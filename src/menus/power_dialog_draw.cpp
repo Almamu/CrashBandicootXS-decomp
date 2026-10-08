@@ -36,8 +36,8 @@ void PowerDialog::Draw()
     s32 n;
     u32 x;
 
-    ResetOamBuffer(gOamBuffer);
-    RewindObjVram(gObjVramCursor);
+    gOamBuffer->Reset();
+    gObjVramCursor->Rewind();
     icon->DrawWithOffset(0, 0);
     w = gLargeFont->MeasureText((u8 *)titleText);
     x = (u32)(240 - w) >> 1;
@@ -51,7 +51,7 @@ void PowerDialog::Draw()
     x = (u32)(240 - w) >> 1;
     gSmallFont->SetPos(x, 0x90);
     gSmallFont->DrawText((u8 *)n);
-    HideUnusedOamEntries(gOamBuffer);
+    gOamBuffer->HideUnused();
 }
 
 void PowerDialog::Animate()
@@ -63,8 +63,8 @@ void PowerDialog::Animate()
 void PowerDialog::CommitFrame()
 {
     WaitForVBlank();
-    UploadPaletteCache(gPaletteCache);
-    CommitOamBuffer(gOamBuffer);
+    gPaletteCache->Upload();
+    gOamBuffer->Commit();
     FlushVramDmaQueue();
     *(vu16 *)REG_ADDR_BG0HOFS = frame >> 3;
     *(vu16 *)PLTT = 0;

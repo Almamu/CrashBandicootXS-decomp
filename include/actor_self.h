@@ -5,10 +5,11 @@
  * The C view of the 3D actors' base class, ActorSelf (actor_self.hpp;
  * C++ since #664 part 11a, src/actor/actor.cpp), for the files still in
  * C: an object built by `InitActorPart` (ActorSelf's constructor), its
- * vtable pointer at +0x50, and the layouts of its vtable slots and
- * pointer-to-member records (struct actor_pmf, for the src/data tables).
- * Every 3D actor class is C++ since #664 part 11g, and the C macros that
- * called through them (ACTOR_PMF_CALL, ACTOR_VCALL, ...) are gone.
+ * vtable pointer at +0x50, and the layout of its vtable slots. Every 3D
+ * actor class is C++ since #664 part 11g, and the C macros that called
+ * through them (ACTOR_PMF_CALL, ACTOR_VCALL, ...) are gone, as are the
+ * pointer-to-member records of the C state tables (struct actor_pmf,
+ * ACTOR_PMF: the tables are C++, #656).
  *
  * Only the common prefix (0x00-0x53) is described here: every derived
  * class lays out its own fields from +0x54 on, in each translation
@@ -49,24 +50,6 @@ struct actor_vtable {
     struct actor_method getHp;
     struct actor_method m38; // 0x38 - "release" (no argument; DamageJetpackBalloon)
 };
-
-/* A gcc 2.x pointer-to-member-function record, as stored in the
- * per-state dispatch tables (gJetpackPlaneStateFuncs/0817C280/...):
- * `index > 0` selects virtual slot `index - 1` of the method table
- * found at `this + vtableOffset`, otherwise `fn` is called directly. */
-struct actor_pmf {
-    s16 thisOffset; // 0x00
-    s16 index;      // 0x02
-    union {
-        s16 vtableOffset; // 0x04 - index > 0
-        void *fn;         // 0x04 - index <= 0
-    } u;
-};
-
-/* Initializer for a non-virtual `&Class::method` constant, the only kind
- * the ROM's tables hold: gcc 2.x stores it as thisOffset 0, index -1 and
- * the (Thumb) code address. Used by the src/data tables (docs/data.md). */
-#define ACTOR_PMF(func) { 0, -1, { .fn = (void *)(func) } }
 
 struct anim_table_record;
 

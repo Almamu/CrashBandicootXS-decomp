@@ -2,9 +2,8 @@
 #define GUARD_CRATE_HPP
 
 /* The crate as C++ (#664, docs/cplusplus.md, parts 7e and 7g): the class
- * behind gCrateVtable (src/crates/). crate.h's `struct crate` is its C
- * view, for the files that are still C and the C
- * prototypes (crates.h).
+ * behind gCrateVtable (src/crates/). It has no C view; crate.h has its
+ * C types (the outline group, the placement record, the state bits).
  *
  * No `#pragma interface`: g++ emits the vtable in crate_update.cpp (see
  * ctrl.hpp); cxx_symbols.txt maps the mangled names onto the C names. */
@@ -19,29 +18,55 @@ extern "C" {
 /* A crate (CreateCrate allocates 0x64 bytes): a sprite with the fall
  * state, the per-kind parameters and the stack links. `kind` is the crate
  * type (CRATE_KIND_*, constants/crates.h), `state` the state and busy
- * bits (CRATE_STATE_*). The per-kind word at 0x48 is documented in
- * crate.h. */
+ * bits (CRATE_STATE_*). The head is Sprite's: `anim` the sprite bank,
+ * `tag` the animation, `frame` its step (FinishBrokenCrate blasts on the
+ * first tick of `stepTimer`), and `animDone` set once it ends (UpdateCrate
+ * then resets `frame` and clears the busy bit). */
 class Crate : public Sprite
 {
 public:
-    s32 fallTargetY;  // 0x40 - Q8 y the crate lands at
-    s32 fallDistance; // 0x44 - Q8 distance still to fall, 0: resting
-    union {           // 0x48 - one word, read per kind (crate.h)
-        s32 solidKind;
+    s32 fallTargetY;   // 0x40 - Q8 y the crate lands at (DropCratesAbove sets it;
+                       //        UpdateCrateFall snaps `y` to it when the fall ends)
+    s32 fallDistance;  // 0x44 - Q8 distance still to fall, 0: resting
+    union {            // 0x48 - one word, read per kind (placement halfword +8 for outlines):
+        s32 solidKind; //   5 (outline): the entity type (ENTITY_*) it turns into
+                       //   (SolidifyOutlineCrate); also loaded from `trialKind` by
+                       //   ConvertCratesForTimeTrial
+        // 3 (iron switch): its outline crates; NULL or PHYS_NO_GROUP: none
         struct crate_group *group;
-        s32 bounceTimer;
-        s32 slotState;
-        s32 pressed;
-        s32 blastState;
+        s32 bounceTimer; // 12 (bouncy wumpa): -0x2A until the first bounce, then 360
+                         //   frames counted down by UpdateCrate (BounceWumpaCrate)
+        s32 slotState;   // 15 (slot): bits 0-2 phase (face 0-3, bit 2 started), 3-5 spins
+                         //   left at this stage, 6-7 stage (gSlotCrateTimers index; 0
+                         //   idle); see UpdateSlotCrate and CRATE_SLOT_*
+        s32 pressed;     // 6 (nitro switch): set once ActivateNitroSwitchCrate has fired
+        s32 blastState;  // explosive kinds: 1 once it has fallen far enough to explode
+                         //   on landing (DropCratesAbove/UpdateCrateFall), 0xFF once it
+                         //   has blasted (BlastNearbyCrates)
     };
-    s8 fallSpeed; // 0x4C - UpdateCrateFall's speed; the iron switch's step delay
-    u8 state;     // 0x4D - low 7 bits: state (1: committed), bit 7: busy
-    u8 kind;      // 0x4E
+    s8 fallSpeed; // 0x4C - UpdateCrateFall's per-tick speed (ramps up to 5); the iron
+                  //        switch instead keeps its step delay here (placement byte 8,
+                  //        reloaded into `timer` after each step)
+    u8 state;     // 0x4D - low 7 bits: state (1: committed), bit 7: busy (CRATE_STATE_*)
+    u8 kind;      // 0x4E - index into the gCrateKind* tables and gCrateHitResponse
     u8 timer;     // 0x4F
-    u8 paramA;    // 0x50 - per-kind parameter (crate.h)
-    u8 paramB;    // 0x51
+    u8 paramA;    // 0x50 - per-kind parameter (placement byte 6 for kinds 3/5):
+                  //        1 (checkpoint): placement flag bit 6, handed to
+                  //        SetCheckpointAtPlayer; 3 (iron switch): group id, then the
+                  //        step counter once activated; 5 (outline): group id (matches
+                  //        its switch's); 12 (bouncy wumpa): set while a bounce
+                  //        animation runs; 15 (slot): mask of the faces it may stop on
+                  //        (placement byte 1 bits 1-3)
+    u8 paramB;    // 0x51 - per-kind parameter (placement byte 6/7): 3 (iron switch):
+                  //        number of steps; 5 (outline): the step it solidifies on;
+                  //        11 ("?"): contents (9: random, OpenMysteryCrate); 12 (bouncy
+                  //        wumpa): bounces so far (breaks after 5); 15 (slot): placement
+                  //        byte 6
     u8 unk_52[2];
-    s32 trialKind;     // 0x54 - the entity type it becomes in a time trial; -1: none
+    s32 trialKind;     // 0x54 - the entity type (ENTITY_*) it becomes in a time trial
+                       //        (placement halfword +4, ENTITY_NITRO_SWITCH_CRATE read as
+                       //        ENTITY_BASIC_CRATE); -1: none (ResetCrate). See
+                       //        ConvertCratesForTimeTrial
     u8 touched;        // 0x58
     u8 groupAllocated; // 0x59 - `group` was allocated (ActivateIronSwitchCrate)
     u8 unk_5A[2];
@@ -156,7 +181,14 @@ public:
 #include "crate_line_step.hpp"
 #endif
 
+/* codegen: Crate::ApplyCollision under its C name (cxx_symbols.txt), as
+ * CollisionQueue::Resolve (collision_queue.cpp) calls it: the three bool
+ * flags passed as one-byte structs, which go to their stack slots with
+ * `strb`, as in the ROM (a bool argument is stored as a word). */
+extern "C" void ApplyCrateCollision(Crate *self, s32 kind, s32 code, s32 edge, s32 depth,
+                                    struct e08c_pos pos, s32 hit, struct byte_arg p20,
+                                    struct byte_arg p21, struct byte_arg pforced);
+
 COMPILE_TIME_ASSERT(crate_hpp, sizeof(Crate) == 0x64);
-COMPILE_TIME_ASSERT(crate_hpp, sizeof(Crate) == sizeof(struct crate));
 
 #endif /* !GUARD_CRATE_HPP */

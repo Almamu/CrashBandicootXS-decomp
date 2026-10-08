@@ -1,3 +1,4 @@
+#include "sprite_obj.hpp"
 #include "font.hpp"
 
 extern "C" {

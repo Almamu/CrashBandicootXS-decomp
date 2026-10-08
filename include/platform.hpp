@@ -4,8 +4,6 @@
 /* The platforms as C++ (#664, docs/cplusplus.md, part 7d): the classes
  * behind gPlatformVtable and gPlatformMoverVtable (src/objects/platform*.cpp),
  * and the Neo Cortex fight's mover subclass (part 7i, src/bosses/cortex.cpp).
- * gobj_1a794.h's `struct gobj` and `struct mover` are their C views, for
- * the files that are still C (the level spawners).
  *
  * No `#pragma interface`: g++ emits the vtables, PlatformMover's in
  * platform.cpp, Platform's in platform_contact.cpp and
@@ -50,7 +48,7 @@ public:
     }
 };
 
-COMPILE_TIME_ASSERT(platform_hpp, sizeof(Platform) == sizeof(struct gobj));
+COMPILE_TIME_ASSERT(platform_hpp, sizeof(Platform) == 0x80);
 
 /* A platform's controller (CreatePlatform allocates 0x38 bytes): it moves
  * its platform back and forth over `rangeX`/`rangeY` pixels with the
@@ -88,7 +86,7 @@ public:
     void ClearActive();
 };
 
-COMPILE_TIME_ASSERT(platform_hpp, sizeof(PlatformMover) == sizeof(struct mover));
+COMPILE_TIME_ASSERT(platform_hpp, sizeof(PlatformMover) == 0x38);
 
 /* The Neo Cortex fight's platforms' controller
  * (gCortexBossPlatformMoverVtable; src/bosses/cortex.cpp): a still type-6
@@ -103,6 +101,6 @@ public:
     virtual ~CortexBossPlatformMover(); // DestroyCortexBossPlatformMover
 };
 
-COMPILE_TIME_ASSERT(platform_hpp, sizeof(CortexBossPlatformMover) == sizeof(struct mover));
+COMPILE_TIME_ASSERT(platform_hpp, sizeof(CortexBossPlatformMover) == 0x38);
 
 #endif /* !GUARD_PLATFORM_HPP */

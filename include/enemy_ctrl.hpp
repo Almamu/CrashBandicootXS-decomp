@@ -13,7 +13,6 @@
 #include "sprite_obj.hpp"
 
 extern "C" {
-#include "part_ctrl.h"
 #include "enemies.h"
 }
 
@@ -48,26 +47,20 @@ public:
     s32 shotPeriod;  // 0x48 - UpdateShooter fires every shotPeriod
     s32 shotPhase;   // 0x4C   frames, offset by shotPhase
     u8 unk_50[8];
-    s32 speed; // 0x58 - homing
-    s32 accel; // 0x5C
-    s32 baseX; // 0x60 - oscillator base / last target x
-    s32 baseY; // 0x64 - oscillator base / last target y
-    s32 mode;  // 0x68 - see SetAnimMode
-    s32 kind;  // 0x6C - the enemy kind (its sprite bank)
-    /* 0x70: the steered part, through part_ctrl.h's field view
-     * (`target`) or as the sprite object the Ctrl methods and its own
-     * virtual methods take (`sprite`). */
-    union {
-        struct ctrl_target *target;
-        MovingSprite *sprite;
-    };
-    s32 state;                 // 0x74 - Update's state (SetState)
-    s32 modeB;                 // 0x78 - see SetMotionX
-    s32 modeA;                 // 0x7C - see SetMotionY
-    s32 counter;               // 0x80
-    const s32 *anims;          // 0x84 - per-mode argument of SetTargetAnim: anim mode ->
-                               //        bank anim (gEnemyDefaultAnimMap..., SetModeTable)
-    struct ctrl_target *popup; // 0x88 - floating popup spawned in state 18
+    s32 speed;            // 0x58 - homing
+    s32 accel;            // 0x5C
+    s32 baseX;            // 0x60 - oscillator base / last target x
+    s32 baseY;            // 0x64 - oscillator base / last target y
+    s32 mode;             // 0x68 - see SetAnimMode
+    s32 kind;             // 0x6C - the enemy kind (its sprite bank)
+    MovingSprite *target; // 0x70 - the steered part (Attach)
+    s32 state;            // 0x74 - Update's state (SetState)
+    s32 modeB;            // 0x78 - see SetMotionX
+    s32 modeA;            // 0x7C - see SetMotionY
+    s32 counter;          // 0x80
+    const s32 *anims;     // 0x84 - per-mode argument of SetTargetAnim: anim mode ->
+                          //        bank anim (gEnemyDefaultAnimMap..., SetModeTable)
+    MovingSprite *popup;  // 0x88 - floating popup spawned in state 18
 
     EnemyCtrl();                                                        // CreateEnemyCtrl
     virtual void Update(MovingSprite *part);                            // UpdateEnemyCtrl

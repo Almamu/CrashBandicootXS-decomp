@@ -1,3 +1,4 @@
+#include "bg_layer.hpp"
 #include "boss_ctrl.hpp"
 #include "player.hpp"
 
@@ -352,11 +353,11 @@ void TinyCtrl::SpawnFallingLeaves(MovingSprite *part, s32 n)
     /* through an s32: a constant stored straight is loaded after the
      * address, where the ROM loads it first */
     SetTag(p, 5);
-    ResetSpriteFrameTimer(p);
-    ResetSpriteFrameIndex(p);
-    SetSpriteAnimDone(p, 0);
+    p->ResetFrameTimer();
+    p->ResetFrameIndex();
+    p->SetAnimDone(0);
     ctrl = new OneShotAnimCtrl;
-    p->palette = GetSpriteAnimPaletteSlot((struct actor *)p);
+    p->palette = p->GetAnimPaletteSlot();
     p->mover = ctrl;
     ctrl->Attach(p);
     p->f.flags |= 0x10;

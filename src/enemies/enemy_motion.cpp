@@ -30,14 +30,14 @@ extern "C" {
     {                      \
         s32 a = (a_);      \
         s32 b = (b_);      \
-        (v)[0] = a;        \
-        (v)[1] = b;        \
-        (v)[2] = a;        \
+        (v).start = a;     \
+        (v).step = b;      \
+        (v).target = a;    \
     }
 
 void EnemyCtrl::UpdateHomingX()
 {
-    struct ctrl_target *part = target;
+    MovingSprite *part = target;
     s32 x = part->x;
     s32 d = x - gPlayer->x;
 
@@ -60,7 +60,7 @@ void EnemyCtrl::UpdateHomingX()
  * `rangeY` bounds tested in the opposite order. */
 void EnemyCtrl::UpdateHomingY()
 {
-    struct ctrl_target *part = target;
+    MovingSprite *part = target;
     s32 y = part->y;
     s32 d = y - gPlayer->y;
 
@@ -93,7 +93,7 @@ void EnemyCtrl::UpdateHomingY()
  * the same `t` (issue #9-#11 NAKED retry). */
 void EnemyCtrl::UpdateHop()
 {
-    struct ctrl_target *t;
+    MovingSprite *t;
 
     if (target->y < baseY)
         return;
@@ -111,13 +111,13 @@ void EnemyCtrl::UpdateHop()
             break;
         case 1:
             {
-                u32 m = t->mirror.x;
-                t->mirror.x = !m;
+                u32 m = t->mirrorFlags.mirrorX;
+                t->mirrorFlags.mirrorX = !m;
             }
             SetAnimMode(0);
             break;
         }
-    } else if (t->tick == 8 && t->timer == 0) {
+    } else if (t->frame == 8 && t->stepTimer == 0) {
         switch (mode) {
         case 0:
             SetMotionX(3);
@@ -149,15 +149,15 @@ void EnemyCtrl::UpdateHop()
  * bytes under agbcp and old_agbcp. */
 void EnemyCtrl::UpdateFlipCycle()
 {
-    struct ctrl_target *part = target;
+    MovingSprite *part = target;
 
     if (!part->animDone)
         return;
     switch (mode) {
     case 0:
         if (counter & 1) {
-            u32 m = part->mirror.x;
-            part->mirror.x = !m;
+            u32 m = part->mirrorFlags.mirrorX;
+            part->mirrorFlags.mirrorX = !m;
             SetAnimMode(1);
         } else {
             SetAnimMode(6);
@@ -173,8 +173,8 @@ void EnemyCtrl::UpdateFlipCycle()
         break;
     case 6:
         {
-            u32 m = part->mirror.y;
-            part->mirror.y = !m;
+            u32 m = part->mirrorFlags.mirrorY;
+            part->mirrorFlags.mirrorY = !m;
         }
         counter = (counter + 1) % 4;
         SetMotionX(2);

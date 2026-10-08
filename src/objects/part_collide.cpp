@@ -11,7 +11,7 @@
  * `other` is marked touched. */
 void PartList::CollideWithObject(struct aabb box, MovingSprite *part, MovingSprite *other)
 {
-    if (ClassifySpriteContact(part, &box)) {
+    if (part->ClassifyContact(&box)) {
         part->HandleEvent(1, other->kind, 0);
         other->f.b.bit3 = 1;
     }

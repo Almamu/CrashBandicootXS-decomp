@@ -100,9 +100,9 @@ s32 Ctrl::SetTargetAnim(MovingSprite *part, s32 anim)
 
     if (part->tag != anim) {
         part->tag = anim;
-        ResetSpriteFrameTimer(part);
-        ResetSpriteFrameIndex(part);
-        SetSpriteAnimDone(part, 0);
+        part->ResetFrameTimer();
+        part->ResetFrameIndex();
+        part->SetAnimDone(0);
         part->f.b.bit3 = 0;
         result = 1;
     }

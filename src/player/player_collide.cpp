@@ -1,3 +1,4 @@
+#include "bg_layer.hpp"
 #include "player.hpp"
 
 extern "C" {

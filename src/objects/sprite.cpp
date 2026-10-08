@@ -1,3 +1,4 @@
+#include "bg_layer.hpp"
 #include "sprite_obj.hpp"
 #include "spawners.hpp"
 #include "player.hpp"
@@ -285,7 +286,7 @@ u8 Sprite::IsOnScreen()
 
     if (!hidden) {
         struct aabb screen;
-        struct bg_scroll_layer *cam = gLevelLayers->layer0;
+        BgLayer *cam = gLevelLayers->layer0;
         s32 cx = INT_TO_Q8(cam->x);
         s32 cy = INT_TO_Q8(cam->y);
         s32 w, h;

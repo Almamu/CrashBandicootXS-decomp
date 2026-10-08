@@ -207,8 +207,8 @@ void SaveMenu::DrawLoad()
 
 void SaveMenu::Draw()
 {
-    ResetOamBuffer(gOamBuffer);
-    RewindObjVram(gObjVramCursor);
+    gOamBuffer->Reset();
+    gObjVramCursor->Rewind();
     if ((u32)state <= 0xa) {
         switch (state) {
         case 0:
@@ -244,7 +244,7 @@ void SaveMenu::Draw()
             break;
         }
     }
-    HideUnusedOamEntries(gOamBuffer);
+    gOamBuffer->HideUnused();
 }
 
 void SaveMenu::DeleteSlot(s32 arg1)

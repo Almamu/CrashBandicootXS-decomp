@@ -20,15 +20,10 @@
 #include "constants/events.h"
 
 struct actor;
-struct box_part;
 struct collect_part;
 struct crate;
-struct part_list;
-struct gfx_part;
 struct gfx_vec;
-struct gobj;
 struct hitbox_quad;
-struct mover;
 struct sprite_point;
 
 /* A position pair: a collision candidate's (src/objects/collision_queue.cpp),
@@ -50,15 +45,19 @@ struct e08c_pos {
  * batch 9e).
  */
 struct collision_candidate {
+#ifdef __cplusplus
+    class Crate *neighbor; // 0x00 - the crate (crate.hpp)
+#else
     struct crate *neighbor; // 0x00 - the crate; its position is its first two words
-    struct e08c_pos pos;    // 0x04
-    s32 kind;               // 0x0C - ATTACK_KIND_* (constants/attack_kinds.h)
-    s32 code;               // 0x10
-    s32 edge;               // 0x14
-    s32 depth;              // 0x18
-    s32 hit;                // 0x1C
-    struct byte_arg p20;    // 0x20 - passed on the stack as a byte (`strb`)
-    struct byte_arg p21;    // 0x21
+#endif
+    struct e08c_pos pos; // 0x04
+    s32 kind;            // 0x0C - ATTACK_KIND_* (constants/attack_kinds.h)
+    s32 code;            // 0x10
+    s32 edge;            // 0x14
+    s32 depth;           // 0x18
+    s32 hit;             // 0x1C
+    struct byte_arg p20; // 0x20 - passed on the stack as a byte (`strb`)
+    struct byte_arg p21; // 0x21
     u8 unk_22[2];
 };
 
@@ -85,14 +84,13 @@ struct collision_queue {
  * records per state; `entries` is an array of pairs) and a Q8 scale,
  * 0x100 (1.0) in every set in the ROM, that SetCtrlTargetMotionX and
  * StartCtrlTargetMotionX multiply the motion vector by. A controller or
- * mover keeps one at +0x04 (SetCtrlAnimSet, gobj_1a794.h's `struct mover`
- * `set`). */
+ * mover keeps one at +0x04 (SetCtrlAnimSet, Ctrl's `animSet`). */
 struct entry_set {
     const u32 (*entries)[2];
     s32 scale; // 0x04 - Q8
 };
 
-/* A sprite object's per-axis speed ramp (struct gobj.rampX/rampY, struct
+/* A sprite object's per-axis speed ramp (MovingSprite's rampX/rampY, struct
  * player's): each frame ApplySpriteVelocity steps speedX/speedY by `step`
  * toward `target` without overshooting. The Start...MotionX/Y setters also
  * load `start` into the speed; the Set... ones keep the current speed.
@@ -111,40 +109,19 @@ struct speed_ramp {
 
 /* src/objects/ctrl.cpp: Ctrl's methods (include/ctrl.hpp)
  * under their C names (cxx_symbols.txt), for the C callers. */
-extern void AttachCtrl(void *self, s32 val);
 
 /* src/objects/moving_sprite_collide.cpp */
-extern s32 ClassifySpriteContact(void *part, void *region);
-
-/* src/objects/part_list.cpp */
-extern void DrawPartList(struct part_list *manager);
-
-/* src/objects/part_list_cull.cpp */
-extern void CullPartList(struct part_list *manager);
-extern void ClearPartList(struct part_list *manager);
-
-/* src/objects/player_contact.cpp */
-extern void CheckPlayerContact(void *part);
-extern void ResolvePlayerContact(void *part);
 
 /* src/objects/sprite.cpp */
-extern struct aabb GetSpriteHitbox(struct box_part *part);
 extern void *GetSpriteAttackBox(void *dest, void *pt);
 extern void *GetSpriteBodyBox(void *dest, void *pt);
 
 /* src/objects/sprite_anim.cpp */
-extern void ResetSpriteFrameIndex(void *part);
-extern void ResetSpriteFrameTimer(void *part);
-extern void UpdatePartList(struct part_list *list);
-extern void CollidePartList(struct part_list *list, struct aabb box, s32 unused,
-                            struct box_part *other);
 
 /* src/objects/sprite_obj.cpp */
-extern s32 GetSpriteAnimPaletteSlot(struct actor *part);
 extern void OffsetFromHitboxEdge(void *dest, s32 kind, void *rec);
 extern void OffsetToHitboxEdge(void *dest, s32 kind, void *rec);
 extern void OffsetToHitboxEdgeStart(void *dest, s32 kind, void *rec);
-extern void SetSpriteAnimDone(void *part, u8 val);
 
 /* The controllers' motion records (src/data/motion_records_16b304.c),
  * read by StartCtrlTargetMotionYFromSet/StartCtrlTargetMotionXFromSet and

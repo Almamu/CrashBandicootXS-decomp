@@ -1,3 +1,4 @@
+#include "sprite_obj.hpp"
 #include "frontend.hpp"
 
 extern "C" {
@@ -216,7 +217,7 @@ void TitleScreen::CommitFrame()
     REG_BG2PC = 0;
     REG_BG2PD = scale;
     CommitDispcnt();
-    CommitOamBuffer(gOamBuffer);
+    gOamBuffer->Commit();
 }
 
 /* Draws menu item `item` (`text`, a GetUiText string) centred at row
@@ -245,14 +246,14 @@ void TitleScreen::DrawMenuItem(s32 text, s32 item)
  * shown. */
 void TitleScreen::Draw()
 {
-    ResetOamBuffer(gOamBuffer);
+    gOamBuffer->Reset();
     DrawLogoPieces();
     if (menuShown != 0) {
         DrawMenuItem(GetUiText(0x1a), 0);
         DrawMenuItem(GetUiText(0x1b), 1);
         DrawMenuItem(GetUiText(0x3b), 2);
     }
-    HideUnusedOamEntries(gOamBuffer);
+    gOamBuffer->HideUnused();
 }
 
 /* CheatInput's hash step on its own. */
@@ -450,7 +451,7 @@ void CompanyLogos::Run()
         }
         part->Update();
         part->Draw();
-        RewindOamBuffer(gOamBuffer);
+        gOamBuffer->Rewind();
         FlushSpriteFrameOamQueue();
         UpdateVvLogoPieces();
         DrawVvLogoPieces();
@@ -475,7 +476,7 @@ void CompanyLogos::Run()
             REG_BLDY = 0x10 - v;
             REG_BLDCNT = 0xff;
         }
-        CommitOamBuffer(gOamBuffer);
+        gOamBuffer->Commit();
         FlushVramDmaQueue();
         AgeSpriteFrameCache();
     }

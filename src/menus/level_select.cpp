@@ -178,7 +178,7 @@ LaunchPad *LaunchPad::Spawn(u16 id, u16 x, u16 y, u16 unused)
     {
         const struct sprite_anim *anims = obj->bank->anims;
         const struct sprite_anim *rec = &anims[obj->tag];
-        u32 slot = GetPaletteSlot(gPaletteCache, rec->paletteId);
+        u32 slot = gPaletteCache->GetSlot(rec->paletteId);
 
         obj->palette = slot;
     }
@@ -226,12 +226,12 @@ LaunchPad::LaunchPad()
  * separate inlined expansions give. */
 static inline void IconReserve(Font **m)
 {
-    struct vram_upload_cursor *c = gObjVramCursor;
+    ObjVramCursor *c = gObjVramCursor;
 
-    ReserveObjVram(c, (*m)->tileCount << 5);
+    c->Reserve((*m)->tileCount << 5);
 }
 
-static inline void LoadMenuPalette(struct palette_cache *cache)
+static inline void LoadMenuPalette(PaletteCache *cache)
 {
     CpuSet(gLevelSelectPalette, cache->slots[15], 0x10);
 }
@@ -246,12 +246,12 @@ s32 RunLevelSelect(s32 *arg)
     WaitForVBlank();
     *(vu16 *)PLTT = 0;
     *(vu16 *)REG_ADDR_DISPCNT = 0;
-    FreeUnlockedPaletteSlots(gPaletteCache);
-    ClaimPaletteSlot(gPaletteCache, 0xF);
+    gPaletteCache->FreeUnlockedSlots();
+    gPaletteCache->ClaimSlot(0xF);
     LoadMenuPalette(gPaletteCache);
     gObjVramCursor->baseTile = 0;
-    ResetObjVram(gObjVramCursor);
-    ResetObjVram(gObjVramCursor);
+    gObjVramCursor->Reset();
+    gObjVramCursor->Reset();
     gSmallFont->SetTileBase(0);
     IconReserve(&gSmallFont);
     {
@@ -260,7 +260,7 @@ s32 RunLevelSelect(s32 *arg)
         gLargeFont->SetTileBase(v);
     }
     IconReserve(&gLargeFont);
-    MarkObjVram(gObjVramCursor);
+    gObjVramCursor->Mark();
     PlaySong(gAudioContext, SONG_WARP_ROOM);
     {
         LevelSelect **menuAddr = &gLevelSelect;
@@ -272,7 +272,7 @@ s32 RunLevelSelect(s32 *arg)
         delete menu;
         *menuAddr = 0;
     }
-    FreeUnlockedPaletteSlots(gPaletteCache);
+    gPaletteCache->FreeUnlockedSlots();
     mem_free_bytes(heaps);
     return result;
 }
@@ -345,42 +345,36 @@ LevelSelect::LevelSelect(s32 arg)
     }
     SetBankNow(sprites[0], AnimTable(0x234));
     StartAnim(sprites[0], gLevelSelectWorldAnims[world]);
-    SetEntityPixelPos((struct actor *)sprites[0], gLevelSelectWorldPos.x, gLevelSelectWorldPos.y);
+    SetEntityPixelPos(sprites[0], gLevelSelectWorldPos.x, gLevelSelectWorldPos.y);
     SetBankNow(sprites[1], AnimTable(0x234));
     StartAnim(sprites[1], 10);
-    SetEntityPixelPos((struct actor *)sprites[1], gLevelSelectCrashIconPos.x,
-                      gLevelSelectCrashIconPos.y);
+    SetEntityPixelPos(sprites[1], gLevelSelectCrashIconPos.x, gLevelSelectCrashIconPos.y);
     SetBankNow(sprites[2], AnimTable(0x1BC));
-    SetEntityPixelPos((struct actor *)sprites[2], gLevelSelectCrystalPos.x,
-                      gLevelSelectCrystalPos.y);
+    SetEntityPixelPos(sprites[2], gLevelSelectCrystalPos.x, gLevelSelectCrystalPos.y);
     SetBankNow(sprites[3], AnimTable(0x180));
     StartAnim(sprites[3], 1);
-    SetEntityPixelPos((struct actor *)sprites[3], gLevelSelectGemPos_rw.x, gLevelSelectGemPos_rw.y);
+    SetEntityPixelPos(sprites[3], gLevelSelectGemPos_rw.x, gLevelSelectGemPos_rw.y);
     SetBankNow(sprites[4], AnimTable(0x180));
     StartAnim(sprites[4], 1);
-    SetEntityPixelPos((struct actor *)sprites[4], gLevelSelectGemPos_rw.x, gLevelSelectGemPos_rw.y);
+    SetEntityPixelPos(sprites[4], gLevelSelectGemPos_rw.x, gLevelSelectGemPos_rw.y);
     SetBankNow(sprites[5], AnimTable(0x18C));
-    SetEntityPixelPos((struct actor *)sprites[5], gLevelSelectTrialIconPos_rw.x,
-                      gLevelSelectTrialIconPos_rw.y);
+    SetEntityPixelPos(sprites[5], gLevelSelectTrialIconPos_rw.x, gLevelSelectTrialIconPos_rw.y);
     SetBankNow(sprites[6], AnimTable(0x18C));
-    SetEntityPixelPos((struct actor *)sprites[6], gLevelSelectTrialIconPos_rw.x,
-                      gLevelSelectTrialIconPos_rw.y);
+    SetEntityPixelPos(sprites[6], gLevelSelectTrialIconPos_rw.x, gLevelSelectTrialIconPos_rw.y);
     SetBankNow(sprites[7], AnimTable(0x18C));
-    SetEntityPixelPos((struct actor *)sprites[7], gLevelSelectTimePos.x, gLevelSelectTimePos.y);
+    SetEntityPixelPos(sprites[7], gLevelSelectTimePos.x, gLevelSelectTimePos.y);
     s = new UiSprite;
     sprites[8] = s;
     s->SetPriority(1);
     SetBankNow(sprites[8], AnimTable(0x270));
     StartAnim(sprites[8], 1);
-    SetEntityPixelPos((struct actor *)sprites[8], gLevelSelectNextWorldArrowPos.x,
-                      gLevelSelectNextWorldArrowPos.y);
+    SetEntityPixelPos(sprites[8], gLevelSelectNextWorldArrowPos.x, gLevelSelectNextWorldArrowPos.y);
     s = new UiSprite;
     sprites[9] = s;
     s->SetPriority(1);
     SetBankNow(sprites[9], AnimTable(0x270));
     StartAnim(sprites[9], 0);
-    SetEntityPixelPos((struct actor *)sprites[9], gLevelSelectPrevWorldArrowPos.x,
-                      gLevelSelectPrevWorldArrowPos.y);
+    SetEntityPixelPos(sprites[9], gLevelSelectPrevWorldArrowPos.x, gLevelSelectPrevWorldArrowPos.y);
     if (gNewWorldOpened && IsNextWorldOpen()) {
         panel->Park();
     } else {
@@ -421,8 +415,8 @@ void LevelSelect::Update()
 {
     s32 i;
 
-    ResetOamBuffer(gOamBuffer);
-    RewindObjVram(gObjVramCursor);
+    gOamBuffer->Reset();
+    gObjVramCursor->Rewind();
     panel->Draw();
     if (bg2->IsShown() && items[index]->IsSelected()) {
         u32 x = (u32)(0xF0 - gLargeFont->MeasureText((u8 *)nameText)) >> 1;
@@ -451,7 +445,7 @@ void LevelSelect::Update()
         dispcnt.bits.bg2 = 0;
     else
         dispcnt.bits.bg2 = 1;
-    HideUnusedOamEntries(gOamBuffer);
+    gOamBuffer->HideUnused();
 }
 
 /* Updates the two page-arrow sprites (8/9): palettes from
@@ -566,7 +560,7 @@ void LevelSelect::Draw()
         panelSlideX = 0;
         if (index <= 4) {
             LoadRecord();
-            FreeUnlockedPaletteSlots(gPaletteCache);
+            gPaletteCache->FreeUnlockedSlots();
             ReloadPalette();
         }
         gLargeFont->ResetPalette();
@@ -768,8 +762,8 @@ end:
     dispcnt.raw = 0;
     dispcnt.bits.objMap1D = 1;
     WaitForVBlank();
-    UploadPaletteCache(gPaletteCache);
-    CommitOamBuffer(gOamBuffer);
+    gPaletteCache->Upload();
+    gOamBuffer->Commit();
     CommitDisplay();
     return items[index]->GetLevel();
 }
@@ -786,7 +780,7 @@ void LevelSelect::SettlePage()
         panel->Update();
         bg2->Update();
     }
-    FreeUnlockedPaletteSlots(gPaletteCache);
+    gPaletteCache->FreeUnlockedSlots();
 }
 
 /* Moves the cursor left, repeating while Left is held; sound 0x48 at the

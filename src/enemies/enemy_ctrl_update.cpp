@@ -1,3 +1,4 @@
+#include "bg_layer.hpp"
 #include "enemy_ctrl.hpp"
 #include "spawners.hpp"
 #include "player.hpp"
@@ -23,29 +24,29 @@ extern "C" {
 
 /* Sets `t`'s `gone` bit and, if it has an id, its bit in the "gone"
  * bitmap at gEntityFlags+0x108. */
-static inline void MarkGone(struct ctrl_target *t)
+static inline void MarkGone(MovingSprite *t)
 {
-    ENTITY_MARK_GONE(t->gone, t->id);
+    ENTITY_MARK_GONE(t->f.b.gone, t->id);
 }
 
-static inline void SetVelX(struct ctrl_target *t, s32 a, s32 b, s32 c)
+static inline void SetVelX(MovingSprite *t, s32 a, s32 b, s32 c)
 {
     t->speedX = a;
-    t->rampX[0] = a;
-    t->rampX[1] = b;
-    t->rampX[2] = c;
+    t->rampX.start = a;
+    t->rampX.step = b;
+    t->rampX.target = c;
 }
 
-static inline void SetVelY(struct ctrl_target *t, s32 a, s32 b, s32 c)
+static inline void SetVelY(MovingSprite *t, s32 a, s32 b, s32 c)
 {
     t->speedY = a;
-    t->rampY[0] = a;
-    t->rampY[1] = b;
-    t->rampY[2] = c;
+    t->rampY.start = a;
+    t->rampY.step = b;
+    t->rampY.target = c;
 }
 
 /* Both values are evaluated before either store, as in the ROM. */
-static inline void SetPos(struct ctrl_target *t, s32 x, s32 y)
+static inline void SetPos(MovingSprite *t, s32 x, s32 y)
 {
     t->x = x;
     t->y = y;
@@ -54,9 +55,9 @@ static inline void SetPos(struct ctrl_target *t, s32 x, s32 y)
 /* The target's `hit` bit, read the way the ROM does (`lsrs #3; ands
  * #1` on the flags byte; the bitfield would be tested with `movs #8;
  * ands`). */
-static inline u32 TargetHit(struct ctrl_target *t)
+static inline u32 TargetHit(MovingSprite *t)
 {
-    return (((struct box_part *)t)->flags >> 3) & 1;
+    return (t->f.flags >> 3) & 1;
 }
 
 /* An 18-state dispatcher keyed off `state` (1-18; 0 or > 18 is a no-op,
@@ -89,22 +90,22 @@ void EnemyCtrl::Update(MovingSprite *)
 
                 if (target->animDone)
                     SetAnimMode(0);
-                onScreen = sprite->IsOnScreen();
+                onScreen = target->IsOnScreen();
                 if (onScreen == 0) {
-                    struct ctrl_target *t;
+                    MovingSprite *t;
 
                     SetPos(target, baseX, baseY - 0x6400);
                     SetMotionX(0);
                     t = target;
                     SetVelY(t, 0x80, 0, 0x80);
-                    t->flag4 = 1;
+                    t->f.b.active = 1;
                 }
             } else {
                 UpdateTriggerBox();
             }
         }
         {
-            MovingSprite *t = sprite;
+            MovingSprite *t = target;
 
             if (t->frame == 0 && t->stepTimer == 0 && t->IsOnScreen())
                 PlaySfx(gAudioContext, SFX_UNKNOWN_13, 0x100);
@@ -112,13 +113,13 @@ void EnemyCtrl::Update(MovingSprite *)
         break;
     case 5:
         {
-            struct ctrl_target *t = target;
+            MovingSprite *t = target;
             s32 y = t->y;
 
             if (y > INT_TO_Q8(gLevelLayers->layer0->heightPx) - 0x1E00) {
-                t->flag7 = 0;
+                t->f.b.collides = 0;
                 {
-                    struct ctrl_target *t2 = target;
+                    MovingSprite *t2 = target;
 
                     y = t2->y;
                     if (y > INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x1E00)
@@ -133,7 +134,7 @@ void EnemyCtrl::Update(MovingSprite *)
         break;
     case 18:
         {
-            struct ctrl_target *t = target;
+            MovingSprite *t = target;
             s32 x = Q8_TO_INT(t->x);
             s32 y = Q8_TO_INT(t->y);
             Player *p = gPlayer;
@@ -150,8 +151,7 @@ void EnemyCtrl::Update(MovingSprite *)
             PlayAmbientSfx(gAudioContext, SFX_SAUCER_HUM, 8, vol, zero);
         }
         if (target->animDone && mode == 3) {
-            struct ctrl_target *pop =
-                (struct ctrl_target *)LaunchHarmfulEffectPart(0x1d, 0, 0, 0x2b, 0, sprite);
+            MovingSprite *pop = LaunchHarmfulEffectPart(0x1d, 0, 0, 0x2b, 0, target);
 
             popup = pop;
             pop->kind = 3;
@@ -163,22 +163,22 @@ void EnemyCtrl::Update(MovingSprite *)
         UpdatePatrol();
         UpdateAttackCycle();
         if (mode == 1) {
-            struct ctrl_target *t = target;
-            u32 m = t->mirror.x;
+            MovingSprite *t = target;
+            u32 m = t->mirrorFlags.mirrorX;
 
-            t->mirror.x = !m;
+            t->mirrorFlags.mirrorX = !m;
             SetAnimMode(0);
             SetMotionX(1);
         } else if (mode == 6) {
-            struct ctrl_target *t = target;
-            u32 m = t->mirror.x;
+            MovingSprite *t = target;
+            u32 m = t->mirrorFlags.mirrorX;
 
-            t->mirror.x = !m;
+            t->mirrorFlags.mirrorX = !m;
             SetAnimMode(4);
             {
-                struct ctrl_target *t2 = target;
+                MovingSprite *t2 = target;
 
-                t2->tick = (*t2->keyframes)[t2->frame].steps - 1;
+                t2->frame = t2->bank->anims[t2->tag].frameCount - 1;
             }
             SetMotionX(1);
         }
@@ -226,7 +226,7 @@ void EnemyCtrl::Update(MovingSprite *)
         UpdateHomingX();
         UpdateOscillateX();
         {
-            struct ctrl_target *t = target;
+            MovingSprite *t = target;
             s32 x, y;
 
             x = t->x;
@@ -275,17 +275,17 @@ void EnemyCtrl::Update(MovingSprite *)
  * doesn't reuse `one`. The C also held r2 live across the first
  * MarkGone's id compare with an asm-only register variable, to get the
  * ROM's reload registers; g++ gives them without it. */
-static inline struct ctrl_target *SpawnAt(s32 kind, s32 x, s32 y)
+static inline MovingSprite *SpawnAt(s32 kind, s32 x, s32 y)
 {
-    return (struct ctrl_target *)gEntitySpawner->SpawnEffectPart(kind, 2, x, y, 0);
+    return gEntitySpawner->SpawnEffectPart(kind, 2, x, y, 0);
 }
 
 /* MarkGone whose bitmap `1` is loaded after the shift count and isn't
  * shared with an earlier 1 (see above). The MATCH_CONST is what keeps it
  * from being entity_bits.h's ENTITY_MARK_GONE. */
-static inline void MarkGoneFreshBit(struct ctrl_target *t)
+static inline void MarkGoneFreshBit(MovingSprite *t)
 {
-    t->gone = 1;
+    t->f.b.gone = 1;
     if (t->id != 0xFFFF)
         do {
             s32 id = t->id;
@@ -318,13 +318,13 @@ void EnemyCtrl::HandleEvent(MovingSprite *, s32 event, s32)
     case EVENT_ATTACK_SLIDE:
         {
             KnockedEnemyCtrl *knocked = new KnockedEnemyCtrl;
-            MovingSprite *part = sprite;
-            struct ctrl_target *t;
+            MovingSprite *part = target;
+            MovingSprite *t;
             s32 a, v;
 
             part->mover = knocked;
             knocked->Attach(part);
-            target->flag7 = 0;
+            target->f.b.collides = 0;
             t = target;
             if ((a = t->x) > gPlayer->x)
                 SetVelX(t, 0x1000, 0, 0x1800);
@@ -332,10 +332,10 @@ void EnemyCtrl::HandleEvent(MovingSprite *, s32 event, s32)
                 SetVelX(t, -0x1000, 0, -0x1800);
             v = ((u16)RandRange(3) << 9) - 0x200;
             {
-                struct ctrl_target *t2 = target;
+                MovingSprite *t2 = target;
 
                 SetVelY(t2, v, 0, v);
-                t2->visible = 0;
+                t2->f.b.visible = 0;
             }
             PlaySfx(gAudioContext, SFX_ENEMY_KNOCKED_AWAY, 0x80);
             delete this;
@@ -345,11 +345,11 @@ void EnemyCtrl::HandleEvent(MovingSprite *, s32 event, s32)
     case EVENT_ATTACK_BODY_SLAM:
     case EVENT_ATTACK_SUPER_BODY_SLAM:
         {
-            struct ctrl_target *obj = SpawnAt(0x29, Q8_TO_INT(target->x), Q8_TO_INT(target->y));
+            MovingSprite *obj = SpawnAt(0x29, Q8_TO_INT(target->x), Q8_TO_INT(target->y));
             s32 one = 1;
 
-            obj->visible = 0;
-            obj->mirror.layer = one;
+            obj->f.b.visible = 0;
+            obj->mirrorFlags.gfxMode = one;
             MarkGoneFreshBit(target);
         }
         break;

@@ -4,7 +4,7 @@
 /*
  * The player's action-controller states: ActionCtrl's `state` (and
  * `prevState`), the index into gActionCtrlStateTable
- * (src/data/action_table_16bf20.c) and gActionCtrlStateAttackKinds. A
+ * (src/data/action_table_16bf20.cpp) and gActionCtrlStateAttackKinds. A
  * state is entered through the controller's set-mode method
  * (ActionCtrl::SetMode, SetActionCtrlMode: vtable slot 4) or
  * ActionCtrl::SetModeAnim (SetActionCtrlModeAnim).

@@ -18,7 +18,7 @@ void JetpackShot::Update()
     y += -0xc0 + velY;
     z += 0x400;
 
-    HpActor *hit = (HpActor *)FindShotTarget((struct actor_self *)this);
+    HpActor *hit = FindShotTarget(this);
 
     if (hit != 0) {
         hit->Damage(2);

@@ -1,3 +1,4 @@
+#include "sprite_obj.hpp"
 #include "font.hpp"
 
 extern "C" {
@@ -49,8 +50,8 @@ s32 DrawWrappedText(u8 *text, Font *self, struct aabb *box, s32 limit, s32 mode)
 
     posAccum = 0;
     if (mode != 0) {
-        ResetOamBuffer(gOamBuffer);
-        HideUnusedOamEntries(gOamBuffer);
+        gOamBuffer->Reset();
+        gOamBuffer->HideUnused();
     }
     self->SetPos(box->x, box->y);
     widthAccum = 0;
@@ -104,7 +105,7 @@ s32 DrawWrappedText(u8 *text, Font *self, struct aabb *box, s32 limit, s32 mode)
                 if (mode == 1 || mode == 2) {
                 flush:
                     WaitForVBlank();
-                    CommitOamBuffer(gOamBuffer);
+                    gOamBuffer->Commit();
                 }
             }
         skip:
@@ -113,7 +114,7 @@ s32 DrawWrappedText(u8 *text, Font *self, struct aabb *box, s32 limit, s32 mode)
     }
     if (mode != 0) {
         WaitForVBlank();
-        CommitOamBuffer(gOamBuffer);
+        gOamBuffer->Commit();
     }
     return posAccum;
 }

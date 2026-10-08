@@ -109,8 +109,8 @@ void PauseMenu::Draw()
     void *label;
     u32 width;
 
-    ResetOamBuffer(gOamBuffer);
-    RewindObjVram(gObjVramCursor);
+    gOamBuffer->Reset();
+    gObjVramCursor->Rewind();
     {
         u32 w = gLargeFont->MeasureText((u8 *)levelName);
         u32 x, t;
@@ -173,7 +173,7 @@ void PauseMenu::Draw()
     }
     if (blinkTimer == 0)
         blinkEyes->DrawWithOffset(0, 0);
-    HideUnusedOamEntries(gOamBuffer);
+    gOamBuffer->HideUnused();
 }
 
 /* Draws the rows (`rows`, `rowCount` of them) from y = 0x4a,

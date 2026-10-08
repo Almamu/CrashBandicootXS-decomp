@@ -1,3 +1,4 @@
+#include "sprite_obj.hpp"
 #include "frontend.hpp"
 
 extern "C" {
@@ -30,8 +31,8 @@ void ContinuePrompt::Draw()
 {
     s32 w;
 
-    ResetOamBuffer(gOamBuffer);
-    RewindObjVram(gObjVramCursor);
+    gOamBuffer->Reset();
+    gObjVramCursor->Rewind();
     w = icons->MeasureText((u8 *)GetUiText(0x28));
     icons->SetPalette(0);
     icons->SetPos(0x88 - w, 0x87);
@@ -50,7 +51,7 @@ void ContinuePrompt::Draw()
     }
     icons->SetPos(0x98, 0x91);
     icons->DrawText((u8 *)GetUiText(0x2a));
-    HideUnusedOamEntries(gOamBuffer);
+    gOamBuffer->HideUnused();
 }
 
 /* The palette of `option`'s label: 1 when it isn't selected, else 0 or 2
@@ -66,7 +67,7 @@ s32 ContinuePrompt::Blink(s32 option)
 void ContinuePrompt::CommitFrame()
 {
     WaitForVBlank();
-    CommitOamBuffer(gOamBuffer);
+    gOamBuffer->Commit();
     FlushVramDmaQueue();
     REG_DISPCNT = dispcnt.raw;
 }
@@ -95,9 +96,9 @@ u8 ContinuePrompt::Run()
 
 /* Reserves `m`'s glyph tiles (`tileCount` tiles) from the VRAM upload
  * cursor `c`. */
-static inline void ReserveFontVram(struct vram_upload_cursor *c, Font *m)
+static inline void ReserveFontVram(ObjVramCursor *c, Font *m)
 {
-    ReserveObjVram(c, m->tileCount << 5);
+    c->Reserve(m->tileCount << 5);
 }
 
 /* Starts the starfield, loads the logos and the two fonts' tiles, and
@@ -106,21 +107,21 @@ static inline void ReserveFontVram(struct vram_upload_cursor *c, Font *m)
 Credits::Credits()
 {
     starfield = new Starfield;
-    ResetOamBuffer(gOamBuffer);
-    HideUnusedOamEntries(gOamBuffer);
+    gOamBuffer->Reset();
+    gOamBuffer->HideUnused();
     WaitForVBlank();
-    CommitOamBuffer(gOamBuffer);
-    FreeUnlockedPaletteSlots(gPaletteCache);
+    gOamBuffer->Commit();
+    gPaletteCache->FreeUnlockedSlots();
     gSmallFont->ResetPalette();
     gLargeFont->SetPalette(0);
     /* No code: it lengthens the live ranges across it, which gives
      * &gPaletteCache and &gObjVramCursor r4 and &gSmallFont r6. */
     MATCH_BARRIER();
     LoadLogos();
-    UploadPaletteCache(gPaletteCache);
+    gPaletteCache->Upload();
     gObjVramCursor->baseTile = 0;
-    ResetObjVram(gObjVramCursor);
-    ResetObjVram(gObjVramCursor);
+    gObjVramCursor->Reset();
+    gObjVramCursor->Reset();
     gSmallFont->SetTileBase(0);
     ReserveFontVram(gObjVramCursor, gSmallFont);
     {
@@ -129,7 +130,7 @@ Credits::Credits()
         gLargeFont->SetTileBase(base);
     }
     ReserveFontVram(gObjVramCursor, gLargeFont);
-    MarkObjVram(gObjVramCursor);
+    gObjVramCursor->Mark();
     popups = 0;
     largeFont = 0;
     streamBase = gCreditsText;
@@ -211,8 +212,8 @@ void Credits::DrawText()
 {
     CreditsPopup *node;
 
-    ResetOamBuffer(gOamBuffer);
-    RewindObjVram(gObjVramCursor);
+    gOamBuffer->Reset();
+    gObjVramCursor->Rewind();
     for (node = popups; node != 0; node = node->next) {
         Font *m;
         CreditsLogo *logo;
@@ -234,8 +235,8 @@ void Credits::DrawText()
             break;
         case 2:
             logo = &logos[node->index];
-            tile = GetObjVramTile(gObjVramCursor);
-            UploadObjVram(gObjVramCursor, logo->tiles, (logo->rows * logo->cols) << 9);
+            tile = gObjVramCursor->GetTile();
+            gObjVramCursor->Upload(logo->tiles, (logo->rows * logo->cols) << 9);
             zero = 0;
             CpuSet(&zero, &oam, CPU_SET_SRC_FIXED | CPU_SET_32BIT | 2);
             oam.size = 2;
@@ -251,7 +252,7 @@ void Credits::DrawText()
                     if ((u32)(y + 0x1f) <= 0xbe) {
                         oam.x = x;
                         oam.tile = tile;
-                        AddOamEntry(gOamBuffer, &oam);
+                        gOamBuffer->Add(&oam);
                     }
                     tile += 0x10;
                     x += 0x20;
@@ -261,7 +262,7 @@ void Credits::DrawText()
             break;
         }
     }
-    HideUnusedOamEntries(gOamBuffer);
+    gOamBuffer->HideUnused();
 }
 
 /* Moves the lines up, freeing those that have left the screen; then,
@@ -493,7 +494,7 @@ void Credits::LoadLogos()
             }
         }
         delete[] pal;
-        ClaimPaletteSlot(gPaletteCache, slot);
+        gPaletteCache->ClaimSlot(slot);
         logo->palette = slot;
         slot++;
     }
@@ -503,8 +504,8 @@ void Credits::CommitFrame()
 {
     CommitDispcnt();
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
-    UploadPaletteCache(gPaletteCache);
-    CommitOamBuffer(gOamBuffer);
+    gPaletteCache->Upload();
+    gOamBuffer->Commit();
     FlushVramDmaQueue();
 }
 

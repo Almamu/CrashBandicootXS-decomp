@@ -36,7 +36,7 @@ void EnemyCtrl::UpdateShooter()
         return;
     }
 
-    part = sprite;
+    part = target;
     if (part->animDone != 0) {
         switch (mode) {
         case 2:

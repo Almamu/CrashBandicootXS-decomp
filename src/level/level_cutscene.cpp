@@ -52,8 +52,8 @@ extern "C" {
 LevelState::~LevelState()
 {
     FreeVramDmaQueue();
-    delete (OamBuffer *)gOamBuffer;
-    delete (ObjVramCursor *)gObjVramCursor;
+    delete gOamBuffer;
+    delete gObjVramCursor;
     if (gInput != NULL) /* KeyInput has no destructor: `delete` alone tests nothing */
         delete (KeyInput *)gInput;
     DisableMusicVCountIrq(gAudioContext);
@@ -61,11 +61,11 @@ LevelState::~LevelState()
         DestroyAudioContext(gAudioContext, 3);
     delete gLargeFont;
     delete gSmallFont;
-    delete (SpriteRenderer *)gSpriteRenderer;
-    delete (SpriteBankSet *)gSpriteBankSet;
-    delete (PaletteCache *)gPaletteCache;
+    delete gSpriteRenderer;
+    delete gSpriteBankSet;
+    delete gPaletteCache;
     delete (LevelEntityFlags *)gEntityFlags;
-    delete (PaletteCycles *)gPaletteCycles;
+    delete gPaletteCycles;
     gLevelStateSingleton = 0;
 }
 
@@ -127,10 +127,10 @@ void PlayCutscene(void *self, s32 idx)
     REG_BG2PD = 0x100;
     REG_BG2X = zero;
     REG_BG2Y = zero;
-    FreeUnlockedPaletteSlots(gPaletteCache);
+    gPaletteCache->FreeUnlockedSlots();
     gSmallFont->SetTileBase(0x200);
     gSmallFont->ResetPalette();
-    UploadPaletteCache(gPaletteCache);
+    gPaletteCache->Upload();
     InitCutscenePlayer(&f.pager);
     f.pager.font = gSmallFont;
     {

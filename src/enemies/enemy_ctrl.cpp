@@ -24,14 +24,14 @@ extern "C" {
 void EnemyCtrl::SetMotionY(s32 mode)
 {
     modeA = mode;
-    Ctrl::StartTargetMotionYFromSet(sprite, mode);
+    Ctrl::StartTargetMotionYFromSet(target, mode);
 }
 
 /* The same with the X record. */
 void EnemyCtrl::SetMotionX(s32 mode)
 {
     modeB = mode;
-    Ctrl::StartTargetMotionXFromSet(sprite, mode);
+    Ctrl::StartTargetMotionXFromSet(target, mode);
 }
 
 /* Sets the animation mode: plays `anims[mode]` on the target, through
@@ -39,7 +39,7 @@ void EnemyCtrl::SetMotionX(s32 mode)
 void EnemyCtrl::SetAnimMode(s32 m)
 {
     mode = m;
-    SetTargetAnim(sprite, anims[m]);
+    SetTargetAnim(target, anims[m]);
 }
 
 /* The three oscillators move the target along a sine wave
@@ -65,7 +65,7 @@ void EnemyCtrl::UpdateOscillateX()
     s32 t = __udivsi3(INT_TO_Q8(gRoomFrameCount), period);
     MATCH_HOLD_REG(s32, v, r2);
     s32 w;
-    struct ctrl_target *part;
+    MovingSprite *part;
 
     w = Wave(table, t, phase - 0x100);
     v = w * amplitude;
@@ -82,7 +82,7 @@ void EnemyCtrl::UpdateOscillateX()
  * in r5. */
 void EnemyCtrl::UpdateBob()
 {
-    MATCH_HOLD_REG(struct ctrl_target *, part, r3) = target;
+    MATCH_HOLD_REG(MovingSprite *, part, r3) = target;
     const s16 *table = gSineTable;
     u32 t;
     s32 ph;
@@ -99,7 +99,7 @@ void EnemyCtrl::UpdateBob()
 
 void EnemyCtrl::UpdateOscillateY()
 {
-    struct ctrl_target *part = target;
+    MovingSprite *part = target;
     MATCH_HOLD_REG(const s16 *, table, r6) = gSineTable;
     s32 t = __udivsi3(INT_TO_Q8(gRoomFrameCount), period);
 
@@ -135,7 +135,7 @@ MovingSprite *LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e, MovingS
  * slot. */
 void EnemyCtrl::Attach(MovingSprite *part)
 {
-    sprite = part;
+    target = part;
 }
 
 /* A sound's volume at (x, y), in pixels: full (0x100) within 0x20

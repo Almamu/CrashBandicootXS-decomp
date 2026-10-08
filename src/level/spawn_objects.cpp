@@ -3,6 +3,7 @@
 #include "crate.hpp"
 #include "boss_ctrl.hpp"
 #include "enemy_ctrl.hpp"
+#include "level_select.hpp"
 
 extern "C" {
 #include "menus.h"
@@ -43,7 +44,7 @@ void SpawnMegaMix(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->ResetFrameTimer();
     part->ResetFrameIndex();
     part->SetAnimDone(0);
-    SetPalette(part, GetPaletteSlot(gPaletteCache, part->bank->anims->paletteId));
+    SetPalette(part, gPaletteCache->GetSlot(part->bank->anims->paletteId));
     part->mirrorFlags.mirrorX = 0;
     part->mirrorFlags.mirrorY = 0;
     hdr = new MegaMixCtrl;
@@ -158,10 +159,11 @@ void SpawnLargePlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     Platform::Create(arg0, arg1, arg2, arg3, 0);
 }
 
-/* Plain tail-call trampoline to `SpawnLaunchPad` (still raw). */
+/* Plain tail-call trampoline to LaunchPad::Spawn (SpawnLaunchPad,
+ * level_select.cpp). */
 void SpawnLaunchPadEntity(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    SpawnLaunchPad(arg0, arg1, arg2, arg3);
+    LaunchPad::Spawn(arg0, arg1, arg2, arg3);
 }
 
 /* The spawner of entity types 0x0D-0x0F, 0x11, 0x36, 0x3C, 0x3E and 0x46

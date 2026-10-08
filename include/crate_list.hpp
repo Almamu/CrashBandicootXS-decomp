@@ -8,10 +8,9 @@
  *              src/crates/crate_list*.cpp, crate_grid_*.cpp,
  *              crate_player_collide.cpp
  *
- * crates.h's `struct pool_manager`, `struct pool_node` and `struct
- * pool_link` are the C views, for the files that are still C and three of crate_break.cpp's loops; each class checks
- * its size against its view below. The C prototypes (crates.h) keep the C names; cxx_symbols.txt
- * maps the methods to them.
+ * The classes have no C view (crates.h keeps `struct pool_init_node`, a
+ * codegen view of the nodes, below). cxx_symbols.txt maps the methods to
+ * their C names.
  *
  * `#pragma interface`: no class here has a vtable, so there is none to emit;
  * the pragma keeps g++ from emitting out-of-line copies of the inline
@@ -46,7 +45,7 @@ struct CrateGridNode {
     u8 mark2;            // 0x11 - handled by Draw
 };
 
-COMPILE_TIME_ASSERT(crate_list_hpp, sizeof(CrateGridNode) == sizeof(struct pool_node));
+COMPILE_TIME_ASSERT(crate_list_hpp, sizeof(CrateGridNode) == 0x14);
 
 /* An entry of the free list: a node not in use, and the next entry. */
 struct CrateGridLink {
@@ -54,7 +53,7 @@ struct CrateGridLink {
     CrateGridLink *next; // 0x04
 };
 
-COMPILE_TIME_ASSERT(crate_list_hpp, sizeof(CrateGridLink) == sizeof(struct pool_link));
+COMPILE_TIME_ASSERT(crate_list_hpp, sizeof(CrateGridLink) == 8);
 
 /* The crate list (`gCrateList`, play_room.cpp allocates 0x818 bytes for
  * 0xC0 crates): `slots` holds the listed sprites (`count` of them, up to
@@ -68,14 +67,14 @@ COMPILE_TIME_ASSERT(crate_list_hpp, sizeof(CrateGridLink) == sizeof(struct pool_
 class CrateList
 {
 public:
-    s32 count;                 // 0x000 - pool_manager's activeCount
+    s32 count;                 // 0x000
     s32 capacity;              // 0x004
-    Crate **slots;             // 0x008 - slotArray
-    CrateGridNode *nodes;      // 0x00C - nodeArray
-    CrateGridNode *heads[256]; // 0x010 - gridHead
-    CrateGridNode *tails[256]; // 0x410 - gridTail
-    CrateGridLink *links;      // 0x810 - freeListArray
-    CrateGridLink *freeHead;   // 0x814 - freeListHead
+    Crate **slots;             // 0x008
+    CrateGridNode *nodes;      // 0x00C
+    CrateGridNode *heads[256]; // 0x010
+    CrateGridNode *tails[256]; // 0x410
+    CrateGridLink *links;      // 0x810
+    CrateGridLink *freeHead;   // 0x814
 
     CrateList(s32 capacity); // InitCrateList (src/objects/part_list.cpp)
     ~CrateList();            // DestroyCrateList
@@ -199,12 +198,12 @@ public:
     }
 };
 
-COMPILE_TIME_ASSERT(crate_list_hpp, sizeof(CrateList) == sizeof(struct pool_manager));
+COMPILE_TIME_ASSERT(crate_list_hpp, sizeof(CrateList) == 0x818);
 
 /* gCrateList (globals.h) as the class. */
 static inline CrateList *Crates()
 {
-    return (CrateList *)gCrateList;
+    return gCrateList;
 }
 
 #endif /* !GUARD_CRATE_LIST_HPP */

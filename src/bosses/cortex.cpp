@@ -1,3 +1,4 @@
+#include "bg_layer.hpp"
 #include "boss_ctrl.hpp"
 #include "platform.hpp"
 #include "player.hpp"
@@ -516,7 +517,7 @@ void CortexShotCtrl::Update(MovingSprite *part)
 
             for (i = 0; i < n; i++) {
                 MovingSprite *e = (MovingSprite *)gCollidableList->items[i];
-                struct aabb c = GetSpriteHitbox((struct box_part *)e);
+                struct aabb c = e->GetAnimHitbox();
 
                 if (AabbOverlaps(&c, &b)) {
                     boss->SetMode(2);

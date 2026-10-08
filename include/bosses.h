@@ -60,7 +60,6 @@ struct hovercraft_attack {
  * .c files that use them). */
 struct anim_box;
 struct entry_set;
-struct gobj;
 
 /* src/bosses/airship.cpp */
 extern void SteerAirship(void);
@@ -286,7 +285,7 @@ extern const struct anim_frame_record gHovercraftKeyframes[1];
  * in actor_pmf_17c450.cpp */
 extern void (*const gHovercraftStateFuncs[6])(void);
 
-/* src/data/player_pmf_16c250.c */
+/* src/data/player_pmf_16c250.cpp */
 extern const struct entry_set gMegaMixMotionSet;
 
 /* The {a, b} motion record index pairs (src/data/entry_set_16c418.c):

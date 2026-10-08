@@ -272,13 +272,13 @@ LevelState::LevelState()
     {
         SpriteBankSet *banks;
 
-        gSpriteBankSet = (struct sprite_bank_set *)(banks = new SpriteBankSet);
+        gSpriteBankSet = (banks = new SpriteBankSet);
         banks->table = &gSpriteBankTable;
     }
     {
         PaletteCache *cache;
 
-        gPaletteCache = (struct palette_cache *)(cache = new PaletteCache);
+        gPaletteCache = (cache = new PaletteCache);
         cache->SetSource(gSpriteBankTable.paletteCount, gSpriteBankTable.palettes);
     }
     {
@@ -289,11 +289,11 @@ LevelState::LevelState()
         *font = new LargeFont;
     }
     AllocVramDmaQueue();
-    gOamBuffer = (struct oam_shadow_buffer *)new OamBuffer;
-    gObjVramCursor = (struct vram_upload_cursor *)new ObjVramCursor(0);
+    gOamBuffer = new OamBuffer;
+    gObjVramCursor = new ObjVramCursor(0);
     gInput = new KeyInput;
     gEntityFlags = new LevelEntityFlags;
-    gPaletteCycles = (struct palette_cycler *)new PaletteCycles;
+    gPaletteCycles = new PaletteCycles;
     {
         u16 *dispcnt = (u16 *)gDispcnt;
         u16 zero = 0;

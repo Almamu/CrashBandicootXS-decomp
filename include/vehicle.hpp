@@ -101,7 +101,7 @@ public:
     static const StateFunc stateFuncs[14];
 };
 
-COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(PolarPlayer) == sizeof(struct actor_self));
+COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(PolarPlayer) == sizeof(ActorSelf));
 
 class PolarCheckpointText : public ActorSelf
 {
@@ -172,6 +172,10 @@ public:
         RestartAnim(0x12);
     }
 };
+
+/* src/actor/actor_anim.cpp: the C-linkage copy of PolarCrate's inline
+ * destructor, which the g++-emitted vtables point at (cxx_symbols.txt). */
+extern "C" void DestroyPolarCrate(PolarCrate *self, u32 flags);
 
 inline PolarCrate::~PolarCrate()
 {

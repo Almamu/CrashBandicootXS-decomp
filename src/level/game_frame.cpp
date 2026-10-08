@@ -175,7 +175,7 @@ void UpdateGameFrame(struct level_state *self)
             } else if (!(u8)SelectRoom(&self->room)) {
                 break;
             }
-            FreeUnlockedPaletteSlots(gPaletteCache);
+            gPaletteCache->FreeUnlockedSlots();
             gHud->ConfigureParts(0);
             gRoomFrameCount = 0;
             SetLevelBoss(self, 0);

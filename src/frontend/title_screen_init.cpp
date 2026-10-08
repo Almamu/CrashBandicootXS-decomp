@@ -1,3 +1,4 @@
+#include "sprite_obj.hpp"
 #include "frontend.hpp"
 
 extern "C" {
@@ -38,10 +39,10 @@ TitleScreen::TitleScreen()
     struct dma_regs *dma;
 
     font = gSmallFont;
-    ResetOamBuffer(gOamBuffer);
-    HideUnusedOamEntries(gOamBuffer);
+    gOamBuffer->Reset();
+    gOamBuffer->HideUnused();
     WaitForVBlank();
-    CommitOamBuffer(gOamBuffer);
+    gOamBuffer->Commit();
 
     *(vu32 *)REG_ADDR_BLDCNT = 0xff;
     REG_BLDY = 0x10;
@@ -218,7 +219,7 @@ void TitleScreen::UpdateLogoPieces()
     }
 }
 
-static inline void SetAffine(struct oam_shadow_buffer *buf, s32 m, u16 pa, u16 pb, u16 pc, u16 pd)
+static inline void SetAffine(OamBuffer *buf, s32 m, u16 pa, u16 pb, u16 pc, u16 pd)
 {
     s32 idx = m * 4;
 
@@ -275,10 +276,10 @@ void TitleScreen::DrawLogoPieces()
             oamA.y = Q16_TO_INT(slot->posB.q) - 16;
             oamA.tileNum = 0x1c0;
             oamA.x = Q16_TO_INT(slot->posA.q) - 0x20 - Q16_TO_INT(slot->velA << 5);
-            AddOamEntry(gOamBuffer, &oamA);
+            gOamBuffer->Add(&oamA);
             oamA.tileNum += 8;
             oamA.x = Q16_TO_INT(slot->posA.q) - 0x20;
-            AddOamEntry(gOamBuffer, &oamA);
+            gOamBuffer->Add(&oamA);
             oamA.tileNum += 8;
             {
                 s32 px = Q16_TO_INT(slot->posA.q);
@@ -286,7 +287,7 @@ void TitleScreen::DrawLogoPieces()
 
                 oamA.x = px + dx;
             }
-            AddOamEntry(gOamBuffer, &oamA);
+            gOamBuffer->Add(&oamA);
             matrix = 2;
         }
     }
@@ -333,7 +334,7 @@ void TitleScreen::DrawLogoPieces()
                 oamB.x = px + dx;
             }
             oamB.y = Q16_TO_INT(slot->posB.q) - 32 + off;
-            AddOamEntry(gOamBuffer, &oamB);
+            gOamBuffer->Add(&oamB);
         }
     }
     {
@@ -380,7 +381,7 @@ void TitleScreen::DrawLogoPieces()
                     oamC.x = x;
                     oamC.y = y;
                     if (slot->active)
-                        AddOamEntry(gOamBuffer, &oamC);
+                        gOamBuffer->Add(&oamC);
                 }
                 oamC.tileNum += 0x10;
             }

@@ -11,16 +11,17 @@
  *   PaletteCycles   src/gfx/palette_cycle.cpp
  *   HudPart         src/gfx/palette_cycle.cpp (gHudPartVtable)
  *
- * The C views stay for the C files, each checked against its class
- * below: objects.h's `struct collision_queue` and gfx.h's `struct
- * palette_cycler`. The C prototypes (objects.h, gfx.h) keep the C
- * names; cxx_symbols.txt maps the methods to them. The HUD that owns the
+ * objects.h's `struct collision_queue` stays the C view of the
+ * CollisionQueue (struct player embeds it), checked below.
+ * cxx_symbols.txt maps the methods to their C names. The HUD that owns the
  * HudParts is hud.hpp's Hud.
  *
  * No `#pragma interface`: g++ emits HudPart's vtable in
  * palette_cycle.cpp (see ctrl.hpp). */
 
 #include "sprite_obj.hpp"
+
+class Crate;
 
 extern "C" {
 #include "core.h"
@@ -43,30 +44,37 @@ public:
     CollisionQueue();  // ResetCollisionQueue: empties it (Player's constructor)
     ~CollisionQueue(); // DestroyCollisionQueue
     void Resolve();    // ResolveCollisionCandidates
-    void Add(struct crate *neighbor, s32 kind, s32 code, s32 edge, s32 depth, struct e08c_pos pos,
-             s32 hit, struct byte_arg p20,
+    void Add(Crate *neighbor, s32 kind, s32 code, s32 edge, s32 depth, struct e08c_pos pos, s32 hit,
+             struct byte_arg p20,
              struct byte_arg p21); // AddCollisionCandidate
 };
 
 COMPILE_TIME_ASSERT(part_list_hpp, sizeof(CollisionQueue) == sizeof(struct collision_queue));
 
-/* Up to three palette colour cycles (gPaletteCycles; gfx.h's `struct
- * palette_cycler` is its C view, and has the full description): every
- * `periods[i]` frames, the colours of `targets[i]` at the indices
- * `lists[i]` holds rotate by one place, forwards or backwards by
- * `direction`. */
+/* Up to three palette colour cycles (gPaletteCycles, `new
+ * PaletteCycles`, 0x48 bytes). run_room.cpp adds them (Add) with
+ * `targets` = BG palette RAM and `lists` = the palette indices to cycle;
+ * every `periods[i]` = 60 / rate frames, Tick rotates the colours of
+ * `targets[i]` at the indices `lists[i]` holds by one place (when
+ * `gRoomFrameCount % periods[i] == 0`), forwards or backwards by
+ * `direction`. Add only appends at `count`, with no wraparound: the
+ * caller empties the cycles (Clear) between sets. (docs/rom_map.md's "fx"
+ * investigation first read the pair as a particle queue and `rate` as an
+ * angle; `__divsi3` is plain division. docs/matching/
+ * issue-45-hud-stat-widget-dispatcher.md, "Third pass", settled the
+ * fields.) */
 class PaletteCycles
 {
 public:
     u8 active; // 0x00
     u8 unk_01[3];
-    s32 fields_e[3]; // 0x04 - only ever cleared (Add)
+    s32 fields_e[3]; // 0x04 - only ever cleared (Add); never read
     u16 *targets[3]; // 0x10 - the colours each cycle rotates
     u16 *lists[3];   // 0x1C - the indices into targets[i], counts[i] of them
     s32 periods[3];  // 0x28 - 60 / rate: frames per step
-    s32 counts[3];   // 0x34
+    s32 counts[3];   // 0x34 - `lists[i]`'s length
     s32 count;       // 0x40 - the cycles in use (0-3)
-    u8 direction;    // 0x44
+    u8 direction;    // 0x44 - 0/1: which end of `lists[i]` the rotation starts from
     u8 unk_45[3];
 
     PaletteCycles();  // InitPaletteCycles
@@ -77,7 +85,7 @@ public:
     void Clear();                        // ClearPaletteCycles
 };
 
-COMPILE_TIME_ASSERT(part_list_hpp, sizeof(PaletteCycles) == sizeof(struct palette_cycler));
+COMPILE_TIME_ASSERT(part_list_hpp, sizeof(PaletteCycles) == 0x48);
 
 /* One HUD digit or icon (gHudPartVtable, 0x40 bytes): a UiSprite whose `frame` is -1 while it is hidden. */
 class HudPart : public UiSprite

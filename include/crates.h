@@ -1,18 +1,18 @@
 #ifndef GUARD_CRATES_H
 #define GUARD_CRATES_H
 
-/* The crates subsystem (src/crates/): the crate object (`struct crate`,
- * crate.h), its collision and breaking, the slot crate, and the crate
- * list (the bucketed grid of crates and other collidable parts).
+/* The crates subsystem (src/crates/): the crate object (class Crate,
+ * crate.hpp; crate.h has its C types), its collision and breaking, the
+ * slot crate, and the crate list (the bucketed grid of crates and other
+ * collidable parts).
  *
  * Declarations here are the functions' real prototypes, copied from
  * their definitions. A .c file that needs a different local declaration
  * for codegen keeps it as an asm-label alias with a `codegen:` comment
  * (docs/headers_plan.md).
  *
- * The crate list (`struct pool_manager`, below) is set up by InitCrateList,
- * which src/objects/part_list.cpp holds for ROM order. Its code is C++
- * (`CrateList`, include/crate_list.hpp); the structs here are the C views. */
+ * The crate list (`CrateList`, include/crate_list.hpp) is set up by
+ * InitCrateList, which src/objects/part_list.cpp holds for ROM order. */
 
 #include "core.h"
 #include "math_util.h"
@@ -25,34 +25,17 @@
 #include "constants/crates.h"
 #include "constants/entities.h"
 
-struct actor;
-struct box_part;
-struct crate;
-struct part_list;
 
-/* One entry of the crate list's free list: a grid node not in use (C
- * view of crate_list.hpp's CrateGridLink). */
+/* One entry of the crate list's free list (crate_list.hpp's
+ * CrateGridLink), as `struct pool_init_node` below points at it. */
 struct pool_link {
     struct pool_node *node; // 0x00
     struct pool_link *next; // 0x04
 };
 
-/* One node of the crate list's grid (0x14 bytes): a listed part, the
- * next node in its bucket, and the free-list entry it was taken from.
- * UpdateCrateList also files a large part in bucket 255 under a second
- * node (`link`), and DrawCrateList/UpdateCrateList mark the nodes they
- * have handled. C view of crate_list.hpp's CrateGridNode. */
-struct pool_node {
-    struct box_part *data;  // 0x00
-    struct pool_node *next; // 0x04
-    struct pool_link *wrap; // 0x08
-    struct pool_node *link; // 0x0C
-    u8 mark;                // 0x10
-    u8 mark2;               // 0x11
-};
-
-/* codegen: `struct pool_node` with untyped fields, the view
- * CrateList::ResetGrid (include/crate_list.hpp) zeroes the nodes through.
+/* codegen: a grid node (crate_list.hpp's CrateGridNode) with untyped
+ * fields, the view CrateList::ResetGrid (include/crate_list.hpp) zeroes
+ * the nodes through.
  * Through the real node pointer fields, gcc takes the zeroing stores as
  * possible writes to the list's `nodes` and reloads it
  * (docs/headers_plan.md, "Codegen findings"). */
@@ -62,28 +45,6 @@ struct pool_init_node {
     struct pool_link *wrap;
     void *link;
     u8 mark;
-};
-
-/* The crate list (`gCrateList`): a fixed-slot pool of the crates and
- * other collidable parts, set up by InitCrateList. `slotArray` holds the
- * active objects (bounded by `activeCount`, up to `capacity`);
- * `nodeArray` is a flat array of `capacity` grid nodes; `gridHead`/
- * `gridTail` are a 256-bucket spatial hash grid, each bucket a
- * singly-linked list of nodes (head set once when a bucket leaves empty,
- * tail always updated for O(1) append - see AddCrateGridNode);
- * `freeListArray` is `capacity` free-list entries threaded into a
- * singly-linked list, `freeListHead` pointing at its first still-free
- * entry. ResetCrateList and InitCrateList saw it as `struct pool_init`.
- * The C view of crate_list.hpp's CrateList, for the C files and three of crate_break.cpp's loops. */
-struct pool_manager {
-    s32 activeCount;                 // 0x000
-    s32 capacity;                    // 0x004
-    struct box_part **slotArray;     // 0x008
-    struct pool_node *nodeArray;     // 0x00C
-    struct pool_node *gridHead[256]; // 0x010
-    struct pool_node *gridTail[256]; // 0x410
-    struct pool_link *freeListArray; // 0x810
-    struct pool_link *freeListHead;  // 0x814
 };
 
 /* The crate tables, indexed by crate kind (src/data/object_tables_16bb6c.c). */
@@ -99,39 +60,17 @@ extern const u8 gAttackKindBreakLimited[8];
 extern u8 gCrateListChanged;
 
 /* src/crates/crate_break.cpp */
-extern void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 depth,
-                                struct e08c_pos pos, s32 hit, struct byte_arg p20,
-                                struct byte_arg p21, struct byte_arg pforced);
-extern void BreakCrate(struct crate *self, u32 arg1);
-extern void ExplodeCrate(struct crate *self, u8 near);
 extern void UpdateCrates(void);
 extern void DetonateNitroCrates(void);
 extern void BreakCratesInArea(s32 x, s32 y, s32 dist, s32 height);
-extern void UpdateTntCountdown(struct crate *self);
 
 /* src/crates/crate.cpp */
 extern void ResolvePlayerCollisions(void);
 /* FindLineCrossingYMajor and FindLineCrossingXMajor are C++ functions
  * (include/crate.hpp). */
 
-/* src/crates/crate_hit.cpp */
-extern u8 PlayerHitboxOverlapsAt(struct crate *self, struct hitbox_quad *quad, struct aabb *box,
-                                 s32 xOffset, s32 yOffset);
-
-/* src/crates/crate_list_draw.cpp */
-extern void DrawCrateList(struct pool_manager *manager);
-
-/* src/crates/crate_list_reset.cpp */
-extern void ResetCrateList(struct pool_manager *m);
-
-/* src/crates/crate_list_update.cpp */
-extern void UpdateCrateList(struct pool_manager *manager);
-
 /* src/crates/crate_reset.cpp */
 extern s32 FindLineCrossing(s32 pos, s32 count, s32 a, s32 b, s32 limit);
-
-/* src/crates/crate_stack.cpp */
-extern u8 IsCrateKindBreakable(void *arg0, u32 idx);
 
 /* src/crates/crate_time_trial.cpp */
 extern void ConvertCratesForTimeTrial(void);

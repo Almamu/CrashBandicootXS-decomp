@@ -40,10 +40,9 @@ extern void PolarReloadPlayerTiles(void *arg0);
 extern void JetpackReachCourseEnd(void *arg0);
 extern void PolarReachCourseEnd(void *arg0);
 
-/* src/actor/actor_anim.cpp: the C-linkage copies of PolarCrate's inline
- * destructor and of the balloon crate kinds' implicit ones (vehicle.hpp),
- * which the g++-emitted vtables point at (cxx_symbols.txt) */
-extern void DestroyPolarCrate(struct actor_self *self, u32 flags);
+/* src/actor/actor_anim.cpp: the C-linkage copies of the balloon crate
+ * kinds' implicit destructors (vehicle.hpp), which the g++-emitted
+ * vtables point at (cxx_symbols.txt); PolarCrate's is in vehicle.hpp */
 extern void DestroyJetpackHealthCrate(void *self, u32 flags);
 extern void DestroyJetpackTimeCrate(void *self, u32 flags);
 extern void DestroyJetpackQuestionCrate(void *self, u32 flags);

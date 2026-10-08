@@ -59,7 +59,7 @@ void ActionCtrl::KillPlayer(s32 anim)
     part->f.b.vulnerable = 0;
     part->dead = 1;
     LoseLife(gLevelState);
-    LoadPaletteSlot(gPaletteCache, part->palette, part->anim->records[part->tag].paletteId);
+    gPaletteCache->LoadSlot(part->palette, part->anim->records[part->tag].paletteId);
 }
 
 /* Update calls this when the player's `slippery` changed. On slippery
@@ -100,9 +100,9 @@ void ActionCtrl::UpdateSkidAnim()
         tag = 0x26;
         player->tag = tag;
     restart:
-        ResetSpriteFrameTimer(player);
-        ResetSpriteFrameIndex(player);
-        SetSpriteAnimDone(player, 0);
+        player->ResetFrameTimer();
+        player->ResetFrameIndex();
+        player->SetAnimDone(0);
     } else {
         s32 tag = player->tag;
 

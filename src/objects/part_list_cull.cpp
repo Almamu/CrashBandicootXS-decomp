@@ -1,10 +1,10 @@
+#include "bg_layer.hpp"
 #include "part_list.hpp"
 
 extern "C" {
 #include "math_util.h"
 #include "globals.h"
 #include "level.h"
-#include "bg_scroll_layer.h"
 }
 
 /* The part list's per-frame passes (#664, part 7c; include/part_list.hpp).
@@ -18,7 +18,7 @@ void PartList::Cull()
 {
     s32 i;
     struct aabb screen;
-    struct bg_scroll_layer *cam = gLevelLayers->layer0;
+    BgLayer *cam = gLevelLayers->layer0;
 
     {
         s32 cx = INT_TO_Q8(cam->x);

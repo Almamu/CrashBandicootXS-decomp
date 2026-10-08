@@ -1,4 +1,5 @@
 #include "part_list.hpp"
+#include "crate.hpp"
 #include "player.hpp"
 
 extern "C" {
@@ -46,7 +47,7 @@ void CollisionQueue::Resolve()
         forced = 0;
 
         for (i = 1; i < count; i++) {
-            struct crate *n = candidates[i].neighbor;
+            Crate *n = candidates[i].neighbor;
             s32 dx = n->x;
             s32 dy = n->y;
             s32 d;
@@ -82,7 +83,7 @@ void CollisionQueue::Resolve()
  * (crate_break.cpp). The two byte arguments are one-byte structs (the
  * ROM reads them with `ldrb` from their stack words, both addresses
  * first); a `u8` parameter loads the whole word and narrows it. */
-void CollisionQueue::Add(struct crate *neighbor, s32 kind, s32 code, s32 edge, s32 depth,
+void CollisionQueue::Add(Crate *neighbor, s32 kind, s32 code, s32 edge, s32 depth,
                          struct e08c_pos pos, s32 hit, struct byte_arg p20, struct byte_arg p21)
 {
     u8 f20 = p20.v;

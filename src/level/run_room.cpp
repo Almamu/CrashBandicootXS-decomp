@@ -1,3 +1,5 @@
+#include "bg_layer.hpp"
+#include "crate_list.hpp"
 #include "player.hpp"
 #include "hud.hpp"
 #include "platform.hpp"
@@ -37,7 +39,7 @@ extern "C" {
  * `state==0` or `state>6` - taking the `default` path below):
  *
  * - **state 1 or 6** (cases 0 and 5 share one code block): resets the
- *   `gPaletteCycles` "fx queue" (`ClearPaletteCycles`, the `palette_cycler`
+ *   `gPaletteCycles` "fx queue" (`ClearPaletteCycles`, the PaletteCycles
  *   struct `palette_cycle.cpp` documents) then fires it **twice** via
  *   `AddPaletteCycle(queue, (u16 *)0x05000000, gThemePaletteCycle1A, 0x10,
  *   9, 0)` and `AddPaletteCycle(queue, (u16 *)0x05000000, gStaticData_
@@ -168,9 +170,8 @@ struct fx_direction {
 
 /* codegen: AddPaletteCycle takes a u8 `direction` (gfx.h); passed as a
  * u8 it is stored to the stack slot as a word. docs/headers_plan.md */
-extern void AddPaletteCycle_fx(struct palette_cycler *self, u16 *targets, const u16 *lists,
-                               s32 rate, s32 count,
-                               struct fx_direction direction) asm("AddPaletteCycle");
+extern void AddPaletteCycle_fx(PaletteCycles *self, u16 *targets, const u16 *lists, s32 rate,
+                               s32 count, struct fx_direction direction) asm("AddPaletteCycle");
 
 #define FX_CYCLE(lists, rate, count, dir) \
     AddPaletteCycle_fx(gPaletteCycles, PAL_RAM, (lists), (rate), (count), \
@@ -194,10 +195,10 @@ static inline void RestartPlayerAnim(Player *p, s32 anim)
 
 static inline void RefreshPlayerTiles(void)
 {
-    struct palette_cache *cache = gPaletteCache;
+    PaletteCache *cache = gPaletteCache;
     Player *p = gPlayer;
 
-    LoadPaletteSlot(cache, p->palette, p->bank->anims[p->tag].paletteId);
+    cache->LoadSlot(p->palette, p->bank->anims[p->tag].paletteId);
 }
 
 s32 RunRoom(struct level_progress *self)
@@ -208,7 +209,7 @@ s32 RunRoom(struct level_progress *self)
     gPlayer->ResetForRoom();
     gCamera->target = (struct camera_target *)gPlayer;
     gCamera->mode = ret;
-    LoadRoom(gLevelLayers, self->cat);
+    gLevelLayers->LoadRoom(self->cat);
     if (!gLevelTable[self->level].isBoss)
         CheckAllCratesBroken(gLevelState);
     if (IsSwitchPressed(gLevelState))
@@ -218,21 +219,21 @@ s32 RunRoom(struct level_progress *self)
 
     switch (gLevelTable[self->level].theme) {
     case 2:
-        ClearPaletteCycles(gPaletteCycles);
+        gPaletteCycles->Clear();
         FX_CYCLE(gThemePaletteCycle2, 6, 5, 1);
         break;
     case 1:
     case 6:
-        ClearPaletteCycles(gPaletteCycles);
+        gPaletteCycles->Clear();
         FX_CYCLE(gThemePaletteCycle1A, 0x10, 9, 0);
         FX_CYCLE(gThemePaletteCycle1B, 0x14, 9, 0);
         break;
     case 3:
-        ClearPaletteCycles(gPaletteCycles);
+        gPaletteCycles->Clear();
         FX_CYCLE(gThemePaletteCycle3, 0xA, 0x10, 0);
         break;
     case 5:
-        ClearPaletteCycles(gPaletteCycles);
+        gPaletteCycles->Clear();
         FX_CYCLE(gThemePaletteCycle5, 0x14, 5, 0);
         break;
     default:
@@ -249,7 +250,7 @@ s32 RunRoom(struct level_progress *self)
     gPlayer->palette = gPlayer->GetAnimPaletteSlot();
     RefreshPlayerTiles();
     SnapCamera(gCamera);
-    ResetLevelLayers(gLevelLayers);
+    gLevelLayers->Reset();
 
     if (self->cat->kind == ROOM_KIND_ON_FOOT) {
         if ((IsInBonusRound(gLevelState) && (u8)IsInBonusRoom(self)) ||
@@ -262,10 +263,10 @@ s32 RunRoom(struct level_progress *self)
             gHud->ShowCounters();
         }
     }
-    CullPartList(gForegroundList);
-    CullPartList(gTouchableList);
-    CullPartList(gCollidableList);
-    CullPartList(gDecorationList);
+    gForegroundList->Cull();
+    gTouchableList->Cull();
+    gCollidableList->Cull();
+    gDecorationList->Cull();
     UpdateRoomFrame(self);
     SetDispcntMode(0);
     SetObjMapping1D();
@@ -295,14 +296,14 @@ s32 RunRoom(struct level_progress *self)
         }
         if (gKeys.all & 4)
             gHud->ShowCounters();
-        UpdatePartList(gForegroundList);
-        UpdatePartList(gUpdateOnlyPartList);
+        gForegroundList->Update();
+        gUpdateOnlyPartList->Update();
         if (gPlayer->IsNearCamera())
             gPlayer->Update();
-        UpdateCrateList(gCrateList);
-        UpdatePartList(gTouchableList);
-        UpdatePartList(gCollidableList);
-        UpdatePartList(gDecorationList);
+        gCrateList->Update();
+        gTouchableList->Update();
+        gCollidableList->Update();
+        gDecorationList->Update();
         gHud->UpdateSlides();
         if (gLevelState->timeTrial)
             TickLevelClock(gLevelState);
@@ -344,28 +345,28 @@ fade:
             SetCheckpoint(gLevelState, 0, &point.x);
         } else {
             s32 count = 0;
-            struct pool_manager **list;
+            CrateList **list;
 
             i = 0;
-            if (count < gCrateList->activeCount) {
+            if (count < gCrateList->count) {
                 list = &gCrateList;
                 do {
-                    Crate *e = (Crate *)(*list)->slotArray[i];
+                    Crate *e = (*list)->slots[i];
 
                     if (e->GetClassId() == 3 && e->kind == 0xA)
                         count++;
                     i++;
-                } while (i < (*list)->activeCount);
+                } while (i < (*list)->count);
             }
             AddPendingSwitchCrates(gLevelState, count);
         }
     }
-    ClearPartList(gUpdateOnlyPartList);
-    ResetCrateList(gCrateList);
-    ClearPartList(gTouchableList);
-    ClearPartList(gCollidableList);
-    ClearPartList(gDecorationList);
-    ClearPartList(gForegroundList);
+    gUpdateOnlyPartList->Clear();
+    gCrateList->Reset();
+    gTouchableList->Clear();
+    gCollidableList->Clear();
+    gDecorationList->Clear();
+    gForegroundList->Clear();
     HideBg0();
     HideBg1();
     HideBg2();

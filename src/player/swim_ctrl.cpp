@@ -189,7 +189,7 @@ void PlayerCtrl::KillPlayer(s32 anim)
     target->f.b.vulnerable = 0;
     target->dead = 1;
     LoseLife(gLevelState);
-    LoadPaletteSlot(gPaletteCache, target->palette, target->anim->records[target->tag].paletteId);
+    gPaletteCache->LoadSlot(target->palette, target->anim->records[target->tag].paletteId);
 }
 
 /* the out-of-line copy is SetDriftX */
@@ -255,9 +255,9 @@ static inline void ApplyLevel(PlayerCtrl *self)
         s32 f34 = t->stepTimer;
 
         *tag = gPlayerCtrlModeAnimRows[self->mode][self->tilt].anim;
-        ResetSpriteFrameTimer(t);
-        ResetSpriteFrameIndex(t);
-        SetSpriteAnimDone(t, 0);
+        t->ResetFrameTimer();
+        t->ResetFrameIndex();
+        t->SetAnimDone(0);
         RestoreFrame(self->target, frame, f34);
     } else {
         s32 frame;

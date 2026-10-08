@@ -67,7 +67,7 @@ struct level_entity_list {
  * `struct level_record`), at `params + paramOffsets[id]` (bytes) in the
  * room's entity list (gEntityFlags->list). After the flags come
  * per-type parameter words; `p` has one view per layout, named after
- * the part_ctrl setters spawn_enemies.cpp hands them to (SetEnemyRangeX:
+ * the EnemyCtrl setters spawn_enemies.cpp hands them to (SetEnemyRangeX:
  * `rangeX`/`rangeY` are pixels either side of the spawn point;
  * SetEnemyRangeXSpeed/SetEnemyRangeYSpeed: `speed`/`accel`;
  * SetEnemyAttackCycle: `idleTime`/`attackTime`/`cycleOffset`;

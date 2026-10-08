@@ -32,7 +32,7 @@ static inline void SetSlotFrame(HudPart *slot, s32 frame)
 
 static inline void SetSlotPos(HudPart *slot, const struct hud_pos *pos)
 {
-    SetEntityPixelPos((struct actor *)slot, pos->x, pos->y);
+    SetEntityPixelPos(slot, pos->x, pos->y);
 }
 
 /* InitHud. Builds `parts` (`new HudPart[35]`), each given the
@@ -89,7 +89,7 @@ Hud::Hud()
     {
         const struct sprite_anim *records = parts[13].bank->anims;
         const struct sprite_anim *rec = &records[parts[13].tag];
-        s32 palette = GetPaletteSlot(gPaletteCache, rec->paletteId);
+        s32 palette = gPaletteCache->GetSlot(rec->paletteId);
 
         parts[13].palette = palette;
     }
@@ -104,8 +104,8 @@ Hud::Hud()
  * finishes the two slots `InitHud` set up part of already (a
  * position/frame-index pair from a shared table, then the same
  * `field_29`-low-nibble update the pause menu's icons do
- * (Sprite::palette, pause_menu_pages_init.cpp) for the unrelated
- * `struct settings_icon_actor` family - `GetSpriteAnimPaletteSlot`'s result feeds the
+ * (Sprite::palette, pause_menu_pages_init.cpp) for their UI sprites -
+ * `GetSpriteAnimPaletteSlot`'s result feeds the
  * same low-nibble-preserving update here too), then loops over the
  * remaining slots (index 0-34 again) repositioning/re-clamping a
  * handful of specific ones (13, 22, 29 - byte offsets `0x340`/`0x580`/

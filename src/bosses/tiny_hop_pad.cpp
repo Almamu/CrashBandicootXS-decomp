@@ -1,3 +1,4 @@
+#include "bg_layer.hpp"
 #include "ctrl.hpp"
 #include "sprite_obj.hpp"
 

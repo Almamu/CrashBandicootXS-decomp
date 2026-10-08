@@ -1,3 +1,4 @@
+#include "crate_list.hpp"
 #include "crate.hpp"
 #include "spawners.hpp"
 
@@ -84,7 +85,7 @@ struct lk_point {
 
 static inline Crate *Slot(s32 i)
 {
-    return (Crate *)gCrateList->slotArray[i];
+    return gCrateList->slots[i];
 }
 
 void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list *list,
@@ -124,7 +125,7 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
     lk = links->links;
 
     {
-        for (i = gCrateList->activeCount - 1; i >= 0; i--) {
+        for (i = gCrateList->count - 1; i >= 0; i--) {
             Crate *actor = Slot(i);
             u16 id = actor->id;
             s32 j;
@@ -139,7 +140,7 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
                         s32 missing;
                         s32 m;
 
-                        for (k = gCrateList->activeCount - 1; k >= 0; k--) {
+                        for (k = gCrateList->count - 1; k >= 0; k--) {
                             Crate *other = Slot(k);
 
                             if (to == other->id) {
@@ -184,7 +185,7 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
             s32 got;
             s32 m;
 
-            for (k = 0; k < gCrateList->activeCount; k++) {
+            for (k = 0; k < gCrateList->count; k++) {
                 if ((Slot(k))->id == from) {
                     found = 1;
                     goto chk;
@@ -206,7 +207,7 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
                         if (to == lk[m].from) {
                             missing = 0;
                             next = (u16)lk[m].to;
-                            for (k2 = 0; k2 < gCrateList->activeCount; k2++) {
+                            for (k2 = 0; k2 < gCrateList->count; k2++) {
                                 /* Pinned: the ROM keeps the item pointer in
                                  * r0 and the id in r1. As a local temporary
                                  * the id is allocated first and takes r0. */
@@ -226,7 +227,7 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
                 if (got)
                     goto move;
                 if (missing) {
-                    for (k3 = 0; k3 < gCrateList->activeCount; k3++) {
+                    for (k3 = 0; k3 < gCrateList->count; k3++) {
                         Crate *a = Slot(k3);
 
                         if (a->id == to) {
@@ -252,7 +253,7 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
                 do {
                     p.x = actor->x;
                     pp->y = actor->y + lift;
-                    SetEntityPos((struct actor *)actor, p.x, pp->y);
+                    SetEntityPos(actor, p.x, pp->y);
                     actor = actor->GetAbove();
                 } while (actor != 0);
             }

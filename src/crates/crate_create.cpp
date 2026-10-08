@@ -187,7 +187,7 @@ Crate *Crate::Create(u16 id, u16 x, u16 y, u16 slot, u8 type)
             {
                 const struct sprite_anim *anim = &self->bank->anims[8];
 
-                GetPaletteSlot(gPaletteCache, anim->paletteId);
+                gPaletteCache->GetSlot(anim->paletteId);
             }
             self->slotState &= CRATE_SLOT_CLEAR_STAGE;
             self->slotState &= CRATE_SLOT_CLEAR_PHASE;

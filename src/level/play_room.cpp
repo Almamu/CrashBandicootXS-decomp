@@ -42,22 +42,22 @@ s32 PlayRoom(struct level_progress *self)
     CreateEntitySpawner();
     ClearRoomExit();
 
-    gUpdateOnlyPartList = (struct part_list *)new PartList(0x20);
-    gTouchableList = (struct part_list *)new PartList(0xc0);
-    gCrateList = (struct pool_manager *)new CrateList(0xc0);
-    gCollidableList = (struct part_list *)new PartList(0x80);
-    gDecorationList = (struct part_list *)new PartList(0x40);
-    gForegroundList = (struct part_list *)new PartList(0x40);
+    gUpdateOnlyPartList = new PartList(0x20);
+    gTouchableList = new PartList(0xc0);
+    gCrateList = new CrateList(0xc0);
+    gCollidableList = new PartList(0x80);
+    gDecorationList = new PartList(0x40);
+    gForegroundList = new PartList(0x40);
     gCamera = (struct camera *)operator new(0x18);
 
     {
-        struct level_layers *layers = (struct level_layers *)LevelLayers::Get();
+        LevelLayers *layers = LevelLayers::Get();
 
         gLevelLayers = layers;
     }
 
     gPlayer = new Player(0xffff, 0, 0, 0);
-    SetEntityPos((struct actor *)gPlayer, self->checkpointX, self->checkpointY);
+    SetEntityPos(gPlayer, self->checkpointX, self->checkpointY);
     gPlayer->f.bytes.flags |= 0x10;
     gPlayer->mirrorFlags.mirrorX = self->checkpointFlags;
 
@@ -132,15 +132,15 @@ s32 PlayRoom(struct level_progress *self)
 
     result = RunRoom(self);
 
-    delete (LevelLayers *)gLevelLayers;
+    delete gLevelLayers;
     operator delete(gCamera);
     delete gPlayer;
-    delete (PartList *)gForegroundList;
-    delete (PartList *)gDecorationList;
-    delete (PartList *)gCollidableList;
-    delete (CrateList *)gCrateList;
-    delete (PartList *)gTouchableList;
-    delete (PartList *)gUpdateOnlyPartList;
+    delete gForegroundList;
+    delete gDecorationList;
+    delete gCollidableList;
+    delete gCrateList;
+    delete gTouchableList;
+    delete gUpdateOnlyPartList;
 
     DestroyEntitySpawner();
 

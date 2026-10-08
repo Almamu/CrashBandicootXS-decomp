@@ -61,13 +61,13 @@ void SpriteRenderer::DrawAffinePieces(Sprite *part, s32 *pos)
     struct oam_attrs oam;
     s32 total = 0;
     struct piece_info *info = (struct piece_info *)part->GetFrame();
-    s32 tile = GetObjVramTile(gObjVramCursor);
+    s32 tile = gObjVramCursor->GetTile();
     s32 scale = part->affine;
     u16 pa;
     u16 pd;
     s32 idx;
     s32 k;
-    struct oam_shadow_buffer *buf;
+    OamBuffer *buf;
     s32 baseX, baseY, halfW, halfH, pullX, pullY;
     s32 i;
 
@@ -184,7 +184,7 @@ void SpriteRenderer::DrawAffinePieces(Sprite *part, s32 *pos)
                 oam.x = x;
                 oam.size = PieceSize7634(id);
                 oam.tileNum = tile;
-                AddOamEntry(gOamBuffer, &oam);
+                gOamBuffer->Add(&oam);
             }
         }
         if (PART_FLAG_SET(part, 28)) // 8bpp: twice the tiles
@@ -192,6 +192,5 @@ void SpriteRenderer::DrawAffinePieces(Sprite *part, s32 *pos)
         tile += tiles;
         total += tiles << 5;
     }
-    UploadObjVram(gObjVramCursor, (void *)(part->GetTileBase() + (info->u.packed & 0xffffff)),
-                  total);
+    gObjVramCursor->Upload((void *)(part->GetTileBase() + (info->u.packed & 0xffffff)), total);
 }

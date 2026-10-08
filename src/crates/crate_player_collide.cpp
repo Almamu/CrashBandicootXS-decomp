@@ -1,3 +1,4 @@
+#include "bg_layer.hpp"
 #include "crate.hpp"
 #include "crate_list.hpp"
 #include "player.hpp"

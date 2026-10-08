@@ -3372,6 +3372,100 @@ SetCrateAbove, SetCrateBelow), with player.h's `struct player_vtable`
 `MATCH_HOLD_REG` 501 -> 487, `MATCH_CLOBBER` sites 3 -> 2, instruction asm
 61 -> 61. No file of the family was left C.
 
+**The class families' leftover C views (#656 batches 2-5).** After the
+conversion, the C views of the classes (`struct ctrl_target`, `struct
+gobj`, `struct box_part`, ...) had almost no C user left: the .cpp files
+still read through them. `tools/layout_audit.py views` lists them.
+
+- **Batch 2, the controllers.** The two state-table files are C++
+  (src/data/action_table_16bf20.cpp: `ActionCtrl::stateFuncs`;
+  player_pmf_16c250.cpp: `PlayerCtrl::stateFuncs` and
+  `InputCtrl::stateFuncs`), so player.h's 53 C prototypes of the
+  controllers' and the player's methods (the state methods, KillPlayer,
+  DoSuperBodySlamShockwave, CollidePlayer, SetPlayerBusy: the C++ callers
+  call the methods), the three `struct actor_pmf` table externs, and `struct actor_pmf`/`ACTOR_PMF` (actor_self.h) went. The
+  objects are byte-identical, symbols included. With them went the
+  controllers' C views: player_ctrl.h (`struct player_ctrl`), player.h's
+  `struct input_ctrl` and `struct act` tag, gobj_1a794.h's `struct mover`
+  and `struct mover_vtable`, and part_ctrl.h (`struct ctrl_target`): the
+  classes check the ROM sizes (0x30, 0x28, 0x38) instead. EnemyCtrl's
+  `target` and `popup` are `MovingSprite *`s (the `target`/`sprite` union
+  went); the enemy files read the class's fields (`f.b.gone`,
+  `mirrorFlags.mirrorX`, `rampX.start`, `bank->anims[tag].frameCount`,
+  ...). The six enemy objects are byte-identical, the `MATCH_HOLD_REG`
+  pins (now on `MovingSprite *`s) unchanged.
+- **Batch 3, the 3D actors.** The last three .cpp users of `struct
+  actor_self` take the classes: FindShotTarget is `HpActor
+  *FindShotTarget(ActorSelf *)` (declared in actor_self.hpp, C linkage;
+  JetpackShot::Update passes `this`), and DestroyPolarCrate takes a
+  `PolarCrate *` (vehicle.hpp). actor.h's GetAnimFrameAttr and
+  GetAnimFrameData prototypes had no user (the C++ calls the AnimPart
+  methods). `struct actor_self` is now only the yeti's and the IWRAM
+  sorter's C view (and ActorSelf's size check). The objects are
+  byte-identical.
+- **Batch 4, the dead views.** gobj_1a794.h's `struct gobj` and `struct
+  gobj_vtable` (GroundSprite's and Platform's C view: only their size
+  checks used it, which compare with 0x80 now; player.h's `carried` is a
+  `void *`), gfx_part.h's `struct gfx_part`, `struct anim_bank` and
+  `struct anim_record` (the header keeps `struct gfx_vec` and
+  `PART_FLAG_SET`), and level_menu.h with its `struct sprite`,
+  `sprite_f28` and `sprite_vtable` (spawn_objects.cpp's
+  SpawnLaunchPadEntity calls `LaunchPad::Spawn`, so menus.h's
+  SpawnLaunchPad prototype went too). Six more C prototypes of C++
+  methods had no user but the method calls of the same name
+  (UpdateTntCountdown, PlayerHitboxOverlapsAt, AddPaletteCycle,
+  AttachCtrl, CheckPlayerContact, ResolvePlayerContact). Found by
+  deleting each candidate and compiling everything: the 51 others are
+  still called by their C names from .cpp files (batch 5 turns the
+  ones on a class's object into method calls). The C-linkage
+  destructor copies (DestroyJetpackHealthCrate & co.) need their
+  prototypes for the linkage.
+- **Batch 5, the entity family's casts.** The globals the C++ files cast
+  have their classes under `#ifdef __cplusplus`, as gPlayer already did:
+  gLevelLayers (`LevelLayers *`), gCrateList (`CrateList *`), the five
+  part lists (`PartList *`), gPaletteCycles, gPaletteCache, gOamBuffer,
+  gObjVramCursor, gSpriteBankSet and gSpriteRenderer. The part lists,
+  the crate list and the palette cycles have no C user, so they have no C
+  declaration at all; the others keep their C views for the C files.
+  Their C++ users call the methods instead of the C names
+  (`DrawPartList(gX)` is `gX->Draw()`, `GetPaletteSlot(gPaletteCache, id)`
+  `gPaletteCache->GetSlot(id)`, `CommitOamBuffer(gOamBuffer)`
+  `gOamBuffer->Commit()`: about 230 calls), and read the classes' fields
+  (`gCrateList->slots[i]`, `gLevelLayers->layer0` as a `BgLayer *`). The
+  sprite helpers the controllers and bosses called by their C names on a
+  `void *` (ResetSpriteFrameTimer, ResetSpriteFrameIndex,
+  SetSpriteAnimDone, ClassifySpriteContact, GetSpriteHitbox,
+  GetSpriteAnimPaletteSlot) are method calls too, the crates' (BreakCrate,
+  ExplodeCrate, IsCrateKindBreakable) as well, and the 30 `(struct actor
+  *)` casts went: GetSpriteAnimPaletteSlot is `p->GetAnimPaletteSlot()`;
+  SetEntityPos and SetEntityPixelPos are graphics.cpp's out-of-line copies
+  of inline methods, which the ROM calls from the other files (a method
+  call would be inlined), so entity.hpp declares them taking an `Entity
+  *` for the C++ files. The collision queue holds `Crate *`s
+  (`collision_candidate.neighbor` under `__cplusplus`,
+  `CollisionQueue::Add(Crate *, ...)`, cxx_symbols.txt updated); its
+  resolve keeps calling ApplyCrateCollision, now declared in crate.hpp
+  with a `Crate *`, because the method's bool flags are passed as words
+  where the ROM stores one-byte structs. With that, these C views had no
+  user left and went: box_part.h's `struct box_part`, `struct keyframe`
+  and `struct part_list`, crates.h's `struct pool_manager` and `struct
+  pool_node`, gfx.h's `struct palette_cycler` (its notes are
+  PaletteCycles' now), crate.h's `struct crate` (its field notes are
+  Crate's), and pause_menu.h with `struct settings_icon_actor`; 35 more C
+  prototypes of methods (DrawPartList, UpdateCrateList, LoadRoom,
+  GetPaletteSlot, AddOamEntry, ...) had no caller left. Every object is
+  byte-identical. What still casts: the actor list's root
+  (`(JetpackPlayer *)gActorList`, a downcast), gPlayerCtrl and gInput
+  (`void *`s their C and C++ users pass around as such), gEntityFlags
+  (LevelEntityFlags derives from the C struct, and entity.hpp's inline
+  methods use it before spawners.hpp can be included) and the DISPCNT
+  shadow bytes.
+
+`tools/layout_audit.py views` on origin/main listed 90 view pairs; after
+batches 2-5 it lists 49, none of them a C view a C++ file reads through.
+`MATCH_HOLD_REG` stays at 411 and instruction-emitting `asm` at 49:
+the retyped code compiled to the same bytes with the pins as they were.
+
 ### Next batches
 
 Bigger controllers, roughly in order (function counts from

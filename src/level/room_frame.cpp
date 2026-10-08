@@ -1,10 +1,16 @@
+#include "bg_layer.hpp"
+#include "crate_list.hpp"
 #include "player.hpp"
 #include "hud.hpp"
 
 extern "C" {
 #include "core.h"
 #include "actor.h"
-#include "level_menu.h"
+#include "menus.h"
+#include "gfx.h"
+#include "actor_self.h"
+#include "sprite_bank.h"
+#include "level_state.h"
 #include "hud.h"
 #include "system.h"
 #include "crates.h"
@@ -19,7 +25,6 @@ extern "C" {
  * cleanup: the player's IsOnScreen and Draw are virtual calls. */
 
 struct palette_cache;
-struct part_list;
 struct oam_shadow_buffer;
 
 /* Runs the DMA3/`UploadPaletteCache`+`ResetLevelLayers` refresh pass over every
@@ -28,27 +33,27 @@ struct oam_shadow_buffer;
  * index), otherwise this is a no-op. */
 void UpdateRoomFrame(struct level_progress *self)
 {
-    UploadPaletteCache(gPaletteCache);
+    gPaletteCache->Upload();
     UpdateCamera(gCamera);
-    ScrollLevelLayers(gLevelLayers);
-    TickPaletteCycles(gPaletteCycles);
+    gLevelLayers->Scroll();
+    gPaletteCycles->Tick();
 
     if (self->level <= 0x1000) {
         gHud->Update();
-        DrawPartList(gForegroundList);
+        gForegroundList->Draw();
 
         if (gPlayer->IsOnScreen())
             gPlayer->Draw();
 
-        DrawPartList(gCollidableList);
-        DrawPartList(gTouchableList);
-        DrawCrateList(gCrateList);
-        DrawPartList((struct part_list *)gDecorationList);
+        gCollidableList->Draw();
+        gTouchableList->Draw();
+        gCrateList->Draw();
+        gDecorationList->Draw();
 
-        HideUnusedOamEntries(gOamBuffer);
+        gOamBuffer->HideUnused();
         WaitForVBlank();
-        CommitOamBuffer(gOamBuffer);
-        CommitLevelScroll(gLevelLayers);
+        gOamBuffer->Commit();
+        gLevelLayers->CommitScroll();
         FlushVramDmaQueue();
     }
 }

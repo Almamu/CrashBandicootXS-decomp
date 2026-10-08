@@ -24,9 +24,7 @@ struct level_layers;
 struct level_state;
 struct oam_shadow_buffer;
 struct palette_cache;
-struct part_list;
 struct player;
-struct pool_manager;
 struct sprite_bank_table;
 struct vram_upload_cursor;
 
@@ -71,10 +69,24 @@ extern struct actor_self *gActorList;
 
 /* sym_iwram.txt */
 extern u8 gDispcnt[2]; /* the REG_DISPCNT shadow (CommitDispcnt), read and written bytewise */
+#ifdef __cplusplus
+extern class PaletteCache *gPaletteCache;
+#else
 extern struct palette_cache *gPaletteCache;
+#endif
 extern struct AudioContext *gAudioContext;
-extern void *gSpriteRenderer; /* an empty 4-byte object (DrawSprite ignores it) */
+/* An empty 4-byte object (DrawSprite ignores it): class SpriteRenderer
+ * (sprite_obj.hpp) to the C++ files. */
+#ifdef __cplusplus
+extern class SpriteRenderer *gSpriteRenderer;
+#else
+extern void *gSpriteRenderer;
+#endif
+#ifdef __cplusplus
+extern class SpriteBankSet *gSpriteBankSet;
+#else
 extern struct sprite_bank_set *gSpriteBankSet;
+#endif
 /* The entity spawner (CreateEntitySpawner): the C++ files see it as its
  * class, EntitySpawner (spawners.hpp), the C files as level.h's struct
  * entity_spawner. */
@@ -83,8 +95,16 @@ extern class EntitySpawner *gEntitySpawner;
 #else
 extern struct entity_spawner *gEntitySpawner;
 #endif
+#ifdef __cplusplus
+extern class ObjVramCursor *gObjVramCursor;
+#else
 extern struct vram_upload_cursor *gObjVramCursor;
+#endif
+#ifdef __cplusplus
+extern class OamBuffer *gOamBuffer;
+#else
 extern struct oam_shadow_buffer *gOamBuffer;
+#endif
 extern void *gInput; /* UpdateKeys's object; it only reads gKeys */
 /* The HUD (game_frame.cpp builds it): a Hud (hud.hpp) to the C++ files,
  * its C view, struct hud_counter (hud.h), to the C ones. */
@@ -97,26 +117,33 @@ extern u8 gJetpackPlayerInactive;
 
 /* sym_iwram.txt: the level's objects. game_frame.cpp builds the level
  * state and the entity flags; PlayRoom (play_room.cpp) builds the rest per
- * room. The structs are in level_state.h (struct level_state), level.h
- * (struct level_layers, entity_flags, camera), box_part.h (struct
- * part_list) and crates.h (struct pool_manager, the crate list). */
+ * room. The structs are in level_state.h (struct level_state) and level.h
+ * (struct level_layers, entity_flags, camera). The C++ files see the
+ * level layers as their class, LevelLayers (bg_layer.hpp), the C files as
+ * its C view. The part lists (PartList, sprite_obj.hpp) and the crate list
+ * (CrateList, crate_list.hpp) have no C view and no C user: only the C++
+ * files see them. */
 extern struct entity_flags *gEntityFlags;
 extern struct level_state *gLevelState;
 extern struct camera *gCamera;
+#ifdef __cplusplus
 /* What the player's body touches (CollidePlayerWithObjects runs
  * CollidePartsOfClass on it): the pickups, gems, crystals, platforms and
  * Tiny's hop pads. */
-extern struct part_list *gTouchableList;
-/* What the player's attack box hits (CollidePartList), such as the
+extern class PartList *gTouchableList;
+/* What the player's attack box hits (PartList::Collide), such as the
  * enemies and bosses. */
-extern struct part_list *gCollidableList;
+extern class PartList *gCollidableList;
 /* Updated before the player and drawn first, so in front of everything
  * (the lowest OAM entries); the player never collides with it: the Cortex
  * boss and its cannon and shots, and wumpa flying to the HUD (CreateWumpa
  * with `special`). */
-extern struct part_list *gForegroundList;
+extern class PartList *gForegroundList;
+extern class LevelLayers *gLevelLayers;
+extern class CrateList *gCrateList;
+#else
 extern struct level_layers *gLevelLayers;
-extern struct pool_manager *gCrateList;
+#endif
 
 /* sym_iwram.txt: the player object, built by PlayRoom. The C++ files see
  * it as its class, Player (player.hpp), the C files as its C view, struct

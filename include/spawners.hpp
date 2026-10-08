@@ -39,7 +39,7 @@ static inline const struct entity_params *EntityParams(u16 index)
  * TouchableList() and the others are (sprite_obj.hpp). */
 static inline PartList *DecorationList()
 {
-    return (PartList *)gDecorationList;
+    return gDecorationList;
 }
 
 /* The update-only list holds bare entities (the room exits and the seal
@@ -47,7 +47,7 @@ static inline PartList *DecorationList()
  * Update, OverlapsRect and the destructor). */
 static inline void AddUpdateOnly(Entity *e)
 {
-    ((PartList *)gUpdateOnlyPartList)->Add((Sprite *)e);
+    (gUpdateOnlyPartList)->Add((Sprite *)e);
 }
 
 /* The room's entity flags (gEntityFlags; src/level/entity_flags.cpp):

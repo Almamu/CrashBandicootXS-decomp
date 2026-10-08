@@ -207,7 +207,7 @@ void Platform::ResolveCollision(void *)
                 pos.x = gPlayer->x;
             }
         }
-        SetEntityPos((struct actor *)gPlayer, pos.x, PosPtr(&pos)->y);
+        SetEntityPos(gPlayer, pos.x, PosPtr(&pos)->y);
         if (flags) {
             gPlayer->HandleEvent(0, EVENT_BUMP, flags);
             gPlayer->hitMask |= flags;

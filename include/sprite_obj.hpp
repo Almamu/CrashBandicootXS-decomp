@@ -21,11 +21,9 @@
  * calls the controller's methods with itself (`P12MovingSprite` in their
  * mangled names, cxx_symbols.txt).
  *
- * The C files keep their views of the same objects: actor.h's `struct
- * actor` (Entity), box_part.h's `struct box_part` and gfx_part.h's
- * `struct gfx_part` (the sprite fields), gobj_1a794.h's `struct gobj`
- * (a ground sprite). Each class checks its size against them below; the
- * fields keep their offsets in comments. The player, a ground sprite with
+ * The C files keep one view of these objects: actor.h's `struct actor`
+ * (Entity; entity.hpp checks the size). The fields keep their offsets in
+ * comments. The player, a ground sprite with
  * its own fields after it, is class Player (player.hpp).
  *
  * No `#pragma interface`: g++ emits the vtables of Sprite (sprite.cpp),
@@ -81,7 +79,7 @@ public:
             s32 flipY:1;
             u8 priority:2; // OBJ priority (Get/SetSpritePriority)
         } __attribute__((packed)) mirrorBits;
-        /* The same bits unsigned, as box_part.h has them: read as
+        /* The same bits unsigned: read as
          * values (`lsl #27; lsr #31`), not tested. */
         struct MirrorFlags {
             u32 gfxMode:2;
@@ -298,15 +296,11 @@ public:
 };
 
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(MovingSprite) == 0x78);
-COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(MovingSprite) == sizeof(struct box_part));
-// gfx_part.h's view stops at prevY
-COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(struct gfx_part) <= sizeof(MovingSprite));
 
 /* The ground sprite (src/objects/ground_sprite.cpp, ground_sprite_collide.cpp,
  * ground_sprite_update.cpp; gGroundSpriteVtable): a moving sprite that
  * probes the terrain under it (slot 1) and keeps its hitbox anchored to
- * the floor or the ceiling (slot 3). struct gobj (gobj_1a794.h) is its C
- * view. */
+ * the floor or the ceiling (slot 3). */
 class GroundSprite : public MovingSprite
 {
 public:
@@ -349,9 +343,9 @@ public:
     void AnchorHitbox();                                        // AnchorGroundSpriteHitbox
 };
 
-COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(GroundSprite) == sizeof(struct gobj));
+COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(GroundSprite) == 0x80);
 
-/* A list of sprite objects (box_part.h's struct part_list is its C view):
+/* A list of sprite objects (the room's part lists, globals.h):
  * Update compacts `items` and fills `visible`, the parts on screen, which
  * Collide walks. Its methods are C++: Update, Collide and CollideWithPlayer
  * in src/objects/sprite_anim.cpp, the rest in part_list.cpp,
@@ -388,23 +382,23 @@ public:
     void CollideClass(s32 classId); // CollidePartsOfClass
 };
 
-COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(PartList) == sizeof(struct part_list));
+COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(PartList) == 0x14);
 
-/* The room's part lists (globals.h) as the class, as Crates() is the
- * crate list (crate_list.hpp). */
+/* The room's part lists (globals.h), as Crates() is the crate list
+ * (crate_list.hpp). */
 static inline PartList *TouchableList()
 {
-    return (PartList *)gTouchableList;
+    return gTouchableList;
 }
 
 static inline PartList *CollidableList()
 {
-    return (PartList *)gCollidableList;
+    return gCollidableList;
 }
 
 static inline PartList *ForegroundList()
 {
-    return (PartList *)gForegroundList;
+    return gForegroundList;
 }
 
 /* The sprite graphics managers (src/gfx/graphics.cpp). */

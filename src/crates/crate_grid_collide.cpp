@@ -1,3 +1,4 @@
+#include "bg_layer.hpp"
 #include "crate_list.hpp"
 #include "player.hpp"
 
@@ -7,7 +8,6 @@ extern "C" {
 #include "level.h"
 #include "globals.h"
 #include "player.h"
-#include "bg_scroll_layer.h"
 }
 
 /* CrateList::Collide and CollideWithPlayer (#664, part 7f;
@@ -43,7 +43,7 @@ static inline void CollidePart(CrateList *list, MovingSprite *part, struct aabb 
 void CrateList::Collide(struct aabb box, s32 unused, MovingSprite *other)
 {
     struct aabb screen;
-    struct bg_scroll_layer *cam;
+    BgLayer *cam;
     s32 lo;
     s32 i;
     CrateGridNode *node;
