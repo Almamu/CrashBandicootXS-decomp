@@ -1,5 +1,4 @@
 #include "core.h"
-#include "match.h"
 #include "system.h"
 #include "gfx.h"
 
@@ -18,97 +17,22 @@
  * up the hardware blend registers (`REG_BLDCNT`/`REG_BLDY`) and
  * restores the original backed-up palette.
  *
- * Was NAKED asm, not plain C - see
- * docs/matching/archive/naked-sub_80014a4-matched.md for the derivation of how
- * this was finally matched as real C. The gap: the ROM caches the
- * blended-buffer address (`gPaletteFadeBuffer`) in a register across
- * the loop while recomputing the other two DMA fields (the 0x05000000
- * destination and the 0x80000200 control word) fresh every iteration,
- * plus an extra "rename" copy of the DMA register pointer right before
- * the loop, and reuses the loop's last-iteration register values
- * (rather than recomputing) for the final post-loop DMA setup too -
- * this compiler's loop-invariant hoisting pass never reproduces any of
- * that from plain C. Closed with register-pinned locals for the DMA
- * pointer and the two fresh field values (the "rename" copy, the loop
- * counter and the buffer address need no pins) plus
- * inline-asm-materialized DMA-field writes (opaque to the hoisting
- * pass) for the fields the ROM keeps fresh, with the loop's own
- * asm-computed values threaded through as real operands so the
- * post-loop block reuses them exactly like the ROM does instead of
- * recomputing. */
+ * Was NAKED asm, then C with pins and instruction asm (see
+ * docs/matching/archive/naked-sub_80014a4-matched.md); the plain
+ * DmaCopy16 calls match (#662). */
 void FadePaletteToBlack(void)
 {
-    MATCH_HOLD_REG(struct dma_regs *, dma, r1);
-    struct dma_regs *dma2;
     s32 factor;
-    u32 val;
-    u32 *bufAddr;
-    MATCH_HOLD_REG(u32, dstVal, r3);
-    MATCH_HOLD_REG(u32, cntVal, r2);
 
-    dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
-    dma->src = PLTT;
-    dma->dst = (u32)gPaletteBackup;
-    dma->cnt = 0x80000200;
-    val = dma->cnt;
-
-    factor = 0;
-    dma2 = dma;
-    bufAddr = (u32 *)gPaletteFadeBuffer;
-
-    /* The 0x80000200 reload below deliberately references the literal
-     * pool slot (`.L8+0x8`) this function's own compiler-generated
-     * pool already holds it in (shared with the plain-C uses above and
-     * `dstVal`/`cntVal`'s reuse below), rather than materializing its
-     * own literal, to stay byte-identical to the ROM's single shared
-     * pool entry - see the derivation doc for why. `REG_BLDCNT`/
-     * `REG_BLDY` below are deliberately left as plain C (not also
-     * folded into asm) specifically so this function's own literal
-     * pool keeps a real, compiler-tracked entry for
-     * `REG_ADDR_DMA3SAD`+16 (0x04000050) at `.L8+0x10` for this block
-     * to reference - if a future edit to this function changes what
-     * agbcc names its pool or how many words are in it (check a
-     * `make NON_MATCHING=1` build's generated .s), update every
-     * `.L8+`-prefixed reference in this function to match. */
-    do {
+    DmaCopy16(3, PLTT, gPaletteBackup, PLTT_SIZE);
+    for (factor = 0; factor <= 0x10; factor += 2) {
         DarkenPalette(factor);
         WaitForVBlank();
-        dma2->src = (u32)bufAddr;
-        // clang-format off
-        asm volatile(
-            "mov %0, #0xa0\n\t"
-            "lsl %0, %0, #0x13\n\t"
-            "str %0, [%2, #4]\n\t"
-            "ldr %1, .L8+0x8\n\t"
-            "str %1, [%2, #8]\n\t"
-            "ldr r0, [%2, #8]\n\t"
-            : "=r"(dstVal), "=r"(cntVal) : "r"(dma2) : "r0", "memory");
-        // clang-format on
-        factor += 2;
-    } while (factor <= 0x10);
-
+        DmaCopy16(3, gPaletteFadeBuffer, PLTT, PLTT_SIZE);
+    }
     REG_BLDCNT = 0xff;
     REG_BLDY = 0x10;
-
-    /* Reload `dma` fresh from the pool (matching the ROM) instead of
-     * letting the compiler notice it can cheaply derive
-     * `REG_ADDR_DMA3SAD` from the `REG_ADDR_BLDY` value still live in
-     * a register from the two writes above (`REG_ADDR_DMA3SAD` is
-     * `REG_ADDR_BLDY + 0x80`) - a real, shorter instruction sequence
-     * this compiler prefers, but not what the ROM does. */
-    {
-        MATCH_HOLD_REG(struct dma_regs *, dma3, r0);
-        // clang-format off
-        asm volatile(
-            "ldr %0, .L8\n\t"
-            "ldr r1, .L8+0x4\n\t"
-            "str r1, [%0, #0]\n\t"
-            "str %1, [%0, #4]\n\t"
-            "str %2, [%0, #8]\n\t"
-            "ldr %0, [%0, #8]\n\t"
-            : "=r"(dma3), "+r"(dstVal), "+r"(cntVal) :: "r1", "memory");
-        // clang-format on
-    }
+    DmaCopy16(3, gPaletteBackup, PLTT, PLTT_SIZE);
 }
 
 /* `gBrightnessFade.period != -1`: the "idle" sentinel (gfx.h). */
