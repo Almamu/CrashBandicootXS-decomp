@@ -1,5 +1,4 @@
 #include "gax_internal.h"
-#include "match.h"
 
 extern void *_call_via_r1(void *arg0, void *fn);
 
@@ -27,24 +26,13 @@ void GaxMixerInit(void *self)
 {
     struct GaxMixerHandler *p = self;
     u32 i;
-    MATCH_HOLD_REG(u32, limit, r0);
 
     p->pos = 1;
-    for (i = 0;; i++) {
-        if (gGaxPlayerState->curChannelIdx == 0) {
-            limit = p->type->childCount;
-            limit = limit + p->extraChildren;
-        } else {
-            limit = p->type->childCount;
-        }
-        if (i >= limit) {
-            break;
-        }
-        {
-            struct GaxHandler *elem = p->children[i];
-            void *fn = elem->type->init;
-            _call_via_r1(elem, fn);
-        }
+    for (i = 0; i < (gGaxPlayerState->curChannelIdx == 0 ? p->type->childCount + p->extraChildren
+                                                         : p->type->childCount);
+         i++) {
+        struct GaxHandler *elem = p->children[i];
+        _call_via_r1(elem, elem->type->init);
     }
 }
 

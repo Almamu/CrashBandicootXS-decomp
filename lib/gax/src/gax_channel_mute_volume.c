@@ -1,5 +1,4 @@
 #include "gax_internal.h"
-#include "match.h"
 
 /* This whole file re-derives `gGaxPlayerState->channels[gGaxPlayerState
  * ->curChannelIdx]` fresh at every single use, never through a cached local
@@ -63,40 +62,14 @@ void GAX_set_music_volume(s32 idx, u32 vol)
     if (idx == -1) {
         s32 i;
 
-        for (i = 0; i < GAX_MIXER()->type->childCount; i++) {
-            MATCH_HOLD_REG(struct GaxHandler **, chan, r1) = GAX_CHAN();
-            u32 off = (u32)i << 2;
-            struct GaxChannelState **entryAddr;
-            struct GaxChannelState *entry;
-
-            /* Forces the ROM's exact "adds r0, r0, r1" register-operand
-             * order (`chan` pinned to r1 above) - gcc-2.9 always
-             * canonicalizes this pointer+offset add with the pointer
-             * operand first (`adds r0, r1, r0`) regardless of C-level
-             * source order, so only a raw instruction closes this gap
-             * (see docs/workflow.md step 3 / matching_decomp_register_
-             * pinning memory's inline-asm-anchor technique). The operand
-             * list (rather than a bare asm string) keeps gcc from
-             * treating `chan`/`off`'s defining loads as dead. */
-            asm("add %0, %0, %1" : "=r"(entryAddr) : "r"(chan), "0"(off));
-            entry = entryAddr[3];
-            entry->volume = vol;
-        }
+        for (i = 0; i < GAX_MIXER()->type->childCount; i++)
+            ((struct GaxChannelState **)GAX_CHAN())[i + 3]->volume = vol;
     } else if (idx > -2) {
         struct GaxHandler **chan = GAX_CHAN();
         struct GaxMixerHandler *obj = (struct GaxMixerHandler *)chan[0];
 
-        if (idx < obj->type->childCount) {
-            u32 off = (u32)idx << 2;
-            struct GaxChannelState **entryAddr;
-            struct GaxChannelState *entry;
-
-            /* Same "adds r0, r0, r1" operand-order gap as the loop body
-             * above. */
-            asm("add %0, %0, %1" : "=r"(entryAddr) : "r"(chan), "0"(off));
-            entry = entryAddr[3];
-            entry->volume = vol;
-        }
+        if (idx < obj->type->childCount)
+            ((struct GaxChannelState **)chan)[idx + 3]->volume = vol;
     }
 }
 

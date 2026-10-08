@@ -18,35 +18,16 @@
 void GaxInfoResetPosition(void *self)
 {
     struct GaxInfoHandler *p = self;
-    u16 val;
-    u8 zeroByte;
-    u16 zeroHalf;
 
-    /* 0xFFFF/0x4E20 need to go through a named temp before the store -
-     * assigning the literal straight to the dereferenced address loads
-     * it into a scratch register and copies that into the real
-     * destination register first, one instruction more than the ROM's
-     * direct `ldr r0,=...; strh r0,[...]` (same gotcha documented on
-     * GAX2_new in gax_new.c). The two zero-fill temps
-     * (`zeroByte`/`zeroHalf`) both get set right after the first store,
-     * matching the ROM's `movs r2,#0; movs r3,#0` pair, rather than
-     * being zeroed right before each individual use; the empty asm
-     * statements keep them there once the stores are struct fields. */
-    val = 0xFFFF;
-    p->orderPos = val;
-    zeroByte = 0;
-    MATCH_KEEP(zeroByte);
-    zeroHalf = 0;
-    MATCH_KEEP(zeroHalf);
-    val = 0x4E20;
-    p->row = val;
-    p->tickCounter = zeroByte;
+    p->orderPos = 0xFFFF;
+    p->row = 0x4E20;
+    p->tickCounter = 0;
     p->speed = 6;
     p->volume = 0xff;
-    p->newRow = zeroByte;
-    p->newOrder = zeroByte;
-    p->patternBreak = zeroByte;
-    p->breakRow = zeroHalf;
+    p->newRow = 0;
+    p->newOrder = 0;
+    p->patternBreak = 0;
+    p->breakRow = 0;
 }
 
 /* GAX2_SoundHandler "Info" type's init_fn (ROM 0x080393FD, see
