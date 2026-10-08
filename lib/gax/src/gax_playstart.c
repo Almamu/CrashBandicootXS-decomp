@@ -47,7 +47,11 @@ u8 GAX2_init(struct GaxSongHeader *p)
     /* no-code hold: the ROM leaves r3 unused while `layout` is live
      * between the first tap scan and its `types[2]` test, so `layout`
      * lands in r4. `hold` is never assigned; its MATCH_USE after the
-     * tap scan keeps r3 reserved up to there. */
+     * tap scan keeps r3 reserved up to there. #662 round 2: without it
+     * only `layout` moves (r3); re-reading `p->layout` instead of the
+     * copy, or copying it before the types[] load, moves much more, and
+     * the permuter's best C (35 from 335) wraps the alternative-layout
+     * loop's body in a `do { } while (0)`. */
     MATCH_HOLD_REG(u32, hold, r3);
 
     if (size <= 0x18b)

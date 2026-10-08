@@ -399,7 +399,7 @@ extern void GaxInfoResetPosition(void *self);
 extern void GaxInfoInit(void *self);
 extern void GaxInfoRestart(void *self);
 extern void GaxInfoUnknown(void);
-extern u32 GaxInfoPlay(void *self, u32 arg1, u32 chanArg);
+extern u32 GaxInfoPlay(struct GaxInfoHandler *p, u32 arg1, u32 tick);
 /* gax_sound_handler_mixer.c, gax_sound_handler_mixer_play.c: the mixer
  * type */
 extern void GaxFxChannelUnknown(void);
