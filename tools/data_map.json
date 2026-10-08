@@ -3229,7 +3229,7 @@
     "InitSmallFont"
    ],
    "consumer_files": [
-    "text/font_glyph.c"
+    "text/font_glyph.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3250,7 +3250,7 @@
     "InitSmallFont"
    ],
    "consumer_files": [
-    "text/font_glyph.c"
+    "text/font_glyph.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3271,7 +3271,7 @@
     "InitLargeFont"
    ],
    "consumer_files": [
-    "text/font_glyph.c"
+    "text/font_glyph.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3292,7 +3292,7 @@
     "InitLargeFont"
    ],
    "consumer_files": [
-    "text/font_glyph.c"
+    "text/font_glyph.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -8259,8 +8259,8 @@
     "DestroyLargeFont"
    ],
    "consumer_files": [
-    "util/aabb_setup.c",
-    "text/font_glyph.c"
+    "util/aabb_setup.cpp",
+    "text/font_glyph.cpp"
    ],
    "ptr_words_code": 8,
    "ptr_words_data": 0,
@@ -8285,8 +8285,8 @@
     "DestroySmallFont"
    ],
    "consumer_files": [
-    "util/aabb_setup.c",
-    "text/font_glyph.c"
+    "util/aabb_setup.cpp",
+    "text/font_glyph.cpp"
    ],
    "ptr_words_code": 8,
    "ptr_words_data": 0,
@@ -8315,9 +8315,9 @@
     "DestroySmallFont"
    ],
    "consumer_files": [
-    "util/aabb_setup.c",
-    "text/font.c",
-    "text/font_glyph.c"
+    "util/aabb_setup.cpp",
+    "text/font.cpp",
+    "text/font_glyph.cpp"
    ],
    "ptr_words_code": 8,
    "ptr_words_data": 0,

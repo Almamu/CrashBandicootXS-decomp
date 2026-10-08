@@ -301,7 +301,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/hud/hud_init.o \
                   $(C_BUILDDIR)/text/font_glyph.o \
                   $(C_BUILDDIR)/text/font_draw_text.o \
-                  $(C_BUILDDIR)/text/font_measure.o \
+                  $(C_BUILDDIR)/text/font.o \
                   $(C_BUILDDIR)/hud/hud_boss_clock.o \
                   $(C_BUILDDIR)/hud/hud_counters.o \
                   $(C_BUILDDIR)/frontend/title_screen_init.o \

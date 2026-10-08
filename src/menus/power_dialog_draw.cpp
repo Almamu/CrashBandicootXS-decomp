@@ -1,7 +1,7 @@
 #include "menus.hpp"
+#include "font.hpp"
 
 extern "C" {
-#include "bitmap_font.h"
 #include "vram_pool.h"
 #include "text.h"
 #include "util.h"
@@ -21,22 +21,12 @@ extern "C" {
  * ROM recomputes it fresh for each one (see docs/matching.md, "Matching
  * decompilation"). */
 
-/* Sets an icon manager's draw position. Both coordinates are inline
- * arguments, so gcc evaluates them (and re-reads the manager global)
- * before either store - the ROM's order. */
-static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
-{
-    m->posX = x;
-    m->posY = y;
-}
-
-/* Positions two OAM icons flanking a number (drawn via DrawWrappedTextInBox in
- * between) - centers each icon horizontally from its rendered pixel
- * width (the manager's `record->slots[0]` method, a gcc 2.x virtual call
- * through `_call_via_r2`), at fixed Y coordinates, then
- * draws it with `slots[2]`. Parked as NAKED for a long time over a
- * register-letter gap; closed by computing the centered X into its own
- * local before passing it to the inline setter (passing the expression
+/* Draws the dialog: the power's title centred at row 0x2d (gLargeFont's
+ * MeasureText, then DrawText), the description wrapped into its box
+ * (DrawWrappedTextInBox) and UI text 0x2e centred at row 0x90
+ * (gSmallFont). Parked as NAKED for a long time over a register-letter
+ * gap; closed by computing the centered X into its own local before
+ * passing it to the inline setter (Font::SetPos; passing the expression
  * straight in swapped the X/Y and 0x130/240 registers) - see
  * docs/matching/archive/strag3-naked-retry.md. */
 void PowerDialog::Draw()
@@ -45,27 +35,22 @@ void PowerDialog::Draw()
     s32 w;
     s32 n;
     u32 x;
-    struct icon_record *r;
 
     ResetOamBuffer(gOamBuffer);
     RewindObjVram(gObjVramCursor);
     icon->DrawWithOffset(0, 0);
-    r = gLargeFont->record;
-    w = _call_via_r2((u8 *)gLargeFont + r->slots[0].offset, (void *)titleText, r->slots[0].ptr);
+    w = gLargeFont->MeasureText((u8 *)titleText);
     x = (u32)(240 - w) >> 1;
-    set_icon_mgr_pos(gLargeFont, x, 0x2d);
-    r = gLargeFont->record;
-    _call_via_r2((u8 *)gLargeFont + r->slots[2].offset, (void *)titleText, r->slots[2].ptr);
+    gLargeFont->SetPos(x, 0x2d);
+    gLargeFont->DrawText((u8 *)titleText);
     SetAabbPos(&box, 0x10, 0x6a);
     SetAabbSize(&box, 0xd0, 0x35);
     DrawWrappedTextInBox((u8 *)descText, gSmallFont, &box, 0);
     n = GetUiText(0x2e);
-    r = gSmallFont->record;
-    w = _call_via_r2((u8 *)gSmallFont + r->slots[0].offset, (void *)n, r->slots[0].ptr);
+    w = gSmallFont->MeasureText((u8 *)n);
     x = (u32)(240 - w) >> 1;
-    set_icon_mgr_pos(gSmallFont, x, 0x90);
-    r = gSmallFont->record;
-    _call_via_r2((u8 *)gSmallFont + r->slots[2].offset, (void *)n, r->slots[2].ptr);
+    gSmallFont->SetPos(x, 0x90);
+    gSmallFont->DrawText((u8 *)n);
     HideUnusedOamEntries(gOamBuffer);
 }
 

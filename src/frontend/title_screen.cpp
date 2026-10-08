@@ -3,7 +3,6 @@
 extern "C" {
 #include "match.h"
 #include "gba/io_reg.h"
-#include "bitmap_font.h"
 #include "gba/dma_macros.h"
 #include "graphics_package.h"
 #include "text.h"
@@ -27,13 +26,7 @@ extern "C" {
  * with -fno-strength-reduce, for InitVvLogoPieces's up-counting loop; as
  * C++ the plain indexed loop matches with strength reduction on, and so
  * does the rest of the file, so the flag went (#664 part 10c-2; see
- * docs/matching/per-file-flags-investigation.md).
- *
- * gSmallFont is still C (src/text/): its virtual calls are spelled out
- * through the record's slots. */
-
-/* `_call_via_r2`: calls `fn(self, arg)` (a bitmap_font method). */
-extern "C" s32 _call_via_r2(void *self, void *arg, void *fn);
+ * docs/matching/per-file-flags-investigation.md). */
 
 /* Folds `val` into the cheat hash: XOR, rotate left by one, times 521
  * (CheatInput's, and HashCheatInput's body). The rotate's left shift is
@@ -207,12 +200,6 @@ fadeLoop:
     return selection;
 }
 
-static inline void SetFontPos(struct bitmap_font *m, u32 x, u32 y)
-{
-    m->posX = x;
-    m->posY = y;
-}
-
 /* Writes the BG2 logo's affine scroll and scale (DrawLogoPieces's),
  * then commits DISPCNT and the OAM buffer. The ROM derives
  * `REG_BG2PA`'s address from `REG_BG2Y`'s (`-0xc`); that falls out of
@@ -237,21 +224,21 @@ void TitleScreen::CommitFrame()
  * selected, palette 13 otherwise. */
 void TitleScreen::DrawMenuItem(s32 text, s32 item)
 {
-    struct bitmap_font *m;
+    Font *m;
     s32 x;
 
     if (item == selection) {
         s32 count = blinkCounter + 1;
 
         blinkCounter = count;
-        FontSetPalette(font, ((count >> 2) & 1) + 0xe);
+        font->SetPalette(((count >> 2) & 1) + 0xe);
     } else {
-        FontSetPalette(font, 0xd);
+        font->SetPalette(0xd);
     }
-    x = (0xf0 - ICON_TEXT_CALL(font, 0, text)) >> 1;
+    x = (0xf0 - font->MeasureText((u8 *)text)) >> 1;
     m = font;
-    SetFontPos(m, x, item * 10 + 0x80);
-    ICON_TEXT_CALL(m, 2, text);
+    m->SetPos(x, item * 10 + 0x80);
+    m->DrawText((u8 *)text);
 }
 
 /* Builds the frame's OAM: the logo pieces, and the menu once it is

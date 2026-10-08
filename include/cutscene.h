@@ -63,8 +63,12 @@ struct cutscene_player {
     s32 toggle;                        // 0x0C - ShowSlidePicture's VRAM-bank flip-flop,
                                        //        1 after ResetSlideshow
     const struct cutscene_page *pages; // 0x10 - one per slide
-    struct bitmap_font *font;          // 0x14
-    struct aabb box;                   // 0x18 - the text rectangle
+#ifdef __cplusplus
+    class Font *font; // 0x14 (include/font.hpp)
+#else
+    struct bitmap_font *font; // 0x14
+#endif
+    struct aabb box; // 0x18 - the text rectangle
 };
 
 /* The cutscenes, one {slides, count} header each

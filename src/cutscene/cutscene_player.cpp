@@ -1,4 +1,5 @@
 #include "bg_layer.hpp"
+#include "font.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -91,10 +92,10 @@ void RunCutscenePlayer(struct cutscene_player *self)
 
     {
         s32 b = self->box.x;
-        struct bitmap_font *t = self->font;
+        Font *t = self->font;
 
-        t->marginX = b;
-        limit = __udivsi3(self->box.h, t->lineHeight);
+        t->SetMargin(b);
+        limit = t->HeightToLines(self->box.h);
     }
     for (i = 0; i < self->count; i++) {
         u8 res = 1;

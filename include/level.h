@@ -20,7 +20,6 @@
 #include "level_data.h"
 #include "constants/bosses.h"
 #include "bg_scroll_layer.h"
-#include "vtable.h"
 #include "constants/entities.h"
 #include "constants/chunk_tokens.h"
 

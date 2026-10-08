@@ -2,6 +2,7 @@
 #include "pickups.hpp"
 #include "player.hpp"
 #include "part_list.hpp"
+#include "font.hpp"
 
 extern "C" {
 #include "audio.h"
@@ -279,11 +280,11 @@ struct level_state *InitLevelState(struct level_state *self)
         cache->SetSource(gSpriteBankTable.paletteCount, gSpriteBankTable.palettes);
     }
     {
-        struct bitmap_font **font = &gSmallFont;
+        Font **font = &gSmallFont;
 
-        *font = InitSmallFont((struct bitmap_font *)operator new(sizeof(struct bitmap_font)));
+        *font = new SmallFont;
         font = &gLargeFont;
-        *font = InitLargeFont((struct bitmap_font *)operator new(sizeof(struct bitmap_font)));
+        *font = new LargeFont;
     }
     AllocVramDmaQueue();
     gOamBuffer = (struct oam_shadow_buffer *)new OamBuffer;

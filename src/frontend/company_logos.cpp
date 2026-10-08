@@ -3,7 +3,6 @@
 extern "C" {
 #include "match.h"
 #include "gba/io_reg.h"
-#include "bitmap_font.h"
 #include "gba/dma_macros.h"
 #include "graphics_package.h"
 #include "text.h"

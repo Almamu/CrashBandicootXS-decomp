@@ -6,10 +6,9 @@ from (docs/cplusplus.md). The decompilation reproduces it as C, so the
 C++ shows up as hand-written runtime structures. This tool counts them
 per object (one src/*/*.c or lib/*/src/*.c file):
 
-  method     functions defined here that a C vtable (struct vtable_slot,
-             src/data/entity_vtables_7e3bec.c: the 8 tables g++ doesn't
-             emit, docs/cplusplus.md) or a pointer-to-member table
-             (ACTOR_PMF) points at: virtual and member functions
+  method     functions defined here that a C pointer-to-member table
+             (ACTOR_PMF) points at: member functions (g++ emits every
+             vtable since #664 step 10b, docs/cplusplus.md)
   vptr       stores of a vtable address into an object (constructors and
              destructors set the vptr: `x->vtable = gFooVtable`)
   ctor       functions that store a vptr and return the object: a g++
@@ -34,10 +33,8 @@ still be C++ member functions whose class has no virtuals). Objects
 already written as C++ (src/*/*.cpp, the Makefile's CXX_OBJS) are
 listed as "C++ source"; the C patterns don't apply to them.
 
-It also checks the C vtables themselves: slot 0 (the RTTI slot) and
-every `this` delta (g++ writes the others' as the ROM has them: slot 0
-empty with -fno-rtti, every delta 0). The ROM-level searches (RTTI names, __pure_virtual, static
-constructor lists, exception tables) are in docs/cplusplus.md.
+The ROM-level searches (RTTI names, __pure_virtual, static constructor
+lists, exception tables) are in docs/cplusplus.md.
 
 Usage:
   tools/cpp_survey.py             summary
@@ -52,8 +49,6 @@ import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-VTABLE_FILE = "src/data/entity_vtables_7e3bec.c"
 
 TRAITS = ("method", "vptr", "ctor", "dtor", "new", "delete", "vcall", "pmf", "fnptr")
 CXX_TRAITS = ("method", "vptr", "new", "vcall", "pmf")
@@ -100,24 +95,13 @@ def functions(text):
 
 
 def table_targets():
-    """Names a vtable slot or a PMF table entry points at."""
+    """Names a C PMF table entry points at."""
     names = set()
     for path in glob.glob(os.path.join(ROOT, "src/data/*.c")):
         text = strip_comments(open(path).read())
-        names.update(re.findall(r"\bVTABLE_SLOT\(\s*(\w+)\s*\)", text))
         names.update(re.findall(r"\bACTOR_PMF\(\s*(\w+)\s*\)", text))
     names.discard("NULL")
     return names
-
-
-def vtable_check():
-    text = strip_comments(open(os.path.join(ROOT, VTABLE_FILE)).read())
-    tables = re.findall(r"const struct vtable_slot (\w+)\[(\d+)\](?:\s*VTABLE_SECTION\(\w+\))?\s*=\s*\{(.*?)\n\};",
-                        text, re.S)
-    slots = sum(int(n) for _, n, _ in tables)
-    slot0_null = sum(1 for _, _, body in tables if re.match(r"\s*VTABLE_SLOT\(NULL\)", body))
-    raw = sum(len(re.findall(r"\{\s*-?\d+\s*,", body)) for _, _, body in tables)
-    return len(tables), slots, slot0_null, raw
 
 
 def survey():
@@ -190,9 +174,6 @@ def main():
 
     summary("game (src/)", game)
     summary("libraries (lib/)", libs)
-    n, slots, slot0, raw = vtable_check()
-    print("C vtables: %d tables, %d slots; slot 0 (RTTI) empty in %d; slots with an explicit"
-          " (possibly nonzero) this delta: %d" % (n, slots, slot0, raw))
     return 0
 
 

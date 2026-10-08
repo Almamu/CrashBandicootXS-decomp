@@ -35,9 +35,7 @@ extern "C" {
  * CameraLead::SetUnk32, SetOffset, GetOffset and LaunchPad's out-of-line
  * constructor (Spawn has it inlined). Matched anyway.
  *
- * old_agbcp (Makefile OLD_AGBCC_OBJS), as its C was old_agbcc. The fonts
- * (gSmallFont, gLargeFont) are still C (src/text/): their virtual calls are
- * spelled out through the record's slots. */
+ * old_agbcp (Makefile OLD_AGBCC_OBJS), as its C was old_agbcc. */
 
 /* codegen: gLevelSelectGemPos and gLevelSelectTrialIconPos are const
  * (menus.h), but the constructor reads each one twice, across calls, and
@@ -53,12 +51,6 @@ static inline void SetAxes(MovingSprite *s, u8 dir, u8 hit)
 {
     s->dir = dir;
     s->hitAxes = hit;
-}
-
-static inline void SetIconPos(struct bitmap_font *m, u32 x, u32 y)
-{
-    m->posX = x;
-    m->posY = y;
 }
 
 /* Sprite::ToggleHidden, inlined. */
@@ -228,19 +220,11 @@ LaunchPad::LaunchPad()
  * display, palette, VRAM cursor and both fonts (the same setup as
  * ShowPowerDialog), builds the menu for level `*arg`, runs it, stores the
  * chosen level back through `arg`, tears the menu down and returns its
- * `result` byte. The font steps are inline helpers: the ROM recomputes
- * every field address after each call instead of keeping the offsets in
- * registers, which is what separate inlined expansions give. */
-static inline void IconSetup(struct bitmap_font *m, u32 v)
-{
-    struct icon_slot *slot;
-
-    m->tileBase = v;
-    slot = &m->record->slots[6];
-    _call_via_r1((u8 *)m + slot->offset, slot->ptr);
-}
-
-static inline void IconReserve(struct bitmap_font **m)
+ * `result` byte. The font steps are inline functions (Font::SetTileBase
+ * and IconReserve): the ROM recomputes every field address after each
+ * call instead of keeping the offsets in registers, which is what
+ * separate inlined expansions give. */
+static inline void IconReserve(Font **m)
 {
     struct vram_upload_cursor *c = gObjVramCursor;
 
@@ -268,12 +252,12 @@ s32 RunLevelSelect(s32 *arg)
     gObjVramCursor->baseTile = 0;
     ResetObjVram(gObjVramCursor);
     ResetObjVram(gObjVramCursor);
-    IconSetup(gSmallFont, 0);
+    gSmallFont->SetTileBase(0);
     IconReserve(&gSmallFont);
     {
         u32 v = gSmallFont->tileCount;
 
-        IconSetup(gLargeFont, v);
+        gLargeFont->SetTileBase(v);
     }
     IconReserve(&gLargeFont);
     MarkObjVram(gObjVramCursor);
@@ -441,14 +425,10 @@ void LevelSelect::Update()
     RewindObjVram(gObjVramCursor);
     panel->Draw();
     if (bg2->IsShown() && items[index]->IsSelected()) {
-        struct icon_slot *slot = &gLargeFont->record->slots[0];
-        u32 x = (u32)(0xF0 -
-                      _call_via_r2((u8 *)gLargeFont + slot->offset, (void *)nameText, slot->ptr)) >>
-                1;
+        u32 x = (u32)(0xF0 - gLargeFont->MeasureText((u8 *)nameText)) >> 1;
 
-        SetIconPos(gLargeFont, x, -panelSlideX + 2);
-        slot = &gLargeFont->record->slots[2];
-        _call_via_r2((u8 *)gLargeFont + slot->offset, (void *)nameText, slot->ptr);
+        gLargeFont->SetPos(x, -panelSlideX + 2);
+        gLargeFont->DrawText((u8 *)nameText);
         if (index <= 4)
             DrawRecord();
     }
@@ -458,15 +438,11 @@ void LevelSelect::Update()
     if (bg1->IsSettled()) {
         if (!bg2->IsExiting()) {
             s32 text = GetUiText(0x2F);
-            struct icon_slot *slot = &gSmallFont->record->slots[0];
-            u32 x = (u32)(0xF0 -
-                          _call_via_r2((u8 *)gSmallFont + slot->offset, (void *)text, slot->ptr)) >>
-                    1;
+            u32 x = (u32)(0xF0 - gSmallFont->MeasureText((u8 *)text)) >> 1;
 
-            SetIconPos(gSmallFont, x, 0x96);
-            FontSetPalette(gSmallFont, 0xF);
-            slot = &gSmallFont->record->slots[2];
-            _call_via_r2((u8 *)gSmallFont + slot->offset, (void *)text, slot->ptr);
+            gSmallFont->SetPos(x, 0x96);
+            gSmallFont->SetPalette(0xF);
+            gSmallFont->DrawText((u8 *)text);
             UpdatePageArrows();
         }
         bg2->Draw();
@@ -548,23 +524,16 @@ void LevelSelect::DrawTime(u32 time)
     sprites[6]->DrawWithOffset(-panelSlideX, trialIcon2Y);
     info = &gLevelTable[levelId];
     if (time != 0 && time <= info->times[2]) {
-        struct icon_slot *slot;
-
-        SetIconPos(gLargeFont, panelSlideX + gLevelSelectTimePos.x + 10, gLevelSelectTimePos.y - 8);
-        slot = &gLargeFont->record->slots[2];
-        _call_via_r2((u8 *)gLargeFont + slot->offset, (void *)timeText, slot->ptr);
+        gLargeFont->SetPos(panelSlideX + gLevelSelectTimePos.x + 10, gLevelSelectTimePos.y - 8);
+        gLargeFont->DrawText((u8 *)timeText);
     } else {
-        struct icon_slot *slot;
-
         sprites[7]->DrawWithOffset(panelSlideX, 0);
-        FontSetPalette(gLargeFont, sprites[7]->palette);
-        SetIconPos(gLargeFont, panelSlideX + gLevelSelectTimePos.x + 10, gLevelSelectTimePos.y - 8);
-        slot = &gLargeFont->record->slots[2];
-        _call_via_r2((u8 *)gLargeFont + slot->offset, (void *)recordText, slot->ptr);
-        FontResetPalette(gLargeFont);
-        SetIconPos(gLargeFont, panelSlideX + gLevelSelectTimePos.x + 10, gLevelSelectTimePos.y + 8);
-        slot = &gLargeFont->record->slots[2];
-        _call_via_r2((u8 *)gLargeFont + slot->offset, (void *)timeText, slot->ptr);
+        gLargeFont->SetPalette(sprites[7]->palette);
+        gLargeFont->SetPos(panelSlideX + gLevelSelectTimePos.x + 10, gLevelSelectTimePos.y - 8);
+        gLargeFont->DrawText((u8 *)recordText);
+        gLargeFont->ResetPalette();
+        gLargeFont->SetPos(panelSlideX + gLevelSelectTimePos.x + 10, gLevelSelectTimePos.y + 8);
+        gLargeFont->DrawText((u8 *)timeText);
     }
 }
 
@@ -600,7 +569,7 @@ void LevelSelect::Draw()
             FreeUnlockedPaletteSlots(gPaletteCache);
             ReloadPalette();
         }
-        FontResetPalette(gLargeFont);
+        gLargeFont->ResetPalette();
     }
     it = items;
     sp = sprites;

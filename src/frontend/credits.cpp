@@ -3,7 +3,6 @@
 extern "C" {
 #include "match.h"
 #include "gba/io_reg.h"
-#include "bitmap_font.h"
 #include "vram_pool.h"
 #include "audio.h"
 #include "gba/dma_macros.h"
@@ -23,20 +22,7 @@ extern "C" {
  * Loop are in src/menus/continue_prompt*.cpp), then the credits screen
  * (Credits). See docs/matching/archive/issue-64-0x08034aa4-actor.md.
  *
- * gSmallFont and gLargeFont are still C (src/text/): their virtual calls
- * are spelled out through the record's slots. old_agbcp (OLD_AGBCC_OBJS),
- * as its C was old_agbcc. */
-
-/* `_call_via_rN`: calls `fn(self, ...)` (a bitmap_font method). */
-extern "C" s32 _call_via_r1(void *self, void *fn);
-extern "C" s32 _call_via_r2(void *self, void *arg, void *fn);
-extern "C" s32 _call_via_r3(void *self, const void *a, s32 b, void *fn);
-
-static inline void SetFontPos(struct bitmap_font *m, u32 x, u32 y)
-{
-    m->posX = x;
-    m->posY = y;
-}
+ * old_agbcp (OLD_AGBCC_OBJS), as its C was old_agbcc. */
 
 /* Draws the Yes/No labels (UI texts 0x28-0x2a) with gSmallFont, the
  * selected one blinking (Blink) and marked with the cursor. */
@@ -46,24 +32,24 @@ void ContinuePrompt::Draw()
 
     ResetOamBuffer(gOamBuffer);
     RewindObjVram(gObjVramCursor);
-    w = ICON_TEXT_CALL(icons, 0, GetUiText(0x28));
-    FontSetPalette(icons, 0);
-    SetFontPos(icons, 0x88 - w, 0x87);
-    ICON_TEXT_CALL(icons, 2, GetUiText(0x28));
-    FontSetPalette(icons, Blink(0));
+    w = icons->MeasureText((u8 *)GetUiText(0x28));
+    icons->SetPalette(0);
+    icons->SetPos(0x88 - w, 0x87);
+    icons->DrawText((u8 *)GetUiText(0x28));
+    icons->SetPalette(Blink(0));
     if (selection == 0) {
-        SetFontPos(icons, 0x90, 0x87);
-        ICON_TEXT_CALL(icons, 2, gContinuePromptCursorText);
+        icons->SetPos(0x90, 0x87);
+        icons->DrawText((u8 *)gContinuePromptCursorText);
     }
-    SetFontPos(icons, 0x98, 0x87);
-    ICON_TEXT_CALL(icons, 2, GetUiText(0x29));
-    FontSetPalette(icons, Blink(1));
+    icons->SetPos(0x98, 0x87);
+    icons->DrawText((u8 *)GetUiText(0x29));
+    icons->SetPalette(Blink(1));
     if (selection == 1) {
-        SetFontPos(icons, 0x90, 0x91);
-        ICON_TEXT_CALL(icons, 2, gContinuePromptCursorText);
+        icons->SetPos(0x90, 0x91);
+        icons->DrawText((u8 *)gContinuePromptCursorText);
     }
-    SetFontPos(icons, 0x98, 0x91);
-    ICON_TEXT_CALL(icons, 2, GetUiText(0x2a));
+    icons->SetPos(0x98, 0x91);
+    icons->DrawText((u8 *)GetUiText(0x2a));
     HideUnusedOamEntries(gOamBuffer);
 }
 
@@ -107,19 +93,9 @@ u8 ContinuePrompt::Run()
     return result;
 }
 
-/* Sets the font's glyph tile base and calls its slot 6. */
-static inline void SetFontTileBase(struct bitmap_font *m, u32 base)
-{
-    struct icon_slot *slot;
-
-    m->tileBase = base;
-    slot = &m->record->slots[6];
-    _call_via_r1((u8 *)m + slot->offset, slot->ptr);
-}
-
 /* Reserves `m`'s glyph tiles (`tileCount` tiles) from the VRAM upload
  * cursor `c`. */
-static inline void ReserveFontVram(struct vram_upload_cursor *c, struct bitmap_font *m)
+static inline void ReserveFontVram(struct vram_upload_cursor *c, Font *m)
 {
     ReserveObjVram(c, m->tileCount << 5);
 }
@@ -135,8 +111,8 @@ Credits::Credits()
     WaitForVBlank();
     CommitOamBuffer(gOamBuffer);
     FreeUnlockedPaletteSlots(gPaletteCache);
-    FontResetPalette(gSmallFont);
-    FontSetPalette(gLargeFont, 0);
+    gSmallFont->ResetPalette();
+    gLargeFont->SetPalette(0);
     /* No code: it lengthens the live ranges across it, which gives
      * &gPaletteCache and &gObjVramCursor r4 and &gSmallFont r6. */
     MATCH_BARRIER();
@@ -145,12 +121,12 @@ Credits::Credits()
     gObjVramCursor->baseTile = 0;
     ResetObjVram(gObjVramCursor);
     ResetObjVram(gObjVramCursor);
-    SetFontTileBase(gSmallFont, 0);
+    gSmallFont->SetTileBase(0);
     ReserveFontVram(gObjVramCursor, gSmallFont);
     {
         u32 base = gSmallFont->tileCount;
 
-        SetFontTileBase(gLargeFont, base);
+        gLargeFont->SetTileBase(base);
     }
     ReserveFontVram(gObjVramCursor, gLargeFont);
     MarkObjVram(gObjVramCursor);
@@ -238,7 +214,7 @@ void Credits::DrawText()
     ResetOamBuffer(gOamBuffer);
     RewindObjVram(gObjVramCursor);
     for (node = popups; node != 0; node = node->next) {
-        struct bitmap_font *m;
+        Font *m;
         CreditsLogo *logo;
         s32 tile;
         u32 zero;
@@ -253,9 +229,8 @@ void Credits::DrawText()
         case 1:
             m = gLargeFont;
         draw:
-            SetFontPos(m, node->x, node->y);
-            _call_via_r2((u8 *)m + m->record->slots[4].offset, (void *)(u32)node->index,
-                         m->record->slots[4].ptr);
+            m->SetPos(node->x, node->y);
+            m->DrawGlyph(node->index);
             break;
         case 2:
             logo = &logos[node->index];
@@ -328,8 +303,8 @@ void Credits::UpdateText()
     }
     tail = lineStart;
 
-    smallHeight = FontTextHeight(gSmallFont, (u8 *)gCreditsEmptyText);
-    largeHeight = FontTextHeight(gLargeFont, (u8 *)gCreditsEmptyText);
+    smallHeight = gSmallFont->TextHeight((u8 *)gCreditsEmptyText);
+    largeHeight = gLargeFont->TextHeight((u8 *)gCreditsEmptyText);
     maxHeight = smallHeight;
     penX = 0;
     if (*stream == 0) {
@@ -365,14 +340,10 @@ void Credits::UpdateText()
                     advance = logos[n->index].width;
                 } else {
                     if (largeFont == 0) {
-                        struct icon_slot *s = &gSmallFont->record->slots[1];
-
-                        advance = _call_via_r3((u8 *)gSmallFont + s->offset, p, 1, s->ptr);
+                        advance = gSmallFont->MeasureChars((u8 *)p, 1);
                         height = smallHeight;
                     } else {
-                        struct icon_slot *s = &gLargeFont->record->slots[1];
-
-                        advance = _call_via_r3((u8 *)gLargeFont + s->offset, p, 1, s->ptr);
+                        advance = gLargeFont->MeasureChars((u8 *)p, 1);
                         height = largeHeight;
                     }
                     if (*stream != ' ') {
