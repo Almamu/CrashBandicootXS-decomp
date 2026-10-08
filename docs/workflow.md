@@ -154,7 +154,10 @@ incomplete pass and should be finished before moving on.
      touches a struct that has a C view or a class twin,
      `python3 tools/layout_audit.py diff A B` compares their layouts
      from the compiler's debug info (`views` and `names` survey the whole
-     tree; see CONTRIBUTING.md).
+     tree; see CONTRIBUTING.md). `python3 tools/match_prune.py FILE`
+     lists the file's pins and empty-asm nudges that the object no
+     longer needs (`--write` removes them); see "Pruning workarounds"
+     in matching_techniques.md.
    - Replace magic numeric constants with an existing named constant
      when one already covers this exact value/meaning elsewhere in the
      project (`OAM_ENTRY_COUNT`, `DMA_ENABLE`, and so on); don't invent a
