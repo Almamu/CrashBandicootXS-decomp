@@ -1,11 +1,11 @@
 #include "pickups.hpp"
 #include "player.hpp"
 #include "hud.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "math_util.h"
 #include "util.h"
-#include "audio.h"
 #include "gfx.h"
 #include "level.h"
 #include "globals.h"
@@ -54,7 +54,7 @@ void ExtraLife::PickUp(u8 randomize)
     s32 outX, outY;
     s32 newX, newY;
 
-    PlaySfx(gAudioContext, SFX_EXTRA_LIFE, 0x100);
+    gAudioContext->PlaySfx(SFX_EXTRA_LIFE, 0x100);
     affine = 0xa0;
 
     if (randomize) {
@@ -112,7 +112,7 @@ void ExtraLife::Update()
         n = y + velY;
         y = n;
         if (Q8_TO_INT(px + vx) <= 0xb4 && Q8_TO_INT(n) <= 0xc) {
-            PlaySfx(gAudioContext, SFX_HUD_COLLECT, 0x100);
+            gAudioContext->PlaySfx(SFX_HUD_COLLECT, 0x100);
             AddLife(gLevelState);
             MarkGone();
         }
@@ -177,7 +177,7 @@ void ExtraLife::SendToHud()
     s32 outX, outY;
     s32 newX, newY;
 
-    PlaySfx(gAudioContext, SFX_EXTRA_LIFE, 0x100);
+    gAudioContext->PlaySfx(SFX_EXTRA_LIFE, 0x100);
     state = 1;
     x -= INT_TO_Q8(mode);
     screenSpace = 1;
@@ -300,7 +300,7 @@ void Wumpa::CheckPickup()
         if (AabbOverlaps(&playerBox, &box)) {
             f.b.bit3 = 1;
             PickUp(1);
-            PlaySfx(gAudioContext, SFX_WUMPA_HIT, 0x80);
+            gAudioContext->PlaySfx(SFX_WUMPA_HIT, 0x80);
         }
     } else {
         struct aabb playerBox = player->GetAnimHitbox();

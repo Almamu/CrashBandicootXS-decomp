@@ -1,4 +1,5 @@
 #include "save_menu.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "core.h"
@@ -7,7 +8,6 @@ extern "C" {
 #include "save.h"
 #include "util.h"
 #include "system.h"
-#include "audio.h"
 #include "gfx.h"
 #include "level.h"
 #include "globals.h"
@@ -112,7 +112,7 @@ SaveMenu::SaveMenu()
     gPaletteCache->FreeUnlockedSlots();
     InitIcons();
     LoadBg();
-    PlaySong(gAudioContext, SONG_WARP_ROOM);
+    gAudioContext->PlaySong(SONG_WARP_ROOM);
     LoadData();
     SummarizeProgress(&currentStats, PackSaveData(gLevelState));
     RefreshSlotSummaries(*cartSaveAddr);
@@ -209,12 +209,12 @@ void SaveMenu::Input(u32 keys)
 void SaveMenu::MainInput(u32 keys)
 {
     if (keys & (B_BUTTON | START_BUTTON)) {
-        PlaySfx(gAudioContext, SFX_MENU_BACK, 0x100);
+        gAudioContext->PlaySfx(SFX_MENU_BACK, 0x100);
         done = 1;
         return;
     }
     if (keys & A_BUTTON) {
-        PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
+        gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
         switch (cursor) {
         case 0:
             state = 1;
@@ -245,13 +245,13 @@ void SaveMenu::MainInput(u32 keys)
         return;
     }
     if (keys & DPAD_UP) {
-        PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
+        gAudioContext->PlaySfx(SFX_MENU_MOVE, 0x100);
         cursor -= 1;
         if (cursor < 0) {
             cursor = 4;
         }
     } else if (keys & DPAD_DOWN) {
-        PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
+        gAudioContext->PlaySfx(SFX_MENU_MOVE, 0x100);
         cursor += 1;
         if (cursor > 4) {
             cursor = 0;
@@ -266,7 +266,7 @@ void SaveMenu::MainInput(u32 keys)
 void SaveMenu::MoveCursor(u32 keys)
 {
     if (keys & DPAD_UP) {
-        PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
+        gAudioContext->PlaySfx(SFX_MENU_MOVE, 0x100);
         if ((u32)cursor <= 4) {
             switch (cursor) {
             case 0:
@@ -285,7 +285,7 @@ void SaveMenu::MoveCursor(u32 keys)
         return;
     }
     if (keys & DPAD_DOWN) {
-        PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
+        gAudioContext->PlaySfx(SFX_MENU_MOVE, 0x100);
         if ((u32)cursor <= 4) {
             switch (cursor) {
             case 0:
@@ -305,7 +305,7 @@ void SaveMenu::MoveCursor(u32 keys)
     }
     if (keys & DPAD_SIDEWAYS) {
         if (cursor != 4) {
-            PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
+            gAudioContext->PlaySfx(SFX_MENU_MOVE, 0x100);
             cursor ^= 2;
         }
     }
@@ -328,28 +328,28 @@ void SaveMenu::LoadInput(u32 keys, struct save_data *handle)
     if (keys & START_BUTTON) {
     confirm:
         if (cursor == 4) {
-            PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
+            gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
             state = 0;
             cursor = 0;
             return;
         }
         if (IsSaveSlotEmpty(handle, cursor)) {
-            PlaySfx(gAudioContext, SFX_MENU_ERROR, 0x100);
+            gAudioContext->PlaySfx(SFX_MENU_ERROR, 0x100);
             return;
         }
-        PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
+        gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
         ReadSaveSlot(handle, cursor, &buf);
         UnpackSaveData(gLevelState, &buf.progress);
         SetCurrentLevel(gLevelState, buf.level);
-        SetSfxVolume(gAudioContext, buf.sfxVolume);
-        SetMusicVolume(gAudioContext, buf.musicVolume);
+        gAudioContext->SetSfxVolume(buf.sfxVolume);
+        gAudioContext->SetMusicVolume(buf.musicVolume);
         SummarizeProgress(&currentStats, PackSaveData(gLevelState));
         gameLoaded = 1;
         done = 1;
         return;
     }
     if (keys & B_BUTTON) {
-        PlaySfx(gAudioContext, SFX_MENU_BACK, 0x100);
+        gAudioContext->PlaySfx(SFX_MENU_BACK, 0x100);
         state = 0;
         cursor = 0;
         return;
@@ -373,7 +373,7 @@ void SaveMenu::LinkInput()
     if (result == 3) {
         state = 0;
         cursor = 1;
-        PlaySfx(gAudioContext, SFX_MENU_BACK, 0x100);
+        gAudioContext->PlaySfx(SFX_MENU_BACK, 0x100);
         return;
     }
 
@@ -424,7 +424,7 @@ void SaveMenu::SaveToSlot(s32 rowIndex)
     struct save_data **handleAddr2;
     u32 wasSelected;
     struct level_state **c0Addr;
-    struct AudioContext **bcAddr;
+    AudioContext **bcAddr;
 
     if (!IsSaveSlotEmpty(*handleAddr, rowIndex)) {
         ReadSaveSlot(*handleAddr, rowIndex, buf);
@@ -446,8 +446,8 @@ void SaveMenu::SaveToSlot(s32 rowIndex)
     buf[1].level = (u8)GetCurrentLevel(*c0Addr);
 
     bcAddr = &gAudioContext;
-    buf[1].sfxVolume = (u16)GetSfxVolume(*bcAddr);
-    buf[1].musicVolume = (u16)GetMusicVolume(*bcAddr);
+    buf[1].sfxVolume = (u16)(*bcAddr)->GetSfxVolume();
+    buf[1].musicVolume = (u16)(*bcAddr)->GetMusicVolume();
 
     /* The ROM recomputes `cartSave`'s address a second time here
      * (a fresh `adds r4, r7, #0` / `adds r4, #0x8c` pair) rather than
@@ -487,27 +487,27 @@ void SaveMenu::OverwriteInput(u32 keys)
         } else {
             state = 5;
             cursor = pendingSlot;
-            PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
+            gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
         }
         return;
     }
     if (keys & B_BUTTON) {
         state = 5;
         cursor = pendingSlot;
-        PlaySfx(gAudioContext, SFX_MENU_BACK, 0x100);
+        gAudioContext->PlaySfx(SFX_MENU_BACK, 0x100);
         return;
     }
     if (keys & DPAD_UP) {
         if (cursor == 1) {
             cursor = 0;
-            PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
+            gAudioContext->PlaySfx(SFX_MENU_MOVE, 0x100);
         }
         return;
     }
     if (keys & DPAD_DOWN) {
         if (cursor == 0) {
             cursor = 1;
-            PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
+            gAudioContext->PlaySfx(SFX_MENU_MOVE, 0x100);
         }
     }
 }
@@ -525,12 +525,12 @@ void SaveMenu::SaveInput(u32 keys)
     if (keys & START_BUTTON) {
     confirm:
         if (cursor == 4) {
-            PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
+            gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
             state = 0;
             cursor = 2;
             return;
         }
-        PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
+        gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
         if (!IsSaveSlotEmpty(cartSave, cursor)) {
             state = 9;
             pendingSlot = cursor;
@@ -543,7 +543,7 @@ void SaveMenu::SaveInput(u32 keys)
         return;
     }
     if (keys & B_BUTTON) {
-        PlaySfx(gAudioContext, SFX_MENU_BACK, 0x100);
+        gAudioContext->PlaySfx(SFX_MENU_BACK, 0x100);
         state = 0;
         cursor = 2;
         return;
@@ -562,23 +562,23 @@ void SaveMenu::DeleteInput(u32 keys)
     if (keys & START_BUTTON) {
     confirm:
         if (cursor == 4) {
-            PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
+            gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
             state = 0;
             cursor = 3;
             return;
         }
         if (IsSaveSlotEmpty(cartSave, cursor)) {
-            PlaySfx(gAudioContext, SFX_MENU_ERROR, 0x100);
+            gAudioContext->PlaySfx(SFX_MENU_ERROR, 0x100);
             return;
         }
-        PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
+        gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
         state = 7;
         pendingSlot = cursor;
         cursor = 0;
         return;
     }
     if (keys & B_BUTTON) {
-        PlaySfx(gAudioContext, SFX_MENU_BACK, 0x100);
+        gAudioContext->PlaySfx(SFX_MENU_BACK, 0x100);
         state = 0;
         cursor = 3;
         return;
@@ -616,27 +616,27 @@ void SaveMenu::ConfirmDeleteInput(u32 keys)
         } else {
             state = 6;
             cursor = pendingSlot;
-            PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
+            gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
         }
         return;
     }
     if (keys & B_BUTTON) {
         state = 6;
         cursor = pendingSlot;
-        PlaySfx(gAudioContext, SFX_MENU_BACK, 0x100);
+        gAudioContext->PlaySfx(SFX_MENU_BACK, 0x100);
         return;
     }
     if (keys & DPAD_UP) {
         if (cursor == 1) {
             cursor = 0;
-            PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
+            gAudioContext->PlaySfx(SFX_MENU_MOVE, 0x100);
         }
         return;
     }
     if (keys & DPAD_DOWN) {
         if (cursor == 0) {
             cursor = 1;
-            PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
+            gAudioContext->PlaySfx(SFX_MENU_MOVE, 0x100);
         }
     }
 }

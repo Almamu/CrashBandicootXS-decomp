@@ -1,8 +1,8 @@
 #include "vehicle.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "math_util.h"
-#include "audio.h"
 #include "actor.h"
 #include "gfx.h"
 #include "level.h"
@@ -39,7 +39,7 @@ void PolarPlayer::StateLaunched()
 void PolarPlayer::StateFinish()
 {
     if (animDone != 0) {
-        PlaySfx(gAudioContext, SFX_POLAR_FINISH_LEAP, 0x100);
+        gAudioContext->PlaySfx(SFX_POLAR_FINISH_LEAP, 0x100);
         gPolarPlayerVelY = 0xFFFFF980;
         SetState(0xb, 7);
         if (y > 0x2000)
@@ -82,7 +82,7 @@ void PolarPlayer::Catch()
     gPolarAkuAku->ClearMask();
     gPolarPlayerInactive = 1;
     SetState(7, 6);
-    PlaySfx(gAudioContext, SFX_YETI_CATCH, 0x100);
+    gAudioContext->PlaySfx(SFX_YETI_CATCH, 0x100);
 }
 
 /* Feeds `n` wumpas into the `gPolarQueuedWumpa` accumulator

@@ -1,5 +1,6 @@
 #include "sprite_obj.hpp"
 #include "frontend.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "match.h"
@@ -10,7 +11,6 @@ extern "C" {
 #include "util.h"
 #include <libgcc.h>
 #include "system.h"
-#include "audio.h"
 #include "gfx.h"
 #include "globals.h"
 #include "math_util.h"
@@ -77,7 +77,7 @@ TitleScreen::TitleScreen()
     selection = 0;
     blinkCounter = 0;
 
-    StartSong(gAudioContext, SONG_MAIN_MENU_EUROPE);
+    gAudioContext->StartSong(SONG_MAIN_MENU_EUROPE);
 }
 
 /* Loads BG2's palette, tiles and map from gTitleScreenBg, packing the
@@ -307,7 +307,7 @@ void TitleScreen::DrawLogoPieces()
                 if (*cnt == -1)
                     *cnt = 10;
                 if (--*cnt == 0)
-                    PlaySfx(gAudioContext, SFX_UNKNOWN_4A, 0x100);
+                    gAudioContext->PlaySfx(SFX_UNKNOWN_4A, 0x100);
             }
             d = 0x1000000 / slot->velA;
             scale = d;
@@ -356,7 +356,7 @@ void TitleScreen::DrawLogoPieces()
                 if (*cnt != 0) {
                     if (*cnt == -1) {
                         *cnt = 8;
-                        PlaySfx(gAudioContext, SFX_UNKNOWN_3D, 0x100);
+                        gAudioContext->PlaySfx(SFX_UNKNOWN_3D, 0x100);
                     } else if (--*cnt == 0) {
                         shake = 30;
                     }

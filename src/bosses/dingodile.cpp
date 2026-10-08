@@ -1,12 +1,12 @@
 #include "bg_layer.hpp"
 #include "boss_ctrl.hpp"
 #include "player.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "match.h"
 #include "sprite_bank.h"
 #include "util.h"
-#include "audio.h"
 #include "memory.h"
 #include "crates.h"
 #include "level.h"
@@ -464,7 +464,7 @@ void DingodileCtrl::SetState(MovingSprite *part, s32 next)
         timer = 0x64;
         if (counter > 2)
             timer = 1;
-        PlaySfx(gAudioContext, SFX_BOSS_HIT, 0x100);
+        gAudioContext->PlaySfx(SFX_BOSS_HIT, 0x100);
         part->f.b.visible = 0;
         StartMotion(part, 2);
         SetTargetAnim(part, 1);
@@ -501,7 +501,7 @@ void DingodileCtrl::SpawnShieldOrRocket(s32 mode, u16 x, u16 y, MovingSprite *ow
         shield = p;
         break;
     case 1:
-        PlaySfx(gAudioContext, SFX_DINGODILE_ROCKET, 0x100);
+        gAudioContext->PlaySfx(SFX_DINGODILE_ROCKET, 0x100);
         SetTag(p, 7);
         p->ResetFrameTimer();
         p->ResetFrameIndex();
@@ -657,7 +657,7 @@ void DingodileProjectileCtrl::Update(MovingSprite *part)
                     owner->mover->SetMode(7);
                     SetMode(6);
                     SetTargetAnim(part, 8);
-                    PlaySfx(gAudioContext, SFX_UNKNOWN_39, 0x100);
+                    gAudioContext->PlaySfx(SFX_UNKNOWN_39, 0x100);
                 }
             }
         }
@@ -672,7 +672,7 @@ void DingodileProjectileCtrl::Update(MovingSprite *part)
                 if (state == 3) {
                     SetMode(6);
                     SetTargetAnim(part, 8);
-                    PlaySfx(gAudioContext, SFX_UNKNOWN_39, 0x100);
+                    gAudioContext->PlaySfx(SFX_UNKNOWN_39, 0x100);
                 }
             }
         }
@@ -708,7 +708,7 @@ void DingodileProjectileCtrl::Update(MovingSprite *part)
             if (y >= LevelBottom() - 0x2000) {
                 SetMode(6);
                 SetTargetAnim(part, 8);
-                PlaySfx(gAudioContext, SFX_UNKNOWN_39, 0x100);
+                gAudioContext->PlaySfx(SFX_UNKNOWN_39, 0x100);
             }
             break;
         }

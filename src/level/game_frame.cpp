@@ -1,6 +1,7 @@
 #include "hud.hpp"
 #include "frontend.hpp"
 #include "spawners.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "core.h"
@@ -12,7 +13,6 @@ extern "C" {
 #include "frontend.h"
 #include "util.h"
 #include "system.h"
-#include "audio.h"
 #include "menus.h"
 #include "actor.h"
 #include "gfx.h"
@@ -195,7 +195,7 @@ void UpdateGameFrame(struct level_state *self)
                 }
                 break;
             }
-            ResetAmbientSfx(gAudioContext);
+            gAudioContext->ResetAmbientSfx();
             {
                 s32 tier = self->maskLevel;
                 s32 arg = MASK_LEVEL_TWO;

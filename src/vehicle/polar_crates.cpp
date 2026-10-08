@@ -1,9 +1,9 @@
 #define POLAR_CRATE_CONSTRUCTORS_OUT_OF_LINE
 #include "vehicle.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "math_util.h"
-#include "audio.h"
 #include "actor.h"
 #include "level.h"
 #include "globals.h"
@@ -27,7 +27,7 @@ void PolarAkuAkuCrate::Update()
     }
 
     if (animIndex != 0x12 && IsTouchingYeti(this)) {
-        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
+        gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         AddBrokenCrate(gLevelState);
         Break();
         palette = 1;
@@ -40,7 +40,7 @@ void PolarAkuAkuCrate::Update()
 void PolarTimeCrate::Update()
 {
     if (animIndex != 0x12 && (u8)IsTouchingPlayer(this)) {
-        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
+        gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         AddBrokenCrate(gLevelState);
 
         switch ((u8)record->index) {
@@ -67,7 +67,7 @@ void PolarTimeCrate::Update()
 void PolarNitroCrate::Detonate()
 {
     if (animIndex != 0x12) {
-        PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
+        gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
         AddBrokenCrate(gLevelState);
         Explode();
     }
@@ -83,7 +83,7 @@ void PolarNitroCrate::Detonate()
 void PolarFourWumpaCrate::Update()
 {
     if (animIndex != 0x12 && (u8)IsTouchingPlayer(this)) {
-        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
+        gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         AddBrokenCrate(gLevelState);
         static_cast<PolarPlayer *>(gActorList)->QueueWumpa(4);
         Break();
@@ -96,7 +96,7 @@ void PolarFourWumpaCrate::Update()
 void PolarBasicCrate::Update()
 {
     if (animIndex != 0x12 && (u8)IsTouchingPlayer(this)) {
-        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
+        gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         AddBrokenCrate(gLevelState);
         static_cast<PolarPlayer *>(gActorList)->QueueWumpa(1);
         Break();

@@ -1,11 +1,11 @@
 #include "boss_actors.hpp"
 #include "vehicle.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "match.h"
 #include <libgcc.h>
 #include "system.h"
-#include "audio.h"
 #include "actor.h"
 #include "gfx.h"
 #include "level.h"
@@ -47,7 +47,7 @@ void JetpackCollectedWumpa::Update()
     nx = x += velX;
     ny = y += velY;
     if (nx <= 0x1000 || ny <= 0x1000) {
-        PlaySfx(gAudioContext, SFX_HUD_COLLECT, 0x100);
+        gAudioContext->PlaySfx(SFX_HUD_COLLECT, 0x100);
         delete this;
         return;
     }
@@ -170,7 +170,7 @@ void HovercraftFireball::Damage(s32 amount)
         return;
 
     palette = 4;
-    PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
+    gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
     SetState(1, 1);
 }
 
@@ -219,7 +219,7 @@ void HovercraftFireball::StateFly()
     if ((u8)IsTouchingPlayer(this)) {
         ((HpActor *)gActorList)->Damage(6);
         palette = 4;
-        PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
+        gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
         SetState(1, 1);
     }
 }

@@ -1,7 +1,7 @@
 #include "boss_actors.hpp"
+#include "audio.hpp"
 
 extern "C" {
-#include "audio.h"
 #include "globals.h"
 }
 
@@ -25,6 +25,6 @@ void DamageAirship(s32 delta)
         gAirshipVelZ = 0xaa;
         SetAirshipState(4, 1);
     } else {
-        PlaySfx(gAudioContext, SFX_AIRSHIP_HIT, 0x100);
+        gAudioContext->PlaySfx(SFX_AIRSHIP_HIT, 0x100);
     }
 }

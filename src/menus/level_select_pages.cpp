@@ -1,7 +1,7 @@
 #include "level_select.hpp"
+#include "audio.hpp"
 
 extern "C" {
-#include "audio.h"
 #include "math_util.h"
 }
 
@@ -59,7 +59,7 @@ void LevelSelect::Confirm()
 {
     s32 t;
 
-    PlaySfx(gAudioContext, SFX_LEVEL_SELECT_CONFIRM, 0x100);
+    gAudioContext->PlaySfx(SFX_LEVEL_SELECT_CONFIRM, 0x100);
     items[index]->SetSelected(0);
     panel->Move(0x78, 0x35);
     panel->Hide();
@@ -93,7 +93,7 @@ void LevelSelect::Exit()
 {
     s32 t;
 
-    PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
+    gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
     blend.bits.effect = 3;
     blend.bits.bdFirst = 1;
     blend.bits.bg0First = 1;
@@ -168,7 +168,7 @@ void LevelSelect::PrevWorld()
 {
     if (HasPrevWorld()) {
         SettlePage();
-        PlaySfx(gAudioContext, SFX_LEVEL_SELECT_PREV_WORLD, 0x100);
+        gAudioContext->PlaySfx(SFX_LEVEL_SELECT_PREV_WORLD, 0x100);
         goto check;
     loop:
         world--;
@@ -183,7 +183,7 @@ void LevelSelect::PrevWorld()
     done:
         RefreshPage();
     } else {
-        PlaySfx(gAudioContext, SFX_MENU_ERROR, 0x100);
+        gAudioContext->PlaySfx(SFX_MENU_ERROR, 0x100);
     }
 }
 
@@ -193,7 +193,7 @@ void LevelSelect::NextWorld()
 {
     if (IsNextWorldOpen()) {
         SettlePage();
-        PlaySfx(gAudioContext, SFX_LEVEL_SELECT_NEXT_WORLD, 0x100);
+        gAudioContext->PlaySfx(SFX_LEVEL_SELECT_NEXT_WORLD, 0x100);
         goto check;
     loop:
         world++;
@@ -208,7 +208,7 @@ void LevelSelect::NextWorld()
     done:
         RefreshPage();
     } else {
-        PlaySfx(gAudioContext, SFX_MENU_ERROR, 0x100);
+        gAudioContext->PlaySfx(SFX_MENU_ERROR, 0x100);
     }
 }
 

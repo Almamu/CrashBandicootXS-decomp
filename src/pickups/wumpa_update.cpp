@@ -2,12 +2,12 @@
 #include "spawners.hpp"
 #include "player.hpp"
 #include "hud.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "math_util.h"
 #include "match.h"
 #include "util.h"
-#include "audio.h"
 #include "gfx.h"
 #include "level.h"
 #include "globals.h"
@@ -28,7 +28,7 @@ void Wumpa::PickUp(u8 randomize)
     s32 outX, outY;
     s32 newX, newY;
 
-    PlaySfx(gAudioContext, SFX_WUMPA, 0x100);
+    gAudioContext->PlaySfx(SFX_WUMPA, 0x100);
     if (randomize) {
         u32 rv = (u16)rand();
         u8 lowbit = rv & 1;
@@ -83,7 +83,7 @@ void Wumpa::Update()
                 affine = 0;
         }
         if (Q8_TO_INT(x) <= 0x10 && Q8_TO_INT(y) <= 0x10) {
-            PlaySfx(gAudioContext, SFX_HUD_COLLECT, 0x100);
+            gAudioContext->PlaySfx(SFX_HUD_COLLECT, 0x100);
             CollectWumpa(gLevelState);
             MarkGone();
         }
@@ -223,7 +223,7 @@ void Wumpa::SendToHud()
     s32 outX, outY;
     s32 newX, newY;
 
-    PlaySfx(gAudioContext, SFX_WUMPA, 0x100);
+    gAudioContext->PlaySfx(SFX_WUMPA, 0x100);
     state = 1;
     x -= INT_TO_Q8(mode);
     affine = 0xa0;

@@ -1,9 +1,9 @@
 #include "frontend.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "gba/io_reg.h"
 #include "graphics_package.h"
-#include "audio.h"
 #include "memory.h"
 #include "globals.h"
 }
@@ -47,5 +47,5 @@ ContinuePrompt::ContinuePrompt()
     *(vu32 *)REG_ADDR_BLDCNT = blend.raw;
     blinkCounter = 0;
     selection = 0;
-    FadeOutMusic(gAudioContext, 0);
+    gAudioContext->FadeOutMusic(0);
 }

@@ -1,9 +1,9 @@
 #include "menus.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "core.h"
 #include "match.h"
-#include "audio.h"
 #include "system.h"
 #include "globals.h"
 }
@@ -60,12 +60,12 @@ s32 PauseMenu::Loop()
         if (KEYS.pressed & DPAD_UP) {
             CursorUp();
             flashTimer = 0x1e;
-            PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
+            gAudioContext->PlaySfx(SFX_MENU_MOVE, 0x100);
         }
         if (KEYS.pressed & DPAD_DOWN) {
             CursorDown();
             flashTimer = 0x1e;
-            PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
+            gAudioContext->PlaySfx(SFX_MENU_MOVE, 0x100);
         }
         in = gKeys.all;
         pressed = in >> 16;
@@ -98,14 +98,14 @@ s32 PauseMenu::Loop()
         if (KEYS.pressed & A_BUTTON) {
             result = rows[cursor].type;
             if ((u32)(result - 4) <= 1) {
-                PlaySfx(gAudioContext, SFX_MENU_ERROR, 0x100);
+                gAudioContext->PlaySfx(SFX_MENU_ERROR, 0x100);
             } else {
-                PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
+                gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
                 break;
             }
         }
         if (KEYS.pressed & START_BUTTON) {
-            PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
+            gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
             result = 0;
             break;
         }

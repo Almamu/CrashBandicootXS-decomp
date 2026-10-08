@@ -1,9 +1,9 @@
 #include "enemy_ctrl.hpp"
 #include "player.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "match.h"
-#include "audio.h"
 #include "globals.h"
 #include "player.h"
 }
@@ -122,12 +122,12 @@ void EnemyCtrl::UpdateHop()
         case 0:
             SetMotionX(3);
             SetMotionY(3);
-            PlaySfx(gAudioContext, SFX_ENEMY_HOP, 0x100);
+            gAudioContext->PlaySfx(SFX_ENEMY_HOP, 0x100);
             break;
         case 1:
             SetMotionX(0);
             SetMotionY(3);
-            PlaySfx(gAudioContext, SFX_ENEMY_HOP, 0x100);
+            gAudioContext->PlaySfx(SFX_ENEMY_HOP, 0x100);
             break;
         }
     }

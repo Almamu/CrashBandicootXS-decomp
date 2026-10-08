@@ -1,9 +1,9 @@
 #include "vehicle.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "math_util.h"
 #include "util.h"
-#include "audio.h"
 #include "actor.h"
 #include "gfx.h"
 #include "level.h"
@@ -42,24 +42,24 @@ void PolarElectricFence::Update()
     if (animIndex == 0) {
         box = record->box_14;
         if (IsTouchingYeti(this)) {
-            PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
+            gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
             RestartAnim(1);
         }
         box = gPolarElectricFenceWireBox;
         if ((u8)IsTouchingPlayer(this)) {
             if ((u8)static_cast<PolarPlayer *>(gActorList)->Shock()) {
-                PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
+                gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
                 RestartAnim(1);
             }
         } else {
             box = gPolarElectricFenceLeftPostBox;
             if ((u8)IsTouchingPlayer(this)) {
-                PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
+                gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
                 RestartAnim(1);
             }
             box = gPolarElectricFenceRightPostBox;
             if ((u8)IsTouchingPlayer(this)) {
-                PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
+                gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
                 RestartAnim(1);
             }
         }
@@ -99,10 +99,10 @@ void PolarLauncher::Update()
     case 0:
         if ((u8)IsTouchingPlayer(this)) {
             static_cast<PolarPlayer *>(gActorList)->Launch();
-            PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
+            gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
             SetState(1, 1);
         } else if (IsTouchingYeti(this)) {
-            PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
+            gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
             SetState(1, 1);
         }
         break;
@@ -141,14 +141,14 @@ void PolarPenguin::Update()
                 velX = x > 0 ? 0x600 : -0x600;
                 velY = -(s32)(u16)RandRange(0x300);
                 velZ += 0x200;
-                PlaySfx(gAudioContext, SFX_ENEMY_KNOCKED_AWAY, 0x100);
+                gAudioContext->PlaySfx(SFX_ENEMY_KNOCKED_AWAY, 0x100);
                 SetState(1, 0);
             }
         } else if (IsTouchingYeti(this)) {
             velX = x > 0 ? 0x600 : -0x600;
             velY = -(s32)(u16)RandRange(0x300);
             velZ += 0x200;
-            PlaySfx(gAudioContext, SFX_ENEMY_KNOCKED_AWAY, 0x100);
+            gAudioContext->PlaySfx(SFX_ENEMY_KNOCKED_AWAY, 0x100);
             SetState(1, 0);
         }
     }

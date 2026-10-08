@@ -1,8 +1,8 @@
 #include "boss_actors.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "match.h"
-#include "audio.h"
 #include "actor.h"
 #include "globals.h"
 }
@@ -66,7 +66,7 @@ s32 GetHovercraftPartsLeft(void)
  * hovercraft falls (state 5). */
 void LoseHovercraftPart(void)
 {
-    PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
+    gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
 
     gHovercraftPartsLeft -= 1;
     if (gHovercraftPartsLeft == 0) {

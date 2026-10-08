@@ -1,9 +1,9 @@
 #include "crate_list.hpp"
 #include "crate.hpp"
 #include "player.hpp"
+#include "audio.hpp"
 
 extern "C" {
-#include "audio.h"
 #include "globals.h"
 }
 
@@ -43,6 +43,6 @@ void Crate::OpenAkuAku()
 
     if (p->f.flags >> 7) {
         p->HandleEvent(0, EVENT_MASK_GAIN, 0);
-        PlaySfx(gAudioContext, SFX_AKU_AKU_GAIN, 0x100);
+        gAudioContext->PlaySfx(SFX_AKU_AKU_GAIN, 0x100);
     }
 }

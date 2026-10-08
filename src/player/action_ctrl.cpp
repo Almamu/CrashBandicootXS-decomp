@@ -2,9 +2,9 @@
 #include "player_ctrl.hpp"
 #include "sprite_obj.hpp"
 #include "player.hpp"
+#include "audio.hpp"
 
 extern "C" {
-#include "audio.h"
 #include "globals.h"
 }
 
@@ -80,11 +80,11 @@ s32 ActionCtrl::SetTargetAnim(MovingSprite *part, s32 anim)
         case 0x18:
             anim = 0x26;
         skid:
-            StopSfx(gAudioContext, SFX_SKID);
-            PlaySfx(gAudioContext, SFX_SKID, 0x100);
+            gAudioContext->StopSfx(SFX_SKID);
+            gAudioContext->PlaySfx(SFX_SKID, 0x100);
             break;
         default:
-            StopSfx(gAudioContext, SFX_SKID);
+            gAudioContext->StopSfx(SFX_SKID);
             break;
         }
     }

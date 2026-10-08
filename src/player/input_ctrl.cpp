@@ -2,9 +2,9 @@
 #include "input_ctrl.hpp"
 #include "player_ctrl.hpp"
 #include "sprite_obj.hpp"
+#include "audio.hpp"
 
 extern "C" {
-#include "audio.h"
 #include "menus.h"
 #include "gfx.h"
 #include "memory.h"
@@ -85,7 +85,7 @@ void PlayerCtrl::QueueMotionX(u8 entry)
  * and reloads the target's palette. */
 void InputCtrl::KillPlayer(s32 anim)
 {
-    PlaySfx(gAudioContext, SFX_PLAYER_HURT, 0x100);
+    gAudioContext->PlaySfx(SFX_PLAYER_HURT, 0x100);
     SetMode(3);
     SetTargetAnim(target, anim);
     target->f.b.collides = 0;

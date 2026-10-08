@@ -1,9 +1,9 @@
 #include "cutscene.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "core.h"
 #include "cutscene.h"
-#include "audio.h"
 #include "gfx.h"
 #include "memory.h"
 #include "globals.h"
@@ -31,8 +31,6 @@ void SetSlideshowDispcnt(u32 value)
  * write-up and docs/matching/archive/issue-38-sound-channel-family.md for this
  * follow-up pass. */
 
-struct AudioContext;
-
 /* Tail half of RunSlideshow's per-item body (slideshow.cpppp) - duck-out
  * (`duckMusic`), fade-start (`fadeAfter`), and re-arm (`rearmSfx`/
  * `sfx`) - reused standalone against a caller-supplied index. Each
@@ -42,7 +40,7 @@ struct AudioContext;
 void Slideshow::EndSlide(s32 idx)
 {
     if (slides[idx]->duckMusic != 0) {
-        FadeOutMusic(gAudioContext, 0);
+        gAudioContext->FadeOutMusic(0);
     }
 
     {
@@ -57,7 +55,7 @@ void Slideshow::EndSlide(s32 idx)
         const struct cutscene_slide *item = slides[idx];
 
         if (item->rearmSfx != 0 && item->sfx != SFX_NONE) {
-            StopSfx(gAudioContext, item->sfx);
+            gAudioContext->StopSfx(item->sfx);
         }
     }
 }

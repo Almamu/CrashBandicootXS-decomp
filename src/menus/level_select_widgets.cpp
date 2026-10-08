@@ -1,8 +1,8 @@
 #include "level_select.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include <agb_syscall.h>
-#include "audio.h"
 #include "math_util.h"
 }
 
@@ -78,7 +78,7 @@ void ZoomBg::Update()
     case 2:
         if (image == 11)
             break;
-        PlaySfx(gAudioContext, SFX_ZOOM_BG_IN, 0x100);
+        gAudioContext->PlaySfx(SFX_ZOOM_BG_IN, 0x100);
         LoadTaggedAsset(gLevelSelectPictures[image].palette, buf);
         DmaCopy16(3, buf, BG_PLTT, 0x40);
         LoadTaggedAsset(gLevelSelectPictures[image].tiles, (void *)(BG_VRAM + (charBlock << 14)));
@@ -181,7 +181,7 @@ void ZoomBg::StartExit()
 /* Zooms the picture out with no follow-up picture (page turn). */
 void ZoomBg::ClearPicture()
 {
-    PlaySfx(gAudioContext, SFX_ZOOM_BG_OUT, 0x100);
+    gAudioContext->PlaySfx(SFX_ZOOM_BG_OUT, 0x100);
     state = 1;
     image = 11;
 }

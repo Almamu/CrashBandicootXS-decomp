@@ -400,7 +400,7 @@
     "StartSong"
    ],
    "consumer_files": [
-    "audio/audio.c"
+    "audio/audio.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 19,

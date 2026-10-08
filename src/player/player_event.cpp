@@ -2,11 +2,11 @@
 #include "spawners.hpp"
 #include "crate_list.hpp"
 #include "hud.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "util.h"
 #include "system.h"
-#include "audio.h"
 #include "crates.h"
 #include "level.h"
 #include "globals.h"
@@ -69,7 +69,7 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
     switch (event) {
     case EVENT_CRYSTAL:
         *GetCurrentLevelFlags(gLevelState) |= LEVEL_FLAG_CRYSTAL;
-        PlaySfx(gAudioContext, SFX_CRYSTAL, 0x100);
+        gAudioContext->PlaySfx(SFX_CRYSTAL, 0x100);
         break;
     case EVENT_ROOM_EXIT:
         RequestRoomExit();
@@ -96,31 +96,31 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
     case EVENT_STOPWATCH:
         if (gLevelState->maskLevel == MASK_LEVEL_INVINCIBLE)
             deadline = 0;
-        PlaySfx(gAudioContext, SFX_CLOCK, 0x100);
+        gAudioContext->PlaySfx(SFX_CLOCK, 0x100);
         StartTimeTrial(gLevelState);
         break;
     case EVENT_CRATE_GEM:
-        PlaySfx(gAudioContext, SFX_GEM, 0x100);
+        gAudioContext->PlaySfx(SFX_GEM, 0x100);
         *GetCurrentLevelFlags(gLevelState) |= LEVEL_FLAG_CRATE_GEM;
         break;
     case EVENT_GEM_PATH_GEM:
-        PlaySfx(gAudioContext, SFX_GEM, 0x100);
+        gAudioContext->PlaySfx(SFX_GEM, 0x100);
         *GetCurrentLevelFlags(gLevelState) |= LEVEL_FLAG_GEM_PATH_GEM;
         break;
     case EVENT_YELLOW_GEM:
-        PlaySfx(gAudioContext, SFX_GEM, 0x100);
+        gAudioContext->PlaySfx(SFX_GEM, 0x100);
         gLevelState->progress.flags |= 2;
         break;
     case EVENT_GREEN_GEM:
-        PlaySfx(gAudioContext, SFX_GEM, 0x100);
+        gAudioContext->PlaySfx(SFX_GEM, 0x100);
         gLevelState->progress.flags |= 4;
         break;
     case EVENT_RED_GEM:
-        PlaySfx(gAudioContext, SFX_GEM, 0x100);
+        gAudioContext->PlaySfx(SFX_GEM, 0x100);
         gLevelState->progress.flags |= 1;
         break;
     case EVENT_BLUE_GEM:
-        PlaySfx(gAudioContext, SFX_GEM, 0x100);
+        gAudioContext->PlaySfx(SFX_GEM, 0x100);
         gLevelState->progress.flags |= 8;
         break;
     case EVENT_POWER_DOUBLE_JUMP:
@@ -167,8 +167,8 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
 
                         deadline = gRoomFrameCount + 90;
                         SetMaskLevel(game, game->maskLevel - 1);
-                        PlaySfx(gAudioContext, SFX_AKU_AKU_LOSE, 0x100);
-                        PlaySfx(gAudioContext, SFX_PLAYER_HURT, 0x100);
+                        gAudioContext->PlaySfx(SFX_AKU_AKU_LOSE, 0x100);
+                        gAudioContext->PlaySfx(SFX_PLAYER_HURT, 0x100);
                         mover->HandleEvent((MovingSprite *)from, EVENT_MASK_HIT, arg);
                         /* The ROM reloads the mode here and never uses it. */
                         (void)*(volatile s32 *)&gLevelState->maskLevel;

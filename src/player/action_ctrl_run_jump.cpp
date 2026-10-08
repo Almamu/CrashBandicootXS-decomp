@@ -2,11 +2,11 @@
 #include "spawners.hpp"
 #include "sprite_obj.hpp"
 #include "player.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "match.h"
 #include "system.h"
-#include "audio.h"
 #include "level.h"
 #include "globals.h"
 }
@@ -30,7 +30,7 @@ void ActionCtrl::StateRun()
     if (busy)
         return;
     if (INPUT_PRESSED(in) & 1) {
-        PlaySfx(gAudioContext, SFX_JUMP, 0x100);
+        gAudioContext->PlaySfx(SFX_JUMP, 0x100);
         SetMode(ACTION_STATE_JUMP);
         SetTargetAnim(part, 0x13);
         frame = busy;
@@ -48,7 +48,7 @@ void ActionCtrl::StateRun()
             s32 frames;
             MovingSprite *obj;
 
-            PlaySfx(gAudioContext, SFX_SLIDE, 0x100);
+            gAudioContext->PlaySfx(SFX_SLIDE, 0x100);
             frames = 0x10;
             SetMode(ACTION_STATE_SLIDE);
             SetTargetAnim(part, 0xF);
@@ -141,7 +141,7 @@ void ActionCtrl::StateJump()
         if (busy == 0 && (INPUT_PRESSED(in) & 2)) {
             s32 frames;
 
-            PlaySfx(gAudioContext, SFX_SPIN, 0x100);
+            gAudioContext->PlaySfx(SFX_SPIN, 0x100);
             frames = 0x18;
             SetMode(ACTION_STATE_AIR_SPIN);
             SetTargetAnim(part, 0x10);

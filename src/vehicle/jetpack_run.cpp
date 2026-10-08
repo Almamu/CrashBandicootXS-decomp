@@ -1,10 +1,10 @@
 #include "vehicle.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "math_util.h"
 #include "match.h"
 #include <libgcc.h>
-#include "audio.h"
 #include "actor.h"
 #include "gfx.h"
 #include "level.h"
@@ -40,7 +40,7 @@ void JetpackPlayer::FinishRun()
         gJetpackPlayerVelY = zero;
         gJetpackPlayerVelX = zero;
         SetState(5, 4);
-        PlaySfx(gAudioContext, SFX_JETPACK_RUN_FINISH, 0x100);
+        gAudioContext->PlaySfx(SFX_JETPACK_RUN_FINISH, 0x100);
         if (gLevelState->timeTrial != 0)
             FreezeLevelClock(gLevelState, 0x2710);
     }
@@ -133,7 +133,7 @@ void JetpackPlayer::PassRing(s32 x, s32 y)
     case 4:
         if (gLevelState->timeTrial == 0) {
             AddLife(gLevelState);
-            PlaySfx(gAudioContext, SFX_EXTRA_LIFE, 0x100);
+            gAudioContext->PlaySfx(SFX_EXTRA_LIFE, 0x100);
         }
         break;
     }

@@ -1,10 +1,10 @@
 #include "action_ctrl.hpp"
 #include "sprite_obj.hpp"
 #include "player.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "system.h"
-#include "audio.h"
 #include "gfx.h"
 #include "level.h"
 #include "globals.h"
@@ -45,7 +45,7 @@ static inline void FaceRight(ActionCtrl *ctrl, Player *p, s32 pending)
  * and reloads the player's palette. */
 void ActionCtrl::KillPlayer(s32 anim)
 {
-    PlaySfx(gAudioContext, SFX_PLAYER_HURT, 0x100);
+    gAudioContext->PlaySfx(SFX_PLAYER_HURT, 0x100);
     SetTargetAnim(part, anim);
     SetMode(ACTION_STATE_DYING);
     QueueNowX(0);
@@ -111,7 +111,7 @@ void ActionCtrl::UpdateSkidAnim()
             goto unskid;
         if (tag == 0x26) {
         unskid:
-            StopSfx(gAudioContext, SFX_SKID);
+            gAudioContext->StopSfx(SFX_SKID);
             SetModeAnim(ACTION_STATE_IDLE, 0x12, 0, slippery);
         }
     }

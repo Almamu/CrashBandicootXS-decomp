@@ -1,7 +1,7 @@
 #include "boss_actors.hpp"
+#include "audio.hpp"
 
 extern "C" {
-#include "audio.h"
 #include "actor.h"
 #include "globals.h"
 }
@@ -20,7 +20,7 @@ void AirshipFireball::Damage(s32 amount)
     hp -= amount;
     if (hp <= 0) {
         palette = 4;
-        PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
+        gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
         SetState(2, 1);
     }
 }

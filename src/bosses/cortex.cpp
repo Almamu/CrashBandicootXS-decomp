@@ -2,12 +2,12 @@
 #include "boss_ctrl.hpp"
 #include "platform.hpp"
 #include "player.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "match.h"
 #include "sprite_bank.h"
 #include "util.h"
-#include "audio.h"
 #include "memory.h"
 #include "level.h"
 #include "globals.h"
@@ -346,7 +346,7 @@ void CortexTargetCtrl::Update(MovingSprite *part)
                 break;
             }
             if (timer == gCortexTargetBlinkStartTimes[boss->counter]) {
-                PlaySfx(gAudioContext, SFX_CORTEX_TARGET_BLINK, 0x100);
+                gAudioContext->PlaySfx(SFX_CORTEX_TARGET_BLINK, 0x100);
                 part->animating = left;
                 SetTargetAnim(part, 0x10);
                 blinking = 1;
@@ -487,9 +487,9 @@ void CortexTargetCtrl::FireShot(MovingSprite *part, s32 kind)
     c->f.b.active = 1;
     ForegroundList()->Add(c);
     if (kind == 1)
-        PlaySfx(gAudioContext, SFX_CORTEX_SHOT_FAST, 0x100);
+        gAudioContext->PlaySfx(SFX_CORTEX_SHOT_FAST, 0x100);
     else
-        PlaySfx(gAudioContext, SFX_CORTEX_SHOT, 0x100);
+        gAudioContext->PlaySfx(SFX_CORTEX_SHOT, 0x100);
 }
 
 /* While the part's `kind` is 1, the shot hurts the player it touches, or

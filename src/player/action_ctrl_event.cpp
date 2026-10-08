@@ -1,10 +1,10 @@
 #include "action_ctrl.hpp"
 #include "sprite_obj.hpp"
 #include "player.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "match.h"
-#include "audio.h"
 #include "gfx.h"
 #include "level.h"
 #include "sprite_bank.h"
@@ -181,7 +181,7 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
             s32 fire;
             s32 one;
 
-            PlaySfx(gAudioContext, SFX_SPIN, 0x100);
+            gAudioContext->PlaySfx(SFX_SPIN, 0x100);
             MATCH_CONST(one, 1);
             fire = in & 1;
             if (fire) {
@@ -206,11 +206,11 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
         frame = 0;
         break;
     case EVENT_WARP_BONUS_ROUND:
-        FadeOutMusic(gAudioContext, 0);
+        gAudioContext->FadeOutMusic(0);
         /* fallthrough */
     case EVENT_WARP_GEM_PATH:
     case EVENT_WARP_EXIT:
-        PlaySfx(gAudioContext, SFX_WARP, 0x100);
+        gAudioContext->PlaySfx(SFX_WARP, 0x100);
         {
             u8 *f = &gPlayer->f.flags;
 

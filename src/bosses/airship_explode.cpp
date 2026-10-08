@@ -1,9 +1,9 @@
 #include "boss_actors.hpp"
 #include "vehicle.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "util.h"
-#include "audio.h"
 #include "actor.h"
 #include "vehicle.h"
 #include "level_state.h"
@@ -78,7 +78,7 @@ void AirshipStateExplode(void)
     } else if (gAirshipStateTimer == 0xaa) {
         ResumeActorSpawns();
         SetAirshipState(5, 1);
-        PlaySfx(gAudioContext, SFX_UNKNOWN_42, 0x100);
+        gAudioContext->PlaySfx(SFX_UNKNOWN_42, 0x100);
         gAirshipVelZ = 0x9d;
         if (gLevelState->timeTrial == 0 && gAirshipCheckpointCount <= 1) {
             ActorSelf **pl = &gActorList;

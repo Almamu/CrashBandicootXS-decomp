@@ -1,13 +1,13 @@
 #include "bg_layer.hpp"
 #include "sprite_obj.hpp"
 #include "player.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "math_util.h"
 #include <agb_syscall.h>
 #include "util.h"
 #include "system.h"
-#include "audio.h"
 #include "gfx.h"
 #include "level.h"
 #include "globals.h"
@@ -314,7 +314,7 @@ void PartList::CollideWithPlayer(struct aabb box, MovingSprite *part)
                 if (gPlayer->speedY > 0) {
                     part->HandleEvent(1, EVENT_HIT, 0);
                     gPlayer->HandleEvent(0, EVENT_BOUNCE, 0);
-                    PlaySfx(gAudioContext, SFX_BOUNCE, 0x100);
+                    gAudioContext->PlaySfx(SFX_BOUNCE, 0x100);
                 }
             } else {
                 part->HandleEvent(1, kind, 0);

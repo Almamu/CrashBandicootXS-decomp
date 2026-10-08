@@ -366,7 +366,9 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
 # byte-identical with plain C - input.o's `keys = mask & pressed`
 # (old_agbcc copies `mask` first, as the ROM does), irq.o's
 # UpdateKeys and DISPSTAT updates, aabb.o's CommitBlendRegs (BLDY's
-# address derived from BLDCNT's), audio.o's VCount DISPSTAT updates.
+# address derived from BLDCNT's), audio.o's VCount DISPSTAT updates
+# (audio.cpp since, built by old_agbcp: agbcp gives the same AudioContext
+# methods but loads DISPSTAT's byte before the mask).
 OLD_AGBCC_OBJS += $(C_BUILDDIR)/system/input.o \
                   $(C_BUILDDIR)/system/irq.o \
                   $(C_BUILDDIR)/util/aabb.o \

@@ -1,10 +1,10 @@
 #include "save_menu.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "core.h"
 #include "gba/io_reg.h"
 #include "save.h"
-#include "audio.h"
 #include "gfx.h"
 #include "memory.h"
 #include "globals.h"
@@ -19,7 +19,7 @@ void SaveMenu::MessageInput(u32 keys)
         goto confirm;
     } else if (keys & START_BUTTON) {
     confirm:
-        PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
+        gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
         state = 0;
         cursor = 1;
     }

@@ -1,9 +1,9 @@
 #include "vehicle.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "math_util.h"
 #include "util.h"
-#include "audio.h"
 #include "actor.h"
 #include "gfx.h"
 #include "level.h"
@@ -184,7 +184,7 @@ s32 PolarPlayer::Hurt()
     s32 tier = gLevelState->maskLevel;
 
     if (tier == MASK_LEVEL_NONE) {
-        PlaySfx(gAudioContext, SFX_PLAYER_HURT, 0x100);
+        gAudioContext->PlaySfx(SFX_PLAYER_HURT, 0x100);
         QueueVramDmaTransfer((void *)gPolarPlayerShockPalette, (void *)OBJ_PLTT, 0x20, 0x10);
         SetState(6, 5);
         gPolarPauseLocked = 1;
@@ -216,7 +216,7 @@ s32 PolarPlayer::Shock()
 
     if (tier == MASK_LEVEL_NONE) {
         SetState(0xc, 0xb);
-        PlaySfx(gAudioContext, SFX_ELECTRIC_SHOCK, 0x100);
+        gAudioContext->PlaySfx(SFX_ELECTRIC_SHOCK, 0x100);
         gPolarSteerEnabled = 0;
         gPolarPlayerInactive = 1;
         SetCellAnimSpeed(0);
@@ -260,7 +260,7 @@ void PolarPlayer::StateMount()
     y = ny;
     gPolarPlayerVelY += 0x2d;
     if (ny > 0x2800) {
-        PlaySfx(gAudioContext, SFX_POLAR_MOUNT, 0x100);
+        gAudioContext->PlaySfx(SFX_POLAR_MOUNT, 0x100);
         y = 0x2800;
         SetState(9, 9);
         gPolarPlayerInactive = 0;
@@ -288,7 +288,7 @@ void PolarPlayer::StateRun()
     if (gPolarSteerEnabled != 0) {
         if (gKeys.half.pressed & 1) {
             SetState(4, 3);
-            PlaySfx(gAudioContext, SFX_JUMP, 0x100);
+            gAudioContext->PlaySfx(SFX_JUMP, 0x100);
             gPolarPlayerVelY = 0xFFFFF880;
         }
         /* The mask as in StateBoost (polar_player_states.cpp). */
@@ -331,7 +331,7 @@ void PolarPlayer::StateDash()
 
     if (gKeys.half.pressed & 1) {
         SetState(4, 3);
-        PlaySfx(gAudioContext, SFX_JUMP, 0x100);
+        gAudioContext->PlaySfx(SFX_JUMP, 0x100);
         gPolarPlayerVelY = 0xFFFFF880;
     }
 }

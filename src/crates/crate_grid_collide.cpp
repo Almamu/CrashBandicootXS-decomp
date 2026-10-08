@@ -1,10 +1,10 @@
 #include "bg_layer.hpp"
 #include "crate_list.hpp"
 #include "player.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "math_util.h"
-#include "audio.h"
 #include "level.h"
 #include "globals.h"
 #include "player.h"
@@ -114,7 +114,7 @@ void CrateList::CollideWithPlayer(struct aabb box, MovingSprite *part)
                 if (gPlayer->speedY > 0) {
                     part->HandleEvent(1, EVENT_HIT, 0);
                     gPlayer->HandleEvent(0, EVENT_BOUNCE, 0);
-                    PlaySfx(gAudioContext, SFX_BOUNCE, 0x100);
+                    gAudioContext->PlaySfx(SFX_BOUNCE, 0x100);
                 }
             } else {
                 part->HandleEvent(1, kind, 0);

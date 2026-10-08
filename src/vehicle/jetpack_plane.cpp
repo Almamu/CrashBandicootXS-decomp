@@ -1,9 +1,9 @@
 #include "vehicle.hpp"
 #include "boss_actors.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "math_util.h"
-#include "audio.h"
 #include "actor.h"
 #include "globals.h"
 }
@@ -170,7 +170,7 @@ void JetpackPlane::Damage(s32 amount)
         idx = 4;
     }
     SetState(2, idx);
-    PlaySfx(gAudioContext, SFX_JETPACK_PLANE_DOWN, 0x100);
+    gAudioContext->PlaySfx(SFX_JETPACK_PLANE_DOWN, 0x100);
 }
 
 /* CreateJetpackPlane: 4 hit points; a spawn whose first target needs a
@@ -294,7 +294,7 @@ void JetpackBomber::Update()
         if (state != 6 && (u8)IsTouchingPlayer(this)) {
             PlayerActor()->Damage(10);
             palette = 4;
-            PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
+            gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
             SetState(6, 1);
         }
     }
@@ -384,7 +384,7 @@ void JetpackBomber::Damage(s32 amount)
 {
     if (state != 6 && (hp -= amount) <= 0) {
         palette = 4;
-        PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
+        gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
         SetState(6, 1);
     }
 }
@@ -478,7 +478,7 @@ void AirshipFireball::StateOrbit()
     if ((u8)IsTouchingPlayer(this)) {
         PlayerActor()->Damage(6);
         palette = 4;
-        PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
+        gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
         SetState(2, 1);
     }
 }
@@ -520,7 +520,7 @@ void AirshipFireball::StateSpiralIn()
     if ((u8)IsTouchingPlayer(this)) {
         PlayerActor()->Damage(6);
         palette = 4;
-        PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
+        gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
         SetState(2, 1);
     }
 }

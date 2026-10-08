@@ -1,9 +1,9 @@
 #include "spawners.hpp"
 #include "enemy_ctrl.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "match.h"
-#include "audio.h"
 #include "level.h"
 #include "globals.h"
 }
@@ -302,7 +302,7 @@ void SpawnSeal(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
     hdr->SetState(5);
-    PlaySfx(gAudioContext, SFX_SEAL_SPAWN, 0x100);
+    gAudioContext->PlaySfx(SFX_SEAL_SPAWN, 0x100);
 }
 
 /* Bank +0xC0, kind 6; patrols (state 2) within the record's X range. */
