@@ -44,16 +44,9 @@ s32 Platform::GetExitMirror()
  * active bonus platform). */
 void Platform::SetExitMirror(u8 value)
 {
-    u32 one = 1;
-    u32 bit;
-    s32 mask;
+    s32 mirror = value;
 
-    /* Emits nothing: hides the 1 from reload, which would otherwise
-     * build the mask below from it, as `1 - 0x12`. */
-    MATCH_KEEP(one);
-    bit = (value & one) << 4;
-    mask = ~0x10;
-    f.bytes.flags2 = (mask & f.bytes.flags2) | bit;
+    f.b.exitMirror = mirror;
 }
 
 s32 Platform::GetClassId()

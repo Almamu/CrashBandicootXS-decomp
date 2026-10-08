@@ -1,5 +1,4 @@
 #include "core.h"
-#include "match.h"
 #include "gfx.h"
 #include "globals.h"
 
@@ -9,147 +8,77 @@
  * `REG_DISPCNT`, committed to the real hardware register by
  * `CommitDispcnt`. */
 
+/* `gDispcnt` viewed as its REG_DISPCNT bitfields. The field stores give
+ * the ROM's byte-wide read-modify-writes; old_agbcc (Makefile) loads the
+ * mask before the `ldrb`, as the ROM does. */
+#define DISPCNT_BITS ((struct dispcnt_bits *)gDispcnt)
+
 /* Sets `gDispcnt`'s low 3 bits (the DISPCNT background-mode
- * field) to `val & 7`, preserving the rest.
- *
- * The ROM materializes `-8` fresh via `movs r1,#8; rsbs r1,r1,#0`
- * rather than deriving it from the already-loaded `7` mask via a
- * cheaper `SUB` - but this compiler's value-propagation pass always
- * takes the cheaper `SUB` once `7` has been loaded anywhere nearby, no
- * matter how the `-8`/`~7` constant is spelled in C. The fix is to
- * never let the mask exist as a C-level constant at all: an inline-asm
- * block computes it via the exact two-instruction ROM sequence, opaque
- * to the optimizer, which reproduces the ROM's own choice instead of
- * outsmarting it. */
+ * field) to `val & 7`, preserving the rest. */
 void SetDispcntMode(s32 val)
 {
-    MATCH_HOLD_REG(u8 *, addr, r2) = gDispcnt;
-    MATCH_HOLD_REG(s32, lowBits, r0) = val & 7;
-    s32 mask;
-
-    asm("mov %0, #8\n\tneg %0, %0" : "=r"(mask));
-    addr[0] = (mask & addr[0]) | lowBits;
+    DISPCNT_BITS->mode = val;
 }
 
 /* `gDispcnt[1]` bit 3 clear/set pair (part of the packed
  * DISPCNT-mode shadow's second byte). */
 void HideBg3(void)
 {
-    u8 *addr = gDispcnt;
-    s32 mask = -9;
-    MATCH_HOLD_REG(s32, byte, r2) = addr[1];
-    s32 result;
-
-    result = mask & byte;
-    addr[1] = result;
+    DISPCNT_BITS->bg3 = 0;
 }
 
 /* `gDispcnt[1]` bit 2 clear. */
 void HideBg2(void)
 {
-    u8 *addr = gDispcnt;
-    s32 mask = -5;
-    MATCH_HOLD_REG(s32, byte, r2) = addr[1];
-    s32 result;
-
-    result = mask & byte;
-    addr[1] = result;
+    DISPCNT_BITS->bg2 = 0;
 }
 
 /* `gDispcnt[1]` bit 1 clear. */
 void HideBg1(void)
 {
-    u8 *addr = gDispcnt;
-    s32 mask = -3;
-    MATCH_HOLD_REG(s32, byte, r2) = addr[1];
-    s32 result;
-
-    result = mask & byte;
-    addr[1] = result;
+    DISPCNT_BITS->bg1 = 0;
 }
 
 /* `gDispcnt[1]` bit 0 clear. */
 void HideBg0(void)
 {
-    u8 *addr = gDispcnt;
-    s32 mask = -2;
-    MATCH_HOLD_REG(s32, byte, r2) = addr[1];
-    s32 result;
-
-    result = mask & byte;
-    addr[1] = result;
+    DISPCNT_BITS->bg0 = 0;
 }
 
 /* `gDispcnt[1]` bit 4 clear. */
 void HideObj(void)
 {
-    u8 *addr = gDispcnt;
-    s32 mask = -0x11;
-    MATCH_HOLD_REG(s32, byte, r2) = addr[1];
-    s32 result;
-
-    result = mask & byte;
-    addr[1] = result;
+    DISPCNT_BITS->obj = 0;
 }
 
 /* `gDispcnt[1]` bit 3 set. */
 void ShowBg3(void)
 {
-    u8 *addr = gDispcnt;
-    s32 mask = 8;
-    MATCH_HOLD_REG(s32, byte, r2) = addr[1];
-    s32 result;
-
-    result = mask | byte;
-    addr[1] = result;
+    DISPCNT_BITS->bg3 = 1;
 }
 
 /* `gDispcnt[1]` bit 2 set. */
 void ShowBg2(void)
 {
-    u8 *addr = gDispcnt;
-    s32 mask = 4;
-    MATCH_HOLD_REG(s32, byte, r2) = addr[1];
-    s32 result;
-
-    result = mask | byte;
-    addr[1] = result;
+    DISPCNT_BITS->bg2 = 1;
 }
 
 /* `gDispcnt[1]` bit 1 set. */
 void ShowBg1(void)
 {
-    u8 *addr = gDispcnt;
-    s32 mask = 2;
-    MATCH_HOLD_REG(s32, byte, r2) = addr[1];
-    s32 result;
-
-    result = mask | byte;
-    addr[1] = result;
+    DISPCNT_BITS->bg1 = 1;
 }
 
 /* `gDispcnt[1]` bit 0 set. */
 void ShowBg0(void)
 {
-    u8 *addr = gDispcnt;
-    s32 mask = 1;
-    MATCH_HOLD_REG(s32, byte, r2) = addr[1];
-    s32 result;
-
-    result = mask | byte;
-    addr[1] = result;
+    DISPCNT_BITS->bg0 = 1;
 }
 
 /* `gDispcnt[1]` bit 4 set. */
 void ShowObj(void)
 {
-    u8 *addr = gDispcnt;
-    s32 mask = 0x10;
-    MATCH_HOLD_REG(s32, byte, r2) = addr[1];
-    s32 result;
-
-    result = mask | byte;
-    addr[1] = result;
+    DISPCNT_BITS->obj = 1;
 }
 
 /* `gDispcnt[0]` bit 6 clear (DISPCNT's own top mode bit). */
@@ -157,25 +86,13 @@ void ShowObj(void)
  * pointer to it in baserom.gba, nor any reference in asm/ or src/). */
 void SetObjMapping2D(void)
 {
-    u8 *addr = gDispcnt;
-    s32 mask = -0x41;
-    MATCH_HOLD_REG(s32, byte, r2) = addr[0];
-    s32 result;
-
-    result = mask & byte;
-    addr[0] = result;
+    DISPCNT_BITS->objMap1D = 0;
 }
 
 /* `gDispcnt[0]` bit 6 set. */
 void SetObjMapping1D(void)
 {
-    u8 *addr = gDispcnt;
-    s32 mask = 0x40;
-    MATCH_HOLD_REG(s32, byte, r2) = addr[0];
-    s32 result;
-
-    result = mask | byte;
-    addr[0] = result;
+    DISPCNT_BITS->objMap1D = 1;
 }
 
 /* Commits the packed `gDispcnt` shadow (both bytes, as one
