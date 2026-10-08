@@ -61,7 +61,13 @@ struct sprite_bank_set {
 /* src/iwram/iwram_data.c */
 extern union key_state gKeys;
 extern u32 gRoomFrameCount;
-extern struct actor_self *gActorList; /* the circular actor list's root (actor_self.prev/next) */
+/* The circular actor list's root (actor_self.prev/next): the C++ files see
+ * it as its class, ActorSelf (actor_self.hpp), the C files as its C view. */
+#ifdef __cplusplus
+extern class ActorSelf *gActorList;
+#else
+extern struct actor_self *gActorList;
+#endif
 
 /* sym_iwram.txt */
 extern u8 gDispcnt[2]; /* the REG_DISPCNT shadow (CommitDispcnt), read and written bytewise */

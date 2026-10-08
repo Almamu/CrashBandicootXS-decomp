@@ -6,7 +6,7 @@
  * (the player, crates, pickups, Aku Aku and obstacles) and the yeti
  * chase. Every function they define is declared here, including those
  * that the file layout put in actor or bosses files for ROM order (the
- * teardown functions in actor_anim.c, the per-category hooks in actor.c,
+ * teardown functions in actor_anim.cpp, the per-category hooks in actor.cpp,
  * actor_category_frame.c and actor_spawn.c, the jetpack ring and
  * collected wumpa in hovercraft.c, ...), plus their globals and data
  * tables.
@@ -75,13 +75,14 @@ struct jetpack_plane;
 struct jetpack_spawn_rec;
 struct kind_entry;
 
-/* src/actor/actor.c */
+/* src/actor/actor.cpp */
 extern void JetpackReloadPlayerTiles(void *arg0);
 extern void PolarReloadPlayerTiles(void *arg0);
 extern void JetpackReachCourseEnd(void *arg0);
 extern void PolarReachCourseEnd(void *arg0);
 
-/* src/actor/actor_anim.c */
+/* src/actor/actor_anim.cpp: the C names of the classes' destructors and
+ * small methods (vehicle.hpp), for the vtable data */
 extern void DestroyRiderlessPolar(struct actor_self *self, u32 flags);
 extern void UpdatePolarCheckpointText(void *self);
 extern void DestroyPolarCheckpointText(struct actor_self *self, u32 flags);
@@ -355,7 +356,7 @@ extern void GivePolarPlayerMask(void *arg0);
 extern void LaunchPolarPlayer(void *self);
 extern void DestroyPolarPlayer(void *self, u32 arg1);
 
-/* src/vehicle/polar_player_dispatch.c */
+/* src/vehicle/polar_player_dispatch.cpp: PolarPlayer::RunState (vehicle.hpp) */
 extern void RunPolarPlayerState(struct actor_self *self);
 
 /* src/vehicle/polar_player_states.c */
@@ -501,7 +502,8 @@ extern const u16 gPolarPlayerShockBlinkPalette[16];
 extern const u16 gPolarPlayerShockPalette[16];
 extern const s32 gYetiChargeParams[6][3];
 
-/* src/data/actor_pmf_17a6b8.c */
+/* src/data/actor_pmf_17a6b8.cpp: PolarPlayer::stateFuncs (vehicle.hpp), whose
+ * C view this is */
 extern const struct actor_pmf gPolarPlayerStateFuncs[14];
 
 /* src/iwram/iwram_data.c */

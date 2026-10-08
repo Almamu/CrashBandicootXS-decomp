@@ -219,7 +219,7 @@ The first batch (all pointer tables, all byte-exact):
 | `actor_category_175558.c` | `0x08175558` | 7 `struct category_descriptor`, 3 `struct category_vtable` |
 | `palette_cycle_175760.c` | `0x08175760` | the 32-frame BG palette cycle and its 4 cursor start/bound pairs |
 | `anim_family_178f80.c` | `0x08178F80` | categories 0-2: OBJ palette, animation table `gCategoryFamily0AnimTable`, keyframe and frame arrays (see "Category families") |
-| `actor_pmf_17a6b8.c` | `0x0817A6B8` | 1 actor PMF table |
+| `actor_pmf_17a6b8.cpp` | `0x0817A6B8` | 1 actor PMF table, in C++ (`PolarPlayer::stateFuncs`, docs/cplusplus.md) |
 | `actor_tables_17a728.c` | `0x0817A728` | 5 small palettes, 4 `struct anim_box`, 6 threshold records |
 | `actor_state_fn_17a840.c` | `0x0817A840` | 4 state functions |
 | `anim_frames_17a850.c` | `0x0817A850` | 4 keyframes (`struct anim_frame_record`) |

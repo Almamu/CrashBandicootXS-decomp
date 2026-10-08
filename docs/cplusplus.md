@@ -179,7 +179,7 @@ That is why the pointer sits at different offsets in different families:
 |---|---|---|
 | controllers (`struct ctrl`) | `owner`, `animSet`, `state` | +0x0C |
 | entities (`struct actor`, `gEntityVtable`) | x, y, id, kind, flags, half sizes, raw sizes | +0x18 (size 0x1C) |
-| 3D actors (`struct actor_self`) | animation, position, state, links | +0x50 |
+| 3D actors (`struct actor_self`) | animation (a non-polymorphic base, `AnimPart`, 0x1C), position, state, links | +0x50 |
 
 **Vtables.** Slot 0 is the RTTI slot (`__tf<class>`, 0 with
 `-fno-rtti`), then one slot per virtual method in declaration order,
@@ -534,6 +534,10 @@ counts them by kind) and what the C++ still needs.
 | `src/menus/continue_prompt.cpp` | `ContinuePrompt::InitGraphics`, `Loop` | 2 | old_agbcp | 1 use, 1 keep -> the same | 10d |
 | `src/frontend/title_screen_init.cpp` | `TitleScreen`'s constructor, `LoadBg`, `LoadObjTiles`, `UpdateLogoPieces`, `DrawLogoPieces` (include/frontend.hpp) | 5 | old_agbcp | 18 pins, 5 `asm`, 12 per-field inline accessors -> 1 pin | 10c-2 |
 | `src/frontend/title_screen.cpp` | `TitleScreen`'s `CheatInput`, `Run`, `CommitFrame`, `DrawMenuItem`, `Draw`, `HashCheatInput`, `ResetLogoPieces`, destructor; `CompanyLogos::Run`, `LoadVvLogoGraphics`, `InitVvLogoPieces`, `UpdateVvLogoPieces` | 12 | old_agbcp, **with strength reduction** (was `-fno-strength-reduce`) | 10 pins, 2 keeps, 5 uses, 1 const, 23 per-field inline accessors (12 of them copies of title_screen_init.c's), the hand-written vtable calls -> 1 pin, 5 uses, 1 const | 10c-2 |
+| `src/actor/actor.cpp` | `ActorSelf` (include/actor_self.hpp): constructor (`InitActorPart`), destructor (`DestroyActor`), `Update`, `Draw`, `UpdateDepth`, `EnterState` (`SetActorState`), `GetRecordIndex`, `GetX`/`GetY`/`GetZ`, `GetWorldBox`, `IsVisible`; with the category hooks, `IsTouchingPlayer`, the collected spawns and the BG palette cycle (C linkage) | 12 + 13 | **old_agbcp** (was agbcc) | 34 pins, 7 `asm` (one of them all of `UpdateActorPaletteCycle`, with its `.pool`), 2 retyped stores, 1 retyped read, the `destroy` slot call -> 1 pin | 11a |
+| `src/actor/actor_anim.cpp` | `AnimPart` (actor_self.hpp): `GetAnimFrameBaseOffset`, `GetAnimFrameAttr`, `GetAnimFrameData`, `SetAnim` (`SetActorAnim`); `HpActor`'s `GetHp`, `Damage`, `IsUnshootable`; 36 subclasses' destructors, and the checkpoint banners' and the jetpack explosion's methods (include/vehicle.hpp, include/boss_actors.hpp); 3 implicit destructors (C linkage) | 49 + 3 | **old_agbcp** (was agbcc) | 27 pins, 2 `asm`, 1 retyped store, 3 `destroy` slot calls -> 1 const | 11a |
+| `src/vehicle/polar_player_dispatch.cpp` | `PolarPlayer::RunState` (include/vehicle.hpp): `(this->*stateFuncs[state])()` | 1 | agbcp | `ACTOR_PMF_CALL` -> 0 | 11a |
+| `src/data/actor_pmf_17a6b8.cpp` | `PolarPlayer::stateFuncs`, the first pointer-to-member table in C++ (`&PolarPlayer::StateMount`, ...) | data | agbcp | the `ACTOR_PMF` records -> 0 | 11a |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -1793,7 +1797,7 @@ the new include/actor_self.hpp. Project-wide: `MATCH_HOLD_REG` 1252 ->
 
 | Class | Size | Vtable | Code |
 |---|---:|---|---|
-| `ActorSelf` | 0x54 | gActorVtable (a root class: the vtable pointer at +0x50) | still C (src/actor/actor.c) |
+| `ActorSelf` | 0x54 | gActorVtable (a root class: the vtable pointer at +0x50) | still C (src/actor/actor.c; C++ since part 11a) |
 | `LogoActor` | 0x54 | gLogoActorVtable (an `ActorSelf`) | company_logos.cpp, language_select.cpp (destructor) |
 | `CompanyLogos` | 0x44C | none | company_logos.cpp, language_select.cpp, and title_screen.c (still C; C++ since part 10c-2) |
 | `LanguageSelect` | 0x14 | none | language_select.cpp, language_select_setup.cpp |
@@ -2088,6 +2092,114 @@ loop is strength-reduced), `DrawLogoPieces`' `px + dx` locals and counter
 addresses, `LoadBg`'s `bg2cnt = bg2cnt`, and the `u8 *` walk of the
 pieces' active flags (`slot[offsetof(TitleScreen, pieces[0].active)]`).
 
+### The 3D actors' base (part 11a)
+
+Part 11a in numbers: actor.c and actor_anim.c (ROM 0x0802A69C-0x0802AC28
+and 0x0803B058-0x0803B8B0), polar_player_dispatch.c and the polar player's
+pointer-to-member table (src/data/actor_pmf_17a6b8.c), 78 functions and a
+table, with the 3D actors' base classes in include/actor_self.hpp and the
+first declarations of their subclasses in the new include/vehicle.hpp and
+include/boss_actors.hpp. Project-wide: `MATCH_HOLD_REG` 1099 -> 1039,
+instruction-emitting `asm` 109 -> 101, `.pool` in asm 5 -> 4, retyped
+field stores 194 -> 191 and reads 70 -> 69, `MATCH_CONST` 19 -> 20.
+`actor.o` and `actor_anim.o` move to `OLD_AGBCC_OBJS` (128 -> 130);
+`polar_player_dispatch.o` stays agbcc.
+
+| Class | Size | Vtable | Code |
+|---|---:|---|---|
+| `AnimPart` | 0x1C | none | actor_anim.cpp (its constructor is inline) |
+| `ActorSelf` | 0x54 | gActorVtable (slots 1-3) | actor.cpp |
+| `HpActor` | 0x58 | none in the ROM (slots 4-6 added) | actor_anim.cpp (`GetHp`, `Damage`, `IsUnshootable`); the constructor is inline |
+| 21 polar actors (`PolarPlayer`, `RiderlessPolar`, `PolarWumpa`, the crates, ...) | | their own (4 slots) | the destructors in actor_anim.cpp, `PolarPlayer::RunState` and its table; the rest still C |
+| 14 jetpack actors (`JetpackCheckpointText`, `JetpackShot`, `JetpackBalloonCrate` and its 3 kinds, ...) | | their own (7 slots, 8 for the balloon crates) | the destructors and the checkpoint banner's and explosion's methods in actor_anim.cpp; the rest still C |
+| `AirshipFireball` and 5 hovercraft actors (boss_actors.hpp) | | their own (7 slots) | the destructors in actor_anim.cpp; the rest still C |
+
+- **`AnimPart` is the base the ROM implies.** InitActorPart stores the
+  keyframes, frames and palette and calls SetActorAnim *before* storing
+  gActorVtable, which a g++ constructor only does in a base class's
+  constructor; and CreateAirship builds a 0x1C-byte object with the same
+  three stores and SetActorAnim (`AllocActor(0x1c)` and `InitAnimPart`,
+  airship.c): `new AnimPart(...)`. So `ActorSelf : AnimPart`, with the
+  animation methods (`GetAnimFrameBaseOffset`, `GetAnimFrameAttr`,
+  `GetAnimFrameData`, `SetAnim`) and the IWRAM `operator new`/`delete` on
+  `AnimPart`. The vtable pointer is still at +0x50: `ActorSelf` is the
+  first class with virtual methods.
+- **`HpActor`** is the jetpack levels' and the 3D bosses' base: the hit
+  points at +0x54 (vehicle.h's `struct actor_hp`), and slots 4-6
+  (`Damage`, `IsUnshootable`, `GetHp`, whose defaults are DamageActor,
+  IsJetpackPlayerUnshootable and GetActorHp). No ROM vtable is its own:
+  its constructor is inline (InitHpActor), and its table store is dead
+  in every subclass's.
+- **The destructor is inline and out of line.** Every subclass's
+  destructor expands `~ActorSelf` (the unlink), and the ROM also has it
+  out of line, `DestroyActor`, in the middle of actor.c. The class
+  declares `virtual ~ActorSelf();`, actor_self.hpp defines it `inline`
+  after the class, and actor.cpp, which defines
+  `ACTOR_SELF_DESTRUCTOR_OUT_OF_LINE`, has the plain definition at
+  DestroyActor's place (the header-fragment idea of part 7e, for one
+  function). The 36 subclass destructors in actor_anim.cpp are empty
+  bodies: the class's own vtable store is dead before `~ActorSelf`'s and
+  goes, as in the ROM.
+- **Three destructors are g++'s implicit ones.** The balloon crates'
+  kinds (`JetpackHealthCrate`, `JetpackTimeCrate`,
+  `JetpackQuestionCrate`) call `~JetpackBalloonCrate`, which is out of
+  line (jetpack_crates.c), with no store of their own vtable before the
+  call. g++ 2.9 skips that store only when the destructor's body emitted
+  no insns at all (`empty_dtor` in cp/decl.c), which an explicit `{}`
+  never is (its block note) and a synthesized destructor always is. The
+  three classes declare no destructor, and actor_anim.cpp has the
+  functions g++ synthesized, with C linkage: `DestroyJetpackBalloonCrate(self,
+  0)`, then `AnimPart::operator delete` when bit 0 is set. The other 36
+  were probably implicit too, emitted with their vtables; with an inline
+  base destructor an explicit empty one compiles the same.
+- **The first pointer-to-member table in C++.** `RunPolarPlayerState` is
+  `(this->*stateFuncs[state])()`, and gPolarPlayerStateFuncs is
+  `const PolarPlayer::StateFunc PolarPlayer::stateFuncs[14] = {
+  &PolarPlayer::StateMount, ... }` in src/data/actor_pmf_17a6b8.cpp: g++
+  emits the `{0, -1, fn}` records in `.rodata`, byte for byte the C's
+  `ACTOR_PMF` table, with no static constructor. The state methods are
+  still C (polar_player*.c), mapped to their C names, and
+  UpdatePolarPlayer (polar_player.c) still dispatches through the table's
+  C view with `ACTOR_PMF_CALL`.
+- **The C views stay** for the C files: `struct actor_self`, `struct
+  actor_hp` and the prototypes of every converted function (the vtable
+  data and C callers use all of them). `gActorList` is an `ActorSelf *`
+  to C++ (a `__cplusplus` declaration in globals.h, as `gPlayer`'s).
+
+What made the C++ match:
+
+- **The depth and draw-order key** (InitActorPart, UpdateActor and
+  UpdateActorDepth; an inline helper here, with UpdateDepth its
+  out-of-line copy) is `depth = ABS_BRANCHLESS(d)` and the key computed
+  from `depth`, where the C pinned the value to r2 three times.
+- **`UpdateActorPaletteCycle` is plain C++.** The C was one `asm` block,
+  for the literal pool the ROM splits after the cursor step's `b`. With
+  the step written `if (target - v >= 0) { r = v; if (target != r) r++;
+  } else r = v - 1;` the increment comes first, its `b` is the barrier the
+  pool goes after, and the decrement after the pool, as in the ROM.
+- **`GetWorldBox`** returns the box (g++'s hidden result pointer is the
+  C's `out`) and adds the position through a `struct anim_box *` to the
+  local copy: the three loads come first and the `sp` copy is the
+  `ldrh`/`strh` base, where the C was three `asm` blocks and three pins.
+- **`DrawActor`**: the depth in a local (one load for both divisions),
+  `screenY = t * proj` from a copy of `y`, and two pointers to the frame,
+  the call's result for the height (read through r0) and its copy for the
+  width and the OAM call (r7), where the C needed 15 pins and three
+  `asm`s (two of them spilling the flags, which g++ does on its own).
+- The loops of `IsSpawnCollected` and `MarkSpawnCollected` are plain `for`
+  loops over `gCollectedSpawns[i]`, `UpdateActor`'s and
+  `UpdateJetpackCheckpointText`'s loop test reads `anims[animIndex]`
+  directly (as `LogoActor::Update`), and the `destroy` slot calls are
+  `delete this`.
+
+Kept, each with a comment: `DrawActor`'s r5 pin on the projection
+(unpinned, it and the screen y swap r4 and r5: global allocation ranks the
+projection first, with every spelling tried, and the pin is the C's), and
+`DrawJetpackCheckpointText`'s `MATCH_CONST`: the ROM ORs a register holding
+0 into the attribute word (`movs r0, #0; orrs r3, r0`), as if an inline
+helper's flag argument were 0; g++ folds any spelling of the 0, the C
+wrote the `orr` in asm (and pinned 23 registers in that function).
+
 ### The entity family is done
 
 With 7b', part 7 is complete: `Entity` and every class built on it whose
@@ -2135,10 +2247,12 @@ player, then the first item here, is C++ since part 8):
   names the vtables and C files use stay). Part 9b dropped enemies.h's and
   the constructors', part 10d menus.h's.
 - **The 3D actors** (`struct actor_self`, vtable pointer at +0x50) and their
-  pointer-to-member tables (src/data/actor_pmf_*.c, `ACTOR_PMF_CALL`):
-  src/actor/ (actor_anim.c alone has 48 methods), the vehicle levels
+  pointer-to-member tables (src/data/actor_pmf_*.c, actor_state_*.c,
+  `ACTOR_PMF_CALL`): the rest of src/actor/, the vehicle levels
   (src/vehicle/: the jetpack, polar and yeti files) and the 3D bosses
-  (airship*.c, hovercraft*.c).
+  (airship*.c, hovercraft*.c). Part 11a converted the base classes
+  (actor.c, actor_anim.c), the polar player's dispatch and its table; the
+  plan for the rest is [below](#the-3d-actors-part-11).
 - **The rest with C++ traits**: the background layers (bg_layer*.c), the
   fonts (src/text/), the menus (the save menu, and the pause menu's and
   the power dialog's plain-C files; all of src/frontend/ is C++: the
@@ -2202,13 +2316,48 @@ PR, as before):
    with C++ traits; the classes' plain-C files stay C) and
    ~~title_screen_init.c and title_screen.c~~ (part 10c-2: `CompanyLogos`'s
    other methods and the title screen).
-9. **The 3D actors** (part 11 onwards): `ActorSelf` (vtable pointer at
-   +0x50; part 10b declared it, include/actor_self.hpp), actor*.c first,
-   then the vehicles and the 3D bosses; the PMF tables become `const
-   StateFunc t[] = { &X::f, ... }` (experiment 3) and `ACTOR_PMF_CALL`
-   goes.
+9. **The 3D actors** (part 11 onwards, [below](#the-3d-actors-part-11)):
+   the base classes (`AnimPart`, `ActorSelf`, `HpActor`) in part 11a,
+   then the rest of src/actor/, the vehicles and the 3D bosses; the PMF
+   tables become `const StateFunc t[] = { &X::f, ... }` (experiment 3,
+   part 11a's actor_pmf_17a6b8.cpp) and `ACTOR_PMF_CALL` goes.
 10. **Then the vtables** (plan item 5 below): once a family has no C class
    left, let g++ emit its vtables and check them against the ROM's.
+
+#### The 3D actors (part 11)
+
+Whole files only, base classes first, as in part 7. Counts are the C's:
+the functions in the objects, and `tools/match_idioms.py`'s
+`MATCH_HOLD_REG` pins and instruction-emitting `asm`; "old" is an
+object already in `OLD_AGBCC_OBJS`. The class hierarchy: `AnimPart` (the
+animation, 0x1C; the airship is one) -> `ActorSelf` (gActorVtable, 4
+slots: the polar actors, the logo actor) -> `HpActor` (hit points, slots
+4-6: the jetpack actors and the 3D bosses' weapons) -> the balloon crate
+(`JetpackBalloonCrate`, an 8th slot) -> its three kinds. The yeti, the
+airship and the hovercraft themselves are singletons driven by plain
+function tables (gYetiStateFuncs, gAirshipStateFuncs, ...), not classes
+with vtables. A slice gives its classes their fields (from the C structs:
+`struct actor_hp`, `struct jetpack_plane`, `struct orbit_actor`, ...) and
+their real constructors, converts its PMF dispatches (`ACTOR_PMF_CALL`)
+and, once no C file reads one, its PMF table to C++.
+
+| Part | Files | Classes | Functions, pins, `asm` | PMF tables | Depends on |
+|---|---|---|---|---|---|
+| ~~11a~~ | ~~actor/actor.c, actor_anim.c; vehicle/polar_player_dispatch.c; data/actor_pmf_17a6b8.c~~ | `AnimPart`, `ActorSelf`, `HpActor`; the subclasses' destructors; `PolarPlayer::RunState` | done | gPolarPlayerStateFuncs | |
+| 11b | actor/actor_factory.c, actor_spawn.c, actor_category_frame.c (old), actor_category_select.c | the polar actors' constructors (CreateActor's inlined `new`s, `ConstructActorPart` = `PolarPlayer`'s), `FindShotTarget`, the category frame's virtual calls | 28, 3, 3 | | 11a |
+| 11c | vehicle/polar_player.c (old), polar_player_actions.c, polar_player_states.c | `PolarPlayer` (its fields, `Update`, `Draw`, the 14 states, the destructor) | 29, 89, 1 | (gPolarPlayerStateFuncs' last C user) | 11a |
+| 11d | vehicle/polar_crates.c, polar_pickups.c, polar_objects.c, polar_aku_aku.c, polar_nitro.c (old) | the polar crates (`PolarCrate` and its kinds), wumpas, hazards, Aku Aku, goal, boost pad | 51, 145, 3 | | 11b |
+| 11e | vehicle/jetpack_spawn.c (old), jetpack_player.c, jetpack_run.c, jetpack_shot.c | `HpActor`'s constructor, `JetpackPlayer`, `JetpackShot`, the jetpack spawners | 47, 52, 6 | gJetpackPlayerStateFuncs | 11a |
+| 11f | vehicle/jetpack_plane.c, jetpack_balloon.c | `JetpackPlane`, `JetpackBomber`, `JetpackCannonball`, `JetpackBalloon`; two of `AirshipFireball`'s states | 43, 21, 0 | gJetpackPlaneStateFuncs, gJetpackBomberStateFuncs, gJetpackBalloonStateFuncs | 11e |
+| 11g | vehicle/jetpack_crates.c | `JetpackBalloonCrate` and its kinds, `JetpackParachuteNitro`, `JetpackRocket`, `JetpackRing::Update` | 30, 62, 3 | gJetpackBalloonCrateStateFuncs | 11e |
+| 11h | bosses/hovercraft.c (old), hovercraft_cannon.c, hovercraft_cannon_flash.c, hovercraft_launcher.c, hovercraft_side_gun.c, hovercraft_parts.c | the hovercraft's weapons (`HovercraftFireball`, `HovercraftCannon`, ...), `JetpackRing`'s and `JetpackCollectedWumpa`'s constructors and methods (in hovercraft.c), the hovercraft singleton | 70, 110, 4 | gHovercraftFireballStateFuncs, gHovercraftCannonStateFuncs, gHovercraftLauncherStateFuncs | 11e |
+| 11i | bosses/airship*.c (10 files; airship_map.c, airship_touch.c old) | `AirshipFireball`; the airship (an `AnimPart` singleton) | 23, 35, 3 | gAirshipFireballStateFuncs | 11f |
+| 11j | actor/actor_bg.c, actor_category_init.c (old), actor_category_stats.c, actor_vram_pool.c, bg_picture.c (old), cell_anim.c; vehicle/yeti*.c (yeti_graphics.c, yeti_update.c old) | none: C-like (no C++ trait), only if the family's files should all be C++ | 43, 33, 3 | | |
+
+After 11i every 3D actor class is C++: actor_self.h's `ACTOR_PMF_CALL`,
+`ACTOR_VCALL`, `VTABLE_CALL2`/`3` and `VCALL1`/`2` go with their last C
+users, and the family's 47 vtables (with the logo actor's) can be
+emitted by g++ (item 10).
 
 #### The entity family (part 7)
 
@@ -2596,3 +2745,31 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
 - **A union of `u16` and a `u16` bitfield struct takes a word** (a struct
   is 4-aligned on ARM): a padding field after it must go (`union
   MenuDispcnt`, part 10d).
+- **Stores before the vtable pointer's are a base class's constructor.**
+  g++ stores a class's vtable pointer after its bases' constructors and
+  before its own body, so a constructor whose C sets fields and calls a
+  function before the vtable store (InitActorPart's keyframes, palette
+  and SetActorAnim) has a base class that does that: `AnimPart`, which
+  another object (the airship) is built from alone (part 11a).
+- **A virtual destructor both inline and out of line:** declare it in the
+  class, define it `inline` after the class in the header under an
+  `#ifndef`, and have the one `.cpp` that holds the ROM's copy define the
+  macro and the destructor plainly at its place (`~ActorSelf`,
+  `ACTOR_SELF_DESTRUCTOR_OUT_OF_LINE`; part 11a).
+- **An explicit destructor always stores its class's vtable,** even an
+  empty `{}` one: g++ 2.9 skips the store only when the body emitted no
+  insns at all, which only a synthesized (implicit) destructor's does.
+  The store is dead, and goes, before an inline base destructor's own; it
+  stays before a call of an out-of-line one. Where the ROM has none there
+  (the balloon crates' kinds), the destructor was the implicit one: write
+  the function g++ synthesized, with C linkage, and declare none in the
+  class (part 11a).
+- **A register holding 0 ORed into a value** (`movs r0, #0; orrs r3,
+  r0`) can't be spelled: g++ folds the 0 from a variable, a parameter or
+  an inline's argument. `MATCH_CONST(flag, 0)` right before the OR gives
+  it (`DrawJetpackCheckpointText`, part 11a).
+- **A pointer-to-member table in C++** (`const X::StateFunc X::t[] = {
+  &X::f, ... }`) is the C's `{0, -1, fn}` records in `.rodata`, with no
+  static constructor; the data file becomes a `.cpp` and the methods'
+  mangled names map to their C ones (src/data/actor_pmf_17a6b8.cpp, part
+  11a).

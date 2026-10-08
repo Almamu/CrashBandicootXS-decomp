@@ -2,25 +2,24 @@
 #define GUARD_ACTOR_SELF_H
 
 /*
- * The shared per-instance "self" object of the 0x0802xxxx-0x0803xxxx
- * actor zone (issues #54-#62 - see docs/matching/issue-58-*.md and
- * issue-57-0x0802fbf0-actor.md): a gcc 2.x C++ object built by
- * `InitActorPart`, whose method table pointer sits at +0x50. Methods are
- * called through the `_call_via_r1`..`_call_via_r4` libgcc `_call_via_rN`
- * thunks with the `this` pointer pre-adjusted by the method record's
- * own `thisOffset`.
+ * The C view of the 3D actors' base class, ActorSelf (actor_self.hpp;
+ * C++ since #664 part 11a, src/actor/actor.cpp), for the files still in
+ * C: an object built by `InitActorPart` (ActorSelf's constructor), its
+ * vtable pointer at +0x50, its virtual methods called through the
+ * `_call_via_rN` thunks with `this` adjusted by the slot's `thisOffset`
+ * (always 0), and its state methods through pointer-to-member tables
+ * (struct actor_pmf, ACTOR_PMF_CALL).
  *
- * Only the common prefix (0x00-0x57) is described here - every derived
- * class lays out its own fields from +0x54 on, so those live in each
- * translation unit's own struct that embeds this one as its first
- * member. Most of the older actor files still use raw offsets
- * into the same object.
+ * Only the common prefix (0x00-0x53) is described here: every derived
+ * class lays out its own fields from +0x54 on, in each translation
+ * unit's own struct that embeds this one as its first member. See
+ * docs/matching/archive/issue-58-*.md and issue-57-0x0802fbf0-actor.md.
  */
 
-/* One entry of `actor_self.anims` (`anim_part_instance.frameTable` in
- * actor_anim.c), stride 12 - only the five fields actually read by
- * matched functions are named; the rest (0xa-0xb) isn't exercised by
- * any function matched so far. */
+/* One entry of `actor_self.anims` (AnimPart's, actor_self.hpp), stride
+ * 12 - only the five fields actually read by matched functions are
+ * named; the rest (0xa-0xb) isn't exercised by any function matched so
+ * far. */
 struct anim_frame_record {
     u16 duration;   // 0x00 - copied into the owning self's `animTimer` on a sequence reset
     s16 frameIndex; // 0x02 - added to GetAnimFrameBaseOffset()'s result, indexes frameOffsets
