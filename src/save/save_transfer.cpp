@@ -17,39 +17,19 @@ void SaveData::SetFlags(u8 mask)
 
 /* Drains up to 0x60 bytes per call from `self->cursor` (streaming a
  * save_data out of `self->tmpl`) into the SIO session's
- * outgoing ring, once the previous batch has been taken (`ring.count`
- * back to 0). Marks `sendDone` once `remaining` is fully drained. The
- * channel pointer has to be its own local: written as `s->ring.`
- * throughout, gcc keeps the first `&count` computation alive for both
- * fill loops instead of recomputing it as the ROM does. */
+ * outgoing ring (LinkRing::Push), once the previous batch has been
+ * taken (`ring.count` back to 0). Marks `sendDone` once `remaining` is
+ * fully drained. */
 void SaveTransfer::SendChunk()
 {
     if (remaining != 0) {
         LinkSession *s = gLinkSession;
-        LinkRing *ch = &s->ring;
 
-        if (ch->count == 0) {
+        if (s->ring.count == 0) {
             s32 n = remaining;
-            u8 *src;
-            s32 i;
 
             LIMIT_MAX(n, 0x60);
-            src = cursor;
-            if (ch->writePos < 0x80 - n) {
-                for (i = n - 1; i != -1; i--) {
-                    ch->writePos++;
-                    ch->count++;
-                    ch->buf[ch->writePos] = *src++;
-                }
-            } else {
-                for (i = n - 1; i != -1; i--) {
-                    u8 b = *src++;
-
-                    ch->writePos = ch->writePos == 0x7f ? 0 : ch->writePos + 1;
-                    ch->count++;
-                    ch->buf[ch->writePos] = b;
-                }
-            }
+            s->ring.Push(cursor, n);
             cursor += n;
             remaining -= n;
         }

@@ -359,8 +359,7 @@ void LinkSession::HandleSerial(u16 *data)
             } else {
                 u16 want;
                 u16 hash;
-                s32 n, k;
-                u8 *src;
+                s32 n;
 
                 if (LINK_NIB(&q[1]).lo != p->rxSeq)
                     continue;
@@ -374,25 +373,7 @@ void LinkSession::HandleSerial(u16 *data)
                  * gets its own register (r7) instead of reusing the
                  * id-byte one. */
                 MATCH_USE(n);
-                src = &p->id[2];
-                /* The bounds test reaches the ring through an escaped copy
-                 * of `p` (no code), so CSE doesn't share its address with
-                 * the loop pre-headers, which recompute it as the ROM does. */
-                if (MATCH_KEEP_EXPR(LinkPlayer *, p)->ring.writePos < 0x80 - n) {
-                    for (k = n - 1; k != -1; k--) {
-                        p->ring.writePos++;
-                        p->ring.count++;
-                        p->ring.buf[p->ring.writePos] = *src++;
-                    }
-                } else {
-                    for (k = n - 1; k != -1; k--) {
-                        u8 b = *src++;
-
-                        p->ring.writePos = p->ring.writePos == 0x7f ? 0 : p->ring.writePos + 1;
-                        p->ring.count++;
-                        p->ring.buf[p->ring.writePos] = b;
-                    }
-                }
+                p->ring.Push(&p->id[2], n);
                 p->totalReceived += n;
                 p->prevHash = p->hash;
                 p->rxSeq = (p->rxSeq + 1) & 0xf;
