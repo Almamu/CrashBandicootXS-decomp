@@ -1,5 +1,4 @@
 #include "core.h"
-#include "match.h"
 #include "memory.h"
 #include "util.h"
 #include "level.h"
@@ -11,32 +10,18 @@
 /* Commits the `gBlendRegs` shadow to the real blend registers:
  * the word at `+0` covers both `REG_BLDCNT` and `REG_BLDALPHA` (a
  * single 32-bit write spanning the adjacent halfwords), and the low
- * 5 bits of the byte at `+4` become `REG_BLDY`.
- *
- * The ROM writes the word then does a separate `adds r2,#4` on the
- * same register before the second store, where this compiler always
- * fuses a normal C-level store-then-increment-same-register pair into
- * a single `stmia r2!,{r0}` instead (an unavoidable peephole
- * optimization, regardless of how the increment is expressed in C).
- * The fix is the same one used for `SetDispcntMode`'s value-propagation
- * fold: emit the store-and-increment pair as one inline-asm block,
- * opaque to the peephole pass, so it can't recognize and fuse it. The
- * `bldy` mask is written as the ROM's own `(x << 27) >> 27` shift
- * pair rather than a plain `& 0x1f`, which this compiler would
- * otherwise encode as a direct AND-immediate instead. */
+ * 5 bits of the byte at `+4` become `REG_BLDY`. The mask is the ROM's
+ * `(x << 27) >> 27` shift pair, which a plain `& 0x1f` would encode as
+ * an AND with a constant instead. Built with old_agbcc, which derives
+ * the BLDY address from BLDCNT's (`adds r2, #4`) as the ROM does; agbcc
+ * loads it from a second literal. */
 void CommitBlendRegs(void)
 {
-    MATCH_HOLD_REG(vu32 *, bldReg, r2) = (vu32 *)REG_ADDR_BLDCNT;
-    struct blend_regs *src = &gBlendRegs;
-    MATCH_HOLD_REG(u32, word, r0) = src->blend.raw;
-    MATCH_HOLD_REG(u32, bldy, r1);
-    MATCH_HOLD_REG(u32, masked, r0);
+    u32 bldy;
 
-    asm volatile("str %1, [%0]\n\tadd %0, %0, #4" : "+r"(bldReg) : "r"(word));
-
-    bldy = src->bldy;
-    masked = (bldy << 27) >> 27;
-    *(vu16 *)bldReg = masked;
+    *(vu32 *)REG_ADDR_BLDCNT = gBlendRegs.blend.raw;
+    bldy = gBlendRegs.bldy;
+    REG_BLDY = (bldy << 27) >> 27;
 }
 
 /* Axis-aligned box overlap test, X-axis edges inclusive (touching

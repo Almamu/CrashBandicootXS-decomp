@@ -541,10 +541,9 @@ struct AudioContext *InitAudioContext(struct AudioContext *self)
  * DestroyLevelState passes gAudioContext in r0. */
 void DisableMusicVCountIrq(struct AudioContext *self)
 {
-    MATCH_HOLD_REG(vu8 *, dispstat, r1) = (vu8 *)REG_ADDR_DISPSTAT;
     u8 tmp = DISPSTAT_VCOUNT_INTR;
 
-    *dispstat &= ~tmp;
+    *(u8 *)REG_ADDR_DISPSTAT &= ~tmp;
     IrqRestoreHandler(INTR_INDEX_VCOUNT);
 }
 
@@ -555,17 +554,12 @@ void DisableMusicVCountIrq(struct AudioContext *self)
  * which already anticipated this function. */
 void EnableMusicVCountIrq(void)
 {
-    vu8 *p;
-    u8 v;
-    MATCH_HOLD_REG(u8, loaded, r2);
+    u8 *p;
 
     IrqSetHandler(INTR_INDEX_VCOUNT, MusicVCountIrqHandler);
-    p = (vu8 *)REG_ADDR_DISPSTAT;
+    p = (u8 *)REG_ADDR_DISPSTAT;
     p[1] = 0x35;
-    v = DISPSTAT_VCOUNT_INTR;
-    loaded = *p;
-    v |= loaded;
-    *p = v;
+    *p |= DISPSTAT_VCOUNT_INTR;
 }
 
 /* The VCount-IRQ handler installed by `EnableMusicVCountIrq` above: just forwards
