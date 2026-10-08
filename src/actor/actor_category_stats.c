@@ -59,15 +59,9 @@ s32 CountCategoryCrates(s32 categoryIdx)
                 if ((u8)(v - 0x13) <= 4) {
                     count++;
                 } else {
-                    /* This compiler eliminates a plain `u8 v2 = v;`
-                     * copy here entirely (comparing `v` directly), but
-                     * the ROM keeps a real `adds r0, r1, #0` copy - an
-                     * inline-asm island forces the redundant move back
-                     * in, matching the ROM's exact register (`r0`)
-                     * and instruction (see docs/workflow.md step 3). */
-                    s32 v2;
-                    asm("add %0, %1, #0" : "=r"(v2) : "r"((s32)v));
-                    if (v2 == 0x1b || v2 == 0x1e) {
+                    /* Reads the field again: cse turns the second read
+                     * into the ROM's `adds r0, r1, #0` copy of `v`. */
+                    if (table->kind == 0x1b || table->kind == 0x1e) {
                         count++;
                     }
                 }

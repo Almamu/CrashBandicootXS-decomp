@@ -1,9 +1,5 @@
 #include "boss_actors.hpp"
 
-extern "C" {
-#include "match.h"
-}
-
 /* The cannon's muzzle flash (#664 part 11h, include/boss_actors.hpp): an
  * HpActor the cannon spawns with each shot (SpawnHovercraftCannonFlash).
  * It stays in front of the cannon until its animation has played once,
@@ -11,8 +7,9 @@ extern "C" {
 
 /* Follows the cannon and deletes itself once the animation is done.
  * Returns whether the flash is still there. Update's body; the ROM also
- * has it out of line, as RunState. */
-static inline s32 StepCannonFlash(HovercraftCannonFlash *self)
+ * has it out of line, as RunState. A `bool`: Update's test of it is kept
+ * (with an `s32`, cse folds it on both paths). */
+static inline bool StepCannonFlash(HovercraftCannonFlash *self)
 {
     self->z = GetHovercraftZ() - 0x200;
     self->x = GetHovercraftX() + 0x2000;
@@ -21,21 +18,15 @@ static inline s32 StepCannonFlash(HovercraftCannonFlash *self)
 
     if (self->animDone != 0) {
         delete self;
-        return 0;
+        return false;
     }
-    return 1;
+    return true;
 }
 
 /* StepCannonFlash, then the common update while the flash is there. */
 void HovercraftCannonFlash::Update()
 {
-    s32 alive = StepCannonFlash(this);
-
-    /* The ROM tests the 0 or 1 again: CSE folds the test of the inline's
-     * result on both paths with every spelling tried (a local, a `bool`,
-     * empty loops around the call or the test), as it did in the C. */
-    MATCH_KEEP_VOLATILE(alive);
-    if (alive != 0)
+    if (StepCannonFlash(this))
         ActorSelf::Update();
 }
 

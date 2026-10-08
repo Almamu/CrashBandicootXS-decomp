@@ -3,7 +3,6 @@
 #include "player.hpp"
 
 extern "C" {
-#include "match.h"
 #include "system.h"
 #include "audio.h"
 #include "gfx.h"
@@ -75,9 +74,9 @@ void ActionCtrl::UpdateSkidAnim()
     if (slippery) {
         u8 *tagp = &player->tag;
         s32 tag = *tagp;
-        /* The ROM tests 0x18 on a copy of the animation, in r2; a switch
-         * or an if chain tests all four on the loaded register. */
-        MATCH_HOLD_REG(s32, tagCopy, r2) = tag;
+        /* The ROM tests 0x18 on a copy of the animation, in r2: a `u8`
+         * copy (an `s32` one is folded into `tag`). */
+        u8 tagCopy = tag;
 
         if (tag == 0x12)
             goto idle;

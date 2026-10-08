@@ -22,6 +22,13 @@ void DestroyYeti(void)
     mem_free(gYeti);
 }
 
+/* The actors' operator new (actor_self.hpp) as C: the size is the inline's
+ * argument, so its `movs r0, #0x1c` is scheduled before the heap flag. */
+static inline void *AllocIwram(u32 size)
+{
+    return mem_alloc(size, MEM_HEAP_IWRAM);
+}
+
 /* Constructor: stashes the caller's argument in `gYetiParamsIndex`,
  * allocates and wires up a fresh instance (part table
  * `gYetiKeyframes`/`0817A880`, header byte `0xf`, reset via
@@ -34,15 +41,11 @@ void DestroyYeti(void)
 void CreateYeti(void *arg0)
 {
     struct actor_self *obj;
-    u32 size;
-    s32 flags;
     void **bcAddr;
 
     gYetiParamsIndex = (s32)arg0;
     bcAddr = (void **)&gYeti;
-    asm volatile("mov %0, #0x1c" : "=r"(size));
-    flags = MEM_HEAP_IWRAM;
-    obj = mem_alloc(size, flags);
+    obj = AllocIwram(0x1c);
     {
         struct anim_frame_record *v0 = (struct anim_frame_record *)gYetiKeyframes;
         u32 *v1 = (u32 *)gYetiFrames;

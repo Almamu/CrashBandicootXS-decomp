@@ -1,6 +1,5 @@
 #include "core.h"
 #include "math_util.h"
-#include "match.h"
 #include "actor_anim.h"
 #include "gba/io_reg.h"
 #include <libgcc.h>
@@ -407,48 +406,39 @@ void InitActorBgScroll(s32 arg0)
 /* Eases the BG0/BG1 scroll accumulators (gActorBgScrollX/gActorBgScrollY)
  * toward their per-axis target/scale-derived offsets
  * (gActorBgScrollMaxX/gActorBgScrollMaxY), clamping each to
- * [0, target]. arg0/arg1 are the two axes' own driving values. */
+ * [0, target]. arg0/arg1 are the two axes' own driving values. Each
+ * axis has its own target and delta locals (shared ones put the clamps in
+ * other registers). */
 void UpdateActorBgScroll(s32 arg0, s32 arg1)
 {
-    s32 target;
-    MATCH_HOLD_REG(s32, delta, r0);
+    s32 targetX, targetY;
+    s32 deltaX, deltaY;
     s32 cur;
     s32 shift;
 
-    target = gActorBgScrollMaxX;
-    delta = __divsi3(arg0 * Q8_TO_INT(target), gActorBgScrollRangeX);
-    delta += target / 2;
+    targetX = gActorBgScrollMaxX;
+    deltaX = __divsi3(arg0 * Q8_TO_INT(targetX), gActorBgScrollRangeX);
+    deltaX += targetX / 2;
     cur = gActorBgScrollX;
-    delta -= cur;
+    deltaX -= cur;
     shift = gActorBgScrollEaseShift;
-    delta >>= shift;
-    cur += delta;
+    deltaX >>= shift;
+    cur += deltaX;
     gActorBgScrollX = cur;
     LIMIT_MIN(cur, 0);
-    {
-        MATCH_HOLD_REG(s32, clamped, r1) = target;
-        LIMIT_MAX(clamped, cur);
-        cur = clamped;
-    }
+    cur = MIN(cur, targetX);
     gActorBgScrollX = cur;
 
-    target = gActorBgScrollMaxY;
-    delta = __divsi3(arg1 * Q8_TO_INT(target), gActorBgScrollRangeY);
-    delta += target / 2;
+    targetY = gActorBgScrollMaxY;
+    deltaY = __divsi3(arg1 * Q8_TO_INT(targetY), gActorBgScrollRangeY);
+    deltaY += targetY / 2;
     cur = gActorBgScrollY;
-    delta -= cur;
-    delta >>= shift;
-    delta -= gActorBgShake;
-    cur += delta;
+    deltaY -= cur;
+    deltaY >>= shift;
+    deltaY -= gActorBgShake;
+    cur += deltaY;
     gActorBgScrollY = cur;
     LIMIT_MIN(cur, 0);
-    {
-        /* Same clamp idiom as the X-axis block above, but the ROM
-         * happens to keep this second copy in `r0` instead of `r1` -
-         * see docs/workflow.md step 3. */
-        MATCH_HOLD_REG(s32, clamped, r0) = target;
-        LIMIT_MAX(clamped, cur);
-        cur = clamped;
-    }
+    cur = MIN(cur, targetY);
     gActorBgScrollY = cur;
 }
