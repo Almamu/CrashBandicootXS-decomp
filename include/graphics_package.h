@@ -26,7 +26,7 @@ union bgcnt {
     struct {
         u16 priority:2;
         u16 charBase:2;
-        u16 unk_4:2;
+        u16 unused_4:2; // bits 4-5, unused by the hardware
         u16 mosaic:1;
         u16 colorMode:1;
         u16 screenBase:5;
