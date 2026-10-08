@@ -71,8 +71,7 @@ public:
     u8 dirX;    // 0x30 - nonzero: the motion record's sign as it is
     u8 dirY;    // 0x31
     u8 active;  // 0x32 - the player stands on the platform
-    u8 unk_33;
-    u32 time; // 0x34 - type 6: the frame its animation runs again
+    u32 time;   // 0x34 - type 6: the frame its animation runs again
 
     PlatformMover(s32 distX, s32 distY, bool dirX, bool dirY, s32 kind);   // CreatePlatformMover
     virtual void Update(MovingSprite *part);                               // 1 UpdatePlatformMover

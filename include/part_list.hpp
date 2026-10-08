@@ -38,7 +38,6 @@ class CollisionQueue
 public:
     s32 count;       // 0x00
     u8 posCommitted; // 0x04 - while set, ApplyCrateCollision leaves the player's position alone
-    u8 unk_05[3];
     struct collision_candidate candidates[16]; // 0x08
 
     CollisionQueue();  // ResetCollisionQueue: empties it (Player's constructor)
@@ -69,8 +68,7 @@ ASSERT_VIEW_FIELD(part_list_hpp, CollisionQueue, collision_queue, candidates);
 class PaletteCycles
 {
 public:
-    u8 active; // 0x00
-    u8 unk_01[3];
+    u8 active;       // 0x00
     s32 fields_e[3]; // 0x04 - only ever cleared (Add); never read
     u16 *targets[3]; // 0x10 - the colours each cycle rotates
     u16 *lists[3];   // 0x1C - the indices into targets[i], counts[i] of them
@@ -78,7 +76,6 @@ public:
     s32 counts[3];   // 0x34 - `lists[i]`'s length
     s32 count;       // 0x40 - the cycles in use (0-3)
     u8 direction;    // 0x44 - 0/1: which end of `lists[i]` the rotation starts from
-    u8 unk_45[3];
 
     PaletteCycles();  // InitPaletteCycles
     ~PaletteCycles(); // DestroyPaletteCycles

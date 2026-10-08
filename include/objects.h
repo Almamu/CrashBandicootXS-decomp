@@ -50,7 +50,6 @@ struct collision_candidate {
     s32 hit;             // 0x1C
     struct byte_arg p20; // 0x20 - passed on the stack as a byte (`strb`)
     struct byte_arg p21; // 0x21
-    u8 unk_22[2];
 };
 
 /*
@@ -68,7 +67,6 @@ struct collision_queue {
     // it, and while it is set ApplyCrateCollision leaves the player's
     // position alone
     u8 posCommitted;
-    u8 unk_05[3];
     struct collision_candidate candidates[16]; // 0x08
 };
 

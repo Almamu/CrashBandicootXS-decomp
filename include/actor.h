@@ -39,8 +39,7 @@ union EntityFlags {
         u8 blink:1;      // hidden this frame (a blinking part; Is/ToggleHidden)
         u8 solid:1;      // pushes the player out (Is/Set/ClearSolid)
         u8 exitMirror:1; // a bonus platform's exit facing (Platform::Get/SetExitMirror)
-        u8 unk_0D_5:3;
-    } b; // (ARM structs are 4-byte sized: the union spans 0x0C-0x0F)
+    } b;                 // (ARM structs are 4-byte sized: the union spans 0x0C-0x0F)
     struct {
         u8 flags;  // 0x0C
         u8 flags2; // 0x0D
@@ -69,6 +68,9 @@ struct actor_spawn {
     u8 kind;      // 0x00 - the normal kind
     u8 altKind;   // 0x01 - in time trial mode
     u8 bonusKind; // 0x02 - when the bonus kinds are on (`useBonus`, `alt`)
+    // 0x03 - sub_effect_record's `pad_0b`: not padding, the spawn tables
+    //        (src/data/) hold 0 in most records and 1, 3, 17, 33, 53, 108,
+    //        125, 138, 155, 157, 161 or 191 in others; nothing reads it
     u8 unk_03;
     s32 x; // 0x04
     s32 y; // 0x08

@@ -37,7 +37,6 @@ struct anim_table_record {
     // 0x0C - OBJ palette bank; InitActorPart copies it to actor_self.palette (+0x18), which
     // DrawActor puts in OAM attr 2 (<< 12)
     u8 palette;
-    u8 pad_0D[3];
     // 0x10 - 0 or 0x260C-0x36D5: the depth at which the
     // part draws unscaled (DrawActor divides by it)
     s32 baseDepth;

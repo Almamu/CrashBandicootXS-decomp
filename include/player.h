@@ -36,7 +36,6 @@ struct speed_table {
 struct level_anim {
     u8 anim;
     u8 unk_1;
-    u8 pad[2];
 };
 
 /* The player object (gPlayer) as the C files see it: the C view of class
@@ -75,19 +74,16 @@ struct player {
 #define PLAYER_DIR_Y 0xC // PLAYER_DIR_UP | PLAYER_DIR_DOWN
     u8 screenSpace; // 0x25
     u8 unk_26[2];
-    u8 mirror;    // 0x28 - bit 4: X mirrored, bit 5: Y mirrored
-    u8 palette:4; // 0x29 - the OBJ palette slot
-    u8 unk_29_4:4;
-    u8 unk_2A[2];
-    u8 animating; // 0x2C
-    u8 tag;       // 0x2D - the animation in the bank
-    u8 unk_2E[2];
+    u8 mirror;     // 0x28 - bit 4: X mirrored, bit 5: Y mirrored
+    u8 palette:4;  // 0x29 - the OBJ palette slot
+    u32:20;        // 0x29 bit 4-0x2B: the unused rest of the 0x28 word
+    u8 animating;  // 0x2C
+    u8 tag;        // 0x2D - the animation in the bank
     s32 frame;     // 0x30
     s32 stepTimer; // 0x34
     u8 animDone;   // 0x38
     u8 unk_39[3];
-    u16 affine; // 0x3C
-    u8 unk_3E[2];
+    u16 affine;              // 0x3C
     s32 unk_40;              // 0x40
     void *mover;             // 0x44 - the room kind's controller (Ctrl *)
     struct speed_ramp rampX; // 0x48
@@ -96,10 +92,9 @@ struct player {
     s32 speedY;              // 0x64 - > 0: falling
     u8 hitAxes;              // 0x68 - the axes the terrain probe resolved (8: Y, standing; 4: X)
     u8 probeTries;           // 0x69
-    u8 unk_6A[2];
-    s32 prevX;   // 0x6C
-    s32 prevY;   // 0x70
-    s32 hitMask; // 0x74 - the probe axes hit this frame (bits 0-1: X, 2-3: Y)
+    s32 prevX;               // 0x6C
+    s32 prevY;               // 0x70
+    s32 hitMask;             // 0x74 - the probe axes hit this frame (bits 0-1: X, 2-3: Y)
 /* hitMask's axes: the swim controller zeroes speedX on an X hit and
  * speedY on a Y hit (PlayerCtrl::Update, swim_ctrl.cpp). */
 #define PLAYER_HIT_X 3
@@ -108,28 +103,25 @@ struct player {
     u8 unk_7C[4];
     u8 busy; // 0x80
     u8 unk_81[7];
-    u8 ctrlMode; // 0x88
-    u8 unk_89[3];
+    u8 ctrlMode;  // 0x88
     u32 deadline; // 0x8C - the gRoomFrameCount frame IsPlayerInvulnerable tests against
     u8 bumped;    // 0x90
     u8 countdown; // 0x91
     u8 bounce;    // 0x92
     u8 unk_93;
-    u8 listCount; // 0x94
-    u8 unk_95[3];
+    u8 listCount;             // 0x94
     void *list[5];            // 0x98 - Crate *s
     void *carried;            // 0xAC - a Sprite *
     void *child;              // 0xB0 - a Sprite *
     s32 maskTrailIdx;         // 0xB4
     struct vec2 maskTrail[8]; // 0xB8 (aabb.h)
     u8 unk_F8[8];
-    u8 slippery;  // 0x100
-    u8 hanging;   // 0x101
-    u8 pushLeft;  // 0x102
-    u8 pushRight; // 0x103
-    u8 dead;      // 0x104
-    u8 cleared;   // 0x105
-    u8 unk_106[2];
+    u8 slippery;                           // 0x100
+    u8 hanging;                            // 0x101
+    u8 pushLeft;                           // 0x102
+    u8 pushRight;                          // 0x103
+    u8 dead;                               // 0x104
+    u8 cleared;                            // 0x105
     struct collision_queue collisionQueue; // 0x108 (objects.h)
 };
 

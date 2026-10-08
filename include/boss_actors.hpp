@@ -207,9 +207,8 @@ COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftLauncher) == 0x70);
 class HovercraftSideGun : public HpActor
 {
 public:
-    u8 dead; // 0x58 - set when shot down, IsUnshootable returns it
-    u8 left; // 0x59 - the constructor's `left`: the side and the animation
-    u8 unk_5A[2];
+    u8 dead;        // 0x58 - set when shot down, IsUnshootable returns it
+    u8 left;        // 0x59 - the constructor's `left`: the side and the animation
     s32 offX;       // 0x5C - added to the hovercraft's position
     s32 offY;       // 0x60
     s32 offZ;       // 0x64

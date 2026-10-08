@@ -41,7 +41,6 @@ public:
     s32 animIndex;                   // 0x0C - current index into anims
     u16 animTimer;                   // 0x10
     u8 animDone;                     // 0x12
-    u8 unk_13;                       // 0x13
     s32 sortKey;                     // 0x14 - draw order (actor_self.h)
     s32 palette;                     // 0x18 - OBJ palette bank
 
@@ -89,7 +88,6 @@ public:
     s32 z;                            // 0x24
     s32 state;                        // 0x28
     u8 visible;                       // 0x2C
-    u8 unk_2D[3];                     // 0x2D
     struct anim_table_record *record; // 0x30
     s32 depth;                        // 0x34
     struct anim_box box;              // 0x38

@@ -146,5 +146,5 @@ const struct delta_record gTitleLogoPieceMotion8[6] = {
 const struct anim_table_record gLogoActorAnim = {
     0, (struct anim_frame_record *)((const u8 *)gPolarCategoryPalette + 0x400),
     (u32 *)((const u8 *)gPolarCategoryPalette + 0x49C),
-    0, { 0 }, 0x100, { -10, -20, -1, 20, 44, 3 }, 0, 0,
+    0, 0x100, { -10, -20, -1, 20, 44, 3 }, 0, 0,
 };
