@@ -1,9 +1,10 @@
 # g++ 2.x mangled name -> the C name the rest of the build uses (#664).
 # The Makefile renames these in every C++ object (CXX_OBJS) with
 # `objcopy --redefine-syms` after assembling it: definitions get the
-# names the vtables (src/data) and the C callers use, and references
-# get the C names of the functions and vtables they point at. See
-# docs/cplusplus.md.
+# names the C callers (and the C vtables left in src/data) use, the
+# vtables g++ emits get their C table names (ldscript.txt places them),
+# and references get the C names of the functions and vtables they
+# point at. See docs/cplusplus.md.
 #
 # g++ 2.9 mangling: `Method__<len>Class<args>` for a method,
 # `__<len>Class` for a constructor, `_._<len>Class` for a destructor,
