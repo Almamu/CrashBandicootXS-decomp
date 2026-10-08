@@ -84,9 +84,8 @@ TitleScreen::TitleScreen()
  * map's 16-bit entries (the tile number in the low byte) into the bytes
  * of the 8-bit affine screen at 0x0600F000, and sets up BG2.
  *
- * `bg2cnt` is deliberately left uninitialized: the ROM builds the
- * register value with an `& 0xFFFF0000` against whatever register it
- * got. The indexed `map[i]`/`map[i + 1]` reads are strength-reduced into
+ * `bg2cnt` is a BGnCNT union (a word on the stack): clearing its raw
+ * halfword is the ROM's `& 0xFFFF0000`. The indexed `map[i]`/`map[i + 1]` reads are strength-reduced into
  * the ROM's walk pointer, with `map` kept in r8 for the free. */
 void TitleScreen::LoadBg()
 {
@@ -94,8 +93,7 @@ void TitleScreen::LoadBg()
     u16 *map;
     u16 *dest;
     s32 i;
-    /* self-init: deliberately unset (see above); silences -Wuninitialized (#577) */
-    u32 bg2cnt = bg2cnt;
+    union bgcnt bg2cnt;
 
     LoadTaggedAsset(pkg->paletteAsset, (void *)BG_PLTT);
     LoadTaggedAsset(pkg->tileAsset, (void *)BG_CHAR_ADDR(2));
@@ -106,12 +104,12 @@ void TitleScreen::LoadBg()
         *dest = (map[i] & 0xff) | ((map[i + 1] & 0xff) << 8);
         dest++;
     }
-    bg2cnt &= 0xFFFF0000;
-    bg2cnt |= 8;
-    bg2cnt |= 0xf0 << 5;
-    bg2cnt |= 0x80;
-    bg2cnt |= 1;
-    REG_BG2CNT = bg2cnt;
+    bg2cnt.raw = 0;
+    bg2cnt.bits.charBase = 2;
+    bg2cnt.bits.screenBase = 30;
+    bg2cnt.bits.colorMode = 1;
+    bg2cnt.bits.priority = 1;
+    REG_BG2CNT = bg2cnt.raw;
     delete[] map;
 }
 

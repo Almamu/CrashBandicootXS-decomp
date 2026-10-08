@@ -423,12 +423,6 @@ u8 TestSaveFlags(struct save_data *self, u8 flags)
 
 void ClearSaveFlags(struct save_data *self, u8 flags)
 {
-    MATCH_HOLD_REG(u8, loaded, r3);
-    MATCH_HOLD_REG(u8, v, r1);
-
-    loaded = self->flags;
-    loaded &= ~flags;
-    asm volatile("add %0, %1, #0" : "=r"(v) : "r"(loaded));
-    self->flags = v;
+    self->flags &= ~flags;
     UpdateSaveChecksum(self);
 }
