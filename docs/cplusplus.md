@@ -462,7 +462,7 @@ counts them by kind) and what the C++ needed when it was converted.
 | `src/level/level_layers.cpp` (again) | `LevelLayers`: `new TileCache`, `delete tiles` (`InitTileCache(operator new(0x1064))`, `DestroyTileCache(tiles, 3)` before) | 0 | old_agbcp | 0 -> 0 | cleanup |
 | `src/level/entity_flags.cpp` | `LevelEntityFlags` (include/spawners.hpp; derives from struct entity_flags; `EntityFlags` is taken by entity.hpp's union): `CountCrateEntities`, the bitmap accessors, constructor, destructor | 9 | **old_agbcp** (was agbcc) | 8 pins, 2 asm -> 6 pins, 1 asm (`SetEntityIdActivated`'s `ip`/`r2` block: no plain form found under either compiler) | cleanup |
 | `src/level/spawn_pickups.cpp` (again) | `LevelState`'s constructor (InitLevelState, include/level_state.hpp; C linkage before); `new LevelEntityFlags` | 0 | old_agbcp | 0 -> 0 | cleanup |
-| `src/level/level_query.cpp` | `UnusedLevelObject` (file-local): the unused destructor and empty constructor (`sub_802425C`, `nullsub_25`); the medal tallies and room selection (C linkage) | 2 + 15 | agbcp | 0 -> 0 | cleanup |
+| `src/level/level_query.cpp` | `UnusedLevelObject` (file-local): the unused destructor and empty constructor (`DestroyUnusedLevelObject`, `InitUnusedLevelObject`); the medal tallies and room selection (C linkage) | 2 + 15 | agbcp | 0 -> 0 | cleanup |
 | `src/cutscene/slideshow.cpp` | `Slideshow` (new include/cutscene.hpp): `BeginSlide`, `Run` (UNUSED), `Skip`, `ShowPicture` | 4 | old_agbcp (old_agbcc C already) | 7 pins, 1 asm, 1 memory barrier -> 0 | cleanup |
 | `src/cutscene/slideshow_display.cpp` | `Slideshow`'s `EndSlide`, destructor, `Reset`; with `SetSlideshowDispcnt` (C linkage) | 3 + 1 | agbcp | 1 pin -> 0 | cleanup |
 | `src/cutscene/cutscene_player.cpp` (again) | `Slideshow`'s constructor; `CutscenePlayer` (cutscene.hpp): constructor, `Run`, destructor (all C linkage before) | 4 | old_agbcp | 0 -> 0 | cleanup |
@@ -550,7 +550,7 @@ counts them by kind) and what the C++ needed when it was converted.
 | `src/objects/platform_contact.cpp` | `Platform::CheckPlayerContact` | 1 | **old_agbcp** (was agbcc) | 4 pins -> 0 | 7d |
 | `src/objects/platform_collide.cpp` | `Platform::ResolveCollision` | 1 | old_agbcp | 2 pins, 2 holds, 2 uses, 1 keep, 1 asm label, gotos -> 1 keep, 1 asm label | 7d |
 | `src/objects/platform_create.cpp` | `Platform::Create` | 1 | old_agbcp | 1 keep, 8 retyped stores, 8 volatiles, the `MOVER_NEW` cast -> 0 | 7d |
-| `src/bosses/cortex.cpp` | `OneShotAnimCtrl`'s constructor and destructor (ctrl.hpp); `UnusedOneShotAnimCtrl`; `TinyCtrl`'s `StartHop`, destructor and constructor; `CortexBossCtrl::Update`, `SpawnCannon`, `SpawnTarget`; `CortexTargetCtrl::Update`, `SetState`, `FireShot`; `CortexShotCtrl`, `CortexBossGemCtrl` (boss_ctrl.hpp); `CortexBossPlatformMover` (platform.hpp); with `nullsub_19` and `SpawnCortexBossGem` (C linkage) | 23 + 2 | old_agbcp | 49 pins, 13 keeps, 4 asm, 3 volatiles, 2 retyped stores, the `MOVER_NEW` cast, the per-site `SET_FRAME_R`/`MARK_GONE`/`GONE_SLOT_R4` macros and entity_bits.h's `ENTITY_SET_GONE_BIT_PINNED` (5 pins), gotos -> 1 pin, one goto | 7i |
+| `src/bosses/cortex.cpp` | `OneShotAnimCtrl`'s constructor and destructor (ctrl.hpp); `UnusedOneShotAnimCtrl`; `TinyCtrl`'s `StartHop`, destructor and constructor; `CortexBossCtrl::Update`, `SpawnCannon`, `SpawnTarget`; `CortexTargetCtrl::Update`, `SetState`, `FireShot`; `CortexShotCtrl`, `CortexBossGemCtrl` (boss_ctrl.hpp); `CortexBossPlatformMover` (platform.hpp); with `TinyHitStub` and `SpawnCortexBossGem` (C linkage) | 23 + 2 | old_agbcp | 49 pins, 13 keeps, 4 asm, 3 volatiles, 2 retyped stores, the `MOVER_NEW` cast, the per-site `SET_FRAME_R`/`MARK_GONE`/`GONE_SLOT_R4` macros and entity_bits.h's `ENTITY_SET_GONE_BIT_PINNED` (5 pins), gotos -> 1 pin, one goto | 7i |
 | `src/objects/platform_create.cpp` (again) | `Platform::Create`: `new CortexBossPlatformMover` (the C prototype before) | 0 | old_agbcp | 0 -> 0 | 7i |
 | the controller headers (ctrl.hpp, enemy_ctrl.hpp, input_ctrl.hpp, player_ctrl.hpp, action_ctrl.hpp, boss_ctrl.hpp, platform.hpp), sprite_obj.hpp, crate_list.hpp, and 38 `.cpp` files | every controller method takes a `MovingSprite *` (`SpriteObj` removed); `Ctrl::owner` a `MovingSprite *`; `PartList`'s items `Sprite *`s, `CrateList`'s `Crate *`s | 0 | (unchanged) | 0 -> 0 | 7b' |
 | `src/player/player_update.cpp` | `Player` (include/player.hpp): `ApplyVelocity`, `Update`, `TouchesBox`, destructor, `HasRampYTarget`, `ClearSpeedY`, `StopFalling` | 7 | **old_agbcp** (was agbcc) | 14 pins, 1 asm, 2 retyped reads, gotos, the destructor's slot call -> 0 | 8 |
@@ -1438,7 +1438,7 @@ Kept, each with a comment:
 
 Part 7i in numbers: cortex.c, the last file of the entity family and the
 last boss controller file, 25 functions: 23 methods of nine classes and
-two C-linkage functions (`nullsub_19`, which tiny_update.cpp calls, and
+two C-linkage functions (`TinyHitStub`, which tiny_update.cpp calls, and
 `SpawnCortexBossGem`, which spawn_gems.c calls). Project-wide:
 `MATCH_HOLD_REG` 1457 -> 1404, `MATCH_KEEP` 47 -> 34, instruction-emitting
 `asm` 164 -> 160, retyped field stores 204 -> 202 and scoped volatiles 13
@@ -1908,7 +1908,7 @@ tables (`InitLevelSelect` reloads them across calls). C idioms kept:
 `LevelSelectLoop`'s and `LoadLevelSelectRecord`'s gotos, the page turns'
 goto loops (a `while` gets its test copied in front), and
 `GetLevelSelectPageBgOffsets`'s `u32` read of `hofs`/`vofs` (g++ 2.9 has
-no anonymous structs for a union view). `sub_801B85C` stores the byte at
+no anonymous structs for a union view). `SetCameraLeadUnk32` stores the byte at
 0x32, inside `Sprite::frame`, through a byte pointer: nothing else
 touches it.
 
@@ -3256,7 +3256,7 @@ now only a tag. The slot list's 15 icons are `UiSprite *`s (`new
 UiSprite`, the C's `InitUiSpriteObj(OperatorNew(0x40))`); their
 PART_METHOD slot calls are `rowObjA[i]->Update()` (slot 3) and `delete
 rowObjA[i]` (slot 10, with its null test). The save transfer (struct
-settings_sync_pump) and the save data stay C structs, `new`/`delete`d as
+save_transfer) and the save data stay C structs, `new`/`delete`d as
 PODs: save_data.c and save_transfer*.c have no C++ trait.
 
 What made it match: DrawMain, two inline-asm transcriptions of the ROM in
@@ -3345,8 +3345,8 @@ instruction asm 61 -> 56, MATCH_HOLD 13 -> 12. Nothing in this family was left C
   `new Hud` and its `DestroyHud(gHud, 3)` `delete gHud` (still
   byte-identical), and level_state.cpp calls the Hud's methods.
 - **Gone C prototypes:** InitTileCache, DestroyTileCache, SetEntityIdGone,
-  SetEntityFlagsPos, InitEntityFlags, DestroyEntityFlags, sub_802425C,
-  nullsub_25, BeginSlide, RunSlideshow, SkipSlides, ShowSlidePicture,
+  SetEntityFlagsPos, InitEntityFlags, DestroyEntityFlags, DestroyUnusedLevelObject,
+  InitUnusedLevelObject, BeginSlide, RunSlideshow, SkipSlides, ShowSlidePicture,
   EndSlide, DestroySlideshow, ResetSlideshow, InitSlideshow,
   InitTitleScreen, RunTitleScreen, DestroyTitleScreen, InitLevelState,
   DestroyLevelState, DestroyOamBuffer, DestroyObjVramCursor,

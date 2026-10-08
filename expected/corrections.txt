@@ -2842,3 +2842,9 @@ rename sub_8023138 GetUnusedAssistDeaths
 rename sub_802314C SetUnusedFlags
 rename sub_8023158 TestUnusedFlags
 rename nullsub_23 SpawnStartMarkerStub
+
+# Naming round 8: the last functions (#554, #558).
+rename sub_802425C DestroyUnusedLevelObject
+rename nullsub_25 InitUnusedLevelObject
+rename nullsub_19 TinyHitStub
+rename sub_801B85C SetCameraLeadUnk32

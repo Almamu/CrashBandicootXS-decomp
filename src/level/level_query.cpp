@@ -27,16 +27,17 @@ extern "C" {
  * reads. */
 
 /* UNUSED - no caller anywhere in the ROM (checked src/ and asm/): the
- * destructor (sub_802425C; g++'s deleting destructor frees `this` when
- * bit 0 of its __in_chrg is set) and the empty constructor (nullsub_25,
- * which returns `this` by leaving r0 alone) of a class with no fields and
+ * destructor (DestroyUnusedLevelObject; g++'s deleting destructor frees
+ * `this` when bit 0 of its __in_chrg is set) and the empty constructor
+ * (InitUnusedLevelObject, which returns `this` by leaving r0 alone) of a
+ * class with no fields and
  * no vtable that nothing creates. C++ since the #664 cleanup; the rest of
  * the file has C linkage. */
 class UnusedLevelObject
 {
 public:
-    UnusedLevelObject();  // nullsub_25
-    ~UnusedLevelObject(); // sub_802425C
+    UnusedLevelObject();  // InitUnusedLevelObject
+    ~UnusedLevelObject(); // DestroyUnusedLevelObject
 };
 
 UnusedLevelObject::~UnusedLevelObject()

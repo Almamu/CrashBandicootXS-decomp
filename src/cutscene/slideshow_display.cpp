@@ -68,7 +68,7 @@ void Slideshow::EndSlide(s32 idx)
 
 /* DestroySlideshow: nothing to tear down; g++'s deleting destructor frees
  * `this` when bit 0 of its __in_chrg is set (the same shape as
- * level_query.cpppp's sub_802425C). */
+ * level_query.cpp's DestroyUnusedLevelObject). */
 Slideshow::~Slideshow()
 {
 }

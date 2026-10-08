@@ -919,7 +919,10 @@ void PlayBootCutscene(void *self)
     PlayCutscene(self, 0);
 }
 
-/* UNUSED - no caller anywhere in the ROM (checked src/ and asm/). */
+/* UNUSED - no caller anywhere in the ROM (checked src/, asm/, expected/
+ * and every word-aligned Thumb pointer in baserom.gba). Empty; keeps the
+ * nullsub_N name (docs/naming.md): no call, table slot or neighbour
+ * shows what it stood for. */
 void nullsub_24(void)
 {
 }

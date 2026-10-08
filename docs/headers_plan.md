@@ -408,7 +408,9 @@ file. Check each file.
   changes with unrelated renames in the same PR.
 - #569 lists type names that are misleading (`icon_manager`,
   `pause_options_screen`, ...). Header batches use the current names and
-  don't rename types. #569 does that separately.
+  don't rename types. #569 does that separately (done: the bitmap font,
+  the save menu, `save_data`/`save_transfer` in save_data.h, formerly
+  settings_sync.h).
 - A copy that doesn't really match (different size or offsets) is a
   different struct, or one of the copies is wrong. Look at the readers
   before merging, and don't force it.
@@ -701,7 +703,7 @@ definitions (522 -> 501). No file needed an asm-label alias.
   save menu (`gSaveMenu`, now `struct save_menu *` in iwram_data.c), the
   menu tables in menu_tables_16b138.c (`const`), `gEepromNeedsInit` and
   the two link-text pointers (`const u8 *`). It includes `save_menu.h`
-  and `settings_sync.h`, which stay as type headers; the save files
+  and `save_data.h`, which stay as type headers; the save files
   include `save.h` in their place.
   - Definition fixes: `SummarizeProgress` takes `struct save_menu *`
     (was `void *`, unused). `EndLinkSaveTransfer` takes an unused
@@ -1167,7 +1169,7 @@ in jetpack_spawn.c, see "Codegen exceptions").
   - an unused parameter, where the callers pass a value the ROM sets up:
     `FinishPolarRun`, `CountJetpackBomber`, `IsJetpackPauseLocked`,
     `IsPolarPauseLocked` (`gActorList`), `AnimateJetpackPlayerPalette`
-    (`self`), `nullsub_19` (`self`, `part`);
+    (`self`), `TinyHitStub` (`self`, `part`);
   - `IsJetpackPauseLocked`/`IsPolarPauseLocked` return `s32` (their only
     callers return the value as `s32`; with `u8` they add `lsl`/`lsr`);
   - the 27 constructors that took the part record as `s32 a`

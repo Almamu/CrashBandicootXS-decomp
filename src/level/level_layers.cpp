@@ -36,9 +36,12 @@ extern "C" {
  * - `sub_80269DC`/`sub_80269F8` - identical predicates: 0 if `arg1`,
  *   `*arg2` and `arg3` are all nonzero, else 1. `sub_8026A14` returns 0.
  *   All three are UNUSED: no caller anywhere in the ROM (checked src/,
- *   asm/ and the method tables).
+ *   asm/, the method tables and every word-aligned Thumb pointer in
+ *   baserom.gba). They keep their `sub_XXXXXXXX` names (docs/naming.md):
+ *   with no caller and no table slot, nothing shows what the arguments
+ *   are or what the predicates answer.
  *
- * Function names stay `sub_XXXXXXXX` (docs/naming.md). Only `SetScroll`
+ * Only `SetScroll`
  * needed a matching tweak (separate temps per axis); the C's hand-written
  * method-table calls are virtual calls. See
  * docs/matching/archive/issue-43-level-layers.md.

@@ -21,7 +21,7 @@
  * instruction-for-instruction transcription of the ROM's own
  * disassembly like the rest of this chunk's r7-affected neighbours -
  * see docs/matching/archive/issue-5-overlay-ui-sync.md. */
-s32 PollSaveTransfer(struct settings_sync_pump *self)
+s32 PollSaveTransfer(struct save_transfer *self)
 {
     MATCH_HOLD_REG(s32, result, r0);
 

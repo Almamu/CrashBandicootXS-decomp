@@ -98,9 +98,9 @@ extern u8 IsTouchingAirship(void *self);
 
 /* src/bosses/cortex.cpp: methods of TinyCtrl, CortexBossCtrl,
  * CortexTargetCtrl and CortexShotCtrl (include/boss_ctrl.hpp) under their
- * C names (cxx_symbols.txt). nullsub_19 and SpawnCortexBossGem
+ * C names (cxx_symbols.txt). TinyHitStub and SpawnCortexBossGem
  * (spawn_gems.cpp calls it) have C linkage. */
-extern void nullsub_19(void *self, void *part);
+extern void TinyHitStub(void *self, void *part);
 extern void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind);
 
 /* src/bosses/hovercraft.cpp */

@@ -7,7 +7,7 @@
  * src/save/save_menu.cpp, save_menu_draw.cpp, save_menu_input.cpp and
  * save_menu_ui.cpp; cxx_symbols.txt maps the methods onto their C names
  * (SaveMenuInput, DrawSaveMenu, ...). The link transfer it drives
- * (struct settings_sync_pump, settings_sync.h) and the save data (struct
+ * (struct save_transfer, save_data.h) and the save data (struct
  * save_data) stay C structs: their own files (save_data.c,
  * save_transfer*.c) have no C++ trait.
  *

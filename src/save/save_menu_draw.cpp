@@ -30,7 +30,7 @@ extern "C" {
  * DrawTitle are in src/save/save_menu_ui.cpp. */
 
 /* State 3's link exchange: `new`s a save transfer (struct
- * settings_sync_pump, 0x220 bytes) sending cartSave, then loops
+ * save_transfer, 0x220 bytes) sending cartSave, then loops
  * VBlank-waiting while polling input (B cancels: 3), the link-reset flag
  * gLinkSessionReset and UpdateLinkSession (the link-connection/handshake
  * driver, docs/rom_map.md's SIO/link-cable section) until the transfer's
@@ -43,7 +43,7 @@ extern "C" {
  * `GetSaveTransferData` result is taken before `linkSave` is loaded. */
 s32 SaveMenu::LinkExchange()
 {
-    struct settings_sync_pump *spinner = new settings_sync_pump;
+    struct save_transfer *spinner = new save_transfer;
     s32 result;
 
     SetSaveTransferRecord(spinner, cartSave);

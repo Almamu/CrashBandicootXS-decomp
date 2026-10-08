@@ -17,7 +17,7 @@ void SetSaveFlags(struct save_data *self, u8 flags)
  * channel pointer has to be its own local: written as `s->ring.`
  * throughout, gcc keeps the first `&count` computation alive for both
  * fill loops instead of recomputing it as the ROM does. */
-void SendSaveTransferChunk(struct settings_sync_pump *self)
+void SendSaveTransferChunk(struct save_transfer *self)
 {
     if (self->remaining != 0) {
         struct link_session *s = gLinkSession;
@@ -67,7 +67,7 @@ void SendSaveTransferChunk(struct settings_sync_pump *self)
  * the wrap loop's `old` out of r2. The wrap loop's count pointer is
  * pinned to r1 (the ROM's register), and the loop is an explicit
  * `if` + `do`/`while` so the pin is set after the zero-trip test. */
-void ReceiveSaveTransferChunk(struct settings_sync_pump *self, s32 playerIndex)
+void ReceiveSaveTransferChunk(struct save_transfer *self, s32 playerIndex)
 {
     struct link_session *s = gLinkSession;
     s32 pi = playerIndex;

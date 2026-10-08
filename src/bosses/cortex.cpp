@@ -88,11 +88,13 @@ UnusedOneShotAnimCtrl::~UnusedOneShotAnimCtrl()
 {
 }
 
-/* Empty. TinyCtrl::SetState's case 9 (tiny_update.cpp) calls it directly,
+/* Empty hook for Tiny taking a hit. TinyCtrl::SetState's case 9
+ * (tiny_update.cpp; Update enters it when the player's attack box hits
+ * Tiny, and it plays SFX_BOSS_HIT and counts the hit) calls it directly,
  * between the hop set-up and the anim-7 call, with the same (self, part)
- * arguments as StartHop below; it is in no method table, so nothing shows
- * what it was for. */
-void nullsub_19(void *self, void *part)
+ * arguments as StartHop below. It is in no method table, so nothing shows
+ * what the hook was meant to do. */
+void TinyHitStub(void *self, void *part)
 {
 }
 
