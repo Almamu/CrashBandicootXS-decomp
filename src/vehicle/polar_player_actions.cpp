@@ -79,7 +79,7 @@ void PolarPlayer::Catch()
 {
     gPolarSteerEnabled = 0;
     gPolarPlayerHalted = 1;
-    ClearPolarAkuAkuMask(gPolarAkuAku);
+    gPolarAkuAku->ClearMask();
     gPolarPlayerInactive = 1;
     SetState(7, 6);
     PlaySfx(gAudioContext, SFX_YETI_CATCH, 0x100);
@@ -103,7 +103,7 @@ void PolarPlayer::GiveLife()
     AddLife(gLevelState);
 }
 
-/* A boost pad at `x` (polar_aku_aku.c): only while running, dashing or
+/* A boost pad at `x` (polar_aku_aku.cpp): only while running, dashing or
  * boosted (states 1-3), the player is put on the pad, plays anim 2 and
  * is boosted (state 3) with the steering off; the bear's speed jumps
  * (0x5a from a dash, 0x55 from a run). */
@@ -133,11 +133,11 @@ void PolarPlayer::Boost(s32 x)
  * for 500 frames. */
 void PolarPlayer::GiveMask()
 {
-    if (AddPolarAkuAkuMask(gPolarAkuAku) == 3)
+    if (gPolarAkuAku->AddMask() == 3)
         gPolarInvulnTimer = 500;
 }
 
-/* A launcher (polar_objects.c): only while running, dashing or boosted
+/* A launcher (polar_objects.cpp): only while running, dashing or boosted
  * and not invulnerable, the launch (state 5, anim 3) with the steering
  * off. */
 void PolarPlayer::Launch()

@@ -8,7 +8,7 @@
 #include "vehicle.h"
 #include "globals.h"
 
-/* Sits right after polar_aku_aku.c's `CreatePolarCheckpointCrate` and before
+/* Sits right after polar_aku_aku.cpp's `CreatePolarCheckpointCrate` and before
  * yeti_states.c's `YetiStateChase`/`YetiStateCharge` - the whole contiguous
  * range that used to be `asm/code_3_2_20_28568_c99c_d7b0.s`. All three
  * functions here operate on the `gYeti`-rooted "position-

@@ -6,7 +6,7 @@
 #include "vehicle.h"
 
 /* More of the `gYeti`-rooted object's lifecycle (see
- * polar_aku_aku.c's header comment): a state-flag setter, its
+ * polar_aku_aku.cpp's header comment): a state-flag setter, its
  * destructor, and its constructor. */
 
 /* Arms `gYetiState = 3` - a state value none of this chunk's

@@ -81,13 +81,13 @@ void PolarPlayer::Update()
         }
     }
     if (gPolarAkuAku != NULL) {
-        MovePolarAkuAku((struct actor_self *)gPolarAkuAku, x, y, z);
+        gPolarAkuAku->Move(x, y, z);
     } else {
         s32 tier = gLevelState->maskLevel;
 
         gPolarAkuAku = SpawnPolarAkuAku(x, y, z, tier);
         if ((u8)IsActorMaskAssistDue())
-            AddPolarAkuAkuMask(gPolarAkuAku);
+            gPolarAkuAku->AddMask();
     }
 }
 
@@ -166,7 +166,7 @@ void PolarPlayer::Draw()
     }
 }
 
-/* A hazard's hit (the penguin, the icicle, ...; polar_objects.c): nothing
+/* A hazard's hit (the penguin, the icicle, ...; polar_objects.cpp): nothing
  * while invulnerable (returns 1). With no mask, the player is knocked off
  * (state 6, anim 5, the shock palette, a life lost) and the yeti stops;
  * otherwise Aku Aku loses a mask and the player is invulnerable for 0x4b
@@ -180,7 +180,7 @@ s32 PolarPlayer::Hurt()
     if (*timer != 0)
         return 1;
 
-    ActorSelf **aku = &gPolarAkuAku;
+    PolarAkuAku **aku = &gPolarAkuAku;
     s32 tier = gLevelState->maskLevel;
 
     if (tier == MASK_LEVEL_NONE) {
@@ -196,12 +196,12 @@ s32 PolarPlayer::Hurt()
         StopYeti();
     } else {
         *timer = 0x4b;
-        RemovePolarAkuAkuMask(*aku);
+        (*aku)->RemoveMask();
     }
     return 0;
 }
 
-/* The electric fence's shock (polar_objects.c): as Hurt, but the shock
+/* The electric fence's shock (polar_objects.cpp): as Hurt, but the shock
  * (state 12, anim 11) with no life lost yet (StateShocked). */
 s32 PolarPlayer::Shock()
 {
@@ -211,7 +211,7 @@ s32 PolarPlayer::Shock()
     if (*timer != 0)
         return 1;
 
-    ActorSelf **aku = &gPolarAkuAku;
+    PolarAkuAku **aku = &gPolarAkuAku;
     s32 tier = gLevelState->maskLevel;
 
     if (tier == MASK_LEVEL_NONE) {
@@ -223,7 +223,7 @@ s32 PolarPlayer::Shock()
         StopYeti();
     } else {
         *timer = 0x4b;
-        RemovePolarAkuAkuMask(*aku);
+        (*aku)->RemoveMask();
     }
     return 0;
 }

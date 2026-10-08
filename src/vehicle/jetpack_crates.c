@@ -30,7 +30,7 @@
  * plays first, then the record's kind byte (`record->index`) selects between
  * `FreezeLevelClock`/`QueueJetpackWumpa` calls - written as `goto`-chained `if`
  * blocks (not a plain `switch`) to match this family's already-matched
- * sibling `UpdatePolarQuestionCrate` (`polar_pickups.c`), whose last case does
+ * sibling `UpdatePolarQuestionCrate` (`polar_pickups.cpp`), whose last case does
  * something structurally different from the others and resists a plain
  * `switch`'s uniform codegen.
  *
