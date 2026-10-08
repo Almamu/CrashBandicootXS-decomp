@@ -426,7 +426,9 @@ and the vtable names, is why the build renames with objcopy instead.
 The conversion goes one class family per PR (#664). Each row is an
 object that is now built from C++ source; "workarounds" counts the
 `MATCH_*` pins and `asm` statements of its old C (`tools/match_idioms.py`
-counts them by kind) and what the C++ still needs.
+counts them by kind) and what the C++ needed when it was converted.
+#662 removed many of those since; `tools/match_idioms.py --functions
+--files` lists the functions that still have one.
 
 | Object | Classes (include/ctrl.hpp unless noted) | Functions | Compiler | Workarounds: C -> C++ | Part |
 | include/objects.h, player.h, crates.h, gfx.h, bosses.h, pickups.h, frontend.h, actor.h, vehicle.h, system.h | the 391 C prototypes of C++ methods with no C caller go, with the C views only a class's size check used (struct ctrl, boss_ctrl, mega_mix_ctrl, part_ctrl and ctrl_anchor, periodic_spawner, spawner, actor_orbit, cannon_flash, actor_hp, jetpack_ring, orbit_part and orbit_part.h); the classes check the ROM sizes | 0 | (unchanged) | 0 -> 0 | cleanup |
@@ -2919,8 +2921,10 @@ counts, project-wide; `tools/cpp_survey.py`):
 
 The 74 objects: bosses 7, crates 19, enemies 6, gfx 2, objects 20, pickups 3,
 player 17. `MATCH_BARRIER` (17), the clobbers (3), the memory barriers (2)
-and the `BOX_ADDR`s (12) are unchanged. Every remaining workaround in a C++
-object is listed, with its reason, in its part's notes above.
+and the `BOX_ADDR`s (12) are unchanged. Every workaround a C++ object kept
+then is listed, with its reason, in its part's notes above; #662 has
+removed many of them since (see docs/matching_techniques.md, "Pruning
+workarounds").
 
 **What is still C**: since [the final cleanup](#the-final-cleanup),
 nothing with a C++ trait. Every item this list had (the level select's
@@ -3121,8 +3125,8 @@ C++ objects (153 -> 167 `.cpp` files under src/).
 ### The final cleanup
 
 **#664 is complete.** No game object outside lib/ is C with a C++ trait
-any more: `tools/cpp_survey.py --objects` lists 201 objects under src/
-built from C++ source and 49 C-like ones (plus the data tables), and
+any more: `tools/cpp_survey.py --objects` listed 201 objects under src/
+built from C++ source and 49 C-like ones (plus the data tables) then, and
 the only traits it still finds in C files are plain function pointers
 (the IRQ table, the yeti's state table, the sprite-frame cache hook,
 GAX's mixer), which aren't C++. The report stays 2059/2059 functions
