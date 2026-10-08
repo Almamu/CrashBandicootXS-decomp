@@ -1,0 +1,136 @@
+#include "bg_layer.hpp"
+
+extern "C" {
+#include "math_util.h"
+}
+
+/* GitHub issue #42: the overrides of BgLayer's tile-slot-pooled subclass
+ * used for BG layer 0 (PooledBgLayer, include/bg_layer.hpp,
+ * gPooledBgLayerVtable; its constructor and destructor are in
+ * tile_slot_pool.cpp). Instead of copying map entries straight into the
+ * screen block, it routes each source tile through the VRAM tile-slot pool
+ * (`AcquireTileSlot` acquire / `ReleaseTileSlot` release) and releases
+ * the tiles of rows/columns that scroll out (ClipColumns, ClipRows).
+ *
+ * Compiled with old_agbcp (Makefile OLD_AGBCC_OBJS), as bg_layer.cpp, the
+ * other half of what was one C file. Real bytes formerly the end of
+ * `asm/code_3_2_17_25fc8.s`. */
+
+/* Layer-0 DrawColumn (slot 7): acquires a pool slot for every resident
+ * row's tile in map column `col` and writes the returned map entry, moving
+ * down one screen row (mod 32x32) per step. */
+void PooledBgLayer::DrawColumn(s32 col)
+{
+    s32 srcRow;
+    u16 *src = streamer->GetColumn(col, rowLo, &srcRow);
+    s32 idx = GetScreenIndex(col, rowLo);
+    s32 r;
+
+    for (r = rowLo; r <= rowHi; r++) {
+        screen[idx] = AcquireTileSlot(pool, src[srcRow * 64]);
+        srcRow = (srcRow + 1) & 0x1F;
+        idx = (idx + 32) % 0x400;
+    }
+}
+
+/* Layer-0 override of slot 4 (base: BgLayerBase::ClampScrollStep): clamps
+ * a scroll step to [-8, 8]. */
+s32 PooledBgLayer::ClampScrollStep(s32 step)
+{
+    LIMIT_MIN(step, -8);
+    LIMIT_MAX(step, 8);
+    return step;
+}
+
+/* Releases the pool slots of map column `col`'s resident rows. */
+void PooledBgLayer::ReleaseColumn(s32 col)
+{
+    s32 srcRow;
+    u16 *src = streamer->GetColumn(col, rowLo, &srcRow);
+    s32 r;
+
+    for (r = rowLo; r <= rowHi; r++) {
+        ReleaseTileSlot(pool, src[srcRow * 64]);
+        srcRow = (srcRow + 1) & 0x1F;
+    }
+}
+
+/* Releases the pool slots of map row `row`'s resident columns. */
+void PooledBgLayer::ReleaseRow(s32 row)
+{
+    s32 srcCol;
+    u16 *src = streamer->GetRow(colLo, row, &srcCol);
+    s32 c;
+
+    for (c = colLo; c <= colHi; c++) {
+        ReleaseTileSlot(pool, src[srcCol++]);
+        srcCol &= 0x3F;
+    }
+}
+
+/* Layer-0 ClipColumns (slot 8; the base only narrows the range):
+ * releases the columns that leave [lo, hi] one at a time. */
+void PooledBgLayer::ClipColumns(s32 lo, s32 hi)
+{
+    while (colLo < lo) {
+        ReleaseColumn(colLo);
+        colLo++;
+    }
+    while (colHi > hi) {
+        ReleaseColumn(colHi);
+        colHi--;
+    }
+}
+
+/* Layer-0 ClipRows (slot 9): same for rows. */
+void PooledBgLayer::ClipRows(s32 lo, s32 hi)
+{
+    while (rowLo < lo) {
+        ReleaseRow(rowLo);
+        rowLo++;
+    }
+    while (rowHi > hi) {
+        ReleaseRow(rowHi);
+        rowHi--;
+    }
+}
+
+/* Layer-0 DrawRow (slot 6): like BgLayer::DrawRow, but each tile goes
+ * through the pool. */
+void PooledBgLayer::DrawRow(s32 row)
+{
+    u16 *dst = &screen[WrapRow(row) * 32];
+    s32 srcCol;
+    u16 *src = streamer->GetRow(colLo, row, &srcCol);
+    s32 c;
+
+    for (c = colLo; c <= colHi; c++) {
+        s32 i = WrapColumn(c);
+
+        dst[i] = AcquireTileSlot(pool, src[srcCol++]);
+        srcCol &= 0x3F;
+    }
+}
+
+/* Layer-0 Reset (slot 2): empties the pool, then the base reset. */
+void PooledBgLayer::Reset(const s32 *pos)
+{
+    ResetTileSlotPool(pool);
+    BgLayer::Reset(pos);
+}
+
+/* Layer-0 LoadTiles (slot 5): instead of unpacking the tile asset into
+ * VRAM, points the pool at the character block and the asset's tile
+ * data (past its 4-byte header). */
+void PooledBgLayer::LoadTiles()
+{
+    u32 tiles = (u32)tileData;
+
+    SetTileSlotPoolSource(pool, GetCharBase(), tiles + 4);
+}
+
+/* UNUSED - no caller anywhere in the ROM (checked asm/, expected/ and
+ * src/). */
+void nullsub_26(void)
+{
+}

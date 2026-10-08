@@ -34,6 +34,7 @@
 
 #include "sprite_obj.hpp"
 #include "player.hpp"
+#include "font.hpp"
 
 extern "C" {
 #include "core.h"
@@ -42,7 +43,6 @@ extern "C" {
 #include "line_util.h"
 #include "menus.h"
 #include "level_menu.h"
-#include "bitmap_font.h"
 #include "util.h"
 #include "system.h"
 #include "objects.h"

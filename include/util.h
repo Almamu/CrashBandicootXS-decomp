@@ -9,8 +9,9 @@
  * for codegen keeps it as an asm-label alias with a `codegen:` comment
  * (docs/headers_plan.md, "Codegen exceptions").
  *
- * DestroyLargeFont/DestroySmallFont (src/util/aabb_setup.c) are in
- * text.h. strcpy/strlen (src/util/string.c, defined under the C names
+ * DestroyLargeFont/DestroySmallFont (src/util/aabb_setup.cpp) are
+ * LargeFont's and SmallFont's destructors (include/font.hpp).
+ * strcpy/strlen (src/util/string.c, defined under the C names
  * CopyString/StringLength to avoid gcc's built-ins) are not declared
  * here: nothing outside string.c calls them. */
 
@@ -30,7 +31,7 @@ extern u8 AabbOverlaps(struct aabb *a, struct aabb *b);
 extern void IwramFree(u8 *address);
 extern void *IwramAlloc(u32 size);
 
-/* src/util/aabb_setup.c */
+/* src/util/aabb_setup.cpp */
 extern void SetAabbSize(struct aabb *dest, s32 w, s32 h);
 extern void SetAabbPos(struct aabb *dest, s32 x, s32 y);
 extern s32 GetLives(struct level_state *self);

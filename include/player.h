@@ -527,11 +527,8 @@ extern void SetPlayerSlippery(struct player *self, u8 arg1);
 extern struct crate *GetPlayerListEntry(struct player *self, s32 idx);
 extern void StorePlayerListEntry(struct player *self, struct crate *crate);
 /* Ctrl's methods (include/ctrl.hpp) under their C names
- * (cxx_symbols.txt), for gCtrlVtable and the C callers. */
-extern void SetCtrlMode(void *self, s32 val);
+ * (cxx_symbols.txt), for the C callers. */
 extern void SetCtrlAnimSet(void *self, s32 val);
-extern void SetCtrlTargetMotionY(void *unused, void *self, const struct speed_ramp *ramp);
-extern void StartCtrlTargetMotionY(void *unused, void *self, const struct speed_ramp *ramp);
 
 /* src/player/player_init.cpp */
 extern struct player *InitPlayer(struct player *self, u16 arg1, u16 arg2, u16 arg3, u16 unused);

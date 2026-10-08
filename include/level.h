@@ -5,8 +5,8 @@
  * the level layers and BG scroll layers, rooms and their entities, the
  * entity spawners, the camera, terrain and collision maps, and the game
  * frame. Every function src/level/ defines, with the prototype of its
- * definition, plus the BG layer functions that cutscene_player.c holds
- * for ROM order, and the globals and tables the level files use
+ * definition (the BG layers are C++ classes, include/bg_layer.hpp), and
+ * the globals and tables the level files use
  * (docs/headers_plan.md). OperatorNew and the other new/delete operators
  * (camera.c) are in memory.h. A .c file that needs a different local
  * declaration for codegen keeps it as an asm-label alias with a
@@ -20,19 +20,17 @@
 #include "level_data.h"
 #include "constants/bosses.h"
 #include "bg_scroll_layer.h"
-#include "vtable.h"
 #include "constants/entities.h"
 #include "constants/chunk_tokens.h"
 
-struct bg_streamer;
 struct camera;
 struct level_ctx;
 struct level_progress;
 struct orbit_part;
-struct pooled_layer;
 struct part_list;
+struct tile_slot_pool;
 
-/* The terrain types of the level collision maps (bg_layer_base.c): a
+/* The terrain types of the level collision maps (bg_layer_base.cpp): a
  * cell's low byte picks one (0x24 and above are solid, 0 is empty, and
  * GetTerrainHeights stops at 0x23), `modeValue` is a value per collision mode
  * (GetSolidTerrainModeValue) and `heights` the surface height of each of the cell's
@@ -44,7 +42,7 @@ struct terrain_type {
 };
 
 /* The 16-slot decode/LRU tile-record cache used throughout this cluster
- * of files (`bg_layer_base.c`/`tile_cache.c`/`collision_map.c`, gLevelLayers->tiles; docs/rom_map.md's
+ * of files (`bg_layer_base.cpp`/`tile_cache.c`/`collision_map.c`, gLevelLayers->tiles; docs/rom_map.md's
  * "Collision/terrain-map streamer" / "`GetCollisionChunk` (16-slot LRU
  * cache/decode dispatcher)"). `id[N]` holds the record ID currently
  * decoded into the matching 256-byte `buf[N]` slot; `nextSlot` is the
@@ -77,17 +75,17 @@ struct probe_pos {
     s32 y;
 };
 
-/* The level-layers singleton (gLevelLayersSingleton, InitLevelLayers): the
- * level's scroll position and limits, BG layer 0 (a `struct
- * pooled_bg_layer`, 0x60 bytes, InitPooledBgLayer) and the three other BG
- * layers (0x5C bytes each, InitBgLayer), the collision tile cache and the
- * loaded level asset. */
+/* The level-layers singleton (gLevelLayersSingleton, gLevelLayers): the
+ * level's scroll position and limits, BG layer 0 (a PooledBgLayer, 0x60
+ * bytes) and the three other BG layers (BgLayers, 0x5C bytes each), the
+ * collision tile cache and the loaded level asset. The C view of the
+ * class LevelLayers (include/bg_layer.hpp, src/level/level_layers.cpp). */
 struct level_layers {
     s32 maxScrollX;                    // 0x00 - pixels
     s32 maxScrollY;                    // 0x04
     s32 scrollX;                       // 0x08 - pixels
     s32 scrollY;                       // 0x0C
-    struct bg_scroll_layer *layer0;    // 0x10 - a struct pooled_bg_layer
+    struct bg_scroll_layer *layer0;    // 0x10 - a PooledBgLayer
     struct bg_scroll_layer *layers[3]; // 0x14
     struct tile_cache *tiles;          // 0x20 - 0x1064 bytes
     void *asset;                       // 0x24
@@ -155,60 +153,17 @@ struct camera {
     s32 mode;                     // 0x14 - 1/2 select StepCameraFacing/StepCameraDirectional
 };
 
-/* src/level/bg_layer.c */
-extern void ScrollBgLayer(struct bg_scroll_layer *self, void *vec2);
-extern void CommitBgLayerScroll(void *self);
-extern void DrawBgLayerColumn(struct bg_scroll_layer *self, s32 col);
-extern void DrawBgLayerRow(struct bg_scroll_layer *self, s32 row);
-extern void RedrawBgLayer(struct bg_scroll_layer *self);
-extern void ResetBgLayer(struct bg_scroll_layer *self, void *pos);
-extern void LoadBgLayerTiles(struct bg_scroll_layer *self);
-extern void LoadBgLayer(struct bg_scroll_layer *self, const struct level_layer_desc *desc);
-extern s32 GetBgLayerScreenIndex(void *self, s32 col, s32 row);
-extern s32 WrapBgLayerColumn(void *self, s32 col);
-extern s32 WrapBgLayerRow(void *self, s32 row);
-extern void SetBgLayerScreenBase(struct bg_scroll_layer *self, u32 screenBase);
-extern void SetBgLayerPriority(struct bg_scroll_layer *self, u32 priority);
-extern void SetBgLayerColors256(struct bg_scroll_layer *self, u32 colors256);
-extern u32 GetBgLayerCharBase(struct bg_scroll_layer *self);
-extern void SetBgLayerCharBase(struct bg_scroll_layer *self, u32 charBase);
-extern void WriteBgLayerOffsetRegs(struct bg_scroll_layer *self);
-extern void WriteBgLayerCntReg(struct bg_scroll_layer *self);
-extern void DestroyBgLayer(struct bg_scroll_layer *self, u32 flags);
-extern void DrawPooledBgLayerColumn(struct pooled_bg_layer *self, s32 col);
-extern s32 ClampPooledBgLayerScrollStep(struct pooled_bg_layer *self, s32 v);
-extern void ReleasePooledBgLayerColumn(struct pooled_bg_layer *self, s32 col);
-extern void ReleasePooledBgLayerRow(struct pooled_bg_layer *self, s32 row);
-extern void ClipPooledBgLayerColumns(struct pooled_bg_layer *self, s32 lo, s32 hi);
-extern void ClipPooledBgLayerRows(struct pooled_bg_layer *self, s32 lo, s32 hi);
-extern void DrawPooledBgLayerRow(struct pooled_bg_layer *self, s32 row);
-extern void ResetPooledBgLayer(struct pooled_bg_layer *self, void *pos);
-extern void LoadPooledBgLayerTiles(struct pooled_bg_layer *self);
+/* src/level/pooled_bg_layer.cpp (the BG layers' methods are BgLayer's and
+ * PooledBgLayer's, include/bg_layer.hpp) */
 extern void nullsub_26(void);
 
-/* src/level/bg_layer_base.c */
-extern void ScrollBgLayerBase(struct bg_scroll_layer *self, s32 *vec2);
-extern void ResetBgLayerBase(struct bg_scroll_layer *self, s32 *vec2);
-extern void SetBgLayerSource(struct bg_scroll_layer *self, const struct level_layer_desc *source);
-extern u8 IsBgLayerEnabled(struct bg_scroll_layer *self);
-extern s32 GetBgLayerY(struct bg_scroll_layer *self);
-extern s32 GetBgLayerX(struct bg_scroll_layer *self);
-extern s32 GetBgLayerHeightTiles(struct bg_scroll_layer *self);
-extern s32 GetBgLayerWidthTiles(struct bg_scroll_layer *self);
-extern s32 GetBgLayerHeight(struct bg_scroll_layer *self);
-extern s32 GetBgLayerWidth(struct bg_scroll_layer *self);
+/* src/level/bg_layer_base.cpp: the terrain tile cache's lookups (the BG
+ * layer methods are BgLayerBase's, include/bg_layer.hpp) */
 extern void *GetCollisionChunk(struct tile_cache *self, s32 recordId);
 extern void *GetTerrainHeights(struct tile_cache *self, s32 x, s32 y);
 extern void *GetSolidTerrainHeights(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut);
 extern s8 GetSolidTerrainModeValue(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut);
 extern void DecodeCollisionChunk(struct tile_cache *self, s32 recordId, void *dest);
-
-/* src/level/bg_layer_init.c */
-extern void *InitBgLayer(void *self, s32 bgIndex);
-extern void GrowBgLayerRows(struct bg_scroll_layer *self, s32 lo, s32 hi);
-extern void GrowBgLayerColumns(struct bg_scroll_layer *self, s32 lo, s32 hi);
-extern void ClipBgLayerColumns(struct bg_scroll_layer *self, s32 a, s32 b);
-extern void ClipBgLayerRows(struct bg_scroll_layer *self, s32 a, s32 b);
 
 /* src/level/bonus_round.c */
 extern void EndBonusRound(struct level_state *self, u8 arg1);
@@ -250,9 +205,9 @@ extern void UpdateGameFrame(struct level_state *self);
 extern void DestroyLevelState(void *self, s32 flags);
 extern void PlayCutscene(void *self, s32 idx);
 
-/* src/level/level_layers.c */
+/* src/level/level_layers.cpp: LevelLayers's methods (include/bg_layer.hpp)
+ * under their C names (cxx_symbols.txt), for the C callers */
 extern void LoadRoom(struct level_layers *self, const struct level_room *args);
-extern struct level_layers *InitLevelLayers(struct level_layers *self);
 extern void DestroyLevelLayers(struct level_layers *self, u32 flags);
 extern struct level_layers *GetLevelLayers(void);
 extern void SetLevelScroll(struct level_layers *self, s32 x, s32 y);
@@ -520,10 +475,7 @@ extern void DestroyTileCache(void *self, u32 flags);
 extern struct tile_cache *InitTileCache(struct tile_cache *self);
 extern u16 GetTerrainType(struct tile_cache *self, s32 x, s32 y, u8 *flagsOut, s32 *hiOut);
 
-/* src/level/tile_slot_pool.c */
-extern void DestroyPooledBgLayer(struct pooled_layer *self, u32 flags);
-extern struct pooled_layer *InitPooledBgLayer(struct pooled_layer *self, s32 bgIndex);
-extern u32 GetPooledBgLayerPriority(struct pooled_layer *self);
+/* src/level/tile_slot_pool.cpp: layer 0's VRAM tile-slot pool */
 extern void ResetTileSlotPool(struct tile_slot_pool *pool);
 extern u16 AcquireTileSlot(struct tile_slot_pool *pool, u16 tile);
 extern void ReleaseTileSlot(struct tile_slot_pool *pool, u32 tile);
@@ -532,38 +484,6 @@ extern void SetTileSlotPoolSource(struct tile_slot_pool *pool, s32 charBase, u32
 
 /* src/level/time_trial.cpp */
 extern void StartTimeTrial(struct level_state *self);
-
-/* src/cutscene/cutscene_player.c (for ROM order): the tile-map streamer of
- * the BG layers (`struct bg_streamer`) and the BG layer base methods */
-extern void DecodeLayerChunk(struct bg_streamer *self, s32 recordId, void *dest);
-extern void ScrollBgStreamer(void *self, void *worldpos);
-extern void *GetBgStreamerColumn(void *self, s32 x, s32 y, s32 *rowOut);
-extern void *GetBgStreamerRow(void *self, s32 x, s32 y, s32 *colOut);
-extern u16 GetBgStreamerCell(void *self, s32 x, s32 y);
-extern void StreamBgRow(struct bg_streamer *self, s32 row);
-extern void StreamBgColumn(struct bg_streamer *self, s32 col);
-extern void FillBgStreamer(struct bg_streamer *self, s32 *pos);
-extern void SetBgStreamerSource(void *self, void *source);
-extern void DestroyBgStreamer(void *self, s32 flags);
-extern void *InitBgStreamer(void *self);
-extern s32 GetBgStreamerHeight(void *self);
-extern s32 GetBgStreamerWidth(void *self);
-extern void SetBgStreamerSizeVec(void *self, void *vec);
-extern void SetBgStreamerSize(void *self, s32 x, s32 y);
-extern void DestroyBgLayerBase(void *self, s32 flags);
-extern void *InitBgLayerBase(void *self, s32 unused);
-extern s32 ClampBgLayerScrollStep(void *self, s32 value);
-extern void ClampBgLayerScrollMax(void *self, s32 *out);
-extern void ScaleBgLayerScroll(void *self, void *vec2);
-extern void StepBgLayerScroll(void *self, void *delta);
-
-/* The BG layer method tables (src/data/entity_vtables_7e3bec.c) */
-extern const struct vtable_slot gBgLayerVtable[10];
-extern const struct vtable_slot gPooledBgLayerVtable[10];
-/* InitBgStreamer/DestroyBgStreamer (cutscene_player.c) */
-extern const struct vtable_slot gBgStreamerVtable[2];
-/* InitBgLayerBase/DestroyBgLayerBase (cutscene_player.c) */
-extern const struct vtable_slot gBgLayerBaseVtable[5];
 
 /* sym_iwram.txt */
 extern struct part_list *gDecorationList;
@@ -602,7 +522,11 @@ typedef void (*entity_spawn_fn)(u32 id, u16 x, u16 y, u16 index);
 extern const entity_spawn_fn gEntitySpawnFuncs[ENTITY_COUNT];
 
 /* src/iwram/iwram_data.c */
+#ifdef __cplusplus
+extern class LevelLayers *gLevelLayersSingleton;
+#else
 extern struct level_layers *gLevelLayersSingleton;
+#endif
 extern struct level_state *gLevelStateSingleton;
 extern u8 gRoomExitRequested;
 

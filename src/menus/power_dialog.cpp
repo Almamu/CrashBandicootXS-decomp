@@ -1,7 +1,7 @@
 #include "menus.hpp"
+#include "font.hpp"
 
 extern "C" {
-#include "bitmap_font.h"
 #include "vram_pool.h"
 #include "system.h"
 #include "text.h"
@@ -12,24 +12,11 @@ extern "C" {
 /* The power dialog (GitHub issue #8; PowerDialog, menus.hpp): a power's
  * name and description over the scrolling sky, shown by the four
  * Show*Dialog wrappers (power_dialog_draw.cpp) when a boss gives Crash a
- * power.
- *
- * gSmallFont and gLargeFont are still C (src/text/): their virtual calls
- * are spelled out through the record's slots. */
+ * power. */
 
-/* The fonts' set-up: the font's tile base, then its slot-6 method (which
- * uploads its glyphs), and its tiles reserved in OBJ VRAM. The same
- * helpers as RunLevelSelect's (level_select.cpp). */
-static inline void IconSetup(struct bitmap_font *m, u32 v)
-{
-    struct icon_slot *slot;
-
-    m->tileBase = v;
-    slot = &m->record->slots[6];
-    _call_via_r1((u8 *)m + slot->offset, slot->ptr);
-}
-
-static inline void IconReserve(struct bitmap_font **m)
+/* Reserves a font's tiles in OBJ VRAM. The same helper as
+ * RunLevelSelect's (level_select.cpp). */
+static inline void IconReserve(Font **m)
 {
     struct vram_upload_cursor *c = gObjVramCursor;
 
@@ -49,17 +36,17 @@ void PowerDialog::Show(s32 title, s32 desc, s32 type)
     *(vu16 *)PLTT = 0;
     *(vu16 *)REG_ADDR_DISPCNT = 0;
     FreeUnlockedPaletteSlots(gPaletteCache);
-    FontResetPalette(gSmallFont);
-    FontResetPalette(gLargeFont);
+    gSmallFont->ResetPalette();
+    gLargeFont->ResetPalette();
     gObjVramCursor->baseTile = 0;
     ResetObjVram(gObjVramCursor);
     ResetObjVram(gObjVramCursor);
-    IconSetup(gSmallFont, 0);
+    gSmallFont->SetTileBase(0);
     IconReserve(&gSmallFont);
     {
         u32 v = gSmallFont->tileCount;
 
-        IconSetup(gLargeFont, v);
+        gLargeFont->SetTileBase(v);
     }
     IconReserve(&gLargeFont);
     MarkObjVram(gObjVramCursor);

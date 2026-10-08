@@ -180,6 +180,7 @@ SECTIONS
         build/crashbandicootxs/src/level/entity_spawner.o(.text);
         build/crashbandicootxs/src/level/bg_layer_init.o(.text);
         build/crashbandicootxs/src/level/bg_layer.o(.text);
+        build/crashbandicootxs/src/level/pooled_bg_layer.o(.text);
         build/crashbandicootxs/src/level/tile_slot_pool.o(.text);
         build/crashbandicootxs/src/level/terrain_probe.o(.text);
         build/crashbandicootxs/src/level/level_layers.o(.text);
@@ -198,7 +199,6 @@ SECTIONS
         build/crashbandicootxs/src/text/font_draw_chars.o(.text);
         build/crashbandicootxs/src/text/font_draw_text.o(.text);
         build/crashbandicootxs/src/text/font_height.o(.text);
-        build/crashbandicootxs/src/text/font_measure.o(.text);
         build/crashbandicootxs/src/text/font.o(.text);
         build/crashbandicootxs/src/gfx/sprite_frame.o(.text);
         build/crashbandicootxs/src/actor/actor_vram_pool.o(.text);
@@ -394,17 +394,16 @@ SECTIONS
         build/crashbandicootxs/src/data/cutscene_pictures_5a9f70.o(.rodata);
         build/crashbandicootxs/data/data.o(.rodata.0861BADC);
         /* The 93 vtables (0x087E3BEC-0x087E55E4), one section each, in
-         * ROM order: a g++-emitted one is its class's
-         * .gnu.linkonce.d._vt.<class> section in its key-method object,
-         * the others are C tables (src/data/entity_vtables_7e3bec.c,
-         * .rodata.<name>). See docs/cplusplus.md, "Emitting the vtables". */
+         * ROM order: g++ emits each as its class's
+         * .gnu.linkonce.d._vt.<class> section in its key-method object.
+         * See docs/cplusplus.md, "Emitting the vtables". */
         build/crashbandicootxs/src/gfx/graphics.o(.gnu.linkonce.d._vt.6Entity); /* gEntityVtable */
         build/crashbandicootxs/src/objects/sprite.o(.gnu.linkonce.d._vt.6Sprite); /* gSpriteObjVtable */
         build/crashbandicootxs/src/objects/sprite_anim.o(.gnu.linkonce.d._vt.8UiSprite); /* gUiSpriteObjVtable */
         build/crashbandicootxs/src/objects/moving_sprite_collide.o(.gnu.linkonce.d._vt.12MovingSprite); /* gMovingSpriteVtable */
         build/crashbandicootxs/src/objects/ground_sprite_collide.o(.gnu.linkonce.d._vt.12GroundSprite); /* gGroundSpriteVtable */
         build/crashbandicootxs/src/player/player_collide.o(.gnu.linkonce.d._vt.6Player); /* gPlayerVtable */
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gCtrlVtable);
+        build/crashbandicootxs/src/system/boot.o(.gnu.linkonce.d._vt.4Ctrl); /* gCtrlVtable */
         build/crashbandicootxs/src/enemies/enemy_ctrl_update.o(.gnu.linkonce.d._vt.9EnemyCtrl); /* gEnemyCtrlVtable */
         build/crashbandicootxs/src/enemies/enemy_ctrl.o(.gnu.linkonce.d._vt.15PeriodicSpawner); /* gPeriodicSpawnerVtable */
         build/crashbandicootxs/src/enemies/enemy_ctrl.o(.gnu.linkonce.d._vt.16KnockedEnemyCtrl); /* gKnockedEnemyCtrlVtable */
@@ -437,14 +436,14 @@ SECTIONS
         build/crashbandicootxs/src/menus/level_select.o(.gnu.linkonce.d._vt.10CameraLead); /* gCameraLeadVtable */
         build/crashbandicootxs/src/menus/level_select.o(.gnu.linkonce.d._vt.9LaunchPad); /* gLaunchPadVtable */
         build/crashbandicootxs/src/menus/level_select_widgets.o(.gnu.linkonce.d._vt.16LevelSelectEntry); /* gLevelSelectEntryVtable */
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gBgStreamerVtable);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gBgLayerBaseVtable);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gBgLayerVtable);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPooledBgLayerVtable);
+        build/crashbandicootxs/src/cutscene/cutscene_player.o(.gnu.linkonce.d._vt.10BgStreamer); /* gBgStreamerVtable */
+        build/crashbandicootxs/src/cutscene/cutscene_player.o(.gnu.linkonce.d._vt.11BgLayerBase); /* gBgLayerBaseVtable */
+        build/crashbandicootxs/src/level/bg_layer.o(.gnu.linkonce.d._vt.7BgLayer); /* gBgLayerVtable */
+        build/crashbandicootxs/src/level/tile_slot_pool.o(.gnu.linkonce.d._vt.13PooledBgLayer); /* gPooledBgLayerVtable */
         build/crashbandicootxs/src/gfx/palette_cycle.o(.gnu.linkonce.d._vt.7HudPart); /* gHudPartVtable */
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gLargeFontVtable);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gSmallFontVtable);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gFontVtable);
+        build/crashbandicootxs/src/util/aabb_setup.o(.gnu.linkonce.d._vt.9LargeFont); /* gLargeFontVtable */
+        build/crashbandicootxs/src/util/aabb_setup.o(.gnu.linkonce.d._vt.9SmallFont); /* gSmallFontVtable */
+        build/crashbandicootxs/src/text/font.o(.gnu.linkonce.d._vt.4Font); /* gFontVtable */
         build/crashbandicootxs/src/actor/actor.o(.gnu.linkonce.d._vt.9ActorSelf); /* gActorVtable */
         build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.14RiderlessPolar); /* gRiderlessPolarVtable */
         build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.19PolarCheckpointText); /* gPolarCheckpointTextVtable */

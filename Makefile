@@ -301,7 +301,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/hud/hud_init.o \
                   $(C_BUILDDIR)/text/font_glyph.o \
                   $(C_BUILDDIR)/text/font_draw_text.o \
-                  $(C_BUILDDIR)/text/font_measure.o \
+                  $(C_BUILDDIR)/text/font.o \
                   $(C_BUILDDIR)/hud/hud_boss_clock.o \
                   $(C_BUILDDIR)/hud/hud_counters.o \
                   $(C_BUILDDIR)/frontend/title_screen_init.o \
@@ -317,6 +317,9 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/level/spawn_gem_platforms.o \
                   $(C_BUILDDIR)/level/entity_spawner.o \
                   $(C_BUILDDIR)/level/bg_layer.o \
+                  $(C_BUILDDIR)/level/bg_layer_init.o \
+                  $(C_BUILDDIR)/level/pooled_bg_layer.o \
+                  $(C_BUILDDIR)/level/tile_slot_pool.o \
                   $(C_BUILDDIR)/level/drop_extra_life.o \
                   $(C_BUILDDIR)/level/bg_layer_base.o \
                   $(C_BUILDDIR)/crates/crate_create.o \

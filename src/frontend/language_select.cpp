@@ -3,7 +3,6 @@
 extern "C" {
 #include "gba/dma_macros.h"
 #include "system.h"
-#include "bitmap_font.h"
 #include "vram_pool.h"
 #include "text.h"
 #include "audio.h"
@@ -21,10 +20,7 @@ extern "C" {
  * GAX2 engine, but is game-side code that merely uses PlaySfx.
  * LanguageSelect is in frontend.hpp (#664, part 10b); the file starts
  * with the last of CompanyLogos's and LogoActor's methods
- * (company_logos.cpp).
- *
- * gSmallFont and gLargeFont are still C (src/text/): their virtual calls
- * are spelled out through the record's slots. */
+ * (company_logos.cpp). */
 
 /* Loads a "tagged" asset (see LoadTaggedAsset, src/system/asset.c)
  * into a freshly allocated buffer, then DMAs it to `dest`. A method of
@@ -125,21 +121,15 @@ void LanguageSelect::Input(u32 flags)
     frame = (frame + 1) & 0xff;
 }
 
-/* `_call_via_r2`: calls `fn(self, arg)` (an bitmap_font method). */
-extern "C" s32 _call_via_r2(void *self, void *arg, void *fn);
-
 /* The language menu's per-frame draw
  * loop: for each of the six language names (0-5) it sets the shared
  * overlay frame (`gSmallFont`: 1 or 2 from `Blink`'s blink
  * state on the currently selected entry `language`, 0 elsewhere), measures
- * that slot's glyph with the icon manager's `slots[0]` method, centers
- * it horizontally, and draws it with `slots[2]` at a Y stepping by 0xa
- * from 0x32.
+ * that name (MeasureText), centers it horizontally, and draws it
+ * (DrawText) at a Y stepping by 0xa from 0x32.
  *
- * Was NAKED ("many-register allocation ceiling"); calling the method
- * trampoline `_call_via_r2` directly with the glyph assigned inside the
- * first call's argument list (so it's loaded between `this` and the
- * method pointer, as the ROM does) matches outright - see
+ * Was NAKED ("many-register allocation ceiling"); the glyph is assigned
+ * inside the first call's argument list, as the ROM loads it there - see
  * docs/matching/archive/gax-toolchain-retry.md. */
 void LanguageSelect::Draw()
 {
@@ -154,18 +144,12 @@ void LanguageSelect::Draw()
         s32 x;
 
         if (i == language)
-            FontSetPalette(gSmallFont, Blink());
+            gSmallFont->SetPalette(Blink());
         else
-            FontSetPalette(gSmallFont, 0);
-        // clang-format off
-        x = (240 - _call_via_r2((u8 *)gSmallFont + gSmallFont->record->slots[0].offset,
-                                (void *)(glyph = gLanguageNames[i]),
-                                gSmallFont->record->slots[0].ptr)) >> 1;
-        // clang-format on
-        gSmallFont->posX = x;
-        gSmallFont->posY = y;
-        _call_via_r2((u8 *)gSmallFont + gSmallFont->record->slots[2].offset, (void *)glyph,
-                     gSmallFont->record->slots[2].ptr);
+            gSmallFont->SetPalette(0);
+        x = (240 - gSmallFont->MeasureText((u8 *)(glyph = gLanguageNames[i]))) >> 1;
+        gSmallFont->SetPos(x, y);
+        gSmallFont->DrawText((u8 *)glyph);
         y += 10;
     }
     HideUnusedOamEntries(gOamBuffer);
@@ -174,31 +158,20 @@ void LanguageSelect::Draw()
 /* Resets several OAM-manager globals, then hand-fills
  * `gPaletteCache`'s (`struct palette_cache`, include/vram_pool.h)
  * `slots[0]`-`slots[3]` with 4 fixed 32-byte OBJ tiles copied from
- * `gLanguageSelectPalette0`..`gLanguageSelectPalette3`, and finally runs
- * `gSmallFont`'s/`gLargeFont`'s `record->slots[6]` method
- * (`_call_via_r1`) plus a VRAM reserve (`ReserveObjVram`) for each, copying
- * `tileCount` into the other manager's `tileBase`.
+ * `gLanguageSelectPalette0`..`gLanguageSelectPalette3`, and finally sets
+ * `gSmallFont`'s/`gLargeFont`'s tile base (Font::SetTileBase, which
+ * uploads the tiles) plus a VRAM reserve (`ReserveObjVram`) for each,
+ * copying `tileCount` into the other font's `tileBase`.
  *
  * Was NAKED: the ROM rematerializes the 0x108/0x12c/0x130 field-offset
  * constants after every call instead of keeping them in callee-saved
  * registers. Matched with the idiom from credits.cpp's
- * `InitCredits`: the two icon-manager steps as `static inline` helpers
- * taking the manager as a parameter (each expansion recomputes its own
+ * `InitCredits`: the two font steps as inline functions taking the font
+ * as a parameter (each expansion recomputes its own
  * offsets; the E0 base is read from DC before E0 itself), plus one
  * `zero` local shared by the `gObjVramCursor` word 2/`tileBase` stores - the 0 the
  * ROM keeps in r8. Matches under both compilers. */
-extern "C" void _call_via_r1(void *self, void *fn);
-
-static inline void IconSetBase(struct bitmap_font *m, u32 base)
-{
-    struct icon_slot *slot;
-
-    m->tileBase = base;
-    slot = &m->record->slots[6];
-    _call_via_r1((u8 *)m + slot->offset, slot->ptr);
-}
-
-static inline void IconReserveVram(struct vram_upload_cursor *c, struct bitmap_font *m)
+static inline void IconReserveVram(struct vram_upload_cursor *c, Font *m)
 {
     ReserveObjVram(c, m->tileCount << 5);
 }
@@ -231,17 +204,17 @@ void LanguageSelect::InitGraphics()
     {
         u32 zero = 0;
 
-        FontSetPalette(gSmallFont, 0);
-        FontSetPalette(gLargeFont, 0);
+        gSmallFont->SetPalette(0);
+        gLargeFont->SetPalette(0);
         gObjVramCursor->baseTile = zero;
         ResetObjVram(gObjVramCursor);
         ResetObjVram(gObjVramCursor);
-        IconSetBase(gSmallFont, zero);
+        gSmallFont->SetTileBase(zero);
         IconReserveVram(gObjVramCursor, gSmallFont);
         {
             u32 base = gSmallFont->tileCount;
 
-            IconSetBase(gLargeFont, base);
+            gLargeFont->SetTileBase(base);
         }
         IconReserveVram(gObjVramCursor, gLargeFont);
     }

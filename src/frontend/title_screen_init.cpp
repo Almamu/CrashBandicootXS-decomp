@@ -2,7 +2,6 @@
 
 extern "C" {
 #include "match.h"
-#include "bitmap_font.h"
 #include "gba/dma_macros.h"
 #include "graphics_package.h"
 #include "gba/io_reg.h"
@@ -25,27 +24,12 @@ extern "C" {
  * old_agbcp (OLD_AGBCC_OBJS), as its C was old_agbcc, with the default
  * -O2 strength reduction: DrawLogoPieces's up-counting inner loop is
  * reversed by it, as in the ROM (title_screen.cpp is built without it).
- * See docs/matching/archive/issue-64-65-naked-retry-2.md.
- *
- * gSmallFont is still C (src/text/): its virtual call is spelled out
- * through the record's slots. */
+ * See docs/matching/archive/issue-64-65-naked-retry-2.md. */
 
-/* `_call_via_r1`: calls `fn(self)` (a bitmap_font method). */
-extern "C" s32 _call_via_r1(void *self, void *fn);
 /* codegen: RandRange returns u16 (util.h), but DrawLogoPieces was matched
  * against an s32 return: with the u16 prototype its two stack slots
  * swap. docs/headers_plan.md */
 extern "C" s32 RandRange_s32(s32 max) asm("RandRange");
-
-/* Sets the font's glyph tile base and calls its slot 6. */
-static inline void SetFontTileBase(struct bitmap_font *m, u32 base)
-{
-    struct icon_slot *slot;
-
-    m->tileBase = base;
-    slot = &m->record->slots[6];
-    _call_via_r1((u8 *)m + slot->offset, slot->ptr);
-}
 
 /* Blanks the screen, loads the menu font's palettes and the logo's
  * graphics, starts the starfield and the title music. */
@@ -63,8 +47,8 @@ TitleScreen::TitleScreen()
     REG_BLDY = 0x10;
     REG_DISPCNT = 0;
 
-    FontSetPalette(font, 0xe);
-    SetFontTileBase(font, 0x200);
+    font->SetPalette(0xe);
+    font->SetTileBase(0x200);
 
     dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
     dma->src = (u32)gTitleMenuPalette;

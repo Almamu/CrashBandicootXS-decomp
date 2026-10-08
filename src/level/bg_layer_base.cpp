@@ -1,58 +1,54 @@
-#include "core.h"
+#include "bg_layer.hpp"
+
+extern "C" {
 #include "match.h"
-#include "bg_scroll_layer.h"
-#include "level_data.h"
-#include "level.h"
 #include "globals.h"
-
-/* Built with old_agbcc - see docs/matching/archive/game-loop-old-agbcc.md. */
-
-/* A viewport/parallax-scroll-layer object: `struct bg_scroll_layer`
- * (include/bg_scroll_layer.h; docs/rom_map.md's "Visual scrolling
- * background streamer" family is the sibling system built on the same
- * source-descriptor shape - see `ScrollBgStreamer` there), initialized from a
- * `struct level_layer_desc`. */
-
-/* Applies the layer's scale-then-clamp step to `vec2` and accumulates
- * the (Q8, floor-divided) result into the layer's own position. */
-void ScrollBgLayerBase(struct bg_scroll_layer *self, s32 *vec2)
-{
-    s32 scaled[2];
-    s32 x = vec2[0];
-    s32 y = vec2[1];
-
-    scaled[0] = x;
-    scaled[1] = y;
-    ScaleBgLayerScroll(self, scaled);
-    StepBgLayerScroll(self, scaled);
 }
 
-/* Same shape as `ScrollBgLayerBase`, but seeds the scale step directly from
- * `vec2` in place (no separate stack copy) and finishes by re-deriving
- * the layer's cached-tile buffers from its `streamer` instead of
- * accumulating a position. */
-void ResetBgLayerBase(struct bg_scroll_layer *self, s32 *vec2)
-{
-    s32 x = vec2[0];
-    s32 y = vec2[1];
+/* Built with old_agbcp - see docs/matching/archive/game-loop-old-agbcc.md. */
 
-    self->x = x;
-    self->y = y;
-    ScaleBgLayerScroll(self, self);
-    FillBgStreamer(self->streamer, (s32 *)self);
+/* BgLayerBase's other methods (include/bg_layer.hpp; the constructor,
+ * destructor and scroll steps are in src/cutscene/cutscene_player.cpp),
+ * then the terrain tile cache's lookups (level.h's `struct tile_cache`,
+ * plain C functions). */
+
+/* Scales the move `delta` by the layer's parallax factors and steps the
+ * layer's position toward the result. */
+void BgLayerBase::Scroll(const s32 *delta)
+{
+    s32 scaled[2];
+    s32 dx = delta[0];
+    s32 dy = delta[1];
+
+    scaled[0] = dx;
+    scaled[1] = dy;
+    ScaleScroll(scaled);
+    StepScroll(scaled);
+}
+
+/* Sets the position to `pos` scaled by the parallax factors, and seeds
+ * the streamer's window there. */
+void BgLayerBase::Reset(const s32 *pos)
+{
+    s32 px = pos[0];
+    s32 py = pos[1];
+
+    x = px;
+    y = py;
+    ScaleScroll(&x);
+    streamer->Fill(&x);
 }
 
 /* (Re)initializes the layer from `source`: caches its pixel
  * dimensions/scroll bounds, resets the accumulated position to the
- * origin, and re-populates the `streamer` tile-cache sub-object from
- * the same descriptor. Does nothing (besides clearing the ready flag)
- * when `source` is NULL. */
-void SetBgLayerSource(struct bg_scroll_layer *self, const struct level_layer_desc *source)
+ * origin, and re-populates the streamer from the same descriptor. Does
+ * nothing (besides clearing the enabled flag) when `source` is NULL. */
+void BgLayerBase::SetSource(const struct level_layer_desc *source)
 {
     u8 *readyFlag;
     s32 zero;
 
-    readyFlag = &self->enabled;
+    readyFlag = &enabled;
     zero = 0;
     *readyFlag = zero;
 
@@ -60,63 +56,64 @@ void SetBgLayerSource(struct bg_scroll_layer *self, const struct level_layer_des
         s32 w, h;
 
         w = source->widthTiles;
-        self->widthTiles = w;
+        widthTiles = w;
         h = source->heightTiles;
-        self->heightTiles = h;
+        heightTiles = h;
 
         w <<= 3;
-        self->widthPx = w;
+        widthPx = w;
         h <<= 3;
-        self->heightPx = h;
+        heightPx = h;
         w -= 0xf0;
-        self->maxX = w;
+        maxX = w;
         h -= 0xa0;
-        self->maxY = h;
-        self->scaleX = source->scaleX;
-        self->scaleY = source->scaleY;
-        self->x = zero;
-        self->y = zero;
+        maxY = h;
+        scaleX = source->scaleX;
+        scaleY = source->scaleY;
+        x = zero;
+        y = zero;
 
-        SetBgStreamerSource(self->streamer, (void *)source);
-        FillBgStreamer(self->streamer, (s32 *)self);
+        streamer->SetSource(source);
+        streamer->Fill(&x);
 
         *readyFlag = 1;
     }
 }
 
-u8 IsBgLayerEnabled(struct bg_scroll_layer *self)
+/* The accessors below are UNUSED: no caller anywhere in the ROM. */
+u8 BgLayerBase::IsEnabled()
 {
-    return self->enabled;
+    return enabled;
 }
 
-s32 GetBgLayerY(struct bg_scroll_layer *self)
+s32 BgLayerBase::GetY()
 {
-    return self->y;
+    return y;
 }
 
-s32 GetBgLayerX(struct bg_scroll_layer *self)
+s32 BgLayerBase::GetX()
 {
-    return self->x;
+    return x;
 }
 
-s32 GetBgLayerHeightTiles(struct bg_scroll_layer *self)
+s32 BgLayerBase::GetHeightTiles()
 {
-    return self->heightTiles;
+    return heightTiles;
 }
 
-s32 GetBgLayerWidthTiles(struct bg_scroll_layer *self)
+s32 BgLayerBase::GetWidthTiles()
 {
-    return self->widthTiles;
+    return widthTiles;
 }
 
-s32 GetBgLayerHeight(struct bg_scroll_layer *self)
+s32 BgLayerBase::GetHeight()
 {
-    return self->heightPx;
+    return heightPx;
 }
 
-s32 GetBgLayerWidth(struct bg_scroll_layer *self)
+s32 BgLayerBase::GetWidth()
 {
-    return self->widthPx;
+    return widthPx;
 }
 
 /* Returns the cache slot holding decoded record recordId. On a miss,
@@ -173,7 +170,7 @@ static inline u16 GetCell(struct tile_cache *self, s32 x, s32 y)
 {
     s32 tileX = x >> 4;
     s32 tileY = y >> 3;
-    u16 *buf = GetCollisionChunk(self, (*(u16 **)self->source)[tileY * self->width + tileX]);
+    u16 *buf = (u16 *)GetCollisionChunk(self, (*(u16 **)self->source)[tileY * self->width + tileX]);
     return buf[(y & 7) * 16 + (x & 0xf)];
 }
 
@@ -325,11 +322,11 @@ s8 GetSolidTerrainModeValue(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 
  * - `MATCH_USE(n)` after `n -= 2` (an extra-reference nudge that
  *   emits no code, see #468) gives `n` one more reference, so the pair
  *   loop's run counter wins r3 and `acc` keeps r4. Without it the
- *   allocator swaps the two. */
+ *   allocator swaps the two. Still needed in C++ (old_agbcp). */
 void DecodeCollisionChunk(struct tile_cache *self, s32 recordId, void *dest)
 {
-    u16 *out = dest;
-    u16 *src = self->decodeBase;
+    u16 *out = (u16 *)dest;
+    u16 *src = (u16 *)self->decodeBase;
     s32 budget;
     s32 written;
 

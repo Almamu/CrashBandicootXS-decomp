@@ -1,8 +1,8 @@
 #include "menus.hpp"
+#include "font.hpp"
 
 extern "C" {
 #include "audio.h"
-#include "bitmap_font.h"
 #include "vram_pool.h"
 #include "system.h"
 #include <agb_syscall.h>
@@ -16,37 +16,22 @@ extern "C" {
  * section). Run runs the whole screen to completion: frees the pending
  * heap bytes, stops the ambient sounds, clears palette color 0 and
  * DISPCNT, swaps gPaletteCache for a new palette cache with the menu's
- * palette in slot 15, sets up both fonts (each one's slot-6 method, the
+ * palette in slot 15, sets up both fonts (each one's tiles uploaded, the
  * two fonts' tiles reserved in OBJ VRAM), builds the menu, runs its loop
  * (PauseMenuLoop, still C) and deletes it, then restores the old palette
  * cache and returns the loop's result.
  *
  * The ROM builds the font's 0x12c offset again for each `tileCount` read:
- * reading it through the inline `mgr_12c` stops CSE from sharing it. The
+ * reading it through the inline Font::GetTileCount stops CSE from sharing
+ * it. The
  * two reads for the VRAM reservation are taken into locals before
  * `gObjVramCursor` is loaded, and the palette cache into a local before
  * `gPauseMenuPalette`'s address, for the ROM's load order. */
-
-/* Calls a font's slot-6 method (a virtual call; the fonts are still C). */
-static inline void init_icon_mgr(struct bitmap_font *mgr, u32 base)
-{
-    struct icon_slot *s;
-
-    mgr->tileBase = base;
-    s = &mgr->record->slots[6];
-    ((void (*)(void *))s->ptr)((u8 *)mgr + s->offset);
-}
 
 static inline void reserve_icon_vram(u32 n)
 {
     gObjVramCursor->baseTile = n;
     ResetObjVram(gObjVramCursor);
-}
-
-/* Keeps CSE from sharing the 0x12c offset between reads (see above). */
-static inline u32 mgr_12c(struct bitmap_font *m)
-{
-    return m->tileCount;
 }
 
 s32 PauseMenu::Run()
@@ -71,13 +56,13 @@ s32 PauseMenu::Run()
         CpuSet(gPauseMenuPalette, cache->slots[15], 0x10);
     }
 
-    FontResetPalette(gSmallFont);
-    FontResetPalette(gLargeFont);
-    init_icon_mgr(gSmallFont, 0);
-    init_icon_mgr(gLargeFont, mgr_12c(gSmallFont));
+    gSmallFont->ResetPalette();
+    gLargeFont->ResetPalette();
+    gSmallFont->SetTileBase(0);
+    gLargeFont->SetTileBase(gSmallFont->GetTileCount());
     {
-        u32 a = mgr_12c(gSmallFont);
-        u32 b = mgr_12c(gLargeFont);
+        u32 a = gSmallFont->GetTileCount();
+        u32 b = gLargeFont->GetTileCount();
 
         gObjVramCursor->baseTile = a + b;
         ResetObjVram(gObjVramCursor);

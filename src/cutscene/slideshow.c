@@ -50,7 +50,7 @@ void BeginSlide(struct cutscene_player *self, s32 idx)
  * UNUSED - no caller anywhere in the ROM (checked src/, asm/ and every
  * Thumb `bl` and aligned word of baserom.gba for its address). It plays
  * a slide list without text; the cutscenes use RunCutscenePlayer
- * (cutscene_player.c), the same loop with the text pages added. */
+ * (cutscene_player.cpp), the same loop with the text pages added. */
 void RunSlideshow(struct cutscene_player *self0)
 {
     struct cutscene_player *self = self0;
@@ -144,7 +144,7 @@ s32 SkipSlides(struct cutscene_player *self, s32 startIdx, u8 condFlag)
  *   identical-shaped computation) - an `asm volatile("mov r2, #0x80\n\t
  *   lsl r2, r2, #2\n\tadd %0, %1, r2" : "=r"(addr) : "r"(asset) : "r2")`
  *   anchor (the same "hardcode the scratch register, let the output land
- *   wherever" idiom `font.c` uses) forces it.
+ *   wherever" idiom the C InitFont used) forces it.
  * - The `gSlideshowDispcnt` shadow-byte rebuild needed its own two-part
  *   fix: gcc's front end always schedules the `& ~0x10` mask/byte-read
  *   pair *before* the toggle-bit `& 1 << 4` shift-and-mask when both are

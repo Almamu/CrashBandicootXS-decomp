@@ -27,7 +27,7 @@ to two extra rooms, each a `struct level_room` record
 one record per room (`gLevelRoom00`..`gLevelRoom40`) plus seven records
 of kind 3 for the stages played in an actor category, which have no
 room data. The room record is the widget `RunRoom` hands to
-`LoadRoom` (`level_layers.c`), which loads a room: it unpacks or
+`LoadRoom` (`LevelLayers::LoadRoom`, `level_layers.cpp`), which loads a room: it unpacks or
 references the asset, feeds each layer its descriptor, feeds the terrain
 cache the collision layer, hands the entity list and links to
 `SpawnRoomEntities` (`room_entities.c`) and DMAs the palette to BG palette RAM.
@@ -54,8 +54,8 @@ struct names the code's own local views of the same record.
 
 ### `struct level_layer_desc` (0x20)
 
-`struct bg_layer_desc` in `bg_layer.c`, `struct
-stream_source` in `cutscene_player.c`, the terrain cache's `source`.
+The source of a BG layer and its streamer (`BgLayerBase::SetSource`,
+`BgStreamer`, include/bg_layer.hpp) and the terrain cache's `source`.
 
 | Offset | Field |
 |---|---|
@@ -93,7 +93,7 @@ Every layer's cells are `u16`:
 - **BG1-3**: a BG screen entry (tile 0-9, h/v flip 10-11, palette bank
   12-15), copied straight into the screen block (`DrawBgLayerRow`).
 - **BG0**: a source tile id (bits 0-13, into the 8bpp tile set) with the
-  h/v flip in bits 14-15. `AcquireTileSlot` (`tile_slot_pool.c`) gives the
+  h/v flip in bits 14-15. `AcquireTileSlot` (`tile_slot_pool.cpp`) gives the
   tile a VRAM slot and returns the screen entry.
 - **Collision**: terrain type in bits 0-7 (types 1-0x23 are the
   non-solid ones `GetTerrainHeights` returns, above that the solid shapes of the

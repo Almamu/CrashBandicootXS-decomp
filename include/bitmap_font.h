@@ -2,9 +2,11 @@
 #define __BITMAP_FONT_H__
 
 /* `struct bitmap_font` is the game's bitmap-font text renderer
- * (formerly `struct icon_manager`). There are two fonts, gSmallFont (InitSmallFont)
- * and gLargeFont (InitLargeFont), both built in InitLevelState; menus,
- * the credits and the dialogs draw all their text with them. Calls go
+ * (formerly `struct icon_manager`), the C view of the C++ class Font
+ * (include/font.hpp, src/text/), for the C files. There are two fonts,
+ * gSmallFont (InitSmallFont) and gLargeFont (InitLargeFont), both built
+ * in InitLevelState; menus, the credits and the dialogs draw all their
+ * text with them. The C files' calls go
  * through the font's vtable (`record`, gFontVtable/gSmallFontVtable/
  * gLargeFontVtable): `record->slots[n]` is vtable slot n + 2, so
  * slots[0] FontMeasureText, [1] FontMeasureChars, [2] FontDrawText,

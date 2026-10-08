@@ -2,7 +2,6 @@
 
 extern "C" {
 #include "match.h"
-#include "bitmap_font.h"
 #include "vram_pool.h"
 #include "text.h"
 #include "system.h"
@@ -10,12 +9,9 @@ extern "C" {
 #include "globals.h"
 }
 
-/* `_call_via_r1`: calls `fn(self)` (a font method; the fonts are still C). */
-extern "C" s32 _call_via_r1(void *self, void *fn);
-
 /* The continue prompt's graphics (ContinuePrompt, frontend.hpp; called by
  * the constructor, continue_prompt_init.cpp): resets the OBJ VRAM cursor,
- * sets up gSmallFont (its slot-6 method, no margin, its tiles reserved),
+ * sets up gSmallFont (its tiles uploaded, no margin, its tiles reserved),
  * claims palette slots 0-3 and fills them from gContinuePromptPalette0-3,
  * turns the OBJs on and clears OAM.
  *
@@ -34,12 +30,8 @@ void ContinuePrompt::InitGraphics()
     ResetObjVram(gObjVramCursor);
 
     icons = gSmallFont;
-    icons->tileBase = 0;
-    {
-        struct icon_slot *rec = &icons->record->slots[6];
-        _call_via_r1((u8 *)icons + rec->offset, rec->ptr);
-    }
-    icons->marginX = 0;
+    icons->SetTileBase(0);
+    icons->SetMargin(0);
     ReserveObjVram(gObjVramCursor, icons->tileCount << 5);
     MarkObjVram(gObjVramCursor);
 

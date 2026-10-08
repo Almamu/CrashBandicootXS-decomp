@@ -146,16 +146,8 @@ extern void AddCollisionCandidate(struct collision_queue *self, struct crate *ne
 extern struct collision_queue *ResetCollisionQueue(struct collision_queue *self);
 
 /* src/objects/ctrl.cpp: Ctrl's methods (include/ctrl.hpp)
- * under their C names (cxx_symbols.txt), for gCtrlVtable (still C data)
- * and the C callers. */
-extern void StartCtrlTargetMotionYFromSet(void *self, void *part, s32 index);
-extern void SetCtrlTargetMotionX(void *self, void *part, s32 *vec);
-extern void StartCtrlTargetMotionX(void *self, void *part, s32 *vec);
-extern void StartCtrlTargetMotionXFromSet(void *self, void *part, s32 index);
-extern void CtrlHandleEvent(void);
-extern u8 SetCtrlTargetAnim(void *unused, void *part, s32 newVal);
+ * under their C names (cxx_symbols.txt), for the C callers. */
 extern void AttachCtrl(void *self, s32 val);
-extern void DestroyCtrl(void *self, s32 flags);
 extern s32 GetCtrlMode(void *self);
 
 /* src/objects/ground_sprite.cpp */
@@ -335,9 +327,6 @@ extern const struct speed_ramp gCtrlMotionRecords[44];
  * records (src/data/velocity_16c460.c). */
 extern const struct entry_set gPlatformMoverMotionSet;
 extern const struct speed_ramp gPlatformMoverMotionRecords[3];
-
-/* The method tables (src/data/entity_vtables_7e3bec.c) */
-extern const struct vtable_slot gCtrlVtable[13];
 
 /* The empty box GetSpriteFrameBodyBox and friends return for a frame
  * without one (src/data/obj_sizes_16b2e0.c). */

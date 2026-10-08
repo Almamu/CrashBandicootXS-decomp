@@ -34,6 +34,7 @@
  * with one, in language_select.cpp (see ctrl.hpp). */
 
 #include "actor_self.hpp"
+#include "font.hpp"
 
 extern "C" {
 #include "core.h"
@@ -140,9 +141,9 @@ public:
     } dispcnt;         // 0x0C - REG_DISPCNT (a word: a struct is 4-aligned)
     union blend blend; // 0x10 - REG_BLDCNT/BLDALPHA; Loop pulses `eva`
     u8 unused_14[4];
-    struct bitmap_font *icons; // 0x18 - gSmallFont
-    s32 blinkCounter;          // 0x1C - the selected option's blink counter
-    s32 selection;             // 0x20 - the Yes/No cursor, 0/1
+    Font *icons;      // 0x18 - gSmallFont
+    s32 blinkCounter; // 0x1C - the selected option's blink counter
+    s32 selection;    // 0x20 - the Yes/No cursor, 0/1
 
     ContinuePrompt();      // InitContinuePrompt
     ~ContinuePrompt();     // DestroyContinuePrompt
@@ -199,19 +200,19 @@ COMPILE_TIME_ASSERT(frontend_hpp, sizeof(LogoPiece) == 0x34);
 class TitleScreen
 {
 public:
-    s32 selection;            // 0x000 - the menu choice Run returns (0-2)
-    s32 blinkCounter;         // 0x004 - the selected item blinks with bit 2
-    u8 menuShown;             // 0x008 - Draw draws the menu items
-    u8 unk_009[3];            //
-    struct bitmap_font *font; // 0x00C - gSmallFont
-    LogoPiece pieces[9];      // 0x010
-    s32 landTimer[9];         // 0x1E4 - -1 until the piece lands, then frames to its cue
-    Starfield *starfield;     // 0x208
-    s32 shake;                // 0x20C - frames the BG2 logo keeps shaking
-    u32 cheatHash;            // 0x210 - CheatInput's rolling hash
-    s32 bgX;                  // 0x214 - REG_BG2X
-    s32 bgY;                  // 0x218 - REG_BG2Y
-    s32 bgScale;              // 0x21C - REG_BG2PA/PD
+    s32 selection;        // 0x000 - the menu choice Run returns (0-2)
+    s32 blinkCounter;     // 0x004 - the selected item blinks with bit 2
+    u8 menuShown;         // 0x008 - Draw draws the menu items
+    u8 unk_009[3];        //
+    Font *font;           // 0x00C - gSmallFont
+    LogoPiece pieces[9];  // 0x010
+    s32 landTimer[9];     // 0x1E4 - -1 until the piece lands, then frames to its cue
+    Starfield *starfield; // 0x208
+    s32 shake;            // 0x20C - frames the BG2 logo keeps shaking
+    u32 cheatHash;        // 0x210 - CheatInput's rolling hash
+    s32 bgX;              // 0x214 - REG_BG2X
+    s32 bgY;              // 0x218 - REG_BG2Y
+    s32 bgScale;          // 0x21C - REG_BG2PA/PD
 
     TitleScreen();                         // InitTitleScreen
     ~TitleScreen();                        // DestroyTitleScreen
