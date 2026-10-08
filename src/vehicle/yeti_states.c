@@ -125,15 +125,9 @@ void YetiStateChase(void)
                 struct actor_self *bc = gYeti;
 
                 bc->animIndex = 1;
-                {
-                    u16 anim = bc->anims[1].duration;
-                    u8 zero1 = 0;
-                    MATCH_HOLD_REG(s32, zero2, r3) = 0;
-
-                    *(u16 *)&bc->animTimer = anim;
-                    *(u8 *)&bc->animDone = zero1;
-                    bc->animTime = zero2;
-                }
+                bc->animTimer = bc->anims[1].duration;
+                bc->animDone = 0;
+                bc->animTime = 0;
             }
 
             if (gYetiDistance <= 0x7800) {
@@ -173,7 +167,10 @@ void YetiStateCharge(void)
         if (gYetiDistance <= 0x4FFF) {
             if (tier == 0xb) {
                 PlaySfx(gAudioContext, SFX_YETI_STOMP_1, 0x100);
-                MATCH_MEMORY_BARRIER();
+                /* The ROM cross-jumps only the ShakeActorBg(0x200) tail
+                 * of the two cues; without the barrier the PlaySfx call
+                 * is shared too (as YetiStateChase's is). */
+                MATCH_BARRIER();
                 ShakeActorBg(0x200);
             } else if (tier == 0x1b) {
                 PlaySfx(gAudioContext, SFX_YETI_STOMP_2, 0x100);
@@ -188,19 +185,11 @@ void YetiStateCharge(void)
         struct actor_self *bc = gYeti;
 
         if (bc->animDone != 0) {
-            s32 *d0 = &gYetiState;
-            s32 zero = 0;
-
-            *d0 = zero;
-            bc->animIndex = zero;
-            {
-                u16 anim = bc->anims[0].duration;
-                MATCH_HOLD_REG(u8, zero2, r2) = 0;
-
-                *(u16 *)&bc->animTimer = anim;
-                *(u8 *)&bc->animDone = zero2;
-                bc->animTime = zero;
-            }
+            gYetiState = 0;
+            bc->animIndex = 0;
+            bc->animTimer = bc->anims[0].duration;
+            bc->animDone = 0;
+            bc->animTime = 0;
         }
     }
 }
