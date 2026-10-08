@@ -24,16 +24,16 @@ struct oam_shadow_buffer;
 
 /* Runs the DMA3/`UploadPaletteCache`+`ResetLevelLayers` refresh pass over every
  * currently-active dual-array manager, then flushes the VRAM DMA
- * queue - only while `self->0x0` is still within the "near start of
- * level" range (`<= 0x1000`), otherwise this is a no-op. */
-void UpdateRoomFrame(void *self)
+ * queue - only while `self->level` is `<= 0x1000` (always, for a level
+ * index), otherwise this is a no-op. */
+void UpdateRoomFrame(struct level_progress *self)
 {
     UploadPaletteCache(gPaletteCache);
     UpdateCamera(gCamera);
     ScrollLevelLayers(gLevelLayers);
     TickPaletteCycles(gPaletteCycles);
 
-    if (*(s32 *)self <= 0x1000) {
+    if (self->level <= 0x1000) {
         gHud->Update();
         DrawPartList(gForegroundList);
 
@@ -53,36 +53,23 @@ void UpdateRoomFrame(void *self)
     }
 }
 
-/* The level's raster/blend settings. */
-struct level_blend {
-    u8 unk_00[8];
-    s32 mode; // 0x08
-    u8 unk_0C[4];
-    u16 effect; // 0x10 - 0: no blending
-    u8 eva;     // 0x12
-    u8 evb;     // 0x13
-};
-
-struct level_ctx {
-    u8 unk_00[0x18];
-    struct level_blend *blend; // 0x18
-};
-
-/* Rebuilds the gBlendRegs BLDCNT/BLDALPHA shadow from the level's
- * blend settings and sets gLevelLayers->raiseObjPriority in mode 1. With
- * no blend effect, the shadow gets a fixed 16/16 alpha pattern. */
-void SetupRoomBlend(struct level_ctx *self)
+/* Rebuilds the gBlendRegs BLDCNT/BLDALPHA shadow from the current room's
+ * blend settings (`level_room.param.blend`) and
+ * sets gLevelLayers->raiseObjPriority in an underwater room (kind 1). With
+ * no blend effect, the shadow gets a fixed 16/16 alpha pattern. The effect
+ * is tested as a halfword and stored from its low byte, as in the ROM. */
+void SetupRoomBlend(struct level_progress *self)
 {
     union blend *b = &gBlendRegs.blend;
 
     b->raw = 0;
     gLevelLayers->raiseObjPriority = 0;
-    if (self->blend->effect != 0) {
-        if (self->blend->mode == 1)
+    if (self->cat->param.blend.effect != 0) {
+        if (self->cat->kind == ROOM_KIND_UNDERWATER)
             gLevelLayers->raiseObjPriority = 1;
-        b->bits.effect = *(u8 *)&self->blend->effect;
-        b->bits.eva = self->blend->eva;
-        b->bits.evb = self->blend->evb;
+        b->bits.effect = *(const u8 *)&self->cat->param.blend.effect;
+        b->bits.eva = self->cat->param.blend.eva;
+        b->bits.evb = self->cat->param.blend.evb;
         b->bits.bg3First = 1;
         b->bits.bg0Second = 1;
         b->bits.bg1Second = 1;

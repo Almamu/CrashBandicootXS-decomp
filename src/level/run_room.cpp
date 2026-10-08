@@ -240,7 +240,7 @@ s32 RunRoom(struct level_progress *self)
         break;
     }
 
-    SetupRoomBlend((struct level_ctx *)self);
+    SetupRoomBlend(self);
     ResetObjBuffers();
     if (self->cat->kind == ROOM_KIND_UNDERWATER) {
         RestartPlayerAnim(gPlayer, 0x1F);

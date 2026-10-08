@@ -24,7 +24,6 @@
 #include "constants/chunk_tokens.h"
 
 struct camera;
-struct level_ctx;
 struct level_progress;
 struct part_list;
 struct tile_slot_pool;
@@ -328,8 +327,8 @@ extern void SpawnRoomEntities(struct entity_flags *self, const struct level_enti
                               const struct level_link_list *links, s32 pos, s32 unused);
 
 /* src/level/room_frame.cpp */
-extern void UpdateRoomFrame(void *self);
-extern void SetupRoomBlend(struct level_ctx *self);
+extern void UpdateRoomFrame(struct level_progress *self);
+extern void SetupRoomBlend(struct level_progress *self);
 
 /* src/level/run_room.cpp */
 extern s32 RunRoom(struct level_progress *self);

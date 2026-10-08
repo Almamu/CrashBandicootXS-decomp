@@ -85,7 +85,7 @@ void FreezeLevelClock(struct level_state *self, s32 seconds)
     recordId = recordb[4].paletteId;
     LoadPaletteSlot(gPaletteCache, slot, recordId);
 
-    level = self->cat;
+    level = self->room.cat;
     if (level->kind == ROOM_KIND_CATEGORY) {
         UploadPaletteSlot(gPaletteCache, slot);
     }
@@ -156,7 +156,7 @@ void TickLevelClock(struct level_state *self)
             recordId = recordb[1].paletteId;
             LoadPaletteSlot(gPaletteCache, slot, recordId);
 
-            level = self->cat;
+            level = self->room.cat;
             if (level->kind == ROOM_KIND_CATEGORY) {
                 UploadPaletteSlot(gPaletteCache, slot);
             }
@@ -211,7 +211,7 @@ void AddBrokenCrate(struct level_state *self)
 
     if (self->crateCount == self->crateTotal) {
         if (!IsInBonusRound(self) && !IsInGemPath(self)) {
-            const struct level_room *level = self->cat;
+            const struct level_room *level = self->room.cat;
 
             if (level->kind == ROOM_KIND_CATEGORY) {
                 u8 *flags = GetCurrentLevelFlags(self);
@@ -252,7 +252,7 @@ void PressSwitchCrate(struct level_state *self)
     }
 
     if (!IsInBonusRound(self) && !IsInGemPath(self)) {
-        const struct level_room *level = self->cat;
+        const struct level_room *level = self->room.cat;
 
         if (level->kind == ROOM_KIND_CATEGORY) {
             u8 *flags = GetCurrentLevelFlags(self);
@@ -447,7 +447,7 @@ struct AudioContext;
 /* Sets the Aku Aku mask level (`maskLevel`, +0x78, 0-3): level `3` (the
  * invincibility mask) always fires a jingle (`StartSong(
  * gAudioContext, SONG_DRUMS)`) and skips the rest; leaving level 3 re-fires
- * `PlayRoomMusic(&self->level)` once. Either way `maskLevel` ends up
+ * `PlayRoomMusic(&self->room)` once. Either way `maskLevel` ends up
  * holding `state`. */
 void SetMaskLevel(void *selfArg, s32 stateArg)
 {
@@ -462,7 +462,7 @@ void SetMaskLevel(void *selfArg, s32 stateArg)
         StartSong(gAudioContext, SONG_DRUMS);
     } else if (self->maskLevel == MASK_LEVEL_INVINCIBLE) {
         self->maskLevel = state;
-        PlayRoomMusic((struct level_progress *)&self->level);
+        PlayRoomMusic(&self->room);
     }
     self->maskLevel = state;
 }
@@ -632,24 +632,24 @@ void SetLevelBoss(struct level_state *self, void *value)
     self->boss = (struct level_state_1c8 *)value;
 }
 
-/* Plain getter/getter/setter trio for `roomIndex` (`self+0xc8`, the
+/* Plain getter/getter/setter trio for `room.roomIndex` (`self+0xc8`, the
  * current room's index in the level's room list; SpawnRoomExit tests it
- * for the first room) and `level` (`self+0xc4`) - the
+ * for the first room) and `room.level` (`self+0xc4`) - the
  * latter is the "current index" field `GetBossHealth`/`GetBossIndex`/
  * `GetCurrentLevelFlags`/`IsCrystalSaved` below all read. */
 s32 GetRoomIndex(struct level_state *self)
 {
-    return self->roomIndex;
+    return self->room.roomIndex;
 }
 
 s32 GetCurrentLevel(struct level_state *self)
 {
-    return self->level;
+    return self->room.level;
 }
 
 void SetCurrentLevel(struct level_state *self, s32 value)
 {
-    self->level = value;
+    self->room.level = value;
 }
 
 /* Five thin two-argument wrappers that drop `self` entirely and forward
@@ -680,7 +680,7 @@ s32 LevelHasGemPathGem(void *self, s32 idx)
     return LevelHasGemPathGemEntity(idx);
 }
 
-/* Dispatches on `self+0xc4`'s "current index" field: index `0x15` fires
+/* Dispatches on the "current index" field `room.level` (`self+0xc4`): index `0x15` fires
  * the actor-part singleton lifetime counter (`GetHovercraftPartsLeft`,
  * `hovercraft_parts.cpp`); indices `0x14`/`0x16`/`0x17` instead compute
  * `3 - (*(self+0x1c8))->0x10` (the fourth word-field `SetLevelBoss`
@@ -688,7 +688,7 @@ s32 LevelHasGemPathGem(void *self, s32 idx)
  * else returns `0`. */
 s32 GetBossHealth(struct level_state *self)
 {
-    s32 idx = self->level;
+    s32 idx = self->room.level;
 
     switch (idx) {
     case LEVEL_N_GIN:
@@ -713,7 +713,7 @@ s32 GetBossHealth(struct level_state *self)
     }
 }
 
-/* Same `self+0xc4` "current index" field, the level, mapped through a
+/* Same "current index" field (`room.level`), the level, mapped through a
  * 5-entry table (the boss levels) to the boss's HUD icon animation
  * (`{9, 8, 6, 7}`) minus a shared `BOSS_HUD_ANIM_BASE`, giving BOSS_* -
  * LEVEL_MEGA_MIX and any other level both skip the shared
@@ -724,7 +724,7 @@ s32 GetBossHealth(struct level_state *self)
  * so the subtraction has to stay a genuine runtime step). */
 s32 GetBossIndex(struct level_state *self)
 {
-    s32 idx = self->level;
+    s32 idx = self->room.level;
     s32 result;
 
     switch (idx) {
@@ -753,12 +753,12 @@ u8 *GetLevelFlags(struct level_state *self, s32 idx)
     return (u8 *)&self->levelFlags[idx];
 }
 
-/* Resolves the "current index" field (`self+0xc4`) into its own slot
+/* Resolves the "current index" field (`room.level`, `self+0xc4`) into its own slot
  * address via `GetLevelFlags` - the address this file's `AddBrokenCrate`/
  * `PressSwitchCrate`/`CheckAllCratesBroken` all call "flags" and OR a bit into. */
 u8 *GetCurrentLevelFlags(struct level_state *self)
 {
-    s32 idx = self->level;
+    s32 idx = self->room.level;
     return GetLevelFlags(self, idx);
 }
 
@@ -769,12 +769,12 @@ s32 GetCrateCount(struct level_state *self)
 }
 
 /* Bit-0 getter on the current level's `levelFlags` word in the
- * `saveData` copy of the attempt block (`idx` from `level`). Spelled as
+ * `saveData` copy of the attempt block (`idx` from `room.level`). Spelled as
  * `self + idx * 4 + offset`: taking `&...levelFlags[idx]` inside the
  * snapshot adds the constant first, which the ROM doesn't. */
 s32 IsCrystalSaved(struct level_state *self)
 {
-    s32 idx = self->level;
+    s32 idx = self->room.level;
     u8 *addr = (u8 *)self + idx * 4 + offsetof(struct level_state, saveData[4]);
 
     return (u32)(*addr << 31) >> 31;
@@ -825,7 +825,7 @@ void CheckAllCratesBroken(void *selfArg)
     MATCH_HOLD_REG(struct level_state *, self, r4) = (struct level_state *)selfArg;
 
     if (self->crateCount == self->crateTotal && !IsInBonusRound(self) && !IsInGemPath(self)) {
-        const struct level_room *level = self->cat;
+        const struct level_room *level = self->room.cat;
 
         if (level->kind == ROOM_KIND_CATEGORY) {
             u8 *flags = GetCurrentLevelFlags(self);
@@ -907,8 +907,8 @@ void RestoreCheckpoint(struct level_state *self)
 {
     u8 tmp;
 
-    self->crateCount = self->checkpointCrateCount;
-    tmp = self->checkpointSwitchPressed;
+    self->crateCount = self->room.checkpointCrateCount;
+    tmp = self->room.checkpointSwitchPressed;
     self->switchPressed = tmp;
     MemCopy32(self, self->checkpointData, 0x68);
 }
@@ -925,14 +925,14 @@ void SetCheckpoint(void *selfArg, s32 flag, s32 *pairArg)
     MATCH_HOLD_REG(s32 *, pair, r4) = pairArg;
     u8 tmp;
 
-    self->checkpointFlags = flag;
-    self->checkpointCrateCount = GetCrateCount(self);
+    self->room.checkpointFlags = flag;
+    self->room.checkpointCrateCount = GetCrateCount(self);
     tmp = self->switchPressed;
-    self->checkpointSwitchPressed = tmp;
+    self->room.checkpointSwitchPressed = tmp;
     ClearSpawnAtStart(self);
     ResetDeaths(self);
     {
-        MATCH_HOLD_REG(s32 *, dst, r2) = &self->checkpointX;
+        MATCH_HOLD_REG(s32 *, dst, r2) = &self->room.checkpointX;
         MATCH_HOLD_REG(s32, px, r0) = pair[0];
         MATCH_HOLD_REG(s32, py, r1) = pair[1];
         dst[0] = px;
@@ -971,10 +971,10 @@ void EndGemPath(struct level_state *self, u8 flag)
         gHud->SetCrateTotal(self->crateTotal);
         {
             Player *player = gPlayer;
-            s32 *p = &self->checkpointX;
+            s32 *p = &self->room.checkpointX;
             SetEntityPos((struct actor *)player, p[0], p[1]);
         }
-        SetCheckpointAtPlayer(self, self->checkpointFlags);
+        SetCheckpointAtPlayer(self, self->room.checkpointFlags);
     } else {
         ResetCrateCount(self);
     }

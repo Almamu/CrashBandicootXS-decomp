@@ -169,20 +169,36 @@ struct level_desc {
 /*
  * One room record of the level table (src/data/level_table_16c814.c):
  * the record RunRoom hands to LoadRoom, and the current room
- * (`level_state.cat`, `level_progress.cat`). It merges level_layers.cpp's
+ * (`level_progress.cat`, `level_state.room.cat`). It merges level_layers.cpp's
  * `struct level_load_args` (batch 8b), level_query.cpp's `MedalListItem`
  * (`linkedObj`/`type` are `desc`/`kind`), level_state.h's `struct
- * level_category` and run_room.cpp's `gl_widget_kind` (#574, batch 9e).
+ * level_category`, run_room.cpp's `gl_widget_kind` (#574, batch 9e) and
+ * room_frame.cpp's `level_blend` (`mode` was `kind`, `effect`/`eva`/`evb`
+ * are `param.blend`; #656, batch 7).
  */
+
+/* A room's colour-effect settings (SetupRoomBlend): the BLDCNT effect and
+ * the BLDALPHA weights. Every room that sets them uses alpha blending
+ * (effect 1) at EVA 4, EVB 16. */
+struct level_room_blend {
+    u16 effect; // 0x00 - 0: no blending (a fixed 16/16 alpha pattern)
+    u8 eva;     // 0x02 - first-target weight
+    u8 evb;     // 0x03 - second-target weight
+};
+
 struct level_room {
     const u16 *palette;            // 0x00 - BG palette, 256 colours
     const struct level_desc *desc; // 0x04 - NULL for a category stage
-    s32 kind;                      // 0x08 - 0-2: a room; 3: a stage played
-                                   //        in actor category `catIndex`
-    s32 unk_0C;                    // 0x0C - 0 in every record
-    u16 catIndex;                  // 0x10 - kind 3: the actor category
-                                   //        (CountCategoryCrates)
-    u16 unk_12;                    // 0x12
+    // 0x08 - ROOM_KIND_*: 0-2 a room; 3 a stage played in actor category
+    // `param.catIndex`. SetupRoomBlend raises the sprites' priority in
+    // an underwater room (1)
+    s32 kind;
+    s32 unk_0C; // 0x0C - 0 in every record
+    union {
+        struct level_room_blend blend; // kinds 0-2
+        // kind 3: the actor category (CountCategoryCrates, InitActorCategory)
+        u16 catIndex;
+    } param; // 0x10
 };
 
 /* A level's rooms (level_query.cpp's `MedalItemList` was a view: `items` is

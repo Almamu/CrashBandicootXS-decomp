@@ -59,7 +59,7 @@ s32 PlayRoom(struct level_progress *self)
     gPlayer = new Player(0xffff, 0, 0, 0);
     SetEntityPos((struct actor *)gPlayer, self->checkpointX, self->checkpointY);
     gPlayer->f.bytes.flags |= 0x10;
-    gPlayer->mirrorFlags.mirrorX = self->flags;
+    gPlayer->mirrorFlags.mirrorX = self->checkpointFlags;
 
     mode = self->cat->kind;
     switch (mode) {

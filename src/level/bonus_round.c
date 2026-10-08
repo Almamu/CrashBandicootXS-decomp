@@ -49,8 +49,8 @@ void EndBonusRound(struct level_state *self, u8 arg1)
 
         {
             s32 *fieldb8 = &self->savedLives;
-            s32 *fieldd4 = &self->checkpointX;
-            u8 *fielde0 = &self->checkpointFlags;
+            s32 *fieldd4 = &self->room.checkpointX;
+            u8 *fielde0 = &self->room.checkpointFlags;
             s32 total;
 
             fieldbc = &self->crateTotal;
@@ -108,10 +108,10 @@ void EndBonusRound(struct level_state *self, u8 arg1)
  * copy, reusing the register chain exactly like the ROM. */
 void SetCheckpointAtPlayer(struct level_state *self, u8 arg1)
 {
-    const struct level_room *level = self->cat;
+    const struct level_room *level = self->room.cat;
 
     if (level->kind == ROOM_KIND_CATEGORY) {
-        self->checkpointCrateCount = GetCrateCount(self);
+        self->room.checkpointCrateCount = GetCrateCount(self);
 
         /* Barrier: without this, the compiler notices `self + 0xa9`
          * is `(self + 0xcc) - 0x23` and reuses the field-0xcc pointer
@@ -134,8 +134,8 @@ void SetCheckpointAtPlayer(struct level_state *self, u8 arg1)
         s32 y = player->y;
         void *base;
 
-        self->checkpointFlags = arg1;
-        self->checkpointCrateCount = GetCrateCount(self);
+        self->room.checkpointFlags = arg1;
+        self->room.checkpointCrateCount = GetCrateCount(self);
 
         MATCH_KEEP_VOLATILE(self);
 
@@ -158,7 +158,7 @@ void SetCheckpointAtPlayer(struct level_state *self, u8 arg1)
              * form. Reproduced with a local pointer and indexed
              * stores - same gotcha as `SetCrateGemPos`/`SetCheckpoint` in
              * docs/matching/archive/issue-37-game-loop-234e8.md. */
-            s32 *dst = &self->checkpointX;
+            s32 *dst = &self->room.checkpointX;
 
             dst[0] = x;
             dst[1] = y;

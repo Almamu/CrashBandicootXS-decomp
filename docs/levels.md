@@ -26,7 +26,10 @@ to two extra rooms, each a `struct level_room` record
 (0x14 bytes). All of it is C in `src/data/level_table_16c814.c`, with
 one record per room (`gLevelRoom00`..`gLevelRoom40`) plus seven records
 of kind 3 for the stages played in an actor category, which have no
-room data. The room record is the widget `RunRoom` hands to
+room data. The union at +0x10 (`param`) is a stage's actor category
+(`param.catIndex`) or a room's colour effect (`param.blend`, which
+`SetupRoomBlend` turns into BLDCNT/BLDALPHA: the seven rooms that set it
+use alpha blending at EVA 4, EVB 16). The room record is the widget `RunRoom` hands to
 `LoadRoom` (`LevelLayers::LoadRoom`, `level_layers.cpp`), which loads a room: it unpacks or
 references the asset, feeds each layer its descriptor, feeds the terrain
 cache the collision layer, hands the entity list and links to
