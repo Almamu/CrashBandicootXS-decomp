@@ -28,14 +28,14 @@ songs and WAV samples. `baserom.gba` isn't needed to build it.
   (no `sub_XXXXXXXX` function names left), the library split (#573), the
   file layout (#575) and the headers (#574: every function and global is
   declared once, in a header).
-- **Matching workarounds: 2019/2059 functions have none.** The other
-  40 still need at least one register pin, empty-asm nudge
+- **Matching workarounds: 2031/2059 functions have none.** The other
+  28 still need at least one register pin, empty-asm nudge
   (`include/match.h`), instruction asm, `BOX_ADDR`, retyped field
   access, scoped `volatile` or self-init to come out byte-exact, each
   with a comment saying why (#662,
   [docs/matching_techniques.md](./docs/matching_techniques.md)). After
   a build, `tools/match_idioms.py --functions` prints these numbers and
-  the table below; `--functions --files` lists the 40 functions.
+  the table below; `--functions --files` lists the 28 functions.
 - **What's left** is code quality: the remaining placeholder names
   (`gUnknown_`, `gStaticData_`, `nullsub_N`, `unk_XX` fields), compiler
   warnings, formatting, and the matching workarounds above. It's
@@ -49,12 +49,12 @@ songs and WAV samples. `baserom.gba` isn't needed to build it.
 | `lib/agb_eeprom/` | 10 | 9 | 1 |
 | `lib/gax/` | 49 | 38 | 11 |
 | `lib/libgcc/` | 3 | 3 | 0 |
-| `src/actor/` | 136 | 134 | 2 |
+| `src/actor/` | 136 | 136 | 0 |
 | `src/audio/` | 27 | 27 | 0 |
-| `src/bosses/` | 139 | 134 | 5 |
+| `src/bosses/` | 139 | 137 | 2 |
 | `src/crates/` | 94 | 94 | 0 |
 | `src/cutscene/` | 12 | 12 | 0 |
-| `src/enemies/` | 41 | 36 | 5 |
+| `src/enemies/` | 41 | 41 | 0 |
 | `src/frontend/` | 52 | 51 | 1 |
 | `src/gfx/` | 98 | 98 | 0 |
 | `src/hud/` | 21 | 21 | 0 |
@@ -64,8 +64,8 @@ songs and WAV samples. `baserom.gba` isn't needed to build it.
 | `src/menus/` | 125 | 125 | 0 |
 | `src/objects/` | 252 | 249 | 3 |
 | `src/pickups/` | 36 | 36 | 0 |
-| `src/player/` | 195 | 190 | 5 |
-| `src/save/` | 74 | 72 | 2 |
+| `src/player/` | 195 | 191 | 4 |
+| `src/save/` | 74 | 73 | 1 |
 | `src/system/` | 41 | 41 | 0 |
 | `src/text/` | 26 | 26 | 0 |
 | `src/util/` | 25 | 25 | 0 |
