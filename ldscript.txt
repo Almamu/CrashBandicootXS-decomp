@@ -42,6 +42,7 @@ SECTIONS
         build/crashbandicootxs/src/gfx/fade_to_black.o(.text);
         build/crashbandicootxs/src/gfx/display.o(.text);
         build/crashbandicootxs/src/util/aabb.o(.text);
+        build/crashbandicootxs/src/system/iwram_alloc.o(.text);
         build/crashbandicootxs/src/audio/audio.o(.text);
         build/crashbandicootxs/src/link/link_handshake.o(.text);
         build/crashbandicootxs/src/link/link_session_reset.o(.text);

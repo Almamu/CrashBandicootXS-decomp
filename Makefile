@@ -365,14 +365,17 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
 # asms) aren't needed under old_agbcc. Evidence: each object stays
 # byte-identical with plain C - input.o's `keys = mask & pressed`
 # (old_agbcc copies `mask` first, as the ROM does), irq.o's DISPSTAT
-# updates, key_input.o's UpdateKeys (split from irq.o, #767), aabb.o's CommitBlendRegs (BLDY's
-# address derived from BLDCNT's), audio.o's VCount DISPSTAT updates
+# updates, key_input.o's UpdateKeys (split from irq.o, #767), aabb.o's
+# CommitBlendRegs (BLDY's address derived from BLDCNT's; at the end of
+# display.o, already old_agbcc, since #767 - aabb.o and iwram_alloc.o, the
+# rest of the old aabb.o, stay old_agbcc), audio.o's VCount DISPSTAT updates
 # (audio.cpp since, built by old_agbcp: agbcp gives the same AudioContext
 # methods but loads DISPSTAT's byte before the mask).
 OLD_AGBCC_OBJS += $(C_BUILDDIR)/system/input.o \
                   $(C_BUILDDIR)/system/irq.o \
                   $(C_BUILDDIR)/system/key_input.o \
                   $(C_BUILDDIR)/util/aabb.o \
+                  $(C_BUILDDIR)/system/iwram_alloc.o \
                   $(C_BUILDDIR)/audio/audio.o
 $(OLD_AGBCC_OBJS): CC1 := $(CC1_OLD)
 $(OLD_AGBCC_OBJS): CC1FLAGS := $(filter-out -fprologue-bugfix,$(CC1FLAGS))

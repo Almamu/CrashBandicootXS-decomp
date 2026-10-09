@@ -8,7 +8,8 @@ extern "C" {
  * for why this cluster needed splitting into this many pieces.
  * `gDispcnt` is a 2-byte packed mode/flags shadow copy of
  * `REG_DISPCNT`, committed to the real hardware register by
- * `CommitDispcnt`. */
+ * `CommitDispcnt`. The blend registers' commit, `CommitBlendRegs`,
+ * ends the file (it started util/aabb.cpp until #767). */
 
 /* `gDispcnt` viewed as its REG_DISPCNT bitfields. The field stores give
  * the ROM's byte-wide read-modify-writes; old_agbcc (Makefile) loads the
@@ -102,4 +103,21 @@ void SetObjMapping1D(void)
 void CommitDispcnt(void)
 {
     *(vu16 *)REG_ADDR_DISPCNT = *(u16 *)gDispcnt;
+}
+
+/* Commits the `gBlendRegs` shadow to the real blend registers:
+ * the word at `+0` covers both `REG_BLDCNT` and `REG_BLDALPHA` (a
+ * single 32-bit write spanning the adjacent halfwords), and the low
+ * 5 bits of the byte at `+4` become `REG_BLDY`. The mask is the ROM's
+ * `(x << 27) >> 27` shift pair, which a plain `& 0x1f` would encode as
+ * an AND with a constant instead. Built with old_agbcc, which derives
+ * the BLDY address from BLDCNT's (`adds r2, #4`) as the ROM does; agbcc
+ * loads it from a second literal. */
+void CommitBlendRegs(void)
+{
+    u32 bldy;
+
+    *(vu32 *)REG_ADDR_BLDCNT = gBlendRegs.blend.raw;
+    bldy = gBlendRegs.bldy;
+    REG_BLDY = (bldy << 27) >> 27;
 }

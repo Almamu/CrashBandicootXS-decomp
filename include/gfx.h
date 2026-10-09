@@ -159,7 +159,7 @@ struct bldy {
 };
 
 /* `gBlendRegs`, the blend register shadow SetupRoomBlend builds and
- * CommitBlendRegs (util/aabb.cpp) writes: BLDCNT/BLDALPHA as one word, then
+ * CommitBlendRegs (gfx/display.cpp) writes: BLDCNT/BLDALPHA as one word, then
  * the BLDY byte. */
 struct blend_regs {
     union blend blend; // 0x00
@@ -209,6 +209,7 @@ extern void ShowObj(void);
 extern void SetObjMapping2D(void);
 extern void SetObjMapping1D(void);
 extern void CommitDispcnt(void);
+extern void CommitBlendRegs(void);
 
 /* src/gfx/fade.cpp */
 extern void StepBrightnessFade(void);

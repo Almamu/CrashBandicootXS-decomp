@@ -59,15 +59,17 @@ and [graphics_loading.md](./graphics_loading.md).
   object joined `OLD_AGBCC_OBJS`); see
   [strag3-naked-retry.md](../matching/archive/strag3-naked-retry.md).
 
-- `src/util/aabb.cpp` (new file): `CommitBlendRegs` (BLDCNT/
+- `src/gfx/display.cpp`'s last function, `CommitBlendRegs` (until #767
+  the first of `src/util/aabb.cpp`; BLDCNT/
   BLDALPHA/BLDY shadow commit - was previously NAKED, now matched as
   real C via an inline-asm-materialized store-and-increment pair
   opaque to the peephole fusion that otherwise always combines it into
   a `stmia` writeback, plus the ROM's own shift-based mask idiom - see
   [naked-CommitBlendRegs-matched.md](../matching/archive/naked-sub_8001624-matched.md)),
-  `AabbOverlapsInclusiveX`, `AabbOverlaps`, `IwramFree`, `IwramAlloc` - two AABB
+  then `src/util/aabb.cpp`: `AabbOverlapsInclusiveX`, `AabbOverlaps` - two AABB
   overlap tests (one already referenced by name from `actor.md`'s
-  `player_update.c`) plus `mem_free`/`mem_alloc` wrappers.
+  `player_update.c`), and `src/system/iwram_alloc.cpp`: `IwramFree`,
+  `IwramAlloc`, the `mem_free`/`mem_alloc` wrappers (split from aabb.cpp, #767).
 
 - `src/gfx/bitmap_screen.cpp` (new file, replacing `asm/code_3_1.s` -
   boot-adjacent but not part of `src/system/bios_util.cpp` since

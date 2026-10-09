@@ -1431,7 +1431,7 @@ see "Codegen exceptions").
   - the blend registers: level_menu.h's and level_select.c's `struct
     blend_bits`/`union blend`/`struct bldy` moved to gfx.h, and
     `gBlendRegs` is a `struct blend_regs { union blend blend; u8 bldy; }`
-    (room_frame.c's `union blend` view and util/aabb.cpp's `struct
+    (room_frame.c's `union blend` view and util/aabb.cpp's (CommitBlendRegs, now gfx/display.cpp) `struct
     unk_03001280`).
 - **Definition fixes**, all identical:
   - an unused parameter where the callers pass one: `InitBgLayerBase`

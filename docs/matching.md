@@ -4791,6 +4791,9 @@ links them in real ROM order: `code_3_1_7.o`, `fade_to_black.o`,
 
 ## `aabb.c` (`AabbOverlapsInclusiveX`-`IwramAlloc`)
 
+(Since #767 `CommitBlendRegs` ends `gfx/display.cpp`, the overlap tests are
+`util/aabb.cpp` and the wrappers `system/iwram_alloc.cpp`.)
+
 Right after the parked `CommitBlendRegs`, two AABB overlap tests plus two
 tiny `mem_free`/`mem_alloc` wrappers:
 

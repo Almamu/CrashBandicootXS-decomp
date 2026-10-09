@@ -23,9 +23,10 @@
 extern u32 gRandSeed;
 
 /* src/util/aabb.cpp */
-extern void CommitBlendRegs(void);
 extern u8 AabbOverlapsInclusiveX(struct aabb *a, struct aabb *b);
 extern u8 AabbOverlaps(struct aabb *a, struct aabb *b);
+
+/* src/system/iwram_alloc.cpp */
 extern void IwramFree(u8 *address);
 extern void *IwramAlloc(u32 size);
 
