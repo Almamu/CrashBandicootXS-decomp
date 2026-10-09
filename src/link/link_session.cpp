@@ -102,8 +102,8 @@ s32 LinkSession::Update()
         return 0;
     if (!sioConfigured) {
         REG_RCNT = 0;
-        REG_SIOCNT = 0x2000;
-        REG_SIOCNT |= 0x4003;
+        REG_SIOCNT = SIO_MULTI_MODE;
+        REG_SIOCNT |= SIO_115200_BPS | SIO_INTR_ENABLE;
         sioConfigured = 1;
     }
     if (!started) {
@@ -116,8 +116,8 @@ s32 LinkSession::Update()
         if ((v & 1) == 0) {
             Stop();
             REG_RCNT = 0;
-            REG_SIOCNT = 0x2000;
-            REG_SIOCNT |= 0x4003;
+            REG_SIOCNT = SIO_MULTI_MODE;
+            REG_SIOCNT |= SIO_115200_BPS | SIO_INTR_ENABLE;
             return 0;
         }
         started = one;
@@ -127,18 +127,18 @@ s32 LinkSession::Update()
         REG_IME = 0;
         saved = REG_IME;
         REG_IME = 0;
-        REG_IE &= ~0x80;
+        REG_IE &= ~INTR_FLAG_SERIAL;
         REG_IME = saved;
         saved = REG_IME;
         REG_IME = 0;
-        REG_IE &= ~0x40;
+        REG_IE &= ~INTR_FLAG_TIMER3;
         REG_IME = saved;
         IrqClearHandler(INTR_INDEX_TIMER3);
         IrqSetHandler(INTR_INDEX_SERIAL, LinkSerialIntr);
-        REG_IE |= 0x80;
+        REG_IE |= INTR_FLAG_SERIAL;
         if (arm3) {
             IrqSetHandler(INTR_INDEX_TIMER3, LinkTimer3Intr);
-            REG_IE |= 0x40;
+            REG_IE |= INTR_FLAG_TIMER3;
             REG_TM3CNT = 0x00C0BBBC;
         }
         REG_IME = one;

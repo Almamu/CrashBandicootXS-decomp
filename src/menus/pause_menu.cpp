@@ -55,7 +55,7 @@ s32 PauseMenu::Run()
     {
         PaletteCache *cache = gPaletteCache;
 
-        CpuSet(gPauseMenuPalette, cache->slots[15], 0x10);
+        CpuSet(gPauseMenuPalette, cache->slots[15], sizeof(gPauseMenuPalette) / sizeof(u16));
     }
 
     gSmallFont->ResetPalette();
