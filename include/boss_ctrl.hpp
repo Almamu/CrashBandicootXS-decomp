@@ -59,8 +59,7 @@ public:
 
 COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(MegaMixCtrl) == 0x24);
 
-/* The Tiny boss's controller (gTinyVtable; src/bosses/tiny_update.cpp,
- * and its constructor, destructor and StartHop in src/bosses/cortex.cpp).
+/* The Tiny boss's controller (gTinyVtable; src/bosses/tiny.cpp).
  * Tiny hops his part along parabolic arcs between gTouchableList's
  * anchors (the hop pads), stomping them: Update steps the hop and the
  * state machine, SetState enters a state. `counter` is the round (1-3,
@@ -92,9 +91,8 @@ public:
 
 COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(TinyCtrl) == 0x4C);
 
-/* The Neo Cortex fight's controller (gCortexBossVtable; Update and the
- * two spawners are in src/bosses/cortex.cpp, the rest is in
- * src/bosses/dingodile.cpp). `counter` is the round. It spawns the
+/* The Neo Cortex fight's controller (gCortexBossVtable;
+ * src/bosses/cortex.cpp). `counter` is the round. It spawns the
  * cannon and the target (crosshair) parts. spawn_bosses.cpp creates it in
  * a 0x24-byte block. */
 class CortexBossCtrl : public BossCtrl
@@ -114,7 +112,7 @@ public:
 COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexBossCtrl) == 0x24);
 
 /* The Neo Cortex fight's cannon (gCortexCannonVtable; 0x10 bytes,
- * src/bosses/dingodile.cpp): hides its part in state 0. */
+ * src/bosses/cortex.cpp): hides its part in state 0. */
 class CortexCannonCtrl : public Ctrl
 {
 public:
@@ -127,9 +125,8 @@ public:
 COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexCannonCtrl) == 0x10);
 
 /* The Neo Cortex fight's target, the crosshair that hops between the
- * player and the platforms (gCortexTargetVtable, 0x40 bytes). Update,
- * SetState and FireShot are in src/bosses/cortex.cpp; the constructor,
- * destructor, SetDest and SetPlatformsKind in src/bosses/dingodile.cpp. */
+ * player and the platforms (gCortexTargetVtable, 0x40 bytes;
+ * src/bosses/cortex.cpp). */
 class CortexTargetCtrl : public Ctrl
 {
 public:
@@ -190,7 +187,7 @@ public:
 
 COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexBossGemCtrl) == 0x14);
 
-/* gUnusedOneShotAnimCtrlVtable's class (src/bosses/cortex.cpp): does what
+/* gUnusedOneShotAnimCtrlVtable's class (src/bosses/tiny.cpp): does what
  * OneShotAnimCtrl does. Its constructor has no caller (UNUSED). */
 class UnusedOneShotAnimCtrl : public Ctrl
 {

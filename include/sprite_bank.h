@@ -20,7 +20,7 @@
  * and gfx_part.h's) are merged into these (#656). gfx.h's struct
  * piece_info is the frame header's view. The menus' copies
  * (level_menu.h's, level_select_parts.h, level_select.c) and the file-local ones
- * (time_trial.cpp, dingodile.cpp, tiny_update.cpp, spawn_objects.cpp,
+ * (time_trial.cpp, dingodile.cpp, tiny.cpp, spawn_objects.cpp,
  * affine_sprite_pieces.cpp's kf_record) use these types since #574 batch 9e.
  */
 

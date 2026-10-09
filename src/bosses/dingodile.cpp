@@ -16,16 +16,14 @@ extern "C" {
 #include "math_util.h"
 }
 
-/* GitHub issue #24: 0x0801967C-0x0801A794, formerly
- * asm/code_3_2_17_188d0_1967c.s. Built with old_agbcp (Makefile
- * OLD_AGBCC_OBJS; docs/matching/archive/issue-24-boss-actor.md).
+/* Dingodile's fight (GitHub issue #24), ROM 0x080197F4-0x0801A794,
+ * formerly asm/code_3_2_17_188d0_1967c.s. Built with old_agbcp (Makefile
+ * OLD_AGBCC_OBJS; docs/matching/archive/issue-24-boss-actor.md). Until
+ * #769 it started with the end of the Neo Cortex fight's controllers
+ * (cortex.cpp since).
  *
  * The small boss controllers of include/boss_ctrl.hpp, in ROM order:
- * the Neo Cortex fight's target (CortexTargetCtrl: SetPlatformsKind,
- * SetDest, destructor, constructor; the rest is in cortex.cpp), cannon
- * (CortexCannonCtrl) and boss controller (CortexBossCtrl: SetState,
- * destructor, constructor; Update is in cortex.cpp), then Dingodile
- * (DingodileCtrl), his shield (DingodileShieldCtrl), rocket and
+ * Dingodile (DingodileCtrl), his shield (DingodileShieldCtrl), rocket and
  * stalactite (DingodileProjectileCtrl) and shark (DingodileSharkCtrl).
  *
  * Dingodile walks his part along the level (the approach tables
@@ -42,8 +40,8 @@ extern "C" {
  * on him, and a bank-4 shark (SpawnShark) that crosses the level.
  *
  * UNUSED - no `bl`/`.4byte` reference in asm/, data/ or src/, and no
- * Thumb pointer anywhere in the ROM: CortexCannonCtrl::SetState,
- * DingodileCtrl::GetHits. Matched anyway. */
+ * Thumb pointer anywhere in the ROM: DingodileCtrl::GetHits. Matched
+ * anyway. */
 
 /* Right edge of the level, in Q8 units. */
 static inline s32 LevelRight(void)
@@ -75,93 +73,6 @@ extern "C" struct aabb GetSpriteAttackBox_s(void *part) asm("GetSpriteAttackBox"
 static inline void SetTag(MovingSprite *p, u8 tag)
 {
     p->tag = tag;
-}
-
-/* Sets `kind` to `flag` (0 or 1) on every part in the gTouchableList
- * list, the list the level's platforms join (platform_create.cpp). In the
- * Cortex fight those include the Cortex platform movers, which
- * UpdateCortexBossPlatformMover animates to frame 10 for kind 1 and
- * 0x1A otherwise; SetCortexTargetState clears it (state 1) and sets it
- * (state 5). */
-void CortexTargetCtrl::SetPlatformsKind(u8 flag)
-{
-    s32 i;
-    s32 n = gTouchableList->count;
-
-    for (i = 0; i < n; i++) {
-        MovingSprite *p = (MovingSprite *)gTouchableList->items[i];
-
-        if (flag)
-            p->kind = 1;
-        else
-            p->kind = flag;
-    }
-}
-
-/* Hops from `part`'s position to (x, y), in the boss round's number of
- * steps. */
-void CortexTargetCtrl::SetDest(MovingSprite *part, s32 x, s32 y)
-{
-    u8 v;
-
-    this->x = x;
-    this->y = y;
-    dx = x - part->x;
-    dy = y - part->y;
-    v = *(boss->counter + gCortexTargetHopSteps);
-    steps = v;
-    stepsLeft = v;
-}
-
-CortexTargetCtrl::~CortexTargetCtrl()
-{
-}
-
-CortexTargetCtrl::CortexTargetCtrl(CortexBossCtrl *boss)
-{
-    stepsLeft = 0;
-    this->boss = boss;
-}
-
-/* The same shape as CortexBossCtrl::SetState below (and
- * SetCortexTargetState, cortex.cpp) without any state of its own. */
-void CortexCannonCtrl::SetState(MovingSprite *, s32 next)
-{
-    SetMode(next);
-}
-
-void CortexCannonCtrl::Update(MovingSprite *part)
-{
-    if (state == 0)
-        part->f.b.visible = 0;
-}
-
-CortexCannonCtrl::~CortexCannonCtrl()
-{
-}
-
-CortexCannonCtrl::CortexCannonCtrl()
-{
-}
-
-/* State 3 (Neo Cortex beaten) also stops the target (mode 9) and, unless
- * the player has it, spawns the body slam power. */
-void CortexBossCtrl::SetState(MovingSprite *, s32 next)
-{
-    if (next == 3) {
-        target->mover->SetMode(9);
-        if (!(u8)gLevelState->HasTurboRun())
-            SpawnBodySlamPower(0xFFFF, 0x8C, 0x98, 0);
-    }
-    SetMode(next);
-}
-
-CortexBossCtrl::~CortexBossCtrl()
-{
-}
-
-CortexBossCtrl::CortexBossCtrl()
-{
 }
 
 s32 DingodileCtrl::GetHits()

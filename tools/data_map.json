@@ -1902,7 +1902,7 @@
     "SetTinyState"
    ],
    "consumer_files": [
-    "bosses/tiny_update.cpp"
+    "bosses/tiny.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1923,7 +1923,7 @@
     "PickTinyHopTarget"
    ],
    "consumer_files": [
-    "bosses/tiny_update.cpp"
+    "bosses/tiny.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -7651,7 +7651,7 @@
     "CreateStompedHopPadCtrl"
    ],
    "consumer_files": [
-    "bosses/tiny_hop_pad.cpp"
+    "bosses/tiny.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,

@@ -6,36 +6,43 @@
 #include "level_state.hpp"
 
 extern "C" {
+#include "match.h"
 #include "sprite_bank.h"
 #include "util.h"
 #include "memory.h"
+#include "crates.h"
 #include "level.h"
 #include "globals.h"
+#include "entity_bits.h"
 #include "math_util.h"
 }
 
-/* GitHub issue #23: 0x080188D0-0x0801967C, formerly
- * asm/code_3_2_17_188d0.s (details in docs/matching/archive/issue-23-graphics.md).
- * Built with old_agbcp (Makefile OLD_AGBCC_OBJS).
+/* The Neo Cortex fight (GitHub issues #23 and #24), ROM
+ * 0x08018A30-0x080197F4, formerly asm/code_3_2_17_188d0.s and the head of
+ * asm/code_3_2_17_188d0_1967c.s (details in
+ * docs/matching/archive/issue-23-graphics.md and issue-24-boss-actor.md).
+ * Built with old_agbcp (Makefile OLD_AGBCC_OBJS). Until #769 its start
+ * was the end of cortex.cpp and its end the head of dingodile.cpp; each
+ * class's methods end with its destructor and constructor, so the
+ * controllers' boundaries put these functions in one original unit.
  *
- * Small controllers (include/boss_ctrl.hpp, include/ctrl.hpp,
- * include/platform.hpp), in ROM order: the one-shot animation
- * controllers' constructors and destructors, Tiny's StartHop, destructor
- * and constructor, then most of the Neo Cortex fight (sprite bank 53: the
- * Tesla cannon at three angles in anims 3-5, the green/red crosshairs in
- * 0xF/0x10/0x12, the shots in 0xE/0x11 and the shrinking gems in 9-0xD):
- * the boss controller (CortexBossCtrl) spawns the cannon and the target
- * (crosshair), the target (CortexTargetCtrl) hops across the level and
- * then chases the player, firing a shot (CortexShotCtrl) at each stop. In
- * this fight the red/green/yellow gem spawners hand over to
- * SpawnCortexBossGem (bank 32's gems, CortexBossGemCtrl), which a fast
- * shot shrinks away, and the level's type-6 platforms get a
- * CortexBossPlatformMover.
+ * Small controllers (include/boss_ctrl.hpp, include/platform.hpp), in ROM
+ * order, for the fight in sprite bank 53 (the Tesla cannon at three
+ * angles in anims 3-5, the green/red crosshairs in 0xF/0x10/0x12, the
+ * shots in 0xE/0x11 and the shrinking gems in 9-0xD): the boss controller
+ * (CortexBossCtrl) spawns the cannon and the target (crosshair), the
+ * target (CortexTargetCtrl) hops across the level and then chases the
+ * player, firing a shot (CortexShotCtrl) at each stop. In this fight the
+ * red/green/yellow gem spawners hand over to SpawnCortexBossGem (bank
+ * 32's gems, CortexBossGemCtrl), which a fast shot shrinks away, and the
+ * level's type-6 platforms get a CortexBossPlatformMover. Then the
+ * target's SetPlatformsKind, SetDest, destructor and constructor, the
+ * cannon (CortexCannonCtrl) and the boss controller's SetState,
+ * destructor and constructor.
  *
- * UNUSED - no caller anywhere in the ROM (checked the asm/ and expected/
- * sources, every .c file under src/, and every word-aligned Thumb pointer
- * in baserom.gba): UnusedOneShotAnimCtrl's constructor
- * (CreateUnusedOneShotAnimCtrl). Matched anyway. */
+ * UNUSED - no `bl`/`.4byte` reference in asm/, data/ or src/, and no
+ * Thumb pointer anywhere in the ROM: CortexCannonCtrl::SetState. Matched
+ * anyway. */
 
 /* The player's HandleEvent (Player, include/player.hpp). */
 static inline void HitPlayer(Player *pl, s32 event)
@@ -61,80 +68,6 @@ static inline void ClampFrame(MovingSprite *p, s32 idx)
 
     CLAMP_INDEX(idx, n);
     p->frame = idx;
-}
-
-OneShotAnimCtrl::OneShotAnimCtrl()
-{
-}
-
-OneShotAnimCtrl::~OneShotAnimCtrl()
-{
-}
-
-/* Marks the sprite object gone once its animation has played through,
- * as OneShotAnimCtrl::Update (tiny_hop_pad.cpp) does. */
-void UnusedOneShotAnimCtrl::Update(MovingSprite *part)
-{
-    if (part->animDone)
-        part->MarkGone();
-}
-
-/* UNUSED - see the top of the file. */
-UnusedOneShotAnimCtrl::UnusedOneShotAnimCtrl()
-{
-}
-
-UnusedOneShotAnimCtrl::~UnusedOneShotAnimCtrl()
-{
-}
-
-/* Empty hook for Tiny taking a hit. TinyCtrl::SetState's case 9
- * (tiny_update.cpp; Update enters it when the player's attack box hits
- * Tiny, and it plays SFX_BOSS_HIT and counts the hit) calls it directly,
- * between the hop set-up and the anim-7 call, with the same (self, part)
- * arguments as StartHop below. It is in no method table, so nothing shows
- * what the hook was meant to do. */
-void TinyHitStub(void *self, void *part)
-{
-}
-
-/* Starts a hop from (x, y) to the part's position, facing it. The ROM
- * clears and sets the mirror bit in two steps (`& -0x11`, then `| 0x10`),
- * through the byte; a bitfield store of 1 is one `orr`. */
-void TinyCtrl::StartHop(MovingSprite *part)
-{
-    s32 px = part->x;
-
-    if (x <= px) {
-        u8 *p = &part->mirror;
-        s32 m = -0x11;
-
-        m &= *p;
-        m |= 0x10;
-        *p = m;
-    } else {
-        part->mirrorFlags.mirrorX = 0;
-    }
-    steps = 0x1A;
-    total = 0x1A;
-    dy = part->y - y;
-    dx = part->x - x;
-}
-
-TinyCtrl::~TinyCtrl()
-{
-    delete[] squares;
-}
-
-/* The hop's squares table: i * i >> 8 for i = 0..0x100. */
-TinyCtrl::TinyCtrl()
-{
-    s32 i;
-
-    stomped = -1;
-    squares = new s16[0x101];
-    for (i = 0; i <= 0x100; i++)
-        squares[i] = Q8_MUL(i, i);
 }
 
 /* State 0 spawns the cannon and the target and moves to state 1; state 1
@@ -617,4 +550,91 @@ CortexShotCtrl::~CortexShotCtrl()
 CortexShotCtrl::CortexShotCtrl(CortexBossCtrl *boss)
 {
     this->boss = boss;
+}
+
+/* Sets `kind` to `flag` (0 or 1) on every part in the gTouchableList
+ * list, the list the level's platforms join (platform_create.cpp). In the
+ * Cortex fight those include the Cortex platform movers, which
+ * UpdateCortexBossPlatformMover animates to frame 10 for kind 1 and
+ * 0x1A otherwise; SetCortexTargetState clears it (state 1) and sets it
+ * (state 5). */
+void CortexTargetCtrl::SetPlatformsKind(u8 flag)
+{
+    s32 i;
+    s32 n = gTouchableList->count;
+
+    for (i = 0; i < n; i++) {
+        MovingSprite *p = (MovingSprite *)gTouchableList->items[i];
+
+        if (flag)
+            p->kind = 1;
+        else
+            p->kind = flag;
+    }
+}
+
+/* Hops from `part`'s position to (x, y), in the boss round's number of
+ * steps. */
+void CortexTargetCtrl::SetDest(MovingSprite *part, s32 x, s32 y)
+{
+    u8 v;
+
+    this->x = x;
+    this->y = y;
+    dx = x - part->x;
+    dy = y - part->y;
+    v = *(boss->counter + gCortexTargetHopSteps);
+    steps = v;
+    stepsLeft = v;
+}
+
+CortexTargetCtrl::~CortexTargetCtrl()
+{
+}
+
+CortexTargetCtrl::CortexTargetCtrl(CortexBossCtrl *boss)
+{
+    stepsLeft = 0;
+    this->boss = boss;
+}
+
+/* The same shape as CortexBossCtrl::SetState below (and
+ * SetCortexTargetState above) without any state of its own. */
+void CortexCannonCtrl::SetState(MovingSprite *, s32 next)
+{
+    SetMode(next);
+}
+
+void CortexCannonCtrl::Update(MovingSprite *part)
+{
+    if (state == 0)
+        part->f.b.visible = 0;
+}
+
+CortexCannonCtrl::~CortexCannonCtrl()
+{
+}
+
+CortexCannonCtrl::CortexCannonCtrl()
+{
+}
+
+/* State 3 (Neo Cortex beaten) also stops the target (mode 9) and, unless
+ * the player has it, spawns the body slam power. */
+void CortexBossCtrl::SetState(MovingSprite *, s32 next)
+{
+    if (next == 3) {
+        target->mover->SetMode(9);
+        if (!(u8)gLevelState->HasTurboRun())
+            SpawnBodySlamPower(0xFFFF, 0x8C, 0x98, 0);
+    }
+    SetMode(next);
+}
+
+CortexBossCtrl::~CortexBossCtrl()
+{
+}
+
+CortexBossCtrl::CortexBossCtrl()
+{
 }

@@ -256,7 +256,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/crates/crate_grid_link.o \
                   $(C_BUILDDIR)/enemies/enemy_attack.o \
                   $(C_BUILDDIR)/objects/ctrl.o \
-                  $(C_BUILDDIR)/bosses/tiny_hop_pad.o \
+                  $(C_BUILDDIR)/bosses/tiny.o \
                   $(C_BUILDDIR)/enemies/enemy_ctrl.o \
                   $(C_BUILDDIR)/objects/effect_ctrl.o \
                   $(C_BUILDDIR)/vehicle/polar/polar_player.o \
@@ -295,7 +295,6 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/player/action_ctrl_hang.o \
                   $(C_BUILDDIR)/player/swim_ctrl.o \
                   $(C_BUILDDIR)/player/input_ctrl.o \
-                  $(C_BUILDDIR)/bosses/tiny_update.o \
                   $(C_BUILDDIR)/bosses/cortex.o \
                   $(C_BUILDDIR)/bosses/dingodile.o \
                   $(C_BUILDDIR)/objects/platform_create.o \

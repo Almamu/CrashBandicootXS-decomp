@@ -145,8 +145,7 @@ SECTIONS
         build/crashbandicootxs/src/player/input_ctrl_queue.o(.text);
         build/crashbandicootxs/src/bosses/mega_mix_update.o(.text);
         build/crashbandicootxs/src/bosses/mega_mix.o(.text);
-        build/crashbandicootxs/src/bosses/tiny_update.o(.text);
-        build/crashbandicootxs/src/bosses/tiny_hop_pad.o(.text);
+        build/crashbandicootxs/src/bosses/tiny.o(.text);
         build/crashbandicootxs/src/bosses/cortex.o(.text);
         build/crashbandicootxs/src/bosses/dingodile.o(.text);
         build/crashbandicootxs/src/bosses/dingodile_create.o(.text);
@@ -450,15 +449,15 @@ SECTIONS
         build/crashbandicootxs/src/player/input_ctrl.o(.gnu.linkonce.d._vt.9InputCtrl); /* gInputCtrlVtable */
         build/crashbandicootxs/src/player/input_ctrl_queue.o(.gnu.linkonce.d._vt.8BossCtrl); /* gBossCtrlVtable */
         build/crashbandicootxs/src/bosses/mega_mix_update.o(.gnu.linkonce.d._vt.11MegaMixCtrl); /* gMegaMixCtrlVtable */
-        build/crashbandicootxs/src/bosses/tiny_hop_pad.o(.gnu.linkonce.d._vt.17StompedHopPadCtrl); /* gStompedHopPadVtable */
-        build/crashbandicootxs/src/bosses/tiny_hop_pad.o(.gnu.linkonce.d._vt.15OneShotAnimCtrl); /* gOneShotAnimCtrlVtable */
-        build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.21UnusedOneShotAnimCtrl); /* gUnusedOneShotAnimCtrlVtable */
-        build/crashbandicootxs/src/bosses/tiny_update.o(.gnu.linkonce.d._vt.8TinyCtrl); /* gTinyVtable */
+        build/crashbandicootxs/src/bosses/tiny.o(.gnu.linkonce.d._vt.17StompedHopPadCtrl); /* gStompedHopPadVtable */
+        build/crashbandicootxs/src/bosses/tiny.o(.gnu.linkonce.d._vt.15OneShotAnimCtrl); /* gOneShotAnimCtrlVtable */
+        build/crashbandicootxs/src/bosses/tiny.o(.gnu.linkonce.d._vt.21UnusedOneShotAnimCtrl); /* gUnusedOneShotAnimCtrlVtable */
+        build/crashbandicootxs/src/bosses/tiny.o(.gnu.linkonce.d._vt.8TinyCtrl); /* gTinyVtable */
         build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.17CortexBossGemCtrl); /* gCortexBossGemVtable */
         build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.23CortexBossPlatformMover); /* gCortexBossPlatformMoverVtable */
         build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.14CortexShotCtrl); /* gCortexShotVtable */
         build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.16CortexTargetCtrl); /* gCortexTargetVtable */
-        build/crashbandicootxs/src/bosses/dingodile.o(.gnu.linkonce.d._vt.16CortexCannonCtrl); /* gCortexCannonVtable */
+        build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.16CortexCannonCtrl); /* gCortexCannonVtable */
         build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.14CortexBossCtrl); /* gCortexBossVtable */
         build/crashbandicootxs/src/bosses/dingodile.o(.gnu.linkonce.d._vt.18DingodileSharkCtrl); /* gDingodileSharkVtable */
         build/crashbandicootxs/src/bosses/dingodile.o(.gnu.linkonce.d._vt.23DingodileProjectileCtrl); /* gDingodileProjectileVtable */

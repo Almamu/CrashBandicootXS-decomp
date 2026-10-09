@@ -40,7 +40,7 @@ Update__10EffectCtrlP12MovingSprite UpdateEffectCtrl
 HandleEvent__10EffectCtrlP12MovingSpriteii EffectCtrlHandleEvent
 Reset__10EffectCtrl ResetEffectCtrl
 #
-# StompedHopPadCtrl, OneShotAnimCtrl (src/bosses/tiny_hop_pad.cpp)
+# StompedHopPadCtrl, OneShotAnimCtrl (src/bosses/tiny.cpp)
 _vt.17StompedHopPadCtrl gStompedHopPadVtable
 __17StompedHopPadCtrl CreateStompedHopPadCtrl
 _._17StompedHopPadCtrl DestroyStompedHopPadCtrl
@@ -273,8 +273,8 @@ UpdateSkidAnim__10ActionCtrl UpdateActionCtrlSkidAnim
 UpdateFacing__10ActionCtrl UpdatePlayerFacing
 # part 6: the boss controllers (include/boss_ctrl.hpp): MegaMixCtrl's
 # Update (src/bosses/mega_mix_update.cpp) and TinyCtrl
-# (src/bosses/tiny_update.cpp; its constructor, destructor and StartHop
-# are in cortex.cpp, part 7i)
+# (src/bosses/tiny.cpp; its constructor, destructor and StartHop
+# are part 7i's)
 Update__11MegaMixCtrlP12MovingSprite UpdateMegaMix
 _vt.8TinyCtrl gTinyVtable
 __8TinyCtrl CreateTiny
@@ -287,7 +287,8 @@ StartHop__8TinyCtrlP12MovingSprite StartTinyHop
 __15OneShotAnimCtrl CreateOneShotAnimCtrl
 #
 # part 6b: Dingodile and the Neo Cortex fight's controllers
-# (include/boss_ctrl.hpp, src/bosses/dingodile.cpp, dingodile_create.cpp)
+# (include/boss_ctrl.hpp, src/bosses/dingodile.cpp, dingodile_create.cpp;
+# the Cortex controllers' part at the end of cortex.cpp since #769)
 _vt.13DingodileCtrl gDingodileVtable
 __13DingodileCtrlUiUi CreateDingodile
 _._13DingodileCtrl DestroyDingodile
@@ -754,7 +755,8 @@ ClearActive__13PlatformMover ClearPlatformMoverActive
 #
 # part 7i: the rest of the Neo Cortex fight, Tiny's constructor,
 # destructor and StartHop, and the one-shot animation controllers
-# (include/boss_ctrl.hpp, include/platform.hpp, src/bosses/cortex.cpp)
+# (include/boss_ctrl.hpp, include/platform.hpp, src/bosses/cortex.cpp;
+# Tiny's and the one-shot controllers' part at the end of tiny.cpp since #769)
 _vt.15OneShotAnimCtrl gOneShotAnimCtrlVtable
 _._15OneShotAnimCtrl DestroyOneShotAnimCtrl
 _vt.21UnusedOneShotAnimCtrl gUnusedOneShotAnimCtrlVtable

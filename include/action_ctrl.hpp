@@ -278,7 +278,7 @@ static inline u8 IsSlippery(Player *p)
 /* Byte read-modify-writes of the player's flags2 (+0x0D), through a
  * pointer to it: as a member store, gcc's expansion leaves a dead `& 0`
  * whose 0 CSE then reuses for later zero stores, moving them (see
- * tiny_update.cpp). The mask arrives as an `s32` parameter so old_agbcp
+ * tiny.cpp). The mask arrives as an `s32` parameter so old_agbcp
  * materializes it before the load. */
 static inline void ActAndFlags0D(Player *part, s32 mask)
 {

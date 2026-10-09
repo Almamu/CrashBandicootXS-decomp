@@ -480,7 +480,7 @@ counts them by kind) and what the C++ needed when it was converted.
 |---|---|---:|---|---|---|
 | `src/objects/effect_ctrl.cpp` | `EffectCtrl` | 5 | old_agbcp | 0 -> 0 | #685 |
 | `src/objects/ctrl.cpp` | `Ctrl` | 10 | old_agbcp (was agbcc) | 7 pins, 2 asm -> 0 | 1 |
-| `src/bosses/tiny_hop_pad.cpp` | `StompedHopPadCtrl`, `OneShotAnimCtrl::Update` | 4 | old_agbcp (was agbcc) | 5 pins and an `ENTITY_SET_GONE_BIT_ASR` (6 pins, 1 asm), gotos -> 2 pins | 1 |
+| `src/bosses/tiny.cpp` (tiny_hop_pad.cpp until #769) | `StompedHopPadCtrl`, `OneShotAnimCtrl::Update` | 4 | old_agbcp (was agbcc) | 5 pins and an `ENTITY_SET_GONE_BIT_ASR` (6 pins, 1 asm), gotos -> 2 pins | 1 |
 | `src/player/input_ctrl_queue.cpp` | `InputCtrl`'s queue setters (input_ctrl.hpp since part 3), `BossCtrl` | 9 | agbcp | 0 -> 0 | 1 |
 | `src/bosses/mega_mix.cpp` | `MegaMixCtrl` | 7 | agbcp | 23 pins, 8 asm -> 0 | 1 |
 | `src/player/player_flags.cpp` | `Ctrl`'s `SetMode`, `SetAnimSet`, `SetTargetMotionY`, `StartTargetMotionY` (ctrl.hpp), with 40 C-linkage player accessors | 4 + 40 | agbcp | 16 pins -> 0 (plus `StorePlayerListEntry`'s 6 -> 0; `GetPlayerListEntry` keeps 3) | 3 |
@@ -503,8 +503,8 @@ counts them by kind) and what the C++ needed when it was converted.
 | `src/player/action_ctrl_left_ground.cpp` | `ActionCtrl::CheckLeftGround` | 1 | **old_agbcp** (was agbcc) | 3 pins -> 0 | 5a |
 | `src/player/kill_player.cpp` | `ActionCtrl::KillPlayer`, `UpdateSkidAnim`, `UpdateFacing` | 3 | **old_agbcp** (was agbcc) | 44 pins, 1 asm -> 1 pin | 5a |
 | `src/bosses/mega_mix_update.cpp` | `MegaMixCtrl::Update` (include/boss_ctrl.hpp) | 1 | old_agbcp | 3 pins, 2 keeps, gotos -> 1 pin, 1 keep, one goto | 6 |
-| `src/bosses/tiny_update.cpp` | `TinyCtrl` (include/boss_ctrl.hpp): `Update`, `SetState`, `PickHopTarget`, `SpawnFallingLeaves` | 4 | old_agbcp | 8 pins, 3 keeps, 1 asm -> 2 pins | 6 |
-| `src/bosses/dingodile.cpp` | `DingodileCtrl`, `DingodileShieldCtrl`, `DingodileProjectileCtrl`, `DingodileSharkCtrl`, and `CortexTargetCtrl`'s, `CortexCannonCtrl`'s and `CortexBossCtrl`'s methods (include/boss_ctrl.hpp) | 25 | old_agbcp | 7 pins, 2 holds, 2 uses, 1 const, the `PREP_VOBJ_CALL2` shared call and gotos, 2 asm labels -> 3 pins, 2 holds, 2 uses, 1 const, 1 asm label | 6b |
+| `src/bosses/tiny.cpp` (tiny_update.cpp until #769) | `TinyCtrl` (include/boss_ctrl.hpp): `Update`, `SetState`, `PickHopTarget`, `SpawnFallingLeaves` | 4 | old_agbcp | 8 pins, 3 keeps, 1 asm -> 2 pins | 6 |
+| `src/bosses/dingodile.cpp` | `DingodileCtrl`, `DingodileShieldCtrl`, `DingodileProjectileCtrl`, `DingodileSharkCtrl`, and `CortexTargetCtrl`'s, `CortexCannonCtrl`'s and `CortexBossCtrl`'s methods (include/boss_ctrl.hpp; at the end of cortex.cpp since #769) | 25 | old_agbcp | 7 pins, 2 holds, 2 uses, 1 const, the `PREP_VOBJ_CALL2` shared call and gotos, 2 asm labels -> 3 pins, 2 holds, 2 uses, 1 const, 1 asm label | 6b |
 | `src/bosses/dingodile_create.cpp` | `DingodileShieldCtrl`'s constructor, `DingodileCtrl`'s `StartMotion`, constructor, destructor and setters | 6 | agbcp | 2 pins, 1 use -> 0 | 6b |
 | `src/player/action_ctrl_event.cpp` | `ActionCtrl::HandleEvent` | 1 | old_agbcp | 3 consts, a `volatile` read -> the same | 5b |
 | `src/player/action_ctrl_hang.cpp` | `ActionCtrl::StateLeftGround`, `StateDying`, `StateWarpIn`, the 6 hang states, `ReleaseHang`, `DoSuperBodySlamShockwave`, `StartTornadoSpin` | 11 | old_agbcp | 15 pins, 1 const, 3 uses, 3 holds, 1 keep, 2 asm and a file-scope pool word, 2 volatile casts, a retyped store, an asm label -> 1 pin, 1 hold, 1 use | 5b |
@@ -554,7 +554,7 @@ counts them by kind) and what the C++ needed when it was converted.
 | `src/objects/platform_contact.cpp` | `Platform::CheckPlayerContact` | 1 | **old_agbcp** (was agbcc) | 4 pins -> 0 | 7d |
 | `src/objects/platform_collide.cpp` | `Platform::ResolveCollision` | 1 | old_agbcp | 2 pins, 2 holds, 2 uses, 1 keep, 1 asm label, gotos -> 1 keep, 1 asm label | 7d |
 | `src/objects/platform_create.cpp` | `Platform::Create` | 1 | old_agbcp | 1 keep, 8 retyped stores, 8 volatiles, the `MOVER_NEW` cast -> 0 | 7d |
-| `src/bosses/cortex.cpp` | `OneShotAnimCtrl`'s constructor and destructor (ctrl.hpp); `UnusedOneShotAnimCtrl`; `TinyCtrl`'s `StartHop`, destructor and constructor; `CortexBossCtrl::Update`, `SpawnCannon`, `SpawnTarget`; `CortexTargetCtrl::Update`, `SetState`, `FireShot`; `CortexShotCtrl`, `CortexBossGemCtrl` (boss_ctrl.hpp); `CortexBossPlatformMover` (platform.hpp); with `TinyHitStub` and `SpawnCortexBossGem` (C linkage) | 23 + 2 | old_agbcp | 49 pins, 13 keeps, 4 asm, 3 volatiles, 2 retyped stores, the `MOVER_NEW` cast, the per-site `SET_FRAME_R`/`MARK_GONE`/`GONE_SLOT_R4` macros and entity_bits.h's `ENTITY_SET_GONE_BIT_PINNED` (5 pins), gotos -> 1 pin, one goto | 7i |
+| `src/bosses/cortex.cpp` | `OneShotAnimCtrl`'s constructor and destructor (ctrl.hpp); `UnusedOneShotAnimCtrl`; `TinyCtrl`'s `StartHop`, destructor and constructor (these, with `TinyHitStub`, at the end of tiny.cpp since #769); `CortexBossCtrl::Update`, `SpawnCannon`, `SpawnTarget`; `CortexTargetCtrl::Update`, `SetState`, `FireShot`; `CortexShotCtrl`, `CortexBossGemCtrl` (boss_ctrl.hpp); `CortexBossPlatformMover` (platform.hpp); with `TinyHitStub` and `SpawnCortexBossGem` (C linkage) | 23 + 2 | old_agbcp | 49 pins, 13 keeps, 4 asm, 3 volatiles, 2 retyped stores, the `MOVER_NEW` cast, the per-site `SET_FRAME_R`/`MARK_GONE`/`GONE_SLOT_R4` macros and entity_bits.h's `ENTITY_SET_GONE_BIT_PINNED` (5 pins), gotos -> 1 pin, one goto | 7i |
 | `src/objects/platform_create.cpp` (again) | `Platform::Create`: `new CortexBossPlatformMover` (the C prototype before) | 0 | old_agbcp | 0 -> 0 | 7i |
 | the controller headers (ctrl.hpp, enemy_ctrl.hpp, input_ctrl.hpp, player_ctrl.hpp, action_ctrl.hpp, boss_ctrl.hpp, platform.hpp), sprite_obj.hpp, crate_list.hpp, and 38 `.cpp` files | every controller method takes a `MovingSprite *` (`SpriteObj` removed); `Ctrl::owner` a `MovingSprite *`; `PartList`'s items `Sprite *`s, `CrateList`'s `Crate *`s | 0 | (unchanged) | 0 -> 0 | 7b' |
 | `src/player/player_update.cpp` | `Player` (include/player.hpp): `ApplyVelocity`, `Update`, `TouchesBox`, destructor, `HasRampYTarget`, `ClearSpeedY`, `StopFalling` | 7 | **old_agbcp** (was agbcc) | 14 pins, 1 asm, 2 retyped reads, gotos, the destructor's slot call -> 0 | 8 |
@@ -718,7 +718,7 @@ same two pins, plus gotos for the block order, which a `switch` gives.
 (#662 step 2 dropped the `this` pin: with `part` pinned, `this` lands in
 r3 by itself.)
 
-Compilers: `ctrl.o` and `tiny_hop_pad.o` match as clean C++ only under
+Compilers: `ctrl.o` and `tiny.o` match as clean C++ only under
 old_agbcp (`SetTargetAnim`'s and `OneShotAnimCtrl::Update`'s
 constant-before-`ldrb`), so both moved to `OLD_AGBCC_OBJS`; their C was
 pinned to old_agbcc's code under agbcc. `mega_mix.o` and
@@ -1489,7 +1489,7 @@ Kept, each with a comment:
 
 Part 7i in numbers: cortex.c, the last file of the entity family and the
 last boss controller file, 25 functions: 23 methods of nine classes and
-two C-linkage functions (`TinyHitStub`, which tiny_update.cpp calls, and
+two C-linkage functions (`TinyHitStub`, which tiny.cpp calls, and
 `SpawnCortexBossGem`, which spawn_gems.c calls). Project-wide:
 `MATCH_HOLD_REG` 1457 -> 1404, `MATCH_KEEP` 47 -> 34, instruction-emitting
 `asm` 164 -> 160, retyped field stores 204 -> 202 and scoped volatiles 13
@@ -1594,7 +1594,7 @@ too: only mangled names changed, each mapped to the same C name.
   `CollidableList()` and `ForegroundList()` (sprite_obj.hpp, like
   `Crates()`) replace the `((PartList *)gTouchableList)` casts and the C
   `AddToPartList(gCollidableList, p)` calls of cortex.cpp, dingodile.cpp,
-  tiny_update.cpp, platform_create.cpp and the pickups. `InputCtrl::StateStart`
+  tiny.cpp, platform_create.cpp and the pickups. `InputCtrl::StateStart`
   kept `AddToPartList` for the camera lead, then a C struct, until part 10
   (`CollidableList()->Add(cameraLead)`).
 
@@ -1651,7 +1651,7 @@ player_collide.o and player_event.o were old_agbcc already.
   `p->HasRoomForAnim(0xB)`, `p->ClearSpeedY()`, `gPlayer->HasRampYTarget()`,
   `p->collisionQueue.Resolve()`, `p->mover->state`).
 - **Hand-written virtual calls go.** cortex.cpp's, dingodile.cpp's,
-  tiny_update.cpp's and mega_mix_update.cpp's slot-13 calls through
+  tiny.cpp's and mega_mix_update.cpp's slot-13 calls through
   `vtable->handleEvent` are `pl->HandleEvent(0, event, 0)`, byte for byte.
 - **The accessors** (player_flags.cpp) are `Player` methods,
   cxx_symbols.txt mapping them to the C names. `GetListEntry`'s 3 pins and
@@ -1750,7 +1750,7 @@ agbcc to old_agbcc's constant-before-`ldrb` order) and move to
   class (`TouchableList()->Add`, `DecorationList()`, and `AddUpdateOnly`
   for the update-only list, which holds bare entities). The bosses' own
   `(MovingSprite *)CreateMovingSprite` calls (cortex.cpp, dingodile.cpp,
-  tiny_update.cpp) are `MovingSprite::Create` too.
+  tiny.cpp) are `MovingSprite::Create` too.
 - **`InitLevelState`** (spawn_pickups.cpp; spawn_markers.cpp since #770) builds the C++ classes with
   `new`: `SpriteRenderer`, `SpriteBankSet`, `PaletteCache`, `OamBuffer`,
   `ObjVramCursor(0)`, `PaletteCycles`, and the key input, `KeyInput`
@@ -3053,12 +3053,13 @@ data.
 | Object | Tables | Classes |
 |---|---:|---|
 | `src/actor/inline_copies_actors.cpp` | 35 | every polar, jetpack and boss actor whose destructor is here: `RiderlessPolar` ... `PolarCheckpointCrate`, `JetpackCheckpointText` ... `JetpackRing`, `AirshipFireball`, the hovercraft's five weapons |
-| `src/bosses/cortex.cpp` | 6 | `UnusedOneShotAnimCtrl`, `CortexBossGemCtrl`, `CortexBossPlatformMover`, `CortexShotCtrl`, `CortexTargetCtrl`, `CortexBossCtrl` |
-| `src/bosses/dingodile.cpp` | 5 | `CortexCannonCtrl`, `DingodileSharkCtrl`, `DingodileProjectileCtrl`, `DingodileShieldCtrl`, `DingodileCtrl` |
+| `src/bosses/cortex.cpp` | 6 | `CortexBossGemCtrl`, `CortexBossPlatformMover`, `CortexShotCtrl`, `CortexTargetCtrl`, `CortexCannonCtrl`, `CortexBossCtrl` |
+| `src/bosses/tiny.cpp` | 4 | `StompedHopPadCtrl`, `OneShotAnimCtrl`, `UnusedOneShotAnimCtrl`, `TinyCtrl` |
+| `src/bosses/dingodile.cpp` | 4 | `DingodileSharkCtrl`, `DingodileProjectileCtrl`, `DingodileShieldCtrl`, `DingodileCtrl` |
 | `src/vehicle/jetpack/jetpack_crates.cpp` | 4 | `JetpackBalloonCrate` and its three kinds |
-| `src/enemies/enemy_ctrl.cpp`, `src/pickups/wumpa.cpp`, `src/bosses/tiny_hop_pad.cpp`, `src/menus/level_select.cpp` (since #767 one each in `src/objects/camera_lead.cpp` and `launch_pad.cpp`), `src/vehicle/polar/polar_pickups.cpp` | 2 each | `PeriodicSpawner`, `KnockedEnemyCtrl`; `Wumpa`, `Stopwatch`; `StompedHopPadCtrl`, `OneShotAnimCtrl`; `CameraLead`, `LaunchPad`; `PolarCollectedWumpa`, `PolarCrate` |
+| `src/enemies/enemy_ctrl.cpp`, `src/pickups/wumpa.cpp`, `src/menus/level_select.cpp` (since #767 one each in `src/objects/camera_lead.cpp` and `launch_pad.cpp`) | 2 each | `PeriodicSpawner`, `KnockedEnemyCtrl`; `Wumpa`, `Stopwatch`; `CameraLead`, `LaunchPad` |
 | `src/cutscene/cutscene_player.cpp`, `src/system/inline_copies_misc.cpp` (step 10b) | 2 each | `BgStreamer`, `BgLayerBase`; `LargeFont`, `SmallFont` |
-| 29 others (4 of them since step 10b) | 1 each | `Entity` (graphics), `Sprite`, `UiSprite`, `MovingSprite`, `GroundSprite`, `Player`, `EnemyCtrl`, `EffectCtrl`, `Crate`, `ExtraLife`, `ActionCtrl`, `PlayerCtrl`, `InputCtrl`, `BossCtrl`, `MegaMixCtrl`, `TinyCtrl`, `Platform`, `PlatformMover`, `LevelSelectEntry`, `HudPart`, `ActorSelf` (gActorVtable), `PolarPlayer`, `JetpackPlayer`, `JetpackCollectedWumpa` (vehicle/jetpack/jetpack_collected_wumpa.cpp), `LogoActor`; `Ctrl` (system/bios_util.cpp), `BgLayer` (level/bg_layer.cpp), `PooledBgLayer` (level/tile_slot_pool.cpp), `Font` (text/font.cpp) |
+| 30 others (4 of them since step 10b) | 1 each | `Entity` (graphics), `Sprite`, `UiSprite`, `MovingSprite`, `GroundSprite`, `Player`, `EnemyCtrl`, `EffectCtrl`, `Crate`, `ExtraLife`, `ActionCtrl`, `PlayerCtrl`, `InputCtrl`, `BossCtrl`, `MegaMixCtrl`, `Platform`, `PlatformMover`, `LevelSelectEntry`, `HudPart`, `ActorSelf` (gActorVtable), `PolarPlayer`, `PolarCollectedWumpa` (vehicle/polar/polar_pickups.cpp), `PolarCrate` (vehicle/polar/polar_crate.cpp), `JetpackPlayer`, `JetpackCollectedWumpa` (vehicle/jetpack/jetpack_collected_wumpa.cpp), `LogoActor`; `Ctrl` (system/bios_util.cpp), `BgLayer` (level/bg_layer.cpp), `PooledBgLayer` (level/tile_slot_pool.cpp), `Font` (text/font.cpp) |
 
 **Still C after step 10** (src/data/entity_vtables_7e3bec.c), 8 tables
 whose class's key method was C code: `gCtrlVtable` (`Ctrl::Update` was
@@ -3073,9 +3074,11 @@ menus.hpp, spawners.hpp) have no class with a vtable.
 
 **What the ROM's order says.** Within one object, g++ writes the
 tables in the order the ROM has them (cortex.cpp's six, inline_copies_actors.cpp's
-35). But the ROM interleaves some objects' tables: `TinyCtrl`'s
-(tiny_update.cpp) and `CortexCannonCtrl`'s (dingodile.cpp) sit among
-cortex.cpp's, and `PolarPlayer`'s, `PolarCollectedWumpa`'s,
+35). The ROM had `TinyCtrl`'s (then tiny_update.cpp) and
+`CortexCannonCtrl`'s (then dingodile.cpp) among cortex.cpp's; since
+#769 moved Tiny's, the Cortex fight's and Dingodile's file boundaries
+(tiny.cpp, cortex.cpp, dingodile.cpp), each of the three objects' tables
+is one run. The ROM still interleaves `PolarPlayer`'s, `PolarCollectedWumpa`'s,
 `PolarCrate`'s, `JetpackPlayer`'s, the balloon crates' and
 `JetpackCollectedWumpa`'s among inline_copies_actors.cpp's. If the original
 linked each table with its key-method object, as g++ does, those
@@ -4237,7 +4240,7 @@ in experiment 2 no matching workarounds at all. Plan:
    report. Expect most pins in the virtual-call and PMF code to go
    (experiment 2); drop each one that isn't needed.
 3. **Recheck the compiler** of each object as it's converted: ctrl.o
-   and tiny_hop_pad.o match as clean C++ only under old_agbcp, and were
+   and tiny.o match as clean C++ only under old_agbcp, and were
    held on agbcc by pins; expect more.
 4. **While the code is mixed,** C callers keep using the C structs and the
    C names. A class and its C struct must keep the same layout: add
