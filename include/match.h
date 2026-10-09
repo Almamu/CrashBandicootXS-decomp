@@ -150,11 +150,11 @@
 #define MATCH_KEEP_EXPR(T, e) ({ T _p = (e); asm("" : "+r"(_p)); _p; })
 
 /* BOX_ADDR(a): the address of a stack `struct aabb`, as its own pseudo
- * at each use (MATCH_KEEP_EXPR). The crate collision code passes the
- * same stack box to several calls and the ROM recomputes `add rN, sp,
- * #K` before each one; without this, cse keeps the address in a callee-
- * saved register across the calls. See docs/matching/archive/
- * sp-box-retry.md. */
+ * at each use (MATCH_KEEP_EXPR), for a ROM that recomputes `add rN, sp,
+ * #K` before each call taking the box. Unused since #662 round 4: the
+ * crate code it was written for passes standalone box locals to inline
+ * helpers instead (util.h's SetAabb, aabb.h), which gives the same code
+ * without an asm. See docs/matching/archive/sp-box-retry.md. */
 #define BOX_ADDR(a) MATCH_KEEP_EXPR(struct aabb *, a)
 
 #endif /* GUARD_MATCH_H */

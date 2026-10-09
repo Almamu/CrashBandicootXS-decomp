@@ -183,7 +183,14 @@ void PlatformMover::Update(MovingSprite *part)
      * insns. Testing the bit with `(now & 1)`, `% 2` or a reread of
      * gRoomFrameCount (the libcall keeps it in its register) leaves 5:
      * regmove folds the AND's result back into `now`. -fno-regmove
-     * splits it but moves `this` instead. */
+     * splits it but moves `this` instead.
+     * #662 round 4: the other side of the comparison is `part`: 57
+     * references give floor_log2 5, and 64 would give 6 (6 * 64 / 384 =
+     * 1.0 against `now`'s 0.83). The AND can't take `now`'s fifth
+     * reference without a second pseudo, and regmove's fixup_match_1
+     * merges any result of `now & 1` back into `now` because `now` dies
+     * there and isn't a remote constant (a global load has no REG_EQUAL
+     * note). */
     MATCH_HOLD_REG(u32, now, r5);
 
     if (k == 5 && timer > 0 && gRoomFrameCount - timer == 60) {

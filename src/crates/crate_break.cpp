@@ -9,7 +9,6 @@
 #include "level_state.hpp"
 
 extern "C" {
-#include "match.h"
 #include "pickups.h"
 #include "util.h"
 #include "player.h"
@@ -171,22 +170,21 @@ static inline void SetPlayerBusy(void)
  *
  * The shapes the ROM needs are in the comments below; the C was matched
  * over three passes (docs/matching/archive/huge-naked-retry-3.md). The
- * six BOX_ADDRs are crate_hit.cpp's PlayerAnimWouldTouch case (its #662 round 2 and 3
- * notes: the builder sites are cse1's within one basic block); here no
- * subset of them can go: -fno-gcse, which frees the overlap tests' sites
- * there, puts this function over 2000 lines off. */
+ * boxes are filled and mirrored through SetAabb and FlipAabbX/FlipAabbY,
+ * as in crate_hit.cpp's PlayerAnimWouldTouch (see there): each builder
+ * call then forms its own `add r0, sp, #N`, as in the ROM. The locals
+ * are declared in the ROM's stack order (they were one frame struct,
+ * whose `&f.b` arguments needed six BOX_ADDRs until #662 round 4). */
 void Crate::QueuePlayerCollision(s32 idx)
 {
-    struct {
-        struct aabb a;
-        struct aabb c;
-        struct aabb b;
-        u8 found;
-        struct vec2 p1;
-        struct vec2 p2;
-        struct vec2 p3;
-        struct vec2 pos;
-    } f;
+    struct aabb box;
+    struct aabb prev;
+    struct aabb pbox;
+    u8 found;
+    struct vec2 p1;
+    struct vec2 p2;
+    struct vec2 p3;
+    struct vec2 pos;
     s32 px;
     s32 py;
     s32 side;
@@ -228,12 +226,11 @@ void Crate::QueuePlayerCollision(s32 idx)
         offY = pb->offY;
         w = pb->w;
         h = pb->h;
-        SetAabbPos(&f.a, offX + px, offY + py);
-        SetAabbSize(&f.a, w, h);
+        SetAabb(&box, offX + px, offY + py, w, h);
         if (mirrorBits.flipX < 0)
-            f.a.x = px * 2 - (f.a.x + f.a.w);
+            FlipAabbX(&box, px);
         if (mirrorBits.flipY < 0)
-            f.a.y = py * 2 - (f.a.y + f.a.h);
+            FlipAabbY(&box, py);
     }
     px = Q8_TO_INT(gPlayer->x);
     py = Q8_TO_INT(gPlayer->y);
@@ -277,23 +274,18 @@ void Crate::QueuePlayerCollision(s32 idx)
         offY = hb->offY;
         w = hb->w;
         h = hb->h;
-        {
-            s32 bx = offX + px, by = offY + py;
-
-            SetAabbPos(BOX_ADDR(&f.b), bx, by);
-        }
-        SetAabbSize(BOX_ADDR(&f.b), w, h);
+        SetAabb(&pbox, offX + px, offY + py, w, h);
         if (gPlayer->mirrorBits.flipX < 0)
-            f.b.x = px * 2 - (f.b.x + f.b.w);
+            FlipAabbX(&pbox, px);
         if (gPlayer->mirrorBits.flipY < 0)
-            f.b.y = py * 2 - (f.b.y + f.b.h);
+            FlipAabbY(&pbox, py);
     }
-    bb = BOX_ADDR(&f.b);
-    if (!AabbOverlaps(&f.a, bb))
+    bb = &pbox;
+    if (!AabbOverlaps(&box, bb))
         goto tail;
-    f.found = 0;
+    found = 0;
     if (attack <= ATTACK_KIND_SPIN)
-        obj = ResolveStackHit(bb, &f.found);
+        obj = ResolveStackHit(bb, &found);
     else
         obj = this;
     code = HitResponseAt(gCrateHitResponse, &obj->kind, attack);
@@ -303,7 +295,7 @@ void Crate::QueuePlayerCollision(s32 idx)
         if (bnc > 4)
             code = 0;
     }
-    if (f.found != 0 && PlayerRingCount() != 0) {
+    if (found != 0 && PlayerRingCount() != 0) {
         s32 i;
 
         for (i = 0; i < gPlayer->listCount; i++) {
@@ -349,7 +341,7 @@ void Crate::QueuePlayerCollision(s32 idx)
             const struct sprite_anim *a = &gPlayer->bank->anims[gPlayer->tag];
 
             if (attack != ATTACK_KIND_SLIDE &&
-                PlayerHitboxOverlapsAt((struct hitbox_quad *)&a->box[0], &f.a, px, py)) {
+                PlayerHitboxOverlapsAt((struct hitbox_quad *)&a->box[0], &box, px, py)) {
                 Crate *e = obj->GetAbove();
 
                 if (e != 0 && (e->state & CRATE_STATE_MASK) != 1) {
@@ -366,7 +358,7 @@ void Crate::QueuePlayerCollision(s32 idx)
             } else if (gPlayer->dir != 0)
                 n += 2;
         }
-        if (f.found == 0)
+        if (found == 0)
             return;
         if (Q8_TO_INT(gPlayer->x) < Q8_TO_INT(x)) {
             if (attack != ATTACK_KIND_SLIDE || obj->GetAbove() != 0) {
@@ -405,12 +397,12 @@ tail:
     {
         /* Through a pointer local: the block copy then takes a copy of it
          * (`add r2, sp, #0x2c; adds r1, r2, #0`), as in the ROM. */
-        struct aabb *pc = &f.c;
+        struct aabb *pc = &prev;
 
-        *pc = f.a;
+        *pc = box;
     }
     if (attack != ATTACK_KIND_INVINCIBLE)
-        MarkStackTouched(&f.a);
+        MarkStackTouched(&box);
     {
         s32 offX;
         s32 offY;
@@ -422,26 +414,21 @@ tail:
         offY = q->offY;
         w = q->w;
         h = q->h;
-        {
-            s32 bx = offX + px, by = offY + py;
-
-            SetAabbPos(BOX_ADDR(&f.b), bx, by);
-        }
-        SetAabbSize(BOX_ADDR(&f.b), w, h);
+        SetAabb(&pbox, offX + px, offY + py, w, h);
         if (gPlayer->mirrorBits.flipX < 0)
-            f.b.x = px * 2 - (f.b.x + f.b.w);
+            FlipAabbX(&pbox, px);
         if (gPlayer->mirrorBits.flipY < 0)
-            f.b.y = py * 2 - (f.b.y + f.b.h);
+            FlipAabbY(&pbox, py);
     }
-    bb = BOX_ADDR(&f.b);
-    if (!AabbOverlapsInclusiveX(&f.a, bb))
+    bb = &pbox;
+    if (!AabbOverlapsInclusiveX(&box, bb))
         return;
     edge = 0;
     f21 = 0;
-    if (f.b.y < f.a.y)
+    if (pbox.y < box.y)
         f21 = 1;
     if (fallDistance != 0) {
-        if (!AabbOverlapsInclusiveX(&f.c, &f.b))
+        if (!AabbOverlapsInclusiveX(&prev, &pbox))
             return;
         if (gCrateKindUnbreakable[kind] != 0) {
             /* `side` is dead in this path, but the ROM keeps a reload of
@@ -456,17 +443,17 @@ tail:
                 side = 1;
             if (Q8_TO_INT(gPlayer->x) < Q8_TO_INT(x)) {
                 dirX = 1;
-                dx = Span(f.b.x, f.b.w, f.c.x) + 1;
+                dx = Span(pbox.x, pbox.w, prev.x) + 1;
             } else {
                 dirX = 2;
-                dx = Span(f.c.x, f.c.w, f.b.x) + 1;
+                dx = Span(prev.x, prev.w, pbox.x) + 1;
             }
             if (Q8_TO_INT(gPlayer->y) > Q8_TO_INT(y)) {
                 dirY = 4;
-                dy = Span(f.c.y, f.c.h, f.b.y);
+                dy = Span(prev.y, prev.h, pbox.y);
             } else {
                 dirY = 8;
-                dy = Span(f.b.y, f.b.h, f.c.y);
+                dy = Span(pbox.y, pbox.h, prev.y);
             }
             if (dx > 5 && f21 == 0) {
                 if ((gLevelState->maskLevel == MASK_LEVEL_NONE && ((gPlayer->f.flags >> 6) & 1) &&
@@ -483,26 +470,26 @@ tail:
             } else if (dx > 6 && dy > 1 && f21 != 0) {
                 s32 py2;
 
-                f.p1.x = gPlayer->x;
+                p1.x = gPlayer->x;
                 py2 = gPlayer->y;
-                pp = &f.p1;
+                pp = &p1;
                 pp->y = py2 - INT_TO_Q8(dy - 1);
                 gPlayer->speedY = 0;
-                SetEntityPos(gPlayer, f.p1.x, pp->y);
+                SetEntityPos(gPlayer, p1.x, pp->y);
                 PlayerQueue()->posCommitted = 1;
                 gPlayer->hitMask |= dirY;
                 return;
             } else if (dx <= 6 && dy > 2) {
                 s32 py2;
 
-                f.p2.x = gPlayer->x;
+                p2.x = gPlayer->x;
                 py2 = gPlayer->y;
-                PosPtr(&f.p2)->y = py2;
+                PosPtr(&p2)->y = py2;
                 if (dirX == 2)
-                    f.p2.x = INT_TO_Q8(dx) + f.p2.x;
+                    p2.x = INT_TO_Q8(dx) + p2.x;
                 else if (dirX == 1)
-                    f.p2.x -= INT_TO_Q8(dx);
-                SetEntityPos(gPlayer, f.p2.x, PosPtr(&f.p2)->y);
+                    p2.x -= INT_TO_Q8(dx);
+                SetEntityPos(gPlayer, p2.x, PosPtr(&p2)->y);
                 PlayerQueue()->posCommitted = 1;
                 gPlayer->HandleEvent(0, EVENT_BUMP, dirX);
                 gPlayer->hitMask |= dirX;
@@ -512,15 +499,15 @@ tail:
 
                 if (gPlayer->ctrlMode != 1)
                     return;
-                f.p3.x = gPlayer->x;
+                p3.x = gPlayer->x;
                 py2 = gPlayer->y;
-                PosPtr(&f.p3)->y = py2;
-                pp = &f.p3; /* shared with the p1 arm, where it gets r2 */
+                PosPtr(&p3)->y = py2;
+                pp = &p3; /* shared with the p1 arm, where it gets r2 */
                 if (dirY == 4)
                     pp->y = INT_TO_Q8(dy) + pp->y;
                 else if (dirX == 8)
                     pp->y -= INT_TO_Q8(dy);
-                SetEntityPos(gPlayer, f.p3.x, pp->y);
+                SetEntityPos(gPlayer, p3.x, pp->y);
                 PlayerQueue()->posCommitted = 1;
                 gPlayer->HandleEvent(0, EVENT_BUMP, dirY);
                 gPlayer->hitMask |= dirY;
@@ -553,17 +540,17 @@ tail:
             side = 1;
         if (Q8_TO_INT(gPlayer->x) < Q8_TO_INT(x)) {
             dirX = 1;
-            dx = Span(f.b.x, f.b.w, f.a.x) + 1;
+            dx = Span(pbox.x, pbox.w, box.x) + 1;
         } else {
             dirX = 2;
-            dx = Span(f.a.x, f.a.w, f.b.x) + 1;
+            dx = Span(box.x, box.w, pbox.x) + 1;
         }
         if (Q8_TO_INT(gPlayer->y) > Q8_TO_INT(y)) {
             dirY = 4;
-            dy = Span(f.a.y, f.a.h, f.b.y);
+            dy = Span(box.y, box.h, pbox.y);
         } else {
             dirY = 8;
-            dy = Span(f.b.y, f.b.h, f.a.y);
+            dy = Span(pbox.y, pbox.h, box.y);
         }
         if (ay == py) {
             if (ax == px) {
@@ -604,12 +591,12 @@ tail:
              * slope check's `ay += q->offY` loads into r1 with r0 as the
              * scratch, as in the ROM. Cross-jumping then merges the `else`
              * into edge_x, which also reloads dirX into r0. */
-            if (ay <= f.a.y + f.a.h) {
+            if (ay <= box.y + box.h) {
                 edge = 0;
                 if (side == 1) {
-                    if (f.b.x + f.b.w >= f.a.x && dx > 4)
+                    if (pbox.x + pbox.w >= box.x && dx > 4)
                         edge = 8;
-                } else if (f.b.x <= f.a.x + f.a.w && dx > 4)
+                } else if (pbox.x <= box.x + box.w && dx > 4)
                     edge = 8;
                 if (edge == 0) {
                     py += q->offY + q->h;
@@ -619,14 +606,14 @@ tail:
                      * computed in, as in the ROM. */
                     if (dirX == 1) {
                         ax += q->offX + q->w;
-                        px = f.b.x + f.b.w;
-                        r = FindLineCrossing(ax, ay, px, py, f.a.x);
+                        px = pbox.x + pbox.w;
+                        r = FindLineCrossing(ax, ay, px, py, box.x);
                     } else {
                         ax += q->offX;
-                        px = f.b.x;
-                        r = FindLineCrossing(ax, ay, px, py, f.a.x + f.a.w);
+                        px = pbox.x;
+                        r = FindLineCrossing(ax, ay, px, py, box.x + box.w);
                     }
-                    if ((r < 0 && f21 != 0 && dx > 4) || (r > 0 && r <= f.a.y))
+                    if ((r < 0 && f21 != 0 && dx > 4) || (r > 0 && r <= box.y))
                         edge = 8;
                     else
                         edge = dirX;
@@ -635,29 +622,29 @@ tail:
                 edge = dirX;
         } else {
             ay += q->offY;
-            if (ay < f.a.y)
+            if (ay < box.y)
                 goto edge_x;
             {
                 edge = 0;
                 if (side == 1) {
-                    if (f.b.x + f.b.w >= f.a.x && dx > 5)
+                    if (pbox.x + pbox.w >= box.x && dx > 5)
                         edge = 4;
-                } else if (f.b.x <= f.a.x + f.a.w && dx > 5)
+                } else if (pbox.x <= box.x + box.w && dx > 5)
                     edge = 4;
                 if (edge == 0) {
                     py += q->offY;
                     if (dirX == 1) {
                         ax += q->offX + q->w;
-                        px = f.b.x + f.b.w;
-                        r = FindLineCrossing(ax, ay, px, py, f.a.x);
+                        px = pbox.x + pbox.w;
+                        r = FindLineCrossing(ax, ay, px, py, box.x);
                     } else {
                         ax += q->offX;
-                        px = f.b.x;
-                        r = FindLineCrossing(ax, ay, px, py, f.a.x + f.a.w);
+                        px = pbox.x;
+                        r = FindLineCrossing(ax, ay, px, py, box.x + box.w);
                     }
                     if (gPlayer->ctrlMode == 1)
                         r += 2;
-                    if ((r < 0 && f21 == 0 && dx > 5) || (r > 0 && r >= f.a.y + f.a.h))
+                    if ((r < 0 && f21 == 0 && dx > 5) || (r > 0 && r >= box.y + box.h))
                         edge = 4;
                     else
                         edge = dirX;
@@ -673,9 +660,9 @@ tail:
     {
         s32 py2;
 
-        f.pos.x = gPlayer->x;
+        pos.x = gPlayer->x;
         py2 = gPlayer->y;
-        PosPtr(&f.pos)->y = py2;
+        PosPtr(&pos)->y = py2;
     }
     LIMIT_MIN(dx, 0);
     LIMIT_MIN(dy, 0);
@@ -699,7 +686,7 @@ tail:
             gPlayer->HandleEvent(0, EVENT_BUMP, 4);
             AddPlayerHit(gPlayer, 4);
             if (gPlayer->hitAxes != 8)
-                PosPtr(&f.pos)->y = INT_TO_Q8(dy) + PosPtr(&f.pos)->y;
+                PosPtr(&pos)->y = INT_TO_Q8(dy) + PosPtr(&pos)->y;
         }
         break;
     case 8:
@@ -714,40 +701,40 @@ tail:
             code = 1;
         }
         if (code == 1 || code == 2) {
-            PosPtr(&f.pos)->y -= INT_TO_Q8(dy - 1);
-            PosPtr(&f.pos)->y &= ~0xff;
-            SetEntityPos(gPlayer, f.pos.x, PosPtr(&f.pos)->y);
+            PosPtr(&pos)->y -= INT_TO_Q8(dy - 1);
+            PosPtr(&pos)->y &= ~0xff;
+            SetEntityPos(gPlayer, pos.x, PosPtr(&pos)->y);
             PlayerQueue()->posCommitted = 1;
         } else if (code == 0 || code == 2)
-            PosPtr(&f.pos)->y -= INT_TO_Q8(dy);
-        PosPtr(&f.pos)->y &= ~0xff;
+            PosPtr(&pos)->y -= INT_TO_Q8(dy);
+        PosPtr(&pos)->y &= ~0xff;
         break;
     case 1:
     case 2:
         hit = dirX;
-        if (!AabbOverlapsInclusiveX(&f.c, &f.b)) {
+        if (!AabbOverlapsInclusiveX(&prev, &pbox)) {
             code = 0;
             ClearStackTouched();
             hit = 0;
         } else {
             if ((*st & CRATE_STATE_MASK) == 0) {
                 if (hit == 2)
-                    f.pos.x += INT_TO_Q8(dx);
+                    pos.x += INT_TO_Q8(dx);
                 else if (hit == 1)
-                    f.pos.x -= INT_TO_Q8(dx);
+                    pos.x -= INT_TO_Q8(dx);
             }
             if (attack > ATTACK_KIND_JUMP) {
                 code = gCrateHitResponse[kind][attack];
                 if (attack == ATTACK_KIND_SPIN && code == 2)
                     code = 0;
                 if (attack == ATTACK_KIND_BODY_SLAM && code == 3)
-                    f.pos.x = gPlayer->x;
+                    pos.x = gPlayer->x;
             } else if (dy <= 4 && dx > 3 && f21 != 0) {
                 code = gCrateHitResponse[kind][attack];
                 if (code > 1)
                     code = 0;
             } else if (gCrateHitResponse[kind][attack] == 4) {
-                f.pos.x = gPlayer->x;
+                pos.x = gPlayer->x;
                 code = gCrateHitResponse[kind][attack];
             }
         }
@@ -762,16 +749,16 @@ tail:
             else if (dirY == 4 && prev == 0 && (vy >= dy - 1 || dy <= 2))
                 ok = 0;
             if (ok) {
-                SetEntityPos(gPlayer, f.pos.x, PosPtr(&f.pos)->y);
+                SetEntityPos(gPlayer, pos.x, PosPtr(&pos)->y);
                 PlayerQueue()->posCommitted = 1;
             }
         }
         break;
     }
     if (gPlayer->ctrlMode == 1 && kind == CRATE_KIND_TNT && code <= 1 &&
-        AabbOverlapsInclusiveX(&f.c, &f.b) == 1)
+        AabbOverlapsInclusiveX(&prev, &pbox) == 1)
         tgt->LightTnt();
-    PlayerQueue()->Add(tgt, attack, code, edge, dy, f.pos, hit, (struct byte_arg){ f20 },
+    PlayerQueue()->Add(tgt, attack, code, edge, dy, pos, hit, (struct byte_arg){ f20 },
                        (struct byte_arg){ f21 });
 }
 

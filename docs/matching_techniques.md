@@ -462,9 +462,14 @@ sorts itself out. See
 
 **Stack-box addresses** are a separate problem: gcc CSEs `&box` into one
 pseudo held in a callee-saved register across calls, where the ROM
-recomputes `add r0, sp, #K` before each call. `BOX_ADDR(&box)` on every
-use makes each its own opaque value. The constant-init form doesn't work
-there, because its input is still CSE'd
+recomputes `add r0, sp, #K` before each call (and reads `box.y` at its
+own sp offset while a pointer to the box is live). Pass a standalone
+box local (not a member of a frame struct) to an inline helper instead:
+util.h's SetAabb, aabb.h's FlipAabbX/FlipAabbY and field accessors.
+The inline's argument is the constant `frame + K`, so nothing holds the
+address for cse to reuse (#662 round 4, [Pruning
+workarounds](#pruning-workarounds)). `BOX_ADDR(&box)` on every use,
+which made each its own opaque value, did the same with an asm
 ([sp-box-retry.md](./matching/archive/sp-box-retry.md),
 `PlayerAnimWouldTouchCrate`).
 
@@ -1202,6 +1207,44 @@ local-alloc's quantity order):
   load is a fourth quantity); `ReleaseHang` (find_reload_regs spills the
   first free call-clobbered register in number order, so r2 must be live
   at the add, and nothing is).
+
+**Round 4, objects/, crates/ and actor/ (C++), from the compiler
+source.** 10 functions -> 5. One mechanism was behind five of them:
+
+- **A stack box's address through an inline argument.** A `struct
+  aabb` is 16 bytes, so BLKmode, and Thumb's GO_IF_LEGITIMATE_ADDRESS
+  rejects any frame address in a mode under 4 bytes (BLKmode's size is
+  0). expr.c then copies a box local's address into a pseudo at every
+  use (`&f.b` for a call argument, `b.y` for a field read), and cse1
+  ties the copies to the first one, or to a pointer local already
+  holding it. The ROM recomputes `add r0, sp, #16` per call and reads
+  the fields at their sp offsets. integrate.c expands an inline
+  function's arguments with EXPAND_SUM, where a standalone local's
+  address is `(plus virtual-stack-vars 16)` itself; process_reg_param
+  records it in const_equiv_map and substitutes it for the parameter,
+  so the inlined body has no pseudo to tie. aabb.h's field accessors
+  (AabbX/AabbY/AabbW/AabbH) and FlipAabbX/FlipAabbY and util.h's
+  SetAabb (SetAabbPos then SetAabbSize) replace the crate box builders'
+  six `BOX_ADDR`s (with the frame structs split into locals in the
+  same stack order: a member's address is still copied),
+  `MovingSprite::TouchPlayer`'s volatile read and
+  `Platform::ResolveCollision`'s `MATCH_KEEP` and GetSpriteHitbox
+  alias. A private old_agbcp built without that BLKmode test compiles
+  the two objects' plain code to the ROM's bytes as well, which is how
+  the mechanism was confirmed.
+- **Kept, with the exact condition in each comment:**
+  `CameraLead::Reset` (the `and`'s dying 1 is tied to its result by
+  both regmove's fixup_match_1 and local-alloc's combine_regs; only a
+  1 that lives on or is a remote constant escapes, and the toggle shows
+  either), `Sprite::CheckPlayerContact` (cse's insert_regs puts every
+  SImode 1 in one quantity, so the gone bit's shift takes r6 unless r6
+  is set again first, and then the OR's result moves into r6),
+  `ActorSelf::Draw` (local-alloc: no quantity holds r4 over the
+  projection's life, and SMALL_REGISTER_CLASSES turns off block_alloc's
+  widened lives; one variable for the projection and the screen x gets
+  4 lines off, regmove's replacement_quality then picks the mask's
+  register), `PlatformMover::Update` and `SelectActorCategory`
+  (global-alloc priorities 0.83/0.74 and 0.129/0.133).
 
 ## Survey and conversion record (#576)
 

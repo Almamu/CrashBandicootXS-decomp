@@ -38,6 +38,45 @@ struct vec2 {
 };
 COMPILE_TIME_ASSERT(aabb_h, sizeof(struct vec2) == 8);
 
+/* A box's fields read through its address, and the box mirrored around
+ * a centre on one axis (`x = cx * 2 - (x + w)`). As inlines taking the
+ * box's address, a stack box's `&box` reaches the inlined body as the
+ * constant `frame + offset` (integrate.c substitutes it for the
+ * parameter) instead of a register: each field is read at its own sp
+ * offset, and nothing holds the address for cse to reuse. Written as
+ * `box.y` instead, a BLKmode local's fields are read through a copy of
+ * its address, which cse ties to any register already holding it
+ * (#662 round 4; see SetAabb in util.h). */
+static inline s32 AabbX(const struct aabb *box)
+{
+    return box->x;
+}
+
+static inline s32 AabbY(const struct aabb *box)
+{
+    return box->y;
+}
+
+static inline s32 AabbW(const struct aabb *box)
+{
+    return box->w;
+}
+
+static inline s32 AabbH(const struct aabb *box)
+{
+    return box->h;
+}
+
+static inline void FlipAabbX(struct aabb *box, s32 cx)
+{
+    box->x = cx * 2 - (box->x + box->w);
+}
+
+static inline void FlipAabbY(struct aabb *box, s32 cy)
+{
+    box->y = cy * 2 - (box->y + box->h);
+}
+
 /* A box's `w`, read through a volatile: some code re-reads a just-filled
  * box's width (a box with no width is empty) straight from its stack
  * slot rather than through the register already holding the box's
