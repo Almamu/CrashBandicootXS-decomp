@@ -544,7 +544,20 @@ void DingodileShieldCtrl::Update(MovingSprite *part)
              * holds above moves everything else). #662 round 3: with
              * `acc = BLDCNT_TGT1_OBJ` cse1 knows each `|=` operand and
              * folds the whole chain into one constant, so the chain needs
-             * a starting value cse can't see. */
+             * a starting value cse can't see. #662 round 8, from the -da
+             * dumps: it is combine that folds it. cse1 keeps all eight
+             * `|=`s, each with a REG_EQUAL note of the running value (a
+             * constant load is no cheaper than the ior), and combine then
+             * merges each constant set into the next ior. The matched
+             * corpus does have unfolded constant ORs (tools/rtl_corpus.py's
+             * unfolded-const-chain, which corrects round 7):
+             * JetpackPlayer::Draw and PolarPlayer::Draw, `attr1 = 0x100;
+             * if (scale <= 0xff) attr1 |= 0x200;`, where the start value
+             * is set in another basic block and combine's links stay
+             * inside one. The ROM's `movs r5, #16` opens case 0's block,
+             * the chain's own. u16/s16/u32/s32 accumulators, one local or
+             * two, and one variable shared with the width test all fold
+             * (tools/natural_enum.py: 36-101 instructions off). */
             MATCH_HOLD_REG(u32, acc, r5);
             u32 w;
 

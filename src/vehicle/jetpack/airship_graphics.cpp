@@ -208,7 +208,25 @@ void Airship::LoadGraphics()
  * see it and loop.c has no outer loop to move it to; here that is the
  * set at the top of the row body (78 lines). u8/u16 masks or pixel
  * values (the halfword AND of round 7's player code) are 8 lines off or
- * worse (45-89). */
+ * worse (45-89).
+ *
+ * #662 round 8 (tools/natural_enum.py over the types, helper forms,
+ * statement orders, loop forms and mask placements; tools/rtl_corpus.py
+ * over the matched corpus): a ternary MeterPx (`return v != 0 ? 0x10 |
+ * v : 0;`) leaves only the first byte's AND wrong (2 instructions): its
+ * if/else join ends cse1's block before the second byte's AND. Plain C
+ * gives the ROM exactly when the pixel loop's mask is a register copy of
+ * a variable set outside it (`u32 mask = 0xf;` at function scope, `u32
+ * m = mask;` in the pixel loop, with the ternary): cse1 can't see the
+ * constant at the uses, so the ANDs keep the mask first; loop.c moves the
+ * copy to the pixel loop's preheader, after the copied entry test, so it
+ * stays in the row loop; and reload rematerialises `mask`'s REG_EQUIV 15
+ * there. Both twins match that way, but the copy is redundant (junk
+ * under #662's rules). An inline helper's parameter (integrate.c copies a
+ * parameter that isn't const) is the natural source of such a copy, but
+ * every helper shape tried is 51-99 instructions off, and no matched
+ * function has the copy (rtl_corpus.py's copy-of-const-in-loop finds
+ * only MainLoop's call arguments). */
 static inline u32 MeterPx(u32 v)
 {
     u32 r = 0;

@@ -27,6 +27,18 @@ plainer version doesn't.
   then in pairs and pin bundles, rebuilds the object through the
   Makefile and keeps every removal that leaves the object
   byte-identical (see [Pruning workarounds](#pruning-workarounds)).
+- [tools/natural_enum.py](../tools/natural_enum.py) searches natural
+  rewrites of one function (#662 round 8): a spec file lists the
+  function's text with slots and, per slot, the alternatives a
+  programmer would write (a type, a statement order, a helper, a loop
+  form). Every combination of up to three changes, then a beam search,
+  is compiled with the object's own compiler and flags and scored by
+  instructions off the ROM. The winner is judged by hand.
+- [tools/rtl_corpus.py](../tools/rtl_corpus.py) compiles every object
+  again with `-da -g` (`build`, about 530 MB) and runs queries over the
+  per-pass RTL dumps of the matched functions (`list`, `query NAME
+  --src`), each finding one situation that decides a kept workaround,
+  with the C line behind it.
 - The process (isolated compiles, clean rebuilds, `make compare`, the
   report) is in [workflow.md](./workflow.md) and
   [CONTRIBUTING.md](../CONTRIBUTING.md#verification). An isolated compile
@@ -1668,6 +1680,27 @@ builds and comparing each function:
   lr moved after r11 in the allocation order, which alone changes
   nothing); turning off reload_cse's constant-to-register operand
   substitution changes all four other string functions.
+
+**Round 8, the ConvertTiles masks, DingodileShieldCtrl::Update and
+Credits::LoadLogos (RTL corpus and natural-only enumeration).** Nothing
+freed; each comment has the new evidence:
+
+- **The mask copy is a register copy.** Plain C gives both ConvertTiles
+  exactly with a ternary MeterPx and the pixel loop's mask copied from a
+  function-scope variable (`u32 mask = 0xf;` ... `u32 m = mask;`): cse1
+  can't see the constant at the ANDs, loop.c moves the copy into the
+  pixel loop's preheader and reload rematerialises the 15 there. The
+  copy is redundant, so it isn't used; the ternary alone is 2
+  instructions off.
+- **combine, not cse1, folds a constant chain.** cse1 keeps
+  Dingodile's natural `|=` chain (with REG_EQUAL notes) and combine
+  folds it. Matched code does leave a constant OR unfolded when its
+  start is in another basic block: JetpackPlayer::Draw and
+  PolarPlayer::Draw (`attr1 = 0x100; if (...) attr1 |= 0x200;`). This
+  corrects round 7.
+- **PRE moves whatever is anticipatable on every path.** The invariant
+  shifts that matched code computes after a loop are on a conditional
+  path (GAX2_estimate's `if (i == 0)`); LoadLogos' palette copy has none.
 
 ## Survey and conversion record (#576)
 
