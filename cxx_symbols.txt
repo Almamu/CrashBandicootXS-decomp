@@ -694,8 +694,7 @@ Reset__9Stopwatch ResetStopwatch
 _._9Stopwatch DestroyStopwatch
 __9Stopwatch InitStopwatch
 #
-# part 7f: the crate list (include/crate_list.hpp; src/crates/crate_list*.cpp;
-# the constructor in src/objects/part_list.cpp)
+# part 7f: the crate list (include/crate_list.hpp; src/crates/crate_list*.cpp)
 __9CrateListi InitCrateList
 _._9CrateList DestroyCrateList
 Reset__9CrateList ResetCrateList

@@ -12,7 +12,7 @@
  * (docs/headers_plan.md).
  *
  * The crate list (`CrateList`, include/crate_list.hpp) is set up by
- * InitCrateList, which src/objects/part_list.cpp holds for ROM order. */
+ * InitCrateList (src/crates/crate_list_unlink.cpp). */
 
 #include "core.h"
 #include "math_util.h"
