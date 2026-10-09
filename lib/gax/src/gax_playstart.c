@@ -102,7 +102,19 @@ u8 GAX2_init(struct GaxSongHeader *p)
      * (0.45), the pointer then 4 over 18 (0.44). #662 round 7: a
      * private agbcc with other allocno_compare formulas (refs / length,
      * (log2 + 1) * refs / length, log2 * refs, refs * refs / length)
-     * leaves the plain code 102-480 lines off, against 88. */
+     * leaves the plain code 102-480 lines off, against 88. #662 round 8
+     * (tools/rtl_index.py, the .greg dump's sorted order): the pseudo
+     * the size races is not the format pointer (r2 either way) but the
+     * copy of `&gGaxPlayerState` the outHalf store loads through, 3
+     * refs over 7 (1 * 3 / 7 = 0.43): at 0.40 the size goes after it
+     * and gets r4, at 0.45 before it and gets r3 (the ROM's `mov r4,
+     * sl`). tools/natural_enum.py (every pair of 121 edits): two single
+     * edits give that order with no use, the outHalf store after the
+     * test (the copy then lives 9 insns) and `size -=` before `buf +=`
+     * below (the size then lives 14), but each moves its statement in
+     * the ROM (4 lines off). ALIGN4 as an inline (by pointers, or one
+     * computing the pad), a block-local `g` for any 1-3 statements of
+     * this carve, the test reversed or through a local are 12-91 off. */
     MATCH_USE(size);
     gGaxPlayerState->outHalf = 0;
     if (size < gGaxPlayerState->format->frames * 2)
@@ -145,7 +157,19 @@ u8 GAX2_init(struct GaxSongHeader *p)
              * 9 references (cse1 folds the second add into fmt + 8);
              * every scalar local zero-initialized as GAX2_estimate
              * declares them is 712 lines off, `fmt = 0` or maxRate
-             * declared first 30. */
+             * declared first 30. Round 8 (tools/rtl_index.py): five of
+             * maxRate's 18 references are the zero stores of the state
+             * init (`numSfx`, `state`, `curChannelIdx`, `echoTaps`,
+             * `skipSongChannels`), which cse gives maxRate's 0 (the
+             * ROM's `mov r4, r8`); the tap loops count theirs by loop
+             * depth. tools/natural_enum.py (all pairs of 114 edits,
+             * triples of the 22 hand-written ones: a `rate` local, the
+             * walk as `for (...; i++, tap++)`, `maxRate < tap->rate`,
+             * `len` through `g->format`, declaration orders, `if
+             * (maxRate)`, each other local zero-initialized as
+             * GAX2_estimate's are, alone or together) finds nothing
+             * under the plain code's 15 lines; without `fmt` in `len`,
+             * fmt's range ends early and it is 70 off. */
             MATCH_USE(maxRate);
             tap++;
         }

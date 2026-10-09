@@ -672,7 +672,8 @@ in three places. Each has a cause in agbcc_arm's source and a C fix:
   the ROM: jump.c turns the first into a conditional move (`movge`), cse
   drops the second compare, and the ccfsm conditionalizes the second if.
   gcc then warns that `neg` might be used uninitialized (`-Werror`), so a
-  `MATCH_HOLD(neg)` defines it first; it emits nothing.
+  `MATCH_HOLD(neg)` defined it first; it emits nothing. (Since #662
+  round 8 string_arm.o is built with -Wno-uninitialized instead.)
 - **`movne r4, #0` after `movne r4, #45`.** The draft's `subne r4, r4,
   #45` comes from `reload_cse_move2add` (reload1.c), which rewrites a
   constant load as an add from the register's last known constant. It
@@ -681,7 +682,9 @@ in three places. Each has a cause in agbcc_arm's source and a C fix:
   later `neg = 0` (SImode) stays a `mov`.
 - **The swap's temporary in r0 and `j` in r1.** The swap loads both bytes
   first (`lo = b[neg]; hi = b[j]; b[j] = lo; b[neg] = hi;`), with `hi`
-  pinned to r0 and `j` to r1, as in the ROM.
+  pinned to r0 and `j` to r1, as in the ROM. (#662 round 8: `j` and
+  `hi` are `digit` and `num` reused, the SWI's r1 and r0, with no pins,
+  as `neg` is reused for the left index.)
 
 Also needed, from the earlier drafts: the pins on `digit`, `b`, `len`
 and `neg`, `MATCH_CONST(len, 0)`, `(ten = 10)`, and a `MATCH_KEEP(base)`

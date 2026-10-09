@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Index the matched corpus at the RTL level and query it (#662).
 
-    tools/rtl_corpus.py build [-j N] [--dir D] [--only RE] [--no-dumps]
+    tools/rtl_corpus.py build [-j N] [--dir D] [--only RE] [--no-dumps] [--check]
     tools/rtl_corpus.py list                       the queries
     tools/rtl_corpus.py query NAME [--dir D] [--func F] [--src]
                         [--file RE] [--grep RE] [--matched] [--limit N]
@@ -101,6 +101,19 @@ def build_one(d, src, obj, cpp, cc1, keep):
     )
     if r.returncode:
         return src, "cc1 failed: " + r.stderr.decode()[:200]
+    if ARGS.check:
+        s_ = stem + ".s"
+        with open(s_, "a") as f:
+            f.write("\t.text\n\t.align\t2, 0\n")  # the Makefile's ZERO_PAD_TEXT
+        o = stem + ".o"
+        subprocess.run(["arm-none-eabi-as", "-mcpu=arm7tdmi", "-mthumb-interwork", "-I",
+                        os.path.join(ROOT, "asminclude"), "--defsym", "NON_MATCHING=0", "-o", o, s_],
+                       check=True)
+        ref = os.path.join(ROOT, "build/crashbandicootxs", obj + ".o")
+        differs = _text(o) != _text(ref)
+        os.unlink(o)
+        if differs:
+            return src, ".text differs from build/ with -da -g"
     for p in ("bp", "range", "sched", "sched2"):
         try:
             os.unlink(ii + "." + p)
@@ -116,6 +129,11 @@ def build_one(d, src, obj, cpp, cc1, keep):
             if name == base or name.startswith(base + ".") or name == os.path.basename(stem) + ".s":
                 os.unlink(os.path.join(os.path.dirname(ii), name))
     return src, None
+
+
+def _text(o):
+    return subprocess.run(["arm-none-eabi-objcopy", "-O", "binary", "-j", ".text", o, "/dev/stdout"],
+                          capture_output=True).stdout
 
 
 def cmd_build(args):
@@ -696,6 +714,9 @@ def f_pre(gcse_path, gcse):
     out = []
     if not os.path.exists(gcse_path):
         return out
+    names = printable_names(gcse_path[:-len('.gcse')] + '.greg')
+    seen = {}
+    raw = None
     fn = None
     with open(gcse_path, errors='replace') as f:
         lines = f.readlines()
@@ -705,12 +726,15 @@ def f_pre(gcse_path, gcse):
     for line in lines:
         m = FUNC_RE.match(line)
         if m:
-            fn = m.group(1)
+            raw = m.group(1).strip()
+            n = seen.get(raw, 0)
+            seen[raw] = n + 1
+            fn = names.get((raw, n), raw)
             continue
         m = PRE_RE.match(line)
         if m and fn:
             uid = int(m.group(1))
-            loc, text = locs.get(fn, {}).get(uid, ((None, 0), ''))
+            loc, text = locs.get(raw, {}).get(uid, ((None, 0), ''))
             out.append({'func': fn, 'loc': loc, 'detail': 'redundant insn %d (expr %s, bb %s) -> reg %s: %s' % (
                 uid, m.group(2), m.group(3), m.group(4), short(text, 100))})
             continue
@@ -735,6 +759,143 @@ def f_reload_del(lreg, greg):
     return out
 
 
+def printable_names(greg_path):
+    """toplev.c names the .gcse dump's functions by DECL_NAME (`Update`),
+    every other dump by the printable name (`void Foo::Update()`). This
+    maps (DECL_NAME, n-th occurrence) to the printable name, in order."""
+    out = {}
+    seen = {}
+    if not os.path.exists(greg_path):
+        return out
+    with open(greg_path, errors='replace') as f:
+        for line in f:
+            m = FUNC_RE.match(line)
+            if m:
+                full = m.group(1).strip()
+                short_ = pretty_name(full).split('::')[-1]
+                n = seen.get(short_, 0)
+                seen[short_] = n + 1
+                out[(short_, n)] = full
+    return out
+
+
+CONFL_RE = re.compile(r'^;; (\d+) conflicts: (.*)$')
+
+
+def f_race(greg_path, lreg):
+    """Pairs of conflicting pseudos global-alloc took in nearly the same
+    priority (within 15%): which went first and which hard register each
+    got. A workaround that adds or removes a reference usually flips one."""
+    out = []
+    if not os.path.exists(greg_path):
+        return out
+    per = {}
+    fn = None
+    in_disp = False
+    with open(greg_path, errors='replace') as f:
+        for line in f:
+            m = FUNC_RE.match(line)
+            if m:
+                fn = m.group(1).strip()
+                per[fn] = ([], {}, {})
+                in_disp = False
+                continue
+            if fn is None:
+                continue
+            order, confl, disp = per[fn]
+            m = SORTED_RE.match(line)
+            if m:
+                order.append((int(m.group(1)), int(m.group(2)), int(m.group(3))))
+                continue
+            m = CONFL_RE.match(line)
+            if m:
+                confl[int(m.group(1))] = {int(x) for x in m.group(2).split()}
+                continue
+            if line.startswith(';; Register dispositions'):
+                in_disp = True
+                continue
+            if in_disp:
+                if not line.strip():
+                    in_disp = False
+                    continue
+                for a, b in re.findall(r'(\d+) in (\d+)', line):
+                    disp[int(a)] = int(b)
+
+    def prio(refs, ll):
+        lg = refs.bit_length() - 1 if refs > 0 else 0
+        return lg * refs / ll if ll else 0.0
+
+    for fn, (order, confl, disp) in per.items():
+        first_set = {}
+        for kind, uid, text, loc, b in lreg.get(fn, []):
+            ds = set_dest_src(text) if kind == 'insn' else None
+            if ds:
+                m = re.match(r'\(reg(?:/\w+)*:\w+ (\d+)\)', ds[0])
+                if m and int(m.group(1)) not in first_set:
+                    first_set[int(m.group(1))] = loc
+        for i, (a, ra, la) in enumerate(order):
+            pa = prio(ra, la)
+            for b_, rb, lb in order[i + 1:i + 12]:
+                pb = prio(rb, lb)
+                if not pa or not pb or b_ not in confl.get(a, ()) or pb / pa <= 0.85:
+                    continue
+                hard = lambda r: ('r%d' % disp[r]) if r in disp else 'mem'
+                out.append({'func': fn, 'loc': first_set.get(a, (None, 0)),
+                            'detail': 'reg %d (%d refs / %d = %.3f -> %s) before reg %d (%d / %d = %.3f -> %s, set %s), margin %.1f%%' % (
+                                a, ra, la, pa, hard(a), b_, rb, lb, pb, hard(b_), loc_str(first_set.get(b_, (None, 0))),
+                                100 * (1 - pb / pa))})
+    return out
+
+
+LOOPMOVE_RE = re.compile(r'^Insn (\d+): regno (\d+) \(life (\d+)\), (.*) moved to (\d+)')
+GIV_RE = re.compile(r'^Insn (\d+): giv reg (\d+) src reg (\d+) (.*)$')
+
+
+def f_loop(loop_path, loop):
+    """loop.c's work: each invariant it moved out of a loop and each
+    induction variable (giv) it found, at the C line of the insn."""
+    out = []
+    if not os.path.exists(loop_path):
+        return out
+    locs = {fn: {uid: loc for kind, uid, text, loc, b in xs} for fn, xs in loop.items()}
+    fn = None
+    with open(loop_path, errors='replace') as f:
+        for line in f:
+            m = FUNC_RE.match(line)
+            if m:
+                fn = m.group(1).strip()
+                continue
+            m = LOOPMOVE_RE.match(line)
+            if m and fn:
+                fl = locs.get(fn, {})
+                loc = fl.get(int(m.group(1))) or fl.get(int(m.group(5))) or (None, 0)
+                out.append({'func': fn, 'loc': loc,
+                            'detail': 'invariant reg %s (life %s, %s) moved out' % (m.group(2), m.group(3), m.group(4).strip())})
+                continue
+            m = GIV_RE.match(line)
+            if m and fn:
+                out.append({'func': fn, 'loc': locs.get(fn, {}).get(int(m.group(1)), (None, 0)),
+                            'detail': 'giv reg %s from biv %s: %s' % (m.group(2), m.group(3), short(m.group(4), 100))})
+    return out
+
+
+def f_flow2_del(greg, final):
+    """A load, store or constant present after reload and gone from the
+    final RTL (flow2's dead-code removal, jump2's cross-jumping)."""
+    out = []
+    for fn, forms_ in greg.items():
+        after = {uid for kind, uid, text, loc, b in final.get(fn, [])}
+        for kind, uid, text, loc, b in forms_:
+            if kind != 'insn' or uid in after:
+                continue
+            ds = set_dest_src(text)
+            if not ds:
+                continue
+            if ds[0].startswith('(mem') or ds[1].startswith('(mem') or ds[1].startswith('(const_int'):
+                out.append({'func': fn, 'loc': loc, 'detail': 'insn %d deleted after reload: %s' % (uid, short(text, 120))})
+    return out
+
+
 def index_dumps(base):
     """The index features of one object's dumps (BASE.<pass>)."""
     rtl = forms(base + '.rtl')
@@ -745,6 +906,7 @@ def index_dumps(base):
     greg = forms(base + '.greg')
     gcse = forms(base + '.gcse')
     final = forms(base + '.jump2') or greg
+    loop = forms(base + '.loop')
     return {
         'narrow_const': f_narrow_const(rtl, cse),
         'const_regs': f_const_regs(lreg),
@@ -753,6 +915,9 @@ def index_dumps(base):
         'alloc': f_alloc(base + '.greg', base + '.lreg', lreg),
         'pre': f_pre(base + '.gcse', gcse),
         'reload_del': f_reload_del(lreg, greg),
+        'race': f_race(base + '.greg', lreg),
+        'loop': f_loop(base + '.loop', loop),
+        'flow2_del': f_flow2_del(greg, final),
     }
 
 
@@ -764,6 +929,9 @@ INDEX_KINDS = {
     'alloc': "every pseudo global-alloc saw: rank, refs, live length, priority, hard reg, lreg's notes",
     'pre': 'a gcse PRE deletion (with the reaching register) or insertion',
     'reload_del': 'a load or store present before global-alloc and gone after it',
+    'race': 'two conflicting pseudos global-alloc took within 15% priority: order, refs/live, hard regs',
+    'loop': "loop.c's moved invariants and givs",
+    'flow2_del': 'a load, store or constant present after reload and gone from the final RTL',
 }
 
 
@@ -861,6 +1029,8 @@ def main():
     ap.add_argument("-j", type=int, default=os.cpu_count())
     ap.add_argument("--only", help="build: only sources matching this regex")
     ap.add_argument("--no-dumps", action="store_true", help="build: keep only the index (dump queries need the dumps)")
+    ap.add_argument("--check", action="store_true",
+                    help="build: also assemble each object and check its .text is build/'s (-g -da change no code)")
     ap.add_argument("--func", help="only functions whose name contains this")
     ap.add_argument("--file", help="only sources matching this regex")
     ap.add_argument("--grep", help="only hits whose text matches this regex")

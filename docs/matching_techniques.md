@@ -40,7 +40,13 @@ plainer version doesn't.
   with the object's own compiler and flags (`make -n`) and scored by
   instructions off the ROM (`--metric lines` for diff lines); `--all`
   adds the object's other functions (collateral), `--dump` writes every
-  result as TSV, `-v N` spells out the best. The winner is judged by
+  result as TSV, `-v N` spells out the best. A third form, an
+  edit-list spec (`base`/`alts` of (old, new) replacements), also
+  generates edits itself (each integer local or parameter retyped,
+  compound vs explicit assignments, adjacent independent statements
+  swapped) and scores every combination of up to `-k` of them over the
+  function and any `extra` functions of the object; `drop_werror` and
+  `cflags` test a warning-only form or a flag. The winner is judged by
   hand.
 - [tools/rtl_corpus.py](../tools/rtl_corpus.py) compiles every object
   again with `-da -g` (`build`, into build/rtl_corpus: about 530 MB of
@@ -53,7 +59,12 @@ plainer version doesn't.
   index queries are computed at build time (narrow constants and their
   users after cse, one constant in several pseudos per block, dead
   loads, regmove rewrites, global-alloc's order and priorities, PRE
-  deletions, loads and stores reload deleted). `--matched` leaves out
+  deletions, loads and stores reload deleted, and since #829 close
+  global-alloc races between conflicting pseudos, loop.c's moved
+  invariants and givs, and what flow2/jump2 deleted after reload; PRE
+  hits of C++ functions carry their full names). `build --check`
+  assembles each object and checks its `.text` is build/'s (-da -g
+  change no code). `--matched` leaves out
   the functions that still have a workaround; `--grep`/`--file`/
   `--func` filter.
 - The process (isolated compiles, clean rebuilds, `make compare`, the
@@ -1751,6 +1762,38 @@ corpus and a natural-only enumerator).** 7 functions -> 6
   but the mask is redundant code the ROM doesn't have) and the two
   HandleEvent dead loads. (These sweeps' distances are `--metric lines`,
   a unified diff's -/+ lines.)
+
+**Round 8, GAX2_init, GaxChannelMix and itoa_arm (the RTL index and
+natural-only enumeration).** 3 functions -> 3; itoa_arm loses two of
+its sites (the `j` and `hi` pins), and the GAX comments gain the
+deciding contest:
+
+- **Tools.** This round's per-function RTL index (formerly a separate
+  rtl_index.py) is folded into tools/rtl_corpus.py: the `race`, `loop`
+  and `flow2_del` index queries, full C++ names on `pre` hits, and
+  `build --check` (all 362 objects stay byte-identical with `-da -g`).
+  Its enumerator is tools/natural_enum.py's edit-list spec form (the
+  automatic type/compound/order edits, `extra` functions, `drop_werror`).
+- **A variable reused once it is dead can stand for a pin.** itoa_arm
+  already reuses its sign flag as the swap's left index. Its swap's
+  right index and high byte, pinned to r1 and r0 as their own `j` and
+  `hi`, are `digit` and `num` (the SWI's r1/r0) reused the same way:
+  the ROM with neither pin. When a pin names the register of a value
+  that is dead there, try that value's variable.
+- **Warning-only workarounds stay as code.** itoa_arm's MATCH_HOLD
+  exists only for -Werror's false "might be used uninitialized" (two ifs
+  that together always set the flag); without it, and with the warning
+  off, the code is the same. As for GAX_fx and EEPROMWrite1_check, the
+  silencing code is kept rather than a per-object -Wno-uninitialized.
+- **The race the comment named was the wrong one.** GAX2_init's aligned
+  size doesn't race the format pointer (r2 either way) but a 3-reference
+  copy of `&gGaxPlayerState` (`rtl_corpus.py query race`); two single
+  natural edits (the outHalf store after its test, `size -=` before
+  `buf +=`) win that race without the use but move a statement in the
+  ROM. GaxChannelMix's PRE inserts a fresh `self->instrument` load at
+  the end of a block whose own load of it is available (an instrumented
+  gcse shows both occurrences anticipatable and available), so the kill
+  the comment looked for isn't one.
 
 ## Survey and conversion record (#576)
 

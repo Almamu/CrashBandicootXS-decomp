@@ -55,9 +55,35 @@ function, pool words by relocation; `--metric lines` counts a unified
 diff's -/+ lines instead, as round 8's link/ sweeps did); 0 is a match.
 --all also scores the object's other functions (collateral). --dump
 writes every result as TSV (score, collateral, each axis's text).
+
+A third form, an edit-list spec, lists edits instead of slots (the edit-list
+workflow; the spec is exec'd from the current directory, so it may load
+and extend another spec):
+
+    src    = "src/iwram/string_arm.cpp"   # the source file
+    obj    = "src/iwram/string_arm"       # its object, under build/crashbandicootxs/
+    func   = "itoa_arm"                   # the symbol scored
+    extra  = ["strlen_arm", ...]          # optional: other symbols that must stay
+    base   = [(old, new), ...]            # takes the workarounds out
+    alts   = [("name", [(old, new), ...]), ...]  # one natural edit each
+    region = (start, end)                 # optional: bounds for the automatic edits
+    auto   = ("type", "compound", "swap") # optional: which automatic edits
+    cflags = [...]; drop_werror = True    # optional: test a flag or a warning-only form
+    target = "path/to/object.o"           # optional: default the build's object
+
+The target defaults to the matching build's object (run `make` first).
+Besides the hand-written `alts`, it generates edits itself: every
+integer local or parameter retyped (s8/u8/s16/u16/s32/u32), `x op= e`
+<-> `x = x op e`, and two adjacent independent statements swapped.
+Every combination of up to -k edits is compiled (no beam search); the
+score adds up the instructions off over `func` and `extra`. `--keep DIR`
+writes the best variants, `--max` caps the combinations, `--no-auto`
+keeps only `alts`. Set NENUM_TMP to put its temporary directories
+outside /tmp.
 """
 
 import argparse
+import concurrent.futures
 import difflib
 import hashlib
 import importlib.util
@@ -67,6 +93,7 @@ import os
 import random
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -388,6 +415,216 @@ class Runner:
 # ---------------------------------------------------------------- search
 
 
+# ---------------------------------------------------------------- edit-list specs
+
+INT_TYPES = ('s8', 'u8', 's16', 'u16', 's32', 'u32')
+
+
+def edits_compile_line(obj):
+    out = subprocess.run(['make', '-n', '-B', f'build/crashbandicootxs/{obj}.o'], cwd=ROOT,
+                         capture_output=True, text=True).stdout
+    for line in out.splitlines():
+        if '| tools/agbcc/bin/' in line:
+            return line
+    raise SystemExit(f'no compile line for {obj}')
+
+
+def edits_func_lines(o, func):
+    out = subprocess.run(['arm-none-eabi-objdump', '-dr', '--no-show-raw-insn', o], capture_output=True,
+                         text=True).stdout
+    lines = []
+    on = False
+    for l in out.splitlines():
+        m = re.match(r'^[0-9a-f]+ <(.+)>:$', l)
+        if m:
+            on = m.group(1) == func
+            continue
+        if not on or not l.strip():
+            continue
+        l = re.sub(r'^\s*[0-9a-f]+:\s*', '', l)
+        l = re.sub(r'\s+[0-9a-f]+ <[^>]*>', '', l)  # branch target addresses
+        l = re.sub(r'@ \(.*\)|; \(.*\)', '', l).strip()
+        lines.append(l)
+    # drop trailing alignment padding
+    while lines and lines[-1] in ('nop', '.word\t0x00000000', 'movs\tr0, r0', 'lsls\tr0, r0, #0'):
+        lines.pop()
+    return lines
+
+
+class EditsCtx:
+    def __init__(self, spec):
+        self.spec = spec
+        self.line = edits_compile_line(spec['obj'])
+        cpp, cc = self.line.split(' | ', 1)
+        cpp = shlex.split(cpp)
+        args = []
+        skip = 0
+        for a in cpp:
+            if skip:
+                skip -= 1
+                continue
+            if a in ('-MF', '-MT'):
+                skip = 1
+                continue
+            if a in ('-MMD', '-MP'):
+                continue
+            args.append(a)
+        self.cpp = args[:-1] + ['-iquote', os.path.dirname(spec['src'])]
+        cc = shlex.split(cc)
+        oi = cc.index('-o')
+        self.cc = [os.path.join(ROOT, cc[0])] + cc[1:oi] + list(spec.get('cflags', []))
+        if spec.get('drop_werror'):
+            self.cc = [a for a in self.cc if a != '-Werror']
+        self.cxx = '-x' in args
+        ref = os.path.join(ROOT, spec.get('target') or 'build/crashbandicootxs/' + spec['obj'] + '.o')
+        self.funcs = [spec['func']] + list(spec.get('extra', []))
+        self.target = {f: edits_func_lines(ref, f) for f in self.funcs}
+        for f, t in self.target.items():
+            if not t:
+                raise SystemExit(f'{f}: not in {ref}')
+
+    def run(self, text):
+        d = tempfile.mkdtemp(prefix='nenum', dir=os.environ.get('NENUM_TMP'))
+        try:
+            src = os.path.join(d, 'v.cpp' if self.cxx else 'v.c')
+            open(src, 'w').write(text)
+            r = subprocess.run(self.cpp + [src], cwd=ROOT, capture_output=True, text=True)
+            if r.returncode:
+                return None, 'cpp: ' + r.stderr[-300:]
+            r2 = subprocess.run(self.cc + ['-o', os.path.join(d, 'v.s')], input=r.stdout, cwd=ROOT,
+                                capture_output=True, text=True)
+            if r2.returncode:
+                return None, 'cc: ' + r2.stderr[-300:]
+            with open(os.path.join(d, 'v.s'), 'a') as f:
+                f.write('\t.text\n\t.align\t2, 0\n')
+            r3 = subprocess.run(['arm-none-eabi-as', '-mcpu=arm7tdmi', '-mthumb-interwork', '-I',
+                                 os.path.join(ROOT, 'asminclude'), '--defsym', 'NON_MATCHING=0', '-o',
+                                 os.path.join(d, 'v.o'), os.path.join(d, 'v.s')], capture_output=True,
+                                text=True)
+            if r3.returncode:
+                return None, 'as: ' + r3.stderr[-300:]
+            o = os.path.join(d, 'v.o')
+            if self.cxx:
+                subprocess.run(['arm-none-eabi-objcopy', '--redefine-syms=' + os.path.join(ROOT, 'cxx_symbols.txt'),
+                                o], check=True)
+            s = 0
+            for f in self.funcs:
+                s += score_insns(edits_func_lines(o, f), self.target[f])
+            return s, None
+        finally:
+            shutil.rmtree(d, ignore_errors=True)
+
+
+def edits_apply(text, edits):
+    for old, new in edits:
+        if old not in text:
+            return None
+        text = text.replace(old, new, 1)
+    return text
+
+
+def edits_auto_mutations(text, region, kinds):
+    """Yield (name, [(old, new)]) for the automatic mutation kinds."""
+    if region:
+        a = text.index(region[0])
+        b = text.index(region[1], a)
+        body = text[a:b]
+    else:
+        body = text
+    muts = []
+    if 'type' in kinds:
+        for m in re.finditer(r'(?m)^(\s*)(' + '|'.join(INT_TYPES) + r') (\w+)( = [^;]*)?;', body):
+            for t in INT_TYPES:
+                if t != m.group(2):
+                    old = m.group(0)
+                    muts.append((f'type {m.group(3)}:{t}', [(old, old.replace(m.group(2) + ' ', t + ' ', 1))]))
+        for m in re.finditer(r'[(,]\s*(' + '|'.join(INT_TYPES) + r') (\w+)(?=[,)])', body):
+            for t in INT_TYPES:
+                if t != m.group(1):
+                    old = m.group(0)
+                    muts.append((f'param {m.group(2)}:{t}', [(old, old.replace(m.group(1) + ' ', t + ' ', 1))]))
+    if 'compound' in kinds:
+        for m in re.finditer(r'(?m)^(\s*)([\w.>\[\]-]+) ([-+*/|&^]|<<|>>)= ([^;]+);', body):
+            old = m.group(0)
+            muts.append((f'explicit {m.group(2)}', [(old, f'{m.group(1)}{m.group(2)} = {m.group(2)} '
+                                                           f'{m.group(3)} {m.group(4)};')]))
+        for m in re.finditer(r'(?m)^(\s*)([\w.>\[\]-]+) = \2 ([-+*/|&^]|<<|>>) ([^;]+);', body):
+            old = m.group(0)
+            muts.append((f'compound {m.group(2)}', [(old, f'{m.group(1)}{m.group(2)} {m.group(3)}= '
+                                                           f'{m.group(4)};')]))
+    if 'swap' in kinds:
+        lines = body.split('\n')
+        for i in range(len(lines) - 1):
+            a, b = lines[i], lines[i + 1]
+            simple = re.compile(r'^\s+[^{}/*#]*;\s*$')
+            if not (simple.match(a) and simple.match(b)):
+                continue
+            ia = len(a) - len(a.lstrip())
+            if ia != len(b) - len(b.lstrip()):
+                continue
+            if re.search(r'\b(return|break|continue|goto)\b', a + b):
+                continue
+            # independent: neither writes a name the other mentions
+            wa = re.match(r'^\s*([\w]+)', a)
+            wb = re.match(r'^\s*([\w]+)', b)
+            if wa and wb and (re.search(r'\b' + wa.group(1) + r'\b', b) or re.search(r'\b' + wb.group(1) + r'\b', a)):
+                continue
+            muts.append((f'swap {a.strip()[:30]}', [(a + '\n' + b, b + '\n' + a)]))
+    return muts
+
+
+def edits_main(a):
+    """The edit-list workflow (see the module docstring)."""
+    spec = {}
+    exec(open(a.spec).read(), spec)
+    ctx = EditsCtx(spec)
+    orig = open(os.path.join(ROOT, spec['src'])).read()
+    s0, err = ctx.run(orig)
+    print(f'current source: {s0} {err or ""}')
+    base = edits_apply(orig, spec.get('base', []))
+    if base is None:
+        raise SystemExit('base edits do not apply')
+    sb, err = ctx.run(base)
+    print(f'plain base: {sb} {err or ""}')
+    muts = [(f'alt{i}' + (f' {g[0]}' if isinstance(g[0], str) else ''), g[1] if isinstance(g[0], str) else g)
+            for i, g in enumerate(spec.get('alts', []))]
+    if not a.no_auto:
+        muts += edits_auto_mutations(base, spec.get('region'), spec.get('auto', ('type', 'compound', 'swap')))
+    print(f'{len(muts)} mutations')
+    combos = []
+    for k in range(1, (a.k or 2) + 1):
+        for c in itertools.combinations(range(len(muts)), k):
+            combos.append(c)
+            if len(combos) >= a.max:
+                break
+    jobs = []
+    for c in combos:
+        t = base
+        for i in c:
+            t = edits_apply(t, muts[i][1])
+            if t is None:
+                break
+        if t is not None:
+            jobs.append((c, t))
+    print(f'{len(jobs)} variants')
+    results = []
+    with concurrent.futures.ThreadPoolExecutor(a.j) as ex:
+        futs = {ex.submit(ctx.run, t): (c, t) for c, t in jobs}
+        for f in concurrent.futures.as_completed(futs):
+            c, t = futs[f]
+            s, err = f.result()
+            if s is not None:
+                results.append((s, c, t))
+    results.sort(key=lambda r: (r[0], len(r[1])))
+    for s, c, t in results[:a.top]:
+        print(f'{s:5d}  ' + ' + '.join(muts[i][0] for i in c))
+    if a.keep:
+        os.makedirs(a.keep, exist_ok=True)
+        for n, (s, c, t) in enumerate(results[:a.top]):
+            open(os.path.join(a.keep, f'{n:02d}_{s}.txt'), 'w').write(
+                '/* ' + ' + '.join(muts[i][0] for i in c) + ' */\n' + t)
+
+
 def distinct(results):
     """(score, collateral, choice) per distinct output, each with its
     fewest changes."""
@@ -424,9 +661,15 @@ def main():
     ap.add_argument("--flags", default="", help="extra compiler flags")
     ap.add_argument("--show", action="store_true", help="print the best variant's text and diff")
     ap.add_argument("--eval", metavar="AXIS=I,...", help="only score and diff this one variant")
+    ap.add_argument("--keep", help="edit-list specs: write the best variants here")
+    ap.add_argument("--max", type=int, default=200000, help="edit-list specs: cap on combinations")
+    ap.add_argument("--no-auto", action="store_true", help="edit-list specs: only the spec's alts")
     args = ap.parse_args()
 
     if args.spec.endswith(".py"):
+        with open(args.spec) as f:
+            if re.search(r"^(alts|base)\s*=", f.read(), re.M):
+                return edits_main(args)
         src = SpecSource(args.spec)
     else:
         src = TemplateSource(args.spec, args.src, args.sig, args.sym, args.ref)
