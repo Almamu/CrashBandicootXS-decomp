@@ -330,7 +330,8 @@ SetDest__16CortexTargetCtrlP12MovingSpriteii SetCortexTargetDest
 #
 # part 7a: the entity and sprite object base classes
 # (include/sprite_obj.hpp; src/objects/entity.cpp, the sprite graphics
-# managers' src/gfx/oam_buffer.cpp ... sprite_bank_set.cpp, src/objects/sprite.cpp,
+# managers' src/gfx/oam_buffer.cpp ... sprite_bank_set.cpp, src/gfx/sprite_renderer.cpp,
+# src/objects/sprite.cpp,
 # sprite_obj.cpp, sprite_anim.cpp)
 # g++ copies a struct passed by value with memcpy, which in this ROM is
 # MemCopy32 (src/system/bios_util.cpp; GAX's `.set memcpy, MemCopy32`)

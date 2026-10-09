@@ -1,8 +1,8 @@
 #ifndef GUARD_GFX_PART_H
 #define GUARD_GFX_PART_H
 
-/* A helper of the sprite pieces' draw loops (src/gfx/sprite_pieces.cpp,
- * affine_sprite_pieces.cpp). The C view this header was named after,
+/* A helper of the sprite pieces' draw loops (DrawPieces and
+ * DrawAffinePieces, src/gfx/sprite_renderer.cpp). The C view this header was named after,
  * `struct gfx_part` (a moving sprite, as include/sprite_obj.hpp's
  * MovingSprite has it) and its `struct anim_bank`/`anim_record` records,
  * went with their last users, and its `struct gfx_vec` is aabb.h's

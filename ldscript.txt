@@ -74,8 +74,7 @@ SECTIONS
         build/crashbandicootxs/src/gfx/palette_cache.o(.text);
         build/crashbandicootxs/src/gfx/sprite_bank_set.o(.text);
         build/crashbandicootxs/src/objects/entity.o(.text);
-        build/crashbandicootxs/src/gfx/sprite_pieces.o(.text);
-        build/crashbandicootxs/src/gfx/affine_sprite_pieces.o(.text);
+        build/crashbandicootxs/src/gfx/sprite_renderer.o(.text);
         build/crashbandicootxs/src/objects/sprite.o(.text);
         build/crashbandicootxs/src/objects/sprite_obj.o(.text);
         build/crashbandicootxs/src/objects/sprite_anim.o(.text);

@@ -238,7 +238,7 @@ derivation of each, and `docs/matching.md`'s original entries ("The
 `0x080014A4`-`0x08001624` fade/screen-mode cluster" and "Parked, not
 matched: `DrawWrappedText`") for the pre-NAKED gap analysis.
 
-- **`DrawSpritePieces` is now matched as real C (split into `src/gfx/sprite_pieces.c`, old_agbcc; see docs/matching/archive/strag1-naked-retry.md); `DrawPowerDialog` is now matched as real C too (see docs/matching/archive/strag3-naked-retry.md); entry kept for history.** **`DrawPowerDialog`** (`src/menus/power_dialog_draw.c`) and **`DrawSpritePieces`**
+- **`DrawSpritePieces` is now matched as real C (split into `src/gfx/sprite_renderer.cpp`, old_agbcc; see docs/matching/archive/strag1-naked-retry.md); `DrawPowerDialog` is now matched as real C too (see docs/matching/archive/strag3-naked-retry.md); entry kept for history.** **`DrawPowerDialog`** (`src/menus/power_dialog_draw.c`) and **`DrawSpritePieces`**
   (`src/gfx/graphics.c`) - this project's original reference cases
   for the register-allocation-gap class documented above (several
   `overlay_ui`/`actor` functions elsewhere still hit the same class,

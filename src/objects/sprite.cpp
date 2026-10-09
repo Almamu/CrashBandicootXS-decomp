@@ -14,38 +14,9 @@ extern "C" {
 #include "player.h"
 }
 
-/* The sprite renderer and the first of Sprite's methods (#664,
- * include/sprite_obj.hpp). An old_agbcp object (OLD_AGBCC_OBJS). */
-
-/* `screenSpace` says whether (x, y) are already screen coordinates;
- * otherwise WorldToScreen makes them camera-relative. DrawPieces
- * builds and queues the part's OAM entries at the resolved position. */
-void SpriteRenderer::DrawAt(Sprite *part, s32 x, s32 y)
-{
-    s32 pos[2];
-
-    if (part->screenSpace == 0) {
-        WorldToScreen(part, x, y, &pos[0], &pos[1]);
-    } else {
-        pos[0] = x;
-        pos[1] = y;
-    }
-    DrawPieces(part, pos);
-}
-
-/* Draws `part` at its own position. */
-void SpriteRenderer::Draw(Sprite *part)
-{
-    DrawAt(part, Q8_TO_INT(part->x), Q8_TO_INT(part->y));
-}
-
-SpriteRenderer::~SpriteRenderer()
-{
-}
-
-SpriteRenderer::SpriteRenderer()
-{
-}
+/* The first of Sprite's methods (#664, include/sprite_obj.hpp). An
+ * old_agbcp object (OLD_AGBCC_OBJS); the sprite renderer before them is
+ * gfx/sprite_renderer.cpp. */
 
 /* Clears the animation state (`bank`, `tag`, `frame`, `stepTimer`,
  * `animDone`; `animating` is set), the mirror and palette bytes, `affine`,

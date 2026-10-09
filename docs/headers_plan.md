@@ -1240,7 +1240,7 @@ exceptions").
     definition. Its copies are gone: sprite_frame.c's (`u8 table[0x400]`),
     graphics_package.c's (`struct oam_attrs oam[0x80]`),
     level_select_widgets.c's, company_logos.c's and title_screen_init.c's
-    `struct oam_buf`, affine_sprite_pieces.c's `struct oam_buffer`/`struct
+    `struct oam_buf`, sprite_renderer.cpp's `struct oam_buffer`/`struct
     affine_oam`, and the three `struct oam_entry` copies. Every view only
     wrote the affine parameter of entry `n`, now `table[n].attr[3]`.
   - `struct dispcnt_bits` (4 copies; level_select.c's `hblankFree`/`obj1d`
@@ -1255,7 +1255,7 @@ exceptions").
     7's deferral). gobj_1a794.h's `anim_rec` keeps the four fields inline:
     the quad can't be embedded (agbcc pads it to 8 bytes).
   - `struct piece_offset`/`struct piece_info`/`struct oam_attr2` (the
-    sprite frame as sprite_pieces.c and affine_sprite_pieces.c read it,
+    sprite frame as sprite_renderer.cpp's DrawPieces and DrawAffinePieces read it,
     2 copies each); their `struct part_method73dc`/`part_method7634` are
     `struct vtable_slot` (`thisOffset` -> `delta`). Their `oam_attr01`/
     `oam_pair` differ (the matrix bits vs the flip bits) and stay local.
@@ -1911,7 +1911,7 @@ codegen exception was needed.
 - **Other sprite-bank views**: time_trial.c's `anim_record`/
   `anim_table`, dingodile.c's `anim_rec`, tiny_update.c's
   `hop_anim_record`/`hop_anim_bank`, spawn_objects.c's
-  `anim_record_21668`/`anim_table_21668` and affine_sprite_pieces.c's
+  `anim_record_21668`/`anim_table_21668` and sprite_renderer.cpp's
   `kf_record` (`steps` is `frameCount`) are `struct sprite_anim`/
   `sprite_bank`.
 - **The camera lead** (camera_lead.h, new): level_select.c's `struct
@@ -1919,8 +1919,8 @@ codegen exception was needed.
   `targetOffset`). The flags byte at +0x0C is a packed union: `all`
   (level_select.c ORs the byte) and `bits.gone` (input_ctrl.c's
   `MARK_GONE`).
-- **The other duplicate names**: sprite_pieces.c's and
-  affine_sprite_pieces.c's `oam_pair`/`oam_attr01` (and gfx.h's
+- **The other duplicate names**: DrawPieces' and
+  DrawAffinePieces' (sprite_renderer.cpp) `oam_pair`/`oam_attr01` (and gfx.h's
   `oam_attr2`) are gfx.h's `struct oam_attrs` (`objMode`/`gfxMode`/
   `colorMode`/`hflip`/`vflip`/`matrix`/`matrixHi`/`matrixTop`/`tile` are
   `affineMode`/`objMode`/`bpp`/`matrixBit3`/`matrixBit4`/`matrixLo`/
@@ -2174,7 +2174,7 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | `u8 []`/`void *` palette with byte offsets -> `const u16 [N][16]` and `[frame]` | `gJetpackFlashPalettes`, `gAirshipHitFlashPalettes` | identical; the byte offset `+ (f << 5)` on the `u16` array is `lsl #0xa`, so the index form is needed |
 | one-byte struct stack argument -> `u8` parameter | `CreateHovercraftSideGun` in SpawnHovercraftSideGun | **changes** (`add r2, sp, #4; strb` becomes `str`); kept as an alias |
 | local method records (`gfx_method`, `vmethod`, `hop_method`, `ab_method`) -> `struct actor_method` | cortex.c, dingodile.c, tiny_update.c, mega_mix_update.c | identical |
-| local OAM buffer views (`entries[n].affineParam`, `oam[i].affineParam`, `u8 table[0x400]`) -> `struct oam_shadow_buffer`, `table[n].attr[3]` | company_logos.c, title_screen_init.c, level_select_widgets.c, graphics_package.c, affine_sprite_pieces.c (old_agbcc), sprite_frame.c | identical |
+| local OAM buffer views (`entries[n].affineParam`, `oam[i].affineParam`, `u8 table[0x400]`) -> `struct oam_shadow_buffer`, `table[n].attr[3]` | company_logos.c, title_screen_init.c, level_select_widgets.c, graphics_package.c, sprite_renderer.cpp (old_agbcc), sprite_frame.c | identical |
 | u16-unit OAM attribute bitfields -> gfx.h's u32-unit `struct oam_attrs` | graphics_package.c (old_agbcc) | **changes** (an `and` with a loaded `#3` becomes `lsl #0x1e` in DrawScaledSprite); kept as `struct oam_attrs_u16` |
 | `struct anim_box`/`part_box`/`hitbox_quad` -> one `struct hitbox_quad`, `padX`/`xOff` -> `w`/`offX` | graphics.c, platform_collide.c, crate_break.c, crate_hit.c, crate_touch.c, ground_sprite_collide.c, sprite.c, moving_sprite_probe.cpp, player_anim_room.c | identical |
 | `u8 buf[0x10]` stack buffer / `u8 unused_00[0x10]` member -> `struct bg_setup` and `&` | language_select_setup.c, save_menu_ui.c, level_select.c, pause_menu.c, power_dialog.c, level_select_pages.c | identical |
@@ -2248,7 +2248,7 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | `struct vec3`/`motion_rec`/`s32 [N][3]` motion records -> `struct speed_ramp` (`.x`/`.a` -> `.start`, ...), `(const struct vec3 *)tbl[i]` -> `&tbl[i]` | platform.c (pinned `register` pointers), dingodile.c, dingodile_create.c, action_ctrl_idle.c (old_agbcc), swim_ctrl.c, player_flags.c | identical |
 | local `*_method` records -> `struct actor_method`, a typed `fn` call -> a cast call | 12 files (old_agbcc and agbcc) | identical |
 | level_select.c's local level-select types -> level_menu.h's: `u8 flags28` -> packed `struct sprite_f28`, `struct actor_method *vtable` with `&vtable[10]` -> `struct sprite_vtable *` with `&vtable->m50`, `u8 *save` -> `struct menu_save *` read through `(u8 *)`/`save->open`, `void *bg1` -> `struct page_bg *` (`&bg1->bg`) | level_select.c (old_agbcc) | identical, including the pinned `anim`/`records` registers |
-| `struct anim_record`/`anim_table` and other sprite-bank views -> `const struct sprite_anim`/`sprite_bank` (`records` -> `anims`, `tileRecord` -> `paletteId`, `(*kf)[i]` -> `kf->anims[i]`) | level_select.c, level_select_pages.c, level_select_widgets.c, time_trial.c, dingodile.c, tiny_update.c, spawn_objects.c, affine_sprite_pieces.c | identical |
+| `struct anim_record`/`anim_table` and other sprite-bank views -> `const struct sprite_anim`/`sprite_bank` (`records` -> `anims`, `tileRecord` -> `paletteId`, `(*kf)[i]` -> `kf->anims[i]`) | level_select.c, level_select_pages.c, level_select_widgets.c, time_trial.c, dingodile.c, tiny_update.c, spawn_objects.c, sprite_renderer.cpp | identical |
 | two `zoom_bg` copies -> one with both BG2CNT bit views (byte containers for InitZoomBg, halfword ones for UpdateZoomBg); `s32 phase` -> `u32`, `u16 x16` -> `s16` (stores only in InitZoomBg) | level_select_pages.c, level_select_widgets.c (old_agbcc) | identical |
 | stack `struct oam_pair` (`oam_attr01` + `oam_attr2`) -> `struct oam_attrs` | DrawSpritePieces, DrawAffineSpritePieces | identical |
 | `struct spawned` effect-part views -> `struct gfx_part` (`unk_0C_2` -> `hidden`) | action_ctrl_run_jump.c, swim_ctrl_stroke.c | identical |

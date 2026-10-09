@@ -518,8 +518,8 @@ public:
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(SpriteBankSet) == 4);
 
 /* The sprite renderer (gSpriteRenderer, an empty object InitLevelState
- * allocates): draws a sprite's OAM pieces (DrawPieces in
- * src/gfx/sprite_pieces.cpp, DrawAffinePieces in affine_sprite_pieces.cpp). */
+ * allocates): draws a sprite's OAM pieces (DrawPieces and
+ * DrawAffinePieces, src/gfx/sprite_renderer.cpp). */
 class SpriteRenderer
 {
 public:

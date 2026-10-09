@@ -883,8 +883,7 @@
     "DrawAffineSpritePieces"
    ],
    "consumer_files": [
-    "gfx/sprite_pieces.cpp",
-    "gfx/affine_sprite_pieces.cpp"
+    "gfx/sprite_renderer.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -906,8 +905,7 @@
     "DrawAffineSpritePieces"
    ],
    "consumer_files": [
-    "gfx/sprite_pieces.cpp",
-    "gfx/affine_sprite_pieces.cpp"
+    "gfx/sprite_renderer.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,

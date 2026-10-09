@@ -225,8 +225,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/gfx/palette_cache.o \
                   $(C_BUILDDIR)/gfx/sprite_bank_set.o \
                   $(C_BUILDDIR)/objects/entity.o \
-                  $(C_BUILDDIR)/gfx/sprite_pieces.o \
-                  $(C_BUILDDIR)/gfx/affine_sprite_pieces.o \
+                  $(C_BUILDDIR)/gfx/sprite_renderer.o \
                   $(C_BUILDDIR)/gfx/display.o \
                   $(C_BUILDDIR)/gfx/fade.o \
                   $(C_BUILDDIR)/gfx/sprite_frame.o \

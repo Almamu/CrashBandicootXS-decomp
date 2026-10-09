@@ -967,10 +967,10 @@ See [docs/matching/archive/strag2-naked-retry.md](../matching/archive/strag2-nak
 
 ### Matched in the DrawAffineSpritePieces retry
 
-- `src/gfx/affine_sprite_pieces.c` - `DrawAffineSpritePieces` (the affine sibling
+- `src/gfx/sprite_renderer.cpp` - `DrawAffineSpritePieces` (the affine sibling
   of `DrawSpritePieces`: one affine OAM entry per visible piece, pulled
   towards the first piece's centre by the scale), old_agbcc
-  (`affine_sprite_pieces.o` joined `OLD_AGBCC_OBJS`; it is the only function in
+  (`sprite_renderer.o` joined `OLD_AGBCC_OBJS`; it is the only function in
   the file). Was 468 halfwords off. Taking the size-table addresses
   before reading `pos` makes reload spill r7, which sets the ROM's
   reload-register rotation. The rest: the pull maths interleaved per
@@ -1682,7 +1682,7 @@ embedded as asm instead. They're tracked as parked, not matched.
 
 ## Left raw (not attempted, or attempted and set aside)
 
-- ~~**`DrawAffineSpritePieces`**~~ (`src/gfx/affine_sprite_pieces.c`, ROM 0x08007634,
+- ~~**`DrawAffineSpritePieces`**~~ (`src/gfx/sprite_renderer.cpp`, ROM 0x08007634,
   GitHub issue #9) - real GBA hardware-affine sprite-matrix setup.
   Moved out of `asm/code_3_2.s` as NAKED in the issue #9 raw-asm pass,
   now matched as real C under old_agbcc - see "Matched in the
