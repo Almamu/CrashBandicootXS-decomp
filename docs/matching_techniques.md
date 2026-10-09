@@ -1160,7 +1160,8 @@ compiled with `-da` and its RTL dumps read pass by pass:
 - **Kept, with the pass that decides it** (in each site's comment):
   the mask asm of the same two functions (cse1's fold_rtx puts an
   operand with a known constant value second, and regmove copies the
-  first one); `UpdateTriggerBox`, `StompedHopPadCtrl::Update`,
+  first one; replaced in round 8 by a copy of a function-scope mask, see
+  the resolution after round 8); `UpdateTriggerBox`, `StompedHopPadCtrl::Update`,
   `TinyCtrl::SetState` and `SelectActorCategory` (global-alloc's
   ranking of two pseudos, by references over live length);
   `UpdateHop`, `UpdateOscillateX`, `UpdateOscillateY` and
@@ -1339,7 +1340,8 @@ sites:
   cse1 can't see it but loop.c won't move it out of the row loop, which
   needs a conditional jump before it: only a guard duplicating the
   pixel loop's entry test does that, and it costs the ROM's `n << 4`
-  recompute); `GAX2_init`'s two uses (global priorities, the numbers in
+  recompute; round 8 found the register copy that does it, adopted
+  after round 8); `GAX2_init`'s two uses (global priorities, the numbers in
   each comment); `GaxChannelMix`'s instrument re-read (gcse PRE finds it
   redundant: nothing kills it, `__muldi3` being a const libcall) and its
   clamp keep.
@@ -1463,7 +1465,7 @@ use, and one libcall:
   `bg_picture.cpp`'s `MapFill` and `sprite_arm.cpp`'s ARM
   `UnpackNibbleTiles` with its `ExpandNibble` ternary, were tried in
   every combination of helper and body: 100-118 lines off, as against
-  the asm-free near miss's 8).
+  the asm-free near miss's 8; resolved after round 8).
 
 **Round 5 in link/, save/, frontend/ and lib/gax (outside the function
 body).** 8 functions -> 7:
@@ -1680,7 +1682,7 @@ builds and comparing each function:
   changes 4 (5 with IOR/XOR, 143 for all commutative codes). Both
   compilers had both rules as they are. The only matched function with
   the copy is Yeti::UpdatePalette (`mask2 & c`, the mask set before a
-  single loop).
+  single loop). Round 8 found the plain C that matches (below).
 - **Dingodile's chain.** No other matched function leaves constant
   arithmetic unfolded. The other matched functions that save a register
   they never use are sprintf, ActionCtrl::Update (the frame pointer) and
@@ -1700,14 +1702,15 @@ builds and comparing each function:
 
 **Round 8, the ConvertTiles masks, DingodileShieldCtrl::Update and
 Credits::LoadLogos (RTL corpus and natural-only enumeration).** Nothing
-freed; each comment has the new evidence:
+freed in round 8 itself (the ConvertTiles form was adopted afterwards,
+below); each comment has the new evidence:
 
 - **The mask copy is a register copy.** Plain C gives both ConvertTiles
   exactly with a ternary MeterPx and the pixel loop's mask copied from a
   function-scope variable (`u32 mask = 0xf;` ... `u32 m = mask;`): cse1
   can't see the constant at the ANDs, loop.c moves the copy into the
   pixel loop's preheader and reload rematerialises the 15 there. The
-  copy is redundant, so it isn't used; the ternary alone is 2
+  copy is redundant, so round 8 didn't use it; the ternary alone is 2
   instructions off.
 - **combine, not cse1, folds a constant chain.** cse1 keeps
   Dingodile's natural `|=` chain (with REG_EQUAL notes) and combine
@@ -1751,6 +1754,17 @@ corpus and a natural-only enumerator).** 7 functions -> 6
   but the mask is redundant code the ROM doesn't have) and the two
   HandleEvent dead loads. (These sweeps' distances are `--metric lines`,
   a unified diff's -/+ lines.)
+
+**The ConvertTiles masks: resolved (owner decision, after round 8).**
+Both twins (`Hovercraft::ConvertTiles`, `Airship::ConvertTiles`) now use
+round 8's form and no workaround: MeterPx is the ternary, and the pixel
+loop's mask is `u32 m = mask;`, a copy of the function-scope `u32 mask =
+0xf;`. That copy is what reproduces the ROM's mask copy: cse1 can't see
+the constant at the ANDs, so the mask stays their first operand and
+regmove copies the mask register, not the byte. The copy is redundant
+(the rounds 3-8 search found no natural source for it), but the owner
+chose it over the `MATCH_CONST` asm. Both functions leave the
+with-workarounds count (2035 -> 2037 of 2059 with none).
 
 ## Survey and conversion record (#576)
 
