@@ -116,7 +116,6 @@ SECTIONS
         build/crashbandicootxs/src/crates/crate_update.o(.text);
         build/crashbandicootxs/src/crates/crate.o(.text);
         build/crashbandicootxs/src/crates/crate_time_trial.o(.text);
-        build/crashbandicootxs/src/crates/crate_stack.o(.text);
         build/crashbandicootxs/src/crates/crate_fields.o(.text);
         build/crashbandicootxs/src/objects/collision_queue.o(.text);
         build/crashbandicootxs/src/pickups/extra_life.o(.text);

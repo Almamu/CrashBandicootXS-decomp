@@ -359,7 +359,6 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/crates/crate_fields.o \
                   $(C_BUILDDIR)/crates/crate.o \
                   $(C_BUILDDIR)/crates/crate_reset.o \
-                  $(C_BUILDDIR)/crates/crate_stack.o \
                   $(C_BUILDDIR)/crates/crate_time_trial.o \
                   $(C_BUILDDIR)/pickups/wumpa_update.o \
                   $(C_BUILDDIR)/pickups/extra_life.o \
