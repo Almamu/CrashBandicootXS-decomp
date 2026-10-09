@@ -737,6 +737,10 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/level/camera.cpp`, `play_room.cpp`, `src/menus/level_select.cpp` | the camera follows a `Sprite *` (`Pos()`, `dir`, `mirror`; `Pos()` moved up from MovingSprite) | 0 | (unchanged) | 0 -> 0 | [views](#the-c-views-go-754) |
 | `src/level/terrain.cpp`, `terrain_probe.cpp`, `terrain_probe_axes.cpp` | ProbeTerrainX/Y take a `LevelLayers *`, and the terrain lookups cast `self` to one | 0 | (unchanged) | 0 -> 0 | [views](#the-c-views-go-754) |
 | include/crate_list.hpp | crates.h's codegen view `struct pool_init_node` (and `struct pool_link`) is `CrateGridNodeInit`, next to `ResetGrid`, its user | 0 | (unchanged) | 0 -> 0 | [views](#the-c-views-go-754) |
+| `src/system/key_input.cpp` (again) | `KeyInput` (new include/key_input.hpp, moved from spawners.hpp): `Update` (UpdateKeys), `GetDpadDirection`; system.h's two C prototypes go | 2 | old_agbcp | 0 -> 0 | [#759, #761](#the-key-input-and-the-camera-759-761) |
+| globals.h, 23 `.cpp` files | `gInput` is a `KeyInput *` to C++; `UpdateKeys(gInput)` is `gInput->Update()`, `GetDpadDirection(pad)` `pad->GetDpadDirection()`, the `void *pad = gInput` copies `KeyInput *`s, `delete (KeyInput *)gInput` `delete gInput` | 0 | (unchanged) | 0 -> 0 | [#759, #761](#the-key-input-and-the-camera-759-761) |
+| `src/level/camera.cpp` (again) | `Camera` (new include/camera.hpp; level.h's struct camera): `StepDirectional`, `StepFacing`, `Snap`, `Update` (the C names stay) | 4 | agbcp | 0 -> 0 | [#759, #761](#the-key-input-and-the-camera-759-761) |
+| globals.h, level.h, `play_room.cpp`, `room.cpp`, `action_ctrl_event.cpp`, `camera_lead.cpp` | `gCamera` is a `Camera *` to C++; PlayRoom's `operator new(0x18)` and `operator delete(gCamera)` are `new Camera` and `delete gCamera`; `SnapCamera(gCamera)` is `gCamera->Snap()`, `UpdateCamera(gCamera)` `gCamera->Update()`; level.h's four C prototypes go | 0 | (unchanged) | 0 -> 0 | [#759, #761](#the-key-input-and-the-camera-759-761) |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -4123,6 +4127,38 @@ byte-identical to origin/main's.
 
 CONTRIBUTING.md's "One layout, one type" now says there are no C views of
 the classes.
+
+### The key input and the camera (#759, #761)
+
+Two small classes whose functions all took the object as their first
+argument, so `this` arrives in r0 where the C's parameter did; every
+object is byte-identical to origin/main's and every method keeps its C
+name (cxx_symbols.txt).
+
+- **KeyInput** (include/key_input.hpp, moved out of spawners.hpp): the
+  input object gInput, built by `new KeyInput` (ClearKeys) in
+  spawn_markers.cpp. UpdateKeys and GetDpadDirection took it as an unused
+  `void *input` and read gKeys; they are the non-static methods `Update`
+  and `GetDpadDirection`, which read gKeys the same way, so the call
+  sites (about 50) still load gInput into r0 (a static member would
+  leave r0 alone).
+  globals.h declares gInput as a `KeyInput *` (C++ only; no C file uses
+  it), so level_cutscene.cpp's `delete (KeyInput *)gInput` loses its
+  cast; the action controller's and swim controller's local copies (`void
+  *pad = gInput`, `void **pad = &gInput`) are `KeyInput *`s. gKeys stays a
+  global rather than a static data member: the menus, the HUD and the
+  controllers read it in about 80 places that don't go through gInput.
+- **Camera** (include/camera.hpp; level.h's `struct camera`, which only
+  C++ files used): StepCameraDirectional, StepCameraFacing, SnapCamera and
+  UpdateCamera are `StepDirectional`, `StepFacing`, `Snap` and `Update`,
+  their bodies the C's with `cam->` dropped (Snap keeps the target in a
+  local, `followed`). With no constructor, destructor or vtable, PlayRoom's
+  `(struct camera *)operator new(0x18)` and `operator delete(gCamera)` are
+  `new Camera` and `delete gCamera`: the same `__builtin_new(0x18)` and
+  `__builtin_delete` calls, with no null test. globals.h declares gCamera
+  as a `Camera *` (C++ only).
+
+`tools/match_idioms.py` counts are unchanged.
 
 ### Next batches
 

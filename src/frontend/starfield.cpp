@@ -1,4 +1,5 @@
 #include "frontend.hpp"
+#include "key_input.hpp"
 
 extern "C" {
 #include "gba/dma_macros.h"
@@ -263,7 +264,7 @@ void Starfield::Update()
 void Starfield::WaitForButton()
 {
     for (;;) {
-        UpdateKeys(gInput);
+        gInput->Update();
         if (gKeys.half.pressed & 9) {
             break;
         }

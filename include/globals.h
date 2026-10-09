@@ -15,7 +15,6 @@
 #include "core.h"
 #include "vtable.h"
 
-struct camera;
 struct entity_flags;
 struct level_state;
 struct sprite_bank_table;
@@ -79,7 +78,12 @@ extern class ObjVramCursor *gObjVramCursor;
 #ifdef __cplusplus
 extern class OamBuffer *gOamBuffer;
 #endif
-extern void *gInput; /* UpdateKeys's object; it only reads gKeys */
+/* The key input object (new KeyInput, spawn_markers.cpp): a KeyInput
+ * (key_input.hpp), whose methods use gKeys, not the object. No C file
+ * uses it. */
+#ifdef __cplusplus
+extern class KeyInput *gInput;
+#endif
 /* The HUD (game_frame.cpp builds it): a Hud (hud.hpp). No C file uses
  * it. */
 #ifdef __cplusplus
@@ -101,8 +105,9 @@ extern class LevelState *gLevelState;
 #else
 extern struct level_state *gLevelState;
 #endif
-extern struct camera *gCamera;
 #ifdef __cplusplus
+/* The camera (PlayRoom builds it): a Camera (camera.hpp). */
+extern class Camera *gCamera;
 /* What the player's body touches (CollidePlayerWithObjects runs
  * CollidePartsOfClass on it): the pickups, gems, crystals, platforms and
  * Tiny's hop pads. */

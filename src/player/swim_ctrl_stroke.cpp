@@ -192,7 +192,7 @@ void SwimCtrl::StartSpin()
     speed = 960;
     flag = 0;
     gAudioContext->PlaySfx(SFX_UNKNOWN_09, 256);
-    if ((target->hitAxes & 3) && GetDpadDirection(gInput) <= 2)
+    if ((target->hitAxes & 3) && gInput->GetDpadDirection() <= 2)
         flag = 1;
 
     if (state == 4) {
@@ -283,7 +283,7 @@ void SwimCtrl::ApplySwimDrift()
         valA = 5;
     }
 
-    dir = GetDpadDirection(gInput);
+    dir = gInput->GetDpadDirection();
     if ((gRoomFrameCount & 0x7F) == 0 && (u16)RandRange(2) == 0) {
         Player *t = target;
         s32 x = Q8_TO_INT(t->x);

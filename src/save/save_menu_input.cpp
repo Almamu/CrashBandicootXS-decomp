@@ -2,6 +2,7 @@
 #include "audio.hpp"
 #include "level_state.hpp"
 #include "link_session.hpp"
+#include "key_input.hpp"
 
 extern "C" {
 #include "core.h"
@@ -55,7 +56,7 @@ u8 RunSaveMenu(u32 state, u32 cursor)
     for (;;) {
         u16 keys;
 
-        UpdateKeys(gInput);
+        gInput->Update();
         keys = gKeys.half.pressed;
         (*selfAddr)->Input(keys);
     dispatch:

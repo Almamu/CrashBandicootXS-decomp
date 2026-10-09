@@ -1,3 +1,5 @@
+#include "key_input.hpp"
+
 extern "C" {
 #include "core.h"
 #include "system.h"
@@ -20,8 +22,8 @@ extern "C" {
  * companion u16 at +2, see `UpdateKeys`'s own notes in
  * `src/system/key_input.cpp`) fresh each poll (no caching across polls, since
  * `UpdateKeys`'s call in between could change it). `UpdateKeys`
- * takes the input object (`gInput`, in r0 at every call) but never
- * reads it (system.h). Built with old_agbcc: agbcc loads `pressed`
+ * is gInput's method (KeyInput::Update, key_input.hpp) but never reads
+ * the object. Built with old_agbcc: agbcc loads `pressed`
  * straight into r1 and ANDs `mask` into it, where the ROM (and
  * old_agbcc) copies `mask` to r1 first (`adds r1, r7, #0`).
  *
@@ -43,7 +45,7 @@ s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask)
     if (count != 0) {
         for (i = 0; i < count; i++) {
             WaitForVBlank();
-            UpdateKeys(gInput);
+            gInput->Update();
             keys = (u16)mask & gKeys.half.pressed;
             if (checkButtons) {
                 if (keys & 1) {
@@ -57,7 +59,7 @@ s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask)
     } else if (checkButtons) {
         for (;;) {
             WaitForVBlank();
-            UpdateKeys(gInput);
+            gInput->Update();
             keys = (u16)mask & gKeys.half.pressed;
             if (keys & 1) {
                 break;

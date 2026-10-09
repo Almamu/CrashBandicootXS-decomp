@@ -15,6 +15,7 @@
 #include "level_select.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "camera.hpp"
 
 extern "C" {
 #include "match.h"

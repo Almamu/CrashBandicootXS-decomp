@@ -3,6 +3,7 @@
 #include "player.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "key_input.hpp"
 
 extern "C" {
 #include "match.h"
@@ -151,7 +152,7 @@ void ActionCtrl::StateLeftGround()
         }
     }
     {
-        u8 dir = GetDpadDirection(gInput);
+        u8 dir = gInput->GetDpadDirection();
 
         if (dir == 0) {
             motionXKeepSpeed = dir;
@@ -196,7 +197,7 @@ void ActionCtrl::StateWarpIn()
  * facing. */
 void ActionCtrl::StateHang()
 {
-    u8 dir = GetDpadDirection(gInput);
+    u8 dir = gInput->GetDpadDirection();
     u32 in = gKeys.all;
 
     if (dir != 0)
@@ -279,7 +280,7 @@ void ActionCtrl::ReleaseHang()
  * 5). Then the facing. */
 void ActionCtrl::StateHangMoveStart()
 {
-    void *pad = gInput;
+    KeyInput *pad = gInput;
     u32 in = gKeys.all;
     s32 v = INPUT_PRESSED(in) & 1;
 
@@ -297,7 +298,7 @@ void ActionCtrl::StateHangMoveStart()
         motionX = 0;
         return;
     }
-    v = GetDpadDirection(pad);
+    v = pad->GetDpadDirection();
     if (v == 0) {
         SetMode(ACTION_STATE_HANG_STOP);
         SetTargetAnim(part, 0x22);
@@ -342,7 +343,7 @@ void ActionCtrl::StateHangMoveStart()
  * frame's anchor X (mirrored). */
 void ActionCtrl::StateHangMove()
 {
-    u8 dir = GetDpadDirection(gInput);
+    u8 dir = gInput->GetDpadDirection();
     u32 in = gKeys.all;
     Player *p = part;
     s32 fire;

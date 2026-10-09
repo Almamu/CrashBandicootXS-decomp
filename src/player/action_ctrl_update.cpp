@@ -4,6 +4,7 @@
 #include "player.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "key_input.hpp"
 
 extern "C" {
 #include "system.h"
@@ -290,7 +291,7 @@ done:
     if (state == ACTION_STATE_AIRBORNE_JUMP || state == ACTION_STATE_AIRBORNE_FLIP_JUMP ||
         state == ACTION_STATE_AIRBORNE_HIGH_JUMP || state == ACTION_STATE_AIR_SPIN ||
         state == ACTION_STATE_AIRBORNE_FALL) {
-        if (GetDpadDirection(gInput) <= 2) {
+        if (gInput->GetDpadDirection() <= 2) {
             QueueNowX(0);
         } else {
             if (motionX == 0x1B || motionX == 0x1C) {

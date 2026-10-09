@@ -98,8 +98,8 @@ const struct hovercraft_picture {
 #include "boss_pictures/169ce8.inc"
 };
 
-/* GetDpadDirection (irq.cpp): the d-pad direction (0-8, 0 = none) of each
- * combination of the right/left/up/down bits. */
+/* KeyInput::GetDpadDirection (key_input.cpp): the d-pad direction (0-8,
+ * 0 = none) of each combination of the right/left/up/down bits. */
 const u8 gDpadDirectionTable[16] = {
     0, 1, 2, 2, 3, 5, 7, 7, 4, 6, 8, 8, 4, 6, 8, 8,
 };

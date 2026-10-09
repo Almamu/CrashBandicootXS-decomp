@@ -7,6 +7,7 @@
 #include "sprite_obj.hpp"
 #include "frontend.hpp"
 #include "audio.hpp"
+#include "key_input.hpp"
 
 extern "C" {
 #include "gba/io_reg.h"
@@ -156,7 +157,7 @@ s32 ContinuePrompt::Loop()
 
     while (dir >= 0) {
         MATCH_USE(audio); /* extra reference: audio outranks i for r7 */
-        UpdateKeys(gInput);
+        gInput->Update();
         {
             struct held_pressed_pair k = *input;
 

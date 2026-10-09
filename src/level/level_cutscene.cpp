@@ -57,7 +57,7 @@ LevelState::~LevelState()
     delete gOamBuffer;
     delete gObjVramCursor;
     if (gInput != NULL) /* KeyInput has no destructor: `delete` alone tests nothing */
-        delete (KeyInput *)gInput;
+        delete gInput;
     gAudioContext->DisableVCountIrq();
     delete gAudioContext;
     delete gLargeFont;

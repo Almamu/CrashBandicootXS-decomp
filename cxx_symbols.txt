@@ -1811,3 +1811,13 @@ ShowCompanyLogos__10LevelState ShowCompanyLogos
 PlayBootCutscene__10LevelState PlayBootCutscene
 UnpackSaveData__10LevelStatePC13game_progress UnpackSaveData
 PackSaveData__10LevelState PackSaveData
+#
+# #759: KeyInput's Update and GetDpadDirection (include/key_input.hpp; src/system/key_input.cpp)
+Update__8KeyInput UpdateKeys
+GetDpadDirection__8KeyInput GetDpadDirection
+#
+# #761: the camera (include/camera.hpp; src/level/camera.cpp)
+StepDirectional__6Camera StepCameraDirectional
+StepFacing__6Camera StepCameraFacing
+Snap__6Camera SnapCamera
+Update__6Camera UpdateCamera

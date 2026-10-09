@@ -1,6 +1,7 @@
 #include "menus.hpp"
 #include "font.hpp"
 #include "audio.hpp"
+#include "key_input.hpp"
 
 extern "C" {
 #include "system.h"
@@ -123,7 +124,7 @@ void PowerDialog::Loop()
         Draw();
         CommitFrame();
         Animate();
-        UpdateKeys(gInput);
+        gInput->Update();
     } while (!(gKeys.half.pressed & START_BUTTON));
     while (bldy.evy != 0x10) {
         bldy.evy++;

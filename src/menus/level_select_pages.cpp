@@ -1,5 +1,6 @@
 #include "level_select.hpp"
 #include "audio.hpp"
+#include "key_input.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -169,7 +170,7 @@ void LevelSelect::PrevWorld()
         world--;
         bg1->TurnBack();
         TurnPage();
-        UpdateKeys(gInput);
+        gInput->Update();
         if (!(gKeys.all & DPAD_DOWN))
             goto done;
     check:
@@ -194,7 +195,7 @@ void LevelSelect::NextWorld()
         world++;
         bg1->TurnForward();
         TurnPage();
-        UpdateKeys(gInput);
+        gInput->Update();
         if (!(gKeys.all & DPAD_UP))
             goto done;
     check:

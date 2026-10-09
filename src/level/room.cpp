@@ -1,6 +1,7 @@
 #include "sprite_obj.hpp"
 #include "bg_layer.hpp"
 #include "level_state.hpp"
+#include "camera.hpp"
 
 extern "C" {
 #include "core.h"
@@ -46,7 +47,7 @@ void LevelProgress::ResumeRoomAfterPause()
 
     gObjVramCursor->Reset();
     gOamBuffer->Reset();
-    SnapCamera(gCamera);
+    gCamera->Snap();
     gLevelLayers->Reset();
     UpdateRoomFrame();
     SetDispcntMode(0);

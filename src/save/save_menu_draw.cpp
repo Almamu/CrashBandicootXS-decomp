@@ -1,6 +1,7 @@
 #include "save_menu.hpp"
 #include "link_session.hpp"
 #include "graphics_package.hpp"
+#include "key_input.hpp"
 
 extern "C" {
 #include "core.h"
@@ -52,7 +53,7 @@ s32 SaveMenu::LinkExchange()
     spinner->Reset();
     do {
         WaitForVBlank();
-        UpdateKeys(gInput);
+        gInput->Update();
         if ((u16)(gKeys.all & 2)) {
             result = 3;
         } else {

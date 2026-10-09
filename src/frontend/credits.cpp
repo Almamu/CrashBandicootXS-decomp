@@ -1,6 +1,7 @@
 #include "sprite_obj.hpp"
 #include "frontend.hpp"
 #include "audio.hpp"
+#include "key_input.hpp"
 
 extern "C" {
 #include "match.h"
@@ -76,7 +77,7 @@ void Credits::Loop()
     s32 i;
 
     for (;;) {
-        UpdateKeys(gInput);
+        gInput->Update();
         if (gKeys.half.pressed & 9) {
             break;
         }
