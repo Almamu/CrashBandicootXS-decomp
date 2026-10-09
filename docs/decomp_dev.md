@@ -213,7 +213,13 @@ unit for them, so they drop out of both the matched and the total counts.
 crt0 is excluded the same way: its range comes before the first unit. The
 bytes are still verified by `make compare`. Only mark a range
 `HANDWRITTEN` once it's confirmed to be hand-written, not just hard to
-match.
+match. GAX2's ARM DSP routines (`lib/gax/asm/gax_arm_dsp.s`, from
+0x0803A628) are one: hand-written ARM in every GAX version
+([libraries.md](./libraries.md#gax-implementation-notes)). Until #837
+they were raw bytes inside the `gax_sound_handler_mixer_play.o` unit and
+counted as matched code. The disassembly has no function label there,
+only the local `_0803A628:`, so `tools/slice_expected.py` also accepts a
+local label named after the address as a range boundary.
 
 ## The IWRAM image
 

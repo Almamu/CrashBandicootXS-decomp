@@ -539,8 +539,9 @@ gcc 2.9:
   can merge two identical ones and flow deletes it when the output is
   dead. `asm volatile` stops all three and makes it a full scheduling
   barrier. The `_VOLATILE` macros are for the sites where the plain form
-  was moved or merged. Only `MATCH_USE2_VOLATILE` (`lib/gax/src/gax_swi.c`)
-  and one spelled-out `asm volatile` keep (below) are left.
+  was moved or merged. No site uses them now: the last two, in
+  `GaxHuffUnComp`, went when it was rewritten in Shin'en's form
+  (register variables and one inline `swi`, two `MATCH_USE_MEM`s).
 
 | Spelling | Macro | What gcc 2.9 does with it | Typical use |
 |---|---|---|---|
@@ -564,24 +565,26 @@ The rarer forms, a few sites each:
 
 | Spelling | Macro | Sites | What it does |
 |---|---|---|---|
-| `asm("" : : "r"(a), "r"(b))` | `MATCH_USE2(a, b)`, `MATCH_USE2_VOLATILE(a, b)` | 2 | `MATCH_USE` of two values in one insn. Not the same as two `MATCH_USE`s, which are two insns. |
+| `asm("" : : "r"(a), "r"(b))` | `MATCH_USE2(a, b)`, `MATCH_USE2_VOLATILE(a, b)` | 0 | `MATCH_USE` of two values in one insn. Not the same as two `MATCH_USE`s, which are two insns. |
 | `asm("" : : : "r5")` | `MATCH_CLOBBER(r5)`, `MATCH_CLOBBER_VOLATILE(r4)` | 2 | Tells gcc the register is clobbered, so the prologue saves it even though nothing uses it, as the ROM does ([issue-9-raw-asm-pass.md](./matching/archive/issue-9-raw-asm-pass.md), `UpdateEnemyBob`; `src/enemies/enemy_ctrl.cpp`); it also forces a reload of whatever the register held. |
 | `asm volatile("" ::: "memory")` | `MATCH_MEMORY_BARRIER()` | 0 | Makes gcc forget memory and acts as a barrier. It does not stop address CSE, which is what it was usually tried for. No site needs it any more. |
 | `asm("" : "+m"(x))` | `MATCH_KEEP_MEM(x)` | 2 | `x` is in memory here with an unknown value, so a later read is a real load (the `ldm r1!` re-read in `ConvertAirshipTiles`). |
-| `asm("" : : "m"(x))` | `MATCH_USE_MEM(x)` | 0 | `x` must be in memory here: kept a value in its stack slot across a call (`SpawnFlamethrowerLabAssistant` until #662 round 4). |
+| `asm("" : : "m"(x))` | `MATCH_USE_MEM(x)` | 2 | `x` must be in memory here: kept a value in its stack slot across a call (`SpawnFlamethrowerLabAssistant` until #662 round 4); `GaxHuffUnComp`'s dead stores of its two arguments. |
 
 An asm that reads a field through `"m"` can also fix the order of a load
 against a constant
 ([issue-59-60-m-operand-scheduling.md](./matching/archive/issue-59-60-m-operand-scheduling.md)).
 
-One empty asm stays written out, a one-off shape that no macro covers
-(a macro for one site would only add a name to look up). It is
-`ALLOWED_SPELLED` in `tools/match_idioms.py` (`EndSpin`'s keep-and-use
-went in #662 round 4, and `SaveTransfer::ReceiveChunk`'s untied `"=r"`/`"r"`
-copy in round 5):
+No empty asm stays written out. A one-off shape no macro covers would
+be listed in `ALLOWED_SPELLED` (`tools/match_idioms.py`), which is empty:
+`EndSpin`'s keep-and-use went in #662 round 4,
+`SaveTransfer::ReceiveChunk`'s untied `"=r"`/`"r"` copy in round 5, and
+`GaxHuffUnComp`'s two `"m"` inputs became two `MATCH_USE_MEM`s.
 
-- `asm volatile("" : : "m"(src), "m"(dst))` in `lib/gax/src/gax_swi.c`:
-  two `"m"` inputs in one insn (`mem_ref`).
+`ORIGINAL_SOURCE`, next to it, lists the asm that is the original
+program's own source rather than a workaround: GAX2's inline asm
+(below). `--check` allows it spelled out as the original wrote it, and
+`--functions` doesn't count it.
 
 ## Memory accesses
 
@@ -659,11 +662,15 @@ address when it can
 
 ### Instruction asm
 
-17 asm statements emit real instructions (from 253 when the #576 survey
-counted them): `swi`/`svc` calls with their registers, GAX2's
-hardware settle delays (`.byte`-encoded) and call-into-ARM sequence, two
-`ldrsh` forms, a pair of `lsl`/`lsr` halfword truncations and
-`FindSubstring`'s case folding. They are the last
+6 asm statements emit real instructions (from 253 when the #576 survey
+counted them). Two are workarounds: the `swi`/`svc` calls of `itoa_arm`
+and `src/system/bios_util.cpp`, with their registers. Four are GAX2's own
+source (`ORIGINAL_SOURCE`, not counted as workarounds; docs/libraries.md,
+"GAX implementation notes"): `GAX_DMA_WAIT` (the DMA settle delay,
+`mov r3, r3` and three `nop`s, as GAX 3.05A's matched C writes it; the
+assembler encodes that `mov` as the ROM's `add r3, r3, #0`, which the
+`.byte 0x1b, 0x1c` it replaces spelled out), `GAX_CALL_ARM` and
+`GAX_CALL_ARM_R` (the call into ARM code) and `GaxHuffUnComp`'s `swi`. They are the last
 resort, for orders gcc can't be talked into, and every one says why. An asm tail is also never cross-jumped with C tails
 ([naked-sub_800fdc8-matched.md](./matching/archive/naked-sub_800fdc8-matched.md)).
 They have no macro: each is a specific instruction sequence.
@@ -911,7 +918,8 @@ each:
 - **A re-read from memory** (`MATCH_KEEP_MEM`/`MATCH_USE_MEM`, 3): the
   `ldm r1!` re-read in `ConvertAirshipTiles`.
 - **Instructions no C produces** (17 instruction asms): `swi` calls,
-  GAX2's hardware settle delays and call into ARM code.
+  GAX2's hardware settle delays and call into ARM code. GAX2's turned
+  out to be its own source (below).
 - **Accesses of another width or a forced load** (23 retyped field
   accesses, 9 scoped volatiles): `Player::HandleEvent`'s dead load of
   `maskLevel`.
@@ -983,6 +991,8 @@ barriers (both since fixed by the compiler options: iwram-image.md,
 "Ninth step"), `FindSubstring`'s case folds (63 more spellings: only `char`
 locals keep both arms' copies, with the truncation inside one arm),
 `GAX2_init`'s and `DrawWrappedText`'s holds and `GaxChannelMix`'s keep.
+(GAX2's settle delays, ARM calls and SWI are its original inline asm
+since; see "GAX2's inline asm is original source" below.)
 
 Round 2, player/crates/frontend (after the C++ conversion):
 
@@ -1922,6 +1932,37 @@ enabled and are printed; their three objects get `-Wno-error`
 (`UNINIT_WARNING_OBJS`, [Warnings](#warnings)). All three objects are
 byte-identical. 2 functions freed (GAX_fx, EEPROMWrite1_check); itoa_arm
 keeps its other sites.
+
+**GAX2's inline asm is original source (owner decision).** The kept GAX2
+sites were not workarounds but Shin'en's own inline asm, by the evidence
+in docs/libraries.md ("GAX implementation notes": GAX 3.05A's matched C
+has the same settle delay as `__asm__ volatile`, and calls its ARM code
+from C). They are written the way the original most likely had them and
+listed in `tools/match_idioms.py`'s `ORIGINAL_SOURCE`, so `--functions`
+doesn't count them; 7 functions freed:
+
+- **GAX_DMA_WAIT** (gax_internal.h): `mov r3, r3` and three `nop`s, not
+  the `.byte 0x1b, 0x1c` + `mov r8, r8` spelling. GaxResetSoundHardware,
+  GAX_irq, GAX_stop and GaxStopDma.
+- **GAX_CALL_ARM / GAX_CALL_ARM_R**: the hand-computed Thumb -> ARM call.
+  The register form is now a plain `"r"(arg), "r"(fn)` asm called as
+  `GAX_CALL_ARM_R(gGaxPlayerState->mixCode, &item)`; the old macro's
+  state-to-routine walk through one variable isn't needed. The memory
+  form keeps its `"m"` operand (the ROM loads the item pointer from a
+  stack slot). GaxMixerApplyEcho, GaxMixerApplyFilter and GaxMixFrame
+  are left with nothing else; GaxChannelMix keeps its clamp keep and
+  volatile read (both still needed with the new macro, rounds 3-9).
+- **GaxHuffUnComp**: `register` variables in r7 and r8 (spelled out, the
+  original's; the ROM's missing r7 save is agbcc's r7-pin bug) and one
+  `swi 0x13; mov r0, r7; mov r1, r8` asm, replacing the four
+  `MATCH_HOLD_REG`s and `MATCH_USE2_VOLATILE`. The dead stores of both
+  arguments still take a memory use of each (two `MATCH_USE_MEM`s,
+  counted): what the original had there is unknown.
+
+The ARM DSP routines, hand-written in every GAX version, are assembly:
+`lib/gax/asm/gax_arm_dsp.s`, disassembled from the raw `.byte` block
+that ended `gax_sound_handler_mixer_play.c`, `HANDWRITTEN` in the
+report. The function count stays 2059.
 
 ## Survey and conversion record (#576)
 

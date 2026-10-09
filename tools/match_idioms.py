@@ -573,9 +573,26 @@ SPELLED_KINDS = ("pin", "empty", "empty_volatile", "use", "use_volatile", "keep"
 # The sites that stay spelled out, as (file, kind) -> (count, reason).
 # docs/matching_techniques.md lists them too. Keep the counts exact: a
 # new site fails the check, and so does a stale entry.
-ALLOWED_SPELLED = {
-    ("lib/gax/src/gax_swi.c", "mem_ref"):
-        (1, 'two "m" inputs in one volatile asm; no macro has that shape'),
+ALLOWED_SPELLED = {}
+
+# Sites that are the original program's own source, not matching
+# workarounds, as (file, kind) -> (count, reason): --check allows them
+# (spelled out, as the original wrote them) and --functions doesn't count
+# them against the functions that use them. Only for constructs with
+# outside evidence that the original had them. Keep the counts exact, as
+# for ALLOWED_SPELLED: a new site of the same kind in the file fails
+# --check until it is either a workaround elsewhere or listed here.
+ORIGINAL_SOURCE = {
+    ("lib/gax/src/gax_internal.h", "insn"):
+        (3, "Shin'en's inline asm: GAX_DMA_WAIT (the DMA settle delay) and "
+            "GAX_CALL_ARM/GAX_CALL_ARM_R (the call into ARM code); see "
+            "docs/libraries.md, \"GAX implementation notes\""),
+    ("lib/gax/src/gax_swi.c", "insn"):
+        (1, "GaxHuffUnComp's inline swi, Shin'en's (docs/libraries.md, "
+            "\"GAX implementation notes\")"),
+    ("lib/gax/src/gax_swi.c", "pin"):
+        (2, "GaxHuffUnComp's r7/r8 register variables, Shin'en's: the ROM has "
+            "agbcc's r7-pin bug (docs/libraries.md, \"GAX implementation notes\")"),
 }
 
 
@@ -601,7 +618,9 @@ def check_spelled(hits):
         for rel, _ in hits.get(kind, []):
             counts[(rel, kind)] += 1
     for (rel, kind), n in sorted(counts.items()):
-        if n > ALLOWED_SPELLED.get((rel, kind), (0, None))[0]:
+        allowed = ALLOWED_SPELLED.get((rel, kind), (0, None))[0]
+        allowed += ORIGINAL_SOURCE.get((rel, kind), (0, None))[0]
+        if n > allowed:
             bad += 1
             for r, ln in sorted(hits[kind]):
                 if r == rel:
@@ -612,9 +631,20 @@ def check_spelled(hits):
             bad += 1
             print("%s: ALLOWED_SPELLED expects %d %s site(s), found %d; update the list"
                   % (rel, n, kind, counts[(rel, kind)]))
+    all_counts = collections.Counter()
+    for kind, sites in hits.items():
+        for rel, _ in sites:
+            all_counts[(rel, kind)] += 1
+    for (rel, kind), (n, _) in sorted(ORIGINAL_SOURCE.items()):
+        if all_counts[(rel, kind)] != n:
+            bad += 1
+            print("%s: ORIGINAL_SOURCE expects %d %s site(s), found %d; update the list"
+                  % (rel, n, kind, all_counts[(rel, kind)]))
     if not bad:
-        print("ok: no spelled-out matching idioms outside the %d documented exceptions"
-              % sum(n for n, _ in ALLOWED_SPELLED.values()))
+        print("ok: no spelled-out matching idioms outside the %d documented exceptions "
+              "(and %d original-source sites)"
+              % (sum(n for n, _ in ALLOWED_SPELLED.values()),
+                 sum(n for n, _ in ORIGINAL_SOURCE.values())))
     return 1 if bad else 0
 
 
@@ -766,7 +796,8 @@ def workaround_functions():
                     continue
                 offsets = []
                 text = scan_file(p, rel, collections.defaultdict(list), offsets)
-                sites = [(k, pos) for k, pos in offsets if k in WORKAROUND_KINDS]
+                sites = [(k, pos) for k, pos in offsets
+                         if k in WORKAROUND_KINDS and (rel, k) not in ORIGINAL_SOURCE]
                 seen = set(pos for _, pos in offsets)
                 sites += [(m.group(0).rstrip("( \t\n"), m.start())
                           for m in ANY_MATCH_MACRO.finditer(text) if m.start() not in seen]

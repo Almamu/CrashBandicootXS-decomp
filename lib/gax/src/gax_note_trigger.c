@@ -3,8 +3,8 @@
 
 /* GAX2 per-channel mixer (issue #68): renders channel `self` into
  * `buf` through the ARM resampling routine `gGaxPlayerState->mixCode`
- * points at (an IWRAM copy of the raw ARM code at
- * `gGaxArmResample`, gax_sound_handler_mixer_play.c). Called by the Channel
+ * points at (an IWRAM copy of the hand-written ARM code at
+ * `gGaxArmResample`, lib/gax/asm/gax_arm_dsp.s). Called by the Channel
  * play_fns `GaxChannelPlay`/`GaxFxChannelPlay` as `GaxChannelMix(self, info, buf,
  * arg, type data, flag)`.
  *
@@ -267,7 +267,7 @@ u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, voi
                     GAX_PATCH_MIXER(gGaxArmResampleMixEndTest, 0xcaff);
                 }
             }
-            GAX_CALL_ARM_R(gGaxPlayerState, &item);
+            GAX_CALL_ARM_R(gGaxPlayerState->mixCode, &item);
             if (item.done == self->format->frames)
                 break;
             if (pingpong) {
