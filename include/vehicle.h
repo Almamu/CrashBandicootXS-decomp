@@ -49,8 +49,8 @@ extern void DestroyJetpackTimeCrate(void *self, u32 flags);
 extern void DestroyJetpackQuestionCrate(void *self, u32 flags);
 
 /* src/actor/actor_category_frame.cpp */
-extern s32 PolarIsTouchingPlayer(void *self);
-extern s32 JetpackIsTouchingPlayer(void *self);
+extern s32 PolarIsTouchingPlayer(struct ActorSelf *self);
+extern s32 JetpackIsTouchingPlayer(struct ActorSelf *self);
 
 /* src/actor/actor_factory.cpp */
 extern void CreatePolarCheckpointText(s32 x, s32 y, s32 z);
@@ -76,7 +76,7 @@ extern u8 IsJetpackPlayerInactive(void);
 /* src/vehicle/jetpack/jetpack_spawn.cpp: the spawners (C linkage) */
 extern void YetiStateStop(void);
 extern void *SpawnJetpackActor(struct actor_spawn *rec, u8 alt, s32 dz);
-extern void *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, void *spawn);
+extern void *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, struct actor_spawn *spawn);
 extern void CreateJetpackCheckpointText(void);
 extern void CreateJetpackExplosion(s32 x, s32 y, s32 z);
 extern void SpawnJetpackCollectedWumpa(s32 a, s32 b, s32 c);

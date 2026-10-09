@@ -37,7 +37,7 @@ extern "C" {
  * as in the ROM. A few constructors take the record's `spawnX` for x
  * where the others take the moved x. */
 
-ActorSelf *CreateActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
+ActorSelf *CreateActor(u8 kind, s32 x, s32 y, s32 z, struct actor_spawn *spawn)
 {
     x += gActorAnimTable[kind].spawnX;
     y += gActorAnimTable[kind].spawnY;

@@ -31,22 +31,22 @@ static inline u8 ActorsOverlap(ActorSelf *pl, ActorSelf *self)
     return BoxOverlap(WorldBox(pl), WorldBox(self));
 }
 
-s32 PolarIsTouchingPlayer(void *self)
+s32 PolarIsTouchingPlayer(ActorSelf *self)
 {
     ActorSelf **plAddr = &gActorList;
 
     if (gPolarPlayerInactive != 0)
         return 0;
-    return ActorsOverlap(*plAddr, (ActorSelf *)self);
+    return ActorsOverlap(*plAddr, self);
 }
 
-s32 JetpackIsTouchingPlayer(void *self)
+s32 JetpackIsTouchingPlayer(ActorSelf *self)
 {
     ActorSelf **plAddr = &gActorList;
 
     if (gJetpackPlayerInactive != 0)
         return 0;
-    return ActorsOverlap(*plAddr, (ActorSelf *)self);
+    return ActorsOverlap(*plAddr, self);
 }
 
 /* The category's frame: the category vtable's slot 3 (the frame's

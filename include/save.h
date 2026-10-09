@@ -42,10 +42,6 @@ extern const u16 gSaveMenuPalette1[16];
 extern const u16 gSaveMenuPalette2[16];
 extern const u16 gSaveMenuPalette3[16];
 
-/* src/save/save_data.cpp */
-extern s32 ReadSaveData(void *self, s32 len);
-extern s32 WriteSaveData(void *self, s32 len);
-
 /* The save data's and the save transfer's methods (C++,
  * include/save_data.hpp: classes SaveData and SaveTransfer) have no C
  * caller and no C prototype. */

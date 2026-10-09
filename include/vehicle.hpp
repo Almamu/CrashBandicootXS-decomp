@@ -235,9 +235,10 @@ public:
 class PolarLifeCrate : public PolarCrate
 {
 public:
-    void *spawn; // 0x54
+    struct actor_spawn *spawn; // 0x54
 
-    PolarLifeCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z, void *spawn);
+    PolarLifeCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z,
+                   struct actor_spawn *spawn);
     virtual ~PolarLifeCrate(); // 1 DestroyPolarLifeCrate
     virtual void Update();     // 2 UpdatePolarLifeCrate
 };
@@ -689,10 +690,11 @@ public:
 class JetpackQuestionCrate : public JetpackBalloonCrate
 {
 public:
-    void *spawn; // 0x70 - the level spawn record, for MarkSpawnCollected
+    struct actor_spawn *spawn; // 0x70 - the level spawn record, for MarkSpawnCollected
 
     // CreateJetpackQuestionCrate
-    JetpackQuestionCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z, void *spawn);
+    JetpackQuestionCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z,
+                         struct actor_spawn *spawn);
     virtual void Update();           // 2 UpdateJetpackQuestionCrate
     virtual void Damage(s32 amount); // 4 DamageJetpackQuestionCrate
 };

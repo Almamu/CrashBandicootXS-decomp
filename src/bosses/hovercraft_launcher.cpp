@@ -52,11 +52,11 @@ void HovercraftLauncher::StateLaunch()
                 s32 n;
 
                 if (kind == 0)
-                    CreateJetpackActor(5, x, y, z, (void *)slot);
+                    CreateJetpackActor(5, x, y, z, (struct actor_spawn *)slot);
                 else if (kind == 1)
-                    CreateJetpackActor(6, x, y, z, (void *)slot);
+                    CreateJetpackActor(6, x, y, z, (struct actor_spawn *)slot);
                 else
-                    CreateJetpackActor(8, x, y, z, (void *)slot);
+                    CreateJetpackActor(8, x, y, z, (struct actor_spawn *)slot);
 
                 n = count + 1;
                 count = n;

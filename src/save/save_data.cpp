@@ -16,7 +16,7 @@ extern "C" {
  * the EEPROM chip (the SDK's `EEPROMRead`) into a stack
  * buffer sized `len` (always 0x200, `sizeof(struct
  * save_data)`, from every call site), then copies the whole
- * buffer into `self`. One-time-inits the EEPROM chip config
+ * buffer into `this`. One-time-inits the EEPROM chip config
  * (`EEPROMConfigure`) and claims hardware timer 2 for the transfer
  * (`SetEepromTimerIntr`, installing its handler straight into the Timer 2
  * slot of the IRQ table, `gIntrTableTimer2`) on the way in. Returns -1 on any block-read failure
@@ -33,7 +33,7 @@ extern "C" {
  * instruction diff misreports the trailing literal-pool word at this
  * exact symbol boundary as a size mismatch even though the raw bytes
  * are identical). */
-s32 ReadSaveData(void *self, s32 len)
+s32 SaveData::Read(s32 len)
 {
     u8 buf[0x200];
     s32 i;
@@ -68,7 +68,7 @@ s32 ReadSaveData(void *self, s32 len)
         REG_IME = 1;
     }
 
-    MemCopy32(self, buf, len);
+    MemCopy32(this, buf, len);
     return 0;
 
 fail_restore:
@@ -82,15 +82,15 @@ fail_restore:
     return -1;
 }
 
-/* EEPROM "save" - counterpart to `ReadSaveData`: same one-time
- * chip-config init and timer-2 claim, but copies `self` into a stack
+/* EEPROM "save" - counterpart to `SaveData::Read`: same one-time
+ * chip-config init and timer-2 claim, but copies `this` into a stack
  * buffer *after* the chip-config check (not before, matching the
  * ROM's own instruction order), then writes it out `maxCount` 8-byte
  * blocks at a time (the SDK's `EEPROMWrite1_check`). Same -1-on-failure/
  * 0-on-success return and IME-save/IE-clear/IME-restore snippet as
- * `ReadSaveData`, byte-identical as plain C for the same reason (see
+ * `SaveData::Read`, byte-identical as plain C for the same reason (see
  * that function's doc comment). */
-s32 WriteSaveData(void *self, s32 len)
+s32 SaveData::Write(s32 len)
 {
     u8 buf[0x200];
     s32 i;
@@ -104,7 +104,7 @@ s32 WriteSaveData(void *self, s32 len)
         gEepromNeedsInit = 0;
     }
 
-    MemCopy32(buf, self, len);
+    MemCopy32(buf, this, len);
 
     REG_IME = 0;
     SetEepromTimerIntr(2, &gIntrTableTimer2);
@@ -140,7 +140,7 @@ fail_restore:
     return -1;
 }
 
-/* Loads the settings record from EEPROM (`ReadSaveData`, retried up to
+/* Loads the settings record from EEPROM (`SaveData::Read`, retried up to
  * 3 times), muting the music player across the transfer (stop before,
  * resume after, matching `src/audio/audio.cpp`'s established
  * `AudioContext` helpers), then validates the loaded record's two
@@ -165,7 +165,7 @@ s32 SaveData::Load()
 
     i = 0;
     do {
-        result = ReadSaveData(this, 0x200);
+        result = Read(0x200);
         i++;
     } while (i <= 2 && result != 0);
 
@@ -249,7 +249,7 @@ u32 SaveData::GetGameId()
     return versionNibble >> 4;
 }
 
-/* Saves the settings record to EEPROM (`WriteSaveData`, retried up to 5
+/* Saves the settings record to EEPROM (`SaveData::Write`, retried up to 5
  * times), muting the music player across the transfer the same way
  * `SaveData::Load` (src/save/save_data.cpp) does (checksum
  * refreshed first via `SaveData::UpdateChecksum`, before the mute). Returns 4
@@ -274,7 +274,7 @@ s32 SaveData::Store()
 
     i = 0;
     do {
-        result = WriteSaveData(this, 0x200);
+        result = Write(0x200);
         i++;
     } while (i <= 4 && result != 0);
 

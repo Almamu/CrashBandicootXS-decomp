@@ -58,7 +58,7 @@ struct level_anim {
  * action controller ActionCtrl (action_ctrl.hpp), the swim controller
  * SwimCtrl (swim_ctrl.hpp), the input controller InputCtrl
  * (input_ctrl.hpp) and the boss controllers (boss_ctrl.hpp). gSwimCtrl
- * is a `void *`. */
+ * names SwimCtrl's own tag: an incomplete struct to C, the class to C++. */
 
 /* The attack kind of each action controller state (QueueCratePlayerCollision,
  * src/data/object_tables_16bb6c.c). */
@@ -92,7 +92,7 @@ extern const struct entry_set gSwimCtrlMotionSet;
 extern const struct entry_set gInputCtrlMotionSet;
 
 /* The player's controller (sym_iwram.txt), built by PlayRoom. */
-extern void *gSwimCtrl;
+extern struct SwimCtrl *gSwimCtrl;
 
 /* SetSwimCtrlState's `timer`/`timerMax` value that keeps the current
  * one. */

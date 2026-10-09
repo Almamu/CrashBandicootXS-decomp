@@ -746,6 +746,9 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/objects/moving_sprite_probe.cpp`, `ground_sprite_collide.cpp`, `src/player/player_anim_room.cpp`, `player_collide.cpp` | callers: `gLevelLayers->Probe(...)` & co.; level.h's 8 probe prototypes went | 0 | (unchanged) | 0 -> 0 | [#760, #762](#the-terrain-probes-and-the-entity-flags-760-762) |
 | `src/level/entity_flags.cpp`, `room_entities.cpp`, `entity_bitmap.cpp` (again) | `LevelEntityFlags` moves to new include/entity_flags.hpp and is the whole class (level.h's struct entity_flags went); `SpawnRoomEntities` is its method; `Bitmap` (new, all UNUSED): constructor (InitBitmap), `Set`, `ClearBit`, `Clear` | 1 + 4 | (unchanged) | 0 -> 0 | [#760, #762](#the-terrain-probes-and-the-entity-flags-760-762) |
 | globals.h, level_state.hpp, entity.hpp, entity_bits.h, `src/crates/crate_create.cpp`, `crate_break.cpp`, `crate_fields.cpp`, `crate_switches.cpp`, `src/level/level_query.cpp`, `level_layers.cpp`, `game_frame.cpp`, `level_cutscene.cpp`, `bonus_round.cpp`, `level_state.cpp` | `gEntityFlags` is a `LevelEntityFlags *` (C++ only); `IsEntityIdActivated(gEntityFlags, ...)` & co. are `gEntityFlags->IsActivated(...)`, `delete (LevelEntityFlags *)gEntityFlags` is `delete gEntityFlags`; level.h's 10 prototypes went | 0 | (unchanged) | 0 -> 0 | [#760, #762](#the-terrain-probes-and-the-entity-flags-760-762) |
+| `src/save/save_data.cpp` (again) | `SaveData::Read` (ReadSaveData) and `Write` (WriteSaveData): methods, `Load`/`Store` call `Read(0x200)`/`Write(0x200)`; save.h's prototypes go | 2 | (unchanged) | 0 -> 0 | [#763](#small-method-moves-and-retypes-763) |
+| `src/bosses/tiny.cpp` (again) | `TinyCtrl::HitStub` (TinyHitStub), the empty hook `SetState` calls; bosses.h's prototype goes | 1 | (unchanged) | 0 -> 0 | [#763](#small-method-moves-and-retypes-763) |
+| player.h, actor.h, vehicle.h, bosses.h, vehicle.hpp, `src/level/play_room.cpp`, the IsTouching* and spawn-list files | `gSwimCtrl` is a `SwimCtrl *`; `IsTouchingPlayer`, `PolarIsTouchingPlayer`, `JetpackIsTouchingPlayer`, `IsTouchingAirship` take an `ActorSelf *`; `IsSpawnCollected`, `MarkSpawnCollected`, `gCollectedSpawns`, `CreateActor`, `CreateJetpackActor` and the two life crates' `spawn` an `actor_spawn *` | 0 | (unchanged) | 0 -> 0 | [#763](#small-method-moves-and-retypes-763) |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -3855,8 +3858,8 @@ function keeping its C name through cxx_symbols.txt:
   `return ChecksumOk();` ([An inline body the ROM also has out of
   line](#dead-ends-and-gotchas)). TestSaveFlags' and ClearSaveFlags'
   parameter was called `flags` like the field; it is `mask` now.
-  ReadSaveData and WriteSaveData take a `void *` buffer and a length and
-  stay free functions.
+  ReadSaveData and WriteSaveData took a `void *` buffer and a length and
+  stayed free functions (`SaveData::Read` and `Write` since #763).
 
 The layouts are the classes' alone now: no C file used them (the two
 data files that include link.h and save.h only see the tags). save.h's
@@ -4236,6 +4239,29 @@ stay (cxx_symbols.txt's `#760` and `#762` blocks):
   bitset with no caller. InitBitmap, which cleared and returned `self`,
   is its constructor (g++ returns `this`), ClearBitmap `Clear`,
   SetBitmapBit `Set` and ClearBitmapBit `ClearBit`. All UNUSED.
+
+### Small method moves and retypes (#763)
+
+Leftovers of #750-#754, every object byte-identical to origin/main's:
+
+- **SaveData::Read and Write** (ReadSaveData, WriteSaveData): their only
+  callers were `Load` and `Store`, as `(this, 0x200)`; the buffer is the
+  object, so they are methods taking the length (`this` in r0, as
+  `self` was). save.h's prototypes go.
+- **TinyCtrl::HitStub** (TinyHitStub): the empty hook `SetState` calls
+  as `TinyHitStub(this, part)` is a non-virtual method like `StartHop`.
+- **Retypes**: `gSwimCtrl` (player.h) is a `struct SwimCtrl *`, the
+  class's own tag (the two casts in PlayRoom go); the four contact tests
+  (`IsTouchingPlayer`, `PolarIsTouchingPlayer`, `JetpackIsTouchingPlayer`,
+  `IsTouchingAirship`) take a `struct ActorSelf *` (actor.h declares the
+  tag); the collected-spawn list (`IsSpawnCollected`,
+  `MarkSpawnCollected`, `gCollectedSpawns`) holds `struct actor_spawn *`s,
+  and so do the spawn parameters that feed it (`CreateActor`,
+  `CreateJetpackActor`, the PolarLifeCrate and JetpackQuestionCrate
+  constructors and their `spawn` fields; their mangled names in
+  cxx_symbols.txt change from `Pv` to `P11actor_spawn`). The hovercraft
+  launcher passes its cooldown as CreateJetpackActor's unused spawn
+  argument, now cast to `struct actor_spawn *`.
 
 ### Next batches
 

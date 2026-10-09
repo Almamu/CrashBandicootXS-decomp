@@ -30,7 +30,7 @@ extern "C" {
 }
 
 /* The 0x200-byte save data, as stored in the cartridge EEPROM
- * (ReadSaveData/WriteSaveData, and Load/Store with retries and
+ * (Read/Write, and Load/Store with retries and
  * validation): four 0x70-byte save slots (ReadSlot/WriteSlot/EraseSlot;
  * each holds the 0x68-byte progress block of the level state, the level,
  * and the sound and music volumes - see SaveMenu::SaveToSlot), a
@@ -87,6 +87,8 @@ public:
     }
 
     /* src/save/save_data.cpp */
+    s32 Read(s32 len);                  // ReadSaveData
+    s32 Write(s32 len);                 // WriteSaveData
     s32 Load();                         // LoadSaveData
     void Validate();                    // ValidateSaveData (UNUSED)
     u32 CheckChecksum();                // CheckSaveChecksum

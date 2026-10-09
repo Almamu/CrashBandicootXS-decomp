@@ -274,7 +274,7 @@ JetpackHealthCrate::JetpackHealthCrate(const struct anim_table_record *rec, s32 
 /* CreateJetpackQuestionCrate: the balloon is record 0x29; `spawn` is the
  * level's spawn record, marked collected for the life. */
 JetpackQuestionCrate::JetpackQuestionCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z,
-                                           void *spawn)
+                                           struct actor_spawn *spawn)
     : JetpackBalloonCrate(rec, x, y, z, 0x29)
 {
     this->spawn = spawn;

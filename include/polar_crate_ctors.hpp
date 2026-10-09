@@ -31,7 +31,7 @@ POLAR_CRATE_CTOR PolarNitroCrate::PolarNitroCrate(const struct anim_table_record
 }
 
 POLAR_CRATE_CTOR PolarLifeCrate::PolarLifeCrate(const struct anim_table_record *rec, s32 x, s32 y,
-                                                s32 z, void *spawn)
+                                                s32 z, struct actor_spawn *spawn)
     : PolarCrate(rec, x, y, z)
 {
     this->spawn = spawn;
