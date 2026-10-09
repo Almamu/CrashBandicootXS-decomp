@@ -5,8 +5,8 @@ extern "C" {
 #include "globals.h"
 }
 
-/* The palette cycles (gPaletteCycles) and the HUD part (#664, part 7c;
- * include/part_list.hpp). An old_agbcp object (OLD_AGBCC_OBJS): Tick's
+/* The palette cycles (gPaletteCycles; #664, part 7c; include/part_list.hpp).
+ * The HUD part that followed is hud/hud_part.cpp since #767. An old_agbcp object (OLD_AGBCC_OBJS): Tick's
  * index loads take old_agbcp's registers. */
 
 /* Steps each cycle whose period has elapsed this frame: the colours of
@@ -100,20 +100,4 @@ PaletteCycles::PaletteCycles()
         targets[i] = 0;
         lists[i] = 0;
     }
-}
-
-/* Draws the part, unless it is hidden (`frame` -1), `gHudSlideOffset`
- * lower. */
-void HudPart::Draw(s32 dx, s32 dy)
-{
-    if (frame != -1)
-        DrawWithOffset(dx, dy + gHudSlideOffset);
-}
-
-HudPart::~HudPart()
-{
-}
-
-HudPart::HudPart()
-{
 }

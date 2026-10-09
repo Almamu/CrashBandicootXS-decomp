@@ -274,6 +274,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/objects/part_collide.o \
                   $(C_BUILDDIR)/objects/part_list_cull.o \
                   $(C_BUILDDIR)/gfx/palette_cycle.o \
+                  $(C_BUILDDIR)/hud/hud_part.o \
                   $(C_BUILDDIR)/player/player_event.o \
                   $(C_BUILDDIR)/player/action_ctrl_event.o \
                   $(C_BUILDDIR)/player/action_ctrl_idle.o \

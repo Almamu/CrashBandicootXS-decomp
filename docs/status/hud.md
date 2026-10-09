@@ -21,7 +21,7 @@ system from "core" graphics.
   `docs/matching/archive/issue-45-hud-stat-widget-dispatcher.md`'s "Third pass"
   section for the register-pinning/instruction-ordering gotchas this
   pair needed), `ClearPaletteCycles`, `DestroyPaletteCycles`, `InitPaletteCycles`,
-  `DrawHudPart`, `DestroyHudPart` (the destructor slot of
+  then (`src/hud/hud_part.cpp` since #767) `DrawHudPart`, `DestroyHudPart` (the destructor slot of
   gHudPartVtable, reached only through it), `InitHudPart` - a fixed 3-entry particle/effect queue's reset/
   constructor/teardown trio, a HUD digit-slot draw helper, and the slot's
   `struct actor`-table-swap destructor and constructor; see `docs/matching.md`.

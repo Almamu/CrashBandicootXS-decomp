@@ -203,6 +203,7 @@ SECTIONS
         build/crashbandicootxs/src/level/camera.o(.text);
         build/crashbandicootxs/src/system/main_loop.o(.text);
         build/crashbandicootxs/src/gfx/palette_cycle.o(.text);
+        build/crashbandicootxs/src/hud/hud_part.o(.text);
         build/crashbandicootxs/src/hud/hud_init.o(.text);
         build/crashbandicootxs/src/hud/hud.o(.text);
         build/crashbandicootxs/src/hud/hud_boss_clock.o(.text);
@@ -454,7 +455,7 @@ SECTIONS
         build/crashbandicootxs/src/cutscene/cutscene_player.o(.gnu.linkonce.d._vt.11BgLayerBase); /* gBgLayerBaseVtable */
         build/crashbandicootxs/src/level/bg_layer.o(.gnu.linkonce.d._vt.7BgLayer); /* gBgLayerVtable */
         build/crashbandicootxs/src/level/tile_slot_pool.o(.gnu.linkonce.d._vt.13PooledBgLayer); /* gPooledBgLayerVtable */
-        build/crashbandicootxs/src/gfx/palette_cycle.o(.gnu.linkonce.d._vt.7HudPart); /* gHudPartVtable */
+        build/crashbandicootxs/src/hud/hud_part.o(.gnu.linkonce.d._vt.7HudPart); /* gHudPartVtable */
         build/crashbandicootxs/src/util/aabb_setup.o(.gnu.linkonce.d._vt.9LargeFont); /* gLargeFontVtable */
         build/crashbandicootxs/src/util/aabb_setup.o(.gnu.linkonce.d._vt.9SmallFont); /* gSmallFontVtable */
         build/crashbandicootxs/src/text/font.o(.gnu.linkonce.d._vt.4Font); /* gFontVtable */

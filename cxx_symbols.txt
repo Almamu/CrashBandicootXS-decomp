@@ -505,7 +505,8 @@ CollideWithObject__8PartListG4aabbP12MovingSpriteT2 CollidePartWithObject
 #
 # part 7c: the rest of PartList, CollisionQueue, PaletteCycles, HudPart
 # (include/part_list.hpp; src/objects/part_list.cpp, part_list_cull.cpp,
-# part_collide.cpp, collision_queue.cpp, src/gfx/palette_cycle.cpp)
+# part_collide.cpp, collision_queue.cpp, src/gfx/palette_cycle.cpp,
+# src/hud/hud_part.cpp)
 Draw__8PartList DrawPartList
 Remove__8PartListP6Sprite RemoveFromPartList
 RemoveAt__8PartListi RemovePartListAt

@@ -9,13 +9,13 @@
  *                   part_collide.cpp (the class is in sprite_obj.hpp)
  *   CollisionQueue  src/objects/collision_queue.cpp
  *   PaletteCycles   src/gfx/palette_cycle.cpp
- *   HudPart         src/gfx/palette_cycle.cpp (gHudPartVtable)
+ *   HudPart         src/hud/hud_part.cpp (gHudPartVtable)
  *
  * cxx_symbols.txt maps the methods to their C names. The HUD that owns the
  * HudParts is hud.hpp's Hud.
  *
  * No `#pragma interface`: g++ emits HudPart's vtable in
- * palette_cycle.cpp (see ctrl.hpp). */
+ * hud_part.cpp (see ctrl.hpp). */
 
 #include "sprite_obj.hpp"
 
