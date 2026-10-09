@@ -119,7 +119,13 @@ u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, voi
          * tuned pitch, before or after `inst` is set) is 101-107 lines
          * off; the inline's return adds no join cse1 stops at. Round 7:
          * no other matched function has a clamp feeding a table index
-         * (`cmp; bls; adds; lsls`) to compare spellings with. */
+         * (`cmp; bls; adds; lsls`) to compare spellings with. Round 8,
+         * tools/natural_enum.py (all pairs of 103 edits: the clamp as
+         * `m < idx`, `idx >= m + 1`, else-first, `tab[m]` in the arm, a
+         * block-local copy of m, pointer arithmetic, an inline returning
+         * from each arm, s32 idx or m, the tune lines reordered, and
+         * the automatic type/compound/order edits): none comes under
+         * the escape-free code's 14 instructions. */
         if (idx > m) {
             idx = m;
             MATCH_KEEP(idx);
@@ -193,7 +199,19 @@ u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, voi
          * alias.c without base_alias_check's "a stack reference can't
          * alias a parameter" is 34 off, and unchanged (48) when only
          * gcse's kill test drops it, so the item's stores are not what
-         * the ROM's PRE saw as the kill. */
+         * the ROM's PRE saw as the kill. #662 round 8, a private agbcc
+         * printing gcse's occurrences: the tune's `ip = self->instrument`
+         * is anticipatable and available in its block, yet PRE inserts
+         * a fresh load at that block's end and copies it here (cse2
+         * then merges the two into `inst`); nothing between kills it.
+         * tools/natural_enum.py (all pairs of 101 edits): an inline
+         * `GaxSweepLen(self)` (here or at all three sweep reads), one
+         * taking `(self->instrument, self->row)`, a `GaxCurRow(self)`
+         * row accessor, `inst` here, `self->instrument` in the ping-pong
+         * test and the automatic type/order edits are all 15-18
+         * instructions off like the plain read; the loop length set by
+         * an `if` after the initializer, through a local, or the item
+         * filled field by field are 140-195. */
         // clang-format off
         struct GaxMixItem item = {
             data, buf, pos, len << 11, frames, 0, vol, step, 0,

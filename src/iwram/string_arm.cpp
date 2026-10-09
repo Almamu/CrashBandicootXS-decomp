@@ -115,9 +115,14 @@ void strcat_arm(u8 *dst, u8 *src)
  * - The pins put the values in the ROM's registers (agbcc_arm's
  *   allocator would use lr and r2/r3). `num`/`digit` are also the SWI's
  *   r0/r1.
- * - `neg` is the sign flag and then the swap's left index, as r4 is in
- *   the ROM. On the '-' path it is reset to 0, so `b[neg]` stores the
- *   terminator and the swap starts at 0 on both paths.
+ * - The function reuses its variables once they are dead, as the ROM's
+ *   registers show: `neg` is the sign flag and then the swap's left
+ *   index (r4). On the '-' path it is reset to 0, so `b[neg]` stores the
+ *   terminator and the swap starts at 0 on both paths. `digit` is the
+ *   swap's right index and `num` holds its high byte (the ROM's r1 and
+ *   r0, the SWI's registers). #662 round 8: the swap with its own `j`
+ *   and `hi` locals needed a pin each (r1, r0); written with `digit` and
+ *   `num` it is the ROM with neither.
  * - The sign is set by two ifs on the same test. As one if/else, jump.c
  *   hoists `neg = 0` above the branch (`if (...) { x = a; goto l; } x =
  *   b;` becomes `x = a; if (...) goto l; x = b;`), giving `mov r4, #0;
@@ -126,7 +131,10 @@ void strcat_arm(u8 *dst, u8 *src)
  *   and the ccfsm prints the second if as the ROM's `movlt`/`rsblt`.
  *   gcc can't tell that the two ifs together always set `neg`;
  *   MATCH_HOLD(neg) defines it first (no code), for -Werror's "might be
- *   used uninitialized".
+ *   used uninitialized". #662 round 8: without it (and the warning off)
+ *   the code is the same; the warning-silencing code stays, as for
+ *   GAX_fx and EEPROMWrite1_check, rather than a per-object
+ *   -Wno-uninitialized.
  * - MATCH_KEEP(base) keeps the `!= 16` test on base (r2) after the copy
  *   to `divisor` (ip), as in the ROM.
  * - `(ten = 10)` keeps `cmp r1, #10` with `addge`/`addlt`: fold-const
@@ -163,7 +171,17 @@ void strcat_arm(u8 *dst, u8 *src)
  *   change 5. len's 0 is reused for `neg = 0` (`movge r4, r5`) by
  *   reload_cse's operand substitution; without it strncpy_arm's `cmp
  *   r2, r3` and the other string functions change, and cheaper
- *   constants change 6-8 functions. */
+ *   constants change 6-8 functions.
+ * - #662 round 8, tools/natural_enum.py (every pair of 35 hand-written
+ *   spellings and the automatic type/compound/order edits, scored on all
+ *   five string functions): without the base keep the nearest is 1 line
+ *   off, an SWI that also clobbers r2 (the BIOS leaves it alone), which
+ *   gives the ROM's `mov ip, r2` but compares the copy; the '-' through
+ *   `neg` is 1 line off (the `subne` above), through `digit`, `num` or a
+ *   u8 local 2 (r3); len's 0 as a plain `len = 0` 1 line, in every
+ *   order; `(ten = 10)` as `digit - 10 >= 0` 2 lines, the other
+ *   spellings (`< 10` with the arms swapped, `?:`, `>= 0xA`, adding 7)
+ *   3. The b/len/neg pins stay 6-14 lines off. */
 s32 itoa_arm(s32 value, u8 *buf, s32 base)
 {
     MATCH_HOLD_REG(s32, num, r0);
@@ -171,7 +189,6 @@ s32 itoa_arm(s32 value, u8 *buf, s32 base)
     MATCH_HOLD_REG(u8 *, b, r6);
     MATCH_HOLD_REG(s32, len, r5);
     MATCH_HOLD_REG(s32, neg, r4);
-    MATCH_HOLD_REG(s32, j, r1);
     s32 divisor;
     s32 ten;
 
@@ -213,14 +230,14 @@ s32 itoa_arm(s32 value, u8 *buf, s32 base)
         neg = 0;
     }
     b[len] = neg;
-    j = len - 1;
+    digit = len - 1;
     do {
         u8 lo = b[neg];
-        MATCH_HOLD_REG(u8, hi, r0) = b[j];
-        b[j] = lo;
-        b[neg] = hi;
+        num = b[digit];
+        b[digit] = lo;
+        b[neg] = num;
         neg++;
-        j--;
-    } while (neg < j);
+        digit--;
+    } while (neg < digit);
     return len;
 }

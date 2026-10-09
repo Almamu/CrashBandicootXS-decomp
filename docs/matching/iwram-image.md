@@ -681,7 +681,9 @@ in three places. Each has a cause in agbcc_arm's source and a C fix:
   later `neg = 0` (SImode) stays a `mov`.
 - **The swap's temporary in r0 and `j` in r1.** The swap loads both bytes
   first (`lo = b[neg]; hi = b[j]; b[j] = lo; b[neg] = hi;`), with `hi`
-  pinned to r0 and `j` to r1, as in the ROM.
+  pinned to r0 and `j` to r1, as in the ROM. (#662 round 8: `j` and
+  `hi` are `digit` and `num` reused, the SWI's r1 and r0, with no pins,
+  as `neg` is reused for the left index.)
 
 Also needed, from the earlier drafts: the pins on `digit`, `b`, `len`
 and `neg`, `MATCH_CONST(len, 0)`, `(ten = 10)`, and a `MATCH_KEEP(base)`
