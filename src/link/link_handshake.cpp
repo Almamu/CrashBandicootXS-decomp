@@ -85,12 +85,12 @@ s32 LinkSession::Stop()
     REG_IME = 0;
     savedIme = REG_IME;
     REG_IME = 0;
-    REG_IE &= ~0x80;
+    REG_IE &= ~INTR_FLAG_SERIAL;
     REG_IME = savedIme;
 
     savedIme = REG_IME;
     REG_IME = 0;
-    REG_IE &= ~0x40;
+    REG_IE &= ~INTR_FLAG_TIMER3;
     REG_IME = savedIme;
 
     IrqClearHandler(INTR_INDEX_SERIAL);
@@ -99,11 +99,11 @@ s32 LinkSession::Stop()
     REG_IME = 1;
 
     REG_RCNT = 0;
-    REG_SIOCNT = 0x3000;
+    REG_SIOCNT = SIO_UART_MODE;
     REG_TM3CNT = 0xBBBC;
 
-    REG_IF |= 0x80;
-    REG_IF |= 0x40;
+    REG_IF |= INTR_FLAG_SERIAL;
+    REG_IF |= INTR_FLAG_TIMER3;
 
     return 0;
 }

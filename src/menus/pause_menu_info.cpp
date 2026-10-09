@@ -19,7 +19,9 @@ extern "C" {
 void PauseMenu::InitInfo()
 {
     s32 levelIdx = gLevelState->GetCurrentLevel();
-    u32 labelId = *(u32 *)((u8 *)gLevelTable + levelIdx * 0x24);
+    /* gLevelTable[levelIdx].nameText; spelling it as the member loads
+     * gLevelTable's address before the multiply instead of after. */
+    u32 labelId = *(u32 *)((u8 *)gLevelTable + levelIdx * sizeof(struct level_info));
 
     levelName = (void *)GetUiText(labelId);
 

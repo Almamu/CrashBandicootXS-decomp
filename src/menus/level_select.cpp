@@ -47,7 +47,7 @@ static inline void IconReserve(Font **m)
 
 static inline void LoadMenuPalette(PaletteCache *cache)
 {
-    CpuSet(gLevelSelectPalette, cache->slots[15], 0x10);
+    CpuSet(gLevelSelectPalette, cache->slots[15], sizeof(gLevelSelectPalette) / sizeof(u16));
 }
 
 s32 RunLevelSelect(s32 *arg)

@@ -139,7 +139,7 @@ void ZoomBg::Update()
             break;
         gAudioContext->PlaySfx(SFX_ZOOM_BG_IN, 0x100);
         LoadTaggedAsset(gLevelSelectPictures[image].palette, buf);
-        DmaCopy16(3, buf, BG_PLTT, 0x40);
+        DmaCopy16(3, buf, BG_PLTT, 2 * PALETTE_SIZE_16);
         LoadTaggedAsset(gLevelSelectPictures[image].tiles, (void *)(BG_VRAM + (charBlock << 14)));
         state = 0;
         break;

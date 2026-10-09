@@ -148,7 +148,7 @@ s32 LinkSession::ResetState()
         players[i].ring.Reset();
         {
             s32 *f30 = &players[0].rxSeq;
-            s32 t = i * 0xc8;
+            s32 t = i * sizeof(LinkPlayer);
 
             *(s32 *)((u8 *)f30 + t) = 0;
         }
@@ -164,7 +164,7 @@ s32 LinkSession::ResetState()
             }
         }
         {
-            s32 t = i * 0xc8;
+            s32 t = i * sizeof(LinkPlayer);
             struct nibble_pair *nb = (struct nibble_pair *)((u8 *)this + t + 0xd1);
 
             /* players[i].id[1]'s low nibble */

@@ -63,7 +63,7 @@ s32 SaveData::Read(s32 len)
     {
         u16 savedIme = REG_IME;
         REG_IME = 0;
-        REG_IE &= 0xFFDF;
+        REG_IE &= ~INTR_FLAG_TIMER2;
         REG_IME = savedIme;
         REG_IME = 1;
     }
@@ -75,7 +75,7 @@ fail_restore:
     {
         u16 savedIme = REG_IME;
         REG_IME = 0;
-        REG_IE &= 0xFFDF;
+        REG_IE &= ~INTR_FLAG_TIMER2;
         REG_IME = savedIme;
         REG_IME = 1;
     }
@@ -122,7 +122,7 @@ s32 SaveData::Write(s32 len)
     {
         u16 savedIme = REG_IME;
         REG_IME = 0;
-        REG_IE &= 0xFFDF;
+        REG_IE &= ~INTR_FLAG_TIMER2;
         REG_IME = savedIme;
         REG_IME = 1;
     }
@@ -133,7 +133,7 @@ fail_restore:
     {
         u16 savedIme = REG_IME;
         REG_IME = 0;
-        REG_IE &= 0xFFDF;
+        REG_IE &= ~INTR_FLAG_TIMER2;
         REG_IME = savedIme;
         REG_IME = 1;
     }
@@ -297,9 +297,9 @@ void SaveData::ReadSlot(s32 row, void *dst)
     if (slotEmpty[row] == 0) {
         s32 offset;
 
-        offset = row * 0x70;
+        offset = row * sizeof(struct save_slot);
         offset = offset + (s32)this;
-        MemCopy32(dst, (void *)offset, 0x70);
+        MemCopy32(dst, (void *)offset, sizeof(struct save_slot));
     }
 }
 
@@ -311,9 +311,9 @@ void SaveData::WriteSlot(s32 row, void *src)
     s32 offset;
 
     slotEmpty[row] = 0;
-    offset = row * 0x70;
+    offset = row * sizeof(struct save_slot);
     offset = offset + (s32)this;
-    MemCopy32((void *)offset, src, 0x70);
+    MemCopy32((void *)offset, src, sizeof(struct save_slot));
     UpdateChecksum();
 }
 
