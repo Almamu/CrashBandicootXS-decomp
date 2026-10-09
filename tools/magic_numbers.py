@@ -30,6 +30,14 @@ Usage:
                                           has exactly one name in
                                           include/constants/ (then rebuild and
                                           compare the objects)
+
+--sizes is a separate mode (#820, tools/magic_sizes.py): allocation sizes,
+copy lengths, index strides and byte offsets that have a sizeof or a
+member (from the compiler's debug info, tools/layout_audit.py), and
+hardware addresses and register values that include/gba/ names:
+  tools/magic_numbers.py --sizes [--show] [--json] [--report [OUT]]
+      [--category C ...] [--min-confidence high|medium|low] [--path P ...]
+      [--db FILE [--rebuild]] [-j N] [--samples N]
 """
 
 import argparse
@@ -437,7 +445,30 @@ def main():
         action="store_true",
         help="with --topic: replace each literal that has exactly one name in include/constants/",
     )
+    g = ap.add_argument_group("--sizes (#820, see tools/magic_sizes.py)")
+    g.add_argument("--sizes", action="store_true", help="sizes, strides, offsets and hardware values")
+    g.add_argument(
+        "--category",
+        action="append",
+        metavar="C",
+        help="only category C: alloc, copy, stride, offset, hwaddr, hw (repeatable)",
+    )
+    g.add_argument("--min-confidence", choices=("high", "medium", "low"))
+    g.add_argument("--path", action="append", metavar="P", help="only files under P (repeatable)")
+    g.add_argument("--json", action="store_true", help="the hits as JSON, for agents")
+    g.add_argument("--db", metavar="FILE", help="type database JSON: read if it exists, else written")
+    g.add_argument("--rebuild", action="store_true", help="recompile even if --db exists")
+    g.add_argument("-j", "--jobs", type=int, default=os.cpu_count() or 4)
+    g.add_argument("--samples", type=int, default=8, help="--report: high-confidence samples per category")
     args = ap.parse_args()
+
+    if args.sizes:
+        import magic_sizes
+
+        for c in args.category or ():
+            if c not in magic_sizes.CATEGORIES:
+                ap.error(f"unknown category {c!r} (one of {', '.join(magic_sizes.CATEGORIES)})")
+        return magic_sizes.run(args)
 
     if args.list_topics:
         for topic, (desc, _) in TOPICS.items():

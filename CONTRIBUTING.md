@@ -213,6 +213,34 @@ full rules and the history (#574). For new code:
   one definition (`actor@actor.h`). Use it before merging or renaming a
   view of a class (a codegen view), and after, to check the view and the
   class agree.
+- **Raw sizes, strides, offsets and hardware values:**
+  `python3 tools/magic_numbers.py --sizes` (#820) lists the literals in
+  src/ (not src/data/) that have a `sizeof`, a member or a named
+  constant: allocation sizes and heap flags (`alloc`), copy and fill
+  lengths (`copy`), index strides (`stride`), byte offsets into a struct
+  (`offset`), VRAM/palette/OAM/I/O addresses (`hwaddr`) and register
+  values (`hw`). It builds layout_audit.py's database and adds every
+  function's locals, parameters and `this` and every TU's globals, so it
+  knows what `self->players[i]` or `(u8 *)gActorSpawnTable` is. Each hit
+  has a confidence: `high` when the type comes from the site itself (the
+  cast or target of an allocation, a copy's source or destination, the
+  pointer a stride or offset applies to, a hardware register), `medium`
+  when the function uses something of that size elsewhere, `low` for a
+  value-only match:
+
+  ```
+  tools/magic_numbers.py --sizes --db /tmp/sizes.json [--show]       # by directory, with counts
+  tools/magic_numbers.py --sizes --db /tmp/sizes.json --json         # for agents: expr, suggestions, confidence
+  tools/magic_numbers.py --sizes --db /tmp/sizes.json --report OUT   # Markdown counts and samples
+  tools/magic_numbers.py --sizes --category stride --min-confidence medium --path src/link
+  ```
+
+  A suggestion keeps the value, not always the type (`sizeof` is
+  unsigned, a `~FLAG` is an int), and some literals are kept on purpose
+  for matching (#662): rebuild and compare after each change. Some
+  suggestions use a define that doesn't exist yet (`new_defines`:
+  `PALETTE_SIZE_16`, `BG_SCREEN_SIZE`, `BG_CHAR_SIZE`); add it to
+  include/gba/defines.h with the first use.
 - **One layout, one type (#656).** A record that extends another embeds
   it, so each field has one name and one type:
   - **Plain C:** the base is the named first member (memory.h's `struct
