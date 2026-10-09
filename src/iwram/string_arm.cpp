@@ -64,7 +64,19 @@ void strcpy_arm(u8 *dst, u8 *src)
  *   followed by a RETURN, gated only by arm.c's use_return_insn, which
  *   holds for every frameless leaf with nothing saved. So no C shape of
  *   this function can avoid it, and agbcc_arm_patched has no option for
- *   it. */
+ *   it. #662 round 4: the whole condition is use_return_insn (1) false,
+ *   i.e. a frame, pretend args, or a saved register under interworking,
+ *   none of which a 3-argument leaf that uses r0-r3 has; jump.c's
+ *   end-of-function RETURN (emitted after the last insn when HAVE_return
+ *   holds) is what the label precedes. This is the ROM compiler's own
+ *   behaviour, evidence for docs/matching/iwram-image.md's "later ARM
+ *   gcc": stock 2.9-arm-000512 turns this `beq` into `bxeq lr` for any
+ *   C. A private build of agbcp_arm_patched whose use_return_insn
+ *   refuses conditional returns (iscond) compiles strncpy_arm without
+ *   the barrier, and all of string_arm.o, byte-identical to the ROM's
+ *   (sprite_arm.o is unchanged by it). Adopting that is a compiler-patch
+ *   decision (a further option in agbcc_arm_prologue_return.patch), not
+ *   taken here. */
 void strncpy_arm(u8 *dst, u8 *src, s32 n)
 {
     u8 c;

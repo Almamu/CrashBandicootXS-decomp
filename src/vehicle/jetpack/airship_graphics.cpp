@@ -149,7 +149,27 @@ void Airship::LoadGraphics()
  * `goto` loop the set stays put, but the row loop then has no loop notes
  * and the reference weighting puts `stride` and `row_i` in each other's
  * homes (r10 and the stack; tried on the hovercraft twin). No -f flag,
- * alone or in pairs, gets the plain `b & 0xf` there. */
+ * alone or in pairs, gets the plain `b & 0xf` there.
+ *
+ * The exact condition (#662 round 4, from cse.c, regmove.c and loop.c):
+ * regmove copies the first operand of the AND that doesn't die there
+ * (neither does: the byte is shifted next, the mask is loop-invariant),
+ * so the ROM's RTL had `(and mask byte)`. cse1's fold_rtx swaps a
+ * commutative operation whose first operand has a known constant value
+ * and whose second doesn't, so at cse1 the mask's 0xf must be unknown:
+ * set outside the pixel loop's extended basic block, whose top label
+ * ends it. loop.c must then leave that set in the pixel loop's
+ * preheader instead of moving it out of the row loop; scan_loop keeps
+ * it only when a conditional jump precedes it in the row loop
+ * (maybe_never) and the register is used in other blocks. The only
+ * such jump is the pixel loop's own entry test, which jump.c copies in
+ * front of the loop. A source guard in its place (`j = 0; if (j < n <<
+ * 4) { m = 0xf; for (; j < n << 4; j++) ... }`, and the do/while and
+ * `for (;;)` forms) gives the ROM's four mask copies, but cse1 then
+ * shares the guard's `n << 4` with the loop test, which the ROM
+ * recomputes from `n` (r8) every iteration (28-34 lines off; a guard on
+ * `n` adds a compare, 42-48), and it is a redundant test anyway. A u8
+ * (QImode) AND is 128 lines off. */
 static inline u32 MeterPx(u32 v)
 {
     u32 r = 0;

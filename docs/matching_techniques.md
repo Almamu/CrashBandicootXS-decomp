@@ -1246,6 +1246,45 @@ source.** 10 functions -> 5. One mechanism was behind five of them:
   register), `PlatformMover::Update` and `SelectActorCategory`
   (global-alloc priorities 0.83/0.74 and 0.129/0.133).
 
+**Round 4, lib/gax, src/iwram and the two ConvertTiles (from the
+compiler source).** No function loses its last workaround; two lose
+sites:
+
+- **One variable for a list of the same shape.** `GAX2_init`'s r3 hold
+  went: `layout` walks on to types[2], the alternative-layout list (a
+  count and pointers, like a layout), instead of a second `subs` local.
+  As one pseudo it conflicts with the inner scan's `next` (r3), and
+  global-alloc gives it r4 as in the ROM.
+- **A volatile field instead of a volatile local.** Only
+  `GaxMixItem.done`, which the ARM mixer advances, needs to be re-read;
+  as a `volatile` field `GaxChannelMix`'s item is a plain local.
+- **Kept, with the exact condition in each comment:** the ConvertTiles
+  masks (regmove copies the first non-dying AND operand; cse1 swaps a
+  known-constant first operand second; so the mask must be set where
+  cse1 can't see it but loop.c won't move it out of the row loop, which
+  needs a conditional jump before it: only a guard duplicating the
+  pixel loop's entry test does that, and it costs the ROM's `n << 4`
+  recompute); `GAX2_init`'s two uses (global priorities, the numbers in
+  each comment); `GaxChannelMix`'s instrument re-read (gcse PRE finds it
+  redundant: nothing kills it, `__muldi3` being a const libcall) and its
+  clamp keep.
+- **The IWRAM ARM compiler.** `HeapSortActorsByKey`'s barriers and
+  `strncpy_arm`'s are stock 2.9-arm-000512 behaviour no C avoids
+  (find_cross_jump's lowered minimum after a label; jump.c's
+  conditional RETURN). Private builds of agbcp_arm_patched that skip the
+  label rule, or refuse conditional returns, compile sprite_arm.o and
+  string_arm.o byte-identical to the ROM's without them: more evidence
+  for [the later ARM gcc](matching/iwram-image.md), and a candidate third
+  option for agbcc_arm_prologue_return.patch (not adopted; an owner's
+  call).
+- **Other configurations.** Every round-4 function's plain C (all its
+  sites removed) was compiled under agbcc/old_agbcc, agbcp/old_agbcp
+  or agbcp_arm_patched with -O1/-O2/-O3/-Os x prologue-bugfix on/off x
+  -mthumb-interwork on/off x caller-saves on/off, and for C++
+  -mtpcs-frame/-mtpcs-leaf-frame and the scheduling switches (ARM: the
+  frame pointer, scheduling and the patch's options). None matches; the
+  notyourav `cp` tree's gcc/ is semantically identical to pret's agbcc.
+
 ## Survey and conversion record (#576)
 
 The conversion is complete. `tools/match_idioms.py` after part 4
