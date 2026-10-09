@@ -107,10 +107,10 @@ static inline void FillTileMap(s32 arg0, s32 w, s32 h)
     s32 row, col;
 
     if (arg0 != 0) {
-        base = (u16 *)(VRAM + 0xF400);
+        base = (u16 *)(BG_SCREEN_ADDR(30) + 0x400);
         tile = h * w + 1;
     } else {
-        base = (u16 *)(VRAM + 0xE400);
+        base = (u16 *)(BG_SCREEN_ADDR(28) + 0x400);
         tile = 1;
     }
     for (row = 0; row < h; row++) {
@@ -132,8 +132,8 @@ static inline void FillTileMap(s32 arg0, s32 w, s32 h)
  * compilers. */
 void ResetCellAnimBg(void)
 {
-    REG_DISPCNT = 0x1141;
-    REG_BG0CNT = 0x5c02;
+    REG_DISPCNT = DISPCNT_MODE_1 | DISPCNT_OBJ_1D_MAP | DISPCNT_BG0_ON | DISPCNT_OBJ_ON;
+    REG_BG0CNT = BGCNT_PRIORITY(2) | BGCNT_SCREENBASE(28) | BGCNT_TXT512x256;
     DmaSet(3, gCellAnim, PLTT, 0x80000100);
     if (gCellAnimHasBanks == 0) {
         u32 *vram = (u32 *)VRAM;
@@ -141,7 +141,7 @@ void ResetCellAnimBg(void)
 
         for (i = 0; i < 8; i++)
             vram[i] = 0;
-        DmaFill16(3, 0, VRAM + 0xE000, 0x2000);
+        DmaFill16(3, 0, BG_SCREEN_ADDR(28), 4 * BG_SCREEN_SIZE);
         FillTileMap(0, gCellAnimCols, gCellAnimRows);
         FillTileMap(1, gCellAnimCols, gCellAnimRows);
     }
@@ -186,9 +186,9 @@ void FlipCellAnimPage(void)
         u8 toggled;
 
         if (gCellAnimPage != 0) {
-            REG_BG0CNT = 0x5C02;
+            REG_BG0CNT = BGCNT_PRIORITY(2) | BGCNT_SCREENBASE(28) | BGCNT_TXT512x256;
         } else {
-            REG_BG0CNT = 0x5E02;
+            REG_BG0CNT = BGCNT_PRIORITY(2) | BGCNT_SCREENBASE(30) | BGCNT_TXT512x256;
         }
         gCellAnimUploaded = 0;
         toggled = 1;

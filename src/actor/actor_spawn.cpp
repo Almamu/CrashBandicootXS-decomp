@@ -70,9 +70,9 @@ void PauseActorSpawns(void)
 s32 GetActorSpawnNextTarget(s32 idx)
 {
     u8 *base = (u8 *)gActorSpawnTable;
-    s32 off = idx * 0x14;
+    s32 off = idx * sizeof(struct sub_effect_record);
 
-    base = base + 0x18;
+    base = base + sizeof(struct sub_effect_record) + offsetof(struct sub_effect_record, link);
     return *(s32 *)(base + off);
 }
 
@@ -82,9 +82,9 @@ s32 GetActorSpawnNextTarget(s32 idx)
 s32 GetActorSpawnZ(s32 idx)
 {
     u8 *base = (u8 *)gActorSpawnTable;
-    s32 off = idx * 0x14;
+    s32 off = idx * sizeof(struct sub_effect_record);
 
-    base = base + 0x14;
+    base = base + sizeof(struct sub_effect_record) + offsetof(struct sub_effect_record, depth);
     return INT_TO_Q8(*(s32 *)(base + off) + gActorSpawnOffset);
 }
 
@@ -92,18 +92,18 @@ s32 GetActorSpawnZ(s32 idx)
 s32 GetActorSpawnY(s32 idx)
 {
     u8 *base = (u8 *)gActorSpawnTable;
-    s32 off = idx * 0x14;
+    s32 off = idx * sizeof(struct sub_effect_record);
 
-    base = base + 0x10;
+    base = base + offsetof(struct sub_effect_record, offsetY);
     return INT_TO_Q8(*(s32 *)(base + off));
 }
 
 s32 GetActorSpawnX(s32 idx)
 {
     u8 *base = (u8 *)gActorSpawnTable;
-    s32 off = idx * 0x14;
+    s32 off = idx * sizeof(struct sub_effect_record);
 
-    base = base + 0xc;
+    base = base + offsetof(struct sub_effect_record, offsetX);
     return INT_TO_Q8(*(s32 *)(base + off));
 }
 

@@ -15,5 +15,5 @@ void IwramFree(u8 *address)
 
 void *IwramAlloc(u32 size)
 {
-    return mem_alloc(size, 0x80000000);
+    return mem_alloc(size, MEM_HEAP_IWRAM);
 }
