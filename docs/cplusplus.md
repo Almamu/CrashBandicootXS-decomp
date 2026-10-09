@@ -1003,12 +1003,12 @@ What made the C++ match:
   `MarkEntityGone` (the controllers). That is a class whose accessors,
   constructor and destructor are inline, in a header with no `#pragma
   interface`: g++ 2.9 then emits the vtable in the file that defines the
-  first non-inline virtual method (`CheckPlayerContact`, graphics.cpp),
+  first non-inline virtual method (`CheckPlayerContact`, graphics.cpp, objects/entity.cpp since #767),
   and with it out-of-line copies of all the inline methods, at the end of
   the file, **in the reverse of their declaration order**. So
   include/entity.hpp has no `#pragma interface`, declares the accessors
   inline from `GetId` (`DestroyEntity`'s neighbour) up to
-  `ClearAlwaysActive`, and graphics.cpp defines the constructor `inline`
+  `ClearAlwaysActive`, and graphics.cpp (entity.cpp since #767) defines the constructor `inline`
   just before `Create`, which inlines it (`new Entity`); its copy is the
   first one emitted. The vtable g++ emits is a weak symbol in a
   `.gnu.linkonce.d` section: the linker script's `/DISCARD/` drops it, and
@@ -2134,7 +2134,7 @@ workaround.
 - **The free functions** in power_dialog_draw.cpp (the four `Show*Dialog`
   wrappers, `GetProgressLives` and the `Count*` tallies of the save block)
   keep C linkage through menus.h; game_frame.c, save_menu_ui.c and
-  graphics.cpp call them.
+  graphics.cpp (save/game_progress.cpp since #767) call them.
 - **menus.h's dead prototypes went:** 91 C names of C++ methods that no C
   file, vtable or C++ file uses (the level select's, the camera lead's,
   the continue prompt's, and the new classes'). 54 are left: the vtables'
@@ -3027,8 +3027,8 @@ data.
   emitted table with no ROM counterpart (nothing refers to it).
 - **The out-of-line inline methods.** An object that gets a class's
   vtable also gets an out-of-line copy of every inline method of the
-  class (the [gotcha](#dead-ends-and-gotchas) graphics.cpp shows). The
-  ROM has them only in graphics.o (Entity's, with `DestroyEntity` last).
+  class (the [gotcha](#dead-ends-and-gotchas) graphics.cpp (entity.cpp since #767) shows). The
+  ROM has them only in graphics.o (entity.o since #767; Entity's, with `DestroyEntity` last).
   In 17 other key-method objects they would be new code: inline
   constructors (`Sprite(u16, u16, u16)`, `LaunchPad`'s, ...), accessors
   (`MovingSprite::Pos`, `Player::StoreSlippery`, ...), `ActionCtrl`'s 12
@@ -3117,7 +3117,7 @@ through). The report stays 2059/2059 functions and 100% data.
   continue prompt and the cutscene player.
 
 **Out-of-line copies of inline methods.** Twice the ROM showed the
-pattern graphics.cpp has (a class's inline methods emitted at the end of
+pattern graphics.cpp (entity.cpp since #767) has (a class's inline methods emitted at the end of
 the object that gets its vtable, in the reverse of their declaration
 order), and it says which functions were inline and where a file ended:
 
@@ -3504,7 +3504,7 @@ still read through them. `tools/layout_audit.py views` lists them.
   GetSpriteAnimPaletteSlot) are method calls too, the crates' (BreakCrate,
   ExplodeCrate, IsCrateKindBreakable) as well, and the 30 `(struct actor
   *)` casts went: GetSpriteAnimPaletteSlot is `p->GetAnimPaletteSlot()`;
-  SetEntityPos and SetEntityPixelPos are graphics.cpp's out-of-line copies
+  SetEntityPos and SetEntityPixelPos are graphics.cpp's (entity.cpp's since #767) out-of-line copies
   of inline methods, which the ROM calls from the other files (a method
   call would be inlined), so entity.hpp declares them taking an `Entity
   *` for the C++ files. The collision queue holds `Crate *`s
@@ -4002,8 +4002,8 @@ every object is byte-identical to origin/main's.
   ignore it) are methods like the others: `this` is r0 either way.
 - **`struct game_progress` stays a plain struct** in level_state.h, as
   LevelState's `progress`, `checkpointData` and `saveData`: the save slots
-  (save_data.h), the menus' counts (CountGems & co., power_dialog_draw.cpp)
-  and GetCompletionPercent (graphics.cpp) share it, and none of them is
+  (save_data.h), the menus' counts (CountGems & co., power_dialog_draw.cpp, now save/game_progress.cpp)
+  and GetCompletionPercent (graphics.cpp, now save/game_progress.cpp) share it, and none of them is
   the level state's. A GameProgress class would retype the save slot's
   member and the menu prototypes in the headers the data tables parse as
   C, for no change in the code.
@@ -4297,7 +4297,7 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   `.gnu.linkonce.d` section (ldscript.txt places it, step 10). That file
   also gets an out-of-line copy of **every** inline method of the class,
   used or not, at its end, in the reverse of their declaration order:
-  that is how graphics.cpp ends with `InitEntity`, the accessors and
+  that is how graphics.cpp (entity.cpp since #767) ends with `InitEntity`, the accessors and
   `DestroyEntity` (include/entity.hpp). An inline method meant only for
   other files (a second constructor, say) would be emitted there too;
   `-fno-implement-inlines` (`NO_IMPLEMENT_INLINES_OBJS`) drops them.

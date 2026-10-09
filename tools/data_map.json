@@ -325,7 +325,7 @@
     "GetDpadDirection"
    ],
    "consumer_files": [
-    "system/irq.cpp"
+    "system/key_input.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 2,
@@ -370,7 +370,7 @@
     "bosses/hovercraft.c",
     "vehicle/polar_objects.c",
     "frontend/starfield.cpp",
-    "menus/level_select_widgets.c",
+    "menus/zoom_bg.cpp",
     "vehicle/jetpack_plane.c",
     "pickups/extra_life.cpp",
     "pickups/wumpa_update.cpp",
@@ -2629,7 +2629,7 @@
     "CreateLevelSelectPageBg"
    ],
    "consumer_files": [
-    "menus/level_select_pages.c"
+    "menus/level_select_page_bg.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 3,
@@ -2649,7 +2649,7 @@
     "UpdateZoomBg"
    ],
    "consumer_files": [
-    "menus/level_select_widgets.c"
+    "menus/zoom_bg.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 20,
@@ -2672,7 +2672,7 @@
     "InitZoomBg"
    ],
    "consumer_files": [
-    "menus/level_select_pages.c"
+    "menus/zoom_bg.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2696,7 +2696,7 @@
     "SetLevelSelectEntryBox"
    ],
    "consumer_files": [
-    "menus/level_select_widgets.c"
+    "menus/level_select_entry.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2720,7 +2720,7 @@
     "SetLevelSelectEntryLevel"
    ],
    "consumer_files": [
-    "menus/level_select_widgets.c"
+    "menus/level_select_entry.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2744,7 +2744,7 @@
     "UpdateLevelSelectCursor"
    ],
    "consumer_files": [
-    "menus/level_select_widgets.c"
+    "menus/level_select_cursor.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2769,7 +2769,7 @@
     "DrawScaledSprite"
    ],
    "consumer_files": [
-    "gfx/graphics_package.cpp"
+    "gfx/scaled_sprite.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2794,7 +2794,7 @@
     "DrawScaledSprite"
    ],
    "consumer_files": [
-    "gfx/graphics_package.cpp"
+    "gfx/scaled_sprite.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4375,7 +4375,7 @@
     "DrawContinuePrompt"
    ],
    "consumer_files": [
-    "frontend/credits.cpp"
+    "menus/continue_prompt.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -8106,7 +8106,7 @@
     "CreateLevelSelectEntry"
    ],
    "consumer_files": [
-    "menus/level_select_widgets.c"
+    "menus/level_select_entry.cpp"
    ],
    "ptr_words_code": 5,
    "ptr_words_data": 0,
@@ -8234,7 +8234,7 @@
     "InitHudPart"
    ],
    "consumer_files": [
-    "gfx/palette_cycle.cpp"
+    "hud/hud_part.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
