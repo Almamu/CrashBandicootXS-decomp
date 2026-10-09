@@ -14,12 +14,6 @@ extern "C" {
  * collision CheckPlayerContact runs (see
  * docs/matching/archive/issue-25-level-objects.md for what it computes). */
 
-/* GetSpriteHitbox (Sprite::GetAnimHitbox) with the result's address as an
- * explicit first argument: the player's box is built through `pb`, which
- * the ROM keeps in a register for the later overlap tests; a struct
- * return assigned to `*pb` goes through a temporary. */
-extern "C" void GetSpriteHitbox_p(struct aabb *dest, void *part) asm("GetSpriteHitbox");
-
 /* Returns its argument: reading `pos` through it keeps the address in a
  * register, as the ROM does. */
 static inline struct vec2 *PosPtr(struct vec2 *p)
@@ -51,27 +45,24 @@ void Platform::ResolveCollision(void *)
     s32 flags;
     s32 r;
     struct aabb a = GetAnimHitbox();
-    struct aabb b;
-    struct aabb *pb;
 
     px = Q8_TO_INT(gPlayer->x);
     py = Q8_TO_INT(gPlayer->y);
-    pb = &b;
-    /* Emits nothing: hides `pb`'s value from CSE, so that `&b` stays in a
-     * register (r4) for the overlap tests below, as in the ROM, instead
-     * of being formed again from sp at each one. #662 round 3: the C++
-     * front end reads `b.y` and the other fields through a fresh copy of
-     * `&b`, and cse1 ties that copy to `pb`. Without the asm the fields
-     * are read through `pb` (`ldr r1, [r5, #4]`), not at sp+24 as in the
-     * ROM, and the allocation is 760 lines off. No -f flag toggle
-     * changes that. */
-    MATCH_KEEP(pb);
-    GetSpriteHitbox_p(pb, gPlayer);
+    /* The player's box. Its address stays in r4 for the overlap tests,
+     * while both boxes' fields are read through aabb.h's accessors, at
+     * their own sp offsets, as in the ROM. Read as `b.y`, a field goes
+     * through a fresh copy of `&b` that cse1 ties to r4's pseudo
+     * (`ldr r1, [r4, #4]`); an inlined accessor's argument is the
+     * constant `fp + 16` itself (#662 round 4, aabb.h). Until then the C
+     * hid r4's value with an empty asm and filled the box through an
+     * explicit-destination alias of GetSpriteHitbox. */
+    struct aabb b = gPlayer->GetAnimHitbox();
+
     box = (struct hitbox_quad *)&gPlayer->bank->anims[gPlayer->tag].box[0];
-    if (AabbOverlaps(&a, pb)) {
+    if (AabbOverlaps(&a, &b)) {
         result = 0;
         above = 0;
-        if (b.y < a.y)
+        if (AabbY(&b) < AabbY(&a))
             above = 1;
         tx = gPlayer->GetPrevX();
         ty = gPlayer->GetPrevY();
@@ -80,17 +71,17 @@ void Platform::ResolveCollision(void *)
             side = 1;
         if (Q8_TO_INT(gPlayer->x) < Q8_TO_INT(x)) {
             hdir = 1;
-            ox = Span(b.x, b.w, a.x) + 1;
+            ox = Span(AabbX(&b), AabbW(&b), AabbX(&a)) + 1;
         } else {
             hdir = 2;
-            ox = Span(a.x, a.w, b.x) + 1;
+            ox = Span(AabbX(&a), AabbW(&a), AabbX(&b)) + 1;
         }
         if (Q8_TO_INT(gPlayer->y) > Q8_TO_INT(y)) {
             vdir = 4;
-            oy = Span(a.y, a.h, b.y);
+            oy = Span(AabbY(&a), AabbH(&a), AabbY(&b));
         } else {
             vdir = 8;
-            oy = Span(b.y, b.h, a.y);
+            oy = Span(AabbY(&b), AabbH(&b), AabbY(&a));
         }
         if (type != 1 && type != 5 && type != 6) {
             if (ty == py && tx == px) {
@@ -105,26 +96,26 @@ void Platform::ResolveCollision(void *)
         if (ty <= py && above) {
             if (result == 0) {
                 ty += box->offY + box->h;
-                if (ty <= a.y + a.h) {
+                if (ty <= AabbY(&a) + AabbH(&a)) {
                     if (side == 1) {
-                        if (b.x + b.w >= a.x && ox > 2)
+                        if (AabbX(&b) + AabbW(&b) >= AabbX(&a) && ox > 2)
                             result = 8;
                     } else {
-                        if (b.x <= a.x + a.w && ox > 2)
+                        if (AabbX(&b) <= AabbX(&a) + AabbW(&a) && ox > 2)
                             result = 8;
                     }
                     if (result == 0) {
                         py += box->offY + box->h;
                         if (hdir == 1) {
                             tx += box->offX + box->w;
-                            px = b.x + b.w;
-                            r = FindLineCrossing(tx, ty, px, py, a.x);
+                            px = AabbX(&b) + AabbW(&b);
+                            r = FindLineCrossing(tx, ty, px, py, AabbX(&a));
                         } else {
                             tx += box->offX;
-                            px = b.x;
-                            r = FindLineCrossing(tx, ty, px, py, a.x + a.w);
+                            px = AabbX(&b);
+                            r = FindLineCrossing(tx, ty, px, py, AabbX(&a) + AabbW(&a));
                         }
-                        if ((r < 0 && above && oy <= 1) || (r > 0 && r <= a.y))
+                        if ((r < 0 && above && oy <= 1) || (r > 0 && r <= AabbY(&a)))
                             result = 8;
                         else
                             result = hdir;
@@ -135,26 +126,26 @@ void Platform::ResolveCollision(void *)
         } else {
             if (result == 0) {
                 ty += box->offY;
-                if (ty >= a.y) {
+                if (ty >= AabbY(&a)) {
                     if (side == 1) {
-                        if (b.x + b.w >= a.x && ox > 3)
+                        if (AabbX(&b) + AabbW(&b) >= AabbX(&a) && ox > 3)
                             result = 4;
                     } else {
-                        if (b.x <= a.x + a.w && ox > 3)
+                        if (AabbX(&b) <= AabbX(&a) + AabbW(&a) && ox > 3)
                             result = 4;
                     }
                     if (result == 0) {
                         py += box->offY;
                         if (hdir == 1) {
                             tx += box->offX + box->w;
-                            px = b.x + b.w;
-                            r = FindLineCrossing(tx, ty, px, py, a.x);
+                            px = AabbX(&b) + AabbW(&b);
+                            r = FindLineCrossing(tx, ty, px, py, AabbX(&a));
                         } else {
                             tx += box->offX;
-                            px = b.x;
-                            r = FindLineCrossing(tx, ty, px, py, a.x + a.w);
+                            px = AabbX(&b);
+                            r = FindLineCrossing(tx, ty, px, py, AabbX(&a) + AabbW(&a));
                         }
-                        if ((r < 0 && !above && ox > 3) || (r > 0 && r >= a.y + a.h))
+                        if ((r < 0 && !above && ox > 3) || (r > 0 && r >= AabbY(&a) + AabbH(&a)))
                             result = 4;
                         else
                             result = hdir;
@@ -251,7 +242,7 @@ void Platform::ResolveCollision(void *)
         switch (type) {
         case 0:
         case 7:
-            if (AabbOverlaps(&a, pb)) {
+            if (AabbOverlaps(&a, &b)) {
                 Player *q = gPlayer;
 
                 q->carried = this;
@@ -263,7 +254,7 @@ void Platform::ResolveCollision(void *)
             }
             break;
         case 2:
-            if (AabbOverlaps(&a, pb)) {
+            if (AabbOverlaps(&a, &b)) {
                 s32 d = Q8_TO_INT(x) - Q8_TO_INT(gPlayer->x);
                 s32 sign;
 
@@ -274,7 +265,7 @@ void Platform::ResolveCollision(void *)
             break;
         case 3:
             if (!gLevelState->IsBonusRoundDone() && !gLevelState->timeTrial &&
-                AabbOverlaps(&a, pb)) {
+                AabbOverlaps(&a, &b)) {
                 s32 d = Q8_TO_INT(x) - Q8_TO_INT(gPlayer->x);
                 s32 sign;
 
@@ -284,7 +275,7 @@ void Platform::ResolveCollision(void *)
             }
             break;
         case 4:
-            if (!gLevelState->IsGemPathDone() && !gLevelState->timeTrial && AabbOverlaps(&a, pb)) {
+            if (!gLevelState->IsGemPathDone() && !gLevelState->timeTrial && AabbOverlaps(&a, &b)) {
                 s32 d = Q8_TO_INT(x) - Q8_TO_INT(gPlayer->x);
                 s32 sign;
 
@@ -296,7 +287,7 @@ void Platform::ResolveCollision(void *)
         case 1:
         case 5:
         case 6:
-            if (!AabbOverlaps(&a, pb))
+            if (!AabbOverlaps(&a, &b))
                 Mover()->active = 0;
             break;
         }
