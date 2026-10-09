@@ -28,14 +28,14 @@ songs and WAV samples. `baserom.gba` isn't needed to build it.
   (no `sub_XXXXXXXX` function names left), the library split (#573), the
   file layout (#575) and the headers (#574: every function and global is
   declared once, in a header).
-- **Matching workarounds: 1992/2059 functions have none.** The other
-  67 still need at least one register pin, empty-asm nudge
+- **Matching workarounds: 2005/2059 functions have none.** The other
+  54 still need at least one register pin, empty-asm nudge
   (`include/match.h`), instruction asm, `BOX_ADDR`, retyped field
   access, scoped `volatile` or self-init to come out byte-exact, each
   with a comment saying why (#662,
   [docs/matching_techniques.md](./docs/matching_techniques.md)). After
   a build, `tools/match_idioms.py --functions` prints these numbers and
-  the table below; `--functions --files` lists the 67 functions.
+  the table below; `--functions --files` lists the 54 functions.
 - **What's left** is code quality: the remaining placeholder names
   (`gUnknown_`, `gStaticData_`, `nullsub_N`, `unk_XX` fields), compiler
   warnings, formatting, and the matching workarounds above. It's
@@ -52,23 +52,23 @@ songs and WAV samples. `baserom.gba` isn't needed to build it.
 | `src/actor/` | 136 | 134 | 2 |
 | `src/audio/` | 27 | 27 | 0 |
 | `src/bosses/` | 165 | 159 | 6 |
-| `src/crates/` | 93 | 87 | 6 |
+| `src/crates/` | 93 | 90 | 3 |
 | `src/cutscene/` | 33 | 33 | 0 |
 | `src/enemies/` | 41 | 36 | 5 |
-| `src/frontend/` | 57 | 53 | 4 |
+| `src/frontend/` | 57 | 56 | 1 |
 | `src/gfx/` | 140 | 140 | 0 |
 | `src/hud/` | 18 | 18 | 0 |
 | `src/iwram/` | 10 | 7 | 3 |
-| `src/level/` | 321 | 316 | 5 |
+| `src/level/` | 321 | 320 | 1 |
 | `src/link/` | 12 | 9 | 3 |
 | `src/menus/` | 140 | 136 | 4 |
 | `src/objects/` | 198 | 194 | 4 |
-| `src/pickups/` | 37 | 36 | 1 |
+| `src/pickups/` | 37 | 37 | 0 |
 | `src/player/` | 202 | 195 | 7 |
-| `src/save/` | 65 | 62 | 3 |
+| `src/save/` | 65 | 63 | 2 |
 | `src/system/` | 30 | 30 | 0 |
 | `src/text/` | 26 | 25 | 1 |
-| `src/util/` | 33 | 32 | 1 |
+| `src/util/` | 33 | 33 | 0 |
 | `src/vehicle/` | 213 | 213 | 0 |
 
 </details>
