@@ -9,7 +9,7 @@
  * teardown functions in inline_copies_actors.cpp, the per-category hooks in
  * actor_category_hooks.cpp, actor_category_frame.cpp and
  * actor_category.cpp, the jetpack ring and
- * collected wumpa in hovercraft.cpp, ...), plus their globals and data
+ * collected wumpa in jetpack_collected_wumpa.cpp, ...), plus their globals and data
  * tables.
  *
  * Declarations here are the functions' real prototypes, copied from

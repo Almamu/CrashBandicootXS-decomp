@@ -271,6 +271,8 @@ SECTIONS
         build/crashbandicootxs/src/vehicle/jetpack/jetpack_balloon.o(.text);
         build/crashbandicootxs/src/vehicle/jetpack/jetpack_crates.o(.text);
         build/crashbandicootxs/src/vehicle/jetpack/jetpack_rocket.o(.text);
+        build/crashbandicootxs/src/vehicle/jetpack/jetpack_collected_wumpa.o(.text);
+        build/crashbandicootxs/src/bosses/hovercraft_fireball.o(.text);
         build/crashbandicootxs/src/bosses/hovercraft.o(.text);
         build/crashbandicootxs/src/bosses/hovercraft_parts.o(.text);
         build/crashbandicootxs/src/bosses/hovercraft_cannon.o(.text);
@@ -514,7 +516,7 @@ SECTIONS
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.21JetpackParachuteNitro); /* gJetpackParachuteNitroVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.13JetpackRocket); /* gJetpackRocketVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.11JetpackRing); /* gJetpackRingVtable */
-        build/crashbandicootxs/src/bosses/hovercraft.o(.gnu.linkonce.d._vt.21JetpackCollectedWumpa); /* gJetpackCollectedWumpaVtable */
+        build/crashbandicootxs/src/vehicle/jetpack/jetpack_collected_wumpa.o(.gnu.linkonce.d._vt.21JetpackCollectedWumpa); /* gJetpackCollectedWumpaVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.18HovercraftFireball); /* gHovercraftFireballVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.16HovercraftCannon); /* gHovercraftCannonVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.18HovercraftLauncher); /* gHovercraftLauncherVtable */

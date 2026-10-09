@@ -11,12 +11,12 @@ extern "C" {
 }
 
 /* 0x08032480-0x080326E4 (#664 part 11g, include/vehicle.hpp), between
- * jetpack_crates.cpp and src/bosses/hovercraft.cpp:
+ * jetpack_crates.cpp and jetpack_collected_wumpa.cpp:
  *
  * - JetpackRocket (gJetpackRocketVtable): swings down to a height, then
  *   explodes; it hurts the player once on contact.
  * - JetpackRing::Update (the ring's other methods are in
- *   src/bosses/hovercraft.cpp).
+ *   jetpack_collected_wumpa.cpp).
  *
  * See docs/matching/archive/issue-59-0x08031784-actor.md and
  * issue-60-61-gap-31a6c-part2.md. */

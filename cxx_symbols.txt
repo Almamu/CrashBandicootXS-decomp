@@ -1261,6 +1261,7 @@ StatePop__14JetpackBalloon JetpackBalloonStatePop
 #
 # part 11h: the hovercraft's weapons, the jetpack ring and collected wumpa
 # (include/boss_actors.hpp, vehicle.hpp; src/bosses/hovercraft*.cpp,
+# src/vehicle/jetpack/jetpack_collected_wumpa.cpp,
 # src/data/actor_pmf_17c450.cpp, actor_state_17c4c8.cpp)
 _vt.21HovercraftCannonFlash gHovercraftCannonFlashVtable
 __21HovercraftCannonFlashPC17anim_table_recordiii CreateHovercraftCannonFlash

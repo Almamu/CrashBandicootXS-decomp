@@ -627,7 +627,7 @@ counts them by kind) and what the C++ needed when it was converted.
 | `src/vehicle/jetpack/jetpack_balloon.cpp` | `JetpackBalloon` (include/vehicle.hpp): constructor (`CreateJetpackBalloon`), `Update`, `Damage`, `IsUnshootable`, `ClearCrate`, `Release`, `Move`, `RunState`, 3 states; `GetAirshipHpPercent`, `DestroyAirship` (`delete gAirship`), `nullsub_30`, `AirshipStateInactive` (C linkage; at the end of airship_graphics.cpp since #769) | 11 + 4 | agbcp (both match) | 7 pins, 2 retyped stores, 3 retyped reads, `ACTOR_PMF_CALL`, `ACTOR_VCALL`, a hand-written slot-7 call, `ACTOR_SET_STATE`, a `goto` -> 0 | 11f |
 | `src/data/actor_pmf_17c260.cpp` | `JetpackPlane::stateFuncs`, `JetpackBomber::stateFuncs` (gJetpackPlaneStateFuncs, gJetpackBomberStateFuncs) | data | agbcp | the `ACTOR_PMF` records -> 0 | 11f |
 | `src/data/actor_pmf_17c414.cpp` | `JetpackBalloon::stateFuncs` (gJetpackBalloonStateFuncs; split from actor_state_17c3fc.c, with the balloon crate's table after it in the new actor_pmf_17c42c.c, still C) | data | agbcp | the `ACTOR_PMF` records -> 0 | 11f |
-| `src/bosses/hovercraft.cpp` | `JetpackRing` (include/vehicle.hpp): constructor (`CreateJetpackRing`), `IsUnshootable`; `JetpackCollectedWumpa` (new): `Update`, `Draw`, destructor, constructor, `IsUnshootable`; `HovercraftFireball` (include/boss_actors.hpp): `Damage`, `Update`, constructor, `StateExplode`, `StateFly`, `RunState`, `IsUnshootable`; the hovercraft (an `AnimPart`, gHovercraft): `UpdateHovercraftHitFlash`, `RunHovercraftState`, its states, `DrawHovercraftMap`, `CreateHovercraft` (`new AnimPart`), `SpawnHovercraft`, `UpdateHovercraft`, `UpdateHovercraftBg2`, `LoadHovercraftGraphics`, `ConvertHovercraftTiles`, `DestroyHovercraft` (`delete`), 3 unused stubs (C linkage) | 14 + 16 | old_agbcp (old_agbcc C already) | 28 pins, 1 const, 2 keeps, 1 memory keep, 4 retyped stores, 1 retyped read, 3 `ACTOR_PMF_CALL`s, 3 slot calls, the inline `AllocActor`/`InitAnimPart` pair -> 4 pins, 1 const, 1 memory keep | 11h |
+| `src/bosses/hovercraft.cpp` (split in #769 into `src/vehicle/jetpack/jetpack_collected_wumpa.cpp`, `src/bosses/hovercraft_fireball.cpp` and `hovercraft.cpp`) | `JetpackRing` (include/vehicle.hpp): constructor (`CreateJetpackRing`), `IsUnshootable`; `JetpackCollectedWumpa` (new): `Update`, `Draw`, destructor, constructor, `IsUnshootable` (these two, jetpack_collected_wumpa.cpp); `HovercraftFireball` (include/boss_actors.hpp): `Damage`, `Update`, constructor, `StateExplode`, `StateFly`, `RunState`, `IsUnshootable` (hovercraft_fireball.cpp); the hovercraft (an `AnimPart`, gHovercraft): `UpdateHovercraftHitFlash`, `RunHovercraftState`, its states, `DrawHovercraftMap`, `CreateHovercraft` (`new AnimPart`), `SpawnHovercraft`, `UpdateHovercraft`, `UpdateHovercraftBg2`, `LoadHovercraftGraphics`, `ConvertHovercraftTiles`, `DestroyHovercraft` (`delete`), 3 unused stubs (C linkage) | 14 + 16 | old_agbcp (old_agbcc C already) | 28 pins, 1 const, 2 keeps, 1 memory keep, 4 retyped stores, 1 retyped read, 3 `ACTOR_PMF_CALL`s, 3 slot calls, the inline `AllocActor`/`InitAnimPart` pair -> 4 pins, 1 const, 1 memory keep | 11h |
 | `src/bosses/hovercraft_parts.cpp` | the hovercraft's getters, `StartHovercraftHitFlash`, `SetHovercraftFlashColor`, `LoseHovercraftPart`, `SetHovercraftState` (the inline `EnterHovercraftState` out of line), 3 states (C linkage) | 0 + 14 | agbcp | 22 pins, 2 `asm`, 4 retyped stores -> 1 pin | 11h |
 | `src/bosses/hovercraft_cannon.cpp` | `HovercraftCannon` (include/boss_actors.hpp): `StateFire`, `Damage`, `Update`, constructor (`CreateHovercraftCannon`), `StateDestroyed`, `StateWait`, `RunState`, `IsUnshootable` | 8 | agbcp | 15 pins, 1 const, 4 retyped stores, 1 retyped read, 2 `ACTOR_PMF_CALL`s, the hand-written destroy-slot call -> 0 | 11h |
 | `src/bosses/hovercraft_launcher.cpp` | `HovercraftLauncher` (include/boss_actors.hpp): the same eight methods as the cannon's | 8 | agbcp | 20 pins, 3 consts, 7 retyped stores, 2 `ACTOR_PMF_CALL`s, the hand-written destroy-slot call -> 0 | 11h |
@@ -2519,13 +2519,13 @@ match under agbcp as their C did.
 
 | Class | Size | Vtable | Code |
 |---|---:|---|---|
-| `HovercraftFireball : HpActor` | 0x6C | gHovercraftFireballVtable (7 slots) | hovercraft.cpp; its table in actor_pmf_17c450.cpp |
+| `HovercraftFireball : HpActor` | 0x6C | gHovercraftFireballVtable (7 slots) | hovercraft_fireball.cpp; its table in actor_pmf_17c450.cpp |
 | `HovercraftCannon : HpActor` | 0x70 | gHovercraftCannonVtable | hovercraft_cannon.cpp; its table in actor_state_17c4c8.cpp |
 | `HovercraftLauncher : HpActor` | 0x70 | gHovercraftLauncherVtable | hovercraft_launcher.cpp; its table in actor_state_17c4c8.cpp |
 | `HovercraftSideGun : HpActor` | 0x70 | gHovercraftSideGunVtable | hovercraft_side_gun.cpp |
 | `HovercraftCannonFlash : HpActor` | 0x5C | gHovercraftCannonFlashVtable | hovercraft_cannon_flash.cpp (its `Damage` in hovercraft_side_gun.cpp) |
-| `JetpackRing : HpActor` (vehicle.hpp) | 0x5C | gJetpackRingVtable | hovercraft.cpp (its `Update` is still C, jetpack_crates.c, 11g) |
-| `JetpackCollectedWumpa : HpActor` (vehicle.hpp, new) | 0x64 | gJetpackCollectedWumpaVtable | hovercraft.cpp |
+| `JetpackRing : HpActor` (vehicle.hpp) | 0x5C | gJetpackRingVtable | jetpack_collected_wumpa.cpp (its `Update` is 11g's, jetpack_rocket.cpp) |
+| `JetpackCollectedWumpa : HpActor` (vehicle.hpp, new) | 0x64 | gJetpackCollectedWumpaVtable | jetpack_collected_wumpa.cpp |
 | the hovercraft | 0x1C | none | a bare `AnimPart` (gHovercraft) and globals, the airship's twin; its functions keep C linkage |
 
 - **The weapons get their fields** (bosses.h's `struct spawner`, `struct
@@ -2613,7 +2613,7 @@ and old_agbcp (identical assembly) and stays agbcp.
 | `JetpackQuestionCrate : JetpackBalloonCrate` | 0x74 | gJetpackQuestionCrateVtable (2, 4) | jetpack_crates.cpp; the level spawn record |
 | `JetpackParachuteNitro : HpActor` | 0x60 | gJetpackParachuteNitroVtable (2, 4, 5) | jetpack_crates.cpp; `dead`, `limitY` |
 | `JetpackRocket : HpActor` | 0x68 | gJetpackRocketVtable (2, 4, 5) | jetpack_rocket.cpp; the swing's origin, `limitY`, `stepY`, `triggered`, `hit` |
-| `JetpackRing` | | | `Update` (the rest is 11h's, hovercraft.cpp) |
+| `JetpackRing` | | | `Update` (the rest is 11h's, jetpack_collected_wumpa.cpp) |
 
 - **The kinds expand the crate's constructor; the ROM also has it out of
   line**, uncalled (InitJetpackBalloonCrate, in the middle of the file). One
@@ -3058,7 +3058,7 @@ data.
 | `src/vehicle/jetpack/jetpack_crates.cpp` | 4 | `JetpackBalloonCrate` and its three kinds |
 | `src/enemies/enemy_ctrl.cpp`, `src/pickups/wumpa.cpp`, `src/bosses/tiny_hop_pad.cpp`, `src/menus/level_select.cpp` (since #767 one each in `src/objects/camera_lead.cpp` and `launch_pad.cpp`), `src/vehicle/polar/polar_pickups.cpp` | 2 each | `PeriodicSpawner`, `KnockedEnemyCtrl`; `Wumpa`, `Stopwatch`; `StompedHopPadCtrl`, `OneShotAnimCtrl`; `CameraLead`, `LaunchPad`; `PolarCollectedWumpa`, `PolarCrate` |
 | `src/cutscene/cutscene_player.cpp`, `src/system/inline_copies_misc.cpp` (step 10b) | 2 each | `BgStreamer`, `BgLayerBase`; `LargeFont`, `SmallFont` |
-| 29 others (4 of them since step 10b) | 1 each | `Entity` (graphics), `Sprite`, `UiSprite`, `MovingSprite`, `GroundSprite`, `Player`, `EnemyCtrl`, `EffectCtrl`, `Crate`, `ExtraLife`, `ActionCtrl`, `PlayerCtrl`, `InputCtrl`, `BossCtrl`, `MegaMixCtrl`, `TinyCtrl`, `Platform`, `PlatformMover`, `LevelSelectEntry`, `HudPart`, `ActorSelf` (gActorVtable), `PolarPlayer`, `JetpackPlayer`, `JetpackCollectedWumpa` (hovercraft.cpp), `LogoActor`; `Ctrl` (system/bios_util.cpp), `BgLayer` (level/bg_layer.cpp), `PooledBgLayer` (level/tile_slot_pool.cpp), `Font` (text/font.cpp) |
+| 29 others (4 of them since step 10b) | 1 each | `Entity` (graphics), `Sprite`, `UiSprite`, `MovingSprite`, `GroundSprite`, `Player`, `EnemyCtrl`, `EffectCtrl`, `Crate`, `ExtraLife`, `ActionCtrl`, `PlayerCtrl`, `InputCtrl`, `BossCtrl`, `MegaMixCtrl`, `TinyCtrl`, `Platform`, `PlatformMover`, `LevelSelectEntry`, `HudPart`, `ActorSelf` (gActorVtable), `PolarPlayer`, `JetpackPlayer`, `JetpackCollectedWumpa` (vehicle/jetpack/jetpack_collected_wumpa.cpp), `LogoActor`; `Ctrl` (system/bios_util.cpp), `BgLayer` (level/bg_layer.cpp), `PooledBgLayer` (level/tile_slot_pool.cpp), `Font` (text/font.cpp) |
 
 **Still C after step 10** (src/data/entity_vtables_7e3bec.c), 8 tables
 whose class's key method was C code: `gCtrlVtable` (`Ctrl::Update` was

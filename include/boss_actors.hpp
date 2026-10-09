@@ -125,7 +125,7 @@ static inline void ApplyHovercraftFlashColor(u8 flag)
     }
 }
 
-/* The hovercraft's fireball (gHovercraftFireballVtable, hovercraft.cpp;
+/* The hovercraft's fireball (gHovercraftFireballVtable, hovercraft_fireball.cpp;
  * the airship fireball's layout): the side guns fire it (SpawnHovercraftFireball). It sets the
  * orbit fields up as the airship's does, but never reads them: it flies
  * straight on at `velZ`. */

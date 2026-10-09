@@ -17,7 +17,7 @@
  * the jetpack player (JetpackPlayer), its shot and the checkpoint banner's
  * and explosion's constructors their code; part 11c the polar player;
  * part 11h the jetpack ring and the collected wumpa
- * (src/bosses/hovercraft.cpp); part 11d the other polar actors
+ * (src/vehicle/jetpack/jetpack_collected_wumpa.cpp); part 11d the other polar actors
  * (src/vehicle/polar/polar_crates.cpp, polar_pickups.cpp, polar_crate.cpp,
  * polar_objects.cpp,
  * polar_aku_aku.cpp, polar_course_objects.cpp and polar_nitro.cpp), so
@@ -744,8 +744,9 @@ public:
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackRocket) == 0x68);
 
-/* A jetpack ring (gJetpackRingVtable). Its constructor and slot 5 are in src/bosses/hovercraft.cpp
- * (part 11h), its Update in src/vehicle/jetpack/jetpack_rocket.cpp (part 11g). */
+/* A jetpack ring (gJetpackRingVtable). Its constructor and slot 5 are in
+ * src/vehicle/jetpack/jetpack_collected_wumpa.cpp (part 11h), its Update in
+ * jetpack_rocket.cpp (part 11g). */
 class JetpackRing : public HpActor
 {
 public:
@@ -761,7 +762,8 @@ public:
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackRing) == 0x5C);
 
 /* A collected wumpa of the jetpack levels (gJetpackCollectedWumpaVtable,
- * src/bosses/hovercraft.cpp, part 11h; PolarCollectedWumpa's twin): it
+ * src/vehicle/jetpack/jetpack_collected_wumpa.cpp, part 11h;
+ * PolarCollectedWumpa's twin): it
  * flies from where it was collected to the HUD's wumpa counter, and its
  * destructor adds the fruit it carries. */
 class JetpackCollectedWumpa : public HpActor
