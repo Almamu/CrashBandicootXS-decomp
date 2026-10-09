@@ -205,6 +205,7 @@ SECTIONS
         build/crashbandicootxs/src/level/terrain_probe_axes.o(.text);
         build/crashbandicootxs/src/level/terrain.o(.text);
         build/crashbandicootxs/src/level/camera.o(.text);
+        build/crashbandicootxs/src/system/operator_new.o(.text);
         build/crashbandicootxs/src/system/main_loop.o(.text);
         build/crashbandicootxs/src/gfx/palette_cycle.o(.text);
         build/crashbandicootxs/src/hud/hud_part.o(.text);

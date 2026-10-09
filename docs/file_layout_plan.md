@@ -327,7 +327,7 @@ this plan depends on splitting them.
   `LaunchPad` (objects) ahead of the level-select screen.~~ **Done (#767):**
   `objects/camera_lead.cpp`, `objects/launch_pad.cpp`.
 - `level/camera.c` (`camera_follow.c`): `OperatorNew`/`OperatorDelete`
-  (C++ runtime) after the camera.
+  (C++ runtime) after the camera. **Done** (#770): `system/operator_new.cpp`.
 - `bosses/cortex.c` and `bosses/dingodile.c` (`actor_part_188d0.c`,
   `actor_part_1967c.c`): Tiny, Cortex and Dingodile straddle both files.
 - `vehicle/jetpack_spawn.c` (`actor_part128.c`): starts with

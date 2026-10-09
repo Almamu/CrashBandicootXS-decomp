@@ -380,7 +380,8 @@ system from "core" system startup/init code.
   project's usual practice. `asm/code_3_2_17_26bf8.s` trimmed to begin
   at `StepCameraDirectional`.
 - **`StepCameraDirectional`/`StepCameraFacing`/`SnapCamera`/`UpdateCamera`/`OperatorDeleteArray`/`OperatorNewArray`/`OperatorDelete`/`OperatorNew`**
-  (`src/level/camera.cpp`, new file - GitHub issue #44) - the
+  (`src/level/camera.cpp`, new file - GitHub issue #44; the four
+  operators in `src/system/operator_new.cpp` since #770) - the
   `gCamera` camera follower: Q8 position eased a quarter-step
   per frame toward `target + look-ahead`, published centered on screen
   (`- (120 << 8)`, `- (80 << 8)`) through `SetLevelScroll`'s level-bounds

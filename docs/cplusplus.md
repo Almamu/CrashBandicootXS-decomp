@@ -42,7 +42,7 @@ Contents:
 | `__pure_virtual` ("pure virtual method called") | none | no pure virtual slot is ever emitted |
 | exception tables, `__throw`, `__eh_*`, `terminate` | none | built with `-fno-exceptions` (or no `throw`) |
 | static constructor lists (`__CTOR_LIST__`, `.ctors`, a `__main` call) | none: crt0 calls `AgbMain` directly, and `AgbMain` calls no `__main` | no global object has a constructor |
-| `operator new`/`delete`/`new[]`/`delete[]` | `OperatorNew` & co. in `src/level/camera.cpp` | the game's own replacements: see below |
+| `operator new`/`delete`/`new[]`/`delete[]` | `OperatorNew` & co. in `src/system/operator_new.cpp` | the game's own replacements: see below |
 
 **The operators.** In g++ 2.x the global `operator new(size_t)` has the
 assembler name `__builtin_new`, and `new[]`, `delete` and `delete[]` are
@@ -50,9 +50,10 @@ assembler name `__builtin_new`, and `new[]`, `delete` and `delete[]` are
 `new X` expression calls `__builtin_new` and then the constructor; a
 `delete p` calls the destructor through the vtable with `__in_chrg` = 3.
 libgcc's own versions (new1.cc, new2.cc) call `malloc` and the new
-handler. The game's four, in camera.cpp, call `mem_alloc(size,
-MEM_HEAP_EWRAM)` and `mem_free`: they are the game's replacement global
-operators, and `OperatorNew` is `__builtin_new`. camera.cpp defines them
+handler. The game's four, in operator_new.cpp (camera.cpp until #770),
+call `mem_alloc(size, MEM_HEAP_EWRAM)` and `mem_free`: they are the
+game's replacement global operators, and `OperatorNew` is
+`__builtin_new`. operator_new.cpp defines them
 as `operator delete[]`, `operator new[]`, `operator delete` and `operator
 new` (in ROM order), and cxx_symbols.txt gives them their C names. None of libgcc's C++
 support (new handler, `__pure_virtual`, `__terminate`) is linked.
