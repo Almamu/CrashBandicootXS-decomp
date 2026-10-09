@@ -77,7 +77,6 @@ SECTIONS
         build/crashbandicootxs/src/gfx/sprite_renderer.o(.text);
         build/crashbandicootxs/src/objects/sprite.o(.text);
         build/crashbandicootxs/src/objects/sprite_obj.o(.text);
-        build/crashbandicootxs/src/objects/sprite_anim.o(.text);
         build/crashbandicootxs/src/objects/ui_sprite.o(.text);
         build/crashbandicootxs/src/objects/part_list_cull.o(.text);
         build/crashbandicootxs/src/objects/part_collide.o(.text);
