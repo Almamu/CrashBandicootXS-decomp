@@ -1025,7 +1025,7 @@ vararg. Matched first-try using this toolchain's real `<stdarg.h>`
 project code had used variadics before this. Needed the same trailing
 `asm(".align 2, 0")` fix as `itoa` for the padding byte after it.
 
-**Parked, not matched: `FindSubstring`** (ROM `0x08000CBC`, right after `sprintf`, same file).
+**Parked, not matched: `FindSubstring`** (ROM `0x08000CBC`, right after `sprintf`, same file; in `string.cpp` since #767).
 A case-insensitive `strstr`: `u8 *FindSubstring(u8 *haystack0, u8 *needle,
 s32 caseInsensitive)` scans `haystack0` for the first occurrence of
 `needle`, lowercasing both sides byte-by-byte before comparing whenever

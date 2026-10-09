@@ -81,8 +81,8 @@ UNITS = [
     (0x080007EC, "src/gfx/bitmap_screen.o", "graphics"),
     (0x080008B4, "src/util/fixed_math.o", "util"),
     (0x0800094C, "src/util/number_format.o", "util"),
-    (0x08000AA8, "src/util/printf.o", "util"),  # vsprintf/sprintf/FindSubstring - custom sprintf plus its variadic wrapper, plus a case-insensitive strstr; matched. FindSubstring was previously NAKED - closed by materializing each lowercase-fold as an opaque inline-asm block (same technique as SetDispcntMode/CommitBlendRegs) plus deferring the "match found" computation to a label placed after the whole scan/verify loop so gcc's block linearizer places it right before the shared epilogue, matching the ROM's own layout - see docs/matching/archive/naked-sub_8000cbc-matched.md
-    (0x08000D68, "src/util/string.o", "util"),
+    (0x08000AA8, "src/util/printf.o", "util"),  # vsprintf/sprintf - custom sprintf plus its variadic wrapper; matched
+    (0x08000CBC, "src/util/string.o", "util"),  # FindSubstring (moved from printf.o, #767) - a case-insensitive strstr, then the string helpers; matched. FindSubstring was previously NAKED - closed by materializing each lowercase-fold as an opaque inline-asm block (same technique as SetDispcntMode/CommitBlendRegs) plus deferring the "match found" computation to a label placed after the whole scan/verify loop so gcc's block linearizer places it right before the shared epilogue, matching the ROM's own layout - see docs/matching/archive/naked-sub_8000cbc-matched.md
     (0x08000E10, "src/util/rand.o", "util"),
     (0x08000E6C, "src/util/line.o", "util"),
     (0x08000EE4, "src/text/wrapped_text.o", "graphics"),  # DrawWrappedText (word-wrap text renderer) - matched as plain C (old_agbcc, was NAKED) - see docs/matching/archive/strag3-naked-retry.md
