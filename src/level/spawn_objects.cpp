@@ -1,7 +1,5 @@
 #include "spawners.hpp"
 #include "platform.hpp"
-#include "crate.hpp"
-#include "boss_ctrl.hpp"
 #include "enemy_ctrl.hpp"
 #include "level_select.hpp"
 #include "level_state.hpp"
@@ -12,51 +10,14 @@ extern "C" {
 #include "globals.h"
 }
 
-/* Spawner table entries next to the bosses' (ROM 0x08021668-0x08021BFC;
- * #664, include/spawners.hpp). Built with old_agbcp. */
-
-/* Inline so old_agbcp re-truncates GetPaletteSlot's u8 result before the
- * nibble insert, as the ROM does. */
-static inline void SetPalette(MovingSprite *part, s32 slot)
-{
-    part->palette = slot;
-}
+/* The decoration, platform and seal-spawner spawners, between the
+ * bosses' and the crates' (ROM 0x08021748-0x08021A4C; #664,
+ * include/spawners.hpp). Built with old_agbcp. */
 
 /* `t` is an s32: its constant is loaded before the tag's address. */
 static inline void SetTag(Sprite *part, s32 t)
 {
     part->tag = t;
-}
-
-/* Entity type 0x49, Mega-Mix (see mega_mix_update.cpp): a moving sprite
- * on sprite bank +0x168 at (arg1, arg2), its palette that of its first
- * animation, not mirrored, driven by a MegaMixCtrl; kind 1, not
- * colliding, out of contact, invulnerable and always active, in the
- * collidable list. */
-void SpawnMegaMix(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
-{
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
-    MegaMixCtrl *hdr;
-
-    part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x168);
-    part->x = INT_TO_Q8(arg1);
-    part->y = INT_TO_Q8(arg2);
-    SetTag(part, 0);
-    part->ResetFrameTimer();
-    part->ResetFrameIndex();
-    part->SetAnimDone(0);
-    SetPalette(part, gPaletteCache->GetSlot(part->bank->anims->paletteId));
-    part->mirrorFlags.mirrorX = 0;
-    part->mirrorFlags.mirrorY = 0;
-    hdr = new MegaMixCtrl;
-    part->mover = hdr;
-    hdr->Attach(part);
-    part->kind = 1;
-    part->f.b.collides = 0;
-    part->f.b.visible = 0;
-    part->f.b.vulnerable = 0;
-    part->f.b.active = 1;
-    CollidableList()->Add(part);
 }
 
 /* Builds a sprite on sprite bank +0x21c, resets
@@ -189,86 +150,4 @@ void SpawnSealSpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     obj->y = INT_TO_Q8(arg2);
     obj->f.flags |= 0x10;
     AddUpdateOnly(obj);
-}
-
-/* Plain `CreateCrate` entity-constructor trampoline (docs/rom_map.md;
- * same dispatch family as src/level/spawn_crates.cpp's
- * types 1-7), type `0x12`. */
-void SpawnTimeCrate3(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
-{
-    Crate::Create(arg0, arg1, arg2, arg3, CRATE_KIND_TIME_3);
-}
-
-/* Plain `CreateCrate` trampoline, type `0x11`. */
-void SpawnTimeCrate2(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
-{
-    Crate::Create(arg0, arg1, arg2, arg3, CRATE_KIND_TIME_2);
-}
-
-/* Plain `CreateCrate` trampoline, type `0x10`. */
-void SpawnTimeCrate1(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
-{
-    Crate::Create(arg0, arg1, arg2, arg3, CRATE_KIND_TIME_1);
-}
-
-/* Plain `CreateCrate` trampoline, type `0xf`. */
-void SpawnSlotCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
-{
-    Crate::Create(arg0, arg1, arg2, arg3, CRATE_KIND_SLOT);
-}
-
-/* Plain `CreateCrate` trampoline, type `0xe`. */
-void SpawnTntCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
-{
-    Crate::Create(arg0, arg1, arg2, arg3, CRATE_KIND_TNT);
-}
-
-/* Plain `CreateCrate` trampoline, type `0xd`: the reinforced crate (bank
- * 31 animation 6, a wooden crate with metal-banded edges). Only a body
- * slam (attack kind 5, gActionCtrlStateAttackKinds) or the invincibility
- * mask breaks it: gCrateHitResponse row 13 bounces every other attack,
- * and QueueCratePlayerCollision turns a body slam moving up into a bounce
- * too. */
-void SpawnReinforcedCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
-{
-    Crate::Create(arg0, arg1, arg2, arg3, CRATE_KIND_REINFORCED);
-}
-
-/* Plain `CreateCrate` trampoline, type `0xc`. */
-void SpawnBouncyWumpaCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
-{
-    Crate::Create(arg0, arg1, arg2, arg3, CRATE_KIND_BOUNCY_WUMPA);
-}
-
-/* Plain `CreateCrate` trampoline, type `0xb`. */
-void SpawnMysteryCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
-{
-    Crate::Create(arg0, arg1, arg2, arg3, CRATE_KIND_MYSTERY);
-}
-
-/* Plain `CreateCrate` trampoline, type `0xa`. */
-void SpawnNitroCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
-{
-    Crate::Create(arg0, arg1, arg2, arg3, CRATE_KIND_NITRO);
-}
-
-/* Plain `CreateCrate` trampoline, type `9`. */
-void SpawnLifeCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
-{
-    Crate::Create(arg0, arg1, arg2, arg3, CRATE_KIND_LIFE);
-}
-
-/* Plain `CreateCrate` trampoline, type `8`. */
-void SpawnIronArrowCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
-{
-    Crate::Create(arg0, arg1, arg2, arg3, CRATE_KIND_IRON_ARROW);
-}
-
-/* Plain `CreateCrate` trampoline, type `7`. Last function in this ROM
- * region - `asm/code_3_2_17_21280.s` (still-raw text past this point
- * used to continue here) now ends right before this file's span, at
- * `SpawnCortexBoss`'s literal pool. */
-void SpawnIronCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
-{
-    Crate::Create(arg0, arg1, arg2, arg3, CRATE_KIND_IRON);
 }

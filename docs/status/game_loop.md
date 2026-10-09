@@ -221,8 +221,8 @@ system from "core" system startup/init code.
 - `src/crates/crate_create.c` (GitHub issue #13, fourth pass, new file -
   replaces the trimmed `asm/code_3_2_17_e560_ff0c.s`, now deleted):
   `CreateCrate` - the `CreateCrate` entity-constructor trampoline
-  family's own target function (two whole files, `spawn_crates.c`/
-  `spawn_objects.c`, exist purely to call it with a fixed
+  family's own target function (`spawn_crates.cpp`, which holds all the
+  crate spawners since #770, exists purely to call it with a fixed
   `type` constant). Allocates a 0x64-byte object, sets `self+0x18` to
   `&gCrateVtable` (a `+0x18` outlier of the usual `+0xC`
   table-pointer convention), then dispatches on `type` (0-0x12,

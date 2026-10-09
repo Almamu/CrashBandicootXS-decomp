@@ -98,8 +98,11 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   **`SpawnSquid`** (`spawn_enemies.c`), **`SpawnJellyfish`**-
   **`SpawnWoodenCrusher`** (`spawn_enemies.c`; `SpawnFlamethrowerLabAssistant` closed in
   [last-eleven-naked-retry.md](../matching/archive/last-eleven-naked-retry.md)),
-  **`SpawnRoomExit`**-**`SpawnCortexBoss`** (`spawn_bosses.c`) and
-  **`SpawnMegaMix`**-**`SpawnIronCrate`** (`spawn_objects.c`) - the
+  **`SpawnRoomExit`**-**`SpawnMegaMix`** (`spawn_bosses.cpp`),
+  **`SpawnSeaweed`**-**`SpawnSealSpawner`** (`spawn_objects.cpp`) and
+  **`SpawnTimeCrate3`**-**`SpawnIronCrate`** (the head of
+  `spawn_crates.cpp`; the last two moved out of `spawn_objects.cpp` in
+  #770) - the
   "two-line text popup" spawners (issue #31) and the spawner-table
   entries that follow them. All five files are built with old_agbcc and
   share `include/text_popup.h`. 33 functions were rewritten as plain C with no pins or
