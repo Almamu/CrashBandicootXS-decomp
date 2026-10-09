@@ -27,7 +27,13 @@ extern "C" {
  * gives the ROM's registers but keeps the flag as a `movs` 0/1 and a
  * second compare; the permuter on the C++ matched only with
  * `do { } while (0)` wrappers, `x++; x--;` no-ops or a redundant copy of
- * `part`. */
+ * `part`. #662 round 3 (greg dump): `this` and `part` are global and
+ * global-alloc ranks `this` (6 references over 30 insns, 0.40) just
+ * above `part` (4 over 21, 0.38), so `this` takes r2 and `part` is left
+ * with r4; ranked the other way they get the ROM's r2/r3. The switch's
+ * dispatch is shared by both lives, so no reshaping of it helps (it
+ * would have to shrink by 4 insns), and `part` has no further use to
+ * reference. No -f flag or pair of flags changes it either. */
 void StompedHopPadCtrl::Update(MovingSprite *partArg)
 {
     MATCH_HOLD_REG(MovingSprite *, part, r2) = partArg;

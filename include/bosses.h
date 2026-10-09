@@ -171,7 +171,9 @@ extern s32 gAirshipHitFlashTimer;
 extern s32 gAirshipHp;
 extern s32 gAirshipLevel;
 extern s32 gAirshipMapCols;
-extern u8 *gAirshipMapFrames[];
+/* The picture's row addresses, as the AnimPart's u32 frame offsets
+ * (ConvertAirshipTiles fills them; a u32 store may alias its heights[]). */
+extern u32 gAirshipMapFrames[];
 extern s32 gAirshipMapRows;
 extern s32 gAirshipMapTileBase;
 extern s32 gAirshipScreenX;
@@ -201,7 +203,8 @@ extern u8 gHovercraftHitFlashOn;
 extern s16 gHovercraftHitFlashTimer;
 extern s32 gHovercraftLevel;
 extern s32 gHovercraftMapCols;
-extern void *gHovercraftMapFrames[];
+/* The same for the hovercraft (ConvertHovercraftTiles). */
+extern u32 gHovercraftMapFrames[];
 extern s32 gHovercraftMapRows;
 extern s32 gHovercraftMapTileBase;
 extern s32 gHovercraftOrbitRadius;

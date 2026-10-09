@@ -235,7 +235,11 @@ void TinyCtrl::SetState(MovingSprite *part, s32 next)
              * alone moves `x` off r1. #662 round 2: `pad`/`x` at function
              * scope or in nested blocks, TouchableList(), an inline
              * returning the pad, and `pad->x` read again all leave `pad`
-             * in r0. */
+             * in r0. #662 round 3: `pad` lives across the `next == 11 ||
+             * next == 13` test, so global-alloc places it, after
+             * local-alloc has used r0 only for the address loads that die
+             * where `pad` is born; r0 is the first free one. No -f flag or
+             * pair of flags changes that. */
             MATCH_HOLD_REG(MovingSprite *, pad, r2);
             MATCH_HOLD_REG(s32, x, r1);
 

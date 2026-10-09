@@ -42,7 +42,9 @@ extern "C" {
  * copies of the address. Matches under both compilers, in C and in C++
  * (#664 part 11b), and the C++ still needs the nudge; #662 round 2:
  * `idx` dropped, used in the scan loops, the reset in an inline, or a
- * `bool active` all differ.
+ * `bool active` all differ. #662 round 3: global-alloc's ranking (the
+ * references over the live length) decides r7 against r8; no -f flag or
+ * pair of flags, and either compiler, leaves the swap.
  * NextThreshold is actor_spawn.cpp's `GetActorSpawnZ` address shape,
  * returned as a pointer so the load lands after the limit. */
 

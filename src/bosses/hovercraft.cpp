@@ -521,8 +521,8 @@ void CreateHovercraft(s32 level)
     gHovercraftLevel = level;
     gHovercraftMapCols = BOSS_PICTURE_SIZE(gHovercraftPicture)->cols;
     gHovercraftMapRows = BOSS_PICTURE_SIZE(gHovercraftPicture)->rows;
-    gHovercraft = new AnimPart((struct anim_frame_record *)gHovercraftKeyframes,
-                               (u32 *)gHovercraftMapFrames, 1);
+    gHovercraft =
+        new AnimPart((struct anim_frame_record *)gHovercraftKeyframes, gHovercraftMapFrames, 1);
     EnterHovercraftState(0, 0);
     LoadHovercraftGraphics();
     gHovercraftBg2PageFlip = 0;
@@ -689,14 +689,16 @@ void LoadHovercraftGraphics(void)
 /* The one-row twin of `ConvertAirshipTiles` (airship_graphics.cpp): the
  * picture's 4bpp tiles (gHovercraftPalette's data after the palette) into
  * 8bpp tiles at the top of char block 2. The height is re-read after the
- * row-pointer store (the `MATCH_KEEP_MEM`) and the second loop has its
+ * row-pointer store (gHovercraftMapFrames is a `u32` table, whose store
+ * may alias heights[]; #662 round 3) and the second loop has its
  * own counter (sharing `k` makes the first loop's reversed counter start
  * from a constant instead of `sum`'s zero register). The row header is
  * written out step by step in the ROM's order, `d` being a copy of `dst`.
  * In the nibble loop the 0xf mask is an opaque value ANDed with each byte
  * (`m & b`), so gcc copies the mask rather than the byte, as the ROM
  * does, and the second byte gets its own local. ConvertAirshipTiles'
- * comment has what #662 round 2 tried for the two workarounds. */
+ * comment has why the mask needs the asm (cse1's operand order; #662
+ * rounds 2 and 3). */
 static inline u32 MeterPx(u32 v)
 {
     u32 r = 0;
@@ -714,7 +716,7 @@ void ConvertHovercraftTiles(void)
     s32 k;
     s32 row_i;
     u32 *dst;
-    u8 **rows = (u8 **)gHovercraftMapFrames;
+    u32 *rows = gHovercraftMapFrames;
     u32 m;
 
     stride = (u32)(gHovercraftMapCols * gHovercraftMapRows + 1) >> 1 << 2;
@@ -723,9 +725,7 @@ void ConvertHovercraftTiles(void)
         heights[k] = x;
         sum += x;
         off += 4;
-        rows[k] = ((u8 *)gHovercraftPalette) + off;
-        /* forces the height to be re-read (the ROM's `ldm r1!`) */
-        MATCH_KEEP_MEM(heights[k]);
+        rows[k] = (u32)((u8 *)gHovercraftPalette + off);
         off += stride;
         off += heights[k] << 5;
     }

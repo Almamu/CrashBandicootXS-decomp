@@ -94,7 +94,13 @@ void EnemyCtrl::UpdateHomingY()
  * `t->animDone` taken before the store (`u8 &done`) gives the ROM's
  * registers, but its address add then comes before the store, where the
  * ROM has it after; an inline setter or getter, the target re-read, or
- * `t` scoped to its use keep the r1/r0 split. */
+ * `t` scoped to its use keep the r1/r0 split. #662 round 3 (lreg dump):
+ * the baseY copy is local to the block after the calls, so local-alloc
+ * gives it r0 before the global `t` is allocated (r1, the first free
+ * one); r0 is only taken during the store when the animDone address
+ * pseudo is born before it, as with `done`. Under old_agbcp the `done`
+ * version is the same (the scheduler leaves the add before the store),
+ * and no -f flag or field type changes the allocation. */
 void EnemyCtrl::UpdateHop()
 {
     MovingSprite *t;
