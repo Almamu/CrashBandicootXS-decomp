@@ -277,7 +277,7 @@ void Crate::SolidifyOutline()
 /* Every idle crate of the crate list within `dist` pixels (|dx| + |dy|)
  * of (x, y), and less than `height` pixels above or below it, explodes,
  * if it is explosive, or opens or breaks, if it is breakable (the
- * player's super body slam, action_ctrl_hang.cpp). */
+ * player's super body slam, action_ctrl_moves.cpp). */
 void BreakCratesInArea(s32 x, s32 y, s32 dist, s32 height)
 {
     s32 i = 0;

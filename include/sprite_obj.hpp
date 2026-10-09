@@ -49,7 +49,7 @@ extern "C" {
 class Ctrl;
 
 /* The sprite object (src/objects/sprite_obj.cpp, sprite.cpp,
- * sprite_anim.cpp; gSpriteObjVtable): an entity with a sprite bank
+ * sprite_obj.cpp; gSpriteObjVtable): an entity with a sprite bank
  * animation. `bank` is the sprite bank (sprite_bank.h), `tag` the
  * animation in it, `frame` the step within the animation. */
 class Sprite : public Entity
@@ -217,7 +217,7 @@ public:
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(UiSprite) == 0x40);
 
 /* The moving sprite (src/objects/moving_sprite.cpp, moving_sprite_collide.cpp,
- * moving_sprite_contact.cpp, moving_sprite_probe.cpp; gMovingSpriteVtable): a sprite with a
+ * moving_sprite.cpp, moving_sprite_probe.cpp; gMovingSpriteVtable): a sprite with a
  * controller (`mover`), per-axis speeds and their ramps, and the terrain
  * probe's state. Its update runs the controller's, its events go to the
  * controller, and its slot 14 is the contact with the player. */
@@ -297,7 +297,7 @@ public:
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(MovingSprite) == 0x78);
 
 /* The ground sprite (src/objects/ground_sprite.cpp, ground_sprite_collide.cpp,
- * ground_sprite_update.cpp; gGroundSpriteVtable): a moving sprite that
+ * ground_sprite.cpp; gGroundSpriteVtable): a moving sprite that
  * probes the terrain under it (slot 1) and keeps its hitbox anchored to
  * the floor or the ceiling (slot 3). */
 class GroundSprite : public MovingSprite
@@ -347,7 +347,7 @@ COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(GroundSprite) == 0x80);
 /* A list of sprite objects (the room's part lists, globals.h):
  * Update compacts `items` and fills `visible`, the parts on screen, which
  * Collide walks. Its methods are C++, in src/objects/part_list.cpp,
- * part_list_cull.cpp and part_collide.cpp (part 7c). The items are
+ * part_list_collide.cpp (part 7c). The items are
  * Sprites: gTouchableList holds pickups, platforms and Tiny's hop pads,
  * gCollidableList and gForegroundList moving sprites and effect parts.
  * Collide hands on only the parts whose class id is above 4, the moving
@@ -368,7 +368,7 @@ public:
     void CollideWithObject(struct aabb box, MovingSprite *part,
                            MovingSprite *other); // CollidePartWithObject
     /* part 7c (include/part_list.hpp; src/objects/part_list.cpp,
-     * part_list_cull.cpp) */
+     * part_list_collide.cpp) */
     PartList(s32 capacity);         // InitPartList
     ~PartList();                    // DestroyPartList
     void Draw();                    // DrawPartList

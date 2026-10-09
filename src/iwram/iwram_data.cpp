@@ -76,7 +76,7 @@ SaveMenu *gSaveMenu = 0;
 const u8 *gCrash2LinkTextPtr = (const u8 *)gCrash2LinkText;
 const u8 *gCrash3LinkTextPtr = (const u8 *)gCrash3LinkText;
 
-/* The Aku Aku mask's animation frame (player_event.c): re-rolled every
+/* The Aku Aku mask's animation frame (player_update.cpp): re-rolled every
  * 8 frames while invincible (mask level 3), random-walked in 0-3 while
  * following the player (levels 1-2). */
 s32 gAkuAkuInvincibleFrame = 0;

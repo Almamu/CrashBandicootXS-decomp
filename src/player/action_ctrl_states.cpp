@@ -1,15 +1,433 @@
 #include "action_ctrl.hpp"
-#include "spawners.hpp"
 #include "sprite_obj.hpp"
 #include "player.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "spawners.hpp"
 
 extern "C" {
+#include "util.h"
 #include "system.h"
 #include "level.h"
 #include "globals.h"
+#include "match.h"
 #include "math_util.h"
+}
+
+/* ActionCtrl's CheckLeftGround (include/action_ctrl.hpp; #664,
+ * docs/cplusplus.md). Built by old_agbcp (the Makefile's OLD_AGBCC_OBJS):
+ * the C, built by agbcc, pinned 3 registers to old_agbcc's code. */
+
+/* Whether the player has left the ground (`hitAxes` bit 3, the floor,
+ * clear): then the fall (state 0x1A, animation 0x1B) after more than two
+ * probe tries, or state 0x1C (just left the ground) before, with the
+ * falling Y motion (entry 4) queued. */
+u8 ActionCtrl::CheckLeftGround()
+{
+    if ((part->hitAxes & 8) == 0) {
+        if (part->probeTries > 2) {
+            SetMode(ACTION_STATE_AIRBORNE_FALL);
+            SetTargetAnim(part, 0x1B);
+        } else {
+            SetMode(ACTION_STATE_LEFT_GROUND);
+        }
+        QueueNowY(4);
+        return 1;
+    }
+    return 0;
+}
+
+/* ActionCtrl's ApplyMotion and its idle state (include/action_ctrl.hpp;
+ * #664, docs/cplusplus.md). Built by old_agbcp (the Makefile's
+ * OLD_AGBCC_OBJS), like the old_agbcc C it replaces. */
+
+/* Applies the queued motion. First, while pushed (`pushLeft`/`pushRight`,
+ * a conveyor) and standing (`hitAxes` 8), moves the player a pixel; in
+ * idle, plays the idle animation once he stands still (unless a fidget
+ * plays); in idle and crouching, stops a non-slippery slide. Then each
+ * pending entry names a record of gCtrlMotionRecords through the entry
+ * set's {X, Y} pairs, applied with the speed kept (SetTargetMotion*) or
+ * started (StartTargetMotion*). On ice a standing, moving player keeps
+ * his speed with a slower ramp (target * 1.5, step / 2); the slide's X
+ * entry 0x1E starts it, faster on ice. */
+void ActionCtrl::ApplyMotion()
+{
+    struct speed_ramp rec;
+    Player *p;
+
+    p = gPlayer;
+    if (p->pushLeft == 0) {
+        if (p->pushRight == 0)
+            goto skip;
+    }
+    if (part->hitAxes == 8) {
+        if (p->pushLeft)
+            p->x -= 0x100;
+        else if (p->pushRight)
+            p->x += 0x100;
+        gPlayer->SetPrevPos(gPlayer->x, gPlayer->y);
+    }
+skip:
+    if (state == ACTION_STATE_IDLE) {
+        Player *p = gPlayer;
+
+        if (p->speedX == 0 && p->bank->animCount != 0x12 && idleFidget == 0) {
+            gAudioContext->StopSfx(SFX_SKID);
+            SetTargetAnim(gPlayer, 0x12);
+        }
+    }
+    if (state == ACTION_STATE_IDLE || state == ACTION_STATE_CROUCH) {
+        Player *p = gPlayer;
+
+        if (p->speedX != 0 && p->slippery == 0)
+            QueueNowX(0);
+    }
+    {
+        u8 pending = motionXPending;
+
+        if (pending == 1) {
+            Player *q;
+
+            rec = gCtrlMotionRecords[animSet->entries[motionX][0]];
+            q = gPlayer;
+            if (IsSlippery(q) && part->hitAxes == 8 && q->speedX != 0) {
+                motionXKeepSpeed = pending;
+                rec.target = FixedMul(rec.target, 0x180);
+                rec.step /= 2;
+            }
+            if (motionX == 0x1E) {
+                motionXKeepSpeed = 0;
+                if (gPlayer->slippery) {
+                    rec.step = FixedMul(rec.step, 0x200);
+                    rec.start = FixedMul(rec.start, 0x180);
+                }
+            }
+            if (motionXKeepSpeed)
+                SetTargetMotionX(part, &rec.start);
+            else
+                StartTargetMotionX(part, &rec.start);
+            motionXPending = 0;
+        }
+    }
+    if (motionYPending == 1) {
+        rec = gCtrlMotionRecords[animSet->entries[motionY][1]];
+        if (motionYKeepSpeed)
+            SetTargetMotionY(part, &rec);
+        else
+            StartTargetMotionY(part, &rec);
+        motionYPending = 0;
+    }
+}
+
+/* Idle: the D-pad lock counts down (released, it ends); the idle
+ * animation resumes after a fidget; standing still (animation 0x12, on its
+ * first frame) for 8, 20 or 30 seconds plays a fidget (0xE, 5, 0x1A).
+ * Unless the player left the ground (CheckLeftGround): A jumps (state 5,
+ * animation 0x13, Y entry 7), B spins (StartSpin), R crouches down
+ * (animation 3); otherwise the D-pad: sideways runs (the turbo run with L
+ * held and HasTurboRun), down crouches down, none slides to a stop on
+ * ice (X entry 0x1F). Then the facing. */
+void ActionCtrl::StateIdle()
+{
+    void *pad = gInput;
+    u32 in = gKeys.all;
+    u8 dir = GetDpadDirection(pad);
+    s32 count;
+    Player *p;
+
+    if (dpadLockTimer != 0) {
+        dpadLockTimer--;
+        if (dir == 0)
+            dpadLockTimer = dir;
+    }
+    p = part;
+    if (p->animDone) {
+        SetTargetAnim(p, 0x12);
+        idleFidget = 0;
+    }
+    count = ++frames;
+    p = part;
+    if (p->tag == 0x12 && p->frame == 0) {
+        if (count > 0x708) {
+            SetTargetAnim(p, 0x1A);
+            frames = 0;
+        } else if (count >= 0x49D && count <= 0x4C3) {
+            SetTargetAnim(p, 5);
+            frames = 0x4C4;
+        } else if (count >= 0x1E1 && count <= 0x207) {
+            SetTargetAnim(p, 0xE);
+            frames = 0x208;
+        } else {
+            goto skip;
+        }
+        idleFidget = 1;
+    }
+skip:
+    {
+        u8 left = CheckLeftGround();
+        u16 held;
+
+        if (left)
+            return;
+        if (INPUT_PRESSED(in) & 1) {
+            gAudioContext->PlaySfx(SFX_JUMP, 0x100);
+            SetMode(ACTION_STATE_JUMP);
+            SetTargetAnim(part, 0x13);
+            frame = left;
+            QueueNowY(7);
+        } else {
+            u16 alt = INPUT_PRESSED(in) & 2;
+
+            if (alt) {
+                StartSpin();
+            } else {
+                if ((held = INPUT_HELD(in) & R_BUTTON) == 0)
+                    goto other;
+                SetMode(ACTION_STATE_CROUCH_DOWN);
+                SetTargetAnim(part, 3);
+                frames = alt;
+            }
+        }
+        UpdateFacing();
+        return;
+    other:
+        turboRun = held;
+        if (dir == 0) {
+            Player *q = part;
+
+            if (IsSlippery(q) && motionX != 0x1F && q->speedX != 0)
+                QueueNowXKeepSpeed(0x1F);
+        } else {
+            u8 wait = dpadLockTimer;
+
+            if (wait == 0) {
+                switch (dir) {
+                case 3 ... 8:
+                    if ((INPUT_HELD(in) & L_BUTTON) && (u8)gLevelState->HasTurboRun()) {
+                        turboRun = 1;
+                        SetMode(ACTION_STATE_TURBO_RUN);
+                        SetTargetAnim(part, 0x18);
+                        QueueX(wait, 1, 0x1B);
+                    } else {
+                        StartRun();
+                    }
+                    break;
+                case 2:
+                    SetMode(ACTION_STATE_CROUCH_DOWN);
+                    SetTargetAnim(part, 3);
+                    frames = wait;
+                    break;
+                }
+            }
+        }
+        UpdateFacing();
+    }
+}
+
+/* ActionCtrl's run and jump states (include/action_ctrl.hpp; #664,
+ * docs/cplusplus.md). Built by old_agbcp (the Makefile's OLD_AGBCC_OBJS),
+ * like the old_agbcc C it replaces. */
+
+/* Running (states 3 and 4, the turbo run): unless the player left the
+ * ground (CheckLeftGround), A jumps (animation 0x13, Y entry 7), B spins
+ * and R slides (animation 0xF, X entry 0x1E, a dust effect part). Then
+ * the D-pad: none goes idle, down crouches. L held in the plain run
+ * starts the turbo run (HasTurboRun); releasing it in the turbo run goes
+ * back to the plain one. */
+void ActionCtrl::StateRun()
+{
+    void **pad = &gInput;
+    u32 in = gKeys.all;
+    u8 busy = CheckLeftGround();
+
+    if (busy)
+        return;
+    if (INPUT_PRESSED(in) & 1) {
+        gAudioContext->PlaySfx(SFX_JUMP, 0x100);
+        SetMode(ACTION_STATE_JUMP);
+        SetTargetAnim(part, 0x13);
+        frame = busy;
+        QueueNowY(7);
+        return;
+    }
+    {
+        u16 alt = INPUT_PRESSED(in) & 2;
+
+        if (alt) {
+            StartSpin();
+            return;
+        }
+        if (INPUT_PRESSED(in) & R_BUTTON) {
+            s32 frames;
+            MovingSprite *obj;
+
+            gAudioContext->PlaySfx(SFX_SLIDE, 0x100);
+            frames = 0x10;
+            SetMode(ACTION_STATE_SLIDE);
+            SetTargetAnim(part, 0xF);
+            frame = alt;
+            this->frames = frames;
+            QueueX(alt, 1, 0x1E);
+            gPlayer->listCount = alt;
+            gPlayer->listCount = alt;
+            obj = gEntitySpawner->LaunchEffectPart(0x29, 1, 0, 0xA, alt, gPlayer);
+            obj->f.b.visible = 0;
+            obj->mirrorBits.gfxMode = 1;
+        }
+    }
+    {
+        u8 dir = GetDpadDirection(*pad);
+
+        switch (dir) {
+        case 0:
+            SetModeAnim(ACTION_STATE_IDLE, 0x12, 0, dir);
+            QueueX(dir, 1, dir);
+            QueueY(dir, 1, dir);
+            QueueX(dir, 1, 0x1D);
+            break;
+        case 2:
+        case 7:
+        case 8:
+            {
+                s32 zero = 0;
+
+                SetMode(ACTION_STATE_CROUCH_DOWN);
+                SetTargetAnim(part, 3);
+                frames = zero;
+                QueuePendingX(zero, 0x1D);
+            }
+            break;
+        }
+    }
+    {
+        s32 held = (u16)(INPUT_HELD(in) & L_BUTTON);
+
+        if (held) {
+            if (state == ACTION_STATE_RUN && (u8)gLevelState->HasTurboRun()) {
+                turboRun = 1;
+                SetMode(ACTION_STATE_TURBO_RUN);
+                SetTargetAnim(part, 0x18);
+                QueueX(0, 1, 0x1B);
+            }
+        } else if (state == ACTION_STATE_TURBO_RUN) {
+            turboRun = held;
+            StartRun();
+        } else if (frame != 0) {
+            frame = held;
+        }
+    }
+    UpdateFacing();
+}
+
+/* Jumping (state 5, the take-off): the player's `flags2` bits 0 and 1
+ * cleared. Hitting a ceiling (`hitAxes` bit 2) falls (animation 0x15 on
+ * frame 2, the Y speed cleared); B spins in the air unless the spin
+ * cooldown runs. Once the take-off animation is done, A with the D-pad
+ * sideways is the flip jump (animation 6), otherwise the jump's rise
+ * (animation 0xC); a queued Y entry 7 becomes 0xA, 9 (A still held) or
+ * 8. Then the D-pad steers: X entries 0, 0x1C on ice (after a turbo run),
+ * 0xD (once `frame` counts a double jump) or 7. */
+void ActionCtrl::StateJump()
+{
+    ActAndFlags0D(part, -2);
+    ActAndFlags0D(part, -3);
+    if (part->hitAxes & 4) {
+        Player *p;
+        s32 frame;
+        s32 count;
+
+        SetMode(ACTION_STATE_AIRBORNE_FALL);
+        SetTargetAnim(part, 0x15);
+        p = part;
+        frame = 2;
+        count = p->bank->anims[p->tag].frameCount;
+        CLAMP_INDEX(frame, count);
+        p->frame = frame;
+        p->ClearSpeedY();
+        part->StoreHitAxes(0);
+        return;
+    }
+    {
+        u32 in = gKeys.all;
+        u8 busy = spinCooldown;
+
+        if (busy == 0 && (INPUT_PRESSED(in) & 2)) {
+            s32 frames;
+
+            gAudioContext->PlaySfx(SFX_SPIN, 0x100);
+            frames = 0x18;
+            SetMode(ACTION_STATE_AIR_SPIN);
+            SetTargetAnim(part, 0x10);
+            frame = busy;
+            this->frames = frames;
+            tornadoVariant = busy;
+            charge = busy;
+            tornadoTurn = busy;
+            tornadoFallQueued = busy;
+            tornadoUnwinding = busy;
+            gPlayer->bounce = busy;
+            return;
+        }
+    }
+    {
+        Player *p = part;
+
+        if (p->animDone) {
+            u32 cur = gKeys.all;
+
+            if ((cur & A_BUTTON) && (cur & DPAD_SIDEWAYS)) {
+                if (p->tag == 6) {
+                    SetMode(ACTION_STATE_AIRBORNE_FLIP_JUMP);
+                } else {
+                    SetMode(ACTION_STATE_AIRBORNE_FLIP_JUMP);
+                    SetTargetAnim(part, 6);
+                }
+                if (motionY == 7)
+                    QueueNowY(0xA);
+            } else {
+                SetMode(ACTION_STATE_AIRBORNE_JUMP);
+                SetTargetAnim(part, 0xC);
+                {
+                    u8 *slot = &motionY;
+
+                    if (*slot == 7) {
+                        s32 one = 1;
+
+                        /* Kept from the C: the ROM loads this 1 (r6) apart
+                         * from the A test's own 1, which plain C++ shares.
+                         * A byte test (`(u8)cur & 1` or a `u8` flag) keeps
+                         * the two 1s apart, as in HandleEvent's launch
+                         * pad, but its AND lands in r0 instead of r2
+                         * (the else's 0 store then shifts registers);
+                         * the permuter only found a shared hoisted 1.
+                         * The mechanism is ActionCtrl::HandleEvent's (see
+                         * its bounce cases): cse1 gives the arms' 1 the
+                         * test's pseudo, and regmove copies it (#662
+                         * round 3). */
+                        MATCH_KEEP(one);
+                        if (cur & 1)
+                            QueueYAt(slot, one, 9);
+                        else
+                            QueueYAt(slot, one, 8);
+                    }
+                }
+            }
+        }
+    }
+    if (GetDpadDirection(gInput) <= 2) {
+        if (gPlayer->slippery == 0)
+            QueueNowX(0);
+    } else {
+        if (motionX == 0x1B || motionX == 0x1C) {
+            QueueNowXKeepSpeed(0x1C);
+        } else if (frame != 0) {
+            if (motionX != 0xD)
+                QueueNowX(0xD);
+        } else if (gPlayer->slippery == 0) {
+            QueueNowX(7);
+        }
+    }
+    UpdateFacing();
 }
 
 /* ActionCtrl's state methods in the air, spinning, sliding, crouching and

@@ -70,8 +70,8 @@ StartTargetMotionYFromSet__11MegaMixCtrlP12MovingSpritei StartMegaMixMotionYFrom
 StartTargetMotionXFromSet__11MegaMixCtrlP12MovingSpritei StartMegaMixMotionXFromSet
 Reset__11MegaMixCtrl ResetMegaMixCtrl
 #
-# part 3: Ctrl's first four methods in src/objects/ctrl.cpp (player_flags.cpp's
-# until #768), and InputCtrl
+# part 3: Ctrl's first four methods in src/objects/ctrl.cpp (player_flags.cpp's,
+# now player.cpp, until #768), and InputCtrl
 # (include/input_ctrl.hpp, src/player/input_ctrl.cpp)
 StartTargetMotionY__4CtrlP12MovingSpritePC10speed_ramp StartCtrlTargetMotionY
 SetMode__4Ctrli SetCtrlMode
@@ -191,7 +191,7 @@ QueueMotionY__8SwimCtrlUc QueueSwimCtrlMotionY
 QueueMotionX__8SwimCtrlUc QueueSwimCtrlMotionX
 #
 # part 5: ActionCtrl (include/action_ctrl.hpp, src/player/action_ctrl*.cpp,
-# action_ctrl_kill.cpp)
+# action_ctrl_event.cpp)
 _vt.10ActionCtrl gActionCtrlVtable
 __10ActionCtrl InitActionCtrl
 _._10ActionCtrl DestroyActionCtrl
@@ -332,7 +332,7 @@ SetDest__16CortexTargetCtrlP12MovingSpriteii SetCortexTargetDest
 # part 7a: the entity and sprite object base classes
 # (include/sprite_obj.hpp; src/objects/entity.cpp, the sprite graphics
 # managers' src/gfx/oam_buffer.cpp ... sprite_bank_set.cpp, src/gfx/sprite_renderer.cpp,
-# src/objects/sprite.cpp, sprite_obj.cpp, sprite_anim.cpp, ui_sprite.cpp)
+# src/objects/sprite.cpp, sprite_obj.cpp, ui_sprite.cpp)
 # g++ copies a struct passed by value with memcpy, which in this ROM is
 # MemCopy32 (src/system/bios_util.cpp; GAX's `.set memcpy, MemCopy32`)
 memcpy MemCopy32
@@ -506,8 +506,8 @@ CollideWithPlayer__8PartListG4aabbP12MovingSprite CollidePartWithPlayer
 CollideWithObject__8PartListG4aabbP12MovingSpriteT2 CollidePartWithObject
 #
 # part 7c: the rest of PartList, CollisionQueue, PaletteCycles, HudPart
-# (include/part_list.hpp; src/objects/part_list.cpp, part_list_cull.cpp,
-# part_collide.cpp, collision_queue.cpp, src/gfx/palette_cycle.cpp,
+# (include/part_list.hpp; src/objects/part_list.cpp, part_list_collide.cpp,
+# collision_queue.cpp, src/gfx/palette_cycle.cpp,
 # src/hud/hud_part.cpp)
 Draw__8PartList DrawPartList
 Remove__8PartListP6Sprite RemoveFromPartList

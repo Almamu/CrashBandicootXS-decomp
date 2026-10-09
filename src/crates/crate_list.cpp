@@ -8,7 +8,7 @@ extern "C" {
 /* The crate list's slots and grid nodes (#664, part 7f;
  * include/crate_list.hpp). An old_agbcp object (OLD_AGBCC_OBJS). */
 
-/* PartList::CollideWithObject's twin (part_collide.cpp), for Collide:
+/* PartList::CollideWithObject's twin (part_list_collide.cpp), for Collide:
  * when `part` touches the box (ClassifySpriteContact), its HandleEvent
  * with `other`'s kind, and `other` is marked touched. */
 void CrateList::CollideWithObject(struct aabb box, MovingSprite *part, MovingSprite *other)

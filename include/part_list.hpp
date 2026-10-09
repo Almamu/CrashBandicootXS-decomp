@@ -5,8 +5,8 @@
  * the part list, the player's collision queue, the palette cycles and
  * the HUD part.
  *
- *   PartList        src/objects/part_list.cpp, part_list_cull.cpp,
- *                   part_collide.cpp (the class is in sprite_obj.hpp)
+ *   PartList        src/objects/part_list.cpp, part_list_collide.cpp
+ *                   (the class is in sprite_obj.hpp)
  *   CollisionQueue  src/objects/collision_queue.cpp
  *   PaletteCycles   src/gfx/palette_cycle.cpp
  *   HudPart         src/hud/hud_part.cpp (gHudPartVtable)
@@ -33,7 +33,7 @@ extern "C" {
  * ResolvePlayerCollisions. The player object is 0x350 bytes, so the queue
  * holds 16 candidates (objects.h's `struct collision_candidate`).
  * collision_queue.cpp's `struct candidate_list` and `struct
- * collision_queue` and player_event.c's `struct ab9c_link` (the head) were
+ * collision_queue` and player_update.cpp's `struct ab9c_link` (the head) were
  * views of it (#574, batch 9e); objects.h's `struct collision_queue`, its
  * last C view, went in #754. */
 class CollisionQueue

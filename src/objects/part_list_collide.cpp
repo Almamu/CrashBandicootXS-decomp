@@ -18,8 +18,9 @@ extern "C" {
 
 /* The part list's per-frame passes (#664, part 7c; include/part_list.hpp):
  * Update, Collide and CollideWithPlayer, then Cull, Clear and
- * CollideClass. An old_agbcp object (OLD_AGBCC_OBJS): CollideClass's flag
- * test takes old_agbcp's registers. */
+ * CollideClass, and CollideWithObject. An old_agbcp object
+ * (OLD_AGBCC_OBJS): CollideClass's flag test takes old_agbcp's registers.
+ * (#771: part_list_cull.cpp and part_collide.cpp merged.) */
 
 /* Each frame: compacts `items` (dropping the gone parts, which are
  * deleted) and rebuilds `visible`. A part near the camera (within a
@@ -233,5 +234,17 @@ void PartList::CollideClass(s32 classId)
         if (!inContact)
             continue;
         part->CheckPlayerContact();
+    }
+}
+
+/* CollideWithPlayer's counterpart for a list collided with another
+ * object (CollidePartList): when `part` touches the box
+ * (ClassifySpriteContact), its HandleEvent with `other`'s kind, and
+ * `other` is marked touched. */
+void PartList::CollideWithObject(struct aabb box, MovingSprite *part, MovingSprite *other)
+{
+    if (part->ClassifyContact(&box)) {
+        part->HandleEvent(1, other->kind, 0);
+        other->f.b.bit3 = 1;
     }
 }

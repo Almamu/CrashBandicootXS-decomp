@@ -450,6 +450,19 @@ swim_ctrl_stroke.cpp and its six motion-queue accessors end swim_ctrl.cpp;
 `stopwatch.cpp` and `ActionCtrl::Reset` starts action_ctrl_event.cpp;
 crate_break.cpp's switches and per-state ticks are `crate_switches.cpp`
 and `crate_states.cpp`, and `Crate::OpenAkuAku` starts crate_stack.cpp.
+#771 then merged consecutive files of one class: sprite_anim.cpp into
+sprite_obj.cpp; part_list_cull.cpp and part_collide.cpp into
+part_list_collide.cpp; moving_sprite_contact.cpp into moving_sprite.cpp;
+ground_sprite_update.cpp into ground_sprite.cpp; crate_list_unlink.cpp
+and crate_list_link_active.cpp into crate_list_update.cpp;
+crate_list_collide_player.cpp into crate_list_collide.cpp; crate_touch.cpp
+into crate_hit.cpp; crate_draw.cpp into crate_create.cpp; crate_stack.cpp
+into crate_fields.cpp; player_event.cpp into player_update.cpp;
+player_init.cpp and player_flags.cpp into player.cpp; action_ctrl_kill.cpp
+into action_ctrl_event.cpp; action_ctrl_left_ground.cpp,
+action_ctrl_idle.cpp and action_ctrl_run_jump.cpp into
+action_ctrl_states.cpp; action_ctrl_hang.cpp into action_ctrl_moves.cpp;
+enemy_attack.cpp into enemy_ctrl.cpp.
 
 | Object | Classes (include/ctrl.hpp unless noted) | Functions | Compiler | Workarounds: C -> C++ | Part |
 | include/objects.h, player.h, crates.h, gfx.h, bosses.h, pickups.h, frontend.h, actor.h, vehicle.h, system.h | the 391 C prototypes of C++ methods with no C caller go, with the C views only a class's size check used (struct ctrl, boss_ctrl, mega_mix_ctrl, part_ctrl and ctrl_anchor, periodic_spawner, spawner, actor_orbit, cannon_flash, actor_hp, jetpack_ring, orbit_part and orbit_part.h); the classes check the ROM sizes | 0 | (unchanged) | 0 -> 0 | cleanup |
@@ -991,10 +1004,10 @@ ROM's sizes (`CreateEntity` allocates 0x1C bytes, `CreateSpriteObj` 0x40,
 | Class | Size | Vtable | Code |
 |---|---:|---|---|
 | `Entity` | 0x1C | gEntityVtable (11 slots) | graphics.cpp (objects/entity.cpp since #767) |
-| `Sprite` | 0x40 | gSpriteObjVtable (13) | sprite.cpp, sprite_obj.cpp, sprite_anim.cpp (the renderer: gfx/sprite_renderer.cpp) |
+| `Sprite` | 0x40 | gSpriteObjVtable (13) | sprite.cpp, sprite_obj.cpp (the renderer: gfx/sprite_renderer.cpp) |
 | `UiSprite` | 0x40 | gUiSpriteObjVtable | ui_sprite.cpp |
-| `MovingSprite` | 0x78 | gMovingSpriteVtable (15) | moving_sprite.cpp, moving_sprite_collide.cpp, moving_sprite_contact.cpp, moving_sprite_probe.cpp (part 7b) |
-| `GroundSprite` | 0x80 | gGroundSpriteVtable (15) | ground_sprite.cpp, ground_sprite_collide.cpp, ground_sprite_update.cpp (part 7b) |
+| `MovingSprite` | 0x78 | gMovingSpriteVtable (15) | moving_sprite.cpp, moving_sprite_collide.cpp, moving_sprite_probe.cpp (part 7b) |
+| `GroundSprite` | 0x80 | gGroundSpriteVtable (15) | ground_sprite.cpp, ground_sprite_collide.cpp (part 7b) |
 
 The 0x40-byte class is `Sprite`: the C names of its methods say "SpriteObj"
 (`InitSpriteObj`, `DestroySpriteObj`, `gSpriteObjVtable`), and cxx_symbols.txt

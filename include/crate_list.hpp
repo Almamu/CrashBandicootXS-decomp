@@ -93,7 +93,7 @@ public:
     CrateGridLink *links;      // 0x810
     CrateGridLink *freeHead;   // 0x814
 
-    CrateList(s32 capacity); // InitCrateList (src/crates/crate_list_unlink.cpp)
+    CrateList(s32 capacity); // InitCrateList (src/crates/crate_list_update.cpp)
     ~CrateList();            // DestroyCrateList
     void Reset();            // ResetCrateList
     void Update();           // UpdateCrateList

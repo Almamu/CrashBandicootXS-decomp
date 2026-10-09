@@ -200,7 +200,7 @@ programmer did, not by workarounds. The recurring ones:
   loop, put a `MATCH_KEEP_VOLATILE(base)` at the use
   ([sub_8009150-loop-invariant-hoist-matched.md](./matching/archive/sub_8009150-loop-invariant-hoist-matched.md),
   `LinkCrateToActiveBucket` in its C; the C++ in
-  `src/crates/crate_list_link_active.cpp` needs none).
+  `src/crates/crate_list_update.cpp` needs none).
 - **Insn counts.** loop.c's decision to move an invariant depends on the
   loop's insn count; `MATCH_BARRIER()`s in the body change it
   (`src/frontend/company_logos.cpp`).
@@ -359,7 +359,7 @@ instead of computing it in locals. The spelling matters: in `DrawPlayer`
 to put an `add r0, sp, #K` after the other arguments, compute those in a
 block before the call. See
 [inline-arg-order-retry.md](./matching/archive/inline-arg-order-retry.md)
-and `src/player/player_event.cpp`.
+and `src/player/player_update.cpp`.
 
 ### Asm-label aliases
 
@@ -940,7 +940,7 @@ Round 2, player/crates/frontend (after the C++ conversion):
 - **Kept:** the stack-box `BOX_ADDR`s are two passes' doing: cse1
   merges the builder calls' `&f.b` inside one basic block (no flag
   changes that), and gcse's PRE moves the overlap test's. -fno-gcse
-  frees the latter in crate_touch.o and crate_hit.o but puts
+  frees the latter in both of crate_hit.o's builder functions but puts
   `Crate::QueuePlayerCollision` 2000 lines off, so no flag was added.
 
 Round 2 in menus/, save/ and link/ (C++):

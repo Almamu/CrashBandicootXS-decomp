@@ -13,7 +13,7 @@ from "core" graphics.
 ## Matched
 
 - **Issue #9-#11 box/collision NAKED retry** ([docs/matching/archive/issue-9-11-box-naked-retry.md](../matching/archive/issue-9-11-box-naked-retry.md)):
-  `CheckSpritePickup` (`sprite.c`), `UpdatePartList` (`sprite_anim.c`),
+  `CheckSpritePickup` (`sprite.c`), `UpdatePartList` (`sprite_obj.cpp`),
   `InitCrateList` (`part_list.c`), `ResetCrateList` (`crate_list_reset.c`),
   `ProbeHitboxEdgeTerrain` (`moving_sprite_probe.cpp`) and `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor`
   (`ground_sprite_collide.c`) are real C now; they were NAKED. `sprite.o`
@@ -45,7 +45,7 @@ from "core" graphics.
   register pins; they were NAKED. `airship_map.c`, `airship_touch.c`,
   `yeti_graphics.cpp` and `hovercraft.c` moved to old_agbcc.
 
-- **`ActionCtrlStateIdle`** (`src/player/action_ctrl_idle.c`) and **`HandleActionCtrlAirInput`**
+- **`ActionCtrlStateIdle`** (`src/player/action_ctrl_states.cpp`) and **`HandleActionCtrlAirInput`**
   (`src/player/action_ctrl_update.c`) - issue #16: two
   `gActionCtrlStateTable` action-table helpers on the player/action object
   (`include/action_obj.h`). Plain C under old_agbcc (both files moved to
@@ -75,9 +75,9 @@ from "core" graphics.
   [issues-14-53-60-last-naked.md](../matching/archive/issues-14-53-60-last-naked.md).
 - **Issue #9 NAKED retry** ([docs/matching/archive/issue-9-naked-retry.md](../matching/archive/issue-9-naked-retry.md)):
   `GetSpriteBounds`/`GetSpriteHitbox` (`sprite.c`), `AdvanceSpriteAnim`
-  (`sprite.c`), `CollidePartList`/`CollidePartWithPlayer` (`sprite_anim.c`),
-  `CollidePartWithObject` (`part_collide.c`), `CollideCrateGrid` (`crate_list_collide.cpp`),
-  `CollideCrateGridPartWithPlayer` (`crate_list_collide.cpp`), `CollidePlayerWithCrates` (`crate_list_collide_player.cpp`),
+  (`sprite.c`), `CollidePartList`/`CollidePartWithPlayer` (`sprite_obj.cpp`),
+  `CollidePartWithObject` (`part_list_collide.cpp`), `CollideCrateGrid` (`crate_list_collide.cpp`),
+  `CollideCrateGridPartWithPlayer` (`crate_list_collide.cpp`), `CollidePlayerWithCrates` (`crate_list_collide.cpp`),
   `CollideCrateGridPartWithObject` (`crate_list.c`) - all under old_agbcc (the whole
   objects moved to `OLD_AGBCC_OBJS`), mostly by passing the collision
   box by value - and `PlayerHasRoomForAnim` (`player_anim_room.c`, either compiler,
@@ -122,7 +122,7 @@ from "core" graphics.
   `SetSpriteFlipX`, `SetSpriteFlipY`, `SetSpriteAnimDone`, `GetSpriteAnimPaletteId`,
   `GetSpritePalette`, `SetSpritePalette`, `SetSpriteAnimTable`, `GetSpriteAnimTable`,
   `IsSpriteAnimLooping`
-- `src/objects/sprite_anim.c` (new file, now directly adjacent to
+- `src/objects/sprite_obj.cpp` (new file, now directly adjacent to
   `sprite_obj.c`'s matched functions): `GetSpriteAnimFrameCount`, `GetSpriteAnimDuration`, `ResetSpriteFrameIndex`,
   `SetSpriteFrameTimer`, `ResetSpriteFrameTimer`, `SetSpriteAnimIndex`, `SetSpriteAnim`,
   `IncSpriteFrameIndex`, `IncSpriteFrameTimer`, `SetSpriteMoveAxes`, `GetSpriteMoveAxes`,
@@ -132,27 +132,27 @@ from "core" graphics.
   `SetSpriteAffine`, `DrawSpriteWithOffset`, `SetSpritePriority`, `GetSpritePriority`,
   `DestroyUiSpriteObj`, `InitUiSpriteObj`
 
-- `src/objects/part_list_cull.c` (new file, now directly adjacent to
-  `sprite_anim.c`'s matched functions): `CullPartList`, `ClearPartList`, `CollidePartsOfClass`
+- `src/objects/part_list_collide.cpp` (new file, now directly adjacent to
+  `sprite_obj.cpp`'s matched functions): `CullPartList`, `ClearPartList`, `CollidePartsOfClass`
 
 - `src/objects/part_list.c` (new file, now directly adjacent to
-  `part_collide.c`'s `CollidePartWithObject` range): `DrawPartList`, `RemoveFromPartList`, `RemovePartListAt`,
+  `part_list_collide.cpp`'s `CollidePartWithObject` range): `DrawPartList`, `RemoveFromPartList`, `RemovePartListAt`,
   `AddToPartList`, `DestroyPartList`, `InitPartList`. (This file's `InitCrateList`,
   compiled right after these, is a NAKED transcription tracked as
   parked, not matched - see below and
   `docs/matching/archive/naked-sub_8008f20-sub_8009914-freelist.md`.)
 
-- `src/crates/crate_list_unlink.cpp`/`crate_list_update.c`/`crate_list_collide.cpp`/`crate_list_collide_player.cpp` (new files, NAKED-transcription-
+- `src/crates/crate_list_update.cpp`/`crate_list_collide.cpp` (new files, NAKED-transcription-
   only - see "Parked - NAKED transcription" below for what each one
   holds): `UnlinkCrateFromGrid`, `UpdateCrateList`, `CollideCrateGrid`, `CollideCrateGridPartWithPlayer`,
   `CollidePlayerWithCrates` respectively, each dropped into `ldscript.txt` between
   the remaining `asm/code_3_2_13*.s` guard splits at its own real ROM
   address
 
-- `src/crates/crate_list_link_active.cpp` (new file - `LinkCrateToActiveBucket`'s real ROM
-  address sits between the NAKED `UnlinkCrateFromGrid` (`crate_list_unlink.cpp`) and
+- `src/crates/crate_list_update.cpp` (new file - `LinkCrateToActiveBucket`'s real ROM
+  address sits between the NAKED `UnlinkCrateFromGrid` (`crate_list_update.cpp`) and
   `UpdateCrateList` (`crate_list_update.c`), replacing the retired
-  `asm/code_3_2_13_9150.s` guard; named `crate_list_link_active.cpp` since
+  `asm/code_3_2_13_9150.s` guard; named `crate_list_update.cpp` since
   `CollideCrateGrid`'s own NAKED conversion claimed `crate_list_collide.cpp` first):
   `LinkCrateToActiveBucket` - see
   `docs/matching/archive/sub_8009150-loop-invariant-hoist-matched.md`
@@ -160,15 +160,15 @@ from "core" graphics.
 - `src/crates/crate_list_draw.c` (new file - `DrawCrateList`'s real ROM
   address isn't adjacent to `part_list.c`'s matched functions,
   since the NAKED `InitCrateList` and `UnlinkCrateFromGrid`/`UpdateCrateList` plus
-  the now-matched `LinkCrateToActiveBucket` (`crate_list_link_active.cpp`) sit between them;
-  named `crate_list_draw.c` since `crate_list_collide.cpp`/`crate_list_link_active.cpp`
+  the now-matched `LinkCrateToActiveBucket` (`crate_list_update.cpp`) sit between them;
+  named `crate_list_draw.c` since `crate_list_collide.cpp`/`crate_list_update.cpp`
   were both already claimed by the time this landed): `DrawCrateList`
 
 - `src/crates/crate_list_reset.c` (new file, NAKED-transcription-only,
   `ResetCrateList`'s real ROM address isn't adjacent to `part_list.c`'s
   own functions - see `docs/matching/archive/naked-sub_8008f20-sub_8009914-freelist.md`.
   Named "i" - `CollideCrateGrid` claimed `crate_list_collide.cpp`, the now-matched
-  `LinkCrateToActiveBucket` claimed `crate_list_link_active.cpp`, and the now-matched
+  `LinkCrateToActiveBucket` claimed `crate_list_update.cpp`, and the now-matched
   `DrawCrateList` claimed `crate_list_draw.c`, all in parallel PRs merged
   first), dropped into `ldscript.txt` in place of the retired
   `asm/code_3_2_13_9914.s`
@@ -176,7 +176,7 @@ from "core" graphics.
 - `src/crates/crate_list.c` (new file - `RemoveCrateFromList`'s real ROM
   address isn't adjacent to `part_list.c`'s matched functions
   either, since the NAKED `InitCrateList`, the now-matched `LinkCrateToActiveBucket`
-  (`crate_list_link_active.cpp`) and `DrawCrateList` (`crate_list_draw.c`), the NAKED
+  (`crate_list_update.cpp`) and `DrawCrateList` (`crate_list_draw.c`), the NAKED
   `UnlinkCrateFromGrid`/`UpdateCrateList`/`CollideCrateGrid`/`CollideCrateGridPartWithPlayer`/`CollidePlayerWithCrates`/`ResetCrateList`,
   all sit between them; see `docs/matching.md`):
   `RemoveCrateFromList`, `RemoveCrateListAt`, `AddCrateGridNode`, `LinkCrateInGrid`,
@@ -185,7 +185,7 @@ from "core" graphics.
 - `src/objects/moving_sprite_probe.cpp` (new file, NAKED-transcription-only -
   `ProbeHitboxEdgeTerrain`, see "Parked - NAKED transcription" below)
 
-- `src/objects/moving_sprite_contact.cpp` (new file - `CheckPlayerContact`'s real ROM
+- `src/objects/moving_sprite.cpp` (new file - `CheckPlayerContact`'s real ROM
   address isn't adjacent to `crate_list.c`'s matched functions
   either, since NAKED `ProbeHitboxEdgeTerrain` (`moving_sprite_probe.cpp`) sits between
   them; see `docs/matching.md`): `CheckPlayerContact`
@@ -236,14 +236,14 @@ from "core" graphics.
   address isn't adjacent to `moving_sprite_collide.c`'s matched functions
   either, since a raw/parked span (`ProbeGroundSpriteTerrain`-`AnchorGroundSpriteHitbox`,
   `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor` NAKED-parked but `UpdateGroundSprite`/
-  `AnchorGroundSpriteHitbox` matched in `ground_sprite_update.c`) sits between them; see
+  `AnchorGroundSpriteHitbox` matched in `ground_sprite.cpp`) sits between them; see
   `docs/matching.md`): `DrawGroundSprite`, `GetGroundSpriteClassId`,
   `CreateGroundSprite`, `DestroyGroundSprite`, `ResetGroundSprite`, `InitGroundSprite`,
   `IsGroundSpriteGrounded`, `ClearGroundSpriteGrounded`, `SetGroundSpriteGrounded`, `IsGroundSpriteFloorProbeEnabled`,
   `DisableGroundSpriteFloorProbe`, `EnableGroundSpriteFloorProbe`, `ClearSpriteObjFlag5`, `SetSpriteObjFlag5`,
   `GetSpriteObjFlag5`, `GetMovingSpriteCtrl`
 
-- `src/objects/ground_sprite_update.c` (new file, GitHub issue #9): `UpdateGroundSprite`/
+- `src/objects/ground_sprite.cpp` (new file, GitHub issue #9): `UpdateGroundSprite`/
   `AnchorGroundSpriteHitbox` - keep the hitbox edge a ground sprite rests on in place
   when its hitbox record changes, nudging `self->y` by the delta between
   the cached and the current record.
@@ -265,7 +265,7 @@ from "core" graphics.
   dispatches a sub-state byte to one of three teardown helpers; see
   [docs/matching/archive/issue-9-0x08007634-actor.md](../matching/archive/issue-9-0x08007634-actor.md).
 
-- `src/player/player_update.c`/`src/player/player_flags.c` (new
+- `src/player/player_update.c`/`src/player/player.cpp` (new
   files, split around the raw untouched `InitPlayer` - see
   `docs/matching.md`): a new not-yet-named big object's accessors -
   `HasPlayerRampYTarget`, `ClearPlayerSpeedY`, `StopPlayerFalling`, `UpdatePlayer`,
@@ -286,9 +286,9 @@ from "core" graphics.
   locals pinned to their own ABI registers in the ROM's actual load
   order, avoiding the callee-saved spill three earlier attempts hit)
 
-- `src/player/player_init.c` (new file, GitHub issue #9/#10, ROM
+- `src/player/player.cpp` (new file, GitHub issue #9/#10, ROM
   `0x0800B3F0`, non-adjacent to `player_reset.c` since the matched
-  `player_update.c`/`ApplyPlayerVelocity`/`player_flags.c` sit between
+  `player_update.c`/`ApplyPlayerVelocity`/`player.cpp` sit between
   them): `InitPlayer` - a part-object constructor re-initializing
   `self` via `InitGroundSprite`, allocating a child `struct actor` via
   `CreateSpriteObj`, hooking it up at `self+0xb0` via the standard
@@ -409,7 +409,7 @@ from "core" graphics.
   `gActionCtrlStateTable` action-table handlers (`ActionCtrlStateCrouch`, in the
   same file, is parked below); see
   `docs/matching/archive/issue-17-0x08012fbc-actor.md`, "Second pass".
-- `src/player/action_ctrl_hang.c` (new file, GitHub issue #17, ROM
+- `src/player/action_ctrl_moves.cpp` (new file, GitHub issue #17, ROM
   0x08014674-0x08014F8C, built with old_agbcc): `ActionCtrlStateLeftGround` (since
   the mix NAKED retry 5, `docs/matching/archive/mix-naked-retry-5.md`),
   `ActionCtrlStateDying`, `ActionCtrlStateWarpIn`, `ActionCtrlStateHang`, `ActionCtrlStateUnusedHang`,
@@ -417,12 +417,12 @@ from "core" graphics.
   `docs/matching/archive/late-naked-retry-3.md`), `ActionCtrlStateHangMoveStart`, `ActionCtrlStateHangMove`,
   `ActionCtrlStateHangStop`; see `docs/matching/archive/issue-17-0x08012fbc-actor.md`, "Second
   pass" and "Third pass".
-- `src/player/action_ctrl_run_jump.c`, `action_ctrl_states.c` (GitHub issue #17, ROM 0x08012FBC-0x08013C60, now
+- `src/player/action_ctrl_states.cpp`, `action_ctrl_states.c` (GitHub issue #17, ROM 0x08012FBC-0x08013C60, now
   built with old_agbcc): `ActionCtrlStateRun`, `ActionCtrlStateJump`, `ActionCtrlStateAirborne`,
   `ActionCtrlStateFlipBodySlamStart`, `ActionCtrlStateSlide` - the chunk's first five action-table
   handlers, formerly NAKED; see
   `docs/matching/archive/issue-17-0x08012fbc-actor.md`, "Third pass".
-- `src/player/player_event.c` (GitHub issue #9/#10, ROM
+- `src/player/player_update.cpp` (GitHub issue #9/#10, ROM
   0x0800AB9C-0x0800AC2C, now built with old_agbcc): `CollidePlayerWithObjects`, the
   big object's teardown/notification step, formerly parked
   NON_MATCHING. The box goes to `CollidePartList` by value; see
@@ -444,7 +444,7 @@ from "core" graphics.
   anim-frame-reset setters, an `InitActorPart`-based constructor, and
   several "self" object accessors/setters sharing the boss cluster's
   layout convention.
-- `src/player/action_ctrl_hang.c` (new file `actor_part38.c`, GitHub issue #18, ROM
+- `src/player/action_ctrl_moves.cpp` (new file `actor_part38.c`, GitHub issue #18, ROM
   0x08014F8C - numbered `38` rather than `28` since issue #62's
   parallel PR above independently claimed `actor_part28.c` first):
   `DoSuperBodySlamShockwave` - a `gCollidableList`-list proximity-
@@ -453,7 +453,7 @@ from "core" graphics.
   see Matched); see
   `docs/matching/archive/issue-18-0x08014f8c-actor.md`.
 - `src/player/action_ctrl_moves.c` (new file, GitHub issue #18, ROM
-  0x080151C8, non-adjacent to `action_ctrl_hang.c` since `StartActionCtrlTornadoSpin`
+  0x080151C8, non-adjacent to `action_ctrl_moves.cpp` since `StartActionCtrlTornadoSpin`
   sits between them): `StartActionCtrlTornadoFall`, `EndActionCtrlSpin`, `SteerActionCtrlSpin`
   (the last two matched in the strag2 retry); see
   `docs/matching/archive/issue-18-0x08014f8c-actor.md`.
@@ -518,7 +518,7 @@ from "core" graphics.
   `docs/rom_map.md` traces through the chunk's remaining (unmatched)
   functions. See
   [docs/matching/archive/issue-16-actor-11b0c.md](../matching/archive/issue-16-actor-11b0c.md).
-- `src/player/action_ctrl_kill.cpp` (new file, GitHub issue #16, ROM
+- `src/player/action_ctrl_event.cpp` (new file, GitHub issue #16, ROM
   0x08012160-0x08012420): `KillPlayer`, `UpdateActionCtrlSkidAnim`, `UpdatePlayerFacing` -
   three more members of the 42-slot action-dispatch-table family
   (`gActionCtrlStateTable`), operating on the same still-unnamed "child
@@ -529,9 +529,9 @@ from "core" graphics.
   `HandleActionCtrlAirInput` and the still-raw `ActionCtrlHandleEvent` sit between them), so
   a new file. See
   [docs/matching/archive/issue-16-actor-12160.md](../matching/archive/issue-16-actor-12160.md).
-- `src/player/action_ctrl_left_ground.c` (new file, GitHub issue #16, ROM
+- `src/player/action_ctrl_states.cpp` (new file, GitHub issue #16, ROM
   0x08012A7C-0x08012AF4): `CheckActionCtrlLeftGround` - another member of the same
-  action-dispatch-table family, not ROM-adjacent to `action_ctrl_kill.cpp`'s
+  action-dispatch-table family, not ROM-adjacent to `action_ctrl_event.cpp`'s
   functions either (the raw `UpdateActionCtrl`/`TryActionCtrlDoubleJump`/`HandleActionCtrlAirInput`
   sit in between). See
   [docs/matching/archive/issue-16-actor-12160.md](../matching/archive/issue-16-actor-12160.md).
@@ -785,7 +785,7 @@ from "core" graphics.
   (`DestroyAllActors`) - see
   [docs/matching/archive/issue-49-0x08029e4c-actor.md](../matching/archive/issue-49-0x08029e4c-actor.md).
 
-- **`ResolvePlayerContact`** (`src/objects/moving_sprite_contact.cpp`) - fires a
+- **`ResolvePlayerContact`** (`src/objects/moving_sprite.cpp`) - fires a
   `part->table+0x68`-driven trampoline based on `gLevelState`'s
   mode, on the player and/or `part` depending on the mode value. A
   `switch` reproduces the ROM's exact 3-way mode dispatch, and explicit
@@ -935,7 +935,7 @@ from "core" graphics.
 
 ### Matched in the strag4 retry (issue #18's last function)
 
-- `src/player/action_ctrl_hang.c` - `StartActionCtrlTornadoSpin` (issue #18, formerly
+- `src/player/action_ctrl_moves.cpp` - `StartActionCtrlTornadoSpin` (issue #18, formerly
   NAKED), old_agbcc. The `self+0x24 != 0` arm tests `self[0x22]`
   directly instead of through a `u8` local, so the byte load lands
   after old_agbcc GCSE's end-of-block copy of `self + 0x22`, and one
@@ -957,10 +957,10 @@ See [docs/matching/archive/strag4-naked-retry.md](../matching/archive/strag4-nak
   `src/player/action_ctrl_moves.c` - `ActionCtrlStateBodySlamStart` (issue #18, formerly
   NAKED). The fixes were real `u8 *`/`u8` parameters, `u8` locals for the
   table indices, and a constant-copy escape for `EndActionCtrlSpin`'s `0x200`
-  test. `action_ctrl_hang.o`/`38b.o`/`38c.o` joined `OLD_AGBCC_OBJS`: their
+  test. `action_ctrl_moves.o`/`38b.o`/`38c.o` joined `OLD_AGBCC_OBJS`: their
   whole `.text` is identical under both compilers, and the range is
   confirmed old_agbcc territory.
-- Still NAKED at the time: `StartActionCtrlTornadoSpin` (`action_ctrl_hang.c`), with a C
+- Still NAKED at the time: `StartActionCtrlTornadoSpin` (`action_ctrl_moves.cpp`), with a C
   draft that was 2 halfwords off (matched in the strag4 retry).
 
 See [docs/matching/archive/strag2-naked-retry.md](../matching/archive/strag2-naked-retry.md).
@@ -995,7 +995,7 @@ See [docs/matching/archive/strag2-naked-retry.md](../matching/archive/strag2-nak
 
 ### Matched in the inline-argument-order retry
 
-- `src/player/player_event.c` - `DrawPlayer` (the dizzy-stars
+- `src/player/player_update.cpp` - `DrawPlayer` (the dizzy-stars
   orbit update), old_agbcc (the object was already on
   `OLD_AGBCC_OBJS`). The last 40 halfwords were the orbit tail. It now
   passes its two sums straight to an inline setter
@@ -1020,7 +1020,7 @@ See [docs/matching/archive/strag2-naked-retry.md](../matching/archive/strag2-nak
 
 ### Matched in the late NAKED retry 3
 
-- `src/player/action_ctrl_hang.c` - `ActionCtrlReleaseHang` (the jump-start
+- `src/player/action_ctrl_moves.cpp` - `ActionCtrlReleaseHang` (the jump-start
   handler, issue #17), old_agbcc. The 0x600 is a reload; an r2
   register variable that only empty asms set and use keeps r2 live
   across the add, so reload spills r3 for it as the ROM does. See
@@ -1064,7 +1064,7 @@ See [docs/matching/archive/category-driver-naked-retry.md](../matching/archive/c
 
 ### Matched in the fresh NAKED retry
 
-- `src/crates/crate_list_unlink.cpp` - `UnlinkCrateFromGrid` (the grid-removal
+- `src/crates/crate_list_update.cpp` - `UnlinkCrateFromGrid` (the grid-removal
   primitive, issue #9), old_agbcc (the object was added to
   `OLD_AGBCC_OBJS`). The ROM sets the phase-2 bucket index to 0x100
   after each removal, so the C does that too. The free-list head is
@@ -1080,7 +1080,7 @@ See [docs/matching/archive/category-driver-naked-retry.md](../matching/archive/c
   `ActQueue27`; the input mask is an opaque 0x100; the switch bodies are
   in ROM order. The PMF method record then gets its 8-byte stack slot
   (and the unused `r7` push) by itself.
-- `src/player/action_ctrl_idle.c` - `ApplyActionCtrlMotion` (issue #16), old_agbcc
+- `src/player/action_ctrl_states.cpp` - `ApplyActionCtrlMotion` (issue #16), old_agbcc
   (the file's compiler). No flag/tag pointer locals: `self->motionXPending` and
   `self->motionX` are read through `self` each time and old_agbcc's GCSE
   makes the ROM's address copies; the record lookup is
@@ -1128,9 +1128,9 @@ See [docs/matching/archive/mid-range-naked-retry-4.md](../matching/archive/mid-r
 
 ### Matched in the stack-box NAKED retry
 
-- `src/crates/crate_touch.c` - `PlayerAnimWouldTouchCrate` (issue #11, the
+- `src/crates/crate_hit.cpp` - `PlayerAnimWouldTouchCrate` (issue #11, the
   "would action `x` newly hit `self`" three-box test), old_agbcc
-  (`crate_touch.o` joined `OLD_AGBCC_OBJS`). Each builder call and
+  (`crate_hit.o` joined `OLD_AGBCC_OBJS`). Each builder call and
   the first overlap test take the player box's address through an
   empty `asm("" : "+r")` copy, so cse doesn't keep `sp+16` in a
   callee-saved register across the calls; `rec` is shared by the first
@@ -1176,14 +1176,14 @@ plain C didn't converge.
   halfwords off, now sits under `#if NON_MATCHING` - see
   `docs/matching/archive/fresh-naked-retry.md`). See
   `docs/matching/archive/naked-spatial-grid-tail.md`.
-- **Now matched as real C (late NAKED retry 3, see Matched and docs/matching/archive/late-naked-retry-3.md); entry kept for history.** **`ActionCtrlReleaseHang`** (`src/player/action_ctrl_hang.c`), GitHub issue
+- **Now matched as real C (late NAKED retry 3, see Matched and docs/matching/archive/late-naked-retry-3.md); entry kept for history.** **`ActionCtrlReleaseHang`** (`src/player/action_ctrl_moves.cpp`), GitHub issue
   #17 - the jump-start handler, whose old_agbcc C (kept under
   `NON_MATCHING`) is 3 halfwords off: the reloaded 0x600 lands in r2
   where the ROM uses r3. (`ActionCtrlStateLeftGround` from this entry is matched since
   the mix NAKED retry 5, `docs/matching/archive/mix-naked-retry-5.md`, and
   `ActionCtrlStateCrouch` since the third near-miss sweep.) See
   `docs/matching/archive/issue-17-0x08012fbc-actor.md`, "Third pass".
-- **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/archive/issue-9-naked-retry.md); entry kept for history.** **`CollidePlayerWithCrates`** (`src/crates/crate_list_collide_player.cpp`) - another
+- **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/archive/issue-9-naked-retry.md); entry kept for history.** **`CollidePlayerWithCrates`** (`src/crates/crate_list_collide.cpp`) - another
   3-bucket-window grid pass, this one reading the player's state to
   dispatch `BreakCrateTouchedByPlayer`/`CollideCrateWithPlayer` per object. Fully understood;
   parked on a cross-branch register-role gap (`r8` reused for two
@@ -1195,7 +1195,7 @@ plain C didn't converge.
   retry) before giving up. Fully understood; parked on a register-
   reload quirk in the retry loop. See
   `docs/matching/archive/naked-spatial-grid-tail.md`.
-- **Now matched as real C (stack-box NAKED retry, see Matched and docs/matching/archive/sp-box-retry.md); entry kept for history.** **`PlayerAnimWouldTouchCrate`** (`src/crates/crate_touch.c`, GitHub issue
+- **Now matched as real C (stack-box NAKED retry, see Matched and docs/matching/archive/sp-box-retry.md); entry kept for history.** **`PlayerAnimWouldTouchCrate`** (`src/crates/crate_hit.cpp`, GitHub issue
   #9/#10) - `PlayerHasRoomForAnim`'s only callee: builds three AABBs (the
   entry's own current hitbox, the player's current hitbox, and the
   player's hitbox for the caller's target action) via the same
@@ -1230,7 +1230,7 @@ plain C didn't converge.
   at all, a structurally different solution rather than a near-miss).
   Transcribed directly as byte-exact NAKED asm instead. See
   [docs/matching/archive/issue-9-0x0800a178-graphics.md](../matching/archive/issue-9-0x0800a178-graphics.md).
-- **Now matched as real C (strag4 retry, see Matched); entry kept for history.** **`StartActionCtrlTornadoSpin`** (`src/player/action_ctrl_hang.c`) - a three-arm
+- **Now matched as real C (strag4 retry, see Matched); entry kept for history.** **`StartActionCtrlTornadoSpin`** (`src/player/action_ctrl_moves.cpp`) - a three-arm
   mgr-trampoline handler keyed on `self+0x24`/`self+0x22`, picking one
   of three table-index fallbacks. The strag2 retry left a C draft under
   `#if NON_MATCHING` that is 2 halfwords off under both compilers (one
@@ -1537,7 +1537,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   `ProbeTerrain` proximity probe against the player, then walks
   `gCrateList`'s object list, testing each entry via
   `_call_via_r1` and calling `PlayerAnimWouldTouchCrate` (now examined and closed,
-  `crate_touch.c`) on a hit. Every instruction matches except one
+  `crate_hit.cpp`) on a hit. Every instruction matches except one
   5-instruction pair (the `gCrateList` list-walk's loop-
   condition-check/loop-entry register roles - the ROM re-loads
   `&gCrateList` from the literal pool fresh every iteration,
@@ -1548,7 +1548,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   callee-saved register). Default build uses a byte-exact NAKED
   transcription instead - see
   [docs/matching/archive/issue-9-10-0x0800aaec-graphics.md](../matching/archive/issue-9-10-0x0800aaec-graphics.md).
-- **`SetCtrlTargetMotionY`/`StartCtrlTargetMotionY`** (`src/player/player_flags.c`) -
+- **`SetCtrlTargetMotionY`/`StartCtrlTargetMotionY`** (`src/player/player.cpp`) -
   mirror-flag-gated 3-vector copies. This compiler unconditionally
   spills the `vec` pointer to a callee-saved register (`push
   {r4,lr}`/`pop {r4}`) whenever it's referenced in both branches of an
@@ -1557,12 +1557,12 @@ embedded as asm instead. They're tracked as parked, not matched.
   alone; also pinning/reassigning `vec`; restructuring into a
   `goto`-based flow) all produced an identical 8-byte-larger result -
   see `docs/matching.md`, "A new unnamed object:
-  `player_update.c`/`player_flags.c`".
+  `player_update.c`/`player.cpp`".
 - **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/archive/issue-9-naked-retry.md); entry kept for history.** **`GetSpriteBounds`/`GetSpriteHitbox`** (`src/objects/sprite.c`),
   **`AdvanceSpriteAnim`** (`src/objects/sprite.c`), and
   **`UpdatePartList`/`CollidePartList`/`CollidePartWithPlayer`**
-  (`src/objects/sprite_anim.c`) / **`CollidePartWithObject`**
-  (`src/objects/part_collide.c`) - stayed parked here for a long time
+  (`src/objects/sprite_obj.cpp`) / **`CollidePartWithObject`**
+  (`src/objects/part_list_collide.cpp`) - stayed parked here for a long time
   on exactly the register-canonicalization/stack-layout classes of gap
   documented at length throughout this page (`r7`-pin hazards and a
   C-inexpressible stack-layout coincidence). All seven are `NAKED`
@@ -1626,14 +1626,14 @@ embedded as asm instead. They're tracked as parked, not matched.
   policy this doesn't count as "matched" the way real decompiled C
   does, so it stays filed here rather than in "Matched" above - see
   `docs/matching.md`, "Parked, not matched: `CollideCrateGridPartWithPlayer`".
-  `CollidePartWithPlayer` itself (`src/objects/sprite_anim.c`) is unaffected by
+  `CollidePartWithPlayer` itself (`src/objects/sprite_obj.cpp`) is unaffected by
   this change and remains its own separate `NAKED` function.
 - **Now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/archive/issue-9-11-box-naked-retry.md); entry kept for history.** **`ResetCrateList`** (`src/crates/crate_list_reset.c`, new file - its
   real ROM address, `0x08009914`, doesn't sit adjacent to
   `part_list.c`'s own functions, the same reason `CollideCrateGridPartWithPlayer`
   above got its own `crate_list_collide.cpp` (named "i" - `CollideCrateGrid`
   claimed `crate_list_collide.cpp`, the now-matched `LinkCrateToActiveBucket` claimed
-  `crate_list_link_active.cpp`, and the now-matched `DrawCrateList` claimed
+  `crate_list_update.cpp`, and the now-matched `DrawCrateList` claimed
   `crate_list_draw.c`, all in parallel PRs merged first)) - resets a
   pool manager to empty: tears down every active object, then rebuilds the grid and
   free list from scratch. The teardown loop was confirmed correct on
@@ -1658,7 +1658,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   "matched" the way real decompiled C does, so it stays filed here
   rather than in "Matched" above - see `docs/matching.md`, "Parked,
   not matched: `CollideCrateGridPartWithObject`". `CollidePartWithObject` itself
-  (`src/objects/part_collide.c`) is unaffected by this change and
+  (`src/objects/part_list_collide.cpp`) is unaffected by this change and
   remains its own separate `NAKED` function.
 - **Now matched as real C (strag2 retry, see Matched); entry kept for history.** **`HovercraftCannonStateFire`** (`asm/code_3_2_20_28568_c99c_31784_339dc.s`, C in
   `src/bosses/hovercraft_cannon.c`) - a proximity-triggered effect/hazard
@@ -1688,7 +1688,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   now matched as real C under old_agbcc - see "Matched in the
   DrawAffineSpritePieces retry" above.
 - ~~**`PlayerHandleEvent`**~~ (ROM 0x0800AC2C, GitHub issue #9/#10) - matched
-  as real C under old_agbcc in `src/player/player_event.c` (issue #9
+  as real C under old_agbcc in `src/player/player_update.cpp` (issue #9
   raw-asm pass, `docs/matching/archive/issue-9-raw-asm-pass.md`);
   `asm/code_3_2_16_ac2c.s` is gone.
 - ~~**`CheckSwimCtrlTurn`**~~ (ROM 0x08016048, GitHub issue #19) - matched

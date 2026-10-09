@@ -3,17 +3,19 @@
 #include "player.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "crate.hpp"
 
 extern "C" {
 #include "math_util.h"
 #include "level.h"
 #include "globals.h"
 #include "player.h"
+#include "objects.h"
 }
 
 /* CrateList::Collide and CollideWithPlayer (#664, part 7f;
  * include/crate_list.hpp), PartList's Collide and CollideWithPlayer
- * (part_list_cull.cpp) for the grid. An old_agbcp object (OLD_AGBCC_OBJS).
+ * (part_list_collide.cpp) for the grid. An old_agbcp object (OLD_AGBCC_OBJS).
  * The three take the sprites as MovingSprites, as PartList's do (they
  * call HandleEvent, slot 13); the crate list holds crates, which have no
  * slot 13, but nothing calls Collide (below). */
@@ -39,7 +41,7 @@ static inline void CollidePart(CrateList *list, MovingSprite *part, struct aabb 
  * (the player, or another object) against `box`. A sprite in both is
  * tested twice. UNUSED - no caller anywhere in the ROM (no call in src/,
  * no pointer to 0x08009528 in the ROM): the crates collide with the
- * player through CollidePlayer (crate_list_collide_player.cpp), and
+ * player through CollidePlayer (below), and
  * CollideWithPlayer and CollideWithObject have no other caller. */
 void CrateList::Collide(struct aabb box, s32 unused, MovingSprite *other)
 {
@@ -79,7 +81,7 @@ void CrateList::Collide(struct aabb box, s32 unused, MovingSprite *other)
         CollidePart(this, (MovingSprite *)node->data, &screen, box, other);
 }
 
-/* PartList::CollideWithPlayer's twin (part_list_cull.cpp), the same code:
+/* PartList::CollideWithPlayer's twin (part_list_collide.cpp), the same code:
  * a hit between `part` and the player, against the box Collide passed. */
 void CrateList::CollideWithPlayer(struct aabb box, MovingSprite *part)
 {
@@ -128,5 +130,55 @@ void CrateList::CollideWithPlayer(struct aabb box, MovingSprite *part)
             gPlayer->HandleEvent(1, part->kind, 0);
             break;
         }
+    }
+}
+
+/* The player's pass over the crate grid (#664, part 7f;
+ * include/crate_list.hpp). */
+
+/* For the crates in the three grid buckets from the camera's column on
+ * (as UpdateCrateList's window): a player in control mode 3 breaks the
+ * ones it touches (BreakCrateTouchedByPlayer); otherwise each collides
+ * with the player (CollideCrateWithPlayer), with the player's action (its
+ * controller's state; 0 in control mode 1, or 0xD for a kind 0x13
+ * player). Old_agbcc C (see docs/matching/archive/issue-9-naked-retry.md):
+ * the camera x is read before the `>> 8`. */
+void CrateList::CollidePlayer(s32 unused)
+{
+    s32 lo = gLevelLayers->layer0->x;
+    s32 i;
+    Player *p;
+    u8 mode;
+
+    lo >>= 8;
+    LIMIT_MIN(lo, 0);
+    i = lo + 2;
+    p = gPlayer;
+    mode = p->ctrlMode;
+    if (mode == 3) {
+        do {
+            CrateGridNode *node;
+
+            for (node = heads[i]; node != 0; node = node->next)
+                node->data->BreakIfTouchedByPlayer();
+            i--;
+        } while (i >= lo);
+    } else {
+        s32 action = p->mover->state;
+        s32 px = p->x;
+        s32 py = p->y;
+
+        if (mode == 1) {
+            action = 0;
+            if (p->kind == 0x13)
+                action = 0xd;
+        }
+        do {
+            CrateGridNode *node;
+
+            for (node = heads[i]; node != 0; node = node->next)
+                node->data->CollideWithPlayer(action, px, py);
+            i--;
+        } while (i >= lo);
     }
 }

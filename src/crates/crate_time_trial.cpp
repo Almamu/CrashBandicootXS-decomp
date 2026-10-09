@@ -8,7 +8,7 @@ extern "C" {
 }
 
 /* The time trial's crate conversion (#664, include/crate.hpp). The Aku
- * Aku crate, which the ROM puts right after it, starts crate_stack.cpp. */
+ * Aku crate, which the ROM puts right after it, starts crate_fields.cpp. */
 
 /* In a time trial, each crate of the crate list (class id 3) with a
  * time-trial kind becomes that kind, through SolidifyOutlineCrate. */

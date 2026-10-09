@@ -2,7 +2,7 @@
 
 /* CrateList::Reset (#664, part 7f; include/crate_list.hpp). In its own
  * file for ROM order: 0x08009914, between CollidePlayer
- * (crate_list_collide_player.cpp) and crate_list.cpp's functions. */
+ * (crate_list_collide.cpp) and crate_list.cpp's functions. */
 
 /* Deletes every listed sprite and empties the list, the grid and the
  * free list (ResetGrid, the constructor's tail). */

@@ -80,7 +80,7 @@ public:
     void StopFalling();              // StopPlayerFalling (UNUSED)
     u8 TouchesBox(struct aabb *box); // PlayerTouchesBox
 
-    /* The accessors (src/player/player_flags.cpp; their C names are
+    /* The accessors (src/player/player.cpp; their C names are
      * player.h's GetPlayerCollisionQueue, ClearPlayerDead, ...). Most are
      * UNUSED (see there). */
     CollisionQueue *GetCollisionQueue();
