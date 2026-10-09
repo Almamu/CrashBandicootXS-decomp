@@ -100,7 +100,6 @@ SECTIONS
         build/crashbandicootxs/src/enemies/enemy_shooter.o(.text);
         build/crashbandicootxs/src/enemies/enemy_patrol.o(.text);
         build/crashbandicootxs/src/enemies/enemy_motion.o(.text);
-        build/crashbandicootxs/src/enemies/enemy_attack.o(.text);
         build/crashbandicootxs/src/enemies/enemy_ctrl.o(.text);
         build/crashbandicootxs/src/enemies/periodic_spawner.o(.text);
         build/crashbandicootxs/src/enemies/knocked_enemy_ctrl.o(.text);

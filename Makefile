@@ -247,7 +247,6 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/crates/crate_list_update.o \
                   $(C_BUILDDIR)/crates/crate_list_collide.o \
                   $(C_BUILDDIR)/crates/crate_list.o \
-                  $(C_BUILDDIR)/enemies/enemy_attack.o \
                   $(C_BUILDDIR)/objects/ctrl.o \
                   $(C_BUILDDIR)/bosses/tiny.o \
                   $(C_BUILDDIR)/enemies/enemy_ctrl.o \
