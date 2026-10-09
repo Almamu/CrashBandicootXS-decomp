@@ -462,9 +462,14 @@ sorts itself out. See
 
 **Stack-box addresses** are a separate problem: gcc CSEs `&box` into one
 pseudo held in a callee-saved register across calls, where the ROM
-recomputes `add r0, sp, #K` before each call. `BOX_ADDR(&box)` on every
-use makes each its own opaque value. The constant-init form doesn't work
-there, because its input is still CSE'd
+recomputes `add r0, sp, #K` before each call (and reads `box.y` at its
+own sp offset while a pointer to the box is live). Pass a standalone
+box local (not a member of a frame struct) to an inline helper instead:
+util.h's SetAabb, aabb.h's FlipAabbX/FlipAabbY and field accessors.
+The inline's argument is the constant `frame + K`, so nothing holds the
+address for cse to reuse (#662 round 4, [Pruning
+workarounds](#pruning-workarounds)). `BOX_ADDR(&box)` on every use,
+which made each its own opaque value, did the same with an asm
 ([sp-box-retry.md](./matching/archive/sp-box-retry.md),
 `PlayerAnimWouldTouchCrate`).
 
@@ -494,8 +499,10 @@ gcc 2.9:
 
 Cases: [near-miss-polish-3.md](./matching/archive/near-miss-polish-3.md)
 (constant-init), [sp-box-retry.md](./matching/archive/sp-box-retry.md)
-(`"+r"` vs `"=r"/"0"`), `src/player/action_ctrl_moves.cpp` (`MATCH_CONST`
-as an opaque copy, `m2`), `src/actor/actor_category_select.cpp` (use).
+(`"+r"` vs `"=r"/"0"`), `src/actor/actor_category_select.cpp` (use).
+`EndSpin`'s `MATCH_CONST` opaque copy went in #662 round 4 (a `u16`
+mask: thumb's movhi takes only 0-255, so reload builds the constant and
+copies it, the ROM's copy).
 
 ### Other empty-asm forms
 
@@ -507,21 +514,19 @@ The rarer forms, a few sites each:
 | `asm("" : : : "r5")` | `MATCH_CLOBBER(r5)`, `MATCH_CLOBBER_VOLATILE(r4)` | 2 | Tells gcc the register is clobbered, so the prologue saves it even though nothing uses it, as the ROM does ([issue-9-raw-asm-pass.md](./matching/archive/issue-9-raw-asm-pass.md), `UpdateEnemyBob`; `src/enemies/enemy_ctrl.cpp`); it also forces a reload of whatever the register held. |
 | `asm volatile("" ::: "memory")` | `MATCH_MEMORY_BARRIER()` | 0 | Makes gcc forget memory and acts as a barrier. It does not stop address CSE, which is what it was usually tried for. No site needs it any more. |
 | `asm("" : "+m"(x))` | `MATCH_KEEP_MEM(x)` | 2 | `x` is in memory here with an unknown value, so a later read is a real load (the `ldm r1!` re-read in `ConvertAirshipTiles`). |
-| `asm("" : : "m"(x))` | `MATCH_USE_MEM(x)` | 1 | `x` must be in memory here: keeps it in its stack slot across a call (`src/level/spawn_enemies.cpp`). |
+| `asm("" : : "m"(x))` | `MATCH_USE_MEM(x)` | 0 | `x` must be in memory here: kept a value in its stack slot across a call (`SpawnFlamethrowerLabAssistant` until #662 round 4). |
 
 An asm that reads a field through `"m"` can also fix the order of a load
 against a constant
 ([issue-59-60-m-operand-scheduling.md](./matching/archive/issue-59-60-m-operand-scheduling.md)).
 
-Three empty asms stay written out, each a one-off shape that no macro
+Two empty asms stay written out, each a one-off shape that no macro
 covers (a macro for one site would only add a name to look up). They
-are `ALLOWED_SPELLED` in `tools/match_idioms.py`:
+are `ALLOWED_SPELLED` in `tools/match_idioms.py` (a third, `EndSpin`'s
+keep-and-use, went in #662 round 4):
 
 - `asm volatile("" : : "m"(src), "m"(dst))` in `lib/gax/src/gax_swi.c`:
   two `"m"` inputs in one insn (`mem_ref`).
-- `asm volatile("" : "+r"(flags) : "r"(m))` in
-  `src/player/action_ctrl_moves.cpp`: a keep and a use in one insn
-  (`keep_volatile`).
 - `asm volatile("" : "=r"(ch) : "r"(c + 0x108))` in
   `src/save/save_transfer.cpp`: an opaque copy whose input isn't tied to
   the output (`"r"`, not `MATCH_CONST`'s `"0"`), so `ch` gets no copy
@@ -1169,6 +1174,77 @@ from the `-da` dumps first:
   dying operand in `PauseMenu::Draw`; reload's spill-register rotation
   for `DrawWrappedText`'s r1 hold (under `-fno-rerun-loop-opt` the
   hold-free code is two reload registers off, nothing else).
+
+**Round 4, src/player, src/level and src/text (C++).** 9 functions -> 5,
+from the passes' source (an instrumented private old_agbcp printed
+local-alloc's quantity order):
+
+- **Code jump2 merges again.** Two tails the ROM shares by cross-jumping
+  can be written twice, as plain code: `StartTornadoFall` queues its Y
+  entry in each `case` (each call's entry is a block-local pseudo, which
+  local-alloc places in r2 before global-alloc ranks `this`; one `entry`
+  queued after the switch is global and loses r2 to `this`), and
+  `DrawWrappedText` ends both branches of a measured token with their own
+  flush and `posAccum += len`, which gives `len` the extra loop-weighted
+  reference its `MATCH_USE` supplied (floor_log2(16) * 16 / 97 against
+  `self`'s 4 * 17 / 141) and drops the draft's gotos and r1 hold.
+- **A narrower local changes a live length.** `SpawnFlamethrowerLabAssistant`
+  reads the mirror bit into a `u8`: the loaded byte then lives 14 insns
+  instead of 12 and ranks just below the mirror address (0.21 against
+  0.22), which is the global-alloc order the ROM's caller-saved r3 needs;
+  the hold, keep, stack-slot use and four uses went. `EndSpin`'s L bit as
+  a `u16`: an HImode 0x200 can't be a movhi immediate, so reload builds it
+  in r1 and copies it into the constant's register, the ROM's
+  `adds r0, r1, #0`.
+- **Kept, with the condition in each comment:** the dead `state` and
+  `maskLevel` loads (jump2's delete_computation keeps the feeding load
+  after reload, flow2 has already run, so the test's body must be dead
+  code flow1 removed or arms jump2 merges); the bounce and `StateJump`
+  1s (cse puts two equal constants in one extended block into one
+  quantity in either order; only an init moved later by update_equiv_regs
+  escapes it); `StateCrouch` (local-alloc's three-quantity exchange
+  allocates the address first whatever the priorities, the volatile byte
+  load is a fourth quantity); `ReleaseHang` (find_reload_regs spills the
+  first free call-clobbered register in number order, so r2 must be live
+  at the add, and nothing is).
+
+**Round 4, objects/, crates/ and actor/ (C++), from the compiler
+source.** 10 functions -> 5. One mechanism was behind five of them:
+
+- **A stack box's address through an inline argument.** A `struct
+  aabb` is 16 bytes, so BLKmode, and Thumb's GO_IF_LEGITIMATE_ADDRESS
+  rejects any frame address in a mode under 4 bytes (BLKmode's size is
+  0). expr.c then copies a box local's address into a pseudo at every
+  use (`&f.b` for a call argument, `b.y` for a field read), and cse1
+  ties the copies to the first one, or to a pointer local already
+  holding it. The ROM recomputes `add r0, sp, #16` per call and reads
+  the fields at their sp offsets. integrate.c expands an inline
+  function's arguments with EXPAND_SUM, where a standalone local's
+  address is `(plus virtual-stack-vars 16)` itself; process_reg_param
+  records it in const_equiv_map and substitutes it for the parameter,
+  so the inlined body has no pseudo to tie. aabb.h's field accessors
+  (AabbX/AabbY/AabbW/AabbH) and FlipAabbX/FlipAabbY and util.h's
+  SetAabb (SetAabbPos then SetAabbSize) replace the crate box builders'
+  six `BOX_ADDR`s (with the frame structs split into locals in the
+  same stack order: a member's address is still copied),
+  `MovingSprite::TouchPlayer`'s volatile read and
+  `Platform::ResolveCollision`'s `MATCH_KEEP` and GetSpriteHitbox
+  alias. A private old_agbcp built without that BLKmode test compiles
+  the two objects' plain code to the ROM's bytes as well, which is how
+  the mechanism was confirmed.
+- **Kept, with the exact condition in each comment:**
+  `CameraLead::Reset` (the `and`'s dying 1 is tied to its result by
+  both regmove's fixup_match_1 and local-alloc's combine_regs; only a
+  1 that lives on or is a remote constant escapes, and the toggle shows
+  either), `Sprite::CheckPlayerContact` (cse's insert_regs puts every
+  SImode 1 in one quantity, so the gone bit's shift takes r6 unless r6
+  is set again first, and then the OR's result moves into r6),
+  `ActorSelf::Draw` (local-alloc: no quantity holds r4 over the
+  projection's life, and SMALL_REGISTER_CLASSES turns off block_alloc's
+  widened lives; one variable for the projection and the screen x gets
+  4 lines off, regmove's replacement_quality then picks the mask's
+  register), `PlatformMover::Update` and `SelectActorCategory`
+  (global-alloc priorities 0.83/0.74 and 0.129/0.133).
 
 **Round 4, lib/gax, src/iwram and the two ConvertTiles (from the
 compiler source).** No function loses its last workaround; two lose

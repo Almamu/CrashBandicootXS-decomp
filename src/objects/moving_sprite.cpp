@@ -41,24 +41,22 @@ void MovingSprite::TouchPlayer()
     }
     struct aabb box = GetAttackBox();
 
-    if (box.w != 0 && gPlayer->TouchesBox(&box)) {
+    if (AabbW(&box) != 0 && gPlayer->TouchesBox(&box)) {
         ResolvePlayerContact();
         return;
     }
     struct aabb box2 = GetBodyBox();
 
-    /* Kept from the C: a volatile read, so that `w` is read at sp+24
-     * rather than through the register holding box2's address (which
-     * also gives `this` r5 instead of r4). #662 round 2: a `w` local,
-     * nested ifs, reusing `box` and an inline test of the box all keep
-     * the register read; the permuter (score 30 of 80) only with an
-     * uninitialized pointer. #662 round 3 (RTL): the C++ front end reads
-     * `box2.w` as (mem (plus P 8)), with P a fresh copy of `fp + 16`.
-     * cse1 ties P to the call's return-slot pseudo in the same block (the
-     * one the ROM keeps in r5), so the load goes through it. Declaring
-     * box2 in a block, at the top, in an `else`, or reusing `box` doesn't
-     * change that, and no -f flag toggle does either. */
-    if (*(volatile s32 *)&box2.w != 0 && gPlayer->TouchesBox(&box2))
+    /* The widths through aabb.h's AabbW: `w` is read at sp+24, while
+     * box2's address stays in r5 for the call and TouchesBox, as in the
+     * ROM. Written `box2.w`, the C++ front end reads it as (mem (plus P
+     * 8)), with P a fresh copy of `fp + 16` (expr.c copies a BLKmode
+     * local's address, which Thumb's GO_IF_LEGITIMATE_ADDRESS rejects),
+     * and cse1 ties P to the return slot's pseudo, so the load went
+     * through r5 (a volatile read until #662 round 4). Inlined, AabbW's
+     * argument is the constant `fp + 16` itself (integrate.c), and its
+     * load folds to sp+24. */
+    if (AabbW(&box2) != 0 && gPlayer->TouchesBox(&box2))
         ResolvePlayerContact();
 }
 

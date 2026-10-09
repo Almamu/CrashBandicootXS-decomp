@@ -403,7 +403,9 @@ void ActionCtrl::StateJump()
                          * The mechanism is ActionCtrl::HandleEvent's (see
                          * its bounce cases): cse1 gives the arms' 1 the
                          * test's pseudo, and regmove copies it (#662
-                         * round 3). */
+                         * round 3). Round 4 traced the condition the ROM
+                         * implies to cse's quantities and local-alloc's
+                         * update_equiv_regs (see HandleEvent's bounce). */
                         MATCH_KEEP(one);
                         if (cur & 1)
                             QueueYAt(slot, one, 9);
@@ -993,7 +995,23 @@ void ActionCtrl::StateCrouch()
              * preference would place it. Through `part->mirror` with no
              * pointer, the registers are the ROM's but reload forms the
              * address (ldrb's offset is 0-31) next to the `ldrb`, after
-             * the mask. */
+             * the mask. Round 4 (local-alloc.c, with an instrumented
+             * copy printing each block's quantity order): written plainly
+             * (or as `part->SetFlipX(1)`, which gives the ROM's insns),
+             * the flip's block has exactly three local quantities: the
+             * address (born first, q0), the mask (q1) and the 0x10 (q2);
+             * combine folds the byte load into the AND as a subreg of the
+             * MEM. block_alloc sorts three quantities with a hand-written
+             * exchange on quantity numbers (qty_compare (0, 1), (1, 2),
+             * (0, 1)), and with these priorities (0.30, 1.5, 1.0) the two
+             * swaps cancel: the address goes first and takes r0. The ROM
+             * order (mask r0, 0x10 r1, address r2) needs a fourth
+             * quantity (qsort then sorts by priority; the volatile byte
+             * load is one), or the address out of local-alloc, i.e. live
+             * in two blocks, which code confined to this block can't be.
+             * With the address born first (its `adds` comes first in the
+             * ROM too), no priorities make the exchange put the mask
+             * first: it yields address-first or 0x10-first. */
             volatile u8 *p = &part->mirror;
 
             m = -0x11;

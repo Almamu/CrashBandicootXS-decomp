@@ -34,6 +34,18 @@ extern void *IwramAlloc(u32 size);
 extern void SetAabbSize(struct aabb *dest, s32 w, s32 h);
 extern void SetAabbPos(struct aabb *dest, s32 x, s32 y);
 
+/* Both setters, position first. Through this inline, a stack box's
+ * address is the constant `frame + offset` in each call's argument
+ * (aabb.h's accessors), so each call computes `add r0, sp, #N` for
+ * itself, as the ROM does; called directly with `&box`, each argument
+ * is a pseudo that cse1 ties to the first one, held across the calls
+ * (#662 round 4). */
+static inline void SetAabb(struct aabb *dest, s32 x, s32 y, s32 w, s32 h)
+{
+    SetAabbPos(dest, x, y);
+    SetAabbSize(dest, w, h);
+}
+
 /* src/util/fixed_math.cpp */
 extern s32 FixedDistSq(s32 x1, s32 x2, s32 y1, s32 y2);
 extern u32 FixedDist(s32 x1, s32 x2, s32 y1, s32 y2);

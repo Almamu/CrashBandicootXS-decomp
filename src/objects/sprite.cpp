@@ -200,7 +200,14 @@ s32 Sprite::CheckPlayerContact()
      * register. The `1 << bit` is SImode, so cse gives it that register.
      * In the ROM the OR has it. `f.flags = f.flags | 1`, `(u32)` casts,
      * a `u32 one` local (cse folds it), MarkGone and every -f flag toggle
-     * stay 20 or more lines off. Only a register cse doesn't track works. */
+     * stay 20 or more lines off. Only a register cse doesn't track works.
+     * #662 round 4 (cse.c): insert_regs puts every SImode pseudo set to 1
+     * in one quantity (make_regs_eqv), so the gone bit's `1 << bit`
+     * takes the tests' register unless that register is set again
+     * before it. `one |= f.flags; f.flags = one;` does that (the shift
+     * then loads its own 1, as in the ROM, and the OR uses the tests'
+     * r6), but the OR's result then lands in `one`'s r6 instead of r0
+     * (6 lines off); with a separate result the shift is tied again. */
     MATCH_HOLD_REG(u32, one, r6);
     s32 touched = (flags >> 27) & (one = 1);
 

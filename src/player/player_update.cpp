@@ -71,7 +71,12 @@ static inline s32 IsBlinking(Player *p)
  * `if (maskLevel != MASK_LEVEL_NONE) { spawn } else { the same spawn }`
  * and a dead `if (maskLevel == MASK_LEVEL_NONE) m = 0;` before `m`'s
  * store give the ROM's load (the second the whole object), but neither
- * is source anyone wrote, so the volatile read stays. */
+ * is source anyone wrote, so the volatile read stays. #662 round 4 traced
+ * why only those two work (jump.c's delete_computation keeps the feeding
+ * load after reload, and no flow pass follows jump2; see
+ * ActionCtrl::HandleEvent's bump case, action_ctrl_event.cpp): the test
+ * must reach jump2 with nothing left to do, so its body has to be dead
+ * code flow1 removes, or arms jump2 finds identical. */
 void Player::HandleEvent(s32 from, s32 event, s32 arg)
 {
     switch (event) {
