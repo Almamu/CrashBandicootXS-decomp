@@ -107,7 +107,6 @@ SECTIONS
         build/crashbandicootxs/src/enemies/periodic_spawner.o(.text);
         build/crashbandicootxs/src/enemies/knocked_enemy_ctrl.o(.text);
         build/crashbandicootxs/src/objects/effect_ctrl.o(.text);
-        build/crashbandicootxs/src/crates/crate_touch.o(.text);
         build/crashbandicootxs/src/crates/crate_hit.o(.text);
         build/crashbandicootxs/src/crates/crate_break.o(.text);
         build/crashbandicootxs/src/crates/crate_switches.o(.text);
