@@ -1,3 +1,4 @@
+#include "bg_layer.hpp"
 #include "player.hpp"
 #include "crate.hpp"
 #include "crate_list.hpp"
@@ -48,7 +49,7 @@ u8 Player::HasRoomForAnim(s32 anim)
     pos.y = INT_TO_Q8(box->offY) + pos.y;
     Q8_TO_INT_INPLACE(pos.x);
     Q8_TO_INT_INPLACE(pos.y);
-    if ((u8)ProbeTerrain(gLevelLayers, probeDir, (struct vec2 *)&pos, h, &origY))
+    if ((u8)gLevelLayers->Probe(probeDir, (struct vec2 *)&pos, h, &origY))
         return 0;
 
     i = 0;

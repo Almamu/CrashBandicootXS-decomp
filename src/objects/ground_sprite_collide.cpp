@@ -1,3 +1,4 @@
+#include "bg_layer.hpp"
 #include "sprite_obj.hpp"
 
 extern "C" {
@@ -88,7 +89,7 @@ s32 GroundSprite::ProbeTerrainAxes()
             pos.x -= quad->w >> 1;
         else
             pos.x += quad->w >> 1;
-        c = ProbeSolidFloorHeight(gLevelLayers, &pos, &origY);
+        c = gLevelLayers->ProbeSolidFloor(&pos, &origY);
         unused = 0;
         if (c) {
             y = origY & 0xFFFFFF00;
@@ -118,7 +119,7 @@ s32 GroundSprite::ProbeTerrainAxes()
         OffsetToHitboxEdgeStart(&pos, mode, (void *)quad);
         pos.x = Q8_TO_INT(pos.x);
         pos.y = Q8_TO_INT(pos.y) + 8;
-        if ((u8)ProbeTerrain(gLevelLayers, mode, &pos, span, &origX)) {
+        if ((u8)gLevelLayers->Probe(mode, &pos, span, &origX)) {
             hitMask |= mode;
             result |= mode;
             x = origX;
@@ -136,7 +137,7 @@ y_probe:
         OffsetToHitboxEdgeStart(&pos, mode, (void *)quad);
         pos.x = Q8_TO_INT(pos.x);
         pos.y = Q8_TO_INT(pos.y);
-        if ((u8)ProbeTerrain(gLevelLayers, mode, &pos, span, &origY)) {
+        if ((u8)gLevelLayers->Probe(mode, &pos, span, &origY)) {
             result |= mode;
             hitMask |= mode;
             y = origY;
@@ -152,7 +153,7 @@ y_probe:
         OffsetToHitboxEdgeStart(&pos, mode, (void *)quad);
         pos.x = Q8_TO_INT(pos.x);
         pos.y = Q8_TO_INT(pos.y);
-        if ((u8)ProbeTerrain(gLevelLayers, mode, &pos, span, &origX)) {
+        if ((u8)gLevelLayers->Probe(mode, &pos, span, &origX)) {
             hitMask |= mode;
             result |= mode;
             x = origX;
@@ -187,7 +188,7 @@ u8 GroundSprite::ProbeFloor(const struct hitbox_quad *quad, u8 *outFlag)
         pos.x -= quad->w >> 1;
     else
         pos.x += quad->w >> 1;
-    hit = ProbeFloorHeight(gLevelLayers, &pos, &origY);
+    hit = gLevelLayers->ProbeFloor(&pos, &origY);
     if (hit) {
         y = origY & 0xFFFFFF00;
         grounded = (f.bytes.flags2 >> 1) & 1;
@@ -199,7 +200,7 @@ u8 GroundSprite::ProbeFloor(const struct hitbox_quad *quad, u8 *outFlag)
     grounded = (f.bytes.flags2 >> 1) & 1;
     if (!grounded) {
         pos.y++;
-        hit = ProbeFloorHeight(gLevelLayers, &pos, &origY);
+        hit = gLevelLayers->ProbeFloor(&pos, &origY);
         if (hit) {
             y = origY & 0xFFFFFF00;
             f.b.grounded = 1;

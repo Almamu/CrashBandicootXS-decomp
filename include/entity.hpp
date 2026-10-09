@@ -16,6 +16,8 @@
  * places at gEntityVtable's ROM address (docs/cplusplus.md, "Emitting
  * the vtables"). */
 
+#include "entity_flags.hpp"
+
 extern "C" {
 #include "core.h"
 #include "math_util.h"
@@ -172,7 +174,7 @@ public:
         f.b.gone = 1;
         if (id != ENTITY_ID_NONE) {
             s32 i = id;
-            struct entity_flags *flags = gEntityFlags;
+            LevelEntityFlags *flags = gEntityFlags;
             s32 word = i / 32;
 
             flags->bits0Copy[word] |= 1 << (i - word * 32);

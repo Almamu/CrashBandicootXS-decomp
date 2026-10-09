@@ -1,4 +1,5 @@
 #include "bg_layer.hpp"
+#include "entity_flags.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -79,7 +80,7 @@ void LevelLayers::LoadRoom(const struct level_room *args)
     if (layers[2]->enabled)
         ShowBg3();
 
-    SpawnRoomEntities(gEntityFlags, args->desc->entities, args->desc->links, 0, 0);
+    gEntityFlags->SpawnRoomEntities(args->desc->entities, args->desc->links, 0, 0);
 
     dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
     dma->src = (u32)args->palette;
@@ -185,7 +186,7 @@ void LevelLayers::Reset()
     }
 }
 
-s32 sub_80269DC(void *self, s32 arg1, s32 *arg2, s32 arg3)
+s32 LevelLayers::sub_80269DC(s32 arg1, s32 *arg2, s32 arg3)
 {
     s32 result = 1;
 
@@ -194,7 +195,7 @@ s32 sub_80269DC(void *self, s32 arg1, s32 *arg2, s32 arg3)
     return result;
 }
 
-s32 sub_80269F8(void *self, s32 arg1, s32 *arg2, s32 arg3)
+s32 LevelLayers::sub_80269F8(s32 arg1, s32 *arg2, s32 arg3)
 {
     s32 result = 1;
 

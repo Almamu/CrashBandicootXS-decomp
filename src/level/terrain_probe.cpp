@@ -25,17 +25,17 @@ extern "C" {
  *   - `mode == 2`: if `pos->x < 0`, clamps `*outValue = 0` and reports
  *     a hit immediately (the probe position is already off the left
  *     edge of the loaded region - nothing to scan). Otherwise calls
- *     `ProbeTerrainX(layers, pos, span, outValue, 3)`.
+ *     `ProbeX(pos, span, outValue, 3)`.
  *   - `mode == 1`: reads `self+0x10`'s pointed-to record's own `+0x10`
  *     field (`bounds->widthPx` below - a right/loaded-region edge, plain
  *     ints, not Q8, matching `pos`'s own units). If `pos->x` is past
  *     it, clamps `*outValue = bound << 8` and reports a hit without
- *     scanning. Otherwise calls `ProbeTerrainX(layers, pos, span,
+ *     scanning. Otherwise calls `ProbeX(pos, span,
  *     outValue, 1)`.
- *   - `mode == 4`: always calls `ProbeTerrainY(layers, pos, span,
+ *   - `mode == 4`: always calls `ProbeY(pos, span,
  *     outValue, 2)` - no short-circuit for this arm.
  *   - `mode == 8`: same shape as `mode == 1` but on the Y axis
- *     (`bounds->heightPx`, `pos->y`), calling `ProbeTerrainY(layers, pos,
+ *     (`bounds->heightPx`, `pos->y`), calling `ProbeY(pos,
  *     span, outValue, 0)` when not already past the bound.
  *   - any other `mode` (in practice just `0`): returns `0` with no
  *     side effects.
@@ -80,12 +80,11 @@ extern "C" {
  * session, including `ProbeTerrainX`/`ProbeTerrainY` themselves) moved to
  * the new `asm/code_3_2_17_266bc.s`. */
 
-/* `self` is gLevelLayers; the bounds are layer 0's `widthPx`/`heightPx`
+/* `this` is gLevelLayers; the bounds are layer 0's `widthPx`/`heightPx`
  * (BgLayerBase's), the right/lower edge of the level, compared
  * directly against the caller's plain-int probe position, not Q8. */
-s32 ProbeTerrain(void *self, s32 mode, struct vec2 *pos, s32 span, s32 *outValue)
+s32 LevelLayers::Probe(s32 mode, struct vec2 *pos, s32 span, s32 *outValue)
 {
-    LevelLayers *layers = (LevelLayers *)self;
     s32 hit = 0;
 
     switch (mode) {
@@ -93,33 +92,33 @@ s32 ProbeTerrain(void *self, s32 mode, struct vec2 *pos, s32 span, s32 *outValue
         if (pos->x < 0) {
             *outValue = 0;
             hit = 1;
-        } else if ((u8)ProbeTerrainX(layers, pos, span, outValue, 3) != 0) {
+        } else if ((u8)ProbeX(pos, span, outValue, 3) != 0) {
             hit = 1;
         }
         break;
     case 1:
         {
-            s32 bound = layers->layer0->widthPx;
+            s32 bound = layer0->widthPx;
             if (pos->x > bound) {
                 *outValue = INT_TO_Q8(bound);
                 hit = 1;
-            } else if ((u8)ProbeTerrainX(layers, pos, span, outValue, mode) != 0) {
+            } else if ((u8)ProbeX(pos, span, outValue, mode) != 0) {
                 hit = 1;
             }
             break;
         }
     case 4:
-        if ((u8)ProbeTerrainY(layers, pos, span, outValue, 2) != 0) {
+        if ((u8)ProbeY(pos, span, outValue, 2) != 0) {
             hit = 1;
         }
         break;
     case 8:
         {
-            s32 bound = layers->layer0->heightPx;
+            s32 bound = layer0->heightPx;
             if (pos->y > bound) {
                 *outValue = INT_TO_Q8(bound);
                 hit = 1;
-            } else if ((u8)ProbeTerrainY(layers, pos, span, outValue, 0) != 0) {
+            } else if ((u8)ProbeY(pos, span, outValue, 0) != 0) {
                 hit = 1;
             }
             break;

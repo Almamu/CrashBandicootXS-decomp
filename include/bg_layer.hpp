@@ -370,14 +370,26 @@ public:
     //        take layer 0's priority minus one (GetSpriteObjPriority)
     u8 raiseObjPriority;
 
-    LevelLayers();                                // InitLevelLayers
-    ~LevelLayers();                               // DestroyLevelLayers
-    static LevelLayers *Get();                    // GetLevelLayers
-    void LoadRoom(const struct level_room *args); // LoadRoom
-    void SetScroll(s32 x, s32 y);                 // SetLevelScroll
-    void CommitScroll();                          // CommitLevelScroll
-    void Scroll();                                // ScrollLevelLayers
-    void Reset();                                 // ResetLevelLayers
+    LevelLayers();                                  // InitLevelLayers
+    ~LevelLayers();                                 // DestroyLevelLayers
+    static LevelLayers *Get();                      // GetLevelLayers
+    void LoadRoom(const struct level_room *args);   // LoadRoom
+    void SetScroll(s32 x, s32 y);                   // SetLevelScroll
+    void CommitScroll();                            // CommitLevelScroll
+    void Scroll();                                  // ScrollLevelLayers
+    void Reset();                                   // ResetLevelLayers
+    s32 sub_80269DC(s32 arg1, s32 *arg2, s32 arg3); // UNUSED
+    s32 sub_80269F8(s32 arg1, s32 *arg2, s32 arg3); // UNUSED
+
+    /* The terrain probes (#760; terrain_probe.cpp, terrain_probe_axes.cpp,
+     * terrain.cpp): every caller passes gLevelLayers. */
+    s32 Probe(s32 mode, struct vec2 *pos, s32 span, s32 *outValue);     // ProbeTerrain
+    s32 ProbeY(struct vec2 *pos, s32 span, s32 *outValue, s32 submode); // ProbeTerrainY
+    s32 ProbeX(struct vec2 *pos, s32 span, s32 *outValue, s32 submode); // ProbeTerrainX
+    s32 GetTerrainFlags(s32 x, s32 y);                                  // GetTerrainFlagsAt
+    s32 ProbeFloor(struct vec2 *pos, s32 *outValue);                    // ProbeFloorHeight
+    s32 ProbeSolidFloor(struct vec2 *pos, s32 *outValue);               // ProbeSolidFloorHeight
+    s32 sub_8026C80(s32 arg1, volatile s32 *arg2);                      // UNUSED
 };
 
 COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(LevelLayers) == 0x2C);

@@ -1,5 +1,6 @@
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "entity_flags.hpp"
 extern "C" {
 #include "core.h"
 #include "actor.h"
@@ -50,7 +51,7 @@ UnusedLevelObject::UnusedLevelObject()
 
 /* Per-level medal tally: sums, across `gLevelTable[idx]`'s
  * item list (`rooms[]`, plus the two extra single-item slots), a
- * per-item value - `CountCrateEntities(gEntityFlags, item->desc->entities)` for
+ * per-item value - `gEntityFlags->CountCrateEntities(item->desc->entities)` for
  * `kind` 0-2, `CountCategoryCrates(item->param.catIndex)` for `kind == 3`, 0
  * otherwise (including `kind < 0`). The same 4-branch
  * dispatch is inlined three times in the ROM (once per source: the
@@ -76,7 +77,7 @@ s32 CountLevelCrates(s32 idx)
         case ROOM_KIND_ON_FOOT:
         case ROOM_KIND_UNDERWATER:
         case ROOM_KIND_HOVER:
-            v = CountCrateEntities(gEntityFlags, item->desc->entities);
+            v = gEntityFlags->CountCrateEntities(item->desc->entities);
             break;
         case ROOM_KIND_CATEGORY:
             v = CountCategoryCrates(item->param.catIndex);
@@ -94,7 +95,7 @@ s32 CountLevelCrates(s32 idx)
         case ROOM_KIND_ON_FOOT:
         case ROOM_KIND_UNDERWATER:
         case ROOM_KIND_HOVER:
-            v = CountCrateEntities(gEntityFlags, item->desc->entities);
+            v = gEntityFlags->CountCrateEntities(item->desc->entities);
             break;
         case ROOM_KIND_CATEGORY:
             v = CountCategoryCrates(item->param.catIndex);
@@ -112,7 +113,7 @@ s32 CountLevelCrates(s32 idx)
         case ROOM_KIND_ON_FOOT:
         case ROOM_KIND_UNDERWATER:
         case ROOM_KIND_HOVER:
-            v = CountCrateEntities(gEntityFlags, item->desc->entities);
+            v = gEntityFlags->CountCrateEntities(item->desc->entities);
             break;
         case ROOM_KIND_CATEGORY:
             v = CountCategoryCrates(item->param.catIndex);
@@ -247,7 +248,7 @@ s32 CountRoomCrates(const struct level_room *item)
     case ROOM_KIND_ON_FOOT:
     case ROOM_KIND_UNDERWATER:
     case ROOM_KIND_HOVER:
-        v = CountCrateEntities(gEntityFlags, item->desc->entities);
+        v = gEntityFlags->CountCrateEntities(item->desc->entities);
         break;
     case ROOM_KIND_CATEGORY:
         v = CountCategoryCrates(item->param.catIndex);

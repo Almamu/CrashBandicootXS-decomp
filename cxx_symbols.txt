@@ -1490,6 +1490,17 @@ SetScroll__11LevelLayersii SetLevelScroll
 CommitScroll__11LevelLayers CommitLevelScroll
 Scroll__11LevelLayers ScrollLevelLayers
 Reset__11LevelLayers ResetLevelLayers
+# #760: the terrain probes and level_layers.cpp's stubs (src/level/level_layers.cpp,
+# terrain_probe.cpp, terrain_probe_axes.cpp, terrain.cpp)
+sub_80269DC__11LevelLayersiPii sub_80269DC
+sub_80269F8__11LevelLayersiPii sub_80269F8
+Probe__11LevelLayersiP4vec2iPi ProbeTerrain
+ProbeY__11LevelLayersP4vec2iPii ProbeTerrainY
+ProbeX__11LevelLayersP4vec2iPii ProbeTerrainX
+GetTerrainFlags__11LevelLayersii GetTerrainFlagsAt
+ProbeFloor__11LevelLayersP4vec2Pi ProbeFloorHeight
+ProbeSolidFloor__11LevelLayersP4vec2Pi ProbeSolidFloorHeight
+sub_8026C80__11LevelLayersiPVi sub_8026C80
 # step 10b: the fonts (include/font.hpp; src/text/font*.cpp, src/system/inline_copies_misc.cpp)
 _vt.4Font gFontVtable
 _vt.9SmallFont gSmallFontVtable
@@ -1570,6 +1581,13 @@ MarkActivated__16LevelEntityFlagsi MarkEntityIdActivated
 SetPos__16LevelEntityFlagsi SetEntityFlagsPos
 _._16LevelEntityFlags DestroyEntityFlags
 __16LevelEntityFlags InitEntityFlags
+# #762: SpawnRoomEntities (src/level/room_entities.cpp) and the UNUSED
+# Bitmap (include/entity_flags.hpp, src/level/entity_bitmap.cpp)
+SpawnRoomEntities__16LevelEntityFlagsPC17level_entity_listPC15level_link_listii SpawnRoomEntities
+__6Bitmap InitBitmap
+Set__6Bitmapi SetBitmapBit
+ClearBit__6Bitmapi ClearBitmapBit
+Clear__6Bitmap ClearBitmap
 _._17UnusedLevelObject DestroyUnusedLevelObject
 __17UnusedLevelObject InitUnusedLevelObject
 __10LevelState InitLevelState

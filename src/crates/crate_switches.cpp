@@ -138,7 +138,7 @@ void Crate::ActivateIronSwitch()
 
         palette = slot;
     }
-    MarkEntityIdActivated(gEntityFlags, id);
+    gEntityFlags->MarkActivated(id);
 
     i = 0;
     if (i < Crates()->count) {
@@ -150,7 +150,7 @@ void Crate::ActivateIronSwitch()
                     found[n] = o;
                     n++;
                     n &= 0x1f;
-                    MarkEntityIdActivated(gEntityFlags, o->id);
+                    gEntityFlags->MarkActivated(o->id);
                 }
             }
             i++;

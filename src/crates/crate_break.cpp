@@ -1076,7 +1076,7 @@ void Crate::OpenCheckpoint()
         u16 eid = id;
 
         if (eid != 0xffff)
-            SetEntityIdActivated(gEntityFlags, eid);
+            gEntityFlags->SetActivated(eid);
     }
     if (gCrateKindCounted[kind])
         gLevelState->AddBrokenCrate();
@@ -1181,7 +1181,7 @@ void Crate::Break(u32 arg1)
      * block: the macro's do/while(0) changes this object. */
     {
         s32 eid = id;
-        struct entity_flags *base = gEntityFlags;
+        LevelEntityFlags *base = gEntityFlags;
         s32 word = eid / 32;
         s32 off = word * 4;
         u32 *slot = base->bits0Copy;
@@ -1290,8 +1290,8 @@ void Crate::OpenMystery(bool flag)
             u16 eid = id;
 
             if (eid != 0xffff) {
-                if ((u8)IsEntityIdActivated(gEntityFlags, eid) == 0)
-                    SetEntityIdActivated(gEntityFlags, id);
+                if ((u8)gEntityFlags->IsActivated(eid) == 0)
+                    gEntityFlags->SetActivated(id);
             }
         }
         {
@@ -1375,8 +1375,8 @@ void Crate::OpenSlot(bool flag)
             u16 eid = id;
 
             if (eid != 0xffff) {
-                if ((u8)IsEntityIdActivated(gEntityFlags, eid) == 0)
-                    SetEntityIdActivated(gEntityFlags, id);
+                if ((u8)gEntityFlags->IsActivated(eid) == 0)
+                    gEntityFlags->SetActivated(id);
             }
         }
         {

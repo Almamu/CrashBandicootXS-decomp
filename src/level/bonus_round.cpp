@@ -125,7 +125,7 @@ void LevelState::SetCheckpointAtPlayer(u8 arg1)
         Player *player = gPlayer;
         s32 x = player->x;
         s32 y = player->y;
-        struct entity_flags *flags;
+        LevelEntityFlags *flags;
 
         room.checkpointFlags = arg1;
         room.checkpointCrateCount = GetCrateCount();

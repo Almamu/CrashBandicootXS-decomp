@@ -1,20 +1,22 @@
+#include "entity_flags.hpp"
+
 extern "C" {
 #include "core.h"
 #include <agb_syscall.h>
-#include "level.h"
 }
 
 /* A 32-word (1024-bit) bitmap's helpers, ROM 0x08025554-0x080255D4:
  * set, clear, clear all and the constructor-like InitBitmap. Nothing
  * calls them; LevelEntityFlags::SetGone (entity_flags.cpp) uses the same
- * bit idiom. In collision_map.cpp (now tile_cache_cell.cpp) until #770;
- * C++ like the rest of src/, with C linkage (level.h). */
+ * bit idiom. In collision_map.cpp (now tile_cache_cell.cpp) until #770.
+ * They are class Bitmap's methods (include/entity_flags.hpp, #762) under
+ * their C names (cxx_symbols.txt); all UNUSED. */
 
 /* Sets bit `n & 0x1f` of the (32-bit-word-per-block) bitmap array at
- * `self`, floor-dividing `n` by 32 to find the word (so it behaves
+ * `this`, floor-dividing `n` by 32 to find the word (so it behaves
  * correctly for negative `n` too). Returns 1 if the bit was previously
  * clear (newly set), 0 if it was already set. */
-s32 SetBitmapBit(void *self, s32 n)
+s32 Bitmap::Set(s32 n)
 {
     s32 t = n;
     s32 result = 0;
@@ -27,7 +29,7 @@ s32 SetBitmapBit(void *self, s32 n)
     wordIndex = t >> 5;
     bitIndex = n - (wordIndex << 5);
     mask = 1 << bitIndex;
-    word = (s32 *)((u8 *)self + (wordIndex << 2));
+    word = (s32 *)((u8 *)bits + (wordIndex << 2));
 
     if (!(*word & mask)) {
         *word |= mask;
@@ -36,8 +38,8 @@ s32 SetBitmapBit(void *self, s32 n)
     return result;
 }
 
-/* Clears bit `n & 0x1f` of the same bitmap array `SetBitmapBit` sets. */
-void ClearBitmapBit(void *self, s32 n)
+/* Clears bit `n & 0x1f` of the bitmap (SetBitmapBit sets them). */
+void Bitmap::ClearBit(s32 n)
 {
     s32 t = n;
     s32 wordIndex, bitIndex, mask;
@@ -49,23 +51,23 @@ void ClearBitmapBit(void *self, s32 n)
     wordIndex = t >> 5;
     bitIndex = n - (wordIndex << 5);
     mask = 1 << bitIndex;
-    word = (s32 *)((u8 *)self + (wordIndex << 2));
+    word = (s32 *)((u8 *)bits + (wordIndex << 2));
 
     *word &= ~mask;
 }
 
-/* Zero-fills 32 words (128 bytes) at `dst` via the BIOS `CpuSet`
+/* ClearBitmap: zero-fills the 32 words (128 bytes) via the BIOS `CpuSet`
  * wrapper, 32-bit fixed-source mode. */
-void ClearBitmap(void *dst)
+void Bitmap::Clear()
 {
     s32 zero = 0;
 
-    CpuSet(&zero, dst, CPU_SET_32BIT | CPU_SET_SRC_FIXED | 0x20);
+    CpuSet(&zero, bits, CPU_SET_32BIT | CPU_SET_SRC_FIXED | 0x20);
 }
 
-/* `ClearBitmap` wrapper that returns the same pointer it clears. */
-void *InitBitmap(void *self)
+/* InitBitmap: clears the bitmap (g++'s constructor returns `this`, as
+ * the C wrapper returned the pointer it cleared). */
+Bitmap::Bitmap()
 {
-    ClearBitmap(self);
-    return self;
+    Clear();
 }

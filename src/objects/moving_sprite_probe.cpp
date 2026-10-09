@@ -34,7 +34,7 @@ s32 MovingSprite::ProbeEdgeTerrain(s32 mode, const struct hitbox_quad *quad)
     f.pos.y = Q8_TO_INT(f.pos.y);
     tries = &probeTries;
     *tries = 0;
-    hit = (u8)ProbeTerrain(gLevelLayers, mode, &f.pos, span, &f.origY);
+    hit = (u8)gLevelLayers->Probe(mode, &f.pos, span, &f.origY);
     if (hit) {
         y = f.origY;
         return 1;
@@ -55,7 +55,7 @@ s32 MovingSprite::ProbeEdgeTerrain(s32 mode, const struct hitbox_quad *quad)
         do {
             (*count)++;
             pp->y += 8;
-            if ((u8)ProbeTerrain(gLevelLayers, mode, &f.pos, span, &f.origY)) {
+            if ((u8)gLevelLayers->Probe(mode, &f.pos, span, &f.origY)) {
                 gLevelLayers->probeFlag = saved;
                 return 0;
             }

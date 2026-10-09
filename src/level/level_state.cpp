@@ -906,7 +906,7 @@ static inline void CopyBitmapSpan(void *dst, void *src)
  * `0xe4`-byte snapshot block (see `RestoreCheckpoint` above). */
 void LevelState::SetCheckpoint(s32 flag, s32 *pair)
 {
-    struct entity_flags *flags;
+    LevelEntityFlags *flags;
     u8 tmp;
 
     room.checkpointFlags = flag;
