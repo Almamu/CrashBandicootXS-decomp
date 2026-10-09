@@ -257,6 +257,8 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/objects/ctrl.o \
                   $(C_BUILDDIR)/bosses/tiny.o \
                   $(C_BUILDDIR)/enemies/enemy_ctrl.o \
+                  $(C_BUILDDIR)/enemies/periodic_spawner.o \
+                  $(C_BUILDDIR)/enemies/knocked_enemy_ctrl.o \
                   $(C_BUILDDIR)/objects/effect_ctrl.o \
                   $(C_BUILDDIR)/vehicle/polar/polar_player.o \
                   $(C_BUILDDIR)/vehicle/jetpack/jetpack_spawn.o \

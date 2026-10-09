@@ -111,6 +111,8 @@ SECTIONS
         build/crashbandicootxs/src/enemies/enemy_motion.o(.text);
         build/crashbandicootxs/src/enemies/enemy_attack.o(.text);
         build/crashbandicootxs/src/enemies/enemy_ctrl.o(.text);
+        build/crashbandicootxs/src/enemies/periodic_spawner.o(.text);
+        build/crashbandicootxs/src/enemies/knocked_enemy_ctrl.o(.text);
         build/crashbandicootxs/src/objects/effect_ctrl.o(.text);
         build/crashbandicootxs/src/crates/crate_touch.o(.text);
         build/crashbandicootxs/src/crates/crate_hit.o(.text);
@@ -438,8 +440,8 @@ SECTIONS
         build/crashbandicootxs/src/player/player_collide.o(.gnu.linkonce.d._vt.6Player); /* gPlayerVtable */
         build/crashbandicootxs/src/system/bios_util.o(.gnu.linkonce.d._vt.4Ctrl); /* gCtrlVtable */
         build/crashbandicootxs/src/enemies/enemy_ctrl_update.o(.gnu.linkonce.d._vt.9EnemyCtrl); /* gEnemyCtrlVtable */
-        build/crashbandicootxs/src/enemies/enemy_ctrl.o(.gnu.linkonce.d._vt.15PeriodicSpawner); /* gPeriodicSpawnerVtable */
-        build/crashbandicootxs/src/enemies/enemy_ctrl.o(.gnu.linkonce.d._vt.16KnockedEnemyCtrl); /* gKnockedEnemyCtrlVtable */
+        build/crashbandicootxs/src/enemies/periodic_spawner.o(.gnu.linkonce.d._vt.15PeriodicSpawner); /* gPeriodicSpawnerVtable */
+        build/crashbandicootxs/src/enemies/knocked_enemy_ctrl.o(.gnu.linkonce.d._vt.16KnockedEnemyCtrl); /* gKnockedEnemyCtrlVtable */
         build/crashbandicootxs/src/objects/effect_ctrl.o(.gnu.linkonce.d._vt.10EffectCtrl); /* gEffectCtrlVtable */
         build/crashbandicootxs/src/crates/crate_update.o(.gnu.linkonce.d._vt.5Crate); /* gCrateVtable */
         build/crashbandicootxs/src/pickups/extra_life.o(.gnu.linkonce.d._vt.9ExtraLife); /* gExtraLifeVtable */
