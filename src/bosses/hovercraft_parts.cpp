@@ -2,7 +2,6 @@
 #include "audio.hpp"
 
 extern "C" {
-#include "match.h"
 #include "actor.h"
 #include "globals.h"
 }
@@ -23,37 +22,11 @@ void StartHovercraftHitFlash(void)
     }
 }
 
-/* Colour 15 of the hovercraft's BG and OBJ palettes (gFlashBgPalette,
- * gFlashObjPalette, iwram_data.cpp): white when `flag` is set, or else the
- * colour saved by the first call.
- *
- * Kept: the colour's r1 pin (the C had two more, on the pointers). The
- * ROM loads the white into r2 and copies it to r1; unpinned, the colour
- * gets other registers, the two BG stores are cross-jumped into one, with
- * every spelling tried (an inline for the two stores, a `u16` or an `s32`
- * colour). RunHovercraftState (hovercraft.cpp) has the same pin. */
+/* Colour 15 of the hovercraft's palettes, white or the saved colour
+ * (ApplyHovercraftFlashColor, include/boss_actors.hpp). */
 void SetHovercraftFlashColor(u8 flag)
 {
-    MATCH_HOLD_REG(u16, val, r1);
-
-    if (gHovercraftFlashColorSaved == 0) {
-        gHovercraftFlashSavedColor = gFlashBgPalette[15];
-        gHovercraftFlashColorSaved = 1;
-    }
-
-    if (flag != 0) {
-        u16 *p = gFlashBgPalette;
-
-        val = RGB_WHITE;
-        p[15] = val;
-    } else {
-        u16 *p = gFlashBgPalette;
-
-        val = gHovercraftFlashSavedColor;
-        p[15] = val;
-    }
-
-    gFlashObjPalette[15] = val;
+    ApplyHovercraftFlashColor(flag);
 }
 
 /* How many of its four weapons the hovercraft has left. */

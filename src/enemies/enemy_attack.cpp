@@ -116,7 +116,11 @@ void EnemyCtrl::UpdateTriggerBox()
 
     if (kind == ENEMY_KIND_VULTURE) {
         /* r1 pin: the allocator otherwise swaps target/baseY (r2/r1),
-         * under C++ as under C. */
+         * under C++ as under C. #662 round 2: `baseY` read into a local
+         * before the target gives the ROM's registers but loads it first;
+         * a reference, `baseY > t->y`, a `bool` or the test folded
+         * into the kind test keep the swap, and the permuter matched only
+         * with dummy stores (`target->x = target->x`). */
         MATCH_HOLD_REG(MovingSprite *, t, r1) = target;
         if (t->y < baseY) {
             t->y = baseY;

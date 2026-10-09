@@ -593,7 +593,10 @@ void DingodileShieldCtrl::Update(MovingSprite *part)
         {
             /* Kept from the C: the ROM builds the value with an `orrs`
              * chain in r5, which a constant expression folds into one
-             * load (a constant-init, the same under agbcp). */
+             * load (a constant-init, the same under agbcp). #662 round 2:
+             * `acc` initialized at the top of the function keeps the
+             * chain unfolded, but builds it in r0/r1 (and without the
+             * holds above moves everything else). */
             MATCH_HOLD_REG(u32, acc, r5);
             u32 w;
 

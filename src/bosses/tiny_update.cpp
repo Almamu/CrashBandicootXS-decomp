@@ -232,7 +232,10 @@ void TinyCtrl::SetState(MovingSprite *part, s32 next)
         {
             /* pinned, as in the C (under agbcp and old_agbcp): unpinned,
              * `pad` lands in r0 where the ROM has r2, and pinning it
-             * alone moves `x` off r1 */
+             * alone moves `x` off r1. #662 round 2: `pad`/`x` at function
+             * scope or in nested blocks, TouchableList(), an inline
+             * returning the pad, and `pad->x` read again all leave `pad`
+             * in r0. */
             MATCH_HOLD_REG(MovingSprite *, pad, r2);
             MATCH_HOLD_REG(s32, x, r1);
 

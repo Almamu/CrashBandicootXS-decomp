@@ -31,7 +31,11 @@ extern "C" {
  * r1!`), the second loop has its own counter, its header is written in
  * the ROM's order, and the 0xf mask comes from an `asm` so that it is
  * the AND's first operand (the ROM copies the mask, not the byte).
- * Matches under both compilers. */
+ * Matches under both compilers. #662 round 2: a `u32 m = 0xf` set in the
+ * row loop keeps the mask first, but as a variable it is allocated ip
+ * instead of being hoisted into r6; set in the pixel loop, or written
+ * `0xf & b`, or passed to an inline as a parameter, it folds back to
+ * `b & 0xf` and the byte is copied. */
 static inline u32 MeterPx(u32 v)
 {
     u32 r = 0;

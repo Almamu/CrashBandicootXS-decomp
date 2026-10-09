@@ -22,7 +22,12 @@ extern "C" {
  * The pin on `part` (r2) is still needed in C++: with neither pinned,
  * g++ gives `this` r2 and `part` r4 where the ROM has r3 and r2; once
  * `part` is pinned, `this` lands in r3 by itself. (The C needed a pin on
- * both, plus gotos for the block order, which the switch gives.) */
+ * both, plus gotos for the block order, which the switch gives.)
+ * #662 round 2: state 1's test through a `bool` (an inline or a local)
+ * gives the ROM's registers but keeps the flag as a `movs` 0/1 and a
+ * second compare; the permuter on the C++ matched only with
+ * `do { } while (0)` wrappers, `x++; x--;` no-ops or a redundant copy of
+ * `part`. */
 void StompedHopPadCtrl::Update(MovingSprite *partArg)
 {
     MATCH_HOLD_REG(MovingSprite *, part, r2) = partArg;

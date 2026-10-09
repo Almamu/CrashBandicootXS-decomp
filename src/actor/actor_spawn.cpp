@@ -5,7 +5,6 @@
 extern "C" {
 #include "core.h"
 #include "math_util.h"
-#include "match.h"
 #include "memory.h"
 #include "actor_self.h"
 #include "actor_anim.h"
@@ -136,16 +135,15 @@ s32 GetActorSpawnKindIndex(s32 idx)
     return v - 0x20;
 }
 
-/* Slot 12 (PolarIsPauseLocked, JetpackIsPauseLocked), negated. The ROM
- * EORs the 1 into the call's result in r0 (`movs r1, #1; eors r0, r1`);
- * unpinned, g++ copies the result to r1 and builds the 1 in r0, with every
- * spelling tried (the C wrote the two instructions in asm). */
-s32 CanPauseActorCategory(void)
+/* Slot 12 (PolarIsPauseLocked, JetpackIsPauseLocked), negated: a
+ * `bool` function's result, so `!` is the ROM's `movs r1, #1; eors r0,
+ * r1` on the call's r0. Through an `s32` g++ copies the result to r1
+ * and builds the 1 in r0; the C wrote the two instructions in asm and
+ * the first C++ pinned the result to r0 (#662 round 2). Its caller
+ * (InitActorCategory) zero-extends the result, as for a `bool`. */
+bool CanPauseActorCategory(void)
 {
-    MATCH_HOLD_REG(s32, r, r0) = ((s32 (*)(void))gActorCategoryVtable->fn[12])();
-
-    r ^= 1;
-    return r;
+    return !((bool (*)(void))gActorCategoryVtable->fn[12])();
 }
 
 void ReloadActorCategoryGraphics(void)

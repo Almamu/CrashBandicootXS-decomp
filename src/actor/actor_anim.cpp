@@ -4,7 +4,6 @@
 
 extern "C" {
 #include "math_util.h"
-#include "match.h"
 #include "actor.h"
 #include "gfx.h"
 #include "globals.h"
@@ -148,59 +147,61 @@ PolarCheckpointCrate::~PolarCheckpointCrate()
 {
 }
 
-/* DrawActor's OAM tail: `frame` at (x, y), its keyframe's attr flags,
- * OAM priority 2 when SORT_KEY_FLAG_BEHIND_BG. The ROM ORs a zero (in a
- * register) into the attribute word, as if a flag argument were 0 at run
- * time: MATCH_CONST hides the constant (the C wrote the `orr` in asm). */
-static inline void DrawFrameAt(ActorSelf *self, u8 *frame, s32 x, s32 y, s32 scale)
-{
-    s32 attr = self->GetAnimFrameAttr();
-    u32 flag;
-    u32 packed = (y & 0xff) | ((x & 0x1ff) << 16) | attr;
-    u32 pal;
-    u32 pre;
-    u32 attr2;
-
-    MATCH_CONST(flag, 0);
-    packed |= flag;
-    pal = self->palette;
-    pre = pal << 0xc;
-    if (self->sortKey & SORT_KEY_FLAG_BEHIND_BG)
-        attr2 = ((pre | 0x800) << 0x10) >> 0x10;
-    else
-        attr2 = (pal << 0x1c) >> 0x10;
-
-    SetupSpriteFrameOam(frame, packed, attr2, scale);
-}
-
 /* The current frame at the fixed screen position (120, 106), culled off
- * screen. */
+ * screen: ActorSelf::Draw (actor.cpp) at a fixed scale of 0x100, its
+ * double-size flag and size tests still written against `scale`. The ROM
+ * ORs a zero into the attribute word: the flag folds away in the size
+ * tests but not in the OR, where reload rematerializes it as `movs r0,
+ * #0`. The C wrote the `orr` in asm and the first C++ hid the constant
+ * with a constant-init asm (#662 round 2). */
 void JetpackCheckpointText::Draw()
 {
     s32 x = 120;
     s32 y = 106;
-    u8 *frame = GetAnimFrameData();
+    s32 scale = 0x100;
+    u8 *frame;
+    u32 flag;
     s32 halfW;
-    s32 h;
     s32 halfH;
 
-    halfW = frame[0];
-    halfW <<= 2;
-    h = frame[1];
-    halfH = h << 2;
+    frame = GetAnimFrameData();
+    flag = 0;
+    if (scale <= 0xff)
+        flag = 0x200;
+    if (scale <= 0xff)
+        halfW = frame[0] << 3;
+    else
+        halfW = frame[0] << 2;
+    if (scale <= 0xff)
+        halfH = frame[1] << 3;
+    else
+        halfH = frame[1] << 2;
 
     x -= halfW;
     y -= halfH;
     if (y > 159)
         return;
-    if (y + (h << 3) < 0)
+    if (y + halfH * 2 < 0)
         return;
     if (x > 239)
         return;
-    if (x + (halfW << 1) < 0)
+    if (x + halfW * 2 < 0)
         return;
 
-    DrawFrameAt(this, frame, x, y, 0x100);
+    {
+        s32 attr = GetAnimFrameAttr();
+        u32 packed = (y & 0xff) | ((x & 0x1ff) << 16) | attr | flag;
+        u32 pal = palette;
+        u32 pre = pal << 0xc;
+        u32 attr2;
+
+        if (sortKey & SORT_KEY_FLAG_BEHIND_BG)
+            attr2 = ((pre | 0x800) << 0x10) >> 0x10;
+        else
+            attr2 = (pal << 0x1c) >> 0x10;
+
+        SetupSpriteFrameOam(frame, packed, attr2, scale);
+    }
 }
 
 /* Plays the animation once (ActorSelf::Update's loop, without the depth

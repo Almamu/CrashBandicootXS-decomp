@@ -46,7 +46,13 @@ extern "C" {
 
 /* The player's `dead` byte (+0x104). The 0x104 is loaded into a spill
  * register that rotates through r1-r3; for this one read the ROM's is r3,
- * one step from what g++ picks (the same in C), so it is pinned there. */
+ * one step from what g++ picks (the same in C), so it is pinned there.
+ * The greg dump shows it is a reload of the constant for the add (insn
+ * 1313 for insn 1110), so the register depends on every reload before it
+ * in the function. #662 round 2: the other two reads and this one written
+ * with `!`, a `bool` latch, an early `return`, the branches swapped, or
+ * state 2's out-of-range exit calling Run itself instead of `goto run`
+ * all leave r1. */
 static inline u8 PlayerDeadByte(Player *pl)
 {
     MATCH_HOLD_REG(s32, off, r3) = 0x104;

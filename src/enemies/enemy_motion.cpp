@@ -90,7 +90,11 @@ void EnemyCtrl::UpdateHomingY()
  * The pin is about register allocation, not the C++ (it's still needed
  * under agbcp and old_agbcp): `baseY` in r1 gives the ROM's r2/r1 split
  * of the post-call `t->y = baseY` store, and every later access reuses
- * the same `t` (issue #9-#11 NAKED retry). */
+ * the same `t` (issue #9-#11 NAKED retry). #662 round 2: a reference to
+ * `t->animDone` taken before the store (`u8 &done`) gives the ROM's
+ * registers, but its address add then comes before the store, where the
+ * ROM has it after; an inline setter or getter, the target re-read, or
+ * `t` scoped to its use keep the r1/r0 split. */
 void EnemyCtrl::UpdateHop()
 {
     MovingSprite *t;

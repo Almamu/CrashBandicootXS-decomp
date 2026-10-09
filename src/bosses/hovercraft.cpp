@@ -241,90 +241,55 @@ s32 HovercraftFireball::IsUnshootable()
  * hovercraft's 16-colour BG palette (BG palette 1) flips between white
  * and its colours (gHovercraftPalette) every 4 frames.
  *
- * The timer is read again for the `& 3` through a volatile cast (as in
- * the C: otherwise the incremented value is reused), and the 3 is a
- * variable, loaded before the timer as in the ROM. Kept from the C: the
- * loop's two pins (it had six more). Unpinned, the flag's address is
- * hoisted out of the toggle (the ROM loads it there, and again for the
- * loop) and the white isn't loaded through r3. */
+ * The 3 is a variable, loaded before the timer as in the ROM. The loop
+ * is an indexed `for` over the palettes, with white stored as a
+ * constant: that gives the ROM's flag address loaded for the loop, the
+ * white hoisted into r3 and copied to r4, and the walking pointers. The
+ * C walked the pointers itself, which needed two pins on the flag's
+ * address and the white (it had six more) and the timer re-read through
+ * a volatile cast (#662 round 2). */
 void UpdateHovercraftHitFlash(void)
 {
+    const u16 *src;
+    u16 *dst;
+    s32 i;
+
     if (gHovercraftHitFlashTimer == 0)
         return;
 
     gHovercraftHitFlashTimer += 1;
     {
         s32 three = 3;
-        s32 cur = *(vu16 *)&gHovercraftHitFlashTimer;
 
-        if ((three & cur) == 0)
+        if ((three & gHovercraftHitFlashTimer) == 0)
             gHovercraftHitFlashOn ^= 1;
     }
-
     if (gHovercraftHitFlashTimer > 0xb)
         gHovercraftHitFlashTimer = 0;
 
-    {
-        MATCH_HOLD_REG(u8 *, flagAddr, r5) = &gHovercraftHitFlashOn;
-        MATCH_HOLD_REG(u16, white, r4) = 0x7fff;
-        const u16 *src = gHovercraftPalette;
-        vu16 *dst = (vu16 *)(PLTT + 0x20);
-        vu16 *end = dst + 15;
-
-        do {
-            if (*flagAddr != 0)
-                *dst = white;
-            else
-                *dst = *src;
-            src++;
-            dst++;
-        } while ((s32)dst <= (s32)end);
+    src = gHovercraftPalette;
+    dst = (u16 *)(PLTT + 0x20);
+    for (i = 0; i < 16; i++) {
+        if (gHovercraftHitFlashOn != 0)
+            dst[i] = RGB_WHITE;
+        else
+            dst[i] = src[i];
     }
 }
 
-/* SetHovercraftFlashColor's two stores (hovercraft_parts.cpp). */
-static inline void CommitFlashColor(u16 *p, u16 val)
-{
-    p[15] = val;
-    gFlashObjPalette[15] = val;
-}
-
 /* The hovercraft's frame: every 16th frame its palettes' colour 15 goes
- * white, and every 8th back (SetHovercraftFlashColor's body twice), then
- * the hit flash and the state function (gHovercraftStateFuncs, a plain
- * function table).
- *
- * Kept: the colour's r1 pin (the C had two more, and two `MATCH_KEEP`s).
- * The ROM loads the white into r2 and copies it to r1; unpinned, it is
- * loaded into r1 directly, with every spelling tried (the colour a
- * `u16` or an `s32` local, an argument of the inline). */
+ * white, and every 8th back (SetHovercraftFlashColor's body inlined
+ * twice), then the hit flash and the state function
+ * (gHovercraftStateFuncs, a plain function table). */
 void RunHovercraftState(void)
 {
     s32 counter = gHovercraftFrameCount + 1;
     gHovercraftFrameCount = counter;
 
-    if ((counter & 0xf) == 0) {
-        if (gHovercraftFlashColorSaved == 0) {
-            gHovercraftFlashSavedColor = gFlashBgPalette[15];
-            gHovercraftFlashColorSaved = 1;
-        }
-        {
-            u16 *p = gFlashBgPalette;
-            MATCH_HOLD_REG(u16, val, r1) = 0x7FFF;
-
-            CommitFlashColor(p, val);
-        }
-    } else if ((counter & 7) == 0) {
-        if (gHovercraftFlashColorSaved == 0) {
-            gHovercraftFlashSavedColor = gFlashBgPalette[15];
-            gHovercraftFlashColorSaved = 1;
-        }
-        {
-            u16 *p = gFlashBgPalette;
-
-            CommitFlashColor(p, gHovercraftFlashSavedColor);
-        }
-    }
+    if ((counter & 0xf) == 0)
+        ApplyHovercraftFlashColor(1);
+    else if ((counter & 7) == 0)
+        ApplyHovercraftFlashColor(0);
 
     UpdateHovercraftHitFlash();
     gHovercraftStateFuncs[gHovercraftState]();
@@ -730,7 +695,8 @@ void LoadHovercraftGraphics(void)
  * written out step by step in the ROM's order, `d` being a copy of `dst`.
  * In the nibble loop the 0xf mask is an opaque value ANDed with each byte
  * (`m & b`), so gcc copies the mask rather than the byte, as the ROM
- * does, and the second byte gets its own local. */
+ * does, and the second byte gets its own local. ConvertAirshipTiles'
+ * comment has what #662 round 2 tried for the two workarounds. */
 static inline u32 MeterPx(u32 v)
 {
     u32 r = 0;

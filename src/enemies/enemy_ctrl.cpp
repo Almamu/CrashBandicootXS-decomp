@@ -51,7 +51,15 @@ void EnemyCtrl::SetAnimMode(s32 m)
  * and the -0x100 phase bias come out in the ROM's registers only with
  * them (issue #9-#11 NAKED retry, issue #10 retry). The phase bias goes
  * through Wave's parameter to keep the ROM's `phase + 0xFFFFFF00`
- * literal instead of a folded `+ 0x100`. */
+ * literal instead of a folded `+ 0x100`.
+ *
+ * #662 round 2: in UpdateOscillateX, `baseX` read into a local before
+ * the target gives the ROM's registers, but loads it before the target
+ * (agbcp has no scheduling pass to reorder them); reading the target
+ * first gives other registers. The permuter on the C++ reached the ROM
+ * only with `do { } while (0)` wrappers or `x++; x--;` no-ops. Locals
+ * read before UpdateOscillateY's division (target, table, phase,
+ * amplitude, baseY, in any combination) don't give its unused r8. */
 static inline s16 Wave(const s16 *table, s32 t, s32 phase)
 {
     return table[(t - phase) & 0xff];
