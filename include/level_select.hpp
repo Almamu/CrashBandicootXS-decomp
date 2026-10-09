@@ -3,8 +3,8 @@
 
 /* The level select's classes as C++ (#664, docs/cplusplus.md, part 10):
  *
- *   CameraLead          0x80  gCameraLeadVtable       src/menus/level_select.cpp
- *   LaunchPad           0x78  gLaunchPadVtable        src/menus/level_select.cpp
+ *   CameraLead          0x80  gCameraLeadVtable       src/objects/camera_lead.cpp
+ *   LaunchPad           0x78  gLaunchPadVtable        src/objects/launch_pad.cpp
  *   LevelSelect         0xAC                          src/menus/level_select.cpp,
  *                                                     level_select_pages.cpp
  *   LevelSelectPageBg   0x28                          src/menus/level_select_pages.cpp
@@ -29,8 +29,8 @@
  * #754); menus.h has the C names of the methods the vtable data uses, and
  * cxx_symbols.txt maps the methods to them.
  *
- * No `#pragma interface`: g++ emits the vtables, CameraLead's and
- * LaunchPad's in level_select.cpp, LevelSelectEntry's in
+ * No `#pragma interface`: g++ emits the vtables, CameraLead's in
+ * camera_lead.cpp, LaunchPad's in launch_pad.cpp, LevelSelectEntry's in
  * level_select_widgets.cpp (see ctrl.hpp). */
 
 #include "sprite_obj.hpp"

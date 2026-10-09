@@ -294,6 +294,8 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/objects/platform_collide.o \
                   $(C_BUILDDIR)/objects/platform_contact.o \
                   $(C_BUILDDIR)/objects/platform.o \
+                  $(C_BUILDDIR)/objects/camera_lead.o \
+                  $(C_BUILDDIR)/objects/launch_pad.o \
                   $(C_BUILDDIR)/menus/level_select.o \
                   $(C_BUILDDIR)/menus/level_select_pages.o \
                   $(C_BUILDDIR)/menus/level_select_widgets.o \
@@ -417,7 +419,9 @@ NO_IMPLEMENT_INLINES_OBJS := $(C_BUILDDIR)/actor/actor.o \
                              $(C_BUILDDIR)/crates/crate_update.o \
                              $(C_BUILDDIR)/frontend/language_select.o \
                              $(C_BUILDDIR)/menus/level_select.o \
+                             $(C_BUILDDIR)/objects/camera_lead.o \
                              $(C_BUILDDIR)/objects/ground_sprite_collide.o \
+                             $(C_BUILDDIR)/objects/launch_pad.o \
                              $(C_BUILDDIR)/objects/moving_sprite_collide.o \
                              $(C_BUILDDIR)/objects/platform_contact.o \
                              $(C_BUILDDIR)/objects/sprite.o \
