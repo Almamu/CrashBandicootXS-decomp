@@ -13,7 +13,7 @@ extern "C" {
 
 /* CrateList::Collide and CollideWithPlayer (#664, part 7f;
  * include/crate_list.hpp), PartList's Collide and CollideWithPlayer
- * (sprite_anim.cpp) for the grid. An old_agbcp object (OLD_AGBCC_OBJS).
+ * (part_list_cull.cpp) for the grid. An old_agbcp object (OLD_AGBCC_OBJS).
  * The three take the sprites as MovingSprites, as PartList's do (they
  * call HandleEvent, slot 13); the crate list holds crates, which have no
  * slot 13, but nothing calls Collide (below). */
@@ -79,7 +79,7 @@ void CrateList::Collide(struct aabb box, s32 unused, MovingSprite *other)
         CollidePart(this, (MovingSprite *)node->data, &screen, box, other);
 }
 
-/* PartList::CollideWithPlayer's twin (sprite_anim.cpp), the same code:
+/* PartList::CollideWithPlayer's twin (part_list_cull.cpp), the same code:
  * a hit between `part` and the player, against the box Collide passed. */
 void CrateList::CollideWithPlayer(struct aabb box, MovingSprite *part)
 {

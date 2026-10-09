@@ -7,7 +7,7 @@
  *
  *   Entity        0x1C  gEntityVtable        (11 slots) src/objects/entity.cpp
  *   Sprite        0x40  gSpriteObjVtable     (13 slots) src/objects/sprite*.cpp
- *   UiSprite      0x40  gUiSpriteObjVtable              src/objects/sprite_anim.cpp
+ *   UiSprite      0x40  gUiSpriteObjVtable              src/objects/ui_sprite.cpp
  *   MovingSprite  0x78  gMovingSpriteVtable  (15 slots) src/objects/moving_sprite*.cpp
  *   GroundSprite  0x80  gGroundSpriteVtable  (15 slots) src/objects/ground_sprite*.cpp
  *
@@ -25,7 +25,7 @@
  * camera's followed Sprite) and player.h's `struct player` went in #754.
  *
  * No `#pragma interface`: g++ emits the vtables of Sprite (sprite.cpp),
- * UiSprite (sprite_anim.cpp), MovingSprite (moving_sprite_collide.cpp) and
+ * UiSprite (ui_sprite.cpp), MovingSprite (moving_sprite_collide.cpp) and
  * GroundSprite (ground_sprite_collide.cpp), their key-method objects (see
  * ctrl.hpp). */
 
@@ -205,7 +205,7 @@ public:
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(Sprite) == 0x40);
 
 /* A sprite on the HUD or a menu (gUiSpriteObjVtable;
- * src/objects/sprite_anim.cpp): its OBJ priority is its own. */
+ * src/objects/ui_sprite.cpp): its OBJ priority is its own. */
 class UiSprite : public Sprite
 {
 public:
@@ -346,8 +346,7 @@ COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(GroundSprite) == 0x80);
 
 /* A list of sprite objects (the room's part lists, globals.h):
  * Update compacts `items` and fills `visible`, the parts on screen, which
- * Collide walks. Its methods are C++: Update, Collide and CollideWithPlayer
- * in src/objects/sprite_anim.cpp, the rest in part_list.cpp,
+ * Collide walks. Its methods are C++, in src/objects/part_list.cpp,
  * part_list_cull.cpp and part_collide.cpp (part 7c). The items are
  * Sprites: gTouchableList holds pickups, platforms and Tiny's hop pads,
  * gCollidableList and gForegroundList moving sprites and effect parts.

@@ -272,6 +272,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/player/action_ctrl_moves.o \
                   $(C_BUILDDIR)/actor/bg_picture.o \
                   $(C_BUILDDIR)/objects/sprite_anim.o \
+                  $(C_BUILDDIR)/objects/ui_sprite.o \
                   $(C_BUILDDIR)/vehicle/polar/yeti_update.o \
                   $(C_BUILDDIR)/vehicle/polar/yeti_graphics.o \
                   $(C_BUILDDIR)/player/player_collide.o \

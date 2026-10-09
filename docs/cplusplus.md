@@ -975,7 +975,7 @@ ROM's sizes (`CreateEntity` allocates 0x1C bytes, `CreateSpriteObj` 0x40,
 |---|---:|---|---|
 | `Entity` | 0x1C | gEntityVtable (11 slots) | graphics.cpp (objects/entity.cpp since #767) |
 | `Sprite` | 0x40 | gSpriteObjVtable (13) | sprite.cpp, sprite_obj.cpp, sprite_anim.cpp |
-| `UiSprite` | 0x40 | gUiSpriteObjVtable | sprite_anim.cpp |
+| `UiSprite` | 0x40 | gUiSpriteObjVtable | ui_sprite.cpp |
 | `MovingSprite` | 0x78 | gMovingSpriteVtable (15) | moving_sprite.cpp, moving_sprite_collide.cpp, moving_sprite_contact.cpp, moving_sprite_probe.cpp (part 7b) |
 | `GroundSprite` | 0x80 | gGroundSpriteVtable (15) | ground_sprite.cpp, ground_sprite_collide.cpp, ground_sprite_update.cpp (part 7b) |
 

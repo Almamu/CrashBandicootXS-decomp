@@ -78,6 +78,7 @@ SECTIONS
         build/crashbandicootxs/src/objects/sprite.o(.text);
         build/crashbandicootxs/src/objects/sprite_obj.o(.text);
         build/crashbandicootxs/src/objects/sprite_anim.o(.text);
+        build/crashbandicootxs/src/objects/ui_sprite.o(.text);
         build/crashbandicootxs/src/objects/part_list_cull.o(.text);
         build/crashbandicootxs/src/objects/part_collide.o(.text);
         build/crashbandicootxs/src/objects/part_list.o(.text);
@@ -430,7 +431,7 @@ SECTIONS
          * See docs/cplusplus.md, "Emitting the vtables". */
         build/crashbandicootxs/src/objects/entity.o(.gnu.linkonce.d._vt.6Entity); /* gEntityVtable */
         build/crashbandicootxs/src/objects/sprite.o(.gnu.linkonce.d._vt.6Sprite); /* gSpriteObjVtable */
-        build/crashbandicootxs/src/objects/sprite_anim.o(.gnu.linkonce.d._vt.8UiSprite); /* gUiSpriteObjVtable */
+        build/crashbandicootxs/src/objects/ui_sprite.o(.gnu.linkonce.d._vt.8UiSprite); /* gUiSpriteObjVtable */
         build/crashbandicootxs/src/objects/moving_sprite_collide.o(.gnu.linkonce.d._vt.12MovingSprite); /* gMovingSpriteVtable */
         build/crashbandicootxs/src/objects/ground_sprite_collide.o(.gnu.linkonce.d._vt.12GroundSprite); /* gGroundSpriteVtable */
         build/crashbandicootxs/src/player/player_collide.o(.gnu.linkonce.d._vt.6Player); /* gPlayerVtable */
