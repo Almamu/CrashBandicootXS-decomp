@@ -47,7 +47,8 @@ _._17StompedHopPadCtrl DestroyStompedHopPadCtrl
 Update__17StompedHopPadCtrlP12MovingSprite UpdateStompedHopPad
 Update__15OneShotAnimCtrlP12MovingSprite UpdateOneShotAnimCtrl
 #
-# InputCtrl (the motion queue), BossCtrl (src/player/input_ctrl_queue.cpp)
+# InputCtrl (the motion queue, src/player/input_ctrl_queue.cpp), BossCtrl
+# (src/bosses/boss_ctrl.cpp)
 IsMotionXPending__9InputCtrl IsInputCtrlMotionXPending
 QueueMotionYKeepSpeed__9InputCtrlUc QueueInputCtrlMotionYKeepSpeed
 QueueMotionXKeepSpeed__9InputCtrlUc QueueInputCtrlMotionXKeepSpeed

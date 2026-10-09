@@ -24,7 +24,7 @@ extern "C" {
  * room.
  *
  * GitHub issue #22, ROM 0x08017AB0-0x08017ECC, between
- * input_ctrl_queue.cpp and mega_mix.cpp (MegaMixCtrl's other methods).
+ * boss_ctrl.cpp and mega_mix.cpp (MegaMixCtrl's other methods).
  * Built with old_agbcp (Makefile OLD_AGBCC_OBJS), like tiny.cpp
  * and cortex.cpp after it (docs/matching/archive/issue-22-0x08018008-hopper.md).
  *

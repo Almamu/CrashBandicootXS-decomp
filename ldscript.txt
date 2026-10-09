@@ -145,6 +145,7 @@ SECTIONS
         build/crashbandicootxs/src/player/swim_ctrl.o(.text);
         build/crashbandicootxs/src/player/input_ctrl.o(.text);
         build/crashbandicootxs/src/player/input_ctrl_queue.o(.text);
+        build/crashbandicootxs/src/bosses/boss_ctrl.o(.text);
         build/crashbandicootxs/src/bosses/mega_mix_update.o(.text);
         build/crashbandicootxs/src/bosses/mega_mix.o(.text);
         build/crashbandicootxs/src/bosses/tiny.o(.text);
@@ -450,7 +451,7 @@ SECTIONS
         build/crashbandicootxs/src/player/action_ctrl_update.o(.gnu.linkonce.d._vt.10ActionCtrl); /* gActionCtrlVtable */
         build/crashbandicootxs/src/player/swim_ctrl.o(.gnu.linkonce.d._vt.8SwimCtrl); /* gSwimCtrlVtable */
         build/crashbandicootxs/src/player/input_ctrl.o(.gnu.linkonce.d._vt.9InputCtrl); /* gInputCtrlVtable */
-        build/crashbandicootxs/src/player/input_ctrl_queue.o(.gnu.linkonce.d._vt.8BossCtrl); /* gBossCtrlVtable */
+        build/crashbandicootxs/src/bosses/boss_ctrl.o(.gnu.linkonce.d._vt.8BossCtrl); /* gBossCtrlVtable */
         build/crashbandicootxs/src/bosses/mega_mix_update.o(.gnu.linkonce.d._vt.11MegaMixCtrl); /* gMegaMixCtrlVtable */
         build/crashbandicootxs/src/bosses/tiny.o(.gnu.linkonce.d._vt.17StompedHopPadCtrl); /* gStompedHopPadVtable */
         build/crashbandicootxs/src/bosses/tiny.o(.gnu.linkonce.d._vt.15OneShotAnimCtrl); /* gOneShotAnimCtrlVtable */

@@ -12,7 +12,7 @@
 #include "sprite_obj.hpp"
 #include "enemy_ctrl.hpp"
 
-/* The boss controller (gBossCtrlVtable, src/player/input_ctrl_queue.cpp):
+/* The boss controller (gBossCtrlVtable, src/bosses/boss_ctrl.cpp):
  * the base class of the bosses'
  * controllers (Mega Mix, Tiny, Neo Cortex's fight, Dingodile and his
  * shield and rocket/stalactite). Its event handler keeps the event's msg
