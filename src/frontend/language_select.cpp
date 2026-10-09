@@ -18,51 +18,10 @@ extern "C" {
  * result in gLanguage, which picks the gUiText<Lang>/cutscene tables.
  * Sits at the very start of the address range docs/audio.md calls the
  * GAX2 engine, but is game-side code that merely uses PlaySfx.
- * LanguageSelect is in frontend.hpp (#664, part 10b); the file starts
- * with the last of CompanyLogos's and LogoActor's methods
- * (company_logos.cpp). */
-
-/* Loads a "tagged" asset (see LoadTaggedAsset, src/system/asset.cpp)
- * into a freshly allocated buffer, then DMAs it to `dest`. A method of
- * the logo screen (LoadVvLogoGraphics's), which it doesn't use. */
-void CompanyLogos::LoadAssetBuffered(const void *asset, void *dest)
-{
-    u32 val = *(const u32 *)asset;
-    struct dma_regs *dma;
-    u8 *buf;
-
-    val >>= 8;
-    buf = new u8[val];
-    LoadTaggedAsset(asset, buf);
-    dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
-    dma->src = (u32)buf;
-    dma->dst = (u32)dest;
-    val >>= 1;
-    dma->cnt = val | 0x80000000;
-    dma->cnt;
-    delete[] buf;
-}
-
-/* The company-logo screen's constructor and destructor, both empty
- * (ShowCompanyLogos, level_state.cpp, allocates the screen, runs it and
- * deletes it). */
-CompanyLogos::CompanyLogos()
-{
-}
-
-CompanyLogos::~CompanyLogos()
-{
-}
-
-/* The company-logo actor's destructor (slot 1; RunCompanyLogos deletes
- * it): frees the two VRAM tile blocks the constructor allocated. g++ adds
- * ActorSelf's inline destructor (the unlink) and the class's operator
- * delete (mem_free). */
-LogoActor::~LogoActor()
-{
-    FreeVramTileBlock(gLogoActorTiles[0]);
-    FreeVramTileBlock(gLogoActorTiles[1]);
-}
+ * LanguageSelect is in frontend.hpp (#664, part 10b). The last of
+ * CompanyLogos's and LogoActor's methods, before it in the ROM, are in
+ * company_logos_ctor.cpp (here until #770). Built with
+ * -fno-implement-inlines, as it was then. */
 
 /* Runs the widget: resets it, draws/flushes once, then polls input each
  * frame (dispatching newly-pressed keys to Input) until it signals

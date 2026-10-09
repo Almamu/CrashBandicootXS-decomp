@@ -19,11 +19,12 @@ extern "C" {
 /* Tail of GitHub issue #65's chunk (0x080361B0-0x08037110). The
  * company-logo screen's methods (CompanyLogos, #664 part 10b,
  * include/frontend.hpp): Run, the VV logo's graphics and pieces (the
- * first four, at the end of title_screen.cpp until #770) and the VV logo
- * draw and Universal logo BG (split off `title_screen.cpp` at
- * `DrawVvLogoPieces`; its constructor and destructor start
- * language_select.cpp), then the logo actor's (LogoActor: constructor,
- * Update, Draw; its destructor is in language_select.cpp too).
+ * first four, at the end of title_screen.cpp until #770), the VV logo
+ * draw and the Universal logo BG (this file was split off
+ * `title_screen.cpp` at `DrawVvLogoPieces`), then the logo actor's
+ * (LogoActor: constructor, Update, Draw). The screen's constructor and
+ * destructor and the actor's destructor follow in
+ * company_logos_ctor.cpp.
  *
  * old_agbcp (OLD_AGBCC_OBJS), as its C was old_agbcc, with strength
  * reduction: `DrawVvLogoPieces`'s header loop is check_dbra_loop's

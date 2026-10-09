@@ -53,7 +53,8 @@ write-up):
 
 - `src/frontend/language_select.c` - `LoadTaggedAssetBuffered`, `InitCompanyLogos`,
   `DestroyCompanyLogos`, `DestroyLogoActor` (reached only through
-  gLogoActorVtable's slot 1), `RunLanguageSelect`, `LanguageSelectInput`
+  gLogoActorVtable's slot 1; these four in `company_logos_ctor.cpp`
+  since #770), `RunLanguageSelect`, `LanguageSelectInput`
 - `src/frontend/language_select_setup.c` - `LoadLanguageSelectBg`, `LanguageSelectBlink`,
   `CommitLanguageSelectFrame`, `DestroyLanguageSelect`, `InitLanguageSelect`, `CloseLanguageSelect`,
   `OpenLanguageSelect`

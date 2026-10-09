@@ -14,7 +14,7 @@
  * the continue prompt functions (DrawContinuePrompt..RunContinuePrompt,
  * at the start of credits.cpp until #767) are in menus.h, with the rest
  * of the continue prompt. LoadTaggedAssetBuffered
- * (language_select.cpp, CompanyLogos::LoadAssetBuffered) is in system.h,
+ * (company_logos_ctor.cpp, CompanyLogos::LoadAssetBuffered) is in system.h,
  * with LoadTaggedAsset. */
 
 #include "core.h"

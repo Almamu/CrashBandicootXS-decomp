@@ -905,7 +905,7 @@ void LevelState::PlayIntroCutscene()
 
 /* The company logos (CompanyLogos, frontend.hpp; 0x44c bytes): made, run
  * and deleted. The constructor is empty (InitCompanyLogos,
- * language_select.cpp), and g++'s `new` keeps the block in r0 across its
+ * company_logos_ctor.cpp), and g++'s `new` keeps the block in r0 across its
  * call, which the C could only write as an asm `bl` with a pinned r0. */
 void LevelState::ShowCompanyLogos()
 {

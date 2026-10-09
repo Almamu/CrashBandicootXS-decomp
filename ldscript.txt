@@ -279,6 +279,7 @@ SECTIONS
         build/crashbandicootxs/src/frontend/title_screen_init.o(.text);
         build/crashbandicootxs/src/frontend/title_screen.o(.text);
         build/crashbandicootxs/src/frontend/company_logos.o(.text);
+        build/crashbandicootxs/src/frontend/company_logos_ctor.o(.text);
         build/crashbandicootxs/src/frontend/language_select.o(.text);
         build/crashbandicootxs/src/frontend/language_select_setup.o(.text);
         build/crashbandicootxs/lib/libgcc/_divdi3.o(.text);
@@ -513,7 +514,7 @@ SECTIONS
         build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.18HovercraftLauncher); /* gHovercraftLauncherVtable */
         build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.17HovercraftSideGun); /* gHovercraftSideGunVtable */
         build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.21HovercraftCannonFlash); /* gHovercraftCannonFlashVtable */
-        build/crashbandicootxs/src/frontend/language_select.o(.gnu.linkonce.d._vt.9LogoActor); /* gLogoActorVtable */
+        build/crashbandicootxs/src/frontend/company_logos_ctor.o(.gnu.linkonce.d._vt.9LogoActor); /* gLogoActorVtable */
 
 	} = 0
 

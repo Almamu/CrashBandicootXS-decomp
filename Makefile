@@ -431,6 +431,7 @@ NO_IMPLEMENT_INLINES_OBJS := $(C_BUILDDIR)/actor/actor.o \
                              $(C_BUILDDIR)/actor/actor_anim.o \
                              $(C_BUILDDIR)/bosses/dingodile.o \
                              $(C_BUILDDIR)/crates/crate_update.o \
+                             $(C_BUILDDIR)/frontend/company_logos_ctor.o \
                              $(C_BUILDDIR)/frontend/language_select.o \
                              $(C_BUILDDIR)/menus/level_select.o \
                              $(C_BUILDDIR)/objects/camera_lead.o \

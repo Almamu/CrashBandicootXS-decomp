@@ -340,7 +340,8 @@ this plan depends on splitting them.
   prompt's draw/run.~~ **Done (#767):** moved to the end of
   `menus/continue_prompt.cpp`.
 - `frontend/language_select.c` (`counter_selector.c`): starts with
-  `LoadTaggedAssetBuffered` and the company-logo destructors.
+  `LoadTaggedAssetBuffered` and the company-logo destructors. **Done**
+  (#770): `frontend/company_logos_ctor.cpp`.
 - `actor/actor_anim.c` and `util/aabb_setup.c`: the ROM-tail grab bags
   after libgcc.
 
