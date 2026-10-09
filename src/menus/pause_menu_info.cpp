@@ -32,7 +32,7 @@ void PauseMenu::InitInfo()
     }
 
     {
-        s32 count = FormatDecimal(GetCompletionPercent(progress), percentText);
+        s32 count = FormatDecimal(progress->GetCompletionPercent(), percentText);
         percentText[count] = '%';
         percentText[count + 1] = 0;
     }

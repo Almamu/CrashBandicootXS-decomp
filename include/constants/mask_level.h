@@ -6,7 +6,7 @@
  * player has (SetMaskLevel, RaiseMaskLevel). A hit with a mask takes one
  * away (PlayerHandleEvent); the third makes the player invincible: it
  * plays SONG_DRUMS (SetMaskLevel, PlayRoomMusic) and hits do nothing.
- * Packed into two bits of the save stats (game_progress.maskLevel,
+ * Packed into two bits of the save stats (GameProgress::maskLevel,
  * level_state.h).
  */
 

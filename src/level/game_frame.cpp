@@ -84,7 +84,7 @@ void LevelState::UpdateGameFrame()
         dma->cnt = 0x81000034;
         dma->cnt;
     }
-    MemCopy32(&saveData, &progress, sizeof(struct game_progress));
+    MemCopy32(&saveData, &progress, sizeof(GameProgress));
     gGameFrameLevelState = this;
     maskLevel = MASK_LEVEL_NONE;
     {
@@ -119,8 +119,8 @@ void LevelState::UpdateGameFrame()
                 room.level = level;
             }
             quit = RunLevelSelect(&room.level);
-            MemCopy32(&progress, &saveData, sizeof(struct game_progress));
-            MemCopy32(&checkpointData, &progress, sizeof(struct game_progress));
+            MemCopy32(&progress, &saveData, sizeof(GameProgress));
+            MemCopy32(&checkpointData, &progress, sizeof(GameProgress));
             if (quit) {
                 OpenSaveMenu();
                 quit = RunSaveMenu(0, 0);
@@ -289,7 +289,7 @@ void LevelState::UpdateGameFrame()
                     GiveTurboRun();
                     ShowTurboRunDialog();
                 }
-                if (GetCompletionPercent(&progress) > 99) {
+                if (progress.GetCompletionPercent() > 99) {
                     PlayCutscene(8);
                     room.level++;
                     room.roomIndex = 0;
@@ -316,7 +316,7 @@ void LevelState::UpdateGameFrame()
                         0)
                     ((union level_record *)GetCurrentLevelFlags())->w.time = t;
             }
-            MemCopy32(&saveData, &progress, sizeof(struct game_progress));
+            MemCopy32(&saveData, &progress, sizeof(GameProgress));
         }
     }
 }

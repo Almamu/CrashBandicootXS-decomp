@@ -36,6 +36,7 @@
 #include "player.hpp"
 #include "font.hpp"
 #include "graphics_package.hpp"
+#include "game_progress.hpp"
 
 extern "C" {
 #include "core.h"
@@ -346,7 +347,7 @@ public:
     s32 trialIconY;               // 0x90 - sprite 5's (time-trial icons)
     s32 trialIcon2Y;              // 0x94 - sprite 6's
     s32 rank;                     // 0x98 - LoadRecord's classification, 5 = none
-    struct game_progress *save;   // 0x9C - PackSaveData's save block
+    GameProgress *save;           // 0x9C - PackSaveData's save block
     union blend blend;            // 0xA0 - REG_BLDCNT + REG_BLDALPHA
     struct bldy bldy;             // 0xA4 - REG_BLDY
     union dispcnt dispcnt;        // 0xA8 - REG_DISPCNT (gfx.h)

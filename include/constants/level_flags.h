@@ -2,7 +2,7 @@
 #define GUARD_CONSTANTS_LEVEL_FLAGS_H
 
 /*
- * The bits of a level's progress word, `game_progress.levels[level]`
+ * The bits of a level's progress word, `GameProgress::levels[level]`
  * (`union level_record`, level_state.h; GetLevelFlags/GetCurrentLevelFlags
  * return its address in `level_state.progress`, and the menus read the
  * words of the block PackSaveData returns).
@@ -25,7 +25,7 @@
  *   with the level's gLevelTable times.
  *
  * CountGems/CountClearGems count bits 1 and 2 (the clear gems); the
- * four colored gems are bits 0-3 of `game_progress.flags` instead.
+ * four colored gems are bits 0-3 of `GameProgress::flags` instead.
  */
 
 #define LEVEL_FLAG_CRYSTAL (1 << 0)

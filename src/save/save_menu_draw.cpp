@@ -473,11 +473,11 @@ void SaveMenu::RefreshSlotSummaries(SaveData *handle)
     do {
         if (!handle->IsSlotEmpty(i)) {
             handle->ReadSlot(i, &buf);
-            row->gems = CountClearGems(&buf.progress);
-            row->relics = CountRelics(&buf.progress);
-            row->lives = GetProgressLives(&buf.progress);
-            row->crystals = CountCrystals(&buf.progress);
-            row->percent = GetCompletionPercent(&buf.progress);
+            row->gems = buf.progress.CountClearGems();
+            row->relics = buf.progress.CountRelics();
+            row->lives = buf.progress.GetLives();
+            row->crystals = buf.progress.CountCrystals();
+            row->percent = buf.progress.GetCompletionPercent();
         }
         row++;
         i++;
@@ -496,13 +496,13 @@ void SaveMenu::LoadData()
 /* Fills `dest` from `src` using the same five-function battery as the
  * loop in RefreshSlotSummaries above - `this` is passed but never used,
  * matching the ROM exactly. */
-void SaveMenu::SummarizeProgress(struct settings_row_stats *dest, const struct game_progress *src)
+void SaveMenu::SummarizeProgress(struct settings_row_stats *dest, const GameProgress *src)
 {
-    dest->gems = CountClearGems(src);
-    dest->relics = CountRelics(src);
-    dest->lives = GetProgressLives(src);
-    dest->crystals = CountCrystals(src);
-    dest->percent = GetCompletionPercent(src);
+    dest->gems = src->CountClearGems();
+    dest->relics = src->CountRelics();
+    dest->lives = src->GetLives();
+    dest->crystals = src->CountCrystals();
+    dest->percent = src->GetCompletionPercent();
 }
 
 /* The next two (ROM 0x08004914-0x08004A50) were NAKED transcriptions

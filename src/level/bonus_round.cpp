@@ -120,7 +120,7 @@ void LevelState::SetCheckpointAtPlayer(u8 arg1)
         room.checkpointCrateCount = GetCrateCount();
 
         room.checkpointSwitchPressed = switchPressed;
-        MemCopy32(&checkpointData, &progress, sizeof(struct game_progress));
+        MemCopy32(&checkpointData, &progress, sizeof(GameProgress));
     } else {
         Player *player = gPlayer;
         s32 x = player->x;
@@ -152,6 +152,6 @@ void LevelState::SetCheckpointAtPlayer(u8 arg1)
         CopyBitmapSpan(flags->bits0Copy, flags->bits0);
         CopyBitmapSpan(flags->bits1Copy, flags->bits1);
 
-        MemCopy32(&checkpointData, &progress, sizeof(struct game_progress));
+        MemCopy32(&checkpointData, &progress, sizeof(GameProgress));
     }
 }
