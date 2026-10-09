@@ -61,7 +61,14 @@ s32 DrawWrappedText(u8 *text, Font *self, struct aabb *box, s32 limit, s32 mode)
         len = GetWordLength(text);
         /* Emits nothing; the extra reference raises `len`'s allocation
          * priority so it gets r7 ahead of `self` (r8) and `charWidth`
-         * (r9), as in the ROM. */
+         * (r9), as in the ROM. #662 round 3: global-alloc's priority is
+         * floor_log2(refs) * refs / live length; plain, `len` has 14
+         * refs over 93 insns (3 * 14 / 93 = 0.45) against `self`'s 17
+         * over 136 (4 * 17 / 136 = 0.50), and the asm's operand makes it
+         * 16 (4 * 16 / 94 = 0.68). The ROM needs two more `len` refs or
+         * two fewer `self` refs, which no spelling of the loop tried
+         * (a `self` copy for the /b handler, GetX/GetY into locals,
+         * `text += len`, local reorderings, -fno-* flags, agbcp) gives. */
         MATCH_USE(len);
         token = text;
         text = token + len;
@@ -95,7 +102,19 @@ s32 DrawWrappedText(u8 *text, Font *self, struct aabb *box, s32 limit, s32 mode)
                      * #662 round 2: `++lineCount >= limit`, `limit <=
                      * lineCount`, moving the setup stores and the
                      * permuter (best C wraps every `*token` read in an
-                     * inline function) don't replace it. */
+                     * inline function) don't replace it.
+                     * #662 round 3: it is reload's spill-register
+                     * rotation. lineCount and limit are spilled, and
+                     * reload hands out r0-r3 round-robin: plain, the
+                     * increment gets r1 and the limit r2; with r1 live
+                     * the rotation starts one register on (r2, then r0
+                     * with r3 busy), the ROM's. Without the hold the
+                     * rest of the function also moves (the setup
+                     * SetPos's &posY spill); under -fno-rerun-loop-opt
+                     * only these two reloads differ, and no spelling of
+                     * the wrap (`++lineCount`, `limit <= lineCount`, the
+                     * draw nested in `if (lineCount < limit)`, an inline
+                     * `*token` read, local orders) moves the rotation. */
                     MATCH_HOLD_REG(s32, hold, r1);
                     MATCH_HOLD(hold);
                     lineCount++;

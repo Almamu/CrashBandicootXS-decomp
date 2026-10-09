@@ -47,7 +47,18 @@ extern "C" {
  * `!(REG_SIOCNT & 8)`/`!(REG_SIOCNT & 4)`-style bool expressions and as a
  * volatile SioMultiCnt bitfield struct). Matches under both compilers. As
  * C++, the ready test is written `(v & 1) == 0`: g++'s `!(v & 1)` is a
- * bool negation, which combine turns into an eor/and pair. */
+ * bool negation, which combine turns into an eor/and pair.
+ * #662 round 3 (RTL dumps): without MATCH_KEEP(one1), cse1 already puts
+ * the eor/and on `one`'s pseudo and cse2 (the rerun after loop) then
+ * canonicalizes every 1 to the first one, so one register is left. The
+ * ROM has two registers holding 1, both set before the ready test and
+ * one used only after it, so its second 1 was a value cse did not know
+ * to be constant. Without MATCH_KEEP(arm3), combine rewrites
+ * `(x ^ c) & c` as a bic. Tried: `arm3` as s32/u8/bool from
+ * `!(REG_SIOCNT & 4)`, `!((REG_SIOCNT >> 2) & 1)`, `((REG_SIOCNT >> 2) ^ 1)
+ * & 1` (one or two statements) and `== 0` forms; no flag of the brief's
+ * list (-fno-gcse ... -fno-function-cse, -fno-regmove, -fno-force-mem)
+ * matches the object without the keeps. */
 s32 LinkSession::Update()
 {
     s32 arm3;
@@ -360,7 +371,12 @@ void LinkSession::HandleSerial(u16 *data)
                 n = p->id[1] >> 4;
                 /* Extra reference (no code): raises `n`'s priority so it
                  * gets its own register (r7) instead of reusing the
-                 * id-byte one. */
+                 * id-byte one. #662 round 3: unreferenced, global-alloc
+                 * gives `n` the register of the `p->id[1]` byte it is
+                 * shifted from (r8, which dies there) and copies it to
+                 * low registers at each use. Tried: `n` as u8/u32, from
+                 * the nibble bitfield, declared first, block-local
+                 * around the push, and totalReceived before the push. */
                 MATCH_USE(n);
                 p->ring.Push(&p->id[2], n);
                 p->totalReceived += n;
@@ -411,7 +427,14 @@ void LinkSession::HandleSerial(u16 *data)
             }
             rf = ring;
             /* A distinct copy of the ring pointer (no code), taken here
-             * like the ROM's `adds r4, r7, #0`. */
+             * like the ROM's `adds r4, r7, #0`. #662 round 3: a plain
+             * copy is propagated away by cse1, and the fast loop's
+             * addresses are then built from `ring` itself; the ROM's
+             * copy is a value cse did not see as equal to `ring` (its
+             * fast loop recomputes `&readPos` beside `rd`). Tried: the
+             * pop with `ring` passed twice, one-pointer inline pops
+             * (bounds via `r->readPos` or `rd`) and a LinkRing::Pop
+             * member on `ring`/`this->ring`. */
             MATCH_KEEP(rf);
             n = *cnt;
             LIMIT_MAX(n, 4);

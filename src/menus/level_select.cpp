@@ -80,7 +80,16 @@ void CameraLead::Reset()
      * one constant between the two, with every spelling of the test and
      * the toggle tried (u8/s32/bool tests, a switch, `^ 1`, `== 0`; in
      * round 2 also IsHidden-style inline helpers returning s32 or bool,
-     * the bitfield test and `blink = 1`). */
+     * the bitfield test and `blink = 1`).
+     * #662 round 3, from the -da dumps: the toggle's 1 is a QImode
+     * pseudo of its own (the bitfield store), so nothing shares it; the
+     * test's 1 dies at the `and`, and regmove/reload then build the
+     * `and` in its register (`movs r0, #1; ands r0, r1`). The ROM's
+     * `adds r0, r2, #0; ands r0, r1` is the `and` built in a copy of `v`,
+     * which reload only does when the 1 is still live after it. A literal
+     * 1 is folded into `(v ^ 1) & 1` and shared with the toggle; u8, u16,
+     * s8, s16 and bool for `one` or `v`, a `hidden = v & 1` local and the
+     * flag sweep (-fno-regmove included) don't give the copy. */
     MATCH_HOLD_REG(u32, one, r1) = 1;
 
     if (!(v & one))
@@ -720,7 +729,12 @@ loop:
          * copy, so the (code-free) asm keeps `k` a separate value.
          * #662 round 2: a copy in the else arm, a held_pressed_pair copy
          * and inline helpers taking the keys by value (a register-sized
-         * struct goes to the stack) don't reproduce it. */
+         * struct goes to the stack) don't reproduce it.
+         * #662 round 3, from the -da dumps: cse1 replaces the copy by
+         * `keys` in the 0x20 test and deletes it (gcse and cse2 never
+         * see it); the ROM's copy survived every pass, so it can't have
+         * been a pseudo-to-pseudo copy cse could see through. No flag of
+         * the family list keeps it without changing other functions. */
         else if (({
                      u32 hit = keys.half.pressed & DPAD_DOWN;
 

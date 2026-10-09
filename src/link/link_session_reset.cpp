@@ -38,6 +38,11 @@ extern "C" {
  * - The nibble address is `self + t` with `t = i * 0xc8` in a local, so
  *   the add is built as (plus self t): the ROM's `adds r0, r5, r2`.
  *   `&self->players[i]` expands to (plus (mult i 200) self) instead.
+ *   The address goes into its own pointer `nb` before the decrement
+ *   (#662 round 3): that pseudo gives the pointer r4 and the base ip, as
+ *   in the ROM; decremented through the cast expression, the two tied in
+ *   global-alloc priority and a MATCH_BARRIER() of insn padding broke
+ *   the tie.
  * - `magic` holds 0x1234 in a function-scope local. Its set is then
  *   outside the loop, so its pseudo lives across the whole loop, loses
  *   global allocation and is rematerialized at each use by reload
@@ -47,14 +52,19 @@ extern "C" {
  *   in the tail.
  * - The tail stores handshakeWord into sendWord and reads it back through a
  *   plain `u16 *` into `v`.
- * The asm statements emit no code:
- * - 13 references on `id` lift its global-alloc priority (15 refs over
- *   41 insns) just above `self`'s (34 over 151), so `id` gets r4 and
- *   `self` r5 as in the ROM.
- * - The MATCH_BARRIER() after the nibble decrement lengthens `self + i *
- *   0xc8`'s life by one insn; that breaks its priority tie with the
- *   nibble pointer, so the pointer gets r4 and the base ip, as in the
- *   ROM.
+ * The asm statements emit no code: 13 references on `id` lift its
+ * global-alloc priority (15 refs over 41 insns) just above `self`'s (34
+ * over 151), so `id` gets r4 and `self` r5 as in the ROM.
+ * #662 round 3 diagnosis: global-alloc decides it. Unpinned, `id` has 3
+ * (loop-weighted) refs over 29 insns against `self`'s 34 over 140, so
+ * `self` is allocated first and takes r4, the inner counter r5 and `id`
+ * r8; fewer than 13 uses still leave `self` ahead. No flag of the
+ * family list (-fno-gcse ... -fno-regmove), agbcp instead of old_agbcp,
+ * an `id` read as `this->id` at the call and the copy, `id` declared at
+ * the top, or an inline CopyPacket (bytes or packed halfwords) for the
+ * inner copy changes the order; the ROM's `id` is referenced only at the
+ * call and the copy into the inner loop's spilled source, so nothing
+ * natural raises its priority that far.
  * #662 round 2: the copy loops are halfword copies through a packed
  * `struct { u16 v; }` (that reproduces their ldrb/orr/and/strb exactly,
  * the same as the explicit `lo = w & 0xff`), and written naturally that
@@ -129,12 +139,11 @@ s32 LinkSession::ResetState()
         }
         {
             s32 t = i * 0xc8;
+            struct nibble_pair *nb = (struct nibble_pair *)((u8 *)this + t + 0xd1);
 
             /* players[i].id[1]'s low nibble */
-            ((struct nibble_pair *)((u8 *)this + t + 0xd1))->lo--;
+            nb->lo--;
         }
-        /* No code: one insn of padding (see above). */
-        MATCH_BARRIER();
         players[i].totalReceived = 0;
         players[i].rxCount = 0;
         players[i].prevHash = (players[i].hash = magic);

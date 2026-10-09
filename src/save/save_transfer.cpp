@@ -56,7 +56,19 @@ void SaveTransfer::SendChunk()
  * inline LinkRing pop (SendChunk's LinkRing::Push in reverse, with the
  * wrap loop's `next = 0; if (old != 0x7f) ...`), both loops come out as
  * the ROM's, but gcc computes `playerIndex * 0xc8 + s` once and reuses
- * it for the ring pointer, where the ROM multiplies twice. */
+ * it for the ring pointer, where the ROM multiplies twice.
+ * #662 round 3: it is cse1 that merges the two products (the -da dumps
+ * have both `mult`s up to the cse pass), in every spelling tried: the
+ * ring or player pointer taken first, a `LinkPlayer *`/reference local,
+ * `players + playerIndex`, a byte offset, a count pointer, an early
+ * `return` or the empty case first, with -fno-cse-follow-jumps/
+ * -fno-cse-skip-blocks/-fno-gcse and the other per-object flags, and
+ * under agbcp. The ROM's second `muls r2, r1` into the 0xc8 register
+ * says cse never saw the first product with the second one, and its
+ * reuse of r2 is reload_cse's; the natural code also builds the
+ * addresses as `(i * 0xc8 + 0xd0) + s` (g++'s pointer arithmetic for
+ * `&players[i]`) where the ROM adds `s` first, as the cast through a
+ * moved `LinkSession *` here does. */
 void SaveTransfer::ReceiveChunk(s32 playerIndex)
 {
     LinkSession *s = gLinkSession;
