@@ -364,7 +364,13 @@ void LinkSession::HandleSerial(u16 *data)
                  * totalReceived, prevHash and rxSeq updates in either
                  * order): 42 lines off; `(p->id[1] >> 4) & 0xf` gives
                  * `n` r7 (28 off) but with an `ands` the ROM doesn't
-                 * have. */
+                 * have. Round 9 (the header's types and LinkRing::Push's
+                 * forms, 2110 variants with save_transfer.o's chunk
+                 * functions): Push's test as `writePos + n < 0x80` gives
+                 * `n` r7, but the ROM has the `0x80 - n` compare (as in
+                 * Pop) and SendChunk changes; Push's parameter and
+                 * counter types, its loop forms and the ring members'
+                 * types leave `n` in r8. */
                 MATCH_USE(n);
                 p->ring.Push(&p->id[2], n);
                 p->totalReceived += n;
@@ -445,7 +451,18 @@ void LinkSession::HandleSerial(u16 *data)
              * copy in place (32 lines), but then `&this->ring` is a PRE
              * insertion after the loop setup instead of the second of
              * the address locals, and that helper (session id, count and
-             * destination pointers as parameters) is no natural code. */
+             * destination pointers as parameters) is no natural code.
+             * #662 round 9 (the ring's member types, Pop's parameter,
+             * test and loop forms, Count()/Count(max) accessors and the
+             * address locals, about 8000 variants with save_transfer.o's
+             * chunk functions): the nearest is the plain `n =
+             * this->ring.count; ... this->ring.Pop(&this->id[2], n);`
+             * with none of the address locals, 26 lines off. Only the
+             * order of the hoisted addresses differs (the ROM has
+             * `&this->ring` first, then `&ring.count`, `&id[2]`,
+             * `&ring.readPos`) and the inline's copy of `this`, which the
+             * ROM has before the count read and the call puts after the
+             * clamp. */
             MATCH_KEEP(rf);
             n = *cnt;
             LIMIT_MAX(n, 4);

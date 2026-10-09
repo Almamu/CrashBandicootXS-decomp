@@ -1809,6 +1809,46 @@ deciding contest:
   gcse shows both occurrences anticipatable and available), so the kill
   the comment looked for isn't one.
 
+**Round 9, link/, Credits::LoadLogos and DingodileShieldCtrl::Update
+(types beyond the function).** 4 functions -> 3
+(`DingodileShieldCtrl::Update` free):
+
+- **A half-set struct local is a register pair live from the entry.**
+  DingodileShieldCtrl::Update builds its BLDCNT/BLDALPHA word in a
+  `struct blend_regs` (gBlendRegs' type: the word and the BLDY byte),
+  with no hold, pin or MATCH_CONST. The 8-byte struct is one DImode
+  pseudo; only its first word is ever set, so the pair is live from the
+  function's entry and crosses every call (lreg: "crosses 6 calls; 8
+  bytes"). global-alloc gives it r5:r6, which is all three of the ROM's
+  oddities: r6 saved and never used, `this` pushed to r7, and the `orrs`
+  chain in r5 (the start value is a subreg set of the pair, which
+  combine doesn't fold into the ORs). Rounds 2-8 had tried the
+  accumulator as every integer type, a u64 (set before the builders, so
+  spilled), a `union blend` and at function scope. When the ROM saves a
+  register it never uses next to one that holds a block-local value,
+  try the value as a word of a two-word struct local.
+- **Kept, with sweeps that found nothing** (a multi-file enumerator: the
+  header members' same-size types, signatures and helper forms, each
+  variant scored over the object's other functions and the header's
+  other users, here save_transfer.o's Send/ReceiveChunk):
+  LinkSession::ResetState without the `id` references (33 member and
+  global types two at a time, 1257 variants plus a beam: 122 lines at
+  best, from LinkPlayer::hash as `s16`, against 140), HandleSerial's `n`
+  (Push's parameter, counter and loop forms, the ring members' types,
+  `n`'s type and spelling: 2110 variants; `writePos + n < 0x80` in Push
+  gives `n` r7 and is 10 lines off, but the ROM has the `0x80 - n`
+  compare and SendChunk moves by 30), HandleSerial's `rf` (about 8000
+  variants: the ring's member types, Pop's parameter, test and loop
+  forms, count accessors, the address locals; the nearest, 26 lines, is
+  the plain `n = this->ring.count; ... this->ring.Pop(&this->id[2], n)`
+  with no address locals: only the hoisted addresses' order and the
+  inline's copy of `this`, after the clamp instead of before the count
+  read, differ) and LoadLogos' palette address
+  (CreditsLogo's and the logo record's field types, ClaimSlot's
+  parameter and return types, PaletteCache::slots as `u16[16][16]`,
+  `slot`'s and `i`'s types, seven address spellings and the copy loop:
+  56 lines at best, against 72; PRE still hoists the shift).
+
 ## Survey and conversion record (#576)
 
 The conversion is complete. `tools/match_idioms.py` after part 4

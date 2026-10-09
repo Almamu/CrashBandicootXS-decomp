@@ -377,7 +377,16 @@ struct popup_glyph_src {
  * over slot's type (s32/u32/int/u8/u16/s16), palSlots' type, the
  * address and copy-loop forms and the order of the last three
  * statements: the plain form is 39 instructions off, the nearest 31 (an
- * s16 slot with `logo->palette = slot++`). */
+ * s16 slot with `logo->palette = slot++`).
+ * #662 round 9, the types beyond the function: CreditsLogo's fields and
+ * this record's `w`/`h` as u32, ClaimSlot's parameter (every integer
+ * type) and return (u8, bool, void), PaletteCache::slots as
+ * `u16[16][16]`, palSlots as a byte or halfword pointer, with slot's
+ * and i's types, seven spellings of the address, the copy loop's form
+ * and the order of the last three statements, up to three at a time and
+ * a beam search: the nearest (a `u8` slot and `ClaimSlot(u8)`, 56 lines
+ * off against 72 for the plain form) still computes the shift ahead of
+ * the tile loops. */
 void Credits::LoadLogos()
 {
     u8 (*palSlots)[TILE_SIZE_4BPP] = gPaletteCache->slots;
