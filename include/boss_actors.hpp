@@ -56,27 +56,7 @@ public:
 COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(AirshipFireball) == 0x6C);
 COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(AirshipFireball) == 0x6C);
 
-/* The airship itself (src/vehicle/jetpack/airship*.cpp) is no class of its own: a
- * bare AnimPart (gAirship, `new AnimPart` in CreateAirship) for its
- * picture's animation, and globals for the rest (gAirshipState,
- * gAirshipX, ...), stepped by UpdateAirship through the plain function
- * table gAirshipStateFuncs. Its functions keep their C names.
- *
- * SetAirshipState: state `st` and animation `idx`, keeping the current
- * frame unless it is past the new animation's end. */
-static inline void SetAirshipState(s32 st, s32 idx)
-{
-    AnimPart *a;
-
-    gAirshipState = st;
-    gAirshipStateTimer = 0;
-    a = gAirship;
-    a->animIndex = idx;
-    a->animTimer = a->anims[idx].duration;
-    a->animDone = 0;
-    if (a->GetAnimFrameBaseOffset() >= a->anims[a->animIndex].loopThreshold)
-        a->animTime = 0;
-}
+/* The airship itself is the all-static class Airship (airship.hpp, #772). */
 
 /* The hovercraft's weapons (#664 part 11h, src/bosses/hovercraft*.cpp).
  * The hovercraft itself is the all-static class Hovercraft

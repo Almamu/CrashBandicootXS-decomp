@@ -1,6 +1,7 @@
 #include "hud.hpp"
 #include "level_state.hpp"
 #include "actor_self.hpp"
+#include "airship.hpp"
 
 extern "C" {
 #include "core.h"
@@ -400,7 +401,7 @@ void Hud::UpdatePercentCounters()
 
     if (gLevelState->GetBossIndex() != BOSS_NONE)
         return;
-    if ((airshipHpPercent = GetAirshipHpPercent()) == -1)
+    if ((airshipHpPercent = Airship::GetHpPercent()) == -1)
         return;
 
     SetPartPos(gHudPartPositions[29].x, gHudPartPositions[29].y, (part = &parts[29]));

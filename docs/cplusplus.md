@@ -756,6 +756,8 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/bosses/hovercraft_cannon.cpp`, `hovercraft_launcher.cpp`, `hovercraft_side_gun.cpp`, `hovercraft_cannon_flash.cpp`, `src/level/level_state.cpp`, `src/vehicle/jetpack/jetpack_spawn.cpp` | the callers: `Hovercraft::GetX()` & co., `Hovercraft::Spawn(...)` | 0 | (unchanged) | 0 -> 0 | [#772](#the-hovercraft-as-an-all-static-class-772) |
 | `src/vehicle/polar/yeti.cpp`, `yeti_graphics.cpp`, `yeti_states.cpp`, `yeti_update.cpp`, `src/vehicle/jetpack/jetpack_spawn.cpp`, `src/data/actor_state_fn_17a840.cpp` (was .c) | `Yeti` (new include/yeti.hpp), an all-static class: its 8 IWRAM globals and 7 ROM tables are static data members (`anim` is gYeti, `x` gYetiX, `stateFuncs` gYetiStateFuncs, ...), its 13 functions static member functions (`Create`, `Update`, `UpdateBg2`, `Destroy`, `LoadGraphics`, `Stop`, `IsTouching`, the four states incl. jetpack_spawn.cpp's `StateStop`, `UpdatePalette`, `BuildBg2Map`); vehicle.h's 13 prototypes and 15 externs go (5 C-only prototypes stay for the category table) | 13 | (unchanged) | 0 -> 0 | [#772](#the-yeti-as-an-all-static-class-772) |
 | `src/vehicle/polar/polar_player.cpp`, `polar_player_states.cpp`, `polar_crate.cpp`, `polar_crates.cpp`, `polar_objects.cpp`, `polar_course_objects.cpp` | the callers: `Yeti::Stop()`, `Yeti::IsTouching(this)` | 0 | (unchanged) | 0 -> 0 | [#772](#the-yeti-as-an-all-static-class-772) |
+| `src/vehicle/jetpack/airship.cpp`, `airship_states.cpp`, `airship_graphics.cpp`, `airship_map.cpp`, `airship_touch.cpp`, `src/data/actor_state_17c3fc.cpp` (was .c) | `Airship` (new include/airship.hpp), an all-static class: its 25 IWRAM globals are static data members (`x` is gAirshipX, `anim` gAirship, ...), its 21 functions static member functions (`Create`, `Spawn`, `Update`, `UpdateBg2`, `LoadGraphics`, `Destroy`, `Damage`, `IsTouching`, `GetHpPercent`, `Steer`, `DrawMap`, `ConvertTiles`, the six states, ...), gAirshipStateFuncs is `Airship::stateFuncs` and the six tables only it reads (gAirshipAttacks, gAirshipBox, ...) are static data members too; boss_actors.hpp's inline SetAirshipState is the private inline member `SetState`; bosses.h's 20 prototypes are down to 5 C-only ones (the category table's), its 32 externs and vehicle.h's nullsub_30 go | 21 | (unchanged) | 0 -> 0 | [#772](#the-airship-as-an-all-static-class-772) |
+| `src/vehicle/jetpack/jetpack_shot.cpp`, `jetpack_spawn.cpp`, `src/hud/hud_counters.cpp` | the callers: `Airship::IsTouching(this)`, `Airship::Damage(2)`, `Airship::Spawn(...)`, `Airship::GetHpPercent()` | 0 | (unchanged) | 0 -> 0 | [#772](#the-airship-as-an-all-static-class-772) |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -2476,7 +2478,8 @@ operand, the height re-read; both tried without, and both still needed).
   table, which C++ calls directly (`gAirshipStateFuncs[gAirshipState]()`,
   the ROM's `bl _call_via_r0`). The functions keep C linkage: their C
   prototypes in bosses.h are what the table, the jetpack files and the
-  category vtables use.
+  category vtables use. (#772 made it the all-static class `Airship`:
+  [The airship as an all-static class](#the-airship-as-an-all-static-class-772).)
 - **One state change for the airship**, `SetAirshipState(st, idx)` in
   boss_actors.hpp: the state and its timer, then animation `idx` with the
   frame kept unless it is past the new animation's end. Five copies of
@@ -4405,6 +4408,56 @@ data objects included.
   (LoadGraphics's inlined copy of the map loop) stays a file-local helper,
   and gYetiRleFrames (the frames' pixels, rle_sprites_0c2758.c) a C
   global that only frame_table_17a880.c names.
+
+### The airship as an all-static class (#772)
+
+The airship ([part 11i](#the-airship-part-11i) left it a bare AnimPart,
+globals and plain functions with C linkage) is `Airship`
+(include/airship.hpp), all-static for the same reason as
+[the hovercraft](#the-hovercraft-as-an-all-static-class-772), and done the
+same way except for the ROM tables (below); every object is
+byte-identical.
+
+- **Data.** The 25 IWRAM variables (0x1520-0x1580) are static data
+  members, only declared; cxx_symbols.txt's `#772 Airship` block maps
+  `_7Airship.x` to gAirshipX and so on. Members drop the prefix (`x`,
+  `velZ`, `anim` for gAirship, `stateFuncs` for gAirshipStateFuncs);
+  where a parameter or local had a member's name it was renamed
+  (`Spawn`'s `sx`/`sy`/`sz`, `Create`'s `lvl`, StateApproach's `vx`/`vy`,
+  StateExplode's `bx`/`by`, GetHpPercent's `left`). A bare `x` in Spawn's
+  body would be the parameter, not gAirshipX: the first try kept the
+  parameter names and qualified only the stores (`Airship::x = x * 5`),
+  and SpawnAirship came out with different registers because the zoom
+  then read the parameters.
+- **Functions.** All 21 are static member functions under their C names
+  (`Update__7Airship UpdateAirship`, ...). Public: the category table's
+  five (`Create`, `Update`, `UpdateBg2`, `Destroy`, `LoadGraphics`),
+  `Spawn` (jetpack_spawn.cpp), `Damage` and `IsTouching` (JetpackShot) and
+  `GetHpPercent` (the HUD). The states, `Steer`, `DrawMap`,
+  `ConvertTiles`, `UpdateFlashColor`, `AnimatePalette` and the UNUSED
+  `nullsub_30` are private. boss_actors.hpp's `static inline`
+  SetAirshipState is the private inline member `SetState`; g++ still
+  inlines all its uses. `nullsub_30` was the C++ name `nullsub_30__Fv` in
+  airship_graphics.o (its file never saw vehicle.h's `extern "C"`
+  prototype); through cxx_symbols.txt it is `nullsub_30` again, the ROM
+  symbol's name. The code is unchanged.
+- **Tables.** gAirshipStateFuncs is the private static member
+  `stateFuncs`: its table file was C, which can't name a C++ member, so
+  actor_state_17c3fc.c became actor_state_17c3fc.cpp (the same
+  `.rodata` bytes) with `&Airship::StateInactive` and so on. The actor
+  category table (actor_category_175558.c) stays C and names the five
+  boss slots by their C names (bosses.h, `#ifndef __cplusplus`).
+- **ROM tables.** The tables only the airship reads are static data
+  members as well, as for
+  [the yeti](#the-yeti-as-an-all-static-class-772): `attacks`, `hitFlashPalettes`, `box`
+  and `keyframes` (weapon_kind_17c2d0.c), `palette` and `picture`
+  (boss_pictures_167ad4.c, which it shares with the hovercraft's picture).
+  Those files stay C and define them under their C names
+  (gAirshipAttacks, ...), which cxx_symbols.txt maps the members onto;
+  bosses.h's six externs go.
+- **Left outside.** `SpawnAirshipFireball` (jetpack_spawn.cpp) is the
+  jetpack spawners', and `AirshipFireball` a class of its own
+  (boss_actors.hpp); they call no airship member.
 
 ### Next batches
 

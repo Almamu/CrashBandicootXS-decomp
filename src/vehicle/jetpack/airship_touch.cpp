@@ -1,4 +1,4 @@
-#include "boss_actors.hpp"
+#include "airship.hpp"
 
 extern "C" {
 #include "system.h"
@@ -25,16 +25,16 @@ extern "C" {
  * across the `MemCopy32` call. Built with old_agbcc
  * (docs/matching/archive/issue-58-61-naked-retry.md). */
 
-u8 IsTouchingAirship(ActorSelf *self)
+u8 Airship::IsTouching(ActorSelf *self)
 {
-    if ((u32)(gAirshipState - 2) <= 1) {
+    if ((u32)(state - 2) <= 1) {
         struct {
             struct anim_box a, c, t;
         } f;
         struct anim_box *pa, *pc;
 
-        f.a = gAirshipBox;
-        BoxMove(&f.a, Q8_TO_INT(gAirshipX), Q8_TO_INT(gAirshipY), Q8_TO_INT(gAirshipZ));
+        f.a = box;
+        BoxMove(&f.a, Q8_TO_INT(x), Q8_TO_INT(y), Q8_TO_INT(z));
         f.t = self->box;
         BoxMove(&f.t, Q8_TO_INT(self->x), Q8_TO_INT(self->y), Q8_TO_INT(self->z));
         f.c = f.t;

@@ -1,4 +1,4 @@
-#include "boss_actors.hpp"
+#include "airship.hpp"
 #include "audio.hpp"
 
 extern "C" {
@@ -11,7 +11,7 @@ extern "C" {
 }
 
 /* The airship's damage, graphics, HP gauge and teardown (#664 parts
- * 11f and 11i, include/boss_actors.hpp): DamageAirship, its graphics
+ * 11f and 11i, Airship since #772, include/airship.hpp): DamageAirship, its graphics
  * (LoadAirshipGraphics, ConvertAirshipTiles and the flash/palette
  * updates) and the end of its code. DamageAirship and
  * LoadAirshipGraphics were airship_damage.cpp and
@@ -23,19 +23,19 @@ extern "C" {
  * airship's hit points and starts the hit flash
  * (gAirshipHitFlashTimer). While it has hit points left, a hit sound;
  * at zero, it stops and enters state 4 (exploding) with animation 1. */
-void DamageAirship(s32 delta)
+void Airship::Damage(s32 delta)
 {
-    s32 remaining = gAirshipHp - delta;
+    s32 remaining = hp - delta;
 
-    gAirshipHp = remaining;
-    gAirshipHitFlashTimer = 0x12;
+    hp = remaining;
+    hitFlashTimer = 0x12;
 
     if (remaining <= 0) {
-        gAirshipHp = 0;
-        gAirshipVelX = 0;
-        gAirshipVelY = 0;
-        gAirshipVelZ = 0xaa;
-        SetAirshipState(4, 1);
+        hp = 0;
+        velX = 0;
+        velY = 0;
+        velZ = 0xaa;
+        SetState(4, 1);
     } else {
         gAudioContext->PlaySfx(SFX_AIRSHIP_HIT, 0x100);
     }
@@ -72,7 +72,7 @@ void DamageAirship(s32 delta)
  * `vu16` - the state-5 blackout is one chained assignment, whose
  * volatile read-backs are the ROM's `ldrh`/`strh` ladder. */
 
-void LoadAirshipGraphics(void)
+void Airship::LoadGraphics()
 {
     s32 i;
     s32 base = VRAM + 0xBFC0;
@@ -81,32 +81,32 @@ void LoadAirshipGraphics(void)
     for (i = base + 0x3c; i >= base; i -= 4)
         *(u32 *)i = zero;
     DmaFill16(3, 0xFFFF, (void *)(VRAM + 0xC000), 0x1000);
-    ConvertAirshipTiles();
-    if (gAirshipState != 0) {
+    ConvertTiles();
+    if (state != 0) {
         AnimPart *self;
         vu16 *pal;
 
-        gAirshipBg2PageFlip = 1;
-        gAirshipBg2Page = 0;
-        self = gAirship;
+        bg2PageFlip = 1;
+        bg2Page = 0;
+        self = anim;
         {
             s32 t = Q8_TO_INT(self->animTime);
-            DrawAirshipMap((u16 *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
+            DrawMap((u16 *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
         }
         REG_DISPCNT |= DISPCNT_BG2_ON;
-        UpdateAirshipBg2();
+        UpdateBg2();
         pal = (vu16 *)(PLTT + 0x20);
-        DmaCopy16(3, gAirshipPalette, pal, 0x20);
-        if (gAirshipState == 5) {
+        DmaCopy16(3, palette, pal, 0x20);
+        if (state == 5) {
             pal[15] = pal[1] = pal[4] = pal[8] = 0;
-        } else if (gAirshipState == 4) {
-            if ((u32)gAirshipStateTimer > 9)
+        } else if (state == 4) {
+            if ((u32)stateTimer > 9)
                 pal[15] = 0;
-            if ((u32)gAirshipStateTimer > 0x31)
+            if ((u32)stateTimer > 0x31)
                 pal[1] = 0;
-            if ((u32)gAirshipStateTimer > 0x4f)
+            if ((u32)stateTimer > 0x4f)
                 pal[4] = 0;
-            if ((u32)gAirshipStateTimer > 0x6d)
+            if ((u32)stateTimer > 0x6d)
                 pal[8] = 0;
         }
     }
@@ -158,7 +158,7 @@ static inline u32 MeterPx(u32 v)
     return r;
 }
 
-void ConvertAirshipTiles(void)
+void Airship::ConvertTiles()
 {
     s32 heights[4];
     u32 stride;
@@ -167,20 +167,20 @@ void ConvertAirshipTiles(void)
     s32 k;
     s32 row_i;
     u32 *dst;
-    u32 *rows = gAirshipMapFrames;
+    u32 *rows = mapFrames;
     u32 m;
 
-    stride = (u32)(gAirshipMapCols * gAirshipMapRows + 1) >> 1 << 2;
+    stride = (u32)(mapCols * mapRows + 1) >> 1 << 2;
     for (k = 0; k < 4; k++) {
-        s32 x = *(const s32 *)((const u8 *)gAirshipPalette + off);
+        s32 x = *(const s32 *)((const u8 *)palette + off);
         heights[k] = x;
         sum += x;
         off += 4;
-        rows[k] = (u32)((u8 *)gAirshipPalette + off);
+        rows[k] = (u32)((u8 *)palette + off);
         off += stride;
         off += heights[k] << 5;
     }
-    gAirshipMapTileBase = 0xFF - sum;
+    mapTileBase = 0xFF - sum;
     dst = (u32 *)(((0xFF - sum) << 6) + BG_CHAR_ADDR(2));
     for (row_i = 0; row_i <= 3; row_i++) {
         u8 *src;
@@ -190,7 +190,7 @@ void ConvertAirshipTiles(void)
         s32 j;
         u32 *d;
 
-        row = (u8 *)gAirshipMapFrames[row_i];
+        row = (u8 *)mapFrames[row_i];
         hp = &heights[row_i];
         d = dst;
         src = row + stride;
@@ -223,11 +223,11 @@ void ConvertAirshipTiles(void)
 /* Sets BG palette bank 1's last color (index 15) to either a near-white
  * flash color or a dim default, gated by bit 3 of `gAirshipStateTimer`
  * (a flags word driving this effect's per-frame look). */
-void UpdateAirshipFlashColor(void)
+void Airship::UpdateFlashColor()
 {
     vu16 *bank1 = (vu16 *)(BG_PLTT + 0x20);
 
-    if (gAirshipStateTimer & 8) {
+    if (stateTimer & 8) {
         bank1[0xf] = 0x7fff;
     } else {
         bank1[0xf] = 0x1f;
@@ -239,64 +239,64 @@ void UpdateAirshipFlashColor(void)
  * animation strip into BG palette bank 1 - `__divsi3` picks a
  * triangle-wave frame index (0-2, mirrored back down for 3-4) so the
  * animation ping-pongs. */
-void AnimateAirshipPalette(void)
+void Airship::AnimatePalette()
 {
     s32 v;
 
-    if (gAirshipHitFlashTimer == 0) {
+    if (hitFlashTimer == 0) {
         return;
     }
-    gAirshipHitFlashTimer--;
+    hitFlashTimer--;
 
-    v = __divsi3(gAirshipHitFlashTimer, 3);
+    v = __divsi3(hitFlashTimer, 3);
     if (v > 2) {
         v = 5 - v;
     }
 
-    QueueVramDmaTransfer((void *)gAirshipHitFlashPalettes[v], (void *)(BG_PLTT + 0x20), 0x20, 0x10);
+    QueueVramDmaTransfer((void *)hitFlashPalettes[v], (void *)(BG_PLTT + 0x20), 0x20, 0x10);
 }
 
 /* The end of the airship's code (#664 part 11f): its HP gauge, its
- * teardown and its idle state (C linkage), in jetpack_balloon.cpp until
+ * teardown and its idle state, in jetpack_balloon.cpp until
  * #769. See docs/matching/archive/issue-58-0x08030334-actor.md and
  * issue-62-0x08033804-actor.md. */
 
 /* The airship's hit points as a percentage of its attack's (the HUD's
  * gauge, UpdateHudPercentCounters), at least 1 while it has any; -1 while
  * no airship is active (gAirshipState 0). */
-s32 GetAirshipHpPercent(void)
+s32 Airship::GetHpPercent()
 {
-    s32 hp;
+    s32 left;
     s32 result;
 
-    if (gAirshipState == 0) {
+    if (state == 0) {
         return -1;
     }
 
-    hp = gAirshipHp;
-    result = hp * 100 / gAirshipAttack->hp;
-    if (result == 0 && hp > 0) {
+    left = hp;
+    result = left * 100 / attack->hp;
+    if (result == 0 && left > 0) {
         result = 1;
     }
     return result;
 }
 
 /* Frees the airship (CreateAirship's `new AnimPart`, airship.cpp). */
-void DestroyAirship(void)
+void Airship::Destroy()
 {
-    delete gAirship;
+    delete anim;
 }
 
 /* UNUSED - no caller anywhere in the ROM (checked every src/ .c file, the
  * category vtables and every word-aligned Thumb pointer in baserom.gba).
  * Empty; it has no table slot to name it after, so it keeps the nullsub_N
  * name (docs/naming.md). */
-void nullsub_30(void)
+void Airship::nullsub_30()
 {
 }
 
 /* gAirshipStateFuncs[0]: no airship is active (AirshipStateFall goes back
  * to state 0). Empty. */
-void AirshipStateInactive(void)
+void Airship::StateInactive()
 {
 }

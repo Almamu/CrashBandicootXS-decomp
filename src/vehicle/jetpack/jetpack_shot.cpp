@@ -1,4 +1,5 @@
 #include "vehicle.hpp"
+#include "airship.hpp"
 
 extern "C" {
 #include "actor.h"
@@ -23,8 +24,8 @@ void JetpackShot::Update()
     if (hit != 0) {
         hit->Damage(2);
         delete this;
-    } else if (IsTouchingAirship(this)) {
-        DamageAirship(2);
+    } else if (Airship::IsTouching(this)) {
+        Airship::Damage(2);
         delete this;
     } else if (depth > 0x8200) {
         delete this;

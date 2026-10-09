@@ -233,7 +233,7 @@ The first batch (all pointer tables, all byte-exact):
 | `actor_pmf_17c260.cpp` | `0x0817C260` | 2 actor PMF tables, in C++ (`JetpackPlane::stateFuncs`, `JetpackBomber::stateFuncs`) |
 | `actor_pmf_17c2b8.cpp` | `0x0817C2B8` | 1 actor PMF table, in C++ (`AirshipFireball::stateFuncs`, docs/cplusplus.md) |
 | `weapon_kind_17c2d0.c` | `0x0817C2D0` | 6 weapon-kind records, a 3-frame palette strip, a box, 2 keyframes |
-| `actor_state_17c3fc.c` | `0x0817C3FC` | 1 function table |
+| `actor_state_17c3fc.cpp` | `0x0817C3FC` | 1 function table, in C++ (`Airship::stateFuncs`, docs/cplusplus.md) |
 | `actor_pmf_17c414.cpp` | `0x0817C414` | 1 actor PMF table, in C++ (`JetpackBalloon::stateFuncs`) |
 | `actor_pmf_17c42c.cpp` | `0x0817C42C` | 1 actor PMF table |
 | `actor_box_17c444.c` | `0x0817C444` | 1 `struct anim_box` |

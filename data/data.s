@@ -122,7 +122,7 @@ gSfxTable:
 
 @ gAirshipAttacks..gAirshipKeyframes: src/data/weapon_kind_17c2d0.c
 
-@ gAirshipStateFuncs: src/data/actor_state_17c3fc.c
+@ gAirshipStateFuncs: src/data/actor_state_17c3fc.cpp
 
 @ gJetpackBalloonStateFuncs: src/data/actor_pmf_17c414.cpp
 
