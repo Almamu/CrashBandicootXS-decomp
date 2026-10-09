@@ -3,7 +3,6 @@
 #include "audio.hpp"
 
 extern "C" {
-#include "match.h"
 #include "gba/io_reg.h"
 #include "gba/dma_macros.h"
 #include "graphics_package.h"
@@ -144,10 +143,6 @@ void CompanyLogos::DrawVvLogoPieces()
         s32 row;
         s32 pa, pd;
         u8 affine;
-        /* Pinned (register allocation; unpinned the DMA base and the
-         * address of `frames` swap r2 and r3), so `&frames` takes r3 and
-         * the reduced `base + row * 0x100 + 0x60` r3 in the loop. */
-        MATCH_HOLD_REG(struct dma_regs *, dma, r2);
 
         if (*flag) {
             gAudioContext->PlaySfx(SFX_UNKNOWN_4D, 0x100);
@@ -155,13 +150,24 @@ void CompanyLogos::DrawVvLogoPieces()
         }
         slot = &slots[0];
         tile = (tilesC - (u32)OBJ_VRAM0) >> 5;
+        /* `scratch` cleared with a 32-bit DMA3 fill from `zero32`, as
+         * CLEAR_OAM does (include/frontend.h), and in the loop each row's
+         * two halves copied with DmaCopy16. Written with one `dma` pointer
+         * for the whole block (the loop's copies through it), the base
+         * and `&frames` swapped r2 and r3, and the loop's insn count was
+         * three short of the ROM's hoisting (#481); this needed an r2 pin
+         * and three empty asm()s. DmaCopy16's own pointer, set in the
+         * loop, gives both. */
         zero32 = 0;
-        dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
-        dma->src = (u32)&zero32;
-        buf = scratch;
-        dma->dst = (u32)buf;
-        dma->cnt = 0x85000400;
-        dma->cnt;
+        {
+            struct dma_regs *dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
+
+            dma->src = (u32)&zero32;
+            buf = scratch;
+            dma->dst = (u32)buf;
+            dma->cnt = 0x85000400;
+            dma->cnt;
+        }
         src = frames + frame * 0xa00;
         /* `base + row * 0x100 + 0x60` is a giv of the row counter, which
          * check_dbra_loop reverses, so loop.c must reduce it into its own
@@ -169,25 +175,11 @@ void CompanyLogos::DrawVvLogoPieces()
          * steps by a 0x100 loaded inside the loop, so `buf` is no biv. */
         base = buf;
         for (row = 0; row < 8; row++) {
-            dma->src = (u32)src;
-            dma->dst = (u32)(base + row * 0x100 + 0x60);
-            dma->cnt = 0x80000050;
-            dma->cnt;
+            DmaCopy16(3, src, base + row * 0x100 + 0x60, 0xa0);
             src += 0xa0;
-            dma->src = (u32)src;
-            dma->dst = (u32)(buf + 0x800);
-            dma->cnt = 0x80000050;
-            dma->cnt;
+            DmaCopy16(3, src, buf + 0x800, 0xa0);
             src += 0xa0;
             buf += 0x100;
-            /* Instruction-count padding (#481): three empty asm()s raise
-             * the loop's insn count so loop pass 1 hoists only the
-             * 0x80000050 count (ip), and pass 2 hoists 0x800 (sl) and the
-             * 0x100 after the reduced pointer's init, as in the ROM.
-             * They emit no code. */
-            MATCH_BARRIER();
-            MATCH_BARRIER();
-            MATCH_BARRIER();
         }
         QueueVramDmaTransfer(scratch, (void *)tilesC, 0x1000, 0x10);
         CLEAR_OAM(&oamC);

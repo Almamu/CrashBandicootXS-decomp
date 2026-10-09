@@ -182,7 +182,12 @@ void ActionCtrl::StateJump()
                         s32 one = 1;
 
                         /* Kept from the C: the ROM loads this 1 (r6) apart
-                         * from the A test's own 1, which plain C++ shares. */
+                         * from the A test's own 1, which plain C++ shares.
+                         * A byte test (`(u8)cur & 1` or a `u8` flag) keeps
+                         * the two 1s apart, as in HandleEvent's launch
+                         * pad, but its AND lands in r0 instead of r2
+                         * (the else's 0 store then shifts registers);
+                         * the permuter only found a shared hoisted 1. */
                         MATCH_KEEP(one);
                         if (cur & 1)
                             QueueYAt(slot, one, 9);

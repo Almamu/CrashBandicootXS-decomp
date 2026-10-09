@@ -354,7 +354,10 @@ TitleScreen::~TitleScreen()
  * then test it again" (which gives the ROM's block order), and the
  * affine X/Y values are computed before either register store. The
  * fade-out value is pinned to r1 (register allocation, as in the C: the
- * ROM's choice; unpinned it lands in r2 and costs a copy). */
+ * ROM's choice; unpinned it lands in r2 and costs a copy for the alpha
+ * `v - 0x12`, which the ROM computes over it). Reading and writing
+ * `fade` through a pointer, `a` from `n` or `v -= 0x12` in place don't
+ * change that (#662 round 2). */
 void CompanyLogos::Run()
 {
     LogoActor *part;

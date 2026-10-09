@@ -152,7 +152,15 @@ void sprintf(u8 *dest, u8 *fmt, ...)
  *    `SetDispcntMode`: each fold is materialized as an opaque
  *    inline-asm block the optimizer can't see into. (#662: a macro, a
  *    ternary, if/else and four inline-function spellings all become a
- *    conditional move under both agbcc and old_agbcc.)
+ *    conditional move under both agbcc and old_agbcc: jump.c rewrites
+ *    `if (...) x = a; else x = b;` as `x = b; if (...) x = a;` when
+ *    each arm is one insn. Round 2 tried 63 more spellings (u8, s8,
+ *    char, u16, s16, u32 and s32 locals; `c >= 'A' && c <= 'Z'`,
+ *    `(u8)(c - 'A') <= 25` and `c - 'A' + 'a'` macros, with and without
+ *    an outer cast) and the permuter: only `char` locals (or a `(char)`
+ *    cast) keep a copy in both arms, and then the truncation moves into
+ *    the `+ 0x20` arm instead of following the join, which also changes
+ *    the block layout.)
  * 2. The inner verify loop's "needle exhausted, match found" check
  *    compiled with the opposite branch sense from the ROM (`bne` to a
  *    same-iteration fallthrough instead of the ROM's `beq` clear across

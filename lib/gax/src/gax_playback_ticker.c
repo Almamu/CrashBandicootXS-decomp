@@ -18,12 +18,9 @@ void GAX_irq(void)
     if (gGaxPlayerState->state == 0) {
         return;
     }
-    /* Volatile-forced re-read: the ROM re-loads `state` a second time here
-     * (rather than reusing the register from the `== 0` check above) - a
-     * gcc-2.9 CSE difference this scoped volatile cast reproduces without
-     * marking the field volatile project-wide (matching_decomp_register_
-     * pinning memory's "scoped-volatile casts" technique). */
-    if (*(vu32 *)&gGaxPlayerState->state == 1) {
+    /* `state` is volatile (gax_internal.h), so it's read again here, as in
+     * the ROM. */
+    if (gGaxPlayerState->state == 1) {
         struct GaxPlayerState *p = gGaxPlayerState;
 
         REG_SOUNDCNT_X = 0x80;

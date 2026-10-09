@@ -47,15 +47,15 @@ songs and WAV samples. `baserom.gba` isn't needed to build it.
 | Directory | Functions | No workarounds | With workarounds |
 |---|---:|---:|---:|
 | `lib/agb_eeprom/` | 10 | 9 | 1 |
-| `lib/gax/` | 49 | 35 | 14 |
+| `lib/gax/` | 49 | 38 | 11 |
 | `lib/libgcc/` | 3 | 3 | 0 |
 | `src/actor/` | 136 | 131 | 5 |
-| `src/audio/` | 27 | 26 | 1 |
+| `src/audio/` | 27 | 27 | 0 |
 | `src/bosses/` | 165 | 155 | 10 |
 | `src/crates/` | 93 | 87 | 6 |
 | `src/cutscene/` | 33 | 32 | 1 |
 | `src/enemies/` | 41 | 34 | 7 |
-| `src/frontend/` | 57 | 51 | 6 |
+| `src/frontend/` | 57 | 53 | 4 |
 | `src/gfx/` | 140 | 140 | 0 |
 | `src/hud/` | 18 | 18 | 0 |
 | `src/iwram/` | 10 | 7 | 3 |
@@ -64,9 +64,9 @@ songs and WAV samples. `baserom.gba` isn't needed to build it.
 | `src/menus/` | 140 | 136 | 4 |
 | `src/objects/` | 198 | 194 | 4 |
 | `src/pickups/` | 37 | 36 | 1 |
-| `src/player/` | 202 | 194 | 8 |
+| `src/player/` | 202 | 195 | 7 |
 | `src/save/` | 65 | 62 | 3 |
-| `src/system/` | 30 | 28 | 2 |
+| `src/system/` | 30 | 30 | 0 |
 | `src/text/` | 26 | 25 | 1 |
 | `src/util/` | 33 | 32 | 1 |
 | `src/vehicle/` | 213 | 211 | 2 |

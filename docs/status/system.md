@@ -9,8 +9,8 @@ category page - see [game_loop.md](./game_loop.md).
 
 - `src/system/main.cpp`: `AgbMain`
 - `src/system/memory.cpp`: `mem_heap_init`, `mem_collect`, `mem_free_bytes`,
-  `mem_alloc`, `mem_free`, `mem_heap_shutdown`, `mem_walk_heaps` (unreachable -
-  see `docs/decomp_dev.md` for what it is and why it's kept)
+  `mem_alloc`, `mem_free`, `mem_heap_shutdown`, `mem_walk_heaps` (unreachable, plain C
+  since #662 round 2; see `docs/decomp_dev.md`)
 - `src/system/irq.cpp`: `IrqDisable`, `IrqSetup`, `IrqEmptyHandler`,
   `EnableVBlankHandler`, `DisableVBlankHandler`, `RemoveVBlankCallback`, `AddVBlankCallback` (2025,
   original `code_1.s`/`code_2.s` lineage), plus `WaitForVBlank`,

@@ -562,7 +562,13 @@ void ActionCtrl::StateCrouch()
         {
             /* volatile: keeps the `+0x28` address in the part copy's
              * register and computed ahead of the -0x11 mask, as in the
-             * ROM (a plain pointer lands in a fresh register) */
+             * ROM (a plain pointer lands in a fresh register: the test
+             * above already computed `part + 0x28`, and the pointer
+             * becomes a copy of it). Set after the mask, the address is
+             * the ROM's register but comes after the `movs; negs`; the
+             * bitfield store `mirrorBits.flipX = 1` is a halfword longer
+             * and `*p = (*p & -0x11) | 0x10` loads an 0xEF mask (#662
+             * round 2). */
             volatile u8 *p = &part->mirror;
 
             m = -0x11;
