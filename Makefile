@@ -301,6 +301,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/objects/platform_collide.o \
                   $(C_BUILDDIR)/objects/platform_contact.o \
                   $(C_BUILDDIR)/objects/platform.o \
+                  $(C_BUILDDIR)/objects/platform_mover.o \
                   $(C_BUILDDIR)/objects/camera_lead.o \
                   $(C_BUILDDIR)/objects/launch_pad.o \
                   $(C_BUILDDIR)/menus/level_select.o \

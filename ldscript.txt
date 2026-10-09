@@ -153,6 +153,7 @@ SECTIONS
         build/crashbandicootxs/src/objects/platform_contact.o(.text);
         build/crashbandicootxs/src/objects/platform_collide.o(.text);
         build/crashbandicootxs/src/objects/platform.o(.text);
+        build/crashbandicootxs/src/objects/platform_mover.o(.text);
         build/crashbandicootxs/src/objects/camera_lead.o(.text);
         build/crashbandicootxs/src/objects/launch_pad.o(.text);
         build/crashbandicootxs/src/menus/level_select.o(.text);
@@ -464,7 +465,7 @@ SECTIONS
         build/crashbandicootxs/src/bosses/dingodile.o(.gnu.linkonce.d._vt.19DingodileShieldCtrl); /* gDingodileShieldVtable */
         build/crashbandicootxs/src/bosses/dingodile.o(.gnu.linkonce.d._vt.13DingodileCtrl); /* gDingodileVtable */
         build/crashbandicootxs/src/objects/platform_contact.o(.gnu.linkonce.d._vt.8Platform); /* gPlatformVtable */
-        build/crashbandicootxs/src/objects/platform.o(.gnu.linkonce.d._vt.13PlatformMover); /* gPlatformMoverVtable */
+        build/crashbandicootxs/src/objects/platform_mover.o(.gnu.linkonce.d._vt.13PlatformMover); /* gPlatformMoverVtable */
         build/crashbandicootxs/src/objects/camera_lead.o(.gnu.linkonce.d._vt.10CameraLead); /* gCameraLeadVtable */
         build/crashbandicootxs/src/objects/launch_pad.o(.gnu.linkonce.d._vt.9LaunchPad); /* gLaunchPadVtable */
         build/crashbandicootxs/src/menus/level_select_entry.o(.gnu.linkonce.d._vt.16LevelSelectEntry); /* gLevelSelectEntryVtable */

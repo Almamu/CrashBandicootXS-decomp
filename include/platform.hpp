@@ -6,7 +6,7 @@
  * and the Neo Cortex fight's mover subclass (part 7i, src/bosses/cortex.cpp).
  *
  * No `#pragma interface`: g++ emits the vtables, PlatformMover's in
- * platform.cpp, Platform's in platform_contact.cpp and
+ * platform_mover.cpp, Platform's in platform_contact.cpp and
  * CortexBossPlatformMover's in cortex.cpp (see ctrl.hpp); cxx_symbols.txt
  * maps the mangled names onto the C names. */
 
