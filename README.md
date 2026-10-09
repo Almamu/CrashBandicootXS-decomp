@@ -34,51 +34,20 @@ songs and WAV samples. `baserom.gba` isn't needed to build it.
   (no `sub_XXXXXXXX` function names left), the library split (#573), the
   file layout (#575) and the headers (#574: every function and global is
   declared once, in a header).
-- **Matching workarounds: 2033/2059 functions have none.** The other
-  26 still need at least one register pin, empty-asm nudge
-  (`include/match.h`), instruction asm, `BOX_ADDR`, retyped field
-  access, scoped `volatile` or self-init to come out byte-exact, each
-  with a comment saying why (#662,
-  [docs/matching_techniques.md](./docs/matching_techniques.md)). After
-  a build, `tools/match_idioms.py --functions` prints these numbers and
-  the table below; `--functions --files` lists the 26 functions.
+- **Matching workarounds:** the *clean functions* and *workarounds left*
+  badges above (redrawn by CI on every push to main) show how many
+  functions still need a register pin, empty-asm nudge
+  (`include/match.h`), instruction asm, retyped field access, scoped
+  `volatile` or self-init to come out byte-exact. Each has a comment
+  saying why (#662,
+  [docs/matching_techniques.md](./docs/matching_techniques.md)). After a
+  build, `tools/match_idioms.py --functions` prints the numbers per
+  directory and `--functions --files` lists the functions.
 - **What's left** is code quality: the remaining placeholder names
   (`gUnknown_`, `gStaticData_`, `nullsub_N`, `unk_XX` fields), compiler
   warnings, formatting, and the matching workarounds above. It's
   tracked as `cleanup` issues on GitHub.
 
-<details>
-<summary>Functions with no matching workarounds, per directory</summary>
-
-| Directory | Functions | No workarounds | With workarounds |
-|---|---:|---:|---:|
-| `lib/agb_eeprom/` | 10 | 9 | 1 |
-| `lib/gax/` | 49 | 38 | 11 |
-| `lib/libgcc/` | 3 | 3 | 0 |
-| `src/actor/` | 136 | 136 | 0 |
-| `src/audio/` | 27 | 27 | 0 |
-| `src/bosses/` | 139 | 137 | 2 |
-| `src/crates/` | 94 | 94 | 0 |
-| `src/cutscene/` | 12 | 12 | 0 |
-| `src/enemies/` | 41 | 41 | 0 |
-| `src/frontend/` | 52 | 51 | 1 |
-| `src/gfx/` | 98 | 98 | 0 |
-| `src/hud/` | 21 | 21 | 0 |
-| `src/iwram/` | 10 | 9 | 1 |
-| `src/level/` | 338 | 338 | 0 |
-| `src/link/` | 12 | 9 | 3 |
-| `src/menus/` | 125 | 125 | 0 |
-| `src/objects/` | 252 | 251 | 1 |
-| `src/pickups/` | 36 | 36 | 0 |
-| `src/player/` | 195 | 191 | 4 |
-| `src/save/` | 74 | 73 | 1 |
-| `src/system/` | 41 | 41 | 0 |
-| `src/text/` | 26 | 26 | 0 |
-| `src/util/` | 25 | 25 | 0 |
-| `src/vehicle/jetpack/` | 150 | 149 | 1 |
-| `src/vehicle/polar/` | 93 | 93 | 0 |
-
-</details>
 
 `src/` has one directory per subsystem (`system/`, `gfx/`, `text/`,
 `audio/`, `objects/`, `player/`, `crates/`, `enemies/`, `level/`,
