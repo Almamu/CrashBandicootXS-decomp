@@ -109,7 +109,12 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
             } else {
                 goto check_slide;
             }
-            /* The ROM has a dead load of the state here. */
+            /* The ROM has a dead load of the state here. The kind of
+             * load no later pass deletes: jump2 (after reload, with no
+             * flow pass after it) merges two identical arms of a test,
+             * leaving the test's load (#662 round 3 reproduced this in
+             * Player::HandleEvent, player_event.cpp, with identical
+             * arms or a dead store, neither of them source). */
             *(volatile s32 *)&state;
             bumpTimer = 3;
             SetBumped(part, 1);
@@ -143,7 +148,15 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
              * takes a copy into the flag's register (`movs r0, #1; adds
              * r4, r0`); `bool`/`s16`/`u16` flags, a `u8` copy of the AND
              * and `(u8)` casts don't help, and the permuter only found a
-             * shared `s16` 1 also used by an unrelated test. */
+             * shared `s16` 1 also used by an unrelated test. #662 round
+             * 3 (-da dumps): cse1, following the jump into each arm,
+             * replaces the arm's QImode 1 with a subreg of the AND's SImode
+             * 1 pseudo, which then lives across SetModeAnim (r5), and
+             * regmove's two-address fix-up copies it into the AND's output
+             * (`adds r4, r5, #0`) where the ROM reloads the constant. A `u8`
+             * or `u16` `one` is found by cse's narrower-mode lookup the
+             * same way; -fno-cse-follow-jumps and -fno-regmove each move
+             * the object 100+ lines. */
             MATCH_CONST(one, 1);
             fire = held & 1;
             if (fire) {

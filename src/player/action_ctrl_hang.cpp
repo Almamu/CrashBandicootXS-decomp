@@ -249,7 +249,12 @@ void ActionCtrl::StateUnusedHang()
  * never assigned, keeps r2 live from the start of the function to its
  * `MATCH_USE` after the add (an empty asm, no code). Round 2 of #662:
  * `part->y = part->y + 0x600`, a Player copy, `0x600u`, `-= -0x600` and
- * the 0x600 in a local all take r2. */
+ * the 0x600 in a local all take r2. #662 round 3 (-dg dump): the 0x600 is
+ * a reload of the add's constant operand, and reload hands out spill
+ * registers round-robin: the reload of the `hanging` field's 0x101
+ * offset just before takes r1, so the next one gets r2. The ROM's r3
+ * means r2 was not free for it there (as the hold makes it); the flag
+ * sweep (-fno-gcse ... -O1) changes nothing at this site. */
 void ActionCtrl::ReleaseHang()
 {
     Player *p;

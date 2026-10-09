@@ -187,7 +187,11 @@ void ActionCtrl::StateJump()
                          * the two 1s apart, as in HandleEvent's launch
                          * pad, but its AND lands in r0 instead of r2
                          * (the else's 0 store then shifts registers);
-                         * the permuter only found a shared hoisted 1. */
+                         * the permuter only found a shared hoisted 1.
+                         * The mechanism is ActionCtrl::HandleEvent's (see
+                         * its bounce cases): cse1 gives the arms' 1 the
+                         * test's pseudo, and regmove copies it (#662
+                         * round 3). */
                         MATCH_KEEP(one);
                         if (cur & 1)
                             QueueYAt(slot, one, 9);

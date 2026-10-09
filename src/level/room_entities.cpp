@@ -5,7 +5,6 @@
 extern "C" {
 #include "core.h"
 #include "math_util.h"
-#include "match.h"
 #include <agb_syscall.h>
 #include "crates.h"
 #include "gfx.h"
@@ -75,8 +74,8 @@ extern "C" {
  *   scope (stack-slot order), `n > 0` guard + do-while for the link
  *   scan, `struct vec2 *pp = &p` for the move call, and a
  *   `u32 zero` for the DMA fills.
- * - The first search's id is pinned to r1 (see the comment there); the
- *   C++ still needs it.
+ * - One `aid` for the crate ids of the first and second searches (see
+ *   its declaration).
  */
 static inline Crate *Slot(s32 i)
 {
@@ -179,9 +178,19 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
             s32 next;
             s32 got;
             s32 m;
+            /* The crate id of the first and second searches, one variable
+             * for both: the ROM keeps the second search's slot pointer in
+             * r0 and the id in r1. A variable used in one basic block only
+             * is local-alloc's, which runs before global-alloc and gives it
+             * r0 ahead of the strength-reduced slot pointer (a global
+             * pseudo); used in two loops it is global-alloc's too, and the
+             * pointer outranks it (#662 round 3, found with the -dl/-dg
+             * dumps; it was pinned to r1). */
+            u16 aid;
 
             for (k = 0; k < gCrateList->count; k++) {
-                if ((Slot(k))->id == from) {
+                aid = Slot(k)->id;
+                if (aid == from) {
                     found = 1;
                     goto chk;
                 }
@@ -203,14 +212,6 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
                             missing = 0;
                             next = (u16)lk[m].to;
                             for (k2 = 0; k2 < gCrateList->count; k2++) {
-                                /* Pinned: the ROM keeps the item pointer in
-                                 * r0 and the id in r1. As a local temporary
-                                 * the id is allocated first and takes r0.
-                                 * Still so with the id read directly, through
-                                 * an inline or in the assignment's value
-                                 * (#662 round 2; the permuter stays at 25). */
-                                MATCH_HOLD_REG(u16, aid, r1);
-
                                 actor = Slot(k2);
                                 aid = actor->id;
                                 if (aid == to) {
