@@ -9,10 +9,9 @@
  * spawn_markers.cpp (the constructor, InitLevelState), level_cutscene.cpp
  * (the destructor, DestroyLevelState, UNUSED: the game never leaves
  * MainLoop; PlayCutscene), game_frame.cpp (UpdateGameFrame),
- * bonus_round.cpp, time_trial.cpp and inline_copies_misc.cpp (GetLives);
- * LevelProgress's in level_query.cpp, room_select.cpp, play_room.cpp,
- * run_room.cpp,
- * room.cpp and room_frame.cpp. The progress blocks stay level_state.h's
+ * bonus_round.cpp, level_state.cpp and inline_copies_misc.cpp (GetLives);
+ * LevelProgress's in level_query.cpp, room_select.cpp, play_room.cpp
+ * and room.cpp. The progress blocks stay level_state.h's
  * plain struct game_progress, which the save slots and the menus share.
  *
  * `#pragma interface`: no class here has a vtable, so there is none to
@@ -32,14 +31,13 @@ struct entity_flags;
  * The room block of the level state (`room`, +0x0C4), whose methods are
  * the room functions (UpdateGameFrame calls them on `room`): SelectRoom,
  * NextRoom, EnterBonusRoom and the others in level_query.cpp and
- * room_select.cpp, PlayRoom
- * (play_room.cpp), RunRoom (run_room.cpp), ResumeRoomAfterPause
- * (room.cpp), UpdateRoomFrame and SetupRoomBlend (room_frame.cpp). Until
+ * room_select.cpp, PlayRoom, RunRoom, UpdateRoomFrame and SetupRoomBlend
+ * (play_room.cpp) and ResumeRoomAfterPause (room.cpp). Until
  * #750 it was level_state.h's struct level_progress, and the functions
  * took it as `self`. It merges the four file-local views `level_progress`
  * (level_query.c), `level_start_args` (play_room.c; `spawnX`/`spawnY`
  * were `checkpointX`/`checkpointY`), `gl_self` (run_room.c; `widget` was
- * `cat`) (#574, batch 9e) and room_frame.cpp's `level_ctx` (`blend` was
+ * `cat`) (#574, batch 9e) and play_room.cpp's `level_ctx` (`blend` was
  * `cat`; #656, batch 7). Offsets in brackets are the level state's.
  */
 class LevelProgress
@@ -56,9 +54,9 @@ public:
     s32 SelectRoom();
     s32 PlayRoom();              // play_room.cpp
     void ResumeRoomAfterPause(); // room.cpp
-    void UpdateRoomFrame();      // room_frame.cpp
+    void UpdateRoomFrame();      // play_room.cpp
     void SetupRoomBlend();
-    s32 RunRoom(); // run_room.cpp
+    s32 RunRoom(); // play_room.cpp
 
     s32 level; // 0x00 (0x0C4) - index into gLevelTable
     // 0x04 (0x0C8) - the current room's index in the level's room list
@@ -104,7 +102,7 @@ public:
     // bonus_round.cpp
     void EndBonusRound(u8 arg1);
     void SetCheckpointAtPlayer(u8 arg1);
-    void StartTimeTrial(); // time_trial.cpp
+    void StartTimeTrial(); // level_state.cpp
     s32 GetLives();        // inline_copies_misc.cpp
 
     // level_state.cpp

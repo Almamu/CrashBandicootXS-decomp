@@ -96,7 +96,8 @@ system from "core" system startup/init code.
   mode-trampoline family, and a packed-bitfield unpacker/repacker pair
 - `src/level/level_state.c` (GitHub issue #37): `GetLevelState` - lazily
   allocates and returns `gLevelStateSingleton`
-- `src/level/room_frame.c` (GitHub issue #37): `UpdateRoomFrame` - the
+- `src/level/room_frame.c` (GitHub issue #37; in `src/level/play_room.cpp`
+  since #771): `UpdateRoomFrame` - the
   DMA3/VRAM refresh pass gated on `self+0x0 <= 0x1000` - and
   `SetupRoomBlend` - the `REG_BLDCNT`/`REG_BLDALPHA` shadow-word rebuild
   (plain C, built with old_agbcc - see [game-loop-old-agbcc.md](../matching/archive/game-loop-old-agbcc.md)). See
@@ -144,7 +145,8 @@ system from "core" system startup/init code.
   `DestroyEntitySpawnerObj` (conditional `OperatorDelete` forward, dup of
   `DestroyEntityFlags`), `InitEntitySpawner` (zero two Q8 words, dup of
   `InitEntityFlags`)
-- `src/level/bg_layer_init.c` (GitHub issue #41): `InitBgLayer`
+- `src/level/bg_layer_init.c` (GitHub issue #41; at the head of
+  `src/level/bg_layer.cpp` since #771): `InitBgLayer`
   (BG-scroll-layer hardware-register/bitfield initializer - previously
   NAKED, now matched as real C via opaque inline-asm-materialized mask
   folds plus one function-owned literal pool for its three pointer-sized
@@ -195,7 +197,8 @@ system from "core" system startup/init code.
   trivial `gCrateKindBreakable[idx]` lookup
 - `src/crates/crate_fields.cpp` (GitHub issue #13): `GetSlotCrateStage` -
   `self+0x48` bits 6-7 sub-state extractor
-- `src/level/drop_extra_life.c` (GitHub issue #13, second pass): `OpenLifeCrate`
+- `src/level/drop_extra_life.c` (GitHub issue #13, second pass; `DropExtraLife`
+  at the head of `src/level/entity_spawner.cpp` since #771): `OpenLifeCrate`
   - cue-3 SFX plus a `gEntityFlags` bit-grid consume-if-clear and a
   `DropExtraLife` part-object spawn. See
   [docs/matching/archive/issue-13-fc70-continuation.md](../matching/archive/issue-13-fc70-continuation.md).
@@ -426,7 +429,8 @@ system from "core" system startup/init code.
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
-- **`StartTimeTrial`** (`time_trial.c`), **`DropExtraLife`** (`drop_extra_life.c`),
+- **`StartTimeTrial`** (`time_trial.c`, in `level_state.cpp` since #771),
+  **`DropExtraLife`** (`drop_extra_life.c`, in `entity_spawner.cpp` since #771),
   **`SpawnEffectPart`** (`entity_spawner.c`), **`ScrollBgLayer`**/**`DrawBgLayerColumn`**
   (`bg_layer.c`), and the other functions above marked "built with
   old_agbcc" - 17 former `NAKED` transcriptions in 0x08022D50-0x08026BC0,
@@ -531,7 +535,8 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
-- **Now matched as real C (hard-register hold pass, see Matched); entry kept for history.** **`RunRoom`** (`src/level/run_room.c`, new file - GitHub
+- **Now matched as real C (hard-register hold pass, see Matched); entry kept for history.** **`RunRoom`** (`src/level/run_room.c`, new file, in
+  `src/level/play_room.cpp` since #771 - GitHub
   issue #37, ROM `0x08023A1C`-`0x0802400C`) - the ~650-instruction
   level-lifecycle state machine `PlayRoom` unconditionally hands off
   to (`play_room.c`). Its 6-case jump table (state `1`/`6` share one

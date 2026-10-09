@@ -639,7 +639,7 @@ No file needed an asm-label alias, so batch 1 adds no codegen exceptions.
   cast. `struct orbit_part` gets `animDone` at 0x38 (the name every other
   sprite part uses).
   - Conflicts: `PickUpWumpa` is called on items of the wumpa/extra-life
-    list in crate_break.c and time_trial.c, which cast to `struct
+    list in crate_break.c and level_state.cpp, which cast to `struct
     orbit_part *`. `StartWumpaPayout` takes the orbit part.
     `CreateWumpa` was declared `void (u16)` in spawn_pickups.c: SpawnWumpa
     now passes its four arguments, which also made its `asm volatile`
@@ -647,7 +647,7 @@ No file needed an asm-label alias, so batch 1 adds no codegen exceptions.
   - **Definition fix:** `CreateStopwatch` gets a fourth, unused `u16`
     parameter. SpawnStopwatch passes it in r3 (with three parameters its
     `.s` changes), and the definition's code is the same.
-  - drop_extra_life.c's `struct spawn_part` was a view of `struct
+  - entity_spawner.cpp's `struct spawn_part` was a view of `struct
     orbit_part` (`anim`/`frameNibble`/`unk_49..4B` are
     `bank`/`slotNibble`/`counter`/`mode`/`phase`); it is gone.
 - **`include/enemies.h`** (new) declares every function of src/enemies/,
@@ -690,7 +690,7 @@ No file needed an asm-label alias, so batch 1 adds no codegen exceptions.
 
 Every touched object file is identical to the clean build's. A few `.s`
 files differ only in local label numbers (`.L`/`.LCB`): cutscene_player.c,
-wumpa.c, crate_break.c, time_trial.c, spawn_pickups.c, drop_extra_life.c.
+wumpa.c, crate_break.c, level_state.cpp, spawn_pickups.c, entity_spawner.cpp.
 Including a header with static inline functions or a changed function
 body can shift gcc's label counter; the labels don't reach the object.
 
@@ -1190,7 +1190,7 @@ in jetpack_spawn.c, see "Codegen exceptions").
     `ShockPolarPlayer` and `CanPauseActorCategory` as `u8` (the
     definitions return `s32`) write `(u8)F(...)`, which keeps the
     truncation.
-  - airship_load_graphics.c compared `gAirshipStateTimer` as `u32`; its
+  - airship_graphics.cpp compared `gAirshipStateTimer` as `u32`; its
     four tests cast.
   - `LoadBgPicture(CUR_CATEGORY.bgPicture)`: the callers declared `(void)`
     and the picture is already in r0. `CreateTiny(OperatorNew(0x4c))` and
@@ -1261,7 +1261,7 @@ exceptions").
     `oam_pair` differ (the matrix bits vs the flip bits) and stay local.
   - `struct sprite_frame_cache_node` (sprite_frame.c, sprite_arm.c),
     `struct palette_cycler` (palette_cycle.c; `gPaletteCycles` is now
-    typed with it, so run_room.c's `*gPaletteCycles = 0` is
+    typed with it, so play_room.cpp's `*gPaletteCycles = 0` is
     `gPaletteCycles->active = 0`) and `struct brightness_fade` (fade.c's
     `struct unk_030007E8`, an anonymous struct in iwram_data.c; fade_to_black.c
     read it as an `s32`).
@@ -1332,7 +1332,7 @@ exceptions").
     trampolines pass four), and the last three return `void *` (most
     callers use the new object as their own type).
   - `InitPaletteCache` returns `self` (pause_menu.c uses the result, still
-    in r0); `GetPlatformExitMirror` returns `s32` (run_room.c's type; with `u8` the
+    in r0); `GetPlatformExitMirror` returns `s32` (play_room.cpp's type; with `u8` the
     caller adds `lsl`/`lsr`).
   - `AddOamEntry` takes `const void *entry`, `DestroyOamBuffer` a `struct
     oam_shadow_buffer *`, `WorldPosToScreen` an `s32 *`,
@@ -1411,16 +1411,16 @@ see "Codegen exceptions").
     `entities`/`links`) and `LoadRoom` takes the room record, `const struct
     level_room *` (its `struct level_load_args`). bg_layer.c's `struct
     bg_layer_desc` is `struct level_layer_desc`.
-  - the level state: time_trial.c's, drop_extra_life.c's and game_frame.c's
+  - the level state: level_state.cpp's, entity_spawner.cpp's and game_frame.c's
     copies (and game_frame.c's `struct level_category`) are level_state.h's.
-    time_trial.c's `unk_90[5]` is `minutes`..`countdown` and its `level->state`
+    level_state.cpp's `unk_90[5]` is `minutes`..`countdown` and its `level->state`
     is `cat->kind`; spawn_gem_platforms.c's `struct level_progress` was the
     level state too (`collected` is `flags`). dingodile.c's `struct
     level_state` was the entity flags object (`gEntityFlags`) and is now
     named `struct entity_flags`.
   - the level table: `struct threshold_table_entry` (pause_menu_pages_init.c,
     power_dialog_draw.c), `MedalTableEntry` (level_query.c), `level_guard`
-    (spawn_bosses.c), `gl_level_entry` (run_room.c) and level_select.c's
+    (spawn_bosses.c), `gl_level_entry` (play_room.cpp) and level_select.c's
     `struct level_info` are level_data.h's `struct level_info`
     (`threshold_08/0C/10` and `time0/1/2` are `times[3]`, `guard`/`state`/
     `cueTableOffset` are `theme`, `itemList` is `rooms`).
@@ -1431,7 +1431,7 @@ see "Codegen exceptions").
   - the blend registers: level_menu.h's and level_select.c's `struct
     blend_bits`/`union blend`/`struct bldy` moved to gfx.h, and
     `gBlendRegs` is a `struct blend_regs { union blend blend; u8 bldy; }`
-    (room_frame.c's `union blend` view and util/aabb.cpp's (CommitBlendRegs, now gfx/display.cpp) `struct
+    (play_room.cpp's `union blend` view and util/aabb.cpp's (CommitBlendRegs, now gfx/display.cpp) `struct
     unk_03001280`).
 - **Definition fixes**, all identical:
   - an unused parameter where the callers pass one: `InitBgLayerBase`
@@ -1485,12 +1485,12 @@ definitions (298 -> 286). No codegen exception was needed.
     The users that declared it `u32` read `gKeys.all`, the struct users
     `gKeys.half.held`/`.pressed`; the `u16` users (irq.c, input.c,
     language_select.c) read `gKeys.half.held` or take `&gKeys.half.held`.
-    run_room.c's `union gl_input` (`held`, `half.lo`/`half.hi`) was the
+    play_room.cpp's `union gl_input` (`held`, `half.lo`/`half.hi`) was the
     same union. swim_ctrl.c keeps its `struct keys` (a zero-length array
     makes it BLKmode, so the copy lives on the stack, see its comment)
     and copies `*(struct keys *)&gKeys`.
   - `gRoomFrameCount` (`u32`, the definition's type; game_frame.c and
-    run_room.c declared `s32` and only store or increment it).
+    play_room.cpp declared `s32` and only store or increment it).
   - the sym_iwram.txt singletons: `gPaletteCache` (`struct palette_cache
     *`), `gAudioContext` (`struct AudioContext *`; 65 files declared
     `void *`), `gSpriteRenderer`, `gEntitySpawner` and `gInput` (`void *`:
@@ -1542,7 +1542,7 @@ No codegen exception was needed.
     `u8 *`, `void *`, game_frame.c's `struct level_state` and four
     copies of `struct game_state` (polar_player.c, polar_objects.c,
     crate_list_collide.cpp, sprite_obj.cpp), player_update.cpp's `struct
-    orbit_game` (`flags2` is `flags`), run_room.c's `struct gl_level`,
+    orbit_game` (`flags2` is `flags`), play_room.cpp's `struct gl_level`,
     entity_spawner.c's `struct level_state14` and crate_break.c's
     `struct d18c_level` (`mode` is `maskLevel`). The byte reads
     `gLevelState[0x8c]`/`*((u8 *)gLevelState + 0x8c)` are
@@ -1570,7 +1570,7 @@ No codegen exception was needed.
     0x8/0x108/0x208/0x308). The names are room_entities.c's `struct
     lk_self`, the most complete copy; dingodile.c had `struct
     entity_flags` (`bitmap` at 0x108, the list as `struct collect_info`),
-    time_trial.c `struct collision_map` (`seen`), text_popup.h `struct
+    level_state.cpp `struct collision_map` (`seen`), text_popup.h `struct
     level_record_table **`, crate_create.c `struct placement_level` and
     spawn_start_marker.c/spawn_crates.c/platform_create.c read the list
     through `*(T **)gEntityFlags`. Those are `gEntityFlags->list` now,
@@ -1580,18 +1580,18 @@ No codegen exception was needed.
     (its `lk_list`/`lk_group`/`lk_item`/`lk_link`/`lk_links` views are
     gone), so LoadRoom passes the room's lists without casts.
   - `gCamera` (`struct camera *`): camera.c's `struct camera` and
-    `struct camera_target` moved to level.h. run_room.c's `struct
+    `struct camera_target` moved to level.h. play_room.cpp's `struct
     gl_scratch` (`player`/`unk_14`), action_ctrl_event.c's `struct
     follow_state` and level_select.c's `struct follow_owner` (`follow`)
     are `target`/`mode`; the stores cast to `struct camera_target *`.
   - `gCollidableList`, `gTouchableList`, `gForegroundList` (`struct
     part_list *`, box_part.h): cortex.c's `struct gfx_list`,
-    tiny_update.c's `struct hop_list`, time_trial.c's `struct
+    tiny_update.c's `struct hop_list`, level_state.cpp's `struct
     entity_list` and crate.h's `struct phys_obj_list2` (all `count` at 4,
     `items` at 0xC); the item reads cast `items[i]` to the file's object
     type.
   - `gCrateList` (`struct pool_manager *`, crates.h). crate.h's `struct crate_list`, mega_mix_update.c's `struct
-    ab_list`, room_entities.c's `struct lk_actor_list`, run_room.c's
+    ab_list`, room_entities.c's `struct lk_actor_list`, play_room.cpp's
     `struct gl_entity_list` and player_anim_room.c's `struct
     actor_list` are `activeCount`/`slotArray` (`count`/`items`); the
     `(struct pool_manager *)gCrateList` casts are gone.
@@ -1652,7 +1652,7 @@ The third `globals.h` PR. `gPlayer` had 16 types in 42 files; it is now
     is `speedX`), cortex.c's `gfx_player`, mega_mix_update.c's
     `ab_player`, tiny_update.c's `hop_player` (their `busy` at 0x104 is
     `dead`; dingodile.c's `struct part` loses its player-only `busy`),
-    run_room.c's `gl_player` and `gl_anim_record`, player_update.cpp's
+    play_room.cpp's `gl_player` and `gl_anim_record`, player_update.cpp's
     `ac2c_player`, moving_sprite.cpp's `player_view`,
     enemy_ctrl_update.c's `player_ring`, and the `void *`/`u8 *` users'
     byte offsets (`[0x88]`, `[0x92]`, `[0x94]`, `[0x100]`, `+0x80`,
@@ -1683,7 +1683,7 @@ The third `globals.h` PR. `gPlayer` had 16 types in 42 files; it is now
   code (see "Codegen findings") or the code is register-pinned:
   action_ctrl_moves.c's three `player[0x92]`/`[0x94]` byte
   stores through `*(u8 *volatile *)&gPlayer`, the register-pinned byte
-  writes in play_room.c and spawn_start_marker.c, and run_room.c's
+  writes in play_room.c and spawn_start_marker.c, and play_room.cpp's
   8-byte position copy (`*(struct gl_point *)&pl->x`).
 - **Left for later (9c2, done, see "Batch 9c2"):** the player functions still take `void *`
   (player.cpp's accessors read the player through `struct gobj`,
@@ -1847,7 +1847,7 @@ codegen exception was needed.
   the level state from `level` (+0xC4) on, which game_frame.c passes as
   `&self->level`. It merges level_query.c's `level_progress` (`item` is
   `cat`), play_room.c's `level_start_args` (`spawnX`/`spawnY`/`room` are
-  `checkpointX`/`checkpointY`/`cat`) and run_room.c's `gl_self`
+  `checkpointX`/`checkpointY`/`cat`) and play_room.cpp's `gl_self`
   (`widget` is `cat`; `gl_widget_kind` was the room). `PlayRoom` and
   `RunRoom` take it.
 - **`struct hitbox_quad`** (hitbox_quad.h, new, included by gfx.h and
@@ -1908,7 +1908,7 @@ codegen exception was needed.
   `struct menu_save *` (level_select.c reads `save->open` and the record
   words through a `(u8 *)` cast), `positions` is `const`, and `bg1`/`bg2`
   are typed.
-- **Other sprite-bank views**: time_trial.c's `anim_record`/
+- **Other sprite-bank views**: level_state.cpp's `anim_record`/
   `anim_table`, dingodile.c's `anim_rec`, tiny_update.c's
   `hop_anim_record`/`hop_anim_bank`, spawn_objects.c's
   `anim_record_21668`/`anim_table_21668` and sprite_renderer.cpp's
@@ -2162,12 +2162,12 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | `void *` view parameter -> `struct pause_menu *` | `PauseMenuCursorDown`/`Up`, `DrawPauseMenuPageTitle` | identical |
 | local `struct anim_part_instance`/`linked_node` -> `struct actor_self` fields | inline_copies_actors.cpp | identical, except `SetActorAnim`'s `animDone = zero1` store: through the field the pinned zero in r2 is dropped (`mov r1, #0`), so it stays `*((u8 *)self + 0x12)` |
 | `(*(struct cam_ref **)&self->record)->depth` -> `self->record->baseDepth` | company_logos.c (old_agbcc), jetpack_spawn.c, polar_player.c | identical |
-| `s16 []`/`u8 []` box extern -> `const struct anim_box`, `[0]`/`[3]` -> `.x`/`.w`; local `box16`/`box3` -> `struct anim_box` | airship.c, airship_explode.c, airship_touch.c, hovercraft.c, actor_category_frame.c, polar_nitro.c, yeti_*.c | identical |
+| `s16 []`/`u8 []` box extern -> `const struct anim_box`, `[0]`/`[3]` -> `.x`/`.w`; local `box16`/`box3` -> `struct anim_box` | airship.c, airship_states.cpp, airship_touch.c, hovercraft.c, actor_category_frame.c, polar_nitro.c, yeti_*.c | identical |
 | `s32 *` view of a const record table -> `const struct airship_attack *` fields | airship_states.c | identical |
 | ten-word / `orbit_table` / `spawn_timing_table` views -> `struct hovercraft_attack` with `timing[3]` | hovercraft*.c, singleton_kind_17c460.c | identical |
 | caller's `u8` return -> definition's `s32`, call written `(u8)F(...)` | `IsTouchingPlayer` (8 files), `IsSpawnCollected`, `IsActorMaskAssistDue`, `HurtPolarPlayer`, `ShockPolarPlayer`, `CanPauseActorCategory` | identical |
 | definition return `u8` -> `s32` for a getter whose caller returns `s32` | `IsJetpackPauseLocked`, `IsPolarPauseLocked` | identical; with `u8` the callers add `lsl`/`lsr #0x18` |
-| `u32` global read as `s32` (header type), compares cast `(u32)` | `gAirshipStateTimer` in airship_load_graphics.c | identical; without the casts `bls` becomes `ble` |
+| `u32` global read as `s32` (header type), compares cast `(u32)` | `gAirshipStateTimer` in airship_graphics.cpp | identical; without the casts `bls` becomes `ble` |
 | parameter `s32 a` -> `void *part`, passed on to `InitActorPart` | 27 constructors (polar_crates.c, jetpack_crates.c, ...) | identical, including the pinned `register void *aReg asm("r1")` in CreateJetpackParachuteNitro |
 | call `f()` -> `f(value already in r0)` | `LoadBgPicture(CUR_CATEGORY.bgPicture)` | identical |
 | two-argument call -> three, for a three-parameter definition | `SpawnHovercraftFireball` in the side gun | identical |
@@ -2182,7 +2182,7 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | `void InitPaletteCache(...)` -> returns `self` | graphics.c; pause_menu.c uses the result | identical (`self` is still in r0) |
 | unused 4th `u16` added to a spawn constructor; return `struct actor *` -> `void *` | `CreateEntity`, `CreateMovingSprite`, `CreateSpriteObj`, `CreateGroundSprite` | identical |
 | caller's `s32` declaration -> definition's `u8` return | `GetPaletteSlot` in FontUploadTiles | **changes** (`lsl #0x18; lsr #0x14` for one `lsl #4`); kept as an alias |
-| definition return `u8` -> `s32` (a 0/1 bit) | `GetPlatformExitMirror` | identical; with `u8`, run_room.c adds `lsl`/`lsr #0x18` |
+| definition return `u8` -> `s32` (a 0/1 bit) | `GetPlatformExitMirror` | identical; with `u8`, play_room.cpp adds `lsl`/`lsr #0x18` |
 | one-byte struct (`fx_direction`, BLKmode) stack argument -> `u8` parameter | `AddPaletteCycle` in RunRoom | **changes**; kept as an alias |
 | explicit-destination call `F(&box, part)` <-> struct return `box = F(part)` | `GetSpriteHitbox`, `GetSpriteBodyBox`, `GetSpriteAttackBox` | identical in cortex.c, tiny_update.c, level_select.c, sprite_obj.cpp, extra_life.c, crate_list_collide.cpp; **changes** the stack frame in dingodile.c, entity_spawner.c and platform_collide.c (aliases) |
 | s32 parameters read back with `ldrb` (`STACK_ARG_U8_ADDR`) -> `struct byte_arg` parameters | `AddCollisionCandidate` (collision_queue.c) | **changes** the definition (a register swap); kept as `s32`, crate_break.c calls through a `byte_arg` alias |
@@ -2197,15 +2197,15 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | caller's `u8` return -> definition's `s32`, call written `(u8)F(...)` | the level power tests, room queries and gem tests in 16 files (old_agbcc and agbcc) | identical; without the cast the `lsl #0x18` is missing |
 | local `struct layer`/`level_desc`/`level_load_args` views -> `struct bg_scroll_layer`/level_data.h's `level_desc`/`level_room` | level_layers.c | identical |
 | short local `struct level_layers`/`bg_scroll_layer` copies -> level.h's/bg_scroll_layer.h's | tiny_hop_pad.c, crate_list_collide.cpp, enemy_ctrl_update.c, sprite_obj.cpp, dingodile.c, entity_spawner.c | identical; entity_spawner.c's `u32` width reads keep their sign through `(u32)` casts |
-| local `struct level_state` copies -> level_state.h's, `unk_90[5]` -> named fields, `s32` platform fields read through `(struct slot_part *)` casts | time_trial.c, drop_extra_life.c, game_frame.c (old_agbcc) | identical |
-| local views of gLevelTable -> `const struct level_info` (`times[3]`, `theme`, `rooms`) | pause_menu_pages_init.c, power_dialog_draw.c, spawn_bosses.c, run_room.c (its `switch` on the now `u32` theme), level_query.c, level_select.c | identical |
+| local `struct level_state` copies -> level_state.h's, `unk_90[5]` -> named fields, `s32` platform fields read through `(struct slot_part *)` casts | level_state.cpp, entity_spawner.cpp, game_frame.c (old_agbcc) | identical |
+| local views of gLevelTable -> `const struct level_info` (`times[3]`, `theme`, `rooms`) | pause_menu_pages_init.c, power_dialog_draw.c, spawn_bosses.c, play_room.cpp (its `switch` on the now `u32` theme), level_query.c, level_select.c | identical |
 | `void` constructor -> returns `self` | `InitTileCache`, `InitEntityFlags` | identical |
 | `u8` parameter -> `s32` (stored with `strb` either way) | `SetCheckpoint` | identical; with `u8` RunRoom adds `lsl`/`lsr #0x18` |
 | `void *` global assigned the result of a function returning `struct level_layers *` | `gLevelLayers = GetLevelLayers()` in PlayRoom | **changes** (the global's address is loaded before the call); the file declares `gLevelLayers` with the real type |
 | call with no argument -> passing the global just stored from r0 | `PlayBootCutscene(gLevelState)` in MainLoop | identical |
 | array extern of a struct type that is still incomplete where it is declared (the file completes it later) | `gTerrainTypes` in bg_layer_base.c, while level.h only had the `struct terrain_type` tag | **changes** (GetSolidTerrainModeValue's `modeValue[n]` loads change); with the struct defined in level.h, identical |
 | `struct dual_array_manager` -> `struct part_list` (`void **` -> `struct box_part **` arrays, read through `(void **)` casts) | part_list.c | identical |
-| `union blend` global view / `struct unk_03001280` -> `struct blend_regs` | room_frame.c, util/aabb.cpp | identical |
+| `union blend` global view / `struct unk_03001280` -> `struct blend_regs` | play_room.cpp, util/aabb.cpp | identical |
 | `u32 gKeys` -> `union key_state`, `gKeys` -> `gKeys.all`; struct users -> `gKeys.half.pressed`; `u16` users -> `gKeys.half.held`/`&gKeys.half.held` | the action controller handlers, menus, frontend, irq.c, input.c (old_agbcc and agbcc) | identical; the `u16` users read `half.held`, since through `gKeys.all` their halfword tests would be word loads |
 | anonymous `struct { u16 held, pressed; } gKeys = { 0, 0 }` -> `union key_state gKeys = { { 0, 0 } }`, struct member first | iwram_data.c | identical; with the `u32` member first the `.s` has one `.word 0` for the two `.short 0` (same bytes) |
 | `void *`/`u8 *` global -> its struct pointer (`gAudioContext`, `gPaletteCache`, `gOamBuffer`, `gObjVramCursor`, `gHud`) | about 100 files | identical |
@@ -2215,7 +2215,7 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | `s16 []` extern -> `const s16 [256]`, locals `const s16 *` (also a pinned `register ... asm("r5")`) | gSineTable's 10 users | identical |
 | `void *`/`u8 *`/local-struct globals -> `struct level_state *`, `struct level_layers *`, `struct entity_flags *`, `struct camera *`, `struct part_list *`, `struct pool_manager *`, `struct actor_self *` | about 110 files (old_agbcc and agbcc) | identical |
 | byte offsets on the level globals -> fields (`[0x8c]` -> `timeTrial`, `+0x10`/`+0x24`/`+0x2b` -> `layer0`/`asset`/`raiseObjPriority`, `*(T **)gEntityFlags` -> `->list`) | 30 files, including the pinned `rec` in spawn_crates.c/spawn_start_marker.c | identical |
-| `gCrateList->count`/`items[i]` (local views) -> `activeCount`/`(T *)slotArray[i]` | crate_break.c, crate_time_trial.c, mega_mix_update.c, room_entities.c (old_agbcc), run_room.c, player_anim_room.c | identical |
+| `gCrateList->count`/`items[i]` (local views) -> `activeCount`/`(T *)slotArray[i]` | crate_break.c, crate_time_trial.c, mega_mix_update.c, room_entities.c (old_agbcc), play_room.cpp, player_anim_room.c | identical |
 | `void *` global assigned the result of a `void *` function, global made `struct level_state *` | `gLevelState = GetLevelState()` in MainLoop | **changes** (the global's address is loaded before the call, as with `gLevelLayers` in 8b); with GetLevelState returning `struct level_state *` it is identical, and so is GetLevelState |
 | `vt = src->vtable` (`struct pct_vtable *`, fields at 0x30/0x34) -> `struct actor_method *vt = &src->vtable->m30` | UpdateHudPercentCounters | `.o` identical, but the `.s` label numbers shift; `struct actor_vtable *vt = src->vtable` and `vt->m30.thisOffset`/`.fn` keep the `.s` identical too |
 | `void *`/`u8 *`/16 local-struct `gPlayer` views -> `struct player *`, byte offsets -> fields (`[0x88]` -> `ctrlMode`, `+0x80` -> `busy`, `[0x92]` -> `bounce`, `[0x100]` -> `slippery`, `+0x108` -> `collisionQueue`) | 59 files (old_agbcc and agbcc) | identical |
@@ -2225,10 +2225,10 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | `s32 flipX:1` (4-byte container) -> `u32 flipX:1` in a packed one-byte struct | crate_break.c | `.o` identical, but the `.LCB` labels shift (the signed field expands to more insns); `mirror.sbits` keeps the signed view |
 | `u32` mirror bits of a 4-byte struct (`ceac_player`, `box_part`) -> packed `mirror.bits` | crate_hit.c, crate_hit.cpp | identical |
 | `point = pl->pos` (8-byte struct copy) -> `point.x = pl->x; point.y = pl->y` | RunRoom | **changes** (`ldr; ldr; str; str` order); kept as a copy through `*(struct gl_point *)&pl->x` |
-| `#include "action_obj.h"` (it defines static inlines) in a file that didn't include it | run_room.c | `.o` identical, `.s` label numbers shift; the records it needed moved to player.h instead |
-| `(*p->anim)[tag].tileRecord`/`(*keyframes)[tag]` -> `p->anim->records[tag].paletteId` | run_room.c, crate_hit.cpp, crate_hit.c | identical |
-| `vtable + 0x68` bytes / `vtable[13]` / local `m68` -> `&p->vtable->handleEvent`, with `*(void *const volatile *)&m->fn` | graphics.c, level_select.c, cortex.c, crate_time_trial.c, moving_sprite.cpp, sprite.c, tiny_update.c, mega_mix_update.c, dingodile.c, platform_collide.c, play_room.c (`destroy`), room_frame.c (`isOnScreen`/`draw`) | identical |
-| `struct gl_method`'s `delta` -> `thisOffset` and `__typeof__` in `PMF_CALL` | run_room.c | identical |
+| `#include "action_obj.h"` (it defines static inlines) in a file that didn't include it | play_room.cpp | `.o` identical, `.s` label numbers shift; the records it needed moved to player.h instead |
+| `(*p->anim)[tag].tileRecord`/`(*keyframes)[tag]` -> `p->anim->records[tag].paletteId` | play_room.cpp, crate_hit.cpp, crate_hit.c | identical |
+| `vtable + 0x68` bytes / `vtable[13]` / local `m68` -> `&p->vtable->handleEvent`, with `*(void *const volatile *)&m->fn` | graphics.c, level_select.c, cortex.c, crate_time_trial.c, moving_sprite.cpp, sprite.c, tiny_update.c, mega_mix_update.c, dingodile.c, platform_collide.c, play_room.c (`destroy`), play_room.cpp (`isOnScreen`/`draw`) | identical |
+| `struct gl_method`'s `delta` -> `thisOffset` and `__typeof__` in `PMF_CALL` | play_room.cpp | identical |
 | `void *self` -> `struct player *`/`struct crate *` parameters, `selfArg` copies dropped or cast to `u8 *` (pinned registers kept) | player.cpp, player_update.c, player_reset.c, crate_fields.cpp, crate_create.cpp, crate_reset.c | identical |
 | method `self` views (`a884_part`, `ab9c_obj`, `ac2c_self`, `orbit_self`, `ctrl_target`) -> `struct player`; u32 mirror bit of a 4-byte container -> packed `mirror.bits.flipX`; `u8` bitfields -> `flags.bits`; `vtable + 0x70` -> `&vtable->collideWithObjects` | player_collide.c, player_update.cpp, input_ctrl.c (old_agbcc) | identical |
 | `#include "crate.h"` (with gobj_1a794.h; 6 static inlines) in a file that didn't include it | crate.c | `.o` identical, `.s` label numbers shift (+7); kept, since crate.c needs `struct crate` |
@@ -2240,7 +2240,7 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | `u8 []` ARM-code labels -> `const u32 []`, byte offsets through `(const u8 *)` casts | GaxChannelMix's patch macro | identical |
 | `void *` accessor return -> `struct crate *`, callers cast | GetCrateAbove/GetCrateBelow in crate_hit.c (old_agbcc), room_entities.c (old_agbcc) | identical |
 | `struct level_category`/`MedalListItem`/`MedalItemList` views -> `const struct level_room`/`level_room_list`, `*(void **)((u8 *)item->linkedObj + 0x1c)` -> `item->desc->entities`, `*(u8 **)(nested + 0x10)` -> `nested->typeCounts` (pinned `register u32`) | level_query.c, level_state.c, bonus_round.c, game_frame.c | identical |
-| three file-local views of the level state's room block -> one `struct level_progress`; `void *`/`struct gl_self *` parameters -> `struct level_progress *` | play_room.c (pinned r8/r4 copies), run_room.c, level_query.c | identical |
+| three file-local views of the level state's room block -> one `struct level_progress`; `void *`/`struct gl_self *` parameters -> `struct level_progress *` | play_room.c (pinned r8/r4 copies), play_room.cpp, level_query.c | identical |
 | `struct sprite_box` -> `struct hitbox_quad` with the pad named (`u16 unk_06`) | sprite_bank.h's frames and animations, gEmptySpriteBox | identical |
 | `u8 collisionQueue[4]`/`unk_10C` -> embedded `struct collision_queue`; `(u8 *)p + 0x108` with `q[4]` -> `&p->collisionQueue` with `q->unk_04` | crate_break.c (old_agbcc), player_update.cpp, player.cpp, crate.c | identical |
 | u8 candidate bytes stored as `struct byte_arg` members (`.p20.v = f20`) | AddCollisionCandidate | identical |
@@ -2248,7 +2248,7 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | `struct vec3`/`motion_rec`/`s32 [N][3]` motion records -> `struct speed_ramp` (`.x`/`.a` -> `.start`, ...), `(const struct vec3 *)tbl[i]` -> `&tbl[i]` | platform.c (pinned `register` pointers), dingodile.c, dingodile_create.c, action_ctrl_states.cpp (old_agbcc), swim_ctrl.c, player.cpp | identical |
 | local `*_method` records -> `struct actor_method`, a typed `fn` call -> a cast call | 12 files (old_agbcc and agbcc) | identical |
 | level_select.c's local level-select types -> level_menu.h's: `u8 flags28` -> packed `struct sprite_f28`, `struct actor_method *vtable` with `&vtable[10]` -> `struct sprite_vtable *` with `&vtable->m50`, `u8 *save` -> `struct menu_save *` read through `(u8 *)`/`save->open`, `void *bg1` -> `struct page_bg *` (`&bg1->bg`) | level_select.c (old_agbcc) | identical, including the pinned `anim`/`records` registers |
-| `struct anim_record`/`anim_table` and other sprite-bank views -> `const struct sprite_anim`/`sprite_bank` (`records` -> `anims`, `tileRecord` -> `paletteId`, `(*kf)[i]` -> `kf->anims[i]`) | level_select.c, level_select_pages.c, level_select_widgets.c, time_trial.c, dingodile.c, tiny_update.c, spawn_objects.c, sprite_renderer.cpp | identical |
+| `struct anim_record`/`anim_table` and other sprite-bank views -> `const struct sprite_anim`/`sprite_bank` (`records` -> `anims`, `tileRecord` -> `paletteId`, `(*kf)[i]` -> `kf->anims[i]`) | level_select.c, level_select_pages.c, level_select_widgets.c, level_state.cpp, dingodile.c, tiny_update.c, spawn_objects.c, sprite_renderer.cpp | identical |
 | two `zoom_bg` copies -> one with both BG2CNT bit views (byte containers for InitZoomBg, halfword ones for UpdateZoomBg); `s32 phase` -> `u32`, `u16 x16` -> `s16` (stores only in InitZoomBg) | level_select_pages.c, level_select_widgets.c (old_agbcc) | identical |
 | stack `struct oam_pair` (`oam_attr01` + `oam_attr2`) -> `struct oam_attrs` | DrawSpritePieces, DrawAffineSpritePieces | identical |
 | `struct spawned` effect-part views -> `struct gfx_part` (`unk_0C_2` -> `hidden`) | action_ctrl_states.cpp, swim_ctrl_stroke.c | identical |
@@ -2267,8 +2267,8 @@ Experiments for later batches:
 - **`RandRange` (util, applied in batch 4): neither type works
   everywhere.** The definition
   (`src/util/rand.cpp`) returns `u16`. 14 callers declare `s32`, and
-  `airship_explode.c` declares `u16`.
-  - Switching `airship_explode.c` to `s32` removes every `lsl #0x10`/
+  `airship_states.cpp` declares `u16`.
+  - Switching `airship_states.cpp` to `s32` removes every `lsl #0x10`/
     `lsr #0x10` pair after the calls.
   - Switching each `s32` caller to `u16` is identical in 13 of them.
     `title_screen_init.c` changes: its two stack slots swap (`[sp, #0x20]`
@@ -2295,7 +2295,7 @@ adds its entries here.
 | src/player/action_ctrl_moves.cpp | `UpdatePlayerFacing` | `u8 UpdatePlayerFacing_u8(struct act *self) asm("UpdatePlayerFacing")`, used where ActionCtrlStateHangMove tests the result | `s32 (struct act *)` (player.h) | the test needs the `u8` return's `lsl #0x18`; the definition only matches as `s32` |
 | src/vehicle/jetpack/jetpack_spawn.c | `CreateHovercraftSideGun` | `void *CreateHovercraftSideGun_b(void *self, void *part, s32 b, s32 c, s32 d, struct byte_arg e) asm("CreateHovercraftSideGun")`, called by SpawnHovercraftSideGun | `void *(void *self, void *part, s32 b, s32 c, s32 d, u8 eByte)` (bosses.h) | the ROM stores the one-byte stack argument with `add r2, sp, #4; strb`; through the `u8` prototype it is a `str` |
 | src/text/font.c | `GetPaletteSlot` | `s32 GetPaletteSlot_s32(u8 *cache, s32 recordId) asm("GetPaletteSlot")` | `u8 (struct palette_cache *, s32)` (gfx.h) | FontUploadTiles uses the slot as a word; through the `u8` return the shift is `lsl #0x18; lsr #0x14` for the ROM's `lsl #4` |
-| src/level/run_room.c | `AddPaletteCycle` | `void AddPaletteCycle_fx(..., struct fx_direction direction) asm("AddPaletteCycle")`, used by `FX_CYCLE` | `void (..., u8 direction)` (gfx.h) | RunRoom passes the direction as a one-byte BLKmode struct stored with `strb` |
+| src/level/play_room.cpp | `AddPaletteCycle` | `void AddPaletteCycle_fx(..., struct fx_direction direction) asm("AddPaletteCycle")`, used by `FX_CYCLE` | `void (..., u8 direction)` (gfx.h) | RunRoom passes the direction as a one-byte BLKmode struct stored with `strb` |
 | src/level/entity_spawner.c, src/objects/platform_collide.cpp | `GetSpriteHitbox` | `void GetSpriteHitbox_p(struct aabb *dest, void *part) asm("GetSpriteHitbox")` | `struct aabb (struct box_part *)` (objects.h) | written as a struct return, the call goes through a stack temporary and the frame grows |
 | src/bosses/dingodile.c | `GetSpriteAttackBox`, `GetSpriteBodyBox` | `struct aabb GetSpriteAttackBox_s(void *part) asm("GetSpriteAttackBox")` (and `_s` for the other) | `void *(void *dest, void *pt)` (objects.h) | written with an explicit destination, the frame and register allocation change |
 | src/crates/crate_break.c | `AddCollisionCandidate` | `void AddCollisionCandidate_b(..., struct byte_arg f20, struct byte_arg f21) asm("AddCollisionCandidate")` | `void (..., s32 field20, s32 field21)` (objects.h) | QueueCratePlayerCollision stores the two bytes with `strb`; the definition only matches with `s32` parameters |

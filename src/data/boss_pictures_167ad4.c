@@ -28,7 +28,7 @@
 #include "globals.h"
 
 /* N. Gin's airship: its palette, 16 colours that LoadAirshipGraphics
- * (airship_load_graphics.c) DMAs to BG palette 1 (the rest is zero). */
+ * (airship_graphics.cpp) DMAs to BG palette 1 (the rest is zero). */
 const u16 gAirshipPalette[256] = {
     0x03E0, 0x30E7, 0x3549, 0x41AC, 0x46C5, 0x3222, 0x1DA0, 0x033F,
     0x02BF, 0x3AB9, 0x05F7, 0x0194, 0x5B3B, 0x29B0, 0x14BF, 0x7FFF,

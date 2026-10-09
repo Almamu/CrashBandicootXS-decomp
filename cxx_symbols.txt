@@ -932,7 +932,7 @@ Loop__11LevelSelect LevelSelectLoop
 CursorLeft__11LevelSelect LevelSelectCursorLeft
 CursorRight__11LevelSelect LevelSelectCursorRight
 # part 9: the spawners (include/spawners.hpp; src/level/entity_spawner.cpp,
-# drop_extra_life.cpp, spawn_*.cpp, time_trial.cpp)
+# spawn_*.cpp, level_state.cpp)
 __13EntitySpawner InitEntitySpawner
 _._13EntitySpawner DestroyEntitySpawnerObj
 Spawn__13EntitySpawnerUiPC12level_entity SpawnEntity
@@ -1037,7 +1037,7 @@ UpdateVvLogoPieces__12CompanyLogos UpdateVvLogoPieces
 # part 11a: the 3D actors' base classes and their subclasses' destructors
 # (include/actor_self.hpp, vehicle.hpp, boss_actors.hpp; src/actor/actor.cpp,
 # inline_copies_actors.cpp), and the polar player's state dispatch and table
-# (src/vehicle/polar/polar_player_dispatch.cpp, src/data/actor_pmf_17a6b8.cpp)
+# (src/vehicle/polar/polar_player_states.cpp, src/data/actor_pmf_17a6b8.cpp)
 GetAnimFrameBaseOffset__8AnimPart GetAnimFrameBaseOffset
 GetAnimFrameAttr__8AnimPart GetAnimFrameAttr
 GetAnimFrameData__8AnimPart GetAnimFrameData
@@ -1195,7 +1195,7 @@ Update__11JetpackShot UpdateJetpackShot
 IsUnshootable__11JetpackShot IsJetpackShotUnshootable
 #
 # part 11c: the polar player (include/vehicle.hpp; src/vehicle/polar/polar_player.cpp,
-# polar_player_states.cpp, polar_player_actions.cpp)
+# polar_player_states.cpp)
 _._11PolarPlayer DestroyPolarPlayer
 Update__11PolarPlayer UpdatePolarPlayer
 Draw__11PolarPlayer DrawPolarPlayer

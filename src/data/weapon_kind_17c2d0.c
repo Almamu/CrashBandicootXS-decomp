@@ -38,7 +38,7 @@ const u16 gAirshipHitFlashPalettes[3][16] = {
 };
 
 /* The boss's box (struct anim_box), read by AirshipStateExplode
- * (airship_explode.c), SteerAirship (airship.c) and IsTouchingAirship
+ * (airship_states.cpp), SteerAirship (airship.c) and IsTouchingAirship
  * (airship_touch.c). */
 const struct anim_box gAirshipBox = { -102, -12, -2, 51, 68, 4 };
 

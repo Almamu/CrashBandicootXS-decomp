@@ -230,7 +230,7 @@ void UpdateAirship(void)
     }
 }
 
-/* Same boss-weapon subsystem as airship_fireball.cpp/airship_fall.cpp - see
+/* Same boss-weapon subsystem as airship_fireball.cpp/airship_states.cpp - see
  * airship_fireball.cpp's header comment and
  * docs/matching/archive/issue-58-0x08030334-actor.md. */
 

@@ -5,7 +5,7 @@
  * ActorSelf and HpActor (actor_self.hpp). Part 11a declared what the
  * C++ objects needed then: the destructors that src/actor/inline_copies_actors.cpp
  * has (the ROM keeps them there, with a few small methods), and the polar
- * player's state dispatch and table (src/vehicle/polar/polar_player_dispatch.cpp,
+ * player's state dispatch and table (src/vehicle/polar/polar_player_states.cpp,
  * src/data/actor_pmf_17a6b8.cpp). Part 11b added the polar actors' fields
  * and the constructors src/actor/actor_factory.cpp uses. Their other
  * methods, and the jetpack actors' fields past HpActor's, are still C
@@ -50,9 +50,8 @@ public:
     virtual ~RiderlessPolar(); // 1 DestroyRiderlessPolar
 };
 
-/* The polar run's player (gPolarPlayerVtable; src/vehicle/polar/polar_player.cpp,
- * polar_player_states.cpp, polar_player_actions.cpp and
- * polar_player_dispatch.cpp): it rides the polar bear, steered left and
+/* The polar run's player (gPolarPlayerVtable; src/vehicle/polar/polar_player.cpp
+ * and polar_player_states.cpp): it rides the polar bear, steered left and
  * right, and jumps; the rest of its state is in the gPolar* globals
  * (vehicle.h), as the ROM has it. ConstructAnimTableState
  * (actor_factory.cpp) makes it gActorList, the actor list's root. The

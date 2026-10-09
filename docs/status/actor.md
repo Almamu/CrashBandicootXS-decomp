@@ -53,9 +53,10 @@ from "core" graphics.
   [issue-15-16-naked-retry.md](../matching/archive/issue-15-16-naked-retry.md).
 - **Issues #58/#61 NAKED retry** ([docs/matching/archive/issue-58-61-naked-retry.md](../matching/archive/issue-58-61-naked-retry.md)):
   the boss-weapon cluster's `AirshipStateFireballs` (`airship_states.c`),
-  `AirshipStateCannon` (`airship_states.c`), `AirshipStateExplode` (`airship_explode.c`),
+  `AirshipStateCannon` (`airship_states.c`), `AirshipStateExplode` (`airship_explode.c`; in `airship_states.cpp` since #771),
   `CreateAirship` (`airship.c`), `SpawnAirship` (`airship.c`),
-  `UpdateAirship` (`airship.c`), `LoadAirshipGraphics` (`airship_load_graphics.c`),
+  `UpdateAirship` (`airship.c`), `LoadAirshipGraphics` (`airship_load_graphics.c`; in
+  `airship_graphics.cpp` since #771),
   and the `gHovercraft` singleton's `HovercraftStateCloseIn`, `HovercraftStateFallBack`,
   `CreateHovercraft`, `SpawnHovercraft`, `UpdateHovercraft`, `LoadHovercraftGraphics`
   (`hovercraft.c`). Plain C under current agbcc, no register pins;
@@ -311,10 +312,12 @@ from "core" graphics.
   #15/#16/#17 retry)
 
 - `src/graphics/actor_part19.c`/`actor_part19c.c`/`actor_part19d.c`/
-  `actor_part19f.c`/`actor_part19g.c` (now `src/vehicle/polar/polar_player_actions.c`,
+  `actor_part19f.c`/`actor_part19g.c` (now `src/vehicle/polar/polar_player_actions.c` - in `polar_player_states.cpp`
+  since #771 -
   `polar_pickups.c` and `polar_crates.c`; new files, non-adjacent since
   the now-matched `CreatePolarCollectedWumpa` (see below), `RunPolarPlayerState`
-  (`polar_player_dispatch.c`, now matched too - see below), and one left-raw function sat
+  (`polar_player_dispatch.c`, in `polar_player_states.cpp` since #771, now
+  matched too - see below), and one left-raw function sat
   between them - `DrawPolarCollectedWumpa` (`polar_pickups.c`), previously also
   parked here, is now matched as real C (see below) - see
   `docs/matching.md`, issue #52): `PolarPlayerStateLaunched`, `PolarPlayerStateFinish`,
@@ -361,7 +364,9 @@ from "core" graphics.
 
 - `src/vehicle/jetpack/airship_fireball.c`/`airship_states.c`/`airship_fall.c`/
   `airship.c`/`airship_damage.c`/`airship_graphics.c` (new files, issue
-  #58, ROM `0x08030334`-`0x08031784` - the boss-weapon effect state
+  #58; since #771 `airship_fall.c` is in `airship_states.cpp` and
+  `airship_damage.c` in `airship_graphics.cpp`; ROM
+  `0x08030334`-`0x08031784` - the boss-weapon effect state
   machine, non-adjacent since 18 raw functions sit between/around them;
   see
   [docs/matching/archive/issue-58-0x08030334-actor.md](../matching/archive/issue-58-0x08030334-actor.md)):
@@ -900,7 +905,8 @@ from "core" graphics.
   ([docs/matching/archive/size2-naked-retry.md](../matching/archive/size2-naked-retry.md)) - see
   [docs/matching/archive/issue-64-0x08034aa4-actor.md](../matching/archive/issue-64-0x08034aa4-actor.md).
 
-- `src/vehicle/polar/polar_player_dispatch.c` (`RunPolarPlayerState`),
+- `src/vehicle/polar/polar_player_dispatch.c` (`RunPolarPlayerState`; in
+  `polar_player_states.cpp` since #771),
   `airship_fireball.c` (`UpdateAirshipFireball`), `airship_fireball.c` (`RunAirshipFireballState`),
   `hovercraft_cannon.c` (`UpdateHovercraftCannon`), `hovercraft_cannon.c` (`RunHovercraftCannonState`),
   `hovercraft_launcher.c` (`UpdateHovercraftLauncher`), `jetpack_player.c` (`RunJetpackPlayerState`),

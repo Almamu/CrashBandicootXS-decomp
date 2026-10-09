@@ -36,7 +36,7 @@ static inline void SetPlayerBusy(void)
     p->busy = one;
 }
 
-/* The crate list's update pass (run_room.cpp): DetonateNitroCrates, then
+/* The crate list's update pass (play_room.cpp): DetonateNitroCrates, then
  * each crate of the list is updated, and a crate that is gone is removed
  * and deleted; all of it again while the list keeps changing. */
 void UpdateCrates(void)

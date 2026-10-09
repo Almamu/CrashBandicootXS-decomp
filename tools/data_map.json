@@ -224,8 +224,7 @@
     "ConvertAirshipTiles"
    ],
    "consumer_files": [
-    "vehicle/jetpack/airship_load_graphics.c",
-    "vehicle/jetpack/airship_graphics.c"
+    "vehicle/jetpack/airship_graphics.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2844,7 +2843,7 @@
     "RunRoom"
    ],
    "consumer_files": [
-    "level/run_room.cpp"
+    "level/play_room.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2868,7 +2867,7 @@
     "RunRoom"
    ],
    "consumer_files": [
-    "level/run_room.cpp"
+    "level/play_room.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2892,7 +2891,7 @@
     "RunRoom"
    ],
    "consumer_files": [
-    "level/run_room.cpp"
+    "level/play_room.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2916,7 +2915,7 @@
     "RunRoom"
    ],
    "consumer_files": [
-    "level/run_room.cpp"
+    "level/play_room.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2940,7 +2939,7 @@
     "RunRoom"
    ],
    "consumer_files": [
-    "level/run_room.cpp"
+    "level/play_room.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2990,7 +2989,7 @@
     "menus/pause_menu_pages_init.cpp",
     "level/level_query.cpp",
     "level/room_select.cpp",
-    "level/run_room.cpp"
+    "level/play_room.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 67,
@@ -3498,7 +3497,7 @@
    ],
    "consumer_files": [
     "vehicle/polar/polar_player.c",
-    "vehicle/polar/polar_player_dispatch.c"
+    "vehicle/polar/polar_player_states.cpp"
    ],
    "ptr_words_code": 14,
    "ptr_words_data": 0,
@@ -4063,7 +4062,7 @@
     "IsTouchingAirship"
    ],
    "consumer_files": [
-    "vehicle/jetpack/airship_explode.c",
+    "vehicle/jetpack/airship_states.cpp",
     "vehicle/jetpack/airship.c",
     "vehicle/jetpack/airship_touch.c"
    ],
@@ -8184,7 +8183,6 @@
    ],
    "consumer_files": [
     "level/bg_layer.cpp",
-    "level/bg_layer_init.cpp",
     "level/pooled_bg_layer.cpp"
    ],
    "ptr_words_code": 9,
@@ -8389,7 +8387,7 @@
     "actor/inline_copies_actors.cpp",
     "vehicle/jetpack/jetpack_crates.c",
     "vehicle/jetpack/jetpack_collected_wumpa.cpp",
-    "vehicle/polar/polar_player_actions.c",
+    "vehicle/polar/polar_player_states.cpp",
     "vehicle/polar/polar_pickups.c",
     "vehicle/jetpack/jetpack_player.c",
     "actor/actor.cpp"
@@ -8465,7 +8463,7 @@
     "DestroyPolarPlayer"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_player_actions.c",
+    "vehicle/polar/polar_player_states.cpp",
     "actor/actor_factory.c"
    ],
    "ptr_words_code": 3,
