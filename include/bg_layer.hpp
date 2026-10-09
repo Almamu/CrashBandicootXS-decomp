@@ -66,9 +66,9 @@ public:
 COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(BgStreamer) == 0x24);
 
 /* A scrolling layer's position and size (0x34 bytes): the base of
- * BgLayer. Its methods are in src/level/bg_layer_base.cpp. Scroll scales a move by the layer's
- * parallax factors and steps the position by it, ClampScrollStep (virtual)
- * limiting each axis's step. */
+ * BgLayer. Its methods are in src/level/bg_layer_base.cpp. Scroll scales
+ * a move by the layer's parallax factors and steps the position by it,
+ * ClampScrollStep (virtual) limiting each axis's step. */
 class BgLayerBase
 {
 public:
@@ -305,9 +305,9 @@ COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(PooledBgLayer) == 0x60);
  * slot `(nextSlot - 1) & 0xf`, the slot filled just before the cursor).
  * `source` is the level_layer_desc SetSource was given, read as a pointer
  * to the record grid. It has no vtable. Its methods are in
- * src/level/bg_layer_base.cpp (GetChunk, the terrain lookups, DecodeChunk),
- * src/level/tile_cache.cpp (the constructor, destructor and GetTerrainType)
- * and src/level/collision_map.cpp (GetCell, SetSource). */
+ * src/level/tile_cache.cpp (GetChunk, the terrain lookups, DecodeChunk,
+ * the constructor, destructor and GetTerrainType) and
+ * src/level/collision_map.cpp (GetCell, SetSource). */
 class TileCache
 {
 public:

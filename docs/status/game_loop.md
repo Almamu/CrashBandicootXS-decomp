@@ -71,7 +71,8 @@ system from "core" system startup/init code.
   and `IsBgLayerEnabled`/`GetBgLayerY`/`GetBgLayerX`/`GetBgLayerHeightTiles`/
   `GetBgLayerWidthTiles`/`GetBgLayerHeight`/`GetBgLayerWidth` (its field accessors), and
   the terrain tile cache's `GetCollisionChunk`/`GetTerrainHeights`/`GetSolidTerrainHeights`/
-  `GetSolidTerrainModeValue` (plain C, built with old_agbcc - see [game-loop-old-agbcc.md](../matching/archive/game-loop-old-agbcc.md)),
+  `GetSolidTerrainModeValue` (in `src/level/tile_cache.cpp` since #770, with
+  `DecodeCollisionChunk`; plain C, built with old_agbcc - see [game-loop-old-agbcc.md](../matching/archive/game-loop-old-agbcc.md)),
   and `DecodeCollisionChunk`, the RLE/delta decoder (real C since the second
   near-miss sweep - see [near-miss-polish-2.md](../matching/archive/near-miss-polish-2.md))
 - `src/level/tile_cache.c` (GitHub issue #40): `DestroyTileCache`,

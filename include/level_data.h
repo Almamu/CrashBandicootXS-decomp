@@ -15,7 +15,7 @@
 
 /* One layer (BG0-3 or the collision layer): the BG layers' and their
  * streamers' source (include/bg_layer.hpp), and the raw `source` of the
- * terrain cache (bg_layer_base.cpp/collision_map.cpp). */
+ * terrain cache (tile_cache.cpp/collision_map.cpp). */
 struct level_layer_desc {
     const u16 *chunkGrid; // 0x00 - gridWidth x gridHeight chunk ids, row-major
     u32 assetOffset;      // 0x04 - this layer's section in the level asset

@@ -26,7 +26,7 @@
 
 struct camera;
 
-/* The terrain types of the level collision maps (bg_layer_base.cpp): a
+/* The terrain types of the level collision maps (tile_cache.cpp): a
  * cell's low byte picks one (0x24 and above are solid, 0 is empty, and
  * GetTerrainHeights stops at 0x23), `modeValue` is a value per collision mode
  * (GetSolidTerrainModeValue) and `heights` the surface height of each of the cell's

@@ -86,7 +86,7 @@ s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
  * for on the same `player`/`arg0` global, `gLevelLayers`).
  *
  * `ProbeFloorHeight` looks the tile row up via the already-matched
- * `GetTerrainHeights` ("the raw terrain streamer" - `bg_layer_base.cpp`, GitHub
+ * `GetTerrainHeights` ("the raw terrain streamer" - `tile_cache.cpp`, GitHub
  * issue #40), returning a row pointer or `NULL` on a miss. On a hit,
  * reads a **signed byte** height sample at `row[pos->x & 7]`, computes
  * `((pos->y >> 3) << 3) + heightByte - pos->y`, shifts to Q8, and
@@ -97,9 +97,9 @@ s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
  * the already-matched `GetSolidTerrainModeValue(terrainPtr, tileX, tileY, 0,
  * &scratch)` instead - the "CheckTerrainFlag"-style API
  * `ProbeTerrainY`/`ProbeTerrainX` already use via their own `GetSolidTerrainHeights`
- * calls (`bg_layer_base.cpp`, same issue #40). `scratch` is a caller-local
+ * calls (`tile_cache.cpp`, same issue #40). `scratch` is a caller-local
  * flag-nibble out-parameter nothing here ever reads back, the same
- * "discarded outValue" idiom `bg_layer_base.cpp`'s own siblings already
+ * "discarded outValue" idiom `tile_cache.cpp`'s own siblings already
  * established. Returns `0` if the returned signed byte is negative, `1`
  * otherwise, with the same `(tileY<<3)+byte-pos->y` delta accumulation.
  *

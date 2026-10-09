@@ -46,7 +46,7 @@ extern "C" {
  * `recordId`'s halfword table entry, then decodes a token stream,
  * budget-limited to 0x7f halfwords, with the same three run modes
  * (literal-fill, signed-delta-accumulate, raw-copy) as the terrain-tile
- * cache's `DecodeCollisionChunk` (bg_layer_base.cpp) - just writing into a
+ * cache's `DecodeCollisionChunk` (tile_cache.cpp) - just writing into a
  * 2D buffer (row = idx>>4, 64-halfword row stride) instead of a flat one.
  *
  * Matched (old_agbcc) by porting `DecodeCollisionChunk`'s matched shape: `src`

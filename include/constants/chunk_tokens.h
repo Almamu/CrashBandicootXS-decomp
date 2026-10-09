@@ -3,7 +3,7 @@
 
 /*
  * The run kinds of a layer or collision chunk's token stream
- * (DecodeCollisionChunk, bg_layer_base.cpp, and its twin DecodeLayerChunk,
+ * (DecodeCollisionChunk, tile_cache.cpp, and its twin DecodeLayerChunk,
  * bg_streamer.cpp; docs/rom_map.md). Each token halfword's low byte is
  * the run length, and its top bits pick the run: a token with neither bit
  * set copies the next `n` halfwords as they are.

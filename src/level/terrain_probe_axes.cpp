@@ -24,7 +24,7 @@ extern "C" {
  *     it lands exactly on `self->tiles->widthTiles` (the tile cache's
  *     width in tiles, TileCache in include/bg_layer.hpp), calling
  *     `self->tiles->GetSolidTerrainHeights(tileX, tileY, submode,
- *     &scratch)` (matched, `bg_layer_base.cpp`) per tile until a hit or the
+ *     &scratch)` (matched, `tile_cache.cpp`) per tile until a hit or the
  *     range is exhausted. On a hit, accumulates into `*outValue` using
  *     `pos->y & 7`: `submode == 2` adds `(8-(y&7))<<8`, `submode == 0`
  *     subtracts `(y&7)<<8` (any other submode value leaves `*outValue`
