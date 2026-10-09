@@ -17,39 +17,19 @@ void SaveData::SetFlags(u8 mask)
 
 /* Drains up to 0x60 bytes per call from `self->cursor` (streaming a
  * save_data out of `self->tmpl`) into the SIO session's
- * outgoing ring, once the previous batch has been taken (`ring.count`
- * back to 0). Marks `sendDone` once `remaining` is fully drained. The
- * channel pointer has to be its own local: written as `s->ring.`
- * throughout, gcc keeps the first `&count` computation alive for both
- * fill loops instead of recomputing it as the ROM does. */
+ * outgoing ring (LinkRing::Push), once the previous batch has been
+ * taken (`ring.count` back to 0). Marks `sendDone` once `remaining` is
+ * fully drained. */
 void SaveTransfer::SendChunk()
 {
     if (remaining != 0) {
         LinkSession *s = gLinkSession;
-        LinkRing *ch = &s->ring;
 
-        if (ch->count == 0) {
+        if (s->ring.count == 0) {
             s32 n = remaining;
-            u8 *src;
-            s32 i;
 
             LIMIT_MAX(n, 0x60);
-            src = cursor;
-            if (ch->writePos < 0x80 - n) {
-                for (i = n - 1; i != -1; i--) {
-                    ch->writePos++;
-                    ch->count++;
-                    ch->buf[ch->writePos] = *src++;
-                }
-            } else {
-                for (i = n - 1; i != -1; i--) {
-                    u8 b = *src++;
-
-                    ch->writePos = ch->writePos == 0x7f ? 0 : ch->writePos + 1;
-                    ch->count++;
-                    ch->buf[ch->writePos] = b;
-                }
-            }
+            s->ring.Push(cursor, n);
             cursor += n;
             remaining -= n;
         }
@@ -71,7 +51,12 @@ void SaveTransfer::SendChunk()
  * `"+r"` escape the ring pointer inherited that preference and pushed
  * the wrap loop's `old` out of r2. The wrap loop's count pointer is
  * pinned to r1 (the ROM's register), and the loop is an explicit
- * `if` + `do`/`while` so the pin is set after the zero-trip test. */
+ * `if` + `do`/`while` so the pin is set after the zero-trip test.
+ * #662 round 2: written as `s->players[playerIndex].ring.count` and an
+ * inline LinkRing pop (SendChunk's LinkRing::Push in reverse, with the
+ * wrap loop's `next = 0; if (old != 0x7f) ...`), both loops come out as
+ * the ROM's, but gcc computes `playerIndex * 0xc8 + s` once and reuses
+ * it for the ring pointer, where the ROM multiplies twice. */
 void SaveTransfer::ReceiveChunk(s32 playerIndex)
 {
     LinkSession *s = gLinkSession;

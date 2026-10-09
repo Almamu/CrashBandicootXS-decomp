@@ -91,7 +91,11 @@ s32 DrawWrappedText(u8 *text, Font *self, struct aabb *box, s32 limit, s32 mode)
                 {
                     /* Emits nothing; keeping r1 live here moves the
                      * spilled lineCount's reload to r2 and the limit's
-                     * to r0, as in the ROM (hard-register hold, #489). */
+                     * to r0, as in the ROM (hard-register hold, #489).
+                     * #662 round 2: `++lineCount >= limit`, `limit <=
+                     * lineCount`, moving the setup stores and the
+                     * permuter (best C wraps every `*token` read in an
+                     * inline function) don't replace it. */
                     MATCH_HOLD_REG(s32, hold, r1);
                     MATCH_HOLD(hold);
                     lineCount++;

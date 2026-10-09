@@ -47,7 +47,7 @@ songs and WAV samples. `baserom.gba` isn't needed to build it.
 | Directory | Functions | No workarounds | With workarounds |
 |---|---:|---:|---:|
 | `lib/agb_eeprom/` | 10 | 9 | 1 |
-| `lib/gax/` | 49 | 35 | 14 |
+| `lib/gax/` | 49 | 38 | 11 |
 | `lib/libgcc/` | 3 | 3 | 0 |
 | `src/actor/` | 136 | 134 | 2 |
 | `src/audio/` | 27 | 26 | 1 |
@@ -61,12 +61,12 @@ songs and WAV samples. `baserom.gba` isn't needed to build it.
 | `src/iwram/` | 10 | 7 | 3 |
 | `src/level/` | 321 | 308 | 13 |
 | `src/link/` | 12 | 9 | 3 |
-| `src/menus/` | 140 | 134 | 6 |
+| `src/menus/` | 140 | 136 | 4 |
 | `src/objects/` | 198 | 194 | 4 |
 | `src/pickups/` | 37 | 36 | 1 |
-| `src/player/` | 202 | 194 | 8 |
-| `src/save/` | 65 | 59 | 6 |
-| `src/system/` | 30 | 28 | 2 |
+| `src/player/` | 202 | 195 | 7 |
+| `src/save/` | 65 | 62 | 3 |
+| `src/system/` | 30 | 30 | 0 |
 | `src/text/` | 26 | 25 | 1 |
 | `src/util/` | 33 | 32 | 1 |
 | `src/vehicle/` | 213 | 211 | 2 |

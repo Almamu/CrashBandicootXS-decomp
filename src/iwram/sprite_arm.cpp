@@ -147,7 +147,12 @@ void HeapSortActorsByKey(s32 n, ActorSelf **list)
     }
     /* This and the barrier at the end of the loop body keep jump2 from
      * cross-jumping the second loop's entry test (`cmp r7, #1; ble`) and
-     * its bottom test into each other; the ROM keeps both. */
+     * its bottom test into each other; the ROM keeps both. #662 round 2
+     * tried, in their place: a dead store (`i = 0`, `t = 0`, `root = 0`,
+     * `child = 0`), `while (--n > 0)`, a counted `for (i = n - 1; ...)`,
+     * `if (n > 1) do ... while (n > 1)`, `for (i = n / 2 - 1; i >= 0;
+     * i--)` and either phase as an inline function: each loses one of
+     * the two tests or moves registers. */
     MATCH_BARRIER();
     while (n > 1) {
         n--;

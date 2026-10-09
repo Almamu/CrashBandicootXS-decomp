@@ -748,7 +748,8 @@ removable were kept on purpose; a dry run still lists them:
 - **A pin whose register the asm template names.** `itoa_arm`'s `num`
   (the `swi` reads r0), `DivMod`'s `quotient`/`remainder` (`svc #6`),
   and `GaxInfoPlay`'s `cnt`/`cnt2` (`ldrsh r1, ...` writes r1 while the
-  output operand is `%0`). Without the pin the code is only right
+  output operand is `%0`; since #662 round 2 GaxInfoPlay is plain C
+  and has neither). Without the pin the code is only right
   because the allocator happens to pick that register, so the object
   stays the same while the C is wrong. Check this before applying a
   removal next to an asm with hard registers in its template.
@@ -846,8 +847,8 @@ each:
 - **Instructions no C produces** (17 instruction asms): `swi` calls,
   GAX2's hardware settle delays and call into ARM code.
 - **Accesses of another width or a forced load** (23 retyped field
-  accesses, 9 scoped volatiles): `PlayerCtrl::StartStroke`'s byte
-  re-store of `tag`, `Player::HandleEvent`'s dead load of `maskLevel`.
+  accesses, 9 scoped volatiles): `Player::HandleEvent`'s dead load of
+  `maskLevel`.
 - **An uninitialized register the ROM really uses** (2 self-inits, both
   in lib/): `GAX_fx`'s `sel`.
 
@@ -876,6 +877,91 @@ Round 2 in level/, objects/, vehicle/, cutscene/ and pickups/ (C++):
   added to `bits1` as bytes replaced an integer address pinned to r1.
 - **A dead load through a pointer-to-volatile parameter**
   (`sub_8026C80`) instead of a volatile cast in the body.
+
+**Round 2, lib/iwram/system/util/audio/text.** 23 functions -> 17
+(`tools/match_idioms.py --functions`). What removed them:
+
+- **A re-read instead of a local** (`GaxInfoPlay`, pins, two `ldrsh`
+  asms and retyped accesses): the final `(p->speed & 0xff) == 0` reads
+  the field again, and GCSE keeps the halfword in a register from the
+  top, as the ROM does; `TickAmbientSfx`'s scoped volatile read was the
+  shared tail `GAX_set_fx_volume(2, ambientSfxVolume)` written once,
+  after an `if (... <= 0) { ... }`.
+- **The parameter's type.** A `void *self` copied to a typed local
+  makes gcc copy the later parameters first; `GaxInfoPlay` takes
+  `struct GaxInfoHandler *` (as `GaxChannelPlay` already did).
+- **A field that really is volatile.** GaxPlayerState's `state` is
+  advanced by `GAX_irq` (interrupt side) and tested by the main loop;
+  marked volatile, `GAX_irq`'s scoped cast goes and every other GAX2
+  object stays the same.
+- **Dead initializers as insn count.** GAX2_estimate's four empty asms
+  only lengthened the RTL for GCSE's hash-table sizing; initializing
+  every local to 0 where it's declared does the same.
+- **Real loops.** `WaitForKeyPress`'s goto transcription is two loops:
+  the front end's loop rotation (`expand_end_loop` moves everything up
+  to the *last* exit to the bottom) gives the ROM's block order when
+  the cancel test leaves by `goto fail` rather than `break`; the
+  permuter then found `(u16)mask &` for the r4/r5 order.
+- **Plain C for a hand-written island**: `mem_walk_heaps` (file-scope
+  asm) is a walk to each heap's last block, result discarded.
+- **Plain stores**: `GAX2_new`'s `*(u16 *)&` store and its `val`
+  juggling were a draft artefact; `params->x = 0xFFFF` etc. match.
+
+Kept, with what was tried in each comment: GAX2's hardware settle
+delays and ARM calls, `GaxHuffUnComp`'s SWI, the two `x = x`
+self-inits (the ROM uses the uninitialized register), `itoa_arm`,
+`strncpy_arm`'s conditional-return barrier, `HeapSortActorsByKey`'s
+barriers, `FindSubstring`'s case folds (63 more spellings: only `char`
+locals keep both arms' copies, with the truncation inside one arm),
+`GAX2_init`'s and `DrawWrappedText`'s holds and `GaxChannelMix`'s keep.
+
+Round 2, player/crates/frontend (after the C++ conversion):
+
+- **The project's DMA macros instead of a shared register struct.**
+  `CompanyLogos::DrawVvLogoPieces` copied its emblem rows through one
+  `struct dma_regs *` held for the whole block, which needed an r2 pin
+  and three `MATCH_BARRIER`s of loop insn-count padding. With
+  `DmaCopy16` (its own `dmaRegs` pointer, set inside the loop) both go.
+  `TitleScreen::LoadObjTiles`'s r8 pin went with a plain `pkg++` at the
+  end of the pass instead of a `next` copy.
+- **A store the optimizer folds, through an inline parameter.**
+  `PlayerCtrl::StartStroke`'s `ldrb`/`strb` of `tag` is the
+  "switch to animation `tag`" idiom (Crate::SetTag's) called with the
+  current animation; `t->tag = t->tag` is folded away, the parameter
+  store isn't, so the volatile cast went.
+- **A byte flag for a separate constant.** In `ActionCtrl::HandleEvent`
+  the launch pad's A flag as a `u8` (it is stored to `u8` fields) makes
+  the AND a byte operation, whose 1 cse doesn't share with `one`'s
+  word-sized 1, so its `MATCH_CONST` went. In the two bounce cases (and
+  `StateJump`) the byte AND then lands in another register.
+- **Kept:** the stack-box `BOX_ADDR`s are two passes' doing: cse1
+  merges the builder calls' `&f.b` inside one basic block (no flag
+  changes that), and gcse's PRE moves the overlap test's. -fno-gcse
+  frees the latter in crate_touch.o and crate_hit.o but puts
+  `Crate::QueuePlayerCollision` 2000 lines off, so no flag was added.
+
+Round 2 in menus/, save/ and link/ (C++):
+
+- **A key-state copy** (`struct held_pressed_pair k = KEYS`): the word
+  load plus `lsr #16` that `PauseMenu::Loop` pinned two registers for.
+- **The same call in both arms of an `if`**: `UpdatePageArrows`'s
+  `ShowFrame(sprites[8], 0)` / `(..., 1)`, which the ROM loads
+  `sprites[8]` for twice; one call after the `if` needed two pins.
+- **A literal where the draft had a variable**: `DrawYesNoPrompt`'s Y
+  0x87 at each SetPos; gcc shares the constant the ROM's way by itself.
+- **An inline method around a statement group**: `SaveData::StampHeader`
+  (the four header stores) makes gcc compute their addresses before the
+  EraseSlot loop, as `Validate` does in the ROM; written out, they come
+  after it. `DmaClear16` instead of `DmaFill16` then gives the ROM's
+  registers.
+- **The class's own method for shared code**: `LinkRing::Push`, the ring
+  push `SaveTransfer::SendChunk` and `LinkSession::HandleSerial` both
+  inline, frees HandleSerial's escaped `p` (`MATCH_KEEP_EXPR`).
+- **Hardware registers as volatile**: HandleSerial reads each SIOMULTI
+  register twice (the word copy and the 0xffff test) because they are
+  volatile, not because of a pointer biv and a `MATCH_CONST`.
+- **A field for a retyped access**: LinkSession's packet CRC is a `u16
+  hash` field after `id[6]`, as LinkPlayer's.
 
 Round 2 in bosses/, enemies/ and actor/ (C++):
 

@@ -124,60 +124,34 @@ void mem_collect(s32 arg0)
     }
 }
 
-/* ROM 0x0800039C - dead code: reachable from nothing in this file (or
- * any other matched source), but its bytes still sit between
- * mem_collect and mem_free_bytes_for_heap in the ROM and must be
- * reproduced for a byte-exact build. Two near-identical halves, one
- * per heap (IWRAM if MEM_HEAP_IWRAM is set, then EWRAM if
- * MEM_HEAP_EWRAM is set): take &mem_i/ewram_heap_pointer, deref it for
- * the heap struct, then loop `p = p->next` until `p->next` loops
- * back to the heap struct itself - the same circular-list-walk idiom
- * mem_collect_heap uses, but here the result is never stored anywhere,
- * consistent with this being an optimizer-emitted leftover (e.g. a
- * partially-shared/identical-code-folded copy of a real function body)
- * rather than something reachable from source. Kept as real
- * instructions rather than a raw byte blob so it's inspectable; see
- * docs/decomp_dev.md for how this was found and verified byte-for-byte
- * against the disassembled ROM. */
-// clang-format off
-__asm__(
-    ".align 2, 0\n"
-    ".thumb_func\n"
-    ".type mem_walk_heaps, function\n"
-    ".global mem_walk_heaps\n"
-    "mem_walk_heaps:\n"
-    "add r3, r0, #0\n\t"
-    "cmp r3, #0\n\t"
-    "bge 1f\n\t"
-    "ldr r0, 2f\n\t"
-    "ldr r2, [r0, #0]\n\t"
-    "ldr r1, [r2, #8]\n\t"
-    "b 3f\n\t"
-    ".align 2, 0\n"
-    "2: .4byte mem_iwram_heap_pointer\n"
-    "4: ldr r1, [r1, #8]\n"
-    "3: ldr r0, [r1, #8]\n\t"
-    "cmp r0, r2\n\t"
-    "bne 4b\n"
-    "1: mov r0, #0x80\n\t"
-    "lsl r0, r0, #23\n\t"
-    "and r0, r3\n\t"
-    "cmp r0, #0\n\t"
-    "beq 5f\n\t"
-    "ldr r0, 6f\n\t"
-    "ldr r2, [r0, #0]\n\t"
-    "ldr r1, [r2, #8]\n\t"
-    "b 7f\n\t"
-    ".align 2, 0\n"
-    "6: .4byte mem_ewram_heap_pointer\n"
-    "8: ldr r1, [r1, #8]\n"
-    "7: ldr r0, [r1, #8]\n\t"
-    "cmp r0, r2\n\t"
-    "bne 8b\n"
-    "5: bx lr\n"
-    ".align 2, 0\n"
-);
-// clang-format on
+/* Returns the heap's last block: the one whose `next` wraps back to the
+ * heap's own header. */
+static inline struct mem_block *mem_last_block(struct mem_heap *heap)
+{
+    struct mem_block *current = heap->base.header.next;
+
+    while (current->next != &heap->base.header) {
+        current = current->next;
+    }
+
+    return current;
+}
+
+/* UNUSED - ROM 0x0800039C, between mem_collect and mem_free_bytes: no
+ * caller anywhere in the ROM. For each heap selected in `flags` (IWRAM,
+ * then EWRAM) it walks to the last block and discards the result. Until
+ * #662 round 2 it was a file-scope asm transcription (and before that a
+ * `.byte` blob, see docs/decomp_dev.md); the plain C above matches. */
+extern "C" void mem_walk_heaps(s32 flags)
+{
+    if (MEM_HEAP_IWRAM & flags) {
+        mem_last_block(mem_iwram_heap_pointer);
+    }
+
+    if (MEM_HEAP_EWRAM & flags) {
+        mem_last_block(mem_ewram_heap_pointer);
+    }
+}
 
 static inline u32 mem_free_bytes_for_heap(struct mem_heap *heap)
 {

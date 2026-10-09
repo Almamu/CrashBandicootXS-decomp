@@ -3,7 +3,6 @@
 
 extern "C" {
 #include "core.h"
-#include "match.h"
 #include "system.h"
 #include "globals.h"
 }
@@ -21,10 +20,13 @@ extern "C" {
  * just bit 6, commits it and returns the confirmed row's type (or 0).
  *
  * Matches under old_agbcp only (Makefile OLD_AGBCC_OBJS, old_agbcc as C;
- * agbcc is 4 bytes longer). `pressed` pinned to r1 keeps the word load
- * plus `lsr #16` (unpinned, combine folds it into `ldrh [keys+2]`);
- * `key` pinned to r3 and the pressed test spelled with the literal give
- * the ROM's two `mov #K`. The input loop is a plain `for (;;)` with the
+ * agbcc is 4 bytes longer). The left/right tests read gKeys once, as a
+ * held_pressed_pair copy `k`: the word load plus `lsr #16` for
+ * `k.pressed`, and the ROM's two `mov #K` (the key's constant is
+ * reloaded for the held test, the press test's copy being consumed by
+ * its `and`). Reading KEYS.pressed directly gives `ldrh [keys+2]`
+ * (#662 round 2; the C pinned `pressed` and `key` to r1/r3 for this).
+ * The input loop is a plain `for (;;)` with the
  * START test at the bottom: the old compiler's rotation puts that test at
  * the loop top and enters at the body, as in the ROM. The fade pointer
  * (this+0xcc) that GCSE carries past the input loop into the fade-in
@@ -49,10 +51,6 @@ s32 PauseMenu::Loop()
     }
 
     for (;;) {
-        u32 in;
-        MATCH_HOLD_REG(u32, key, r3);
-        MATCH_HOLD_REG(u32, pressed, r1);
-
         Draw();
         CommitFrame();
         Animate();
@@ -67,32 +65,32 @@ s32 PauseMenu::Loop()
             flashTimer = 0x1e;
             gAudioContext->PlaySfx(SFX_MENU_MOVE, 0x100);
         }
-        in = gKeys.all;
-        pressed = in >> 16;
-        key = DPAD_LEFT;
-        if (pressed & DPAD_LEFT) {
-            VolumeDown();
-            flashTimer = 0x1e;
-        } else if (in & key) {
-            if (flashTimer == 0) {
+        {
+            struct held_pressed_pair k = KEYS;
+            if (k.pressed & DPAD_LEFT) {
                 VolumeDown();
-                flashTimer = 5;
-            } else {
-                flashTimer--;
+                flashTimer = 0x1e;
+            } else if (k.held & DPAD_LEFT) {
+                if (flashTimer == 0) {
+                    VolumeDown();
+                    flashTimer = 5;
+                } else {
+                    flashTimer--;
+                }
             }
         }
-        in = gKeys.all;
-        pressed = in >> 16;
-        key = DPAD_RIGHT;
-        if (pressed & DPAD_RIGHT) {
-            VolumeUp();
-            flashTimer = 0x1e;
-        } else if (in & key) {
-            if (flashTimer == 0) {
+        {
+            struct held_pressed_pair k = KEYS;
+            if (k.pressed & DPAD_RIGHT) {
                 VolumeUp();
-                flashTimer = 5;
-            } else {
-                flashTimer--;
+                flashTimer = 0x1e;
+            } else if (k.held & DPAD_RIGHT) {
+                if (flashTimer == 0) {
+                    VolumeUp();
+                    flashTimer = 5;
+                } else {
+                    flashTimer--;
+                }
             }
         }
         if (KEYS.pressed & A_BUTTON) {

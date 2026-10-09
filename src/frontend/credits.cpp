@@ -401,7 +401,12 @@ struct popup_glyph_src {
  *
  * The ROM reloads `slot` into r1 and computes the palette address at
  * the copy, so the palette index is a copy `ps` pinned to r1: with
- * `slot << 5` itself, or a plain copy, the shift comes out elsewhere. */
+ * `slot << 5` itself, or a plain copy, the shift comes out elsewhere.
+ * (#662 round 2: unpinned, loop.c computes `slot << 5` ahead of the
+ * tile loops, next to `slot + 1` and `i + 1`, which the ROM has there,
+ * and spills it; `palSlots[slot]`, an inline copy helper, the DMA
+ * macros and -fno-strength-reduce/-fno-rerun-loop-opt/-fno-gcse don't
+ * change that.) */
 void Credits::LoadLogos()
 {
     u8 (*palSlots)[TILE_SIZE_4BPP] = gPaletteCache->slots;

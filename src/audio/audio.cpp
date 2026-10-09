@@ -152,27 +152,19 @@ void AudioContext::TickAmbientSfx()
     }
     now = gRoomFrameCount;
     if (now >= activeSfx.deadline) {
-        s32 v;
-
         activeSfx.volume = 0;
-        v = ambientSfxVolume - 0x10;
-        ambientSfxVolume = v;
-        if (v > 0) {
-            /* The ROM reads the volume back from memory after the store:
-             * plain, CSE passes `v` (its register, and the zero's,
-             * change); still needed in C++. */
-            GAX_set_fx_volume(2, *(volatile s32 *)&ambientSfxVolume);
-            return;
-        }
-        ambientSfxVolume = 0;
-        GAX_stop_fx(2);
-        activeSfx = pendingSfx;
-        if (activeSfx.id != 0x63) {
-            u32 handle;
+        ambientSfxVolume -= 0x10;
+        if (ambientSfxVolume <= 0) {
+            ambientSfxVolume = 0;
+            GAX_stop_fx(2);
+            activeSfx = pendingSfx;
+            if (activeSfx.id != 0x63) {
+                u32 handle;
 
-            pendingSfx.id = 0x63;
-            handle = gSfxTable[activeSfx.id].slotId;
-            GAX_fx_ex(handle, 2, 0, -1);
+                pendingSfx.id = 0x63;
+                handle = gSfxTable[activeSfx.id].slotId;
+                GAX_fx_ex(handle, 2, 0, -1);
+            }
         }
         GAX_set_fx_volume(2, ambientSfxVolume);
         return;

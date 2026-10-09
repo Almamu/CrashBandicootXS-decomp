@@ -22,7 +22,17 @@ extern "C" {
  * builder calls and only holds it in r6 from the first overlap test on;
  * BOX_ADDR keeps each of those uses its own value (match.h,
  * docs/matching/archive/sp-box-retry.md), as in crate_hit.cpp. The
- * first build's x/y are computed before its call. */
+ * first build's x/y are computed before its call.
+ *
+ * #662 round 2: the two builder sites are cse1 inside one basic block
+ * (the second `&f.b` is replaced by the first's register), which no
+ * cse/gcse flag changes; an inline box builder, a reference to `f.b`
+ * and agbcp do worse. With them kept, `pb`'s site is gcse's: PRE
+ * computes `&f.b` early in the player block's mirror tests and the last
+ * overlap test rematerializes `add r1, sp, #16` instead of using r6.
+ * -fno-gcse frees that one site (the object matches), as it does
+ * crate_hit.cpp's, but not crate_break.cpp's; not worth a flag while
+ * the builder sites stay. */
 u8 Crate::PlayerAnimWouldTouch(s32 action)
 {
     struct {

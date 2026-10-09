@@ -77,6 +77,16 @@ public:
         return result;
     }
 
+    /* The blank record's header: the two markers and both flag bytes
+     * clear (Validate, Reset). */
+    void StampHeader()
+    {
+        magic = 0x43;
+        versionNibble = 0x12;
+        flags = 0;
+        field_1fb = 0;
+    }
+
     /* src/save/save_data.cpp */
     s32 Load();                         // LoadSaveData
     void Validate();                    // ValidateSaveData (UNUSED)

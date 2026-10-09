@@ -78,7 +78,9 @@ void CameraLead::Reset()
     /* One pin kept (the C had five): the ROM tests `blink` with a 1 of its
      * own in r1 and loads another for ToggleHidden's; unpinned, gcc shares
      * one constant between the two, with every spelling of the test and
-     * the toggle tried (u8/s32/bool tests, a switch, `^ 1`, `== 0`). */
+     * the toggle tried (u8/s32/bool tests, a switch, `^ 1`, `== 0`; in
+     * round 2 also IsHidden-style inline helpers returning s32 or bool,
+     * the bitfield test and `blink = 1`). */
     MATCH_HOLD_REG(u32, one, r1) = 1;
 
     if (!(v & one))
@@ -450,36 +452,20 @@ void LevelSelect::Update()
 
 /* Updates the two page-arrow sprites (8/9): palettes from
  * GetAnimPaletteSlot, frame 0/1 by whether the previous/next page is
- * open. */
+ * open. The next-page arrow's ShowFrame is in both arms of the `if`, as
+ * the ROM's two `ldr r1, [r6, #0x60]` show: the two copies share
+ * everything after their frame constants (#662 round 2; the C pinned
+ * the arrow to r1 and `&tag` to r3 for this). */
 void LevelSelect::UpdatePageArrows()
 {
     sprites[8]->palette = sprites[8]->GetAnimPaletteSlot();
     sprites[9]->palette = sprites[9]->GetAnimPaletteSlot();
     if (world <= 2) {
-        /* Two pins kept (the C had 24 and a keep): the ROM has the arrow
-         * in r1 and `&tag` in r3; unpinned, old_agbcp (and agbcp) give the
-         * arrow r3 or swap `&tag` with the animation table's r2. The copy
-         * `t` is the register the ROM's frame store and draw call use. */
-        MATCH_HOLD_REG(UiSprite *, s, r1);
-        s32 f;
-
-        if (IsNextWorldOpen()) {
-            s = sprites[8];
-            f = 0;
-        } else {
-            s = sprites[8];
-            f = 1;
-        }
-        {
-            const struct sprite_bank *b = s->bank;
-            MATCH_HOLD_REG(u8 *, tag, r3) = &s->tag;
-            s32 n = b->anims[*tag].frameCount;
-            UiSprite *t = s;
-
-            CLAMP_INDEX(f, n);
-            t->frame = f;
-            t->DrawWithOffset(0, 0);
-        }
+        if (IsNextWorldOpen())
+            ShowFrame(sprites[8], 0);
+        else
+            ShowFrame(sprites[8], 1);
+        sprites[8]->DrawWithOffset(0, 0);
     }
     if (HasPrevWorld()) {
         UiSprite *s = sprites[9];
@@ -731,7 +717,10 @@ loop:
             NextWorld();
         /* The ROM copies the key word between the 0x80 test's `ands`
          * and its `cmp`, and tests 0x20 on the copy; gcc merges a plain
-         * copy, so the (code-free) asm keeps `k` a separate value. */
+         * copy, so the (code-free) asm keeps `k` a separate value.
+         * #662 round 2: a copy in the else arm, a held_pressed_pair copy
+         * and inline helpers taking the keys by value (a register-sized
+         * struct goes to the stack) don't reproduce it. */
         else if (({
                      u32 hit = keys.half.pressed & DPAD_DOWN;
 

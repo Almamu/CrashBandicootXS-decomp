@@ -1952,7 +1952,8 @@ What made the C++ match:
 Kept, each with a comment: `ResetCameraLead`'s one pin (the ROM tests
 `blink` with its own 1 in r1; unpinned, gcc shares the constant with
 `ToggleHidden`'s; the C had five pins), `UpdatePageArrows`'s two (the arrow
-in r1 and `&tag` in r3; the C had 24 and a keep), the `MATCH_KEEP` of
+in r1 and `&tag` in r3; the C had 24 and a keep; gone in #662 round 2,
+with ShowFrame in both arms of the `if`), the `MATCH_KEEP` of
 `LevelSelectLoop` and the two `_rw` asm-label aliases of the const position
 tables (`InitLevelSelect` reloads them across calls). C idioms kept:
 `LevelSelectLoop`'s and `LoadLevelSelectRecord`'s gotos, the page turns'
