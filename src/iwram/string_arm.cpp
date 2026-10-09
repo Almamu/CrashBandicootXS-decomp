@@ -135,7 +135,19 @@ void strcat_arm(u8 *dst, u8 *src)
  * - The '-' is a u8 pinned to r4. As a store to the s32 `neg`,
  *   reload_cse_move2add rewrites the later `neg = 0` as `neg - 45`
  *   (`subne r4, r4, #45`); it only tracks a register's constant into a
- *   set of the same or a narrower mode. */
+ *   set of the same or a narrower mode.
+ * - #662 round 6, rewritten from the ROM as plain code (the SWI asm
+ *   with its r0/r1 operands): 64 lines off, with lr and ip for the
+ *   buffer and the length. Each site taken out alone, under the
+ *   Makefile's flags, with -mstrict-cross-jump and
+ *   -minterwork-return-lr added, or with -ffixed-lr (gcc's own way of
+ *   keeping lr out of allocation): len's MATCH_CONST 2 lines (`movge
+ *   r4, r5`: cse reuses len's 0), the base keep 15 (the compare and the
+ *   loop share r2), the len/b/neg pins 22-28, j's 10, minus' and hi's 4
+ *   each. The sign as one if/else needs no MATCH_HOLD but prints the
+ *   `movge` after `movlt`/`rsblt` (2 lines); `neg = num < 0` is an
+ *   `lsrs #31` (14). These are allocation and cse choices; no option
+ *   the patched compiler has reaches them. */
 s32 itoa_arm(s32 value, u8 *buf, s32 base)
 {
     MATCH_HOLD_REG(s32, num, r0);

@@ -491,7 +491,18 @@ void DingodileShieldCtrl::Update(MovingSprite *part)
      * whole test as an inline, nor the BLDCNT chain below started at
      * function scope (gcse's cprop moves the 16 into the chain, which
      * reload then builds in r0/r1), through a reference or a member
-     * function of a local (all folded), or as a u64. */
+     * function of a local (all folded), or as a u64. #662 round 6:
+     * the chain's accumulator in r5 is itself evidence. Live in case 0
+     * only it would be local-alloc's and take r0/r1 (the asm-free
+     * chain does); a callee-saved register means global-alloc placed
+     * it, so in the ROM it is one pseudo with a value somewhere else,
+     * very likely the r5 one over the box builders. Neither a 64-bit
+     * value held over the builders (an r5:r6 pair; it is spilled), nor
+     * the player-box idiom of CortexShotCtrl/TinyCtrl::Update (a
+     * third box filled and copied in), nor `gPlayer->HandleEvent`
+     * written out, nor the overlap test and HitPlayer repeated in each
+     * branch of the width test for jump2 to merge (PlatformMover's
+     * round-6 fix) moves `this` off r5 (192-226 lines each). */
     MATCH_HOLD_REG(s32, hr5, r5);
     MATCH_HOLD_REG(s32, hr6, r6);
 
