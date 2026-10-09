@@ -171,7 +171,11 @@ from `sound/gax_manifest.json`'s `song_table` (`tools/gax_audio.py
 
 `tools/magic_numbers.py` lists the literals that are left, by topic
 (`--report` for the counts), and `--topic T --fix` replaces the ones that
-have exactly one name.
+have exactly one name. `tools/magic_numbers.py --sizes` (#820, see
+CONTRIBUTING.md) does the same for sizes, strides, struct offsets,
+hardware addresses and register values: the ones that should be a
+`sizeof`, a member or an include/gba/ define, with the replacement and a
+confidence (`--json` for agents).
 
 - **`#define`, not `enum`.** The project has no enums. A define can't
   change the width of a field or a parameter the way an int-sized enum
