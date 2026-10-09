@@ -247,7 +247,20 @@ void ActionCtrl::StateUnusedHang()
  * registers round-robin: the reload of the `hanging` field's 0x101
  * offset just before takes r1, so the next one gets r2. The ROM's r3
  * means r2 was not free for it there (as the hold makes it); the flag
- * sweep (-fno-gcse ... -O1) changes nothing at this site. */
+ * sweep (-fno-gcse ... -O1) changes nothing at this site. #662 round 4,
+ * from reload1.c: the round-robin only picks among the registers the
+ * needs pass spilled for that insn (choose_reload_regs marks every other
+ * one used), and find_reload_regs spills the first of
+ * potential_reload_regs: call-clobbered registers with no live pseudo,
+ * in register-number order (thumb has no REG_ALLOC_ORDER). So the ROM's
+ * r3 means r2 was live there, as a hard register or holding a live
+ * pseudo. The function is one basic block, every pseudo in it is
+ * local-alloc's (an instrumented local-alloc shows the y add between the
+ * zero (r5), `this` (r4), the y value (r0) and `part` (r1) only), and the
+ * ROM's code uses r2 first for the SetMode call's function pointer, after
+ * the add. Eleven spellings (setter and DropBy helpers, a zero or entry
+ * local, a `Player *` copy first, the y in a local, QueueNowY or the
+ * frame first) all spill r2. */
 void ActionCtrl::ReleaseHang()
 {
     Player *p;
@@ -599,42 +612,33 @@ void ActionCtrl::StartTornadoSpin(s32 id, s32 param2)
  * entry 0x18/0x19/0x1A by `tornadoTurn` (0-1, 2, 3-4; nothing above 4).
  * Those entries are gCtrlMotionRecords 29-31, {8, 18/14/6, 1280}: the
  * more turns, the slower the fall speeds up. Then sets the player's
- * `flags2` bit 0 and clears `slamBlocked`. */
+ * `flags2` bit 0 and clears `slamBlocked`.
+ *
+ * A QueueNowY in each case (#662 round 4): each call's entry is then a
+ * pseudo of its own case block, which local-alloc places (r2) before
+ * global-alloc ranks `this`, so `this` takes r3 as in the ROM; jump2's
+ * cross-jumping then merges the three identical store tails, leaving the
+ * ROM's `movs r2, #K; b tail`. One `entry` set in the cases and queued
+ * after the switch is a global pseudo, which `this` outranks (8 refs
+ * over 38 insns against 4 over 26) for r2. */
 void ActionCtrl::StartTornadoFall()
 {
     if (tornadoFallQueued != 0)
         return;
     tornadoFallQueued = 1;
-    {
-        /* Pinned (the C had seven pins and a hand-written jump table):
-         * unpinned, `this` and `entry` swap r2 and r3. Global-alloc
-         * takes `this` first (priority 8 references over 38 insns
-         * against entry's 4 over 26), and `this` conflicts only with
-         * r0/r1, so it gets r2 (#662 round 3, from the -dg dump; u8 and
-         * s32 entries, QueueNowY and a local copy of the turn count all
-         * allocate the same). */
-        MATCH_HOLD_REG(s32, entry, r2);
-
-        switch (tornadoTurn) {
-        case 0:
-        case 1:
-            entry = 0x18;
-            break;
-        case 2:
-            entry = 0x19;
-            break;
-        case 3:
-        case 4:
-            entry = 0x1A;
-            break;
-        default:
-            goto queued;
-        }
-        motionYKeepSpeed = 0;
-        motionYPending = 1;
-        motionY = entry;
+    switch (tornadoTurn) {
+    case 0:
+    case 1:
+        QueueNowY(0x18);
+        break;
+    case 2:
+        QueueNowY(0x19);
+        break;
+    case 3:
+    case 4:
+        QueueNowY(0x1A);
+        break;
     }
-queued:
     /* Through ActOrFlags0D's pointer: as a member `|=` the expansion's
      * dead `& 0` leaves a 0 that cse reuses for slamBlocked's store,
      * loaded before the `ldrb` (an r0 pin on the 0 before; #662 round
@@ -654,35 +658,25 @@ void ActionCtrl::EndSpin(u8 mode, s32 flags)
     case 3:
     case 4:
         {
-            s32 m = L_BUTTON;
-            s32 m2;
+            /* The L bit as a `u16`, the key word's width (#662 round 4):
+             * the ROM builds 0x200 in r1 and ANDs through a copy in r0
+             * into flags' own r2. The u16 makes the mask an HImode
+             * constant, and thumb's movhi takes only 0-255 immediates,
+             * so reload builds 0x200 in a spare register (r1) and copies
+             * it into the constant's pseudo (r0), which dies in the AND;
+             * the result stays in flags' r2. With an `s32`/`u32` the
+             * constant is a plain movsi and local-alloc ties the AND's
+             * output to it (block-local and dying there) instead. */
+            u16 turbo = flags & L_BUTTON;
 
-            /* The ROM builds 0x200 in r1 and ANDs through a copy in r0,
-             * into flags' own r2. Kept from the C: the MATCH_CONST escape
-             * keeps the copy (m2) apart from m, and the volatile use of m
-             * and flags right after the `and` stops combine from sinking
-             * it into the test and regmove from retargeting it onto m2.
-             * The natural `flags & L_BUTTON` ANDs into the constant's
-             * register instead: both inputs die there and local-alloc
-             * ties the output to the constant's (block-local) pseudo,
-             * not to `flags` (live from the entry). #662 round 3: with
-             * `s32 m = L_BUTTON;` declared at the top of the function,
-             * `flags &= m` keeps the result in r2, but the constant is
-             * then built in r0 directly; the ROM's `adds r0, r1, #0`
-             * means two pseudos for it, the first still live after the
-             * AND, which no spelling tried (inline mask helpers, u32
-             * types, the mask as the AND's target) gives. */
-            MATCH_CONST(m2, m);
-            flags &= m2;
-            asm volatile("" : "+r"(flags) : "r"(m));
-        }
-        if (flags != 0 && (u8)gLevelState->HasTurboRun()) {
-            turboRun = 1;
-            SetMode(ACTION_STATE_TURBO_RUN);
-            SetTargetAnim(part, 0x18);
-            QueueNowX(0x1B);
-        } else {
-            StartRun();
+            if (turbo && (u8)gLevelState->HasTurboRun()) {
+                turboRun = 1;
+                SetMode(ACTION_STATE_TURBO_RUN);
+                SetTargetAnim(part, 0x18);
+                QueueNowX(0x1B);
+            } else {
+                StartRun();
+            }
         }
         break;
     default:
