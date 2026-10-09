@@ -223,7 +223,13 @@ s32 Sprite::CheckPlayerContact()
     /* The 1 that the two tests and the gone flag share is pinned: written
      * as constants, old_agbcp loads a fresh 1 for the flag's OR and gives
      * the tests' register to the gone bit's shift instead, the other way
-     * round from the ROM. */
+     * round from the ROM. #662 round 3 (RTL): the OR on the u8 `flags`
+     * is expanded as an SImode OR of two QImode subregs, so its 1 is a
+     * QImode constant that cse can't replace with the tests' SImode
+     * register. The `1 << bit` is SImode, so cse gives it that register.
+     * In the ROM the OR has it. `f.flags = f.flags | 1`, `(u32)` casts,
+     * a `u32 one` local (cse folds it), MarkGone and every -f flag toggle
+     * stay 20 or more lines off. Only a register cse doesn't track works. */
     MATCH_HOLD_REG(u32, one, r6);
     s32 touched = (flags >> 27) & (one = 1);
 

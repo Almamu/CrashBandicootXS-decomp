@@ -32,7 +32,19 @@ extern "C" {
  * overlap test rematerializes `add r1, sp, #16` instead of using r6.
  * -fno-gcse frees that one site (the object matches), as it does
  * crate_hit.cpp's, but not crate_break.cpp's; not worth a flag while
- * the builder sites stay. */
+ * the builder sites stay.
+ *
+ * #662 round 3 (RTL dumps): the builder sites are decided at expand
+ * time. calls.c (precompute_register_parameters) copies each `&f.b`
+ * argument into a new pseudo, since a PLUS costs more than 2 and Thumb
+ * has SMALL_REGISTER_CLASSES. The C++ front end also builds the address
+ * from a copy of the frame pointer. cse1 then finds the second copy
+ * equal to the first in the same basic block and reuses it, so one
+ * pseudo holds the box across the call. The ROM's `add r0, sp, #16` per
+ * call needs an argument that reaches expand as a REG cse can't tie to
+ * the frame pointer, which is what the asm gives. Every -f flag toggle
+ * (cse, gcse, skip-blocks, force-mem/addr, regmove, expensive-
+ * optimizations, -O1) leaves the plain code 10 or more lines off. */
 u8 Crate::PlayerAnimWouldTouch(s32 action)
 {
     struct {
