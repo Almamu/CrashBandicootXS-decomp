@@ -114,7 +114,10 @@ u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, voi
          * `if`, whose join cse1 skips (220 lines off); two loads with no
          * escape (`idx > m ? tab[m] : tab[idx]`, the two-armed `if`)
          * fold the first to `tab[0xef3]`, which cross-jumping can't
-         * merge (132 lines off). */
+         * merge (132 lines off). Round 6: the clamp and table load as an
+         * inline `GaxPeriod(idx)` (u32 or s32 parameter, called with the
+         * tuned pitch, before or after `inst` is set) is 101-107 lines
+         * off; the inline's return adds no join cse1 stops at. */
         if (idx > m) {
             idx = m;
             MATCH_KEEP(idx);
@@ -170,7 +173,18 @@ u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, voi
          * argument, so no store between can kill it; only a call can.
          * `__muldi3` called through libgcc.h's prototype (not a const
          * libcall) does, but the register allocation then differs from
-         * the function's first block on (878 lines off). */
+         * the function's first block on (878 lines off).
+         * #662 round 6 (-dG): without the volatile, PRE inserts a fresh
+         * load of `self->instrument` at the end of the clamp's block
+         * ("PRE/HOIST: end of bb 9") and makes this one a copy of it;
+         * the row load beside it stays. Through the prototype with the
+         * s64 `prod` (`prod = __muldi3(prod, gGaxMixRateReciprocal) >>
+         * 32`) the load is right and the rest is 84 lines off, ignoring
+         * addresses, all allocation: the call clobbers memory, so the
+         * row is loaded again after it and `wave` is not spilled. The
+         * ROM keeps the row in r9 across the call, so its `__muldi3`
+         * was the const libcall and the kill is elsewhere. -fargument-
+         * noalias, -fno-strict-aliasing and the -f sweep don't help. */
         // clang-format off
         struct GaxMixItem item = {
             data, buf, pos, len << 11, frames, 0, vol, step, 0,

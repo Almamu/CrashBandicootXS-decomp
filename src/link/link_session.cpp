@@ -72,7 +72,13 @@ extern "C" {
  * ROM's 1 in r9 lives across IrqClearHandler/IrqSetHandler as a register
  * (`started` and REG_IME are stored from it), so cse saw it as one
  * value; the r1 copy, set before the test and used only after it, is the
- * one it did not know was 1. */
+ * one it did not know was 1.
+ * #662 round 6: the started block is LinkSession::Start (link_sio.cpp,
+ * unused) and the SIOCNT setup LinkSetupSio, step for step. Update
+ * written with inline copies of both (`Start(((REG_SIOCNT >> 2) & 1) ==
+ * 0)`, `Stop(); SetupSio(); return 0;`) compiles to this code except
+ * the 1s (48 lines off without the keeps): the argument copy is cse'd
+ * like the local, so there is still one 1 and a bic. */
 s32 LinkSession::Update()
 {
     s32 arm3;

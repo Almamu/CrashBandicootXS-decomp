@@ -382,7 +382,20 @@ u8 SaveData::IsSlotEmpty(s32 rowIndex)
  * HUD counters and more), which match as they are. Also tried: the
  * method defined inside the class and emitted out of line, `return v !=
  * 0;` and the store-flag forms (expand's "load v, then 1 if nonzero" path,
- * which ties the copy to v), `mask &= flags` on the parameter. */
+ * which ties the copy to v), `mask &= flags` on the parameter.
+ * #662 round 6: regmove calls optimize_reg_copy_1 only under
+ * -fexpensive-optimizations, and with this whole object built with
+ * -fno-expensive-optimizations every other function still matches and
+ * the round-4 form gets the copy and the test as the ROM. But then the
+ * entry's zero-extension splits: its `lsrs` moves down past the flags
+ * address (combine places it at the `and`), where the ROM has the pair
+ * first, because stmt.c's preserve_subexpressions_p, which keeps the
+ * extended parameter at the entry, answers to the same flag. So no flag
+ * gives both. Also tried: expr.c's `A != 0 ? FOO : A` expansion
+ * (`return v != 0 ? 1 : v;` stores v to the result before the branch,
+ * the ROM's order, but regmove still moves the test onto the result; a
+ * u8 result folds to the neg/orr/lsr store-flag), and the -f flags,
+ * -O1 and -O3 on the object. */
 u8 SaveData::TestFlags(u8 mask)
 {
     MATCH_HOLD_REG(u8, v, r1);
