@@ -93,7 +93,6 @@ SECTIONS
         build/crashbandicootxs/src/player/player_reset.o(.text);
         build/crashbandicootxs/src/player/player_collide.o(.text);
         build/crashbandicootxs/src/player/player_anim_room.o(.text);
-        build/crashbandicootxs/src/player/player_event.o(.text);
         build/crashbandicootxs/src/player/player_update.o(.text);
         build/crashbandicootxs/src/player/player_init.o(.text);
         build/crashbandicootxs/src/player/player_flags.o(.text);
