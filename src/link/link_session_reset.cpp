@@ -103,7 +103,13 @@ extern "C" {
  * `j`, `k` and `magic` through all six integer types (1296 variants)
  * stay 134 lines off, and a 12000-variant sample that also retypes the
  * copy loops' `v`/`w`/`lo` and the `t` offsets gets to 82 with `self`
- * still in r4. */
+ * still in r4.
+ * #662 round 9, the header's types: every LinkSession, LinkPlayer and
+ * LinkRing member and gLinkSessionReset in their same-size alternatives
+ * (signedness, bool, volatile, the nibble and id-word bitfields' base
+ * types), two at a time and then a beam search (2400 variants, scored
+ * with Update and HandleSerial), without the references: the nearest
+ * (LinkPlayer::hash as `s16`) is 122 lines off against 140. */
 s32 LinkSession::ResetState()
 {
     s32 i, j;

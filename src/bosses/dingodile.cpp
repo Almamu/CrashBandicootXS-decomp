@@ -463,72 +463,12 @@ void DingodileShieldCtrl::Update(MovingSprite *part)
 {
     struct aabb a;
     struct aabb b;
-    /* Kept from the C (they are register allocation, the same under
-     * agbcp): the ROM leaves r4-r6 free and keeps the long-lived values
-     * in r7-r10 (`this`, `&b`, `part`, &gPlayer). Holding r5 and r6
-     * across the box builders makes the allocator skip them; without
-     * the holds it starts at r5. #662 round 3: the ROM pushes r6 and
-     * never uses it, and the greg dumps of the plain function show no
-     * spill of r4-r6 (reload never takes them away from the long-lived
-     * pseudos), so the ROM's allocation had pseudos in r5/r6 over the
-     * box builders whose code is gone from the output; nothing tried
-     * gives them. No -f flag or pair of flags helps. #662 round 4: in
-     * the plain function `this` (21 references) is the first long-lived
-     * value global-alloc places, and gets r6, so the ROM's r7 means r5
-     * and r6 were already taken where `this` lives: by block-local
-     * quantities (placed before any global) or higher-ranked values in
-     * call-saved registers across the builders. Of the three kinds of
-     * insn flow2 deletes after reload in the game (see enemy_ctrl.cpp's
-     * oscillators), none fits two such values with no trace left;
-     * forced spills of each pseudo don't move the globals (they are
-     * placed before reload). The width read through aabb.h's AabbW
-     * (#802's BLKmode address mechanism, which replaced the volatile
-     * AABB_VALID here), `b.w`, pointer locals for the boxes, a player
-     * local and the C++ box getters all leave the allocation as it
-     * is. #662 round 5: neither do the player's box built by an inline
-     * (returning the struct, or overlap-testing a box it is given, as
-     * a shared helper with DingodileProjectileCtrl::Update would), the
-     * whole test as an inline, nor the BLDCNT chain below started at
-     * function scope (gcse's cprop moves the 16 into the chain, which
-     * reload then builds in r0/r1), through a reference or a member
-     * function of a local (all folded), or as a u64. #662 round 6:
-     * the chain's accumulator in r5 is itself evidence. Live in case 0
-     * only it would be local-alloc's and take r0/r1 (the asm-free
-     * chain does); a callee-saved register means global-alloc placed
-     * it, so in the ROM it is one pseudo with a value somewhere else,
-     * very likely the r5 one over the box builders. Neither a 64-bit
-     * value held over the builders (an r5:r6 pair; it is spilled), nor
-     * the player-box idiom of CortexShotCtrl/TinyCtrl::Update (a
-     * third box filled and copied in), nor `gPlayer->HandleEvent`
-     * written out, nor the overlap test and HitPlayer repeated in each
-     * branch of the width test for jump2 to merge (PlatformMover's
-     * round-6 fix) moves `this` off r5 (192-226 lines each). #662 round
-     * 7, the matched corpus: no other matched function leaves constant
-     * arithmetic unfolded (a `movs rA, #K` later ORed or added with a
-     * register built from a constant, in its block or past a label).
-     * The other four that save a register they never use are sprintf
-     * (varargs), ActionCtrl::Update (r7, the Thumb frame pointer, live
-     * from the entry in every block) and UpdateBob/UpdateOscillateY (round 5's SetPos, with no
-     * call between load and store); none has a value held over calls
-     * with no code. The chain's start at function scope (`u32 acc =
-     * BLDCNT_TGT1_OBJ;` before the player test, the `|=`s in case 0)
-     * does give both ROM traits, an unfolded chain (cse1 doesn't see
-     * the 16 across the switch and gcse doesn't propagate a register
-     * set five times) in a callee-saved register, but the `movs #0x10`
-     * is then at the entry and `this` moves (107 lines). */
-    MATCH_HOLD_REG(s32, hr5, r5);
-    MATCH_HOLD_REG(s32, hr6, r6);
 
     if (part->IsOnScreen() && !gPlayer->dead) {
-        MATCH_HOLD(hr5);
-        MATCH_HOLD(hr6);
         GetSpriteAttackBox(&a, part);
         GetSpriteBodyBox(&b, gPlayer);
         if (!AabbW(&b))
             b = GetSpriteAttackBox_s(gPlayer);
-        /* end of the hold */
-        MATCH_USE(hr5);
-        MATCH_USE(hr6);
         if (AabbOverlaps(&b, &a))
             HitPlayer(part);
     }
@@ -536,39 +476,31 @@ void DingodileShieldCtrl::Update(MovingSprite *part)
     switch (state) {
     case 0:
         {
-            /* Kept from the C: the ROM builds the value with an `orrs`
-             * chain in r5, which a constant expression folds into one
-             * load (a constant-init, the same under agbcp). #662 round 2:
-             * `acc` initialized at the top of the function keeps the
-             * chain unfolded, but builds it in r0/r1 (and without the
-             * holds above moves everything else). #662 round 3: with
-             * `acc = BLDCNT_TGT1_OBJ` cse1 knows each `|=` operand and
-             * folds the whole chain into one constant, so the chain needs
-             * a starting value cse can't see. #662 round 8, from the -da
-             * dumps: it is combine that folds it. cse1 keeps all eight
-             * `|=`s, each with a REG_EQUAL note of the running value (a
-             * constant load is no cheaper than the ior), and combine then
-             * merges each constant set into the next ior. The matched
-             * corpus does have unfolded constant ORs (tools/rtl_corpus.py's
-             * unfolded-const-chain, which corrects round 7):
-             * JetpackPlayer::Draw and PolarPlayer::Draw, `attr1 = 0x100;
-             * if (scale <= 0xff) attr1 |= 0x200;`, where the start value
-             * is set in another basic block and combine's links stay
-             * inside one. The ROM's `movs r5, #16` opens case 0's block,
-             * the chain's own. u16/s16/u32/s32 accumulators, one local or
-             * two, and one variable shared with the width test all fold
-             * (tools/natural_enum.py: 36-101 instructions off). */
-            MATCH_HOLD_REG(u32, acc, r5);
+            /* The blend value is built in a `struct blend_regs` (gfx.h,
+             * gBlendRegs' type): BLDCNT/BLDALPHA's word and BLDY's byte.
+             * The 8-byte struct is a DImode pseudo, and only its first
+             * word is ever set, so the pair is live from the function's
+             * entry (the bldy half is never written) and across every
+             * call: global-alloc gives it r5:r6, which is why the ROM
+             * saves r6 and never uses it, keeps `this` in r7, and builds
+             * the chain in r5; the start value, a subreg set of the
+             * pair, isn't folded into the ORs by cse or combine.
+             * Until #662 round 9 the function held r5 and r6 with two
+             * MATCH_HOLD_REGs over the box builders and started the
+             * chain from a MATCH_CONST in a pinned r5 (rounds 2-8 had
+             * tried the accumulator as every integer type, a u64, a
+             * union blend and at function scope). */
+            struct blend_regs regs;
             u32 w;
 
-            MATCH_CONST(acc, BLDCNT_TGT1_OBJ);
-            acc |= BLDCNT_TGT2_BG0;
-            acc |= BLDCNT_TGT2_BG1;
-            acc |= BLDCNT_TGT2_BG2;
-            acc |= BLDCNT_TGT2_BG3;
-            w = acc | BLDCNT_TGT2_OBJ;
-            w |= 0x100000;
-            w |= 0x10000000;
+            regs.blend.raw = BLDCNT_TGT1_OBJ;
+            regs.blend.raw |= BLDCNT_TGT2_BG0;
+            regs.blend.raw |= BLDCNT_TGT2_BG1;
+            regs.blend.raw |= BLDCNT_TGT2_BG2;
+            regs.blend.raw |= BLDCNT_TGT2_BG3;
+            w = regs.blend.raw | BLDCNT_TGT2_OBJ;
+            w |= 0x100000;   /* EVA 16 */
+            w |= 0x10000000; /* EVB 16 */
             *(vu32 *)REG_ADDR_BLDCNT = w;
         }
         SetMode(5);
