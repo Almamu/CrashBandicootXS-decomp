@@ -89,7 +89,6 @@ SECTIONS
         build/crashbandicootxs/src/crates/crate_list_reset.o(.text);
         build/crashbandicootxs/src/crates/crate_list.o(.text);
         build/crashbandicootxs/src/objects/moving_sprite_probe.o(.text);
-        build/crashbandicootxs/src/objects/moving_sprite_contact.o(.text);
         build/crashbandicootxs/src/objects/moving_sprite.o(.text);
         build/crashbandicootxs/src/objects/moving_sprite_collide.o(.text);
         build/crashbandicootxs/src/objects/ground_sprite_collide.o(.text);
