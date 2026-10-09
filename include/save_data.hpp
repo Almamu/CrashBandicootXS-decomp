@@ -10,9 +10,9 @@
  * link exchange (SaveMenu::LinkExchange); cxx_symbols.txt maps the
  * methods onto their C names.
  *
- *   src/save/save_data.cpp           SaveData (all but SetFlags)
- *   src/save/save_transfer.cpp       SaveData::SetFlags, SaveTransfer's
- *                                    SendChunk and ReceiveChunk
+ *   src/save/save_data.cpp           SaveData
+ *   src/save/save_transfer.cpp       SaveTransfer's SendChunk and
+ *                                    ReceiveChunk
  *   src/save/save_transfer_poll.cpp  SaveTransfer::Poll
  *   src/save/save_menu_input.cpp     SaveTransfer's SetRecord, GetData,
  *                                    Reset
@@ -101,9 +101,7 @@ public:
     u8 IsSlotEmpty(s32 row);            // IsSaveSlotEmpty
     u8 TestFlags(u8 mask);              // TestSaveFlags
     void ClearFlags(u8 mask);           // ClearSaveFlags
-
-    /* src/save/save_transfer.cpp */
-    void SetFlags(u8 mask); // SetSaveFlags
+    void SetFlags(u8 mask);             // SetSaveFlags
 };
 
 COMPILE_TIME_ASSERT(save_data_hpp, sizeof(SaveData) == 0x200);

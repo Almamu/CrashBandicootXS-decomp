@@ -114,7 +114,7 @@ UNITS = [
     (0x08002AA4, "src/save/save_data.o", "overlay_ui"),  # ValidateSaveData - checksum validate/repair-via-DMA; matched as real C in the near-miss polish pass (an empty asm reference to `flags` fixes the r7/r8 ranking) - issue #4, see docs/matching/archive/near-miss-polish.md
     (0x08002B44, "src/save/save_data.o", "overlay_ui"),  # CheckSaveChecksum-EraseSaveSlot (7 fns, the save_data checksum compare/store, versionNibble accessor, EEPROM-save-with-retry, and per-row default/force-set/mark-selected helpers); matched - issue #4
     (0x08002C84, "src/save/save_data.o", "overlay_ui"),  # ResetSaveData/IsSaveSlotEmpty/TestSaveFlags/ClearSaveFlags - the settings-sync record's init, two flag-test accessors and the bitmask-clear accessor; matched - issue #5, see docs/matching/archive/issue-5-overlay-ui-sync.md
-    (0x08002D28, "src/save/save_transfer.o", "overlay_ui"),  # SetSaveFlags (flag-set accessor); matched - issue #5
+    (0x08002D28, "src/save/save_data.o", "overlay_ui"),  # SetSaveFlags (flag-set accessor; moved from save_transfer.o to save_data.o's end, #767); matched - issue #5
     (0x08002D44, "src/save/save_transfer.o", "overlay_ui"),  # SendSaveTransferChunk - the SIO pump's TX fill step; matched as plain C (was NAKED) - issue #5, see docs/matching/archive/old-agbcc-round5.md
     (0x08002E20, "src/save/save_transfer.o", "overlay_ui"),  # ReceiveSaveTransferChunk - the SIO pump's RX drain step; matched as real C (was NAKED) - issue #5, see docs/matching/archive/last-eight-naked-retry.md
     (0x08002EFC, "src/save/save_transfer_poll.o", "overlay_ui"),  # PollSaveTransfer - the SIO send/receive pump's per-frame poll step (third of the trio above, doesn't touch r7 so unaffected by that limitation); matched - issue #5

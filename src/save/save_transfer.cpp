@@ -9,12 +9,6 @@ extern "C" {
 #include "math_util.h"
 }
 
-void SaveData::SetFlags(u8 mask)
-{
-    flags |= mask;
-    UpdateChecksum();
-}
-
 /* Drains up to 0x60 bytes per call from `self->cursor` (streaming a
  * save_data out of `self->tmpl`) into the SIO session's
  * outgoing ring (LinkRing::Push), once the previous batch has been
