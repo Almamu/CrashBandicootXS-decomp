@@ -169,35 +169,17 @@ void PlatformMover::Update(MovingSprite *part)
     }
 
     s32 k = kind;
-    /* The frame count crosses the __umodsi3 call. Unpinned, old_agbcp's
-     * global allocator ranks it above `part` and gives it r4, so `part`
-     * and every temporary after it swap r4 and r5 (the C pinned `part`).
-     * #662 round 2: per-axis inline turn helpers give the same swap; the
-     * permuter on the unpinned C++ got only to 20 of 365, by wrapping the
-     * distance and turn blocks in a `do { } while (0)` (its loop notes
-     * weight their references).
-     * #662 round 3 (lreg/greg dumps): global-alloc's priority is
-     * floor_log2(refs) * refs / live length. `now` has 5 references over
-     * 12 insns (0.83) and `part` 57 over 384 (0.74), so `now` is
-     * allocated first and takes r4. It would need 4 references or 14
-     * insns. Testing the bit with `(now & 1)`, `% 2` or a reread of
-     * gRoomFrameCount (the libcall keeps it in its register) leaves 5:
-     * regmove folds the AND's result back into `now`. -fno-regmove
-     * splits it but moves `this` instead.
-     * #662 round 4: the other side of the comparison is `part`: 57
-     * references give floor_log2 5, and 64 would give 6 (6 * 64 / 384 =
-     * 1.0 against `now`'s 0.83). The AND can't take `now`'s fifth
-     * reference without a second pseudo, and regmove's fixup_match_1
-     * merges any result of `now & 1` back into `now` because `now` dies
-     * there and isn't a remote constant (a global load has no REG_EQUAL
-     * note). #662 round 5: the wobble's two SetPos calls (below) give
-     * `part` 61 references over 388 insns (0.786), still under `now`'s
-     * 0.833; it needs 64. The ramp blocks as inlines (StartRamp and
-     * SetRamp, Ctrl::StartTargetMotionY's shape with `dirX`/`dirY` for
-     * the sign) and do/while(0) MAKE_ABS_BRANCHLESS or CLAMP_INDEX
-     * macros (loop-weighted references) move the object further; the
-     * ranking isn't a tie that a declaration's place could break. */
-    MATCH_HOLD_REG(u32, now, r5);
+    /* The frame count `now` crosses the __umodsi3 call, and old_agbcp's
+     * global allocator ranks pseudos by floor_log2(refs) * refs / live
+     * length: `part` needs 64 references to outrank `now` (5 over 12
+     * insns, 0.83) and keep r4, or `part` and every temporary after it
+     * swap r4 and r5 (a `now` pin until #662 round 6). The wobble's two
+     * SetPos calls (#662 round 5) give it 61, and the two hold tests as
+     * separate branches, each with its own HoldFirstFrame (jump2's
+     * cross-jumping then merges the three copies into the ROM's one),
+     * give the other 3. The tests ORed into one branch, StartRamp/SetRamp
+     * inlines and do/while(0) macros (rounds 2-5) stayed off. */
+    u32 now;
 
     if (k == 5 && timer > 0 && gRoomFrameCount - timer == 60) {
         StartTargetMotionYFromSet(part, 3);
@@ -214,8 +196,9 @@ void PlatformMover::Update(MovingSprite *part)
             part->SetPos(part->x, part->y - 0x300);
         else
             part->SetPos(part->x, part->y + 0x300);
-    } else if ((k == 7 && part->frame <= 1 && !active) ||
-               (k == 6 && part->frame <= 1 && gRoomFrameCount < time)) {
+    } else if (k == 7 && part->frame <= 1 && !active) {
+        HoldFirstFrame(part);
+    } else if (k == 6 && part->frame <= 1 && gRoomFrameCount < time) {
         HoldFirstFrame(part);
     } else if (k == 7 && part->animDone) {
         part->MarkGone();

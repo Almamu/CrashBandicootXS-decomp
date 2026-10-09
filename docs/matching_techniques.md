@@ -1503,6 +1503,30 @@ free; PlatformMover::Update loses its 0x300 pin and keep):
   quantities); CameraLead::Reset; PlatformMover::Update's `now` (`part`
   61 references over 388 insns with the SetPos calls, 64 needed).
 
+**Round 6, player/ and objects/ (the class's own accessors, and one
+branch per test).** 7 functions -> 5 (Sprite::CheckPlayerContact and
+PlatformMover::Update free):
+
+- **The base class's inline accessors.** `Sprite::CheckPlayerContact`
+  written with Entity's IsTouched, IsContactEnabled, SetTouched and
+  MarkGone (entity.hpp) instead of open-coded flag tests and
+  ENTITY_SET_GONE_BIT is the ROM, register for register, with no pin:
+  the u8 accessors give the `lsl #24` the C spelled as `f.flags << 24`
+  and the shared 1, and MarkGone's bitmap write loads its own 1. When a
+  function tests or sets an object's flags, try the class's accessors
+  before tuning the expression.
+- **A branch per test, each with its own copy of the body.**
+  `PlatformMover::Update`'s two hold-first-frame tests (type 7 not yet
+  active, type 6 before its time) as two `else if` branches, each calling
+  HoldFirstFrame, instead of one `||` branch: jump2's cross-jumping
+  merges the copies after reload, so the ROM has one, but each copy
+  counted in global-alloc's priority (`part` 61 -> 64 references), which
+  is what the `now` pin stood in for. Duplicated tails merged in the ROM
+  are worth trying whenever a pointer is a few references short.
+- **Kept:** the two HandleEvent dead loads, the bounce and StateJump 1s,
+  StateCrouch and CameraLead::Reset, with what was tried in each
+  comment.
+
 ## Survey and conversion record (#576)
 
 The conversion is complete. `tools/match_idioms.py` after part 4

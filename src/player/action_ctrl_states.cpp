@@ -1023,7 +1023,14 @@ void ActionCtrl::StateCrouch()
              * byte local for the load (`u8`/`s32`), the load first, an
              * `s32 bit = 0x10` and SetFlipX(1) all leave the same three
              * quantities; the whole turn as one inline taking `part`
-             * makes the flip share the test's address instead. */
+             * makes the flip share the test's address instead. Round 6:
+             * the turn as `if/else if` with SetFlipX(0)/(1) or
+             * mirrorFlags stores (`mirrorX = 1` alone is a plain ORR)
+             * stays 14-18 lines off; a mask set once before the tests
+             * and used once in the flip (local-alloc's update_equiv_regs
+             * then substitutes the constant, reloaded at the AND) gives
+             * the ROM's order (address, mask, load) with the address
+             * still in a block-local r0. */
             volatile u8 *p = &part->mirror;
 
             m = -0x11;
