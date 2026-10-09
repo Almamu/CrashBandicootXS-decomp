@@ -713,7 +713,7 @@ LinkActive__9CrateListP5Crate LinkCrateToActiveBucket
 Unlink__9CrateListP5Crate UnlinkCrateFromGrid
 #
 # part 7g: the crate's hits, breaks and explosions (include/crate.hpp,
-# src/crates/crate_break.cpp)
+# src/crates/crate_break.cpp, crate_switches.cpp, crate_states.cpp)
 ApplyCollision__5CrateiiiiG4vec2ibN27 ApplyCrateCollision
 ClearStackTouched__5Crate ClearCrateStackTouched
 MarkStackTouched__5CrateP4aabb MarkCrateStackTouched

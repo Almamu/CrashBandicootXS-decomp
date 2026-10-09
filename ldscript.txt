@@ -117,6 +117,8 @@ SECTIONS
         build/crashbandicootxs/src/crates/crate_touch.o(.text);
         build/crashbandicootxs/src/crates/crate_hit.o(.text);
         build/crashbandicootxs/src/crates/crate_break.o(.text);
+        build/crashbandicootxs/src/crates/crate_switches.o(.text);
+        build/crashbandicootxs/src/crates/crate_states.o(.text);
         build/crashbandicootxs/src/crates/crate_reset.o(.text);
         build/crashbandicootxs/src/crates/crate_create.o(.text);
         build/crashbandicootxs/src/crates/crate_draw.o(.text);

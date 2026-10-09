@@ -361,6 +361,8 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/crates/crate_hit.o \
                   $(C_BUILDDIR)/level/terrain_probe_axes.o \
                   $(C_BUILDDIR)/crates/crate_break.o \
+                  $(C_BUILDDIR)/crates/crate_switches.o \
+                  $(C_BUILDDIR)/crates/crate_states.o \
                   $(C_BUILDDIR)/crates/crate_update.o \
                   $(C_BUILDDIR)/crates/crate_fields.o \
                   $(C_BUILDDIR)/crates/crate.o \

@@ -124,7 +124,9 @@ public:
     void SetTrialKind(s32 value);
     s32 GetTrialKind();
 
-    /* The hits, breaks and explosions (crate_break.cpp, part 7g). */
+    /* The hits, breaks and explosions (crate_break.cpp, part 7g; the
+     * switches and outlines in crate_switches.cpp, FinishBroken on in
+     * crate_states.cpp). */
     void QueuePlayerCollision(s32 idx); // QueueCratePlayerCollision
     void ApplyCollision(s32 attack, s32 code, s32 edge, s32 depth, struct vec2 pos, s32 hit,
                         bool limited, bool above, bool forced); // ApplyCrateCollision
