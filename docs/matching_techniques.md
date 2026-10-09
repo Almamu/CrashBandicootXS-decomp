@@ -1552,6 +1552,27 @@ the new evidence is in each comment:
   -O3. None removes a workaround. -fno-strict-aliasing changes the GAX
   objects and credits.o, so strict aliasing is the compilers' default.
 
+**Round 6, the ConvertTiles masks, DingodileShieldCtrl::Update and
+itoa_arm (rewritten from the ROM).** Nothing freed; the comments carry
+the new evidence:
+
+- **Which operand a two-address op copies.** regmove's backward pass
+  copies the first operand that doesn't die into the result; an
+  operand that dies is retargeted at its setter when that is in the
+  same block, with no copy. So a copied loop-invariant register means
+  that register was the RTL's first operand (the ConvertTiles mask), or
+  the other operand died there with its setter out of reach (MeterPx's
+  0x10: `v` dies at the `ior`, set before the `if`).
+- **A callee-saved register for a short block-local value** means the
+  value is not block-local in the original: local-alloc would have
+  given it r0-r3. DingodileShieldCtrl's BLDCNT accumulator in r5 is
+  one pseudo with a value elsewhere, likely the deleted one over the
+  box builders.
+- **itoa_arm under every option.** The patched compiler's four options
+  and gcc's own -ffixed-lr leave each of its sites as far off as
+  before (2-28 lines each): they are allocation and cse choices of the
+  ROM's later ARM gcc.
+
 ## Survey and conversion record (#576)
 
 The conversion is complete. `tools/match_idioms.py` after part 4

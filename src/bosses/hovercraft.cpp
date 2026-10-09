@@ -481,7 +481,9 @@ void Hovercraft::LoadGraphics(void)
  * rounds 2 and 3) and the exact condition the ROM implies (round 4: the
  * mask set where cse1 can't see it but loop.c doesn't move it out of
  * the row loop, which only a guard duplicating the pixel loop's entry
- * test gives; the same guard variants are as far off here). */
+ * test gives; the same guard variants are as far off here: 44 lines in
+ * round 6, the loop test then reusing the guard's `n << 4`; round 6's
+ * other variants are in ConvertAirshipTiles' comment). */
 static inline u32 MeterPx(u32 v)
 {
     u32 r = 0;

@@ -178,7 +178,16 @@ void Airship::LoadGraphics()
  * of helper (if, ternary, early return) and body (two byte locals,
  * indexing, a halfword, `% 16`/`/ 16`, the high nibble unmasked), where
  * the plain `m = 0xf` in the loop is 8 lines off: the two mask copies
- * become byte copies. */
+ * become byte copies. #662 round 6 (rewritten from the ROM, on the
+ * hovercraft twin): regmove's backward pass copies the first of the
+ * AND's operands that doesn't die; a byte dying at the AND would be
+ * retargeted by its load with no copy at all, so the ROM's mask copy
+ * does need `(and mask byte)` (the 0x10 copy comes from `v` dying at
+ * the `ior` with its setter before the `if`). The mask set in the pixel loop's `for` init or at the top
+ * of the row body is 78 lines off (hoisted out of the row loop), at
+ * function scope 88 (one set before both loops, in r9); a ternary or
+ * if/else MeterPx is the plain 8; reading the byte twice (`src[0] &
+ * 0xf`, `src[0] >> 4`) is 118-120 (cse1 merges the loads). */
 static inline u32 MeterPx(u32 v)
 {
     u32 r = 0;
