@@ -11,7 +11,7 @@ extern const u8 gMenuSkyBgPalette[];
 extern const u8 gMenuSkyBgTiles[];
 extern const u8 gMenuSkyBgMap[];
 
-/* BG0 graphics package shared by LoadSaveMenuBg (save_menu_ui.cpp),
+/* BG0 graphics package shared by LoadSaveMenuBg (save_menu_draw.cpp),
  * LoadLanguageSelectBg (language_select_setup.cpp), RunLevelSelect
  * (level_select.cpp) and power_dialog.cpp. */
 const struct bg_package gMenuSkyBg = {

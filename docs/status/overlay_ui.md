@@ -29,11 +29,11 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   `SaveMenuMoveCursor`, `SaveMenuLoadInput`, `SaveMenuLinkInput`, `SaveGameToSlot`,
   `SaveMenuOverwriteInput`, `SaveMenuSaveInput`, `SaveMenuDeleteInput`, `SaveMenuConfirmDeleteInput`,
   `DrawSaveMenuMain`, and `ReceiveSaveTransferChunk` (was NAKED, see below).
-- `src/save/save_menu_ui.c` (new file - the composite pause/
+- `src/save/save_menu_ui.c` (`save_menu_draw.cpp` since #771; new file - the composite pause/
   options screen's BG-load helper and per-row stats gatherer/
   aggregator; see `docs/rom_map.md`'s `overlay_ui` section):
   `LoadSaveMenuBg`, `RefreshSaveSlotSummaries`, `LoadSaveMenuData`, `SummarizeProgress`
-- `src/save/save_menu_ui.c` (new file - the same screen's flag
+- `src/save/save_menu_ui.c` (`save_menu_draw.cpp` since #771; new file - the same screen's flag
   test, link-cancel-flag pair, six near-identical per-item wrappers,
   state jump-table dispatcher, and a final list-refresh trio):
   `GetSaveMenuBlinkPalette`, `EndLinkSaveTransfer`, `BeginLinkSaveTransfer`, `DrawSaveMenuConfirmDelete`,
@@ -113,7 +113,7 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   and the screen's init routine `InitSaveMenuIcons` (was raw asm in the now
   retired `asm/code_3_1_10_4.s`) in the hard-register hold pass
   ([hard-register-hold-retry.md](../matching/archive/hard-register-hold-retry.md)).
-- `src/save/save_menu_ui.c` (issue #6 retry): `DrawEmptySlotLabel`,
+- `src/save/save_menu_ui.c` (`save_menu_draw.cpp` since #771; issue #6 retry): `DrawEmptySlotLabel`,
   `DrawSaveMenuTitle` - plain C, were NAKED.
 - `src/menus/power_dialog_loop.c` (issue #8 retry, old_agbcc):
   `PowerDialogLoop`; `pause_menu_pages_draw.c`: `DrawPauseTimeTrialPage`, `DrawPauseCrystalsPage`,

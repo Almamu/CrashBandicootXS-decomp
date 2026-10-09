@@ -2272,7 +2272,7 @@
     "frontend/language_select_setup.cpp",
     "menus/level_select.c",
     "menus/power_dialog.cpp",
-    "save/save_menu_ui.cpp"
+    "save/save_menu_draw.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 3,

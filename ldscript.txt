@@ -53,7 +53,6 @@ SECTIONS
         build/crashbandicootxs/src/save/save_transfer_state.o(.text);
         build/crashbandicootxs/src/save/save_menu_input.o(.text);
         build/crashbandicootxs/src/save/save_menu_draw.o(.text);
-        build/crashbandicootxs/src/save/save_menu_ui.o(.text);
         build/crashbandicootxs/src/save/save_menu.o(.text);
         build/crashbandicootxs/src/menus/pause_menu.o(.text);
         build/crashbandicootxs/src/menus/pause_menu_loop.o(.text);

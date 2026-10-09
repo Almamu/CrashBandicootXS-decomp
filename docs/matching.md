@@ -5877,7 +5877,7 @@ shared icon-manager centered-label toolkit (the same
 register-allocation difficulty `DrawPowerDialog` already hit, or (two of
 them) weren't understood confidently enough to force a reconstruction.
 
-**Matched** (`src/save/save_menu_ui.c`):
+**Matched** (`src/save/save_menu_ui.c`, in `save_menu_draw.cpp` since #771):
 `LoadSaveMenuBg` (BG-load helper - literally the same shape as
 `LoadLanguageSelectBg` in `src/frontend/language_select_setup.c`, just at
 different field offsets and with an extra `field_0 = 0`),

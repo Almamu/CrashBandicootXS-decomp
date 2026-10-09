@@ -317,7 +317,6 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/hud/hud_counters.o \
                   $(C_BUILDDIR)/frontend/title_screen_init.o \
                   $(C_BUILDDIR)/save/save_menu_draw.o \
-                  $(C_BUILDDIR)/save/save_menu_ui.o \
                   $(C_BUILDDIR)/save/save_data.o \
                   $(C_BUILDDIR)/save/save_transfer.o \
                   $(C_BUILDDIR)/menus/power_dialog_loop.o \

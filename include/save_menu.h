@@ -4,7 +4,7 @@
 /* A save slot's summary: five totals counted from the slot's 0x70 bytes
  * (SaveData::ReadSlot). SaveMenu keeps the current game's (`currentStats`) and
  * the four slots' (`rowStats`, RefreshSlotSummaries in
- * src/save/save_menu_ui.cpp), and the slot list reads them as one
+ * src/save/save_menu_draw.cpp), and the slot list reads them as one
  * 5-entry array. */
 struct settings_row_stats {
     s32 percent;
