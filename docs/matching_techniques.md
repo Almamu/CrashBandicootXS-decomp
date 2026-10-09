@@ -28,17 +28,34 @@ plainer version doesn't.
   Makefile and keeps every removal that leaves the object
   byte-identical (see [Pruning workarounds](#pruning-workarounds)).
 - [tools/natural_enum.py](../tools/natural_enum.py) searches natural
-  rewrites of one function (#662 round 8): a spec file lists the
-  function's text with slots and, per slot, the alternatives a
+  rewrites of one function (#662 round 8). The alternatives are what a
   programmer would write (a type, a statement order, a helper, a loop
-  form). Every combination of up to three changes, then a beam search,
-  is compiled with the object's own compiler and flags and scored by
-  instructions off the ROM. The winner is judged by hand.
+  form), given either as a spec file (the function's text with
+  `{axis}` slots and a Python AXES table, optionally a CONSTRAINT) or
+  as an inline template of the function (`@name{a|b}@` slots, which
+  nest and tie by name, and type slots `@T{s32}@` over s8-u32, with
+  `--src/--sig/--sym`). It tries the full product (or a fixed-seed
+  sample past `--limit`), or with `-k K` every combination of up to K
+  changes and then a beam search. Each variant is compiled in parallel
+  with the object's own compiler and flags (`make -n`) and scored by
+  instructions off the ROM (`--metric lines` for diff lines); `--all`
+  adds the object's other functions (collateral), `--dump` writes every
+  result as TSV, `-v N` spells out the best. The winner is judged by
+  hand.
 - [tools/rtl_corpus.py](../tools/rtl_corpus.py) compiles every object
-  again with `-da -g` (`build`, about 530 MB) and runs queries over the
-  per-pass RTL dumps of the matched functions (`list`, `query NAME
-  --src`), each finding one situation that decides a kept workaround,
-  with the C line behind it.
+  again with `-da -g` (`build`, into build/rtl_corpus: about 530 MB of
+  dumps, or 15 MB of index with `--no-dumps`) and queries the matched
+  functions' per-pass RTL (`list`, `query NAME --src`), each query
+  finding one situation that decides a kept workaround, with the C line
+  behind it. Dump queries read the dumps (a constant first in an AND, a
+  constant copied in a loop, a shift after a loop, PRE hoists, an
+  unfolded constant chain, two pseudos with one constant, lreg's refs);
+  index queries are computed at build time (narrow constants and their
+  users after cse, one constant in several pseudos per block, dead
+  loads, regmove rewrites, global-alloc's order and priorities, PRE
+  deletions, loads and stores reload deleted). `--matched` leaves out
+  the functions that still have a workaround; `--grep`/`--file`/
+  `--func` filter.
 - The process (isolated compiles, clean rebuilds, `make compare`, the
   report) is in [workflow.md](./workflow.md) and
   [CONTRIBUTING.md](../CONTRIBUTING.md#verification). An isolated compile
@@ -1701,6 +1718,39 @@ freed; each comment has the new evidence:
 - **PRE moves whatever is anticipatable on every path.** The invariant
   shifts that matched code computes after a loop are on a conditional
   path (GAX2_estimate's `if (i == 0)`); LoadLogos' palette copy has none.
+
+**Round 8, player/, link/ and SaveData::TestFlags (an RTL index of the
+corpus and a natural-only enumerator).** 7 functions -> 6
+(`LinkSession::Update` free):
+
+- **A byte flag gives the two 1s.** `LinkSession::Update`'s ready test
+  and `arm3` as `u8`s (`u8 ready = (REG_SIOCNT >> 3) & 1; if (!ready)`,
+  `arm3 = ((REG_SIOCNT >> 2) ^ 1) & 1`, as `LinkSession::Start` takes a
+  `u8 arm3`) are the ROM with no `one` local and no keeps. Thumb has no
+  QImode AND either, so expand leaves a QImode 1 and redoes the AND with
+  an SImode one; the byte-wide eor and and take the QImode 1 through
+  paradoxical subregs (which cse can't fold to a constant) and `started`
+  and REG_IME the SImode one. tools/natural_enum.py found it in a
+  55296-variant sweep of the flags' and locals' types and spellings:
+  all 384 matches have a byte `ready` and a byte `arm3`, and none has a
+  `u16` one. Round 7's `u16` was one type away. When two equal
+  constants feed different uses, sweep the flags' types through all six
+  integer types, not just the one the matched sibling uses.
+- **The RTL index agrees with the asm one on the dead loads.**
+  `rtl_corpus.py query dead_load` over the whole corpus finds the same
+  three non-volatile dead loads as round 7 (the two HandleEvent sites and
+  Crate::QueuePlayerCollision's), now tied to their source lines.
+- **Kept, with sweeps that found nothing:** StateCrouch (11 axes, 14575
+  variants: the turn as open code, SetFlipX or mirrorFlags stores,
+  `goto`/`else if`, the mask spellings and the locals' types; 14 lines
+  at best, as in round 6), SaveData::TestFlags (2592: the locals' types,
+  the operand order, `if`/`?:`/early return; 2, the round-4 form),
+  LinkSession::ResetState without the `id` references (the counters' and
+  `magic`'s types: 134, unchanged), HandleSerial's `n` (its type and
+  source spellings, statement order: 42; `(p->id[1] >> 4) & 0xf` is 28,
+  but the mask is redundant code the ROM doesn't have) and the two
+  HandleEvent dead loads. (These sweeps' distances are `--metric lines`,
+  a unified diff's -/+ lines.)
 
 ## Survey and conversion record (#576)
 

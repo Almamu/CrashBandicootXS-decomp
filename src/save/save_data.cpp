@@ -407,7 +407,12 @@ u8 SaveData::IsSlotEmpty(s32 rowIndex)
  * for a bare test right after the copy, or only for a bare test whose
  * DEST is set again, compiles everything as the ROM, but of the 42
  * places the pass fires in this ROM only this one meets either
- * condition, so nothing corroborates them. */
+ * condition, so nothing corroborates them.
+ * #662 round 8 (tools/natural_enum.py, 2592 variants: `v` and `result`
+ * in all six integer types, `mask & flags`/`flags & mask`/`v = mask; v
+ * &= flags`, the `if` with or without `else`, `?:` into `result` or
+ * returned, an early `return 1`, `v != 0` or `v`): 2 lines off at best,
+ * the round-4 form's test. */
 u8 SaveData::TestFlags(u8 mask)
 {
     MATCH_HOLD_REG(u8, v, r1);

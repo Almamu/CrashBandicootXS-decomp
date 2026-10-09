@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 """Enumerate natural rewrites of one function and score each against the ROM.
 
-    tools/natural_enum.py SPEC.py [-j N] [-k K] [--beam B] [--top T]
+    tools/natural_enum.py SPEC.py [options]
+    tools/natural_enum.py TEMPLATE --src SRC --sig 'SIGLINE' --sym SYM
+                          [--ref OBJ] [options]
 
 The decomp-permuter finds matches, but mostly with junk nobody would write
-(#662). This is its opposite: it only tries the rewrites a spec lists, and
-a spec only lists things a programmer plausibly writes (a local's type or
+(#662). This is its opposite: it only tries the rewrites it is given, and
+those are only things a programmer plausibly writes (a local's type or
 signedness, statement order, where a local is declared, splitting or
 merging locals, a sub-expression as an inline helper, early return vs
 if/else, loop forms, compound assignment, `?:` vs if, a class accessor
-instead of the field). It tries every combination of up to K of them
-(pairs and triples by default), then a beam search from the best, in
-parallel, and prints the best variants by how far each is from the ROM.
-The winner still has to be judged by hand: it must read like the
-original author's code.
+instead of the field). The winner still has to be judged by hand: it must
+read like the original author's code.
+
+The rewrites come in one of two forms.
 
 A spec is a Python file defining:
 
@@ -26,16 +27,34 @@ A spec is a Python file defining:
     # optional: CONSTRAINT(choice) -> bool, choice = {axis: index}
     # optional: EXTRA_FLAGS = ["-f..."], PRELUDE = "text put before REGION"
 
-TARGET is any object with the function as the ROM has it (a copy of the
-matched build's object, taken before editing). Literal `{`/`}` in
-TEMPLATE are written `{{`/`}}`. An axis value can itself contain
-`{other}` slots (and no other braces). The compile command is the
-Makefile's (`make -n`), so the object's compiler and flags are used.
+Literal `{`/`}` in TEMPLATE are written `{{`/`}}`. An axis value can
+itself contain `{other}` slots (and no other braces).
 
-The score is the number of differing instructions (a line diff of the
-normalised disassembly: branch targets relative to the function, pool
-words by relocation); 0 is a match. Variants that don't compile are
-dropped. Results are cached by the rendered text in the work directory.
+A template (any other file) is the function's text, from the line equal
+to --sig to the next "\\n}\\n" of --src (helpers before it may be
+included), with inline slots:
+
+    @{a|b|c}@        one of the alternatives (an empty one is allowed)
+    @name{a|b|c}@    every slot with this name takes the same index
+    @T{s32}@         a type: s8, u8, s16, u16, s32, u32 (the given one first)
+    @Tname{s32}@     a type slot tied by name
+
+Slots nest; write `\\|` and `\\}` for a literal `|` and `}`.
+
+Search. Without -k, every combination is tried when there are at most
+--limit of them, else a fixed-seed sample of --limit (--sample forces
+the sample). With -k K, every combination of up to K changed axes is
+tried, then --rounds rounds of a beam search (width --beam) from the
+best. Identical renderings are compiled once, and results are cached by
+the rendered text in the work directory (build/natural_enum/<name>).
+
+The compile command is the Makefile's (`make -n`), so the object's
+compiler and flags are used. The score is the number of differing
+instructions (normalised disassembly: branch targets relative to the
+function, pool words by relocation; `--metric lines` counts a unified
+diff's -/+ lines instead, as round 8's link/ sweeps did); 0 is a match.
+--all also scores the object's other functions (collateral). --dump
+writes every result as TSV (score, collateral, each axis's text).
 """
 
 import argparse
@@ -45,14 +64,19 @@ import importlib.util
 import itertools
 import json
 import os
+import random
 import re
 import shlex
 import subprocess
 import sys
 import tempfile
+import threading
 from concurrent.futures import ThreadPoolExecutor
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+TYPES = ["s8", "u8", "s16", "u16", "s32", "u32"]
+
+# ---------------------------------------------------------------- sources
 
 
 def load_spec(path):
@@ -62,28 +86,147 @@ def load_spec(path):
     return mod
 
 
+class SpecSource:
+    """A SPEC.py: named axes, `{axis}` slots, a REGION of SOURCE."""
+
+    def __init__(self, path):
+        self.spec = spec = load_spec(path)
+        self.source = spec.SOURCE
+        self.symbol = spec.SYMBOL
+        self.target = spec.TARGET
+        self.region = spec.REGION
+        self.extra_flags = list(getattr(spec, "EXTRA_FLAGS", []))
+        self.axes = list(spec.AXES)
+        self.sizes = {a: len(spec.AXES[a]) for a in self.axes}
+        self.constraint = getattr(spec, "CONSTRAINT", lambda c: True)
+
+    def values(self, choice):
+        vals = {k: self.spec.AXES[k][i] for k, i in choice.items()}
+
+        def fill(text):
+            # axis values may name other axes; they have no literal braces
+            return re.sub(r"\{([a-z_0-9]+)\}", lambda m: fill(vals[m.group(1)]), text)
+
+        return {k: fill(v) for k, v in vals.items()}
+
+    def render(self, choice):
+        return self.spec.TEMPLATE.format(**self.values(choice))
+
+    def axis_text(self, choice, axis):
+        return self.values(choice)[axis]
+
+
+OPEN_RE = re.compile(r"@(T?)(\w*)\{")
+
+
+def parse_seq(text, pos, slots, stop):
+    """Literal text and slots up to a `|` or `}@` (when stop) or the end.
+    -> (pieces, pos); a piece is a string or a slot index."""
+    pieces = []
+    buf = []
+    while pos < len(text):
+        if text.startswith("\\|", pos) or text.startswith("\\}", pos):
+            buf.append(text[pos + 1])
+            pos += 2
+            continue
+        if stop and (text.startswith("}@", pos) or text[pos] == "|"):
+            break
+        m = OPEN_RE.match(text, pos)
+        if m:
+            pieces.append("".join(buf))
+            buf = []
+            is_type, name = m.group(1), m.group(2)
+            pos = m.end()
+            alts = []
+            while True:
+                alt, pos = parse_seq(text, pos, slots, True)
+                alts.append(alt)
+                if text.startswith("}@", pos):
+                    pos += 2
+                    break
+                if pos >= len(text):
+                    sys.exit("unterminated slot")
+                pos += 1  # '|'
+            if is_type:
+                first = "".join(x for x in alts[0] if isinstance(x, str)).strip() or "s32"
+                alts = [[first]] + [[t] for t in TYPES if t != first]
+            pieces.append(len(slots))
+            slots.append(((("T" if is_type else "") + name) if name else None, alts))
+            continue
+        buf.append(text[pos])
+        pos += 1
+    pieces.append("".join(buf))
+    return pieces, pos
+
+
+class TemplateSource:
+    """An inline-slot template of one function (see the module doc)."""
+
+    def __init__(self, path, src, sig, sym, ref):
+        if not (src and sig and sym):
+            sys.exit("a template needs --src, --sig and --sym")
+        self.source = src
+        self.symbol = sym
+        self.target = ref or os.path.join("build/crashbandicootxs", os.path.splitext(src)[0] + ".o")
+        text = open(os.path.join(ROOT, src)).read()
+        i = text.index("\n" + sig + "\n") + 1
+        j = text.index("\n}\n", i) + 3
+        self.region = text[i:j]
+        self.extra_flags = []
+        self.constraint = lambda c: True
+        self.slots = []
+        self.pieces, _ = parse_seq(open(path).read(), 0, self.slots, False)
+        # tied slots share one axis
+        self.slot_axis = []
+        self.axes = []
+        self.sizes = {}
+        for k, (name, alts) in enumerate(self.slots):
+            axis = name or "s%d" % k
+            if axis in self.sizes:
+                if self.sizes[axis] != len(alts):
+                    sys.exit("slot %s: tied slots need the same number of alternatives" % axis)
+            else:
+                self.axes.append(axis)
+                self.sizes[axis] = len(alts)
+            self.slot_axis.append(axis)
+
+    def _render(self, pieces, choice):
+        out = []
+        for p in pieces:
+            if isinstance(p, int):
+                out.append(self._render(self.slots[p][1][choice[self.slot_axis[p]]], choice))
+            else:
+                out.append(p)
+        return "".join(out)
+
+    def render(self, choice):
+        body = self._render(self.pieces, choice)
+        return body if body.endswith("\n") else body + "\n"
+
+    def axis_text(self, choice, axis):
+        k = self.slot_axis.index(axis)
+        return self._render(self.slots[k][1][choice[axis]], choice)
+
+
+# ---------------------------------------------------------------- compile
+
+
 def make_commands(source):
     """The Makefile's cpp and cc1 command lines for SOURCE's object."""
     obj = "build/crashbandicootxs/" + os.path.splitext(source)[0] + ".o"
-    out = subprocess.run(
-        ["make", "-n", "-W", source, obj],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-    ).stdout
+    out = subprocess.run(["make", "-n", "-W", source, obj], cwd=ROOT, capture_output=True, text=True).stdout
     for line in out.splitlines():
         if "|" in line and source in line and "agbc" in line:
             cpp, cc1 = line.split("|", 1)
             cpp = shlex.split(cpp)
             cc1 = shlex.split(cc1)
-            drop = {"-MF", "-MT"}
             clean = []
             skip = False
             for a in cpp:
                 if skip:
                     skip = False
                     continue
-                if a in drop:
+                if a in ("-MF", "-MT"):
                     skip = True
                     continue
                 if a in ("-MMD", "-MP") or a == source:
@@ -114,31 +257,19 @@ def cxx_symbols():
     return _CXX
 
 
-def symbol_names(symbol):
-    """SYMBOL and its mangled name."""
-    return {symbol} | {k for k, v in cxx_symbols().items() if v == symbol}
-
-
-def objdump_func(obj, symbol):
-    names = symbol_names(symbol)
-    out = subprocess.run(
-        ["arm-none-eabi-objdump", "-dr", "--no-show-raw-insn", obj],
-        capture_output=True,
-        text=True,
-    ).stdout
-    lines = []
-    start = None
-    inside = False
+def objdump_all(obj):
+    """{C symbol name: normalised instruction lines} for every function."""
+    out = subprocess.run(["arm-none-eabi-objdump", "-dr", "--no-show-raw-insn", obj], capture_output=True, text=True).stdout
+    funcs = {}
+    lines = None
+    start = 0
     for line in out.splitlines():
         m = re.match(r"^([0-9a-f]+) <(.+)>:$", line)
         if m:
-            if inside:
-                break
-            if m.group(2) in names:
-                inside = True
-                start = int(m.group(1), 16)
+            lines = funcs.setdefault(cxx_symbols().get(m.group(2), m.group(2)), [])
+            start = int(m.group(1), 16)
             continue
-        if not inside or not line.strip():
+        if lines is None or not line.strip():
             continue
         rm = re.match(r"^\s*[0-9a-f]+: (R_\S+)\s+(\S+)", line)
         if rm:
@@ -152,35 +283,48 @@ def objdump_func(obj, symbol):
             bm = re.match(r"^(b\S*) ([0-9a-f]+)( <[^>]*>)?$", text)
             if bm and bm.group(1) != "bl":
                 text = "%s .%+x" % (bm.group(1), int(bm.group(2), 16) - start)
+            elif bm and bm.group(3):
+                # a call within the object: by name, not by address
+                name = bm.group(3)[2:-1].split("+")[0]
+                text = "bl " + cxx_symbols().get(name, name)
             text = re.sub(r" <[^>]*>", "", text)
             lines.append(text)
-    return lines
+    return funcs
 
 
-def score(a, b):
+def objdump_func(obj, symbol):
+    return objdump_all(obj).get(symbol, [])
+
+
+def score_insns(a, b):
     sm = difflib.SequenceMatcher(None, a, b, autojunk=False)
-    n = 0
-    for tag, i1, i2, j1, j2 in sm.get_opcodes():
-        if tag != "equal":
-            n += max(i2 - i1, j2 - j1)
-    return n
+    return sum(max(i2 - i1, j2 - j1) for tag, i1, i2, j1, j2 in sm.get_opcodes() if tag != "equal")
+
+
+def score_lines(a, b):
+    return sum(1 for l in difflib.unified_diff(a, b, lineterm="", n=0) if l[:1] in "+-" and not l.startswith(("+++", "---")))
 
 
 class Runner:
-    def __init__(self, spec, work):
-        self.spec = spec
+    def __init__(self, src, work, metric, collateral):
+        self.src = src
         self.work = work
         os.makedirs(work, exist_ok=True)
-        self.cpp, self.cc1 = make_commands(spec.SOURCE)
-        self.cc1 += list(getattr(spec, "EXTRA_FLAGS", []))
-        with open(os.path.join(ROOT, spec.SOURCE)) as f:
+        self.cpp, self.cc1 = make_commands(src.source)
+        self.cc1 += src.extra_flags
+        with open(os.path.join(ROOT, src.source)) as f:
             self.text = f.read()
-        if spec.REGION not in self.text:
-            sys.exit("REGION not found in " + spec.SOURCE)
-        self.target = objdump_func(os.path.join(ROOT, spec.TARGET), spec.SYMBOL)
+        if src.region not in self.text:
+            sys.exit("REGION not found in " + src.source)
+        self.ref = objdump_all(os.path.join(ROOT, src.target))
+        self.target = self.ref.get(src.symbol)
         if not self.target:
-            sys.exit("symbol %s not in target" % spec.SYMBOL)
+            sys.exit("symbol %s not in %s" % (src.symbol, src.target))
+        self.score = score_lines if metric == "lines" else score_insns
+        self.collateral = collateral
+        self.mode = "%s%s" % (metric, "+all" if collateral else "")
         self.keep_diff = False
+        self.lock = threading.Lock()
         self.cache_path = os.path.join(work, "cache.json")
         try:
             with open(self.cache_path) as f:
@@ -188,56 +332,52 @@ class Runner:
         except (OSError, ValueError):
             self.cache = {}
 
-    def render(self, choice):
-        vals = {k: self.spec.AXES[k][i] for k, i in choice.items()}
-
-        def fill(text):
-            # axis values may name other axes; they have no literal braces
-            return re.sub(r"\{([a-z_0-9]+)\}", lambda m: fill(vals[m.group(1)]), text)
-
-        return self.spec.TEMPLATE.format(**{k: fill(v) for k, v in vals.items()})
+    def key(self, body):
+        return hashlib.sha1((self.mode + "\0" + body).encode()).hexdigest()
 
     def compile(self, body):
-        key = hashlib.sha1(body.encode()).hexdigest()
-        if key in self.cache:
-            return self.cache[key]
-        src = self.text.replace(self.spec.REGION, body, 1)
+        """-> [score, output hash, collateral] or None."""
+        key = self.key(body)
+        with self.lock:
+            if key in self.cache:
+                return self.cache[key]
+        src = self.text.replace(self.src.region, body, 1)
         d = tempfile.mkdtemp(dir=self.work)
+        res = None
         try:
-            cppf = os.path.join(d, "v.cpp")
+            cppf = os.path.join(d, "v" + os.path.splitext(self.src.source)[1])
             with open(cppf, "w") as f:
                 f.write(src)
-            srcdir = os.path.dirname(os.path.join(ROOT, self.spec.SOURCE))
-            ii = subprocess.run(
-                self.cpp[:1] + ["-iquote", srcdir] + self.cpp[1:] + [cppf],
-                cwd=ROOT,
-                capture_output=True,
-            )
-            if ii.returncode:
-                res = None
-            else:
+            srcdir = os.path.dirname(os.path.join(ROOT, self.src.source))
+            ii = subprocess.run(self.cpp[:1] + ["-iquote", srcdir] + self.cpp[1:] + [cppf], cwd=ROOT, capture_output=True)
+            if not ii.returncode:
                 s = os.path.join(d, "v.s")
-                cc = subprocess.run(
-                    self.cc1 + ["-o", s], input=ii.stdout, cwd=ROOT, capture_output=True
-                )
                 o = os.path.join(d, "v.o")
-                if cc.returncode or subprocess.run(
-                    ["arm-none-eabi-as", "-mcpu=arm7tdmi", "-mthumb-interwork", "-o", o, s],
-                    capture_output=True,
+                cc = subprocess.run(self.cc1 + ["-o", s], input=ii.stdout, cwd=ROOT, capture_output=True)
+                if not cc.returncode:
+                    # the Makefile's ZERO_PAD_TEXT (#663)
+                    with open(s, "a") as f:
+                        f.write("\t.text\n\t.align\t2, 0\n")
+                if not cc.returncode and not subprocess.run(
+                    ["arm-none-eabi-as", "-mcpu=arm7tdmi", "-mthumb-interwork", "-o", o, s], capture_output=True
                 ).returncode:
-                    res = None
-                else:
-                    got = objdump_func(o, self.spec.SYMBOL)
-                    res = [score(self.target, got), hashlib.sha1("\n".join(got).encode()).hexdigest()[:12]]
+                    funcs = objdump_all(o)
+                    got = funcs.get(self.src.symbol, [])
+                    other = 0
+                    if self.collateral:
+                        other = sum(self.score(v, funcs.get(k, [])) for k, v in self.ref.items() if k != self.src.symbol)
+                    res = [self.score(self.target, got), hashlib.sha1("\n".join(got).encode()).hexdigest()[:12], other]
                     if self.keep_diff:
+                        for k, v in self.ref.items():
+                            if k != self.src.symbol and self.collateral and v != funcs.get(k, []):
+                                print("collateral: %s, %d" % (k, self.score(v, funcs.get(k, []))))
                         sys.stdout.writelines(
-                            difflib.unified_diff(
-                                [x + "\n" for x in self.target], [x + "\n" for x in got], "rom", "variant", n=2
-                            )
+                            difflib.unified_diff([x + "\n" for x in self.target], [x + "\n" for x in got], "rom", "variant", n=2)
                         )
         finally:
             subprocess.run(["rm", "-rf", d])
-        self.cache[key] = res
+        with self.lock:
+            self.cache[key] = res
         return res
 
     def save(self):
@@ -245,88 +385,131 @@ class Runner:
             json.dump(self.cache, f)
 
 
+# ---------------------------------------------------------------- search
+
+
 def distinct(results):
-    """(score, choice) per distinct output, each with its fewest changes."""
+    """(score, collateral, choice) per distinct output, each with its
+    fewest changes."""
     best = {}
     for k, s in results.items():
         if s is None:
             continue
         n = sum(1 for _, i in k if i)
         if s[1] not in best or n < best[s[1]][0]:
-            best[s[1]] = (n, s[0], k)
-    return sorted((sc, k) for n, sc, k in best.values())
+            best[s[1]] = (n, s[0], s[2] if len(s) > 2 else 0, k)
+    return sorted((sc, o, k) for n, sc, o, k in best.values())
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("spec")
+    ap.add_argument("spec", help="a SPEC.py or an inline-slot template")
+    ap.add_argument("--src", help="template: the source file")
+    ap.add_argument("--sig", help="template: the function's definition line")
+    ap.add_argument("--sym", help="template: the symbol (the C name)")
+    ap.add_argument("--ref", help="template: object with the ROM's code (default: build/'s)")
     ap.add_argument("-j", type=int, default=os.cpu_count())
-    ap.add_argument("-k", type=int, default=3, help="max axes changed at once (exhaustive)")
-    ap.add_argument("--beam", type=int, default=8, help="beam width after the exhaustive pass")
+    ap.add_argument("-k", type=int, default=None, help="max axes changed at once, then a beam search")
+    ap.add_argument("--beam", type=int, default=8, help="beam width after the -k pass")
     ap.add_argument("--rounds", type=int, default=3, help="beam rounds")
+    ap.add_argument("--limit", type=int, default=4000, help="full product up to this many, else a sample")
+    ap.add_argument("--sample", action="store_true", help="sample --limit combinations even if fewer")
+    ap.add_argument("--metric", choices=["insns", "lines"], default="insns")
+    ap.add_argument("--all", action="store_true", help="also score the object's other functions")
     ap.add_argument("--top", type=int, default=15)
+    ap.add_argument("-v", "--verbose", type=int, default=0, help="spell out the N best axis by axis")
+    ap.add_argument("--dump", help="write every result as TSV")
+    ap.add_argument("--best", help="write the best variant's text here")
     ap.add_argument("--work", default=None)
+    ap.add_argument("--flags", default="", help="extra compiler flags")
     ap.add_argument("--show", action="store_true", help="print the best variant's text and diff")
     ap.add_argument("--eval", metavar="AXIS=I,...", help="only score and diff this one variant")
     args = ap.parse_args()
 
-    spec = load_spec(args.spec)
+    if args.spec.endswith(".py"):
+        src = SpecSource(args.spec)
+    else:
+        src = TemplateSource(args.spec, args.src, args.sig, args.sym, args.ref)
+    src.extra_flags += shlex.split(args.flags)
     work = args.work or os.path.join(ROOT, "build", "natural_enum", os.path.basename(args.spec))
-    r = Runner(spec, work)
-    axes = list(spec.AXES)
-    ok = getattr(spec, "CONSTRAINT", lambda c: True)
+    r = Runner(src, work, args.metric, args.all)
+    axes = src.axes
     base = {a: 0 for a in axes}
+
     if args.eval:
         c = dict(base)
         for kv in args.eval.split(","):
             k, v = kv.split("=")
             c[k] = int(v)
-        body = r.render(c)
+        body = src.render(c)
         print(body)
         r.keep_diff = True
-        r.cache.pop(hashlib.sha1(body.encode()).hexdigest(), None)
+        r.cache.pop(r.key(body), None)
         print("score:", r.compile(body))
         return
+
     results = {}
+    seen_body = {}
 
     def run_all(choices):
         todo = []
         for c in choices:
             key = tuple(sorted(c.items()))
-            if key in results or not ok(c):
+            if key in results or not src.constraint(c):
                 continue
             results[key] = None
-            todo.append(c)
+            todo.append((key, src.render(c)))
+        uniq = {}
+        for key, body in todo:
+            uniq.setdefault(body, []).append(key)
+        bodies = [b for b in uniq if b not in seen_body]
         with ThreadPoolExecutor(args.j) as ex:
-            for c, s in zip(todo, ex.map(lambda c: r.compile(r.render(c)), todo)):
-                results[tuple(sorted(c.items()))] = s
+            for b, s in zip(bodies, ex.map(r.compile, bodies)):
+                seen_body[b] = s
+        for body, keys in uniq.items():
+            for key in keys:
+                results[key] = seen_body[body]
         r.save()
-        return len(todo)
+        return len(bodies)
 
-    def variants(c, axs):
-        for a in axs:
-            for i in range(len(spec.AXES[a])):
+    def neighbours(c):
+        for a in axes:
+            for i in range(src.sizes[a]):
                 if i != c[a]:
                     n = dict(c)
                     n[a] = i
                     yield n
 
-    choices = []
-    for k in range(0, args.k + 1):
-        for combo in itertools.combinations(axes, k):
-            for idx in itertools.product(*[range(1, len(spec.AXES[a])) for a in combo]):
-                c = dict(base)
-                c.update(zip(combo, idx))
-                choices.append(c)
-    n = run_all(choices)
-    print("exhaustive (k<=%d): %d variants" % (args.k, n), file=sys.stderr)
-    for rnd in range(args.rounds):
-        best = distinct(results)[: args.beam]
-        nxt = [n for _, k in best for n in variants(dict(k), axes)]
-        n = run_all(nxt)
-        print("beam round %d: %d new" % (rnd + 1, n), file=sys.stderr)
-        if not n:
-            break
+    total = 1
+    for a in axes:
+        total *= src.sizes[a]
+    if args.k is None:
+        if total <= args.limit and not args.sample:
+            choices = [dict(zip(axes, p)) for p in itertools.product(*[range(src.sizes[a]) for a in axes])]
+        else:
+            rnd = random.Random(662)
+            picked = {tuple(0 for _ in axes)}
+            while len(picked) < min(args.limit, total):
+                picked.add(tuple(rnd.randrange(src.sizes[a]) for a in axes))
+            choices = [dict(zip(axes, p)) for p in sorted(picked)]
+        n = run_all(choices)
+        print("%d axes, %d combinations, %d tried, %d compiled" % (len(axes), total, len(choices), n), file=sys.stderr)
+    else:
+        choices = []
+        for k in range(0, args.k + 1):
+            for combo in itertools.combinations(axes, k):
+                for idx in itertools.product(*[range(1, src.sizes[a]) for a in combo]):
+                    c = dict(base)
+                    c.update(zip(combo, idx))
+                    choices.append(c)
+        n = run_all(choices)
+        print("exhaustive (k<=%d): %d variants" % (args.k, n), file=sys.stderr)
+        for rnd in range(args.rounds):
+            best = distinct(results)[: args.beam]
+            n = run_all([x for _, _, k in best for x in neighbours(dict(k))])
+            print("beam round %d: %d new" % (rnd + 1, n), file=sys.stderr)
+            if not n:
+                break
 
     ranked = distinct(results)
     b = results.get(tuple(sorted(base.items())))
@@ -335,14 +518,31 @@ def main():
         "compiled: %d (%d distinct outputs), failed: %d"
         % (sum(1 for s in results.values() if s), len(ranked), sum(1 for s in results.values() if s is None))
     )
-    for s, k in ranked[: args.top]:
+    for s, o, k in ranked[: args.top]:
         diff = {a: i for a, i in k if i}
-        print("%4d  %s" % (s, diff))
+        print("%4d%s  %s" % (s, (" +%d other" % o) if args.all else "", diff))
+    for s, o, k in ranked[: args.verbose]:
+        c = dict(k)
+        print("%4d:" % s)
+        for a in axes:
+            if src.sizes[a] > 1:
+                print("    %-8s %s" % (a, " ".join(src.axis_text(c, a).split())[:90]))
+    if args.dump:
+        with open(args.dump, "w") as f:
+            f.write("score\tother\t" + "\t".join(axes) + "\n")
+            for k, s in sorted(results.items(), key=lambda kv: (kv[1] is None, kv[1] and kv[1][0])):
+                if s is None:
+                    continue
+                c = dict(k)
+                f.write("%d\t%d\t%s\n" % (s[0], s[2] if len(s) > 2 else 0, "\t".join(" ".join(src.axis_text(c, a).split()) for a in axes)))
+    if ranked and args.best:
+        with open(args.best, "w") as f:
+            f.write(src.render(dict(ranked[0][2])))
     if args.show and ranked:
-        body = r.render(dict(ranked[0][1]))
+        body = src.render(dict(ranked[0][2]))
         print(body)
         r.keep_diff = True
-        r.cache.pop(hashlib.sha1(body.encode()).hexdigest(), None)
+        r.cache.pop(r.key(body), None)
         r.compile(body)
 
 

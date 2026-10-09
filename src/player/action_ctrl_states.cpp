@@ -1020,7 +1020,12 @@ void ActionCtrl::StateCrouch()
              * variants). A private old_agbcp whose three-quantity sort
              * compares sorted positions (the exchange fixed) moves the
              * rest of this function 30 lines, so the original compiler
-             * had the exchange as it is. */
+             * had the exchange as it is. Round 8 (tools/natural_enum.py,
+             * 14575 variants: both turns as open code, SetFlipX or
+             * mirrorFlags stores, `goto` or `else if`, the mask as
+             * -0x11/~0x10 before or after the address, `turned` set
+             * before or after, and in/dir/turned/moved/m in all six
+             * integer types): 14 lines off at best. */
             volatile u8 *p = &part->mirror;
 
             m = -0x11;

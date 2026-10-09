@@ -98,7 +98,12 @@ extern "C" {
  * length leaves the plain code 78, 146, 220 and 162 lines off (146 with
  * the stock formula); the same variants are further off for
  * HandleSerial's `n` and GAX2_init's two uses, so no other priority rule
- * explains these references. */
+ * explains these references.
+ * #662 round 8 (tools/natural_enum.py): without the references, `i`,
+ * `j`, `k` and `magic` through all six integer types (1296 variants)
+ * stay 134 lines off, and a 12000-variant sample that also retypes the
+ * copy loops' `v`/`w`/`lo` and the `t` offsets gets to 82 with `self`
+ * still in r4. */
 s32 LinkSession::ResetState()
 {
     s32 i, j;
