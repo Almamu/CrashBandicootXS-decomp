@@ -1,6 +1,7 @@
 #include "vehicle.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "yeti.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -178,7 +179,7 @@ s32 PolarPlayer::Hurt()
         gPolarSteerEnabled = 0;
         gPolarPlayerInactive = 1;
         SetCellAnimSpeed(0);
-        StopYeti();
+        Yeti::Stop();
     } else {
         *timer = 0x4b;
         (*aku)->RemoveMask();
@@ -205,7 +206,7 @@ s32 PolarPlayer::Shock()
         gPolarSteerEnabled = 0;
         gPolarPlayerInactive = 1;
         SetCellAnimSpeed(0);
-        StopYeti();
+        Yeti::Stop();
     } else {
         *timer = 0x4b;
         (*aku)->RemoveMask();

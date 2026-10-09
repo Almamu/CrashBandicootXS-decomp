@@ -3,6 +3,7 @@
 #include "hovercraft.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "yeti.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -23,17 +24,18 @@ extern "C" {
  * record's kind byte and forwards to it, the run of small spawners
  * (`CreateJetpackCheckpointText`-`SpawnJetpackShot`) each build one object
  * from a fixed record of the same table, and `CreateJetpackPlayer` builds
- * the player. It starts with the yeti's `YetiStateStop`, which stays here
- * across the flag boundary with yeti.cpp.
+ * the player. It starts with the yeti's `Yeti::StateStop` (YetiStateStop,
+ * include/yeti.hpp), which stays here across the flag boundary with
+ * yeti.cpp.
  *
  * Built with old_agbcp (as the C was with old_agbcc). */
 
 /* Once the current animation has played through, switches the yeti to
  * animation sequence 3 (unless it's already on it), restarting its timer
  * from that sequence's first frame. */
-void YetiStateStop(void)
+void Yeti::StateStop()
 {
-    AnimPart *self = gYeti;
+    AnimPart *self = anim;
 
     if (self->animIndex != 3 && self->animDone != 0) {
         self->animIndex = 3;

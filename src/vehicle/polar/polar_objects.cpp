@@ -1,6 +1,7 @@
 #include "vehicle.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "yeti.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -41,7 +42,7 @@ void PolarElectricFence::Update()
 
     if (animIndex == 0) {
         box = record->box_14;
-        if (IsTouchingYeti(this)) {
+        if (Yeti::IsTouching(this)) {
             gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
             RestartAnim(1);
         }
@@ -101,7 +102,7 @@ void PolarLauncher::Update()
             static_cast<PolarPlayer *>(gActorList)->Launch();
             gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
             SetState(1, 1);
-        } else if (IsTouchingYeti(this)) {
+        } else if (Yeti::IsTouching(this)) {
             gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
             SetState(1, 1);
         }
@@ -144,7 +145,7 @@ void PolarPenguin::Update()
                 gAudioContext->PlaySfx(SFX_ENEMY_KNOCKED_AWAY, 0x100);
                 SetState(1, 0);
             }
-        } else if (IsTouchingYeti(this)) {
+        } else if (Yeti::IsTouching(this)) {
             velX = x > 0 ? 0x600 : -0x600;
             velY = -(s32)(u16)RandRange(0x300);
             velZ += 0x200;

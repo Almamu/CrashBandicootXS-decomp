@@ -1,6 +1,7 @@
 #include "vehicle.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "yeti.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -20,7 +21,7 @@ extern "C" {
 void PolarCrate::Update()
 {
     if (animIndex != 0x12) {
-        if (IsTouchingYeti(this)) {
+        if (Yeti::IsTouching(this)) {
             gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
             gLevelState->AddBrokenCrate();
             Break();
@@ -79,7 +80,7 @@ void PolarLifeCrate::Update()
             palette = 1;
         }
 
-        if (animIndex != 0x12 && IsTouchingYeti(this)) {
+        if (animIndex != 0x12 && Yeti::IsTouching(this)) {
             gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
             gLevelState->AddBrokenCrate();
             Break();
@@ -107,7 +108,7 @@ void PolarNitroCrate::Update()
             gLevelState->AddBrokenCrate();
             static_cast<PolarPlayer *>(gActorList)->Hurt();
             Explode();
-        } else if (IsTouchingYeti(this)) {
+        } else if (Yeti::IsTouching(this)) {
             gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
             gLevelState->AddBrokenCrate();
             Explode();

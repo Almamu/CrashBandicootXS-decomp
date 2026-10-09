@@ -1,5 +1,6 @@
 #include "actor_self.hpp"
 #include "audio.hpp"
+#include "yeti.hpp"
 
 extern "C" {
 #include "core.h"
@@ -38,24 +39,24 @@ extern "C" {
  * `gYetiChargeParams[gYetiParamsIndex]`'s `+4`/`+8` thresholds to
  * decide whether to fire the kind-1/anim-reset transition (plus a sound
  * cue while `gYetiDistance <= 0x7800`). */
-void YetiStateChase(void)
+void Yeti::StateChase()
 {
     if (GetCellAnimSpeed() == 0x24) {
-        gYetiPosition = INT_TO_Q8(GetCellAnimDistance()) - gYetiDistance;
+        position = INT_TO_Q8(GetCellAnimDistance()) - distance;
     } else {
-        gYetiPosition += 0x99;
-        gYetiDistance = INT_TO_Q8(GetCellAnimDistance()) - gYetiPosition;
+        position += 0x99;
+        distance = INT_TO_Q8(GetCellAnimDistance()) - position;
     }
 
-    if (gYetiDistance > 0xa000) {
-        gYetiDistance = 0xa000;
-        gYetiPosition = INT_TO_Q8(GetCellAnimDistance()) - gYetiDistance;
+    if (distance > 0xa000) {
+        distance = 0xa000;
+        position = INT_TO_Q8(GetCellAnimDistance()) - distance;
     }
 
     {
-        s32 tier = Q8_TO_INT(gYeti->animTime);
+        s32 tier = Q8_TO_INT(anim->animTime);
 
-        if (gYetiDistance <= 0x4FFF) {
+        if (distance <= 0x4FFF) {
             if (tier == 0xc) {
                 gAudioContext->PlayAmbientSfx(0x3f, 0x3E8, 0x100, true);
                 ShakeActorBg(0x200);
@@ -69,15 +70,15 @@ void YetiStateChase(void)
     }
 
     {
-        if (gYeti->animDone != 0) {
-            if (gYetiDistance > 0x5A00) {
+        if (anim->animDone != 0) {
+            if (distance > 0x5A00) {
                 goto do_transition;
             }
 
             if (GetCellAnimSpeed() > 0x24) {
                 s32 v = (u16)RandRange(0x100);
-                u8 *tableBase = (u8 *)gYetiChargeParams;
-                s32 offset = gYetiParamsIndex * 0xc;
+                u8 *tableBase = (u8 *)chargeParams;
+                s32 offset = paramsIndex * 0xc;
                 u8 *tablePlus4 = tableBase + 4;
                 s32 threshold = *(s32 *)(tablePlus4 + offset);
 
@@ -91,8 +92,8 @@ void YetiStateChase(void)
             }
             {
                 s32 v = (u16)RandRange(0x100);
-                u8 *tableBase = (u8 *)gYetiChargeParams;
-                s32 offset = gYetiParamsIndex * 0xc;
+                u8 *tableBase = (u8 *)chargeParams;
+                s32 offset = paramsIndex * 0xc;
                 u8 *tablePlus8 = tableBase + 8;
                 s32 threshold = *(s32 *)(tablePlus8 + offset);
 
@@ -102,12 +103,12 @@ void YetiStateChase(void)
             }
 
         do_transition:
-            gYetiState = 1;
+            state = 1;
             {
-                gYeti->RestartAnim(1);
+                anim->RestartAnim(1);
             }
 
-            if (gYetiDistance <= 0x7800) {
+            if (distance <= 0x7800) {
                 gAudioContext->PlaySfx(SFX_YETI_CHASE, 0x100);
             }
         end_transition:;
@@ -124,24 +125,24 @@ void YetiStateChase(void)
  * branch this time). The done-flag tail is a plain unconditional
  * kind-0/anim-reset (no threshold gate, no sound cue) - the counterpart
  * "settle" step to `YetiStateChase`'s tier-1 "arm" step. */
-void YetiStateCharge(void)
+void Yeti::StateCharge()
 {
-    s32 *c8 = &gYetiPosition;
-    u8 *table = (u8 *)gYetiChargeParams;
-    s32 idx = gYetiParamsIndex;
+    s32 *c8 = &position;
+    u8 *table = (u8 *)chargeParams;
+    s32 idx = paramsIndex;
 
     *c8 += *(s32 *)(table + idx * 0xc);
-    gYetiDistance = INT_TO_Q8(GetCellAnimDistance()) - gYetiPosition;
+    distance = INT_TO_Q8(GetCellAnimDistance()) - position;
 
-    if (gYetiDistance > 0xa000) {
-        gYetiDistance = 0xa000;
-        gYetiPosition = INT_TO_Q8(GetCellAnimDistance()) - gYetiDistance;
+    if (distance > 0xa000) {
+        distance = 0xa000;
+        position = INT_TO_Q8(GetCellAnimDistance()) - distance;
     }
 
     {
-        s32 tier = Q8_TO_INT(gYeti->animTime);
+        s32 tier = Q8_TO_INT(anim->animTime);
 
-        if (gYetiDistance <= 0x4FFF) {
+        if (distance <= 0x4FFF) {
             /* The two stomp cues share their ShakeActorBg(0x200) (the
              * ROM's one cross-jumped tail). */
             if (tier == 0xb || tier == 0x1b) {
@@ -157,10 +158,10 @@ void YetiStateCharge(void)
     }
 
     {
-        AnimPart *bc = gYeti;
+        AnimPart *bc = anim;
 
         if (bc->animDone != 0) {
-            gYetiState = 0;
+            state = 0;
             bc->RestartAnim(0);
         }
     }

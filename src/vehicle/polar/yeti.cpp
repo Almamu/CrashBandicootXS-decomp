@@ -1,4 +1,5 @@
 #include "actor_self.hpp"
+#include "yeti.hpp"
 
 extern "C" {
 #include "core.h"
@@ -15,15 +16,15 @@ extern "C" {
 /* Arms `gYetiState = 3` - a state value none of this chunk's
  * other functions read back, plausibly consumed by the vtable-dispatch
  * caller itself. */
-void StopYeti(void)
+void Yeti::Stop()
 {
-    gYetiState = 3;
+    state = 3;
 }
 
 /* Destructor: frees the object. */
-void DestroyYeti(void)
+void Yeti::Destroy()
 {
-    delete gYeti;
+    delete anim;
 }
 
 /* Constructor: stashes the caller's argument in `gYetiParamsIndex`,
@@ -35,18 +36,18 @@ void DestroyYeti(void)
  * primes `SetActorBgLayerDepth`, clears `gYetiState`, and finally calls
  * `LoadYetiGraphics` (the object's own initial VRAM-pattern/DMA setup,
  * parked separately - see docs/matching/archive/issue-54-actor-d3a8.md). */
-void CreateYeti(s32 level)
+void Yeti::Create(s32 level)
 {
-    gYetiParamsIndex = level;
-    gYeti = new AnimPart((struct anim_frame_record *)gYetiKeyframes, (u32 *)gYetiFrames, 0xf);
+    paramsIndex = level;
+    anim = new AnimPart((struct anim_frame_record *)keyframes, (u32 *)frames, 0xf);
 
-    gYetiX = 0;
-    gYetiDistance = 0xa000;
-    gYetiPosition = INT_TO_Q8(GetCellAnimDistance()) - gYetiDistance;
-    SetActorBgLayerDepth(gYetiDistance);
+    x = 0;
+    distance = 0xa000;
+    position = INT_TO_Q8(GetCellAnimDistance()) - distance;
+    SetActorBgLayerDepth(distance);
 
-    gYetiState = 0;
-    LoadYetiGraphics();
+    state = 0;
+    LoadGraphics();
 }
 
 /* Sits right after `CreateYeti` above and before
@@ -70,7 +71,7 @@ void CreateYeti(s32 level)
  *
  * The condition is written as the "fill with 0xff" test so the 0xff
  * store comes first, as in the ROM. */
-void BuildYetiBg2Map(u8 *dst, u8 seed)
+void Yeti::BuildBg2Map(u8 *dst, u8 seed)
 {
     s32 y, x;
 
@@ -87,6 +88,6 @@ void BuildYetiBg2Map(u8 *dst, u8 seed)
 /* Genuine no-op stub sitting between `BuildYetiBg2Map` (the BG2 map
  * builder) and `YetiStateStop` - see
  * docs/matching/archive/issue-54-actor-d3a8.md. */
-void YetiStateCaught(void)
+void Yeti::StateCaught()
 {
 }

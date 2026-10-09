@@ -74,7 +74,6 @@ extern void DestroyJetpackBalloonCrate(void *self, s32 flags);
 extern u8 IsJetpackPlayerInactive(void);
 
 /* src/vehicle/jetpack/jetpack_spawn.cpp: the spawners (C linkage) */
-extern void YetiStateStop(void);
 extern struct ActorSelf *SpawnJetpackActor(struct actor_spawn *rec, u8 alt, s32 dz);
 extern struct ActorSelf *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z,
                                             struct actor_spawn *spawn);
@@ -91,27 +90,16 @@ extern void CreateJetpackPlayer(struct anim_table_record *table, s32 z);
 extern s32 GetPolarMaskLevel(void);
 extern u8 IsPolarPlayerInactive(void);
 
-/* src/vehicle/polar/yeti.cpp */
-extern void StopYeti(void);
-extern void DestroyYeti(void);
+/* The yeti's category-table slots (#765), by the C names of their Yeti
+ * static members (include/yeti.hpp, cxx_symbols.txt), for the C category
+ * table (src/data/actor_category_175558.c). C++ calls Yeti::Create & co. */
+#ifndef __cplusplus
 extern void CreateYeti(s32 level);
-extern void BuildYetiBg2Map(u8 *dst, u8 seed);
-extern void YetiStateCaught(void);
-
-/* src/vehicle/polar/yeti_graphics.cpp */
-#ifdef __cplusplus
-extern u8 IsTouchingYeti(class ActorSelf *self);
-#endif
-extern void LoadYetiGraphics(void);
-
-/* src/vehicle/polar/yeti_states.cpp */
-extern void YetiStateChase(void);
-extern void YetiStateCharge(void);
-
-/* src/vehicle/polar/yeti_update.cpp */
 extern void UpdateYeti(void);
-extern void UpdateYetiPalette(void);
 extern void UpdateYetiBg2(void);
+extern void DestroyYeti(void);
+extern void LoadYetiGraphics(void);
+#endif
 
 /* The vehicles' globals (sym_iwram.txt). */
 extern struct anim_table_record *gJetpackAnimTable; /* actor_anim.h */
@@ -156,18 +144,8 @@ extern s32 gPolarWumpaDispenseTimer;
 #ifdef __cplusplus
 extern class ActorSelf *gRiderlessPolar;
 #endif
-/* The yeti's animation: a 0x1C-byte AnimPart (actor_self.hpp), as the
- * airship's (CreateYeti, yeti.cpp). No C file uses it. */
-#ifdef __cplusplus
-extern class AnimPart *gYeti;
-#endif
-extern u8 gYetiBg2Page;
-extern u8 gYetiBg2PageFlip;
-extern s32 gYetiDistance;
-extern s32 gYetiParamsIndex;
-extern s32 gYetiPosition;
-extern s32 gYetiState;
-extern s32 gYetiX;
+/* The yeti's (gYeti, gYetiX, ...) are Yeti's static data members
+ * (include/yeti.hpp). */
 
 /* src/data/palette_strip_17c200.c */
 extern const u16 gJetpackFlashPalettes[3][16];
@@ -185,25 +163,14 @@ extern const struct anim_box gPolarElectricFenceWireBox;
 extern const struct anim_box gPolarNitroCrateBox;
 extern const u16 gPolarPlayerShockBlinkPalette[16];
 extern const u16 gPolarPlayerShockPalette[16];
-extern const s32 gYetiChargeParams[6][3];
 
 /* src/iwram/iwram_data.cpp */
 extern s32 gPolarPenguinSpeeds[3];
 extern s32 gJetpackPlaneHopSpeeds[6];
 extern void (*gUnpackNibbleTilesFunc)(u16 *src, s32 lowBlock);
 
-/* src/data/anim_family_17aa6c.c */
-extern const struct anim_box gYetiBox;
-extern const struct anim_box gYetiCatchBox;
-extern const u16 gYetiPalette[16];
-
-/* src/data/frame_table_17a880.c */
-extern const u8 *const gYetiFrames[123];
-
-/* src/data/anim_frames_17a850.c */
-extern const struct anim_frame_record gYetiKeyframes[4];
-
-/* src/data/actor_state_fn_17a840.c */
-extern void (*const gYetiStateFuncs[4])(void);
+/* The yeti's tables (gYetiChargeParams, gYetiBox, gYetiCatchBox,
+ * gYetiPalette, gYetiFrames, gYetiKeyframes, gYetiStateFuncs) are Yeti's
+ * static data members (include/yeti.hpp). */
 
 #endif /* !GUARD_VEHICLE_H */

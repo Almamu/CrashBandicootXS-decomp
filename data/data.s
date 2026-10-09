@@ -104,7 +104,7 @@ gSfxTable:
 
 @ gPolarPlayerShockPalette..gYetiChargeParams: src/data/actor_tables_17a728.c
 
-@ gYetiStateFuncs: src/data/actor_state_fn_17a840.c
+@ gYetiStateFuncs: src/data/actor_state_fn_17a840.cpp
 
 @ gYetiKeyframes: src/data/anim_frames_17a850.c
 

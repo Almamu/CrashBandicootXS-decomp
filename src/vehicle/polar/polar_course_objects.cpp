@@ -1,6 +1,7 @@
 #include "vehicle.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "yeti.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -81,7 +82,7 @@ void PolarCheckpointCrate::Update()
             CreatePolarCheckpointText(x, y - 0xF00, z);
         }
 
-        if (animIndex == 0 && IsTouchingYeti(this)) {
+        if (animIndex == 0 && Yeti::IsTouching(this)) {
             RestartAnim(3);
             palette = 1;
             gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);

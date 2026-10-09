@@ -1,4 +1,5 @@
 #include "vehicle.hpp"
+#include "yeti.hpp"
 
 extern "C" {
 #include "core.h"
@@ -28,7 +29,7 @@ extern void _call_via_r0(void *fn);
 extern void _call_via_r2(void *arg0, s32 arg1, void *fn);
 
 /* One of two confirmed slots (index 3, dispatched via
- * `gYetiStateFuncs[gYetiState]`) of the type-0
+ * `stateFuncs[state]`) of the type-0
  * `category_vtable` (`gActorCategoryVtables[0]`, `include/actor_anim.h`)
  * - `UpdateGameFrame`'s own direct top-level callee for this object, per
  * docs/rom_map.md's "Two new type-0 vtable slots confirmed" section.
@@ -41,7 +42,7 @@ extern void _call_via_r2(void *arg0, s32 arg1, void *fn);
  * `GetAnimFrameBaseOffset` against the current part-table record's
  * `+4`/`+6` timing fields, latching the `+0x12` done flag and correcting
  * the accumulator on overrun), fires the current
- * `gYetiStateFuncs[gYetiState]` vtable slot via
+ * `stateFuncs[state]` vtable slot via
  * `_call_via_r0`, and - only when the accumulator's `>>8` value actually
  * changed this frame - fires a `_call_via_r2` trampoline from the part
  * table's own `+2`-offset record (latching `gYetiBg2PageFlip`).
@@ -75,7 +76,7 @@ extern void _call_via_r2(void *arg0, s32 arg1, void *fn);
  * uses its own `g` local for the gauge object (the function-wide `obj`
  * would be allocated a callee-saved register). Built with old_agbcc
  * (docs/matching/archive/issue-51-54-naked-retry.md, later pass). */
-void UpdateYeti(void)
+void Yeti::Update()
 {
     struct {
         struct anim_box a, b, t;
@@ -83,9 +84,9 @@ void UpdateYeti(void)
     AnimPart *obj;
     s32 old, cur;
 
-    if (gYetiState != 3)
-        gYetiX += ((gActorList)->x - gYetiX) / 32;
-    obj = gYeti;
+    if (state != 3)
+        x += ((gActorList)->x - x) / 32;
+    obj = anim;
     old = Q8_TO_INT(obj->animTime);
     obj->animTime += (s16)obj->animTimer;
     obj->animDone = 0;
@@ -93,20 +94,20 @@ void UpdateYeti(void)
         ANIM_REWIND(obj->animTime, obj->anims[obj->animIndex]);
         obj->animDone = 1;
     }
-    gYetiStateFuncs[gYetiState]();
-    obj = gYeti;
+    stateFuncs[state]();
+    obj = anim;
     cur = Q8_TO_INT(obj->animTime);
     if (old != cur) {
         gUnpackNibbleTilesFunc(
             (u16 *)((u8 *)obj->frameOffsets[obj->anims[obj->animIndex].frameIndex + cur] + 4),
-            gYetiBg2Page);
-        gYetiBg2PageFlip = 1;
+            bg2Page);
+        bg2PageFlip = 1;
     }
-    SetActorBgLayerDepth(gYetiDistance);
-    UpdateYetiPalette();
-    f.a = gYetiCatchBox;
-    BoxMove(&f.a, Q8_TO_INT(gYetiX), 0, Q8_TO_INT(gYetiPosition));
-    if ((u32)gYetiState <= 1) {
+    SetActorBgLayerDepth(distance);
+    UpdatePalette();
+    f.a = catchBox;
+    BoxMove(&f.a, Q8_TO_INT(x), 0, Q8_TO_INT(position));
+    if ((u32)state <= 1) {
         ActorSelf **playerAddr = &gActorList;
         ActorSelf *pl;
         struct anim_box *b;
@@ -122,8 +123,8 @@ void UpdateYeti(void)
         if (BoxOverlap(b, &f.a)) {
             AnimPart *g;
 
-            gYetiState = 2;
-            g = gYeti;
+            state = 2;
+            g = anim;
             g->RestartAnim(2);
             static_cast<PolarPlayer *>(gActorList)->Catch();
             SetCellAnimSpeed(0);
@@ -146,19 +147,19 @@ void UpdateYeti(void)
  *
  * The two `0x1f` masks are separate locals: the ROM keeps one in `ip`
  * (set before the pointers) and one in `r7` (set after them). */
-void UpdateYetiPalette(void)
+void Yeti::UpdatePalette()
 {
-    s32 v = gYetiDistance;
+    s32 v = distance;
 
     if (v <= 0x4fff) {
-        DmaCopy16(3, gYetiPalette, (void *)(PLTT + 0x1E0), 0x20);
+        DmaCopy16(3, palette, (void *)(PLTT + 0x1E0), 0x20);
     } else if (v > 0xbdff) {
         DmaFill16(3, 0, (void *)(PLTT + 0x1E0), 0x20);
     } else {
         s32 f = Q8_DIV(0xbe00 - v, 0x6e00);
         s32 mask = 0x1f;
         u16 *dst = (u16 *)(PLTT + 0x1E0);
-        const u16 *src = gYetiPalette;
+        const u16 *src = palette;
         s32 mask2 = 0x1f;
         s32 i;
 
@@ -184,21 +185,21 @@ void UpdateYetiPalette(void)
  * `0x04000020` as `scale, 0, 0, scale`.
  *
  * Matches under old_agbcc. */
-void UpdateYetiBg2(void)
+void Yeti::UpdateBg2()
 {
     s32 scale, base, t;
 
-    if (gYetiBg2PageFlip != 0) {
-        if (gYetiBg2Page != 0)
+    if (bg2PageFlip != 0) {
+        if (bg2Page != 0)
             REG_BG2CNT = 0x1a09;
         else
             REG_BG2CNT = 0x1b09;
-        gYetiBg2PageFlip = 0;
-        gYetiBg2Page ^= 1;
+        bg2PageFlip = 0;
+        bg2Page ^= 1;
     }
-    scale = Q8_DIV(gYetiDistance, 0x5500);
+    scale = Q8_DIV(distance, 0x5500);
     base = GetActorBgCenterX();
-    t = Q8_DIV(gYetiX * 47, gYetiDistance) + base;
+    t = Q8_DIV(x * 47, distance) + base;
     *(vs32 *)REG_ADDR_BG2X = 0x4000 - Q8_MUL(t, scale);
     *(vs32 *)REG_ADDR_BG2Y = 0x4400 - Q8_MUL(GetActorBgCenterY(), scale);
     {
