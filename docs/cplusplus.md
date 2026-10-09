@@ -434,6 +434,23 @@ counts them by kind) and what the C++ needed when it was converted.
 #662 removed many of those since; `tools/match_idioms.py --functions
 --files` lists the functions that still have one.
 
+The rows name the objects as they were when converted. #768 (file layout
+round 2) renamed some (`action_ctrl_kill.cpp`, `moving_sprite_contact.cpp`,
+`crate_fields.cpp`, ... are their names now) and moved code between
+others: `sprite_pieces.cpp`, `affine_sprite_pieces.cpp` and sprite.cpp's
+`SpriteRenderer` methods are `gfx/sprite_renderer.cpp`; `UiSprite` is
+`ui_sprite.cpp` and `PartList::Update`/`Collide`/`CollideWithPlayer` start
+part_list_cull.cpp; `CrateList`'s constructor starts crate_list_unlink.cpp;
+`PlatformMover` is `platform_mover.cpp`; the four `Ctrl` methods of
+player_flags.cpp start ctrl.cpp; `SwimCtrl::Reset`/`Restart` start
+swim_ctrl_stroke.cpp and its six motion-queue accessors end swim_ctrl.cpp;
+`BossCtrl` is `bosses/boss_ctrl.cpp`; `PeriodicSpawner` and
+`KnockedEnemyCtrl` are `periodic_spawner.cpp` and `knocked_enemy_ctrl.cpp`;
+`Wumpa::CheckPickup` starts wumpa_update.cpp, `Stopwatch` is
+`stopwatch.cpp` and `ActionCtrl::Reset` starts action_ctrl_event.cpp;
+crate_break.cpp's switches and per-state ticks are `crate_switches.cpp`
+and `crate_states.cpp`, and `Crate::OpenAkuAku` starts crate_stack.cpp.
+
 | Object | Classes (include/ctrl.hpp unless noted) | Functions | Compiler | Workarounds: C -> C++ | Part |
 | include/objects.h, player.h, crates.h, gfx.h, bosses.h, pickups.h, frontend.h, actor.h, vehicle.h, system.h | the 391 C prototypes of C++ methods with no C caller go, with the C views only a class's size check used (struct ctrl, boss_ctrl, mega_mix_ctrl, part_ctrl and ctrl_anchor, periodic_spawner, spawner, actor_orbit, cannon_flash, actor_hp, jetpack_ring, orbit_part and orbit_part.h); the classes check the ROM sizes | 0 | (unchanged) | 0 -> 0 | cleanup |
 | actor_self.h, box_part.h, match.h | `ACTOR_SET_STATE`, `CALL_HIT`, `MATCH_USE_VOLATILE`, `MATCH_CONST_VOLATILE` (no user left) go | 0 | (unchanged) | 0 -> 0 | cleanup |
@@ -974,7 +991,7 @@ ROM's sizes (`CreateEntity` allocates 0x1C bytes, `CreateSpriteObj` 0x40,
 | Class | Size | Vtable | Code |
 |---|---:|---|---|
 | `Entity` | 0x1C | gEntityVtable (11 slots) | graphics.cpp (objects/entity.cpp since #767) |
-| `Sprite` | 0x40 | gSpriteObjVtable (13) | sprite.cpp, sprite_obj.cpp, sprite_anim.cpp |
+| `Sprite` | 0x40 | gSpriteObjVtable (13) | sprite.cpp, sprite_obj.cpp, sprite_anim.cpp (the renderer: gfx/sprite_renderer.cpp) |
 | `UiSprite` | 0x40 | gUiSpriteObjVtable | ui_sprite.cpp |
 | `MovingSprite` | 0x78 | gMovingSpriteVtable (15) | moving_sprite.cpp, moving_sprite_collide.cpp, moving_sprite_contact.cpp, moving_sprite_probe.cpp (part 7b) |
 | `GroundSprite` | 0x80 | gGroundSpriteVtable (15) | ground_sprite.cpp, ground_sprite_collide.cpp, ground_sprite_update.cpp (part 7b) |
@@ -3057,9 +3074,9 @@ data.
 | `src/bosses/tiny.cpp` | 4 | `StompedHopPadCtrl`, `OneShotAnimCtrl`, `UnusedOneShotAnimCtrl`, `TinyCtrl` |
 | `src/bosses/dingodile.cpp` | 4 | `DingodileSharkCtrl`, `DingodileProjectileCtrl`, `DingodileShieldCtrl`, `DingodileCtrl` |
 | `src/vehicle/jetpack/jetpack_crates.cpp` | 4 | `JetpackBalloonCrate` and its three kinds |
-| `src/enemies/enemy_ctrl.cpp`, `src/pickups/wumpa.cpp`, `src/menus/level_select.cpp` (since #767 one each in `src/objects/camera_lead.cpp` and `launch_pad.cpp`) | 2 each | `PeriodicSpawner`, `KnockedEnemyCtrl`; `Wumpa`, `Stopwatch`; `CameraLead`, `LaunchPad` |
+| `src/menus/level_select.cpp` (since #767 one each in `src/objects/camera_lead.cpp` and `launch_pad.cpp`) | 2 | `CameraLead`, `LaunchPad` |
 | `src/cutscene/cutscene_player.cpp`, `src/system/inline_copies_misc.cpp` (step 10b) | 2 each | `BgStreamer`, `BgLayerBase`; `LargeFont`, `SmallFont` |
-| 30 others (4 of them since step 10b) | 1 each | `Entity` (graphics), `Sprite`, `UiSprite`, `MovingSprite`, `GroundSprite`, `Player`, `EnemyCtrl`, `EffectCtrl`, `Crate`, `ExtraLife`, `ActionCtrl`, `SwimCtrl`, `InputCtrl`, `BossCtrl`, `MegaMixCtrl`, `Platform`, `PlatformMover`, `LevelSelectEntry`, `HudPart`, `ActorSelf` (gActorVtable), `PolarPlayer`, `PolarCollectedWumpa` (vehicle/polar/polar_pickups.cpp), `PolarCrate` (vehicle/polar/polar_crate.cpp), `JetpackPlayer`, `JetpackCollectedWumpa` (vehicle/jetpack/jetpack_collected_wumpa.cpp), `LogoActor`; `Ctrl` (system/bios_util.cpp), `BgLayer` (level/bg_layer.cpp), `PooledBgLayer` (level/tile_slot_pool.cpp), `Font` (text/font.cpp) |
+| 34 others (4 of them since step 10b; enemy_ctrl.cpp's and wumpa.cpp's second tables are their own objects' since #768) | 1 each | `Entity` (graphics), `Sprite`, `UiSprite`, `MovingSprite`, `GroundSprite`, `Player`, `EnemyCtrl`, `PeriodicSpawner`, `KnockedEnemyCtrl`, `EffectCtrl`, `Crate`, `ExtraLife`, `Wumpa`, `Stopwatch`, `ActionCtrl`, `SwimCtrl`, `InputCtrl`, `BossCtrl`, `MegaMixCtrl`, `Platform`, `PlatformMover`, `LevelSelectEntry`, `HudPart`, `ActorSelf` (gActorVtable), `PolarPlayer`, `PolarCollectedWumpa` (vehicle/polar/polar_pickups.cpp), `PolarCrate` (vehicle/polar/polar_crate.cpp), `JetpackPlayer`, `JetpackCollectedWumpa` (vehicle/jetpack/jetpack_collected_wumpa.cpp), `LogoActor`; `Ctrl` (system/bios_util.cpp), `BgLayer` (level/bg_layer.cpp), `PooledBgLayer` (level/tile_slot_pool.cpp), `Font` (text/font.cpp) |
 
 **Still C after step 10** (src/data/entity_vtables_7e3bec.c), 8 tables
 whose class's key method was C code: `gCtrlVtable` (`Ctrl::Update` was
