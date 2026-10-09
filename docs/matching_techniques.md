@@ -1849,6 +1849,29 @@ deciding contest:
   `slot`'s and `i`'s types, seven address spellings and the copy loop:
   56 lines at best, against 72; PRE still hoists the shift).
 
+**Round 9, player/ and SaveData::TestFlags (types beyond the function).**
+4 functions -> 3 (`SaveData::TestFlags` free):
+
+- **A `bool` return gives the copy-then-test-the-source.**
+  `bool SaveData::TestFlags(u8 mask) { return flags & mask; }` is the
+  ROM with no pin (a 14964-variant sweep of the return, parameter and
+  `flags` types with the round-8 local spellings: 9 matches, all with a
+  `bool` return and a u8 parameter; `(mask & flags) != 0` and `(flags &
+  mask) ? 1 : 0` too). The conversion to bool expands as "the value,
+  then 1 if it is nonzero" testing the value itself, so regmove has no
+  copy to move the test onto. With any integer return type the best is
+  1 instruction off.
+  When the ROM copies a value and tests the source, try a `bool` return
+  or a `bool` destination.
+- **Kept, with sweeps that found nothing:** ActionCtrl::HandleEvent's
+  bump load (3240 variants: `state` s32/u32/enums, `event`/`arg` s32/u32,
+  `m`'s type, SetBumped's parameter, eight test forms; only the
+  identical-arms junk matches), Player::HandleEvent's mask load (120:
+  `maskLevel` s32/u32/enums, `event` s32/u32, seven re-tests and a
+  `switch`; each stays a real compare, 5 off at best), StateCrouch (15360:
+  GetDpadDirection's and CheckLeftGround's returns, `motionXPending` u8 or
+  bool, the flip forms and locals' types; 2 off, round 3's form).
+
 ## Survey and conversion record (#576)
 
 The conversion is complete. `tools/match_idioms.py` after part 4

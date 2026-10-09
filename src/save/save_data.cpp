@@ -3,7 +3,6 @@
 
 extern "C" {
 #include "core.h"
-#include "match.h"
 #include "audio.h"
 #include <agb_eeprom.h>
 #include "gba/dma_macros.h"
@@ -347,83 +346,24 @@ u8 SaveData::IsSlotEmpty(s32 rowIndex)
     return slotEmpty[rowIndex];
 }
 
-/* `v` pinned to r1 (mask's register) keeps the ROM's zero-extension of
- * `mask` at the entry: unpinned, combine folds it into the `and` with
- * the zero-extended byte load, with every spelling tried in #662 round 2
- * (`(mask & flags) != 0`, a ternary, a bool, s8/s16/u16/s32/u32 for `v`
- * and the result, `flags & mask`, `mask &= flags`).
- * #662 round 3, from the -da dumps: combine merges the entry's lsl/lsr
- * pair and the `ldrb` into the `and` (insns 10, 11 and 31 to one), since
- * the loaded byte's nonzero bits make the zero-extension redundant; a
- * volatile read, s8/char `flags`, an s8 or u32 `mask` and the flag sweep
- * don't stop it. With `v` in r1 (a hard register) the `and` can't take
- * the parameter's pseudo, so the extension stays; the ROM's `v` and
- * `result` are also separate (r1, r0) where cse folds them otherwise.
- * #662 round 4, from the compiler source: `s32 v = mask; v &= flags;`
- * keeps the extension without the pin (the `and` is then on v's own
- * pseudo), and everything but the test matches: the ROM tests `v` (r1),
- * this tests the copy (r0). That is regmove's optimize_reg_copy_1: for
- * the copy `result = v`, it scans forward to v's death (the test) and
- * rewrites v's uses there to `result`, so v dies at the copy. The scan
- * gives up only at a CODE_LABEL, a JUMP_INSN, a LOOP_BEG/LOOP_END note
- * or a set of either register, and it never touches a hard register
- * (SMALL_REGISTER_CLASSES). Nothing of the kind sits between a copy
- * and the `if` that follows it. The decomp-permuter on a C port reached
- * the ROM 472 times in 20 minutes, every time with junk that puts one
- * there or keeps v alive past the test: a `do { } while (0)` around the
- * copy or the test (loop notes), identical `if (self)`/`else` arms
- * around the copy, a dead `x = v != 0` store, or a second, dead test of
- * v after the `if`. So the hard register stays.
- * #662 round 5: a private old_agbcp whose regmove skips
- * optimize_reg_copy_1 compiles the round-4 form (`s32 v = mask; v &=
- * flags; result = v; if (v != 0) result = 1;`) byte for byte as the ROM.
- * That is not the original compiler, though: the same switch changes 16
- * other old_agbcp objects (CreateCrate, UpdateCrate, UpdateGameFrame, the
- * HUD counters and more), which match as they are. Also tried: the
- * method defined inside the class and emitted out of line, `return v !=
- * 0;` and the store-flag forms (expand's "load v, then 1 if nonzero" path,
- * which ties the copy to v), `mask &= flags` on the parameter.
- * #662 round 6: regmove calls optimize_reg_copy_1 only under
- * -fexpensive-optimizations, and with this whole object built with
- * -fno-expensive-optimizations every other function still matches and
- * the round-4 form gets the copy and the test as the ROM. But then the
- * entry's zero-extension splits: its `lsrs` moves down past the flags
- * address (combine places it at the `and`), where the ROM has the pair
- * first, because stmt.c's preserve_subexpressions_p, which keeps the
- * extended parameter at the entry, answers to the same flag. So no flag
- * gives both. Also tried: expr.c's `A != 0 ? FOO : A` expansion
- * (`return v != 0 ? 1 : v;` stores v to the result before the branch,
- * the ROM's order, but regmove still moves the test onto the result; a
- * u8 result folds to the neg/orr/lsr store-flag), and the -f flags,
- * -O1 and -O3 on the object.
- * #662 round 7: no matched function has the ROM's copy-then-test-the-
- * source idiom (`adds r0, r1, #0; cmp r1, #0` with r1 dying at the
- * test); the 25 that copy a register before comparing the source keep
- * the source live past the compare. Whole-ROM tests of a private build
- * (all four Thumb compilers) with the round-4 form here: no
- * optimize_reg_copy_1 into any test changes 15 other functions, into a
- * bare register test 1 (QueueVramDmaTransfer, whose ROM test does sit
- * on the copy), when DEST is set again in the block 7. Skipping it only
- * for a bare test right after the copy, or only for a bare test whose
- * DEST is set again, compiles everything as the ROM, but of the 42
- * places the pass fires in this ROM only this one meets either
- * condition, so nothing corroborates them.
- * #662 round 8 (tools/natural_enum.py, 2592 variants: `v` and `result`
- * in all six integer types, `mask & flags`/`flags & mask`/`v = mask; v
- * &= flags`, the `if` with or without `else`, `?:` into `result` or
- * returned, an early `return 1`, `v != 0` or `v`): 2 lines off at best,
- * the round-4 form's test. */
-u8 SaveData::TestFlags(u8 mask)
+/* Whether any of `mask`'s bits is set in `flags`.
+ * UNUSED - no caller anywhere in the ROM (no `bl` to TestSaveFlags and
+ * no pointer to it in the data).
+ *
+ * The `bool` return is what gives the ROM's code, with no workaround
+ * (#662 round 9, a sweep of the return, parameter and `flags` types with
+ * the local spellings: 14964 variants). The conversion to bool expands
+ * as "the value, then 1 if it is nonzero" with the test on the AND
+ * itself, and the u8 parameter keeps its extension at the entry. With
+ * any integer return type (u8 before, and every other one in the sweep)
+ * regmove's optimize_reg_copy_1 moves the test onto the result's copy,
+ * which is why rounds 2-8 kept `v` pinned to r1. `(mask & flags) != 0`
+ * and `(flags & mask) ? 1 : 0` give the same code; the `flags` field as
+ * a u8 bitfield (`u8 flags : 8`, `u32 flags : 8`) does too, an s8 one
+ * doesn't. */
+bool SaveData::TestFlags(u8 mask)
 {
-    MATCH_HOLD_REG(u8, v, r1);
-    u8 result;
-
-    v = mask & flags;
-    result = v;
-    if (v != 0) {
-        result = 1;
-    }
-    return result;
+    return flags & mask;
 }
 
 void SaveData::ClearFlags(u8 mask)

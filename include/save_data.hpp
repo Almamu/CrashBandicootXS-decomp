@@ -116,7 +116,7 @@ public:
     void EraseSlot(s32 row);            // EraseSaveSlot
     void Reset();                       // ResetSaveData
     u8 IsSlotEmpty(s32 row);            // IsSaveSlotEmpty
-    u8 TestFlags(u8 mask);              // TestSaveFlags
+    bool TestFlags(u8 mask);            // TestSaveFlags
     void ClearFlags(u8 mask);           // ClearSaveFlags
     void SetFlags(u8 mask);             // SetSaveFlags
 };
