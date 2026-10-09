@@ -156,7 +156,7 @@ void ExtraLife::Update()
     Sprite::Update();
 }
 
-/* The extra life spawner (DropExtraLife, drop_extra_life.cpp): an extra
+/* The extra life spawner (DropExtraLife, entity_spawner.cpp): an extra
  * life at pixel (x, y), at home there, in the touchable list. */
 ExtraLife *ExtraLife::Create(u16 id, u16 x, u16 y, s32 unused)
 {

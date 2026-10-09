@@ -6,10 +6,10 @@ extern "C" {
 }
 
 /* GitHub issue #42: BgLayer's own methods (include/bg_layer.hpp,
- * gBgLayerVtable; the constructor and the grow/clip methods are in
- * bg_layer_init.cpp). Reset is the class's key method, so g++ emits
- * gBgLayerVtable here, and after the methods the out-of-line copies of
- * the class's inline methods (GetBgLayerScreenIndex ... DestroyBgLayer,
+ * gBgLayerVtable): first the constructor and the grow/clip methods
+ * (bg_layer_init.cpp until #771), then the rest. Reset is the class's
+ * key method, so g++ emits gBgLayerVtable here, and after the methods
+ * the out-of-line copies of the class's inline methods (GetBgLayerScreenIndex ... DestroyBgLayer,
  * the end of this object): nothing calls them, the code expands them.
  * The overrides of its tile-slot-pooled subclass used for BG layer 0
  * follow in pooled_bg_layer.cpp.
@@ -29,6 +29,75 @@ extern "C" {
  * docs/matching/archive/issue-42-bg-scroll-layer.md.
  *
  * Real bytes formerly part of `asm/code_3_2_17_25fc8.s`. */
+
+/* Sets up the layer for hardware BG `bgIndex`: screen block
+ * `bgIndex + 0x1c`'s address as `screen`, `&REG_BGnCNT` as `cntReg`,
+ * `&REG_BGnHOFS` as `ofsReg`, and the BGnCNT shadow `cnt` (screen base
+ * `(bgIndex + 0x1c) & 0x1f`, char base 2, priority 0). */
+BgLayer::BgLayer(s32 bgIndex) : BgLayerBase(bgIndex)
+{
+    s32 block = bgIndex + 0x1c;
+
+    screen = (u16 *)BG_SCREEN_ADDR(block);
+    cntReg = (vu16 *)(bgIndex * 2 + REG_ADDR_BG0CNT);
+    ofsReg = (vu32 *)(bgIndex * 4 + REG_ADDR_BG0HOFS);
+    cnt.raw = 0;
+    SetColors256(0);
+    SetScreenBase(block);
+    SetCharBase(2);
+}
+
+/* Grows the resident row range down to `lo` and up to `hi` one row at a
+ * time, drawing each new row (DrawRow, virtual): the streamed-range
+ * grower Scroll drives for one axis; GrowColumns is its twin for the
+ * other. */
+void BgLayer::GrowRows(s32 lo, s32 hi)
+{
+    while (rowLo > lo) {
+        s32 v = rowLo - 1;
+
+        rowLo = v;
+        DrawRow(v);
+    }
+    while (rowHi < hi) {
+        s32 v = rowHi + 1;
+
+        rowHi = v;
+        DrawRow(v);
+    }
+}
+
+/* Same shape as GrowRows, for the resident columns (DrawColumn). */
+void BgLayer::GrowColumns(s32 lo, s32 hi)
+{
+    while (colLo > lo) {
+        s32 v = colLo - 1;
+
+        colLo = v;
+        DrawColumn(v);
+    }
+    while (colHi < hi) {
+        s32 v = colHi + 1;
+
+        colHi = v;
+        DrawColumn(v);
+    }
+}
+
+/* Narrows the resident column range to [lo, hi]: the base layer only
+ * records it (PooledBgLayer's override also releases the tiles). */
+void BgLayer::ClipColumns(s32 lo, s32 hi)
+{
+    LIMIT_MIN(colLo, lo);
+    LIMIT_MAX(colHi, hi);
+}
+
+/* Same as ClipColumns, for the resident rows. */
+void BgLayer::ClipRows(s32 lo, s32 hi)
+{
+    LIMIT_MIN(rowLo, lo);
+    LIMIT_MAX(rowHi, hi);
+}
 
 /* Moves the layer (BgLayerBase::Scroll), then works out the tile columns
  * and rows the 240x160 screen covers at the new position, clips the
@@ -55,7 +124,7 @@ void BgLayer::Scroll(const s32 *delta)
 
 /* Truncates the X/Y position to the `hofs`/`vofs` halfwords, then
  * writes the pair as one word through `ofsReg` - the `BGnHOFS`/`BGnVOFS`
- * register pair address the constructor (bg_layer_init.cpp) caches there. */
+ * register pair address the constructor (bg_layer.cpp) caches there. */
 void BgLayer::CommitScroll()
 {
     hofs = x;

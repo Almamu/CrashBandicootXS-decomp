@@ -54,7 +54,7 @@ public:
 COMPILE_TIME_ASSERT(part_list_hpp, sizeof(CollisionQueue) == 0x248);
 
 /* Up to three palette colour cycles (gPaletteCycles, `new
- * PaletteCycles`, 0x48 bytes). run_room.cpp adds them (Add) with
+ * PaletteCycles`, 0x48 bytes). play_room.cpp adds them (Add) with
  * `targets` = BG palette RAM and `lists` = the palette indices to cycle;
  * every `periods[i]` = 60 / rate frames, Tick rotates the colours of
  * `targets[i]` at the indices `lists[i]` holds by one place (when

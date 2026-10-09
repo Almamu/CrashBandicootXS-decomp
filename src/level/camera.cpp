@@ -40,9 +40,9 @@ extern "C" {
  * - `SnapCamera`: snaps straight to the target (no easing), seeding the
  *   mode-1 look-ahead at its limit (or zero for any other mode), then
  *   publishes. Called from `ResumeRoomAfterPause`'s teardown/refresh pass
- *   (`room.cpp`) and `PlayRoom`'s shared tail (`run_room.cpp`).
+ *   (`room.cpp`) and `PlayRoom`'s shared tail (`play_room.cpp`).
  * - `UpdateCamera`: the per-frame update, dispatching on `mode`, then
- *   publishing. Called from `UpdateRoomFrame` (`room_frame.cpp`).
+ *   publishing. Called from `UpdateRoomFrame` (`play_room.cpp`).
  *
  * Matching notes: both easing functions copy the target's position as
  * one 8-byte `struct vec2` (the pair lands in r2/r3, as in the ROM; two

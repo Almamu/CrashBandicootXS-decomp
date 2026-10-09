@@ -266,8 +266,8 @@ is reached through two pointer graphs.
 them rooms: `{u16 (*palette)[256]; struct level_desc *desc; s32 kind;
 ...; union {blend; u16 catIndex} param @0x10}` (now `struct level_room` in
 `src/data/level_table_16c814.c`). Every reader uses that struct
-(`level_layers.c`'s `struct level_load_args`, `run_room.cpp`'s
-`gl_widget_kind`, `level_query.cpp`'s `MedalListItem` and `room_frame.cpp`'s
+(`level_layers.c`'s `struct level_load_args`, `play_room.cpp`'s
+`gl_widget_kind`, `level_query.cpp`'s `MedalListItem` and `play_room.cpp`'s
 `level_blend` were views of it; `desc->entities` is the descriptor's object list). A room record is
 the `cat` that `RunRoom` hands to `LoadRoom`.
 Walking them:

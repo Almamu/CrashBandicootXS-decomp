@@ -342,7 +342,7 @@ both compile to these exact sequences.
   one-byte struct, `struct byte_arg` ([include/byte_arg.h](../include/byte_arg.h)).
   A packed struct literal is built in a register before the slot address;
   adding `u8 pad[0]` makes it BLKmode and stores it address-first
-  (`RunRoom`, `src/level/run_room.cpp`;
+  (`RunRoom`, `src/level/play_room.cpp`;
   [hard-register-hold-retry.md](./matching/archive/hard-register-hold-retry.md)).
   See [issue-55-naked-retry.md](./matching/archive/issue-55-naked-retry.md).
 
@@ -438,7 +438,7 @@ model registers the ROM leaves unused. See
 [hard-register-hold-retry.md](./matching/archive/hard-register-hold-retry.md)
 (`InitSaveMenuIcons`, `DrawPauseMenu`),
 [huge-naked-retry-3.md](./matching/archive/huge-naked-retry-3.md)
-(the round-robin wrapping), and `src/level/run_room.cpp`.
+(the round-robin wrapping), and `src/level/play_room.cpp`.
 
 ### Spill-slot order
 
@@ -756,7 +756,7 @@ removable were kept on purpose; a dry run still lists them:
   because the allocator happens to pick that register, so the object
   stays the same while the C is wrong. Check this before applying a
   removal next to an asm with hard registers in its template.
-- **Half of a symmetric hold.** `run_room.cpp`'s r0/r1 hold keeps
+- **Half of a symmetric hold.** `play_room.cpp`'s r0/r1 hold keeps
   `MATCH_HOLD(hold1)` next to `MATCH_HOLD(hold)`. A never-assigned pin
   is live from the top of the function anyway, so where a hold has only
   the one start, step 2 dropped it (`ReleaseHang`, `PauseMenu::Draw`,

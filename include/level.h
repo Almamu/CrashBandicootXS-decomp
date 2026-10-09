@@ -46,7 +46,7 @@ struct terrain_type {
  * in `bits0Copy` when it is collected, broken or killed, and
  * SetCheckpointAtPlayer copies the two back. The names are room_entities.cpp's
  * (`struct lk_self`); dingodile.c called the object `struct entity_flags`
- * (`bits0Copy` was `bitmap`, the list `struct collect_info`), time_trial.cpp
+ * (`bits0Copy` was `bitmap`, the list `struct collect_info`), level_state.cpp
  * `struct collision_map` (`seen`), the enemy spawners' text_popup.h a
  * `struct level_record_table **`. */
 struct entity_flags {
@@ -60,7 +60,7 @@ struct entity_flags {
 
 /* The camera (`gCamera`, 0x18 bytes, allocated by PlayRoom; camera.cpp):
  * a Q8 position, a Q8 look-ahead offset, the followed object and the
- * mode. run_room.cpp called it `struct gl_scratch`, action_ctrl_event.c
+ * mode. play_room.cpp called it `struct gl_scratch`, action_ctrl_event.c
  * `struct follow_state` and level_select.c `struct follow_owner`. */
 struct camera {
     s32 x;  // 0x00 - Q8

@@ -6093,7 +6093,7 @@ tail `UpdatePolarCrate`).
 
 **Parked (`NON_MATCHING`, 3):**
 
-- **`RunPolarPlayerState`** (`polar_player_dispatch.c`, real bytes in
+- **`RunPolarPlayerState`** (`polar_player_states.cpp`, real bytes in
   `asm/code_3_2_20_28568_c208.s`) - a `gPolarPlayerStateFuncs` stride-8
   trampoline-record dispatcher (`{s16 baseOff; s16 count; s16
   subOffset}`, count-gated between an inline fallback pair and a
@@ -6153,7 +6153,8 @@ raw `code_3_2_20_28568_c99c.s` (the original file's unchanged
 remainder, from `UpdatePolarTimeCrate` on) - see `ldscript.txt` and
 `tools/report_units.py`'s `actor` category, both updated to match.
 (Every raw piece has since been matched, and #575 merged these objects
-into `src/vehicle/polar/polar_player_actions.c`, `polar_player_dispatch.c`,
+into `src/vehicle/polar/polar_player_actions.c`, `polar_player_dispatch.c`
+(both in `polar_player_states.cpp` since #771),
 `polar_pickups.c` and `polar_crates.c`; see `tools/file_layout_plan.tsv`.)
 Verified via a full clean `make compare` (`La suma coincide`) and
 `make NON_MATCHING=1 report`.

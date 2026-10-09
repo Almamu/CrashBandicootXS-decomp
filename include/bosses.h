@@ -68,21 +68,17 @@ extern void SpawnAirship(s32 kind, s32 x, s32 y, s32 z);
 extern void UpdateAirship(void);
 extern void UpdateAirshipBg2(void);
 
-/* src/vehicle/jetpack/airship_damage.cpp */
+/* src/vehicle/jetpack/airship_graphics.cpp */
 extern void DamageAirship(s32 delta);
 
-/* src/vehicle/jetpack/airship_explode.cpp */
+/* src/vehicle/jetpack/airship_states.cpp */
 extern void AirshipStateExplode(void);
-
-/* src/vehicle/jetpack/airship_fall.cpp */
 extern void AirshipStateFall(void);
 
 /* src/vehicle/jetpack/airship_graphics.cpp */
 extern void ConvertAirshipTiles(void);
 extern void UpdateAirshipFlashColor(void);
 extern void AnimateAirshipPalette(void);
-
-/* src/vehicle/jetpack/airship_load_graphics.cpp */
 extern void LoadAirshipGraphics(void);
 
 /* src/vehicle/jetpack/airship_map.cpp */

@@ -109,8 +109,7 @@ COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(BgLayerBase) == 0x34);
  * window of the level's tile map resident in its BG screen block, rows
  * rowLo..rowHi and columns colLo..colHi, drawing and clipping one row or
  * column at a time as the window moves. Screen entries wrap modulo 32 on
- * both axes. Its methods are in src/level/bg_layer_init.cpp and
- * src/level/bg_layer.cpp.
+ * both axes. Its methods are in src/level/bg_layer.cpp.
  *
  * The destructor and the small accessors are inline: the subclasses and
  * the methods expand them, and bg_layer.cpp, which has the class's key

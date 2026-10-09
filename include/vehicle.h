@@ -85,7 +85,7 @@ extern void SpawnJetpackCannonball(s32 a, s32 b, s32 c, s32 d, s32 e);
 extern void SpawnJetpackShot(s32 a, s32 b, s32 c, s32 d, s32 e);
 extern void CreateJetpackPlayer(struct anim_table_record *table, s32 z);
 
-/* src/vehicle/polar/polar_aku_aku.cpp and polar_player_dispatch.cpp: the
+/* src/vehicle/polar/polar_aku_aku.cpp and polar_player_states.cpp: the
  * C-linkage functions. */
 extern s32 GetPolarMaskLevel(void);
 extern u8 IsPolarPlayerInactive(void);

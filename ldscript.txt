@@ -160,11 +160,8 @@ SECTIONS
         build/crashbandicootxs/src/level/level_cutscene.o(.text);
         build/crashbandicootxs/src/level/game_frame.o(.text);
         build/crashbandicootxs/src/level/bonus_round.o(.text);
-        build/crashbandicootxs/src/level/time_trial.o(.text);
         build/crashbandicootxs/src/level/level_state.o(.text);
         build/crashbandicootxs/src/level/play_room.o(.text);
-        build/crashbandicootxs/src/level/run_room.o(.text);
-        build/crashbandicootxs/src/level/room_frame.o(.text);
         build/crashbandicootxs/src/level/room.o(.text);
         build/crashbandicootxs/src/level/level_query.o(.text);
         build/crashbandicootxs/src/level/room_select.o(.text);
@@ -178,9 +175,7 @@ SECTIONS
         build/crashbandicootxs/src/level/entity_bitmap.o(.text);
         build/crashbandicootxs/src/level/room_entities.o(.text);
         build/crashbandicootxs/src/level/entity_flags.o(.text);
-        build/crashbandicootxs/src/level/drop_extra_life.o(.text);
         build/crashbandicootxs/src/level/entity_spawner.o(.text);
-        build/crashbandicootxs/src/level/bg_layer_init.o(.text);
         build/crashbandicootxs/src/level/bg_layer.o(.text);
         build/crashbandicootxs/src/level/pooled_bg_layer.o(.text);
         build/crashbandicootxs/src/level/tile_slot_pool.o(.text);
@@ -219,8 +214,6 @@ SECTIONS
         build/crashbandicootxs/src/actor/actor_factory.o(.text);
         build/crashbandicootxs/src/vehicle/polar/polar_player.o(.text);
         build/crashbandicootxs/src/vehicle/polar/polar_player_states.o(.text);
-        build/crashbandicootxs/src/vehicle/polar/polar_player_actions.o(.text);
-        build/crashbandicootxs/src/vehicle/polar/polar_player_dispatch.o(.text);
         build/crashbandicootxs/src/vehicle/polar/polar_pickups.o(.text);
         build/crashbandicootxs/src/vehicle/polar/polar_crate.o(.text);
         build/crashbandicootxs/src/vehicle/polar/polar_nitro.o(.text);
@@ -242,13 +235,9 @@ SECTIONS
         build/crashbandicootxs/src/vehicle/jetpack/jetpack_cannonball.o(.text);
         build/crashbandicootxs/src/vehicle/jetpack/airship_fireball.o(.text);
         build/crashbandicootxs/src/vehicle/jetpack/airship_states.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack/airship_explode.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack/airship_fall.o(.text);
         build/crashbandicootxs/src/vehicle/jetpack/airship_map.o(.text);
         build/crashbandicootxs/src/vehicle/jetpack/airship.o(.text);
         build/crashbandicootxs/src/vehicle/jetpack/airship_touch.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack/airship_damage.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack/airship_load_graphics.o(.text);
         build/crashbandicootxs/src/vehicle/jetpack/airship_graphics.o(.text);
         build/crashbandicootxs/src/vehicle/jetpack/jetpack_balloon.o(.text);
         build/crashbandicootxs/src/vehicle/jetpack/jetpack_crates.o(.text);
@@ -460,7 +449,7 @@ SECTIONS
         build/crashbandicootxs/src/actor/actor.o(.gnu.linkonce.d._vt.9ActorSelf); /* gActorVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.14RiderlessPolar); /* gRiderlessPolarVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.19PolarCheckpointText); /* gPolarCheckpointTextVtable */
-        build/crashbandicootxs/src/vehicle/polar/polar_player_actions.o(.gnu.linkonce.d._vt.11PolarPlayer); /* gPolarPlayerVtable */
+        build/crashbandicootxs/src/vehicle/polar/polar_player_states.o(.gnu.linkonce.d._vt.11PolarPlayer); /* gPolarPlayerVtable */
         build/crashbandicootxs/src/vehicle/polar/polar_pickups.o(.gnu.linkonce.d._vt.19PolarCollectedWumpa); /* gPolarCollectedWumpaVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.10PolarWumpa); /* gPolarWumpaVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.14PolarTimeCrate); /* gPolarTimeCrateVtable */

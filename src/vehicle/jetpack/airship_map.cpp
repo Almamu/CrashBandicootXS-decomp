@@ -1,7 +1,7 @@
 #include "boss_actors.hpp"
 
 /* Same boss-weapon "self" object family as airship_fireball.cpp/
- * airship_fall.cpp - see airship_fireball.cpp's header comment and
+ * airship_states.cpp - see airship_fireball.cpp's header comment and
  * docs/matching/archive/issue-58-0x08030334-actor.md.
  *
  * Per docs/rom_map.md ("a rectangular BG-tilemap blit routine"):

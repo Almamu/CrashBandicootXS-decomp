@@ -1,4 +1,7 @@
 #include "boss_actors.hpp"
+#include "vehicle.hpp"
+#include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include <libgcc.h>
@@ -6,10 +9,13 @@ extern "C" {
 #include "vehicle.h"
 #include "globals.h"
 #include "math_util.h"
+#include "util.h"
 }
 
-/* The airship's attack states (#664 part 11i, include/boss_actors.hpp):
- * gAirshipStateFuncs[1-3]. See
+/* The airship's states (#664 part 11i, include/boss_actors.hpp):
+ * gAirshipStateFuncs[1-5], the attack states, the explosion and the
+ * fall (the last two airship_explode.cpp and airship_fall.cpp until
+ * #771; state 0 is AirshipStateInactive, airship_graphics.cpp). See
  * docs/matching/archive/issue-58-0x08030334-actor.md.
  *
  * State 1: the airship comes in (gAirshipZ by gAirshipVelZ) until its
@@ -140,4 +146,108 @@ void AirshipStateCannon(void)
         SetAirshipState(2, 0);
     }
     UpdateAirshipFlashColor();
+}
+
+/* gAirshipStateFuncs[4], the explosion: advances the position
+ * accumulators (`gAirshipX`/`gAirshipY`/
+ * `gAirshipZ`), clears `gAirshipHitFlashTimer`'s DMA-refresh
+ * counter, and derives two base screen coordinates from a fixed
+ * keyframe-table box (`gAirshipBox`, `>>8`) offset by the
+ * accumulators. Dispatches on `gAirshipStateTimer` (a frame/flags
+ * counter, the same one `LoadAirshipGraphics`'s palette fade reads) through
+ * five weapon-kind cases (0xa/0x32/0x50/0x6e/0xaa), each clearing one
+ * BG palette bank-1 slot then spawning 1-3 sub-projectiles via
+ * `RandRange` (a per-axis jitter/randomizer) and `CreateJetpackExplosion` (the
+ * actual spawn call, `(x, y, z)`); the 0xaa case instead
+ * enters state 5 (falling) with animation 1,
+ * plays a sound, and - gated by a lock byte
+ * (`gLevelState+0x8c`) and a spawn-budget counter
+ * (`gAirshipCheckpointCount`) - spawns a homing/seek effect via
+ * `SetJetpackCheckpoint`/`CreateJetpackCheckpointText`.
+ *
+ * Matching notes: the box table is `const` (so its jitter ranges stay
+ * CSE'd in registers across the spawn calls), the palette base pointer
+ * is assigned right where the ROM materializes it (declared-and-
+ * initialized at the top it gets hoisted into a callee-saved register),
+ * the RNG `RandRange` is read back as a `u16` here (the ROM zero-
+ * extends its result), and the seek spawn takes `&gActorList`
+ * before the last lock check, as the ROM loads that address early. */
+
+/* One sub-projectile, jittered around (x, y) by the box's own +-range. */
+#define SPAWN(x, y) CreateJetpackExplosion((x) + RandRange(INT_TO_Q8(gAirshipBox.w)), \
+                                (y) + RandRange(INT_TO_Q8(gAirshipBox.h)), \
+                                gAirshipZ - 0x100)
+
+void AirshipStateExplode(void)
+{
+    s32 x, y;
+    u16 *pal;
+
+    gAirshipX += gAirshipVelX;
+    gAirshipY += gAirshipVelY;
+    gAirshipZ += gAirshipVelZ;
+    gAirshipHitFlashTimer = 0;
+    pal = (u16 *)(BG_PLTT + 0x20);
+    x = gAirshipX + INT_TO_Q8(gAirshipBox.x);
+    y = gAirshipY + INT_TO_Q8(gAirshipBox.y);
+
+    if (gAirshipStateTimer == 0xa) {
+        pal[15] = 0;
+        SPAWN(x, y);
+    } else if (gAirshipStateTimer == 0x32) {
+        pal[1] = 0;
+        SPAWN(x, y);
+        SPAWN(x, y);
+    } else if (gAirshipStateTimer == 0x50) {
+        pal[4] = 0;
+        SPAWN(x, y);
+        SPAWN(x, y);
+        SPAWN(x, y);
+    } else if (gAirshipStateTimer == 0x6e) {
+        pal[8] = 0;
+        SPAWN(x, y);
+        SPAWN(x, y);
+        SPAWN(x, y);
+        SPAWN(x, y);
+    } else if (gAirshipStateTimer == 0xaa) {
+        ResumeActorSpawns();
+        SetAirshipState(5, 1);
+        gAudioContext->PlaySfx(SFX_UNKNOWN_42, 0x100);
+        gAirshipVelZ = 0x9d;
+        if (gLevelState->timeTrial == 0 && gAirshipCheckpointCount <= 1) {
+            ActorSelf **pl = &gActorList;
+            if (gJetpackPlayerInactive == 0) {
+                ((JetpackPlayer *)*pl)->SetCheckpoint();
+                CreateJetpackCheckpointText();
+                gAirshipCheckpointCount++;
+            }
+        }
+    }
+}
+
+/* gAirshipStateFuncs[5], after the explosion: the airship falls (its Y
+ * speed grows by 7 a frame up to 0x140) until it is past 0xBB80, then
+ * goes back to state 0 (inactive) with animation 0 and BG2 off. */
+void AirshipStateFall(void)
+{
+    s32 total;
+    s32 delta;
+
+    gAirshipX += gAirshipVelX;
+
+    total = gAirshipY + gAirshipVelY;
+    gAirshipY = total;
+
+    gAirshipZ += gAirshipVelZ;
+
+    delta = gAirshipVelY + 7;
+    gAirshipVelY = delta;
+    if (delta > 0x140) {
+        gAirshipVelY = 0x140;
+    }
+
+    if (total > 0xbb80) {
+        SetAirshipState(0, 0);
+        REG_DISPCNT &= 0xfbff;
+    }
 }

@@ -170,8 +170,8 @@ struct level_desc {
  * (`LevelProgress::cat`, `LevelState::room.cat`). It merges level_layers.cpp's
  * `struct level_load_args` (batch 8b), level_query.cpp's `MedalListItem`
  * (`linkedObj`/`type` are `desc`/`kind`), level_state.h's `struct
- * level_category`, run_room.cpp's `gl_widget_kind` (#574, batch 9e) and
- * room_frame.cpp's `level_blend` (`mode` was `kind`, `effect`/`eva`/`evb`
+ * level_category`, play_room.cpp's `gl_widget_kind` (#574, batch 9e) and
+ * play_room.cpp's `level_blend` (`mode` was `kind`, `effect`/`eva`/`evb`
  * are `param.blend`; #656, batch 7).
  */
 

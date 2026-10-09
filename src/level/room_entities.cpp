@@ -15,7 +15,7 @@ extern "C" {
 /* GitHub issue #34/#40/#41, `UpdateGameFrame`-`MainLoop` cluster: the
  * second of the two raw functions `docs/matching/issue-34-game-loop-
  * 8022d50-80255d4.md` left for a follow-up pass (the first,
- * `StartTimeTrial`, is `time_trial.cpp`, now plain C).
+ * `StartTimeTrial`, is `level_state.cpp`, now plain C).
  *
  * `self` is `*gEntityFlags` (the same collision-bitmap base
  * `SetEntityIdGone`/`IsEntityIdGone`/`IsEntityIdActivated`, entity_flags.cpp, and
