@@ -170,8 +170,16 @@ from `sound/gax_manifest.json`'s `song_table` (`tools/gax_audio.py
 
 
 `tools/magic_numbers.py` lists the literals that are left, by topic
-(`--report` for the counts), and `--topic T --fix` replaces the ones that
-have exactly one name. `tools/magic_numbers.py --sizes` (#820, see
+(`--report` for the counts), and `--topic T --fix` replaces the
+high-confidence ones that have exactly one name. It reads the C++
+classes from the headers and the C-to-method names from
+cxx_symbols.txt, so its rules follow the methods (`obj->PlaySfx(id,
+volume)`, `ActionCtrl::SetMode`) and the fields of a class (a Crate's
+`kind`, an ActionCtrl's `state`), and a value through locals and
+wrappers; each hit has a confidence (`high`, `medium`, `low`, see
+CONTRIBUTING.md). A new kind of value gets a rule in its tables
+(`CALLS`, `CXX_FIELDS`, `CXX_RESULTS`, `CXX_TABLES`) along with its
+header. `tools/magic_numbers.py --sizes` (#820, see
 CONTRIBUTING.md) does the same for sizes, strides, struct offsets,
 hardware addresses and register values: the ones that should be a
 `sizeof`, a member or an include/gba/ define, with the replacement and a
