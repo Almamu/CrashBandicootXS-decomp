@@ -181,7 +181,18 @@ void strcat_arm(u8 *dst, u8 *src)
  *   u8 local 2 (r3); len's 0 as a plain `len = 0` 1 line, in every
  *   order; `(ten = 10)` as `digit - 10 >= 0` 2 lines, the other
  *   spellings (`< 10` with the arms swapped, `?:`, `>= 0xA`, adding 7)
- *   3. The b/len/neg pins stay 6-14 lines off. */
+ *   3. The b/len/neg pins stay 6-14 lines off.
+ * - #662 round 9 (natural_enum.py, every pair of 79 edits: each local's
+ *   and parameter's type over s8-u32, a u32 return, `buf`/`b` as char *
+ *   or s8 *, `minus`/`lo` as char or s32, the declaration and statement
+ *   orders), with all the sites out (32 instructions off at best, as
+ *   without the edits) and with each taken out alone: len's
+ *   MATCH_CONST stays 1 off, the base keep 2 (1 with `divisor` a u8,
+ *   which would truncate the base), minus' pin 2, the b and len pins
+ *   13-14, neg's 11, digit's 4. num's r0 pin alone is byte-neutral, but
+ *   it is what binds the SWI's r0 operand, so it stays with the SWI.
+ *   The quotient and remainder as a two-word struct (the Div result) is
+ *   44 off with every site out. */
 s32 itoa_arm(s32 value, u8 *buf, s32 base)
 {
     MATCH_HOLD_REG(s32, num, r0);

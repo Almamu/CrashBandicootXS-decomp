@@ -1872,6 +1872,39 @@ deciding contest:
   GetDpadDirection's and CheckLeftGround's returns, `motionXPending` u8 or
   bool, the flip forms and locals' types; 2 off, round 3's form).
 
+**Round 9, GAX2_init, GaxChannelMix and itoa_arm (types beyond the
+function).** 3 functions -> 3; GAX2_init loses its size use:
+
+- **An integer field aliases an integer local in memory.**
+  GaxPlayerState.outBuf (the 8-bit output buffer) is now an `s8 *`, not
+  a u32 address. GAX2_init passes `&size` to GaxCreateHandlers, so
+  `size` lives in memory (an ADDRESSOF), and a store through a `u32`
+  field shares its alias set: after `outBuf = buf`, cse1 reloads
+  `size` and the size's pseudo loses its global-alloc race. As a
+  pointer the store can't alias it and the ROM comes out with no
+  MATCH_USE (any pointee type; the plain `u32` was 9 lines off). When a
+  local's address is taken, check which stores share its type: a
+  same-size field type with another alias set (a pointer for an
+  address) changes what cse may keep.
+- **Kept, with sweeps that found nothing** (a multi-file harness over
+  lib/gax: every same-size retype of the members the functions touch,
+  signedness, volatile and const pointees, the address fields as
+  pointers, alone and in pairs, each variant compiled over all of
+  lib/gax for collateral): GAX2_init's maxRate use (fmt 9 refs over
+  197 insns against maxRate's 18 over 564; natural_enum.py, all
+  triples of 120 edits, 267,662 variants, reaches 6 instructions only
+  by dropping the ROM's re-read of `fmt->mixRate`), GaxChannelMix's
+  volatile read and keep (the signature's and GaxMixItem's types too;
+  13 and 132 diff lines at best, `instrument` itself volatile 12 but
+  with three other functions changed) and itoa_arm's pins, MATCH_CONST
+  and keep (each local's and parameter's type, a u32 return, `char
+  *`/`s8 *` buffers, each site alone: len's MATCH_CONST 1 off, the base
+  keep 2, minus' pin 2, digit's 4, b/len/neg 11-14).
+- **The two-word struct local doesn't carry over here.** A tap or a
+  RateEntry copied whole in GAX2_init is 40-52 instructions off, the
+  wave copied whole in GaxChannelMix 51, the Div quotient/remainder as
+  a struct in itoa_arm 44: none of them has a register saved and unused.
+
 ## Survey and conversion record (#576)
 
 The conversion is complete. `tools/match_idioms.py` after part 4

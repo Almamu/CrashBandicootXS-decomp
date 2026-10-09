@@ -51,7 +51,7 @@ void GAX_irq(void)
             "mov r8, r8");
         // clang-format on
         REG_DMA1CNT_H = 0xc8 << 3;
-        REG_DMA1SAD = p->outBuf;
+        REG_DMA1SAD = (u32)p->outBuf;
         REG_DMA1CNT_H = 0xB660;
     }
 

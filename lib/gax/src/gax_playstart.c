@@ -26,7 +26,8 @@
  * block-local read after the first types[] load, and three no-code
  * register nudges (commented at each use). #662 round 4 replaced the
  * third, an r3 hold, with `layout` walking on to the alternative-layout
- * list. */
+ * list; #662 round 9 the second, a use of the aligned size, with
+ * GaxPlayerState.outBuf's pointer type (see there). */
 
 #define ALIGN4(buf, size)                                  \
     {                                                      \
@@ -94,35 +95,13 @@ u8 GAX2_init(struct GaxSongHeader *p)
     buf += (gGaxPlayerState->format->frames + 4) * 2;
     size -= (gGaxPlayerState->format->frames + 4) * 2;
     ALIGN4(buf, size);
-    /* no code: an extra reference that lifts the aligned size over the
-     * format pointer in global.c's priority order (ROM: r3/r4). #662
-     * round 4 (-dl/-dg): both are short pseudos; without the use the
-     * size is 4 refs over 20 insns (2 * 4 / 20 = 0.40) against the
-     * format pointer's 4 over 16 (0.50); the use gives 5 over 22
-     * (0.45), the pointer then 4 over 18 (0.44). #662 round 7: a
-     * private agbcc with other allocno_compare formulas (refs / length,
-     * (log2 + 1) * refs / length, log2 * refs, refs * refs / length)
-     * leaves the plain code 102-480 lines off, against 88. #662 round 8
-     * (rtl_corpus.py query race, the .greg sorted order): the pseudo
-     * the size races is not the format pointer (r2 either way) but the
-     * copy of `&gGaxPlayerState` the outHalf store loads through, 3
-     * refs over 7 (1 * 3 / 7 = 0.43): at 0.40 the size goes after it
-     * and gets r4, at 0.45 before it and gets r3 (the ROM's `mov r4,
-     * sl`). tools/natural_enum.py (every pair of 121 edits): two single
-     * edits give that order with no use, the outHalf store after the
-     * test (the copy then lives 9 insns) and `size -=` before `buf +=`
-     * below (the size then lives 14), but each moves its statement in
-     * the ROM (4 lines off). ALIGN4 as an inline (by pointers, or one
-     * computing the pad), a block-local `g` for any 1-3 statements of
-     * this carve, the test reversed or through a local are 12-91 off. */
-    MATCH_USE(size);
     gGaxPlayerState->outHalf = 0;
     if (size < gGaxPlayerState->format->frames * 2)
         return 0;
-    gGaxPlayerState->outBuf = (u32)buf;
+    gGaxPlayerState->outBuf = (s8 *)buf;
     buf += gGaxPlayerState->format->frames * 2;
     size -= gGaxPlayerState->format->frames * 2;
-    GaxZeroFill((void *)gGaxPlayerState->outBuf, gGaxPlayerState->format->frames * 2);
+    GaxZeroFill(gGaxPlayerState->outBuf, gGaxPlayerState->format->frames * 2);
     ALIGN4(buf, size);
     {
         struct GaxDspTap *tap;
@@ -169,7 +148,19 @@ u8 GAX2_init(struct GaxSongHeader *p)
              * (maxRate)`, each other local zero-initialized as
              * GAX2_estimate's are, alone or together) finds nothing
              * under the plain code's 15 lines; without `fmt` in `len`,
-             * fmt's range ends early and it is 70 off. */
+             * fmt's range ends early and it is 70 off. Round 9 (-dl,
+             * with outBuf a pointer): fmt is 9 refs over 197 insns (3 *
+             * 9 / 197 = 0.137), maxRate 18 over 564 (0.128). Every
+             * same-size retype of the members this function touches
+             * (GaxPlayerState, GaxSongHeader, GaxChannelFormat,
+             * GaxDspTap, GaxSongData, GaxHandlerLayout: signedness,
+             * volatile, the address fields as pointers), alone and in
+             * pairs, leaves the plain code 15 instructions off or worse;
+             * natural_enum.py over 120 edits (every triple, 267,662
+             * variants, adding a tap or RateEntry copied whole as a
+             * two-word struct, 40-52) gets 6 only by computing the
+             * frames from the table instead of re-reading
+             * fmt->mixRate, which drops the ROM's `ldrh`. */
             MATCH_USE(maxRate);
             tap++;
         }

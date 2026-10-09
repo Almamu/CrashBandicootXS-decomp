@@ -125,7 +125,10 @@ u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, voi
          * block-local copy of m, pointer arithmetic, an inline returning
          * from each arm, s32 idx or m, the tune lines reordered, and
          * the automatic type/compound/order edits): none comes under
-         * the escape-free code's 14 instructions. */
+         * the escape-free code's 14 instructions. Round 9: no same-size
+         * retype of a member or the signature (alone or in pairs; see
+         * the sweep length below) brings the escape-free code under 132
+         * diff lines. */
         if (idx > m) {
             idx = m;
             MATCH_KEEP(idx);
@@ -211,7 +214,17 @@ u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, voi
          * test and the automatic type/order edits are all 15-18
          * instructions off like the plain read; the loop length set by
          * an `if` after the initializer, through a local, or the item
-         * filled field by field are 140-195. */
+         * filled field by field are 140-195. #662 round 9, types beyond
+         * the function: every same-size retype of the GaxChannelState,
+         * GaxChannelInstrument, GaxInstrumentRow, GaxSongData,
+         * GaxInfoHandler and GaxOrderEntry members (signedness,
+         * volatile, const pointees), of GaxMixItem's fields, and of the
+         * signature (u8/s32 return, u32/s32 `flag`, s32 `arg`, s16 *
+         * `buf`), alone and in pairs, is 13 diff lines off or worse
+         * without the volatile read; `instrument` itself volatile is 12
+         * but changes three other functions. `wave` as a struct copy
+         * (an 8-byte pair) is 51 instructions off; natural_enum.py over
+         * these 98 edits (all 4700 pairs) finds nothing under 15. */
         // clang-format off
         struct GaxMixItem item = {
             data, buf, pos, len << 11, frames, 0, vol, step, 0,
