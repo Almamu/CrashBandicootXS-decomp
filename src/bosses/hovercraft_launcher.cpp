@@ -1,4 +1,5 @@
 #include "boss_actors.hpp"
+#include "hovercraft.hpp"
 #include "audio.hpp"
 
 extern "C" {
@@ -26,9 +27,9 @@ void HovercraftLauncher::StateLaunch()
     s32 slot;
     s32 next;
 
-    x = GetHovercraftX() + 0x1E00;
-    y = GetHovercraftY() - 0x3000;
-    z = GetHovercraftZ() - 0x100;
+    x = Hovercraft::GetX() + 0x1E00;
+    y = Hovercraft::GetY() - 0x3000;
+    z = Hovercraft::GetZ() - 0x100;
 
     slot = cooldown;
     if (slot == 0) {
@@ -60,13 +61,13 @@ void HovercraftLauncher::StateLaunch()
 
                 n = count + 1;
                 count = n;
-                table = GetHovercraftAttack();
+                table = Hovercraft::GetAttack();
                 if (n == table->timing[2].burst) {
                     count = 0;
-                    table = GetHovercraftAttack();
+                    table = Hovercraft::GetAttack();
                     next = table->timing[2].burstDelay;
                 } else {
-                    table = GetHovercraftAttack();
+                    table = Hovercraft::GetAttack();
                     next = table->timing[2].delay;
                 }
                 goto store;
@@ -78,7 +79,7 @@ void HovercraftLauncher::StateLaunch()
         cooldown = next;
     }
 
-    if (depth > 0x4B00 && GetHovercraftState() == 3)
+    if (depth > 0x4B00 && Hovercraft::GetState() == 3)
         SetState(0, 2);
 }
 
@@ -89,12 +90,12 @@ void HovercraftLauncher::Damage(s32 amount)
     s32 st = state;
 
     if (st == 1) {
-        StartHovercraftHitFlash();
+        Hovercraft::StartHitFlash();
         hp -= amount;
 
         if (hp <= 0) {
             dead = st;
-            LoseHovercraftPart();
+            Hovercraft::LosePart();
             SetState(2, 3);
             gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
         } else {
@@ -144,12 +145,12 @@ void HovercraftLauncher::StateDestroyed()
  * 0x4AFF), starts launching: state 1 with animation 1. */
 void HovercraftLauncher::StateWait()
 {
-    x = GetHovercraftX() + 0x1E00;
-    y = GetHovercraftY() - 0x3000;
-    z = GetHovercraftZ() - 0x100;
+    x = Hovercraft::GetX() + 0x1E00;
+    y = Hovercraft::GetY() - 0x3000;
+    z = Hovercraft::GetZ() - 0x100;
 
-    if (GetHovercraftPartsLeft() <= 2 &&
-        (GetHovercraftState() == 2 || (GetHovercraftState() == 3 && depth <= 0x4AFF))) {
+    if (Hovercraft::GetPartsLeft() <= 2 &&
+        (Hovercraft::GetState() == 2 || (Hovercraft::GetState() == 3 && depth <= 0x4AFF))) {
         cooldown = 0;
         count = 0;
         SetState(1, 1);

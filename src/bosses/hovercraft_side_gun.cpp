@@ -1,4 +1,5 @@
 #include "boss_actors.hpp"
+#include "hovercraft.hpp"
 #include "audio.hpp"
 
 extern "C" {
@@ -22,7 +23,7 @@ extern "C" {
  * base constructor runs, as in the ROM. */
 HovercraftSideGun::HovercraftSideGun(const struct anim_table_record *rec, s32 x, s32 y, s32 z,
                                      bool left)
-    : HpActor(rec, x, y, z, GetHovercraftLevel() == 0 ? 0x18 : 0x10)
+    : HpActor(rec, x, y, z, Hovercraft::GetLevel() == 0 ? 0x18 : 0x10)
 {
     s32 idx;
     u8 l;
@@ -42,7 +43,7 @@ HovercraftSideGun::HovercraftSideGun(const struct anim_table_record *rec, s32 x,
     offY = 0xa00;
     offZ = -1;
     visible = 0;
-    orbitTimer = GetHovercraftAttack()->timing[0].delay;
+    orbitTimer = Hovercraft::GetAttack()->timing[0].delay;
     lap = 0;
 }
 
@@ -52,14 +53,14 @@ HovercraftSideGun::HovercraftSideGun(const struct anim_table_record *rec, s32 x,
  * hit sound. */
 void HovercraftSideGun::Damage(s32 amount)
 {
-    StartHovercraftHitFlash();
+    Hovercraft::StartHitFlash();
     hp -= amount;
 
     if (hp <= 0) {
         s32 idx;
         u8 l;
 
-        LoseHovercraftPart();
+        Hovercraft::LosePart();
         dead = 1;
         visible = 1;
         l = left;
@@ -79,9 +80,9 @@ void HovercraftSideGun::Damage(s32 amount)
  * Update's body after the common update, and RunState's. */
 static inline void StepSideGun(HovercraftSideGun *self)
 {
-    self->x = GetHovercraftX() + self->offX;
-    self->y = GetHovercraftY() + self->offY;
-    self->z = GetHovercraftZ() + self->offZ;
+    self->x = Hovercraft::GetX() + self->offX;
+    self->y = Hovercraft::GetY() + self->offY;
+    self->z = Hovercraft::GetZ() + self->offZ;
 
     if (self->state == 0 && self->depth > 0x2800) {
         s32 timer = self->orbitTimer;
@@ -94,11 +95,11 @@ static inline void StepSideGun(HovercraftSideGun *self)
             n = self->lap + 1;
             self->lap = n;
 
-            if (n == GetHovercraftAttack()->timing[0].burst) {
+            if (n == Hovercraft::GetAttack()->timing[0].burst) {
                 self->lap = timer;
-                next = GetHovercraftAttack()->timing[0].burstDelay;
+                next = Hovercraft::GetAttack()->timing[0].burstDelay;
             } else {
-                next = GetHovercraftAttack()->timing[0].delay;
+                next = Hovercraft::GetAttack()->timing[0].delay;
             }
         } else {
             next = timer - 1;

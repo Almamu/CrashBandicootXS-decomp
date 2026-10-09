@@ -1,5 +1,6 @@
 #include "vehicle.hpp"
 #include "boss_actors.hpp"
+#include "hovercraft.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
 
@@ -70,7 +71,7 @@ ActorSelf *SpawnJetpackActor(struct actor_spawn *rec, u8 alt, s32 dz)
     } else if (kind != 0xa) {
         return CreateJetpackActor(kind, x, y, z, rec);
     } else {
-        SpawnHovercraft(0, x, y, z);
+        Hovercraft::Spawn(0, x, y, z);
     }
     return 0;
 }

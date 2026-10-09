@@ -1,4 +1,4 @@
-#include "boss_actors.hpp"
+#include "hovercraft.hpp"
 #include "audio.hpp"
 
 extern "C" {
@@ -7,112 +7,113 @@ extern "C" {
 }
 
 /* The hovercraft's accessors and state changes (#664 part 11h). The
- * hovercraft is a bare AnimPart (gHovercraft, CreateHovercraft) and
- * globals (gHovercraftX, gHovercraftState, ...), like the airship; its
- * weapons (include/boss_actors.hpp) read it through the getters here.
- * The functions keep their C names. See
+ * hovercraft is a bare AnimPart (anim, Create) and variables (x, state,
+ * ...), like the airship, all static members of Hovercraft
+ * (include/hovercraft.hpp, #772); its weapons (include/boss_actors.hpp)
+ * read it through the getters here. The members keep their C names
+ * (cxx_symbols.txt). See
  * docs/matching/archive/issue-62-0x08033804-actor.md. */
 
 /* Arms the hit flash (UpdateHovercraftHitFlash) unless it is running. */
-void StartHovercraftHitFlash(void)
+void Hovercraft::StartHitFlash(void)
 {
-    if (gHovercraftHitFlashOn == 0 && gHovercraftHitFlashTimer == 0) {
-        gHovercraftHitFlashTimer = 1;
-        gHovercraftHitFlashOn = 1;
+    if (hitFlashOn == 0 && hitFlashTimer == 0) {
+        hitFlashTimer = 1;
+        hitFlashOn = 1;
     }
 }
 
 /* Colour 15 of the hovercraft's palettes, white or the saved colour
  * (ApplyHovercraftFlashColor, include/boss_actors.hpp). */
-void SetHovercraftFlashColor(u8 flag)
+void Hovercraft::SetFlashColor(u8 flag)
 {
-    ApplyHovercraftFlashColor(flag);
+    ApplyFlashColor(flag);
 }
 
 /* How many of its four weapons the hovercraft has left. */
-s32 GetHovercraftPartsLeft(void)
+s32 Hovercraft::GetPartsLeft(void)
 {
-    return gHovercraftPartsLeft;
+    return partsLeft;
 }
 
 /* One weapon less: the explosion sound, and once none is left, the
  * hovercraft falls (state 5). */
-void LoseHovercraftPart(void)
+void Hovercraft::LosePart(void)
 {
     gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
 
-    gHovercraftPartsLeft -= 1;
-    if (gHovercraftPartsLeft == 0) {
-        gHovercraftGone = gHovercraftPartsLeft;
-        SetHovercraftState(5, 0);
+    partsLeft -= 1;
+    if (partsLeft == 0) {
+        gone = partsLeft;
+        SetState(5, 0);
     }
 }
 
 /* The attack parameters (gHovercraftAttacks' record, SpawnHovercraft). */
-const struct hovercraft_attack *GetHovercraftAttack(void)
+const struct hovercraft_attack *Hovercraft::GetAttack(void)
 {
-    return gHovercraftAttack;
+    return attack;
 }
 
-s32 GetHovercraftState(void)
+s32 Hovercraft::GetState(void)
 {
-    return gHovercraftState;
+    return state;
 }
 
 /* The level index CreateHovercraft caches (it picks the gHovercraftAttacks
  * record; the side guns test it against 0). */
-s32 GetHovercraftLevel(void)
+s32 Hovercraft::GetLevel(void)
 {
-    return gHovercraftLevel;
+    return level;
 }
 
-s32 GetHovercraftZ(void)
+s32 Hovercraft::GetZ(void)
 {
-    return gHovercraftZ;
+    return z;
 }
 
-s32 GetHovercraftY(void)
+s32 Hovercraft::GetY(void)
 {
-    return gHovercraftY;
+    return y;
 }
 
-s32 GetHovercraftX(void)
+s32 Hovercraft::GetX(void)
 {
-    return gHovercraftX;
+    return x;
 }
 
 /* EnterHovercraftState out of line. */
-void SetHovercraftState(s32 a0, s32 a1)
+void Hovercraft::SetState(s32 a0, s32 a1)
 {
-    EnterHovercraftState(a0, a1);
+    EnterState(a0, a1);
 }
 
 /* gHovercraftStateFuncs[0]: the state CreateHovercraft sets before
  * SpawnHovercraft starts the fight (state 1), the twin of
  * AirshipStateInactive. Empty. */
-void HovercraftStateInactive(void)
+void Hovercraft::StateInactive(void)
 {
 }
 
 /* State 1: the hovercraft comes in at its Z speed; once close enough
  * (0x81FF), it stops sideways and closes in (state 2, animation 0). */
-void HovercraftStateApproach(void)
+void Hovercraft::StateApproach(void)
 {
-    gHovercraftZ += gHovercraftVelZ;
+    z += velZ;
 
-    if (gHovercraftDistance <= 0x81FF) {
-        s32 *velX = &gHovercraftVelX;
-        s32 *velY = &gHovercraftVelY;
+    if (distance <= 0x81FF) {
+        s32 *vx = &velX;
+        s32 *vy = &velY;
 
-        *velY = 0;
-        *velX = 0;
-        EnterHovercraftState(2, 0);
+        *vy = 0;
+        *vx = 0;
+        EnterState(2, 0);
     }
 }
 
 /* gHovercraftStateFuncs[4], the slot of gAirshipStateFuncs[4]'s
  * AirshipStateExplode. Empty and never entered: LoseHovercraftPart goes
  * straight to state 5 (HovercraftStateFall). */
-void HovercraftStateExplodeStub(void)
+void Hovercraft::StateExplodeStub(void)
 {
 }

@@ -1,4 +1,5 @@
 #include "boss_actors.hpp"
+#include "hovercraft.hpp"
 
 /* The cannon's muzzle flash (#664 part 11h, include/boss_actors.hpp): an
  * HpActor the cannon spawns with each shot (SpawnHovercraftCannonFlash).
@@ -17,9 +18,9 @@ void HovercraftCannonFlash::Damage(s32)
  * (with an `s32`, cse folds it on both paths). */
 static inline bool StepCannonFlash(HovercraftCannonFlash *self)
 {
-    self->z = GetHovercraftZ() - 0x200;
-    self->x = GetHovercraftX() + 0x2000;
-    self->y = GetHovercraftY() + 0x3000;
+    self->z = Hovercraft::GetZ() - 0x200;
+    self->x = Hovercraft::GetX() + 0x2000;
+    self->y = Hovercraft::GetY() + 0x3000;
     self->unshootable = 1;
 
     if (self->animDone != 0) {

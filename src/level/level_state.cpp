@@ -6,6 +6,7 @@
 #include "player.hpp"
 #include "audio.hpp"
 #include "boss_ctrl.hpp"
+#include "hovercraft.hpp"
 
 extern "C" {
 #include "crates.h"
@@ -690,7 +691,7 @@ s32 LevelState::GetBossHealth()
 
     switch (idx) {
     case LEVEL_N_GIN:
-        return GetHovercraftPartsLeft();
+        return Hovercraft::GetPartsLeft();
     case LEVEL_DINGODILE:
         {
             BossCtrl *p = boss;
