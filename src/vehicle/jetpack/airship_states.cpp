@@ -1,4 +1,4 @@
-#include "boss_actors.hpp"
+#include "airship.hpp"
 #include "vehicle.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
@@ -12,7 +12,8 @@ extern "C" {
 #include "util.h"
 }
 
-/* The airship's states (#664 part 11i, include/boss_actors.hpp):
+/* The airship's states (#664 part 11i, Airship's since #772,
+ * include/airship.hpp):
  * gAirshipStateFuncs[1-5], the attack states, the explosion and the
  * fall (the last two airship_explode.cpp and airship_fall.cpp until
  * #771; state 0 is AirshipStateInactive, airship_graphics.cpp). See
@@ -21,18 +22,18 @@ extern "C" {
  * State 1: the airship comes in (gAirshipZ by gAirshipVelZ) until its
  * distance is down to 0x81FF, then stops and enters state 2 (fireballs)
  * with animation 0, and pauses the actor spawns. */
-void AirshipStateApproach(void)
+void Airship::StateApproach()
 {
-    gAirshipZ += gAirshipVelZ;
+    z += velZ;
 
-    if (gAirshipDistance <= 0x81FF) {
+    if (distance <= 0x81FF) {
         /* both addresses first, as the ROM loads them */
-        s32 *velX = &gAirshipVelX;
-        s32 *velY = &gAirshipVelY;
+        s32 *vx = &velX;
+        s32 *vy = &velY;
 
-        *velY = 0;
-        *velX = 0;
-        SetAirshipState(2, 0);
+        *vy = 0;
+        *vx = 0;
+        SetState(2, 0);
         PauseActorSpawns();
     }
 }
@@ -51,34 +52,34 @@ void AirshipStateApproach(void)
  * state 3 (cannon) with animation 0. Always finishes with
  * `UpdateAirshipFlashColor` (the palette bank-1 flash-color select). */
 
-void AirshipStateFireballs(void)
+void Airship::StateFireballs()
 {
     s32 v;
-    gAirshipZ += gAirshipVelZ;
-    v = gAirshipVelZ;
+    z += velZ;
+    v = velZ;
     if (v <= 0x98)
-        gAirshipVelZ = v + 1;
+        velZ = v + 1;
     else
-        gAirshipVelZ = v - 1;
+        velZ = v - 1;
 
-    if (gAirshipFireTimer == 0) {
-        SpawnAirshipFireball(gAirshipX - 0xCDB, gAirshipY + 0x516D, gAirshipZ - 10);
-        if (++gAirshipVolleyCount == gAirshipAttack->fireballBurst) {
-            gAirshipVolleyCount = 0;
-            gAirshipFireTimer = gAirshipAttack->fireballBurstDelay;
+    if (fireTimer == 0) {
+        SpawnAirshipFireball(x - 0xCDB, y + 0x516D, z - 10);
+        if (++volleyCount == attack->fireballBurst) {
+            volleyCount = 0;
+            fireTimer = attack->fireballBurstDelay;
         } else {
-            gAirshipFireTimer = gAirshipAttack->fireballDelay;
+            fireTimer = attack->fireballDelay;
         }
     } else {
-        gAirshipFireTimer--;
+        fireTimer--;
     }
-    SteerAirship();
-    if (gAirshipDistance <= 0x31FF) {
-        gAirshipFireTimer = gAirshipAttack->cannonDelay;
-        gAirshipVolleyCount = 0;
-        SetAirshipState(3, 0);
+    Steer();
+    if (distance <= 0x31FF) {
+        fireTimer = attack->cannonDelay;
+        volleyCount = 0;
+        SetState(3, 0);
     }
-    UpdateAirshipFlashColor();
+    UpdateFlashColor();
 }
 
 /* State 3: `AirshipStateApproach`/`AirshipStateFireballs`'s third sibling: advances
@@ -106,46 +107,45 @@ void AirshipStateFireballs(void)
  * `/` goes through the ROM's own `__divsi3` and the
  * absolute values are the branchless `asrs`/`eors`/`subs` form. */
 
-void AirshipStateCannon(void)
+void Airship::StateCannon()
 {
     s32 v;
     s32 phase;
 
-    gAirshipZ += gAirshipVelZ;
-    v = gAirshipVelZ;
+    z += velZ;
+    v = velZ;
     if (v <= 0xb2)
-        gAirshipVelZ = v + 1;
+        velZ = v + 1;
 
-    phase = gAirshipFireTimer;
+    phase = fireTimer;
     if (phase == 0) {
         ActorSelf *pl = gActorList;
-        s32 speed = (pl->z - (gAirshipZ - 10)) / -0x1AA;
+        s32 speed = (pl->z - (z - 10)) / -0x1AA;
         if (speed > 0) {
             s32 dx, dy;
             speed = 0x1000 / speed;
-            dx = Q12_MUL(pl->x - (gAirshipX - 0xCDB), speed);
-            dy = Q12_MUL(pl->y - (gAirshipY + 0x516D), speed);
+            dx = Q12_MUL(pl->x - (x - 0xCDB), speed);
+            dy = Q12_MUL(pl->y - (y + 0x516D), speed);
             if (ABS_BRANCHLESS(dx) + ABS_BRANCHLESS(dy) <= 0x7FF) {
-                SpawnJetpackCannonball(gAirshipX - 0xCDB, gAirshipY + 0x516D, gAirshipZ - 10, dx,
-                                       dy);
-                if (++gAirshipVolleyCount == gAirshipAttack->cannonBurst) {
-                    gAirshipVolleyCount = phase;
-                    gAirshipFireTimer = gAirshipAttack->cannonBurstDelay;
+                SpawnJetpackCannonball(x - 0xCDB, y + 0x516D, z - 10, dx, dy);
+                if (++volleyCount == attack->cannonBurst) {
+                    volleyCount = phase;
+                    fireTimer = attack->cannonBurstDelay;
                 } else {
-                    gAirshipFireTimer = gAirshipAttack->cannonDelay;
+                    fireTimer = attack->cannonDelay;
                 }
             }
         }
     } else {
-        gAirshipFireTimer = phase - 1;
+        fireTimer = phase - 1;
     }
-    SteerAirship();
-    if (gAirshipDistance > 0x4300) {
-        gAirshipFireTimer = gAirshipAttack->fireballDelay;
-        gAirshipVolleyCount = 0;
-        SetAirshipState(2, 0);
+    Steer();
+    if (distance > 0x4300) {
+        fireTimer = attack->fireballDelay;
+        volleyCount = 0;
+        SetState(2, 0);
     }
-    UpdateAirshipFlashColor();
+    UpdateFlashColor();
 }
 
 /* gAirshipStateFuncs[4], the explosion: advances the position
@@ -174,52 +174,52 @@ void AirshipStateCannon(void)
  * before the last lock check, as the ROM loads that address early. */
 
 /* One sub-projectile, jittered around (x, y) by the box's own +-range. */
-#define SPAWN(x, y) CreateJetpackExplosion((x) + RandRange(INT_TO_Q8(gAirshipBox.w)), \
-                                (y) + RandRange(INT_TO_Q8(gAirshipBox.h)), \
-                                gAirshipZ - 0x100)
+#define SPAWN(bx, by) CreateJetpackExplosion((bx) + RandRange(INT_TO_Q8(box.w)), \
+                                (by) + RandRange(INT_TO_Q8(box.h)), \
+                                z - 0x100)
 
-void AirshipStateExplode(void)
+void Airship::StateExplode()
 {
-    s32 x, y;
+    s32 bx, by;
     u16 *pal;
 
-    gAirshipX += gAirshipVelX;
-    gAirshipY += gAirshipVelY;
-    gAirshipZ += gAirshipVelZ;
-    gAirshipHitFlashTimer = 0;
+    x += velX;
+    y += velY;
+    z += velZ;
+    hitFlashTimer = 0;
     pal = (u16 *)(BG_PLTT + 0x20);
-    x = gAirshipX + INT_TO_Q8(gAirshipBox.x);
-    y = gAirshipY + INT_TO_Q8(gAirshipBox.y);
+    bx = x + INT_TO_Q8(box.x);
+    by = y + INT_TO_Q8(box.y);
 
-    if (gAirshipStateTimer == 0xa) {
+    if (stateTimer == 0xa) {
         pal[15] = 0;
-        SPAWN(x, y);
-    } else if (gAirshipStateTimer == 0x32) {
+        SPAWN(bx, by);
+    } else if (stateTimer == 0x32) {
         pal[1] = 0;
-        SPAWN(x, y);
-        SPAWN(x, y);
-    } else if (gAirshipStateTimer == 0x50) {
+        SPAWN(bx, by);
+        SPAWN(bx, by);
+    } else if (stateTimer == 0x50) {
         pal[4] = 0;
-        SPAWN(x, y);
-        SPAWN(x, y);
-        SPAWN(x, y);
-    } else if (gAirshipStateTimer == 0x6e) {
+        SPAWN(bx, by);
+        SPAWN(bx, by);
+        SPAWN(bx, by);
+    } else if (stateTimer == 0x6e) {
         pal[8] = 0;
-        SPAWN(x, y);
-        SPAWN(x, y);
-        SPAWN(x, y);
-        SPAWN(x, y);
-    } else if (gAirshipStateTimer == 0xaa) {
+        SPAWN(bx, by);
+        SPAWN(bx, by);
+        SPAWN(bx, by);
+        SPAWN(bx, by);
+    } else if (stateTimer == 0xaa) {
         ResumeActorSpawns();
-        SetAirshipState(5, 1);
+        SetState(5, 1);
         gAudioContext->PlaySfx(SFX_UNKNOWN_42, 0x100);
-        gAirshipVelZ = 0x9d;
-        if (gLevelState->timeTrial == 0 && gAirshipCheckpointCount <= 1) {
+        velZ = 0x9d;
+        if (gLevelState->timeTrial == 0 && checkpointCount <= 1) {
             ActorSelf **pl = &gActorList;
             if (gJetpackPlayerInactive == 0) {
                 ((JetpackPlayer *)*pl)->SetCheckpoint();
                 CreateJetpackCheckpointText();
-                gAirshipCheckpointCount++;
+                checkpointCount++;
             }
         }
     }
@@ -228,26 +228,26 @@ void AirshipStateExplode(void)
 /* gAirshipStateFuncs[5], after the explosion: the airship falls (its Y
  * speed grows by 7 a frame up to 0x140) until it is past 0xBB80, then
  * goes back to state 0 (inactive) with animation 0 and BG2 off. */
-void AirshipStateFall(void)
+void Airship::StateFall()
 {
     s32 total;
     s32 delta;
 
-    gAirshipX += gAirshipVelX;
+    x += velX;
 
-    total = gAirshipY + gAirshipVelY;
-    gAirshipY = total;
+    total = y + velY;
+    y = total;
 
-    gAirshipZ += gAirshipVelZ;
+    z += velZ;
 
-    delta = gAirshipVelY + 7;
-    gAirshipVelY = delta;
+    delta = velY + 7;
+    velY = delta;
     if (delta > 0x140) {
-        gAirshipVelY = 0x140;
+        velY = 0x140;
     }
 
     if (total > 0xbb80) {
-        SetAirshipState(0, 0);
+        SetState(0, 0);
         REG_DISPCNT &= 0xfbff;
     }
 }

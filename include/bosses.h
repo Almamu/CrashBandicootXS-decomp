@@ -61,36 +61,17 @@ struct hovercraft_attack {
 struct anim_box;
 struct entry_set;
 
-/* src/vehicle/jetpack/airship.cpp */
-extern void SteerAirship(void);
+/* src/vehicle/jetpack/airship*.cpp: the Airship class (include/airship.hpp,
+ * #772), its static members under their C names (cxx_symbols.txt). The
+ * actor category table (src/data/actor_category_175558.c, C) names its
+ * five boss slots' functions by those C names. */
+#ifndef __cplusplus
 extern void CreateAirship(s32 level);
-extern void SpawnAirship(s32 kind, s32 x, s32 y, s32 z);
 extern void UpdateAirship(void);
 extern void UpdateAirshipBg2(void);
-
-/* src/vehicle/jetpack/airship_graphics.cpp */
-extern void DamageAirship(s32 delta);
-
-/* src/vehicle/jetpack/airship_states.cpp */
-extern void AirshipStateExplode(void);
-extern void AirshipStateFall(void);
-
-/* src/vehicle/jetpack/airship_graphics.cpp */
-extern void ConvertAirshipTiles(void);
-extern void UpdateAirshipFlashColor(void);
-extern void AnimateAirshipPalette(void);
+extern void DestroyAirship(void);
 extern void LoadAirshipGraphics(void);
-
-/* src/vehicle/jetpack/airship_map.cpp */
-extern void DrawAirshipMap(u16 *src);
-
-/* src/vehicle/jetpack/airship_states.cpp */
-extern void AirshipStateApproach(void);
-extern void AirshipStateFireballs(void);
-extern void AirshipStateCannon(void);
-
-/* src/vehicle/jetpack/airship_touch.cpp */
-extern u8 IsTouchingAirship(struct ActorSelf *self);
+#endif
 
 /* src/bosses/tiny.cpp and cortex.cpp: methods of TinyCtrl, CortexBossCtrl,
  * CortexTargetCtrl and CortexShotCtrl (include/boss_ctrl.hpp) under their
@@ -110,11 +91,6 @@ extern void LoadHovercraftGraphics(void);
 extern void DestroyHovercraft(void);
 #endif
 
-/* src/vehicle/jetpack/airship_graphics.cpp, its end (C linkage) */
-extern s32 GetAirshipHpPercent(void);
-extern void DestroyAirship(void);
-extern void AirshipStateInactive(void);
-
 /* src/vehicle/jetpack/jetpack_spawn.cpp */
 extern void SpawnHovercraftCannonFlash(s32 a, s32 b, s32 c);
 /* `left` is the side gun's `bool` (HovercraftSideGun's constructor); only
@@ -129,66 +105,28 @@ extern void SpawnHovercraftCannon(s32 a, s32 b, s32 c);
 extern void SpawnHovercraftFireball(s32 x, s32 y, s32 z);
 extern void SpawnAirshipFireball(s32 x, s32 y, s32 z);
 
-/* The bosses' globals (sym_iwram.txt). The airship is a bare AnimPart
- * (actor_self.hpp); only C++ uses it. */
-#ifdef __cplusplus
-extern class AnimPart *gAirship;
-#endif
-extern const struct airship_attack *gAirshipAttack;
-extern s32 gAirshipBg2Page;
-extern u8 gAirshipBg2PageFlip;
-extern s32 gAirshipCheckpointCount;
-extern s32 gAirshipDistance;
-extern s32 gAirshipFireTimer;
-extern s32 gAirshipHitFlashTimer;
-extern s32 gAirshipHp;
-extern s32 gAirshipLevel;
-extern s32 gAirshipMapCols;
-/* The picture's row addresses, as the AnimPart's u32 frame offsets
- * (ConvertAirshipTiles fills them; a u32 store may alias its heights[]). */
-extern u32 gAirshipMapFrames[];
-extern s32 gAirshipMapRows;
-extern s32 gAirshipMapTileBase;
-extern s32 gAirshipScreenX;
-extern s32 gAirshipScreenY;
-extern s32 gAirshipState;
-extern s32 gAirshipStateTimer;
-extern s32 gAirshipVelX;
-extern s32 gAirshipVelY;
-extern s32 gAirshipVelZ;
-extern s32 gAirshipVolleyCount;
-extern s32 gAirshipX;
-extern s32 gAirshipY;
-extern s32 gAirshipZ;
-/* The hovercraft's variables are Hovercraft's static members
- * (include/hovercraft.hpp, #772). */
-
-/* src/data/weapon_kind_17c2d0.c */
-extern const struct airship_attack gAirshipAttacks[6];
-extern const struct anim_box gAirshipBox;
-extern const u16 gAirshipHitFlashPalettes[3][16];
-extern const struct anim_frame_record gAirshipKeyframes[2];
+/* The bosses' globals (sym_iwram.txt): the airship's and the
+ * hovercraft's variables are Airship's and Hovercraft's static members
+ * (include/airship.hpp, include/hovercraft.hpp; #772). */
 
 /* src/data/boss_pictures_167ad4.c */
-extern const u16 gAirshipPalette[256];
 extern const u16 gHovercraftPalette[256];
 /* The two boss pictures: a {cols, rows} head, then the frames (docs/data.md
  * "Boss pictures"). Each picture's struct is sized by its generated picture
  * header (build/.../boss_pictures/<addr>.h), so it is only complete in the
  * data file; the code reads the head through BOSS_PICTURE_SIZE, and finds
- * the frames from the palette (gAirshipPalette + 0x204). */
+ * the frames from the palette (gAirshipPalette + 0x204). The airship's
+ * tables (gAirshipPalette, gAirshipPicture, gAirshipAttacks,
+ * gAirshipBox, gAirshipHitFlashPalettes, gAirshipKeyframes) are
+ * Airship's static data members (include/airship.hpp). */
 struct boss_picture_size {
     s16 cols;
     s16 rows;
 };
 struct airship_picture;    /* 4 frames */
 struct hovercraft_picture; /* 1 frame */
-extern const struct airship_picture gAirshipPicture;
 extern const struct hovercraft_picture gHovercraftPicture;
 #define BOSS_PICTURE_SIZE(picture) ((const struct boss_picture_size *)&(picture))
-
-/* src/data/actor_state_17c3fc.c */
-extern void (*const gAirshipStateFuncs[6])(void);
 
 /* src/data/actor_tables_16c2d8.c */
 extern const u8 gCortexTargetBlinkStartTimes[3];

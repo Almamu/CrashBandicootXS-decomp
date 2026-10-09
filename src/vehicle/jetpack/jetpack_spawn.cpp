@@ -1,6 +1,7 @@
 #include "vehicle.hpp"
 #include "boss_actors.hpp"
 #include "hovercraft.hpp"
+#include "airship.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
 #include "yeti.hpp"
@@ -69,7 +70,7 @@ ActorSelf *SpawnJetpackActor(struct actor_spawn *rec, u8 alt, s32 dz)
     y = INT_TO_Q8(rec->y);
     z = INT_TO_Q8(rec->z) + dz;
     if ((u8)(kind - 0x10) <= 2) {
-        SpawnAirship(kind - 0x10, x, y, z);
+        Airship::Spawn(kind - 0x10, x, y, z);
     } else if (kind != 0xa) {
         return CreateJetpackActor(kind, x, y, z, rec);
     } else {

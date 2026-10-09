@@ -1,4 +1,4 @@
-#include "boss_actors.hpp"
+#include "airship.hpp"
 
 /* Same boss-weapon "self" object family as airship_fireball.cpp/
  * airship_states.cpp - see airship_fireball.cpp's header comment and
@@ -20,15 +20,15 @@
  * pseudo after `i + 1` and `i + 1` wins the r7/ip tie as in the ROM
  * (docs/matching/archive/issue-58-61-naked-retry.md). */
 
-void DrawAirshipMap(u16 *src)
+void Airship::DrawMap(u16 *src)
 {
-    u8 *row = (u8 *)((gAirshipBg2Page + 0x18) << 11) + (VRAM + (0x20 - gAirshipMapCols) / 4 * 2) +
-              ((0x20 - gAirshipMapRows) / 2 * 32 + 2);
+    u8 *row = (u8 *)((bg2Page + 0x18) << 11) + (VRAM + (0x20 - mapCols) / 4 * 2) +
+              ((0x20 - mapRows) / 2 * 32 + 2);
     s32 i, j;
 
-    for (i = 0; i < gAirshipMapRows; i++) {
-        for (j = 0; j < gAirshipMapCols / 2; j++) {
-            u8 bias = gAirshipMapTileBase;
+    for (i = 0; i < mapRows; i++) {
+        for (j = 0; j < mapCols / 2; j++) {
+            u8 bias = mapTileBase;
             u16 lo = *src++ + bias;
             u16 hi = *src++ + bias;
             ((u16 *)row)[j] = lo | (hi << 8);

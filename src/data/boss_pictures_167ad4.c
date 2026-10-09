@@ -27,8 +27,9 @@
 #include "bosses.h"
 #include "globals.h"
 
-/* N. Gin's airship: its palette, 16 colours that LoadAirshipGraphics
- * (airship_graphics.cpp) DMAs to BG palette 1 (the rest is zero). */
+/* N. Gin's airship (Airship::palette, include/airship.hpp): its palette,
+ * 16 colours that LoadAirshipGraphics (airship_graphics.cpp) DMAs to BG
+ * palette 1 (the rest is zero). */
 const u16 gAirshipPalette[256] = {
     0x03E0, 0x30E7, 0x3549, 0x41AC, 0x46C5, 0x3222, 0x1DA0, 0x033F,
     0x02BF, 0x3AB9, 0x05F7, 0x0194, 0x5B3B, 0x29B0, 0x14BF, 0x7FFF,
@@ -36,9 +37,9 @@ const u16 gAirshipPalette[256] = {
 
 #define AIRSHIP_CELLS (BOSS_PICTURE_167CD4_COLS * BOSS_PICTURE_167CD4_ROWS)
 
-/* The airship, 4 frames (the propellers turn). CreateAirship
- * (airship.c) reads cols and rows, ConvertAirshipTiles (airship_graphics.c)
- * uploads the tiles. */
+/* Airship::picture: the airship, 4 frames (the propellers turn).
+ * CreateAirship (airship.cpp) reads cols and rows, ConvertAirshipTiles
+ * (airship_graphics.cpp) uploads the tiles. */
 const struct airship_picture {
     struct boss_picture_size size;
     BOSS_FRAME(AIRSHIP_CELLS, BOSS_PICTURE_167CD4_FRAME0_TILES) frame0;

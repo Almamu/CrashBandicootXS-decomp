@@ -67,7 +67,7 @@ private:
     static void nullsub_35();
 
     /* EnterState: state `st` and animation `idx`, keeping the current
-     * frame unless it is past the new animation's end (SetAirshipState
+     * frame unless it is past the new animation's end (Airship::SetState
      * without the timer). SetState is its out-of-line copy. */
     static void EnterState(s32 st, s32 idx)
     {

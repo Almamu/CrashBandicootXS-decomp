@@ -63,9 +63,6 @@ extern class PolarAkuAku *SpawnPolarAkuAku(s32 x, s32 y, s32 z, s32 arg);
 extern s32 JetpackIsPauseLocked(void);
 extern s32 PolarIsPauseLocked(void);
 
-/* src/vehicle/jetpack/airship_graphics.cpp: a C-linkage function */
-extern void nullsub_30(void);
-
 /* src/vehicle/jetpack/jetpack_crates.cpp: JetpackBalloonCrate's destructor
  * (vehicle.hpp), for inline_copies_actors.cpp's kinds' destructors */
 extern void DestroyJetpackBalloonCrate(void *self, s32 flags);
