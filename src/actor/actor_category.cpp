@@ -19,26 +19,27 @@ extern "C" {
  * actor_spawn.cpp (#770).
  *
  * The category vtable (include/actor_anim.h's 13-slot
- * `struct category_vtable`, set by SelectActorCategory) is a table of
- * plain function pointers, not a C++ vtable: its slots are called with
- * no arguments, or hold values (slots 7 and 8). C++ since #664 part 11b
- * (docs/cplusplus.md). */
+ * `struct category_vtable`, set by SelectActorCategory) is a struct of
+ * plain function pointers and two values, not a C++ vtable (#765). C++
+ * since #664 part 11b (docs/cplusplus.md). */
 
-/* Slot 12 (PolarIsPauseLocked, JetpackIsPauseLocked), negated: a
- * `bool` function's result, so `!` is the ROM's `movs r1, #1; eors r0,
- * r1` on the call's r0. Through an `s32` g++ copies the result to r1
- * and builds the 1 in r0; the C wrote the two instructions in asm and
- * the first C++ pinned the result to r0 (#662 round 2). Its caller
- * (InitActorCategory) zero-extends the result, as for a `bool`. */
+/* Slot 12 (`isPauseLocked`: PolarIsPauseLocked, JetpackIsPauseLocked),
+ * negated. The slot's functions return `s32`, but the ROM treats the
+ * result as a `bool` (the one cast #765 keeps), so `!` is the ROM's
+ * `movs r1, #1; eors r0, r1` on the call's r0. Through an `s32` g++
+ * copies the result to r1 and builds the 1 in r0; the C wrote the two
+ * instructions in asm and the first C++ pinned the result to r0 (#662
+ * round 2). Its caller (InitActorCategory) zero-extends the result, as
+ * for a `bool`. */
 bool CanPauseActorCategory(void)
 {
-    return !((bool (*)(void))gActorCategoryVtable->fn[12])();
+    return !((bool (*)(void))gActorCategoryVtable->isPauseLocked)();
 }
 
 void ReloadActorCategoryGraphics(void)
 {
-    gActorCategoryVtable->fn[6]();
-    gActorCategoryVtable->fn[11]();
+    gActorCategoryVtable->loadBossGraphics();
+    gActorCategoryVtable->reloadPlayerTiles();
 }
 
 /* Deletes every actor, the list's root (the player) last, then the draw
@@ -48,8 +49,8 @@ void DestroyAllActors(void)
     ActorSelf *n;
     ActorSelf *next;
 
-    if (gActorCategoryVtable->fn[5] != NULL)
-        gActorCategoryVtable->fn[5]();
+    if (gActorCategoryVtable->destroyBoss != NULL)
+        gActorCategoryVtable->destroyBoss();
 
     n = gActorList->next;
     while (n != gActorList) {
@@ -64,8 +65,8 @@ void DestroyAllActors(void)
 
 void UpdateActorCategoryBg2(void)
 {
-    if (gActorCategoryVtable->fn[4] != NULL)
-        gActorCategoryVtable->fn[4]();
+    if (gActorCategoryVtable->updateBossBg2 != NULL)
+        gActorCategoryVtable->updateBossBg2();
 }
 
 void SetActorCategoryExitStatus(s32 arg0)

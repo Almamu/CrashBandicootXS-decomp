@@ -36,10 +36,10 @@ struct anim_box;
 struct anim_table_record;
 
 /* src/actor/actor_category_hooks.cpp */
-extern void JetpackReloadPlayerTiles(void *arg0);
-extern void PolarReloadPlayerTiles(void *arg0);
-extern void JetpackReachCourseEnd(void *arg0);
-extern void PolarReachCourseEnd(void *arg0);
+extern void JetpackReloadPlayerTiles(void);
+extern void PolarReloadPlayerTiles(void);
+extern void JetpackReachCourseEnd(void);
+extern void PolarReachCourseEnd(void);
 
 /* src/actor/inline_copies_actors.cpp: the C-linkage copies of the balloon crate
  * kinds' implicit destructors (vehicle.hpp), which the g++-emitted
@@ -75,8 +75,9 @@ extern u8 IsJetpackPlayerInactive(void);
 
 /* src/vehicle/jetpack/jetpack_spawn.cpp: the spawners (C linkage) */
 extern void YetiStateStop(void);
-extern void *SpawnJetpackActor(struct actor_spawn *rec, u8 alt, s32 dz);
-extern void *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, struct actor_spawn *spawn);
+extern struct ActorSelf *SpawnJetpackActor(struct actor_spawn *rec, u8 alt, s32 dz);
+extern struct ActorSelf *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z,
+                                            struct actor_spawn *spawn);
 extern void CreateJetpackCheckpointText(void);
 extern void CreateJetpackExplosion(s32 x, s32 y, s32 z);
 extern void SpawnJetpackCollectedWumpa(s32 a, s32 b, s32 c);
@@ -93,7 +94,7 @@ extern u8 IsPolarPlayerInactive(void);
 /* src/vehicle/polar/yeti.cpp */
 extern void StopYeti(void);
 extern void DestroyYeti(void);
-extern void CreateYeti(void *arg0);
+extern void CreateYeti(s32 level);
 extern void BuildYetiBg2Map(u8 *dst, u8 seed);
 extern void YetiStateCaught(void);
 

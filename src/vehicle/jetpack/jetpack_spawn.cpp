@@ -46,7 +46,7 @@ void YetiStateStop(void)
  * `kind`, `altKind` in the alternate game mode (kind 0x17 there becomes
  * 0x14) or `bonusKind` when `alt` is set. Kind 0x1d only spawns while
  * `IsCrystalSaved` allows it; kinds 0, 0x3e and 0x20-0x25 never do. */
-void *SpawnJetpackActor(struct actor_spawn *rec, u8 alt, s32 dz)
+ActorSelf *SpawnJetpackActor(struct actor_spawn *rec, u8 alt, s32 dz)
 {
     u8 kind = rec->kind;
     s32 x, y, z;
@@ -78,7 +78,7 @@ void *SpawnJetpackActor(struct actor_spawn *rec, u8 alt, s32 dz)
 /* The spawn dispatcher: offsets the position by the kind's record and
  * constructs the kind's object. Kind 23 turns into kind 20's object
  * when `IsSpawnCollected` says so; kind 31 spawns a kind-43 companion first. */
-void *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, struct actor_spawn *spawn)
+ActorSelf *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, struct actor_spawn *spawn)
 {
     x += gJetpackAnimTable[kind].spawnX;
     y += gJetpackAnimTable[kind].spawnY;

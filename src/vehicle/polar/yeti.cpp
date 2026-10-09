@@ -35,9 +35,9 @@ void DestroyYeti(void)
  * primes `SetActorBgLayerDepth`, clears `gYetiState`, and finally calls
  * `LoadYetiGraphics` (the object's own initial VRAM-pattern/DMA setup,
  * parked separately - see docs/matching/archive/issue-54-actor-d3a8.md). */
-void CreateYeti(void *arg0)
+void CreateYeti(s32 level)
 {
-    gYetiParamsIndex = (s32)arg0;
+    gYetiParamsIndex = level;
     gYeti = new AnimPart((struct anim_frame_record *)gYetiKeyframes, (u32 *)gYetiFrames, 0xf);
 
     gYetiX = 0;

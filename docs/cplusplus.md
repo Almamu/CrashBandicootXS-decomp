@@ -749,6 +749,7 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/save/save_data.cpp` (again) | `SaveData::Read` (ReadSaveData) and `Write` (WriteSaveData): methods, `Load`/`Store` call `Read(0x200)`/`Write(0x200)`; save.h's prototypes go | 2 | (unchanged) | 0 -> 0 | [#763](#small-method-moves-and-retypes-763) |
 | `src/bosses/tiny.cpp` (again) | `TinyCtrl::HitStub` (TinyHitStub), the empty hook `SetState` calls; bosses.h's prototype goes | 1 | (unchanged) | 0 -> 0 | [#763](#small-method-moves-and-retypes-763) |
 | player.h, actor.h, vehicle.h, bosses.h, vehicle.hpp, `src/level/play_room.cpp`, the IsTouching* and spawn-list files | `gSwimCtrl` is a `SwimCtrl *`; `IsTouchingPlayer`, `PolarIsTouchingPlayer`, `JetpackIsTouchingPlayer`, `IsTouchingAirship` take an `ActorSelf *`; `IsSpawnCollected`, `MarkSpawnCollected`, `gCollectedSpawns`, `CreateActor`, `CreateJetpackActor` and the two life crates' `spawn` an `actor_spawn *` | 0 | (unchanged) | 0 -> 0 | [#763](#small-method-moves-and-retypes-763) |
+| actor_anim.h, `src/data/actor_category_175558.c`, `src/actor/actor_category.cpp`, `actor_category_frame.cpp`, `actor_category_hooks.cpp`, `actor_category_select.cpp` | `struct category_vtable`'s `fn[13]` is 11 typed function pointers and two `s32`s (`spawnDistance`, `skipDistance`); the 8 slot casts at the call sites and the table's 27 go; the four player hooks take no argument, CreateYeti an `s32`, SpawnJetpackActor and CreateJetpackActor return an `ActorSelf *`, SelectActorCategory takes an `anim_table_record *` | 0 | (unchanged) | 0 -> 0 (CanPauseActorCategory keeps one cast, to `bool (*)(void)`) | [#765](#the-category-table-765) |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -2742,7 +2743,8 @@ latter match under both).
 - **The category vtable stays C:** `struct category_vtable` is 13 plain
   function pointers (two of them hold values), not a g++ vtable; the
   slots are called as `gActorCategoryVtable->fn[5]()`, with casts where a
-  slot takes arguments or returns a value.
+  slot takes arguments or returns a value. (Named, typed fields since
+  [#765](#the-category-table-765).)
 - **C views:** CreateActor, SpawnActor and SpawnPolarAkuAku return an
   `ActorSelf *` to C++, and gActorDrawList and gHeapSortActorsByKeyFunc
   use `ActorSelf **` (`__cplusplus` declarations in actor.h and
@@ -4262,6 +4264,35 @@ Leftovers of #750-#754, every object byte-identical to origin/main's:
   cxx_symbols.txt change from `Pv` to `P11actor_spawn`). The hovercraft
   launcher passes its cooldown as CreateJetpackActor's unused spawn
   argument, now cast to `struct actor_spawn *`.
+
+### The category table (#765)
+
+`gActorCategoryVtables` (src/data/actor_category_175558.c), read through
+`gActorCategoryVtable`, was `struct category_vtable { void (*fn[13])(void);
+}` with a cast at almost every use. It is not a g++ vtable (no RTTI slot,
+4-byte slots, two values, NULL-tested slots), so it stays a C struct in
+actor_anim.h, now with a named, typed field per slot: `createPlayer`
+(ConstructAnimTableState, CreateJetpackPlayer), `spawn` (SpawnActor,
+SpawnJetpackActor), the boss's `createBoss`, `updateBoss`,
+`updateBossBg2`, `destroyBoss` and `loadBossGraphics` (the yeti's, the
+airship's and the hovercraft's: plain functions, so static member
+functions can fill them later), the two `s32` distances `spawnDistance`
+(slot 7: -0x11 polar, 0xA9 jetpack) and `skipDistance` (slot 8: -0x2F,
+0x1C), and the player's `isTouchingPlayer`, `reachCourseEnd`,
+`reloadPlayerTiles` and `isPauseLocked`. Every object is byte-identical
+to origin/main's.
+
+To give every slot one signature: the four `*ReachCourseEnd`/
+`*ReloadPlayerTiles` hooks take no argument (they ignored a `void *` that
+no caller passed), CreateYeti takes the `s32 level` its two siblings take,
+SpawnJetpackActor and CreateJetpackActor return an `ActorSelf *`, as
+SpawnActor does, and SelectActorCategory's animation table is a `struct
+anim_table_record *`. The spawn calls still cast the record address
+(`(u8 *)gActorSpawnTable + idx * 0x14 + 8`) to `struct actor_spawn *`:
+the address arithmetic is the ROM's order. CanPauseActorCategory keeps
+one cast: the slot's functions return `s32`, but the ROM's caller treats
+the result as a `bool` (`!` is `eors r0, #1` on it), which only a `bool
+(*)(void)` call gives.
 
 ### Next batches
 

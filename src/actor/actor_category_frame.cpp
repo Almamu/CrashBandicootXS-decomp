@@ -69,7 +69,7 @@ s32 JetpackIsTouchingPlayer(ActorSelf *self)
     (gActorSpawnIndex < gActorSpawnTable->link                                 \
      && (off = gActorSpawnIndex * 0x14, tb = (u8 *)gActorSpawnTable + 0x14, \
          *(s32 *)(tb + off)) + gActorSpawnOffset                              \
-            <= scroll + (s32)gActorCategoryVtable->fn[7])
+            <= scroll + gActorCategoryVtable->spawnDistance)
 
 s32 RunActorCategoryFrame(void)
 {
@@ -79,19 +79,19 @@ s32 RunActorCategoryFrame(void)
     u8 *tb;
     s32 off;
 
-    if (gActorCategoryVtable->fn[3] != NULL)
-        gActorCategoryVtable->fn[3]();
+    if (gActorCategoryVtable->updateBoss != NULL)
+        gActorCategoryVtable->updateBoss();
     gActorCategoryExitStatus = CATEGORY_EXIT_NONE;
     scroll = GetCellAnimDistance();
     if (scroll - gActorSpawnOffset > gActorSpawnTable->depth)
-        gActorCategoryVtable->fn[10]();
+        gActorCategoryVtable->reachCourseEnd();
     if (gActorSpawnsPaused != 0) {
         gActorSpawnOffset += GetCellAnimFrameStep();
     } else {
         while (SUB_EFFECT_DUE()) {
-            ((void (*)(void *, s32, s32))gActorCategoryVtable->fn[1])(
-                (u8 *)gActorSpawnTable + (gActorSpawnIndex * 0x14 + 8), gActorSpawnUseBonus,
-                INT_TO_Q8(gActorSpawnOffset));
+            gActorCategoryVtable->spawn(
+                (struct actor_spawn *)((u8 *)gActorSpawnTable + (gActorSpawnIndex * 0x14 + 8)),
+                gActorSpawnUseBonus, INT_TO_Q8(gActorSpawnOffset));
             gActorSpawnIndex++;
         }
     }

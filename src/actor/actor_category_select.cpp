@@ -20,8 +20,8 @@ extern "C" {
  * `ldr r6, [sp, #0x20]`), then runs a two-pass scan over the
  * `gActorSpawnTable[]` array comparing each entry's threshold field
  * (see `struct sub_effect_record.depth`) plus `gActorSpawnOffset`'s
- * offset against `gActorCategoryVtable->fn[8]` (the vtable's own +0x20
- * slot, reinterpreted as a threshold): the first pass finds the last
+ * offset against `gActorCategoryVtable->skipDistance` (the table's +0x20
+ * slot, a value): the first pass finds the last
  * entry whose adjusted threshold the vtable slot still exceeds
  * (`gActorSpawnIndex`, an index into the table), the second draws
  * every entry from index 0 up to that point via `_call_via_r3`, mem_
@@ -60,8 +60,9 @@ static inline s32 *NextThreshold(struct sub_effect_record *table, s32 idx)
     return (s32 *)(b + off);
 }
 
-void SelectActorCategory(s32 type, struct sub_effect_record *table, void *animTable, u8 active,
-                         s32 variant, s32 checkpoint)
+void SelectActorCategory(s32 type, struct sub_effect_record *table,
+                         struct anim_table_record *animTable, u8 active, s32 variant,
+                         s32 checkpoint)
 {
     struct sub_effect_record *t;
     ActorSelf ***buf;
@@ -75,22 +76,23 @@ void SelectActorCategory(s32 type, struct sub_effect_record *table, void *animTa
     *idx = 0;
     gActorSpawnsPaused = 0;
     gActorSpawnOffset = 0;
-    ((void (*)(void *, s32))gActorCategoryVtable->fn[0])(animTable, checkpoint);
+    gActorCategoryVtable->createPlayer(animTable, checkpoint);
     base = GetCellAnimDistance();
     MATCH_USE(idx); /* extra reference: `idx` outranks `base` */
     t = gActorSpawnTable;
     while (gActorSpawnIndex < t->link &&
-           *NextThreshold(t, gActorSpawnIndex) < (s32)gActorCategoryVtable->fn[8] + base)
+           *NextThreshold(t, gActorSpawnIndex) < gActorCategoryVtable->skipDistance + base)
         gActorSpawnIndex++;
     buf = &gActorDrawList;
     *buf = (ActorSelf **)mem_alloc(0xc8, MEM_HEAP_IWRAM);
-    if (gActorCategoryVtable->fn[2] != NULL)
-        ((void (*)(s32))gActorCategoryVtable->fn[2])(variant);
+    if (gActorCategoryVtable->createBoss != NULL)
+        gActorCategoryVtable->createBoss(variant);
     while (gActorSpawnIndex < gActorSpawnTable->link &&
            *NextThreshold(gActorSpawnTable, gActorSpawnIndex) <=
-               (s32)gActorCategoryVtable->fn[7] + base) {
-        ((void (*)(void *, s32, s32))gActorCategoryVtable->fn[1])(
-            (u8 *)gActorSpawnTable + (gActorSpawnIndex * 0x14 + 8), gActorSpawnUseBonus, 0);
+               gActorCategoryVtable->spawnDistance + base) {
+        gActorCategoryVtable->spawn(
+            (struct actor_spawn *)((u8 *)gActorSpawnTable + (gActorSpawnIndex * 0x14 + 8)),
+            gActorSpawnUseBonus, 0);
         gActorSpawnIndex++;
     }
     gActorCategoryFrameCount = 0;
