@@ -353,7 +353,13 @@ struct popup_glyph_src {
  * the pin uses. The decomp-permuter on a C port (45 minutes) stopped the
  * hoist only with a second copy of `slot`, set in front of the tile
  * loops and used for the palette address; that copy gets its own stack
- * slot, which the ROM doesn't have. */
+ * slot, which the ROM doesn't have.
+ * #662 round 5: the palette address as SaveData::ReadSlot's two-statement
+ * offset (`offset = slot << 5; offset = offset + (s32)palSlots;`, which
+ * hid ReceiveChunk's product from cse1), a shift of an assigned copy
+ * (`offset = slot; offset <<= 5;`), `(u16 *)palSlots[slot]` and an
+ * indexed copy loop are all 396 lines off: each still has the shift of
+ * `slot` itself (cse1 folds the copy), which PRE hoists. */
 void Credits::LoadLogos()
 {
     u8 (*palSlots)[TILE_SIZE_4BPP] = gPaletteCache->slots;

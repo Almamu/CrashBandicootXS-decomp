@@ -65,7 +65,14 @@ extern "C" {
  * the test for the eor/and (with or without the test using it too) is
  * canonicalized to the test's 1, and combine still makes the bic. The
  * decomp-permuter on a C port (45 minutes) got from 1030 to 575 with no
- * natural change. */
+ * natural change.
+ * #662 round 5: `arm3 = (REG_SIOCNT & 4) == 0` is expr.c's store-flag of
+ * a single bit (shift, xor 1, and 1: the ROM's eor/and), but its two 1s
+ * are then the test's register, which is why combine makes the bic. The
+ * ROM's 1 in r9 lives across IrqClearHandler/IrqSetHandler as a register
+ * (`started` and REG_IME are stored from it), so cse saw it as one
+ * value; the r1 copy, set before the test and used only after it, is the
+ * one it did not know was 1. */
 s32 LinkSession::Update()
 {
     s32 arm3;
@@ -447,7 +454,24 @@ void LinkSession::HandleSerial(u16 *data)
              * reaching register at the end of an earlier block and
              * makes `rf` a copy of that. But that register then lives
              * across the id copy loop (r8) and the allocation after it
-             * moves. */
+             * moves. #662 round 5: an inline call whose ring argument is
+             * the expression `&this->ring` gives the ROM's copy without
+             * the escape. integrate.c copies an argument that isn't a
+             * register into a fresh pseudo; cse1 can't tell that it
+             * equals `ring` (the id copy loop ended its extended basic
+             * block), and gcse's PRE then turns it into a copy of the
+             * reaching register, so the fast loop works from the copy
+             * and the wrap loop from the PRE register, as in the ROM.
+             * But the copy is emitted at the call. `this->ring.Pop(dst,
+             * n)` (LinkRing's Pop) is 56 lines off, and this pop with one
+             * ring pointer, called with `&this->ring` and `rd`, is 52:
+             * the copy comes after the clamp and the nibble store, where
+             * the ROM has it before `n = *cnt`. Moving the count read, the
+             * clamp and the nibble store into the inline as well puts the
+             * copy in place (32 lines), but then `&this->ring` is a PRE
+             * insertion after the loop setup instead of the second of
+             * the address locals, and that helper (session id, count and
+             * destination pointers as parameters) is no natural code. */
             MATCH_KEEP(rf);
             n = *cnt;
             LIMIT_MAX(n, 4);
