@@ -364,19 +364,19 @@
     "SpawnStar"
    ],
    "consumer_files": [
-    "player/player_event.c",
+    "player/player_event.cpp",
     "enemies/enemy_ctrl.cpp",
-    "vehicle/jetpack/jetpack_rocket.cpp",
-    "vehicle/jetpack/jetpack_crates.c",
-    "bosses/hovercraft.c",
-    "vehicle/polar/polar_aku_aku.cpp",
-    "frontend/starfield.cpp",
-    "menus/zoom_bg.cpp",
-    "vehicle/jetpack/jetpack_bomber.cpp",
-    "vehicle/jetpack/airship_fireball.cpp",
     "pickups/extra_life.cpp",
     "pickups/wumpa_update.cpp",
-    "pickups/extra_life.cpp"
+    "pickups/wumpa.cpp",
+    "menus/zoom_bg.cpp",
+    "vehicle/polar/polar_aku_aku.cpp",
+    "vehicle/jetpack/jetpack_bomber.cpp",
+    "vehicle/jetpack/airship_fireball.cpp",
+    "vehicle/jetpack/jetpack_crates.cpp",
+    "vehicle/jetpack/jetpack_rocket.cpp",
+    "bosses/hovercraft.cpp",
+    "frontend/starfield.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1498,8 +1498,8 @@
     "CreateCrate"
    ],
    "consumer_files": [
-    "crates/crate_create.cpp",
-    "crates/crate_break.c"
+    "crates/crate_states.cpp",
+    "crates/crate_create.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1545,8 +1545,9 @@
     "IsCrateKindBreakable"
    ],
    "consumer_files": [
-    "crates/crate_stack.cpp",
-    "crates/crate_break.c"
+    "crates/crate_break.cpp",
+    "crates/crate_switches.cpp",
+    "crates/crate_stack.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1572,9 +1573,10 @@
     "UpdateCrateFall"
    ],
    "consumer_files": [
-    "crates/crate_break.c",
-    "crates/crate_break.c",
-    "crates/crate_hit.cpp"
+    "crates/crate_hit.cpp",
+    "crates/crate_break.cpp",
+    "crates/crate_switches.cpp",
+    "crates/crate_states.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1711,7 +1713,7 @@
     "UpdateWumpaHop"
    ],
    "consumer_files": [
-    "pickups/wumpa_update.cpp"
+    "pickups/wumpa.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2216,7 +2218,7 @@
     "CreatePlatformMover"
    ],
    "consumer_files": [
-    "objects/platform.cpp"
+    "objects/platform_mover.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -2240,7 +2242,7 @@
     "StartPlatformMoverMotionXFromSet"
    ],
    "consumer_files": [
-    "objects/platform.cpp"
+    "objects/platform_mover.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -7140,9 +7142,9 @@
     "DestroyPeriodicSpawner"
    ],
    "consumer_files": [
-    "enemies/enemy_ctrl.cpp",
+    "objects/entity.cpp",
     "objects/sprite_obj.cpp",
-    "objects/entity.cpp"
+    "enemies/periodic_spawner.cpp"
    ],
    "ptr_words_code": 10,
    "ptr_words_data": 0,
@@ -7192,7 +7194,7 @@
     "InitUiSpriteObj"
    ],
    "consumer_files": [
-    "objects/sprite_anim.cpp"
+    "objects/ui_sprite.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7344,7 +7346,7 @@
     "CreatePeriodicSpawner"
    ],
    "consumer_files": [
-    "enemies/enemy_ctrl.cpp"
+    "enemies/periodic_spawner.cpp"
    ],
    "ptr_words_code": 10,
    "ptr_words_data": 0,
@@ -7369,7 +7371,7 @@
     "CreateKnockedEnemyCtrl"
    ],
    "consumer_files": [
-    "enemies/enemy_ctrl.cpp"
+    "enemies/knocked_enemy_ctrl.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7501,7 +7503,7 @@
     "InitStopwatch"
    ],
    "consumer_files": [
-    "pickups/wumpa.cpp"
+    "pickups/stopwatch.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7601,7 +7603,7 @@
     "CreateBossCtrl"
    ],
    "consumer_files": [
-    "player/input_ctrl_queue.cpp"
+    "bosses/boss_ctrl.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -8030,7 +8032,7 @@
     "CreatePlatformMover"
    ],
    "consumer_files": [
-    "objects/platform.cpp"
+    "objects/platform_mover.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
