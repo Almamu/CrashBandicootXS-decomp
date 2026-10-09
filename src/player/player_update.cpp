@@ -87,7 +87,13 @@ static inline s32 IsBlinking(Player *p)
  * from a `side` computed with a test on a path that never reads it (see
  * ActionCtrl::HandleEvent's bump case); no variable here fits that.
  * #662 round 8: tools/rtl_corpus.py's dead_load query (final RTL, every
- * object) finds the same three. */
+ * object) finds the same three. #662 round 9 (120 variants): `maskLevel`
+ * as s32, u32 or an enum (0-3, 0-INT_MAX, -1-3), `event` s32 or u32, with
+ * the spawn plain or under a re-test of the level (`>= NONE`, `<=
+ * INVINCIBLE`, `!= INVINCIBLE`, `< INVINCIBLE`, `<= TWO`, `< TWO`, `<=
+ * ONE`) or a `switch` on it: every test is compiled as a real compare
+ * (5 instructions off at best, with the enum, which also drops the
+ * reload for SetMaskLevel's argument), none is deleted after the load. */
 void Player::HandleEvent(s32 from, s32 event, s32 arg)
 {
     switch (event) {

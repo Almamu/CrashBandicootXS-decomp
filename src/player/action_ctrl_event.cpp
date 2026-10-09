@@ -175,7 +175,17 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
              * is the dead store above, written for a reason; nothing in
              * this case has a variable to compute that way. #662 round
              * 8: tools/rtl_corpus.py's dead_load query over every
-             * object's final RTL finds the same three. */
+             * object's final RTL finds the same three. #662 round 9
+             * (3240 variants): `state` as s32, u32 or an enum (0-0x29,
+             * 0-INT_MAX, -1-0x29), `event`/`arg` s32 or u32, `m` in the
+             * six integer types and SetBumped's parameter s32/bool/u8,
+             * with the bump stores plain, under `if (state !=
+             * ACTION_STATE_IDLE)`, `state >= 0`, `state <
+             * ACTION_STATE_COUNT`, a `switch (state)` with only a default
+             * or the bumped flag as `state != ACTION_STATE_IDLE`: only
+             * the identical-arms form matches; no type leaves the load
+             * from a test that reads naturally (57 instructions off at
+             * best; 58 with no load at all). */
             *(volatile s32 *)&state;
             bumpTimer = 3;
             SetBumped(part, 1);

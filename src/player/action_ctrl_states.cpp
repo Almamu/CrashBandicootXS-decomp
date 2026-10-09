@@ -1025,7 +1025,14 @@ void ActionCtrl::StateCrouch()
              * mirrorFlags stores, `goto` or `else if`, the mask as
              * -0x11/~0x10 before or after the address, `turned` set
              * before or after, and in/dir/turned/moved/m in all six
-             * integer types): 14 lines off at best. */
+             * integer types): 14 lines off at best. Round 9 (15360
+             * variants, the types beyond the function: GetDpadDirection
+             * returning u8/s32/u32/s8, CheckLeftGround u8 or bool,
+             * `motionXPending` u8 or bool, with the flip as open code
+             * through a pointer or `part->mirror`, SetFlipX, mirrorFlags,
+             * `|= 0x10` and the locals' types): 2 instructions off at
+             * best, the form through `part->mirror` with no pointer
+             * (`adds r2, #0x28` after the mask), as in round 3. */
             volatile u8 *p = &part->mirror;
 
             m = -0x11;
