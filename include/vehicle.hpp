@@ -17,13 +17,12 @@
  * the jetpack player (JetpackPlayer), its shot and the checkpoint banner's
  * and explosion's constructors their code; part 11c the polar player;
  * part 11h the jetpack ring and the collected wumpa
- * (src/vehicle/jetpack/jetpack_collected_wumpa.cpp); part 11d the other polar actors
- * (src/vehicle/polar/polar_crates.cpp, polar_pickups.cpp, polar_crate.cpp,
- * polar_objects.cpp,
- * polar_aku_aku.cpp, polar_course_objects.cpp and polar_nitro.cpp), so
- * every polar class is C++;
- * part 11g the balloon crates, the parachute nitro and the rocket
- * (src/vehicle/jetpack/jetpack_crates.cpp).
+ * (src/vehicle/jetpack/jetpack_collected_wumpa.cpp); part 11d the other
+ * polar actors (src/vehicle/polar/polar_crates.cpp, polar_pickups.cpp,
+ * polar_crate.cpp, polar_objects.cpp, polar_aku_aku.cpp,
+ * polar_course_objects.cpp and polar_nitro.cpp), so every polar class is
+ * C++; part 11g the balloon crates, the parachute nitro and the rocket
+ * (src/vehicle/jetpack/jetpack_crates.cpp, jetpack_rocket.cpp).
  *
  * No `#pragma interface`: g++ emits the vtables, each in its key-method
  * object: most in inline_copies_actors.cpp, where the classes' destructors are (see

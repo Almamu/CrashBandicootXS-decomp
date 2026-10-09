@@ -388,7 +388,7 @@ from "core" graphics.
   shape as `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet`) feeding the
   `gMegaMixMotionRecords` per-vector-component trampoline table; see
   `docs/matching/archive/issue-22-0x08017a44-actor.md`.
-- `src/bosses/tiny_hop_pad.c` (new file, GitHub issue #22, ROM
+- `src/bosses/tiny_hop_pad.c` (new file, now part of `src/bosses/tiny.cpp`, GitHub issue #22, ROM
   0x080187FC-0x08018884, non-adjacent to `mega_mix.c` since the
   raw `UpdateTiny`-`SpawnTinyFallingLeaves` block sits between them):
   `UpdateStompedHopPad`, `DestroyStompedHopPadCtrl`, `CreateStompedHopPadCtrl`, `UpdateOneShotAnimCtrl`; see
@@ -397,7 +397,7 @@ from "core" graphics.
   0x08017AB0-0x08017ECC): `UpdateMegaMix` - the player-vs-part 3-state
   dispatcher, previously a NAKED transcription, now real C built with
   old_agbcc; see `docs/matching/archive/issue-22-0x08018008-hopper.md`.
-- `src/bosses/tiny_update.c` (new file, GitHub issue #22, ROM
+- `src/bosses/tiny_update.c` (new file, now part of `src/bosses/tiny.cpp`, GitHub issue #22, ROM
   0x08018008-0x080187FC, built with old_agbcc): `UpdateTiny`,
   `SetTinyState`, `PickTinyHopTarget`, `SpawnTinyFallingLeaves` - the
   `gTinyVtable` hopping boss's update/enter-state methods,
@@ -867,7 +867,7 @@ from "core" graphics.
   `DestroyHovercraft`/`nullsub_34`/`sub_80337FC`/`nullsub_35` (singleton
   destructor, no-op stub, trivial "false" getter, no-op stub) - opens
   the singleton's own camera-follow/scroll-velocity RAM family
-  (`gHovercraftMapCols`-`030015FF`, reusing `hovercraft_parts.c`'s existing
+  (`gHovercraftMapCols`-`030015FF`, reusing `hovercraft_parts.c`'s (now `hovercraft_state.cpp`'s) existing
   naming for the fields that family already touches) - see
   [docs/matching/archive/issue-60-61-gap-31a6c-part2.md](../matching/archive/issue-60-61-gap-31a6c-part2.md).
   `RunHovercraftState` (the P1/P2 speed-toggle dispatcher + category-vtable

@@ -366,12 +366,14 @@
    "consumer_files": [
     "player/player_event.c",
     "enemies/enemy_ctrl.cpp",
+    "vehicle/jetpack/jetpack_rocket.cpp",
     "vehicle/jetpack/jetpack_crates.c",
     "bosses/hovercraft.c",
-    "vehicle/polar/polar_objects.c",
+    "vehicle/polar/polar_aku_aku.cpp",
     "frontend/starfield.cpp",
     "menus/zoom_bg.cpp",
-    "vehicle/jetpack/jetpack_plane.c",
+    "vehicle/jetpack/jetpack_bomber.cpp",
+    "vehicle/jetpack/airship_fireball.cpp",
     "pickups/extra_life.cpp",
     "pickups/wumpa_update.cpp",
     "pickups/extra_life.cpp"
@@ -1944,7 +1946,7 @@
     "SetCortexTargetDest"
    ],
    "consumer_files": [
-    "bosses/dingodile.cpp"
+    "bosses/cortex.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3571,7 +3573,7 @@
     "UpdatePolarNitroCrate"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_pickups.c"
+    "vehicle/polar/polar_crate.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3655,7 +3657,7 @@
     "RefreshPolarAkuAku"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_objects.c"
+    "vehicle/polar/polar_aku_aku.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3679,7 +3681,7 @@
     "UpdatePolarAkuAku"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_objects.c"
+    "vehicle/polar/polar_aku_aku.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3703,7 +3705,7 @@
     "UpdatePolarAkuAku"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_objects.c"
+    "vehicle/polar/polar_aku_aku.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3886,7 +3888,7 @@
     "RunJetpackPlayerState"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_spawn.c",
+    "vehicle/jetpack/jetpack_player_update.cpp",
     "vehicle/jetpack/jetpack_player.c"
    ],
    "ptr_words_code": 8,
@@ -3961,7 +3963,7 @@
     "RunJetpackBomberState"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_plane.c"
+    "vehicle/jetpack/jetpack_bomber.cpp"
    ],
    "ptr_words_code": 7,
    "ptr_words_data": 0,
@@ -4186,7 +4188,7 @@
     "UpdateJetpackRocket"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_crates.c"
+    "vehicle/jetpack/jetpack_rocket.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4208,7 +4210,7 @@
     "RunHovercraftFireballState"
    ],
    "consumer_files": [
-    "bosses/hovercraft.c"
+    "bosses/hovercraft_fireball.cpp"
    ],
    "ptr_words_code": 2,
    "ptr_words_data": 0,
@@ -7676,7 +7678,7 @@
     "DestroyOneShotAnimCtrl"
    ],
    "consumer_files": [
-    "bosses/cortex.cpp"
+    "bosses/tiny.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7701,7 +7703,7 @@
     "DestroyUnusedOneShotAnimCtrl"
    ],
    "consumer_files": [
-    "bosses/cortex.cpp"
+    "bosses/tiny.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7726,7 +7728,7 @@
     "CreateTiny"
    ],
    "consumer_files": [
-    "bosses/cortex.cpp"
+    "bosses/tiny.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7826,7 +7828,7 @@
     "CreateCortexTargetCtrl"
    ],
    "consumer_files": [
-    "bosses/dingodile.cpp"
+    "bosses/cortex.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7851,7 +7853,7 @@
     "CreateCortexCannonCtrl"
    ],
    "consumer_files": [
-    "bosses/dingodile.cpp"
+    "bosses/cortex.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7876,7 +7878,7 @@
     "CreateCortexBoss"
    ],
    "consumer_files": [
-    "bosses/dingodile.cpp"
+    "bosses/cortex.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -8387,7 +8389,7 @@
     "frontend/company_logos_ctor.cpp",
     "actor/inline_copies_actors.cpp",
     "vehicle/jetpack/jetpack_crates.c",
-    "bosses/hovercraft.c",
+    "vehicle/jetpack/jetpack_collected_wumpa.cpp",
     "vehicle/polar/polar_player_actions.c",
     "vehicle/polar/polar_pickups.c",
     "vehicle/jetpack/jetpack_player.c",
@@ -8890,7 +8892,7 @@
     "CreatePolarGoal"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_aku_aku.c"
+    "vehicle/polar/polar_course_objects.cpp"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8914,7 +8916,7 @@
     "CreatePolarBoostPad"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_aku_aku.c"
+    "vehicle/polar/polar_course_objects.cpp"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8938,7 +8940,7 @@
     "CreatePolarCheckpointCrate"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_aku_aku.c"
+    "vehicle/polar/polar_course_objects.cpp"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -9011,7 +9013,7 @@
     "DestroyJetpackPlayer"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_spawn.c",
+    "vehicle/jetpack/jetpack_player_update.cpp",
     "vehicle/jetpack/jetpack_player.c"
    ],
    "ptr_words_code": 6,
@@ -9084,7 +9086,7 @@
     "CreateJetpackBomber"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_plane.c"
+    "vehicle/jetpack/jetpack_bomber.cpp"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9108,7 +9110,7 @@
     "CreateJetpackCannonball"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_plane.c"
+    "vehicle/jetpack/jetpack_cannonball.cpp"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9303,7 +9305,7 @@
     "CreateJetpackRocket"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_crates.c"
+    "vehicle/jetpack/jetpack_rocket.cpp"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9327,7 +9329,7 @@
     "CreateJetpackRing"
    ],
    "consumer_files": [
-    "bosses/hovercraft.c"
+    "vehicle/jetpack/jetpack_collected_wumpa.cpp"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9352,7 +9354,7 @@
     "CreateJetpackCollectedWumpa"
    ],
    "consumer_files": [
-    "bosses/hovercraft.c"
+    "vehicle/jetpack/jetpack_collected_wumpa.cpp"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9376,7 +9378,7 @@
     "CreateHovercraftFireball"
    ],
    "consumer_files": [
-    "bosses/hovercraft.c"
+    "bosses/hovercraft_fireball.cpp"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
