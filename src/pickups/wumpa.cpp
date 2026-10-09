@@ -1,14 +1,81 @@
 #include "pickups.hpp"
 #include "action_ctrl.hpp"
+#include "hud.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "math_util.h"
+#include "util.h"
+#include "gfx.h"
 #include "globals.h"
 #include "player.h"
 }
 
-/* The wumpa's small methods, the stopwatch, and the action controller's
- * Reset, which the ROM puts after them (#664, include/pickups.hpp). */
+/* The wumpa's flight to the HUD, payout start and hop, its small methods,
+ * the stopwatch, and the action controller's Reset, which the ROM puts
+ * after them (#664, include/pickups.hpp). The first three were the end
+ * of wumpa_update.cpp; they need cse's skip-blocks, which that object is
+ * built without (#662 round 3, see the Makefile). */
+
+/* pos - off. As an inline's parameter, the offset is loaded from the
+ * pool again for each axis, as in the ROM, not kept across the call. */
+static inline s32 Offset(s32 pos, s32 off)
+{
+    return pos - off;
+}
+
+/* Flies to the HUD's wumpa counter from `mode` pixels to the left
+ * (DropWumpa's), as PickUp's state 1 does, and shows the counter. */
+void Wumpa::SendToHud()
+{
+    s32 outX, outY;
+    s32 newX, newY;
+
+    gAudioContext->PlaySfx(SFX_WUMPA, 0x100);
+    state = 1;
+    x -= INT_TO_Q8(mode);
+    affine = 0xa0;
+    ClampFrame(this);
+    screenSpace = 1;
+
+    WorldToScreen(this, Q8_TO_INT(x), Q8_TO_INT(y), &outX, &outY);
+
+    newX = INT_TO_Q8(outX);
+    x = newX;
+    velX = -FixedDiv(Offset(newX, 0x1000), 0x1400);
+    newY = INT_TO_Q8(outY);
+    y = newY;
+    velY = -FixedDiv(Offset(newY, 0x1000), 0x1400);
+    gHud->ShowWumpa();
+}
+
+/* The payout: 10 drops, the first on the next frame (Update). */
+void Wumpa::StartPayout()
+{
+    state = 3;
+    counter = 0xa;
+}
+
+/* The hop: `phase` steps a sine, the height 0x30 pixels; hop 1 moves to
+ * the left and hop 2 to the right, by gWumpaHopWidths[mode - 1]. */
+void Wumpa::UpdateHop()
+{
+    struct three_words widths = *(const struct three_words *)gWumpaHopWidths;
+    s32 dy;
+    s32 sn;
+
+    sn = gSineTable[phase * 4];
+    dy = FixedMul(sn, 0x3000);
+    y = anchor.y - dy;
+    sn = gSineTable[phase * 2];
+    sn = FixedMul(sn, widths.a[mode - 1]);
+    if (mode == 1)
+        x = anchor.x - sn;
+    else if (mode == 2)
+        x = anchor.x + sn;
+    else
+        x = anchor.x;
+}
 
 /* Draws the sprite; once a non-looping animation has ended, clears the
  * touched flag. */

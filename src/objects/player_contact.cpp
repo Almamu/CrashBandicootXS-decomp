@@ -49,7 +49,12 @@ void MovingSprite::TouchPlayer()
      * also gives `this` r5 instead of r4). #662 round 2: a `w` local,
      * nested ifs, reusing `box` and an inline test of the box all keep
      * the register read; the permuter (score 30 of 80) only with an
-     * uninitialized pointer. */
+     * uninitialized pointer. #662 round 3 (RTL): the C++ front end reads
+     * `box2.w` as (mem (plus P 8)), with P a fresh copy of `fp + 16`.
+     * cse1 ties P to the call's return-slot pseudo in the same block (the
+     * one the ROM keeps in r5), so the load goes through it. Declaring
+     * box2 in a block, at the top, in an `else`, or reusing `box` doesn't
+     * change that, and no -f flag toggle does either. */
     if (*(volatile s32 *)&box2.w != 0 && gPlayer->TouchesBox(&box2))
         ResolvePlayerContact();
 }

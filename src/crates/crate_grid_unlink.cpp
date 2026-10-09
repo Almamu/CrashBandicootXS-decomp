@@ -1,28 +1,7 @@
 #include "crate_list.hpp"
 
-extern "C" {
-#include "match.h"
-}
-
 /* CrateList::Unlink (#664, part 7f; include/crate_list.hpp). An
  * old_agbcp object (OLD_AGBCC_OBJS). */
-
-/* Puts `node`'s free-list entry back at the head of the free list. The
- * ROM loads the head into r1 before it loads `node->wrap` into r0; the r1
- * pin reproduces that. Unpinned, the head gets r0 and the entry r1, or
- * (read in the store, `node->wrap->next = freeHead`) the entry is loaded
- * first; a copy of `node`, the loads into locals in either order and an
- * inline setter don't change that. Through a reference or a pointer to
- * `freeHead` (#662 round 2) the registers are the ROM's but `node->wrap`
- * is loaded first again; an inline push taking the head by pointer or
- * reference, or the link first, doesn't help either. */
-static inline void FreeNode(CrateList *list, CrateGridNode *node)
-{
-    MATCH_HOLD_REG(CrateGridLink *, head, r1) = list->freeHead;
-
-    node->wrap->next = head;
-    list->freeHead = node->wrap;
-}
 
 /* Takes `sprite`'s nodes out of the grid (Remove and RemoveAt call it
  * before they compact the slots), back onto the free list. First its
@@ -35,7 +14,16 @@ static inline void FreeNode(CrateList *list, CrateGridNode *node)
  * is set to 0x100, so the loop's `i--` restarts the search at column 255,
  * and a later match in the same list is unlinked against `heads[0x100]`,
  * which is `tails[0]`. That is what the original source did, so this does
- * it too. */
+ * it too.
+ *
+ * Each unlinked node's free-list entry goes back at the head of the free
+ * list through `head`, one function-scope temporary for both searches.
+ * That makes `head` a global-alloc register (it is used in two blocks),
+ * which gets r1 next to the entry's r0, as in the ROM. With a temporary
+ * of its own in each block (an inline helper's local, #662 round 3),
+ * each block has three local quantities, and local-alloc's 3-quantity
+ * sort compares quantity numbers instead of sorted positions, so the
+ * head (the first born) is allocated first and takes r0. */
 void CrateList::Unlink(Crate *sprite)
 {
     s32 column = ColumnOf(sprite);
@@ -44,6 +32,7 @@ void CrateList::Unlink(Crate *sprite)
     CrateGridNode *prev = 0;
     s32 removed = 0;
     s32 i;
+    CrateGridLink *head;
 
     for (; found != 0; prev = found, found = found->next) {
         if (found->data == sprite) {
@@ -63,7 +52,9 @@ void CrateList::Unlink(Crate *sprite)
                     tails[column] = prev;
                 prev->next = found->next;
             }
-            FreeNode(this, found);
+            head = freeHead;
+            found->wrap->next = head;
+            freeHead = found->wrap;
             break;
         }
     }
@@ -100,7 +91,9 @@ void CrateList::Unlink(Crate *sprite)
                         tails[i] = prev;
                     prev->next = node->next;
                 }
-                FreeNode(this, found);
+                head = freeHead;
+                found->wrap->next = head;
+                freeHead = found->wrap;
                 /* Restarts the search (see above). */
                 i = 0x100;
                 if (removed > 1)

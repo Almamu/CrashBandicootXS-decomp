@@ -236,7 +236,15 @@ void PlatformMover::Update(MovingSprite *part)
      * #662 round 2: per-axis inline turn helpers give the same swap; the
      * permuter on the unpinned C++ got only to 20 of 365, by wrapping the
      * distance and turn blocks in a `do { } while (0)` (its loop notes
-     * weight their references). */
+     * weight their references).
+     * #662 round 3 (lreg/greg dumps): global-alloc's priority is
+     * floor_log2(refs) * refs / live length. `now` has 5 references over
+     * 12 insns (0.83) and `part` 57 over 384 (0.74), so `now` is
+     * allocated first and takes r4. It would need 4 references or 14
+     * insns. Testing the bit with `(now & 1)`, `% 2` or a reread of
+     * gRoomFrameCount (the libcall keeps it in its register) leaves 5:
+     * regmove folds the AND's result back into `now`. -fno-regmove
+     * splits it but moves `this` instead. */
     MATCH_HOLD_REG(u32, now, r5);
 
     if (k == 5 && timer > 0 && gRoomFrameCount - timer == 60) {
@@ -249,7 +257,11 @@ void PlatformMover::Update(MovingSprite *part)
         else {
             s32 y = part->y;
             /* The 0x300 in r2 (reload picks r1 for a plain constant), as
-             * the C had it. */
+             * the C had it. #662 round 3: the constant is reload's
+             * (insn 1128 in the greg dump): reload hands out its spill
+             * registers round-robin from the last one used, so the -0x300
+             * of the other branch takes r5 and this one r1. That depends
+             * on the earlier reloads, i.e. on `now` above. */
             MATCH_HOLD_REG(s32, up, r2) = 0x300;
 
             MATCH_KEEP(up);
