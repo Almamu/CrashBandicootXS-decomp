@@ -147,7 +147,23 @@ void strcat_arm(u8 *dst, u8 *src)
  *   each. The sign as one if/else needs no MATCH_HOLD but prints the
  *   `movge` after `movlt`/`rsblt` (2 lines); `neg = num < 0` is an
  *   `lsrs #31` (14). These are allocation and cse choices; no option
- *   the patched compiler has reaches them. */
+ *   the patched compiler has reaches them.
+ * - #662 round 7, private agbcp_arm_patched builds, each checked on all
+ *   ten functions of string_arm.o and sprite_arm.o (the ARM compiler
+ *   builds nothing else; lib/ has no ARM C): without fold-const's `X >=
+ *   C` to `X > C - 1` rewrite, a plain `digit >= 10` gives the ROM's
+ *   `cmp r1, #10` and nothing else changes, but no other ARM function
+ *   compares against a constant with `>=` or `<`, so that proves
+ *   nothing. lr gets `len` because global-alloc counts it as already
+ *   used (it is call-clobbered) and REG_ALLOC_ORDER has it before r4.
+ *   Moving it after r11 changes nothing, matched or plain itoa_arm;
+ *   not counting it as used changes HeapSortActorsByKey,
+ *   UnpackRleSpriteFrame and LookupSpriteFrameCache, whose ROM code
+ *   uses lr (even when limited to leaf functions), and both together
+ *   change 5. len's 0 is reused for `neg = 0` (`movge r4, r5`) by
+ *   reload_cse's operand substitution; without it strncpy_arm's `cmp
+ *   r2, r3` and the other string functions change, and cheaper
+ *   constants change 6-8 functions. */
 s32 itoa_arm(s32 value, u8 *buf, s32 base)
 {
     MATCH_HOLD_REG(s32, num, r0);
