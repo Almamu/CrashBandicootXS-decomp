@@ -23,15 +23,6 @@ extern "C" {
  * old_agbcp (the Makefile's OLD_AGBCC_OBJS), like the old_agbcc C it
  * replaces. */
 
-/* The player's animation set to `tag`, restarted. */
-static inline void SetTag(Player *part, s32 tag)
-{
-    part->tag = tag;
-    part->ResetFrameTimer();
-    part->ResetFrameIndex();
-    part->SetAnimDone(0);
-}
-
 /* The state CheckLeftGround enters when the player walks off the ground.
  * Back on it (`hitAxes` bit 3): the run or turbo run resumes from its
  * animation (0xD, 0x18), the air spin goes on as the ground spin,
@@ -350,7 +341,7 @@ void ActionCtrl::StateHangMove()
     u16 alt;
 
     if (p->animDone)
-        SetTag(p, 0x21);
+        p->StartAnim(0x21);
     fire = INPUT_PRESSED(in) & 1;
     if (fire) {
         gAudioContext->PlaySfx(SFX_JUMP, 0x100);

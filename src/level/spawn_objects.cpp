@@ -14,12 +14,6 @@ extern "C" {
  * bosses' and the crates' (ROM 0x08021748-0x08021A4C; #664,
  * include/spawners.hpp). Built with old_agbcp. */
 
-/* `t` is an s32: its constant is loaded before the tag's address. */
-static inline void SetTag(Sprite *part, s32 t)
-{
-    part->tag = t;
-}
-
 /* Builds a sprite on sprite bank +0x21c, resets
  * its OAM state and frame nibble, clears flags bits 7 and 2 and
  * registers it with gDecorationList's manager. */
@@ -28,10 +22,7 @@ void SpawnSeaweed(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     Sprite *part = Sprite::Create(arg0, arg1, arg2, arg3);
 
     part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x21c);
-    SetTag(part, 0);
-    part->ResetFrameTimer();
-    part->ResetFrameIndex();
-    part->SetAnimDone(0);
+    part->StartAnim(0);
     part->palette = part->GetAnimPaletteSlot();
     part->f.b.collides = 0;
     part->f.b.visible = 0;
@@ -61,10 +52,7 @@ void SpawnFlame(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     Sprite *part = Sprite::Create(arg0, arg1, arg2, arg3);
 
     part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x210);
-    SetTag(part, 0);
-    part->ResetFrameTimer();
-    part->ResetFrameIndex();
-    part->SetAnimDone(0);
+    part->StartAnim(0);
     part->palette = part->GetAnimPaletteSlot();
     part->f.b.collides = 0;
     part->f.b.visible = 0;

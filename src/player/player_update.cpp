@@ -242,11 +242,6 @@ static inline void PlaceChild(Sprite *c, s32 px, s32 py)
     c->y = py;
 }
 
-static inline void SetChildAnim(Sprite *c, u8 anim)
-{
-    c->tag = anim;
-}
-
 /* Draws Aku Aku and the player. While invincible, Aku Aku sits at the
  * player's head, facing the other way, flickering between its animations 1
  * and 2; the player blinks while the invulnerability lasts, and when it
@@ -274,9 +269,9 @@ void Player::Draw()
         else
             PlaceAt(x, y, child, 0x600, -0x1300);
         if (gRoomFrameCount & 4)
-            SetChildAnim(child, 1);
+            child->SetTag(1);
         else
-            SetChildAnim(child, 2);
+            child->SetTag(2);
         child->Draw();
     }
     {

@@ -25,13 +25,6 @@ extern "C" {
  * across the `MemCopy32` call. Built with old_agbcc
  * (docs/matching/archive/issue-58-61-naked-retry.md). */
 
-static inline void BoxOffset(struct anim_box *b, s32 x, s32 y, s32 z)
-{
-    b->x += x;
-    b->y += y;
-    b->z += z;
-}
-
 u8 IsTouchingAirship(void *selfArg)
 {
     ActorSelf *self = (ActorSelf *)selfArg;
@@ -43,9 +36,9 @@ u8 IsTouchingAirship(void *selfArg)
         struct anim_box *pa, *pc;
 
         f.a = gAirshipBox;
-        BoxOffset(&f.a, Q8_TO_INT(gAirshipX), Q8_TO_INT(gAirshipY), Q8_TO_INT(gAirshipZ));
+        BoxMove(&f.a, Q8_TO_INT(gAirshipX), Q8_TO_INT(gAirshipY), Q8_TO_INT(gAirshipZ));
         f.t = self->box;
-        BoxOffset(&f.t, Q8_TO_INT(self->x), Q8_TO_INT(self->y), Q8_TO_INT(self->z));
+        BoxMove(&f.t, Q8_TO_INT(self->x), Q8_TO_INT(self->y), Q8_TO_INT(self->z));
         f.c = f.t;
         pc = &f.c;
         MemCopy32(pc, pc, sizeof(*pc));

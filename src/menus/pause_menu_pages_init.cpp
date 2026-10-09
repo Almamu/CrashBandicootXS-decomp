@@ -21,17 +21,6 @@ static inline void SetIconPos(Sprite *s, const struct vec2 *p)
     SetEntityPixelPos(s, p->x, p->y);
 }
 
-/* Animation `frame` of the icon's bank, from its start. The frame is a
- * word parameter (not u8) so the table word is loaded after the icon
- * pointer, as in the ROM. */
-static inline void SetIconFrame(Sprite *s, u32 frame)
-{
-    s->tag = frame;
-    s->ResetFrameTimer();
-    s->ResetFrameIndex();
-    s->SetAnimDone(0);
-}
-
 /* The crystals page: the crystal icon, the crystals found and the 20 to
  * find. */
 void PauseMenu::InitCrystalsPage()
@@ -56,7 +45,7 @@ void PauseMenu::InitPowersPage()
 
         powerIcons[i] = icon = new UiSprite;
         SetIconBank(icon, 0xe4 << 1);
-        SetIconFrame(icon, gPausePowerIconFrames[i]);
+        icon->StartAnim(gPausePowerIconFrames[i]);
         SetIconPos(powerIcons[i], &gPausePowerIconPos[i]);
         powerIcons[i]->palette = powerIcons[i]->GetAnimPaletteSlot();
     }
@@ -74,7 +63,7 @@ void PauseMenu::InitGemsPage()
 
         gemIcons[i] = icon = new UiSprite;
         SetIconBank(icon, 0xc0 << 1);
-        SetIconFrame(icon, gPauseGemIconFrames[i]);
+        icon->StartAnim(gPauseGemIconFrames[i]);
         SetIconPos(gemIcons[i], &gPauseGemIconPos[i]);
         gemIcons[i]->palette = gemIcons[i]->GetAnimPaletteSlot();
         gemIcons[i]->affine = 0x80;
@@ -98,7 +87,7 @@ void PauseMenu::InitRelicsPage()
 
         relicIcons[i] = icon = new UiSprite;
         SetIconBank(icon, 0xc6 << 1);
-        SetIconFrame(icon, gPauseRelicIconFrames[i]);
+        icon->StartAnim(gPauseRelicIconFrames[i]);
         SetIconPos(relicIcons[i], &gPauseRelicIconPos[i]);
         relicIcons[i]->palette = relicIcons[i]->GetAnimPaletteSlot();
         relicIcons[i]->affine = 0x80;
@@ -144,11 +133,11 @@ void PauseMenu::InitTimeTrialPage()
 
     if (time != 0) {
         if (time <= entry->times[0])
-            SetIconFrame(trialIcon, gPauseRelicIconFrames[2]);
+            trialIcon->StartAnim(gPauseRelicIconFrames[2]);
         if (time <= entry->times[1])
-            SetIconFrame(trialIcon, gPauseRelicIconFrames[1]);
+            trialIcon->StartAnim(gPauseRelicIconFrames[1]);
         if (time <= entry->times[2])
-            SetIconFrame(trialIcon, gPauseRelicIconFrames[0]);
+            trialIcon->StartAnim(gPauseRelicIconFrames[0]);
         trialIcon->palette = trialIcon->GetAnimPaletteSlot();
     }
 }

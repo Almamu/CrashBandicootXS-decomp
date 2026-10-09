@@ -50,17 +50,6 @@ static inline void HitPlayer(Player *pl, s32 event)
     pl->HandleEvent(0, event, 0);
 }
 
-/* Switches to animation `t` from its start. `t` is an s32: with a u8
- * parameter, SpawnCortexBossGem's tag 0 is loaded after the tag's address,
- * where the ROM loads it first. */
-static inline void SetTag(MovingSprite *p, s32 t)
-{
-    p->tag = t;
-    p->ResetFrameTimer();
-    p->ResetFrameIndex();
-    p->SetAnimDone(0);
-}
-
 /* Sets `frame` to `idx`, clamped to the animation's last step. */
 static inline void ClampFrame(MovingSprite *p, s32 idx)
 {
@@ -90,11 +79,11 @@ void CortexBossCtrl::Update(MovingSprite *part)
             s32 n;
 
             if (y <= 0x5000)
-                SetTag(cannon, 5);
+                cannon->StartAnim(5);
             else if (y <= 0x7800)
-                SetTag(cannon, 4);
+                cannon->StartAnim(4);
             else
-                SetTag(cannon, 3);
+                cannon->StartAnim(3);
 
             n = target->x - part->x;
             part->mirrorFlags.mirrorX = n >= 0;
@@ -139,7 +128,7 @@ void CortexBossCtrl::SpawnCannon(MovingSprite *part)
     Ctrl *ctrl;
 
     c->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x27C);
-    SetTag(c, 3);
+    c->StartAnim(3);
     c->animating = 0;
     ctrl = new CortexCannonCtrl;
     c->palette = c->GetAnimPaletteSlot();
@@ -161,7 +150,7 @@ void CortexBossCtrl::SpawnTarget(MovingSprite *part)
     s32 x, y;
 
     c->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x27C);
-    SetTag(c, 0xF);
+    c->StartAnim(0xF);
     c->palette = c->GetAnimPaletteSlot();
     ctrl = new CortexTargetCtrl(this);
     c->mover = ctrl;
@@ -188,13 +177,13 @@ void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
     c->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x180);
     switch (kind) {
     case 0:
-        SetTag(c, 3);
+        c->StartAnim(3);
         break;
     case 1:
-        SetTag(c, 2);
+        c->StartAnim(2);
         break;
     case 2:
-        SetTag(c, 0);
+        c->StartAnim(0);
         break;
     }
     c->palette = c->GetAnimPaletteSlot();
@@ -402,10 +391,10 @@ void CortexTargetCtrl::FireShot(MovingSprite *part, s32 kind)
     c->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x27C);
     switch (kind) {
     case 0:
-        SetTag(c, 0xE);
+        c->StartAnim(0xE);
         break;
     case 1:
-        SetTag(c, 0x11);
+        c->StartAnim(0x11);
         break;
     }
     c->palette = c->GetAnimPaletteSlot();

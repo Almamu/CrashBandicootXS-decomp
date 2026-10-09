@@ -35,12 +35,6 @@ extern "C" {
  * #34, UpdateGameFrame-MainLoop cluster, docs/rom_map.md; C++ since #664
  * part 9). */
 
-/* `t` is an s32: the constant is loaded before the tag's address. */
-static inline void SetTag(Platform *part, s32 t)
-{
-    part->tag = t;
-}
-
 /* Starts a time trial: no mask, the clock and the countdown cleared.
  * Outside the category rooms, the bonus platform and the gem platform
  * switch to their time-trial animations (7 and 0xC; the gem platform's
@@ -64,17 +58,11 @@ void LevelState::StartTimeTrial()
 
     part = (Platform *)bonusPlatform;
     if (part != 0) {
-        SetTag(part, 7);
-        part->ResetFrameTimer();
-        part->ResetFrameIndex();
-        part->SetAnimDone(0);
+        part->StartAnim(7);
     }
     part = (Platform *)gemPlatform;
     if (part != 0) {
-        SetTag(part, 0xc);
-        part->ResetFrameTimer();
-        part->ResetFrameIndex();
-        part->SetAnimDone(0);
+        part->StartAnim(0xc);
         // clang-format off
         gPaletteCache->LoadSlot(((Platform *)gemPlatform)->palette,
                         ((Platform *)gemPlatform)->bank->anims[

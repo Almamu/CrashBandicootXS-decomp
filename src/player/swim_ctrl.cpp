@@ -83,13 +83,6 @@ static inline void ResetMode(SwimCtrl *self)
     self->SetState(1, 1, CTRL_KEEP, 0);
 }
 
-/* The value arrives as a (constant-propagated) inline parameter, so the
- * bitfield store is the generic clear-then-or, as in the ROM. */
-static inline void SetFlipX(Player *t, u32 value)
-{
-    t->mirrorFlags.mirrorX = value;
-}
-
 /* The facing tests: as C++, a test of the unsigned `mirrorFlags.mirrorX`
  * compiles to `ands #16`, where the ROM (and the C front end) has `lsls
  * #27` and a sign test, which `mirrorBits.flipX < 0` (the signed view)
@@ -520,7 +513,7 @@ void SwimCtrl::StateTurn()
         ResetMode(this);
         break;
     case 6:
-        SetFlipX(target, 1);
+        target->SetFlipX(1);
         ResetMode(this);
         break;
     case 5:
@@ -529,7 +522,7 @@ void SwimCtrl::StateTurn()
         SetStateNow(this, 3, 3, CTRL_KEEP, CTRL_KEEP);
         break;
     case 7:
-        SetFlipX(target, 1);
+        target->SetFlipX(1);
         SetStateNow(this, 3, 3, CTRL_KEEP, CTRL_KEEP);
         break;
     }

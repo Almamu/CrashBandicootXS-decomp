@@ -147,7 +147,7 @@ u8 LevelSelect::IsNextWorldOpen()
  * cursor back on the (clamped) entry. */
 void LevelSelect::RefreshPage()
 {
-    StartAnim(sprites[0], gLevelSelectWorldAnims[world]);
+    sprites[0]->StartAnim(gLevelSelectWorldAnims[world]);
     LIMIT_MAX(index, lastIndex);
     {
         const struct vec2 *pos = &positions[index];

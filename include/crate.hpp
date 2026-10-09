@@ -151,16 +151,6 @@ public:
     void UpdateSlot(); // UpdateSlotCrate
     void UpdateFall(); // UpdateCrateFall
 
-    /* Switches to animation `t` from its start: the three-call idiom
-     * every state change uses. */
-    void SetTag(u8 t)
-    {
-        tag = t;
-        ResetFrameTimer();
-        ResetFrameIndex();
-        SetAnimDone(0);
-    }
-
     /* Sets `frame` to `idx`, clamped to the animation's last step. `idx`
      * being a parameter keeps a constant argument in its own register,
      * which the callers' later stores reuse (BreakCrate, UpdateCrate). */

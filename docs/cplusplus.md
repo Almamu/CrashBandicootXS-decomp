@@ -468,6 +468,7 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | include/objects.h, player.h, crates.h, gfx.h, bosses.h, pickups.h, frontend.h, actor.h, vehicle.h, system.h | the 391 C prototypes of C++ methods with no C caller go, with the C views only a class's size check used (struct ctrl, boss_ctrl, mega_mix_ctrl, part_ctrl and ctrl_anchor, periodic_spawner, spawner, actor_orbit, cannon_flash, actor_hp, jetpack_ring, orbit_part and orbit_part.h); the classes check the ROM sizes | 0 | (unchanged) | 0 -> 0 | cleanup |
 | actor_self.h, box_part.h, match.h | `ACTOR_SET_STATE`, `CALL_HIT`, `MATCH_USE_VOLATILE`, `MATCH_CONST_VOLATILE` (no user left) go | 0 | (unchanged) | 0 -> 0 | cleanup |
 | actor_self.hpp, `src/actor/actor_category_frame.cpp`, `src/vehicle/polar/polar_nitro.cpp` | `BoxOverlap` and `WorldBox`, the two files' identical inlines, are actor_self.hpp's | 0 | (unchanged) | 0 -> 0 | cleanup |
+| sprite_obj.hpp, actor_self.hpp, crate.hpp, level_select.hpp and 34 source files | the shared inline helpers (#764): `Sprite::SetTag`, `StartAnim`, the inline `SetFlipX`/`SetFlipY`, `AnimPart::CurFrame`/`CurAttr`, the pointer `BoxOverlap` and `BoxMove`; 33 file-local copies (and `Crate::SetTag`, level_select.hpp's `StartAnim`) go | 0 | (unchanged) | 0 -> 0 | cleanup |
 | `src/actor/actor.cpp`, `actor_spawn.cpp`, `src/bosses/hovercraft.cpp`, `airship_states.cpp` | the category hooks call `JetpackPlayer`'s and `PolarPlayer`'s `AllocTiles`, `FinishRun`, `IsPauseLocked`, `SetCheckpoint` directly; their C prototypes go (`CatchPolarPlayer` stays, for yeti_update.c) | 0 | (unchanged) | 0 -> 0 | cleanup |
 | `src/menus/pause_menu_draw.cpp` | `PauseMenu::Animate`, `Draw`, `DrawRows` (menus.hpp) | 3 | agbcp | 2 pins, 2 holds, 3 uses (`MATCH_USE` x2, `MATCH_USE2`), 14 slot calls -> 2 pins, 2 holds, 3 uses | cleanup |
 | `src/menus/pause_menu_gems.cpp` (`pause_menu_collectibles.cpp` since #771) | `PauseMenu::DrawGemsPage`, `DrawRelicsPage` | 2 | old_agbcp | 0 -> 0; 4 slot calls -> 0 | cleanup |
@@ -4159,6 +4160,46 @@ name (cxx_symbols.txt).
   as a `Camera *` (C++ only).
 
 `tools/match_idioms.py` counts are unchanged.
+
+### The shared inline helpers (#764)
+
+The same one-line accessors were file-local inlines in many objects. They
+are the classes' inline methods now, and every copy is gone; each object
+is byte-identical to origin/main's:
+
+- **`Sprite::SetTag(s32)`** (the tag alone; tiny.cpp, dingodile.cpp,
+  entity_spawner.cpp, level_state.cpp, spawn_bosses.cpp's `SetSpriteTag`,
+  spawn_objects.cpp, spawn_pickups.cpp, player_update.cpp's
+  `SetChildAnim`) and **`Sprite::StartAnim(s32)`** (the tag and the
+  three-call restart; cortex.cpp's, spawn_bosses.cpp's and
+  action_ctrl_moves.cpp's `SetTag`, spawn_enemies.cpp's `SetAnim`,
+  play_room.cpp's `RestartPlayerAnim`, pause_menu_pages_init.cpp's
+  `SetIconFrame`, swim_ctrl_stroke.cpp's `RestartAnim`, level_select.hpp's
+  `StartAnim` and `Crate::SetTag`). A `SetTag` followed by the three
+  calls is a `StartAnim`. The parameter is an s32: cortex.cpp's note says
+  a u8 one moves SpawnCortexBossGem's constant after the tag's address,
+  and the copies that took a u8 or u32 (dingodile, player_update,
+  swim_ctrl_stroke, pause_menu_pages_init, Crate) compile the same with
+  it.
+- **`Sprite::SetFlipX`/`SetFlipY`** are inline (spawn_crates.cpp,
+  spawn_enemies.cpp, spawn_start_marker.cpp, zoom_bg.cpp, swim_ctrl.cpp),
+  storing the unsigned `mirrorFlags` bit. sprite_obj.cpp defines
+  `SPRITE_FLIP_OUT_OF_LINE` and keeps the out-of-line copies
+  (SetSpriteObjFlipX/Y, no caller), as actor.cpp does for ActorSelf's
+  destructor. The u8 parameter gives the same general bitfield insert the
+  u32 copies had.
+- **`AnimPart::CurFrame()`/`CurAttr()`** (polar_player.cpp,
+  yeti_graphics.cpp, jetpack_player_update.cpp's `CurFrame`, `CurAttr`
+  and `CurFrameData`): the frame's frameOffsets entry, with no sprite
+  sheet base (unlike GetAnimFrameData), and the keyframe's attr. The
+  jetpack's `CurFrame`, spelled out with locals, compiles the same as the
+  one-expression body.
+- **`BoxOverlap(const anim_box *, const anim_box *)` and `BoxMove`**
+  (actor_self.hpp, next to the by-reference `BoxOverlap`): yeti_graphics.cpp's
+  and yeti_update.cpp's copies and airship_touch.cpp's `BoxOffset`.
+  `struct anim_box` is a C record, so these stay free functions.
+
+No copy needed a different spelling to match, so none stays local.
 
 ### Next batches
 

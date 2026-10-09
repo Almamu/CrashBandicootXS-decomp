@@ -73,15 +73,6 @@ static inline void SetBankNow(Sprite *p, const struct sprite_bank *bank)
     *field = bank;
 }
 
-/* Sprite::SetAnim, inlined: animation `anim` from its start. */
-static inline void StartAnim(Sprite *p, s32 anim)
-{
-    p->tag = anim;
-    p->ResetFrameTimer();
-    p->ResetFrameIndex();
-    p->SetAnimDone(0);
-}
-
 /* Shows step `frame` of the animation, clamped to its last one. */
 static inline void ShowFrame(Sprite *p, s32 frame)
 {

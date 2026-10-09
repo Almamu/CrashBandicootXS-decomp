@@ -158,18 +158,18 @@ LevelSelect::LevelSelect(s32 arg)
         }
     }
     SetBankNow(sprites[0], AnimTable(0x234));
-    StartAnim(sprites[0], gLevelSelectWorldAnims[world]);
+    sprites[0]->StartAnim(gLevelSelectWorldAnims[world]);
     SetEntityPixelPos(sprites[0], gLevelSelectWorldPos.x, gLevelSelectWorldPos.y);
     SetBankNow(sprites[1], AnimTable(0x234));
-    StartAnim(sprites[1], 10);
+    sprites[1]->StartAnim(10);
     SetEntityPixelPos(sprites[1], gLevelSelectCrashIconPos.x, gLevelSelectCrashIconPos.y);
     SetBankNow(sprites[2], AnimTable(0x1BC));
     SetEntityPixelPos(sprites[2], gLevelSelectCrystalPos.x, gLevelSelectCrystalPos.y);
     SetBankNow(sprites[3], AnimTable(0x180));
-    StartAnim(sprites[3], 1);
+    sprites[3]->StartAnim(1);
     SetEntityPixelPos(sprites[3], gLevelSelectGemPos_rw.x, gLevelSelectGemPos_rw.y);
     SetBankNow(sprites[4], AnimTable(0x180));
-    StartAnim(sprites[4], 1);
+    sprites[4]->StartAnim(1);
     SetEntityPixelPos(sprites[4], gLevelSelectGemPos_rw.x, gLevelSelectGemPos_rw.y);
     SetBankNow(sprites[5], AnimTable(0x18C));
     SetEntityPixelPos(sprites[5], gLevelSelectTrialIconPos_rw.x, gLevelSelectTrialIconPos_rw.y);
@@ -181,13 +181,13 @@ LevelSelect::LevelSelect(s32 arg)
     sprites[8] = s;
     s->SetPriority(1);
     SetBankNow(sprites[8], AnimTable(0x270));
-    StartAnim(sprites[8], 1);
+    sprites[8]->StartAnim(1);
     SetEntityPixelPos(sprites[8], gLevelSelectNextWorldArrowPos.x, gLevelSelectNextWorldArrowPos.y);
     s = new UiSprite;
     sprites[9] = s;
     s->SetPriority(1);
     SetBankNow(sprites[9], AnimTable(0x270));
-    StartAnim(sprites[9], 0);
+    sprites[9]->StartAnim(0);
     SetEntityPixelPos(sprites[9], gLevelSelectPrevWorldArrowPos.x, gLevelSelectPrevWorldArrowPos.y);
     if (gNewWorldOpened && IsNextWorldOpen()) {
         panel->Park();
@@ -435,7 +435,7 @@ void LevelSelect::LoadRecord()
     }
     if (rank != 5) {
     set_rank_icon:
-        StartAnim(sprites[4], gLevelSelectRankAnims[rank]);
+        sprites[4]->StartAnim(gLevelSelectRankAnims[rank]);
         if (flag1IconY == gemIconY) {
             flag1IconY -= 6;
             gemIconY += 6;
@@ -447,27 +447,27 @@ void LevelSelect::LoadRecord()
 
         FormatCentiseconds(info->times[0], recordText);
         FormatCentiseconds(sv->time, timeText);
-        StartAnim(sprites[5], 0);
-        StartAnim(sprites[6], 0);
-        StartAnim(sprites[7], 0);
+        sprites[5]->StartAnim(0);
+        sprites[6]->StartAnim(0);
+        sprites[7]->StartAnim(0);
         if (sv->time != 0) {
             if (sv->time <= info->times[2]) {
                 trialIcon2Y = 0x1C;
                 trialIconY = 0x1C;
-                StartAnim(sprites[5], 1);
-                StartAnim(sprites[6], 1);
+                sprites[5]->StartAnim(1);
+                sprites[6]->StartAnim(1);
             } else if (sv->time <= info->times[1]) {
                 FormatCentiseconds(info->times[2], recordText);
                 trialIconY = 0x1C;
-                StartAnim(sprites[5], 2);
-                StartAnim(sprites[6], 1);
-                StartAnim(sprites[7], 1);
+                sprites[5]->StartAnim(2);
+                sprites[6]->StartAnim(1);
+                sprites[7]->StartAnim(1);
             } else if (sv->time <= entry->times[0]) {
                 FormatCentiseconds(info->times[1], recordText);
                 trialIconY = 0x1C;
-                StartAnim(sprites[5], 0);
-                StartAnim(sprites[6], 2);
-                StartAnim(sprites[7], 2);
+                sprites[5]->StartAnim(0);
+                sprites[6]->StartAnim(2);
+                sprites[7]->StartAnim(2);
             }
         }
     }

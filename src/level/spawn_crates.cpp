@@ -130,19 +130,6 @@ void SpawnCheckpointCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     Crate::Create(arg0, arg1, arg2, arg3, CRATE_KIND_CHECKPOINT);
 }
 
-/* The mirror bits stored from a parameter: inlined at the RTL level, the
- * store is a general bitfield insert (the field cleared with `~0x10`, the
- * value ORed in), as in the ROM, where a literal 1 is a plain OR. */
-static inline void SetFlipX(Crate *c, u32 v)
-{
-    c->mirrorFlags.mirrorX = v;
-}
-
-static inline void SetFlipY(Crate *c, u32 v)
-{
-    c->mirrorFlags.mirrorY = v;
-}
-
 /* A basic crate (type 0), mirrored in X and Y by bits 1 and 2 of its
  * parameter record's flags.
  *
@@ -155,7 +142,7 @@ void SpawnBasicCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     const struct entity_params *rec = EntityParams(arg3);
 
     if (rec->flags & 2)
-        SetFlipX(obj, 1);
+        obj->SetFlipX(1);
     if (rec->flags & 4)
-        SetFlipY(obj, 1);
+        obj->SetFlipY(1);
 }

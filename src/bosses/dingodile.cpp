@@ -70,11 +70,6 @@ static inline void HitPlayer(MovingSprite *by)
  * (the ROM's frame and its ldmia/stmia copy). */
 extern "C" struct aabb GetSpriteAttackBox_s(void *part) asm("GetSpriteAttackBox");
 
-static inline void SetTag(MovingSprite *p, u8 tag)
-{
-    p->tag = tag;
-}
-
 s32 DingodileCtrl::GetHits()
 {
     return counter;
@@ -398,10 +393,7 @@ void DingodileCtrl::SpawnShieldOrRocket(s32 mode, u16 x, u16 y, MovingSprite *ow
             s32 kind = 1;
 
             p->mirrorBits.gfxMode = kind;
-            SetTag(p, 3);
-            p->ResetFrameTimer();
-            p->ResetFrameIndex();
-            p->SetAnimDone(0);
+            p->StartAnim(3);
             p->kind = kind;
         }
         {
@@ -414,10 +406,7 @@ void DingodileCtrl::SpawnShieldOrRocket(s32 mode, u16 x, u16 y, MovingSprite *ow
         break;
     case 1:
         gAudioContext->PlaySfx(SFX_DINGODILE_ROCKET, 0x100);
-        SetTag(p, 7);
-        p->ResetFrameTimer();
-        p->ResetFrameIndex();
-        p->SetAnimDone(0);
+        p->StartAnim(7);
         p->kind = 4;
         {
             DingodileProjectileCtrl *c;
@@ -451,10 +440,7 @@ void DingodileCtrl::SpawnShark(u16 x, u16 y, u8 facing)
     Ctrl *ctl;
 
     p->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x30);
-    SetTag(p, 1);
-    p->ResetFrameTimer();
-    p->ResetFrameIndex();
-    p->SetAnimDone(0);
+    p->StartAnim(1);
     p->kind = 6;
     ctl = new DingodileSharkCtrl;
     p->palette = p->GetAnimPaletteSlot();
@@ -655,10 +641,7 @@ void DingodileProjectileCtrl::SpawnStalactite(u16 x, u16 y)
 
     p->f.b.visible = 0;
     p->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x288);
-    SetTag(p, 8);
-    p->ResetFrameTimer();
-    p->ResetFrameIndex();
-    p->SetAnimDone(0);
+    p->StartAnim(8);
     p->kind = 1;
     c = new DingodileProjectileCtrl(this);
     c->SetMode(5);

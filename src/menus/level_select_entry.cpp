@@ -62,7 +62,7 @@ void LevelSelectEntry::SetLevel(s32 world, s32 index)
         ShowFrame(icon, id);
     } else {
         id = world + LEVEL_FIRST_BOSS;
-        StartAnim(icon, gLevelSelectEntryWorldAnims[world]);
+        icon->StartAnim(gLevelSelectEntryWorldAnims[world]);
     }
 }
 
@@ -70,7 +70,7 @@ void LevelSelectEntry::SetLevel(s32 world, s32 index)
  * both parts' palettes. */
 void LevelSelectEntry::SetBox(s32 kind)
 {
-    StartAnim(frame, gLevelSelectEntryBoxAnims[kind]);
+    frame->StartAnim(gLevelSelectEntryBoxAnims[kind]);
     frame->palette = frame->GetAnimPaletteSlot();
     icon->palette = icon->GetAnimPaletteSlot();
 }

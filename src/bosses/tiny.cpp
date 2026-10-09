@@ -219,12 +219,6 @@ void TinyCtrl::Update(MovingSprite *part)
     }
 }
 
-/* Sets the animation (no reset). */
-static inline void SetTag(MovingSprite *p, s32 tag)
-{
-    p->tag = tag;
-}
-
 /* Sets the frame, clamped to the current animation's frame count. */
 static inline void SetFrame(MovingSprite *part, s32 frame)
 {
@@ -376,12 +370,7 @@ void TinyCtrl::SpawnFallingLeaves(MovingSprite *part, s32 n)
     s32 x;
 
     p->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x294);
-    /* through an s32: a constant stored straight is loaded after the
-     * address, where the ROM loads it first */
-    SetTag(p, 5);
-    p->ResetFrameTimer();
-    p->ResetFrameIndex();
-    p->SetAnimDone(0);
+    p->StartAnim(5);
     ctrl = new OneShotAnimCtrl;
     p->palette = p->GetAnimPaletteSlot();
     p->mover = ctrl;

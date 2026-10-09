@@ -117,26 +117,6 @@ void JetpackPlayer::Update()
     (this->*stateFuncs[state])();
 }
 
-/* AnimPart's frame accessors (anim_part.cpp), inlined. */
-static inline u8 *CurFrame(AnimPart *self)
-{
-    s32 base = Q8_TO_INT(self->animTime);
-    s32 idx = self->animIndex;
-    struct anim_frame_record *table = self->anims;
-    s32 val = table[idx].frameIndex;
-
-    val += base;
-    return (u8 *)self->frameOffsets[val];
-}
-
-static inline s32 CurAttr(AnimPart *self)
-{
-    s32 idx = self->animIndex;
-    struct anim_frame_record *table = self->anims;
-
-    return (s32)table[idx].attr << 16;
-}
-
 /* Slot 3: projects the position by depth (scaled and double-sized when
  * drawn behind the reference depth), culls against the screen, uploads
  * the frame's tiles into the other of the two VRAM buffers when the
@@ -150,7 +130,7 @@ void JetpackPlayer::Draw()
     s32 halfW, halfH;
     s32 sx, sy;
 
-    frame = CurFrame(this);
+    frame = CurFrame();
     w = frame[0];
     halfW = w * 4;
     h = frame[1];
@@ -177,7 +157,7 @@ void JetpackPlayer::Draw()
     sx -= halfW;
     sy -= halfH;
     if (sy <= 0x9f && sy + halfH * 2 >= 0 && sx <= 0xef && sx + halfW * 2 >= 0) {
-        u32 attr = CurAttr(this);
+        u32 attr = CurAttr();
 
         attr1 |= (sy & 0xff) | ((sx & 0x1ff) << 16) | attr | GetSpriteShapeSizeBits(frame);
         if (frame != gJetpackPlayerLastFrame) {
@@ -366,15 +346,6 @@ void JetpackPlayer::StateRollRight()
 }
 
 
-/* AnimPart::GetAnimFrameData (anim_part.cpp), inlined; written
- * differently from Draw's CurFrame above. */
-static inline u8 *CurFrameData(AnimPart *self)
-{
-    s32 t = Q8_TO_INT(self->animTime);
-
-    return (u8 *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t];
-}
-
 /* The course's end (the category's hook, JetpackReachCourseEnd): unless
  * the player is already inactive, it stops, loses the input and enters
  * state 5 (animation 4), with a cue; in a time trial the clock freezes. */
@@ -501,9 +472,9 @@ void JetpackPlayer::AllocTiles()
 {
     u8 *f;
 
-    f = CurFrameData(this);
+    f = CurFrame();
     gJetpackPlayerTiles[0] = AllocVramTileBlock(f[1] * f[0] * 32);
-    f = CurFrameData(this);
+    f = CurFrame();
     gJetpackPlayerTiles[1] = AllocVramTileBlock(f[1] * f[0] * 32);
     gJetpackPlayerTileBuffer = 1;
     gJetpackPlayerLastFrame = 0;

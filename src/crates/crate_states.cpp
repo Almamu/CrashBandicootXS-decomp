@@ -91,13 +91,13 @@ void Crate::UpdateTntCountdown()
     k = kind;
     switch (k) {
     case CRATE_KIND_TNT_LIT_3:
-        SetTag(0x13);
+        StartAnim(0x13);
         gAudioContext->PlaySfx(SFX_TNT_TICK, 0x100);
         kind = CRATE_KIND_TNT_LIT_2;
         timer = 0x3c;
         break;
     case CRATE_KIND_TNT_LIT_2:
-        SetTag(0x12);
+        StartAnim(0x12);
         gAudioContext->PlaySfx(SFX_TNT_TICK, 0x100);
         kind = CRATE_KIND_TNT_LIT_1;
         timer = 0x3c;
@@ -173,7 +173,7 @@ void Crate::UpdateSlot()
             slotState = lw;
             switch (ph) {
             case 0:
-                SetTag(7);
+                StartAnim(7);
                 if (slotState & CRATE_SLOT_STAGE_MASK) {
                     u8 r = GetSlotSpins();
 
@@ -200,7 +200,7 @@ void Crate::UpdateSlot()
                             slotState = (w2 & CRATE_SLOT_CLEAR_STAGE) | 0xc0;
                             break;
                         case 3:
-                            SetTag(0x20);
+                            StartAnim(0x20);
                             kind = CRATE_KIND_IRON;
                             break;
                         }
@@ -209,19 +209,19 @@ void Crate::UpdateSlot()
                 goto out;
             case 1:
                 if (paramA & 2) {
-                    SetTag(9);
+                    StartAnim(9);
                     goto out;
                 }
                 break;
             case 2:
                 if (paramA & 1) {
-                    SetTag(0xb);
+                    StartAnim(0xb);
                     goto out;
                 }
                 break;
             case 3:
                 if (paramA & 4) {
-                    SetTag(0xd);
+                    StartAnim(0xd);
                     done = 1;
                 }
                 break;
@@ -249,20 +249,20 @@ void Crate::UpdateSlot()
         slotState = w1;
         timer = 1;
         if (tag == 0xc)
-            SetTag(0xa);
+            StartAnim(0xa);
         else if (tag == 0xa)
-            SetTag(8);
+            StartAnim(8);
         else {
             switch ((s32)((u32)(slotState & CRATE_SLOT_STAGE_MASK) >> CRATE_SLOT_STAGE_SHIFT)) {
             case 0:
             case 1:
-                SetTag(0xc);
+                StartAnim(0xc);
                 break;
             case 2:
-                SetTag(0xa);
+                StartAnim(0xa);
                 break;
             case 3:
-                SetTag(8);
+                StartAnim(8);
                 break;
             }
         }

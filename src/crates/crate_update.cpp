@@ -68,13 +68,13 @@ void Crate::Update()
                 u32 slot; // a u32: the ROM zero-extends the u8 result before the 4-bit store
 
                 kind = CRATE_KIND_IRON;
-                SetTag(0x20);
+                StartAnim(0x20);
                 anims = bank->anims;
                 anim = &anims[tag];
                 slot = gPaletteCache->GetSlot(anim->paletteId);
                 palette = slot;
             } else if (kind == CRATE_KIND_IRON_SWITCH) {
-                SetTag(0x20);
+                StartAnim(0x20);
             }
         }
     } else if ((state & CRATE_STATE_MASK) == 1)

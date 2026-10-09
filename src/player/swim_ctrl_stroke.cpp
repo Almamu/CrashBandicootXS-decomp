@@ -76,18 +76,6 @@ void SwimCtrl::Restart()
 /* `v`, mirrored when the target faces left */
 #define SIGNED_X(t, v) ((t)->mirrorBits.flipX < 0 ? -(v) : (v))
 
-/* Switches `t` to animation `tag` from its start, the three-call idiom of
- * Crate::SetTag. StartStroke passes the current animation: the ROM's
- * `ldrb`/`strb` of `tag` is that store of the parameter (a plain
- * `t->tag = t->tag` is folded away). */
-static inline void RestartAnim(Player *t, u8 tag)
-{
-    t->tag = tag;
-    t->ResetFrameTimer();
-    t->ResetFrameIndex();
-    t->SetAnimDone(0);
-}
-
 /* Sets the target's speed for the current `tilt` (state 4, the turn,
  * instead reads the frame-indexed stack copy of gSwimCtrlTurnSpeeds,
  * negated unless `mode` is 6) and steps `tilt` towards 0/3/6/9/12. */
@@ -107,7 +95,7 @@ void SwimCtrl::StartStroke()
     }
 
     t = target;
-    RestartAnim(t, t->tag);
+    t->StartAnim(t->tag);
     SetState(2, 2, CTRL_KEEP, CTRL_KEEP);
 
     switch (tilt) {

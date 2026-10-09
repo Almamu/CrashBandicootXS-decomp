@@ -1,3 +1,5 @@
+/* This object has the out-of-line SetFlipX/SetFlipY (sprite_obj.hpp). */
+#define SPRITE_FLIP_OUT_OF_LINE
 #include "bg_layer.hpp"
 #include "sprite_obj.hpp"
 #include "player.hpp"

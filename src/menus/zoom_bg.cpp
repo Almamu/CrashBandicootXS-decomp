@@ -27,16 +27,6 @@ static inline void SetMode(Sprite *s, s32 mode)
     s->mirrorBits.gfxMode = mode;
 }
 
-static inline void SetFlipX(Sprite *s, u8 on)
-{
-    s->mirrorFlags.mirrorX = on;
-}
-
-static inline void SetFlipY(Sprite *s, u8 on)
-{
-    s->mirrorFlags.mirrorY = on;
-}
-
 static inline void SetPalette(Sprite *s, s32 pal)
 {
     s->palette = pal;
@@ -96,10 +86,10 @@ ZoomBg::ZoomBg(s32 charBlock, s32 screenBlock)
         RandomizeTwinkle(&twinkles[i]);
     }
     gPaletteCache->Lock(twinkles[0].part->bank->anims[twinkles[0].part->tag].paletteId);
-    SetFlipX(twinkles[1].part, 1);
-    SetFlipY(twinkles[2].part, 1);
-    SetFlipX(twinkles[3].part, 1);
-    SetFlipY(twinkles[3].part, 1);
+    twinkles[1].part->SetFlipX(1);
+    twinkles[2].part->SetFlipY(1);
+    twinkles[3].part->SetFlipX(1);
+    twinkles[3].part->SetFlipY(1);
 }
 
 /* Destructor (`LevelSelect::bg2`). */
