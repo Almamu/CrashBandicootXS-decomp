@@ -300,7 +300,9 @@ full rules and the history (#574). For new code:
 
 ### Compiler warnings
 
-The build is warning-free and stays that way (#577). Every C object,
+The build is warning-free and stays that way (#577), except for three
+expected "might be used uninitialized" warnings left enabled on purpose
+(below). Every C object,
 whichever compiler builds it (agbcc, old_agbcc, agbcp, old_agbcp or
 agbcp_arm_patched, including the per-object flag overrides), gets the Makefile's `WARNFLAGS`:
 
@@ -342,23 +344,26 @@ two clean builds above:
   adds or changes code, so check it before keeping it. An inline-asm
   operand marked `"+r"` that the asm only writes should be `"=r"`.
 
-When the honest fix changes the bytes, keep the code and silence just
-that one site, with a comment saying why. agbcc 2.9 has no
-`#pragma GCC diagnostic`, so use one of these, in this order:
+When the honest fix changes the bytes, keep the code as the ROM has it
+and don't add code whose only job is to silence the warning (#662, owner
+decision): no `T x = x;` self-init, no empty asm (`MATCH_HOLD`) that
+"defines" the variable, no per-object `-Wno-<warning>`. The warning stays
+enabled and is printed. To keep `-Werror` from failing the build on it,
+add the object to the Makefile's `UNINIT_WARNING_OBJS` (built with
+`-Wno-error`; agbcc 2.9 has no `-Wno-error=<warning>` or `#pragma GCC
+diagnostic`), with a comment naming the variable and why the warning is
+expected, and a comment at the declaration. Such an object must print
+that warning and no other. Today: `GAX_fx`'s `sel` (`gax_voice_steal.c`,
+the ROM uses the unset register), `EEPROMWrite1_check`'s `result`
+(`eeprom_verify.c`) and `itoa_arm`'s `neg` (`string_arm.cpp`), both
+false positives. For `-Wunused`, `__attribute__((unused))` on a variable
+or parameter that has to stay for codegen is fine: it is a declaration
+attribute, not code. (A struct or union local isn't checked for
+uninitialized use at all, which is how `starfield.cpp` builds its BGnCNT
+value; that is a real type, not a silencer.)
 
-1. **Self-initialization** for `-Wuninitialized`: `s32 sel = sel;`
-   gcc emits no code for it. Used in `fade.cpp`, `sprite_frame.cpp`,
-   `eeprom_verify.c` and `gax_voice_steal.c`. (A struct or union local
-   isn't checked at all, which is how `starfield.cpp` builds its BGnCNT
-   value.)
-2. **`__attribute__((unused))`** on a variable or parameter that has to
-   stay for codegen, for `-Wunused`.
-3. **A per-object override** in the Makefile, as a last resort:
-   `$(C_BUILDDIR)/foo/bar.o: CC1FLAGS += -Wno-<warning>`, with a comment
-   saying which site needs it and why nothing narrower works. It
-   silences the warning for the whole file, so prefer 1 or 2.
-
-Never remove `-Werror` or a flag from `WARNFLAGS` to get a change in.
+Never remove `-Werror` or a flag from `WARNFLAGS` globally to get a
+change in.
 
 ### Shared helpers
 

@@ -39,9 +39,11 @@ s32 EEPROMCompare(u16 addr, u16 *data)
 s32 EEPROMWrite1_check(u16 addr, u16 *data)
 {
     u8 i;
-    /* Self-initialized to silence -Wuninitialized (the loop always runs,
-     * gcc can't tell): `= 0` adds a store to the SDK code (#577). */
-    u16 result = result;
+    /* The loop always runs, which gcc can't tell: its "might be used
+     * uninitialized" is left enabled on purpose (Makefile
+     * UNINIT_WARNING_OBJS, #662); `= 0` adds a store to the SDK code
+     * (#577). */
+    u16 result;
 
     for (i = 0; i < 3; i++) {
         result = EEPROMWrite(addr, data);

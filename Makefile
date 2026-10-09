@@ -528,6 +528,24 @@ $(ARM_OBJS): CC1FLAGS := -mthumb-interwork $(WARNFLAGS) -O2 -fomit-frame-pointer
 $(C_BUILDDIR)/iwram/string_arm.o: CC1FLAGS += -mleaf-no-lr-save -mno-cond-return -fno-schedule-insns -fno-schedule-insns2
 $(C_BUILDDIR)/iwram/sprite_arm.o: CC1FLAGS += -minterwork-return-lr -mstrict-cross-jump
 
+# Objects whose "might be used uninitialized" warning is expected and left
+# enabled on purpose (#662, owner decision): it is printed on every build,
+# but doesn't fail it. The C reads the variable exactly as the ROM does, so
+# no `x = x` self-init or empty asm hides it any more. agbcc's gcc 2.9 has
+# no -Wno-error=uninitialized, so these objects get -Wno-error (each prints
+# that one warning and nothing else; keep it that way). The code is the
+# same with and without the silencers that used to be there:
+# - gax_voice_steal.o: GAX_fx's `sel` is really unset if there is no SFX
+#   voice (the ROM returns whatever its register held).
+# - eeprom_verify.o: EEPROMWrite1_check's `result` - a false positive, the
+#   loop always runs; `= 0` adds a store to the SDK code (#577).
+# - string_arm.o: itoa_arm's `neg` - a false positive, the two ifs on the
+#   sign always set it (round 8, #829).
+UNINIT_WARNING_OBJS := $(LIB_BUILDDIR)/gax/src/gax_voice_steal.o \
+                       $(LIB_BUILDDIR)/agb_eeprom/src/eeprom_verify.o \
+                       $(C_BUILDDIR)/iwram/string_arm.o
+$(UNINIT_WARNING_OBJS): CC1FLAGS += -Wno-error
+
 # Appended to every compiled .s before it is assembled (#663). agbcc
 # starts each function with `.align 2, 0`, but nothing aligns the end of
 # the last one, so when a .text section ends on a halfword boundary `as`
