@@ -63,8 +63,8 @@ void ShowBitmapScreen(void *asset, void *palette)
     u32 val;
     struct dma_regs *dma;
 
-    REG_BG2CNT = 0x088F;
-    REG_DISPCNT = 0x1F44;
+    REG_BG2CNT = BGCNT_PRIORITY(3) | BGCNT_CHARBASE(3) | BGCNT_256COLOR | BGCNT_SCREENBASE(8);
+    REG_DISPCNT = DISPCNT_MODE_4 | DISPCNT_OBJ_1D_MAP | DISPCNT_BG_ALL_ON | DISPCNT_OBJ_ON;
 
     rawA = FixedInverse16(0x100);
     zero = 0;

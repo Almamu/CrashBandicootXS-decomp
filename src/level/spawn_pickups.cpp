@@ -140,7 +140,8 @@ void *CreateTouchableSprite(u32 index, u32 tag, u32 field0A, u32 cx, u16 cy, u16
 {
     Sprite *part = Sprite::Create(cx, cy, cw, ch);
 
-    part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + index * 12);
+    part->bank =
+        (const struct sprite_bank *)(SPRITE_BANK_BASE + index * sizeof(struct sprite_bank));
     part->tag = tag;
     part->ResetFrameTimer();
     part->ResetFrameIndex();

@@ -104,7 +104,7 @@ void Credits::Loop()
         DrawText();
         WaitForVBlank();
         REG_BLDY = i;
-        REG_BLDCNT = 0xff;
+        REG_BLDCNT = BLDCNT_TGT1_ALL | BLDCNT_EFFECT_DARKEN;
         CommitFrame();
         starfield->Update();
     }
@@ -154,7 +154,7 @@ void Credits::DrawText()
             tile = gObjVramCursor->GetTile();
             gObjVramCursor->Upload(logo->tiles, (logo->rows * logo->cols) << 9);
             zero = 0;
-            CpuSet(&zero, &oam, CPU_SET_SRC_FIXED | CPU_SET_32BIT | 2);
+            CpuSet(&zero, &oam, CPU_SET_SRC_FIXED | CPU_SET_32BIT | sizeof(oam) / sizeof(u32));
             oam.size = 2;
             oam.palette = logo->palette;
             y = node->y;

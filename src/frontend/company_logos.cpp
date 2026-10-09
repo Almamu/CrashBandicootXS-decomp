@@ -70,7 +70,7 @@ void CompanyLogos::Run()
     LoadUniversalLogoBg();
     for (i = 0; i <= 0x3b; i++) {
         if (i <= 0x10) {
-            REG_BLDCNT = 0xff;
+            REG_BLDCNT = BLDCNT_TGT1_ALL | BLDCNT_EFFECT_DARKEN;
             REG_BLDY = 0x10 - i;
         } else {
             *(vu32 *)REG_ADDR_BLDCNT = 0;
@@ -98,7 +98,7 @@ void CompanyLogos::Run()
             v = fade;
             if (v <= 0x40) {
                 s32 a = v >> 2;
-                REG_BLDCNT = 0x3f7f;
+                REG_BLDCNT = BLDCNT_TGT1_ALL | BLDCNT_EFFECT_BLEND | BLDCNT_TGT2_ALL;
                 REG_BLDALPHA = a | ((0x10 - a) << 8);
             }
             fade = v - 1;
@@ -155,7 +155,7 @@ void CompanyLogos::Run()
 
             fade = n;
             a = v - 0x12;
-            REG_BLDCNT = 0x3f7f;
+            REG_BLDCNT = BLDCNT_TGT1_ALL | BLDCNT_EFFECT_BLEND | BLDCNT_TGT2_ALL;
             REG_BLDALPHA = (0x10 - a) | (a << 8);
             if (n == 0x11) {
                 fade = -1;
@@ -166,7 +166,7 @@ void CompanyLogos::Run()
 
             fade = n;
             REG_BLDY = 0x10 - n;
-            REG_BLDCNT = 0xff;
+            REG_BLDCNT = BLDCNT_TGT1_ALL | BLDCNT_EFFECT_DARKEN;
         }
         gOamBuffer->Commit();
         FlushVramDmaQueue();
@@ -193,9 +193,9 @@ void CompanyLogos::LoadVvLogoGraphics()
     tilesA = (u32)AllocVramTileBlock(0x1200);
     tilesB = (u32)AllocVramTileBlock(0x400);
     tilesC = (u32)AllocVramTileBlock(0x1000);
-    LoadAssetBuffered(gVvLogoEmblemObj.paletteAsset, (void *)(PLTT + 0x3E0));
-    LoadAssetBuffered(gVvLogoLettersObj.paletteAsset, (void *)(PLTT + 0x3C0));
-    LoadAssetBuffered(gVvLogoUrlObj.paletteAsset, (void *)(PLTT + 0x3A0));
+    LoadAssetBuffered(gVvLogoEmblemObj.paletteAsset, (void *)(OBJ_PLTT + 15 * PALETTE_SIZE_16));
+    LoadAssetBuffered(gVvLogoLettersObj.paletteAsset, (void *)(OBJ_PLTT + 14 * PALETTE_SIZE_16));
+    LoadAssetBuffered(gVvLogoUrlObj.paletteAsset, (void *)(OBJ_PLTT + 13 * PALETTE_SIZE_16));
     LoadAssetBuffered(gVvLogoLettersObj.tileAsset, (void *)tilesA);
     LoadAssetBuffered(gVvLogoUrlObj.tileAsset, (void *)tilesB);
     {
@@ -519,8 +519,8 @@ void CompanyLogos::DrawVvLogoPieces()
 }
 
 /* Loads the Universal logo onto BG2 (gUniversalLogoBg): its palette
- * (through a scratch buffer, DMA'd from colour 1), its tiles at VRAM
- * +0x8000, and its map, which BG2's 8-bit affine map at +0xF000 gets a
+ * (through a scratch buffer, DMA'd from colour 1), its tiles in char
+ * block 2, and its map, which BG2's 8-bit affine map in screen block 30 gets a
  * byte per tile of; then BG2CNT (256 colours, 256x256, priority 1) and
  * BG2 on in mode 1. The screen's own fields aren't used.
  *
@@ -548,10 +548,10 @@ void CompanyLogos::LoadUniversalLogoBg()
         dma->cnt;
     }
     delete[] palBuf;
-    LoadTaggedAsset(pkg->tileAsset, (void *)(VRAM + 0x8000));
+    LoadTaggedAsset(pkg->tileAsset, (void *)BG_CHAR_ADDR(2));
     mapBuf = new u16[(s32)pkg->height * (s32)pkg->width];
     LoadTaggedAsset(pkg->mapAsset, mapBuf);
-    dest = (u16 *)(VRAM + 0xF000);
+    dest = (u16 *)BG_SCREEN_ADDR(30);
     for (y = 0; y <= 0x1f; y++) {
         for (x = 0; x <= 0x1f; x += 2) {
             if (y < (s32)pkg->height && x < (s32)pkg->width) {

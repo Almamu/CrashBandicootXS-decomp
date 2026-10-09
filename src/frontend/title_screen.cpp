@@ -46,7 +46,7 @@ TitleScreen::TitleScreen()
     WaitForVBlank();
     gOamBuffer->Commit();
 
-    *(vu32 *)REG_ADDR_BLDCNT = 0xff;
+    *(vu32 *)REG_ADDR_BLDCNT = BLDCNT_TGT1_ALL | BLDCNT_EFFECT_DARKEN;
     REG_BLDY = 0x10;
     REG_DISPCNT = 0;
 
@@ -55,15 +55,15 @@ TitleScreen::TitleScreen()
 
     dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
     dma->src = (u32)gTitleMenuPalette;
-    dma->dst = OBJ_PLTT + 13 * 0x20;
+    dma->dst = OBJ_PLTT + 13 * PALETTE_SIZE_16;
     dma->cnt = 0x80000010;
     dma->cnt;
     dma->src = (u32)gTitleMenuSelectedPalette;
-    dma->dst = OBJ_PLTT + 14 * 0x20;
+    dma->dst = OBJ_PLTT + 14 * PALETTE_SIZE_16;
     dma->cnt = 0x80000010;
     dma->cnt;
     dma->src = (u32)gTitleMenuBlinkPalette;
-    dma->dst = OBJ_PLTT + 15 * 0x20;
+    dma->dst = OBJ_PLTT + 15 * PALETTE_SIZE_16;
     dma->cnt = 0x80000010;
     dma->cnt;
 
@@ -134,8 +134,8 @@ void TitleScreen::LoadObjTiles()
 
         palette = new u8[*(u32 *)(*pkg)->paletteAsset >> 8];
         LoadTaggedAsset((*pkg)->paletteAsset, palette);
-        DmaCopy16(3, palette, paletteDest, 0x20);
-        paletteDest += 0x20;
+        DmaCopy16(3, palette, paletteDest, PALETTE_SIZE_16);
+        paletteDest += PALETTE_SIZE_16;
         delete[] palette;
 
         tiles = new u8[*(u32 *)(*pkg)->tileAsset >> 8];
@@ -148,8 +148,8 @@ void TitleScreen::LoadObjTiles()
             s32 i;
 
             for (i = 0; i < count; i++) {
-                DmaCopy16(3, tiles + ((map[i] & 0xff) << 5), tileDest, 0x20);
-                tileDest += 0x20;
+                DmaCopy16(3, tiles + ((map[i] & 0xff) << 5), tileDest, TILE_SIZE_4BPP);
+                tileDest += TILE_SIZE_4BPP;
             }
         }
 
@@ -555,7 +555,7 @@ fadeLoop:
     starfield->Update();
     WaitForVBlank();
     REG_BLDY = fade;
-    REG_BLDCNT = 0xff;
+    REG_BLDCNT = BLDCNT_TGT1_ALL | BLDCNT_EFFECT_DARKEN;
     CommitFrame();
     fade++;
     if (fade <= 0x10)
@@ -665,6 +665,6 @@ TitleScreen::~TitleScreen()
     pal = (u16 *)PLTT;
     for (i = 0xff; i >= 0; i--)
         *pal++ = zero;
-    REG_BLDCNT = 0xff;
+    REG_BLDCNT = BLDCNT_TGT1_ALL | BLDCNT_EFFECT_DARKEN;
     REG_BLDY = 0x10;
 }

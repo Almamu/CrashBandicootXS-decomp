@@ -54,7 +54,7 @@ void Hovercraft::UpdateHitFlash(void)
         hitFlashTimer = 0;
 
     src = palette;
-    dst = (u16 *)(PLTT + 0x20);
+    dst = (u16 *)(BG_PLTT + PALETTE_SIZE_16);
     for (i = 0; i < 16; i++) {
         if (hitFlashOn != 0)
             dst[i] = RGB_WHITE;
@@ -268,7 +268,7 @@ void Hovercraft::StateFall(void)
     }
 
     if (distance <= 0x14ff) {
-        REG_DISPCNT &= 0xfbff;
+        REG_DISPCNT &= ~DISPCNT_BG2_ON;
         gone = 1;
     }
 }
@@ -413,9 +413,11 @@ void Hovercraft::UpdateBg2(void)
 
     if (bg2PageFlip != 0) {
         if (bg2Page == 0)
-            REG_BG2CNT = 0x5809;
+            REG_BG2CNT =
+                BGCNT_PRIORITY(1) | BGCNT_CHARBASE(2) | BGCNT_SCREENBASE(24) | BGCNT_AFF256x256;
         else
-            REG_BG2CNT = 0x5909;
+            REG_BG2CNT =
+                BGCNT_PRIORITY(1) | BGCNT_CHARBASE(2) | BGCNT_SCREENBASE(25) | BGCNT_AFF256x256;
         bg2PageFlip = 0;
         bg2Page ^= 1;
     }
@@ -433,7 +435,8 @@ void Hovercraft::UpdateBg2(void)
 }
 
 /* Loads the hovercraft's graphics: its palette into BG palette 1, a blank
- * tile and a blank char block 3, its tiles (ConvertHovercraftTiles), and
+ * 8bpp tile (tile 0xFF of char block 2), both map pages (screen blocks 24
+ * and 25) filled with that tile, its tiles (ConvertHovercraftTiles), and
  * once it is active, its map and BG2. LoadAirshipGraphics's twin, with
  * the tile clear as a signed-address loop with its zero hoisted into a
  * local. */
@@ -443,12 +446,12 @@ void Hovercraft::LoadGraphics(void)
     s32 base;
     u32 zero;
 
-    DmaCopy16(3, palette, (void *)(PLTT + 0x20), 0x20);
-    base = VRAM + 0xBFC0;
+    DmaCopy16(3, palette, (void *)(BG_PLTT + PALETTE_SIZE_16), PALETTE_SIZE_16);
+    base = BG_CHAR_ADDR(2) + 0xFF * TILE_SIZE_8BPP;
     zero = 0;
     for (i = base + 0x3c; i >= base; i -= 4)
         *(u32 *)i = zero;
-    DmaFill16(3, 0xFFFF, (void *)(VRAM + 0xC000), 0x1000);
+    DmaFill16(3, 0xFFFF, (void *)BG_SCREEN_ADDR(24), 2 * BG_SCREEN_SIZE);
     ConvertTiles();
     if (state != 0) {
         AnimPart *self;
@@ -517,7 +520,7 @@ void Hovercraft::ConvertTiles(void)
         off += heights[k] << 5;
     }
     mapTileBase = 0xFF - sum;
-    dst = (u32 *)(((0xFF - sum) << 6) + (VRAM + 0x8000));
+    dst = (u32 *)(((0xFF - sum) << 6) + BG_CHAR_ADDR(2));
     for (row_i = 0; row_i <= 0; row_i++) {
         u8 *src;
         u8 *row;
