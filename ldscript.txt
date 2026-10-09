@@ -270,6 +270,7 @@ SECTIONS
         build/crashbandicootxs/src/vehicle/jetpack/airship_graphics.o(.text);
         build/crashbandicootxs/src/vehicle/jetpack/jetpack_balloon.o(.text);
         build/crashbandicootxs/src/vehicle/jetpack/jetpack_crates.o(.text);
+        build/crashbandicootxs/src/vehicle/jetpack/jetpack_rocket.o(.text);
         build/crashbandicootxs/src/bosses/hovercraft.o(.text);
         build/crashbandicootxs/src/bosses/hovercraft_parts.o(.text);
         build/crashbandicootxs/src/bosses/hovercraft_cannon.o(.text);

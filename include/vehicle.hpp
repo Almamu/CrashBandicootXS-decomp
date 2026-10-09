@@ -720,7 +720,7 @@ public:
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackParachuteNitro) == 0x60);
 
-/* A rocket (gJetpackRocketVtable, src/vehicle/jetpack/jetpack_crates.cpp): it
+/* A rocket (gJetpackRocketVtable, src/vehicle/jetpack/jetpack_rocket.cpp): it
  * swings around `originX` while it comes down by `stepY` to `limitY`,
  * then explodes (Launch); it hurts the player once on contact. */
 class JetpackRocket : public HpActor
@@ -745,7 +745,7 @@ public:
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackRocket) == 0x68);
 
 /* A jetpack ring (gJetpackRingVtable). Its constructor and slot 5 are in src/bosses/hovercraft.cpp
- * (part 11h), its Update in src/vehicle/jetpack/jetpack_crates.cpp (part 11g). */
+ * (part 11h), its Update in src/vehicle/jetpack/jetpack_rocket.cpp (part 11g). */
 class JetpackRing : public HpActor
 {
 public:
