@@ -769,12 +769,14 @@ s32 LevelState::GetCrateCount()
 
 /* Bit-0 getter on the current level's word in the `saveData` copy of
  * the progress block (`idx` from `room.level`). Spelled as
- * `this + idx * 4 + offset`: taking `&...levels[idx]` inside the
- * snapshot adds the constant first, which the ROM doesn't. */
+ * `this + idx * sizeof(union level_record) + offset`: taking
+ * `&...levels[idx]` inside the snapshot adds the constant first, which
+ * the ROM doesn't. */
 s32 LevelState::IsCrystalSaved()
 {
     s32 idx = room.level;
-    u8 *addr = (u8 *)this + idx * 4 + offsetof(LevelState, saveData.levels);
+    u8 *addr =
+        (u8 *)this + idx * sizeof(union level_record) + offsetof(LevelState, saveData.levels);
 
     return (u32)(*addr << 31) >> 31;
 }

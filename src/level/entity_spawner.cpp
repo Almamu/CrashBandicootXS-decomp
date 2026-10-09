@@ -106,7 +106,7 @@ MovingSprite *EntitySpawner::SpawnEffectPart(s32 anim, s32 tag, s32 x, s32 y, s3
         y = ((u32)layer->heightPx << 8 >> 8) - 1;
     part = MovingSprite::Create(0xffff, x, y, 0);
     part->mirrorFlags.mirrorX = mirror != 0;
-    part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + anim * 12);
+    part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + anim * sizeof(struct sprite_bank));
     part->tag = tag;
     part->ResetFrameTimer();
     part->ResetFrameIndex();

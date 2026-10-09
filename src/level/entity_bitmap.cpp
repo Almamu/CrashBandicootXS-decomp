@@ -56,13 +56,13 @@ void Bitmap::ClearBit(s32 n)
     *word &= ~mask;
 }
 
-/* ClearBitmap: zero-fills the 32 words (128 bytes) via the BIOS `CpuSet`
- * wrapper, 32-bit fixed-source mode. */
+/* ClearBitmap: zero-fills `bits` via the BIOS `CpuSet` wrapper, 32-bit
+ * fixed-source mode. */
 void Bitmap::Clear()
 {
     s32 zero = 0;
 
-    CpuSet(&zero, bits, CPU_SET_32BIT | CPU_SET_SRC_FIXED | 0x20);
+    CpuSet(&zero, bits, CPU_SET_32BIT | CPU_SET_SRC_FIXED | sizeof(bits) / sizeof(u32));
 }
 
 /* InitBitmap: clears the bitmap (g++'s constructor returns `this`, as

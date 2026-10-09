@@ -32,7 +32,7 @@ void FadePaletteToBlack(void)
         WaitForVBlank();
         DmaCopy16(3, gPaletteFadeBuffer, PLTT, PLTT_SIZE);
     }
-    REG_BLDCNT = 0xff;
+    REG_BLDCNT = BLDCNT_TGT1_ALL | BLDCNT_EFFECT_DARKEN;
     REG_BLDY = 0x10;
     DmaCopy16(3, gPaletteBackup, PLTT, PLTT_SIZE);
 }

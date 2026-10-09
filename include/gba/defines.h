@@ -30,8 +30,10 @@
 #define PLTT_SIZE       0x400
 #define BG_PLTT_SIZE    0x200
 #define OBJ_PLTT_SIZE   0x200
+#define PALETTE_SIZE_16 0x20 // one 16-colour palette
 #define VRAM_SIZE       0x18000
 #define BG_VRAM_SIZE    0x10000
+#define BG_SCREEN_SIZE  0x800 // one screen block (BG_SCREEN_ADDR)
 // The size of OBJ_VRAM0_SIZE depends on the "Mode" of the graphics hardware.
 // The data is interpreted differently by the hardware in each mode.
 #define OBJ_VRAM0_SIZE  0x8000

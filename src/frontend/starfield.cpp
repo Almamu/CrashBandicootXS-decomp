@@ -68,7 +68,7 @@ Starfield::Starfield()
     {
         u16 *dispcntShadow = (u16 *)gDispcnt;
         zero = 0;
-        *dispcntShadow = 0x40;
+        *dispcntShadow = DISPCNT_OBJ_1D_MAP;
     }
     SetDispcntMode(0);
 

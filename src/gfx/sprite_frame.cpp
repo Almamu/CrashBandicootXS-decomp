@@ -339,11 +339,12 @@ void FlushSpriteFrameOamQueue(void)
  * here hiding every hardware sprite as this system's startup state. */
 void InitSpriteFrameOamQueue(void)
 {
-    gSpriteOamQueue = (struct queued_oam_entry *)mem_alloc(OAM_ENTRY_COUNT * 8, MEM_HEAP_EWRAM);
-    gSpriteAffineQueue = (s32 *)mem_alloc(32 * 4, MEM_HEAP_EWRAM);
+    gSpriteOamQueue = (struct queued_oam_entry *)mem_alloc(
+        OAM_ENTRY_COUNT * sizeof(struct queued_oam_entry), MEM_HEAP_EWRAM);
+    gSpriteAffineQueue = (s32 *)mem_alloc(32 * sizeof(s32), MEM_HEAP_EWRAM);
     gSpriteOamQueueCount = 0;
     gSpriteAffineQueueCount = 0;
-    DmaFill16(3, 0x200, OAM, OAM_ENTRY_COUNT * 8);
+    DmaFill16(3, 0x200, OAM, OAM_ENTRY_COUNT * sizeof(union oam_shadow_entry));
 }
 
 /* A doubly-linked frame-cache entry: `frame` is the source animation-
