@@ -140,6 +140,15 @@ unlabel sub_8039E50
 unlabel sub_803A318
 unlabel sub_803A608
 
+# GAX2's DMA settle delay (GAX_DMA_WAIT, Shin'en's `mov r3, r3`) is a
+# `.byte 0x1b, 0x1c` in expected/code_3.s, which puts a data mapping
+# symbol on that halfword; the C build has it as code. GaxResetSoundHardware,
+# GAX_irq, GAX_stop, GaxStopDma.
+code 0x080384E4
+code 0x08038BD4
+code 0x080391BC
+code 0x080391F8
+
 # A padding halfword the original disassembly gave its own
 # non_word_aligned_thumb_func_start; nothing in src/ defines it.
 unlabel sub_8016046

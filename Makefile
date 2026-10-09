@@ -83,7 +83,8 @@ DATA_ASM_OBJS := $(patsubst $(DATA_ASM_SUBDIR)/%.s,$(DATA_ASM_BUILDDIR)/%.o,$(DA
 # Third-party and SDK code linked into the ROM, kept apart from the game
 # under lib/ (see docs/libraries.md). They are linked as plain objects:
 # ldscript.txt interleaves them with the game code in ROM order.
-#  - lib/gax: Shin'en's GAX2 sound engine (src/*.c code, data/*.c tables)
+#  - lib/gax: Shin'en's GAX2 sound engine (src/*.c code, asm/*.s its
+#    hand-written ARM DSP routines, data/*.c tables)
 #  - lib/agb_eeprom: Nintendo's AgbEeprom SDK library, EEPROM_V122
 #  - lib/libgcc: libgcc2.c's 64-bit helpers and lib1funcs.asm's routines
 #  - lib/libagbsyscall: the BIOS SWI wrappers
@@ -105,7 +106,11 @@ LIB1FUNCS_OBJS := $(patsubst %,$(LIB_BUILDDIR)/libgcc/%.o,$(LIB1FUNCS))
 
 LIBAGBSYSCALL_OBJS := $(LIB_BUILDDIR)/libagbsyscall/libagbsyscall.o
 
-LIB_OBJS := $(LIB_C_OBJS) $(LIBGCC2_OBJS) $(LIB1FUNCS_OBJS) $(LIBAGBSYSCALL_OBJS)
+# A library's hand-written assembly (lib/<name>/asm/*.s: GAX2's ARM DSP code).
+LIB_ASM_OBJS := $(patsubst $(LIB_SUBDIR)/%.s,$(LIB_BUILDDIR)/%.o,$(wildcard $(LIB_SUBDIR)/*/asm/*.s))
+$(LIB_ASM_OBJS): asm/macros.inc asm/macros/function.inc
+
+LIB_OBJS := $(LIB_C_OBJS) $(LIBGCC2_OBJS) $(LIB1FUNCS_OBJS) $(LIBAGBSYSCALL_OBJS) $(LIB_ASM_OBJS)
 
 OBJS := $(C_OBJS) $(CXX_OBJS) $(LIB_OBJS) $(ASM_OBJS) $(DATA_ASM_OBJS)
 

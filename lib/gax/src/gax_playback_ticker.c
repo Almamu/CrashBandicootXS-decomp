@@ -8,7 +8,7 @@
  * fatal errors to be shown (`showErrors`) and one hasn't already been
  * reported (`playDone`), shows GAX2's fatal-error screen (GaxFatalError);
  * finally, when `outHalf == 1`, re-arms DMA1 for Direct Sound A output
- * from `outBuf` (same DMA1CNT_H settle-delay quirk as GaxResetSoundHardware) and
+ * from `outBuf` (around GAX2's DMA1CNT_H settle delay, GAX_DMA_WAIT) and
  * clears the `playDone` flag. */
 void GAX_irq(void)
 {
@@ -41,15 +41,7 @@ void GAX_irq(void)
         struct GaxPlayerState *p = gGaxPlayerState;
 
         REG_DMA1CNT_H = 0x8640;
-        /* Real hardware settle delay, not padding - see GaxResetSoundHardware's
-         * doc comment in gax_hw_reset.c for why this can't be written
-         * as plain "adds r3, r3, #0" text. */
-        // clang-format off
-        asm(".byte 0x1b, 0x1c\n\t"
-            "mov r8, r8\n\t"
-            "mov r8, r8\n\t"
-            "mov r8, r8");
-        // clang-format on
+        GAX_DMA_WAIT();
         REG_DMA1CNT_H = 0xc8 << 3;
         REG_DMA1SAD = (u32)p->outBuf;
         REG_DMA1CNT_H = 0xB660;

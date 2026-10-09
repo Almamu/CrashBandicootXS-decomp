@@ -9,8 +9,9 @@ magic constant (`0x47415832`) embedded in the engine's own init code
 The whole engine (mixer, timer IRQ handler, replay logic) is matched C in
 [`lib/gax/`](../lib/gax), kept apart from the game as a library (see
 [`docs/libraries.md`](./libraries.md)): `lib/gax/src/*.c` (ROM
-`0x08037F3C`-`0x0803A944`, including the ARM mixer/DSP routines, which are
-inline in `gax_sound_handler_mixer_play.c`), its strings and tables in
+`0x08037F3C`-`0x0803A944`) with Shin'en's own inline asm, and the
+hand-written ARM mixer/DSP routines in `lib/gax/asm/gax_arm_dsp.s`
+(docs/libraries.md, "GAX implementation notes"), its strings and tables in
 `lib/gax/data/gax_tables_5a6100.c`, the public API in `<gax.h>`
 (`lib/gax/include/gax.h`) and the internal structures in
 `lib/gax/src/gax_internal.h`. The libgcc 64-bit helpers linked in with it

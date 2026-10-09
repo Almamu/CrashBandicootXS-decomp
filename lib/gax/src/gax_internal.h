@@ -61,7 +61,7 @@ struct GaxPlayerState {
     void *mixCode; /* 0x44 - IWRAM copy of the ARM resampler gGaxArmResample (GaxChannelMix) */
     /* 0x48/0x9c/0x17c - IWRAM copies of the ARM routines gGaxArmDownmix,
      * gGaxArmEcho and (only with GaxSongHeader.flags bit 2, else NULL)
-     * gGaxArmFilter (see gax_sound_handler_mixer_play.c), entered in place via
+     * gGaxArmFilter (lib/gax/asm/gax_arm_dsp.s), entered in place via
      * GAX_CALL_ARM. */
     u32 downmixCode[21]; /* 0x48 */
     u32 echoCode[56];    /* 0x9c */
@@ -435,7 +435,7 @@ extern const char gGaxHaltFunctionLabel[];
 extern const u32 gGaxPeriodTable[0xEF4];
 extern const s8 gGaxVibratoTable[64];
 
-/* The raw ARM routines at the end of gax_sound_handler_mixer_play.c, which GAX2_init
+/* The hand-written ARM routines (lib/gax/asm/gax_arm_dsp.s), which GAX2_init
  * copies into the player state (downmixCode/echoCode/filterCode/mixCode),
  * and the four instructions of the resampler that GaxChannelMix patches
  * in the copy (by their offset from gGaxArmResample). */
@@ -459,41 +459,34 @@ extern u32 gGaxHaltFont[70];
 /* sym_iwram.txt (gGaxPlayerState is declared above) */
 extern u64 gGaxMixRateReciprocal; /* 2^32 / mix rate (GaxChannelInit), scales gGaxPeriodTable */
 
-/* GAX2's own "call an ARM routine from Thumb" idiom (ARMv4T Thumb has
- * no `blx reg`): hand-computes a Thumb-tagged return address into lr
- * and `bx`es to `fn` with `*argp` in r0, returning to the trailing
- * `nop`. The operand shapes (`"m"` for the argument, forcing it through
- * a stack slot, and a free register moved into r1) are what reproduce
- * the ROM's own `str r0,[sp,#N]` ... `mov r1,rX; ldr r0,[sp,#N]`
- * sequence, so this is very likely the engine's own inline asm.
- * #662 round 3: no C call can produce this. agbcc's thumb.md has one
- * indirect-call pattern, `bl _call_via_rN` (lib/libgcc/lib1funcs.s).
- * This gcc has no `long_call` attribute, and -mlong-calls only forces
- * direct calls through that same pattern. Nothing in the Thumb back end
- * emits `mov rX, pc; add rX, #5; mov lr, rX; bx rY`. */
-#define GAX_CALL_ARM(fn, arg)                                                    \
-    asm volatile("mov r1, %1\n\tldr r0, %0\n\tmov r2, pc\n\tadd r2, #5\n\t"     \
-                 "mov lr, r2\n\tbx r1\n\tnop"                                   \
-                 : : "m"(arg), "r"(fn) : "r0", "r1", "r2", "lr")
+/* ---- Shin'en's inline asm (original source, not matching workarounds:
+ * docs/libraries.md, "GAX implementation notes") ---- */
 
-/* The same call with the argument already in a register (`mov r0, rX`
- * instead of a stack reload) - GaxChannelMix's form, taking the player
- * state whose `mixCode` holds the routine. What reproduces the ROM
- * (docs/matching/archive/gax-naked-retry-3.md):
- * - the "memory" clobber: the ARM routine writes the work item `arg`
- *   points at, and without it GCSE carries loads across the call;
- * - `arg` goes into a register before the routine is loaded (the ROM's
- *   `mov r4, sp` comes first);
- * - one variable walks state -> routine, so both loads share a register
- *   (the ROM's `ldr r3, [r3]; ldr r3, [r3, #0x44]`). */
-#define GAX_CALL_ARM_R(state, arg)                                               \
-    {                                                                            \
-        void *_arg = (void *)(arg);                                              \
-        void *_fn = (state);                                                     \
-        _fn = ((struct GaxPlayerState *)_fn)->mixCode;                          \
-        asm volatile("mov r1, %1\n\tmov r0, %0\n\tmov r2, pc\n\tadd r2, #5\n\t" \
+/* The DMA settle delay GAX2 puts between arming and disarming a DMA
+ * channel's control register (GaxResetSoundHardware, GAX_irq, GAX_stop,
+ * GaxStopDma): four instructions that do nothing. GAX 3.05A's matched C
+ * has the same `mov r3, r3` and three `nop`s as inline asm in its
+ * GAX_stop and GAX_irq; the assembler encodes the Thumb `mov r3, r3` as
+ * `add r3, r3, #0` (0x1C1B), the ROM's bytes. */
+#define GAX_DMA_WAIT() __asm__ volatile("mov r3, r3\n\tnop\n\tnop\n\tnop")
+
+/* GAX2's call from Thumb into one of its ARM routines (ARMv4T Thumb has
+ * no `blx reg`): it computes a Thumb-tagged return address into lr and
+ * `bx`es to `fn` with the work item's address in r0, returning to the
+ * trailing `nop`. No C call produces it (agbcc's only indirect call is
+ * `bl _call_via_rN`, and GAX 3.05A calls its ARM code that way), so
+ * this is the engine's own inline asm. Two forms, as the ROM has them:
+ * GAX_CALL_ARM reads the item pointer `argp` from memory (its "m"
+ * operand: the mixer's `str r0, [sp, #N]` ... `ldr r0, [sp, #N]`),
+ * GAX_CALL_ARM_R takes it in a register (GaxChannelMix's `mov r0, r4`)
+ * and says the routine writes memory (the item). */
+#define GAX_CALL_ARM(fn, argp)                                                \
+    __asm__ volatile("mov r1, %1\n\tldr r0, %0\n\tmov r2, pc\n\tadd r2, #5\n\t" \
                      "mov lr, r2\n\tbx r1\n\tnop"                               \
-                     : : "r"(_arg), "r"(_fn) : "r0", "r1", "r2", "lr", "memory"); \
-    }
+                     : : "m"(argp), "r"(fn) : "r0", "r1", "r2", "lr")
+#define GAX_CALL_ARM_R(fn, arg)                                               \
+    __asm__ volatile("mov r1, %1\n\tmov r0, %0\n\tmov r2, pc\n\tadd r2, #5\n\t" \
+                     "mov lr, r2\n\tbx r1\n\tnop"                               \
+                     : : "r"(arg), "r"(fn) : "r0", "r1", "r2", "lr", "memory")
 
 #endif /* __GAX_INTERNAL_H__ */

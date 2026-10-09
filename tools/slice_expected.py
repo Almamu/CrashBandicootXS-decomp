@@ -34,6 +34,13 @@ def find_label_line(lines, address):
         if i > 0 and re.search(rf"\b(?:thumb|arm)_func_start\s+{re.escape(name)}\b", lines[i - 1]):
             return i - 1
         return i
+    # No function label there: a local label named after its address
+    # (`_0803A628:`, where GAX2's raw ARM block starts), for a range that
+    # begins mid-way into what the disassembly took for one function.
+    local = re.compile(rf"^_0*{address:X}:", re.IGNORECASE)
+    for i, line in enumerate(lines):
+        if local.match(line):
+            return i
     return None
 
 

@@ -86,7 +86,7 @@ pass) and
   Timer0 stop, the counterpart to `GAX_irq`'s start, plus a generic
   single-DMA-channel "off" helper; same writeup as above)
 - `lib/gax/src/gax_swi.c` - `GaxHuffUnComp` (HuffUnComp SWI 0x13 wrapper,
-  transcribed as NAKED asm)
+  real C in Shin'en's form: r7/r8 register variables and an inline `swi`)
 - `lib/gax/src/gax_fatal_error.c` - `GaxFatalError` (the fatal-error
   display screen)
 - `lib/gax/src/gax_sound_handler_info.c` - `GaxInfoResetPosition`/`GaxInfoInit`/
@@ -178,7 +178,7 @@ for the per-function notes.
 - `lib/gax/src/gax_channel_note_cut_driver.c` - `GaxFxChannelPlay`
 - `lib/gax/src/gax_sound_handler_mixer_play.c` - `GaxMixerApplyEcho`, `GaxMixerApplyFilter`,
   `GaxMixerPlay`, `GaxMixFrame` (the Thumb-to-ARM call is GAX2's own
-  inline-asm idiom, `GAX_CALL_ARM`; `sub_803A318`/`sub_803A608` were
+  inline asm, `GAX_CALL_ARM`, original source; `sub_803A318`/`sub_803A608` were
   only its return points, not functions)
 - `lib/libgcc/libgcc2.c` - `__divdi3`/`__udivdi3`/
   `__muldi3` (libgcc2, category `util` -
@@ -292,6 +292,6 @@ Nothing in this chunk is left raw any more; see
 register allocation ceiling, or entangled with a neighbor via a manual
 return-address-trampoline idiom). The raw ARM-mode DSP/mixer code block past
 `0x0803A628` (docs/audio.md's `gGaxArmDownmix` onward) is no
-longer a separate raw span - it is now an untouched trailing byte
-transcription inside `gax_sound_handler_mixer_play.c` (see above), still not
-disassembled as real code.
+longer a raw span: it is disassembled, hand-written ARM in
+`lib/gax/asm/gax_arm_dsp.s` (docs/libraries.md, "GAX implementation
+notes").

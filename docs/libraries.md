@@ -17,6 +17,7 @@ holds only the game.
 ```
 lib/<name>/include/   the library's public header(s), on the -I path
 lib/<name>/src/       its C sources, one object each, plus internal headers
+lib/<name>/asm/       its hand-written assembly (GAX2's ARM DSP routines)
 lib/<name>/data/      its constant data (C tables, linked in the data block)
 ```
 
@@ -45,8 +46,8 @@ Game code includes a library's public header and nothing else from it:
   `GAX_irq`/`GAX_play`, the music and sound-effect calls, and
   `struct GaxSongHeader` (GAX2's parameter block). `include/audio.h` (the
   game's audio manager) includes it. The engine's internal structures
-  (player state, handler types, channel state, `GAX_CALL_ARM`) are in
-  `lib/gax/src/gax_internal.h`.
+  (player state, handler types, channel state, and Shin'en's inline asm
+  `GAX_DMA_WAIT`/`GAX_CALL_ARM`) are in `lib/gax/src/gax_internal.h`.
 - `<agb_eeprom.h>`: `EEPROMConfigure`, `SetEepromTimerIntr`, `EEPROMRead`,
   `EEPROMWrite`, `EEPROMCompare`, `EEPROMWrite1_check`, `struct
   EepromConfig` and `gEepromConfig`. The timer state and helpers are in
@@ -58,6 +59,67 @@ Game code includes a library's public header and nothing else from it:
 
 The libraries include `gba/gba.h` (the hardware headers in `include/gba/`)
 but not the game's headers.
+
+## GAX implementation notes
+
+GAX2 is Shin'en Multimedia's GAX Sound Engine (code by Bernhard Wodok).
+This ROM has version **2.01D** (`gGaxVersionStringPtr`: "GAX Sound Engine
+2.01D (Sep 28 2001)"); the three Crash Bandicoot XS releases (EUR, USA as
+*The Huge Adventure*, JPN as *Crash Bandicoot Advance*) are the only 2.01D
+games in loveemu's list of GAX games and versions
+([gist](https://gist.github.com/loveemu/068ffdf1ee118abff0d97bf97d854b4c)).
+No SDK, library or source release of GAX is public, no interview says how
+it was written, and no other project decompiles a 2.x version. The
+evidence there is:
+
+- **The GAX 3.05A decompilation**
+  ([beanieaxolotl/shinen-gax-decomp](https://github.com/beanieaxolotl/shinen-gax-decomp),
+  a later and incompatible engine generation) is Thumb C (`src/gax.c`,
+  `tracker.c`, `output.c`, ...) built with agbcc
+  `-mthumb-interwork -fprologue-bugfix -O2`, the same compiler and flags as
+  this ROM's GAX2 (decomp.me has a
+  ["GAX Sound Engine (3.05A)" preset](https://decomp.me/preset/184)), plus
+  two assembly files for the ARM code only: `asm/output_asm.s` (render,
+  low-pass filter and reverb, with the same "FILT"/"BART" tags as
+  `gGaxArmFilter`/`gGaxArmEcho` here) and `asm/tracker_asm.s` (the
+  resampler, with patch points like the ones GaxChannelMix rewrites). The
+  ARM code is copied into GAX's work RAM and run from there, as here.
+- **The DMA settle delay is inline asm in C there.** Its `GAX_stop` (100%
+  matched) and `GAX_irq` are C with an `__asm__ volatile` of
+  `mov r3, r3` and three `nop`s between arming and disarming DMA1CNT_H
+  ([src/gax.c](https://github.com/beanieaxolotl/shinen-gax-decomp/blob/747dd8ec979fd9c1ea92756bc33f9ffe32d41ce3/src/gax.c#L1437-L1475)).
+  That is this ROM's `add r3, r3, #0` + three `nop`s: the assembler
+  encodes the Thumb `mov r3, r3` that way.
+- **3.05A calls its ARM code through C function pointers**
+  (`bl _call_via_r1`/`_r3`, `tracker.c`); 2.01D computes the return
+  address by hand (`mov r2, pc; add r2, #5; mov lr, r2; bx r1`), an
+  instruction sequence no C produces. Its operand shapes (the argument
+  through a stack slot, a free register moved into r1) are those of a gcc
+  inline asm inside compiled code, not of a hand-written routine.
+- **GaxHuffUnComp** saves r8 but not r7, which it clobbers: agbcc's bug
+  of dropping a register variable pinned to r7 from the push list, so
+  its source was C with register variables. 3.05A has no Huffman routine.
+- loveemu's [gaxtapper](https://github.com/loveemu/gaxtapper)
+  (`src/gaxtapper/gax_driver.cpp`) finds GAX2_init in versions 2.1 to 3.05
+  by its gcc 2.9 Thumb prologue (`push {r4-r7, lr}; mov r7, r10; ...`).
+
+So GAX was C with assembly pieces, and this repository follows that (the
+owner's decision in #662):
+
+- **Assembly:** only the ARM DSP routines, hand-written in every GAX
+  version: `lib/gax/asm/gax_arm_dsp.s` (gGaxArmDownmix, gGaxArmFilter,
+  gGaxArmEcho, gGaxArmResample), disassembled from the bytes that used
+  to sit as a raw `.byte` block at the end of
+  `gax_sound_handler_mixer_play.c`.
+- **C with Shin'en's inline asm:** `GAX_DMA_WAIT()` (the settle delay,
+  as 3.05A writes it) in GaxResetSoundHardware, GAX_irq, GAX_stop and
+  GaxStopDma; `GAX_CALL_ARM`/`GAX_CALL_ARM_R` (the call into ARM code) in
+  GaxMixerApplyEcho, GaxMixerApplyFilter, GaxMixFrame and GaxChannelMix;
+  GaxHuffUnComp's r7/r8 register variables and inline `swi`. These are
+  original source, not matching workarounds: `tools/match_idioms.py`
+  lists them in `ORIGINAL_SOURCE`, and `--functions` doesn't count them.
+  What these functions still need beyond them (GaxChannelMix's keep and
+  volatile read, GaxHuffUnComp's two memory uses) is counted as usual.
 
 ## Linking
 
@@ -72,7 +134,7 @@ ROM order of the library code:
 
 ```
 lib/libgcc/_divdi3.o _udivdi3.o _udivsi3.o _muldi3.o   (linked in with GAX2)
-lib/gax/src/gax_*.o                                     (the engine)
+lib/gax/src/gax_*.o lib/gax/asm/gax_arm_dsp.o          (the engine)
 lib/libagbsyscall/libagbsyscall.o
 lib/agb_eeprom/src/eeprom_timer.o eeprom_timer_stop.o eeprom_read_write.o eeprom_verify.o
 lib/libgcc/_call_via_rX.o _divsi3.o _dvmd_tls.o _modsi3.o _umodsi3.o
@@ -87,7 +149,7 @@ The per-object flags moved with the files, unchanged:
 | `lib/gax/src/*.o`, `lib/*/data/*.o` | agbcc | default (`-O2 -mthumb-interwork ... -fprologue-bugfix`) |
 | `lib/agb_eeprom/src/*.o` | agbcc | `-O1` instead of `-O2` (`O1_OBJS`, [eeprom-sdk-o1.md](./matching/eeprom-sdk-o1.md)) |
 | `lib/libgcc/_divdi3.o`, `_udivdi3.o`, `_muldi3.o` | agbcc | no `-mthumb-interwork` (`NO_INTERWORK_OBJS`, [gax-toolchain-retry.md](./matching/archive/gax-toolchain-retry.md)) |
-| `lib/libgcc/_*.o` from lib1funcs.s, `lib/libagbsyscall/*.o` | as | `ASFLAGS` |
+| `lib/libgcc/_*.o` from lib1funcs.s, `lib/libagbsyscall/*.o`, `lib/gax/asm/*.o` | as | `ASFLAGS` |
 
 No library object uses old_agbcc, agbcp_arm_patched or
 `-fno-rerun-loop-opt` (`OLD_AGBCC_OBJS`, `ARM_OBJS`,
@@ -122,6 +184,6 @@ No library object uses old_agbcc, agbcp_arm_patched or
 `tools/report_units.py` gives each library its own progress category:
 `gax` ("GAX2 sound engine (lib)"), `agb_eeprom` ("AgbEeprom SDK (lib)")
 and `libgcc` ("libgcc (lib)"); game audio keeps `audio`. The hand-written
-ranges (lib1funcs.s, libagbsyscall.s) are `HANDWRITTEN`: no unit, out of
-the totals. `tools/chunk_remaining_work.py` scans `lib/**/*.c` as well as
+ranges (lib1funcs.s, libagbsyscall.s, `lib/gax/asm/gax_arm_dsp.s`) are
+`HANDWRITTEN`: no unit, out of the totals. `tools/chunk_remaining_work.py` scans `lib/**/*.c` as well as
 `src/**/*.c` for parked functions and cleanup candidates.
