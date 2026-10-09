@@ -330,7 +330,9 @@ system from "core" system startup/init code.
   removed. See
   [docs/matching/archive/issue-42-bg-scroll-layer.md](../matching/archive/issue-42-bg-scroll-layer.md).
 - **`DestroyPooledBgLayer`/`InitPooledBgLayer`/`GetPooledBgLayerPriority`/`ResetTileSlotPool`/`AcquireTileSlot`/`ReleaseTileSlot`/`UploadTileSlot`/`SetTileSlotPoolSource`**
-  (`src/level/tile_slot_pool.c`, new file - GitHub issue #43) - BG
+  (`src/level/tile_slot_pool.c`, new file - GitHub issue #43; the
+  three `PooledBgLayer` methods at the end of `src/level/pooled_bg_layer.cpp`
+  since #770) - BG
   layer 0 of the level-layers singleton (constructor/destructor chaining
   to the `InitBgLayer` BG-scroll-layer base) and its reference-counted
   VRAM tile-slot pool (0x2000 source tiles onto 0x200 slots): reset,

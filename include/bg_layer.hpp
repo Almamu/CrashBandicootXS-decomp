@@ -9,9 +9,8 @@
  * No `#pragma interface`: g++ emits each vtable in the object that
  * defines the class's key method, its destructor (BgStreamer's in
  * src/level/bg_streamer.cpp, BgLayerBase's in src/level/bg_layer_base.cpp,
- * PooledBgLayer's in
- * src/level/tile_slot_pool.cpp; BgLayer's is inline, so its key method is
- * Reset, in src/level/bg_layer.cpp),
+ * PooledBgLayer's in src/level/pooled_bg_layer.cpp; BgLayer's is inline,
+ * so its key method is Reset, in src/level/bg_layer.cpp),
  * and ldscript.txt places them at their ROM addresses (docs/cplusplus.md,
  * "Emitting the vtables"). cxx_symbols.txt maps the mangled names onto
  * the C names. The classes have no C view (bg_scroll_layer.h's `struct
@@ -274,8 +273,8 @@ COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(TileSlotPool) == 0x480C);
 /* BG layer 0 (0x60 bytes): a BgLayer whose tiles go through a VRAM tile
  * slot pool (TileSlotPool, src/level/tile_slot_pool.cpp) instead
  * of the layer's own character block, releasing the tiles of the rows and
- * columns that scroll out. Its methods are in src/level/pooled_bg_layer.cpp
- * and src/level/tile_slot_pool.cpp. */
+ * columns that scroll out. Its methods are in
+ * src/level/pooled_bg_layer.cpp. */
 class PooledBgLayer : public BgLayer
 {
 public:

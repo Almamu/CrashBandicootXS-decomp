@@ -5,15 +5,10 @@ extern "C" {
 #include "memory.h"
 }
 
-/* GitHub issue #43: BG layer 0 of the level-layers singleton
- * (`level_layers.cpp`) and the VRAM tile-slot pool it owns.
- *
- * Layer 0 is a PooledBgLayer (include/bg_layer.hpp): a BgLayer
- * extended with a TileSlotPool at `+0x5C`. Its constructor sets the
- * 256-colour bit and char base 0 and allocates the pool, its destructor
- * frees it and then expands BgLayer's inline one. The destructor is the
- * class's key method: g++ emits gPooledBgLayerVtable here. `GetPriority`
- * reads the BG priority.
+/* GitHub issue #43: the VRAM tile-slot pool that BG layer 0 of the
+ * level-layers singleton (`level_layers.cpp`; a PooledBgLayer, whose
+ * constructor, destructor and GetPriority were here until #770 and are
+ * now at the end of pooled_bg_layer.cpp) owns.
  *
  * The pool (TileSlotPool, include/bg_layer.hpp; a class since #752) maps
  * up to 0x2000 source tiles onto 0x200 reference-counted VRAM tile slots:
@@ -39,8 +34,8 @@ extern "C" {
  * reproducing the ROM's register-held `& 0xFFFF0000 | tile` and
  * `lsl #18/lsr #18`, `lsl #16/lsr #30` field extraction. Built with
  * old_agbcp (the Makefile's OLD_AGBCC_OBJS). As C it needed an asm block
- * for the constructor's BGnCNT update, two in `AcquireTileSlot` and a pin
- * in `ReleaseTileSlot`; the C++ needs none. See
+ * for PooledBgLayer's constructor's BGnCNT update, two in
+ * `AcquireTileSlot` and a pin in `ReleaseTileSlot`; the C++ needs none. See
  * docs/matching/archive/issue-43-level-layers.md.
  *
  * Real bytes formerly the tail of `asm/code_3_2_17_25fc8.s` (that file
@@ -62,29 +57,6 @@ union bg_entry {
         u32 palette:4;
     } bits;
 };
-
-PooledBgLayer::~PooledBgLayer()
-{
-    if (pool != NULL)
-        delete pool;
-}
-
-/* Through BgLayer's inline setters, each field store is a general insert
- * (the field cleared, then the value ORed in) even with a constant: the
- * ROM's `& 0x7f` before the `| 0x80`. */
-PooledBgLayer::PooledBgLayer(s32 bgIndex) : BgLayer(bgIndex)
-{
-    SetColors256(1);
-    SetCharBase(0);
-    pool = new TileSlotPool;
-}
-
-/* UNUSED - no caller anywhere in the ROM (checked src/, asm/ and the
- * method tables). Layer 0's BG priority, BGnCNT bits 0-1. */
-u32 PooledBgLayer::GetPriority()
-{
-    return cnt.bits.priority;
-}
 
 void TileSlotPool::Reset()
 {
