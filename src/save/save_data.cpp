@@ -358,7 +358,22 @@ u8 SaveData::IsSlotEmpty(s32 rowIndex)
  * volatile read, s8/char `flags`, an s8 or u32 `mask` and the flag sweep
  * don't stop it. With `v` in r1 (a hard register) the `and` can't take
  * the parameter's pseudo, so the extension stays; the ROM's `v` and
- * `result` are also separate (r1, r0) where cse folds them otherwise. */
+ * `result` are also separate (r1, r0) where cse folds them otherwise.
+ * #662 round 4, from the compiler source: `s32 v = mask; v &= flags;`
+ * keeps the extension without the pin (the `and` is then on v's own
+ * pseudo), and everything but the test matches: the ROM tests `v` (r1),
+ * this tests the copy (r0). That is regmove's optimize_reg_copy_1: for
+ * the copy `result = v`, it scans forward to v's death (the test) and
+ * rewrites v's uses there to `result`, so v dies at the copy. The scan
+ * gives up only at a CODE_LABEL, a JUMP_INSN, a LOOP_BEG/LOOP_END note
+ * or a set of either register, and it never touches a hard register
+ * (SMALL_REGISTER_CLASSES). Nothing of the kind sits between a copy
+ * and the `if` that follows it. The decomp-permuter on a C port reached
+ * the ROM 472 times in 20 minutes, every time with junk that puts one
+ * there or keeps v alive past the test: a `do { } while (0)` around the
+ * copy or the test (loop notes), identical `if (self)`/`else` arms
+ * around the copy, a dead `x = v != 0` store, or a second, dead test of
+ * v after the `if`. So the hard register stays. */
 u8 SaveData::TestFlags(u8 mask)
 {
     MATCH_HOLD_REG(u8, v, r1);

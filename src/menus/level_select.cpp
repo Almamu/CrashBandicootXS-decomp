@@ -4,7 +4,6 @@
 #include "key_input.hpp"
 
 extern "C" {
-#include "match.h"
 #include <agb_syscall.h>
 #include <libgcc.h>
 #include "text.h"
@@ -473,10 +472,26 @@ void LevelSelect::LoadRecord()
     }
 }
 
+/* The key state's halfwords, from a copy of the word passed by value
+ * (LevelSelect::Loop, below). */
+static inline struct held_pressed_pair KeyHalf(union key_state k)
+{
+    return k.half;
+}
+
 /* The menu loop: fades in (BLDY), then runs frames until A is pressed on
  * an open entry (Confirm) or Start exits (Exit), dispatching Up/Down page
  * turns (NextWorld/PrevWorld) and Left/Right cursor moves
- * (CursorLeft/CursorRight); returns the selected entry's level. */
+ * (CursorLeft/CursorRight); returns the selected entry's level.
+ *
+ * The direction tests read the keys through KeyHalf, which takes the
+ * key word by value (#662 round 4; a code-free asm kept a copy of the
+ * word before). The inline's parameter and return value are each a
+ * union in an ADDRESSOF pseudo, so cse1 sees the copies into and out of
+ * them as memory moves; they only become register copies in the
+ * addressof pass after it, and one of them survives the later passes:
+ * the ROM's `adds r1, r2, #0` between the 0x80 test's `ands` and `cmp`,
+ * which the 0x20 test reads. */
 s32 LevelSelect::Loop()
 {
     const struct level_info *info;
@@ -521,38 +536,14 @@ loop:
     if (!panel->HasArrived())
         goto loop;
     gInput->Update();
-    {
-        union key_state k;
-        union key_state keys = gKeys;
-
-        if (keys.half.pressed & DPAD_UP)
-            NextWorld();
-        /* The ROM copies the key word between the 0x80 test's `ands`
-         * and its `cmp`, and tests 0x20 on the copy; gcc merges a plain
-         * copy, so the (code-free) asm keeps `k` a separate value.
-         * #662 round 2: a copy in the else arm, a held_pressed_pair copy
-         * and inline helpers taking the keys by value (a register-sized
-         * struct goes to the stack) don't reproduce it.
-         * #662 round 3, from the -da dumps: cse1 replaces the copy by
-         * `keys` in the 0x20 test and deletes it (gcse and cse2 never
-         * see it); the ROM's copy survived every pass, so it can't have
-         * been a pseudo-to-pseudo copy cse could see through. No flag of
-         * the family list keeps it without changing other functions. */
-        else if (({
-                     u32 hit = keys.half.pressed & DPAD_DOWN;
-
-                     k.all = keys.all;
-                     MATCH_KEEP(k.all);
-                     hit;
-                 }))
-            PrevWorld();
-        else {
-            if (k.half.pressed & DPAD_LEFT)
-                CursorLeft();
-            else if (keys.half.pressed & DPAD_RIGHT)
-                CursorRight();
-        }
-    }
+    if (KeyHalf(gKeys).pressed & DPAD_UP)
+        NextWorld();
+    else if (KeyHalf(gKeys).pressed & DPAD_DOWN)
+        PrevWorld();
+    else if (KeyHalf(gKeys).pressed & DPAD_LEFT)
+        CursorLeft();
+    else if (KeyHalf(gKeys).pressed & DPAD_RIGHT)
+        CursorRight();
     {
         u32 a = gKeys.half.pressed & A_BUTTON;
 

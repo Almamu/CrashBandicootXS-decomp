@@ -14,7 +14,6 @@ extern "C" {
 #include "graphics_package.h"
 #include "memory.h"
 #include "globals.h"
-#include "match.h"
 #include "text.h"
 #include "system.h"
 }
@@ -122,60 +121,55 @@ void ContinuePrompt::InitGraphics()
  * From the late-ROM retry passes (docs/matching/archive/late-rom-naked-retry.md):
  * `k` is a struct copy of the input word (the ROM's word load and `lsrs
  * #16` per test, then a fresh `ldrh` for the DPAD_DOWN test after the
- * calls), and the loop is `while (dir >= 0)` (with `while (1)` jump.c
- * moves the return computation to the `break`). Two empty asm statements,
- * which emit no code, are still needed in C++:
- *  - `MATCH_USE(audio)` at the top of the loop adds one reference to
- *    `audio`, so it outranks the pair counter for r7 (the counter lands in
- *    r8 without a pin);
- *  - `MATCH_KEEP(k)` between the A and START tests makes the second
- *    test's shift a fresh value, so CSE doesn't share it with the first,
- *    and the first test keeps the ROM's `movs r0, #1; ands r0, r1`
- *    register choice. The START test's `u16` result is the 0 the ROM
- *    then stores into `selection`.
- * #662 round 2: without the MATCH_KEEP the only difference is that shared
- * shift (inline u16 helpers, a union copy, swapped operands and `!= 0`
- * don't separate it), and `gAudioContext->` written directly gives the
- * counter r7 and the pointer r8.
- * #662 round 3, from the -da dumps: the two shifts are separate insns up
- * to reload (cse, gcse and combine keep both); it is reload's
- * reload_cse_regs that deletes the START test's `lsrs r1, r2, #16`,
- * because r1 still holds `word >> 16` from the A test. The keep's "+r"
- * operand is what tells it r2 may have changed; the ROM's compile had
- * something there that did the same, which no C statement between the
- * tests reproduces (agbcp instead of old_agbcp is further off). Without
- * the MATCH_USE, global-alloc ranks the pair counter (5 refs in the
- * loop) above `audio` (3) and gives it r7; declaration order, `u32 i`
- * and `++i >= 2` don't change the ranking. */
+ * calls), and the loop is `while (dir >= 0)`: combine knows `dir` is only
+ * ever 0 or 1 (its nonzero bits), folds the test into a jump and deletes
+ * it, so the ROM has no exit test at all.
+ *
+ * A and START are two tests, each with its own sound and `goto done`
+ * (#662 round 4; an `A || START` test with one `break` needed two empty
+ * asms before). Three passes decide this:
+ *  - reload_cse_regs (reload1.c) forgets every register value at a code
+ *    label. The A test's false branch jumps to a label in front of the
+ *    START test until jump2, so the START test keeps its own `lsrs r1,
+ *    r2, #16` (with `||` there is no label between the two, and the
+ *    second shift was deleted as a no-op: r1 still held it).
+ *  - jump2's cross-jumping then merges the two identical sound-and-leave
+ *    tails into one, which the A test branches to: the ROM's layout.
+ *  - expand_end_loop (stmt.c) rotates a loop whose top is an exit test:
+ *    it moves everything up to the last jump to the loop's end label
+ *    found within LOOP_TEST_THRESHOLD (30) insns of the top to the
+ *    bottom. A `break` in the A test is such a jump within 30 insns, so
+ *    the key reads and the A test would move behind the body; `goto done`
+ *    jumps to a user label, isn't counted, and only the `dir` test moves
+ *    (as the ROM shows). A `return` in each test instead keeps a copy of
+ *    the return computation at each one. */
 s32 ContinuePrompt::Loop()
 {
     s32 dir = 1;
     s32 i = 0;
     s32 level = blend.bits.eva;
     struct held_pressed_pair *input = &gKeys.half;
-    AudioContext **audio = &gAudioContext;
 
     while (dir >= 0) {
-        MATCH_USE(audio); /* extra reference: audio outranks i for r7 */
         gInput->Update();
         {
             struct held_pressed_pair k = *input;
 
-            /* The MATCH_KEEP keeps the & 8 test's shift separate from the
-             * & 1 test's. */
-            // clang-format off
-            if ((k.pressed & A_BUTTON) || ({ MATCH_KEEP(k); (u16)(k.pressed & START_BUTTON); })) {
-                // clang-format on
-                (*audio)->PlaySfx(SFX_MENU_SELECT, 0x100);
-                break;
+            if (k.pressed & A_BUTTON) {
+                gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
+                goto done;
+            }
+            if (k.pressed & START_BUTTON) {
+                gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
+                goto done;
             }
             if ((k.pressed & DPAD_UP) && selection == 1) {
-                (*audio)->PlaySfx(SFX_MENU_MOVE, 0x100);
+                gAudioContext->PlaySfx(SFX_MENU_MOVE, 0x100);
                 selection = 0;
             }
         }
         if ((input->pressed & DPAD_DOWN) && selection == 0) {
-            (*audio)->PlaySfx(SFX_MENU_MOVE, 0x100);
+            gAudioContext->PlaySfx(SFX_MENU_MOVE, 0x100);
             selection = 1;
         }
         Draw();
@@ -193,6 +187,7 @@ s32 ContinuePrompt::Loop()
             *(vu32 *)REG_ADDR_BLDCNT = blend.raw;
         }
     }
+done:
     return selection == 0;
 }
 
