@@ -527,7 +527,7 @@ public:
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackPlane) == 0x80);
 
-/* The bomber (gJetpackBomberVtable, src/vehicle/jetpack/jetpack_plane.cpp): its
+/* The bomber (gJetpackBomberVtable, src/vehicle/jetpack/jetpack_bomber.cpp): its
  * record's kind (4-9) picks how it moves around its home point; it
  * explodes on the player. */
 class JetpackBomber : public HpActor
@@ -563,7 +563,7 @@ public:
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackBomber) == 0x64);
 
 /* The cannonball the planes and the airship fire
- * (gJetpackCannonballVtable, src/vehicle/jetpack/jetpack_plane.cpp). */
+ * (gJetpackCannonballVtable, src/vehicle/jetpack/jetpack_cannonball.cpp). */
 class JetpackCannonball : public HpActor
 {
 public:

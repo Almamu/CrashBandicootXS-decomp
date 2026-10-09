@@ -1211,7 +1211,8 @@ Boost__11PolarPlayeri BoostPolarPlayer
 GiveMask__11PolarPlayer GivePolarPlayerMask
 Launch__11PolarPlayer LaunchPolarPlayer
 # part 11f: the planes, bombers, cannonballs and balloons (include/vehicle.hpp;
-# src/vehicle/jetpack/jetpack_plane.cpp, jetpack_balloon.cpp, src/data/actor_pmf_17c260.cpp,
+# src/vehicle/jetpack/jetpack_plane.cpp, jetpack_bomber.cpp, jetpack_cannonball.cpp,
+# jetpack_balloon.cpp, src/data/actor_pmf_17c260.cpp,
 # actor_pmf_17c414.cpp)
 _vt.12JetpackPlane gJetpackPlaneVtable
 _vt.13JetpackBomber gJetpackBomberVtable

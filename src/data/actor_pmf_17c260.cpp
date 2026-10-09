@@ -18,7 +18,7 @@ const JetpackPlane::StateFunc JetpackPlane::stateFuncs[4] = {
 };
 
 /* The bomber's (gJetpackBomberStateFuncs; JetpackBomber::Update and
- * RunState, jetpack_plane.cpp). */
+ * RunState, jetpack_bomber.cpp). */
 const JetpackBomber::StateFunc JetpackBomber::stateFuncs[7] = {
     &JetpackBomber::StateIdle,
     &JetpackBomber::StateHome,

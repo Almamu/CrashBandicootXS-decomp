@@ -256,6 +256,8 @@ SECTIONS
         build/crashbandicootxs/src/actor/bg_picture.o(.text);
         build/crashbandicootxs/src/vehicle/jetpack/jetpack_shot.o(.text);
         build/crashbandicootxs/src/vehicle/jetpack/jetpack_plane.o(.text);
+        build/crashbandicootxs/src/vehicle/jetpack/jetpack_bomber.o(.text);
+        build/crashbandicootxs/src/vehicle/jetpack/jetpack_cannonball.o(.text);
         build/crashbandicootxs/src/vehicle/jetpack/airship_fireball.o(.text);
         build/crashbandicootxs/src/vehicle/jetpack/airship_states.o(.text);
         build/crashbandicootxs/src/vehicle/jetpack/airship_explode.o(.text);

@@ -623,7 +623,7 @@ counts them by kind) and what the C++ needed when it was converted.
 | `src/vehicle/polar/polar_player.cpp` | `PolarPlayer` (include/vehicle.hpp): `Update`, `Draw`, `Hurt`, `Shock`, `AllocTiles`, `StateMount`, `StateRun`, `StateJump`, `StateDash`, `StateShocked`, `StateCaught` | 11 | old_agbcp (old_agbcc C already) | 38 pins, 14 retyped stores, 1 retyped read, `ACTOR_PMF_CALL`, 5 `ACTOR_SET_STATE`s, the `destroy` slot call, 7 gotos -> 0 | 11c |
 | `src/vehicle/polar/polar_player_states.cpp` | `PolarPlayer`'s `DispenseWumpa`, `IsPauseLocked`, `StateRecover`, `StateFinishLeap`, `StateCarriedOff`, `StateKnockedOff`, `StateBoost` (and, since #769, the next row's `StateLaunched`, `StateFinish`, `StateLand`) | 7 | agbcp | 11 pins, 4 retyped stores, 2 retyped reads -> 0 | 11c |
 | `src/vehicle/polar/polar_player_actions.cpp` | `PolarPlayer`'s `StateLaunched`, `StateFinish`, `StateLand`, `FinishRun`, `Catch`, `QueueWumpa`, `GiveLife`, `Boost`, `GiveMask`, `Launch`, destructor | 11 | agbcp | 40 pins, 1 `asm`, 12 retyped stores, 6 retyped reads, the hand-written destructor -> 0 | 11c |
-| `src/vehicle/jetpack/jetpack_plane.cpp` | `JetpackPlane`, `JetpackBomber`, `JetpackCannonball` (include/vehicle.hpp): constructors (`CreateJetpackPlane`, ...), `Update`, `Damage`, `IsUnshootable`, `Aim`, `Home`, `RunState`s, the 11 states; `AirshipFireball::StateOrbit` and `StateSpiralIn` (include/boss_actors.hpp) | 28 | agbcp (both match) | 14 pins, 4 `ACTOR_PMF_CALL`s, 9 `ACTOR_VCALL`s, 14 `ACTOR_SET_STATE`s, 2 explicit `__divsi3` calls -> 0 | 11f |
+| `src/vehicle/jetpack/jetpack_plane.cpp`, `jetpack_bomber.cpp`, `jetpack_cannonball.cpp` (split off in #769) | `JetpackPlane`, `JetpackBomber`, `JetpackCannonball` (include/vehicle.hpp, one file each since #769): constructors (`CreateJetpackPlane`, ...), `Update`, `Damage`, `IsUnshootable`, `Aim`, `Home`, `RunState`s, the 11 states; `AirshipFireball::StateOrbit` and `StateSpiralIn` (include/boss_actors.hpp; airship_fireball.cpp since #769) | 28 | agbcp (both match) | 14 pins, 4 `ACTOR_PMF_CALL`s, 9 `ACTOR_VCALL`s, 14 `ACTOR_SET_STATE`s, 2 explicit `__divsi3` calls -> 0 | 11f |
 | `src/vehicle/jetpack/jetpack_balloon.cpp` | `JetpackBalloon` (include/vehicle.hpp): constructor (`CreateJetpackBalloon`), `Update`, `Damage`, `IsUnshootable`, `ClearCrate`, `Release`, `Move`, `RunState`, 3 states; `GetAirshipHpPercent`, `DestroyAirship` (`delete gAirship`), `nullsub_30`, `AirshipStateInactive` (C linkage) | 11 + 4 | agbcp (both match) | 7 pins, 2 retyped stores, 3 retyped reads, `ACTOR_PMF_CALL`, `ACTOR_VCALL`, a hand-written slot-7 call, `ACTOR_SET_STATE`, a `goto` -> 0 | 11f |
 | `src/data/actor_pmf_17c260.cpp` | `JetpackPlane::stateFuncs`, `JetpackBomber::stateFuncs` (gJetpackPlaneStateFuncs, gJetpackBomberStateFuncs) | data | agbcp | the `ACTOR_PMF` records -> 0 | 11f |
 | `src/data/actor_pmf_17c414.cpp` | `JetpackBalloon::stateFuncs` (gJetpackBalloonStateFuncs; split from actor_state_17c3fc.c, with the balloon crate's table after it in the new actor_pmf_17c42c.c, still C) | data | agbcp | the `ACTOR_PMF` records -> 0 | 11f |
@@ -2397,7 +2397,7 @@ operand, the height re-read; both tried without, and both still needed).
 
 | Class | Size | Vtable | Code |
 |---|---:|---|---|
-| `AirshipFireball : HpActor` | 0x6C | gAirshipFireballVtable (7 slots) | airship_fireball.cpp (all but `StateOrbit` and `StateSpiralIn`, still C in jetpack_plane.c), its table in actor_pmf_17c2b8.cpp |
+| `AirshipFireball : HpActor` | 0x6C | gAirshipFireballVtable (7 slots) | airship_fireball.cpp (`StateOrbit` and `StateSpiralIn` were in jetpack_plane.cpp until #769), its table in actor_pmf_17c2b8.cpp |
 | the airship | 0x1C | none | a bare `AnimPart` (gAirship) and globals; its functions keep their C names |
 
 - **`AirshipFireball`** gets its fields (bosses.h's `struct actor_orbit`
@@ -2802,8 +2802,8 @@ agbcp and old_agbcp and stay agbcp.
 | Class (include/vehicle.hpp) | Size | Vtable | Code |
 |---|---:|---|---|
 | `JetpackPlane : HpActor` | 0x80 | gJetpackPlaneVtable (2, 4, 5) | jetpack_plane.cpp; the hop's velocity, accelerations, steps and next target, the cannonball cooldown, `dying` |
-| `JetpackBomber : HpActor` | 0x64 | gJetpackBomberVtable (2, 4, 5) | jetpack_plane.cpp; the home point, `unshootable` |
-| `JetpackCannonball : HpActor` | 0x60 | gJetpackCannonballVtable (2, 5) | jetpack_plane.cpp; the velocity |
+| `JetpackBomber : HpActor` | 0x64 | gJetpackBomberVtable (2, 4, 5) | jetpack_bomber.cpp; the home point, `unshootable` |
+| `JetpackCannonball : HpActor` | 0x60 | gJetpackCannonballVtable (2, 5) | jetpack_cannonball.cpp; the velocity |
 | `JetpackBalloon : HpActor` | 0x64 | gJetpackBalloonVtable (2, 4, 5) | jetpack_balloon.cpp; its crate, `dying`, `velY` |
 
 - **Constructors and `new`**: each constructor is `HpActor(rec, x, y, z,
