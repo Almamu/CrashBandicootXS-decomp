@@ -113,7 +113,6 @@ SECTIONS
         build/crashbandicootxs/src/crates/crate_states.o(.text);
         build/crashbandicootxs/src/crates/crate_reset.o(.text);
         build/crashbandicootxs/src/crates/crate_create.o(.text);
-        build/crashbandicootxs/src/crates/crate_draw.o(.text);
         build/crashbandicootxs/src/crates/crate_update.o(.text);
         build/crashbandicootxs/src/crates/crate.o(.text);
         build/crashbandicootxs/src/crates/crate_time_trial.o(.text);
