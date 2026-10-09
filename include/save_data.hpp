@@ -136,7 +136,7 @@ public:
     void ReceiveChunk(s32 playerIndex); // ReceiveSaveTransferChunk
 
     /* src/save/save_transfer_state.cpp */
-    s32 Poll(); // PollSaveTransfer
+    s32 Poll();                       // PollSaveTransfer
     void SetRecord(SaveData *record); // SetSaveTransferRecord
     void *GetData();                  // GetSaveTransferData
     void Reset();                     // ResetSaveTransfer
