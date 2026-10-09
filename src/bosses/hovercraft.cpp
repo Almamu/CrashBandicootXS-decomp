@@ -478,7 +478,10 @@ void Hovercraft::LoadGraphics(void)
  * (`m & b`), so gcc copies the mask rather than the byte, as the ROM
  * does, and the second byte gets its own local. ConvertAirshipTiles'
  * comment has why the mask needs the asm (cse1's operand order; #662
- * rounds 2 and 3). */
+ * rounds 2 and 3) and the exact condition the ROM implies (round 4: the
+ * mask set where cse1 can't see it but loop.c doesn't move it out of
+ * the row loop, which only a guard duplicating the pixel loop's entry
+ * test gives; the same guard variants are as far off here). */
 static inline u32 MeterPx(u32 v)
 {
     u32 r = 0;

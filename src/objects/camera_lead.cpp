@@ -70,7 +70,17 @@ void CameraLead::Reset()
      * which reload only does when the 1 is still live after it. A literal
      * 1 is folded into `(v ^ 1) & 1` and shared with the toggle; u8, u16,
      * s8, s16 and bool for `one` or `v`, a `hidden = v & 1` local and the
-     * flag sweep (-fno-regmove included) don't give the copy. */
+     * flag sweep (-fno-regmove included) don't give the copy.
+     * #662 round 4 (regmove.c, local-alloc.c): the result of an `and`
+     * whose 1 dies there is tied to the 1 twice over: regmove's
+     * fixup_match_1 (unless the 1 is a "remote constant", set once in
+     * another basic block with a REG_EQUAL note) and local-alloc's
+     * combine_regs (for any 1 local to the block). Only a 1 that stays
+     * live after the `and` leaves reload to copy `v`, and its later use
+     * then shows in the toggle: `blink = v ^ one`, `(v ^ one) & one` and a
+     * u32 temporary for the toggle keep the copy but `eor` with r1 or
+     * fold to a `bic` (6 to 14 lines off), where the ROM's toggle loads
+     * a 1 of its own. No 1 set in an earlier block exists to use. */
     MATCH_HOLD_REG(u32, one, r1) = 1;
 
     if (!(v & one))

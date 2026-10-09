@@ -462,9 +462,14 @@ sorts itself out. See
 
 **Stack-box addresses** are a separate problem: gcc CSEs `&box` into one
 pseudo held in a callee-saved register across calls, where the ROM
-recomputes `add r0, sp, #K` before each call. `BOX_ADDR(&box)` on every
-use makes each its own opaque value. The constant-init form doesn't work
-there, because its input is still CSE'd
+recomputes `add r0, sp, #K` before each call (and reads `box.y` at its
+own sp offset while a pointer to the box is live). Pass a standalone
+box local (not a member of a frame struct) to an inline helper instead:
+util.h's SetAabb, aabb.h's FlipAabbX/FlipAabbY and field accessors.
+The inline's argument is the constant `frame + K`, so nothing holds the
+address for cse to reuse (#662 round 4, [Pruning
+workarounds](#pruning-workarounds)). `BOX_ADDR(&box)` on every use,
+which made each its own opaque value, did the same with an asm
 ([sp-box-retry.md](./matching/archive/sp-box-retry.md),
 `PlayerAnimWouldTouchCrate`).
 
@@ -1202,6 +1207,83 @@ local-alloc's quantity order):
   load is a fourth quantity); `ReleaseHang` (find_reload_regs spills the
   first free call-clobbered register in number order, so r2 must be live
   at the add, and nothing is).
+
+**Round 4, objects/, crates/ and actor/ (C++), from the compiler
+source.** 10 functions -> 5. One mechanism was behind five of them:
+
+- **A stack box's address through an inline argument.** A `struct
+  aabb` is 16 bytes, so BLKmode, and Thumb's GO_IF_LEGITIMATE_ADDRESS
+  rejects any frame address in a mode under 4 bytes (BLKmode's size is
+  0). expr.c then copies a box local's address into a pseudo at every
+  use (`&f.b` for a call argument, `b.y` for a field read), and cse1
+  ties the copies to the first one, or to a pointer local already
+  holding it. The ROM recomputes `add r0, sp, #16` per call and reads
+  the fields at their sp offsets. integrate.c expands an inline
+  function's arguments with EXPAND_SUM, where a standalone local's
+  address is `(plus virtual-stack-vars 16)` itself; process_reg_param
+  records it in const_equiv_map and substitutes it for the parameter,
+  so the inlined body has no pseudo to tie. aabb.h's field accessors
+  (AabbX/AabbY/AabbW/AabbH) and FlipAabbX/FlipAabbY and util.h's
+  SetAabb (SetAabbPos then SetAabbSize) replace the crate box builders'
+  six `BOX_ADDR`s (with the frame structs split into locals in the
+  same stack order: a member's address is still copied),
+  `MovingSprite::TouchPlayer`'s volatile read and
+  `Platform::ResolveCollision`'s `MATCH_KEEP` and GetSpriteHitbox
+  alias. A private old_agbcp built without that BLKmode test compiles
+  the two objects' plain code to the ROM's bytes as well, which is how
+  the mechanism was confirmed.
+- **Kept, with the exact condition in each comment:**
+  `CameraLead::Reset` (the `and`'s dying 1 is tied to its result by
+  both regmove's fixup_match_1 and local-alloc's combine_regs; only a
+  1 that lives on or is a remote constant escapes, and the toggle shows
+  either), `Sprite::CheckPlayerContact` (cse's insert_regs puts every
+  SImode 1 in one quantity, so the gone bit's shift takes r6 unless r6
+  is set again first, and then the OR's result moves into r6),
+  `ActorSelf::Draw` (local-alloc: no quantity holds r4 over the
+  projection's life, and SMALL_REGISTER_CLASSES turns off block_alloc's
+  widened lives; one variable for the projection and the screen x gets
+  4 lines off, regmove's replacement_quality then picks the mask's
+  register), `PlatformMover::Update` and `SelectActorCategory`
+  (global-alloc priorities 0.83/0.74 and 0.129/0.133).
+
+**Round 4, lib/gax, src/iwram and the two ConvertTiles (from the
+compiler source).** No function loses its last workaround; two lose
+sites:
+
+- **One variable for a list of the same shape.** `GAX2_init`'s r3 hold
+  went: `layout` walks on to types[2], the alternative-layout list (a
+  count and pointers, like a layout), instead of a second `subs` local.
+  As one pseudo it conflicts with the inner scan's `next` (r3), and
+  global-alloc gives it r4 as in the ROM.
+- **A volatile field instead of a volatile local.** Only
+  `GaxMixItem.done`, which the ARM mixer advances, needs to be re-read;
+  as a `volatile` field `GaxChannelMix`'s item is a plain local.
+- **Kept, with the exact condition in each comment:** the ConvertTiles
+  masks (regmove copies the first non-dying AND operand; cse1 swaps a
+  known-constant first operand second; so the mask must be set where
+  cse1 can't see it but loop.c won't move it out of the row loop, which
+  needs a conditional jump before it: only a guard duplicating the
+  pixel loop's entry test does that, and it costs the ROM's `n << 4`
+  recompute); `GAX2_init`'s two uses (global priorities, the numbers in
+  each comment); `GaxChannelMix`'s instrument re-read (gcse PRE finds it
+  redundant: nothing kills it, `__muldi3` being a const libcall) and its
+  clamp keep.
+- **The IWRAM ARM compiler.** `HeapSortActorsByKey`'s barriers and
+  `strncpy_arm`'s are stock 2.9-arm-000512 behaviour no C avoids
+  (find_cross_jump's lowered minimum after a label; jump.c's
+  conditional RETURN). Private builds of agbcp_arm_patched that skip the
+  label rule, or refuse conditional returns, compile sprite_arm.o and
+  string_arm.o byte-identical to the ROM's without them: more evidence
+  for [the later ARM gcc](matching/iwram-image.md), and a candidate third
+  option for agbcc_arm_prologue_return.patch (not adopted; an owner's
+  call).
+- **Other configurations.** Every round-4 function's plain C (all its
+  sites removed) was compiled under agbcc/old_agbcc, agbcp/old_agbcp
+  or agbcp_arm_patched with -O1/-O2/-O3/-Os x prologue-bugfix on/off x
+  -mthumb-interwork on/off x caller-saves on/off, and for C++
+  -mtpcs-frame/-mtpcs-leaf-frame and the scheduling switches (ARM: the
+  frame pointer, scheduling and the patch's options). None matches; the
+  notyourav `cp` tree's gcc/ is semantically identical to pret's agbcc.
 
 **Round 4 in menus/, link/, save/ and frontend/**, from the compiler
 source (8 functions -> 5):
