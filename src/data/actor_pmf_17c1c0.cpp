@@ -6,7 +6,7 @@
  */
 
 /* The jetpack player's state methods, indexed by `state`
- * (gJetpackPlayerStateFuncs; JetpackPlayer::Update, jetpack_spawn.cpp, and
+ * (gJetpackPlayerStateFuncs; JetpackPlayer::Update, jetpack_player_update.cpp, and
  * JetpackPlayer::RunState, jetpack_player.cpp, dispatch through it). Each
  * non-virtual `&JetpackPlayer::f` is g++'s {0, -1, f} record. */
 const JetpackPlayer::StateFunc JetpackPlayer::stateFuncs[8] = {

@@ -10,54 +10,10 @@ extern "C" {
 #include "globals.h"
 }
 
-/* PolarPlayer's three landing and finish states, the methods the other
- * polar actors call on the player (gActorList) and its destructor (#664
- * part 11c, include/vehicle.hpp), ROM 0x0802BED8-0x0802C1BC, between
- * polar_player_states.cpp and polar_player_dispatch.cpp. */
-
-/* State 5, launched by a launcher: rises and falls by `gPolarPlayerVelY`
- * (gravity 0x60, to 0x780) and, back on the ground (y 0x2800), runs again
- * (state 1, anim 4) with the steering on. */
-void PolarPlayer::StateLaunched()
-{
-    s32 total = y + gPolarPlayerVelY;
-
-    y = total;
-    gPolarPlayerVelY += 0x60;
-    LIMIT_MAX(gPolarPlayerVelY, 0x780);
-
-    if (total > 0x2800) {
-        y = 0x2800;
-        gPolarSteerEnabled = 1;
-        SetCellAnimSpeed(0x24);
-        SetState(1, 4);
-    }
-}
-
-/* State 10, at the finish line: once the animation is done, the leap
- * (state 11, anim 7, sfx SFX_POLAR_FINISH_LEAP); the bear, left behind,
- * runs on riderless when the player is high enough. */
-void PolarPlayer::StateFinish()
-{
-    if (animDone != 0) {
-        gAudioContext->PlaySfx(SFX_POLAR_FINISH_LEAP, 0x100);
-        gPolarPlayerVelY = 0xFFFFF980;
-        SetState(0xb, 7);
-        if (y > 0x2000)
-            gRiderlessPolar = CreateActor(2, x, 0x2800, z, 0);
-    }
-}
-
-/* State 9, landing on the bear: once the animation is done, running
- * (state 1) with the steering on. */
-void PolarPlayer::StateLand()
-{
-    if (animDone != 0) {
-        gPolarSteerEnabled = 1;
-        SetState(1, 0);
-        SetCellAnimSpeed(0x24);
-    }
-}
+/* The methods the other polar actors call on PolarPlayer (gActorList)
+ * and its destructor (#664 part 11c, include/vehicle.hpp), ROM
+ * 0x0802BFD4-0x0802C1BC, between polar_player_states.cpp and
+ * polar_player_dispatch.cpp. */
 
 /* The course's end (PolarReachCourseEnd, actor_category_hooks.cpp): once, the finish
  * countdown (state 10 when it runs out, Update), the yeti stops, and the
@@ -104,7 +60,7 @@ void PolarPlayer::GiveLife()
     gLevelState->AddLife();
 }
 
-/* A boost pad at `x` (polar_aku_aku.cpp): only while running, dashing or
+/* A boost pad at `x` (polar_course_objects.cpp): only while running, dashing or
  * boosted (states 1-3), the player is put on the pad, plays anim 2 and
  * is boosted (state 3) with the steering off; the bear's speed jumps
  * (0x5a from a dash, 0x55 from a run). */

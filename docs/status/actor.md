@@ -69,7 +69,7 @@ from "core" graphics.
   function, a bounding-box-culled sprite draw (`DrawActor`'s
   shape with the scale flag fixed at 0). Plain C; it was NAKED. See
   [issues-14-53-60-last-naked.md](../matching/archive/issues-14-53-60-last-naked.md).
-- **`UpdatePolarElectricFence`** (`src/vehicle/polar_objects.c`) - issue #53's last
+- **`UpdatePolarElectricFence`** (`src/vehicle/polar/polar_objects.c`) - issue #53's last
   function, a hazard/proximity state machine that tests the part's own
   box and three `gStaticData_0817A7xx` boxes. Plain C; it was NAKED. See
   [issues-14-53-60-last-naked.md](../matching/archive/issues-14-53-60-last-naked.md).
@@ -311,7 +311,7 @@ from "core" graphics.
   #15/#16/#17 retry)
 
 - `src/graphics/actor_part19.c`/`actor_part19c.c`/`actor_part19d.c`/
-  `actor_part19f.c`/`actor_part19g.c` (now `src/vehicle/polar_player_actions.c`,
+  `actor_part19f.c`/`actor_part19g.c` (now `src/vehicle/polar/polar_player_actions.c`,
   `polar_pickups.c` and `polar_crates.c`; new files, non-adjacent since
   the now-matched `CreatePolarCollectedWumpa` (see below), `RunPolarPlayerState`
   (`polar_player_dispatch.c`, now matched too - see below), and one left-raw function sat
@@ -326,7 +326,7 @@ from "core" graphics.
   per-instance "self" object's action-table/trampoline/circular-list
   conventions as `ctrl.c`/`action_ctrl_states.c`
 
-- `src/graphics/actor_part19i.c` (new file, now part of `src/vehicle/polar_crates.c`,
+- `src/graphics/actor_part19i.c` (new file, now part of `src/vehicle/polar/polar_crates.c`,
   directly adjacent to `actor_part19d.c`'s matched functions - GitHub issue #53):
   `UpdatePolarTimeCrate`, `DetonatePolarNitroCrate`, `UpdatePolarFourWumpaCrate`, `UpdatePolarBasicCrate` - the
   type-byte-dispatch/proximity "used"-state transition family (same
@@ -338,7 +338,7 @@ from "core" graphics.
   range-keyed offset. See
   [docs/matching/archive/issue-53-actor-c7a8.md](../matching/archive/issue-53-actor-c7a8.md).
 
-- `src/vehicle/polar_objects.c` (new file, `0x0802CDE4`-`0x0802D2DC`,
+- `src/vehicle/polar/polar_objects.c` (new file, `0x0802CDE4`-`0x0802D2DC`,
   the remainder of the `0x0802CC9C`-`0x0802D3A8` gap between issues #53
   and #54): `CreatePolarElectricFence`/`CreatePolarObstacle`/`CreatePolarLauncher`/`CreatePolarPenguin`/
   `CreatePolarIcicle` - `InitActorPart`-based constructors on the same `self`
@@ -359,7 +359,7 @@ from "core" graphics.
   trivial raw-offset getter), `DestroyLargeFont`/`DestroySmallFont` (two more
   `gEntityVtable`-family per-type descriptor table constructors)
 
-- `src/bosses/airship_fireball.c`/`airship_states.c`/`airship_fall.c`/
+- `src/vehicle/jetpack/airship_fireball.c`/`airship_states.c`/`airship_fall.c`/
   `airship.c`/`airship_damage.c`/`airship_graphics.c` (new files, issue
   #58, ROM `0x08030334`-`0x08031784` - the boss-weapon effect state
   machine, non-adjacent since 18 raw functions sit between/around them;
@@ -388,7 +388,7 @@ from "core" graphics.
   shape as `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet`) feeding the
   `gMegaMixMotionRecords` per-vector-component trampoline table; see
   `docs/matching/archive/issue-22-0x08017a44-actor.md`.
-- `src/bosses/tiny_hop_pad.c` (new file, GitHub issue #22, ROM
+- `src/bosses/tiny_hop_pad.c` (new file, now part of `src/bosses/tiny.cpp`, GitHub issue #22, ROM
   0x080187FC-0x08018884, non-adjacent to `mega_mix.c` since the
   raw `UpdateTiny`-`SpawnTinyFallingLeaves` block sits between them):
   `UpdateStompedHopPad`, `DestroyStompedHopPadCtrl`, `CreateStompedHopPadCtrl`, `UpdateOneShotAnimCtrl`; see
@@ -397,7 +397,7 @@ from "core" graphics.
   0x08017AB0-0x08017ECC): `UpdateMegaMix` - the player-vs-part 3-state
   dispatcher, previously a NAKED transcription, now real C built with
   old_agbcc; see `docs/matching/archive/issue-22-0x08018008-hopper.md`.
-- `src/bosses/tiny_update.c` (new file, GitHub issue #22, ROM
+- `src/bosses/tiny_update.c` (new file, now part of `src/bosses/tiny.cpp`, GitHub issue #22, ROM
   0x08018008-0x080187FC, built with old_agbcc): `UpdateTiny`,
   `SetTinyState`, `PickTinyHopTarget`, `SpawnTinyFallingLeaves` - the
   `gTinyVtable` hopping boss's update/enter-state methods,
@@ -427,7 +427,7 @@ from "core" graphics.
   big object's teardown/notification step, formerly parked
   NON_MATCHING. The box goes to `CollidePartList` by value; see
   `docs/matching/archive/issue-9-10-0x0800ab9c-graphics.md`.
-- `src/bosses/hovercraft_parts.c`/`hovercraft_cannon.c`/`hovercraft_launcher.c` (new files, GitHub issue #62, ROM
+- `src/bosses/hovercraft_state.c`/`hovercraft_cannon.c`/`hovercraft_launcher.c` (new files, GitHub issue #62, ROM
   0x08033804-0x08033EF4 - the `gHovercraft` singleton system's
   accessor/state-machine cluster, non-adjacent since the (now matched)
   `HovercraftCannonStateFire`/`HovercraftLauncherStateLaunch` (`hovercraft_cannon.c`/`hovercraft_launcher.c`) and the (now matched)
@@ -535,7 +535,7 @@ from "core" graphics.
   functions either (the raw `UpdateActionCtrl`/`TryActionCtrlDoubleJump`/`HandleActionCtrlAirInput`
   sit in between). See
   [docs/matching/archive/issue-16-actor-12160.md](../matching/archive/issue-16-actor-12160.md).
-- `src/vehicle/jetpack_run.c`/`jetpack_player.c`/
+- `src/vehicle/jetpack/jetpack_player_update.c`/`jetpack_player.c`/
   `jetpack_shot.c` (new files, GitHub issue #56, ROM
   0x0802F0DC-0x0802FBF0 - a second boss-weapon "spawn/pre-attack"
   singleton and its `self` object, non-adjacent since the parked
@@ -555,7 +555,7 @@ from "core" graphics.
   and the singleton's teardown/destructor, all sharing
   `ctrl.c`/`action_ctrl_states.c`/`airship_fireball.c`'s established
   "self" object conventions.
-- `src/vehicle/jetpack_plane.c` (new file, GitHub issue #57 plus
+- `src/vehicle/jetpack/jetpack_plane.c` (new file, GitHub issue #57 plus
   issue #58's first two functions, ROM 0x0802FBF0-0x08030530, formerly
   `asm/code_3_2_20_28568_c99c_2fbf0.s`): three small C++ actor classes
   (method tables `gJetpackPlaneVtable`/`087E51EC`/`087E5224`) and the
@@ -591,7 +591,7 @@ from "core" graphics.
   matched in a later pass that closed the register-pinning/pool-split
   gaps documented in that same writeup (all 25 of this chunk's functions
   are now real C, none NAKED).
-- `src/vehicle/polar_player.c` (new file, ROM `0x0802B364`-`0x0802BC68`
+- `src/vehicle/polar/polar_player.c` (new file, ROM `0x0802B364`-`0x0802BC68`
   - the start of the actor zone before issue #52, right before
   `polar_player_states.c`'s own range): `PolarPlayerStateShocked` - a frame-counter
   threshold DMA driver sharing the same reset idiom as `HurtPolarPlayer` -
@@ -607,7 +607,7 @@ from "core" graphics.
   `PolarPlayerStateJump`, `PolarPlayerStateDash`, `PolarPlayerStateCaught`) were promoted from NAKED
   in the issue #51/#54 retry, with the file switched to old_agbcc - see
   [docs/matching/archive/issue-51-54-naked-retry.md](../matching/archive/issue-51-54-naked-retry.md).
-- `src/vehicle/polar_player_states.c` (new file, ROM 0x0802BC68-0x0802BED8 -
+- `src/vehicle/polar/polar_player_states.c` (new file, ROM 0x0802BC68-0x0802BED8 -
   the literal tail of `asm/code_3_2_20_8b7c_ac28.s`, one raw file's
   leftover portion out of GitHub issue #50's original chunk scope;
   everything before it in that raw file - `CreateActor`'s giant
@@ -652,7 +652,7 @@ from "core" graphics.
   sit between them):
   `SetPlayerSwimDriftY` - a player-velocity-relative record writer; see
   [docs/matching/archive/issue-19-0x08015840-actor.md](../matching/archive/issue-19-0x08015840-actor.md).
-- `src/graphics/actor_part58.c`, now `src/vehicle/polar_aku_aku.c` (new file, GitHub issue #54, non-
+- `src/graphics/actor_part58.c`, now `src/vehicle/polar/polar_aku_aku.c` (new file, GitHub issue #54, non-
   adjacent to `actor_part56.c` since the whole 0x0802D3A8-0x0802E0A4
   range sits between them; numbered `58` rather than `57` since issue
   #19's PR independently claimed `actor_part57.c`/`57b.c` first - see
@@ -662,7 +662,7 @@ from "core" graphics.
   `UpdatePolarBoostPad`, `CreatePolarBoostPad`, `UpdatePolarCheckpointCrate`, `CreatePolarCheckpointCrate` -
   `InitActorPart`-based constructor variants plus the
   `gLevelState+0x78` Aku-Aku-mask-style add/remove pair.
-- `src/graphics/actor_part59.c`, now `src/vehicle/yeti_states.cpp` (new file, GitHub issue #54, non-
+- `src/graphics/actor_part59.c`, now `src/vehicle/polar/yeti_states.cpp` (new file, GitHub issue #54, non-
   adjacent since `actor_part74.c` sits between it and `actor_part58.c`;
   see
   [docs/matching/archive/issue-54-actor-d3a8.md](../matching/archive/issue-54-actor-d3a8.md)):
@@ -670,19 +670,19 @@ from "core" graphics.
   tracking object's two `gYetiStateFuncs` vtable-slot update
   functions (accumulate/clamp, tier-keyed `PlaySfx`/`PlayAmbientSfx`
   cues, and a shared kind/anim-reset transition tail).
-- `src/graphics/actor_part60.c`, now part of `src/vehicle/yeti.cpp` (new file, GitHub issue #54, non-
+- `src/graphics/actor_part60.c`, now part of `src/vehicle/polar/yeti.cpp` (new file, GitHub issue #54, non-
   adjacent since `actor_part75.c` sits between it and `actor_part59.c`;
   see
   [docs/matching/archive/issue-54-actor-d3a8.md](../matching/archive/issue-54-actor-d3a8.md)):
   `StopYeti`, `DestroyYeti`, `CreateYeti` - the
   `gYeti` object's state-flag setter, destructor, and
   constructor.
-- `src/graphics/actor_part61.c`, now part of `src/vehicle/yeti.cpp` (new file, GitHub issue #54, non-
+- `src/graphics/actor_part61.c`, now part of `src/vehicle/polar/yeti.cpp` (new file, GitHub issue #54, non-
   adjacent since `actor_part76.c` sits between it and `actor_part60.c`;
   see
   [docs/matching/archive/issue-54-actor-d3a8.md](../matching/archive/issue-54-actor-d3a8.md)):
   `YetiStateCaught` - a genuine no-op stub.
-- `src/vehicle/polar_objects.c`, `yeti_update.cpp`, `yeti.cpp`
+- `src/vehicle/polar/polar_objects.c`, `yeti_update.cpp`, `yeti.cpp`
   (GitHub issue #54, promoted from NAKED in the issue #51/#54 retry -
   see
   [docs/matching/archive/issue-51-54-naked-retry.md](../matching/archive/issue-51-54-naked-retry.md)):
@@ -690,7 +690,7 @@ from "core" graphics.
   (the `gYeti` gauge's palette ramp and affine BG2 setup;
   `yeti_update.cpp` now builds with old_agbcc) and `BuildYetiBg2Map` (an
   unused copy of the gauge's dot-pattern fill).
-- `src/vehicle/jetpack_spawn.c` (new file, ROM `0x0802E0A4`-
+- `src/vehicle/jetpack/jetpack_spawn.c` (new file, ROM `0x0802E0A4`-
   `0x0802F0DC`, the gap between issue #54's chunk and issue #56's
   chunk, tracked as issue #55; built with old_agbcc): all 25 functions -
   the spawn dispatcher `CreateJetpackActor` (a plain 31-case `switch`) with
@@ -807,7 +807,7 @@ from "core" graphics.
   into `r0` via the ABI, but `mode0` has no such call to hint it).
   Retires the old raw `asm/code_3_2_15.o` guard entirely.
 
-- `src/vehicle/jetpack_balloon.c` (new file, ROM 0x08031784-0x08031A6C,
+- `src/vehicle/jetpack/jetpack_balloon.c` (new file, ROM 0x08031784-0x08031A6C,
   Phase 1 of the boss-weapon/singleton cluster's gap between issue #58
   and issue #62): `GetAirshipHpPercent` (tracker "ready" check scaling the
   countdown via `__divsi3`), `DestroyAirship` (tracker destructor,
@@ -820,7 +820,7 @@ from "core" graphics.
   `IsAirshipFireballUnshootable`/`IsHovercraftCannonUnshootable`) - see
   [docs/matching/archive/issue-59-0x08031784-actor.md](../matching/archive/issue-59-0x08031784-actor.md).
 
-- `src/vehicle/jetpack_crates.c` (new file, ROM 0x08031B0C-0x08032688,
+- `src/vehicle/jetpack/jetpack_crates.c` (new file, ROM 0x08031B0C-0x08032688,
   first 30 of issue #59 Phase 2's 60-function remainder): the
   "type-byte event dispatch" family (`UpdateJetpackQuestionCrate`/`DamageJetpackQuestionCrate`/
   `UpdateJetpackHealthCrate`/`UpdateJetpackTimeCrate`/`DamageJetpackTimeCrate`), three `SpawnJetpackBalloon`-based
@@ -867,7 +867,7 @@ from "core" graphics.
   `DestroyHovercraft`/`nullsub_34`/`sub_80337FC`/`nullsub_35` (singleton
   destructor, no-op stub, trivial "false" getter, no-op stub) - opens
   the singleton's own camera-follow/scroll-velocity RAM family
-  (`gHovercraftMapCols`-`030015FF`, reusing `hovercraft_parts.c`'s existing
+  (`gHovercraftMapCols`-`030015FF`, reusing `hovercraft_parts.c`'s (now `hovercraft_state.cpp`'s) existing
   naming for the fields that family already touches) - see
   [docs/matching/archive/issue-60-61-gap-31a6c-part2.md](../matching/archive/issue-60-61-gap-31a6c-part2.md).
   `RunHovercraftState` (the P1/P2 speed-toggle dispatcher + category-vtable
@@ -900,7 +900,7 @@ from "core" graphics.
   ([docs/matching/archive/size2-naked-retry.md](../matching/archive/size2-naked-retry.md)) - see
   [docs/matching/archive/issue-64-0x08034aa4-actor.md](../matching/archive/issue-64-0x08034aa4-actor.md).
 
-- `src/vehicle/polar_player_dispatch.c` (`RunPolarPlayerState`),
+- `src/vehicle/polar/polar_player_dispatch.c` (`RunPolarPlayerState`),
   `airship_fireball.c` (`UpdateAirshipFireball`), `airship_fireball.c` (`RunAirshipFireballState`),
   `hovercraft_cannon.c` (`UpdateHovercraftCannon`), `hovercraft_cannon.c` (`RunHovercraftCannonState`),
   `hovercraft_launcher.c` (`UpdateHovercraftLauncher`), `jetpack_player.c` (`RunJetpackPlayerState`),
@@ -1117,7 +1117,7 @@ See [docs/matching/archive/big-naked-retry-2.md](../matching/archive/big-naked-r
 
 ### Matched in the fourth mid-range NAKED retry
 
-- `src/bosses/airship_graphics.c` - `ConvertAirshipTiles` (issue #58, VRAM
+- `src/vehicle/jetpack/airship_graphics.c` - `ConvertAirshipTiles` (issue #58, VRAM
   fill-level meter), both compilers. The fixes that closed its one-row
   twin `ConvertHovercraftTiles`: the 0xf mask from `asm("" : "=r"(m) : "0"(0xf))`
   ANDed as `m & b`, a separate local for the second byte, the second
@@ -1281,7 +1281,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   natural allocator land it in r7 correctly) rather than a genuine
   register shortage. GitHub issue #71, see
   [docs/matching/archive/issue-71-0x0803b060-actor.md](../matching/archive/issue-71-0x0803b060-actor.md).
-- **`DrawPolarCollectedWumpa`** (`src/vehicle/polar_pickups.c`) - fixed-position
+- **`DrawPolarCollectedWumpa`** (`src/vehicle/polar/polar_pickups.c`) - fixed-position
   OAM setup for one sprite frame, `DrawJetpackCheckpointText`'s twin above; now fully
   matched as real C. The dead `flag = 0` initializer closes via an
   opaque two-instruction `asm volatile` materialization (a single
@@ -1290,7 +1290,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   the same pin-matching techniques worked out for `DrawJetpackCheckpointText`. The
   old raw `asm/code_3_2_20_28568_c2fc.s` is retired. See
   `docs/matching.md`, issue #52.
-- **`CreatePolarCollectedWumpa`** (`src/vehicle/polar_pickups.c`) - a homing/
+- **`CreatePolarCollectedWumpa`** (`src/vehicle/polar/polar_pickups.c`) - a homing/
   seek-toward-point spawn-effect constructor; now fully matched as
   real C. The Manhattan-distance abs-value computation uses the ROM's
   own branchless idiom (`(x ^ (x >> 31)) - (x >> 31)`, compiling to
@@ -1321,7 +1321,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   recheck for dead-branch elimination to collapse. The old raw
   `asm/code_3_2_20_28568_c99c_31784_33ef4_34314.s` is retired. GitHub
   issue #63, see `docs/matching/archive/issue-63-0x08033ef4-actor.md`.
-- **`AllocJetpackPlayerTiles`** (`src/vehicle/jetpack_run.c`) - computes two
+- **`AllocJetpackPlayerTiles`** (`src/vehicle/jetpack/jetpack_player_update.c`) - computes two
   keyframe-driven tile-cache sizes via `AllocVramTileBlock`; now fully
   matched as real C. The ROM's "materialize the multiply result, then
   copy it again before shifting" idiom (`adds r2,r3,#0; muls r2,r1,r2;
@@ -1336,7 +1336,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   own `ldrb` register choices), each closed with the same
   register-pin/opaque-asm technique. See
   `docs/matching/archive/issue-56-0x0802f0dc-actor.md`.
-- **`CreateJetpackShot`** (`src/vehicle/jetpack_shot.c`) - an
+- **`CreateJetpackShot`** (`src/vehicle/jetpack/jetpack_shot.c`) - an
   `InitActorPart`-based constructor for this cluster's `self` object:
   forwards its first three real arguments plus one stack argument
   straight to `InitActorPart`, then marks `self+0x54` = 1, sets

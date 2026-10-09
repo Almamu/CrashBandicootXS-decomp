@@ -9,7 +9,7 @@
  * teardown functions in inline_copies_actors.cpp, the per-category hooks in
  * actor_category_hooks.cpp, actor_category_frame.cpp and
  * actor_category.cpp, the jetpack ring and
- * collected wumpa in hovercraft.cpp, ...), plus their globals and data
+ * collected wumpa in jetpack_collected_wumpa.cpp, ...), plus their globals and data
  * tables.
  *
  * Declarations here are the functions' real prototypes, copied from
@@ -63,17 +63,17 @@ extern class PolarAkuAku *SpawnPolarAkuAku(s32 x, s32 y, s32 z, s32 arg);
 extern s32 JetpackIsPauseLocked(void);
 extern s32 PolarIsPauseLocked(void);
 
-/* src/vehicle/jetpack_balloon.cpp: a C-linkage function */
+/* src/vehicle/jetpack/airship_graphics.cpp: a C-linkage function */
 extern void nullsub_30(void);
 
-/* src/vehicle/jetpack_crates.cpp: JetpackBalloonCrate's destructor
+/* src/vehicle/jetpack/jetpack_crates.cpp: JetpackBalloonCrate's destructor
  * (vehicle.hpp), for inline_copies_actors.cpp's kinds' destructors */
 extern void DestroyJetpackBalloonCrate(void *self, s32 flags);
 
-/* src/vehicle/jetpack_player.cpp: a C-linkage getter */
+/* src/vehicle/jetpack/jetpack_player.cpp: a C-linkage getter */
 extern u8 IsJetpackPlayerInactive(void);
 
-/* src/vehicle/jetpack_spawn.cpp: the spawners (C linkage) */
+/* src/vehicle/jetpack/jetpack_spawn.cpp: the spawners (C linkage) */
 extern void YetiStateStop(void);
 extern void *SpawnJetpackActor(struct actor_spawn *rec, u8 alt, s32 dz);
 extern void *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, void *spawn);
@@ -85,29 +85,29 @@ extern void SpawnJetpackCannonball(s32 a, s32 b, s32 c, s32 d, s32 e);
 extern void SpawnJetpackShot(s32 a, s32 b, s32 c, s32 d, s32 e);
 extern void CreateJetpackPlayer(struct anim_table_record *table, s32 z);
 
-/* src/vehicle/polar_aku_aku.cpp, polar_crates.cpp, polar_objects.cpp and
- * polar_pickups.cpp: the C-linkage functions. */
+/* src/vehicle/polar/polar_aku_aku.cpp and polar_player_dispatch.cpp: the
+ * C-linkage functions. */
 extern s32 GetPolarMaskLevel(void);
 extern u8 IsPolarPlayerInactive(void);
 
-/* src/vehicle/yeti.cpp */
+/* src/vehicle/polar/yeti.cpp */
 extern void StopYeti(void);
 extern void DestroyYeti(void);
 extern void CreateYeti(void *arg0);
 extern void BuildYetiBg2Map(u8 *dst, u8 seed);
 extern void YetiStateCaught(void);
 
-/* src/vehicle/yeti_graphics.cpp */
+/* src/vehicle/polar/yeti_graphics.cpp */
 #ifdef __cplusplus
 extern u8 IsTouchingYeti(class ActorSelf *self);
 #endif
 extern void LoadYetiGraphics(void);
 
-/* src/vehicle/yeti_states.cpp */
+/* src/vehicle/polar/yeti_states.cpp */
 extern void YetiStateChase(void);
 extern void YetiStateCharge(void);
 
-/* src/vehicle/yeti_update.cpp */
+/* src/vehicle/polar/yeti_update.cpp */
 extern void UpdateYeti(void);
 extern void UpdateYetiPalette(void);
 extern void UpdateYetiBg2(void);

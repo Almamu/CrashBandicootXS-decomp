@@ -74,7 +74,7 @@ public:
 COMPILE_TIME_ASSERT(ctrl_hpp, sizeof(EffectCtrl) == 0x10);
 
 /* The Tiny boss's stomped hop pad's controller
- * (src/bosses/tiny_hop_pad.cpp, gStompedHopPadVtable): `state` 0 plays
+ * (src/bosses/tiny.cpp, gStompedHopPadVtable): `state` 0 plays
  * animation 8, 1 sinks the pad, 2 is done. */
 class StompedHopPadCtrl : public Ctrl
 {
@@ -88,8 +88,7 @@ COMPILE_TIME_ASSERT(ctrl_hpp, sizeof(StompedHopPadCtrl) == 0x10);
 
 /* A controller that marks its sprite object gone once the animation has
  * played through (gOneShotAnimCtrlVtable). Its Update is in
- * src/bosses/tiny_hop_pad.cpp, its constructor and destructor in
- * src/bosses/cortex.cpp. */
+ * src/bosses/tiny.cpp, with its constructor and destructor. */
 class OneShotAnimCtrl : public Ctrl
 {
 public:

@@ -741,7 +741,7 @@ plain C didn't converge.
   (`src/objects/effect_ctrl.c`, new file - GitHub issue #9/#10, the
   final piece of the `0x0800B8DC`-cluster investigation, closing out
   the entire 43-function cluster). `UpdateEffectCtrl` (NAKED) inlines the
-  "flag active + bitmap-set" idiom (`tiny_hop_pad.c`'s `UpdateOneShotAnimCtrl`)
+  "flag active + bitmap-set" idiom (`tiny_hop_pad.c`'s, now `tiny.cpp`'s, `UpdateOneShotAnimCtrl`)
   three times over, each independently gated (a `_call_via_r1` hit-probe
   reporting no hit, a flags-bit-3 test, and a `+0x38` byte test).
   `EffectCtrlHandleEvent`/`ResetEffectCtrl` are genuine empty stubs, matched as real C.

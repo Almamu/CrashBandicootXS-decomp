@@ -4,9 +4,10 @@
 /* The 3D bosses' actors as C++ (#664, docs/cplusplus.md): the airship's
  * fireball and the hovercraft's weapons, all HpActors (actor_self.hpp).
  * Part 11a declares their destructors (src/actor/inline_copies_actors.cpp). The
- * airship's fireball is complete since part 11i (src/bosses/airship*.cpp,
+ * airship's fireball is complete since part 11i (src/vehicle/jetpack/airship*.cpp,
  * with the airship itself), its two flight states since part 11f
- * (src/vehicle/jetpack_plane.cpp); the hovercraft's weapons since part
+ * (then in jetpack_plane.cpp, at the start of airship_fireball.cpp since
+ * #769); the hovercraft's weapons since part
  * 11h (src/bosses/hovercraft*.cpp, with the hovercraft itself).
  * They have no C views. cxx_symbols.txt maps the C++ names to the C
  * ones.
@@ -21,10 +22,10 @@ extern "C" {
 }
 
 /* The airship's fireball (gAirshipFireballVtable,
- * src/bosses/airship_fireball.cpp): it flies around the
+ * src/vehicle/jetpack/airship_fireball.cpp): it flies around the
  * point it was spawned at (StateOrbit), then spirals in on it
- * (StateSpiralIn); the ROM has those two flight states in
- * src/vehicle/jetpack_plane.cpp. */
+ * (StateSpiralIn); the ROM has those two flight states first, right
+ * after jetpack_cannonball.cpp. */
 class AirshipFireball : public HpActor
 {
 public:
@@ -55,7 +56,7 @@ public:
 COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(AirshipFireball) == 0x6C);
 COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(AirshipFireball) == 0x6C);
 
-/* The airship itself (src/bosses/airship*.cpp) is no class of its own: a
+/* The airship itself (src/vehicle/jetpack/airship*.cpp) is no class of its own: a
  * bare AnimPart (gAirship, `new AnimPart` in CreateAirship) for its
  * picture's animation, and globals for the rest (gAirshipState,
  * gAirshipX, ...), stepped by UpdateAirship through the plain function
@@ -87,7 +88,7 @@ static inline void SetAirshipState(s32 st, s32 idx)
 /* EnterHovercraftState: state `st` and animation `idx`, keeping the
  * current frame unless it is past the new animation's end
  * (SetAirshipState without the timer). SetHovercraftState
- * (hovercraft_parts.cpp) is its out-of-line copy. */
+ * (hovercraft_state.cpp) is its out-of-line copy. */
 static inline void EnterHovercraftState(s32 st, s32 idx)
 {
     AnimPart *a;
@@ -104,7 +105,7 @@ static inline void EnterHovercraftState(s32 st, s32 idx)
 /* ApplyHovercraftFlashColor: colour 15 of the hovercraft's BG and OBJ
  * palettes (gFlashBgPalette, gFlashObjPalette) white when `flag` is set,
  * or else the colour saved the first time. SetHovercraftFlashColor
- * (hovercraft_parts.cpp) is its out-of-line copy; RunHovercraftState
+ * (hovercraft_state.cpp) is its out-of-line copy; RunHovercraftState
  * inlines it twice. Each branch stores both palettes: that gives the
  * ROM's white loaded into r2 and copied to r1, which a colour local
  * assigned in the branches and stored once after them only got with an
@@ -124,7 +125,7 @@ static inline void ApplyHovercraftFlashColor(u8 flag)
     }
 }
 
-/* The hovercraft's fireball (gHovercraftFireballVtable, hovercraft.cpp;
+/* The hovercraft's fireball (gHovercraftFireballVtable, hovercraft_fireball.cpp;
  * the airship fireball's layout): the side guns fire it (SpawnHovercraftFireball). It sets the
  * orbit fields up as the airship's does, but never reads them: it flies
  * straight on at `velZ`. */

@@ -5,7 +5,7 @@
  * ActorSelf and HpActor (actor_self.hpp). Part 11a declared what the
  * C++ objects needed then: the destructors that src/actor/inline_copies_actors.cpp
  * has (the ROM keeps them there, with a few small methods), and the polar
- * player's state dispatch and table (src/vehicle/polar_player_dispatch.cpp,
+ * player's state dispatch and table (src/vehicle/polar/polar_player_dispatch.cpp,
  * src/data/actor_pmf_17a6b8.cpp). Part 11b added the polar actors' fields
  * and the constructors src/actor/actor_factory.cpp uses. Their other
  * methods, and the jetpack actors' fields past HpActor's, are still C
@@ -17,11 +17,12 @@
  * the jetpack player (JetpackPlayer), its shot and the checkpoint banner's
  * and explosion's constructors their code; part 11c the polar player;
  * part 11h the jetpack ring and the collected wumpa
- * (src/bosses/hovercraft.cpp); part 11d the other polar actors
- * (src/vehicle/polar_crates.cpp, polar_pickups.cpp, polar_objects.cpp,
- * polar_aku_aku.cpp and polar_nitro.cpp), so every polar class is C++;
- * part 11g the balloon crates, the parachute nitro and the rocket
- * (src/vehicle/jetpack_crates.cpp).
+ * (src/vehicle/jetpack/jetpack_collected_wumpa.cpp); part 11d the other
+ * polar actors (src/vehicle/polar/polar_crates.cpp, polar_pickups.cpp,
+ * polar_crate.cpp, polar_objects.cpp, polar_aku_aku.cpp,
+ * polar_course_objects.cpp and polar_nitro.cpp), so every polar class is
+ * C++; part 11g the balloon crates, the parachute nitro and the rocket
+ * (src/vehicle/jetpack/jetpack_crates.cpp, jetpack_rocket.cpp).
  *
  * No `#pragma interface`: g++ emits the vtables, each in its key-method
  * object: most in inline_copies_actors.cpp, where the classes' destructors are (see
@@ -49,7 +50,7 @@ public:
     virtual ~RiderlessPolar(); // 1 DestroyRiderlessPolar
 };
 
-/* The polar run's player (gPolarPlayerVtable; src/vehicle/polar_player.cpp,
+/* The polar run's player (gPolarPlayerVtable; src/vehicle/polar/polar_player.cpp,
  * polar_player_states.cpp, polar_player_actions.cpp and
  * polar_player_dispatch.cpp): it rides the polar bear, steered left and
  * right, and jumps; the rest of its state is in the gPolar* globals
@@ -114,7 +115,7 @@ public:
 };
 
 /* The wumpa fruit flying to the HUD (gPolarCollectedWumpaVtable;
- * src/vehicle/polar_pickups.cpp): it flies at a fixed speed to the
+ * src/vehicle/polar/polar_pickups.cpp): it flies at a fixed speed to the
  * wumpa counter's corner, and its destructor counts in its fruit. */
 class PolarCollectedWumpa : public ActorSelf
 {
@@ -151,8 +152,8 @@ inline PolarWumpa::PolarWumpa(const struct anim_table_record *rec, s32 x, s32 y,
 }
 #endif
 
-/* The crates' base (gPolarCrateVtable; src/vehicle/polar_crates.cpp and
- * polar_pickups.cpp). Its constructor picks one of 18 looks by the
+/* The crates' base (gPolarCrateVtable; src/vehicle/polar/polar_crates.cpp and
+ * polar_crate.cpp). Its constructor picks one of 18 looks by the
  * crate's place on the course. A crate breaks (animation 0x12, Break)
  * when the player or the yeti touches it, and Update deletes it once
  * that animation has played. Its destructor is inline, as every crate
@@ -180,7 +181,7 @@ inline PolarCrate::~PolarCrate()
 {
 }
 
-/* The crate kinds (polar_crates.cpp and polar_pickups.cpp). Their
+/* The crate kinds (polar_crates.cpp and polar_crate.cpp). Their
  * constructors are inline (CreateActor expands them) and also out of line
  * at the end of polar_crates.cpp (CreatePolarTimeCrate, ...), from one
  * source, polar_crate_ctors.hpp. */
@@ -268,8 +269,9 @@ public:
 #undef POLAR_CRATE_CTOR
 #endif
 
-/* The hazards and objects (src/vehicle/polar_objects.cpp and
- * polar_aku_aku.cpp). Their constructors are out of line. */
+/* The hazards and objects (src/vehicle/polar/polar_objects.cpp,
+ * polar_aku_aku.cpp and polar_course_objects.cpp). Their constructors are
+ * out of line. */
 
 /* An electric fence (gPolarElectricFenceVtable): shown once near enough,
  * it shocks the player on its wire and hurts it on its posts. */
@@ -392,8 +394,9 @@ public:
 /* The jetpack levels (7 vtable slots: HpActor's; the balloon crates
  * add an 8th). */
 
-/* The jetpack player (gJetpackPlayerVtable; src/vehicle/jetpack_spawn.cpp,
- * jetpack_player.cpp and jetpack_run.cpp): its hit points are HpActor's,
+/* The jetpack player (gJetpackPlayerVtable;
+ * src/vehicle/jetpack/jetpack_player_update.cpp and jetpack_player.cpp;
+ * jetpack_spawn.cpp's CreateJetpackPlayer): its hit points are HpActor's,
  * shown as a percentage (GetHp); the rest of its state is in the
  * gJetpack* globals (vehicle.h), as the ROM has it. CreateJetpackPlayer
  * makes it gActorList, the actor list's root. */
@@ -466,7 +469,7 @@ public:
     virtual s32 IsUnshootable(); // 5 IsJetpackExplosionUnshootable
 };
 
-/* The jetpack player's shot (src/vehicle/jetpack_shot.cpp): it flies by
+/* The jetpack player's shot (src/vehicle/jetpack/jetpack_shot.cpp): it flies by
  * its speed, and hits the first shootable actor or the airship. */
 class JetpackShot : public HpActor
 {
@@ -483,7 +486,7 @@ public:
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackShot) == 0x60);
 
-/* The plane (gJetpackPlaneVtable, src/vehicle/jetpack_plane.cpp): it hops
+/* The plane (gJetpackPlaneVtable, src/vehicle/jetpack/jetpack_plane.cpp): it hops
  * from spawn point to spawn point (Aim, the GetActorSpawn* accessors) and
  * fires cannonballs at the player from its low pose; shot down, it falls
  * out of the sky. */
@@ -523,7 +526,7 @@ public:
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackPlane) == 0x80);
 
-/* The bomber (gJetpackBomberVtable, src/vehicle/jetpack_plane.cpp): its
+/* The bomber (gJetpackBomberVtable, src/vehicle/jetpack/jetpack_bomber.cpp): its
  * record's kind (4-9) picks how it moves around its home point; it
  * explodes on the player. */
 class JetpackBomber : public HpActor
@@ -559,7 +562,7 @@ public:
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackBomber) == 0x64);
 
 /* The cannonball the planes and the airship fire
- * (gJetpackCannonballVtable, src/vehicle/jetpack_plane.cpp). */
+ * (gJetpackCannonballVtable, src/vehicle/jetpack/jetpack_cannonball.cpp). */
 class JetpackCannonball : public HpActor
 {
 public:
@@ -578,7 +581,7 @@ COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackCannonball) == 0x60);
 class JetpackBalloonCrate;
 
 /* The balloon a crate hangs from (gJetpackBalloonVtable,
- * src/vehicle/jetpack_balloon.cpp): the crate moves it (Move) until it is
+ * src/vehicle/jetpack/jetpack_balloon.cpp): the crate moves it (Move) until it is
  * released (Release) and floats away, or is shot and pops. */
 class JetpackBalloon : public HpActor
 {
@@ -613,7 +616,7 @@ public:
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackBalloon) == 0x64);
 
 /* The crates hanging from balloons (gJetpackBalloonCrateVtable,
- * src/vehicle/jetpack_crates.cpp): each hangs from a balloon of its own
+ * src/vehicle/jetpack/jetpack_crates.cpp): each hangs from a balloon of its own
  * (SpawnJetpackBalloon), swaying around its spawn point, until the
  * balloon is shot (Break: it falls) or the crate is (Damage: it breaks
  * and lets the balloon go). The three kinds built on it pay out when
@@ -698,7 +701,7 @@ public:
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackQuestionCrate) == 0x74);
 
 /* A nitro crate on a parachute (gJetpackParachuteNitroVtable,
- * src/vehicle/jetpack_crates.cpp): it rises to `limitY`, and explodes on
+ * src/vehicle/jetpack/jetpack_crates.cpp): it rises to `limitY`, and explodes on
  * the player or when shot. */
 class JetpackParachuteNitro : public HpActor
 {
@@ -716,7 +719,7 @@ public:
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackParachuteNitro) == 0x60);
 
-/* A rocket (gJetpackRocketVtable, src/vehicle/jetpack_crates.cpp): it
+/* A rocket (gJetpackRocketVtable, src/vehicle/jetpack/jetpack_rocket.cpp): it
  * swings around `originX` while it comes down by `stepY` to `limitY`,
  * then explodes (Launch); it hurts the player once on contact. */
 class JetpackRocket : public HpActor
@@ -740,8 +743,9 @@ public:
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackRocket) == 0x68);
 
-/* A jetpack ring (gJetpackRingVtable). Its constructor and slot 5 are in src/bosses/hovercraft.cpp
- * (part 11h), its Update in src/vehicle/jetpack_crates.cpp (part 11g). */
+/* A jetpack ring (gJetpackRingVtable). Its constructor and slot 5 are in
+ * src/vehicle/jetpack/jetpack_collected_wumpa.cpp (part 11h), its Update in
+ * jetpack_rocket.cpp (part 11g). */
 class JetpackRing : public HpActor
 {
 public:
@@ -757,7 +761,8 @@ public:
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackRing) == 0x5C);
 
 /* A collected wumpa of the jetpack levels (gJetpackCollectedWumpaVtable,
- * src/bosses/hovercraft.cpp, part 11h; PolarCollectedWumpa's twin): it
+ * src/vehicle/jetpack/jetpack_collected_wumpa.cpp, part 11h;
+ * PolarCollectedWumpa's twin): it
  * flies from where it was collected to the HUD's wumpa counter, and its
  * destructor adds the fruit it carries. */
 class JetpackCollectedWumpa : public HpActor

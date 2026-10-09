@@ -25,7 +25,7 @@ extern "C" {
  *
  * GitHub issue #22, ROM 0x08017AB0-0x08017ECC, between
  * input_ctrl_queue.cpp and mega_mix.cpp (MegaMixCtrl's other methods).
- * Built with old_agbcp (Makefile OLD_AGBCC_OBJS), like tiny_update.cpp
+ * Built with old_agbcp (Makefile OLD_AGBCC_OBJS), like tiny.cpp
  * and cortex.cpp after it (docs/matching/archive/issue-22-0x08018008-hopper.md).
  *
  * The first frame (`stamp` -1) starts X motion record 1. Then, by `state`:

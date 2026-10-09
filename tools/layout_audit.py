@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """Audit struct and class layouts from the compiler's own debug info (#656).
 
-Every game translation unit (src/*/*.c and src/*/*.cpp) is compiled again
-with -g, by the Makefile's own rules, into a temporary directory: the same
-compiler (agbcc, old_agbcc, agbcc_arm(_patched), agbcp, old_agbcp) and the
-same per-object flags as the ROM build (OLD_AGBCC_OBJS, CXX_OBJS,
-NO_IMPLEMENT_INLINES_OBJS, the ARM objects, ...). The tool runs make with
-an extra makefile that only adds `-g -w` to those objects, redirects
-OBJ_DIR and GENERATED_INCLUDE_DIR into the temporary directory, and ends
-each .s with the terminating 0 byte agbcc leaves out of .debug_abbrev (so
+Every game translation unit (src/*/*.c and src/*/*.cpp, plus
+src/*/*/*.cpp) is compiled again with -g, by the Makefile's own rules,
+into a temporary directory: the same compiler (agbcc, old_agbcc,
+agbcc_arm(_patched), agbcp, old_agbcp) and the same per-object flags as
+the ROM build (OLD_AGBCC_OBJS, CXX_OBJS, NO_IMPLEMENT_INLINES_OBJS, the
+ARM objects, ...). The tool runs make with an extra makefile that only
+adds `-g -w` to those objects, redirects OBJ_DIR and
+GENERATED_INCLUDE_DIR into the temporary directory, and ends each .s
+with the terminating 0 byte agbcc leaves out of .debug_abbrev (so
 readelf can parse it). build/ is never read or written.
 
 The DWARF2 of every object (arm-none-eabi-readelf --debug-dump=info) is
@@ -164,7 +165,7 @@ def compile_objects(workdir, include_lib, jobs):
                     sources.append(os.path.relpath(os.path.join(dirpath, fn), ROOT))
     out, missing = [], []
     for src in sorted(sources):
-        if src.startswith('src/') and src.count('/') != 2:
+        if src.startswith('src/') and src.count('/') < 2:
             continue
         if src.startswith('lib/') and not re.match(r'lib/[^/]+/(src|data)/[^/]+\.c$', src):
             continue

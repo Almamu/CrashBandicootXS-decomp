@@ -10,8 +10,8 @@ extern "C" {
 #include "globals.h"
 }
 
-/* PolarPlayer's wumpa dispenser, its pause lock and five of its states
- * (#664 part 11c, include/vehicle.hpp), ROM 0x0802BC68-0x0802BED8, between
+/* PolarPlayer's wumpa dispenser, its pause lock and eight of its states
+ * (#664 part 11c, include/vehicle.hpp), ROM 0x0802BC68-0x0802BFD4, between
  * polar_player.cpp and polar_player_actions.cpp. DispenseWumpa is the
  * twin of JetpackPlayer::DispenseWumpa (jetpack_player.cpp) on the polar
  * globals; the three end-of-run states are the course's three exits
@@ -157,5 +157,49 @@ void PolarPlayer::StateBoost()
             stateTime = 0;
             SetCellAnimSpeed(0x38);
         }
+    }
+}
+
+/* State 5, launched by a launcher: rises and falls by `gPolarPlayerVelY`
+ * (gravity 0x60, to 0x780) and, back on the ground (y 0x2800), runs again
+ * (state 1, anim 4) with the steering on. */
+void PolarPlayer::StateLaunched()
+{
+    s32 total = y + gPolarPlayerVelY;
+
+    y = total;
+    gPolarPlayerVelY += 0x60;
+    LIMIT_MAX(gPolarPlayerVelY, 0x780);
+
+    if (total > 0x2800) {
+        y = 0x2800;
+        gPolarSteerEnabled = 1;
+        SetCellAnimSpeed(0x24);
+        SetState(1, 4);
+    }
+}
+
+/* State 10, at the finish line: once the animation is done, the leap
+ * (state 11, anim 7, sfx SFX_POLAR_FINISH_LEAP); the bear, left behind,
+ * runs on riderless when the player is high enough. */
+void PolarPlayer::StateFinish()
+{
+    if (animDone != 0) {
+        gAudioContext->PlaySfx(SFX_POLAR_FINISH_LEAP, 0x100);
+        gPolarPlayerVelY = 0xFFFFF980;
+        SetState(0xb, 7);
+        if (y > 0x2000)
+            gRiderlessPolar = CreateActor(2, x, 0x2800, z, 0);
+    }
+}
+
+/* State 9, landing on the bear: once the animation is done, running
+ * (state 1) with the steering on. */
+void PolarPlayer::StateLand()
+{
+    if (animDone != 0) {
+        gPolarSteerEnabled = 1;
+        SetState(1, 0);
+        SetCellAnimSpeed(0x24);
     }
 }

@@ -849,7 +849,7 @@ u16 zeros;         // ...
 
 The IWRAM routine `0x03000634` (`UnpackRleSpriteFrame` in
 `src/iwram/sprite_arm.cpp`, the `gUnpackRleSpriteFrameFunc` hook, called by
-`polar_player.cpp`, `jetpack_spawn.cpp` and `company_logos.cpp`)
+`polar_player.cpp`, `jetpack_player_update.cpp` and `company_logos.cpp`)
 unpacks a frame into a VRAM tile block. The frame pointer tables
 (`table_B` of animation record 0 of both category families, and
 `gYetiFrames`) point at the frame headers.

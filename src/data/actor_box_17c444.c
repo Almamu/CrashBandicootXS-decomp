@@ -7,6 +7,6 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* The box UpdateJetpackRocket (jetpack_crates.cpp) copies into a part's +0x38
+/* The box UpdateJetpackRocket (jetpack_rocket.cpp) copies into a part's +0x38
  * box. */
 const struct anim_box gJetpackRocketBox = { -21, -21, -2, 42, 42, 4 };

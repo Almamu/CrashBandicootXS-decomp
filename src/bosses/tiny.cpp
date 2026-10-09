@@ -1,5 +1,7 @@
 #include "bg_layer.hpp"
 #include "boss_ctrl.hpp"
+#include "ctrl.hpp"
+#include "sprite_obj.hpp"
 #include "player.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
@@ -16,16 +18,32 @@ extern "C" {
 #include "math_util.h"
 }
 
-/* GitHub issue #22, ROM 0x08018008-0x080187FC, formerly
- * asm/code_3_2_17_18008.s (details in
- * docs/matching/archive/issue-22-0x08018008-hopper.md). Built with
- * old_agbcp (Makefile OLD_AGBCC_OBJS), like cortex.cpp right after it.
+/* Tiny's fight (GitHub issues #22 and #23), ROM 0x08018008-0x08018A30,
+ * built with old_agbcp (Makefile OLD_AGBCC_OBJS), like cortex.cpp right
+ * after it. Until #769 it was three files: tiny_update.cpp, tiny_hop_pad.cpp
+ * and the head of cortex.cpp; each class's methods end with its
+ * destructor and constructor, so the controllers' boundaries put these
+ * functions in one original unit.
  *
- * TinyCtrl's (include/boss_ctrl.hpp, gTinyVtable) per-frame Update and
- * "enter state" SetState: Tiny hops his `part` along parabolic arcs (the
- * 257-entry i*i>>8 table `squares`) between gTouchableList's anchors,
- * stomping them. PickHopTarget picks the next anchor from a per-round
- * table, SpawnFallingLeaves spawns a falling hazard. */
+ * - TinyCtrl's (include/boss_ctrl.hpp, gTinyVtable) per-frame Update and
+ *   "enter state" SetState (issue #22, ROM 0x08018008-0x080187FC, formerly
+ *   asm/code_3_2_17_18008.s; details in
+ *   docs/matching/archive/issue-22-0x08018008-hopper.md): Tiny hops his
+ *   `part` along parabolic arcs (the 257-entry i*i>>8 table `squares`)
+ *   between gTouchableList's anchors, stomping them. PickHopTarget picks
+ *   the next anchor from a per-round table, SpawnFallingLeaves spawns a
+ *   falling hazard.
+ * - Two controllers (include/ctrl.hpp, issue #22, ROM
+ *   0x080187FC-0x08018884): the stomped hop pad's, and OneShotAnimCtrl's
+ *   Update.
+ * - The one-shot animation controllers' constructors and destructors,
+ *   TinyHitStub, and Tiny's StartHop, destructor and constructor (issue
+ *   #23, docs/matching/archive/issue-23-graphics.md).
+ *
+ * UNUSED - no caller anywhere in the ROM (checked the asm/ and expected/
+ * sources, every .c file under src/, and every word-aligned Thumb pointer
+ * in baserom.gba): UnusedOneShotAnimCtrl's constructor
+ * (CreateUnusedOneShotAnimCtrl). Matched anyway. */
 
 /* The player's HandleEvent (Player, include/player.hpp). */
 static inline void HitPlayer(Player *pl)
@@ -398,4 +416,133 @@ void TinyCtrl::SpawnFallingLeaves(MovingSprite *part, s32 n)
         p->f.flags = m;
     }
     gAudioContext->PlaySfx(SFX_UNKNOWN_13, 0x100);
+}
+
+/* State 0 plays animation 8 and moves to state 1. State 1 sinks the pad
+ * 4 pixels a frame until it is 32 pixels below layer 0's bottom edge,
+ * then moves to state 2, where it stays.
+ *
+ * The pin on `part` (r2) is still needed in C++: with neither pinned,
+ * g++ gives `this` r2 and `part` r4 where the ROM has r3 and r2; once
+ * `part` is pinned, `this` lands in r3 by itself. (The C needed a pin on
+ * both, plus gotos for the block order, which the switch gives.)
+ * #662 round 2: state 1's test through a `bool` (an inline or a local)
+ * gives the ROM's registers but keeps the flag as a `movs` 0/1 and a
+ * second compare; the permuter on the C++ matched only with
+ * `do { } while (0)` wrappers, `x++; x--;` no-ops or a redundant copy of
+ * `part`. #662 round 3 (greg dump): `this` and `part` are global and
+ * global-alloc ranks `this` (6 references over 30 insns, 0.40) just
+ * above `part` (4 over 21, 0.38), so `this` takes r2 and `part` is left
+ * with r4; ranked the other way they get the ROM's r2/r3. The switch's
+ * dispatch is shared by both lives, so no reshaping of it helps (it
+ * would have to shrink by 4 insns), and `part` has no further use to
+ * reference. No -f flag or pair of flags changes it either. */
+void StompedHopPadCtrl::Update(MovingSprite *partArg)
+{
+    MATCH_HOLD_REG(MovingSprite *, part, r2) = partArg;
+    s32 y;
+
+    switch (state) {
+    case 0:
+        state = 1;
+        SetTargetAnim(part, 8);
+        break;
+    case 1:
+        y = part->y + 0x400;
+        part->y = y;
+        if (y >= INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x2000)
+            state = 2;
+        break;
+    case 2:
+        break;
+    }
+}
+
+StompedHopPadCtrl::~StompedHopPadCtrl()
+{
+}
+
+StompedHopPadCtrl::StompedHopPadCtrl()
+{
+}
+
+/* Marks the sprite object gone once its animation has played through. */
+void OneShotAnimCtrl::Update(MovingSprite *part)
+{
+    if (part->animDone)
+        part->MarkGone();
+}
+
+OneShotAnimCtrl::OneShotAnimCtrl()
+{
+}
+
+OneShotAnimCtrl::~OneShotAnimCtrl()
+{
+}
+
+/* Marks the sprite object gone once its animation has played through,
+ * as OneShotAnimCtrl::Update above does. */
+void UnusedOneShotAnimCtrl::Update(MovingSprite *part)
+{
+    if (part->animDone)
+        part->MarkGone();
+}
+
+/* UNUSED - see the top of the file. */
+UnusedOneShotAnimCtrl::UnusedOneShotAnimCtrl()
+{
+}
+
+UnusedOneShotAnimCtrl::~UnusedOneShotAnimCtrl()
+{
+}
+
+/* Empty hook for Tiny taking a hit. TinyCtrl::SetState's case 9
+ * (above; Update enters it when the player's attack box hits
+ * Tiny, and it plays SFX_BOSS_HIT and counts the hit) calls it directly,
+ * between the hop set-up and the anim-7 call, with the same (self, part)
+ * arguments as StartHop below. It is in no method table, so nothing shows
+ * what the hook was meant to do. */
+void TinyHitStub(void *self, void *part)
+{
+}
+
+/* Starts a hop from (x, y) to the part's position, facing it. The ROM
+ * clears and sets the mirror bit in two steps (`& -0x11`, then `| 0x10`),
+ * through the byte; a bitfield store of 1 is one `orr`. */
+void TinyCtrl::StartHop(MovingSprite *part)
+{
+    s32 px = part->x;
+
+    if (x <= px) {
+        u8 *p = &part->mirror;
+        s32 m = -0x11;
+
+        m &= *p;
+        m |= 0x10;
+        *p = m;
+    } else {
+        part->mirrorFlags.mirrorX = 0;
+    }
+    steps = 0x1A;
+    total = 0x1A;
+    dy = part->y - y;
+    dx = part->x - x;
+}
+
+TinyCtrl::~TinyCtrl()
+{
+    delete[] squares;
+}
+
+/* The hop's squares table: i * i >> 8 for i = 0..0x100. */
+TinyCtrl::TinyCtrl()
+{
+    s32 i;
+
+    stomped = -1;
+    squares = new s16[0x101];
+    for (i = 0; i <= 0x100; i++)
+        squares[i] = Q8_MUL(i, i);
 }

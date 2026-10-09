@@ -43,6 +43,8 @@ directories are not subsystems.
 
 One directory level under `src/`, as now: the Makefile's
 `C_SRCS := $(wildcard $(C_SUBDIR)/*/*.c)` keeps working unchanged.
+(#769 later split `src/vehicle/` into `polar/` and `jetpack/`; the
+Makefile globs `src/*/*/*.c` and `src/*/*/*.cpp` too since.)
 
 | Directory | What goes there | Files now → after |
 |---|---|---:|
@@ -65,7 +67,7 @@ One directory level under `src/`, as now: the Makefile's
 | `src/menus/` | Pause menu, power dialog, level select, continue prompt | 25 → 17 |
 | `src/frontend/` | Title screen, company logos, language select, starfield, credits | 11 → 7 |
 | `src/actor/` | The actor-category engine behind the polar and jetpack levels: category init/select/frame, cell-animated BGs, the actor base and factory, BG pictures | 27 → 12 |
-| `src/vehicle/` | Polar (riding) and jetpack levels: their players, objects and crates, and the yeti chase | 34 → 20 |
+| `src/vehicle/` | Polar (riding) and jetpack levels: their players, objects and crates, and the yeti chase; since #769 in `polar/` (with the yeti) and `jetpack/` (with the airship) | 34 → 20 |
 | `src/iwram/` | ARM IWRAM code and data. Unchanged. | 3 → 3 |
 | `src/data/` | ROM data. Names unchanged (see below). | 73 → 73 |
 
@@ -328,14 +330,21 @@ this plan depends on splitting them.
   `objects/camera_lead.cpp`, `objects/launch_pad.cpp`.
 - `level/camera.c` (`camera_follow.c`): `OperatorNew`/`OperatorDelete`
   (C++ runtime) after the camera. **Done** (#770): `system/operator_new.cpp`.
-- `bosses/cortex.c` and `bosses/dingodile.c` (`actor_part_188d0.c`,
-  `actor_part_1967c.c`): Tiny, Cortex and Dingodile straddle both files.
+- ~~`bosses/cortex.c` and `bosses/dingodile.c` (`actor_part_188d0.c`,
+  `actor_part_1967c.c`): Tiny, Cortex and Dingodile straddle both files.~~
+  **Done (#769):** `bosses/tiny.cpp` (with tiny_update and tiny_hop_pad),
+  `bosses/cortex.cpp`, `bosses/dingodile.cpp`.
 - `vehicle/jetpack_spawn.c` (`actor_part128.c`): starts with
-  `YetiStateStop`.
-- `vehicle/jetpack_balloon.c` (`actor_part125.c`): starts with the
-  airship's `GetAirshipHpPercent`/`DestroyAirship`.
-- `bosses/hovercraft.c` (`actor_part130.c`): starts with the jetpack ring
-  and collected wumpa.
+  `YetiStateStop`. #769 moved the jetpack player's code at its end to
+  `vehicle/jetpack/jetpack_player_update.cpp`; `YetiStateStop` stays
+  (old_agbcc, yeti.cpp before it is not).
+- ~~`vehicle/jetpack_balloon.c` (`actor_part125.c`): starts with the
+  airship's `GetAirshipHpPercent`/`DestroyAirship`.~~ **Done (#769):**
+  moved to the end of `vehicle/jetpack/airship_graphics.cpp`.
+- ~~`bosses/hovercraft.c` (`actor_part130.c`): starts with the jetpack ring
+  and collected wumpa.~~ **Done (#769):**
+  (`vehicle/jetpack/jetpack_collected_wumpa.cpp`,
+  `bosses/hovercraft_fireball.cpp`).
 - ~~`frontend/credits.c` (`actor_part131.c`): starts with the continue
   prompt's draw/run.~~ **Done (#767):** moved to the end of
   `menus/continue_prompt.cpp`.

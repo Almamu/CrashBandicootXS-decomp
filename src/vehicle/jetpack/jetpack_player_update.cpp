@@ -6,6 +6,7 @@
 extern "C" {
 #include "math_util.h"
 #include "match.h"
+#include <libgcc.h>
 #include "system.h"
 #include "actor.h"
 #include "bosses.h"
@@ -14,210 +15,22 @@ extern "C" {
 #include "globals.h"
 }
 
-/* The jetpack levels' spawners and the jetpack player's constructor and
- * virtual methods (#664 part 11e, include/vehicle.hpp), ROM
- * 0x0802E0A4-0x0802F0DC, between yeti.cpp and jetpack_run.cpp:
+/* JetpackPlayer's constructor, virtual methods, steering, first three
+ * states, course end, ring pass and VRAM tile buffers (#664 part 11e,
+ * include/vehicle.hpp), ROM 0x0802E740-0x0802F3BC, between
+ * jetpack_spawn.cpp and jetpack_player.cpp. JetpackPlayer is
+ * gJetpackPlayerVtable; its state lives in the gJetpack* globals.
  *
- * - The level's spawn dispatcher `CreateJetpackActor` (a 31-case `switch`
- *   over the spawn "kind", indexing the per-kind record table
- *   `gJetpackAnimTable`) and its helpers: `SpawnJetpackActor` picks a
- *   spawn record's kind byte and forwards to it, and the run of small
- *   spawners (`CreateJetpackCheckpointText`-`SpawnJetpackShot`) each build
- *   one object from a fixed record of the same table.
- * - `JetpackPlayer` (gJetpackPlayerVtable): its constructor, `Update`,
- *   `Draw`, `Damage`, the d-pad steering and three of its states. Its
- *   state lives in the gJetpack* globals.
- *
- * Built with old_agbcp (as the C was with old_agbcc). */
+ * Built with old_agbcp (as the C was with old_agbcc): AllocTiles's
+ * products (`adds r2, r3, #0; muls r2, r1; adds r0, r2, #0`) are
+ * old_agbcc's, as in AllocPolarPlayerTiles (polar_player.cpp); the C wrote
+ * them in asm. See docs/matching/archive/issue-56-0x0802f0dc-actor.md. */
 
 /* Clamps a steering speed to +-0x240, keeping its sign. */
 #define CLAMP_SPEED(v)                                                         \
     if (ABS_BRANCHLESS(v) > 0x240)                                             \
         (v) = (v) < 0 ? -0x240 : ((v) != 0 ? 0x240 : 0);                      \
     else (void)0
-
-/* Once the current animation has played through, switches the yeti to
- * animation sequence 3 (unless it's already on it), restarting its timer
- * from that sequence's first frame. */
-void YetiStateStop(void)
-{
-    AnimPart *self = gYeti;
-
-    if (self->animIndex != 3 && self->animDone != 0) {
-        self->animIndex = 3;
-        self->animTimer = self->anims[3].duration;
-        self->animDone = 0;
-        self->animTime = 0;
-    }
-}
-
-/* Spawns the object a level spawn record describes: its kind comes from
- * `kind`, `altKind` in the alternate game mode (kind 0x17 there becomes
- * 0x14) or `bonusKind` when `alt` is set. Kind 0x1d only spawns while
- * `IsCrystalSaved` allows it; kinds 0, 0x3e and 0x20-0x25 never do. */
-void *SpawnJetpackActor(struct actor_spawn *rec, u8 alt, s32 dz)
-{
-    u8 kind = rec->kind;
-    s32 x, y, z;
-
-    if (gLevelState->timeTrial != 0) {
-        kind = rec->altKind;
-        if (kind == 0x17)
-            kind = 0x14;
-    } else if (alt != 0) {
-        kind = rec->bonusKind;
-    }
-    if (kind == 0x1d && !(u8)gLevelState->IsCrystalSaved())
-        return 0;
-    if (kind == 0 || kind == 0x3e || (u8)(kind - 0x20) <= 5)
-        return 0;
-    x = INT_TO_Q8(rec->x);
-    y = INT_TO_Q8(rec->y);
-    z = INT_TO_Q8(rec->z) + dz;
-    if ((u8)(kind - 0x10) <= 2) {
-        SpawnAirship(kind - 0x10, x, y, z);
-    } else if (kind != 0xa) {
-        return CreateJetpackActor(kind, x, y, z, rec);
-    } else {
-        SpawnHovercraft(0, x, y, z);
-    }
-    return 0;
-}
-
-/* The spawn dispatcher: offsets the position by the kind's record and
- * constructs the kind's object. Kind 23 turns into kind 20's object
- * when `IsSpawnCollected` says so; kind 31 spawns a kind-43 companion first. */
-void *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
-{
-    x += gJetpackAnimTable[kind].spawnX;
-    y += gJetpackAnimTable[kind].spawnY;
-    switch (kind) {
-    case 1:
-        return new JetpackPlane(&gJetpackAnimTable[kind], x, y, z, (struct spawn_arg *)spawn);
-    case 4:
-    case 5:
-    case 6:
-    case 7:
-    case 8:
-    case 9:
-        return new JetpackBomber(&gJetpackAnimTable[kind], x, y, z);
-    case 19:
-        return new JetpackHealthCrate(&gJetpackAnimTable[kind], x, y, z);
-    case 23:
-        if ((u8)IsSpawnCollected(spawn))
-            return new JetpackQuestionCrate(&gJetpackAnimTable[20], x, y, z, spawn);
-        /* fallthrough */
-    case 20:
-    case 21:
-    case 22:
-        return new JetpackQuestionCrate(&gJetpackAnimTable[kind], x, y, z, spawn);
-    case 24:
-    case 25:
-    case 26:
-    case 29:
-        return new JetpackTimeCrate(&gJetpackAnimTable[kind], x, y, z);
-    case 27:
-        return new JetpackParachuteNitro(&gJetpackAnimTable[kind], x, y, z);
-    case 28:
-        return new JetpackRocket(&gJetpackAnimTable[kind], x, y, z);
-    case 31:
-        new JetpackRing(&gJetpackAnimTable[43],
-                        x - gJetpackAnimTable[kind].spawnX + gJetpackAnimTable[43].spawnX, y, z);
-        return new JetpackRing(&gJetpackAnimTable[kind], x, y, z);
-    }
-    return 0;
-}
-
-/* Plays sfx 0x17 and spawns the checkpoint banner (record 46). */
-void CreateJetpackCheckpointText(void)
-{
-    gAudioContext->PlaySfx(SFX_CHECKPOINT, 0x100);
-    new JetpackCheckpointText(&gJetpackAnimTable[46], 0, 0, 0);
-}
-
-/* Plays sfx 4 and spawns an explosion (record 45) at (x, y, z). */
-void CreateJetpackExplosion(s32 x, s32 y, s32 z)
-{
-    gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
-    new JetpackExplosion(&gJetpackAnimTable[45], x, y, z);
-}
-
-/* Kind-44 constructor. */
-void SpawnJetpackCollectedWumpa(s32 a, s32 b, s32 c)
-{
-    new JetpackCollectedWumpa(&gJetpackAnimTable[44], a, b, c);
-}
-
-/* A balloon of record `kind` holding crate `d` (the crates' constructors,
- * jetpack_crates.cpp). */
-void *SpawnJetpackBalloon(u8 kind, s32 a, s32 b, s32 c, s32 d)
-{
-    return new JetpackBalloon(&gJetpackAnimTable[kind], a, b, c, (JetpackBalloonCrate *)d);
-}
-
-/* Kind-14 constructor. */
-void SpawnHovercraftCannonFlash(s32 a, s32 b, s32 c)
-{
-    new HovercraftCannonFlash(&gJetpackAnimTable[14], a, b, c);
-}
-
-/* Kind-13 constructor. The side gun's `left` is a `bool`, which g++
- * passes as a byte on the stack (`add r2, sp, #4; strb`). */
-void SpawnHovercraftSideGun(s32 a, s32 b, s32 c, bool left)
-{
-    new HovercraftSideGun(&gJetpackAnimTable[13], a, b, c, left);
-}
-
-/* Kind-12 constructor. */
-void SpawnHovercraftLauncher(s32 a, s32 b, s32 c)
-{
-    new HovercraftLauncher(&gJetpackAnimTable[12], a, b, c);
-}
-
-/* Kind-11 constructor. */
-void SpawnHovercraftCannon(s32 a, s32 b, s32 c)
-{
-    new HovercraftCannon(&gJetpackAnimTable[11], a, b, c);
-}
-
-/* Plays sfx 0x38 and spawns a kind-39 object. */
-void SpawnHovercraftFireball(s32 x, s32 y, s32 z)
-{
-    gAudioContext->PlaySfx(SFX_FIREBALL_LAUNCH, 0x100);
-    new HovercraftFireball(&gJetpackAnimTable[39], x, y, z);
-}
-
-/* Plays sfx 0x38 and spawns an airship fireball (record 38). */
-void SpawnAirshipFireball(s32 x, s32 y, s32 z)
-{
-    gAudioContext->PlaySfx(SFX_FIREBALL_LAUNCH, 0x100);
-    new AirshipFireball(&gJetpackAnimTable[38], x, y, z);
-}
-
-/* Plays sfx 0x30 and fires a cannonball (record 3) at (d, e). */
-void SpawnJetpackCannonball(s32 a, s32 b, s32 c, s32 d, s32 e)
-{
-    gAudioContext->PlaySfx(SFX_CANNONBALL_FIRE, 0x100);
-    new JetpackCannonball(&gJetpackAnimTable[3], a, b, c, d, e);
-}
-
-/* Spawns the player's shot (record 2; JetpackPlayer::StateFly). */
-void SpawnJetpackShot(s32 x, s32 y, s32 z, s32 velX, s32 velY)
-{
-    new JetpackShot(&gJetpackAnimTable[2], x, y, z, velX, velY);
-}
-
-/* Installs the level's per-kind table and builds the player from its
- * first record, making it the (self-linked) actor list's root. */
-void CreateJetpackPlayer(struct anim_table_record *table, s32 z)
-{
-    JetpackPlayer *p;
-
-    gJetpackAnimTable = table;
-    gActorList = p = new JetpackPlayer(gJetpackAnimTable, z);
-    p->prev = p;
-    p->next = p;
-}
 
 /* InitJetpackPlayer: 100 hit points (0x78 when `IsActorMaskAssistDue`
  * says so), and a reset of all its global state. A nonzero start depth
@@ -550,4 +363,148 @@ void JetpackPlayer::StateRollRight()
     }
     if (animDone)
         SetState(1, 0);
+}
+
+
+/* AnimPart::GetAnimFrameData (anim_part.cpp), inlined; written
+ * differently from Draw's CurFrame above. */
+static inline u8 *CurFrameData(AnimPart *self)
+{
+    s32 t = Q8_TO_INT(self->animTime);
+
+    return (u8 *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t];
+}
+
+/* The course's end (the category's hook, JetpackReachCourseEnd): unless
+ * the player is already inactive, it stops, loses the input and enters
+ * state 5 (animation 4), with a cue; in a time trial the clock freezes. */
+void JetpackPlayer::FinishRun()
+{
+    s32 zero = gJetpackPlayerInactive;
+
+    if (zero == 0) {
+        gJetpackInputEnabled = zero;
+        gJetpackPlayerHalted = 1;
+        gJetpackPlayerInactive = 1;
+        SetCellAnimSpeed(0x3c);
+        gJetpackPlayerVelY = zero;
+        gJetpackPlayerVelX = zero;
+        SetState(5, 4);
+        gAudioContext->PlaySfx(SFX_JETPACK_RUN_FINISH, 0x100);
+        if (gLevelState->timeTrial != 0)
+            gLevelState->FreezeLevelClock(0x2710);
+    }
+}
+
+/* Flying through a ring at (x, y) (UpdateJetpackRing): in states 1, 6, 2
+ * and 3, the player snaps to the ring's center, plays animation 5 and
+ * enters state 6 (the ring's boost, StateBoost), stopping its steering.
+ * Outside time trials, rings passed less than 0xbe frames apart (and
+ * more than 0x14) build a chain of five rewards: 1, 5 and 0x14 wumpas,
+ * a fifth of the hit points, and a life. */
+void JetpackPlayer::PassRing(s32 x, s32 y)
+{
+    s32 state = this->state;
+    u8 paused;
+
+    if (state != 1 && state != 6 && state != 2 && state != 3)
+        return;
+
+    if (animIndex != 5) {
+        animIndex = 5;
+        animTimer = anims[5].duration;
+        animDone = 0;
+        animTime = 0;
+    }
+
+    this->x = x;
+    this->y = y;
+
+    if (this->state != 6)
+        SetCellAnimSpeed(0x50);
+    this->state = 6;
+
+    /* Both addresses first, as the ROM loads them (stored in place,
+     * each address is loaded just before its store). */
+    {
+        s32 *velY = &gJetpackPlayerVelY;
+        s32 *velX = &gJetpackPlayerVelX;
+
+        *velX = 0;
+        *velY = 0;
+    }
+    stateTime = 0;
+
+    paused = gLevelState->timeTrial;
+    if (paused != 0)
+        return;
+
+    if (GetActorCategoryFrameCount() - gJetpackRingLastFrame <= 0x14)
+        return;
+
+    if (GetActorCategoryFrameCount() - gJetpackRingLastFrame > 0xbe)
+        gJetpackRingChain = paused;
+
+    switch (gJetpackRingChain) {
+    case 0:
+        if (gLevelState->timeTrial == 0) {
+            if (gJetpackQueuedWumpa == 0)
+                gJetpackWumpaDispenseTimer = 0xf;
+            gJetpackQueuedWumpa += 1;
+        }
+        break;
+    case 1:
+        if (gLevelState->timeTrial == 0) {
+            if (gJetpackQueuedWumpa == 0)
+                gJetpackWumpaDispenseTimer = 0xf;
+            gJetpackQueuedWumpa += 5;
+        }
+        break;
+    case 2:
+        if (gLevelState->timeTrial == 0) {
+            if (gJetpackQueuedWumpa == 0)
+                gJetpackWumpaDispenseTimer = 0xf;
+            gJetpackQueuedWumpa += 0x14;
+        }
+        break;
+    case 3:
+        if (gJetpackPlayerInactive == 0) {
+            /* `pct` a variable: the ROM multiplies (`muls`), where a
+             * literal 0x14 is strength-reduced to shifts. */
+            s32 max = gJetpackPlayerMaxHp;
+            s32 pct = 0x14;
+            s32 v = hp + __divsi3(pct * max, 0x64);
+
+            hp = v;
+            if (v > gJetpackPlayerMaxHp)
+                hp = gJetpackPlayerMaxHp;
+        }
+        break;
+    case 4:
+        if (gLevelState->timeTrial == 0) {
+            gLevelState->AddLife();
+            gAudioContext->PlaySfx(SFX_EXTRA_LIFE, 0x100);
+        }
+        break;
+    }
+
+    gJetpackRingLastFrame = GetActorCategoryFrameCount();
+    gJetpackRingChain++;
+    if (gJetpackRingChain == 5)
+        gJetpackRingChain = 0;
+}
+
+/* The two VRAM tile buffers Draw unpacks the frames into, each the size
+ * of the current frame (w * h tiles); buffer 1 first, and no frame in
+ * either. */
+void JetpackPlayer::AllocTiles()
+{
+    u8 *f;
+
+    f = CurFrameData(this);
+    gJetpackPlayerTiles[0] = AllocVramTileBlock(f[1] * f[0] * 32);
+    f = CurFrameData(this);
+    gJetpackPlayerTiles[1] = AllocVramTileBlock(f[1] * f[0] * 32);
+    gJetpackPlayerTileBuffer = 1;
+    gJetpackPlayerLastFrame = 0;
 }

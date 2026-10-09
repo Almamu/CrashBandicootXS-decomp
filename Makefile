@@ -62,13 +62,14 @@ GRAPHICS_BUILDDIR = $(OBJ_DIR)/graphics
 
 $(shell mkdir -p $(C_BUILDDIR) $(ASM_BUILDDIR) $(DATA_ASM_BUILDDIR) $(SOUND_BUILDDIR) $(GRAPHICS_BUILDDIR))
 
-C_SRCS := $(wildcard $(C_SUBDIR)/*/*.c)
+C_SRCS := $(wildcard $(C_SUBDIR)/*/*.c $(C_SUBDIR)/*/*/*.c)
 C_ASMS := $(patsubst $(C_SUBDIR)/%.c,$(C_BUILDDIR)/%.s,$(C_SRCS))
 C_OBJS := $(patsubst $(C_SUBDIR)/%.c,$(C_BUILDDIR)/%.o,$(C_SRCS))
 
-# The game objects written as C++ (#664, docs/cplusplus.md): src/*/*.cpp,
-# built by agbcp/old_agbcp (see "C++ objects" below).
-CXX_SRCS := $(wildcard $(C_SUBDIR)/*/*.cpp)
+# The game objects written as C++ (#664, docs/cplusplus.md): src/*/*.cpp
+# and src/*/*/*.cpp (src/vehicle/polar/, src/vehicle/jetpack/), built by
+# agbcp/old_agbcp (see "C++ objects" below).
+CXX_SRCS := $(wildcard $(C_SUBDIR)/*/*.cpp $(C_SUBDIR)/*/*/*.cpp)
 CXX_ASMS := $(patsubst $(C_SUBDIR)/%.cpp,$(C_BUILDDIR)/%.s,$(CXX_SRCS))
 CXX_OBJS := $(patsubst $(C_SUBDIR)/%.cpp,$(C_BUILDDIR)/%.o,$(CXX_SRCS))
 
@@ -255,23 +256,25 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/crates/crate_grid_link.o \
                   $(C_BUILDDIR)/enemies/enemy_attack.o \
                   $(C_BUILDDIR)/objects/ctrl.o \
-                  $(C_BUILDDIR)/bosses/tiny_hop_pad.o \
+                  $(C_BUILDDIR)/bosses/tiny.o \
                   $(C_BUILDDIR)/enemies/enemy_ctrl.o \
                   $(C_BUILDDIR)/objects/effect_ctrl.o \
-                  $(C_BUILDDIR)/vehicle/polar_player.o \
-                  $(C_BUILDDIR)/vehicle/jetpack_spawn.o \
-                  $(C_BUILDDIR)/vehicle/jetpack_run.o \
+                  $(C_BUILDDIR)/vehicle/polar/polar_player.o \
+                  $(C_BUILDDIR)/vehicle/jetpack/jetpack_spawn.o \
+                  $(C_BUILDDIR)/vehicle/jetpack/jetpack_player_update.o \
+                  $(C_BUILDDIR)/vehicle/jetpack/jetpack_collected_wumpa.o \
+                  $(C_BUILDDIR)/bosses/hovercraft_fireball.o \
                   $(C_BUILDDIR)/bosses/hovercraft.o \
                   $(C_BUILDDIR)/frontend/credits.o \
-                  $(C_BUILDDIR)/vehicle/polar_nitro.o \
-                  $(C_BUILDDIR)/bosses/airship_map.o \
-                  $(C_BUILDDIR)/bosses/airship_touch.o \
+                  $(C_BUILDDIR)/vehicle/polar/polar_nitro.o \
+                  $(C_BUILDDIR)/vehicle/jetpack/airship_map.o \
+                  $(C_BUILDDIR)/vehicle/jetpack/airship_touch.o \
                   $(C_BUILDDIR)/bosses/mega_mix_update.o \
                   $(C_BUILDDIR)/player/action_ctrl_moves.o \
                   $(C_BUILDDIR)/actor/bg_picture.o \
                   $(C_BUILDDIR)/objects/sprite_anim.o \
-                  $(C_BUILDDIR)/vehicle/yeti_update.o \
-                  $(C_BUILDDIR)/vehicle/yeti_graphics.o \
+                  $(C_BUILDDIR)/vehicle/polar/yeti_update.o \
+                  $(C_BUILDDIR)/vehicle/polar/yeti_graphics.o \
                   $(C_BUILDDIR)/player/player_collide.o \
                   $(C_BUILDDIR)/player/player_reset.o \
                   $(C_BUILDDIR)/player/player_update.o \
@@ -292,7 +295,6 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/player/action_ctrl_hang.o \
                   $(C_BUILDDIR)/player/swim_ctrl.o \
                   $(C_BUILDDIR)/player/input_ctrl.o \
-                  $(C_BUILDDIR)/bosses/tiny_update.o \
                   $(C_BUILDDIR)/bosses/cortex.o \
                   $(C_BUILDDIR)/bosses/dingodile.o \
                   $(C_BUILDDIR)/objects/platform_create.o \
@@ -447,8 +449,10 @@ NO_IMPLEMENT_INLINES_OBJS := $(C_BUILDDIR)/actor/actor.o \
                              $(C_BUILDDIR)/player/action_ctrl_update.o \
                              $(C_BUILDDIR)/player/input_ctrl.o \
                              $(C_BUILDDIR)/player/player_collide.o \
-                             $(C_BUILDDIR)/vehicle/jetpack_crates.o \
-                             $(C_BUILDDIR)/vehicle/polar_pickups.o
+                             $(C_BUILDDIR)/vehicle/jetpack/jetpack_crates.o \
+                             $(C_BUILDDIR)/vehicle/jetpack/jetpack_rocket.o \
+                             $(C_BUILDDIR)/vehicle/polar/polar_crate.o \
+                             $(C_BUILDDIR)/vehicle/polar/polar_pickups.o
 $(NO_IMPLEMENT_INLINES_OBJS): CC1FLAGS += -fno-implement-inlines
 
 # Objects built with -fno-rerun-loop-opt (one loop-optimizer pass).

@@ -61,45 +61,45 @@ struct hovercraft_attack {
 struct anim_box;
 struct entry_set;
 
-/* src/bosses/airship.cpp */
+/* src/vehicle/jetpack/airship.cpp */
 extern void SteerAirship(void);
 extern void CreateAirship(s32 level);
 extern void SpawnAirship(s32 kind, s32 x, s32 y, s32 z);
 extern void UpdateAirship(void);
 extern void UpdateAirshipBg2(void);
 
-/* src/bosses/airship_damage.cpp */
+/* src/vehicle/jetpack/airship_damage.cpp */
 extern void DamageAirship(s32 delta);
 
-/* src/bosses/airship_explode.cpp */
+/* src/vehicle/jetpack/airship_explode.cpp */
 extern void AirshipStateExplode(void);
 
-/* src/bosses/airship_fall.cpp */
+/* src/vehicle/jetpack/airship_fall.cpp */
 extern void AirshipStateFall(void);
 
-/* src/bosses/airship_graphics.cpp */
+/* src/vehicle/jetpack/airship_graphics.cpp */
 extern void ConvertAirshipTiles(void);
 extern void UpdateAirshipFlashColor(void);
 extern void AnimateAirshipPalette(void);
 
-/* src/bosses/airship_load_graphics.cpp */
+/* src/vehicle/jetpack/airship_load_graphics.cpp */
 extern void LoadAirshipGraphics(void);
 
-/* src/bosses/airship_map.cpp */
+/* src/vehicle/jetpack/airship_map.cpp */
 extern void DrawAirshipMap(u16 *src);
 
-/* src/bosses/airship_states.cpp */
+/* src/vehicle/jetpack/airship_states.cpp */
 extern void AirshipStateApproach(void);
 extern void AirshipStateFireballs(void);
 extern void AirshipStateCannon(void);
 
-/* src/bosses/airship_touch.cpp */
+/* src/vehicle/jetpack/airship_touch.cpp */
 extern u8 IsTouchingAirship(void *self);
 
-/* src/bosses/cortex.cpp: methods of TinyCtrl, CortexBossCtrl,
+/* src/bosses/tiny.cpp and cortex.cpp: methods of TinyCtrl, CortexBossCtrl,
  * CortexTargetCtrl and CortexShotCtrl (include/boss_ctrl.hpp) under their
- * C names (cxx_symbols.txt). TinyHitStub and SpawnCortexBossGem
- * (spawn_gems.cpp calls it) have C linkage. */
+ * C names (cxx_symbols.txt). TinyHitStub (tiny.cpp) and SpawnCortexBossGem
+ * (cortex.cpp; spawn_gems.cpp calls it) have C linkage. */
 extern void TinyHitStub(void *self, void *part);
 extern void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind);
 
@@ -121,7 +121,7 @@ extern void nullsub_34(void);
 extern s32 sub_80337FC(void);
 extern void nullsub_35(void);
 
-/* src/bosses/hovercraft_parts.cpp */
+/* src/bosses/hovercraft_state.cpp */
 extern void StartHovercraftHitFlash(void);
 extern void SetHovercraftFlashColor(u8 flag);
 extern s32 GetHovercraftPartsLeft(void);
@@ -137,12 +137,12 @@ extern void HovercraftStateInactive(void);
 extern void HovercraftStateApproach(void);
 extern void HovercraftStateExplodeStub(void);
 
-/* src/vehicle/jetpack_balloon.cpp (C linkage) */
+/* src/vehicle/jetpack/airship_graphics.cpp, its end (C linkage) */
 extern s32 GetAirshipHpPercent(void);
 extern void DestroyAirship(void);
 extern void AirshipStateInactive(void);
 
-/* src/vehicle/jetpack_spawn.cpp */
+/* src/vehicle/jetpack/jetpack_spawn.cpp */
 extern void SpawnHovercraftCannonFlash(s32 a, s32 b, s32 c);
 /* `left` is the side gun's `bool` (HovercraftSideGun's constructor); only
  * C++ calls it. */

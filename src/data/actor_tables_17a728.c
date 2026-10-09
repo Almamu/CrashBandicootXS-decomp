@@ -19,7 +19,7 @@ const u16 gPolarPlayerShockBlinkPalette[16] = {
     0x18C8, 0x31B1, 0x294C, 0x52D8, 0x3E32, 0x5F3B, 0x4675, 0x6BBF,
 };
 
-/* Boxes (struct anim_box): the one UpdatePolarNitroCrate (polar_pickups.cpp) copies
+/* Boxes (struct anim_box): the one UpdatePolarNitroCrate (polar_crate.cpp) copies
  * into a part's +0x38 box, and the three UpdatePolarElectricFence (polar_objects.cpp)
  * picks from. */
 const struct anim_box gPolarNitroCrateBox = { -15, -15, -2, 30, 30, 5 };

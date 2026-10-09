@@ -40,7 +40,7 @@ Update__10EffectCtrlP12MovingSprite UpdateEffectCtrl
 HandleEvent__10EffectCtrlP12MovingSpriteii EffectCtrlHandleEvent
 Reset__10EffectCtrl ResetEffectCtrl
 #
-# StompedHopPadCtrl, OneShotAnimCtrl (src/bosses/tiny_hop_pad.cpp)
+# StompedHopPadCtrl, OneShotAnimCtrl (src/bosses/tiny.cpp)
 _vt.17StompedHopPadCtrl gStompedHopPadVtable
 __17StompedHopPadCtrl CreateStompedHopPadCtrl
 _._17StompedHopPadCtrl DestroyStompedHopPadCtrl
@@ -273,8 +273,8 @@ UpdateSkidAnim__10ActionCtrl UpdateActionCtrlSkidAnim
 UpdateFacing__10ActionCtrl UpdatePlayerFacing
 # part 6: the boss controllers (include/boss_ctrl.hpp): MegaMixCtrl's
 # Update (src/bosses/mega_mix_update.cpp) and TinyCtrl
-# (src/bosses/tiny_update.cpp; its constructor, destructor and StartHop
-# are in cortex.cpp, part 7i)
+# (src/bosses/tiny.cpp; its constructor, destructor and StartHop
+# are part 7i's)
 Update__11MegaMixCtrlP12MovingSprite UpdateMegaMix
 _vt.8TinyCtrl gTinyVtable
 __8TinyCtrl CreateTiny
@@ -287,7 +287,8 @@ StartHop__8TinyCtrlP12MovingSprite StartTinyHop
 __15OneShotAnimCtrl CreateOneShotAnimCtrl
 #
 # part 6b: Dingodile and the Neo Cortex fight's controllers
-# (include/boss_ctrl.hpp, src/bosses/dingodile.cpp, dingodile_create.cpp)
+# (include/boss_ctrl.hpp, src/bosses/dingodile.cpp, dingodile_create.cpp;
+# the Cortex controllers' part at the end of cortex.cpp since #769)
 _vt.13DingodileCtrl gDingodileVtable
 __13DingodileCtrlUiUi CreateDingodile
 _._13DingodileCtrl DestroyDingodile
@@ -754,7 +755,8 @@ ClearActive__13PlatformMover ClearPlatformMoverActive
 #
 # part 7i: the rest of the Neo Cortex fight, Tiny's constructor,
 # destructor and StartHop, and the one-shot animation controllers
-# (include/boss_ctrl.hpp, include/platform.hpp, src/bosses/cortex.cpp)
+# (include/boss_ctrl.hpp, include/platform.hpp, src/bosses/cortex.cpp;
+# Tiny's and the one-shot controllers' part at the end of tiny.cpp since #769)
 _vt.15OneShotAnimCtrl gOneShotAnimCtrlVtable
 _._15OneShotAnimCtrl DestroyOneShotAnimCtrl
 _vt.21UnusedOneShotAnimCtrl gUnusedOneShotAnimCtrlVtable
@@ -1037,7 +1039,7 @@ UpdateVvLogoPieces__12CompanyLogos UpdateVvLogoPieces
 # part 11a: the 3D actors' base classes and their subclasses' destructors
 # (include/actor_self.hpp, vehicle.hpp, boss_actors.hpp; src/actor/actor.cpp,
 # inline_copies_actors.cpp), and the polar player's state dispatch and table
-# (src/vehicle/polar_player_dispatch.cpp, src/data/actor_pmf_17a6b8.cpp)
+# (src/vehicle/polar/polar_player_dispatch.cpp, src/data/actor_pmf_17a6b8.cpp)
 GetAnimFrameBaseOffset__8AnimPart GetAnimFrameBaseOffset
 GetAnimFrameAttr__8AnimPart GetAnimFrameAttr
 GetAnimFrameData__8AnimPart GetAnimFrameData
@@ -1115,7 +1117,7 @@ StateFinishLeap__11PolarPlayer PolarPlayerStateFinishLeap
 StateShocked__11PolarPlayer PolarPlayerStateShocked
 StateRecover__11PolarPlayer PolarPlayerStateRecover
 # part 11i: the airship's fireball (include/boss_actors.hpp;
-# src/bosses/airship_fireball.cpp, src/data/actor_pmf_17c2b8.cpp)
+# src/vehicle/jetpack/airship_fireball.cpp, src/data/actor_pmf_17c2b8.cpp)
 _vt.15AirshipFireball gAirshipFireballVtable
 __15AirshipFireballPC17anim_table_recordiii CreateAirshipFireball
 Update__15AirshipFireball UpdateAirshipFireball
@@ -1156,8 +1158,8 @@ __13PolarBoostPadPC17anim_table_recordiii CreatePolarBoostPad
 __20PolarCheckpointCratePC17anim_table_recordiii CreatePolarCheckpointCrate
 #
 # part 11e: the jetpack player, its shot and the jetpack spawners
-# (include/vehicle.hpp; src/vehicle/jetpack_spawn.cpp, jetpack_player.cpp,
-# jetpack_run.cpp, jetpack_shot.cpp, src/data/actor_pmf_17c1c0.cpp)
+# (include/vehicle.hpp; src/vehicle/jetpack/jetpack_spawn.cpp, jetpack_player.cpp,
+# jetpack_player_update.cpp, jetpack_shot.cpp, src/data/actor_pmf_17c1c0.cpp)
 _vt.13JetpackPlayer gJetpackPlayerVtable
 _vt.11JetpackShot gJetpackShotVtable
 _vt.21JetpackCheckpointText gJetpackCheckpointTextVtable
@@ -1194,7 +1196,7 @@ __11JetpackShotPC17anim_table_recordiiiii CreateJetpackShot
 Update__11JetpackShot UpdateJetpackShot
 IsUnshootable__11JetpackShot IsJetpackShotUnshootable
 #
-# part 11c: the polar player (include/vehicle.hpp; src/vehicle/polar_player.cpp,
+# part 11c: the polar player (include/vehicle.hpp; src/vehicle/polar/polar_player.cpp,
 # polar_player_states.cpp, polar_player_actions.cpp)
 _._11PolarPlayer DestroyPolarPlayer
 Update__11PolarPlayer UpdatePolarPlayer
@@ -1211,7 +1213,8 @@ Boost__11PolarPlayeri BoostPolarPlayer
 GiveMask__11PolarPlayer GivePolarPlayerMask
 Launch__11PolarPlayer LaunchPolarPlayer
 # part 11f: the planes, bombers, cannonballs and balloons (include/vehicle.hpp;
-# src/vehicle/jetpack_plane.cpp, jetpack_balloon.cpp, src/data/actor_pmf_17c260.cpp,
+# src/vehicle/jetpack/jetpack_plane.cpp, jetpack_bomber.cpp, jetpack_cannonball.cpp,
+# jetpack_balloon.cpp, src/data/actor_pmf_17c260.cpp,
 # actor_pmf_17c414.cpp)
 _vt.12JetpackPlane gJetpackPlaneVtable
 _vt.13JetpackBomber gJetpackBomberVtable
@@ -1260,6 +1263,7 @@ StatePop__14JetpackBalloon JetpackBalloonStatePop
 #
 # part 11h: the hovercraft's weapons, the jetpack ring and collected wumpa
 # (include/boss_actors.hpp, vehicle.hpp; src/bosses/hovercraft*.cpp,
+# src/vehicle/jetpack/jetpack_collected_wumpa.cpp,
 # src/data/actor_pmf_17c450.cpp, actor_state_17c4c8.cpp)
 _vt.21HovercraftCannonFlash gHovercraftCannonFlashVtable
 __21HovercraftCannonFlashPC17anim_table_recordiii CreateHovercraftCannonFlash
@@ -1365,8 +1369,8 @@ Update__20PolarCheckpointCrate UpdatePolarCheckpointCrate
 _vt.20PolarCheckpointCrate gPolarCheckpointCrateVtable
 #
 # part 11g: the balloon crates, the parachute nitro, the rocket and the
-# ring's Update (include/vehicle.hpp; src/vehicle/jetpack_crates.cpp,
-# src/data/actor_pmf_17c42c.cpp)
+# ring's Update (include/vehicle.hpp; src/vehicle/jetpack/jetpack_crates.cpp,
+# jetpack_rocket.cpp, src/data/actor_pmf_17c42c.cpp)
 _vt.19JetpackBalloonCrate gJetpackBalloonCrateVtable
 __19JetpackBalloonCratePC17anim_table_recordiiiUc InitJetpackBalloonCrate
 Update__19JetpackBalloonCrate UpdateJetpackBalloonCrate

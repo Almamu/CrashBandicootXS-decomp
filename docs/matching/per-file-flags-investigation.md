@@ -164,8 +164,8 @@ normalized) finds changed code in matched real-C functions in 11
 old_agbcc files:
 
 - `continue_prompt.c` (`InitContinuePromptGraphics`)
-- `tiny_update.c` (`PickTinyHopTarget`)
-- `cortex.c` (`CreateTiny`)
+- `tiny_update.c` (`PickTinyHopTarget`; now tiny.cpp)
+- `cortex.c` (`CreateTiny`; now tiny.cpp)
 - `level_select.c` (`DestroyLevelSelect`)
 - `level_select_pages.c` (`LevelSelectTurnPage`, `PlaceLevelSelectEntries`, `InitZoomBg`)
 - `graphics_package.c` (`LoadGraphicsPackage`)

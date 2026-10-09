@@ -9,71 +9,10 @@ extern "C" {
 #include "globals.h"
 }
 
-/* Aku Aku's masks, the goal, the boost pad and the checkpoint crate
- * (#664 part 11d, include/vehicle.hpp), ROM 0x0802D3A8-0x0802D5D4, between
- * polar_objects.cpp and yeti_update.cpp. The mask level is the level's
- * (gLevelState->maskLevel, SetMaskLevel); PolarAkuAku::Refresh
- * (polar_objects.cpp) shows it. */
-
-/* All masks gone (PolarPlayer::Catch). */
-void PolarAkuAku::ClearMask()
-{
-    gLevelState->SetMaskLevel(MASK_LEVEL_NONE);
-    Refresh(0);
-}
-
-/* A mask lost (PolarPlayer::Hurt and Shock): the level, one down
- * unless none is left, and a lost mask shown. */
-s32 PolarAkuAku::RemoveMask()
-{
-    s32 level;
-
-    gAudioContext->PlaySfx(SFX_AKU_AKU_LOSE, 0x100);
-    level = gLevelState->maskLevel;
-    if (level != MASK_LEVEL_NONE) {
-        level -= 1;
-        gLevelState->SetMaskLevel(level);
-    }
-    Refresh(1);
-    return level;
-}
-
-/* A mask gained (PolarPlayer::GiveMask): the level, one up to
- * invincible. */
-s32 PolarAkuAku::AddMask()
-{
-    s32 level;
-
-    gAudioContext->PlaySfx(SFX_AKU_AKU_GAIN, 0x100);
-    level = gLevelState->maskLevel;
-    if (level != MASK_LEVEL_INVINCIBLE) {
-        level += 1;
-        gLevelState->SetMaskLevel(level);
-    }
-    Refresh(0);
-    return level;
-}
-
-/* Behind the player (SpawnPolarAkuAku, actor_factory.cpp: at its
- * position), with the mask level `level`. */
-PolarAkuAku::PolarAkuAku(const struct anim_table_record *rec, s32 x, s32 y, s32 z, s32 level)
-    : ActorSelf(rec, x - 0x1000, y - 0x1E00, z - 0x200)
-{
-    gLevelState->SetMaskLevel(level);
-    Refresh(0);
-}
-
-/* The mask level (no caller). */
-void PolarAkuAku::SetMask(s32 level)
-{
-    gLevelState->SetMaskLevel(level);
-}
-
-/* The mask level (no caller). */
-s32 GetPolarMaskLevel(void)
-{
-    return gLevelState->maskLevel;
-}
+/* The polar course's goal, boost pad and checkpoint crate (#664 part
+ * 11d, include/vehicle.hpp), ROM 0x0802D59C-0x0802D7B0, between
+ * polar_aku_aku.cpp and yeti_update.cpp: each one's Update and
+ * constructor. */
 
 /* Shown after 5 frames; the player finishes the run on touch. */
 void PolarGoal::Update()

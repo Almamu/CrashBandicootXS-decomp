@@ -7,7 +7,7 @@
 
 /* The hovercraft fireball's state methods, indexed by `state`
  * (gHovercraftFireballStateFuncs; HovercraftFireball::Update and RunState,
- * hovercraft.cpp, dispatch through it). Each non-virtual
+ * hovercraft_fireball.cpp, dispatch through it). Each non-virtual
  * `&HovercraftFireball::f` is g++'s {0, -1, f} record. */
 const HovercraftFireball::StateFunc HovercraftFireball::stateFuncs[2] = {
     &HovercraftFireball::StateFly,
