@@ -157,7 +157,8 @@ system from "core" system startup/init code.
 - `src/level/level_query.c` (GitHub issue #38): `IsInGemPathRoom`,
   `IsInBonusRoom`, `LevelHasYellowGemEntity`, `LevelHasBlueGemEntity`, `LevelHasGreenGemEntity`,
   `LevelHasRedGemEntity`, `LevelHasGemPathGemEntity`, `CountRoomCrates`, `PlayRoomMusic`,
-  `NextRoom`, `EnterGemPathRoom`, `EnterBonusRoom`, `SelectRoom` -
+  `NextRoom`, `EnterGemPathRoom`, `EnterBonusRoom`, `SelectRoom` (the last
+  five in `src/level/room_select.cpp` since #770) -
   medal-table entry/item-list field accessors, the sound-cue resolver,
   and the `LevelHasEntityType` constant wrappers (`LevelHasEntityType` itself is left
   raw, see below)

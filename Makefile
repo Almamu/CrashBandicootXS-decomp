@@ -369,6 +369,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/level/play_room.o \
                   $(C_BUILDDIR)/level/level_state.o \
                   $(C_BUILDDIR)/level/level_query.o \
+                  $(C_BUILDDIR)/level/room_select.o \
                   $(C_BUILDDIR)/level/spawn_crates.o \
                   $(C_BUILDDIR)/level/spawn_pickups.o \
                   $(C_BUILDDIR)/level/spawn_markers.o \

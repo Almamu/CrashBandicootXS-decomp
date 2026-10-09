@@ -183,6 +183,7 @@ SECTIONS
         build/crashbandicootxs/src/level/room_frame.o(.text);
         build/crashbandicootxs/src/level/room.o(.text);
         build/crashbandicootxs/src/level/level_query.o(.text);
+        build/crashbandicootxs/src/level/room_select.o(.text);
         build/crashbandicootxs/src/cutscene/slideshow.o(.text);
         build/crashbandicootxs/src/cutscene/slideshow_display.o(.text);
         build/crashbandicootxs/src/cutscene/cutscene_player.o(.text);
