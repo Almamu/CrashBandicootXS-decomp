@@ -58,7 +58,7 @@ extern void SpawnPolarCollectedWumpa(s32 x, s32 y, s32 z);
 extern class PolarAkuAku *SpawnPolarAkuAku(s32 x, s32 y, s32 z, s32 arg);
 #endif
 
-/* src/actor/actor_spawn.cpp */
+/* src/actor/actor_category.cpp */
 extern s32 JetpackIsPauseLocked(void);
 extern s32 PolarIsPauseLocked(void);
 

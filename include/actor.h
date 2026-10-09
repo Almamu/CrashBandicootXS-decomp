@@ -132,7 +132,9 @@ extern s32 GetActorSpawnZ(s32 idx);
 extern s32 GetActorSpawnY(s32 idx);
 extern s32 GetActorSpawnX(s32 idx);
 extern s32 GetActorSpawnKindIndex(s32 idx);
-/* C++ only: it returns a `bool` (actor_spawn.cpp). */
+
+/* src/actor/actor_category.cpp. C++ only: CanPauseActorCategory returns a
+ * `bool`. */
 #ifdef __cplusplus
 extern bool CanPauseActorCategory(void);
 #endif

@@ -31,7 +31,7 @@ from "core" graphics.
   old_agbcc; the tile-map fill `FillCellAnimTilemap` (`cell_anim.cpp`) and its
   inlined twin in `ResetCellAnimBg` (`cell_anim.cpp`) - `tile++` in each
   branch; `UploadCellAnimFrame` (`cell_anim.cpp`); and the trampolines
-  `JetpackIsPauseLocked`/`PolarIsPauseLocked` (`actor_spawn.c`), which return the
+  `JetpackIsPauseLocked`/`PolarIsPauseLocked` (`actor_category.cpp`), which return the
   callee's result.
 
 - **Actor-zone NAKED near-miss retry** ([docs/matching/archive/actor-zone-naked-retry.md](../matching/archive/actor-zone-naked-retry.md)):
@@ -774,7 +774,8 @@ from "core" graphics.
   `GetActorBgLayerDepth`, minus the NAKED functions below) - see
   [docs/matching/archive/issue-48-0x080291a4-actor.md](../matching/archive/issue-48-0x080291a4-actor.md).
 - `src/actor/actor_bg.cpp`/
-  `actor_spawn.c` (GitHub issue #49, ROM 0x08029E4C-0x0802A69C):
+  `actor_spawn.c`/`actor_category.cpp` (GitHub issue #49, ROM 0x08029E4C-0x0802A69C;
+  `actor_category.cpp` split from `actor_spawn.cpp` in #770):
   `ActorCategoryEndStub`, `CommitActorBgScroll`, `GetActorBgCenterY`, `GetActorBgCenterX` (the
   BG2-affine scroll subsystem's tail), the `gActorSpawnTable`
   `sub_effect_table` record accessor family (`GetActorCategoryFrameCount`-
