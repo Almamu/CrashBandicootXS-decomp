@@ -119,7 +119,7 @@ rename sub_8029168 FreeCategorySpriteSheet
 # src/gfx/sprite_frame.cpp's comment on GetFreeVramTileBytes.
 split 0x08028D94 GetFreeVramTileBytes
 
-# src/crates/slot_crate.c: sub_8010AF8 follows sub_8010AEC's (GetCrateFallSpeed) padding
+# src/crates/crate_fields.cpp: sub_8010AF8 follows sub_8010AEC's (GetCrateFallSpeed) padding
 # with no label of its own in the original disassembly.
 split 0x08010AF8 IsCrateBusy
 

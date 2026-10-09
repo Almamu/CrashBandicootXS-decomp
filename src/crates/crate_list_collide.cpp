@@ -39,7 +39,7 @@ static inline void CollidePart(CrateList *list, MovingSprite *part, struct aabb 
  * (the player, or another object) against `box`. A sprite in both is
  * tested twice. UNUSED - no caller anywhere in the ROM (no call in src/,
  * no pointer to 0x08009528 in the ROM): the crates collide with the
- * player through CollidePlayer (crate_player_collide.cpp), and
+ * player through CollidePlayer (crate_list_collide_player.cpp), and
  * CollideWithPlayer and CollideWithObject have no other caller. */
 void CrateList::Collide(struct aabb box, s32 unused, MovingSprite *other)
 {

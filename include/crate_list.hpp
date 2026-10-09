@@ -5,8 +5,7 @@
  * the crates of the room filed in a grid of 256-pixel columns.
  *
  *   CrateList  src/objects/part_list.cpp (the constructor, for ROM order),
- *              src/crates/crate_list*.cpp, crate_grid_*.cpp,
- *              crate_player_collide.cpp
+ *              src/crates/crate_list*.cpp
  *
  * The classes have no C view (crates.h's `struct pool_init_node`, a
  * codegen view of the nodes, is CrateGridNodeInit below since #754).

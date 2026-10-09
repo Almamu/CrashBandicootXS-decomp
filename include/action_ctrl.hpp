@@ -3,7 +3,7 @@
 
 /* The action controller as C++ (#664, docs/cplusplus.md): the player's
  * controller on foot (room kind 0; PlayRoom creates it). Its code is in
- * src/player/action_ctrl*.cpp and kill_player.cpp, and Reset in
+ * src/player/action_ctrl*.cpp and action_ctrl_kill.cpp, and Reset in
  * src/pickups/wumpa.cpp (the ROM puts it there). cxx_symbols.txt maps
  * every method declared here to its C name, for the vtable and state
  * table data.
@@ -258,7 +258,7 @@ public:
     u8 TryDoubleJump();
     void HandleAirInput();
 
-    /* src/player/kill_player.cpp */
+    /* src/player/action_ctrl_kill.cpp */
     void KillPlayer(s32 anim);
     void UpdateSkidAnim();
     s32 UpdateFacing();

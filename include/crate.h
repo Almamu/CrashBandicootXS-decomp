@@ -32,7 +32,7 @@ struct crate_group {
 #define CRATE_STATE_MASK 0x7f
 #define CRATE_STATE_BUSY 0x80
 
-/* Crate's `slotState` (slot crates), as UpdateSlotCrate and the slot_crate.cpp
+/* Crate's `slotState` (slot crates), as UpdateSlotCrate and the crate_fields.cpp
  * accessors read the raw word: `phase` (bits 0-2; bit 2: the spin has
  * started), `spins` (3-5, full turns left at this stage) and `stage` (6-7,
  * 0 idle, 1-3 faster each time, gSlotCrateTimers; past 3 it turns to

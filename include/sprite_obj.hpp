@@ -8,8 +8,7 @@
  *   Entity        0x1C  gEntityVtable        (11 slots) src/objects/entity.cpp
  *   Sprite        0x40  gSpriteObjVtable     (13 slots) src/objects/sprite*.cpp
  *   UiSprite      0x40  gUiSpriteObjVtable              src/objects/sprite_anim.cpp
- *   MovingSprite  0x78  gMovingSpriteVtable  (15 slots) src/objects/moving_sprite*.cpp,
- *                                                       player_contact.cpp, step_probe.cpp
+ *   MovingSprite  0x78  gMovingSpriteVtable  (15 slots) src/objects/moving_sprite*.cpp
  *   GroundSprite  0x80  gGroundSpriteVtable  (15 slots) src/objects/ground_sprite*.cpp
  *
  * The sizes are the ROM's: CreateEntity allocates 0x1C bytes,
@@ -218,7 +217,7 @@ public:
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(UiSprite) == 0x40);
 
 /* The moving sprite (src/objects/moving_sprite.cpp, moving_sprite_collide.cpp,
- * player_contact.cpp, step_probe.cpp; gMovingSpriteVtable): a sprite with a
+ * moving_sprite_contact.cpp, moving_sprite_probe.cpp; gMovingSpriteVtable): a sprite with a
  * controller (`mover`), per-axis speeds and their ramps, and the terrain
  * probe's state. Its update runs the controller's, its events go to the
  * controller, and its slot 14 is the contact with the player. */
@@ -291,7 +290,7 @@ public:
     u8 GetProbeTries(); // GetGroundSpriteProbeTries
     void ResolvePlayerContact();
     /* ProbeHitboxEdgeTerrain: ProbeTerrain along the edge of `quad` that
-     * faces `mode`, retried lower (src/objects/step_probe.cpp). */
+     * faces `mode`, retried lower (src/objects/moving_sprite_probe.cpp). */
     s32 ProbeEdgeTerrain(s32 mode, const struct hitbox_quad *quad);
 };
 

@@ -190,7 +190,7 @@ QueueMotionY__8SwimCtrlUc QueueSwimCtrlMotionY
 QueueMotionX__8SwimCtrlUc QueueSwimCtrlMotionX
 #
 # part 5: ActionCtrl (include/action_ctrl.hpp, src/player/action_ctrl*.cpp,
-# kill_player.cpp)
+# action_ctrl_kill.cpp)
 _vt.10ActionCtrl gActionCtrlVtable
 __10ActionCtrl InitActionCtrl
 _._10ActionCtrl DestroyActionCtrl
@@ -593,8 +593,7 @@ PlayerAnimWouldTouch__5Cratei PlayerAnimWouldTouchCrate
 Create__5CrateUsUsUsUsUc CreateCrate
 #
 # part 7b: MovingSprite and GroundSprite (include/sprite_obj.hpp;
-# src/objects/moving_sprite*.cpp, player_contact.cpp, step_probe.cpp,
-# ground_sprite*.cpp)
+# src/objects/moving_sprite*.cpp, ground_sprite*.cpp)
 _vt.12MovingSprite gMovingSpriteVtable
 __12MovingSprite InitMovingSprite
 _._12MovingSprite DestroyMovingSprite
@@ -694,9 +693,8 @@ Reset__9Stopwatch ResetStopwatch
 _._9Stopwatch DestroyStopwatch
 __9Stopwatch InitStopwatch
 #
-# part 7f: the crate list (include/crate_list.hpp; src/crates/crate_list*.cpp,
-# crate_grid_*.cpp, crate_player_collide.cpp; the constructor in
-# src/objects/part_list.cpp)
+# part 7f: the crate list (include/crate_list.hpp; src/crates/crate_list*.cpp;
+# the constructor in src/objects/part_list.cpp)
 __9CrateListi InitCrateList
 _._9CrateList DestroyCrateList
 Reset__9CrateList ResetCrateList

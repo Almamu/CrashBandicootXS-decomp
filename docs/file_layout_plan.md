@@ -192,7 +192,7 @@ is the per-object list membership; `default` means none.
 | M9 | 2 | `src/menus/power_dialog.c` | `graphics/settings_menu14.c`, `graphics/settings_menu13.c` | default | tag struct power_dialog clashes (different body: rename one) |
 | M10 | 2 | `src/objects/sprite.c` | `graphics/actor_part.c`, `graphics/actor_part2.c`, `graphics/actor_part3.c` | old_agbcc | prototype SetAabbPos differs only in pointer types; prototype SetAabbSize differs only in pointer types; tag struct aabb clashes (different body: rename one) |
 | M11 | 2 | `src/objects/sprite_obj.c` | `graphics/actor_part4.c`, `graphics/actor_part5.c`, `graphics/actor_part6.c` | default | prototype GetSpriteFrame differs only in pointer types |
-| M12 | 2 | `src/crates/crate_grid_collide.c` | `graphics/actor_part11f.c`, `graphics/actor_part11e.c` | old_agbcc | prototype CollideCrateGridPartWithPlayer differs only in pointer types |
+| M12 | 2 | `src/crates/crate_list_collide.cpp` | `graphics/actor_part11f.c`, `graphics/actor_part11e.c` | old_agbcc | prototype CollideCrateGridPartWithPlayer differs only in pointer types |
 | M13 | 1 | `src/player/player_event.c` | `graphics/actor_part81.c`, `graphics/actor_part111.c` | old_agbcc | none: concatenate verbatim |
 | M14 | 1 | `src/player/player_update.c` | `graphics/actor_part49.c`, `graphics/actor_part15.c` | default | none: concatenate verbatim |
 | M15 | 1 | `src/enemies/enemy_motion.c` | `graphics/actor_part114.c`, `graphics/actor_part119.c`, `graphics/actor_part115.c` | default | none: concatenate verbatim |
@@ -203,7 +203,7 @@ is the per-object list membership; `default` means none.
 | M20 | 1 | `src/crates/crate_reset.c` | `system/game_loop33.c`, `system/game_loop22.c` | default | none: concatenate verbatim |
 | M21 | 1 | `src/crates/crate.c` | `system/game_loop23.c`, `system/game_loop31.c` | default | none: concatenate verbatim |
 | M22 | 2 | `src/crates/crate_stack.c` | `system/game_loop34.c`, `system/game_loop25.c`, `system/game_loop30.c` | default | inline-asm `ldr rN, =sym` in game_loop34.c relies on the end-of-file literal pool: add `asm(".pool")` at its old end |
-| M23 | 1 | `src/crates/slot_crate.c` | `system/game_loop26.c`, `system/game_loop27.c` | default | none: concatenate verbatim |
+| M23 | 1 | `src/crates/crate_fields.cpp` | `system/game_loop26.c`, `system/game_loop27.c` | default | none: concatenate verbatim |
 | M24 | 1 | `src/objects/collision_queue.c` | `system/game_loop28.c`, `system/game_loop50.c` | default | none: concatenate verbatim |
 | M25 | 2 | `src/pickups/extra_life.c` | `system/game_loop54.c`, `system/game_loop52.c` | old_agbcc | prototype UpdateExtraLifeHop differs only in pointer types |
 | M26 | 2 | `src/player/action_ctrl_states.c` | `graphics/actor_part_134b8.c`, `graphics/actor_part_138e8.c`, `graphics/actor_part_13c60.c`, `graphics/actor_part18.c` | old_agbcc | prototype ActionCtrlStateCrawl differs only in pointer types; prototype CheckActionCtrlLeftGround differs only in pointer types; prototype PlayerHasRoomForAnim differs only in pointer types; prototype StartActionCtrlHighJump differs only in pointer types; prototype UpdatePlayerFacing differs only in pointer types; static ActQueue27 duplicated (identical: delete one copy); static ActTrio27 duplicated (identical: delete one copy) |

@@ -3851,7 +3851,7 @@ list-management logic whose higher-level purpose isn't recoverable
 without more context. Left raw rather than guess.
 
 **Matched: `DrawCrateList`** (ROM `0x0800944C`, right after the raw
-`UpdateCrateList`, now `src/crates/crate_grid_link.c` - moved out of
+`UpdateCrateList`, now `src/crates/crate_list_link_active.cpp` - moved out of
 `part_list.c`, since its real ROM address isn't adjacent to that
 file's own matched functions, per docs/workflow.md step 4's "needs its
 own new .c file" case): the same "extended screen box" filter shape as
@@ -3906,18 +3906,18 @@ section-end padding artifact from testing the function in isolation,
 outside the function's own `.size` boundary) plus a full clean `make
 compare` (`crashbandicootxs.gba: La suma coincide`).
 
-Moved into its own new translation unit, `src/crates/crate_grid_link.c`
+Moved into its own new translation unit, `src/crates/crate_list_link_active.cpp`
 (also hoisting `struct pool_manager`'s definition there, mirroring the
 copy `crate_list.c` and `part_list.c` each keep - it was named
 `actor_part11g.c` rather than the more obvious `actor_part11f.c`, since
 a concurrent PR matched-as-NAKED `CollideCrateGrid` into
-`actor_part11f.c` first; that file is now `crate_grid_collide.c`). Its raw
+`actor_part11f.c` first; that file is now `crate_list_collide.cpp`). Its raw
 `.if NON_MATCHING == 0` guard block was removed from
 `asm/code_3_2_13_944c.s`; once `CollideCrateGrid` also moved out (see that
 function's own "Update: converted to `NAKED`" entry below), the shared
 file held nothing at all and was deleted entirely. `ldscript.txt` got a
-new `crate_grid_link.o` entry inserted between `crate_list_update.o` and
-`crate_grid_collide.o` (`CollideCrateGrid`'s own new home), preserving ROM order.
+new `crate_list_link_active.o` entry inserted between `crate_list_update.o` and
+`crate_list_collide.o` (`CollideCrateGrid`'s own new home), preserving ROM order.
 
 **Parked, not matched: `CollideCrateGrid`** (ROM `0x08009528`, right after
 the now-matched `DrawCrateList`, `src/objects/part_list.c`): the same
@@ -3959,15 +3959,15 @@ was hand-transcribed as literal Thumb asm instead of staying an
 unclosable `#if NON_MATCHING` C draft: the ROM's own ldr/str/lsl/asr
 sequence, one-to-one, both grid passes byte-identical to each other.
 Moved out of `part_list.c` into its own new translation unit,
-`src/crates/crate_grid_collide.c` (its real ROM address isn't adjacent to
+`src/crates/crate_list_collide.cpp` (its real ROM address isn't adjacent to
 that file's other functions - it sits between `DrawCrateList`, still raw
 asm in `asm/code_3_2_13_944c.s`, and `CollideCrateGridPartWithPlayer`,
-`src/crates/crate_grid_collide.c` - per docs/workflow.md step 4's "needs
+`src/crates/crate_list_collide.cpp` - per docs/workflow.md step 4's "needs
 its own new .c file" case). Its raw `.if NON_MATCHING == 0` guard block
 was removed from `asm/code_3_2_13_944c.s` (which still carries
 `DrawCrateList`'s own guard, untouched); `ldscript.txt` got a new
-`crate_grid_collide.o` entry inserted between `asm/code_3_2_13_944c.o` and
-`crate_grid_collide.o`. Verified byte-identical via `arm-none-eabi-as`
+`crate_list_collide.o` entry inserted between `asm/code_3_2_13_944c.o` and
+`crate_list_collide.o`. Verified byte-identical via `arm-none-eabi-as`
 isolated assemble (a standalone reassembly of both the ROM's own
 verified instruction stream and this transcription produced bit-for-
 bit identical `.text` bytes and relocations) plus a full clean `make
@@ -3999,15 +3999,15 @@ name differ), `CollideCrateGridPartWithPlayer` was hand-transcribed as literal T
 instead of staying an unclosable `#if NON_MATCHING` C draft, the same
 technique already used for `CollidePartWithPlayer`, `CollidePartWithObject`, and
 `CollideCrateGridPartWithObject`. Moved out of `part_list.c` into its own new
-translation unit, `src/crates/crate_grid_collide.c` (its real ROM
+translation unit, `src/crates/crate_list_collide.cpp` (its real ROM
 address isn't adjacent to that file's other functions - it sits
 between `CollideCrateGrid`, still raw asm in `asm/code_3_2_13_944c.s`, and
-`CollidePlayerWithCrates`, `crate_player_collide.c` - per docs/workflow.md step 4's
+`CollidePlayerWithCrates`, `crate_list_collide_player.cpp` - per docs/workflow.md step 4's
 "needs its own new .c file" case). Its raw `.if NON_MATCHING == 0`
 guard block was removed from `asm/code_3_2_13_944c.s` (which still
 carries `DrawCrateList`/`CollideCrateGrid`'s own still-parked guards,
-untouched); `ldscript.txt` got a new `crate_grid_collide.o` entry inserted
-between `asm/code_3_2_13_944c.o` and `crate_player_collide.o`. Verified
+untouched); `ldscript.txt` got a new `crate_list_collide.o` entry inserted
+between `asm/code_3_2_13_944c.o` and `crate_list_collide_player.o`. Verified
 byte-identical via `arm-none-eabi-as` isolated assemble (every
 differing byte against the raw ROM bytes falls exactly on an
 unresolved `bl` target or `.4byte` pool word, both necessarily zero in
@@ -4157,7 +4157,7 @@ probe function calling still-unexamined `OffsetToHitboxEdgeStart`/`ProbeTerrain`
 mysterious `+0x2a` flag toggling on `gPlayer`) - left raw
 rather than guess at semantics.
 
-## `CheckPlayerContact`: third tractable function, `player_contact.c`
+## `CheckPlayerContact`: third tractable function, `moving_sprite_contact.cpp`
 
 Right after the raw `ProbeHitboxEdgeTerrain`, `CheckPlayerContact` turned out to be
 another self-contained, clearly-understood function: it tests `part`
@@ -4197,7 +4197,7 @@ each one only surfacing via the full integrated rebuild - the
 isolated per-function compile looked correct both times.
 
 **Parked, not matched: `ResolvePlayerContact`** (ROM `0x08009D5C`, right after
-`CheckPlayerContact`, `src/objects/player_contact.c`): fires a
+`CheckPlayerContact`, `src/objects/moving_sprite_contact.cpp`): fires a
 `part->table+0x68`-driven trampoline (the established "dead read"
 idiom) based on `gLevelState`'s mode: mode 0 fires it on the
 player with `(0, part->field_0A, 0)`; modes 1-2 fire it on the player

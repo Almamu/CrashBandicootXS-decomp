@@ -193,7 +193,7 @@ system from "core" system startup/init code.
   `OpenAkuAkuCrate` (viewport trampoline-pair/cue-1 firing)
 - `src/crates/crate_stack.c` (GitHub issue #13): `IsCrateKindBreakable` -
   trivial `gCrateKindBreakable[idx]` lookup
-- `src/crates/slot_crate.c` (GitHub issue #13): `GetSlotCrateStage` -
+- `src/crates/crate_fields.cpp` (GitHub issue #13): `GetSlotCrateStage` -
   `self+0x48` bits 6-7 sub-state extractor
 - `src/level/drop_extra_life.c` (GitHub issue #13, second pass): `OpenLifeCrate`
   - cue-3 SFX plus a `gEntityFlags` bit-grid consume-if-clear and a
@@ -275,7 +275,7 @@ system from "core" system startup/init code.
   `EndSlide` - the tail half of `RunSlideshow`'s per-item body, reused
   standalone. See
   [docs/matching/archive/issue-38-sound-channel-family.md](../matching/archive/issue-38-sound-channel-family.md).
-- `src/crates/slot_crate.c` (GitHub issue #14, recategorized
+- `src/crates/crate_fields.cpp` (GitHub issue #14, recategorized
   graphics->game_loop - a direct continuation of the same physics/
   collision subsystem file family): `DecrementSlotCrateStage`-`GetCrateTrialKind` (24
   functions) plus the unlabeled `IsCrateBusy` (the original

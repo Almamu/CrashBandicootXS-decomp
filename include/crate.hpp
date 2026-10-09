@@ -95,7 +95,7 @@ public:
     void OpenAkuAku();                                       // OpenAkuAkuCrate
     u8 IsKindBreakable(u32 kind);                            // IsCrateKindBreakable
 
-    /* The slot crate's word (slot_crate.cpp). */
+    /* The slot crate's word (crate_fields.cpp). */
     u32 GetSlotStage();
     void DecrementSlotStage();
     void SetSlotStage(u32 stage);
@@ -105,7 +105,7 @@ public:
     void SetSlotSpins(u32 spins);
     void SetSlotPhase(u32 phase);
     u32 GetSlotPhase();
-    /* The other accessors (slot_crate.cpp). */
+    /* The other accessors (crate_fields.cpp). */
     void SetKind(u8 value);
     u8 GetKind();
     void SetFallDistance(s32 value);

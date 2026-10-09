@@ -245,15 +245,15 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/objects/ground_sprite_collide.o \
                   $(C_BUILDDIR)/objects/moving_sprite.o \
                   $(C_BUILDDIR)/objects/moving_sprite_collide.o \
-                  $(C_BUILDDIR)/objects/player_contact.o \
+                  $(C_BUILDDIR)/objects/moving_sprite_contact.o \
                   $(C_BUILDDIR)/objects/ground_sprite.o \
                   $(C_BUILDDIR)/objects/ground_sprite_update.o \
-                  $(C_BUILDDIR)/crates/crate_grid_unlink.o \
+                  $(C_BUILDDIR)/crates/crate_list_unlink.o \
                   $(C_BUILDDIR)/crates/crate_list_update.o \
-                  $(C_BUILDDIR)/crates/crate_player_collide.o \
-                  $(C_BUILDDIR)/crates/crate_grid_collide.o \
+                  $(C_BUILDDIR)/crates/crate_list_collide_player.o \
+                  $(C_BUILDDIR)/crates/crate_list_collide.o \
                   $(C_BUILDDIR)/crates/crate_list.o \
-                  $(C_BUILDDIR)/crates/crate_grid_link.o \
+                  $(C_BUILDDIR)/crates/crate_list_link_active.o \
                   $(C_BUILDDIR)/enemies/enemy_attack.o \
                   $(C_BUILDDIR)/objects/ctrl.o \
                   $(C_BUILDDIR)/bosses/tiny.o \
@@ -286,7 +286,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/player/action_ctrl_event.o \
                   $(C_BUILDDIR)/player/action_ctrl_idle.o \
                   $(C_BUILDDIR)/player/action_ctrl_update.o \
-                  $(C_BUILDDIR)/player/kill_player.o \
+                  $(C_BUILDDIR)/player/action_ctrl_kill.o \
                   $(C_BUILDDIR)/player/action_ctrl_left_ground.o \
                   $(C_BUILDDIR)/player/swim_ctrl_stroke.o \
                   $(C_BUILDDIR)/menus/continue_prompt.o \
@@ -359,7 +359,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/level/terrain_probe_axes.o \
                   $(C_BUILDDIR)/crates/crate_break.o \
                   $(C_BUILDDIR)/crates/crate_update.o \
-                  $(C_BUILDDIR)/crates/slot_crate.o \
+                  $(C_BUILDDIR)/crates/crate_fields.o \
                   $(C_BUILDDIR)/crates/crate.o \
                   $(C_BUILDDIR)/crates/crate_draw.o \
                   $(C_BUILDDIR)/crates/crate_reset.o \
