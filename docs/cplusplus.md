@@ -742,6 +742,10 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | globals.h, 23 `.cpp` files | `gInput` is a `KeyInput *` to C++; `UpdateKeys(gInput)` is `gInput->Update()`, `GetDpadDirection(pad)` `pad->GetDpadDirection()`, the `void *pad = gInput` copies `KeyInput *`s, `delete (KeyInput *)gInput` `delete gInput` | 0 | (unchanged) | 0 -> 0 | [#759, #761](#the-key-input-and-the-camera-759-761) |
 | `src/level/camera.cpp` (again) | `Camera` (new include/camera.hpp; level.h's struct camera): `StepDirectional`, `StepFacing`, `Snap`, `Update` (the C names stay) | 4 | agbcp | 0 -> 0 | [#759, #761](#the-key-input-and-the-camera-759-761) |
 | globals.h, level.h, `play_room.cpp`, `room.cpp`, `action_ctrl_event.cpp`, `camera_lead.cpp` | `gCamera` is a `Camera *` to C++; PlayRoom's `operator new(0x18)` and `operator delete(gCamera)` are `new Camera` and `delete gCamera`; `SnapCamera(gCamera)` is `gCamera->Snap()`, `UpdateCamera(gCamera)` `gCamera->Update()`; level.h's four C prototypes go | 0 | (unchanged) | 0 -> 0 | [#759, #761](#the-key-input-and-the-camera-759-761) |
+| `src/level/terrain.cpp`, `terrain_probe.cpp`, `terrain_probe_axes.cpp`, `level_layers.cpp` (again) | `LevelLayers` (include/bg_layer.hpp): `Probe` (ProbeTerrain), `ProbeX`/`ProbeY` (ProbeTerrainX/Y), `GetTerrainFlags` (GetTerrainFlagsAt), `ProbeFloor`/`ProbeSolidFloor` (ProbeFloorHeight/ProbeSolidFloorHeight), and the UNUSED `sub_80269DC`, `sub_80269F8`, `sub_8026C80`; `sub_8026A14` and `sub_8026C8C` stay free (no argument) | 9 | (unchanged) | 0 -> 0 | [#760, #762](#the-terrain-probes-and-the-entity-flags-760-762) |
+| `src/objects/moving_sprite_probe.cpp`, `ground_sprite_collide.cpp`, `src/player/player_anim_room.cpp`, `player_collide.cpp` | callers: `gLevelLayers->Probe(...)` & co.; level.h's 8 probe prototypes went | 0 | (unchanged) | 0 -> 0 | [#760, #762](#the-terrain-probes-and-the-entity-flags-760-762) |
+| `src/level/entity_flags.cpp`, `room_entities.cpp`, `entity_bitmap.cpp` (again) | `LevelEntityFlags` moves to new include/entity_flags.hpp and is the whole class (level.h's struct entity_flags went); `SpawnRoomEntities` is its method; `Bitmap` (new, all UNUSED): constructor (InitBitmap), `Set`, `ClearBit`, `Clear` | 1 + 4 | (unchanged) | 0 -> 0 | [#760, #762](#the-terrain-probes-and-the-entity-flags-760-762) |
+| globals.h, level_state.hpp, entity.hpp, entity_bits.h, `src/crates/crate_create.cpp`, `crate_break.cpp`, `crate_fields.cpp`, `crate_switches.cpp`, `src/level/level_query.cpp`, `level_layers.cpp`, `game_frame.cpp`, `level_cutscene.cpp`, `bonus_round.cpp`, `level_state.cpp` | `gEntityFlags` is a `LevelEntityFlags *` (C++ only); `IsEntityIdActivated(gEntityFlags, ...)` & co. are `gEntityFlags->IsActivated(...)`, `delete (LevelEntityFlags *)gEntityFlags` is `delete gEntityFlags`; level.h's 10 prototypes went | 0 | (unchanged) | 0 -> 0 | [#760, #762](#the-terrain-probes-and-the-entity-flags-760-762) |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -3563,8 +3567,9 @@ still read through them. `tools/layout_audit.py views` lists them.
   byte-identical. What still casts: the actor list's root
   (`(JetpackPlayer *)gActorList`, a downcast), gSwimCtrl and gInput
   (`void *`s their C and C++ users pass around as such), gEntityFlags
-  (LevelEntityFlags derives from the C struct, and entity.hpp's inline
-  methods use it before spawners.hpp can be included) and the DISPCNT
+  (LevelEntityFlags derived from the C struct, and entity.hpp's inline
+  methods used it before spawners.hpp could be included; #762 moved the
+  class to entity_flags.hpp and retyped the global) and the DISPCNT
   shadow bytes.
 
 - **Batch 6, one name per field.** The C views that C files still read
@@ -4200,6 +4205,37 @@ is byte-identical to origin/main's:
   `struct anim_box` is a C record, so these stay free functions.
 
 No copy needed a different spelling to match, so none stays local.
+
+### The terrain probes and the entity flags (#760, #762)
+
+Two families whose functions took the object as `self` (`this` arrives
+in r0 the same way), so every object is byte-identical and the C names
+stay (cxx_symbols.txt's `#760` and `#762` blocks):
+
+- **The terrain probes** are `LevelLayers` methods (include/bg_layer.hpp):
+  every caller passed gLevelLayers, and the code sits among LevelLayers'
+  own in the ROM. ProbeTerrain is `Probe(mode, pos, span, out)`, its
+  axis resolvers `ProbeX`/`ProbeY`, GetTerrainFlagsAt `GetTerrainFlags`,
+  ProbeFloorHeight/ProbeSolidFloorHeight `ProbeFloor`/`ProbeSolidFloor`;
+  the bodies drop the `(LevelLayers *)self` casts. The UNUSED stubs that
+  take a (never read) object first, level_layers.cpp's `sub_80269DC` and
+  `sub_80269F8` and terrain.cpp's `sub_8026C80`, are methods too; the two
+  with no argument (`sub_8026A14`, `sub_8026C8C`) stay free functions.
+- **LevelEntityFlags** is the whole class now, in the new
+  include/entity_flags.hpp: level.h's struct entity_flags, its base,
+  went. gEntityFlags is a `LevelEntityFlags *` (globals.h, C++ only; no C
+  file reads it), so the casts went (`delete gEntityFlags`) and the 20
+  `IsEntityIdActivated(gEntityFlags, ...)`-style calls are method calls.
+  SpawnRoomEntities (room_entities.cpp, just before entity_flags.cpp in
+  the ROM) is its method; its `list` parameter shadows the member, so the
+  body says `this->list`. entity.hpp includes entity_flags.hpp ahead of
+  its `extern "C"` block, so its inline MarkGone and entity_bits.h's
+  macros see the class wherever entity.hpp is included; spawners.hpp
+  includes it too.
+- **Bitmap** (entity_flags.hpp, src/level/entity_bitmap.cpp): the 32-word
+  bitset with no caller. InitBitmap, which cleared and returned `self`,
+  is its constructor (g++ returns `this`), ClearBitmap `Clear`,
+  SetBitmapBit `Set` and ClearBitmapBit `ClearBit`. All UNUSED.
 
 ### Next batches
 

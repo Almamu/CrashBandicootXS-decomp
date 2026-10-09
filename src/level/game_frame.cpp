@@ -63,7 +63,7 @@ void LevelState::UpdateGameFrame()
     vu16 zero;
     s32 best;
     s32 status;
-    struct entity_flags **bitmap;
+    LevelEntityFlags **bitmap;
 
     unk_68 = 0;
     ResetLives();
@@ -207,12 +207,12 @@ void LevelState::UpdateGameFrame()
             }
             mem_free_bytes(0xC0000000);
             if ((u8)room.IsInBonusRoom() && IsInBonusRound()) {
-                delete (LevelEntityFlags *)gEntityFlags;
+                delete gEntityFlags;
                 gEntityFlags = savedBitmap;
                 EndBonusRound(status == 0);
             }
             if ((u8)room.IsInGemPathRoom() && IsInGemPath()) {
-                delete (LevelEntityFlags *)gEntityFlags;
+                delete gEntityFlags;
                 gEntityFlags = savedBitmap;
                 EndGemPath(status == 0);
             }

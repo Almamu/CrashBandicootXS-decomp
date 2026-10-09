@@ -21,9 +21,9 @@ extern "C" {
  *     4`/`8` in `ProbeTerrain`): scans `pos->x` over `[x, x+span-1]>>3`
  *     at a fixed `pos->y>>3` tile row, clamping the start index up to
  *     0 if it computes to exactly -1 and the end index down by one if
- *     it lands exactly on `self->tiles->widthTiles` (the tile cache's
+ *     it lands exactly on `tiles->widthTiles` (the tile cache's
  *     width in tiles, TileCache in include/bg_layer.hpp), calling
- *     `self->tiles->GetSolidTerrainHeights(tileX, tileY, submode,
+ *     `tiles->GetSolidTerrainHeights(tileX, tileY, submode,
  *     &scratch)` (matched, `tile_cache.cpp`) per tile until a hit or the
  *     range is exhausted. On a hit, accumulates into `*outValue` using
  *     `pos->y & 7`: `submode == 2` adds `(8-(y&7))<<8`, `submode == 0`
@@ -53,7 +53,7 @@ extern "C" {
  * pos->y's row until GetSolidTerrainHeights reports a hit. On a hit, moves
  * *outValue to the tile edge (down for submode 2, up for submode 0).
  * Returns whether anything was hit. */
-s32 ProbeTerrainY(LevelLayers *self, struct vec2 *pos, s32 span, s32 *outValue, s32 submode)
+s32 LevelLayers::ProbeY(struct vec2 *pos, s32 span, s32 *outValue, s32 submode)
 {
     s32 hit = 0;
     u8 flag = hit;
@@ -66,10 +66,10 @@ s32 ProbeTerrainY(LevelLayers *self, struct vec2 *pos, s32 span, s32 *outValue, 
     end >>= 3;
     if (x == -1)
         x = 0;
-    if (end == self->tiles->widthTiles)
+    if (end == tiles->widthTiles)
         end--;
     for (; x <= end && !hit; x++) {
-        if (self->tiles->GetSolidTerrainHeights(x, y, submode, &flag))
+        if (tiles->GetSolidTerrainHeights(x, y, submode, &flag))
             hit = 1;
     }
     if (hit) {
@@ -82,8 +82,8 @@ s32 ProbeTerrainY(LevelLayers *self, struct vec2 *pos, s32 span, s32 *outValue, 
             break;
         }
     }
-    if (self->probeFlag && flag)
-        self->kind = flag;
+    if (probeFlag && flag)
+        kind = flag;
     return hit;
 }
 
@@ -91,7 +91,7 @@ s32 ProbeTerrainY(LevelLayers *self, struct vec2 *pos, s32 span, s32 *outValue, 
  * pos->x's column until GetSolidTerrainHeights reports a hit. On a hit, moves
  * *outValue to the tile edge (right for submode 3, left for submode 1),
  * one unit past it. Returns whether anything was hit. */
-s32 ProbeTerrainX(LevelLayers *self, struct vec2 *pos, s32 span, s32 *outValue, s32 submode)
+s32 LevelLayers::ProbeX(struct vec2 *pos, s32 span, s32 *outValue, s32 submode)
 {
     s32 hit = 0;
     u8 flag = hit;
@@ -104,10 +104,10 @@ s32 ProbeTerrainX(LevelLayers *self, struct vec2 *pos, s32 span, s32 *outValue, 
     end >>= 3;
     if (y == -1)
         y = 0;
-    if (end == self->tiles->heightTiles)
+    if (end == tiles->heightTiles)
         end--;
     for (; y <= end && !hit; y++) {
-        if (self->tiles->GetSolidTerrainHeights(x, y, submode, &flag))
+        if (tiles->GetSolidTerrainHeights(x, y, submode, &flag))
             hit = 1;
     }
     if (hit) {
@@ -126,7 +126,7 @@ s32 ProbeTerrainX(LevelLayers *self, struct vec2 *pos, s32 span, s32 *outValue, 
             break;
         }
     }
-    if (self->probeFlag && flag)
-        self->kind = flag;
+    if (probeFlag && flag)
+        kind = flag;
     return hit;
 }

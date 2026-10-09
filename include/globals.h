@@ -15,7 +15,6 @@
 #include "core.h"
 #include "vtable.h"
 
-struct entity_flags;
 struct level_state;
 struct sprite_bank_table;
 
@@ -94,12 +93,14 @@ extern u8 gJetpackPlayerInactive;
 /* sym_iwram.txt: the level's objects. game_frame.cpp builds the level
  * state and the entity flags; PlayRoom (play_room.cpp) builds the rest per
  * room. The level state is a C++ class, LevelState (level_state.hpp;
- * C sees an incomplete struct level_state); the structs are in level.h
- * (struct entity_flags, camera). The level layers (LevelLayers,
- * bg_layer.hpp), the part lists (PartList, sprite_obj.hpp) and the crate
- * list (CrateList, crate_list.hpp) have no C view and no C user: only the
- * C++ files see them. */
-extern struct entity_flags *gEntityFlags;
+ * C sees an incomplete struct level_state). The entity flags
+ * (LevelEntityFlags, entity_flags.hpp), the camera (Camera, camera.hpp),
+ * the level layers (LevelLayers, bg_layer.hpp), the part lists (PartList,
+ * sprite_obj.hpp) and the crate list (CrateList, crate_list.hpp) have no
+ * C view and no C user: only the C++ files see them. */
+#ifdef __cplusplus
+extern class LevelEntityFlags *gEntityFlags; /* entity_flags.hpp */
+#endif
 #ifdef __cplusplus
 extern class LevelState *gLevelState;
 #else

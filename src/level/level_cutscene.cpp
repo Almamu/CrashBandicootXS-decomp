@@ -65,7 +65,7 @@ LevelState::~LevelState()
     delete gSpriteRenderer;
     delete gSpriteBankSet;
     delete gPaletteCache;
-    delete (LevelEntityFlags *)gEntityFlags;
+    delete gEntityFlags;
     delete gPaletteCycles;
     gLevelStateSingleton = 0;
 }

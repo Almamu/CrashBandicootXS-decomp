@@ -60,7 +60,7 @@ extern "C" {
  * write-up of this closure, appended to the section that originally
  * flagged this function raw. */
 
-s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
+s32 LevelLayers::GetTerrainFlags(s32 x, s32 y)
 {
     u8 flagsOut = 0;
     s32 hiOut = 0;
@@ -70,7 +70,7 @@ s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
     LIMIT_MIN(tileX, 0);
     LIMIT_MIN(tileY, 0);
 
-    ((LevelLayers *)arg0)->tiles->GetTerrainType(tileX, tileY, &flagsOut, &hiOut);
+    tiles->GetTerrainType(tileX, tileY, &flagsOut, &hiOut);
 
     return flagsOut;
 }
@@ -184,11 +184,11 @@ s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
  * GetTerrainHeights): adds the distance from `pos->y` to that column's
  * surface, Q8, to `*outValue` and returns 1, or returns 0 when the cell has
  * none (ProbeGroundSpriteFloor). */
-s32 ProbeFloorHeight(void *player, struct vec2 *pos, s32 *outValue)
+s32 LevelLayers::ProbeFloor(struct vec2 *pos, s32 *outValue)
 {
     s32 tileX = pos->x >> 3;
     s32 tileY = pos->y >> 3;
-    s8 *row = (s8 *)((LevelLayers *)player)->tiles->GetTerrainHeights(tileX, tileY);
+    s8 *row = (s8 *)tiles->GetTerrainHeights(tileX, tileY);
 
     if (row != NULL) {
         s32 y = pos->y;
@@ -203,12 +203,12 @@ s32 ProbeFloorHeight(void *player, struct vec2 *pos, s32 *outValue)
 /* The same for the solid terrain types (0x24 and above), whose surface is
  * the type's mode-0 value (GetSolidTerrainModeValue) rather than a height
  * per column (ProbeGroundSpriteTerrain). */
-s32 ProbeSolidFloorHeight(void *player, struct vec2 *pos, s32 *outValue)
+s32 LevelLayers::ProbeSolidFloor(struct vec2 *pos, s32 *outValue)
 {
     u8 scratch;
     s32 tileX = pos->x >> 3;
     s32 tileY = pos->y >> 3;
-    s8 height = ((LevelLayers *)player)->tiles->GetSolidTerrainModeValue(tileX, tileY, 0, &scratch);
+    s8 height = tiles->GetSolidTerrainModeValue(tileX, tileY, 0, &scratch);
 
     if (height >= 0) {
         s32 y = pos->y;
@@ -222,7 +222,7 @@ s32 ProbeSolidFloorHeight(void *player, struct vec2 *pos, s32 *outValue)
 /* UNUSED - no caller anywhere in the ROM (checked every asm/*.s,
  * expected/*.s, and every .c file under src/ for a bl/.4byte reference).
  * See the file-level comment above. */
-s32 sub_8026C80(void *arg0, s32 arg1, volatile s32 *arg2)
+s32 LevelLayers::sub_8026C80(s32 arg1, volatile s32 *arg2)
 {
     if (arg1 != 0)
         (void)*arg2;

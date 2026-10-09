@@ -25,7 +25,7 @@ extern "C" {
 }
 
 class BossCtrl;
-struct entity_flags;
+class LevelEntityFlags;
 
 /*
  * The room block of the level state (`room`, +0x0C4), whose methods are
@@ -241,7 +241,7 @@ public:
     // 0x14C - the committed progress: restored before each level,
     // updated when one is won, packed for the save menus (PackSaveData)
     struct game_progress saveData;
-    struct entity_flags
+    LevelEntityFlags
         *savedBitmap;    // 0x1B4 - gEntityFlags, while a bonus round or gem path has its own
     void *bonusPlatform; // 0x1B8 - the bonus-round platform object (SetBonusPlatform)
     void *gemPlatform;   // 0x1BC - the gem-path platform object (SetGemPlatform)

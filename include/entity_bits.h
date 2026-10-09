@@ -9,7 +9,7 @@
  * (entity.cpp), which many objects inline instead of calling it. An
  * entity that is collected, broken or killed sets its own `gone` flag
  * and, unless its id is ENTITY_ID_NONE, bit `id` of
- * `gEntityFlags->bits0Copy` (struct entity_flags, level.h).
+ * `gEntityFlags->bits0Copy` (LevelEntityFlags, entity_flags.hpp).
  * entity_flags.cpp has the out-of-line accessors for the other bitmaps.
  *
  * Like the rest of the project's helpers, each macro expands to exactly
@@ -43,7 +43,7 @@
 #define ENTITY_SET_GONE_BIT_OF(idExpr, bit)                                    \
     do {                                                                       \
         s32 _id = (idExpr);                                                    \
-        struct entity_flags *_base = gEntityFlags;                             \
+        LevelEntityFlags *_base = gEntityFlags;                                \
         s32 _word = _id / 32;                                                  \
         s32 _off = _word * 4;                                                  \
         u32 *_slot = _base->bits0Copy;                                         \

@@ -33,8 +33,8 @@ void Crate::OpenLife(bool flag6)
     gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
     u16 eid = id;
     if (eid != 0xFFFF) {
-        if ((u8)IsEntityIdActivated(gEntityFlags, eid) == 0)
-            SetEntityIdActivated(gEntityFlags, id);
+        if ((u8)gEntityFlags->IsActivated(eid) == 0)
+            gEntityFlags->SetActivated(id);
     }
     s32 px = Q8_TO_INT(x);
     s32 py = Q8_TO_INT(y) + 3;

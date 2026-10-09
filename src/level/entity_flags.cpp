@@ -7,12 +7,12 @@ extern "C" {
 #include "level.h"
 }
 
-/* The room's entity flags (LevelEntityFlags, include/spawners.hpp;
+/* The room's entity flags (LevelEntityFlags, include/entity_flags.hpp;
  * gEntityFlags): the "gone" and "activated" bitmaps by entity id, and the
  * crate count of a room's entity list. C++ since the #664 cleanup, built
  * with old_agbcp (current agbcc was the C's); the methods keep their C
- * names (cxx_symbols.txt) for the callers, which call them through
- * level.h's prototypes. */
+ * names (cxx_symbols.txt); the callers call them as methods of
+ * gEntityFlags (#762). */
 
 /* GitHub issue #41: 0x08025894-0x08025FC8. Counts, across every group
  * in `list` and every entity in each group,
@@ -63,7 +63,7 @@ s32 LevelEntityFlags::CountCrateEntities(const struct level_entity_list *list)
     return count;
 }
 
-/* The bit accessors of struct entity_flags (level.h), by entity id `n`:
+/* The bit accessors of LevelEntityFlags (entity_flags.hpp), by entity id `n`:
  * `bits0` is the committed "gone" set (collected, broken or killed;
  * SpawnRoomEntities skips those) and `bits1` the committed "activated"
  * set (a checkpoint, life, "?" or slot crate opened, an iron switch

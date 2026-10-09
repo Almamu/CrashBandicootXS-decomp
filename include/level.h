@@ -35,48 +35,13 @@ struct terrain_type {
     u8 heights[4][8];
 };
 
-/* The entity flags (`gEntityFlags`, 0x408 bytes, InitEntityFlags; built
- * by UpdateGameFrame): the room's entity list and two pairs of bitmaps,
- * one bit per entity id (entity_flags.cpp's bit accessors, SetEntityIdGone
- * through MarkEntityIdActivated). SpawnRoomEntities skips the entities set in
- * `bits0` and copies `bits0`/`bits1` to `bits0Copy`/`bits1Copy` when the
- * room loads; MarkEntityGone and its inline copies set an entity's bit
- * in `bits0Copy` when it is collected, broken or killed, and
- * SetCheckpointAtPlayer copies the two back. The names are room_entities.cpp's
- * (`struct lk_self`); dingodile.c called the object `struct entity_flags`
- * (`bits0Copy` was `bitmap`, the list `struct collect_info`), level_state.cpp
- * `struct collision_map` (`seen`), the enemy spawners' text_popup.h a
- * `struct level_record_table **`. */
-struct entity_flags {
-    const struct level_entity_list *list; // 0x000 - the room's entities and their parameters
-    s32 pos;                              // 0x004 - SpawnRoomEntities's position argument >> 8
-    u32 bits0[64];                        // 0x008
-    u32 bits0Copy[64];                    // 0x108
-    u32 bits1[64];                        // 0x208
-    u32 bits1Copy[64];                    // 0x308
-};
+/* The entity flags (`gEntityFlags`) are LevelEntityFlags, include/entity_flags.hpp. */
 
 /* src/level/pooled_bg_layer.cpp (the BG layers' methods are BgLayer's and
  * PooledBgLayer's, include/bg_layer.hpp) */
 extern void nullsub_26(void);
 
-/* src/level/entity_bitmap.cpp (UNUSED) */
-extern s32 SetBitmapBit(void *self, s32 n);
-extern void ClearBitmapBit(void *self, s32 n);
-extern void ClearBitmap(void *dst);
-extern void *InitBitmap(void *self);
-
-/* src/level/entity_flags.cpp: LevelEntityFlags's methods (include/spawners.hpp)
- * under their C names (cxx_symbols.txt), for the callers. */
-extern s32 CountCrateEntities(void *self, const struct level_entity_list *list);
-extern s32 IsEntityIdGone(void *self, s32 n);
-extern s32 IsEntityIdActivated(void *self, s32 n);
-extern void SetEntityIdActivated(void *self, s32 n);
-extern void MarkEntityIdActivated(void *self, s32 n);
-
-/* src/level/level_layers.cpp */
-extern s32 sub_80269DC(void *self, s32 arg1, s32 *arg2, s32 arg3);
-extern s32 sub_80269F8(void *self, s32 arg1, s32 *arg2, s32 arg3);
+/* src/level/level_layers.cpp (LevelLayers' methods: bg_layer.hpp) */
 extern s32 sub_8026A14(void);
 
 /* src/level/level_query.cpp (C linkage) */
@@ -102,10 +67,6 @@ extern void ClearRoomExit(void);
 extern void RequestRoomExit(void);
 extern u8 IsRoomExitRequested(void);
 extern void ResetObjBuffers(void);
-
-/* src/level/room_entities.cpp */
-extern void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list *list,
-                              const struct level_link_list *links, s32 pos, s32 unused);
 
 /* src/level/spawn_bosses.cpp */
 extern void SpawnRoomExit(u32 arg, u16 arg1, u16 arg2, u16 arg3);
@@ -215,23 +176,9 @@ extern void CreateEntitySpawner(void);
 /* src/level/spawn_start_marker.cpp */
 extern void SpawnStartMarker(u32 arg, u16 x, u16 y, u16 z);
 
-/* src/level/terrain.cpp */
-extern s32 GetTerrainFlagsAt(void *arg, s32 x, s32 y);
-extern s32 ProbeFloorHeight(void *player, struct vec2 *pos, s32 *outValue);
-extern s32 ProbeSolidFloorHeight(void *player, struct vec2 *pos, s32 *outValue);
-extern s32 sub_8026C80(void *arg, s32 arg1, volatile s32 *arg2);
+/* src/level/terrain.cpp (the terrain probes are LevelLayers' methods:
+ * bg_layer.hpp) */
 extern s32 sub_8026C8C(void);
-
-/* src/level/terrain_probe.cpp */
-extern s32 ProbeTerrain(void *self, s32 mode, struct vec2 *pos, s32 span, s32 *outValue);
-
-/* src/level/terrain_probe_axes.cpp (C linkage; only C++ calls them) */
-#ifdef __cplusplus
-extern s32 ProbeTerrainY(class LevelLayers *self, struct vec2 *pos, s32 span, s32 *outValue,
-                         s32 submode);
-extern s32 ProbeTerrainX(class LevelLayers *self, struct vec2 *pos, s32 span, s32 *outValue,
-                         s32 submode);
-#endif
 
 /* sym_iwram.txt */
 #ifdef __cplusplus

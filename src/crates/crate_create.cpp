@@ -51,7 +51,7 @@ Crate *Crate::Create(u16 id, u16 x, u16 y, u16 slot, u8 type)
     s32 flagged;
 
     self->id = id;
-    if (type == CRATE_KIND_LIFE && id != 0xffff && (u8)IsEntityIdActivated(gEntityFlags, id))
+    if (type == CRATE_KIND_LIFE && id != 0xffff && (u8)gEntityFlags->IsActivated(id))
         type = CRATE_KIND_BASIC;
     if (gLevelState->timeTrial == 0 &&
         gLevelState->GetDeaths() >= gLevelState->GetCrateAssistDeaths()) {
@@ -86,7 +86,7 @@ Crate *Crate::Create(u16 id, u16 x, u16 y, u16 slot, u8 type)
         special = 1;
         break;
     case CRATE_KIND_IRON_SWITCH:
-        if ((u8)IsEntityIdActivated(gEntityFlags, id))
+        if ((u8)gEntityFlags->IsActivated(id))
             type = CRATE_KIND_IRON;
         break;
     }
@@ -221,18 +221,17 @@ Crate *Crate::Create(u16 id, u16 x, u16 y, u16 slot, u8 type)
     self->palette = self->GetAnimPaletteSlot();
     self->x = INT_TO_Q8(x);
     self->y = INT_TO_Q8(y);
-    if ((u8)IsEntityIdActivated(gEntityFlags, id) &&
+    if ((u8)gEntityFlags->IsActivated(id) &&
         (type == CRATE_KIND_MYSTERY || type == CRATE_KIND_SLOT) &&
         (PLACEMENT(slot)->flags & CRATE_PLACEMENT_FLAG_ASSIST_CHECKPOINT))
         type = CRATE_KIND_CHECKPOINT;
-    if (type == CRATE_KIND_CHECKPOINT && id != 0xffff &&
-        (u8)IsEntityIdActivated(gEntityFlags, id)) {
+    if (type == CRATE_KIND_CHECKPOINT && id != 0xffff && (u8)gEntityFlags->IsActivated(id)) {
         self->StartAnim(0x1b);
         self->frame = self->bank->anims[self->tag].frameCount - 1;
         self->state = (self->state & CRATE_STATE_BUSY) | type;
     }
     self->kind = type;
-    if (type == CRATE_KIND_OUTLINE && (u8)IsEntityIdActivated(gEntityFlags, id))
+    if (type == CRATE_KIND_OUTLINE && (u8)gEntityFlags->IsActivated(id))
         self->SolidifyOutline();
     Crates()->Add(self);
     return self;

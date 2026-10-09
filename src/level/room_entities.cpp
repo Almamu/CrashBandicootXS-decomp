@@ -17,7 +17,7 @@ extern "C" {
  * 8022d50-80255d4.md` left for a follow-up pass (the first,
  * `StartTimeTrial`, is `level_state.cpp`, now plain C).
  *
- * `self` is `*gEntityFlags` (the same collision-bitmap base
+ * `this` (`self` below) is gEntityFlags (the same collision-bitmap base
  * `SetEntityIdGone`/`IsEntityIdGone`/`IsEntityIdActivated`, entity_flags.cpp, and
  * `MarkEntityIdActivated`, entity_flags.cpp, already operate on).
  *
@@ -82,8 +82,9 @@ static inline Crate *Slot(s32 i)
     return gCrateList->slots[i];
 }
 
-void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list *list,
-                       const struct level_link_list *links, s32 posArg, s32 unused)
+void LevelEntityFlags::SpawnRoomEntities(const struct level_entity_list *list,
+                                         const struct level_link_list *links, s32 posArg,
+                                         s32 unused)
 {
     s32 i;
     s32 counter;
@@ -92,22 +93,22 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
     const struct level_link *lk;
     u32 zero = 0;
 
-    if (list != self->list) {
-        self->list = list;
-        DmaFill32(3, zero, self->bits0, 64);
-        DmaFill32(3, zero, self->bits1, 64);
+    if (list != this->list) {
+        this->list = list;
+        DmaFill32(3, zero, bits0, 64);
+        DmaFill32(3, zero, bits1, 64);
     }
-    CpuSet(self->bits0, self->bits0Copy, CPU_SET_32BIT | 0x40);
-    CpuSet(self->bits1, self->bits1Copy, CPU_SET_32BIT | 0x40);
-    self->pos = Q8_TO_INT(posArg);
+    CpuSet(bits0, bits0Copy, CPU_SET_32BIT | 0x40);
+    CpuSet(bits1, bits1Copy, CPU_SET_32BIT | 0x40);
+    pos = Q8_TO_INT(posArg);
 
     counter = 0;
-    for (g = self->list->groupCount - 1; g >= 0; g--) {
-        const struct level_entity_group *group = &self->list->groups[g];
+    for (g = this->list->groupCount - 1; g >= 0; g--) {
+        const struct level_entity_group *group = &this->list->groups[g];
         s32 k;
 
         for (k = 0; k < group->count; k++) {
-            if (!(u8)IsEntityIdGone(self, counter))
+            if (!(u8)IsGone(counter))
                 gEntitySpawner->Spawn(counter, &group->entities[k]);
             counter++;
         }

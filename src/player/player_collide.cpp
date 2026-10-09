@@ -95,7 +95,7 @@ s32 Player::CheckPlayerContact()
         else
             px += off->x;
         py += off->y;
-        if (GetTerrainFlagsAt(gLevelLayers, px, py) == 6) {
+        if (gLevelLayers->GetTerrainFlags(px, py) == 6) {
             if (hanging == 0) {
                 s32 snap = (py & 0x00FFFFF8) + 7;
 
