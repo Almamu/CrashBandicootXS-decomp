@@ -81,7 +81,11 @@ static inline s32 IsBlinking(Player *p)
  * delete_trivially_dead_insns takes it first (see HandleEvent's bump
  * case); an inline Aku Aku spawn with an unused mask-level parameter, a
  * `const bool &` or by-value struct parameter, or the mirror read
- * through an inline taking the level all leave no load. */
+ * through an inline taking the level all leave no load. #662 round 7:
+ * the only other such load in the ROM (DMA reads aside) that isn't this
+ * one or HandleEvent's bump is Crate::QueuePlayerCollision's, matched
+ * from a `side` computed with a test on a path that never reads it (see
+ * ActionCtrl::HandleEvent's bump case); no variable here fits that. */
 void Player::HandleEvent(s32 from, s32 event, s32 arg)
 {
     switch (event) {

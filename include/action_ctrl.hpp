@@ -147,12 +147,6 @@ public:
         motionYPending = 1;
         *slot = entry;
     }
-    void QueueYAt(u8 *slot, s32 pending, s32 entry)
-    {
-        motionYKeepSpeed = 0;
-        motionYPending = pending;
-        *slot = entry;
-    }
 
     /* SetModeAnim inlined, for a `frame` that is set: the frame value is
      * computed before the two calls. */

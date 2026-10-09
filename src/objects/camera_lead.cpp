@@ -18,7 +18,6 @@
 #include "camera.hpp"
 
 extern "C" {
-#include "match.h"
 #include <agb_syscall.h>
 #include <libgcc.h>
 #include "text.h"
@@ -56,49 +55,16 @@ void CameraLead::SetUnk32()
 void CameraLead::Reset()
 {
     u32 v = f.bytes.flags2 >> 2;
-    /* One pin kept (the C had five): the ROM tests `blink` with a 1 of its
-     * own in r1 and loads another for ToggleHidden's; unpinned, gcc shares
-     * one constant between the two, with every spelling of the test and
-     * the toggle tried (u8/s32/bool tests, a switch, `^ 1`, `== 0`; in
-     * round 2 also IsHidden-style inline helpers returning s32 or bool,
-     * the bitfield test and `blink = 1`).
-     * #662 round 3, from the -da dumps: the toggle's 1 is a QImode
-     * pseudo of its own (the bitfield store), so nothing shares it; the
-     * test's 1 dies at the `and`, and regmove/reload then build the
-     * `and` in its register (`movs r0, #1; ands r0, r1`). The ROM's
-     * `adds r0, r2, #0; ands r0, r1` is the `and` built in a copy of `v`,
-     * which reload only does when the 1 is still live after it. A literal
-     * 1 is folded into `(v ^ 1) & 1` and shared with the toggle; u8, u16,
-     * s8, s16 and bool for `one` or `v`, a `hidden = v & 1` local and the
-     * flag sweep (-fno-regmove included) don't give the copy.
-     * #662 round 4 (regmove.c, local-alloc.c): the result of an `and`
-     * whose 1 dies there is tied to the 1 twice over: regmove's
-     * fixup_match_1 (unless the 1 is a "remote constant", set once in
-     * another basic block with a REG_EQUAL note) and local-alloc's
-     * combine_regs (for any 1 local to the block). Only a 1 that stays
-     * live after the `and` leaves reload to copy `v`, and its later use
-     * then shows in the toggle: `blink = v ^ one`, `(v ^ one) & one` and a
-     * u32 temporary for the toggle keep the copy but `eor` with r1 or
-     * fold to a `bic` (6 to 14 lines off), where the ROM's toggle loads
-     * a 1 of its own. No 1 set in an earlier block exists to use.
-     * #662 round 5: the ROM's pair (`movs r1, #1` at the test, a fresh
-     * `movs r0, #1` in the toggle) looks like reload rematerializing
-     * one pseudo equal to 1 that got no hard register (a REG_EQUIV
-     * constant; not verified); nothing here is short of registers, so
-     * no spelling found gets it spilled. `u32 one` kept live by
-     * `f.b.active = one` (s32, u8 too) is 43 lines off; IsHidden-style
-     * inlines leave the plain code.
-     * #662 round 6: Sprite's IsHidden/ToggleHidden as inline members
-     * (or s32/u8/u32/bool static inlines) do give the ROM's test, the
-     * `and` built in a copy of `v`: the u8 `>> 2 & 1` is shortened to a
-     * QImode AND whose 1 the toggle's bitfield store shares, so it stays
-     * live; but the toggle then uses that register (15 lines off) where
-     * the ROM loads a fresh 1. Every toggle spelling (`^= 1`, `1 -`, `~`,
-     * `= !IsHidden()`) is worse, and SetPos/SetAlwaysActive in the tail
-     * change nothing. */
-    MATCH_HOLD_REG(u32, one, r1) = 1;
+    /* A u16 flag, as TryDoubleJump's `pressed`. Its AND is expanded as
+     * a failed HImode AND: the 1 (r1) is an HImode pseudo the SImode
+     * `and` reads through a subreg, so nothing ties the result to it and
+     * the `and` is built in a copy of `v`; the toggle's bitfield store
+     * keeps a QImode 1 of its own (`movs r0, #1`), as in the ROM. An
+     * s32 or u8 flag shares one 1 between the two (#662 round 7, -da
+     * dumps). */
+    u16 hidden = v & 1;
 
-    if (!(v & one))
+    if (!hidden)
         ToggleHiddenNow(this);
     gCamera->target = this;
     {

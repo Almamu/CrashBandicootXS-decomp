@@ -1573,6 +1573,42 @@ the new evidence:
   before (2-28 lines each): they are allocation and cse choices of the
   ROM's later ARM gcc.
 
+**Round 7, player/ and objects/ (the matched corpus as evidence).** 5
+functions -> 3 (ActionCtrl::StateJump and CameraLead::Reset free;
+ActionCtrl::HandleEvent loses its bounce macro and keeps the bump's
+dead load). Each kept site's ROM idiom, with registers as
+roles, was searched for in every built object; the matched functions
+that have it show how it was written:
+
+- **Two equal constants in two registers come from a halfword AND.**
+  `movs rA, #1; movs rB, #1; ands rB, rX` with rA kept for later byte
+  stores is in 8 matched functions; the six in ActionCtrl (the three
+  hang states, StateLeftGround, StateRun and TryDoubleJump) all test
+  `INPUT_PRESSED(in) & 1`, a u16 view of the keys. `u16 & 1` is shortened to an HImode AND, which
+  Thumb can't do: expand_binop loads the 1 into an HImode pseudo, fails
+  and redoes the AND in SImode with a new SImode 1. The leftover HImode
+  1 is what cse then gives the later QImode stores (through a
+  subreg), and the AND keeps its own. HandleEvent's two bounces and the
+  launch pad (`if (INPUT_HELD(in) & A_BUTTON)` with QueueNowY) and
+  StateJump (the same with QueueNowYAt) match that way with no `one`
+  local and no macro.
+- **An AND built in a copy, the same way.** CameraLead::Reset's `adds
+  r0, r2, #0; ands r0, r1` is what a u16 flag gives (`u16 hidden = v &
+  1`, as TryDoubleJump's `u16 pressed`): the SImode `and` reads the
+  HImode 1 through a subreg, so neither regmove nor local-alloc ties
+  its result to it, and the toggle keeps a QImode 1 of its own. A u8
+  flag (PickUpWumpa's `u8 lowbit = rv & 1`) also builds the copy, but
+  there the toggle's bitfield store shares the 1.
+- **Dead loads.** Outside the DMA macros' volatile reads the ROM has
+  three loads overwritten unread in their block: the two HandleEvent
+  sites and Crate::QueuePlayerCollision's, which is plain C (a
+  function-scope `side` computed with a test on a path that doesn't
+  read it). The kept sites have no such variable to compute.
+- **Compiler hypothesis refuted:** local-alloc's three-quantity sort
+  fixed to compare sorted positions (StateCrouch's flip order) moves
+  the rest of StateCrouch 30 lines, so the original compiler had the
+  exchange as agbcc has it.
+
 ## Survey and conversion record (#576)
 
 The conversion is complete. `tools/match_idioms.py` after part 4

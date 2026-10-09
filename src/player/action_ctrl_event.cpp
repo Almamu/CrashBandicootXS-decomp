@@ -7,7 +7,6 @@
 #include "camera.hpp"
 
 extern "C" {
-#include "match.h"
 #include "gfx.h"
 #include "level.h"
 #include "sprite_bank.h"
@@ -165,7 +164,16 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
              * Everything built from inlines dies there: an unused
              * inline parameter (`Nop(state == SLIDE)`, `const bool &`),
              * an inline's discarded return value, an empty inline in
-             * the arm; so do `do { if (...) {} } while (0)` asserts. */
+             * the arm; so do `do { if (...) {} } while (0)` asserts.
+             * #662 round 7 (a scan of every object for loads whose
+             * register is overwritten unread in the same block): apart
+             * from the DMA macros' volatile reads, the ROM has three, this
+             * one, Player::HandleEvent's and Crate::QueuePlayerCollision's
+             * (crate_break.cpp). The last is matched plain C: `side = 2;
+             * if (px > prevX) side = 1;` on a path that never reads
+             * `side`, a function-scope variable the other path uses. That
+             * is the dead store above, written for a reason; nothing in
+             * this case has a variable to compute that way. */
             *(volatile s32 *)&state;
             bumpTimer = 3;
             SetBumped(part, 1);
@@ -183,69 +191,26 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
         part->speedX = 0;
         break;
     case EVENT_BOUNCE:
+        /* The A test through INPUT_HELD (a u16 view of the keys, as
+         * TryDoubleJump and the hang states read theirs) and the queue
+         * through QueueNowY: the ROM's two 1s (`movs r5, #1; movs r4, #1`),
+         * the queue's apart from the test's. The halfword AND is expanded
+         * as a failed HImode AND, whose leftover HImode 1 cse then gives
+         * the queue's byte stores; the SImode AND keeps a 1 of its own
+         * (#662 round 7). */
         {
             u32 in = gKeys.all;
-            u32 held = in;
-            s32 fire;
-            s32 one;
 
-            if (held & R_BUTTON)
+            if (INPUT_HELD(in) & R_BUTTON)
                 slamBlocked = 1;
-            /* The ROM loads this 1 (r5) apart from the A test's own 1;
-             * unhidden, cse copies it into the test (`adds r4, r5`), with
-             * QueueNowY's literal 1 too. The same in the case below. A
-             * `u8` flag, which frees the launch pad's (below), loads the
-             * test's 1 apart here too, but the byte AND's result then
-             * takes a copy into the flag's register (`movs r0, #1; adds
-             * r4, r0`); `bool`/`s16`/`u16` flags, a `u8` copy of the AND
-             * and `(u8)` casts don't help, and the permuter only found a
-             * shared `s16` 1 also used by an unrelated test. #662 round
-             * 3 (-da dumps): cse1, following the jump into each arm,
-             * replaces the arm's QImode 1 with a subreg of the AND's SImode
-             * 1 pseudo, which then lives across SetModeAnim (r5), and
-             * regmove's two-address fix-up copies it into the AND's output
-             * (`adds r4, r5, #0`) where the ROM reloads the constant. A `u8`
-             * or `u16` `one` is found by cse's narrower-mode lookup the
-             * same way; -fno-cse-follow-jumps and -fno-regmove each move
-             * the object 100+ lines. #662 round 4: in either order, cse
-             * puts two registers set to the same constant in one
-             * extended basic block into one quantity (the second joins
-             * the constant's class) and canonicalizes uses to the first;
-             * the ROM's adjacent `movs r5, #1; movs r4, #1` needs the
-             * AND's 1 to come from outside cse's view and be placed
-             * there later. local-alloc's update_equiv_regs does that for
-             * a constant set once in another block and used once: a
-             * function-scope `u32 jumpKey = A_BUTTON` ANDed here gives
-             * the two movs, but used by both bounce cases it is set once
-             * at the top (3 lines off). An enumeration of 30000 variants
-             * (held/fire/one types u8-u32/s16/bool, `one` before or after
-             * the AND or the R test, `& 1`/`!= 0`/`% 2`, QueueY,
-             * QueueNowY or plain stores, the else's 0 or `fire`) gets no
-             * closer than the copy. #662 round 5: the two bounces as one
-             * inline (`Bounce(high, low)`, with the mask, the keys or
-             * the pending 1 as parameters), a block-scope `jump =
-             * A_BUTTON` set before the R test, and `one` through a
-             * `const s32 &` QueueY all still share the 1 (an inline's
-             * constant argument is a pseudo set at the call, which cse
-             * links the same way; the reference's ADDRESSOF store goes
-             * through a pseudo set to 1 too). A private old_agbcp whose
-             * insert_regs doesn't link a register set from a constant
-             * to the class's register (four forms: always, or only
-             * between a user variable and a temporary, either way round
-             * or both) fixes none of this case, StateJump or
-             * Sprite::CheckPlayerContact and changes up to 13 other
-             * functions in their objects, so that isn't how the
-             * original compiler differed. */
-            MATCH_CONST(one, 1);
-            fire = held & 1;
-            if (fire) {
+            if (INPUT_HELD(in) & A_BUTTON) {
                 SetModeAnim(ACTION_STATE_JUMP, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
                 part->speedY = 0;
-                QueueY(0, one, 0x10);
+                QueueNowY(0x10);
             } else {
                 SetModeAnim(ACTION_STATE_JUMP, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
-                part->speedY = fire;
-                QueueY(0, one, 0xF);
+                part->speedY = 0;
+                QueueNowY(0xF);
             }
         }
         frame = 0;
@@ -253,22 +218,17 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
     case EVENT_BOUNCE_HIGH:
         {
             u32 in = gKeys.all;
-            u32 held = in;
-            s32 fire;
-            s32 one;
 
-            if (held & R_BUTTON)
+            if (INPUT_HELD(in) & R_BUTTON)
                 slamBlocked = 1;
-            MATCH_CONST(one, 1);
-            fire = held & 1;
-            if (fire) {
+            if (INPUT_HELD(in) & A_BUTTON) {
                 SetModeAnim(ACTION_STATE_JUMP, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
                 part->speedY = 0;
-                QueueY(0, one, 0x12);
+                QueueNowY(0x12);
             } else {
                 SetModeAnim(ACTION_STATE_JUMP, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
-                part->speedY = fire;
-                QueueY(0, one, 0x11);
+                part->speedY = 0;
+                QueueNowY(0x11);
             }
         }
         frame = 0;
@@ -276,33 +236,24 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
     case EVENT_LAUNCH_PAD:
         {
             u32 in = gKeys.all;
-            u8 fire;
-            s32 one;
 
             gAudioContext->PlaySfx(SFX_SPIN, 0x100);
-            /* A `u8` A flag (it is stored to the u8 tornado fields): the
-             * AND is then done on the byte, whose 1 cse doesn't take from
-             * `one`'s word-sized 1 (with an `s32` flag it does, as in the
-             * two cases above). `in` dies at the AND, so the result
-             * takes its register, as in the ROM. */
-            one = 1;
-            fire = in & 1;
-            if (fire) {
+            if (INPUT_HELD(in) & A_BUTTON) {
                 SetModeAnim(ACTION_STATE_AIR_SPIN, 0x10, 0, 0x18);
                 tornadoTurn = 0;
                 tornadoFallQueued = 0;
                 tornadoUnwinding = 0;
                 charge = 3;
                 part->speedY = 0;
-                QueueY(0, one, 0x14);
+                QueueNowY(0x14);
             } else {
                 SetModeAnim(ACTION_STATE_AIR_SPIN, 0x10, 0, 0x18);
-                tornadoTurn = fire;
-                tornadoFallQueued = fire;
-                tornadoUnwinding = fire;
+                tornadoTurn = 0;
+                tornadoFallQueued = 0;
+                tornadoUnwinding = 0;
                 charge = 3;
-                part->speedY = fire;
-                QueueY(0, one, 0x13);
+                part->speedY = 0;
+                QueueNowY(0x13);
             }
             ApplyMotion();
         }

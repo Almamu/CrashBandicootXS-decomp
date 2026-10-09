@@ -10,7 +10,6 @@ extern "C" {
 #include "system.h"
 #include "level.h"
 #include "globals.h"
-#include "match.h"
 #include "math_util.h"
 }
 
@@ -390,33 +389,14 @@ void ActionCtrl::StateJump()
                 {
                     u8 *slot = &motionY;
 
+                    /* INPUT_HELD's u16 AND keeps the queue's 1 (r6) apart
+                     * from the test's, as in HandleEvent's bounce cases
+                     * (#662 round 7). */
                     if (*slot == 7) {
-                        s32 one = 1;
-
-                        /* Kept from the C: the ROM loads this 1 (r6) apart
-                         * from the A test's own 1, which plain C++ shares.
-                         * A byte test (`(u8)cur & 1` or a `u8` flag) keeps
-                         * the two 1s apart, as in HandleEvent's launch
-                         * pad, but its AND lands in r0 instead of r2
-                         * (the else's 0 store then shifts registers);
-                         * the permuter only found a shared hoisted 1.
-                         * The mechanism is ActionCtrl::HandleEvent's (see
-                         * its bounce cases): cse1 gives the arms' 1 the
-                         * test's pseudo, and regmove copies it (#662
-                         * round 3). Round 4 traced the condition the ROM
-                         * implies to cse's quantities and local-alloc's
-                         * update_equiv_regs (see HandleEvent's bounce).
-                         * Round 5: the test through an inline (`Held`,
-                         * `HeldB(cur, A_BUTTON)`, the bool one keeping
-                         * `cur` in r4) or the whole queueing as an
-                         * inline with the A flag or keys as a parameter
-                         * still share the 1, and a cse that doesn't
-                         * link equal constants changes other states. */
-                        MATCH_KEEP(one);
-                        if (cur & 1)
-                            QueueYAt(slot, one, 9);
+                        if (INPUT_HELD(cur) & A_BUTTON)
+                            QueueNowYAt(slot, 9);
                         else
-                            QueueYAt(slot, one, 8);
+                            QueueNowYAt(slot, 8);
                     }
                 }
             }
@@ -1030,7 +1010,17 @@ void ActionCtrl::StateCrouch()
              * and used once in the flip (local-alloc's update_equiv_regs
              * then substitutes the constant, reloaded at the AND) gives
              * the ROM's order (address, mask, load) with the address
-             * still in a block-local r0. */
+             * still in a block-local r0. Round 7: the ROM's flip block
+             * (`adds r2, #0x28; movs r0, #0x11; negs; ldrb; ands; movs
+             * r1, #0x10; orrs; strb`) recurs in matched code only in
+             * SwimCtrl::StateTurn (swim_ctrl.cpp), from
+             * `target->SetFlipX(1)`; here, with `part` held across the
+             * two tests (a local or the member), SetFlipX(1), the mask
+             * spellings and mirrorFlags stores stay 2-46 lines off (32
+             * variants). A private old_agbcp whose three-quantity sort
+             * compares sorted positions (the exchange fixed) moves the
+             * rest of this function 30 lines, so the original compiler
+             * had the exchange as it is. */
             volatile u8 *p = &part->mirror;
 
             m = -0x11;
