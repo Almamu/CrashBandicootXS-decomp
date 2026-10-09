@@ -94,8 +94,9 @@ Crate *Crate::ResolveStackHit(struct aabb *box, u8 *foundFlag)
  * explosive kind, or breaks in its stack; a committed crate (state 1)
  * is skipped. The two boxes are one frame struct, and `px`/`py` are
  * shared by both. The BOX_ADDRs are as in crate_touch.cpp (see its
- * #662 round 2 note): -fno-gcse frees the overlap test's (the object
- * matches), the builder sites are cse1's in any case. */
+ * #662 round 2 and 3 notes): -fno-gcse frees the overlap test's (the
+ * object matches), but the builder sites are cse1's within one basic
+ * block whatever the flags. */
 void Crate::BreakIfTouchedByPlayer()
 {
     struct {
