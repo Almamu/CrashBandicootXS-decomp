@@ -122,9 +122,6 @@ SECTIONS
         build/crashbandicootxs/src/pickups/stopwatch.o(.text);
         build/crashbandicootxs/src/player/action_ctrl_event.o(.text);
         build/crashbandicootxs/src/player/action_ctrl_update.o(.text);
-        build/crashbandicootxs/src/player/action_ctrl_left_ground.o(.text);
-        build/crashbandicootxs/src/player/action_ctrl_idle.o(.text);
-        build/crashbandicootxs/src/player/action_ctrl_run_jump.o(.text);
         build/crashbandicootxs/src/player/action_ctrl_states.o(.text);
         build/crashbandicootxs/src/player/action_ctrl_land.o(.text);
         build/crashbandicootxs/src/player/action_ctrl_hang.o(.text);

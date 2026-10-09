@@ -277,12 +277,9 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/gfx/palette_cycle.o \
                   $(C_BUILDDIR)/hud/hud_part.o \
                   $(C_BUILDDIR)/player/action_ctrl_event.o \
-                  $(C_BUILDDIR)/player/action_ctrl_idle.o \
                   $(C_BUILDDIR)/player/action_ctrl_update.o \
-                  $(C_BUILDDIR)/player/action_ctrl_left_ground.o \
                   $(C_BUILDDIR)/player/swim_ctrl_stroke.o \
                   $(C_BUILDDIR)/menus/continue_prompt.o \
-                  $(C_BUILDDIR)/player/action_ctrl_run_jump.o \
                   $(C_BUILDDIR)/player/action_ctrl_states.o \
                   $(C_BUILDDIR)/player/action_ctrl_hang.o \
                   $(C_BUILDDIR)/player/swim_ctrl.o \
