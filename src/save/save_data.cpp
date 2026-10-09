@@ -373,7 +373,16 @@ u8 SaveData::IsSlotEmpty(s32 rowIndex)
  * there or keeps v alive past the test: a `do { } while (0)` around the
  * copy or the test (loop notes), identical `if (self)`/`else` arms
  * around the copy, a dead `x = v != 0` store, or a second, dead test of
- * v after the `if`. So the hard register stays. */
+ * v after the `if`. So the hard register stays.
+ * #662 round 5: a private old_agbcp whose regmove skips
+ * optimize_reg_copy_1 compiles the round-4 form (`s32 v = mask; v &=
+ * flags; result = v; if (v != 0) result = 1;`) byte for byte as the ROM.
+ * That is not the original compiler, though: the same switch changes 16
+ * other old_agbcp objects (CreateCrate, UpdateCrate, UpdateGameFrame, the
+ * HUD counters and more), which match as they are. Also tried: the
+ * method defined inside the class and emitted out of line, `return v !=
+ * 0;` and the store-flag forms (expand's "load v, then 1 if nonzero" path,
+ * which ties the copy to v), `mask &= flags` on the parameter. */
 u8 SaveData::TestFlags(u8 mask)
 {
     MATCH_HOLD_REG(u8, v, r1);

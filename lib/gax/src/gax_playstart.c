@@ -136,7 +136,13 @@ u8 GAX2_init(struct GaxSongHeader *p)
              * loop's depth), or fmt at 8 or fewer, or fmt live over 213
              * insns; the ROM sets maxRate = 0 in the prologue (a later
              * `maxRate = 0` shortens it but moves the 0); `?:`, `<`
-             * and if/else spellings of the max are 30-34 lines off. */
+             * and if/else spellings of the max are 30-34 lines off.
+             * Round 5: carving the format in GAX2_estimate's style
+             * (`buf += n * 4; fmt = (...)buf; buf += 8;`) leaves fmt at
+             * 9 references (cse1 folds the second add into fmt + 8);
+             * every scalar local zero-initialized as GAX2_estimate
+             * declares them is 712 lines off, `fmt = 0` or maxRate
+             * declared first 30. */
             MATCH_USE(maxRate);
             tap++;
         }

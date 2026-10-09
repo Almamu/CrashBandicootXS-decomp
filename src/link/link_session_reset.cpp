@@ -88,7 +88,11 @@ extern "C" {
  * recomputed. With the copies in an inline CopyPacket `id` gets r4 and
  * `self` r5 as in the ROM, but the first loop then walks `id` instead of
  * reading `prevPacket + 8`, and the rxSeq/nibble addresses differ; the
- * permuter (45 minutes) got its score from 3340 to 2110 only. */
+ * permuter (45 minutes) got its score from 3340 to 2110 only.
+ * #662 round 5: the inner copy as an inline CopyPacket(dst, src) taking
+ * `id` or `this->id` (with or without the `id` local, the call taking
+ * `this->id`) is 338-350 lines off against 366 for the plain code without
+ * the references; `self` still takes r4 in all of them. */
 s32 LinkSession::ResetState()
 {
     s32 i, j;
