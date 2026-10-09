@@ -1133,6 +1133,38 @@ compiled with `-da` and its RTL dumps read pass by pass:
   `-flive-range`, the aliasing, inlining and scheduling switches) was
   tried on each plain function, under both compilers, and none matches.
 
+**Round 4, src/enemies and src/bosses (C++), from the compiler source.**
+9 functions -> 9; each site's comment now names the code path. A
+private old_agbcp printed local-alloc's quantity order, global-alloc's
+ranking, reload's spill choices and every insn flow2 deletes after
+reload, and could force a pseudo out of its register:
+
+- **What decides it.** Global-alloc's `find_reg` passes: the first
+  only takes registers already used and not preferred by a
+  lower-ranked conflicting value (`regs_someone_prefers`), and a
+  register is "preferred" when `set_preference` sees the value as the
+  source, or the source's first operand, of an insn setting a hard
+  register or an allocated local (`TinyCtrl::SetState`'s pad gets r0
+  from `ldr pad, [addr]`, `UpdateTriggerBox` would need one). Ranking
+  uses flow's REG_N_REFS (plus loop depth, hence every permuter
+  `do { } while (0)`) and REG_LIVE_LENGTH, counted before combine
+  (`StompedHopPadCtrl::Update` needs 2 more insns where only `this`
+  lives). Reload's free registers come in number order (thumb.h has no
+  REG_ALLOC_ORDER); its spill registers rotate from `last_spill_reg`,
+  which inherited reloads and output-register reloads don't move
+  (`MegaMixCtrl::Update`).
+- **Saved but unused registers.** Only four functions in the
+  decompiled code have one: `UpdateBob`, `UpdateOscillateY`,
+  `DingodileShieldCtrl::Update` and the matched `ActionCtrl::Update`,
+  whose r7 is the high half of a DImode pointer to member. flow2's
+  deletions across all 149 old_agbcp objects are of three kinds: copies
+  into r8-r10 whose use reload took from the low register they came
+  from, chains whose last use reload_cse removed, and halves of DImode
+  pairs. 64-bit locals do produce the unused push in UpdateBob (`u64
+  t`: the ROM's push and r4/r6, with the pair moving `ph` and the
+  target), but no spelling gives the ROM; forced spills show the ROM's
+  extra value kept its register through reload.
+
 Round 3 in frontend/, menus/, save/, link/ and text/ (C++), diagnosed
 from the `-da` dumps first:
 

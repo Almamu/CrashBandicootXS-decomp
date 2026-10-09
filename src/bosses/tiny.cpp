@@ -79,7 +79,7 @@ void TinyCtrl::Update(MovingSprite *part)
     if (this->state == 8) {
         GetSpriteAttackBox(&a, gPlayer);
         GetSpriteBodyBox(&b, part);
-        if (a.w != 0 && AABB_VALID(b) && AabbOverlaps(&b, &a) && gPlayer->kind == 0x13)
+        if (a.w != 0 && AabbW(&b) && AabbOverlaps(&b, &a) && gPlayer->kind == 0x13)
             SetState(part, 9);
     } else if (gPlayer->dead == 0) {
         GetSpriteBodyBox(&a, gPlayer);
@@ -88,7 +88,7 @@ void TinyCtrl::Update(MovingSprite *part)
             a = b;
         }
         GetSpriteAttackBox(&b, part);
-        if (AABB_VALID(b) && a.w != 0 && AabbOverlaps(&b, &a))
+        if (AabbW(&b) && a.w != 0 && AabbOverlaps(&b, &a))
             HitPlayer(gPlayer);
     }
 
@@ -251,7 +251,16 @@ void TinyCtrl::SetState(MovingSprite *part, s32 next)
              * next == 13` test, so global-alloc places it, after
              * local-alloc has used r0 only for the address loads that die
              * where `pad` is born; r0 is the first free one. No -f flag or
-             * pair of flags changes that. */
+             * pair of flags changes that. #662 round 4 (global.c): `x`
+             * (3 references over 7 insns) is allocated before `pad` (3
+             * over 9) and skips r0 because `pad` prefers it:
+             * set_preference gives `pad` r0 from `ldr pad, [addr]`, the
+             * address being a local in r0, and prune_preferences adds
+             * r0 to `x`'s "someone prefers" set. `pad` then takes its
+             * own preference, r0, in find_reg's first pass. r2 needs r0
+             * to conflict with `pad` (a value held in r0 while `pad` is
+             * live) or a copy preference for r2 (a copy between `pad`
+             * and r2), and the ROM's code has neither. */
             MATCH_HOLD_REG(MovingSprite *, pad, r2);
             MATCH_HOLD_REG(s32, x, r1);
 
@@ -425,7 +434,18 @@ void TinyCtrl::SpawnFallingLeaves(MovingSprite *part, s32 n)
  * with r4; ranked the other way they get the ROM's r2/r3. The switch's
  * dispatch is shared by both lives, so no reshaping of it helps (it
  * would have to shrink by 4 insns), and `part` has no further use to
- * reference. No -f flag or pair of flags changes it either. */
+ * reference. No -f flag or pair of flags changes it either. #662 round
+ * 4: the counts are flow's (REG_N_REFS, REG_LIVE_LENGTH), taken before
+ * combine, so insns that combine or update_equiv_regs remove later
+ * still count. `this` wins until its life reaches 32 insns (2 more
+ * where `part` is dead: state 1 after the store, or the state > 1
+ * path), or `part` gets a 5th reference. A `case 2: state = 2;` for
+ * state 1 to fall into, or the test in an inline returning s32, adds
+ * them and gives the ROM's registers, but with the extra compare or the
+ * 0/1 flag in the output; a `next` local, a split-out bottom or layer
+ * pointer, a `y - bottom >= 0` test and `heightPx * 8 * 32` add none
+ * (cse folds them first). The permuter's zero scores on a C port all
+ * use a loop wrapper, `self++; self--;` or a dead statement. */
 void StompedHopPadCtrl::Update(MovingSprite *partArg)
 {
     MATCH_HOLD_REG(MovingSprite *, part, r2) = partArg;

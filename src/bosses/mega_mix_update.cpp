@@ -59,7 +59,15 @@ extern "C" {
  * the ROM's r3 needs the previous reload to have taken r2, i.e. a
  * different count of reloads before it with the same final code, which
  * no spelling of the function's other reads gives. No -f flag or pair
- * of flags changes it. */
+ * of flags changes it. #662 round 4 (instrumented reload): the spill
+ * registers are r1-r3; the HandleEvent call's `ldrsh` scratch takes r3
+ * (last_spill_reg 2), the animDone address is reloaded into its own
+ * output r0 without allocate_reload_reg, and the search for the 0x104
+ * starts at r1. r3 needs one more allocate_reload_reg landing on r2
+ * between the two, or r1 and r2 busy at the add; an inherited reload
+ * doesn't move last_spill_reg, and a choose_reload_regs retry (which
+ * keeps it) needs a reload that fails with inheritance. Nothing in the
+ * final code between the two reloads can carry either. */
 static inline u8 PlayerDeadByte(Player *pl)
 {
     MATCH_HOLD_REG(s32, off, r3) = 0x104;
