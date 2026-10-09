@@ -494,8 +494,10 @@ gcc 2.9:
 
 Cases: [near-miss-polish-3.md](./matching/archive/near-miss-polish-3.md)
 (constant-init), [sp-box-retry.md](./matching/archive/sp-box-retry.md)
-(`"+r"` vs `"=r"/"0"`), `src/player/action_ctrl_moves.cpp` (`MATCH_CONST`
-as an opaque copy, `m2`), `src/actor/actor_category_select.cpp` (use).
+(`"+r"` vs `"=r"/"0"`), `src/actor/actor_category_select.cpp` (use).
+`EndSpin`'s `MATCH_CONST` opaque copy went in #662 round 4 (a `u16`
+mask: thumb's movhi takes only 0-255, so reload builds the constant and
+copies it, the ROM's copy).
 
 ### Other empty-asm forms
 
@@ -507,21 +509,19 @@ The rarer forms, a few sites each:
 | `asm("" : : : "r5")` | `MATCH_CLOBBER(r5)`, `MATCH_CLOBBER_VOLATILE(r4)` | 2 | Tells gcc the register is clobbered, so the prologue saves it even though nothing uses it, as the ROM does ([issue-9-raw-asm-pass.md](./matching/archive/issue-9-raw-asm-pass.md), `UpdateEnemyBob`; `src/enemies/enemy_ctrl.cpp`); it also forces a reload of whatever the register held. |
 | `asm volatile("" ::: "memory")` | `MATCH_MEMORY_BARRIER()` | 0 | Makes gcc forget memory and acts as a barrier. It does not stop address CSE, which is what it was usually tried for. No site needs it any more. |
 | `asm("" : "+m"(x))` | `MATCH_KEEP_MEM(x)` | 2 | `x` is in memory here with an unknown value, so a later read is a real load (the `ldm r1!` re-read in `ConvertAirshipTiles`). |
-| `asm("" : : "m"(x))` | `MATCH_USE_MEM(x)` | 1 | `x` must be in memory here: keeps it in its stack slot across a call (`src/level/spawn_enemies.cpp`). |
+| `asm("" : : "m"(x))` | `MATCH_USE_MEM(x)` | 0 | `x` must be in memory here: kept a value in its stack slot across a call (`SpawnFlamethrowerLabAssistant` until #662 round 4). |
 
 An asm that reads a field through `"m"` can also fix the order of a load
 against a constant
 ([issue-59-60-m-operand-scheduling.md](./matching/archive/issue-59-60-m-operand-scheduling.md)).
 
-Three empty asms stay written out, each a one-off shape that no macro
+Two empty asms stay written out, each a one-off shape that no macro
 covers (a macro for one site would only add a name to look up). They
-are `ALLOWED_SPELLED` in `tools/match_idioms.py`:
+are `ALLOWED_SPELLED` in `tools/match_idioms.py` (a third, `EndSpin`'s
+keep-and-use, went in #662 round 4):
 
 - `asm volatile("" : : "m"(src), "m"(dst))` in `lib/gax/src/gax_swi.c`:
   two `"m"` inputs in one insn (`mem_ref`).
-- `asm volatile("" : "+r"(flags) : "r"(m))` in
-  `src/player/action_ctrl_moves.cpp`: a keep and a use in one insn
-  (`keep_volatile`).
 - `asm volatile("" : "=r"(ch) : "r"(c + 0x108))` in
   `src/save/save_transfer.cpp`: an opaque copy whose input isn't tied to
   the output (`"r"`, not `MATCH_CONST`'s `"0"`), so `ch` gets no copy
@@ -1169,6 +1169,39 @@ from the `-da` dumps first:
   dying operand in `PauseMenu::Draw`; reload's spill-register rotation
   for `DrawWrappedText`'s r1 hold (under `-fno-rerun-loop-opt` the
   hold-free code is two reload registers off, nothing else).
+
+**Round 4, src/player, src/level and src/text (C++).** 9 functions -> 5,
+from the passes' source (an instrumented private old_agbcp printed
+local-alloc's quantity order):
+
+- **Code jump2 merges again.** Two tails the ROM shares by cross-jumping
+  can be written twice, as plain code: `StartTornadoFall` queues its Y
+  entry in each `case` (each call's entry is a block-local pseudo, which
+  local-alloc places in r2 before global-alloc ranks `this`; one `entry`
+  queued after the switch is global and loses r2 to `this`), and
+  `DrawWrappedText` ends both branches of a measured token with their own
+  flush and `posAccum += len`, which gives `len` the extra loop-weighted
+  reference its `MATCH_USE` supplied (floor_log2(16) * 16 / 97 against
+  `self`'s 4 * 17 / 141) and drops the draft's gotos and r1 hold.
+- **A narrower local changes a live length.** `SpawnFlamethrowerLabAssistant`
+  reads the mirror bit into a `u8`: the loaded byte then lives 14 insns
+  instead of 12 and ranks just below the mirror address (0.21 against
+  0.22), which is the global-alloc order the ROM's caller-saved r3 needs;
+  the hold, keep, stack-slot use and four uses went. `EndSpin`'s L bit as
+  a `u16`: an HImode 0x200 can't be a movhi immediate, so reload builds it
+  in r1 and copies it into the constant's register, the ROM's
+  `adds r0, r1, #0`.
+- **Kept, with the condition in each comment:** the dead `state` and
+  `maskLevel` loads (jump2's delete_computation keeps the feeding load
+  after reload, flow2 has already run, so the test's body must be dead
+  code flow1 removed or arms jump2 merges); the bounce and `StateJump`
+  1s (cse puts two equal constants in one extended block into one
+  quantity in either order; only an init moved later by update_equiv_regs
+  escapes it); `StateCrouch` (local-alloc's three-quantity exchange
+  allocates the address first whatever the priorities, the volatile byte
+  load is a fourth quantity); `ReleaseHang` (find_reload_regs spills the
+  first free call-clobbered register in number order, so r2 must be live
+  at the add, and nothing is).
 
 ## Survey and conversion record (#576)
 
