@@ -110,7 +110,7 @@ plainer version doesn't.
    volatile, `"m"` operands, static-inline accessors
 7. [Assembler-level fixes](#assembler-level-fixes): `.align 2, 0`,
    `.pool`, instruction asm
-8. [Warnings](#warnings): `x = x` self-init
+8. [Warnings](#warnings): expected warnings left enabled, `-Wno-error`
 9. [NON_MATCHING](#non_matching)
 10. [Pruning workarounds](#pruning-workarounds): `tools/match_prune.py` (#662)
 11. [Survey and conversion record (#576)](#survey-and-conversion-record-576)
@@ -183,6 +183,7 @@ comment with its evidence.
 | no `-mthumb-interwork` | libgcc2 (`__divdi3`, ...) | The only ROM functions that return with `pop {r4-r7, pc}`. |
 | agbcp_arm_patched (the ARM C++ compiler), `-fomit-frame-pointer` | `string_arm.o`, `sprite_arm.o` | ARM code of the IWRAM image ([matching/iwram-image.md](./matching/iwram-image.md)); C++ like the rest of the game, the output is agbcc_arm's without the four options below. |
 | **agbcp_arm_patched**'s `-mleaf-no-lr-save`, `-mno-cond-return`, `-fno-schedule-insns -fno-schedule-insns2` | `string_arm.o` | `itoa_arm` pushes r4-r6 without lr, which stock agbcc_arm can't; and the ROM keeps its loop increments, terminator store and swap in source order, which either scheduling pass reorders. `strncpy_arm` branches to its final `bx lr` where stock agbcc_arm makes `bxeq lr` for any C. The three other functions come out the same either way. |
+| `-Wno-error` | `gax_voice_steal.o`, `eeprom_verify.o`, `string_arm.o` | Each prints one expected "might be used uninitialized", left enabled on purpose ([Warnings](#warnings)); gcc 2.9 has no `-Wno-error=uninitialized`. |
 | **agbcp_arm_patched**'s `-minterwork-return-lr`, `-mstrict-cross-jump` | `sprite_arm.o` | `LookupSpriteFrameCache`'s three returns pop into lr (`ldmfd sp!, {lr}; bx lr`); stock agbcc_arm pops into ip. `HeapSortActorsByKey` keeps two identical loop tests that stock jump2 cross-jumps for any C, because each follows a label. The three other functions come out the same either way (and need scheduling). |
 
 **agbcc_arm_patched and agbcp_arm_patched are locally patched
@@ -669,19 +670,25 @@ They have no macro: each is a specific instruction sequence.
 
 ## Warnings
 
-The build is `-Wall ... -Werror`. Where the ROM really uses an
-uninitialized register (a `bestIdx` when the count is 0), an initializer
-would add code, so the variable stays uninitialized and is
-self-initialized: `s32 sel = sel;` emits nothing and silences
-`-Wuninitialized` (2 sites, both in lib/: `GAX_fx` and
-`EEPROMWrite1_check`). A `& 0xFFFF0000` on garbage before ORing in
+The build is `-Wall ... -Werror`. No code exists only to silence a
+warning (#662, owner decision): no `T x = x;` self-init, no empty asm
+that defines a variable for gcc's flow analysis. Where the ROM really
+uses an uninitialized register (`GAX_fx`'s `sel` when there is no SFX
+voice), or gcc can't tell a variable is always set
+(`EEPROMWrite1_check`'s `result`, `itoa_arm`'s `neg`), and an
+initializer would add code, the variable stays uninitialized and its
+"might be used uninitialized" warning is left enabled on purpose: it is
+printed on every build. Those objects (the Makefile's
+`UNINIT_WARNING_OBJS`, each with its reason) are built with
+`-Wno-error`, since gcc 2.9 has no `-Wno-error=uninitialized`; keep
+them free of any other warning. The silencers they had (two self-inits
+and a `MATCH_HOLD`) changed no code. A `& 0xFFFF0000` on garbage before ORing in
 BGxCNT bits is a `union bgcnt` local (`graphics_package.h`) instead:
 agbcc pads the union to a word, `cnt.raw = 0` clears only its low half,
 and `-Wuninitialized` doesn't check aggregates (`src/frontend/starfield.cpp`,
 `TitleScreen::LoadBg`; #662 step 3, formerly self-inits,
 [issue-65-naked-retry.md](./matching/archive/issue-65-naked-retry.md)).
-The order of escape hatches (self-init, `UNUSED`, a per-object
-`-Wno-...`) is in CONTRIBUTING.md's "Compiler warnings".
+How to handle a warning is in CONTRIBUTING.md's "Compiler warnings".
 
 ## NON_MATCHING
 
@@ -909,7 +916,8 @@ each:
   accesses, 9 scoped volatiles): `Player::HandleEvent`'s dead load of
   `maskLevel`.
 - **An uninitialized register the ROM really uses** (2 self-inits, both
-  in lib/): `GAX_fx`'s `sel`.
+  in lib/): `GAX_fx`'s `sel`. (Removed since; the warning is left
+  enabled instead, [Warnings](#warnings).)
 
 After step 3, `tools/match_idioms.py --functions` counts 1955 of the
 2059 functions with no workaround at all (README.md has the
@@ -968,7 +976,8 @@ Round 2 in level/, objects/, vehicle/, cutscene/ and pickups/ (C++):
 
 Kept, with what was tried in each comment: GAX2's hardware settle
 delays and ARM calls, `GaxHuffUnComp`'s SWI, the two `x = x`
-self-inits (the ROM uses the uninitialized register), `itoa_arm`,
+self-inits (the ROM uses the uninitialized register; removed since,
+[Warnings](#warnings)), `itoa_arm`,
 `strncpy_arm`'s conditional-return barrier and `HeapSortActorsByKey`'s
 barriers (both since fixed by the compiler options: iwram-image.md,
 "Ninth step"), `FindSubstring`'s case folds (63 more spellings: only `char`
@@ -1794,11 +1803,12 @@ deciding contest:
   `hi`, are `digit` and `num` (the SWI's r1/r0) reused the same way:
   the ROM with neither pin. When a pin names the register of a value
   that is dead there, try that value's variable.
-- **Warning-only workarounds stay as code.** itoa_arm's MATCH_HOLD
-  exists only for -Werror's false "might be used uninitialized" (two ifs
-  that together always set the flag); without it, and with the warning
-  off, the code is the same. As for GAX_fx and EEPROMWrite1_check, the
-  silencing code is kept rather than a per-object -Wno-uninitialized.
+- **Warning-only workarounds.** itoa_arm's MATCH_HOLD exists only for
+  -Werror's false "might be used uninitialized" (two ifs that together
+  always set the flag); without it, and with the warning off, the code
+  is the same. It was kept then, as were GAX_fx's and
+  EEPROMWrite1_check's self-inits; the owner reversed that afterwards
+  (see "Warning silencers removed" below).
 - **The race the comment named was the wrong one.** GAX2_init's aligned
   size doesn't race the format pointer (r2 either way) but a 3-reference
   copy of `&gGaxPlayerState` (`rtl_corpus.py query race`); two single
@@ -1904,6 +1914,14 @@ function).** 3 functions -> 3; GAX2_init loses its size use:
   RateEntry copied whole in GAX2_init is 40-52 instructions off, the
   wave copied whole in GaxChannelMix 51, the Div quotient/remainder as
   a struct in itoa_arm 44: none of them has a register saved and unused.
+
+**Warning silencers removed (owner decision, #662).** Code that exists
+only to silence a warning goes: GAX_fx's and EEPROMWrite1_check's `x =
+x` self-inits and itoa_arm's MATCH_HOLD(neg). The warnings stay
+enabled and are printed; their three objects get `-Wno-error`
+(`UNINIT_WARNING_OBJS`, [Warnings](#warnings)). All three objects are
+byte-identical. 2 functions freed (GAX_fx, EEPROMWrite1_check); itoa_arm
+keeps its other sites.
 
 ## Survey and conversion record (#576)
 

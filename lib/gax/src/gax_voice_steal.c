@@ -55,10 +55,10 @@ s32 GAX_fx(u32 instrument)
 {
     s32 best = 0x7fffffff;
     u32 i;
-    /* Self-initialized to silence -Wuninitialized: like the original,
-     * `sel` stays unset if there is no SFX voice, and `= 0` changes the
-     * code (#577). */
-    s32 sel = sel;
+    /* Like the original, `sel` stays unset if there is no SFX voice, and
+     * `= 0` changes the code (#577). gcc's "might be used uninitialized"
+     * is left enabled on purpose (Makefile UNINIT_WARNING_OBJS, #662). */
+    s32 sel;
 
     for (i = 0; i < GAX_MIXER()->extraChildren; i++) {
         if (GAX_SFX_VOICE(i)->priority <= best) {

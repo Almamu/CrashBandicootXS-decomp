@@ -584,6 +584,9 @@ ALLOWED_SPELLED = {
 REDUNDANT_KINDS = {
     "file_align": "drop it; the Makefile's ZERO_PAD_TEXT zero-fills the end of "
                   "every compiled object's .text (#663, docs/matching_techniques.md)",
+    "self_init": "drop it; it only silences -Wuninitialized, which is left enabled: "
+                 "add the object to the Makefile's UNINIT_WARNING_OBJS (#662, "
+                 "docs/matching_techniques.md#warnings)",
 }
 
 
