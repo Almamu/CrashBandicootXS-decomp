@@ -121,7 +121,6 @@ SECTIONS
         build/crashbandicootxs/src/pickups/wumpa.o(.text);
         build/crashbandicootxs/src/pickups/stopwatch.o(.text);
         build/crashbandicootxs/src/player/action_ctrl_event.o(.text);
-        build/crashbandicootxs/src/player/action_ctrl_kill.o(.text);
         build/crashbandicootxs/src/player/action_ctrl_update.o(.text);
         build/crashbandicootxs/src/player/action_ctrl_left_ground.o(.text);
         build/crashbandicootxs/src/player/action_ctrl_idle.o(.text);
