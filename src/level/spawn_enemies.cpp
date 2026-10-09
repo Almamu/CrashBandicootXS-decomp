@@ -679,7 +679,14 @@ void SpawnPistonCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * - the r3 hold (`h3`) keeps r3 free over the animation map store and
  *   the second lookup, so &gEntityFlags is reloaded through r1;
  * - three extra references lift rec2 above the reloaded `q` (rec2 keeps
- *   r2), and one puts `p` ahead of the flag byte (r3, then r4). */
+ *   r2), and one puts `p` ahead of the flag byte (r3, then r4).
+ * #662 round 3: the ROM's `str r3, [sp]` / `ldr r3, [sp]` are
+ * caller-save.c's save and (lazy) restore of a pseudo global-alloc put in
+ * call-clobbered r3, because it ranked below the seven pseudos that took
+ * r4-r7, r8, r9 and sl. Written plainly (the flip through a pointer to
+ * the mirror bits), the address gets r5 and arg3 drops to r9 and a stack
+ * slot (86 lines off); the flag sweep (-fno-gcse ... -O1, -fno-caller-saves)
+ * doesn't get closer. */
 void SpawnFlamethrowerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);

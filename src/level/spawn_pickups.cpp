@@ -12,7 +12,6 @@ extern "C" {
 #include "gfx.h"
 #include "memory.h"
 #include "system.h"
-#include "match.h"
 #include "level.h"
 #include "globals.h"
 }
@@ -117,34 +116,21 @@ void SpawnBlueGem(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 /* Entity type 0x0C (the crate gem's marker): where the crate gem appears
  * (SetCrateGemPos) once every crate is broken.
  *
- * Kept from the C: the truncation of `arg1`/`arg2` in inline asm. The
- * ROM truncates both in one batch (`lsl r1; lsl r2; lsr r3, r1; lsr r4,
- * r2`) into fresh registers, one of them callee-saved; g++ truncates them
- * in place, with every spelling tried (u16 parameters, locals, a point
- * class with a constructor, an inline returning a `struct vec2`), the
- * same gap as SpawnRoomExit (spawn_bosses.cpp). The ROM's shape is the
- * point as one `struct vec2` value in a register pair (r3:r4, hence the
- * pushed r4) stored to the stack: agbcc gives exactly these instructions
- * for that inline, but g++ keeps a struct value in memory. */
-void SpawnCrateGemMarker(u32 arg0, u32 arg1, u32 arg2, u16 arg3)
+ * The ROM truncates both coordinates in one batch (`lsl r1; lsl r2; lsr
+ * r3, r1; lsr r4, r2`) into fresh registers, one of them callee-saved:
+ * the point is one `struct vec2` value in a register pair (r3:r4, hence
+ * the pushed r4) stored to the stack. g++ gives it a DImode pseudo when
+ * it is assigned from a compound literal: a named `struct vec2` returned
+ * by an inline, or one built field by field, is bound to the implicit
+ * copy constructor's reference argument, which makes it addressable, so
+ * it lives on the stack (#662 round 3; the C had the four instructions
+ * in asm). */
+void SpawnCrateGemMarker(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    MATCH_HOLD_REG(u32, rx, r1) = arg1;
-    MATCH_HOLD_REG(u32, ry, r2) = arg2;
-    MATCH_HOLD_REG(s32, x, r3);
-    MATCH_HOLD_REG(s32, y, r4);
-    s32 point[2];
+    struct vec2 point;
 
-    // clang-format off
-    asm volatile(
-        "lsl %2, %2, #0x10\n\t"
-        "lsl %3, %3, #0x10\n\t"
-        "lsr %0, %2, #0x10\n\t"
-        "lsr %1, %3, #0x10"
-        : "=r" (x), "=r" (y), "+r" (rx), "+r" (ry));
-    // clang-format on
-    point[0] = x;
-    point[1] = y;
-    gLevelState->SetCrateGemPos(point);
+    point = (struct vec2){ arg1, arg2 };
+    gLevelState->SetCrateGemPos(&point.x);
 }
 
 /* UNUSED - no caller anywhere in the ROM (checked src/, asm/ and the spawn

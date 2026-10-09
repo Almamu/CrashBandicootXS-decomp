@@ -301,9 +301,11 @@ Cases: [big-naked-retry-3.md](./matching/archive/big-naked-retry-3.md)
   str r2, [sp]; str r3, [sp, #4]`, or a callee-saved r4 pushed for
   `r3:r4` in a leaf): a `struct vec2` *value* held in a DImode register
   pair. In C, `struct vec2 goal = target->pos;` (camera.cpp) or an inline
-  returning a `struct vec2` gives it; g++ keeps a struct value in
-  memory, so the C++ spawners `SpawnRoomExit` and `SpawnCrateGemMarker`
-  still need pins (#662 step 3).
+  returning a `struct vec2` gives it. In C++ it takes a compound
+  literal, `point = (struct vec2){x, y};`: a named `struct vec2` copied
+  whole goes through the implicit copy constructor, whose reference
+  argument makes it addressable, so it lives on the stack
+  (`SpawnRoomExit`, `SpawnCrateGemMarker`, `RunRoom`; #662 round 3).
 
 ## Calls
 
@@ -837,9 +839,9 @@ each:
   `HeapSortActorsByKey` against cross-jumping.
 - **A stack-box address recomputed before each call** (`BOX_ADDR`, 12):
   `Crate::PlayerAnimWouldTouch` ([spill-slot order](#spill-slot-order)).
-- **A struct value in a register pair** (pins): g++ keeps a `struct
-  vec2` value in memory, so `SpawnRoomExit` and `SpawnCrateGemMarker`
-  pin what C would hold in DImode.
+- **A struct value in a register pair** (pins, until round 3's
+  compound literal, [above](#types-and-expressions)): `SpawnRoomExit`
+  and `SpawnCrateGemMarker` pinned what C would hold in DImode.
 - **A callee-saved register pushed but unused** (`MATCH_CLOBBER`, 2):
   `EnemyCtrl::UpdateBob`'s r5.
 - **A re-read from memory** (`MATCH_KEEP_MEM`/`MATCH_USE_MEM`, 3): the
@@ -1024,6 +1026,43 @@ Round 2 in bosses/, enemies/ and actor/ (C++):
   - `GaxChannelMix`: the ROM reloads `item.done` twice in a row, which
     takes volatile. A one-armed clamp lets cse1 carry `row * 28` across
     the join.
+
+**Round 3, src/level and src/player.** 12 functions -> 8:
+
+- **A compound literal for a `struct vec2` in a register pair.**
+  `point = (struct vec2){x, y};` is one DImode pseudo set word by word.
+  It freed `SpawnRoomExit`'s and `SpawnCrateGemMarker`'s pins (and the
+  latter's instruction asm) and `RunRoom`'s r0/r1 hold: the pair is born
+  before the player pointer is loaded, so it conflicts with the pointer,
+  which takes r2 (copied whole, the pointer died in the DImode load and
+  took r0). See [Types and expressions](#types-and-expressions).
+- **One variable used in two blocks is global-alloc's.** A local used
+  in one basic block only is allocated by local-alloc, before any global
+  pseudo, and takes the first free register. `SpawnRoomEntities` had its
+  crate id pinned to r1. Now one `aid` serves the first and second
+  searches: global-alloc then ranks the strength-reduced slot pointer
+  above it, and the pointer gets r0 as in the ROM.
+- **A flags2 `|=` through ActOrFlags0D.** The member `|=` expansion's
+  dead `& 0` gave `StartTornadoFall`'s `slamBlocked = 0` its early 0
+  (there was an r0 pin before).
+- **Kept, diagnosed** (each comment has the details):
+  - `ActionCtrl::HandleEvent`'s bounce 1s and `StateJump`'s: cse1
+    follows the jump and gives the arms' QImode 1 a subreg of the AND's
+    SImode 1, even from a `u8` `one`, and regmove copies it.
+  - The dead loads in `Player::HandleEvent` and
+    `ActionCtrl::HandleEvent`: jump2 merges a test's identical arms
+    after reload and leaves the test's load, because no flow pass runs
+    after it to delete it. Reproduced, but only with identical arms or
+    a dead store.
+  - `ReleaseHang`: reload's spill round-robin.
+  - `StartTornadoFall`'s entry: global priority, `this` with 8 refs over
+    38 insns ahead of entry's 4 over 26.
+  - `EndSpin`, and `StateCrouch`, where a block-local address takes r0
+    in local-alloc.
+  - `SpawnFlamethrowerLabAssistant`: the ROM's `str r3, [sp]` is
+    caller-save.c saving the lowest-ranked pseudo.
+
+  None of the per-object flags on the brief's list helped any of them.
 
 ## Survey and conversion record (#576)
 

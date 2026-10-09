@@ -5,7 +5,6 @@
 #include "level_state.hpp"
 
 extern "C" {
-#include "match.h"
 #include "level.h"
 #include "globals.h"
 }
@@ -46,20 +45,15 @@ static inline void SetMirrorFromRecord(MovingSprite *part, u16 index)
  * crate gem's position just above-left of it; in a vehicle a 0x28x0x28
  * entity.
  *
- * Kept from the C: four pins and a MATCH_KEEP. The ROM computes the
- * point's x and y into fresh registers (`subs r2, r1, #2`; `adds r3,
- * r0, #0; subs r3, #30`); g++ reuses their inputs, with every spelling
- * tried (locals, an inline setter, a point class with a constructor, a
- * loop around the stores), the same gap as SpawnCrateGemMarker
- * (spawn_pickups.cpp). The ROM's shape is the point built as one
- * `struct vec2` value in a register pair (r2:r3) and then stored: the C
- * compiler gives exactly that for an inline returning a `struct vec2`,
- * but g++ keeps a struct value in memory, so here it takes the pins.
- * #662 round 2 retried the C++ shapes: a `struct vec2` local copied whole
- * (assignment, initializer, or into the array through a cast) gets a
- * stack slot of its own (`sub sp, #20`), and one copied field by field is
- * split into two SImode registers that are offset in place (`subs r1,
- * #2`), never the r2:r3 pair. */
+ * The ROM computes the point's x and y into fresh registers (`subs r2,
+ * r1, #2`; `adds r3, r0, #0; subs r3, #30`): the point is one `struct
+ * vec2` value in a register pair (r2:r3), then stored. g++ holds it in
+ * DImode when it is assigned from a compound literal. A named `struct
+ * vec2` copied whole (an inline's return value, an initializer) goes
+ * through the implicit copy constructor, whose reference argument makes
+ * the source addressable, so it gets a stack slot of its own; one copied
+ * field by field is two SImode values offset in place (`subs r1, #2`).
+ * #662 round 3 (the C++ had four pins and a MATCH_KEEP). */
 void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     if (!gLevelState->IsInGemPath() && !gLevelState->IsInBonusRound() &&
@@ -71,19 +65,10 @@ void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         AddUpdateOnly(part);
     } else if (gPlayer->ctrlMode == 0) {
         Platform *pad = Platform::Create(arg0, arg1, arg2, arg3, 4);
+        struct vec2 point;
 
-        MATCH_HOLD_REG(s32, px, r1) = Q8_TO_INT(pad->x);
-        MATCH_HOLD_REG(s32, x, r2) = px - 2;
-        MATCH_HOLD_REG(s32, py, r0);
-        MATCH_HOLD_REG(s32, y, r3);
-        s32 point[2];
-
-        MATCH_KEEP(x);
-        py = Q8_TO_INT(pad->y);
-        y = py - 0x1E;
-        point[0] = x;
-        point[1] = y;
-        gLevelState->SetCrateGemPos(point);
+        point = (struct vec2){ Q8_TO_INT(pad->x) - 2, Q8_TO_INT(pad->y) - 0x1E };
+        gLevelState->SetCrateGemPos(&point.x);
     } else {
         Entity *part = Entity::Create(arg0, arg1, arg2, arg3);
 

@@ -9,7 +9,6 @@
 
 extern "C" {
 #include "core.h"
-#include "match.h"
 #include "hud.h"
 #include "util.h"
 #include "system.h"
@@ -152,7 +151,7 @@ extern "C" {
  * on it gives an `eor` in C++. The shared `_08023BA6` tail is ordinary
  * cross-jumping. The one-byte `direction` stack argument is a BLKmode
  * struct (see `struct fx_direction`), and the post-fade player-position
- * copy holds r0/r1 while the player pointer is loaded. */
+ * copy is a `struct vec2` compound literal. */
 /* The direction flag travels as a one-byte struct by value - the ROM
  * stores it into its stack slot with `strb`. The zero-length `pad`
  * makes the struct BLKmode, so the compound literal is stored straight
@@ -327,26 +326,16 @@ fade:
             }
         } else if (!(u8)IsInGemPathRoom() && gLevelState->IsInGemPath()) {
             struct vec2 point;
-            Player *pl;
-            MATCH_HOLD_REG(s32, hold, r0);
-            MATCH_HOLD_REG(s32, hold1, r1);
 
-            /* Hard-register hold (no code): with r0 and r1 live, the
-             * global's address and the player pointer both land in r2,
-             * as in the ROM. Unheld, the 8-byte copy loads through r0
-             * (`ldr r1, [r0, #4]; ldr r0, [r0]`); #662 round 2 also tried
-             * the copy as an inline returning the `struct vec2`, as a
-             * by-value argument of an inline calling SetCheckpoint (either
-             * argument order), as an aggregate initializer and as two
-             * `s32` locals, none of which keeps the pointer out of r0/r1. */
-            MATCH_HOLD(hold);
-            MATCH_HOLD(hold1);
-            pl = gPlayer;
-            /* End of the hold. */
-            MATCH_USE(hold);
-            MATCH_USE(hold1);
-            /* copied as one 8-byte struct (ldr; ldr; str; str) */
-            point = *(struct vec2 *)&pl->x;
+            /* The ROM loads the two words into r0 and r1 through the
+             * player pointer in r2. A compound literal is one DImode
+             * pseudo (r0:r1) set word by word and born before the
+             * global's address and the pointer are loaded, so both
+             * conflict with it and take r2. Through a `pl` local, the
+             * pointer dies in a DImode load and took r0 (`ldr r1, [r0,
+             * #4]; ldr r0, [r0]`) unless r0/r1 were held (#662 round 3,
+             * from the -dl dump). */
+            point = (struct vec2){ gPlayer->x, gPlayer->y };
             gLevelState->SetCheckpoint(0, &point.x);
         } else {
             s32 count = 0;

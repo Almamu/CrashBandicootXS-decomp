@@ -223,7 +223,7 @@ extern void SpawnDoubleJumpPower(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnTurboRunPower(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnStopwatch(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnBlueGem(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnCrateGemMarker(u32 arg, u32 arg1, u32 arg2, u16 arg3);
+extern void SpawnCrateGemMarker(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void *CreateTouchableSprite(u32 index, u32 tag, u32 field0A, u32 cx, u16 cy, u16 cw, u16 ch);
 extern void SpawnWumpa(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnHoverPlayerPosition(void);
