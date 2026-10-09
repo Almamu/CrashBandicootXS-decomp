@@ -2,6 +2,7 @@
 #include "vehicle.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "yeti.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -27,7 +28,7 @@ void PolarAkuAkuCrate::Update()
         palette = 1;
     }
 
-    if (animIndex != 0x12 && IsTouchingYeti(this)) {
+    if (animIndex != 0x12 && Yeti::IsTouching(this)) {
         gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         gLevelState->AddBrokenCrate();
         Break();

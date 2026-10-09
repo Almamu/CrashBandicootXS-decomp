@@ -1,6 +1,7 @@
 #include "vehicle.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "yeti.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -222,7 +223,7 @@ void PolarPlayer::FinishRun()
         gPolarFinishTimer = 0x16;
         SetCellAnimSpeed(0x24);
         LIMIT_MIN(gPolarPlayerVelY, 0);
-        StopYeti();
+        Yeti::Stop();
         gPolarPlayerInactive = 1;
         gPolarSteerEnabled = 0;
     }

@@ -1919,3 +1919,36 @@ SetState__10Hovercraftii SetHovercraftState
 StateInactive__10Hovercraft HovercraftStateInactive
 StateApproach__10Hovercraft HovercraftStateApproach
 StateExplodeStub__10Hovercraft HovercraftStateExplodeStub
+#
+# #772 Yeti: the yeti as an all-static class (include/yeti.hpp, src/vehicle/polar/yeti*.cpp,
+# StateStop in src/vehicle/jetpack/jetpack_spawn.cpp). Its data members keep
+# the C names: sym_iwram.txt places the IWRAM ones, the ROM tables are
+# defined in src/data under them (stateFuncs in actor_state_fn_17a840.cpp).
+Create__4Yetii CreateYeti
+Update__4Yeti UpdateYeti
+UpdateBg2__4Yeti UpdateYetiBg2
+Destroy__4Yeti DestroyYeti
+LoadGraphics__4Yeti LoadYetiGraphics
+Stop__4Yeti StopYeti
+IsTouching__4YetiP9ActorSelf IsTouchingYeti
+StateChase__4Yeti YetiStateChase
+StateCharge__4Yeti YetiStateCharge
+StateCaught__4Yeti YetiStateCaught
+StateStop__4Yeti YetiStateStop
+UpdatePalette__4Yeti UpdateYetiPalette
+BuildBg2Map__4YetiPUcUc BuildYetiBg2Map
+_4Yeti.anim gYeti
+_4Yeti.bg2Page gYetiBg2Page
+_4Yeti.bg2PageFlip gYetiBg2PageFlip
+_4Yeti.x gYetiX
+_4Yeti.position gYetiPosition
+_4Yeti.distance gYetiDistance
+_4Yeti.state gYetiState
+_4Yeti.paramsIndex gYetiParamsIndex
+_4Yeti.stateFuncs gYetiStateFuncs
+_4Yeti.chargeParams gYetiChargeParams
+_4Yeti.box gYetiBox
+_4Yeti.catchBox gYetiCatchBox
+_4Yeti.palette gYetiPalette
+_4Yeti.frames gYetiFrames
+_4Yeti.keyframes gYetiKeyframes

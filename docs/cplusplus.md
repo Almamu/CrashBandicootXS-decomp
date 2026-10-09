@@ -754,6 +754,8 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | level_state.hpp, save_data.hpp, menus.hpp, level_select.hpp, save_menu.hpp, `src/level/game_frame.cpp`, `src/menus/pause_menu_info.cpp`, `pause_menu_pages_init.cpp`, `src/save/save_menu_draw.cpp`, `save_menu_input.cpp`, `src/level/bonus_round.cpp`, `level_state.cpp` | the callers: `progress->CountGems()` & co.; LevelState's `progress`, `checkpointData` and `saveData`, the save slot's `progress` (`struct save_slot`, now save_data.hpp's), PauseMenu's and LevelSelect's pointers and `PackSaveData`/`UnpackSaveData`/`SummarizeProgress` are `GameProgress` | 0 | (unchanged) | 0 -> 0 | [#766](#the-progress-block-as-a-class-766) |
 | `src/bosses/hovercraft.cpp`, `hovercraft_state.cpp`, `src/data/actor_state_17c4c8.cpp` | `Hovercraft` (new include/hovercraft.hpp), an all-static class: its 31 IWRAM globals are static data members (`x` is gHovercraftX, `anim` gHovercraft, ...), its 30 functions static member functions (`Create`, `Spawn`, `Update`, `UpdateBg2`, `LoadGraphics`, `Destroy`, the getters `GetX`/`GetY`/`GetZ`/`GetState`/`GetLevel`/`GetAttack`/`GetPartsLeft`, `StartHitFlash`, `LosePart`, the six states, ...), gHovercraftStateFuncs is `Hovercraft::stateFuncs`; boss_actors.hpp's two inline helpers are its private inline members; bosses.h's 30 prototypes and 32 externs go (5 C-only prototypes stay for the category table) | 30 | (unchanged) | 0 -> 0 | [#772](#the-hovercraft-as-an-all-static-class-772) |
 | `src/bosses/hovercraft_cannon.cpp`, `hovercraft_launcher.cpp`, `hovercraft_side_gun.cpp`, `hovercraft_cannon_flash.cpp`, `src/level/level_state.cpp`, `src/vehicle/jetpack/jetpack_spawn.cpp` | the callers: `Hovercraft::GetX()` & co., `Hovercraft::Spawn(...)` | 0 | (unchanged) | 0 -> 0 | [#772](#the-hovercraft-as-an-all-static-class-772) |
+| `src/vehicle/polar/yeti.cpp`, `yeti_graphics.cpp`, `yeti_states.cpp`, `yeti_update.cpp`, `src/vehicle/jetpack/jetpack_spawn.cpp`, `src/data/actor_state_fn_17a840.cpp` (was .c) | `Yeti` (new include/yeti.hpp), an all-static class: its 8 IWRAM globals and 7 ROM tables are static data members (`anim` is gYeti, `x` gYetiX, `stateFuncs` gYetiStateFuncs, ...), its 13 functions static member functions (`Create`, `Update`, `UpdateBg2`, `Destroy`, `LoadGraphics`, `Stop`, `IsTouching`, the four states incl. jetpack_spawn.cpp's `StateStop`, `UpdatePalette`, `BuildBg2Map`); vehicle.h's 13 prototypes and 15 externs go (5 C-only prototypes stay for the category table) | 13 | (unchanged) | 0 -> 0 | [#772](#the-yeti-as-an-all-static-class-772) |
+| `src/vehicle/polar/polar_player.cpp`, `polar_player_states.cpp`, `polar_crate.cpp`, `polar_crates.cpp`, `polar_objects.cpp`, `polar_course_objects.cpp` | the callers: `Yeti::Stop()`, `Yeti::IsTouching(this)` | 0 | (unchanged) | 0 -> 0 | [#772](#the-yeti-as-an-all-static-class-772) |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -4367,6 +4369,42 @@ reasoning).
   gHovercraftPicture, gHovercraftAttacks, gHovercraftBox,
   gHovercraftKeyframes) stays C globals defined in src/data/*.c, declared
   in bosses.h like the other data tables.
+
+### The yeti as an all-static class (#772)
+
+The yeti (a bare AnimPart since the C++ conversion, with globals and plain
+functions of C linkage) is `Yeti` (include/yeti.hpp), all-static on the
+same grounds as the hovercraft: its 8 IWRAM variables (0x14BC-0x14D7) are
+loaded from separate addresses, even gYetiBg2Page and gYetiBg2PageFlip,
+adjacent bytes, in UpdateYetiBg2. Every object is byte-identical, the
+data objects included.
+
+- **Data.** The IWRAM variables are static data members, only declared:
+  `anim` (gYeti), `bg2Page`, `bg2PageFlip`, `x`, `position`, `distance`,
+  `state`, `paramsIndex`, mapped to their C names by cxx_symbols.txt's
+  `#772 Yeti` block. The ROM tables only the yeti reads are static members
+  too: `stateFuncs` (gYetiStateFuncs) is defined in
+  src/data/actor_state_fn_17a840.cpp (was .c) with the bare member names;
+  `chargeParams`, `box`, `catchBox`, `palette`, `frames` and `keyframes`
+  stay defined in their C data files under their C names
+  (actor_tables_17a728.c, anim_family_17aa6c.c, frame_table_17a880.c,
+  anim_frames_17a850.c, which hold other data too) and the block maps the
+  members onto those, as for the IWRAM ones. vehicle.h's 7 table externs
+  and 8 variable externs go. No local or parameter shadowed a member it
+  used (BuildBg2Map's `x` loop counter never read gYetiX).
+- **Functions.** All 13 are static member functions under their C names.
+  Public: the category table's five (`Create`, `Update`, `UpdateBg2`,
+  `Destroy`, `LoadGraphics`), `Stop` (the polar player) and
+  `IsTouching(ActorSelf *)` (the polar crates and objects:
+  `Yeti::IsTouching(this)`). Private: the four states, `UpdatePalette` and
+  the UNUSED `BuildBg2Map`. `StateStop` (YetiStateStop) stays at the start
+  of jetpack_spawn.cpp, across the flag boundary, defined there as
+  `Yeti::StateStop`. vehicle.h keeps the five slot prototypes for C only
+  (`#ifndef __cplusplus`), for actor_category_175558.c.
+- **Left outside.** yeti_graphics.cpp's `static inline FillDotPattern`
+  (LoadGraphics's inlined copy of the map loop) stays a file-local helper,
+  and gYetiRleFrames (the frames' pixels, rle_sprites_0c2758.c) a C
+  global that only frame_table_17a880.c names.
 
 ### Next batches
 

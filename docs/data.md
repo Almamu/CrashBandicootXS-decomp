@@ -224,7 +224,7 @@ The first batch (all pointer tables, all byte-exact):
 | `anim_family_178f80.c` | `0x08178F80` | categories 0-2: OBJ palette, animation table `gCategoryFamily0AnimTable`, keyframe and frame arrays (see "Category families") |
 | `actor_pmf_17a6b8.cpp` | `0x0817A6B8` | 1 actor PMF table, in C++ (`PolarPlayer::stateFuncs`, docs/cplusplus.md) |
 | `actor_tables_17a728.c` | `0x0817A728` | 5 small palettes, 4 `struct anim_box`, 6 threshold records |
-| `actor_state_fn_17a840.c` | `0x0817A840` | 4 state functions |
+| `actor_state_fn_17a840.cpp` | `0x0817A840` | 4 state functions, in C++ (`Yeti::stateFuncs`, docs/cplusplus.md) |
 | `anim_frames_17a850.c` | `0x0817A850` | 4 keyframes (`struct anim_frame_record`) |
 | `frame_table_17a880.c` | `0x0817A880` | 123 frame pointers |
 | `anim_family_17aa6c.c` | `0x0817AA6C` | a palette, 2 boxes, then categories 3-6: 2 OBJ palettes, animation table `gCategoryFamily1AnimTable`, keyframe and frame arrays |

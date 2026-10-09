@@ -1,4 +1,5 @@
 #include "actor_self.hpp"
+#include "yeti.hpp"
 
 extern "C" {
 #include "core.h"
@@ -17,7 +18,7 @@ extern "C" {
 /* `UpdateYeti`'s (yeti_update.cpp) shared AABB-overlap-test tail,
  * factored out as its own function taking `self` explicitly instead of
  * always reading the player global - used by `UpdatePolarCheckpointCrate`
- * (polar_course_objects.cpp, already matched, called as `IsTouchingYeti(self)`)
+ * (polar_course_objects.cpp, already matched, called as `Yeti::IsTouching(this)`)
  * among others. Same 12-byte `{s16 x, y, z, sizeX, sizeY, sizeZ}` record
  * shape and same self-copy-through-`MemCopy32` idiom as `UpdateYeti`
  * - see that function's doc comment for the full record-layout writeup.
@@ -35,15 +36,15 @@ extern "C" {
  * from sp instead of being kept in callee-saved registers, and only
  * `&f.b` goes through a pointer local across the `MemCopy32` call.
  * Needs old_agbcc (docs/matching/archive/issue-51-54-naked-retry.md). */
-u8 IsTouchingYeti(ActorSelf *self)
+u8 Yeti::IsTouching(ActorSelf *self)
 {
     struct {
         struct anim_box a, b, t;
     } f;
     struct anim_box *b;
 
-    f.a = gYetiBox;
-    BoxMove(&f.a, Q8_TO_INT(gYetiX), 0, Q8_TO_INT(gYetiPosition));
+    f.a = box;
+    BoxMove(&f.a, Q8_TO_INT(x), 0, Q8_TO_INT(position));
     f.t = self->box;
     BoxMove(&f.t, Q8_TO_INT(self->x), Q8_TO_INT(self->y), Q8_TO_INT(self->z));
     f.b = f.t;
@@ -86,7 +87,7 @@ static inline void FillDotPattern(u8 *dst, u8 seed)
     }
 }
 
-void LoadYetiGraphics(void)
+void Yeti::LoadGraphics()
 {
     u8 buf[0x100];
 
@@ -103,9 +104,9 @@ void LoadYetiGraphics(void)
         for (p = base + 0x3c; p >= base; p -= 4)
             *(u32 *)p = zero;
     }
-    gYetiBg2Page = 1;
-    gUnpackNibbleTilesFunc((u16 *)(gYeti->CurFrame() + 4), 1);
-    gYetiBg2PageFlip = 1;
-    UpdateYetiBg2();
-    UpdateYetiPalette();
+    bg2Page = 1;
+    gUnpackNibbleTilesFunc((u16 *)(anim->CurFrame() + 4), 1);
+    bg2PageFlip = 1;
+    UpdateBg2();
+    UpdatePalette();
 }

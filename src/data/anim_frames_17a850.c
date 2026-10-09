@@ -7,7 +7,7 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* The keyframes of the CreateYeti singleton (yeti.cpp, the yeti
+/* Yeti::keyframes (include/yeti.hpp): the keyframes of the yeti (yeti.cpp,
  * of compressed frame set B), with frame_table_17a880.c's
  * gYetiFrames as their frame table. */
 const struct anim_frame_record gYetiKeyframes[4] = {
