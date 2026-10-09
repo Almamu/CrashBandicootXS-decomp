@@ -99,7 +99,10 @@ u8 GAX2_init(struct GaxSongHeader *p)
      * round 4 (-dl/-dg): both are short pseudos; without the use the
      * size is 4 refs over 20 insns (2 * 4 / 20 = 0.40) against the
      * format pointer's 4 over 16 (0.50); the use gives 5 over 22
-     * (0.45), the pointer then 4 over 18 (0.44). */
+     * (0.45), the pointer then 4 over 18 (0.44). #662 round 7: a
+     * private agbcc with other allocno_compare formulas (refs / length,
+     * (log2 + 1) * refs / length, log2 * refs, refs * refs / length)
+     * leaves the plain code 102-480 lines off, against 88. */
     MATCH_USE(size);
     gGaxPlayerState->outHalf = 0;
     if (size < gGaxPlayerState->format->frames * 2)

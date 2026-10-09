@@ -117,7 +117,9 @@ u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, voi
          * merge (132 lines off). Round 6: the clamp and table load as an
          * inline `GaxPeriod(idx)` (u32 or s32 parameter, called with the
          * tuned pitch, before or after `inst` is set) is 101-107 lines
-         * off; the inline's return adds no join cse1 stops at. */
+         * off; the inline's return adds no join cse1 stops at. Round 7:
+         * no other matched function has a clamp feeding a table index
+         * (`cmp; bls; adds; lsls`) to compare spellings with. */
         if (idx > m) {
             idx = m;
             MATCH_KEEP(idx);
@@ -184,7 +186,14 @@ u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, voi
          * row is loaded again after it and `wave` is not spilled. The
          * ROM keeps the row in r9 across the call, so its `__muldi3`
          * was the const libcall and the kill is elsewhere. -fargument-
-         * noalias, -fno-strict-aliasing and the -f sweep don't help. */
+         * noalias, -fno-strict-aliasing and the -f sweep don't help.
+         * #662 round 7, private agbcc builds with the plain read (48
+         * lines off): gcse killing every load at any store (egcs 1.1's
+         * rule, before load_killed_in_block_p) is 224 lines off;
+         * alias.c without base_alias_check's "a stack reference can't
+         * alias a parameter" is 34 off, and unchanged (48) when only
+         * gcse's kill test drops it, so the item's stores are not what
+         * the ROM's PRE saw as the kill. */
         // clang-format off
         struct GaxMixItem item = {
             data, buf, pos, len << 11, frames, 0, vol, step, 0,

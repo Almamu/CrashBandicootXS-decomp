@@ -359,7 +359,15 @@ struct popup_glyph_src {
  * hid ReceiveChunk's product from cse1), a shift of an assigned copy
  * (`offset = slot; offset <<= 5;`), `(u16 *)palSlots[slot]` and an
  * indexed copy loop are all 396 lines off: each still has the shift of
- * `slot` itself (cse1 folds the copy), which PRE hoists. */
+ * `slot` itself (cse1 folds the copy), which PRE hoists.
+ * #662 round 7: the ROM's PRE does hoist this loop's `slot + 1` and
+ * `i + 1` to the y loop's preheader, so it is the shift alone it left.
+ * A private agbcp/agbcc whose gcse never PREs a shift compiles
+ * `(u16 *)(slot * 32 + (u32)palSlots)` as the ROM, but changes 46 other
+ * functions of the ROM. lcm.c's compute_latein has its two branches
+ * swapped (its comment makes the last block the special one); fixed, it
+ * changes no function of the ROM and keeps this hoist. No other matched
+ * function copies a palette into a cache slot. */
 void Credits::LoadLogos()
 {
     u8 (*palSlots)[TILE_SIZE_4BPP] = gPaletteCache->slots;

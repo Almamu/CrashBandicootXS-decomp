@@ -92,7 +92,13 @@ extern "C" {
  * #662 round 5: the inner copy as an inline CopyPacket(dst, src) taking
  * `id` or `this->id` (with or without the `id` local, the call taking
  * `this->id`) is 338-350 lines off against 366 for the plain code without
- * the references; `self` still takes r4 in all of them. */
+ * the references; `self` still takes r4 in all of them.
+ * #662 round 7: a private old_agbcp whose allocno_compare ranks by refs /
+ * length, (log2 + 1) * refs / length, log2 * refs or refs * refs /
+ * length leaves the plain code 78, 146, 220 and 162 lines off (146 with
+ * the stock formula); the same variants are further off for
+ * HandleSerial's `n` and GAX2_init's two uses, so no other priority rule
+ * explains these references. */
 s32 LinkSession::ResetState()
 {
     s32 i, j;

@@ -1552,6 +1552,34 @@ the new evidence is in each comment:
   -O3. None removes a workaround. -fno-strict-aliasing changes the GAX
   objects and credits.o, so strict aliasing is the compilers' default.
 
+**Round 7 in link/, save/, frontend/ and lib/gax (corpus and whole-ROM
+compiler tests).** 7 functions -> 7; the evidence is in each comment:
+
+- **Line numbers for the corpus.** Built with `-g` added to every
+  compile, all Thumb objects keep byte-identical code, and
+  `objdump -dl` maps each ROM instruction to its C line. An idiom
+  search (registers as roles) over that build prints the C behind each
+  hit.
+- **Whole-ROM test rig.** Private copies of all four Thumb compilers
+  with each hypothesis behind an environment switch, a full build per
+  setting, and a per-function objdump diff of every object against
+  stock. A hypothesis must leave the ROM `OK` with the natural form
+  in place.
+- **Zero collateral can be vacuous.** `SaveData::TestFlags`'s natural
+  form matches with no other change when regmove's optimize_reg_copy_1
+  skips a bare test right after the copy, but of the 42 places the
+  pass fires in the ROM only TestFlags meets that condition. The broader
+  rules it narrows are refuted: no move into a bare test changes
+  QueueVramDmaTransfer, whose ROM test sits on the copy. Count how many
+  other sites a rule touches before reading anything into zero.
+- **Refuted:** gcse not PREing shifts (46 functions), the lcm.c
+  `compute_latein` fix (inert: no function changes), any-store-kills-
+  every-load gcse, the stack-vs-parameter alias rule, four other
+  allocno_compare formulas, and cse trying wider constant modes widest
+  first. `LinkSession::Update` gets within 6 lines of natural code with
+  the ready test on a `u16` (the halfword-AND pair of 1s); what is left
+  is which of the two 1s each later use takes.
+
 **Round 6, the ConvertTiles masks, DingodileShieldCtrl::Update and
 itoa_arm (rewritten from the ROM).** Nothing freed; the comments carry
 the new evidence:
