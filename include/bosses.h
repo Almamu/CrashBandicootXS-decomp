@@ -48,7 +48,7 @@ struct spawn_timing {
 };
 
 /* The hovercraft's attack parameters, one per kind and level
- * (gHovercraftAttacks, src/data/singleton_kind_17c460.c). SpawnHovercraft
+ * (Hovercraft::attacks, src/data/singleton_kind_17c460.c). SpawnHovercraft
  * points gHovercraftAttack at one, and GetHovercraftAttack returns it. */
 struct hovercraft_attack {
     s32 hp;                        // 0x00 - copied to gHovercraftHp, which nothing reads
@@ -109,23 +109,23 @@ extern void SpawnAirshipFireball(s32 x, s32 y, s32 z);
  * hovercraft's variables are Airship's and Hovercraft's static members
  * (include/airship.hpp, include/hovercraft.hpp; #772). */
 
-/* src/data/boss_pictures_167ad4.c */
-extern const u16 gHovercraftPalette[256];
-/* The two boss pictures: a {cols, rows} head, then the frames (docs/data.md
- * "Boss pictures"). Each picture's struct is sized by its generated picture
+/* src/data/boss_pictures_167ad4.c: the two boss pictures, a {cols, rows}
+ * head, then the frames (docs/data.md "Boss pictures"). Each picture's struct is sized by its generated picture
  * header (build/.../boss_pictures/<addr>.h), so it is only complete in the
  * data file; the code reads the head through BOSS_PICTURE_SIZE, and finds
  * the frames from the palette (gAirshipPalette + 0x204). The airship's
  * tables (gAirshipPalette, gAirshipPicture, gAirshipAttacks,
  * gAirshipBox, gAirshipHitFlashPalettes, gAirshipKeyframes) are
- * Airship's static data members (include/airship.hpp). */
+ * Airship's static data members (include/airship.hpp), and the
+ * hovercraft's (gHovercraftPalette, gHovercraftPicture, gHovercraftAttacks,
+ * gHovercraftBox, gHovercraftKeyframes) Hovercraft's
+ * (include/hovercraft.hpp). */
 struct boss_picture_size {
     s16 cols;
     s16 rows;
 };
 struct airship_picture;    /* 4 frames */
 struct hovercraft_picture; /* 1 frame */
-extern const struct hovercraft_picture gHovercraftPicture;
 #define BOSS_PICTURE_SIZE(picture) ((const struct boss_picture_size *)&(picture))
 
 /* src/data/actor_tables_16c2d8.c */
@@ -147,11 +147,6 @@ extern const u8 gTinyRoundAnchors[3];
 /* src/iwram/iwram_data.cpp */
 extern u16 *gFlashBgPalette;
 extern u16 *gFlashObjPalette;
-
-/* src/data/singleton_kind_17c460.c */
-extern const struct hovercraft_attack gHovercraftAttacks[2];
-extern const struct anim_box gHovercraftBox;
-extern const struct anim_frame_record gHovercraftKeyframes[1];
 
 /* src/data/player_pmf_16c250.cpp */
 extern const struct entry_set gMegaMixMotionSet;

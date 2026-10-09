@@ -12,9 +12,10 @@
  * keep their C names the same way. Its weapons (include/boss_actors.hpp)
  * read it through the public getters.
  *
- * The ROM data it reads stays C globals of src/data/ (bosses.h):
- * gHovercraftPalette, gHovercraftPicture, gHovercraftAttacks,
- * gHovercraftBox and gHovercraftKeyframes. The actor category table
+ * The ROM tables only it reads are static data members too, defined in
+ * their src/data/*.c files under their C names (gHovercraftPalette, ...):
+ * a C++ reference to `_10Hovercraft.palette` is renamed to
+ * gHovercraftPalette. The actor category table
  * (src/data/actor_category_175558.c, C) names Create, Update, UpdateBg2,
  * Destroy and LoadGraphics by their C names (bosses.h). */
 
@@ -146,6 +147,15 @@ private:
     /* The picture's row addresses, as the AnimPart's u32 frame offsets
      * (ConvertTiles fills them; a u32 store may alias its heights[]). */
     static u32 mapFrames[]; // gHovercraftMapFrames
+
+    /* The ROM tables (src/data): attacks, box and keyframes are in
+     * singleton_kind_17c460.c, palette and picture in
+     * boss_pictures_167ad4.c. */
+    static const struct hovercraft_attack attacks[2];   // gHovercraftAttacks
+    static const struct anim_box box;                   // gHovercraftBox
+    static const struct anim_frame_record keyframes[1]; // gHovercraftKeyframes
+    static const u16 palette[256];                      // gHovercraftPalette
+    static const struct hovercraft_picture picture;     // gHovercraftPicture
 };
 
 #endif // GUARD_HOVERCRAFT_HPP

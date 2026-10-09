@@ -1856,7 +1856,8 @@ GetCompletionPercent__C12GameProgress GetCompletionPercent
 #
 # #772 Hovercraft: the hovercraft as an all-static class (include/hovercraft.hpp;
 # src/bosses/hovercraft.cpp, hovercraft_state.cpp). The data members are
-# only declared: these names get their addresses from sym_iwram.txt.
+# only declared: the IWRAM ones get their addresses from sym_iwram.txt, the
+# ROM tables are defined in src/data under their C names.
 _10Hovercraft.flashSavedColor gHovercraftFlashSavedColor
 _10Hovercraft.flashColorSaved gHovercraftFlashColorSaved
 _10Hovercraft.bg2Page gHovercraftBg2Page
@@ -1889,6 +1890,11 @@ _10Hovercraft.hitFlashOn gHovercraftHitFlashOn
 _10Hovercraft.gone gHovercraftGone
 _10Hovercraft.mapFrames gHovercraftMapFrames
 _10Hovercraft.stateFuncs gHovercraftStateFuncs
+_10Hovercraft.attacks gHovercraftAttacks
+_10Hovercraft.box gHovercraftBox
+_10Hovercraft.keyframes gHovercraftKeyframes
+_10Hovercraft.palette gHovercraftPalette
+_10Hovercraft.picture gHovercraftPicture
 UpdateHitFlash__10Hovercraft UpdateHovercraftHitFlash
 RunState__10Hovercraft RunHovercraftState
 StateCloseIn__10Hovercraft HovercraftStateCloseIn
