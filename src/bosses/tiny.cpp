@@ -79,7 +79,7 @@ void TinyCtrl::Update(MovingSprite *part)
     if (this->state == 8) {
         GetSpriteAttackBox(&a, gPlayer);
         GetSpriteBodyBox(&b, part);
-        if (a.w != 0 && AABB_VALID(b) && AabbOverlaps(&b, &a) && gPlayer->kind == 0x13)
+        if (a.w != 0 && AabbW(&b) && AabbOverlaps(&b, &a) && gPlayer->kind == 0x13)
             SetState(part, 9);
     } else if (gPlayer->dead == 0) {
         GetSpriteBodyBox(&a, gPlayer);
@@ -88,7 +88,7 @@ void TinyCtrl::Update(MovingSprite *part)
             a = b;
         }
         GetSpriteAttackBox(&b, part);
-        if (AABB_VALID(b) && a.w != 0 && AabbOverlaps(&b, &a))
+        if (AabbW(&b) && a.w != 0 && AabbOverlaps(&b, &a))
             HitPlayer(gPlayer);
     }
 

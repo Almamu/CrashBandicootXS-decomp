@@ -114,7 +114,7 @@ void DingodileCtrl::Update(MovingSprite *part)
     GetSpriteBodyBox(&hurt, part);
     if (this->state == 8 && gPlayer->kind == 0x13) {
         GetSpriteAttackBox(&box, gPlayer);
-        if (AABB_VALID(box) && AabbOverlaps(&box, &hurt)) {
+        if (AabbW(&box) && AabbOverlaps(&box, &hurt)) {
             counter++;
             SetState(part, 11);
         }
@@ -481,9 +481,11 @@ void DingodileShieldCtrl::Update(MovingSprite *part)
      * insn flow2 deletes after reload in the game (see enemy_ctrl.cpp's
      * oscillators), none fits two such values with no trace left;
      * forced spills of each pseudo don't move the globals (they are
-     * placed before reload). Reading the width through an inline
-     * accessor or `b.w`, and the C++ box getters, leave the
-     * allocation as it is. */
+     * placed before reload). The width read through aabb.h's AabbW
+     * (#802's BLKmode address mechanism, which replaced the volatile
+     * AABB_VALID here), `b.w`, pointer locals for the boxes, a player
+     * local and the C++ box getters all leave the allocation as it
+     * is. */
     MATCH_HOLD_REG(s32, hr5, r5);
     MATCH_HOLD_REG(s32, hr6, r6);
 
@@ -492,7 +494,7 @@ void DingodileShieldCtrl::Update(MovingSprite *part)
         MATCH_HOLD(hr6);
         GetSpriteAttackBox(&a, part);
         GetSpriteBodyBox(&b, gPlayer);
-        if (!AABB_VALID(b))
+        if (!AabbW(&b))
             b = GetSpriteAttackBox_s(gPlayer);
         /* end of the hold */
         MATCH_USE(hr5);
@@ -585,7 +587,7 @@ void DingodileProjectileCtrl::Update(MovingSprite *part)
             struct aabb b;
 
             GetSpriteBodyBox(&b, gPlayer);
-            if (!AABB_VALID(b))
+            if (!AabbW(&b))
                 b = GetSpriteAttackBox_s(gPlayer);
             if (AabbOverlaps(&a, &b)) {
                 HitPlayer(part);
