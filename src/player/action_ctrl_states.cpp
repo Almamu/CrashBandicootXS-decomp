@@ -568,7 +568,14 @@ void ActionCtrl::StateCrouch()
              * the ROM's register but comes after the `movs; negs`; the
              * bitfield store `mirrorBits.flipX = 1` is a halfword longer
              * and `*p = (*p & -0x11) | 0x10` loads an 0xEF mask (#662
-             * round 2). */
+             * round 2). Round 3: the plain pointer is a block-local
+             * pseudo, so local-alloc gives it r0, the first free
+             * register; the ROM's `adds r2, #0x28` is the address tied
+             * to the dying part copy (r2), as global-alloc's copy
+             * preference would place it. Through `part->mirror` with no
+             * pointer, the registers are the ROM's but reload forms the
+             * address (ldrb's offset is 0-31) next to the `ldrb`, after
+             * the mask. */
             volatile u8 *p = &part->mirror;
 
             m = -0x11;

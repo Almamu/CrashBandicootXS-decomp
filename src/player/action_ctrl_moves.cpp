@@ -30,10 +30,13 @@ void ActionCtrl::StartTornadoFall()
         return;
     tornadoFallQueued = 1;
     {
-        /* Two pins, both still needed in C++ (the C had seven and a
-         * hand-written jump table): unpinned, `this` and `entry` swap r2
-         * and r3, and the 0 for `slamBlocked` is loaded before the
-         * player's `flags2` (into r2, pushing the `ldrb` to r4). */
+        /* Pinned (the C had seven pins and a hand-written jump table):
+         * unpinned, `this` and `entry` swap r2 and r3. Global-alloc
+         * takes `this` first (priority 8 references over 38 insns
+         * against entry's 4 over 26), and `this` conflicts only with
+         * r0/r1, so it gets r2 (#662 round 3, from the -dg dump; u8 and
+         * s32 entries, QueueNowY and a local copy of the turn count all
+         * allocate the same). */
         MATCH_HOLD_REG(s32, entry, r2);
 
         switch (tornadoTurn) {
@@ -56,13 +59,12 @@ void ActionCtrl::StartTornadoFall()
         motionY = entry;
     }
 queued:
-    part->f.bytes.flags2 |= 1;
-    {
-        u8 *p = &slamBlocked;
-        MATCH_HOLD_REG(s32, zero, r0) = 0;
-
-        *p = zero;
-    }
+    /* Through ActOrFlags0D's pointer: as a member `|=` the expansion's
+     * dead `& 0` leaves a 0 that cse reuses for slamBlocked's store,
+     * loaded before the `ldrb` (an r0 pin on the 0 before; #662 round
+     * 3). */
+    ActOrFlags0D(part, 1);
+    slamBlocked = 0;
 }
 
 /* The end of a ground spin: the spin cooldown starts (12 frames). With
@@ -85,7 +87,15 @@ void ActionCtrl::EndSpin(u8 mode, s32 flags)
              * and flags right after the `and` stops combine from sinking
              * it into the test and regmove from retargeting it onto m2.
              * The natural `flags & L_BUTTON` ANDs into the constant's
-             * register instead. */
+             * register instead: both inputs die there and local-alloc
+             * ties the output to the constant's (block-local) pseudo,
+             * not to `flags` (live from the entry). #662 round 3: with
+             * `s32 m = L_BUTTON;` declared at the top of the function,
+             * `flags &= m` keeps the result in r2, but the constant is
+             * then built in r0 directly; the ROM's `adds r0, r1, #0`
+             * means two pseudos for it, the first still live after the
+             * AND, which no spelling tried (inline mask helpers, u32
+             * types, the mask as the AND's target) gives. */
             MATCH_CONST(m2, m);
             flags &= m2;
             asm volatile("" : "+r"(flags) : "r"(m));

@@ -64,7 +64,13 @@ static inline s32 IsBlinking(Player *p)
  *
  * The case bodies are in the ROM's block order. The ROM reloads the mask
  * level after the controller call of a masked hit and never uses it; only
- * a volatile read reproduces that load. */
+ * a volatile read reproduces that load. #662 round 3 found what leaves
+ * such a load in gcc 2.9: a test on it whose two arms jump2 merges after
+ * reload (no flow pass runs after jump2 to delete the load). Both
+ * `if (maskLevel != MASK_LEVEL_NONE) { spawn } else { the same spawn }`
+ * and a dead `if (maskLevel == MASK_LEVEL_NONE) m = 0;` before `m`'s
+ * store give the ROM's load (the second the whole object), but neither
+ * is source anyone wrote, so the volatile read stays. */
 void Player::HandleEvent(s32 from, s32 event, s32 arg)
 {
     switch (event) {
