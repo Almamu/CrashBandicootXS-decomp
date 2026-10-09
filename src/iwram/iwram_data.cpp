@@ -124,8 +124,8 @@ void (*gUnpackNibbleTilesFunc)(u16 *src, s32 lowBlock) = UnpackNibbleTiles;
 s32 gJetpackPlaneHopSpeeds[6] = { 0x1555, 0x1155, 0xD55, 0x955, 0x555, 0x155 };
 
 /* Palette RAM addresses (hovercraft.cpp, hovercraft_state.cpp). */
-u16 *gFlashBgPalette = (u16 *)(PLTT + 0x20);
-u16 *gFlashObjPalette = (u16 *)(PLTT + 0x340);
+u16 *gFlashBgPalette = (u16 *)(BG_PLTT + PALETTE_SIZE_16);
+u16 *gFlashObjPalette = (u16 *)(OBJ_PLTT + 10 * PALETTE_SIZE_16);
 
 /* title_screen.cpp: the four OBJ sprite packages of
  * src/data/level_gfx_17cff4.c. */

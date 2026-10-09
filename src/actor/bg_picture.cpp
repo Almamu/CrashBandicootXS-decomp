@@ -19,8 +19,9 @@ extern "C" {
  * - `LoadBgPicture(pic)`: DMA3-copies `pic`'s 0x200-byte palette to
  *   PLTT, reads cols/rows and the tile count (a `struct
  *   bg_picture_header`), runs the loop over the map at +0x208 with the
- *   nibbles after the tiles, then enables BG1 (DISPCNT |= 0x200, BG1CNT =
- *   0x5A07) and DMA3-copies the tiles to VRAM + GetCellAnimFreeTile() * 32.
+ *   nibbles after the tiles, then enables BG1 (priority 3, char block 1,
+ *   screen block 26, 512x256) and DMA3-copies the tiles to VRAM +
+ *   GetCellAnimFreeTile() * 32.
  * - `FillBgPictureMap(nibbles, map, cols, rows)`: the same loop on explicit
  *   arguments.
  *
@@ -83,7 +84,7 @@ void LoadBgPicture(u8 *pic)
     u32 tiles;
     u8 *tileData;
 
-    DmaCopy16(3, pic, (void *)PLTT, 0x200);
+    DmaCopy16(3, pic, (void *)PLTT, BG_PLTT_SIZE);
     cols = ((struct bg_picture_header *)pic)->cols;
     rows = ((struct bg_picture_header *)pic)->rows;
     pic += 0x204;
@@ -92,7 +93,7 @@ void LoadBgPicture(u8 *pic)
     tileData = pic + ((cols * rows + 1) / 2) * 4;
     MapFill(tileData + tiles * 32, (u16 *)pic, cols, rows);
     REG_DISPCNT |= DISPCNT_BG1_ON;
-    REG_BG1CNT = 0x5A07;
+    REG_BG1CNT = BGCNT_PRIORITY(3) | BGCNT_CHARBASE(1) | BGCNT_SCREENBASE(26) | BGCNT_TXT512x256;
     {
         void *vd = (void *)(VRAM + GetCellAnimFreeTile() * 32);
 

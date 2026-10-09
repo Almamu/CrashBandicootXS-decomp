@@ -39,7 +39,7 @@ static inline u32 ExpandNibble(u32 nibble)
  * 15 (colour 0 stays 0). Called by yeti_update.cpp/yeti_graphics.cpp. */
 void UnpackNibbleTiles(u16 *src, s32 lowBlock)
 {
-    u32 *dst = lowBlock ? (u32 *)(BG_VRAM + 0x8000) : (u32 *)(BG_VRAM + 0xA000);
+    u32 *dst = lowBlock ? (u32 *)BG_CHAR_ADDR(2) : (u32 *)(BG_CHAR_ADDR(2) + 0x2000);
     u32 *end = (u32 *)((u8 *)dst + 0x1900);
 
     while (dst != end) {

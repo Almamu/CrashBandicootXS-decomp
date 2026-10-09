@@ -73,7 +73,7 @@ extern void SetCheckpointAtPlayer_1(void *self) asm("SetCheckpointAtPlayer");
  * result. */
 static inline s32 RunCategoryPauseMenu(struct dma_regs *dma)
 {
-    void *buf = mem_alloc(0x200, 0x80000000);
+    void *buf = mem_alloc(OBJ_PLTT_SIZE, MEM_HEAP_IWRAM);
     s32 result;
 
     dma->src = OBJ_PLTT;
@@ -225,7 +225,7 @@ s32 InitActorCategory(s32 category)
     FreeSpriteFrameOamQueue();
     FreeObjTileFreeList();
     FreeCategorySpriteSheet();
-    REG_DISPCNT = 0x41;
+    REG_DISPCNT = DISPCNT_MODE_1 | DISPCNT_OBJ_1D_MAP;
     *(vu16 *)PLTT = 0;
     return ret;
 }

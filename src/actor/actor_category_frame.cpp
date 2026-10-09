@@ -90,7 +90,9 @@ s32 RunActorCategoryFrame(void)
     } else {
         while (SUB_EFFECT_DUE()) {
             gActorCategoryVtable->spawn(
-                (struct actor_spawn *)((u8 *)gActorSpawnTable + (gActorSpawnIndex * 0x14 + 8)),
+                (struct actor_spawn *)((u8 *)gActorSpawnTable +
+                                       (gActorSpawnIndex * sizeof(struct sub_effect_record) +
+                                        offsetof(struct sub_effect_record, kind))),
                 gActorSpawnUseBonus, INT_TO_Q8(gActorSpawnOffset));
             gActorSpawnIndex++;
         }

@@ -81,18 +81,21 @@ void SelectActorCategory(s32 type, struct sub_effect_record *table,
 
     t = gActorSpawnTable;
     for (; gActorSpawnIndex < t->link &&
-           (off = gActorSpawnIndex * 0x14, tb = (u8 *)t + 0x14, *(s32 *)(tb + off)) <
-               gActorCategoryVtable->skipDistance + base;
+           (off = gActorSpawnIndex * sizeof(struct sub_effect_record),
+           tb = (u8 *)t + sizeof(struct sub_effect_record),
+           *(s32 *)(tb + off)) < gActorCategoryVtable->skipDistance + base;
          gActorSpawnIndex++)
         ;
-    gActorDrawList = (ActorSelf **)mem_alloc(0xc8, MEM_HEAP_IWRAM);
+    gActorDrawList = (ActorSelf **)mem_alloc(50 * sizeof(ActorSelf *), MEM_HEAP_IWRAM);
     if (gActorCategoryVtable->createBoss != NULL)
         gActorCategoryVtable->createBoss(variant);
     while (gActorSpawnIndex < gActorSpawnTable->link &&
            *NextThreshold(gActorSpawnTable, gActorSpawnIndex) <=
                gActorCategoryVtable->spawnDistance + base) {
         gActorCategoryVtable->spawn(
-            (struct actor_spawn *)((u8 *)gActorSpawnTable + (gActorSpawnIndex * 0x14 + 8)),
+            (struct actor_spawn *)((u8 *)gActorSpawnTable +
+                                   (gActorSpawnIndex * sizeof(struct sub_effect_record) +
+                                    offsetof(struct sub_effect_record, kind))),
             gActorSpawnUseBonus, 0);
         gActorSpawnIndex++;
     }
