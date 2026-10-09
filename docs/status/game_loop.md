@@ -78,7 +78,9 @@ system from "core" system startup/init code.
 - `src/level/tile_cache.c` (GitHub issue #40): `DestroyTileCache`,
   `InitTileCache`, `GetTerrainType` (plain C, built with old_agbcc - see
   [game-loop-old-agbcc.md](../matching/archive/game-loop-old-agbcc.md))
-- `src/level/collision_map.cpp` (GitHub issue #40): `GetCollisionCell`,
+- `src/level/collision_map.cpp` (GitHub issue #40; since #770
+  `src/level/tile_cache_cell.cpp` up to `SetCollisionSource` and
+  `src/level/entity_bitmap.cpp` from `SetBitmapBit`): `GetCollisionCell`,
   `SetCollisionSource`, `SetBitmapBit`, `ClearBitmapBit`, `ClearBitmap`,
   `InitBitmap` - the terrain tile-record decode cache's constructor,
   a raw-cell-lookup variant, a floor-div-by-32 bitmap set/clear pair,

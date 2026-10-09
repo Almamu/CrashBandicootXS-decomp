@@ -307,7 +307,7 @@ COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(PooledBgLayer) == 0x60);
  * to the record grid. It has no vtable. Its methods are in
  * src/level/tile_cache.cpp (GetChunk, the terrain lookups, DecodeChunk,
  * the constructor, destructor and GetTerrainType) and
- * src/level/collision_map.cpp (GetCell, SetSource). */
+ * src/level/tile_cache_cell.cpp (GetCell, SetSource). */
 class TileCache
 {
 public:

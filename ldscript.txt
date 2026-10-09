@@ -191,6 +191,7 @@ SECTIONS
         build/crashbandicootxs/src/level/bg_layer_base.o(.text);
         build/crashbandicootxs/src/level/tile_cache.o(.text);
         build/crashbandicootxs/src/level/tile_cache_cell.o(.text);
+        build/crashbandicootxs/src/level/entity_bitmap.o(.text);
         build/crashbandicootxs/src/level/room_entities.o(.text);
         build/crashbandicootxs/src/level/entity_flags.o(.text);
         build/crashbandicootxs/src/level/drop_extra_life.o(.text);

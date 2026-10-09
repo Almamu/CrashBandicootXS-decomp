@@ -85,7 +85,7 @@ extern void StepCameraFacing(struct camera *cam);
 extern void SnapCamera(struct camera *cam);
 extern void UpdateCamera(struct camera *cam);
 
-/* src/level/collision_map.cpp */
+/* src/level/entity_bitmap.cpp (UNUSED) */
 extern s32 SetBitmapBit(void *self, s32 n);
 extern void ClearBitmapBit(void *self, s32 n);
 extern void ClearBitmap(void *dst);
