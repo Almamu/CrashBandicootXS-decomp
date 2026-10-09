@@ -681,7 +681,7 @@ counts them by kind) and what the C++ needed when it was converted.
 | `src/vehicle/yeti_update.cpp` | none (C linkage): `PolarPlayer::Catch`, `AnimPart::GetAnimFrameBaseOffset`/`RestartAnim` | 0 + 3 | old_agbcp (old_agbcc C already) | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
 | `src/level/bonus_round.cpp` | none (C linkage) | 0 + 2 | agbcp | 1 pin -> 1 pin | [everywhere](#c-everywhere-actor-vehicle-level) |
 | `src/level/camera.cpp` | the camera (C linkage) and the global `operator new`, `new[]`, `delete`, `delete[]` | 0 + 8 | agbcp | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
-| `src/level/collision_map.cpp` | none (C linkage) | 0 + 6 | agbcp | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
+| `src/level/collision_map.cpp` (since #770 `tile_cache_cell.cpp` and `entity_bitmap.cpp`) | none (C linkage) | 0 + 6 | agbcp | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
 | `src/level/room.cpp` | none (C linkage): the PaletteCache, ObjVramCursor, OamBuffer and LevelLayers calls are methods | 0 + 5 | agbcp | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
 | `src/level/terrain.cpp` | none (C linkage) | 0 + 5 | agbcp | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
 | `src/level/terrain_probe.cpp` | none (C linkage) | 0 + 1 | agbcp | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
@@ -691,7 +691,7 @@ counts them by kind) and what the C++ needed when it was converted.
 | `src/iwram/iwram_data.cpp` | the IWRAM image's initialised globals; `gSaveMenu`, `gLevelSelect`, `gLevelLayersSingleton`, `gActorList`, `gLanguageSelect` and `gHeapSortActorsByKeyFunc` defined with their C++ types | 0 | agbcp | 0 -> 0 | all-C++: link, save, iwram |
 | `src/iwram/string_arm.cpp`, `sprite_arm.cpp` | none: the IWRAM image's ARM routines, C linkage; HeapSortActorsByKey takes `ActorSelf **` | 5 + 5 | agbcp_arm_patched (new; agbcc_arm_patched C) | 0 -> 0 | all-C++: link, save, iwram |
 | `src/level/tile_slot_pool.cpp` (again) | `TileSlotPool` (include/bg_layer.hpp; was the file-local struct tile_slot_pool): `Reset`, `Acquire`, `Release`, `Upload`, `SetSource` (the C names stay), its five `static inline` helpers private inline methods | 5 | old_agbcp | 0 -> 0 | [#752](#the-tile-slot-pool-the-tile-cache-and-the-bg-setup-752-753) |
-| `src/level/bg_layer_base.cpp`, `collision_map.cpp`, `tile_cache.cpp` (again) | `TileCache` (include/bg_layer.hpp; level.h's struct tile_cache's fields move into it): `GetChunk` (GetCollisionChunk), `GetTerrainHeights`, `GetSolidTerrainHeights`, `GetSolidTerrainModeValue`, `DecodeChunk` (DecodeCollisionChunk); `GetCell` (GetCollisionCell), `SetSource` (SetCollisionSource); `GetTerrainType`; the two files' `GetCell` inline is the private `CellAt` | 5 + 2 + 1 | old_agbcp, agbcp, old_agbcp | 1 use -> 1 use (DecodeChunk's `MATCH_USE(n)`) | [#752](#the-tile-slot-pool-the-tile-cache-and-the-bg-setup-752-753) |
+| `src/level/bg_layer_base.cpp`, `collision_map.cpp`, `tile_cache.cpp` (again; since #770 all in `tile_cache.cpp` and `tile_cache_cell.cpp`) | `TileCache` (include/bg_layer.hpp; level.h's struct tile_cache's fields move into it): `GetChunk` (GetCollisionChunk), `GetTerrainHeights`, `GetSolidTerrainHeights`, `GetSolidTerrainModeValue`, `DecodeChunk` (DecodeCollisionChunk); `GetCell` (GetCollisionCell), `SetSource` (SetCollisionSource); `GetTerrainType`; the two files' `GetCell` inline is the private `CellAt` | 5 + 2 + 1 | old_agbcp, agbcp, old_agbcp | 1 use -> 1 use (DecodeChunk's `MATCH_USE(n)`) | [#752](#the-tile-slot-pool-the-tile-cache-and-the-bg-setup-752-753) |
 | `src/level/pooled_bg_layer.cpp`, `level_layers.cpp`, `terrain.cpp`, `terrain_probe_axes.cpp` (again) | callers: `pool->Acquire(...)`, `tiles->SetSource(...)`, `tiles->GetTerrainType(...)` & co.; level.h's struct level_layers holds a `TileCache *` for C++ | 0 | (unchanged) | 0 -> 0 | [#752](#the-tile-slot-pool-the-tile-cache-and-the-bg-setup-752-753) |
 | `src/gfx/graphics_package.cpp` (again) | `BgSetup` (new include/graphics_package.hpp; was graphics_package.h's struct bg_setup): constructor (InitBgSetup), `Load` (LoadGraphicsPackage), `GetControl` (GetBgSetupControl); `ScaledSprite` (was the file-local struct gfx_box_obj; all UNUSED): `Fit`, `Draw`, `SetColor`, `SetPriority`, `SetPos`, `ResetAttrs` | 3 + 6 | old_agbcp | 0 -> 0 | [#753](#the-tile-slot-pool-the-tile-cache-and-the-bg-setup-752-753) |
 | `src/menus/pause_menu.cpp`, `power_dialog.cpp`, `level_select_pages.cpp`, `level_select.cpp`, `continue_prompt_init.cpp`, `src/save/save_menu_ui.cpp`, `src/frontend/language_select_setup.cpp` (again) | callers: `BgSetup` members built in the mem-initializer list, stack ones declared at their construction, `new BgSetup(...)`; `bg.Load(...)`, `bg.GetControl()` | 0 | (unchanged) | 0 -> 0 | [#753](#the-tile-slot-pool-the-tile-cache-and-the-bg-setup-752-753) |
@@ -3955,8 +3955,8 @@ stay (cxx_symbols.txt's `#752` and `#753` blocks):
   constructor allocates it with `new TileSlotPool` (no constructor: the
   ROM's plain OperatorNew) and its Reset empties it.
 - **TileCache** (include/bg_layer.hpp, LevelLayers' `tiles`) had only its
-  constructor and destructor; its eight lookups (bg_layer_base.cpp,
-  collision_map.cpp, tile_cache.cpp) are methods now, and level.h's
+  constructor and destructor; its eight lookups (tile_cache.cpp and
+  tile_cache_cell.cpp since #770) are methods now, and level.h's
   struct tile_cache, its base, is gone: the fields are the class's, and
   struct level_layers (the probes' C view) holds a `class TileCache *`
   for C++ (C sees an opaque `struct tile_cache *`). The `GetCell` inline
