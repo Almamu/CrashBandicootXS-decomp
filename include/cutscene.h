@@ -18,9 +18,9 @@
  *
  * The slideshow and the cutscene player are C++ classes
  * (include/cutscene.hpp) with no C view. The background streamer and
- * layer classes in cutscene_player.cpp
- * (BgStreamer, BgLayerBase: include/bg_layer.hpp) only share its ROM
- * range.
+ * layer classes that follow cutscene_player.cpp in the ROM
+ * (BgStreamer, BgLayerBase: include/bg_layer.hpp; src/level/bg_streamer.cpp
+ * and bg_layer_base.cpp) only share its ROM range.
  */
 
 /* One slide. */

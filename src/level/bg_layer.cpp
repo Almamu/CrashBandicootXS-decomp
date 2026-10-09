@@ -17,7 +17,7 @@ extern "C" {
  * The layer keeps a 32x32-entry window of the level's tile map resident in
  * its BG screen block: `rowLo..rowHi` / `colLo..colHi` are the resident
  * tile row / column ranges, and the streamer (BgStreamer::GetColumn/GetRow,
- * cutscene_player.cpp) resolves a (column, row) of the level map to its
+ * bg_streamer.cpp) resolves a (column, row) of the level map to its
  * ring-buffer entries. Screen entries wrap modulo 32 on both axes.
  *
  * The base layer copies map entries straight into the screen block.

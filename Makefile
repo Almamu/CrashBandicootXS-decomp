@@ -365,6 +365,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/level/game_frame.o \
                   $(C_BUILDDIR)/level/run_room.o \
                   $(C_BUILDDIR)/cutscene/cutscene_player.o \
+                  $(C_BUILDDIR)/level/bg_streamer.o \
                   $(C_BUILDDIR)/level/room_frame.o \
                   $(C_BUILDDIR)/level/play_room.o \
                   $(C_BUILDDIR)/level/level_state.o \

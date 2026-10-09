@@ -7,8 +7,9 @@
  * gPooledBgLayerVtable, and the level-layers singleton that owns them.
  *
  * No `#pragma interface`: g++ emits each vtable in the object that
- * defines the class's key method, its destructor (BgStreamer's and
- * BgLayerBase's in src/cutscene/cutscene_player.cpp, PooledBgLayer's in
+ * defines the class's key method, its destructor (BgStreamer's in
+ * src/level/bg_streamer.cpp, BgLayerBase's in src/level/bg_layer_base.cpp,
+ * PooledBgLayer's in
  * src/level/tile_slot_pool.cpp; BgLayer's is inline, so its key method is
  * Reset, in src/level/bg_layer.cpp),
  * and ldscript.txt places them at their ROM addresses (docs/cplusplus.md,
@@ -30,7 +31,7 @@ extern "C" {
  * 128x64-pixel chunk (`tileX`, `tileY`). `subX`/`subY` are the ring's
  * block (mod 4) at the window's left and top edges. Scroll streams in
  * the chunk row or column the camera has just reached, Fill seeds the
- * whole window. Its code is in src/cutscene/cutscene_player.cpp. */
+ * whole window. Its code is in src/level/bg_streamer.cpp. */
 class BgStreamer
 {
 public:
@@ -65,8 +66,7 @@ public:
 COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(BgStreamer) == 0x24);
 
 /* A scrolling layer's position and size (0x34 bytes): the base of
- * BgLayer. Its methods are in src/cutscene/cutscene_player.cpp and
- * src/level/bg_layer_base.cpp. Scroll scales a move by the layer's
+ * BgLayer. Its methods are in src/level/bg_layer_base.cpp. Scroll scales a move by the layer's
  * parallax factors and steps the position by it, ClampScrollStep (virtual)
  * limiting each axis's step. */
 class BgLayerBase

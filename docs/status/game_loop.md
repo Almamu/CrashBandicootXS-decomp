@@ -46,7 +46,10 @@ system from "core" system startup/init code.
   lazily initialize this object - GitHub issue #37's last standing
   gap) - all matched as real C, no `NAKED` fallbacks needed. See
   [docs/matching/archive/issue-35-36-0x080231cc-game-loop.md](../matching/archive/issue-35-36-0x080231cc-game-loop.md)
-- `src/cutscene/cutscene_player.c` (new file, GitHub issue #39): `InitSlideshow`-
+- `src/cutscene/cutscene_player.c` (new file, GitHub issue #39; since #770
+  `InitSlideshow`-`InitCutscenePlayer` there, the `BgStreamer` functions in
+  `src/level/bg_streamer.cpp` and the `BgLayerBase` ones at the head of
+  `src/level/bg_layer_base.cpp`): `InitSlideshow`-
   `StepBgLayerScroll` (25 functions) - extends `struct SoundChannelList`
   (slideshow.c/slideshow_display.c) with more fields, plus the "visual scrolling
   background streamer" family (docs/rom_map.md): a circular 4x4-block

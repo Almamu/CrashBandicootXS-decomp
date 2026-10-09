@@ -68,7 +68,7 @@ the appendix.
 | `08167AD4`-`0817E78C` | 92,180 | 200 small/mid tables: gameplay, menus, HUD, actors, text (the built sfx table sits in between) | direct, see appendix | mostly high | easy (a few medium) |
 | `0817E78C`-`0817E7AC` | 32 | `u16[16]` | `InitLanguageSelectGraphics` | high | **done** (C) |
 | `0817E7AC`-`0824B638` | 839,308 | level tile sets 1-3 (tag-0x00 raw 8bpp tiles) | `bg_layer.c` via `bg_layer_desc.tileData` | high | **done** (grit) |
-| `0824B638`-`08270F08` | 153,808 | per-room level data, 33 rooms | `level_layers.c`, `collision_map.cpp`, `cutscene_player.c`, `room_entities.cpp` | high | **done** (C, [levels.md](./levels.md)) |
+| `0824B638`-`08270F08` | 153,808 | per-room level data, 33 rooms | `level_layers.c`, `collision_map.cpp`, `bg_streamer.cpp`, `room_entities.cpp` | high | **done** (C, [levels.md](./levels.md)) |
 | `08270F08`-`082B91D0` | 295,624 | level tile sets 4-5 | as tile sets 1-3 | high | **done** (grit) |
 | `082B91D0`-`082BF120` | 24,400 | per-room level data, 8 rooms | as block 1 | high | **done** (C) |
 | `082BF120`-`084A4660` | 1,987,904 | sprite tile pool for the 56 sprite banks | `affine_sprite_pieces.cpp`/`sprite_pieces.cpp` (`GetSpriteTileBase` + frame offset) | high | **done** (grit) |
@@ -278,7 +278,7 @@ Walking them:
   ... `08270BCC` (33) and `082B9ED0` ... `082BEADC` (8).
 - `struct bg_layer_desc` (0x20, `bg_layer.c`): `u16 *chunkGrid`,
   `u32 assetOffset` (the streamers use `level asset + assetOffset` as
-  their decode base, `collision_map.cpp`/`cutscene_player.c`), `tileData`,
+  their decode base, `collision_map.cpp`/`bg_streamer.cpp`), `tileData`,
   `scaleX`, `scaleY`, `cnt`, grid width/height in chunks
   (`+0x16`/`+0x18`), size in tiles (`+0x1A`/`+0x1C`).
 - `tileData` is either one of the built LZ77 tile sets
