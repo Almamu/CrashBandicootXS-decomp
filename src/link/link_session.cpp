@@ -78,7 +78,20 @@ extern "C" {
  * written with inline copies of both (`Start(((REG_SIOCNT >> 2) & 1) ==
  * 0)`, `Stop(); SetupSio(); return 0;`) compiles to this code except
  * the 1s (48 lines off without the keeps): the argument copy is cse'd
- * like the local, so there is still one 1 and a bic. */
+ * like the local, so there is still one 1 and a bic.
+ * #662 round 7: the ROM's two 1s are the halfword-AND idiom of the
+ * matched ActionCtrl states: Thumb has no HImode AND, so expand loads
+ * an HImode 1, gives up and redoes the AND in SImode with a new 1. With
+ * the ready test on a `u16` (`u16 v = REG_SIOCNT >> 3; if ((v & 1) ==
+ * 0)`), `started = 1`, `arm3 = (REG_SIOCNT >> 2) ^ 1; arm3 &= 1;`,
+ * `REG_IME = 1` and no keeps, the code is 6 lines off: r1 and r9 hold
+ * the two 1s as in the ROM, but the ROM stores `started` from r9 (the
+ * AND's) and does the eor and the and with r1, where cse gives
+ * `started` (QImode, wider modes tried narrowest first) the HImode 1
+ * and the and the SImode one. About 300 variants (the test's and
+ * arm3's types and forms, statement order, an inline copy of Start, a
+ * `MATCH_KEEP` between eor and and) don't move them, nor does a
+ * private cse that tries the wider modes widest first (66 lines). */
 s32 LinkSession::Update()
 {
     s32 arm3;
@@ -396,7 +409,9 @@ void LinkSession::HandleSerial(u16 *data)
                  * shifted from (r8, which dies there) and copies it to
                  * low registers at each use. Tried: `n` as u8/u32, from
                  * the nibble bitfield, declared first, block-local
-                 * around the push, and totalReceived before the push. */
+                 * around the push, and totalReceived before the push.
+                 * #662 round 7: no other global.c priority formula gives
+                 * it either (see LinkSession::ResetState). */
                 MATCH_USE(n);
                 p->ring.Push(&p->id[2], n);
                 p->totalReceived += n;

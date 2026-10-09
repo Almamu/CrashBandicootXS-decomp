@@ -395,7 +395,19 @@ u8 SaveData::IsSlotEmpty(s32 rowIndex)
  * (`return v != 0 ? 1 : v;` stores v to the result before the branch,
  * the ROM's order, but regmove still moves the test onto the result; a
  * u8 result folds to the neg/orr/lsr store-flag), and the -f flags,
- * -O1 and -O3 on the object. */
+ * -O1 and -O3 on the object.
+ * #662 round 7: no matched function has the ROM's copy-then-test-the-
+ * source idiom (`adds r0, r1, #0; cmp r1, #0` with r1 dying at the
+ * test); the 25 that copy a register before comparing the source keep
+ * the source live past the compare. Whole-ROM tests of a private build
+ * (all four Thumb compilers) with the round-4 form here: no
+ * optimize_reg_copy_1 into any test changes 15 other functions, into a
+ * bare register test 1 (QueueVramDmaTransfer, whose ROM test does sit
+ * on the copy), when DEST is set again in the block 7. Skipping it only
+ * for a bare test right after the copy, or only for a bare test whose
+ * DEST is set again, compiles everything as the ROM, but of the 42
+ * places the pass fires in this ROM only this one meets either
+ * condition, so nothing corroborates them. */
 u8 SaveData::TestFlags(u8 mask)
 {
     MATCH_HOLD_REG(u8, v, r1);
