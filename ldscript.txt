@@ -92,7 +92,6 @@ SECTIONS
         build/crashbandicootxs/src/objects/moving_sprite.o(.text);
         build/crashbandicootxs/src/objects/moving_sprite_collide.o(.text);
         build/crashbandicootxs/src/objects/ground_sprite_collide.o(.text);
-        build/crashbandicootxs/src/objects/ground_sprite_update.o(.text);
         build/crashbandicootxs/src/objects/ground_sprite.o(.text);
         build/crashbandicootxs/src/player/player_reset.o(.text);
         build/crashbandicootxs/src/player/player_collide.o(.text);
