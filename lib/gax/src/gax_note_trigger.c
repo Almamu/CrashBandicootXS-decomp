@@ -41,7 +41,12 @@ struct GaxMixItem {
     s32 pos; /* Q11 sample position */
     s32 end; /* Q11 end/turn-around position */
     u32 frames;
-    u32 done; /* samples written so far */
+    /* samples written so far: the ARM routine advances it behind gcc's
+     * back, and the ROM reads it again at every use (GaxZeroFill's two
+     * arguments load it twice in a row, which only a volatile access
+     * does). #662 round 4: as a volatile field the rest of the item is
+     * plain, and the item itself needs no volatile qualifier. */
+    volatile u32 done;
     u32 volume;
     u32 step; /* Q11 per output sample */
     u32 mode;
@@ -101,7 +106,15 @@ u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, voi
          * the ROM's code reads as is 256 lines off. cse1 carries `row * 28`
          * across the join and keeps the row in r9, which costs a stack
          * slot. With -fno-cse-skip-blocks it is still 151 lines off, and
-         * the other swept flags are worse. */
+         * the other swept flags are worse. Round 4: the ROM needs both
+         * at once - a join that ends cse1's block before the ping-pong
+         * test, and one table load after it - and every single-load form
+         * (`tab[idx > m ? m : idx]`, `idx = idx > m ? m : idx`, `idx < m
+         * ? idx : m`, the `if`) is lowered by jump.c to the one-armed
+         * `if`, whose join cse1 skips (220 lines off); two loads with no
+         * escape (`idx > m ? tab[m] : tab[idx]`, the two-armed `if`)
+         * fold the first to `tab[0xef3]`, which cross-jumping can't
+         * merge (132 lines off). */
         if (idx > m) {
             idx = m;
             MATCH_KEEP(idx);
@@ -139,15 +152,21 @@ u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, voi
         u32 frames = self->format->frames;
         u8 *data = wave->data;
         s32 pos = self->samplePos;
-        /* volatile: the ARM routine updates it behind gcc's back, and the
-         * ROM re-reads `item.done` at every use. #662 round 3: a plain
-         * item with the call's real `"+m"(item)` operand and the "memory"
-         * clobber is 38 lines off. The ROM reloads `item.done` twice in a
-         * row for GaxZeroFill's two arguments with no store or call
-         * between them, which only a volatile access does. The sweep length re-reads
-         * `self->instrument` (volatile read) where GCSE would reuse `inst`. */
+        /* The ARM routine updates the item through the pointer the call
+         * passes; only `done` is read back where gcc can't know it changed
+         * (see GaxMixItem). The sweep length re-reads `self->instrument`
+         * (volatile read) where gcse would reuse `inst`: #662 round 4
+         * (-dG), PRE finds the load redundant with the tune's
+         * `self->instrument` read (expression available on every path,
+         * nothing killing it: the __muldi3 between them is a const
+         * libcall and the item's stores have other alias sets) and
+         * replaces it with a copy that reload then spills, 46 lines off.
+         * Retyping the item's pointer fields to `struct
+         * GaxChannelInstrument *`, an explicit `__muldi3()` call (112
+         * lines off) and the swept -f flags don't give the ROM's fresh
+         * `ldr r1, [r6, #60]`. */
         // clang-format off
-        volatile struct GaxMixItem item = {
+        struct GaxMixItem item = {
             data, buf, pos, len << 11, frames, 0, vol, step, 0,
             self->sweepOn
                 ? (*(struct GaxChannelInstrument *volatile *)&self->instrument)

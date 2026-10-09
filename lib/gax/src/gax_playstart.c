@@ -24,7 +24,9 @@
  * hoists their addresses to the first block in the ROM's order), a
  * separate counter for the filterCode copy, `layout` copied from a
  * block-local read after the first types[] load, and three no-code
- * register nudges (commented at each use). */
+ * register nudges (commented at each use). #662 round 4 replaced the
+ * third, an r3 hold, with `layout` walking on to the alternative-layout
+ * list. */
 
 #define ALIGN4(buf, size)                                  \
     {                                                      \
@@ -44,15 +46,6 @@ u8 GAX2_init(struct GaxSongHeader *p)
     s32 idx;
     s32 k;
     struct GaxHandlerLayout *layout;
-    /* no-code hold: the ROM leaves r3 unused while `layout` is live
-     * between the first tap scan and its `types[2]` test, so `layout`
-     * lands in r4. `hold` is never assigned; its MATCH_USE after the
-     * tap scan keeps r3 reserved up to there. #662 round 2: without it
-     * only `layout` moves (r3); re-reading `p->layout` instead of the
-     * copy, or copying it before the types[] load, moves much more, and
-     * the permuter's best C (35 from 335) wraps the alternative-layout
-     * loop's body in a `do { } while (0)`. */
-    MATCH_HOLD_REG(u32, hold, r3);
 
     if (size <= 0x18b)
         goto fail;
@@ -102,7 +95,11 @@ u8 GAX2_init(struct GaxSongHeader *p)
     size -= (gGaxPlayerState->format->frames + 4) * 2;
     ALIGN4(buf, size);
     /* no code: an extra reference that lifts the aligned size over the
-     * format pointer in global.c's priority order (ROM: r3/r4) */
+     * format pointer in global.c's priority order (ROM: r3/r4). #662
+     * round 4 (-dl/-dg): both are short pseudos; without the use the
+     * size is 4 refs over 20 insns (2 * 4 / 20 = 0.40) against the
+     * format pointer's 4 over 16 (0.50); the use gives 5 over 22
+     * (0.45), the pointer then 4 over 18 (0.44). */
     MATCH_USE(size);
     gGaxPlayerState->outHalf = 0;
     if (size < gGaxPlayerState->format->frames * 2)
@@ -134,22 +131,34 @@ u8 GAX2_init(struct GaxSongHeader *p)
              * 0.136 against maxRate 4 * 18 / 568 = 0.127; the use, counted
              * twice inside the loop, gives maxRate 0.141. It isn't a tie,
              * so declaration order doesn't change it (three orders
-             * tried), and no swept -f flag does either. */
+             * tried), and no swept -f flag does either. Round 4: the
+             * condition is maxRate at 20 references (two more at this
+             * loop's depth), or fmt at 8 or fewer, or fmt live over 213
+             * insns; the ROM sets maxRate = 0 in the prologue (a later
+             * `maxRate = 0` shortens it but moves the 0); `?:`, `<`
+             * and if/else spellings of the max are 30-34 lines off. */
             MATCH_USE(maxRate);
             tap++;
         }
     }
-    MATCH_USE(hold);
     if (!(p->flags & 0x10) && layout->types[2] != NULL) {
-        struct GaxLayoutList *subs = (struct GaxLayoutList *)layout->types[2];
-
+        /* `layout` walks on to the song's alternative layouts: types[2]
+         * is a list with a layout's own shape (a count, then pointers;
+         * GaxLayoutList), and the same variable holds it. As one pseudo
+         * the song layout and the list conflict with the inner scan's
+         * `next` (r3), so global-alloc puts them in r4, as in the ROM
+         * (#662 round 4). With a separate `subs` local the song layout
+         * alone takes the free r3; that took an r3 pin held over the
+         * first tap scan. Indexed as gax_work_size.c indexes types[]
+         * (`*(i + types)`), for the ROM's `adds r0, r0, r4`. */
+        layout = (struct GaxHandlerLayout *)layout->types[2];
         {
             s32 j;
             s32 next;
 
-            for (j = 0; j < (s32)subs->count; j = next) {
+            for (j = 0; j < (s32)layout->count; j = next) {
                 struct GaxDspTap *tap;
-                struct GaxHandlerLayout *l = *(j + subs->layouts);
+                struct GaxHandlerLayout *l = (struct GaxHandlerLayout *)*(j + layout->types);
 
                 i = 0;
                 next = j + 1;

@@ -159,7 +159,25 @@ void HeapSortActorsByKey(s32 n, ActorSelf **list)
      * `cmp` lowers the required match from two insns to one. Only a
      * non-note insn between that label and the `cmp` stops it, and jump2
      * always cross-jumps (no -f flag; the swept flag families all
-     * leave it or break more). */
+     * leave it or break more). Round 4, the whole condition: in the ROM
+     * both tests follow a label (0x308 is the first phase's `ble`
+     * target, 0x3d8 the sift loop's exits'), their RTL is identical
+     * (`cmp r7, #1`, CCmode) and jump_back_p holds both ways, so jump2
+     * merges them in either direction: with only this barrier the
+     * bottom test becomes a `b` to the top one, with only the other the
+     * top one becomes a `b` to the bottom. What stops it is a non-note
+     * insn between each label and its `cmp` that survives to jump2
+     * (after sched2) and emits nothing: a volatile asm, or a USE or
+     * CLOBBER, which only return values, calls and multiword stores
+     * produce, none of them in a void function without calls. So this
+     * jump.c can't give the ROM's code from any C. The ROM's later ARM
+     * gcc (docs/matching/iwram-image.md) evidently didn't lower the
+     * minimum at a label: a private build of agbcp_arm_patched with
+     * that one `--minimum` skipped compiles this function without
+     * either barrier, and the whole of sprite_arm.o, byte-identical to
+     * the ROM's (and string_arm.o too; see strncpy_arm). Adopting that
+     * would be a third option in agbcc_arm_prologue_return.patch, an
+     * owner's decision, so the barriers stay. */
     MATCH_BARRIER();
     while (n > 1) {
         n--;
