@@ -152,13 +152,13 @@ void Yeti::UpdatePalette()
     s32 v = distance;
 
     if (v <= 0x4fff) {
-        DmaCopy16(3, palette, (void *)(PLTT + 0x1E0), 0x20);
+        DmaCopy16(3, palette, (void *)(BG_PLTT + 15 * PALETTE_SIZE_16), PALETTE_SIZE_16);
     } else if (v > 0xbdff) {
-        DmaFill16(3, 0, (void *)(PLTT + 0x1E0), 0x20);
+        DmaFill16(3, 0, (void *)(BG_PLTT + 15 * PALETTE_SIZE_16), PALETTE_SIZE_16);
     } else {
         s32 f = Q8_DIV(0xbe00 - v, 0x6e00);
         s32 mask = 0x1f;
-        u16 *dst = (u16 *)(PLTT + 0x1E0);
+        u16 *dst = (u16 *)(BG_PLTT + 15 * PALETTE_SIZE_16);
         const u16 *src = palette;
         s32 mask2 = 0x1f;
         s32 i;
@@ -191,9 +191,11 @@ void Yeti::UpdateBg2()
 
     if (bg2PageFlip != 0) {
         if (bg2Page != 0)
-            REG_BG2CNT = 0x1a09;
+            REG_BG2CNT =
+                BGCNT_PRIORITY(1) | BGCNT_CHARBASE(2) | BGCNT_SCREENBASE(26) | BGCNT_AFF128x128;
         else
-            REG_BG2CNT = 0x1b09;
+            REG_BG2CNT =
+                BGCNT_PRIORITY(1) | BGCNT_CHARBASE(2) | BGCNT_SCREENBASE(27) | BGCNT_AFF128x128;
         bg2PageFlip = 0;
         bg2Page ^= 1;
     }
