@@ -103,7 +103,7 @@ u8 GAX2_init(struct GaxSongHeader *p)
      * private agbcc with other allocno_compare formulas (refs / length,
      * (log2 + 1) * refs / length, log2 * refs, refs * refs / length)
      * leaves the plain code 102-480 lines off, against 88. #662 round 8
-     * (rtl_corpus.py index-race, the .greg sorted order): the pseudo
+     * (rtl_corpus.py query race, the .greg sorted order): the pseudo
      * the size races is not the format pointer (r2 either way) but the
      * copy of `&gGaxPlayerState` the outHalf store loads through, 3
      * refs over 7 (1 * 3 / 7 = 0.43): at 0.40 the size goes after it
@@ -157,7 +157,7 @@ u8 GAX2_init(struct GaxSongHeader *p)
              * 9 references (cse1 folds the second add into fmt + 8);
              * every scalar local zero-initialized as GAX2_estimate
              * declares them is 712 lines off, `fmt = 0` or maxRate
-             * declared first 30. Round 8 (rtl_corpus.py index-pseudo): five of
+             * declared first 30. Round 8 (rtl_corpus.py query alloc): five of
              * maxRate's 18 references are the zero stores of the state
              * init (`numSfx`, `state`, `curChannelIdx`, `echoTaps`,
              * `skipSongChannels`), which cse gives maxRate's 0 (the
