@@ -100,7 +100,7 @@ static inline u8 FlipX(Player *t)
     return t->mirrorFlags.mirrorX;
 }
 
-/* QueueMotionX/QueueMotionY (input_ctrl.cpp) as this file has them
+/* QueueMotionX/QueueMotionY (at the end of this file) as this file has them
  * inlined. */
 static inline void QueueNowX(SwimCtrl *self, s32 value)
 {
@@ -661,4 +661,40 @@ void SwimCtrl::SetMotionYPending()
 void SwimCtrl::SetMotionXPending()
 {
     motionXPending = 1;
+}
+
+/* The accessors of the queued X/Y motion entries (`motionX`/`motionY`)
+ * and their "pending" flags (the start of input_ctrl.cpp until #768).
+ * UNUSED - no `bl`/`.4byte` reference in src/, and no Thumb pointer
+ * anywhere in the ROM. */
+void SwimCtrl::ClearMotionYPending()
+{
+    motionYPending = 0;
+}
+
+void SwimCtrl::ClearMotionXPending()
+{
+    motionXPending = 0;
+}
+
+u8 SwimCtrl::IsMotionYPending()
+{
+    return motionYPending;
+}
+
+u8 SwimCtrl::IsMotionXPending()
+{
+    return motionXPending;
+}
+
+void SwimCtrl::QueueMotionY(u8 entry)
+{
+    motionYPending = 1;
+    motionY = entry;
+}
+
+void SwimCtrl::QueueMotionX(u8 entry)
+{
+    motionXPending = 1;
+    motionX = entry;
 }

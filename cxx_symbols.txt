@@ -148,8 +148,7 @@ SetCallback__15PeriodicSpawnerPFUiUsUsUs_v SetPeriodicSpawnerCallback
 _vt.6Entity gEntityVtable
 __6Entity InitEntity
 # part 4: SwimCtrl, the swim controller (include/swim_ctrl.hpp,
-# src/player/swim_ctrl*.cpp and the motion-queue accessors in
-# src/player/input_ctrl.cpp)
+# src/player/swim_ctrl*.cpp)
 _vt.8SwimCtrl gSwimCtrlVtable
 __8SwimCtrl InitSwimCtrl
 _._8SwimCtrl DestroySwimCtrl

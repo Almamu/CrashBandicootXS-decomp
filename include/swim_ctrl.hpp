@@ -2,8 +2,7 @@
 #define GUARD_SWIM_CTRL_HPP
 
 /* The swim controller as C++ (#664, docs/cplusplus.md):
- * src/player/swim_ctrl.cpp, swim_ctrl_drift.cpp and swim_ctrl_stroke.cpp,
- * and the six motion-queue accessors at the top of input_ctrl.cpp.
+ * src/player/swim_ctrl.cpp, swim_ctrl_drift.cpp and swim_ctrl_stroke.cpp.
  *
  * No `#pragma interface`: g++ emits its vtable, gSwimCtrlVtable, in
  * swim_ctrl.cpp (see ctrl.hpp). */
