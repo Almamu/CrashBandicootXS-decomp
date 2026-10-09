@@ -1098,6 +1098,36 @@ compiled with `-da` and its RTL dumps read pass by pass:
   expanded with a QImode constant, which cse can't replace with the
   tests' SImode register).
 
+**Round 3, src/bosses, src/enemies, src/actor (C++).** 13 functions ->
+13: no function loses its last workaround, two lose one each.
+
+- **A global's real type gives a re-read.** `ConvertAirshipTiles` and
+  `ConvertHovercraftTiles` re-read each height after storing the row
+  pointer (the ROM's `ldm r1!`), which a `MATCH_KEEP_MEM` forced.
+  gAirshipMapFrames/gHovercraftMapFrames are the AnimParts' frame
+  offsets, `u32` tables (both creators already cast them to `u32 *`):
+  declared so, the row store has the int alias set, may alias
+  `heights[]`, and cse no longer reuses the stored value. As `u8 *`/
+  `void *` arrays the store's pointer alias set told cse it couldn't.
+- **Kept, with the pass that decides it** (in each site's comment):
+  the mask asm of the same two functions (cse1's fold_rtx puts an
+  operand with a known constant value second, and regmove copies the
+  first one); `UpdateTriggerBox`, `StompedHopPadCtrl::Update`,
+  `TinyCtrl::SetState` and `SelectActorCategory` (global-alloc's
+  ranking of two pseudos, by references over live length);
+  `UpdateHop`, `UpdateOscillateX`, `UpdateOscillateY` and
+  `ActorSelf::Draw` (local-alloc: a block-local value is placed before
+  the globals are ranked, or two quantities tie and the older one wins);
+  `MegaMixCtrl::Update`'s 0x104 (reload's round-robin over its spill
+  registers); `UpdateBob`'s and `DingodileShieldCtrl::Update`'s saved
+  but unused registers (a pseudo the ROM had in that register and whose
+  code is gone by the end; the plain functions have none, and no spill
+  of those registers happens). Every single -f flag and every pair of
+  them (`-fno-gcse`, the cse, loop, strength-reduce, jump-threading,
+  defer-pop, function-cse, regmove and peephole switches, `-O1`, plus
+  `-flive-range`, the aliasing, inlining and scheduling switches) was
+  tried on each plain function, under both compilers, and none matches.
+
 ## Survey and conversion record (#576)
 
 The conversion is complete. `tools/match_idioms.py` after part 4

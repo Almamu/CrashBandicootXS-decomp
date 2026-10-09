@@ -59,7 +59,30 @@ void EnemyCtrl::SetAnimMode(s32 m)
  * first gives other registers. The permuter on the C++ reached the ROM
  * only with `do { } while (0)` wrappers or `x++; x--;` no-ops. Locals
  * read before UpdateOscillateY's division (target, table, phase,
- * amplitude, baseY, in any combination) don't give its unused r8. */
+ * amplitude, baseY, in any combination) don't give its unused r8.
+ *
+ * #662 round 3, from the RTL dumps (each function is one basic block, so
+ * local-alloc decides everything):
+ * - UpdateOscillateX: mulsi3's output is earlyclobber, so the product is
+ *   never tied to an input; it gets the first free register when its
+ *   quantity is allocated. The target load and the product rank equal
+ *   (2 references over 4 insns) and the tie goes to the older quantity,
+ *   the product, which takes the dying w's r1. The ROM's `mov r2, r1;
+ *   mul r2, r0` needs the target (r1) and baseX (r0) allocated first,
+ *   i.e. the target ranked above the product, which only an extra
+ *   reference or a shorter life (a different load order) gives.
+ * - UpdateBob: the -0x100 is a reload (the add can't take it as an
+ *   immediate), and reload takes the first unused call-saved register,
+ *   r5, in the plain function. The ROM's r6 and its saved-but-unused r5
+ *   mean a pseudo sat in r5 at that insn and its code was gone by the
+ *   end (e.g. a copy that reload_cse made redundant and flow2 deleted);
+ *   no natural spelling of the body creates one. Holding `this` in r5
+ *   doesn't either (r0 doesn't keep `this` long enough for reload_cse).
+ * - UpdateOscillateY: local-alloc ranks the table's quantity above the
+ *   target's, so they get r5 and r6 the other way round; the saved r8
+ *   is again a register nothing in the final code uses.
+ * No -f flag, alone or in pairs, and no change of the fields' or Wave's
+ * types (u32 fields, an s32 or int Wave, a macro) moves any of them. */
 static inline s16 Wave(const s16 *table, s32 t, s32 phase)
 {
     return table[(t - phase) & 0xff];

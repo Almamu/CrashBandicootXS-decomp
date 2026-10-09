@@ -52,7 +52,14 @@ extern "C" {
  * in the function. #662 round 2: the other two reads and this one written
  * with `!`, a `bool` latch, an early `return`, the branches swapped, or
  * state 2's out-of-range exit calling Run itself instead of `goto run`
- * all leave r1. */
+ * all leave r1. #662 round 3: reload's allocate_reload_reg starts each
+ * search one past the last spill register it handed out
+ * (last_spill_reg), and in the plain function the reload just before
+ * this one (the animDone address) used r0, so the search stops at r1;
+ * the ROM's r3 needs the previous reload to have taken r2, i.e. a
+ * different count of reloads before it with the same final code, which
+ * no spelling of the function's other reads gives. No -f flag or pair
+ * of flags changes it. */
 static inline u8 PlayerDeadByte(Player *pl)
 {
     MATCH_HOLD_REG(s32, off, r3) = 0x104;
