@@ -815,7 +815,7 @@ in `game_loop` and `HovercraftStateCloseIn` in `actor`. These addresses sit only
 `HovercraftStateCloseIn` uses - very plausibly the **same larger struct at
 different field offsets**, not a fourth separate RAM family as the
 address alone might suggest. Also calls `RandRange`, the same input-
-check function `ApplyPlayerCtrlSwimDrift` used back in `game_loop`'s core.
+check function `ApplySwimCtrlSwimDrift` used back in `game_loop`'s core.
 
 ### Three more reads, zero new table families - the known structures are absorbing the remainder
 
@@ -1772,11 +1772,11 @@ subsection's claim by hand:
 
 Plus several of the core's largest individual functions read end-to-end
 regardless of which bucket they fell in (`ResolvePlatformCollision`, `UpdateEnemyCtrl`,
-`ActionCtrlStateAirborne`, `QueueCratePlayerCollision`, `UpdatePlayerCtrl`, `ActionCtrlHandleEvent`,
+`ActionCtrlStateAirborne`, `QueueCratePlayerCollision`, `UpdateSwimCtrl`, `ActionCtrlHandleEvent`,
 `CreateCrate`, `UpdateMegaMix`, `InitLevelSelect`, `DrawAffineSpritePieces`,
 `ApplyCrateCollision`, `LoadLevelSelectRecord`, `UpdatePlatformMover`, and - this round -
 `BreakCrate`, `UpdateSlotCrate`, `DrawPlayer`, `UpdateActionCtrl`,
-`UpdateDingodileProjectile`, `CollidePlayer`, `StartPlayerCtrlStroke`, `PlayerCtrlStateTurn`; see
+`UpdateDingodileProjectile`, `CollidePlayer`, `StartSwimCtrlStroke`, `SwimCtrlStateTurn`; see
 below). The remaining ~9.4 KB has no distinguishing signature found
 yet - the next concrete step is more of the same: pick the next-biggest unread
 function, read it, check whether it's vtable-dispatched or
@@ -1796,18 +1796,18 @@ dispatched (all reached via `bl`); the two concrete new leads:
   and commits them to `REG_BLDCNT`/`BLDALPHA`/`BLDY`. Confirms the
   two functions belong to a single subsystem rather than two unrelated
   ones that happen to share field offsets.
-- **`UpdatePlayerCtrl`/`ActionCtrlHandleEvent` share a type-ID gate (`0x1d`)**,
+- **`UpdateSwimCtrl`/`ActionCtrlHandleEvent` share a type-ID gate (`0x1d`)**,
   suggesting they're sibling state machines on the same object-type
-  family. `UpdatePlayerCtrl` (2088 B) is a per-frame input/state-machine
+  family. `UpdateSwimCtrl` (2088 B) is a per-frame input/state-machine
   handler: reads D-pad input via the already-matched `GetDpadDirection`
   (`src/system/key_input.cpp`), gates on a child object's `+0x2D` type field
   against `0x1d`/`0x1f`/`0x20`, then dispatches a 34-case jump table on
   `self+0x22` - strong evidence of core **player movement/action
-  control**, referencing a new unlabeled table `gPlayerCtrlStateFuncs`.
+  control**, referencing a new unlabeled table `gSwimCtrlStateFuncs`.
   `ActionCtrlHandleEvent` (1420 B) bails unless `self+0x8==0x1d` (the same
   type ID), then runs a 25-case jump table on a second parameter, with
   a further 7-case sub-dispatch on a nibble of a child object's `+4`
-  byte - reads as a companion state machine to `UpdatePlayerCtrl`.
+  byte - reads as a companion state machine to `UpdateSwimCtrl`.
 
 Smaller/lower-confidence reads, each real coverage but without a new
 family attached: **`CreateCrate`** (1396 B, entity constructor -
@@ -1832,7 +1832,7 @@ reads as a per-object-type directional velocity/offset table).
 
 A further fork read eight more functions (~5.1 KB net-new). The
 standout: **`BreakCrate`** (628 B) is plausibly the constructor for
-the "type `0x1d`" player-control entity `UpdatePlayerCtrl`/`ActionCtrlHandleEvent`
+the "type `0x1d`" player-control entity `UpdateSwimCtrl`/`ActionCtrlHandleEvent`
 already gate on - it sets `self+0x2D = 0x1d` (the exact tag value),
 runs the standard OAM-setup trio, then reaches the **same 28-byte-
 record-array dereference chain** the `gSpriteBankTable` fork found
@@ -1862,9 +1862,9 @@ Smaller reads, same known shapes: **`CollidePlayer`** (616 B) wraps
 `gLevelLayers+0x2a`, and separately calls `_call_via_r1` - another
 member of the BLX-trampoline family (`_call_via_r0`-`94`), so this call
 proves only "makes one indirect call," not real work there.
-**`StartPlayerCtrlStroke`** (628 B) and **`PlayerCtrlStateTurn`** (616 B) extend the
+**`StartSwimCtrlStroke`** (628 B) and **`SwimCtrlStateTurn`** (616 B) extend the
 directional-table/timed-state-machine shapes already found in this
-zone and in `actor` (`gPlayerCtrlTurnSpeeds`, `gPlayerCtrlModeAnimRows` -
+zone and in `actor` (`gSwimCtrlTurnSpeeds`, `gSwimCtrlModeAnimRows` -
 two more unlabeled tables in the same family as `gPlatformMoverMotionRecords`).
 None of the eight showed vtable-dispatch patterns in this pass (spot
 pattern, not exhaustively re-checked against `baserom.gba`).
@@ -1885,7 +1885,7 @@ window registers via `EndBonusRound`/`SetCheckpointAtPlayer`) plus `PlaySfx(0x5a
 or dispatches a 22-case jump table where cases 18/19 allocate an
 object, draw floating text, and write the **exact same
 `self+0x60`/`+0x48`/`+0x4c`/`+0x50` directional-target field layout**
-`UpdatePlatformMover` (actor) and `StartPlayerCtrlStroke` (game_loop core) already
+`UpdatePlatformMover` (actor) and `StartSwimCtrlStroke` (game_loop core) already
 write - a real synthesis point tying together the window-register
 bitset, the directional-target field convention, the shared
 `RandRange` input-check, and floating-text feedback in one function.
@@ -1944,7 +1944,7 @@ with mode-gated increment/decrement, and on a branch plays
 inside the 42-slot action dispatch table's own ROM span* (`0x0816BFAC`,
 `0x8C` bytes past `gActionCtrlStateTable`'s base) - a concrete new tie,
 and also folds into the already-counted action-table bucket. It
-strongly resembles the `UpdatePlayerCtrl`/`ActionCtrlHandleEvent` type-`0x1d`
+strongly resembles the `UpdateSwimCtrl`/`ActionCtrlHandleEvent` type-`0x1d`
 player-control family's shape (D-pad input via the same
 `GetDpadDirection`, direction-value branching), though the type-ID field
 wasn't cross-checked.
@@ -2046,7 +2046,7 @@ high confidence: mechanics fully read, but the actual screen content
 confirmed.
 
 The other genuinely-unread outside-any-bucket
-function sampled, `ApplyPlayerCtrlTilt`, fits already-known conventions
+function sampled, `ApplySwimCtrlTilt`, fits already-known conventions
 closely (the type-`0x1d`/28-byte-record family).
 
 **Follow-up resolved `UpdateExtraLife`/`UpdateZoomBg`, and found the "mostly
@@ -2117,7 +2117,7 @@ per-level table lookup). **`UpdateEnemyPatrol`**/**`UpdateEnemyFlipCycle`** are 
 state-machine selector pattern already noted across unrelated object
 types. **`PickUpWumpa`** is a randomized-position spawn picker, same
 flavor as the documented `OpenMysteryCrate` randomized-behavior selector
-but for position rather than behavior choice. **`PlayerCtrlStateIdle`** is a
+but for position rather than behavior choice. **`SwimCtrlStateIdle`** is a
 timed input-driven state machine, a close cousin of the player-
 input-control family but with its own field-offset triple. None of
 these represent a wholly new subsystem.
@@ -2137,7 +2137,7 @@ guessed. The rest all fit already-documented conventions -
 per call), `ResetPlayer` (a reset/init function for the directional-
 target field octet, its 5th+ confirmed site), `DrawCrateList` (a
 per-object list updater tied to the text-box singleton's camera
-anchor), `PickUpExtraLife`/`CheckPlayerCtrlTurn` (the randomized-behavior and
+anchor), `PickUpExtraLife`/`CheckSwimCtrlTurn` (the randomized-behavior and
 player-input-control families respectively), `InitCrateList`/
 `DrawLevelSelectCursor`/`ResetCrateList` (asset-loading/OAM/text-rendering toolkit
 shapes, not fully characterized in detail but no anomalies). Nothing
@@ -2177,13 +2177,13 @@ directional-target field octet for the first time. `UpdateEffectCtrl`
 extends the `gEntityFlags` bitset convention. `GetSpriteAttackBox`
 confirms `SetAabbPos`/`SetAabbSize` as the ROM's general-purpose
 AABB-construction primitive, now reused across 3+ sites (also seen in
-`IsTouchingYeti`'s overlap test). `PlayerCtrlStateStroke` is pure input-dispatch
+`IsTouchingYeti`'s overlap test). `SwimCtrlStateStroke` is pure input-dispatch
 orchestration. `SpawnDingodileStalactite` extends the master-table spawner family
 with a new record index (34) and a new 93-entry-family address.
 `MovePlayerWithPlatform` is a camera-target-position setter extending
 `gPlayer`'s known field layout. **Two new data points worth
 flagging**: a recurring, still-unexplained global **`gRoomFrameCount`**
-(3 independent confirmed sites - `PlayerCtrlStateStroke`, `UpdateEnemyShooter`,
+(3 independent confirmed sites - `SwimCtrlStateStroke`, `UpdateEnemyShooter`,
 `MovePlayerWithPlatform`) and the confirmed AABB-builder primitive reused widely.
 
 ### Cross-checked the `UpdateGameFrame`-`MainLoop` cluster: same signature, not an island
@@ -2209,7 +2209,7 @@ document shows, just somewhat weaker than the main zone's 87%.
 
 Read two functions: **`SpawnRoomEntities`** (704 B) DMA-writes to OBJ palette
 RAM and a BG window register, then iterates a small count-prefixed
-array touching `gEntitySpawner` - the same global `ApplyPlayerCtrlSwimDrift`'s
+array touching `gEntitySpawner` - the same global `ApplySwimCtrlSwimDrift`'s
 periodic input-gated check (documented above) also uses. Reads as a
 per-frame visible-object/window list processor. **`GetCollisionChunk`**
 (408 B) is a linear ID→offset lookup scanning fields starting at
@@ -2759,7 +2759,7 @@ tables:
   with a fixed value `0x1A`. Reads as a **proximity-triggered indicator**
   - show a hint icon when near a specific object type, distance varying
   by type.
-- **`ApplyPlayerCtrlSwimDrift`** (484 B): dispatches on a `self+8` type (`2`/`3`/
+- **`ApplySwimCtrlSwimDrift`** (484 B): dispatches on a `self+8` type (`2`/`3`/
   default), calls the matched `GetDpadDirection` (`src/system/key_input.cpp`), gates
   on `gRoomFrameCount`'s low 7 bits `==0` (a periodic ~128-frame
   check - `gRoomFrameCount` is the same counter the post-fade
@@ -2878,7 +2878,7 @@ a genuinely promising new lead:
   entries** (`ActionCtrlStateSpin`/`ActionCtrlStateAirSpin`/`ActionCtrlStateTornadoSpin`), a shared helper
   several action-table handlers reuse, likely to update one common HUD
   counter glyph.
-- **`StartPlayerCtrlSpin`** (396 B, read by the same fork that corrected
+- **`StartSwimCtrlSpin`** (396 B, read by the same fork that corrected
   `CollidePartWithPlayer` above): checks a self-flag, plays `PlaySfx(id=9)`, calls
   the matched `GetDpadDirection`, and on state `self+8==4` writes a signed
   velocity constant (`±0x3C0`) into `self+0x10→+0x60`, direction chosen
@@ -3555,7 +3555,7 @@ dedicated look if anyone continues this specific thread.
 
 A fork checked whether the recurring `gStaticData_0816Cxxx` symbols
 found across this session's actor/game_loop reads
-(`gPlayerCtrlTurnSpeeds`, `0816C070`, `0816C250`, `0816C308`/`35F`/
+(`gSwimCtrlTurnSpeeds`, `0816C070`, `0816C250`, `0816C308`/`35F`/
 `5F0`, `0816C460`, `0816C86C`, ...) are scattered tables or one region.
 **They're one fully contiguous, byte-precise-labeled ROM span** -
 `data/data.s` already splits the entire range from the 42-slot action
@@ -3582,7 +3582,7 @@ double-indirection shape already noted for `gPlatformMoverMotionRecords`
 vector record**, conditionally negate all three components based on a
 flag bit, and write them into `self+0x54`/`+0x58`/`+0x5c` or
 `self+0x48`/`+0x4c`/`+0x50` - the same "directional target" convention
-as `UpdatePlatformMover`/`StartPlayerCtrlStroke`/`HitEnemy`. `DestroyMegaMixCtrl` ties this
+as `UpdatePlatformMover`/`StartSwimCtrlStroke`/`HitEnemy`. `DestroyMegaMixCtrl` ties this
 region directly to the 93-entry entity vtable family: stores
 `&gMegaMixCtrlVtable` into `self+0xc` then calls `DestroyBossCtrl`.
 

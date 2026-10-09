@@ -665,7 +665,7 @@ vtable shapes).
 | `0816B2F8` | 0x8 | all zero (zero-initialised table). **Converted** (`src/data/obj_sizes_16b2e0.c`) | `QueueCratePlayerCollision`, `GetSpriteAttackBox`, `GetSpriteBodyBox` +3 | high | done |
 | `0816B300` | 0x4 | all zero (zero-initialised table). **Converted** (`src/data/obj_sizes_16b2e0.c`) | `GetSpriteFrameAnchor`, `CollidePlayer`, `ActionCtrlHandleEvent` +1 | high | done |
 | `0816B304` | 0x318 | 44 {s32, s32, s32} motion records + 33 {a, b} entry pairs (`gActionCtrlMotionEntries`, gActionCtrlMotionSet's entries). **Converted** (`src/data/motion_records_16b304.c`) | `StartCtrlTargetMotionYFromSet`, `StartCtrlTargetMotionXFromSet`, `ApplyActionCtrlMotion` | high | done |
-| `0816B61C` | 0x2A4 | 31 {s32, s32, s32} motion records + 38 {a, b} entry pairs (`gPlayerCtrlMotionEntries`, gPlayerCtrlMotionSet's entries). **Converted** (`src/data/motion_records_16b304.c`) | `ApplyPlayerCtrlMotion`, `StartPlayerCtrlMotionYFromSet`, `StartPlayerCtrlMotionXFromSet` | high | done |
+| `0816B61C` | 0x2A4 | 31 {s32, s32, s32} motion records + 38 {a, b} entry pairs (`gSwimCtrlMotionEntries`, gSwimCtrlMotionSet's entries). **Converted** (`src/data/motion_records_16b304.c`) | `ApplySwimCtrlMotion`, `StartSwimCtrlMotionYFromSet`, `StartSwimCtrlMotionXFromSet` | high | done |
 | `0816B8C0` | 0x6C | table (element layout: see consumers). **Converted** (`src/data/motion_records_16b304.c`) | `ApplyInputCtrlMotion` | medium | done |
 | `0816B92C` | 0x8 | pointer table (1 data pointers) | `PlayRoom` | high | easy |
 | `0816B934` | 0x8 | pointer table (1 data pointers) | `PlayRoom` | high | easy |
@@ -697,9 +697,9 @@ vtable shapes).
 | `0816BF08` | 0xC | table of s32 (`s32` x 3). **Converted** (`src/data/object_tables_16bb6c.c`) | `UpdateExtraLifeHop` | high | done |
 | `0816BF14` | 0xC | table of struct three_words. **Converted** (`src/data/object_tables_16bb6c.c`) | `UpdateWumpaHop` | high | done |
 | `0816BF20` | 0x150 | pointer-to-member dispatch table: 42 x {0xFFFF0000, fn} (`struct act_pmf` x 42) | `UpdateActionCtrl` | high | easy |
-| `0816C070` | 0x20 | pointer table (8 data pointers) (`struct level_anim*` x 8) | `UpdatePlayerCtrl`, `PlayerCtrlStateTurn`, `PlayerCtrlStateStop` +2 | high | easy |
-| `0816C090` | 0x1C0 | `struct speed_table` (8 s32, `gPlayerCtrlTurnSpeeds`: speedX per frame of the swim turn) + `struct level_anim[8][13]` (`gPlayerCtrlModeLevelAnims`, the rows gPlayerCtrlModeAnimRows points at). **Converted** (`src/data/speed_table_16c090.c`) | `StartPlayerCtrlStroke` | high | done |
-| `0816C250` | 0x40 | function-pointer / pointer-to-member table (8 code pointers) | `UpdatePlayerCtrl` | high | easy |
+| `0816C070` | 0x20 | pointer table (8 data pointers) (`struct level_anim*` x 8) | `UpdateSwimCtrl`, `SwimCtrlStateTurn`, `SwimCtrlStateStop` +2 | high | easy |
+| `0816C090` | 0x1C0 | `struct speed_table` (8 s32, `gSwimCtrlTurnSpeeds`: speedX per frame of the swim turn) + `struct level_anim[8][13]` (`gSwimCtrlModeLevelAnims`, the rows gSwimCtrlModeAnimRows points at). **Converted** (`src/data/speed_table_16c090.c`) | `StartSwimCtrlStroke` | high | done |
+| `0816C250` | 0x40 | function-pointer / pointer-to-member table (8 code pointers) | `UpdateSwimCtrl` | high | easy |
 | `0816C290` | 0x40 | table of struct pmf; 4 word(s) look like ROM pointers | `UpdateInputCtrl` | high | easy |
 | `0816C2D0` | 0x8 | pointer table (1 data pointers) | `ResetMegaMixCtrl` | high | easy |
 | `0816C2D8` | 0x30 | table (element layout: see consumers). **Converted** (`src/data/actor_tables_16c2d8.c`) | `SetMegaMixMotionYFromSet`, `SetMegaMixMotionXFromSet`, `StartMegaMixMotionYFromSet` +1 | medium | done |
@@ -965,7 +965,7 @@ vtable shapes).
 | `087E414C` | 0x70 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateWumpa`, `DestroyWumpa`, `InitWumpa` | high | easy |
 | `087E41BC` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateStopwatch`, `DestroyStopwatch`, `InitStopwatch` | high | easy |
 | `087E4224` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyActionCtrl`, `InitActionCtrl` | high | easy |
-| `087E428C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyPlayerCtrl`, `InitPlayerCtrl` | high | easy |
+| `087E428C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroySwimCtrl`, `InitSwimCtrl` | high | easy |
 | `087E42F4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyInputCtrl`, `CreateInputCtrl` | high | easy |
 | `087E435C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyBossCtrl`, `CreateBossCtrl` | high | easy |
 | `087E43C4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyMegaMixCtrl`, `CreateMegaMixCtrl` | high | easy |

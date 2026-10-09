@@ -1006,11 +1006,11 @@
   {
    "address": "0x0816B61C",
    "size": 676,
-   "name": "gPlayerCtrlMotionRecords",
+   "name": "gSwimCtrlMotionRecords",
    "consumers": [
-    "ApplyPlayerCtrlMotion",
-    "StartPlayerCtrlMotionYFromSet",
-    "StartPlayerCtrlMotionXFromSet"
+    "ApplySwimCtrlMotion",
+    "StartSwimCtrlMotionYFromSet",
+    "StartSwimCtrlMotionXFromSet"
    ],
    "consumer_files": [
     "player/swim_ctrl.cpp"
@@ -1073,7 +1073,7 @@
   {
    "address": "0x0816B934",
    "size": 8,
-   "name": "gPlayerCtrlMotionSet",
+   "name": "gSwimCtrlMotionSet",
    "consumers": [
     "PlayRoom"
    ],
@@ -1756,13 +1756,13 @@
   {
    "address": "0x0816C070",
    "size": 32,
-   "name": "gPlayerCtrlModeAnimRows",
+   "name": "gSwimCtrlModeAnimRows",
    "consumers": [
-    "UpdatePlayerCtrl",
-    "PlayerCtrlStateTurn",
-    "PlayerCtrlStateStop",
-    "SetPlayerCtrlState",
-    "ApplyPlayerCtrlTilt"
+    "UpdateSwimCtrl",
+    "SwimCtrlStateTurn",
+    "SwimCtrlStateStop",
+    "SetSwimCtrlState",
+    "ApplySwimCtrlTilt"
    ],
    "consumer_files": [
     "player/swim_ctrl.cpp"
@@ -1783,9 +1783,9 @@
   {
    "address": "0x0816C090",
    "size": 448,
-   "name": "gPlayerCtrlTurnSpeeds",
+   "name": "gSwimCtrlTurnSpeeds",
    "consumers": [
-    "StartPlayerCtrlStroke"
+    "StartSwimCtrlStroke"
    ],
    "consumer_files": [
     "player/swim_ctrl_stroke.cpp"
@@ -1807,9 +1807,9 @@
   {
    "address": "0x0816C250",
    "size": 64,
-   "name": "gPlayerCtrlStateFuncs",
+   "name": "gSwimCtrlStateFuncs",
    "consumers": [
-    "UpdatePlayerCtrl"
+    "UpdateSwimCtrl"
    ],
    "consumer_files": [
     "player/swim_ctrl.cpp"
@@ -7547,10 +7547,10 @@
   {
    "address": "0x087E428C",
    "size": 104,
-   "name": "gPlayerCtrlVtable",
+   "name": "gSwimCtrlVtable",
    "consumers": [
-    "DestroyPlayerCtrl",
-    "InitPlayerCtrl"
+    "DestroySwimCtrl",
+    "InitSwimCtrl"
    ],
    "consumer_files": [
     "player/swim_ctrl.cpp"

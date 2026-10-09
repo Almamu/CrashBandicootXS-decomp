@@ -1033,7 +1033,7 @@ action_ctrl_hang.c, see "Codegen exceptions").
     (`delta` -> `thisOffset`); their `struct pmf_entry` is `struct
     vtable_slot`. `struct speed_table` and `struct level_anim` (the data
     file's and swim_ctrl.c's copies) are in player.h, and
-    `gPlayerCtrlModeAnimRows` is a `const struct level_anim *const [8]`
+    `gSwimCtrlModeAnimRows` is a `const struct level_anim *const [8]`
     in its data file too.
   - Definition fixes, all identical: `InitPlayer` takes an unused fifth
     `u16` (play_room.c called the unprototyped declaration with five
@@ -1049,7 +1049,7 @@ action_ctrl_hang.c, see "Codegen exceptions").
     files with two layouts, `pool_init`/`pool_init_node`/`pool_init_link`
     in crate_list_reset.c, `pool_node`, `grid_node`) go with
     src/objects/part_list.c's copies in the objects batch;
-  - `gPlayerCtrlMotionRecords`/`gInputCtrlMotionRecords` share `struct
+  - `gSwimCtrlMotionRecords`/`gInputCtrlMotionRecords` share `struct
     motion_rec` (`struct pctrl_anim`, player_flags.c's `struct vec3`)
     with ctrl.c's `gCtrlMotionRecords`: objects batch;
   - `struct threshold_table_entry` (pause_menu_pages_init.c,
@@ -1300,7 +1300,7 @@ exceptions").
     file. action_ctrl_idle.c's `struct anim_rec` and player_ctrl.h's
     `struct pctrl_anim` were copies; ctrl.c and input_ctrl.c read the
     tables as `u8 []` with byte offsets, now through a `(u8 *)` cast.
-    player.h declares gPlayerCtrlMotionRecords/gInputCtrlMotionRecords and
+    player.h declares gSwimCtrlMotionRecords/gInputCtrlMotionRecords and
     includes objects.h.
   - `struct entry_set` (5 copies in data files) and the three player-side
     sets of play_room.c (player.h, `const struct entry_set`).
@@ -1395,7 +1395,7 @@ see "Codegen exceptions").
     parameters are cast.
 - Data that went elsewhere: `gSpriteBankTable` (gfx.h, `const struct
   sprite_bank_table`; spawn_pickups.c and pause_menu.c take its address),
-  `gPlayerCtrl` (player.h), `gBlendRegs` (gfx.h, batch 4's deferral).
+  `gSwimCtrl` (player.h), `gBlendRegs` (gfx.h, batch 4's deferral).
 - **Struct merges** (49 local definitions gone):
   - the level layers: the five files that read `gLevelLayers->layer0`
     (tiny_hop_pad.c, crate_player_collide.c, crate_grid_collide.c,
@@ -1989,7 +1989,7 @@ name a header also used is renamed. No codegen exception was needed.
     `KillPlayer`'s walked pointer, `UpdatePlayerFacing`'s pinned part
     bytes), and `StartActionCtrlTornadoFall` and `ActionCtrlStateTurboRun` keep their
     pinned `register` copies.
-  - The swim controller's `ResetPlayerCtrl`/`RestartPlayerCtrl` (in
+  - The swim controller's `ResetSwimCtrl`/`RestartSwimCtrl` (in
     action_ctrl.c for ROM order) take `struct player_ctrl *`.
   - action_ctrl_states.c's calls lost their `(u8 *)self` casts, and the
     `UpdatePlayerFacing_u8` codegen alias in action_ctrl_hang.c takes
@@ -2220,7 +2220,7 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | `vt = src->vtable` (`struct pct_vtable *`, fields at 0x30/0x34) -> `struct actor_method *vt = &src->vtable->m30` | UpdateHudPercentCounters | `.o` identical, but the `.s` label numbers shift; `struct actor_vtable *vt = src->vtable` and `vt->m30.thisOffset`/`.fn` keep the `.s` identical too |
 | `void *`/`u8 *`/16 local-struct `gPlayer` views -> `struct player *`, byte offsets -> fields (`[0x88]` -> `ctrlMode`, `+0x80` -> `busy`, `[0x92]` -> `bounce`, `[0x100]` -> `slippery`, `+0x108` -> `collisionQueue`) | 59 files (old_agbcc and agbcc) | identical |
 | `gPlayer->x` etc. through a `struct player *` instead of `struct box_part *`/`struct actor *`; base-class calls through a cast | sprite_anim.c, crate_grid_collide.c, crate_touch.c, enemy_ctrl.c, ... | identical |
-| `u8` bitfields at +0x0C (`flag7 = 0; flag6 = 0`) -> byte `&= 0x7F; &= 0xBF` or `&= ~0x40` | PlayerCtrlKillPlayer | **changes** (`mov r0, #0xbf` for the ROM's `mov r0, #0x41; neg`); `struct player.flags` is a union with the bit view |
+| `u8` bitfields at +0x0C (`flag7 = 0; flag6 = 0`) -> byte `&= 0x7F; &= 0xBF` or `&= ~0x40` | SwimCtrlKillPlayer | **changes** (`mov r0, #0xbf` for the ROM's `mov r0, #0x41; neg`); `struct player.flags` is a union with the bit view |
 | struct member stores `player->bounce = 0; player->listCount = 0` for `player[0x92]`/`[0x94]` | ActionCtrlHandleEvent's tail (action_ctrl_moves.c) | **changes** (the 0 isn't kept in r4); kept as byte stores |
 | `s32 flipX:1` (4-byte container) -> `u32 flipX:1` in a packed one-byte struct | crate_break.c | `.o` identical, but the `.LCB` labels shift (the signed field expands to more insns); `mirror.sbits` keeps the signed view |
 | `u32` mirror bits of a 4-byte struct (`ceac_player`, `box_part`) -> packed `mirror.bits` | crate_hit.c, crate_touch.c | identical |

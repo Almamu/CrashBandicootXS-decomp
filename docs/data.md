@@ -48,12 +48,12 @@ hole:
 gWumpaHopWidths:
 	.incbin "baserom.gba", 0x0016BF14, 0x0000000C
 
-@ gActionCtrlStateTable..gPlayerCtrlModeAnimRows: src/data/action_table_16bf20.cpp
+@ gActionCtrlStateTable..gSwimCtrlModeAnimRows: src/data/action_table_16bf20.cpp
 
 .section .rodata.0816C090
 
-.global gPlayerCtrlTurnSpeeds
-gPlayerCtrlTurnSpeeds:
+.global gSwimCtrlTurnSpeeds
+gSwimCtrlTurnSpeeds:
 	.incbin "baserom.gba", 0x0016C090, 0x000001C0
 ```
 
@@ -593,8 +593,8 @@ icon positions (`struct icon_pos`), OBJ sizes, motion records and the
 collision kind tables, and vectors. Labels the code has no symbol for,
 because it only reaches them through a pointer, are named after their
 address: the pairs in `motion_records_16b304.c` (`gActionCtrlMotionEntries`,
-`gPlayerCtrlMotionEntries`), which `entry_set_16b92c.c` now points at by
-name, the level animation rows `gPlayerCtrlModeLevelAnims` that
+`gSwimCtrlMotionEntries`), which `entry_set_16b92c.c` now points at by
+name, the level animation rows `gSwimCtrlModeLevelAnims` that
 `action_table_16bf20.cpp` points at, and the two link-cable names
 `gCrash2LinkText`/`0816B124` that the IWRAM data points at (`src/iwram/iwram_data.cpp`). A few
 byte tables sit at odd addresses (`gTinyHopTargets`); brace-list `u8`

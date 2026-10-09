@@ -928,7 +928,7 @@ Round 2, player/crates/frontend (after the C++ conversion):
   `TitleScreen::LoadObjTiles`'s r8 pin went with a plain `pkg++` at the
   end of the pass instead of a `next` copy.
 - **A store the optimizer folds, through an inline parameter.**
-  `PlayerCtrl::StartStroke`'s `ldrb`/`strb` of `tag` is the
+  `SwimCtrl::StartStroke`'s `ldrb`/`strb` of `tag` is the
   "switch to animation `tag`" idiom (Crate::SetTag's) called with the
   current animation; `t->tag = t->tag` is folded away, the parameter
   store isn't, so the volatile cast went.

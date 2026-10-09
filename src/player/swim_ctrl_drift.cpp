@@ -1,4 +1,4 @@
-#include "player_ctrl.hpp"
+#include "swim_ctrl.hpp"
 #include "player.hpp"
 
 extern "C" {
@@ -26,7 +26,7 @@ extern "C" {
  * X: the step is `(speedY^2 / 0x4000 + 4) * 3 / 2` when the player is
  * faster than `target`, `step` plus that when it moves against `target`,
  * and `step` otherwise. */
-void PlayerCtrl::SetDriftY(s32 start, s32 step, s32 target)
+void SwimCtrl::SetDriftY(s32 start, s32 step, s32 target)
 {
     Player *p = gPlayer;
     s32 v = p->speedY;

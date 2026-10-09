@@ -1,4 +1,4 @@
-#include "player_ctrl.hpp"
+#include "swim_ctrl.hpp"
 #include "input_ctrl.hpp"
 
 extern "C" {
@@ -13,13 +13,13 @@ extern "C" {
  */
 
 /* The swim controller's state methods, indexed by `state`
- * (gPlayerCtrlStateFuncs; PlayerCtrl::Update, swim_ctrl.cpp, dispatches
- * through it; KillPlayer sets state 7). Each non-virtual `&PlayerCtrl::f`
+ * (gSwimCtrlStateFuncs; SwimCtrl::Update, swim_ctrl.cpp, dispatches
+ * through it; KillPlayer sets state 7). Each non-virtual `&SwimCtrl::f`
  * is g++'s {0, -1, f} record. */
-const PlayerCtrl::StateFunc PlayerCtrl::stateFuncs[8] = {
-    &PlayerCtrl::StateIdle,      &PlayerCtrl::StateSwim, &PlayerCtrl::StateStroke,
-    &PlayerCtrl::StateSpin,      &PlayerCtrl::StateTurn, &PlayerCtrl::StateStop,
-    &PlayerCtrl::StateSwimStart, &PlayerCtrl::StateDead,
+const SwimCtrl::StateFunc SwimCtrl::stateFuncs[8] = {
+    &SwimCtrl::StateIdle,      &SwimCtrl::StateSwim, &SwimCtrl::StateStroke,
+    &SwimCtrl::StateSpin,      &SwimCtrl::StateTurn, &SwimCtrl::StateStop,
+    &SwimCtrl::StateSwimStart, &SwimCtrl::StateDead,
 };
 
 /* The input controller's state methods (gInputCtrlStateFuncs;

@@ -445,7 +445,7 @@ SECTIONS
         build/crashbandicootxs/src/pickups/wumpa.o(.gnu.linkonce.d._vt.5Wumpa); /* gWumpaVtable */
         build/crashbandicootxs/src/pickups/wumpa.o(.gnu.linkonce.d._vt.9Stopwatch); /* gStopwatchVtable */
         build/crashbandicootxs/src/player/action_ctrl_update.o(.gnu.linkonce.d._vt.10ActionCtrl); /* gActionCtrlVtable */
-        build/crashbandicootxs/src/player/swim_ctrl.o(.gnu.linkonce.d._vt.10PlayerCtrl); /* gPlayerCtrlVtable */
+        build/crashbandicootxs/src/player/swim_ctrl.o(.gnu.linkonce.d._vt.8SwimCtrl); /* gSwimCtrlVtable */
         build/crashbandicootxs/src/player/input_ctrl.o(.gnu.linkonce.d._vt.9InputCtrl); /* gInputCtrlVtable */
         build/crashbandicootxs/src/player/input_ctrl_queue.o(.gnu.linkonce.d._vt.8BossCtrl); /* gBossCtrlVtable */
         build/crashbandicootxs/src/bosses/mega_mix_update.o(.gnu.linkonce.d._vt.11MegaMixCtrl); /* gMegaMixCtrlVtable */

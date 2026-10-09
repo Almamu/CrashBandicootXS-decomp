@@ -69,7 +69,7 @@
    "pitch_offset": 0,
    "volume": 200,
    "name": "UNKNOWN_09",
-   "comment": "the underwater spin (StartPlayerCtrlSpin); a penguin starts its attack (UpdateEnemyAttackCycle)"
+   "comment": "the underwater spin (StartSwimCtrlSpin); a penguin starts its attack (UpdateEnemyAttackCycle)"
   },
   {
    "slot_id": 22,

@@ -1,6 +1,6 @@
 #include "player.hpp"
 #include "action_ctrl.hpp"
-#include "player_ctrl.hpp"
+#include "swim_ctrl.hpp"
 #include "input_ctrl.hpp"
 
 extern "C" {
@@ -77,7 +77,7 @@ void Player::ResetForRoom()
             ((ActionCtrl *)mover)->Restart();
             break;
         case 1:
-            ((PlayerCtrl *)mover)->Restart();
+            ((SwimCtrl *)mover)->Restart();
             break;
         case 2:
             break;

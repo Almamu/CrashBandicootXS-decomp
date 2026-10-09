@@ -6,11 +6,11 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-const struct speed_table gPlayerCtrlTurnSpeeds = { { 528, 352, 176, -176, -352, -528, -704, -704 } };
+const struct speed_table gSwimCtrlTurnSpeeds = { { 528, 352, 176, -176, -352, -528, -704, -704 } };
 
-/* 8 modes x 13 levels; action_table_16bf20.cpp's gPlayerCtrlModeAnimRows
+/* 8 modes x 13 levels; action_table_16bf20.cpp's gSwimCtrlModeAnimRows
  * points at each row. */
-const struct level_anim gPlayerCtrlModeLevelAnims[8][13] = {
+const struct level_anim gSwimCtrlModeLevelAnims[8][13] = {
     {
         { 0x1F, 0x00 }, { 0x1F, 0x00 }, { 0x1F, 0x00 }, { 0x1F, 0x00 }, { 0x1F, 0x00 }, { 0x1F, 0x00 }, { 0x1F, 0x00 },
         { 0x1F, 0x00 }, { 0x1F, 0x00 }, { 0x1F, 0x00 }, { 0x1F, 0x00 }, { 0x1F, 0x00 }, { 0x1F, 0x00 }

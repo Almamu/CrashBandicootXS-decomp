@@ -1,6 +1,6 @@
 #include "player.hpp"
 #include "action_ctrl.hpp"
-#include "player_ctrl.hpp"
+#include "swim_ctrl.hpp"
 #include "input_ctrl.hpp"
 #include "crate_list.hpp"
 #include "bg_layer.hpp"
@@ -26,7 +26,7 @@ extern "C" {
  * level layers singleton (`LevelLayers::Get`), builds the player
  * (`gPlayer`) at the checkpoint, and gives it the room kind's controller
  * (`cat->kind`): the action controller on foot, the swim controller
- * (`gPlayerCtrl`) underwater, the input controller on the hover levels.
+ * (`gSwimCtrl`) underwater, the input controller on the hover levels.
  * Then it runs the room (`RunRoom`) and deletes everything again.
  *
  * C++ since the #664 cleanup, built with old_agbcp (agbcc as C, held by
@@ -82,8 +82,8 @@ s32 LevelProgress::PlayRoom()
         }
     case ROOM_KIND_UNDERWATER:
         {
-            gPlayerCtrl = new PlayerCtrl;
-            ((PlayerCtrl *)gPlayerCtrl)->SetAnimSet(&gPlayerCtrlMotionSet);
+            gSwimCtrl = new SwimCtrl;
+            ((SwimCtrl *)gSwimCtrl)->SetAnimSet(&gSwimCtrlMotionSet);
             gPlayer->ctrlMode = mode;
             {
                 const struct sprite_bank *bank =
@@ -102,7 +102,7 @@ s32 LevelProgress::PlayRoom()
             }
             {
                 Player *pl = gPlayer;
-                PlayerCtrl *ctrl = (PlayerCtrl *)gPlayerCtrl;
+                SwimCtrl *ctrl = (SwimCtrl *)gSwimCtrl;
 
                 pl->mover = ctrl;
                 ctrl->Attach(pl);

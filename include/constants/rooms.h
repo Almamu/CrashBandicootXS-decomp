@@ -8,7 +8,7 @@
  * the start marker of its kind (docs/levels.md).
  */
 #define ROOM_KIND_ON_FOOT 0    /* action controller (InitActionCtrl) */
-#define ROOM_KIND_UNDERWATER 1 /* swim controller (InitPlayerCtrl) */
+#define ROOM_KIND_UNDERWATER 1 /* swim controller (InitSwimCtrl) */
 #define ROOM_KIND_HOVER 2      /* hover-vehicle controller (CreateInputCtrl); room 16 only */
 #define ROOM_KIND_CATEGORY 3   /* no room data: a stage played in actor category `catIndex` */
 

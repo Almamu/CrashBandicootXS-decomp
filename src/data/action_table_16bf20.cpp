@@ -70,11 +70,11 @@ const ActionCtrl::StateFunc ActionCtrl::stateFuncs[ACTION_STATE_COUNT] = {
 };
 
 /* The 13-level animation rows (4-byte `struct level_anim` records,
- * gPlayerCtrlModeLevelAnims in speed_table_16c090.c), one pointer per mode:
- * swim_ctrl.cpp reads `gPlayerCtrlModeAnimRows[mode][level]`. C linkage:
+ * gSwimCtrlModeLevelAnims in speed_table_16c090.c), one pointer per mode:
+ * swim_ctrl.cpp reads `gSwimCtrlModeAnimRows[mode][level]`. C linkage:
  * player.h declares it. */
-const struct level_anim *const gPlayerCtrlModeAnimRows[8] = {
-    gPlayerCtrlModeLevelAnims[0], gPlayerCtrlModeLevelAnims[1], gPlayerCtrlModeLevelAnims[2],
-    gPlayerCtrlModeLevelAnims[3], gPlayerCtrlModeLevelAnims[4], gPlayerCtrlModeLevelAnims[5],
-    gPlayerCtrlModeLevelAnims[6], gPlayerCtrlModeLevelAnims[7],
+const struct level_anim *const gSwimCtrlModeAnimRows[8] = {
+    gSwimCtrlModeLevelAnims[0], gSwimCtrlModeLevelAnims[1], gSwimCtrlModeLevelAnims[2],
+    gSwimCtrlModeLevelAnims[3], gSwimCtrlModeLevelAnims[4], gSwimCtrlModeLevelAnims[5],
+    gSwimCtrlModeLevelAnims[6], gSwimCtrlModeLevelAnims[7],
 };

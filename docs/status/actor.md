@@ -634,21 +634,21 @@ from "core" graphics.
   `InitActionCtrl`, `sub_80158AC`, `SetActionCtrlMotionYKeepSpeed`, `SetActionCtrlMotionXKeepSpeed`,
   `SetActionCtrlMotionYPending`, `SetActionCtrlMotionXPending`, `ClearActionCtrlMotionYPending`, `ClearActionCtrlMotionXPending`,
   `IsActionCtrlMotionYPending`, `IsActionCtrlMotionXPending`, `QueueActionCtrlMotionYKeepSpeed`, `QueueActionCtrlMotionXKeepSpeed`,
-  `QueueActionCtrlMotionY`, `QueueActionCtrlMotionX`, `GetActionCtrlPrevState`, `ResetPlayerCtrl`,
-  `RestartPlayerCtrl` - a run of small accessors/resetters on the state-trio
+  `QueueActionCtrlMotionY`, `QueueActionCtrlMotionX`, `GetActionCtrlPrevState`, `ResetSwimCtrl`,
+  `RestartSwimCtrl` - a run of small accessors/resetters on the state-trio
   bytes, the `gActionCtrlVtable` double-table-set idiom already seen
   in `input_ctrl_queue.c`, and a larger field-reset pair; see
   [docs/matching/archive/issue-19-0x08015840-actor.md](../matching/archive/issue-19-0x08015840-actor.md).
 - `src/player/swim_ctrl_stroke.c` (GitHub issue #19, ROM
-  0x080159F8-0x08015FDC, built with old_agbcc): `StartPlayerCtrlStroke`,
-  `StartPlayerCtrlSpin`, `ApplyPlayerCtrlSwimDrift` - the player-input controller's three
+  0x080159F8-0x08015FDC, built with old_agbcc): `StartSwimCtrlStroke`,
+  `StartSwimCtrlSpin`, `ApplySwimCtrlSwimDrift` - the player-input controller's three
   jump-table dispatchers (`level`-indexed speed tables, a kind-4 spawn and
   the `SetPlayerSwimDriftX`/`SetPlayerSwimDriftY` feed), promoted from NAKED once built
   with old_agbcc; see
   [docs/matching/archive/issue-19-0x08015840-actor.md](../matching/archive/issue-19-0x08015840-actor.md).
 - `src/player/swim_ctrl_drift.c` (new file, GitHub issue #19, ROM
   0x08015FDC, non-adjacent to action_ctrl.c since
-  `StartPlayerCtrlStroke`/`StartPlayerCtrlSpin`/`ApplyPlayerCtrlSwimDrift` (`swim_ctrl_stroke.c`)
+  `StartSwimCtrlStroke`/`StartSwimCtrlSpin`/`ApplySwimCtrlSwimDrift` (`swim_ctrl_stroke.c`)
   sit between them):
   `SetPlayerSwimDriftY` - a player-velocity-relative record writer; see
   [docs/matching/archive/issue-19-0x08015840-actor.md](../matching/archive/issue-19-0x08015840-actor.md).
@@ -1691,6 +1691,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   as real C under old_agbcc in `src/player/player_event.c` (issue #9
   raw-asm pass, `docs/matching/archive/issue-9-raw-asm-pass.md`);
   `asm/code_3_2_16_ac2c.s` is gone.
-- ~~**`CheckPlayerCtrlTurn`**~~ (ROM 0x08016048, GitHub issue #19) - matched
+- ~~**`CheckSwimCtrlTurn`**~~ (ROM 0x08016048, GitHub issue #19) - matched
   as real C with issue #20 in `src/player/swim_ctrl.c` (listed
   under `graphics.md`) - see `docs/matching/archive/issue-20-player-ctrl.md`.

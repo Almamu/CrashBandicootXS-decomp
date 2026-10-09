@@ -1,4 +1,4 @@
-#include "player_ctrl.hpp"
+#include "swim_ctrl.hpp"
 #include "spawners.hpp"
 #include "player.hpp"
 #include "audio.hpp"
@@ -12,7 +12,7 @@ extern "C" {
 }
 
 /* GitHub issue #19: 0x080159F8-0x08015FDC, the three jump-table
- * dispatchers of the swim controller, PlayerCtrl (include/player_ctrl.hpp;
+ * dispatchers of the swim controller, SwimCtrl (include/swim_ctrl.hpp;
  * #664, docs/cplusplus.md), documented in
  * docs/matching/archive/issue-19-0x08015840-actor.md. All three are called
  * from swim_ctrl.cpp's state methods.
@@ -46,15 +46,15 @@ static inline void RestartAnim(Player *t, u8 tag)
 }
 
 /* Sets the target's speed for the current `tilt` (state 4, the turn,
- * instead reads the frame-indexed stack copy of gPlayerCtrlTurnSpeeds,
+ * instead reads the frame-indexed stack copy of gSwimCtrlTurnSpeeds,
  * negated unless `mode` is 6) and steps `tilt` towards 0/3/6/9/12. */
-void PlayerCtrl::StartStroke()
+void SwimCtrl::StartStroke()
 {
     Player *t;
 
     deadline = gRoomFrameCount + 16;
     if (state == 4) {
-        struct speed_table tbl = gPlayerCtrlTurnSpeeds;
+        struct speed_table tbl = gSwimCtrlTurnSpeeds;
 
         if (mode == 6)
             target->speedX = tbl.v[target->frame];
@@ -138,7 +138,7 @@ void PlayerCtrl::StartStroke()
  * SIGNED_X ternary, so each arm is divided separately). `flag` zeroes the
  * horizontal speed when the target's +0x68 bits are set and the D-pad is
  * not held sideways. */
-void PlayerCtrl::StartSpin()
+void SwimCtrl::StartSpin()
 {
     u16 speed;
     u8 flag;
@@ -219,7 +219,7 @@ void PlayerCtrl::StartSpin()
  * (valB/valA, +-mag) pair, 3/4-scaled on the diagonals, to SetDriftX and
  * SetDriftY. `mag`/`valB`/`valA` are unsigned, so `x * 3 / 4` is a plain
  * shift and only `-mag * 3 / 4` rounds toward zero. */
-void PlayerCtrl::ApplySwimDrift()
+void SwimCtrl::ApplySwimDrift()
 {
     u16 mag;
     u8 valB;

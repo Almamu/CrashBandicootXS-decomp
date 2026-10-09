@@ -84,23 +84,23 @@ and [graphics_loading.md](./graphics_loading.md).
   `docs/matching.md` for the statement-ordering gotchas.
 
 - `src/player/swim_ctrl.c` (new file - GitHub issue #20, plus
-  issue #19's last raw function `CheckPlayerCtrlTurn`): `CheckPlayerCtrlTurn`-
-  `SetPlayerCtrlMotionXPending` (26 functions), all real C - the player-input controller
-  class (method table `gPlayerCtrlVtable`, struct in
-  `include/player_ctrl.h`): per-frame update `UpdatePlayerCtrl` (D-pad
+  issue #19's last raw function `CheckSwimCtrlTurn`): `CheckSwimCtrlTurn`-
+  `SetSwimCtrlMotionXPending` (26 functions), all real C - the player-input controller
+  class (method table `gSwimCtrlVtable`, struct in
+  `include/swim_ctrl.hpp`): per-frame update `UpdateSwimCtrl` (D-pad
   auto-repeat level stepping, animation re-apply, pointer-to-member state
-  dispatch through `gPlayerCtrlStateFuncs` to the eight state handlers
-  `PlayerCtrlStateIdle`...`PlayerCtrlStateDead`), message handler `PlayerCtrlHandleEvent`, mode/
-  animation setter `SetPlayerCtrlState`, player record writer `SetPlayerSwimDriftX`,
-  constructor/destructor `InitPlayerCtrl`/`DestroyPlayerCtrl`. Nine UNUSED
-  (`ApplyPlayerCtrlMotion`, `StartPlayerCtrlMotionYFromSet`, `StartPlayerCtrlMotionXFromSet`, `GetPlayerSwimDriftStep`,
-  `ApplyPlayerCtrlTilt`, `StartPlayerCtrlSwim`, `sub_801750C`, `SetPlayerCtrlMotionYPending`,
-  `SetPlayerCtrlMotionXPending`). Built with `tools/agbcc/bin/old_agbcc`; register pins
-  only in `ApplyPlayerCtrlMotion`. See
+  dispatch through `gSwimCtrlStateFuncs` to the eight state handlers
+  `SwimCtrlStateIdle`...`SwimCtrlStateDead`), message handler `SwimCtrlHandleEvent`, mode/
+  animation setter `SetSwimCtrlState`, player record writer `SetPlayerSwimDriftX`,
+  constructor/destructor `InitSwimCtrl`/`DestroySwimCtrl`. Nine UNUSED
+  (`ApplySwimCtrlMotion`, `StartSwimCtrlMotionYFromSet`, `StartSwimCtrlMotionXFromSet`, `GetPlayerSwimDriftStep`,
+  `ApplySwimCtrlTilt`, `StartSwimCtrlSwim`, `sub_801750C`, `SetSwimCtrlMotionYPending`,
+  `SetSwimCtrlMotionXPending`). Built with `tools/agbcc/bin/old_agbcc`; register pins
+  only in `ApplySwimCtrlMotion`. See
   [docs/matching/archive/issue-20-player-ctrl.md](../matching/archive/issue-20-player-ctrl.md).
 
 - `src/player/input_ctrl.c` (new file - GitHub issue #21):
-  `ClearPlayerCtrlMotionYPending`-`IsInputCtrlMotionYPending` (25 functions) - six byte accessors, then a
+  `ClearSwimCtrlMotionYPending`-`IsInputCtrlMotionYPending` (25 functions) - six byte accessors, then a
   D-pad-driven actor-part subclass (method table `gInputCtrlVtable`):
   per-frame animation/speed selection from the held keys, a gcc 2.x
   pointer-to-member state dispatch (`gInputCtrlStateFuncs`), and the

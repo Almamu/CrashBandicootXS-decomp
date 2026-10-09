@@ -1,6 +1,6 @@
 #include "bg_layer.hpp"
 #include "input_ctrl.hpp"
-#include "player_ctrl.hpp"
+#include "swim_ctrl.hpp"
 #include "sprite_obj.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
@@ -17,8 +17,8 @@ extern "C" {
 /* GitHub issue #21: 0x08017524-0x08017A44, the whole tail of the former
  * asm/code_3_2_17_16048.s.
  *
- * The first six functions are the swim controller's (PlayerCtrl,
- * include/player_ctrl.hpp; swim_ctrl.cpp right before them): the
+ * The first six functions are the swim controller's (SwimCtrl,
+ * include/swim_ctrl.hpp; swim_ctrl.cpp right before them): the
  * accessors of its queued X/Y motion entries (`motionX`/`motionY`) and
  * their "pending" flags.
  *
@@ -36,7 +36,7 @@ extern "C" {
  * (gInputCtrlStateFuncs) and applies the queued motion.
  *
  * UNUSED - no `bl`/`.4byte` reference in src/, and no Thumb pointer
- * anywhere in the ROM: the six PlayerCtrl accessors and
+ * anywhere in the ROM: the six SwimCtrl accessors and
  * SetMotionYPending, SetMotionXPending, CancelMotionY, CancelMotionX and
  * IsMotionYPending. Matched anyway.
  *
@@ -49,33 +49,33 @@ extern "C" {
  * `(this->*stateFuncs[state])()`. The "mark gone" bitmap sequence
  * (MarkEntityGone's, inlined twice) is Entity::MarkGone. */
 
-void PlayerCtrl::ClearMotionYPending()
+void SwimCtrl::ClearMotionYPending()
 {
     motionYPending = 0;
 }
 
-void PlayerCtrl::ClearMotionXPending()
+void SwimCtrl::ClearMotionXPending()
 {
     motionXPending = 0;
 }
 
-u8 PlayerCtrl::IsMotionYPending()
+u8 SwimCtrl::IsMotionYPending()
 {
     return motionYPending;
 }
 
-u8 PlayerCtrl::IsMotionXPending()
+u8 SwimCtrl::IsMotionXPending()
 {
     return motionXPending;
 }
 
-void PlayerCtrl::QueueMotionY(u8 entry)
+void SwimCtrl::QueueMotionY(u8 entry)
 {
     motionYPending = 1;
     motionY = entry;
 }
 
-void PlayerCtrl::QueueMotionX(u8 entry)
+void SwimCtrl::QueueMotionX(u8 entry)
 {
     motionXPending = 1;
     motionX = entry;
