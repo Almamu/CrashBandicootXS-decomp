@@ -364,13 +364,14 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
 # #662 step 3: system/util/audio objects whose workarounds (pins, copy
 # asms) aren't needed under old_agbcc. Evidence: each object stays
 # byte-identical with plain C - input.o's `keys = mask & pressed`
-# (old_agbcc copies `mask` first, as the ROM does), irq.o's
-# UpdateKeys and DISPSTAT updates, aabb.o's CommitBlendRegs (BLDY's
+# (old_agbcc copies `mask` first, as the ROM does), irq.o's DISPSTAT
+# updates, key_input.o's UpdateKeys (split from irq.o, #767), aabb.o's CommitBlendRegs (BLDY's
 # address derived from BLDCNT's), audio.o's VCount DISPSTAT updates
 # (audio.cpp since, built by old_agbcp: agbcp gives the same AudioContext
 # methods but loads DISPSTAT's byte before the mask).
 OLD_AGBCC_OBJS += $(C_BUILDDIR)/system/input.o \
                   $(C_BUILDDIR)/system/irq.o \
+                  $(C_BUILDDIR)/system/key_input.o \
                   $(C_BUILDDIR)/util/aabb.o \
                   $(C_BUILDDIR)/audio/audio.o
 $(OLD_AGBCC_OBJS): CC1 := $(CC1_OLD)

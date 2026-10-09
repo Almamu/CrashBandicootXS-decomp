@@ -77,6 +77,7 @@ UNITS = [
     (0x08000170, "src/system/main.o", "system"),
     (0x080001CC, "src/system/memory.o", "system"),
     (0x08000544, "src/system/irq.o", "system"),
+    (0x08000760, "src/system/key_input.o", "system"),  # GetDpadDirection/UpdateKeys/KeyInput::KeyInput (ClearKeys), split from irq.o (#767)
     (0x080007EC, "src/gfx/bitmap_screen.o", "graphics"),
     (0x080008B4, "src/util/fixed_math.o", "util"),
     (0x0800094C, "src/util/number_format.o", "util"),

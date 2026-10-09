@@ -664,7 +664,7 @@ counts them by kind) and what the C++ needed when it was converted.
 | `src/gfx/display.cpp`, `fade.cpp` | the DISPCNT helpers (`SetDispcntMode` ... `CommitDispcnt`); `StepBrightnessFade`, `FadeBrightness`, `DarkenPalette` (C linkage) | 0 + 17 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/gfx/sprite_frame.cpp` | the OBJ tile allocator, the overflow OAM queue and the sprite frame cache (C linkage); FlushSpriteFrameOamQueue calls `gOamBuffer->Append`, `HideUnused`, `SetAffineScales` (sprite_obj.hpp), whose C prototypes go | 0 + 18 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/system/asset.cpp`, `main.cpp`, `main_loop.cpp`, `memory.cpp` | `LoadTaggedAsset`, `LoadBackgroundTileAndPalette`; `AgbMain`; `MainLoop`, `GetUiText`; the heap (`mem_*`, C linkage) | 0 + 12 | agbcp | 1 file-scope asm -> 1 (`mem_walk_heaps`) | all-C++: gfx, system, util, text |
-| `src/system/input.cpp`, `irq.cpp` | `WaitForKeyPress`; the IRQ table, the VBlank handler and callbacks, the key reading (C linkage), and `KeyInput`'s constructor (`ClearKeys`, spawners.hpp), whose C prototype goes | 1 + 17 | old_agbcp | 1 pin -> 1 pin | all-C++: gfx, system, util, text |
+| `src/system/input.cpp`, `irq.cpp` (the key reading since in `key_input.cpp`, #767) | `WaitForKeyPress`; the IRQ table, the VBlank handler and callbacks, the key reading (C linkage), and `KeyInput`'s constructor (`ClearKeys`, spawners.hpp), whose C prototype goes | 1 + 17 | old_agbcp | 1 pin -> 1 pin | all-C++: gfx, system, util, text |
 | `src/text/text_box.cpp` | `GetWordLength`, `DrawWrappedTextInBox` (C linkage; takes a `Font *`, `self->SetMargin`, `HeightToLines`) | 0 + 2 | agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/aabb.cpp` | `CommitBlendRegs`, `AabbOverlapsInclusiveX`, `AabbOverlaps`, `IwramFree`, `IwramAlloc` (C linkage) | 0 + 5 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/fixed_math.cpp`, `line.cpp`, `line_step.cpp`, `number_format.cpp`, `printf.cpp`, `rand.cpp`, `string.cpp`, `time_format.cpp` | the fixed-point helpers, the Bresenham line, `itoa`, `sprintf`/`vsprintf`/`FindSubstring`, `rand`/`srand`/`RandRange`, the string functions, `FormatCentiseconds` (C linkage) | 0 + 24 | agbcp | 2 pins, 5 asm, 2 asm labels -> the same | all-C++: gfx, system, util, text |
@@ -1753,7 +1753,7 @@ agbcc to old_agbcc's constant-before-`ldrb` order) and move to
 - **`InitLevelState`** (spawn_pickups.cpp) builds the C++ classes with
   `new`: `SpriteRenderer`, `SpriteBankSet`, `PaletteCache`, `OamBuffer`,
   `ObjVramCursor(0)`, `PaletteCycles`, and the key input, `KeyInput`
-  (spawners.hpp), whose constructor is ClearKeys (src/system/irq.c, still
+  (spawners.hpp), whose constructor is ClearKeys (src/system/irq.c, now key_input.cpp, still
   C, `void *ClearKeys(void *self)`, which returns `this` in r0). The C's six `bl`
   asm statements with the pointer pinned to r0 go: a constructor returns
   `this`. The globals keep their C types (the C files use them), so the

@@ -1800,7 +1800,7 @@ dispatched (all reached via `bl`); the two concrete new leads:
   suggesting they're sibling state machines on the same object-type
   family. `UpdatePlayerCtrl` (2088 B) is a per-frame input/state-machine
   handler: reads D-pad input via the already-matched `GetDpadDirection`
-  (`src/system/irq.cpp`), gates on a child object's `+0x2D` type field
+  (`src/system/key_input.cpp`), gates on a child object's `+0x2D` type field
   against `0x1d`/`0x1f`/`0x20`, then dispatches a 34-case jump table on
   `self+0x22` - strong evidence of core **player movement/action
   control**, referencing a new unlabeled table `gPlayerCtrlStateFuncs`.
@@ -2760,7 +2760,7 @@ tables:
   - show a hint icon when near a specific object type, distance varying
   by type.
 - **`ApplyPlayerCtrlSwimDrift`** (484 B): dispatches on a `self+8` type (`2`/`3`/
-  default), calls the matched `GetDpadDirection` (`src/system/irq.cpp`), gates
+  default), calls the matched `GetDpadDirection` (`src/system/key_input.cpp`), gates
   on `gRoomFrameCount`'s low 7 bits `==0` (a periodic ~128-frame
   check - `gRoomFrameCount` is the same counter the post-fade
   investigation above also touches) **and** an input check

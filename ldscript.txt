@@ -24,6 +24,7 @@ SECTIONS
         build/crashbandicootxs/src/system/main.o(.text);
         build/crashbandicootxs/src/system/memory.o(.text);
         build/crashbandicootxs/src/system/irq.o(.text);
+        build/crashbandicootxs/src/system/key_input.o(.text);
         build/crashbandicootxs/src/gfx/bitmap_screen.o(.text);
         build/crashbandicootxs/src/util/fixed_math.o(.text);
         build/crashbandicootxs/src/util/number_format.o(.text);

@@ -49,12 +49,14 @@ extern void *MemCopy32(void *dst, const void *src, u32 byteCount);
 /* src/system/input.cpp */
 extern s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask);
 
-/* src/system/irq.cpp. UpdateKeys and GetDpadDirection take the input
- * object (every caller passes gInput) but read gKeys directly; its
- * constructor, ClearKeys, is KeyInput's (spawners.hpp). */
+/* src/system/irq.cpp */
 extern void WaitForVBlank(void);
 extern void DisableFrameLimit(void);
 extern void SetFrameLimit(u32 interval);
+
+/* src/system/key_input.cpp. UpdateKeys and GetDpadDirection take the
+ * input object (every caller passes gInput) but read gKeys directly; its
+ * constructor, ClearKeys, is KeyInput's (spawners.hpp). */
 extern u8 GetDpadDirection(void *input);
 extern s32 UpdateKeys(void *input);
 
