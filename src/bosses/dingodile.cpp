@@ -485,7 +485,13 @@ void DingodileShieldCtrl::Update(MovingSprite *part)
      * (#802's BLKmode address mechanism, which replaced the volatile
      * AABB_VALID here), `b.w`, pointer locals for the boxes, a player
      * local and the C++ box getters all leave the allocation as it
-     * is. */
+     * is. #662 round 5: neither do the player's box built by an inline
+     * (returning the struct, or overlap-testing a box it is given, as
+     * a shared helper with DingodileProjectileCtrl::Update would), the
+     * whole test as an inline, nor the BLDCNT chain below started at
+     * function scope (gcse's cprop moves the 16 into the chain, which
+     * reload then builds in r0/r1), through a reference or a member
+     * function of a local (all folded), or as a u64. */
     MATCH_HOLD_REG(s32, hr5, r5);
     MATCH_HOLD_REG(s32, hr6, r6);
 

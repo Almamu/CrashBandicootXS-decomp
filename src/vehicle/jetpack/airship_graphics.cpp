@@ -169,7 +169,16 @@ void Airship::LoadGraphics()
  * shares the guard's `n << 4` with the loop test, which the ROM
  * recomputes from `n` (r8) every iteration (28-34 lines off; a guard on
  * `n` adds a compare, 42-48), and it is a redundant test anyway. A u8
- * (QImode) AND is 128 lines off. */
+ * (QImode) AND is 128 lines off. #662 round 5: the ROM's other nibble
+ * expanders don't share an idiom that gets there. sprite_arm.cpp's ARM
+ * UnpackNibbleTiles (`ExpandNibble(v & 15)`, a ternary helper, one
+ * halfword per word) and bg_picture.cpp's MapFill (`*nib & 0xf`, the
+ * constant set at each use and dying in the AND, so the result takes
+ * its register) put this loop 100-118 lines off in every combination
+ * of helper (if, ternary, early return) and body (two byte locals,
+ * indexing, a halfword, `% 16`/`/ 16`, the high nibble unmasked), where
+ * the plain `m = 0xf` in the loop is 8 lines off: the two mask copies
+ * become byte copies. */
 static inline u32 MeterPx(u32 v)
 {
     u32 r = 0;

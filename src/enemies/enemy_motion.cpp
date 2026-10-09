@@ -3,7 +3,6 @@
 #include "audio.hpp"
 
 extern "C" {
-#include "match.h"
 #include "globals.h"
 #include "player.h"
 }
@@ -87,26 +86,16 @@ void EnemyCtrl::UpdateHomingY()
  * - otherwise, at keyframe 8 (tick 8, timer 0), it hops: Y motion 3,
  *   X motion 3 (mode 0) or 0 (mode 1), and the hop sound.
  *
- * The pin is about register allocation, not the C++ (it's still needed
- * under agbcp and old_agbcp): `baseY` in r1 gives the ROM's r2/r1 split
- * of the post-call `t->y = baseY` store, and every later access reuses
- * the same `t` (issue #9-#11 NAKED retry). #662 round 2: a reference to
- * `t->animDone` taken before the store (`u8 &done`) gives the ROM's
- * registers, but its address add then comes before the store, where the
- * ROM has it after; an inline setter or getter, the target re-read, or
- * `t` scoped to its use keep the r1/r0 split. #662 round 3 (lreg dump):
- * the baseY copy is local to the block after the calls, so local-alloc
- * gives it r0 before the global `t` is allocated (r1, the first free
- * one); r0 is only taken during the store when the animDone address
- * pseudo is born before it, as with `done`. Under old_agbcp the `done`
- * version is the same (the scheduler leaves the add before the store),
- * and no -f flag or field type changes the allocation. #662 round 4:
- * the copy's quantity has no hard-register suggestion (it isn't copied
- * to or from a hard register), so find_free_reg gives it the lowest
- * register free over its life; r1 needs something in r0 between the
- * baseY load and the store, which the ROM's block doesn't have. The
- * permuter on a C port (which gives the same registers) found only
- * self-assignments. */
+ * The target is put back at baseY through Entity::SetPos with its x
+ * unchanged, as EnemyCtrl's oscillators and UpdateTriggerBox's vulture
+ * clamp do (enemy_ctrl.cpp, #662 round 5). The x is a pseudo in r0
+ * between the baseY load and the store, which is what the ROM's r2/r1
+ * split needs (#662 round 4: local-alloc gives the baseY copy the
+ * lowest register free over its life); after reload, reload_cse_regs
+ * deletes the x store as a no-op and flow2 its load. That is the
+ * self-assignment the permuter found on a C port in round 4; with a
+ * plain `t->y = baseY` the store takes r0/r1 (an r1 pin until round
+ * 4). */
 void EnemyCtrl::UpdateHop()
 {
     MovingSprite *t;
@@ -116,10 +105,7 @@ void EnemyCtrl::UpdateHop()
     SetMotionX(0);
     SetMotionY(0);
     t = target;
-    {
-        MATCH_HOLD_REG(s32, by, r1) = baseY;
-        t->y = by;
-    }
+    t->SetPos(t->x, baseY);
     if (t->animDone) {
         switch (mode) {
         case 0:

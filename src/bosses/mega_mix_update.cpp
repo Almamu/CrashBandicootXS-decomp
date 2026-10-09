@@ -3,7 +3,6 @@
 #include "player.hpp"
 
 extern "C" {
-#include "match.h"
 #include "aabb.h"
 #include "crates.h"
 #include "crate.h"
@@ -44,38 +43,6 @@ extern "C" {
  *   a hit (his HandleEvent). Once the anim is done it runs again (or
  *   stops, if the player is dead). */
 
-/* The player's `dead` byte (+0x104). The 0x104 is loaded into a spill
- * register that rotates through r1-r3; for this one read the ROM's is r3,
- * one step from what g++ picks (the same in C), so it is pinned there.
- * The greg dump shows it is a reload of the constant for the add (insn
- * 1313 for insn 1110), so the register depends on every reload before it
- * in the function. #662 round 2: the other two reads and this one written
- * with `!`, a `bool` latch, an early `return`, the branches swapped, or
- * state 2's out-of-range exit calling Run itself instead of `goto run`
- * all leave r1. #662 round 3: reload's allocate_reload_reg starts each
- * search one past the last spill register it handed out
- * (last_spill_reg), and in the plain function the reload just before
- * this one (the animDone address) used r0, so the search stops at r1;
- * the ROM's r3 needs the previous reload to have taken r2, i.e. a
- * different count of reloads before it with the same final code, which
- * no spelling of the function's other reads gives. No -f flag or pair
- * of flags changes it. #662 round 4 (instrumented reload): the spill
- * registers are r1-r3; the HandleEvent call's `ldrsh` scratch takes r3
- * (last_spill_reg 2), the animDone address is reloaded into its own
- * output r0 without allocate_reload_reg, and the search for the 0x104
- * starts at r1. r3 needs one more allocate_reload_reg landing on r2
- * between the two, or r1 and r2 busy at the add; an inherited reload
- * doesn't move last_spill_reg, and a choose_reload_regs retry (which
- * keeps it) needs a reload that fails with inheritance. Nothing in the
- * final code between the two reloads can carry either. */
-static inline u8 PlayerDeadByte(Player *pl)
-{
-    MATCH_HOLD_REG(s32, off, r3) = 0x104;
-
-    MATCH_KEEP(off);
-    return *((u8 *)pl + off);
-}
-
 /* Runs towards the player: faces him (X record 3 when mirrored, else 1),
  * anim 0, mode 1. */
 static inline void Run(MegaMixCtrl *self, MovingSprite *part)
@@ -107,7 +74,6 @@ void MegaMixCtrl::Update(MovingSprite *part)
     case 0:
         if (gPlayer->dead != 0)
             return;
-    run:
         Run(this, part);
         return;
     case 1:
@@ -211,17 +177,24 @@ void MegaMixCtrl::Update(MovingSprite *part)
         if (part->frame == 8 && part->stepTimer == 0) {
             Player *pl = gPlayer;
 
-            /* out of range: run again (the same code as state 0's, which
-             * the ROM shares) */
-            if (ABS_BRANCHLESS(pl->x - part->x) > 0x27FF ||
-                ABS_BRANCHLESS(pl->y - part->y) > 0x31FF)
-                goto run;
-            pl->HandleEvent(0, EVENT_HIT, 0);
+            /* Out of range it runs again. The three copies of Run (here,
+             * in state 0 and after the grab) are one in the ROM: jump2
+             * cross-jumps them after reload. This copy's reloads (the
+             * scratch of each virtual call's `ldrsh`) still count in
+             * reload's spill-register rotation, which is what puts the
+             * `dead` read's 0x104 below in r3 (#662 round 5): written as
+             * a `goto` into state 0's copy it lands in r1, an r3 pin
+             * until round 4. */
+            if (ABS_BRANCHLESS(pl->x - part->x) <= 0x27FF &&
+                ABS_BRANCHLESS(pl->y - part->y) <= 0x31FF)
+                pl->HandleEvent(0, EVENT_HIT, 0);
+            else
+                Run(this, part);
             return;
         }
         if (!part->animDone)
             return;
-        if (PlayerDeadByte(gPlayer) == 0)
+        if (gPlayer->dead == 0)
             Run(this, part);
         else
             Stop(this, part);
