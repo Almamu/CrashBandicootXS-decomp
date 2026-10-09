@@ -19,7 +19,8 @@
  * part 11h the jetpack ring and the collected wumpa
  * (src/bosses/hovercraft.cpp); part 11d the other polar actors
  * (src/vehicle/polar/polar_crates.cpp, polar_pickups.cpp, polar_objects.cpp,
- * polar_aku_aku.cpp and polar_nitro.cpp), so every polar class is C++;
+ * polar_aku_aku.cpp, polar_course_objects.cpp and polar_nitro.cpp), so
+ * every polar class is C++;
  * part 11g the balloon crates, the parachute nitro and the rocket
  * (src/vehicle/jetpack/jetpack_crates.cpp).
  *
@@ -268,8 +269,9 @@ public:
 #undef POLAR_CRATE_CTOR
 #endif
 
-/* The hazards and objects (src/vehicle/polar/polar_objects.cpp and
- * polar_aku_aku.cpp). Their constructors are out of line. */
+/* The hazards and objects (src/vehicle/polar/polar_objects.cpp,
+ * polar_aku_aku.cpp and polar_course_objects.cpp). Their constructors are
+ * out of line. */
 
 /* An electric fence (gPolarElectricFenceVtable): shown once near enough,
  * it shocks the player on its wire and hurts it on its posts. */

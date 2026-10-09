@@ -17,7 +17,7 @@ extern "C" {
 /* `UpdateYeti`'s (yeti_update.cpp) shared AABB-overlap-test tail,
  * factored out as its own function taking `self` explicitly instead of
  * always reading the player global - used by `UpdatePolarCheckpointCrate`
- * (polar_aku_aku.cpp, already matched, called as `IsTouchingYeti(self)`)
+ * (polar_course_objects.cpp, already matched, called as `IsTouchingYeti(self)`)
  * among others. Same 12-byte `{s16 x, y, z, sizeX, sizeY, sizeZ}` record
  * shape and same self-copy-through-`MemCopy32` idiom as `UpdateYeti`
  * - see that function's doc comment for the full record-layout writeup.

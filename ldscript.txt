@@ -244,6 +244,7 @@ SECTIONS
         build/crashbandicootxs/src/vehicle/polar/polar_crates.o(.text);
         build/crashbandicootxs/src/vehicle/polar/polar_objects.o(.text);
         build/crashbandicootxs/src/vehicle/polar/polar_aku_aku.o(.text);
+        build/crashbandicootxs/src/vehicle/polar/polar_course_objects.o(.text);
         build/crashbandicootxs/src/vehicle/polar/yeti_update.o(.text);
         build/crashbandicootxs/src/vehicle/polar/yeti_states.o(.text);
         build/crashbandicootxs/src/vehicle/polar/yeti_graphics.o(.text);

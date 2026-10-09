@@ -104,7 +104,7 @@ void PolarPlayer::GiveLife()
     gLevelState->AddLife();
 }
 
-/* A boost pad at `x` (polar_aku_aku.cpp): only while running, dashing or
+/* A boost pad at `x` (polar_course_objects.cpp): only while running, dashing or
  * boosted (states 1-3), the player is put on the pad, plays anim 2 and
  * is boosted (state 3) with the steering off; the bear's speed jumps
  * (0x5a from a dash, 0x55 from a run). */
