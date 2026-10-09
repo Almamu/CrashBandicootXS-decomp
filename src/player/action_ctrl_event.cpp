@@ -142,7 +142,21 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
              * flow pass after it) merges two identical arms of a test,
              * leaving the test's load (#662 round 3 reproduced this in
              * Player::HandleEvent, player_update.cpp, with identical
-             * arms or a dead store, neither of them source). */
+             * arms or a dead store, neither of them source).
+             * #662 round 4, from jump.c and toplev.c: a test on `state`
+             * whose body flow1 finds dead is enough. flow1 turns the
+             * body into notes but keeps the jump; no jump pass runs
+             * between flow1 and jump2; jump2 deletes the jump to the
+             * next label and its cc0 setter, and delete_computation's
+             * removal of the insns feeding it (the load) is skipped once
+             * reload has run (the `if (! reload_completed)` Cygnus
+             * change), while flow2 has already run. `if (state ==
+             * ACTION_STATE_SLIDE) m = 0;` here (m is dead) gives the
+             * whole object. A body with live code keeps the test, and an
+             * empty one goes in the jump passes before flow1, whose
+             * dead-code pass then takes the load too; so only a dead
+             * store (or identical arms) leaves the load, and neither is
+             * source a programmer writes. */
             *(volatile s32 *)&state;
             bumpTimer = 3;
             SetBumped(part, 1);
@@ -184,7 +198,21 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
              * (`adds r4, r5, #0`) where the ROM reloads the constant. A `u8`
              * or `u16` `one` is found by cse's narrower-mode lookup the
              * same way; -fno-cse-follow-jumps and -fno-regmove each move
-             * the object 100+ lines. */
+             * the object 100+ lines. #662 round 4: in either order, cse
+             * puts two registers set to the same constant in one
+             * extended basic block into one quantity (the second joins
+             * the constant's class) and canonicalizes uses to the first;
+             * the ROM's adjacent `movs r5, #1; movs r4, #1` needs the
+             * AND's 1 to come from outside cse's view and be placed
+             * there later. local-alloc's update_equiv_regs does that for
+             * a constant set once in another block and used once: a
+             * function-scope `u32 jumpKey = A_BUTTON` ANDed here gives
+             * the two movs, but used by both bounce cases it is set once
+             * at the top (3 lines off). An enumeration of 30000 variants
+             * (held/fire/one types u8-u32/s16/bool, `one` before or after
+             * the AND or the R test, `& 1`/`!= 0`/`% 2`, QueueY,
+             * QueueNowY or plain stores, the else's 0 or `fire`) gets no
+             * closer than the copy. */
             MATCH_CONST(one, 1);
             fire = held & 1;
             if (fire) {

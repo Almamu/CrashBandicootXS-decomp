@@ -3,7 +3,6 @@
 #include "audio.hpp"
 
 extern "C" {
-#include "match.h"
 #include "level.h"
 #include "globals.h"
 }
@@ -648,37 +647,26 @@ void SpawnPistonCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 /* Bank +0x114, X mirror flipped, gFlamethrowerLabAssistantAnimMap; the
  * record's attack cycle; state 4.
  *
- * Kept from the C (the same workarounds less one MATCH_USE): the ROM
- * keeps the mirror byte's address (part+0x28) in r3 across
- * AddToPartList through a stack slot (`str r3, [sp]` just before the
- * call, `ldr r3, [sp]` before the second flip), &gEntityFlags in r9 and
- * -0x11 in sl. g++ ranks the address (6 references) above both and
- * gives it a callee-saved register, with the same code under every
- * spelling tried (inline setters taking the sprite or the bits, a
- * pointer taken earlier, the sign test, the record lookup moved); the
- * register allocation is the same as the C front end's. So:
- * - `q` is the address in a stack slot (`MATCH_USE_MEM`), stored inside
- *   the call's argument after a copy of `part` (`MATCH_KEEP`), so the
- *   store follows the r1 move;
- * - the r3 hold (`h3`) keeps r3 free over the animation map store and
- *   the second lookup, so &gEntityFlags is reloaded through r1;
- * - three extra references lift rec2 above the reloaded `q` (rec2 keeps
- *   r2), and one puts `p` ahead of the flag byte (r3, then r4).
- * #662 round 3: the ROM's `str r3, [sp]` / `ldr r3, [sp]` are
- * caller-save.c's save and (lazy) restore of a pseudo global-alloc put in
- * call-clobbered r3, because it ranked below the seven pseudos that took
- * r4-r7, r8, r9 and sl. Written plainly (the flip through a pointer to
- * the mirror bits), the address gets r5 and arg3 drops to r9 and a stack
- * slot (86 lines off); the flag sweep (-fno-gcse ... -O1, -fno-caller-saves)
- * doesn't get closer. */
+ * The flip reads the bit into a `u8` (#662 round 4). The ROM keeps the
+ * mirror byte's address (part+0x28) in call-clobbered r3 across
+ * AddToPartList (caller-save.c's `str r3, [sp]` / `ldr r3, [sp]`),
+ * &gEntityFlags in r9 and -0x11 in sl: global-alloc ranked the address
+ * below the seven pseudos that took r4-r7, r8, r9 and sl. Which side of
+ * it the loaded mirror byte (kept for the store after `!f`'s branch)
+ * falls decides the cascade: with a `u8` copy of the bit that byte lives
+ * 14 insns (3 refs: floor_log2(refs) * refs / length = 0.21) and ranks
+ * below the address (6 refs over 54 insns, 0.22), as in the ROM; with an
+ * `s32` copy it lives 12 (0.25), goes first, and the address ends up in
+ * r5 with arg3 and &gEntityFlags pushed to r9 and a stack slot (86 lines
+ * off; the draft needed a register hold, a stack-slot `MATCH_USE_MEM`,
+ * a `MATCH_KEEP` and four `MATCH_USE`s for that). */
 void SpawnFlamethrowerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
     EnemyCtrl *hdr;
     const struct entity_params *rec;
     const struct entity_params *rec2;
-    Sprite::MirrorFlags *q;
-    MATCH_HOLD_REG(s32, h3, r3);
+    u8 f;
 
     part->bank = BankAnim(0x114);
     part->palette = part->GetAnimPaletteSlot();
@@ -691,31 +679,11 @@ void SpawnFlamethrowerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->f.flags &= 0x7f;
     rec = EntityParams(arg3);
     SetMirror(part, rec);
-    // clang-format off
-    CollidableList()->Add(({
-        MovingSprite *t = part;
-
-        MATCH_KEEP(t);
-        q = &part->mirrorFlags;
-        t;
-    }));
-    // clang-format on
-    MATCH_USE_MEM(q);
-    MATCH_HOLD(h3);
+    CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
     rec2 = EntityParams(arg3);
-    MATCH_USE(h3);
-    MATCH_USE(rec2);
-    MATCH_USE(rec2);
-    MATCH_USE(rec2);
-    {
-        Sprite::MirrorFlags *p = q;
-        s32 f;
-
-        MATCH_USE(p);
-        f = p->mirrorX;
-        SetMirrorX(p, !f);
-    }
+    f = part->mirrorFlags.mirrorX;
+    SetMirrorX(&part->mirrorFlags, !f);
     SetKind(part, 1);
     SetAnims(hdr, gFlamethrowerLabAssistantAnimMap);
     SetAttackCycle(hdr, rec2->p.attackFirst.idleTime, rec2->p.attackFirst.attackTime,

@@ -3,7 +3,6 @@
 
 extern "C" {
 #include "core.h"
-#include "match.h"
 #include "text.h"
 #include "system.h"
 #include "gfx.h"
@@ -37,7 +36,19 @@ extern "C" {
  * The `/b` handler reads the position through GetX/GetY: their inline
  * `this` makes the reads use the same loop-hoisted `&posX`/`&posY` as
  * the stores (the ROM's two spill slots), where a plain `posX` read
- * recomputes the address. */
+ * recomputes the address.
+ *
+ * Each branch of the measured token ends with its own flush test and
+ * `posAccum += len` (#662 round 4). jump2's cross-jumping merges the two
+ * identical tails after reload (the ROM's `bne skip; b flush` from the
+ * fitting token into the wrapped one's flush), but before that `len` has
+ * the extra use: 16 loop-weighted references over 97 insns, so
+ * global-alloc's floor_log2(refs) * refs / live length (0.66) ranks it
+ * above `self` (17 over 141, 0.48) and it takes r7, as in the ROM. The
+ * draft's shared tail (`goto skip`/`goto flush`) left `len` at 14 over
+ * 91 (0.46) against `self`'s 0.51, and needed an extra `MATCH_USE(len)`
+ * reference and an r1 hold at the wrap's `lineCount++` for the reload
+ * rotation that followed. */
 s32 DrawWrappedText(u8 *text, Font *self, struct aabb *box, s32 limit, s32 mode)
 {
     s32 widthAccum;
@@ -59,17 +70,6 @@ s32 DrawWrappedText(u8 *text, Font *self, struct aabb *box, s32 limit, s32 mode)
     token = text;
     while (*token != 0 && lineCount < limit) {
         len = GetWordLength(text);
-        /* Emits nothing; the extra reference raises `len`'s allocation
-         * priority so it gets r7 ahead of `self` (r8) and `charWidth`
-         * (r9), as in the ROM. #662 round 3: global-alloc's priority is
-         * floor_log2(refs) * refs / live length; plain, `len` has 14
-         * refs over 93 insns (3 * 14 / 93 = 0.45) against `self`'s 17
-         * over 136 (4 * 17 / 136 = 0.50), and the asm's operand makes it
-         * 16 (4 * 16 / 94 = 0.68). The ROM needs two more `len` refs or
-         * two fewer `self` refs, which no spelling of the loop tried
-         * (a `self` copy for the /b handler, GetX/GetY into locals,
-         * `text += len`, local reorderings, -fno-* flags, agbcp) gives. */
-        MATCH_USE(len);
         token = text;
         text = token + len;
         if (*token == '/') {
@@ -90,49 +90,24 @@ s32 DrawWrappedText(u8 *text, Font *self, struct aabb *box, s32 limit, s32 mode)
             if (combined <= box->w) {
                 self->DrawChars(token, len);
                 widthAccum = combined;
-                /* ROM order: `bne skip; b flush`. */
-                if (mode != 1)
-                    goto skip;
-                goto flush;
-            } else {
-                {
-                    /* Emits nothing; keeping r1 live here moves the
-                     * spilled lineCount's reload to r2 and the limit's
-                     * to r0, as in the ROM (hard-register hold, #489).
-                     * #662 round 2: `++lineCount >= limit`, `limit <=
-                     * lineCount`, moving the setup stores and the
-                     * permuter (best C wraps every `*token` read in an
-                     * inline function) don't replace it.
-                     * #662 round 3: it is reload's spill-register
-                     * rotation. lineCount and limit are spilled, and
-                     * reload hands out r0-r3 round-robin: plain, the
-                     * increment gets r1 and the limit r2; with r1 live
-                     * the rotation starts one register on (r2, then r0
-                     * with r3 busy), the ROM's. Without the hold the
-                     * rest of the function also moves (the setup
-                     * SetPos's &posY spill); under -fno-rerun-loop-opt
-                     * only these two reloads differ, and no spelling of
-                     * the wrap (`++lineCount`, `limit <= lineCount`, the
-                     * draw nested in `if (lineCount < limit)`, an inline
-                     * `*token` read, local orders) moves the rotation. */
-                    MATCH_HOLD_REG(s32, hold, r1);
-                    MATCH_HOLD(hold);
-                    lineCount++;
-                    MATCH_USE(hold);
+                if (mode == 1) {
+                    WaitForVBlank();
+                    gOamBuffer->Commit();
                 }
+                posAccum += len;
+            } else {
+                lineCount++;
                 if (lineCount >= limit)
                     continue;
                 self->PutChar('\n');
                 self->DrawChars(token, len);
                 widthAccum = charWidth;
                 if (mode == 1 || mode == 2) {
-                flush:
                     WaitForVBlank();
                     gOamBuffer->Commit();
                 }
+                posAccum += len;
             }
-        skip:
-            posAccum += len;
         }
     }
     if (mode != 0) {
