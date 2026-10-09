@@ -4,9 +4,9 @@
 /* The 3D bosses' actors as C++ (#664, docs/cplusplus.md): the airship's
  * fireball and the hovercraft's weapons, all HpActors (actor_self.hpp).
  * Part 11a declares their destructors (src/actor/inline_copies_actors.cpp). The
- * airship's fireball is complete since part 11i (src/bosses/airship*.cpp,
+ * airship's fireball is complete since part 11i (src/vehicle/jetpack/airship*.cpp,
  * with the airship itself), its two flight states since part 11f
- * (src/vehicle/jetpack_plane.cpp); the hovercraft's weapons since part
+ * (src/vehicle/jetpack/jetpack_plane.cpp); the hovercraft's weapons since part
  * 11h (src/bosses/hovercraft*.cpp, with the hovercraft itself).
  * They have no C views. cxx_symbols.txt maps the C++ names to the C
  * ones.
@@ -21,10 +21,10 @@ extern "C" {
 }
 
 /* The airship's fireball (gAirshipFireballVtable,
- * src/bosses/airship_fireball.cpp): it flies around the
+ * src/vehicle/jetpack/airship_fireball.cpp): it flies around the
  * point it was spawned at (StateOrbit), then spirals in on it
  * (StateSpiralIn); the ROM has those two flight states in
- * src/vehicle/jetpack_plane.cpp. */
+ * src/vehicle/jetpack/jetpack_plane.cpp. */
 class AirshipFireball : public HpActor
 {
 public:
@@ -55,7 +55,7 @@ public:
 COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(AirshipFireball) == 0x6C);
 COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(AirshipFireball) == 0x6C);
 
-/* The airship itself (src/bosses/airship*.cpp) is no class of its own: a
+/* The airship itself (src/vehicle/jetpack/airship*.cpp) is no class of its own: a
  * bare AnimPart (gAirship, `new AnimPart` in CreateAirship) for its
  * picture's animation, and globals for the rest (gAirshipState,
  * gAirshipX, ...), stepped by UpdateAirship through the plain function

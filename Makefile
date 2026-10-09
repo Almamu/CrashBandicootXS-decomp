@@ -260,13 +260,13 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/enemies/enemy_ctrl.o \
                   $(C_BUILDDIR)/objects/effect_ctrl.o \
                   $(C_BUILDDIR)/vehicle/polar/polar_player.o \
-                  $(C_BUILDDIR)/vehicle/jetpack_spawn.o \
-                  $(C_BUILDDIR)/vehicle/jetpack_run.o \
+                  $(C_BUILDDIR)/vehicle/jetpack/jetpack_spawn.o \
+                  $(C_BUILDDIR)/vehicle/jetpack/jetpack_run.o \
                   $(C_BUILDDIR)/bosses/hovercraft.o \
                   $(C_BUILDDIR)/frontend/credits.o \
                   $(C_BUILDDIR)/vehicle/polar/polar_nitro.o \
-                  $(C_BUILDDIR)/bosses/airship_map.o \
-                  $(C_BUILDDIR)/bosses/airship_touch.o \
+                  $(C_BUILDDIR)/vehicle/jetpack/airship_map.o \
+                  $(C_BUILDDIR)/vehicle/jetpack/airship_touch.o \
                   $(C_BUILDDIR)/bosses/mega_mix_update.o \
                   $(C_BUILDDIR)/player/action_ctrl_moves.o \
                   $(C_BUILDDIR)/actor/bg_picture.o \
@@ -448,7 +448,7 @@ NO_IMPLEMENT_INLINES_OBJS := $(C_BUILDDIR)/actor/actor.o \
                              $(C_BUILDDIR)/player/action_ctrl_update.o \
                              $(C_BUILDDIR)/player/input_ctrl.o \
                              $(C_BUILDDIR)/player/player_collide.o \
-                             $(C_BUILDDIR)/vehicle/jetpack_crates.o \
+                             $(C_BUILDDIR)/vehicle/jetpack/jetpack_crates.o \
                              $(C_BUILDDIR)/vehicle/polar/polar_pickups.o
 $(NO_IMPLEMENT_INLINES_OBJS): CC1FLAGS += -fno-implement-inlines
 

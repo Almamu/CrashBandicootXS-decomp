@@ -63,17 +63,17 @@ extern class PolarAkuAku *SpawnPolarAkuAku(s32 x, s32 y, s32 z, s32 arg);
 extern s32 JetpackIsPauseLocked(void);
 extern s32 PolarIsPauseLocked(void);
 
-/* src/vehicle/jetpack_balloon.cpp: a C-linkage function */
+/* src/vehicle/jetpack/jetpack_balloon.cpp: a C-linkage function */
 extern void nullsub_30(void);
 
-/* src/vehicle/jetpack_crates.cpp: JetpackBalloonCrate's destructor
+/* src/vehicle/jetpack/jetpack_crates.cpp: JetpackBalloonCrate's destructor
  * (vehicle.hpp), for inline_copies_actors.cpp's kinds' destructors */
 extern void DestroyJetpackBalloonCrate(void *self, s32 flags);
 
-/* src/vehicle/jetpack_player.cpp: a C-linkage getter */
+/* src/vehicle/jetpack/jetpack_player.cpp: a C-linkage getter */
 extern u8 IsJetpackPlayerInactive(void);
 
-/* src/vehicle/jetpack_spawn.cpp: the spawners (C linkage) */
+/* src/vehicle/jetpack/jetpack_spawn.cpp: the spawners (C linkage) */
 extern void YetiStateStop(void);
 extern void *SpawnJetpackActor(struct actor_spawn *rec, u8 alt, s32 dz);
 extern void *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, void *spawn);

@@ -359,7 +359,7 @@ from "core" graphics.
   trivial raw-offset getter), `DestroyLargeFont`/`DestroySmallFont` (two more
   `gEntityVtable`-family per-type descriptor table constructors)
 
-- `src/bosses/airship_fireball.c`/`airship_states.c`/`airship_fall.c`/
+- `src/vehicle/jetpack/airship_fireball.c`/`airship_states.c`/`airship_fall.c`/
   `airship.c`/`airship_damage.c`/`airship_graphics.c` (new files, issue
   #58, ROM `0x08030334`-`0x08031784` - the boss-weapon effect state
   machine, non-adjacent since 18 raw functions sit between/around them;
@@ -535,7 +535,7 @@ from "core" graphics.
   functions either (the raw `UpdateActionCtrl`/`TryActionCtrlDoubleJump`/`HandleActionCtrlAirInput`
   sit in between). See
   [docs/matching/archive/issue-16-actor-12160.md](../matching/archive/issue-16-actor-12160.md).
-- `src/vehicle/jetpack_run.c`/`jetpack_player.c`/
+- `src/vehicle/jetpack/jetpack_run.c`/`jetpack_player.c`/
   `jetpack_shot.c` (new files, GitHub issue #56, ROM
   0x0802F0DC-0x0802FBF0 - a second boss-weapon "spawn/pre-attack"
   singleton and its `self` object, non-adjacent since the parked
@@ -555,7 +555,7 @@ from "core" graphics.
   and the singleton's teardown/destructor, all sharing
   `ctrl.c`/`action_ctrl_states.c`/`airship_fireball.c`'s established
   "self" object conventions.
-- `src/vehicle/jetpack_plane.c` (new file, GitHub issue #57 plus
+- `src/vehicle/jetpack/jetpack_plane.c` (new file, GitHub issue #57 plus
   issue #58's first two functions, ROM 0x0802FBF0-0x08030530, formerly
   `asm/code_3_2_20_28568_c99c_2fbf0.s`): three small C++ actor classes
   (method tables `gJetpackPlaneVtable`/`087E51EC`/`087E5224`) and the
@@ -690,7 +690,7 @@ from "core" graphics.
   (the `gYeti` gauge's palette ramp and affine BG2 setup;
   `yeti_update.cpp` now builds with old_agbcc) and `BuildYetiBg2Map` (an
   unused copy of the gauge's dot-pattern fill).
-- `src/vehicle/jetpack_spawn.c` (new file, ROM `0x0802E0A4`-
+- `src/vehicle/jetpack/jetpack_spawn.c` (new file, ROM `0x0802E0A4`-
   `0x0802F0DC`, the gap between issue #54's chunk and issue #56's
   chunk, tracked as issue #55; built with old_agbcc): all 25 functions -
   the spawn dispatcher `CreateJetpackActor` (a plain 31-case `switch`) with
@@ -807,7 +807,7 @@ from "core" graphics.
   into `r0` via the ABI, but `mode0` has no such call to hint it).
   Retires the old raw `asm/code_3_2_15.o` guard entirely.
 
-- `src/vehicle/jetpack_balloon.c` (new file, ROM 0x08031784-0x08031A6C,
+- `src/vehicle/jetpack/jetpack_balloon.c` (new file, ROM 0x08031784-0x08031A6C,
   Phase 1 of the boss-weapon/singleton cluster's gap between issue #58
   and issue #62): `GetAirshipHpPercent` (tracker "ready" check scaling the
   countdown via `__divsi3`), `DestroyAirship` (tracker destructor,
@@ -820,7 +820,7 @@ from "core" graphics.
   `IsAirshipFireballUnshootable`/`IsHovercraftCannonUnshootable`) - see
   [docs/matching/archive/issue-59-0x08031784-actor.md](../matching/archive/issue-59-0x08031784-actor.md).
 
-- `src/vehicle/jetpack_crates.c` (new file, ROM 0x08031B0C-0x08032688,
+- `src/vehicle/jetpack/jetpack_crates.c` (new file, ROM 0x08031B0C-0x08032688,
   first 30 of issue #59 Phase 2's 60-function remainder): the
   "type-byte event dispatch" family (`UpdateJetpackQuestionCrate`/`DamageJetpackQuestionCrate`/
   `UpdateJetpackHealthCrate`/`UpdateJetpackTimeCrate`/`DamageJetpackTimeCrate`), three `SpawnJetpackBalloon`-based
@@ -1117,7 +1117,7 @@ See [docs/matching/archive/big-naked-retry-2.md](../matching/archive/big-naked-r
 
 ### Matched in the fourth mid-range NAKED retry
 
-- `src/bosses/airship_graphics.c` - `ConvertAirshipTiles` (issue #58, VRAM
+- `src/vehicle/jetpack/airship_graphics.c` - `ConvertAirshipTiles` (issue #58, VRAM
   fill-level meter), both compilers. The fixes that closed its one-row
   twin `ConvertHovercraftTiles`: the 0xf mask from `asm("" : "=r"(m) : "0"(0xf))`
   ANDed as `m & b`, a separate local for the second byte, the second
@@ -1321,7 +1321,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   recheck for dead-branch elimination to collapse. The old raw
   `asm/code_3_2_20_28568_c99c_31784_33ef4_34314.s` is retired. GitHub
   issue #63, see `docs/matching/archive/issue-63-0x08033ef4-actor.md`.
-- **`AllocJetpackPlayerTiles`** (`src/vehicle/jetpack_run.c`) - computes two
+- **`AllocJetpackPlayerTiles`** (`src/vehicle/jetpack/jetpack_run.c`) - computes two
   keyframe-driven tile-cache sizes via `AllocVramTileBlock`; now fully
   matched as real C. The ROM's "materialize the multiply result, then
   copy it again before shifting" idiom (`adds r2,r3,#0; muls r2,r1,r2;
@@ -1336,7 +1336,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   own `ldrb` register choices), each closed with the same
   register-pin/opaque-asm technique. See
   `docs/matching/archive/issue-56-0x0802f0dc-actor.md`.
-- **`CreateJetpackShot`** (`src/vehicle/jetpack_shot.c`) - an
+- **`CreateJetpackShot`** (`src/vehicle/jetpack/jetpack_shot.c`) - an
   `InitActorPart`-based constructor for this cluster's `self` object:
   forwards its first three real arguments plus one stack argument
   straight to `InitActorPart`, then marks `self+0x54` = 1, sets

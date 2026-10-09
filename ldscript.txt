@@ -248,24 +248,24 @@ SECTIONS
         build/crashbandicootxs/src/vehicle/polar/yeti_states.o(.text);
         build/crashbandicootxs/src/vehicle/polar/yeti_graphics.o(.text);
         build/crashbandicootxs/src/vehicle/polar/yeti.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack_spawn.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack_run.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack_player.o(.text);
+        build/crashbandicootxs/src/vehicle/jetpack/jetpack_spawn.o(.text);
+        build/crashbandicootxs/src/vehicle/jetpack/jetpack_run.o(.text);
+        build/crashbandicootxs/src/vehicle/jetpack/jetpack_player.o(.text);
         build/crashbandicootxs/src/actor/bg_picture.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack_shot.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack_plane.o(.text);
-        build/crashbandicootxs/src/bosses/airship_fireball.o(.text);
-        build/crashbandicootxs/src/bosses/airship_states.o(.text);
-        build/crashbandicootxs/src/bosses/airship_explode.o(.text);
-        build/crashbandicootxs/src/bosses/airship_fall.o(.text);
-        build/crashbandicootxs/src/bosses/airship_map.o(.text);
-        build/crashbandicootxs/src/bosses/airship.o(.text);
-        build/crashbandicootxs/src/bosses/airship_touch.o(.text);
-        build/crashbandicootxs/src/bosses/airship_damage.o(.text);
-        build/crashbandicootxs/src/bosses/airship_load_graphics.o(.text);
-        build/crashbandicootxs/src/bosses/airship_graphics.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack_balloon.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack_crates.o(.text);
+        build/crashbandicootxs/src/vehicle/jetpack/jetpack_shot.o(.text);
+        build/crashbandicootxs/src/vehicle/jetpack/jetpack_plane.o(.text);
+        build/crashbandicootxs/src/vehicle/jetpack/airship_fireball.o(.text);
+        build/crashbandicootxs/src/vehicle/jetpack/airship_states.o(.text);
+        build/crashbandicootxs/src/vehicle/jetpack/airship_explode.o(.text);
+        build/crashbandicootxs/src/vehicle/jetpack/airship_fall.o(.text);
+        build/crashbandicootxs/src/vehicle/jetpack/airship_map.o(.text);
+        build/crashbandicootxs/src/vehicle/jetpack/airship.o(.text);
+        build/crashbandicootxs/src/vehicle/jetpack/airship_touch.o(.text);
+        build/crashbandicootxs/src/vehicle/jetpack/airship_damage.o(.text);
+        build/crashbandicootxs/src/vehicle/jetpack/airship_load_graphics.o(.text);
+        build/crashbandicootxs/src/vehicle/jetpack/airship_graphics.o(.text);
+        build/crashbandicootxs/src/vehicle/jetpack/jetpack_balloon.o(.text);
+        build/crashbandicootxs/src/vehicle/jetpack/jetpack_crates.o(.text);
         build/crashbandicootxs/src/bosses/hovercraft.o(.text);
         build/crashbandicootxs/src/bosses/hovercraft_parts.o(.text);
         build/crashbandicootxs/src/bosses/hovercraft_cannon.o(.text);
@@ -495,17 +495,17 @@ SECTIONS
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.20PolarCheckpointCrate); /* gPolarCheckpointCrateVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.21JetpackCheckpointText); /* gJetpackCheckpointTextVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.16JetpackExplosion); /* gJetpackExplosionVtable */
-        build/crashbandicootxs/src/vehicle/jetpack_player.o(.gnu.linkonce.d._vt.13JetpackPlayer); /* gJetpackPlayerVtable */
+        build/crashbandicootxs/src/vehicle/jetpack/jetpack_player.o(.gnu.linkonce.d._vt.13JetpackPlayer); /* gJetpackPlayerVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.11JetpackShot); /* gJetpackShotVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.12JetpackPlane); /* gJetpackPlaneVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.13JetpackBomber); /* gJetpackBomberVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.17JetpackCannonball); /* gJetpackCannonballVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.15AirshipFireball); /* gAirshipFireballVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.14JetpackBalloon); /* gJetpackBalloonVtable */
-        build/crashbandicootxs/src/vehicle/jetpack_crates.o(.gnu.linkonce.d._vt.18JetpackHealthCrate); /* gJetpackHealthCrateVtable */
-        build/crashbandicootxs/src/vehicle/jetpack_crates.o(.gnu.linkonce.d._vt.16JetpackTimeCrate); /* gJetpackTimeCrateVtable */
-        build/crashbandicootxs/src/vehicle/jetpack_crates.o(.gnu.linkonce.d._vt.20JetpackQuestionCrate); /* gJetpackQuestionCrateVtable */
-        build/crashbandicootxs/src/vehicle/jetpack_crates.o(.gnu.linkonce.d._vt.19JetpackBalloonCrate); /* gJetpackBalloonCrateVtable */
+        build/crashbandicootxs/src/vehicle/jetpack/jetpack_crates.o(.gnu.linkonce.d._vt.18JetpackHealthCrate); /* gJetpackHealthCrateVtable */
+        build/crashbandicootxs/src/vehicle/jetpack/jetpack_crates.o(.gnu.linkonce.d._vt.16JetpackTimeCrate); /* gJetpackTimeCrateVtable */
+        build/crashbandicootxs/src/vehicle/jetpack/jetpack_crates.o(.gnu.linkonce.d._vt.20JetpackQuestionCrate); /* gJetpackQuestionCrateVtable */
+        build/crashbandicootxs/src/vehicle/jetpack/jetpack_crates.o(.gnu.linkonce.d._vt.19JetpackBalloonCrate); /* gJetpackBalloonCrateVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.21JetpackParachuteNitro); /* gJetpackParachuteNitroVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.13JetpackRocket); /* gJetpackRocketVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.11JetpackRing); /* gJetpackRingVtable */

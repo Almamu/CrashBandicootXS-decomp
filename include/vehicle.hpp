@@ -21,7 +21,7 @@
  * (src/vehicle/polar/polar_crates.cpp, polar_pickups.cpp, polar_objects.cpp,
  * polar_aku_aku.cpp and polar_nitro.cpp), so every polar class is C++;
  * part 11g the balloon crates, the parachute nitro and the rocket
- * (src/vehicle/jetpack_crates.cpp).
+ * (src/vehicle/jetpack/jetpack_crates.cpp).
  *
  * No `#pragma interface`: g++ emits the vtables, each in its key-method
  * object: most in inline_copies_actors.cpp, where the classes' destructors are (see
@@ -392,7 +392,7 @@ public:
 /* The jetpack levels (7 vtable slots: HpActor's; the balloon crates
  * add an 8th). */
 
-/* The jetpack player (gJetpackPlayerVtable; src/vehicle/jetpack_spawn.cpp,
+/* The jetpack player (gJetpackPlayerVtable; src/vehicle/jetpack/jetpack_spawn.cpp,
  * jetpack_player.cpp and jetpack_run.cpp): its hit points are HpActor's,
  * shown as a percentage (GetHp); the rest of its state is in the
  * gJetpack* globals (vehicle.h), as the ROM has it. CreateJetpackPlayer
@@ -466,7 +466,7 @@ public:
     virtual s32 IsUnshootable(); // 5 IsJetpackExplosionUnshootable
 };
 
-/* The jetpack player's shot (src/vehicle/jetpack_shot.cpp): it flies by
+/* The jetpack player's shot (src/vehicle/jetpack/jetpack_shot.cpp): it flies by
  * its speed, and hits the first shootable actor or the airship. */
 class JetpackShot : public HpActor
 {
@@ -483,7 +483,7 @@ public:
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackShot) == 0x60);
 
-/* The plane (gJetpackPlaneVtable, src/vehicle/jetpack_plane.cpp): it hops
+/* The plane (gJetpackPlaneVtable, src/vehicle/jetpack/jetpack_plane.cpp): it hops
  * from spawn point to spawn point (Aim, the GetActorSpawn* accessors) and
  * fires cannonballs at the player from its low pose; shot down, it falls
  * out of the sky. */
@@ -523,7 +523,7 @@ public:
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackPlane) == 0x80);
 
-/* The bomber (gJetpackBomberVtable, src/vehicle/jetpack_plane.cpp): its
+/* The bomber (gJetpackBomberVtable, src/vehicle/jetpack/jetpack_plane.cpp): its
  * record's kind (4-9) picks how it moves around its home point; it
  * explodes on the player. */
 class JetpackBomber : public HpActor
@@ -559,7 +559,7 @@ public:
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackBomber) == 0x64);
 
 /* The cannonball the planes and the airship fire
- * (gJetpackCannonballVtable, src/vehicle/jetpack_plane.cpp). */
+ * (gJetpackCannonballVtable, src/vehicle/jetpack/jetpack_plane.cpp). */
 class JetpackCannonball : public HpActor
 {
 public:
@@ -578,7 +578,7 @@ COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackCannonball) == 0x60);
 class JetpackBalloonCrate;
 
 /* The balloon a crate hangs from (gJetpackBalloonVtable,
- * src/vehicle/jetpack_balloon.cpp): the crate moves it (Move) until it is
+ * src/vehicle/jetpack/jetpack_balloon.cpp): the crate moves it (Move) until it is
  * released (Release) and floats away, or is shot and pops. */
 class JetpackBalloon : public HpActor
 {
@@ -613,7 +613,7 @@ public:
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackBalloon) == 0x64);
 
 /* The crates hanging from balloons (gJetpackBalloonCrateVtable,
- * src/vehicle/jetpack_crates.cpp): each hangs from a balloon of its own
+ * src/vehicle/jetpack/jetpack_crates.cpp): each hangs from a balloon of its own
  * (SpawnJetpackBalloon), swaying around its spawn point, until the
  * balloon is shot (Break: it falls) or the crate is (Damage: it breaks
  * and lets the balloon go). The three kinds built on it pay out when
@@ -698,7 +698,7 @@ public:
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackQuestionCrate) == 0x74);
 
 /* A nitro crate on a parachute (gJetpackParachuteNitroVtable,
- * src/vehicle/jetpack_crates.cpp): it rises to `limitY`, and explodes on
+ * src/vehicle/jetpack/jetpack_crates.cpp): it rises to `limitY`, and explodes on
  * the player or when shot. */
 class JetpackParachuteNitro : public HpActor
 {
@@ -716,7 +716,7 @@ public:
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackParachuteNitro) == 0x60);
 
-/* A rocket (gJetpackRocketVtable, src/vehicle/jetpack_crates.cpp): it
+/* A rocket (gJetpackRocketVtable, src/vehicle/jetpack/jetpack_crates.cpp): it
  * swings around `originX` while it comes down by `stepY` to `limitY`,
  * then explodes (Launch); it hurts the player once on contact. */
 class JetpackRocket : public HpActor
@@ -741,7 +741,7 @@ public:
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackRocket) == 0x68);
 
 /* A jetpack ring (gJetpackRingVtable). Its constructor and slot 5 are in src/bosses/hovercraft.cpp
- * (part 11h), its Update in src/vehicle/jetpack_crates.cpp (part 11g). */
+ * (part 11h), its Update in src/vehicle/jetpack/jetpack_crates.cpp (part 11g). */
 class JetpackRing : public HpActor
 {
 public:

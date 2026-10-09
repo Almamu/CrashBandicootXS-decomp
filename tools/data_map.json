@@ -224,8 +224,8 @@
     "ConvertAirshipTiles"
    ],
    "consumer_files": [
-    "bosses/airship_load_graphics.c",
-    "bosses/airship_graphics.c"
+    "vehicle/jetpack/airship_load_graphics.c",
+    "vehicle/jetpack/airship_graphics.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -251,7 +251,7 @@
     "CreateAirship"
    ],
    "consumer_files": [
-    "bosses/airship.c"
+    "vehicle/jetpack/airship.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -366,12 +366,12 @@
    "consumer_files": [
     "player/player_event.c",
     "enemies/enemy_ctrl.cpp",
-    "vehicle/jetpack_crates.c",
+    "vehicle/jetpack/jetpack_crates.c",
     "bosses/hovercraft.c",
     "vehicle/polar/polar_objects.c",
     "frontend/starfield.cpp",
     "menus/zoom_bg.cpp",
-    "vehicle/jetpack_plane.c",
+    "vehicle/jetpack/jetpack_plane.c",
     "pickups/extra_life.cpp",
     "pickups/wumpa_update.cpp",
     "pickups/extra_life.cpp"
@@ -3886,8 +3886,8 @@
     "RunJetpackPlayerState"
    ],
    "consumer_files": [
-    "vehicle/jetpack_spawn.c",
-    "vehicle/jetpack_player.c"
+    "vehicle/jetpack/jetpack_spawn.c",
+    "vehicle/jetpack/jetpack_player.c"
    ],
    "ptr_words_code": 8,
    "ptr_words_data": 0,
@@ -3911,7 +3911,7 @@
     "AnimateJetpackPlayerPalette"
    ],
    "consumer_files": [
-    "vehicle/jetpack_player.c"
+    "vehicle/jetpack/jetpack_player.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3936,7 +3936,7 @@
     "RunJetpackPlaneState"
    ],
    "consumer_files": [
-    "vehicle/jetpack_plane.c"
+    "vehicle/jetpack/jetpack_plane.c"
    ],
    "ptr_words_code": 4,
    "ptr_words_data": 0,
@@ -3961,7 +3961,7 @@
     "RunJetpackBomberState"
    ],
    "consumer_files": [
-    "vehicle/jetpack_plane.c"
+    "vehicle/jetpack/jetpack_plane.c"
    ],
    "ptr_words_code": 7,
    "ptr_words_data": 0,
@@ -3986,7 +3986,7 @@
     "RunAirshipFireballState"
    ],
    "consumer_files": [
-    "bosses/airship_fireball.c"
+    "vehicle/jetpack/airship_fireball.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -4010,7 +4010,7 @@
     "SpawnAirship"
    ],
    "consumer_files": [
-    "bosses/airship.c"
+    "vehicle/jetpack/airship.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4035,8 +4035,8 @@
     "AnimateAirshipPalette"
    ],
    "consumer_files": [
-    "bosses/airship.c",
-    "bosses/airship_graphics.c"
+    "vehicle/jetpack/airship.c",
+    "vehicle/jetpack/airship_graphics.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4062,9 +4062,9 @@
     "IsTouchingAirship"
    ],
    "consumer_files": [
-    "bosses/airship_explode.c",
-    "bosses/airship.c",
-    "bosses/airship_touch.c"
+    "vehicle/jetpack/airship_explode.c",
+    "vehicle/jetpack/airship.c",
+    "vehicle/jetpack/airship_touch.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4089,7 +4089,7 @@
     "CreateAirship"
    ],
    "consumer_files": [
-    "bosses/airship.c"
+    "vehicle/jetpack/airship.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4113,7 +4113,7 @@
     "UpdateAirship"
    ],
    "consumer_files": [
-    "bosses/airship.c"
+    "vehicle/jetpack/airship.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -4137,7 +4137,7 @@
     "RunJetpackBalloonState"
    ],
    "consumer_files": [
-    "vehicle/jetpack_balloon.c"
+    "vehicle/jetpack/jetpack_balloon.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -4162,7 +4162,7 @@
     "RunJetpackBalloonCrateState"
    ],
    "consumer_files": [
-    "vehicle/jetpack_crates.c"
+    "vehicle/jetpack/jetpack_crates.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -4186,7 +4186,7 @@
     "UpdateJetpackRocket"
    ],
    "consumer_files": [
-    "vehicle/jetpack_crates.c"
+    "vehicle/jetpack/jetpack_crates.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -8386,11 +8386,11 @@
    "consumer_files": [
     "frontend/company_logos_ctor.cpp",
     "actor/inline_copies_actors.cpp",
-    "vehicle/jetpack_crates.c",
+    "vehicle/jetpack/jetpack_crates.c",
     "bosses/hovercraft.c",
     "vehicle/polar/polar_player_actions.c",
     "vehicle/polar/polar_pickups.c",
-    "vehicle/jetpack_player.c",
+    "vehicle/jetpack/jetpack_player.c",
     "actor/actor.cpp"
    ],
    "ptr_words_code": 3,
@@ -8962,7 +8962,7 @@
     "CreateJetpackCheckpointText"
    ],
    "consumer_files": [
-    "vehicle/jetpack_spawn.c"
+    "vehicle/jetpack/jetpack_spawn.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -8986,7 +8986,7 @@
     "CreateJetpackExplosion"
    ],
    "consumer_files": [
-    "vehicle/jetpack_spawn.c"
+    "vehicle/jetpack/jetpack_spawn.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9011,8 +9011,8 @@
     "DestroyJetpackPlayer"
    ],
    "consumer_files": [
-    "vehicle/jetpack_spawn.c",
-    "vehicle/jetpack_player.c"
+    "vehicle/jetpack/jetpack_spawn.c",
+    "vehicle/jetpack/jetpack_player.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9036,7 +9036,7 @@
     "CreateJetpackShot"
    ],
    "consumer_files": [
-    "vehicle/jetpack_shot.c"
+    "vehicle/jetpack/jetpack_shot.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9060,7 +9060,7 @@
     "CreateJetpackPlane"
    ],
    "consumer_files": [
-    "vehicle/jetpack_plane.c"
+    "vehicle/jetpack/jetpack_plane.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9084,7 +9084,7 @@
     "CreateJetpackBomber"
    ],
    "consumer_files": [
-    "vehicle/jetpack_plane.c"
+    "vehicle/jetpack/jetpack_plane.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9108,7 +9108,7 @@
     "CreateJetpackCannonball"
    ],
    "consumer_files": [
-    "vehicle/jetpack_plane.c"
+    "vehicle/jetpack/jetpack_plane.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9132,7 +9132,7 @@
     "CreateAirshipFireball"
    ],
    "consumer_files": [
-    "bosses/airship_fireball.c"
+    "vehicle/jetpack/airship_fireball.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9156,7 +9156,7 @@
     "CreateJetpackBalloon"
    ],
    "consumer_files": [
-    "vehicle/jetpack_balloon.c"
+    "vehicle/jetpack/jetpack_balloon.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9180,7 +9180,7 @@
     "CreateJetpackHealthCrate"
    ],
    "consumer_files": [
-    "vehicle/jetpack_crates.c"
+    "vehicle/jetpack/jetpack_crates.c"
    ],
    "ptr_words_code": 7,
    "ptr_words_data": 0,
@@ -9204,7 +9204,7 @@
     "CreateJetpackTimeCrate"
    ],
    "consumer_files": [
-    "vehicle/jetpack_crates.c"
+    "vehicle/jetpack/jetpack_crates.c"
    ],
    "ptr_words_code": 7,
    "ptr_words_data": 0,
@@ -9228,7 +9228,7 @@
     "CreateJetpackQuestionCrate"
    ],
    "consumer_files": [
-    "vehicle/jetpack_crates.c"
+    "vehicle/jetpack/jetpack_crates.c"
    ],
    "ptr_words_code": 7,
    "ptr_words_data": 0,
@@ -9255,7 +9255,7 @@
     "InitJetpackBalloonCrate"
    ],
    "consumer_files": [
-    "vehicle/jetpack_crates.c"
+    "vehicle/jetpack/jetpack_crates.c"
    ],
    "ptr_words_code": 7,
    "ptr_words_data": 0,
@@ -9279,7 +9279,7 @@
     "CreateJetpackParachuteNitro"
    ],
    "consumer_files": [
-    "vehicle/jetpack_crates.c"
+    "vehicle/jetpack/jetpack_crates.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9303,7 +9303,7 @@
     "CreateJetpackRocket"
    ],
    "consumer_files": [
-    "vehicle/jetpack_crates.c"
+    "vehicle/jetpack/jetpack_crates.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,

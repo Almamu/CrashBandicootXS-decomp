@@ -1115,7 +1115,7 @@ StateFinishLeap__11PolarPlayer PolarPlayerStateFinishLeap
 StateShocked__11PolarPlayer PolarPlayerStateShocked
 StateRecover__11PolarPlayer PolarPlayerStateRecover
 # part 11i: the airship's fireball (include/boss_actors.hpp;
-# src/bosses/airship_fireball.cpp, src/data/actor_pmf_17c2b8.cpp)
+# src/vehicle/jetpack/airship_fireball.cpp, src/data/actor_pmf_17c2b8.cpp)
 _vt.15AirshipFireball gAirshipFireballVtable
 __15AirshipFireballPC17anim_table_recordiii CreateAirshipFireball
 Update__15AirshipFireball UpdateAirshipFireball
@@ -1156,7 +1156,7 @@ __13PolarBoostPadPC17anim_table_recordiii CreatePolarBoostPad
 __20PolarCheckpointCratePC17anim_table_recordiii CreatePolarCheckpointCrate
 #
 # part 11e: the jetpack player, its shot and the jetpack spawners
-# (include/vehicle.hpp; src/vehicle/jetpack_spawn.cpp, jetpack_player.cpp,
+# (include/vehicle.hpp; src/vehicle/jetpack/jetpack_spawn.cpp, jetpack_player.cpp,
 # jetpack_run.cpp, jetpack_shot.cpp, src/data/actor_pmf_17c1c0.cpp)
 _vt.13JetpackPlayer gJetpackPlayerVtable
 _vt.11JetpackShot gJetpackShotVtable
@@ -1211,7 +1211,7 @@ Boost__11PolarPlayeri BoostPolarPlayer
 GiveMask__11PolarPlayer GivePolarPlayerMask
 Launch__11PolarPlayer LaunchPolarPlayer
 # part 11f: the planes, bombers, cannonballs and balloons (include/vehicle.hpp;
-# src/vehicle/jetpack_plane.cpp, jetpack_balloon.cpp, src/data/actor_pmf_17c260.cpp,
+# src/vehicle/jetpack/jetpack_plane.cpp, jetpack_balloon.cpp, src/data/actor_pmf_17c260.cpp,
 # actor_pmf_17c414.cpp)
 _vt.12JetpackPlane gJetpackPlaneVtable
 _vt.13JetpackBomber gJetpackBomberVtable
@@ -1365,7 +1365,7 @@ Update__20PolarCheckpointCrate UpdatePolarCheckpointCrate
 _vt.20PolarCheckpointCrate gPolarCheckpointCrateVtable
 #
 # part 11g: the balloon crates, the parachute nitro, the rocket and the
-# ring's Update (include/vehicle.hpp; src/vehicle/jetpack_crates.cpp,
+# ring's Update (include/vehicle.hpp; src/vehicle/jetpack/jetpack_crates.cpp,
 # src/data/actor_pmf_17c42c.cpp)
 _vt.19JetpackBalloonCrate gJetpackBalloonCrateVtable
 __19JetpackBalloonCratePC17anim_table_recordiiiUc InitJetpackBalloonCrate
