@@ -1312,7 +1312,7 @@ exceptions").
   and part_list.c's `struct pool_init`), `struct pool_node` (`pool_node` x2,
   `grid_node` x2, `pool_init_node` x2) and `struct pool_link` (`pool_init_link`
   x2, `pool_entry`). ResetCrateList and InitCrateList take `struct pool_manager *`.
-  crate_list.c/crate_list_draw.c/crate_grid_link.c walk the grid as raw
+  crate_list.c/crate_list_draw.c/crate_list_link_active.cpp walk the grid as raw
   `void **` and cast. `PoolResetFreeList` (part_list.c, crate_list_reset.c)
   zeroes the nodes through a local untyped view (see "Codegen findings").
 - **`OperatorNew`/`OperatorNewArray`/`OperatorDelete`/`OperatorDeleteArray`**
