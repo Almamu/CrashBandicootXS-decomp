@@ -1285,6 +1285,52 @@ sites:
   frame pointer, scheduling and the patch's options). None matches; the
   notyourav `cp` tree's gcc/ is semantically identical to pret's agbcc.
 
+**Round 4 in menus/, link/, save/ and frontend/**, from the compiler
+source (8 functions -> 5):
+
+- **A variable set and dead twice is global-alloc's.** local_alloc only
+  takes a pseudo with REG_BASIC_BLOCK >= 0 *and* REG_N_DEATHS == 1;
+  there it ties an output to an input that dies in the insn.
+  `PauseMenu::Draw`'s centring and right-alignment had their own `x`
+  and `t` each, so `x` was tied to the dying `t` and SetPos's `y` got
+  r3 (two holds and two uses fixed that). One function-scope `x, t`
+  pair for both makes them global: no tie, `y` takes r2 first and `x`
+  r3, as in the ROM.
+- **Two `if`s and a `goto`, not `A || START` and a `break`.**
+  `ContinuePrompt::Loop`'s START test keeps its own `lsrs r1, r2, #16`
+  because reload_cse_regs forgets every register value at a code label,
+  and the A test's false branch jumps to one in front of it until jump2
+  cross-jumps the two identical sound-and-leave tails (the ROM's
+  layout). The tails leave by `goto done`: a `break` in the A test is a
+  jump to the loop's end label within LOOP_TEST_THRESHOLD (30) insns of
+  the top, so expand_end_loop would rotate the key reads and the A test
+  to the bottom; a user label doesn't count, and only the `dir` test
+  moves (combine then folds it away, `dir` being only 0 or 1). That
+  freed its `MATCH_KEEP` and `MATCH_USE`.
+- **A struct passed by value to an inline hides copies from cse1.**
+  `LevelSelect::Loop` reads the direction keys through
+  `KeyHalf(union key_state)`, which returns `.half`. The inline's
+  parameter and return value are unions in ADDRESSOF pseudos, so cse1
+  sees the copies through them as memory moves; they become register
+  copies only in the addressof pass, after cse1, and one survives: the
+  ROM's `adds r1, r2, #0` between the 0x80 test's `ands` and `cmp`. The
+  decomp-permuter on a C port found it (in 25 minutes; a `MATCH_KEEP`
+  before).
+- **Kept, with the deciding code in each comment:**
+  `SaveData::TestFlags` (regmove's optimize_reg_copy_1 moves the test
+  onto the copy `result = v`; only a label, jump or loop note between
+  the two, or a hard register, stops it; the permuter's 472 zero-score
+  variants all used junk for that), `LinkSession::ResetState`
+  (priorities 1.21 for `self` against 0.10 for `id`, which would need
+  12 references where the code has 3), `Credits::LoadLogos` (gcse's
+  PRE hoists `slot << 5`; the shift of a hard register is never a PRE
+  candidate), `SaveTransfer::ReceiveChunk` (cse1 shares the two 0xc8
+  constants and with them the product, where the ROM shares only the
+  constant) and `LinkSession::Update` (45-minute decomp-permuter runs
+  on C ports of these four found only junk), and
+  `LinkSession::HandleSerial` (`rf = &this->ring` does give a second
+  register, through gcse's PRE, but in the wrong place).
+
 ## Survey and conversion record (#576)
 
 The conversion is complete. `tools/match_idioms.py` after part 4

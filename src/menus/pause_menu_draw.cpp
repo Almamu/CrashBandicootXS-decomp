@@ -3,7 +3,6 @@
 
 extern "C" {
 #include "core.h"
-#include "match.h"
 #include "system.h"
 #include "text.h"
 #include "util.h"
@@ -103,39 +102,30 @@ void PauseMenu::Animate()
 /* Draws the frame: the level's name centred at the top, "LEVEL N" under
  * it for the numbered levels, the completion percentage right-aligned,
  * the rows, the info page's title and the page itself, and the eyelids
- * while they blink. */
+ * while they blink.
+ *
+ * `x` and `t` serve both the centred name and the right-aligned
+ * percentage (#662 round 4; before, each block had its own pair and two
+ * code-free asm holds and uses). local-alloc only takes a pseudo that
+ * lives in one basic block and dies once (local_alloc: REG_BASIC_BLOCK
+ * >= 0 and REG_N_DEATHS == 1). There it ties `x` to the dying `t` (and
+ * the 0x8c), so x landed in r1 and SetPos's `y` in r3. Set and dead
+ * twice, x and t are left to global-alloc, which doesn't tie them: `y`,
+ * a block-local constant, takes r2 first, and x gets r3 (t r1), as in
+ * the ROM. */
 void PauseMenu::Draw()
 {
     void *label;
     u32 width;
+    u32 x, t;
 
     gOamBuffer->Reset();
     gObjVramCursor->Rewind();
     {
         u32 w = gLargeFont->MeasureText((u8 *)levelName);
-        u32 x, t;
-        MATCH_HOLD_REG(s32, hold, r2);
 
         t = 0xf0 - w;
         x = t >> 1;
-        /* Extra reference (no code): keeps `t` (r1) from being tied
-         * to `x` (r3). */
-        MATCH_USE(t);
-        /* Hard-register hold (no code): `hold`, never assigned, keeps r2
-         * live from its declaration to here, so y takes it afterwards.
-         * #662 round 2: SetPos with the expressions as arguments or an
-         * `x` local give x r1 and y r3 (direct posX/posY stores are
-         * further off), and the permuter found nothing in 43k
-         * iterations.
-         * #662 round 3: local-alloc. Plain, the shift result is tied to
-         * the dying subtraction (r1) and, at the same priority as
-         * SetPos's inlined `y` parameter (2 refs over 5 insns each), is
-         * allocated first because it is born first; `y` then gets r3.
-         * The ROM allocates `y` first (r2) and leaves x untied (r3).
-         * Tried: centring/right-align inline helpers, `y` and the 0xf0
-         * as locals in either order, s32/u32 SetPos parameters, old_agbcp
-         * and every -fno-* flag family. */
-        MATCH_USE(hold);
         gLargeFont->SetPos(x, 0xe);
     }
     gLargeFont->DrawText((u8 *)levelName);
@@ -146,21 +136,9 @@ void PauseMenu::Draw()
         gLargeFont->DrawText(levelNumber);
     }
     width = gLargeFont->MeasureText(percentText);
-    {
-        u32 x, t;
-        MATCH_HOLD_REG(s32, hold, r2);
-
-        t = 0x8c;
-        x = t - width;
-        /* Extra references (no code): neither the 0x8c (r1) nor
-         * `width` (r0) is tied to `x` (r3). */
-        MATCH_USE2(t, width);
-        /* Hard-register hold (no code), as above: the same local-alloc
-         * tie, x tied to the dying 0x8c (round 3: `t`/`x`/`y` locals in
-         * either order, `-width + 0x8c`, a RightX helper don't help). */
-        MATCH_USE(hold);
-        gLargeFont->SetPos(x, 0x88);
-    }
+    t = 0x8c;
+    x = t - width;
+    gLargeFont->SetPos(x, 0x88);
     gLargeFont->DrawText(percentText);
     DrawRows();
     DrawPageTitle();

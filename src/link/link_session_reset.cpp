@@ -65,6 +65,22 @@ extern "C" {
  * inner copy changes the order; the ROM's `id` is referenced only at the
  * call and the copy into the inner loop's spilled source, so nothing
  * natural raises its priority that far.
+ * #662 round 4, the exact priorities (global.c's allocno_compare,
+ * floor_log2(refs) * refs / live length; refs and lengths are weighted
+ * by loop depth): `self` 5 * 34 / 140 = 1.21, `id` 1 * 3 / 29 = 0.10.
+ * `id` lives from its set to the copy into `src` that loop.c hoists in
+ * front of the outer loop, across the first loop, so its 29 can't
+ * shrink; it would need 12 references (3 * 12 / 29 = 1.24) where the
+ * code has 3 (the set, MakeLinkHandshakeId's argument, the hoisted
+ * copy). The other way to the ROM's registers, `self` allocated first
+ * but r4 already taken by something ranked above it that conflicts
+ * with `self` and not with `id`, has no candidate: everything ranked
+ * above `self` is a short-lived value that finds r0-r3 free, and what
+ * the ROM has in r4 later (the inner counter, 3 * 11 / 44 = 0.75, and
+ * the nibble pointer, 2 * 6 / 12 = 1.0) ranks below it; extra
+ * references on the nibble pointer still leave `self` in r4. The
+ * decomp-permuter on a C port (45 minutes) found only junk (a variable
+ * holding the shift count 8). So the references stay.
  * #662 round 2: the copy loops are halfword copies through a packed
  * `struct { u16 v; }` (that reproduces their ldrb/orr/and/strb exactly,
  * the same as the explicit `lo = w & 0xff`), and written naturally that

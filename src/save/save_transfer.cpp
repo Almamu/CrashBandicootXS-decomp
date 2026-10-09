@@ -62,7 +62,15 @@ void SaveTransfer::SendChunk()
  * reuse of r2 is reload_cse's; the natural code also builds the
  * addresses as `(i * 0xc8 + 0xd0) + s` (g++'s pointer arithmetic for
  * `&players[i]`) where the ROM adds `s` first, as the cast through a
- * moved `LinkSession *` here does. */
+ * moved `LinkSession *` here does.
+ * #662 round 4: in the -da dumps of the natural C, expand emits both
+ * products with their own 0xc8 pseudo; cse1 puts the two constants in
+ * one class (the ROM's shared r2) and then finds the second `mult` in
+ * its table, so the product is reused. The ROM shares the constant but
+ * not the product, i.e. its cse saw the first product's operands but
+ * not the product, which no spelling of one basic block gives. The
+ * decomp-permuter on a C port of the natural code (45 minutes) got
+ * from 1590 to 665, through an identity inline, not to the ROM. */
 void SaveTransfer::ReceiveChunk(s32 playerIndex)
 {
     LinkSession *s = gLinkSession;

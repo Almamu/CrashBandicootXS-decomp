@@ -58,7 +58,14 @@ extern "C" {
  * `!(REG_SIOCNT & 4)`, `!((REG_SIOCNT >> 2) & 1)`, `((REG_SIOCNT >> 2) ^ 1)
  * & 1` (one or two statements) and `== 0` forms; no flag of the brief's
  * list (-fno-gcse ... -fno-function-cse, -fno-regmove, -fno-force-mem)
- * matches the object without the keeps. */
+ * matches the object without the keeps.
+ * #662 round 4: cse hashes a constant by mode, so a QImode or HImode 1
+ * would stay apart from the test's SImode one; `u8`/`u16` copies of the
+ * flag still come out as one register. A `bit = 1` local set before
+ * the test for the eor/and (with or without the test using it too) is
+ * canonicalized to the test's 1, and combine still makes the bic. The
+ * decomp-permuter on a C port (45 minutes) got from 1030 to 575 with no
+ * natural change. */
 s32 LinkSession::Update()
 {
     s32 arm3;
@@ -434,7 +441,13 @@ void LinkSession::HandleSerial(u16 *data)
              * fast loop recomputes `&readPos` beside `rd`). Tried: the
              * pop with `ring` passed twice, one-pointer inline pops
              * (bounds via `r->readPos` or `rd`) and a LinkRing::Pop
-             * member on `ring`/`this->ring`. */
+             * member on `ring`/`this->ring`. #662 round 4: `rf =
+             * &this->ring` here does stay a second register: gcse's
+             * PRE finds the address redundant, computes it into a
+             * reaching register at the end of an earlier block and
+             * makes `rf` a copy of that. But that register then lives
+             * across the id copy loop (r8) and the allocation after it
+             * moves. */
             MATCH_KEEP(rf);
             n = *cnt;
             LIMIT_MAX(n, 4);

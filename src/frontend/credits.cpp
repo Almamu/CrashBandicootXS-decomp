@@ -347,7 +347,13 @@ struct popup_glyph_src {
  * at the palette copy. For the natural code the shift would have to be
  * not anticipated there (an operand set or a path without it between),
  * which nothing in the loop body gives; -fno-gcse moves most of the
- * file. */
+ * file.
+ * #662 round 4: gcse.c's hash_scan_set records only sets of a pseudo, so
+ * the shift of a hard register is never a PRE candidate, which is what
+ * the pin uses. The decomp-permuter on a C port (45 minutes) stopped the
+ * hoist only with a second copy of `slot`, set in front of the tile
+ * loops and used for the palette address; that copy gets its own stack
+ * slot, which the ROM doesn't have. */
 void Credits::LoadLogos()
 {
     u8 (*palSlots)[TILE_SIZE_4BPP] = gPaletteCache->slots;
