@@ -6,11 +6,82 @@ extern "C" {
 }
 
 /* The controllers' base class, Ctrl (gCtrlVtable's own methods), ROM
- * 0x0800C9A4-0x0800CBF4 (#664, docs/cplusplus.md). It's old_agbcp's: the
+ * 0x0800B698-0x0800B8DC (#664, docs/cplusplus.md). It's old_agbcp's: the
  * file is in the Makefile's OLD_AGBCC_OBJS (SetTargetAnim's `movs r0, #9;
  * negs r0, r0` before the `ldrb` is old_agbcc's tell). As C, built with
  * agbcc, it needed 7 MATCH_* pins and 2 asm statements; as C++ it needs
- * none. */
+ * none.
+ *
+ * The first four, the SetMode/SetAnimSet setters and the Y motion setters
+ * (which act on a controller's target, a moving sprite object: the
+ * player, a platform or a boss part), were the end of
+ * src/player/player_flags.cpp, built with agbcp, until #768; they compile
+ * the same under old_agbcp. As C, the two motion setters needed 8
+ * register pins each to load the ramp in the ROM's order; as C++, with
+ * the values in locals, they need none. */
+
+/* `state` setter (slot 4). */
+void Ctrl::SetMode(s32 mode)
+{
+    state = mode;
+}
+
+/* `animSet` setter: the motion entry set the ...FromSet methods index
+ * (play_room.cpp sets each room kind's). */
+void Ctrl::SetAnimSet(const struct entry_set *set)
+{
+    animSet = set;
+}
+
+/* Copies `ramp` into `part`'s Y speed ramp (`rampY`; the speed is kept),
+ * negating the start and the target when `part` is Y-mirrored (`mirror`
+ * bit 5). The negated branch loads the target before the step. */
+void Ctrl::SetTargetMotionY(MovingSprite *part, const speed_ramp *ramp)
+{
+    if ((s32)(part->mirror << 26) < 0) {
+        s32 x = -ramp->start;
+        s32 z = -ramp->target;
+        s32 y = ramp->step;
+
+        part->rampY.start = x;
+        part->rampY.step = y;
+        part->rampY.target = z;
+    } else {
+        s32 x = ramp->start;
+        s32 y = ramp->step;
+        s32 z = ramp->target;
+
+        part->rampY.start = x;
+        part->rampY.step = y;
+        part->rampY.target = z;
+    }
+}
+
+/* The same, also starting `speedY` at the (possibly negated) start: the
+ * plain-copy counterpart of StartTargetMotionX (ctrl.cpp), which scales
+ * the record by the entry set's `scale`. */
+void Ctrl::StartTargetMotionY(MovingSprite *part, const speed_ramp *ramp)
+{
+    if ((s32)(part->mirror << 26) < 0) {
+        s32 x = -ramp->start;
+        s32 z = -ramp->target;
+        s32 y = ramp->step;
+
+        part->speedY = x;
+        part->rampY.start = x;
+        part->rampY.step = y;
+        part->rampY.target = z;
+    } else {
+        s32 x = ramp->start;
+        s32 y = ramp->step;
+        s32 z = ramp->target;
+
+        part->speedY = x;
+        part->rampY.start = x;
+        part->rampY.step = y;
+        part->rampY.target = z;
+    }
+}
 
 /* Looks up the `index`-th {X, Y} pair of the controller's entry set and
  * starts the Y record it names (virtual: a subclass can override

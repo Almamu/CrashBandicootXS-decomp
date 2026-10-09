@@ -28,8 +28,8 @@ class MovingSprite;
  * method's slot in gCtrlVtable is its declaration order, from slot 1
  * (slot 0 is the empty RTTI slot: the game was built with -fno-rtti).
  * Slot 1, Update (UpdateCtrl), is an empty function in system/bios_util.cpp.
- * SetMode, StartTargetMotionY, SetTargetMotionY and SetAnimSet are in
- * src/player/player_flags.cpp, with the player's accessors. */
+ * SetMode, StartTargetMotionY, SetTargetMotionY and SetAnimSet start
+ * src/objects/ctrl.cpp, as the rest. */
 class Ctrl
 {
 public:

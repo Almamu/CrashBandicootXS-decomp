@@ -70,7 +70,8 @@ StartTargetMotionYFromSet__11MegaMixCtrlP12MovingSpritei StartMegaMixMotionYFrom
 StartTargetMotionXFromSet__11MegaMixCtrlP12MovingSpritei StartMegaMixMotionXFromSet
 Reset__11MegaMixCtrl ResetMegaMixCtrl
 #
-# part 3: Ctrl's methods in src/player/player_flags.cpp, and InputCtrl
+# part 3: Ctrl's first four methods in src/objects/ctrl.cpp (player_flags.cpp's
+# until #768), and InputCtrl
 # (include/input_ctrl.hpp, src/player/input_ctrl.cpp)
 StartTargetMotionY__4CtrlP12MovingSpritePC10speed_ramp StartCtrlTargetMotionY
 SetMode__4Ctrli SetCtrlMode
