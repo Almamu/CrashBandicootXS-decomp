@@ -137,7 +137,7 @@ extern void HovercraftStateInactive(void);
 extern void HovercraftStateApproach(void);
 extern void HovercraftStateExplodeStub(void);
 
-/* src/vehicle/jetpack/jetpack_balloon.cpp (C linkage) */
+/* src/vehicle/jetpack/airship_graphics.cpp, its end (C linkage) */
 extern s32 GetAirshipHpPercent(void);
 extern void DestroyAirship(void);
 extern void AirshipStateInactive(void);

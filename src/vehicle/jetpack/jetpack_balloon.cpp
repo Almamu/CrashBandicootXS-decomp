@@ -8,51 +8,9 @@ extern "C" {
 #include "globals.h"
 }
 
-/* 0x08031784-0x08031A6C (#664 part 11f): the end of the airship's code
- * (its HP gauge, its teardown and its idle state, C linkage) and the
- * balloon the jetpack levels' crates hang from, JetpackBalloon
- * (include/vehicle.hpp). See docs/matching/archive/issue-58-0x08030334-actor.md
- * and issue-62-0x08033804-actor.md. */
-
-/* The airship's hit points as a percentage of its attack's (the HUD's
- * gauge, UpdateHudPercentCounters), at least 1 while it has any; -1 while
- * no airship is active (gAirshipState 0). */
-s32 GetAirshipHpPercent(void)
-{
-    s32 hp;
-    s32 result;
-
-    if (gAirshipState == 0) {
-        return -1;
-    }
-
-    hp = gAirshipHp;
-    result = hp * 100 / gAirshipAttack->hp;
-    if (result == 0 && hp > 0) {
-        result = 1;
-    }
-    return result;
-}
-
-/* Frees the airship (CreateAirship's `new AnimPart`, airship.cpp). */
-void DestroyAirship(void)
-{
-    delete gAirship;
-}
-
-/* UNUSED - no caller anywhere in the ROM (checked every src/ .c file, the
- * category vtables and every word-aligned Thumb pointer in baserom.gba).
- * Empty; it has no table slot to name it after, so it keeps the nullsub_N
- * name (docs/naming.md). */
-void nullsub_30(void)
-{
-}
-
-/* gAirshipStateFuncs[0]: no airship is active (AirshipStateFall goes back
- * to state 0). Empty. */
-void AirshipStateInactive(void)
-{
-}
+/* 0x080317E0-0x08031A6C (#664 part 11f): the balloon the jetpack
+ * levels' crates hang from, JetpackBalloon (include/vehicle.hpp). See
+ * docs/matching/archive/issue-59-0x08031784-actor.md. */
 
 /* Slot 2: the depth; once it has fallen behind the camera (more than
  * 0x200 past gActorNearClipDepth) it lets go of its crate and is gone,
