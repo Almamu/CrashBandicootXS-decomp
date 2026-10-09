@@ -264,7 +264,6 @@ SECTIONS
         build/crashbandicootxs/src/frontend/starfield.o(.text);
         build/crashbandicootxs/src/menus/continue_prompt.o(.text);
         build/crashbandicootxs/src/frontend/credits.o(.text);
-        build/crashbandicootxs/src/frontend/title_screen_init.o(.text);
         build/crashbandicootxs/src/frontend/title_screen.o(.text);
         build/crashbandicootxs/src/frontend/company_logos.o(.text);
         build/crashbandicootxs/src/frontend/company_logos_ctor.o(.text);

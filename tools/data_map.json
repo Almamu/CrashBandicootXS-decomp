@@ -4640,7 +4640,7 @@
     "DrawTitleLogoPieces"
    ],
    "consumer_files": [
-    "frontend/title_screen_init.cpp"
+    "frontend/title_screen.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4664,7 +4664,7 @@
     "InitTitleScreen"
    ],
    "consumer_files": [
-    "frontend/title_screen_init.cpp"
+    "frontend/title_screen.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -4685,7 +4685,7 @@
     "InitTitleScreen"
    ],
    "consumer_files": [
-    "frontend/title_screen_init.cpp"
+    "frontend/title_screen.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -4709,7 +4709,7 @@
     "InitTitleScreen"
    ],
    "consumer_files": [
-    "frontend/title_screen_init.cpp"
+    "frontend/title_screen.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 12,
@@ -4730,7 +4730,7 @@
     "LoadTitleScreenBg"
    ],
    "consumer_files": [
-    "frontend/title_screen_init.cpp"
+    "frontend/title_screen.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 3,
@@ -4864,7 +4864,7 @@
    "c_decls": [
     "u8 X[]"
    ],
-   "format": "bg_package (title_screen_init.cpp) + trailing per-screen records",
+   "format": "bg_package (title_screen.cpp) + trailing per-screen records",
    "effort": "medium",
    "confidence": "medium",
    "notes": "",

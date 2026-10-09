@@ -23,7 +23,7 @@ extern const u8 gTitleCrashObjMap[];
 extern const u8 gTitleArrow1ObjMap[];
 extern const u8 gTitleArrow2ObjMap[];
 extern const u8 gTitleScreenBgMap[];
-/* DrawTitleLogoPieces (title_screen_init.cpp): the {x, y} offsets of the
+/* DrawTitleLogoPieces (title_screen.cpp): the {x, y} offsets of the
  * eight OAM pieces it draws around each of its two slots. */
 const s32 gTitleArrowPieceOffsets[8][2] = {
     { 0, 0 },
@@ -36,7 +36,7 @@ const s32 gTitleArrowPieceOffsets[8][2] = {
     { 0, 70 },
 };
 
-/* The palettes InitTitleScreen (title_screen_init.cpp) DMAs to OBJ palettes
+/* The palettes InitTitleScreen (title_screen.cpp) DMAs to OBJ palettes
  * 13, 14 and 15. */
 const u16 gTitleMenuPalette[16] = {
     0x83E0, 0x9CC6, 0x107F, 0x0D04, 0x0F9F, 0x894C, 0x0864, 0x05D4,
@@ -51,7 +51,7 @@ const u16 gTitleMenuBlinkPalette[16] = {
     0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
 };
 
-/* The four OBJ sprites LoadTitleScreenObjTiles (title_screen_init.cpp) uploads,
+/* The four OBJ sprites LoadTitleScreenObjTiles (title_screen.cpp) uploads,
  * through the IWRAM table gTitleObjPackages (src/iwram/iwram_data.cpp),
  * which lists them in the order 0817D0A8, 0817D0D0, 0817D0BC, 0817D094. */
 const struct bg_package gTitleBandicootObj = { 4, 6, (void *)gTitleBandicootObjPalette, (void *)gTitleBandicootObjTiles, (void *)gTitleBandicootObjMap };
@@ -59,7 +59,7 @@ const struct bg_package gTitleCrashObj = { 8, 40, (void *)gTitleCrashObjPalette,
 const struct bg_package gTitleArrow1Obj = { 4, 16, (void *)gTitleArrow1ObjPalette, (void *)gTitleArrow1ObjTiles, (void *)gTitleArrow1ObjMap };
 const struct bg_package gTitleArrow2Obj = { 4, 16, (void *)gTitleArrow2ObjPalette, (void *)gTitleArrow2ObjTiles, (void *)gTitleArrow2ObjMap };
 
-/* LoadTitleScreenBg's (title_screen_init.cpp) BG2 picture. */
+/* LoadTitleScreenBg's (title_screen.cpp) BG2 picture. */
 const struct bg_package gTitleScreenBg = { 16, 16, (void *)gTitleScreenBgPalette, (void *)gTitleScreenBgTiles, (void *)gTitleScreenBgMap };
 
 /* The motion sequences of the nine countdown slots of
