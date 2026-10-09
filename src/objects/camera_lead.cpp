@@ -87,7 +87,15 @@ void CameraLead::Reset()
      * constant; not verified); nothing here is short of registers, so
      * no spelling found gets it spilled. `u32 one` kept live by
      * `f.b.active = one` (s32, u8 too) is 43 lines off; IsHidden-style
-     * inlines leave the plain code. */
+     * inlines leave the plain code.
+     * #662 round 6: Sprite's IsHidden/ToggleHidden as inline members
+     * (or s32/u8/u32/bool static inlines) do give the ROM's test, the
+     * `and` built in a copy of `v`: the u8 `>> 2 & 1` is shortened to a
+     * QImode AND whose 1 the toggle's bitfield store shares, so it stays
+     * live; but the toggle then uses that register (15 lines off) where
+     * the ROM loads a fresh 1. Every toggle spelling (`^= 1`, `1 -`, `~`,
+     * `= !IsHidden()`) is worse, and SetPos/SetAlwaysActive in the tail
+     * change nothing. */
     MATCH_HOLD_REG(u32, one, r1) = 1;
 
     if (!(v & one))
