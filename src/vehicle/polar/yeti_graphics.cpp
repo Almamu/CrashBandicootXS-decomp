@@ -59,10 +59,12 @@ u8 Yeti::IsTouching(ActorSelf *self)
  * then runs the same 16x16 BG2 map-fill loop twice into a
  * 0x100-byte stack buffer (`BuildYetiBg2Map`'s own loop body, parameterized
  * there by seed/destination but fixed here to a `0`/`0x80` seed pair) -
- * DMA3-transferring the first fill to VRAM tile `0x0600D000` and the
- * second to `0x0600D800` (`REG_DMA3SAD`/`DAD`/`CNT` at `0x040000D4`,
- * 0x80 words, 32-bit transfers). Then clears a third tile
- * (`0x0600BFC0`-`0x0600BFFC`) word-by-word, arms the object
+ * DMA3-transferring the first fill to BG2's map in screen block 26
+ * (`0x0600D000`) and the second to screen block 27 (`0x0600D800`)
+ * (`REG_DMA3SAD`/`DAD`/`CNT` at `0x040000D4`, 0x80 words, 32-bit
+ * transfers). Then clears tile 0xff of char block 2 (`0x0600BFC0`-
+ * `0x0600BFFC`, the 8bpp blank tile the maps' 0xff entries use)
+ * word-by-word, arms the object
  * (`gYetiBg2Page = 1`), passes the object's current frame data
  * (past its 4-byte header) to the `gUnpackNibbleTilesFunc` hook, latches
  * `gYetiBg2PageFlip`, and
@@ -93,15 +95,15 @@ void Yeti::LoadGraphics()
 
     REG_DISPCNT |= DISPCNT_BG2_ON;
     FillDotPattern(buf, 0);
-    DmaCopy16(3, buf, (void *)(VRAM + 0xD000), 0x100);
+    DmaCopy16(3, buf, (void *)BG_SCREEN_ADDR(26), sizeof(buf));
     FillDotPattern(buf, 0x80);
-    DmaCopy16(3, buf, (void *)(VRAM + 0xD800), 0x100);
+    DmaCopy16(3, buf, (void *)BG_SCREEN_ADDR(27), sizeof(buf));
     {
-        s32 base = VRAM + 0xBFC0;
+        s32 base = BG_CHAR_ADDR(2) + 0xff * TILE_SIZE_8BPP;
         u32 zero = 0;
         s32 p;
 
-        for (p = base + 0x3c; p >= base; p -= 4)
+        for (p = base + TILE_SIZE_8BPP - 4; p >= base; p -= 4)
             *(u32 *)p = zero;
     }
     bg2Page = 1;

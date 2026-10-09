@@ -44,10 +44,11 @@ void Airship::Damage(s32 delta)
 /* LoadAirshipGraphics: confirmed by docs/rom_map.md as a
  * `category_vtable` slot (`gActorCategoryVtables`, type 1, slot 6) - part of this actor's per-frame dispatch table.
  *
- * Zero-fills one 0x40-byte (8bpp) tile right before BG char block 3
- * (`BG_CHAR_ADDR(3) - 0x40`..`BG_CHAR_ADDR(3)`, a blank/transparent
- * filler tile), then DMA3-fills a 0xffff halfword into BG char block 3
- * itself and runs `ConvertAirshipTiles`'s VRAM fill-level meter generator (see
+ * Zero-fills tile 0xff of BG char block 2 (one 0x40-byte 8bpp tile,
+ * right before `BG_CHAR_ADDR(3)`, the blank tile the map's 0xff entries
+ * use), then DMA3-fills 0xffff halfwords into BG2's two affine map pages
+ * (screen blocks 24 and 25, which `UpdateAirshipBg2` flips between) and
+ * runs `ConvertAirshipTiles`'s VRAM fill-level meter generator (see
  * docs/rom_map.md's "procedurally-generated VRAM fill-level meter"
  * finding). While the airship's state (`gAirshipState`) is non-zero:
  * forces a BG2CNT preset toggle (via `gAirshipBg2PageFlip`/
@@ -55,7 +56,7 @@ void Airship::Damage(s32 delta)
  * frame's tilemap through its AnimPart (`gAirship`'s `animIndex` and
  * `animTime`) and blits it via `DrawAirshipMap` (docs/rom_map.md's
  * confirmed "rectangular BG-tilemap blit routine"), sets DISPCNT's
- * bit10 (the same window/mosaic-family bit `AirshipStateFall` clears), and
+ * `DISPCNT_BG2_ON` (the bit `AirshipStateFall` clears), and
  * DMAs a 0x10-halfword palette strip from `gAirshipPalette` into
  * BG palette bank 1 (`0x05000020`). Once there, one of two mutually
  * exclusive tails run based on the airship's state: state 5 mirrors
@@ -75,12 +76,12 @@ void Airship::Damage(s32 delta)
 void Airship::LoadGraphics()
 {
     s32 i;
-    s32 base = VRAM + 0xBFC0;
+    s32 base = BG_CHAR_ADDR(2) + 0xff * TILE_SIZE_8BPP;
     u32 zero = 0;
 
-    for (i = base + 0x3c; i >= base; i -= 4)
+    for (i = base + TILE_SIZE_8BPP - 4; i >= base; i -= 4)
         *(u32 *)i = zero;
-    DmaFill16(3, 0xFFFF, (void *)(VRAM + 0xC000), 0x1000);
+    DmaFill16(3, 0xFFFF, (void *)BG_SCREEN_ADDR(24), 2 * BG_SCREEN_SIZE);
     ConvertTiles();
     if (state != 0) {
         AnimPart *self;
@@ -95,8 +96,8 @@ void Airship::LoadGraphics()
         }
         REG_DISPCNT |= DISPCNT_BG2_ON;
         UpdateBg2();
-        pal = (vu16 *)(PLTT + 0x20);
-        DmaCopy16(3, palette, pal, 0x20);
+        pal = (vu16 *)(BG_PLTT + PALETTE_SIZE_16);
+        DmaCopy16(3, palette, pal, PALETTE_SIZE_16);
         if (state == 5) {
             pal[15] = pal[1] = pal[4] = pal[8] = 0;
         } else if (state == 4) {
@@ -283,7 +284,7 @@ void Airship::ConvertTiles()
  * (a flags word driving this effect's per-frame look). */
 void Airship::UpdateFlashColor()
 {
-    vu16 *bank1 = (vu16 *)(BG_PLTT + 0x20);
+    vu16 *bank1 = (vu16 *)(BG_PLTT + PALETTE_SIZE_16);
 
     if (stateTimer & 8) {
         bank1[0xf] = 0x7fff;
@@ -311,7 +312,8 @@ void Airship::AnimatePalette()
         v = 5 - v;
     }
 
-    QueueVramDmaTransfer((void *)hitFlashPalettes[v], (void *)(BG_PLTT + 0x20), 0x20, 0x10);
+    QueueVramDmaTransfer((void *)hitFlashPalettes[v], (void *)(BG_PLTT + PALETTE_SIZE_16),
+                         PALETTE_SIZE_16, 0x10);
 }
 
 /* The end of the airship's code (#664 part 11f): its HP gauge, its

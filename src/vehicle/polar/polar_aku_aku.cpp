@@ -40,8 +40,8 @@ void PolarAkuAku::Refresh(u8 lost)
     if (level == MASK_LEVEL_NONE && lost == 0) {
         visible = level;
     } else {
-        QueueVramDmaTransfer((u8 *)gPolarAkuAkuPalette1 + (level - 1) * 0x20,
-                             (void *)(PLTT + 0x3C0), 0x20, 0x10);
+        QueueVramDmaTransfer((u8 *)gPolarAkuAkuPalette1 + (level - 1) * PALETTE_SIZE_16,
+                             (void *)(OBJ_PLTT + 14 * PALETTE_SIZE_16), PALETTE_SIZE_16, 0x10);
         visible = 1;
         SwitchAnim(this, 0);
     }
@@ -66,9 +66,11 @@ void PolarAkuAku::Update()
 {
     if (gPolarAkuAkuInvincibleTimer != 0) {
         if (gPolarAkuAkuInvincibleTimer & 4)
-            QueueVramDmaTransfer((void *)gPolarAkuAkuPalette3, (void *)(PLTT + 0x3C0), 0x20, 0x10);
+            QueueVramDmaTransfer((void *)gPolarAkuAkuPalette3,
+                                 (void *)(OBJ_PLTT + 14 * PALETTE_SIZE_16), PALETTE_SIZE_16, 0x10);
         else
-            QueueVramDmaTransfer((void *)gPolarAkuAkuPalette2, (void *)(PLTT + 0x3C0), 0x20, 0x10);
+            QueueVramDmaTransfer((void *)gPolarAkuAkuPalette2,
+                                 (void *)(OBJ_PLTT + 14 * PALETTE_SIZE_16), PALETTE_SIZE_16, 0x10);
 
         gPolarAkuAkuInvincibleTimer -= 1;
         if (gPolarAkuAkuInvincibleTimer == 0) {

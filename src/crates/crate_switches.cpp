@@ -158,7 +158,10 @@ void Crate::ActivateIronSwitch()
     }
 
     if (n != 0) {
-        struct crate_group *g = (struct crate_group *)OperatorNewArray((n + 1) * 4);
+        /* The count word and the n item pointers, all one word each
+         * (`sizeof(struct crate_group) + n * sizeof(Crate *)` adds after
+         * the shift, not the ROM's add-then-shift). */
+        struct crate_group *g = (struct crate_group *)OperatorNewArray((n + 1) * sizeof(Crate *));
 
         groupAllocated = 1;
         g->count = n;

@@ -183,7 +183,8 @@ void Airship::Spawn(s32 kind, s32 sx, s32 sy, s32 sz)
     REG_DISPCNT |= DISPCNT_BG2_ON;
     UpdateBg2();
     hitFlashTimer = 0;
-    QueueVramDmaTransfer((void *)hitFlashPalettes, (void *)(BG_PLTT + 0x20), 0x20, 0x10);
+    QueueVramDmaTransfer((void *)hitFlashPalettes, (void *)(BG_PLTT + PALETTE_SIZE_16),
+                         PALETTE_SIZE_16, 0x10);
 }
 
 /* The airship's frame: the state function (gAirshipStateFuncs, a plain
@@ -245,9 +246,11 @@ void Airship::UpdateBg2()
 {
     if (bg2PageFlip != 0) {
         if (bg2Page == 0) {
-            REG_BG2CNT = 0x5809;
+            REG_BG2CNT =
+                BGCNT_PRIORITY(1) | BGCNT_CHARBASE(2) | BGCNT_SCREENBASE(24) | BGCNT_AFF256x256;
         } else {
-            REG_BG2CNT = 0x5909;
+            REG_BG2CNT =
+                BGCNT_PRIORITY(1) | BGCNT_CHARBASE(2) | BGCNT_SCREENBASE(25) | BGCNT_AFF256x256;
         }
         bg2PageFlip = 0;
         bg2Page ^= 1;

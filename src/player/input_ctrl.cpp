@@ -253,8 +253,8 @@ InputCtrl::~InputCtrl()
 {
 }
 
-/* Ctrl(), the vtable pointer, then Reset. play_room.cpp's
- * CreateInputCtrl(OperatorNew(0x28)) is `new InputCtrl`. */
+/* Ctrl(), the vtable pointer, then Reset. play_room.cpp builds it with
+ * `new InputCtrl`. */
 InputCtrl::InputCtrl()
 {
     Reset();

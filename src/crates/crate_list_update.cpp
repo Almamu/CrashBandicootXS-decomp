@@ -13,7 +13,7 @@ extern "C" {
  * include/crate_list.hpp). An old_agbcp object (OLD_AGBCC_OBJS). */
 
 /* InitCrateList: an empty list for `n` sprites (play_room.cpp's
- * `InitCrateList(OperatorNew(0x818), 0xC0)`), the slots cleared and every
+ * `new CrateList(0xc0)`), the slots cleared and every
  * node on the free list. */
 CrateList::CrateList(s32 n)
 {

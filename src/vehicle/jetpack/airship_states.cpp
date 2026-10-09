@@ -187,7 +187,7 @@ void Airship::StateExplode()
     y += velY;
     z += velZ;
     hitFlashTimer = 0;
-    pal = (u16 *)(BG_PLTT + 0x20);
+    pal = (u16 *)(BG_PLTT + PALETTE_SIZE_16);
     bx = x + INT_TO_Q8(box.x);
     by = y + INT_TO_Q8(box.y);
 
@@ -248,6 +248,6 @@ void Airship::StateFall()
 
     if (total > 0xbb80) {
         SetState(0, 0);
-        REG_DISPCNT &= 0xfbff;
+        REG_DISPCNT &= ~DISPCNT_BG2_ON;
     }
 }
