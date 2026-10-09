@@ -15,7 +15,7 @@ extern "C" {
  * shooter (mode 0 or 4) starts its shooting animation (mode 2 or 7).
  * On the other frames, a shooting one goes back to walking when the
  * animation is done, and otherwise fires its shot (a harmful effect
- * part, kind 8) at keyframe 10 (mode 2) or 8 (mode 7).
+ * part, kind EVENT_HIT_DART) at keyframe 10 (mode 2) or 8 (mode 7).
  *
  * The C pinned the controller to r4 and read gRoomFrameCount in a
  * statement of its own; g++ gives the ROM's code as written. */
@@ -61,5 +61,5 @@ void EnemyCtrl::UpdateShooter()
         break;
     }
     if (shot != 0)
-        shot->kind = 8;
+        shot->kind = EVENT_HIT_DART;
 }

@@ -41,7 +41,7 @@ void Player::Reset()
     countdown = 0;
     listCount = 0;
     bounce = 0;
-    kind = 1;
+    kind = EVENT_HIT;
     child->palette = child->GetAnimPaletteSlot();
     slippery = 0;
     hanging = 0;

@@ -18,10 +18,16 @@
  * Hits 1-10: PlayerHandleEvent takes a mask away (then sends
  * EVENT_MASK_HIT) or, without one, kills the player; the controller picks
  * the death animation (KillPlayer: ActionCtrlHandleEvent, SwimCtrlKillPlayer).
- * Hits 5, 7 and 8 keep their numbers: 5 comes only from the pufferfish
- * (SpawnPufferfish) and 7 only from the frog (SpawnFrog), 8 from nothing
- * found, and none of the three says what kind of hit it is.
+ * Hits 5 and 7 keep their numbers: 5 comes only from the pufferfish
+ * (SpawnPufferfish) and 7 only from the frog (SpawnFrog), and neither
+ * says what kind of hit it is (the controllers only pick a death
+ * animation for them).
  */
+
+// No event: a harmless object's kind (the seaweed and flames of
+// spawn_objects.cpp, Cortex's gems until a shot hits them and his spent
+// shots, Dingodile in his first state). No event method has a case for it
+#define EVENT_NONE 0
 
 // The plain hit: the player's default kind (UpdateActionCtrl), sent by
 // deadly terrain (CollidePlayer, terrain kind 1), crates
@@ -39,6 +45,8 @@
 // The shark, moray eel, polar bear and venus flytrap (spawn_enemies.cpp) and
 // Dingodile's shark (SpawnDingodileShark)
 #define EVENT_HIT_BITE 6
+// The blowgun tribesman's dart (EnemyCtrl::UpdateShooter, its state 16)
+#define EVENT_HIT_DART 8
 // Neo Cortex's shot (UpdateCortexShot)
 #define EVENT_HIT_CORTEX_SHOT 9
 // A crusher: the wooden crusher (SpawnWoodenCrusher), and a crate landing

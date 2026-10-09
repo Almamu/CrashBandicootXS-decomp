@@ -236,9 +236,9 @@ void InputCtrl::HandleEvent(MovingSprite *, s32 event, s32)
     /* a non-literal lower bound keeps gcc from folding `>= 1` into
      * `> 0` (the ROM compares against 1) and from merging the two tests
      * into one unsigned range check */
-    s32 lo = 1;
+    s32 lo = EVENT_HIT;
 
-    if (event >= lo && event <= 4)
+    if (event >= lo && event <= EVENT_HIT_EXPLOSION)
         KillPlayer(1);
 }
 

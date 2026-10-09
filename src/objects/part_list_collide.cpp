@@ -155,7 +155,7 @@ void PartList::CollideWithPlayer(struct aabb box, MovingSprite *part)
         case 1:
             gPlayer->f.b.bit3 = 1;
             kind = gPlayer->kind;
-            if (kind == 1) {
+            if (kind == EVENT_HIT) {
                 if (gPlayer->speedY > 0) {
                     part->HandleEvent(1, EVENT_HIT, 0);
                     gPlayer->HandleEvent(0, EVENT_BOUNCE, 0);

@@ -64,7 +64,7 @@ public:
                        //        byte 6
     s32 trialKind;     // 0x54 - the entity type (ENTITY_*) it becomes in a time trial
                        //        (placement halfword +4, ENTITY_NITRO_SWITCH_CRATE read as
-                       //        ENTITY_BASIC_CRATE); -1: none (ResetCrate). See
+                       //        ENTITY_BASIC_CRATE); CRATE_TRIAL_KIND_NONE: none. See
                        //        ConvertCratesForTimeTrial
     u8 touched;        // 0x58
     u8 groupAllocated; // 0x59 - `group` was allocated (ActivateIronSwitchCrate)

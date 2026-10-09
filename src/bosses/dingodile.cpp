@@ -112,7 +112,7 @@ void DingodileCtrl::Update(MovingSprite *part)
         p->y = y;
     }
     GetSpriteBodyBox(&hurt, part);
-    if (this->state == 8 && gPlayer->kind == 0x13) {
+    if (this->state == 8 && gPlayer->kind == EVENT_ATTACK_SPIN) {
         GetSpriteAttackBox(&box, gPlayer);
         if (AabbW(&box) && AabbOverlaps(&box, &hurt)) {
             counter++;
@@ -126,7 +126,7 @@ void DingodileCtrl::Update(MovingSprite *part)
         SetState(part, 1);
         step = 0;
         passes = 0;
-        part->kind = 0;
+        part->kind = EVENT_NONE;
         part->f.b.visible = 0;
         part->f.b.vulnerable = 0;
         break;
@@ -407,7 +407,7 @@ void DingodileCtrl::SpawnShieldOrRocket(s32 mode, u16 x, u16 y, MovingSprite *ow
     case 1:
         gAudioContext->PlaySfx(SFX_DINGODILE_ROCKET, 0x100);
         p->StartAnim(7);
-        p->kind = 4;
+        p->kind = EVENT_HIT_EXPLOSION;
         {
             DingodileProjectileCtrl *c;
 
@@ -441,7 +441,7 @@ void DingodileCtrl::SpawnShark(u16 x, u16 y, u8 facing)
 
     p->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x30);
     p->StartAnim(1);
-    p->kind = 6;
+    p->kind = EVENT_HIT_BITE;
     ctl = new DingodileSharkCtrl;
     p->palette = p->GetAnimPaletteSlot();
     p->mover = ctl;
@@ -685,7 +685,7 @@ void DingodileProjectileCtrl::SpawnStalactite(u16 x, u16 y)
     p->f.b.visible = 0;
     p->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x288);
     p->StartAnim(8);
-    p->kind = 1;
+    p->kind = EVENT_HIT;
     c = new DingodileProjectileCtrl(this);
     c->SetMode(5);
     p->palette = p->GetAnimPaletteSlot();

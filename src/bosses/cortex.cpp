@@ -190,7 +190,7 @@ void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
     ctrl = new CortexBossGemCtrl(kind);
     c->mover = ctrl;
     ctrl->Attach(c);
-    c->kind = 0;
+    c->kind = EVENT_NONE;
     c->f.b.visible = 0;
     c->f.b.active = 1;
     CollidableList()->Add(c);
@@ -407,7 +407,7 @@ void CortexTargetCtrl::FireShot(MovingSprite *part, s32 kind)
      * gives r6 and r7 */
     c->SetPos(part->x, part->y);
     c->f.b.visible = 0;
-    c->kind = 1;
+    c->kind = EVENT_HIT;
     c->f.b.active = 1;
     ForegroundList()->Add(c);
     if (kind == 1)
@@ -424,7 +424,7 @@ void CortexShotCtrl::Update(MovingSprite *part)
     struct aabb a;
     struct aabb b;
 
-    if (part->kind == 1) {
+    if (part->kind == EVENT_HIT) {
         GetSpriteBodyBox(&a, gPlayer);
         if (a.w == 0) {
             GetSpriteAttackBox(&b, gPlayer);
@@ -434,7 +434,7 @@ void CortexShotCtrl::Update(MovingSprite *part)
         if (AabbOverlaps(&a, &b)) {
             if (gPlayer->dead == 0)
                 HitPlayer(gPlayer, EVENT_HIT_CORTEX_SHOT);
-            part->kind = 0;
+            part->kind = EVENT_NONE;
         } else if (fast) {
             s32 n = gCollidableList->count;
             s32 i;
@@ -445,11 +445,11 @@ void CortexShotCtrl::Update(MovingSprite *part)
 
                 if (AabbOverlaps(&c, &b)) {
                     boss->SetMode(2);
-                    /* through the inline: with a plain `e->kind = 1`,
+                    /* through the inline: with a plain `e->kind = EVENT_HIT`,
                      * reload picks other registers for `part` (r8) in
                      * the next store and in MarkGone */
-                    e->SetKind(1);
-                    part->kind = 0;
+                    e->SetKind(EVENT_HIT);
+                    part->kind = EVENT_NONE;
                 }
             }
         }
@@ -469,7 +469,7 @@ void CortexBossPlatformMover::Update(MovingSprite *part)
         state = 1;
     }
     target = 0x1A;
-    if (part->kind == 1)
+    if (part->kind == EVENT_HIT)
         target = 10;
     if (part->frame == target) {
         part->animating = 0;
@@ -490,7 +490,7 @@ void CortexBossGemCtrl::Update(MovingSprite *part)
 {
     switch (state) {
     case 0:
-        if (part->kind == 1) {
+        if (part->kind == EVENT_HIT) {
             part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x27C);
             switch (kind) {
             case 0:
@@ -556,7 +556,7 @@ void CortexTargetCtrl::SetPlatformsKind(u8 flag)
         MovingSprite *p = (MovingSprite *)gTouchableList->items[i];
 
         if (flag)
-            p->kind = 1;
+            p->kind = EVENT_HIT;
         else
             p->kind = flag;
     }

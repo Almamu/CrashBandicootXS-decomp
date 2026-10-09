@@ -81,7 +81,7 @@ void MegaMixCtrl::Update(MovingSprite *part)
             s32 i;
             s32 px;
 
-            if (gPlayer->dead != 0 || gPlayer->mover->state == 0x1E)
+            if (gPlayer->dead != 0 || gPlayer->mover->state == ACTION_STATE_WARP_OUT)
                 Stop(this, part);
             if (part->IsOnScreen() && latch == 0) {
                 stamp = gRoomFrameCount;
@@ -161,8 +161,9 @@ void MegaMixCtrl::Update(MovingSprite *part)
                             s32 kind = e->kind;
 
                             /* TNT and nitro blow up */
-                            if (kind == 0xE || kind == 0x13 || kind == 0x14 || kind == 0x15 ||
-                                kind == 0xA)
+                            if (kind == CRATE_KIND_TNT || kind == CRATE_KIND_TNT_LIT_1 ||
+                                kind == CRATE_KIND_TNT_LIT_2 || kind == CRATE_KIND_TNT_LIT_3 ||
+                                kind == CRATE_KIND_NITRO)
                                 c->Explode(0);
                             else if (e->IsKindBreakable(kind))
                                 e->Break(1);

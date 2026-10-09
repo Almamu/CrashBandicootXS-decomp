@@ -58,10 +58,10 @@ void Yeti::StateChase()
 
         if (distance <= 0x4FFF) {
             if (tier == 0xc) {
-                gAudioContext->PlayAmbientSfx(0x3f, 0x3E8, 0x100, true);
+                gAudioContext->PlayAmbientSfx(SFX_YETI_STOMP_1, 0x3E8, 0x100, true);
                 ShakeActorBg(0x200);
             } else if (tier == 0x1c) {
-                gAudioContext->PlayAmbientSfx(0x40, 0x3E8, 0x100, true);
+                gAudioContext->PlayAmbientSfx(SFX_YETI_STOMP_2, 0x3E8, 0x100, true);
                 ShakeActorBg(0x200);
             } else if (tier == 0xd || tier == 0x1d) {
                 ShakeActorBg(0x100);

@@ -51,7 +51,7 @@ void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         Entity *part = Entity::Create(arg0, arg1, arg2, arg3);
 
         part->SetSize(0x64, 0x64);
-        part->kind = 0x12;
+        part->kind = EVENT_ROOM_EXIT;
         AddUpdateOnly(part);
     } else if (gPlayer->ctrlMode == 0) {
         Platform *pad = Platform::Create(arg0, arg1, arg2, arg3, 4);
@@ -63,7 +63,7 @@ void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         Entity *part = Entity::Create(arg0, arg1, arg2, arg3);
 
         part->SetSize(0x28, 0x28);
-        part->kind = 0x12;
+        part->kind = EVENT_ROOM_EXIT;
         AddUpdateOnly(part);
     }
 }
@@ -154,7 +154,7 @@ void SpawnMegaMix(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr = new MegaMixCtrl;
     part->mover = hdr;
     hdr->Attach(part);
-    part->kind = 1;
+    part->kind = EVENT_HIT;
     part->f.b.collides = 0;
     part->f.b.visible = 0;
     part->f.b.vulnerable = 0;

@@ -78,7 +78,7 @@ void TinyCtrl::Update(MovingSprite *part)
     if (this->state == 8) {
         GetSpriteAttackBox(&a, gPlayer);
         GetSpriteBodyBox(&b, part);
-        if (a.w != 0 && AabbW(&b) && AabbOverlaps(&b, &a) && gPlayer->kind == 0x13)
+        if (a.w != 0 && AabbW(&b) && AabbOverlaps(&b, &a) && gPlayer->kind == EVENT_ATTACK_SPIN)
             SetState(part, 9);
     } else if (gPlayer->dead == 0) {
         GetSpriteBodyBox(&a, gPlayer);
@@ -393,7 +393,7 @@ void TinyCtrl::SpawnFallingLeaves(MovingSprite *part, s32 n)
         p->x = x;
         p->y = y;
     }
-    p->kind = 1;
+    p->kind = EVENT_HIT;
     {
         /* two masks, not folded to -0x45; the -5 is derived from the 1 */
         s32 m = -5;

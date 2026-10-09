@@ -77,4 +77,8 @@ struct crate_placement {
  * life crate (after the two flags above). */
 #define CRATE_PLACEMENT_OPTION_ASSIST_LIFE 1
 
+/* Crate::trialKind with no time-trial kind (ResetCrate):
+ * ConvertCratesForTimeTrial leaves such a crate alone. */
+#define CRATE_TRIAL_KIND_NONE -1
+
 #endif // GUARD_CRATE_H

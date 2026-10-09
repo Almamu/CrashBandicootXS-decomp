@@ -40,7 +40,7 @@ void Wumpa::CheckPickup()
     struct aabb box = GetAnimHitbox();
     Player *player = gPlayer;
 
-    if (player->kind == 0x13) {
+    if (player->kind == EVENT_ATTACK_SPIN) {
         struct aabb playerBox = player->GetAttackBox();
 
         if (AabbOverlaps(&playerBox, &box)) {

@@ -175,7 +175,7 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
     case 5:
     case EVENT_HIT_BITE:
     case 7:
-    case 8:
+    case EVENT_HIT_DART:
     case EVENT_HIT_CORTEX_SHOT:
     case EVENT_HIT_CRUSH:
         if ((f.flags >> 6) & 1) {
@@ -317,7 +317,7 @@ void Player::Draw()
     {
         s32 mode = gLevelState->maskLevel;
 
-        if ((u32)(mode - 1) <= 1) {
+        if ((u32)(mode - MASK_LEVEL_ONE) <= 1) {
             if (!(gRoomFrameCount & 7)) {
                 s32 v;
 

@@ -73,7 +73,7 @@ void ActionCtrl::Update(MovingSprite *)
                 if (y2 > INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x1400) {
                     r->deadline = 0;
                     gLevelState->SetMaskLevel(MASK_LEVEL_NONE);
-                    HandleEvent(0, 1, 0);
+                    HandleEvent(0, EVENT_HIT, 0);
                 }
             }
         }
@@ -126,19 +126,19 @@ void ActionCtrl::Update(MovingSprite *)
     case ACTION_STATE_AIR_SPIN:
     case ACTION_STATE_TORNADO_SPIN:
     case ACTION_STATE_HANG_SPIN:
-        part->kind = 0x13;
+        part->kind = EVENT_ATTACK_SPIN;
         break;
     case ACTION_STATE_SLIDE:
-        part->kind = 0x14;
+        part->kind = EVENT_ATTACK_SLIDE;
         break;
     case ACTION_STATE_AIRBORNE_BODY_SLAM:
-        part->kind = 0x15;
+        part->kind = EVENT_ATTACK_BODY_SLAM;
         break;
     case ACTION_STATE_AIRBORNE_SUPER_BODY_SLAM:
-        part->kind = 0x16;
+        part->kind = EVENT_ATTACK_SUPER_BODY_SLAM;
         break;
     default:
-        part->kind = 1;
+        part->kind = EVENT_HIT;
         break;
     }
 }
