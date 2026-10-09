@@ -72,12 +72,15 @@ struct actor_spawn {
 /* The actor zone (src/actor/): the 3D actor object (ActorSelf),
  * its animation, spawning, category frame and backgrounds. */
 
-/* src/actor/actor.cpp: C linkage, and the C names of ActorSelf's methods
- * (actor_self.hpp) */
+/* src/actor/actor_category_hooks.cpp (the rest: vehicle.h) */
 extern s32 IsTouchingPlayer(void *self);
+
+/* src/actor/actor_spawn_collected.cpp */
 extern s32 IsSpawnCollected(void *self);
 extern void MarkSpawnCollected(void *self);
 extern void ClearCollectedSpawns(void);
+
+/* src/actor/actor_palette_cycle.cpp */
 extern void RestoreActorPaletteCycle(void);
 extern void SaveActorPaletteCycle(void);
 extern void UpdateActorPaletteCycle(void);

@@ -232,7 +232,10 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/text/wrapped_text.o \
                   $(C_BUILDDIR)/actor/actor_category_init.o \
                   $(C_BUILDDIR)/actor/actor_category_frame.o \
+                  $(C_BUILDDIR)/actor/actor_category_hooks.o \
                   $(C_BUILDDIR)/actor/actor.o \
+                  $(C_BUILDDIR)/actor/actor_spawn_collected.o \
+                  $(C_BUILDDIR)/actor/actor_palette_cycle.o \
                   $(C_BUILDDIR)/actor/actor_anim.o \
                   $(C_BUILDDIR)/crates/crate_touch.o \
                   $(C_BUILDDIR)/enemies/enemy_patrol.o \
@@ -422,6 +425,9 @@ $(filter $(OLD_AGBCC_OBJS),$(CXX_OBJS)): CXX1 := $(CXX1_OLD)
 # key-method object the ROM has the copies in (Entity's inline methods,
 # DestroyEntity last).
 NO_IMPLEMENT_INLINES_OBJS := $(C_BUILDDIR)/actor/actor.o \
+                             $(C_BUILDDIR)/actor/actor_category_hooks.o \
+                             $(C_BUILDDIR)/actor/actor_palette_cycle.o \
+                             $(C_BUILDDIR)/actor/actor_spawn_collected.o \
                              $(C_BUILDDIR)/actor/actor_anim.o \
                              $(C_BUILDDIR)/bosses/dingodile.o \
                              $(C_BUILDDIR)/crates/crate_update.o \

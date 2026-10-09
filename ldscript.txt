@@ -230,7 +230,10 @@ SECTIONS
         build/crashbandicootxs/src/actor/actor_category_frame.o(.text);
         build/crashbandicootxs/src/actor/actor_spawn.o(.text);
         build/crashbandicootxs/src/actor/actor_category.o(.text);
+        build/crashbandicootxs/src/actor/actor_category_hooks.o(.text);
         build/crashbandicootxs/src/actor/actor.o(.text);
+        build/crashbandicootxs/src/actor/actor_spawn_collected.o(.text);
+        build/crashbandicootxs/src/actor/actor_palette_cycle.o(.text);
         build/crashbandicootxs/src/actor/actor_factory.o(.text);
         build/crashbandicootxs/src/vehicle/polar_player.o(.text);
         build/crashbandicootxs/src/vehicle/polar_player_states.o(.text);

@@ -6,8 +6,9 @@
  * (the player, crates, pickups, Aku Aku and obstacles) and the yeti
  * chase. Every function they define is declared here, including those
  * that the file layout put in actor or bosses files for ROM order (the
- * teardown functions in actor_anim.cpp, the per-category hooks in actor.cpp,
- * actor_category_frame.cpp and actor_spawn.cpp, the jetpack ring and
+ * teardown functions in actor_anim.cpp, the per-category hooks in
+ * actor_category_hooks.cpp, actor_category_frame.cpp and
+ * actor_category.cpp, the jetpack ring and
  * collected wumpa in hovercraft.cpp, ...), plus their globals and data
  * tables.
  *
@@ -34,7 +35,7 @@ struct spawn_arg {
 struct anim_box;
 struct anim_table_record;
 
-/* src/actor/actor.cpp */
+/* src/actor/actor_category_hooks.cpp */
 extern void JetpackReloadPlayerTiles(void *arg0);
 extern void PolarReloadPlayerTiles(void *arg0);
 extern void JetpackReachCourseEnd(void *arg0);

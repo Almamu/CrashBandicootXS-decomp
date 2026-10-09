@@ -56,8 +56,8 @@ public:
  * (vehicle.h), as the ROM has it. ConstructAnimTableState
  * (actor_factory.cpp) makes it gActorList, the actor list's root. The
  * other actors call its methods on `static_cast<PolarPlayer *>(gActorList)`,
- * as do the actor zone's C-linkage category hooks (actor.cpp,
- * actor_spawn.cpp) and UpdateYeti (yeti_update.cpp). */
+ * as do the actor zone's C-linkage category hooks
+ * (actor_category_hooks.cpp, actor_category.cpp) and UpdateYeti (yeti_update.cpp). */
 class PolarPlayer : public ActorSelf
 {
 public:

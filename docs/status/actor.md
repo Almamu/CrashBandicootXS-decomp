@@ -570,7 +570,9 @@ from "core" graphics.
   dispatch shape parked NAKED elsewhere as the "r7 hazard"). First user
   of the shared `include/actor_self.h`. See
   [docs/matching/archive/issue-57-0x0802fbf0-actor.md](../matching/archive/issue-57-0x0802fbf0-actor.md).
-- `src/graphics/actor_part50.c`-`actor_part56.c`, now `src/actor/actor.c`
+- `src/graphics/actor_part50.c`-`actor_part56.c`, now `src/actor/actor.cpp`
+  (split in #770 into `actor_category_hooks.cpp`, `actor.cpp`,
+  `actor_spawn_collected.cpp` and `actor_palette_cycle.cpp`)
   (new files, GitHub issue #50, ROM 0x0802A69C-0x0802AC28 - numbered
   `50`-`56` rather than `39`-`45` since issues #16 and #56's parallel
   PRs above independently claimed those numbers first; see
@@ -1498,7 +1500,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   `gHovercraftSideGunVtable` store into its own tiny `asm volatile` island
   too, since a real, respected `.pool` split only works for symbols
   whose literal load is itself opaque assembler text, the same gap
-  already documented for `UpdateActorPaletteCycle` in `actor.c`. Retires
+  already documented for `UpdateActorPaletteCycle` in `actor_palette_cycle.cpp`. Retires
   the raw `asm/code_3_2_20_28568_c99c_31784_33ef4_34058.s`. See
   `docs/matching/archive/issue-63-0x08033ef4-actor.md`.
 

@@ -14,39 +14,11 @@ extern "C" {
 
 /* The 3D actor base class, ActorSelf (#664 part 11a, include/actor_self.hpp):
  * the constructor, Update and Draw, the depth and draw-order key, the
- * accessors and the destructor, with the C-linkage helpers around them:
- * the vehicle levels' category hooks (the first four, and
- * IsTouchingPlayer), the collected-spawn list and the BG palette cycle.
+ * accessors and the destructor (the key method: g++ emits gActorVtable
+ * here). The C-linkage helpers around it in the ROM are in
+ * actor_category_hooks.cpp (before), actor_spawn_collected.cpp and
+ * actor_palette_cycle.cpp (after); they were in this file until #770.
  * See docs/matching/archive/issue-50-actor-2a69c.md. */
-
-/* The vehicle levels' category hooks (gActorCategoryVtables' slots):
- * each ignores its argument and calls its method on the player
- * (gActorList, the list's root). */
-void JetpackReloadPlayerTiles(void *arg0)
-{
-    ((JetpackPlayer *)gActorList)->AllocTiles();
-}
-
-void PolarReloadPlayerTiles(void *arg0)
-{
-    ((PolarPlayer *)gActorList)->AllocTiles();
-}
-
-void JetpackReachCourseEnd(void *arg0)
-{
-    ((JetpackPlayer *)gActorList)->FinishRun();
-}
-
-void PolarReachCourseEnd(void *arg0)
-{
-    ((PolarPlayer *)gActorList)->FinishRun();
-}
-
-/* The selected category's slot 9 (its player contact test) on `self`. */
-s32 IsTouchingPlayer(void *self)
-{
-    return ((s32 (*)(void *))gActorCategoryVtable->fn[9])(self);
-}
 
 /* The depth (the distance past the cell animation's, absolute) and the
  * draw-order key: (depth >> 1) & 0x7f80, then ((|x| + |y|) >> 11) & 0x7f,
@@ -276,106 +248,4 @@ u8 ActorSelf::IsVisible()
 ActorSelf::~ActorSelf()
 {
     Unlink();
-}
-
-/* Whether `self` is among gCollectedSpawns' first gCollectedSpawnCount
- * entries. */
-s32 IsSpawnCollected(void *self)
-{
-    s32 i;
-
-    for (i = 0; i < gCollectedSpawnCount; i++) {
-        if (gCollectedSpawns[i] == self)
-            return 1;
-    }
-    return 0;
-}
-
-/* Appends `self` to gCollectedSpawns (15 entries at most), unless it is
- * NULL, the list is full or it is already there. */
-void MarkSpawnCollected(void *self)
-{
-    s32 i;
-
-    if (gCollectedSpawnCount == 0xf || self == NULL)
-        return;
-    for (i = 0; i < gCollectedSpawnCount; i++) {
-        if (gCollectedSpawns[i] == self)
-            return;
-    }
-    gCollectedSpawns[gCollectedSpawnCount++] = self;
-}
-
-void ClearCollectedSpawns(void)
-{
-    gCollectedSpawnCount = 0;
-}
-
-/* Loads the palette cycle's cursor and bound (gActorPaletteCycleFrame/
- * gActorPaletteCycleTarget, see UpdateActorPaletteCycle) from their saved
- * copies and restarts the DMA timer. */
-void RestoreActorPaletteCycle(void)
-{
-    gActorPaletteCycleFrame = gSavedActorPaletteCycleFrame;
-    gActorPaletteCycleTarget = gSavedActorPaletteCycleTarget;
-    gActorPaletteCycleTimer = 0;
-}
-
-/* The inverse of RestoreActorPaletteCycle. */
-void SaveActorPaletteCycle(void)
-{
-    gSavedActorPaletteCycleFrame = gActorPaletteCycleFrame;
-    gSavedActorPaletteCycleTarget = gActorPaletteCycleTarget;
-}
-
-/* While gActorPaletteCycleEnabled: DMAs one 0x1c0-byte frame of
- * gActorPaletteCycleFrames (the cursor's) to BG palette RAM, and every
- * 0x24 calls moves the cursor one step toward the bound (holding it
- * there); SaveActorPaletteCycle/SetActorPaletteCycle swap the ends for a
- * ping-pong. */
-void UpdateActorPaletteCycle(void)
-{
-    if (!gActorPaletteCycleEnabled)
-        return;
-    QueueVramDmaTransfer((void *)gActorPaletteCycleFrames[gActorPaletteCycleFrame], (void *)BG_PLTT,
-                         0x1c0, 0x10);
-    if (++gActorPaletteCycleTimer > 0x23) {
-        gActorPaletteCycleTimer = 0;
-        {
-            s32 *cur = &gActorPaletteCycleFrame;
-            s32 target = gActorPaletteCycleTarget;
-            s32 v = *cur;
-            s32 r;
-
-            if (target - v >= 0) {
-                r = v;
-                if (target != r)
-                    r++;
-            } else {
-                r = v - 1;
-            }
-            *cur = r;
-        }
-    }
-}
-
-/* Seeds the palette cycle's cursor and bound from the per-category tables
- * (gActorPaletteCycleStartFrames/gActorPaletteCycleTargetFrames) and
- * restarts the DMA timer. */
-void SetActorPaletteCycle(s32 idx)
-{
-    gActorPaletteCycleFrame = gActorPaletteCycleStartFrames[idx];
-    gActorPaletteCycleTarget = gActorPaletteCycleTargetFrames[idx];
-    gActorPaletteCycleTimer = 0;
-}
-
-/* Turns the palette cycle on or off, resetting the cursor, the bound and
- * the timer, and saves that state (SaveActorPaletteCycle). */
-void EnableActorPaletteCycle(u8 flag)
-{
-    gActorPaletteCycleEnabled = flag;
-    gActorPaletteCycleFrame = 0;
-    gActorPaletteCycleTarget = 0;
-    gActorPaletteCycleTimer = 0;
-    SaveActorPaletteCycle();
 }
