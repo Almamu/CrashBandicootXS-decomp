@@ -10,8 +10,9 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
 
 ## Matched
 
-- `src/save/save_data.cpp`/`save_transfer.cpp`/`save_transfer_poll.cpp`/
-  `save_menu_input.c` (`save_transfer_poll.cpp` new in the
+- `src/save/save_data.cpp`/`save_transfer.cpp`/`save_transfer_state.cpp`/
+  `save_menu_input.c` (`save_transfer_poll.cpp`, `save_transfer_state.cpp`
+  since #767, new in the
   second pass - issue #5, 0x08002C84-0x08003B40): the settings-sync
   record's init/flag/checksum accessors (`struct save_data`,
   `include/save_data.h`), the SIO send/receive pump's handle

@@ -50,7 +50,7 @@ SECTIONS
         build/crashbandicootxs/src/link/link_sio.o(.text);
         build/crashbandicootxs/src/save/save_data.o(.text);
         build/crashbandicootxs/src/save/save_transfer.o(.text);
-        build/crashbandicootxs/src/save/save_transfer_poll.o(.text);
+        build/crashbandicootxs/src/save/save_transfer_state.o(.text);
         build/crashbandicootxs/src/save/save_menu_input.o(.text);
         build/crashbandicootxs/src/save/save_menu_draw.o(.text);
         build/crashbandicootxs/src/save/save_menu_ui.o(.text);

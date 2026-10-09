@@ -13,9 +13,8 @@
  *   src/save/save_data.cpp           SaveData
  *   src/save/save_transfer.cpp       SaveTransfer's SendChunk and
  *                                    ReceiveChunk
- *   src/save/save_transfer_poll.cpp  SaveTransfer::Poll
- *   src/save/save_menu_input.cpp     SaveTransfer's SetRecord, GetData,
- *                                    Reset
+ *   src/save/save_transfer_state.cpp SaveTransfer's Poll, SetRecord,
+ *                                    GetData, Reset
  *
  * Neither has a vtable, a constructor or a destructor: `new` and
  * `delete` of them are plain OperatorNew and OperatorDelete calls, as
@@ -136,10 +135,8 @@ public:
     void SendChunk();                   // SendSaveTransferChunk
     void ReceiveChunk(s32 playerIndex); // ReceiveSaveTransferChunk
 
-    /* src/save/save_transfer_poll.cpp */
+    /* src/save/save_transfer_state.cpp */
     s32 Poll(); // PollSaveTransfer
-
-    /* src/save/save_menu_input.cpp */
     void SetRecord(SaveData *record); // SetSaveTransferRecord
     void *GetData();                  // GetSaveTransferData
     void Reset();                     // ResetSaveTransfer
