@@ -1,3 +1,9 @@
+[![Build and compare](https://github.com/Almamu/CrashBandicootXS-decomp/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/Almamu/CrashBandicootXS-decomp/actions/workflows/build.yml)
+[![Matching decompilation](https://github.com/Almamu/CrashBandicootXS-decomp/blob/badges/matching.svg?raw=true)](docs/decomp_dev.md#progress-badges)
+[![Non-matching decompilation](https://github.com/Almamu/CrashBandicootXS-decomp/blob/badges/nonmatching.svg?raw=true)](docs/decomp_dev.md#progress-badges)
+[![Functions with no matching workarounds](https://github.com/Almamu/CrashBandicootXS-decomp/blob/badges/clean.svg?raw=true)](docs/decomp_dev.md#progress-badges)
+[![Functions with matching workarounds left](https://github.com/Almamu/CrashBandicootXS-decomp/blob/badges/workarounds.svg?raw=true)](docs/decomp_dev.md#progress-badges)
+
 Matching decompilation of Crash Bandicoot XS (Crash Bandicoot: The Huge Adventure).
 
 It builds the following ROM:

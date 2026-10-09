@@ -102,3 +102,45 @@ jobs:
       with:
         name: europe_report
         path: report.json
+
+    # The README's progress badges (tools/badges.py): matching and
+    # non-matching from the report above, clean functions and workarounds
+    # left from tools/match_idioms.py --functions on the same build's
+    # objects. Drawn on every run, PRs included, so a PR's artifact shows
+    # them; only the `badges` job below publishes them.
+    - name: Draw the progress badges
+      run: python3 tools/badges.py build/badges
+
+    - name: Upload progress badges artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: badges
+        path: build/badges
+
+  # On main, once every job passed, the badges replace the single commit
+  # of the `badges` branch, which README.md shows. The same design as
+  # Almamu/MotoRacerWorldTour-decomp's workflow.
+  badges:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [ build ]
+    runs-on: ubuntu-24.04
+    name: Publish the progress badges
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/download-artifact@v8
+      with:
+        name: badges
+        path: badges
+
+    # One commit, replaced each time, so the branch doesn't grow.
+    - name: Replace the badges branch
+      working-directory: badges
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        git init -q -b badges
+        git add .
+        git -c user.name=github-actions -c user.email=41898282+github-actions[bot]@users.noreply.github.com \
+          commit -q -m "Progress badges for $GITHUB_SHA"
+        git push -f "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY" badges

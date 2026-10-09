@@ -67,6 +67,10 @@ matched code - read it before starting.** In short:
   `tools/match_idioms.py --functions` counts the functions with no
   workaround at all (README.md's number; refresh it when you remove the
   last one in a function), and `--functions --files` lists the others.
+  `tools/badges.py DIR` draws README.md's progress badges (matching,
+  non-matching, clean functions, workarounds left) from the progress
+  report and these counts; CI publishes them from `main` (see
+  [docs/decomp_dev.md](docs/decomp_dev.md), "Progress badges").
 - **Pruning workarounds** (#662): `python3 tools/match_prune.py PATH...`
   tries removing each workaround site in the given `.c`/`.cpp` files or
   directories, one at a time and then in pairs and pin bundles until a

@@ -505,6 +505,36 @@ any further CI changes. Re-running `make NON_MATCHING=1 report` after any
 matching *or* cleanup work keeps this in sync automatically; there's
 nothing to hand-maintain here the way the `UNITS` address table is.
 
+## Progress badges
+
+README.md's badges are SVG files `tools/badges.py DIR` draws from the
+same build, with no external service (the drawing is
+Almamu/MotoRacerWorldTour-decomp's, shields.io's flat style):
+
+| Badge | File | What it counts |
+|---|---|---|
+| matching | `matching.svg` | the report's `matched_code` over `total_code`: the code bytes that build byte for byte from C |
+| non-matching | `nonmatching.svg` | the code bytes of the units with a base object, matching or not: the code that has C at all (a parked function's `NON_MATCHING` C counts here, not above) |
+| clean functions | `clean.svg` | `tools/match_idioms.py --functions`'s functions with no matching workarounds, as a percentage of all of them |
+| workarounds left | `workarounds.svg` | the functions that still have at least one matching workaround (#662), as a count (green at 0) |
+
+It reads `report.json` and `objdiff.json` (`--report`, `--objdiff`; both
+default to the repository root) and needs the report build's objects
+for the function counts, so run it after the commands at the top of
+this page:
+
+```
+python3 tools/badges.py build/badges
+```
+
+It prints each badge's value and the numbers behind it. CI's build job
+runs it after "Generate progress report" on every run and uploads
+`build/badges` as the `badges` artifact, so a PR's run shows the
+badges it would publish. On a push to `main`, once every job passed,
+the `badges` job (the only one with `contents: write`) replaces the
+single commit of the `badges` branch with them, and the README links to
+the files on that branch.
+
 ## Registering the project on decomp.dev
 
 This part can't be scripted - it needs an interactive GitHub login:

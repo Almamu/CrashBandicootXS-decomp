@@ -808,10 +808,14 @@ def workaround_functions():
     return dirty, rom
 
 
-def functions_report(list_dirty):
-    """--functions: how many ROM functions have no workaround, overall and
-    per directory. The totals are the FUNC symbols of the built objects
-    the progress report counts, so it needs a build (`make`)."""
+def function_counts():
+    """The functions the progress report counts, per object: (total,
+    with_wa, dirty), where total and with_wa are Counters of the FUNC
+    symbols and of the functions with a workaround, keyed by object path
+    (relative to build/crashbandicootxs/, no `.o`), and dirty is
+    workaround_functions()'s. Needs a build (`make`); prints why and
+    returns None if an object is missing or the counts don't add up.
+    tools/badges.py uses it too."""
     dirty, rom = workaround_functions()
     total = collections.Counter()
     missing = []
@@ -824,7 +828,7 @@ def functions_report(list_dirty):
     if missing:
         print("not built: %s%s; run `make` first"
               % (", ".join(missing[:5]), " ..." if len(missing) > 5 else ""), file=sys.stderr)
-        return 1
+        return None
     with_wa = collections.Counter()
     for rel, name in dirty:
         obj = os.path.splitext(rel)[0]
@@ -835,7 +839,18 @@ def functions_report(list_dirty):
         if with_wa[obj] > total[obj]:
             print("%s: %d functions with a workaround but only %d in the object"
                   % (obj, with_wa[obj], total[obj]), file=sys.stderr)
-            return 1
+            return None
+    return total, with_wa, dirty
+
+
+def functions_report(list_dirty):
+    """--functions: how many ROM functions have no workaround, overall and
+    per directory. The totals are the FUNC symbols of the built objects
+    the progress report counts, so it needs a build (`make`)."""
+    counts = function_counts()
+    if counts is None:
+        return 1
+    total, with_wa, dirty = counts
     n = sum(total.values())
     w = sum(with_wa.values())
     print("%d/%d functions with no matching workarounds (%.1f%%); %d with at least one"
