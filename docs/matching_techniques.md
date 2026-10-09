@@ -1000,6 +1000,31 @@ Round 2 in bosses/, enemies/ and actor/ (C++):
   the 0x104 reload; the unused saved registers of `UpdateBob` and
   `UpdateOscillateY`.
 
+**Round 3, lib/gax, src/iwram, src/util.** 15 functions -> 14:
+
+- **One result variable that the test also uses.** `FindSubstring`'s
+  four opaque lowercase blocks become an inline `ToLower` that computes
+  `r = (u8)(c - 'A')`, then `r = c + 0x20` or `r = c`, and returns
+  `(u8)r`. jump.c's "`x = b; if (...) x = a;`" rewrite gives up when X
+  is referenced in the test, so both arms keep their copy of `c`. Its
+  two pins went as well: one variable for the scanned haystack byte and
+  the pattern byte (both r3 in the ROM), and the parameters copied to
+  locals, `needle` first, for the prologue order.
+- **Kept, diagnosed.**
+  - `GAX_CALL_ARM` (and `_R`): thumb.md's only indirect call is
+    `bl _call_via_rN`, and this gcc has no `long_call`.
+  - `HeapSortActorsByKey`: jump2 always cross-jumps the two loop tests,
+    because the label before the top `cmp` lowers find_cross_jump's
+    minimum to one insn.
+  - `strncpy_arm`: jump.c makes a conditional RETURN of any jump to a
+    label that a return follows, whenever use_return_insn holds.
+  - `GAX2_init`: global.c's priority, log2(refs) * refs / live length,
+    puts fmt (0.136) above maxRate (0.127) unless maxRate gets the extra
+    reference.
+  - `GaxChannelMix`: the ROM reloads `item.done` twice in a row, which
+    takes volatile. A one-armed clamp lets cse1 carry `row * 28` across
+    the join.
+
 ## Survey and conversion record (#576)
 
 The conversion is complete. `tools/match_idioms.py` after part 4

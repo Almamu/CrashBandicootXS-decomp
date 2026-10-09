@@ -152,7 +152,14 @@ void HeapSortActorsByKey(s32 n, ActorSelf **list)
      * `child = 0`), `while (--n > 0)`, a counted `for (i = n - 1; ...)`,
      * `if (n > 1) do ... while (n > 1)`, `for (i = n / 2 - 1; i >= 0;
      * i--)` and either phase as an inline function: each loses one of
-     * the two tests or moves registers. */
+     * the two tests or moves registers. Round 3 (-da): both tests survive
+     * to sched2 and jump2 merges them. Its cross-jumping (jump.c,
+     * find_cross_jump) turns the top `ble` into a branch to the bottom
+     * test once one insn matches, because the label right before the top
+     * `cmp` lowers the required match from two insns to one. Only a
+     * non-note insn between that label and the `cmp` stops it, and jump2
+     * always cross-jumps (no -f flag; the swept flag families all
+     * leave it or break more). */
     MATCH_BARRIER();
     while (n > 1) {
         n--;

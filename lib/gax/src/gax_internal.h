@@ -458,7 +458,12 @@ extern u64 gGaxMixRateReciprocal; /* 2^32 / mix rate (GaxChannelInit), scales gG
  * `nop`. The operand shapes (`"m"` for the argument, forcing it through
  * a stack slot, and a free register moved into r1) are what reproduce
  * the ROM's own `str r0,[sp,#N]` ... `mov r1,rX; ldr r0,[sp,#N]`
- * sequence, so this is very likely the engine's own inline asm. */
+ * sequence, so this is very likely the engine's own inline asm.
+ * #662 round 3: no C call can produce this. agbcc's thumb.md has one
+ * indirect-call pattern, `bl _call_via_rN` (lib/libgcc/lib1funcs.s).
+ * This gcc has no `long_call` attribute, and -mlong-calls only forces
+ * direct calls through that same pattern. Nothing in the Thumb back end
+ * emits `mov rX, pc; add rX, #5; mov lr, rX; bx rY`. */
 #define GAX_CALL_ARM(fn, arg)                                                    \
     asm volatile("mov r1, %1\n\tldr r0, %0\n\tmov r2, pc\n\tadd r2, #5\n\t"     \
                  "mov lr, r2\n\tbx r1\n\tnop"                                   \

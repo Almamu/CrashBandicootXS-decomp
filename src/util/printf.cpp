@@ -1,6 +1,5 @@
 extern "C" {
 #include "core.h"
-#include "match.h"
 #include <stdarg.h>
 #include "util.h"
 }
@@ -128,171 +127,70 @@ void sprintf(u8 *dest, u8 *fmt, ...)
     va_end(args);
 }
 
-/* strstr, with optional case-insensitive matching (`caseInsensitive`
- * nonzero lowercases both sides before comparing): scans `haystack0`
- * for the first occurrence of `needle`, lowercasing both sides
- * byte-by-byte before comparing whenever `caseInsensitive` is nonzero
- * (`(u8)(c - 'A') <= 0x19` is the ROM's own range check for
- * `'A'`-`'Z'`), returning a pointer into `haystack0` at the match or
- * `0` if not found or if `needle` is empty. Not printf-related, but
- * kept in this file rather than a new one purely to preserve the ROM's
- * address order (it sits immediately after sprintf) without
- * another ldscript.txt split.
- *
- * Two compiler gaps, both closed with the techniques already used
- * elsewhere in this file's neighbors (see naked-SetDispcntMode-matched.md
- * and naked-sub_80010e0-matched.md):
- *
- * 1. The "normalize a char to lowercase, on the unchanged path" branch
- *    shape: the ROM routes the untaken branch of the range check
- *    through a redundant copy-into-r0 before a shared truncate, where
- *    a plain `if (cond) x += 0x20;` just branches straight past it,
- *    and gcc folds an equivalent ternary back into the same shape once
- *    it proves the truncate redundant. Fixed the same way as
- *    `SetDispcntMode`: each fold is materialized as an opaque
- *    inline-asm block the optimizer can't see into. (#662: a macro, a
- *    ternary, if/else and four inline-function spellings all become a
- *    conditional move under both agbcc and old_agbcc: jump.c rewrites
- *    `if (...) x = a; else x = b;` as `x = b; if (...) x = a;` when
- *    each arm is one insn. Round 2 tried 63 more spellings (u8, s8,
- *    char, u16, s16, u32 and s32 locals; `c >= 'A' && c <= 'Z'`,
- *    `(u8)(c - 'A') <= 25` and `c - 'A' + 'a'` macros, with and without
- *    an outer cast) and the permuter: only `char` locals (or a `(char)`
- *    cast) keep a copy in both arms, and then the truncation moves into
- *    the `+ 0x20` arm instead of following the join, which also changes
- *    the block layout.)
- * 2. The inner verify loop's "needle exhausted, match found" check
- *    compiled with the opposite branch sense from the ROM (`bne` to a
- *    same-iteration fallthrough instead of the ROM's `beq` clear across
- *    to a tail shared with the epilogue) whenever the match-found value
- *    was computed inline at the check site - gcc's block linearizer
- *    always inlines a short taken-branch target right at the branch.
- *    Deferring the computation to a label placed after the whole
- *    scan/verify loop (so it's the function's last basic block, exactly
- *    where the ROM put it, immediately before the shared epilogue) gets
- *    gcc to lay out the branch the same way the ROM's compiler did. */
-u8 *FindSubstring(u8 *haystack0, u8 *needle, s32 caseInsensitive)
+/* ASCII lowercase. Written with one result variable that the range
+ * test also uses, so jump.c can't turn the if/else into a conditional
+ * move (`r = c; if (...) r = c + 0x20;`): the ROM keeps the copy of `c`
+ * in both arms and truncates after the join. */
+static inline u32 ToLower(u32 c)
 {
-    MATCH_HOLD_REG(u8 *, needleRest, ip) = needle;
-    u8 *haystack = haystack0;
-    u32 c0 = *needle;
-    MATCH_HOLD_REG(u32, hc, r3);
-    u8 *matchHaystack;
-    u8 *matchNeedle;
-    u32 nc;
-    u32 hc2;
+    u32 r = (u8)(c - 'A');
 
-    asm volatile("mov r0, #1\n\tadd %0, r0" : "+r"(needleRest) : : "r0");
+    if (r <= 25)
+        r = c + 0x20;
+    else
+        r = c;
+    return (u8)r;
+}
 
-    if (c0 == 0) {
+/* strstr, with optional case-insensitive matching (`caseInsensitive`
+ * nonzero lowercases both sides before comparing): returns a pointer
+ * into `str` at the first occurrence of `pattern`, or `0` if there is
+ * none or `pattern` is empty. Not printf-related, but kept in this file
+ * rather than a new one purely to preserve the ROM's address order (it
+ * sits immediately after sprintf) without another ldscript.txt split.
+ *
+ * #662 round 3 replaced the opaque lowercase asm blocks and the register
+ * pins: ToLower's shared result variable keeps both arms of its test
+ * (see above); one variable `a` for the scanned haystack byte and the
+ * pattern byte puts both in r3, as in the ROM; and copying the
+ * parameters into locals, `needle` first, gives the ROM's prologue
+ * order (`r7 = r2; ip = r1; r5 = r0`). */
+u8 *FindSubstring(u8 *str, u8 *pattern, s32 caseInsensitive)
+{
+    u8 *needle = pattern;
+    u8 *haystack = str;
+    u32 first = *needle++;
+    u32 a;
+    u32 b;
+    u8 *h;
+    u8 *n;
+
+    if (first == 0)
         return 0;
+    if (caseInsensitive != 0)
+        first = ToLower(first);
+    for (;;) {
+        a = *haystack++;
+        if (caseInsensitive != 0)
+            a = ToLower(a);
+        if (a != first) {
+            if (a == 0)
+                return 0;
+        } else {
+            h = haystack;
+            n = needle;
+            do {
+                a = *n++;
+                if (a == 0)
+                    goto found;
+                b = *h++;
+                if (caseInsensitive != 0) {
+                    a = ToLower(a);
+                    b = ToLower(b);
+                }
+            } while (a == b);
+        }
     }
-    if (caseInsensitive != 0) {
-        // clang-format off
-        asm volatile(
-            "add r0, %0, #0\n\t"
-            "sub r0, #0x41\n\t"
-            "lsl r0, r0, #0x18\n\t"
-            "lsr r0, r0, #0x18\n\t"
-            "cmp r0, #0x19\n\t"
-            "bhi 1f\n\t"
-            "add r0, %0, #0\n\t"
-            "add r0, #0x20\n\t"
-            "b 2f\n\t"
-            "1:\n\t"
-            "add r0, %0, #0\n\t"
-            "2:\n\t"
-            "lsl r0, r0, #0x18\n\t"
-            "lsr %0, r0, #0x18\n\t"
-            : "+r"(c0) : : "r0");
-        // clang-format on
-    }
-
-scan:
-    hc = *haystack;
-    haystack++;
-    if (caseInsensitive != 0) {
-        // clang-format off
-        asm volatile(
-            "add r0, %0, #0\n\t"
-            "sub r0, #0x41\n\t"
-            "lsl r0, r0, #0x18\n\t"
-            "lsr r0, r0, #0x18\n\t"
-            "cmp r0, #0x19\n\t"
-            "bhi 1f\n\t"
-            "add r0, %0, #0\n\t"
-            "add r0, #0x20\n\t"
-            "b 2f\n\t"
-            "1:\n\t"
-            "add r0, %0, #0\n\t"
-            "2:\n\t"
-            "lsl r0, r0, #0x18\n\t"
-            "lsr %0, r0, #0x18\n\t"
-            : "+r"(hc) : : "r0");
-        // clang-format on
-    }
-    if (hc == c0) {
-        goto verify;
-    }
-    if (hc != 0) {
-        goto scan;
-    }
-    return 0;
-
-verify:
-    matchHaystack = haystack;
-    matchNeedle = needleRest;
-inner:
-    nc = *matchNeedle;
-    matchNeedle++;
-    if (nc == 0) {
-        goto matchFound;
-    }
-    hc2 = *matchHaystack;
-    matchHaystack++;
-    if (caseInsensitive != 0) {
-        // clang-format off
-        asm volatile(
-            "add r0, %0, #0\n\t"
-            "sub r0, #0x41\n\t"
-            "lsl r0, r0, #0x18\n\t"
-            "lsr r0, r0, #0x18\n\t"
-            "cmp r0, #0x19\n\t"
-            "bhi 1f\n\t"
-            "add r0, %0, #0\n\t"
-            "add r0, #0x20\n\t"
-            "b 2f\n\t"
-            "1:\n\t"
-            "add r0, %0, #0\n\t"
-            "2:\n\t"
-            "lsl r0, r0, #0x18\n\t"
-            "lsr %0, r0, #0x18\n\t"
-            : "+r"(nc) : : "r0");
-        // clang-format on
-        // clang-format off
-        asm volatile(
-            "add r0, %0, #0\n\t"
-            "sub r0, #0x41\n\t"
-            "lsl r0, r0, #0x18\n\t"
-            "lsr r0, r0, #0x18\n\t"
-            "cmp r0, #0x19\n\t"
-            "bhi 1f\n\t"
-            "add r0, %0, #0\n\t"
-            "add r0, #0x20\n\t"
-            "b 2f\n\t"
-            "1:\n\t"
-            "add r0, %0, #0\n\t"
-            "2:\n\t"
-            "lsl r0, r0, #0x18\n\t"
-            "lsr %0, r0, #0x18\n\t"
-            : "+r"(hc2) : : "r0");
-        // clang-format on
-    }
-    if (nc == hc2) {
-        goto inner;
-    }
-    goto scan;
-
-matchFound:
+found:
     return haystack - 1;
 }

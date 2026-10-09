@@ -59,7 +59,12 @@ void strcpy_arm(u8 *dst, u8 *src)
  *   followed by a return (jump.c, "turn it into a RETURN insn").
  *   The asm sits between that label and the return, so the branch
  *   stays. The ROM's ARM compiler never emits a conditional return (see
- *   docs/matching/iwram-image.md). */
+ *   docs/matching/iwram-image.md). #662 round 3: the rewrite is jump.c's
+ *   `redirect_jump (insn, NULL_RTX)` for any jump whose label is
+ *   followed by a RETURN, gated only by arm.c's use_return_insn, which
+ *   holds for every frameless leaf with nothing saved. So no C shape of
+ *   this function can avoid it, and agbcc_arm_patched has no option for
+ *   it. */
 void strncpy_arm(u8 *dst, u8 *src, s32 n)
 {
     u8 c;
