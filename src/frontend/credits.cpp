@@ -367,7 +367,17 @@ struct popup_glyph_src {
  * functions of the ROM. lcm.c's compute_latein has its two branches
  * swapped (its comment makes the last block the special one); fixed, it
  * changes no function of the ROM and keeps this hoist. No other matched
- * function copies a palette into a cache slot. */
+ * function copies a palette into a cache slot.
+ * #662 round 8: gcse.c's PRE inserts an expression at the end of a block
+ * when it is anticipatable there on every path (here the end of the
+ * block before the y loop). In the matched corpus (tools/rtl_corpus.py's
+ * shift-after-loop), the invariant shifts left after a loop are on a
+ * conditional path, such as GAX2_estimate's `if (i == 0) need += numSfx
+ * * 4`; the ROM has no path around this palette copy. tools/natural_enum.py
+ * over slot's type (s32/u32/int/u8/u16/s16), palSlots' type, the
+ * address and copy-loop forms and the order of the last three
+ * statements: the plain form is 39 instructions off, the nearest 31 (an
+ * s16 slot with `logo->palette = slot++`). */
 void Credits::LoadLogos()
 {
     u8 (*palSlots)[TILE_SIZE_4BPP] = gPaletteCache->slots;

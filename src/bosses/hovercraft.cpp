@@ -488,7 +488,9 @@ void Hovercraft::LoadGraphics(void)
  * round 6, the loop test then reusing the guard's `n << 4`; round 6's
  * other variants are in ConvertAirshipTiles' comment; round 7's whole-ROM
  * tests of a regmove and a cse1 rule that free both twins, refuted by 7
- * and 4 other functions, are there too). */
+ * and 4 other functions, are there too; round 8's loop-local copy of a
+ * function-scope mask, which matches both twins but is a redundant copy,
+ * is there as well). */
 static inline u32 MeterPx(u32 v)
 {
     u32 r = 0;
