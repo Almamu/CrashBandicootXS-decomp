@@ -449,6 +449,7 @@ NO_IMPLEMENT_INLINES_OBJS := $(C_BUILDDIR)/actor/actor.o \
                              $(C_BUILDDIR)/player/input_ctrl.o \
                              $(C_BUILDDIR)/player/player_collide.o \
                              $(C_BUILDDIR)/vehicle/jetpack/jetpack_crates.o \
+                             $(C_BUILDDIR)/vehicle/polar/polar_crate.o \
                              $(C_BUILDDIR)/vehicle/polar/polar_pickups.o
 $(NO_IMPLEMENT_INLINES_OBJS): CC1FLAGS += -fno-implement-inlines
 

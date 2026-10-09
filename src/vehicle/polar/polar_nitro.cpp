@@ -8,7 +8,7 @@ extern "C" {
 }
 
 /* A broken nitro's blast (#664 part 11d, include/vehicle.hpp), ROM
- * 0x0802C9A8-0x0802CA60, between polar_pickups.cpp and polar_crates.cpp.
+ * 0x0802C9A8-0x0802CA60, between polar_crate.cpp and polar_crates.cpp.
  * An old_agbcc object (current agbcc schedules the box moves' `asr`s
  * differently).
  *
@@ -20,7 +20,7 @@ static inline u8 ActorsOverlap(ActorSelf *a, ActorSelf *b)
     return BoxOverlap(WorldBox(a), WorldBox(b));
 }
 
-/* UpdatePolarNitroCrate (polar_pickups.cpp) calls it 0x14 frames after
+/* UpdatePolarNitroCrate (polar_crate.cpp) calls it 0x14 frames after
  * the nitro broke: every other nitro (record 4) whose box overlaps this
  * one's, and not broken yet, explodes too. */
 void PolarNitroCrate::DetonateNearby()

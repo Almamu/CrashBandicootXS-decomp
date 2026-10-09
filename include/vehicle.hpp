@@ -18,7 +18,8 @@
  * and explosion's constructors their code; part 11c the polar player;
  * part 11h the jetpack ring and the collected wumpa
  * (src/bosses/hovercraft.cpp); part 11d the other polar actors
- * (src/vehicle/polar/polar_crates.cpp, polar_pickups.cpp, polar_objects.cpp,
+ * (src/vehicle/polar/polar_crates.cpp, polar_pickups.cpp, polar_crate.cpp,
+ * polar_objects.cpp,
  * polar_aku_aku.cpp, polar_course_objects.cpp and polar_nitro.cpp), so
  * every polar class is C++;
  * part 11g the balloon crates, the parachute nitro and the rocket
@@ -153,7 +154,7 @@ inline PolarWumpa::PolarWumpa(const struct anim_table_record *rec, s32 x, s32 y,
 #endif
 
 /* The crates' base (gPolarCrateVtable; src/vehicle/polar/polar_crates.cpp and
- * polar_pickups.cpp). Its constructor picks one of 18 looks by the
+ * polar_crate.cpp). Its constructor picks one of 18 looks by the
  * crate's place on the course. A crate breaks (animation 0x12, Break)
  * when the player or the yeti touches it, and Update deletes it once
  * that animation has played. Its destructor is inline, as every crate
@@ -181,7 +182,7 @@ inline PolarCrate::~PolarCrate()
 {
 }
 
-/* The crate kinds (polar_crates.cpp and polar_pickups.cpp). Their
+/* The crate kinds (polar_crates.cpp and polar_crate.cpp). Their
  * constructors are inline (CreateActor expands them) and also out of line
  * at the end of polar_crates.cpp (CreatePolarTimeCrate, ...), from one
  * source, polar_crate_ctors.hpp. */

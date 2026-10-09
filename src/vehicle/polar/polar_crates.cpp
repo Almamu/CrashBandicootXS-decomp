@@ -14,7 +14,7 @@ extern "C" {
  * out-of-line constructors (#664 part 11d, include/vehicle.hpp), ROM
  * 0x0802CA60-0x0802CC9C, between polar_nitro.cpp and polar_objects.cpp.
  * Each kind breaks (PolarCrate::Break) when the player touches it, then
- * hands the rest to PolarCrate::Update (polar_pickups.cpp), which also
+ * hands the rest to PolarCrate::Update (polar_crate.cpp), which also
  * breaks it on the yeti and deletes it once broken. */
 
 /* A mask for the player; the yeti breaks it for nothing. */

@@ -240,6 +240,7 @@ SECTIONS
         build/crashbandicootxs/src/vehicle/polar/polar_player_actions.o(.text);
         build/crashbandicootxs/src/vehicle/polar/polar_player_dispatch.o(.text);
         build/crashbandicootxs/src/vehicle/polar/polar_pickups.o(.text);
+        build/crashbandicootxs/src/vehicle/polar/polar_crate.o(.text);
         build/crashbandicootxs/src/vehicle/polar/polar_nitro.o(.text);
         build/crashbandicootxs/src/vehicle/polar/polar_crates.o(.text);
         build/crashbandicootxs/src/vehicle/polar/polar_objects.o(.text);
@@ -484,7 +485,7 @@ SECTIONS
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.14PolarLifeCrate); /* gPolarLifeCrateVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.19PolarFourWumpaCrate); /* gPolarFourWumpaCrateVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.15PolarBasicCrate); /* gPolarBasicCrateVtable */
-        build/crashbandicootxs/src/vehicle/polar/polar_pickups.o(.gnu.linkonce.d._vt.10PolarCrate); /* gPolarCrateVtable */
+        build/crashbandicootxs/src/vehicle/polar/polar_crate.o(.gnu.linkonce.d._vt.10PolarCrate); /* gPolarCrateVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.18PolarElectricFence); /* gPolarElectricFenceVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.13PolarObstacle); /* gPolarObstacleVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.13PolarLauncher); /* gPolarLauncherVtable */

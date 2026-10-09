@@ -11,17 +11,10 @@ extern "C" {
 #include "globals.h"
 }
 
-/* The polar wumpas and the crates' shared update (#664 part 11d,
- * include/vehicle.hpp), ROM 0x0802C1EC-0x0802C9A8, between
- * polar_player_dispatch.cpp and polar_nitro.cpp: the collected wumpa
- * (PolarCollectedWumpa), the course's wumpa (PolarWumpa), PolarCrate's
- * Update and three crate kinds'. */
-
-/* Whether the player is inactive (no caller). */
-u8 IsPolarPlayerInactive(void)
-{
-    return gPolarPlayerInactive;
-}
+/* The polar wumpas (#664 part 11d, include/vehicle.hpp), ROM
+ * 0x0802C270-0x0802C4C8, between polar_player_dispatch.cpp and
+ * polar_crate.cpp: the collected wumpa (PolarCollectedWumpa) and the
+ * course's wumpa (PolarWumpa). */
 
 /* Flies to the HUD's wumpa counter (0x1000, 0x1000), then is deleted with
  * SFX_HUD_COLLECT; on the way, its animation runs on (UpdateActor's
@@ -156,110 +149,4 @@ void PolarWumpa::Update()
 PolarWumpa::PolarWumpa(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
     : ActorSelf(rec, x, y, z)
 {
-}
-
-/* Every crate kind's update ends here: the yeti breaks it, and once the
- * broken animation has played it is deleted. */
-void PolarCrate::Update()
-{
-    if (animIndex != 0x12) {
-        if (IsTouchingYeti(this)) {
-            gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
-            gLevelState->AddBrokenCrate();
-            Break();
-        }
-    }
-
-    if (animIndex == 0x12 && animDone != 0) {
-        delete this;
-        return;
-    }
-
-    ActorSelf::Update();
-}
-
-/* By its record: 1, 3 or 5 wumpas (0x1C-0x1E), or a mask (0x1F). */
-void PolarQuestionCrate::Update()
-{
-    if (animIndex != 0x12 && (u8)IsTouchingPlayer(this)) {
-        gLevelState->AddBrokenCrate();
-
-        switch ((u8)record->index) {
-        case 0x1c:
-            gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
-            static_cast<PolarPlayer *>(gActorList)->QueueWumpa(1);
-            break;
-        case 0x1d:
-            gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
-            static_cast<PolarPlayer *>(gActorList)->QueueWumpa(3);
-            break;
-        case 0x1e:
-            gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
-            static_cast<PolarPlayer *>(gActorList)->QueueWumpa(5);
-            break;
-        case 0x1f:
-            static_cast<PolarPlayer *>(gActorList)->GiveMask();
-            break;
-        }
-
-        Break();
-    }
-
-    PolarCrate::Update();
-}
-
-/* An extra life, once: the spawn is marked collected (CreateActor builds
- * a question crate in its place from then on). */
-void PolarLifeCrate::Update()
-{
-    if (animIndex != 0x12) {
-        if ((u8)IsTouchingPlayer(this)) {
-            gAudioContext->PlaySfx(SFX_EXTRA_LIFE, 0x100);
-            gLevelState->AddBrokenCrate();
-            static_cast<PolarPlayer *>(gActorList)->GiveLife();
-            MarkSpawnCollected(spawn);
-            Break();
-            palette = 1;
-        }
-
-        if (animIndex != 0x12 && IsTouchingYeti(this)) {
-            gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
-            gLevelState->AddBrokenCrate();
-            Break();
-            palette = 1;
-        }
-    }
-
-    PolarCrate::Update();
-}
-
-/* Hurts the player and explodes on touch (the yeti sets it off too); one
- * left behind (depth past 0xA000) counts as missed. Once broken, its box
- * is the blast's (gPolarNitroCrateBox), and 0x14 frames on it sets off
- * the nitros next to it. */
-void PolarNitroCrate::Update()
-{
-    if (animIndex != 0x12) {
-        if (depth > 0xa000) {
-            AddActorMissedNitro();
-            delete this;
-            return;
-        }
-        if ((u8)IsTouchingPlayer(this)) {
-            gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
-            gLevelState->AddBrokenCrate();
-            static_cast<PolarPlayer *>(gActorList)->Hurt();
-            Explode();
-        } else if (IsTouchingYeti(this)) {
-            gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
-            gLevelState->AddBrokenCrate();
-            Explode();
-        }
-    } else {
-        box = gPolarNitroCrateBox;
-        if (stateTime == 0x14)
-            DetonateNearby();
-    }
-
-    PolarCrate::Update();
 }
