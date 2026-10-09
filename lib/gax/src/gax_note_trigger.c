@@ -164,7 +164,13 @@ u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, voi
          * Retyping the item's pointer fields to `struct
          * GaxChannelInstrument *`, an explicit `__muldi3()` call (112
          * lines off) and the swept -f flags don't give the ROM's fresh
-         * `ldr r1, [r6, #60]`. */
+         * `ldr r1, [r6, #60]`. #662 round 5: gcse.c checks a load
+         * against each store with alias.c's true_dependence, and the
+         * item's stores are frame-based while the load is off `self`, an
+         * argument, so no store between can kill it; only a call can.
+         * `__muldi3` called through libgcc.h's prototype (not a const
+         * libcall) does, but the register allocation then differs from
+         * the function's first block on (878 lines off). */
         // clang-format off
         struct GaxMixItem item = {
             data, buf, pos, len << 11, frames, 0, vol, step, 0,

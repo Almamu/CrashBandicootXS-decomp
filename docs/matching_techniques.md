@@ -533,17 +533,14 @@ An asm that reads a field through `"m"` can also fix the order of a load
 against a constant
 ([issue-59-60-m-operand-scheduling.md](./matching/archive/issue-59-60-m-operand-scheduling.md)).
 
-Two empty asms stay written out, each a one-off shape that no macro
-covers (a macro for one site would only add a name to look up). They
-are `ALLOWED_SPELLED` in `tools/match_idioms.py` (a third, `EndSpin`'s
-keep-and-use, went in #662 round 4):
+One empty asm stays written out, a one-off shape that no macro covers
+(a macro for one site would only add a name to look up). It is
+`ALLOWED_SPELLED` in `tools/match_idioms.py` (`EndSpin`'s keep-and-use
+went in #662 round 4, and `SaveTransfer::ReceiveChunk`'s untied `"=r"`/`"r"`
+copy in round 5):
 
 - `asm volatile("" : : "m"(src), "m"(dst))` in `lib/gax/src/gax_swi.c`:
   two `"m"` inputs in one insn (`mem_ref`).
-- `asm volatile("" : "=r"(ch) : "r"(c + 0x108))` in
-  `src/save/save_transfer.cpp`: an opaque copy whose input isn't tied to
-  the output (`"r"`, not `MATCH_CONST`'s `"0"`), so `ch` gets no copy
-  preference for the input's register (`empty_other`).
 
 ## Memory accesses
 
@@ -1438,6 +1435,36 @@ use, and one libcall:
   `UnpackNibbleTiles` with its `ExpandNibble` ternary, were tried in
   every combination of helper and body: 100-118 lines off, as against
   the asm-free near miss's 8).
+
+**Round 5 in link/, save/, frontend/ and lib/gax (outside the function
+body).** 8 functions -> 7:
+
+- **A byte offset built in two statements hides a product from cse1.**
+  `SaveTransfer::ReceiveChunk` reads the count through `offset =
+  playerIndex * sizeof(LinkPlayer); offset = offset + (s32)s;`, the
+  shape of `SaveData::ReadSlot`/`WriteSlot`. The second statement
+  overwrites the register holding the product, so when
+  `&s->players[playerIndex].ring` multiplies again cse1 shares the 0xc8
+  constant but has no register left with the product: the ROM's second
+  `muls`. In one statement the product is reused. The pop is
+  `LinkRing::Pop`, the inline counterpart of `Push`. That removed a
+  `MATCH_HOLD_REG` pair and an empty asm.
+- **An inline's non-register argument is a copy cse1 may not see
+  through.** integrate.c copies an argument that isn't a register into a
+  fresh pseudo at the call; after a loop (a new extended basic block)
+  cse1 doesn't know it equals an earlier address, and gcse's PRE turns
+  it into a copy of the reaching register. That is
+  `LinkSession::HandleSerial`'s ring copy (`this->ring.Pop`), but the
+  copy lands at the call, after the clamp; the comment there has the
+  numbers.
+- **Compiler hypothesis tested and refuted:** a private old_agbcp
+  without regmove's optimize_reg_copy_1 compiles `SaveData::TestFlags`'s
+  natural form as the ROM, but changes 16 other old_agbcp objects that
+  match now.
+- **Kept** (the round-5 attempts are in each comment):
+  `LinkSession::Update`, `LinkSession::ResetState`,
+  `LinkSession::HandleSerial`, `SaveData::TestFlags`,
+  `Credits::LoadLogos`, `GAX2_init` and `GaxChannelMix`.
 
 ## Survey and conversion record (#576)
 
