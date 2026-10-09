@@ -873,7 +873,9 @@ from "core" graphics.
   technique - see
   [issue-59-60-static-inline-cse-promotion.md](../matching/archive/issue-59-60-static-inline-cse-promotion.md).
 - `src/frontend/credits.c` (new file, ROM 0x08034AA4-0x080354E0,
-  GitHub issue #64): `GetContinuePromptBlink` (the fade overlay's Yes/No-dialog
+  GitHub issue #64; its continue prompt functions, `DrawContinuePrompt`-
+  `RunContinuePrompt`, are at the end of `src/menus/continue_prompt.cpp`
+  since #767): `GetContinuePromptBlink` (the fade overlay's Yes/No-dialog
   blink/toggle helper), `CommitContinuePromptFrame` (fade overlay per-frame "yield"
   helper), `DestroyContinuePrompt` (fade overlay teardown), `RunContinuePrompt` (the
   "Are you sure?" confirmation-dialog trigger), `CreditsLoop` (the

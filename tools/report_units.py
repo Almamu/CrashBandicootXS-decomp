@@ -497,11 +497,11 @@ UNITS = [
     (0x0803472C, "src/menus/continue_prompt_init.o", "actor"),  # InitContinuePrompt (issue #63): the fade overlay's constructor half: allocates/loads its three BG scratch buffers, builds DISPCNT/BLDCNT/BLDALPHA; matched as real C (two register-pin/barrier fixes closed the previously-parked BLDCNT/BLDALPHA byte-packing gap)
     (0x0803487C, "src/menus/continue_prompt.o", "actor"),  # InitContinuePromptGraphics (issue #63) - the fade overlay's other setup half (icon manager hookup, tile-cache seeding loop); matched as plain C, built with old_agbcc (was raw) - see docs/matching/archive/old-agbcc-round5.md
     (0x08034994, "src/menus/continue_prompt.o", "actor"),  # ContinuePromptLoop (issue #63): the fade overlay's per-frame input-poll/blend-alpha driver; matched, real C under old_agbcc (object joined OLD_AGBCC_OBJS), two extra-reference/"+r" asm nudges - see docs/matching/archive/late-rom-naked-retry.md
-    (0x08034AA4, "src/frontend/credits.o", "actor"),  # DrawContinuePrompt (issue #64): fade-overlay Yes/No dialog draw; matched, real C (ICON_TEXT_CALL icon-manager virtual calls) - see docs/matching/archive/issue-64-65-naked-retry.md
-    (0x08034C40, "src/frontend/credits.o", "actor"),  # GetContinuePromptBlink (issue #64): the dialog's blink/toggle helper; matched, real C
-    (0x08034C5C, "src/frontend/credits.o", "actor"),  # CommitContinuePromptFrame (issue #64): fade overlay per-frame "yield" helper (OAM sync + DISPCNT re-apply); matched, real C
-    (0x08034C84, "src/frontend/credits.o", "actor"),  # DestroyContinuePrompt (issue #64): fade overlay teardown; matched, real C
-    (0x08034CB0, "src/frontend/credits.o", "actor"),  # RunContinuePrompt (issue #64): the "Are you sure?" confirmation-dialog trigger; matched, real C
+    (0x08034AA4, "src/menus/continue_prompt.o", "actor"),  # DrawContinuePrompt (issue #64; moved from credits.o to the end of continue_prompt.o, #767): fade-overlay Yes/No dialog draw; matched, real C (ICON_TEXT_CALL icon-manager virtual calls) - see docs/matching/archive/issue-64-65-naked-retry.md
+    (0x08034C40, "src/menus/continue_prompt.o", "actor"),  # GetContinuePromptBlink (issue #64): the dialog's blink/toggle helper; matched, real C
+    (0x08034C5C, "src/menus/continue_prompt.o", "actor"),  # CommitContinuePromptFrame (issue #64): fade overlay per-frame "yield" helper (OAM sync + DISPCNT re-apply); matched, real C
+    (0x08034C84, "src/menus/continue_prompt.o", "actor"),  # DestroyContinuePrompt (issue #64): fade overlay teardown; matched, real C
+    (0x08034CB0, "src/menus/continue_prompt.o", "actor"),  # RunContinuePrompt (issue #64): the "Are you sure?" confirmation-dialog trigger; matched, real C
     (0x08034CEC, "src/frontend/credits.o", "actor"),  # InitCredits (issue #64): the between-level map/progress screen's constructor; matched, real C under old_agbcc (inline IconSetBase/IconReserveVram helpers, one empty asm("") allocation nudge) - see docs/matching/archive/issue-64-65-naked-retry.md
     (0x08034E2C, "src/frontend/credits.o", "actor"),  # CreditsLoop (issue #64): the map screen's per-frame driver; matched, real C
     (0x08034EF0, "src/frontend/credits.o", "actor"),  # DrawCreditsText (issue #64): the map screen's popup draw dispatcher; matched, real C under old_agbcc - see docs/matching/archive/issue-64-65-naked-retry.md

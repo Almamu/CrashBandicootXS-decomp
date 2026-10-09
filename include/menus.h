@@ -100,7 +100,7 @@ extern const u16 gContinuePromptPalette1[16];
 extern const u16 gContinuePromptPalette2[16];
 extern const u16 gContinuePromptPalette3[17];
 
-/* src/frontend/credits.cpp (C++, frontend.hpp: ContinuePrompt's methods) */
+/* src/menus/continue_prompt.cpp (C++, frontend.hpp: ContinuePrompt's methods) */
 extern u8 RunContinuePrompt(void);
 
 /* src/menus/level_select.cpp */

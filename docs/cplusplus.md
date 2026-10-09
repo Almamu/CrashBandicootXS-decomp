@@ -585,7 +585,7 @@ counts them by kind) and what the C++ needed when it was converted.
 | `src/frontend/language_select_setup.cpp` | `LanguageSelect`'s constructor, destructor, `LoadBg`, `Blink`, `CommitFrame`, `Open`, `Close` | 7 | **old_agbcp** (was agbcc) | 2 pins, a retyped store and read (the DISPCNT bytes) -> 0 | 10b |
 | `src/level/spawn_enemies.cpp` | the 26 enemy spawners (C linkage): `new EnemyCtrl`, `hdr->Attach(part)` | 26 | old_agbcp | 22 pins, 6 asm, 6 uses, 1 hold, 1 keep, 1 mem use, 1 asm label, 52 `POPUP_ATTACH` slot calls -> 1 pin, 5 uses, 1 hold, 1 keep, 1 mem use (all `SpawnFlamethrowerLabAssistant`'s) | 9b |
 | `src/frontend/starfield.cpp` | `Starfield` (include/frontend.hpp) | 7 | **old_agbcp** (was agbcc) | 16 pins, 5 `asm` -> 0 | 10c |
-| `src/frontend/credits.cpp` | `ContinuePrompt`'s `Draw`, `Blink`, `CommitFrame`, destructor, `Run`; `Credits` (include/frontend.hpp) | 13 | old_agbcp | 4 pins, 1 use, 1 volatile keep, 1 barrier, a retyped store -> 1 pin, 1 use, 1 volatile keep, 1 barrier | 10c |
+| `src/frontend/credits.cpp` (the `ContinuePrompt` methods in `src/menus/continue_prompt.cpp` since #767) | `ContinuePrompt`'s `Draw`, `Blink`, `CommitFrame`, destructor, `Run`; `Credits` (include/frontend.hpp) | 13 | old_agbcp | 4 pins, 1 use, 1 volatile keep, 1 barrier, a retyped store -> 1 pin, 1 use, 1 volatile keep, 1 barrier | 10c |
 | `src/menus/pause_menu.cpp` | `PauseMenu::Run`, constructor, destructor (include/menus.hpp) | 3 | **old_agbcp** (was agbcc) | 25 pins, 3 `asm`, 1 `.pool` -> 0 | 10d |
 | `src/menus/pause_menu_pages_init.cpp` | `PauseMenu`'s five `Init*Page`s | 5 | old_agbcp | `UPDATE_ICON_FRAME_NIBBLE` (4 pins, 1 `asm`) -> 0 | 10d |
 | `src/menus/power_dialog.cpp` | `PowerDialog::Show`, constructor | 2 | **old_agbcp** (was agbcc) | 24 pins, 2 `asm`, 3 consts -> 0 | 10d |
@@ -2050,7 +2050,7 @@ Project-wide: `MATCH_HOLD_REG` 1249 -> 1230, instruction-emitting `asm`
 |---|---:|---|---|
 | `Starfield` | 0x14 | none | starfield.cpp |
 | `Credits` | 0x98 | none | credits.cpp |
-| `ContinuePrompt` | 0x24 | none | credits.cpp (`Draw`, `Blink`, `CommitFrame`, the destructor, `Run`); its constructor, `InitGraphics` and `Loop` are C++ since part 10d (src/menus/continue_prompt*.cpp) |
+| `ContinuePrompt` | 0x24 | none | credits.cpp (`Draw`, `Blink`, `CommitFrame`, the destructor, `Run`; continue_prompt.cpp since #767); its constructor, `InitGraphics` and `Loop` are C++ since part 10d (src/menus/continue_prompt*.cpp) |
 
 - **The classes.** All three are plain classes with a constructor and a
   destructor. `Starfield`'s `particles` and `tileBuffer` are `new
@@ -2115,7 +2115,7 @@ workaround.
 |---|---:|---|---|
 | `PauseMenu` | 0xD4 | none | pause_menu.cpp, pause_menu_pages_init.cpp; its drawing, input and `InitInfo` are still C (pause_menu_draw.c, _gems.c, _info.c, _loop.c, _pages_draw.c, _powers.c, _widgets.c) |
 | `PowerDialog` | 0x2C | none | power_dialog.cpp, power_dialog_draw.cpp; its `Loop` is still C (power_dialog_loop.c) |
-| `ContinuePrompt` | 0x24 | none | continue_prompt_init.cpp (the constructor), continue_prompt.cpp (`InitGraphics`, `Loop`), credits.cpp |
+| `ContinuePrompt` | 0x24 | none | continue_prompt_init.cpp (the constructor), continue_prompt.cpp (`InitGraphics`, `Loop`; and since #767 the methods that were in credits.cpp) |
 
 - **The classes.** All three are plain classes with a constructor and a
   destructor; their icons are `UiSprite`s. `RunPauseMenu` and
