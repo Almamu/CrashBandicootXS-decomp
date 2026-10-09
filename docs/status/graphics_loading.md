@@ -138,7 +138,8 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   [docs/matching/archive/naked-sub_801e990-matched.md](../matching/archive/naked-sub_801e990-matched.md)
   for the full derivation.
 - **`TitleScreenCheatInput`**, **`UpdateVvLogoPieces`**, **`LoadUniversalLogoBg`**
-  (`src/frontend/title_screen.c`, issue #65) - the "cheat
+  (`src/frontend/title_screen.c`, issue #65; the last two in
+  `company_logos.cpp` now) - the "cheat
   code" detector, the 20-slot updater and BG2's tilemap-remap loader,
   NAKED until the issue #64/#65 NAKED retry: the held/pressed pair read
   into a local struct first (the ROM's `0x100` mask built in r4 and
@@ -169,7 +170,8 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   **`DestroyTitleScreen`**, **`RunCompanyLogos`**, **`LoadVvLogoGraphics`**,
   **`InitLogoActor`**, **`UpdateLogoActor`**, **`DrawLogoActor`**
   (`src/frontend/title_screen.c`, split off
-  `title_screen_init.c`) - promoted from NAKED to
+  `title_screen_init.c`; `RunCompanyLogos` on in `company_logos.cpp`
+  since #770) - promoted from NAKED to
   real C in the issue #65 retry pass. Both files turned out to be
   old_agbcc code (both are now on the Makefile's `OLD_AGBCC_OBJS`);
   `LoadTitleScreenBg`'s long-documented "dead r7 in the push list" gap
@@ -180,7 +182,8 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   destination pointer taken before an allocation call, a nested block
   for the ROM's stack-slot order). See
   [issue-65-naked-retry.md](../matching/archive/issue-65-naked-retry.md).
-- **`InitVvLogoPieces`** (`src/frontend/title_screen.c`) - the
+- **`InitVvLogoPieces`** (`src/frontend/title_screen.c`;
+  `company_logos.cpp` since #770) - the
   20-slot seeder. Real C once the object is built with
   `-fno-strength-reduce` (the Makefile's `NO_STRENGTH_REDUCE_OBJS`):
   with strength reduction on, gcc reverses the first loop into a

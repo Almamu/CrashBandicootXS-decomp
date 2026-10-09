@@ -2,7 +2,8 @@
 
 > **Update (#664 part 10c-2):** the one flag this page found,
 > `-fno-strength-reduce` on title_screen.o, is gone. Converted to C++
-> (title_screen.cpp, [cplusplus.md](../cplusplus.md)), `InitVvLogoPieces`
+> (title_screen.cpp, [cplusplus.md](../cplusplus.md); company_logos.cpp
+> since #770), `InitVvLogoPieces`
 > is the plain indexed loop (`slots[i].countdown =
 > gVvLogoPieceSeeds[i].hold + 1`), which matches with strength reduction
 > on, as does every other function in the file. The C's hand-written

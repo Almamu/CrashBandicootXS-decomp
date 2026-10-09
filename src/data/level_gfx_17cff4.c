@@ -138,7 +138,7 @@ const struct delta_record gTitleLogoPieceMotion8[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-/* The animation record RunCompanyLogos (title_screen.cpp) builds its
+/* The animation record RunCompanyLogos (company_logos.cpp) builds its
  * part from (actor_anim.h's `struct anim_table_record`; this file had its
  * own view, `struct anim_record_view`). The keyframes and frames are
  * record 0's of the categories 0-2 family (Crash riding the polar bear),

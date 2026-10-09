@@ -10,8 +10,7 @@
  *   TitleScreen     0x220                    src/frontend/title_screen_init.cpp,
  *                                            title_screen.cpp
  *   CompanyLogos    0x44C                    src/frontend/company_logos.cpp,
- *                                            language_select.cpp,
- *                                            title_screen.cpp
+ *                                            language_select.cpp
  *   LogoActor       0x54   gLogoActorVtable  src/frontend/company_logos.cpp,
  *                                            language_select.cpp
  *   LanguageSelect  0x14                     src/frontend/language_select.cpp,
