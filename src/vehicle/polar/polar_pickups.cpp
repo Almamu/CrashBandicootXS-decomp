@@ -39,66 +39,12 @@ void PolarCollectedWumpa::Update()
     }
 }
 
-/* DrawActor's (ActorSelf::Draw) sprite, with the screen position and the
- * scale given: double size below 0x100, affine unless 1:1; culled off
- * screen, OAM priority 2 when SORT_KEY_FLAG_BEHIND_BG. */
-static inline void DrawScaledFrame(ActorSelf *self, s32 screenX, s32 screenY, s32 scale)
-{
-    u8 *frame = self->GetAnimFrameData();
-    u32 flag;
-    s32 halfW;
-    s32 halfH;
-
-    flag = 0;
-    if (scale <= 0xff)
-        flag = 0x200;
-
-    if (flag != 0)
-        halfW = frame[0] << 3;
-    else
-        halfW = frame[0] << 2;
-
-    if (flag != 0)
-        halfH = frame[1] << 3;
-    else
-        halfH = frame[1] << 2;
-
-    screenX -= halfW;
-    screenY -= halfH;
-
-    if (screenY > 0x9f)
-        return;
-    if (screenY + halfH * 2 < 0)
-        return;
-    if (screenX > 0xef)
-        return;
-    if (screenX + halfW * 2 < 0)
-        return;
-
-    if (scale != 0x100)
-        flag |= 0x100;
-
-    {
-        s32 attr = self->GetAnimFrameAttr();
-        u32 packed = (screenY & 0xff) | (((u32)screenX & 0x1ff) << 16) | attr | flag;
-        u32 pal = self->palette;
-        u32 pre = pal << 0xc;
-        u32 attr2;
-
-        if (self->sortKey & SORT_KEY_FLAG_BEHIND_BG)
-            attr2 = ((pre | 0x800) << 0x10) >> 0x10;
-        else
-            attr2 = (pal << 0x1c) >> 0x10;
-
-        SetupSpriteFrameOam(frame, packed, attr2, scale);
-    }
-}
-
 /* At its screen position (x and y are screen coordinates), at scale
- * 0x140. */
+ * 0x140: DrawActor's (ActorSelf::Draw) sprite (DrawFrameAt,
+ * actor_self.hpp). */
 void PolarCollectedWumpa::Draw()
 {
-    DrawScaledFrame(this, Q8_TO_INT(x), Q8_TO_INT(y), 0x140);
+    DrawFrameAt(Q8_TO_INT(x), Q8_TO_INT(y), 0x140);
 }
 
 /* Counts in its fruit. */

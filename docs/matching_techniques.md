@@ -1439,6 +1439,43 @@ use, and one libcall:
   every combination of helper and body: 100-118 lines off, as against
   the asm-free near miss's 8).
 
+**Round 5, player/, objects/ and actor/ (outside the function).** 10
+functions -> 6 (ActorSelf::Draw, SelectActorCategory and ReleaseHang
+free; PlatformMover::Update loses its 0x300 pin and keep):
+
+- **A sibling's inline.** `ActorSelf::Draw`'s second half is the inline
+  `DrawScaledFrame` that polar_pickups.cpp already had for
+  `PolarCollectedWumpa::Draw`; as ActorSelf's inline `DrawFrameAt`
+  (actor_self.hpp, used by both) the screen X and Y are the inline's
+  parameters, copied in after the projection, and the projection shares
+  r5 with the screen X without the pin. The `/` operator works as well
+  as the explicit `__divsi3` calls there.
+- **The sibling's loop test, a tie and a declaration's place.**
+  `SelectActorCategory`'s skip loop with RunActorCategoryFrame's
+  SUB_EFFECT_DUE test (the record address through `off` and `tb` in a
+  comma expression) and as a `for` brings `&gActorSpawnIndex` and
+  `base` to the same global priority (0.1333); allocno_compare then
+  takes the lower pseudo, and `s32 base = GetCellAnimDistance();`
+  declared at its set (C++) is created after the address's pseudo. With
+  `base` declared at the top, or a `while`, they still swap.
+- **A setter with the other coordinate passed back** (above):
+  `part->SetPos(part->x, part->y + 0x600)` in `ReleaseHang` keeps the X
+  in r2 across the add, which is what made reload spill r3 for the
+  0x600 (an instrumented reload1.c shows the spill set r1, r2, r3, r6
+  against r1, r2, r6). PlatformMover::Update's wobble the same way (the
+  -0x300 in r5, the 0x300 in r2).
+- **Kept, with what was tried in each comment:** the two HandleEvent
+  dead loads (the dead arm's register also needs a use elsewhere in the
+  function, or cse1's delete_trivially_dead_insns removes it before
+  flow1: every inline form, unused parameters, discarded returns,
+  `const bool &`, empty inlines and do/while(0) asserts, dies there);
+  the bounce and StateJump 1s and Sprite::CheckPlayerContact's 1 (a
+  private old_agbcp whose cse doesn't link a constant's registers, in
+  four forms, fixes none and changes up to 13 other functions per
+  object); StateCrouch (FaceRight-style inlines keep the three
+  quantities); CameraLead::Reset; PlatformMover::Update's `now` (`part`
+  61 references over 388 insns with the SetPos calls, 64 needed).
+
 ## Survey and conversion record (#576)
 
 The conversion is complete. `tools/match_idioms.py` after part 4

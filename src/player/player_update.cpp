@@ -76,7 +76,12 @@ static inline s32 IsBlinking(Player *p)
  * load after reload, and no flow pass follows jump2; see
  * ActionCtrl::HandleEvent's bump case, action_ctrl_event.cpp): the test
  * must reach jump2 with nothing left to do, so its body has to be dead
- * code flow1 removes, or arms jump2 finds identical. */
+ * code flow1 removes, or arms jump2 finds identical. #662 round 5: and
+ * the body's register needs a use elsewhere, or cse1's
+ * delete_trivially_dead_insns takes it first (see HandleEvent's bump
+ * case); an inline Aku Aku spawn with an unused mask-level parameter, a
+ * `const bool &` or by-value struct parameter, or the mirror read
+ * through an inline taking the level all leave no load. */
 void Player::HandleEvent(s32 from, s32 event, s32 arg)
 {
     switch (event) {

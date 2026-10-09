@@ -80,7 +80,14 @@ void CameraLead::Reset()
      * then shows in the toggle: `blink = v ^ one`, `(v ^ one) & one` and a
      * u32 temporary for the toggle keep the copy but `eor` with r1 or
      * fold to a `bic` (6 to 14 lines off), where the ROM's toggle loads
-     * a 1 of its own. No 1 set in an earlier block exists to use. */
+     * a 1 of its own. No 1 set in an earlier block exists to use.
+     * #662 round 5: the ROM's pair (`movs r1, #1` at the test, a fresh
+     * `movs r0, #1` in the toggle) looks like reload rematerializing
+     * one pseudo equal to 1 that got no hard register (a REG_EQUIV
+     * constant; not verified); nothing here is short of registers, so
+     * no spelling found gets it spilled. `u32 one` kept live by
+     * `f.b.active = one` (s32, u8 too) is 43 lines off; IsHidden-style
+     * inlines leave the plain code. */
     MATCH_HOLD_REG(u32, one, r1) = 1;
 
     if (!(v & one))

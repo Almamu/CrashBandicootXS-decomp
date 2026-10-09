@@ -4,8 +4,6 @@
 
 extern "C" {
 #include "math_util.h"
-#include "match.h"
-#include <libgcc.h>
 #include "actor.h"
 #include "vehicle.h"
 #include "gfx.h"
@@ -96,42 +94,17 @@ void ActorSelf::Update()
 }
 
 /* Slot 3: the sprite, scaled by depth against the record's baseDepth
- * (an affine sprite unless 1:1, double size below 0x100) and projected
- * through gActorFocalLength around the BG's center; culled off screen,
- * OAM priority 2 when SORT_KEY_FLAG_BEHIND_BG. */
+ * and projected through gActorFocalLength around the BG's center, drawn
+ * by DrawFrameAt (actor_self.hpp; an affine sprite unless 1:1, double
+ * size below 0x100, culled off screen, OAM priority 2 when
+ * SORT_KEY_FLAG_BEHIND_BG). */
 void ActorSelf::Draw()
 {
     s32 dist = depth;
-    s32 scale = __divsi3(dist << 8, record->baseDepth);
-    /* r5: unpinned, the projection and the screen y swap r4 and r5 (no
-     * spelling changes global allocation's ranking of the two). The
-     * projection is local to the first basic block, so local allocation
-     * gives it r4 before the screen y (global) is ranked; #662 round 2:
-     * scoping it (or `dist`, `scale`) in blocks, and testing `scale`
-     * instead of `flag`, don't change that. #662 round 3: nor do the
-     * screen y computed through a temporary (as the x is) or as one
-     * expression, or the projection declared just before its use; the
-     * projection stays local to block 0, which ends at the scale test,
-     * and no -f flag or pair of flags makes it global.
-     * #662 round 4 (an instrumented local-alloc.c): in block 0 the
-     * projection (3 references, life 32-54) outranks `dist` (3, life
-     * 4-28), but the order doesn't matter: no local quantity holds r4 in
-     * 32-54, and with SMALL_REGISTER_CLASSES block_alloc doesn't widen
-     * lives (fake_birth/fake_death) against false dependencies, so the
-     * projection takes r4 either way. The ROM's r5 needs it global and
-     * ranked after the screen y. One variable for the projection and
-     * the screen x (both r5 in the ROM) does that and is 4 lines off:
-     * regmove's commutative fix-up then builds `x & 0x1ff` in the mask's
-     * register, since the variable's first set copies the call's r0
-     * (replacement_quality 1, against the constant's 3). */
-    MATCH_HOLD_REG(s32, proj, r5) = __divsi3(gActorFocalLength << 0xc, dist);
+    s32 scale = (dist << 8) / record->baseDepth;
+    s32 proj = (gActorFocalLength << 0xc) / dist;
     s32 screenY;
     s32 screenX;
-    u8 *data;
-    u8 *frame;
-    u32 flag;
-    s32 halfW;
-    s32 halfH;
 
     {
         s32 off = GetActorBgCenterY();
@@ -151,55 +124,7 @@ void ActorSelf::Draw()
         t += off;
         screenX = Q8_TO_INT(t);
     }
-
-    /* Two pointers: the height is read through the call's result (r0),
-     * the width and the OAM call through its copy (r7). */
-    data = GetAnimFrameData();
-    frame = data;
-
-    flag = 0;
-    if (scale <= 0xff)
-        flag = 0x200;
-
-    if (flag != 0)
-        halfW = frame[0] << 3;
-    else
-        halfW = frame[0] << 2;
-
-    if (flag != 0)
-        halfH = data[1] << 3;
-    else
-        halfH = data[1] << 2;
-
-    screenX -= halfW;
-    screenY -= halfH;
-
-    if (screenY > 0x9f)
-        return;
-    if (screenY + halfH * 2 < 0)
-        return;
-    if (screenX > 0xef)
-        return;
-    if (screenX + halfW * 2 < 0)
-        return;
-
-    if (scale != 0x100)
-        flag |= 0x100;
-
-    {
-        s32 attr = GetAnimFrameAttr();
-        u32 packed = (screenY & 0xff) | (((u32)screenX & 0x1ff) << 16) | attr | flag;
-        u32 pal = palette;
-        u32 pre = pal << 0xc;
-        u32 attr2;
-
-        if (sortKey & SORT_KEY_FLAG_BEHIND_BG)
-            attr2 = ((pre | 0x800) << 0x10) >> 0x10;
-        else
-            attr2 = (pal << 0x1c) >> 0x10;
-
-        SetupSpriteFrameOam(frame, packed, attr2, scale);
-    }
+    DrawFrameAt(screenX, screenY, scale);
 }
 
 void ActorSelf::UpdateDepth()

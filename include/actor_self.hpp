@@ -32,6 +32,7 @@ extern "C" {
 #include "memory.h"
 #include "actor_self.h"
 #include "actor_anim.h"
+#include "gfx.h"
 }
 
 class AnimPart
@@ -164,6 +165,8 @@ public:
         next->prev = prev;
         prev->next = next;
     }
+
+    void DrawFrameAt(s32 screenX, s32 screenY, s32 scale);
 };
 
 COMPILE_TIME_ASSERT(actor_self_hpp, sizeof(ActorSelf) == 0x54);
@@ -175,6 +178,71 @@ inline ActorSelf::~ActorSelf()
     Unlink();
 }
 #endif
+
+/* The current frame at screen position (screenX, screenY), `scale` the
+ * depth scale (0x100 is 1:1): double size below 0x100, affine unless
+ * 1:1, centred on the frame's size and culled off screen, OAM priority 2
+ * when SORT_KEY_FLAG_BEHIND_BG. ActorSelf::Draw (actor.cpp) and
+ * PolarCollectedWumpa::Draw (polar_pickups.cpp) expand it. The frame
+ * pointer has a copy: ActorSelf::Draw reads the height through the
+ * call's result (r0) and the width and the OAM call through the copy
+ * (r7). Written out in Draw instead of inlined, the projection there is
+ * a block-local value that local-alloc puts in r4 before the screen Y is
+ * ranked (an r5 pin until #662 round 5); as this inline's parameters,
+ * the screen X and Y are copied in after the projection, which then
+ * shares r5 with the screen X as in the ROM. */
+inline void ActorSelf::DrawFrameAt(s32 screenX, s32 screenY, s32 scale)
+{
+    u8 *frame = GetAnimFrameData();
+    u8 *data = frame;
+    u32 flag;
+    s32 halfW;
+    s32 halfH;
+
+    flag = 0;
+    if (scale <= 0xff)
+        flag = 0x200;
+
+    if (flag != 0)
+        halfW = frame[0] << 3;
+    else
+        halfW = frame[0] << 2;
+
+    if (flag != 0)
+        halfH = data[1] << 3;
+    else
+        halfH = data[1] << 2;
+
+    screenX -= halfW;
+    screenY -= halfH;
+
+    if (screenY > 0x9f)
+        return;
+    if (screenY + halfH * 2 < 0)
+        return;
+    if (screenX > 0xef)
+        return;
+    if (screenX + halfW * 2 < 0)
+        return;
+
+    if (scale != 0x100)
+        flag |= 0x100;
+
+    {
+        s32 attr = GetAnimFrameAttr();
+        u32 packed = (screenY & 0xff) | (((u32)screenX & 0x1ff) << 16) | attr | flag;
+        u32 pal = palette;
+        u32 pre = pal << 0xc;
+        u32 attr2;
+
+        if (sortKey & SORT_KEY_FLAG_BEHIND_BG)
+            attr2 = ((pre | 0x800) << 0x10) >> 0x10;
+        else
+            attr2 = (pal << 0x1c) >> 0x10;
+
+        SetupSpriteFrameOam(frame, packed, attr2, scale);
+    }
+}
 
 /* The 3D actors' box test (actor_category_frame.cpp's player hooks and
  * FindShotTarget, polar_nitro.cpp's DetonateNearby; UpdateYeti,

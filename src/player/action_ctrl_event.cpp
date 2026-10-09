@@ -156,7 +156,16 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
              * empty one goes in the jump passes before flow1, whose
              * dead-code pass then takes the load too; so only a dead
              * store (or identical arms) leaves the load, and neither is
-             * source a programmer writes. */
+             * source a programmer writes. #662 round 5 (cse.c): the
+             * dead body must also survive cse1's
+             * delete_trivially_dead_insns, which counts each register's
+             * uses (count_reg_usage) and deletes sets nothing reads, so
+             * the set register needs a use elsewhere in the function
+             * (`m`, `arg`, `event`: `m = state == SLIDE` matches too).
+             * Everything built from inlines dies there: an unused
+             * inline parameter (`Nop(state == SLIDE)`, `const bool &`),
+             * an inline's discarded return value, an empty inline in
+             * the arm; so do `do { if (...) {} } while (0)` asserts. */
             *(volatile s32 *)&state;
             bumpTimer = 3;
             SetBumped(part, 1);
@@ -212,7 +221,21 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
              * (held/fire/one types u8-u32/s16/bool, `one` before or after
              * the AND or the R test, `& 1`/`!= 0`/`% 2`, QueueY,
              * QueueNowY or plain stores, the else's 0 or `fire`) gets no
-             * closer than the copy. */
+             * closer than the copy. #662 round 5: the two bounces as one
+             * inline (`Bounce(high, low)`, with the mask, the keys or
+             * the pending 1 as parameters), a block-scope `jump =
+             * A_BUTTON` set before the R test, and `one` through a
+             * `const s32 &` QueueY all still share the 1 (an inline's
+             * constant argument is a pseudo set at the call, which cse
+             * links the same way; the reference's ADDRESSOF store goes
+             * through a pseudo set to 1 too). A private old_agbcp whose
+             * insert_regs doesn't link a register set from a constant
+             * to the class's register (four forms: always, or only
+             * between a user variable and a temporary, either way round
+             * or both) fixes none of this case, StateJump or
+             * Sprite::CheckPlayerContact and changes up to 13 other
+             * functions in their objects, so that isn't how the
+             * original compiler differed. */
             MATCH_CONST(one, 1);
             fire = held & 1;
             if (fire) {

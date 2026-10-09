@@ -405,7 +405,13 @@ void ActionCtrl::StateJump()
                          * test's pseudo, and regmove copies it (#662
                          * round 3). Round 4 traced the condition the ROM
                          * implies to cse's quantities and local-alloc's
-                         * update_equiv_regs (see HandleEvent's bounce). */
+                         * update_equiv_regs (see HandleEvent's bounce).
+                         * Round 5: the test through an inline (`Held`,
+                         * `HeldB(cur, A_BUTTON)`, the bool one keeping
+                         * `cur` in r4) or the whole queueing as an
+                         * inline with the A flag or keys as a parameter
+                         * still share the 1, and a cse that doesn't
+                         * link equal constants changes other states. */
                         MATCH_KEEP(one);
                         if (cur & 1)
                             QueueYAt(slot, one, 9);
@@ -1011,7 +1017,13 @@ void ActionCtrl::StateCrouch()
              * in two blocks, which code confined to this block can't be.
              * With the address born first (its `adds` comes first in the
              * ROM too), no priorities make the exchange put the mask
-             * first: it yields address-first or 0x10-first. */
+             * first: it yields address-first or 0x10-first. Round 5:
+             * the flip as UpdateFacing's FaceRight-style inline (Player
+             * or u8 * parameter, with or without the pending store), a
+             * byte local for the load (`u8`/`s32`), the load first, an
+             * `s32 bit = 0x10` and SetFlipX(1) all leave the same three
+             * quantities; the whole turn as one inline taking `part`
+             * makes the flip share the test's address instead. */
             volatile u8 *p = &part->mirror;
 
             m = -0x11;
