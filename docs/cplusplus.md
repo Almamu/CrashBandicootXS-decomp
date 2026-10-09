@@ -2289,7 +2289,7 @@ field stores 194 -> 191 and reads 70 -> 69, `MATCH_CONST` 19 -> 20.
 
 | Class | Size | Vtable | Code |
 |---|---:|---|---|
-| `AnimPart` | 0x1C | none | inline_copies_actors.cpp (its constructor is inline) |
+| `AnimPart` | 0x1C | none | anim_part.cpp (its constructor is inline) |
 | `ActorSelf` | 0x54 | gActorVtable (slots 1-3) | actor.cpp |
 | `HpActor` | 0x58 | none in the ROM (slots 4-6 added) | inline_copies_actors.cpp (`GetHp`, `Damage`, `IsUnshootable`); the constructor is inline |
 | 21 polar actors (`PolarPlayer`, `RiderlessPolar`, `PolarWumpa`, the crates, ...) | | their own (4 slots) | the destructors in inline_copies_actors.cpp, `PolarPlayer::RunState` and its table; the rest still C |

@@ -450,7 +450,7 @@ one sample read.
 | `0x080354E0`-`0x08035780`ish | ~0.7 KB | graphics loading | high | `InitTitleScreen`, `LoadTitleScreenBg`, `LoadTitleScreenObjTiles` |
 | `0x08037110`-~`0x0803A950` | ~14 KB | audio (GAX2) | medium, **narrowed this pass** | see "Narrowing the GAX2 boundary" below |
 | `0x0803A950`-`0x0803B058` | ~1.5 KB | `system` (asset loading) | high | `LZ77UnCompVram`/`RLUnCompVram`, confirmed called from the already-matched `src/system/asset.cpp` |
-| `0x0803B058`-`0x0803B060` | 8 B | `graphics` | **matched** | `src/actor/inline_copies_actors.cpp` |
+| `0x0803B058`-`0x0803B060` | 8 B | `graphics` | **matched** | `src/actor/anim_part.cpp` |
 | `0x0803B060`-`0x0803B8B0` | ~2.1 KB | actor system | medium | `GetAnimFrameData`, 43 other still-unnamed neighbors in `code_3_3.s` |
 
 ## Two big unnamed systems
@@ -632,7 +632,7 @@ them directly:
 
 - **Every run leans on the same handful of already-matched or
   already-documented functions**: `PlaySfx`, `InitActorPart`,
-  `GetAnimFrameBaseOffset` (matched, `inline_copies_actors.cpp`), and two
+  `GetAnimFrameBaseOffset` (matched, `anim_part.cpp`), and two
   actor-system siblings just outside the zone (`IsTouchingPlayer`,
   `UpdateActor`, near `InitActorPart`/`DrawActor` -
   every prior pass only seeded from `InitActorPart` itself, missing

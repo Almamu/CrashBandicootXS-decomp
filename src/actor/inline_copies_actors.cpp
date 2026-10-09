@@ -9,46 +9,19 @@ extern "C" {
 #include "globals.h"
 }
 
-/* AnimPart's methods (#664 part 11a, include/actor_self.hpp), then the
- * 3D actors' destructors (vehicle.hpp, boss_actors.hpp), all but the
+/* The 3D actors' destructors (vehicle.hpp, boss_actors.hpp), all but the
  * polar player's, the jetpack player's, the balloon crate's and the
  * polar collected wumpa's, in the ROM's order, with a few small methods
  * among them: the polar and jetpack checkpoint banners', the jetpack
  * explosion's and HpActor's defaults. Every destructor here is an empty
  * body: g++ expands ActorSelf's inline one (the unlink, with
  * gActorVtable stored; the class's own table store before it is dead)
- * and the delete through AnimPart's operator delete (mem_free). */
-
-s32 AnimPart::GetAnimFrameBaseOffset()
-{
-    return Q8_TO_INT(animTime);
-}
-
-/* The current keyframe's `attr`, in the high halfword: an OAM attribute
- * word's flags (DrawActor, DrawJetpackCheckpointText). */
-s32 AnimPart::GetAnimFrameAttr()
-{
-    return (s32)anims[animIndex].attr << 16;
-}
-
-/* The current frame's graphics: the keyframe's frameIndex plus the
- * animation's frame, indexing frameOffsets (byte offsets into
- * gCategorySpriteSheet). */
-u8 *AnimPart::GetAnimFrameData()
-{
-    s32 base = GetAnimFrameBaseOffset();
-
-    return (u8 *)gCategorySpriteSheet + frameOffsets[anims[animIndex].frameIndex + base];
-}
-
-/* Starts keyframe `idx`: its duration, not done, from the start. */
-void AnimPart::SetAnim(s32 idx)
-{
-    animIndex = idx;
-    animTimer = anims[idx].duration;
-    animDone = 0;
-    animTime = 0;
-}
+ * and the delete through AnimPart's operator delete (mem_free).
+ *
+ * ROM 0x0803B0C4-0x0803B8B0, the end of the code, after anim_part.cpp
+ * (AnimPart's methods, which opened this file, then actor_anim.cpp,
+ * until #770). Likely the original's collected out-of-line copies of
+ * inline or implicit functions, hence the name. */
 
 RiderlessPolar::~RiderlessPolar()
 {

@@ -330,6 +330,7 @@ SECTIONS
         build/crashbandicootxs/lib/libgcc/_modsi3.o(.text);
         build/crashbandicootxs/lib/libgcc/_umodsi3.o(.text);
         build/crashbandicootxs/src/system/inline_copies_misc.o(.text);
+        build/crashbandicootxs/src/actor/anim_part.o(.text);
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.text);
 
         /* Data */

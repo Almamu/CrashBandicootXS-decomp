@@ -3,7 +3,7 @@
 
 /* The 3D actors' base classes as C++ (#664, docs/cplusplus.md):
  *
- *   AnimPart   0x1C  none          src/actor/inline_copies_actors.cpp
+ *   AnimPart   0x1C  none          src/actor/anim_part.cpp
  *   ActorSelf  0x54  gActorVtable  src/actor/actor.cpp
  *   HpActor    0x58  none (no ROM table: every subclass has its own)
  *

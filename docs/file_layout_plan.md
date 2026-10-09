@@ -343,7 +343,10 @@ this plan depends on splitting them.
   `LoadTaggedAssetBuffered` and the company-logo destructors. **Done**
   (#770): `frontend/company_logos_ctor.cpp`.
 - `actor/actor_anim.c` and `util/aabb_setup.c`: the ROM-tail grab bags
-  after libgcc.
+  after libgcc. **Done** (#770): nothing can move across libgcc, so they
+  are renamed `system/inline_copies_misc.cpp` and
+  `actor/inline_copies_actors.cpp`, with AnimPart's methods split into
+  `actor/anim_part.cpp`.
 
 ## What each move PR has to touch
 

@@ -70,7 +70,7 @@ needs its own new `.c` file (here, `src/actor/inline_copies_actors.cpp`), not ju
 addition to the existing one - adding it to the wrong file would silently
 move it to the wrong ROM address.
 
-Third matched function: `GetAnimFrameBaseOffset` in `src/actor/inline_copies_actors.cpp` -
+Third matched function: `GetAnimFrameBaseOffset` in `src/actor/anim_part.cpp` -
 trivial (a single field read + arithmetic shift), included here mainly to
 confirm the "new `.c` file, non-adjacent region" workflow above works.
 
