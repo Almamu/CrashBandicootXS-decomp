@@ -25,10 +25,8 @@ extern "C" {
  * across the `MemCopy32` call. Built with old_agbcc
  * (docs/matching/archive/issue-58-61-naked-retry.md). */
 
-u8 IsTouchingAirship(void *selfArg)
+u8 IsTouchingAirship(ActorSelf *self)
 {
-    ActorSelf *self = (ActorSelf *)selfArg;
-
     if ((u32)(gAirshipState - 2) <= 1) {
         struct {
             struct anim_box a, c, t;

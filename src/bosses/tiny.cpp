@@ -37,7 +37,7 @@ extern "C" {
  *   0x080187FC-0x08018884): the stomped hop pad's, and OneShotAnimCtrl's
  *   Update.
  * - The one-shot animation controllers' constructors and destructors,
- *   TinyHitStub, and Tiny's StartHop, destructor and constructor (issue
+ *   Tiny's HitStub (TinyHitStub) and StartHop, destructor and constructor (issue
  *   #23, docs/matching/archive/issue-23-graphics.md).
  *
  * UNUSED - no caller anywhere in the ROM (checked the asm/ and expected/
@@ -309,7 +309,7 @@ void TinyCtrl::SetState(MovingSprite *part, s32 next)
             this->x = x + 0x6400;
             StartHop(part);
         }
-        TinyHitStub(this, part);
+        HitStub(part);
         SetTargetAnim(part, 7);
         break;
     case 14:
@@ -490,10 +490,10 @@ UnusedOneShotAnimCtrl::~UnusedOneShotAnimCtrl()
 /* Empty hook for Tiny taking a hit. TinyCtrl::SetState's case 9
  * (above; Update enters it when the player's attack box hits
  * Tiny, and it plays SFX_BOSS_HIT and counts the hit) calls it directly,
- * between the hop set-up and the anim-7 call, with the same (self, part)
- * arguments as StartHop below. It is in no method table, so nothing shows
- * what the hook was meant to do. */
-void TinyHitStub(void *self, void *part)
+ * between the hop set-up and the anim-7 call, with the same part argument
+ * as StartHop below. It is in no method table, so nothing shows what the
+ * hook was meant to do. */
+void TinyCtrl::HitStub(MovingSprite *part)
 {
 }
 

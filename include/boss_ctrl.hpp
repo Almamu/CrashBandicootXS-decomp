@@ -86,6 +86,7 @@ public:
     void SetState(MovingSprite *part, s32 next);
     s32 PickHopTarget();
     void SpawnFallingLeaves(MovingSprite *part, s32 n);
+    void HitStub(MovingSprite *part);  // TinyHitStub (empty)
     void StartHop(MovingSprite *part); // StartTinyHop
 };
 

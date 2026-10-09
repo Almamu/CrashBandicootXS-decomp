@@ -78,7 +78,7 @@ void *SpawnJetpackActor(struct actor_spawn *rec, u8 alt, s32 dz)
 /* The spawn dispatcher: offsets the position by the kind's record and
  * constructs the kind's object. Kind 23 turns into kind 20's object
  * when `IsSpawnCollected` says so; kind 31 spawns a kind-43 companion first. */
-void *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
+void *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, struct actor_spawn *spawn)
 {
     x += gJetpackAnimTable[kind].spawnX;
     y += gJetpackAnimTable[kind].spawnY;

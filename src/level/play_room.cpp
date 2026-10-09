@@ -104,7 +104,7 @@ s32 LevelProgress::PlayRoom()
     case ROOM_KIND_UNDERWATER:
         {
             gSwimCtrl = new SwimCtrl;
-            ((SwimCtrl *)gSwimCtrl)->SetAnimSet(&gSwimCtrlMotionSet);
+            gSwimCtrl->SetAnimSet(&gSwimCtrlMotionSet);
             gPlayer->ctrlMode = mode;
             {
                 const struct sprite_bank *bank =
@@ -123,7 +123,7 @@ s32 LevelProgress::PlayRoom()
             }
             {
                 Player *pl = gPlayer;
-                SwimCtrl *ctrl = (SwimCtrl *)gSwimCtrl;
+                SwimCtrl *ctrl = gSwimCtrl;
 
                 pl->mover = ctrl;
                 ctrl->Attach(pl);

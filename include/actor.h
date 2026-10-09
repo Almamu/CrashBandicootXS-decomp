@@ -72,12 +72,16 @@ struct actor_spawn {
 /* The actor zone (src/actor/): the 3D actor object (ActorSelf),
  * its animation, spawning, category frame and backgrounds. */
 
+/* ActorSelf's own tag (actor_self.hpp): an incomplete struct to C, the
+ * class to C++. */
+struct ActorSelf;
+
 /* src/actor/actor_category_hooks.cpp (the rest: vehicle.h) */
-extern s32 IsTouchingPlayer(void *self);
+extern s32 IsTouchingPlayer(struct ActorSelf *self);
 
 /* src/actor/actor_spawn_collected.cpp */
-extern s32 IsSpawnCollected(void *self);
-extern void MarkSpawnCollected(void *self);
+extern s32 IsSpawnCollected(struct actor_spawn *spawn);
+extern void MarkSpawnCollected(struct actor_spawn *spawn);
 extern void ClearCollectedSpawns(void);
 
 /* src/actor/actor_palette_cycle.cpp */
@@ -120,7 +124,7 @@ extern s32 IsActorMaskAssistDue(void);
  * vtables (src/data/actor_category_175558.c): to C, `struct ActorSelf` is
  * the class's tag, with no fields. */
 #ifdef __cplusplus
-extern class ActorSelf *CreateActor(u8 kind, s32 x, s32 y, s32 z, void *spawn);
+extern class ActorSelf *CreateActor(u8 kind, s32 x, s32 y, s32 z, struct actor_spawn *spawn);
 #endif
 extern struct ActorSelf *SpawnActor(struct actor_spawn *spawn, u8 useBonus, s32 zOffset);
 extern void ConstructAnimTableState(struct anim_table_record *table, s32 z);
@@ -219,7 +223,7 @@ extern s32 gCellAnimSpeed;
 extern s32 gCellAnimTileBytes;
 extern s32 gCellAnimTime;
 extern u8 gCellAnimUploaded;
-extern void *gCollectedSpawns[];
+extern struct actor_spawn *gCollectedSpawns[];
 extern s32 gSavedActorPaletteCycleFrame;
 extern s32 gSavedActorPaletteCycleTarget;
 /* The deaths since the checkpoint that count towards the category's

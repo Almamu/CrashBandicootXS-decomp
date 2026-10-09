@@ -90,13 +90,12 @@ extern void AirshipStateFireballs(void);
 extern void AirshipStateCannon(void);
 
 /* src/vehicle/jetpack/airship_touch.cpp */
-extern u8 IsTouchingAirship(void *self);
+extern u8 IsTouchingAirship(struct ActorSelf *self);
 
 /* src/bosses/tiny.cpp and cortex.cpp: methods of TinyCtrl, CortexBossCtrl,
  * CortexTargetCtrl and CortexShotCtrl (include/boss_ctrl.hpp) under their
- * C names (cxx_symbols.txt). TinyHitStub (tiny.cpp) and SpawnCortexBossGem
- * (cortex.cpp; spawn_gems.cpp calls it) have C linkage. */
-extern void TinyHitStub(void *self, void *part);
+ * C names (cxx_symbols.txt). SpawnCortexBossGem (cortex.cpp; spawn_gems.cpp
+ * calls it) has C linkage. */
 extern void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind);
 
 /* src/bosses/hovercraft.cpp */

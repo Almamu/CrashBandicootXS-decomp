@@ -41,7 +41,7 @@ void PolarReachCourseEnd(void *arg0)
 }
 
 /* The selected category's slot 9 (its player contact test) on `self`. */
-s32 IsTouchingPlayer(void *self)
+s32 IsTouchingPlayer(ActorSelf *self)
 {
-    return ((s32 (*)(void *))gActorCategoryVtable->fn[9])(self);
+    return ((s32 (*)(ActorSelf *))gActorCategoryVtable->fn[9])(self);
 }
