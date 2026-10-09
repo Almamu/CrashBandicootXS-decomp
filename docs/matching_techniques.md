@@ -1503,6 +1503,31 @@ free; PlatformMover::Update loses its 0x300 pin and keep):
   quantities); CameraLead::Reset; PlatformMover::Update's `now` (`part`
   61 references over 388 insns with the SetPos calls, 64 needed).
 
+**Round 6 in link/, save/, frontend/ and lib/gax.** 7 functions -> 7;
+the new evidence is in each comment:
+
+- **A flag that is two switches.** `-fno-expensive-optimizations` on
+  save_data.o turns off regmove's optimize_reg_copy_1 (the copy that
+  moves `SaveData::TestFlags`'s test) and every other function still
+  matches, but it also turns off stmt.c's preserve_subexpressions_p, and
+  the parameter's zero-extension then splits. Test both effects of a
+  flag before blaming one pass.
+- **A const libcall leaves a trace.** In `GaxChannelMix` the ROM keeps
+  `self->row` in a register across `__muldi3`, so that call didn't
+  clobber memory. The reload of `self->instrument` after it has another
+  cause. Through the libgcc.h prototype the reload is right and the rest
+  differs only in allocation (84 lines).
+- **Unused siblings as inlines.** `LinkSession::Update`'s started block
+  is the unused `LinkSession::Start`, and its SIOCNT setup is
+  `LinkSetupSio`. Inline copies of both give the same code apart from
+  the 1s that the keeps are for.
+- **Flag sweep, whole objects, workarounds removed.** For all seven
+  sites: -fno-expensive-optimizations, -fno-gcse, the cse/loop/regmove/
+  force-mem/caller-saves switches, -fargument-alias/-noalias(-global),
+  -f(no-)strict-aliasing, -fno-inline, -fkeep-inline-functions, -O1 and
+  -O3. None removes a workaround. -fno-strict-aliasing changes the GAX
+  objects and credits.o, so strict aliasing is the compilers' default.
+
 ## Survey and conversion record (#576)
 
 The conversion is complete. `tools/match_idioms.py` after part 4
