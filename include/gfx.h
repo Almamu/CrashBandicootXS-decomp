@@ -19,7 +19,6 @@
 
 struct aabb;
 struct dma_queue;
-struct game_progress;
 struct queued_oam_entry;
 struct rle_frame;
 struct sprite_bank_table;

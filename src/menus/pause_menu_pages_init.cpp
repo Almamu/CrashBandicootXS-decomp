@@ -29,7 +29,7 @@ void PauseMenu::InitCrystalsPage()
     SetIconBank(crystalIcon, 0xde << 1);
     SetIconPos(crystalIcon, &gPauseCrystalIconPos);
     crystalIcon->palette = crystalIcon->GetAnimPaletteSlot();
-    FormatDecimal(CountCrystals(progress), crystalCount);
+    FormatDecimal(progress->CountCrystals(), crystalCount);
     FormatDecimal(0x14, crystalTotal);
 }
 
@@ -69,8 +69,8 @@ void PauseMenu::InitGemsPage()
         gemIcons[i]->affine = 0x80;
     }
 
-    a = CountClearGems(progress);
-    b = CountGems(progress);
+    a = progress->CountClearGems();
+    b = progress->CountGems();
     FormatDecimal(a, clearGemCount);
     FormatDecimal(b, gemCount);
     FormatDecimal(0x1c, gemTotal);
@@ -93,10 +93,10 @@ void PauseMenu::InitRelicsPage()
         relicIcons[i]->affine = 0x80;
     }
 
-    FormatDecimal(CountSapphireRelics(progress), sapphireCount);
-    FormatDecimal(CountGoldRelics(progress), goldCount);
-    FormatDecimal(CountPlatinumRelics(progress), platinumCount);
-    FormatDecimal(CountRelics(progress), relicCount);
+    FormatDecimal(progress->CountSapphireRelics(), sapphireCount);
+    FormatDecimal(progress->CountGoldRelics(), goldCount);
+    FormatDecimal(progress->CountPlatinumRelics(), platinumCount);
+    FormatDecimal(progress->CountRelics(), relicCount);
     FormatDecimal(0x14, relicTotal);
 }
 
@@ -116,7 +116,7 @@ void PauseMenu::InitTimeTrialPage()
     {
         /* A byte offset, not an index: keeps the ROM's `idx*4 + 4`
          * computed before the base is loaded. */
-        s32 off = levelIdx * 4 + offsetof(struct game_progress, levels);
+        s32 off = levelIdx * 4 + offsetof(GameProgress, levels);
 
         time = (u16)*(u32 *)((u8 *)progress + off) >> 3;
     }

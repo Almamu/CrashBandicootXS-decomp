@@ -886,7 +886,7 @@ void LevelState::RestoreCheckpoint()
     crateCount = room.checkpointCrateCount;
     tmp = room.checkpointSwitchPressed;
     switchPressed = tmp;
-    MemCopy32(&progress, &checkpointData, sizeof(struct game_progress));
+    MemCopy32(&progress, &checkpointData, sizeof(GameProgress));
 }
 
 /* One span of the entity bitmap copied to its checkpoint copy: see
@@ -927,7 +927,7 @@ void LevelState::SetCheckpoint(s32 flag, s32 *pair)
     CopyBitmapSpan(flags->bits0Copy, flags->bits0);
     CopyBitmapSpan(flags->bits1Copy, flags->bits1);
 
-    MemCopy32(&checkpointData, &progress, sizeof(struct game_progress));
+    MemCopy32(&checkpointData, &progress, sizeof(GameProgress));
 }
 
 /* When `flag` is set, accumulates `+0xb4` into `+0x70`,
@@ -995,12 +995,12 @@ void nullsub_24(void)
  * the snapshot itself: copies `src` into `this`'s progress block, then
  * re-copies that into `saveData`. `wumpa` is read off `this` (the ROM's
  * `ldrb [this, 0x14d]`), the other two through `snap`. */
-void LevelState::UnpackSaveData(const struct game_progress *src)
+void LevelState::UnpackSaveData(const GameProgress *src)
 {
-    struct game_progress *snap = &saveData;
+    GameProgress *snap = &saveData;
 
-    MemCopy32(&progress, src, sizeof(struct game_progress));
-    MemCopy32(snap, &progress, sizeof(struct game_progress));
+    MemCopy32(&progress, src, sizeof(GameProgress));
+    MemCopy32(snap, &progress, sizeof(GameProgress));
 
     lives = snap->lives;
     wumpa = saveData.wumpa;
@@ -1010,10 +1010,10 @@ void LevelState::UnpackSaveData(const struct game_progress *src)
 /* Packs `lives`/`wumpa`/`maskLevel` back into `saveData`'s halfword -
  * the inverse of `UnpackSaveData` above - and returns `&saveData`.
  * As there, `wumpa` goes through `this` (`strb [this, 0x14d]`). */
-struct game_progress *LevelState::PackSaveData()
+GameProgress *LevelState::PackSaveData()
 {
     s32 l = lives;
-    struct game_progress *snap = &saveData;
+    GameProgress *snap = &saveData;
 
     snap->lives = l;
     saveData.wumpa = wumpa;

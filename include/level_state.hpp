@@ -11,13 +11,15 @@
  * MainLoop; PlayCutscene), game_frame.cpp (UpdateGameFrame),
  * bonus_round.cpp, level_state.cpp and inline_copies_misc.cpp (GetLives);
  * LevelProgress's in level_query.cpp, room_select.cpp, play_room.cpp
- * and room.cpp. The progress blocks stay level_state.h's
- * plain struct game_progress, which the save slots and the menus share.
+ * and room.cpp. The progress blocks are GameProgress (game_progress.hpp),
+ * which the save slots and the menus share.
  *
  * `#pragma interface`: no class here has a vtable, so there is none to
  * emit; the pragma keeps g++ from emitting out-of-line copies of inline
  * methods (docs/cplusplus.md, "Emitting the vtables"). */
 #pragma interface
+
+#include "game_progress.hpp"
 
 extern "C" {
 #include "core.h"
@@ -189,12 +191,12 @@ public:
     void PlayIntroCutscene();
     void ShowCompanyLogos();
     void PlayBootCutscene();
-    void UnpackSaveData(const struct game_progress *src);
-    struct game_progress *PackSaveData();
+    void UnpackSaveData(const GameProgress *src);
+    GameProgress *PackSaveData();
 
     // 0x000 - the per-attempt progress block, snapshotted into
     // `checkpointData`/`saveData` and restored from them (UpdateGameFrame)
-    struct game_progress progress;
+    GameProgress progress;
     s32 unk_68; // 0x068 - zeroed at game start (UpdateGameFrame); nothing reads it
     s32 wumpa;  // 0x06C - at 100 it wraps and adds a life (CollectWumpa)
     // 0x070 - crates broken (AddBrokenCrate); reaching
@@ -237,10 +239,10 @@ public:
     // 0x0C4 - the current level and room, and the checkpoint
     LevelProgress room;
     // 0x0E4 - the first 0x68 bytes at the last checkpoint (SetCheckpoint/RestoreCheckpoint)
-    struct game_progress checkpointData;
+    GameProgress checkpointData;
     // 0x14C - the committed progress: restored before each level,
     // updated when one is won, packed for the save menus (PackSaveData)
-    struct game_progress saveData;
+    GameProgress saveData;
     LevelEntityFlags
         *savedBitmap;    // 0x1B4 - gEntityFlags, while a bonus round or gem path has its own
     void *bonusPlatform; // 0x1B8 - the bonus-round platform object (SetBonusPlatform)

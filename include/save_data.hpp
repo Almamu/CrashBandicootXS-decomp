@@ -24,10 +24,26 @@
  * the inline methods. */
 #pragma interface
 
+#include "game_progress.hpp"
+
 extern "C" {
 #include "core.h"
 #include "save_data.h"
 }
+
+/* One 0x70-byte save slot, as SaveData::ReadSlot/WriteSlot copy it:
+ * the level state's packed progress block (GameProgress;
+ * PackSaveData/UnpackSaveData), then the current level and the sound
+ * and music volumes (SaveMenu::SaveToSlot builds one,
+ * SaveMenu::LoadInput restores one). */
+struct save_slot {
+    GameProgress progress; /* 0x00 */
+    u8 level;              /* 0x68 */
+    u16 sfxVolume;         /* 0x6a */
+    u16 musicVolume;       /* 0x6c */
+};
+COMPILE_TIME_ASSERT(save_data_hpp, offsetof(struct save_slot, level) == 0x68);
+COMPILE_TIME_ASSERT(save_data_hpp, sizeof(struct save_slot) == 0x70);
 
 /* The 0x200-byte save data, as stored in the cartridge EEPROM
  * (Read/Write, and Load/Store with retries and

@@ -750,6 +750,8 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/bosses/tiny.cpp` (again) | `TinyCtrl::HitStub` (TinyHitStub), the empty hook `SetState` calls; bosses.h's prototype goes | 1 | (unchanged) | 0 -> 0 | [#763](#small-method-moves-and-retypes-763) |
 | player.h, actor.h, vehicle.h, bosses.h, vehicle.hpp, `src/level/play_room.cpp`, the IsTouching* and spawn-list files | `gSwimCtrl` is a `SwimCtrl *`; `IsTouchingPlayer`, `PolarIsTouchingPlayer`, `JetpackIsTouchingPlayer`, `IsTouchingAirship` take an `ActorSelf *`; `IsSpawnCollected`, `MarkSpawnCollected`, `gCollectedSpawns`, `CreateActor`, `CreateJetpackActor` and the two life crates' `spawn` an `actor_spawn *` | 0 | (unchanged) | 0 -> 0 | [#763](#small-method-moves-and-retypes-763) |
 | actor_anim.h, `src/data/actor_category_175558.c`, `src/actor/actor_category.cpp`, `actor_category_frame.cpp`, `actor_category_hooks.cpp`, `actor_category_select.cpp` | `struct category_vtable`'s `fn[13]` is 11 typed function pointers and two `s32`s (`spawnDistance`, `skipDistance`); the 8 slot casts at the call sites and the table's 27 go; the four player hooks take no argument, CreateYeti an `s32`, SpawnJetpackActor and CreateJetpackActor return an `ActorSelf *`, SelectActorCategory takes an `anim_table_record *` | 0 | (unchanged) | 0 -> 0 (CanPauseActorCategory keeps one cast, to `bool (*)(void)`) | [#765](#the-category-table-765) |
+| `src/save/game_progress.cpp` (again) | `GameProgress` (new include/game_progress.hpp; was level_state.h's struct game_progress): `GetLives` (GetProgressLives), `CountPlatinumRelics`, `CountGoldRelics`, `CountSapphireRelics`, `CountRelics`, `CountGems`, `CountClearGems`, `CountCrystals`, `GetCompletionPercent`, all `const`; menus.h's 9 prototypes go | 9 | (unchanged) | 0 -> 0 | [#766](#the-progress-block-as-a-class-766) |
+| level_state.hpp, save_data.hpp, menus.hpp, level_select.hpp, save_menu.hpp, `src/level/game_frame.cpp`, `src/menus/pause_menu_info.cpp`, `pause_menu_pages_init.cpp`, `src/save/save_menu_draw.cpp`, `save_menu_input.cpp`, `src/level/bonus_round.cpp`, `level_state.cpp` | the callers: `progress->CountGems()` & co.; LevelState's `progress`, `checkpointData` and `saveData`, the save slot's `progress` (`struct save_slot`, now save_data.hpp's), PauseMenu's and LevelSelect's pointers and `PackSaveData`/`UnpackSaveData`/`SummarizeProgress` are `GameProgress` | 0 | (unchanged) | 0 -> 0 | [#766](#the-progress-block-as-a-class-766) |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -4056,7 +4058,8 @@ every object is byte-identical to origin/main's.
   and GetCompletionPercent (graphics.cpp, now save/game_progress.cpp) share it, and none of them is
   the level state's. A GameProgress class would retype the save slot's
   member and the menu prototypes in the headers the data tables parse as
-  C, for no change in the code.
+  C, for no change in the code. (#766 made it the class anyway, the
+  owner's decision: [The progress block as a class](#the-progress-block-as-a-class-766).)
 - **Pins gone:** SetCheckpoint's and SetCheckpointAtPlayer's r2 hold
   (`MATCH_HOLD_REG(u32, ctrl, r2)`, which kept gcc from holding the CpuSet
   control word in a callee-saved register across the first of the two
@@ -4293,6 +4296,33 @@ the address arithmetic is the ROM's order. CanPauseActorCategory keeps
 one cast: the slot's functions return `s32`, but the ROM's caller treats
 the result as a `bool` (`!` is `eors r0, #1` on it), which only a `bool
 (*)(void)` call gives.
+
+### The progress block as a class (#766)
+
+#750 left the 0x68-byte progress block a plain C struct (`struct
+game_progress`, level_state.h); the owner decided it is a class.
+`GameProgress` (include/game_progress.hpp) holds the fields (no C file
+reads the layout: src/data/ and lib/ never name it, so there is no C base
+struct, unlike AudioContext's), and the 9 functions that took it as
+their first argument are its `const` methods, under their C names
+(cxx_symbols.txt, `__C12GameProgress`): `GetLives` (GetProgressLives),
+`CountPlatinumRelics`, `CountGoldRelics`, `CountSapphireRelics`,
+`CountRelics`, `CountGems`, `CountClearGems`, `CountCrystals` and
+`GetCompletionPercent`, in src/save/game_progress.cpp. It has no
+constructor or destructor: the level state and the save slots hold it by
+value and copy it with MemCopy32. LevelState's `progress`,
+`checkpointData` and `saveData`, the save slot's `progress` (`struct
+save_slot` moves from save_data.h to save_data.hpp with it; save_data.h
+keeps the tags), PauseMenu's `progress`, LevelSelect's `save` and
+LevelState's PackSaveData/UnpackSaveData are `GameProgress`. level_state.h
+keeps `union level_record` (the per-level word the class holds an array
+of). Every object's code and data are byte-identical to origin/main's.
+
+cxx_symbols.txt's SummarizeProgress entry was stale (`...Pv`, from before
+#750 retyped the parameter), so save_menu_draw.o exported, and
+save_menu_input.o called, the mangled name; with the entry fixed
+(`...PC12GameProgress`) both use `SummarizeProgress` again, the ROM's
+name (the map shows it at 0x080048E0).
 
 ### Next batches
 

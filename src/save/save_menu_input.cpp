@@ -420,8 +420,8 @@ void SaveMenu::SaveToSlot(s32 rowIndex)
          * MemCopy32, not the other way around) - a plain nested call
          * expression here lets this compiler compute the pointer
          * argument first instead. */
-        struct game_progress *result = (*c0Addr)->PackSaveData();
-        MemCopy32(&buf[1].progress, result, sizeof(struct game_progress));
+        GameProgress *result = (*c0Addr)->PackSaveData();
+        MemCopy32(&buf[1].progress, result, sizeof(GameProgress));
     }
     buf[1].level = (u8)(*c0Addr)->GetCurrentLevel();
 

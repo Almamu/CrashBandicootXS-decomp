@@ -14,8 +14,8 @@
  * level_select.hpp, the pause menu and the power dialog in menus.hpp, the
  * continue prompt in frontend.hpp, with no C views. The prototypes below
  * are the C names (cxx_symbols.txt) of the methods that a vtable in
- * src/data/ still uses, and the free functions. The save block is level_state.h's `struct
- * game_progress`. */
+ * src/data/ still uses, and the free functions. The save block is
+ * game_progress.hpp's class GameProgress. */
 
 #include "core.h"
 #include "aabb.h"
@@ -24,7 +24,6 @@
 #include "constants/levels.h"
 
 struct bg_package;
-struct game_progress;
 
 /* One row of the pause menu (gPauseMenuRows, PauseMenu::rows): a
  * GetUiText label id, then the row's type (4/5 are the music/sound
@@ -121,16 +120,5 @@ extern void ShowTurboRunDialog(void);
 extern void ShowTornadoSpinDialog(void);
 extern void ShowDoubleJumpDialog(void);
 extern void ShowSuperBodySlamDialog(void);
-
-/* src/save/game_progress.cpp: the save block's statistics */
-extern s32 GetProgressLives(const struct game_progress *save);
-extern s32 CountPlatinumRelics(const struct game_progress *save);
-extern s32 CountGoldRelics(const struct game_progress *save);
-extern s32 CountSapphireRelics(const struct game_progress *save);
-extern s32 CountRelics(const struct game_progress *save);
-extern s32 CountGems(const struct game_progress *save);
-extern s32 CountClearGems(const struct game_progress *save);
-extern s32 CountCrystals(const struct game_progress *save);
-extern s32 GetCompletionPercent(const struct game_progress *progress);
 
 #endif /* GUARD_MENUS_H */
