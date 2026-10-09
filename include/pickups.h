@@ -10,8 +10,7 @@
  * for codegen keeps it as an asm-label alias with a `codegen:` comment
  * (docs/headers_plan.md).
  *
- * `ResetActionCtrl` (src/pickups/wumpa.cpp) only shares the file's ROM
- * range; it is in player.h. */
+ * `ResetActionCtrl` (src/player/action_ctrl_event.cpp) is in player.h. */
 
 #include "core.h"
 #include "aabb.h"

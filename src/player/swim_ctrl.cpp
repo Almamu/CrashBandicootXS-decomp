@@ -1,4 +1,4 @@
-#include "player_ctrl.hpp"
+#include "swim_ctrl.hpp"
 #include "sprite_obj.hpp"
 #include "player.hpp"
 #include "audio.hpp"
@@ -13,9 +13,9 @@ extern "C" {
 #include "math_util.h"
 }
 
-/* GitHub issues #19 (its last raw function, CheckPlayerCtrlTurn) and #20
- * (0x08016128-0x08017524): the swim controller, PlayerCtrl
- * (include/player_ctrl.hpp, gPlayerCtrlVtable; #664, docs/cplusplus.md).
+/* GitHub issues #19 (its last raw function, CheckSwimCtrlTurn) and #20
+ * (0x08016128-0x08017524): the swim controller, SwimCtrl
+ * (include/swim_ctrl.hpp, gSwimCtrlVtable; #664, docs/cplusplus.md).
  * It drives the diving Crash of the room-kind-1 (underwater) rooms:
  * sprite bank 1 is Crash with an air tank and flippers, `tilt` is his swim
  * direction (0 up, 6 level, 12 down) and ApplySwimDrift blows the bank-40
@@ -30,11 +30,11 @@ extern "C" {
  *   auto-repeat (`repeat`) steps `tilt` (0..12) and re-applies the
  *   target's animation (ApplyLevel, whose out-of-line copy is ApplyTilt),
  *   then runs the state method through `stateFuncs`
- *   (gPlayerCtrlStateFuncs).
+ *   (gSwimCtrlStateFuncs).
  * - HandleEvent (slot 2) is the message handler, Attach (slot 3) sets the
- *   target; the constructor is play_room.cpp's `new PlayerCtrl`.
+ *   target; the constructor is play_room.cpp's `new SwimCtrl`.
  * - SetState sets the state (SetMode) and picks the animation from
- *   gPlayerCtrlModeAnimRows[mode][tilt].
+ *   gSwimCtrlModeAnimRows[mode][tilt].
  * - SetDriftX writes the player's X drift ramp from its speed, like
  *   swim_ctrl_drift.cpp's SetDriftY does for Y.
  *
@@ -58,13 +58,13 @@ struct keys {
     u8 pad[0];
 };
 
-static inline u8 LevelAnim(PlayerCtrl *self)
+static inline u8 LevelAnim(SwimCtrl *self)
 {
-    return gPlayerCtrlModeAnimRows[self->mode][self->tilt].anim;
+    return gSwimCtrlModeAnimRows[self->mode][self->tilt].anim;
 }
 
 /* the out-of-line copy is SetState */
-static inline void SetStateNow(PlayerCtrl *self, s32 newState, s32 newMode, s32 newTimer,
+static inline void SetStateNow(SwimCtrl *self, s32 newState, s32 newMode, s32 newTimer,
                                s32 newTimerMax)
 {
     self->SetMode(newState);
@@ -77,7 +77,7 @@ static inline void SetStateNow(PlayerCtrl *self, s32 newState, s32 newMode, s32 
 }
 
 /* the out-of-line copy is StartSwim */
-static inline void ResetMode(PlayerCtrl *self)
+static inline void ResetMode(SwimCtrl *self)
 {
     self->SetState(1, 1, CTRL_KEEP, 0);
 }
@@ -100,21 +100,21 @@ static inline u8 FlipX(Player *t)
     return t->mirrorFlags.mirrorX;
 }
 
-/* QueueMotionX/QueueMotionY (input_ctrl.cpp) as this file has them
+/* QueueMotionX/QueueMotionY (at the end of this file) as this file has them
  * inlined. */
-static inline void QueueNowX(PlayerCtrl *self, s32 value)
+static inline void QueueNowX(SwimCtrl *self, s32 value)
 {
     self->motionXPending = 1;
     self->motionX = value;
 }
 
-static inline void QueueNowY(PlayerCtrl *self, s32 value)
+static inline void QueueNowY(SwimCtrl *self, s32 value)
 {
     self->motionYPending = 1;
     self->motionY = value;
 }
 
-void PlayerCtrl::CheckTurn()
+void SwimCtrl::CheckTurn()
 {
     u8 dir = GetDpadDirection(gInput);
 
@@ -144,7 +144,7 @@ void PlayerCtrl::CheckTurn()
     }
 }
 
-void PlayerCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
+void SwimCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
 {
     s32 side;
 
@@ -181,7 +181,7 @@ void PlayerCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
     }
 }
 
-void PlayerCtrl::KillPlayer(s32 anim)
+void SwimCtrl::KillPlayer(s32 anim)
 {
     gAudioContext->PlaySfx(SFX_PLAYER_HURT, 0x100);
     SetMode(7);
@@ -246,7 +246,7 @@ static inline void RestoreFrame(Player *t, s32 frame, s32 f34)
 
 /* Re-applies the animation for the current mode/level; the out-of-line
  * copy is ApplyTilt. */
-static inline void ApplyLevel(PlayerCtrl *self)
+static inline void ApplyLevel(SwimCtrl *self)
 {
     Player *t = self->target;
     u8 *tag = &t->tag;
@@ -255,7 +255,7 @@ static inline void ApplyLevel(PlayerCtrl *self)
         s32 frame = t->frame;
         s32 f34 = t->stepTimer;
 
-        *tag = gPlayerCtrlModeAnimRows[self->mode][self->tilt].anim;
+        *tag = gSwimCtrlModeAnimRows[self->mode][self->tilt].anim;
         t->ResetFrameTimer();
         t->ResetFrameIndex();
         t->SetAnimDone(0);
@@ -282,7 +282,7 @@ static inline void ApplyLevel(PlayerCtrl *self)
     }
 }
 
-void PlayerCtrl::Update(MovingSprite *)
+void SwimCtrl::Update(MovingSprite *)
 {
     if (state == 7) {
         (this->*stateFuncs[state])();
@@ -360,23 +360,23 @@ void PlayerCtrl::Update(MovingSprite *)
 }
 
 /* UNUSED */
-void PlayerCtrl::ApplyMotion()
+void SwimCtrl::ApplyMotion()
 {
     const speed_ramp *rec;
 
     if (motionXPending == 1) {
         motionXPending = 0;
-        rec = &gPlayerCtrlMotionRecords[animSet->entries[motionX][0]];
+        rec = &gSwimCtrlMotionRecords[animSet->entries[motionX][0]];
         Ctrl::StartTargetMotionX(target, &rec->start);
     }
     if (motionYPending == 1) {
         motionYPending = 0;
-        rec = &gPlayerCtrlMotionRecords[animSet->entries[motionY][1]];
+        rec = &gSwimCtrlMotionRecords[animSet->entries[motionY][1]];
         Ctrl::StartTargetMotionY(target, rec);
     }
 }
 
-void PlayerCtrl::StateIdle()
+void SwimCtrl::StateIdle()
 {
     struct keys k;
     u8 dir;
@@ -407,7 +407,7 @@ void PlayerCtrl::StateIdle()
     CheckTurn();
 }
 
-void PlayerCtrl::StateSwim()
+void SwimCtrl::StateSwim()
 {
     struct keys k;
     u8 dir = GetDpadDirection(gInput);
@@ -427,7 +427,7 @@ void PlayerCtrl::StateSwim()
     CheckTurn();
 }
 
-void PlayerCtrl::StateStroke()
+void SwimCtrl::StateStroke()
 {
     void *inp = gInput;
     struct keys k = *(struct keys *)&gKeys;
@@ -453,7 +453,7 @@ void PlayerCtrl::StateStroke()
     CheckTurn();
 }
 
-void PlayerCtrl::StateSpin()
+void SwimCtrl::StateSpin()
 {
     u8 dir = GetDpadDirection(gInput);
 
@@ -470,7 +470,7 @@ void PlayerCtrl::StateSpin()
     CheckTurn();
 }
 
-void PlayerCtrl::StateTurn()
+void SwimCtrl::StateTurn()
 {
     struct keys k = *(struct keys *)&gKeys;
     s32 frame;
@@ -482,13 +482,13 @@ void PlayerCtrl::StateTurn()
         case 7:
             frame = target->frame;
             mode = 6;
-            SetTargetAnim(target, gPlayerCtrlModeAnimRows[6][tilt].anim);
+            SetTargetAnim(target, gSwimCtrlModeAnimRows[6][tilt].anim);
             ClampFrame(target, frame);
             break;
         case 5:
             frame = target->frame;
             mode = 4;
-            SetTargetAnim(target, gPlayerCtrlModeAnimRows[4][tilt].anim);
+            SetTargetAnim(target, gSwimCtrlModeAnimRows[4][tilt].anim);
             ClampFrame(target, frame);
             break;
         }
@@ -503,7 +503,7 @@ void PlayerCtrl::StateTurn()
             mode = 5;
         else
             mode = 7;
-        SetTargetAnim(target, gPlayerCtrlModeAnimRows[mode][tilt].anim);
+        SetTargetAnim(target, gSwimCtrlModeAnimRows[mode][tilt].anim);
         StartSpin();
         ClampFrame(target, frame);
         return;
@@ -535,7 +535,7 @@ void PlayerCtrl::StateTurn()
     motionXPending = 1;
 }
 
-void PlayerCtrl::StateSwimStart()
+void SwimCtrl::StateSwimStart()
 {
     void *inp = gInput;
     struct keys k = *(struct keys *)&gKeys;
@@ -560,7 +560,7 @@ void PlayerCtrl::StateSwimStart()
     CheckTurn();
 }
 
-void PlayerCtrl::StateStop()
+void SwimCtrl::StateStop()
 {
     struct keys k = *(struct keys *)&gKeys;
 
@@ -579,7 +579,7 @@ void PlayerCtrl::StateStop()
     CheckTurn();
 }
 
-void PlayerCtrl::StateDead()
+void SwimCtrl::StateDead()
 {
     SetDriftY(0, 5, 0);
     SetDriftNowX(0, 5, 0);
@@ -587,78 +587,114 @@ void PlayerCtrl::StateDead()
         MarkGone(target);
 }
 
-void PlayerCtrl::Attach(MovingSprite *owner)
+void SwimCtrl::Attach(MovingSprite *owner)
 {
     target = (Player *)owner;
 }
 
 /* UNUSED */
-void PlayerCtrl::StartMotionYFromSet(Player *part, s32 idx)
+void SwimCtrl::StartMotionYFromSet(Player *part, s32 idx)
 {
-    Ctrl::StartTargetMotionY(part, &gPlayerCtrlMotionRecords[animSet->entries[idx][1]]);
+    Ctrl::StartTargetMotionY(part, &gSwimCtrlMotionRecords[animSet->entries[idx][1]]);
 }
 
 /* UNUSED */
-void PlayerCtrl::StartMotionXFromSet(Player *part, s32 idx)
+void SwimCtrl::StartMotionXFromSet(Player *part, s32 idx)
 {
-    Ctrl::StartTargetMotionX(part, &gPlayerCtrlMotionRecords[animSet->entries[idx][0]].start);
+    Ctrl::StartTargetMotionX(part, &gSwimCtrlMotionRecords[animSet->entries[idx][0]].start);
 }
 
-void PlayerCtrl::SetState(s32 newState, s32 newMode, s32 newTimer, s32 newTimerMax)
+void SwimCtrl::SetState(s32 newState, s32 newMode, s32 newTimer, s32 newTimerMax)
 {
     SetStateNow(this, newState, newMode, newTimer, newTimerMax);
 }
 
-void PlayerCtrl::SetDriftX(s32 start, s32 step, s32 target)
+void SwimCtrl::SetDriftX(s32 start, s32 step, s32 target)
 {
     SetDriftNowX(start, step, target);
 }
 
 /* UNUSED. The ramp step SetDriftX computes from the player's speed:
  * v^2 / 0x4000 + 4. */
-s32 PlayerCtrl::GetDriftStep(s32 v)
+s32 SwimCtrl::GetDriftStep(s32 v)
 {
     return v * v / 0x4000 + 4;
 }
 
 /* UNUSED */
-void PlayerCtrl::ApplyTilt()
+void SwimCtrl::ApplyTilt()
 {
     ApplyLevel(this);
 }
 
 /* UNUSED */
-void PlayerCtrl::StartSwim()
+void SwimCtrl::StartSwim()
 {
     SetState(1, 1, CTRL_KEEP, 0);
 }
 
-/* g++ stores gPlayerCtrlVtable and calls ~Ctrl (DestroyCtrl). */
-PlayerCtrl::~PlayerCtrl()
+/* g++ stores gSwimCtrlVtable and calls ~Ctrl (DestroyCtrl). */
+SwimCtrl::~SwimCtrl()
 {
 }
 
-/* Ctrl(), the vtable pointer, then Reset (ResetPlayerCtrl, in
- * action_ctrl.cpp). */
-PlayerCtrl::PlayerCtrl()
+/* Ctrl(), the vtable pointer, then Reset (ResetSwimCtrl, in
+ * swim_ctrl_stroke.cpp). */
+SwimCtrl::SwimCtrl()
 {
     Reset();
 }
 
 /* UNUSED */
-void PlayerCtrl::ClearUnk14()
+void SwimCtrl::ClearUnk14()
 {
     unk_14 = 0;
 }
 
 /* UNUSED */
-void PlayerCtrl::SetMotionYPending()
+void SwimCtrl::SetMotionYPending()
 {
     motionYPending = 1;
 }
 
 /* UNUSED */
-void PlayerCtrl::SetMotionXPending()
+void SwimCtrl::SetMotionXPending()
 {
     motionXPending = 1;
+}
+
+/* The accessors of the queued X/Y motion entries (`motionX`/`motionY`)
+ * and their "pending" flags (the start of input_ctrl.cpp until #768).
+ * UNUSED - no `bl`/`.4byte` reference in src/, and no Thumb pointer
+ * anywhere in the ROM. */
+void SwimCtrl::ClearMotionYPending()
+{
+    motionYPending = 0;
+}
+
+void SwimCtrl::ClearMotionXPending()
+{
+    motionXPending = 0;
+}
+
+u8 SwimCtrl::IsMotionYPending()
+{
+    return motionYPending;
+}
+
+u8 SwimCtrl::IsMotionXPending()
+{
+    return motionXPending;
+}
+
+void SwimCtrl::QueueMotionY(u8 entry)
+{
+    motionYPending = 1;
+    motionY = entry;
+}
+
+void SwimCtrl::QueueMotionX(u8 entry)
+{
+    motionXPending = 1;
+    motionX = entry;
 }

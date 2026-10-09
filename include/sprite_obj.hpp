@@ -7,9 +7,8 @@
  *
  *   Entity        0x1C  gEntityVtable        (11 slots) src/objects/entity.cpp
  *   Sprite        0x40  gSpriteObjVtable     (13 slots) src/objects/sprite*.cpp
- *   UiSprite      0x40  gUiSpriteObjVtable              src/objects/sprite_anim.cpp
- *   MovingSprite  0x78  gMovingSpriteVtable  (15 slots) src/objects/moving_sprite*.cpp,
- *                                                       player_contact.cpp, step_probe.cpp
+ *   UiSprite      0x40  gUiSpriteObjVtable              src/objects/ui_sprite.cpp
+ *   MovingSprite  0x78  gMovingSpriteVtable  (15 slots) src/objects/moving_sprite*.cpp
  *   GroundSprite  0x80  gGroundSpriteVtable  (15 slots) src/objects/ground_sprite*.cpp
  *
  * The sizes are the ROM's: CreateEntity allocates 0x1C bytes,
@@ -26,7 +25,7 @@
  * camera's followed Sprite) and player.h's `struct player` went in #754.
  *
  * No `#pragma interface`: g++ emits the vtables of Sprite (sprite.cpp),
- * UiSprite (sprite_anim.cpp), MovingSprite (moving_sprite_collide.cpp) and
+ * UiSprite (ui_sprite.cpp), MovingSprite (moving_sprite_collide.cpp) and
  * GroundSprite (ground_sprite_collide.cpp), their key-method objects (see
  * ctrl.hpp). */
 
@@ -206,7 +205,7 @@ public:
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(Sprite) == 0x40);
 
 /* A sprite on the HUD or a menu (gUiSpriteObjVtable;
- * src/objects/sprite_anim.cpp): its OBJ priority is its own. */
+ * src/objects/ui_sprite.cpp): its OBJ priority is its own. */
 class UiSprite : public Sprite
 {
 public:
@@ -218,7 +217,7 @@ public:
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(UiSprite) == 0x40);
 
 /* The moving sprite (src/objects/moving_sprite.cpp, moving_sprite_collide.cpp,
- * player_contact.cpp, step_probe.cpp; gMovingSpriteVtable): a sprite with a
+ * moving_sprite_contact.cpp, moving_sprite_probe.cpp; gMovingSpriteVtable): a sprite with a
  * controller (`mover`), per-axis speeds and their ramps, and the terrain
  * probe's state. Its update runs the controller's, its events go to the
  * controller, and its slot 14 is the contact with the player. */
@@ -291,7 +290,7 @@ public:
     u8 GetProbeTries(); // GetGroundSpriteProbeTries
     void ResolvePlayerContact();
     /* ProbeHitboxEdgeTerrain: ProbeTerrain along the edge of `quad` that
-     * faces `mode`, retried lower (src/objects/step_probe.cpp). */
+     * faces `mode`, retried lower (src/objects/moving_sprite_probe.cpp). */
     s32 ProbeEdgeTerrain(s32 mode, const struct hitbox_quad *quad);
 };
 
@@ -347,8 +346,7 @@ COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(GroundSprite) == 0x80);
 
 /* A list of sprite objects (the room's part lists, globals.h):
  * Update compacts `items` and fills `visible`, the parts on screen, which
- * Collide walks. Its methods are C++: Update, Collide and CollideWithPlayer
- * in src/objects/sprite_anim.cpp, the rest in part_list.cpp,
+ * Collide walks. Its methods are C++, in src/objects/part_list.cpp,
  * part_list_cull.cpp and part_collide.cpp (part 7c). The items are
  * Sprites: gTouchableList holds pickups, platforms and Tiny's hop pads,
  * gCollidableList and gForegroundList moving sprites and effect parts.
@@ -519,8 +517,8 @@ public:
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(SpriteBankSet) == 4);
 
 /* The sprite renderer (gSpriteRenderer, an empty object InitLevelState
- * allocates): draws a sprite's OAM pieces (DrawPieces in
- * src/gfx/sprite_pieces.cpp, DrawAffinePieces in affine_sprite_pieces.cpp). */
+ * allocates): draws a sprite's OAM pieces (DrawPieces and
+ * DrawAffinePieces, src/gfx/sprite_renderer.cpp). */
 class SpriteRenderer
 {
 public:

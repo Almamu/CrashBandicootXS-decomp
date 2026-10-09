@@ -12,10 +12,34 @@ extern "C" {
 #include "math_util.h"
 }
 
-/* ActionCtrl's event handler (include/action_ctrl.hpp; #664,
+/* ActionCtrl's Reset and event handler (include/action_ctrl.hpp; #664,
  * docs/cplusplus.md). Built by old_agbcp (the Makefile's OLD_AGBCC_OBJS),
- * like the old_agbcc C it replaces: under agbcc the same C was 36
+ * like the old_agbcc C it replaces: under agbcc the handler's C was 36
  * halfwords off. */
+
+/* Clears the controller's state, the player, the motion queue (both
+ * entries pending), the spin and bump timers and the flags. InitActionCtrl
+ * runs it. */
+void ActionCtrl::Reset()
+{
+    turboRun = 0;
+    state = 0;
+    bumpedMotionX = 0;
+    motionX = 0;
+    motionY = 0;
+    motionXPending = 1;
+    motionYPending = 1;
+    unk_14 = 0;
+    part = 0;
+    spinCooldown = 0;
+    unk_2A = 0;
+    dpadLockTimer = 0;
+    bumpTimer = 0;
+    frame = 0;
+    frames = 0;
+    idleFidget = 0;
+    slamBlocked = 0;
+}
 
 /* Stores to the player's `hanging` and `bumped`: as inline parameters,
  * the values are materialized before the fields' addresses. */

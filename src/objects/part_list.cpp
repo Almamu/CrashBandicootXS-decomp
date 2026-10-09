@@ -7,9 +7,9 @@ extern "C" {
 #include "memory.h"
 }
 
-/* The part list's own methods (#664, part 7c; include/part_list.hpp),
- * and the crate list's constructor (part 7f; include/crate_list.hpp),
- * which the ROM puts here. */
+/* The part list's own methods (#664, part 7c; include/part_list.hpp).
+ * The crate list's constructor, which the ROM puts right after them,
+ * starts src/crates/crate_list_unlink.cpp. */
 
 /* Draws every part on screen. */
 void PartList::Draw()
@@ -76,19 +76,4 @@ PartList::PartList(s32 n)
     visible = new Sprite *[n];
     for (i = 0; i < capacity; i++)
         items[i] = 0;
-}
-
-/* InitCrateList: an empty list for `n` sprites (play_room.cpp's
- * `InitCrateList(OperatorNew(0x818), 0xC0)`), the slots cleared and every
- * node on the free list. */
-CrateList::CrateList(s32 n)
-{
-    count = 0;
-    capacity = n;
-    slots = new Crate *[n];
-    nodes = new CrateGridNode[capacity];
-    links = new CrateGridLink[capacity];
-    for (s32 j = 0; j < capacity; j++)
-        slots[j] = 0;
-    ResetGrid();
 }

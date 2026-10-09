@@ -363,7 +363,7 @@ The 7 failures are trivial to fix: `asm("..." :: "r"(x))` (6 files),
 where `::` is one token in C++ (write `: :`), and one `asm` whose
 operand constraints g++ rejects. The 45 differences are code generation:
 the C++ front end lays out some temporaries and stack slots differently
-(e.g. `player_contact.c`'s frame is 16 bytes, not 32) or ranks registers
+(e.g. `moving_sprite_contact.cpp`'s frame is 16 bytes, not 32) or ranks registers
 differently (`palette_cycle.c` uses r9). They cluster in the files with
 the most matching workarounds, i.e. the ones tuned hardest against the C
 front end. So **80% of the game's C is already valid C++ that compiles to
@@ -434,6 +434,23 @@ counts them by kind) and what the C++ needed when it was converted.
 #662 removed many of those since; `tools/match_idioms.py --functions
 --files` lists the functions that still have one.
 
+The rows name the objects as they were when converted. #768 (file layout
+round 2) renamed some (`action_ctrl_kill.cpp`, `moving_sprite_contact.cpp`,
+`crate_fields.cpp`, ... are their names now) and moved code between
+others: `sprite_pieces.cpp`, `affine_sprite_pieces.cpp` and sprite.cpp's
+`SpriteRenderer` methods are `gfx/sprite_renderer.cpp`; `UiSprite` is
+`ui_sprite.cpp` and `PartList::Update`/`Collide`/`CollideWithPlayer` start
+part_list_cull.cpp; `CrateList`'s constructor starts crate_list_unlink.cpp;
+`PlatformMover` is `platform_mover.cpp`; the four `Ctrl` methods of
+player_flags.cpp start ctrl.cpp; `SwimCtrl::Reset`/`Restart` start
+swim_ctrl_stroke.cpp and its six motion-queue accessors end swim_ctrl.cpp;
+`BossCtrl` is `bosses/boss_ctrl.cpp`; `PeriodicSpawner` and
+`KnockedEnemyCtrl` are `periodic_spawner.cpp` and `knocked_enemy_ctrl.cpp`;
+`Wumpa::CheckPickup` starts wumpa_update.cpp, `Stopwatch` is
+`stopwatch.cpp` and `ActionCtrl::Reset` starts action_ctrl_event.cpp;
+crate_break.cpp's switches and per-state ticks are `crate_switches.cpp`
+and `crate_states.cpp`, and `Crate::OpenAkuAku` starts crate_stack.cpp.
+
 | Object | Classes (include/ctrl.hpp unless noted) | Functions | Compiler | Workarounds: C -> C++ | Part |
 | include/objects.h, player.h, crates.h, gfx.h, bosses.h, pickups.h, frontend.h, actor.h, vehicle.h, system.h | the 391 C prototypes of C++ methods with no C caller go, with the C views only a class's size check used (struct ctrl, boss_ctrl, mega_mix_ctrl, part_ctrl and ctrl_anchor, periodic_spawner, spawner, actor_orbit, cannon_flash, actor_hp, jetpack_ring, orbit_part and orbit_part.h); the classes check the ROM sizes | 0 | (unchanged) | 0 -> 0 | cleanup |
 | actor_self.h, box_part.h, match.h | `ACTOR_SET_STATE`, `CALL_HIT`, `MATCH_USE_VOLATILE`, `MATCH_CONST_VOLATILE` (no user left) go | 0 | (unchanged) | 0 -> 0 | cleanup |
@@ -458,8 +475,8 @@ counts them by kind) and what the C++ needed when it was converted.
 | `src/hud/hud_lives.cpp` | `Hud::UpdateLives` | 1 | **old_agbcp** (was agbcc) | 34 pins, 5 `asm`, 1 volatile hold -> 0 | cleanup |
 | `src/hud/hud_counters.cpp` | `Hud::UpdateCrates`, `UpdateWumpa`, `UpdatePercentCounters` | 3 | old_agbcp | 0 -> 0; the `getHp` slot call is `HpActor::GetHp` | cleanup |
 | `src/hud/hud_slide.cpp` | `Hud`'s slides (`UpdateSlides`, the four `Show*`, `StepSlide`), `SetCrateTotal`, `IncCrateTotal`, destructor (`DestroyHud`: `delete[] parts`) | 9 | agbcp | 0 -> 0; the slot-10 destructor loop and `OperatorDeleteArray` go | cleanup |
-| `src/gfx/sprite_pieces.cpp` | `SpriteRenderer::DrawPieces` (`DrawSpritePieces`, sprite_obj.hpp) | 1 | old_agbcp | 0 -> 0; the slot-11 call is `Sprite::GetPriority`, the `struct oam_part` view goes | cleanup |
-| `src/gfx/affine_sprite_pieces.cpp` | `SpriteRenderer::DrawAffinePieces` (`DrawAffineSpritePieces`) | 1 | old_agbcp | 1 use -> 1 use; the slot-11 call is `Sprite::GetPriority`, the `struct affine_part` view goes | cleanup |
+| `src/gfx/sprite_renderer.cpp` | `SpriteRenderer::DrawPieces` (`DrawSpritePieces`, sprite_obj.hpp) | 1 | old_agbcp | 0 -> 0; the slot-11 call is `Sprite::GetPriority`, the `struct oam_part` view goes | cleanup |
+| `src/gfx/sprite_renderer.cpp` | `SpriteRenderer::DrawAffinePieces` (`DrawAffineSpritePieces`) | 1 | old_agbcp | 1 use -> 1 use; the slot-11 call is `Sprite::GetPriority`, the `struct affine_part` view goes | cleanup |
 | `src/gfx/graphics_package.cpp` (the sprite box in `scaled_sprite.cpp` since #767) | `LoadGraphicsPackage`, the BG setup and sprite-box functions (C linkage) | 0 + 8 | old_agbcp | 0 -> 0; `OperatorNewArray`/`OperatorDeleteArray` -> `new u16[]`/`delete[]` | cleanup |
 | globals.h, hud.h, part_list.hpp, objects.h, gfx.h, extra_life.cpp, wumpa_update.cpp, crate_break.cpp, player_event.cpp, sprite.cpp, sprite_anim.cpp | `gHud` is a `Hud *` to C++; the C++ callers' `ShowHud*(gHud)` are methods, the pieces' callers `SpriteRenderer` methods; struct hud_digit_part, hud_anim_record/data, HUD_CLAMP_FRAME and 15 dead prototypes go | 0 | (unchanged) | 0 -> 0 | cleanup |
 | `src/level/tile_cache.cpp` | `TileCache` (include/bg_layer.hpp; derives from level.h's struct tile_cache): constructor, destructor; with `GetTerrainType` (C linkage) | 2 + 1 | old_agbcp (old_agbcc C already) | 0 -> 0 |  cleanup |
@@ -476,7 +493,7 @@ counts them by kind) and what the C++ needed when it was converted.
 | `src/level/room_frame.cpp` | `UpdateRoomFrame`, `SetupRoomBlend` (C linkage): the player's `IsOnScreen` and `Draw` virtual calls | 0 + 2 | old_agbcp (old_agbcc C already) | 0 -> 0; 2 hand-written slot calls (struct player_vtable) -> 0 | cleanup |
 | `src/level/room_entities.cpp` | `SpawnRoomEntities` (C linkage): the links walk `Crate *`s (`GetBounds()->h`, `SetAbove`, `SetBelow`, `GetAbove`), `gEntitySpawner->Spawn` | 0 + 1 | old_agbcp (old_agbcc C already) | 1 pin -> 1 pin; the `height` slot call and the lk_vtable/lk_actor views -> 0 | cleanup |
 | `src/level/run_room.cpp` | `RunRoom` (C linkage): `Player::ResetForRoom`, `IsNearCamera`, `Update`, `GetAnimPaletteSlot`, the controller's `SetMode`, the crates' `GetClassId`, `Platform::GetExitMirror` | 0 + 1 | old_agbcp (old_agbcc C already) | 2 pins, 2 holds, 2 uses, 1 asm label -> the same; `PMF_CALL` and the gl_* vtable structs (4 slot calls) -> 0 | cleanup |
-| `src/level/play_room.cpp` | `PlayRoom` (C linkage): `new PartList`, `CrateList`, `Player`, `ActionCtrl`, `PlayerCtrl`, `InputCtrl`, `ctrl->Attach(pl)`, the `delete`s | 0 + 1 | **old_agbcp** (was agbcc) | 14 pins, 1 clobber -> 0; 3 attach slot calls, the player's destroy slot call, the widget vtable structs -> 0 | cleanup |
+| `src/level/play_room.cpp` | `PlayRoom` (C linkage): `new PartList`, `CrateList`, `Player`, `ActionCtrl`, `SwimCtrl`, `InputCtrl`, `ctrl->Attach(pl)`, the `delete`s | 0 + 1 | **old_agbcp** (was agbcc) | 14 pins, 1 clobber -> 0; 3 attach slot calls, the player's destroy slot call, the widget vtable structs -> 0 | cleanup |
 |---|---|---:|---|---|---|
 | `src/objects/effect_ctrl.cpp` | `EffectCtrl` | 5 | old_agbcp | 0 -> 0 | #685 |
 | `src/objects/ctrl.cpp` | `Ctrl` | 10 | old_agbcp (was agbcc) | 7 pins, 2 asm -> 0 | 1 |
@@ -491,17 +508,17 @@ counts them by kind) and what the C++ needed when it was converted.
 | `src/enemies/enemy_motion.cpp` | `EnemyCtrl`'s homing, hop, flip cycle | 4 | agbcp | 1 pin -> 1 pin | 2 |
 | `src/enemies/enemy_patrol.cpp` | `EnemyCtrl::UpdatePatrol` | 1 | old_agbcp | 0 -> 0 | 2 |
 | `src/enemies/enemy_shooter.cpp` | `EnemyCtrl::UpdateShooter` | 1 | agbcp | 1 pin -> 0 | 2 |
-| `src/player/swim_ctrl.cpp` | `PlayerCtrl` (player_ctrl.hpp) | 26 | old_agbcp | 4 pins -> 0; the vcall macros and the 16-line PMF dispatch go | 4 |
-| `src/player/swim_ctrl_drift.cpp` | `PlayerCtrl::SetDriftY` | 1 | agbcp | 13 pins -> 0 | 4 |
-| `src/player/swim_ctrl_stroke.cpp` | `PlayerCtrl`'s `StartStroke`, `StartSpin`, `ApplySwimDrift` | 3 | old_agbcp | 0 -> 0 | 4 |
-| `src/player/input_ctrl.cpp` (again) | the 6 swim controller accessors are `PlayerCtrl` methods now | 6 | old_agbcp | 0 -> 0 | 4 |
-| `src/player/action_ctrl.cpp` | `ActionCtrl` (include/action_ctrl.hpp): constructor, destructor, `SetModeAnim`, `SetTargetAnim`, `Restart`, the motion queue accessors, 4 short state methods; `PlayerCtrl::Reset`/`Restart` | 23 + 2 | agbcp | 6 pins -> 0 (and the `SetTargetAnim` return cast and gotos) | 5a |
+| `src/player/swim_ctrl.cpp` | `SwimCtrl` (swim_ctrl.hpp) | 26 | old_agbcp | 4 pins -> 0; the vcall macros and the 16-line PMF dispatch go | 4 |
+| `src/player/swim_ctrl_drift.cpp` | `SwimCtrl::SetDriftY` | 1 | agbcp | 13 pins -> 0 | 4 |
+| `src/player/swim_ctrl_stroke.cpp` | `SwimCtrl`'s `StartStroke`, `StartSpin`, `ApplySwimDrift` | 3 | old_agbcp | 0 -> 0 | 4 |
+| `src/player/input_ctrl.cpp` (again) | the 6 swim controller accessors are `SwimCtrl` methods now | 6 | old_agbcp | 0 -> 0 | 4 |
+| `src/player/action_ctrl.cpp` | `ActionCtrl` (include/action_ctrl.hpp): constructor, destructor, `SetModeAnim`, `SetTargetAnim`, `Restart`, the motion queue accessors, 4 short state methods; `SwimCtrl::Reset`/`Restart` | 23 + 2 | agbcp | 6 pins -> 0 (and the `SetTargetAnim` return cast and gotos) | 5a |
 | `src/player/action_ctrl_moves.cpp` | `ActionCtrl::SetMode`, `Attach`, the spin/run/jump starts, `StartTornadoFall`, `EndSpin`, `SteerSpin`, 7 state methods | 17 | old_agbcp | 18 pins, 2 keeps, 1 const, 1 `"+r"` asm, 1 asm jump table, 3 volatile casts, 4 retyped stores -> 2 pins, 1 const, 1 `"+r"` asm | 5a |
 | `src/player/action_ctrl_update.cpp` | `ActionCtrl::Update`, `TryDoubleJump`, `HandleAirInput` | 3 | old_agbcp | 1 const -> 0; the 20-line PMF dispatch goes | 5a |
 | `src/player/action_ctrl_idle.cpp` | `ActionCtrl::ApplyMotion`, `StateIdle` | 2 | old_agbcp | 3 uses -> 0 | 5a |
 | `src/player/action_ctrl_land.cpp` | `ActionCtrl::StateCrawlStandUp`, `StateBodySlamLand`, `StateLand` | 3 | agbcp | 0 -> 0 | 5a |
 | `src/player/action_ctrl_left_ground.cpp` | `ActionCtrl::CheckLeftGround` | 1 | **old_agbcp** (was agbcc) | 3 pins -> 0 | 5a |
-| `src/player/kill_player.cpp` | `ActionCtrl::KillPlayer`, `UpdateSkidAnim`, `UpdateFacing` | 3 | **old_agbcp** (was agbcc) | 44 pins, 1 asm -> 1 pin | 5a |
+| `src/player/action_ctrl_kill.cpp` | `ActionCtrl::KillPlayer`, `UpdateSkidAnim`, `UpdateFacing` | 3 | **old_agbcp** (was agbcc) | 44 pins, 1 asm -> 1 pin | 5a |
 | `src/bosses/mega_mix_update.cpp` | `MegaMixCtrl::Update` (include/boss_ctrl.hpp) | 1 | old_agbcp | 3 pins, 2 keeps, gotos -> 1 pin, 1 keep, one goto | 6 |
 | `src/bosses/tiny.cpp` (tiny_update.cpp until #769) | `TinyCtrl` (include/boss_ctrl.hpp): `Update`, `SetState`, `PickHopTarget`, `SpawnFallingLeaves` | 4 | old_agbcp | 8 pins, 3 keeps, 1 asm -> 2 pins | 6 |
 | `src/bosses/dingodile.cpp` | `DingodileCtrl`, `DingodileShieldCtrl`, `DingodileProjectileCtrl`, `DingodileSharkCtrl`, and `CortexTargetCtrl`'s, `CortexCannonCtrl`'s and `CortexBossCtrl`'s methods (include/boss_ctrl.hpp; at the end of cortex.cpp since #769) | 25 | old_agbcp | 7 pins, 2 holds, 2 uses, 1 const, the `PREP_VOBJ_CALL2` shared call and gotos, 2 asm labels -> 3 pins, 2 holds, 2 uses, 1 const, 1 asm label | 6b |
@@ -525,15 +542,15 @@ counts them by kind) and what the C++ needed when it was converted.
 | `src/crates/crate_update.cpp` | `Crate::Update` | 1 | old_agbcp | 0 -> 0; the vcall macro goes | 7e |
 | `src/crates/crate_hit.cpp` | `Crate::PlayerHitboxOverlapsAt`, `ResolveStackHit`, `BreakIfTouchedByPlayer` | 3 | old_agbcp | 3 `BOX_ADDR` -> the same | 7e |
 | `src/crates/crate_touch.cpp` | `Crate::PlayerAnimWouldTouch` | 1 | old_agbcp | 3 `BOX_ADDR` -> the same | 7e |
-| `src/crates/crate_player_collide.cpp` | `CollidePlayerWithCrates` (C linkage) | 0 + 1 | old_agbcp | 0 -> 0 | 7e |
+| `src/crates/crate_list_collide_player.cpp` | `CollidePlayerWithCrates` (C linkage) | 0 + 1 | old_agbcp | 0 -> 0 | 7e |
 | `src/crates/crate_reset.cpp` | `Crate::Reset`, with `FindLineCrossing` | 1 + 1 | **old_agbcp** (was agbcc) | 13 pins, 7 asm, 1 retyped store -> 0 | 7e |
 | `src/crates/crate_stack.cpp` | `Crate::OpenLife`, `IsKindBreakable`, `GetTop`, `GetBottom`, `CollideWithPlayer` | 5 | **old_agbcp** (was agbcc) | 4 pins, 7 asm, 1 `.pool` -> 1 asm label | 7e |
 | `src/crates/crate_time_trial.cpp` | `Crate::OpenAkuAku`, with `ConvertCratesForTimeTrial` | 1 + 1 | **old_agbcp** (was agbcc) | 3 pins, 1 asm, 1 volatile read -> 0 | 7e |
-| `src/crates/slot_crate.cpp` | `Crate`'s accessors (the slot crate's word, `kind`, `state`, ...) | 26 | **old_agbcp** (was agbcc) | 6 pins -> 0 | 7e |
+| `src/crates/crate_fields.cpp` | `Crate`'s accessors (the slot crate's word, `kind`, `state`, ...) | 26 | **old_agbcp** (was agbcc) | 6 pins -> 0 | 7e |
 | `src/objects/moving_sprite.cpp` | `MovingSprite`: constructor, destructor, `Reset`, `ApplyVelocity`, `Update`, the previous position | 11 | **old_agbcp** (was agbcc) | 30 pins, 1 asm, 2 retyped stores, 2 retyped `vs32` reads -> 0 | 7b |
 | `src/objects/moving_sprite_collide.cpp` | `MovingSprite`'s `HandleEvent`, `CheckPlayerContact`, `ClassifyContact`, `AttachCtrl` and accessors | 21 | **old_agbcp** (was agbcc) | 13 pins, 1 volatile read -> 0 | 7b |
-| `src/objects/player_contact.cpp` | `MovingSprite::TouchPlayer`, `ResolvePlayerContact` | 2 | **old_agbcp** (was agbcc) | 24 pins, gotos, 5 volatile reads -> 1 volatile read | 7b |
-| `src/objects/step_probe.cpp` | `MovingSprite::ProbeEdgeTerrain` | 1 | agbcp | 1 pin -> 1 pin | 7b |
+| `src/objects/moving_sprite_contact.cpp` | `MovingSprite::TouchPlayer`, `ResolvePlayerContact` | 2 | **old_agbcp** (was agbcc) | 24 pins, gotos, 5 volatile reads -> 1 volatile read | 7b |
+| `src/objects/moving_sprite_probe.cpp` | `MovingSprite::ProbeEdgeTerrain` | 1 | agbcp | 1 pin -> 1 pin | 7b |
 | `src/objects/ground_sprite.cpp` | `GroundSprite`: constructor, destructor, `Reset`, `Draw`, the flag accessors | 16 | **old_agbcp** (was agbcc) | 34 pins -> 0 | 7b |
 | `src/objects/ground_sprite_collide.cpp` | `GroundSprite::CheckPlayerContact`, `ProbeTerrainAxes`, `ProbeFloor` | 3 | old_agbcp | 2 pins, gotos -> 0 (one goto) | 7b |
 | `src/objects/ground_sprite_update.cpp` | `GroundSprite::Update`, `AnchorHitbox` | 2 | **old_agbcp** (was agbcc) | 14 pins, 4 asm, gotos -> 0 | 7b |
@@ -541,12 +558,12 @@ counts them by kind) and what the C++ needed when it was converted.
 | `src/pickups/wumpa_update.cpp` | `Wumpa`'s `PickUp`, `Update`, `Create`, `SendToHud`, `StartPayout`, `UpdateHop` | 6 | old_agbcp | 1 pin, 2 uses, 1 keep, 1 const, a volatile store and pointer -> 1 keep | 7h |
 | `src/pickups/wumpa.cpp` | `Wumpa`'s small methods, `Stopwatch`, `ActionCtrl::Reset` | 15 | **old_agbcp** (was agbcc) | 15 pins, 3 asm, 5 volatile accesses -> 0 | 7h |
 | `src/objects/part_list.cpp` (again) | `CrateList`'s constructor (`InitCrateList`, include/crate_list.hpp; C linkage before) | 1 | agbcp | 0 -> 0 | 7f |
-| `src/crates/crate_grid_unlink.cpp` | `CrateList::Unlink` | 1 | old_agbcp | 1 pin -> 1 pin | 7f |
-| `src/crates/crate_grid_link.cpp` | `CrateList::LinkActive` | 1 | **old_agbcp** (was agbcc) | 8 pins, 1 keep -> 0 | 7f |
+| `src/crates/crate_list_unlink.cpp` | `CrateList::Unlink` | 1 | old_agbcp | 1 pin -> 1 pin | 7f |
+| `src/crates/crate_list_link_active.cpp` | `CrateList::LinkActive` | 1 | **old_agbcp** (was agbcc) | 8 pins, 1 keep -> 0 | 7f |
 | `src/crates/crate_list_update.cpp` | `CrateList::Update` | 1 | old_agbcp | 1 pin, 1 hold, 1 use, 1 barrier, statement-expression copies -> the barrier (in `Detach`), inline copies | 7f |
 | `src/crates/crate_list_draw.cpp` | `CrateList::Draw` | 1 | agbcp | 7 pins, 1 asm -> 0 | 7f |
-| `src/crates/crate_grid_collide.cpp` | `CrateList::Collide` (UNUSED), `CollideWithPlayer` | 2 | old_agbcp | 0 -> 0 | 7f |
-| `src/crates/crate_player_collide.cpp` (again) | `CrateList::CollidePlayer` (C linkage before) | 1 | old_agbcp | 0 -> 0 | 7f |
+| `src/crates/crate_list_collide.cpp` | `CrateList::Collide` (UNUSED), `CollideWithPlayer` | 2 | old_agbcp | 0 -> 0 | 7f |
+| `src/crates/crate_list_collide_player.cpp` (again) | `CrateList::CollidePlayer` (C linkage before) | 1 | old_agbcp | 0 -> 0 | 7f |
 | `src/crates/crate_list_reset.cpp` | `CrateList::Reset` | 1 | agbcp | 0 -> 0 | 7f |
 | `src/crates/crate_list.cpp` | `CrateList::CollideWithObject`, `Remove`, `RemoveAt`, `AddNode`, `Link`, `Add`, destructor | 7 | old_agbcp | 4 pins -> 0 | 7f |
 | `src/crates/crate_break.cpp` | `Crate` (include/crate.hpp): the player's hits (`QueuePlayerCollision`, `ApplyCollision`), the breaks, the kinds' contents, the explosions and blasts, the falls, the switches, the TNT countdown and the slot crate's tick; with `UpdateCrates`, `DetonateNitroCrates`, `BreakCratesInArea` (C linkage) | 22 + 3 | old_agbcp | 11 pins, 4 asm, 1 keep, 2 uses, 8 volatile casts, 2 asm labels, 6 `BOX_ADDR` -> 6 `BOX_ADDR` (and the two drop aliases, shared with crate_stack.cpp) | 7g |
@@ -556,7 +573,7 @@ counts them by kind) and what the C++ needed when it was converted.
 | `src/objects/platform_create.cpp` | `Platform::Create` | 1 | old_agbcp | 1 keep, 8 retyped stores, 8 volatiles, the `MOVER_NEW` cast -> 0 | 7d |
 | `src/bosses/cortex.cpp` | `OneShotAnimCtrl`'s constructor and destructor (ctrl.hpp); `UnusedOneShotAnimCtrl`; `TinyCtrl`'s `StartHop`, destructor and constructor (these, with `TinyHitStub`, at the end of tiny.cpp since #769); `CortexBossCtrl::Update`, `SpawnCannon`, `SpawnTarget`; `CortexTargetCtrl::Update`, `SetState`, `FireShot`; `CortexShotCtrl`, `CortexBossGemCtrl` (boss_ctrl.hpp); `CortexBossPlatformMover` (platform.hpp); with `TinyHitStub` and `SpawnCortexBossGem` (C linkage) | 23 + 2 | old_agbcp | 49 pins, 13 keeps, 4 asm, 3 volatiles, 2 retyped stores, the `MOVER_NEW` cast, the per-site `SET_FRAME_R`/`MARK_GONE`/`GONE_SLOT_R4` macros and entity_bits.h's `ENTITY_SET_GONE_BIT_PINNED` (5 pins), gotos -> 1 pin, one goto | 7i |
 | `src/objects/platform_create.cpp` (again) | `Platform::Create`: `new CortexBossPlatformMover` (the C prototype before) | 0 | old_agbcp | 0 -> 0 | 7i |
-| the controller headers (ctrl.hpp, enemy_ctrl.hpp, input_ctrl.hpp, player_ctrl.hpp, action_ctrl.hpp, boss_ctrl.hpp, platform.hpp), sprite_obj.hpp, crate_list.hpp, and 38 `.cpp` files | every controller method takes a `MovingSprite *` (`SpriteObj` removed); `Ctrl::owner` a `MovingSprite *`; `PartList`'s items `Sprite *`s, `CrateList`'s `Crate *`s | 0 | (unchanged) | 0 -> 0 | 7b' |
+| the controller headers (ctrl.hpp, enemy_ctrl.hpp, input_ctrl.hpp, swim_ctrl.hpp, action_ctrl.hpp, boss_ctrl.hpp, platform.hpp), sprite_obj.hpp, crate_list.hpp, and 38 `.cpp` files | every controller method takes a `MovingSprite *` (`SpriteObj` removed); `Ctrl::owner` a `MovingSprite *`; `PartList`'s items `Sprite *`s, `CrateList`'s `Crate *`s | 0 | (unchanged) | 0 -> 0 | 7b' |
 | `src/player/player_update.cpp` | `Player` (include/player.hpp): `ApplyVelocity`, `Update`, `TouchesBox`, destructor, `HasRampYTarget`, `ClearSpeedY`, `StopFalling` | 7 | **old_agbcp** (was agbcc) | 14 pins, 1 asm, 2 retyped reads, gotos, the destructor's slot call -> 0 | 8 |
 | `src/player/player_init.cpp` | `Player`'s constructor | 1 | agbcp | 1 pin, 1 retyped store -> 0 | 8 |
 | `src/player/player_reset.cpp` | `Player::Reset`, `ResetForRoom` | 2 | **old_agbcp** (was agbcc) | 30 pins, 4 asm, gotos -> 0 | 8 |
@@ -565,7 +582,7 @@ counts them by kind) and what the C++ needed when it was converted.
 | `src/player/player_event.cpp` | `Player::TouchPlayer`, `HandleEvent`, `Draw` | 3 | old_agbcp | 1 pin, 2 holds, 2 uses, a volatile read, the `NOTIFY` macro and slot calls -> the volatile read | 8 |
 | `src/player/player_flags.cpp` (again) | the 40 player accessors are `Player` methods (C linkage before) | 40 | agbcp | 3 pins, gotos -> 0 | 8 |
 | `src/objects/collision_queue.cpp` (again) | `CollisionQueue`'s constructor (`ResetCollisionQueue`; `Reset` before) | 0 | agbcp | 0 -> 0 | 8 |
-| globals.h, action_obj.h, the controller headers (action_ctrl.hpp, input_ctrl.hpp, player_ctrl.hpp), sprite_obj.hpp, and 43 `.cpp` files | `gPlayer` and the controllers' player pointers are `Player *`s; `PlayerSprite()`, `ActionCtrl::Sprite()` and the `(GroundSprite *)` casts go | 0 | (unchanged) | 4 hand-written vcalls, the flags2 offset macro -> 0 | 8 |
+| globals.h, action_obj.h, the controller headers (action_ctrl.hpp, input_ctrl.hpp, swim_ctrl.hpp), sprite_obj.hpp, and 43 `.cpp` files | `gPlayer` and the controllers' player pointers are `Player *`s; `PlayerSprite()`, `ActionCtrl::Sprite()` and the `(GroundSprite *)` casts go | 0 | (unchanged) | 4 hand-written vcalls, the flags2 offset macro -> 0 | 8 |
 | `src/level/entity_spawner.cpp` | `EntitySpawner` (include/spawners.hpp): `SpawnEffectPart`, `LaunchEffectPart`, `DropWumpa`, `Spawn` (SpawnEntity), `SetTable`, constructor, destructor | 7 | old_agbcp | 4 pins, 1 use, 1 keep, 1 asm label, the `attach` slot call -> 0 | 9 |
 | `src/level/drop_extra_life.cpp` | `EntitySpawner::DropExtraLife` | 1 | old_agbcp | 0 -> 0 | 9 |
 | `src/level/spawn_gems.cpp` | the crystal and gem spawners (C linkage) | 6 | old_agbcp | 0 -> 0 | 9 |
@@ -771,8 +788,8 @@ moved to `OLD_AGBCC_OBJS`. `enemy_ctrl_update.o`, `enemy_attack.o` and
 `enemy_patrol.o` were already old_agbcc objects. `enemy_motion.o` and
 `enemy_shooter.o` compile the same under both and stay agbcc.
 
-Part 4 in numbers: the swim controller, `PlayerCtrl` (new
-`include/player_ctrl.hpp`), 36 methods in 4 objects (`swim_ctrl.cpp`,
+Part 4 in numbers: the swim controller, `SwimCtrl` (new
+`include/swim_ctrl.hpp`), 36 methods in 4 objects (`swim_ctrl.cpp`,
 `swim_ctrl_drift.cpp`, `swim_ctrl_stroke.cpp`, and the six motion-queue
 accessors at the top of `input_ctrl.cpp`, which are methods now);
 `MATCH_HOLD_REG` 2096 -> 2079, instruction-emitting `asm` unchanged (239).
@@ -786,8 +803,8 @@ match only under old_agbcp, as their C did under old_agbcc.
 `SetMode(...)`, `SetTargetAnim(...)` and `(this->*stateFuncs[state])()`;
 the constructor and destructor are empty bodies. `SetDriftX`/`SetDriftY`/
 `GetDriftStep` use only `gPlayer`, so they are static members.
-`PlayerCtrl`'s `Reset` and `Restart` are still C (`ResetPlayerCtrl`,
-`RestartPlayerCtrl`, in `action_ctrl.c` with the action controller, which
+`SwimCtrl`'s `Reset` and `Restart` are still C (`ResetSwimCtrl`,
+`RestartSwimCtrl`, in `action_ctrl.c` with the action controller, which
 the ROM puts them next to); the constructor calls `Reset` through its
 cxx_symbols.txt mapping. `struct player_ctrl` (player_ctrl.h) stays the C
 view for them and `play_room.c`; its vtable and anim-pair views
@@ -804,7 +821,7 @@ self-assignment is deleted, in C++ as in C), and the BLKmode `struct keys`
 stack copy of `gKeys`.
 
 Part 5a in numbers: the first 7 of the action controller's 11 files, 52
-`ActionCtrl` methods plus `PlayerCtrl::Reset`/`Restart`;
+`ActionCtrl` methods plus `SwimCtrl::Reset`/`Restart`;
 `MATCH_HOLD_REG` 2061 -> 1993, instruction-emitting `asm` 238 -> 236,
 `MATCH_CONST` 30 -> 29, `MATCH_USE` 82 -> 79, `MATCH_KEEP` 61 -> 59,
 retyped field stores 228 -> 224 and scoped volatiles 48 -> 45
@@ -812,7 +829,7 @@ project-wide. `ActionCtrl` (include/action_ctrl.hpp) declares all of its
 methods, also those still in C files (cxx_symbols.txt maps them to their
 C names), and its state table is `static const StateFunc
 stateFuncs[ACTION_STATE_COUNT]` (`gActionCtrlStateTable`), dispatched by
-`(this->*stateFuncs[state])()`. `kill_player.o` and
+`(this->*stateFuncs[state])()`. `action_ctrl_kill.o` and
 `action_ctrl_left_ground.o` move to `OLD_AGBCC_OBJS`: their clean C++
 matches only under old_agbcp (`KillPlayer`'s constant-before-`ldrb`); their
 47 pins reproduced old_agbcc's code under agbcc. `action_ctrl.o` and
@@ -974,9 +991,9 @@ ROM's sizes (`CreateEntity` allocates 0x1C bytes, `CreateSpriteObj` 0x40,
 | Class | Size | Vtable | Code |
 |---|---:|---|---|
 | `Entity` | 0x1C | gEntityVtable (11 slots) | graphics.cpp (objects/entity.cpp since #767) |
-| `Sprite` | 0x40 | gSpriteObjVtable (13) | sprite.cpp, sprite_obj.cpp, sprite_anim.cpp |
-| `UiSprite` | 0x40 | gUiSpriteObjVtable | sprite_anim.cpp |
-| `MovingSprite` | 0x78 | gMovingSpriteVtable (15) | moving_sprite.cpp, moving_sprite_collide.cpp, player_contact.cpp, step_probe.cpp (part 7b) |
+| `Sprite` | 0x40 | gSpriteObjVtable (13) | sprite.cpp, sprite_obj.cpp, sprite_anim.cpp (the renderer: gfx/sprite_renderer.cpp) |
+| `UiSprite` | 0x40 | gUiSpriteObjVtable | ui_sprite.cpp |
+| `MovingSprite` | 0x78 | gMovingSpriteVtable (15) | moving_sprite.cpp, moving_sprite_collide.cpp, moving_sprite_contact.cpp, moving_sprite_probe.cpp (part 7b) |
 | `GroundSprite` | 0x80 | gGroundSpriteVtable (15) | ground_sprite.cpp, ground_sprite_collide.cpp, ground_sprite_update.cpp (part 7b) |
 
 The 0x40-byte class is `Sprite`: the C names of its methods say "SpriteObj"
@@ -1051,7 +1068,7 @@ the two line steppers and `ConvertCratesForTimeTrial`). Project-wide:
 `MATCH_USE` 76 -> 73, `.pool` 7 -> 6, retyped field stores 217 -> 216 and
 scoped volatiles 44 -> 43; asm labels 18 -> 19 (below). All 11 match only
 under old_agbcp: the 6 agbcc objects (crate.o, crate_draw.o, crate_reset.o,
-crate_stack.o, crate_time_trial.o, slot_crate.o) move to `OLD_AGBCC_OBJS`,
+crate_stack.o, crate_time_trial.o, crate_fields.o) move to `OLD_AGBCC_OBJS`,
 their 46 pins and 15 `asm` statements old_agbcc's code (the constant
 before the `ldrb`, the shift into another register) reproduced under
 agbcc. `IsCrateInsideRect`'s 10-instruction box `asm`, `ResetCrate`'s
@@ -1110,18 +1127,18 @@ box's stack address recomputed at each call, as in the C). C idioms kept:
 before the loop) and `UpdateCrate`'s `goto done`, nested `if`s and `s32`
 copy of `kind`. The `DropExtraLife` alias is the one new asm label.
 Part 7b in numbers: `MovingSprite` and `GroundSprite`, 7 objects and 56
-functions (moving_sprite.cpp, moving_sprite_collide.cpp, player_contact.cpp,
-step_probe.cpp, ground_sprite.cpp, ground_sprite_collide.cpp,
+functions (moving_sprite.cpp, moving_sprite_collide.cpp, moving_sprite_contact.cpp,
+moving_sprite_probe.cpp, ground_sprite.cpp, ground_sprite_collide.cpp,
 ground_sprite_update.cpp). Project-wide: `MATCH_HOLD_REG` 1707 -> 1590,
 instruction-emitting `asm` 197 -> 192, retyped field stores 217 -> 215,
 retyped field reads 90 -> 88 and scoped volatiles 44 -> 39. Of the C's 118
 pins, 5 `asm` statements and 10 retyped or volatile accesses, one pin and
 one volatile read are left (below). Six of the seven objects match only
 under old_agbcp: `moving_sprite.o`, `moving_sprite_collide.o`,
-`player_contact.o`, `ground_sprite.o` and `ground_sprite_update.o` move to
+`moving_sprite_contact.o`, `ground_sprite.o` and `ground_sprite_update.o` move to
 `OLD_AGBCC_OBJS` (their pins were old_agbcc's constant-before-`ldrb` and
 register choices reproduced under agbcc; `ground_sprite_collide.o` was
-old already); `step_probe.o` compiles the same under both and stays agbcc.
+old already); `moving_sprite_probe.o` compiles the same under both and stays agbcc.
 
 The classes now have every method of the two vtables, the constructors
 (`InitMovingSprite`, `InitGroundSprite`; `new MovingSprite(id, x, y)` and
@@ -1297,12 +1314,12 @@ entity_spawner.c, crate_break.c and time_trial.c still use it).
 Part 7f in numbers: the crate list, `CrateList` (new `include/crate_list.hpp`,
 `gCrateList`), 7 objects converted and 16 methods: the 14 functions of the
 7 files, plus the constructor (`InitCrateList`, in part_list.cpp for ROM
-order) and `CollidePlayer` (`CollidePlayerWithCrates`, crate_player_collide.cpp),
+order) and `CollidePlayer` (`CollidePlayerWithCrates`, crate_list_collide_player.cpp),
 which parts 7c and 7e left with C linkage. Project-wide: `MATCH_HOLD_REG`
 1520 -> 1500, instruction-emitting `asm` 170 -> 169, `MATCH_USE` 66 -> 65,
 `MATCH_KEEP` 50 -> 49, `MATCH_HOLD` 21 -> 20; `MATCH_BARRIER` stays 17 (the
 C's moved into the header). Of the C's 21 pins, 1 `asm`, 1 keep, 1 hold and
-1 use, one pin is left (below). `crate_grid_link.o` moves to
+1 use, one pin is left (below). `crate_list_link_active.o` moves to
 `OLD_AGBCC_OBJS` (`LinkActive`'s flag test is old_agbcp's `ldrb r1; lsrs r0,
 r1, #4`, which the C pinned); `crate_list_draw.o`, `crate_list_reset.o` and
 `part_list.o` match under both and stay on agbcc; the other four were old
@@ -1557,7 +1574,7 @@ too: only mangled names changed, each mapped to the same C name.
   subclass of `GroundSprite` that every controller method took, is gone.
   Every `Ctrl` virtual (`Update`, `HandleEvent`, `Attach`, the motion
   setters, `SetTargetAnim`) and every controller's own method that takes
-  its part (`EnemyCtrl`, `KnockedEnemyCtrl`, `InputCtrl`, `PlayerCtrl`,
+  its part (`EnemyCtrl`, `KnockedEnemyCtrl`, `InputCtrl`, `SwimCtrl`,
   `ActionCtrl`, `BossCtrl`, the Mega Mix, Tiny, Dingodile and Neo Cortex
   controllers, `PlatformMover`, `OneShotAnimCtrl`, `EffectCtrl`, ...) takes
   a `MovingSprite *`, and so do the bosses' part pointers (`cannon`,
@@ -1645,8 +1662,8 @@ player_collide.o and player_event.o were old_agbcc already.
   `mirrorFlags.mirrorX`, `mirror`, `palette`, `mover`, `bank->anims[...]`).
   `PlayerSprite()` and every `(GroundSprite *)` and `(MovingSprite *)`
   cast of the player go, and so does `ActionCtrl::Sprite()`: `ActionCtrl`,
-  `PlayerCtrl` and `InputCtrl` hold a `Player *` (`P6Player` in
-  `PlayerCtrl::StartMotion?FromSet`'s mangled names). The C-linkage calls
+  `SwimCtrl` and `InputCtrl` hold a `Player *` (`P6Player` in
+  `SwimCtrl::StartMotion?FromSet`'s mangled names). The C-linkage calls
   that took the player are method calls (`gPlayer->TouchesBox(&box)`,
   `p->HasRoomForAnim(0xB)`, `p->ClearSpeedY()`, `gPlayer->HasRampYTarget()`,
   `p->collisionQueue.Resolve()`, `p->mover->state`).
@@ -3057,9 +3074,9 @@ data.
 | `src/bosses/tiny.cpp` | 4 | `StompedHopPadCtrl`, `OneShotAnimCtrl`, `UnusedOneShotAnimCtrl`, `TinyCtrl` |
 | `src/bosses/dingodile.cpp` | 4 | `DingodileSharkCtrl`, `DingodileProjectileCtrl`, `DingodileShieldCtrl`, `DingodileCtrl` |
 | `src/vehicle/jetpack/jetpack_crates.cpp` | 4 | `JetpackBalloonCrate` and its three kinds |
-| `src/enemies/enemy_ctrl.cpp`, `src/pickups/wumpa.cpp`, `src/menus/level_select.cpp` (since #767 one each in `src/objects/camera_lead.cpp` and `launch_pad.cpp`) | 2 each | `PeriodicSpawner`, `KnockedEnemyCtrl`; `Wumpa`, `Stopwatch`; `CameraLead`, `LaunchPad` |
+| `src/menus/level_select.cpp` (since #767 one each in `src/objects/camera_lead.cpp` and `launch_pad.cpp`) | 2 | `CameraLead`, `LaunchPad` |
 | `src/cutscene/cutscene_player.cpp`, `src/system/inline_copies_misc.cpp` (step 10b) | 2 each | `BgStreamer`, `BgLayerBase`; `LargeFont`, `SmallFont` |
-| 30 others (4 of them since step 10b) | 1 each | `Entity` (graphics), `Sprite`, `UiSprite`, `MovingSprite`, `GroundSprite`, `Player`, `EnemyCtrl`, `EffectCtrl`, `Crate`, `ExtraLife`, `ActionCtrl`, `PlayerCtrl`, `InputCtrl`, `BossCtrl`, `MegaMixCtrl`, `Platform`, `PlatformMover`, `LevelSelectEntry`, `HudPart`, `ActorSelf` (gActorVtable), `PolarPlayer`, `PolarCollectedWumpa` (vehicle/polar/polar_pickups.cpp), `PolarCrate` (vehicle/polar/polar_crate.cpp), `JetpackPlayer`, `JetpackCollectedWumpa` (vehicle/jetpack/jetpack_collected_wumpa.cpp), `LogoActor`; `Ctrl` (system/bios_util.cpp), `BgLayer` (level/bg_layer.cpp), `PooledBgLayer` (level/tile_slot_pool.cpp), `Font` (text/font.cpp) |
+| 34 others (4 of them since step 10b; enemy_ctrl.cpp's and wumpa.cpp's second tables are their own objects' since #768) | 1 each | `Entity` (graphics), `Sprite`, `UiSprite`, `MovingSprite`, `GroundSprite`, `Player`, `EnemyCtrl`, `PeriodicSpawner`, `KnockedEnemyCtrl`, `EffectCtrl`, `Crate`, `ExtraLife`, `Wumpa`, `Stopwatch`, `ActionCtrl`, `SwimCtrl`, `InputCtrl`, `BossCtrl`, `MegaMixCtrl`, `Platform`, `PlatformMover`, `LevelSelectEntry`, `HudPart`, `ActorSelf` (gActorVtable), `PolarPlayer`, `PolarCollectedWumpa` (vehicle/polar/polar_pickups.cpp), `PolarCrate` (vehicle/polar/polar_crate.cpp), `JetpackPlayer`, `JetpackCollectedWumpa` (vehicle/jetpack/jetpack_collected_wumpa.cpp), `LogoActor`; `Ctrl` (system/bios_util.cpp), `BgLayer` (level/bg_layer.cpp), `PooledBgLayer` (level/tile_slot_pool.cpp), `Font` (text/font.cpp) |
 
 **Still C after step 10** (src/data/entity_vtables_7e3bec.c), 8 tables
 whose class's key method was C code: `gCtrlVtable` (`Ctrl::Update` was
@@ -3434,7 +3451,7 @@ the ROM's locals are kept (each controller case reads `gPlayer` once into
 the field's address). No cxx_symbols.txt entry was needed (every mangled
 name was already mapped). The C prototypes these files were the last
 users of went (InitPlayer, ResetPlayerForRoom, InitActionCtrl,
-CreateInputCtrl, InitPlayerCtrl, SetCtrlAnimSet, InitPartList,
+CreateInputCtrl, InitSwimCtrl, SetCtrlAnimSet, InitPartList,
 DestroyPartList, InitCrateList, DestroyCrateList, GetLevelLayers,
 DestroyLevelLayers, SpawnEntity, GetPlatformExitMirror, GetCrateAbove,
 SetCrateAbove, SetCrateBelow), with player.h's `struct player_vtable`
@@ -3449,7 +3466,7 @@ still read through them. `tools/layout_audit.py views` lists them.
 
 - **Batch 2, the controllers.** The two state-table files are C++
   (src/data/action_table_16bf20.cpp: `ActionCtrl::stateFuncs`;
-  player_pmf_16c250.cpp: `PlayerCtrl::stateFuncs` and
+  player_pmf_16c250.cpp: `SwimCtrl::stateFuncs` and
   `InputCtrl::stateFuncs`), so player.h's 53 C prototypes of the
   controllers' and the player's methods (the state methods, KillPlayer,
   DoSuperBodySlamShockwave, CollidePlayer, SetPlayerBusy: the C++ callers
@@ -3525,7 +3542,7 @@ still read through them. `tools/layout_audit.py views` lists them.
   prototypes of methods (DrawPartList, UpdateCrateList, LoadRoom,
   GetPaletteSlot, AddOamEntry, ...) had no caller left. Every object is
   byte-identical. What still casts: the actor list's root
-  (`(JetpackPlayer *)gActorList`, a downcast), gPlayerCtrl and gInput
+  (`(JetpackPlayer *)gActorList`, a downcast), gSwimCtrl and gInput
   (`void *`s their C and C++ users pass around as such), gEntityFlags
   (LevelEntityFlags derives from the C struct, and entity.hpp's inline
   methods use it before spawners.hpp can be included) and the DISPCNT
@@ -4105,11 +4122,11 @@ Bigger controllers, roughly in order (function counts from
 2. ~~**The rest of `Ctrl` and `InputCtrl`**~~: done in part 3, and
    `Ctrl::Update` (`UpdateCtrl`, an empty function in system/bios_util.cpp) in
    step 10b.
-3. ~~**The swim controller**~~ (`PlayerCtrl`): done in part 4; its
+3. ~~**The swim controller**~~ (`SwimCtrl`): done in part 4; its
    `Reset`/`Restart` (in `action_ctrl.cpp`) in part 5a. **The action
    controller** (`ActionCtrl`): part 5a converted `action_ctrl.c`,
    `_moves.c`, `_update.c`, `_idle.c`, `_land.c`, `_left_ground.c` and
-   `kill_player.c`; part 5b the other four (`action_ctrl_event.c`,
+   `action_ctrl_kill.cpp`; part 5b the other four (`action_ctrl_event.c`,
    `_hang.c`, `_run_jump.c`, `_states.c`), and action_obj.h's vcall
    macros went with them. Its last method, `Reset` (`ResetActionCtrl`,
    wumpa.cpp), was converted with the pickups in part 7h.
@@ -4205,12 +4222,12 @@ only under old_agbcp, as all four of 7a's do, and most of their pins to go.
 | Part | Files | Classes | Size | Depends on |
 |---|---|---|---|---|
 | ~~7a~~ | ~~graphics.c, sprite.c, sprite_obj.c, sprite_anim.c~~ | `Entity`, `Sprite`, `UiSprite`, `PartList` (update, collide), the sprite graphics managers | done | |
-| ~~7b~~ | ~~objects/moving_sprite.c, moving_sprite_collide.c, player_contact.c, step_probe.c, ground_sprite.c, ground_sprite_collide.c (old), ground_sprite_update.c~~ | `MovingSprite` (its 15 slots, the speeds, the controller), `GroundSprite` (the terrain probe) | done | 7a |
+| ~~7b~~ | ~~objects/moving_sprite.c, moving_sprite_collide.c, moving_sprite_contact.cpp, moving_sprite_probe.cpp, ground_sprite.c, ground_sprite_collide.c (old), ground_sprite_update.c~~ | `MovingSprite` (its 15 slots, the speeds, the controller), `GroundSprite` (the terrain probe) | done | 7a |
 | ~~7b'~~ | ~~the controller headers and cxx_symbols.txt~~ | the controllers' `SpriteObj *` parameters become `MovingSprite *` (`P9SpriteObj` -> `P12MovingSprite`), and `SpriteObj` goes; `PartList`'s and `CrateList`'s items retyped | done | 7b |
 | ~~7c~~ | ~~objects/part_list.c, part_list_cull.c, part_collide.c (old), collision_queue.c, gfx/palette_cycle.c~~ | the rest of `PartList`, the player's `CollisionQueue`, `HudPart` (a `UiSprite`) and the palette cycles | done | |
 | ~~7d~~ | ~~objects/platform.c, platform_collide.c (old), platform_contact.c, platform_create.c (old)~~ | `Platform` (a `MovingSprite`, 0x80 bytes), `PlatformMover` (a `Ctrl`) (include/platform.hpp) | done | 7b |
-| ~~7e~~ | ~~crates/crate.c, crate_create.c, crate_draw.c, crate_update.c, crate_hit.c, crate_touch.c, crate_player_collide.c, crate_reset.c, crate_stack.c, crate_time_trial.c, slot_crate.c~~ | `Crate` (include/crate.hpp) and its accessors | done | |
-| ~~7f~~ | ~~crates/crate_list.c (old), crate_list_draw.c, crate_list_reset.c, crate_list_update.c (old), crate_grid_collide.c (old), crate_grid_link.c, crate_grid_unlink.c (old)~~ | `CrateList` (include/crate_list.hpp), the crate grid | done | |
+| ~~7e~~ | ~~crates/crate.c, crate_create.c, crate_draw.c, crate_update.c, crate_hit.c, crate_touch.c, crate_list_collide_player.cpp, crate_reset.c, crate_stack.c, crate_time_trial.c, crate_fields.cpp~~ | `Crate` (include/crate.hpp) and its accessors | done | |
+| ~~7f~~ | ~~crates/crate_list.c (old), crate_list_draw.c, crate_list_reset.c, crate_list_update.c (old), crate_list_collide.cpp (old), crate_list_link_active.cpp, crate_list_unlink.cpp (old)~~ | `CrateList` (include/crate_list.hpp), the crate grid | done | |
 | ~~7g~~ | ~~crates/crate_break.c (old)~~ | the crates' break and bounce paths | done | |
 | ~~7h~~ | ~~pickups/extra_life.c, wumpa.c, wumpa_update.c~~ | `ExtraLife`, `Wumpa`, `Stopwatch`, `ActionCtrl::Reset`; `struct act` went | done | |
 | ~~7i~~ | ~~bosses/cortex.c (old)~~ | the Neo Cortex fight's gem, platform mover (a `PlatformMover`) and shot controllers, the rest of the target's, cannon's and boss's methods, Tiny's constructor, destructor and `StartHop`, `OneShotAnimCtrl`'s and `UnusedOneShotAnimCtrl`'s constructors and destructors | done | 7d |

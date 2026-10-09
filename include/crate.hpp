@@ -95,7 +95,7 @@ public:
     void OpenAkuAku();                                       // OpenAkuAkuCrate
     u8 IsKindBreakable(u32 kind);                            // IsCrateKindBreakable
 
-    /* The slot crate's word (slot_crate.cpp). */
+    /* The slot crate's word (crate_fields.cpp). */
     u32 GetSlotStage();
     void DecrementSlotStage();
     void SetSlotStage(u32 stage);
@@ -105,7 +105,7 @@ public:
     void SetSlotSpins(u32 spins);
     void SetSlotPhase(u32 phase);
     u32 GetSlotPhase();
-    /* The other accessors (slot_crate.cpp). */
+    /* The other accessors (crate_fields.cpp). */
     void SetKind(u8 value);
     u8 GetKind();
     void SetFallDistance(s32 value);
@@ -124,7 +124,9 @@ public:
     void SetTrialKind(s32 value);
     s32 GetTrialKind();
 
-    /* The hits, breaks and explosions (crate_break.cpp, part 7g). */
+    /* The hits, breaks and explosions (crate_break.cpp, part 7g; the
+     * switches and outlines in crate_switches.cpp, FinishBroken on in
+     * crate_states.cpp). */
     void QueuePlayerCollision(s32 idx); // QueueCratePlayerCollision
     void ApplyCollision(s32 attack, s32 code, s32 edge, s32 depth, struct vec2 pos, s32 hit,
                         bool limited, bool above, bool forced); // ApplyCrateCollision

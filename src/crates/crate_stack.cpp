@@ -1,5 +1,6 @@
 #include "crate.hpp"
 #include "spawners.hpp"
+#include "player.hpp"
 #include "audio.hpp"
 
 extern "C" {
@@ -7,8 +8,21 @@ extern "C" {
 #include "globals.h"
 }
 
-/* The crate's stack walks and player collision, and the life crate
- * (#664, include/crate.hpp). */
+/* The Aku Aku and life crates, and the crate's stack walks and player
+ * collision (#664, include/crate.hpp). */
+
+/* The Aku Aku crate: unless the player is passing through (the
+ * `collides` flag clear), it gains a mask (EVENT_MASK_GAIN) with its
+ * sound. */
+void Crate::OpenAkuAku()
+{
+    Player *p = gPlayer;
+
+    if (p->f.flags >> 7) {
+        p->HandleEvent(0, EVENT_MASK_GAIN, 0);
+        gAudioContext->PlaySfx(SFX_AKU_AKU_GAIN, 0x100);
+    }
+}
 
 /* The life crate: the break sound, the crate's entity id marked
  * activated (not again once it is), and an extra life dropped three

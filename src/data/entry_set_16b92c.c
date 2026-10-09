@@ -9,7 +9,7 @@
 
 /* Their entries, in motion_records_16b304.c. */
 extern const u32 gActionCtrlMotionEntries[][2];
-extern const u32 gPlayerCtrlMotionEntries[][2];
+extern const u32 gSwimCtrlMotionEntries[][2];
 
 /* The sets PlayRoom (play_room.cpp) gives the two HUD widgets it
  * builds, through SetCtrlAnimSet (which stores them at +0x04). */
@@ -17,6 +17,6 @@ const struct entry_set gActionCtrlMotionSet = {
     gActionCtrlMotionEntries, 0x100,
 };
 
-const struct entry_set gPlayerCtrlMotionSet = {
-    gPlayerCtrlMotionEntries, 0x100,
+const struct entry_set gSwimCtrlMotionSet = {
+    gSwimCtrlMotionEntries, 0x100,
 };

@@ -225,8 +225,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/gfx/palette_cache.o \
                   $(C_BUILDDIR)/gfx/sprite_bank_set.o \
                   $(C_BUILDDIR)/objects/entity.o \
-                  $(C_BUILDDIR)/gfx/sprite_pieces.o \
-                  $(C_BUILDDIR)/gfx/affine_sprite_pieces.o \
+                  $(C_BUILDDIR)/gfx/sprite_renderer.o \
                   $(C_BUILDDIR)/gfx/display.o \
                   $(C_BUILDDIR)/gfx/fade.o \
                   $(C_BUILDDIR)/gfx/sprite_frame.o \
@@ -245,19 +244,21 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/objects/ground_sprite_collide.o \
                   $(C_BUILDDIR)/objects/moving_sprite.o \
                   $(C_BUILDDIR)/objects/moving_sprite_collide.o \
-                  $(C_BUILDDIR)/objects/player_contact.o \
+                  $(C_BUILDDIR)/objects/moving_sprite_contact.o \
                   $(C_BUILDDIR)/objects/ground_sprite.o \
                   $(C_BUILDDIR)/objects/ground_sprite_update.o \
-                  $(C_BUILDDIR)/crates/crate_grid_unlink.o \
+                  $(C_BUILDDIR)/crates/crate_list_unlink.o \
                   $(C_BUILDDIR)/crates/crate_list_update.o \
-                  $(C_BUILDDIR)/crates/crate_player_collide.o \
-                  $(C_BUILDDIR)/crates/crate_grid_collide.o \
+                  $(C_BUILDDIR)/crates/crate_list_collide_player.o \
+                  $(C_BUILDDIR)/crates/crate_list_collide.o \
                   $(C_BUILDDIR)/crates/crate_list.o \
-                  $(C_BUILDDIR)/crates/crate_grid_link.o \
+                  $(C_BUILDDIR)/crates/crate_list_link_active.o \
                   $(C_BUILDDIR)/enemies/enemy_attack.o \
                   $(C_BUILDDIR)/objects/ctrl.o \
                   $(C_BUILDDIR)/bosses/tiny.o \
                   $(C_BUILDDIR)/enemies/enemy_ctrl.o \
+                  $(C_BUILDDIR)/enemies/periodic_spawner.o \
+                  $(C_BUILDDIR)/enemies/knocked_enemy_ctrl.o \
                   $(C_BUILDDIR)/objects/effect_ctrl.o \
                   $(C_BUILDDIR)/vehicle/polar/polar_player.o \
                   $(C_BUILDDIR)/vehicle/jetpack/jetpack_spawn.o \
@@ -273,6 +274,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/player/action_ctrl_moves.o \
                   $(C_BUILDDIR)/actor/bg_picture.o \
                   $(C_BUILDDIR)/objects/sprite_anim.o \
+                  $(C_BUILDDIR)/objects/ui_sprite.o \
                   $(C_BUILDDIR)/vehicle/polar/yeti_update.o \
                   $(C_BUILDDIR)/vehicle/polar/yeti_graphics.o \
                   $(C_BUILDDIR)/player/player_collide.o \
@@ -286,7 +288,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/player/action_ctrl_event.o \
                   $(C_BUILDDIR)/player/action_ctrl_idle.o \
                   $(C_BUILDDIR)/player/action_ctrl_update.o \
-                  $(C_BUILDDIR)/player/kill_player.o \
+                  $(C_BUILDDIR)/player/action_ctrl_kill.o \
                   $(C_BUILDDIR)/player/action_ctrl_left_ground.o \
                   $(C_BUILDDIR)/player/swim_ctrl_stroke.o \
                   $(C_BUILDDIR)/menus/continue_prompt.o \
@@ -301,6 +303,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/objects/platform_collide.o \
                   $(C_BUILDDIR)/objects/platform_contact.o \
                   $(C_BUILDDIR)/objects/platform.o \
+                  $(C_BUILDDIR)/objects/platform_mover.o \
                   $(C_BUILDDIR)/objects/camera_lead.o \
                   $(C_BUILDDIR)/objects/launch_pad.o \
                   $(C_BUILDDIR)/menus/level_select.o \
@@ -358,8 +361,10 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/crates/crate_hit.o \
                   $(C_BUILDDIR)/level/terrain_probe_axes.o \
                   $(C_BUILDDIR)/crates/crate_break.o \
+                  $(C_BUILDDIR)/crates/crate_switches.o \
+                  $(C_BUILDDIR)/crates/crate_states.o \
                   $(C_BUILDDIR)/crates/crate_update.o \
-                  $(C_BUILDDIR)/crates/slot_crate.o \
+                  $(C_BUILDDIR)/crates/crate_fields.o \
                   $(C_BUILDDIR)/crates/crate.o \
                   $(C_BUILDDIR)/crates/crate_draw.o \
                   $(C_BUILDDIR)/crates/crate_reset.o \
@@ -368,6 +373,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/pickups/wumpa_update.o \
                   $(C_BUILDDIR)/pickups/extra_life.o \
                   $(C_BUILDDIR)/pickups/wumpa.o \
+                  $(C_BUILDDIR)/pickups/stopwatch.o \
                   $(C_BUILDDIR)/level/game_frame.o \
                   $(C_BUILDDIR)/level/run_room.o \
                   $(C_BUILDDIR)/cutscene/cutscene_player.o \
@@ -446,6 +452,7 @@ NO_IMPLEMENT_INLINES_OBJS := $(C_BUILDDIR)/actor/actor.o \
                              $(C_BUILDDIR)/objects/sprite.o \
                              $(C_BUILDDIR)/pickups/extra_life.o \
                              $(C_BUILDDIR)/pickups/wumpa.o \
+                             $(C_BUILDDIR)/pickups/stopwatch.o \
                              $(C_BUILDDIR)/player/action_ctrl_update.o \
                              $(C_BUILDDIR)/player/input_ctrl.o \
                              $(C_BUILDDIR)/player/player_collide.o \

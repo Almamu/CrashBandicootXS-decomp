@@ -11,10 +11,11 @@ extern "C" {
 #include "player.h"
 }
 
-/* The enemy controllers' small methods (include/enemy_ctrl.hpp), ROM
- * 0x0800C8AC-0x0800CBF4: EnemyCtrl's mode triggers, oscillators,
- * constructor, destructor and setters, the periodic spawner, and the
- * knocked controller. EnemyCtrl's Update and HandleEvent are in
+/* The enemy controller's small methods (include/enemy_ctrl.hpp), ROM
+ * 0x0800C8AC-0x0800CACC: EnemyCtrl's mode triggers, oscillators,
+ * constructor, destructor and setters. The periodic spawner and the
+ * knocked controller follow in periodic_spawner.cpp and
+ * knocked_enemy_ctrl.cpp. EnemyCtrl's Update and HandleEvent are in
  * enemy_ctrl_update.cpp, its per-state updaters in enemy_attack.cpp,
  * enemy_motion.cpp, enemy_patrol.cpp and enemy_shooter.cpp. */
 
@@ -256,72 +257,4 @@ void EnemyCtrl::SetModeTable(const s32 *newAnims)
 void EnemyCtrl::SetKind(s32 newKind)
 {
     kind = newKind;
-}
-
-/* While the spawner is 0xA1-0x18F pixels right of the player, calls
- * `callback` at its position once every `period` frames (offset by
- * `phase`), the gate UpdateShooter uses too. */
-void PeriodicSpawner::Update()
-{
-    s32 selfX = Q8_TO_INT(x);
-    s32 cameraX = Q8_TO_INT(gPlayer->x);
-
-    if ((u32)(selfX - cameraX - 0xa1) <= 0xee) {
-        if (__modsi3(gRoomFrameCount + period - phase, period) == 0)
-            callback(0xFFFF, selfX, y >> 8, 0);
-    }
-}
-
-/* g++ sets the vtable pointer back to gPeriodicSpawnerVtable and runs
- * the inline ~Entity, which sets gEntityVtable and frees the object when
- * bit 0 of the flags is set; the first store is dead and goes. */
-PeriodicSpawner::~PeriodicSpawner()
-{
-}
-
-/* Entity() (InitEntity), then the vtable pointer. */
-PeriodicSpawner::PeriodicSpawner()
-{
-}
-
-/* The gate's period and phase. */
-void PeriodicSpawner::SetPeriod(s32 newPeriod, s32 newPhase)
-{
-    period = newPeriod;
-    phase = newPhase;
-}
-
-/* The function Update calls; SpawnSealSpawner (spawn_objects.cpp) stores
- * `callback` directly.
- * UNUSED - no caller anywhere in the ROM (checked every src/ and lib/ .c
- * file and every word-aligned Thumb pointer in baserom.gba). */
-void PeriodicSpawner::SetCallback(void (*newCallback)(u32 arg, u16 x, u16 y, u16 arg3))
-{
-    callback = newCallback;
-}
-
-/* Marks the knocked enemy's part gone once it has left the screen (the
- * same test as EffectCtrl::Update's first). */
-void KnockedEnemyCtrl::Update(MovingSprite *part)
-{
-    if (!part->IsOnScreen())
-        part->MarkGone();
-}
-
-/* Empty: the constructor calls it where EnemyCtrl's calls Reset. */
-void KnockedEnemyCtrl::Reset()
-{
-}
-
-/* g++ sets the vtable pointer back to gKnockedEnemyCtrlVtable, then
- * calls ~Ctrl (DestroyCtrl). */
-KnockedEnemyCtrl::~KnockedEnemyCtrl()
-{
-}
-
-/* Ctrl() (InitCtrl), the vtable pointer, then Reset. HitEnemy `new`s
- * one. */
-KnockedEnemyCtrl::KnockedEnemyCtrl()
-{
-    Reset();
 }

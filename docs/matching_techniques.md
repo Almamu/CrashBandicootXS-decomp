@@ -200,7 +200,7 @@ programmer did, not by workarounds. The recurring ones:
   loop, put a `MATCH_KEEP_VOLATILE(base)` at the use
   ([sub_8009150-loop-invariant-hoist-matched.md](./matching/archive/sub_8009150-loop-invariant-hoist-matched.md),
   `LinkCrateToActiveBucket` in its C; the C++ in
-  `src/crates/crate_grid_link.cpp` needs none).
+  `src/crates/crate_list_link_active.cpp` needs none).
 - **Insn counts.** loop.c's decision to move an invariant depends on the
   loop's insn count; `MATCH_BARRIER()`s in the body change it
   (`src/frontend/company_logos.cpp`).
@@ -928,7 +928,7 @@ Round 2, player/crates/frontend (after the C++ conversion):
   `TitleScreen::LoadObjTiles`'s r8 pin went with a plain `pkg++` at the
   end of the pass instead of a `next` copy.
 - **A store the optimizer folds, through an inline parameter.**
-  `PlayerCtrl::StartStroke`'s `ldrb`/`strb` of `tag` is the
+  `SwimCtrl::StartStroke`'s `ldrb`/`strb` of `tag` is the
   "switch to animation `tag`" idiom (Crate::SetTag's) called with the
   current animation; `t->tag = t->tag` is folded away, the parameter
   store isn't, so the volatile cast went.

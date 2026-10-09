@@ -21,7 +21,7 @@
  * piece_info is the frame header's view. The menus' copies
  * (level_menu.h's, level_select_parts.h, level_select.c) and the file-local ones
  * (time_trial.cpp, dingodile.cpp, tiny.cpp, spawn_objects.cpp,
- * affine_sprite_pieces.cpp's kf_record) use these types since #574 batch 9e.
+ * sprite_renderer.cpp's kf_record) use these types since #574 batch 9e.
  */
 
 /* One OBJ piece's position relative to the part, in pixels. */

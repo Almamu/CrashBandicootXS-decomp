@@ -1,6 +1,5 @@
 #include "bg_layer.hpp"
 #include "input_ctrl.hpp"
-#include "player_ctrl.hpp"
 #include "sprite_obj.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
@@ -17,10 +16,8 @@ extern "C" {
 /* GitHub issue #21: 0x08017524-0x08017A44, the whole tail of the former
  * asm/code_3_2_17_16048.s.
  *
- * The first six functions are the swim controller's (PlayerCtrl,
- * include/player_ctrl.hpp; swim_ctrl.cpp right before them): the
- * accessors of its queued X/Y motion entries (`motionX`/`motionY`) and
- * their "pending" flags.
+ * The first six functions, the swim controller's motion-queue accessors,
+ * are at the end of swim_ctrl.cpp since #768.
  *
  * The other 19 are InputCtrl's (include/input_ctrl.hpp, gInputCtrlVtable;
  * #664, docs/cplusplus.md), the controller play_room.cpp attaches in room
@@ -36,8 +33,7 @@ extern "C" {
  * (gInputCtrlStateFuncs) and applies the queued motion.
  *
  * UNUSED - no `bl`/`.4byte` reference in src/, and no Thumb pointer
- * anywhere in the ROM: the six PlayerCtrl accessors and
- * SetMotionYPending, SetMotionXPending, CancelMotionY, CancelMotionX and
+ * anywhere in the ROM: SetMotionYPending, SetMotionXPending, CancelMotionY, CancelMotionX and
  * IsMotionYPending. Matched anyway.
  *
  * Built by old_agbcp (the Makefile's OLD_AGBCC_OBJS), like the old_agbcc
@@ -48,38 +44,6 @@ extern "C" {
  * lines of slot arithmetic); here they are `SetMode(3)` and
  * `(this->*stateFuncs[state])()`. The "mark gone" bitmap sequence
  * (MarkEntityGone's, inlined twice) is Entity::MarkGone. */
-
-void PlayerCtrl::ClearMotionYPending()
-{
-    motionYPending = 0;
-}
-
-void PlayerCtrl::ClearMotionXPending()
-{
-    motionXPending = 0;
-}
-
-u8 PlayerCtrl::IsMotionYPending()
-{
-    return motionYPending;
-}
-
-u8 PlayerCtrl::IsMotionXPending()
-{
-    return motionXPending;
-}
-
-void PlayerCtrl::QueueMotionY(u8 entry)
-{
-    motionYPending = 1;
-    motionY = entry;
-}
-
-void PlayerCtrl::QueueMotionX(u8 entry)
-{
-    motionXPending = 1;
-    motionX = entry;
-}
 
 /* The target is hit: plays the hurt sound, switches to state 3 (StateDead)
  * on animation `anim`, makes the target intangible and dead, takes a life

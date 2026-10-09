@@ -6,7 +6,7 @@
  * controllers), their animation, the part lists and the collision queue.
  * Every function src/objects/ defines, with the prototype of its
  * definition, and the globals and tables its files use
- * (docs/headers_plan.md). InitCrateList (part_list.cpp) is in crates.h. A
+ * (docs/headers_plan.md). InitCrateList (crate_list_unlink.cpp) is in crates.h. A
  * .c file that needs a different local declaration for codegen keeps it
  * as an asm-label alias with a `codegen:` comment.
  *

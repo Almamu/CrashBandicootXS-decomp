@@ -39,7 +39,7 @@
 . = 0x00001304; gInput = .;
 . = 0x00001308; gLevelLayers = .;
 . = 0x0000130C; gCrateList = .;
-. = 0x00001310; gPlayerCtrl = .;
+. = 0x00001310; gSwimCtrl = .;
 . = 0x00001314; gSlideshowDispcnt = .;
 . = 0x00001318; gHud = .;
 . = 0x00001320; gVramTileBlockPool = .;

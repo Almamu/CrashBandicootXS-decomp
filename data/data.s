@@ -54,7 +54,7 @@ gSfxTable:
 
 @ gCtrlMotionRecords..gInputCtrlMotionRecords: src/data/motion_records_16b304.c
 
-@ gActionCtrlMotionSet..gPlayerCtrlMotionSet: src/data/entry_set_16b92c.c
+@ gActionCtrlMotionSet..gSwimCtrlMotionSet: src/data/entry_set_16b92c.c
 
 @ gInputCtrlMotionSet..gInputCtrlMotionEntries: src/data/entry_set_16b93c.c
 
@@ -62,11 +62,11 @@ gSfxTable:
 
 @ gEnemyCtrlMotionSet..gWumpaHopWidths: src/data/object_tables_16bb6c.c
 
-@ gActionCtrlStateTable..gPlayerCtrlModeAnimRows: src/data/action_table_16bf20.cpp
+@ gActionCtrlStateTable..gSwimCtrlModeAnimRows: src/data/action_table_16bf20.cpp
 
-@ gPlayerCtrlTurnSpeeds..gPlayerCtrlModeLevelAnims: src/data/speed_table_16c090.c
+@ gSwimCtrlTurnSpeeds..gSwimCtrlModeLevelAnims: src/data/speed_table_16c090.c
 
-@ gPlayerCtrlStateFuncs..gMegaMixMotionSet: src/data/player_pmf_16c250.cpp
+@ gSwimCtrlStateFuncs..gMegaMixMotionSet: src/data/player_pmf_16c250.cpp
 
 @ gMegaMixMotionRecords..gDingodileStalactiteFallMotion: src/data/actor_tables_16c2d8.c
 

@@ -1,7 +1,27 @@
 #include "crate_list.hpp"
 
-/* CrateList::Unlink (#664, part 7f; include/crate_list.hpp). An
- * old_agbcp object (OLD_AGBCC_OBJS). */
+extern "C" {
+#include "crates.h"
+#include "memory.h"
+}
+
+/* CrateList's constructor and Unlink (#664, part 7f;
+ * include/crate_list.hpp). An old_agbcp object (OLD_AGBCC_OBJS). */
+
+/* InitCrateList: an empty list for `n` sprites (play_room.cpp's
+ * `InitCrateList(OperatorNew(0x818), 0xC0)`), the slots cleared and every
+ * node on the free list. */
+CrateList::CrateList(s32 n)
+{
+    count = 0;
+    capacity = n;
+    slots = new Crate *[n];
+    nodes = new CrateGridNode[capacity];
+    links = new CrateGridLink[capacity];
+    for (s32 j = 0; j < capacity; j++)
+        slots[j] = 0;
+    ResetGrid();
+}
 
 /* Takes `sprite`'s nodes out of the grid (Remove and RemoveAt call it
  * before they compact the slots), back onto the free list. First its

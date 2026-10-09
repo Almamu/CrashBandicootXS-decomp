@@ -47,7 +47,8 @@ _._17StompedHopPadCtrl DestroyStompedHopPadCtrl
 Update__17StompedHopPadCtrlP12MovingSprite UpdateStompedHopPad
 Update__15OneShotAnimCtrlP12MovingSprite UpdateOneShotAnimCtrl
 #
-# InputCtrl (the motion queue), BossCtrl (src/player/input_ctrl_queue.cpp)
+# InputCtrl (the motion queue, src/player/input_ctrl_queue.cpp), BossCtrl
+# (src/bosses/boss_ctrl.cpp)
 IsMotionXPending__9InputCtrl IsInputCtrlMotionXPending
 QueueMotionYKeepSpeed__9InputCtrlUc QueueInputCtrlMotionYKeepSpeed
 QueueMotionXKeepSpeed__9InputCtrlUc QueueInputCtrlMotionXKeepSpeed
@@ -69,7 +70,8 @@ StartTargetMotionYFromSet__11MegaMixCtrlP12MovingSpritei StartMegaMixMotionYFrom
 StartTargetMotionXFromSet__11MegaMixCtrlP12MovingSpritei StartMegaMixMotionXFromSet
 Reset__11MegaMixCtrl ResetMegaMixCtrl
 #
-# part 3: Ctrl's methods in src/player/player_flags.cpp, and InputCtrl
+# part 3: Ctrl's first four methods in src/objects/ctrl.cpp (player_flags.cpp's
+# until #768), and InputCtrl
 # (include/input_ctrl.hpp, src/player/input_ctrl.cpp)
 StartTargetMotionY__4CtrlP12MovingSpritePC10speed_ramp StartCtrlTargetMotionY
 SetMode__4Ctrli SetCtrlMode
@@ -145,52 +147,51 @@ SetPeriod__15PeriodicSpawnerii SetPeriodicSpawnerPeriod
 SetCallback__15PeriodicSpawnerPFUiUsUsUs_v SetPeriodicSpawnerCallback
 _vt.6Entity gEntityVtable
 __6Entity InitEntity
-# part 4: PlayerCtrl, the swim controller (include/player_ctrl.hpp,
-# src/player/swim_ctrl*.cpp and the motion-queue accessors in
-# src/player/input_ctrl.cpp)
-_vt.10PlayerCtrl gPlayerCtrlVtable
-__10PlayerCtrl InitPlayerCtrl
-_._10PlayerCtrl DestroyPlayerCtrl
-_10PlayerCtrl.stateFuncs gPlayerCtrlStateFuncs
-Update__10PlayerCtrlP12MovingSprite UpdatePlayerCtrl
-HandleEvent__10PlayerCtrlP12MovingSpriteii PlayerCtrlHandleEvent
-Attach__10PlayerCtrlP12MovingSprite AttachPlayerCtrl
-CheckTurn__10PlayerCtrl CheckPlayerCtrlTurn
-KillPlayer__10PlayerCtrli PlayerCtrlKillPlayer
-ApplyMotion__10PlayerCtrl ApplyPlayerCtrlMotion
-StateIdle__10PlayerCtrl PlayerCtrlStateIdle
-StateSwim__10PlayerCtrl PlayerCtrlStateSwim
-StateStroke__10PlayerCtrl PlayerCtrlStateStroke
-StateSpin__10PlayerCtrl PlayerCtrlStateSpin
-StateTurn__10PlayerCtrl PlayerCtrlStateTurn
-StateSwimStart__10PlayerCtrl PlayerCtrlStateSwimStart
-StateStop__10PlayerCtrl PlayerCtrlStateStop
-StateDead__10PlayerCtrl PlayerCtrlStateDead
-StartMotionYFromSet__10PlayerCtrlP6Playeri StartPlayerCtrlMotionYFromSet
-StartMotionXFromSet__10PlayerCtrlP6Playeri StartPlayerCtrlMotionXFromSet
-SetState__10PlayerCtrliiii SetPlayerCtrlState
-SetDriftX__10PlayerCtrliii SetPlayerSwimDriftX
-SetDriftY__10PlayerCtrliii SetPlayerSwimDriftY
-GetDriftStep__10PlayerCtrli GetPlayerSwimDriftStep
-ApplyTilt__10PlayerCtrl ApplyPlayerCtrlTilt
-StartSwim__10PlayerCtrl StartPlayerCtrlSwim
-ClearUnk14__10PlayerCtrl sub_801750C
-SetMotionYPending__10PlayerCtrl SetPlayerCtrlMotionYPending
-SetMotionXPending__10PlayerCtrl SetPlayerCtrlMotionXPending
-StartStroke__10PlayerCtrl StartPlayerCtrlStroke
-StartSpin__10PlayerCtrl StartPlayerCtrlSpin
-ApplySwimDrift__10PlayerCtrl ApplyPlayerCtrlSwimDrift
-Reset__10PlayerCtrl ResetPlayerCtrl
-Restart__10PlayerCtrl RestartPlayerCtrl
-ClearMotionYPending__10PlayerCtrl ClearPlayerCtrlMotionYPending
-ClearMotionXPending__10PlayerCtrl ClearPlayerCtrlMotionXPending
-IsMotionYPending__10PlayerCtrl IsPlayerCtrlMotionYPending
-IsMotionXPending__10PlayerCtrl IsPlayerCtrlMotionXPending
-QueueMotionY__10PlayerCtrlUc QueuePlayerCtrlMotionY
-QueueMotionX__10PlayerCtrlUc QueuePlayerCtrlMotionX
+# part 4: SwimCtrl, the swim controller (include/swim_ctrl.hpp,
+# src/player/swim_ctrl*.cpp)
+_vt.8SwimCtrl gSwimCtrlVtable
+__8SwimCtrl InitSwimCtrl
+_._8SwimCtrl DestroySwimCtrl
+_8SwimCtrl.stateFuncs gSwimCtrlStateFuncs
+Update__8SwimCtrlP12MovingSprite UpdateSwimCtrl
+HandleEvent__8SwimCtrlP12MovingSpriteii SwimCtrlHandleEvent
+Attach__8SwimCtrlP12MovingSprite AttachSwimCtrl
+CheckTurn__8SwimCtrl CheckSwimCtrlTurn
+KillPlayer__8SwimCtrli SwimCtrlKillPlayer
+ApplyMotion__8SwimCtrl ApplySwimCtrlMotion
+StateIdle__8SwimCtrl SwimCtrlStateIdle
+StateSwim__8SwimCtrl SwimCtrlStateSwim
+StateStroke__8SwimCtrl SwimCtrlStateStroke
+StateSpin__8SwimCtrl SwimCtrlStateSpin
+StateTurn__8SwimCtrl SwimCtrlStateTurn
+StateSwimStart__8SwimCtrl SwimCtrlStateSwimStart
+StateStop__8SwimCtrl SwimCtrlStateStop
+StateDead__8SwimCtrl SwimCtrlStateDead
+StartMotionYFromSet__8SwimCtrlP6Playeri StartSwimCtrlMotionYFromSet
+StartMotionXFromSet__8SwimCtrlP6Playeri StartSwimCtrlMotionXFromSet
+SetState__8SwimCtrliiii SetSwimCtrlState
+SetDriftX__8SwimCtrliii SetPlayerSwimDriftX
+SetDriftY__8SwimCtrliii SetPlayerSwimDriftY
+GetDriftStep__8SwimCtrli GetPlayerSwimDriftStep
+ApplyTilt__8SwimCtrl ApplySwimCtrlTilt
+StartSwim__8SwimCtrl StartSwimCtrlSwim
+ClearUnk14__8SwimCtrl sub_801750C
+SetMotionYPending__8SwimCtrl SetSwimCtrlMotionYPending
+SetMotionXPending__8SwimCtrl SetSwimCtrlMotionXPending
+StartStroke__8SwimCtrl StartSwimCtrlStroke
+StartSpin__8SwimCtrl StartSwimCtrlSpin
+ApplySwimDrift__8SwimCtrl ApplySwimCtrlSwimDrift
+Reset__8SwimCtrl ResetSwimCtrl
+Restart__8SwimCtrl RestartSwimCtrl
+ClearMotionYPending__8SwimCtrl ClearSwimCtrlMotionYPending
+ClearMotionXPending__8SwimCtrl ClearSwimCtrlMotionXPending
+IsMotionYPending__8SwimCtrl IsSwimCtrlMotionYPending
+IsMotionXPending__8SwimCtrl IsSwimCtrlMotionXPending
+QueueMotionY__8SwimCtrlUc QueueSwimCtrlMotionY
+QueueMotionX__8SwimCtrlUc QueueSwimCtrlMotionX
 #
 # part 5: ActionCtrl (include/action_ctrl.hpp, src/player/action_ctrl*.cpp,
-# kill_player.cpp)
+# action_ctrl_kill.cpp)
 _vt.10ActionCtrl gActionCtrlVtable
 __10ActionCtrl InitActionCtrl
 _._10ActionCtrl DestroyActionCtrl
@@ -330,8 +331,8 @@ SetDest__16CortexTargetCtrlP12MovingSpriteii SetCortexTargetDest
 #
 # part 7a: the entity and sprite object base classes
 # (include/sprite_obj.hpp; src/objects/entity.cpp, the sprite graphics
-# managers' src/gfx/oam_buffer.cpp ... sprite_bank_set.cpp, src/objects/sprite.cpp,
-# sprite_obj.cpp, sprite_anim.cpp)
+# managers' src/gfx/oam_buffer.cpp ... sprite_bank_set.cpp, src/gfx/sprite_renderer.cpp,
+# src/objects/sprite.cpp, sprite_obj.cpp, sprite_anim.cpp, ui_sprite.cpp)
 # g++ copies a struct passed by value with memcpy, which in this ROM is
 # MemCopy32 (src/system/bios_util.cpp; GAX's `.set memcpy, MemCopy32`)
 memcpy MemCopy32
@@ -593,8 +594,7 @@ PlayerAnimWouldTouch__5Cratei PlayerAnimWouldTouchCrate
 Create__5CrateUsUsUsUsUc CreateCrate
 #
 # part 7b: MovingSprite and GroundSprite (include/sprite_obj.hpp;
-# src/objects/moving_sprite*.cpp, player_contact.cpp, step_probe.cpp,
-# ground_sprite*.cpp)
+# src/objects/moving_sprite*.cpp, ground_sprite*.cpp)
 _vt.12MovingSprite gMovingSpriteVtable
 __12MovingSprite InitMovingSprite
 _._12MovingSprite DestroyMovingSprite
@@ -652,8 +652,8 @@ ProbeTerrainAxes__12GroundSprite ProbeGroundSpriteTerrain
 ProbeFloor__12GroundSpritePC11hitbox_quadPUc ProbeGroundSpriteFloor
 Update__12GroundSprite UpdateGroundSprite
 AnchorHitbox__12GroundSprite AnchorGroundSpriteHitbox
-# part 7h: the pickups (include/pickups.hpp, src/pickups/*.cpp) and
-# ActionCtrl::Reset (wumpa.cpp; its entry is in part 5's block)
+# part 7h: the pickups (include/pickups.hpp, src/pickups/*.cpp); ActionCtrl::Reset,
+# converted with them, is in part 5's block (action_ctrl_event.cpp)
 _vt.9ExtraLife gExtraLifeVtable
 CheckPickup__9ExtraLife CheckExtraLifePickup
 PickUp__9ExtraLifeUc PickUpExtraLife
@@ -694,9 +694,7 @@ Reset__9Stopwatch ResetStopwatch
 _._9Stopwatch DestroyStopwatch
 __9Stopwatch InitStopwatch
 #
-# part 7f: the crate list (include/crate_list.hpp; src/crates/crate_list*.cpp,
-# crate_grid_*.cpp, crate_player_collide.cpp; the constructor in
-# src/objects/part_list.cpp)
+# part 7f: the crate list (include/crate_list.hpp; src/crates/crate_list*.cpp)
 __9CrateListi InitCrateList
 _._9CrateList DestroyCrateList
 Reset__9CrateList ResetCrateList
@@ -715,7 +713,7 @@ LinkActive__9CrateListP5Crate LinkCrateToActiveBucket
 Unlink__9CrateListP5Crate UnlinkCrateFromGrid
 #
 # part 7g: the crate's hits, breaks and explosions (include/crate.hpp,
-# src/crates/crate_break.cpp)
+# src/crates/crate_break.cpp, crate_switches.cpp, crate_states.cpp)
 ApplyCollision__5CrateiiiiG4vec2ibN27 ApplyCrateCollision
 ClearStackTouched__5Crate ClearCrateStackTouched
 MarkStackTouched__5CrateP4aabb MarkCrateStackTouched

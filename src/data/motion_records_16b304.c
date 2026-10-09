@@ -93,8 +93,8 @@ const u32 gActionCtrlMotionEntries[33][2] = {
     { 33, 0 },
 };
 
-/* Read by ApplyPlayerCtrlMotion, StartPlayerCtrlMotionYFromSet and StartPlayerCtrlMotionXFromSet (swim_ctrl.cpp). */
-const struct speed_ramp gPlayerCtrlMotionRecords[31] = {
+/* Read by ApplySwimCtrlMotion, StartSwimCtrlMotionYFromSet and StartSwimCtrlMotionXFromSet (swim_ctrl.cpp). */
+const struct speed_ramp gSwimCtrlMotionRecords[31] = {
     { 0, 0, 0 },
     { 192, 0, 192 },
     { 192, 2, 0 },
@@ -128,8 +128,8 @@ const struct speed_ramp gPlayerCtrlMotionRecords[31] = {
     { 1, 8, 0 },
 };
 
-/* gPlayerCtrlMotionSet's entries: indices into gPlayerCtrlMotionRecords. */
-const u32 gPlayerCtrlMotionEntries[38][2] = {
+/* gSwimCtrlMotionSet's entries: indices into gSwimCtrlMotionRecords. */
+const u32 gSwimCtrlMotionEntries[38][2] = {
     { 0, 0 },
     { 0, 8 },
     { 0, 9 },

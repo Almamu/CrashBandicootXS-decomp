@@ -74,24 +74,24 @@ SECTIONS
         build/crashbandicootxs/src/gfx/palette_cache.o(.text);
         build/crashbandicootxs/src/gfx/sprite_bank_set.o(.text);
         build/crashbandicootxs/src/objects/entity.o(.text);
-        build/crashbandicootxs/src/gfx/sprite_pieces.o(.text);
-        build/crashbandicootxs/src/gfx/affine_sprite_pieces.o(.text);
+        build/crashbandicootxs/src/gfx/sprite_renderer.o(.text);
         build/crashbandicootxs/src/objects/sprite.o(.text);
         build/crashbandicootxs/src/objects/sprite_obj.o(.text);
         build/crashbandicootxs/src/objects/sprite_anim.o(.text);
+        build/crashbandicootxs/src/objects/ui_sprite.o(.text);
         build/crashbandicootxs/src/objects/part_list_cull.o(.text);
         build/crashbandicootxs/src/objects/part_collide.o(.text);
         build/crashbandicootxs/src/objects/part_list.o(.text);
-        build/crashbandicootxs/src/crates/crate_grid_unlink.o(.text);
-        build/crashbandicootxs/src/crates/crate_grid_link.o(.text);
+        build/crashbandicootxs/src/crates/crate_list_unlink.o(.text);
+        build/crashbandicootxs/src/crates/crate_list_link_active.o(.text);
         build/crashbandicootxs/src/crates/crate_list_update.o(.text);
         build/crashbandicootxs/src/crates/crate_list_draw.o(.text);
-        build/crashbandicootxs/src/crates/crate_grid_collide.o(.text);
-        build/crashbandicootxs/src/crates/crate_player_collide.o(.text);
+        build/crashbandicootxs/src/crates/crate_list_collide.o(.text);
+        build/crashbandicootxs/src/crates/crate_list_collide_player.o(.text);
         build/crashbandicootxs/src/crates/crate_list_reset.o(.text);
         build/crashbandicootxs/src/crates/crate_list.o(.text);
-        build/crashbandicootxs/src/objects/step_probe.o(.text);
-        build/crashbandicootxs/src/objects/player_contact.o(.text);
+        build/crashbandicootxs/src/objects/moving_sprite_probe.o(.text);
+        build/crashbandicootxs/src/objects/moving_sprite_contact.o(.text);
         build/crashbandicootxs/src/objects/moving_sprite.o(.text);
         build/crashbandicootxs/src/objects/moving_sprite_collide.o(.text);
         build/crashbandicootxs/src/objects/ground_sprite_collide.o(.text);
@@ -111,10 +111,14 @@ SECTIONS
         build/crashbandicootxs/src/enemies/enemy_motion.o(.text);
         build/crashbandicootxs/src/enemies/enemy_attack.o(.text);
         build/crashbandicootxs/src/enemies/enemy_ctrl.o(.text);
+        build/crashbandicootxs/src/enemies/periodic_spawner.o(.text);
+        build/crashbandicootxs/src/enemies/knocked_enemy_ctrl.o(.text);
         build/crashbandicootxs/src/objects/effect_ctrl.o(.text);
         build/crashbandicootxs/src/crates/crate_touch.o(.text);
         build/crashbandicootxs/src/crates/crate_hit.o(.text);
         build/crashbandicootxs/src/crates/crate_break.o(.text);
+        build/crashbandicootxs/src/crates/crate_switches.o(.text);
+        build/crashbandicootxs/src/crates/crate_states.o(.text);
         build/crashbandicootxs/src/crates/crate_reset.o(.text);
         build/crashbandicootxs/src/crates/crate_create.o(.text);
         build/crashbandicootxs/src/crates/crate_draw.o(.text);
@@ -122,13 +126,14 @@ SECTIONS
         build/crashbandicootxs/src/crates/crate.o(.text);
         build/crashbandicootxs/src/crates/crate_time_trial.o(.text);
         build/crashbandicootxs/src/crates/crate_stack.o(.text);
-        build/crashbandicootxs/src/crates/slot_crate.o(.text);
+        build/crashbandicootxs/src/crates/crate_fields.o(.text);
         build/crashbandicootxs/src/objects/collision_queue.o(.text);
         build/crashbandicootxs/src/pickups/extra_life.o(.text);
         build/crashbandicootxs/src/pickups/wumpa_update.o(.text);
         build/crashbandicootxs/src/pickups/wumpa.o(.text);
+        build/crashbandicootxs/src/pickups/stopwatch.o(.text);
         build/crashbandicootxs/src/player/action_ctrl_event.o(.text);
-        build/crashbandicootxs/src/player/kill_player.o(.text);
+        build/crashbandicootxs/src/player/action_ctrl_kill.o(.text);
         build/crashbandicootxs/src/player/action_ctrl_update.o(.text);
         build/crashbandicootxs/src/player/action_ctrl_left_ground.o(.text);
         build/crashbandicootxs/src/player/action_ctrl_idle.o(.text);
@@ -143,6 +148,7 @@ SECTIONS
         build/crashbandicootxs/src/player/swim_ctrl.o(.text);
         build/crashbandicootxs/src/player/input_ctrl.o(.text);
         build/crashbandicootxs/src/player/input_ctrl_queue.o(.text);
+        build/crashbandicootxs/src/bosses/boss_ctrl.o(.text);
         build/crashbandicootxs/src/bosses/mega_mix_update.o(.text);
         build/crashbandicootxs/src/bosses/mega_mix.o(.text);
         build/crashbandicootxs/src/bosses/tiny.o(.text);
@@ -153,6 +159,7 @@ SECTIONS
         build/crashbandicootxs/src/objects/platform_contact.o(.text);
         build/crashbandicootxs/src/objects/platform_collide.o(.text);
         build/crashbandicootxs/src/objects/platform.o(.text);
+        build/crashbandicootxs/src/objects/platform_mover.o(.text);
         build/crashbandicootxs/src/objects/camera_lead.o(.text);
         build/crashbandicootxs/src/objects/launch_pad.o(.text);
         build/crashbandicootxs/src/menus/level_select.o(.text);
@@ -431,23 +438,23 @@ SECTIONS
          * See docs/cplusplus.md, "Emitting the vtables". */
         build/crashbandicootxs/src/objects/entity.o(.gnu.linkonce.d._vt.6Entity); /* gEntityVtable */
         build/crashbandicootxs/src/objects/sprite.o(.gnu.linkonce.d._vt.6Sprite); /* gSpriteObjVtable */
-        build/crashbandicootxs/src/objects/sprite_anim.o(.gnu.linkonce.d._vt.8UiSprite); /* gUiSpriteObjVtable */
+        build/crashbandicootxs/src/objects/ui_sprite.o(.gnu.linkonce.d._vt.8UiSprite); /* gUiSpriteObjVtable */
         build/crashbandicootxs/src/objects/moving_sprite_collide.o(.gnu.linkonce.d._vt.12MovingSprite); /* gMovingSpriteVtable */
         build/crashbandicootxs/src/objects/ground_sprite_collide.o(.gnu.linkonce.d._vt.12GroundSprite); /* gGroundSpriteVtable */
         build/crashbandicootxs/src/player/player_collide.o(.gnu.linkonce.d._vt.6Player); /* gPlayerVtable */
         build/crashbandicootxs/src/system/bios_util.o(.gnu.linkonce.d._vt.4Ctrl); /* gCtrlVtable */
         build/crashbandicootxs/src/enemies/enemy_ctrl_update.o(.gnu.linkonce.d._vt.9EnemyCtrl); /* gEnemyCtrlVtable */
-        build/crashbandicootxs/src/enemies/enemy_ctrl.o(.gnu.linkonce.d._vt.15PeriodicSpawner); /* gPeriodicSpawnerVtable */
-        build/crashbandicootxs/src/enemies/enemy_ctrl.o(.gnu.linkonce.d._vt.16KnockedEnemyCtrl); /* gKnockedEnemyCtrlVtable */
+        build/crashbandicootxs/src/enemies/periodic_spawner.o(.gnu.linkonce.d._vt.15PeriodicSpawner); /* gPeriodicSpawnerVtable */
+        build/crashbandicootxs/src/enemies/knocked_enemy_ctrl.o(.gnu.linkonce.d._vt.16KnockedEnemyCtrl); /* gKnockedEnemyCtrlVtable */
         build/crashbandicootxs/src/objects/effect_ctrl.o(.gnu.linkonce.d._vt.10EffectCtrl); /* gEffectCtrlVtable */
         build/crashbandicootxs/src/crates/crate_update.o(.gnu.linkonce.d._vt.5Crate); /* gCrateVtable */
         build/crashbandicootxs/src/pickups/extra_life.o(.gnu.linkonce.d._vt.9ExtraLife); /* gExtraLifeVtable */
         build/crashbandicootxs/src/pickups/wumpa.o(.gnu.linkonce.d._vt.5Wumpa); /* gWumpaVtable */
-        build/crashbandicootxs/src/pickups/wumpa.o(.gnu.linkonce.d._vt.9Stopwatch); /* gStopwatchVtable */
+        build/crashbandicootxs/src/pickups/stopwatch.o(.gnu.linkonce.d._vt.9Stopwatch); /* gStopwatchVtable */
         build/crashbandicootxs/src/player/action_ctrl_update.o(.gnu.linkonce.d._vt.10ActionCtrl); /* gActionCtrlVtable */
-        build/crashbandicootxs/src/player/swim_ctrl.o(.gnu.linkonce.d._vt.10PlayerCtrl); /* gPlayerCtrlVtable */
+        build/crashbandicootxs/src/player/swim_ctrl.o(.gnu.linkonce.d._vt.8SwimCtrl); /* gSwimCtrlVtable */
         build/crashbandicootxs/src/player/input_ctrl.o(.gnu.linkonce.d._vt.9InputCtrl); /* gInputCtrlVtable */
-        build/crashbandicootxs/src/player/input_ctrl_queue.o(.gnu.linkonce.d._vt.8BossCtrl); /* gBossCtrlVtable */
+        build/crashbandicootxs/src/bosses/boss_ctrl.o(.gnu.linkonce.d._vt.8BossCtrl); /* gBossCtrlVtable */
         build/crashbandicootxs/src/bosses/mega_mix_update.o(.gnu.linkonce.d._vt.11MegaMixCtrl); /* gMegaMixCtrlVtable */
         build/crashbandicootxs/src/bosses/tiny.o(.gnu.linkonce.d._vt.17StompedHopPadCtrl); /* gStompedHopPadVtable */
         build/crashbandicootxs/src/bosses/tiny.o(.gnu.linkonce.d._vt.15OneShotAnimCtrl); /* gOneShotAnimCtrlVtable */
@@ -464,7 +471,7 @@ SECTIONS
         build/crashbandicootxs/src/bosses/dingodile.o(.gnu.linkonce.d._vt.19DingodileShieldCtrl); /* gDingodileShieldVtable */
         build/crashbandicootxs/src/bosses/dingodile.o(.gnu.linkonce.d._vt.13DingodileCtrl); /* gDingodileVtable */
         build/crashbandicootxs/src/objects/platform_contact.o(.gnu.linkonce.d._vt.8Platform); /* gPlatformVtable */
-        build/crashbandicootxs/src/objects/platform.o(.gnu.linkonce.d._vt.13PlatformMover); /* gPlatformMoverVtable */
+        build/crashbandicootxs/src/objects/platform_mover.o(.gnu.linkonce.d._vt.13PlatformMover); /* gPlatformMoverVtable */
         build/crashbandicootxs/src/objects/camera_lead.o(.gnu.linkonce.d._vt.10CameraLead); /* gCameraLeadVtable */
         build/crashbandicootxs/src/objects/launch_pad.o(.gnu.linkonce.d._vt.9LaunchPad); /* gLaunchPadVtable */
         build/crashbandicootxs/src/menus/level_select_entry.o(.gnu.linkonce.d._vt.16LevelSelectEntry); /* gLevelSelectEntryVtable */

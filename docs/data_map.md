@@ -33,7 +33,7 @@ label, with `regions` sub-lists for the composite blobs.
   checks out (the chained tag-0 assets, the 2,429 frames of the sprite
   banks, the 41 level descriptors).
 - **Structure walkers** for the big blobs, written from the matched C:
-  the sprite-bank walker (`GetSpriteTileBase`/`GetSpriteFrame`/`affine_sprite_pieces.cpp`),
+  the sprite-bank walker (`GetSpriteTileBase`/`GetSpriteFrame`/`sprite_renderer.cpp`),
   the level-descriptor walker (`level_layers.c`, `bg_layer.c`,
   `tile_cache_cell.cpp`), the category-descriptor fields (`cell_anim.cpp`,
   `bg_picture.cpp`, `include/actor_anim.h`), and a `LoadTaggedAsset`
@@ -71,7 +71,7 @@ the appendix.
 | `0824B638`-`08270F08` | 153,808 | per-room level data, 33 rooms | `level_layers.c`, `tile_cache_cell.cpp`, `bg_streamer.cpp`, `room_entities.cpp` | high | **done** (C, [levels.md](./levels.md)) |
 | `08270F08`-`082B91D0` | 295,624 | level tile sets 4-5 | as tile sets 1-3 | high | **done** (grit) |
 | `082B91D0`-`082BF120` | 24,400 | per-room level data, 8 rooms | as block 1 | high | **done** (C) |
-| `082BF120`-`084A4660` | 1,987,904 | sprite tile pool for the 56 sprite banks | `affine_sprite_pieces.cpp`/`sprite_pieces.cpp` (`GetSpriteTileBase` + frame offset) | high | **done** (grit) |
+| `082BF120`-`084A4660` | 1,987,904 | sprite tile pool for the 56 sprite banks | `sprite_renderer.cpp` (`GetSpriteTileBase` + frame offset) | high | **done** (grit) |
 | `084A4660`-`084A5600` | 4,000 | 125 OBJ palettes (`gObjPalettes`) | `InitLevelState`/`RunPauseMenu` palette cache, `GetPaletteSlot` | high | **done** (grit) |
 | `084A5600`-`084C0006` | 109,062 | sprite-bank table ("master asset table"): header, 56 banks, 2,429 frames | `RunPauseMenu`, `InitLevelState`, every `**gSpriteBankSet` user | high | **converted** (C) |
 | `084C0006`-`0855BCB4` | 638,126 | GAX2 sound-effect data set: 88 instruments, 87 8-bit samples, sample table, the SFX voice handler type | `PlaySfx`/`GAX_fx_ex` voices via `GaxSongHeader.sfxTypes` (`StartSong`) | high | **converted** (`gax_audio.py --sfx`) |
@@ -302,8 +302,8 @@ two room-data blocks (`0824B638`, `082B91D0`) are typed C
 `tools/levels.py` from `data/levels/` ([levels.md](./levels.md)).
 
 **2. Sprite banks.** The `gSpriteBankTable` header's second word is
-`0x082BF120`, and `GetSpriteTileBase` returns it. `affine_sprite_pieces.cpp` and
-`sprite_pieces.cpp` upload `GetSpriteTileBase() + (frame.packed & 0xFFFFFF)`.
+`0x082BF120`, and `GetSpriteTileBase` returns it. `sprite_renderer.cpp`'s
+DrawPieces and DrawAffinePieces upload `GetSpriteTileBase() + (frame.packed & 0xFFFFFF)`.
 
 | Range | Size | Content | Evidence | Effort |
 |---|---:|---|---|---|
@@ -333,7 +333,7 @@ see [levels.md](./levels.md).
 This is the "master asset table" of docs/rom_map.md. Its structure,
 from the matched readers (`RunPauseMenu` in `pause_menu.cpp`, `GetSpriteTileBase`/
 `GetSpriteFrame`/`GetSpriteAnimPaletteSlot`/`GetSpriteAnimPaletteId` in `sprite_obj.c`,
-`affine_sprite_pieces.cpp`, and the `**gSpriteBankSet + N` users):
+`sprite_renderer.cpp`, and the `**gSpriteBankSet + N` users):
 
 ```
 0x084A5600 header (0x10):
@@ -665,7 +665,7 @@ vtable shapes).
 | `0816B2F8` | 0x8 | all zero (zero-initialised table). **Converted** (`src/data/obj_sizes_16b2e0.c`) | `QueueCratePlayerCollision`, `GetSpriteAttackBox`, `GetSpriteBodyBox` +3 | high | done |
 | `0816B300` | 0x4 | all zero (zero-initialised table). **Converted** (`src/data/obj_sizes_16b2e0.c`) | `GetSpriteFrameAnchor`, `CollidePlayer`, `ActionCtrlHandleEvent` +1 | high | done |
 | `0816B304` | 0x318 | 44 {s32, s32, s32} motion records + 33 {a, b} entry pairs (`gActionCtrlMotionEntries`, gActionCtrlMotionSet's entries). **Converted** (`src/data/motion_records_16b304.c`) | `StartCtrlTargetMotionYFromSet`, `StartCtrlTargetMotionXFromSet`, `ApplyActionCtrlMotion` | high | done |
-| `0816B61C` | 0x2A4 | 31 {s32, s32, s32} motion records + 38 {a, b} entry pairs (`gPlayerCtrlMotionEntries`, gPlayerCtrlMotionSet's entries). **Converted** (`src/data/motion_records_16b304.c`) | `ApplyPlayerCtrlMotion`, `StartPlayerCtrlMotionYFromSet`, `StartPlayerCtrlMotionXFromSet` | high | done |
+| `0816B61C` | 0x2A4 | 31 {s32, s32, s32} motion records + 38 {a, b} entry pairs (`gSwimCtrlMotionEntries`, gSwimCtrlMotionSet's entries). **Converted** (`src/data/motion_records_16b304.c`) | `ApplySwimCtrlMotion`, `StartSwimCtrlMotionYFromSet`, `StartSwimCtrlMotionXFromSet` | high | done |
 | `0816B8C0` | 0x6C | table (element layout: see consumers). **Converted** (`src/data/motion_records_16b304.c`) | `ApplyInputCtrlMotion` | medium | done |
 | `0816B92C` | 0x8 | pointer table (1 data pointers) | `PlayRoom` | high | easy |
 | `0816B934` | 0x8 | pointer table (1 data pointers) | `PlayRoom` | high | easy |
@@ -697,9 +697,9 @@ vtable shapes).
 | `0816BF08` | 0xC | table of s32 (`s32` x 3). **Converted** (`src/data/object_tables_16bb6c.c`) | `UpdateExtraLifeHop` | high | done |
 | `0816BF14` | 0xC | table of struct three_words. **Converted** (`src/data/object_tables_16bb6c.c`) | `UpdateWumpaHop` | high | done |
 | `0816BF20` | 0x150 | pointer-to-member dispatch table: 42 x {0xFFFF0000, fn} (`struct act_pmf` x 42) | `UpdateActionCtrl` | high | easy |
-| `0816C070` | 0x20 | pointer table (8 data pointers) (`struct level_anim*` x 8) | `UpdatePlayerCtrl`, `PlayerCtrlStateTurn`, `PlayerCtrlStateStop` +2 | high | easy |
-| `0816C090` | 0x1C0 | `struct speed_table` (8 s32, `gPlayerCtrlTurnSpeeds`: speedX per frame of the swim turn) + `struct level_anim[8][13]` (`gPlayerCtrlModeLevelAnims`, the rows gPlayerCtrlModeAnimRows points at). **Converted** (`src/data/speed_table_16c090.c`) | `StartPlayerCtrlStroke` | high | done |
-| `0816C250` | 0x40 | function-pointer / pointer-to-member table (8 code pointers) | `UpdatePlayerCtrl` | high | easy |
+| `0816C070` | 0x20 | pointer table (8 data pointers) (`struct level_anim*` x 8) | `UpdateSwimCtrl`, `SwimCtrlStateTurn`, `SwimCtrlStateStop` +2 | high | easy |
+| `0816C090` | 0x1C0 | `struct speed_table` (8 s32, `gSwimCtrlTurnSpeeds`: speedX per frame of the swim turn) + `struct level_anim[8][13]` (`gSwimCtrlModeLevelAnims`, the rows gSwimCtrlModeAnimRows points at). **Converted** (`src/data/speed_table_16c090.c`) | `StartSwimCtrlStroke` | high | done |
+| `0816C250` | 0x40 | function-pointer / pointer-to-member table (8 code pointers) | `UpdateSwimCtrl` | high | easy |
 | `0816C290` | 0x40 | table of struct pmf; 4 word(s) look like ROM pointers | `UpdateInputCtrl` | high | easy |
 | `0816C2D0` | 0x8 | pointer table (1 data pointers) | `ResetMegaMixCtrl` | high | easy |
 | `0816C2D8` | 0x30 | table (element layout: see consumers). **Converted** (`src/data/actor_tables_16c2d8.c`) | `SetMegaMixMotionYFromSet`, `SetMegaMixMotionXFromSet`, `StartMegaMixMotionYFromSet` +1 | medium | done |
@@ -965,7 +965,7 @@ vtable shapes).
 | `087E414C` | 0x70 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateWumpa`, `DestroyWumpa`, `InitWumpa` | high | easy |
 | `087E41BC` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateStopwatch`, `DestroyStopwatch`, `InitStopwatch` | high | easy |
 | `087E4224` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyActionCtrl`, `InitActionCtrl` | high | easy |
-| `087E428C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyPlayerCtrl`, `InitPlayerCtrl` | high | easy |
+| `087E428C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroySwimCtrl`, `InitSwimCtrl` | high | easy |
 | `087E42F4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyInputCtrl`, `CreateInputCtrl` | high | easy |
 | `087E435C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyBossCtrl`, `CreateBossCtrl` | high | easy |
 | `087E43C4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyMegaMixCtrl`, `CreateMegaMixCtrl` | high | easy |

@@ -12,7 +12,7 @@
  * (docs/headers_plan.md).
  *
  * The crate list (`CrateList`, include/crate_list.hpp) is set up by
- * InitCrateList, which src/objects/part_list.cpp holds for ROM order. */
+ * InitCrateList (src/crates/crate_list_unlink.cpp). */
 
 #include "core.h"
 #include "math_util.h"
@@ -38,7 +38,7 @@ extern const u8 gAttackKindBreakLimited[8];
 /* Set when the crate list changes (sym_iwram.txt). */
 extern u8 gCrateListChanged;
 
-/* src/crates/crate_break.cpp */
+/* src/crates/crate_switches.cpp */
 extern void UpdateCrates(void);
 extern void DetonateNitroCrates(void);
 extern void BreakCratesInArea(s32 x, s32 y, s32 dist, s32 height);

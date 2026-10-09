@@ -1,23 +1,22 @@
-#ifndef GUARD_PLAYER_CTRL_HPP
-#define GUARD_PLAYER_CTRL_HPP
+#ifndef GUARD_SWIM_CTRL_HPP
+#define GUARD_SWIM_CTRL_HPP
 
 /* The swim controller as C++ (#664, docs/cplusplus.md):
- * src/player/swim_ctrl.cpp, swim_ctrl_drift.cpp and swim_ctrl_stroke.cpp,
- * and the six motion-queue accessors at the top of input_ctrl.cpp.
+ * src/player/swim_ctrl.cpp, swim_ctrl_drift.cpp and swim_ctrl_stroke.cpp.
  *
- * No `#pragma interface`: g++ emits its vtable, gPlayerCtrlVtable, in
+ * No `#pragma interface`: g++ emits its vtable, gSwimCtrlVtable, in
  * swim_ctrl.cpp (see ctrl.hpp). */
 
 #include "ctrl.hpp"
 #include "player.hpp"
 
-/* The swim controller (gPlayerCtrlVtable; 0x30 bytes): the diving Crash's controller in the room-kind-1
- * (underwater) rooms, where play_room.cpp creates it (`new PlayerCtrl`,
- * InitPlayerCtrl(OperatorNew(0x30)) in its C). See swim_ctrl.cpp for the
- * states. Reset and Restart are in src/player/action_ctrl.cpp
- * (ResetPlayerCtrl, RestartPlayerCtrl), which the ROM puts with the action
- * controller's code. */
-class PlayerCtrl : public Ctrl
+/* The swim controller (gSwimCtrlVtable; 0x30 bytes): the diving Crash's controller in the room-kind-1
+ * (underwater) rooms, where play_room.cpp creates it (`new SwimCtrl`,
+ * InitSwimCtrl(OperatorNew(0x30)) in its C). See swim_ctrl.cpp for the
+ * states. Reset and Restart (ResetSwimCtrl, RestartSwimCtrl) start
+ * src/player/swim_ctrl_stroke.cpp, right after the action controller's
+ * code in the ROM. */
+class SwimCtrl : public Ctrl
 {
 public:
     Player *target; // 0x10 - the player (gPlayer)
@@ -25,9 +24,9 @@ public:
     s32 timer;      // 0x18
     s32 timerMax;   // 0x1C
     u8 repeat;      // 0x20 - D-pad auto-repeat countdown
-    // 0x21 - swim direction, 0 (up) .. 6 (level) .. 12 (down); column of gPlayerCtrlModeAnimRows
+    // 0x21 - swim direction, 0 (up) .. 6 (level) .. 12 (down); column of gSwimCtrlModeAnimRows
     u8 tilt;
-    // 0x22 - row of gPlayerCtrlModeAnimRows (0 idle, 1 swim, 2 stroke, 3 spin, 4-7 turn)
+    // 0x22 - row of gSwimCtrlModeAnimRows (0 idle, 1 swim, 2 stroke, 3 spin, 4-7 turn)
     u8 mode;
     u8 spinCooldown; // 0x23 - frames until StartSpin is allowed again (set to 12)
     u8 motionX;      // 0x24 - queued X motion entry (animSet->entries[][0])
@@ -41,18 +40,18 @@ public:
     u8 motionXPending; // 0x2C - motionX is queued
     u8 motionYPending; // 0x2D - motionY is queued
 
-    /* The state methods, indexed by `state` (gPlayerCtrlStateFuncs,
+    /* The state methods, indexed by `state` (gSwimCtrlStateFuncs,
      * src/data/player_pmf_16c250.cpp): 0 StateIdle, 1 StateSwim,
      * 2 StateStroke, 3 StateSpin, 4 StateTurn, 5 StateStop,
      * 6 StateSwimStart, 7 StateDead. */
-    typedef void (PlayerCtrl::*StateFunc)();
+    typedef void (SwimCtrl::*StateFunc)();
     static const StateFunc stateFuncs[8];
 
-    PlayerCtrl();                                                       // InitPlayerCtrl
+    SwimCtrl();                                                         // InitSwimCtrl
     virtual void Update(MovingSprite *part);                            // 1
     virtual void HandleEvent(MovingSprite *sender, s32 event, s32 arg); // 2
     virtual void Attach(MovingSprite *owner);                           // 3
-    virtual ~PlayerCtrl();                                              // 9 DestroyPlayerCtrl
+    virtual ~SwimCtrl();                                                // 9 DestroySwimCtrl
     void CheckTurn();
     void KillPlayer(s32 anim);
     void ApplyMotion();
@@ -75,8 +74,8 @@ public:
     void StartStroke();
     void StartSpin();
     void ApplySwimDrift();
-    void Reset();   // ResetPlayerCtrl, action_ctrl.cpp
-    void Restart(); // RestartPlayerCtrl, action_ctrl.cpp
+    void Reset();   // ResetSwimCtrl, swim_ctrl_stroke.cpp
+    void Restart(); // RestartSwimCtrl, swim_ctrl_stroke.cpp
     void ClearMotionYPending();
     void ClearMotionXPending();
     u8 IsMotionYPending();
@@ -91,6 +90,6 @@ public:
     static s32 GetDriftStep(s32 v);
 };
 
-COMPILE_TIME_ASSERT(player_ctrl_hpp, sizeof(PlayerCtrl) == 0x30);
+COMPILE_TIME_ASSERT(swim_ctrl_hpp, sizeof(SwimCtrl) == 0x30);
 
-#endif /* !GUARD_PLAYER_CTRL_HPP */
+#endif /* !GUARD_SWIM_CTRL_HPP */

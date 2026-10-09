@@ -6,7 +6,8 @@
  * to, and the periodic spawner (src/enemies/).
  *
  * No `#pragma interface`: g++ emits their vtables (EnemyCtrl's in
- * enemy_ctrl_update.cpp, the others in enemy_ctrl.cpp; see ctrl.hpp);
+ * enemy_ctrl_update.cpp, the others in periodic_spawner.cpp and
+ * knocked_enemy_ctrl.cpp; see ctrl.hpp);
  * cxx_symbols.txt maps their mangled names onto the C names. */
 
 #include "ctrl.hpp"
@@ -104,7 +105,8 @@ public:
 
 COMPILE_TIME_ASSERT(enemy_ctrl_hpp, sizeof(EnemyCtrl) == 0x8C);
 
-/* The knocked enemy's controller (gKnockedEnemyCtrlVtable): HitEnemy
+/* The knocked enemy's controller (gKnockedEnemyCtrlVtable,
+ * src/enemies/knocked_enemy_ctrl.cpp): HitEnemy
  * hands a spun or slid enemy's part to one, and it marks the part gone
  * once it has left the screen. */
 class KnockedEnemyCtrl : public Ctrl
@@ -118,7 +120,8 @@ public:
 
 COMPILE_TIME_ASSERT(enemy_ctrl_hpp, sizeof(KnockedEnemyCtrl) == 0x10);
 
-/* A periodic trigger entity (gPeriodicSpawnerVtable, 0x28 bytes): calls `callback` at its own position
+/* A periodic trigger entity (gPeriodicSpawnerVtable, 0x28 bytes;
+ * src/enemies/periodic_spawner.cpp): calls `callback` at its own position
  * once every `period` frames while near the camera. SpawnSealSpawner
  * (src/level/spawn_objects.cpp) makes one with SpawnSeal. */
 class PeriodicSpawner : public Entity

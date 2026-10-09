@@ -6,7 +6,7 @@
  * +0x68, `handleEvent`: this, sender, event, arg). PlayerHandleEvent is the
  * player's; it handles some itself and forwards the rest to its
  * controller's event slot (NOTIFY: ActionCtrlHandleEvent on foot,
- * PlayerCtrlHandleEvent swimming, InputCtrlHandleEvent). An enemy's is
+ * SwimCtrlHandleEvent swimming, InputCtrlHandleEvent). An enemy's is
  * HitEnemy.
  *
  * A touched object sends its own `kind`: CollidePartWithPlayer,
@@ -17,7 +17,7 @@
  *
  * Hits 1-10: PlayerHandleEvent takes a mask away (then sends
  * EVENT_MASK_HIT) or, without one, kills the player; the controller picks
- * the death animation (KillPlayer: ActionCtrlHandleEvent, PlayerCtrlKillPlayer).
+ * the death animation (KillPlayer: ActionCtrlHandleEvent, SwimCtrlKillPlayer).
  * Hits 5, 7 and 8 keep their numbers: 5 comes only from the pufferfish
  * (SpawnPufferfish) and 7 only from the frog (SpawnFrog), 8 from nothing
  * found, and none of the three says what kind of hit it is.

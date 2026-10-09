@@ -7,8 +7,8 @@ extern "C" {
 #include "globals.h"
 }
 
-/* The time trial's crate conversion and the Aku Aku crate (#664,
- * include/crate.hpp). */
+/* The time trial's crate conversion (#664, include/crate.hpp). The Aku
+ * Aku crate, which the ROM puts right after it, starts crate_stack.cpp. */
 
 /* In a time trial, each crate of the crate list (class id 3) with a
  * time-trial kind becomes that kind, through SolidifyOutlineCrate. */
@@ -31,18 +31,5 @@ void ConvertCratesForTimeTrial(void)
             }
             i++;
         } while (i < gCrateList->count);
-    }
-}
-
-/* The Aku Aku crate: unless the player is passing through (the
- * `collides` flag clear), it gains a mask (EVENT_MASK_GAIN) with its
- * sound. */
-void Crate::OpenAkuAku()
-{
-    Player *p = gPlayer;
-
-    if (p->f.flags >> 7) {
-        p->HandleEvent(0, EVENT_MASK_GAIN, 0);
-        gAudioContext->PlaySfx(SFX_AKU_AKU_GAIN, 0x100);
     }
 }

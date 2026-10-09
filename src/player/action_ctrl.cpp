@@ -1,5 +1,4 @@
 #include "action_ctrl.hpp"
-#include "player_ctrl.hpp"
 #include "sprite_obj.hpp"
 #include "player.hpp"
 #include "audio.hpp"
@@ -14,10 +13,8 @@ extern "C" {
  * the constructor and destructor, and the motion queue accessors. The C
  * wrote out the virtual calls (`_call_via_r2`/`_call_via_r3` through the
  * method table); here they are `SetMode(...)` and `SetTargetAnim(...)`.
- *
- * The last two functions are the swim controller's (PlayerCtrl,
- * include/player_ctrl.hpp; swim_ctrl.cpp): its field reset and restart,
- * which the ROM puts here, with the action controller's code. */
+ * The swim controller's Reset and Restart, which the ROM puts right after
+ * them, start swim_ctrl_stroke.cpp. */
 
 /* gActionCtrlStateTable's slot 6 (and StateNop2 slot 2): empty handlers
  * of states nothing sets. */
@@ -197,42 +194,4 @@ void ActionCtrl::QueueMotionX(s32 entry)
 u8 ActionCtrl::GetPrevState()
 {
     return prevState;
-}
-
-/* PlayerCtrl::Reset: everything cleared, with both motion entries 0
- * pending and the level tilt (6); also the player's `bounce`. */
-void PlayerCtrl::Reset()
-{
-    unk_26 = 0;
-    state = 0;
-    motionX = 0;
-    motionY = 0;
-    motionXPending = 1;
-    motionYPending = 1;
-    unk_14 = 0;
-    target = 0;
-    mode = 0;
-    spinCooldown = 0;
-    idleTimer = 0;
-    repeat = 0;
-    tilt = 6;
-    timer = 0;
-    timerMax = 0;
-    gPlayer->bounce = 0;
-}
-
-/* PlayerCtrl::Restart: back to state 0 (StateIdle), level, with both
- * motion entries 0 pending. */
-void PlayerCtrl::Restart()
-{
-    SetState(0, 0, 0, 0);
-    idleTimer = 0;
-    repeat = 0;
-    tilt = 6;
-    mode = 0;
-    gPlayer->bounce = 0;
-    motionXPending = 1;
-    motionX = 0;
-    motionYPending = 1;
-    motionY = 0;
 }
