@@ -570,7 +570,12 @@ void DingodileShieldCtrl::Update(MovingSprite *part)
      * agbcp): the ROM leaves r4-r6 free and keeps the long-lived values
      * in r7-r10 (`this`, `&b`, `part`, &gPlayer). Holding r5 and r6
      * across the box builders makes the allocator skip them; without
-     * the holds it starts at r5. */
+     * the holds it starts at r5. #662 round 3: the ROM pushes r6 and
+     * never uses it, and the greg dumps of the plain function show no
+     * spill of r4-r6 (reload never takes them away from the long-lived
+     * pseudos), so the ROM's allocation had pseudos in r5/r6 over the
+     * box builders whose code is gone from the output; nothing tried
+     * gives them. No -f flag or pair of flags helps. */
     MATCH_HOLD_REG(s32, hr5, r5);
     MATCH_HOLD_REG(s32, hr6, r6);
 
@@ -596,7 +601,10 @@ void DingodileShieldCtrl::Update(MovingSprite *part)
              * load (a constant-init, the same under agbcp). #662 round 2:
              * `acc` initialized at the top of the function keeps the
              * chain unfolded, but builds it in r0/r1 (and without the
-             * holds above moves everything else). */
+             * holds above moves everything else). #662 round 3: with
+             * `acc = BLDCNT_TGT1_OBJ` cse1 knows each `|=` operand and
+             * folds the whole chain into one constant, so the chain needs
+             * a starting value cse can't see. */
             MATCH_HOLD_REG(u32, acc, r5);
             u32 w;
 

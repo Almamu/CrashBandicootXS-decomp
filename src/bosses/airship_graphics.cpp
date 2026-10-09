@@ -28,14 +28,26 @@ extern "C" {
  * docs/matching/archive/near-miss-polish-3.md). */
 
 /* The height is re-read after the row-pointer store (the ROM's `ldm
- * r1!`), the second loop has its own counter, its header is written in
- * the ROM's order, and the 0xf mask comes from an `asm` so that it is
- * the AND's first operand (the ROM copies the mask, not the byte).
- * Matches under both compilers. #662 round 2: a `u32 m = 0xf` set in the
- * row loop keeps the mask first, but as a variable it is allocated ip
- * instead of being hoisted into r6; set in the pixel loop, or written
- * `0xf & b`, or passed to an inline as a parameter, it folds back to
- * `b & 0xf` and the byte is copied. */
+ * r1!`) because gAirshipMapFrames is a `u32` table (AnimPart's frame
+ * offsets): the store has the int alias set, which may alias heights[],
+ * so cse doesn't reuse the stored value (#662 round 3; as `u8 *` it did,
+ * and an asm forced the re-read). The second loop has its own counter,
+ * its header is written in the ROM's order, and the 0xf mask comes from
+ * an `asm` so that it is the AND's first operand (the ROM copies the
+ * mask, not the byte). Matches under both compilers.
+ *
+ * Why the mask needs it (#662 round 3, from the dumps): which operand
+ * regmove copies into the result is the AND's first one, and cse1's
+ * fold_rtx puts an operand whose value it knows to be constant second.
+ * So a mask set anywhere cse can see it (in the pixel loop, `0xf & b`,
+ * an inline's parameter) comes out `b & m` and the byte is copied. Set
+ * before the pixel loop, where cse doesn't see it, the order stays, but
+ * loop.c then hoists the set out of the row loop as well (into ip, where
+ * the ROM sets it in the pixel loop's preheader); with the row loop as a
+ * `goto` loop the set stays put, but the row loop then has no loop notes
+ * and the reference weighting puts `stride` and `row_i` in each other's
+ * homes (r10 and the stack; tried on the hovercraft twin). No -f flag,
+ * alone or in pairs, gets the plain `b & 0xf` there. */
 static inline u32 MeterPx(u32 v)
 {
     u32 r = 0;
@@ -53,7 +65,7 @@ void ConvertAirshipTiles(void)
     s32 k;
     s32 row_i;
     u32 *dst;
-    u8 **rows = gAirshipMapFrames;
+    u32 *rows = gAirshipMapFrames;
     u32 m;
 
     stride = (u32)(gAirshipMapCols * gAirshipMapRows + 1) >> 1 << 2;
@@ -62,9 +74,7 @@ void ConvertAirshipTiles(void)
         heights[k] = x;
         sum += x;
         off += 4;
-        rows[k] = (u8 *)gAirshipPalette + off;
-        /* forces the height to be re-read (the ROM's `ldm r1!`) */
-        MATCH_KEEP_MEM(heights[k]);
+        rows[k] = (u32)((u8 *)gAirshipPalette + off);
         off += stride;
         off += heights[k] << 5;
     }
@@ -78,7 +88,7 @@ void ConvertAirshipTiles(void)
         s32 j;
         u32 *d;
 
-        row = gAirshipMapFrames[row_i];
+        row = (u8 *)gAirshipMapFrames[row_i];
         hp = &heights[row_i];
         d = dst;
         src = row + stride;

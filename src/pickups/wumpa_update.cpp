@@ -7,7 +7,6 @@
 
 extern "C" {
 #include "math_util.h"
-#include "match.h"
 #include "util.h"
 #include "gfx.h"
 #include "level.h"
@@ -15,7 +14,8 @@ extern "C" {
 }
 
 /* The wumpa's pick-up, update and spawn (#664, include/pickups.hpp). An
- * old_agbcp object (OLD_AGBCC_OBJS). */
+ * old_agbcp object (OLD_AGBCC_OBJS), built with -fno-cse-skip-blocks
+ * (NO_CSE_SKIP_BLOCKS_OBJS). */
 
 /* Collected: plays the wumpa sound and flies off, either to the HUD's
  * wumpa counter (`randomize` 0: state 1, and shows the counter) or to a
@@ -159,10 +159,13 @@ void Wumpa::Update()
  *
  * `mode` is a 0 set before the first call: CSE loses it at the list
  * `if`/`else` join, so the ROM's dead `cmp r7, #0xff` (SetHop's payout
- * test) stays. `phase` is a 0 hidden from CSE (MATCH_KEEP, as in the C):
- * the ROM compares it with the frame count (`cmp r6, r0`) and stores it
- * at +0x4B, while `counter` gets a fresh 0; known as a constant, the 0 is
- * shared with `counter`. The tag's 1 is materialized before its address,
+ * test) stays. `phase` is a 0 the ROM compares with the frame count
+ * (`cmp r6, r0`) and stores at +0x4B, while `counter` gets a fresh 0:
+ * this object is built without cse's skip-blocks (Makefile), so cse
+ * forgets `phase`'s value at the frame clamp's join instead of carrying
+ * it around the clamp and sharing the 0 with `counter` (the C, and
+ * #662 rounds 1-2, hid it with MATCH_KEEP). The tag's 1 is materialized
+ * before its address,
  * and `phase`'s 0 between the two (the `one` and `tag` locals). The palette
  * slot goes through an `s32` for the ROM's zero-extension of the `u8`. */
 Wumpa *Wumpa::Create(u16 id, u16 x, u16 y, u16 special)
@@ -181,7 +184,6 @@ Wumpa *Wumpa::Create(u16 id, u16 x, u16 y, u16 special)
         u8 *tag = &self->tag;
 
         phase = 0;
-        MATCH_KEEP(phase); // see above
         *tag = one;
     }
     self->ResetFrameTimer();
@@ -208,64 +210,4 @@ Wumpa *Wumpa::Create(u16 id, u16 x, u16 y, u16 special)
         self->palette = slot;
     }
     return self;
-}
-
-/* pos - off. As an inline's parameter, the offset is loaded from the
- * pool again for each axis, as in the ROM, not kept across the call. */
-static inline s32 Offset(s32 pos, s32 off)
-{
-    return pos - off;
-}
-
-/* Flies to the HUD's wumpa counter from `mode` pixels to the left
- * (DropWumpa's), as PickUp's state 1 does, and shows the counter. */
-void Wumpa::SendToHud()
-{
-    s32 outX, outY;
-    s32 newX, newY;
-
-    gAudioContext->PlaySfx(SFX_WUMPA, 0x100);
-    state = 1;
-    x -= INT_TO_Q8(mode);
-    affine = 0xa0;
-    ClampFrame(this);
-    screenSpace = 1;
-
-    WorldToScreen(this, Q8_TO_INT(x), Q8_TO_INT(y), &outX, &outY);
-
-    newX = INT_TO_Q8(outX);
-    x = newX;
-    velX = -FixedDiv(Offset(newX, 0x1000), 0x1400);
-    newY = INT_TO_Q8(outY);
-    y = newY;
-    velY = -FixedDiv(Offset(newY, 0x1000), 0x1400);
-    gHud->ShowWumpa();
-}
-
-/* The payout: 10 drops, the first on the next frame (Update). */
-void Wumpa::StartPayout()
-{
-    state = 3;
-    counter = 0xa;
-}
-
-/* The hop: `phase` steps a sine, the height 0x30 pixels; hop 1 moves to
- * the left and hop 2 to the right, by gWumpaHopWidths[mode - 1]. */
-void Wumpa::UpdateHop()
-{
-    struct three_words widths = *(const struct three_words *)gWumpaHopWidths;
-    s32 dy;
-    s32 sn;
-
-    sn = gSineTable[phase * 4];
-    dy = FixedMul(sn, 0x3000);
-    y = anchor.y - dy;
-    sn = gSineTable[phase * 2];
-    sn = FixedMul(sn, widths.a[mode - 1]);
-    if (mode == 1)
-        x = anchor.x - sn;
-    else if (mode == 2)
-        x = anchor.x + sn;
-    else
-        x = anchor.x;
 }

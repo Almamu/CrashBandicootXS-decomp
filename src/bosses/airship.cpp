@@ -122,8 +122,7 @@ void CreateAirship(s32 level)
         gAirshipCheckpointCount = 0;
     gAirshipMapCols = BOSS_PICTURE_SIZE(gAirshipPicture)->cols;
     gAirshipMapRows = BOSS_PICTURE_SIZE(gAirshipPicture)->rows;
-    gAirship =
-        new AnimPart((struct anim_frame_record *)gAirshipKeyframes, (u32 *)gAirshipMapFrames, 1);
+    gAirship = new AnimPart((struct anim_frame_record *)gAirshipKeyframes, gAirshipMapFrames, 1);
     SetAirshipState(0, 0);
     LoadAirshipGraphics();
     gAirshipBg2PageFlip = 0;

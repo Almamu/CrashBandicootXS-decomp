@@ -120,7 +120,13 @@ void EnemyCtrl::UpdateTriggerBox()
          * before the target gives the ROM's registers but loads it first;
          * a reference, `baseY > t->y`, a `bool` or the test folded
          * into the kind test keep the swap, and the permuter matched only
-         * with dummy stores (`target->x = target->x`). */
+         * with dummy stores (`target->x = target->x`). #662 round 3
+         * (greg dump): both values live across the bge, so global-alloc
+         * ranks them, and baseY's pseudo (3 references over 4 insns)
+         * outranks the target's (3 over 6), takes r1 and leaves r2 to
+         * the target; the target would need a fourth reference or a
+         * shorter life. No -f flag, pair of flags or field type
+         * (u32 baseY/y/mode/kind) changes that. */
         MATCH_HOLD_REG(MovingSprite *, t, r1) = target;
         if (t->y < baseY) {
             t->y = baseY;

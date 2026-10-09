@@ -59,7 +59,12 @@ void Platform::ResolveCollision(void *)
     pb = &b;
     /* Emits nothing: hides `pb`'s value from CSE, so that `&b` stays in a
      * register (r4) for the overlap tests below, as in the ROM, instead
-     * of being formed again from sp at each one. */
+     * of being formed again from sp at each one. #662 round 3: the C++
+     * front end reads `b.y` and the other fields through a fresh copy of
+     * `&b`, and cse1 ties that copy to `pb`. Without the asm the fields
+     * are read through `pb` (`ldr r1, [r5, #4]`), not at sp+24 as in the
+     * ROM, and the allocation is 760 lines off. No -f flag toggle
+     * changes that. */
     MATCH_KEEP(pb);
     GetSpriteHitbox_p(pb, gPlayer);
     box = (struct hitbox_quad *)&gPlayer->bank->anims[gPlayer->tag].box[0];

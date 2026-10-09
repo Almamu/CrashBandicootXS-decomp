@@ -136,7 +136,11 @@ void ActorSelf::Draw()
      * projection is local to the first basic block, so local allocation
      * gives it r4 before the screen y (global) is ranked; #662 round 2:
      * scoping it (or `dist`, `scale`) in blocks, and testing `scale`
-     * instead of `flag`, don't change that. */
+     * instead of `flag`, don't change that. #662 round 3: nor do the
+     * screen y computed through a temporary (as the x is) or as one
+     * expression, or the projection declared just before its use; the
+     * projection stays local to block 0, which ends at the scale test,
+     * and no -f flag or pair of flags makes it global. */
     MATCH_HOLD_REG(s32, proj, r5) = __divsi3(gActorFocalLength << 0xc, dist);
     s32 screenY;
     s32 screenX;

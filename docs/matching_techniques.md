@@ -138,6 +138,7 @@ comment with its evidence.
 |---|---|---|
 | ~~`-fno-strength-reduce`~~ | none (`title_screen.o` until #664 part 10c-2) | Its C needed it for `InitVvLogoPieces`'s up-counting loop. As C++ the plain indexed loop matches with strength reduction on, and so does the rest of the file ([per-file-flags-investigation.md](./matching/per-file-flags-investigation.md)). |
 | `-fno-rerun-loop-opt` | `link_session_reset.o` | The second loop pass reverses `ResetLinkSessionState`'s copy loop; the flag breaks `HandleLinkSerial`, hence the split. |
+| `-fno-cse-skip-blocks` | `wumpa_update.o` | `Wumpa::Create`'s `phase` 0 has to be forgotten at the frame clamp's join, as in the ROM (`counter` gets a fresh 0). With skip-blocks cse carries it around the clamp. `SendToHud` needs skip-blocks, so it moved with `StartPayout` and `UpdateHop` to the start of `wumpa.cpp`, the next object (#662 round 3). |
 | `-O1` | `lib/agb_eeprom` (4 objects) | SDK code, above. |
 | no `-mthumb-interwork` | libgcc2 (`__divdi3`, ...) | The only ROM functions that return with `pop {r4-r7, pc}`. |
 | agbcp_arm_patched (the ARM C++ compiler), `-fomit-frame-pointer` | `string_arm.o`, `sprite_arm.o` | ARM code of the IWRAM image ([matching/iwram-image.md](./matching/iwram-image.md)); C++ like the rest of the game, the output is agbcc_arm's without the two options below. |
@@ -1063,6 +1064,69 @@ Round 2 in bosses/, enemies/ and actor/ (C++):
     caller-save.c saving the lowest-ranked pseudo.
 
   None of the per-object flags on the brief's list helped any of them.
+
+Round 3 in crates/, objects/ and pickups/ (C++). Each function was
+compiled with `-da` and its RTL dumps read pass by pass:
+
+- **local-alloc's 3-quantity sort.** A block with exactly three local
+  quantities is sorted by a hand-written exchange
+  (`qty_compare (0, 1)`, `(1, 2)`, `(0, 1)`) that compares quantity
+  *numbers*, not sorted positions. When q1 beats q0 and q2 doesn't beat
+  q1, the two swaps cancel and q0 (the first born) is allocated first. With two
+  quantities, or four or more (qsort), the order is right.
+  `CrateList::Unlink`'s free-list push (head, entry, reloaded entry) hit
+  it: the head took r0. One function-scope `head` for both searches
+  makes it a global-alloc register (r1), and FreeNode's r1 pin went.
+- **A plain search loop.** `CrateList::Detach` (Remove and Update) as
+  `while (i < capacity && slots[i] != sprite) i++;` drops the asm
+  barrier its `n = capacity` local with early returns needed in Update.
+- **-fno-cse-skip-blocks, with a move.** `Wumpa::Create`'s `phase` 0
+  hidden from cse (MATCH_KEEP) is what cse does without skip-blocks: it
+  forgets the 0 at the frame clamp's join, so `counter` gets a fresh 0.
+  `SendToHud` in the same object needs skip-blocks, so it and the two
+  functions after it moved to the start of wumpa.cpp, the next object.
+- **Kept, with the deciding pass in each comment:** the crate box
+  builders' `BOX_ADDR`s (calls.c copies each `&f.b` argument into a
+  pseudo, since a PLUS costs more than 2 under SMALL_REGISTER_CLASSES,
+  and cse1 ties the copies in one block); `MovingSprite::TouchPlayer`'s
+  volatile read and `Platform::ResolveCollision`'s `pb` keep (the C++
+  front end reads a local struct's fields through a fresh copy of its
+  address, which cse1 ties to the pointer the ROM holds);
+  `PlatformMover::Update`'s `now` pin (global-alloc priority, 0.83
+  against `part`'s 0.74) and its 0x300 (reload's round-robin spill
+  register); `Sprite::CheckPlayerContact`'s 1 (the u8 flag's OR is
+  expanded with a QImode constant, which cse can't replace with the
+  tests' SImode register).
+
+**Round 3, src/bosses, src/enemies, src/actor (C++).** 13 functions ->
+13: no function loses its last workaround, two lose one each.
+
+- **A global's real type gives a re-read.** `ConvertAirshipTiles` and
+  `ConvertHovercraftTiles` re-read each height after storing the row
+  pointer (the ROM's `ldm r1!`), which a `MATCH_KEEP_MEM` forced.
+  gAirshipMapFrames/gHovercraftMapFrames are the AnimParts' frame
+  offsets, `u32` tables (both creators already cast them to `u32 *`):
+  declared so, the row store has the int alias set, may alias
+  `heights[]`, and cse no longer reuses the stored value. As `u8 *`/
+  `void *` arrays the store's pointer alias set told cse it couldn't.
+- **Kept, with the pass that decides it** (in each site's comment):
+  the mask asm of the same two functions (cse1's fold_rtx puts an
+  operand with a known constant value second, and regmove copies the
+  first one); `UpdateTriggerBox`, `StompedHopPadCtrl::Update`,
+  `TinyCtrl::SetState` and `SelectActorCategory` (global-alloc's
+  ranking of two pseudos, by references over live length);
+  `UpdateHop`, `UpdateOscillateX`, `UpdateOscillateY` and
+  `ActorSelf::Draw` (local-alloc: a block-local value is placed before
+  the globals are ranked, or two quantities tie and the older one wins);
+  `MegaMixCtrl::Update`'s 0x104 (reload's round-robin over its spill
+  registers); `UpdateBob`'s and `DingodileShieldCtrl::Update`'s saved
+  but unused registers (a pseudo the ROM had in that register and whose
+  code is gone by the end; the plain functions have none, and no spill
+  of those registers happens). Every single -f flag and every pair of
+  them (`-fno-gcse`, the cse, loop, strength-reduce, jump-threading,
+  defer-pop, function-cse, regmove and peephole switches, `-O1`, plus
+  `-flive-range`, the aliasing, inlining and scheduling switches) was
+  tried on each plain function, under both compilers, and none matches.
 
 Round 3 in frontend/, menus/, save/, link/ and text/ (C++), diagnosed
 from the `-da` dumps first:
