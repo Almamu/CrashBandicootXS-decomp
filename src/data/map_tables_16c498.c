@@ -8,7 +8,7 @@
 
 /* `struct vec2` (menus.h) positions and animation ids of the level-select
  * screens: level_select.cpp (InitLevelSelect, DrawLevelSelectTime, LoadLevelSelectRecord,
- * InitLaunchPad) and level_select_pages.cpp (its level menu's item positions
+ * InitLaunchPad, now launch_pad.cpp) and level_select_pages.cpp (its level menu's item positions
  * and skins, RefreshLevelSelectPage). */
 const struct vec2 gLevelSelectWorldPos = { 16, 32 };
 const struct vec2 gLevelSelectCrashIconPos = { 16, 60 };

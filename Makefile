@@ -298,7 +298,10 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/objects/launch_pad.o \
                   $(C_BUILDDIR)/menus/level_select.o \
                   $(C_BUILDDIR)/menus/level_select_pages.o \
-                  $(C_BUILDDIR)/menus/level_select_widgets.o \
+                  $(C_BUILDDIR)/menus/level_select_page_bg.o \
+                  $(C_BUILDDIR)/menus/zoom_bg.o \
+                  $(C_BUILDDIR)/menus/level_select_entry.o \
+                  $(C_BUILDDIR)/menus/level_select_cursor.o \
                   $(C_BUILDDIR)/level/spawn_start_marker.o \
                   $(C_BUILDDIR)/level/spawn_gems.o \
                   $(C_BUILDDIR)/level/spawn_enemies.o \

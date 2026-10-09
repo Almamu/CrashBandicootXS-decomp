@@ -141,7 +141,9 @@ and [graphics_loading.md](./graphics_loading.md).
   `LevelSelectExit`, the page-entry refresh (`PlaceLevelSelectEntries`/`LoadLevelSelectEntries`/
   `SetLevelSelectEntryBoxes`), the BG1 page strip (`GetLevelSelectPageBgScroll`-`CreateLevelSelectPageBg`) and
   the BG2 icon layer's constructor `InitZoomBg`. `CommitLevelSelectFrame` is
-  UNUSED. Compiled with `old_agbcc`. See
+  UNUSED. Compiled with `old_agbcc`. Since #767 the BG1 page strip is
+  `src/menus/level_select_page_bg.cpp` and `InitZoomBg` starts
+  `src/menus/zoom_bg.cpp`. See
   [docs/matching/archive/issue-27-level-select-pages.md](../matching/archive/issue-27-level-select-pages.md).
 - `src/bosses/dingodile.c` (new file - GitHub issue #24):
   `SetCortexPlatformsKind`-`DestroyDingodileShieldCtrl` except the two NAKED ones below (23 of 25
@@ -168,7 +170,9 @@ and [graphics_loading.md](./graphics_loading.md).
   NAKED retry, below). See
   [docs/matching/archive/issue-25-level-objects.md](../matching/archive/issue-25-level-objects.md).
 - GitHub issues #28/#29 (0x0801DA38-0x0801E578, shared structs in
-  `include/level_select_parts.h`, both files built with `old_agbcc`):
+  `include/level_select_parts.h`, both files built with `old_agbcc`;
+  `level_select_widgets.c` is split since #767 into `src/menus/zoom_bg.cpp`,
+  `level_select_entry.cpp` and `level_select_cursor.cpp`):
   `src/menus/level_select_widgets.c` (`DestroyZoomBg`-`DestroyLevelSelectEntry`, all
   25) - the level-select screen's zooming BG2 picture (`struct
   zoom_bg`: destructor, state machine, affine draw/commit, state

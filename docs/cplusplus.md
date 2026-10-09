@@ -577,8 +577,8 @@ counts them by kind) and what the C++ needed when it was converted.
 | `src/level/time_trial.cpp` | `StartTimeTrial` (C linkage) | 1 | old_agbcp | 2 vcall macros, an `ENTITY_SET_GONE_BIT` -> 0 | 9 |
 | globals.h, level.h, level_state.h, level_data.h, crate.hpp, enemy_ctrl.hpp, and 17 `.cpp` files | `gEntitySpawner` is an `EntitySpawner *` to C++, and the effect parts' and dropped pickups' callers call its methods; `CreateMovingSprite` calls are `MovingSprite::Create` | 0 | (unchanged) | 2 asm labels (`DropWumpaFlag`, `DropExtraLifeFlag`), a function-pointer cast -> 0 | 9 |
 | `src/menus/level_select.cpp` (`CameraLead` and `LaunchPad` in `objects/camera_lead.cpp` and `launch_pad.cpp` since #767) | `CameraLead`, `LaunchPad`, and `LevelSelect`'s constructor, destructor, update, draw, record and loop (include/level_select.hpp), with `RunLevelSelect` (C linkage) | 24 + 1 | old_agbcp | 31 pins, 2 keeps, 2 asm, 2 asm labels, 1 volatile read, the byte views of DISPCNT, BLDY and the save record, the `Opaque` and `ItemAt` helpers, gotos, 7 hand-written vcalls -> 3 pins, 1 keep, 2 asm labels | 10 |
-| `src/menus/level_select_pages.cpp` | `LevelSelect`'s page turns, exits and entry refresh; `LevelSelectPageBg`; `ZoomBg`'s constructor; with `SetNewWorldOpened` (C linkage) | 24 + 1 | old_agbcp | 0 -> 0; the entries' 2 function-pointer vcalls go | 10 |
-| `src/menus/level_select_widgets.cpp` | `ZoomBg`, `LevelSelectEntry`, `LevelSelectCursor` | 41 | old_agbcp | 0 -> 0; `DELETE_PART` (the parts' slot-10 calls) goes | 10 |
+| `src/menus/level_select_pages.cpp` (`LevelSelectPageBg` in `level_select_page_bg.cpp` and `ZoomBg`'s constructor in `zoom_bg.cpp` since #767) | `LevelSelect`'s page turns, exits and entry refresh; `LevelSelectPageBg`; `ZoomBg`'s constructor; with `SetNewWorldOpened` (C linkage) | 24 + 1 | old_agbcp | 0 -> 0; the entries' 2 function-pointer vcalls go | 10 |
+| `src/menus/level_select_widgets.cpp` (split in #767: `zoom_bg.cpp`, `level_select_entry.cpp`, `level_select_cursor.cpp`) | `ZoomBg`, `LevelSelectEntry`, `LevelSelectCursor` | 41 | old_agbcp | 0 -> 0; `DELETE_PART` (the parts' slot-10 calls) goes | 10 |
 | `src/player/input_ctrl.cpp` (again) | `InputCtrl::StateStart`: `new CameraLead`, `CollidableList()->Add`, `cameraLead->Reset()`; `Update` and `StateDead`: `MarkGone()` | 0 | old_agbcp | 2 `ENTITY_MARK_GONE`s -> 0 | 10 |
 | `src/frontend/company_logos.cpp` | `CompanyLogos::DrawVvLogoPieces`, `LoadUniversalLogoBg`; `LogoActor`'s constructor, `Update`, `Draw` (include/frontend.hpp; `ActorSelf`, its base, in include/actor_self.hpp) | 5 | old_agbcp | 2 pins, 2 uses, 3 barriers -> 1 pin, 3 barriers | 10b |
 | `src/frontend/language_select.cpp` | `CompanyLogos`'s constructor, destructor, `LoadAssetBuffered`; `LogoActor`'s destructor; `LanguageSelect::Run`, `Input`, `Draw`, `InitGraphics` | 8 | agbcp | 0 -> 0; a goto and the hand-written destructors' vtable stores, unlink and frees go | 10b |
@@ -1891,10 +1891,10 @@ three objects were old_agbcc C already and match under old_agbcp.
 | `CameraLead` | 0x80 | gCameraLeadVtable (a `MovingSprite`) | level_select.cpp (objects/camera_lead.cpp since #767) |
 | `LaunchPad` | 0x78 | gLaunchPadVtable (a `MovingSprite`) | level_select.cpp (objects/launch_pad.cpp since #767) |
 | `LevelSelect` | 0xAC | none | level_select.cpp, level_select_pages.cpp |
-| `LevelSelectPageBg` | 0x28 | none | level_select_pages.cpp |
-| `ZoomBg` | 0x8C | none | level_select_widgets.cpp (constructor: _pages.cpp) |
-| `LevelSelectEntry` | 0x14 | gLevelSelectEntryVtable (a root class: the vtable pointer at +0x10) | level_select_widgets.cpp |
-| `LevelSelectCursor` | 0x54 | none | level_select_widgets.cpp |
+| `LevelSelectPageBg` | 0x28 | none | level_select_pages.cpp (level_select_page_bg.cpp since #767) |
+| `ZoomBg` | 0x8C | none | level_select_widgets.cpp (constructor: _pages.cpp; all in zoom_bg.cpp since #767) |
+| `LevelSelectEntry` | 0x14 | gLevelSelectEntryVtable (a root class: the vtable pointer at +0x10) | level_select_widgets.cpp (level_select_entry.cpp since #767) |
+| `LevelSelectCursor` | 0x54 | none | level_select_widgets.cpp (level_select_cursor.cpp since #767) |
 
 - **The classes.** The camera lead and the launch pad are `MovingSprite`s:
   the camera lead overrides `Update` and the destructor, the launch pad the

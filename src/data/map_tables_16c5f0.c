@@ -7,7 +7,7 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* InitZoomBg (level_select_pages.cpp): the four slots' offsets. */
+/* InitZoomBg (zoom_bg.cpp): the four slots' offsets. */
 const struct vec2 gZoomBgSlotOffsets[4] = {
     { 4, -4 },
     { -4, -4 },
@@ -15,8 +15,8 @@ const struct vec2 gZoomBgSlotOffsets[4] = {
     { -4, 4 },
 };
 
-/* Animation ids: SetLevelSelectEntryBox (level_select_widgets.cpp) by kind, SetLevelSelectEntryLevel
- * by world, UpdateLevelSelectCursor (level_select_widgets.cpp). */
+/* Animation ids: SetLevelSelectEntryBox (level_select_entry.cpp) by kind, SetLevelSelectEntryLevel
+ * by world, UpdateLevelSelectCursor (level_select_cursor.cpp). */
 const u32 gLevelSelectEntryBoxAnims[5] = {
     0, 1, 4, 3, 2,
 };
