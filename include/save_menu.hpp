@@ -4,8 +4,8 @@
 /* The save menu as C++ (#664, docs/cplusplus.md, the final cleanup):
  * class SaveMenu, the object OpenSaveMenu allocates (`new SaveMenu`, 0xE4
  * bytes) into gSaveMenu and CloseSaveMenu deletes. Its code is
- * src/save/save_menu.cpp, save_menu_draw.cpp, save_menu_input.cpp and
- * save_menu_ui.cpp; cxx_symbols.txt maps the methods onto their C names
+ * src/save/save_menu.cpp, save_menu_draw.cpp and save_menu_input.cpp
+ * (save_menu_draw.cpp has save_menu_ui.cpp since #771); cxx_symbols.txt maps the methods onto their C names
  * (SaveMenuInput, DrawSaveMenu, ...). The save data it holds and the
  * link transfer it drives are classes SaveData and SaveTransfer
  * (save_data.hpp), the link session class LinkSession
@@ -90,7 +90,7 @@ public:
     void ConfirmDeleteInput(u32 keys);          // SaveMenuConfirmDeleteInput
     void DrawMain();                            // DrawSaveMenuMain
 
-    /* src/save/save_menu_ui.cpp */
+    /* src/save/save_menu_draw.cpp (was save_menu_ui.cpp) */
     void LoadBg();                               // LoadSaveMenuBg
     void RefreshSlotSummaries(SaveData *handle); // RefreshSaveSlotSummaries
     void LoadData();                             // LoadSaveMenuData

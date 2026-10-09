@@ -2560,7 +2560,7 @@ between them in `ldscript.txt`.
 
 **`UpdateHudLives`** (ROM `0x08027838`, 262 bytes, contributed via PR #1 by
 @MiryamSanchez26, new
-`src/hud/hud_lives.c`): updates a cached two-digit HUD counter
+`src/hud/hud_lives.c`, in `hud_counters.cpp` since #771): updates a cached two-digit HUD counter
 from the central state object's `+0x74` value. Negative source values
 are displayed as zero. Modes 1 and 3 derive the shared horizontal HUD
 offset from the counter's layout field; other modes reset that offset.
@@ -5877,7 +5877,7 @@ shared icon-manager centered-label toolkit (the same
 register-allocation difficulty `DrawPowerDialog` already hit, or (two of
 them) weren't understood confidently enough to force a reconstruction.
 
-**Matched** (`src/save/save_menu_ui.c`):
+**Matched** (`src/save/save_menu_ui.c`, in `save_menu_draw.cpp` since #771):
 `LoadSaveMenuBg` (BG-load helper - literally the same shape as
 `LoadLanguageSelectBg` in `src/frontend/language_select_setup.c`, just at
 different field offsets and with an extra `field_0 = 0`),

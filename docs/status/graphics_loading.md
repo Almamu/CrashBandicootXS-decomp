@@ -44,7 +44,7 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   for the earlier accessor passes (`SetScaledSpriteColor`'s DMA-register load
   order, the trailing `asm(".align 2, 0")` zero-padding fix).
 
-- **`InitTitleScreen`** (`src/frontend/title_screen_init.c`) - the
+- **`InitTitleScreen`** (`src/frontend/title_screen_init.c`, `title_screen.cpp` since #771) - the
   title screen's constructor (`UpdateGameFrame` runs the title screen
   before the level loop: `RunTitleScreen`, then `DestroyTitleScreen`); stashes the
   icon-manager pointer, resets the OAM shadow buffer, sets up blend/
@@ -52,7 +52,7 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   `LoadTitleScreenBg`/`LoadTitleScreenObjTiles`, runs the fade/audio-reset
   quartet, and starts song `0xb` - see
   [issue-65-graphics-loading.md](../matching/archive/issue-65-graphics-loading.md).
-- **`LoadTitleScreenObjTiles`** (`src/frontend/title_screen_init.c`) - the
+- **`LoadTitleScreenObjTiles`** (`src/frontend/title_screen_init.c`, `title_screen.cpp` since #771) - the
   OBJ-sprite tileset/palette loader (4-pass over `gTitleObjPackages`),
   closed via a register-pinning + opaque-asm-island pass on top of the
   previously-parked semantically-faithful reconstruction - see
@@ -155,7 +155,7 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   `(v << 1) | (v >> 31)` idiom into a single Thumb `ROR` instruction the
   ROM's own build never emits. See
   [issue-65-0x08035780-graphics-loading.md](../matching/archive/issue-65-0x08035780-graphics-loading.md).
-- **`UpdateTitleLogoPieces`** (`src/frontend/title_screen_init.c`) - the
+- **`UpdateTitleLogoPieces`** (`src/frontend/title_screen_init.c`, `title_screen.cpp` since #771) - the
   9-slot record-array per-frame updater documented under "Parked" below
   for its siblings; promoted to real C in a follow-up pass via the
   static-inline anti-CSE technique first demonstrated in
@@ -165,13 +165,13 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   `self+i*0x34` slot-base register the way any single plain-C
   reconstruction otherwise does. See
   [issue-59-60-static-inline-cse-promotion.md](../matching/archive/issue-59-60-static-inline-cse-promotion.md).
-- **`LoadTitleScreenBg`** (`src/frontend/title_screen_init.c`), and
+- **`LoadTitleScreenBg`** (`src/frontend/title_screen_init.c`, `title_screen.cpp` since #771), and
   **`CommitTitleScreenFrame`**, **`DrawTitleMenuItem`**, **`DrawTitleScreen`**,
   **`DestroyTitleScreen`**, **`RunCompanyLogos`**, **`LoadVvLogoGraphics`**,
   **`InitLogoActor`**, **`UpdateLogoActor`**, **`DrawLogoActor`**
   (`src/frontend/title_screen.c`, split off
-  `title_screen_init.c`; `RunCompanyLogos` on in `company_logos.cpp`
-  since #770) - promoted from NAKED to
+  `title_screen_init.c` and merged back in #771; `RunCompanyLogos` on
+  in `company_logos.cpp` since #770) - promoted from NAKED to
   real C in the issue #65 retry pass. Both files turned out to be
   old_agbcc code (both are now on the Makefile's `OLD_AGBCC_OBJS`);
   `LoadTitleScreenBg`'s long-documented "dead r7 in the push list" gap
@@ -192,7 +192,7 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   old_agbcc objects. See
   [per-file-flags-investigation.md](../matching/per-file-flags-investigation.md).
 
-- **`DrawTitleLogoPieces`** (`src/frontend/title_screen_init.c`),
+- **`DrawTitleLogoPieces`** (`src/frontend/title_screen_init.c`, `title_screen.cpp` since #771),
   **`RunTitleScreen`** and **`ResetTitleLogoPieces`**
   (`src/frontend/title_screen.c`) - the 9-slot OAM builder,
   the intro sequencer and the 9-slot seeder, NAKED until the issues

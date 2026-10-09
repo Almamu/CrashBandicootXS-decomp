@@ -125,7 +125,7 @@ extern void CloseLanguageSelect(void);
 extern void OpenLanguageSelect(void);
 
 /* Clears one OAM entry (4 words) with a DMA3 fill from `zero`, a
- * variable the caller declares (company_logos.cpp, title_screen_init.cpp).
+ * variable the caller declares (company_logos.cpp, title_screen.cpp).
  * A macro, not a function: `zero` is stored before the DMA base is
  * loaded, as in the ROM. */
 #define CLEAR_OAM(oam)                                          \

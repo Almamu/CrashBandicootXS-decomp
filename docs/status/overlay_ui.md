@@ -29,11 +29,11 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   `SaveMenuMoveCursor`, `SaveMenuLoadInput`, `SaveMenuLinkInput`, `SaveGameToSlot`,
   `SaveMenuOverwriteInput`, `SaveMenuSaveInput`, `SaveMenuDeleteInput`, `SaveMenuConfirmDeleteInput`,
   `DrawSaveMenuMain`, and `ReceiveSaveTransferChunk` (was NAKED, see below).
-- `src/save/save_menu_ui.c` (new file - the composite pause/
+- `src/save/save_menu_ui.c` (`save_menu_draw.cpp` since #771; new file - the composite pause/
   options screen's BG-load helper and per-row stats gatherer/
   aggregator; see `docs/rom_map.md`'s `overlay_ui` section):
   `LoadSaveMenuBg`, `RefreshSaveSlotSummaries`, `LoadSaveMenuData`, `SummarizeProgress`
-- `src/save/save_menu_ui.c` (new file - the same screen's flag
+- `src/save/save_menu_ui.c` (`save_menu_draw.cpp` since #771; new file - the same screen's flag
   test, link-cancel-flag pair, six near-identical per-item wrappers,
   state jump-table dispatcher, and a final list-refresh trio):
   `GetSaveMenuBlinkPalette`, `EndLinkSaveTransfer`, `BeginLinkSaveTransfer`, `DrawSaveMenuConfirmDelete`,
@@ -57,7 +57,7 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   renderer `DrawPauseMenuRows`, and (hard-register hold pass) the per-frame
   row draw step `DrawPauseMenu` - plain C, was NAKED. See
   [hard-register-hold-retry.md](../matching/archive/hard-register-hold-retry.md).
-- `src/menus/pause_menu_gems.c` (issue #7 retry, old_agbcc): the
+- `src/menus/pause_menu_gems.c` (`pause_menu_collectibles.cpp` since #771; issue #7 retry, old_agbcc): the
   icon-row fraction readouts `DrawPauseGemsPage`, `DrawPauseRelicsPage`.
 - `src/save/save_data.cpp` (new file - issue #4,
   0x08002A08-0x08002AA4): the settings-sync record's EEPROM-load-with-
@@ -96,7 +96,7 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   0x08005304-0x080053F4): the icon-group reveal/cycle animation plus
   the row-cursor icon's blink countdown: `AnimatePauseMenu`. See
   `docs/matching/archive/issue-7-0x08004d74-overlay-ui.md`.
-- `src/menus/pause_menu_powers.c` (new file - issue #7,
+- `src/menus/pause_menu_powers.c` (`pause_menu_collectibles.cpp` since #771; new file - issue #7,
   0x0800570C-0x080057E0): shows whichever `icons8c` row changed, or a
   fallback label if none did: `DrawPausePowersPage`. See
   `docs/matching/archive/issue-7-0x08004d74-overlay-ui.md`.
@@ -113,16 +113,16 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   and the screen's init routine `InitSaveMenuIcons` (was raw asm in the now
   retired `asm/code_3_1_10_4.s`) in the hard-register hold pass
   ([hard-register-hold-retry.md](../matching/archive/hard-register-hold-retry.md)).
-- `src/save/save_menu_ui.c` (issue #6 retry): `DrawEmptySlotLabel`,
+- `src/save/save_menu_ui.c` (`save_menu_draw.cpp` since #771; issue #6 retry): `DrawEmptySlotLabel`,
   `DrawSaveMenuTitle` - plain C, were NAKED.
-- `src/menus/power_dialog_loop.c` (issue #8 retry, old_agbcc):
+- `src/menus/power_dialog_loop.c` (`power_dialog.cpp` since #771; issue #8 retry, old_agbcc):
   `PowerDialogLoop`; `pause_menu_pages_draw.c`: `DrawPauseTimeTrialPage`, `DrawPauseCrystalsPage`,
   `DrawPauseMenuPageTitle`; `power_dialog.c`: `ShowPowerDialog` - plain C, were
   NAKED.
 - `src/menus/pause_menu.c` (second near-miss sweep):
   `RunPauseMenu`, the composite pause/options screen driver - plain C,
   was NAKED. See [near-miss-polish-2.md](../matching/archive/near-miss-polish-2.md).
-- `src/menus/pause_menu_loop.c` (early-ROM NAKED retry 2, old_agbcc):
+- `src/menus/pause_menu_loop.c` (`pause_menu.cpp` since #771; early-ROM NAKED retry 2, old_agbcc):
   `PauseMenuLoop`, the blocking cursor/confirm/cancel driver - plain C,
   was NAKED. See [early-rom-naked-retry-2.md](../matching/archive/early-rom-naked-retry-2.md).
 

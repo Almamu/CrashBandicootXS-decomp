@@ -8,7 +8,7 @@ system from "core" graphics.
 
 ## Matched
 
-- `src/hud/hud_lives.c` (new file, contributed via PR #1 by
+- `src/hud/hud_lives.c` (`hud_counters.cpp` since #771; new file, contributed via PR #1 by
   @MiryamSanchez26 - `UpdateHudLives` is an isolated HUD counter update
   inside the raw HUD stat-widget region, so preserving its ROM address
   required a split of what's now `asm/code_3_2_17.s`/`asm/code_3_2_20.s`
@@ -85,7 +85,7 @@ system from "core" graphics.
   padding.
 
 - `src/hud/hud_boss_clock.c`, `hud_init.c`,
-  `hud_counters.c` (GitHub issue #45's dispatcher family):
+  `hud_counters.c` (`hud_boss_clock` in `hud_counters.cpp` since #771; GitHub issue #45's dispatcher family):
   `UpdateHudBoss`, `UpdateHudClock`, `InitHud`, `ConfigureHudParts`,
   `UpdateHudCrates`, `UpdateHudWumpa`, `UpdateHudPercentCounters`. All plain C built with
   old_agbcc (`hud_boss_clock.c`/`hud_counters.c` moved to it). Six

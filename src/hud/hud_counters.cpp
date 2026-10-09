@@ -1,14 +1,32 @@
 #include "hud.hpp"
-#include "actor_self.hpp"
 #include "level_state.hpp"
+#include "actor_self.hpp"
 
 extern "C" {
 #include "core.h"
 #include <libgcc.h>
-#include "bosses.h"
 #include "level.h"
 #include "globals.h"
+#include "util.h"
+#include "bosses.h"
 }
+
+/* The HUD's stat widgets, the callees of Hud::Update (hud.cpp): UpdateBoss,
+ * UpdateClock, UpdateLives, UpdateCrates, UpdateWumpa and
+ * UpdatePercentCounters (include/hud.hpp). The first three were
+ * hud_boss_clock.cpp and hud_lives.cpp until #771. */
+
+/* Icon-indicator widget (lives display) - see
+ * docs/matching/archive/issue-45-hud-stat-widget-dispatcher.md for the full
+ * semantic account: positions and clamps the primary icon slot
+ * (parts[22]) unconditionally, then a second icon (parts[23]) only when
+ * GetBossHealth's count exceeds 1.
+ *
+ * Built with old_agbcp, as the C was with old_agbcc. The earlier
+ * NAKED note blamed an "r7 wrong-value miscompile" at the clamp sites;
+ * under old_agbcc plain code reproduces the ROM's `ldrb r7; ...; adds rN,
+ * r7, #0` clamp sequence exactly. The position helper takes the part
+ * pointer last so the table symbol is loaded before `parts`. */
 
 static inline void SetPartPos(s32 x, s32 y, HudPart *part)
 {
@@ -16,10 +34,139 @@ static inline void SetPartPos(s32 x, s32 y, HudPart *part)
     part->y = INT_TO_Q8(y);
 }
 
+void Hud::UpdateBoss()
+{
+    HudPart *part;
+    s32 count;
+
+    gHudSlideOffset = 0;
+    SetPartPos(gHudPartPositions[22].x, gHudPartPositions[22].y, (part = &parts[22]));
+    HUDPART_CLAMP_FRAME(part, parts[22].tag, 0);
+    part->Draw(0, 0);
+
+    count = gLevelState->GetBossHealth();
+    if (count > 0) {
+        HudPart *second = &parts[23];
+
+        SetPartPos(gHudPartPositions[23].x, gHudPartPositions[23].y, second);
+        HUDPART_CLAMP_FRAME(second, parts[23].tag, count - 1);
+        second->Draw(0, 0);
+    }
+}
+
+/* Three more digit/icon widgets, gated by their own change-detection
+ * caches (`sync_value_a`/`b`/`c`, `include/hud.h`) against
+ * `GetClockMinutes`/`GetClockSeconds`/`GetClockTenths`. The first two split their
+ * value into tens/ones cur (`__udivsi3`/`__umodsi3`, div/mod by
+ * 10) across a slot pair each (14/15, 17/18); the third does not split
+ * at all - slot 20 gets the raw value as its desired frame, slot 21
+ * always gets a fixed desired frame of 0 (a single-frame icon, not a
+ * digit). All six slots get redrawn unconditionally afterward via
+ * `Draw` - slot 21 appears twice in that list, matching the ROM
+ * exactly. Old_agbcp, like `UpdateBoss`; `HUDPART_CLAMP_FRAME` binds the
+ * part pointer before the frame value, which is the order the ROM
+ * computes them in. */
+void Hud::UpdateClock()
+{
+    HudPart *cur;
+
+    gHudSlideOffset = 0;
+    if (shownMinutes != gLevelState->GetClockMinutes()) {
+        s32 f;
+
+        shownMinutes = gLevelState->GetClockMinutes();
+        f = __udivsi3(shownMinutes, 10);
+        cur = parts;
+        HUDPART_CLAMP_FRAME(&cur[14], cur[14].tag, f);
+        f = __umodsi3(shownMinutes, 10);
+        HUDPART_CLAMP_FRAME(&cur[15], cur[15].tag, f);
+    }
+    if (shownSeconds != gLevelState->GetClockSeconds()) {
+        s32 f;
+
+        shownSeconds = gLevelState->GetClockSeconds();
+        f = __udivsi3(shownSeconds, 10);
+        cur = parts;
+        HUDPART_CLAMP_FRAME(&cur[17], cur[17].tag, f);
+        f = __umodsi3(shownSeconds, 10);
+        HUDPART_CLAMP_FRAME(&cur[18], cur[18].tag, f);
+    }
+    if (shownTenths != gLevelState->GetClockTenths()) {
+        s32 f;
+
+        shownTenths = f = gLevelState->GetClockTenths();
+        cur = parts;
+        HUDPART_CLAMP_FRAME(&cur[20], cur[20].tag, f);
+        HUDPART_CLAMP_FRAME(&cur[21], cur[21].tag, 0);
+    }
+    parts[14].Draw(0, 0);
+    parts[15].Draw(0, 0);
+    parts[17].Draw(0, 0);
+    parts[18].Draw(0, 0);
+    parts[20].Draw(0, 0);
+    parts[21].Draw(0, 0);
+    parts[16].Draw(0, 0);
+    parts[19].Draw(0, 0);
+    parts[21].Draw(0, 0);
+}
+
+/* Hud::UpdateLives (UpdateHudLives, #664 cleanup, include/hud.hpp): the
+ * lives counter, two digits (parts 0 and 1; a single-digit count hides
+ * the second) and the icon (part 2), redrawn every frame while the
+ * counter is on screen.
+ *
+ * Built with old_agbcp (the C was agbcc, held to the ROM by 34 register
+ * pins, five instruction asm statements and a volatile hold): its clamp
+ * sequence is the ROM's. The second digit's value is computed before its
+ * part's address, as the ROM does. */
+void Hud::UpdateLives()
+{
+    HudPart *cur;
+
+    if (livesSlide == 0)
+        return;
+
+    if (gLevelState->GetLives() > 0)
+        lives = gLevelState->GetLives();
+    else
+        lives = 0;
+
+    if (livesSlide == 1 || livesSlide == 3)
+        gHudSlideOffset = livesSlideTimer * 2 - 0x28;
+    else
+        gHudSlideOffset = 0;
+
+    {
+        s32 v = lives;
+        s32 w = shownLives;
+
+        cur = parts;
+        if (v != w) {
+            if (v > 9) {
+                s32 f = __divsi3(v, 10);
+
+                HUDPART_CLAMP_FRAME(&cur[0], cur[0].tag, f);
+                f = __modsi3(lives, 10);
+                HUDPART_CLAMP_FRAME(&cur[1], cur[1].tag, f);
+            } else {
+                HUDPART_CLAMP_FRAME(&cur[0], cur[0].tag, v);
+                /* The ROM keeps this clamp's dead `tag` load: -1 is
+                 * never past the end, so only the store is left. */
+                HUDPART_CLAMP_FRAME(&cur[1], cur[1].tag, -1);
+            }
+        }
+    }
+
+    cur[2].Draw(0, 0);
+    parts[0].Draw(0, 0);
+    parts[1].Draw(0, 0);
+    shownLives = lives;
+}
+
 /* The remaining three callees of the HUD stat-widget dispatcher
  * (Hud::Update, `hud.cpp`) - see `docs/matching/
  * issue-45-hud-stat-widget-dispatcher.md` for the family's full
- * background. Built with old_agbcp, like `hud_boss_clock.cpp` (the C
+ * background. Built with old_agbcp, like UpdateBoss above (the C
  * was old_agbcc).
  *
  * These were parked as NAKED on the belief that a second "r7 wrong-value

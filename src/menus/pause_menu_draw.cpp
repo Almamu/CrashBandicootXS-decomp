@@ -13,8 +13,8 @@ extern "C" {
 }
 
 /* PauseMenu's Animate, Draw and DrawRows (menus.hpp; C++ since the #664
- * cleanup), between Loop (pause_menu_loop.cpp) and DrawPowersPage
- * (pause_menu_powers.cpp) in the ROM. See
+ * cleanup), between Loop (pause_menu.cpp) and DrawPowersPage
+ * (pause_menu_collectibles.cpp) in the ROM. See
  * docs/matching/archive/issue-7-0x08004d74-overlay-ui.md. */
 
 /* Animates the info page shown (`page`, 0-4: each of its icons'

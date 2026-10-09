@@ -822,7 +822,7 @@ definitions (501 -> 487). One file needed an asm-label alias
 - **Conflicts**, all identical with the header's type:
   - `RandRange` returns `u16`. 13 of the 14 `s32` callers and
     level_select_widgets.c (through level_select_parts.h) take the `u16`;
-    title_screen_init.c keeps an `s32` alias.
+    title_screen_init.c (title_screen.cpp since #771) keeps an `s32` alias.
   - `rand` returns `u16` (extra_life.c, wumpa_update.c declared `s32`).
   - `__udivsi3`/`__umodsi3` are `u32 (u32, u32)`; 8 callers declared
     `s32 (s32, s32)`, and rand.c `u16 (u16, s32)`.
@@ -2288,7 +2288,7 @@ adds its entries here.
 
 | File | Symbol | Local form | Header form | Why |
 |---|---|---|---|---|
-| src/frontend/title_screen_init.c | `RandRange` | `s32 RandRange_s32(s32 max) asm("RandRange")` | `u16 RandRange(s32 max)` (util.h) | with the `u16` return, InitTitleScreen's two stack slots (`[sp, #0x20]`/`[sp, #0x24]`) swap (old_agbcc) |
+| src/frontend/title_screen_init.c (title_screen.cpp since #771) | `RandRange` | `s32 RandRange_s32(s32 max) asm("RandRange")` | `u16 RandRange(s32 max)` (util.h) | with the `u16` return, InitTitleScreen's two stack slots (`[sp, #0x20]`/`[sp, #0x24]`) swap (old_agbcc) |
 | src/level/spawn_enemies.c | `CreateEnemyCtrl` | `CreateEnemyCtrl_r0(void) asm("CreateEnemyCtrl")`, called after a bare `OperatorNew(0x8c);` | `struct part_ctrl *(struct part_ctrl *self)` | in 11 of the 26 spawners (old_agbcc) the registers only match with the block left in r0 by the previous call; the other 15 use the header's prototype |
 | src/vehicle/polar/yeti_states.c | `PlayAmbientSfx` | `void PlayAmbientSfx_4(void *self, s32 id, s32 frameOffset, s32 volumeMul) asm("PlayAmbientSfx")`, the byte stored at sp through a pinned r4 | `void (struct AudioContext *, u32, u32, s32, struct byte_arg)` (audio.h) | passing a `struct byte_arg` schedules `mov r1, #1` before `mov r4, sp` in YetiStateChase |
 | src/menus/level_select.c | `gLevelSelectGemPos`, `gLevelSelectTrialIconPos` | `struct xy_pair gLevelSelectGemPos_rw asm("gLevelSelectGemPos")` (and `_rw` for the other) | `const struct xy_pair` (menus.h) | InitLevelSelect reads each twice across calls; through the const object gcc keeps the first loads (old_agbcc) |

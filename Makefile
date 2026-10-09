@@ -309,26 +309,18 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/gfx/graphics_package.o \
                   $(C_BUILDDIR)/gfx/scaled_sprite.o \
                   $(C_BUILDDIR)/hud/hud_init.o \
-                  $(C_BUILDDIR)/hud/hud_lives.o \
                   $(C_BUILDDIR)/text/font_glyph.o \
                   $(C_BUILDDIR)/text/font_draw_text.o \
                   $(C_BUILDDIR)/text/font.o \
-                  $(C_BUILDDIR)/hud/hud_boss_clock.o \
                   $(C_BUILDDIR)/hud/hud_counters.o \
-                  $(C_BUILDDIR)/frontend/title_screen_init.o \
                   $(C_BUILDDIR)/save/save_menu_draw.o \
-                  $(C_BUILDDIR)/save/save_menu_ui.o \
                   $(C_BUILDDIR)/save/save_data.o \
                   $(C_BUILDDIR)/save/save_transfer.o \
-                  $(C_BUILDDIR)/menus/power_dialog_loop.o \
-                  $(C_BUILDDIR)/menus/pause_menu_loop.o \
-                  $(C_BUILDDIR)/menus/pause_menu_gems.o \
-                  $(C_BUILDDIR)/menus/pause_menu_powers.o \
+                  $(C_BUILDDIR)/menus/pause_menu_collectibles.o \
                   $(C_BUILDDIR)/menus/pause_menu_pages_init.o \
                   $(C_BUILDDIR)/menus/power_dialog.o \
                   $(C_BUILDDIR)/menus/power_dialog_draw.o \
                   $(C_BUILDDIR)/menus/pause_menu.o \
-                  $(C_BUILDDIR)/menus/continue_prompt_init.o \
                   $(C_BUILDDIR)/level/spawn_gem_platforms.o \
                   $(C_BUILDDIR)/level/entity_spawner.o \
                   $(C_BUILDDIR)/level/bg_layer.o \

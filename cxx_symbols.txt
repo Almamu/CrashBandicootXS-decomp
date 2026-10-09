@@ -1015,7 +1015,7 @@ Loop__11PowerDialog PowerDialogLoop
 InitGraphics__14ContinuePrompt InitContinuePromptGraphics
 #
 # part 10c-2: the title screen and the company logos' other methods
-# (include/frontend.hpp; src/frontend/title_screen_init.cpp, title_screen.cpp)
+# (include/frontend.hpp; src/frontend/title_screen.cpp)
 __11TitleScreen InitTitleScreen
 _._11TitleScreen DestroyTitleScreen
 LoadBg__11TitleScreen LoadTitleScreenBg
