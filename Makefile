@@ -324,16 +324,13 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/level/spawn_gem_platforms.o \
                   $(C_BUILDDIR)/level/entity_spawner.o \
                   $(C_BUILDDIR)/level/bg_layer.o \
-                  $(C_BUILDDIR)/level/bg_layer_init.o \
                   $(C_BUILDDIR)/level/pooled_bg_layer.o \
                   $(C_BUILDDIR)/level/tile_slot_pool.o \
-                  $(C_BUILDDIR)/level/drop_extra_life.o \
                   $(C_BUILDDIR)/level/bg_layer_base.o \
                   $(C_BUILDDIR)/crates/crate_create.o \
                   $(C_BUILDDIR)/cutscene/slideshow.o \
                   $(C_BUILDDIR)/level/tile_cache.o \
                   $(C_BUILDDIR)/level/entity_flags.o \
-                  $(C_BUILDDIR)/level/time_trial.o \
                   $(C_BUILDDIR)/level/room_entities.o \
                   $(C_BUILDDIR)/crates/crate_hit.o \
                   $(C_BUILDDIR)/level/terrain_probe_axes.o \
@@ -350,10 +347,8 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/pickups/wumpa.o \
                   $(C_BUILDDIR)/pickups/stopwatch.o \
                   $(C_BUILDDIR)/level/game_frame.o \
-                  $(C_BUILDDIR)/level/run_room.o \
                   $(C_BUILDDIR)/cutscene/cutscene_player.o \
                   $(C_BUILDDIR)/level/bg_streamer.o \
-                  $(C_BUILDDIR)/level/room_frame.o \
                   $(C_BUILDDIR)/level/play_room.o \
                   $(C_BUILDDIR)/level/level_state.o \
                   $(C_BUILDDIR)/level/level_query.o \

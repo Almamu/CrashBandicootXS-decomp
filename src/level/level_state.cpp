@@ -1,11 +1,17 @@
+#include "platform.hpp"
+#include "pickups.hpp"
+#include "level_state.hpp"
 #include "hud.hpp"
 #include "frontend.hpp"
-#include "level_state.hpp"
 #include "player.hpp"
 #include "audio.hpp"
 #include "boss_ctrl.hpp"
 
 extern "C" {
+#include "crates.h"
+#include "gfx.h"
+#include "level.h"
+#include "globals.h"
 #include "core.h"
 #include "actor.h"
 #include <agb_syscall.h>
@@ -13,9 +19,6 @@ extern "C" {
 #include "frontend.h"
 #include "system.h"
 #include "bosses.h"
-#include "gfx.h"
-#include "level.h"
-#include "globals.h"
 #include "player.h"
 #include "sprite_bank.h"
 }
@@ -25,7 +28,78 @@ extern "C" {
  * the free functions nullsub_24 and GetLevelState. C++ since the #664
  * cleanup, for GetLevelState's `new LevelState` and ShowCompanyLogos'
  * `new CompanyLogos`; the methods were C functions taking the level
- * state as `self` until #750, and compile to the same code. */
+ * state as `self` until #750, and compile to the same code. Built with
+ * old_agbcp - see docs/matching/archive/game-loop-old-agbcc.md.
+ *
+ * StartTimeTrial, first, was time_trial.cpp until #771 (GitHub issue
+ * #34, UpdateGameFrame-MainLoop cluster, docs/rom_map.md; C++ since #664
+ * part 9). */
+
+/* `t` is an s32: the constant is loaded before the tag's address. */
+static inline void SetTag(Platform *part, s32 t)
+{
+    part->tag = t;
+}
+
+/* Starts a time trial: no mask, the clock and the countdown cleared.
+ * Outside the category rooms, the bonus platform and the gem platform
+ * switch to their time-trial animations (7 and 0xC; the gem platform's
+ * palette reloaded), the crates become their time-trial kinds
+ * (ConvertCratesForTimeTrial), and every pickup in the touchable list
+ * (class 2) is collected if it is on screen, or else gone. */
+void LevelState::StartTimeTrial()
+{
+    Platform *part;
+    s32 i;
+
+    SetMaskLevel(MASK_LEVEL_NONE);
+    timeTrial = 1;
+    minutes = 0;
+    seconds = 0;
+    tenths = 0;
+    frames = 0;
+    countdown = 0;
+    if (room.cat->kind == ROOM_KIND_CATEGORY)
+        return;
+
+    part = (Platform *)bonusPlatform;
+    if (part != 0) {
+        SetTag(part, 7);
+        part->ResetFrameTimer();
+        part->ResetFrameIndex();
+        part->SetAnimDone(0);
+    }
+    part = (Platform *)gemPlatform;
+    if (part != 0) {
+        SetTag(part, 0xc);
+        part->ResetFrameTimer();
+        part->ResetFrameIndex();
+        part->SetAnimDone(0);
+        // clang-format off
+        gPaletteCache->LoadSlot(((Platform *)gemPlatform)->palette,
+                        ((Platform *)gemPlatform)->bank->anims[
+                            ((Platform *)gemPlatform)->tag].paletteId);
+        // clang-format on
+    }
+    ConvertCratesForTimeTrial();
+
+    i = 0;
+    if (i < TouchableList()->count) {
+        do {
+            Sprite *e = TouchableList()->items[i];
+            /* The pickup as a wumpa (class 2): a pointer of its own, a
+             * register copy of `e` in the ROM. */
+            Wumpa *w = (Wumpa *)e;
+
+            if (e->GetClassId() == 2) {
+                if (e->IsOnScreen())
+                    w->PickUp(1);
+                else
+                    w->MarkGone();
+            }
+        } while (++i < TouchableList()->count);
+    }
+}
 
 /* Record 47's periodic-trigger setter (docs/rom_map.md, "An
  * achievement/unlock-icon spawner family, tied to gSpriteBankTable
@@ -754,7 +828,7 @@ void LevelState::AddLife()
  * counter/threshold pair, `IsInBonusRound`/`IsInGemPath` readiness checks,
  * then either OR a bit into `GetCurrentLevelFlags`'s slot or forward
  * `+0x1c0`/`0x1c4` to `SpawnCrateGem`). Only caller is
- * `RunRoom`'s dispatch opener (`run_room.cpp`), which passes
+ * `RunRoom`'s dispatch opener (`play_room.cpp`), which passes
  * `*gLevelState` as `this`. */
 void LevelState::CheckAllCratesBroken()
 {
