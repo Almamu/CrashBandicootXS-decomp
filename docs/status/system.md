@@ -14,9 +14,10 @@ category page - see [game_loop.md](./game_loop.md).
 - `src/system/irq.cpp`: `IrqDisable`, `IrqSetup`, `IrqEmptyHandler`,
   `EnableVBlankHandler`, `DisableVBlankHandler`, `RemoveVBlankCallback`, `AddVBlankCallback` (2025,
   original `code_1.s`/`code_2.s` lineage), plus `WaitForVBlank`,
-  `DisableFrameLimit`, `SetFrameLimit`, `VBlankHandler`, `GetDpadDirection`,
-  `UpdateKeys`, `ClearKeys` (Sept 2026, `code_3.s` lineage - `irq.c` is
-  a mixed file, see `docs/decomp_dev.md`)
+  `DisableFrameLimit`, `SetFrameLimit`, `VBlankHandler` (Sept 2026,
+  `code_3.s` lineage - `irq.c` is a mixed file, see `docs/decomp_dev.md`)
+- `src/system/key_input.cpp`: `GetDpadDirection`, `UpdateKeys`, `ClearKeys`
+  (Sept 2026, `code_3.s` lineage; split from `irq.cpp`, #767)
 - The IWRAM image (`0x03000000`, stored at ROM `0x087E55E4`):
   `asm/intr_main.s` (`IntrMain`, hand-written), `src/iwram/string_arm.cpp`
   and `src/iwram/sprite_arm.cpp` (ARM C, all ten matched - `strncpy_arm`
@@ -31,7 +32,7 @@ category page - see [game_loop.md](./game_loop.md).
   the poll/confirm-check code (matching the ROM's own basic-block
   layout) instead of the natural top-to-bottom order - see
   [naked-sub_80010e0-matched.md](../matching/archive/naked-sub_80010e0-matched.md).
-- `src/system/boot.c`: `DivMod`, `MemCopy32`, `UpdateCtrl` -
+- `src/system/bios_util.cpp`: `DivMod`, `MemCopy32`, `UpdateCtrl` -
   boot-adjacent BIOS wrappers right after `asm/crt0.s`'s permanent boot
   stub (`start`, left as hand-written asm, not tracked as a function to
   match); see `docs/matching.md`

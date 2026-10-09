@@ -28,7 +28,7 @@ extern const u8 gLevelSelectPicture8Palette[];
 extern const u8 gLevelSelectPicture6Palette[];
 
 /* Ten {palette, tiles} tagged-asset pairs, indexed by image number:
- * UpdateZoomBg (level_select_widgets.cpp) loads both through
+ * UpdateZoomBg (zoom_bg.cpp) loads both through
  * LoadTaggedAsset. */
 const struct image_pair gLevelSelectPictures[10] = {
     { gLevelSelectPicture0Palette, gLevelSelectPicture0Tiles },

@@ -100,7 +100,7 @@ extern const u16 gContinuePromptPalette1[16];
 extern const u16 gContinuePromptPalette2[16];
 extern const u16 gContinuePromptPalette3[17];
 
-/* src/frontend/credits.cpp (C++, frontend.hpp: ContinuePrompt's methods) */
+/* src/menus/continue_prompt.cpp (C++, frontend.hpp: ContinuePrompt's methods) */
 extern u8 RunContinuePrompt(void);
 
 /* src/menus/level_select.cpp */
@@ -121,6 +121,8 @@ extern void ShowTurboRunDialog(void);
 extern void ShowTornadoSpinDialog(void);
 extern void ShowDoubleJumpDialog(void);
 extern void ShowSuperBodySlamDialog(void);
+
+/* src/save/game_progress.cpp: the save block's statistics */
 extern s32 GetProgressLives(const struct game_progress *save);
 extern s32 CountPlatinumRelics(const struct game_progress *save);
 extern s32 CountGoldRelics(const struct game_progress *save);
@@ -129,5 +131,6 @@ extern s32 CountRelics(const struct game_progress *save);
 extern s32 CountGems(const struct game_progress *save);
 extern s32 CountClearGems(const struct game_progress *save);
 extern s32 CountCrystals(const struct game_progress *save);
+extern s32 GetCompletionPercent(const struct game_progress *progress);
 
 #endif /* GUARD_MENUS_H */

@@ -11,8 +11,8 @@
  * (docs/headers_plan.md).
  *
  * Not here, by ownership (docs/headers_plan.md, "Who owns a symbol"):
- * the continue prompt functions at the start of credits.cpp
- * (DrawContinuePrompt..RunContinuePrompt) are in menus.h, with the rest
+ * the continue prompt functions (DrawContinuePrompt..RunContinuePrompt,
+ * at the start of credits.cpp until #767) are in menus.h, with the rest
  * of the continue prompt. LoadTaggedAssetBuffered
  * (language_select.cpp, CompanyLogos::LoadAssetBuffered) is in system.h,
  * with LoadTaggedAsset. */

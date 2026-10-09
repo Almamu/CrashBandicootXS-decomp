@@ -1,3 +1,5 @@
+/* BIOS helpers (DivMod, MemCopy32), plus Ctrl's empty key method Ctrl::Update. */
+
 #include "ctrl.hpp"
 
 extern "C" {

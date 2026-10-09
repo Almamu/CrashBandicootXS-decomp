@@ -21,7 +21,7 @@ __builtin_vec_delete OperatorDeleteArray
 _vt.4Ctrl gCtrlVtable
 __4Ctrl InitCtrl
 _._4Ctrl DestroyCtrl
-# Ctrl::Update is in src/system/boot.cpp (the key method: gCtrlVtable)
+# Ctrl::Update is in src/system/bios_util.cpp (the key method: gCtrlVtable)
 Update__4CtrlP12MovingSprite UpdateCtrl
 StartTargetMotionYFromSet__4CtrlP12MovingSpritei StartCtrlTargetMotionYFromSet
 SetTargetMotionX__4CtrlP12MovingSpritePCi SetCtrlTargetMotionX
@@ -136,7 +136,7 @@ __16KnockedEnemyCtrl CreateKnockedEnemyCtrl
 _._16KnockedEnemyCtrl DestroyKnockedEnemyCtrl
 Update__16KnockedEnemyCtrlP12MovingSprite UpdateKnockedEnemyCtrl
 Reset__16KnockedEnemyCtrl ResetKnockedEnemyCtrl
-# PeriodicSpawner, and its base Entity (include/entity.hpp, src/gfx/graphics.cpp)
+# PeriodicSpawner, and its base Entity (include/entity.hpp, src/objects/entity.cpp)
 _vt.15PeriodicSpawner gPeriodicSpawnerVtable
 __15PeriodicSpawner CreatePeriodicSpawner
 _._15PeriodicSpawner DestroyPeriodicSpawner
@@ -328,10 +328,11 @@ SetPlatformsKind__16CortexTargetCtrlUc SetCortexPlatformsKind
 SetDest__16CortexTargetCtrlP12MovingSpriteii SetCortexTargetDest
 #
 # part 7a: the entity and sprite object base classes
-# (include/sprite_obj.hpp; src/gfx/graphics.cpp, src/objects/sprite.cpp,
+# (include/sprite_obj.hpp; src/objects/entity.cpp, the sprite graphics
+# managers' src/gfx/oam_buffer.cpp ... sprite_bank_set.cpp, src/objects/sprite.cpp,
 # sprite_obj.cpp, sprite_anim.cpp)
 # g++ copies a struct passed by value with memcpy, which in this ROM is
-# MemCopy32 (src/system/boot.cpp; GAX's `.set memcpy, MemCopy32`)
+# MemCopy32 (src/system/bios_util.cpp; GAX's `.set memcpy, MemCopy32`)
 memcpy MemCopy32
 __14SpriteRenderer InitSpriteRenderer
 _._14SpriteRenderer DestroySpriteRenderer
@@ -504,7 +505,8 @@ CollideWithObject__8PartListG4aabbP12MovingSpriteT2 CollidePartWithObject
 #
 # part 7c: the rest of PartList, CollisionQueue, PaletteCycles, HudPart
 # (include/part_list.hpp; src/objects/part_list.cpp, part_list_cull.cpp,
-# part_collide.cpp, collision_queue.cpp, src/gfx/palette_cycle.cpp)
+# part_collide.cpp, collision_queue.cpp, src/gfx/palette_cycle.cpp,
+# src/hud/hud_part.cpp)
 Draw__8PartList DrawPartList
 Remove__8PartListP6Sprite RemoveFromPartList
 RemoveAt__8PartListi RemovePartListAt

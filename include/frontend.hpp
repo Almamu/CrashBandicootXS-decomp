@@ -6,8 +6,7 @@
  *
  *   Starfield       0x14                     src/frontend/starfield.cpp
  *   Credits         0x98                     src/frontend/credits.cpp
- *   ContinuePrompt  0x24                     src/frontend/credits.cpp,
- *                                            src/menus/continue_prompt*.cpp
+ *   ContinuePrompt  0x24                     src/menus/continue_prompt*.cpp
  *   TitleScreen     0x220                    src/frontend/title_screen_init.cpp,
  *                                            title_screen.cpp
  *   CompanyLogos    0x44C                    src/frontend/company_logos.cpp,

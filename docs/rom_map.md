@@ -444,7 +444,7 @@ one sample read.
 |---|---|---|---|---|
 | `0x08000000`-`0x08006C00` | ~26 KB | `system`/`util`/`graphics` | **matched** | `src/*.c`, see decomp_dev.md |
 | `0x080014A4`-`0x08006700` | 20.6 KB | audio (SFX) | medium | anchored on `PlaySfx`; see "The SFX system" below |
-| `0x08006700`-`0x08006C00` | ~1.3 KB | `graphics` | **matched** | `power_dialog_draw.c`/`graphics.c` |
+| `0x08006700`-`0x08006C00` | ~1.3 KB | `graphics` | **matched** | `power_dialog_draw.c`/`graphics.c` (since #767 `game_progress.cpp`, the `gfx/` manager files, `objects/entity.cpp`) |
 | `0x0801E578`-`0x08029ED0`ish | ~27 KB | graphics loading + HUD + actor init | high | `LoadGraphicsPackage`, `InitSmallFont/B`, `FontMeasureText`, `FontUploadTiles`, `DestroyFont`, `InitObjTileFreeList`, `LoadSpriteFrameTiles`, `SetupSpriteFrameOam`, `DecompressCategorySpriteSheet`, `SetupActorVramPool`, `InitActorCategory` all fall in this stretch, tightly packed |
 | `0x08029ED0`-`0x0802B348`ish | ~5.6 KB | actor system | high | `SelectActorCategory`, `InitActorPart`, `DrawActor`, `ConstructAnimTableState`, `ConstructActorPart` - the vtable/animation system documented in `docs/graphics.md` |
 | `0x080354E0`-`0x08035780`ish | ~0.7 KB | graphics loading | high | `InitTitleScreen`, `LoadTitleScreenBg`, `LoadTitleScreenObjTiles` |
@@ -1800,7 +1800,7 @@ dispatched (all reached via `bl`); the two concrete new leads:
   suggesting they're sibling state machines on the same object-type
   family. `UpdatePlayerCtrl` (2088 B) is a per-frame input/state-machine
   handler: reads D-pad input via the already-matched `GetDpadDirection`
-  (`src/system/irq.cpp`), gates on a child object's `+0x2D` type field
+  (`src/system/key_input.cpp`), gates on a child object's `+0x2D` type field
   against `0x1d`/`0x1f`/`0x20`, then dispatches a 34-case jump table on
   `self+0x22` - strong evidence of core **player movement/action
   control**, referencing a new unlabeled table `gPlayerCtrlStateFuncs`.
@@ -2760,7 +2760,7 @@ tables:
   - show a hint icon when near a specific object type, distance varying
   by type.
 - **`ApplyPlayerCtrlSwimDrift`** (484 B): dispatches on a `self+8` type (`2`/`3`/
-  default), calls the matched `GetDpadDirection` (`src/system/irq.cpp`), gates
+  default), calls the matched `GetDpadDirection` (`src/system/key_input.cpp`), gates
   on `gRoomFrameCount`'s low 7 bits `==0` (a periodic ~128-frame
   check - `gRoomFrameCount` is the same counter the post-fade
   investigation above also touches) **and** an input check

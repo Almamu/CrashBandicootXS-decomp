@@ -104,7 +104,7 @@ union dispcnt {
  * and DrawAffineSpritePieces build one on the stack (their local `struct
  * oam_pair`/`oam_attr01` and gfx.h's `oam_attr2` were copies, #574
  * batch 9e), as do the credits' logos; Font::DrawGlyph builds one in the
- * font's `oam_scratch`, and graphics_package.cpp's scaled sprite keeps
+ * font's `oam_scratch`, and scaled_sprite.cpp's scaled sprite keeps
  * one. font_glyph.cpp's `struct glyph_oam`, credits.cpp's `struct
  * popup_oam` (byte and halfword units) and graphics_package.cpp's `struct
  * oam_attrs_u16` (halfword units) were copies too; all of their objects
@@ -159,7 +159,7 @@ struct bldy {
 };
 
 /* `gBlendRegs`, the blend register shadow SetupRoomBlend builds and
- * CommitBlendRegs (util/aabb.cpp) writes: BLDCNT/BLDALPHA as one word, then
+ * CommitBlendRegs (gfx/display.cpp) writes: BLDCNT/BLDALPHA as one word, then
  * the BLDY byte. */
 struct blend_regs {
     union blend blend; // 0x00
@@ -209,6 +209,7 @@ extern void ShowObj(void);
 extern void SetObjMapping2D(void);
 extern void SetObjMapping1D(void);
 extern void CommitDispcnt(void);
+extern void CommitBlendRegs(void);
 
 /* src/gfx/fade.cpp */
 extern void StepBrightnessFade(void);
@@ -219,16 +220,13 @@ extern void DarkenPalette(s32 factor);
 extern void FadePaletteToBlack(void);
 extern s32 IsBrightnessFadeActive(void);
 
-/* src/gfx/graphics.cpp: the OAM shadow buffer */
-extern s32 GetCompletionPercent(const struct game_progress *progress);
-
-/* src/gfx/graphics.cpp: the VRAM DMA queue and OBJ VRAM cursor */
+/* src/gfx/vram_dma_queue.cpp */
 extern void FlushVramDmaQueue(void);
 extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
 extern void FreeVramDmaQueue(void);
 extern s32 AllocVramDmaQueue(void);
 
-/* src/gfx/graphics.cpp: the entity's world-to-screen helpers */
+/* src/objects/entity.cpp: the world-to-screen helpers between Entity's methods */
 extern void WorldToScreen(void *unused, s32 x, s32 y, s32 *outX, s32 *outY);
 extern void WorldPosToScreen(s32 *pos, s32 *outX, s32 *outY);
 extern void nullsub_12(void);
@@ -292,7 +290,7 @@ extern const s32 gObjSizeWidths[12];
 extern u16 gPaletteBackup[512];
 extern u16 gPaletteFadeBuffer[512];
 
-/* sym_iwram.txt: the VRAM DMA queue (graphics.cpp) */
+/* sym_iwram.txt: the VRAM DMA queue (vram_dma_queue.cpp) */
 extern struct dma_queue gVramDmaQueue;
 
 /* sym_iwram.txt: the OBJ tile allocator (sprite_frame.cpp) */

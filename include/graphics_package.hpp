@@ -1,7 +1,8 @@
 #ifndef GUARD_GRAPHICS_PACKAGE_HPP
 #define GUARD_GRAPHICS_PACKAGE_HPP
 
-/* The BG setup and the sprite box as C++ (#753; src/gfx/graphics_package.cpp).
+/* The BG setup and the sprite box as C++ (#753; src/gfx/graphics_package.cpp
+ * and scaled_sprite.cpp).
  * Neither has a vtable. cxx_symbols.txt maps the methods' mangled names
  * onto their C names. */
 

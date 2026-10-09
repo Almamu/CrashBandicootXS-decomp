@@ -10,12 +10,11 @@
  * link exchange (SaveMenu::LinkExchange); cxx_symbols.txt maps the
  * methods onto their C names.
  *
- *   src/save/save_data.cpp           SaveData (all but SetFlags)
- *   src/save/save_transfer.cpp       SaveData::SetFlags, SaveTransfer's
- *                                    SendChunk and ReceiveChunk
- *   src/save/save_transfer_poll.cpp  SaveTransfer::Poll
- *   src/save/save_menu_input.cpp     SaveTransfer's SetRecord, GetData,
- *                                    Reset
+ *   src/save/save_data.cpp           SaveData
+ *   src/save/save_transfer.cpp       SaveTransfer's SendChunk and
+ *                                    ReceiveChunk
+ *   src/save/save_transfer_state.cpp SaveTransfer's Poll, SetRecord,
+ *                                    GetData, Reset
  *
  * Neither has a vtable, a constructor or a destructor: `new` and
  * `delete` of them are plain OperatorNew and OperatorDelete calls, as
@@ -101,9 +100,7 @@ public:
     u8 IsSlotEmpty(s32 row);            // IsSaveSlotEmpty
     u8 TestFlags(u8 mask);              // TestSaveFlags
     void ClearFlags(u8 mask);           // ClearSaveFlags
-
-    /* src/save/save_transfer.cpp */
-    void SetFlags(u8 mask); // SetSaveFlags
+    void SetFlags(u8 mask);             // SetSaveFlags
 };
 
 COMPILE_TIME_ASSERT(save_data_hpp, sizeof(SaveData) == 0x200);
@@ -138,10 +135,8 @@ public:
     void SendChunk();                   // SendSaveTransferChunk
     void ReceiveChunk(s32 playerIndex); // ReceiveSaveTransferChunk
 
-    /* src/save/save_transfer_poll.cpp */
-    s32 Poll(); // PollSaveTransfer
-
-    /* src/save/save_menu_input.cpp */
+    /* src/save/save_transfer_state.cpp */
+    s32 Poll();                       // PollSaveTransfer
     void SetRecord(SaveData *record); // SetSaveTransferRecord
     void *GetData();                  // GetSaveTransferData
     void Reset();                     // ResetSaveTransfer

@@ -23,9 +23,10 @@
 extern u32 gRandSeed;
 
 /* src/util/aabb.cpp */
-extern void CommitBlendRegs(void);
 extern u8 AabbOverlapsInclusiveX(struct aabb *a, struct aabb *b);
 extern u8 AabbOverlaps(struct aabb *a, struct aabb *b);
+
+/* src/system/iwram_alloc.cpp */
 extern void IwramFree(u8 *address);
 extern void *IwramAlloc(u32 size);
 
@@ -53,7 +54,6 @@ extern u8 *FormatPaddedNumber(u8 *dest, u8 *fmt, s32 *valuePtr, u8 padChar, s32 
 /* src/util/printf.cpp */
 extern void vsprintf(u8 *dest, u8 *fmt, u32 *args);
 extern void sprintf(u8 *dest, u8 *fmt, ...);
-extern u8 *FindSubstring(u8 *haystack, u8 *needle, s32 caseInsensitive);
 
 /* src/util/rand.cpp */
 extern void srand(u32 seed);
@@ -61,6 +61,7 @@ extern u16 RandRange(s32 max);
 extern u16 rand(void);
 
 /* src/util/string.cpp */
+extern u8 *FindSubstring(u8 *haystack, u8 *needle, s32 caseInsensitive);
 extern s32 CountNonSpaceChars(u8 *s);
 extern void strcat(u8 *dst, u8 *src);
 extern void strncpy(u8 *dst, u8 *src, s32 n);

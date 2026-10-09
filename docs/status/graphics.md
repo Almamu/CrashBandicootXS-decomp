@@ -10,16 +10,21 @@ and [graphics_loading.md](./graphics_loading.md).
 
 ## Matched
 
-- `src/gfx/graphics.c`: `AllocVramDmaQueue`, `QueueVramDmaTransfer`,
-  `FreeVramDmaQueue`, `FlushVramDmaQueue`, `InitOamBuffer`, `DestroyOamBuffer`,
-  `AddOamEntry`, `CommitOamBuffer`, `RewindOamBuffer`, `MarkOamBufferBase`, `ResetOamBuffer`,
-  `HideUnusedOamEntries`, `AppendOamEntries`, `SetOamAffineScales`, `GetCompletionPercent`,
-  `RewindObjVram`, `MarkObjVram`, `GetObjVramFreeBytes`, `GetObjVramTile`, `ResetObjVram`,
-  `ReserveObjVram`, `UploadObjVram`, `DestroyObjVramCursor`, `InitObjVramCursor`, `LoadPaletteSlot`,
+- `src/gfx/graphics.c`, split in #767 into (ROM order) `src/save/game_progress.cpp`
+  (`GetCompletionPercent`, after the counts below), `src/gfx/oam_buffer.cpp`
+  (`SetOamAffineScales`, `AppendOamEntries`, `HideUnusedOamEntries`,
+  `RewindOamBuffer`, `MarkOamBufferBase`, `ResetOamBuffer`, `CommitOamBuffer`,
+  `AddOamEntry`, `DestroyOamBuffer`, `InitOamBuffer`), `src/gfx/vram_dma_queue.cpp`
+  (`FlushVramDmaQueue`, `QueueVramDmaTransfer`, `FreeVramDmaQueue`,
+  `AllocVramDmaQueue`), `src/gfx/obj_vram_cursor.cpp`
+  (`RewindObjVram`, `MarkObjVram`, `GetObjVramFreeBytes`, `GetObjVramTile`, `ResetObjVram`,
+  `ReserveObjVram`, `UploadObjVram`, `DestroyObjVramCursor`, `InitObjVramCursor`),
+  `src/gfx/palette_cache.cpp` (`LoadPaletteSlot`,
   `BindPaletteSlot`, `ClaimPaletteSlot`, `UnlockPalette`, `LockPalette`, `UploadPaletteSlot`,
   `UploadPaletteCache`, `GetPaletteSlot`, `FreePaletteSlot`, `FreeUnlockedPaletteSlots`, `SetPaletteCacheSource`,
-  `ClearPaletteCache`, `DestroyPaletteCache`, `InitPaletteCache`, `DestroySpriteBankSet`, `InitSpriteBankSet`,
-  `IsEntityNearCamera`, `CheckEntityPlayerContact`, `DrawEntity`, `UpdateEntity`, `GetEntityBounds`,
+  `ClearPaletteCache`, `DestroyPaletteCache`, `InitPaletteCache`),
+  `src/gfx/sprite_bank_set.cpp` (`DestroySpriteBankSet`, `InitSpriteBankSet`) and
+  `src/objects/entity.cpp`: `IsEntityNearCamera`, `CheckEntityPlayerContact`, `DrawEntity`, `UpdateEntity`, `GetEntityBounds`,
   `SetEntitySize`, `EntityOverlapsRect`, `IsEntityOnScreen`, `IsEntityInsideRect`,
   `WorldToScreen`, `WorldPosToScreen`, `nullsub_12`, `CreateEntity`,
   `GetEntityClassId`, `ResetEntity`, `InitEntity`, `ClearEntityAlwaysActive`,
@@ -31,7 +36,8 @@ and [graphics_loading.md](./graphics_loading.md).
   `SetEntityPos`, `SetEntityPosVec`, `SetEntityKind`, `GetEntityKind`,
   `GetEntityId`, `DestroyEntity`
 - `src/menus/power_dialog_draw.c`: `AnimatePowerDialog`, `CommitPowerDialogFrame`, `DestroyPowerDialog`,
-  `ShowTurboRunDialog`, `ShowTornadoSpinDialog`, `ShowDoubleJumpDialog`, `ShowSuperBodySlamDialog`, `GetProgressLives`,
+  `ShowTurboRunDialog`, `ShowTornadoSpinDialog`, `ShowDoubleJumpDialog`, `ShowSuperBodySlamDialog`;
+  then (`src/save/game_progress.cpp` since #767) `GetProgressLives`,
   `CountPlatinumRelics`, `CountGoldRelics`, `CountSapphireRelics`, `CountRelics`, `CountGems`,
   `CountClearGems`, `CountCrystals`
 - `src/gfx/fade.cpp`: `StepBrightnessFade`, `FadeBrightness`
@@ -59,18 +65,20 @@ and [graphics_loading.md](./graphics_loading.md).
   object joined `OLD_AGBCC_OBJS`); see
   [strag3-naked-retry.md](../matching/archive/strag3-naked-retry.md).
 
-- `src/util/aabb.cpp` (new file): `CommitBlendRegs` (BLDCNT/
+- `src/gfx/display.cpp`'s last function, `CommitBlendRegs` (until #767
+  the first of `src/util/aabb.cpp`; BLDCNT/
   BLDALPHA/BLDY shadow commit - was previously NAKED, now matched as
   real C via an inline-asm-materialized store-and-increment pair
   opaque to the peephole fusion that otherwise always combines it into
   a `stmia` writeback, plus the ROM's own shift-based mask idiom - see
   [naked-CommitBlendRegs-matched.md](../matching/archive/naked-sub_8001624-matched.md)),
-  `AabbOverlapsInclusiveX`, `AabbOverlaps`, `IwramFree`, `IwramAlloc` - two AABB
+  then `src/util/aabb.cpp`: `AabbOverlapsInclusiveX`, `AabbOverlaps` - two AABB
   overlap tests (one already referenced by name from `actor.md`'s
-  `player_update.c`) plus `mem_free`/`mem_alloc` wrappers.
+  `player_update.c`), and `src/system/iwram_alloc.cpp`: `IwramFree`,
+  `IwramAlloc`, the `mem_free`/`mem_alloc` wrappers (split from aabb.cpp, #767).
 
 - `src/gfx/bitmap_screen.cpp` (new file, replacing `asm/code_3_1.s` -
-  boot-adjacent but not part of `src/system/boot.c` since
+  boot-adjacent but not part of `src/system/bios_util.cpp` since
   `main.c`/`memory.c`/`irq.c` sit between them in ROM order):
   `ShowBitmapScreen` - BG2 affine setup for a full-screen intro image; see
   `docs/matching.md` for the statement-ordering gotchas.
@@ -133,7 +141,9 @@ and [graphics_loading.md](./graphics_loading.md).
   `LevelSelectExit`, the page-entry refresh (`PlaceLevelSelectEntries`/`LoadLevelSelectEntries`/
   `SetLevelSelectEntryBoxes`), the BG1 page strip (`GetLevelSelectPageBgScroll`-`CreateLevelSelectPageBg`) and
   the BG2 icon layer's constructor `InitZoomBg`. `CommitLevelSelectFrame` is
-  UNUSED. Compiled with `old_agbcc`. See
+  UNUSED. Compiled with `old_agbcc`. Since #767 the BG1 page strip is
+  `src/menus/level_select_page_bg.cpp` and `InitZoomBg` starts
+  `src/menus/zoom_bg.cpp`. See
   [docs/matching/archive/issue-27-level-select-pages.md](../matching/archive/issue-27-level-select-pages.md).
 - `src/bosses/dingodile.c` (new file - GitHub issue #24):
   `SetCortexPlatformsKind`-`DestroyDingodileShieldCtrl` except the two NAKED ones below (23 of 25
@@ -160,7 +170,9 @@ and [graphics_loading.md](./graphics_loading.md).
   NAKED retry, below). See
   [docs/matching/archive/issue-25-level-objects.md](../matching/archive/issue-25-level-objects.md).
 - GitHub issues #28/#29 (0x0801DA38-0x0801E578, shared structs in
-  `include/level_select_parts.h`, both files built with `old_agbcc`):
+  `include/level_select_parts.h`, both files built with `old_agbcc`;
+  `level_select_widgets.c` is split since #767 into `src/menus/zoom_bg.cpp`,
+  `level_select_entry.cpp` and `level_select_cursor.cpp`):
   `src/menus/level_select_widgets.c` (`DestroyZoomBg`-`DestroyLevelSelectEntry`, all
   25) - the level-select screen's zooming BG2 picture (`struct
   zoom_bg`: destructor, state machine, affine draw/commit, state

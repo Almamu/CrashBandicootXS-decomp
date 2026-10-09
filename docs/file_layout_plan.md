@@ -318,10 +318,14 @@ Splitting a file at a function boundary is byte-safe for the same reasons a
 merge is. These files mix subjects and would read better split. Nothing in
 this plan depends on splitting them.
 
-- `gfx/graphics.c` (`graphics.c`): OAM buffer, VRAM DMA queue, OBJ VRAM
-  cursor, palette cache and the `Entity` base class.
-- `menus/level_select.c` (`actor_part_1b85c.c`): `CameraLead` and
-  `LaunchPad` (objects) ahead of the level-select screen.
+- ~~`gfx/graphics.c` (`graphics.c`): OAM buffer, VRAM DMA queue, OBJ VRAM
+  cursor, palette cache and the `Entity` base class.~~ **Done (#767):**
+  `gfx/oam_buffer.cpp`, `vram_dma_queue.cpp`, `obj_vram_cursor.cpp`,
+  `palette_cache.cpp`, `sprite_bank_set.cpp`, `objects/entity.cpp`, and
+  `GetCompletionPercent` in `save/game_progress.cpp`.
+- ~~`menus/level_select.c` (`actor_part_1b85c.c`): `CameraLead` and
+  `LaunchPad` (objects) ahead of the level-select screen.~~ **Done (#767):**
+  `objects/camera_lead.cpp`, `objects/launch_pad.cpp`.
 - `level/camera.c` (`camera_follow.c`): `OperatorNew`/`OperatorDelete`
   (C++ runtime) after the camera.
 - `bosses/cortex.c` and `bosses/dingodile.c` (`actor_part_188d0.c`,
@@ -332,8 +336,9 @@ this plan depends on splitting them.
   airship's `GetAirshipHpPercent`/`DestroyAirship`.
 - `bosses/hovercraft.c` (`actor_part130.c`): starts with the jetpack ring
   and collected wumpa.
-- `frontend/credits.c` (`actor_part131.c`): starts with the continue
-  prompt's draw/run.
+- ~~`frontend/credits.c` (`actor_part131.c`): starts with the continue
+  prompt's draw/run.~~ **Done (#767):** moved to the end of
+  `menus/continue_prompt.cpp`.
 - `frontend/language_select.c` (`counter_selector.c`): starts with
   `LoadTaggedAssetBuffered` and the company-logo destructors.
 - `actor/actor_anim.c` and `util/aabb_setup.c`: the ROM-tail grab bags

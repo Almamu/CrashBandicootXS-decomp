@@ -13,8 +13,9 @@ extern "C" {
  * DrawAffinePieces (affine_sprite_pieces.cpp). Split out of graphics.c
  * (now graphics.cpp) when that was still built with agbcc: it needs
  * old_agbcc, and old_agbcp as C++ (Makefile OLD_AGBCC_OBJS) - the ROM loads the piece id's
- * `0xf` mask before the `ldrb` it is combined with. graphics.cpp is an
- * old_agbcp object too since #664.
+ * `0xf` mask before the `ldrb` it is combined with. graphics.cpp was an
+ * old_agbcp object too since #664 (split into entity.cpp and the gfx/
+ * manager files in #767; entity.o is the object before this one).
  *
  * Queues one OAM entry per visible sub-piece of an animated `part`
  * (mirrored per the part's flag bits) and sends the part's whole tile

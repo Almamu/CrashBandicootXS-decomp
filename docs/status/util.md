@@ -8,15 +8,16 @@ helpers.
 - `src/util/fixed_math.cpp`: `FixedDistSq`, `FixedDist`, `FixedDiv`,
   `FixedMul`, `FixedInverse16`, `FixedDiv16`, `FixedMul16`
 - `src/util/number_format.cpp`: `itoa`, `FormatPaddedNumber`
-- `src/util/printf.cpp`: `vsprintf`, `sprintf`, `FindSubstring`
-  (case-insensitive `strstr` - was previously NAKED, now matched as
+- `src/util/printf.cpp`: `vsprintf`, `sprintf`
+- `src/util/string.cpp`: `FindSubstring` (moved from `printf.cpp`, #767;
+  case-insensitive `strstr` - was previously NAKED, now matched as
   real C via opaque inline-asm-materialized lowercase folds plus
   deferring the inner loop's match-found computation to a label placed
   after the whole scan/verify loop so gcc's block linearizer places it
   right before the shared epilogue, matching the ROM's own layout - see
   [naked-sub_8000cbc-matched.md](../matching/archive/naked-sub_8000cbc-matched.md))
-- `src/util/string.cpp`: `CountNonSpaceChars`, `strcat`, `strncpy`,
-  `strcpy`, `strlen`
+  then `CountNonSpaceChars`, `strcat`, `strncpy`, `CopyString`,
+  `StringLength`
 - `src/util/rand.cpp`: `srand`, `RandRange`, `rand`
 - `src/util/line.cpp`: `InitBresenhamLine`
 - `src/util/time_format.cpp`: `FormatCentiseconds`

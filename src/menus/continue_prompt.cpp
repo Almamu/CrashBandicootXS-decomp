@@ -1,3 +1,8 @@
+/* The continue prompt (ContinuePrompt, frontend.hpp): InitGraphics, Loop,
+ * then Draw, Blink, CommitFrame, the destructor and Run (GitHub issue #64;
+ * those five started frontend/credits.cpp until #767). Its constructor is
+ * continue_prompt_init.cpp. All old_agbcc. */
+
 #include "sprite_obj.hpp"
 #include "frontend.hpp"
 #include "audio.hpp"
@@ -142,4 +147,73 @@ s32 ContinuePrompt::Loop()
         }
     }
     return selection == 0;
+}
+
+/* Draws the Yes/No labels (UI texts 0x28-0x2a) with gSmallFont, the
+ * selected one blinking (Blink) and marked with the cursor. */
+void ContinuePrompt::Draw()
+{
+    s32 w;
+
+    gOamBuffer->Reset();
+    gObjVramCursor->Rewind();
+    w = icons->MeasureText((u8 *)GetUiText(0x28));
+    icons->SetPalette(0);
+    icons->SetPos(0x88 - w, 0x87);
+    icons->DrawText((u8 *)GetUiText(0x28));
+    icons->SetPalette(Blink(0));
+    if (selection == 0) {
+        icons->SetPos(0x90, 0x87);
+        icons->DrawText((u8 *)gContinuePromptCursorText);
+    }
+    icons->SetPos(0x98, 0x87);
+    icons->DrawText((u8 *)GetUiText(0x29));
+    icons->SetPalette(Blink(1));
+    if (selection == 1) {
+        icons->SetPos(0x90, 0x91);
+        icons->DrawText((u8 *)gContinuePromptCursorText);
+    }
+    icons->SetPos(0x98, 0x91);
+    icons->DrawText((u8 *)GetUiText(0x2a));
+    gOamBuffer->HideUnused();
+}
+
+/* The palette of `option`'s label: 1 when it isn't selected, else 0 or 2
+ * from the blink counter, which it advances. */
+s32 ContinuePrompt::Blink(s32 option)
+{
+    if (option == selection) {
+        return (blinkCounter++ >> 1) & 2;
+    }
+    return 1;
+}
+
+void ContinuePrompt::CommitFrame()
+{
+    WaitForVBlank();
+    gOamBuffer->Commit();
+    FlushVramDmaQueue();
+    REG_DISPCNT = dispcnt.raw;
+}
+
+/* Frees the three BG buffers. */
+ContinuePrompt::~ContinuePrompt()
+{
+    delete bg0Buf;
+    delete bg1Buf;
+    delete bg2Buf;
+}
+
+/* Runs the prompt and returns the choice (0 yes, 1 no). */
+u8 ContinuePrompt::Run()
+{
+    ContinuePrompt *self;
+    u8 result;
+
+    mem_free_bytes(0xc0000000);
+    self = new ContinuePrompt;
+    result = self->Loop();
+    delete self;
+    mem_free_bytes(0xc0000000);
+    return result;
 }

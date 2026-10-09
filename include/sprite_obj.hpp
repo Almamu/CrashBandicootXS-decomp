@@ -5,7 +5,7 @@
  * classes behind gEntityVtable, gSpriteObjVtable, gMovingSpriteVtable and
  * gGroundSpriteVtable, and the subclasses built on them.
  *
- *   Entity        0x1C  gEntityVtable        (11 slots) src/gfx/graphics.cpp
+ *   Entity        0x1C  gEntityVtable        (11 slots) src/objects/entity.cpp
  *   Sprite        0x40  gSpriteObjVtable     (13 slots) src/objects/sprite*.cpp
  *   UiSprite      0x40  gUiSpriteObjVtable              src/objects/sprite_anim.cpp
  *   MovingSprite  0x78  gMovingSpriteVtable  (15 slots) src/objects/moving_sprite*.cpp,
@@ -401,7 +401,8 @@ static inline PartList *ForegroundList()
     return gForegroundList;
 }
 
-/* The sprite graphics managers (src/gfx/graphics.cpp). */
+/* The sprite graphics managers (src/gfx/oam_buffer.cpp, obj_vram_cursor.cpp,
+ * palette_cache.cpp, sprite_bank_set.cpp). */
 
 /* The OAM shadow buffer (gOamBuffer): a shadow copy of the 128-entry hardware OAM
  * table. `count` entries of it are in use, `base` of them kept from frame

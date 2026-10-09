@@ -8,7 +8,7 @@
  * that defines its first non-inline virtual method (its key method),
  * and ldscript.txt places it at its ROM address (docs/cplusplus.md,
  * "Emitting the vtables"). Ctrl's own, gCtrlVtable, is emitted in
- * src/system/boot.cpp, which has its key method, Update (UpdateCtrl).
+ * src/system/bios_util.cpp, which has its key method, Update (UpdateCtrl).
  * cxx_symbols.txt maps the mangled vtable, method, constructor and
  * destructor names onto their C names. */
 
@@ -27,7 +27,7 @@ class MovingSprite;
  * that has virtual methods, which is why it sits at +0x0C. Each virtual
  * method's slot in gCtrlVtable is its declaration order, from slot 1
  * (slot 0 is the empty RTTI slot: the game was built with -fno-rtti).
- * Slot 1, Update (UpdateCtrl), is an empty function in system/boot.cpp.
+ * Slot 1, Update (UpdateCtrl), is an empty function in system/bios_util.cpp.
  * SetMode, StartTargetMotionY, SetTargetMotionY and SetAnimSet are in
  * src/player/player_flags.cpp, with the player's accessors. */
 class Ctrl

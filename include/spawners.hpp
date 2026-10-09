@@ -73,7 +73,7 @@ COMPILE_TIME_ASSERT(spawners_hpp, sizeof(LevelEntityFlags) == 0x408);
 
 /* The key input object (gInput; system.h): UpdateKeys and
  * GetDpadDirection take it but read gKeys. Its constructor is ClearKeys
- * (src/system/irq.cpp). */
+ * (src/system/key_input.cpp). */
 class KeyInput
 {
 public:

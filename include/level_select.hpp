@@ -3,15 +3,14 @@
 
 /* The level select's classes as C++ (#664, docs/cplusplus.md, part 10):
  *
- *   CameraLead          0x80  gCameraLeadVtable       src/menus/level_select.cpp
- *   LaunchPad           0x78  gLaunchPadVtable        src/menus/level_select.cpp
+ *   CameraLead          0x80  gCameraLeadVtable       src/objects/camera_lead.cpp
+ *   LaunchPad           0x78  gLaunchPadVtable        src/objects/launch_pad.cpp
  *   LevelSelect         0xAC                          src/menus/level_select.cpp,
  *                                                     level_select_pages.cpp
- *   LevelSelectPageBg   0x28                          src/menus/level_select_pages.cpp
- *   ZoomBg              0x8C                          src/menus/level_select_widgets.cpp
- *                                                     (constructor: _pages.cpp)
- *   LevelSelectEntry    0x14  gLevelSelectEntryVtable src/menus/level_select_widgets.cpp
- *   LevelSelectCursor   0x54                          src/menus/level_select_widgets.cpp
+ *   LevelSelectPageBg   0x28                          src/menus/level_select_page_bg.cpp
+ *   ZoomBg              0x8C                          src/menus/zoom_bg.cpp
+ *   LevelSelectEntry    0x14  gLevelSelectEntryVtable src/menus/level_select_entry.cpp
+ *   LevelSelectCursor   0x54                          src/menus/level_select_cursor.cpp
  *
  * The sizes are the ROM's (the `new`s in InputCtrl::StateStart,
  * SpawnLaunchPad, RunLevelSelect and InitLevelSelect). Only three have a
@@ -29,9 +28,9 @@
  * #754); menus.h has the C names of the methods the vtable data uses, and
  * cxx_symbols.txt maps the methods to them.
  *
- * No `#pragma interface`: g++ emits the vtables, CameraLead's and
- * LaunchPad's in level_select.cpp, LevelSelectEntry's in
- * level_select_widgets.cpp (see ctrl.hpp). */
+ * No `#pragma interface`: g++ emits the vtables, CameraLead's in
+ * camera_lead.cpp, LaunchPad's in launch_pad.cpp, LevelSelectEntry's in
+ * level_select_entry.cpp (see ctrl.hpp). */
 
 #include "sprite_obj.hpp"
 #include "player.hpp"
@@ -259,7 +258,7 @@ public:
     s32 bgy;             // 0x58
     Twinkle twinkles[4]; // 0x5C
 
-    ZoomBg(s32 charBlock, s32 screenBlock); // InitZoomBg (level_select_pages.cpp)
+    ZoomBg(s32 charBlock, s32 screenBlock); // InitZoomBg (zoom_bg.cpp)
     ~ZoomBg();                              // DestroyZoomBg
     void Update();                          // UpdateZoomBg
     void Draw();

@@ -51,7 +51,7 @@ u8 gFrameLimitEnabled = 0;
  * (audio.cpp). */
 u8 gGaxIrqEnabled = 0;
 
-/* Held keys and newly pressed keys (irq.cpp's UpdateKeys). */
+/* Held keys and newly pressed keys (key_input.cpp's UpdateKeys). */
 union key_state gKeys = { { 0, 0 } };
 
 /* rand.cpp's seed. */

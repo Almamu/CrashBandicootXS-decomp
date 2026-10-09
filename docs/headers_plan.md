@@ -871,7 +871,7 @@ needed an asm-label alias (`PlayAmbientSfx` in yeti_states.c, see
 "Codegen exceptions").
 
 - **`include/system.h`** (new) declares every function of asset.c,
-  boot.c, input.c, main.c, main_loop.c and the non-IRQ half of irq.c
+  bios_util.cpp, input.c, main.c, main_loop.c and the non-IRQ half of irq.c
   (`WaitForVBlank`, the frame limit, `UpdateKeys`, `ClearKeys`,
   `GetDpadDirection`), plus `LoadTaggedAssetBuffered` (defined in
   language_select.c for ROM order; batch 3 deferred it here), the frame
@@ -1431,7 +1431,7 @@ see "Codegen exceptions").
   - the blend registers: level_menu.h's and level_select.c's `struct
     blend_bits`/`union blend`/`struct bldy` moved to gfx.h, and
     `gBlendRegs` is a `struct blend_regs { union blend blend; u8 bldy; }`
-    (room_frame.c's `union blend` view and util/aabb.cpp's `struct
+    (room_frame.c's `union blend` view and util/aabb.cpp's (CommitBlendRegs, now gfx/display.cpp) `struct
     unk_03001280`).
 - **Definition fixes**, all identical:
   - an unused parameter where the callers pass one: `InitBgLayerBase`

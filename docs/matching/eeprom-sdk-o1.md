@@ -187,11 +187,11 @@ Searched for, and nothing else found:
 - **Game code that looks like library code.** `irq.c` (IRQ table
   setup, VBlank handler, key reading), `memory.c` (heap), `rand.c`,
   `number_format.c`/`string.c`/`printf.c` (`itoa`, `strcat` etc. on `u8 *`),
-  `boot.c` and the link-cable/SIO files (`src/link/*.c`, a custom
+  `bios_util.cpp` and the link-cable/SIO files (`src/link/*.c`, a custom
   CRC-16 handshake) sit in the game's own address range with the
   game's own data structures, and none follows an SDK source. As a
   check, the pinned `irq.c` functions `DisableVBlankHandler`, `UpdateKeys`
-  and `ClearKeys` written as plain C are 11/26/5 halfwords off at
+  and `ClearKeys` (the last two in `key_input.cpp` since #767) written as plain C are 11/26/5 halfwords off at
   **both** -O1 and -O2, so -O1 does not explain their pins.
 - **Whole-tree sweep.** Every `src/**/*.c` was compiled at -O1 (agbcc
   and old_agbcc) and compared per function. About 200 objects also

@@ -1,3 +1,7 @@
+/* The save transfer's state: Poll, then SetRecord, GetData and Reset (those
+ * three moved from save_menu_input.cpp, #767; this file was
+ * save_transfer_poll.cpp; both default flags). */
+
 #include "save_data.hpp"
 #include "link_session.hpp"
 
@@ -56,4 +60,26 @@ s32 SaveTransfer::Poll()
     if (settled)
         return 0;
     return 1;
+}
+
+void SaveTransfer::SetRecord(SaveData *record)
+{
+    tmpl = record;
+    cursor = (u8 *)record;
+}
+
+void *SaveTransfer::GetData()
+{
+    return data;
+}
+
+void SaveTransfer::Reset()
+{
+    remaining = sizeof(data);
+    totalReceived = 0;
+    cursor = (u8 *)tmpl;
+    writePtr = data;
+    sendDone = 0;
+    receiveDone = 0;
+    settleTimer = 0;
 }

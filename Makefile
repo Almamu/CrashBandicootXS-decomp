@@ -217,7 +217,13 @@ $(ELF): $(OBJS) $(LDSCRIPT)
 # -fprologue-bugfix option.
 OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/objects/sprite_obj.o \
-                  $(C_BUILDDIR)/gfx/graphics.o \
+                  $(C_BUILDDIR)/save/game_progress.o \
+                  $(C_BUILDDIR)/gfx/oam_buffer.o \
+                  $(C_BUILDDIR)/gfx/vram_dma_queue.o \
+                  $(C_BUILDDIR)/gfx/obj_vram_cursor.o \
+                  $(C_BUILDDIR)/gfx/palette_cache.o \
+                  $(C_BUILDDIR)/gfx/sprite_bank_set.o \
+                  $(C_BUILDDIR)/objects/entity.o \
                   $(C_BUILDDIR)/gfx/sprite_pieces.o \
                   $(C_BUILDDIR)/gfx/affine_sprite_pieces.o \
                   $(C_BUILDDIR)/gfx/display.o \
@@ -268,6 +274,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/objects/part_collide.o \
                   $(C_BUILDDIR)/objects/part_list_cull.o \
                   $(C_BUILDDIR)/gfx/palette_cycle.o \
+                  $(C_BUILDDIR)/hud/hud_part.o \
                   $(C_BUILDDIR)/player/player_event.o \
                   $(C_BUILDDIR)/player/action_ctrl_event.o \
                   $(C_BUILDDIR)/player/action_ctrl_idle.o \
@@ -288,9 +295,14 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/objects/platform_collide.o \
                   $(C_BUILDDIR)/objects/platform_contact.o \
                   $(C_BUILDDIR)/objects/platform.o \
+                  $(C_BUILDDIR)/objects/camera_lead.o \
+                  $(C_BUILDDIR)/objects/launch_pad.o \
                   $(C_BUILDDIR)/menus/level_select.o \
                   $(C_BUILDDIR)/menus/level_select_pages.o \
-                  $(C_BUILDDIR)/menus/level_select_widgets.o \
+                  $(C_BUILDDIR)/menus/level_select_page_bg.o \
+                  $(C_BUILDDIR)/menus/zoom_bg.o \
+                  $(C_BUILDDIR)/menus/level_select_entry.o \
+                  $(C_BUILDDIR)/menus/level_select_cursor.o \
                   $(C_BUILDDIR)/level/spawn_start_marker.o \
                   $(C_BUILDDIR)/level/spawn_gems.o \
                   $(C_BUILDDIR)/level/spawn_enemies.o \
@@ -301,6 +313,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/frontend/language_select_setup.o \
                   $(C_BUILDDIR)/frontend/starfield.o \
                   $(C_BUILDDIR)/gfx/graphics_package.o \
+                  $(C_BUILDDIR)/gfx/scaled_sprite.o \
                   $(C_BUILDDIR)/hud/hud_init.o \
                   $(C_BUILDDIR)/hud/hud_lives.o \
                   $(C_BUILDDIR)/text/font_glyph.o \
@@ -364,14 +377,18 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
 # #662 step 3: system/util/audio objects whose workarounds (pins, copy
 # asms) aren't needed under old_agbcc. Evidence: each object stays
 # byte-identical with plain C - input.o's `keys = mask & pressed`
-# (old_agbcc copies `mask` first, as the ROM does), irq.o's
-# UpdateKeys and DISPSTAT updates, aabb.o's CommitBlendRegs (BLDY's
-# address derived from BLDCNT's), audio.o's VCount DISPSTAT updates
+# (old_agbcc copies `mask` first, as the ROM does), irq.o's DISPSTAT
+# updates, key_input.o's UpdateKeys (split from irq.o, #767), aabb.o's
+# CommitBlendRegs (BLDY's address derived from BLDCNT's; at the end of
+# display.o, already old_agbcc, since #767 - aabb.o and iwram_alloc.o, the
+# rest of the old aabb.o, stay old_agbcc), audio.o's VCount DISPSTAT updates
 # (audio.cpp since, built by old_agbcp: agbcp gives the same AudioContext
 # methods but loads DISPSTAT's byte before the mask).
 OLD_AGBCC_OBJS += $(C_BUILDDIR)/system/input.o \
                   $(C_BUILDDIR)/system/irq.o \
+                  $(C_BUILDDIR)/system/key_input.o \
                   $(C_BUILDDIR)/util/aabb.o \
+                  $(C_BUILDDIR)/system/iwram_alloc.o \
                   $(C_BUILDDIR)/audio/audio.o
 $(OLD_AGBCC_OBJS): CC1 := $(CC1_OLD)
 $(OLD_AGBCC_OBJS): CC1FLAGS := $(filter-out -fprologue-bugfix,$(CC1FLAGS))
@@ -398,15 +415,18 @@ $(filter $(OLD_AGBCC_OBJS),$(CXX_OBJS)): CXX1 := $(CXX1_OLD)
 # (the copy constructor-like `DingodileProjectileCtrl(rocket)` in
 # dingodile.o, ...). The flag drops those copies and nothing else: each
 # object's code is the same with and without it as long as the class
-# keeps `#pragma interface`. graphics.o is the one key-method object the
-# ROM has the copies in (Entity's inline methods, DestroyEntity last).
+# keeps `#pragma interface`. entity.o (graphics.o until #767) is the one
+# key-method object the ROM has the copies in (Entity's inline methods,
+# DestroyEntity last).
 NO_IMPLEMENT_INLINES_OBJS := $(C_BUILDDIR)/actor/actor.o \
                              $(C_BUILDDIR)/actor/actor_anim.o \
                              $(C_BUILDDIR)/bosses/dingodile.o \
                              $(C_BUILDDIR)/crates/crate_update.o \
                              $(C_BUILDDIR)/frontend/language_select.o \
                              $(C_BUILDDIR)/menus/level_select.o \
+                             $(C_BUILDDIR)/objects/camera_lead.o \
                              $(C_BUILDDIR)/objects/ground_sprite_collide.o \
+                             $(C_BUILDDIR)/objects/launch_pad.o \
                              $(C_BUILDDIR)/objects/moving_sprite_collide.o \
                              $(C_BUILDDIR)/objects/platform_contact.o \
                              $(C_BUILDDIR)/objects/sprite.o \

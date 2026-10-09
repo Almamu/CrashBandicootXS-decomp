@@ -16,35 +16,14 @@ extern "C" {
 }
 
 /* SaveMenu's run loop, constructor, destructor and input handlers
- * (include/save_menu.hpp, #664's final cleanup), with the save
- * transfer's three accessors and RunSaveMenu (C linkage). The C needed
+ * (include/save_menu.hpp, #664's final cleanup), with RunSaveMenu (C
+ * linkage); the save transfer's three accessors that started the file
+ * are at the end of save_transfer_state.cpp since #767. The C needed
  * nine register pins in the constructor and destructor and the
  * hand-written slot calls of the slot list's icons; DrawMain was two
  * inline-asm transcriptions of the ROM (docs/matching/archive/
  * issue-5-overlay-ui-sync.md). The C++ needs none of them, and matches
  * under both compilers. */
-
-void SaveTransfer::SetRecord(SaveData *record)
-{
-    tmpl = record;
-    cursor = (u8 *)record;
-}
-
-void *SaveTransfer::GetData()
-{
-    return data;
-}
-
-void SaveTransfer::Reset()
-{
-    remaining = sizeof(data);
-    totalReceived = 0;
-    cursor = (u8 *)tmpl;
-    writePtr = data;
-    sendDone = 0;
-    receiveDone = 0;
-    settleTimer = 0;
-}
 
 /* gKeys is a plain u32 elsewhere (e.g.
  * src/save/save_menu_draw.cpp's LinkExchange) but this call site reads

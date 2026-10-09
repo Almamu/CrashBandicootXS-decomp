@@ -377,3 +377,9 @@ void SaveData::ClearFlags(u8 mask)
     flags &= ~mask;
     UpdateChecksum();
 }
+
+void SaveData::SetFlags(u8 mask)
+{
+    flags |= mask;
+    UpdateChecksum();
+}
