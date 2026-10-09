@@ -2560,7 +2560,7 @@ between them in `ldscript.txt`.
 
 **`UpdateHudLives`** (ROM `0x08027838`, 262 bytes, contributed via PR #1 by
 @MiryamSanchez26, new
-`src/hud/hud_lives.c`): updates a cached two-digit HUD counter
+`src/hud/hud_lives.c`, in `hud_counters.cpp` since #771): updates a cached two-digit HUD counter
 from the central state object's `+0x74` value. Negative source values
 are displayed as zero. Modes 1 and 3 derive the shared horizontal HUD
 offset from the counter's layout field; other modes reset that offset.

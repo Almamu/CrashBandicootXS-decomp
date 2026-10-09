@@ -10,7 +10,7 @@ extern "C" {
 /* The HUD stat-widget family's dispatcher - see docs/rom_map.md's "full
  * HUD stat-widget family" section. Hud::Update (UpdateHud)
  * calls the other widgets on the same HUD (UpdateLives is in
- * hud_lives.cpp) - `parts` is the 35-slot array the constructor builds. Runs the percentage
+ * hud_counters.cpp) - `parts` is the 35-slot array the constructor builds. Runs the percentage
  * counter (`UpdateHudPercentCounters`) when `icon_flag` is set, then the score
  * counter (`UpdateHudLives`) unconditionally, then branches on
  * `GetBossIndex`'s level-type/game-mode result: a non-"none" mode

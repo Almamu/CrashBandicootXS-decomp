@@ -10,9 +10,8 @@
  *
  *   src/hud/hud_init.cpp      constructor, ConfigureParts
  *   src/hud/hud.cpp           Update
- *   src/hud/hud_boss_clock.cpp UpdateBoss, UpdateClock
- *   src/hud/hud_lives.cpp     UpdateLives
- *   src/hud/hud_counters.cpp  UpdateCrates, UpdateWumpa, UpdatePercentCounters
+ *   src/hud/hud_counters.cpp  UpdateBoss, UpdateClock, UpdateLives,
+ *                             UpdateCrates, UpdateWumpa, UpdatePercentCounters
  *   src/hud/hud_slide.cpp     the slides, the crate total, destructor
  *
  * Hud has no C view (hud.h's `struct hud_counter` tag went in #754);

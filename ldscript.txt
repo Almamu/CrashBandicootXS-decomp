@@ -195,8 +195,6 @@ SECTIONS
         build/crashbandicootxs/src/hud/hud_part.o(.text);
         build/crashbandicootxs/src/hud/hud_init.o(.text);
         build/crashbandicootxs/src/hud/hud.o(.text);
-        build/crashbandicootxs/src/hud/hud_boss_clock.o(.text);
-        build/crashbandicootxs/src/hud/hud_lives.o(.text);
         build/crashbandicootxs/src/hud/hud_counters.o(.text);
         build/crashbandicootxs/src/hud/hud_slide.o(.text);
         build/crashbandicootxs/src/text/font_glyph.o(.text);

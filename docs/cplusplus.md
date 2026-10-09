@@ -484,8 +484,8 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/save/save_menu_ui.cpp` (the second half of `save_menu_draw.cpp` since #771) | `SaveMenu`'s `LoadBg`, `RefreshSlotSummaries`, `LoadData`, `SummarizeProgress`, `DrawEmptySlotLabel`, `DrawTitle`, `GetBlinkPalette`, the link transfer's begin/end, the per-state draws, `Draw`, `DeleteSlot` | 18 | **old_agbcp** (was agbcc) | 1 pin -> 0; `ICON_TEXT_CALL`s -> virtual calls | cleanup |
 | `src/hud/hud_init.cpp` | `Hud` (include/hud.hpp): constructor (`InitHud`: `new HudPart[35]`), `ConfigureParts` | 2 | old_agbcp | 0 -> 0; the hand-written `OperatorNewArray` + count word + `InitHudPart` loop goes (3 bank stores through `SET_PART_BANK`, a retyped store) | cleanup |
 | `src/hud/hud.cpp` | `Hud::Update` | 1 | agbcp | 1 pin -> 0 | cleanup |
-| `src/hud/hud_boss_clock.cpp` | `Hud::UpdateBoss`, `UpdateClock` | 2 | old_agbcp | 0 -> 0 | cleanup |
-| `src/hud/hud_lives.cpp` | `Hud::UpdateLives` | 1 | **old_agbcp** (was agbcc) | 34 pins, 5 `asm`, 1 volatile hold -> 0 | cleanup |
+| `src/hud/hud_boss_clock.cpp` (the start of `hud_counters.cpp` since #771) | `Hud::UpdateBoss`, `UpdateClock` | 2 | old_agbcp | 0 -> 0 | cleanup |
+| `src/hud/hud_lives.cpp` (in `hud_counters.cpp` since #771) | `Hud::UpdateLives` | 1 | **old_agbcp** (was agbcc) | 34 pins, 5 `asm`, 1 volatile hold -> 0 | cleanup |
 | `src/hud/hud_counters.cpp` | `Hud::UpdateCrates`, `UpdateWumpa`, `UpdatePercentCounters` | 3 | old_agbcp | 0 -> 0; the `getHp` slot call is `HpActor::GetHp` | cleanup |
 | `src/hud/hud_slide.cpp` | `Hud`'s slides (`UpdateSlides`, the four `Show*`, `StepSlide`), `SetCrateTotal`, `IncCrateTotal`, destructor (`DestroyHud`: `delete[] parts`) | 9 | agbcp | 0 -> 0; the slot-10 destructor loop and `OperatorDeleteArray` go | cleanup |
 | `src/gfx/sprite_renderer.cpp` | `SpriteRenderer::DrawPieces` (`DrawSpritePieces`, sprite_obj.hpp) | 1 | old_agbcp | 0 -> 0; the slot-11 call is `Sprite::GetPriority`, the `struct oam_part` view goes | cleanup |
