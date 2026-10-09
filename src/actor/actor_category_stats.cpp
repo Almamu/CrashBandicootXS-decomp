@@ -4,6 +4,8 @@ extern "C" {
 #include "actor.h"
 #include "bosses.h"
 #include "vehicle.h"
+#include "level.h"
+#include "globals.h"
 }
 
 /* Counts how many of category `categoryIdx`'s sub-effect-table entries
@@ -90,4 +92,34 @@ s32 GetActorMissedNitros(void)
 s32 GetActorCheckpoint(void)
 {
     return gActorCheckpoint;
+}
+
+/* codegen: LevelState::SetCheckpointAtPlayer takes a flag (level_state.hpp); this
+ * caller passes the state only and leaves r1 as it is. docs/headers_plan.md */
+extern void SetCheckpointAtPlayer_1(void *self) asm("SetCheckpointAtPlayer");
+
+/* Re-bases the category's secondary tick counter from `arg0` (net of
+ * `GetActorSpawnOffset`'s current Q8.8 offset), resets the active-instance
+ * counters, and re-syncs the frame-tick snapshot for a freshly
+ * (re)selected category. */
+void SetActorCheckpoint(s32 arg0)
+{
+    gActorCheckpoint = arg0 - GetActorSpawnOffset();
+    gActorCategoryDeaths = 0;
+    gActorCategoryBossDeaths = 0;
+    SetCheckpointAtPlayer_1(gLevelState);
+    gActorCheckpointMissedNitros = gActorMissedNitros;
+    SaveActorPaletteCycle();
+}
+
+/* True once the running active-instance count reaches the current
+ * category's `maskAssistDeaths` threshold. The cast to `s32` matches the
+ * ROM's own signed comparison (`blt`) - `maskAssistDeaths` is declared `u32`
+ * in actor_anim.h (its sign isn't otherwise pinned down), and the
+ * unsigned usual-arithmetic-conversion comparison that produces
+ * compiles to the unsigned `bcc` instead (see docs/workflow.md
+ * step 3). */
+s32 IsActorMaskAssistDue(void)
+{
+    return gActorCategoryDeaths >= (s32)gActorCategories[gActorCategory].maskAssistDeaths;
 }

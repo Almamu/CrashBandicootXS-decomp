@@ -85,6 +85,8 @@ extern void SetActorPaletteCycle(s32 idx);
 extern void EnableActorPaletteCycle(u8 flag);
 
 /* src/actor/actor_bg.cpp */
+extern void InitActorBgScroll(s32 arg0);
+extern void UpdateActorBgScroll(s32 arg0, s32 arg1);
 extern void ShakeActorBg(s32 arg0);
 extern void SetActorBgLayerDepth(s32 arg0);
 extern s32 GetActorBgLayerDepth(void);
@@ -108,6 +110,8 @@ extern s32 CountCategoryCrates(s32 categoryIdx);
 extern void AddActorMissedNitro(void);
 extern s32 GetActorMissedNitros(void);
 extern s32 GetActorCheckpoint(void);
+extern void SetActorCheckpoint(s32 arg0);
+extern s32 IsActorMaskAssistDue(void);
 
 /* src/actor/actor_factory.cpp. SpawnActor is also slot 1 of the category
  * vtables (src/data/actor_category_175558.c): to C, `struct ActorSelf` is
@@ -145,8 +149,6 @@ extern void LoadBgPicture(u8 *pic);
 extern void FillBgPictureMap(u8 *nib, u16 *map, s32 cols, s32 rows);
 
 /* src/actor/cell_anim.cpp */
-extern void SetActorCheckpoint(s32 arg0);
-extern s32 IsActorMaskAssistDue(void);
 extern void UploadCellAnimFrame(void);
 extern void InitCellAnim(s32 arg0, void *cellAnim, u32 animSize, s32 arg3);
 extern void ResetCellAnimBg(void);
@@ -159,8 +161,6 @@ extern s32 GetCellAnimFrameStep(void);
 extern s32 GetCellAnimSpeed(void);
 extern void SetCellAnimSpeed(s32 arg0);
 extern void FillCellAnimTilemap(s32 arg0, s32 w, s32 h);
-extern void InitActorBgScroll(s32 arg0);
-extern void UpdateActorBgScroll(s32 arg0, s32 arg1);
 
 /* The actor zone's globals (sym_iwram.txt). */
 extern struct anim_table_record *gActorAnimTable;
