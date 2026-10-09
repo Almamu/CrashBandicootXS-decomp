@@ -18,7 +18,7 @@ extern "C" {
  * AllocPolarPlayerTiles (polar_player.cpp); the C wrote them in asm. See
  * docs/matching/archive/issue-56-0x0802f0dc-actor.md. */
 
-/* AnimPart::GetAnimFrameData (actor_anim.cpp), inlined. */
+/* AnimPart::GetAnimFrameData (anim_part.cpp), inlined. */
 static inline u8 *CurFrame(AnimPart *self)
 {
     s32 t = Q8_TO_INT(self->animTime);

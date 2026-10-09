@@ -46,7 +46,10 @@ system from "core" system startup/init code.
   lazily initialize this object - GitHub issue #37's last standing
   gap) - all matched as real C, no `NAKED` fallbacks needed. See
   [docs/matching/archive/issue-35-36-0x080231cc-game-loop.md](../matching/archive/issue-35-36-0x080231cc-game-loop.md)
-- `src/cutscene/cutscene_player.c` (new file, GitHub issue #39): `InitSlideshow`-
+- `src/cutscene/cutscene_player.c` (new file, GitHub issue #39; since #770
+  `InitSlideshow`-`InitCutscenePlayer` there, the `BgStreamer` functions in
+  `src/level/bg_streamer.cpp` and the `BgLayerBase` ones at the head of
+  `src/level/bg_layer_base.cpp`): `InitSlideshow`-
   `StepBgLayerScroll` (25 functions) - extends `struct SoundChannelList`
   (slideshow.c/slideshow_display.c) with more fields, plus the "visual scrolling
   background streamer" family (docs/rom_map.md): a circular 4x4-block
@@ -68,13 +71,16 @@ system from "core" system startup/init code.
   and `IsBgLayerEnabled`/`GetBgLayerY`/`GetBgLayerX`/`GetBgLayerHeightTiles`/
   `GetBgLayerWidthTiles`/`GetBgLayerHeight`/`GetBgLayerWidth` (its field accessors), and
   the terrain tile cache's `GetCollisionChunk`/`GetTerrainHeights`/`GetSolidTerrainHeights`/
-  `GetSolidTerrainModeValue` (plain C, built with old_agbcc - see [game-loop-old-agbcc.md](../matching/archive/game-loop-old-agbcc.md)),
+  `GetSolidTerrainModeValue` (in `src/level/tile_cache.cpp` since #770, with
+  `DecodeCollisionChunk`; plain C, built with old_agbcc - see [game-loop-old-agbcc.md](../matching/archive/game-loop-old-agbcc.md)),
   and `DecodeCollisionChunk`, the RLE/delta decoder (real C since the second
   near-miss sweep - see [near-miss-polish-2.md](../matching/archive/near-miss-polish-2.md))
 - `src/level/tile_cache.c` (GitHub issue #40): `DestroyTileCache`,
   `InitTileCache`, `GetTerrainType` (plain C, built with old_agbcc - see
   [game-loop-old-agbcc.md](../matching/archive/game-loop-old-agbcc.md))
-- `src/level/collision_map.cpp` (GitHub issue #40): `GetCollisionCell`,
+- `src/level/collision_map.cpp` (GitHub issue #40; since #770
+  `src/level/tile_cache_cell.cpp` up to `SetCollisionSource` and
+  `src/level/entity_bitmap.cpp` from `SetBitmapBit`): `GetCollisionCell`,
   `SetCollisionSource`, `SetBitmapBit`, `ClearBitmapBit`, `ClearBitmap`,
   `InitBitmap` - the terrain tile-record decode cache's constructor,
   a raw-cell-lookup variant, a floor-div-by-32 bitmap set/clear pair,
@@ -157,7 +163,8 @@ system from "core" system startup/init code.
 - `src/level/level_query.c` (GitHub issue #38): `IsInGemPathRoom`,
   `IsInBonusRoom`, `LevelHasYellowGemEntity`, `LevelHasBlueGemEntity`, `LevelHasGreenGemEntity`,
   `LevelHasRedGemEntity`, `LevelHasGemPathGemEntity`, `CountRoomCrates`, `PlayRoomMusic`,
-  `NextRoom`, `EnterGemPathRoom`, `EnterBonusRoom`, `SelectRoom` -
+  `NextRoom`, `EnterGemPathRoom`, `EnterBonusRoom`, `SelectRoom` (the last
+  five in `src/level/room_select.cpp` since #770) -
   medal-table entry/item-list field accessors, the sound-cue resolver,
   and the `LevelHasEntityType` constant wrappers (`LevelHasEntityType` itself is left
   raw, see below)
@@ -221,8 +228,8 @@ system from "core" system startup/init code.
 - `src/crates/crate_create.c` (GitHub issue #13, fourth pass, new file -
   replaces the trimmed `asm/code_3_2_17_e560_ff0c.s`, now deleted):
   `CreateCrate` - the `CreateCrate` entity-constructor trampoline
-  family's own target function (two whole files, `spawn_crates.c`/
-  `spawn_objects.c`, exist purely to call it with a fixed
+  family's own target function (`spawn_crates.cpp`, which holds all the
+  crate spawners since #770, exists purely to call it with a fixed
   `type` constant). Allocates a 0x64-byte object, sets `self+0x18` to
   `&gCrateVtable` (a `+0x18` outlier of the usual `+0xC`
   table-pointer convention), then dispatches on `type` (0-0x12,
@@ -323,7 +330,9 @@ system from "core" system startup/init code.
   removed. See
   [docs/matching/archive/issue-42-bg-scroll-layer.md](../matching/archive/issue-42-bg-scroll-layer.md).
 - **`DestroyPooledBgLayer`/`InitPooledBgLayer`/`GetPooledBgLayerPriority`/`ResetTileSlotPool`/`AcquireTileSlot`/`ReleaseTileSlot`/`UploadTileSlot`/`SetTileSlotPoolSource`**
-  (`src/level/tile_slot_pool.c`, new file - GitHub issue #43) - BG
+  (`src/level/tile_slot_pool.c`, new file - GitHub issue #43; the
+  three `PooledBgLayer` methods at the end of `src/level/pooled_bg_layer.cpp`
+  since #770) - BG
   layer 0 of the level-layers singleton (constructor/destructor chaining
   to the `InitBgLayer` BG-scroll-layer base) and its reference-counted
   VRAM tile-slot pool (0x2000 source tiles onto 0x200 slots): reset,
@@ -371,7 +380,8 @@ system from "core" system startup/init code.
   project's usual practice. `asm/code_3_2_17_26bf8.s` trimmed to begin
   at `StepCameraDirectional`.
 - **`StepCameraDirectional`/`StepCameraFacing`/`SnapCamera`/`UpdateCamera`/`OperatorDeleteArray`/`OperatorNewArray`/`OperatorDelete`/`OperatorNew`**
-  (`src/level/camera.cpp`, new file - GitHub issue #44) - the
+  (`src/level/camera.cpp`, new file - GitHub issue #44; the four
+  operators in `src/system/operator_new.cpp` since #770) - the
   `gCamera` camera follower: Q8 position eased a quarter-step
   per frame toward `target + look-ahead`, published centered on screen
   (`- (120 << 8)`, `- (80 << 8)`) through `SetLevelScroll`'s level-bounds

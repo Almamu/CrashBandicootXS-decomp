@@ -7,10 +7,10 @@
  * gPooledBgLayerVtable, and the level-layers singleton that owns them.
  *
  * No `#pragma interface`: g++ emits each vtable in the object that
- * defines the class's key method, its destructor (BgStreamer's and
- * BgLayerBase's in src/cutscene/cutscene_player.cpp, PooledBgLayer's in
- * src/level/tile_slot_pool.cpp; BgLayer's is inline, so its key method is
- * Reset, in src/level/bg_layer.cpp),
+ * defines the class's key method, its destructor (BgStreamer's in
+ * src/level/bg_streamer.cpp, BgLayerBase's in src/level/bg_layer_base.cpp,
+ * PooledBgLayer's in src/level/pooled_bg_layer.cpp; BgLayer's is inline,
+ * so its key method is Reset, in src/level/bg_layer.cpp),
  * and ldscript.txt places them at their ROM addresses (docs/cplusplus.md,
  * "Emitting the vtables"). cxx_symbols.txt maps the mangled names onto
  * the C names. The classes have no C view (bg_scroll_layer.h's `struct
@@ -30,7 +30,7 @@ extern "C" {
  * 128x64-pixel chunk (`tileX`, `tileY`). `subX`/`subY` are the ring's
  * block (mod 4) at the window's left and top edges. Scroll streams in
  * the chunk row or column the camera has just reached, Fill seeds the
- * whole window. Its code is in src/cutscene/cutscene_player.cpp. */
+ * whole window. Its code is in src/level/bg_streamer.cpp. */
 class BgStreamer
 {
 public:
@@ -65,10 +65,9 @@ public:
 COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(BgStreamer) == 0x24);
 
 /* A scrolling layer's position and size (0x34 bytes): the base of
- * BgLayer. Its methods are in src/cutscene/cutscene_player.cpp and
- * src/level/bg_layer_base.cpp. Scroll scales a move by the layer's
- * parallax factors and steps the position by it, ClampScrollStep (virtual)
- * limiting each axis's step. */
+ * BgLayer. Its methods are in src/level/bg_layer_base.cpp. Scroll scales
+ * a move by the layer's parallax factors and steps the position by it,
+ * ClampScrollStep (virtual) limiting each axis's step. */
 class BgLayerBase
 {
 public:
@@ -274,8 +273,8 @@ COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(TileSlotPool) == 0x480C);
 /* BG layer 0 (0x60 bytes): a BgLayer whose tiles go through a VRAM tile
  * slot pool (TileSlotPool, src/level/tile_slot_pool.cpp) instead
  * of the layer's own character block, releasing the tiles of the rows and
- * columns that scroll out. Its methods are in src/level/pooled_bg_layer.cpp
- * and src/level/tile_slot_pool.cpp. */
+ * columns that scroll out. Its methods are in
+ * src/level/pooled_bg_layer.cpp. */
 class PooledBgLayer : public BgLayer
 {
 public:
@@ -305,9 +304,9 @@ COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(PooledBgLayer) == 0x60);
  * slot `(nextSlot - 1) & 0xf`, the slot filled just before the cursor).
  * `source` is the level_layer_desc SetSource was given, read as a pointer
  * to the record grid. It has no vtable. Its methods are in
- * src/level/bg_layer_base.cpp (GetChunk, the terrain lookups, DecodeChunk),
- * src/level/tile_cache.cpp (the constructor, destructor and GetTerrainType)
- * and src/level/collision_map.cpp (GetCell, SetSource). */
+ * src/level/tile_cache.cpp (GetChunk, the terrain lookups, DecodeChunk,
+ * the constructor, destructor and GetTerrainType) and
+ * src/level/tile_cache_cell.cpp (GetCell, SetSource). */
 class TileCache
 {
 public:

@@ -10,10 +10,9 @@
  *   TitleScreen     0x220                    src/frontend/title_screen_init.cpp,
  *                                            title_screen.cpp
  *   CompanyLogos    0x44C                    src/frontend/company_logos.cpp,
- *                                            language_select.cpp,
- *                                            title_screen.cpp
+ *                                            company_logos_ctor.cpp
  *   LogoActor       0x54   gLogoActorVtable  src/frontend/company_logos.cpp,
- *                                            language_select.cpp
+ *                                            company_logos_ctor.cpp
  *   LanguageSelect  0x14                     src/frontend/language_select.cpp,
  *                                            language_select_setup.cpp
  *
@@ -29,7 +28,7 @@
  * cxx_symbols.txt maps the methods to their C names.
  *
  * No `#pragma interface`: g++ emits LogoActor's vtable, the one class here
- * with one, in language_select.cpp (see ctrl.hpp). */
+ * with one, in company_logos_ctor.cpp (see ctrl.hpp). */
 
 #include "actor_self.hpp"
 #include "font.hpp"

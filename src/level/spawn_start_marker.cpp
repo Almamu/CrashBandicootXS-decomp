@@ -21,7 +21,7 @@ static inline void SetFlipX(Player *p, u32 v)
  * 1. If the level state says to spawn at the start (GetSpawnAtStart),
  *    the player faces the way bit 1 of the entity's parameter flags
  *    says and moves to the entity's position (as SpawnPlayerPosition,
- *    spawn_pickups.cpp, does).
+ *    spawn_markers.cpp, does).
  * 2. Unless in a time trial: once the player has died
  *    GetMaskAssistDeaths times, or with no lives left outside the bonus
  *    round and no mask, the player gets an Aku Aku mask

@@ -42,7 +42,7 @@ and [graphics_loading.md](./graphics_loading.md).
   `CountClearGems`, `CountCrystals`
 - `src/gfx/fade.cpp`: `StepBrightnessFade`, `FadeBrightness`
 - `src/gfx/fade.cpp`: `DarkenPalette`
-- `src/actor/actor_anim.c`: `GetAnimFrameBaseOffset`
+- `src/actor/anim_part.cpp`: `GetAnimFrameBaseOffset`
 - `src/gfx/fade_to_black.cpp` (new file - `FadePaletteToBlack`,
   `IsBrightnessFadeActive`) and
   `src/gfx/display.cpp` (new file - `SetDispcntMode`,

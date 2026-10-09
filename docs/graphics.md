@@ -7,7 +7,7 @@ parked/matched log across the whole codebase, including the
 graphics-adjacent functions in `src/gfx/graphics.c` (split into `src/gfx/oam_buffer.cpp`,
 `vram_dma_queue.cpp`, `obj_vram_cursor.cpp`, `palette_cache.cpp`, `sprite_bank_set.cpp`,
 `src/objects/entity.cpp` and `src/save/game_progress.cpp` in #767)/`src/menus/power_dialog_draw.cpp`/
-`src/actor/actor_anim.c`), see [matching.md](./matching.md) instead.
+`src/actor/inline_copies_actors.cpp`), see [matching.md](./matching.md) instead.
 
 ## Background/tileset extraction (done)
 

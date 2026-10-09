@@ -12,8 +12,9 @@ extern "C" {
 
 /* GitHub issue #44: the `gCamera` camera-follow block (the
  * "generic 0x18-byte block" docs/matching/archive/issue-37-game-loop-2375c.md
- * saw `PlayRoom`'s tail flush via `SnapCamera`), plus two identical
- * EWRAM `mem_free`/`mem_alloc` wrapper pairs that follow it in ROM.
+ * saw `PlayRoom`'s tail flush via `SnapCamera`). The global
+ * `operator new` & co. that follow it in ROM are in
+ * src/system/operator_new.cpp (here until #770).
  *
  * `struct camera` holds a Q8 position (`x`/`y`), a Q8 look-ahead offset
  * (`vx`/`vy`), the followed object (`target`) and a `mode`. Every
@@ -150,24 +151,4 @@ void UpdateCamera(struct camera *cam)
     }
 
     gLevelLayers->SetScroll(cam->x - INT_TO_Q8(120), cam->y - INT_TO_Q8(80));
-}
-
-void operator delete[](void *ptr)
-{
-    mem_free(ptr);
-}
-
-void *operator new[](size_t size)
-{
-    return mem_alloc(size, MEM_HEAP_EWRAM);
-}
-
-void operator delete(void *ptr)
-{
-    mem_free(ptr);
-}
-
-void *operator new(size_t size)
-{
-    return mem_alloc(size, MEM_HEAP_EWRAM);
 }

@@ -98,8 +98,11 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   **`SpawnSquid`** (`spawn_enemies.c`), **`SpawnJellyfish`**-
   **`SpawnWoodenCrusher`** (`spawn_enemies.c`; `SpawnFlamethrowerLabAssistant` closed in
   [last-eleven-naked-retry.md](../matching/archive/last-eleven-naked-retry.md)),
-  **`SpawnRoomExit`**-**`SpawnCortexBoss`** (`spawn_bosses.c`) and
-  **`SpawnMegaMix`**-**`SpawnIronCrate`** (`spawn_objects.c`) - the
+  **`SpawnRoomExit`**-**`SpawnMegaMix`** (`spawn_bosses.cpp`),
+  **`SpawnSeaweed`**-**`SpawnSealSpawner`** (`spawn_objects.cpp`) and
+  **`SpawnTimeCrate3`**-**`SpawnIronCrate`** (the head of
+  `spawn_crates.cpp`; the last two moved out of `spawn_objects.cpp` in
+  #770) - the
   "two-line text popup" spawners (issue #31) and the spawner-table
   entries that follow them. All five files are built with old_agbcc and
   share `include/text_popup.h`. 33 functions were rewritten as plain C with no pins or
@@ -114,7 +117,8 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   **`SpawnStopwatch`**, **`SpawnBlueGem`**, **`CreateTouchableSprite`**, **`SpawnCrateGemMarker`**,
   **`SpawnWumpa`**, **`SpawnHoverPlayerPosition`**, **`SpawnHoverStartMarker`**, **`SpawnUnderwaterPlayerPosition`**,
   **`SpawnUnderwaterStartMarker`**, **`SpawnPlayerPosition`**, **`SpawnStartMarkerStub`**, **`DestroyEntitySpawner`**,
-  **`CreateEntitySpawner`**, **`InitLevelState`** (`src/level/spawn_pickups.c`)
+  **`CreateEntitySpawner`**, **`InitLevelState`** (`src/level/spawn_pickups.cpp`
+  up to `SpawnWumpa`, the rest `src/level/spawn_markers.cpp` since #770)
   - the `gSpriteBankTable` record-indexed OAM-trio spawner family, the
   `SpawnStartMarker` trampolines, the `gPlayer` position writers, the
   `{table_base, count}` descriptor pair, and `InitLevelState` itself - the
@@ -134,7 +138,8 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   [docs/matching/archive/naked-sub_801e990-matched.md](../matching/archive/naked-sub_801e990-matched.md)
   for the full derivation.
 - **`TitleScreenCheatInput`**, **`UpdateVvLogoPieces`**, **`LoadUniversalLogoBg`**
-  (`src/frontend/title_screen.c`, issue #65) - the "cheat
+  (`src/frontend/title_screen.c`, issue #65; the last two in
+  `company_logos.cpp` now) - the "cheat
   code" detector, the 20-slot updater and BG2's tilemap-remap loader,
   NAKED until the issue #64/#65 NAKED retry: the held/pressed pair read
   into a local struct first (the ROM's `0x100` mask built in r4 and
@@ -165,7 +170,8 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   **`DestroyTitleScreen`**, **`RunCompanyLogos`**, **`LoadVvLogoGraphics`**,
   **`InitLogoActor`**, **`UpdateLogoActor`**, **`DrawLogoActor`**
   (`src/frontend/title_screen.c`, split off
-  `title_screen_init.c`) - promoted from NAKED to
+  `title_screen_init.c`; `RunCompanyLogos` on in `company_logos.cpp`
+  since #770) - promoted from NAKED to
   real C in the issue #65 retry pass. Both files turned out to be
   old_agbcc code (both are now on the Makefile's `OLD_AGBCC_OBJS`);
   `LoadTitleScreenBg`'s long-documented "dead r7 in the push list" gap
@@ -176,7 +182,8 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   destination pointer taken before an allocation call, a nested block
   for the ROM's stack-slot order). See
   [issue-65-naked-retry.md](../matching/archive/issue-65-naked-retry.md).
-- **`InitVvLogoPieces`** (`src/frontend/title_screen.c`) - the
+- **`InitVvLogoPieces`** (`src/frontend/title_screen.c`;
+  `company_logos.cpp` since #770) - the
   20-slot seeder. Real C once the object is built with
   `-fno-strength-reduce` (the Makefile's `NO_STRENGTH_REDUCE_OBJS`):
   with strength reduction on, gcc reverses the first loop into a

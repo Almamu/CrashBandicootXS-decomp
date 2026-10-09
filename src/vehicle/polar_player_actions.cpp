@@ -59,7 +59,7 @@ void PolarPlayer::StateLand()
     }
 }
 
-/* The course's end (PolarReachCourseEnd, actor.cpp): once, the finish
+/* The course's end (PolarReachCourseEnd, actor_category_hooks.cpp): once, the finish
  * countdown (state 10 when it runs out, Update), the yeti stops, and the
  * player is inactive with the steering off. */
 void PolarPlayer::FinishRun()

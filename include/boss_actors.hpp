@@ -3,7 +3,7 @@
 
 /* The 3D bosses' actors as C++ (#664, docs/cplusplus.md): the airship's
  * fireball and the hovercraft's weapons, all HpActors (actor_self.hpp).
- * Part 11a declares their destructors (src/actor/actor_anim.cpp). The
+ * Part 11a declares their destructors (src/actor/inline_copies_actors.cpp). The
  * airship's fireball is complete since part 11i (src/bosses/airship*.cpp,
  * with the airship itself), its two flight states since part 11f
  * (src/vehicle/jetpack_plane.cpp); the hovercraft's weapons since part
@@ -11,7 +11,7 @@
  * They have no C views. cxx_symbols.txt maps the C++ names to the C
  * ones.
  *
- * No `#pragma interface`: g++ emits the vtables in actor_anim.cpp, where
+ * No `#pragma interface`: g++ emits the vtables in inline_copies_actors.cpp, where
  * their destructors are (see ctrl.hpp). */
 
 #include "actor_self.hpp"

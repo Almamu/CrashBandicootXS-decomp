@@ -9,8 +9,8 @@ extern "C" {
 #include "globals.h"
 }
 
-/* The spawners of the bosses and the room exit (#664,
- * include/spawners.hpp), ROM 0x08021280-0x08021668. Built with
+/* The spawners of the bosses, the room exit and Mega-Mix (#664,
+ * include/spawners.hpp), ROM 0x08021280-0x08021748. Built with
  * old_agbcp. */
 
 /* Switches to animation `t` from its start. `t` is an s32: its 1 is
@@ -135,4 +135,49 @@ void SpawnCortexBoss(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     ForegroundList()->Add(part);
     part->animating = 0;
     gLevelState->SetLevelBoss(hdr);
+}
+
+/* Inline so old_agbcp re-truncates GetPaletteSlot's u8 result before the
+ * nibble insert, as the ROM does. */
+static inline void SetPalette(MovingSprite *part, s32 slot)
+{
+    part->palette = slot;
+}
+
+/* Sets the tag only (SetTag above also restarts the animation). `t` is an
+ * s32: its constant is loaded before the tag's address. */
+static inline void SetSpriteTag(Sprite *part, s32 t)
+{
+    part->tag = t;
+}
+
+/* Entity type 0x49, Mega-Mix (see mega_mix_update.cpp): a moving sprite
+ * on sprite bank +0x168 at (arg1, arg2), its palette that of its first
+ * animation, not mirrored, driven by a MegaMixCtrl; kind 1, not
+ * colliding, out of contact, invulnerable and always active, in the
+ * collidable list. */
+void SpawnMegaMix(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+{
+    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MegaMixCtrl *hdr;
+
+    part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x168);
+    part->x = INT_TO_Q8(arg1);
+    part->y = INT_TO_Q8(arg2);
+    SetSpriteTag(part, 0);
+    part->ResetFrameTimer();
+    part->ResetFrameIndex();
+    part->SetAnimDone(0);
+    SetPalette(part, gPaletteCache->GetSlot(part->bank->anims->paletteId));
+    part->mirrorFlags.mirrorX = 0;
+    part->mirrorFlags.mirrorY = 0;
+    hdr = new MegaMixCtrl;
+    part->mover = hdr;
+    hdr->Attach(part);
+    part->kind = 1;
+    part->f.b.collides = 0;
+    part->f.b.visible = 0;
+    part->f.b.vulnerable = 0;
+    part->f.b.active = 1;
+    CollidableList()->Add(part);
 }

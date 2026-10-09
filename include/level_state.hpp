@@ -6,11 +6,12 @@
  * level_state.cpp, makes the one instance), and LevelProgress, its room
  * block. Their functions are methods, mapped to their C names by
  * cxx_symbols.txt: LevelState's in level_state.cpp (the accessors),
- * spawn_pickups.cpp (the constructor, InitLevelState), level_cutscene.cpp
+ * spawn_markers.cpp (the constructor, InitLevelState), level_cutscene.cpp
  * (the destructor, DestroyLevelState, UNUSED: the game never leaves
  * MainLoop; PlayCutscene), game_frame.cpp (UpdateGameFrame),
- * bonus_round.cpp, time_trial.cpp and aabb_setup.cpp (GetLives);
- * LevelProgress's in level_query.cpp, play_room.cpp, run_room.cpp,
+ * bonus_round.cpp, time_trial.cpp and inline_copies_misc.cpp (GetLives);
+ * LevelProgress's in level_query.cpp, room_select.cpp, play_room.cpp,
+ * run_room.cpp,
  * room.cpp and room_frame.cpp. The progress blocks stay level_state.h's
  * plain struct game_progress, which the save slots and the menus share.
  *
@@ -30,7 +31,8 @@ struct entity_flags;
 /*
  * The room block of the level state (`room`, +0x0C4), whose methods are
  * the room functions (UpdateGameFrame calls them on `room`): SelectRoom,
- * NextRoom, EnterBonusRoom and the others in level_query.cpp, PlayRoom
+ * NextRoom, EnterBonusRoom and the others in level_query.cpp and
+ * room_select.cpp, PlayRoom
  * (play_room.cpp), RunRoom (run_room.cpp), ResumeRoomAfterPause
  * (room.cpp), UpdateRoomFrame and SetupRoomBlend (room_frame.cpp). Until
  * #750 it was level_state.h's struct level_progress, and the functions
@@ -46,6 +48,7 @@ public:
     // level_query.cpp
     s32 IsInGemPathRoom();
     s32 IsInBonusRoom();
+    // room_select.cpp
     void PlayRoomMusic();
     s32 NextRoom();
     void EnterGemPathRoom();
@@ -94,7 +97,7 @@ COMPILE_TIME_ASSERT(level_state_hpp, sizeof(LevelProgress) == 0x20);
 class LevelState
 {
 public:
-    LevelState();               // InitLevelState, spawn_pickups.cpp
+    LevelState();               // InitLevelState, spawn_markers.cpp
     ~LevelState();              // DestroyLevelState, level_cutscene.cpp
     void PlayCutscene(s32 idx); // level_cutscene.cpp
     void UpdateGameFrame();     // game_frame.cpp
@@ -102,7 +105,7 @@ public:
     void EndBonusRound(u8 arg1);
     void SetCheckpointAtPlayer(u8 arg1);
     void StartTimeTrial(); // time_trial.cpp
-    s32 GetLives();        // aabb_setup.cpp
+    s32 GetLives();        // inline_copies_misc.cpp
 
     // level_state.cpp
     void FreezeLevelClock(s32 secs);

@@ -2,12 +2,18 @@
 
 extern "C" {
 #include "math_util.h"
+#include "gfx.h"
+#include "memory.h"
 }
 
 /* GitHub issue #42: the overrides of BgLayer's tile-slot-pooled subclass
- * used for BG layer 0 (PooledBgLayer, include/bg_layer.hpp,
- * gPooledBgLayerVtable; its constructor and destructor are in
- * tile_slot_pool.cpp). Instead of copying map entries straight into the
+ * used for BG layer 0 (PooledBgLayer, include/bg_layer.hpp), then (GitHub
+ * issue #43) its destructor, constructor and GetPriority, which were in
+ * tile_slot_pool.cpp until #770. The class is BgLayer extended with a
+ * TileSlotPool at `+0x5C`: the constructor sets the 256-colour bit and
+ * char base 0 and allocates the pool, the destructor frees it and then
+ * expands BgLayer's inline one. The destructor is the class's key method:
+ * g++ emits gPooledBgLayerVtable here. Instead of copying map entries straight into the
  * screen block, it routes each source tile through the VRAM tile-slot pool
  * (`AcquireTileSlot` acquire / `ReleaseTileSlot` release) and releases
  * the tiles of rows/columns that scroll out (ClipColumns, ClipRows).
@@ -135,4 +141,27 @@ void PooledBgLayer::LoadTiles()
  * the nullsub_N name (docs/naming.md). */
 void nullsub_26(void)
 {
+}
+
+PooledBgLayer::~PooledBgLayer()
+{
+    if (pool != NULL)
+        delete pool;
+}
+
+/* Through BgLayer's inline setters, each field store is a general insert
+ * (the field cleared, then the value ORed in) even with a constant: the
+ * ROM's `& 0x7f` before the `| 0x80`. */
+PooledBgLayer::PooledBgLayer(s32 bgIndex) : BgLayer(bgIndex)
+{
+    SetColors256(1);
+    SetCharBase(0);
+    pool = new TileSlotPool;
+}
+
+/* UNUSED - no caller anywhere in the ROM (checked src/, asm/ and the
+ * method tables). Layer 0's BG priority, BGnCNT bits 0-1. */
+u32 PooledBgLayer::GetPriority()
+{
+    return cnt.bits.priority;
 }

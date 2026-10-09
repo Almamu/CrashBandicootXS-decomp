@@ -72,12 +72,15 @@ struct actor_spawn {
 /* The actor zone (src/actor/): the 3D actor object (ActorSelf),
  * its animation, spawning, category frame and backgrounds. */
 
-/* src/actor/actor.cpp: C linkage, and the C names of ActorSelf's methods
- * (actor_self.hpp) */
+/* src/actor/actor_category_hooks.cpp (the rest: vehicle.h) */
 extern s32 IsTouchingPlayer(void *self);
+
+/* src/actor/actor_spawn_collected.cpp */
 extern s32 IsSpawnCollected(void *self);
 extern void MarkSpawnCollected(void *self);
 extern void ClearCollectedSpawns(void);
+
+/* src/actor/actor_palette_cycle.cpp */
 extern void RestoreActorPaletteCycle(void);
 extern void SaveActorPaletteCycle(void);
 extern void UpdateActorPaletteCycle(void);
@@ -85,6 +88,8 @@ extern void SetActorPaletteCycle(s32 idx);
 extern void EnableActorPaletteCycle(u8 flag);
 
 /* src/actor/actor_bg.cpp */
+extern void InitActorBgScroll(s32 arg0);
+extern void UpdateActorBgScroll(s32 arg0, s32 arg1);
 extern void ShakeActorBg(s32 arg0);
 extern void SetActorBgLayerDepth(s32 arg0);
 extern s32 GetActorBgLayerDepth(void);
@@ -108,6 +113,8 @@ extern s32 CountCategoryCrates(s32 categoryIdx);
 extern void AddActorMissedNitro(void);
 extern s32 GetActorMissedNitros(void);
 extern s32 GetActorCheckpoint(void);
+extern void SetActorCheckpoint(s32 arg0);
+extern s32 IsActorMaskAssistDue(void);
 
 /* src/actor/actor_factory.cpp. SpawnActor is also slot 1 of the category
  * vtables (src/data/actor_category_175558.c): to C, `struct ActorSelf` is
@@ -128,7 +135,9 @@ extern s32 GetActorSpawnZ(s32 idx);
 extern s32 GetActorSpawnY(s32 idx);
 extern s32 GetActorSpawnX(s32 idx);
 extern s32 GetActorSpawnKindIndex(s32 idx);
-/* C++ only: it returns a `bool` (actor_spawn.cpp). */
+
+/* src/actor/actor_category.cpp. C++ only: CanPauseActorCategory returns a
+ * `bool`. */
 #ifdef __cplusplus
 extern bool CanPauseActorCategory(void);
 #endif
@@ -145,8 +154,6 @@ extern void LoadBgPicture(u8 *pic);
 extern void FillBgPictureMap(u8 *nib, u16 *map, s32 cols, s32 rows);
 
 /* src/actor/cell_anim.cpp */
-extern void SetActorCheckpoint(s32 arg0);
-extern s32 IsActorMaskAssistDue(void);
 extern void UploadCellAnimFrame(void);
 extern void InitCellAnim(s32 arg0, void *cellAnim, u32 animSize, s32 arg3);
 extern void ResetCellAnimBg(void);
@@ -159,8 +166,6 @@ extern s32 GetCellAnimFrameStep(void);
 extern s32 GetCellAnimSpeed(void);
 extern void SetCellAnimSpeed(s32 arg0);
 extern void FillCellAnimTilemap(s32 arg0, s32 w, s32 h);
-extern void InitActorBgScroll(s32 arg0);
-extern void UpdateActorBgScroll(s32 arg0, s32 arg1);
 
 /* The actor zone's globals (sym_iwram.txt). */
 extern struct anim_table_record *gActorAnimTable;

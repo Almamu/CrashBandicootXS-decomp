@@ -2,7 +2,7 @@
 
 The per-instance actor "self" object family - `struct actor` and its
 many satellite files (`src/actor/`, `src/vehicle/`, `src/bosses/`,
-`src/objects/`, `src/player/`, `src/util/aabb_setup.c`). It used to be
+`src/objects/`, `src/player/`, `src/system/inline_copies_misc.cpp`). It used to be
 filed under `src/graphics/` on disk (the ROM's actor code lives
 interleaved with rendering code, and several actor functions are
 themselves OAM/sprite-draw routines; see `docs/file_layout_plan.md`), but
@@ -31,7 +31,7 @@ from "core" graphics.
   old_agbcc; the tile-map fill `FillCellAnimTilemap` (`cell_anim.cpp`) and its
   inlined twin in `ResetCellAnimBg` (`cell_anim.cpp`) - `tile++` in each
   branch; `UploadCellAnimFrame` (`cell_anim.cpp`); and the trampolines
-  `JetpackIsPauseLocked`/`PolarIsPauseLocked` (`actor_spawn.c`), which return the
+  `JetpackIsPauseLocked`/`PolarIsPauseLocked` (`actor_category.cpp`), which return the
   callee's result.
 
 - **Actor-zone NAKED near-miss retry** ([docs/matching/archive/actor-zone-naked-retry.md](../matching/archive/actor-zone-naked-retry.md)):
@@ -350,7 +350,7 @@ from "core" graphics.
   effect. 12 functions, all matched. See
   [docs/matching/archive/issue-53-issue-54-gap-cc9c.md](../matching/archive/issue-53-issue-54-gap-cc9c.md).
 
-- `src/util/aabb_setup.c` (new file, GitHub issue #70, ROM
+- `src/system/inline_copies_misc.cpp` (new file, GitHub issue #70, ROM
   `0x0803AFDC`-`0x0803B060` - right after the parked division/modulo
   trio in `lib/libgcc/lib1funcs.s`, see that file's `docs/matching.md`
   entry): `SetAabbSize`/`SetAabbPos` (the shared AABB set-size/
@@ -482,7 +482,7 @@ from "core" graphics.
   [docs/matching/archive/naked-sub_80157c4-matched.md](../matching/archive/naked-sub_80157c4-matched.md));
   see `docs/matching/archive/issue-18-0x08014f8c-actor.md`.
 
-- `src/actor/actor_anim.c` (extended, GitHub issue #71, ROM
+- `src/actor/inline_copies_actors.cpp` (extended, GitHub issue #71, ROM
   `0x0803B060`-`0x0803B46C` - immediately adjacent to the file's existing
   `GetAnimFrameBaseOffset`, which itself ends exactly at `0x0803B060`):
   `GetAnimFrameAttr` (reads the current keyframe's `attr` halfword pre-shifted
@@ -570,7 +570,9 @@ from "core" graphics.
   dispatch shape parked NAKED elsewhere as the "r7 hazard"). First user
   of the shared `include/actor_self.h`. See
   [docs/matching/archive/issue-57-0x0802fbf0-actor.md](../matching/archive/issue-57-0x0802fbf0-actor.md).
-- `src/graphics/actor_part50.c`-`actor_part56.c`, now `src/actor/actor.c`
+- `src/graphics/actor_part50.c`-`actor_part56.c`, now `src/actor/actor.cpp`
+  (split in #770 into `actor_category_hooks.cpp`, `actor.cpp`,
+  `actor_spawn_collected.cpp` and `actor_palette_cycle.cpp`)
   (new files, GitHub issue #50, ROM 0x0802A69C-0x0802AC28 - numbered
   `50`-`56` rather than `39`-`45` since issues #16 and #56's parallel
   PRs above independently claimed those numbers first; see
@@ -743,7 +745,7 @@ from "core" graphics.
   build keeps) - see
   [docs/matching/archive/issue-63-final-raw-actor.md](../matching/archive/issue-63-final-raw-actor.md).
 
-- `src/actor/actor_anim.c` (extended, GitHub issue #72, ROM
+- `src/actor/inline_copies_actors.cpp` (extended, GitHub issue #72, ROM
   0x0803B4EC-0x0803B8B0 - directly contiguous with this file's existing
   coverage, which already ended right at 0x0803B4EC): `UpdateJetpackCheckpointText` (an
   animation-frame-advance/loop-back function, plus a `+0x50` trampoline
@@ -774,7 +776,8 @@ from "core" graphics.
   `GetActorBgLayerDepth`, minus the NAKED functions below) - see
   [docs/matching/archive/issue-48-0x080291a4-actor.md](../matching/archive/issue-48-0x080291a4-actor.md).
 - `src/actor/actor_bg.cpp`/
-  `actor_spawn.c` (GitHub issue #49, ROM 0x08029E4C-0x0802A69C):
+  `actor_spawn.c`/`actor_category.cpp` (GitHub issue #49, ROM 0x08029E4C-0x0802A69C;
+  `actor_category.cpp` split from `actor_spawn.cpp` in #770):
   `ActorCategoryEndStub`, `CommitActorBgScroll`, `GetActorBgCenterY`, `GetActorBgCenterX` (the
   BG2-affine scroll subsystem's tail), the `gActorSpawnTable`
   `sub_effect_table` record accessor family (`GetActorCategoryFrameCount`-
@@ -1267,7 +1270,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   "kind" spawner. Hits this project's confirmed categorical r7-pin
   compiler bug. GitHub issue not tracked separately, see
   `docs/matching/archive/naked-sub_8007dbc.md`.
-- **`DrawJetpackCheckpointText`** (`src/actor/actor_anim.c`) - fixed-position
+- **`DrawJetpackCheckpointText`** (`src/actor/inline_copies_actors.cpp`) - fixed-position
   (120, 106) OAM setup for one sprite frame - screen-space visibility
   cull, then builds the OAM attribute words and calls
   `SetupSpriteFrameOam`; near-identical twin of `DrawPolarCollectedWumpa`
@@ -1497,7 +1500,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   `gHovercraftSideGunVtable` store into its own tiny `asm volatile` island
   too, since a real, respected `.pool` split only works for symbols
   whose literal load is itself opaque assembler text, the same gap
-  already documented for `UpdateActorPaletteCycle` in `actor.c`. Retires
+  already documented for `UpdateActorPaletteCycle` in `actor_palette_cycle.cpp`. Retires
   the raw `asm/code_3_2_20_28568_c99c_31784_33ef4_34058.s`. See
   `docs/matching/archive/issue-63-0x08033ef4-actor.md`.
 

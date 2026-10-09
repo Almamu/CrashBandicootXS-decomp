@@ -62,7 +62,7 @@ void PolarPlayer::DispenseWumpa()
     gAudioContext->PlaySfx(SFX_WUMPA, 0x100);
 }
 
-/* The pause menu is locked (PolarIsPauseLocked, actor_spawn.cpp). */
+/* The pause menu is locked (PolarIsPauseLocked, actor_category.cpp). */
 s32 PolarPlayer::IsPauseLocked()
 {
     return gPolarPauseLocked;

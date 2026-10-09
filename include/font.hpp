@@ -3,14 +3,14 @@
 
 /* The bitmap fonts as C++ (#664, docs/cplusplus.md, step 10b): the classes
  * behind gFontVtable, gSmallFontVtable and gLargeFontVtable (src/text/,
- * src/util/aabb_setup.cpp). gSmallFont/gLargeFont are the two instances.
+ * src/system/inline_copies_misc.cpp). gSmallFont/gLargeFont are the two instances.
  * There is no C view (bitmap_font.h's `struct bitmap_font` went in #754);
  * bitmap_font.h keeps the glyph metrics.
  *
  * No `#pragma interface`: g++ emits Font's vtable in src/text/font.cpp,
  * which has its key method, MeasureText (its first non-inline virtual
  * one; the destructor is inline), and SmallFont's and LargeFont's in
- * src/util/aabb_setup.cpp, which has their destructors. ldscript.txt
+ * src/system/inline_copies_misc.cpp, which has their destructors. ldscript.txt
  * places them at their ROM addresses (docs/cplusplus.md, "Emitting the
  * vtables"); cxx_symbols.txt maps the mangled names onto the C names. */
 
@@ -143,7 +143,7 @@ public:
 COMPILE_TIME_ASSERT(font_hpp, sizeof(Font) == 0x134);
 
 /* gSmallFont: 9-pixel lines, 4-pixel spaces, 2 tiles per glyph
- * (InitSmallFont, src/text/font_glyph.cpp; ~SmallFont, aabb_setup.cpp). */
+ * (InitSmallFont, src/text/font_glyph.cpp; ~SmallFont, inline_copies_misc.cpp). */
 class SmallFont : public Font
 {
 public:
@@ -153,7 +153,7 @@ public:
 
 /* gLargeFont: 16-pixel lines, 6-pixel spaces, 4 tiles per glyph and
  * 16x16 OBJs (InitLargeFont, src/text/font_glyph.cpp; ~LargeFont,
- * aabb_setup.cpp). */
+ * inline_copies_misc.cpp). */
 class LargeFont : public Font
 {
 public:

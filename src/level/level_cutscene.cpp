@@ -21,8 +21,9 @@ extern "C" {
 }
 
 /* 0x08022354-0x080225A0, formerly asm/code_3_2_17_22354.s: the two
- * functions between issue #33's chunk (spawn_pickups.cpp, which
- * ends with the game-context constructor InitLevelState) and
+ * functions between issue #33's chunk (spawn_pickups.cpp and
+ * spawn_markers.cpp, which ends with the game-context constructor
+ * InitLevelState) and
  * UpdateGameFrame (game_frame.cpp). See
  * docs/matching/archive/gap-22354-game-context.md.
  *
@@ -45,7 +46,7 @@ extern "C" {
  * and every word in baserom.gba for 0x08022355). Matched anyway.
  *
  * The game context's destructor: deletes every subsystem singleton its
- * constructor (InitLevelState, spawn_pickups.cpp) built (the fonts
+ * constructor (InitLevelState, spawn_markers.cpp) built (the fonts
  * through their virtual destructors) and clears the context pointer;
  * g++'s deleting destructor then frees `this` on bit 0 of its __in_chrg.
  * The game never leaves MainLoop, so it never runs. The globals keep

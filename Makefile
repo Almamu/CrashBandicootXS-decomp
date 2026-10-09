@@ -232,8 +232,12 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/text/wrapped_text.o \
                   $(C_BUILDDIR)/actor/actor_category_init.o \
                   $(C_BUILDDIR)/actor/actor_category_frame.o \
+                  $(C_BUILDDIR)/actor/actor_category_hooks.o \
                   $(C_BUILDDIR)/actor/actor.o \
-                  $(C_BUILDDIR)/actor/actor_anim.o \
+                  $(C_BUILDDIR)/actor/actor_spawn_collected.o \
+                  $(C_BUILDDIR)/actor/actor_palette_cycle.o \
+                  $(C_BUILDDIR)/actor/anim_part.o \
+                  $(C_BUILDDIR)/actor/inline_copies_actors.o \
                   $(C_BUILDDIR)/crates/crate_touch.o \
                   $(C_BUILDDIR)/enemies/enemy_patrol.o \
                   $(C_BUILDDIR)/enemies/enemy_ctrl_update.o \
@@ -365,12 +369,15 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/level/game_frame.o \
                   $(C_BUILDDIR)/level/run_room.o \
                   $(C_BUILDDIR)/cutscene/cutscene_player.o \
+                  $(C_BUILDDIR)/level/bg_streamer.o \
                   $(C_BUILDDIR)/level/room_frame.o \
                   $(C_BUILDDIR)/level/play_room.o \
                   $(C_BUILDDIR)/level/level_state.o \
                   $(C_BUILDDIR)/level/level_query.o \
+                  $(C_BUILDDIR)/level/room_select.o \
                   $(C_BUILDDIR)/level/spawn_crates.o \
                   $(C_BUILDDIR)/level/spawn_pickups.o \
+                  $(C_BUILDDIR)/level/spawn_markers.o \
                   $(C_BUILDDIR)/link/link_handshake.o \
                   $(C_BUILDDIR)/link/link_session_reset.o \
                   $(C_BUILDDIR)/link/link_session.o
@@ -419,9 +426,14 @@ $(filter $(OLD_AGBCC_OBJS),$(CXX_OBJS)): CXX1 := $(CXX1_OLD)
 # key-method object the ROM has the copies in (Entity's inline methods,
 # DestroyEntity last).
 NO_IMPLEMENT_INLINES_OBJS := $(C_BUILDDIR)/actor/actor.o \
-                             $(C_BUILDDIR)/actor/actor_anim.o \
+                             $(C_BUILDDIR)/actor/actor_category_hooks.o \
+                             $(C_BUILDDIR)/actor/actor_palette_cycle.o \
+                             $(C_BUILDDIR)/actor/actor_spawn_collected.o \
+                             $(C_BUILDDIR)/actor/anim_part.o \
+                             $(C_BUILDDIR)/actor/inline_copies_actors.o \
                              $(C_BUILDDIR)/bosses/dingodile.o \
                              $(C_BUILDDIR)/crates/crate_update.o \
+                             $(C_BUILDDIR)/frontend/company_logos_ctor.o \
                              $(C_BUILDDIR)/frontend/language_select.o \
                              $(C_BUILDDIR)/menus/level_select.o \
                              $(C_BUILDDIR)/objects/camera_lead.o \

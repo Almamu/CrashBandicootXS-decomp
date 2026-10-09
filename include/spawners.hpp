@@ -54,7 +54,7 @@ static inline void AddUpdateOnly(Entity *e)
 /* The room's entity flags (gEntityFlags; src/level/entity_flags.cpp):
  * level.h's struct entity_flags, the room's entity list and its "gone"
  * and "activated" bitmaps, with the bitmaps' accessors. It has no vtable.
- * InitLevelState (spawn_pickups.cpp) makes it. */
+ * InitLevelState (spawn_markers.cpp) makes it. */
 class LevelEntityFlags : public entity_flags
 {
 public:

@@ -92,7 +92,7 @@ void PolarPlayer::Update()
     }
 }
 
-/* AnimPart's frame accessors (actor_anim.cpp), inlined. */
+/* AnimPart's frame accessors (anim_part.cpp), inlined. */
 static inline s32 CurAttr(AnimPart *self)
 {
     s32 idx = self->animIndex;
@@ -230,7 +230,7 @@ s32 PolarPlayer::Shock()
 }
 
 /* The two VRAM tile buffers Draw uploads the frames into, each the size
- * of the current frame (PolarReloadPlayerTiles, actor.cpp, also calls
+ * of the current frame (PolarReloadPlayerTiles, actor_category_hooks.cpp, also calls
  * it). The ROM's product copies are old_agbcp's code for `h * w * 32`. */
 void PolarPlayer::AllocTiles()
 {

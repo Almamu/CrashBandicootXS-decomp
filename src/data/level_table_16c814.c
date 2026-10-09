@@ -353,7 +353,7 @@ const struct level_room_list gLevelRoomLists[LEVEL_COUNT] = {
 
 /*
  * The music cue of each level theme (`struct level_info.theme`), read by
- * PlayRoomMusic (level_query.cpp).
+ * PlayRoomMusic (room_select.cpp).
  */
 const u8 gThemeMusicCues[11] = {
     SONG_ARCTIC,    SONG_JUNGLE, SONG_SEWERS, SONG_UNDERWATER, SONG_ROCKET_CRASH, SONG_FUTURE,

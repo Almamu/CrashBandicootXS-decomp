@@ -8,7 +8,7 @@
  * definition (the BG layers are C++ classes, include/bg_layer.hpp), and
  * the globals and tables the level files use
  * (docs/headers_plan.md). OperatorNew and the other new/delete operators
- * (camera.cpp) are in memory.h. A .c file that needs a different local
+ * (operator_new.cpp) are in memory.h. A .c file that needs a different local
  * declaration for codegen keeps it as an asm-label alias with a
  * `codegen:` comment.
  *
@@ -26,7 +26,7 @@
 
 struct camera;
 
-/* The terrain types of the level collision maps (bg_layer_base.cpp): a
+/* The terrain types of the level collision maps (tile_cache.cpp): a
  * cell's low byte picks one (0x24 and above are solid, 0 is empty, and
  * GetTerrainHeights stops at 0x23), `modeValue` is a value per collision mode
  * (GetSolidTerrainModeValue) and `heights` the surface height of each of the cell's
@@ -85,7 +85,7 @@ extern void StepCameraFacing(struct camera *cam);
 extern void SnapCamera(struct camera *cam);
 extern void UpdateCamera(struct camera *cam);
 
-/* src/level/collision_map.cpp */
+/* src/level/entity_bitmap.cpp (UNUSED) */
 extern s32 SetBitmapBit(void *self, s32 n);
 extern void ClearBitmapBit(void *self, s32 n);
 extern void ClearBitmap(void *dst);
@@ -137,8 +137,21 @@ extern void SpawnRoomExit(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnDingodile(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnTiny(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnCortexBoss(u32 arg, u16 arg1, u16 arg2, u16 arg3);
+extern void SpawnMegaMix(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 
 /* src/level/spawn_crates.cpp */
+extern void SpawnTimeCrate3(u32 arg, u16 arg1, u16 arg2, u16 arg3);
+extern void SpawnTimeCrate2(u32 arg, u16 arg1, u16 arg2, u16 arg3);
+extern void SpawnTimeCrate1(u32 arg, u16 arg1, u16 arg2, u16 arg3);
+extern void SpawnSlotCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
+extern void SpawnTntCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
+extern void SpawnReinforcedCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
+extern void SpawnBouncyWumpaCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
+extern void SpawnMysteryCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
+extern void SpawnNitroCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
+extern void SpawnLifeCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
+extern void SpawnIronArrowCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
+extern void SpawnIronCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnNitroSwitchCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnOutlineCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnArrowCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
@@ -190,7 +203,6 @@ extern void SpawnGreenGem(u32 a, u16 a1, u16 a2, u16 a3);
 extern void SpawnYellowGem(u32 a, u16 a1, u16 a2, u16 a3);
 
 /* src/level/spawn_objects.cpp */
-extern void SpawnMegaMix(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnSeaweed(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnSeaweedNoAnimReset(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnFlame(u32 arg, u16 arg1, u16 arg2, u16 arg3);
@@ -203,18 +215,6 @@ extern void SpawnLargePlatform(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnLaunchPadEntity(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnNoEntity(void);
 extern void SpawnSealSpawner(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnTimeCrate3(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnTimeCrate2(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnTimeCrate1(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnSlotCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnTntCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnReinforcedCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnBouncyWumpaCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnMysteryCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnNitroCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnLifeCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnIronArrowCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnIronCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 
 /* src/level/spawn_pickups.cpp */
 extern void SpawnBodySlamPower(u32 arg, u16 arg1, u16 arg2, u16 arg3);
@@ -226,6 +226,8 @@ extern void SpawnBlueGem(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnCrateGemMarker(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void *CreateTouchableSprite(u32 index, u32 tag, u32 field0A, u32 cx, u16 cy, u16 cw, u16 ch);
 extern void SpawnWumpa(u32 arg, u16 arg1, u16 arg2, u16 arg3);
+
+/* src/level/spawn_markers.cpp */
 extern void SpawnHoverPlayerPosition(void);
 extern void SpawnHoverStartMarker(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnUnderwaterPlayerPosition(u32 arg, u16 arg1, u16 arg2, u16 arg3);

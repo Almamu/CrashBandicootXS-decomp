@@ -327,7 +327,7 @@ this plan depends on splitting them.
   `LaunchPad` (objects) ahead of the level-select screen.~~ **Done (#767):**
   `objects/camera_lead.cpp`, `objects/launch_pad.cpp`.
 - `level/camera.c` (`camera_follow.c`): `OperatorNew`/`OperatorDelete`
-  (C++ runtime) after the camera.
+  (C++ runtime) after the camera. **Done** (#770): `system/operator_new.cpp`.
 - `bosses/cortex.c` and `bosses/dingodile.c` (`actor_part_188d0.c`,
   `actor_part_1967c.c`): Tiny, Cortex and Dingodile straddle both files.
 - `vehicle/jetpack_spawn.c` (`actor_part128.c`): starts with
@@ -340,9 +340,13 @@ this plan depends on splitting them.
   prompt's draw/run.~~ **Done (#767):** moved to the end of
   `menus/continue_prompt.cpp`.
 - `frontend/language_select.c` (`counter_selector.c`): starts with
-  `LoadTaggedAssetBuffered` and the company-logo destructors.
+  `LoadTaggedAssetBuffered` and the company-logo destructors. **Done**
+  (#770): `frontend/company_logos_ctor.cpp`.
 - `actor/actor_anim.c` and `util/aabb_setup.c`: the ROM-tail grab bags
-  after libgcc.
+  after libgcc. **Done** (#770): nothing can move across libgcc, so they
+  are renamed `system/inline_copies_misc.cpp` and
+  `actor/inline_copies_actors.cpp`, with AnimPart's methods split into
+  `actor/anim_part.cpp`.
 
 ## What each move PR has to touch
 

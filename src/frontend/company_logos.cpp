@@ -13,18 +13,320 @@ extern "C" {
 #include "actor.h"
 #include "gfx.h"
 #include "globals.h"
+#include "math_util.h"
 }
 
-/* Tail of GitHub issue #65's chunk (0x0803686C-0x08037110), split off
- * `title_screen.cpp` at `DrawVvLogoPieces`. The company-logo screen's
- * last two methods (CompanyLogos, #664 part 10b, include/frontend.hpp;
- * four others are in title_screen.cpp) and the logo actor's (LogoActor:
- * constructor, Update, Draw; its destructor starts language_select.cpp).
+/* Tail of GitHub issue #65's chunk (0x080361B0-0x08037110). The
+ * company-logo screen's methods (CompanyLogos, #664 part 10b,
+ * include/frontend.hpp): Run, the VV logo's graphics and pieces (the
+ * first four, at the end of title_screen.cpp until #770), the VV logo
+ * draw and the Universal logo BG (this file was split off
+ * `title_screen.cpp` at `DrawVvLogoPieces`), then the logo actor's
+ * (LogoActor: constructor, Update, Draw). The screen's constructor and
+ * destructor and the actor's destructor follow in
+ * company_logos_ctor.cpp.
  *
  * old_agbcp (OLD_AGBCC_OBJS), as its C was old_agbcc, with strength
  * reduction: `DrawVvLogoPieces`'s header loop is check_dbra_loop's
  * reversed counter after the hoisted `&oamA`, which only strength
  * reduction emits. See docs/matching/archive/sr65-naked-retry.md. */
+
+/* Runs the company logos: the logo actor (Crash), the VV logo's pieces
+ * over the starfield with a 60-frame fade-in, the Universal logo zooming
+ * in on BG2 (A or START skips ahead) and fading out, then the VV logo
+ * until its pieces have flown off, and frees everything.
+ *
+ * The zoom-in's decrement/grow/shrink is written as "step the counter,
+ * then test it again" (which gives the ROM's block order), and the
+ * affine X/Y values are computed before either register store. In the
+ * fade-out both branches store the decremented value through a local
+ * `n` (#662 round 3, for an r1 pin on `v`): with `v--` in the second
+ * branch, `v` is live through it, local-alloc gives that block's
+ * BLDY address r1 first, and global-alloc then puts `v` in r2 and
+ * copies it to r1 for the alpha `v - 0x12`. A block-local `n` takes
+ * r1's place there, so `v` gets r1 as in the ROM. */
+void CompanyLogos::Run()
+{
+    LogoActor *part;
+    Starfield *bg;
+    s32 i;
+    s32 scale;
+
+    InitObjTileFreeList(OBJ_VRAM0);
+    InitSpriteFrameOamQueue();
+    InitSpriteFrameCache();
+    part = new LogoActor(&gLogoActorAnim);
+    {
+        struct dma_regs *dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
+        dma->src = (u32)gPolarCategoryPalette;
+        dma->dst = OBJ_PLTT;
+        dma->cnt = 0x80000100;
+        dma->cnt;
+    }
+    LoadVvLogoGraphics();
+    InitVvLogoPieces();
+    bg = new Starfield;
+    LoadUniversalLogoBg();
+    for (i = 0; i <= 0x3b; i++) {
+        if (i <= 0x10) {
+            REG_BLDCNT = 0xff;
+            REG_BLDY = 0x10 - i;
+        } else {
+            *(vu32 *)REG_ADDR_BLDCNT = 0;
+        }
+        WaitForVBlank();
+        bg->Update();
+    }
+    gAudioContext->PlaySfx(SFX_UNIVERSAL_LOGO_IN, 0x100);
+    scale = 0x2000;
+    fade = -1;
+    do {
+        s32 v;
+        s32 q;
+
+        UpdateKeys(gInput);
+        if (gKeys.half.pressed & (A_BUTTON | START_BUTTON)) {
+            if (fade > 0x40)
+                fade = 0x40;
+        }
+        WaitForVBlank();
+        CommitDispcnt();
+        if (fade != -1) {
+            if (fade == 0x40)
+                gAudioContext->PlaySfx(SFX_UNIVERSAL_LOGO_OUT, 0x100);
+            v = fade;
+            if (v <= 0x40) {
+                s32 a = v >> 2;
+                REG_BLDCNT = 0x3f7f;
+                REG_BLDALPHA = a | ((0x10 - a) << 8);
+            }
+            fade = v - 1;
+        }
+        if (fade == -1) {
+            if (scale > 0xffff || (scale += 0x600) > 0xffff) {
+                scale = 0x10000;
+                if (fade == -1)
+                    fade = 0xf4;
+            }
+        } else if (fade <= 0x40) {
+            scale = Q8_MUL(scale, 0x118);
+        }
+        q = 0x1000000 / scale;
+        {
+            s32 x = -(q * 120) + 0x7800;
+            s32 y = -(q * 80) + 0x5000;
+            REG_BG2X = x;
+            REG_BG2Y = y;
+        }
+        REG_BG2PA = q;
+        REG_BG2PD = q;
+        REG_BG2PB = 0;
+        REG_BG2PC = 0;
+        bg->Update();
+    } while (fade != 0);
+    ((struct dispcnt_bits *)gDispcnt)->bg2 = 0;
+    ((struct dispcnt_bits *)gDispcnt)->obj = 1;
+    ((struct dispcnt_bits *)gDispcnt)->objMap1D = 1;
+    CommitDispcnt();
+    *(vu32 *)REG_ADDR_BLDCNT = 0;
+    fade = -1;
+    timer = -1;
+    while (fade != 0) {
+        s32 v;
+
+        UpdateKeys(gInput);
+        if (gKeys.half.pressed & (A_BUTTON | START_BUTTON)) {
+            if (timer > 0)
+                timer = 1;
+        }
+        part->Update();
+        part->Draw();
+        gOamBuffer->Rewind();
+        FlushSpriteFrameOamQueue();
+        UpdateVvLogoPieces();
+        DrawVvLogoPieces();
+        bg->Update();
+        WaitForVBlank();
+        v = fade;
+        if (v > 0x10) {
+            s32 n = v - 1;
+            s32 a;
+
+            fade = n;
+            a = v - 0x12;
+            REG_BLDCNT = 0x3f7f;
+            REG_BLDALPHA = (0x10 - a) | (a << 8);
+            if (n == 0x11) {
+                fade = -1;
+                *(vu32 *)REG_ADDR_BLDCNT = 0;
+            }
+        } else if (v >= 0) {
+            s32 n = v - 1;
+
+            fade = n;
+            REG_BLDY = 0x10 - n;
+            REG_BLDCNT = 0xff;
+        }
+        gOamBuffer->Commit();
+        FlushVramDmaQueue();
+        AgeSpriteFrameCache();
+    }
+    delete part;
+    delete bg;
+    delete[] scratch;
+    delete[] frames;
+    FreeSpriteFrameCache();
+    FreeSpriteFrameOamQueue();
+    FreeObjTileFreeList();
+    FreeCategorySpriteSheet();
+}
+
+/* Reserves the three OBJ VRAM tile blocks and loads the VV logo's three
+ * palettes (gVvLogoEmblemObj's, gVvLogoLettersObj's, gVvLogoUrlObj's)
+ * to OBJ palettes 15, 14 and 13, the letters' and the URL's tiles to
+ * the first two blocks, and the emblem's frames to `frames`; allocates
+ * `scratch`. The frame strip's size is a local, computed before the
+ * allocation (the ROM's order). */
+void CompanyLogos::LoadVvLogoGraphics()
+{
+    tilesA = (u32)AllocVramTileBlock(0x1200);
+    tilesB = (u32)AllocVramTileBlock(0x400);
+    tilesC = (u32)AllocVramTileBlock(0x1000);
+    LoadAssetBuffered(gVvLogoEmblemObj.paletteAsset, (void *)(PLTT + 0x3E0));
+    LoadAssetBuffered(gVvLogoLettersObj.paletteAsset, (void *)(PLTT + 0x3C0));
+    LoadAssetBuffered(gVvLogoUrlObj.paletteAsset, (void *)(PLTT + 0x3A0));
+    LoadAssetBuffered(gVvLogoLettersObj.tileAsset, (void *)tilesA);
+    LoadAssetBuffered(gVvLogoUrlObj.tileAsset, (void *)tilesB);
+    {
+        u32 size = *(u32 *)gVvLogoEmblemObj.tileAsset >> 8;
+        u8 *buf;
+
+        frames = buf = new u8[size];
+        LoadTaggedAsset(gVvLogoEmblemObj.tileAsset, buf);
+    }
+    scratch = new u8[0x1000];
+}
+
+/* Starts the 20 pieces' motions from gVvLogoPieceSeeds, sets every
+ * sound-cue flag and rewinds the frame strip.
+ *
+ * Matches only because this object is built with -fno-strength-reduce
+ * (see NO_STRENGTH_REDUCE_OBJS in the Makefile and
+ * docs/matching/per-file-flags-investigation.md): with strength
+ * reduction on, gcc's loop optimizer reverses the first loop into a
+ * count-down (its counter is only used by the exit test) while the ROM
+ * keeps `i` counting up. The pointer walks are the source's own - with
+ * strength reduction off nothing would have produced them. The second
+ * loop's `1` lives in a local assigned before its counter and pointer
+ * (the ROM materializes it first). */
+void CompanyLogos::InitVvLogoPieces()
+{
+    s32 i;
+
+    for (i = 0; i <= 0x13; i++) {
+        slots[i].active = 0;
+        slots[i].countdown = gVvLogoPieceSeeds[i].hold + 1;
+        slots[i].record = gVvLogoPieceSeeds[i].record;
+    }
+    {
+        u8 one = 1;
+        s32 j = 0x11;
+        u8 *flags = &sfxPending[0x11];
+
+        for (; j >= 0; j--)
+            *flags-- = one;
+    }
+    frame = 0;
+    loops = 0;
+    frameTick = 0;
+}
+
+/* Moves the 20 pieces (as TitleScreen::UpdateLogoPieces, without the
+ * header) while `timer` is -1, setting it to -2 when a piece's motion
+ * has ended, and advances the emblem's frame strip (4 ticks a frame, 10
+ * frames, twice). Then, 240 frames later (a sound), flies every piece
+ * off upwards; once all are gone it starts the fade (`fade` 0x10). */
+void CompanyLogos::UpdateVvLogoPieces()
+{
+    s32 i;
+
+    if (timer == -1) {
+        for (i = 0; i <= 0x13; i++) {
+            if (slots[i].countdown != 0) {
+                s32 countdown = slots[i].countdown - 1;
+
+                slots[i].countdown = countdown;
+                if (countdown == 0) {
+                    const struct delta_record *record = slots[i].record++;
+
+                    slots[i].active = 1;
+                    countdown = record->hold;
+                    slots[i].countdown = countdown;
+                    if (countdown != 0) {
+                        slots[i].posC = INT_TO_Q16(record->dPosC);
+                        slots[i].deltaC = record->deltaC;
+                        slots[i].velA = INT_TO_Q8(record->dVelA);
+                        slots[i].deltaD = record->deltaD;
+                        slots[i].velB = INT_TO_Q8(record->dVelB);
+                        slots[i].deltaE = record->deltaE;
+                        slots[i].posA.q = INT_TO_Q16(record->dPosA);
+                        slots[i].deltaA = record->deltaA;
+                        slots[i].posB.q = INT_TO_Q16(record->dPosB);
+                        slots[i].deltaB = record->deltaB;
+                    }
+                } else {
+                    slots[i].posC += slots[i].deltaC;
+                    slots[i].velA += slots[i].deltaD;
+                    slots[i].velB += slots[i].deltaE;
+                    slots[i].posA.q += slots[i].deltaA;
+                    slots[i].posB.q += slots[i].deltaB;
+                }
+            } else {
+                timer = -2;
+            }
+        }
+        if (loops <= 1) {
+            if (++frameTick > 3) {
+                frameTick = 0;
+                if (++frame > 9) {
+                    frame = 0;
+                    ++loops;
+                }
+            }
+        }
+    }
+    if (timer == -2)
+        timer = 0xf0;
+    if (timer > 0) {
+        if (--timer != 0)
+            return;
+        gAudioContext->PlaySfx(SFX_UNKNOWN_50, 0x100);
+    }
+    if (timer == 0) {
+        s32 allDone = 1;
+        LogoPiece *slot;
+        LogoPiece *end;
+
+        slot = slots;
+        end = &slots[19];
+        do {
+            if (slot->active != 0) {
+                s32 y;
+
+                allDone = 0;
+                y = slot->posA.q - 0x80000;
+                slot->posA.q = y;
+                if (y < -0x7f0000)
+                    slot->active = allDone;
+            }
+            slot++;
+        } while ((s32)slot <= (s32)end);
+        if (allDone) {
+            fade = 0x10;
+            timer = -3;
+        }
+    }
+}
 
 static inline void SetAffine(OamBuffer *buf, s32 m, u16 pa, u16 pb, u16 pc, u16 pd)
 {

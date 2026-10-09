@@ -74,7 +74,7 @@ s32 LevelEntityFlags::CountCrateEntities(const struct level_entity_list *list)
  *
  * UNUSED - no caller anywhere in the ROM (checked src/ and asm/). Sets
  * bit `n` of `bits0` (floor-divided into a 32-bit-word row, same idiom as
- * `SetBitmapBit` in collision_map.cpp). */
+ * `SetBitmapBit` in entity_bitmap.cpp). */
 void LevelEntityFlags::SetGone(s32 n)
 {
     u8 *base = (u8 *)this;

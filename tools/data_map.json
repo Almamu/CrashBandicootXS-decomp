@@ -2818,7 +2818,7 @@
     "CreateEntitySpawner"
    ],
    "consumer_files": [
-    "level/spawn_pickups.cpp"
+    "level/spawn_markers.cpp"
    ],
    "ptr_words_code": 92,
    "ptr_words_data": 0,
@@ -2987,6 +2987,7 @@
     "menus/pause_menu_info.cpp",
     "menus/pause_menu_pages_init.cpp",
     "level/level_query.cpp",
+    "level/room_select.cpp",
     "level/run_room.cpp"
    ],
    "ptr_words_code": 0,
@@ -3017,7 +3018,7 @@
     "PlayRoomMusic"
    ],
    "consumer_files": [
-    "level/level_query.cpp"
+    "level/room_select.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 125,
@@ -3064,7 +3065,7 @@
     "GetSolidTerrainModeValue"
    ],
    "consumer_files": [
-    "level/bg_layer_base.cpp"
+    "level/tile_cache.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3089,7 +3090,7 @@
     "GetSolidTerrainHeights"
    ],
    "consumer_files": [
-    "level/bg_layer_base.cpp"
+    "level/tile_cache.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3110,7 +3111,7 @@
     "GetSolidTerrainHeights"
    ],
    "consumer_files": [
-    "level/bg_layer_base.cpp"
+    "level/tile_cache.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3131,7 +3132,7 @@
     "GetSolidTerrainHeights"
    ],
    "consumer_files": [
-    "level/bg_layer_base.cpp"
+    "level/tile_cache.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3152,7 +3153,7 @@
     "GetSolidTerrainHeights"
    ],
    "consumer_files": [
-    "level/bg_layer_base.cpp"
+    "level/tile_cache.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 420,
@@ -3318,8 +3319,7 @@
    "consumer_files": [
     "actor/actor_category_stats.cpp",
     "actor/actor_category_init.cpp",
-    "actor/actor_vram_pool.cpp",
-    "actor/cell_anim.cpp"
+    "actor/actor_vram_pool.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -3403,7 +3403,7 @@
     "UpdateActorPaletteCycle"
    ],
    "consumer_files": [
-    "actor/actor.c"
+    "actor/actor_palette_cycle.cpp"
    ],
    "ptr_words_code": 16,
    "ptr_words_data": 19,
@@ -3425,7 +3425,7 @@
     "SetActorPaletteCycle"
    ],
    "consumer_files": [
-    "actor/actor.c"
+    "actor/actor_palette_cycle.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3449,7 +3449,7 @@
     "SetActorPaletteCycle"
    ],
    "consumer_files": [
-    "actor/actor.c"
+    "actor/actor_palette_cycle.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3473,7 +3473,7 @@
     "RunCompanyLogos"
    ],
    "consumer_files": [
-    "frontend/title_screen.cpp"
+    "frontend/company_logos.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 234,
@@ -4754,7 +4754,7 @@
     "RunCompanyLogos"
    ],
    "consumer_files": [
-    "frontend/title_screen.cpp"
+    "frontend/company_logos.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 2,
@@ -4775,7 +4775,7 @@
     "InitVvLogoPieces"
    ],
    "consumer_files": [
-    "frontend/title_screen.cpp"
+    "frontend/company_logos.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 20,
@@ -4795,7 +4795,7 @@
     "LoadVvLogoGraphics"
    ],
    "consumer_files": [
-    "frontend/title_screen.cpp"
+    "frontend/company_logos.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 2,
@@ -4815,7 +4815,7 @@
     "LoadVvLogoGraphics"
    ],
    "consumer_files": [
-    "frontend/title_screen.cpp"
+    "frontend/company_logos.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 2,
@@ -4835,7 +4835,7 @@
     "LoadVvLogoGraphics"
    ],
    "consumer_files": [
-    "frontend/title_screen.cpp"
+    "frontend/company_logos.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 2,
@@ -5071,7 +5071,7 @@
     "InitLevelState"
    ],
    "consumer_files": [
-    "level/spawn_pickups.cpp",
+    "level/spawn_markers.cpp",
     "menus/pause_menu.cpp"
    ],
    "ptr_words_code": 220,
@@ -8131,7 +8131,7 @@
     "InitBgStreamer"
    ],
    "consumer_files": [
-    "cutscene/cutscene_player.cpp"
+    "level/bg_streamer.cpp"
    ],
    "ptr_words_code": 1,
    "ptr_words_data": 0,
@@ -8156,7 +8156,7 @@
     "InitBgLayerBase"
    ],
    "consumer_files": [
-    "cutscene/cutscene_player.cpp"
+    "level/bg_layer_base.cpp"
    ],
    "ptr_words_code": 4,
    "ptr_words_data": 0,
@@ -8184,7 +8184,7 @@
    "consumer_files": [
     "level/bg_layer.cpp",
     "level/bg_layer_init.cpp",
-    "level/tile_slot_pool.cpp"
+    "level/pooled_bg_layer.cpp"
    ],
    "ptr_words_code": 9,
    "ptr_words_data": 0,
@@ -8209,7 +8209,7 @@
     "InitPooledBgLayer"
    ],
    "consumer_files": [
-    "level/tile_slot_pool.cpp"
+    "level/pooled_bg_layer.cpp"
    ],
    "ptr_words_code": 9,
    "ptr_words_data": 0,
@@ -8259,7 +8259,7 @@
     "DestroyLargeFont"
    ],
    "consumer_files": [
-    "util/aabb_setup.cpp",
+    "system/inline_copies_misc.cpp",
     "text/font_glyph.cpp"
    ],
    "ptr_words_code": 8,
@@ -8285,7 +8285,7 @@
     "DestroySmallFont"
    ],
    "consumer_files": [
-    "util/aabb_setup.cpp",
+    "system/inline_copies_misc.cpp",
     "text/font_glyph.cpp"
    ],
    "ptr_words_code": 8,
@@ -8315,7 +8315,7 @@
     "DestroySmallFont"
    ],
    "consumer_files": [
-    "util/aabb_setup.cpp",
+    "system/inline_copies_misc.cpp",
     "text/font.cpp",
     "text/font_glyph.cpp"
    ],
@@ -8384,14 +8384,14 @@
     "DestroyHovercraftCannonFlash"
    ],
    "consumer_files": [
-    "frontend/language_select.cpp",
-    "actor/actor_anim.c",
+    "frontend/company_logos_ctor.cpp",
+    "actor/inline_copies_actors.cpp",
     "vehicle/jetpack_crates.c",
     "bosses/hovercraft.c",
     "vehicle/polar_player_actions.c",
     "vehicle/polar_pickups.c",
     "vehicle/jetpack_player.c",
-    "actor/actor.c"
+    "actor/actor.cpp"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -9497,7 +9497,7 @@
     "DestroyLogoActor"
    ],
    "consumer_files": [
-    "frontend/language_select.cpp",
+    "frontend/company_logos_ctor.cpp",
     "frontend/company_logos.cpp"
    ],
    "ptr_words_code": 3,
