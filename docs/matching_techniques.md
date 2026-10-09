@@ -1064,6 +1064,48 @@ Round 2 in bosses/, enemies/ and actor/ (C++):
 
   None of the per-object flags on the brief's list helped any of them.
 
+Round 3 in frontend/, menus/, save/, link/ and text/ (C++), diagnosed
+from the `-da` dumps first:
+
+- **An inline helper changes loop.c's choices.** `TitleScreen::Run`'s
+  seed loop is `SeedLogoPieces()`, an inline method: integrated into
+  Run, loop.c leaves `landTimer[i]`'s address unreduced, which is Run's
+  ROM code, where the same loop written out in Run (or compiled on its
+  own, as the unused `ResetLogoPieces`, which is that plain loop)
+  strength-reduces it. Both functions had hand-written `goto` loops over
+  byte offsets with a `MATCH_CONST` and five `MATCH_USE`s.
+- **A block-local value for a decrement.** In `CompanyLogos::Run`'s
+  fade-out, `v--; fade = v;` keeps `v` live through the branch, so
+  local-alloc gives that block's BLDY address r1 first and global-alloc
+  puts `v` in r2 (an r1 pin before); `s32 n = v - 1;` as in the other
+  branch leaves r1 to `v`.
+- **A pointer local instead of a padding barrier.**
+  `LinkSession::ResetState`'s nibble decrement through its own
+  `struct nibble_pair *nb` breaks the global-alloc priority tie the
+  `MATCH_BARRIER()` broke with an extra insn.
+- **A reload the ROM got for free.** `SaveMenu::InitIcons`' frame-0
+  icon: with `tag` a plain field store, old_agbcp's read-modify-write
+  leaves a dead zero mask that loop.c hoists out of the loop; with no
+  free register it is rematerialized by reload at frame 0's store, after
+  the address, in r1, which also moves the reload-register rotation on.
+  That was the frame-0 address pin and the r1 hold.
+- **Where the kept sites are decided** (each comment has the details):
+  gcse's PRE hoists `slot << 5` into the tile loops' preheader in
+  `Credits::LoadLogos` (it ignores hard registers, hence the pin); cse1
+  propagates the key-word copy in `LevelSelect::Loop` and the ring copy
+  in `LinkSession::HandleSerial`; reload_cse_regs deletes
+  `ContinuePrompt::Loop`'s second `lsrs r1, r2, #16` (r1 still holds
+  it); combine folds `SaveData::TestFlags`'s parameter extension into
+  the `and`; regmove/reload build `CameraLead::Reset`'s `and` in the
+  dying 1's register (the ROM's is a copy of `v`, as if the 1 were
+  still live); cse2 merges `LinkSession::Update`'s two 1s; global-alloc
+  priority (`floor_log2(refs) * refs / length`) for
+  `DrawWrappedText`'s `len`, `ResetState`'s `id` and
+  `ContinuePrompt::Loop`'s `audio`; local-alloc's tie of a shift to the
+  dying operand in `PauseMenu::Draw`; reload's spill-register rotation
+  for `DrawWrappedText`'s r1 hold (under `-fno-rerun-loop-opt` the
+  hold-free code is two reload registers off, nothing else).
+
 ## Survey and conversion record (#576)
 
 The conversion is complete. `tools/match_idioms.py` after part 4

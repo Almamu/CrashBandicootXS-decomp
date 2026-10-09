@@ -126,7 +126,15 @@ void PauseMenu::Draw()
          * #662 round 2: SetPos with the expressions as arguments or an
          * `x` local give x r1 and y r3 (direct posX/posY stores are
          * further off), and the permuter found nothing in 43k
-         * iterations. */
+         * iterations.
+         * #662 round 3: local-alloc. Plain, the shift result is tied to
+         * the dying subtraction (r1) and, at the same priority as
+         * SetPos's inlined `y` parameter (2 refs over 5 insns each), is
+         * allocated first because it is born first; `y` then gets r3.
+         * The ROM allocates `y` first (r2) and leaves x untied (r3).
+         * Tried: centring/right-align inline helpers, `y` and the 0xf0
+         * as locals in either order, s32/u32 SetPos parameters, old_agbcp
+         * and every -fno-* flag family. */
         MATCH_USE(hold);
         gLargeFont->SetPos(x, 0xe);
     }
@@ -147,7 +155,9 @@ void PauseMenu::Draw()
         /* Extra references (no code): neither the 0x8c (r1) nor
          * `width` (r0) is tied to `x` (r3). */
         MATCH_USE2(t, width);
-        /* Hard-register hold (no code), as above. */
+        /* Hard-register hold (no code), as above: the same local-alloc
+         * tie, x tied to the dying 0x8c (round 3: `t`/`x`/`y` locals in
+         * either order, `-width + 0x8c`, a RightX helper don't help). */
         MATCH_USE(hold);
         gLargeFont->SetPos(x, 0x88);
     }

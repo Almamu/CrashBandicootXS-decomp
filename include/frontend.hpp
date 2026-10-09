@@ -217,6 +217,7 @@ public:
     void DrawLogoPieces();                 // DrawTitleLogoPieces
     u32 CheatInput(u32 pressed);           // TitleScreenCheatInput
     void HashInput(u32 val);               // inline: CheatInput's, HashCheatInput's body
+    void SeedLogoPieces();                 // inline: Run's seed loop
     s32 Run();                             // RunTitleScreen
     void CommitFrame();                    // CommitTitleScreenFrame
     void DrawMenuItem(s32 text, s32 item); // DrawTitleMenuItem

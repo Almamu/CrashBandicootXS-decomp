@@ -3,7 +3,6 @@
 #include "audio.hpp"
 
 extern "C" {
-#include "match.h"
 #include "gba/io_reg.h"
 #include "gba/dma_macros.h"
 #include "graphics_package.h"
@@ -81,74 +80,51 @@ u32 TitleScreen::CheatInput(u32 pressed)
     return 0;
 }
 
+/* Starts the nine pieces' motions from gTitleLogoPieceSeeds and clears
+ * `shake` (Run's first step, inlined there).
+ *
+ * #662 round 3: inlined, the loop's giv choices differ from the same
+ * loop compiled on its own (ResetLogoPieces): loop.c reduces the
+ * piece pointer, the 0x34 stride and the seed pointer but leaves
+ * `landTimer[i]` as `this + 0x1e4 + (i << 2)`, which is Run's ROM code.
+ * Written out in Run, the `-1` store's address is strength-reduced too
+ * (r9), as in ResetLogoPieces; the C had a hand-written `goto` loop with
+ * two `MATCH_USE(i)`s in its place. */
+inline void TitleScreen::SeedLogoPieces()
+{
+    s32 i;
+
+    for (i = 0; i <= 8; i++) {
+        pieces[i].active = 0;
+        pieces[i].countdown = gTitleLogoPieceSeeds[i].hold + 1;
+        pieces[i].record = gTitleLogoPieceSeeds[i].record;
+        landTimer[i] = -1;
+    }
+    shake = 0;
+}
+
 /* Runs the title screen: starts the nine pieces' motions and moves them
  * until the first one's ends, then shows the menu (up/down, A or START
  * to choose), fades out and returns the choice: 0 new game, 1 load, 2
  * the credits.
  *
  * Closed in the issues #64/#65 second NAKED retry. Three loop shapes:
- * - The seed loop is a `goto` loop (nothing hoisted), as in
- *   ResetLogoPieces. Two extra `i` references (empty asms) give `i` the
- *   first free low register (r3) ahead of `slot`/`stride`. Both
- *   address sums compute the scaled index first (`off`), and the
- *   `-1` store adds it second (`base + off`).
+ * - The seed loop is SeedLogoPieces, inlined (see there).
  * - The menu loop is a real `for (;;)`, so `&gAudioContext` is
  *   hoisted into r6. Leaving it with `goto fadeLoop` instead of `break`
  *   keeps jump.c from rotating it around the `pressed & 9` exit.
- * - The fade loop is a `goto` loop again (its register addresses are
- *   reloaded each pass) with its own counter, so the seed loop's `i`
- *   does not cross calls.
+ * - The fade loop is a `goto` loop (its register addresses are
+ *   reloaded each pass) with its own counter.
  * `pressed` is loaded into its own variable first (the ROM's
  * `ldrh r5` / `add r1, r5, #0`). The `cheatHash` zero is a local, so it is
  * materialized before the `1`. */
 s32 TitleScreen::Run()
 {
-    s32 i;
-    const struct slot_seed *seedBase;
-    const struct slot_seed *seed;
-    u8 *slot;
-    s32 stride;
-    s32 zero;
     u32 pressed;
     s32 fade;
 
-    i = 0;
-    seedBase = gTitleLogoPieceSeeds;
-    seed = seedBase;
-    slot = (u8 *)this;
-    stride = 0;
-seedLoop:
-    zero = 0;
-    slot[offsetof(TitleScreen, pieces[0].active)] = zero;
-    {
-        u8 *countdownBase = (u8 *)&pieces[0].countdown;
-        s32 *dst = (s32 *)(countdownBase + stride);
-        s32 off = i << 3;
-        u32 holdBase = (u32)&seedBase->hold;
-
-        *dst = *(s32 *)(off + holdBase) + 1;
-    }
-    {
-        u8 *recordBase = (u8 *)&pieces[0].record;
-
-        *(const struct delta_record **)(recordBase + stride) = seed->record;
-    }
-    {
-        s32 off = i << 2;
-        u32 base = (u32)landTimer;
-
-        *(s32 *)(base + off) = -1;
-    }
-    seed++;
-    slot += sizeof(LogoPiece);
-    stride += sizeof(LogoPiece);
-    i++;
-    MATCH_USE(i);
-    MATCH_USE(i);
-    if (i <= 8)
-        goto seedLoop;
-    shake = zero;
-    menuShown = zero;
+    SeedLogoPieces();
+    menuShown = 0;
     while (pieces[0].countdown != 0) {
         UpdateLogoPieces();
         Draw();
@@ -265,64 +241,26 @@ void TitleScreen::HashCheatInput(u32 val)
 }
 
 /* Run's seed loop on its own: starts the nine pieces' motions from
- * gTitleLogoPieceSeeds and clears `shake`.
+ * gTitleLogoPieceSeeds and clears `shake`. SeedLogoPieces's body, but
+ * compiled on its own rather than inlined, where loop.c also
+ * strength-reduces the `landTimer[i]` store (the ROM's `stmia` on r9).
  *
- * Closed in the issues #64/#65 second NAKED retry. The loop is a
- * hand-written `goto` loop (no loop notes), so nothing is hoisted, as in
- * the ROM. The rest is global-alloc priority:
- * - `stride` starts from a constant-init (`MATCH_CONST(stride, 0)`). A plain
- *   `stride = 0` makes local-alloc double its live length, which drops
- *   it below `slot` (r5/r4 swapped).
- * - One extra `this` reference in the loop and `seedBase`/`zero`
- *   references after it (empty asms, no code) lift those three to the
- *   ROM's r3/r8/ip.
- * - `off = i << 3` computed before `holdBase` (as an integer) gives the
- *   ROM's `lsl` first, `add r0, r0, r1` order. */
+ * #662 round 3: the plain indexed loop. The C was a `goto` loop over
+ * hand-kept byte offsets with a `MATCH_CONST` and three `MATCH_USE`s for
+ * the allocation. */
 /* UNUSED - no caller anywhere in the ROM (no Thumb `bl` to it and no
  * pointer to it in baserom.gba, nor any reference in asm/ or src/). */
 void TitleScreen::ResetLogoPieces()
 {
     s32 i;
-    const struct slot_seed *seedBase;
-    s32 *counter;
-    const struct slot_seed *seed;
-    u8 *slot;
-    s32 stride;
-    s32 zero;
 
-    i = 0;
-    seedBase = gTitleLogoPieceSeeds;
-    counter = landTimer;
-    seed = seedBase;
-    slot = (u8 *)this;
-    MATCH_CONST(stride, 0);
-loop:
-    zero = 0;
-    slot[offsetof(TitleScreen, pieces[0].active)] = zero;
-    {
-        u8 *countdownBase = (u8 *)&pieces[0].countdown;
-        s32 *dst = (s32 *)(countdownBase + stride);
-        s32 off = i << 3;
-        u32 holdBase = (u32)&seedBase->hold;
-
-        *dst = *(s32 *)(off + holdBase) + 1;
+    for (i = 0; i <= 8; i++) {
+        pieces[i].active = 0;
+        pieces[i].countdown = gTitleLogoPieceSeeds[i].hold + 1;
+        pieces[i].record = gTitleLogoPieceSeeds[i].record;
+        landTimer[i] = -1;
     }
-    {
-        u8 *recordBase = (u8 *)&pieces[0].record;
-
-        *(const struct delta_record **)(recordBase + stride) = seed->record;
-    }
-    *counter++ = -1;
-    seed++;
-    slot += sizeof(LogoPiece);
-    stride += sizeof(LogoPiece);
-    i++;
-    MATCH_USE(this);
-    if (i <= 8)
-        goto loop;
-    MATCH_USE(seedBase);
-    MATCH_USE(zero);
-    shake = zero;
+    shake = 0;
 }
 
 /* Deletes the starfield, blanks DISPCNT and the BG palettes and fades
@@ -352,12 +290,13 @@ TitleScreen::~TitleScreen()
  *
  * The zoom-in's decrement/grow/shrink is written as "step the counter,
  * then test it again" (which gives the ROM's block order), and the
- * affine X/Y values are computed before either register store. The
- * fade-out value is pinned to r1 (register allocation, as in the C: the
- * ROM's choice; unpinned it lands in r2 and costs a copy for the alpha
- * `v - 0x12`, which the ROM computes over it). Reading and writing
- * `fade` through a pointer, `a` from `n` or `v -= 0x12` in place don't
- * change that (#662 round 2). */
+ * affine X/Y values are computed before either register store. In the
+ * fade-out both branches store the decremented value through a local
+ * `n` (#662 round 3, for an r1 pin on `v`): with `v--` in the second
+ * branch, `v` is live through it, local-alloc gives that block's
+ * BLDY address r1 first, and global-alloc then puts `v` in r2 and
+ * copies it to r1 for the alpha `v - 0x12`. A block-local `n` takes
+ * r1's place there, so `v` gets r1 as in the ROM. */
 void CompanyLogos::Run()
 {
     LogoActor *part;
@@ -445,7 +384,7 @@ void CompanyLogos::Run()
     fade = -1;
     timer = -1;
     while (fade != 0) {
-        MATCH_HOLD_REG(s32, v, r1);
+        s32 v;
 
         UpdateKeys(gInput);
         if (gKeys.half.pressed & (A_BUTTON | START_BUTTON)) {
@@ -474,9 +413,10 @@ void CompanyLogos::Run()
                 *(vu32 *)REG_ADDR_BLDCNT = 0;
             }
         } else if (v >= 0) {
-            v--;
-            fade = v;
-            REG_BLDY = 0x10 - v;
+            s32 n = v - 1;
+
+            fade = n;
+            REG_BLDY = 0x10 - n;
             REG_BLDCNT = 0xff;
         }
         gOamBuffer->Commit();

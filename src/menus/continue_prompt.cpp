@@ -84,7 +84,17 @@ void ContinuePrompt::InitGraphics()
  * #662 round 2: without the MATCH_KEEP the only difference is that shared
  * shift (inline u16 helpers, a union copy, swapped operands and `!= 0`
  * don't separate it), and `gAudioContext->` written directly gives the
- * counter r7 and the pointer r8. */
+ * counter r7 and the pointer r8.
+ * #662 round 3, from the -da dumps: the two shifts are separate insns up
+ * to reload (cse, gcse and combine keep both); it is reload's
+ * reload_cse_regs that deletes the START test's `lsrs r1, r2, #16`,
+ * because r1 still holds `word >> 16` from the A test. The keep's "+r"
+ * operand is what tells it r2 may have changed; the ROM's compile had
+ * something there that did the same, which no C statement between the
+ * tests reproduces (agbcp instead of old_agbcp is further off). Without
+ * the MATCH_USE, global-alloc ranks the pair counter (5 refs in the
+ * loop) above `audio` (3) and gives it r7; declaration order, `u32 i`
+ * and `++i >= 2` don't change the ranking. */
 s32 ContinuePrompt::Loop()
 {
     s32 dir = 1;

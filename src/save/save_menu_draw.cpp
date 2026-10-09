@@ -3,7 +3,6 @@
 
 extern "C" {
 #include "core.h"
-#include "match.h"
 #include "actor.h"
 #include "menus.h"
 #include "graphics_package.h"
@@ -318,6 +317,9 @@ static inline void IconReserve(Font **m)
         _o->y = (py) << 8;                                                      \
     }
 
+/* The animation number as a value: an inline call, so the store's value
+ * is computed before its address (the ROM's `movs r0, #1` ahead of
+ * `adds r1, r4, #0x2d`); a plain `frame` is loaded after the address. */
 static inline s32 Opaque(s32 v)
 {
     return v;
@@ -330,18 +332,7 @@ static inline void new_row_icon(UiSprite **slot, u32 tblOff, u32 frame)
     icon = new UiSprite;
     *slot = icon;
     icon->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + tblOff);
-    /* Plain `u8 *` stores here and for `affine` below: old_agbcp's
-     * read-modify-write field store leaves a dead zero mask that the loop
-     * pass counts as a movable, which keeps 0x80 out of the loop
-     * pre-header (as old_agbcc's did in the C). */
-    if (frame)
-        *(u8 *)&icon->tag = Opaque(frame);
-    else {
-        /* The ROM computes the address first, in r0, and reloads the 0
-         * into r1 after it; this pin reproduces that for frame 0. */
-        MATCH_HOLD_REG(u8 *, fp, r0) = &icon->tag;
-        *fp = 0;
-    }
+    icon->tag = Opaque(frame);
     icon->ResetFrameTimer();
     icon->ResetFrameIndex();
     icon->SetAnimDone(0);
@@ -350,20 +341,14 @@ static inline void new_row_icon(UiSprite **slot, u32 tblOff, u32 frame)
         u8 *p = (u8 *)*slot + 0x29; // the palette nibble's byte
         s32 m = -16;
 
-        if (frame == 0) {
-            /* Hard-register hold (no code): keeping r1 live here makes
-             * reload skip it when it copies the 15 from sl, so the third
-             * icon takes r3 as in the ROM. The ROM reloaded the 0 above,
-             * which moved the round-robin on; the pinned store doesn't. */
-            MATCH_HOLD_REG(s32, hold, r1);
-            MATCH_HOLD(hold);
-            lo &= 15;
-            MATCH_USE(hold);
-        } else
-            lo &= 15;
+        lo &= 15;
         *p = (*p & m) | lo;
     }
-    *(u16 *)&(*slot)->affine = 0x80;
+    {
+        u16 half = 0x80;
+
+        (*slot)->affine = half;
+    }
 }
 
 /* The screen's graphics setup (InitSaveMenuIcons): resets the OAM shadow
@@ -374,18 +359,18 @@ static inline void new_row_icon(UiSprite **slot, u32 tblOff, u32 frame)
  * frames 1/2/0, half size: `affine` 0x80) and places five of them.
  *
  * Was raw asm (asm/code_3_1_10_4.s) with a NON_MATCHING draft; closed
- * in docs/matching/archive/hard-register-hold-retry.md. The plain-pointer
- * stores in new_row_icon fix the loop pre-header (see
- * docs/matching/archive/early-rom-naked-retry-2.md); the frame-0 address
- * pin and the r1 hold fix the last 6 halfwords. The C also needed three
- * MATCH_BARRIER()s of insn-count padding to keep the rowObj pointers'
- * stack slots in the ROM's order; the C++ doesn't.
- * #662 round 2: `icon->tag = Opaque(frame)` for all three frames gets the
- * frame-0 store right with no pin, and then the palette as the plain
- * `palette = GetAnimPaletteSlot()` field store and `affine = 0x80` leave
- * only the 0x80's place in the loop pre-header off;
- * with the byte-wise palette store, the 0x80 needs a `u16` local to land
- * there. */
+ * in docs/matching/archive/hard-register-hold-retry.md.
+ * #662 round 3: `tag` is a plain field store. old_agbcp's read-modify-
+ * write byte store leaves a dead zero mask, which loop.c hoists out of
+ * the loop as a movable; that zero lives across the whole loop, gets no
+ * register (r4-r10 are taken) and is rematerialized by reload at frame
+ * 0's store, after the address, into r1: the ROM's frame-0 sequence, and
+ * the reload that moves the reload-register rotation on to r3 for the
+ * 15's copy from sl. The C had a `u8 *` store with the frame-0 address
+ * pinned to r0 and an r1 hold for that rotation. The 0x80 is a `u16`
+ * local, which puts its load (r9) right after the 15's in the loop
+ * pre-header, ahead of the rowObj pointers' copies, as in the ROM;
+ * `affine = 0x80` loads it after them. */
 void SaveMenu::InitIcons()
 {
     u16 (*pal)[16];

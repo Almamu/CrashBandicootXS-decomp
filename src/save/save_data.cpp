@@ -351,7 +351,14 @@ u8 SaveData::IsSlotEmpty(s32 rowIndex)
  * `mask` at the entry: unpinned, combine folds it into the `and` with
  * the zero-extended byte load, with every spelling tried in #662 round 2
  * (`(mask & flags) != 0`, a ternary, a bool, s8/s16/u16/s32/u32 for `v`
- * and the result, `flags & mask`, `mask &= flags`). */
+ * and the result, `flags & mask`, `mask &= flags`).
+ * #662 round 3, from the -da dumps: combine merges the entry's lsl/lsr
+ * pair and the `ldrb` into the `and` (insns 10, 11 and 31 to one), since
+ * the loaded byte's nonzero bits make the zero-extension redundant; a
+ * volatile read, s8/char `flags`, an s8 or u32 `mask` and the flag sweep
+ * don't stop it. With `v` in r1 (a hard register) the `and` can't take
+ * the parameter's pseudo, so the extension stays; the ROM's `v` and
+ * `result` are also separate (r1, r0) where cse folds them otherwise. */
 u8 SaveData::TestFlags(u8 mask)
 {
     MATCH_HOLD_REG(u8, v, r1);

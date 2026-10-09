@@ -406,7 +406,16 @@ struct popup_glyph_src {
  * tile loops, next to `slot + 1` and `i + 1`, which the ROM has there,
  * and spills it; `palSlots[slot]`, an inline copy helper, the DMA
  * macros and -fno-strength-reduce/-fno-rerun-loop-opt/-fno-gcse don't
- * change that.) */
+ * change that.) #662 round 3, from the -da dumps: it is gcse's PRE, not
+ * loop.c. cse folds the copy into `slot`, and PRE then finds `slot << 5`
+ * anticipated on every path from the block before the tile loops and
+ * inserts it there (busy code motion: "PRE/HOIST: end of bb 7"), with
+ * `slot + 1` and `i + 1`; the ROM has those two there but not the
+ * shift. PRE doesn't consider hard registers, so the pinned copy stays
+ * at the palette copy. For the natural code the shift would have to be
+ * not anticipated there (an operand set or a path without it between),
+ * which nothing in the loop body gives; -fno-gcse moves most of the
+ * file. */
 void Credits::LoadLogos()
 {
     u8 (*palSlots)[TILE_SIZE_4BPP] = gPaletteCache->slots;
