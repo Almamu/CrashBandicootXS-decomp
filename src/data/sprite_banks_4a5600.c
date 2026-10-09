@@ -135,7 +135,7 @@ extern const struct sprite_frame *const gSpriteBank08Frames[36];
 extern const struct sprite_anim gSpriteBank09Anims[1];
 extern const struct sprite_frame *const gSpriteBank09Frames[14];
 
-/* The root of the system: InitLevelState (spawn_pickups.cpp) points
+/* The root of the system: InitLevelState (spawn_markers.cpp) points
  * *gSpriteBankSet here. GetSpriteTileBase returns tileBase;
  * InitLevelState and RunPauseMenu (pause_menu.cpp) build the palette
  * cache from palettes/paletteCount. */

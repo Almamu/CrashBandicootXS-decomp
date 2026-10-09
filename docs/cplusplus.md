@@ -1750,7 +1750,7 @@ agbcc to old_agbcc's constant-before-`ldrb` order) and move to
   for the update-only list, which holds bare entities). The bosses' own
   `(MovingSprite *)CreateMovingSprite` calls (cortex.cpp, dingodile.cpp,
   tiny_update.cpp) are `MovingSprite::Create` too.
-- **`InitLevelState`** (spawn_pickups.cpp) builds the C++ classes with
+- **`InitLevelState`** (spawn_pickups.cpp; spawn_markers.cpp since #770) builds the C++ classes with
   `new`: `SpriteRenderer`, `SpriteBankSet`, `PaletteCache`, `OamBuffer`,
   `ObjVramCursor(0)`, `PaletteCycles`, and the key input, `KeyInput`
   (spawners.hpp), whose constructor is ClearKeys (src/system/irq.c, now key_input.cpp, still

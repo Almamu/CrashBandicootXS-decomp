@@ -6,7 +6,7 @@
  * level_state.cpp, makes the one instance), and LevelProgress, its room
  * block. Their functions are methods, mapped to their C names by
  * cxx_symbols.txt: LevelState's in level_state.cpp (the accessors),
- * spawn_pickups.cpp (the constructor, InitLevelState), level_cutscene.cpp
+ * spawn_markers.cpp (the constructor, InitLevelState), level_cutscene.cpp
  * (the destructor, DestroyLevelState, UNUSED: the game never leaves
  * MainLoop; PlayCutscene), game_frame.cpp (UpdateGameFrame),
  * bonus_round.cpp, time_trial.cpp and aabb_setup.cpp (GetLives);
@@ -94,7 +94,7 @@ COMPILE_TIME_ASSERT(level_state_hpp, sizeof(LevelProgress) == 0x20);
 class LevelState
 {
 public:
-    LevelState();               // InitLevelState, spawn_pickups.cpp
+    LevelState();               // InitLevelState, spawn_markers.cpp
     ~LevelState();              // DestroyLevelState, level_cutscene.cpp
     void PlayCutscene(s32 idx); // level_cutscene.cpp
     void UpdateGameFrame();     // game_frame.cpp

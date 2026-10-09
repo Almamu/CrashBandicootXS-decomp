@@ -10,7 +10,7 @@
 /* The unified 92-slot function-pointer dispatch array (docs/rom_map.md
  * "Major correction: there is no second table"): the spawn function of
  * each entity type of the room data (docs/levels.md, "Entities").
- * CreateEntitySpawner (spawn_pickups.cpp) hands it to SetEntitySpawnerTable
+ * CreateEntitySpawner (spawn_markers.cpp) hands it to SetEntitySpawnerTable
  * with a count of ENTITY_COUNT, as gEntitySpawner; SpawnEntity calls entry
  * `type` with the entity's id, x, y and param. */
 const entity_spawn_fn gEntitySpawnFuncs[ENTITY_COUNT] = {

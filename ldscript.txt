@@ -172,6 +172,7 @@ SECTIONS
         build/crashbandicootxs/src/level/spawn_objects.o(.text);
         build/crashbandicootxs/src/level/spawn_crates.o(.text);
         build/crashbandicootxs/src/level/spawn_pickups.o(.text);
+        build/crashbandicootxs/src/level/spawn_markers.o(.text);
         build/crashbandicootxs/src/level/level_cutscene.o(.text);
         build/crashbandicootxs/src/level/game_frame.o(.text);
         build/crashbandicootxs/src/level/bonus_round.o(.text);

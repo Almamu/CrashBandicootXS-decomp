@@ -117,7 +117,8 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   **`SpawnStopwatch`**, **`SpawnBlueGem`**, **`CreateTouchableSprite`**, **`SpawnCrateGemMarker`**,
   **`SpawnWumpa`**, **`SpawnHoverPlayerPosition`**, **`SpawnHoverStartMarker`**, **`SpawnUnderwaterPlayerPosition`**,
   **`SpawnUnderwaterStartMarker`**, **`SpawnPlayerPosition`**, **`SpawnStartMarkerStub`**, **`DestroyEntitySpawner`**,
-  **`CreateEntitySpawner`**, **`InitLevelState`** (`src/level/spawn_pickups.c`)
+  **`CreateEntitySpawner`**, **`InitLevelState`** (`src/level/spawn_pickups.cpp`
+  up to `SpawnWumpa`, the rest `src/level/spawn_markers.cpp` since #770)
   - the `gSpriteBankTable` record-indexed OAM-trio spawner family, the
   `SpawnStartMarker` trampolines, the `gPlayer` position writers, the
   `{table_base, count}` descriptor pair, and `InitLevelState` itself - the

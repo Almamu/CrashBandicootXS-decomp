@@ -5,7 +5,7 @@
  * class AudioContext, the music and sound-effect front end over GAX2
  * (src/audio/audio.cpp). gAudioContext (globals.h declares it as an
  * `AudioContext *` to C++) is the one instance: LevelState's constructor
- * makes it with `new AudioContext` (src/level/spawn_pickups.cpp) and its
+ * makes it with `new AudioContext` (src/level/spawn_markers.cpp) and its
  * destructor deletes it (src/level/level_cutscene.cpp). It has no vtable.
  *
  * The C++ traits the C had: the destructor takes `__in_chrg` and frees
