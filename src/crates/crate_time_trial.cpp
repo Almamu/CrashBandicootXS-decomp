@@ -24,7 +24,7 @@ void ConvertCratesForTimeTrial(void)
                 Crate *crate = (Crate *)e;
                 s32 trialKind = crate->trialKind;
 
-                if (trialKind != -1) {
+                if (trialKind != CRATE_TRIAL_KIND_NONE) {
                     crate->solidKind = (u8)trialKind;
                     crate->SolidifyOutline();
                 }

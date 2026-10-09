@@ -1272,7 +1272,7 @@ void Crate::OpenMystery(bool flag)
         }
         break;
     case 8:
-        Sfx(3);
+        Sfx(SFX_CRATE_BREAK);
         {
             u16 eid = id;
 
@@ -1294,7 +1294,7 @@ void Crate::OpenMystery(bool flag)
 
             if (p->f.flags >> 7) {
                 p->HandleEvent(0, EVENT_MASK_GAIN, 0);
-                Sfx(1);
+                Sfx(SFX_AKU_AKU_GAIN);
             }
         }
         break;

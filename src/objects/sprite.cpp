@@ -209,23 +209,23 @@ s32 Sprite::CheckPlayerContact()
 
                 spawned = 0;
                 switch (kind) {
-                case 0x1d:
-                case 0x1e:
+                case EVENT_CRATE_GEM:
+                case EVENT_GEM_PATH_GEM:
                     spawned = SpawnPickupEffect(1, Q8_TO_INT(x), Q8_TO_INT(y));
                     break;
-                case 0x21:
+                case EVENT_BLUE_GEM:
                     spawned = SpawnPickupEffect(6, Q8_TO_INT(x), Q8_TO_INT(y));
                     break;
-                case 0x1f:
+                case EVENT_RED_GEM:
                     spawned = SpawnPickupEffect(5, Q8_TO_INT(x), Q8_TO_INT(y));
                     break;
-                case 0x22:
+                case EVENT_YELLOW_GEM:
                     spawned = SpawnPickupEffect(0, Q8_TO_INT(x), Q8_TO_INT(y));
                     break;
-                case 0x20:
+                case EVENT_GREEN_GEM:
                     spawned = SpawnPickupEffect(3, Q8_TO_INT(x), Q8_TO_INT(y));
                     break;
-                case 0x1b:
+                case EVENT_CRYSTAL:
                     spawned = SpawnPickupEffect(4, Q8_TO_INT(x), Q8_TO_INT(y));
                     break;
                 }

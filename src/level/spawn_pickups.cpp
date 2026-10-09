@@ -88,7 +88,7 @@ void SpawnStopwatch(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x1b0);
         part->StartAnim(0);
         part->palette = part->GetAnimPaletteSlot();
-        part->kind = 0x1c;
+        part->kind = EVENT_STOPWATCH;
         part->f.flags |= 0x10;
         TouchableList()->Add(part);
     }

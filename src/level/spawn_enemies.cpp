@@ -160,7 +160,7 @@ void SpawnVenusFlytrap(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
     part->StartAnim(1);
-    part->kind = 6;
+    part->kind = EVENT_HIT_BITE;
     hdr->SetState(3);
     hdr->anims = gVenusFlytrapAnimMap;
     SetHitBox(hdr, 0, -20, 45, 20);
@@ -310,7 +310,7 @@ void SpawnPolarBear(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
     rec2 = EntityParams(arg3);
-    part->kind = 6;
+    part->kind = EVENT_HIT_BITE;
     hdr->SetState(2);
     hdr->SetRangeX(rec2->p.patrol.rangeX);
 }
@@ -370,7 +370,7 @@ void SpawnShark(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
     rec2 = EntityParams(arg3);
-    part->kind = 6;
+    part->kind = EVENT_HIT_BITE;
     SetAnims(hdr, gSharkAnimMap);
     hdr->SetState(15);
     hdr->SetRangeX(rec2->p.rangeHomingY.rangeX);
@@ -403,7 +403,7 @@ void SpawnMorayEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         s32 f = part->mirrorFlags.mirrorX;
         part->SetFlipX(!f);
     }
-    part->kind = 6;
+    part->kind = EVENT_HIT_BITE;
     hdr->SetState(1);
 }
 
@@ -430,7 +430,7 @@ void SpawnElectricEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
     rec2 = EntityParams(arg3);
-    part->kind = 3;
+    part->kind = EVENT_HIT_ELECTRIC;
     SetAnims(hdr, gElectricEelAnimMap);
     SetAttackCycle(hdr, rec2->p.rangeCycle.idleTime, rec2->p.rangeCycle.attackTime,
                    rec2->p.rangeCycle.cycleOffset);
@@ -828,7 +828,7 @@ void SpawnSeaMine(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
     rec2 = EntityParams(arg3);
-    part->kind = 4;
+    part->kind = EVENT_HIT_EXPLOSION;
     hdr->SetState(0xb);
     hdr->SetRangeXSpeed(rec2->p.homingXY.rangeX, rec2->p.homingXY.speedX, rec2->p.homingXY.accelX);
     hdr->SetRangeYSpeed(rec2->p.homingXY.rangeY, rec2->p.homingXY.speedY, rec2->p.homingXY.accelY);
@@ -857,7 +857,7 @@ void SpawnWoodenCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
     rec2 = EntityParams(arg3);
-    part->kind = 0xa;
+    part->kind = EVENT_HIT_CRUSH;
     AndFlags(part, ~0x40);
     hdr->anims = gCrusherAnimMap;
     SetAttackCycle(hdr, rec2->p.cycle.idleTime, rec2->p.cycle.attackTime,

@@ -26,7 +26,7 @@ extern "C" {
 void ActionCtrl::Reset()
 {
     turboRun = 0;
-    state = 0;
+    state = ACTION_STATE_IDLE;
     bumpedMotionX = 0;
     motionX = 0;
     motionY = 0;
@@ -284,7 +284,7 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
     case 7:
         KillPlayer(0x2b);
         break;
-    case 8:
+    case EVENT_HIT_DART:
         KillPlayer(0x2f);
         break;
     case EVENT_HIT_CORTEX_SHOT:

@@ -348,9 +348,9 @@ void SwimCtrl::Update(MovingSprite *)
     }
 
     if (state == 3 || mode == 5 || mode == 7)
-        target->kind = 0x13;
+        target->kind = EVENT_ATTACK_SPIN;
     else
-        target->kind = 1;
+        target->kind = EVENT_HIT;
 }
 
 /* UNUSED */

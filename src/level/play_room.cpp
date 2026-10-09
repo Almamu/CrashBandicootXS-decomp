@@ -394,7 +394,7 @@ s32 LevelProgress::RunRoom()
             gPlayer->f.bytes.flags &= 0x7F;
             gPlayer->StartAnim(0x29);
             gAudioContext->PlaySfx(SFX_WARP, 0x100);
-            gPlayer->mover->SetMode(0x29);
+            gPlayer->mover->SetMode(ACTION_STATE_WARP_IN);
             RefreshPlayerTiles();
             gHud->ShowCounters();
         }
@@ -488,7 +488,7 @@ fade:
                 do {
                     Crate *e = (*list)->slots[i];
 
-                    if (e->GetClassId() == 3 && e->kind == 0xA)
+                    if (e->GetClassId() == 3 && e->kind == CRATE_KIND_NITRO)
                         count++;
                     i++;
                 } while (i < (*list)->count);

@@ -57,7 +57,7 @@ void Crate::Reset()
     paramA = 0;
     paramB = 0;
     touched = 0;
-    trialKind = -1;
+    trialKind = CRATE_TRIAL_KIND_NONE;
     above = 0;
     below = 0;
 }

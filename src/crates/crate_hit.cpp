@@ -35,7 +35,7 @@ u8 Crate::PlayerAnimWouldTouch(s32 action)
     const struct sprite_anim *anim;
     u8 k = kind;
 
-    if (k == CRATE_KIND_OUTLINE || k == 0xa)
+    if (k == CRATE_KIND_OUTLINE || k == CRATE_KIND_NITRO)
         return 0;
     {
         const struct hitbox_quad *q;

@@ -90,7 +90,7 @@ void EnemyCtrl::UpdateAttackCycle()
         }
         if (kind == ENEMY_KIND_FLAMETHROWER_LAB_ASSISTANT && target->frame == 9 &&
             target->stepTimer == 0) {
-            SpawnPart(0x17, 4, -0x2d, 2, 0, target)->kind = 2;
+            SpawnPart(0x17, 4, -0x2d, 2, 0, target)->kind = EVENT_HIT_FIRE;
             gAudioContext->PlaySfx(SFX_FLAMETHROWER, 0x100);
         }
         break;

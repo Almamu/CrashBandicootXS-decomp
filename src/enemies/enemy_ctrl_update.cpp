@@ -159,7 +159,7 @@ void EnemyCtrl::Update(MovingSprite *)
                 MovingSprite *pop = LaunchHarmfulEffectPart(0x1d, 0, 0, 0x2b, 0, t);
 
                 popup = pop;
-                pop->kind = 3;
+                pop->kind = EVENT_HIT_ELECTRIC;
                 gAudioContext->PlaySfx(SFX_SAUCER_ATTACK, 0x100);
             } else if (target->animDone && mode == 5) {
                 MarkGone(popup);

@@ -26,7 +26,7 @@ void SpawnSeaweed(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->palette = part->GetAnimPaletteSlot();
     part->f.b.collides = 0;
     part->f.b.visible = 0;
-    part->kind = 0;
+    part->kind = EVENT_NONE;
     DecorationList()->Add(part);
 }
 
@@ -40,7 +40,7 @@ void SpawnSeaweedNoAnimReset(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->palette = part->GetAnimPaletteSlot();
     part->f.b.collides = 0;
     part->f.b.visible = 0;
-    part->kind = 0;
+    part->kind = EVENT_NONE;
     DecorationList()->Add(part);
 }
 
@@ -56,7 +56,7 @@ void SpawnFlame(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->palette = part->GetAnimPaletteSlot();
     part->f.b.collides = 0;
     part->f.b.visible = 0;
-    part->kind = 0;
+    part->kind = EVENT_NONE;
     DecorationList()->Add(part);
 }
 
