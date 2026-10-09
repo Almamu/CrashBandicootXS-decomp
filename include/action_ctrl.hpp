@@ -195,7 +195,7 @@ public:
     void QueueMotionX(s32 entry);
     u8 GetPrevState();
 
-    /* src/player/action_ctrl_hang.cpp */
+    /* src/player/action_ctrl_moves.cpp */
     void StateLeftGround();
     void StateDying();
     void StateWarpIn();
@@ -208,7 +208,7 @@ public:
     void DoSuperBodySlamShockwave();
     void StartTornadoSpin(s32 id, s32 param2);
 
-    /* src/player/action_ctrl_idle.cpp */
+    /* src/player/action_ctrl_states.cpp */
     void ApplyMotion();
     void StateIdle();
 
@@ -217,7 +217,7 @@ public:
     void StateBodySlamLand();
     void StateLand();
 
-    /* src/player/action_ctrl_left_ground.cpp */
+    /* src/player/action_ctrl_states.cpp */
     u8 CheckLeftGround();
 
     /* src/player/action_ctrl_moves.cpp */
@@ -237,7 +237,7 @@ public:
     void StateCrawlStop();
     void StateBodySlamStart();
 
-    /* src/player/action_ctrl_run_jump.cpp */
+    /* src/player/action_ctrl_states.cpp */
     void StateRun();
     void StateJump();
 
@@ -258,7 +258,7 @@ public:
     u8 TryDoubleJump();
     void HandleAirInput();
 
-    /* src/player/action_ctrl_kill.cpp */
+    /* src/player/action_ctrl_event.cpp */
     void KillPlayer(s32 anim);
     void UpdateSkidAnim();
     s32 UpdateFacing();

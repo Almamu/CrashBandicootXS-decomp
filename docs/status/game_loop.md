@@ -9,7 +9,7 @@ system from "core" system startup/init code.
 ## Matched
 
 - **Issue #9-#11 box/collision NAKED retry** ([docs/matching/archive/issue-9-11-box-naked-retry.md](../matching/archive/issue-9-11-box-naked-retry.md)):
-  `UpdateEnemyHop` (`enemy_motion.c`), `UpdateEnemyTriggerBox` (`enemy_attack.c`),
+  `UpdateEnemyHop` (`enemy_motion.c`), `UpdateEnemyTriggerBox` (`enemy_ctrl.cpp`),
   `UpdateEnemyOscillateX` (`enemy_ctrl.c`), `UpdateEffectCtrl` (`effect_ctrl.c`)
   and `PlayerHitboxOverlapsAt`/`ResolveStackCrateHit` (`crate_hit.c`) are real C now; they
   were NAKED. `effect_ctrl.o` and `crate_hit.o` moved to old_agbcc
@@ -191,7 +191,7 @@ system from "core" system startup/init code.
 - `src/crates/crate_time_trial.c` (GitHub issue #13): `ConvertCratesForTimeTrial` (a
   state-3-countdown-expiry sweep over `gCrateList`),
   `OpenAkuAkuCrate` (viewport trampoline-pair/cue-1 firing)
-- `src/crates/crate_stack.c` (GitHub issue #13): `IsCrateKindBreakable` -
+- `src/crates/crate_fields.cpp` (GitHub issue #13): `IsCrateKindBreakable` -
   trivial `gCrateKindBreakable[idx]` lookup
 - `src/crates/crate_fields.cpp` (GitHub issue #13): `GetSlotCrateStage` -
   `self+0x48` bits 6-7 sub-state extractor
@@ -199,7 +199,7 @@ system from "core" system startup/init code.
   - cue-3 SFX plus a `gEntityFlags` bit-grid consume-if-clear and a
   `DropExtraLife` part-object spawn. See
   [docs/matching/archive/issue-13-fc70-continuation.md](../matching/archive/issue-13-fc70-continuation.md).
-- `src/crates/crate_stack.c` (GitHub issue #13, second pass):
+- `src/crates/crate_fields.cpp` (GitHub issue #13, second pass):
   `GetTopCrate`/`GetBottomCrate` (the "get prev"/"get next"
   neighbor-list-walk-and-filter helpers - previously NAKED, now matched
   as real C via source-order block placement matching the ROM's own
@@ -249,7 +249,7 @@ system from "core" system startup/init code.
   (its return value is copied) in the 0xb pre-check, the `flagged`
   block and case 15. See
   [docs/matching/archive/size2-naked-retry.md](../matching/archive/size2-naked-retry.md).
-- `src/crates/crate_draw.c` (GitHub issue #13, third pass, new file -
+- `src/crates/crate_create.cpp` (GitHub issue #13, third pass, new file -
   it sits between `CreateCrate` (now `crate_create.c`) and `UpdateCrate`,
   so it can't join either neighbor's file): `DrawCrate` - a
   `self+0x4d`-gated reset of `self+0x30`/`self+0x38` via the
@@ -433,10 +433,10 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   now plain C. This ROM region was built with old_agbcc; see [game-loop-old-agbcc.md](../matching/archive/game-loop-old-agbcc.md).
 - **Issue #10 NAKED retry**: `UpdateEnemyHomingX`/`UpdateEnemyHomingY`
   (`enemy_motion.c`), `UpdateEnemyFlipCycle` (`enemy_motion.c`), `UpdateEnemyPatrol`
-  (`enemy_patrol.c`, old_agbcc), `UpdateEnemyAttackCycle` (`enemy_attack.c`,
-  old_agbcc) and `SetEnemyState` (`enemy_attack.c`, old_agbcc) promoted
-  from NAKED to real C. `enemy_patrol.o`, `enemy_attack.o` moved to `OLD_AGBCC_OBJS`; under old_agbcc
-  `enemy_attack.c`'s bounds setters (`SetEnemyRangeXSpeed`/`SetEnemyRangeYSpeed`/
+  (`enemy_patrol.c`, old_agbcc), `UpdateEnemyAttackCycle` (`enemy_ctrl.cpp`,
+  old_agbcc) and `SetEnemyState` (`enemy_ctrl.cpp`, old_agbcc) promoted
+  from NAKED to real C. `enemy_patrol.o`, `enemy_ctrl.o` moved to `OLD_AGBCC_OBJS`; under old_agbcc
+  `enemy_ctrl.cpp`'s bounds setters (`SetEnemyRangeXSpeed`/`SetEnemyRangeYSpeed`/
   `SetEnemyRangeX`) no longer need register pins. The controller/target
   layout is in the new `include/part_ctrl.h`. See
   [docs/matching/archive/issue-10-naked-retry.md](../matching/archive/issue-10-naked-retry.md).
@@ -715,7 +715,7 @@ plain C didn't converge.
   "Phase 3" section for the full writeup.
 - **`SetEnemyState`/`SetEnemyRangeXSpeed`/`SetEnemyRangeYSpeed`/`SetEnemyRangeX`** (all
   real C since the issue #10 NAKED retry, see Matched; kept here for
-  the history) (`src/enemies/enemy_attack.c`, new file - GitHub issue #9/#10, the
+  the history) (`src/enemies/enemy_ctrl.cpp`, new file - GitHub issue #9/#10, the
   last four functions of the old `asm/code_3_2_17_c6a8.s`, now fully
   retired). `SetEnemyState` is the `menu_ui` dialog-widget system's own
   18-state `self+0x74` update, called from all 31 confirmed `menu_ui`
@@ -752,7 +752,7 @@ plain C didn't converge.
   ([docs/matching/archive/issue-12-physics-collision.md](../matching/archive/issue-12-physics-collision.md))
   but is confirmed to still be a plain entity constructor in this
   cluster, immediately followed with no gap by the already-matched
-  `PlayerAnimWouldTouchCrate` (`crate_touch.c`). See
+  `PlayerAnimWouldTouchCrate` (`crate_hit.cpp`). See
   [docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md](../matching/archive/issue-9-10-0x0800b8dc-graphics.md)'s
   final section for the full writeup.
 - **`UpdateEnemyShooter`** (`src/enemies/enemy_shooter.c`, new file - GitHub
@@ -837,7 +837,7 @@ plain C didn't converge.
   `self+0x4e`'s settle-state byte, always calls `UpdateCrateFall`, then -
   gated on `self+0x4d`'s bit 7 and `self+0x38` - re-derives
   `self+0x30`'s index via the same `self+0x20`/`self+0x2d`-tag/
-  0x1c-stride hitbox-record clamp `DrawCrate` (`crate_draw.c`)
+  0x1c-stride hitbox-record clamp `DrawCrate` (`crate_create.cpp`)
   uses and settles state 6/3, or otherwise re-triggers `FinishBrokenCrate`;
   finally hands off to the `_call_via_r1` table-trampoline convention
   `CheckEntityPlayerContact`/`UpdateEntity` (`graphics.c`) establish. A plain-C
@@ -855,7 +855,7 @@ plain C didn't converge.
   `ResolveCollisionCandidates` above, at a finer grain spread across the whole
   function rather than one isolated block. Replaces
   `asm/code_3_2_17_e560_104e4.o` in `ldscript.txt`, sitting between
-  `src/crates/crate_draw.o` and `crate.o`. Filed as
+  `src/crates/crate_create.o` and `crate.o`. Filed as
   `crate_update.c`, not `collision_queue.c`, after a merge conflict with
   the concurrently-matched `AddCollisionCandidate` below, which took the
   `collision_queue.c` name first. See

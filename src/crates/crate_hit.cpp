@@ -21,7 +21,8 @@ extern "C" {
  * player box's address (`add r0, sp, #16`) for each of the first two
  * builder calls and only holds it in r6 from the first overlap test on;
  * BOX_ADDR keeps each of those uses its own value (match.h,
- * docs/matching/archive/sp-box-retry.md), as in crate_hit.cpp. The
+ * docs/matching/archive/sp-box-retry.md), as in BreakIfTouchedByPlayer
+ * (below). The
  * first build's x/y are computed before its call.
  *
  * #662 round 2: the two builder sites are cse1 inside one basic block
@@ -31,7 +32,7 @@ extern "C" {
  * computes `&f.b` early in the player block's mirror tests and the last
  * overlap test rematerializes `add r1, sp, #16` instead of using r6.
  * -fno-gcse frees that one site (the object matches), as it does
- * crate_hit.cpp's, but not crate_break.cpp's; not worth a flag while
+ * BreakIfTouchedByPlayer's, but not crate_break.cpp's; not worth a flag while
  * the builder sites stay.
  *
  * #662 round 3 (RTL dumps): the builder sites are decided at expand
@@ -213,8 +214,8 @@ Crate *Crate::ResolveStackHit(struct aabb *box, u8 *foundFlag)
  * boxes, mirrored around their positions) explodes, if it is an
  * explosive kind, or breaks in its stack; a committed crate (state 1)
  * is skipped. The two boxes are one frame struct, and `px`/`py` are
- * shared by both. The BOX_ADDRs are as in crate_touch.cpp (see its
- * #662 round 2 and 3 notes): -fno-gcse frees the overlap test's (the
+ * shared by both. The BOX_ADDRs are as in PlayerAnimWouldTouch (above; see
+ * its #662 round 2 and 3 notes): -fno-gcse frees the overlap test's (the
  * object matches), but the builder sites are cse1's within one basic
  * block whatever the flags. */
 void Crate::BreakIfTouchedByPlayer()

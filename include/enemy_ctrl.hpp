@@ -84,7 +84,7 @@ public:
     void SetModeTable(const s32 *anims);
     void SetKind(s32 kind);
 
-    /* src/enemies/enemy_attack.cpp */
+    /* src/enemies/enemy_ctrl.cpp */
     void UpdateAttackCycle();
     void UpdateTriggerBox();
     void SetState(s32 state);

@@ -15,7 +15,7 @@ extern "C" {
  * The first four, the SetMode/SetAnimSet setters and the Y motion setters
  * (which act on a controller's target, a moving sprite object: the
  * player, a platform or a boss part), were the end of
- * src/player/player_flags.cpp, built with agbcp, until #768; they compile
+ * src/player/player_flags.cpp (now player.cpp), built with agbcp, until #768; they compile
  * the same under old_agbcp. As C, the two motion setters needed 8
  * register pins each to load the ramp in the ROM's order; as C++, with
  * the values in locals, they need none. */

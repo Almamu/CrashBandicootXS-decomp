@@ -9,7 +9,7 @@ extern "C" {
 
 /* The part list's own methods (#664, part 7c; include/part_list.hpp).
  * The crate list's constructor, which the ROM puts right after them,
- * starts src/crates/crate_list_unlink.cpp. */
+ * starts src/crates/crate_list_update.cpp. */
 
 /* Draws every part on screen. */
 void PartList::Draw()

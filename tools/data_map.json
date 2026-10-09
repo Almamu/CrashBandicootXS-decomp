@@ -364,7 +364,7 @@
     "SpawnStar"
    ],
    "consumer_files": [
-    "player/player_event.cpp",
+    "player/player_update.cpp",
     "enemies/enemy_ctrl.cpp",
     "pickups/extra_life.cpp",
     "pickups/wumpa_update.cpp",
@@ -960,7 +960,7 @@
     "objects/sprite_obj.cpp",
     "player/player_collide.c",
     "player/action_ctrl_event.cpp",
-    "player/action_ctrl_hang.cpp"
+    "player/action_ctrl_moves.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -984,7 +984,7 @@
    ],
    "consumer_files": [
     "objects/ctrl.cpp",
-    "player/action_ctrl_idle.cpp"
+    "player/action_ctrl_states.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1547,7 +1547,7 @@
    "consumer_files": [
     "crates/crate_break.cpp",
     "crates/crate_switches.cpp",
-    "crates/crate_stack.cpp"
+    "crates/crate_fields.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -7272,7 +7272,7 @@
    ],
    "consumer_files": [
     "player/player_update.c",
-    "player/player_init.c"
+    "player/player.cpp"
    ],
    "ptr_words_code": 14,
    "ptr_words_data": 0,

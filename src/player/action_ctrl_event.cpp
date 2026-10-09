@@ -139,7 +139,7 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
              * load no later pass deletes: jump2 (after reload, with no
              * flow pass after it) merges two identical arms of a test,
              * leaving the test's load (#662 round 3 reproduced this in
-             * Player::HandleEvent, player_event.cpp, with identical
+             * Player::HandleEvent, player_update.cpp, with identical
              * arms or a dead store, neither of them source). */
             *(volatile s32 *)&state;
             bumpTimer = 3;

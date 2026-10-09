@@ -37,12 +37,12 @@ extern "C" {
  * speed ramp), and is never let above baseY. Mode 2 goes back to 0 once
  * the animation is done.
  *
- * The spawn is an inline copy of LaunchHarmfulEffectPart (enemy_ctrl.cpp):
+ * The spawn is an inline copy of LaunchHarmfulEffectPart (below):
  * passing the arguments through inline parameters is what materializes
  * them in the ROM's order, and the `+0xC` flag writes are bitfield
  * stores (QImode `-0x41`/`-9` masks). */
 
-/* LaunchHarmfulEffectPart (enemy_ctrl.cpp), inlined. */
+/* LaunchHarmfulEffectPart (below), inlined. */
 static inline MovingSprite *SpawnPart(s32 a, s32 b, s32 c, s32 d, s32 e, MovingSprite *f)
 {
     MovingSprite *obj = gEntitySpawner->LaunchEffectPart(a, b, c, d, e, f);
@@ -171,7 +171,7 @@ void EnemyCtrl::UpdateTriggerBox()
 }
 
 /* SetState's inline copies of SetMotionY, SetMotionX and SetAnimMode
- * (enemy_ctrl.cpp): its `bl`s go to Ctrl::StartTargetMotion*FromSet
+ * (below): its `bl`s go to Ctrl::StartTargetMotion*FromSet
  * directly, never to those three, and SetTargetAnim is called through
  * the vtable in place. In SetState (old_agbcc, issue #10 NAKED retry):
  *  - The groups the ROM keeps apart ({1,3,17} vs {6,9,10,11}) are
@@ -322,7 +322,7 @@ void EnemyCtrl::SetRangeX(s32 radius)
  * constructor, destructor and setters. The periodic spawner and the
  * knocked controller follow in periodic_spawner.cpp and
  * knocked_enemy_ctrl.cpp. EnemyCtrl's Update and HandleEvent are in
- * enemy_ctrl_update.cpp, its per-state updaters in enemy_attack.cpp,
+ * enemy_ctrl_update.cpp, its per-state updaters above and in
  * enemy_motion.cpp, enemy_patrol.cpp and enemy_shooter.cpp. */
 
 /* Sets the motion mode: starts the motion set's Y record `mode` on the

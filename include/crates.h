@@ -12,7 +12,7 @@
  * (docs/headers_plan.md).
  *
  * The crate list (`CrateList`, include/crate_list.hpp) is set up by
- * InitCrateList (src/crates/crate_list_unlink.cpp). */
+ * InitCrateList (src/crates/crate_list_update.cpp). */
 
 #include "core.h"
 #include "math_util.h"
