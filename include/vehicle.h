@@ -85,29 +85,29 @@ extern void SpawnJetpackCannonball(s32 a, s32 b, s32 c, s32 d, s32 e);
 extern void SpawnJetpackShot(s32 a, s32 b, s32 c, s32 d, s32 e);
 extern void CreateJetpackPlayer(struct anim_table_record *table, s32 z);
 
-/* src/vehicle/polar_aku_aku.cpp, polar_crates.cpp, polar_objects.cpp and
+/* src/vehicle/polar/polar_aku_aku.cpp, polar_crates.cpp, polar_objects.cpp and
  * polar_pickups.cpp: the C-linkage functions. */
 extern s32 GetPolarMaskLevel(void);
 extern u8 IsPolarPlayerInactive(void);
 
-/* src/vehicle/yeti.cpp */
+/* src/vehicle/polar/yeti.cpp */
 extern void StopYeti(void);
 extern void DestroyYeti(void);
 extern void CreateYeti(void *arg0);
 extern void BuildYetiBg2Map(u8 *dst, u8 seed);
 extern void YetiStateCaught(void);
 
-/* src/vehicle/yeti_graphics.cpp */
+/* src/vehicle/polar/yeti_graphics.cpp */
 #ifdef __cplusplus
 extern u8 IsTouchingYeti(class ActorSelf *self);
 #endif
 extern void LoadYetiGraphics(void);
 
-/* src/vehicle/yeti_states.cpp */
+/* src/vehicle/polar/yeti_states.cpp */
 extern void YetiStateChase(void);
 extern void YetiStateCharge(void);
 
-/* src/vehicle/yeti_update.cpp */
+/* src/vehicle/polar/yeti_update.cpp */
 extern void UpdateYeti(void);
 extern void UpdateYetiPalette(void);
 extern void UpdateYetiBg2(void);

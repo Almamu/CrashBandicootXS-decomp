@@ -69,7 +69,7 @@ from "core" graphics.
   function, a bounding-box-culled sprite draw (`DrawActor`'s
   shape with the scale flag fixed at 0). Plain C; it was NAKED. See
   [issues-14-53-60-last-naked.md](../matching/archive/issues-14-53-60-last-naked.md).
-- **`UpdatePolarElectricFence`** (`src/vehicle/polar_objects.c`) - issue #53's last
+- **`UpdatePolarElectricFence`** (`src/vehicle/polar/polar_objects.c`) - issue #53's last
   function, a hazard/proximity state machine that tests the part's own
   box and three `gStaticData_0817A7xx` boxes. Plain C; it was NAKED. See
   [issues-14-53-60-last-naked.md](../matching/archive/issues-14-53-60-last-naked.md).
@@ -311,7 +311,7 @@ from "core" graphics.
   #15/#16/#17 retry)
 
 - `src/graphics/actor_part19.c`/`actor_part19c.c`/`actor_part19d.c`/
-  `actor_part19f.c`/`actor_part19g.c` (now `src/vehicle/polar_player_actions.c`,
+  `actor_part19f.c`/`actor_part19g.c` (now `src/vehicle/polar/polar_player_actions.c`,
   `polar_pickups.c` and `polar_crates.c`; new files, non-adjacent since
   the now-matched `CreatePolarCollectedWumpa` (see below), `RunPolarPlayerState`
   (`polar_player_dispatch.c`, now matched too - see below), and one left-raw function sat
@@ -326,7 +326,7 @@ from "core" graphics.
   per-instance "self" object's action-table/trampoline/circular-list
   conventions as `ctrl.c`/`action_ctrl_states.c`
 
-- `src/graphics/actor_part19i.c` (new file, now part of `src/vehicle/polar_crates.c`,
+- `src/graphics/actor_part19i.c` (new file, now part of `src/vehicle/polar/polar_crates.c`,
   directly adjacent to `actor_part19d.c`'s matched functions - GitHub issue #53):
   `UpdatePolarTimeCrate`, `DetonatePolarNitroCrate`, `UpdatePolarFourWumpaCrate`, `UpdatePolarBasicCrate` - the
   type-byte-dispatch/proximity "used"-state transition family (same
@@ -338,7 +338,7 @@ from "core" graphics.
   range-keyed offset. See
   [docs/matching/archive/issue-53-actor-c7a8.md](../matching/archive/issue-53-actor-c7a8.md).
 
-- `src/vehicle/polar_objects.c` (new file, `0x0802CDE4`-`0x0802D2DC`,
+- `src/vehicle/polar/polar_objects.c` (new file, `0x0802CDE4`-`0x0802D2DC`,
   the remainder of the `0x0802CC9C`-`0x0802D3A8` gap between issues #53
   and #54): `CreatePolarElectricFence`/`CreatePolarObstacle`/`CreatePolarLauncher`/`CreatePolarPenguin`/
   `CreatePolarIcicle` - `InitActorPart`-based constructors on the same `self`
@@ -591,7 +591,7 @@ from "core" graphics.
   matched in a later pass that closed the register-pinning/pool-split
   gaps documented in that same writeup (all 25 of this chunk's functions
   are now real C, none NAKED).
-- `src/vehicle/polar_player.c` (new file, ROM `0x0802B364`-`0x0802BC68`
+- `src/vehicle/polar/polar_player.c` (new file, ROM `0x0802B364`-`0x0802BC68`
   - the start of the actor zone before issue #52, right before
   `polar_player_states.c`'s own range): `PolarPlayerStateShocked` - a frame-counter
   threshold DMA driver sharing the same reset idiom as `HurtPolarPlayer` -
@@ -607,7 +607,7 @@ from "core" graphics.
   `PolarPlayerStateJump`, `PolarPlayerStateDash`, `PolarPlayerStateCaught`) were promoted from NAKED
   in the issue #51/#54 retry, with the file switched to old_agbcc - see
   [docs/matching/archive/issue-51-54-naked-retry.md](../matching/archive/issue-51-54-naked-retry.md).
-- `src/vehicle/polar_player_states.c` (new file, ROM 0x0802BC68-0x0802BED8 -
+- `src/vehicle/polar/polar_player_states.c` (new file, ROM 0x0802BC68-0x0802BED8 -
   the literal tail of `asm/code_3_2_20_8b7c_ac28.s`, one raw file's
   leftover portion out of GitHub issue #50's original chunk scope;
   everything before it in that raw file - `CreateActor`'s giant
@@ -652,7 +652,7 @@ from "core" graphics.
   sit between them):
   `SetPlayerSwimDriftY` - a player-velocity-relative record writer; see
   [docs/matching/archive/issue-19-0x08015840-actor.md](../matching/archive/issue-19-0x08015840-actor.md).
-- `src/graphics/actor_part58.c`, now `src/vehicle/polar_aku_aku.c` (new file, GitHub issue #54, non-
+- `src/graphics/actor_part58.c`, now `src/vehicle/polar/polar_aku_aku.c` (new file, GitHub issue #54, non-
   adjacent to `actor_part56.c` since the whole 0x0802D3A8-0x0802E0A4
   range sits between them; numbered `58` rather than `57` since issue
   #19's PR independently claimed `actor_part57.c`/`57b.c` first - see
@@ -662,7 +662,7 @@ from "core" graphics.
   `UpdatePolarBoostPad`, `CreatePolarBoostPad`, `UpdatePolarCheckpointCrate`, `CreatePolarCheckpointCrate` -
   `InitActorPart`-based constructor variants plus the
   `gLevelState+0x78` Aku-Aku-mask-style add/remove pair.
-- `src/graphics/actor_part59.c`, now `src/vehicle/yeti_states.cpp` (new file, GitHub issue #54, non-
+- `src/graphics/actor_part59.c`, now `src/vehicle/polar/yeti_states.cpp` (new file, GitHub issue #54, non-
   adjacent since `actor_part74.c` sits between it and `actor_part58.c`;
   see
   [docs/matching/archive/issue-54-actor-d3a8.md](../matching/archive/issue-54-actor-d3a8.md)):
@@ -670,19 +670,19 @@ from "core" graphics.
   tracking object's two `gYetiStateFuncs` vtable-slot update
   functions (accumulate/clamp, tier-keyed `PlaySfx`/`PlayAmbientSfx`
   cues, and a shared kind/anim-reset transition tail).
-- `src/graphics/actor_part60.c`, now part of `src/vehicle/yeti.cpp` (new file, GitHub issue #54, non-
+- `src/graphics/actor_part60.c`, now part of `src/vehicle/polar/yeti.cpp` (new file, GitHub issue #54, non-
   adjacent since `actor_part75.c` sits between it and `actor_part59.c`;
   see
   [docs/matching/archive/issue-54-actor-d3a8.md](../matching/archive/issue-54-actor-d3a8.md)):
   `StopYeti`, `DestroyYeti`, `CreateYeti` - the
   `gYeti` object's state-flag setter, destructor, and
   constructor.
-- `src/graphics/actor_part61.c`, now part of `src/vehicle/yeti.cpp` (new file, GitHub issue #54, non-
+- `src/graphics/actor_part61.c`, now part of `src/vehicle/polar/yeti.cpp` (new file, GitHub issue #54, non-
   adjacent since `actor_part76.c` sits between it and `actor_part60.c`;
   see
   [docs/matching/archive/issue-54-actor-d3a8.md](../matching/archive/issue-54-actor-d3a8.md)):
   `YetiStateCaught` - a genuine no-op stub.
-- `src/vehicle/polar_objects.c`, `yeti_update.cpp`, `yeti.cpp`
+- `src/vehicle/polar/polar_objects.c`, `yeti_update.cpp`, `yeti.cpp`
   (GitHub issue #54, promoted from NAKED in the issue #51/#54 retry -
   see
   [docs/matching/archive/issue-51-54-naked-retry.md](../matching/archive/issue-51-54-naked-retry.md)):
@@ -900,7 +900,7 @@ from "core" graphics.
   ([docs/matching/archive/size2-naked-retry.md](../matching/archive/size2-naked-retry.md)) - see
   [docs/matching/archive/issue-64-0x08034aa4-actor.md](../matching/archive/issue-64-0x08034aa4-actor.md).
 
-- `src/vehicle/polar_player_dispatch.c` (`RunPolarPlayerState`),
+- `src/vehicle/polar/polar_player_dispatch.c` (`RunPolarPlayerState`),
   `airship_fireball.c` (`UpdateAirshipFireball`), `airship_fireball.c` (`RunAirshipFireballState`),
   `hovercraft_cannon.c` (`UpdateHovercraftCannon`), `hovercraft_cannon.c` (`RunHovercraftCannonState`),
   `hovercraft_launcher.c` (`UpdateHovercraftLauncher`), `jetpack_player.c` (`RunJetpackPlayerState`),
@@ -1281,7 +1281,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   natural allocator land it in r7 correctly) rather than a genuine
   register shortage. GitHub issue #71, see
   [docs/matching/archive/issue-71-0x0803b060-actor.md](../matching/archive/issue-71-0x0803b060-actor.md).
-- **`DrawPolarCollectedWumpa`** (`src/vehicle/polar_pickups.c`) - fixed-position
+- **`DrawPolarCollectedWumpa`** (`src/vehicle/polar/polar_pickups.c`) - fixed-position
   OAM setup for one sprite frame, `DrawJetpackCheckpointText`'s twin above; now fully
   matched as real C. The dead `flag = 0` initializer closes via an
   opaque two-instruction `asm volatile` materialization (a single
@@ -1290,7 +1290,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   the same pin-matching techniques worked out for `DrawJetpackCheckpointText`. The
   old raw `asm/code_3_2_20_28568_c2fc.s` is retired. See
   `docs/matching.md`, issue #52.
-- **`CreatePolarCollectedWumpa`** (`src/vehicle/polar_pickups.c`) - a homing/
+- **`CreatePolarCollectedWumpa`** (`src/vehicle/polar/polar_pickups.c`) - a homing/
   seek-toward-point spawn-effect constructor; now fully matched as
   real C. The Manhattan-distance abs-value computation uses the ROM's
   own branchless idiom (`(x ^ (x >> 31)) - (x >> 31)`, compiling to

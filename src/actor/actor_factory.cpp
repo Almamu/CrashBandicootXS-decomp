@@ -26,7 +26,7 @@ extern "C" {
  *   and skipping kinds 0/32-34/62.
  * - CreateActor is the per-kind `new`: the crates', the wumpa's and the
  *   riderless polar's constructors are inline (vehicle.hpp), the others'
- *   out of line (src/vehicle/polar_*.cpp); kinds 36-39 only select a
+ *   out of line (src/vehicle/polar/polar_*.cpp); kinds 36-39 only select a
  *   palette-cycle preset (SetActorPaletteCycle).
  * - CreatePolarCheckpointText, SpawnPolarCollectedWumpa and
  *   SpawnPolarAkuAku build three fixed records (40, 11, 27).

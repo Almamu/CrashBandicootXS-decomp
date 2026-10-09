@@ -4,7 +4,7 @@
 The game was written in C++ and built with the g++ 2.9 that agbcc comes
 from (docs/cplusplus.md). The decompilation reproduces it as C, so the
 C++ shows up as hand-written runtime structures. This tool counts them
-per object (one src/*/*.c or lib/*/src/*.c file):
+per object (one src/*/*.c, src/*/*/*.c or lib/*/src/*.c file):
 
   method     functions defined here that a C pointer-to-member table
              (ACTOR_PMF) points at: member functions (g++ emits every
@@ -107,7 +107,8 @@ def table_targets():
 def survey():
     targets = table_targets()
     rows = []
-    paths = sorted(glob.glob(os.path.join(ROOT, "src/*/*.c")) + glob.glob(os.path.join(ROOT, "src/*/*.cpp"))
+    paths = sorted(glob.glob(os.path.join(ROOT, "src/**/*.c"), recursive=True)
+                   + glob.glob(os.path.join(ROOT, "src/**/*.cpp"), recursive=True)
                    + glob.glob(os.path.join(ROOT, "lib/*/src/*.c")))
     for path in paths:
         rel = os.path.relpath(path, ROOT)

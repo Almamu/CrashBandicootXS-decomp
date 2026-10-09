@@ -368,7 +368,7 @@
     "enemies/enemy_ctrl.cpp",
     "vehicle/jetpack_crates.c",
     "bosses/hovercraft.c",
-    "vehicle/polar_objects.c",
+    "vehicle/polar/polar_objects.c",
     "frontend/starfield.cpp",
     "menus/zoom_bg.cpp",
     "vehicle/jetpack_plane.c",
@@ -3496,8 +3496,8 @@
     "RunPolarPlayerState"
    ],
    "consumer_files": [
-    "vehicle/polar_player.c",
-    "vehicle/polar_player_dispatch.c"
+    "vehicle/polar/polar_player.c",
+    "vehicle/polar/polar_player_dispatch.c"
    ],
    "ptr_words_code": 14,
    "ptr_words_data": 0,
@@ -3523,7 +3523,7 @@
     "PolarPlayerStateShocked"
    ],
    "consumer_files": [
-    "vehicle/polar_player.c"
+    "vehicle/polar/polar_player.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3547,7 +3547,7 @@
     "PolarPlayerStateShocked"
    ],
    "consumer_files": [
-    "vehicle/polar_player.c"
+    "vehicle/polar/polar_player.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3571,7 +3571,7 @@
     "UpdatePolarNitroCrate"
    ],
    "consumer_files": [
-    "vehicle/polar_pickups.c"
+    "vehicle/polar/polar_pickups.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3592,7 +3592,7 @@
     "UpdatePolarElectricFence"
    ],
    "consumer_files": [
-    "vehicle/polar_objects.c"
+    "vehicle/polar/polar_objects.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3613,7 +3613,7 @@
     "UpdatePolarElectricFence"
    ],
    "consumer_files": [
-    "vehicle/polar_objects.c"
+    "vehicle/polar/polar_objects.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3634,7 +3634,7 @@
     "UpdatePolarElectricFence"
    ],
    "consumer_files": [
-    "vehicle/polar_objects.c"
+    "vehicle/polar/polar_objects.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3655,7 +3655,7 @@
     "RefreshPolarAkuAku"
    ],
    "consumer_files": [
-    "vehicle/polar_objects.c"
+    "vehicle/polar/polar_objects.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3679,7 +3679,7 @@
     "UpdatePolarAkuAku"
    ],
    "consumer_files": [
-    "vehicle/polar_objects.c"
+    "vehicle/polar/polar_objects.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3703,7 +3703,7 @@
     "UpdatePolarAkuAku"
    ],
    "consumer_files": [
-    "vehicle/polar_objects.c"
+    "vehicle/polar/polar_objects.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3728,7 +3728,7 @@
     "YetiStateCharge"
    ],
    "consumer_files": [
-    "vehicle/yeti_states.cpp"
+    "vehicle/polar/yeti_states.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3749,7 +3749,7 @@
     "UpdateYeti"
    ],
    "consumer_files": [
-    "vehicle/yeti_update.cpp"
+    "vehicle/polar/yeti_update.cpp"
    ],
    "ptr_words_code": 4,
    "ptr_words_data": 0,
@@ -3773,7 +3773,7 @@
     "CreateYeti"
    ],
    "consumer_files": [
-    "vehicle/yeti.cpp"
+    "vehicle/polar/yeti.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3794,7 +3794,7 @@
     "CreateYeti"
    ],
    "consumer_files": [
-    "vehicle/yeti.cpp"
+    "vehicle/polar/yeti.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 123,
@@ -3818,7 +3818,7 @@
     "UpdateYetiPalette"
    ],
    "consumer_files": [
-    "vehicle/yeti_update.cpp"
+    "vehicle/polar/yeti_update.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3842,7 +3842,7 @@
     "IsTouchingYeti"
    ],
    "consumer_files": [
-    "vehicle/yeti_graphics.cpp"
+    "vehicle/polar/yeti_graphics.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3863,7 +3863,7 @@
     "UpdateYeti"
    ],
    "consumer_files": [
-    "vehicle/yeti_update.cpp"
+    "vehicle/polar/yeti_update.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 191,
@@ -8388,8 +8388,8 @@
     "actor/inline_copies_actors.cpp",
     "vehicle/jetpack_crates.c",
     "bosses/hovercraft.c",
-    "vehicle/polar_player_actions.c",
-    "vehicle/polar_pickups.c",
+    "vehicle/polar/polar_player_actions.c",
+    "vehicle/polar/polar_pickups.c",
     "vehicle/jetpack_player.c",
     "actor/actor.cpp"
    ],
@@ -8464,7 +8464,7 @@
     "DestroyPolarPlayer"
    ],
    "consumer_files": [
-    "vehicle/polar_player_actions.c",
+    "vehicle/polar/polar_player_actions.c",
     "actor/actor_factory.c"
    ],
    "ptr_words_code": 3,
@@ -8490,7 +8490,7 @@
     "CreatePolarCollectedWumpa"
    ],
    "consumer_files": [
-    "vehicle/polar_pickups.c"
+    "vehicle/polar/polar_pickups.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8515,7 +8515,7 @@
     "CreatePolarWumpa"
    ],
    "consumer_files": [
-    "vehicle/polar_pickups.c",
+    "vehicle/polar/polar_pickups.c",
     "actor/actor_factory.c"
    ],
    "ptr_words_code": 3,
@@ -8541,7 +8541,7 @@
     "CreatePolarTimeCrate"
    ],
    "consumer_files": [
-    "vehicle/polar_crates.c",
+    "vehicle/polar/polar_crates.c",
     "actor/actor_factory.c"
    ],
    "ptr_words_code": 3,
@@ -8567,7 +8567,7 @@
     "CreatePolarQuestionCrate"
    ],
    "consumer_files": [
-    "vehicle/polar_crates.c",
+    "vehicle/polar/polar_crates.c",
     "actor/actor_factory.c"
    ],
    "ptr_words_code": 3,
@@ -8593,7 +8593,7 @@
     "CreatePolarAkuAkuCrate"
    ],
    "consumer_files": [
-    "vehicle/polar_crates.c",
+    "vehicle/polar/polar_crates.c",
     "actor/actor_factory.c"
    ],
    "ptr_words_code": 3,
@@ -8619,7 +8619,7 @@
     "CreatePolarNitroCrate"
    ],
    "consumer_files": [
-    "vehicle/polar_crates.c",
+    "vehicle/polar/polar_crates.c",
     "actor/actor_factory.c"
    ],
    "ptr_words_code": 3,
@@ -8645,7 +8645,7 @@
     "CreatePolarLifeCrate"
    ],
    "consumer_files": [
-    "vehicle/polar_crates.c",
+    "vehicle/polar/polar_crates.c",
     "actor/actor_factory.c"
    ],
    "ptr_words_code": 3,
@@ -8671,7 +8671,7 @@
     "CreatePolarFourWumpaCrate"
    ],
    "consumer_files": [
-    "vehicle/polar_crates.c",
+    "vehicle/polar/polar_crates.c",
     "actor/actor_factory.c"
    ],
    "ptr_words_code": 3,
@@ -8697,7 +8697,7 @@
     "CreatePolarBasicCrate"
    ],
    "consumer_files": [
-    "vehicle/polar_crates.c",
+    "vehicle/polar/polar_crates.c",
     "actor/actor_factory.c"
    ],
    "ptr_words_code": 3,
@@ -8722,7 +8722,7 @@
     "InitPolarCrate"
    ],
    "consumer_files": [
-    "vehicle/polar_crates.c"
+    "vehicle/polar/polar_crates.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8746,7 +8746,7 @@
     "CreatePolarElectricFence"
    ],
    "consumer_files": [
-    "vehicle/polar_objects.c"
+    "vehicle/polar/polar_objects.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8770,7 +8770,7 @@
     "CreatePolarObstacle"
    ],
    "consumer_files": [
-    "vehicle/polar_objects.c"
+    "vehicle/polar/polar_objects.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8794,7 +8794,7 @@
     "CreatePolarLauncher"
    ],
    "consumer_files": [
-    "vehicle/polar_objects.c"
+    "vehicle/polar/polar_objects.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8818,7 +8818,7 @@
     "CreatePolarPenguin"
    ],
    "consumer_files": [
-    "vehicle/polar_objects.c"
+    "vehicle/polar/polar_objects.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8842,7 +8842,7 @@
     "CreatePolarIcicle"
    ],
    "consumer_files": [
-    "vehicle/polar_objects.c"
+    "vehicle/polar/polar_objects.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8866,7 +8866,7 @@
     "CreatePolarAkuAku"
    ],
    "consumer_files": [
-    "vehicle/polar_aku_aku.c"
+    "vehicle/polar/polar_aku_aku.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8890,7 +8890,7 @@
     "CreatePolarGoal"
    ],
    "consumer_files": [
-    "vehicle/polar_aku_aku.c"
+    "vehicle/polar/polar_aku_aku.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8914,7 +8914,7 @@
     "CreatePolarBoostPad"
    ],
    "consumer_files": [
-    "vehicle/polar_aku_aku.c"
+    "vehicle/polar/polar_aku_aku.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8938,7 +8938,7 @@
     "CreatePolarCheckpointCrate"
    ],
    "consumer_files": [
-    "vehicle/polar_aku_aku.c"
+    "vehicle/polar/polar_aku_aku.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,

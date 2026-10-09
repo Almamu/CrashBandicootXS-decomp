@@ -5986,7 +5986,7 @@ save_menu`/`struct settings_row_stats` types used across all
 three new `.c` files. See `ldscript.txt` and `tools/report_units.py`'s
 `overlay_ui` category, both updated to match. Verified via a full clean
 `make compare` (`La suma coincide`) and `make NON_MATCHING=1 report`.
-## The polar files (`src/vehicle/polar_*.c`): the action-object family's `0x0802BED8`-`0x0802C99C` chunk (issue #52)
+## The polar files (`src/vehicle/polar/polar_*.c`): the action-object family's `0x0802BED8`-`0x0802C99C` chunk (issue #52)
 
 `0x0802BED8`-`0x0802C99C` (25-function chunk), `asm/code_3_2_20_28568.s`
 (the file's own truncation point, already past several other sessions'
@@ -6153,7 +6153,7 @@ raw `code_3_2_20_28568_c99c.s` (the original file's unchanged
 remainder, from `UpdatePolarTimeCrate` on) - see `ldscript.txt` and
 `tools/report_units.py`'s `actor` category, both updated to match.
 (Every raw piece has since been matched, and #575 merged these objects
-into `src/vehicle/polar_player_actions.c`, `polar_player_dispatch.c`,
+into `src/vehicle/polar/polar_player_actions.c`, `polar_player_dispatch.c`,
 `polar_pickups.c` and `polar_crates.c`; see `tools/file_layout_plan.tsv`.)
 Verified via a full clean `make compare` (`La suma coincide`) and
 `make NON_MATCHING=1 report`.

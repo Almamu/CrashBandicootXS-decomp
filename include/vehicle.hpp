@@ -5,7 +5,7 @@
  * ActorSelf and HpActor (actor_self.hpp). Part 11a declared what the
  * C++ objects needed then: the destructors that src/actor/inline_copies_actors.cpp
  * has (the ROM keeps them there, with a few small methods), and the polar
- * player's state dispatch and table (src/vehicle/polar_player_dispatch.cpp,
+ * player's state dispatch and table (src/vehicle/polar/polar_player_dispatch.cpp,
  * src/data/actor_pmf_17a6b8.cpp). Part 11b added the polar actors' fields
  * and the constructors src/actor/actor_factory.cpp uses. Their other
  * methods, and the jetpack actors' fields past HpActor's, are still C
@@ -18,7 +18,7 @@
  * and explosion's constructors their code; part 11c the polar player;
  * part 11h the jetpack ring and the collected wumpa
  * (src/bosses/hovercraft.cpp); part 11d the other polar actors
- * (src/vehicle/polar_crates.cpp, polar_pickups.cpp, polar_objects.cpp,
+ * (src/vehicle/polar/polar_crates.cpp, polar_pickups.cpp, polar_objects.cpp,
  * polar_aku_aku.cpp and polar_nitro.cpp), so every polar class is C++;
  * part 11g the balloon crates, the parachute nitro and the rocket
  * (src/vehicle/jetpack_crates.cpp).
@@ -49,7 +49,7 @@ public:
     virtual ~RiderlessPolar(); // 1 DestroyRiderlessPolar
 };
 
-/* The polar run's player (gPolarPlayerVtable; src/vehicle/polar_player.cpp,
+/* The polar run's player (gPolarPlayerVtable; src/vehicle/polar/polar_player.cpp,
  * polar_player_states.cpp, polar_player_actions.cpp and
  * polar_player_dispatch.cpp): it rides the polar bear, steered left and
  * right, and jumps; the rest of its state is in the gPolar* globals
@@ -114,7 +114,7 @@ public:
 };
 
 /* The wumpa fruit flying to the HUD (gPolarCollectedWumpaVtable;
- * src/vehicle/polar_pickups.cpp): it flies at a fixed speed to the
+ * src/vehicle/polar/polar_pickups.cpp): it flies at a fixed speed to the
  * wumpa counter's corner, and its destructor counts in its fruit. */
 class PolarCollectedWumpa : public ActorSelf
 {
@@ -151,7 +151,7 @@ inline PolarWumpa::PolarWumpa(const struct anim_table_record *rec, s32 x, s32 y,
 }
 #endif
 
-/* The crates' base (gPolarCrateVtable; src/vehicle/polar_crates.cpp and
+/* The crates' base (gPolarCrateVtable; src/vehicle/polar/polar_crates.cpp and
  * polar_pickups.cpp). Its constructor picks one of 18 looks by the
  * crate's place on the course. A crate breaks (animation 0x12, Break)
  * when the player or the yeti touches it, and Update deletes it once
@@ -268,7 +268,7 @@ public:
 #undef POLAR_CRATE_CTOR
 #endif
 
-/* The hazards and objects (src/vehicle/polar_objects.cpp and
+/* The hazards and objects (src/vehicle/polar/polar_objects.cpp and
  * polar_aku_aku.cpp). Their constructors are out of line. */
 
 /* An electric fence (gPolarElectricFenceVtable): shown once near enough,
