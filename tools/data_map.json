@@ -694,7 +694,7 @@
     "InitPauseGemsPage"
    ],
    "consumer_files": [
-    "menus/pause_menu_gems.cpp",
+    "menus/pause_menu_collectibles.cpp",
     "menus/pause_menu_pages_init.cpp"
    ],
    "ptr_words_code": 0,
@@ -744,7 +744,7 @@
     "InitPauseRelicsPage"
    ],
    "consumer_files": [
-    "menus/pause_menu_gems.cpp",
+    "menus/pause_menu_collectibles.cpp",
     "menus/pause_menu_pages_init.cpp"
    ],
    "ptr_words_code": 0,
@@ -4494,7 +4494,7 @@
     "InitContinuePrompt"
    ],
    "consumer_files": [
-    "menus/continue_prompt_init.cpp"
+    "menus/continue_prompt.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 3,
@@ -4514,7 +4514,7 @@
     "InitContinuePrompt"
    ],
    "consumer_files": [
-    "menus/continue_prompt_init.cpp"
+    "menus/continue_prompt.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 3,
@@ -4534,7 +4534,7 @@
     "InitContinuePrompt"
    ],
    "consumer_files": [
-    "menus/continue_prompt_init.cpp"
+    "menus/continue_prompt.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 3,

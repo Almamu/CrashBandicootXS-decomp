@@ -732,7 +732,7 @@ from "core" graphics.
   compute-then-copy tail - see that file's doc comments for the full
   account), a particle-spawn-budget driver, an input-poll busy-wait, and a
   buffer-release/teardown helper.
-- **`InitContinuePrompt`** (`src/menus/continue_prompt_init.c`, GitHub issue #63) - a
+- **`InitContinuePrompt`** (`src/menus/continue_prompt_init.c`, `continue_prompt.cpp` since #771; GitHub issue #63) - a
   standalone `struct continue_prompt` object's constructor half: allocates
   and loads its three BG scratch buffers, builds DISPCNT, hands off to
   `InitContinuePromptGraphics`, then builds the BLDCNT/BLDALPHA alpha-blend value.

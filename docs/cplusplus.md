@@ -470,13 +470,13 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | actor_self.hpp, `src/actor/actor_category_frame.cpp`, `src/vehicle/polar/polar_nitro.cpp` | `BoxOverlap` and `WorldBox`, the two files' identical inlines, are actor_self.hpp's | 0 | (unchanged) | 0 -> 0 | cleanup |
 | `src/actor/actor.cpp`, `actor_spawn.cpp`, `src/bosses/hovercraft.cpp`, `airship_explode.cpp` | the category hooks call `JetpackPlayer`'s and `PolarPlayer`'s `AllocTiles`, `FinishRun`, `IsPauseLocked`, `SetCheckpoint` directly; their C prototypes go (`CatchPolarPlayer` stays, for yeti_update.c) | 0 | (unchanged) | 0 -> 0 | cleanup |
 | `src/menus/pause_menu_draw.cpp` | `PauseMenu::Animate`, `Draw`, `DrawRows` (menus.hpp) | 3 | agbcp | 2 pins, 2 holds, 3 uses (`MATCH_USE` x2, `MATCH_USE2`), 14 slot calls -> 2 pins, 2 holds, 3 uses | cleanup |
-| `src/menus/pause_menu_gems.cpp` | `PauseMenu::DrawGemsPage`, `DrawRelicsPage` | 2 | old_agbcp | 0 -> 0; 4 slot calls -> 0 | cleanup |
+| `src/menus/pause_menu_gems.cpp` (`pause_menu_collectibles.cpp` since #771) | `PauseMenu::DrawGemsPage`, `DrawRelicsPage` | 2 | old_agbcp | 0 -> 0; 4 slot calls -> 0 | cleanup |
 | `src/menus/pause_menu_info.cpp` | `PauseMenu::InitInfo` | 1 | agbcp | 0 -> 0 | cleanup |
-| `src/menus/pause_menu_loop.cpp` | `PauseMenu::Loop` | 1 | old_agbcp | 2 pins -> 2 pins | cleanup |
+| `src/menus/pause_menu_loop.cpp` (the end of `pause_menu.cpp` since #771) | `PauseMenu::Loop` | 1 | old_agbcp | 2 pins -> 2 pins | cleanup |
 | `src/menus/pause_menu_pages_draw.cpp` | `PauseMenu::DrawTimeTrialPage`, `DrawCrystalsPage`, `DrawPageTitle`, `CommitFrame` | 4 | agbcp | 1 pin, 1 `asm`, 4 slot calls -> 0 | cleanup |
-| `src/menus/pause_menu_powers.cpp` | `PauseMenu::DrawPowersPage` | 1 | **old_agbcp** (was agbcc) | 12 pins, 2 slot calls -> 0 | cleanup |
+| `src/menus/pause_menu_powers.cpp` (`pause_menu_collectibles.cpp` since #771) | `PauseMenu::DrawPowersPage` | 1 | **old_agbcp** (was agbcc) | 12 pins, 2 slot calls -> 0 | cleanup |
 | `src/menus/pause_menu_widgets.cpp` | `PauseMenu::DrawFraction`, `VolumeDown`, `VolumeUp`, `CursorDown`, `CursorUp`, `FormatVolume` (`FormatVolumePercent`, its unused first argument is `this`), with `FormatDecimal` (C linkage) | 6 + 1 | agbcp | 1 pin, 3 slot calls -> 1 pin (`FormatDecimal`'s) | cleanup |
-| `src/menus/power_dialog_loop.cpp` | `PowerDialog::Loop` | 1 | old_agbcp | 0 -> 0 | cleanup |
+| `src/menus/power_dialog_loop.cpp` (the end of `power_dialog.cpp` since #771) | `PowerDialog::Loop` | 1 | old_agbcp | 0 -> 0 | cleanup |
 | `src/text/wrapped_text.cpp` | `DrawWrappedText` (C linkage) | 0 + 1 | old_agbcp | 1 pin, 1 hold, 2 uses, 5 slot calls -> the same pin, hold and uses | cleanup |
 | `src/save/save_menu.cpp` | `SaveMenu` (include/save_menu.hpp): `MessageInput`, `CommitFrame`; with `CloseSaveMenu` (`delete gSaveMenu`), `OpenSaveMenu` (`new SaveMenu`) (C linkage) | 2 + 2 | agbcp | 0 -> 0; the destructor's direct `(.., 3)` call -> `delete` | cleanup |
 | `src/save/save_menu_draw.cpp` | `SaveMenu::LinkExchange` (`new`/`delete` of the save transfer), `DrawMessageLines`, `DrawCancel`, `DrawYesNoPrompt`, `DrawSlotStats`, `DrawSlots`, `InitIcons` (`new UiSprite`) | 7 | old_agbcp (old_agbcc C already) | 3 pins, 1 hold, 1 use, 3 barriers -> 3 pins, 1 hold, 1 use; the font record-slot calls (`ICON_TEXT_CALL`, `_call_via_r1`), `OperatorNew`/`OperatorDelete` -> virtual calls, `new`/`delete` | cleanup |
@@ -621,7 +621,7 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/menus/pause_menu_pages_init.cpp` | `PauseMenu`'s five `Init*Page`s | 5 | old_agbcp | `UPDATE_ICON_FRAME_NIBBLE` (4 pins, 1 `asm`) -> 0 | 10d |
 | `src/menus/power_dialog.cpp` | `PowerDialog::Show`, constructor | 2 | **old_agbcp** (was agbcc) | 24 pins, 2 `asm`, 3 consts -> 0 | 10d |
 | `src/menus/power_dialog_draw.cpp` | `PowerDialog`'s `Draw`, `Animate`, `CommitFrame`, destructor; the four `Show*Dialog`s and the save block's counts (C linkage) | 4 + 12 | **old_agbcp** (was agbcc) | 18 pins, 4 `asm`, 6 retyped reads -> 0 | 10d |
-| `src/menus/continue_prompt_init.cpp` | `ContinuePrompt`'s constructor (include/frontend.hpp) | 1 | **old_agbcp** (was agbcc) | 13 pins, 4 `asm`, 1 keep -> 0 | 10d |
+| `src/menus/continue_prompt_init.cpp` (the start of `continue_prompt.cpp` since #771) | `ContinuePrompt`'s constructor (include/frontend.hpp) | 1 | **old_agbcp** (was agbcc) | 13 pins, 4 `asm`, 1 keep -> 0 | 10d |
 | `src/menus/continue_prompt.cpp` | `ContinuePrompt::InitGraphics`, `Loop` | 2 | old_agbcp | 1 use, 1 keep -> the same | 10d |
 | `src/frontend/title_screen_init.cpp` | `TitleScreen`'s constructor, `LoadBg`, `LoadObjTiles`, `UpdateLogoPieces`, `DrawLogoPieces` (include/frontend.hpp) | 5 | old_agbcp | 18 pins, 5 `asm`, 12 per-field inline accessors -> 1 pin | 10c-2 |
 | `src/frontend/title_screen.cpp` | `TitleScreen`'s `CheatInput`, `Run`, `CommitFrame`, `DrawMenuItem`, `Draw`, `HashCheatInput`, `ResetLogoPieces`, destructor; `CompanyLogos::Run`, `LoadVvLogoGraphics`, `InitVvLogoPieces`, `UpdateVvLogoPieces` | 12 | old_agbcp, **with strength reduction** (was `-fno-strength-reduce`) | 10 pins, 2 keeps, 5 uses, 1 const, 23 per-field inline accessors (12 of them copies of title_screen_init.c's), the hand-written vtable calls -> 1 pin, 5 uses, 1 const | 10c-2 |
@@ -2144,9 +2144,9 @@ workaround.
 
 | Class | Size | Vtable | Code |
 |---|---:|---|---|
-| `PauseMenu` | 0xD4 | none | pause_menu.cpp, pause_menu_pages_init.cpp; its drawing, input and `InitInfo` are still C (pause_menu_draw.c, _gems.c, _info.c, _loop.c, _pages_draw.c, _powers.c, _widgets.c) |
-| `PowerDialog` | 0x2C | none | power_dialog.cpp, power_dialog_draw.cpp; its `Loop` is still C (power_dialog_loop.c) |
-| `ContinuePrompt` | 0x24 | none | continue_prompt_init.cpp (the constructor), continue_prompt.cpp (`InitGraphics`, `Loop`; and since #767 the methods that were in credits.cpp) |
+| `PauseMenu` | 0xD4 | none | pause_menu.cpp, pause_menu_pages_init.cpp; its drawing, input and `InitInfo` are still C (pause_menu_draw.c, _gems.c, _info.c, _loop.c, _pages_draw.c, _powers.c, _widgets.c; since #771 _loop is in pause_menu.cpp and _gems/_powers are pause_menu_collectibles.cpp) |
+| `PowerDialog` | 0x2C | none | power_dialog.cpp, power_dialog_draw.cpp; its `Loop` is still C (power_dialog_loop.c, the end of power_dialog.cpp since #771) |
+| `ContinuePrompt` | 0x24 | none | continue_prompt_init.cpp (the constructor; the start of continue_prompt.cpp since #771), continue_prompt.cpp (`InitGraphics`, `Loop`; and since #767 the methods that were in credits.cpp) |
 
 - **The classes.** All three are plain classes with a constructor and a
   destructor; their icons are `UiSprite`s. `RunPauseMenu` and
@@ -3201,7 +3201,7 @@ order), and it says which functions were inline and where a file ended:
 | `src/text/font_draw_chars.cpp` | `Font::DrawChars` | agbcp | 0 -> 0; 2 slot calls -> 0 |
 | `src/text/font_height.cpp` | `Font::TextHeight` | agbcp | 0 -> 0 |
 | `src/system/inline_copies_misc.cpp` | `LargeFont`'s and `SmallFont`'s destructors, with `SetAabbSize`, `SetAabbPos`, `GetLives` (C linkage) | agbcp | 4 asm, 4 vtable stores -> 0 |
-| the font callers: credits.cpp, language_select.cpp, title_screen.cpp, title_screen_init.cpp, continue_prompt.cpp, level_select.cpp, pause_menu.cpp, power_dialog.cpp, power_dialog_draw.cpp, cutscene_player.cpp, spawn_pickups.cpp | virtual calls and the inline accessors for the fonts' record-slot calls (`ICON_TEXT_CALL`, `_call_via_rN`) and their own copies of the accessors (`SetFontPos`, `SetFontTileBase`, `mgr_12c`, ...); `new SmallFont`/`new LargeFont` | (unchanged) | 0 -> 0; 31 spelled-out slot calls (`ICON_TEXT_CALL`s, `_call_via_rN`s and the helpers') -> 0 |
+| the font callers: credits.cpp, language_select.cpp, title_screen.cpp, title_screen_init.cpp (in title_screen.cpp since #771), continue_prompt.cpp, level_select.cpp, pause_menu.cpp, power_dialog.cpp, power_dialog_draw.cpp, cutscene_player.cpp, spawn_pickups.cpp | virtual calls and the inline accessors for the fonts' record-slot calls (`ICON_TEXT_CALL`, `_call_via_rN`) and their own copies of the accessors (`SetFontPos`, `SetFontTileBase`, `mgr_12c`, ...); `new SmallFont`/`new LargeFont` | (unchanged) | 0 -> 0; 31 spelled-out slot calls (`ICON_TEXT_CALL`s, `_call_via_rN`s and the helpers') -> 0 |
 
 **In numbers** (project-wide, `tools/match_idioms.py`): `MATCH_HOLD_REG`
 528 -> 501, instruction-emitting `asm` 78 -> 61, `MATCH_KEEP` 27 -> 25,
@@ -3622,7 +3622,7 @@ still read through them. `tools/layout_audit.py views` lists them.
     `struct oam_attrs_u16` (halfword units; its comment said gfx.h's word
     units changed a DrawScaledSprite store, which old_agbcp's C++ doesn't
     do) are gfx.h's `struct oam_attrs`;
-  - pause_menu_loop.cpp's `struct pause_keys` is `gKeys.half`.
+  - pause_menu_loop.cpp's (pause_menu.cpp's since #771) `struct pause_keys` is `gKeys.half`.
 
   Kept, each with its comment: swim_ctrl.cpp's `struct keys` (its
   zero-length array makes the copy BLKmode, on the stack, as in the

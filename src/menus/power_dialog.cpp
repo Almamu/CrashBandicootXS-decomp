@@ -6,12 +6,13 @@ extern "C" {
 #include "system.h"
 #include "text.h"
 #include "globals.h"
+#include "core.h"
 }
 
 /* The power dialog (GitHub issue #8; PowerDialog, menus.hpp): a power's
  * name and description over the scrolling sky, shown by the four
  * Show*Dialog wrappers (power_dialog_draw.cpp) when a boss gives Crash a
- * power. */
+ * power. This file has Show, the constructor and Loop. */
 
 /* Reserves a font's tiles in OBJ VRAM. The same helper as
  * RunLevelSelect's (level_select.cpp). */
@@ -98,4 +99,39 @@ PowerDialog::PowerDialog(s32 titleText, s32 descText, s32 type) : bg(0, 0x1f, 0,
     REG_BG0CNT = bg.GetControl();
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
     gAudioContext->PlaySong(SONG_INTRO);
+}
+
+/* PowerDialog::Loop (C++ since the #664 cleanup; power_dialog_loop.cpp
+ * until #771), the power
+ * dialog's fade and confirm loop: steps BLDY's level down to 0 (drawing,
+ * committing and animating every step), redraws every frame until START
+ * is newly pressed, steps the level back up to 0x10, and finally sets
+ * REG_DISPCNT's shadow to 0x40 and commits it.
+ *
+ * Built with old_agbcp (Makefile OLD_AGBCC_OBJS; old_agbcc as C): it
+ * loads the 0x1f mask before the byte it tests, the old compiler's
+ * tell. */
+void PowerDialog::Loop()
+{
+    while (bldy.evy != 0) {
+        bldy.evy--;
+        Draw();
+        CommitFrame();
+        Animate();
+    }
+    do {
+        Draw();
+        CommitFrame();
+        Animate();
+        UpdateKeys(gInput);
+    } while (!(gKeys.half.pressed & START_BUTTON));
+    while (bldy.evy != 0x10) {
+        bldy.evy++;
+        Draw();
+        CommitFrame();
+        Animate();
+    }
+    dispcnt.raw = 0;
+    dispcnt.bits.objMap1D = 1;
+    CommitFrame();
 }

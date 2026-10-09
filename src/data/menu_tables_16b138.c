@@ -45,7 +45,7 @@ const s32 gPauseMenuPageTitles[5] = {
 
 /* Icon positions and frame indices of the menu screens in
  * pause_menu_pages_init.cpp (InitPauseCrystalsPage, InitPausePowersPage, InitPauseGemsPage, InitPauseRelicsPage,
- * InitPauseTimeTrialPage), pause_menu_pages_draw.cpp and pause_menu_gems.cpp. */
+ * InitPauseTimeTrialPage), pause_menu_pages_draw.cpp and pause_menu_collectibles.cpp. */
 const struct vec2 gPauseCrystalIconPos = { 212, 112 };
 const struct vec2 gPausePowerIconPos[4] = {
     { 180, 96 },

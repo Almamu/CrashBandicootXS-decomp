@@ -8,7 +8,9 @@
 > gVvLogoPieceSeeds[i].hold + 1`), which matches with strength reduction
 > on, as does every other function in the file. The C's hand-written
 > pointer walks, which matched only without strength reduction, were the
-> C front end's problem, not a per-file flag of the original build. The
+> C front end's problem, not a per-file flag of the original build.
+> title_screen_init.cpp is the first half of title_screen.cpp since
+> #771, and pause_menu_gems.cpp is pause_menu_collectibles.cpp. The
 > rest of the page is the investigation as it was.
 
 Question: besides the old_agbcc/agbcc split, did the original build

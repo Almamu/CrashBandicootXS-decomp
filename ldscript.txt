@@ -55,16 +55,13 @@ SECTIONS
         build/crashbandicootxs/src/save/save_menu_draw.o(.text);
         build/crashbandicootxs/src/save/save_menu.o(.text);
         build/crashbandicootxs/src/menus/pause_menu.o(.text);
-        build/crashbandicootxs/src/menus/pause_menu_loop.o(.text);
         build/crashbandicootxs/src/menus/pause_menu_draw.o(.text);
-        build/crashbandicootxs/src/menus/pause_menu_powers.o(.text);
-        build/crashbandicootxs/src/menus/pause_menu_gems.o(.text);
+        build/crashbandicootxs/src/menus/pause_menu_collectibles.o(.text);
         build/crashbandicootxs/src/menus/pause_menu_info.o(.text);
         build/crashbandicootxs/src/menus/pause_menu_pages_init.o(.text);
         build/crashbandicootxs/src/menus/pause_menu_widgets.o(.text);
         build/crashbandicootxs/src/menus/pause_menu_pages_draw.o(.text);
         build/crashbandicootxs/src/menus/power_dialog.o(.text);
-        build/crashbandicootxs/src/menus/power_dialog_loop.o(.text);
         build/crashbandicootxs/src/menus/power_dialog_draw.o(.text);
         build/crashbandicootxs/src/save/game_progress.o(.text);
         build/crashbandicootxs/src/gfx/oam_buffer.o(.text);
@@ -267,7 +264,6 @@ SECTIONS
         build/crashbandicootxs/src/bosses/hovercraft_side_gun.o(.text);
         build/crashbandicootxs/src/bosses/hovercraft_cannon_flash.o(.text);
         build/crashbandicootxs/src/frontend/starfield.o(.text);
-        build/crashbandicootxs/src/menus/continue_prompt_init.o(.text);
         build/crashbandicootxs/src/menus/continue_prompt.o(.text);
         build/crashbandicootxs/src/frontend/credits.o(.text);
         build/crashbandicootxs/src/frontend/title_screen_init.o(.text);

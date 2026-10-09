@@ -4,11 +4,10 @@
 /* The pause menu and the power dialog as C++ (#664, docs/cplusplus.md,
  * part 10d):
  *
- *   PauseMenu    0xD4  src/menus/pause_menu.cpp, pause_menu_pages_init.cpp,
- *                      pause_menu_info.cpp, pause_menu_draw.cpp, _gems.cpp,
- *                      _loop.cpp, _pages_draw.cpp, _powers.cpp, _widgets.cpp
- *   PowerDialog  0x2C  src/menus/power_dialog.cpp, power_dialog_draw.cpp,
- *                      power_dialog_loop.cpp
+ *   PauseMenu    0xD4  src/menus/pause_menu.cpp, pause_menu_draw.cpp,
+ *                      _collectibles.cpp, _info.cpp, _pages_init.cpp,
+ *                      _widgets.cpp, _pages_draw.cpp
+ *   PowerDialog  0x2C  src/menus/power_dialog.cpp, power_dialog_draw.cpp
  *
  * The sizes are the ROM's (RunPauseMenu's and ShowPowerDialog's `new`s).
  * Neither has a vtable: they are plain classes with a constructor and a
