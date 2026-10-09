@@ -109,8 +109,9 @@ extern s32 RunActorCategoryFrame(void);
 extern s32 InitActorCategory(s32 category);
 
 /* src/actor/actor_category_select.cpp */
-extern void SelectActorCategory(s32 type, struct sub_effect_record *table, void *animTable,
-                                u8 active, s32 variant, s32 checkpoint);
+extern void SelectActorCategory(s32 type, struct sub_effect_record *table,
+                                struct anim_table_record *animTable, u8 active, s32 variant,
+                                s32 checkpoint);
 
 /* src/actor/actor_category_stats.cpp */
 extern s32 CountCategoryCrates(s32 categoryIdx);

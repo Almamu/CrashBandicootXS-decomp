@@ -224,24 +224,38 @@ struct category_descriptor {
 }; // 0x34
 COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct category_descriptor) == 0x34);
 
+struct actor_spawn; /* actor.h */
+struct ActorSelf;   /* actor_self.hpp's class */
+
 /* gActorCategoryVtables - 3 entries, type-indexed (see category_descriptor
- * above), not category-indexed - categories that share a type share one
- * of these. Exact signatures unknown (none of these functions have been
- * reversed to C yet); slot 0 is confirmed to be the constructor,
- * ConstructAnimTableState (receives the animation table base and the
- * checkpoint) for type 0, but a different,
- * still-unnamed function for types 1/2 (which share it - constructor
- * logic splits by sprite-sheet family, not by type individually; see
- * docs/rom_map.md's "confirmed: mostly actor per-type behavior" section
- * for the raw addresses of all 39 slots and which ROM region each type's
- * slots 2-6 land in). A couple of slots (7 and 8, at least for type 0)
- * hold obviously-invalid addresses and appear to simply be unused for
- * that type. Placeholder names for the per-type functions once matched
- * (slots 2-6, the ones that actually differ between types):
- * "Actor0_", "Actor1_", "Actor2_" prefixes rather than a guessed
- * real-world name - see docs/naming.md. */
+ * above), not category-indexed: categories that share a type share one.
+ * SelectActorCategory points gActorCategoryVtable at the selected type's.
+ * Not a g++ vtable: no RTTI slot, 4-byte slots, two of them values, and
+ * the callers NULL-test the boss slots before calling them. Slots 2-6 are
+ * the one interface the yeti, the airship and the hovercraft share; the
+ * rest are the player's and the spawner's. */
 struct category_vtable {
-    void (*fn[13])(void);
+    /* 0x00 - builds the player: ConstructAnimTableState (polar),
+     * CreateJetpackPlayer (jetpack, hovercraft) */
+    void (*createPlayer)(struct anim_table_record *table, s32 checkpoint);
+    /* 0x04 - spawns a level spawn record's object: SpawnActor,
+     * SpawnJetpackActor (RunActorCategoryFrame, SelectActorCategory) */
+    struct ActorSelf *(*spawn)(struct actor_spawn *spawn, u8 useBonus, s32 zOffset);
+    void (*createBoss)(s32 level);  // 0x08 - CreateYeti/CreateAirship/CreateHovercraft
+    void (*updateBoss)(void);       // 0x0C - each category frame's start
+    void (*updateBossBg2)(void);    // 0x10 - UpdateActorCategoryBg2
+    void (*destroyBoss)(void);      // 0x14 - DestroyAllActors
+    void (*loadBossGraphics)(void); // 0x18 - ReloadActorCategoryGraphics
+    /* 0x1C - a spawn record is spawned once its depth is within this of
+     * the scroll distance (-0x11 polar, 0xA9 jetpack/hovercraft) */
+    s32 spawnDistance;
+    /* 0x20 - SelectActorCategory skips the records whose depth is below
+     * this plus the start distance (-0x2F polar, 0x1C jetpack/hovercraft) */
+    s32 skipDistance;
+    s32 (*isTouchingPlayer)(struct ActorSelf *self); // 0x24 - IsTouchingPlayer
+    void (*reachCourseEnd)(void);                    // 0x28 - once the course length is passed
+    void (*reloadPlayerTiles)(void);                 // 0x2C - ReloadActorCategoryGraphics
+    s32 (*isPauseLocked)(void);                      // 0x30 - CanPauseActorCategory
 }; // 0x34
 COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct category_vtable) == 0x34);
 

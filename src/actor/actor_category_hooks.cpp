@@ -18,24 +18,24 @@ extern "C" {
  * it was until #770. See docs/matching/archive/issue-50-actor-2a69c.md. */
 
 /* The vehicle levels' category hooks (gActorCategoryVtables' slots):
- * each ignores its argument and calls its method on the player
+ * each calls its method on the player
  * (gActorList, the list's root). */
-void JetpackReloadPlayerTiles(void *arg0)
+void JetpackReloadPlayerTiles(void)
 {
     ((JetpackPlayer *)gActorList)->AllocTiles();
 }
 
-void PolarReloadPlayerTiles(void *arg0)
+void PolarReloadPlayerTiles(void)
 {
     ((PolarPlayer *)gActorList)->AllocTiles();
 }
 
-void JetpackReachCourseEnd(void *arg0)
+void JetpackReachCourseEnd(void)
 {
     ((JetpackPlayer *)gActorList)->FinishRun();
 }
 
-void PolarReachCourseEnd(void *arg0)
+void PolarReachCourseEnd(void)
 {
     ((PolarPlayer *)gActorList)->FinishRun();
 }
@@ -43,5 +43,5 @@ void PolarReachCourseEnd(void *arg0)
 /* The selected category's slot 9 (its player contact test) on `self`. */
 s32 IsTouchingPlayer(ActorSelf *self)
 {
-    return ((s32 (*)(ActorSelf *))gActorCategoryVtable->fn[9])(self);
+    return gActorCategoryVtable->isTouchingPlayer(self);
 }
