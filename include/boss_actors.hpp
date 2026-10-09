@@ -79,51 +79,10 @@ static inline void SetAirshipState(s32 st, s32 idx)
 }
 
 /* The hovercraft's weapons (#664 part 11h, src/bosses/hovercraft*.cpp).
- * The hovercraft itself is no class of its own, like the airship: a bare
- * AnimPart (gHovercraft) and globals, stepped through the plain function
- * table gHovercraftStateFuncs; its functions keep their C names. Its
- * weapons follow it around (GetHovercraftX/Y/Z plus an offset) and count
- * down its parts (LoseHovercraftPart) as they are shot down. */
-
-/* EnterHovercraftState: state `st` and animation `idx`, keeping the
- * current frame unless it is past the new animation's end
- * (SetAirshipState without the timer). SetHovercraftState
- * (hovercraft_state.cpp) is its out-of-line copy. */
-static inline void EnterHovercraftState(s32 st, s32 idx)
-{
-    AnimPart *a;
-
-    gHovercraftState = st;
-    a = gHovercraft;
-    a->animIndex = idx;
-    a->animTimer = a->anims[idx].duration;
-    a->animDone = 0;
-    if (a->GetAnimFrameBaseOffset() >= a->anims[a->animIndex].loopThreshold)
-        a->animTime = 0;
-}
-
-/* ApplyHovercraftFlashColor: colour 15 of the hovercraft's BG and OBJ
- * palettes (gFlashBgPalette, gFlashObjPalette) white when `flag` is set,
- * or else the colour saved the first time. SetHovercraftFlashColor
- * (hovercraft_state.cpp) is its out-of-line copy; RunHovercraftState
- * inlines it twice. Each branch stores both palettes: that gives the
- * ROM's white loaded into r2 and copied to r1, which a colour local
- * assigned in the branches and stored once after them only got with an
- * r1 pin (#662 round 2). */
-static inline void ApplyHovercraftFlashColor(u8 flag)
-{
-    if (gHovercraftFlashColorSaved == 0) {
-        gHovercraftFlashSavedColor = gFlashBgPalette[15];
-        gHovercraftFlashColorSaved = 1;
-    }
-    if (flag != 0) {
-        gFlashBgPalette[15] = RGB_WHITE;
-        gFlashObjPalette[15] = RGB_WHITE;
-    } else {
-        gFlashBgPalette[15] = gHovercraftFlashSavedColor;
-        gFlashObjPalette[15] = gHovercraftFlashSavedColor;
-    }
-}
+ * The hovercraft itself is the all-static class Hovercraft
+ * (include/hovercraft.hpp, #772). Its weapons follow it around
+ * (Hovercraft::GetX/GetY/GetZ plus an offset) and count down its parts
+ * (Hovercraft::LosePart) as they are shot down. */
 
 /* The hovercraft's fireball (gHovercraftFireballVtable, hovercraft_fireball.cpp;
  * the airship fireball's layout): the side guns fire it (SpawnHovercraftFireball). It sets the

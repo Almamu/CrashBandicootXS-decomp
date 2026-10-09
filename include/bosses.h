@@ -98,39 +98,17 @@ extern u8 IsTouchingAirship(struct ActorSelf *self);
  * calls it) has C linkage. */
 extern void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind);
 
-/* src/bosses/hovercraft.cpp */
-extern void UpdateHovercraftHitFlash(void);
-extern void RunHovercraftState(void);
-extern void HovercraftStateCloseIn(void);
-extern void HovercraftStateFallBack(void);
-extern void HovercraftStateFall(void);
-extern void DrawHovercraftMap(void *tileRow);
+/* src/bosses/hovercraft.cpp: the Hovercraft class (include/hovercraft.hpp,
+ * #772), its static members under their C names (cxx_symbols.txt). The
+ * actor category table (src/data/actor_category_175558.c, C) names its
+ * five boss slots' functions by those C names. */
+#ifndef __cplusplus
 extern void CreateHovercraft(s32 level);
-extern void SpawnHovercraft(s32 kind, s32 x, s32 y, s32 z);
 extern void UpdateHovercraft(void);
 extern void UpdateHovercraftBg2(void);
 extern void LoadHovercraftGraphics(void);
-extern void ConvertHovercraftTiles(void);
 extern void DestroyHovercraft(void);
-extern void nullsub_34(void);
-extern s32 sub_80337FC(void);
-extern void nullsub_35(void);
-
-/* src/bosses/hovercraft_state.cpp */
-extern void StartHovercraftHitFlash(void);
-extern void SetHovercraftFlashColor(u8 flag);
-extern s32 GetHovercraftPartsLeft(void);
-extern void LoseHovercraftPart(void);
-extern const struct hovercraft_attack *GetHovercraftAttack(void);
-extern s32 GetHovercraftState(void);
-extern s32 GetHovercraftLevel(void);
-extern s32 GetHovercraftZ(void);
-extern s32 GetHovercraftY(void);
-extern s32 GetHovercraftX(void);
-extern void SetHovercraftState(s32 a0, s32 a1);
-extern void HovercraftStateInactive(void);
-extern void HovercraftStateApproach(void);
-extern void HovercraftStateExplodeStub(void);
+#endif
 
 /* src/vehicle/jetpack/airship_graphics.cpp, its end (C linkage) */
 extern s32 GetAirshipHpPercent(void);
@@ -182,45 +160,8 @@ extern s32 gAirshipVolleyCount;
 extern s32 gAirshipX;
 extern s32 gAirshipY;
 extern s32 gAirshipZ;
-/* The hovercraft is a bare AnimPart too (part 11h), and only C++ uses it. */
-#ifdef __cplusplus
-extern class AnimPart *gHovercraft;
-#endif
-extern const struct hovercraft_attack *gHovercraftAttack;
-extern s32 gHovercraftBg2Page;
-extern u8 gHovercraftBg2PageFlip;
-extern s32 gHovercraftDistance;
-extern s32 gHovercraftFlashColorSaved;
-extern u16 gHovercraftFlashSavedColor;
-extern s32 gHovercraftFrameCount;
-extern u8 gHovercraftGone;
-extern u8 gHovercraftHitFlashOn;
-extern s16 gHovercraftHitFlashTimer;
-extern s32 gHovercraftLevel;
-extern s32 gHovercraftMapCols;
-/* The same for the hovercraft (ConvertHovercraftTiles). */
-extern u32 gHovercraftMapFrames[];
-extern s32 gHovercraftMapRows;
-extern s32 gHovercraftMapTileBase;
-extern s32 gHovercraftOrbitRadius;
-extern s32 gHovercraftPartsLeft;
-extern s32 gHovercraftPhase;
-extern s32 gHovercraftScreenX;
-extern s32 gHovercraftScreenY;
-extern s32 gHovercraftState;
-extern s32 gHovercraftVelX;
-extern s32 gHovercraftVelY;
-extern s32 gHovercraftVelZ;
-extern s32 gHovercraftX;
-extern s32 gHovercraftY;
-extern s32 gHovercraftZ;
-/* The twins of gAirshipHp/gAirshipFireTimer/gAirshipVolleyCount (same
- * place in the same IWRAM layout, set the same way by SpawnHovercraft
- * and the state functions), but nothing reads them: the hovercraft's
- * parts keep their own hit points and spawn timers. */
-extern s32 gHovercraftHp;
-extern s32 gHovercraftFireTimer;
-extern s32 gHovercraftVolleyCount;
+/* The hovercraft's variables are Hovercraft's static members
+ * (include/hovercraft.hpp, #772). */
 
 /* src/data/weapon_kind_17c2d0.c */
 extern const struct airship_attack gAirshipAttacks[6];
@@ -273,11 +214,6 @@ extern u16 *gFlashObjPalette;
 extern const struct hovercraft_attack gHovercraftAttacks[2];
 extern const struct anim_box gHovercraftBox;
 extern const struct anim_frame_record gHovercraftKeyframes[1];
-
-/* src/data/actor_state_17c4c8.cpp, with HovercraftCannon's and
- * HovercraftLauncher's state tables (boss_actors.hpp); the fireball's is
- * in actor_pmf_17c450.cpp */
-extern void (*const gHovercraftStateFuncs[6])(void);
 
 /* src/data/player_pmf_16c250.cpp */
 extern const struct entry_set gMegaMixMotionSet;

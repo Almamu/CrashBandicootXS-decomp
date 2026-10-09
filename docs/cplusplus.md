@@ -752,6 +752,8 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | actor_anim.h, `src/data/actor_category_175558.c`, `src/actor/actor_category.cpp`, `actor_category_frame.cpp`, `actor_category_hooks.cpp`, `actor_category_select.cpp` | `struct category_vtable`'s `fn[13]` is 11 typed function pointers and two `s32`s (`spawnDistance`, `skipDistance`); the 8 slot casts at the call sites and the table's 27 go; the four player hooks take no argument, CreateYeti an `s32`, SpawnJetpackActor and CreateJetpackActor return an `ActorSelf *`, SelectActorCategory takes an `anim_table_record *` | 0 | (unchanged) | 0 -> 0 (CanPauseActorCategory keeps one cast, to `bool (*)(void)`) | [#765](#the-category-table-765) |
 | `src/save/game_progress.cpp` (again) | `GameProgress` (new include/game_progress.hpp; was level_state.h's struct game_progress): `GetLives` (GetProgressLives), `CountPlatinumRelics`, `CountGoldRelics`, `CountSapphireRelics`, `CountRelics`, `CountGems`, `CountClearGems`, `CountCrystals`, `GetCompletionPercent`, all `const`; menus.h's 9 prototypes go | 9 | (unchanged) | 0 -> 0 | [#766](#the-progress-block-as-a-class-766) |
 | level_state.hpp, save_data.hpp, menus.hpp, level_select.hpp, save_menu.hpp, `src/level/game_frame.cpp`, `src/menus/pause_menu_info.cpp`, `pause_menu_pages_init.cpp`, `src/save/save_menu_draw.cpp`, `save_menu_input.cpp`, `src/level/bonus_round.cpp`, `level_state.cpp` | the callers: `progress->CountGems()` & co.; LevelState's `progress`, `checkpointData` and `saveData`, the save slot's `progress` (`struct save_slot`, now save_data.hpp's), PauseMenu's and LevelSelect's pointers and `PackSaveData`/`UnpackSaveData`/`SummarizeProgress` are `GameProgress` | 0 | (unchanged) | 0 -> 0 | [#766](#the-progress-block-as-a-class-766) |
+| `src/bosses/hovercraft.cpp`, `hovercraft_state.cpp`, `src/data/actor_state_17c4c8.cpp` | `Hovercraft` (new include/hovercraft.hpp), an all-static class: its 31 IWRAM globals are static data members (`x` is gHovercraftX, `anim` gHovercraft, ...), its 30 functions static member functions (`Create`, `Spawn`, `Update`, `UpdateBg2`, `LoadGraphics`, `Destroy`, the getters `GetX`/`GetY`/`GetZ`/`GetState`/`GetLevel`/`GetAttack`/`GetPartsLeft`, `StartHitFlash`, `LosePart`, the six states, ...), gHovercraftStateFuncs is `Hovercraft::stateFuncs`; boss_actors.hpp's two inline helpers are its private inline members; bosses.h's 30 prototypes and 32 externs go (5 C-only prototypes stay for the category table) | 30 | (unchanged) | 0 -> 0 | [#772](#the-hovercraft-as-an-all-static-class-772) |
+| `src/bosses/hovercraft_cannon.cpp`, `hovercraft_launcher.cpp`, `hovercraft_side_gun.cpp`, `hovercraft_cannon_flash.cpp`, `src/level/level_state.cpp`, `src/vehicle/jetpack/jetpack_spawn.cpp` | the callers: `Hovercraft::GetX()` & co., `Hovercraft::Spawn(...)` | 0 | (unchanged) | 0 -> 0 | [#772](#the-hovercraft-as-an-all-static-class-772) |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -4323,6 +4325,48 @@ cxx_symbols.txt's SummarizeProgress entry was stale (`...Pv`, from before
 save_menu_input.o called, the mangled name; with the entry fixed
 (`...PC12GameProgress`) both use `SummarizeProgress` again, the ROM's
 name (the map shows it at 0x080048E0).
+
+### The hovercraft as an all-static class (#772)
+
+The hovercraft (part 11h left it a bare AnimPart, globals and plain
+functions with C linkage) is `Hovercraft` (include/hovercraft.hpp), a
+class whose members are all `static`. The ROM loads a separate address
+for each of its variables, even two adjacent bytes in one function, so
+they were separate globals rather than one object's fields; a static data
+member compiles exactly like a global, and a static member function like a
+plain function, so every object stays byte-identical (#772 has the
+reasoning).
+
+- **Data.** The 31 IWRAM variables (0x1590-0x1600) are static data
+  members, only declared, as before: cxx_symbols.txt's `#772 Hovercraft`
+  block maps `_10Hovercraft.x` to gHovercraftX and so on, so the addresses
+  still come from sym_iwram.txt and the map, objdiff and report names
+  don't change. Members drop the prefix (`x`, `velZ`, `anim` for
+  gHovercraft, `stateFuncs` for gHovercraftStateFuncs); where a parameter
+  or local had a member's name, it was renamed (`Spawn`'s `sx`/`sy`/`sz`,
+  `Create`'s `lvl`, StateFallBack's `curY`, StateApproach's `vx`/`vy`).
+- **Functions.** All 30 are static member functions under their C names
+  (`Create__10Hovercrafti CreateHovercraft`, ...). Public: the category
+  table's five (`Create`, `Update`, `UpdateBg2`, `LoadGraphics`,
+  `Destroy`), `Spawn` (jetpack_spawn.cpp) and what the weapons and the
+  level state call (`GetX`/`GetY`/`GetZ`, `GetState`, `GetLevel`,
+  `GetAttack`, `GetPartsLeft`, `StartHitFlash`, `LosePart`). The rest,
+  including the states, the out-of-line copies `SetState` and
+  `SetFlashColor` and the UNUSED `nullsub_34`, `sub_80337FC` and
+  `nullsub_35`, are private. boss_actors.hpp's `static inline`
+  EnterHovercraftState and ApplyHovercraftFlashColor are the private
+  inline members `EnterState` and `ApplyFlashColor`; g++ still inlines
+  every use and emits no copy.
+- **Tables.** gHovercraftStateFuncs is the private static member
+  `stateFuncs`, defined in src/data/actor_state_17c4c8.cpp (already C++)
+  with the bare member names. The actor category table
+  (actor_category_175558.c) stays C and names the five boss-slot
+  functions by their C names, which bosses.h still declares for C only
+  (`#ifndef __cplusplus`).
+- **Left outside.** The ROM data the hovercraft reads (gHovercraftPalette,
+  gHovercraftPicture, gHovercraftAttacks, gHovercraftBox,
+  gHovercraftKeyframes) stays C globals defined in src/data/*.c, declared
+  in bosses.h like the other data tables.
 
 ### Next batches
 

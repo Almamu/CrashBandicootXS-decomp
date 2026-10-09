@@ -1,20 +1,21 @@
 #include "boss_actors.hpp"
+#include "hovercraft.hpp"
 
 /*
  * ROM 0x0817C4C8-0x0817C510. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* The hovercraft's state functions, a plain function table called as
- * `gHovercraftStateFuncs[gHovercraftState]()` by RunHovercraftState
- * (hovercraft.cpp). C linkage: bosses.h declares it. */
-void (*const gHovercraftStateFuncs[6])(void) = {
-    HovercraftStateInactive,
-    HovercraftStateApproach,
-    HovercraftStateCloseIn,
-    HovercraftStateFallBack,
-    HovercraftStateExplodeStub,
-    HovercraftStateFall,
+/* The hovercraft's state functions (gHovercraftStateFuncs), a plain
+ * function table of Hovercraft's static members, called as
+ * `stateFuncs[state]()` by Hovercraft::RunState (hovercraft.cpp). */
+void (*const Hovercraft::stateFuncs[6])() = {
+    StateInactive,
+    StateApproach,
+    StateCloseIn,
+    StateFallBack,
+    StateExplodeStub,
+    StateFall,
 };
 
 /* The cannon's state methods, indexed by `state`

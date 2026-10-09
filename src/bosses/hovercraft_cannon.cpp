@@ -1,4 +1,5 @@
 #include "boss_actors.hpp"
+#include "hovercraft.hpp"
 #include "audio.hpp"
 
 extern "C" {
@@ -26,9 +27,9 @@ void HovercraftCannon::StateFire()
     s32 slot;
     s32 next;
 
-    x = GetHovercraftX() + 0x2000;
-    y = GetHovercraftY() + 0x3000;
-    z = GetHovercraftZ() - 0x100;
+    x = Hovercraft::GetX() + 0x2000;
+    y = Hovercraft::GetY() + 0x3000;
+    z = Hovercraft::GetZ() - 0x100;
 
     slot = cooldown;
     if (slot == 0) {
@@ -55,13 +56,13 @@ void HovercraftCannon::StateFire()
 
                 n = count + 1;
                 count = n;
-                table = GetHovercraftAttack();
+                table = Hovercraft::GetAttack();
                 if (n == table->timing[1].burst) {
                     count = slot;
-                    table = GetHovercraftAttack();
+                    table = Hovercraft::GetAttack();
                     next = table->timing[1].burstDelay;
                 } else {
-                    table = GetHovercraftAttack();
+                    table = Hovercraft::GetAttack();
                     next = table->timing[1].delay;
                 }
                 goto store;
@@ -82,12 +83,12 @@ void HovercraftCannon::StateFire()
  * with animation 2, and the explosion sound; otherwise the hit sound. */
 void HovercraftCannon::Damage(s32 amount)
 {
-    StartHovercraftHitFlash();
+    Hovercraft::StartHitFlash();
     hp -= amount;
 
     if (hp <= 0) {
         dead = 1;
-        LoseHovercraftPart();
+        Hovercraft::LosePart();
         SetState(2, 2);
         gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
     } else {
@@ -136,12 +137,12 @@ void HovercraftCannon::StateDestroyed()
  * state 1 with animation 1. */
 void HovercraftCannon::StateWait()
 {
-    x = GetHovercraftX() + 0x2000;
-    y = GetHovercraftY() + 0x3000;
-    z = GetHovercraftZ() - 0x100;
+    x = Hovercraft::GetX() + 0x2000;
+    y = Hovercraft::GetY() + 0x3000;
+    z = Hovercraft::GetZ() - 0x100;
 
     if (depth <= 0x4AFF) {
-        cooldown = GetHovercraftAttack()->timing[1].delay;
+        cooldown = Hovercraft::GetAttack()->timing[1].delay;
         count = 0;
         SetState(1, 1);
     }
