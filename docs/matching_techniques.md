@@ -1637,6 +1637,38 @@ that have it show how it was written:
   the rest of StateCrouch 30 lines, so the original compiler had the
   exchange as agbcc has it.
 
+**Round 7, the ConvertTiles masks, DingodileShieldCtrl::Update and
+itoa_arm (corpus and whole-ROM compiler tests).** Nothing freed. Each
+compiler rule was tested by rebuilding every object that compiler
+builds and comparing each function:
+
+- **The mask copy (ConvertTiles).** Two private rules free both twins
+  in their plain form. regmove copying a non-dying remote constant
+  before the first operand changes 7 matched functions (number_format's
+  itoa among them: each `x & MASK` whose ROM copies `x`); copying the
+  last non-dying operand changes 27. cse1 not swapping an AND whose
+  first operand is a register with a known constant (`m = 0xf; m & b`)
+  changes 4 (5 with IOR/XOR, 143 for all commutative codes). Both
+  compilers had both rules as they are. The only matched function with
+  the copy is Yeti::UpdatePalette (`mask2 & c`, the mask set before a
+  single loop).
+- **Dingodile's chain.** No other matched function leaves constant
+  arithmetic unfolded. The other matched functions that save a register
+  they never use are sprintf, ActionCtrl::Update (the frame pointer) and
+  round 5's SetPos pair, none with a value held over calls. The
+  accumulator started before the player test gives an unfolded chain in
+  a callee-saved register (cse1 can't see across the switch, gcse doesn't
+  propagate a register set five times), but at the wrong place (107
+  lines).
+- **itoa_arm (ARM: string_arm.o and sprite_arm.o, 10 functions).** No
+  `X >= C` to `X > C - 1` rewrite in fold-const frees the `(ten = 10)`
+  with nothing else changed, but no other ARM function has such a
+  compare, so it is untested rather than confirmed. Not counting lr as
+  a free register in global-alloc changes 3 sprite_arm functions (5 with
+  lr moved after r11 in the allocation order, which alone changes
+  nothing); turning off reload_cse's constant-to-register operand
+  substitution changes all four other string functions.
+
 ## Survey and conversion record (#576)
 
 The conversion is complete. `tools/match_idioms.py` after part 4

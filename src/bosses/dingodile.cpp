@@ -502,7 +502,20 @@ void DingodileShieldCtrl::Update(MovingSprite *part)
      * third box filled and copied in), nor `gPlayer->HandleEvent`
      * written out, nor the overlap test and HitPlayer repeated in each
      * branch of the width test for jump2 to merge (PlatformMover's
-     * round-6 fix) moves `this` off r5 (192-226 lines each). */
+     * round-6 fix) moves `this` off r5 (192-226 lines each). #662 round
+     * 7, the matched corpus: no other matched function leaves constant
+     * arithmetic unfolded (a `movs rA, #K` later ORed or added with a
+     * register built from a constant, in its block or past a label).
+     * The other four that save a register they never use are sprintf
+     * (varargs), ActionCtrl::Update (r7, the Thumb frame pointer, live
+     * from the entry in every block) and UpdateBob/UpdateOscillateY (round 5's SetPos, with no
+     * call between load and store); none has a value held over calls
+     * with no code. The chain's start at function scope (`u32 acc =
+     * BLDCNT_TGT1_OBJ;` before the player test, the `|=`s in case 0)
+     * does give both ROM traits, an unfolded chain (cse1 doesn't see
+     * the 16 across the switch and gcse doesn't propagate a register
+     * set five times) in a callee-saved register, but the `movs #0x10`
+     * is then at the entry and `this` moves (107 lines). */
     MATCH_HOLD_REG(s32, hr5, r5);
     MATCH_HOLD_REG(s32, hr6, r6);
 

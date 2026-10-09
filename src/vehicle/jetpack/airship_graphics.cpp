@@ -187,7 +187,27 @@ void Airship::LoadGraphics()
  * of the row body is 78 lines off (hoisted out of the row loop), at
  * function scope 88 (one set before both loops, in r9); a ternary or
  * if/else MeterPx is the plain 8; reading the byte twice (`src[0] &
- * 0xf`, `src[0] >> 4`) is 118-120 (cse1 merges the loads). */
+ * 0xf`, `src[0] >> 4`) is 118-120 (cse1 merges the loads).
+ *
+ * #662 round 7 (private agbcp/old_agbcp builds, then every object
+ * rebuilt with them and compared function by function): the plain
+ * `b & 0xf` matches, in both twins, if regmove copies a non-dying
+ * operand that is a remote constant in preference to the first one,
+ * but 7 matched functions then change (number_format.cpp's itoa,
+ * UpdateZoomBg, HandleLinkSerial, ResetLinkSessionState,
+ * DecodeLayerChunk, LoadCreditsLogos, UpdateSlotCrate: each an `x &
+ * MASK` whose ROM copies `x`, not the mask); copying the last non-dying
+ * operand changes 27. `m = 0xf; ... m & b` in the pixel loop matches if
+ * cse1 doesn't swap an AND whose first operand is a register with a
+ * known constant, but GetDpadDirection, ProbeGroundSpriteTerrain and
+ * the two DrawSpritePieces change (5 with IOR and XOR too, 143 for every
+ * commutative code). So both compilers had both rules as they are. In
+ * the matched corpus the mask copy is Yeti::UpdatePalette's `mask2 &
+ * c`, a mask set in the block before a single loop, where cse1 can't
+ * see it and loop.c has no outer loop to move it to; here that is the
+ * set at the top of the row body (78 lines). u8/u16 masks or pixel
+ * values (the halfword AND of round 7's player code) are 8 lines off or
+ * worse (45-89). */
 static inline u32 MeterPx(u32 v)
 {
     u32 r = 0;
