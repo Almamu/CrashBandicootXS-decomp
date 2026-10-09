@@ -619,7 +619,7 @@ s32 LevelState::LevelHasGemPathGem(s32 idx)
 
 /* Dispatches on the "current index" field `room.level` (`+0xc4`): index `0x15` fires
  * the actor-part singleton lifetime counter (`GetHovercraftPartsLeft`,
- * `hovercraft_parts.cpp`); indices `0x14`/`0x16`/`0x17` instead compute
+ * `hovercraft_state.cpp`); indices `0x14`/`0x16`/`0x17` instead compute
  * `3 - boss->counter` (the boss controller `SetLevelBoss` above
  * sets; its counter is the hits taken); anything else returns `0`. */
 s32 LevelState::GetBossHealth()

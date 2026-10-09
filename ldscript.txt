@@ -274,7 +274,7 @@ SECTIONS
         build/crashbandicootxs/src/vehicle/jetpack/jetpack_collected_wumpa.o(.text);
         build/crashbandicootxs/src/bosses/hovercraft_fireball.o(.text);
         build/crashbandicootxs/src/bosses/hovercraft.o(.text);
-        build/crashbandicootxs/src/bosses/hovercraft_parts.o(.text);
+        build/crashbandicootxs/src/bosses/hovercraft_state.o(.text);
         build/crashbandicootxs/src/bosses/hovercraft_cannon.o(.text);
         build/crashbandicootxs/src/bosses/hovercraft_launcher.o(.text);
         build/crashbandicootxs/src/bosses/hovercraft_side_gun.o(.text);

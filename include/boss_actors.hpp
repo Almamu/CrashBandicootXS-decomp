@@ -88,7 +88,7 @@ static inline void SetAirshipState(s32 st, s32 idx)
 /* EnterHovercraftState: state `st` and animation `idx`, keeping the
  * current frame unless it is past the new animation's end
  * (SetAirshipState without the timer). SetHovercraftState
- * (hovercraft_parts.cpp) is its out-of-line copy. */
+ * (hovercraft_state.cpp) is its out-of-line copy. */
 static inline void EnterHovercraftState(s32 st, s32 idx)
 {
     AnimPart *a;
@@ -105,7 +105,7 @@ static inline void EnterHovercraftState(s32 st, s32 idx)
 /* ApplyHovercraftFlashColor: colour 15 of the hovercraft's BG and OBJ
  * palettes (gFlashBgPalette, gFlashObjPalette) white when `flag` is set,
  * or else the colour saved the first time. SetHovercraftFlashColor
- * (hovercraft_parts.cpp) is its out-of-line copy; RunHovercraftState
+ * (hovercraft_state.cpp) is its out-of-line copy; RunHovercraftState
  * inlines it twice. Each branch stores both palettes: that gives the
  * ROM's white loaded into r2 and copied to r1, which a colour local
  * assigned in the branches and stored once after them only got with an

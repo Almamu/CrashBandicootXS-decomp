@@ -427,7 +427,7 @@ from "core" graphics.
   big object's teardown/notification step, formerly parked
   NON_MATCHING. The box goes to `CollidePartList` by value; see
   `docs/matching/archive/issue-9-10-0x0800ab9c-graphics.md`.
-- `src/bosses/hovercraft_parts.c`/`hovercraft_cannon.c`/`hovercraft_launcher.c` (new files, GitHub issue #62, ROM
+- `src/bosses/hovercraft_state.c`/`hovercraft_cannon.c`/`hovercraft_launcher.c` (new files, GitHub issue #62, ROM
   0x08033804-0x08033EF4 - the `gHovercraft` singleton system's
   accessor/state-machine cluster, non-adjacent since the (now matched)
   `HovercraftCannonStateFire`/`HovercraftLauncherStateLaunch` (`hovercraft_cannon.c`/`hovercraft_launcher.c`) and the (now matched)

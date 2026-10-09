@@ -121,7 +121,7 @@ extern void nullsub_34(void);
 extern s32 sub_80337FC(void);
 extern void nullsub_35(void);
 
-/* src/bosses/hovercraft_parts.cpp */
+/* src/bosses/hovercraft_state.cpp */
 extern void StartHovercraftHitFlash(void);
 extern void SetHovercraftFlashColor(u8 flag);
 extern s32 GetHovercraftPartsLeft(void);
