@@ -472,7 +472,18 @@ void DingodileShieldCtrl::Update(MovingSprite *part)
      * spill of r4-r6 (reload never takes them away from the long-lived
      * pseudos), so the ROM's allocation had pseudos in r5/r6 over the
      * box builders whose code is gone from the output; nothing tried
-     * gives them. No -f flag or pair of flags helps. */
+     * gives them. No -f flag or pair of flags helps. #662 round 4: in
+     * the plain function `this` (21 references) is the first long-lived
+     * value global-alloc places, and gets r6, so the ROM's r7 means r5
+     * and r6 were already taken where `this` lives: by block-local
+     * quantities (placed before any global) or higher-ranked values in
+     * call-saved registers across the builders. Of the three kinds of
+     * insn flow2 deletes after reload in the game (see enemy_ctrl.cpp's
+     * oscillators), none fits two such values with no trace left;
+     * forced spills of each pseudo don't move the globals (they are
+     * placed before reload). Reading the width through an inline
+     * accessor or `b.w`, and the C++ box getters, leave the
+     * allocation as it is. */
     MATCH_HOLD_REG(s32, hr5, r5);
     MATCH_HOLD_REG(s32, hr6, r6);
 

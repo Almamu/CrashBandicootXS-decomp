@@ -126,7 +126,16 @@ void EnemyCtrl::UpdateTriggerBox()
          * outranks the target's (3 over 6), takes r1 and leaves r2 to
          * the target; the target would need a fourth reference or a
          * shorter life. No -f flag, pair of flags or field type
-         * (u32 baseY/y/mode/kind) changes that. */
+         * (u32 baseY/y/mode/kind) changes that. #662 round 4
+         * (global.c's find_reg): r0 is out for both (the t->y load's
+         * local), so whichever is allocated first takes r1. The other
+         * way round needs a preference: baseY preferring r2, or the
+         * target preferring r1, which makes r1 a register "someone
+         * prefers" that baseY skips in find_reg's first pass.
+         * set_preference only records one when the value is the
+         * source, or the first operand of the source, of an insn that
+         * sets a hard register or an allocated local, and in the ROM's
+         * block neither value is. */
         MATCH_HOLD_REG(MovingSprite *, t, r1) = target;
         if (t->y < baseY) {
             t->y = baseY;
@@ -389,7 +398,39 @@ void EnemyCtrl::SetAnimMode(s32 m)
  *   target's, so they get r5 and r6 the other way round; the saved r8
  *   is again a register nothing in the final code uses.
  * No -f flag, alone or in pairs, and no change of the fields' or Wave's
- * types (u32 fields, an s32 or int Wave, a macro) moves any of them. */
+ * types (u32 fields, an s32 or int Wave, a macro) moves any of them.
+ *
+ * #662 round 4, with an instrumented old_agbcp (local-alloc's qty order,
+ * reload's spill choices, forced spills, and every insn flow2 deletes
+ * after reload):
+ * - UpdateOscillateX: qty_compare_1 orders equal priorities by qty
+ *   number, so the target needs a third reference or a life one insn
+ *   shorter than the product's. Every zero-score permuter result on a
+ *   C port gets there through `do { } while (0)` (flow adds loop_depth
+ *   to REG_N_REFS) or dead `self->target` reads.
+ * - UpdateBob: order_regs_for_reload takes free registers in number
+ *   order (thumb.h has no REG_ALLOC_ORDER), so the -0x100 in r6 means r5
+ *   held a live pseudo at that add. Spilling any one pseudo (6
+ *   spellings) frees r5 and the constant moves there, so the ROM's
+ *   pseudo kept r5 through reload and lost its insns afterwards. The
+ *   whole ROM has one more function with a saved register it never uses
+ *   (ActionCtrl::Update's r7): the high half of a DImode pointer to
+ *   member. The deletions flow2 makes across all 149 old_agbcp objects
+ *   are of three kinds: copies into r8-r10 whose use reload took from
+ *   the low register they were copied from, chains whose last use
+ *   reload_cse_regs removed, and halves of DImode pairs. Of about
+ *   10,000 spellings tried (orders, locals, s16/s32/u32/64-bit types),
+ *   64-bit locals give the unused push: `u64 t` gives the ROM's push,
+ *   r4 table and r6 constant, but its pair (r1, r2) moves `ph` to r3 and
+ *   the target to r5. None gives the ROM.
+ * - UpdateOscillateY: the four values that cross the division take r4,
+ *   r5, r6 and then r8 (r7 is live as the frame pointer while registers
+ *   are allocated), so the ROM had a fourth one, ranked last, whose code
+ *   is gone. With baseY read before the call it takes r5 and the table
+ *   r6, as in the ROM, but the target is then the one ranked last (r8);
+ *   spilling baseY leaves the push as in the ROM, and the target goes
+ *   through r0 into r8 and back after the call, where the ROM keeps it
+ *   in r5. */
 static inline s16 Wave(const s16 *table, s32 t, s32 phase)
 {
     return table[(t - phase) & 0xff];

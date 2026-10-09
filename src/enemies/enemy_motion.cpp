@@ -100,7 +100,13 @@ void EnemyCtrl::UpdateHomingY()
  * one); r0 is only taken during the store when the animDone address
  * pseudo is born before it, as with `done`. Under old_agbcp the `done`
  * version is the same (the scheduler leaves the add before the store),
- * and no -f flag or field type changes the allocation. */
+ * and no -f flag or field type changes the allocation. #662 round 4:
+ * the copy's quantity has no hard-register suggestion (it isn't copied
+ * to or from a hard register), so find_free_reg gives it the lowest
+ * register free over its life; r1 needs something in r0 between the
+ * baseY load and the store, which the ROM's block doesn't have. The
+ * permuter on a C port (which gives the same registers) found only
+ * self-assignments. */
 void EnemyCtrl::UpdateHop()
 {
     MovingSprite *t;
