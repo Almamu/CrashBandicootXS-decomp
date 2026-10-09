@@ -102,7 +102,7 @@ GitHub issue #70 (`0x0803ADB4`-`0x0803B060`, right after
 generator, but every function in it turned out to be either a generic
 math primitive or an AABB/actor-table helper - the matched functions
 from it live in `docs/status/util.md` (`lib/libgcc/lib1funcs.s`) and
-[actor.md](./actor.md) (`src/util/aabb_setup.c`) instead. See
+[actor.md](./actor.md) (`src/system/inline_copies_misc.cpp`) instead. See
 `docs/matching.md`'s issue #70 entry for the original writeup and
 `docs/matching/archive/issue-69-eeprom-timer.md`'s "NAKED transcription pass"
 section for how the division/modulo trio's NAKED transcription pass

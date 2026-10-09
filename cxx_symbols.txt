@@ -1488,7 +1488,7 @@ SetScroll__11LevelLayersii SetLevelScroll
 CommitScroll__11LevelLayers CommitLevelScroll
 Scroll__11LevelLayers ScrollLevelLayers
 Reset__11LevelLayers ResetLevelLayers
-# step 10b: the fonts (include/font.hpp; src/text/font*.cpp, src/util/aabb_setup.cpp)
+# step 10b: the fonts (include/font.hpp; src/text/font*.cpp, src/system/inline_copies_misc.cpp)
 _vt.4Font gFontVtable
 _vt.9SmallFont gSmallFontVtable
 _vt.9LargeFont gLargeFontVtable

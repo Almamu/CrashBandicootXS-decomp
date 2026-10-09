@@ -6177,7 +6177,7 @@ raw.
   body) - written via `NAKED` + `asm("mov pc, lr")` instead, the same
   technique `_call_via_lr` used in issue #69's PR.
 - **`SetAabbSize`/`SetAabbPos`** (ROM `0x0803AFDC`, new
-  `src/util/aabb_setup.c`) - the shared AABB set-size
+  `src/system/inline_copies_misc.cpp`) - the shared AABB set-size
   (`field_8`/`field_c`)/set-position (`field_0`/`field_4`) primitive
   pair, already referenced by name (not yet matched) from
   `sprite.c`/`power_dialog_draw.c`'s `DrawPowerDialog` entry.
@@ -6277,7 +6277,7 @@ functions) is now four pieces in ROM order: the trimmed
 parked functions under `#if NON_MATCHING` - only `__div0` actually
 contributes bytes in a matching build), the new
 `asm/code_3_2_20e_3ae4c.s` (parked `__modsi3`/`__umodsi3`,
-guarded), and the new `src/util/aabb_setup.o`
+guarded), and the new `src/system/inline_copies_misc.o`
 (`SetAabbSize`-`DestroySmallFont`, all matched) - see `ldscript.txt` and
 `tools/report_units.py`'s `util`/`graphics` categories, both updated to
 match. Verified via a full clean `make compare` (`La suma coincide`)

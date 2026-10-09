@@ -329,7 +329,7 @@ SECTIONS
         build/crashbandicootxs/lib/libgcc/_dvmd_tls.o(.text);
         build/crashbandicootxs/lib/libgcc/_modsi3.o(.text);
         build/crashbandicootxs/lib/libgcc/_umodsi3.o(.text);
-        build/crashbandicootxs/src/util/aabb_setup.o(.text);
+        build/crashbandicootxs/src/system/inline_copies_misc.o(.text);
         build/crashbandicootxs/src/actor/actor_anim.o(.text);
 
         /* Data */
@@ -466,8 +466,8 @@ SECTIONS
         build/crashbandicootxs/src/level/bg_layer.o(.gnu.linkonce.d._vt.7BgLayer); /* gBgLayerVtable */
         build/crashbandicootxs/src/level/pooled_bg_layer.o(.gnu.linkonce.d._vt.13PooledBgLayer); /* gPooledBgLayerVtable */
         build/crashbandicootxs/src/hud/hud_part.o(.gnu.linkonce.d._vt.7HudPart); /* gHudPartVtable */
-        build/crashbandicootxs/src/util/aabb_setup.o(.gnu.linkonce.d._vt.9LargeFont); /* gLargeFontVtable */
-        build/crashbandicootxs/src/util/aabb_setup.o(.gnu.linkonce.d._vt.9SmallFont); /* gSmallFontVtable */
+        build/crashbandicootxs/src/system/inline_copies_misc.o(.gnu.linkonce.d._vt.9LargeFont); /* gLargeFontVtable */
+        build/crashbandicootxs/src/system/inline_copies_misc.o(.gnu.linkonce.d._vt.9SmallFont); /* gSmallFontVtable */
         build/crashbandicootxs/src/text/font.o(.gnu.linkonce.d._vt.4Font); /* gFontVtable */
         build/crashbandicootxs/src/actor/actor.o(.gnu.linkonce.d._vt.9ActorSelf); /* gActorVtable */
         build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.14RiderlessPolar); /* gRiderlessPolarVtable */

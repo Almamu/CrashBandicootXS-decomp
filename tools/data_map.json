@@ -8259,7 +8259,7 @@
     "DestroyLargeFont"
    ],
    "consumer_files": [
-    "util/aabb_setup.cpp",
+    "system/inline_copies_misc.cpp",
     "text/font_glyph.cpp"
    ],
    "ptr_words_code": 8,
@@ -8285,7 +8285,7 @@
     "DestroySmallFont"
    ],
    "consumer_files": [
-    "util/aabb_setup.cpp",
+    "system/inline_copies_misc.cpp",
     "text/font_glyph.cpp"
    ],
    "ptr_words_code": 8,
@@ -8315,7 +8315,7 @@
     "DestroySmallFont"
    ],
    "consumer_files": [
-    "util/aabb_setup.cpp",
+    "system/inline_copies_misc.cpp",
     "text/font.cpp",
     "text/font_glyph.cpp"
    ],

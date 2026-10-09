@@ -6,6 +6,13 @@ extern "C" {
 #include "memory.h"
 }
 
+/* Small methods of unrelated classes collected after libgcc in the ROM
+ * (0x0803AFDC-0x0803B058; nothing can move across libgcc): the AABB
+ * set-size and set-position primitives, LevelState::GetLives and the two
+ * fonts' destructors. Likely the original's out-of-line copies of inline
+ * or implicit functions, gathered in one place, hence the name
+ * (src/util/aabb_setup.cpp until #770). */
+
 /* Set-size primitive - already referenced by name from several other
  * files (sprite.cpp/power_dialog_draw.c's DrawPowerDialog) as the
  * shared `SetAabbPos`(set-position)/`SetAabbSize`(set-size) pair. */

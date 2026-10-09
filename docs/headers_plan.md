@@ -277,7 +277,7 @@ The full list:
    file's subsystem. When the file layout put a function in a neighbour's
    file only for ROM order, the function goes with its subject. For
    example, `DestroyLargeFont`/`DestroySmallFont` are defined in
-   `src/util/aabb_setup.c` but are declared in `text.h`.
+   `src/system/inline_copies_misc.cpp` but are declared in `text.h`.
 2. A symbol defined only in data (`src/data/`, the generated level and
    graphics sources, `data/data.s`) or in the linker script (`sym_*.txt`,
    the IWRAM/EWRAM globals) goes in the header of the subsystem that uses it
@@ -504,7 +504,7 @@ had 5 variants in 10 files, `DrawWrappedText` had 2, and the vtable table
 declared 8 of its functions unprototyped.
 
 - **`include/text.h`** declares every function `src/text/` defines, plus
-  `DestroyLargeFont`/`DestroySmallFont` (defined in `src/util/aabb_setup.c`),
+  `DestroyLargeFont`/`DestroySmallFont` (defined in `src/system/inline_copies_misc.cpp`),
   the two font instances `gSmallFont`/`gLargeFont`, the font vtables and
   the font data (`const`). It includes `aabb.h`, `bitmap_font.h` and
   `vtable.h`.
@@ -525,7 +525,7 @@ declared 8 of its functions unprototyped.
   `marginX` at 0x118, `divisor` is `lineHeight` at 0x11C), so `pager.target`
   is now a `struct bitmap_font *`. `power_dialog_draw.c`'s `u8 buf[16]` is
   now a `struct aabb`. The local copies of `struct icon_glyph_metrics`
-  (`hud_fonts_174be0.c`) and `struct aabb` (`aabb_setup.c`) are gone.
+  (`hud_fonts_174be0.c`) and `struct aabb` (`inline_copies_misc.cpp`) are gone.
   Local structs went from 553 to 548.
 - **Definition fix:** `FontResetPalette(struct bitmap_font *self, u32
   unused)` became `FontResetPalette(struct bitmap_font *self)`. All 6
@@ -2106,12 +2106,12 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | parameter `s32` -> `u8` (arguments are constants or `c ? 1 : 2`) | `FontSetPalette` in save_menu_draw/input/ui.c, pause_menu_draw.c | identical |
 | return `s32` -> `void` (result unused) | `FontSetPalette` callers | identical |
 | parameter `void *` -> `struct bitmap_font *`/`struct aabb *` | `FontSetPalette`, `DrawWrappedTextInBox` | identical |
-| `u8 x[]` -> `const struct vtable_slot x[9]` / `const u8 x[]` / `const struct icon_glyph_metrics x[79]` | font_glyph.c (old_agbcc, reads `gSmallFontChars[j]` in a loop), font.c, aabb_setup.c | identical |
+| `u8 x[]` -> `const struct vtable_slot x[9]` / `const u8 x[]` / `const struct icon_glyph_metrics x[79]` | font_glyph.c (old_agbcc, reads `gSmallFontChars[j]` in a loop), font.c, inline_copies_misc.cpp | identical |
 | unused trailing parameter removed from a definition | `FontResetPalette` | identical |
 | stack `u8 buf[16]` -> `struct aabb` | `DrawPowerDialog` | identical |
 | member `s32 box[4]` -> `struct aabb box`, `box[0]`/`box[3]` -> `.x`/`.h` | `RunCutscenePlayer` (old_agbcc) | identical |
 | unprototyped `void f();` -> full prototype, in a data table | entity_vtables_7e3bec.c | identical |
-| local struct with `field_N` names -> shared `struct aabb` (`x`/`y`/`w`/`h`) | wrapped_text.c, text_box.c, aabb_setup.c | identical |
+| local struct with `field_N` names -> shared `struct aabb` (`x`/`y`/`w`/`h`) | wrapped_text.c, text_box.c, inline_copies_misc.cpp | identical |
 | parameter `s32` -> `u8`, argument `x != 0` | `ConfigureHudParts` in actor_vram_pool.c | identical |
 | parameter `void *` -> `struct hud_counter *`/`struct link_session *`, return `void` -> `s32` (unused) | 11 HUD callers, save_menu_*.c | identical |
 | call with no argument -> passing the caller's own first argument | `LinkStop(self)` in `ResetLinkSession` | identical |

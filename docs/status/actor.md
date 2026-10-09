@@ -2,7 +2,7 @@
 
 The per-instance actor "self" object family - `struct actor` and its
 many satellite files (`src/actor/`, `src/vehicle/`, `src/bosses/`,
-`src/objects/`, `src/player/`, `src/util/aabb_setup.c`). It used to be
+`src/objects/`, `src/player/`, `src/system/inline_copies_misc.cpp`). It used to be
 filed under `src/graphics/` on disk (the ROM's actor code lives
 interleaved with rendering code, and several actor functions are
 themselves OAM/sprite-draw routines; see `docs/file_layout_plan.md`), but
@@ -350,7 +350,7 @@ from "core" graphics.
   effect. 12 functions, all matched. See
   [docs/matching/archive/issue-53-issue-54-gap-cc9c.md](../matching/archive/issue-53-issue-54-gap-cc9c.md).
 
-- `src/util/aabb_setup.c` (new file, GitHub issue #70, ROM
+- `src/system/inline_copies_misc.cpp` (new file, GitHub issue #70, ROM
   `0x0803AFDC`-`0x0803B060` - right after the parked division/modulo
   trio in `lib/libgcc/lib1funcs.s`, see that file's `docs/matching.md`
   entry): `SetAabbSize`/`SetAabbPos` (the shared AABB set-size/
