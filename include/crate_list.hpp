@@ -138,23 +138,16 @@ public:
 
     /* Remove's body, which Update inlines: finds `sprite` in the slots,
      * takes its nodes out of the grid (Unlink), moves the slots after it
-     * down one place (CpuSet) and clears the last. */
+     * down one place (CpuSet) and clears the last. The search is a plain
+     * `while` reading `capacity` in its test. With a local `n = capacity`
+     * and early returns instead, Update's copy had `n` and its register
+     * copy swapped and needed an asm barrier (#662 round 3). */
     void Detach(Crate *sprite)
     {
         s32 i = 0;
-        s32 n = capacity;
 
-        /* Emits no code. In Update's two copies, it keeps cse from swapping
-         * `n` and its copy: without it, the loaded value is tested before
-         * and after the loop and the copy in it, where the ROM has the
-         * opposite (Remove is the same either way). Declaring `n` before
-         * `i` gives the ROM's registers too, but loads it before the 0. */
-        MATCH_BARRIER();
-        if (i >= n)
-            return;
-        while (slots[i] != sprite)
-            if (++i >= n)
-                return;
+        while (i < capacity && slots[i] != sprite)
+            i++;
         if (i < capacity) {
             Unlink(slots[i]);
             CpuSet(&slots[i + 1], &slots[i], ((count - i) & CPU_SET_COUNT_MASK) | CPU_SET_32BIT);

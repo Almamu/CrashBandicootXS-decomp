@@ -430,6 +430,17 @@ $(NO_IMPLEMENT_INLINES_OBJS): CC1FLAGS += -fno-implement-inlines
 NO_RERUN_LOOP_OPT_OBJS := $(C_BUILDDIR)/link/link_session_reset.o
 $(NO_RERUN_LOOP_OPT_OBJS): CC1FLAGS += -fno-rerun-loop-opt
 
+# Objects built with -fno-cse-skip-blocks (cse doesn't carry its table
+# around a skipped `if` block). wumpa_update.cpp: Wumpa::Create's `phase`
+# 0 stays a register for its compare and store while `counter` gets a
+# fresh 0 only when cse loses the 0 at the frame clamp's join; with
+# skip-blocks it shares the 0 (the C hid it with an asm). PickUp and
+# Update compile the same either way. SendToHud, which needs skip-blocks
+# (its two 1s share r4 around ClampFrame's `if`), StartPayout and UpdateHop
+# went to the start of wumpa.cpp, the next object in the ROM (#662 round 3).
+NO_CSE_SKIP_BLOCKS_OBJS := $(C_BUILDDIR)/pickups/wumpa_update.o
+$(NO_CSE_SKIP_BLOCKS_OBJS): CC1FLAGS += -fno-cse-skip-blocks
+
 # Objects built with -O1 instead of -O2: the whole of lib/agb_eeprom's
 # code. Nintendo's AgbEeprom SDK library (the ROM's "EEPROM_V122",
 # 0x0803A968-0x0803AD7C) was compiled at -O1, and all nine of its
