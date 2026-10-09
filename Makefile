@@ -525,7 +525,8 @@ ARM_OBJS := $(C_BUILDDIR)/iwram/string_arm.o \
             $(C_BUILDDIR)/iwram/sprite_arm.o
 $(ARM_OBJS): CXX1 := $(CXX1_ARM)
 $(ARM_OBJS): CC1FLAGS := -mthumb-interwork $(WARNFLAGS) -O2 -fomit-frame-pointer -fno-rtti -fno-exceptions
-$(C_BUILDDIR)/iwram/string_arm.o: CC1FLAGS += -mleaf-no-lr-save -mno-cond-return -fno-schedule-insns -fno-schedule-insns2$(C_BUILDDIR)/iwram/sprite_arm.o: CC1FLAGS += -minterwork-return-lr -mstrict-cross-jump
+$(C_BUILDDIR)/iwram/string_arm.o: CC1FLAGS += -mleaf-no-lr-save -mno-cond-return -fno-schedule-insns -fno-schedule-insns2
+$(C_BUILDDIR)/iwram/sprite_arm.o: CC1FLAGS += -minterwork-return-lr -mstrict-cross-jump
 
 # Appended to every compiled .s before it is assembled (#663). agbcc
 # starts each function with `.align 2, 0`, but nothing aligns the end of
