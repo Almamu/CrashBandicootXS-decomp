@@ -4,7 +4,6 @@
 #include "level_state.hpp"
 
 extern "C" {
-#include "match.h"
 #include <libgcc.h>
 #include "system.h"
 #include "actor.h"
@@ -477,26 +476,18 @@ void Hovercraft::LoadGraphics(void)
  * own counter (sharing `k` makes the first loop's reversed counter start
  * from a constant instead of `sum`'s zero register). The row header is
  * written out step by step in the ROM's order, `d` being a copy of `dst`.
- * In the nibble loop the 0xf mask is an opaque value ANDed with each byte
- * (`m & b`), so gcc copies the mask rather than the byte, as the ROM
- * does, and the second byte gets its own local. ConvertAirshipTiles'
- * comment has why the mask needs the asm (cse1's operand order; #662
- * rounds 2 and 3) and the exact condition the ROM implies (round 4: the
- * mask set where cse1 can't see it but loop.c doesn't move it out of
- * the row loop, which only a guard duplicating the pixel loop's entry
- * test gives; the same guard variants are as far off here: 44 lines in
- * round 6, the loop test then reusing the guard's `n << 4`; round 6's
- * other variants are in ConvertAirshipTiles' comment; round 7's whole-ROM
- * tests of a regmove and a cse1 rule that free both twins, refuted by 7
- * and 4 other functions, are there too; round 8's loop-local copy of a
- * function-scope mask, which matches both twins but is a redundant copy,
- * is there as well). */
+ * In the nibble loop the 0xf mask is copied from a function-scope
+ * variable (`u32 m = mask;`), because that is what reproduces the ROM's
+ * mask copy: cse1 can't see the constant at the ANDs, so the mask stays
+ * their first operand and regmove copies the mask register rather than
+ * the byte; the second byte gets its own local. The copy is redundant,
+ * and was adopted by owner decision over the MATCH_CONST asm it replaced
+ * (#662 round 8). ConvertAirshipTiles' comment has the full analysis
+ * (cse1's operand order, loop.c's preheader, reload's REG_EQUIV; #662
+ * rounds 2-8). */
 static inline u32 MeterPx(u32 v)
 {
-    u32 r = 0;
-    if (v != 0)
-        r = 0x10 | v;
-    return r;
+    return v != 0 ? 0x10 | v : 0;
 }
 
 void Hovercraft::ConvertTiles(void)
@@ -509,7 +500,7 @@ void Hovercraft::ConvertTiles(void)
     s32 row_i;
     u32 *dst;
     u32 *rows = mapFrames;
-    u32 m;
+    u32 mask = 0xf;
 
     stride = (u32)(mapCols * mapRows + 1) >> 1 << 2;
     for (k = 0; k < 1; k++) {
@@ -538,11 +529,9 @@ void Hovercraft::ConvertTiles(void)
         n = *hp;
 
         for (j = 0; j < n << 4; j++) {
+            u32 m = mask;
             u32 b, c, p0, p1, p2, p3;
 
-            /* the 0xf mask without a constant-set register: the mask is
-             * the AND's first operand, as in the ROM */
-            MATCH_CONST(m, 0xf);
             b = *src;
             p0 = m & b;
             p0 = MeterPx(p0);
