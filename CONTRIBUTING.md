@@ -213,6 +213,34 @@ full rules and the history (#574). For new code:
   one definition (`actor@actor.h`). Use it before merging or renaming a
   view of a class (a codegen view), and after, to check the view and the
   class agree.
+- **Raw IDs, kinds and states:** `python3 tools/magic_numbers.py` (#655)
+  lists the literals in src/ and include/ where the game has a named
+  value (include/constants/ and the generated build/include/constants/:
+  run make first): sound and song IDs, events, action states, mask
+  levels, entity/crate/enemy/attack kinds, level ids, room kinds, boss
+  ids, category exits, level-flag bits. Its rules are written per call
+  and field: `gAudioContext->PlaySfx(id, volume)`'s argument 0,
+  ActionCtrl::SetMode's mode, a Crate's `kind`, an Entity's `kind` (the
+  event it sends). For C++ it reads the classes, their bases, fields and
+  globals from the headers and maps the C names in cxx_symbols.txt to
+  methods, so it knows that `boss->SetMode(2)` is a boss mode and
+  `gPlayer->mover->SetMode(0x29)` may be an action state. It follows a
+  value through locals (`u8 k = kind; ... k == 0xA`) and through
+  wrappers that pass a parameter on (`Sfx(id)`). Each hit has a
+  confidence: `high` when the class is known (or every class with that
+  method or field agrees), `medium` when the object is one of a few
+  known subclasses, `low` when the class isn't known, the value is
+  above every name, or it's a bare `& 0xNN` test:
+
+  ```
+  tools/magic_numbers.py --min-confidence high [--show]   # the sites to name, `-> NAME` when one exists
+  tools/magic_numbers.py --json --path src/bosses         # for agents: value, names, confidence, why
+  tools/magic_numbers.py --report OUT                     # Markdown counts per topic and directory, samples
+  tools/magic_numbers.py --topic event --fix              # high-confidence sites with exactly one name
+  ```
+
+  A literal kept for matching stays (#662), and a value with no name
+  keeps its number (docs/naming.md): rebuild and compare after `--fix`.
 - **Raw sizes, strides, offsets and hardware values:**
   `python3 tools/magic_numbers.py --sizes` (#820) lists the literals in
   src/ (not src/data/) that have a `sizeof`, a member or a named
