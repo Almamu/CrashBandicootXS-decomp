@@ -53,7 +53,7 @@ void Hovercraft::UpdateHitFlash(void)
     if (hitFlashTimer > 0xb)
         hitFlashTimer = 0;
 
-    src = gHovercraftPalette;
+    src = palette;
     dst = (u16 *)(PLTT + 0x20);
     for (i = 0; i < 16; i++) {
         if (hitFlashOn != 0)
@@ -115,11 +115,11 @@ void Hovercraft::StateCloseIn(void)
         pl = gActorList;
         px = pl->x;
         cx = screenX - 0x1200;
-        velX -= (px - cx - (gHovercraftBox.x + gHovercraftBox.w / 2)) >> 12;
+        velX -= (px - cx - (box.x + box.w / 2)) >> 12;
         vx = velX;
         py = pl->y;
         cy = screenY + 0x1800;
-        vy = velY - ((py - cy - (gHovercraftBox.y + gHovercraftBox.h / 2)) >> 12);
+        vy = velY - ((py - cy - (box.y + box.h / 2)) >> 12);
         velY = vy;
 
         LIMIT_MAX(vx, 0x200);
@@ -304,9 +304,9 @@ void Hovercraft::DrawMap(void *tileRow)
 void Hovercraft::Create(s32 lvl)
 {
     level = lvl;
-    mapCols = BOSS_PICTURE_SIZE(gHovercraftPicture)->cols;
-    mapRows = BOSS_PICTURE_SIZE(gHovercraftPicture)->rows;
-    anim = new AnimPart((struct anim_frame_record *)gHovercraftKeyframes, mapFrames, 1);
+    mapCols = BOSS_PICTURE_SIZE(picture)->cols;
+    mapRows = BOSS_PICTURE_SIZE(picture)->rows;
+    anim = new AnimPart((struct anim_frame_record *)keyframes, mapFrames, 1);
     EnterState(0, 0);
     LoadGraphics();
     bg2PageFlip = 0;
@@ -332,7 +332,7 @@ void Hovercraft::Spawn(s32 kind, s32 sx, s32 sy, s32 sz)
      * constant table base out of `&table[kind]`, while the ROM adds the
      * level offset to the finished record address. */
     attack = (const struct hovercraft_attack *)(level * (s32)sizeof(struct hovercraft_attack) -
-                                                -(s32)&gHovercraftAttacks[kind]);
+                                                -(s32)&attacks[kind]);
     fireTimer = attack->timing[0].burstDelay;
     hp = attack->hp;
     volleyCount = 0;
@@ -443,7 +443,7 @@ void Hovercraft::LoadGraphics(void)
     s32 base;
     u32 zero;
 
-    DmaCopy16(3, gHovercraftPalette, (void *)(PLTT + 0x20), 0x20);
+    DmaCopy16(3, palette, (void *)(PLTT + 0x20), 0x20);
     base = VRAM + 0xBFC0;
     zero = 0;
     for (i = base + 0x3c; i >= base; i -= 4)
@@ -501,11 +501,11 @@ void Hovercraft::ConvertTiles(void)
 
     stride = (u32)(mapCols * mapRows + 1) >> 1 << 2;
     for (k = 0; k < 1; k++) {
-        s32 x = *(s32 *)(((u8 *)gHovercraftPalette) + off);
+        s32 x = *(s32 *)(((u8 *)palette) + off);
         heights[k] = x;
         sum += x;
         off += 4;
-        rows[k] = (u32)((u8 *)gHovercraftPalette + off);
+        rows[k] = (u32)((u8 *)palette + off);
         off += stride;
         off += heights[k] << 5;
     }
