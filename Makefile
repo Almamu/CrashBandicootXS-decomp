@@ -501,26 +501,32 @@ $(NO_INTERWORK_OBJS): CC1FLAGS := $(filter-out -mthumb-interwork,$(CC1FLAGS))
 # docs/cplusplus.md, "The IWRAM ARM code".
 #
 # The ROM's ARM compiler is a later, unreleased build of agbcc_arm's line
-# whose prologue and return code differ in two fixed strings; the patch
-# adds an opt-in option for each. Without the options the patched
-# compiler's output is identical to agbcc_arm's (and agbcp_arm's), so the
-# objects' other functions are unaffected (checked with and without the
-# options). See docs/matching/iwram-image.md, "Seventh pass".
+# whose prologue and return code differ in two fixed strings, and whose
+# jump pass lacks two of agbcc_arm's rules; the patch adds an opt-in
+# option for each. Without the options the patched compiler's output is
+# identical to agbcc_arm's (and agbcp_arm's), so the objects' other
+# functions are unaffected (checked with and without the options). See
+# docs/matching/iwram-image.md, "Seventh pass" and "Ninth step".
 # - string_arm.o: itoa_arm pushes r4-r6 without lr (-mleaf-no-lr-save).
 #   It also needs both scheduling passes off: its loop increments,
 #   terminator store and swap stay in source order in the ROM, where
-#   either pass moves them. The four other string functions come out
-#   the same with or without them.
+#   either pass moves them. strncpy_arm's `n == 0` test branches to the
+#   final `bx lr` where stock agbcc_arm makes a conditional `bxeq lr`
+#   for any C (-mno-cond-return). The other string functions come out
+#   the same with or without these.
 # - sprite_arm.o: LookupSpriteFrameCache's three returns pop into lr
-#   (-minterwork-return-lr). Its other four functions need scheduling,
-#   so it keeps it.
+#   (-minterwork-return-lr). HeapSortActorsByKey keeps both of its
+#   identical second-loop tests (`cmp r7, #1; ble`), which stock jump2
+#   cross-jumps into one for any C because each follows a label
+#   (-mstrict-cross-jump). Its other three functions come out the same
+#   with or without these, and need scheduling, so it keeps it.
 CXX1_ARM := tools/agbcc/bin/agbcp_arm_patched
 ARM_OBJS := $(C_BUILDDIR)/iwram/string_arm.o \
             $(C_BUILDDIR)/iwram/sprite_arm.o
 $(ARM_OBJS): CXX1 := $(CXX1_ARM)
 $(ARM_OBJS): CC1FLAGS := -mthumb-interwork $(WARNFLAGS) -O2 -fomit-frame-pointer -fno-rtti -fno-exceptions
-$(C_BUILDDIR)/iwram/string_arm.o: CC1FLAGS += -mleaf-no-lr-save -fno-schedule-insns -fno-schedule-insns2
-$(C_BUILDDIR)/iwram/sprite_arm.o: CC1FLAGS += -minterwork-return-lr
+$(C_BUILDDIR)/iwram/string_arm.o: CC1FLAGS += -mleaf-no-lr-save -mno-cond-return -fno-schedule-insns -fno-schedule-insns2
+$(C_BUILDDIR)/iwram/sprite_arm.o: CC1FLAGS += -minterwork-return-lr -mstrict-cross-jump
 
 # Appended to every compiled .s before it is assembled (#663). agbcc
 # starts each function with `.align 2, 0`, but nothing aligns the end of

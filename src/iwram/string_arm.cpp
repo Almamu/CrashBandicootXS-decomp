@@ -11,11 +11,13 @@ extern "C" {
  * 0x03000000 at boot (see src/iwram/iwram_data.cpp and docs/data.md).
  *
  * Built as ARM code (Makefile ARM_OBJS) from C++ with agbcp_arm_patched,
- * -mleaf-no-lr-save and no instruction scheduling (docs/cplusplus.md,
- * "The IWRAM ARM code"). strlen_arm, strcpy_arm, strncpy_arm and
- * strcat_arm come out the same under stock agbcc_arm's flags. itoa_arm
- * needs the rest: the ROM's ARM gcc saves r4-r6 without lr, which stock
- * agbcc_arm can't - see its comment and docs/matching/iwram-image.md.
+ * -mleaf-no-lr-save, -mno-cond-return and no instruction scheduling
+ * (docs/cplusplus.md, "The IWRAM ARM code"). strlen_arm, strcpy_arm and
+ * strcat_arm come out the same under stock agbcc_arm's flags.
+ * strncpy_arm needs -mno-cond-return: the ROM's ARM gcc makes no
+ * conditional returns. itoa_arm needs the rest: the ROM's ARM gcc saves
+ * r4-r6 without lr, which stock agbcc_arm can't. See their comments and
+ * docs/matching/iwram-image.md.
  *
  * UNUSED - no caller anywhere in the ROM (checked: none of these five
  * addresses appears as a word in baserom.gba, and ARM code can only be
@@ -49,34 +51,18 @@ void strcpy_arm(u8 *dst, u8 *src)
  * NUL-terminates only if fewer than n were copied. UNUSED - see the
  * file comment.
  *
- * Two details reproduce the ROM's code:
- * - `c = 0; if (n != c) *dst = c;` makes the final test compare `n`
- *   with the register just zeroed (`mov r3, #0; cmp r2, r3`) instead of
- *   the immediate 0.
- * - The empty asm at the end emits no code. Without it agbcc_arm turns
- *   the `n == 0` branch to the final `bx lr` into a conditional return
- *   (`bxeq lr`): its jump pass rewrites any jump whose target is directly
- *   followed by a return (jump.c, "turn it into a RETURN insn").
- *   The asm sits between that label and the return, so the branch
- *   stays. The ROM's ARM compiler never emits a conditional return (see
- *   docs/matching/iwram-image.md). #662 round 3: the rewrite is jump.c's
- *   `redirect_jump (insn, NULL_RTX)` for any jump whose label is
- *   followed by a RETURN, gated only by arm.c's use_return_insn, which
- *   holds for every frameless leaf with nothing saved. So no C shape of
- *   this function can avoid it, and agbcc_arm_patched has no option for
- *   it. #662 round 4: the whole condition is use_return_insn (1) false,
- *   i.e. a frame, pretend args, or a saved register under interworking,
- *   none of which a 3-argument leaf that uses r0-r3 has; jump.c's
- *   end-of-function RETURN (emitted after the last insn when HAVE_return
- *   holds) is what the label precedes. This is the ROM compiler's own
- *   behaviour, evidence for docs/matching/iwram-image.md's "later ARM
- *   gcc": stock 2.9-arm-000512 turns this `beq` into `bxeq lr` for any
- *   C. A private build of agbcp_arm_patched whose use_return_insn
- *   refuses conditional returns (iscond) compiles strncpy_arm without
- *   the barrier, and all of string_arm.o, byte-identical to the ROM's
- *   (sprite_arm.o is unchanged by it). Adopting that is a compiler-patch
- *   decision (a further option in agbcc_arm_prologue_return.patch), not
- *   taken here. */
+ * `c = 0; if (n != c) *dst = c;` makes the final test compare `n` with
+ * the register just zeroed (`mov r3, #0; cmp r2, r3`) instead of the
+ * immediate 0.
+ *
+ * The `n == 0` branch to the final `bx lr` stays a branch only under
+ * -mno-cond-return (Makefile). Stock agbcc_arm's jump pass turns any
+ * jump to a label followed by the return into a conditional return
+ * (`bxeq lr`), gated only by arm.c's use_return_insn, which holds for
+ * every frameless leaf with nothing saved, so no C shape avoids it; the
+ * ROM's later ARM gcc never emits one. #662 rounds 3-4 needed an empty
+ * asm barrier between that label and the return
+ * (docs/matching/iwram-image.md, "Ninth step"). */
 void strncpy_arm(u8 *dst, u8 *src, s32 n)
 {
     u8 c;
@@ -95,7 +81,6 @@ void strncpy_arm(u8 *dst, u8 *src, s32 n)
         if (n != c)
             *dst = c;
     }
-    MATCH_BARRIER();
 }
 
 /* strcat. UNUSED - see the file comment. */

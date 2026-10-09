@@ -233,8 +233,8 @@ NOLOAD section). The image holds, in order:
 - `asm/intr_main.s`: `IntrMain`, hand-written ARM - `HANDWRITTEN`.
 - `src/iwram/string_arm.cpp` and `src/iwram/sprite_arm.cpp`: compiled ARM
   C++, built with `tools/agbcc/bin/agbcp_arm_patched` (the `ARM_OBJS` in
-  the Makefile: `-O2 -fomit-frame-pointer -mthumb-interwork` plus one
-  option each; agbcp_arm_patched is notyourav/agbcc's ARM C++ compiler
+  the Makefile: `-O2 -fomit-frame-pointer -mthumb-interwork` plus the
+  patch's options each object needs; agbcp_arm_patched is notyourav/agbcc's ARM C++ compiler
   with `tools/agbcc_patches/agbcc_arm_prologue_return.patch`, built by
   `tools/build_agbccpp.sh`). Their `.text` goes into `iwram`.
 - `src/iwram/iwram_data.cpp`: the initialised globals from `0x030007CC`,

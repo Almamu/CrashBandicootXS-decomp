@@ -11,9 +11,10 @@
 # installed as <install-dir>/tools/agbcc/bin/agbcc_arm_patched, next to
 # the stock agbcc, old_agbcc and agbcc_arm, which stay untouched.
 #
-# The patch adds two opt-in options (-mleaf-no-lr-save,
-# -minterwork-return-lr). Without them the output is byte-identical to
-# agbcc_arm's. The build doesn't need it any more: the two IWRAM objects
+# The patch adds four opt-in options (-mleaf-no-lr-save,
+# -minterwork-return-lr, -mno-cond-return, -mstrict-cross-jump). Without
+# them the output is byte-identical to agbcc_arm's. The build doesn't
+# need it any more: the two IWRAM objects
 # that need the options are C++, built by agbcp_arm_patched, the same
 # patch on notyourav/agbcc's ARM C++ compiler (tools/build_agbccpp.sh).
 # This C build of the patch stays for comparisons; see

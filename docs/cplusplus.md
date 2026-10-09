@@ -3895,9 +3895,10 @@ notyourav/agbcc's `cp` branch also has an ARM tree, `g++_arm`, which
 is agbcc_arm's gcc 2.9-arm-000512 (same version string, same
 `config/arm/arm.c` and `arm.h`) with the C++ front end; its `cc1plus` is
 agbcp_arm. tools/build_agbccpp.sh builds it with
-tools/agbcc_patches/agbcc_arm_prologue_return.patch (the two opt-in
+tools/agbcc_patches/agbcc_arm_prologue_return.patch (the opt-in
 options itoa_arm and LookupSpriteFrameCache need,
-[iwram-image.md](matching/iwram-image.md), "Seventh pass"), its paths
+[iwram-image.md](matching/iwram-image.md), "Seventh pass", and since the
+ninth step the two strncpy_arm and HeapSortActorsByKey need), its paths
 rewritten from `gcc_arm/` to `g++_arm/` (it applies cleanly), and
 installs it as `tools/agbcc/bin/agbcp_arm_patched`. CI's "Build agbcp,
 old_agbcp and agbcp_arm_patched" step runs it; the step that built
@@ -3915,6 +3916,9 @@ Evidence, on both files (assembled code compared, the objects' flags):
   -O2 -fomit-frame-pointer -fno-rtti -fno-exceptions` plus each object's
   options): string_arm.o and sprite_arm.o byte-identical to the
   agbcc_arm_patched objects.
+- (Ninth step) the two later options, `-mno-cond-return` and
+  `-mstrict-cross-jump`, were checked off against the previous patch
+  on both compilers; see iwram-image.md, "Ninth step".
 
 The only source change besides the `extern "C"` includes is
 HeapSortActorsByKey's list, `ActorSelf **` (sprite_arm.cpp includes

@@ -2,7 +2,6 @@
 
 extern "C" {
 #include "core.h"
-#include "match.h"
 #include "iwram.h"
 #include "gfx.h"
 }
@@ -15,13 +14,14 @@ extern "C" {
  * gDrawMirroredTilemapFunc, gHeapSortActorsByKeyFunc,
  * gUnpackRleSpriteFrameFunc and gLookupSpriteFrameCacheFunc).
  *
- * Built as ARM code (Makefile ARM_OBJS) from C++ with agbcp_arm_patched
- * and -minterwork-return-lr (docs/cplusplus.md, "The IWRAM ARM code").
- * UnpackNibbleTiles, DrawMirroredTilemap and UnpackRleSpriteFrame match
- * as plain code, and HeapSortActorsByKey with two empty-asm barriers;
- * their output is the same without the option. LookupSpriteFrameCache
- * needs it: the ROM's ARM gcc pops its returns into lr, where stock
- * agbcc_arm pops into ip. See its comment and
+ * Built as ARM code (Makefile ARM_OBJS) from C++ with agbcp_arm_patched,
+ * -minterwork-return-lr and -mstrict-cross-jump (docs/cplusplus.md, "The
+ * IWRAM ARM code"). UnpackNibbleTiles, DrawMirroredTilemap and
+ * UnpackRleSpriteFrame come out the same without the options.
+ * LookupSpriteFrameCache needs the first: the ROM's ARM gcc pops its
+ * returns into lr, where stock agbcc_arm pops into ip.
+ * HeapSortActorsByKey needs the second: the ROM's ARM gcc doesn't
+ * cross-jump its two identical loop tests. See their comments and
  * docs/matching/iwram-image.md. HeapSortActorsByKey sorts the actor
  * list as ActorSelf pointers (actor_category_frame.cpp's draw list).
  */
@@ -121,7 +121,16 @@ static inline u8 KeyGreater(ActorSelf **a, s32 i, s32 j, u8 one, u8 zero)
  * ascending order of their `sortKey`, taken as unsigned. Called by actor_category_frame.cpp.
  * Both phases spell out the sift-down loop on the shared `root`/`child`
  * (an inline sift function allocates them to other registers). See
- * docs/matching/iwram-image.md, "Fourth pass". */
+ * docs/matching/iwram-image.md, "Fourth pass".
+ *
+ * The second loop's entry test and its bottom test (`cmp r7, #1; ble`)
+ * each follow a label and are the same insns, so stock agbcc_arm's jump2
+ * cross-jumps one into the other: find_cross_jump (jump.c) lowers its
+ * two-insn minimum to one after a label. The ROM keeps both; its later
+ * ARM gcc didn't have that rule, which -mstrict-cross-jump (Makefile)
+ * turns off. Without the option no C keeps both tests: #662 rounds 2-4
+ * needed an empty asm barrier before each (docs/matching/iwram-image.md,
+ * "Ninth step"). */
 void HeapSortActorsByKey(s32 n, ActorSelf **list)
 {
     ActorSelf **a = list;
@@ -145,40 +154,6 @@ void HeapSortActorsByKey(s32 n, ActorSelf **list)
             a[child] = t;
         }
     }
-    /* This and the barrier at the end of the loop body keep jump2 from
-     * cross-jumping the second loop's entry test (`cmp r7, #1; ble`) and
-     * its bottom test into each other; the ROM keeps both. #662 round 2
-     * tried, in their place: a dead store (`i = 0`, `t = 0`, `root = 0`,
-     * `child = 0`), `while (--n > 0)`, a counted `for (i = n - 1; ...)`,
-     * `if (n > 1) do ... while (n > 1)`, `for (i = n / 2 - 1; i >= 0;
-     * i--)` and either phase as an inline function: each loses one of
-     * the two tests or moves registers. Round 3 (-da): both tests survive
-     * to sched2 and jump2 merges them. Its cross-jumping (jump.c,
-     * find_cross_jump) turns the top `ble` into a branch to the bottom
-     * test once one insn matches, because the label right before the top
-     * `cmp` lowers the required match from two insns to one. Only a
-     * non-note insn between that label and the `cmp` stops it, and jump2
-     * always cross-jumps (no -f flag; the swept flag families all
-     * leave it or break more). Round 4, the whole condition: in the ROM
-     * both tests follow a label (0x308 is the first phase's `ble`
-     * target, 0x3d8 the sift loop's exits'), their RTL is identical
-     * (`cmp r7, #1`, CCmode) and jump_back_p holds both ways, so jump2
-     * merges them in either direction: with only this barrier the
-     * bottom test becomes a `b` to the top one, with only the other the
-     * top one becomes a `b` to the bottom. What stops it is a non-note
-     * insn between each label and its `cmp` that survives to jump2
-     * (after sched2) and emits nothing: a volatile asm, or a USE or
-     * CLOBBER, which only return values, calls and multiword stores
-     * produce, none of them in a void function without calls. So this
-     * jump.c can't give the ROM's code from any C. The ROM's later ARM
-     * gcc (docs/matching/iwram-image.md) evidently didn't lower the
-     * minimum at a label: a private build of agbcp_arm_patched with
-     * that one `--minimum` skipped compiles this function without
-     * either barrier, and the whole of sprite_arm.o, byte-identical to
-     * the ROM's (and string_arm.o too; see strncpy_arm). Adopting that
-     * would be a third option in agbcc_arm_prologue_return.patch, an
-     * owner's decision, so the barriers stay. */
-    MATCH_BARRIER();
     while (n > 1) {
         n--;
         t = a[0];
@@ -197,7 +172,6 @@ void HeapSortActorsByKey(s32 n, ActorSelf **list)
             a[root] = a[child];
             a[child] = t;
         }
-        MATCH_BARRIER();
     }
 }
 

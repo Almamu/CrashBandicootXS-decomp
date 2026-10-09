@@ -12,12 +12,12 @@ script and the report. Contents:
 | `03000000` | `IntrMain` (alias `IntrMain_Buffer`) | `asm/intr_main.s` | hand-written ARM, `HANDWRITTEN` |
 | `030000D4` | `strlen_arm` | `src/iwram/string_arm.cpp` | matched, UNUSED |
 | `030000FC` | `strcpy_arm` | same | matched, UNUSED |
-| `03000120` | `strncpy_arm` | same | matched (second pass), UNUSED |
+| `03000120` | `strncpy_arm` | same | matched (second pass; plain since the ninth step, `-mno-cond-return`), UNUSED |
 | `0300015C` | `strcat_arm` | same | matched, UNUSED |
 | `03000198` | `itoa_arm` | same | matched (seventh pass, agbcc_arm_patched), UNUSED |
 | `0300024C` | `UnpackNibbleTiles` (`gUnpackNibbleTilesFunc`) | `src/iwram/sprite_arm.cpp` | matched |
 | `0300036C` | `DrawMirroredTilemap` (`gDrawMirroredTilemapFunc`) | same | matched |
-| `03000474` | `HeapSortActorsByKey` (`gHeapSortActorsByKeyFunc`) | same | matched (fourth pass) |
+| `03000474` | `HeapSortActorsByKey` (`gHeapSortActorsByKeyFunc`) | same | matched (fourth pass; plain since the ninth step, `-mstrict-cross-jump`) |
 | `03000634` | `UnpackRleSpriteFrame` (`gUnpackRleSpriteFrameFunc`) | same | matched |
 | `030006FC` | `LookupSpriteFrameCache` (`gLookupSpriteFrameCacheFunc`) | same | matched (seventh pass, agbcc_arm_patched) |
 | `030007CC`-`030009E8` | initialised globals | `src/iwram/iwram_data.cpp` | typed C++, data |
@@ -52,6 +52,13 @@ compiler (`g++_arm`, the same gcc 2.9-arm-000512 with the C++ front end)
 with the same patch, built by `tools/build_agbccpp.sh`. Both objects
 are byte-identical to the agbcc_arm_patched C build; see "Eighth step:
 C++" below and docs/cplusplus.md, "The IWRAM ARM code".
+
+strncpy_arm and HeapSortActorsByKey matched on stock agbcc_arm only with
+an empty-asm barrier each (two for HeapSortActorsByKey), against jump.c
+rules the ROM's compiler doesn't have. Since the ninth step the patch
+has an opt-in option for each of those too (`-mno-cond-return`,
+`-mstrict-cross-jump`), and both functions are plain code; see "Ninth
+step" below.
 
 ## Why three are parked
 
@@ -721,6 +728,81 @@ So the Makefile builds them as C++ (`ARM_OBJS`), and CI no longer
 builds agbcc_arm_patched: `tools/build_patched_agbcc_arm.sh` stays as
 the C build of the same patch, for comparisons like the ones above.
 
+## Ninth step: the two jump.c rules (#662)
+
+After the eighth step two IWRAM functions still had matching
+workarounds, both empty asm (`MATCH_BARRIER`), both against agbcc_arm's
+jump pass rather than anything in the C:
+
+- **strncpy_arm** (one barrier, second pass). The `n == 0` test branches
+  to the final `bx lr` in the ROM (`beq`). jump.c turns any jump to a
+  label that is directly followed by a return into a conditional return
+  (`redirect_jump (insn, NULL_RTX)`, "turn it into a RETURN insn"), here
+  `bxeq lr`. Its only gate is arm.c's `use_return_insn (TRUE)`, which
+  holds for every frameless leaf that saves nothing (#662 round 4: the
+  only ways out are a frame, pretend arguments or a register saved under
+  interworking; a 3-argument leaf in r0-r3 has none). The barrier sat
+  between the label and the return.
+- **HeapSortActorsByKey** (two barriers, fourth pass). The second loop's
+  entry test and its bottom test are the same two insns (`cmp r7, #1;
+  ble`), and in the ROM both follow a label (0x308 is the first phase's
+  `ble` target, 0x3d8 the sift loop's exits'). jump2's cross-jumping
+  (`find_cross_jump`) needs two matching insns for a conditional jump,
+  but one fewer when the run reaches a label ("those jumps will be
+  tensioned to go directly to the new label"), so it merges the two tests
+  either way round: with one barrier, the other test is merged. #662
+  rounds 2-4 tried dead stores, `while (--n > 0)`, counted `for` loops,
+  an `if (n > 1) do ... while` and inline sift functions; each loses a
+  test or moves registers. Only a non-note insn between each label and
+  its `cmp` that survives to jump2 and emits nothing stops it: a
+  volatile asm, or a USE or CLOBBER, which a void function without calls
+  doesn't produce.
+
+#662 round 4 built two private agbcp_arm_patched variants: one without
+the `--minimum` at a label in find_cross_jump, one whose
+use_return_insn refuses conditional returns. The first compiles plain
+HeapSortActorsByKey, and the whole of `sprite_arm.o`, byte-identical to
+the ROM's; the second does the same for strncpy_arm and `string_arm.o`.
+So the ROM's later ARM gcc has neither rule, as it lacks the two
+prologue/return strings of the seventh pass. With the owner's approval
+they are now two more opt-in options in
+`tools/agbcc_patches/agbcc_arm_prologue_return.patch` (hunk 6 and the
+new hunk 12; the header lists them):
+
+- `-mno-cond-return`: `use_return_insn` is false for a conditional
+  return (`iscond`), so jump.c leaves the branch alone.
+- `-mstrict-cross-jump`: `find_cross_jump` keeps its full minimum after
+  a label. The hunk is in `jump.c`, the patch's first outside
+  `config/arm/`; it tests `TARGET_STRICT_CROSS_JUMP` under `#ifdef`, so
+  the option is a `target_flags` bit like the others and no `toplev.c`
+  change is needed. `g++_arm/jump.c` differs from `gcc_arm/jump.c`
+  elsewhere (coverage and branch-probability code), so the hunk applies
+  there 7 lines further down; `tools/build_agbccpp.sh` and
+  `tools/build_patched_agbcc_arm.sh` apply it unchanged.
+
+**Which objects.** `string_arm.o` adds `-mno-cond-return`, and
+`sprite_arm.o` adds `-mstrict-cross-jump`. Each option changes only its
+own function: with the plain sources, toggling `-mstrict-cross-jump` on
+`sprite_arm.cpp` changes only HeapSortActorsByKey's code (the two
+tests), and toggling `-mno-cond-return` on `string_arm.cpp` changes only
+strncpy_arm's `bxeq lr`. The other option is a no-op on each object.
+Both functions are now plain C++ with no barrier, and `sprite_arm.cpp`
+no longer includes `match.h` (itoa_arm's pins keep it in
+`string_arm.cpp`).
+
+**Option-off identity.** Both scripts built from the same sources with
+the previous patch and with this one (`agbcp_arm_patched` from
+notyourav/agbcc's `cp` branch, `agbcc_arm_patched` from SAT-R/agbcc).
+Same flags, old against new compiler, assembly compared:
+
+- `agbcp_arm_patched` on both ARM objects (the sources before and after
+  this step), with no option, each of `-mleaf-no-lr-save` and
+  `-minterwork-return-lr`, both, `string_arm.o`'s full flag set, `-O1`
+  and with a frame pointer: identical (14 compiles each).
+- `agbcc_arm_patched` on every `lib/*.c` that compiles as ARM, plus the
+  pre-#748 C `string_arm.c` and `sprite_arm.c`, with no option, both old
+  options, and with a frame pointer: identical (126 compiles).
+
 ## Data
 
 `iwram_data.cpp` defines every global from `0x030007CC` up to
@@ -772,3 +854,12 @@ defined by these objects.
   functions 2,059 / 2,059, data 8,036,176 / 8,036,176 (100%).
   Option-off identity: as above (333 files, and the pre-pass tree's
   `make compare` with agbcc_arm_patched).
+- Ninth step (strncpy_arm and HeapSortActorsByKey plain): both compilers
+  rebuilt from scratch with `tools/build_agbccpp.sh` and
+  `tools/build_patched_agbcc_arm.sh`. `make clean && make compare`:
+  `crashbandicootxs.gba: OK`. `make NON_MATCHING=1 report` and
+  `objdiff-cli report generate`: code 243,378 / 243,378 (100%),
+  functions 2,059 / 2,059, data 8,036,176 / 8,036,176 (100%).
+  `tools/match_idioms.py --functions`: `src/iwram/` 9 of 10 functions
+  without workarounds (was 7; itoa_arm keeps its pins). Option-off
+  identity: as above.
