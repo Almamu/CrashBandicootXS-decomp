@@ -106,49 +106,49 @@ Crate *Crate::Create(u16 id, u16 x, u16 y, u16 slot, u8 type)
     }
     switch (type) {
     case CRATE_KIND_BASIC:
-        self->SetTag(0x1f);
+        self->StartAnim(0x1f);
         break;
     case CRATE_KIND_CHECKPOINT:
         self->paramA = (u32)(PLACEMENT(slot)->flags << 25) >> 31;
-        self->SetTag(0x1a);
+        self->StartAnim(0x1a);
         break;
     case CRATE_KIND_AKU_AKU:
-        self->SetTag(0x17);
+        self->StartAnim(0x17);
         break;
     case CRATE_KIND_IRON_SWITCH:
         {
             struct crate_placement *rec = PLACEMENT(slot);
 
-            self->SetTag(3);
+            self->StartAnim(3);
             self->paramA = rec->param6;
             self->paramB = rec->param7;
             self->fallSpeed = rec->u08.stepDelay;
         }
         break;
     case CRATE_KIND_ARROW:
-        self->SetTag(0x18);
+        self->StartAnim(0x18);
         break;
     case CRATE_KIND_OUTLINE:
         {
             struct crate_placement *rec = PLACEMENT(slot);
 
-            self->SetTag(0x15);
+            self->StartAnim(0x15);
             self->paramA = rec->param6;
             self->paramB = rec->param7;
             self->solidKind = rec->u08.solidKind;
         }
         break;
     case CRATE_KIND_NITRO_SWITCH:
-        self->SetTag(4);
+        self->StartAnim(4);
         break;
     case CRATE_KIND_IRON:
-        self->SetTag(0x20);
+        self->StartAnim(0x20);
         break;
     case CRATE_KIND_IRON_ARROW:
-        self->SetTag(2);
+        self->StartAnim(2);
         break;
     case CRATE_KIND_LIFE:
-        self->SetTag(0x1c);
+        self->StartAnim(0x1c);
         if (!flagged) {
             self->trialKind = ENTITY_BASIC_CRATE;
             if (gLevelState->timeTrial)
@@ -156,7 +156,7 @@ Crate *Crate::Create(u16 id, u16 x, u16 y, u16 slot, u8 type)
         }
         break;
     case CRATE_KIND_NITRO:
-        self->SetTag(5);
+        self->StartAnim(5);
         break;
     case CRATE_KIND_MYSTERY:
         {
@@ -165,19 +165,19 @@ Crate *Crate::Create(u16 id, u16 x, u16 y, u16 slot, u8 type)
              * other tags; a literal 0 argument is loaded after it. */
             u8 zero = 0;
 
-            self->SetTag(zero);
+            self->StartAnim(zero);
             self->paramB = rec->param6;
         }
         break;
     case CRATE_KIND_BOUNCY_WUMPA:
         self->bounceTimer = -0x2a;
-        self->SetTag(0x19);
+        self->StartAnim(0x19);
         break;
     case CRATE_KIND_REINFORCED:
-        self->SetTag(6);
+        self->StartAnim(6);
         break;
     case CRATE_KIND_TNT:
-        self->SetTag(0x11);
+        self->StartAnim(0x11);
         break;
     case CRATE_KIND_SLOT:
         {
@@ -190,7 +190,7 @@ Crate *Crate::Create(u16 id, u16 x, u16 y, u16 slot, u8 type)
             }
             self->slotState &= CRATE_SLOT_CLEAR_STAGE;
             self->slotState &= CRATE_SLOT_CLEAR_PHASE;
-            self->SetTag(7);
+            self->StartAnim(7);
             {
                 u32 idx = (u32)(self->slotState & CRATE_SLOT_SPINS_MASK) >> CRATE_SLOT_SPINS_SHIFT;
 
@@ -207,13 +207,13 @@ Crate *Crate::Create(u16 id, u16 x, u16 y, u16 slot, u8 type)
         }
         break;
     case CRATE_KIND_TIME_1:
-        self->SetTag(0xe);
+        self->StartAnim(0xe);
         break;
     case CRATE_KIND_TIME_2:
-        self->SetTag(0xf);
+        self->StartAnim(0xf);
         break;
     case CRATE_KIND_TIME_3:
-        self->SetTag(0x10);
+        self->StartAnim(0x10);
         break;
     }
     self->mirrorBits.flipX = 0;
@@ -227,7 +227,7 @@ Crate *Crate::Create(u16 id, u16 x, u16 y, u16 slot, u8 type)
         type = CRATE_KIND_CHECKPOINT;
     if (type == CRATE_KIND_CHECKPOINT && id != 0xffff &&
         (u8)IsEntityIdActivated(gEntityFlags, id)) {
-        self->SetTag(0x1b);
+        self->StartAnim(0x1b);
         self->frame = self->bank->anims[self->tag].frameCount - 1;
         self->state = (self->state & CRATE_STATE_BUSY) | type;
     }

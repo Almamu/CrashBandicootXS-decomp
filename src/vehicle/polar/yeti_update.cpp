@@ -75,23 +75,6 @@ extern void _call_via_r2(void *arg0, s32 arg1, void *fn);
  * uses its own `g` local for the gauge object (the function-wide `obj`
  * would be allocated a callee-saved register). Built with old_agbcc
  * (docs/matching/archive/issue-51-54-naked-retry.md, later pass). */
-static inline void BoxMove(struct anim_box *b, s32 x, s32 y, s32 z)
-{
-    b->x += x;
-    b->y += y;
-    b->z += z;
-}
-
-static inline u8 BoxOverlap(struct anim_box *b, struct anim_box *a)
-{
-    if (b->z < a->z + a->d && b->z + b->d > a->z && b->y < a->y + a->h && b->y + b->h > a->y &&
-        b->x < a->x + a->w && b->x + b->w > a->x)
-        goto hit;
-    return 0;
-hit:
-    return 1;
-}
-
 void UpdateYeti(void)
 {
     struct {

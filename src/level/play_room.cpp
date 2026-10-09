@@ -329,14 +329,6 @@ static inline void SetPoint(struct vec2 *point, s32 x, s32 y)
     point->y = y;
 }
 
-static inline void RestartPlayerAnim(Player *p, s32 anim)
-{
-    p->tag = anim;
-    p->ResetFrameTimer();
-    p->ResetFrameIndex();
-    p->SetAnimDone(0);
-}
-
 static inline void RefreshPlayerTiles(void)
 {
     PaletteCache *cache = gPaletteCache;
@@ -388,7 +380,7 @@ s32 LevelProgress::RunRoom()
     SetupRoomBlend();
     ResetObjBuffers();
     if (cat->kind == ROOM_KIND_UNDERWATER) {
-        RestartPlayerAnim(gPlayer, 0x1F);
+        gPlayer->StartAnim(0x1F);
         gCamera->mode = 2;
     }
     gPlayer->palette = gPlayer->GetAnimPaletteSlot();
@@ -400,7 +392,7 @@ s32 LevelProgress::RunRoom()
         if ((gLevelState->IsInBonusRound() && (u8)IsInBonusRoom()) ||
             (gLevelState->IsInGemPath() && (u8)IsInGemPathRoom())) {
             gPlayer->f.bytes.flags &= 0x7F;
-            RestartPlayerAnim(gPlayer, 0x29);
+            gPlayer->StartAnim(0x29);
             gAudioContext->PlaySfx(SFX_WARP, 0x100);
             gPlayer->mover->SetMode(0x29);
             RefreshPlayerTiles();

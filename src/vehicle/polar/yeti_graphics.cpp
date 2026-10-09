@@ -35,23 +35,6 @@ extern "C" {
  * from sp instead of being kept in callee-saved registers, and only
  * `&f.b` goes through a pointer local across the `MemCopy32` call.
  * Needs old_agbcc (docs/matching/archive/issue-51-54-naked-retry.md). */
-static inline void BoxMove(struct anim_box *b, s32 x, s32 y, s32 z)
-{
-    b->x += x;
-    b->y += y;
-    b->z += z;
-}
-
-static inline u8 BoxOverlap(struct anim_box *b, struct anim_box *a)
-{
-    if (b->z < a->z + a->d && b->z + b->d > a->z && b->y < a->y + a->h && b->y + b->h > a->y &&
-        b->x < a->x + a->w && b->x + b->w > a->x)
-        goto hit;
-    return 0;
-hit:
-    return 1;
-}
-
 u8 IsTouchingYeti(ActorSelf *self)
 {
     struct {
@@ -103,13 +86,6 @@ static inline void FillDotPattern(u8 *dst, u8 seed)
     }
 }
 
-static inline u8 *CurFrame(AnimPart *self)
-{
-    s32 t = Q8_TO_INT(self->animTime);
-
-    return (u8 *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t];
-}
-
 void LoadYetiGraphics(void)
 {
     u8 buf[0x100];
@@ -128,7 +104,7 @@ void LoadYetiGraphics(void)
             *(u32 *)p = zero;
     }
     gYetiBg2Page = 1;
-    gUnpackNibbleTilesFunc((u16 *)(CurFrame(gYeti) + 4), 1);
+    gUnpackNibbleTilesFunc((u16 *)(gYeti->CurFrame() + 4), 1);
     gYetiBg2PageFlip = 1;
     UpdateYetiBg2();
     UpdateYetiPalette();

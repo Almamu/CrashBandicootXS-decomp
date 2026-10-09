@@ -28,6 +28,7 @@
 
 extern "C" {
 #include "core.h"
+#include "math_util.h"
 #include "memory.h"
 #include "actor_self.h"
 #include "actor_anim.h"
@@ -70,6 +71,27 @@ public:
         animTimer = anims[idx].duration;
         animDone = 0;
         animTime = 0;
+    }
+
+    /* The current frame's entry in frameOffsets (the keyframe's
+     * frameIndex plus the whole frames of animTime), as a pointer: what
+     * the 3D draws inline (polar_player.cpp, yeti_graphics.cpp). Unlike
+     * GetAnimFrameData, no gCategorySpriteSheet base is added. */
+    u8 *CurFrame()
+    {
+        s32 t = Q8_TO_INT(animTime);
+
+        return (u8 *)frameOffsets[anims[animIndex].frameIndex + t];
+    }
+
+    /* GetAnimFrameAttr's body, inline: the keyframe's attr in the high
+     * half (OAM attribute 1). */
+    s32 CurAttr()
+    {
+        s32 idx = animIndex;
+        struct anim_frame_record *table = anims;
+
+        return (s32)table[idx].attr << 16;
     }
 
     static void *operator new(size_t size)
@@ -172,6 +194,27 @@ static inline u8 BoxOverlap(const struct anim_box &b, const struct anim_box &a)
     return 0;
 hit:
     return 1;
+}
+
+/* The same test through pointers (IsTouchingYeti, UpdateYeti), whose
+ * boxes are in one stack frame struct rather than temporaries. */
+static inline u8 BoxOverlap(const struct anim_box *b, const struct anim_box *a)
+{
+    if (b->z < a->z + a->d && b->z + b->d > a->z && b->y < a->y + a->h && b->y + b->h > a->y &&
+        b->x < a->x + a->w && b->x + b->w > a->x)
+        goto hit;
+    return 0;
+hit:
+    return 1;
+}
+
+/* Moves box `b` by (x, y, z) whole units (IsTouchingYeti, UpdateYeti,
+ * IsTouchingAirship). */
+static inline void BoxMove(struct anim_box *b, s32 x, s32 y, s32 z)
+{
+    b->x += x;
+    b->y += y;
+    b->z += z;
 }
 
 static inline struct anim_box WorldBox(ActorSelf *s)

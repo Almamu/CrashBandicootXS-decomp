@@ -92,22 +92,6 @@ void PolarPlayer::Update()
     }
 }
 
-/* AnimPart's frame accessors (anim_part.cpp), inlined. */
-static inline s32 CurAttr(AnimPart *self)
-{
-    s32 idx = self->animIndex;
-    struct anim_frame_record *table = self->anims;
-
-    return (s32)table[idx].attr << 16;
-}
-
-static inline u8 *CurFrame(AnimPart *self)
-{
-    s32 t = Q8_TO_INT(self->animTime);
-
-    return (u8 *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t];
-}
-
 /* Slot 3: projects the position by depth (scaled and double-sized when
  * drawn behind the reference depth), culls against the screen, uploads
  * the frame's tiles into the other of the two VRAM buffers when the frame
@@ -122,7 +106,7 @@ void PolarPlayer::Draw()
     s32 halfW, halfH;
     s32 sx, sy;
 
-    frame = CurFrame(this);
+    frame = CurFrame();
     w = frame[0];
     halfW = w * 4;
     h = frame[1];
@@ -149,7 +133,7 @@ void PolarPlayer::Draw()
     sx -= halfW;
     sy -= halfH;
     if (sy <= 0x9f && sy + halfH * 2 >= 0 && sx <= 0xef && sx + halfW * 2 >= 0) {
-        u32 attr = CurAttr(this);
+        u32 attr = CurAttr();
 
         attr1 |= (sy & 0xff) | ((sx & 0x1ff) << 16) | attr | GetSpriteShapeSizeBits(frame);
         if (frame != gPolarPlayerLastFrame) {
@@ -236,9 +220,9 @@ void PolarPlayer::AllocTiles()
 {
     u8 *f;
 
-    f = CurFrame(this);
+    f = CurFrame();
     gPolarPlayerTiles[0] = AllocVramTileBlock(f[1] * f[0] * 32);
-    f = CurFrame(this);
+    f = CurFrame();
     gPolarPlayerTiles[1] = AllocVramTileBlock(f[1] * f[0] * 32);
     gPolarPlayerTileBuffer = 1;
     gPolarPlayerLastFrame = 0;

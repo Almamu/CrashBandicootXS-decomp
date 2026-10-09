@@ -13,16 +13,6 @@ extern "C" {
  * include/spawners.hpp), ROM 0x08021280-0x08021748. Built with
  * old_agbcp. */
 
-/* Switches to animation `t` from its start. `t` is an s32: its 1 is
- * loaded before the tag's address, as in the ROM. */
-static inline void SetTag(MovingSprite *p, s32 t)
-{
-    p->tag = t;
-    p->ResetFrameTimer();
-    p->ResetFrameIndex();
-    p->SetAnimDone(0);
-}
-
 /* The part's X and Y mirror bits from its parameter record's flags (bit
  * 1 clear: X mirrored; bit 2: Y mirrored). */
 static inline void SetMirrorFromRecord(MovingSprite *part, u16 index)
@@ -125,7 +115,7 @@ void SpawnCortexBoss(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     CortexBossCtrl *hdr;
 
     part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x27c);
-    SetTag(part, 1);
+    part->StartAnim(1);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new CortexBossCtrl;
     part->mover = hdr;
@@ -144,13 +134,6 @@ static inline void SetPalette(MovingSprite *part, s32 slot)
     part->palette = slot;
 }
 
-/* Sets the tag only (SetTag above also restarts the animation). `t` is an
- * s32: its constant is loaded before the tag's address. */
-static inline void SetSpriteTag(Sprite *part, s32 t)
-{
-    part->tag = t;
-}
-
 /* Entity type 0x49, Mega-Mix (see mega_mix_update.cpp): a moving sprite
  * on sprite bank +0x168 at (arg1, arg2), its palette that of its first
  * animation, not mirrored, driven by a MegaMixCtrl; kind 1, not
@@ -164,10 +147,7 @@ void SpawnMegaMix(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x168);
     part->x = INT_TO_Q8(arg1);
     part->y = INT_TO_Q8(arg2);
-    SetSpriteTag(part, 0);
-    part->ResetFrameTimer();
-    part->ResetFrameIndex();
-    part->SetAnimDone(0);
+    part->StartAnim(0);
     SetPalette(part, gPaletteCache->GetSlot(part->bank->anims->paletteId));
     part->mirrorFlags.mirrorX = 0;
     part->mirrorFlags.mirrorY = 0;

@@ -1031,7 +1031,7 @@ void Crate::LightTnt()
     u32 slot;
 
     kind = CRATE_KIND_TNT_LIT_3;
-    SetTag(0x14);
+    StartAnim(0x14);
     f.b.active = 1;
     Crates()->LinkActive(this);
     anims = bank->anims;
@@ -1070,7 +1070,7 @@ void Crate::OpenCheckpoint()
     puff->f.b.visible = 0;
     puff->mirrorBits.flipX = 0;
     PuffSetMotion(puff, -0x180, 8, -0x10);
-    SetTag(0x1b);
+    StartAnim(0x1b);
     gAudioContext->PlaySfx(SFX_CHECKPOINT, 0x100);
     {
         u16 eid = id;
@@ -1166,7 +1166,7 @@ void Crate::Break(u32 arg1)
     gPlayer->busy = 0;
     one = 1;
     state = (state & CRATE_STATE_BUSY) | one;
-    SetTag(0x1d);
+    StartAnim(0x1d);
     {
         const struct sprite_anim *anims = bank->anims;
         const struct sprite_anim *a = &anims[tag];
@@ -1497,7 +1497,7 @@ void Crate::Explode(u8 near)
         ResetFrameIndex();
         SetAnimDone(0);
     } else
-        SetTag(0x21);
+        StartAnim(0x21);
     if (gCrateKindCounted[kind])
         gLevelState->AddBrokenCrate();
     ENTITY_SET_GONE_BIT(id);

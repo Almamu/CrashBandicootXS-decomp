@@ -200,9 +200,44 @@ public:
     {
         return *(struct vec2 *)&x;
     }
+
+    /* The animation set to `t`, with no restart. `t` is an s32: a
+     * constant argument is loaded before the tag's address, as in the
+     * ROM (a u8 parameter loads it after). */
+    void SetTag(s32 t)
+    {
+        tag = t;
+    }
+
+    /* SetAnim inlined: animation `t` from its start, the three-call
+     * idiom of the state changes. `t` is an s32, as SetTag's. */
+    void StartAnim(s32 t)
+    {
+        tag = t;
+        ResetFrameTimer();
+        ResetFrameIndex();
+        SetAnimDone(0);
+    }
 };
 
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(Sprite) == 0x40);
+
+/* The mirror bits' setters, inline: the spawners and the menus expand
+ * them. Inlined with a parameter (not a literal), the store is a general
+ * bitfield insert (the bit cleared, the value ORed in), as in the ROM.
+ * sprite_obj.cpp defines SPRITE_FLIP_OUT_OF_LINE for its own copies
+ * (SetSpriteObjFlipX/Y), which nothing calls. */
+#ifndef SPRITE_FLIP_OUT_OF_LINE
+inline void Sprite::SetFlipX(u8 value)
+{
+    mirrorFlags.mirrorX = value;
+}
+
+inline void Sprite::SetFlipY(u8 value)
+{
+    mirrorFlags.mirrorY = value;
+}
+#endif
 
 /* A sprite on the HUD or a menu (gUiSpriteObjVtable;
  * src/objects/ui_sprite.cpp): its OBJ priority is its own. */

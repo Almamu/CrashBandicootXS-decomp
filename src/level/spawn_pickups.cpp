@@ -22,12 +22,6 @@ extern "C" {
  * and InitLevelState follow in spawn_markers.cpp. Built with
  * old_agbcp. */
 
-/* `t` is an s32: the constant is loaded before the tag's address. */
-static inline void SetTag(Sprite *part, s32 t)
-{
-    part->tag = t;
-}
-
 /* A sprite of bank `bank` (an offset into the sprite bank table),
  * animation `tag`, kind `kind`, in the touchable list. The callers pass
  * `tag` and `kind` in variables: the ROM loads both into callee-saved
@@ -92,10 +86,7 @@ void SpawnStopwatch(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         Stopwatch *part = Stopwatch::Create(arg0, arg1, arg2, arg3);
 
         part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x1b0);
-        SetTag(part, 0);
-        part->ResetFrameTimer();
-        part->ResetFrameIndex();
-        part->SetAnimDone(0);
+        part->StartAnim(0);
         part->palette = part->GetAnimPaletteSlot();
         part->kind = 0x1c;
         part->f.flags |= 0x10;

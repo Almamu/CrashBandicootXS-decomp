@@ -32,7 +32,7 @@ LevelSelectCursor::LevelSelectCursor()
 
     part = p;
     p->bank = AnimTable(0x240);
-    StartAnim(p, 0);
+    p->StartAnim(0);
     part->palette = part->GetAnimPaletteSlot();
     gPaletteCache->Lock(part->bank->anims[part->tag].paletteId);
     SetPos(0x78, 0x35);
@@ -71,28 +71,28 @@ void LevelSelectCursor::Update()
         }
         if (part->frame == 0) {
             state = 1;
-            StartAnim(part, gLevelSelectCursorAnims[1]);
+            part->StartAnim(gLevelSelectCursorAnims[1]);
         }
         break;
     case 1:
         part->AdvanceAnim();
         if (part->animDone) {
             state = 2;
-            StartAnim(part, gLevelSelectCursorAnims[2]);
+            part->StartAnim(gLevelSelectCursorAnims[2]);
         }
         break;
     case 2:
         part->AdvanceAnim();
         if (part->animDone) {
             state = 3;
-            StartAnim(part, gLevelSelectCursorAnims[3]);
+            part->StartAnim(gLevelSelectCursorAnims[3]);
         }
         break;
     case 3:
         part->AdvanceAnim();
         if (part->animDone) {
             state = 0;
-            StartAnim(part, gLevelSelectCursorAnims[0]);
+            part->StartAnim(gLevelSelectCursorAnims[0]);
             ResetIdleTimer();
         }
         break;

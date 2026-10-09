@@ -97,7 +97,7 @@ void Crate::ActivateNitroSwitch()
             one = 1;
             player->busy = one;
         }
-        SetTag(0x23);
+        StartAnim(0x23);
         anims = bank->anims;
         a = &anims[tag];
         slot = gPaletteCache->GetSlot(a->paletteId);
@@ -130,7 +130,7 @@ void Crate::ActivateIronSwitch()
     Crates()->LinkActive(this);
     state |= CRATE_STATE_BUSY;
     SetPlayerBusy();
-    SetTag(0x22);
+    StartAnim(0x22);
     {
         const struct sprite_anim *anims = bank->anims;
         const struct sprite_anim *a = &anims[tag];
@@ -228,47 +228,47 @@ void Crate::SolidifyOutline()
     kind = solidKind - ENTITY_BASIC_CRATE;
     switch (kind) {
     case CRATE_KIND_BASIC:
-        SetTag(0x1f);
+        StartAnim(0x1f);
         break;
     case CRATE_KIND_CHECKPOINT:
-        SetTag(0x1a);
+        StartAnim(0x1a);
         break;
     case CRATE_KIND_AKU_AKU:
-        SetTag(0x17);
+        StartAnim(0x17);
         break;
     case CRATE_KIND_ARROW:
-        SetTag(0x18);
+        StartAnim(0x18);
         break;
     case CRATE_KIND_NITRO_SWITCH:
-        SetTag(4);
+        StartAnim(4);
         break;
     case CRATE_KIND_IRON:
-        SetTag(0x20);
+        StartAnim(0x20);
         break;
     case CRATE_KIND_IRON_ARROW:
-        SetTag(2);
+        StartAnim(2);
         break;
     case CRATE_KIND_NITRO:
-        SetTag(5);
+        StartAnim(5);
         break;
     case CRATE_KIND_BOUNCY_WUMPA:
         bounceTimer = -0x2a;
-        SetTag(0x19);
+        StartAnim(0x19);
         break;
     case CRATE_KIND_REINFORCED:
-        SetTag(6);
+        StartAnim(6);
         break;
     case CRATE_KIND_TNT:
-        SetTag(0x11);
+        StartAnim(0x11);
         break;
     case CRATE_KIND_TIME_1:
-        SetTag(0xe);
+        StartAnim(0xe);
         break;
     case CRATE_KIND_TIME_2:
-        SetTag(0xf);
+        StartAnim(0xf);
         break;
     case CRATE_KIND_TIME_3:
-        SetTag(0x10);
+        StartAnim(0x10);
         break;
     }
     palette = GetAnimPaletteSlot();

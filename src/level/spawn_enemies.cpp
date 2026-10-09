@@ -42,15 +42,6 @@ static inline void AndFlags(Sprite *part, s32 mask)
     part->f.flags &= mask;
 }
 
-/* Animation `anim` from its start. */
-static inline void SetAnim(Sprite *part, s32 anim)
-{
-    part->tag = anim;
-    part->ResetFrameTimer();
-    part->ResetFrameIndex();
-    part->SetAnimDone(0);
-}
-
 /* The multi-field setters load every value before storing any, as the ROM
  * does; written as separate statements, each load and store interleave. */
 static inline void SetHitBox(EnemyCtrl *hdr, s32 l, s32 t, s32 r, s32 b)
@@ -89,13 +80,6 @@ static inline void SetMirror(Sprite *part, const struct entity_params *rec)
     part->mirrorFlags.mirrorY = rec->flags >> 2 & 1;
 }
 
-/* The u8 parameter keeps the toggled bit's truncation where the ROM
- * has it. */
-static inline void SetFlipX(Sprite *part, u8 value)
-{
-    part->mirrorFlags.mirrorX = value;
-}
-
 static inline void SetMirrorX(Sprite::MirrorFlags *bits, u8 value)
 {
     bits->mirrorX = value;
@@ -124,7 +108,7 @@ void SpawnLizard(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
     rec2 = EntityParams(arg3);
-    SetAnim(part, 0);
+    part->StartAnim(0);
     hdr->SetState(2);
     hdr->SetRangeX(rec2->p.patrol.rangeX);
 }
@@ -176,7 +160,7 @@ void SpawnVenusFlytrap(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
-    SetAnim(part, 1);
+    part->StartAnim(1);
     part->kind = 6;
     hdr->SetState(3);
     hdr->anims = gVenusFlytrapAnimMap;
@@ -269,7 +253,7 @@ void SpawnPenguin(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
     rec2 = EntityParams(arg3);
-    SetAnim(part, 0);
+    part->StartAnim(0);
     SetAnims(hdr, gPenguinAnimMap);
     SetAttackCycle(hdr, rec2->p.rangeAttackFirst.idleTime, rec2->p.rangeAttackFirst.attackTime,
                    rec2->p.rangeAttackFirst.cycleOffset);
@@ -291,7 +275,7 @@ void SpawnSeal(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr = new EnemyCtrl;
     hdr->Attach(part);
     hdr->kind = ENEMY_KIND_SEAL;
-    SetAnim(part, 0);
+    part->StartAnim(0);
     part->mover = hdr;
     hdr->Attach(part);
     SetKind(part, 1);
@@ -355,7 +339,7 @@ void SpawnPufferfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
     rec2 = EntityParams(arg3);
-    SetAnim(part, 2);
+    part->StartAnim(2);
     part->kind = 5;
     SetAnims(hdr, gPufferfishAnimMap);
     SetAttackCycle(hdr, rec2->p.cycle.idleTime, rec2->p.cycle.attackTime,
@@ -415,10 +399,10 @@ void SpawnMorayEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
-    SetAnim(part, 0);
+    part->StartAnim(0);
     {
         s32 f = part->mirrorFlags.mirrorX;
-        SetFlipX(part, !f);
+        part->SetFlipX(!f);
     }
     part->kind = 6;
     hdr->SetState(1);

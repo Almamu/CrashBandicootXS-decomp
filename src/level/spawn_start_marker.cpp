@@ -8,13 +8,6 @@ extern "C" {
 #include "globals.h"
 }
 
-/* The player's mirror bit stored from a parameter: a general bitfield
- * insert, as in the ROM. */
-static inline void SetFlipX(Player *p, u32 v)
-{
-    p->mirrorFlags.mirrorX = v;
-}
-
 /* Entity type 0x00, the player start of the normal rooms (#664,
  * include/spawners.hpp). Two halves:
  *
@@ -36,7 +29,7 @@ void SpawnStartMarker(u32 arg0, u16 x, u16 y, u16 z)
     if (gLevelState->GetSpawnAtStart()) {
         const struct entity_params *rec = EntityParams(z);
 
-        SetFlipX(gPlayer, (rec->flags >> 1) & 1);
+        gPlayer->SetFlipX((rec->flags >> 1) & 1);
         gPlayer->x = INT_TO_Q8(x);
         gPlayer->y = INT_TO_Q8(y);
     }
