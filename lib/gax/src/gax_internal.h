@@ -22,8 +22,15 @@ struct GaxPlayerState {
     void *channels[2];               /* 0x08 */
     u32 curChannelIdx;               /* 0x10 */
     struct GaxChannelFormat *format; /* 0x14 - the output format (GAX2_init) */
-    /* 0x18 - the 8-bit output double buffer (2 x frames), DMA1's source */
-    u32 outBuf;
+    /* 0x18 - the 8-bit output double buffer (2 x frames), DMA1's source.
+     * A pointer, not a u32 address like mixBuf: a u32 store shares the
+     * alias set of GAX2_init's `size` (a u32 in memory, since
+     * GaxCreateHandlers takes its address), so cse1 reloads `size` after
+     * the store and the size loses its register to a copy of
+     * `&gGaxPlayerState` (r4 for the ROM's r3). As a u32 it took a
+     * no-code use of the size (#662 rounds 4-8); round 9's type sweep
+     * found the pointer (any pointee type gives the same code). */
+    s8 *outBuf;
     /* 0x1c - the 16-bit mix buffer ((frames + 4) halfwords) the mixer renders into */
     u32 mixBuf;
     /* 0x20 - the echo delay line, sized for the longest DSP tap delay */
