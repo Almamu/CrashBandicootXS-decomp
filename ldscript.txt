@@ -124,7 +124,6 @@ SECTIONS
         build/crashbandicootxs/src/player/action_ctrl_update.o(.text);
         build/crashbandicootxs/src/player/action_ctrl_states.o(.text);
         build/crashbandicootxs/src/player/action_ctrl_land.o(.text);
-        build/crashbandicootxs/src/player/action_ctrl_hang.o(.text);
         build/crashbandicootxs/src/player/action_ctrl_moves.o(.text);
         build/crashbandicootxs/src/player/action_ctrl.o(.text);
         build/crashbandicootxs/src/player/swim_ctrl_stroke.o(.text);

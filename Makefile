@@ -281,7 +281,6 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/player/swim_ctrl_stroke.o \
                   $(C_BUILDDIR)/menus/continue_prompt.o \
                   $(C_BUILDDIR)/player/action_ctrl_states.o \
-                  $(C_BUILDDIR)/player/action_ctrl_hang.o \
                   $(C_BUILDDIR)/player/swim_ctrl.o \
                   $(C_BUILDDIR)/player/input_ctrl.o \
                   $(C_BUILDDIR)/bosses/cortex.o \
