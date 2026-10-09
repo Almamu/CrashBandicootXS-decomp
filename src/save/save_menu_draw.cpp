@@ -123,30 +123,23 @@ void SaveMenu::DrawCancel(u8 highlight)
  * clear/overwrite step rather than a width probe (the return value is
  * never used).
  *
- * Once a NAKED transcription; it matches as plain C under both
- * compilers. The ROM keeps the record offset 0x130 in r8 and the Y
- * constant 0x87 in sb: `y` is pinned to r9 and set after the
- * manager pointer is loaded (the unpinned draft swapped the two, as
- * global-alloc ranks 0x87 slightly above 0x130). */
+ * Once a NAKED transcription. The ROM keeps the record offset 0x130 in
+ * r8 and the Y constant 0x87 in sb; with the 0x87 written as a literal
+ * at each SetPos, as here, gcc shares it the ROM's way (the C kept it in
+ * a `y` pinned to r9; #662 round 2). */
 void SaveMenu::DrawYesNoPrompt(s32 value)
 {
     s32 w;
-    MATCH_HOLD_REG(s32, y, r9); // r9, as in the ROM (see above); still needed in C++
 
     gSmallFont->SetPalette(0);
     w = gSmallFont->MeasureText((u8 *)GetUiText(value));
-    {
-        s32 x = 0xa0 - w;
-        Font *m = gSmallFont;
-        y = 0x87;
-        m->SetPos(x, y);
-    }
+    gSmallFont->SetPos(0xa0 - w, 0x87);
     gSmallFont->DrawText((u8 *)GetUiText(value));
     gSmallFont->SetPalette(((flags >> 2) & 1) ? 1 : 2);
     if (!cursor) {
-        gSmallFont->SetPos(0xa8, y);
+        gSmallFont->SetPos(0xa8, 0x87);
         gSmallFont->DrawText((u8 *)gMenuCursorText);
-        gSmallFont->SetPos(0xb0, y);
+        gSmallFont->SetPos(0xb0, 0x87);
         gSmallFont->DrawText((u8 *)GetUiText(0x29));
     } else {
         gSmallFont->SetPos(0xa8, 0x91);
@@ -386,7 +379,13 @@ static inline void new_row_icon(UiSprite **slot, u32 tblOff, u32 frame)
  * docs/matching/archive/early-rom-naked-retry-2.md); the frame-0 address
  * pin and the r1 hold fix the last 6 halfwords. The C also needed three
  * MATCH_BARRIER()s of insn-count padding to keep the rowObj pointers'
- * stack slots in the ROM's order; the C++ doesn't. */
+ * stack slots in the ROM's order; the C++ doesn't.
+ * #662 round 2: `icon->tag = Opaque(frame)` for all three frames gets the
+ * frame-0 store right with no pin, and then the palette as the plain
+ * `palette = GetAnimPaletteSlot()` field store and `affine = 0x80` leave
+ * only the 0x80's place in the loop pre-header off;
+ * with the byte-wise palette store, the 0x80 needs a `u16` local to land
+ * there. */
 void SaveMenu::InitIcons()
 {
     u16 (*pal)[16];

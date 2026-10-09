@@ -43,7 +43,9 @@ extern "C" {
  *   constant's register.
  * - `MATCH_KEEP(arm3)` between the eor and the and stops combine
  *   from folding `(x ^ 1) & 1` into a `bic`, which the ROM doesn't have.
- * Both asm statements emit no code. Matches under both compilers. As
+ * Both asm statements emit no code (#662 round 2 also tried the tests as
+ * `!(REG_SIOCNT & 8)`/`!(REG_SIOCNT & 4)`-style bool expressions and as a
+ * volatile SioMultiCnt bitfield struct). Matches under both compilers. As
  * C++, the ready test is written `(v & 1) == 0`: g++'s `!(v & 1)` is a
  * bool negation, which combine turns into an eor/and pair. */
 s32 LinkSession::Update()
@@ -167,8 +169,8 @@ s32 LinkSession::Update()
  * Makefile's OLD_AGBCC_OBJS). History: docs/matching/archive/big-naked-retry-3.md,
  * early-rom-naked-retry-2.md, last-four-naked-retry.md,
  * last-six-naked-retry.md and last-seven-naked-retry.md (the first
- * receive loop, closed last: the load goes through a pointer biv and
- * the compare constants use the constant-init form).
+ * receive loop, closed last; it is a plain loop over the registers as
+ * volatile since #662 round 2).
  * `data` is SIOMULTI0-3 (link_sio.cpp passes 0x04000120). */
 /* A received SIOMULTI word, read back from a stack copy. */
 struct link_rx_word {
@@ -266,32 +268,19 @@ void LinkSession::HandleSerial(u16 *data)
         nId = 0;
         nFree = 0;
         {
-            u16 *d2 = data;
-            u16 *p;
-            u32 kid, kfree;
+            /* SIOMULTI0-3 are hardware registers: the ROM reads each one
+             * twice, as the word copy into `w` and for the 0xffff test
+             * (#662 round 2: the C read them through a pointer biv, with
+             * the test's constant in a MATCH_CONST). */
+            vu16 *multi = data;
 
-            /* Set before the loop, in the ROM's order: `&handshakeWord`,
-             * then the two compare constants, then the load pointer.
-             * `kfree` uses the constant-init form (no code beyond the
-             * `ldr`) so loop.c doesn't hoist it after `p`'s init; `kid`
-             * stays in place as a plain assignment. */
             f20 = &handshakeWord;
-            kid = 0xF0B;
-            MATCH_CONST(kfree, 0xffff);
-            p = data;
             for (i = 0; i <= 3; i++) {
-                /* The test address is taken first, so its giv is found
-                 * before `w[i]`'s; the load goes through the pointer biv
-                 * `p`, which isn't strength-reduced. That gives the ROM's
-                 * giv order (w in r2, test in r3). */
-                u16 *t = &d2[i];
-
-                w[i] = *(struct link_rx_word *)p;
-                if (w[i].hi == kid)
+                w[i] = *(struct link_rx_word *)&multi[i];
+                if (w[i].hi == 0xF0B)
                     nId++;
-                if (*t == kfree)
+                if (multi[i] == 0xffff)
                     nFree++;
-                p++;
             }
         }
         same = 1;
@@ -359,8 +348,7 @@ void LinkSession::HandleSerial(u16 *data)
             } else {
                 u16 want;
                 u16 hash;
-                s32 n, k;
-                u8 *src;
+                s32 n;
 
                 if (LINK_NIB(&q[1]).lo != p->rxSeq)
                     continue;
@@ -374,25 +362,7 @@ void LinkSession::HandleSerial(u16 *data)
                  * gets its own register (r7) instead of reusing the
                  * id-byte one. */
                 MATCH_USE(n);
-                src = &p->id[2];
-                /* The bounds test reaches the ring through an escaped copy
-                 * of `p` (no code), so CSE doesn't share its address with
-                 * the loop pre-headers, which recompute it as the ROM does. */
-                if (MATCH_KEEP_EXPR(LinkPlayer *, p)->ring.writePos < 0x80 - n) {
-                    for (k = n - 1; k != -1; k--) {
-                        p->ring.writePos++;
-                        p->ring.count++;
-                        p->ring.buf[p->ring.writePos] = *src++;
-                    }
-                } else {
-                    for (k = n - 1; k != -1; k--) {
-                        u8 b = *src++;
-
-                        p->ring.writePos = p->ring.writePos == 0x7f ? 0 : p->ring.writePos + 1;
-                        p->ring.count++;
-                        p->ring.buf[p->ring.writePos] = b;
-                    }
-                }
+                p->ring.Push(&p->id[2], n);
                 p->totalReceived += n;
                 p->prevHash = p->hash;
                 p->rxSeq = (p->rxSeq + 1) & 0xf;
@@ -455,13 +425,13 @@ void LinkSession::HandleSerial(u16 *data)
 
                 *b = (*b & ~0xf) | nib;
             }
-            hash = *(u16 *)&this->id[6];
+            hash = this->hash;
             LINK_HASH(hash, &this->id[1]);
             {
                 /* The ROM sets this 0 before the hash store. */
                 s32 z = 0;
 
-                *(u16 *)&this->id[6] = hash;
+                this->hash = hash;
                 sendRound = z;
             }
             changed = 1;
