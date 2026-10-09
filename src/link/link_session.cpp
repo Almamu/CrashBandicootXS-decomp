@@ -33,70 +33,22 @@ extern "C" {
  * counts up otherwise, and past 0x1d idle frames the session is reset.
  * Finally increments `connectCounter` and returns 1.
  *
- * Matched in the second near-miss sweep (37 halfwords before). The ROM
- * materializes two separate 1s after reading SIOCNT: r2 (copied to sb)
- * for `started`/IME and r1 for the arm3 flag. Three things reproduce
- * that:
- * - `MATCH_KEEP(one1)` keeps the flag's 1 from being merged into
- *   `one`.
- * - The ready test uses a literal 1, so `one` is a copy of that
- *   constant's register.
- * - `MATCH_KEEP(arm3)` between the eor and the and stops combine
- *   from folding `(x ^ 1) & 1` into a `bic`, which the ROM doesn't have.
- * Both asm statements emit no code (#662 round 2 also tried the tests as
- * `!(REG_SIOCNT & 8)`/`!(REG_SIOCNT & 4)`-style bool expressions and as a
- * volatile SioMultiCnt bitfield struct). Matches under both compilers. As
- * C++, the ready test is written `(v & 1) == 0`: g++'s `!(v & 1)` is a
- * bool negation, which combine turns into an eor/and pair.
- * #662 round 3 (RTL dumps): without MATCH_KEEP(one1), cse1 already puts
- * the eor/and on `one`'s pseudo and cse2 (the rerun after loop) then
- * canonicalizes every 1 to the first one, so one register is left. The
- * ROM has two registers holding 1, both set before the ready test and
- * one used only after it, so its second 1 was a value cse did not know
- * to be constant. Without MATCH_KEEP(arm3), combine rewrites
- * `(x ^ c) & c` as a bic. Tried: `arm3` as s32/u8/bool from
- * `!(REG_SIOCNT & 4)`, `!((REG_SIOCNT >> 2) & 1)`, `((REG_SIOCNT >> 2) ^ 1)
- * & 1` (one or two statements) and `== 0` forms; no flag of the brief's
- * list (-fno-gcse ... -fno-function-cse, -fno-regmove, -fno-force-mem)
- * matches the object without the keeps.
- * #662 round 4: cse hashes a constant by mode, so a QImode or HImode 1
- * would stay apart from the test's SImode one; `u8`/`u16` copies of the
- * flag still come out as one register. A `bit = 1` local set before
- * the test for the eor/and (with or without the test using it too) is
- * canonicalized to the test's 1, and combine still makes the bic. The
- * decomp-permuter on a C port (45 minutes) got from 1030 to 575 with no
- * natural change.
- * #662 round 5: `arm3 = (REG_SIOCNT & 4) == 0` is expr.c's store-flag of
- * a single bit (shift, xor 1, and 1: the ROM's eor/and), but its two 1s
- * are then the test's register, which is why combine makes the bic. The
- * ROM's 1 in r9 lives across IrqClearHandler/IrqSetHandler as a register
- * (`started` and REG_IME are stored from it), so cse saw it as one
- * value; the r1 copy, set before the test and used only after it, is the
- * one it did not know was 1.
- * #662 round 6: the started block is LinkSession::Start (link_sio.cpp,
- * unused) and the SIOCNT setup LinkSetupSio, step for step. Update
- * written with inline copies of both (`Start(((REG_SIOCNT >> 2) & 1) ==
- * 0)`, `Stop(); SetupSio(); return 0;`) compiles to this code except
- * the 1s (48 lines off without the keeps): the argument copy is cse'd
- * like the local, so there is still one 1 and a bic.
- * #662 round 7: the ROM's two 1s are the halfword-AND idiom of the
- * matched ActionCtrl states: Thumb has no HImode AND, so expand loads
- * an HImode 1, gives up and redoes the AND in SImode with a new 1. With
- * the ready test on a `u16` (`u16 v = REG_SIOCNT >> 3; if ((v & 1) ==
- * 0)`), `started = 1`, `arm3 = (REG_SIOCNT >> 2) ^ 1; arm3 &= 1;`,
- * `REG_IME = 1` and no keeps, the code is 6 lines off: r1 and r9 hold
- * the two 1s as in the ROM, but the ROM stores `started` from r9 (the
- * AND's) and does the eor and the and with r1, where cse gives
- * `started` (QImode, wider modes tried narrowest first) the HImode 1
- * and the and the SImode one. About 300 variants (the test's and
- * arm3's types and forms, statement order, an inline copy of Start, a
- * `MATCH_KEEP` between eor and and) don't move them, nor does a
- * private cse that tries the wider modes widest first (66 lines). */
+ * The ready flag and `arm3` are bytes, as Start's `u8 arm3` is. The
+ * ROM's two 1s after the SIOCNT read (r1 for arm3's eor and and, r9 for
+ * `started` and REG_IME) come from the byte AND: Thumb has no QImode AND,
+ * so expand loads a QImode 1, gives up and redoes the AND in SImode with
+ * a new 1 (the one the test uses and keeps in r9). cse gives arm3's
+ * byte-wide eor and and the QImode 1 through paradoxical subregs, which
+ * it can't fold to a constant, and `started` and REG_IME the SImode one.
+ * Until #662 round 8 the function had a `one1` local held by a
+ * MATCH_KEEP and a second MATCH_KEEP against a bic; with `u16` flags
+ * (round 7) it was 6 lines off, the HImode 1 then going to `started`.
+ * Found by tools/natural_enum.py over the flags' and locals' types and
+ * forms: every match has a byte `ready` and a byte `arm3`. */
 s32 LinkSession::Update()
 {
-    s32 arm3;
+    u8 arm3;
     u16 saved;
-    s32 one;
 
     if (!enabled)
         return 0;
@@ -107,23 +59,17 @@ s32 LinkSession::Update()
         sioConfigured = 1;
     }
     if (!started) {
-        s32 one1;
-        u32 v = REG_SIOCNT >> 3;
+        u8 ready = (REG_SIOCNT >> 3) & 1;
 
-        one1 = 1;
-        MATCH_KEEP(one1); /* keep the flag's own 1 (r1) */
-        one = 1;
-        if ((v & 1) == 0) {
+        if (!ready) {
             Stop();
             REG_RCNT = 0;
             REG_SIOCNT = SIO_MULTI_MODE;
             REG_SIOCNT |= SIO_115200_BPS | SIO_INTR_ENABLE;
             return 0;
         }
-        started = one;
-        arm3 = (REG_SIOCNT >> 2) ^ one1;
-        MATCH_KEEP(arm3); /* keep eor/and, not bic */
-        arm3 &= one1;
+        started = 1;
+        arm3 = ((REG_SIOCNT >> 2) ^ 1) & 1;
         REG_IME = 0;
         saved = REG_IME;
         REG_IME = 0;
@@ -141,7 +87,7 @@ s32 LinkSession::Update()
             REG_IE |= INTR_FLAG_TIMER3;
             REG_TM3CNT = 0x00C0BBBC;
         }
-        REG_IME = one;
+        REG_IME = 1;
         playerId = -1;
         idleFrames = 0;
         framesSinceIrq = 0;
@@ -411,7 +357,14 @@ void LinkSession::HandleSerial(u16 *data)
                  * the nibble bitfield, declared first, block-local
                  * around the push, and totalReceived before the push.
                  * #662 round 7: no other global.c priority formula gives
-                 * it either (see LinkSession::ResetState). */
+                 * it either (see LinkSession::ResetState). Round 8
+                 * (tools/natural_enum.py, 2160 variants: `n` and `want`
+                 * in all six integer types, `n` as `p->id[1] >> 4`, the
+                 * nibble bitfield or `(u8)` cast, the push, the
+                 * totalReceived, prevHash and rxSeq updates in either
+                 * order): 42 lines off; `(p->id[1] >> 4) & 0xf` gives
+                 * `n` r7 (28 off) but with an `ands` the ROM doesn't
+                 * have. */
                 MATCH_USE(n);
                 p->ring.Push(&p->id[2], n);
                 p->totalReceived += n;

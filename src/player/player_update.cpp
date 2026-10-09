@@ -85,7 +85,9 @@ static inline s32 IsBlinking(Player *p)
  * the only other such load in the ROM (DMA reads aside) that isn't this
  * one or HandleEvent's bump is Crate::QueuePlayerCollision's, matched
  * from a `side` computed with a test on a path that never reads it (see
- * ActionCtrl::HandleEvent's bump case); no variable here fits that. */
+ * ActionCtrl::HandleEvent's bump case); no variable here fits that.
+ * #662 round 8: tools/rtl_corpus.py's dead_load query (final RTL, every
+ * object) finds the same three. */
 void Player::HandleEvent(s32 from, s32 event, s32 arg)
 {
     switch (event) {

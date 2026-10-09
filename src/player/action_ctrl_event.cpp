@@ -173,7 +173,9 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
              * if (px > prevX) side = 1;` on a path that never reads
              * `side`, a function-scope variable the other path uses. That
              * is the dead store above, written for a reason; nothing in
-             * this case has a variable to compute that way. */
+             * this case has a variable to compute that way. #662 round
+             * 8: tools/rtl_corpus.py's dead_load query over every
+             * object's final RTL finds the same three. */
             *(volatile s32 *)&state;
             bumpTimer = 3;
             SetBumped(part, 1);
