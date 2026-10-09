@@ -129,10 +129,12 @@ void strcat_arm(u8 *dst, u8 *src)
  *   addlt r4, r4, #1`. As two ifs, jump.c turns the first into a
  *   conditional move (`movge r4, #0`), cse drops the second compare,
  *   and the ccfsm prints the second if as the ROM's `movlt`/`rsblt`.
- *   gcc can't tell that the two ifs together always set `neg` and warns
- *   that it "might be used uninitialized"; string_arm.o is built with
- *   -Wno-uninitialized (Makefile) instead of the no-code MATCH_HOLD(neg)
- *   that defined it first until #662 round 8 (the code is the same).
+ *   gcc can't tell that the two ifs together always set `neg`;
+ *   MATCH_HOLD(neg) defines it first (no code), for -Werror's "might be
+ *   used uninitialized". #662 round 8: without it (and the warning off)
+ *   the code is the same; the warning-silencing code stays, as for
+ *   GAX_fx and EEPROMWrite1_check, rather than a per-object
+ *   -Wno-uninitialized.
  * - MATCH_KEEP(base) keeps the `!= 16` test on base (r2) after the copy
  *   to `divisor` (ip), as in the ROM.
  * - `(ten = 10)` keeps `cmp r1, #10` with `addge`/`addlt`: fold-const
@@ -191,6 +193,7 @@ s32 itoa_arm(s32 value, u8 *buf, s32 base)
     s32 ten;
 
     MATCH_CONST(len, 0);
+    MATCH_HOLD(neg);
     num = value;
     if (num >= 0)
         neg = 0;

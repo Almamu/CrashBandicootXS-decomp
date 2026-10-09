@@ -672,8 +672,7 @@ in three places. Each has a cause in agbcc_arm's source and a C fix:
   the ROM: jump.c turns the first into a conditional move (`movge`), cse
   drops the second compare, and the ccfsm conditionalizes the second if.
   gcc then warns that `neg` might be used uninitialized (`-Werror`), so a
-  `MATCH_HOLD(neg)` defined it first; it emits nothing. (Since #662
-  round 8 string_arm.o is built with -Wno-uninitialized instead.)
+  `MATCH_HOLD(neg)` defines it first; it emits nothing.
 - **`movne r4, #0` after `movne r4, #45`.** The draft's `subne r4, r4,
   #45` comes from `reload_cse_move2add` (reload1.c), which rewrites a
   constant load as an add from the register's last known constant. It
