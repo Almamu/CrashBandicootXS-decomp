@@ -652,8 +652,8 @@ ProbeTerrainAxes__12GroundSprite ProbeGroundSpriteTerrain
 ProbeFloor__12GroundSpritePC11hitbox_quadPUc ProbeGroundSpriteFloor
 Update__12GroundSprite UpdateGroundSprite
 AnchorHitbox__12GroundSprite AnchorGroundSpriteHitbox
-# part 7h: the pickups (include/pickups.hpp, src/pickups/*.cpp) and
-# ActionCtrl::Reset (wumpa.cpp; its entry is in part 5's block)
+# part 7h: the pickups (include/pickups.hpp, src/pickups/*.cpp); ActionCtrl::Reset,
+# converted with them, is in part 5's block (action_ctrl_event.cpp)
 _vt.9ExtraLife gExtraLifeVtable
 CheckPickup__9ExtraLife CheckExtraLifePickup
 PickUp__9ExtraLifeUc PickUpExtraLife

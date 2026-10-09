@@ -3,8 +3,8 @@
 
 /* The action controller as C++ (#664, docs/cplusplus.md): the player's
  * controller on foot (room kind 0; PlayRoom creates it). Its code is in
- * src/player/action_ctrl*.cpp and action_ctrl_kill.cpp, and Reset in
- * src/pickups/wumpa.cpp (the ROM puts it there). cxx_symbols.txt maps
+ * src/player/action_ctrl*.cpp (Reset at the start of
+ * action_ctrl_event.cpp, where the ROM puts it). cxx_symbols.txt maps
  * every method declared here to its C name, for the vtable and state
  * table data.
  *
@@ -170,7 +170,7 @@ public:
         this->frames = frames;
     }
 
-    /* src/pickups/wumpa.cpp */
+    /* src/player/action_ctrl_event.cpp */
     void Reset();
 
     /* src/player/action_ctrl.cpp */

@@ -129,6 +129,7 @@ SECTIONS
         build/crashbandicootxs/src/pickups/extra_life.o(.text);
         build/crashbandicootxs/src/pickups/wumpa_update.o(.text);
         build/crashbandicootxs/src/pickups/wumpa.o(.text);
+        build/crashbandicootxs/src/pickups/stopwatch.o(.text);
         build/crashbandicootxs/src/player/action_ctrl_event.o(.text);
         build/crashbandicootxs/src/player/action_ctrl_kill.o(.text);
         build/crashbandicootxs/src/player/action_ctrl_update.o(.text);
@@ -447,7 +448,7 @@ SECTIONS
         build/crashbandicootxs/src/crates/crate_update.o(.gnu.linkonce.d._vt.5Crate); /* gCrateVtable */
         build/crashbandicootxs/src/pickups/extra_life.o(.gnu.linkonce.d._vt.9ExtraLife); /* gExtraLifeVtable */
         build/crashbandicootxs/src/pickups/wumpa.o(.gnu.linkonce.d._vt.5Wumpa); /* gWumpaVtable */
-        build/crashbandicootxs/src/pickups/wumpa.o(.gnu.linkonce.d._vt.9Stopwatch); /* gStopwatchVtable */
+        build/crashbandicootxs/src/pickups/stopwatch.o(.gnu.linkonce.d._vt.9Stopwatch); /* gStopwatchVtable */
         build/crashbandicootxs/src/player/action_ctrl_update.o(.gnu.linkonce.d._vt.10ActionCtrl); /* gActionCtrlVtable */
         build/crashbandicootxs/src/player/swim_ctrl.o(.gnu.linkonce.d._vt.8SwimCtrl); /* gSwimCtrlVtable */
         build/crashbandicootxs/src/player/input_ctrl.o(.gnu.linkonce.d._vt.9InputCtrl); /* gInputCtrlVtable */

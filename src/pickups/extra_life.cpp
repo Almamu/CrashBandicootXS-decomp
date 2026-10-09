@@ -13,8 +13,9 @@ extern "C" {
 #include "player.h"
 }
 
-/* The extra life, and the wumpa's CheckPickup, which the ROM puts with it
- * (#664, include/pickups.hpp). An old_agbcp object (OLD_AGBCC_OBJS). */
+/* The extra life (#664, include/pickups.hpp). An old_agbcp object
+ * (OLD_AGBCC_OBJS). The wumpa's CheckPickup, which the ROM puts right
+ * after it, starts wumpa_update.cpp. */
 
 /* Unless it is early in a hop (`phase` up to 0x16) while the player's
  * `ctrlMode` isn't 3, or it was already touched, or contact is off: on
@@ -271,44 +272,4 @@ void ExtraLife::SetHop(u8 mode)
 void ExtraLife::SetCounter(u8 value)
 {
     counter = value;
-}
-
-/* As ExtraLife::CheckPickup, but a player in the spin attack (kind 0x13)
- * is tested with the attack box, and picks the wumpa up to fly off the
- * screen, with the hit sound; otherwise it flies to the HUD. */
-void Wumpa::CheckPickup()
-{
-    if (mode != 0 && phase <= 0x16) {
-        if (gPlayer->ctrlMode != 3)
-            return;
-    }
-    {
-        u32 flags = f.flags << 24;
-        s32 contact;
-
-        if ((flags >> 27) & 1)
-            return;
-        contact = (flags >> 26) & 1;
-        if (!contact)
-            return;
-    }
-    struct aabb box = GetAnimHitbox();
-    Player *player = gPlayer;
-
-    if (player->kind == 0x13) {
-        struct aabb playerBox = player->GetAttackBox();
-
-        if (AabbOverlaps(&playerBox, &box)) {
-            f.b.bit3 = 1;
-            PickUp(1);
-            gAudioContext->PlaySfx(SFX_WUMPA_HIT, 0x80);
-        }
-    } else {
-        struct aabb playerBox = player->GetAnimHitbox();
-
-        if (AabbOverlaps(&playerBox, &box)) {
-            f.b.bit3 = 1;
-            PickUp(0);
-        }
-    }
 }

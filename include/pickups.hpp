@@ -6,7 +6,7 @@
  *   ExtraLife  0x54  gExtraLifeVtable (14 slots) src/pickups/extra_life.cpp
  *   Wumpa      0x54  gWumpaVtable     (14 slots) src/pickups/wumpa.cpp,
  *                                                wumpa_update.cpp
- *   Stopwatch  0x40  gStopwatchVtable (13 slots) src/pickups/wumpa.cpp
+ *   Stopwatch  0x40  gStopwatchVtable (13 slots) src/pickups/stopwatch.cpp
  *
  * The sizes are the ROM's: CreateExtraLife and CreateWumpa allocate 0x54
  * bytes, CreateStopwatch 0x40. The extra life and the wumpa have the same
@@ -17,8 +17,8 @@
  * cxx_symbols.txt maps the methods to their C names. Their spawners
  * (src/level/, include/spawners.hpp) are C++ since part 9.
  *
- * No `#pragma interface`: g++ emits the vtables in extra_life.cpp and
- * wumpa.cpp (see ctrl.hpp). */
+ * No `#pragma interface`: g++ emits the vtables in extra_life.cpp,
+ * wumpa.cpp and stopwatch.cpp (see ctrl.hpp). */
 
 #include "sprite_obj.hpp"
 
@@ -122,7 +122,7 @@ public:
     virtual void Draw();              // 4 DrawWumpa
     virtual s32 GetClassId();         // 9 GetWumpaClassId
     virtual ~Wumpa();                 // 10 DestroyWumpa
-    virtual void CheckPickup();       // 13 CheckWumpaPickup (extra_life.cpp)
+    virtual void CheckPickup();       // 13 CheckWumpaPickup (wumpa_update.cpp)
 
     /* Create's `new Wumpa(id, x, y)`: the constructor inlined, then the
      * spawn's id and position, which is home. */
