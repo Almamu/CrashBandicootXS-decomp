@@ -42,7 +42,7 @@ extern const u8 gDpadDirectionTable[16];
 extern void LoadTaggedAsset(const void *asset, void *dest);
 extern void LoadBackgroundTileAndPalette(const void *asset);
 
-/* src/system/boot.cpp */
+/* src/system/bios_util.cpp */
 extern s32 DivMod(s32 number, s32 denom, s32 *remainderOut);
 extern void *MemCopy32(void *dst, const void *src, u32 byteCount);
 

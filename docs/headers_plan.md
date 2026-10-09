@@ -871,7 +871,7 @@ needed an asm-label alias (`PlayAmbientSfx` in yeti_states.c, see
 "Codegen exceptions").
 
 - **`include/system.h`** (new) declares every function of asset.c,
-  boot.c, input.c, main.c, main_loop.c and the non-IRQ half of irq.c
+  bios_util.cpp, input.c, main.c, main_loop.c and the non-IRQ half of irq.c
   (`WaitForVBlank`, the frame limit, `UpdateKeys`, `ClearKeys`,
   `GetDpadDirection`), plus `LoadTaggedAssetBuffered` (defined in
   language_select.c for ROM order; batch 3 deferred it here), the frame

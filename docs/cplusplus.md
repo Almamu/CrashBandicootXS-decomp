@@ -643,7 +643,7 @@ counts them by kind) and what the C++ needed when it was converted.
 | `src/vehicle/jetpack_crates.cpp` | `JetpackBalloonCrate` (include/vehicle.hpp): `Update`, `Damage`, `Break`, `IsUnshootable`, the destructor, the out-of-line constructor (`InitJetpackBalloonCrate`, unused), `ClearBalloon`, `RunState` (unused), 3 states; `JetpackHealthCrate`, `JetpackTimeCrate`, `JetpackQuestionCrate`: constructors (`CreateJetpack*Crate`), `Update`, `Damage`; `JetpackParachuteNitro`, `JetpackRocket`: constructors, `Update`, `Damage`, `IsUnshootable`, `JetpackRocket::Launch`; `JetpackRing::Update` | 30 | agbcp (both match) | 62 pins, 3 `asm`, a file-scope `asm` literal pool, 30 retyped stores, 19 retyped reads, 2 `ACTOR_PMF_CALL`s, 2 `ACTOR_VCALL`s, 5 hand-written slot calls, the `goto` dispatch chains, a `__divsi3` call -> 0 | 11g |
 | `src/data/actor_pmf_17c42c.cpp` | `JetpackBalloonCrate::stateFuncs` (gJetpackBalloonCrateStateFuncs) | data | agbcp | the `ACTOR_PMF` records -> 0 | 11g |
 | `src/vehicle/jetpack_spawn.cpp` (again) | the crates', the parachute nitro's and the rocket's spawners: `new` | 0 + 1 | old_agbcp | 6 C-constructor calls on `AllocActor` (and `AllocActor`) -> 0 | 11g |
-| `src/system/boot.cpp` | `Ctrl::Update` (`UpdateCtrl`), with `DivMod` and `MemCopy32` (C linkage) | 1 + 2 | agbcp | 3 pins, 1 asm -> the same (`DivMod`'s SVC) | step 10b |
+| `src/system/bios_util.cpp` | `Ctrl::Update` (`UpdateCtrl`), with `DivMod` and `MemCopy32` (C linkage) | 1 + 2 | agbcp | 3 pins, 1 asm -> the same (`DivMod`'s SVC) | step 10b |
 | `src/cutscene/cutscene_player.cpp` | `BgStreamer` and `BgLayerBase`'s constructor, destructor and scroll steps (include/bg_layer.hpp), with the cutscene player's 4 functions (C linkage) | 21 + 4 | old_agbcp | 0 -> 0; 4 vtable stores, 4 slot calls -> 0 | step 10b |
 | `src/level/bg_layer_base.cpp` | `BgLayerBase`'s `Scroll`, `Reset`, `SetSource` and accessors, with the terrain tile cache's lookups (C linkage) | 10 + 5 | old_agbcp | 1 use -> 1 use | step 10b |
 | `src/level/bg_layer_init.cpp` | `BgLayer`'s constructor, `GrowRows`, `GrowColumns`, `ClipColumns`, `ClipRows` | 5 | **old_agbcp** (was agbcc) | 9 pins, 6 asm, a file-scope asm pool -> 0 | step 10b |
@@ -1017,7 +1017,7 @@ What made the C++ match:
   later in the class isn't compiled yet when an earlier one's body is, so
   it can't be inlined there.
 - **Struct arguments.** A struct passed by value is copied by g++ with
-  `memcpy`, which in this ROM is `MemCopy32` (src/system/boot.c; GAX has
+  `memcpy`, which in this ROM is `MemCopy32` (src/system/bios_util.cpp; GAX has
   `.set memcpy, MemCopy32`), so cxx_symbols.txt maps `memcpy` to it. That
   is `CollidePartList`'s "copy the box into a shared temporary" before each
   call: `CollideWithPlayer(box, part)`, with no `MemCopy32` in the source.
@@ -3009,7 +3009,7 @@ data.
   `{0, 0, 0}` (with `-fno-rtti`) and every slot is `{0, 0, fn}`, with the
   base's methods where the class doesn't override them. A class whose
   key method is C (until step 10b, `Ctrl`: `Update` was `UpdateCtrl` in
-  system/boot.c) or defined in no object gets no vtable anywhere.
+  system/bios_util.cpp) or defined in no object gets no vtable anywhere.
 - **The names.** objcopy's `--redefine-syms` (cxx_symbols.txt) already
   renamed `_vt.<len><Class>` to the C table's name, and the relocations
   in the table to the C names of the methods, so nothing else changes:
@@ -3057,11 +3057,11 @@ data.
 | `src/vehicle/jetpack_crates.cpp` | 4 | `JetpackBalloonCrate` and its three kinds |
 | `src/enemies/enemy_ctrl.cpp`, `src/pickups/wumpa.cpp`, `src/bosses/tiny_hop_pad.cpp`, `src/menus/level_select.cpp`, `src/vehicle/polar_pickups.cpp` | 2 each | `PeriodicSpawner`, `KnockedEnemyCtrl`; `Wumpa`, `Stopwatch`; `StompedHopPadCtrl`, `OneShotAnimCtrl`; `CameraLead`, `LaunchPad`; `PolarCollectedWumpa`, `PolarCrate` |
 | `src/cutscene/cutscene_player.cpp`, `src/util/aabb_setup.cpp` (step 10b) | 2 each | `BgStreamer`, `BgLayerBase`; `LargeFont`, `SmallFont` |
-| 29 others (4 of them since step 10b) | 1 each | `Entity` (graphics), `Sprite`, `UiSprite`, `MovingSprite`, `GroundSprite`, `Player`, `EnemyCtrl`, `EffectCtrl`, `Crate`, `ExtraLife`, `ActionCtrl`, `PlayerCtrl`, `InputCtrl`, `BossCtrl`, `MegaMixCtrl`, `TinyCtrl`, `Platform`, `PlatformMover`, `LevelSelectEntry`, `HudPart`, `ActorSelf` (gActorVtable), `PolarPlayer`, `JetpackPlayer`, `JetpackCollectedWumpa` (hovercraft.cpp), `LogoActor`; `Ctrl` (system/boot.cpp), `BgLayer` (level/bg_layer.cpp), `PooledBgLayer` (level/tile_slot_pool.cpp), `Font` (text/font.cpp) |
+| 29 others (4 of them since step 10b) | 1 each | `Entity` (graphics), `Sprite`, `UiSprite`, `MovingSprite`, `GroundSprite`, `Player`, `EnemyCtrl`, `EffectCtrl`, `Crate`, `ExtraLife`, `ActionCtrl`, `PlayerCtrl`, `InputCtrl`, `BossCtrl`, `MegaMixCtrl`, `TinyCtrl`, `Platform`, `PlatformMover`, `LevelSelectEntry`, `HudPart`, `ActorSelf` (gActorVtable), `PolarPlayer`, `JetpackPlayer`, `JetpackCollectedWumpa` (hovercraft.cpp), `LogoActor`; `Ctrl` (system/bios_util.cpp), `BgLayer` (level/bg_layer.cpp), `PooledBgLayer` (level/tile_slot_pool.cpp), `Font` (text/font.cpp) |
 
 **Still C after step 10** (src/data/entity_vtables_7e3bec.c), 8 tables
 whose class's key method was C code: `gCtrlVtable` (`Ctrl::Update` was
-`UpdateCtrl`, an empty function in system/boot.c), the background layers'
+`UpdateCtrl`, an empty function in system/bios_util.cpp), the background layers'
 four (`gBgStreamerVtable`, `gBgLayerBaseVtable`, `gBgLayerVtable`,
 `gPooledBgLayerVtable`) and the fonts' three (`gLargeFontVtable`,
 `gSmallFontVtable`, `gFontVtable`). Step 10b converted their classes
@@ -3092,11 +3092,11 @@ went, with include/vtable.h's `VTABLE_SECTION` and `VTABLE_SLOT` (the
 header keeps `struct vtable_slot`, the layout the C files read a vtable
 through). The report stays 2059/2059 functions and 100% data.
 
-- **`Ctrl::Update`** is the empty `UpdateCtrl` in system/boot.c, the
-  ROM's second object (after crt0). boot.c is boot.cpp now (agbcp, its
+- **`Ctrl::Update`** is the empty `UpdateCtrl` in system/bios_util.cpp, the
+  ROM's second object (after crt0). boot.c became boot.cpp (agbcp, its
   three functions unchanged, `DivMod`'s SVC asm and pins with them), and
   `void Ctrl::Update(MovingSprite *) {}` is Ctrl's key method, so g++
-  emits gCtrlVtable in boot.o. No function moved.
+  emits gCtrlVtable in boot.o (bios_util.o since #767). No function moved.
 - **The BG layers** (include/bg_layer.hpp): the tile-map ring buffer
   `BgStreamer` (gBgStreamerVtable: only its destructor), `BgLayerBase`
   (gBgLayerBaseVtable: the position, the parallax step and the
@@ -3153,7 +3153,7 @@ order), and it says which functions were inline and where a file ended:
 
 | Object | Classes | Compiler | Workarounds: C -> C++ |
 |---|---|---|---|
-| `src/system/boot.cpp` | `Ctrl::Update` (ctrl.hpp), with `DivMod` and `MemCopy32` (C linkage) | agbcp | 3 pins, 1 asm (DivMod's SVC) -> the same |
+| `src/system/bios_util.cpp` | `Ctrl::Update` (ctrl.hpp), with `DivMod` and `MemCopy32` (C linkage) | agbcp | 3 pins, 1 asm (DivMod's SVC) -> the same |
 | `src/cutscene/cutscene_player.cpp` | `BgStreamer`, `BgLayerBase`'s constructor, destructor, `ClampScrollStep`, `ClampScrollMax`, `ScaleScroll`, `StepScroll`, with the cutscene player's 4 functions (C linkage) | old_agbcp | 0 -> 0; 4 vtable stores, 4 slot calls -> 0 |
 | `src/level/bg_layer_base.cpp` | `BgLayerBase`'s `Scroll`, `Reset`, `SetSource` and accessors, with the terrain tile cache's lookups (C linkage) | old_agbcp | 1 use -> 1 use (`DecodeCollisionChunk`'s: without it r3/r4 swap) |
 | `src/level/bg_layer_init.cpp` | `BgLayer`'s constructor, `GrowRows`, `GrowColumns`, `ClipColumns`, `ClipRows` | **old_agbcp** (was agbcc) | 9 pins, 6 asm, a file-scope asm pool -> 0; 5 slot calls -> 0 |
@@ -4099,7 +4099,7 @@ Bigger controllers, roughly in order (function counts from
    SpawnSealSpawner), are C++ since parts 9 and 9b; Dingodile's shark
    (`DingodileSharkCtrl`, part 6b) derives from it.
 2. ~~**The rest of `Ctrl` and `InputCtrl`**~~: done in part 3, and
-   `Ctrl::Update` (`UpdateCtrl`, an empty function in system/boot.c) in
+   `Ctrl::Update` (`UpdateCtrl`, an empty function in system/bios_util.cpp) in
    step 10b.
 3. ~~**The swim controller**~~ (`PlayerCtrl`): done in part 4; its
    `Reset`/`Restart` (in `action_ctrl.cpp`) in part 5a. **The action

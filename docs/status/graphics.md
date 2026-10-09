@@ -70,7 +70,7 @@ and [graphics_loading.md](./graphics_loading.md).
   `player_update.c`) plus `mem_free`/`mem_alloc` wrappers.
 
 - `src/gfx/bitmap_screen.cpp` (new file, replacing `asm/code_3_1.s` -
-  boot-adjacent but not part of `src/system/boot.c` since
+  boot-adjacent but not part of `src/system/bios_util.cpp` since
   `main.c`/`memory.c`/`irq.c` sit between them in ROM order):
   `ShowBitmapScreen` - BG2 affine setup for a full-screen intro image; see
   `docs/matching.md` for the statement-ordering gotchas.

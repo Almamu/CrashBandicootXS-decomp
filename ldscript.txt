@@ -20,7 +20,7 @@ SECTIONS
 	ALIGN(4)
 	{
         build/crashbandicootxs/asm/crt0.o(.text);
-        build/crashbandicootxs/src/system/boot.o(.text);
+        build/crashbandicootxs/src/system/bios_util.o(.text);
         build/crashbandicootxs/src/system/main.o(.text);
         build/crashbandicootxs/src/system/memory.o(.text);
         build/crashbandicootxs/src/system/irq.o(.text);
@@ -403,7 +403,7 @@ SECTIONS
         build/crashbandicootxs/src/objects/moving_sprite_collide.o(.gnu.linkonce.d._vt.12MovingSprite); /* gMovingSpriteVtable */
         build/crashbandicootxs/src/objects/ground_sprite_collide.o(.gnu.linkonce.d._vt.12GroundSprite); /* gGroundSpriteVtable */
         build/crashbandicootxs/src/player/player_collide.o(.gnu.linkonce.d._vt.6Player); /* gPlayerVtable */
-        build/crashbandicootxs/src/system/boot.o(.gnu.linkonce.d._vt.4Ctrl); /* gCtrlVtable */
+        build/crashbandicootxs/src/system/bios_util.o(.gnu.linkonce.d._vt.4Ctrl); /* gCtrlVtable */
         build/crashbandicootxs/src/enemies/enemy_ctrl_update.o(.gnu.linkonce.d._vt.9EnemyCtrl); /* gEnemyCtrlVtable */
         build/crashbandicootxs/src/enemies/enemy_ctrl.o(.gnu.linkonce.d._vt.15PeriodicSpawner); /* gPeriodicSpawnerVtable */
         build/crashbandicootxs/src/enemies/enemy_ctrl.o(.gnu.linkonce.d._vt.16KnockedEnemyCtrl); /* gKnockedEnemyCtrlVtable */

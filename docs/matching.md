@@ -4825,13 +4825,13 @@ NOP padding (`0xc046`, "mov r8,r8") mismatched the ROM's zero-padding
 before the next raw function - the same alignment fix already
 established for other files' trailing functions.
 
-## `boot.c`/`bitmap_screen.c`: the boot-adjacent BIOS wrappers and the intro's affine BG setup
+## `bios_util.cpp`/`bitmap_screen.c`: the boot-adjacent BIOS wrappers and the intro's affine BG setup
 
 Four functions right after `asm/crt0.s`'s permanent hand-written boot
 stub, picked up from issue #2 as an end-to-end test of the chunk-issue
 contribution workflow:
 
-- **`DivMod`** (`src/system/boot.c`): a BIOS `Div` (SWI 6)
+- **`DivMod`** (`src/system/bios_util.cpp`): a BIOS `Div` (SWI 6)
   wrapper exposing both the quotient (return value) and the remainder
   (via an out-parameter). Written with inline asm rather than a plain
   `register`-pinned call, because the ROM saves the remainder-out
@@ -4850,7 +4850,7 @@ contribution workflow:
   `asm(".align 2, 0");` for the ROM's zero-fill padding before the next
   function.
 - **`ShowBitmapScreen`** (`src/gfx/bitmap_screen.cpp` - a separate file
-  from `boot.c` despite being boot-adjacent, since `main.c`/
+  from `bios_util.cpp` despite being boot-adjacent, since `main.c`/
   `memory.c`/`irq.c` sit between them in real ROM order and file order
   has to follow ROM address order, not "logical" grouping). Sets up BG2
   for an affine full-screen image (mode 1), computing a scale-only
@@ -4886,7 +4886,7 @@ stub itself) is permanent hand-written asm per standard GBA-decomp
 convention and isn't tracked as a function to match. `asm/code_3_1.s`
 (which held only `ShowBitmapScreen`) was deleted once matched, and
 `ldscript.txt`/`tools/report_units.py` updated for the new
-`boot.o`/`bitmap_screen.o` split.
+`bios_util.o`/`bitmap_screen.o` split.
 
 ## `0x080016EC`-`0x08001C80`: the `AudioContext` wrapper layer (first audio matches)
 
@@ -5511,7 +5511,7 @@ and `make NON_MATCHING=1 report`.
 `code_3_2_17.s`/`code_3_2_20e.s` boundary in the generated issue - the
 real functions live in `code_3_2_20e.s`, right before `__divsi3`'s
 raw division helper). `CpuSet` was *not* already matched despite
-`boot.c`'s comment calling it "the already-matched `CpuSet`"
+`bios_util.cpp`'s comment calling it "the already-matched `CpuSet`"
 - that comment describes `MemCopy32`'s *own* match, written in
 anticipation; the actual `CpuSet` definition was still raw here.
 

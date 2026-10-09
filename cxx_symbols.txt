@@ -21,7 +21,7 @@ __builtin_vec_delete OperatorDeleteArray
 _vt.4Ctrl gCtrlVtable
 __4Ctrl InitCtrl
 _._4Ctrl DestroyCtrl
-# Ctrl::Update is in src/system/boot.cpp (the key method: gCtrlVtable)
+# Ctrl::Update is in src/system/bios_util.cpp (the key method: gCtrlVtable)
 Update__4CtrlP12MovingSprite UpdateCtrl
 StartTargetMotionYFromSet__4CtrlP12MovingSpritei StartCtrlTargetMotionYFromSet
 SetTargetMotionX__4CtrlP12MovingSpritePCi SetCtrlTargetMotionX
@@ -331,7 +331,7 @@ SetDest__16CortexTargetCtrlP12MovingSpriteii SetCortexTargetDest
 # (include/sprite_obj.hpp; src/gfx/graphics.cpp, src/objects/sprite.cpp,
 # sprite_obj.cpp, sprite_anim.cpp)
 # g++ copies a struct passed by value with memcpy, which in this ROM is
-# MemCopy32 (src/system/boot.cpp; GAX's `.set memcpy, MemCopy32`)
+# MemCopy32 (src/system/bios_util.cpp; GAX's `.set memcpy, MemCopy32`)
 memcpy MemCopy32
 __14SpriteRenderer InitSpriteRenderer
 _._14SpriteRenderer DestroySpriteRenderer

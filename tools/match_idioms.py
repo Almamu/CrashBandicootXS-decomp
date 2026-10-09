@@ -834,7 +834,7 @@ def functions_report(list_dirty):
     for rel, name in dirty:
         obj = os.path.splitext(rel)[0]
         if obj not in total:
-            continue  # not a report unit (boot.cpp)
+            continue  # not a report unit (bios_util.cpp)
         with_wa[obj] += 1
     for obj in total:
         if with_wa[obj] > total[obj]:

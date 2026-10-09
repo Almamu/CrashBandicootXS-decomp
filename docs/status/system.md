@@ -31,7 +31,7 @@ category page - see [game_loop.md](./game_loop.md).
   the poll/confirm-check code (matching the ROM's own basic-block
   layout) instead of the natural top-to-bottom order - see
   [naked-sub_80010e0-matched.md](../matching/archive/naked-sub_80010e0-matched.md).
-- `src/system/boot.c`: `DivMod`, `MemCopy32`, `UpdateCtrl` -
+- `src/system/bios_util.cpp`: `DivMod`, `MemCopy32`, `UpdateCtrl` -
   boot-adjacent BIOS wrappers right after `asm/crt0.s`'s permanent boot
   stub (`start`, left as hand-written asm, not tracked as a function to
   match); see `docs/matching.md`
