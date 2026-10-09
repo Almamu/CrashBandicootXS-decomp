@@ -5,6 +5,12 @@
  * It stays in front of the cannon until its animation has played once,
  * then deletes itself. See docs/matching/archive/issue-63-0x08033ef4-actor.md. */
 
+/* gHovercraftCannonFlashVtable slot 4: none (the cannon's muzzle flash
+ * can't be hurt). */
+void HovercraftCannonFlash::Damage(s32)
+{
+}
+
 /* Follows the cannon and deletes itself once the animation is done.
  * Returns whether the flash is still there. Update's body; the ROM also
  * has it out of line, as RunState. A `bool`: Update's test of it is kept

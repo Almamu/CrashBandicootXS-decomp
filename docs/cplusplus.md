@@ -631,7 +631,7 @@ counts them by kind) and what the C++ needed when it was converted.
 | `src/bosses/hovercraft_state.cpp` | the hovercraft's getters, `StartHovercraftHitFlash`, `SetHovercraftFlashColor`, `LoseHovercraftPart`, `SetHovercraftState` (the inline `EnterHovercraftState` out of line), 3 states (C linkage) | 0 + 14 | agbcp | 22 pins, 2 `asm`, 4 retyped stores -> 1 pin | 11h |
 | `src/bosses/hovercraft_cannon.cpp` | `HovercraftCannon` (include/boss_actors.hpp): `StateFire`, `Damage`, `Update`, constructor (`CreateHovercraftCannon`), `StateDestroyed`, `StateWait`, `RunState`, `IsUnshootable` | 8 | agbcp | 15 pins, 1 const, 4 retyped stores, 1 retyped read, 2 `ACTOR_PMF_CALL`s, the hand-written destroy-slot call -> 0 | 11h |
 | `src/bosses/hovercraft_launcher.cpp` | `HovercraftLauncher` (include/boss_actors.hpp): the same eight methods as the cannon's | 8 | agbcp | 20 pins, 3 consts, 7 retyped stores, 2 `ACTOR_PMF_CALL`s, the hand-written destroy-slot call -> 0 | 11h |
-| `src/bosses/hovercraft_side_gun.cpp` | `HovercraftSideGun` (include/boss_actors.hpp): constructor (`CreateHovercraftSideGun`), `Damage`, `Update`, `RunState`, `IsUnshootable`; `HovercraftCannonFlash::Damage` | 6 | agbcp | 20 pins, 2 `asm` (one with a `.pool`), 4 retyped stores -> 0 | 11h |
+| `src/bosses/hovercraft_side_gun.cpp` | `HovercraftSideGun` (include/boss_actors.hpp): constructor (`CreateHovercraftSideGun`), `Damage`, `Update`, `RunState`, `IsUnshootable`; `HovercraftCannonFlash::Damage` (in hovercraft_cannon_flash.cpp since #769) | 6 | agbcp | 20 pins, 2 `asm` (one with a `.pool`), 4 retyped stores -> 0 | 11h |
 | `src/bosses/hovercraft_cannon_flash.cpp` | `HovercraftCannonFlash` (include/boss_actors.hpp): `Update`, constructor (`CreateHovercraftCannonFlash`), `RunState`, `IsUnshootable` | 4 | agbcp | 5 pins, 1 keep, 2 retyped stores, 2 hand-written destroy-slot calls -> 1 keep | 11h |
 | `src/data/actor_pmf_17c450.cpp` | `HovercraftFireball::stateFuncs` (gHovercraftFireballStateFuncs) | data | agbcp | the `ACTOR_PMF` records -> 0 | 11h |
 | `src/data/actor_state_17c4c8.cpp` | gHovercraftStateFuncs (a plain function table, C linkage), `HovercraftCannon::stateFuncs`, `HovercraftLauncher::stateFuncs` | data | agbcp | the `ACTOR_PMF` records -> 0 | 11h |
@@ -2523,7 +2523,7 @@ match under agbcp as their C did.
 | `HovercraftCannon : HpActor` | 0x70 | gHovercraftCannonVtable | hovercraft_cannon.cpp; its table in actor_state_17c4c8.cpp |
 | `HovercraftLauncher : HpActor` | 0x70 | gHovercraftLauncherVtable | hovercraft_launcher.cpp; its table in actor_state_17c4c8.cpp |
 | `HovercraftSideGun : HpActor` | 0x70 | gHovercraftSideGunVtable | hovercraft_side_gun.cpp |
-| `HovercraftCannonFlash : HpActor` | 0x5C | gHovercraftCannonFlashVtable | hovercraft_cannon_flash.cpp (its `Damage` in hovercraft_side_gun.cpp) |
+| `HovercraftCannonFlash : HpActor` | 0x5C | gHovercraftCannonFlashVtable | hovercraft_cannon_flash.cpp |
 | `JetpackRing : HpActor` (vehicle.hpp) | 0x5C | gJetpackRingVtable | jetpack_collected_wumpa.cpp (its `Update` is 11g's, jetpack_rocket.cpp) |
 | `JetpackCollectedWumpa : HpActor` (vehicle.hpp, new) | 0x64 | gJetpackCollectedWumpaVtable | jetpack_collected_wumpa.cpp |
 | the hovercraft | 0x1C | none | a bare `AnimPart` (gHovercraft) and globals, the airship's twin; its functions keep C linkage |

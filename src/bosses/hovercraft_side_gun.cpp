@@ -127,9 +127,3 @@ s32 HovercraftSideGun::IsUnshootable()
 {
     return dead;
 }
-
-/* gHovercraftCannonFlashVtable slot 4: none (the cannon's muzzle flash
- * can't be hurt). */
-void HovercraftCannonFlash::Damage(s32)
-{
-}
