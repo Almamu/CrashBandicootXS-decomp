@@ -80,8 +80,6 @@ SECTIONS
         build/crashbandicootxs/src/objects/ui_sprite.o(.text);
         build/crashbandicootxs/src/objects/part_list_collide.o(.text);
         build/crashbandicootxs/src/objects/part_list.o(.text);
-        build/crashbandicootxs/src/crates/crate_list_unlink.o(.text);
-        build/crashbandicootxs/src/crates/crate_list_link_active.o(.text);
         build/crashbandicootxs/src/crates/crate_list_update.o(.text);
         build/crashbandicootxs/src/crates/crate_list_draw.o(.text);
         build/crashbandicootxs/src/crates/crate_list_collide.o(.text);
