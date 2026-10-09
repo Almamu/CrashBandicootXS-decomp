@@ -639,7 +639,7 @@ SwimCtrl::~SwimCtrl()
 }
 
 /* Ctrl(), the vtable pointer, then Reset (ResetSwimCtrl, in
- * action_ctrl.cpp). */
+ * swim_ctrl_stroke.cpp). */
 SwimCtrl::SwimCtrl()
 {
     Reset();

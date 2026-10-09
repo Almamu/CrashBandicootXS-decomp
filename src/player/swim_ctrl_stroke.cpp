@@ -11,6 +11,49 @@ extern "C" {
 #include "math_util.h"
 }
 
+/* The swim controller's (SwimCtrl, include/swim_ctrl.hpp) Reset and
+ * Restart, then its three jump-table dispatchers. Reset and Restart were
+ * the end of action_ctrl.cpp (agbcp), which they follow in the ROM, until
+ * #768; they compile the same under old_agbcp. */
+
+/* SwimCtrl::Reset: everything cleared, with both motion entries 0
+ * pending and the level tilt (6); also the player's `bounce`. */
+void SwimCtrl::Reset()
+{
+    unk_26 = 0;
+    state = 0;
+    motionX = 0;
+    motionY = 0;
+    motionXPending = 1;
+    motionYPending = 1;
+    unk_14 = 0;
+    target = 0;
+    mode = 0;
+    spinCooldown = 0;
+    idleTimer = 0;
+    repeat = 0;
+    tilt = 6;
+    timer = 0;
+    timerMax = 0;
+    gPlayer->bounce = 0;
+}
+
+/* SwimCtrl::Restart: back to state 0 (StateIdle), level, with both
+ * motion entries 0 pending. */
+void SwimCtrl::Restart()
+{
+    SetState(0, 0, 0, 0);
+    idleTimer = 0;
+    repeat = 0;
+    tilt = 6;
+    mode = 0;
+    gPlayer->bounce = 0;
+    motionXPending = 1;
+    motionX = 0;
+    motionYPending = 1;
+    motionY = 0;
+}
+
 /* GitHub issue #19: 0x080159F8-0x08015FDC, the three jump-table
  * dispatchers of the swim controller, SwimCtrl (include/swim_ctrl.hpp;
  * #664, docs/cplusplus.md), documented in

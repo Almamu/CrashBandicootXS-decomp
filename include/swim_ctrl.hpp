@@ -13,9 +13,9 @@
 /* The swim controller (gSwimCtrlVtable; 0x30 bytes): the diving Crash's controller in the room-kind-1
  * (underwater) rooms, where play_room.cpp creates it (`new SwimCtrl`,
  * InitSwimCtrl(OperatorNew(0x30)) in its C). See swim_ctrl.cpp for the
- * states. Reset and Restart are in src/player/action_ctrl.cpp
- * (ResetSwimCtrl, RestartSwimCtrl), which the ROM puts with the action
- * controller's code. */
+ * states. Reset and Restart (ResetSwimCtrl, RestartSwimCtrl) start
+ * src/player/swim_ctrl_stroke.cpp, right after the action controller's
+ * code in the ROM. */
 class SwimCtrl : public Ctrl
 {
 public:
@@ -74,8 +74,8 @@ public:
     void StartStroke();
     void StartSpin();
     void ApplySwimDrift();
-    void Reset();   // ResetSwimCtrl, action_ctrl.cpp
-    void Restart(); // RestartSwimCtrl, action_ctrl.cpp
+    void Reset();   // ResetSwimCtrl, swim_ctrl_stroke.cpp
+    void Restart(); // RestartSwimCtrl, swim_ctrl_stroke.cpp
     void ClearMotionYPending();
     void ClearMotionXPending();
     u8 IsMotionYPending();
