@@ -112,7 +112,18 @@ void ActorSelf::Draw()
      * screen y computed through a temporary (as the x is) or as one
      * expression, or the projection declared just before its use; the
      * projection stays local to block 0, which ends at the scale test,
-     * and no -f flag or pair of flags makes it global. */
+     * and no -f flag or pair of flags makes it global.
+     * #662 round 4 (an instrumented local-alloc.c): in block 0 the
+     * projection (3 references, life 32-54) outranks `dist` (3, life
+     * 4-28), but the order doesn't matter: no local quantity holds r4 in
+     * 32-54, and with SMALL_REGISTER_CLASSES block_alloc doesn't widen
+     * lives (fake_birth/fake_death) against false dependencies, so the
+     * projection takes r4 either way. The ROM's r5 needs it global and
+     * ranked after the screen y. One variable for the projection and
+     * the screen x (both r5 in the ROM) does that and is 4 lines off:
+     * regmove's commutative fix-up then builds `x & 0x1ff` in the mask's
+     * register, since the variable's first set copies the call's r0
+     * (replacement_quality 1, against the constant's 3). */
     MATCH_HOLD_REG(s32, proj, r5) = __divsi3(gActorFocalLength << 0xc, dist);
     s32 screenY;
     s32 screenX;

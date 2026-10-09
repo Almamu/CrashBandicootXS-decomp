@@ -44,7 +44,13 @@ extern "C" {
  * `idx` dropped, used in the scan loops, the reset in an inline, or a
  * `bool active` all differ. #662 round 3: global-alloc's ranking (the
  * references over the live length) decides r7 against r8; no -f flag or
- * pair of flags, and either compiler, leaves the swap.
+ * pair of flags, and either compiler, leaves the swap. #662 round 4
+ * (greg dump): unnudged, `idx` has 4 references over 62 insns (2 * 4 /
+ * 62 = 0.129) and `base` 7 over 105 (0.133); `idx` needs 3 insns less
+ * or a fifth reference, `base` 4 insns more or a sixth reference less
+ * (its loop tests count twice each). Reading the index through `*idx`
+ * in any subset of the seven later uses of gActorSpawnIndex gives 17
+ * lines off at best.
  * NextThreshold is actor_spawn.cpp's `GetActorSpawnZ` address shape,
  * returned as a pointer so the load lands after the limit. */
 
