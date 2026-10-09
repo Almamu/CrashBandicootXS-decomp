@@ -5,7 +5,6 @@
 
 extern "C" {
 #include "math_util.h"
-#include "match.h"
 #include "util.h"
 #include "gfx.h"
 #include "memory.h"
@@ -185,50 +184,28 @@ static inline Sprite *SpawnPickupEffect(s32 kind, s32 x, s32 y)
  * and while it is in contact, its hitbox against the player's. On a
  * touch it tells the player (the player's HandleEvent with its kind),
  * marks itself gone, and spawns the effect of its kind (0x1b-0x22) at its
- * position, semi-transparent and out of contact. */
+ * position, semi-transparent and out of contact.
+ *
+ * Written with Entity's accessors (IsTouched, IsContactEnabled,
+ * SetTouched, MarkGone; include/entity.hpp). #662 round 6: the inlined
+ * u8 returns give the ROM's `lsl #24` and the shared 1 of the two tests
+ * and the gone flag, and MarkGone's own bitmap write loads its 1 fresh;
+ * the open-coded tests and ENTITY_SET_GONE_BIT needed a pinned 1 (rounds
+ * 1-5). */
 s32 Sprite::CheckPlayerContact()
 {
     Sprite *spawned;
-    u32 flags = f.flags << 24;
 
-    /* The 1 that the two tests and the gone flag share is pinned: written
-     * as constants, old_agbcp loads a fresh 1 for the flag's OR and gives
-     * the tests' register to the gone bit's shift instead, the other way
-     * round from the ROM. #662 round 3 (RTL): the OR on the u8 `flags`
-     * is expanded as an SImode OR of two QImode subregs, so its 1 is a
-     * QImode constant that cse can't replace with the tests' SImode
-     * register. The `1 << bit` is SImode, so cse gives it that register.
-     * In the ROM the OR has it. `f.flags = f.flags | 1`, `(u32)` casts,
-     * a `u32 one` local (cse folds it), MarkGone and every -f flag toggle
-     * stay 20 or more lines off. Only a register cse doesn't track works.
-     * #662 round 4 (cse.c): insert_regs puts every SImode pseudo set to 1
-     * in one quantity (make_regs_eqv), so the gone bit's `1 << bit`
-     * takes the tests' register unless that register is set again
-     * before it. `one |= f.flags; f.flags = one;` does that (the shift
-     * then loads its own 1, as in the ROM, and the OR uses the tests'
-     * r6), but the OR's result then lands in `one`'s r6 instead of r0
-     * (6 lines off); with a separate result the shift is tied again.
-     * #662 round 5: `f.b.gone = 1` or `= one`, `(u32)f.flags | 1`,
-     * ENTITY_MARK_GONE, and a do/while(0) around the OR (cse ends a
-     * block at a loop end; cse2, after loop.c, doesn't, and links the
-     * shift's 1 there) stay 12-16 lines off; a cse that doesn't link
-     * equal constants changes other functions here (see
-     * ActionCtrl::HandleEvent's bounce). */
-    MATCH_HOLD_REG(u32, one, r6);
-    s32 touched = (flags >> 27) & (one = 1);
-
-    if (!touched && ((flags >> 26) & one)) {
+    if (!IsTouched() && IsContactEnabled()) {
         struct aabb a = GetAnimHitbox();
 
         if (gPlayer->f.flags >> 7) {
             struct aabb b = gPlayer->GetAnimHitbox();
 
             if (AabbOverlaps(&b, &a)) {
-                f.b.bit3 = 1;
+                SetTouched();
                 gPlayer->HandleEvent(0, kind, 0);
-                f.flags |= one;
-                if (id != ENTITY_ID_NONE)
-                    ENTITY_SET_GONE_BIT(id);
+                MarkGone();
 
                 spawned = 0;
                 switch (kind) {
