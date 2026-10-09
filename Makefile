@@ -312,6 +312,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/frontend/language_select_setup.o \
                   $(C_BUILDDIR)/frontend/starfield.o \
                   $(C_BUILDDIR)/gfx/graphics_package.o \
+                  $(C_BUILDDIR)/gfx/scaled_sprite.o \
                   $(C_BUILDDIR)/hud/hud_init.o \
                   $(C_BUILDDIR)/hud/hud_lives.o \
                   $(C_BUILDDIR)/text/font_glyph.o \

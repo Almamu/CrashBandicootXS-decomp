@@ -163,6 +163,7 @@ SECTIONS
         build/crashbandicootxs/src/menus/level_select_entry.o(.text);
         build/crashbandicootxs/src/menus/level_select_cursor.o(.text);
         build/crashbandicootxs/src/gfx/graphics_package.o(.text);
+        build/crashbandicootxs/src/gfx/scaled_sprite.o(.text);
         build/crashbandicootxs/src/level/spawn_start_marker.o(.text);
         build/crashbandicootxs/src/level/spawn_gems.o(.text);
         build/crashbandicootxs/src/level/spawn_enemies.o(.text);

@@ -104,7 +104,7 @@ union dispcnt {
  * and DrawAffineSpritePieces build one on the stack (their local `struct
  * oam_pair`/`oam_attr01` and gfx.h's `oam_attr2` were copies, #574
  * batch 9e), as do the credits' logos; Font::DrawGlyph builds one in the
- * font's `oam_scratch`, and graphics_package.cpp's scaled sprite keeps
+ * font's `oam_scratch`, and scaled_sprite.cpp's scaled sprite keeps
  * one. font_glyph.cpp's `struct glyph_oam`, credits.cpp's `struct
  * popup_oam` (byte and halfword units) and graphics_package.cpp's `struct
  * oam_attrs_u16` (halfword units) were copies too; all of their objects

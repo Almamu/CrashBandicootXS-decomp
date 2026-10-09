@@ -32,7 +32,8 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   [issue-47-graphics-loading.md](../matching/archive/issue-47-graphics-loading.md)
   for the full write-up (issue #47).
 
-- **`LoadGraphicsPackage`**-**`ResetScaledSpriteAttrs`** (`src/gfx/graphics_package.c`) -
+- **`LoadGraphicsPackage`**-**`ResetScaledSpriteAttrs`** (`src/gfx/graphics_package.c`; the
+  sprite box, `FitScaledSprite` on, in `src/gfx/scaled_sprite.cpp` since #767) -
   issue #30's BG
   loader and its `struct bg_setup` accessors (`include/graphics_package.h`)
   and the sprite-box fitter `FitScaledSprite`/`DrawScaledSprite`. All built with

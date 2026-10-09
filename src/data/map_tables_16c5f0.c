@@ -28,7 +28,7 @@ const u32 gLevelSelectCursorAnims[4] = {
 };
 
 /* The OBJ shape/size index as width and height in pixels, as s32s:
- * FitScaledSprite and DrawScaledSprite (graphics_package.cpp). The same
+ * FitScaledSprite and DrawScaledSprite (scaled_sprite.cpp). The same
  * sizes as gObjPieceWidths/0816B2EC in another order (the shape
  * bits first). */
 const s32 gObjSizeWidths[12] = {

@@ -459,7 +459,7 @@ counts them by kind) and what the C++ needed when it was converted.
 | `src/hud/hud_slide.cpp` | `Hud`'s slides (`UpdateSlides`, the four `Show*`, `StepSlide`), `SetCrateTotal`, `IncCrateTotal`, destructor (`DestroyHud`: `delete[] parts`) | 9 | agbcp | 0 -> 0; the slot-10 destructor loop and `OperatorDeleteArray` go | cleanup |
 | `src/gfx/sprite_pieces.cpp` | `SpriteRenderer::DrawPieces` (`DrawSpritePieces`, sprite_obj.hpp) | 1 | old_agbcp | 0 -> 0; the slot-11 call is `Sprite::GetPriority`, the `struct oam_part` view goes | cleanup |
 | `src/gfx/affine_sprite_pieces.cpp` | `SpriteRenderer::DrawAffinePieces` (`DrawAffineSpritePieces`) | 1 | old_agbcp | 1 use -> 1 use; the slot-11 call is `Sprite::GetPriority`, the `struct affine_part` view goes | cleanup |
-| `src/gfx/graphics_package.cpp` | `LoadGraphicsPackage`, the BG setup and sprite-box functions (C linkage) | 0 + 8 | old_agbcp | 0 -> 0; `OperatorNewArray`/`OperatorDeleteArray` -> `new u16[]`/`delete[]` | cleanup |
+| `src/gfx/graphics_package.cpp` (the sprite box in `scaled_sprite.cpp` since #767) | `LoadGraphicsPackage`, the BG setup and sprite-box functions (C linkage) | 0 + 8 | old_agbcp | 0 -> 0; `OperatorNewArray`/`OperatorDeleteArray` -> `new u16[]`/`delete[]` | cleanup |
 | globals.h, hud.h, part_list.hpp, objects.h, gfx.h, extra_life.cpp, wumpa_update.cpp, crate_break.cpp, player_event.cpp, sprite.cpp, sprite_anim.cpp | `gHud` is a `Hud *` to C++; the C++ callers' `ShowHud*(gHud)` are methods, the pieces' callers `SpriteRenderer` methods; struct hud_digit_part, hud_anim_record/data, HUD_CLAMP_FRAME and 15 dead prototypes go | 0 | (unchanged) | 0 -> 0 | cleanup |
 | `src/level/tile_cache.cpp` | `TileCache` (include/bg_layer.hpp; derives from level.h's struct tile_cache): constructor, destructor; with `GetTerrainType` (C linkage) | 2 + 1 | old_agbcp (old_agbcc C already) | 0 -> 0 |  cleanup |
 | `src/level/level_layers.cpp` (again) | `LevelLayers`: `new TileCache`, `delete tiles` (`InitTileCache(operator new(0x1064))`, `DestroyTileCache(tiles, 3)` before) | 0 | old_agbcp | 0 -> 0 | cleanup |
@@ -3970,7 +3970,7 @@ stay (cxx_symbols.txt's `#752` and `#753` blocks):
   compiles to the same OperatorNew and constructor call with no null test.
   `LoadGraphicsPackage` and `GetBgSetupControl` are `Load` and
   `GetControl`.
-- **ScaledSprite** (graphics_package.hpp; was graphics_package.cpp's
+- **ScaledSprite** (graphics_package.hpp, src/gfx/scaled_sprite.cpp since #767; was graphics_package.cpp's
   struct gfx_box_obj): the six sprite-box functions, all UNUSED, are its
   methods; gfx.h's nine prototypes went.
 
