@@ -223,7 +223,7 @@ static inline void SetDriftNowX(s32 start, s32 step, s32 target)
     p->rampX.target = target;
 }
 
-/* "Mark gone": MarkEntityGone's sequence (graphics.cpp), inlined - set flags
+/* "Mark gone": MarkEntityGone's sequence (entity.cpp), inlined - set flags
  * bit 0, then unless the id is 0xFFFF set its bit in the bitmap. */
 static inline void MarkGone(Player *t)
 {

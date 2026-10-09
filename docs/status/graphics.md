@@ -10,16 +10,21 @@ and [graphics_loading.md](./graphics_loading.md).
 
 ## Matched
 
-- `src/gfx/graphics.c`: `AllocVramDmaQueue`, `QueueVramDmaTransfer`,
-  `FreeVramDmaQueue`, `FlushVramDmaQueue`, `InitOamBuffer`, `DestroyOamBuffer`,
-  `AddOamEntry`, `CommitOamBuffer`, `RewindOamBuffer`, `MarkOamBufferBase`, `ResetOamBuffer`,
-  `HideUnusedOamEntries`, `AppendOamEntries`, `SetOamAffineScales`, `GetCompletionPercent`,
-  `RewindObjVram`, `MarkObjVram`, `GetObjVramFreeBytes`, `GetObjVramTile`, `ResetObjVram`,
-  `ReserveObjVram`, `UploadObjVram`, `DestroyObjVramCursor`, `InitObjVramCursor`, `LoadPaletteSlot`,
+- `src/gfx/graphics.c`, split in #767 into (ROM order) `src/save/game_progress.cpp`
+  (`GetCompletionPercent`, after the counts below), `src/gfx/oam_buffer.cpp`
+  (`SetOamAffineScales`, `AppendOamEntries`, `HideUnusedOamEntries`,
+  `RewindOamBuffer`, `MarkOamBufferBase`, `ResetOamBuffer`, `CommitOamBuffer`,
+  `AddOamEntry`, `DestroyOamBuffer`, `InitOamBuffer`), `src/gfx/vram_dma_queue.cpp`
+  (`FlushVramDmaQueue`, `QueueVramDmaTransfer`, `FreeVramDmaQueue`,
+  `AllocVramDmaQueue`), `src/gfx/obj_vram_cursor.cpp`
+  (`RewindObjVram`, `MarkObjVram`, `GetObjVramFreeBytes`, `GetObjVramTile`, `ResetObjVram`,
+  `ReserveObjVram`, `UploadObjVram`, `DestroyObjVramCursor`, `InitObjVramCursor`),
+  `src/gfx/palette_cache.cpp` (`LoadPaletteSlot`,
   `BindPaletteSlot`, `ClaimPaletteSlot`, `UnlockPalette`, `LockPalette`, `UploadPaletteSlot`,
   `UploadPaletteCache`, `GetPaletteSlot`, `FreePaletteSlot`, `FreeUnlockedPaletteSlots`, `SetPaletteCacheSource`,
-  `ClearPaletteCache`, `DestroyPaletteCache`, `InitPaletteCache`, `DestroySpriteBankSet`, `InitSpriteBankSet`,
-  `IsEntityNearCamera`, `CheckEntityPlayerContact`, `DrawEntity`, `UpdateEntity`, `GetEntityBounds`,
+  `ClearPaletteCache`, `DestroyPaletteCache`, `InitPaletteCache`),
+  `src/gfx/sprite_bank_set.cpp` (`DestroySpriteBankSet`, `InitSpriteBankSet`) and
+  `src/objects/entity.cpp`: `IsEntityNearCamera`, `CheckEntityPlayerContact`, `DrawEntity`, `UpdateEntity`, `GetEntityBounds`,
   `SetEntitySize`, `EntityOverlapsRect`, `IsEntityOnScreen`, `IsEntityInsideRect`,
   `WorldToScreen`, `WorldPosToScreen`, `nullsub_12`, `CreateEntity`,
   `GetEntityClassId`, `ResetEntity`, `InitEntity`, `ClearEntityAlwaysActive`,
@@ -31,7 +36,8 @@ and [graphics_loading.md](./graphics_loading.md).
   `SetEntityPos`, `SetEntityPosVec`, `SetEntityKind`, `GetEntityKind`,
   `GetEntityId`, `DestroyEntity`
 - `src/menus/power_dialog_draw.c`: `AnimatePowerDialog`, `CommitPowerDialogFrame`, `DestroyPowerDialog`,
-  `ShowTurboRunDialog`, `ShowTornadoSpinDialog`, `ShowDoubleJumpDialog`, `ShowSuperBodySlamDialog`, `GetProgressLives`,
+  `ShowTurboRunDialog`, `ShowTornadoSpinDialog`, `ShowDoubleJumpDialog`, `ShowSuperBodySlamDialog`;
+  then (`src/save/game_progress.cpp` since #767) `GetProgressLives`,
   `CountPlatinumRelics`, `CountGoldRelics`, `CountSapphireRelics`, `CountRelics`, `CountGems`,
   `CountClearGems`, `CountCrystals`
 - `src/gfx/fade.cpp`: `StepBrightnessFade`, `FadeBrightness`

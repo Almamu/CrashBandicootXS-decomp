@@ -7142,7 +7142,7 @@
    "consumer_files": [
     "enemies/enemy_ctrl.cpp",
     "objects/sprite_obj.cpp",
-    "gfx/graphics.cpp"
+    "objects/entity.cpp"
    ],
    "ptr_words_code": 10,
    "ptr_words_data": 0,

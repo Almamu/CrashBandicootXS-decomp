@@ -67,7 +67,13 @@ SECTIONS
         build/crashbandicootxs/src/menus/power_dialog.o(.text);
         build/crashbandicootxs/src/menus/power_dialog_loop.o(.text);
         build/crashbandicootxs/src/menus/power_dialog_draw.o(.text);
-        build/crashbandicootxs/src/gfx/graphics.o(.text);
+        build/crashbandicootxs/src/save/game_progress.o(.text);
+        build/crashbandicootxs/src/gfx/oam_buffer.o(.text);
+        build/crashbandicootxs/src/gfx/vram_dma_queue.o(.text);
+        build/crashbandicootxs/src/gfx/obj_vram_cursor.o(.text);
+        build/crashbandicootxs/src/gfx/palette_cache.o(.text);
+        build/crashbandicootxs/src/gfx/sprite_bank_set.o(.text);
+        build/crashbandicootxs/src/objects/entity.o(.text);
         build/crashbandicootxs/src/gfx/sprite_pieces.o(.text);
         build/crashbandicootxs/src/gfx/affine_sprite_pieces.o(.text);
         build/crashbandicootxs/src/objects/sprite.o(.text);
@@ -399,7 +405,7 @@ SECTIONS
          * ROM order: g++ emits each as its class's
          * .gnu.linkonce.d._vt.<class> section in its key-method object.
          * See docs/cplusplus.md, "Emitting the vtables". */
-        build/crashbandicootxs/src/gfx/graphics.o(.gnu.linkonce.d._vt.6Entity); /* gEntityVtable */
+        build/crashbandicootxs/src/objects/entity.o(.gnu.linkonce.d._vt.6Entity); /* gEntityVtable */
         build/crashbandicootxs/src/objects/sprite.o(.gnu.linkonce.d._vt.6Sprite); /* gSpriteObjVtable */
         build/crashbandicootxs/src/objects/sprite_anim.o(.gnu.linkonce.d._vt.8UiSprite); /* gUiSpriteObjVtable */
         build/crashbandicootxs/src/objects/moving_sprite_collide.o(.gnu.linkonce.d._vt.12MovingSprite); /* gMovingSpriteVtable */

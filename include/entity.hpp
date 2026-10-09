@@ -1,16 +1,16 @@
 #ifndef GUARD_ENTITY_HPP
 #define GUARD_ENTITY_HPP
 
-/* The entity base class (#664, docs/cplusplus.md; src/gfx/graphics.cpp,
+/* The entity base class (#664, docs/cplusplus.md; src/objects/entity.cpp,
  * gEntityVtable). include/sprite_obj.hpp builds the sprite classes on it.
  *
  * This header has no `#pragma interface`, unlike the other class
  * headers: its destructor is inline (the subclasses' destructors inline
  * it, as DestroySpriteObj and DestroyPeriodicSpawner show), and the ROM
  * still has an out-of-line copy, DestroyEntity, the last function of
- * graphics.cpp. That is g++ 2.9's rule for a class with no `#pragma
+ * entity.cpp. That is g++ 2.9's rule for a class with no `#pragma
  * interface`: the file that defines its first non-inline virtual method
- * (CheckPlayerContact, in graphics.cpp) gets the vtable and, at its end,
+ * (CheckPlayerContact, in entity.cpp) gets the vtable and, at its end,
  * the out-of-line copies of the inline virtual ones. The vtable it emits
  * is a weak symbol in a `.gnu.linkonce.d` section, which ldscript.txt
  * places at gEntityVtable's ROM address (docs/cplusplus.md, "Emitting
@@ -47,7 +47,7 @@ public:
     u8 unused_16[2];
     // 0x18: the vtable pointer
 
-    Entity();                                      // InitEntity: inline in graphics.cpp (see there)
+    Entity();                                      // InitEntity: inline in entity.cpp (see there)
     virtual s32 CheckPlayerContact();              // 1
     virtual const struct hitbox_quad *GetBounds(); // 2 - the hitbox record
     virtual void Update();                         // 3
@@ -61,7 +61,7 @@ public:
     void SetSize(s32 w, s32 h);
     void Reset();
 
-    /* The inline methods. graphics.cpp has their out-of-line copies at
+    /* The inline methods. entity.cpp has their out-of-line copies at
      * its end, in the reverse of this order (see the top of this file),
      * for the C callers: DestroyEntity is the last. A method calls one
      * declared after it out of line (SetPixelPosVec, SetPosVec), as in
@@ -222,7 +222,7 @@ public:
 
 COMPILE_TIME_ASSERT(entity_hpp, sizeof(Entity) == 0x1C);
 
-/* graphics.cpp's out-of-line copies of SetPixelPos and SetPos (above),
+/* entity.cpp's out-of-line copies of SetPixelPos and SetPos (above),
  * under their C names (cxx_symbols.txt). The ROM calls them out of line
  * from other files (the level select's sprites, the HUD, the crates, the
  * rooms...), where a call to the inline method would be inlined, so those

@@ -217,7 +217,13 @@ $(ELF): $(OBJS) $(LDSCRIPT)
 # -fprologue-bugfix option.
 OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/objects/sprite_obj.o \
-                  $(C_BUILDDIR)/gfx/graphics.o \
+                  $(C_BUILDDIR)/save/game_progress.o \
+                  $(C_BUILDDIR)/gfx/oam_buffer.o \
+                  $(C_BUILDDIR)/gfx/vram_dma_queue.o \
+                  $(C_BUILDDIR)/gfx/obj_vram_cursor.o \
+                  $(C_BUILDDIR)/gfx/palette_cache.o \
+                  $(C_BUILDDIR)/gfx/sprite_bank_set.o \
+                  $(C_BUILDDIR)/objects/entity.o \
                   $(C_BUILDDIR)/gfx/sprite_pieces.o \
                   $(C_BUILDDIR)/gfx/affine_sprite_pieces.o \
                   $(C_BUILDDIR)/gfx/display.o \
@@ -402,8 +408,9 @@ $(filter $(OLD_AGBCC_OBJS),$(CXX_OBJS)): CXX1 := $(CXX1_OLD)
 # (the copy constructor-like `DingodileProjectileCtrl(rocket)` in
 # dingodile.o, ...). The flag drops those copies and nothing else: each
 # object's code is the same with and without it as long as the class
-# keeps `#pragma interface`. graphics.o is the one key-method object the
-# ROM has the copies in (Entity's inline methods, DestroyEntity last).
+# keeps `#pragma interface`. entity.o (graphics.o until #767) is the one
+# key-method object the ROM has the copies in (Entity's inline methods,
+# DestroyEntity last).
 NO_IMPLEMENT_INLINES_OBJS := $(C_BUILDDIR)/actor/actor.o \
                              $(C_BUILDDIR)/actor/actor_anim.o \
                              $(C_BUILDDIR)/bosses/dingodile.o \

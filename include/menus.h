@@ -121,6 +121,8 @@ extern void ShowTurboRunDialog(void);
 extern void ShowTornadoSpinDialog(void);
 extern void ShowDoubleJumpDialog(void);
 extern void ShowSuperBodySlamDialog(void);
+
+/* src/save/game_progress.cpp: the save block's statistics */
 extern s32 GetProgressLives(const struct game_progress *save);
 extern s32 CountPlatinumRelics(const struct game_progress *save);
 extern s32 CountGoldRelics(const struct game_progress *save);
@@ -129,5 +131,6 @@ extern s32 CountRelics(const struct game_progress *save);
 extern s32 CountGems(const struct game_progress *save);
 extern s32 CountClearGems(const struct game_progress *save);
 extern s32 CountCrystals(const struct game_progress *save);
+extern s32 GetCompletionPercent(const struct game_progress *progress);
 
 #endif /* GUARD_MENUS_H */
