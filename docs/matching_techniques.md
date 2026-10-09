@@ -141,17 +141,19 @@ comment with its evidence.
 | `-fno-cse-skip-blocks` | `wumpa_update.o` | `Wumpa::Create`'s `phase` 0 has to be forgotten at the frame clamp's join, as in the ROM (`counter` gets a fresh 0). With skip-blocks cse carries it around the clamp. `SendToHud` needs skip-blocks, so it moved with `StartPayout` and `UpdateHop` to the start of `wumpa.cpp`, the next object (#662 round 3). |
 | `-O1` | `lib/agb_eeprom` (4 objects) | SDK code, above. |
 | no `-mthumb-interwork` | libgcc2 (`__divdi3`, ...) | The only ROM functions that return with `pop {r4-r7, pc}`. |
-| agbcp_arm_patched (the ARM C++ compiler), `-fomit-frame-pointer` | `string_arm.o`, `sprite_arm.o` | ARM code of the IWRAM image ([matching/iwram-image.md](./matching/iwram-image.md)); C++ like the rest of the game, the output is agbcc_arm's without the two options below. |
-| **agbcp_arm_patched**'s `-mleaf-no-lr-save`, `-fno-schedule-insns -fno-schedule-insns2` | `string_arm.o` | `itoa_arm` pushes r4-r6 without lr, which stock agbcc_arm can't; and the ROM keeps its loop increments, terminator store and swap in source order, which either scheduling pass reorders. The four other functions come out the same either way. |
-| **agbcp_arm_patched**'s `-minterwork-return-lr` | `sprite_arm.o` | `LookupSpriteFrameCache`'s three returns pop into lr (`ldmfd sp!, {lr}; bx lr`); stock agbcc_arm pops into ip. The four other functions come out the same either way (and need scheduling). |
+| agbcp_arm_patched (the ARM C++ compiler), `-fomit-frame-pointer` | `string_arm.o`, `sprite_arm.o` | ARM code of the IWRAM image ([matching/iwram-image.md](./matching/iwram-image.md)); C++ like the rest of the game, the output is agbcc_arm's without the four options below. |
+| **agbcp_arm_patched**'s `-mleaf-no-lr-save`, `-mno-cond-return`, `-fno-schedule-insns -fno-schedule-insns2` | `string_arm.o` | `itoa_arm` pushes r4-r6 without lr, which stock agbcc_arm can't; and the ROM keeps its loop increments, terminator store and swap in source order, which either scheduling pass reorders. `strncpy_arm` branches to its final `bx lr` where stock agbcc_arm makes `bxeq lr` for any C. The three other functions come out the same either way. |
+| **agbcp_arm_patched**'s `-minterwork-return-lr`, `-mstrict-cross-jump` | `sprite_arm.o` | `LookupSpriteFrameCache`'s three returns pop into lr (`ldmfd sp!, {lr}; bx lr`); stock agbcc_arm pops into ip. `HeapSortActorsByKey` keeps two identical loop tests that stock jump2 cross-jumps for any C, because each follows a label. The three other functions come out the same either way (and need scheduling). |
 
 **agbcc_arm_patched and agbcp_arm_patched are locally patched
 compilers, not a real toolchain.** The ROM's ARM code was built by a later build of
 agbcc_arm's own Cygnus/Red Hat line that has never been released; its
 code generation is agbcc_arm's except for two fixed strings in the
 prologue and return code, which no C reaches (fifth pass of
-[iwram-image.md](./matching/iwram-image.md)). So `itoa_arm` and
-`LookupSpriteFrameCache` are built with SAT-R/agbcc's agbcc_arm plus
+[iwram-image.md](./matching/iwram-image.md)), and two jump.c rules it
+doesn't have (ninth step). So `itoa_arm`, `LookupSpriteFrameCache`,
+`strncpy_arm` and `HeapSortActorsByKey` are built with SAT-R/agbcc's
+agbcc_arm plus
 [tools/agbcc_patches/agbcc_arm_prologue_return.patch](../tools/agbcc_patches/agbcc_arm_prologue_return.patch),
 which adds one opt-in option for each behaviour. Without the options
 its output is byte-identical to agbcc_arm's (checked on every C file in
@@ -225,9 +227,11 @@ Cases: [big-naked-retry-3.md](./matching/archive/big-naked-retry-3.md)
   before each `cmp` (the entry becomes a `b` to the bottom test, or the
   bottom one a `b` to the entry). If the ROM keeps both, a
   `MATCH_BARRIER()` before the loop and one at the end of its body block
-  the two directions; nothing else is emitted
-  (`HeapSortActorsByKey`, [iwram-image.md](./matching/iwram-image.md),
-  fourth pass).
+  the two directions; nothing else is emitted. In the IWRAM ARM code
+  the ROM's compiler doesn't have this rule, and `-mstrict-cross-jump`
+  turns it off instead (`HeapSortActorsByKey`,
+  [iwram-image.md](./matching/iwram-image.md), fourth pass and ninth
+  step).
 - **Early return vs one epilogue.** An early `return` gets its own copy
   of the epilogue. If the ROM branches to one, use `goto end;` and a
   single `return`. An early return can also flip which branch falls
@@ -842,7 +846,8 @@ each:
   shares with the test's own 1.
 - **Insn-count padding and tail separation** (`MATCH_BARRIER`, 13):
   the four in `GAX2_estimate` for the spill-slot order, the two in
-  `HeapSortActorsByKey` against cross-jumping.
+  `HeapSortActorsByKey` against cross-jumping (since fixed by the
+  compiler options, below).
 - **A stack-box address recomputed before each call** (`BOX_ADDR`, 12):
   `Crate::PlayerAnimWouldTouch` ([spill-slot order](#spill-slot-order)).
 - **A struct value in a register pair** (pins, until round 3's
@@ -918,8 +923,9 @@ Round 2 in level/, objects/, vehicle/, cutscene/ and pickups/ (C++):
 Kept, with what was tried in each comment: GAX2's hardware settle
 delays and ARM calls, `GaxHuffUnComp`'s SWI, the two `x = x`
 self-inits (the ROM uses the uninitialized register), `itoa_arm`,
-`strncpy_arm`'s conditional-return barrier, `HeapSortActorsByKey`'s
-barriers, `FindSubstring`'s case folds (63 more spellings: only `char`
+`strncpy_arm`'s conditional-return barrier and `HeapSortActorsByKey`'s
+barriers (both since fixed by the compiler options: iwram-image.md,
+"Ninth step"), `FindSubstring`'s case folds (63 more spellings: only `char`
 locals keep both arms' copies, with the truncation inside one arm),
 `GAX2_init`'s and `DrawWrappedText`'s holds and `GaxChannelMix`'s keep.
 
@@ -1023,9 +1029,11 @@ Round 2 in bosses/, enemies/ and actor/ (C++):
     `bl _call_via_rN`, and this gcc has no `long_call`.
   - `HeapSortActorsByKey`: jump2 always cross-jumps the two loop tests,
     because the label before the top `cmp` lowers find_cross_jump's
-    minimum to one insn.
+    minimum to one insn. Since fixed by the compiler options
+    (`-mstrict-cross-jump`).
   - `strncpy_arm`: jump.c makes a conditional RETURN of any jump to a
-    label that a return follows, whenever use_return_insn holds.
+    label that a return follows, whenever use_return_insn holds. Since
+    fixed by the compiler options (`-mno-cond-return`).
   - `GAX2_init`: global.c's priority, log2(refs) * refs / live length,
     puts fmt (0.136) above maxRate (0.127) unless maxRate gets the extra
     reference.
@@ -1300,15 +1308,18 @@ sites:
   each comment); `GaxChannelMix`'s instrument re-read (gcse PRE finds it
   redundant: nothing kills it, `__muldi3` being a const libcall) and its
   clamp keep.
-- **The IWRAM ARM compiler.** `HeapSortActorsByKey`'s barriers and
-  `strncpy_arm`'s are stock 2.9-arm-000512 behaviour no C avoids
-  (find_cross_jump's lowered minimum after a label; jump.c's
-  conditional RETURN). Private builds of agbcp_arm_patched that skip the
-  label rule, or refuse conditional returns, compile sprite_arm.o and
-  string_arm.o byte-identical to the ROM's without them: more evidence
-  for [the later ARM gcc](matching/iwram-image.md), and a candidate third
-  option for agbcc_arm_prologue_return.patch (not adopted; an owner's
-  call).
+- **The IWRAM ARM compiler: fixed by the compiler options.**
+  `HeapSortActorsByKey`'s barriers and `strncpy_arm`'s are stock
+  2.9-arm-000512 behaviour no C avoids (find_cross_jump's lowered
+  minimum after a label; jump.c's conditional RETURN). Private builds of
+  agbcp_arm_patched that skip the label rule, or refuse conditional
+  returns, compile sprite_arm.o and string_arm.o byte-identical to the
+  ROM's without them: more evidence for
+  [the later ARM gcc](matching/iwram-image.md). The owner adopted them
+  afterwards as two more opt-in options of
+  agbcc_arm_prologue_return.patch (`-mstrict-cross-jump` for
+  sprite_arm.o, `-mno-cond-return` for string_arm.o), and both
+  functions are now plain code (iwram-image.md, "Ninth step").
 - **Other configurations.** Every round-4 function's plain C (all its
   sites removed) was compiled under agbcc/old_agbcc, agbcp/old_agbcp
   or agbcp_arm_patched with -O1/-O2/-O3/-Os x prologue-bugfix on/off x
