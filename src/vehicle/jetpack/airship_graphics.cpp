@@ -4,7 +4,6 @@
 extern "C" {
 #include "globals.h"
 #include "math_util.h"
-#include "match.h"
 #include <libgcc.h>
 #include "actor.h"
 #include "gfx.h"
@@ -134,12 +133,16 @@ void Airship::LoadGraphics()
  * r1!`) because gAirshipMapFrames is a `u32` table (AnimPart's frame
  * offsets): the store has the int alias set, which may alias heights[],
  * so cse doesn't reuse the stored value (#662 round 3; as `u8 *` it did,
- * and an asm forced the re-read). The second loop has its own counter,
- * its header is written in the ROM's order, and the 0xf mask comes from
- * an `asm` so that it is the AND's first operand (the ROM copies the
- * mask, not the byte). Matches under both compilers.
+ * and an asm forced the re-read). The second loop has its own counter
+ * and its header is written in the ROM's order. In the pixel loop the
+ * 0xf mask is copied from a function-scope variable (`u32 m = mask;`),
+ * because that is what reproduces the ROM's mask copy: the mask stays
+ * the AND's first operand and regmove copies the mask register, not the
+ * byte (round 8 below). The copy is redundant; it was adopted by owner
+ * decision over the MATCH_CONST asm that used to set the mask. Matches
+ * under both compilers.
  *
- * Why the mask needs it (#662 round 3, from the dumps): which operand
+ * Why the mask needs an indirect source (#662 round 3, from the dumps): which operand
  * regmove copies into the result is the AND's first one, and cse1's
  * fold_rtx puts an operand whose value it knows to be constant second.
  * So a mask set anywhere cse can see it (in the pixel loop, `0xf & b`,
@@ -221,18 +224,16 @@ void Airship::LoadGraphics()
  * constant at the uses, so the ANDs keep the mask first; loop.c moves the
  * copy to the pixel loop's preheader, after the copied entry test, so it
  * stays in the row loop; and reload rematerialises `mask`'s REG_EQUIV 15
- * there. Both twins match that way, but the copy is redundant (junk
- * under #662's rules). An inline helper's parameter (integrate.c copies a
+ * there. Both twins match that way. The copy is redundant (junk under
+ * #662's rules): an inline helper's parameter (integrate.c copies a
  * parameter that isn't const) is the natural source of such a copy, but
  * every helper shape tried is 51-99 instructions off, and no matched
  * function has the copy (rtl_corpus.py's copy-of-const-in-loop finds
- * only MainLoop's call arguments). */
+ * only MainLoop's call arguments). The owner chose this form over the
+ * MATCH_CONST asm, which both twins used until then. */
 static inline u32 MeterPx(u32 v)
 {
-    u32 r = 0;
-    if (v != 0)
-        r = 0x10 | v;
-    return r;
+    return v != 0 ? 0x10 | v : 0;
 }
 
 void Airship::ConvertTiles()
@@ -245,7 +246,7 @@ void Airship::ConvertTiles()
     s32 row_i;
     u32 *dst;
     u32 *rows = mapFrames;
-    u32 m;
+    u32 mask = 0xf;
 
     stride = (u32)(mapCols * mapRows + 1) >> 1 << 2;
     for (k = 0; k < 4; k++) {
@@ -274,11 +275,9 @@ void Airship::ConvertTiles()
         n = *hp;
 
         for (j = 0; j < n << 4; j++) {
+            u32 m = mask;
             u32 b, c, p0, p1, p2, p3;
 
-            /* the 0xf mask without a constant-set register: the mask is
-             * the AND's first operand, as in the ROM */
-            MATCH_CONST(m, 0xf);
             b = *src;
             p0 = m & b;
             p0 = MeterPx(p0);
