@@ -1,5 +1,6 @@
 #include "action_ctrl.hpp"
 #include "sprite_obj.hpp"
+#include "key_input.hpp"
 
 extern "C" {
 #include "system.h"
@@ -32,11 +33,11 @@ void ActionCtrl::StateBodySlamLand()
     Player *p = part;
 
     if (p->animDone != 0) {
-        void *pad = gInput;
+        KeyInput *pad = gInput;
         u16 held = gKeys.all & R_BUTTON;
         u8 crouch = held != 0;
 
-        switch (GetDpadDirection(pad)) {
+        switch (pad->GetDpadDirection()) {
         case 2:
         case 7:
         case 8:

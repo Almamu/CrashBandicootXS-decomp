@@ -1,6 +1,7 @@
 #include "sprite_obj.hpp"
 #include "frontend.hpp"
 #include "audio.hpp"
+#include "key_input.hpp"
 
 extern "C" {
 #include "gba/dma_macros.h"
@@ -526,7 +527,7 @@ s32 TitleScreen::Run()
     for (;;) {
         Draw();
         starfield->Update();
-        UpdateKeys(gInput);
+        gInput->Update();
         pressed = gKeys.half.pressed;
         pressed = CheatInput(pressed);
         if (pressed & (A_BUTTON | START_BUTTON)) {

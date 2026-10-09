@@ -2,6 +2,7 @@
 #include "font.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "key_input.hpp"
 
 extern "C" {
 #include "system.h"
@@ -192,7 +193,7 @@ s32 PauseMenu::Loop()
         Draw();
         CommitFrame();
         Animate();
-        UpdateKeys(gInput);
+        gInput->Update();
         if (KEYS.pressed & DPAD_UP) {
             CursorUp();
             flashTimer = 0x1e;

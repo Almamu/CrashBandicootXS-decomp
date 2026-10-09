@@ -1,6 +1,7 @@
 #include "sprite_obj.hpp"
 #include "hud.hpp"
 #include "level_state.hpp"
+#include "key_input.hpp"
 
 extern "C" {
 #include "core.h"
@@ -153,7 +154,7 @@ s32 InitActorCategory(s32 category)
 
         state = &gLevelState;
         for (;;) {
-            UpdateKeys(gInput);
+            gInput->Update();
             AdvanceCellAnim();
             status = RunActorCategoryFrame();
             if ((*state)->timeTrial != 0)

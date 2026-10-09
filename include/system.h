@@ -54,11 +54,8 @@ extern void WaitForVBlank(void);
 extern void DisableFrameLimit(void);
 extern void SetFrameLimit(u32 interval);
 
-/* src/system/key_input.cpp. UpdateKeys and GetDpadDirection take the
- * input object (every caller passes gInput) but read gKeys directly; its
- * constructor, ClearKeys, is KeyInput's (spawners.hpp). */
-extern u8 GetDpadDirection(void *input);
-extern s32 UpdateKeys(void *input);
+/* src/system/key_input.cpp: KeyInput's constructor (ClearKeys),
+ * UpdateKeys and GetDpadDirection are its methods (key_input.hpp). */
 
 /* src/system/main.cpp */
 extern s32 AgbMain(void);

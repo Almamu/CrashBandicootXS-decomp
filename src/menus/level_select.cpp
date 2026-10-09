@@ -1,6 +1,7 @@
 #include "level_select.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "key_input.hpp"
 
 extern "C" {
 #include "match.h"
@@ -519,7 +520,7 @@ loop:
         goto loop;
     if (!panel->HasArrived())
         goto loop;
-    UpdateKeys(gInput);
+    gInput->Update();
     {
         union key_state k;
         union key_state keys = gKeys;
@@ -605,7 +606,7 @@ void LevelSelect::CursorLeft()
         pos = &positions[index];
         panel->Move(pos->x, pos->y - 0x18);
         WaitCursor();
-        UpdateKeys(gInput);
+        gInput->Update();
         if (!(gKeys.all & DPAD_LEFT))
             return;
     }
@@ -628,7 +629,7 @@ void LevelSelect::CursorRight()
         pos = &positions[index];
         panel->Move(pos->x, pos->y - 0x18);
         WaitCursor();
-        UpdateKeys(gInput);
+        gInput->Update();
         if (!(gKeys.all & DPAD_RIGHT))
             return;
     }

@@ -3,6 +3,7 @@
 #include "player.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "key_input.hpp"
 
 extern "C" {
 #include "system.h"
@@ -116,7 +117,7 @@ static inline void QueueNowY(SwimCtrl *self, s32 value)
 
 void SwimCtrl::CheckTurn()
 {
-    u8 dir = GetDpadDirection(gInput);
+    u8 dir = gInput->GetDpadDirection();
 
     switch (state) {
     case 0 ... 3:
@@ -289,13 +290,13 @@ void SwimCtrl::Update(MovingSprite *)
     } else {
         u32 keys;
         u8 dir;
-        void *inp;
+        KeyInput *inp;
 
         if (spinCooldown)
             spinCooldown--;
         inp = gInput;
         keys = gKeys.all; /* the whole word, held keys low */
-        dir = GetDpadDirection(inp);
+        dir = inp->GetDpadDirection();
 
         if (!(keys & (DPAD_UP | DPAD_DOWN)) && state != 2) {
             if (repeat && tilt != 6)
@@ -381,10 +382,10 @@ void SwimCtrl::StateIdle()
     struct keys k;
     u8 dir;
     u8 count;
-    void *inp = gInput;
+    KeyInput *inp = gInput;
 
     k = *(struct keys *)&gKeys;
-    dir = GetDpadDirection(inp);
+    dir = inp->GetDpadDirection();
     count = ++idleTimer;
     if (count == 30) {
         QueueNowY(this, 1);
@@ -410,7 +411,7 @@ void SwimCtrl::StateIdle()
 void SwimCtrl::StateSwim()
 {
     struct keys k;
-    u8 dir = GetDpadDirection(gInput);
+    u8 dir = gInput->GetDpadDirection();
 
     k = *(struct keys *)&gKeys;
     if (k.pressed & A_BUTTON) {
@@ -429,7 +430,7 @@ void SwimCtrl::StateSwim()
 
 void SwimCtrl::StateStroke()
 {
-    void *inp = gInput;
+    KeyInput *inp = gInput;
     struct keys k = *(struct keys *)&gKeys;
     struct keys *kp = &k;
 
@@ -438,7 +439,7 @@ void SwimCtrl::StateStroke()
         return;
     }
     if (target->animDone || gRoomFrameCount > deadline) {
-        u8 dir = GetDpadDirection(inp);
+        u8 dir = inp->GetDpadDirection();
 
         if (kp->pressed & A_BUTTON)
             StartStroke();
@@ -455,7 +456,7 @@ void SwimCtrl::StateStroke()
 
 void SwimCtrl::StateSpin()
 {
-    u8 dir = GetDpadDirection(gInput);
+    u8 dir = gInput->GetDpadDirection();
 
     if (++timer >= timerMax || target->animDone) {
         gPlayer->bounce = 0;
@@ -537,7 +538,7 @@ void SwimCtrl::StateTurn()
 
 void SwimCtrl::StateSwimStart()
 {
-    void *inp = gInput;
+    KeyInput *inp = gInput;
     struct keys k = *(struct keys *)&gKeys;
     struct keys *kp = &k;
 
@@ -546,7 +547,7 @@ void SwimCtrl::StateSwimStart()
         return;
     }
     if (target->animDone) {
-        u8 dir = GetDpadDirection(inp);
+        u8 dir = inp->GetDpadDirection();
 
         if (kp->pressed & A_BUTTON)
             StartStroke();

@@ -24,8 +24,6 @@
 #include "constants/entities.h"
 #include "constants/chunk_tokens.h"
 
-struct camera;
-
 /* The terrain types of the level collision maps (tile_cache.cpp): a
  * cell's low byte picks one (0x24 and above are solid, 0 is empty, and
  * GetTerrainHeights stops at 0x23), `modeValue` is a value per collision mode
@@ -58,32 +56,9 @@ struct entity_flags {
     u32 bits1Copy[64];                    // 0x308
 };
 
-/* The camera (`gCamera`, 0x18 bytes, allocated by PlayRoom; camera.cpp):
- * a Q8 position, a Q8 look-ahead offset, the followed object and the
- * mode. play_room.cpp called it `struct gl_scratch`, action_ctrl_event.c
- * `struct follow_state` and level_select.c `struct follow_owner`. */
-struct camera {
-    s32 x;  // 0x00 - Q8
-    s32 y;  // 0x04 - Q8
-    s32 vx; // 0x08 - Q8 look-ahead
-    s32 vy; // 0x0C - Q8 look-ahead
-#ifdef __cplusplus
-    class Sprite *target; // 0x10 - gPlayer, or the level select's camera lead (CameraLead)
-#else
-    void *target; // 0x10
-#endif
-    s32 mode; // 0x14 - 1/2 select StepCameraFacing/StepCameraDirectional
-};
-
 /* src/level/pooled_bg_layer.cpp (the BG layers' methods are BgLayer's and
  * PooledBgLayer's, include/bg_layer.hpp) */
 extern void nullsub_26(void);
-
-/* src/level/camera.cpp */
-extern void StepCameraDirectional(struct camera *cam);
-extern void StepCameraFacing(struct camera *cam);
-extern void SnapCamera(struct camera *cam);
-extern void UpdateCamera(struct camera *cam);
 
 /* src/level/entity_bitmap.cpp (UNUSED) */
 extern s32 SetBitmapBit(void *self, s32 n);

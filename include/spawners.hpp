@@ -18,6 +18,7 @@
 
 #include "sprite_obj.hpp"
 #include "pickups.hpp"
+#include "key_input.hpp"
 
 extern "C" {
 #include "level.h"
@@ -70,17 +71,6 @@ public:
 };
 
 COMPILE_TIME_ASSERT(spawners_hpp, sizeof(LevelEntityFlags) == 0x408);
-
-/* The key input object (gInput; system.h): UpdateKeys and
- * GetDpadDirection take it but read gKeys. Its constructor is ClearKeys
- * (src/system/key_input.cpp). */
-class KeyInput
-{
-public:
-    u32 unused;
-
-    KeyInput(); // ClearKeys
-};
 
 class EntitySpawner
 {

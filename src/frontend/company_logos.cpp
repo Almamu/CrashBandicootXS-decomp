@@ -1,6 +1,7 @@
 #include "sprite_obj.hpp"
 #include "frontend.hpp"
 #include "audio.hpp"
+#include "key_input.hpp"
 
 extern "C" {
 #include "gba/io_reg.h"
@@ -84,7 +85,7 @@ void CompanyLogos::Run()
         s32 v;
         s32 q;
 
-        UpdateKeys(gInput);
+        gInput->Update();
         if (gKeys.half.pressed & (A_BUTTON | START_BUTTON)) {
             if (fade > 0x40)
                 fade = 0x40;
@@ -134,7 +135,7 @@ void CompanyLogos::Run()
     while (fade != 0) {
         s32 v;
 
-        UpdateKeys(gInput);
+        gInput->Update();
         if (gKeys.half.pressed & (A_BUTTON | START_BUTTON)) {
             if (timer > 0)
                 timer = 1;

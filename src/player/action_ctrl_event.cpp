@@ -3,6 +3,8 @@
 #include "player.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "key_input.hpp"
+#include "camera.hpp"
 
 extern "C" {
 #include "match.h"
@@ -431,7 +433,7 @@ void ActionCtrl::UpdateSkidAnim()
  * bit 5 (Y mirrored) in those states. Returns whether he turned. */
 s32 ActionCtrl::UpdateFacing()
 {
-    s32 dir = GetDpadDirection(gInput);
+    s32 dir = gInput->GetDpadDirection();
     s32 turned = 0;
 
     switch (state) {

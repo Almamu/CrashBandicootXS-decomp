@@ -129,9 +129,9 @@ skip:
  * ice (X entry 0x1F). Then the facing. */
 void ActionCtrl::StateIdle()
 {
-    void *pad = gInput;
+    KeyInput *pad = gInput;
     u32 in = gKeys.all;
-    u8 dir = GetDpadDirection(pad);
+    u8 dir = pad->GetDpadDirection();
     s32 count;
     Player *p;
 
@@ -236,7 +236,7 @@ skip:
  * back to the plain one. */
 void ActionCtrl::StateRun()
 {
-    void **pad = &gInput;
+    KeyInput **pad = &gInput;
     u32 in = gKeys.all;
     u8 busy = CheckLeftGround();
 
@@ -276,7 +276,7 @@ void ActionCtrl::StateRun()
         }
     }
     {
-        u8 dir = GetDpadDirection(*pad);
+        u8 dir = (*pad)->GetDpadDirection();
 
         switch (dir) {
         case 0:
@@ -414,7 +414,7 @@ void ActionCtrl::StateJump()
             }
         }
     }
-    if (GetDpadDirection(gInput) <= 2) {
+    if (gInput->GetDpadDirection() <= 2) {
         if (gPlayer->slippery == 0)
             QueueNowX(0);
     } else {
@@ -468,10 +468,10 @@ static inline MovingSprite *SpawnSpark(s32 x, s32 y, s32 mirror)
  * else lands (animation 0x16). */
 void ActionCtrl::StateAirborne()
 {
-    void *pad = gInput;
+    KeyInput *pad = gInput;
     u32 in = gKeys.all;
     u8 contact = part->hitAxes;
-    u8 dir = GetDpadDirection(pad);
+    u8 dir = pad->GetDpadDirection();
     s32 state = this->state;
 
     if (state != ACTION_STATE_AIR_SPIN) {
@@ -734,7 +734,7 @@ void ActionCtrl::StateSlide()
             return;
         }
         {
-            u8 dir = GetDpadDirection(gInput);
+            u8 dir = gInput->GetDpadDirection();
 
             if (dir != 0 && part->HasRoomForAnim(2)) {
                 switch (dir) {
@@ -781,10 +781,10 @@ void ActionCtrl::StateSpin()
     u8 dir;
 
     {
-        void *pad = gInput;
+        KeyInput *pad = gInput;
 
         in = gKeys.all;
-        dir = GetDpadDirection(pad);
+        dir = pad->GetDpadDirection();
     }
     if (part->hitAxes == 0)
         QueueNowY(5);
@@ -877,10 +877,10 @@ void ActionCtrl::StateTornadoSpin()
     u8 dir;
 
     {
-        void *pad = gInput;
+        KeyInput *pad = gInput;
 
         in = gKeys.all;
-        dir = GetDpadDirection(pad);
+        dir = pad->GetDpadDirection();
     }
     if (part->hitAxes == 0) {
         if (tornadoTurn)
@@ -947,10 +947,10 @@ void ActionCtrl::StateCrouch()
     s32 moved;
 
     {
-        void *pad = gInput;
+        KeyInput *pad = gInput;
 
         in = gKeys.all;
-        dir = GetDpadDirection(pad);
+        dir = pad->GetDpadDirection();
     }
     if ((INPUT_PRESSED(in) & 1) && part->HasRoomForAnim(0xB) == 1) {
         gAudioContext->PlaySfx(SFX_HIGH_JUMP, 0x100);
@@ -1007,7 +1007,7 @@ turn_done:
 
     moved = 0;
     if (!turned) {
-        switch (GetDpadDirection(gInput)) {
+        switch (gInput->GetDpadDirection()) {
         case 3:
         case 4:
         case 7:
@@ -1104,7 +1104,7 @@ void ActionCtrl::StateCrawl()
     busy = CheckLeftGround();
     if (busy != 0)
         return;
-    dir = GetDpadDirection(gInput);
+    dir = gInput->GetDpadDirection();
     switch (dir) {
     case 0:
     case 2:

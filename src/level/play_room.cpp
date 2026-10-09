@@ -9,6 +9,8 @@
 #include "platform.hpp"
 #include "crate.hpp"
 #include "audio.hpp"
+#include "key_input.hpp"
+#include "camera.hpp"
 
 extern "C" {
 #include "core.h"
@@ -68,7 +70,7 @@ s32 LevelProgress::PlayRoom()
     gCollidableList = new PartList(0x80);
     gDecorationList = new PartList(0x40);
     gForegroundList = new PartList(0x40);
-    gCamera = (struct camera *)operator new(0x18);
+    gCamera = new Camera;
 
     {
         LevelLayers *layers = LevelLayers::Get();
@@ -155,7 +157,7 @@ s32 LevelProgress::PlayRoom()
     result = RunRoom();
 
     delete gLevelLayers;
-    operator delete(gCamera);
+    delete gCamera;
     delete gPlayer;
     delete gForegroundList;
     delete gDecorationList;
@@ -391,7 +393,7 @@ s32 LevelProgress::RunRoom()
     }
     gPlayer->palette = gPlayer->GetAnimPaletteSlot();
     RefreshPlayerTiles();
-    SnapCamera(gCamera);
+    gCamera->Snap();
     gLevelLayers->Reset();
 
     if (cat->kind == ROOM_KIND_ON_FOOT) {
@@ -419,13 +421,13 @@ s32 LevelProgress::RunRoom()
     while (!IsRoomExitRequested() && (gPlayer->f.bytes.flags & 1) == 0) {
         ResetObjBuffers();
         UpdateRoomFrame();
-        UpdateKeys(gInput);
+        gInput->Update();
         if (!gPlayer->dead && (gKeys.half.pressed & 8)) {
             s32 r = RunPauseMenu();
 
             if (r == 0) {
                 ResumeRoomAfterPause();
-                UpdateKeys(gInput);
+                gInput->Update();
             }
             if (r == 1) {
                 ret = 1;
@@ -526,7 +528,7 @@ fade:
 void LevelProgress::UpdateRoomFrame()
 {
     gPaletteCache->Upload();
-    UpdateCamera(gCamera);
+    gCamera->Update();
     gLevelLayers->Scroll();
     gPaletteCycles->Tick();
 

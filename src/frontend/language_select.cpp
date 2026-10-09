@@ -1,6 +1,7 @@
 #include "sprite_obj.hpp"
 #include "frontend.hpp"
 #include "audio.hpp"
+#include "key_input.hpp"
 
 extern "C" {
 #include "gba/dma_macros.h"
@@ -38,7 +39,7 @@ s32 LanguageSelect::Run()
     while (gLanguageSelect->done == 0) {
         u16 keys;
 
-        UpdateKeys(gInput);
+        gInput->Update();
         /* Read before gLanguageSelect, as the ROM loads them. */
         keys = gKeys.half.pressed;
         gLanguageSelect->Input(keys);

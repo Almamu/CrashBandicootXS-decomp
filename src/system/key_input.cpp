@@ -1,7 +1,9 @@
-/* The key input: GetDpadDirection, UpdateKeys and KeyInput's constructor
- * (ClearKeys). Split from irq.cpp (#767), same flags (old_agbcc). */
+/* The key input, KeyInput (include/key_input.hpp): GetDpadDirection,
+ * Update (UpdateKeys) and the constructor (ClearKeys). Split from irq.cpp
+ * (#767), same flags (old_agbcc). The methods use gKeys; `this` (gInput
+ * at every call site) is unused, as the C's `input` argument was. */
 
-#include "spawners.hpp"
+#include "key_input.hpp"
 
 extern "C" {
 #include "core.h"
@@ -10,8 +12,8 @@ extern "C" {
 }
 
 /* The held d-pad bits as a direction 0-8 (0 = none), through
- * gDpadDirectionTable. `input` (gInput at every call site) is unused. */
-u8 GetDpadDirection(void *input)
+ * gDpadDirectionTable. */
+u8 KeyInput::GetDpadDirection()
 {
     u8 idx = 0;
     if (gKeys.half.held & DPAD_RIGHT)
@@ -30,9 +32,8 @@ u8 GetDpadDirection(void *input)
  * updates `held` to the new state, then returns 1 if the low 4 bits
  * (A/B/Select/Start) are all held - a "soft reset" combo check. The
  * combo is a variable compared against the masked keys, as the ROM
- * compares two registers (a literal 0xF would be `cmp r0, #15`).
- * `input` (gInput at every call site) is unused. */
-s32 UpdateKeys(void *input)
+ * compares two registers (a literal 0xF would be `cmp r0, #15`). */
+s32 KeyInput::Update()
 {
     u16 keys = ~REG_KEYINPUT;
     s32 combo;
