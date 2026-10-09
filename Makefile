@@ -261,7 +261,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/objects/effect_ctrl.o \
                   $(C_BUILDDIR)/vehicle/polar/polar_player.o \
                   $(C_BUILDDIR)/vehicle/jetpack/jetpack_spawn.o \
-                  $(C_BUILDDIR)/vehicle/jetpack/jetpack_run.o \
+                  $(C_BUILDDIR)/vehicle/jetpack/jetpack_player_update.o \
                   $(C_BUILDDIR)/bosses/hovercraft.o \
                   $(C_BUILDDIR)/frontend/credits.o \
                   $(C_BUILDDIR)/vehicle/polar/polar_nitro.o \

@@ -396,7 +396,7 @@ public:
  * add an 8th). */
 
 /* The jetpack player (gJetpackPlayerVtable; src/vehicle/jetpack/jetpack_spawn.cpp,
- * jetpack_player.cpp and jetpack_run.cpp): its hit points are HpActor's,
+ * jetpack_player.cpp and jetpack_player_update.cpp): its hit points are HpActor's,
  * shown as a percentage (GetHp); the rest of its state is in the
  * gJetpack* globals (vehicle.h), as the ROM has it. CreateJetpackPlayer
  * makes it gActorList, the actor list's root. */

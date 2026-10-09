@@ -16,7 +16,7 @@ extern "C" {
 
 /* The jetpack levels' spawners and the jetpack player's constructor and
  * virtual methods (#664 part 11e, include/vehicle.hpp), ROM
- * 0x0802E0A4-0x0802F0DC, between yeti.cpp and jetpack_run.cpp:
+ * 0x0802E0A4-0x0802F0DC, between yeti.cpp and jetpack_player_update.cpp:
  *
  * - The level's spawn dispatcher `CreateJetpackActor` (a 31-case `switch`
  *   over the spawn "kind", indexing the per-kind record table

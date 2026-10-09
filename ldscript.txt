@@ -251,7 +251,7 @@ SECTIONS
         build/crashbandicootxs/src/vehicle/polar/yeti_graphics.o(.text);
         build/crashbandicootxs/src/vehicle/polar/yeti.o(.text);
         build/crashbandicootxs/src/vehicle/jetpack/jetpack_spawn.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack/jetpack_run.o(.text);
+        build/crashbandicootxs/src/vehicle/jetpack/jetpack_player_update.o(.text);
         build/crashbandicootxs/src/vehicle/jetpack/jetpack_player.o(.text);
         build/crashbandicootxs/src/actor/bg_picture.o(.text);
         build/crashbandicootxs/src/vehicle/jetpack/jetpack_shot.o(.text);

@@ -535,7 +535,7 @@ from "core" graphics.
   functions either (the raw `UpdateActionCtrl`/`TryActionCtrlDoubleJump`/`HandleActionCtrlAirInput`
   sit in between). See
   [docs/matching/archive/issue-16-actor-12160.md](../matching/archive/issue-16-actor-12160.md).
-- `src/vehicle/jetpack/jetpack_run.c`/`jetpack_player.c`/
+- `src/vehicle/jetpack/jetpack_player_update.c`/`jetpack_player.c`/
   `jetpack_shot.c` (new files, GitHub issue #56, ROM
   0x0802F0DC-0x0802FBF0 - a second boss-weapon "spawn/pre-attack"
   singleton and its `self` object, non-adjacent since the parked
@@ -1321,7 +1321,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   recheck for dead-branch elimination to collapse. The old raw
   `asm/code_3_2_20_28568_c99c_31784_33ef4_34314.s` is retired. GitHub
   issue #63, see `docs/matching/archive/issue-63-0x08033ef4-actor.md`.
-- **`AllocJetpackPlayerTiles`** (`src/vehicle/jetpack/jetpack_run.c`) - computes two
+- **`AllocJetpackPlayerTiles`** (`src/vehicle/jetpack/jetpack_player_update.c`) - computes two
   keyframe-driven tile-cache sizes via `AllocVramTileBlock`; now fully
   matched as real C. The ROM's "materialize the multiply result, then
   copy it again before shifting" idiom (`adds r2,r3,#0; muls r2,r1,r2;

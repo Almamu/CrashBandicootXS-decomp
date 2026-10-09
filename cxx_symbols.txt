@@ -1157,7 +1157,7 @@ __20PolarCheckpointCratePC17anim_table_recordiii CreatePolarCheckpointCrate
 #
 # part 11e: the jetpack player, its shot and the jetpack spawners
 # (include/vehicle.hpp; src/vehicle/jetpack/jetpack_spawn.cpp, jetpack_player.cpp,
-# jetpack_run.cpp, jetpack_shot.cpp, src/data/actor_pmf_17c1c0.cpp)
+# jetpack_player_update.cpp, jetpack_shot.cpp, src/data/actor_pmf_17c1c0.cpp)
 _vt.13JetpackPlayer gJetpackPlayerVtable
 _vt.11JetpackShot gJetpackShotVtable
 _vt.21JetpackCheckpointText gJetpackCheckpointTextVtable
