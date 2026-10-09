@@ -253,6 +253,15 @@ Cases: [big-naked-retry-3.md](./matching/archive/big-naked-retry-3.md)
   ([issue-12-13-25-naked-retry.md](./matching/archive/issue-12-13-25-naked-retry.md)).
 - Operand spelling matters: `a + b*16` and `b*16 + a` and `b << 4` can
   give different code (see [inline-argument order](#inline-argument-order)).
+- **A saved register nothing uses, or a pointer one reference short in
+  global-alloc**, when the code stores one coordinate of a position:
+  write it through `Entity::SetPos` with the other coordinate passed
+  back unchanged (`part->SetPos(part->x, y)`). The unchanged word's load
+  and store are allocated and then deleted after reload (#662 round 5,
+  [Pruning workarounds](#pruning-workarounds)).
+- **`a / b` rather than `__udivsi3(a, b)`**: the operator is a const
+  libcall, the declared function a call that clobbers memory as far as
+  the post-reload passes know.
 - **A 1/0 flag tested from registers** (`mov r3, rOne; movls r3, rZero;
   cmp r3, #0`, the constants loaded before the loop): an inline `u8`
   comparator that returns two `u8` parameters, `return zero;` /
@@ -1373,6 +1382,62 @@ source (8 functions -> 5):
   on C ports of these four found only junk), and
   `LinkSession::HandleSerial` (`rf = &this->ring` does give a second
   register, through gcse's PRE, but in the wrong place).
+
+**Round 5, src/enemies and src/bosses (C++), looking outside the
+function body.** 11 functions -> 3. Round 4 had proved that no edit of
+these bodies reaches the ROM; what does is a helper the bodies didn't
+use, and one libcall:
+
+- **Whole-position setters with one coordinate unchanged.** Seven of
+  the eleven write a position. Written through
+  `Entity::SetPos(x, y)` with the other coordinate passed back
+  (`part->SetPos(part->x, baseY)`), the unchanged coordinate is a pseudo
+  through register allocation, and after reload `reload_cse_regs`
+  deletes its store as a no-op (the register still holds that memory
+  word, no call or store in between) and flow2 deletes the load. The
+  output has no trace of it, but the allocation does: `UpdateBob`'s and
+  `UpdateOscillateY`'s saved registers no instruction uses (the x held
+  r5 or r8 over the body; this is the "pseudo whose code is gone" of
+  round 4), `UpdateOscillateX`'s product in r2, `UpdateTriggerBox`'s
+  and `StompedHopPadCtrl::Update`'s extra reference that reorders
+  global-alloc, `UpdateHop`'s value in r0 under the baseY copy, and
+  `TinyCtrl::SetState`'s y in r0 that keeps `pad` off its r0
+  preference. The permuter had found most of them in rounds 2-4 as
+  "dummy stores" (`target->x = target->x`) and they were rejected as
+  junk; the setter is the natural spelling of the same RTL. Look for it
+  wherever a ROM function saves a register it never uses, or global
+  priorities need one more reference to a pointer whose fields are
+  stored.
+- **`/` is a const libcall; a call to `__udivsi3` is not.**
+  `UpdateOscillateY` needs the x word known across the division: g++
+  expands `INT_TO_Q8(gRoomFrameCount) / period` as a libcall block
+  marked const, which `reload_cse_regs` doesn't treat as clobbering
+  memory. The explicit `__udivsi3(...)` call the code had (a plain
+  `extern` declaration) invalidates every memory value, so the x store
+  stays (`mov r1, r8; str r1, [r5]`). The ROM is the same bytes either
+  way unless something after the call depends on memory being known.
+- **A tail written once more for jump2 to merge.**
+  `MegaMixCtrl::Update`'s state 2 runs `Run(this, part)` itself when the
+  player is out of range, instead of a `goto` into state 0's copy. The
+  three copies are one in the ROM (cross-jumped after reload), but this
+  one's reloads (each virtual call's `ldrsh` scratch) still advance
+  reload's spill-register rotation, which puts the `dead` read's 0x104
+  in r3; that was the `PlayerDeadByte` r3 hold and keep.
+- **The `+ 0x100` in the oscillators' index** is `(t + 0x100 - phase) &
+  0xff`, which fold-const turns into the ROM's `t - (phase +
+  0xFFFFFF00)`; the `Wave` helper that took `phase - 0x100` as a
+  parameter to avoid the fold went.
+- **Kept:** `DingodileShieldCtrl::Update` (tried: struct-returning
+  `GetAttackBox()`/`GetBodyBox()` methods, inline player-box helpers
+  shaped like the matched `DingodileProjectileCtrl::Update`'s, the
+  BLDCNT chain's start at function scope (gcse's cprop folds it into
+  the chain and reload rematerializes it in r0/r1), through a reference
+  or a member function on a local, or as a `u64`; none frees r5/r6),
+  and the two ConvertTiles masks (the matched sibling idioms in the ROM,
+  `bg_picture.cpp`'s `MapFill` and `sprite_arm.cpp`'s ARM
+  `UnpackNibbleTiles` with its `ExpandNibble` ternary, were tried in
+  every combination of helper and body: 100-118 lines off, as against
+  the asm-free near miss's 8).
 
 ## Survey and conversion record (#576)
 

@@ -7,7 +7,6 @@
 #include "level_state.hpp"
 
 extern "C" {
-#include "match.h"
 #include "sprite_bank.h"
 #include "util.h"
 #include "memory.h"
@@ -242,27 +241,17 @@ void TinyCtrl::SetState(MovingSprite *part, s32 next)
     case 1:
     case 2:
         {
-            /* pinned, as in the C (under agbcp and old_agbcp): unpinned,
-             * `pad` lands in r0 where the ROM has r2, and pinning it
-             * alone moves `x` off r1. #662 round 2: `pad`/`x` at function
-             * scope or in nested blocks, TouchableList(), an inline
-             * returning the pad, and `pad->x` read again all leave `pad`
-             * in r0. #662 round 3: `pad` lives across the `next == 11 ||
-             * next == 13` test, so global-alloc places it, after
-             * local-alloc has used r0 only for the address loads that die
-             * where `pad` is born; r0 is the first free one. No -f flag or
-             * pair of flags changes that. #662 round 4 (global.c): `x`
-             * (3 references over 7 insns) is allocated before `pad` (3
-             * over 9) and skips r0 because `pad` prefers it:
-             * set_preference gives `pad` r0 from `ldr pad, [addr]`, the
-             * address being a local in r0, and prune_preferences adds
-             * r0 to `x`'s "someone prefers" set. `pad` then takes its
-             * own preference, r0, in find_reg's first pass. r2 needs r0
-             * to conflict with `pad` (a value held in r0 while `pad` is
-             * live) or a copy preference for r2 (a copy between `pad`
-             * and r2), and the ROM's code has neither. */
-            MATCH_HOLD_REG(MovingSprite *, pad, r2);
-            MATCH_HOLD_REG(s32, x, r1);
+            /* Rounds 11 and 13 also move Tiny onto the pad's x, through
+             * Entity::SetPos with the y unchanged, as EnemyCtrl's motion
+             * updaters do (enemy_ctrl.cpp, #662 round 5). The y load is
+             * a value held in r0 while `pad` is live, which keeps `pad`
+             * off r0, its preference (#662 round 4: set_preference from
+             * `ldr pad, [addr]`), and puts it in the ROM's r2 and `x`
+             * in r1; after reload, reload_cse_regs deletes the y store as
+             * a no-op and flow2 its load. Written as `part->x = x`,
+             * `pad` takes r0 (pins on `pad` and `x` until round 4). */
+            MovingSprite *pad;
+            s32 x;
 
             if (next == 1)
                 SetTargetAnim(part, 2);
@@ -273,7 +262,7 @@ void TinyCtrl::SetState(MovingSprite *part, s32 next)
             x = pad->x;
             this->x = x;
             if (next == 11 || next == 13)
-                part->x = x;
+                part->SetPos(x, part->y);
             this->y = pad->y - 0x2400;
             goto hop;
         }
@@ -420,35 +409,18 @@ void TinyCtrl::SpawnFallingLeaves(MovingSprite *part, s32 n)
  * 4 pixels a frame until it is 32 pixels below layer 0's bottom edge,
  * then moves to state 2, where it stays.
  *
- * The pin on `part` (r2) is still needed in C++: with neither pinned,
- * g++ gives `this` r2 and `part` r4 where the ROM has r3 and r2; once
- * `part` is pinned, `this` lands in r3 by itself. (The C needed a pin on
- * both, plus gotos for the block order, which the switch gives.)
- * #662 round 2: state 1's test through a `bool` (an inline or a local)
- * gives the ROM's registers but keeps the flag as a `movs` 0/1 and a
- * second compare; the permuter on the C++ matched only with
- * `do { } while (0)` wrappers, `x++; x--;` no-ops or a redundant copy of
- * `part`. #662 round 3 (greg dump): `this` and `part` are global and
- * global-alloc ranks `this` (6 references over 30 insns, 0.40) just
- * above `part` (4 over 21, 0.38), so `this` takes r2 and `part` is left
- * with r4; ranked the other way they get the ROM's r2/r3. The switch's
- * dispatch is shared by both lives, so no reshaping of it helps (it
- * would have to shrink by 4 insns), and `part` has no further use to
- * reference. No -f flag or pair of flags changes it either. #662 round
- * 4: the counts are flow's (REG_N_REFS, REG_LIVE_LENGTH), taken before
- * combine, so insns that combine or update_equiv_regs remove later
- * still count. `this` wins until its life reaches 32 insns (2 more
- * where `part` is dead: state 1 after the store, or the state > 1
- * path), or `part` gets a 5th reference. A `case 2: state = 2;` for
- * state 1 to fall into, or the test in an inline returning s32, adds
- * them and gives the ROM's registers, but with the extra compare or the
- * 0/1 flag in the output; a `next` local, a split-out bottom or layer
- * pointer, a `y - bottom >= 0` test and `heightPx * 8 * 32` add none
- * (cse folds them first). The permuter's zero scores on a C port all
- * use a loop wrapper, `self++; self--;` or a dead statement. */
-void StompedHopPadCtrl::Update(MovingSprite *partArg)
+ * The sinking step sets the position through Entity::SetPos with the
+ * x unchanged, as EnemyCtrl's motion updaters do (enemy_ctrl.cpp,
+ * #662 round 5). The x load is `part`'s fifth reference, which ranks
+ * it above `this` in global-alloc (#662 rounds 3-4: `this` 6
+ * references over 30 insns, 0.40, `part` 4 over 21, 0.38; the counts
+ * are flow's, taken before the x store and load go), so they get the
+ * ROM's r2 and r3; after reload, reload_cse_regs deletes the x store
+ * as a no-op and flow2 its load. Written as `part->y = y`, `this`
+ * takes r2 and `part` r4 (a pin on `part` until round 4; the
+ * permuter's zero scores used a redundant copy of `part`). */
+void StompedHopPadCtrl::Update(MovingSprite *part)
 {
-    MATCH_HOLD_REG(MovingSprite *, part, r2) = partArg;
     s32 y;
 
     switch (state) {
@@ -458,7 +430,7 @@ void StompedHopPadCtrl::Update(MovingSprite *partArg)
         break;
     case 1:
         y = part->y + 0x400;
-        part->y = y;
+        part->SetPos(part->x, y);
         if (y >= INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x2000)
             state = 2;
         break;

@@ -4,7 +4,6 @@
 #include "audio.hpp"
 
 extern "C" {
-#include "match.h"
 #include "util.h"
 #include <libgcc.h>
 #include "player.h"
@@ -115,30 +114,19 @@ void EnemyCtrl::UpdateTriggerBox()
     s32 x, y, w, h;
 
     if (kind == ENEMY_KIND_VULTURE) {
-        /* r1 pin: the allocator otherwise swaps target/baseY (r2/r1),
-         * under C++ as under C. #662 round 2: `baseY` read into a local
-         * before the target gives the ROM's registers but loads it first;
-         * a reference, `baseY > t->y`, a `bool` or the test folded
-         * into the kind test keep the swap, and the permuter matched only
-         * with dummy stores (`target->x = target->x`). #662 round 3
-         * (greg dump): both values live across the bge, so global-alloc
-         * ranks them, and baseY's pseudo (3 references over 4 insns)
-         * outranks the target's (3 over 6), takes r1 and leaves r2 to
-         * the target; the target would need a fourth reference or a
-         * shorter life. No -f flag, pair of flags or field type
-         * (u32 baseY/y/mode/kind) changes that. #662 round 4
-         * (global.c's find_reg): r0 is out for both (the t->y load's
-         * local), so whichever is allocated first takes r1. The other
-         * way round needs a preference: baseY preferring r2, or the
-         * target preferring r1, which makes r1 a register "someone
-         * prefers" that baseY skips in find_reg's first pass.
-         * set_preference only records one when the value is the
-         * source, or the first operand of the source, of an insn that
-         * sets a hard register or an allocated local, and in the ROM's
-         * block neither value is. */
-        MATCH_HOLD_REG(MovingSprite *, t, r1) = target;
-        if (t->y < baseY) {
-            t->y = baseY;
+        /* The clamp sets the position through Entity::SetPos with the x
+         * unchanged, as the oscillators below do (#662 round 5). The x
+         * store is a no-op reload_cse_regs deletes, and flow2 then
+         * deletes its load, but the target's fourth reference ranks it
+         * above baseY in global-alloc (round 3 found it 3 references
+         * over 6 insns against baseY's 3 over 4), so the target takes r1
+         * as in the ROM. That is the `target->x = target->x` dummy
+         * store the round-2 permuter found; written as a plain
+         * `t->y = baseY` the two swap (an r1 pin until round 4). */
+        MovingSprite *part = target;
+
+        if (part->y < baseY) {
+            part->SetPos(part->x, baseY);
             SetMotionY(0);
         }
     }
@@ -361,130 +349,51 @@ void EnemyCtrl::SetAnimMode(s32 m)
 /* The three oscillators move the target along a sine wave
  * (gSineTable) around baseX/baseY, `amplitude` high. The phase is
  * gRoomFrameCount scaled by `period` (UpdateOscillateX/Y) or at half
- * rate (UpdateBob), offset by `phase`.
+ * rate (UpdateBob), offset by `phase`; the `+ 0x100` keeps the index
+ * positive before the mask, and g++ folds it into the ROM's
+ * `phase + 0xFFFFFF00`.
  *
- * Their pins are about register allocation, not the C++: the products
- * and the -0x100 phase bias come out in the ROM's registers only with
- * them (issue #9-#11 NAKED retry, issue #10 retry). The phase bias goes
- * through Wave's parameter to keep the ROM's `phase + 0xFFFFFF00`
- * literal instead of a folded `+ 0x100`.
+ * Each one sets the whole position through Entity::SetPos, passing the
+ * other coordinate back unchanged (#662 round 5). That accounts for the
+ * registers the C++ needed pins for until round 4, including the saved
+ * registers no instruction uses (r5 in UpdateBob, r8 in
+ * UpdateOscillateY): the unchanged coordinate is a pseudo that holds a
+ * register through allocation, and after reload, reload_cse_regs
+ * deletes its store as a no-op (the register still holds that memory
+ * word) and flow2 deletes the load, but the prologue still saves the
+ * register. In UpdateOscillateX the y read is just before SetPos, as
+ * the target's is: that extra pseudo moves the product into r2.
  *
- * #662 round 2: in UpdateOscillateX, `baseX` read into a local before
- * the target gives the ROM's registers, but loads it before the target
- * (agbcp has no scheduling pass to reorder them); reading the target
- * first gives other registers. The permuter on the C++ reached the ROM
- * only with `do { } while (0)` wrappers or `x++; x--;` no-ops. Locals
- * read before UpdateOscillateY's division (target, table, phase,
- * amplitude, baseY, in any combination) don't give its unused r8.
- *
- * #662 round 3, from the RTL dumps (each function is one basic block, so
- * local-alloc decides everything):
- * - UpdateOscillateX: mulsi3's output is earlyclobber, so the product is
- *   never tied to an input; it gets the first free register when its
- *   quantity is allocated. The target load and the product rank equal
- *   (2 references over 4 insns) and the tie goes to the older quantity,
- *   the product, which takes the dying w's r1. The ROM's `mov r2, r1;
- *   mul r2, r0` needs the target (r1) and baseX (r0) allocated first,
- *   i.e. the target ranked above the product, which only an extra
- *   reference or a shorter life (a different load order) gives.
- * - UpdateBob: the -0x100 is a reload (the add can't take it as an
- *   immediate), and reload takes the first unused call-saved register,
- *   r5, in the plain function. The ROM's r6 and its saved-but-unused r5
- *   mean a pseudo sat in r5 at that insn and its code was gone by the
- *   end (e.g. a copy that reload_cse made redundant and flow2 deleted);
- *   no natural spelling of the body creates one. Holding `this` in r5
- *   doesn't either (r0 doesn't keep `this` long enough for reload_cse).
- * - UpdateOscillateY: local-alloc ranks the table's quantity above the
- *   target's, so they get r5 and r6 the other way round; the saved r8
- *   is again a register nothing in the final code uses.
- * No -f flag, alone or in pairs, and no change of the fields' or Wave's
- * types (u32 fields, an s32 or int Wave, a macro) moves any of them.
- *
- * #662 round 4, with an instrumented old_agbcp (local-alloc's qty order,
- * reload's spill choices, forced spills, and every insn flow2 deletes
- * after reload):
- * - UpdateOscillateX: qty_compare_1 orders equal priorities by qty
- *   number, so the target needs a third reference or a life one insn
- *   shorter than the product's. Every zero-score permuter result on a
- *   C port gets there through `do { } while (0)` (flow adds loop_depth
- *   to REG_N_REFS) or dead `self->target` reads.
- * - UpdateBob: order_regs_for_reload takes free registers in number
- *   order (thumb.h has no REG_ALLOC_ORDER), so the -0x100 in r6 means r5
- *   held a live pseudo at that add. Spilling any one pseudo (6
- *   spellings) frees r5 and the constant moves there, so the ROM's
- *   pseudo kept r5 through reload and lost its insns afterwards. The
- *   whole ROM has one more function with a saved register it never uses
- *   (ActionCtrl::Update's r7): the high half of a DImode pointer to
- *   member. The deletions flow2 makes across all 149 old_agbcp objects
- *   are of three kinds: copies into r8-r10 whose use reload took from
- *   the low register they were copied from, chains whose last use
- *   reload_cse_regs removed, and halves of DImode pairs. Of about
- *   10,000 spellings tried (orders, locals, s16/s32/u32/64-bit types),
- *   64-bit locals give the unused push: `u64 t` gives the ROM's push,
- *   r4 table and r6 constant, but its pair (r1, r2) moves `ph` to r3 and
- *   the target to r5. None gives the ROM.
- * - UpdateOscillateY: the four values that cross the division take r4,
- *   r5, r6 and then r8 (r7 is live as the frame pointer while registers
- *   are allocated), so the ROM had a fourth one, ranked last, whose code
- *   is gone. With baseY read before the call it takes r5 and the table
- *   r6, as in the ROM, but the target is then the one ranked last (r8);
- *   spilling baseY leaves the push as in the ROM, and the target goes
- *   through r0 into r8 and back after the call, where the ROM keeps it
- *   in r5. */
-static inline s16 Wave(const s16 *table, s32 t, s32 phase)
-{
-    return table[(t - phase) & 0xff];
-}
-
-/* The product goes into a fresh `v` pinned to r2 (the ROM's `mov r2,
- * r1; mul r2, r0`), which leaves r1 for the target. */
+ * The divisions are `/`, not explicit __udivsi3 calls: g++ expands `/`
+ * as a const libcall, which doesn't clobber memory, so reload_cse still
+ * knows UpdateOscillateY's x word after the call. Through a call to the
+ * declared function the x store stays. */
 void EnemyCtrl::UpdateOscillateX()
 {
     const s16 *table = gSineTable;
-    s32 t = __udivsi3(INT_TO_Q8(gRoomFrameCount), period);
-    MATCH_HOLD_REG(s32, v, r2);
-    s32 w;
-    MovingSprite *part;
+    u32 t = INT_TO_Q8(gRoomFrameCount) / period;
 
-    w = Wave(table, t, phase - 0x100);
-    v = w * amplitude;
-    part = target;
-    part->x = baseX + v;
+    target->SetPos(baseX + table[(t + 0x100 - phase) & 0xff] * amplitude, target->y);
 }
 
-/* UpdateBob and UpdateOscillateY: the ROM saves a callee-saved register
- * neither body uses (r5 in UpdateBob, r8 in UpdateOscillateY), which an
- * empty asm clobbering it reproduces without emitting code. In UpdateBob
- * the target is pinned to r3 and the -0x100 bias created in r6 through a
- * constant-init asm, which keeps it from being folded and loaded early;
- * in UpdateOscillateY the table is pinned to r6, which puts the target
- * in r5. */
 void EnemyCtrl::UpdateBob()
 {
-    MATCH_HOLD_REG(MovingSprite *, part, r3) = target;
+    MovingSprite *part = target;
     const s16 *table = gSineTable;
-    u32 t;
-    s32 ph;
-    MATCH_HOLD_REG(s32, k, r6);
+    s32 x = part->x;
+    u32 t = gRoomFrameCount / 2;
 
-    /* Empty: marks r5 as used so the prologue saves it, as in the ROM. */
-    MATCH_CLOBBER(r5);
-    t = gRoomFrameCount >> 1;
-    ph = phase;
-    /* Emits only the `ldr r6, =0xFFFFFF00`; see above. */
-    MATCH_CONST(k, -0x100);
-    part->y = baseY + Wave(table, t, ph + k) * amplitude;
+    part->SetPos(x, baseY + table[(t + 0x100 - phase) & 0xff] * amplitude);
 }
 
 void EnemyCtrl::UpdateOscillateY()
 {
     MovingSprite *part = target;
-    MATCH_HOLD_REG(const s16 *, table, r6) = gSineTable;
-    s32 t = __udivsi3(INT_TO_Q8(gRoomFrameCount), period);
+    const s16 *table = gSineTable;
+    s32 x = part->x;
+    u32 t = INT_TO_Q8(gRoomFrameCount) / period;
 
-    /* Empty: marks r8 as used so the prologue saves it, as in the ROM. */
-    MATCH_CLOBBER(r8);
-    part->y = baseY + Wave(table, t, phase - 0x100) * amplitude;
+    part->SetPos(x, baseY + table[(t + 0x100 - phase) & 0xff] * amplitude);
 }
 
 /* Launches a harmful effect part (state 18's floating popup, the
