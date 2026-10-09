@@ -128,7 +128,13 @@ u8 GAX2_init(struct GaxSongHeader *p)
             if (tap->rate > maxRate)
                 maxRate = tap->rate;
             /* no code: an extra reference that lifts `maxRate` over
-             * `fmt` in global.c's priority order (ROM: r8/r9) */
+             * `fmt` in global.c's priority order (ROM: r8/r9). #662
+             * round 3 (-dl): global.c ranks by log2(refs) * refs / live
+             * length. Without the reference that is fmt 3 * 9 / 199 =
+             * 0.136 against maxRate 4 * 18 / 568 = 0.127; the use, counted
+             * twice inside the loop, gives maxRate 0.141. It isn't a tie,
+             * so declaration order doesn't change it (three orders
+             * tried), and no swept -f flag does either. */
             MATCH_USE(maxRate);
             tap++;
         }
