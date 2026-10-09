@@ -190,7 +190,13 @@ void PlatformMover::Update(MovingSprite *part)
      * reference without a second pseudo, and regmove's fixup_match_1
      * merges any result of `now & 1` back into `now` because `now` dies
      * there and isn't a remote constant (a global load has no REG_EQUAL
-     * note). */
+     * note). #662 round 5: the wobble's two SetPos calls (below) give
+     * `part` 61 references over 388 insns (0.786), still under `now`'s
+     * 0.833; it needs 64. The ramp blocks as inlines (StartRamp and
+     * SetRamp, Ctrl::StartTargetMotionY's shape with `dirX`/`dirY` for
+     * the sign) and do/while(0) MAKE_ABS_BRANCHLESS or CLAMP_INDEX
+     * macros (loop-weighted references) move the object further; the
+     * ranking isn't a tie that a declaration's place could break. */
     MATCH_HOLD_REG(u32, now, r5);
 
     if (k == 5 && timer > 0 && gRoomFrameCount - timer == 60) {
@@ -198,21 +204,16 @@ void PlatformMover::Update(MovingSprite *part)
         timer = -1;
     } else if (k == 5 && timer > 0 && ((now = gRoomFrameCount) - timer) % 30 <= 4) {
         now &= 1;
+        /* The wobble through Entity::SetPos with the X passed back (an
+         * r2 pin and a keep on the 0x300 until #662 round 5): each X load
+         * holds a register across its add, then reload_cse_regs deletes
+         * the X store and flow2 the load, which moves reload's spill
+         * rotation onto the ROM's r5 for the -0x300 and r2 for the 0x300
+         * (`part->y += 0x300` took r1). */
         if (now == 0)
-            part->y += -0x300;
-        else {
-            s32 y = part->y;
-            /* The 0x300 in r2 (reload picks r1 for a plain constant), as
-             * the C had it. #662 round 3: the constant is reload's
-             * (insn 1128 in the greg dump): reload hands out its spill
-             * registers round-robin from the last one used, so the -0x300
-             * of the other branch takes r5 and this one r1. That depends
-             * on the earlier reloads, i.e. on `now` above. */
-            MATCH_HOLD_REG(s32, up, r2) = 0x300;
-
-            MATCH_KEEP(up);
-            part->y = y + up;
-        }
+            part->SetPos(part->x, part->y - 0x300);
+        else
+            part->SetPos(part->x, part->y + 0x300);
     } else if ((k == 7 && part->frame <= 1 && !active) ||
                (k == 6 && part->frame <= 1 && gRoomFrameCount < time)) {
         HoldFirstFrame(part);

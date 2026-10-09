@@ -6,7 +6,6 @@
 #include "key_input.hpp"
 
 extern "C" {
-#include "match.h"
 #include "system.h"
 #include "crates.h"
 #include "gfx.h"
@@ -236,40 +235,24 @@ void ActionCtrl::StateUnusedHang()
 /* Letting go: the player drops 6 px (0x600 in Q8) into the fall
  * (animation 0x1B, held on its last frame), Y entry 4.
  *
- * Kept from the C: reload loads the 0x600 into a spill register, and the
- * ROM's is r3. With r2 and r3 both free it takes r2 (the only difference
- * left in C++: the later reloads are the ROM's). `hold`, pinned to r2 and
- * never assigned, keeps r2 live from the start of the function to its
- * `MATCH_USE` after the add (an empty asm, no code). Round 2 of #662:
- * `part->y = part->y + 0x600`, a Player copy, `0x600u`, `-= -0x600` and
- * the 0x600 in a local all take r2. #662 round 3 (-dg dump): the 0x600 is
- * a reload of the add's constant operand, and reload hands out spill
- * registers round-robin: the reload of the `hanging` field's 0x101
- * offset just before takes r1, so the next one gets r2. The ROM's r3
- * means r2 was not free for it there (as the hold makes it); the flag
- * sweep (-fno-gcse ... -O1) changes nothing at this site. #662 round 4,
- * from reload1.c: the round-robin only picks among the registers the
- * needs pass spilled for that insn (choose_reload_regs marks every other
- * one used), and find_reload_regs spills the first of
- * potential_reload_regs: call-clobbered registers with no live pseudo,
- * in register-number order (thumb has no REG_ALLOC_ORDER). So the ROM's
- * r3 means r2 was live there, as a hard register or holding a live
- * pseudo. The function is one basic block, every pseudo in it is
- * local-alloc's (an instrumented local-alloc shows the y add between the
- * zero (r5), `this` (r4), the y value (r0) and `part` (r1) only), and the
- * ROM's code uses r2 first for the SetMode call's function pointer, after
- * the add. Eleven spellings (setter and DropBy helpers, a zero or entry
- * local, a `Player *` copy first, the y in a local, QueueNowY or the
- * frame first) all spill r2. */
+ * The drop goes through Entity::SetPos with the X passed back unchanged
+ * (#662 round 5; an r2 pin and a `MATCH_USE` before). Written as
+ * `part->y += 0x600`, reload's 0x600 took r2 where the ROM has r3:
+ * reload spills the first call-clobbered register with no live pseudo
+ * at the add, so r2 had to be live there (rounds 3-4). Through SetPos
+ * the X is loaded into r2 before the add and stored back after it;
+ * reload_cse_regs then deletes the store (it stores the value just
+ * loaded from the same place) and flow2 the load, so no code is left,
+ * but r2 was live across the add and the 0x600 takes r3 (an
+ * instrumented reload1.c shows the spill set r1, r2, r3, r6 instead of
+ * r1, r2, r6). */
 void ActionCtrl::ReleaseHang()
 {
     Player *p;
     s32 count;
-    MATCH_HOLD_REG(s32, hold, r2);
 
     part->hanging = 0;
-    part->y += 0x600;
-    MATCH_USE(hold); /* r2 held to here, so the 0x600 reload takes r3 */
+    part->SetPos(part->x, part->y + 0x600);
     SetMode(ACTION_STATE_AIRBORNE_FALL);
     SetTargetAnim(part, 0x1B);
     p = part;

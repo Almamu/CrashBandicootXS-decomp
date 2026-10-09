@@ -2,7 +2,6 @@
 
 extern "C" {
 #include "core.h"
-#include "match.h"
 #include "memory.h"
 #include "actor_anim.h"
 #include "actor.h"
@@ -32,25 +31,22 @@ extern "C" {
  * The ROM passes a 6th argument: `[sp, #0x1c]` is the 5th (handed to
  * vtable slot 2), `[sp, #0x20]` the 6th (`y`).
  *
- * Matched in the second near-miss sweep. The old draft had the ROM's
- * instruction sequence but swapped `&gActorSpawnIndex` (ROM: r7) and
- * `base` (ROM: r8): `base` had more references. The zeroing store now
- * goes through a local pointer `idx`, and `MATCH_USE(idx)` after
- * `GetCellAnimDistance` adds one reference to it. That extra-reference nudge
- * emits no code; it just makes the pointer outrank `base`. The scan
- * loops still use the global directly, which gives the ROM's loop-local
- * copies of the address. Matches under both compilers, in C and in C++
- * (#664 part 11b), and the C++ still needs the nudge; #662 round 2:
- * `idx` dropped, used in the scan loops, the reset in an inline, or a
- * `bool active` all differ. #662 round 3: global-alloc's ranking (the
- * references over the live length) decides r7 against r8; no -f flag or
- * pair of flags, and either compiler, leaves the swap. #662 round 4
- * (greg dump): unnudged, `idx` has 4 references over 62 insns (2 * 4 /
- * 62 = 0.129) and `base` 7 over 105 (0.133); `idx` needs 3 insns less
- * or a fifth reference, `base` 4 insns more or a sixth reference less
- * (its loop tests count twice each). Reading the index through `*idx`
- * in any subset of the seven later uses of gActorSpawnIndex gives 17
- * lines off at best.
+ * The skip loop's test is RunActorCategoryFrame's SUB_EFFECT_DUE
+ * (actor_category_frame.cpp): the next record's address built through
+ * the two locals `off` and `tb`, in a comma expression, and `base` is
+ * declared where GetCellAnimDistance sets it. Matched in the second
+ * near-miss sweep with `&gActorSpawnIndex` (ROM: r7) and `base` (ROM:
+ * r8) swapped unless the store went through a local pointer `idx` with
+ * one extra `MATCH_USE(idx)` reference; #662 rounds 2-4 found it was
+ * global-alloc's ranking (references times floor_log2 over the live
+ * length): the address had 4 references over 62 insns (0.129) against
+ * `base`'s 7 over 105 (0.133). #662 round 5: the comma-expression test
+ * leaves fewer insns in the address's life than NextThreshold's inline
+ * (60, 0.1333), and the `for` puts `base` at 105 insns (0.1333); on the
+ * tie global.c's allocno_compare takes the lower pseudo first, and a
+ * `base` declared at its first set is created after the address's
+ * pseudo. As a `while`, or with `base` declared at the top, the two
+ * still swap.
  * NextThreshold is actor_spawn.cpp's `GetActorSpawnZ` address shape,
  * returned as a pointer so the load lands after the limit. */
 
@@ -71,26 +67,25 @@ void SelectActorCategory(s32 type, struct sub_effect_record *table,
                          s32 checkpoint)
 {
     struct sub_effect_record *t;
-    ActorSelf ***buf;
-    s32 base;
-    s32 *idx;
+    u8 *tb;
+    s32 off;
 
     gActorCategoryVtable = &gActorCategoryVtables[type];
     gActorSpawnUseBonus = active;
     gActorSpawnTable = table;
-    idx = &gActorSpawnIndex;
-    *idx = 0;
+    gActorSpawnIndex = 0;
     gActorSpawnsPaused = 0;
     gActorSpawnOffset = 0;
     gActorCategoryVtable->createPlayer(animTable, checkpoint);
-    base = GetCellAnimDistance();
-    MATCH_USE(idx); /* extra reference: `idx` outranks `base` */
+    s32 base = GetCellAnimDistance();
+
     t = gActorSpawnTable;
-    while (gActorSpawnIndex < t->link &&
-           *NextThreshold(t, gActorSpawnIndex) < gActorCategoryVtable->skipDistance + base)
-        gActorSpawnIndex++;
-    buf = &gActorDrawList;
-    *buf = (ActorSelf **)mem_alloc(0xc8, MEM_HEAP_IWRAM);
+    for (; gActorSpawnIndex < t->link &&
+           (off = gActorSpawnIndex * 0x14, tb = (u8 *)t + 0x14, *(s32 *)(tb + off)) <
+               gActorCategoryVtable->skipDistance + base;
+         gActorSpawnIndex++)
+        ;
+    gActorDrawList = (ActorSelf **)mem_alloc(0xc8, MEM_HEAP_IWRAM);
     if (gActorCategoryVtable->createBoss != NULL)
         gActorCategoryVtable->createBoss(variant);
     while (gActorSpawnIndex < gActorSpawnTable->link &&

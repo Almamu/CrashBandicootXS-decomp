@@ -207,7 +207,13 @@ s32 Sprite::CheckPlayerContact()
      * before it. `one |= f.flags; f.flags = one;` does that (the shift
      * then loads its own 1, as in the ROM, and the OR uses the tests'
      * r6), but the OR's result then lands in `one`'s r6 instead of r0
-     * (6 lines off); with a separate result the shift is tied again. */
+     * (6 lines off); with a separate result the shift is tied again.
+     * #662 round 5: `f.b.gone = 1` or `= one`, `(u32)f.flags | 1`,
+     * ENTITY_MARK_GONE, and a do/while(0) around the OR (cse ends a
+     * block at a loop end; cse2, after loop.c, doesn't, and links the
+     * shift's 1 there) stay 12-16 lines off; a cse that doesn't link
+     * equal constants changes other functions here (see
+     * ActionCtrl::HandleEvent's bounce). */
     MATCH_HOLD_REG(u32, one, r6);
     s32 touched = (flags >> 27) & (one = 1);
 
