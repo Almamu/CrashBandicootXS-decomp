@@ -3,7 +3,7 @@
 
 /* The 3D actors' base classes as C++ (#664, docs/cplusplus.md):
  *
- *   AnimPart   0x1C  none          src/actor/actor_anim.cpp
+ *   AnimPart   0x1C  none          src/actor/inline_copies_actors.cpp
  *   ActorSelf  0x54  gActorVtable  src/actor/actor.cpp
  *   HpActor    0x58  none (no ROM table: every subclass has its own)
  *
@@ -23,7 +23,7 @@
  * free with a direct mem_free, not OperatorDelete.
  *
  * No `#pragma interface`: g++ emits ActorSelf's vtable (gActorVtable) in
- * actor.cpp and HpActor's in actor_anim.cpp; AnimPart has none (see
+ * actor.cpp and HpActor's in inline_copies_actors.cpp; AnimPart has none (see
  * ctrl.hpp). */
 
 extern "C" {

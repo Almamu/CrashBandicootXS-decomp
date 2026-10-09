@@ -1036,7 +1036,7 @@ UpdateVvLogoPieces__12CompanyLogos UpdateVvLogoPieces
 #
 # part 11a: the 3D actors' base classes and their subclasses' destructors
 # (include/actor_self.hpp, vehicle.hpp, boss_actors.hpp; src/actor/actor.cpp,
-# actor_anim.cpp), and the polar player's state dispatch and table
+# inline_copies_actors.cpp), and the polar player's state dispatch and table
 # (src/vehicle/polar_player_dispatch.cpp, src/data/actor_pmf_17a6b8.cpp)
 GetAnimFrameBaseOffset__8AnimPart GetAnimFrameBaseOffset
 GetAnimFrameAttr__8AnimPart GetAnimFrameAttr
@@ -1326,7 +1326,7 @@ __19PolarFourWumpaCratePC17anim_table_recordiii CreatePolarFourWumpaCrate
 __15PolarBasicCratePC17anim_table_recordiii CreatePolarBasicCrate
 Update__10PolarCrate UpdatePolarCrate
 _vt.10PolarCrate gPolarCrateVtable
-# the inline destructor; its ROM copy is C-linkage (actor_anim.cpp)
+# the inline destructor; its ROM copy is C-linkage (inline_copies_actors.cpp)
 _._10PolarCrate DestroyPolarCrate
 DetonateNearby__15PolarNitroCrate DetonateNearbyPolarNitros
 Update__19PolarCollectedWumpa UpdatePolarCollectedWumpa
@@ -1380,7 +1380,7 @@ StateFall__19JetpackBalloonCrate JetpackBalloonCrateStateFall
 StateDestroyed__19JetpackBalloonCrate JetpackBalloonCrateStateDestroyed
 _19JetpackBalloonCrate.stateFuncs gJetpackBalloonCrateStateFuncs
 _vt.18JetpackHealthCrate gJetpackHealthCrateVtable
-# the kinds' implicit destructors; their ROM copies are C-linkage (actor_anim.cpp)
+# the kinds' implicit destructors; their ROM copies are C-linkage (inline_copies_actors.cpp)
 _._18JetpackHealthCrate DestroyJetpackHealthCrate
 __18JetpackHealthCratePC17anim_table_recordiii CreateJetpackHealthCrate
 Update__18JetpackHealthCrate UpdateJetpackHealthCrate

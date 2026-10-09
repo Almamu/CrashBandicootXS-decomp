@@ -6,7 +6,7 @@
  * (the player, crates, pickups, Aku Aku and obstacles) and the yeti
  * chase. Every function they define is declared here, including those
  * that the file layout put in actor or bosses files for ROM order (the
- * teardown functions in actor_anim.cpp, the per-category hooks in
+ * teardown functions in inline_copies_actors.cpp, the per-category hooks in
  * actor_category_hooks.cpp, actor_category_frame.cpp and
  * actor_category.cpp, the jetpack ring and
  * collected wumpa in hovercraft.cpp, ...), plus their globals and data
@@ -41,7 +41,7 @@ extern void PolarReloadPlayerTiles(void *arg0);
 extern void JetpackReachCourseEnd(void *arg0);
 extern void PolarReachCourseEnd(void *arg0);
 
-/* src/actor/actor_anim.cpp: the C-linkage copies of the balloon crate
+/* src/actor/inline_copies_actors.cpp: the C-linkage copies of the balloon crate
  * kinds' implicit destructors (vehicle.hpp), which the g++-emitted
  * vtables point at (cxx_symbols.txt); PolarCrate's is in vehicle.hpp */
 extern void DestroyJetpackHealthCrate(void *self, u32 flags);
@@ -67,7 +67,7 @@ extern s32 PolarIsPauseLocked(void);
 extern void nullsub_30(void);
 
 /* src/vehicle/jetpack_crates.cpp: JetpackBalloonCrate's destructor
- * (vehicle.hpp), for actor_anim.cpp's kinds' destructors */
+ * (vehicle.hpp), for inline_copies_actors.cpp's kinds' destructors */
 extern void DestroyJetpackBalloonCrate(void *self, s32 flags);
 
 /* src/vehicle/jetpack_player.cpp: a C-linkage getter */

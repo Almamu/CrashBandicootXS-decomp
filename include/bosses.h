@@ -5,7 +5,7 @@
  * the jetpack levels, and the Tiny, Dingodile, Cortex and Mega Mix
  * boss objects. Every function they define is declared here, including
  * those that the file layout put in actor or vehicle files for ROM order
- * (the airship and hovercraft teardown functions in actor_anim.c, the
+ * (the airship and hovercraft teardown functions in inline_copies_actors.cpp, the
  * hovercraft spawners in jetpack_spawn.cpp, ...), plus their globals and
  * data tables.
  *

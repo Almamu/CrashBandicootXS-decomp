@@ -330,7 +330,7 @@ SECTIONS
         build/crashbandicootxs/lib/libgcc/_modsi3.o(.text);
         build/crashbandicootxs/lib/libgcc/_umodsi3.o(.text);
         build/crashbandicootxs/src/system/inline_copies_misc.o(.text);
-        build/crashbandicootxs/src/actor/actor_anim.o(.text);
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.text);
 
         /* Data */
         build/crashbandicootxs/data/data.o(.rodata);
@@ -470,50 +470,50 @@ SECTIONS
         build/crashbandicootxs/src/system/inline_copies_misc.o(.gnu.linkonce.d._vt.9SmallFont); /* gSmallFontVtable */
         build/crashbandicootxs/src/text/font.o(.gnu.linkonce.d._vt.4Font); /* gFontVtable */
         build/crashbandicootxs/src/actor/actor.o(.gnu.linkonce.d._vt.9ActorSelf); /* gActorVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.14RiderlessPolar); /* gRiderlessPolarVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.19PolarCheckpointText); /* gPolarCheckpointTextVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.14RiderlessPolar); /* gRiderlessPolarVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.19PolarCheckpointText); /* gPolarCheckpointTextVtable */
         build/crashbandicootxs/src/vehicle/polar_player_actions.o(.gnu.linkonce.d._vt.11PolarPlayer); /* gPolarPlayerVtable */
         build/crashbandicootxs/src/vehicle/polar_pickups.o(.gnu.linkonce.d._vt.19PolarCollectedWumpa); /* gPolarCollectedWumpaVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.10PolarWumpa); /* gPolarWumpaVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.14PolarTimeCrate); /* gPolarTimeCrateVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.18PolarQuestionCrate); /* gPolarQuestionCrateVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.16PolarAkuAkuCrate); /* gPolarAkuAkuCrateVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.15PolarNitroCrate); /* gPolarNitroCrateVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.14PolarLifeCrate); /* gPolarLifeCrateVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.19PolarFourWumpaCrate); /* gPolarFourWumpaCrateVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.15PolarBasicCrate); /* gPolarBasicCrateVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.10PolarWumpa); /* gPolarWumpaVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.14PolarTimeCrate); /* gPolarTimeCrateVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.18PolarQuestionCrate); /* gPolarQuestionCrateVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.16PolarAkuAkuCrate); /* gPolarAkuAkuCrateVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.15PolarNitroCrate); /* gPolarNitroCrateVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.14PolarLifeCrate); /* gPolarLifeCrateVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.19PolarFourWumpaCrate); /* gPolarFourWumpaCrateVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.15PolarBasicCrate); /* gPolarBasicCrateVtable */
         build/crashbandicootxs/src/vehicle/polar_pickups.o(.gnu.linkonce.d._vt.10PolarCrate); /* gPolarCrateVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.18PolarElectricFence); /* gPolarElectricFenceVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.13PolarObstacle); /* gPolarObstacleVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.13PolarLauncher); /* gPolarLauncherVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.12PolarPenguin); /* gPolarPenguinVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.11PolarIcicle); /* gPolarIcicleVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.11PolarAkuAku); /* gPolarAkuAkuVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.9PolarGoal); /* gPolarGoalVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.13PolarBoostPad); /* gPolarBoostPadVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.20PolarCheckpointCrate); /* gPolarCheckpointCrateVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.21JetpackCheckpointText); /* gJetpackCheckpointTextVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.16JetpackExplosion); /* gJetpackExplosionVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.18PolarElectricFence); /* gPolarElectricFenceVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.13PolarObstacle); /* gPolarObstacleVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.13PolarLauncher); /* gPolarLauncherVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.12PolarPenguin); /* gPolarPenguinVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.11PolarIcicle); /* gPolarIcicleVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.11PolarAkuAku); /* gPolarAkuAkuVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.9PolarGoal); /* gPolarGoalVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.13PolarBoostPad); /* gPolarBoostPadVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.20PolarCheckpointCrate); /* gPolarCheckpointCrateVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.21JetpackCheckpointText); /* gJetpackCheckpointTextVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.16JetpackExplosion); /* gJetpackExplosionVtable */
         build/crashbandicootxs/src/vehicle/jetpack_player.o(.gnu.linkonce.d._vt.13JetpackPlayer); /* gJetpackPlayerVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.11JetpackShot); /* gJetpackShotVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.12JetpackPlane); /* gJetpackPlaneVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.13JetpackBomber); /* gJetpackBomberVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.17JetpackCannonball); /* gJetpackCannonballVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.15AirshipFireball); /* gAirshipFireballVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.14JetpackBalloon); /* gJetpackBalloonVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.11JetpackShot); /* gJetpackShotVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.12JetpackPlane); /* gJetpackPlaneVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.13JetpackBomber); /* gJetpackBomberVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.17JetpackCannonball); /* gJetpackCannonballVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.15AirshipFireball); /* gAirshipFireballVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.14JetpackBalloon); /* gJetpackBalloonVtable */
         build/crashbandicootxs/src/vehicle/jetpack_crates.o(.gnu.linkonce.d._vt.18JetpackHealthCrate); /* gJetpackHealthCrateVtable */
         build/crashbandicootxs/src/vehicle/jetpack_crates.o(.gnu.linkonce.d._vt.16JetpackTimeCrate); /* gJetpackTimeCrateVtable */
         build/crashbandicootxs/src/vehicle/jetpack_crates.o(.gnu.linkonce.d._vt.20JetpackQuestionCrate); /* gJetpackQuestionCrateVtable */
         build/crashbandicootxs/src/vehicle/jetpack_crates.o(.gnu.linkonce.d._vt.19JetpackBalloonCrate); /* gJetpackBalloonCrateVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.21JetpackParachuteNitro); /* gJetpackParachuteNitroVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.13JetpackRocket); /* gJetpackRocketVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.11JetpackRing); /* gJetpackRingVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.21JetpackParachuteNitro); /* gJetpackParachuteNitroVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.13JetpackRocket); /* gJetpackRocketVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.11JetpackRing); /* gJetpackRingVtable */
         build/crashbandicootxs/src/bosses/hovercraft.o(.gnu.linkonce.d._vt.21JetpackCollectedWumpa); /* gJetpackCollectedWumpaVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.18HovercraftFireball); /* gHovercraftFireballVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.16HovercraftCannon); /* gHovercraftCannonVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.18HovercraftLauncher); /* gHovercraftLauncherVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.17HovercraftSideGun); /* gHovercraftSideGunVtable */
-        build/crashbandicootxs/src/actor/actor_anim.o(.gnu.linkonce.d._vt.21HovercraftCannonFlash); /* gHovercraftCannonFlashVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.18HovercraftFireball); /* gHovercraftFireballVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.16HovercraftCannon); /* gHovercraftCannonVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.18HovercraftLauncher); /* gHovercraftLauncherVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.17HovercraftSideGun); /* gHovercraftSideGunVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.21HovercraftCannonFlash); /* gHovercraftCannonFlashVtable */
         build/crashbandicootxs/src/frontend/company_logos_ctor.o(.gnu.linkonce.d._vt.9LogoActor); /* gLogoActorVtable */
 
 	} = 0

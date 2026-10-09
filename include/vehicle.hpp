@@ -3,7 +3,7 @@
 
 /* The vehicle levels' 3D actors as C++ (#664, docs/cplusplus.md), on
  * ActorSelf and HpActor (actor_self.hpp). Part 11a declared what the
- * C++ objects needed then: the destructors that src/actor/actor_anim.cpp
+ * C++ objects needed then: the destructors that src/actor/inline_copies_actors.cpp
  * has (the ROM keeps them there, with a few small methods), and the polar
  * player's state dispatch and table (src/vehicle/polar_player_dispatch.cpp,
  * src/data/actor_pmf_17a6b8.cpp). Part 11b added the polar actors' fields
@@ -24,7 +24,7 @@
  * (src/vehicle/jetpack_crates.cpp).
  *
  * No `#pragma interface`: g++ emits the vtables, each in its key-method
- * object: most in actor_anim.cpp, where the classes' destructors are (see
+ * object: most in inline_copies_actors.cpp, where the classes' destructors are (see
  * ctrl.hpp). */
 
 #include "actor_self.hpp"
@@ -156,7 +156,7 @@ inline PolarWumpa::PolarWumpa(const struct anim_table_record *rec, s32 x, s32 y,
  * crate's place on the course. A crate breaks (animation 0x12, Break)
  * when the player or the yeti touches it, and Update deletes it once
  * that animation has played. Its destructor is inline, as every crate
- * kind's expands it; actor_anim.cpp has the out-of-line copy
+ * kind's expands it; inline_copies_actors.cpp has the out-of-line copy
  * (DestroyPolarCrate). */
 class PolarCrate : public ActorSelf
 {
@@ -172,7 +172,7 @@ public:
     }
 };
 
-/* src/actor/actor_anim.cpp: the C-linkage copy of PolarCrate's inline
+/* src/actor/inline_copies_actors.cpp: the C-linkage copy of PolarCrate's inline
  * destructor, which the g++-emitted vtables point at (cxx_symbols.txt). */
 extern "C" void DestroyPolarCrate(PolarCrate *self, u32 flags);
 
@@ -619,7 +619,7 @@ COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackBalloon) == 0x64);
  * and lets the balloon go). The three kinds built on it pay out when
  * broken or touched; their destructors are g++'s implicit ones
  * (DestroyJetpackHealthCrate, DestroyJetpackTimeCrate and
- * DestroyJetpackQuestionCrate, actor_anim.cpp). */
+ * DestroyJetpackQuestionCrate, inline_copies_actors.cpp). */
 class JetpackBalloonCrate : public HpActor
 {
 public:

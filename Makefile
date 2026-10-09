@@ -236,7 +236,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/actor/actor.o \
                   $(C_BUILDDIR)/actor/actor_spawn_collected.o \
                   $(C_BUILDDIR)/actor/actor_palette_cycle.o \
-                  $(C_BUILDDIR)/actor/actor_anim.o \
+                  $(C_BUILDDIR)/actor/inline_copies_actors.o \
                   $(C_BUILDDIR)/crates/crate_touch.o \
                   $(C_BUILDDIR)/enemies/enemy_patrol.o \
                   $(C_BUILDDIR)/enemies/enemy_ctrl_update.o \
@@ -428,7 +428,7 @@ NO_IMPLEMENT_INLINES_OBJS := $(C_BUILDDIR)/actor/actor.o \
                              $(C_BUILDDIR)/actor/actor_category_hooks.o \
                              $(C_BUILDDIR)/actor/actor_palette_cycle.o \
                              $(C_BUILDDIR)/actor/actor_spawn_collected.o \
-                             $(C_BUILDDIR)/actor/actor_anim.o \
+                             $(C_BUILDDIR)/actor/inline_copies_actors.o \
                              $(C_BUILDDIR)/bosses/dingodile.o \
                              $(C_BUILDDIR)/crates/crate_update.o \
                              $(C_BUILDDIR)/frontend/company_logos_ctor.o \

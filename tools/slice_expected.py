@@ -102,7 +102,7 @@ def pool_references(lines):
 def decode_code_words(lines, refs):
     """Re-emits a numeric `.4byte` that nothing loads as the two Thumb
     halfwords it really is. The disassembly lost sync in a few places
-    (all in the actor_anim.c region around 0x0803B4C0-0x0803B83C) and wrote
+    (all in the inline_copies_actors.cpp region around 0x0803B4C0-0x0803B83C) and wrote
     real instructions - `push {lr}; adds r3, r0, #0` as `.4byte 0x1c03b500`
     and so on - as data. The bytes are right, but the `.4byte` puts them in
     a data mapping region, so objdiff shows one `.word` where the base

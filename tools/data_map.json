@@ -8385,7 +8385,7 @@
    ],
    "consumer_files": [
     "frontend/language_select.cpp",
-    "actor/actor_anim.c",
+    "actor/inline_copies_actors.cpp",
     "vehicle/jetpack_crates.c",
     "bosses/hovercraft.c",
     "vehicle/polar_player_actions.c",

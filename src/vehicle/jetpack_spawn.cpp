@@ -304,7 +304,7 @@ void JetpackPlayer::Update()
     (this->*stateFuncs[state])();
 }
 
-/* AnimPart's frame accessors (actor_anim.cpp), inlined. */
+/* AnimPart's frame accessors (inline_copies_actors.cpp), inlined. */
 static inline u8 *CurFrame(AnimPart *self)
 {
     s32 base = Q8_TO_INT(self->animTime);

@@ -482,7 +482,7 @@ from "core" graphics.
   [docs/matching/archive/naked-sub_80157c4-matched.md](../matching/archive/naked-sub_80157c4-matched.md));
   see `docs/matching/archive/issue-18-0x08014f8c-actor.md`.
 
-- `src/actor/actor_anim.c` (extended, GitHub issue #71, ROM
+- `src/actor/inline_copies_actors.cpp` (extended, GitHub issue #71, ROM
   `0x0803B060`-`0x0803B46C` - immediately adjacent to the file's existing
   `GetAnimFrameBaseOffset`, which itself ends exactly at `0x0803B060`):
   `GetAnimFrameAttr` (reads the current keyframe's `attr` halfword pre-shifted
@@ -745,7 +745,7 @@ from "core" graphics.
   build keeps) - see
   [docs/matching/archive/issue-63-final-raw-actor.md](../matching/archive/issue-63-final-raw-actor.md).
 
-- `src/actor/actor_anim.c` (extended, GitHub issue #72, ROM
+- `src/actor/inline_copies_actors.cpp` (extended, GitHub issue #72, ROM
   0x0803B4EC-0x0803B8B0 - directly contiguous with this file's existing
   coverage, which already ended right at 0x0803B4EC): `UpdateJetpackCheckpointText` (an
   animation-frame-advance/loop-back function, plus a `+0x50` trampoline
@@ -1270,7 +1270,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   "kind" spawner. Hits this project's confirmed categorical r7-pin
   compiler bug. GitHub issue not tracked separately, see
   `docs/matching/archive/naked-sub_8007dbc.md`.
-- **`DrawJetpackCheckpointText`** (`src/actor/actor_anim.c`) - fixed-position
+- **`DrawJetpackCheckpointText`** (`src/actor/inline_copies_actors.cpp`) - fixed-position
   (120, 106) OAM setup for one sprite frame - screen-space visibility
   cull, then builds the OAM attribute words and calls
   `SetupSpriteFrameOam`; near-identical twin of `DrawPolarCollectedWumpa`

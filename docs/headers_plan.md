@@ -1086,7 +1086,7 @@ One PR for the three subsystems. 1,082 local declarations are gone
 in jetpack_spawn.c, see "Codegen exceptions").
 
 - **Ownership by subject.** The file layout put many functions in a
-  neighbour's file for ROM order: actor_anim.c holds the teardown
+  neighbour's file for ROM order: inline_copies_actors.cpp holds the teardown
   functions of every jetpack, polar and hovercraft object, actor.c,
   actor_category_frame.c and actor_spawn.c the per-category hooks
   (`JetpackIsTouchingPlayer`, `PolarIsPauseLocked`, ...),
@@ -1123,7 +1123,7 @@ in jetpack_spawn.c, see "Codegen exceptions").
 - The defining data files (entity vtables, state tables, palettes, boxes)
   and iwram_data.c include the new headers, so each definition is checked.
 - **Struct merges** (36 local definitions gone):
-  - actor_anim.c's `struct anim_part_instance` (`frameTable`/`field_08`/
+  - inline_copies_actors.cpp's `struct anim_part_instance` (`frameTable`/`field_08`/
     `frameIndex` are `anims`/`animTime`/`animIndex`) and `struct
     linked_node` (the teardown functions' `prev`/`next`/`field_50`) are
     `struct actor_self`. `SetActorAnim` keeps a raw `animDone` store (see
@@ -2160,7 +2160,7 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | local `struct pmf`/`act_pmf` -> `struct actor_pmf`, `pmf_entry` -> `struct vtable_slot` | input_ctrl.c, swim_ctrl.c, action_ctrl_update.c (old_agbcc) | identical |
 | `struct flag8`/`d18c_flag8` -> `struct byte_arg` as a by-value stack argument | crate_break.c, collision_queue.c | identical |
 | `void *` view parameter -> `struct pause_menu *` | `PauseMenuCursorDown`/`Up`, `DrawPauseMenuPageTitle` | identical |
-| local `struct anim_part_instance`/`linked_node` -> `struct actor_self` fields | actor_anim.c | identical, except `SetActorAnim`'s `animDone = zero1` store: through the field the pinned zero in r2 is dropped (`mov r1, #0`), so it stays `*((u8 *)self + 0x12)` |
+| local `struct anim_part_instance`/`linked_node` -> `struct actor_self` fields | inline_copies_actors.cpp | identical, except `SetActorAnim`'s `animDone = zero1` store: through the field the pinned zero in r2 is dropped (`mov r1, #0`), so it stays `*((u8 *)self + 0x12)` |
 | `(*(struct cam_ref **)&self->record)->depth` -> `self->record->baseDepth` | company_logos.c (old_agbcc), jetpack_spawn.c, polar_player.c | identical |
 | `s16 []`/`u8 []` box extern -> `const struct anim_box`, `[0]`/`[3]` -> `.x`/`.w`; local `box16`/`box3` -> `struct anim_box` | airship.c, airship_explode.c, airship_touch.c, hovercraft.c, actor_category_frame.c, polar_nitro.c, yeti_*.c | identical |
 | `s32 *` view of a const record table -> `const struct airship_attack *` fields | airship_states.c | identical |
@@ -2232,7 +2232,7 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | `void *self` -> `struct player *`/`struct crate *` parameters, `selfArg` copies dropped or cast to `u8 *` (pinned registers kept) | player_flags.c, player_update.c, player_reset.c, player_init.c, slot_crate.c, crate_stack.c, crate_draw.c, crate_reset.c | identical |
 | method `self` views (`a884_part`, `ab9c_obj`, `ac2c_self`, `orbit_self`, `ctrl_target`) -> `struct player`; u32 mirror bit of a 4-byte container -> packed `mirror.bits.flipX`; `u8` bitfields -> `flags.bits`; `vtable + 0x70` -> `&vtable->collideWithObjects` | player_collide.c, player_event.c, input_ctrl.c (old_agbcc) | identical |
 | `#include "crate.h"` (with gobj_1a794.h; 6 static inlines) in a file that didn't include it | crate.c | `.o` identical, `.s` label numbers shift (+7); kept, since crate.c needs `struct crate` |
-| `u8 []` vtable extern -> `const struct vtable_slot [N]`, stores through `(void *)`/`(u8 *)`/`(struct actor_vtable *)` casts | gActorVtable/gEntityVtable users (actor_anim.c, graphics.c, ...) | identical |
+| `u8 []` vtable extern -> `const struct vtable_slot [N]`, stores through `(void *)`/`(u8 *)`/`(struct actor_vtable *)` casts | gActorVtable/gEntityVtable users (inline_copies_actors.cpp, graphics.c, ...) | identical |
 | `s16 []`/`u8 []` picture extern -> incomplete struct object, head read through a `struct boss_picture_size *` cast | CreateAirship, CreateHovercraft | identical |
 | a `struct UnknownC *` parameter copied from a `struct GaxMixerHandler *` (`self = (struct UnknownC *)mixer`) | GaxMixFrame | **changes** (`add r4, r0, #0` moves down one insn); the body reads the header struct's `type->play`/`mixBuf` instead, which is identical |
 | unused `struct GaxInfoHandler *` parameter added; `void *`/`s32` parameters -> the handler structs and `u32` | GaxChannelTick, GaxChannelStepInstrumentSeq, GaxChannelSetInstrument (pinned registers), GaxChannelSetNote | identical |

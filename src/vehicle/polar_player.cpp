@@ -92,7 +92,7 @@ void PolarPlayer::Update()
     }
 }
 
-/* AnimPart's frame accessors (actor_anim.cpp), inlined. */
+/* AnimPart's frame accessors (inline_copies_actors.cpp), inlined. */
 static inline s32 CurAttr(AnimPart *self)
 {
     s32 idx = self->animIndex;

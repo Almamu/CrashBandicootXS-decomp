@@ -58,7 +58,7 @@ doesn't depend on that kind of luck.)
 
 `asm/code_3.s` (122256 lines) is now split into `asm/code_3_1.s`,
 `asm/code_3_2.s`, and `asm/code_3_3.s` around where `src/gfx/graphics.c`'s
-and `src/actor/actor_anim.c`'s functions used to live - expect more such splits
+and `src/actor/inline_copies_actors.cpp`'s functions used to live - expect more such splits
 as more functions get matched out of it over time. **One `.c` file per
 contiguous ROM region, not one per "topic":** `GetAnimFrameBaseOffset`
 (ROM `0x0803B058`) is nowhere near `QueueVramDmaTransfer`/
@@ -66,11 +66,11 @@ contiguous ROM region, not one per "topic":** `GetAnimFrameBaseOffset`
 of the same animation-frame system - since one object file's `.text` can
 only be placed as a single contiguous block by `ldscript.txt`, a function
 whose real address isn't adjacent to an existing matched file's functions
-needs its own new `.c` file (here, `src/actor/actor_anim.c`), not just an
+needs its own new `.c` file (here, `src/actor/inline_copies_actors.cpp`), not just an
 addition to the existing one - adding it to the wrong file would silently
 move it to the wrong ROM address.
 
-Third matched function: `GetAnimFrameBaseOffset` in `src/actor/actor_anim.c` -
+Third matched function: `GetAnimFrameBaseOffset` in `src/actor/inline_copies_actors.cpp` -
 trivial (a single field read + arithmetic shift), included here mainly to
 confirm the "new `.c` file, non-adjacent region" workflow above works.
 
@@ -1534,7 +1534,7 @@ scratch-test comparisons up to the very last iteration.
 ### Cleanup pass over everything matched so far
 
 After the run of matches above, a pass over `src/gfx/graphics.c`,
-`src/menus/power_dialog_draw.c` and `src/actor/actor_anim.c` to tighten up readability
+`src/menus/power_dialog_draw.c` and `src/actor/inline_copies_actors.cpp` to tighten up readability
 without touching generated code (`make compare` re-checked after every
 edit below):
 
