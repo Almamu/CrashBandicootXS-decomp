@@ -19,11 +19,27 @@ extern "C" {
 
 class PlatformMover;
 
+/* Platform::type and PlatformMover::kind (#843, docs/flags/platform.md):
+ * what the platform does, from its spawn record or forced by the spawn
+ * kind (Platform::Create). */
+#define PLATFORM_TYPE_STILL 0         // stands still and carries the player
+#define PLATFORM_TYPE_MOVING 1        // moves back and forth over the record's distances
+#define PLATFORM_TYPE_WARP_EXIT 2     // EVENT_WARP_EXIT: the level exit
+#define PLATFORM_TYPE_WARP_BONUS 3    // EVENT_WARP_BONUS_ROUND, until the bonus round is done
+#define PLATFORM_TYPE_WARP_GEM_PATH 4 // EVENT_WARP_GEM_PATH, until the gem path is done
+#define PLATFORM_TYPE_FALLING 5       // wobbles once the player lands, falls 60 frames later
+#define PLATFORM_TYPE_FLIP 6          // tips over, and comes back 120 frames later
+// SpawnRockPlatform's: carried like STILL; its mover holds the animation
+// while not `active` and is gone when it ends, but nothing activates it
+#define PLATFORM_TYPE_ROCK 7
+
 /* A level platform (CreatePlatform allocates 0x80 bytes): a moving sprite
- * with a `type`, from its spawn record or forced by the spawn kind. Types
- * 1 (a moving platform), 5 (one that falls after the player lands), 6 (the
- * Neo Cortex fight's) and 7 (one that crumbles) get a PlatformMover; 2-4
- * are the warp platforms (the level exit, the bonus round, the gem path). */
+ * with a `type` (PLATFORM_TYPE_*), from its spawn record or forced by the
+ * spawn kind. Types 1 (a moving platform), 5 (one that falls after the
+ * player lands), 6 (the flip platform, which tips over on a timer; the
+ * Neo Cortex fight's are these) and 7 (the rock platform) get a
+ * PlatformMover; 2-4 are the warp platforms (the level exit, the bonus
+ * round, the gem path). */
 class Platform : public MovingSprite
 {
 public:

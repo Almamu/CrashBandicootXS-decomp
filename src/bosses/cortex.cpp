@@ -528,7 +528,8 @@ CortexBossPlatformMover::~CortexBossPlatformMover()
 }
 
 /* A still type-6 platform mover. */
-CortexBossPlatformMover::CortexBossPlatformMover() : PlatformMover(0, 0, false, false, 6)
+CortexBossPlatformMover::CortexBossPlatformMover()
+    : PlatformMover(0, 0, false, false, PLATFORM_TYPE_FLIP)
 {
 }
 
