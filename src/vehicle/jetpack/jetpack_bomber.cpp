@@ -31,22 +31,22 @@ JetpackBomber::JetpackBomber(const struct anim_table_record *rec, s32 x, s32 y, 
     unshootable = 0;
     switch ((u8)rec->index) {
     case 4:
-        SetState(0, 0);
+        SetState(JETPACK_BOMBER_STATE_IDLE, 0);
         break;
     case 5:
-        SetState(1, 0);
+        SetState(JETPACK_BOMBER_STATE_HOME, 0);
         break;
     case 6:
-        SetState(2, 0);
+        SetState(JETPACK_BOMBER_STATE_BOB_VERTICAL, 0);
         break;
     case 7:
-        SetState(3, 0);
+        SetState(JETPACK_BOMBER_STATE_SWING_HORIZONTAL, 0);
         break;
     case 8:
-        SetState(4, 0);
+        SetState(JETPACK_BOMBER_STATE_CIRCLE, 0);
         break;
     case 9:
-        SetState(5, 0);
+        SetState(JETPACK_BOMBER_STATE_DROP, 0);
         break;
     }
 }
@@ -57,19 +57,19 @@ JetpackBomber::JetpackBomber(const struct anim_table_record *rec, s32 x, s32 y, 
  * through it is gone, else it sinks a little and ActorSelf's update. */
 void JetpackBomber::Update()
 {
-    if (state != 6) {
+    if (state != JETPACK_BOMBER_STATE_DYING) {
         ((JetpackPlayer *)gActorList)->CountBomber();
-        if (state != 6 && (u8)IsTouchingPlayer(this)) {
+        if (state != JETPACK_BOMBER_STATE_DYING && (u8)IsTouchingPlayer(this)) {
             PlayerActor()->Damage(10);
             palette = 4;
             gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
-            SetState(6, 1);
+            SetState(JETPACK_BOMBER_STATE_DYING, 1);
         }
     }
 
     (this->*stateFuncs[state])();
 
-    if (state == 6 && animDone != 0) {
+    if (state == JETPACK_BOMBER_STATE_DYING && animDone != 0) {
         delete this;
     } else {
         z += 0x60;
@@ -150,10 +150,10 @@ void JetpackBomber::StateIdle()
 /* Slot 4: explodes (state 6) once the hit points run out. */
 void JetpackBomber::Damage(s32 amount)
 {
-    if (state != 6 && (hp -= amount) <= 0) {
+    if (state != JETPACK_BOMBER_STATE_DYING && (hp -= amount) <= 0) {
         palette = 4;
         gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
-        SetState(6, 1);
+        SetState(JETPACK_BOMBER_STATE_DYING, 1);
     }
 }
 

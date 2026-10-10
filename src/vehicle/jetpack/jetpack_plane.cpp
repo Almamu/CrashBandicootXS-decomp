@@ -80,7 +80,7 @@ void JetpackPlane::Update()
         Damage(4);
     }
 
-    if (state == 3 && y > 0xE100)
+    if (state == JETPACK_PLANE_STATE_FALL && y > 0xE100)
         delete this;
     else
         ActorSelf::Update();
@@ -96,7 +96,7 @@ void JetpackPlane::Aim(s32 target)
 {
     if (target < 0) {
         if (velZ <= 0x955) {
-            SetState(1, 3);
+            SetState(JETPACK_PLANE_STATE_FOLLOW, 3);
         } else {
             accX = 0;
             accY = 0;
@@ -161,7 +161,7 @@ void JetpackPlane::Damage(s32 amount)
     } else {
         idx = 4;
     }
-    SetState(2, idx);
+    SetState(JETPACK_PLANE_STATE_KNOCKED_OUT, idx);
     gAudioContext->PlaySfx(SFX_JETPACK_PLANE_DOWN, 0x100);
 }
 
@@ -208,7 +208,7 @@ void JetpackPlane::StateKnockedOut()
     } else {
         idx = 5;
     }
-    SetState(3, idx);
+    SetState(JETPACK_PLANE_STATE_FALL, idx);
 }
 
 /* gJetpackPlaneStateFuncs[1], entered by Aim at the end of a slow hop

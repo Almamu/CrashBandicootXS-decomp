@@ -75,7 +75,7 @@ void HovercraftCannon::StateFire()
     }
 
     if (depth > 0x4B00)
-        SetState(0, 0);
+        SetState(HOVERCRAFT_CANNON_STATE_WAIT, 0);
 }
 
 /* Takes `amount` off the hit points (with the hovercraft's hit flash); at
@@ -89,7 +89,7 @@ void HovercraftCannon::Damage(s32 amount)
     if (hp <= 0) {
         dead = 1;
         Hovercraft::LosePart();
-        SetState(2, 2);
+        SetState(HOVERCRAFT_CANNON_STATE_DESTROYED, 2);
         gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
     } else {
         gAudioContext->PlaySfx(SFX_HOVERCRAFT_PART_HIT, 0x100);
@@ -107,7 +107,7 @@ void HovercraftCannon::Update()
 
     st = state;
     step = 1;
-    if (st == 2 && animDone != 0)
+    if (st == HOVERCRAFT_CANNON_STATE_DESTROYED && animDone != 0)
         step = 0;
     if (step)
         ActorSelf::Update();
@@ -119,7 +119,7 @@ HovercraftCannon::HovercraftCannon(const struct anim_table_record *rec, s32 x, s
 {
     spawnX = x;
     spawnY = y;
-    state = 0;
+    state = HOVERCRAFT_CANNON_STATE_WAIT;
     dead = 0;
 }
 
@@ -144,7 +144,7 @@ void HovercraftCannon::StateWait()
     if (depth <= 0x4AFF) {
         cooldown = Hovercraft::GetAttack()->timing[1].delay;
         count = 0;
-        SetState(1, 1);
+        SetState(HOVERCRAFT_CANNON_STATE_FIRE, 1);
     }
 }
 
@@ -154,7 +154,7 @@ s32 HovercraftCannon::RunState()
 {
     (this->*stateFuncs[state])();
 
-    if (state == 2 && animDone != 0)
+    if (state == HOVERCRAFT_CANNON_STATE_DESTROYED && animDone != 0)
         return 0;
     return 1;
 }

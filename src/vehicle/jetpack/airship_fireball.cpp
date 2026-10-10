@@ -63,14 +63,14 @@ void AirshipFireball::StateOrbit()
         y = cy + Q8_MUL(sine[angle], radius);
     }
     if (depth <= 0x2bff) {
-        SetState(1, 0);
+        SetState(AIRSHIP_FIREBALL_STATE_SPIRAL_IN, 0);
         stateTime = t;
     }
     if ((u8)IsTouchingPlayer(this)) {
         PlayerActor()->Damage(6);
         palette = 4;
         gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
-        SetState(2, 1);
+        SetState(AIRSHIP_FIREBALL_STATE_EXPLODE, 1);
     }
 }
 
@@ -112,7 +112,7 @@ void AirshipFireball::StateSpiralIn()
         PlayerActor()->Damage(6);
         palette = 4;
         gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
-        SetState(2, 1);
+        SetState(AIRSHIP_FIREBALL_STATE_EXPLODE, 1);
     }
 }
 
@@ -124,7 +124,7 @@ void AirshipFireball::Damage(s32 amount)
     if (hp <= 0) {
         palette = 4;
         gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
-        SetState(2, 1);
+        SetState(AIRSHIP_FIREBALL_STATE_EXPLODE, 1);
     }
 }
 
@@ -134,7 +134,7 @@ void AirshipFireball::Update()
 {
     (this->*stateFuncs[state])();
 
-    if (state == 2 && animDone != 0)
+    if (state == AIRSHIP_FIREBALL_STATE_EXPLODE && animDone != 0)
         delete this;
     else
         ActorSelf::Update();
