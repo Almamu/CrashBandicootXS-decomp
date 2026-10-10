@@ -1,5 +1,7 @@
+extern "C" {
 #include "core.h"
 #include "actor_anim.h"
+}
 
 /*
  * ROM 0x0803B8B0-0x080B2120: BG0 cell animation A (categories 0-2) and
@@ -21,9 +23,9 @@ struct cell_anim_03b8b0 {
         u8 banks[(19 * 13 + 7) / 8 * 4];
     } frames[60];
 };
-COMPILE_TIME_ASSERT(cell_anim_03b8b0_c, sizeof(struct cell_anim_03b8b0) == 0x75B94);
+COMPILE_TIME_ASSERT(cell_anim_03b8b0_cpp, sizeof(struct cell_anim_03b8b0) == 0x75B94);
 
-const struct cell_anim_03b8b0 gCategoryFamily0CellAnim = {
+extern const struct cell_anim_03b8b0 gCategoryFamily0CellAnim = {
     {
         {
 #include "category_bg/03b8b0_cell_anim.pal.inc"
@@ -37,7 +39,7 @@ const struct cell_anim_03b8b0 gCategoryFamily0CellAnim = {
 
 /* Category 0's spawnTable (gActorCategories[0].spawnTable,
  * read by SelectActorCategory (actor_category_select.cpp) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
-const SUB_EFFECT_TABLE(164) gCategory0SpawnTable = {
+extern const SUB_EFFECT_TABLE(164) gCategory0SpawnTable = {
     {
         { 4000, 164, 3, 3, 3, 0, -1, 54 },
         { 18, -1, 28, 28, 28, 0, 30, 54 },

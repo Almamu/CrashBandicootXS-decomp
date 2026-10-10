@@ -71,7 +71,7 @@ struct sprite_frame {
 
 /*
  * Where each bank's tiles start in the sprite tile pool: the offset of the
- * bank's array in src/data/sprite_tiles_2bf120.c from gSpriteBank00Tiles
+ * bank's array in src/data/sprite_tiles_2bf120.cpp from gSpriteBank00Tiles
  * (graphics/sprites/bankNN_*.png, TILE_BYTES_bankNN_* in graphics.mk).
  * Frames give their tile offset relative to these. Resizing a bank's PNG
  * moves every later bank, so these have to follow.

@@ -1,5 +1,7 @@
+extern "C" {
 #include "gba/types.h"
 #include "sprite_bank.h"
+}
 
 /*
  * ROM 0x084b9d7c-0x084c0006: sprite banks 39-55 of the sprite-bank
@@ -12,7 +14,7 @@
  * the frame pointer array, the frames (header plus the boxes/anchor of
  * their layout type), then every frame's piece positions and piece bytes.
  * A frame's tiles are an offset into the sprite tile pool
- * (src/data/sprite_tiles_2bf120.c), written relative to the pool range of
+ * (src/data/sprite_tiles_2bf120.cpp), written relative to the pool range of
  * the bank that owns them (SPRITE_TILES_BANKnn). Editing a piece's shape,
  * adding a piece or moving the tiles means redrawing
  * graphics/sprites/bankNN_*.png to match.
@@ -107,110 +109,110 @@ extern const u8 gSpriteBank39Frame021Pieces[2];
 extern const u8 gSpriteBank39Frame022Pieces[2];
 extern const u8 gSpriteBank39Frame023Pieces[3];
 
-const struct sprite_anim gSpriteBank39Anims[13] = {
-    [0] = {
-        .seq = gSpriteBank39Anim00Seq,
-        .box = { { -56, 3, 106, 9 }, { -55, -11, 111, 23 } },
-        .paletteId = 61,
-        .duration = 5,
-        .frameCount = ARRAY_COUNT(gSpriteBank39Anim00Seq),
-        .flags = SPRITE_ANIM_LOOP,
+extern const struct sprite_anim gSpriteBank39Anims[13] = {
+    /* 0 */ {
+        /* seq */ gSpriteBank39Anim00Seq,
+        /* box */ { { -56, 3, 106, 9 }, { -55, -11, 111, 23 } },
+        /* paletteId */ 61,
+        /* duration */ 5,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank39Anim00Seq),
+        /* flags */ SPRITE_ANIM_LOOP,
     },
-    [1] = {
-        .seq = gSpriteBank39Anim01Seq,
-        .box = { { -23, 4, 38, 9 }, { -23, -11, 47, 23 } },
-        .paletteId = 61,
-        .duration = 5,
-        .frameCount = ARRAY_COUNT(gSpriteBank39Anim01Seq),
-        .flags = SPRITE_ANIM_LOOP,
+    /* 1 */ {
+        /* seq */ gSpriteBank39Anim01Seq,
+        /* box */ { { -23, 4, 38, 9 }, { -23, -11, 47, 23 } },
+        /* paletteId */ 61,
+        /* duration */ 5,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank39Anim01Seq),
+        /* flags */ SPRITE_ANIM_LOOP,
     },
-    [2] = {
-        .seq = gSpriteBank39Anim02Seq,
-        .box = { { -39, 4, 69, 10 }, { -39, -11, 79, 23 } },
-        .paletteId = 61,
-        .duration = 5,
-        .frameCount = ARRAY_COUNT(gSpriteBank39Anim02Seq),
-        .flags = SPRITE_ANIM_LOOP,
+    /* 2 */ {
+        /* seq */ gSpriteBank39Anim02Seq,
+        /* box */ { { -39, 4, 69, 10 }, { -39, -11, 79, 23 } },
+        /* paletteId */ 61,
+        /* duration */ 5,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank39Anim02Seq),
+        /* flags */ SPRITE_ANIM_LOOP,
     },
-    [3] = {
-        .seq = gSpriteBank39Anim03Seq,
-        .box = { { -20, -3, 43, 18 }, { -20, -14, 42, 28 } },
-        .paletteId = 62,
-        .duration = 1,
-        .frameCount = ARRAY_COUNT(gSpriteBank39Anim03Seq),
-        .flags = SPRITE_ANIM_LOOP,
+    /* 3 */ {
+        /* seq */ gSpriteBank39Anim03Seq,
+        /* box */ { { -20, -3, 43, 18 }, { -20, -14, 42, 28 } },
+        /* paletteId */ 62,
+        /* duration */ 1,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank39Anim03Seq),
+        /* flags */ SPRITE_ANIM_LOOP,
     },
-    [4] = {
-        .seq = gSpriteBank39Anim04Seq,
-        .box = { { -20, 3, 42, 11 }, { -22, -13, 46, 28 } },
-        .paletteId = 57,
-        .duration = 0,
-        .frameCount = ARRAY_COUNT(gSpriteBank39Anim04Seq),
-        .flags = SPRITE_ANIM_LOOP,
+    /* 4 */ {
+        /* seq */ gSpriteBank39Anim04Seq,
+        /* box */ { { -20, 3, 42, 11 }, { -22, -13, 46, 28 } },
+        /* paletteId */ 57,
+        /* duration */ 0,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank39Anim04Seq),
+        /* flags */ SPRITE_ANIM_LOOP,
     },
-    [5] = {
-        .seq = gSpriteBank39Anim05Seq,
-        .box = { { -18, -1, 37, 15 }, { -20, -14, 41, 28 } },
-        .paletteId = 57,
-        .duration = 1,
-        .frameCount = ARRAY_COUNT(gSpriteBank39Anim05Seq),
-        .flags = SPRITE_ANIM_LOOP,
+    /* 5 */ {
+        /* seq */ gSpriteBank39Anim05Seq,
+        /* box */ { { -18, -1, 37, 15 }, { -20, -14, 41, 28 } },
+        /* paletteId */ 57,
+        /* duration */ 1,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank39Anim05Seq),
+        /* flags */ SPRITE_ANIM_LOOP,
     },
-    [6] = {
-        .seq = gSpriteBank39Anim06Seq,
-        .box = { { -21, 0, 42, 9 }, { -20, -9, 40, 22 } },
-        .paletteId = 119,
-        .duration = 5,
-        .frameCount = ARRAY_COUNT(gSpriteBank39Anim06Seq),
-        .flags = SPRITE_ANIM_LOOP,
+    /* 6 */ {
+        /* seq */ gSpriteBank39Anim06Seq,
+        /* box */ { { -21, 0, 42, 9 }, { -20, -9, 40, 22 } },
+        /* paletteId */ 119,
+        /* duration */ 5,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank39Anim06Seq),
+        /* flags */ SPRITE_ANIM_LOOP,
     },
-    [7] = {
-        .seq = gSpriteBank39Anim07Seq,
-        .box = { { -18, -1, 37, 15 }, { -20, -14, 41, 28 } },
-        .paletteId = 57,
-        .duration = 1,
-        .frameCount = ARRAY_COUNT(gSpriteBank39Anim07Seq),
-        .flags = 0,
+    /* 7 */ {
+        /* seq */ gSpriteBank39Anim07Seq,
+        /* box */ { { -18, -1, 37, 15 }, { -20, -14, 41, 28 } },
+        /* paletteId */ 57,
+        /* duration */ 1,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank39Anim07Seq),
+        /* flags */ 0,
     },
-    [8] = {
-        .seq = gSpriteBank39Anim08Seq,
-        .box = { { -35, -1, 64, 11 }, { -63, -17, 119, 37 } },
-        .paletteId = 64,
-        .duration = 7,
-        .frameCount = ARRAY_COUNT(gSpriteBank39Anim08Seq),
-        .flags = 0,
+    /* 8 */ {
+        /* seq */ gSpriteBank39Anim08Seq,
+        /* box */ { { -35, -1, 64, 11 }, { -63, -17, 119, 37 } },
+        /* paletteId */ 64,
+        /* duration */ 7,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank39Anim08Seq),
+        /* flags */ 0,
     },
-    [9] = {
-        .seq = gSpriteBank39Anim09Seq,
-        .box = { { -20, -3, 43, 18 }, { -20, -14, 42, 28 } },
-        .paletteId = 53,
-        .duration = 1,
-        .frameCount = ARRAY_COUNT(gSpriteBank39Anim09Seq),
-        .flags = 0,
+    /* 9 */ {
+        /* seq */ gSpriteBank39Anim09Seq,
+        /* box */ { { -20, -3, 43, 18 }, { -20, -14, 42, 28 } },
+        /* paletteId */ 53,
+        /* duration */ 1,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank39Anim09Seq),
+        /* flags */ 0,
     },
-    [10] = {
-        .seq = gSpriteBank39Anim10Seq,
-        .box = { { -20, -3, 43, 18 }, { -20, -14, 42, 28 } },
-        .paletteId = 51,
-        .duration = 1,
-        .frameCount = ARRAY_COUNT(gSpriteBank39Anim10Seq),
-        .flags = 0,
+    /* 10 */ {
+        /* seq */ gSpriteBank39Anim10Seq,
+        /* box */ { { -20, -3, 43, 18 }, { -20, -14, 42, 28 } },
+        /* paletteId */ 51,
+        /* duration */ 1,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank39Anim10Seq),
+        /* flags */ 0,
     },
-    [11] = {
-        .seq = gSpriteBank39Anim11Seq,
-        .box = { { -20, -3, 43, 18 }, { -20, -14, 42, 28 } },
-        .paletteId = 52,
-        .duration = 1,
-        .frameCount = ARRAY_COUNT(gSpriteBank39Anim11Seq),
-        .flags = 0,
+    /* 11 */ {
+        /* seq */ gSpriteBank39Anim11Seq,
+        /* box */ { { -20, -3, 43, 18 }, { -20, -14, 42, 28 } },
+        /* paletteId */ 52,
+        /* duration */ 1,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank39Anim11Seq),
+        /* flags */ 0,
     },
-    [12] = {
-        .seq = gSpriteBank39Anim12Seq,
-        .box = { { -20, -3, 43, 18 }, { -20, -14, 42, 28 } },
-        .paletteId = 50,
-        .duration = 1,
-        .frameCount = ARRAY_COUNT(gSpriteBank39Anim12Seq),
-        .flags = 0,
+    /* 12 */ {
+        /* seq */ gSpriteBank39Anim12Seq,
+        /* box */ { { -20, -3, 43, 18 }, { -20, -14, 42, 28 } },
+        /* paletteId */ 50,
+        /* duration */ 1,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank39Anim12Seq),
+        /* flags */ 0,
     },
 };
 
@@ -256,7 +258,7 @@ const u16 gSpriteBank39Anim12Seq[1] = {
     23,
 };
 
-const struct sprite_frame *const gSpriteBank39Frames[24] = {
+extern const struct sprite_frame *const gSpriteBank39Frames[24] = {
     &gSpriteBank39Frame000.frame,
     &gSpriteBank39Frame001.frame,
     &gSpriteBank39Frame002.frame,
@@ -523,46 +525,46 @@ extern const u8 gSpriteBank40Frame027Pieces[2];
 extern const u8 gSpriteBank40Frame028Pieces[3];
 extern const u8 gSpriteBank40Frame029Pieces[3];
 
-const struct sprite_anim gSpriteBank40Anims[5] = {
-    [0] = {
-        .seq = gSpriteBank40Anim00Seq,
-        .box = { { -7, -7, 15, 15 }, { -7, -7, 14, 15 } },
-        .paletteId = 57,
-        .duration = 29,
-        .frameCount = ARRAY_COUNT(gSpriteBank40Anim00Seq),
-        .flags = 0,
+extern const struct sprite_anim gSpriteBank40Anims[5] = {
+    /* 0 */ {
+        /* seq */ gSpriteBank40Anim00Seq,
+        /* box */ { { -7, -7, 15, 15 }, { -7, -7, 14, 15 } },
+        /* paletteId */ 57,
+        /* duration */ 29,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank40Anim00Seq),
+        /* flags */ 0,
     },
-    [1] = {
-        .seq = gSpriteBank40Anim01Seq,
-        .box = { { -31, -15, 63, 31 }, { -31, -14, 63, 30 } },
-        .paletteId = 57,
-        .duration = 3,
-        .frameCount = ARRAY_COUNT(gSpriteBank40Anim01Seq),
-        .flags = 0,
+    /* 1 */ {
+        /* seq */ gSpriteBank40Anim01Seq,
+        /* box */ { { -31, -15, 63, 31 }, { -31, -14, 63, 30 } },
+        /* paletteId */ 57,
+        /* duration */ 3,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank40Anim01Seq),
+        /* flags */ 0,
     },
-    [2] = {
-        .seq = gSpriteBank40Anim02Seq,
-        .box = { { -10, -7, 21, 15 }, { -13, -21, 24, 29 } },
-        .paletteId = 57,
-        .duration = 3,
-        .frameCount = ARRAY_COUNT(gSpriteBank40Anim02Seq),
-        .flags = 0,
+    /* 2 */ {
+        /* seq */ gSpriteBank40Anim02Seq,
+        /* box */ { { -10, -7, 21, 15 }, { -13, -21, 24, 29 } },
+        /* paletteId */ 57,
+        /* duration */ 3,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank40Anim02Seq),
+        /* flags */ 0,
     },
-    [3] = {
-        .seq = gSpriteBank40Anim03Seq,
-        .box = { { -4, -5, 9, 10 }, { -12, -16, 27, 30 } },
-        .paletteId = 57,
-        .duration = 3,
-        .frameCount = ARRAY_COUNT(gSpriteBank40Anim03Seq),
-        .flags = 0,
+    /* 3 */ {
+        /* seq */ gSpriteBank40Anim03Seq,
+        /* box */ { { -4, -5, 9, 10 }, { -12, -16, 27, 30 } },
+        /* paletteId */ 57,
+        /* duration */ 3,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank40Anim03Seq),
+        /* flags */ 0,
     },
-    [4] = {
-        .seq = gSpriteBank40Anim04Seq,
-        .box = { { -6, -6, 12, 13 }, { -15, -23, 23, 30 } },
-        .paletteId = 57,
-        .duration = 5,
-        .frameCount = ARRAY_COUNT(gSpriteBank40Anim04Seq),
-        .flags = 0,
+    /* 4 */ {
+        /* seq */ gSpriteBank40Anim04Seq,
+        /* box */ { { -6, -6, 12, 13 }, { -15, -23, 23, 30 } },
+        /* paletteId */ 57,
+        /* duration */ 5,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank40Anim04Seq),
+        /* flags */ 0,
     },
 };
 
@@ -582,7 +584,7 @@ const u16 gSpriteBank40Anim04Seq[6] = {
     24, 25, 26, 27, 28, 29,
 };
 
-const struct sprite_frame *const gSpriteBank40Frames[30] = {
+extern const struct sprite_frame *const gSpriteBank40Frames[30] = {
     &gSpriteBank40Frame000.frame,
     &gSpriteBank40Frame001.frame,
     &gSpriteBank40Frame002.frame,
@@ -877,30 +879,30 @@ extern const u8 gSpriteBank41Frame021Pieces[2];
 extern const u8 gSpriteBank41Frame022Pieces[2];
 extern const u8 gSpriteBank41Frame023Pieces[2];
 
-const struct sprite_anim gSpriteBank41Anims[3] = {
-    [0] = {
-        .seq = gSpriteBank41Anim00Seq,
-        .box = { { -2, -1, 5, 3 }, { -3, -4, 7, 6 } },
-        .paletteId = 47,
-        .duration = 2,
-        .frameCount = ARRAY_COUNT(gSpriteBank41Anim00Seq),
-        .flags = 0,
+extern const struct sprite_anim gSpriteBank41Anims[3] = {
+    /* 0 */ {
+        /* seq */ gSpriteBank41Anim00Seq,
+        /* box */ { { -2, -1, 5, 3 }, { -3, -4, 7, 6 } },
+        /* paletteId */ 47,
+        /* duration */ 2,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank41Anim00Seq),
+        /* flags */ 0,
     },
-    [1] = {
-        .seq = gSpriteBank41Anim01Seq,
-        .box = { { -4, -1, 8, 2 }, { -20, -23, 25, 24 } },
-        .paletteId = 47,
-        .duration = 2,
-        .frameCount = ARRAY_COUNT(gSpriteBank41Anim01Seq),
-        .flags = 0,
+    /* 1 */ {
+        /* seq */ gSpriteBank41Anim01Seq,
+        /* box */ { { -4, -1, 8, 2 }, { -20, -23, 25, 24 } },
+        /* paletteId */ 47,
+        /* duration */ 2,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank41Anim01Seq),
+        /* flags */ 0,
     },
-    [2] = {
-        .seq = gSpriteBank41Anim02Seq,
-        .box = { { -9, -8, 19, 16 }, { -11, -17, 24, 25 } },
-        .paletteId = 47,
-        .duration = 2,
-        .frameCount = ARRAY_COUNT(gSpriteBank41Anim02Seq),
-        .flags = 0,
+    /* 2 */ {
+        /* seq */ gSpriteBank41Anim02Seq,
+        /* box */ { { -9, -8, 19, 16 }, { -11, -17, 24, 25 } },
+        /* paletteId */ 47,
+        /* duration */ 2,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank41Anim02Seq),
+        /* flags */ 0,
     },
 };
 
@@ -914,7 +916,7 @@ const u16 gSpriteBank41Anim02Seq[8] = {
     16, 17, 18, 19, 20, 21, 22, 23,
 };
 
-const struct sprite_frame *const gSpriteBank41Frames[24] = {
+extern const struct sprite_frame *const gSpriteBank41Frames[24] = {
     &gSpriteBank41Frame000.frame,
     &gSpriteBank41Frame001.frame,
     &gSpriteBank41Frame002.frame,
@@ -1124,14 +1126,14 @@ extern const u8 gSpriteBank42Frame008Pieces[2];
 extern const u8 gSpriteBank42Frame009Pieces[1];
 extern const u8 gSpriteBank42Frame010Pieces[2];
 
-const struct sprite_anim gSpriteBank42Anims[1] = {
-    [0] = {
-        .seq = gSpriteBank42Anim00Seq,
-        .box = { { -3, -3, 7, 7 }, { -3, -3, 39, 7 } },
-        .paletteId = 33,
-        .duration = 3,
-        .frameCount = ARRAY_COUNT(gSpriteBank42Anim00Seq),
-        .flags = 0,
+extern const struct sprite_anim gSpriteBank42Anims[1] = {
+    /* 0 */ {
+        /* seq */ gSpriteBank42Anim00Seq,
+        /* box */ { { -3, -3, 7, 7 }, { -3, -3, 39, 7 } },
+        /* paletteId */ 33,
+        /* duration */ 3,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank42Anim00Seq),
+        /* flags */ 0,
     },
 };
 
@@ -1140,7 +1142,7 @@ const u16 gSpriteBank42Anim00Seq[24] = {
     9, 10, 10, 10, 9, 8, 7, 6,
 };
 
-const struct sprite_frame *const gSpriteBank42Frames[11] = {
+extern const struct sprite_frame *const gSpriteBank42Frames[11] = {
     &gSpriteBank42Frame000.frame,
     &gSpriteBank42Frame001.frame,
     &gSpriteBank42Frame002.frame,
@@ -1292,62 +1294,62 @@ extern const u8 gSpriteBank43Frame018Pieces[4];
 extern const u8 gSpriteBank43Frame019Pieces[4];
 extern const u8 gSpriteBank43Frame020Pieces[4];
 
-const struct sprite_anim gSpriteBank43Anims[7] = {
-    [0] = {
-        .seq = gSpriteBank43Anim00Seq,
-        .box = { { -11, -11, 22, 23 }, { -25, -26, 49, 57 } },
-        .paletteId = 49,
-        .duration = 2,
-        .frameCount = ARRAY_COUNT(gSpriteBank43Anim00Seq),
-        .flags = 0,
+extern const struct sprite_anim gSpriteBank43Anims[7] = {
+    /* 0 */ {
+        /* seq */ gSpriteBank43Anim00Seq,
+        /* box */ { { -11, -11, 22, 23 }, { -25, -26, 49, 57 } },
+        /* paletteId */ 49,
+        /* duration */ 2,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank43Anim00Seq),
+        /* flags */ 0,
     },
-    [1] = {
-        .seq = gSpriteBank43Anim01Seq,
-        .box = { { -11, -11, 22, 23 }, { -25, -26, 49, 57 } },
-        .paletteId = 50,
-        .duration = 2,
-        .frameCount = ARRAY_COUNT(gSpriteBank43Anim01Seq),
-        .flags = 0,
+    /* 1 */ {
+        /* seq */ gSpriteBank43Anim01Seq,
+        /* box */ { { -11, -11, 22, 23 }, { -25, -26, 49, 57 } },
+        /* paletteId */ 50,
+        /* duration */ 2,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank43Anim01Seq),
+        /* flags */ 0,
     },
-    [2] = {
-        .seq = gSpriteBank43Anim02Seq,
-        .box = { { -21, -23, 42, 47 }, { -25, -28, 49, 57 } },
-        .paletteId = 50,
-        .duration = 2,
-        .frameCount = ARRAY_COUNT(gSpriteBank43Anim02Seq),
-        .flags = 0,
+    /* 2 */ {
+        /* seq */ gSpriteBank43Anim02Seq,
+        /* box */ { { -21, -23, 42, 47 }, { -25, -28, 49, 57 } },
+        /* paletteId */ 50,
+        /* duration */ 2,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank43Anim02Seq),
+        /* flags */ 0,
     },
-    [3] = {
-        .seq = gSpriteBank43Anim03Seq,
-        .box = { { -11, -11, 22, 23 }, { -25, -26, 49, 57 } },
-        .paletteId = 51,
-        .duration = 2,
-        .frameCount = ARRAY_COUNT(gSpriteBank43Anim03Seq),
-        .flags = 0,
+    /* 3 */ {
+        /* seq */ gSpriteBank43Anim03Seq,
+        /* box */ { { -11, -11, 22, 23 }, { -25, -26, 49, 57 } },
+        /* paletteId */ 51,
+        /* duration */ 2,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank43Anim03Seq),
+        /* flags */ 0,
     },
-    [4] = {
-        .seq = gSpriteBank43Anim04Seq,
-        .box = { { -11, -11, 22, 23 }, { -25, -26, 49, 57 } },
-        .paletteId = 117,
-        .duration = 2,
-        .frameCount = ARRAY_COUNT(gSpriteBank43Anim04Seq),
-        .flags = 0,
+    /* 4 */ {
+        /* seq */ gSpriteBank43Anim04Seq,
+        /* box */ { { -11, -11, 22, 23 }, { -25, -26, 49, 57 } },
+        /* paletteId */ 117,
+        /* duration */ 2,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank43Anim04Seq),
+        /* flags */ 0,
     },
-    [5] = {
-        .seq = gSpriteBank43Anim05Seq,
-        .box = { { -11, -11, 22, 23 }, { -25, -26, 49, 57 } },
-        .paletteId = 52,
-        .duration = 2,
-        .frameCount = ARRAY_COUNT(gSpriteBank43Anim05Seq),
-        .flags = 0,
+    /* 5 */ {
+        /* seq */ gSpriteBank43Anim05Seq,
+        /* box */ { { -11, -11, 22, 23 }, { -25, -26, 49, 57 } },
+        /* paletteId */ 52,
+        /* duration */ 2,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank43Anim05Seq),
+        /* flags */ 0,
     },
-    [6] = {
-        .seq = gSpriteBank43Anim06Seq,
-        .box = { { -11, -11, 22, 23 }, { -25, -26, 49, 57 } },
-        .paletteId = 53,
-        .duration = 2,
-        .frameCount = ARRAY_COUNT(gSpriteBank43Anim06Seq),
-        .flags = 0,
+    /* 6 */ {
+        /* seq */ gSpriteBank43Anim06Seq,
+        /* box */ { { -11, -11, 22, 23 }, { -25, -26, 49, 57 } },
+        /* paletteId */ 53,
+        /* duration */ 2,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank43Anim06Seq),
+        /* flags */ 0,
     },
 };
 
@@ -1373,7 +1375,7 @@ const u16 gSpriteBank43Anim06Seq[10] = {
     0, 1, 2, 3, 10, 5, 6, 7, 8, 9,
 };
 
-const struct sprite_frame *const gSpriteBank43Frames[21] = {
+extern const struct sprite_frame *const gSpriteBank43Frames[21] = {
     &gSpriteBank43Frame000.frame,
     &gSpriteBank43Frame001.frame,
     &gSpriteBank43Frame002.frame,
@@ -1570,14 +1572,14 @@ extern const u8 gSpriteBank44Frame010Pieces[2];
 extern const u8 gSpriteBank44Frame011Pieces[1];
 extern const u8 gSpriteBank44Frame012Pieces[3];
 
-const struct sprite_anim gSpriteBank44Anims[1] = {
-    [0] = {
-        .seq = gSpriteBank44Anim00Seq,
-        .box = { { -3, -7, 7, 14 }, { -5, -11, 12, 19 } },
-        .paletteId = 33,
-        .duration = 3,
-        .frameCount = ARRAY_COUNT(gSpriteBank44Anim00Seq),
-        .flags = SPRITE_ANIM_LOOP,
+extern const struct sprite_anim gSpriteBank44Anims[1] = {
+    /* 0 */ {
+        /* seq */ gSpriteBank44Anim00Seq,
+        /* box */ { { -3, -7, 7, 14 }, { -5, -11, 12, 19 } },
+        /* paletteId */ 33,
+        /* duration */ 3,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank44Anim00Seq),
+        /* flags */ SPRITE_ANIM_LOOP,
     },
 };
 
@@ -1585,7 +1587,7 @@ const u16 gSpriteBank44Anim00Seq[13] = {
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
 };
 
-const struct sprite_frame *const gSpriteBank44Frames[13] = {
+extern const struct sprite_frame *const gSpriteBank44Frames[13] = {
     &gSpriteBank44Frame000.frame,
     &gSpriteBank44Frame001.frame,
     &gSpriteBank44Frame002.frame,
@@ -1726,14 +1728,14 @@ extern const u8 gSpriteBank45Frame010Pieces[1];
 extern const u8 gSpriteBank45Frame011Pieces[1];
 extern const u8 gSpriteBank45Frame012Pieces[1];
 
-const struct sprite_anim gSpriteBank45Anims[1] = {
-    [0] = {
-        .seq = gSpriteBank45Anim00Seq,
-        .box = { { -11, -31, 23, 62 }, { -11, -31, 24, 62 } },
-        .paletteId = 123,
-        .duration = 5,
-        .frameCount = ARRAY_COUNT(gSpriteBank45Anim00Seq),
-        .flags = SPRITE_ANIM_LOOP,
+extern const struct sprite_anim gSpriteBank45Anims[1] = {
+    /* 0 */ {
+        /* seq */ gSpriteBank45Anim00Seq,
+        /* box */ { { -11, -31, 23, 62 }, { -11, -31, 24, 62 } },
+        /* paletteId */ 123,
+        /* duration */ 5,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank45Anim00Seq),
+        /* flags */ SPRITE_ANIM_LOOP,
     },
 };
 
@@ -1741,7 +1743,7 @@ const u16 gSpriteBank45Anim00Seq[13] = {
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
 };
 
-const struct sprite_frame *const gSpriteBank45Frames[13] = {
+extern const struct sprite_frame *const gSpriteBank45Frames[13] = {
     &gSpriteBank45Frame000,
     &gSpriteBank45Frame001,
     &gSpriteBank45Frame002,
@@ -1810,14 +1812,14 @@ extern const struct sprite_piece_pos gSpriteBank46Frame001Pos[2];
 extern const u8 gSpriteBank46Frame000Pieces[2];
 extern const u8 gSpriteBank46Frame001Pieces[2];
 
-const struct sprite_anim gSpriteBank46Anims[1] = {
-    [0] = {
-        .seq = gSpriteBank46Anim00Seq,
-        .box = { { -8, -4, 16, 9 }, { -8, -4, 16, 9 } },
-        .paletteId = 124,
-        .duration = 1,
-        .frameCount = ARRAY_COUNT(gSpriteBank46Anim00Seq),
-        .flags = 0,
+extern const struct sprite_anim gSpriteBank46Anims[1] = {
+    /* 0 */ {
+        /* seq */ gSpriteBank46Anim00Seq,
+        /* box */ { { -8, -4, 16, 9 }, { -8, -4, 16, 9 } },
+        /* paletteId */ 124,
+        /* duration */ 1,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank46Anim00Seq),
+        /* flags */ 0,
     },
 };
 
@@ -1825,7 +1827,7 @@ const u16 gSpriteBank46Anim00Seq[3] = {
     0, 1, 0,
 };
 
-const struct sprite_frame *const gSpriteBank46Frames[2] = {
+extern const struct sprite_frame *const gSpriteBank46Frames[2] = {
     &gSpriteBank46Frame000.frame,
     &gSpriteBank46Frame001.frame,
 };
@@ -1989,110 +1991,110 @@ extern const u8 gSpriteBank47Frame040Pieces[2];
 extern const u8 gSpriteBank47Frame041Pieces[2];
 extern const u8 gSpriteBank47Frame042Pieces[2];
 
-const struct sprite_anim gSpriteBank47Anims[13] = {
-    [0] = {
-        .seq = gSpriteBank47Anim00Seq,
-        .box = { { -6, -11, 13, 23 }, { -7, -11, 15, 23 } },
-        .paletteId = 33,
-        .duration = 1,
-        .frameCount = ARRAY_COUNT(gSpriteBank47Anim00Seq),
-        .flags = 0,
+extern const struct sprite_anim gSpriteBank47Anims[13] = {
+    /* 0 */ {
+        /* seq */ gSpriteBank47Anim00Seq,
+        /* box */ { { -6, -11, 13, 23 }, { -7, -11, 15, 23 } },
+        /* paletteId */ 33,
+        /* duration */ 1,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank47Anim00Seq),
+        /* flags */ 0,
     },
-    [1] = {
-        .seq = gSpriteBank47Anim01Seq,
-        .box = { { -3, -5, 7, 11 }, { -3, -6, 7, 12 } },
-        .paletteId = 33,
-        .duration = 1,
-        .frameCount = ARRAY_COUNT(gSpriteBank47Anim01Seq),
-        .flags = 0,
+    /* 1 */ {
+        /* seq */ gSpriteBank47Anim01Seq,
+        /* box */ { { -3, -5, 7, 11 }, { -3, -6, 7, 12 } },
+        /* paletteId */ 33,
+        /* duration */ 1,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank47Anim01Seq),
+        /* flags */ 0,
     },
-    [2] = {
-        .seq = gSpriteBank47Anim02Seq,
-        .box = { { -12, -12, 25, 25 }, { -12, -12, 25, 25 } },
-        .paletteId = 45,
-        .duration = 3,
-        .frameCount = ARRAY_COUNT(gSpriteBank47Anim02Seq),
-        .flags = SPRITE_ANIM_LOOP,
+    /* 2 */ {
+        /* seq */ gSpriteBank47Anim02Seq,
+        /* box */ { { -12, -12, 25, 25 }, { -12, -12, 25, 25 } },
+        /* paletteId */ 45,
+        /* duration */ 3,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank47Anim02Seq),
+        /* flags */ SPRITE_ANIM_LOOP,
     },
-    [3] = {
-        .seq = gSpriteBank47Anim03Seq,
-        .box = { { -3, -5, 7, 11 }, { -3, -5, 7, 11 } },
-        .paletteId = 33,
-        .duration = 1,
-        .frameCount = ARRAY_COUNT(gSpriteBank47Anim03Seq),
-        .flags = 0,
+    /* 3 */ {
+        /* seq */ gSpriteBank47Anim03Seq,
+        /* box */ { { -3, -5, 7, 11 }, { -3, -5, 7, 11 } },
+        /* paletteId */ 33,
+        /* duration */ 1,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank47Anim03Seq),
+        /* flags */ 0,
     },
-    [4] = {
-        .seq = gSpriteBank47Anim04Seq,
-        .box = { { -3, -5, 7, 11 }, { -3, -6, 7, 12 } },
-        .paletteId = 67,
-        .duration = 1,
-        .frameCount = ARRAY_COUNT(gSpriteBank47Anim04Seq),
-        .flags = 0,
+    /* 4 */ {
+        /* seq */ gSpriteBank47Anim04Seq,
+        /* box */ { { -3, -5, 7, 11 }, { -3, -6, 7, 12 } },
+        /* paletteId */ 67,
+        /* duration */ 1,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank47Anim04Seq),
+        /* flags */ 0,
     },
-    [5] = {
-        .seq = gSpriteBank47Anim05Seq,
-        .box = { { -20, -4, 40, 9 }, { -20, -4, 40, 9 } },
-        .paletteId = 68,
-        .duration = 5,
-        .frameCount = ARRAY_COUNT(gSpriteBank47Anim05Seq),
-        .flags = 0,
+    /* 5 */ {
+        /* seq */ gSpriteBank47Anim05Seq,
+        /* box */ { { -20, -4, 40, 9 }, { -20, -4, 40, 9 } },
+        /* paletteId */ 68,
+        /* duration */ 5,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank47Anim05Seq),
+        /* flags */ 0,
     },
-    [6] = {
-        .seq = gSpriteBank47Anim06Seq,
-        .box = { { -14, -11, 29, 22 }, { -14, -11, 29, 22 } },
-        .paletteId = 69,
-        .duration = 0,
-        .frameCount = ARRAY_COUNT(gSpriteBank47Anim06Seq),
-        .flags = 0,
+    /* 6 */ {
+        /* seq */ gSpriteBank47Anim06Seq,
+        /* box */ { { -14, -11, 29, 22 }, { -14, -11, 29, 22 } },
+        /* paletteId */ 69,
+        /* duration */ 0,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank47Anim06Seq),
+        /* flags */ 0,
     },
-    [7] = {
-        .seq = gSpriteBank47Anim07Seq,
-        .box = { { -15, -9, 31, 18 }, { -15, -9, 31, 18 } },
-        .paletteId = 70,
-        .duration = 0,
-        .frameCount = ARRAY_COUNT(gSpriteBank47Anim07Seq),
-        .flags = 0,
+    /* 7 */ {
+        /* seq */ gSpriteBank47Anim07Seq,
+        /* box */ { { -15, -9, 31, 18 }, { -15, -9, 31, 18 } },
+        /* paletteId */ 70,
+        /* duration */ 0,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank47Anim07Seq),
+        /* flags */ 0,
     },
-    [8] = {
-        .seq = gSpriteBank47Anim08Seq,
-        .box = { { -15, -10, 30, 21 }, { -15, -10, 30, 21 } },
-        .paletteId = 71,
-        .duration = 0,
-        .frameCount = ARRAY_COUNT(gSpriteBank47Anim08Seq),
-        .flags = 0,
+    /* 8 */ {
+        /* seq */ gSpriteBank47Anim08Seq,
+        /* box */ { { -15, -10, 30, 21 }, { -15, -10, 30, 21 } },
+        /* paletteId */ 71,
+        /* duration */ 0,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank47Anim08Seq),
+        /* flags */ 0,
     },
-    [9] = {
-        .seq = gSpriteBank47Anim09Seq,
-        .box = { { -14, -10, 29, 20 }, { -14, -10, 29, 20 } },
-        .paletteId = 72,
-        .duration = 0,
-        .frameCount = ARRAY_COUNT(gSpriteBank47Anim09Seq),
-        .flags = 0,
+    /* 9 */ {
+        /* seq */ gSpriteBank47Anim09Seq,
+        /* box */ { { -14, -10, 29, 20 }, { -14, -10, 29, 20 } },
+        /* paletteId */ 72,
+        /* duration */ 0,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank47Anim09Seq),
+        /* flags */ 0,
     },
-    [10] = {
-        .seq = gSpriteBank47Anim10Seq,
-        .box = { { -13, -11, 27, 23 }, { -13, -11, 27, 23 } },
-        .paletteId = 45,
-        .duration = 0,
-        .frameCount = ARRAY_COUNT(gSpriteBank47Anim10Seq),
-        .flags = 0,
+    /* 10 */ {
+        /* seq */ gSpriteBank47Anim10Seq,
+        /* box */ { { -13, -11, 27, 23 }, { -13, -11, 27, 23 } },
+        /* paletteId */ 45,
+        /* duration */ 0,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank47Anim10Seq),
+        /* flags */ 0,
     },
-    [11] = {
-        .seq = gSpriteBank47Anim11Seq,
-        .box = { { -27, -6, 55, 13 }, { -27, -6, 55, 13 } },
-        .paletteId = 33,
-        .duration = 11,
-        .frameCount = ARRAY_COUNT(gSpriteBank47Anim11Seq),
-        .flags = SPRITE_ANIM_LOOP,
+    /* 11 */ {
+        /* seq */ gSpriteBank47Anim11Seq,
+        /* box */ { { -27, -6, 55, 13 }, { -27, -6, 55, 13 } },
+        /* paletteId */ 33,
+        /* duration */ 11,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank47Anim11Seq),
+        /* flags */ SPRITE_ANIM_LOOP,
     },
-    [12] = {
-        .seq = gSpriteBank47Anim12Seq,
-        .box = { { -15, -11, 31, 23 }, { -15, -11, 31, 23 } },
-        .paletteId = 118,
-        .duration = 5,
-        .frameCount = ARRAY_COUNT(gSpriteBank47Anim12Seq),
-        .flags = 0,
+    /* 12 */ {
+        /* seq */ gSpriteBank47Anim12Seq,
+        /* box */ { { -15, -11, 31, 23 }, { -15, -11, 31, 23 } },
+        /* paletteId */ 118,
+        /* duration */ 5,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank47Anim12Seq),
+        /* flags */ 0,
     },
 };
 
@@ -2137,7 +2139,7 @@ const u16 gSpriteBank47Anim12Seq[1] = {
     42,
 };
 
-const struct sprite_frame *const gSpriteBank47Frames[43] = {
+extern const struct sprite_frame *const gSpriteBank47Frames[43] = {
     &gSpriteBank47Frame000.frame,
     &gSpriteBank47Frame001.frame,
     &gSpriteBank47Frame002.frame,
@@ -2558,38 +2560,38 @@ extern const u8 gSpriteBank48Frame035Pieces[2];
 extern const u8 gSpriteBank48Frame036Pieces[2];
 extern const u8 gSpriteBank48Frame037Pieces[2];
 
-const struct sprite_anim gSpriteBank48Anims[4] = {
-    [0] = {
-        .seq = gSpriteBank48Anim00Seq,
-        .box = { { -15, -23, 30, 47 }, { -15, -25, 30, 49 } },
-        .paletteId = 102,
-        .duration = 3,
-        .frameCount = ARRAY_COUNT(gSpriteBank48Anim00Seq),
-        .flags = SPRITE_ANIM_LOOP,
+extern const struct sprite_anim gSpriteBank48Anims[4] = {
+    /* 0 */ {
+        /* seq */ gSpriteBank48Anim00Seq,
+        /* box */ { { -15, -23, 30, 47 }, { -15, -25, 30, 49 } },
+        /* paletteId */ 102,
+        /* duration */ 3,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank48Anim00Seq),
+        /* flags */ SPRITE_ANIM_LOOP,
     },
-    [1] = {
-        .seq = gSpriteBank48Anim01Seq,
-        .box = { { -15, -23, 30, 47 }, { -15, -27, 30, 51 } },
-        .paletteId = 102,
-        .duration = 3,
-        .frameCount = ARRAY_COUNT(gSpriteBank48Anim01Seq),
-        .flags = 0,
+    /* 1 */ {
+        /* seq */ gSpriteBank48Anim01Seq,
+        /* box */ { { -15, -23, 30, 47 }, { -15, -27, 30, 51 } },
+        /* paletteId */ 102,
+        /* duration */ 3,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank48Anim01Seq),
+        /* flags */ 0,
     },
-    [2] = {
-        .seq = gSpriteBank48Anim02Seq,
-        .box = { { -15, -23, 30, 47 }, { -15, -28, 30, 52 } },
-        .paletteId = 102,
-        .duration = 3,
-        .frameCount = ARRAY_COUNT(gSpriteBank48Anim02Seq),
-        .flags = 0,
+    /* 2 */ {
+        /* seq */ gSpriteBank48Anim02Seq,
+        /* box */ { { -15, -23, 30, 47 }, { -15, -28, 30, 52 } },
+        /* paletteId */ 102,
+        /* duration */ 3,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank48Anim02Seq),
+        /* flags */ 0,
     },
-    [3] = {
-        .seq = gSpriteBank48Anim03Seq,
-        .box = { { -15, -23, 30, 47 }, { -14, -26, 29, 50 } },
-        .paletteId = 102,
-        .duration = 3,
-        .frameCount = ARRAY_COUNT(gSpriteBank48Anim03Seq),
-        .flags = 0,
+    /* 3 */ {
+        /* seq */ gSpriteBank48Anim03Seq,
+        /* box */ { { -15, -23, 30, 47 }, { -14, -26, 29, 50 } },
+        /* paletteId */ 102,
+        /* duration */ 3,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank48Anim03Seq),
+        /* flags */ 0,
     },
 };
 
@@ -2606,7 +2608,7 @@ const u16 gSpriteBank48Anim03Seq[10] = {
     29, 30, 31, 32, 33, 34, 35, 36, 37, 37,
 };
 
-const struct sprite_frame *const gSpriteBank48Frames[38] = {
+extern const struct sprite_frame *const gSpriteBank48Frames[38] = {
     &gSpriteBank48Frame000.frame,
     &gSpriteBank48Frame001.frame,
     &gSpriteBank48Frame002.frame,
@@ -2893,46 +2895,46 @@ extern const struct sprite_piece_pos gSpriteBank49Frame001Pos[3];
 extern const u8 gSpriteBank49Frame000Pieces[3];
 extern const u8 gSpriteBank49Frame001Pieces[3];
 
-const struct sprite_anim gSpriteBank49Anims[5] = {
-    [0] = {
-        .seq = gSpriteBank49Anim00Seq,
-        .box = { { -19, -9, 39, 18 }, { -19, -9, 39, 18 } },
-        .paletteId = 74,
-        .duration = 0,
-        .frameCount = ARRAY_COUNT(gSpriteBank49Anim00Seq),
-        .flags = 0,
+extern const struct sprite_anim gSpriteBank49Anims[5] = {
+    /* 0 */ {
+        /* seq */ gSpriteBank49Anim00Seq,
+        /* box */ { { -19, -9, 39, 18 }, { -19, -9, 39, 18 } },
+        /* paletteId */ 74,
+        /* duration */ 0,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank49Anim00Seq),
+        /* flags */ 0,
     },
-    [1] = {
-        .seq = gSpriteBank49Anim01Seq,
-        .box = { { -19, -9, 39, 18 }, { -19, -9, 39, 18 } },
-        .paletteId = 75,
-        .duration = 0,
-        .frameCount = ARRAY_COUNT(gSpriteBank49Anim01Seq),
-        .flags = 0,
+    /* 1 */ {
+        /* seq */ gSpriteBank49Anim01Seq,
+        /* box */ { { -19, -9, 39, 18 }, { -19, -9, 39, 18 } },
+        /* paletteId */ 75,
+        /* duration */ 0,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank49Anim01Seq),
+        /* flags */ 0,
     },
-    [2] = {
-        .seq = gSpriteBank49Anim02Seq,
-        .box = { { -19, -9, 39, 18 }, { -19, -9, 39, 18 } },
-        .paletteId = 76,
-        .duration = 0,
-        .frameCount = ARRAY_COUNT(gSpriteBank49Anim02Seq),
-        .flags = 0,
+    /* 2 */ {
+        /* seq */ gSpriteBank49Anim02Seq,
+        /* box */ { { -19, -9, 39, 18 }, { -19, -9, 39, 18 } },
+        /* paletteId */ 76,
+        /* duration */ 0,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank49Anim02Seq),
+        /* flags */ 0,
     },
-    [3] = {
-        .seq = gSpriteBank49Anim03Seq,
-        .box = { { -19, -9, 39, 18 }, { -19, -9, 39, 18 } },
-        .paletteId = 77,
-        .duration = 0,
-        .frameCount = ARRAY_COUNT(gSpriteBank49Anim03Seq),
-        .flags = 0,
+    /* 3 */ {
+        /* seq */ gSpriteBank49Anim03Seq,
+        /* box */ { { -19, -9, 39, 18 }, { -19, -9, 39, 18 } },
+        /* paletteId */ 77,
+        /* duration */ 0,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank49Anim03Seq),
+        /* flags */ 0,
     },
-    [4] = {
-        .seq = gSpriteBank49Anim04Seq,
-        .box = { { -19, -9, 39, 18 }, { -19, -9, 39, 18 } },
-        .paletteId = 78,
-        .duration = 0,
-        .frameCount = ARRAY_COUNT(gSpriteBank49Anim04Seq),
-        .flags = 0,
+    /* 4 */ {
+        /* seq */ gSpriteBank49Anim04Seq,
+        /* box */ { { -19, -9, 39, 18 }, { -19, -9, 39, 18 } },
+        /* paletteId */ 78,
+        /* duration */ 0,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank49Anim04Seq),
+        /* flags */ 0,
     },
 };
 
@@ -2952,7 +2954,7 @@ const u16 gSpriteBank49Anim04Seq[2] = {
     0, 1,
 };
 
-const struct sprite_frame *const gSpriteBank49Frames[2] = {
+extern const struct sprite_frame *const gSpriteBank49Frames[2] = {
     &gSpriteBank49Frame000.frame,
     &gSpriteBank49Frame001.frame,
 };
@@ -3001,14 +3003,14 @@ extern const u8 gSpriteBank50Frame005Pieces[1];
 extern const u8 gSpriteBank50Frame006Pieces[3];
 extern const u8 gSpriteBank50Frame007Pieces[3];
 
-const struct sprite_anim gSpriteBank50Anims[1] = {
-    [0] = {
-        .seq = gSpriteBank50Anim00Seq,
-        .box = { { -5, -67, 23, 65 }, { -5, -67, 69, 72 } },
-        .paletteId = 79,
-        .duration = 0,
-        .frameCount = ARRAY_COUNT(gSpriteBank50Anim00Seq),
-        .flags = 0,
+extern const struct sprite_anim gSpriteBank50Anims[1] = {
+    /* 0 */ {
+        /* seq */ gSpriteBank50Anim00Seq,
+        /* box */ { { -5, -67, 23, 65 }, { -5, -67, 69, 72 } },
+        /* paletteId */ 79,
+        /* duration */ 0,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank50Anim00Seq),
+        /* flags */ 0,
     },
 };
 
@@ -3016,7 +3018,7 @@ const u16 gSpriteBank50Anim00Seq[8] = {
     0, 1, 2, 3, 4, 5, 6, 7,
 };
 
-const struct sprite_frame *const gSpriteBank50Frames[8] = {
+extern const struct sprite_frame *const gSpriteBank50Frames[8] = {
     &gSpriteBank50Frame000.frame,
     &gSpriteBank50Frame001.frame,
     &gSpriteBank50Frame002.frame,
@@ -3159,46 +3161,46 @@ extern const u8 gSpriteBank51Frame021Pieces[2];
 extern const u8 gSpriteBank51Frame022Pieces[2];
 extern const u8 gSpriteBank51Frame023Pieces[1];
 
-const struct sprite_anim gSpriteBank51Anims[5] = {
-    [0] = {
-        .seq = gSpriteBank51Anim00Seq,
-        .box = { { -3, -4, 6, 8 }, { -10, -4, 20, 8 } },
-        .paletteId = 80,
-        .duration = 0,
-        .frameCount = ARRAY_COUNT(gSpriteBank51Anim00Seq),
-        .flags = 0,
+extern const struct sprite_anim gSpriteBank51Anims[5] = {
+    /* 0 */ {
+        /* seq */ gSpriteBank51Anim00Seq,
+        /* box */ { { -3, -4, 6, 8 }, { -10, -4, 20, 8 } },
+        /* paletteId */ 80,
+        /* duration */ 0,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank51Anim00Seq),
+        /* flags */ 0,
     },
-    [1] = {
-        .seq = gSpriteBank51Anim01Seq,
-        .box = { { -9, -6, 19, 13 }, { -9, -6, 19, 13 } },
-        .paletteId = 81,
-        .duration = 1,
-        .frameCount = ARRAY_COUNT(gSpriteBank51Anim01Seq),
-        .flags = 0,
+    /* 1 */ {
+        /* seq */ gSpriteBank51Anim01Seq,
+        /* box */ { { -9, -6, 19, 13 }, { -9, -6, 19, 13 } },
+        /* paletteId */ 81,
+        /* duration */ 1,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank51Anim01Seq),
+        /* flags */ 0,
     },
-    [2] = {
-        .seq = gSpriteBank51Anim02Seq,
-        .box = { { -10, -6, 20, 12 }, { -10, -6, 20, 12 } },
-        .paletteId = 82,
-        .duration = 1,
-        .frameCount = ARRAY_COUNT(gSpriteBank51Anim02Seq),
-        .flags = 0,
+    /* 2 */ {
+        /* seq */ gSpriteBank51Anim02Seq,
+        /* box */ { { -10, -6, 20, 12 }, { -10, -6, 20, 12 } },
+        /* paletteId */ 82,
+        /* duration */ 1,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank51Anim02Seq),
+        /* flags */ 0,
     },
-    [3] = {
-        .seq = gSpriteBank51Anim03Seq,
-        .box = { { -10, -7, 21, 14 }, { -10, -7, 21, 14 } },
-        .paletteId = 83,
-        .duration = 1,
-        .frameCount = ARRAY_COUNT(gSpriteBank51Anim03Seq),
-        .flags = 0,
+    /* 3 */ {
+        /* seq */ gSpriteBank51Anim03Seq,
+        /* box */ { { -10, -7, 21, 14 }, { -10, -7, 21, 14 } },
+        /* paletteId */ 83,
+        /* duration */ 1,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank51Anim03Seq),
+        /* flags */ 0,
     },
-    [4] = {
-        .seq = gSpriteBank51Anim04Seq,
-        .box = { { -13, -6, 26, 13 }, { -13, -6, 26, 13 } },
-        .paletteId = 84,
-        .duration = 1,
-        .frameCount = ARRAY_COUNT(gSpriteBank51Anim04Seq),
-        .flags = 0,
+    /* 4 */ {
+        /* seq */ gSpriteBank51Anim04Seq,
+        /* box */ { { -13, -6, 26, 13 }, { -13, -6, 26, 13 } },
+        /* paletteId */ 84,
+        /* duration */ 1,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank51Anim04Seq),
+        /* flags */ 0,
     },
 };
 
@@ -3219,7 +3221,7 @@ const u16 gSpriteBank51Anim04Seq[1] = {
     23,
 };
 
-const struct sprite_frame *const gSpriteBank51Frames[24] = {
+extern const struct sprite_frame *const gSpriteBank51Frames[24] = {
     &gSpriteBank51Frame000.frame,
     &gSpriteBank51Frame001.frame,
     &gSpriteBank51Frame002.frame,
@@ -3411,22 +3413,22 @@ extern const u8 gSpriteBank52Frame001Pieces[1];
 extern const u8 gSpriteBank52Frame002Pieces[1];
 extern const u8 gSpriteBank52Frame003Pieces[1];
 
-const struct sprite_anim gSpriteBank52Anims[2] = {
-    [0] = {
-        .seq = gSpriteBank52Anim00Seq,
-        .box = { { -7, -7, 15, 15 }, { -7, -7, 15, 15 } },
-        .paletteId = 33,
-        .duration = 9,
-        .frameCount = ARRAY_COUNT(gSpriteBank52Anim00Seq),
-        .flags = 0,
+extern const struct sprite_anim gSpriteBank52Anims[2] = {
+    /* 0 */ {
+        /* seq */ gSpriteBank52Anim00Seq,
+        /* box */ { { -7, -7, 15, 15 }, { -7, -7, 15, 15 } },
+        /* paletteId */ 33,
+        /* duration */ 9,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank52Anim00Seq),
+        /* flags */ 0,
     },
-    [1] = {
-        .seq = gSpriteBank52Anim01Seq,
-        .box = { { -7, -7, 15, 15 }, { -7, -7, 15, 15 } },
-        .paletteId = 33,
-        .duration = 9,
-        .frameCount = ARRAY_COUNT(gSpriteBank52Anim01Seq),
-        .flags = 0,
+    /* 1 */ {
+        /* seq */ gSpriteBank52Anim01Seq,
+        /* box */ { { -7, -7, 15, 15 }, { -7, -7, 15, 15 } },
+        /* paletteId */ 33,
+        /* duration */ 9,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank52Anim01Seq),
+        /* flags */ 0,
     },
 };
 
@@ -3437,7 +3439,7 @@ const u16 gSpriteBank52Anim01Seq[2] = {
     2, 3,
 };
 
-const struct sprite_frame *const gSpriteBank52Frames[4] = {
+extern const struct sprite_frame *const gSpriteBank52Frames[4] = {
     &gSpriteBank52Frame000.frame,
     &gSpriteBank52Frame001.frame,
     &gSpriteBank52Frame002.frame,
@@ -3695,158 +3697,158 @@ extern const u8 gSpriteBank53Frame064Pieces[1];
 extern const u8 gSpriteBank53Frame065Pieces[3];
 extern const u8 gSpriteBank53Frame066Pieces[1];
 
-const struct sprite_anim gSpriteBank53Anims[19] = {
-    [0] = {
-        .seq = gSpriteBank53Anim00Seq,
-        .box = { { -7, -43, 15, 87 }, { -7, -43, 15, 87 } },
-        .paletteId = 85,
-        .duration = 0,
-        .frameCount = ARRAY_COUNT(gSpriteBank53Anim00Seq),
-        .flags = SPRITE_ANIM_LOOP,
+extern const struct sprite_anim gSpriteBank53Anims[19] = {
+    /* 0 */ {
+        /* seq */ gSpriteBank53Anim00Seq,
+        /* box */ { { -7, -43, 15, 87 }, { -7, -43, 15, 87 } },
+        /* paletteId */ 85,
+        /* duration */ 0,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank53Anim00Seq),
+        /* flags */ SPRITE_ANIM_LOOP,
     },
-    [1] = {
-        .seq = gSpriteBank53Anim01Seq,
-        .box = { { -31, -16, 52, 32 }, { -31, -16, 62, 32 } },
-        .paletteId = 86,
-        .duration = 0,
-        .frameCount = ARRAY_COUNT(gSpriteBank53Anim01Seq),
-        .flags = 0,
+    /* 1 */ {
+        /* seq */ gSpriteBank53Anim01Seq,
+        /* box */ { { -31, -16, 52, 32 }, { -31, -16, 62, 32 } },
+        /* paletteId */ 86,
+        /* duration */ 0,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank53Anim01Seq),
+        /* flags */ 0,
     },
-    [2] = {
-        .seq = gSpriteBank53Anim02Seq,
-        .box = { { -7, -43, 15, 87 }, { -7, -43, 15, 87 } },
-        .paletteId = 87,
-        .duration = 0,
-        .frameCount = ARRAY_COUNT(gSpriteBank53Anim02Seq),
-        .flags = SPRITE_ANIM_LOOP,
+    /* 2 */ {
+        /* seq */ gSpriteBank53Anim02Seq,
+        /* box */ { { -7, -43, 15, 87 }, { -7, -43, 15, 87 } },
+        /* paletteId */ 87,
+        /* duration */ 0,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank53Anim02Seq),
+        /* flags */ SPRITE_ANIM_LOOP,
     },
-    [3] = {
-        .seq = gSpriteBank53Anim03Seq,
-        .box = { { -72, -35, 68, 49 }, { -72, -36, 104, 50 } },
-        .paletteId = 88,
-        .duration = 0,
-        .frameCount = ARRAY_COUNT(gSpriteBank53Anim03Seq),
-        .flags = 0,
+    /* 3 */ {
+        /* seq */ gSpriteBank53Anim03Seq,
+        /* box */ { { -72, -35, 68, 49 }, { -72, -36, 104, 50 } },
+        /* paletteId */ 88,
+        /* duration */ 0,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank53Anim03Seq),
+        /* flags */ 0,
     },
-    [4] = {
-        .seq = gSpriteBank53Anim04Seq,
-        .box = { { -71, -50, 70, 64 }, { -71, -50, 102, 64 } },
-        .paletteId = 88,
-        .duration = 0,
-        .frameCount = ARRAY_COUNT(gSpriteBank53Anim04Seq),
-        .flags = 0,
+    /* 4 */ {
+        /* seq */ gSpriteBank53Anim04Seq,
+        /* box */ { { -71, -50, 70, 64 }, { -71, -50, 102, 64 } },
+        /* paletteId */ 88,
+        /* duration */ 0,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank53Anim04Seq),
+        /* flags */ 0,
     },
-    [5] = {
-        .seq = gSpriteBank53Anim05Seq,
-        .box = { { -68, -61, 70, 75 }, { -68, -61, 102, 75 } },
-        .paletteId = 88,
-        .duration = 0,
-        .frameCount = ARRAY_COUNT(gSpriteBank53Anim05Seq),
-        .flags = 0,
+    /* 5 */ {
+        /* seq */ gSpriteBank53Anim05Seq,
+        /* box */ { { -68, -61, 70, 75 }, { -68, -61, 102, 75 } },
+        /* paletteId */ 88,
+        /* duration */ 0,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank53Anim05Seq),
+        /* flags */ 0,
     },
-    [6] = {
-        .seq = gSpriteBank53Anim06Seq,
-        .box = { { -7, -43, 15, 87 }, { -7, -43, 15, 87 } },
-        .paletteId = 89,
-        .duration = 0,
-        .frameCount = ARRAY_COUNT(gSpriteBank53Anim06Seq),
-        .flags = SPRITE_ANIM_LOOP,
+    /* 6 */ {
+        /* seq */ gSpriteBank53Anim06Seq,
+        /* box */ { { -7, -43, 15, 87 }, { -7, -43, 15, 87 } },
+        /* paletteId */ 89,
+        /* duration */ 0,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank53Anim06Seq),
+        /* flags */ SPRITE_ANIM_LOOP,
     },
-    [7] = {
-        .seq = gSpriteBank53Anim07Seq,
-        .box = { { -7, -43, 15, 87 }, { -7, -43, 15, 87 } },
-        .paletteId = 87,
-        .duration = 0,
-        .frameCount = ARRAY_COUNT(gSpriteBank53Anim07Seq),
-        .flags = SPRITE_ANIM_LOOP,
+    /* 7 */ {
+        /* seq */ gSpriteBank53Anim07Seq,
+        /* box */ { { -7, -43, 15, 87 }, { -7, -43, 15, 87 } },
+        /* paletteId */ 87,
+        /* duration */ 0,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank53Anim07Seq),
+        /* flags */ SPRITE_ANIM_LOOP,
     },
-    [8] = {
-        .seq = gSpriteBank53Anim08Seq,
-        .box = { { -7, -43, 15, 87 }, { -7, -43, 15, 87 } },
-        .paletteId = 59,
-        .duration = 0,
-        .frameCount = ARRAY_COUNT(gSpriteBank53Anim08Seq),
-        .flags = SPRITE_ANIM_LOOP,
+    /* 8 */ {
+        /* seq */ gSpriteBank53Anim08Seq,
+        /* box */ { { -7, -43, 15, 87 }, { -7, -43, 15, 87 } },
+        /* paletteId */ 59,
+        /* duration */ 0,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank53Anim08Seq),
+        /* flags */ SPRITE_ANIM_LOOP,
     },
-    [9] = {
-        .seq = gSpriteBank53Anim09Seq,
-        .box = { { -20, -9, 41, 18 }, { -12, -12, 25, 23 } },
-        .paletteId = 53,
-        .duration = 5,
-        .frameCount = ARRAY_COUNT(gSpriteBank53Anim09Seq),
-        .flags = 0,
+    /* 9 */ {
+        /* seq */ gSpriteBank53Anim09Seq,
+        /* box */ { { -20, -9, 41, 18 }, { -12, -12, 25, 23 } },
+        /* paletteId */ 53,
+        /* duration */ 5,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank53Anim09Seq),
+        /* flags */ 0,
     },
-    [10] = {
-        .seq = gSpriteBank53Anim10Seq,
-        .box = { { -18, -11, 37, 23 }, { -12, -11, 25, 23 } },
-        .paletteId = 50,
-        .duration = 5,
-        .frameCount = ARRAY_COUNT(gSpriteBank53Anim10Seq),
-        .flags = 0,
+    /* 10 */ {
+        /* seq */ gSpriteBank53Anim10Seq,
+        /* box */ { { -18, -11, 37, 23 }, { -12, -11, 25, 23 } },
+        /* paletteId */ 50,
+        /* duration */ 5,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank53Anim10Seq),
+        /* flags */ 0,
     },
-    [11] = {
-        .seq = gSpriteBank53Anim11Seq,
-        .box = { { -23, -8, 46, 16 }, { -12, -10, 25, 23 } },
-        .paletteId = 51,
-        .duration = 5,
-        .frameCount = ARRAY_COUNT(gSpriteBank53Anim11Seq),
-        .flags = 0,
+    /* 11 */ {
+        /* seq */ gSpriteBank53Anim11Seq,
+        /* box */ { { -23, -8, 46, 16 }, { -12, -10, 25, 23 } },
+        /* paletteId */ 51,
+        /* duration */ 5,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank53Anim11Seq),
+        /* flags */ 0,
     },
-    [12] = {
-        .seq = gSpriteBank53Anim12Seq,
-        .box = { { -17, -11, 35, 22 }, { -12, -11, 25, 23 } },
-        .paletteId = 52,
-        .duration = 5,
-        .frameCount = ARRAY_COUNT(gSpriteBank53Anim12Seq),
-        .flags = 0,
+    /* 12 */ {
+        /* seq */ gSpriteBank53Anim12Seq,
+        /* box */ { { -17, -11, 35, 22 }, { -12, -11, 25, 23 } },
+        /* paletteId */ 52,
+        /* duration */ 5,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank53Anim12Seq),
+        /* flags */ 0,
     },
-    [13] = {
-        .seq = gSpriteBank53Anim13Seq,
-        .box = { { -13, -12, 27, 25 }, { -12, -11, 25, 23 } },
-        .paletteId = 49,
-        .duration = 5,
-        .frameCount = ARRAY_COUNT(gSpriteBank53Anim13Seq),
-        .flags = 0,
+    /* 13 */ {
+        /* seq */ gSpriteBank53Anim13Seq,
+        /* box */ { { -13, -12, 27, 25 }, { -12, -11, 25, 23 } },
+        /* paletteId */ 49,
+        /* duration */ 5,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank53Anim13Seq),
+        /* flags */ 0,
     },
-    [14] = {
-        .seq = gSpriteBank53Anim14Seq,
-        .box = { { -6, -6, 12, 12 }, { -7, -7, 14, 14 } },
-        .paletteId = 95,
-        .duration = 3,
-        .frameCount = ARRAY_COUNT(gSpriteBank53Anim14Seq),
-        .flags = 0,
+    /* 14 */ {
+        /* seq */ gSpriteBank53Anim14Seq,
+        /* box */ { { -6, -6, 12, 12 }, { -7, -7, 14, 14 } },
+        /* paletteId */ 95,
+        /* duration */ 3,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank53Anim14Seq),
+        /* flags */ 0,
     },
-    [15] = {
-        .seq = gSpriteBank53Anim15Seq,
-        .box = { { -24, -24, 49, 49 }, { -24, -24, 49, 49 } },
-        .paletteId = 95,
-        .duration = 0,
-        .frameCount = ARRAY_COUNT(gSpriteBank53Anim15Seq),
-        .flags = 0,
+    /* 15 */ {
+        /* seq */ gSpriteBank53Anim15Seq,
+        /* box */ { { -24, -24, 49, 49 }, { -24, -24, 49, 49 } },
+        /* paletteId */ 95,
+        /* duration */ 0,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank53Anim15Seq),
+        /* flags */ 0,
     },
-    [16] = {
-        .seq = gSpriteBank53Anim16Seq,
-        .box = { { -24, -24, 49, 49 }, { -24, -24, 49, 49 } },
-        .paletteId = 95,
-        .duration = 3,
-        .frameCount = ARRAY_COUNT(gSpriteBank53Anim16Seq),
-        .flags = 0,
+    /* 16 */ {
+        /* seq */ gSpriteBank53Anim16Seq,
+        /* box */ { { -24, -24, 49, 49 }, { -24, -24, 49, 49 } },
+        /* paletteId */ 95,
+        /* duration */ 3,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank53Anim16Seq),
+        /* flags */ 0,
     },
-    [17] = {
-        .seq = gSpriteBank53Anim17Seq,
-        .box = { { -14, -15, 28, 30 }, { -14, -15, 28, 30 } },
-        .paletteId = 95,
-        .duration = 3,
-        .frameCount = ARRAY_COUNT(gSpriteBank53Anim17Seq),
-        .flags = 0,
+    /* 17 */ {
+        /* seq */ gSpriteBank53Anim17Seq,
+        /* box */ { { -14, -15, 28, 30 }, { -14, -15, 28, 30 } },
+        /* paletteId */ 95,
+        /* duration */ 3,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank53Anim17Seq),
+        /* flags */ 0,
     },
-    [18] = {
-        .seq = gSpriteBank53Anim18Seq,
-        .box = { { -24, -24, 49, 49 }, { -29, -24, 60, 49 } },
-        .paletteId = 95,
-        .duration = 3,
-        .frameCount = ARRAY_COUNT(gSpriteBank53Anim18Seq),
-        .flags = 0,
+    /* 18 */ {
+        /* seq */ gSpriteBank53Anim18Seq,
+        /* box */ { { -24, -24, 49, 49 }, { -29, -24, 60, 49 } },
+        /* paletteId */ 95,
+        /* duration */ 3,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank53Anim18Seq),
+        /* flags */ 0,
     },
 };
 
@@ -3908,7 +3910,7 @@ const u16 gSpriteBank53Anim18Seq[3] = {
     60, 65, 66,
 };
 
-const struct sprite_frame *const gSpriteBank53Frames[67] = {
+extern const struct sprite_frame *const gSpriteBank53Frames[67] = {
     &gSpriteBank53Frame000.frame,
     &gSpriteBank53Frame001.frame,
     &gSpriteBank53Frame002.frame,
@@ -4760,86 +4762,86 @@ extern const u8 gSpriteBank54Frame118Pieces[1];
 extern const u8 gSpriteBank54Frame119Pieces[3];
 extern const u8 gSpriteBank54Frame120Pieces[1];
 
-const struct sprite_anim gSpriteBank54Anims[10] = {
-    [0] = {
-        .seq = gSpriteBank54Anim00Seq,
-        .box = { { -18, -27, 37, 57 }, { -43, -36, 78, 69 } },
-        .paletteId = 96,
-        .duration = 2,
-        .frameCount = ARRAY_COUNT(gSpriteBank54Anim00Seq),
-        .flags = SPRITE_ANIM_LOOP,
+extern const struct sprite_anim gSpriteBank54Anims[10] = {
+    /* 0 */ {
+        /* seq */ gSpriteBank54Anim00Seq,
+        /* box */ { { -18, -27, 37, 57 }, { -43, -36, 78, 69 } },
+        /* paletteId */ 96,
+        /* duration */ 2,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank54Anim00Seq),
+        /* flags */ SPRITE_ANIM_LOOP,
     },
-    [1] = {
-        .seq = gSpriteBank54Anim01Seq,
-        .box = { { -18, -27, 37, 57 }, { -43, -37, 78, 70 } },
-        .paletteId = 96,
-        .duration = 3,
-        .frameCount = ARRAY_COUNT(gSpriteBank54Anim01Seq),
-        .flags = 0,
+    /* 1 */ {
+        /* seq */ gSpriteBank54Anim01Seq,
+        /* box */ { { -18, -27, 37, 57 }, { -43, -37, 78, 70 } },
+        /* paletteId */ 96,
+        /* duration */ 3,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank54Anim01Seq),
+        /* flags */ 0,
     },
-    [2] = {
-        .seq = gSpriteBank54Anim02Seq,
-        .box = { { -18, -27, 37, 57 }, { -43, -32, 78, 64 } },
-        .paletteId = 96,
-        .duration = 3,
-        .frameCount = ARRAY_COUNT(gSpriteBank54Anim02Seq),
-        .flags = 0,
+    /* 2 */ {
+        /* seq */ gSpriteBank54Anim02Seq,
+        /* box */ { { -18, -27, 37, 57 }, { -43, -32, 78, 64 } },
+        /* paletteId */ 96,
+        /* duration */ 3,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank54Anim02Seq),
+        /* flags */ 0,
     },
-    [3] = {
-        .seq = gSpriteBank54Anim03Seq,
-        .box = { { -47, -47, 95, 95 }, { -47, -47, 95, 95 } },
-        .paletteId = 97,
-        .duration = 5,
-        .frameCount = ARRAY_COUNT(gSpriteBank54Anim03Seq),
-        .flags = SPRITE_ANIM_LOOP,
+    /* 3 */ {
+        /* seq */ gSpriteBank54Anim03Seq,
+        /* box */ { { -47, -47, 95, 95 }, { -47, -47, 95, 95 } },
+        /* paletteId */ 97,
+        /* duration */ 5,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank54Anim03Seq),
+        /* flags */ SPRITE_ANIM_LOOP,
     },
-    [4] = {
-        .seq = gSpriteBank54Anim04Seq,
-        .box = { { -18, -27, 37, 57 }, { -49, -52, 84, 84 } },
-        .paletteId = 96,
-        .duration = 2,
-        .frameCount = ARRAY_COUNT(gSpriteBank54Anim04Seq),
-        .flags = 0,
+    /* 4 */ {
+        /* seq */ gSpriteBank54Anim04Seq,
+        /* box */ { { -18, -27, 37, 57 }, { -49, -52, 84, 84 } },
+        /* paletteId */ 96,
+        /* duration */ 2,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank54Anim04Seq),
+        /* flags */ 0,
     },
-    [5] = {
-        .seq = gSpriteBank54Anim05Seq,
-        .box = { { -18, -27, 37, 57 }, { -43, -33, 80, 65 } },
-        .paletteId = 96,
-        .duration = 3,
-        .frameCount = ARRAY_COUNT(gSpriteBank54Anim05Seq),
-        .flags = 0,
+    /* 5 */ {
+        /* seq */ gSpriteBank54Anim05Seq,
+        /* box */ { { -18, -27, 37, 57 }, { -43, -33, 80, 65 } },
+        /* paletteId */ 96,
+        /* duration */ 3,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank54Anim05Seq),
+        /* flags */ 0,
     },
-    [6] = {
-        .seq = gSpriteBank54Anim06Seq,
-        .box = { { -18, -27, 37, 57 }, { -41, -36, 76, 69 } },
-        .paletteId = 96,
-        .duration = 3,
-        .frameCount = ARRAY_COUNT(gSpriteBank54Anim06Seq),
-        .flags = 0,
+    /* 6 */ {
+        /* seq */ gSpriteBank54Anim06Seq,
+        /* box */ { { -18, -27, 37, 57 }, { -41, -36, 76, 69 } },
+        /* paletteId */ 96,
+        /* duration */ 3,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank54Anim06Seq),
+        /* flags */ 0,
     },
-    [7] = {
-        .seq = gSpriteBank54Anim07Seq,
-        .box = { { -4, -10, 9, 21 }, { -5, -10, 11, 21 } },
-        .paletteId = 98,
-        .duration = 2,
-        .frameCount = ARRAY_COUNT(gSpriteBank54Anim07Seq),
-        .flags = SPRITE_ANIM_LOOP,
+    /* 7 */ {
+        /* seq */ gSpriteBank54Anim07Seq,
+        /* box */ { { -4, -10, 9, 21 }, { -5, -10, 11, 21 } },
+        /* paletteId */ 98,
+        /* duration */ 2,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank54Anim07Seq),
+        /* flags */ SPRITE_ANIM_LOOP,
     },
-    [8] = {
-        .seq = gSpriteBank54Anim08Seq,
-        .box = { { -12, -23, 25, 47 }, { -29, -33, 60, 57 } },
-        .paletteId = 99,
-        .duration = 5,
-        .frameCount = ARRAY_COUNT(gSpriteBank54Anim08Seq),
-        .flags = 0,
+    /* 8 */ {
+        /* seq */ gSpriteBank54Anim08Seq,
+        /* box */ { { -12, -23, 25, 47 }, { -29, -33, 60, 57 } },
+        /* paletteId */ 99,
+        /* duration */ 5,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank54Anim08Seq),
+        /* flags */ 0,
     },
-    [9] = {
-        .seq = gSpriteBank54Anim09Seq,
-        .box = { { -9, -26, 19, 60 }, { -9, -26, 19, 60 } },
-        .paletteId = 99,
-        .duration = 5,
-        .frameCount = ARRAY_COUNT(gSpriteBank54Anim09Seq),
-        .flags = 0,
+    /* 9 */ {
+        /* seq */ gSpriteBank54Anim09Seq,
+        /* box */ { { -9, -26, 19, 60 }, { -9, -26, 19, 60 } },
+        /* paletteId */ 99,
+        /* duration */ 5,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank54Anim09Seq),
+        /* flags */ 0,
     },
 };
 
@@ -4876,7 +4878,7 @@ const u16 gSpriteBank54Anim09Seq[1] = {
     120,
 };
 
-const struct sprite_frame *const gSpriteBank54Frames[121] = {
+extern const struct sprite_frame *const gSpriteBank54Frames[121] = {
     &gSpriteBank54Frame000,
     &gSpriteBank54Frame001,
     &gSpriteBank54Frame002,
@@ -5871,78 +5873,78 @@ extern const u8 gSpriteBank55Frame127Pieces[4];
 extern const u8 gSpriteBank55Frame128Pieces[3];
 extern const u8 gSpriteBank55Frame129Pieces[2];
 
-const struct sprite_anim gSpriteBank55Anims[9] = {
-    [0] = {
-        .seq = gSpriteBank55Anim00Seq,
-        .box = { { -37, -63, 83, 97 }, { -68, -68, 117, 113 } },
-        .paletteId = 100,
-        .duration = 3,
-        .frameCount = ARRAY_COUNT(gSpriteBank55Anim00Seq),
-        .flags = 0,
+extern const struct sprite_anim gSpriteBank55Anims[9] = {
+    /* 0 */ {
+        /* seq */ gSpriteBank55Anim00Seq,
+        /* box */ { { -37, -63, 83, 97 }, { -68, -68, 117, 113 } },
+        /* paletteId */ 100,
+        /* duration */ 3,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank55Anim00Seq),
+        /* flags */ 0,
     },
-    [1] = {
-        .seq = gSpriteBank55Anim01Seq,
-        .box = { { -26, -22, 57, 67 }, { -51, -72, 106, 117 } },
-        .paletteId = 100,
-        .duration = 3,
-        .frameCount = ARRAY_COUNT(gSpriteBank55Anim01Seq),
-        .flags = 0,
+    /* 1 */ {
+        /* seq */ gSpriteBank55Anim01Seq,
+        /* box */ { { -26, -22, 57, 67 }, { -51, -72, 106, 117 } },
+        /* paletteId */ 100,
+        /* duration */ 3,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank55Anim01Seq),
+        /* flags */ 0,
     },
-    [2] = {
-        .seq = gSpriteBank55Anim02Seq,
-        .box = { { -26, -22, 57, 67 }, { -38, -63, 88, 108 } },
-        .paletteId = 100,
-        .duration = 3,
-        .frameCount = ARRAY_COUNT(gSpriteBank55Anim02Seq),
-        .flags = 0,
+    /* 2 */ {
+        /* seq */ gSpriteBank55Anim02Seq,
+        /* box */ { { -26, -22, 57, 67 }, { -38, -63, 88, 108 } },
+        /* paletteId */ 100,
+        /* duration */ 3,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank55Anim02Seq),
+        /* flags */ 0,
     },
-    [3] = {
-        .seq = gSpriteBank55Anim03Seq,
-        .box = { { -25, -45, 62, 78 }, { -31, -63, 81, 102 } },
-        .paletteId = 100,
-        .duration = 3,
-        .frameCount = ARRAY_COUNT(gSpriteBank55Anim03Seq),
-        .flags = 0,
+    /* 3 */ {
+        /* seq */ gSpriteBank55Anim03Seq,
+        /* box */ { { -25, -45, 62, 78 }, { -31, -63, 81, 102 } },
+        /* paletteId */ 100,
+        /* duration */ 3,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank55Anim03Seq),
+        /* flags */ 0,
     },
-    [4] = {
-        .seq = gSpriteBank55Anim04Seq,
-        .box = { { -26, -22, 57, 67 }, { -35, -61, 66, 106 } },
-        .paletteId = 100,
-        .duration = 3,
-        .frameCount = ARRAY_COUNT(gSpriteBank55Anim04Seq),
-        .flags = 0,
+    /* 4 */ {
+        /* seq */ gSpriteBank55Anim04Seq,
+        /* box */ { { -26, -22, 57, 67 }, { -35, -61, 66, 106 } },
+        /* paletteId */ 100,
+        /* duration */ 3,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank55Anim04Seq),
+        /* flags */ 0,
     },
-    [5] = {
-        .seq = gSpriteBank55Anim05Seq,
-        .box = { { -24, -14, 49, 28 }, { -28, -14, 57, 51 } },
-        .paletteId = 101,
-        .duration = 3,
-        .frameCount = ARRAY_COUNT(gSpriteBank55Anim05Seq),
-        .flags = 0,
+    /* 5 */ {
+        /* seq */ gSpriteBank55Anim05Seq,
+        /* box */ { { -24, -14, 49, 28 }, { -28, -14, 57, 51 } },
+        /* paletteId */ 101,
+        /* duration */ 3,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank55Anim05Seq),
+        /* flags */ 0,
     },
-    [6] = {
-        .seq = gSpriteBank55Anim06Seq,
-        .box = { { -23, -54, 56, 87 }, { -33, -54, 66, 88 } },
-        .paletteId = 100,
-        .duration = 3,
-        .frameCount = ARRAY_COUNT(gSpriteBank55Anim06Seq),
-        .flags = SPRITE_ANIM_LOOP,
+    /* 6 */ {
+        /* seq */ gSpriteBank55Anim06Seq,
+        /* box */ { { -23, -54, 56, 87 }, { -33, -54, 66, 88 } },
+        /* paletteId */ 100,
+        /* duration */ 3,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank55Anim06Seq),
+        /* flags */ SPRITE_ANIM_LOOP,
     },
-    [7] = {
-        .seq = gSpriteBank55Anim07Seq,
-        .box = { { -32, -47, 69, 70 }, { -68, -62, 121, 100 } },
-        .paletteId = 100,
-        .duration = 3,
-        .frameCount = ARRAY_COUNT(gSpriteBank55Anim07Seq),
-        .flags = 0,
+    /* 7 */ {
+        /* seq */ gSpriteBank55Anim07Seq,
+        /* box */ { { -32, -47, 69, 70 }, { -68, -62, 121, 100 } },
+        /* paletteId */ 100,
+        /* duration */ 3,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank55Anim07Seq),
+        /* flags */ 0,
     },
-    [8] = {
-        .seq = gSpriteBank55Anim08Seq,
-        .box = { { -13, -45, 26, 91 }, { -92, -65, 126, 111 } },
-        .paletteId = 100,
-        .duration = 3,
-        .frameCount = ARRAY_COUNT(gSpriteBank55Anim08Seq),
-        .flags = 0,
+    /* 8 */ {
+        /* seq */ gSpriteBank55Anim08Seq,
+        /* box */ { { -13, -45, 26, 91 }, { -92, -65, 126, 111 } },
+        /* paletteId */ 100,
+        /* duration */ 3,
+        /* frameCount */ ARRAY_COUNT(gSpriteBank55Anim08Seq),
+        /* flags */ 0,
     },
 };
 
@@ -5977,7 +5979,7 @@ const u16 gSpriteBank55Anim08Seq[12] = {
     118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129,
 };
 
-const struct sprite_frame *const gSpriteBank55Frames[130] = {
+extern const struct sprite_frame *const gSpriteBank55Frames[130] = {
     &gSpriteBank55Frame000.frame,
     &gSpriteBank55Frame001.frame,
     &gSpriteBank55Frame002.frame,
