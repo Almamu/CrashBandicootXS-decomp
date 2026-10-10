@@ -922,6 +922,28 @@ void ActionCtrl::StateCrouchDown()
     }
 }
 
+/* Turns the player to face right (sets the X mirror bit) and queues the
+ * X motion again, as UpdateFacing's FaceRight (action_ctrl_event.cpp).
+ * The pending 1 is an inline parameter, a pseudo set before the body:
+ * with it, the block has four local quantities (the 1, the address, the
+ * mask and the 0x10), which local-alloc sorts by priority: mask r0, 0x10
+ * r1, the address r2 (the dying part copy's register), the 1 r3, as in
+ * the ROM; `turned` gets r3 too, and reload's cse drops its second
+ * `movs r3, #1`. With `turned = 1` before the call, cse folds the
+ * parameter into `turned` (global), and three quantities are left, which
+ * local-alloc's exchange orders address first, in r0 (#662,
+ * docs/matching_techniques.md). */
+static inline void FaceRight(ActionCtrl *ctrl, Player *p, s32 pending)
+{
+    u8 *mirror = &p->mirror;
+    s32 m = ~0x10;
+
+    m &= *mirror;
+    m |= 0x10;
+    *mirror = m;
+    ctrl->motionXPending = pending;
+}
+
 /* Crouching: A jumps high if there is room. Unless the player left the
  * ground (CheckLeftGround): the D-pad turns the player to face it; if he
  * didn't turn, the D-pad sideways starts the crawl (animation 0x14, X
@@ -962,107 +984,8 @@ void ActionCtrl::StateCrouch()
         goto turn_done;
     }
     if ((s8)(part->mirror << 3) >= 0 && (dir == 3 || dir == 5 || dir == 7)) {
-        s32 m;
-
+        FaceRight(this, part, 1);
         turned = 1;
-        {
-            /* volatile: keeps the `+0x28` address in the part copy's
-             * register and computed ahead of the -0x11 mask, as in the
-             * ROM (a plain pointer lands in a fresh register: the test
-             * above already computed `part + 0x28`, and the pointer
-             * becomes a copy of it). Set after the mask, the address is
-             * the ROM's register but comes after the `movs; negs`; the
-             * bitfield store `mirrorBits.flipX = 1` is a halfword longer
-             * and `*p = (*p & -0x11) | 0x10` loads an 0xEF mask (#662
-             * round 2). Round 3: the plain pointer is a block-local
-             * pseudo, so local-alloc gives it r0, the first free
-             * register; the ROM's `adds r2, #0x28` is the address tied
-             * to the dying part copy (r2), as global-alloc's copy
-             * preference would place it. Through `part->mirror` with no
-             * pointer, the registers are the ROM's but reload forms the
-             * address (ldrb's offset is 0-31) next to the `ldrb`, after
-             * the mask. Round 4 (local-alloc.c, with an instrumented
-             * copy printing each block's quantity order): written plainly
-             * (or as `part->SetFlipX(1)`, which gives the ROM's insns),
-             * the flip's block has exactly three local quantities: the
-             * address (born first, q0), the mask (q1) and the 0x10 (q2);
-             * combine folds the byte load into the AND as a subreg of the
-             * MEM. block_alloc sorts three quantities with a hand-written
-             * exchange on quantity numbers (qty_compare (0, 1), (1, 2),
-             * (0, 1)), and with these priorities (0.30, 1.5, 1.0) the two
-             * swaps cancel: the address goes first and takes r0. The ROM
-             * order (mask r0, 0x10 r1, address r2) needs a fourth
-             * quantity (qsort then sorts by priority; the volatile byte
-             * load is one), or the address out of local-alloc, i.e. live
-             * in two blocks, which code confined to this block can't be.
-             * With the address born first (its `adds` comes first in the
-             * ROM too), no priorities make the exchange put the mask
-             * first: it yields address-first or 0x10-first. Round 5:
-             * the flip as UpdateFacing's FaceRight-style inline (Player
-             * or u8 * parameter, with or without the pending store), a
-             * byte local for the load (`u8`/`s32`), the load first, an
-             * `s32 bit = 0x10` and SetFlipX(1) all leave the same three
-             * quantities; the whole turn as one inline taking `part`
-             * makes the flip share the test's address instead. Round 6:
-             * the turn as `if/else if` with SetFlipX(0)/(1) or
-             * mirrorFlags stores (`mirrorX = 1` alone is a plain ORR)
-             * stays 14-18 lines off; a mask set once before the tests
-             * and used once in the flip (local-alloc's update_equiv_regs
-             * then substitutes the constant, reloaded at the AND) gives
-             * the ROM's order (address, mask, load) with the address
-             * still in a block-local r0. Round 7: the ROM's flip block
-             * (`adds r2, #0x28; movs r0, #0x11; negs; ldrb; ands; movs
-             * r1, #0x10; orrs; strb`) recurs in matched code only in
-             * SwimCtrl::StateTurn (swim_ctrl.cpp), from
-             * `target->SetFlipX(1)`; here, with `part` held across the
-             * two tests (a local or the member), SetFlipX(1), the mask
-             * spellings and mirrorFlags stores stay 2-46 lines off (32
-             * variants). A private old_agbcp whose three-quantity sort
-             * compares sorted positions (the exchange fixed) moves the
-             * rest of this function 30 lines, so the original compiler
-             * had the exchange as it is. Round 8 (tools/natural_enum.py,
-             * 14575 variants: both turns as open code, SetFlipX or
-             * mirrorFlags stores, `goto` or `else if`, the mask as
-             * -0x11/~0x10 before or after the address, `turned` set
-             * before or after, and in/dir/turned/moved/m in all six
-             * integer types): 14 lines off at best. Round 9 (15360
-             * variants, the types beyond the function: GetDpadDirection
-             * returning u8/s32/u32/s8, CheckLeftGround u8 or bool,
-             * `motionXPending` u8 or bool, with the flip as open code
-             * through a pointer or `part->mirror`, SetFlipX, mirrorFlags,
-             * `|= 0x10` and the locals' types): 2 instructions off at
-             * best, the form through `part->mirror` with no pointer
-             * (`adds r2, #0x28` after the mask), as in round 3. Round
-             * 10 (dumps): the exchange's outcome depends on birth order.
-             * Born address, mask, 0x10 (the ROM's insn order) it gives
-             * address-first or 0x10-first, as above; born address, 0x10,
-             * mask with rising priorities its three swaps reverse the
-             * order, the ROM's registers (mask r0, 0x10 r1, address r2).
-             * An inline `SetMirror(u8 *p, s32 clear, s32 set)` doing
-             * `m = clear; m &= *p; m |= set; *p = m;` gets that order:
-             * `set` stays a pseudo (orr takes no immediate) loaded at the
-             * inline's entry, so its `movs r1, #0x10` comes before the
-             * mask and the byte load goes to r5, which reload then also
-             * uses at three other sites (4 hunks, 18 lines off). The
-             * face-left flip as `SetMirror(..., -0x11, 0)` matches (the
-             * `| 0` folds). The `movs` can't move: update_equiv_regs
-             * moves a used-once constant only when it is set in another
-             * block, and that pseudo then leaves local-alloc. Same result
-             * with `set` an enum value, `~mask`/`value` parameters or
-             * the parameters swapped; `*p = (*p & clear) | set`, the
-             * load first or `*p = m | set` substitute the constant and
-             * give the plain three quantities (1-2 lines longer). The
-             * plain `u8 *p` (address r0), a function-scope pointer shared
-             * with the test (the test changes) and the whole field volatile
-             * (the face-left flip, plain in the ROM, changes) are out. */
-            volatile u8 *p = &part->mirror;
-
-            m = -0x11;
-            m &= *p;
-            m |= 0x10;
-            *p = m;
-        }
-        motionXPending = turned;
     }
 turn_done:
 

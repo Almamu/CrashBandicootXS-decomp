@@ -1139,7 +1139,7 @@ Round 2 in bosses/, enemies/ and actor/ (C++):
   - `StartTornadoFall`'s entry: global priority, `this` with 8 refs over
     38 insns ahead of entry's 4 over 26.
   - `EndSpin`, and `StateCrouch`, where a block-local address takes r0
-    in local-alloc.
+    in local-alloc (StateCrouch freed in round 11, see below).
   - `SpawnFlamethrowerLabAssistant`: the ROM's `str r3, [sp]` is
     caller-save.c saving the lowest-ranked pseudo.
 
@@ -1316,7 +1316,8 @@ local-alloc's quantity order):
   allocates the address or the 0x10 first whatever the priorities; born
   address, 0x10, mask it can reverse them into the ROM's registers, but
   then the 0x10's `movs` comes before the mask; the volatile byte load is
-  a fourth quantity); `ReleaseHang` (find_reload_regs spills the
+  a fourth quantity; freed in round 11 by another fourth quantity, see
+  below); `ReleaseHang` (find_reload_regs spills the
   first free call-clobbered register in number order, so r2 must be live
   at the add, and nothing is).
 
@@ -1567,7 +1568,8 @@ free; PlatformMover::Update loses its 0x300 pin and keep):
   private old_agbcp whose cse doesn't link a constant's registers, in
   four forms, fixes none and changes up to 13 other functions per
   object); StateCrouch (FaceRight-style inlines keep the three
-  quantities); CameraLead::Reset; PlatformMover::Update's `now` (`part`
+  quantities, with `turned = 1` before the call; round 11 freed it with
+  the call first); CameraLead::Reset; PlatformMover::Update's `now` (`part`
   61 references over 388 insns with the SetPos calls, 64 needed).
 
 **Round 6, player/ and objects/ (the class's own accessors, and one
@@ -1907,6 +1909,7 @@ deciding contest:
   entry, so the byte load moves to r5 and reload uses r5 at three other
   sites (18 lines off); enum, `~mask` or swapped parameters give the
   same, and the other shapes give back the plain three quantities.
+  Freed in round 11 (below).
 
 **Round 9, GAX2_init, GaxChannelMix and itoa_arm (types beyond the
 function).** 3 functions -> 3; GAX2_init loses its size use:
@@ -2055,6 +2058,25 @@ plain register, constant or call, not in a libcall block or a PARALLEL,
 no volatile MEM). When PRE hoists an expression the ROM leaves in place,
 look for what the source had that cse1 saw as memory: a reference or
 pointer to a local, or a struct by value (LevelSelect's KeyHalf).
+
+**Round 11, ActionCtrl::StateCrouch's flip (a fourth quantity from an
+inline parameter).** The scoped `volatile u8 *` is gone: the face-right
+turn is `FaceRight(this, part, 1); turned = 1;`, an inline that flips
+the mirror byte and stores its `pending` parameter to `motionXPending`,
+as UpdateFacing's FaceRight does. A byte scan of the ROM for the flip
+(`movs #0x11; negs; ldrb; ands; movs #0x10; orrs; strb`) finds it with
+the address in r2 in UpdateFacing too, after a `movs r3, #1` that is
+FaceRight's parameter. The parameter is a pseudo set before the inline's
+body (REG_EQUIV 1), live to the `motionXPending` store: a fourth local
+quantity, so local-alloc's block_alloc qsorts the four by priority
+(mask r0, 0x10 r1, address r2, the 1 r3) instead of the three-quantity
+exchange that put the address first in r0. `turned` (global) also gets
+r3, and reload's cse deletes its now redundant `movs r3, #1`. With
+`turned = 1` before the call, cse makes the parameter a copy of
+`turned`, folds it, and the three quantities come back (round 5 tried
+the inline that way). When local-alloc's register order differs only in
+a block with three quantities, look for a constant the ROM sets at the
+block's start (an inline parameter, as here) that would be a fourth.
 
 **Player::HandleEvent's dead load: a dead test (owner decision, #662).**
 After the controller call of a masked hit the ROM reloads
