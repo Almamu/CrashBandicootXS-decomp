@@ -86,7 +86,8 @@ pass) and
   Timer0 stop, the counterpart to `GAX_irq`'s start, plus a generic
   single-DMA-channel "off" helper; same writeup as above)
 - `lib/gax/src/gax_swi.c` - `GaxHuffUnComp` (HuffUnComp SWI 0x13 wrapper,
-  real C in Shin'en's form: r7/r8 register variables and an inline `swi`)
+  real C in Shin'en's form: r7/r8 register variables and an inline `swi`
+  whose `"m"` inputs give the ROM's dead stack stores)
 - `lib/gax/src/gax_fatal_error.c` - `GaxFatalError` (the fatal-error
   display screen)
 - `lib/gax/src/gax_sound_handler_info.c` - `GaxInfoResetPosition`/`GaxInfoInit`/

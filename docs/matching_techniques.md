@@ -541,7 +541,7 @@ gcc 2.9:
   barrier. The `_VOLATILE` macros are for the sites where the plain form
   was moved or merged. No site uses them now: the last two, in
   `GaxHuffUnComp`, went when it was rewritten in Shin'en's form
-  (register variables and one inline `swi`, two `MATCH_USE_MEM`s).
+  (register variables and one inline `swi` with two `"m"` inputs).
 
 | Spelling | Macro | What gcc 2.9 does with it | Typical use |
 |---|---|---|---|
@@ -569,7 +569,7 @@ The rarer forms, a few sites each:
 | `asm("" : : : "r5")` | `MATCH_CLOBBER(r5)`, `MATCH_CLOBBER_VOLATILE(r4)` | 2 | Tells gcc the register is clobbered, so the prologue saves it even though nothing uses it, as the ROM does ([issue-9-raw-asm-pass.md](./matching/archive/issue-9-raw-asm-pass.md), `UpdateEnemyBob`; `src/enemies/enemy_ctrl.cpp`); it also forces a reload of whatever the register held. |
 | `asm volatile("" ::: "memory")` | `MATCH_MEMORY_BARRIER()` | 0 | Makes gcc forget memory and acts as a barrier. It does not stop address CSE, which is what it was usually tried for. No site needs it any more. |
 | `asm("" : "+m"(x))` | `MATCH_KEEP_MEM(x)` | 2 | `x` is in memory here with an unknown value, so a later read is a real load (the `ldm r1!` re-read in `ConvertAirshipTiles`). |
-| `asm("" : : "m"(x))` | `MATCH_USE_MEM(x)` | 2 | `x` must be in memory here: kept a value in its stack slot across a call (`SpawnFlamethrowerLabAssistant` until #662 round 4); `GaxHuffUnComp`'s dead stores of its two arguments. |
+| `asm("" : : "m"(x))` | `MATCH_USE_MEM(x)` | 0 | `x` must be in memory here: kept a value in its stack slot across a call (`SpawnFlamethrowerLabAssistant` until #662 round 4); `GaxHuffUnComp`'s dead stores of its two arguments until they became `"m"` inputs of its `swi` asm (#662). |
 
 An asm that reads a field through `"m"` can also fix the order of a load
 against a constant
@@ -579,7 +579,8 @@ No empty asm stays written out. A one-off shape no macro covers would
 be listed in `ALLOWED_SPELLED` (`tools/match_idioms.py`), which is empty:
 `EndSpin`'s keep-and-use went in #662 round 4,
 `SaveTransfer::ReceiveChunk`'s untied `"=r"`/`"r"` copy in round 5, and
-`GaxHuffUnComp`'s two `"m"` inputs became two `MATCH_USE_MEM`s.
+`GaxHuffUnComp`'s two `"m"` inputs became two `MATCH_USE_MEM`s, and
+then inputs of its `swi` asm, Shin'en's source (#662).
 
 `ORIGINAL_SOURCE`, next to it, lists the asm that is the original
 program's own source rather than a workaround: GAX2's inline asm
@@ -670,7 +671,7 @@ source (`ORIGINAL_SOURCE`, not counted as workarounds; docs/libraries.md,
 `mov r3, r3` and three `nop`s, as GAX 3.05A's matched C writes it; the
 assembler encodes that `mov` as the ROM's `add r3, r3, #0`, which the
 `.byte 0x1b, 0x1c` it replaces spelled out), `GAX_CALL_ARM` and
-`GAX_CALL_ARM_R` (the call into ARM code) and `GaxHuffUnComp`'s `swi`. They are the last
+`GAX_CALL_ARM_R` (the call into ARM code) and `GaxHuffUnComp`'s `swi` (with its `"m"` inputs). They are the last
 resort, for orders gcc can't be talked into, and every one says why. An asm tail is also never cross-jumped with C tails
 ([naked-sub_800fdc8-matched.md](./matching/archive/naked-sub_800fdc8-matched.md)).
 They have no macro: each is a specific instruction sequence.
@@ -1956,8 +1957,13 @@ doesn't count them; 7 functions freed:
   original's; the ROM's missing r7 save is agbcc's r7-pin bug) and one
   `swi 0x13; mov r0, r7; mov r1, r8` asm, replacing the four
   `MATCH_HOLD_REG`s and `MATCH_USE2_VOLATILE`. The dead stores of both
-  arguments still take a memory use of each (two `MATCH_USE_MEM`s,
-  counted): what the original had there is unknown.
+  arguments come from `"m"(src)` and `"m"(dst)` inputs on that asm,
+  unused in its text; they replaced two `MATCH_USE_MEM`s and are taken as
+  Shin'en's (owner decision, #662). The nearest precedent is
+  GAX_CALL_ARM's `"m"(argp)`. The alternatives all miss: `&src`/`&dst`
+  as asm inputs leave one `add r2, sp, #4` too many, `volatile`
+  parameters reload r7/r8 from the stack, and an inline helper or macro
+  taking `&src`/`&dst` folds `*&x` back and loses the stores.
 
 The ARM DSP routines, hand-written in every GAX version, are assembly:
 `lib/gax/asm/gax_arm_dsp.s`, disassembled from the raw `.byte` block

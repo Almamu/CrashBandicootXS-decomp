@@ -588,8 +588,9 @@ ORIGINAL_SOURCE = {
             "GAX_CALL_ARM/GAX_CALL_ARM_R (the call into ARM code); see "
             "docs/libraries.md, \"GAX implementation notes\""),
     ("lib/gax/src/gax_swi.c", "insn"):
-        (1, "GaxHuffUnComp's inline swi, Shin'en's (docs/libraries.md, "
-            "\"GAX implementation notes\")"),
+        (1, "GaxHuffUnComp's inline swi with its \"m\"(src)/\"m\"(dst) inputs "
+            "(the ROM's dead stack stores), Shin'en's: owner decision, #662 "
+            "(docs/libraries.md, \"GAX implementation notes\")"),
     ("lib/gax/src/gax_swi.c", "pin"):
         (2, "GaxHuffUnComp's r7/r8 register variables, Shin'en's: the ROM has "
             "agbcc's r7-pin bug (docs/libraries.md, \"GAX implementation notes\")"),

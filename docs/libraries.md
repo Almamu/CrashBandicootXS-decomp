@@ -115,11 +115,14 @@ owner's decision in #662):
   as 3.05A writes it) in GaxResetSoundHardware, GAX_irq, GAX_stop and
   GaxStopDma; `GAX_CALL_ARM`/`GAX_CALL_ARM_R` (the call into ARM code) in
   GaxMixerApplyEcho, GaxMixerApplyFilter, GaxMixFrame and GaxChannelMix;
-  GaxHuffUnComp's r7/r8 register variables and inline `swi`. These are
+  GaxHuffUnComp's r7/r8 register variables and inline `swi`, whose
+  unused `"m"(src)` and `"m"(dst)` inputs give the ROM's two dead stack
+  stores (as GAX_CALL_ARM's `"m"(argp)` leaves its argument in a stack
+  slot). These are
   original source, not matching workarounds: `tools/match_idioms.py`
   lists them in `ORIGINAL_SOURCE`, and `--functions` doesn't count them.
   What these functions still need beyond them (GaxChannelMix's keep and
-  volatile read, GaxHuffUnComp's two memory uses) is counted as usual.
+  volatile read) is counted as usual.
 
 ## Linking
 
