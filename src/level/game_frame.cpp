@@ -99,7 +99,7 @@ void LevelState::UpdateGameFrame()
         }
         if (result != 0) {
             OpenSaveMenu();
-            RunSaveMenu(1, 0);
+            RunSaveMenu(SAVE_MENU_STATE_LOAD, 0);
             CloseSaveMenu();
         } else {
             gLevelState->PlayCutscene(2);
@@ -121,7 +121,7 @@ void LevelState::UpdateGameFrame()
             MemCopy32(&checkpointData, &progress, sizeof(GameProgress));
             if (quit) {
                 OpenSaveMenu();
-                quit = RunSaveMenu(0, 0);
+                quit = RunSaveMenu(SAVE_MENU_STATE_MAIN, 0);
                 CloseSaveMenu();
                 if (quit)
                     room.checkpointFlags = 0;

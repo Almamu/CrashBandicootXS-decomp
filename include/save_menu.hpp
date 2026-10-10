@@ -42,11 +42,15 @@ struct settings_row_stats {
 };
 COMPILE_TIME_ASSERT(save_menu_hpp, sizeof(struct settings_row_stats) == 0x14);
 
+/* The bit of SaveMenu's frame counter (`flags`) that blinks the
+ * highlighted row: palette 1 while it is set, 2 while it is clear
+ * (SaveMenu::IsBlinkOn). */
+#define SAVE_MENU_BLINK_BIT 2
+
 /* The save menu: its main options are "load game", "load link game",
  * "save game", "delete game" and "exit" (gSaveMenuOptions). `state`
- * selects the input handler (Input) and the draw routine (Draw): 0 main
- * options, 1 load, 2 load from the link save, 3 link transfer, 4
- * message, 5 save, 6 delete, 7 "delete?", 9 "overwrite?". `cursor` is
+ * selects the input handler (Input) and the draw routine (Draw):
+ * SAVE_MENU_STATE_* (save.h). `cursor` is
  * the option or slot cursor (slots 0-3, 4 = cancel). `cartSave` is the
  * cartridge save, `linkSave` the save received over the link cable.
  * `currentStats`/`rowStats` are the summaries the slot list shows
@@ -54,11 +58,11 @@ COMPILE_TIME_ASSERT(save_menu_hpp, sizeof(struct settings_row_stats) == 0x14);
 class SaveMenu
 {
 public:
-    u32 frame;        // 0x00 - frame counter (Input); CommitFrame scrolls BG0 by frame >> 3
-    s32 flags;        // 0x04 - a wrapping 0-0xff frame counter; bit 2 is the highlight blink
-    u8 done;          // 0x08 - set to leave RunSaveMenu's loop
-    u32 state;        // 0x0C - see above
-    s32 cursor;       // 0x10
+    u32 frame;  // 0x00 - frame counter (Input); CommitFrame scrolls BG0 by frame >> 3
+    s32 flags;  // 0x04 - a wrapping 0-0xff frame counter; bit 2 is the highlight blink (IsBlinkOn)
+    u8 done;    // 0x08 - set to leave RunSaveMenu's loop
+    u32 state;  // 0x0C - see above
+    s32 cursor; // 0x10
     u32 messageLine1; // 0x14 - state 4's first text line
     u32 messageLine2; // 0x18 - and its second
     u16 dispcnt;      // 0x1C - the REG_DISPCNT shadow
@@ -124,6 +128,14 @@ public:
     void DrawLoad();                                     // DrawSaveMenuLoad
     void Draw();                                         // DrawSaveMenu
     void DeleteSlot(s32 row);                            // DeleteSaveSlot
+
+    /* The highlight's blink (#843): bit SAVE_MENU_BLINK_BIT of the frame
+     * counter `flags`, on for 4 frames in 8. Spelled `(x >> n) & 1`, as
+     * every draw that tests it. */
+    s32 IsBlinkOn()
+    {
+        return (flags >> SAVE_MENU_BLINK_BIT) & 1;
+    }
 };
 
 COMPILE_TIME_ASSERT(save_menu_hpp, sizeof(SaveMenu) == 0xE4);

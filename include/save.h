@@ -51,6 +51,23 @@ extern const u16 gSaveMenuPalette3[16];
 extern void CloseSaveMenu(void);
 extern void OpenSaveMenu(void);
 
+/* SaveMenu's `state` (save_menu.hpp; #843, docs/flags/save_menu.md): the
+ * screen, which picks SaveMenu::Input's handler and SaveMenu::Draw's
+ * routine. RunSaveMenu starts in the one it is given: UpdateGameFrame
+ * passes SAVE_MENU_STATE_LOAD (the title screen's load) or
+ * SAVE_MENU_STATE_MAIN (on leaving the level select). */
+#define SAVE_MENU_STATE_MAIN 0              // the options: load, load link, save, delete, exit
+#define SAVE_MENU_STATE_LOAD 1              // the cartridge's slots, to load one (LoadInput, DrawLoad)
+#define SAVE_MENU_STATE_LOAD_LINK 2         // the slots received over the link cable (DrawLoadLink)
+#define SAVE_MENU_STATE_LINK_TRANSFER 3     // the link exchange running (LinkInput; DrawMessage)
+#define SAVE_MENU_STATE_MESSAGE 4           // a two-line message, A/START back to MAIN (MessageInput)
+#define SAVE_MENU_STATE_SAVE 5              // the slots, to save into one (SaveInput, DrawSave)
+#define SAVE_MENU_STATE_DELETE 6            // the slots, to delete one (DeleteInput, DrawDelete)
+#define SAVE_MENU_STATE_CONFIRM_DELETE 7    // "delete?" (ConfirmDeleteInput, DrawConfirmDelete)
+#define SAVE_MENU_STATE_UNK8 8              // nothing enters it; Input and Draw do nothing in it
+#define SAVE_MENU_STATE_CONFIRM_OVERWRITE 9 // "overwrite?" (OverwriteInput, DrawOverwrite)
+#define SAVE_MENU_STATE_UNK10 10            // nothing enters it either; the last state the switches take
+
 /* src/save/save_menu_input.cpp (C linkage): the menu's loop */
 extern u8 RunSaveMenu(u32 state, u32 cursor);
 

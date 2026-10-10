@@ -20,7 +20,7 @@ void SaveMenu::MessageInput(u32 keys)
     } else if (keys & START_BUTTON) {
     confirm:
         gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
-        state = 0;
+        state = SAVE_MENU_STATE_MAIN;
         cursor = 1;
     }
 }
