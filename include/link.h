@@ -2,7 +2,9 @@
 #define GUARD_LINK_H
 
 /* The link-cable subsystem (src/link/): the SIO session object, its IRQ
- * handlers and the handshake. The session layouts are in link_session.h.
+ * handlers and the handshake. The session layouts are C++, in
+ * link_session.hpp; C (src/data/link_crc_16af10.c) needs only the tables
+ * and the C-linkage functions below.
  *
  * Declarations here are the functions' real prototypes, copied from
  * their definitions. A .c file that needs a different local declaration
@@ -10,13 +12,12 @@
  * (docs/headers_plan.md). */
 
 #include "core.h"
-#include "link_session.h"
 
 /* The link session the link IRQ handlers and the save transfer work on:
  * made by SaveMenu's constructor (`new LinkSession`), deleted by its
  * destructor (src/save/save_menu_input.cpp). Defined in
  * src/iwram/iwram_data.cpp. The C++ files see it as its class,
- * LinkSession (link_session.hpp). */
+ * LinkSession (link_session.hpp); C sees a tag. */
 #ifdef __cplusplus
 extern class LinkSession *gLinkSession;
 #else

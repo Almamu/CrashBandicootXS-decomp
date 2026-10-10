@@ -4,7 +4,6 @@
 
 extern "C" {
 #include "math_util.h"
-#include "crate.h"
 #include "crates.h"
 #include "memory.h"
 #include "globals.h"

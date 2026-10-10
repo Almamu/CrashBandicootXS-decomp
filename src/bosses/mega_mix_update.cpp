@@ -5,7 +5,6 @@
 extern "C" {
 #include "aabb.h"
 #include "crates.h"
-#include "crate.h"
 #include "globals.h"
 #include "math_util.h"
 }
