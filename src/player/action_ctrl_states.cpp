@@ -668,8 +668,8 @@ void ActionCtrl::StateSlide()
         } else if (INPUT_HELD(in) & A_BUTTON) {
             if (p->HasRoomForAnim(0xB) == 1) {
                 gAudioContext->PlaySfx(SFX_HIGH_JUMP, 0x100);
-                ActAndFlags0D(part, -2);
-                ActAndFlags0D(part, -3);
+                ActAndFlags0D(part, ~ENTITY_FLAG2_FLOOR_PROBE);
+                ActAndFlags0D(part, ~ENTITY_FLAG2_GROUNDED);
                 StartHighJump();
                 return;
             }
@@ -777,8 +777,8 @@ void ActionCtrl::StateSpin()
     if (part->hitAxes == 0)
         QueueNowY(5);
     if ((INPUT_PRESSED(in) & A_BUTTON) && (part->hitAxes & 8)) {
-        ActAndFlags0D(part, -2);
-        ActAndFlags0D(part, -3);
+        ActAndFlags0D(part, ~ENTITY_FLAG2_FLOOR_PROBE);
+        ActAndFlags0D(part, ~ENTITY_FLAG2_GROUNDED);
         SetMode(ACTION_STATE_AIR_SPIN);
         QueueNowY(7);
         tornadoTurn = 0;
@@ -877,8 +877,8 @@ void ActionCtrl::StateTornadoSpin()
             QueueNowY(5);
     }
     if ((INPUT_PRESSED(in) & A_BUTTON) && (part->hitAxes & 8)) {
-        ActAndFlags0D(part, -2);
-        ActAndFlags0D(part, -3);
+        ActAndFlags0D(part, ~ENTITY_FLAG2_FLOOR_PROBE);
+        ActAndFlags0D(part, ~ENTITY_FLAG2_GROUNDED);
         SetMode(ACTION_STATE_AIR_SPIN);
         QueueNowY(7);
         tornadoFallQueued = 0;
@@ -906,8 +906,8 @@ void ActionCtrl::StateCrouchDown()
 
     if (fire) {
         gAudioContext->PlaySfx(SFX_HIGH_JUMP, 0x100);
-        ActAndFlags0D(part, -2);
-        ActAndFlags0D(part, -3);
+        ActAndFlags0D(part, ~ENTITY_FLAG2_FLOOR_PROBE);
+        ActAndFlags0D(part, ~ENTITY_FLAG2_GROUNDED);
         StartHighJump();
         return;
     }
@@ -964,8 +964,8 @@ void ActionCtrl::StateCrouch()
     }
     if ((INPUT_PRESSED(in) & A_BUTTON) && part->HasRoomForAnim(0xB) == 1) {
         gAudioContext->PlaySfx(SFX_HIGH_JUMP, 0x100);
-        ActAndFlags0D(part, -2);
-        ActAndFlags0D(part, -3);
+        ActAndFlags0D(part, ~ENTITY_FLAG2_FLOOR_PROBE);
+        ActAndFlags0D(part, ~ENTITY_FLAG2_GROUNDED);
         StartHighJump();
         return;
     }
@@ -1054,8 +1054,8 @@ void ActionCtrl::StateCrawlStart()
 
     if ((INPUT_PRESSED(in) & A_BUTTON) != 0 && part->HasRoomForAnim(0xB) == 1) {
         gAudioContext->PlaySfx(SFX_HIGH_JUMP, 0x100);
-        ActAndFlags0D(part, -2);
-        ActAndFlags0D(part, -3);
+        ActAndFlags0D(part, ~ENTITY_FLAG2_FLOOR_PROBE);
+        ActAndFlags0D(part, ~ENTITY_FLAG2_GROUNDED);
         StartHighJump();
         return;
     }
@@ -1080,8 +1080,8 @@ void ActionCtrl::StateCrawl()
 
     if ((INPUT_PRESSED(in) & A_BUTTON) && part->HasRoomForAnim(0xB) == 1) {
         gAudioContext->PlaySfx(SFX_HIGH_JUMP, 0x100);
-        ActAndFlags0D(part, -2);
-        ActAndFlags0D(part, -3);
+        ActAndFlags0D(part, ~ENTITY_FLAG2_FLOOR_PROBE);
+        ActAndFlags0D(part, ~ENTITY_FLAG2_GROUNDED);
         StartHighJump();
         return;
     }
