@@ -88,7 +88,7 @@ extern void OffsetToHitboxEdgeStart(void *dest, s32 kind, void *rec);
 
 /* The controllers' motion records (src/data/motion_records_16b304.cpp),
  * read by StartCtrlTargetMotionYFromSet/StartCtrlTargetMotionXFromSet and
- * ApplyActionCtrlMotion. player.h has the player's two tables. */
+ * ApplyActionCtrlMotion. player.hpp has the player's two tables. */
 extern const struct speed_ramp gCtrlMotionRecords[44];
 
 /* The platform mover's entry set (src/data/entry_set_16c418.cpp), whose

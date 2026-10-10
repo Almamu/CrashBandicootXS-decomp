@@ -10,7 +10,6 @@ extern "C" {
 #include "memory.h"
 #include "level.h"
 #include "globals.h"
-#include "player.h"
 }
 
 /* The first of Sprite's methods (#664, include/sprite_obj.hpp). An

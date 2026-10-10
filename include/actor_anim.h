@@ -1,8 +1,8 @@
 #ifndef __ACTOR_ANIM_H__
 #define __ACTOR_ANIM_H__
 
+#include "core.h"
 #include "constants/categories.h"
-#include "actor_self.h"
 
 /*
  * The category-descriptor -> vtable -> animation-table -> keyframe ->
@@ -20,9 +20,30 @@
  * ahead of that so the two can be matched up directly once it is.
  */
 
-/* struct anim_box, the actors' boxes, is actor_self.h's. */
+/* One entry of AnimPart's `anims` (actor_self.hpp), stride
+ * 12 - only the five fields actually read by matched functions are
+ * named; the rest (0xa-0xb) isn't exercised by any function matched so
+ * far. */
+struct anim_frame_record {
+    u16 duration;   // 0x00 - copied into the owning self's `animTimer` on a sequence reset
+    s16 frameIndex; // 0x02 - added to GetAnimFrameBaseOffset()'s result, indexes frameOffsets
+    // 0x04 - UpdateJetpackCheckpointText wraps self->animTime back once the frame base
+    // offset reaches this value
+    s16 loopThreshold;
+    s16 loopBase; // 0x06 - subtracted from loopThreshold (then <<8) as the wrap amount
+    u16 attr;     // 0x08 - packed into the high halfword of GetAnimFrameAttr's return value
+    u8 unknown_0a[2];
+};
 
-struct anim_frame_record; /* actor_self.h */
+/* A box in the actors' 16-bit world units: position then size. The
+ * anim_table_record's box_14, ActorSelf's `box` and several small src/data
+ * tables are this. A fixed box is copied into an actor by struct
+ * assignment (`box = gJetpackRocketBox`): the ROM's `ldm`/`stm`. */
+struct anim_box {
+    s16 x, y, z;
+    s16 w, h, d;
+}; // 0xC
+COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct anim_box) == 0xC);
 
 /* gCategoryFamily0AnimTable (categories 0-2, 41 slots) and gCategoryFamily1AnimTable
  * (categories 3-6, 47 slots) - one record per animation clip, defined in
@@ -31,7 +52,7 @@ struct anim_frame_record; /* actor_self.h */
  * in entities.json), and slots 32-34 of the first table are all zero. */
 struct anim_table_record {
     u32 index; // 0x00 - equals the record's own slot number in every valid record observed
-    // 0x04 - the clip's keyframes (struct anim_frame_record, actor_self.h), no count stored
+    // 0x04 - the clip's keyframes (struct anim_frame_record, above), no count stored
     struct anim_frame_record *table_A;
     u32 *table_B; // 0x08 - frame address/offset array, see the comment below
     // 0x0C - OBJ palette bank; InitActorPart copies it to actor_self.palette (+0x18), which
@@ -48,7 +69,7 @@ struct anim_table_record {
 }; // 0x28
 COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct anim_table_record) == 0x28);
 
-/* table_A is an array of struct anim_frame_record (actor_self.h): one
+/* table_A is an array of struct anim_frame_record (above): one
  * entry per keyframe, {duration, frameIndex (into table_B), loop
  * threshold, loop base, OAM attribute bits, 2 unknown bytes}. There's no
  * end marker or count; the actor's state code knows how many keyframes

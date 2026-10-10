@@ -1,13 +1,13 @@
 #include "yeti.hpp"
 #include "airship.hpp"
 #include "hovercraft.hpp"
+#include "vehicle.hpp"
 
 extern "C" {
 #include "core.h"
 #include "actor_anim.h"
 #include "actor.h"
 #include "bosses.h"
-#include "vehicle.h"
 }
 
 /*

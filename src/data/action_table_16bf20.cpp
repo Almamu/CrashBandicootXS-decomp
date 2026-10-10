@@ -71,8 +71,9 @@ const ActionCtrl::StateFunc ActionCtrl::stateFuncs[ACTION_STATE_COUNT] = {
 
 /* The 13-level animation rows (4-byte `struct level_anim` records,
  * gSwimCtrlModeLevelAnims in speed_table_16c090.cpp), one pointer per mode:
- * swim_ctrl.cpp reads `gSwimCtrlModeAnimRows[mode][level]`. C linkage:
- * player.h declares it. */
+ * swim_ctrl.cpp reads `gSwimCtrlModeAnimRows[mode][level]`. player.hpp
+ * declares it `extern`, so the const definition is visible outside this
+ * file. */
 const struct level_anim *const gSwimCtrlModeAnimRows[8] = {
     gSwimCtrlModeLevelAnims[0], gSwimCtrlModeLevelAnims[1], gSwimCtrlModeLevelAnims[2],
     gSwimCtrlModeLevelAnims[3], gSwimCtrlModeLevelAnims[4], gSwimCtrlModeLevelAnims[5],

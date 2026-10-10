@@ -3,7 +3,6 @@
 extern "C" {
 #include "core.h"
 #include "math_util.h"
-#include "graphics_package.h"
 #include "gfx.h"
 #include "gba/gba.h"
 #include "system.h"

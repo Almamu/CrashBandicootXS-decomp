@@ -6,7 +6,6 @@
 extern "C" {
 #include "level.h"
 #include "globals.h"
-#include "player.h"
 }
 
 /* The Aku Aku and life crates, and the crate's stack walks and player

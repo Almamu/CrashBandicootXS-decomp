@@ -6,7 +6,6 @@
 extern "C" {
 #include <libgcc.h>
 #include "actor.h"
-#include "vehicle.h"
 #include "globals.h"
 #include "math_util.h"
 #include "util.h"

@@ -3,7 +3,6 @@
 
 extern "C" {
 #include "globals.h"
-#include "player.h"
 }
 
 /* Crate::Update (#664, include/crate.hpp). */

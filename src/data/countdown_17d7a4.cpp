@@ -1,3 +1,5 @@
+#include "frontend.hpp"
+
 extern "C" {
 #include "core.h"
 }
@@ -7,7 +9,6 @@ extern "C" {
  * sections by ldscript.txt - see docs/data.md.
  */
 
-#include "frontend.h"
 
 extern const u8 gUniversalLogoBgPalette[];
 extern const u8 gUniversalLogoBgTiles[];

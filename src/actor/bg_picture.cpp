@@ -1,9 +1,10 @@
+#include "vehicle.hpp"
+
 extern "C" {
 #include "core.h"
 #include "actor_anim.h"
 #include "actor.h"
 #include "bosses.h"
-#include "vehicle.h"
 }
 
 /* Same "spawn/pre-attack" singleton family as wumpa.c - see that

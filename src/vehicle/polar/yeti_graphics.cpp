@@ -1,12 +1,12 @@
 #include "actor_self.hpp"
 #include "yeti.hpp"
+#include "vehicle.hpp"
 
 extern "C" {
 #include "core.h"
 #include "math_util.h"
 #include "actor_anim.h"
 #include "system.h"
-#include "vehicle.h"
 }
 
 /* Sits right after yeti_states.cpp's `YetiStateCharge` and before

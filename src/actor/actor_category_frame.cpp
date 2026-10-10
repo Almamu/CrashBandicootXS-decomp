@@ -1,14 +1,13 @@
 #include "actor_self.hpp"
+#include "vehicle.hpp"
 
 extern "C" {
 #include "core.h"
 #include "math_util.h"
-#include "actor_self.h"
 #include "actor_anim.h"
 #include "system.h"
 #include "actor.h"
 #include "bosses.h"
-#include "vehicle.h"
 #include "globals.h"
 }
 

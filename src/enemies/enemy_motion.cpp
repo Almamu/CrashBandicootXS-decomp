@@ -4,7 +4,6 @@
 
 extern "C" {
 #include "globals.h"
-#include "player.h"
 }
 
 /* EnemyCtrl's motion updaters (include/enemy_ctrl.hpp), from the

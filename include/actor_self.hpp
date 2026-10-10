@@ -14,9 +14,10 @@
  * as in every root class. `HpActor` adds the hit points of the jetpack
  * levels' and the 3D bosses' actors and vtable slots 4-6. The classes
  * built on these are in vehicle.hpp and boss_actors.hpp (and LogoActor
- * in frontend.hpp). They have no C view (actor_self.h's `struct
- * actor_self` went with its last C reader, #754); actor_self.h keeps the
- * plain records they use.
+ * in frontend.hpp). They have no C view (the C `struct actor_self` went
+ * with its last C reader, #754); the plain records they use (struct
+ * anim_frame_record, struct anim_box) are actor_anim.h's, which the
+ * src/data tables define.
  *
  * The actors live in IWRAM's heap (mem_alloc's MEM_HEAP_IWRAM flag),
  * which is AnimPart's own operator new and delete: the ROM's destructors
@@ -30,7 +31,6 @@ extern "C" {
 #include "core.h"
 #include "math_util.h"
 #include "memory.h"
-#include "actor_self.h"
 #include "actor_anim.h"
 #include "gfx.h"
 }
@@ -53,7 +53,7 @@ public:
     u8 animDone;                     // 0x12 - set once the current sequence has played through
     // 0x14 - draw order: RunActorCategoryFrame heapsorts the draw list by it
     //        (HeapSortActorsByKey); bit 15 also sets OAM priority
-    //        (SORT_KEY_FLAG_BEHIND_BG, actor_self.h)
+    //        (SORT_KEY_FLAG_BEHIND_BG, above)
     s32 sortKey;
     s32 palette; // 0x18 - OBJ palette bank (OAM attr 2 << 12), from anim_table_record.palette
 

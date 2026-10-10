@@ -24,7 +24,7 @@ extern "C" {
  * old_agbcp (Makefile OLD_AGBCC_OBJS), as its C was old_agbcc. */
 
 /* codegen: gLevelSelectGemPos and gLevelSelectTrialIconPos are const
- * (menus.h), but the constructor reads each one twice, across calls, and
+ * (menus.hpp), but the constructor reads each one twice, across calls, and
  * the ROM loads it again each time: through the const object gcc keeps the
  * first loads in registers. docs/headers_plan.md */
 extern "C" struct vec2 gLevelSelectGemPos_rw asm("gLevelSelectGemPos");

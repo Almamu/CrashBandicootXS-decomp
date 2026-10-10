@@ -19,7 +19,6 @@
 #include "core.h"
 #include "actor.h"
 #include "objects.h"
-#include "player.h"
 
 /* The airship's attack parameters, one per kind and level
  * (gAirshipAttacks, src/data/weapon_kind_17c2d0.cpp). SpawnAirship points

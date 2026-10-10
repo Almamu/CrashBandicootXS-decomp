@@ -1,10 +1,10 @@
 #include "pickups.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "core.h"
 #include "enemies.h"
 #include "crates.h"
-#include "player.h"
 #include "objects.h"
 }
 

@@ -7,7 +7,6 @@ extern "C" {
 #include "crates.h"
 #include "memory.h"
 #include "globals.h"
-#include "player.h"
 }
 
 /* The player's collision queue, CollisionQueue (#664, part 7c;

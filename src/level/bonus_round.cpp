@@ -11,7 +11,6 @@ extern "C" {
 #include "gfx.h"
 #include "level.h"
 #include "globals.h"
-#include "player.h"
 }
 
 /* Called at level start/checkpoint-restore: `arg1` selects whether to

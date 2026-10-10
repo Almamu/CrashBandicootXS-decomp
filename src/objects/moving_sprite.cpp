@@ -4,7 +4,6 @@
 #include "ctrl.hpp"
 
 extern "C" {
-#include "player.h"
 #include "constants/events.h"
 #include "math_util.h"
 #include "memory.h"

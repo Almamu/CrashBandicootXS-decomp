@@ -34,7 +34,7 @@ extern "C" {
  *   direction bits steer the look-ahead in 0x100 steps (bit 0/1 = +x/-x up to +0x27FF/-0x2800,
  *   bit 2/3 = -y/+y up to -0x1AAA/+0x1AA9); an axis with neither of its
  *   bits set decays back toward 0 by the same step. `target+0x24` is
- *   gPlayer's `dir` (PLAYER_DIR_*, player.h; the target is gPlayer).
+ *   gPlayer's `dir` (PLAYER_DIR_*, player.hpp; the target is gPlayer).
  * - `StepFacing` (StepCameraFacing, mode 1): horizontal look-ahead grows
  *   toward -0x1276 or +0x1276 depending on `target+0x28` bit 4 (the mirror flag several
  *   actor-side functions already document at that offset), vertical

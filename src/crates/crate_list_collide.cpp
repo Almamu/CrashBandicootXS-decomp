@@ -9,7 +9,6 @@ extern "C" {
 #include "math_util.h"
 #include "level.h"
 #include "globals.h"
-#include "player.h"
 #include "objects.h"
 }
 

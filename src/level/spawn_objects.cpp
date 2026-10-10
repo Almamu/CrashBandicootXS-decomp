@@ -3,9 +3,9 @@
 #include "enemy_ctrl.hpp"
 #include "level_select.hpp"
 #include "level_state.hpp"
+#include "menus.hpp"
 
 extern "C" {
-#include "menus.h"
 #include "level.h"
 #include "globals.h"
 }

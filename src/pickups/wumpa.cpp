@@ -2,13 +2,13 @@
 #include "action_ctrl.hpp"
 #include "hud.hpp"
 #include "audio.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "math_util.h"
 #include "util.h"
 #include "gfx.h"
 #include "globals.h"
-#include "player.h"
 }
 
 /* The wumpa's flight to the HUD, payout start and hop, and its small

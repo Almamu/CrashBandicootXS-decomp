@@ -1,12 +1,12 @@
 #include "actor_self.hpp"
 #include "yeti.hpp"
+#include "vehicle.hpp"
 
 extern "C" {
 #include "core.h"
 #include "math_util.h"
 #include "memory.h"
 #include "actor.h"
-#include "vehicle.h"
 }
 
 /* More of the `gYeti`-rooted object's lifecycle (see

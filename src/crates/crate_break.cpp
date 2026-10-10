@@ -10,7 +10,6 @@
 
 extern "C" {
 #include "util.h"
-#include "player.h"
 #include "memory.h"
 #include "level.h"
 #include "globals.h"

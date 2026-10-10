@@ -6,7 +6,6 @@ extern "C" {
 #include "match.h"
 #include <libgcc.h>
 #include "actor.h"
-#include "vehicle.h"
 #include "gfx.h"
 #include "globals.h"
 }

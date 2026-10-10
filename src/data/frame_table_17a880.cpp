@@ -1,4 +1,5 @@
 #include "yeti.hpp"
+#include "vehicle.hpp"
 
 extern "C" {
 #include "core.h"
@@ -10,7 +11,6 @@ extern "C" {
  */
 
 #include "rle_sprites/0da1d8_frames.h"
-#include "vehicle.h"
 
 extern const u8 gYetiRleFrames[];
 

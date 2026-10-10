@@ -2,11 +2,11 @@
 #include "frontend.hpp"
 #include "audio.hpp"
 #include "key_input.hpp"
+#include "graphics_package.hpp"
 
 extern "C" {
 #include "gba/io_reg.h"
 #include "gba/dma_macros.h"
-#include "graphics_package.h"
 #include "text.h"
 #include "util.h"
 #include <libgcc.h>
@@ -454,7 +454,7 @@ void CompanyLogos::DrawVvLogoPieces()
         slot = &slots[0];
         tile = (tilesC - (u32)OBJ_VRAM0) >> 5;
         /* `scratch` cleared with a 32-bit DMA3 fill from `zero32`, as
-         * CLEAR_OAM does (include/frontend.h), and in the loop each row's
+         * CLEAR_OAM does (include/frontend.hpp), and in the loop each row's
          * two halves copied with DmaCopy16. Written with one `dma` pointer
          * for the whole block (the loop's copies through it), the base
          * and `&frames` swapped r2 and r3, and the loop's insn count was

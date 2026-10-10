@@ -8,7 +8,6 @@ extern "C" {
 #include "level.h"
 #include "globals.h"
 #include "math_util.h"
-#include "player.h"
 }
 
 /* PeriodicSpawner, the periodic trigger entity (include/enemy_ctrl.hpp),

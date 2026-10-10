@@ -8,7 +8,6 @@
  * #664), and its C prototypes with the state table's conversion to C++
  * (src/data/action_table_16bf20.cpp, #656). */
 
-#include "player.h"
 
 /* gKeys is the input word: low half held, high half newly
  * pressed. Handlers copy it to a stack slot and read the halves back from

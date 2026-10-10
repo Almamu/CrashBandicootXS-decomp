@@ -10,7 +10,6 @@ extern "C" {
 #include "gfx.h"
 #include "level.h"
 #include "globals.h"
-#include "player.h"
 }
 
 /* The extra life (#664, include/pickups.hpp). An old_agbcp object

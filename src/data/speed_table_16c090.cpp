@@ -1,6 +1,7 @@
+#include "player.hpp"
+
 extern "C" {
 #include "core.h"
-#include "player.h"
 }
 
 /*

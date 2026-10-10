@@ -249,7 +249,8 @@ programmer did, not by workarounds. The recurring ones:
   (`src/frontend/company_logos.cpp`).
 - **`do { } while (0)` is a loop** to agbcc: it gets loop notes and
   loop-weighted register priorities. Statement macros use
-  `if (1) { ... } else (void)0` instead (`include/actor_self.h`).
+  `if (1) { ... } else (void)0` instead (`CLAMP_SPEED`,
+  `src/vehicle/jetpack/jetpack_player_update.cpp`).
 
 Cases: [big-naked-retry-3.md](./matching/archive/big-naked-retry-3.md)
 (rotation, `SpawnRoomEntities`),
@@ -374,8 +375,8 @@ an `index > 0` calls virtual slot `index - 1` of the vtable at
 `this + vtableOffset`, anything else calls `fn` directly. The call goes
 through `_call_via_rN` with the pointer in the first free argument
 register. `ACTOR_PMF_CALL(self, table)` and `ACTOR_VCALL(obj, m, arg)`
-in [include/actor_self.h](../include/actor_self.h) reproduce it with no
-pins. See [pmf-dispatch-retry.md](./matching/archive/pmf-dispatch-retry.md)
+in include/actor_self.h reproduced it with no pins (both went when the
+actors became C++ classes, #664). See [pmf-dispatch-retry.md](./matching/archive/pmf-dispatch-retry.md)
 (21 functions, e.g. `RunPolarPlayerState`) and
 [issue-57-0x0802fbf0-actor.md](./matching/archive/issue-57-0x0802fbf0-actor.md).
 In C++ source (built by agbcp, [cplusplus.md](./cplusplus.md)) it is just
@@ -692,7 +693,7 @@ printed on every build. Those objects (the Makefile's
 `-Wno-error`, since gcc 2.9 has no `-Wno-error=uninitialized`; keep
 them free of any other warning. The silencers they had (two self-inits
 and a `MATCH_HOLD`) changed no code. A `& 0xFFFF0000` on garbage before ORing in
-BGxCNT bits is a `union bgcnt` local (`graphics_package.h`) instead:
+BGxCNT bits is a `union bgcnt` local (`graphics_package.hpp`) instead:
 agbcc pads the union to a word, `cnt.raw = 0` clears only its low half,
 and `-Wuninitialized` doesn't check aggregates (`src/frontend/starfield.cpp`,
 `TitleScreen::LoadBg`; #662 step 3, formerly self-inits,

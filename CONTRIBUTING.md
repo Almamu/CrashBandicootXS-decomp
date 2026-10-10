@@ -151,8 +151,8 @@ things themselves. [docs/headers_plan.md](docs/headers_plan.md) has the
 full rules and the history (#574). For new code:
 
 - **Which header:** a function or global goes in the header of the
-  subsystem that owns it - `include/<subsystem>.h`, named after its
-  `src/` directory (`player.h`, `crates.h`, `level.h`, ...). A global
+  subsystem that owns it - `include/<subsystem>.h` or `.hpp`, named after
+  its `src/` directory (`crates.h`, `level.h`, `player.hpp`, ...). A global
   that three or more subsystems use (`gPlayer`, `gLevelState`, `gKeys`,
   ...) goes in `include/globals.h`. GAX engine internals (what one GAX
   object calls in another) go in `lib/gax/src/gax_internal.h`. A struct
@@ -376,8 +376,8 @@ has the list and the rules. In short:
 
 - Use a helper instead of writing the operation out, and instead of a
   new file-local macro. If two files need the same local macro, move it
-  into the header that owns its type (`ACTOR_PMF` is in
-  `actor_self.h`, `ENTITY_MARK_GONE` in `entity_bits.h`, `DMA3` in
+  into the header that owns its type (`CLEAR_OAM` is in
+  `frontend.hpp`, `ENTITY_MARK_GONE` in `entity_bits.h`, `DMA3` in
   `gba/dma_macros.h`, ...). Two different macros shouldn't share a name
   either: rename one.
 - **A helper must expand to exactly the expression it replaces** (the

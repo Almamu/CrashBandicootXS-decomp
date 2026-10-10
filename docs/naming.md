@@ -239,8 +239,8 @@ header that owns their type:
 | `aabb.h` | `AabbX`/`AabbY`/`AabbW`/`AabbH(&box)` | a box's field, read at its stack offset (the "box isn't empty" width test; was the volatile `AABB_VALID` until #662 round 4) |
 | `gfx_part.h` | `PART_FLAG_SET(part, shift)` | a +0x28 flag bit tested as a sign test |
 | `gba/dma_macros.h` | `DMA3` | channel 3's registers as a `struct dma_regs` |
-| `frontend.h` | `CLEAR_OAM(oam)` | the logo screens' one-entry OAM clear |
-| `player.h` | `CTRL_KEEP` | SetSwimCtrlState's "keep the current timer" value |
+| `frontend.hpp` | `CLEAR_OAM(oam)` | the logo screens' one-entry OAM clear |
+| `swim_ctrl.hpp` | `CTRL_KEEP` | SetSwimCtrlState's "keep the current timer" value |
 
 - **A helper expands to exactly the expression it replaces**: the same
   operands in the same order, the same casts and signedness, the same

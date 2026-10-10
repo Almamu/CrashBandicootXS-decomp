@@ -3,9 +3,9 @@
 #include "sprite_obj.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "menus.hpp"
 
 extern "C" {
-#include "menus.h"
 #include "gfx.h"
 #include "memory.h"
 #include "level.h"

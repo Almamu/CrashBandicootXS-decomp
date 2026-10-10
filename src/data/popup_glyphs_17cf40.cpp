@@ -1,6 +1,7 @@
+#include "frontend.hpp"
+
 extern "C" {
 #include "core.h"
-#include "frontend.h"
 }
 
 /*

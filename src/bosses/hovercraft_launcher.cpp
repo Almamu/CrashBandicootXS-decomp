@@ -1,11 +1,11 @@
 #include "boss_actors.hpp"
 #include "hovercraft.hpp"
 #include "audio.hpp"
+#include "vehicle.hpp"
 
 extern "C" {
 #include "util.h"
 #include "actor.h"
-#include "vehicle.h"
 #include "globals.h"
 #include "math_util.h"
 }

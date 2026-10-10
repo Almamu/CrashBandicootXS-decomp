@@ -22,7 +22,7 @@
 
 extern "C" {
 #include "core.h"
-#include "actor_self.h"
+#include "actor_anim.h"
 }
 
 class ActorSelf;

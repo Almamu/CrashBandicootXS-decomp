@@ -15,7 +15,8 @@
 #define PART_FLAG_GONE    1 // removed (MarkEntityGone); the part and crate lists drop it
 #define PART_FLAG_TOUCHED 8 // hit by another object (CollidePartWithObject); IsEntityTouched
 
-/* Sprite's `dir` (player.h's `dir`, the same byte): the direction
+/* Sprite's `dir` (the player's PLAYER_DIR_*, player.hpp, are the same
+ * byte's): the direction
  * bits, 1 right, 2 left, 4 up, 8 down. The X pair is also the X probe
  * mode, the Y pair the Y probe mode (ProbeGroundSpriteTerrain). */
 #define PART_DIR_X_MASK 3
