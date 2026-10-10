@@ -14,8 +14,15 @@
  *                             UpdateCrates, UpdateWumpa, UpdatePercentCounters
  *   src/hud/hud_slide.cpp     the slides, the crate total, destructor
  *
- * Hud has no C view (hud.h's `struct hud_counter` tag went in #754);
- * cxx_symbols.txt maps the methods to their C names. */
+ * Update (UpdateHud) is the per-frame dispatcher; its widgets are
+ * UpdateLives, UpdateClock, UpdateWumpa, UpdateCrates, UpdateBoss and
+ * UpdatePercentCounters (docs/rom_map.md's "hud" investigation). The
+ * lives, wumpa and crate counters each slide in from the top of the
+ * screen (ShowLives/ShowWumpa/ShowCrates/UpdateSlides, hud_slide.cpp): a
+ * counter's slide state is 0 hidden, 1 sliding in, 2 held, 3 sliding out,
+ * and while it slides `gHudSlideOffset = slideTimer * 2 - 40`.
+ *
+ * Hud has no C view; cxx_symbols.txt maps the methods to their C names. */
 
 #include "part_list.hpp"
 

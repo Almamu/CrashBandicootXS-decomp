@@ -27,6 +27,13 @@ extern "C" {
 #include "pickups.h"
 }
 
+/* A copy of one of the hop width tables (gExtraLifeHopWidths,
+ * gWumpaHopWidths), as the struct ExtraLife::UpdateHop and
+ * Wumpa::UpdateHop copy onto the stack in one go. */
+struct three_words {
+    s32 a[3];
+};
+
 /* Sets `frame` to the animation's first step: 0, or the last one
  * (frameCount - 1) if that is lower. */
 static inline void ClampFrame(Sprite *part)
