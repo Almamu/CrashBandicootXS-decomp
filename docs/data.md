@@ -684,7 +684,7 @@ through its own local views (`MedalTableEntry`, `threshold_table_entry`,
 The 11 cutscenes (the intro, the story scenes between worlds, the
 endings) are `src/data/cutscenes_16d1c8.cpp`, `cutscene_text_16d4d8.c`,
 `cutscene_slides_16e064.cpp` and `cutscene_text_16e8a4.c`
-(`0x0816D1C8`-`0x081725A8` in that order, types in `include/cutscene.h`;
+(`0x0816D1C8`-`0x081725A8` in that order, types in `include/cutscene.hpp`;
 the text is C, see "Text tables in C") and
 `src/data/cutscene_pictures_5a9f70.cpp`
 (`0x085A9F70`-`0x0861BADC`). `PlayCutscene` plays cutscene `idx`: the

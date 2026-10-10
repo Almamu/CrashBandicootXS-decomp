@@ -1,6 +1,7 @@
+#include "cutscene.hpp"
+
 extern "C" {
 #include "core.h"
-#include "cutscene.h"
 #include "constants/sfx.h"
 #include "constants/songs.h"
 }

@@ -4,7 +4,7 @@
  * constructor. Split from gfx/palette_cycle.cpp (#767), same flags
  * (old_agbcc). */
 
-#include "part_list.hpp"
+#include "hud.hpp"
 
 extern "C" {
 #include "memory.h"

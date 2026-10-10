@@ -3,7 +3,6 @@
 
 extern "C" {
 #include "core.h"
-#include "cutscene.h"
 #include "gfx.h"
 #include "memory.h"
 #include "globals.h"

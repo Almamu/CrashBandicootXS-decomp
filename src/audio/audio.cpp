@@ -142,7 +142,7 @@ void AudioContext::PlaySfx(u32 id, u32 volumeParam)
  * `gRoomFrameCount` passes `activeSfx.deadline`, fades the channel
  * out over several ticks before promoting the queued `pendingSfx`
  * record into `activeSfx` (a 12-byte struct copy - see
- * include/audio.h) and triggering it via `GAX_fx_ex`. */
+ * include/audio.hpp) and triggering it via `GAX_fx_ex`. */
 void AudioContext::TickAmbientSfx()
 {
     u32 now;

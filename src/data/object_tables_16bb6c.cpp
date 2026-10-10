@@ -1,6 +1,7 @@
+#include "pickups.hpp"
+
 extern "C" {
 #include "core.h"
-#include "pickups.h"
 #include "enemies.h"
 #include "crates.h"
 #include "player.h"

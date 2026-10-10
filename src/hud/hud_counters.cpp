@@ -56,7 +56,7 @@ void Hud::UpdateBoss()
 }
 
 /* Three more digit/icon widgets, gated by their own change-detection
- * caches (`sync_value_a`/`b`/`c`, `include/hud.h`) against
+ * caches (`shownMinutes`/`shownSeconds`/`shownTenths`) against
  * `GetClockMinutes`/`GetClockSeconds`/`GetClockTenths`. The first two split their
  * value into tens/ones cur (`__udivsi3`/`__umodsi3`, div/mod by
  * 10) across a slot pair each (14/15, 17/18); the third does not split

@@ -25,7 +25,6 @@ extern "C" {
 #include "core.h"
 #include "objects.h"
 #include "gfx.h"
-#include "hud.h"
 }
 
 /* The player's collision queue (Player's `collisionQueue`, +0x108): the

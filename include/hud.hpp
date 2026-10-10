@@ -28,8 +28,18 @@
 
 extern "C" {
 #include "core.h"
-#include "hud.h"
+#include "math_util.h"
+#include "aabb.h"
 }
+
+/* The vertical offset HudPart::Draw adds to every part, set by the
+ * counters while they slide (src/iwram/iwram_data.cpp). */
+extern s32 gHudSlideOffset;
+
+/* Each of the 35 parts' starting animation and position
+ * (src/data/hud_fonts_174be0.cpp). */
+extern const u32 gHudPartAnims[35];
+extern const struct vec2 gHudPartPositions[35];
 
 /* Sets a part's sprite bank. `bank` is in Sprite's one-member union (sprite_obj.hpp),
  * and gcc gives every access to a union member alias set 0, so a
@@ -41,7 +51,7 @@ extern "C" {
 #define SET_PART_BANK(part, b) (*(const struct sprite_bank **)&(part)->bank = (b))
 
 /* Sets the part's frame, clamped to its animation's last one (the C's
- * HUD_CLAMP_FRAME, hud.h). The part pointer is bound before the frame
+ * HUD_CLAMP_FRAME before it). The part pointer is bound before the frame
  * value, which is what gives old_agbcp's clamp sequence. */
 #define HUDPART_CLAMP_FRAME(part, index, step)                                 \
     {                                                                          \
@@ -53,13 +63,13 @@ extern "C" {
     }
 
 /* The HUD object (`gHud`, 0x68 bytes). The lives, wumpa and crate
- * counters each have a {slide state, slide timer} pair (hud.h), stepped by
+ * counters each have a {slide state, slide timer} pair, stepped by
  * StepSlide. Each counter keeps the value it is showing (`shown*`), so it
  * only updates its digits when the value changes. */
 class Hud
 {
 public:
-    s32 livesSlide;       // 0x00 - the lives counter's slide state (hud.h)
+    s32 livesSlide;       // 0x00 - the lives counter's slide state
     s32 livesSlideTimer;  // 0x04
     s32 wumpaSlide;       // 0x08 - the wumpa counter's; Update only draws the time-trial
                           //        clock while neither counter is shown

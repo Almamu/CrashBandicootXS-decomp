@@ -9,7 +9,6 @@ extern "C" {
 #include "math_util.h"
 #include "gba/io_reg.h"
 #include "gba/dma_macros.h"
-#include "hud.h"
 #include "save.h"
 #include "frontend.h"
 #include "util.h"

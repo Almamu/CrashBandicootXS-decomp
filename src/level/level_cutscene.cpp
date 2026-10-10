@@ -12,7 +12,6 @@ extern "C" {
 #include "gba/dma_macros.h"
 #include "bitmap_font.h"
 #include "text.h"
-#include "cutscene.h"
 #include "system.h"
 #include "gfx.h"
 #include "objects.h"
@@ -31,7 +30,7 @@ extern "C" {
  *   (include/level_state.hpp), the counterpart of its constructor
  *   (InitLevelState) - frees every subsystem singleton that constructor
  *   built and clears the context pointer gLevelStateSingleton.
- * - PlayCutscene: plays cutscene `idx` (include/cutscene.h): blanks the
+ * - PlayCutscene: plays cutscene `idx` (include/cutscene.hpp): blanks the
  *   palette, resets the BG2 affine transform, then runs a stack-allocated
  *   cutscene player (InitCutscenePlayer/RunCutscenePlayer) over the
  *   slides gCutscenes[idx] and the current language's pages until it

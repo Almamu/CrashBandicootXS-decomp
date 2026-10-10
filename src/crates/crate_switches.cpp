@@ -10,7 +10,6 @@
 
 extern "C" {
 #include "match.h"
-#include "pickups.h"
 #include "util.h"
 #include "player.h"
 #include "memory.h"

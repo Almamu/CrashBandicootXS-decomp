@@ -130,8 +130,8 @@ honest placeholder, since other code and docs will start depending on it.
 Named values (sound IDs, flag bits, states, kinds, ...) are `#define`s in
 `include/constants/<topic>.h`, one header per value set (#655). The
 subsystem header that owns the type or the function includes it
-(`audio.h` includes `constants/sfx.h` and `constants/songs.h`,
-`level_state.h` includes `constants/level_flags.h`), so a `.c` file gets
+(`audio.hpp` includes `constants/sfx.h` and `constants/songs.h`,
+`level.h` includes `constants/level_flags.h`), so a source file gets
 the names with the header it already includes. A data table in
 `src/data/` may include a constants header directly.
 
@@ -268,8 +268,8 @@ header that owns their type:
 - **Naming:** a helper is named after what it does, upper case:
   `<FORMAT>_TO_<FORMAT>` for conversions, a verb for statements
   (`LIMIT_MAX`, `ENTITY_MARK_GONE`). A subsystem's own helper gets the
-  subsystem prefix and lives in its header (`HUD_CLAMP_FRAME` in
-  `hud.h`), not a `.c` file, once two files use it.
+  subsystem prefix and lives in its header (`HUDPART_CLAMP_FRAME` in
+  `hud.hpp`), not a source file, once two files use it.
 
 `tools/common_ops.py` lists the sites that are still spelled out, by
 shape (`--report` for the counts per shape, subsystem and file), and the

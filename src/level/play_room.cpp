@@ -22,7 +22,6 @@ extern "C" {
 #include "memory.h"
 #include "level.h"
 #include "globals.h"
-#include "hud.h"
 #include "util.h"
 #include "system.h"
 #include "menus.h"

@@ -1,9 +1,9 @@
 #include "spawners.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "core.h"
 #include "system.h"
-#include "audio.h"
 #include <gax.h>
 #include <agb_syscall.h>
 #include "globals.h"
