@@ -1032,7 +1032,29 @@ void ActionCtrl::StateCrouch()
              * through a pointer or `part->mirror`, SetFlipX, mirrorFlags,
              * `|= 0x10` and the locals' types): 2 instructions off at
              * best, the form through `part->mirror` with no pointer
-             * (`adds r2, #0x28` after the mask), as in round 3. */
+             * (`adds r2, #0x28` after the mask), as in round 3. Round
+             * 10 (dumps): the exchange's outcome depends on birth order.
+             * Born address, mask, 0x10 (the ROM's insn order) it gives
+             * address-first or 0x10-first, as above; born address, 0x10,
+             * mask with rising priorities its three swaps reverse the
+             * order, the ROM's registers (mask r0, 0x10 r1, address r2).
+             * An inline `SetMirror(u8 *p, s32 clear, s32 set)` doing
+             * `m = clear; m &= *p; m |= set; *p = m;` gets that order:
+             * `set` stays a pseudo (orr takes no immediate) loaded at the
+             * inline's entry, so its `movs r1, #0x10` comes before the
+             * mask and the byte load goes to r5, which reload then also
+             * uses at three other sites (4 hunks, 18 lines off). The
+             * face-left flip as `SetMirror(..., -0x11, 0)` matches (the
+             * `| 0` folds). The `movs` can't move: update_equiv_regs
+             * moves a used-once constant only when it is set in another
+             * block, and that pseudo then leaves local-alloc. Same result
+             * with `set` an enum value, `~mask`/`value` parameters or
+             * the parameters swapped; `*p = (*p & clear) | set`, the
+             * load first or `*p = m | set` substitute the constant and
+             * give the plain three quantities (1-2 lines longer). The
+             * plain `u8 *p` (address r0), a function-scope pointer shared
+             * with the test (the test changes) and the whole field volatile
+             * (the face-left flip, plain in the ROM, changes) are out. */
             volatile u8 *p = &part->mirror;
 
             m = -0x11;
