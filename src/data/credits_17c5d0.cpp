@@ -1,5 +1,7 @@
+extern "C" {
 #include "core.h"
 #include "frontend.h"
+}
 
 /*
  * ROM 0x0817C5D0-0x0817CF40. Linked in ROM order between data/data.s
@@ -9,7 +11,7 @@
 /* The credits (InitCredits/UpdateCreditsText, credits.cpp): a stream of
  * lines of text and three opcodes. UpdateCreditsText draws one line at a time
  * as floating glyph popups and starts over at the terminating zero. */
-/* 1, n: popup glyph picture n (the logos of popup_glyphs_17cf40.c) */
+/* 1, n: popup glyph picture n (the logos of popup_glyphs_17cf40.cpp) */
 #define CREDITS_PICTURE_0 "\001\000"
 #define CREDITS_PICTURE_1 "\001\001"
 #define CREDITS_PICTURE_2 "\001\002"

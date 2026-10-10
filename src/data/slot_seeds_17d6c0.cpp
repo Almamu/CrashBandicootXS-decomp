@@ -1,5 +1,7 @@
+extern "C" {
 #include "core.h"
 #include "frontend.h"
+}
 
 /*
  * ROM 0x0817D6C0-0x0817D7A4. Linked in ROM order between data/data.s
@@ -35,7 +37,7 @@ extern const u8 gVvLogoUrlTiles[];
 
 /* Twenty {record, hold} seeds read by InitVvLogoPieces
  * (company_logos.cpp): the motion sequences in
- * countdown_17d7a4.c, then a {NULL, 0} terminator. */
+ * countdown_17d7a4.cpp, then a {0, 0} terminator. */
 const struct slot_seed gVvLogoPieceSeeds[21] = {
     { gVvLogoPieceMotion00, 0 },
     { gVvLogoPieceMotion01, 0x5a },
@@ -57,7 +59,7 @@ const struct slot_seed gVvLogoPieceSeeds[21] = {
     { gVvLogoPieceMotion17, 0xa3 },
     { gVvLogoPieceMotion18, 0xa6 },
     { gVvLogoPieceMotion19, 0xb2 },
-    { NULL, 0 },
+    { 0, 0 },
 };
 
 /* The three BG banks' packages RunCompanyLogos (company_logos.cpp)

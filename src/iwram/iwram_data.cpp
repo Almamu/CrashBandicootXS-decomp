@@ -128,7 +128,7 @@ u16 *gFlashBgPalette = (u16 *)(BG_PLTT + PALETTE_SIZE_16);
 u16 *gFlashObjPalette = (u16 *)(OBJ_PLTT + 10 * PALETTE_SIZE_16);
 
 /* title_screen.cpp: the four OBJ sprite packages of
- * src/data/level_gfx_17cff4.c. */
+ * src/data/level_gfx_17cff4.cpp. */
 const void *gTitleObjPackages[4] = {
     &gTitleCrashObj,
     &gTitleArrow2Obj,

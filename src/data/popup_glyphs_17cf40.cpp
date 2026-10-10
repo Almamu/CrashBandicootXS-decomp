@@ -1,5 +1,7 @@
+extern "C" {
 #include "core.h"
 #include "frontend.h"
+}
 
 /*
  * ROM 0x0817CF40-0x0817CFF4. Linked in ROM order between data/data.s
@@ -39,7 +41,7 @@ const struct bg_package gCreditsLogos[5] = {
 
 /* Nine {record, hold} seeds for the countdown slots of
  * title_screen.cpp (RunTitleScreen, ResetTitleLogoPieces): the motion
- * sequences in level_gfx_17cff4.c, NULL-terminated. */
+ * sequences in level_gfx_17cff4.cpp, NULL-terminated. */
 const struct slot_seed gTitleLogoPieceSeeds[10] = {
     { gTitleLogoPieceMotion0, 0x54 },
     { gTitleLogoPieceMotion1, 0x5f },
@@ -50,5 +52,5 @@ const struct slot_seed gTitleLogoPieceSeeds[10] = {
     { gTitleLogoPieceMotion6, 0xc },
     { gTitleLogoPieceMotion7, 0 },
     { gTitleLogoPieceMotion8, 0x49 },
-    { NULL, 0 },
+    { 0, 0 },
 };

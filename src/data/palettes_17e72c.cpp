@@ -1,5 +1,7 @@
+extern "C" {
 #include "core.h"
 #include "frontend.h"
+}
 
 /*
  * ROM 0x0817E72C-0x0817E78C. Linked in ROM order between data/data.s
@@ -7,7 +9,7 @@
  */
 
 /* 16-halfword palette-cache slot contents InitLanguageSelectGraphics
- * (language_select.cpp) copies, before level_tilesets_17e78c.c's
+ * (language_select.cpp) copies, before level_tilesets_17e78c.cpp's
  * gLanguageSelectPalette3. */
 const u16 gLanguageSelectPalette0[16] = {
     0x83E0, 0x9CC6, 0x107F, 0x0D04, 0x0F9F, 0x894C, 0x0864, 0x05D4,

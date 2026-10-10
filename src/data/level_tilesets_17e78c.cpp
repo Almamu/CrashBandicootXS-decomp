@@ -1,5 +1,7 @@
+extern "C" {
 #include "tagged_asset.h"
 #include "frontend.h"
+}
 
 /*
  * ROM 0x0817E78C-0x0824B638: the first 0x20 bytes of the old
@@ -10,7 +12,7 @@
 
 /* 16 BGR555 colours: InitLanguageSelectGraphics (language_select.cpp) copies them
  * into tile-asset cache slot 2 (+0x20), after its three siblings
- * gLanguageSelectPalette0/1/2 (palettes_17e72c.c). */
+ * gLanguageSelectPalette0/1/2 (palettes_17e72c.cpp). */
 const u16 gLanguageSelectPalette3[16] = {
     0x0000, 0x001F, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0x0000, 0xFFFF,
     0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
@@ -27,7 +29,7 @@ const u16 gLanguageSelectPalette3[16] = {
  */
 
 /* Tile set 1: 6638 tiles, used by 10 rooms' layer descriptors. */
-const TAGGED_RAW_ASSET(0x67B80) gJungleBg0Tiles = {
+extern const TAGGED_RAW_ASSET(0x67B80) gJungleBg0Tiles = {
     TAGGED_RAW_HEADER(0x67B80),
     {
 #include "level_tilesets/tileset1_17e7ac.img.bin.inc"
@@ -35,7 +37,7 @@ const TAGGED_RAW_ASSET(0x67B80) gJungleBg0Tiles = {
 };
 
 /* Tile set 2: 1707 tiles, 10 rooms. */
-const TAGGED_RAW_ASSET(0x1AAC0) gSnowBg0Tiles = {
+extern const TAGGED_RAW_ASSET(0x1AAC0) gSnowBg0Tiles = {
     TAGGED_RAW_HEADER(0x1AAC0),
     {
 #include "level_tilesets/tileset2_1e6330.img.bin.inc"
@@ -43,7 +45,7 @@ const TAGGED_RAW_ASSET(0x1AAC0) gSnowBg0Tiles = {
 };
 
 /* Tile set 3: 4769 tiles, 5 rooms. */
-const TAGGED_RAW_ASSET(0x4A840) gUnderwaterBg0Tiles = {
+extern const TAGGED_RAW_ASSET(0x4A840) gUnderwaterBg0Tiles = {
     TAGGED_RAW_HEADER(0x4A840),
     {
 #include "level_tilesets/tileset3_200df4.img.bin.inc"

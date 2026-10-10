@@ -1,4 +1,6 @@
+extern "C" {
 #include "core.h"
+}
 
 /*
  * ROM 0x0817CFF4-0x0817D6C0. Linked in ROM order between data/data.s
@@ -64,23 +66,23 @@ const struct bg_package gTitleScreenBg = { 16, 16, (void *)gTitleScreenBgPalette
 
 /* The motion sequences of the nine countdown slots of
  * title_screen.cpp (RunTitleScreen, ResetTitleLogoPieces), which
- * popup_glyphs_17cf40.c's gTitleLogoPieceSeeds seeds: each ends with a
+ * popup_glyphs_17cf40.cpp's gTitleLogoPieceSeeds seeds: each ends with a
  * zero hold. */
-const struct delta_record gTitleLogoPieceMotion0[4] = {
+extern const struct delta_record gTitleLogoPieceMotion0[4] = {
     { 11, 152, 160, 0, 256, 256, -494498, -959208, 0, 0, 0 },
     { 19, 69, 65535, 0, 256, 256, 0, 0, 0, 0, 0 },
     { 1, 69, 65535, 0, 256, 256, 0, 0, 0, 0, 0 },
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gTitleLogoPieceMotion1[4] = {
+extern const struct delta_record gTitleLogoPieceMotion1[4] = {
     { 10, 65440, 160, 0, 256, 256, 1153761, -956825, 0, 0, 0 },
     { 9, 80, 14, 0, 256, 256, 0, 0, 0, 0, 0 },
     { 1, 80, 14, 0, 256, 256, 0, 0, 0, 0, 0 },
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gTitleLogoPieceMotion2[6] = {
+extern const struct delta_record gTitleLogoPieceMotion2[6] = {
     { 7, 120, 72, 0, 51, 51, 0, 0, 0, 7489, 7489 },
     { 3, 120, 72, 0, 256, 256, 0, 0, 0, 2184, 2184 },
     { 3, 120, 72, 0, 281, 281, 0, 0, 0, -2184, -2184 },
@@ -89,7 +91,7 @@ const struct delta_record gTitleLogoPieceMotion2[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gTitleLogoPieceMotion3[5] = {
+extern const struct delta_record gTitleLogoPieceMotion3[5] = {
     { 15, 169, 61, 0, 358, 358, 0, 0, 0, -2184, -2184 },
     { 3, 169, 61, 0, 230, 230, 0, 0, 0, 2184, 2185 },
     { 48, 169, 61, 0, 256, 256, 0, 0, 0, 0, 0 },
@@ -97,7 +99,7 @@ const struct delta_record gTitleLogoPieceMotion3[5] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gTitleLogoPieceMotion4[5] = {
+extern const struct delta_record gTitleLogoPieceMotion4[5] = {
     { 15, 146, 50, 0, 358, 358, 0, 0, 0, -2184, -2184 },
     { 3, 146, 50, 0, 230, 230, 0, 0, 0, 2184, 2184 },
     { 60, 146, 50, 0, 256, 256, 0, 0, 0, 0, 0 },
@@ -105,7 +107,7 @@ const struct delta_record gTitleLogoPieceMotion4[5] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gTitleLogoPieceMotion5[5] = {
+extern const struct delta_record gTitleLogoPieceMotion5[5] = {
     { 15, 117, 50, 0, 358, 358, 0, 0, 0, -2184, -2184 },
     { 3, 117, 50, 0, 230, 230, 0, 0, 0, 2184, 2184 },
     { 72, 117, 50, 0, 256, 256, 0, 0, 0, 0, 0 },
@@ -113,7 +115,7 @@ const struct delta_record gTitleLogoPieceMotion5[5] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gTitleLogoPieceMotion6[5] = {
+extern const struct delta_record gTitleLogoPieceMotion6[5] = {
     { 15, 90, 53, 0, 358, 358, 0, 0, 0, -2184, -2184 },
     { 3, 90, 53, 0, 230, 230, 0, 0, 0, 2184, 2184 },
     { 84, 90, 53, 0, 256, 256, 0, 0, 0, 0, 0 },
@@ -121,7 +123,7 @@ const struct delta_record gTitleLogoPieceMotion6[5] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gTitleLogoPieceMotion7[5] = {
+extern const struct delta_record gTitleLogoPieceMotion7[5] = {
     { 15, 68, 65, 0, 358, 358, 0, 0, 0, -2184, -2184 },
     { 3, 68, 65, 0, 230, 230, 0, 0, 0, 2184, 2184 },
     { 96, 68, 65, 0, 256, 256, 0, 0, 0, 0, 0 },
@@ -129,7 +131,7 @@ const struct delta_record gTitleLogoPieceMotion7[5] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gTitleLogoPieceMotion8[6] = {
+extern const struct delta_record gTitleLogoPieceMotion8[6] = {
     { 5, 119, 71, 0, 383, 384, 0, 0, 0, -6553, -6553 },
     { 3, 119, 71, 0, 256, 256, 0, 0, 0, -2184, -2184 },
     { 3, 119, 71, 0, 230, 230, 0, 0, 0, 2184, 2184 },

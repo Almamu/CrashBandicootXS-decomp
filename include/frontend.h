@@ -48,9 +48,9 @@ struct slot_seed {
 extern class LanguageSelect *gLanguageSelect;
 #endif
 
-/* The six language names (src/data/digit_glyphs_17e714.c) and the four
- * palettes InitLanguageSelectGraphics copies (palettes_17e72c.c,
- * level_tilesets_17e78c.c). */
+/* The six language names (src/data/digit_glyphs_17e714.cpp) and the four
+ * palettes InitLanguageSelectGraphics copies (palettes_17e72c.cpp,
+ * level_tilesets_17e78c.cpp). */
 extern const u8 *const gLanguageNames[6];
 extern const u16 gLanguageSelectPalette0[16];
 extern const u16 gLanguageSelectPalette1[16];
@@ -58,7 +58,7 @@ extern const u16 gLanguageSelectPalette2[16];
 extern const u16 gLanguageSelectPalette3[16];
 
 /* The company logo actor (InitLogoActor): its animation record
- * (src/data/level_gfx_17cff4.c, an anim_table_record) and the two VRAM
+ * (src/data/level_gfx_17cff4.cpp, an anim_table_record) and the two VRAM
  * tile blocks DrawLogoActor
  * double-buffers its frames in (IWRAM, sym_iwram.txt). */
 extern const struct anim_table_record gLogoActorAnim; /* actor_anim.h */
@@ -70,16 +70,16 @@ extern void *gLogoActorLastFrame; /* the frame last unpacked */
  * from, and gLogoActorAnim its frames (src/data/anim_family_178f80.c). */
 extern const u16 gPolarCategoryPalette[0x200];
 
-/* The logo pieces' seed tables (src/data/popup_glyphs_17cf40.c,
- * slot_seeds_17d6c0.c), NULL-terminated. */
+/* The logo pieces' seed tables (src/data/popup_glyphs_17cf40.cpp,
+ * slot_seeds_17d6c0.cpp), NULL-terminated. */
 extern const struct slot_seed gTitleLogoPieceSeeds[10];
 extern const struct slot_seed gVvLogoPieceSeeds[21];
 
 /* The {x, y} offsets of the eight OAM pieces DrawTitleLogoPieces draws
- * around each of its two slots (src/data/level_gfx_17cff4.c). */
+ * around each of its two slots (src/data/level_gfx_17cff4.cpp). */
 extern const s32 gTitleArrowPieceOffsets[8][2];
 
-/* The title screen's graphics (src/data/level_gfx_17cff4.c): the menu
+/* The title screen's graphics (src/data/level_gfx_17cff4.cpp): the menu
  * palettes InitTitleScreen DMAs to OBJ palettes 13-15, the BG2 package
  * LoadTitleScreenBg loads and the four OBJ packages LoadTitleScreenObjTiles
  * loads (gTitleObjPackages, src/iwram/iwram_data.cpp). */
@@ -88,20 +88,20 @@ extern const u16 gTitleMenuSelectedPalette[16];
 extern const u16 gTitleMenuBlinkPalette[16];
 extern const struct bg_package gTitleScreenBg;
 extern const void *gTitleObjPackages[4];
-/* The four packages gTitleObjPackages points at (src/data/level_gfx_17cff4.c). */
+/* The four packages gTitleObjPackages points at (src/data/level_gfx_17cff4.cpp). */
 extern const struct bg_package gTitleCrashObj;
 extern const struct bg_package gTitleArrow2Obj;
 extern const struct bg_package gTitleArrow1Obj;
 extern const struct bg_package gTitleBandicootObj;
 
-/* The company logos' graphics (src/data/slot_seeds_17d6c0.c,
- * countdown_17d7a4.c). */
+/* The company logos' graphics (src/data/slot_seeds_17d6c0.cpp,
+ * countdown_17d7a4.cpp). */
 extern const struct bg_package gVvLogoEmblemObj;
 extern const struct bg_package gVvLogoLettersObj;
 extern const struct bg_package gVvLogoUrlObj;
 extern const struct bg_package gUniversalLogoBg;
 
-/* The credits (src/data/credits_17c5d0.c, popup_glyphs_17cf40.c). */
+/* The credits (src/data/credits_17c5d0.cpp, popup_glyphs_17cf40.cpp). */
 extern const u8 gCreditsText[];
 extern const u8 gCreditsEmptyText[4];
 extern const struct bg_package gCreditsLogos[5];
