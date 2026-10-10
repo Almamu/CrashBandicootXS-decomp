@@ -16,7 +16,6 @@
 #include "core.h"
 #include "aabb.h"
 #include "byte_arg.h"
-#include "vtable.h"
 #include "constants/events.h"
 
 struct vec2;

@@ -15,7 +15,6 @@
 
 #include "core.h"
 #include "actor_self.h"
-#include "vtable.h"
 #include "constants/categories.h"
 
 /* The entity flags byte at +0x0C and the one after it, +0x0D (Entity's

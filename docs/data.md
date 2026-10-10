@@ -35,8 +35,8 @@ libgcc's `__clz_tab`) follow the same convention in C under
   `actor_category_175558.c`).
 - **Types come from the code's headers** when there is one:
   `struct category_descriptor` /
-  `struct category_vtable` (`actor_anim.h`), `struct bg_package`
-  (`graphics_package.h`), and the new `struct vtable_slot` (`vtable.h`).
+  `struct category_vtable` (`actor_anim.h`) and `struct bg_package`
+  (`graphics_package.h`).
   When the only view is a struct local to one source file, the data file
   uses a plain type or a small local struct and says whose view it
   mirrors. Moving such structs into headers is a separate cleanup.
@@ -92,7 +92,8 @@ registering. Everything the linker script doesn't name is discarded
      `actor_pmf_*.cpp`, `action_table_16bf20.cpp` and
      `player_pmf_16c250.cpp` files), each `&X::f` g++'s own record.
    - `{0, fn}` pairs after an all-zero first pair: a gcc 2.x virtual
-     table (`struct vtable_slot`). The game's 93 are all found, and all
+     table (8-byte slots: a `this` delta, a zero index, the code
+     address; slot 0 is empty). The game's 93 are all found, and all
      are emitted by g++ from the classes
      ([cplusplus.md](cplusplus.md#emitting-the-vtables-step-10)).
    - Plain words that are all odd code addresses: a function-pointer

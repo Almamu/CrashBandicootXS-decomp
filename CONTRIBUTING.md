@@ -278,8 +278,7 @@ full rules and the history (#574). For new code:
     with the same fields under other names: merge it into the one that
     exists (aabb.h's `struct vec2` is every {x, y} pair, sprite_bank.h's
     `struct sprite_anim`/`struct sprite_bank` every animation record and
-    bank, vtable.h's `struct vtable_slot` every vtable slot, gfx.h's `union
-    dispcnt` every DISPCNT copy).
+    bank, gfx.h's `union dispcnt` every DISPCNT copy).
   - **C++:** a derived class inherits its base (`class Player : public
     GroundSprite`); it doesn't redeclare the base's fields.
   - **No C views of classes:** every game file is C++, and src/data/ and

@@ -18,7 +18,6 @@
 #include "core.h"
 #include "actor.h"
 #include "constants/entities.h"
-#include "vtable.h"
 
 struct entry_set;
 

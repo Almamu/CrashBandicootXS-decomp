@@ -13,7 +13,6 @@
  * `codegen:` comment (docs/headers_plan.md). */
 
 #include "core.h"
-#include "vtable.h"
 
 struct level_state;
 struct sprite_bank_table;

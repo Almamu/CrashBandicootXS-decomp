@@ -20,7 +20,6 @@
 #include "gfx.h"
 #include "objects.h"
 #include "byte_arg.h"
-#include "vtable.h"
 #include "constants/attack_kinds.h"
 #include "constants/crates.h"
 #include "constants/entities.h"
