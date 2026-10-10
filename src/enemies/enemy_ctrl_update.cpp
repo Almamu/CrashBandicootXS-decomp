@@ -124,7 +124,7 @@ void EnemyCtrl::Update(MovingSprite *)
                     if (y > INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x1E00)
                         MarkGone(t2);
                 }
-            } else if (t->hitAxes == 8) {
+            } else if (t->hitAxes == PART_DIR_DOWN) {
                 SetVelY(t, 0, 0, 0);
             } else {
                 SetVelY(t, 0x400, 0, 0x400);

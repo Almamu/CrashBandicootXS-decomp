@@ -153,6 +153,7 @@ the names with the header it already includes. A data table in
 | `events.h` | `EVENT_` | event IDs (the event method's `case` labels, `NOTIFY`, the `handleEvent` slot calls); also the kinds that touched objects send |
 | `levels.h` (generated) | `LEVEL_` | level ids, the `gLevelTable` index, from `data/levels/levels.json` |
 | `rooms.h` | `ROOM_KIND_` | `struct level_room.kind` (on foot, underwater, hover, category stage) |
+| `box_part.h` | `PART_DIR_` | the direction bits: Sprite's `dir`, MovingSprite's `hitAxes` and `hitMask`, EVENT_BUMP's side ([docs/flags/direction.md](flags/direction.md)) |
 | `platform.hpp` (next to Platform) | `PLATFORM_TYPE_` | `Platform::type` and `PlatformMover::kind`, what a platform does ([docs/flags/platform.md](flags/platform.md)) |
 | `save.h` (next to RunSaveMenu) | `SAVE_MENU_STATE_` | `SaveMenu::state`, the save menu's screen ([docs/flags/save_menu.md](flags/save_menu.md)) |
 | `bosses.h` | `BOSS_` | `GetBossIndex` results |

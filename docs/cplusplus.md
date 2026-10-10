@@ -4119,7 +4119,7 @@ byte-identical to origin/main's.
 - **What the headers keep**: the plain records (actor_self.h's
   `anim_frame_record` and `anim_box`, bitmap_font.h's
   `icon_glyph_metrics`, bg_scroll_layer.h's `union bg_cnt`, player.h's
-  PLAYER_DIR_* and PLAYER_HIT_* bits). Where a C header's struct or the
+  direction bits, now box_part.h's PART_DIR_*). Where a C header's struct or the
   category vtable data (src/data/actor_category_175558.c, slot 1) needs a
   pointer to a class, it names the class's own tag: `struct Crate *` in
   `struct crate_group` and `struct collision_candidate`, `struct ActorSelf

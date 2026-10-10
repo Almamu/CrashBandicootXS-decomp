@@ -19,13 +19,13 @@ static inline void KeepHitboxAnchored(GroundSprite *self)
     const struct hitbox_quad *prev = (const struct hitbox_quad *)self->lastHitbox;
 
     if (prev != box && prev != 0) {
-        if (self->hitAxes == 8) {
+        if (self->hitAxes == PART_DIR_DOWN) {
             s32 prevBottom = prev->offY + prev->h;
             s32 bottom = box->offY + box->h;
 
             if (prevBottom != bottom)
                 self->y += INT_TO_Q8(prevBottom - bottom);
-        } else if (self->hitAxes == 4) {
+        } else if (self->hitAxes == PART_DIR_UP) {
             s32 prevTop = prev->offY;
             s32 top = box->offY;
 
@@ -86,7 +86,7 @@ void GroundSprite::Reset()
     rampY.start = 0;
     rampY.step = 0;
     rampY.target = 0;
-    hitAxes = 8;
+    hitAxes = PART_DIR_DOWN;
     dir = 0;
     mover = 0;
     type = 0;

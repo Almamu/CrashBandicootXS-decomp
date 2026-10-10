@@ -41,7 +41,7 @@ s32 Player::CheckPlayerContact()
         GroundSprite::CheckPlayerContact();
         gLevelLayers->probeFlag = 0;
         if (carried != 0) {
-            hitAxes |= 8;
+            hitAxes |= PART_DIR_DOWN;
             carried = 0;
             slippery = 0;
             pushLeft = 0;
@@ -81,7 +81,7 @@ s32 Player::CheckPlayerContact()
                 break;
             }
             gLevelLayers->kind = 0;
-        } else if (hitAxes == 8) {
+        } else if (hitAxes == PART_DIR_DOWN) {
             pushLeft = 0;
             pushRight = 0;
             slippery = 0;

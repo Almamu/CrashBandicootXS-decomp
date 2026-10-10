@@ -14,11 +14,19 @@
  * ENTITY_FLAG2_* (#843; PART_FLAG_GONE/PART_FLAG_TOUCHED were two of
  * them). */
 
-/* Sprite's `dir` (the player's PLAYER_DIR_*, player.hpp, are the same
- * byte's): the direction
- * bits, 1 right, 2 left, 4 up, 8 down. The X pair is also the X probe
- * mode, the Y pair the Y probe mode (ProbeGroundSpriteTerrain). */
-#define PART_DIR_X_MASK 3
-#define PART_DIR_Y_MASK 0xc
+/* The direction bits (#843, docs/flags/direction.md): Sprite's `dir`
+ * (the motion direction, ApplyVelocity; also the player's and the
+ * camera's target's), MovingSprite's `hitAxes` and `hitMask` (the
+ * terrain probes' hits: a probe in a direction that hits adds that
+ * direction's bit, so `hitAxes & PART_DIR_DOWN` is "on the floor" and
+ * `hitAxes & PART_DIR_UP` "hit the ceiling"), and EVENT_BUMP's side.
+ * The X pair is also the X probe mode, the Y pair the Y probe mode
+ * (ProbeTerrainAxes). */
+#define PART_DIR_RIGHT 1
+#define PART_DIR_LEFT 2
+#define PART_DIR_UP 4
+#define PART_DIR_DOWN 8
+#define PART_DIR_X_MASK 3   // PART_DIR_RIGHT | PART_DIR_LEFT
+#define PART_DIR_Y_MASK 0xc // PART_DIR_UP | PART_DIR_DOWN
 
 #endif /* GUARD_BOX_PART_H */

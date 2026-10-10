@@ -66,21 +66,21 @@ void Platform::ResolveCollision(void *)
             above = 1;
         tx = gPlayer->GetPrevX();
         ty = gPlayer->GetPrevY();
-        side = 2;
+        side = PART_DIR_LEFT;
         if (px > tx)
-            side = 1;
+            side = PART_DIR_RIGHT;
         if (Q8_TO_INT(gPlayer->x) < Q8_TO_INT(x)) {
-            hdir = 1;
+            hdir = PART_DIR_RIGHT;
             ox = Span(AabbX(&b), AabbW(&b), AabbX(&a)) + 1;
         } else {
-            hdir = 2;
+            hdir = PART_DIR_LEFT;
             ox = Span(AabbX(&a), AabbW(&a), AabbX(&b)) + 1;
         }
         if (Q8_TO_INT(gPlayer->y) > Q8_TO_INT(y)) {
-            vdir = 4;
+            vdir = PART_DIR_UP;
             oy = Span(AabbY(&a), AabbH(&a), AabbY(&b));
         } else {
-            vdir = 8;
+            vdir = PART_DIR_DOWN;
             oy = Span(AabbY(&b), AabbH(&b), AabbY(&a));
         }
         if (type != PLATFORM_TYPE_MOVING && type != PLATFORM_TYPE_FALLING &&
@@ -88,7 +88,7 @@ void Platform::ResolveCollision(void *)
             if (ty == py && tx == px) {
                 result = hdir;
                 if (oy <= 2)
-                    result = 8;
+                    result = PART_DIR_DOWN;
             } else if (ty == py && GetPrevY() == Q8_TO_INT(y) && oy > 2)
                 result = hdir;
             else if (tx == px && GetPrevX() == Q8_TO_INT(x))
@@ -98,16 +98,16 @@ void Platform::ResolveCollision(void *)
             if (result == 0) {
                 ty += box->offY + box->h;
                 if (ty <= AabbY(&a) + AabbH(&a)) {
-                    if (side == 1) {
+                    if (side == PART_DIR_RIGHT) {
                         if (AabbX(&b) + AabbW(&b) >= AabbX(&a) && ox > 2)
-                            result = 8;
+                            result = PART_DIR_DOWN;
                     } else {
                         if (AabbX(&b) <= AabbX(&a) + AabbW(&a) && ox > 2)
-                            result = 8;
+                            result = PART_DIR_DOWN;
                     }
                     if (result == 0) {
                         py += box->offY + box->h;
-                        if (hdir == 1) {
+                        if (hdir == PART_DIR_RIGHT) {
                             tx += box->offX + box->w;
                             px = AabbX(&b) + AabbW(&b);
                             r = FindLineCrossing(tx, ty, px, py, AabbX(&a));
@@ -117,7 +117,7 @@ void Platform::ResolveCollision(void *)
                             r = FindLineCrossing(tx, ty, px, py, AabbX(&a) + AabbW(&a));
                         }
                         if ((r < 0 && above && oy <= 1) || (r > 0 && r <= AabbY(&a)))
-                            result = 8;
+                            result = PART_DIR_DOWN;
                         else
                             result = hdir;
                     }
@@ -128,16 +128,16 @@ void Platform::ResolveCollision(void *)
             if (result == 0) {
                 ty += box->offY;
                 if (ty >= AabbY(&a)) {
-                    if (side == 1) {
+                    if (side == PART_DIR_RIGHT) {
                         if (AabbX(&b) + AabbW(&b) >= AabbX(&a) && ox > 3)
-                            result = 4;
+                            result = PART_DIR_UP;
                     } else {
                         if (AabbX(&b) <= AabbX(&a) + AabbW(&a) && ox > 3)
-                            result = 4;
+                            result = PART_DIR_UP;
                     }
                     if (result == 0) {
                         py += box->offY;
-                        if (hdir == 1) {
+                        if (hdir == PART_DIR_RIGHT) {
                             tx += box->offX + box->w;
                             px = AabbX(&b) + AabbW(&b);
                             r = FindLineCrossing(tx, ty, px, py, AabbX(&a));
@@ -147,7 +147,7 @@ void Platform::ResolveCollision(void *)
                             r = FindLineCrossing(tx, ty, px, py, AabbX(&a) + AabbW(&a));
                         }
                         if ((r < 0 && !above && ox > 3) || (r > 0 && r >= AabbY(&a) + AabbH(&a)))
-                            result = 4;
+                            result = PART_DIR_UP;
                         else
                             result = hdir;
                     }
@@ -164,35 +164,35 @@ void Platform::ResolveCollision(void *)
         switch (result) {
         case 0: /* empty case: makes gcc use the ROM's jump table */
             break;
-        case 4:
+        case PART_DIR_UP:
             {
                 Player *q = gPlayer;
 
-                if (!(q->hitAxes & 8)) {
-                    q->HandleEvent(0, EVENT_BUMP, 4);
+                if (!(q->hitAxes & PART_DIR_DOWN)) {
+                    q->HandleEvent(0, EVENT_BUMP, PART_DIR_UP);
                     PosPtr(&pos)->y = INT_TO_Q8(oy) + PosPtr(&pos)->y;
                 }
             }
             break;
-        case 8:
+        case PART_DIR_DOWN:
             PosPtr(&pos)->y = (PosPtr(&pos)->y - INT_TO_Q8(oy - 1)) & ~0xFF;
             break;
-        case 1:
-        case 2:
+        case PART_DIR_RIGHT:
+        case PART_DIR_LEFT:
             flags = hdir;
-            if (flags == 2)
+            if (flags == PART_DIR_LEFT)
                 pos.x = INT_TO_Q8(ox) + pos.x;
-            else if (flags == 1)
+            else if (flags == PART_DIR_RIGHT)
                 pos.x -= INT_TO_Q8(ox);
             break;
         }
-        if (result == 8 || oy <= 1) {
+        if (result == PART_DIR_DOWN || oy <= 1) {
             Player *q = gPlayer;
 
-            if (!(q->dir & 4) && above) {
+            if (!(q->dir & PART_DIR_UP) && above) {
                 q->carried = this;
                 {
-                    u8 m = 8;
+                    u8 m = PART_DIR_DOWN;
 
                     q->hitAxes = m;
                 }
@@ -210,7 +210,7 @@ void Platform::ResolveCollision(void *)
             gPlayer->HandleEvent(0, EVENT_BUMP, flags);
             gPlayer->hitMask |= flags;
         }
-        if (result == 8) {
+        if (result == PART_DIR_DOWN) {
             s32 t = type;
 
             if (t == PLATFORM_TYPE_MOVING || t == PLATFORM_TYPE_FALLING || t == PLATFORM_TYPE_FLIP)
@@ -248,7 +248,7 @@ void Platform::ResolveCollision(void *)
 
                 q->carried = this;
                 {
-                    u8 m = 8;
+                    u8 m = PART_DIR_DOWN;
 
                     q->hitAxes = m;
                 }

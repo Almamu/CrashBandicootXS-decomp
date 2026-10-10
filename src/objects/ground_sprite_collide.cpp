@@ -25,15 +25,15 @@ s32 GroundSprite::CheckPlayerContact()
         val |= ProbeTerrainAxes();
         *p = val;
         MovingSprite::CheckPlayerContact();
-        if (*p & 8) {
+        if (*p & PART_DIR_DOWN) {
             s32 grounded;
 
             f.b.unk_5 = 0;
             grounded = (f.bytes.flags2 >> ENTITY_BIT2_GROUNDED) & 1;
             if (!grounded) {
-                if (!(u8)ProbeEdgeTerrain(8, GetBounds())) {
+                if (!(u8)ProbeEdgeTerrain(PART_DIR_DOWN, GetBounds())) {
                     f.b.unk_5 = 1;
-                    *p &= 7;
+                    *p &= PART_DIR_X_MASK | PART_DIR_UP;
                 }
             }
         }
@@ -70,13 +70,13 @@ s32 GroundSprite::ProbeTerrainAxes()
     if (!(u8)IsNearCamera() || !(f.flags >> ENTITY_BIT_COLLIDES))
         goto done;
     if (!(dir & PART_DIR_Y_MASK) && (f.bytes.flags2 & ENTITY_FLAG2_FLOOR_PROBE))
-        result = 8;
+        result = PART_DIR_DOWN;
     hitMask = 0;
     quad = GetBounds();
     if (f.bytes.flags2 & ENTITY_FLAG2_FLOOR_PROBE)
         hit = ProbeFloor(quad, &floorMiss);
     if (hit && result == 0)
-        result = 8;
+        result = PART_DIR_DOWN;
     if (floorMiss == 1) {
         u8 c;
 
@@ -99,7 +99,7 @@ s32 GroundSprite::ProbeTerrainAxes()
 
                 if (xm == 0)
                     goto y_probe;
-                if (xm == 2)
+                if (xm == PART_DIR_LEFT)
                     x += (s32)0xFFFFFF00;
                 else
                     x += 0x100;

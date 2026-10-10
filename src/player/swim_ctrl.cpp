@@ -343,9 +343,9 @@ void SwimCtrl::Update(MovingSprite *)
         }
 
         (this->*stateFuncs[state])();
-        if (target->hitMask & PLAYER_HIT_X)
+        if (target->hitMask & PART_DIR_X_MASK)
             target->speedX = 0;
-        if (target->hitMask & PLAYER_HIT_Y)
+        if (target->hitMask & PART_DIR_Y_MASK)
             target->speedY = 0;
         target->StoreHitAxes(0);
         ApplySwimDrift();

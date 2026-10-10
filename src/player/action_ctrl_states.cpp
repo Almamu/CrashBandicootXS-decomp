@@ -23,7 +23,7 @@ extern "C" {
  * falling Y motion (entry 4) queued. */
 u8 ActionCtrl::CheckLeftGround()
 {
-    if ((part->hitAxes & 8) == 0) {
+    if ((part->hitAxes & PART_DIR_DOWN) == 0) {
         if (part->probeTries > 2) {
             SetMode(ACTION_STATE_AIRBORNE_FALL);
             SetTargetAnim(part, 0x1B);
@@ -59,7 +59,7 @@ void ActionCtrl::ApplyMotion()
         if (p->pushRight == 0)
             goto skip;
     }
-    if (part->hitAxes == 8) {
+    if (part->hitAxes == PART_DIR_DOWN) {
         if (p->pushLeft)
             p->x -= 0x100;
         else if (p->pushRight)
@@ -89,7 +89,7 @@ skip:
 
             rec = gCtrlMotionRecords[animSet->entries[motionX][0]];
             q = gPlayer;
-            if (IsSlippery(q) && part->hitAxes == 8 && q->speedX != 0) {
+            if (IsSlippery(q) && part->hitAxes == PART_DIR_DOWN && q->speedX != 0) {
                 motionXKeepSpeed = pending;
                 rec.target = FixedMul(rec.target, 0x180);
                 rec.step /= 2;
@@ -330,7 +330,7 @@ void ActionCtrl::StateJump()
 {
     ActAndFlags0D(part, ~ENTITY_FLAG2_FLOOR_PROBE);
     ActAndFlags0D(part, ~ENTITY_FLAG2_GROUNDED);
-    if (part->hitAxes & 4) {
+    if (part->hitAxes & PART_DIR_UP) {
         Player *p;
         s32 frame;
         s32 count;
@@ -504,7 +504,7 @@ void ActionCtrl::StateAirborne()
         return;
     }
     {
-        u8 bit4 = contact & 4;
+        u8 bit4 = contact & PART_DIR_UP;
 
         if (bit4) {
             if (this->state != ACTION_STATE_AIRBORNE_FALL) {
@@ -530,13 +530,13 @@ void ActionCtrl::StateAirborne()
             part->StoreHitAxes(0);
             return;
         }
-        if (contact == 1 || contact == 2) {
+        if (contact == PART_DIR_RIGHT || contact == PART_DIR_LEFT) {
             UpdateFacing();
             HandleAirInput();
             part->hitAxes = bit4;
             return;
         }
-        if ((contact & 8) && part->speedY >= 0) {
+        if ((contact & PART_DIR_DOWN) && part->speedY >= 0) {
             s32 st;
 
             part->f.bytes.flags2 |= ENTITY_FLAG2_FLOOR_PROBE;
@@ -776,7 +776,7 @@ void ActionCtrl::StateSpin()
     }
     if (part->hitAxes == 0)
         QueueNowY(5);
-    if ((INPUT_PRESSED(in) & A_BUTTON) && (part->hitAxes & 8)) {
+    if ((INPUT_PRESSED(in) & A_BUTTON) && (part->hitAxes & PART_DIR_DOWN)) {
         ActAndFlags0D(part, ~ENTITY_FLAG2_FLOOR_PROBE);
         ActAndFlags0D(part, ~ENTITY_FLAG2_GROUNDED);
         SetMode(ACTION_STATE_AIR_SPIN);
@@ -811,7 +811,7 @@ void ActionCtrl::StateAirSpin()
     in = gKeys.all;
     p = part;
 
-    if ((p->hitAxes & 8) && p->speedY > 0) {
+    if ((p->hitAxes & PART_DIR_DOWN) && p->speedY > 0) {
         /* flags2 through a pointer to it: ActOrFlags0D's 1 is
          * reused for motionYPending after the call, and `p->flags2 |= 1`
          * schedules slamBlocked's 0 into the `ldrb`'s slot. */
@@ -876,7 +876,7 @@ void ActionCtrl::StateTornadoSpin()
         else
             QueueNowY(5);
     }
-    if ((INPUT_PRESSED(in) & A_BUTTON) && (part->hitAxes & 8)) {
+    if ((INPUT_PRESSED(in) & A_BUTTON) && (part->hitAxes & PART_DIR_DOWN)) {
         ActAndFlags0D(part, ~ENTITY_FLAG2_FLOOR_PROBE);
         ActAndFlags0D(part, ~ENTITY_FLAG2_GROUNDED);
         SetMode(ACTION_STATE_AIR_SPIN);
@@ -911,7 +911,7 @@ void ActionCtrl::StateCrouchDown()
         StartHighJump();
         return;
     }
-    if (part->hitAxes == 8 && (u8)(motionY - 4) <= 1) {
+    if (part->hitAxes == PART_DIR_DOWN && (u8)(motionY - 4) <= 1) {
         motionYKeepSpeed = fire;
         motionYPending = 1;
         motionY = fire;
