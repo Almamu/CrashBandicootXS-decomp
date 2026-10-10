@@ -188,15 +188,13 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
     case EVENT_HIT_CRUSH:
         if ((f.flags >> 6) & 1) {
             if (!IsBlinking(this)) {
-                LevelState *game = gLevelState;
-
-                if (game->maskLevel != MASK_LEVEL_NONE) {
-                    if (game->maskLevel <= MASK_LEVEL_TWO) {
+                if (gLevelState->maskLevel != MASK_LEVEL_NONE) {
+                    if (gLevelState->maskLevel <= MASK_LEVEL_TWO) {
                         Sprite *c;
                         s32 cx, cy, m;
 
                         deadline = gRoomFrameCount + 90;
-                        game->SetMaskLevel(game->maskLevel - 1);
+                        gLevelState->SetMaskLevel(gLevelState->maskLevel - 1);
                         gAudioContext->PlaySfx(SFX_AKU_AKU_LOSE, 0x100);
                         gAudioContext->PlaySfx(SFX_PLAYER_HURT, 0x100);
                         mover->HandleEvent((MovingSprite *)from, EVENT_MASK_HIT, arg);
@@ -209,7 +207,7 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
                         gEntitySpawner->SpawnEffectPart(0x22, 3, cx, cy, m);
                     }
                 } else {
-                    game->AddDeath();
+                    gLevelState->AddDeath();
                     mover->HandleEvent((MovingSprite *)from, event, arg);
                 }
             }
