@@ -151,7 +151,7 @@ $(DATA_ASM_OBJS): $(GRAPHICS_BUILT) $(LEVELS_BUILT) $(SOUND_BUILT)
 # The music block starts with pointers into the sound-effect set, so it
 # depends on the set's sources too. The same run writes the default song's
 # layout struct (gGaxDefaultSong) and the song offsets the song table
-# (src/data/song_table_16aa20.c) is written with.
+# (src/data/song_table_16aa20.cpp) is written with.
 $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/gax_default_layout.bin $(SOUND_BUILDDIR)/gax_songs.h &: sound/gax_manifest.json $(SOUND_SONGS) $(SOUND_SAMPLES) $(SOUND_SFX_SOURCES) tools/gax_audio.py
 	python3 tools/gax_audio.py $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/gax_default_layout.bin $(SOUND_BUILDDIR)/gax_songs.h
 

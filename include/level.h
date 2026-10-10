@@ -200,7 +200,7 @@ extern struct level_state *gGameFrameLevelState;
 extern class PartList *gUpdateOnlyPartList;
 #endif
 
-/* The enemies' anim maps (src/data/popup_tables_16b98c.c), stored in their
+/* The enemies' anim maps (src/data/popup_tables_16b98c.cpp), stored in their
  * controllers by the spawners */
 extern const s32 gBlowgunTribesmanAnimMap[8];
 extern const s32 gCrusherAnimMap[8];
@@ -222,7 +222,7 @@ extern const s32 gVultureAnimMap[8];
  * (SpawnEntity passes the entity record's four halfwords). */
 typedef void (*entity_spawn_fn)(u32 id, u16 x, u16 y, u16 index);
 
-/* The entity spawners, indexed by entity type (src/data/dispatch_table_16c6a4.c);
+/* The entity spawners, indexed by entity type (src/data/dispatch_table_16c6a4.cpp);
  * the few with other parameters are cast. */
 extern const entity_spawn_fn gEntitySpawnFuncs[ENTITY_COUNT];
 
@@ -237,19 +237,19 @@ extern struct level_state *gLevelStateSingleton;
 #endif
 extern u8 gRoomExitRequested;
 
-/* The terrain height tables (src/data/terrain_1725a8.c, top-level asm) */
+/* The terrain height tables (src/data/terrain_1725a8.cpp, top-level asm) */
 extern u8 gTerrainHeights0[];
 extern u8 gTerrainHeights1[];
 extern u8 gTerrainHeights2[];
 extern u8 gTerrainHeights3[];
 
-/* src/data/terrain_1725a8.c */
+/* src/data/terrain_1725a8.cpp */
 extern const struct terrain_type gTerrainTypes[51];
 
-/* The level table (src/data/level_table_16c814.c, level_data.h). */
+/* The level table (src/data/level_table_16c814.cpp, level_data.h). */
 extern const struct level_info gLevelTable[LEVEL_COUNT];
 
-/* The level themes' music cues and palette cycles (src/data/level_table_16c814.c) */
+/* The level themes' music cues and palette cycles (src/data/level_table_16c814.cpp) */
 extern const u8 gThemeMusicCues[11];
 extern const u16 gThemePaletteCycle1A[9];
 extern const u16 gThemePaletteCycle1B[9];

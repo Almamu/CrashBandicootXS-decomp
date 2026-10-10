@@ -415,7 +415,7 @@ Everything is generated from editable sources, never read from
   actually need to differ.
 - Nothing outside the audio build points into the music block by a fixed
   address any more: the song table `gSongTable`
-  (`src/data/song_table_16aa20.c`) is written as `gGaxMusicData +
+  (`src/data/song_table_16aa20.cpp`) is written as `gGaxMusicData +
   GAX_SONG_<NAME>` from the generated `gax_songs.h`, and the default layout
   is built with the block. So a song can change size. The block itself is
   linked at the fixed `BASE_ADDR` (its pointers are absolute), which is

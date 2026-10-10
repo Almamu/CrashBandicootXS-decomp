@@ -7,7 +7,7 @@ its tile graphics is built from [`data/levels/`](../data/levels) by
 - the room data proper, 178,208 bytes in two ROM regions
   (`0x0824B638`-`0x08270F08`, 33 rooms, and `0x082B91D0`-`0x082BF120`,
   8 rooms): descriptors, chunk grids, palettes and entity lists, as typed
-  C in `src/data/level_rooms_24b638.c` and `src/data/level_rooms_2b91d0.c`;
+  C in `src/data/level_rooms_24b638.cpp` and `src/data/level_rooms_2b91d0.cpp`;
 - the 41 level assets (the per-layer tilemaps, compressed), `gRoomNNAsset`
   in `data/data.s`: 7 raw ones at `0x086C127C` and
   `0x086ECCD4`-`0x087BC13C` (1,112,392 bytes), and 34 LZ77-packed ones
@@ -23,7 +23,7 @@ The level table `gLevelTable` (`struct level_info`, one per
 level) gives each level a room list: the rooms played in order and up
 to two extra rooms, each a `struct level_room` record
 `{const u16 *palette; const struct level_desc *desc; s32 kind; ...}`
-(0x14 bytes). All of it is C in `src/data/level_table_16c814.c`, with
+(0x14 bytes). All of it is C in `src/data/level_table_16c814.cpp`, with
 one record per room (`gLevelRoom00`..`gLevelRoom40`) plus seven records
 of kind 3 for the stages played in an actor category, which have no
 room data. The union at +0x10 (`param`) is a stage's actor category
