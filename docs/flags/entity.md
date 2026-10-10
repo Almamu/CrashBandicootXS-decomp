@@ -30,8 +30,8 @@ and `PART_FLAG_TOUCHED`.
 
 | Bit | Mask | Name | Bitfield | Accessors | Set / cleared by | Read by |
 |---|---|---|---|---|---|---|
-| 0 | 0x01 | `FLOOR_PROBE` | `floorProbe` | Enable/DisableFloorProbe, IsFloorProbeEnabled | ActionCtrl's airborne states (ActOrFlags0D), the event and jump states clear it (ActAndFlags0D) | GroundSprite::ProbeTerrainAxes |
-| 1 | 0x02 | `GROUNDED` | `grounded` | IsGrounded | ProbeFloor; ActionCtrl::HandleEvent clears it | GroundSprite::CheckPlayerContact, ProbeFloor |
+| 0 | 0x01 | `FLOOR_PROBE` | `floorProbe` | Enable/DisableFloorProbe, IsFloorProbeEnabled | ActionCtrl's airborne states (ActOrFlags0D); the event and jump states, and the high jump and the air spin out of the spin, slide, crouch and crawl states, clear it (`ActAndFlags0D(part, ~ENTITY_FLAG2_FLOOR_PROBE)`) | GroundSprite::ProbeTerrainAxes |
+| 1 | 0x02 | `GROUNDED` | `grounded` | IsGrounded | ProbeFloor; ActionCtrl::HandleEvent and the same jump starts clear it (`ActAndFlags0D(part, ~ENTITY_FLAG2_GROUNDED)`) | GroundSprite::CheckPlayerContact, ProbeFloor |
 | 2 | 0x04 | `HIDDEN` | `blink` | Is/ToggleHidden | blinking parts toggle it | Sprite::IsOnScreen, OverlapsRect, CameraLead::Reset |
 | 3 | 0x08 | `SOLID` | `solid` | Is/Set/ClearSolid | | CollideWithPlayer's solid branch (CrateList, PartList), MovingSprite::TouchPlayer |
 | 4 | 0x10 | `EXIT_MIRROR` | `exitMirror` | Platform::Get/SetExitMirror | | Platform::GetExitMirror |
@@ -56,12 +56,3 @@ Each site keeps the spelling the ROM's code needs:
   ~ENTITY_FLAG_CONTACT; m &= ...`) keep their order.
 - **The pickups' `u32 flags = f.flags << 24`:** `(flags >> (24 +
   ENTITY_BIT_TOUCHED)) & 1`.
-
-## Still raw
-
-`ActAndFlags0D(part, -2)` and `ActAndFlags0D(part, -3)` stay as numbers in
-ActionCtrl::StateSlide, StateSpin, StateTornadoSpin, StateCrouchDown,
-StateCrouch, StateCrawlStart and StateCrawl (action_ctrl_states.cpp). They
-mean `~ENTITY_FLAG2_FLOOR_PROBE` and `~ENTITY_FLAG2_GROUNDED`. Each sits
-next to an input test that the KEYINPUT PR of #843 renames, so naming them
-here would make the two PRs conflict. They are left for a follow-up.

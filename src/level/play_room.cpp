@@ -411,7 +411,7 @@ s32 LevelProgress::RunRoom()
         ResetObjBuffers();
         UpdateRoomFrame();
         gInput->Update();
-        if (!gPlayer->dead && (gKeys.half.pressed & 8)) {
+        if (!gPlayer->dead && (gKeys.half.pressed & START_BUTTON)) {
             s32 r = RunPauseMenu();
 
             if (r == 0) {
@@ -427,7 +427,7 @@ s32 LevelProgress::RunRoom()
                 goto fade;
             }
         }
-        if (gKeys.all & 4)
+        if (gKeys.all & SELECT_BUTTON)
             gHud->ShowCounters();
         gForegroundList->Update();
         gUpdateOnlyPartList->Update();

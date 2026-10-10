@@ -12,16 +12,9 @@ A jumps (and fires), B spins or slides, START confirms or pauses, and
 
 | Word | Layout | Read by |
 |---|---|---|
-| `gKeys` (`union key_state`, globals.h) | `half.held` / `half.pressed`, or `all` with held in the low half and newly pressed in the high half | the title, credits and starfield (`half.pressed & (A_BUTTON \| START_BUTTON)`), the polar vehicle, InitActorCategory (`all & SELECT_BUTTON`, `(all >> 16) & START_BUTTON`), the save menu's link exchange (`all & B_BUTTON`) |
+| `gKeys` (`union key_state`, globals.h) | `half.held` / `half.pressed`, or `all` with held in the low half and newly pressed in the high half | the title, credits and starfield (`half.pressed & (A_BUTTON \| START_BUTTON)`), the polar vehicle, InitActorCategory (`all & SELECT_BUTTON`, `(all >> 16) & START_BUTTON`), LevelProgress::RunRoom (`half.pressed & START_BUTTON` pauses, a held `all & SELECT_BUTTON` shows the HUD counters), the save menu's link exchange (`all & B_BUTTON`) |
 | ActionCtrl's `in` (action_obj.h) | a copy of `gKeys`: `INPUT_HELD(in)` and `INPUT_PRESSED(in)` | ActionCtrl's states: `INPUT_PRESSED(in) & A_BUTTON` jumps, `& B_BUTTON` spins or slides |
 | WaitForKeyPress's `keys`, the jetpack's `keys.held` | the pressed or held bits | `A_BUTTON`, `START_BUTTON` |
 
 The `(u16)(gKeys.all & B_BUTTON)` casts are part of the matching spelling
 (save_menu_draw.cpp, polar_player.cpp), so they stay.
-
-## Left raw
-
-LevelProgress::RunRoom's `gKeys.half.pressed & 8` (START, the pause) and
-`gKeys.all & 4` (SELECT) in play_room.cpp are still numbers. They sit next
-to the line that #843's `Entity::f` PR changes, so they are left for a
-follow-up.
