@@ -18,8 +18,7 @@
  * a second register in StartSong and StopSong is the inline's return
  * value, which the C needed a register pin for.
  *
- * struct audio_context (below) is the field list, the class's base; no
- * C file is left that calls the methods by their C names.
+ * struct audio_context (below) is the field list, the class's base.
  *
  * `#pragma interface`: no vtable to emit, and no out-of-line copies of
  * the inline methods. */
@@ -27,9 +26,44 @@
 
 extern "C" {
 #include "core.h"
-#include "audio.h"
+#include <gax.h>
 #include "util.h"
+#include "constants/sfx.h"
+#include "constants/songs.h"
 }
+
+/* One record of the 99-entry sound-effect trigger table at ROM
+ * `0x0816AA6C` (`sound/sfx_table.json`) - see docs/audio.md's "Sound
+ * effects" section. Indexed by the id `PlaySfx`/`PlayAmbientSfx` take. */
+struct SfxTableEntry {
+    /* instrument index into the sound-effect data set
+     * (gGaxSfxData, docs/audio.md) - 0 = unused slot */
+    u32 slotId;
+    /* passed through as GAX_fx_ex's priority arg (only
+     * PlaySfx reads this; PlayAmbientSfx hardcodes 0) */
+    u32 chanArg;
+    /* multiplied by the caller's volume param and AudioContext.sfxVolume, then >>16 */
+    u32 baseVolume;
+};
+
+extern struct SfxTableEntry gSfxTable[99];
+
+/* The GAX2 music block (data/data.s, built by tools/gax_audio.py) and
+ * the song table pointing into it (src/data/song_table_16aa20.cpp). */
+extern const u8 gGaxMusicData[];
+extern const void *const gSongTable[SONG_COUNT];
+
+/* src/iwram/iwram_data.cpp */
+/* VBlankHandler (src/system/irq.cpp) calls GAX_irq while this is set. */
+extern u8 gGaxIrqEnabled;
+/* PlaySfx's two-voice round robin. */
+extern u32 gSfxVoiceToggle;
+
+/* src/audio/audio.cpp: the two free functions, with C linkage so their
+ * symbols keep the C names (the methods get theirs from
+ * cxx_symbols.txt). */
+extern "C" void EnableMusicVCountIrq(void);
+extern "C" void MusicVCountIrqHandler(void);
 
 /* The music/SFX-trigger "context" object `PlaySfx` and its neighbors take
  * as their first argument - `*gAudioContext` in the ROM, an

@@ -3,7 +3,6 @@
 
 extern "C" {
 #include "core.h"
-#include "audio.h"
 #include <agb_eeprom.h>
 #include "gba/dma_macros.h"
 #include "save.h"

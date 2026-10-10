@@ -7,7 +7,6 @@ extern "C" {
 #include "math_util.h"
 #include "actor.h"
 #include <agb_syscall.h>
-#include "hud.h"
 #include "system.h"
 #include "gfx.h"
 #include "level.h"

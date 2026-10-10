@@ -1,6 +1,7 @@
+#include "audio.hpp"
+
 extern "C" {
 #include "core.h"
-#include "audio.h"
 #include "gax_songs.h"
 }
 

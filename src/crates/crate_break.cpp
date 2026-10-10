@@ -9,7 +9,6 @@
 #include "level_state.hpp"
 
 extern "C" {
-#include "pickups.h"
 #include "util.h"
 #include "player.h"
 #include "memory.h"

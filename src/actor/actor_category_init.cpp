@@ -8,7 +8,6 @@ extern "C" {
 #include "actor_anim.h"
 #include "gba/dma_macros.h"
 #include "system.h"
-#include "hud.h"
 #include "util.h"
 #include "menus.h"
 #include "actor.h"

@@ -1,7 +1,8 @@
+#include "hud.hpp"
+
 extern "C" {
 #include "core.h"
 #include "text.h"
-#include "hud.h"
 }
 
 /*

@@ -44,7 +44,7 @@ Game code includes a library's public header and nothing else from it:
 
 - `<gax.h>`: `GAX2_new`/`GAX2_estimate`/`GAX2_init`/`GAX2_jingle`,
   `GAX_irq`/`GAX_play`, the music and sound-effect calls, and
-  `struct GaxSongHeader` (GAX2's parameter block). `include/audio.h` (the
+  `struct GaxSongHeader` (GAX2's parameter block). `include/audio.hpp` (the
   game's audio manager) includes it. The engine's internal structures
   (player state, handler types, channel state, and Shin'en's inline asm
   `GAX_DMA_WAIT`/`GAX_CALL_ARM`) are in `lib/gax/src/gax_internal.h`.

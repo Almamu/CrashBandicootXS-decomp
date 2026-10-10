@@ -6,7 +6,6 @@
 extern "C" {
 #include "math_util.h"
 #include "text.h"
-#include "cutscene.h"
 #include <libgcc.h>
 #include "system.h"
 #include "gfx.h"

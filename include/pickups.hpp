@@ -24,8 +24,12 @@
 
 extern "C" {
 #include "core.h"
-#include "pickups.h"
 }
+
+/* The x offset scale of each hop mode (1-3) of UpdateExtraLifeHop and
+ * UpdateWumpaHop (src/data/object_tables_16bb6c.cpp). */
+extern const s32 gExtraLifeHopWidths[3];
+extern const s32 gWumpaHopWidths[3];
 
 /* A copy of one of the hop width tables (gExtraLifeHopWidths,
  * gWumpaHopWidths), as the struct ExtraLife::UpdateHop and

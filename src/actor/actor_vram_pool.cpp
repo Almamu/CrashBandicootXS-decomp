@@ -5,7 +5,6 @@ extern "C" {
 #include "core.h"
 #include "actor_anim.h"
 #include "sprite_bank.h"
-#include "hud.h"
 #include "actor.h"
 #include "bosses.h"
 #include "vehicle.h"

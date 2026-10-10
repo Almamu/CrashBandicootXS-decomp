@@ -4,7 +4,6 @@
 extern "C" {
 #include "core.h"
 #include "gba/dma_macros.h"
-#include "cutscene.h"
 #include "system.h"
 #include "gfx.h"
 #include "globals.h"
