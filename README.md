@@ -19,12 +19,17 @@ songs and WAV samples. `baserom.gba` isn't needed to build it.
 
 ## Current state
 
-- **Code: all 2059 functions are byte-exact C.** Two of them, ARM
-  functions in the IWRAM image (`src/iwram/`), are built with a locally
-  patched ARM compiler (`agbcp_arm_patched`, see INSTALL.md): the ROM's ARM
-  compiler is a later, unreleased build whose prologue and return code
-  stock agbcc_arm can't produce (#553,
-  [docs/matching/iwram-image.md](./docs/matching/iwram-image.md)).
+- **Code: all 2059 functions are byte-exact; 2058 are C.** The ARM functions in
+  the IWRAM image (`src/iwram/`) are built with a locally patched ARM
+  compiler (`agbcp_arm_patched`, see INSTALL.md): the ROM's ARM compiler
+  is a later, unreleased build whose return code and jump rules stock
+  agbcc_arm can't produce (#553,
+  [docs/matching/iwram-image.md](./docs/matching/iwram-image.md)). The
+  other one, `itoa_arm`, is assembly by owner decision (`asm/itoa_arm.s`,
+  #662): its ROM code is another compiler's, most likely armcc's, which
+  no gcc reproduces. It is still counted as a function. Hand-written
+  assembly (crt0, IntrMain, libgcc's lib1funcs, the BIOS SWI wrappers,
+  GAX2's ARM DSP routines) isn't counted.
 - **Data: 100%.** Every ROM table is a typed C `const` array in
   `src/data/` (a library's own tables are in `lib/<name>/data/`), and
   every asset is rebuilt from a source file (see "Data and assets"

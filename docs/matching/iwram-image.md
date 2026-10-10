@@ -14,7 +14,7 @@ script and the report. Contents:
 | `030000FC` | `strcpy_arm` | same | matched, UNUSED |
 | `03000120` | `strncpy_arm` | same | matched (second pass; plain since the ninth step, `-mno-cond-return`), UNUSED |
 | `0300015C` | `strcat_arm` | same | matched, UNUSED |
-| `03000198` | `itoa_arm` | same | matched (seventh pass, agbcc_arm_patched), UNUSED |
+| `03000198` | `itoa_arm` | `asm/itoa_arm.s` | assembly since #662 by owner decision (not gcc output, see "itoa_arm: assembly"), counted as a matched function, UNUSED |
 | `0300024C` | `UnpackNibbleTiles` (`gUnpackNibbleTilesFunc`) | `src/iwram/sprite_arm.cpp` | matched |
 | `0300036C` | `DrawMirroredTilemap` (`gDrawMirroredTilemapFunc`) | same | matched |
 | `03000474` | `HeapSortActorsByKey` (`gHeapSortActorsByKeyFunc`) | same | matched (fourth pass; plain since the ninth step, `-mstrict-cross-jump`) |
@@ -29,7 +29,9 @@ through a pointer. They are ARM builds of the Thumb ones in
 
 ## Compiler
 
-The ARM functions are gcc output, and `tools/agbcc/bin/agbcc_arm`
+The ARM functions apart from itoa_arm are gcc output (itoa_arm's is
+another compiler's and is assembly now, see "itoa_arm: assembly" below),
+and `tools/agbcc/bin/agbcc_arm`
 (gcc 2.9-arm-000512, installed by SAT-R/agbcc next to agbcc and
 old_agbcc) reproduces eight of them byte for byte (six from the first
 pass, strncpy_arm from the second, HeapSortActorsByKey from the fourth)
@@ -40,7 +42,8 @@ sets up an APCS frame the ROM doesn't have). The Makefile builds
 used.
 
 The last two, `itoa_arm` and `LookupSpriteFrameCache`, need prologue
-and return code that agbcc_arm can't produce. Since the seventh pass both
+and return code that agbcc_arm can't produce. (itoa_arm needed much more
+than that, and has been assembly since #662: see "itoa_arm: assembly".) Since the seventh pass both
 objects are built with `agbcc_arm_patched`, agbcc_arm with two opt-in
 options added (`PATCHED_ARM_OBJS`; see "Seventh pass" below). Without
 the options its output is agbcc_arm's, byte for byte.
@@ -807,6 +810,70 @@ Same flags, old against new compiler, assembly compared:
   pre-#748 C `string_arm.c` and `sprite_arm.c`, with no option, both old
   options, and with a frame pointer: identical (126 compiles).
 
+## itoa_arm: assembly (#662)
+
+From the seventh pass to #662's round 11, itoa_arm matched as C++ only
+with seven register pins (`num`, `digit`, `b`, `len`, `neg`, the '-'),
+a `MATCH_KEEP(base)`, a `MATCH_CONST(len, 0)`, a hidden constant
+(`(ten = 10)`), a false "may be used uninitialized" warning, and three
+compiler options no other function needs (`-mleaf-no-lr-save`,
+`-fno-schedule-insns`, `-fno-schedule-insns2`). Rounds 6-11 found the
+pass and condition behind each site and no C for any of them. The owner
+decided to keep it as assembly, like GAX2's ARM DSP routines:
+`asm/itoa_arm.s`, the ROM's 45 instructions with labels and comments and
+a C++ version of the algorithm in its header. `string_arm.o` keeps the
+other four string functions and only `-mno-cond-return` (strncpy_arm's
+branch to the return); `-mleaf-no-lr-save` and the scheduling options
+were checked to change none of those four, and the object is off
+`UNINIT_WARNING_OBJS`. Unlike hand-written assembly it isn't
+`HANDWRITTEN`: it was compiled code, so it stays a counted function, with
+the assembly object as its own report unit (`tools/report_units.py`'s
+`IWRAM_UNITS`; owner decision). The total stays 2059.
+
+**Why: the ROM's itoa_arm isn't gcc output.** Most likely it is ARM's
+own compiler (armcc, SDT/ADS). The third pass ruled armcc out for the
+image as a whole, and that holds for `sprite_arm`: its five functions
+are agbcc_arm's code instruction for instruction. But itoa_arm has four
+traits no gcc we have (agbcc_arm, FSF 2.95.3-3.4.6) produces from any
+C, and all four are what armcc does:
+
+- **`cmp r1, #10` with `addge`/`addlt`.** Every gcc's fold-const turns
+  `digit >= 10` into `digit > 9` and compares with 9 (third pass,
+  "the `cmp r1, #10` + `addge`/`addlt` test"); the C hid the 10 in an
+  assignment, `(ten = 10)`.
+- **No conditional returns, and lr pushed only when used.** `push {r4,
+  r5, r6}` ... `pop {r4, r5, r6}; bx lr`. agbcc_arm pushes lr with any
+  register (arm.c: "If we push any regs, then we must push lr as well")
+  and makes `bxeq lr` out of any jump to the return; both needed patch
+  options. strncpy_arm's missing conditional return, in the same file,
+  is the same trait.
+- **The shared zero.** r4 is the sign flag, then the '-' character, then
+  the 0 for both the terminator and the swap's left index. On the
+  non-negative path the compiler knows r4 is already 0 and only sets it
+  on the '-' path (`movne r4, #0`). gcc 2.9's cse doesn't track a value
+  through a branch's condition; the C needed the variable reused by hand
+  and `minus` pinned to r4.
+- **The `__value_in_regs` SWI.** The BIOS Div SWI's quotient and
+  remainder come back in r0 and r1 and are used straight from there, the
+  shape of an armcc `__value_in_regs __swi(0x60000)` declaration. gcc
+  needed an asm with both registers pinned.
+
+Round 11 also showed why the pins can't go under gcc's allocator:
+global.c's `find_reg` treats the call-clobbered registers (r0-r3, ip,
+lr) as already used and REG_ALLOC_ORDER puts ip and lr before r4, so
+without a call or a live ip/lr the first of `len`/`neg`/`b` always gets
+ip and the next lr; the ROM gives them r5, r4 and r6 and the
+short-lived divisor ip. `len`'s 0 is reused for `neg = 0` by
+`reload_cse_simplify_operands`, which only forgets at a label, and
+`MATCH_KEEP(base)` stops cse1 from making the longer-lived `divisor` the
+canonical copy (then `base` and `divisor` share r2 and the ROM's `mov
+ip, r2` goes).
+
+The four other string functions are small enough that armcc and
+agbcc_arm can give the same code; whether they came from armcc too
+can't be told from them. `-mleaf-no-lr-save` stays in the compiler
+patch, unused by the build.
+
 ## Data
 
 `iwram_data.cpp` defines every global from `0x030007CC` up to
@@ -867,3 +934,12 @@ defined by these objects.
   `tools/match_idioms.py --functions`: `src/iwram/` 9 of 10 functions
   without workarounds (was 7; itoa_arm keeps its pins). Option-off
   identity: as above.
+- itoa_arm as assembly (#662): `rm -rf build && make compare`:
+  `crashbandicootxs.gba: OK`. `rm -rf build objdiff.json && make
+  NON_MATCHING=1 report` and `objdiff-cli report generate`: code 242,580
+  / 242,580 (100%), functions 2,059 / 2,059 (itoa_arm's unit is
+  `asm/itoa_arm.o`), data 100%. `tools/match_idioms.py --functions`:
+  2057/2059 without workarounds (itoa_arm has none now). `string_arm.cpp` compiled with each of
+  `-mleaf-no-lr-save` and the two scheduling options removed: strlen_arm,
+  strcpy_arm, strncpy_arm and strcat_arm unchanged; without
+  `-mno-cond-return` strncpy_arm changes.

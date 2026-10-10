@@ -182,8 +182,8 @@ comment with its evidence.
 | `-O1` | `lib/agb_eeprom` (4 objects) | SDK code, above. |
 | no `-mthumb-interwork` | libgcc2 (`__divdi3`, ...) | The only ROM functions that return with `pop {r4-r7, pc}`. |
 | agbcp_arm_patched (the ARM C++ compiler), `-fomit-frame-pointer` | `string_arm.o`, `sprite_arm.o` | ARM code of the IWRAM image ([matching/iwram-image.md](./matching/iwram-image.md)); C++ like the rest of the game, the output is agbcc_arm's without the four options below. |
-| **agbcp_arm_patched**'s `-mleaf-no-lr-save`, `-mno-cond-return`, `-fno-schedule-insns -fno-schedule-insns2` | `string_arm.o` | `itoa_arm` pushes r4-r6 without lr, which stock agbcc_arm can't; and the ROM keeps its loop increments, terminator store and swap in source order, which either scheduling pass reorders. `strncpy_arm` branches to its final `bx lr` where stock agbcc_arm makes `bxeq lr` for any C. The three other functions come out the same either way. |
-| `-Wno-error` | `gax_voice_steal.o`, `eeprom_verify.o`, `string_arm.o` | Each prints one expected "might be used uninitialized", left enabled on purpose ([Warnings](#warnings)); gcc 2.9 has no `-Wno-error=uninitialized`. |
+| **agbcp_arm_patched**'s `-mno-cond-return` | `string_arm.o` | `strncpy_arm` branches to its final `bx lr` where stock agbcc_arm makes `bxeq lr` for any C. The three other functions come out the same either way. (`itoa_arm`, which also needed `-mleaf-no-lr-save` and both scheduling passes off, is assembly since #662: `asm/itoa_arm.s`, its ROM code isn't gcc's; iwram-image.md, "itoa_arm: assembly".) |
+| `-Wno-error` | `gax_voice_steal.o`, `eeprom_verify.o` | Each prints one expected "might be used uninitialized", left enabled on purpose ([Warnings](#warnings)); gcc 2.9 has no `-Wno-error=uninitialized`. |
 | **agbcp_arm_patched**'s `-minterwork-return-lr`, `-mstrict-cross-jump` | `sprite_arm.o` | `LookupSpriteFrameCache`'s three returns pop into lr (`ldmfd sp!, {lr}; bx lr`); stock agbcc_arm pops into ip. `HeapSortActorsByKey` keeps two identical loop tests that stock jump2 cross-jumps for any C, because each follows a label. The three other functions come out the same either way (and need scheduling). |
 
 **agbcc_arm_patched and agbcp_arm_patched are locally patched
@@ -192,7 +192,7 @@ agbcc_arm's own Cygnus/Red Hat line that has never been released; its
 code generation is agbcc_arm's except for two fixed strings in the
 prologue and return code, which no C reaches (fifth pass of
 [iwram-image.md](./matching/iwram-image.md)), and two jump.c rules it
-doesn't have (ninth step). So `itoa_arm`, `LookupSpriteFrameCache`,
+doesn't have (ninth step). So `LookupSpriteFrameCache`,
 `strncpy_arm` and `HeapSortActorsByKey` are built with SAT-R/agbcc's
 agbcc_arm plus
 [tools/agbcc_patches/agbcc_arm_prologue_return.patch](../tools/agbcc_patches/agbcc_arm_prologue_return.patch),
@@ -663,9 +663,10 @@ address when it can
 
 ### Instruction asm
 
-6 asm statements emit real instructions (from 253 when the #576 survey
-counted them). Two are workarounds: the `swi`/`svc` calls of `itoa_arm`
-and `src/system/bios_util.cpp`, with their registers. Four are GAX2's own
+5 asm statements emit real instructions (from 253 when the #576 survey
+counted them). One is a workaround: the `svc` call of
+`src/system/bios_util.cpp`, with its registers (`itoa_arm`'s `swi` went
+with it into `asm/itoa_arm.s`, #662). Four are GAX2's own
 source (`ORIGINAL_SOURCE`, not counted as workarounds; docs/libraries.md,
 "GAX implementation notes"): `GAX_DMA_WAIT` (the DMA settle delay,
 `mov r3, r3` and three `nop`s, as GAX 3.05A's matched C writes it; the
@@ -683,7 +684,7 @@ warning (#662, owner decision): no `T x = x;` self-init, no empty asm
 that defines a variable for gcc's flow analysis. Where the ROM really
 uses an uninitialized register (`GAX_fx`'s `sel` when there is no SFX
 voice), or gcc can't tell a variable is always set
-(`EEPROMWrite1_check`'s `result`, `itoa_arm`'s `neg`), and an
+(`EEPROMWrite1_check`'s `result`), and an
 initializer would add code, the variable stays uninitialized and its
 "might be used uninitialized" warning is left enabled on purpose: it is
 printed on every build. Those objects (the Makefile's
@@ -705,9 +706,10 @@ defines it for C (`-D`) and assembly (`--defsym`). A function that
 can't be matched yet keeps its C draft under `#if NON_MATCHING` and the
 checked-in `NAKED` transcription under `#else`; the progress report
 scores the C draft. Both builds have to work. No function uses this any
-more: the last two, `itoa_arm` and `LookupSpriteFrameCache` (#553), are
-real C built with agbcc_arm_patched (C++ built with agbcp_arm_patched
-since the C++ conversion; [per-object flags](#per-object-flags),
+more: the last two, `itoa_arm` and `LookupSpriteFrameCache` (#553),
+became real C built with agbcc_arm_patched (C++ built with
+agbcp_arm_patched since the C++ conversion; `itoa_arm` is assembly since
+#662; [per-object flags](#per-object-flags),
 [matching/iwram-image.md](./matching/iwram-image.md), seventh pass). See
 [naked-transcription-parked-functions.md](./matching/archive/naked-transcription-parked-functions.md)
 for the history.
@@ -819,7 +821,7 @@ strcat's `i`), so 237 sites went in all. Six sites the tool finds
 removable were kept on purpose; a dry run still lists them:
 
 - **A pin whose register the asm template names.** `itoa_arm`'s `num`
-  (the `swi` reads r0), `DivMod`'s `quotient`/`remainder` (`svc #6`),
+  (the `swi` reads r0; assembly since #662), `DivMod`'s `quotient`/`remainder` (`svc #6`),
   and `GaxInfoPlay`'s `cnt`/`cnt2` (`ldrsh r1, ...` writes r1 while the
   output operand is `%0`; since #662 round 2 GaxInfoPlay is plain C
   and has neither). Without the pin the code is only right
@@ -892,7 +894,8 @@ each:
   pins): `ActionCtrl::StartTornadoFall` pins `entry` to r2, where agbcp
   swaps `this` and `entry` between r2 and r3.
 - **A pin whose register an asm template names** (kept even where the
-  tool can remove it, see step 2): `itoa_arm`'s `num` for its `swi`.
+  tool can remove it, see step 2): `itoa_arm`'s `num` for its `swi`
+  (assembly since #662).
 - **A register busy over a span** (`MATCH_HOLD` with a pin, 8): the
   r0/r1 hold in `RunRoom`, so the global's address and the player
   pointer both land in r2, as in the ROM.
@@ -2130,6 +2133,24 @@ already turns into the ROM's single `p[9]`/`p[8]` pointer) gets the
 registers through gcse's PRE copy instead, but `k` then has givs and
 check_dbra_loop won't reverse the loop (it needs a counter with no
 givs), so the `p[8]` form stays.
+
+**itoa_arm is assembly (round 11, owner decision).** Round 11 found no
+natural C for any of its sites and showed why (iwram-image.md,
+"itoa_arm: assembly"): global.c's `find_reg` treats r0-r3, ip and lr as
+already used and tries ip and lr before r4, so without a call or a live
+ip/lr the first two of `len`/`neg`/`b` always get ip and lr;
+`reload_cse_simplify_operands` reuses `len`'s 0 for `neg = 0` unless a
+label comes between; cse1 makes the longer-lived `divisor` the
+canonical copy of `base`. Reference temporaries (#850) and inline
+parameters (#851) for the divisor kept the temporary inside the loop
+(13-19 lines off). The ROM's code has four traits no gcc produces (`cmp
+#10` with `ge`/`lt`, no conditional returns and lr pushed only when used,
+one register reused as a known zero across a branch, an SWI returning
+two values in r0/r1), all of them armcc's, so like GAX2's DSP routines
+it is `asm/itoa_arm.s` (owner decision), still counted as a function
+with the assembly object as its report unit, so the total stays 2059,
+and `string_arm.o` loses `-mleaf-no-lr-save`,
+the two scheduling options and `-Wno-error`.
 
 ## Survey and conversion record (#576)
 

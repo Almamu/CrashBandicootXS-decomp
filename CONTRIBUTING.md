@@ -354,9 +354,8 @@ add the object to the Makefile's `UNINIT_WARNING_OBJS` (built with
 diagnostic`), with a comment naming the variable and why the warning is
 expected, and a comment at the declaration. Such an object must print
 that warning and no other. Today: `GAX_fx`'s `sel` (`gax_voice_steal.c`,
-the ROM uses the unset register), `EEPROMWrite1_check`'s `result`
-(`eeprom_verify.c`) and `itoa_arm`'s `neg` (`string_arm.cpp`), both
-false positives. For `-Wunused`, `__attribute__((unused))` on a variable
+the ROM uses the unset register) and `EEPROMWrite1_check`'s `result`
+(`eeprom_verify.c`, a false positive). For `-Wunused`, `__attribute__((unused))` on a variable
 or parameter that has to stay for codegen is fine: it is a declaration
 attribute, not code. (A struct or union local isn't checked for
 uninitialized use at all, which is how `starfield.cpp` builds its BGnCNT

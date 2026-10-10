@@ -3892,14 +3892,15 @@ ReceiveSaveTransferChunk's two pins and its empty-template asm.
 
 ### The IWRAM ARM code
 
-The IWRAM image's ten ARM routines (src/iwram/string_arm.cpp,
-sprite_arm.cpp) are C++ too, built with **agbcp_arm_patched**:
+The IWRAM image's ARM routines (src/iwram/string_arm.cpp,
+sprite_arm.cpp; nine of them, since itoa_arm is assembly, #662) are C++
+too, built with **agbcp_arm_patched**:
 notyourav/agbcc's `cp` branch also has an ARM tree, `g++_arm`, which
 is agbcc_arm's gcc 2.9-arm-000512 (same version string, same
 `config/arm/arm.c` and `arm.h`) with the C++ front end; its `cc1plus` is
 agbcp_arm. tools/build_agbccpp.sh builds it with
 tools/agbcc_patches/agbcc_arm_prologue_return.patch (the opt-in
-options itoa_arm and LookupSpriteFrameCache need,
+options itoa_arm, assembly since #662, and LookupSpriteFrameCache needed,
 [iwram-image.md](matching/iwram-image.md), "Seventh pass", and since the
 ninth step the two strncpy_arm and HeapSortActorsByKey need), its paths
 rewritten from `gcc_arm/` to `g++_arm/` (it applies cleanly), and

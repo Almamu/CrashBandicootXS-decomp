@@ -10,6 +10,8 @@ setup for the two `NAKED` functions in the agbcc_arm objects (#553):
 their `NAKED` asm is gone and `setup.sh` can't build their targets from
 the current source. Use `src/iwram/*.c` from before that change to rerun
 them, or this directory as a template for another ARM function.
+`itoa_arm` has been assembly since #662 (`asm/itoa_arm.s`: its ROM code
+isn't gcc's); its directory here is kept as a record.
 
 ## Files
 

@@ -505,6 +505,7 @@ SECTIONS
     {
         build/crashbandicootxs/asm/intr_main.o(.text);
         build/crashbandicootxs/src/iwram/string_arm.o(.text);
+        build/crashbandicootxs/asm/itoa_arm.o(.text);
         build/crashbandicootxs/src/iwram/sprite_arm.o(.text);
         build/crashbandicootxs/src/iwram/iwram_data.o(.data);
     }
