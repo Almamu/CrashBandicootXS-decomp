@@ -30,8 +30,9 @@ static inline void HoldFirstFrame(MovingSprite *part)
  * and once it passes rangeX/rangeY the direction flips. Types 5, 6 and 7
  * add timed behaviour: 5 falls (slot 12, record 3) 60 frames after the
  * player lands and wobbles the platform +-3 px meanwhile; 6 and 7 hold
- * their animation at its first frames until the player lands on a 7 or
- * a 6's timer runs out, and a 7 is gone (MarkGone) once its animation
+ * their animation at its first frames, a 6 until its timer runs out and
+ * a 7 while the mover isn't `active` (ResolveCollision sets it only for
+ * types 1, 5 and 6), and a 7 is gone (MarkGone) once its animation
  * ends. Then MovePlayer carries the player along. */
 void PlatformMover::Update(MovingSprite *part)
 {
@@ -181,10 +182,11 @@ void PlatformMover::Update(MovingSprite *part)
      * inlines and do/while(0) macros (rounds 2-5) stayed off. */
     u32 now;
 
-    if (k == 5 && timer > 0 && gRoomFrameCount - timer == 60) {
+    if (k == PLATFORM_TYPE_FALLING && timer > 0 && gRoomFrameCount - timer == 60) {
         StartTargetMotionYFromSet(part, 3);
         timer = -1;
-    } else if (k == 5 && timer > 0 && ((now = gRoomFrameCount) - timer) % 30 <= 4) {
+    } else if (k == PLATFORM_TYPE_FALLING && timer > 0 &&
+               ((now = gRoomFrameCount) - timer) % 30 <= 4) {
         now &= 1;
         /* The wobble through Entity::SetPos with the X passed back (an
          * r2 pin and a keep on the 0x300 until #662 round 5): each X load
@@ -196,13 +198,13 @@ void PlatformMover::Update(MovingSprite *part)
             part->SetPos(part->x, part->y - 0x300);
         else
             part->SetPos(part->x, part->y + 0x300);
-    } else if (k == 7 && part->frame <= 1 && !active) {
+    } else if (k == PLATFORM_TYPE_ROCK && part->frame <= 1 && !active) {
         HoldFirstFrame(part);
-    } else if (k == 6 && part->frame <= 1 && gRoomFrameCount < time) {
+    } else if (k == PLATFORM_TYPE_FLIP && part->frame <= 1 && gRoomFrameCount < time) {
         HoldFirstFrame(part);
-    } else if (k == 7 && part->animDone) {
+    } else if (k == PLATFORM_TYPE_ROCK && part->animDone) {
         part->MarkGone();
-    } else if (k == 6 && part->animDone) {
+    } else if (k == PLATFORM_TYPE_FLIP && part->animDone) {
         time = gRoomFrameCount + 120;
         HoldFirstFrame(part);
     }
@@ -218,7 +220,7 @@ void PlatformMover::Update(MovingSprite *part)
  * platform starts its timer. */
 void PlatformMover::MovePlayer(MovingSprite *part)
 {
-    if (active && kind != 6) {
+    if (active && kind != PLATFORM_TYPE_FLIP) {
         Player *p = gPlayer;
         u32 f = p->f.flags;
 
@@ -254,7 +256,7 @@ void PlatformMover::MovePlayer(MovingSprite *part)
             else if (part->speedY < 0)
                 dir |= 4;
             gPlayer->dir = dir;
-            if (kind == 5 && timer == 0)
+            if (kind == PLATFORM_TYPE_FALLING && timer == 0)
                 timer = gRoomFrameCount;
         }
     }
@@ -324,7 +326,8 @@ PlatformMover::~PlatformMover()
  * the side dirX/dirY give. */
 PlatformMover::PlatformMover(s32 distX, s32 distY, bool dirX, bool dirY, s32 kind)
 {
-    if ((u32)(kind - 6) <= 1) {
+    /* FLIP or ROCK, as one unsigned range test */
+    if ((u32)(kind - PLATFORM_TYPE_FLIP) <= PLATFORM_TYPE_ROCK - PLATFORM_TYPE_FLIP) {
         distY = 0;
         distX = 0;
     }

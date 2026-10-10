@@ -83,7 +83,8 @@ void Platform::ResolveCollision(void *)
             vdir = 8;
             oy = Span(AabbY(&b), AabbH(&b), AabbY(&a));
         }
-        if (type != 1 && type != 5 && type != 6) {
+        if (type != PLATFORM_TYPE_MOVING && type != PLATFORM_TYPE_FALLING &&
+            type != PLATFORM_TYPE_FLIP) {
             if (ty == py && tx == px) {
                 result = hdir;
                 if (oy <= 2)
@@ -212,7 +213,7 @@ void Platform::ResolveCollision(void *)
         if (result == 8) {
             s32 t = type;
 
-            if (t == 1 || t == 5 || t == 6)
+            if (t == PLATFORM_TYPE_MOVING || t == PLATFORM_TYPE_FALLING || t == PLATFORM_TYPE_FLIP)
                 Mover()->active = 1;
             else {
                 s32 d = Q8_TO_INT(x) - Q8_TO_INT(gPlayer->x);
@@ -221,14 +222,14 @@ void Platform::ResolveCollision(void *)
                 MAKE_ABS_BRANCHLESS(d, sign);
                 if (d <= 7) {
                     switch (t) {
-                    case 2:
+                    case PLATFORM_TYPE_WARP_EXIT:
                         gPlayer->HandleEvent(0, EVENT_WARP_EXIT, 0);
                         break;
-                    case 3:
+                    case PLATFORM_TYPE_WARP_BONUS:
                         if (!gLevelState->IsBonusRoundDone() && !gLevelState->timeTrial)
                             gPlayer->HandleEvent(0, EVENT_WARP_BONUS_ROUND, 0);
                         break;
-                    case 4:
+                    case PLATFORM_TYPE_WARP_GEM_PATH:
                         if (!gLevelState->IsGemPathDone() && !gLevelState->timeTrial)
                             gPlayer->HandleEvent(0, EVENT_WARP_GEM_PATH, 0);
                         break;
@@ -240,8 +241,8 @@ void Platform::ResolveCollision(void *)
         a.y -= 4;
         a.h += 4;
         switch (type) {
-        case 0:
-        case 7:
+        case PLATFORM_TYPE_STILL:
+        case PLATFORM_TYPE_ROCK:
             if (AabbOverlaps(&a, &b)) {
                 Player *q = gPlayer;
 
@@ -253,7 +254,7 @@ void Platform::ResolveCollision(void *)
                 }
             }
             break;
-        case 2:
+        case PLATFORM_TYPE_WARP_EXIT:
             if (AabbOverlaps(&a, &b)) {
                 s32 d = Q8_TO_INT(x) - Q8_TO_INT(gPlayer->x);
                 s32 sign;
@@ -263,7 +264,7 @@ void Platform::ResolveCollision(void *)
                     gPlayer->HandleEvent(0, EVENT_WARP_EXIT, 0);
             }
             break;
-        case 3:
+        case PLATFORM_TYPE_WARP_BONUS:
             if (!gLevelState->IsBonusRoundDone() && !gLevelState->timeTrial &&
                 AabbOverlaps(&a, &b)) {
                 s32 d = Q8_TO_INT(x) - Q8_TO_INT(gPlayer->x);
@@ -274,7 +275,7 @@ void Platform::ResolveCollision(void *)
                     gPlayer->HandleEvent(0, EVENT_WARP_BONUS_ROUND, 0);
             }
             break;
-        case 4:
+        case PLATFORM_TYPE_WARP_GEM_PATH:
             if (!gLevelState->IsGemPathDone() && !gLevelState->timeTrial && AabbOverlaps(&a, &b)) {
                 s32 d = Q8_TO_INT(x) - Q8_TO_INT(gPlayer->x);
                 s32 sign;
@@ -284,9 +285,9 @@ void Platform::ResolveCollision(void *)
                     gPlayer->HandleEvent(0, EVENT_WARP_GEM_PATH, 0);
             }
             break;
-        case 1:
-        case 5:
-        case 6:
+        case PLATFORM_TYPE_MOVING:
+        case PLATFORM_TYPE_FALLING:
+        case PLATFORM_TYPE_FLIP:
             if (!AabbOverlaps(&a, &b))
                 Mover()->active = 0;
             break;

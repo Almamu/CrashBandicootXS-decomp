@@ -8,14 +8,14 @@
  * InitPlatform (CreatePlatform inlines it). */
 
 /* While near the camera, steps the animation; then the velocity, and the
- * mover. A Neo Cortex platform that has crumbled (type 6 past frame 0x12)
- * drops the player. */
+ * mover. A flip platform that has tipped over (PLATFORM_TYPE_FLIP past
+ * frame 0x12) drops the player. */
 void Platform::Update()
 {
     if (IsNearCamera()) {
         AdvanceAnim();
         ApplyVelocity();
-        if (type == 6 && frame > 0x12) {
+        if (type == PLATFORM_TYPE_FLIP && frame > 0x12) {
             Sprite **c = &gPlayer->carried;
 
             if (*c == this)

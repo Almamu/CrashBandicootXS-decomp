@@ -42,65 +42,66 @@ Platform *Platform::Create(u16 id, u16 x, u16 y, u16 index, s32 kind)
     }
     switch (kind) {
     case 4:
-        type = 2;
+        type = PLATFORM_TYPE_WARP_EXIT;
         break;
     case 5:
-        type = 3;
+        type = PLATFORM_TYPE_WARP_BONUS;
         break;
     case 8:
-        type = 7;
+        type = PLATFORM_TYPE_ROCK;
         break;
     case 3:
     case 9:
     case 10:
     case 11:
     case 12:
-        type = 4;
+        type = PLATFORM_TYPE_WARP_GEM_PATH;
         break;
     case 6:
-        type = 6;
+        type = PLATFORM_TYPE_FLIP;
         break;
     }
     switch (type) {
-    case 0:
-        obj->type = 0;
+    case PLATFORM_TYPE_STILL:
+        obj->type = PLATFORM_TYPE_STILL;
         break;
-    case 1:
-        obj->type = 1;
-        m = new PlatformMover(rec->distX, rec->distY, rec->dirX != 0, rec->dirY != 0, 1);
+    case PLATFORM_TYPE_MOVING:
+        obj->type = PLATFORM_TYPE_MOVING;
+        m = new PlatformMover(rec->distX, rec->distY, rec->dirX != 0, rec->dirY != 0,
+                              PLATFORM_TYPE_MOVING);
         obj->mover = m;
         m->Attach(obj);
         if (rec->flag)
             obj->SetAlwaysActive();
         break;
-    case 2:
-        obj->type = 2;
+    case PLATFORM_TYPE_WARP_EXIT:
+        obj->type = PLATFORM_TYPE_WARP_EXIT;
         break;
-    case 3:
-        obj->type = 3;
+    case PLATFORM_TYPE_WARP_BONUS:
+        obj->type = PLATFORM_TYPE_WARP_BONUS;
         obj->SetExitMirror(rec->flags & 1);
         break;
-    case 4:
-        obj->type = 4;
+    case PLATFORM_TYPE_WARP_GEM_PATH:
+        obj->type = PLATFORM_TYPE_WARP_GEM_PATH;
         break;
-    case 5:
-        obj->type = 5;
-        m = new PlatformMover(0, 0, false, false, 5);
+    case PLATFORM_TYPE_FALLING:
+        obj->type = PLATFORM_TYPE_FALLING;
+        m = new PlatformMover(0, 0, false, false, PLATFORM_TYPE_FALLING);
         obj->mover = m;
         m->Attach(obj);
         break;
-    case 6:
-        obj->type = 6;
+    case PLATFORM_TYPE_FLIP:
+        obj->type = PLATFORM_TYPE_FLIP;
         if (gLevelState->GetBossIndex() != BOSS_NEO_CORTEX)
-            m = new PlatformMover(0, 0, false, false, 6);
+            m = new PlatformMover(0, 0, false, false, PLATFORM_TYPE_FLIP);
         else
             m = new CortexBossPlatformMover;
         obj->mover = m;
         m->Attach(obj);
         break;
-    case 7:
-        obj->type = 7;
-        m = new PlatformMover(0, 0, false, false, 7);
+    case PLATFORM_TYPE_ROCK:
+        obj->type = PLATFORM_TYPE_ROCK;
+        m = new PlatformMover(0, 0, false, false, PLATFORM_TYPE_ROCK);
         obj->mover = m;
         m->Attach(obj);
         break;
