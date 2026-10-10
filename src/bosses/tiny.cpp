@@ -94,7 +94,7 @@ void TinyCtrl::Update(MovingSprite *part)
     state = this->state;
     switch (state) {
     case 0:
-        ClearFlags(&part->f.flags, ~4);
+        ClearFlags(&part->f.flags, ~ENTITY_FLAG_CONTACT);
         {
             /* a named `one`: written as three plain `= 1`/`= 0` stores, the
              * 0 is materialized first (it is CSE'd from the dead `& 0` of
@@ -373,7 +373,7 @@ void TinyCtrl::SpawnFallingLeaves(MovingSprite *part, s32 n)
     p->palette = p->GetAnimPaletteSlot();
     p->mover = ctrl;
     ctrl->Attach(p);
-    p->f.flags |= 0x10;
+    p->f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
     CollidableList()->Add(p);
     {
         /* the ROM materializes 0x80 before storing the 0s */
@@ -395,11 +395,11 @@ void TinyCtrl::SpawnFallingLeaves(MovingSprite *part, s32 n)
     }
     p->kind = EVENT_HIT;
     {
-        /* two masks, not folded to -0x45; the -5 is derived from the 1 */
-        s32 m = -5;
+        /* two masks, not folded to ~0x44; the -5 is derived from the 1 */
+        s32 m = ~ENTITY_FLAG_CONTACT;
 
         m &= p->f.flags;
-        m &= -0x41;
+        m &= ~ENTITY_FLAG_VULNERABLE;
         p->f.flags = m;
     }
     gAudioContext->PlaySfx(SFX_UNKNOWN_13, 0x100);

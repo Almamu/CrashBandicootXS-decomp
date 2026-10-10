@@ -10,10 +10,9 @@
  * MovingSprite, include/sprite_obj.hpp), its `struct keyframe` records
  * and `struct part_list` (PartList) went with their last users (#656). */
 
-/* The entity flags byte at 0x0C (Entity's `f.flags`; `union EntityFlags`
- * is the bitfield view of the same byte). */
-#define PART_FLAG_GONE    1 // removed (MarkEntityGone); the part and crate lists drop it
-#define PART_FLAG_TOUCHED 8 // hit by another object (CollidePartWithObject); IsEntityTouched
+/* The entity flags bytes at 0x0C/0x0D: actor.h's ENTITY_FLAG_* and
+ * ENTITY_FLAG2_* (#843; PART_FLAG_GONE/PART_FLAG_TOUCHED were two of
+ * them). */
 
 /* Sprite's `dir` (the player's PLAYER_DIR_*, player.hpp, are the same
  * byte's): the direction

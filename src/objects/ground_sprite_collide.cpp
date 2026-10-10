@@ -21,7 +21,7 @@ s32 GroundSprite::CheckPlayerContact()
     u8 *p = &hitAxes;
     u8 val = *p;
 
-    if (f.flags >> 7) {
+    if (f.flags >> ENTITY_BIT_COLLIDES) {
         val |= ProbeTerrainAxes();
         *p = val;
         MovingSprite::CheckPlayerContact();
@@ -29,7 +29,7 @@ s32 GroundSprite::CheckPlayerContact()
             s32 grounded;
 
             f.b.unk_5 = 0;
-            grounded = (f.bytes.flags2 >> 1) & 1;
+            grounded = (f.bytes.flags2 >> ENTITY_BIT2_GROUNDED) & 1;
             if (!grounded) {
                 if (!(u8)ProbeEdgeTerrain(8, GetBounds())) {
                     f.b.unk_5 = 1;
@@ -67,13 +67,13 @@ s32 GroundSprite::ProbeTerrainAxes()
     result = 0;
     floorMiss = 0;
     hit = 0;
-    if (!(u8)IsNearCamera() || !(f.flags >> 7))
+    if (!(u8)IsNearCamera() || !(f.flags >> ENTITY_BIT_COLLIDES))
         goto done;
-    if (!(dir & PART_DIR_Y_MASK) && (f.bytes.flags2 & 1))
+    if (!(dir & PART_DIR_Y_MASK) && (f.bytes.flags2 & ENTITY_FLAG2_FLOOR_PROBE))
         result = 8;
     hitMask = 0;
     quad = GetBounds();
-    if (f.bytes.flags2 & 1)
+    if (f.bytes.flags2 & ENTITY_FLAG2_FLOOR_PROBE)
         hit = ProbeFloor(quad, &floorMiss);
     if (hit && result == 0)
         result = 8;
@@ -181,7 +181,7 @@ u8 GroundSprite::ProbeFloor(const struct hitbox_quad *quad, u8 *outFlag)
     OffsetToHitboxEdge(&pos, 8, (void *)quad);
     pos.x = Q8_TO_INT(pos.x);
     pos.y = Q8_TO_INT(pos.y);
-    grounded = (f.bytes.flags2 >> 1) & 1;
+    grounded = (f.bytes.flags2 >> ENTITY_BIT2_GROUNDED) & 1;
     if (!grounded)
         pos.y--;
     if (mirrorBits.flipX < 0)
@@ -191,13 +191,13 @@ u8 GroundSprite::ProbeFloor(const struct hitbox_quad *quad, u8 *outFlag)
     hit = gLevelLayers->ProbeFloor(&pos, &origY);
     if (hit) {
         y = origY & 0xFFFFFF00;
-        grounded = (f.bytes.flags2 >> 1) & 1;
+        grounded = (f.bytes.flags2 >> ENTITY_BIT2_GROUNDED) & 1;
         if (!grounded)
             y -= 0x100;
         f.b.grounded = 1;
         return hit;
     }
-    grounded = (f.bytes.flags2 >> 1) & 1;
+    grounded = (f.bytes.flags2 >> ENTITY_BIT2_GROUNDED) & 1;
     if (!grounded) {
         pos.y++;
         hit = gLevelLayers->ProbeFloor(&pos, &origY);
@@ -206,7 +206,7 @@ u8 GroundSprite::ProbeFloor(const struct hitbox_quad *quad, u8 *outFlag)
             f.b.grounded = 1;
             return hit;
         }
-        grounded = (f.bytes.flags2 >> 1) & 1;
+        grounded = (f.bytes.flags2 >> ENTITY_BIT2_GROUNDED) & 1;
     }
     if (grounded)
         *outFlag = 1;

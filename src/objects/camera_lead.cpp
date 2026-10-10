@@ -54,7 +54,7 @@ void CameraLead::SetUnk32()
  * both offsets reset. */
 void CameraLead::Reset()
 {
-    u32 v = f.bytes.flags2 >> 2;
+    u32 v = f.bytes.flags2 >> ENTITY_BIT2_HIDDEN;
     /* A u16 flag, as TryDoubleJump's `pressed`. Its AND is expanded as
      * a failed HImode AND: the 1 (r1) is an HImode pseudo the SImode
      * `and` reads through a subreg, so nothing ties the result to it and

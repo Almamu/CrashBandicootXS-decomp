@@ -26,12 +26,12 @@ static inline u8 PlayerStillInvulnerable(Player *player)
  * the body box. */
 void MovingSprite::TouchPlayer()
 {
-    s32 contact = (f.flags >> 2) & 1;
+    s32 contact = IsContactEnabled();
 
     if (!contact ||
         (PlayerStillInvulnerable(gPlayer) && gLevelState->maskLevel != MASK_LEVEL_INVINCIBLE) ||
-        ((f.bytes.flags2 >> 3) & 1)) {
-        s32 solid = (f.bytes.flags2 >> 3) & 1;
+        ((f.bytes.flags2 >> ENTITY_BIT2_SOLID) & 1)) {
+        s32 solid = (f.bytes.flags2 >> ENTITY_BIT2_SOLID) & 1;
 
         if (!solid)
             return;

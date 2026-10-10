@@ -411,9 +411,9 @@ MovingSprite *LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e, MovingS
     s32 mask;
 
     obj = gEntitySpawner->LaunchEffectPart(a, b, c, d, e, src);
-    flags = 4;
+    flags = ENTITY_FLAG_CONTACT;
     flags |= obj->f.flags;
-    mask = -0x41;
+    mask = ~ENTITY_FLAG_VULNERABLE;
     obj->f.flags = flags & mask;
     return obj;
 }

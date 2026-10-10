@@ -77,7 +77,7 @@ s32 LevelProgress::PlayRoom()
 
     gPlayer = new Player(0xffff, 0, 0, 0);
     SetEntityPos(gPlayer, checkpointX, checkpointY);
-    gPlayer->f.bytes.flags |= 0x10;
+    gPlayer->f.bytes.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
     gPlayer->mirrorFlags.mirrorX = checkpointFlags;
 
     mode = cat->kind;
@@ -388,7 +388,7 @@ s32 LevelProgress::RunRoom()
     if (cat->kind == ROOM_KIND_ON_FOOT) {
         if ((gLevelState->IsInBonusRound() && (u8)IsInBonusRoom()) ||
             (gLevelState->IsInGemPath() && (u8)IsInGemPathRoom())) {
-            gPlayer->f.bytes.flags &= 0x7F;
+            gPlayer->f.bytes.flags &= ~ENTITY_FLAG_COLLIDES;
             gPlayer->StartAnim(0x29);
             gAudioContext->PlaySfx(SFX_WARP, 0x100);
             gPlayer->mover->SetMode(ACTION_STATE_WARP_IN);
@@ -407,7 +407,7 @@ s32 LevelProgress::RunRoom()
     CommitDispcnt();
     CommitBlendRegs();
 
-    while (!IsRoomExitRequested() && (gPlayer->f.bytes.flags & 1) == 0) {
+    while (!IsRoomExitRequested() && gPlayer->IsGone() == 0) {
         ResetObjBuffers();
         UpdateRoomFrame();
         gInput->Update();

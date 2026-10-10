@@ -56,7 +56,7 @@ void ActionCtrl::Update(MovingSprite *)
         s32 y = p->y;
 
         if (y > INT_TO_Q8(gLevelLayers->layer0->heightPx) - 0x1400) {
-            p->f.flags &= 0x7F;
+            p->f.flags &= ~ENTITY_FLAG_COLLIDES;
             {
                 Player *q = part;
 
@@ -111,7 +111,7 @@ void ActionCtrl::Update(MovingSprite *)
     ApplyMotion();
     {
         Player *p = part;
-        u32 top = p->f.flags >> 7;
+        u32 top = p->f.flags >> ENTITY_BIT_COLLIDES;
 
         if (top == 0) {
             if (IsSlippery(p) == 0)
@@ -234,7 +234,7 @@ void ActionCtrl::HandleAirInput()
             if (-p->speedY > 0x1F)
                 goto done;
         hit:
-            ActOrFlags0D(p, 1);
+            ActOrFlags0D(p, ENTITY_FLAG2_FLOOR_PROBE);
             SetMode(ACTION_STATE_AIRBORNE_FALL);
         } else if (state == ACTION_STATE_AIR_SPIN) {
             if (tornadoTurn) {
@@ -243,7 +243,7 @@ void ActionCtrl::HandleAirInput()
                 p = part;
                 speed = p->speedY;
                 if (-speed <= 0x7F)
-                    ActOrFlags0D(p, 1);
+                    ActOrFlags0D(p, ENTITY_FLAG2_FLOOR_PROBE);
                 if (speed > 0)
                     StartTornadoFall();
             }
@@ -264,7 +264,7 @@ done:
             {
                 u8 *flags2 = &part->f.bytes.flags2;
 
-                *flags2 |= 1;
+                *flags2 |= ENTITY_FLAG2_FLOOR_PROBE;
             }
             prev = prevState;
             if (prev == ACTION_STATE_AIRBORNE_FLIP_JUMP ||

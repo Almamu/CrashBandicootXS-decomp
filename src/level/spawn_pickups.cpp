@@ -89,7 +89,7 @@ void SpawnStopwatch(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         part->StartAnim(0);
         part->palette = part->GetAnimPaletteSlot();
         part->kind = EVENT_STOPWATCH;
-        part->f.flags |= 0x10;
+        part->f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
         TouchableList()->Add(part);
     }
 }

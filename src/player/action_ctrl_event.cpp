@@ -265,7 +265,7 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
         {
             u8 *f = &gPlayer->f.flags;
 
-            *f &= 0x7f;
+            *f &= ~ENTITY_FLAG_COLLIDES;
         }
         SetModeAnim(ACTION_STATE_WARP_OUT, 0x24, 0x7FFFFFFF, 0x7FFFFFFF);
         gPaletteCache->LoadSlot(part->palette, part->bank->anims[part->tag].paletteId);
@@ -311,8 +311,8 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
         break;
     case EVENT_MASK_HIT:
         if ((gPlayer->hitAxes & 8) && part->HasRoomForAnim(0xb) == 1) {
-            ActAndFlags0D(part, -2);
-            ActAndFlags0D(part, -3);
+            ActAndFlags0D(part, ~ENTITY_FLAG2_FLOOR_PROBE);
+            ActAndFlags0D(part, ~ENTITY_FLAG2_GROUNDED);
             StartMaskHitJump();
         }
         break;

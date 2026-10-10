@@ -18,7 +18,7 @@ void EffectCtrl::Update(MovingSprite *part)
 {
     if (!part->IsOnScreen())
         part->MarkGone();
-    if ((part->f.flags >> 3) & 1)
+    if (part->IsTouched())
         part->MarkGone();
     if (part->animDone)
         part->MarkGone();

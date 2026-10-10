@@ -54,7 +54,7 @@ static inline void SetPos(MovingSprite *t, s32 x, s32 y)
  * ands`). */
 static inline u32 TargetHit(MovingSprite *t)
 {
-    return (t->f.flags >> 3) & 1;
+    return t->IsTouched();
 }
 
 /* An 18-state dispatcher keyed off `state` (1-18; 0 or > 18 is a no-op,

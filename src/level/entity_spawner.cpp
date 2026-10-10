@@ -23,7 +23,7 @@ ExtraLife *EntitySpawner::DropExtraLife(u32 x, u32 y, u32 p3, u32 p5, bool toHud
 
     if (state == 0) {
         part = ExtraLife::Create(0xffff, x, y, 0);
-        part->f.flags |= 0x10;
+        part->f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
         part->counter = p3;
         part->mode = p5;
         part->phase = state;

@@ -28,7 +28,7 @@ extern "C" {
  * the kinds' tails from being cross-jumped). */
 s32 Player::CheckPlayerContact()
 {
-    if (f.flags >> 7) {
+    if (f.flags >> ENTITY_BIT_COLLIDES) {
         u8 k;
         const struct sprite_point *off;
         s32 px, py;

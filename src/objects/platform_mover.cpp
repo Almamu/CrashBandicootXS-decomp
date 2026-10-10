@@ -222,7 +222,7 @@ void PlatformMover::MovePlayer(MovingSprite *part)
         Player *p = gPlayer;
         u32 f = p->f.flags;
 
-        if (f >> 7) {
+        if (f >> ENTITY_BIT_COLLIDES) {
             u8 dir;
 
             p->carried = part;

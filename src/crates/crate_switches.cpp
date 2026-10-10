@@ -48,7 +48,7 @@ void UpdateCrates(void)
             Entity *o = gCrateList->slots[i];
 
             if (o->GetClassId() == 3) {
-                if (o->f.flags & 1) {
+                if (o->IsGone()) {
                     Crates()->RemoveAt(i);
                     delete o;
                     i--;
@@ -124,7 +124,7 @@ void Crate::ActivateIronSwitch()
     if (group != 0)
         return;
 
-    f.flags |= 0x10;
+    f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
     Crates()->LinkActive(this);
     state |= CRATE_STATE_BUSY;
     SetPlayerBusy();

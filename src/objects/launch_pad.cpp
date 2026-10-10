@@ -53,7 +53,7 @@ LaunchPad *LaunchPad::Spawn(u16 id, u16 x, u16 y, u16 unused)
  * hitbox, sends the player EVENT_LAUNCH_PAD. */
 void LaunchPad::TouchPlayer()
 {
-    if (gPlayer->f.flags >> 7) {
+    if (gPlayer->f.flags >> ENTITY_BIT_COLLIDES) {
         struct aabb box = GetAnimHitbox();
 
         if (box.w != 0 && gPlayer->TouchesBox(&box))

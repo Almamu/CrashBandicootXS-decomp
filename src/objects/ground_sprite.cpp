@@ -101,7 +101,7 @@ GroundSprite::GroundSprite()
 
 u8 GroundSprite::IsGrounded()
 {
-    return (f.bytes.flags2 >> 1) & 1;
+    return (f.bytes.flags2 >> ENTITY_BIT2_GROUNDED) & 1;
 }
 
 void GroundSprite::ClearGrounded()
@@ -116,7 +116,7 @@ void GroundSprite::SetGrounded()
 
 u8 GroundSprite::IsFloorProbeEnabled()
 {
-    return f.bytes.flags2 & 1;
+    return f.bytes.flags2 & ENTITY_FLAG2_FLOOR_PROBE;
 }
 
 void GroundSprite::DisableFloorProbe()
@@ -141,7 +141,7 @@ void GroundSprite::SetFlag5()
 
 u8 GroundSprite::GetFlag5()
 {
-    return (f.flags >> 5) & 1;
+    return (f.flags >> ENTITY_BIT_UNK5) & 1;
 }
 
 Ctrl *GroundSprite::GetMover()

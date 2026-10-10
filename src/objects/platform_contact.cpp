@@ -13,7 +13,7 @@ s32 Platform::CheckPlayerContact()
     if (type != 6 || frame <= 0x12) {
         Player *p = gPlayer;
         void *arg = (void *)p->mover->state;
-        s32 collides = p->f.flags >> 7;
+        s32 collides = p->f.flags >> ENTITY_BIT_COLLIDES;
 
         if (collides) {
             s32 d = x;

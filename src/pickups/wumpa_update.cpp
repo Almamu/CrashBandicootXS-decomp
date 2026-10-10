@@ -30,9 +30,9 @@ void Wumpa::CheckPickup()
         u32 flags = f.flags << 24;
         s32 contact;
 
-        if ((flags >> 27) & 1)
+        if ((flags >> (24 + ENTITY_BIT_TOUCHED)) & 1)
             return;
-        contact = (flags >> 26) & 1;
+        contact = (flags >> (24 + ENTITY_BIT_CONTACT)) & 1;
         if (!contact)
             return;
     }
