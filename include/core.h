@@ -18,6 +18,13 @@
  * constant of type size_t. */
 #define ARRAY_COUNT(a) (sizeof(a) / sizeof((a)[0]))
 
+/* The address of a string array (`const u8 s[] = "..."`) defined earlier
+ * in the same C++ file, for another table's initialiser. Named there, the
+ * array is replaced by its initialiser: g++ 2.9 points at a new copy of
+ * the string literal, not at the array. The array's own address keeps
+ * the reference to it. */
+#define STRING_ADDR(a) ((const u8 *)&(a))
+
 #define STATIC_ASSERT(COND, MSG) typedef char static_assertion_##MSG[(!!(COND))*2-1]
 /* COMPILE_TIME_ASSERT(TAG, COND): TAG is the file's name with the dot
  * replaced (`frontend_hpp`, `actor_spawn_c`). The typedef is named after

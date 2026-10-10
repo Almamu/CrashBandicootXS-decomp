@@ -1,6 +1,8 @@
+extern "C" {
 #include "core.h"
 #include "text.h"
 #include "hud.h"
+}
 
 /*
  * ROM 0x08174BE0-0x08175558. Linked in ROM order between data/data.s
