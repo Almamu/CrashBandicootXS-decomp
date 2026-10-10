@@ -4,8 +4,9 @@
 /* The save subsystem (src/save/): the cartridge save data in EEPROM, the
  * save menu, and the save transfer over the link cable. The save data
  * and the transfer are classes SaveData and SaveTransfer
- * (save_data.hpp; save_data.h has the slot layout), the menu's class is
- * in save_menu.hpp (save_menu.h has its slot summaries).
+ * (save_data.hpp), the menu's class is in save_menu.hpp, with their
+ * types. C (src/data/menu_tables_16b138.c) needs only the tables and the
+ * C-linkage functions below.
  *
  * Declarations here are the functions' real prototypes, copied from
  * their definitions. A .c file that needs a different local declaration
@@ -13,8 +14,6 @@
  * (docs/headers_plan.md). */
 
 #include "core.h"
-#include "save_menu.h"
-#include "save_data.h"
 
 /* The save menu, between OpenSaveMenu and CloseSaveMenu. Defined in
  * src/iwram/iwram_data.cpp. The C++ files see it as its class, SaveMenu

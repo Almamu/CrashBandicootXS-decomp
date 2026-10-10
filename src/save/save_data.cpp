@@ -317,7 +317,7 @@ void SaveData::WriteSlot(s32 row, void *src)
 }
 
 /* Marks row `row` as explicitly selected/edited and refreshes the
- * checksum. See `include/save_data.h`'s `slotEmpty` field
+ * checksum. See `include/save_data.hpp`'s `slotEmpty` field
  * comment, which already anticipated this function (matched from a
  * later chunk, issue #5, before this one). */
 void SaveData::EraseSlot(s32 row)

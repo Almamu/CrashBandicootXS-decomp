@@ -109,7 +109,7 @@ void Crate::UpdateTntCountdown()
     }
 }
 
-/* The slot crate's tick (slotState: see crate.h's CRATE_SLOT_*). An idle
+/* The slot crate's tick (slotState: see crate.hpp's CRATE_SLOT_*). An idle
  * one (stage 0) starts at stage 1 when the player comes within 0x4F by
  * 0x3F pixels. Each time its timer runs out, it turns to its next face:
  * once spinning, the faces it may stop on (paramA's mask), counting down

@@ -2,7 +2,7 @@
 #define GUARD_CRATES_H
 
 /* The crates subsystem (src/crates/): the crate object (class Crate,
- * crate.hpp; crate.h has its C types), its collision and breaking, the
+ * crate.hpp, with its types), its collision and breaking, the
  * slot crate, and the crate list (the bucketed grid of crates and other
  * collidable parts).
  *

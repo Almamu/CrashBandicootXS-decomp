@@ -28,7 +28,6 @@
 
 extern "C" {
 #include "core.h"
-#include "save_data.h"
 }
 
 /* One 0x70-byte save slot, as SaveData::ReadSlot/WriteSlot copy it:

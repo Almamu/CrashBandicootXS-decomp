@@ -33,6 +33,18 @@ extern "C" {
 #include "util.h"
 }
 
+/* The session's packed bit views (src/link/*.cpp). See
+ * docs/matching/archive/issue-4-6-8-naked-retry.md. */
+struct nibble_pair {
+    u8 lo:4;
+    u8 hi:4;
+} __attribute__((packed));
+
+struct link_id_word {
+    u16 lo:4;
+    u16 hi:12;
+} __attribute__((packed));
+
 /* A 0x90-byte byte ring: the session's outgoing ring at +0x40 and each
  * player record's incoming ring at +0x38 (SaveTransfer::SendChunk and
  * ReceiveChunk, src/save/save_transfer.cpp, stream the save data through
