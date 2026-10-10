@@ -1,40 +1,41 @@
 # Data: turning ROM data into source
 
-Every compiled function in the ROM is C. The data after the code
+Every compiled function in the ROM is matched. The data after the code
 (`0x0803B8B0` to the end of the ROM) is still mostly `.incbin
 "baserom.gba", ...` in `data/data.s`. This document is the convention for
 turning it into real source, starting with pointer tables. For how data
 progress is measured, see [decomp_dev.md](./decomp_dev.md), "Data
 progress".
 
-## The convention: C `const` arrays in `src/data/`
+## The convention: `const` arrays in `src/data/`
 
-A converted table is a C `const` object in a `src/data/*.c` file, with a
-real element type (from a shared header when the consuming code has one)
-and real symbol references for every pointer. The linker script places
-the file's `.rodata` at the table's ROM address, between the raw parts of
-`data/data.s`. A library's own tables (GAX2's, AgbEeprom's, libgcc's
-`__clz_tab`) follow the same convention under `lib/<name>/data/` instead
-(see [libraries.md](./libraries.md)).
+A converted table is a `const` object in a `src/data/*.cpp` file, written
+in C++ like the rest of the game code (#844; the tables were C files until
+then), with a real element type (from a shared header when the consuming
+code has one) and real symbol references for every pointer. The linker
+script places the file's `.rodata` at the table's ROM address, between the
+raw parts of `data/data.s`. A library's own tables (GAX2's, AgbEeprom's,
+libgcc's `__clz_tab`) follow the same convention in C under
+`lib/<name>/data/` instead (see [libraries.md](./libraries.md)).
 
 - **One file per contiguous run of converted tables.** Name it
-  `<what>_<ROM offset>.c`, the offset in lowercase hex without the
+  `<what>_<ROM offset>.cpp`, the offset in lowercase hex without the
   `0x08` (`action_table_16bf20.cpp` is at `0x0816BF20`), the way
-  `src/player/swim_ctrl.c` is named. Two C files can sit next to
-  each other when their tables are unrelated (`bg_package_16c58c.c`,
-  then `image_table_16c5a0.c`).
+  `src/player/swim_ctrl.cpp` is named. Two files can sit next to
+  each other when their tables are unrelated (`bg_package_16c58c.cpp`,
+  then `image_table_16c5a0.cpp`).
 - **Symbol names don't change.** The code references
   `gStaticData_XXXXXXXX`, and so does the frozen `expected/` assembly the
   code report diffs against, so a converted table keeps its label. The
   meaning goes into the type and a comment naming the consumer. A new
   label is fine where a table had none (`gMegaMixMotionEntries`), and a
-  label nothing references can be dropped when a C table spans it (see
+  label nothing references can be dropped when a table spans it (see
   `actor_category_175558.c`).
 - **Types come from the code's headers** when there is one:
   `struct category_descriptor` /
   `struct category_vtable` (`actor_anim.h`), `struct bg_package`
   (`graphics_package.h`), and the new `struct vtable_slot` (`vtable.h`).
-  When the only view is a struct local to one `.c` file, the data file
+  When the only view is a struct local to one source file, the data file
   uses a plain type or a small local struct and says whose view it
   mirrors. Moving such structs into headers is a separate cleanup.
 
@@ -70,10 +71,10 @@ An input-section name in the linker script matches exactly, so
 `data.o(.rodata)` never pulls in `.rodata.0816C090`. The first section is
 plain `.rodata` (from `0x0803B8B0`). This scales to any number of C
 objects, generated ones included: each one is one more line pair.
-`src/data/*.c` is already covered by the Makefile's `src/*/*.c` wildcard;
-nothing else needs registering. Everything the linker script doesn't
-name is discarded (`/DISCARD/`), so a C data file's empty `.text` is
-harmless.
+`src/data/*.cpp` is already covered by the Makefile's `src/*/*.cpp`
+wildcard (built by agbcp like the other C++ objects); nothing else needs
+registering. Everything the linker script doesn't name is discarded
+(`/DISCARD/`), so a data file's empty `.text` is harmless.
 
 ### Converting a table
 
@@ -97,16 +98,16 @@ harmless.
    - Records with pointers among scalars: find the struct the consumer
      reads them through (`struct bg_package` is `{w, h, palette, tiles,
      map}`).
-2. **Write the C.** One `const` object per label, in ROM order. Declare
-   each function it references as `extern void sub_XXXX();` (unprototyped,
-   so it can't clash with the real signature) and each data label as
-   `extern const u8 gStaticData_XXXX[];`. A pointer into the middle of a
-   still-raw blob is `gStaticData_XXXX + 0x20`. Put a comment on each
-   table naming the functions that read it.
+2. **Write the table.** One `const` object per label, in ROM order. The
+   headers go inside `extern "C" { }`, as in the other C++ files. Declare
+   each function it references with its real prototype (from its header)
+   and each data label as `extern const u8 gStaticData_XXXX[];`. A
+   pointer into the middle of a still-raw blob is `gStaticData_XXXX +
+   0x20`. Put a comment on each table naming the functions that read it.
 3. **Cut it out of `data/data.s`.** Delete the labels' blocks, leave the
-   `@ first..last: src/data/file.c` comment, and start a new
+   `@ first..last: src/data/file.cpp` comment, and start a new
    `.section .rodata.<ADDR>` at the next label, `<ADDR>` being that
-   label's ROM address. (When the next thing is already another C
+   label's ROM address. (When the next thing is already another data
    object, no new section is needed.)
 4. **Add it to `ldscript.txt`:** the object's `(.rodata)` line and the new
    `data.o(.rodata.<ADDR>)` line, right after the `data.o` section the
@@ -119,19 +120,31 @@ harmless.
    doesn't add up (a table of the wrong size shifts every raw blob after
    it off its incbin offset).
 
-### What agbcc does with `const` data
+### What agbcp does with `const` data
 
-Checked by compiling test tables and by the conversions themselves:
+Checked by compiling test tables and by the conversions themselves (the
+C tables' objects were compared symbol by symbol and byte by byte when
+they became C++, #844):
 
 - A `const` object goes to `.section .rodata`, in definition order,
   each preceded by `.align` for its type (`.align 2, 0` for anything with
   a word or pointer), with zero fill. No hidden padding between objects
-  beyond that alignment.
+  beyond that alignment. The same as agbcc's C.
 - A function reference is emitted as `.word sub_XXXX`. The linker sets
   the Thumb bit itself: the R_ARM_ABS32 relocation against a Thumb
   function symbol yields the odd address, so never write `sub_XXXX + 1`.
-- Designated initializers work (`{ .fn = sub_XXXX }`), which a union
-  whose first member isn't the pointer needs.
+- A `const` object at namespace scope has internal linkage in C++. A
+  table whose label a header declares (`extern const ...`, seen before
+  the definition) keeps external linkage; any other is defined `extern
+  const ...`, or it becomes a local symbol, and one nothing in the file
+  uses is dropped.
+- No designated initializers (`{ .fn = f }`, `[IDX] = x`): g++ 2.9
+  rejects them. Write the elements in order with the designator as a
+  comment (`/* CATEGORY_SNOW_JOB */ { ... }`, `/* seq */ ...`), and zero
+  the elements a sparse one skipped. Only a union's first member can be
+  initialized.
+- A null pointer is `0`: `NULL` is C's `((void *)0)`, which C++ doesn't
+  convert to other pointer types.
 - Integer constants cast to pointers work in initializers
   (`(void (*)(void))0xffffffef` for the non-code slots of
   `struct category_vtable`).
@@ -158,7 +171,7 @@ Checked by compiling test tables and by the conversions themselves:
   so an array of small structs (say, three `u8`s) is not the ROM's
   layout. Use a plain array for such records, or check `sizeof` with
   `COMPILE_TIME_ASSERT`.
-- **Alignment.** A C table starts at its type's alignment. Only convert a
+- **Alignment.** A table starts at its type's alignment. Only convert a
   table whose ROM address already has that alignment (all pointer tables
   do); `tools/report_units.py` refuses a misaligned one rather than let
   the linker insert fill.
@@ -178,8 +191,8 @@ Checked by compiling test tables and by the conversions themselves:
 
 The other route is to write the table in assembly: `.4byte sub_XXXX` (the
 linker adds the Thumb bit here too), `.2byte`, `.byte`, in `data/data.s`
-or a `data/*.s` file linked the same way. The C route has matched
-byte-for-byte on every table so far, so this is only for a table C
+or a `data/*.s` file linked the same way. The C++ route has matched
+byte-for-byte on every table so far, so this is only for a table it
 provably can't express. Nothing uses it yet. If something does,
 `tools/report_units.py` needs to learn to size and classify directive
 blobs (today it only understands `.incbin` lines in `data/data.s`).
@@ -193,9 +206,9 @@ The first batch (all pointer tables, all byte-exact):
 | `boss_pictures_167ad4.c` | `0x08167AD4` | the two boss pictures (palette + frames, see "Boss pictures"), the d-pad direction table, the sine table |
 | `song_table_16aa20.c` | `0x0816AA20` | the 19-song table, offsets into the built GAX2 music block (`gax_songs.h`) |
 | `link_crc_16af10.c` | `0x0816AF10` | the link-cable CRC-16 table, 2 pairing names |
-| `menu_tables_16b138.c` | `0x0816B138` | menu text, palette halves, label ids, icon positions and frames |
-| `bg_package_16b284.c` | `0x0816B284` | 1 `struct bg_package` |
-| `pause_rows_16b298.c` | `0x0816B298` | the pause screen rows, a palette half |
+| `menu_tables_16b138.cpp` | `0x0816B138` | menu text, palette halves, label ids, icon positions and frames |
+| `bg_package_16b284.cpp` | `0x0816B284` | 1 `struct bg_package` |
+| `pause_rows_16b298.cpp` | `0x0816B298` | the pause screen rows, a palette half |
 | `obj_sizes_16b2e0.c` | `0x0816B2E0` | OBJ piece sizes, the empty sprite box and point |
 | `motion_records_16b304.c` | `0x0816B304` | 84 motion records, the entries of the two entry sets |
 | `entry_set_16b92c.c` | `0x0816B92C` | 2 `{entries, 0x100}` sets |
@@ -209,10 +222,10 @@ The first batch (all pointer tables, all byte-exact):
 | `entry_set_16c418.c` | `0x0816C418` | an entry table and its set |
 | `velocity_16c460.c` | `0x0816C460` | 3 velocity vectors |
 | `bg_package_16c484.c` | `0x0816C484` | 1 `struct bg_package` |
-| `map_tables_16c498.c` | `0x0816C498` | level-select positions, animation ids, a palette half |
-| `bg_package_16c58c.c` | `0x0816C58C` | 1 `struct bg_package` |
-| `image_table_16c5a0.c` | `0x0816C5A0` | 10 `{palette, tiles}` asset pairs |
-| `map_tables_16c5f0.c` | `0x0816C5F0` | level-select offsets, animation ids, OBJ sizes |
+| `map_tables_16c498.cpp` | `0x0816C498` | level-select positions, animation ids, a palette half |
+| `bg_package_16c58c.cpp` | `0x0816C58C` | 1 `struct bg_package` |
+| `image_table_16c5a0.cpp` | `0x0816C5A0` | 10 `{palette, tiles}` asset pairs |
+| `map_tables_16c5f0.cpp` | `0x0816C5F0` | level-select offsets, animation ids, OBJ sizes |
 | `dispatch_table_16c6a4.c` | `0x0816C6A4` | the unified 92-slot function-pointer dispatch array |
 | `level_table_16c814.c` | `0x0816C814` | the level table (25 `struct level_info`), the levels' room lists and 48 room records, the theme music cues, 5 colour-cycle lists (see "Level data") |
 | `cutscenes_16d1c8.c` | `0x0816D1C8` | the 11 cutscenes: slide lists, 24 slides, the text of 6 languages (see "Cutscenes") |
@@ -240,8 +253,8 @@ The first batch (all pointer tables, all byte-exact):
 | `actor_pmf_17c450.cpp` | `0x0817C450` | 1 actor PMF table, in C++ (`HovercraftFireball::stateFuncs`, docs/cplusplus.md) |
 | `singleton_kind_17c460.c` | `0x0817C460` | 2 singleton-kind records, a box, 1 keyframe |
 | `actor_state_17c4c8.cpp` | `0x0817C4C8` | 1 function table, 2 actor PMF tables, in C++ (`HovercraftCannon::stateFuncs`, `HovercraftLauncher::stateFuncs`) |
-| `hud_palettes_17c510.c` | `0x0817C510` | the ">" icon text, 4 palette halves |
-| `bg_package_17c594.c` | `0x0817C594` | 3 `struct bg_package` |
+| `hud_palettes_17c510.cpp` | `0x0817C510` | the ">" icon text, 4 palette halves |
+| `bg_package_17c594.cpp` | `0x0817C594` | 3 `struct bg_package` |
 | `credits_17c5d0.c` | `0x0817C5D0` | the credits (see "Credits") |
 | `popup_glyphs_17cf40.c` | `0x0817CF40` | 5 glyph packages, 9 slot seeds |
 | `level_gfx_17cff4.c` | `0x0817CFF4` | OAM offsets, palettes, 5 `struct bg_package`, 9 motion sequences, 1 animation record |

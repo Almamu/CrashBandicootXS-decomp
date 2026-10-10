@@ -642,24 +642,24 @@ vtable shapes).
 | `0816A820` | 0x200 | s16[256] sine/direction table (`s16` x 256). **Converted** (`src/data/boss_pictures_167ad4.c`) | `DrawPlayer`, `UpdateEnemyOscillateX`, `UpdateEnemyBob` +16 | high | done |
 | `0816AA20` | 0x4C | song table: 19 pointers into the music block, `gGaxMusicData + GAX_SONG_<NAME>` from the generated `gax_songs.h`. **Converted** (`src/data/song_table_16aa20.c`) | `StartSong` | high | done |
 | `0816AF10` | 0x228 | CRC-16/CCITT lookup table (poly 0x1021, u16[256]) + the two link-cable pairing names "crash 1 <-> crash 2"/"crash 1 <-> crash 3" (`gCrash2LinkText`/`0816B124`, which the IWRAM data `gCrash2LinkTextPtr`/`0814` points at). **Converted** (`src/data/link_crc_16af10.c`) | `MakeLinkHandshakeId`, `HandleLinkSerial` | high | done |
-| `0816B138` | 0x2 | the text ">". **Converted** (`src/data/menu_tables_16b138.c`) | `DrawYesNoPrompt` | medium | done |
-| `0816B13A` | 0x20 | table of u16; 1 word(s) look like ROM pointers (`u16` x 16). **Converted** (`src/data/menu_tables_16b138.c`) | `InitSaveMenuIcons` | high | done |
-| `0816B15A` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/menu_tables_16b138.c`) | `InitSaveMenuIcons` | high | done |
-| `0816B17A` | 0x20 | table of u16 (`u16` x 16). **Converted** (`src/data/menu_tables_16b138.c`) | `InitSaveMenuIcons` | high | done |
-| `0816B19A` | 0x22 | table of u16 (`u16` x 17). **Converted** (`src/data/menu_tables_16b138.c`) | `InitSaveMenuIcons` | high | done |
-| `0816B1BC` | 0x14 | table of s32 (`s32` x 5). **Converted** (`src/data/menu_tables_16b138.c`) | `DrawSaveMenuMain` | high | done |
-| `0816B1D0` | 0x14 | table of void* (`void*` x 5). **Converted** (`src/data/menu_tables_16b138.c`) | `DrawPauseMenuPageTitle` | high | done |
-| `0816B1E4` | 0x8 | table of struct icon_pos. **Converted** (`src/data/menu_tables_16b138.c`) | `InitPauseCrystalsPage`, `DrawPauseCrystalsPage` | high | done |
-| `0816B1EC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/menu_tables_16b138.c`) | `InitPausePowersPage` | high | done |
-| `0816B20C` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/menu_tables_16b138.c`) | `InitPausePowersPage` | high | done |
-| `0816B21C` | 0x28 | table of struct icon_pos. **Converted** (`src/data/menu_tables_16b138.c`) | `DrawPauseGemsPage`, `InitPauseGemsPage` | high | done |
-| `0816B244` | 0x14 | table of u32 (`u32` x 5). **Converted** (`src/data/menu_tables_16b138.c`) | `InitPauseGemsPage` | high | done |
-| `0816B258` | 0x18 | table of struct icon_pos. **Converted** (`src/data/menu_tables_16b138.c`) | `DrawPauseRelicsPage`, `InitPauseRelicsPage` | high | done |
-| `0816B270` | 0xC | table of u32 (`u32` x 3). **Converted** (`src/data/menu_tables_16b138.c`) | `InitPauseRelicsPage`, `InitPauseTimeTrialPage` | high | done |
-| `0816B27C` | 0x8 | table of struct icon_pos. **Converted** (`src/data/menu_tables_16b138.c`) | `InitPauseTimeTrialPage`, `DrawPauseTimeTrialPage` | high | done |
+| `0816B138` | 0x2 | the text ">". **Converted** (`src/data/menu_tables_16b138.cpp`) | `DrawYesNoPrompt` | medium | done |
+| `0816B13A` | 0x20 | table of u16; 1 word(s) look like ROM pointers (`u16` x 16). **Converted** (`src/data/menu_tables_16b138.cpp`) | `InitSaveMenuIcons` | high | done |
+| `0816B15A` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/menu_tables_16b138.cpp`) | `InitSaveMenuIcons` | high | done |
+| `0816B17A` | 0x20 | table of u16 (`u16` x 16). **Converted** (`src/data/menu_tables_16b138.cpp`) | `InitSaveMenuIcons` | high | done |
+| `0816B19A` | 0x22 | table of u16 (`u16` x 17). **Converted** (`src/data/menu_tables_16b138.cpp`) | `InitSaveMenuIcons` | high | done |
+| `0816B1BC` | 0x14 | table of s32 (`s32` x 5). **Converted** (`src/data/menu_tables_16b138.cpp`) | `DrawSaveMenuMain` | high | done |
+| `0816B1D0` | 0x14 | table of void* (`void*` x 5). **Converted** (`src/data/menu_tables_16b138.cpp`) | `DrawPauseMenuPageTitle` | high | done |
+| `0816B1E4` | 0x8 | table of struct icon_pos. **Converted** (`src/data/menu_tables_16b138.cpp`) | `InitPauseCrystalsPage`, `DrawPauseCrystalsPage` | high | done |
+| `0816B1EC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/menu_tables_16b138.cpp`) | `InitPausePowersPage` | high | done |
+| `0816B20C` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/menu_tables_16b138.cpp`) | `InitPausePowersPage` | high | done |
+| `0816B21C` | 0x28 | table of struct icon_pos. **Converted** (`src/data/menu_tables_16b138.cpp`) | `DrawPauseGemsPage`, `InitPauseGemsPage` | high | done |
+| `0816B244` | 0x14 | table of u32 (`u32` x 5). **Converted** (`src/data/menu_tables_16b138.cpp`) | `InitPauseGemsPage` | high | done |
+| `0816B258` | 0x18 | table of struct icon_pos. **Converted** (`src/data/menu_tables_16b138.cpp`) | `DrawPauseRelicsPage`, `InitPauseRelicsPage` | high | done |
+| `0816B270` | 0xC | table of u32 (`u32` x 3). **Converted** (`src/data/menu_tables_16b138.cpp`) | `InitPauseRelicsPage`, `InitPauseTimeTrialPage` | high | done |
+| `0816B27C` | 0x8 | table of struct icon_pos. **Converted** (`src/data/menu_tables_16b138.cpp`) | `InitPauseTimeTrialPage`, `DrawPauseTimeTrialPage` | high | done |
 | `0816B284` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `InitPauseMenu` | medium | easy |
-| `0816B298` | 0x28 | table (element layout: see consumers). **Converted** (`src/data/pause_rows_16b298.c`) | `InitPauseMenu` | medium | done |
-| `0816B2C0` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/pause_rows_16b298.c`) | `RunPauseMenu` | medium | done |
+| `0816B298` | 0x28 | table (element layout: see consumers). **Converted** (`src/data/pause_rows_16b298.cpp`) | `InitPauseMenu` | medium | done |
+| `0816B2C0` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/pause_rows_16b298.cpp`) | `RunPauseMenu` | medium | done |
 | `0816B2E0` | 0xC | table (element layout: see consumers). **Converted** (`src/data/obj_sizes_16b2e0.c`) | `DrawSpritePieces`, `DrawAffineSpritePieces` | medium | done |
 | `0816B2EC` | 0xC | table (element layout: see consumers). **Converted** (`src/data/obj_sizes_16b2e0.c`) | `DrawSpritePieces`, `DrawAffineSpritePieces` | medium | done |
 | `0816B2F8` | 0x8 | all zero (zero-initialised table). **Converted** (`src/data/obj_sizes_16b2e0.c`) | `QueueCratePlayerCollision`, `GetSpriteAttackBox`, `GetSpriteBodyBox` +3 | high | done |
@@ -720,28 +720,28 @@ vtable shapes).
 | `0816C458` | 0x8 | pointer table (1 data pointers) | `CreatePlatformMover` | high | easy |
 | `0816C460` | 0x24 | table of struct speed_ramp (was `struct vec3`). **Converted** (`src/data/velocity_16c460.c`) | `UpdatePlatformMover`, `SetPlatformMoverMotionYFromSet`, `SetPlatformMoverMotionXFromSet` +2 | high | done |
 | `0816C484` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `LoadSaveMenuBg`, `InitPowerDialog`, `InitLevelSelect` +1 | medium | easy |
-| `0816C498` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
-| `0816C4A0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
-| `0816C4A8` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
-| `0816C4B0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
-| `0816C4B8` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
-| `0816C4C0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect`, `DrawLevelSelectTime` | high | done |
-| `0816C4C8` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
-| `0816C4D0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
-| `0816C4D8` | 0x30 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `LevelSelectTurnPage`, `PlaceLevelSelectEntries` | high | done |
-| `0816C508` | 0x30 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `LevelSelectTurnPage`, `PlaceLevelSelectEntries` | high | done |
-| `0816C538` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c498.c`) | `LevelSelectTurnPage`, `SetLevelSelectEntryBoxes` | high | done |
-| `0816C548` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect`, `RefreshLevelSelectPage` | high | done |
-| `0816C558` | 0x14 | table of u32 (`u32` x 5). **Converted** (`src/data/map_tables_16c498.c`) | `LoadLevelSelectRecord` | high | done |
-| `0816C56C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/map_tables_16c498.c`) | `RunLevelSelect` | medium | done |
+| `0816C498` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.cpp`) | `InitLevelSelect` | high | done |
+| `0816C4A0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.cpp`) | `InitLevelSelect` | high | done |
+| `0816C4A8` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.cpp`) | `InitLevelSelect` | high | done |
+| `0816C4B0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.cpp`) | `InitLevelSelect` | high | done |
+| `0816C4B8` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.cpp`) | `InitLevelSelect` | high | done |
+| `0816C4C0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.cpp`) | `InitLevelSelect`, `DrawLevelSelectTime` | high | done |
+| `0816C4C8` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.cpp`) | `InitLevelSelect` | high | done |
+| `0816C4D0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.cpp`) | `InitLevelSelect` | high | done |
+| `0816C4D8` | 0x30 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.cpp`) | `LevelSelectTurnPage`, `PlaceLevelSelectEntries` | high | done |
+| `0816C508` | 0x30 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.cpp`) | `LevelSelectTurnPage`, `PlaceLevelSelectEntries` | high | done |
+| `0816C538` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c498.cpp`) | `LevelSelectTurnPage`, `SetLevelSelectEntryBoxes` | high | done |
+| `0816C548` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c498.cpp`) | `InitLevelSelect`, `RefreshLevelSelectPage` | high | done |
+| `0816C558` | 0x14 | table of u32 (`u32` x 5). **Converted** (`src/data/map_tables_16c498.cpp`) | `LoadLevelSelectRecord` | high | done |
+| `0816C56C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/map_tables_16c498.cpp`) | `RunLevelSelect` | medium | done |
 | `0816C58C` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `CreateLevelSelectPageBg` | medium | easy |
 | `0816C5A0` | 0x50 | pointer table (20 data pointers) | `UpdateZoomBg` | high | easy |
-| `0816C5F0` | 0x20 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c5f0.c`) | `InitZoomBg` | high | done |
-| `0816C610` | 0x14 | table of u32 (`u32` x 5). **Converted** (`src/data/map_tables_16c5f0.c`) | `SetLevelSelectEntryBox` | high | done |
-| `0816C624` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c5f0.c`) | `SetLevelSelectEntryLevel` | high | done |
-| `0816C634` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c5f0.c`) | `UpdateLevelSelectCursor` | high | done |
-| `0816C644` | 0x30 | table of s32 (`s32` x 12). **Converted** (`src/data/map_tables_16c5f0.c`) | `FitScaledSprite`, `DrawScaledSprite` | high | done |
-| `0816C674` | 0x30 | table of s32 (`s32` x 12). **Converted** (`src/data/map_tables_16c5f0.c`) | `FitScaledSprite`, `DrawScaledSprite` | high | done |
+| `0816C5F0` | 0x20 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c5f0.cpp`) | `InitZoomBg` | high | done |
+| `0816C610` | 0x14 | table of u32 (`u32` x 5). **Converted** (`src/data/map_tables_16c5f0.cpp`) | `SetLevelSelectEntryBox` | high | done |
+| `0816C624` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c5f0.cpp`) | `SetLevelSelectEntryLevel` | high | done |
+| `0816C634` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c5f0.cpp`) | `UpdateLevelSelectCursor` | high | done |
+| `0816C644` | 0x30 | table of s32 (`s32` x 12). **Converted** (`src/data/map_tables_16c5f0.cpp`) | `FitScaledSprite`, `DrawScaledSprite` | high | done |
+| `0816C674` | 0x30 | table of s32 (`s32` x 12). **Converted** (`src/data/map_tables_16c5f0.cpp`) | `FitScaledSprite`, `DrawScaledSprite` | high | done |
 | `0816C6A4` (`gEntitySpawnFuncs`) | 0x170 | function-pointer table: 92 Thumb function pointers (menu/trigger-effect dispatch) (`void (*)(void)` x 92) | `CreateEntitySpawner` | high | easy |
 | `0816C814` (`gThemePaletteCycle2`) | 0xA | `u16[5]` palette-entry list of a level-start colour cycle. **Converted** (`src/data/level_table_16c814.c`) | `RunRoom` | high | done |
 | `0816C81E` (`gThemePaletteCycle1A`) | 0x12 | `u16[9]` colour-cycle list. **Converted** (same) | `RunRoom` | high | done |
@@ -807,7 +807,7 @@ vtable shapes).
 | `0817C4C8` | 0x18 | function-pointer / pointer-to-member table (6 code pointers) (`void*` x 6) | `RunHovercraftState` | high | easy |
 | `0817C4E0` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `UpdateHovercraftCannon`, `RunHovercraftCannonState` | high | easy |
 | `0817C4F8` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `UpdateHovercraftLauncher`, `RunHovercraftLauncherState` | high | easy |
-| `0817C510` | 0x2 | the text ">". **Converted** (`src/data/hud_palettes_17c510.c`) | `DrawContinuePrompt` | medium | done |
+| `0817C510` | 0x2 | the text ">". **Converted** (`src/data/hud_palettes_17c510.cpp`) | `DrawContinuePrompt` | medium | done |
 | `0817C512` | 0x20 | 16 palette halfwords. **Converted** | `InitContinuePromptGraphics` | high | done |
 | `0817C532` | 0x20 | 16 palette halfwords. **Converted** | `InitContinuePromptGraphics` | high | done |
 | `0817C552` | 0x20 | 16 halfwords (mostly 0xFFFF). **Converted** | `InitContinuePromptGraphics` | high | done |

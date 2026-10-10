@@ -1,6 +1,8 @@
+extern "C" {
 #include "core.h"
 #include "menus.h"
 #include "graphics_package.h"
+}
 
 /*
  * ROM 0x0817C594-0x0817C5D0: the fade overlay's three BG packages,

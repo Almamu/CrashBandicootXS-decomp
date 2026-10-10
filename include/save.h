@@ -5,7 +5,7 @@
  * save menu, and the save transfer over the link cable. The save data
  * and the transfer are classes SaveData and SaveTransfer
  * (save_data.hpp), the menu's class is in save_menu.hpp, with their
- * types. C (src/data/menu_tables_16b138.c) needs only the tables and the
+ * types. C (src/data/menu_tables_16b138.cpp) needs only the tables and the
  * C-linkage functions below.
  *
  * Declarations here are the functions' real prototypes, copied from
@@ -32,7 +32,7 @@ extern u8 gEepromNeedsInit;
 extern const u8 *gCrash2LinkTextPtr;
 extern const u8 *gCrash3LinkTextPtr;
 
-/* The save menu's tables (src/data/menu_tables_16b138.c): the main
+/* The save menu's tables (src/data/menu_tables_16b138.cpp): the main
  * options' text ids, the cursor text and the four menu palettes. */
 extern const s32 gSaveMenuOptions[5];
 extern const u8 gMenuCursorText[];

@@ -279,7 +279,7 @@ extern void (*gUnpackRleSpriteFrameFunc)(u16 *dst, struct rle_frame *frame);
 
 /* The OBJ shape/size index as width and height in pixels: as bytes for
  * DrawSpritePieces/DrawAffineSpritePieces (src/data/obj_sizes_16b2e0.c),
- * as s32s for FitScaledSprite/DrawScaledSprite (src/data/map_tables_16c5f0.c). */
+ * as s32s for FitScaledSprite/DrawScaledSprite (src/data/map_tables_16c5f0.cpp). */
 extern const u8 gObjPieceHeights[12];
 extern const u8 gObjPieceWidths[12];
 extern const s32 gObjSizeHeights[12];
