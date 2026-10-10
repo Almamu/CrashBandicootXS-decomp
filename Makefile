@@ -202,9 +202,10 @@ tidy:
 # (possibly imperfect) C reconstruction rather than omitted or silently
 # swapped for raw asm. The data units (data/data.s) need the repo-built
 # assets it incbins, but not data.o itself (that needs baserom.gba).
+# itoa_arm's unit is an assembly object (asm/itoa_arm.s, #662).
 
 .PHONY: report
-report: $(C_OBJS) $(CXX_OBJS) $(LIB_C_OBJS) $(LIBGCC2_OBJS) $(GRAPHICS_BUILT) $(LEVELS_BUILT) $(SOUND_BUILT)
+report: $(C_OBJS) $(CXX_OBJS) $(LIB_C_OBJS) $(LIBGCC2_OBJS) $(ASM_BUILDDIR)/itoa_arm.o $(GRAPHICS_BUILT) $(LEVELS_BUILT) $(SOUND_BUILT)
 	python3 tools/report_units.py
 
 #### Recipes ####
@@ -512,13 +513,11 @@ $(NO_INTERWORK_OBJS): CC1FLAGS := $(filter-out -mthumb-interwork,$(CC1FLAGS))
 # identical to agbcc_arm's (and agbcp_arm's), so the objects' other
 # functions are unaffected (checked with and without the options). See
 # docs/matching/iwram-image.md, "Seventh pass" and "Ninth step".
-# - string_arm.o: itoa_arm pushes r4-r6 without lr (-mleaf-no-lr-save).
-#   It also needs both scheduling passes off: its loop increments,
-#   terminator store and swap stay in source order in the ROM, where
-#   either pass moves them. strncpy_arm's `n == 0` test branches to the
-#   final `bx lr` where stock agbcc_arm makes a conditional `bxeq lr`
-#   for any C (-mno-cond-return). The other string functions come out
-#   the same with or without these.
+# - string_arm.o: strncpy_arm's `n == 0` test branches to the final
+#   `bx lr` where stock agbcc_arm makes a conditional `bxeq lr` for any C
+#   (-mno-cond-return). The other string functions come out the same
+#   with or without it. (itoa_arm, which needed -mleaf-no-lr-save and no
+#   scheduling, is assembly now: asm/itoa_arm.s, #662.)
 # - sprite_arm.o: LookupSpriteFrameCache's three returns pop into lr
 #   (-minterwork-return-lr). HeapSortActorsByKey keeps both of its
 #   identical second-loop tests (`cmp r7, #1; ble`), which stock jump2
@@ -530,7 +529,7 @@ ARM_OBJS := $(C_BUILDDIR)/iwram/string_arm.o \
             $(C_BUILDDIR)/iwram/sprite_arm.o
 $(ARM_OBJS): CXX1 := $(CXX1_ARM)
 $(ARM_OBJS): CC1FLAGS := -mthumb-interwork $(WARNFLAGS) -O2 -fomit-frame-pointer -fno-rtti -fno-exceptions
-$(C_BUILDDIR)/iwram/string_arm.o: CC1FLAGS += -mleaf-no-lr-save -mno-cond-return -fno-schedule-insns -fno-schedule-insns2
+$(C_BUILDDIR)/iwram/string_arm.o: CC1FLAGS += -mno-cond-return
 $(C_BUILDDIR)/iwram/sprite_arm.o: CC1FLAGS += -minterwork-return-lr -mstrict-cross-jump
 
 # Objects whose "might be used uninitialized" warning is expected and left
@@ -544,11 +543,8 @@ $(C_BUILDDIR)/iwram/sprite_arm.o: CC1FLAGS += -minterwork-return-lr -mstrict-cro
 #   voice (the ROM returns whatever its register held).
 # - eeprom_verify.o: EEPROMWrite1_check's `result` - a false positive, the
 #   loop always runs; `= 0` adds a store to the SDK code (#577).
-# - string_arm.o: itoa_arm's `neg` - a false positive, the two ifs on the
-#   sign always set it (round 8, #829).
 UNINIT_WARNING_OBJS := $(LIB_BUILDDIR)/gax/src/gax_voice_steal.o \
-                       $(LIB_BUILDDIR)/agb_eeprom/src/eeprom_verify.o \
-                       $(C_BUILDDIR)/iwram/string_arm.o
+                       $(LIB_BUILDDIR)/agb_eeprom/src/eeprom_verify.o
 $(UNINIT_WARNING_OBJS): CC1FLAGS += -Wno-error
 
 # Appended to every compiled .s before it is assembled (#663). agbcc

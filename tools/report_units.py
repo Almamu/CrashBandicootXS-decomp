@@ -67,8 +67,11 @@ LD = ["arm-none-eabi-ld", "-r"]
 # HANDWRITTEN as the base object marks a range of confirmed hand-written
 # assembly (libgcc's lib1funcs.asm routines, lib/libgcc/lib1funcs.s; the
 # BIOS SWI wrappers, lib/libagbsyscall/libagbsyscall.s; GAX2's ARM DSP
-# routines, lib/gax/asm/gax_arm_dsp.s): code
-# that was never C, so there is nothing to decompile. No unit is emitted
+# routines, lib/gax/asm/gax_arm_dsp.s; IntrMain in the IWRAM image,
+# asm/intr_main.s): code that was never C, so there is nothing to
+# decompile. (itoa_arm, asm/itoa_arm.s, is assembly too, but it was
+# compiled code - most likely armcc's - so it keeps its own unit and
+# counts as a function; see IWRAM_UNITS.) No unit is emitted
 # for it, which leaves it out of decomp.dev's progress totals entirely.
 # It counts neither as matched nor as unmatched. crt0.s (0x08000000 up to
 # the first entry below) is excluded the same way, by never having a unit.
@@ -650,7 +653,8 @@ UNITS = [
 IWRAM_CODE = ROOT / "expected" / "iwram.s"
 IWRAM_UNITS = [
     (0x03000000, HANDWRITTEN, None),  # IntrMain (asm/intr_main.s), the interrupt dispatcher - hand-written ARM, excluded from progress
-    (0x030000D4, "src/iwram/string_arm.o", "util"),  # strlen_arm/strcpy_arm/strncpy_arm/strcat_arm/itoa_arm (C++, ARM, agbcp_arm_patched -mleaf-no-lr-save, no scheduling) - docs/matching/iwram-image.md
+    (0x030000D4, "src/iwram/string_arm.o", "util"),  # strlen_arm/strcpy_arm/strncpy_arm/strcat_arm (C++, ARM, agbcp_arm_patched -mno-cond-return) - docs/matching/iwram-image.md
+    (0x03000198, "asm/itoa_arm.o", "util"),  # itoa_arm (asm/itoa_arm.s) - assembly by owner decision (#662): its ROM code isn't gcc output (most likely armcc); still counted as a function, unlike HANDWRITTEN - docs/matching/iwram-image.md, "itoa_arm: assembly"
     (0x0300024C, "src/iwram/sprite_arm.o", "graphics"),  # UnpackNibbleTiles/DrawMirroredTilemap/HeapSortActorsByKey/UnpackRleSpriteFrame/LookupSpriteFrameCache (C++, ARM, agbcp_arm_patched -minterwork-return-lr) - docs/matching/iwram-image.md
     (0x030007CC, None, None),  # sentinel: the image's initialised data starts here
 ]

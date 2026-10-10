@@ -221,6 +221,15 @@ counted as matched code. The disassembly has no function label there,
 only the local `_0803A628:`, so `tools/slice_expected.py` also accepts a
 local label named after the address as a range boundary.
 
+`itoa_arm` (`asm/itoa_arm.s`, IWRAM 0x03000198) is assembly too, but
+not `HANDWRITTEN`: it is another compiler's output (most likely armcc),
+which no gcc reproduces, so the owner chose to keep it as assembly rather
+than as C++ held together by pins and patched-compiler options, and to
+keep counting it as a function (#662; iwram-image.md, "itoa_arm:
+assembly"). Its unit's base object is the assembled `asm/itoa_arm.o`
+(the `report` target builds it), so it reports as a matched function and
+the total stays 2059.
+
 ## The IWRAM image
 
 crt0 copies `0x9E8` bytes from ROM `0x087E55E4` to IWRAM `0x03000000` at
@@ -237,8 +246,9 @@ still starts at `0x03000000` and overlaps `iwram`; ld allows that for a
 NOLOAD section). The image holds, in order:
 
 - `asm/intr_main.s`: `IntrMain`, hand-written ARM - `HANDWRITTEN`.
-- `src/iwram/string_arm.cpp` and `src/iwram/sprite_arm.cpp`: compiled ARM
-  C++, built with `tools/agbcc/bin/agbcp_arm_patched` (the `ARM_OBJS` in
+- `src/iwram/string_arm.cpp`, `asm/itoa_arm.s` and
+  `src/iwram/sprite_arm.cpp`: compiled ARM C++, except `itoa_arm`, which
+  is assembly (not gcc's code, see above; its own report unit). The C++ is built with `tools/agbcc/bin/agbcp_arm_patched` (the `ARM_OBJS` in
   the Makefile: `-O2 -fomit-frame-pointer -mthumb-interwork` plus the
   patch's options each object needs; agbcp_arm_patched is notyourav/agbcc's ARM C++ compiler
   with `tools/agbcc_patches/agbcc_arm_prologue_return.patch`, built by
@@ -311,9 +321,9 @@ where each is handled:
 
 After these fixes, every function in a matched unit scores 100%, and
 code progress is 100%: every compiled function in the ROM is matched.
-The last two, ARM functions in the IWRAM image (`itoa_arm`,
-`LookupSpriteFrameCache`), match with a locally patched ARM compiler
-(docs/matching/iwram-image.md, seventh pass). Any function below 100%
+`LookupSpriteFrameCache`, an ARM function in the IWRAM image, matches
+with a locally patched ARM compiler (docs/matching/iwram-image.md,
+seventh pass); `itoa_arm`, which also did, is assembly since #662. Any function below 100%
 in a future report is either a regression or a new case of one of the
 causes above.
 

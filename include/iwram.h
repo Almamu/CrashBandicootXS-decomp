@@ -24,6 +24,8 @@ extern s32 strlen_arm(u8 *s);
 extern void strcpy_arm(u8 *dst, u8 *src);
 extern void strncpy_arm(u8 *dst, u8 *src, s32 n);
 extern void strcat_arm(u8 *dst, u8 *src);
+
+/* asm/itoa_arm.s (UNUSED, see string_arm.cpp's file comment) */
 extern s32 itoa_arm(s32 value, u8 *buf, s32 base);
 
 /* src/iwram/sprite_arm.cpp */

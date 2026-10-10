@@ -20,9 +20,11 @@ category page - see [game_loop.md](./game_loop.md).
   (Sept 2026, `code_3.s` lineage; split from `irq.cpp`, #767)
 - The IWRAM image (`0x03000000`, stored at ROM `0x087E55E4`):
   `asm/intr_main.s` (`IntrMain`, hand-written), `src/iwram/string_arm.cpp`
-  and `src/iwram/sprite_arm.cpp` (ARM C, all ten matched - `strncpy_arm`
-  in the second pass, `HeapSortActorsByKey` in the fourth, `itoa_arm`
-  and `LookupSpriteFrameCache` in the seventh with agbcc_arm_patched) and `src/iwram/iwram_data.cpp` (the
+  and `src/iwram/sprite_arm.cpp` (ARM C++, all nine matched - `strncpy_arm`
+  in the second pass, `HeapSortActorsByKey` in the fourth,
+  `LookupSpriteFrameCache` in the seventh with agbcc_arm_patched),
+  `asm/itoa_arm.s` (`itoa_arm`: matched as C in the seventh pass, assembly
+  since #662 because its ROM code isn't gcc's) and `src/iwram/iwram_data.cpp` (the
   initialised IWRAM globals) - see
   [iwram-image.md](../matching/iwram-image.md).
 - `src/system/asset.cpp`: `LoadTaggedAsset`, `LoadBackgroundTileAndPalette`

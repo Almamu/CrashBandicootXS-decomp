@@ -23,7 +23,8 @@ options reproduce those four behaviours and nothing else:
                         r5, r6}; bx lr'. Stock agbcc_arm always adds lr
                         to the push (arm_expand_prologue, "If we have to
                         push any regs, then we must push lr as well") and
-                        to the restore. Used by itoa_arm.
+                        to the restore. Was used by itoa_arm,
+                        assembly since #662; unused now.
 
   -minterwork-return-lr An interworking return insn without a frame
                         pointer pops the return address into lr and
