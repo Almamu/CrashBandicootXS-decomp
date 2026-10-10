@@ -10,6 +10,10 @@
 #include "ctrl.hpp"
 #include "player.hpp"
 
+/* SetSwimCtrlState's `timer`/`timerMax` value that keeps the current
+ * one. */
+#define CTRL_KEEP 0x7FFFFFFF
+
 /* The swim controller (gSwimCtrlVtable; 0x30 bytes): the diving Crash's controller in the room-kind-1
  * (underwater) rooms, where play_room.cpp creates it (`new SwimCtrl`,
  * InitSwimCtrl(OperatorNew(0x30)) in its C). See swim_ctrl.cpp for the

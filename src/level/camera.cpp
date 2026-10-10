@@ -1,13 +1,13 @@
 #include "bg_layer.hpp"
 #include "sprite_obj.hpp"
 #include "camera.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "core.h"
 #include "math_util.h"
 #include "memory.h"
 #include "level.h"
-#include "player.h"
 #include "globals.h"
 }
 

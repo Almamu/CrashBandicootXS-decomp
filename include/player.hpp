@@ -17,6 +17,29 @@ extern "C" {
 #include "player.h"
 }
 
+/* Player::dir's bits (the motion direction, ApplyPlayerVelocity); also
+ * the camera's followed sprite's (PlayRoom points gCamera->target at
+ * gPlayer). */
+#define PLAYER_DIR_RIGHT 1
+#define PLAYER_DIR_LEFT 2
+#define PLAYER_DIR_UP 4
+#define PLAYER_DIR_DOWN 8
+#define PLAYER_DIR_X 3   // PLAYER_DIR_RIGHT | PLAYER_DIR_LEFT
+#define PLAYER_DIR_Y 0xC // PLAYER_DIR_UP | PLAYER_DIR_DOWN
+
+/* Player::hitMask's axes: the swim controller zeroes speedX on an X hit
+ * and speedY on a Y hit (SwimCtrl::Update, swim_ctrl.cpp). */
+#define PLAYER_HIT_X 3
+#define PLAYER_HIT_Y 0xC
+
+/* The controllers share a base, ctrl.hpp's class Ctrl (InitCtrl/
+ * DestroyCtrl, ctrl.cpp): +0x04 the motion entry set (SetCtrlAnimSet),
+ * +0x08 the state, +0x0C the method table. Most subclasses keep their
+ * controlled part at +0x10. They are all C++ classes with no C view: the
+ * action controller ActionCtrl (action_ctrl.hpp), the swim controller
+ * SwimCtrl (swim_ctrl.hpp), the input controller InputCtrl
+ * (input_ctrl.hpp) and the boss controllers (boss_ctrl.hpp). */
+
 class Crate;
 
 /* The player (gPlayer): a ground sprite with the player's own fields after

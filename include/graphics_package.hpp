@@ -12,6 +12,23 @@ extern "C" {
 #include "graphics_package.h"
 }
 
+/* REG_BGnCNT as bitfields. As a stack variable it is 4 bytes (agbcc pads
+ * every union to a word); level_select.hpp's `ZoomBg` holds
+ * a packed 2-byte copy. */
+union bgcnt {
+    u16 raw;
+    struct {
+        u16 priority:2;
+        u16 charBase:2;
+        u16:2; // bits 4-5, unused by the hardware
+        u16 mosaic:1;
+        u16 colorMode:1;
+        u16 screenBase:5;
+        u16 wrap:1;
+        u16 size:2;
+    } bits;
+};
+
 /* A BG's setup (0x10 bytes): the char block, screen block and palette bank
  * a graphics package is loaded into, and the BGnCNT value built from them.
  * The menus construct one (on the stack, as a member or with `new`), load

@@ -10,28 +10,14 @@
  * actor_category_hooks.cpp, actor_category_frame.cpp and
  * actor_category.cpp, the jetpack ring and
  * collected wumpa in jetpack_collected_wumpa.cpp, ...), plus their globals and data
- * tables.
- *
- * Declarations here are the functions' real prototypes, copied from
- * their definitions. A .c file that needs a different local declaration for codegen
- * keeps it as an asm-label alias with a `codegen:` comment
- * (docs/headers_plan.md). */
+ * tables. The objects are C++ classes (include/vehicle.hpp); this
+ * header keeps the C-linkage functions and data, and the tables
+ * src/data/*.c defines. */
 
 #include "core.h"
 #include "actor.h"
 
-/* The spawn argument of CreateJetpackPlane and PolarPenguin's
- * constructor (vehicle.hpp): the level spawn record CreateJetpackActor and
- * CreateActor were handed (SpawnJetpackActor, SpawnActor), and the word
- * after it, the next sub_effect_record's `link` (actor_anim.h). */
-struct spawn_arg {
-    struct actor_spawn spawn; // 0x00 (actor.h)
-    s32 target;               // 0x10 - the first hop target index (AimJetpackPlane,
-                              //        PolarPenguin::Aim)
-};
-
-/* actor_anim.h, and the file-local views of the objects (defined in the
- * .c files that use them). */
+/* actor_anim.h's records, for the prototypes below. */
 struct anim_box;
 struct anim_table_record;
 

@@ -34,6 +34,16 @@ extern "C" {
 #include "vehicle.h"
 }
 
+/* The spawn argument of CreateJetpackPlane and PolarPenguin's
+ * constructor (below): the level spawn record CreateJetpackActor and
+ * CreateActor were handed (SpawnJetpackActor, SpawnActor), and the word
+ * after it, the next sub_effect_record's `link` (actor_anim.h). */
+struct spawn_arg {
+    struct actor_spawn spawn; // 0x00 (actor.h)
+    s32 target;               // 0x10 - the first hop target index (AimJetpackPlane,
+                              //        PolarPenguin::Aim)
+};
+
 /* The polar bear levels (4 vtable slots: ActorSelf's). The
  * constructors CreateActor and the other factories in
  * src/actor/actor_factory.cpp use are inline where the ROM expands them

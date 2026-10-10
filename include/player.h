@@ -9,7 +9,8 @@
  * the boss controllers (boss_ctrl.hpp).
  *
  * All of the player's code is C++, and Player has no C view (#754). This
- * header keeps the data the C++ code and the data tables share. */
+ * header keeps what C needs: the record types and tables src/data/*.c
+ * defines, and the C-linkage data the C++ shares with them. */
 
 #include "core.h"
 #include "actor.h"
@@ -35,30 +36,6 @@ struct level_anim {
     u8 anim;
     u8 unk_1;
 };
-
-/* Player::dir's bits (the motion direction, ApplyPlayerVelocity); also
- * the camera's followed sprite's (PlayRoom points gCamera->target at
- * gPlayer). */
-#define PLAYER_DIR_RIGHT 1
-#define PLAYER_DIR_LEFT 2
-#define PLAYER_DIR_UP 4
-#define PLAYER_DIR_DOWN 8
-#define PLAYER_DIR_X 3   // PLAYER_DIR_RIGHT | PLAYER_DIR_LEFT
-#define PLAYER_DIR_Y 0xC // PLAYER_DIR_UP | PLAYER_DIR_DOWN
-
-/* Player::hitMask's axes: the swim controller zeroes speedX on an X hit
- * and speedY on a Y hit (SwimCtrl::Update, swim_ctrl.cpp). */
-#define PLAYER_HIT_X 3
-#define PLAYER_HIT_Y 0xC
-
-/* The controllers share a base, ctrl.hpp's class Ctrl (InitCtrl/
- * DestroyCtrl, ctrl.cpp): +0x04 the motion entry set (SetCtrlAnimSet),
- * +0x08 the state, +0x0C the method table. Most subclasses keep their
- * controlled part at +0x10. They are all C++ classes with no C view: the
- * action controller ActionCtrl (action_ctrl.hpp), the swim controller
- * SwimCtrl (swim_ctrl.hpp), the input controller InputCtrl
- * (input_ctrl.hpp) and the boss controllers (boss_ctrl.hpp). gSwimCtrl
- * names SwimCtrl's own tag: an incomplete struct to C, the class to C++. */
 
 /* The attack kind of each action controller state (QueueCratePlayerCollision,
  * src/data/object_tables_16bb6c.c). */
@@ -91,11 +68,8 @@ extern const struct entry_set gActionCtrlMotionSet;
 extern const struct entry_set gSwimCtrlMotionSet;
 extern const struct entry_set gInputCtrlMotionSet;
 
-/* The player's controller (sym_iwram.txt), built by PlayRoom. */
+/* The player's controller (sym_iwram.txt), built by PlayRoom. It names
+ * SwimCtrl's own tag: an incomplete struct to C, the class to C++. */
 extern struct SwimCtrl *gSwimCtrl;
-
-/* SetSwimCtrlState's `timer`/`timerMax` value that keeps the current
- * one. */
-#define CTRL_KEEP 0x7FFFFFFF
 
 #endif /* GUARD_PLAYER_H */
