@@ -1863,7 +1863,9 @@ deciding contest:
   `n`'s type and spelling: 2110 variants; `writePos + n < 0x80` in Push
   gives `n` r7 and is 10 lines off, but the ROM has the `0x80 - n`
   compare and SendChunk moves by 30; freed in round 10, see "Round 10,
-  LinkSession::HandleSerial's `n`" below), HandleSerial's `rf` (about 8000
+  LinkSession::HandleSerial's `n`" below), HandleSerial's `rf` (freed
+  in round 10, see "Round 10, LinkSession::HandleSerial's ring copy"
+  below; about 8000
   variants: the ring's member types, Pop's parameter, test and loop
   forms, count accessors, the address locals; the nearest, 26 lines, is
   the plain `n = this->ring.count; ... this->ring.Pop(&this->id[2], n)`
@@ -1987,10 +1989,42 @@ order breaks in `n`'s favour; read the other way round, `n` loses r7
 again. None of rounds 3-9's sweeps moved that address insn. When a
 pseudo loses a priority race by a hair, count the insns its live range
 spans and look for a natural statement order that starts it later or
-ends it sooner. The ring copy (`rf`) stays: its copy is only made where
-an inline's argument is the expression `&this->ring`, at the call, so
-it can't come before the count read without a helper that also does
-the clamp and the header nibble.
+ends it sooner.
+
+**Round 10, LinkSession::HandleSerial's ring copy (dump-guided).** The
+MATCH_KEEP(rf), the two-pointer LinkRingPop helper and the address
+locals are gone; the packet build is `ring = &this->ring; n =
+ring->count; LIMIT_MAX(n, 4); ...; ring->Pop(&this->id[2], n);` after the
+id copy loop. Two passes place what the KEEP used to force:
+
+- **gcse's PRE makes the copy.** `&this->ring`, `&ring.count`,
+  `&id[2]` and `&ring.readPos`, all computed after the copy loop, are
+  hoisted to the end of the block before it (in that order, their
+  expression-table order) and `ring` becomes a copy of the hoisted
+  register. The inlined Pop's fast loop works from the copy and its wrap
+  loop from the hoisted register: the ROM's `adds r4, r7, #0` before the
+  count read. Rounds 3-9 had the copy from integrate's argument copy,
+  which is emitted at the call, after the clamp.
+- **loop.c's threshold orders the copy loop's setup.** PRE puts its
+  insertions after everything already in that block, so the ROM's `d`
+  and `s` (after the addresses, before the 0xff mask) can't be source
+  statements: they are the loop's strength-reduced pointers, emitted by
+  the first loop pass, and the 0xff is moved only by the second. That
+  needs the first pass not to move the mask: `d = prevPacket` and `s =
+  this->id` declared in the loop body are invariants it moves first
+  (threshold 2 * (1 + 12 non-fixed regs) = 26, minus 3 per move = 20),
+  and `u16 v` makes the body 21 insns, so the mask (savings 1, lifetime
+  1) misses 20 >= 21 and waits for the second pass. With the pointers
+  outside the loop or a u32 `v`, the first pass moves the mask before the
+  pointers and the allocation after it is 190 lines off. A private
+  old_agbcp that defers only the 0xff in the first pass matched the copy
+  loop's region with every index form, which is what pointed at the
+  threshold.
+
+When a hoisted constant or address sits in an order the source can't
+give, check which loop pass emitted it (`-dL`: "moved to" in the first
+or the second `Loop from` report) and what the threshold and the loop's
+insn count were in that pass.
 
 **Player::HandleEvent's dead load: a dead test (owner decision, #662).**
 After the controller call of a masked hit the ROM reloads

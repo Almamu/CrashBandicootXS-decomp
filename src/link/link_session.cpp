@@ -2,7 +2,6 @@
 
 extern "C" {
 #include "core.h"
-#include "match.h"
 #include "system.h"
 #include "link.h"
 #include "math_util.h"
@@ -196,35 +195,6 @@ struct link_rx_word {
         }                                                                      \
     }
 
-/* The session ring pop. `rf` is a second copy of the ring pointer for
- * the fast loop: the ROM builds that loop's field addresses from a copy
- * made right after the id copy (`adds r4, r7, #0`), and the wrap loop's
- * from the original. The bounds test goes through `rd`, the caller's
- * `&ring.readPos`. */
-static inline void LinkRingPop(LinkRing *r, LinkRing *rf, u8 *dst, s32 n, s32 *rd)
-{
-    s32 k;
-
-    if (*rd < 0x80 - n) {
-        for (k = n - 1; k != -1; k--) {
-            *dst++ = rf->buf[rf->readPos];
-            rf->readPos++;
-            rf->count--;
-        }
-    } else {
-        for (k = n - 1; k != -1; k--) {
-            s32 old = r->readPos;
-            s32 nw = 0;
-
-            if (old != 0x7f)
-                nw = old + 1;
-            r->readPos = nw;
-            r->count--;
-            *dst++ = r->buf[old];
-        }
-    }
-}
-
 void LinkSession::HandleSerial(u16 *data)
 {
     struct link_rx_word w[4];
@@ -377,90 +347,42 @@ void LinkSession::HandleSerial(u16 *data)
         changed = 0;
         if (ackedMask == peerMask) {
             s32 n, k;
-            u8 *dst;
             u16 hash;
             u8 *id;
             LinkRing *ring;
-            s32 *cnt;
-            s32 *rd;
-            LinkRing *rf;
 
             ackedMask = 0;
             id = this->id;
-            ring = &this->ring;
-            cnt = &this->ring.count;
-            dst = &this->id[2];
-            rd = &this->ring.readPos;
-            {
+            /* prevPacket = id, one halfword at a time. The loop's `d` and
+             * `s` (#662 round 10) are loop invariants that loop.c's first
+             * pass moves out (threshold 26 -> 20), and with `v` a u16 the
+             * first pass sees 21 insns, so the 0xff mask isn't moved
+             * until the second pass: the ROM's order, `d`, `s` (the
+             * strength-reduced pointers), then 0xff, then the reversed
+             * counter. Written with the pointers outside the loop, or `v`
+             * as a u32, the mask is moved first and the allocation after
+             * it changes (190 lines). */
+            for (k = 0; k <= 3; k++) {
                 u8 *d = prevPacket;
-                u8 *s = id;
+                u8 *s = this->id;
+                u16 v = (s[k * 2 + 1] << 8) | s[k * 2];
+                u16 lo = v & 0xff;
 
-                for (k = 0; k <= 3; k++) {
-                    u32 v = (s[1] << 8) | s[0];
-                    u32 lo = v & 0xff;
-
-                    d[0] = lo;
-                    d[1] = v >> 8;
-                    d += 2;
-                    s += 2;
-                }
+                d[k * 2] = lo;
+                d[k * 2 + 1] = v >> 8;
             }
-            rf = ring;
-            /* A distinct copy of the ring pointer (no code), taken here
-             * like the ROM's `adds r4, r7, #0`. #662 round 3: a plain
-             * copy is propagated away by cse1, and the fast loop's
-             * addresses are then built from `ring` itself; the ROM's
-             * copy is a value cse did not see as equal to `ring` (its
-             * fast loop recomputes `&readPos` beside `rd`). Tried: the
-             * pop with `ring` passed twice, one-pointer inline pops
-             * (bounds via `r->readPos` or `rd`) and a LinkRing::Pop
-             * member on `ring`/`this->ring`. #662 round 4: `rf =
-             * &this->ring` here does stay a second register: gcse's
-             * PRE finds the address redundant, computes it into a
-             * reaching register at the end of an earlier block and
-             * makes `rf` a copy of that. But that register then lives
-             * across the id copy loop (r8) and the allocation after it
-             * moves. #662 round 5: an inline call whose ring argument is
-             * the expression `&this->ring` gives the ROM's copy without
-             * the escape. integrate.c copies an argument that isn't a
-             * register into a fresh pseudo; cse1 can't tell that it
-             * equals `ring` (the id copy loop ended its extended basic
-             * block), and gcse's PRE then turns it into a copy of the
-             * reaching register, so the fast loop works from the copy
-             * and the wrap loop from the PRE register, as in the ROM.
-             * But the copy is emitted at the call. `this->ring.Pop(dst,
-             * n)` (LinkRing's Pop) is 56 lines off, and this pop with one
-             * ring pointer, called with `&this->ring` and `rd`, is 52:
-             * the copy comes after the clamp and the nibble store, where
-             * the ROM has it before `n = *cnt`. Moving the count read, the
-             * clamp and the nibble store into the inline as well puts the
-             * copy in place (32 lines), but then `&this->ring` is a PRE
-             * insertion after the loop setup instead of the second of
-             * the address locals, and that helper (session id, count and
-             * destination pointers as parameters) is no natural code.
-             * #662 round 9 (the ring's member types, Pop's parameter,
-             * test and loop forms, Count()/Count(max) accessors and the
-             * address locals, about 8000 variants with save_transfer.o's
-             * chunk functions): the nearest is the plain `n =
-             * this->ring.count; ... this->ring.Pop(&this->id[2], n);`
-             * with none of the address locals, 26 lines off. Only the
-             * order of the hoisted addresses differs (the ROM has
-             * `&this->ring` first, then `&ring.count`, `&id[2]`,
-             * `&ring.readPos`) and the inline's copy of `this`, which the
-             * ROM has before the count read and the call puts after the
-             * clamp. #662 round 10: keeping the address locals and
-             * calling `this->ring.Pop(dst, n)` or
-             * `LinkRingPop(&this->ring, &this->ring, dst, n, rd)` gets
-             * the hoisted order right too, but `&this->ring` then becomes
-             * a PRE insertion after the loop setup (20-26 lines). An
-             * inline count accessor (`n = Avail(&this->ring, 4)`), a
-             * `LinkRing *` local's `ring->Pop` and a C-style helper
-             * doing the count, clamp, nibble and pop are 96-270. */
-            MATCH_KEEP(rf);
-            n = *cnt;
+            /* `ring` is set here, after the copy loop: gcse's PRE hoists
+             * `&this->ring` (and the count, payload and readPos addresses
+             * the pop uses) above the loop and turns this into a copy of
+             * that register, which the inlined Pop's fast loop works from
+             * while its wrap loop uses the hoisted one: the ROM's `adds
+             * r4, r7, #0` before the count read. Until #662 round 10 a
+             * MATCH_KEEP stood in for this copy. */
+            ring = &this->ring;
+            n = ring->count;
             LIMIT_MAX(n, 4);
             LINK_NIB(&id[1]).hi = n;
-            LinkRingPop(ring, rf, dst, n, rd);
+            ring->Pop(&this->id[2], n);
             totalSent += n;
             {
                 /* A signed QImode read-modify-write: the ROM's mask is
