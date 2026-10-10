@@ -16,14 +16,14 @@ extern "C" {
  * (OLD_AGBCC_OBJS). The wumpa's CheckPickup, which the ROM puts right
  * after it, starts wumpa_update.cpp. */
 
-/* Unless it is early in a hop (`phase` up to 0x16) while the player's
- * `ctrlMode` isn't 3, or it was already touched, or contact is off: on
- * contact with the player's hitbox, touched, and picked up to fly to the
- * HUD. */
+/* Unless it is early in a hop (`phase` up to 0x16) while the player
+ * isn't on a hover level (`ctrlMode`), or it was already touched, or
+ * contact is off: on contact with the player's hitbox, touched, and
+ * picked up to fly to the HUD. */
 void ExtraLife::CheckPickup()
 {
     if (mode != 0 && phase <= 0x16) {
-        if (gPlayer->ctrlMode != 3)
+        if (gPlayer->ctrlMode != PLAYER_CTRL_MODE_INPUT)
             return;
     }
     {

@@ -51,7 +51,7 @@ extern "C" {
  * 14 pins, a clobber and the `widget` vtable struct; agbcp orders the
  * flag byte's load before the constant). The locals are the ROM's: each
  * controller case reads `gPlayer` once into `pl` after the sprite bank,
- * and the constant stores (`tag`, `ctrlMode` 3) go through a `u8` local
+ * and the constant stores (`tag`, `ctrlMode` PLAYER_CTRL_MODE_INPUT) go through a `u8` local
  * so the constant is loaded before the field's address. */
 s32 LevelProgress::PlayRoom()
 {
@@ -134,7 +134,7 @@ s32 LevelProgress::PlayRoom()
             ctrl->SetAnimSet(&gInputCtrlMotionSet);
             {
                 Player *pl = gPlayer;
-                u8 hover = 3;
+                u8 hover = PLAYER_CTRL_MODE_INPUT;
 
                 pl->ctrlMode = hover;
             }

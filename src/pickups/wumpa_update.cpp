@@ -23,7 +23,7 @@ extern "C" {
 void Wumpa::CheckPickup()
 {
     if (mode != 0 && phase <= 0x16) {
-        if (gPlayer->ctrlMode != 3)
+        if (gPlayer->ctrlMode != PLAYER_CTRL_MODE_INPUT)
             return;
     }
     {

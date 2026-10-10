@@ -263,7 +263,7 @@ void EnemyCtrl::Update(MovingSprite *)
 }
 
 /* The enemy is hit (`event`, the EVENT_* code). If the player is in
- * ctrlMode 1, the enemy just vanishes in a puff (effect 0x28). Otherwise
+ * the swim controller (PLAYER_CTRL_MODE_SWIM), the enemy just vanishes in a puff (effect 0x28). Otherwise
  * its popup goes, and:
  * - spun or slid into (EVENT_ATTACK_SPIN/SLIDE), it is knocked away: its
  *   part gets a KnockedEnemyCtrl, flies off away from the player at a
@@ -289,7 +289,7 @@ static inline MovingSprite *SpawnAt(s32 kind, s32 x, s32 y)
 
 void EnemyCtrl::HandleEvent(MovingSprite *, s32 event, s32)
 {
-    if (gPlayer->ctrlMode == 1) {
+    if (gPlayer->ctrlMode == PLAYER_CTRL_MODE_SWIM) {
         MarkGone(target);
         SpawnAt(0x28, Q8_TO_INT(target->x), Q8_TO_INT(target->y));
         gAudioContext->PlaySfx(SFX_UNKNOWN_5A, 0x80);
