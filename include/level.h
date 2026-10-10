@@ -17,7 +17,8 @@
 
 #include "core.h"
 #include "aabb.h"
-#include "level_state.h"
+#include "constants/level_flags.h"
+#include "constants/mask_level.h"
 #include "level_data.h"
 #include "constants/bosses.h"
 #include "bg_scroll_layer.h"

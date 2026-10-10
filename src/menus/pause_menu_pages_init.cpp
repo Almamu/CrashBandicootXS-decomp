@@ -101,7 +101,7 @@ void PauseMenu::InitRelicsPage()
 }
 
 /* The time trial page (docs/rom_map.md's overlay_ui "Correction"
- * section): the level's best time (the save block's `time:13`, level_state.h)
+ * section): the level's best time (the save block's `time:13`, game_progress.hpp)
  * as text, and the medal icon, the best relic the time won against the
  * level's thresholds in gLevelTable. `trialEarned` is set for a time
  * within times[0], the sapphire. */

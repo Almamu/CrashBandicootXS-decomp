@@ -7,7 +7,7 @@
  * away (PlayerHandleEvent); the third makes the player invincible: it
  * plays SONG_DRUMS (SetMaskLevel, PlayRoomMusic) and hits do nothing.
  * Packed into two bits of the save stats (GameProgress::maskLevel,
- * level_state.h).
+ * game_progress.hpp).
  */
 
 #define MASK_LEVEL_NONE 0

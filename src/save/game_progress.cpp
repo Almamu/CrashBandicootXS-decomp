@@ -11,7 +11,6 @@ extern "C" {
 #include <libgcc.h>
 #include "menus.h"
 #include "level.h"
-#include "level_state.h"
 #include "globals.h"
 }
 

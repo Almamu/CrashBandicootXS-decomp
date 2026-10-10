@@ -33,13 +33,8 @@ extern "C" {
 #include "gfx.h"
 #include "graphics_package.h"
 #include "menus.h"
-#include "menus.h"
-#include "gfx.h"
 #include "actor_self.h"
 #include "sprite_bank.h"
-#include "level_state.h"
-#include "menus.h"
-#include "graphics_package.h"
 #include "objects.h"
 }
 
