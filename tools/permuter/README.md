@@ -2,8 +2,9 @@
 
 A reusable [decomp-permuter](https://github.com/simonlindholm/decomp-permuter)
 setup for the two `NAKED` functions in the agbcc_arm objects (#553):
-`itoa_arm` (`src/iwram/string_arm.c`) and `LookupSpriteFrameCache`
-(`src/iwram/sprite_arm.c`). The results are in
+`itoa_arm` (`src/iwram/string_arm.c` then; `asm/itoa_arm.s` now) and
+`LookupSpriteFrameCache` (`src/iwram/sprite_arm.c` then;
+`src/iwram/sprite_arm.cpp` now). The results are in
 `docs/matching/iwram-image.md` ("Sixth pass").
 
 **Both functions match now** (seventh pass, with agbcc_arm_patched), so

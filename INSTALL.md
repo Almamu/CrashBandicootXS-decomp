@@ -31,7 +31,7 @@ Once those packages are installed you'll need to provide agbcc, which is the com
 1. Clone [agbcc](https://github.com/SAT-R/agbcc) into any folder
 2. Build agbcc using the `./build.sh` script.
 3. Install the compiler under the project's directory using the install script `./install.sh path/to/decomp/project`.
-   This installs `tools/agbcc/bin/agbcc` plus the two other builds the ROM needs: `old_agbcc` and the ARM-targeting `agbcc_arm`.
+   This installs `tools/agbcc/bin/agbcc`, the C compiler of the data tables (`src/data/*.c`) and the libraries (`lib/`), with the `libgcc.a`/`libc.a` the link uses. The script also installs `old_agbcc` and the ARM-targeting `agbcc_arm`, which the build no longer uses: the game code is C++, built by the compilers of the next step.
 4. Build the C++ compilers from the `cp` branch of [notyourav/agbcc](https://github.com/notyourav/agbcc) (the g++ 2.9 front end, decomp.me's "agbccpp"). From the decomp project's directory:
    ```
    git clone -b cp https://github.com/notyourav/agbcc path/to/agbcc-cp
