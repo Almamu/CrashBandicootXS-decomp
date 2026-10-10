@@ -56,3 +56,12 @@ Each site keeps the spelling the ROM's code needs:
   ~ENTITY_FLAG_CONTACT; m &= ...`) keep their order.
 - **The pickups' `u32 flags = f.flags << 24`:** `(flags >> (24 +
   ENTITY_BIT_TOUCHED)) & 1`.
+
+## Still raw
+
+`ActAndFlags0D(part, -2)` and `ActAndFlags0D(part, -3)` stay as numbers in
+ActionCtrl::StateSlide, StateSpin, StateTornadoSpin, StateCrouchDown,
+StateCrouch, StateCrawlStart and StateCrawl (action_ctrl_states.cpp). They
+mean `~ENTITY_FLAG2_FLOOR_PROBE` and `~ENTITY_FLAG2_GROUNDED`. Each sits
+next to an input test that the KEYINPUT PR of #843 renames, so naming them
+here would make the two PRs conflict. They are left for a follow-up.
