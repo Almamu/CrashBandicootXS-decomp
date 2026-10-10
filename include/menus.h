@@ -3,19 +3,14 @@
 
 /* The menus subsystem (src/menus/): the continue prompt, the level
  * select (with its camera lead and launch pad), the pause menu and the
- * power dialog.
- *
- * Declarations here are the functions' real prototypes, copied from
- * their definitions. A .c file that needs a different local declaration
- * for codegen keeps it as an asm-label alias with a `codegen:` comment
- * (docs/headers_plan.md).
- *
- * The menus are C++ classes (#664): the level select's in
+ * power dialog. The menus are C++ classes (#664): the level select's in
  * level_select.hpp, the pause menu and the power dialog in menus.hpp, the
- * continue prompt in frontend.hpp, with no C views. The prototypes below
- * are the C names (cxx_symbols.txt) of the methods that a vtable in
- * src/data/ still uses, and the free functions. The save block is
- * game_progress.hpp's class GameProgress. */
+ * continue prompt in frontend.hpp, with no C views. This header keeps
+ * what C needs: the row and picture records and the tables src/data/*.c
+ * defines, plus the C-linkage data and entry points the C++ shares with
+ * them, and the C names (cxx_symbols.txt) of the methods the game loop
+ * calls by those names. The save block is game_progress.hpp's class
+ * GameProgress. */
 
 #include "core.h"
 #include "aabb.h"

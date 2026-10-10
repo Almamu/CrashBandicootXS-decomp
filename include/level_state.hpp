@@ -23,7 +23,6 @@
 
 extern "C" {
 #include "core.h"
-#include "level_state.h"
 }
 
 class BossCtrl;

@@ -3,19 +3,12 @@
 
 /* The front end (src/frontend/): the language select at boot, the
  * company logos, the title screen, the credits and the starfield the
- * language select and the credits draw behind their text.
- *
- * Declarations here are the functions' real prototypes, copied from
- * their definitions. A .c file that needs a different local declaration
- * for codegen keeps it as an asm-label alias with a `codegen:` comment
- * (docs/headers_plan.md).
- *
- * Not here, by ownership (docs/headers_plan.md, "Who owns a symbol"):
- * the continue prompt functions (DrawContinuePrompt..RunContinuePrompt,
- * at the start of credits.cpp until #767) are in menus.h, with the rest
- * of the continue prompt. LoadTaggedAssetBuffered
- * (company_logos_ctor.cpp, CompanyLogos::LoadAssetBuffered) is in system.h,
- * with LoadTaggedAsset. */
+ * language select and the credits draw behind their text. Its classes
+ * are C++ (include/frontend.hpp). This header keeps what C needs: the
+ * logo motion records and the tables src/data/*.c defines, plus the
+ * C-linkage data and entry points the C++ shares with them. The continue
+ * prompt's entry point is in menus.h, with the rest of the continue
+ * prompt. */
 
 #include "core.h"
 #include "actor_self.h"
@@ -114,7 +107,7 @@ extern const u8 gCreditsEmptyText[4];
 extern const struct bg_package gCreditsLogos[5];
 
 /* src/frontend/credits.cpp (C++, frontend.hpp: the C names of Credits's
- * methods, for the C callers) */
+ * methods, cxx_symbols.txt, which the game loop calls them by) */
 extern void RunCredits(void);
 
 /* src/frontend/language_select.cpp (C++, as above) */
@@ -123,20 +116,5 @@ extern s32 RunLanguageSelect(void);
 /* src/frontend/language_select_setup.cpp (C++, as above) */
 extern void CloseLanguageSelect(void);
 extern void OpenLanguageSelect(void);
-
-/* Clears one OAM entry (4 words) with a DMA3 fill from `zero`, a
- * variable the caller declares (company_logos.cpp, title_screen.cpp).
- * A macro, not a function: `zero` is stored before the DMA base is
- * loaded, as in the ROM. */
-#define CLEAR_OAM(oam)                                          \
-{                                                               \
-    struct dma_regs *dma;                                       \
-    zero = 0;                                                   \
-    dma = (struct dma_regs *)REG_ADDR_DMA3SAD;                  \
-    dma->src = (u32)&zero;                                      \
-    dma->dst = (u32)(oam);                                      \
-    dma->cnt = 0x81000004;                                      \
-    dma->cnt;                                                   \
-}
 
 #endif /* GUARD_FRONTEND_H */

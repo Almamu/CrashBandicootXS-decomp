@@ -14,7 +14,6 @@ extern "C" {
 #include "math_util.h"
 #include "gfx.h"
 #include "util.h"
-#include "level_state.h"
 #include "player.h"
 #include "level.h"
 #include "globals.h"

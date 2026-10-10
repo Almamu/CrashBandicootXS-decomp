@@ -3,7 +3,7 @@
 
 /*
  * The bits of a level's progress word, `GameProgress::levels[level]`
- * (`union level_record`, level_state.h; GetLevelFlags/GetCurrentLevelFlags
+ * (`union level_record`, game_progress.hpp; GetLevelFlags/GetCurrentLevelFlags
  * return its address in `level_state.progress`, and the menus read the
  * words of the block PackSaveData returns).
  * It is saved with the rest of the attempt block (PackSaveData).
