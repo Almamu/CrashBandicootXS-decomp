@@ -26,7 +26,7 @@ struct anim_frame_record; /* actor_self.h */
 
 /* gCategoryFamily0AnimTable (categories 0-2, 41 slots) and gCategoryFamily1AnimTable
  * (categories 3-6, 47 slots) - one record per animation clip, defined in
- * src/data/anim_family_178f80.c / anim_family_17aa6c.c. Several slots
+ * src/data/anim_family_178f80.cpp / anim_family_17aa6c.cpp. Several slots
  * share another slot's table_A/table_B arrays (see "duplicate_of_slot"
  * in entities.json), and slots 32-34 of the first table are all zero. */
 struct anim_table_record {
@@ -259,7 +259,7 @@ struct category_vtable {
 }; // 0x34
 COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct category_vtable) == 0x34);
 
-/* Both tables are defined in src/data/actor_category_175558.c (7*0x34 =
+/* Both tables are defined in src/data/actor_category_175558.cpp (7*0x34 =
  * 0x16C bytes of descriptors, then gActorCategoryVtables). The latter
  * has 3 entries, which is also all of it - there is no 4th/5th/6th/7th
  * vtable to find,
@@ -269,7 +269,7 @@ COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct category_vtable) == 0x34);
 extern const struct category_descriptor gActorCategories[CATEGORY_COUNT];
 extern const struct category_vtable gActorCategoryVtables[CATEGORY_TYPE_COUNT];
 
-/* Defined in src/data/anim_family_178f80.c and anim_family_17aa6c.c. */
+/* Defined in src/data/anim_family_178f80.cpp and anim_family_17aa6c.cpp. */
 extern const struct anim_table_record gCategoryFamily0AnimTable[41]; // 0x081796CC, categories 0-2
 extern const struct anim_table_record gCategoryFamily1AnimTable[47]; // 0x0817B2A4, categories 3-6
 

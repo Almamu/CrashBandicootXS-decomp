@@ -1,6 +1,10 @@
+#include "yeti.hpp"
+
+extern "C" {
 #include "core.h"
 #include "actor_self.h"
 #include "actor_anim.h"
+}
 
 /*
  * ROM 0x0817AA6C-0x0817C1C0: a palette and two boxes of the
@@ -71,20 +75,20 @@ extern const u32 gJetpackCheckpointTextFrames[3];
 /* Yeti::palette (include/yeti.hpp): the 16-colour gradient
  * Yeti::UpdatePalette (yeti_update.cpp) DMAs to OBJ
  * palette 15, or fades towards. */
-const u16 gYetiPalette[16] = {
+const u16 Yeti::palette[16] = {
     0x03E0, 0x3547, 0x24E5, 0x3DA9, 0x49EC, 0x1083, 0x0421, 0x522E,
     0x5A70, 0x62B2, 0x66D3, 0x6F15, 0x7757, 0x7FB9, 0x7FFC, 0x0000,
 };
 
 /* Yeti::box: Yeti::IsTouching's (yeti_graphics.cpp) hit box. */
-const struct anim_box gYetiBox = { -28, -24, -2, 56, 90, 4 };
+const struct anim_box Yeti::box = { -28, -24, -2, 56, 90, 4 };
 
 /* Yeti::catchBox: Yeti::Update's (yeti_update.cpp) hit box. */
-const struct anim_box gYetiCatchBox = { -80, -40, -14, 160, 110, 16 };
+const struct anim_box Yeti::catchBox = { -80, -40, -14, 160, 110, 16 };
 
 /* The 256-colour OBJ palette InitActorCategory loads for these
  * categories. The second 0x200 bytes are zero; nothing reads them. */
-const u16 gAirshipCategoryPalette[0x200] = {
+extern const u16 gAirshipCategoryPalette[0x200] = {
     0x03E0, 0x00BD, 0x004A, 0x035D, 0x0071, 0x069A, 0x0DBB, 0x3C43, 0x0823, 0x198E, 0x2210, 0x10E8,
     0x194A, 0x4337, 0x36B4, 0x0C64, 0x03E0, 0x1CC6, 0x107F, 0x0D04, 0x0F9F, 0x094C, 0x0864, 0x05D4,
     0x0ABE, 0x227F, 0x09BE, 0x1D5F, 0x086B, 0x14DF, 0x0C9B, 0x0873, 0x03E0, 0x737C, 0x5EDA, 0x463B,
@@ -111,7 +115,7 @@ const u16 gAirshipCategoryPalette[0x200] = {
 
 /* The 256-colour OBJ palette InitActorCategory loads for these
  * categories. The second 0x200 bytes are zero; nothing reads them. */
-const u16 gHovercraftCategoryPalette[0x200] = {
+extern const u16 gHovercraftCategoryPalette[0x200] = {
     0x03E0, 0x00BD, 0x004A, 0x035D, 0x0071, 0x069A, 0x0DBB, 0x3C43, 0x0823, 0x198E, 0x2210, 0x10E8,
     0x194A, 0x4337, 0x36B4, 0x0C64, 0x03E0, 0x1CC6, 0x107F, 0x0D04, 0x0F9F, 0x094C, 0x0864, 0x05D4,
     0x0ABE, 0x227F, 0x09BE, 0x1D5F, 0x086B, 0x14DF, 0x0C9B, 0x0873, 0x03E0, 0x737C, 0x5EDA, 0x463B,

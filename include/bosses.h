@@ -22,7 +22,7 @@
 #include "player.h"
 
 /* The airship's attack parameters, one per kind and level
- * (gAirshipAttacks, src/data/weapon_kind_17c2d0.c). SpawnAirship points
+ * (gAirshipAttacks, src/data/weapon_kind_17c2d0.cpp). SpawnAirship points
  * gAirshipAttack at one. AirshipStateFireballs fires a fireball every
  * `fireballDelay` frames, resting `fireballBurstDelay` frames after each
  * `fireballBurst`-th; AirshipStateCannon does the same with cannonballs
@@ -48,7 +48,7 @@ struct spawn_timing {
 };
 
 /* The hovercraft's attack parameters, one per kind and level
- * (Hovercraft::attacks, src/data/singleton_kind_17c460.c). SpawnHovercraft
+ * (Hovercraft::attacks, src/data/singleton_kind_17c460.cpp). SpawnHovercraft
  * points gHovercraftAttack at one, and GetHovercraftAttack returns it. */
 struct hovercraft_attack {
     s32 hp;                        // 0x00 - copied to gHovercraftHp, which nothing reads
@@ -61,35 +61,11 @@ struct hovercraft_attack {
 struct anim_box;
 struct entry_set;
 
-/* src/vehicle/jetpack/airship*.cpp: the Airship class (include/airship.hpp,
- * #772), its static members under their C names (cxx_symbols.txt). The
- * actor category table (src/data/actor_category_175558.c, C) names its
- * five boss slots' functions by those C names. */
-#ifndef __cplusplus
-extern void CreateAirship(s32 level);
-extern void UpdateAirship(void);
-extern void UpdateAirshipBg2(void);
-extern void DestroyAirship(void);
-extern void LoadAirshipGraphics(void);
-#endif
-
 /* src/bosses/tiny.cpp and cortex.cpp: methods of TinyCtrl, CortexBossCtrl,
  * CortexTargetCtrl and CortexShotCtrl (include/boss_ctrl.hpp) under their
  * C names (cxx_symbols.txt). SpawnCortexBossGem (cortex.cpp; spawn_gems.cpp
  * calls it) has C linkage. */
 extern void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind);
-
-/* src/bosses/hovercraft.cpp: the Hovercraft class (include/hovercraft.hpp,
- * #772), its static members under their C names (cxx_symbols.txt). The
- * actor category table (src/data/actor_category_175558.c, C) names its
- * five boss slots' functions by those C names. */
-#ifndef __cplusplus
-extern void CreateHovercraft(s32 level);
-extern void UpdateHovercraft(void);
-extern void UpdateHovercraftBg2(void);
-extern void LoadHovercraftGraphics(void);
-extern void DestroyHovercraft(void);
-#endif
 
 /* src/vehicle/jetpack/jetpack_spawn.cpp */
 extern void SpawnHovercraftCannonFlash(s32 a, s32 b, s32 c);
@@ -128,7 +104,7 @@ struct airship_picture;    /* 4 frames */
 struct hovercraft_picture; /* 1 frame */
 #define BOSS_PICTURE_SIZE(picture) ((const struct boss_picture_size *)&(picture))
 
-/* src/data/actor_tables_16c2d8.c */
+/* src/data/actor_tables_16c2d8.cpp */
 extern const u8 gCortexTargetBlinkStartTimes[3];
 extern const u8 gCortexTargetBlinkStopTimes[3];
 extern const u8 gCortexTargetChaseSteps[3];

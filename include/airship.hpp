@@ -18,11 +18,11 @@
  * (boss_actors.hpp).
  *
  * The ROM tables only it reads are static data members too, defined in
- * their src/data/*.c files under their C names (gAirshipAttacks, ...):
- * a C++ reference to `_7Airship.attacks` is renamed to gAirshipAttacks.
- * The actor category table (src/data/actor_category_175558.c, C) names
- * Create, Update, UpdateBg2, Destroy and LoadGraphics by their C names
- * (bosses.h). */
+ * their src/data/*.cpp files (`const struct airship_attack
+ * Airship::attacks[6] = ...`): `_7Airship.attacks` is renamed to
+ * gAirshipAttacks. The actor category table
+ * (src/data/actor_category_175558.cpp) points at Create, Update,
+ * UpdateBg2, Destroy and LoadGraphics. */
 
 #include "actor_self.hpp"
 
@@ -108,7 +108,7 @@ private:
 
     /* The ROM tables (src/data) */
     static void (*const stateFuncs[6])();          // gAirshipStateFuncs (actor_state_17c3fc.cpp)
-    static const struct airship_attack attacks[6]; // gAirshipAttacks (weapon_kind_17c2d0.c)
+    static const struct airship_attack attacks[6]; // gAirshipAttacks (weapon_kind_17c2d0.cpp)
     static const u16 hitFlashPalettes[3][16];      // gAirshipHitFlashPalettes
     static const struct anim_box box;              // gAirshipBox
     static const struct anim_frame_record keyframes[2]; // gAirshipKeyframes

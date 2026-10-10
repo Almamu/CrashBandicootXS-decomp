@@ -1,7 +1,11 @@
+#include "airship.hpp"
+
+extern "C" {
 #include "core.h"
 #include "actor_self.h"
 #include "actor_anim.h"
 #include "bosses.h"
+}
 
 /*
  * ROM 0x0817C2D0-0x0817C3FC. Linked in ROM order between data/data.s
@@ -11,7 +15,7 @@
 /* Airship::attacks (include/airship.hpp): the airship's attack
  * parameters (struct airship_attack, bosses.h).
  * SpawnAirship picks one by gAirshipLevel. */
-const struct airship_attack gAirshipAttacks[6] = {
+const struct airship_attack Airship::attacks[6] = {
     { 30, 120, 1, 120, 15, 7, 90 },
     { 45, 90, 3, 120, 15, 8, 80 },
     { 60, 60, 5, 120, 15, 9, 70 },
@@ -24,7 +28,7 @@ const struct airship_attack gAirshipAttacks[6] = {
  * SpawnAirship (airship.cpp) loads frame 0, AnimateAirshipPalette
  * (airship_graphics.cpp) ping-pongs through all three while its counter
  * runs. */
-const u16 gAirshipHitFlashPalettes[3][16] = {
+const u16 Airship::hitFlashPalettes[3][16] = {
     {
         0x03E0, 0x30E7, 0x3549, 0x41AC, 0x46C5, 0x3222, 0x1DA0, 0x033F,
         0x02BF, 0x3AB9, 0x05F7, 0x0194, 0x5B3B, 0x29B0, 0x14BF, 0x7FFF,
@@ -42,10 +46,10 @@ const u16 gAirshipHitFlashPalettes[3][16] = {
 /* Airship::box: the boss's box (struct anim_box), read by AirshipStateExplode
  * (airship_states.cpp), SteerAirship (airship.cpp) and IsTouchingAirship
  * (airship_touch.cpp). */
-const struct anim_box gAirshipBox = { -102, -12, -2, 51, 68, 4 };
+const struct anim_box Airship::box = { -102, -12, -2, 51, 68, 4 };
 
 /* Airship::keyframes: the two keyframes CreateAirship (airship.cpp) gives its tracker part. */
-const struct anim_frame_record gAirshipKeyframes[2] = {
+const struct anim_frame_record Airship::keyframes[2] = {
     { 64, 0, 4, 0, 0x0, { 0, 0 } },
     { 64, 0, 1, 0, 0x0, { 0, 0 } },
 };
