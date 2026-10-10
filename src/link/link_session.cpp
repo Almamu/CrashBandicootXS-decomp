@@ -338,6 +338,7 @@ void LinkSession::HandleSerial(u16 *data)
             } else {
                 u16 want;
                 u16 hash;
+                u8 *payload;
                 s32 n;
 
                 if (LINK_NIB(&q[1]).lo != p->rxSeq)
@@ -347,32 +348,17 @@ void LinkSession::HandleSerial(u16 *data)
                 LINK_HASH(hash, &q[1]);
                 if (want != hash)
                     continue;
+                /* The stored packet's payload goes into the ring once the
+                 * next one in sequence arrives. `payload` before `n`:
+                 * `n`'s live range then starts one insn later (10 refs
+                 * over 54 insns), tying in global-alloc priority with the
+                 * wrap loop's hoisted `&ring.buf` (5 over 18); allocno
+                 * order gives `n` r7 as in the ROM. Read first (55), `n`
+                 * shares r8 with the id byte and is copied at each use.
+                 * Until #662 round 10 a MATCH_USE(n) stood in. */
+                payload = &p->id[2];
                 n = p->id[1] >> 4;
-                /* Extra reference (no code): raises `n`'s priority so it
-                 * gets its own register (r7) instead of reusing the
-                 * id-byte one. #662 round 3: unreferenced, global-alloc
-                 * gives `n` the register of the `p->id[1]` byte it is
-                 * shifted from (r8, which dies there) and copies it to
-                 * low registers at each use. Tried: `n` as u8/u32, from
-                 * the nibble bitfield, declared first, block-local
-                 * around the push, and totalReceived before the push.
-                 * #662 round 7: no other global.c priority formula gives
-                 * it either (see LinkSession::ResetState). Round 8
-                 * (tools/natural_enum.py, 2160 variants: `n` and `want`
-                 * in all six integer types, `n` as `p->id[1] >> 4`, the
-                 * nibble bitfield or `(u8)` cast, the push, the
-                 * totalReceived, prevHash and rxSeq updates in either
-                 * order): 42 lines off; `(p->id[1] >> 4) & 0xf` gives
-                 * `n` r7 (28 off) but with an `ands` the ROM doesn't
-                 * have. Round 9 (the header's types and LinkRing::Push's
-                 * forms, 2110 variants with save_transfer.o's chunk
-                 * functions): Push's test as `writePos + n < 0x80` gives
-                 * `n` r7, but the ROM has the `0x80 - n` compare (as in
-                 * Pop) and SendChunk changes; Push's parameter and
-                 * counter types, its loop forms and the ring members'
-                 * types leave `n` in r8. */
-                MATCH_USE(n);
-                p->ring.Push(&p->id[2], n);
+                p->ring.Push(payload, n);
                 p->totalReceived += n;
                 p->prevHash = p->hash;
                 p->rxSeq = (p->rxSeq + 1) & 0xf;
@@ -462,7 +448,14 @@ void LinkSession::HandleSerial(u16 *data)
              * `&this->ring` first, then `&ring.count`, `&id[2]`,
              * `&ring.readPos`) and the inline's copy of `this`, which the
              * ROM has before the count read and the call puts after the
-             * clamp. */
+             * clamp. #662 round 10: keeping the address locals and
+             * calling `this->ring.Pop(dst, n)` or
+             * `LinkRingPop(&this->ring, &this->ring, dst, n, rd)` gets
+             * the hoisted order right too, but `&this->ring` then becomes
+             * a PRE insertion after the loop setup (20-26 lines). An
+             * inline count accessor (`n = Avail(&this->ring, 4)`), a
+             * `LinkRing *` local's `ring->Pop` and a C-style helper
+             * doing the count, clamp, nibble and pop are 96-270. */
             MATCH_KEEP(rf);
             n = *cnt;
             LIMIT_MAX(n, 4);
