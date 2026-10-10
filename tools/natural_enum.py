@@ -497,8 +497,8 @@ class EditsCtx:
                 return None, 'cc: ' + r2.stderr[-300:]
             with open(os.path.join(d, 'v.s'), 'a') as f:
                 f.write('\t.text\n\t.align\t2, 0\n')
-            r3 = subprocess.run(['arm-none-eabi-as', '-mcpu=arm7tdmi', '-mthumb-interwork', '-I',
-                                 os.path.join(ROOT, 'asminclude'), '--defsym', 'NON_MATCHING=0', '-o',
+            r3 = subprocess.run(['arm-none-eabi-as', '-mcpu=arm7tdmi', '-mthumb-interwork', '--defsym',
+                                 'NON_MATCHING=0', '-o',
                                  os.path.join(d, 'v.o'), os.path.join(d, 'v.s')], capture_output=True,
                                 text=True)
             if r3.returncode:
