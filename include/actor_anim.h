@@ -63,7 +63,7 @@ COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct anim_table_record) == 0x28);
  *     zero-run-compressed frame ({w, h, 0x30, 0} + u16 run stream,
  *     unpacked by the gUnpackRleSpriteFrameFunc IWRAM hook). Used only by record
  *     0 of both animation tables (and the CreateYeti singleton's table):
- *     the frame sets are rle_sprites_0c2758.c / rle_sprites_15a050.c,
+ *     the frame sets are rle_sprites_0c2758.cpp / rle_sprites_15a050.cpp,
  *     built from graphics/rle_sprites/ (docs/data.md, "Compressed sprite
  *     frames").
  *
@@ -265,7 +265,7 @@ COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct category_vtable) == 0x34);
  * vtable to find,
  * see the comment on category_descriptor.type above. What follows it at
  * gActorCategoryVtables+0x9C (ROM 0x08175760) is unrelated: the BG
- * palette-cycle frames of src/data/palette_cycle_175760.c. */
+ * palette-cycle frames of src/data/palette_cycle_175760.cpp. */
 extern const struct category_descriptor gActorCategories[CATEGORY_COUNT];
 extern const struct category_vtable gActorCategoryVtables[CATEGORY_TYPE_COUNT];
 

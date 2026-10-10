@@ -5,7 +5,7 @@ extern "C" {
 /*
  * ROM 0x085A9F70-0x0861BADC: the 24 cutscene pictures, each a 256-colour
  * palette directly followed by its Mode 4 bitmap (240x160 8bpp, LZ77).
- * A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette
+ * A cutscene slide (src/data/cutscenes_16d1c8.cpp) points at the palette
  * and ShowSlidePicture (slideshow.cpp) finds the bitmap at +0x200, so each
  * bitmap must stay right after its palette.
  *

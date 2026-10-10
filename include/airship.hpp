@@ -112,8 +112,8 @@ private:
     static const u16 hitFlashPalettes[3][16];      // gAirshipHitFlashPalettes
     static const struct anim_box box;              // gAirshipBox
     static const struct anim_frame_record keyframes[2]; // gAirshipKeyframes
-    static const u16 palette[256];                      // gAirshipPalette (boss_pictures_167ad4.c)
-    static const struct airship_picture picture;        // gAirshipPicture
+    static const u16 palette[256];               // gAirshipPalette (boss_pictures_167ad4.cpp)
+    static const struct airship_picture picture; // gAirshipPicture
 };
 
 #endif /* !GUARD_AIRSHIP_HPP */

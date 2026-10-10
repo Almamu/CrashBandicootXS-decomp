@@ -1,7 +1,7 @@
 #include "vehicle.hpp"
 
 /*
- * ROM 0x0817C414-0x0817C42C, split from actor_state_17c3fc.c (#664 part
+ * ROM 0x0817C414-0x0817C42C, split from actor_state_17c3fc.cpp (#664 part
  * 11f). Linked in ROM order between data/data.s sections by ldscript.txt
  * - see docs/data.md.
  */

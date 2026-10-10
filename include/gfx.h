@@ -250,14 +250,14 @@ extern u32 GetSpriteShapeSizeBits(u8 *frame);
 extern void FreeCategorySpriteSheet(void);
 extern void DecompressCategorySpriteSheet(const void *sheet);
 
-/* The menus' sky background (src/data/bg_package_16c484.c): the language
+/* The menus' sky background (src/data/bg_package_16c484.cpp): the language
  * select, level select, power dialog and save menu load it on BG0. */
 extern const struct bg_package gMenuSkyBg;
 
 /* The blend register shadow (sym_iwram.txt). */
 extern struct blend_regs gBlendRegs;
 
-/* The master sprite bank table (src/data/sprite_banks_4a5600.c,
+/* The master sprite bank table (src/data/sprite_banks_4a5600.cpp,
  * sprite_bank.h): its palettes seed the palette cache. */
 extern const struct sprite_bank_table gSpriteBankTable;
 
@@ -278,7 +278,7 @@ extern s32 (*gLookupSpriteFrameCacheFunc)(u8 *frame);
 extern void (*gUnpackRleSpriteFrameFunc)(u16 *dst, struct rle_frame *frame);
 
 /* The OBJ shape/size index as width and height in pixels: as bytes for
- * DrawSpritePieces/DrawAffineSpritePieces (src/data/obj_sizes_16b2e0.c),
+ * DrawSpritePieces/DrawAffineSpritePieces (src/data/obj_sizes_16b2e0.cpp),
  * as s32s for FitScaledSprite/DrawScaledSprite (src/data/map_tables_16c5f0.cpp). */
 extern const u8 gObjPieceHeights[12];
 extern const u8 gObjPieceWidths[12];

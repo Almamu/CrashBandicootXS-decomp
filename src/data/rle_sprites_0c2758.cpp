@@ -27,7 +27,7 @@ extern const u8 gPolarPlayerRleFrames[RLE_SPRITES_0C2758_SIZE] = {
 };
 
 /* The CreateYeti singleton's frames (table_B gYetiFrames,
- * frame_table_17a880.c): 112 frames of 10x10 tiles (80x80), the yeti.
+ * frame_table_17a880.cpp): 112 frames of 10x10 tiles (80x80), the yeti.
  * Built from graphics/rle_sprites/0da1d8_frames.png. */
 extern const u8 gYetiRleFrames[RLE_SPRITES_0DA1D8_SIZE] = {
 #include "rle_sprites/0da1d8_frames.inc"
