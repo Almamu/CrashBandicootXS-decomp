@@ -101,6 +101,9 @@ symbols left are `_call_via_rN`, whose declarations differ on purpose.
   block-scope `extern`s (there are 6). It finds definitions in C files,
   top-level `asm()` blocks, `.s` files, `ldscript.txt`/`sym_*.txt` and the
   generated level/graphics sources under `build/`, so run it after a build.
+- **`tools/apply_headers.py`** and **`tools/cast_args.py`** below were
+  removed once the pass was done and the game code had become C++
+  (#844); commit `6998747e` has their final versions.
 - **`tools/apply_headers.py HEADER [FILES...]`** applies a header. In each
   file it deletes the local declarations that match the header's (ignoring
   parameter names, `extern` and whitespace) and adds the `#include`. A file
