@@ -106,8 +106,8 @@ def build_one(d, src, obj, cpp, cc1, keep):
         with open(s_, "a") as f:
             f.write("\t.text\n\t.align\t2, 0\n")  # the Makefile's ZERO_PAD_TEXT
         o = stem + ".o"
-        subprocess.run(["arm-none-eabi-as", "-mcpu=arm7tdmi", "-mthumb-interwork", "-I",
-                        os.path.join(ROOT, "asminclude"), "--defsym", "NON_MATCHING=0", "-o", o, s_],
+        subprocess.run(["arm-none-eabi-as", "-mcpu=arm7tdmi", "-mthumb-interwork",
+                        "--defsym", "NON_MATCHING=0", "-o", o, s_],
                        check=True)
         ref = os.path.join(ROOT, "build/crashbandicootxs", obj + ".o")
         differs = _text(o) != _text(ref)

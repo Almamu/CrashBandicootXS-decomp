@@ -4,7 +4,6 @@
 
 PREFIX	 := arm-none-eabi-
 CC1      := tools/agbcc/bin/agbcc
-CC1_OLD  := tools/agbcc/bin/old_agbcc
 CPP      := $(PREFIX)cpp
 AS       := $(PREFIX)as
 LD       := $(PREFIX)ld
@@ -14,7 +13,7 @@ GFX := tools/gbagfx/gbagfx
 GRIT := tools/grit/grit
 
 # Warnings (#577). Every C and C++ object, whichever compiler builds it
-# (agbcc, old_agbcc, agbcp, old_agbcp, agbcp_arm_patched), gets this set, and -Werror makes any warning
+# (agbcc, agbcp, old_agbcp, agbcp_arm_patched), gets this set, and -Werror makes any warning
 # fail the build, locally and in CI. A fix must keep the ROM matching;
 # see "Compiler warnings" in CONTRIBUTING.md for how to handle a warning
 # byte-neutrally and the per-site escape hatches.
@@ -23,7 +22,7 @@ CC1FLAGS := -mthumb-interwork $(WARNFLAGS) -O2 -fhex-asm  -fprologue-bugfix
 # The libraries' public headers (lib/*/include) are on the -I path, so
 # game code includes them as <gax.h>, <agb_eeprom.h>, <agb_syscall.h>.
 CPPFLAGS := -I tools/agbcc/include -iquote include $(patsubst %,-I %,$(wildcard lib/*/include)) -nostdinc -undef
-ASFLAGS  := -mcpu=arm7tdmi -mthumb-interwork -I asminclude
+ASFLAGS  := -mcpu=arm7tdmi -mthumb-interwork
 # The GBA has no memory protection, so the ELF's RWX LOAD segment is
 # expected; binutils >= 2.39 warns about it unless told not to.
 LDFLAGS  := $(shell $(LD) --help 2>/dev/null | grep -q -- --no-warn-rwx-segments && echo --no-warn-rwx-segments)
@@ -191,8 +190,8 @@ tidy:
 	rm -r build/*
 
 #### decomp.dev progress report ####
-# See docs/decomp_dev.md. `report` builds one objdiff unit per matched
-# src/*.c file (rather than one merged blob) so decomp.dev can show
+# See docs/decomp_dev.md. `report` builds one objdiff unit per source
+# file (rather than one merged blob) so decomp.dev can show
 # per-category (Graphics/Util/System) progress, not just an overall
 # total - tools/report_units.py has the full explanation of why it has
 # to be this fine-grained, the per-file address table, and how it slices
@@ -216,12 +215,13 @@ $(ELF): $(OBJS) $(LDSCRIPT)
 %.gba: %.elf
 	$(OBJCOPY) -O binary $< $@
 
-# Translation units the original build compiled with the older agbcc
-# (tools/agbcc/bin/old_agbcc). Its scheduler loads a constant *before*
-# the byte it is combined with (`movs rA, #K; ldrb rB, [..]; ands rA, rB`)
-# where the current agbcc loads the byte first - see
-# docs/matching/archive/issue-24-boss-actor.md. old_agbcc has no
-# -fprologue-bugfix option.
+# Translation units the original build compiled with the older compiler
+# (old_agbcc's line). Its scheduler loads a constant *before* the byte it
+# is combined with (`movs rA, #K; ldrb rB, [..]; ands rA, rB`) where the
+# current one loads the byte first - see
+# docs/matching/archive/issue-24-boss-actor.md. All of them are C++ now,
+# built by old_agbcp (see "C++ objects" below), which, like old_agbcc,
+# has no -fprologue-bugfix option.
 OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/objects/sprite_obj.o \
                   $(C_BUILDDIR)/save/game_progress.o \
@@ -381,7 +381,6 @@ OLD_AGBCC_OBJS += $(C_BUILDDIR)/system/input.o \
                   $(C_BUILDDIR)/util/aabb.o \
                   $(C_BUILDDIR)/system/iwram_alloc.o \
                   $(C_BUILDDIR)/audio/audio.o
-$(OLD_AGBCC_OBJS): CC1 := $(CC1_OLD)
 $(OLD_AGBCC_OBJS): CC1FLAGS := $(filter-out -fprologue-bugfix,$(CC1FLAGS))
 
 # C++ objects (#664, docs/cplusplus.md). The game is g++ 2.x C++; these
