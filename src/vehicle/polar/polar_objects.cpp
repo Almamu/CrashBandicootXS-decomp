@@ -97,17 +97,17 @@ PolarObstacle::PolarObstacle(const struct anim_table_record *rec, s32 x, s32 y, 
 void PolarLauncher::Update()
 {
     switch (state) {
-    case 0:
+    case POLAR_LAUNCHER_STATE_READY:
         if ((u8)IsTouchingPlayer(this)) {
             static_cast<PolarPlayer *>(gActorList)->Launch();
             gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
-            SetState(1, 1);
+            SetState(POLAR_LAUNCHER_STATE_EXPLODE, 1);
         } else if (Yeti::IsTouching(this)) {
             gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
-            SetState(1, 1);
+            SetState(POLAR_LAUNCHER_STATE_EXPLODE, 1);
         }
         break;
-    case 1:
+    case POLAR_LAUNCHER_STATE_EXPLODE:
         if (animDone != 0) {
             delete this;
             return;
@@ -133,7 +133,7 @@ void PolarPenguin::Update()
     y += velY;
     z += velZ;
 
-    if (state == 0) {
+    if (state == POLAR_PENGUIN_STATE_FLY) {
         if (--countdown <= 0)
             Aim(nextTarget);
 
@@ -143,14 +143,14 @@ void PolarPenguin::Update()
                 velY = -(s32)(u16)RandRange(0x300);
                 velZ += 0x200;
                 gAudioContext->PlaySfx(SFX_ENEMY_KNOCKED_AWAY, 0x100);
-                SetState(1, 0);
+                SetState(POLAR_PENGUIN_STATE_KNOCKED_AWAY, 0);
             }
         } else if (Yeti::IsTouching(this)) {
             velX = x > 0 ? 0x600 : -0x600;
             velY = -(s32)(u16)RandRange(0x300);
             velZ += 0x200;
             gAudioContext->PlaySfx(SFX_ENEMY_KNOCKED_AWAY, 0x100);
-            SetState(1, 0);
+            SetState(POLAR_PENGUIN_STATE_KNOCKED_AWAY, 0);
         }
     }
 
@@ -199,10 +199,11 @@ void PolarIcicle::Update()
     if ((u8)IsTouchingPlayer(this))
         static_cast<PolarPlayer *>(gActorList)->Hurt();
 
-    if ((depth > 0x6400 && state == 2) || (depth > 0x5a00 && state == 1)) {
+    if ((depth > 0x6400 && state == POLAR_ICICLE_STATE_DROP2) ||
+        (depth > 0x5a00 && state == POLAR_ICICLE_STATE_DROP1)) {
         SwitchAnim(this, animIndex + 1);
         state = state + 1;
-    } else if (depth > 0x5000 && state == 0) {
+    } else if (depth > 0x5000 && state == POLAR_ICICLE_STATE_HANGING) {
         SwitchAnim(this, animIndex + 1);
         state = state + 1;
     }

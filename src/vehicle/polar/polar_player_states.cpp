@@ -82,7 +82,7 @@ void PolarPlayer::StateRecover()
     if (stateTime > 0x13) {
         gPolarSteerEnabled = 1;
         gPolarPlayerInactive = 0;
-        SetState(1, 0);
+        SetState(POLAR_PLAYER_STATE_RUN, 0);
         SetCellAnimSpeed(0x24);
     }
 }
@@ -157,10 +157,10 @@ void PolarPlayer::StateBoost()
 
         bit = keys &= bit;
         if ((u16)bit == 0) {
-            SetState(1, 0);
+            SetState(POLAR_PLAYER_STATE_RUN, 0);
             SetCellAnimSpeed(0x24);
         } else {
-            state = 2;
+            state = POLAR_PLAYER_STATE_DASH;
             stateTime = 0;
             SetCellAnimSpeed(0x38);
         }
@@ -182,7 +182,7 @@ void PolarPlayer::StateLaunched()
         y = 0x2800;
         gPolarSteerEnabled = 1;
         SetCellAnimSpeed(0x24);
-        SetState(1, 4);
+        SetState(POLAR_PLAYER_STATE_RUN, 4);
     }
 }
 
@@ -194,7 +194,7 @@ void PolarPlayer::StateFinish()
     if (animDone != 0) {
         gAudioContext->PlaySfx(SFX_POLAR_FINISH_LEAP, 0x100);
         gPolarPlayerVelY = 0xFFFFF980;
-        SetState(0xb, 7);
+        SetState(POLAR_PLAYER_STATE_FINISH_LEAP, 7);
         if (y > 0x2000)
             gRiderlessPolar = CreateActor(2, x, 0x2800, z, 0);
     }
@@ -206,7 +206,7 @@ void PolarPlayer::StateLand()
 {
     if (animDone != 0) {
         gPolarSteerEnabled = 1;
-        SetState(1, 0);
+        SetState(POLAR_PLAYER_STATE_RUN, 0);
         SetCellAnimSpeed(0x24);
     }
 }
@@ -237,7 +237,7 @@ void PolarPlayer::Catch()
     gPolarPlayerHalted = 1;
     gPolarAkuAku->ClearMask();
     gPolarPlayerInactive = 1;
-    SetState(7, 6);
+    SetState(POLAR_PLAYER_STATE_CAUGHT, 6);
     gAudioContext->PlaySfx(SFX_YETI_CATCH, 0x100);
 }
 
@@ -265,7 +265,8 @@ void PolarPlayer::GiveLife()
  * (0x5a from a dash, 0x55 from a run). */
 void PolarPlayer::Boost(s32 x)
 {
-    if ((u32)(state - 1) <= 2) {
+    if ((u32)(state - POLAR_PLAYER_STATE_RUN) <=
+        POLAR_PLAYER_STATE_BOOST - POLAR_PLAYER_STATE_RUN) {
         animIndex = 2;
         animTimer = anims[2].duration;
         animDone = 0;
@@ -274,12 +275,12 @@ void PolarPlayer::Boost(s32 x)
 
         this->x = x;
 
-        if (state == 2)
+        if (state == POLAR_PLAYER_STATE_DASH)
             SetCellAnimSpeed(0x5a);
-        else if (state == 1)
+        else if (state == POLAR_PLAYER_STATE_RUN)
             SetCellAnimSpeed(0x55);
 
-        state = 3;
+        state = POLAR_PLAYER_STATE_BOOST;
         stateTime = 0;
         gPolarSteerEnabled = 0;
     }
@@ -298,10 +299,11 @@ void PolarPlayer::GiveMask()
  * off. */
 void PolarPlayer::Launch()
 {
-    if ((u32)(state - 1) <= 2) {
+    if ((u32)(state - POLAR_PLAYER_STATE_RUN) <=
+        POLAR_PLAYER_STATE_BOOST - POLAR_PLAYER_STATE_RUN) {
         if (gPolarInvulnTimer == 0) {
             gPolarSteerEnabled = 0;
-            SetState(5, 3);
+            SetState(POLAR_PLAYER_STATE_LAUNCHED, 3);
             gPolarPlayerVelY = 0xFFFFF880;
             SetCellAnimSpeed(0x1c);
         }
