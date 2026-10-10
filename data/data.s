@@ -44,11 +44,11 @@ gSfxTable:
 
 @ gCrc16Table..gCrash3LinkText: src/data/link_crc_16af10.c
 
-@ gMenuCursorText..gPauseTimeTrialIconPos: src/data/menu_tables_16b138.c
+@ gMenuCursorText..gPauseTimeTrialIconPos: src/data/menu_tables_16b138.cpp
 
-@ gPauseMenuBg: src/data/bg_package_16b284.c
+@ gPauseMenuBg: src/data/bg_package_16b284.cpp
 
-@ gPauseMenuRows..gPauseMenuPalette: src/data/pause_rows_16b298.c
+@ gPauseMenuRows..gPauseMenuPalette: src/data/pause_rows_16b298.cpp
 
 @ gObjPieceWidths..gEmptySpritePoint: src/data/obj_sizes_16b2e0.c
 
@@ -76,11 +76,11 @@ gSfxTable:
 
 @ gMenuSkyBg: src/data/bg_package_16c484.c
 
-@ gLevelSelectWorldPos..gLevelSelectPalette: src/data/map_tables_16c498.c
+@ gLevelSelectWorldPos..gLevelSelectPalette: src/data/map_tables_16c498.cpp
 
-@ gLevelSelectPageBg: src/data/bg_package_16c58c.c
+@ gLevelSelectPageBg: src/data/bg_package_16c58c.cpp
 
-@ gZoomBgSlotOffsets..gObjSizeHeights: src/data/map_tables_16c5f0.c
+@ gZoomBgSlotOffsets..gObjSizeHeights: src/data/map_tables_16c5f0.cpp
 
 @ gEntitySpawnFuncs: src/data/dispatch_table_16c6a4.c
 
@@ -136,9 +136,9 @@ gSfxTable:
 
 @ gHovercraftStateFuncs..gHovercraftLauncherStateFuncs: src/data/actor_state_17c4c8.cpp
 
-@ gContinuePromptCursorText..gContinuePromptPalette3: src/data/hud_palettes_17c510.c
+@ gContinuePromptCursorText..gContinuePromptPalette3: src/data/hud_palettes_17c510.cpp
 
-@ gContinuePromptSmokeBg..gContinuePromptUkaUkaBg: src/data/bg_package_17c594.c
+@ gContinuePromptSmokeBg..gContinuePromptUkaUkaBg: src/data/bg_package_17c594.cpp
 
 @ gCreditsText..gCreditsEmptyText: src/data/credits_17c5d0.c
 

@@ -1,6 +1,8 @@
+extern "C" {
 #include "core.h"
 #include "save.h"
 #include "menus.h"
+}
 
 /*
  * ROM 0x0816B138-0x0816B284. Linked in ROM order between data/data.s

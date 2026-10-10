@@ -464,7 +464,7 @@
    "format": "small constant (3e00)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/data/menu_tables_16b138.c"
+   "status": "converted: src/data/menu_tables_16b138.cpp"
   },
   {
    "address": "0x0816B13A",
@@ -488,7 +488,7 @@
    "format": "table of u16; 1 word(s) look like ROM pointers",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/menu_tables_16b138.c"
+   "status": "converted: src/data/menu_tables_16b138.cpp"
   },
   {
    "address": "0x0816B15A",
@@ -512,7 +512,7 @@
    "format": "BGR555 palette(s): 1 x 16 colours",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/menu_tables_16b138.c"
+   "status": "converted: src/data/menu_tables_16b138.cpp"
   },
   {
    "address": "0x0816B17A",
@@ -536,7 +536,7 @@
    "format": "table of u16",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/menu_tables_16b138.c"
+   "status": "converted: src/data/menu_tables_16b138.cpp"
   },
   {
    "address": "0x0816B19A",
@@ -560,7 +560,7 @@
    "format": "table of u16",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/menu_tables_16b138.c"
+   "status": "converted: src/data/menu_tables_16b138.cpp"
   },
   {
    "address": "0x0816B1BC",
@@ -584,7 +584,7 @@
    "format": "table of s32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/menu_tables_16b138.c"
+   "status": "converted: src/data/menu_tables_16b138.cpp"
   },
   {
    "address": "0x0816B1D0",
@@ -608,7 +608,7 @@
    "format": "table of void*",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/menu_tables_16b138.c"
+   "status": "converted: src/data/menu_tables_16b138.cpp"
   },
   {
    "address": "0x0816B1E4",
@@ -634,7 +634,7 @@
    "format": "table of struct icon_pos",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/menu_tables_16b138.c"
+   "status": "converted: src/data/menu_tables_16b138.cpp"
   },
   {
    "address": "0x0816B1EC",
@@ -658,7 +658,7 @@
    "format": "BGR555 palette(s): 1 x 16 colours",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/menu_tables_16b138.c"
+   "status": "converted: src/data/menu_tables_16b138.cpp"
   },
   {
    "address": "0x0816B20C",
@@ -682,7 +682,7 @@
    "format": "table of u32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/menu_tables_16b138.c"
+   "status": "converted: src/data/menu_tables_16b138.cpp"
   },
   {
    "address": "0x0816B21C",
@@ -708,7 +708,7 @@
    "format": "table of struct icon_pos",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/menu_tables_16b138.c"
+   "status": "converted: src/data/menu_tables_16b138.cpp"
   },
   {
    "address": "0x0816B244",
@@ -732,7 +732,7 @@
    "format": "table of u32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/menu_tables_16b138.c"
+   "status": "converted: src/data/menu_tables_16b138.cpp"
   },
   {
    "address": "0x0816B258",
@@ -758,7 +758,7 @@
    "format": "table of struct icon_pos",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/menu_tables_16b138.c"
+   "status": "converted: src/data/menu_tables_16b138.cpp"
   },
   {
    "address": "0x0816B270",
@@ -783,7 +783,7 @@
    "format": "table of u32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/menu_tables_16b138.c"
+   "status": "converted: src/data/menu_tables_16b138.cpp"
   },
   {
    "address": "0x0816B27C",
@@ -809,7 +809,7 @@
    "format": "table of struct icon_pos",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/menu_tables_16b138.c"
+   "status": "converted: src/data/menu_tables_16b138.cpp"
   },
   {
    "address": "0x0816B284",
@@ -850,7 +850,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/data/pause_rows_16b298.c"
+   "status": "converted: src/data/pause_rows_16b298.cpp"
   },
   {
    "address": "0x0816B2C0",
@@ -871,7 +871,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/data/pause_rows_16b298.c"
+   "status": "converted: src/data/pause_rows_16b298.cpp"
   },
   {
    "address": "0x0816B2E0",
@@ -2305,7 +2305,7 @@
    "format": "table of struct xy_pair",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/map_tables_16c498.c"
+   "status": "converted: src/data/map_tables_16c498.cpp"
   },
   {
    "address": "0x0816C4A0",
@@ -2329,7 +2329,7 @@
    "format": "table of struct xy_pair",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/map_tables_16c498.c"
+   "status": "converted: src/data/map_tables_16c498.cpp"
   },
   {
    "address": "0x0816C4A8",
@@ -2353,7 +2353,7 @@
    "format": "table of struct xy_pair",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/map_tables_16c498.c"
+   "status": "converted: src/data/map_tables_16c498.cpp"
   },
   {
    "address": "0x0816C4B0",
@@ -2377,7 +2377,7 @@
    "format": "table of struct xy_pair",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/map_tables_16c498.c"
+   "status": "converted: src/data/map_tables_16c498.cpp"
   },
   {
    "address": "0x0816C4B8",
@@ -2401,7 +2401,7 @@
    "format": "table of struct xy_pair",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/map_tables_16c498.c"
+   "status": "converted: src/data/map_tables_16c498.cpp"
   },
   {
    "address": "0x0816C4C0",
@@ -2426,7 +2426,7 @@
    "format": "table of struct xy_pair",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/map_tables_16c498.c"
+   "status": "converted: src/data/map_tables_16c498.cpp"
   },
   {
    "address": "0x0816C4C8",
@@ -2450,7 +2450,7 @@
    "format": "table of struct xy_pair",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/map_tables_16c498.c"
+   "status": "converted: src/data/map_tables_16c498.cpp"
   },
   {
    "address": "0x0816C4D0",
@@ -2474,7 +2474,7 @@
    "format": "table of struct xy_pair",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/map_tables_16c498.c"
+   "status": "converted: src/data/map_tables_16c498.cpp"
   },
   {
    "address": "0x0816C4D8",
@@ -2499,7 +2499,7 @@
    "format": "table of struct xy_pair",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/map_tables_16c498.c"
+   "status": "converted: src/data/map_tables_16c498.cpp"
   },
   {
    "address": "0x0816C508",
@@ -2524,7 +2524,7 @@
    "format": "table of struct xy_pair",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/map_tables_16c498.c"
+   "status": "converted: src/data/map_tables_16c498.cpp"
   },
   {
    "address": "0x0816C538",
@@ -2549,7 +2549,7 @@
    "format": "table of u32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/map_tables_16c498.c"
+   "status": "converted: src/data/map_tables_16c498.cpp"
   },
   {
    "address": "0x0816C548",
@@ -2575,7 +2575,7 @@
    "format": "table of u32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/map_tables_16c498.c"
+   "status": "converted: src/data/map_tables_16c498.cpp"
   },
   {
    "address": "0x0816C558",
@@ -2599,7 +2599,7 @@
    "format": "table of u32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/map_tables_16c498.c"
+   "status": "converted: src/data/map_tables_16c498.cpp"
   },
   {
    "address": "0x0816C56C",
@@ -2620,7 +2620,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/data/map_tables_16c498.c"
+   "status": "converted: src/data/map_tables_16c498.cpp"
   },
   {
    "address": "0x0816C58C",
@@ -2687,7 +2687,7 @@
    "format": "table of struct xy_pair",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/map_tables_16c5f0.c"
+   "status": "converted: src/data/map_tables_16c5f0.cpp"
   },
   {
    "address": "0x0816C610",
@@ -2711,7 +2711,7 @@
    "format": "table of u32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/map_tables_16c5f0.c"
+   "status": "converted: src/data/map_tables_16c5f0.cpp"
   },
   {
    "address": "0x0816C624",
@@ -2735,7 +2735,7 @@
    "format": "table of u32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/map_tables_16c5f0.c"
+   "status": "converted: src/data/map_tables_16c5f0.cpp"
   },
   {
    "address": "0x0816C634",
@@ -2759,7 +2759,7 @@
    "format": "table of u32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/map_tables_16c5f0.c"
+   "status": "converted: src/data/map_tables_16c5f0.cpp"
   },
   {
    "address": "0x0816C644",
@@ -2784,7 +2784,7 @@
    "format": "table of s32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/map_tables_16c5f0.c"
+   "status": "converted: src/data/map_tables_16c5f0.cpp"
   },
   {
    "address": "0x0816C674",
@@ -2809,7 +2809,7 @@
    "format": "table of s32",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/map_tables_16c5f0.c"
+   "status": "converted: src/data/map_tables_16c5f0.cpp"
   },
   {
    "address": "0x0816C6A4",
@@ -4386,7 +4386,7 @@
    "format": "small constant (3e00)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/data/hud_palettes_17c510.c"
+   "status": "converted: src/data/hud_palettes_17c510.cpp"
   },
   {
    "address": "0x0817C512",
@@ -4410,7 +4410,7 @@
    "format": "table of u16; 1 word(s) look like ROM pointers",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/hud_palettes_17c510.c"
+   "status": "converted: src/data/hud_palettes_17c510.cpp"
   },
   {
    "address": "0x0817C532",
@@ -4434,7 +4434,7 @@
    "format": "BGR555 palette(s): 1 x 16 colours",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/hud_palettes_17c510.c"
+   "status": "converted: src/data/hud_palettes_17c510.cpp"
   },
   {
    "address": "0x0817C552",
@@ -4458,7 +4458,7 @@
    "format": "table of u16",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/hud_palettes_17c510.c"
+   "status": "converted: src/data/hud_palettes_17c510.cpp"
   },
   {
    "address": "0x0817C572",
@@ -4482,7 +4482,7 @@
    "format": "table of u16",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/hud_palettes_17c510.c"
+   "status": "converted: src/data/hud_palettes_17c510.cpp"
   },
   {
    "address": "0x0817C594",
