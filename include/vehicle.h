@@ -73,17 +73,6 @@ extern void CreateJetpackPlayer(struct anim_table_record *table, s32 z);
 extern s32 GetPolarMaskLevel(void);
 extern u8 IsPolarPlayerInactive(void);
 
-/* The yeti's category-table slots (#765), by the C names of their Yeti
- * static members (include/yeti.hpp, cxx_symbols.txt), for the C category
- * table (src/data/actor_category_175558.c). C++ calls Yeti::Create & co. */
-#ifndef __cplusplus
-extern void CreateYeti(s32 level);
-extern void UpdateYeti(void);
-extern void UpdateYetiBg2(void);
-extern void DestroyYeti(void);
-extern void LoadYetiGraphics(void);
-#endif
-
 /* The vehicles' globals (sym_iwram.txt). */
 extern struct anim_table_record *gJetpackAnimTable; /* actor_anim.h */
 extern s32 gJetpackBomberCount;
@@ -130,13 +119,13 @@ extern class ActorSelf *gRiderlessPolar;
 /* The yeti's (gYeti, gYetiX, ...) are Yeti's static data members
  * (include/yeti.hpp). */
 
-/* src/data/palette_strip_17c200.c */
+/* src/data/palette_strip_17c200.cpp */
 extern const u16 gJetpackFlashPalettes[3][16];
 
-/* src/data/actor_box_17c444.c */
+/* src/data/actor_box_17c444.cpp */
 extern const struct anim_box gJetpackRocketBox;
 
-/* src/data/actor_tables_17a728.c */
+/* src/data/actor_tables_17a728.cpp */
 extern const u16 gPolarAkuAkuPalette1[16];
 extern const u16 gPolarAkuAkuPalette2[16];
 extern const u16 gPolarAkuAkuPalette3[16];

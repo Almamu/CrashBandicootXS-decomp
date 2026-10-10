@@ -13,11 +13,10 @@
  * read it through the public getters.
  *
  * The ROM tables only it reads are static data members too, defined in
- * their src/data/*.c files under their C names (gHovercraftPalette, ...):
- * a C++ reference to `_10Hovercraft.palette` is renamed to
- * gHovercraftPalette. The actor category table
- * (src/data/actor_category_175558.c, C) names Create, Update, UpdateBg2,
- * Destroy and LoadGraphics by their C names (bosses.h). */
+ * their src/data/*.cpp files (`const u16 Hovercraft::palette[256] = ...`):
+ * `_10Hovercraft.palette` is renamed to gHovercraftPalette. The actor
+ * category table (src/data/actor_category_175558.cpp) points at Create,
+ * Update, UpdateBg2, Destroy and LoadGraphics. */
 
 #include "actor_self.hpp"
 
@@ -149,7 +148,7 @@ private:
     static u32 mapFrames[]; // gHovercraftMapFrames
 
     /* The ROM tables (src/data): attacks, box and keyframes are in
-     * singleton_kind_17c460.c, palette and picture in
+     * singleton_kind_17c460.cpp, palette and picture in
      * boss_pictures_167ad4.c. */
     static const struct hovercraft_attack attacks[2];   // gHovercraftAttacks
     static const struct anim_box box;                   // gHovercraftBox

@@ -1,7 +1,9 @@
+extern "C" {
 #include "core.h"
 #include "actor_self.h"
 #include "actor_anim.h"
 #include "frontend.h"
+}
 
 /*
  * ROM 0x08178F80-0x0817A6B8: the data of actor categories 0-2 (the family

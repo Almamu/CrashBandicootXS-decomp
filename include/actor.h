@@ -122,7 +122,7 @@ extern void SetActorCheckpoint(s32 arg0);
 extern s32 IsActorMaskAssistDue(void);
 
 /* src/actor/actor_factory.cpp. SpawnActor is also slot 1 of the category
- * vtables (src/data/actor_category_175558.c): to C, `struct ActorSelf` is
+ * vtables (src/data/actor_category_175558.cpp): to C, `struct ActorSelf` is
  * the class's tag, with no fields. */
 #ifdef __cplusplus
 extern class ActorSelf *CreateActor(u8 kind, s32 x, s32 y, s32 z, struct actor_spawn *spawn);

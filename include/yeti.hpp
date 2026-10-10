@@ -11,10 +11,10 @@
  *
  * cxx_symbols.txt maps every member onto its C name: the IWRAM variables
  * get their addresses from sym_iwram.txt under those names, and the ROM
- * tables but stateFuncs (src/data/actor_state_fn_17a840.cpp) are defined
- * in C data files under them. The actor category table
- * (src/data/actor_category_175558.c) names Create, Update, UpdateBg2,
- * Destroy and LoadGraphics by their C names (vehicle.h).
+ * tables are defined in src/data/*.cpp as the members (`const s32
+ * Yeti::chargeParams[6][3] = ...`). The actor category table
+ * (src/data/actor_category_175558.cpp) points at Create, Update,
+ * UpdateBg2, Destroy and LoadGraphics.
  *
  * `#pragma interface`: no vtable to emit; it keeps g++ from emitting
  * out-of-line copies of inline methods (docs/cplusplus.md). */

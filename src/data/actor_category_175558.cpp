@@ -1,8 +1,14 @@
+#include "yeti.hpp"
+#include "airship.hpp"
+#include "hovercraft.hpp"
+
+extern "C" {
 #include "core.h"
 #include "actor_anim.h"
 #include "actor.h"
 #include "bosses.h"
 #include "vehicle.h"
+}
 
 /*
  * ROM 0x08175558-0x08175760: the actor category descriptors and the
@@ -33,7 +39,7 @@ extern const u16 gHovercraftCategoryPalette[];
  * type 1: 3-5, type 2: 6). data.s used to split this table at
  * 0x08175564 and 0x08175584; nothing referenced those labels. */
 const struct category_descriptor gActorCategories[CATEGORY_COUNT] = {
-    [CATEGORY_FROSTBITE_CAVERN] = {
+    /* CATEGORY_FROSTBITE_CAVERN */ {
         CATEGORY_TYPE_POLAR,
         (void *)gCategoryFamily0CellAnim,
         0x75b94,
@@ -48,7 +54,7 @@ const struct category_descriptor gActorCategories[CATEGORY_COUNT] = {
         1,
         0,
     },
-    [CATEGORY_SNOW_CRASH] = {
+    /* CATEGORY_SNOW_CRASH */ {
         CATEGORY_TYPE_POLAR,
         (void *)gCategoryFamily0CellAnim,
         0x75b94,
@@ -63,7 +69,7 @@ const struct category_descriptor gActorCategories[CATEGORY_COUNT] = {
         3,
         2,
     },
-    [CATEGORY_SNOW_JOB] = {
+    /* CATEGORY_SNOW_JOB */ {
         CATEGORY_TYPE_POLAR,
         (void *)gCategoryFamily0CellAnim,
         0x75b94,
@@ -78,7 +84,7 @@ const struct category_descriptor gActorCategories[CATEGORY_COUNT] = {
         5,
         4,
     },
-    [CATEGORY_ROCKET_RACKET] = {
+    /* CATEGORY_ROCKET_RACKET */ {
         CATEGORY_TYPE_JETPACK,
         (void *)gCategoryFamily1CellAnim,
         0x3e784,
@@ -93,7 +99,7 @@ const struct category_descriptor gActorCategories[CATEGORY_COUNT] = {
         0,
         3,
     },
-    [CATEGORY_BLIMP_BONANZA] = {
+    /* CATEGORY_BLIMP_BONANZA */ {
         CATEGORY_TYPE_JETPACK,
         (void *)gCategoryFamily1CellAnim,
         0x3e784,
@@ -108,7 +114,7 @@ const struct category_descriptor gActorCategories[CATEGORY_COUNT] = {
         0,
         3,
     },
-    [CATEGORY_NO_FLY_ZONE] = {
+    /* CATEGORY_NO_FLY_ZONE */ {
         CATEGORY_TYPE_JETPACK,
         (void *)gCategoryFamily1CellAnim,
         0x3e784,
@@ -123,7 +129,7 @@ const struct category_descriptor gActorCategories[CATEGORY_COUNT] = {
         0,
         3,
     },
-    [CATEGORY_N_GIN] = {
+    /* CATEGORY_N_GIN */ {
         CATEGORY_TYPE_HOVERCRAFT,
         (void *)gCategoryFamily1CellAnim,
         0x3e784,
@@ -145,14 +151,14 @@ const struct category_descriptor gActorCategories[CATEGORY_COUNT] = {
  * (actor_category_select.cpp): include/actor_anim.h names the slots;
  * the two numbers are the spawn and skip distances. */
 const struct category_vtable gActorCategoryVtables[CATEGORY_TYPE_COUNT] = {
-    [CATEGORY_TYPE_POLAR] = {
+    /* CATEGORY_TYPE_POLAR */ {
         ConstructAnimTableState,
         SpawnActor,
-        CreateYeti,
-        UpdateYeti,
-        UpdateYetiBg2,
-        DestroyYeti,
-        LoadYetiGraphics,
+        Yeti::Create,
+        Yeti::Update,
+        Yeti::UpdateBg2,
+        Yeti::Destroy,
+        Yeti::LoadGraphics,
         -0x11,
         -0x2f,
         PolarIsTouchingPlayer,
@@ -160,14 +166,14 @@ const struct category_vtable gActorCategoryVtables[CATEGORY_TYPE_COUNT] = {
         PolarReloadPlayerTiles,
         PolarIsPauseLocked,
     },
-    [CATEGORY_TYPE_JETPACK] = {
+    /* CATEGORY_TYPE_JETPACK */ {
         CreateJetpackPlayer,
         SpawnJetpackActor,
-        CreateAirship,
-        UpdateAirship,
-        UpdateAirshipBg2,
-        DestroyAirship,
-        LoadAirshipGraphics,
+        Airship::Create,
+        Airship::Update,
+        Airship::UpdateBg2,
+        Airship::Destroy,
+        Airship::LoadGraphics,
         0xa9,
         0x1c,
         JetpackIsTouchingPlayer,
@@ -175,14 +181,14 @@ const struct category_vtable gActorCategoryVtables[CATEGORY_TYPE_COUNT] = {
         JetpackReloadPlayerTiles,
         JetpackIsPauseLocked,
     },
-    [CATEGORY_TYPE_HOVERCRAFT] = {
+    /* CATEGORY_TYPE_HOVERCRAFT */ {
         CreateJetpackPlayer,
         SpawnJetpackActor,
-        CreateHovercraft,
-        UpdateHovercraft,
-        UpdateHovercraftBg2,
-        DestroyHovercraft,
-        LoadHovercraftGraphics,
+        Hovercraft::Create,
+        Hovercraft::Update,
+        Hovercraft::UpdateBg2,
+        Hovercraft::Destroy,
+        Hovercraft::LoadGraphics,
         0xa9,
         0x1c,
         JetpackIsTouchingPlayer,

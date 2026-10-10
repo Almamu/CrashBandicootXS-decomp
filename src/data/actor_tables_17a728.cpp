@@ -1,6 +1,10 @@
+#include "yeti.hpp"
+
+extern "C" {
 #include "core.h"
 #include "actor_anim.h"
 #include "vehicle.h"
+}
 
 /*
  * ROM 0x0817A728-0x0817A840. Linked in ROM order between data/data.s
@@ -50,7 +54,7 @@ const u16 gPolarAkuAkuPalette3[16] = {
  * Yeti::StateCharge (yeti_states.cpp) index by
  * gYetiParamsIndex: a value, then two random-roll thresholds (out of
  * 0x100) for the state change. */
-const s32 gYetiChargeParams[6][3] = {
+const s32 Yeti::chargeParams[6][3] = {
     { 243, 5, 1 },
     { 243, 10, 1 },
     { 243, 10, 1 },

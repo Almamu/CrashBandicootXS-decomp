@@ -1,4 +1,8 @@
+#include "yeti.hpp"
+
+extern "C" {
 #include "core.h"
+}
 
 /*
  * ROM 0x0817A880-0x0817AA6C. Linked in ROM order between data/data.s
@@ -16,7 +20,7 @@ extern const u8 gYetiRleFrames[];
  * frames of gYetiRleFrames (rle_sprites_0c2758.c). The offsets come
  * from the header tools/rle_sprites.py generates, so they follow edits to
  * graphics/rle_sprites/0da1d8_frames.png. */
-const u8 *const gYetiFrames[123] = {
+const u8 *const Yeti::frames[123] = {
     gYetiRleFrames + RLE_SPRITES_0DA1D8_FRAME_000,
     gYetiRleFrames + RLE_SPRITES_0DA1D8_FRAME_001,
     gYetiRleFrames + RLE_SPRITES_0DA1D8_FRAME_002,

@@ -1,6 +1,8 @@
+extern "C" {
 #include "core.h"
 #include "actor_anim.h"
 #include "vehicle.h"
+}
 
 /*
  * ROM 0x0817C444-0x0817C450. Linked in ROM order between data/data.s
