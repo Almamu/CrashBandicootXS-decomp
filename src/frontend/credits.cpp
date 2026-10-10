@@ -4,7 +4,6 @@
 #include "key_input.hpp"
 
 extern "C" {
-#include "match.h"
 #include "gba/io_reg.h"
 #include "gba/dma_macros.h"
 #include <agb_syscall.h>
@@ -328,65 +327,33 @@ struct popup_glyph_src {
     u32 map;            /* 0x10 - bg_package's mapAsset, NULL for every logo; not read */
 };
 
-/* Loads the five logos: each one's tiles rearranged into 32x32 OAM cells
- * and its palette into palette-cache slots 1-5.
+/* Copies a 16-colour palette into palette-cache bank `slot`.
  *
- * The ROM reloads `slot` into r1 and computes the palette address at
- * the copy, so the palette index is a copy `ps` pinned to r1: with
- * `slot << 5` itself, or a plain copy, the shift comes out elsewhere.
- * (#662 round 2: unpinned, loop.c computes `slot << 5` ahead of the
- * tile loops, next to `slot + 1` and `i + 1`, which the ROM has there,
- * and spills it; `palSlots[slot]`, an inline copy helper, the DMA
- * macros and -fno-strength-reduce/-fno-rerun-loop-opt/-fno-gcse don't
- * change that.) #662 round 3, from the -da dumps: it is gcse's PRE, not
- * loop.c. cse folds the copy into `slot`, and PRE then finds `slot << 5`
- * anticipated on every path from the block before the tile loops and
- * inserts it there (busy code motion: "PRE/HOIST: end of bb 7"), with
- * `slot + 1` and `i + 1`; the ROM has those two there but not the
- * shift. PRE doesn't consider hard registers, so the pinned copy stays
- * at the palette copy. For the natural code the shift would have to be
- * not anticipated there (an operand set or a path without it between),
- * which nothing in the loop body gives; -fno-gcse moves most of the
- * file.
- * #662 round 4: gcse.c's hash_scan_set records only sets of a pseudo, so
- * the shift of a hard register is never a PRE candidate, which is what
- * the pin uses. The decomp-permuter on a C port (45 minutes) stopped the
- * hoist only with a second copy of `slot`, set in front of the tile
- * loops and used for the palette address; that copy gets its own stack
- * slot, which the ROM doesn't have.
- * #662 round 5: the palette address as SaveData::ReadSlot's two-statement
- * offset (`offset = slot << 5; offset = offset + (s32)palSlots;`, which
- * hid ReceiveChunk's product from cse1), a shift of an assigned copy
- * (`offset = slot; offset <<= 5;`), `(u16 *)palSlots[slot]` and an
- * indexed copy loop are all 396 lines off: each still has the shift of
- * `slot` itself (cse1 folds the copy), which PRE hoists.
- * #662 round 7: the ROM's PRE does hoist this loop's `slot + 1` and
- * `i + 1` to the y loop's preheader, so it is the shift alone it left.
- * A private agbcp/agbcc whose gcse never PREs a shift compiles
- * `(u16 *)(slot * 32 + (u32)palSlots)` as the ROM, but changes 46 other
- * functions of the ROM. lcm.c's compute_latein has its two branches
- * swapped (its comment makes the last block the special one); fixed, it
- * changes no function of the ROM and keeps this hoist. No other matched
- * function copies a palette into a cache slot.
- * #662 round 8: gcse.c's PRE inserts an expression at the end of a block
- * when it is anticipatable there on every path (here the end of the
- * block before the y loop). In the matched corpus (tools/rtl_corpus.py's
- * shift-after-loop), the invariant shifts left after a loop are on a
- * conditional path, such as GAX2_estimate's `if (i == 0) need += numSfx
- * * 4`; the ROM has no path around this palette copy. tools/natural_enum.py
- * over slot's type (s32/u32/int/u8/u16/s16), palSlots' type, the
- * address and copy-loop forms and the order of the last three
- * statements: the plain form is 39 instructions off, the nearest 31 (an
- * s16 slot with `logo->palette = slot++`).
- * #662 round 9, the types beyond the function: CreditsLogo's fields and
- * this record's `w`/`h` as u32, ClaimSlot's parameter (every integer
- * type) and return (u8, bool, void), PaletteCache::slots as
- * `u16[16][16]`, palSlots as a byte or halfword pointer, with slot's
- * and i's types, seven spellings of the address, the copy loop's form
- * and the order of the last three statements, up to three at a time and
- * a beam search: the nearest (a `u8` slot and `ClaimSlot(u8)`, 56 lines
- * off against 72 for the plain form) still computes the shift ahead of
- * the tile loops. */
+ * `slot` is a const reference. LoadLogos passes its s32 counter, so the
+ * call binds the reference to a u32 temporary: a copy of the counter whose
+ * address is taken. Until the addressof pass (after cse1) that copy is
+ * memory, so cse1 can't fold it into the counter, and gcse's PRE sees the
+ * shift of a register set here, after the tile loops. Of the shift by
+ * itself (`slot << 5` with `slot` the counter) PRE would compute a copy
+ * ahead of the tile loops, with the `slot + 1` and `i + 1` it does hoist
+ * there in the ROM (#662 rounds 2-10). cse2 then folds the copy back
+ * into the counter, which leaves the ROM's reload of `slot` at the copy.
+ * With a `const s32 &` the reference binds to the counter itself, which
+ * then lives in memory until the addressof pass and loses the `slot + 1`
+ * hoist (55 lines off); by value the copy is folded and the shift
+ * hoisted (50). */
+static inline void CopyPaletteToSlot(u8 (*slots)[TILE_SIZE_4BPP], const u32 &slot, const u16 *s)
+{
+    u16 *d = (u16 *)(slot * TILE_SIZE_4BPP + (u32)slots);
+    s32 k;
+
+    for (k = 15; k >= 0; k--) {
+        *d++ = *s++;
+    }
+}
+
+/* Loads the five logos: each one's tiles rearranged into 32x32 OAM cells
+ * and its palette into palette-cache slots 1-5. */
 void Credits::LoadLogos()
 {
     u8 (*palSlots)[TILE_SIZE_4BPP] = gPaletteCache->slots;
@@ -440,20 +407,7 @@ void Credits::LoadLogos()
         delete[] tiles;
         pal = new u16[*src->palette >> 9];
         LoadTaggedAsset(src->palette, pal);
-        {
-            u16 *s = pal;
-            /* Copy of `slot`: see the note above. */
-            MATCH_HOLD_REG(s32, ps, r1) = slot;
-            s32 sh;
-            u16 *d;
-            s32 k;
-
-            sh = ps << 5;
-            d = (u16 *)(sh + (u32)palSlots);
-            for (k = 15; k >= 0; k--) {
-                *d++ = *s++;
-            }
-        }
+        CopyPaletteToSlot(palSlots, slot, pal);
         delete[] pal;
         gPaletteCache->ClaimSlot(slot);
         logo->palette = slot;

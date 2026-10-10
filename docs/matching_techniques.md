@@ -1268,7 +1268,8 @@ from the `-da` dumps first:
   That was the frame-0 address pin and the r1 hold.
 - **Where the kept sites are decided** (each comment has the details):
   gcse's PRE hoists `slot << 5` into the tile loops' preheader in
-  `Credits::LoadLogos` (it ignores hard registers, hence the pin); cse1
+  `Credits::LoadLogos` (it ignores hard registers, hence the pin; freed
+  in round 10 by a reference temporary, see below); cse1
   propagates the key-word copy in `LevelSelect::Loop` and the ring copy
   in `LinkSession::HandleSerial`; reload_cse_regs deletes
   `ContinuePrompt::Loop`'s second `lsrs r1, r2, #16` (r1 still holds
@@ -1439,7 +1440,7 @@ source (8 functions -> 5):
   (priorities 1.21 for `self` against 0.10 for `id`, which would need
   12 references where the code has 3), `Credits::LoadLogos` (gcse's
   PRE hoists `slot << 5`; the shift of a hard register is never a PRE
-  candidate), `SaveTransfer::ReceiveChunk` (cse1 shares the two 0xc8
+  candidate; freed in round 10), `SaveTransfer::ReceiveChunk` (cse1 shares the two 0xc8
   constants and with them the product, where the ROM shares only the
   constant) and `LinkSession::Update` (45-minute decomp-permuter runs
   on C ports of these four found only junk), and
@@ -1875,7 +1876,8 @@ deciding contest:
   (CreditsLogo's and the logo record's field types, ClaimSlot's
   parameter and return types, PaletteCache::slots as `u16[16][16]`,
   `slot`'s and `i`'s types, seven address spellings and the copy loop:
-  56 lines at best, against 72; PRE still hoists the shift).
+  56 lines at best, against 72; PRE still hoists the shift; freed in
+  round 10, see "Round 10, Credits::LoadLogos' palette slot").
 
 **Round 9, player/ and SaveData::TestFlags (types beyond the function).**
 4 functions -> 3 (`SaveData::TestFlags` free):
@@ -2025,6 +2027,34 @@ When a hoisted constant or address sits in an order the source can't
 give, check which loop pass emitted it (`-dL`: "moved to" in the first
 or the second `Loop from` report) and what the threshold and the loop's
 insn count were in that pass.
+
+**Round 10, Credits::LoadLogos' palette slot (a reference temporary).**
+The r1 pin on `slot` is gone: the palette copy is an inline
+`CopyPaletteToSlot(slots, const u32 &slot, pal)` and LoadLogos passes its
+s32 counter. From the -dG dump, the shift, `slot + 1` and `i + 1` have
+the same PRE bits (computed only in their own block, killed only by the
+`slot++`, earliest at the loop head); lcm.c's delayedness starts from
+zero, so it never crosses the y loop's header, and with the swapped
+compute_latein all three are optimal at the end of the block before it.
+So the ROM's shift can't have had the counter's pseudo as its operand
+at gcse time, and a plain copy can't give it another one: cse1 folds a
+copy into the longer-lived counter (make_regs_eqv keeps the register
+whose last use is later), gcse's copy propagation folds one from an
+earlier block, and a copy that does win (`q` used after `slot++`) stays
+live across ClaimSlot in r5 (16 lines off). The reference does it:
+binding a `const u32 &` to an s32 makes a temporary whose address is
+taken, an ADDRESSOF until purge_addressof, which runs after cse1 and
+before gcse. cse1 sees only a store and a load of memory, so the shift
+reaches PRE as the shift of a register set at the call, after the tile
+loops, and stays; cse2 then folds that copy into `slot`, leaving the
+ROM's reload of `slot` at the copy. A `const s32 &` binds the counter
+itself, which then loses the `slot + 1` hoist (55 lines off); by value
+the copy is folded (50). gcse.c's PRE has no cost or call condition;
+the only exclusions are in hash_scan_set (a pseudo destination, not a
+plain register, constant or call, not in a libcall block or a PARALLEL,
+no volatile MEM). When PRE hoists an expression the ROM leaves in place,
+look for what the source had that cse1 saw as memory: a reference or
+pointer to a local, or a struct by value (LevelSelect's KeyHalf).
 
 **Player::HandleEvent's dead load: a dead test (owner decision, #662).**
 After the controller call of a masked hit the ROM reloads

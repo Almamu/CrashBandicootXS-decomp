@@ -2145,7 +2145,9 @@ pin, a `MATCH_KEEP_VOLATILE` and a `MATCH_USE`: GCSE hoists any `slot <<
 copy) and the constructor's `MATCH_BARRIER` (no code: the longer live
 ranges give `&gPaletteCache` and `&gObjVramCursor` r4, `&gSmallFont` r6).
 #662 step 2 found the barrier, the keep and the use no longer needed;
-the r1 pin stays.
+round 10 freed the r1 pin with an inline taking the slot as a `const u32
+&` (docs/matching_techniques.md, "Round 10, Credits::LoadLogos' palette
+slot").
 C idioms kept: `DrawText`'s and `UpdateText`'s gotos, the `bg0cnt =
 bg0cnt` self-initialisation and the `UpdateText` font slot calls written
 out.
