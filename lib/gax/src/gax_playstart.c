@@ -118,49 +118,42 @@ u8 GAX2_init(struct GaxSongHeader *p)
         for (; i <= 2; i++) {
             if (tap->rate > maxRate)
                 maxRate = tap->rate;
-            /* no code: an extra reference that lifts `maxRate` over
-             * `fmt` in global.c's priority order (ROM: r8/r9). #662
-             * round 3 (-dl): global.c ranks by log2(refs) * refs / live
-             * length. Without the reference that is fmt 3 * 9 / 199 =
-             * 0.136 against maxRate 4 * 18 / 568 = 0.127; the use, counted
-             * twice inside the loop, gives maxRate 0.141. It isn't a tie,
-             * so declaration order doesn't change it (three orders
-             * tried), and no swept -f flag does either. Round 4: the
-             * condition is maxRate at 20 references (two more at this
-             * loop's depth), or fmt at 8 or fewer, or fmt live over 213
-             * insns; the ROM sets maxRate = 0 in the prologue (a later
-             * `maxRate = 0` shortens it but moves the 0); `?:`, `<`
-             * and if/else spellings of the max are 30-34 lines off.
-             * Round 5: carving the format in GAX2_estimate's style
-             * (`buf += n * 4; fmt = (...)buf; buf += 8;`) leaves fmt at
-             * 9 references (cse1 folds the second add into fmt + 8);
-             * every scalar local zero-initialized as GAX2_estimate
-             * declares them is 712 lines off, `fmt = 0` or maxRate
-             * declared first 30. Round 8 (rtl_corpus.py query alloc): five of
-             * maxRate's 18 references are the zero stores of the state
-             * init (`numSfx`, `state`, `curChannelIdx`, `echoTaps`,
-             * `skipSongChannels`), which cse gives maxRate's 0 (the
-             * ROM's `mov r4, r8`); the tap loops count theirs by loop
-             * depth. tools/natural_enum.py (all pairs of 114 edits,
-             * triples of the 22 hand-written ones: a `rate` local, the
-             * walk as `for (...; i++, tap++)`, `maxRate < tap->rate`,
-             * `len` through `g->format`, declaration orders, `if
-             * (maxRate)`, each other local zero-initialized as
-             * GAX2_estimate's are, alone or together) finds nothing
-             * under the plain code's 15 lines; without `fmt` in `len`,
-             * fmt's range ends early and it is 70 off. Round 9 (-dl,
-             * with outBuf a pointer): fmt is 9 refs over 197 insns (3 *
-             * 9 / 197 = 0.137), maxRate 18 over 564 (0.128). Every
-             * same-size retype of the members this function touches
-             * (GaxPlayerState, GaxSongHeader, GaxChannelFormat,
-             * GaxDspTap, GaxSongData, GaxHandlerLayout: signedness,
-             * volatile, the address fields as pointers), alone and in
-             * pairs, leaves the plain code 15 instructions off or worse;
-             * natural_enum.py over 120 edits (every triple, 267,662
-             * variants, adding a tap or RateEntry copied whole as a
-             * two-word struct, 40-52) gets 6 only by computing the
-             * frames from the table instead of re-reading
-             * fmt->mixRate, which drops the ROM's `ldrh`. */
+            /* no code: an extra reference that gives `maxRate` r8 and
+             * `fmt` r9, as in the ROM (#662 rounds 3-11). global.c ranks
+             * them by (int)(floor_log2(refs) * refs / live length *
+             * 10000), refs counted after combine (by loop depth), live
+             * length from flow. cse1 gives the prologue `maxRate = 0` a
+             * REG_EQUAL 0 note, and local-alloc's update_equiv_regs,
+             * seeing that constant set first, doubles maxRate's live
+             * length (282 -> 564 insns; the later non-constant sets drop
+             * the equivalence but not the doubling). So fmt, 9 refs over
+             * 197 insns (1370), beats maxRate, 18 over 564 (1276); this
+             * use, counted twice inside the loop, makes it 20 (1413).
+             * Without it the ROM's code needs 2 more maxRate refs, the
+             * init-to-carve stretch (84 flow insns) under ~65, or fmt
+             * live over ~255. What doesn't work:
+             * - the `maxRate = 0` moved later (after the size check,
+             *   before the state stores, after the carve or the mix-rate
+             *   lookup, before the scan): the ROM's prologue zero moves
+             *   and the zero stores before the carve (numSfx, state,
+             *   curChannelIdx, echoTaps, skipSongChannels) lose r8;
+             *   only "before the state stores" flips the order (1484),
+             *   28 off; seeding the max from the first tap changes the
+             *   ROM's three-iteration scans; nothing before the carve
+             *   can follow it in the ROM's order;
+             * - every split of fmt (a copy, an inline carve helper):
+             *   the order flips, but the ROM's `mov r1, r9` for the + 8
+             *   and the format store become a lo register (42-48 off);
+             * - inline helpers on fmt or maxRate (#851's parameter
+             *   pseudo): folded by cse1 before flow; `&maxRate` to an
+             *   inline can't be purged in C (process_reg_param copies
+             *   the ADDRESSOF), so maxRate goes to the stack;
+             * - `maxRate = maxRate > rate ? maxRate : rate`: 20-23 refs,
+             *   but an extra `mov r0, r8` per scan; the other max
+             *   spellings, declaration orders, retypes, zero-initialized
+             *   locals as in GAX2_estimate, the 0xffff test spellings,
+             *   old_agbcc and natural_enum.py (267,662 variants, round
+             *   9) find nothing. */
             MATCH_USE(maxRate);
             tap++;
         }

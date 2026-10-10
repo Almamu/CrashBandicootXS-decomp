@@ -1105,7 +1105,8 @@ Round 2 in bosses/, enemies/ and actor/ (C++):
     fixed by the compiler options (`-mno-cond-return`).
   - `GAX2_init`: global.c's priority, log2(refs) * refs / live length,
     puts fmt (0.136) above maxRate (0.127) unless maxRate gets the extra
-    reference.
+    reference; maxRate's live length is doubled by update_equiv_regs
+    (round 11, below).
   - `GaxChannelMix`: the ROM reloads `item.done` twice in a row, which
     takes volatile. A one-armed clamp lets cse1 carry `row * 28` across
     the join.
@@ -2080,6 +2081,36 @@ r3, and reload's cse deletes its now redundant `movs r3, #1`. With
 the inline that way). When local-alloc's register order differs only in
 a block with three quantities, look for a constant the ROM sets at the
 block's start (an inline parameter, as here) that would be a fourth.
+
+**Round 11, GAX2_init's `MATCH_USE(maxRate)`: update_equiv_regs doubles
+the live length (kept).** The `-df` dump has maxRate live over 282 insns,
+the `-dl` dump over 564. cse1 puts a REG_EQUAL note on every constant set
+of a register (cse.c, "we want to add a REG_NOTE"), so the prologue
+`maxRate = 0` gets `REG_EQUAL 0`. local-alloc's update_equiv_regs walks
+the insns in order: at that first set it accepts the equivalence (more
+than one set is allowed when the note is a function invariant), and
+`REG_LIVE_LENGTH *= 2` ("decrease the priority" of a constant register).
+The later `maxRate = tap->rate` sets cancel the equivalence (no_equiv)
+but not the doubling. Any variable whose first set in insn order is a
+constant is ranked this way in global-alloc. For GAX2_init that makes
+fmt (9 refs over 197 insns, 1370) beat maxRate (18 over 564, 1276); the
+no-code use is 2 more refs inside the first scan (20, 1413). Without it,
+the ROM's code needs maxRate at 20 refs, or fewer than about 65 flow insns
+from the init to the fmt carve (84 now; each insn there counts twice
+against maxRate), or fmt live over about 255 insns. The obvious way out,
+the zero set later, fails on the ROM: its `movs r0, #0; mov r8, r0` is
+in the prologue and the five zero stores before the carve take r8, so
+every later placement changes the code (moved before the state stores
+it does flip the order, 28 lines off). Seeding the max from the first tap
+changes the ROM's three-iteration scans, and nothing the ROM does before
+the carve could follow it. In C, `&maxRate` passed to an inline (which
+would hide the constant from cse1, as LoadLogos' reference temporary
+does) never purges: process_reg_param copies the ADDRESSOF argument into
+a parameter pseudo, so maxRate stays on the stack. Splitting fmt flips
+the order but moves the carve's `+ 8` and format store off r9. Scoring
+variants on the two priorities (not on lines off, which stay at 15 until
+the order flips) found nothing natural. When a `-dl` live length is
+exactly twice the flow dump's, look for a constant first set.
 
 **Player::HandleEvent's dead load: a dead test (owner decision, #662).**
 After the controller call of a masked hit the ROM reloads
