@@ -1862,7 +1862,8 @@ deciding contest:
   (Push's parameter, counter and loop forms, the ring members' types,
   `n`'s type and spelling: 2110 variants; `writePos + n < 0x80` in Push
   gives `n` r7 and is 10 lines off, but the ROM has the `0x80 - n`
-  compare and SendChunk moves by 30), HandleSerial's `rf` (about 8000
+  compare and SendChunk moves by 30; freed in round 10, see "Round 10,
+  LinkSession::HandleSerial's `n`" below), HandleSerial's `rf` (about 8000
   variants: the ring's member types, Pop's parameter, test and loop
   forms, count accessors, the address locals; the nearest, 26 lines, is
   the plain `n = this->ring.count; ... this->ring.Pop(&this->id[2], n)`
@@ -1974,6 +1975,22 @@ doesn't count them; 7 functions freed:
   as asm inputs leave one `add r2, sp, #4` too many, `volatile`
   parameters reload r7/r8 from the stack, and an inline helper or macro
   taking `&src`/`&dst` folds `*&x` back and loses the stores.
+
+**Round 10, LinkSession::HandleSerial's `n` (dump-guided).** The
+MATCH_USE(n) is gone: the push takes its source pointer in a local
+before `n` is read (`payload = &p->id[2]; n = p->id[1] >> 4;
+p->ring.Push(payload, n);`, no extra scope needed). The .lreg/.greg dumps showed the race:
+`n` (10 refs over 55 insns, priority 5454) against the wrap loop's
+hoisted `&ring.buf` (5 over 18, 5555) for r7. Taking the address first
+moves `n`'s set one insn later, 54 insns (5555), a tie that allocno
+order breaks in `n`'s favour; read the other way round, `n` loses r7
+again. None of rounds 3-9's sweeps moved that address insn. When a
+pseudo loses a priority race by a hair, count the insns its live range
+spans and look for a natural statement order that starts it later or
+ends it sooner. The ring copy (`rf`) stays: its copy is only made where
+an inline's argument is the expression `&this->ring`, at the call, so
+it can't come before the count read without a helper that also does
+the clamp and the header nibble.
 
 **Player::HandleEvent's dead load: a dead test (owner decision, #662).**
 After the controller call of a masked hit the ROM reloads
