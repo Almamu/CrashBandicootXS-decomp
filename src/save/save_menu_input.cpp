@@ -142,38 +142,38 @@ void SaveMenu::Input(u32 keys)
         rowObjC[i]->Update();
     }
 
-    if ((u32)state <= 0xa) {
+    if ((u32)state <= SAVE_MENU_STATE_UNK10) {
         switch (state) {
-        case 0:
+        case SAVE_MENU_STATE_MAIN:
             MainInput(keys);
             break;
-        case 1:
+        case SAVE_MENU_STATE_LOAD:
             LoadInput(keys, cartSave);
             break;
-        case 2:
+        case SAVE_MENU_STATE_LOAD_LINK:
             LoadInput(keys, linkSave);
             break;
-        case 3:
+        case SAVE_MENU_STATE_LINK_TRANSFER:
             LinkInput();
             break;
-        case 4:
+        case SAVE_MENU_STATE_MESSAGE:
             MessageInput(keys);
             break;
-        case 5:
+        case SAVE_MENU_STATE_SAVE:
             SaveInput(keys);
             break;
-        case 6:
+        case SAVE_MENU_STATE_DELETE:
             DeleteInput(keys);
             break;
-        case 9:
+        case SAVE_MENU_STATE_CONFIRM_OVERWRITE:
             OverwriteInput(keys);
             break;
-        case 8:
+        case SAVE_MENU_STATE_UNK8:
             break;
-        case 7:
+        case SAVE_MENU_STATE_CONFIRM_DELETE:
             ConfirmDeleteInput(keys);
             break;
-        case 10:
+        case SAVE_MENU_STATE_UNK10:
             break;
         }
     }
@@ -197,24 +197,24 @@ void SaveMenu::MainInput(u32 keys)
         gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
         switch (cursor) {
         case 0:
-            state = 1;
+            state = SAVE_MENU_STATE_LOAD;
             cursor = 0;
             RefreshSlotSummaries(cartSave);
             break;
         case 1:
-            state = 3;
+            state = SAVE_MENU_STATE_LINK_TRANSFER;
             cursor = 0;
             messageLine1 = GetUiText(0x2b);
             messageLine2 = GetUiText(0x2d);
             BeginLinkTransfer();
             break;
         case 2:
-            state = 5;
+            state = SAVE_MENU_STATE_SAVE;
             cursor = 0;
             RefreshSlotSummaries(cartSave);
             break;
         case 3:
-            state = 6;
+            state = SAVE_MENU_STATE_DELETE;
             cursor = 0;
             RefreshSlotSummaries(cartSave);
             break;
@@ -309,7 +309,7 @@ void SaveMenu::LoadInput(u32 keys, SaveData *handle)
     confirm:
         if (cursor == 4) {
             gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
-            state = 0;
+            state = SAVE_MENU_STATE_MAIN;
             cursor = 0;
             return;
         }
@@ -330,7 +330,7 @@ void SaveMenu::LoadInput(u32 keys, SaveData *handle)
     }
     if (keys & B_BUTTON) {
         gAudioContext->PlaySfx(SFX_MENU_BACK, 0x100);
-        state = 0;
+        state = SAVE_MENU_STATE_MAIN;
         cursor = 0;
         return;
     }
@@ -351,21 +351,21 @@ void SaveMenu::LinkInput()
     EndLinkTransfer();
 
     if (result == 3) {
-        state = 0;
+        state = SAVE_MENU_STATE_MAIN;
         cursor = 1;
         gAudioContext->PlaySfx(SFX_MENU_BACK, 0x100);
         return;
     }
 
     if (result == 2 || !(u8)linkSave->CheckChecksum()) {
-        state = 4;
+        state = SAVE_MENU_STATE_MESSAGE;
         messageLine1 = GetUiText(0x2c);
         messageLine2 = GetUiText(0x2e);
         return;
     }
 
     if (cartSave->GetGameId() == linkSave->GetGameId()) {
-        state = 2;
+        state = SAVE_MENU_STATE_LOAD_LINK;
         cursor = 0;
         RefreshSlotSummaries(linkSave);
         return;
@@ -375,17 +375,17 @@ void SaveMenu::LinkInput()
     case 2:
         cartSave->SetFlags(2);
         cartSave->Store();
-        state = 4;
+        state = SAVE_MENU_STATE_MESSAGE;
         messageLine1 = (u32)gCrash2LinkTextPtr;
         break;
     case 3:
         cartSave->SetFlags(4);
         cartSave->Store();
-        state = 4;
+        state = SAVE_MENU_STATE_MESSAGE;
         messageLine1 = (u32)gCrash3LinkTextPtr;
         break;
     default:
-        state = 0;
+        state = SAVE_MENU_STATE_MAIN;
         cursor = 1;
         return;
     }
@@ -462,17 +462,17 @@ void SaveMenu::OverwriteInput(u32 keys)
     confirm:
         if (cursor == 0) {
             SaveToSlot(pendingSlot);
-            state = 0;
+            state = SAVE_MENU_STATE_MAIN;
             cursor = 4;
         } else {
-            state = 5;
+            state = SAVE_MENU_STATE_SAVE;
             cursor = pendingSlot;
             gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
         }
         return;
     }
     if (keys & B_BUTTON) {
-        state = 5;
+        state = SAVE_MENU_STATE_SAVE;
         cursor = pendingSlot;
         gAudioContext->PlaySfx(SFX_MENU_BACK, 0x100);
         return;
@@ -506,25 +506,25 @@ void SaveMenu::SaveInput(u32 keys)
     confirm:
         if (cursor == 4) {
             gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
-            state = 0;
+            state = SAVE_MENU_STATE_MAIN;
             cursor = 2;
             return;
         }
         gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
         if (!cartSave->IsSlotEmpty(cursor)) {
-            state = 9;
+            state = SAVE_MENU_STATE_CONFIRM_OVERWRITE;
             pendingSlot = cursor;
             cursor = 0;
         } else {
             SaveToSlot(cursor);
-            state = 0;
+            state = SAVE_MENU_STATE_MAIN;
             cursor = 4;
         }
         return;
     }
     if (keys & B_BUTTON) {
         gAudioContext->PlaySfx(SFX_MENU_BACK, 0x100);
-        state = 0;
+        state = SAVE_MENU_STATE_MAIN;
         cursor = 2;
         return;
     }
@@ -543,7 +543,7 @@ void SaveMenu::DeleteInput(u32 keys)
     confirm:
         if (cursor == 4) {
             gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
-            state = 0;
+            state = SAVE_MENU_STATE_MAIN;
             cursor = 3;
             return;
         }
@@ -552,14 +552,14 @@ void SaveMenu::DeleteInput(u32 keys)
             return;
         }
         gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
-        state = 7;
+        state = SAVE_MENU_STATE_CONFIRM_DELETE;
         pendingSlot = cursor;
         cursor = 0;
         return;
     }
     if (keys & B_BUTTON) {
         gAudioContext->PlaySfx(SFX_MENU_BACK, 0x100);
-        state = 0;
+        state = SAVE_MENU_STATE_MAIN;
         cursor = 3;
         return;
     }
@@ -591,17 +591,17 @@ void SaveMenu::ConfirmDeleteInput(u32 keys)
                 handle = cartSave;
                 handle->WriteSlot(rowIndex, buf);
             }
-            state = 0;
+            state = SAVE_MENU_STATE_MAIN;
             cursor = 4;
         } else {
-            state = 6;
+            state = SAVE_MENU_STATE_DELETE;
             cursor = pendingSlot;
             gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
         }
         return;
     }
     if (keys & B_BUTTON) {
-        state = 6;
+        state = SAVE_MENU_STATE_DELETE;
         cursor = pendingSlot;
         gAudioContext->PlaySfx(SFX_MENU_BACK, 0x100);
         return;

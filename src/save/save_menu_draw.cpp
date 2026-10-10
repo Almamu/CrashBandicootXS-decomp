@@ -108,7 +108,7 @@ void SaveMenu::DrawCancel(u8 highlight)
     s32 w;
 
     if (highlight)
-        gSmallFont->SetPalette(((flags >> 2) & 1) ? 1 : 2);
+        gSmallFont->SetPalette(IsBlinkOn() ? 1 : 2);
     else
         gSmallFont->SetPalette(0);
     w = gSmallFont->MeasureText((u8 *)GetUiText(0x23));
@@ -136,7 +136,9 @@ void SaveMenu::DrawYesNoPrompt(s32 value)
     w = gSmallFont->MeasureText((u8 *)GetUiText(value));
     gSmallFont->SetPos(0xa0 - w, 0x87);
     gSmallFont->DrawText((u8 *)GetUiText(value));
-    gSmallFont->SetPalette(((flags >> 2) & 1) ? 1 : 2);
+    /* spelled out: IsBlinkOn() here swaps r8 and sb in the rest of the
+     * function (#843) */
+    gSmallFont->SetPalette(((flags >> SAVE_MENU_BLINK_BIT) & 1) ? 1 : 2);
     if (!cursor) {
         gSmallFont->SetPos(0xa8, 0x87);
         gSmallFont->DrawText((u8 *)gMenuCursorText);
@@ -170,7 +172,7 @@ static inline void place_row_obj(Sprite *o, s32 x, s32 y)
  * palette `flags` bit 2 picks (1 or 2), others in palette 0. */
 #define SET_HIGHLIGHT(mgrExpr, flag)                                            \
     if (flag)                                                                   \
-        (mgrExpr)->SetPalette(((flags >> 2) & 1) ? 1 : 2);                      \
+        (mgrExpr)->SetPalette(IsBlinkOn() ? 1 : 2);                      \
     else                                                                        \
         (mgrExpr)->SetPalette(0)
 
@@ -264,7 +266,7 @@ static inline void draw_row_mark(SaveMenu *self, s32 arg1, s32 arg2, u8 arg3)
     s32 w;
 
     if (arg3)
-        gSmallFont->SetPalette(((self->flags >> 2) & 1) ? 1 : 2);
+        gSmallFont->SetPalette(self->IsBlinkOn() ? 1 : 2);
     else
         gSmallFont->SetPalette(0);
     w = gSmallFont->MeasureText((u8 *)GetUiText(0x25));
@@ -522,7 +524,7 @@ void SaveMenu::DrawEmptySlotLabel(s32 arg1, s32 arg2, u8 arg3)
     s32 w;
 
     if (arg3)
-        gSmallFont->SetPalette(((flags >> 2) & 1) ? 1 : 2);
+        gSmallFont->SetPalette(IsBlinkOn() ? 1 : 2);
     else
         gSmallFont->SetPalette(0);
     w = gSmallFont->MeasureText((u8 *)GetUiText(0x25));
@@ -544,10 +546,10 @@ void SaveMenu::DrawTitle(s32 labelIndex)
 }
 
 /* The highlight's blink: palette 1 or 2, by bit 2 of the frame counter
- * `flags` (the other draws spell the same test out). */
+ * `flags` (IsBlinkOn; the other draws test it themselves). */
 s32 SaveMenu::GetBlinkPalette()
 {
-    if ((flags >> 2) & 1) {
+    if (IsBlinkOn()) {
         return 1;
     }
     return 2;
@@ -621,36 +623,36 @@ void SaveMenu::Draw()
 {
     gOamBuffer->Reset();
     gObjVramCursor->Rewind();
-    if ((u32)state <= 0xa) {
+    if ((u32)state <= SAVE_MENU_STATE_UNK10) {
         switch (state) {
-        case 0:
+        case SAVE_MENU_STATE_MAIN:
             DrawMain();
             break;
-        case 1:
+        case SAVE_MENU_STATE_LOAD:
             DrawLoad();
             break;
-        case 2:
+        case SAVE_MENU_STATE_LOAD_LINK:
             DrawLoadLink();
             break;
-        case 3:
-        case 4:
+        case SAVE_MENU_STATE_LINK_TRANSFER:
+        case SAVE_MENU_STATE_MESSAGE:
             DrawMessage();
             break;
-        case 5:
+        case SAVE_MENU_STATE_SAVE:
             DrawSave();
             break;
-        case 6:
+        case SAVE_MENU_STATE_DELETE:
             DrawDelete();
             break;
-        case 9:
+        case SAVE_MENU_STATE_CONFIRM_OVERWRITE:
             DrawOverwrite();
             break;
-        case 7:
+        case SAVE_MENU_STATE_CONFIRM_DELETE:
             DrawConfirmDelete();
             break;
-        case 8:
+        case SAVE_MENU_STATE_UNK8:
             break;
-        case 10:
+        case SAVE_MENU_STATE_UNK10:
             break;
         default:
             break;
