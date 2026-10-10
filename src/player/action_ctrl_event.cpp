@@ -136,57 +136,42 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
             } else {
                 goto check_slide;
             }
-            /* The ROM has a dead load of the state here. The kind of
-             * load no later pass deletes: jump2 (after reload, with no
-             * flow pass after it) merges two identical arms of a test,
-             * leaving the test's load (#662 round 3 reproduced this in
-             * Player::HandleEvent, player_update.cpp, with identical
-             * arms or a dead store, neither of them source).
-             * #662 round 4, from jump.c and toplev.c: a test on `state`
-             * whose body flow1 finds dead is enough. flow1 turns the
-             * body into notes but keeps the jump; no jump pass runs
-             * between flow1 and jump2; jump2 deletes the jump to the
-             * next label and its cc0 setter, and delete_computation's
-             * removal of the insns feeding it (the load) is skipped once
-             * reload has run (the `if (! reload_completed)` Cygnus
-             * change), while flow2 has already run. `if (state ==
-             * ACTION_STATE_SLIDE) m = 0;` here (m is dead) gives the
-             * whole object. A body with live code keeps the test, and an
-             * empty one goes in the jump passes before flow1, whose
-             * dead-code pass then takes the load too; so only a dead
-             * store (or identical arms) leaves the load, and neither is
-             * source a programmer writes. #662 round 5 (cse.c): the
-             * dead body must also survive cse1's
-             * delete_trivially_dead_insns, which counts each register's
-             * uses (count_reg_usage) and deletes sets nothing reads, so
-             * the set register needs a use elsewhere in the function
-             * (`m`, `arg`, `event`: `m = state == SLIDE` matches too).
-             * Everything built from inlines dies there: an unused
-             * inline parameter (`Nop(state == SLIDE)`, `const bool &`),
-             * an inline's discarded return value, an empty inline in
-             * the arm; so do `do { if (...) {} } while (0)` asserts.
-             * #662 round 7 (a scan of every object for loads whose
-             * register is overwritten unread in the same block): apart
-             * from the DMA macros' volatile reads, the ROM has three, this
-             * one, Player::HandleEvent's and Crate::QueuePlayerCollision's
-             * (crate_break.cpp). The last is matched plain C: `side = 2;
-             * if (px > prevX) side = 1;` on a path that never reads
-             * `side`, a function-scope variable the other path uses. That
-             * is the dead store above, written for a reason; nothing in
-             * this case has a variable to compute that way. #662 round
-             * 8: tools/rtl_corpus.py's dead_load query over every
-             * object's final RTL finds the same three. #662 round 9
-             * (3240 variants): `state` as s32, u32 or an enum (0-0x29,
-             * 0-INT_MAX, -1-0x29), `event`/`arg` s32 or u32, `m` in the
-             * six integer types and SetBumped's parameter s32/bool/u8,
-             * with the bump stores plain, under `if (state !=
-             * ACTION_STATE_IDLE)`, `state >= 0`, `state <
-             * ACTION_STATE_COUNT`, a `switch (state)` with only a default
-             * or the bumped flag as `state != ACTION_STATE_IDLE`: only
-             * the identical-arms form matches; no type leaves the load
-             * from a test that reads naturally (57 instructions off at
-             * best; 58 with no load at all). */
-            *(volatile s32 *)&state;
+            /* Dead on purpose (owner decision, #662): the ROM loads
+             * `state` here and never uses it. This test is what leaves
+             * that load; its `m = 0` is dead (`m` isn't read after
+             * this), so the compiler drops the store, then the empty
+             * test, but not the load. gcc 2.9 does it in stages
+             * (#662 rounds 3-5, from jump.c, flow.c and cse.c):
+             * - jump1 can't delete the test, because its body still
+             *   does something;
+             * - cse1's delete_trivially_dead_insns keeps `m = 0`,
+             *   because `m` is used elsewhere in the function;
+             * - flow1 deletes the dead store but keeps the branch and
+             *   its compare;
+             * - jump2, after reload, deletes the empty branch and its
+             *   compare, but not the load feeding them (the `if (!
+             *   reload_completed)` in delete_computation), and no flow
+             *   pass runs after it.
+             * Without it the function is 1 instruction short (the load;
+             * plus a halfword of padding). What doesn't work:
+             * - an empty body, every release-mode assert or log macro
+             *   (`if (!(c)) {}`, an empty inline DebugHalt with or
+             *   without __FILE__/__LINE__, a debug-level gate,
+             *   `((void)(c))`, `do {} while (0)`), and anything built
+             *   from inlines (an unused parameter, a discarded return
+             *   value): deleted with their load before flow1 or by
+             *   cse1;
+             * - a store to a global or static error flag: keeps the
+             *   load, but also its own compare and store (+5);
+             * - round 9's 3240 type and test variants: every natural
+             *   test stays a real compare.
+             * The only other form that leaves the load is an if/else
+             * with identical arms. Player::HandleEvent's mask-level
+             * load (player_update.cpp) is the same mechanism and the
+             * same fix; Crate::QueuePlayerCollision's (crate_break.cpp)
+             * is the same shape written for a reason. */
+            if (state == ACTION_STATE_SLIDE)
+                m = 0;
             bumpTimer = 3;
             SetBumped(part, 1);
         }
