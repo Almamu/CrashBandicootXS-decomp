@@ -106,12 +106,8 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
         gHud->ShowCounters();
         break;
     case EVENT_WARP_EXIT:
-        {
-            LevelState *game = gLevelState;
-
-            if (game->timeTrial)
-                game->FreezeLevelClock(100);
-        }
+        if (gLevelState->timeTrial)
+            gLevelState->FreezeLevelClock(100);
         mover->HandleEvent((MovingSprite *)from, event, arg);
         gHud->ShowCounters();
         break;
@@ -303,12 +299,8 @@ void Player::Draw()
         if (game->maskLevel == MASK_LEVEL_INVINCIBLE || !IsBlinking(this) || (gRoomFrameCount & 4))
             gSpriteRenderer->Draw(this);
     }
-    {
-        LevelState *game = gLevelState;
-
-        if (game->maskLevel == MASK_LEVEL_INVINCIBLE && !IsBlinking(this))
-            game->SetMaskLevel(MASK_LEVEL_TWO);
-    }
+    if (gLevelState->maskLevel == MASK_LEVEL_INVINCIBLE && !IsBlinking(this))
+        gLevelState->SetMaskLevel(MASK_LEVEL_TWO);
     {
         s32 px = x;
 
