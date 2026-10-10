@@ -25,6 +25,47 @@ extern "C" {
  * with `new EnemyCtrl`, a 0x8C-byte block. It doesn't use
  * Ctrl's `owner` and `state`: Attach sets `target`, and its own `state`
  * at 0x74 hides Ctrl's. */
+
+/* `state` (#843, docs/flags/enemy_ctrl.md): what Update does each
+ * frame, set once by the spawner (SetState). The names say which
+ * updaters Update runs; the enemies that use each are in the doc. */
+#define ENEMY_STATE_STILL 1             // nothing (the moray eel, the laser barrier)
+#define ENEMY_STATE_PATROL 2            // UpdatePatrol
+#define ENEMY_STATE_TRIGGER 3           // UpdateTriggerBox (the venus flytrap)
+#define ENEMY_STATE_ATTACK_CYCLE 4      // UpdateAttackCycle
+#define ENEMY_STATE_FALL 5              // falls, and is gone below the level (the seal)
+#define ENEMY_STATE_BOB 6               // UpdateBob (the jellyfish)
+#define ENEMY_STATE_FLIP_CYCLE 7        // UpdateFlipCycle (the squid)
+#define ENEMY_STATE_HOP 8               // UpdateHop (the frog)
+#define ENEMY_STATE_HOME_X_OSCILLATE 9  // UpdateHomingX, UpdateOscillateX
+#define ENEMY_STATE_HOME_Y 10           // UpdateHomingY
+#define ENEMY_STATE_HOME 11             // UpdateHomingX and Y; a sea mine blows up on contact
+// Does nothing in Update or SetState, and no spawner sets it.
+#define ENEMY_STATE_UNK12 12
+#define ENEMY_STATE_PATROL_ATTACK 13    // UpdatePatrol, UpdateAttackCycle
+#define ENEMY_STATE_ATTACK_OSCILLATE 14 // UpdateAttackCycle, UpdateOscillateY (the pufferfish)
+#define ENEMY_STATE_PATROL_HOME_Y 15    // UpdatePatrol, UpdateHomingY (the shark)
+#define ENEMY_STATE_ATTACK_SHOOT 16     // UpdateAttackCycle, UpdateShooter
+#define ENEMY_STATE_SWOOP 17            // the vulture's swoop, UpdateTriggerBox
+#define ENEMY_STATE_SAUCER 18           // patrol, attack cycle and popup (the saucer lab assistant)
+
+/* `mode` (#843): the animation mode, an index into the `anims` table
+ * (SetAnimMode). The updaters step through them: 0-2 in the normal pose,
+ * 3-5 into, in and out of the attack, 6-7 the normal ones' attack-pose
+ * versions. */
+#define ENEMY_MODE_NORMAL 0        // idle or walking
+#define ENEMY_MODE_TURN 1          // turning round (UpdatePatrol, UpdateHop, UpdateFlipCycle)
+#define ENEMY_MODE_STRIKE 2        // UpdateTriggerBox's triggered move, UpdateShooter's shot
+#define ENEMY_MODE_ATTACK_START 3  // UpdateAttackCycle: going into the attack
+#define ENEMY_MODE_ATTACK 4        // UpdateAttackCycle: attacking (UpdatePatrol walks in it)
+#define ENEMY_MODE_ATTACK_END 5    // UpdateAttackCycle: coming out of it
+#define ENEMY_MODE_ATTACK_TURN 6   // turning in the attack (UpdateFlipCycle's vertical flip)
+#define ENEMY_MODE_ATTACK_STRIKE 7 // UpdateShooter's shot from the attack pose
+
+/* An `anims` entry for a mode the enemy has no animation for:
+ * UpdateAttackCycle skips the start and end modes it is in. */
+#define ENEMY_ANIM_NONE 8
+
 class EnemyCtrl : public Ctrl
 {
 public:

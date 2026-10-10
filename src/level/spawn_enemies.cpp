@@ -108,7 +108,7 @@ void SpawnLizard(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetAnims(hdr, gEnemyDefaultAnimMap);
     rec2 = EntityParams(arg3);
     part->StartAnim(0);
-    hdr->SetState(2);
+    hdr->SetState(ENEMY_STATE_PATROL);
     hdr->SetRangeX(rec2->p.patrol.rangeX);
 }
 
@@ -133,7 +133,7 @@ void SpawnVulture(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
-    hdr->SetState(0x11);
+    hdr->SetState(ENEMY_STATE_SWOOP);
     hdr->anims = gVultureAnimMap;
     SetHitBox(hdr, 0, 0, 100, 50);
 }
@@ -161,7 +161,7 @@ void SpawnVenusFlytrap(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetAnims(hdr, gEnemyDefaultAnimMap);
     part->StartAnim(1);
     part->kind = EVENT_HIT_BITE;
-    hdr->SetState(3);
+    hdr->SetState(ENEMY_STATE_TRIGGER);
     hdr->anims = gVenusFlytrapAnimMap;
     SetHitBox(hdr, 0, -20, 45, 20);
 }
@@ -192,7 +192,7 @@ void SpawnPatrollingJungleEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
     rec2 = EntityParams(arg3);
-    hdr->SetState(2);
+    hdr->SetState(ENEMY_STATE_PATROL);
     hdr->SetRangeX(rec2->p.patrol.rangeX);
 }
 
@@ -226,7 +226,7 @@ void SpawnBlowgunTribesman(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
                    rec2->p.cycle.cycleOffset);
     mid = (rec2->p.cycle.idleTime + rec2->p.cycle.attackTime) / 2;
     SetShotTiming(hdr, mid, rec2->p.cycle.cycleOffset + mid / 4);
-    hdr->SetState(0x10);
+    hdr->SetState(ENEMY_STATE_ATTACK_SHOOT);
 }
 
 /* Bank +0xB4, animation 0 from its start, gPenguinAnimMap; the record's
@@ -257,7 +257,7 @@ void SpawnPenguin(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetAttackCycle(hdr, rec2->p.rangeAttackFirst.idleTime, rec2->p.rangeAttackFirst.attackTime,
                    rec2->p.rangeAttackFirst.cycleOffset);
     hdr->SetRangeX(rec2->p.rangeAttackFirst.rangeX);
-    hdr->SetState(0xd);
+    hdr->SetState(ENEMY_STATE_PATROL_ATTACK);
 }
 
 /* A ground sprite on bank +0xCC, animation 0 (set before the second attach),
@@ -284,7 +284,7 @@ void SpawnSeal(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
-    hdr->SetState(5);
+    hdr->SetState(ENEMY_STATE_FALL);
     gAudioContext->PlaySfx(SFX_SEAL_SPAWN, 0x100);
 }
 
@@ -311,7 +311,7 @@ void SpawnPolarBear(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetAnims(hdr, gEnemyDefaultAnimMap);
     rec2 = EntityParams(arg3);
     part->kind = EVENT_HIT_BITE;
-    hdr->SetState(2);
+    hdr->SetState(ENEMY_STATE_PATROL);
     hdr->SetRangeX(rec2->p.patrol.rangeX);
 }
 
@@ -344,7 +344,7 @@ void SpawnPufferfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetAttackCycle(hdr, rec2->p.cycle.idleTime, rec2->p.cycle.attackTime,
                    rec2->p.cycle.cycleOffset);
     SetWave(hdr, rec2->p.cycle.wavePeriod, rec2->p.cycle.wavePhase, rec2->p.cycle.waveAmplitude);
-    hdr->SetState(14);
+    hdr->SetState(ENEMY_STATE_ATTACK_OSCILLATE);
 }
 
 /* Bank +0x30, kind 6, gSharkAnimMap; state 15, then the record's X range and
@@ -372,7 +372,7 @@ void SpawnShark(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec2 = EntityParams(arg3);
     part->kind = EVENT_HIT_BITE;
     SetAnims(hdr, gSharkAnimMap);
-    hdr->SetState(15);
+    hdr->SetState(ENEMY_STATE_PATROL_HOME_Y);
     hdr->SetRangeX(rec2->p.rangeHomingY.rangeX);
     hdr->SetRangeYSpeed(rec2->p.rangeHomingY.rangeY, rec2->p.rangeHomingY.speedY,
                         rec2->p.rangeHomingY.accelY);
@@ -404,7 +404,7 @@ void SpawnMorayEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         part->SetFlipX(!f);
     }
     part->kind = EVENT_HIT_BITE;
-    hdr->SetState(1);
+    hdr->SetState(ENEMY_STATE_STILL);
 }
 
 /* Bank +0x60, kind 3, gElectricEelAnimMap; the record's attack cycle and X
@@ -435,7 +435,7 @@ void SpawnElectricEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetAttackCycle(hdr, rec2->p.rangeCycle.idleTime, rec2->p.rangeCycle.attackTime,
                    rec2->p.rangeCycle.cycleOffset);
     hdr->SetRangeX(rec2->p.rangeCycle.rangeX);
-    hdr->SetState(13);
+    hdr->SetState(ENEMY_STATE_PATROL_ATTACK);
 }
 
 /* Bank +0x54, gSquidAnimMap (without the default map first); state 7. */
@@ -458,7 +458,7 @@ void SpawnSquid(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetMirror(part, rec);
     CollidableList()->Add(part);
     hdr->anims = gSquidAnimMap;
-    hdr->SetState(7);
+    hdr->SetState(ENEMY_STATE_FLIP_CYCLE);
 }
 
 /* Bank +0x6C; state 6, then the record's wave. */
@@ -483,7 +483,7 @@ void SpawnJellyfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
     rec2 = EntityParams(arg3);
-    hdr->SetState(6);
+    hdr->SetState(ENEMY_STATE_BOB);
     SetWave(hdr, rec2->p.wave.period, rec2->p.wave.phase, rec2->p.wave.amplitude);
 }
 
@@ -513,7 +513,7 @@ void SpawnLaserBarrier(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     }
     SetKind(part, 2);
     AndFlags(part, ~ENTITY_FLAG_VULNERABLE);
-    hdr->SetState(1);
+    hdr->SetState(ENEMY_STATE_STILL);
 }
 
 /* Entity type 0x38: an enemy on sprite bank 27 (a shell that shoots out
@@ -546,7 +546,7 @@ void SpawnStationarySpaceEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetAnims(hdr, gStationarySpaceEnemyAnimMap);
     SetAttackCycle(hdr, rec2->p.attackFirst.idleTime, rec2->p.attackFirst.attackTime,
                    rec2->p.attackFirst.cycleOffset);
-    hdr->SetState(4);
+    hdr->SetState(ENEMY_STATE_ATTACK_CYCLE);
 }
 
 /* Entity type 0x39: an enemy on sprite bank 24 that patrols and attacks
@@ -579,7 +579,7 @@ void SpawnPatrollingSpaceEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetAttackCycle(hdr, rec2->p.rangeCycle.idleTime, rec2->p.rangeCycle.attackTime,
                    rec2->p.rangeCycle.cycleOffset);
     hdr->SetRangeX(rec2->p.rangeCycle.rangeX);
-    hdr->SetState(0xd);
+    hdr->SetState(ENEMY_STATE_PATROL_ATTACK);
 }
 
 /* 0x28 pixels above its spot, bank +0x15C, gSaucerLabAssistantAnimMap; an
@@ -610,7 +610,7 @@ void SpawnSaucerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetAnims(hdr, gSaucerLabAssistantAnimMap);
     SetAttackCycle(hdr, 0x78, 0x5a, rec2->p.cycle.cycleOffset);
     hdr->SetRangeX(0x28);
-    hdr->SetState(0x12);
+    hdr->SetState(ENEMY_STATE_SAUCER);
 }
 
 /* Bank +0x138, kind 0xA, flag bit 6 cleared, gCrusherAnimMap; the record's
@@ -641,7 +641,7 @@ void SpawnPistonCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetAnims(hdr, gCrusherAnimMap);
     SetAttackCycle(hdr, rec2->p.cycle.idleTime, rec2->p.cycle.attackTime,
                    rec2->p.cycle.cycleOffset);
-    hdr->SetState(4);
+    hdr->SetState(ENEMY_STATE_ATTACK_CYCLE);
 }
 
 /* Bank +0x114, X mirror flipped, gFlamethrowerLabAssistantAnimMap; the
@@ -688,7 +688,7 @@ void SpawnFlamethrowerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetAnims(hdr, gFlamethrowerLabAssistantAnimMap);
     SetAttackCycle(hdr, rec2->p.attackFirst.idleTime, rec2->p.attackFirst.attackTime,
                    rec2->p.attackFirst.cycleOffset);
-    hdr->SetState(4);
+    hdr->SetState(ENEMY_STATE_ATTACK_CYCLE);
 }
 
 /* Entity type 0x41: an enemy on sprite bank 22 that follows the player's
@@ -718,7 +718,7 @@ void SpawnHomingSewerEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
     rec2 = EntityParams(arg3);
-    hdr->SetState(9);
+    hdr->SetState(ENEMY_STATE_HOME_X_OSCILLATE);
     hdr->SetRangeXSpeed(rec2->p.homingX.rangeX, rec2->p.homingX.speedX, rec2->p.homingX.accelX);
     SetWave(hdr, 0x80, 0, 0x14);
 }
@@ -750,7 +750,7 @@ void SpawnPatrollingSewerEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetAnims(hdr, gEnemyDefaultAnimMap);
     rec2 = EntityParams(arg3);
     SetAnims(hdr, gPatrollingSewerEnemyAnimMap);
-    hdr->SetState(2);
+    hdr->SetState(ENEMY_STATE_PATROL);
     hdr->SetRangeX(rec2->p.patrol.rangeX);
 }
 
@@ -776,7 +776,7 @@ void SpawnRat(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
     rec2 = EntityParams(arg3);
-    hdr->SetState(2);
+    hdr->SetState(ENEMY_STATE_PATROL);
     hdr->SetRangeX(rec2->p.patrol.rangeX);
 }
 
@@ -802,7 +802,7 @@ void SpawnFrog(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetAnims(hdr, gEnemyDefaultAnimMap);
     part->kind = 7;
     hdr->anims = gPatrollingSewerEnemyAnimMap;
-    hdr->SetState(8);
+    hdr->SetState(ENEMY_STATE_HOP);
 }
 
 /* Bank +0x48, kind 4; state 0xB, then the record's X and Y ranges and
@@ -829,7 +829,7 @@ void SpawnSeaMine(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetAnims(hdr, gEnemyDefaultAnimMap);
     rec2 = EntityParams(arg3);
     part->kind = EVENT_HIT_EXPLOSION;
-    hdr->SetState(0xb);
+    hdr->SetState(ENEMY_STATE_HOME);
     hdr->SetRangeXSpeed(rec2->p.homingXY.rangeX, rec2->p.homingXY.speedX, rec2->p.homingXY.accelX);
     hdr->SetRangeYSpeed(rec2->p.homingXY.rangeY, rec2->p.homingXY.speedY, rec2->p.homingXY.accelY);
 }
@@ -862,5 +862,5 @@ void SpawnWoodenCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->anims = gCrusherAnimMap;
     SetAttackCycle(hdr, rec2->p.cycle.idleTime, rec2->p.cycle.attackTime,
                    rec2->p.cycle.cycleOffset);
-    hdr->SetState(4);
+    hdr->SetState(ENEMY_STATE_ATTACK_CYCLE);
 }

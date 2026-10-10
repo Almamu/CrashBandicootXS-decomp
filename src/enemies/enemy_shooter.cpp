@@ -26,11 +26,11 @@ void EnemyCtrl::UpdateShooter()
 
     if (__modsi3(gRoomFrameCount + shotPeriod - shotPhase, shotPeriod) == 0) {
         switch (mode) {
-        case 0:
-            SetAnimMode(2);
+        case ENEMY_MODE_NORMAL:
+            SetAnimMode(ENEMY_MODE_STRIKE);
             break;
-        case 4:
-            SetAnimMode(7);
+        case ENEMY_MODE_ATTACK:
+            SetAnimMode(ENEMY_MODE_ATTACK_STRIKE);
             break;
         }
         return;
@@ -39,11 +39,11 @@ void EnemyCtrl::UpdateShooter()
     part = target;
     if (part->animDone != 0) {
         switch (mode) {
-        case 2:
-            SetAnimMode(0);
+        case ENEMY_MODE_STRIKE:
+            SetAnimMode(ENEMY_MODE_NORMAL);
             break;
-        case 7:
-            SetAnimMode(4);
+        case ENEMY_MODE_ATTACK_STRIKE:
+            SetAnimMode(ENEMY_MODE_ATTACK);
             break;
         }
         return;
@@ -51,11 +51,11 @@ void EnemyCtrl::UpdateShooter()
 
     shot = 0;
     switch (mode) {
-    case 2:
+    case ENEMY_MODE_STRIKE:
         if (part->frame == 0xa && part->stepTimer == 0)
             shot = LaunchHarmfulEffectPart(0xc, 6, 0, -0xa, 0x400, part);
         break;
-    case 7:
+    case ENEMY_MODE_ATTACK_STRIKE:
         if (part->frame == 8 && part->stepTimer == 0)
             shot = LaunchHarmfulEffectPart(0xc, 6, 0, 8, 0x400, part);
         break;

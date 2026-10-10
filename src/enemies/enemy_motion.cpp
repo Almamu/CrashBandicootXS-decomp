@@ -107,25 +107,25 @@ void EnemyCtrl::UpdateHop()
     t->SetPos(t->x, baseY);
     if (t->animDone) {
         switch (mode) {
-        case 0:
-            SetAnimMode(1);
+        case ENEMY_MODE_NORMAL:
+            SetAnimMode(ENEMY_MODE_TURN);
             break;
-        case 1:
+        case ENEMY_MODE_TURN:
             {
                 u32 m = t->mirrorFlags.mirrorX;
                 t->mirrorFlags.mirrorX = !m;
             }
-            SetAnimMode(0);
+            SetAnimMode(ENEMY_MODE_NORMAL);
             break;
         }
     } else if (t->frame == 8 && t->stepTimer == 0) {
         switch (mode) {
-        case 0:
+        case ENEMY_MODE_NORMAL:
             SetMotionX(3);
             SetMotionY(3);
             gAudioContext->PlaySfx(SFX_ENEMY_HOP, 0x100);
             break;
-        case 1:
+        case ENEMY_MODE_TURN:
             SetMotionX(0);
             SetMotionY(3);
             gAudioContext->PlaySfx(SFX_ENEMY_HOP, 0x100);
@@ -155,24 +155,24 @@ void EnemyCtrl::UpdateFlipCycle()
     if (!part->animDone)
         return;
     switch (mode) {
-    case 0:
+    case ENEMY_MODE_NORMAL:
         if (counter & 1) {
             u32 m = part->mirrorFlags.mirrorX;
             part->mirrorFlags.mirrorX = !m;
-            SetAnimMode(1);
+            SetAnimMode(ENEMY_MODE_TURN);
         } else {
-            SetAnimMode(6);
+            SetAnimMode(ENEMY_MODE_ATTACK_TURN);
         }
         SetMotionX(0);
         SetMotionY(0);
         break;
-    case 1:
+    case ENEMY_MODE_TURN:
         counter = (counter + 1) % 4;
         SetMotionX(2);
         SetMotionY(2);
-        SetAnimMode(0);
+        SetAnimMode(ENEMY_MODE_NORMAL);
         break;
-    case 6:
+    case ENEMY_MODE_ATTACK_TURN:
         {
             u32 m = part->mirrorFlags.mirrorY;
             part->mirrorFlags.mirrorY = !m;
@@ -180,7 +180,7 @@ void EnemyCtrl::UpdateFlipCycle()
         counter = (counter + 1) % 4;
         SetMotionX(2);
         SetMotionY(2);
-        SetAnimMode(0);
+        SetAnimMode(ENEMY_MODE_NORMAL);
         break;
     }
 }
