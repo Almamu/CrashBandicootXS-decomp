@@ -6,7 +6,7 @@
 
 /*
  * The cutscene subsystem (src/cutscene/): the slideshow player that shows
- * the cutscenes (src/data/cutscenes_16d1c8.c). PlayCutscene
+ * the cutscenes (src/data/cutscenes_16d1c8.cpp). PlayCutscene
  * (level_cutscene.cpp) plays cutscene `idx` as a sequence of slides, each a
  * full-screen picture shown with its page of text in the current
  * language.
@@ -18,8 +18,10 @@
  *
  * The slideshow and the cutscene player are C++ classes
  * (include/cutscene.hpp) with no C view. This header keeps what C needs:
- * the slide and text tables, which src/data/cutscenes_16d1c8.c defines,
- * and the C-linkage data and function the C++ shares with them.
+ * the slide and page tables (src/data/cutscenes_16d1c8.cpp,
+ * cutscene_slides_16e064.cpp), and the C-linkage data and function the
+ * C++ shares with them. The cutscene text is C
+ * (src/data/cutscene_text_*.c) and includes nothing.
  */
 
 /* One slide. */
@@ -52,13 +54,13 @@ struct cutscene_page {
 };
 
 /* The cutscenes, one {slides, count} header each
- * (src/data/cutscenes_16d1c8.c). */
+ * (src/data/cutscenes_16d1c8.cpp). */
 extern const struct cutscene_slides gCutscenes[11];
 
 /* Every cutscene's pages, per language (gLanguage), each indexed like
  * gCutscenes. Defined in src/iwram/iwram_data.cpp. */
 extern const struct cutscene_page *const *gCutsceneTexts[6];
-/* The tables gCutsceneTexts points at (src/data/cutscenes_16d1c8.c). */
+/* The tables gCutsceneTexts points at (src/data/cutscenes_16d1c8.cpp). */
 extern const struct cutscene_page *const gCutsceneTextEnglish[11];
 extern const struct cutscene_page *const gCutsceneTextFrench[11];
 extern const struct cutscene_page *const gCutsceneTextGerman[11];

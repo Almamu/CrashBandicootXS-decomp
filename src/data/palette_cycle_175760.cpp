@@ -1,5 +1,7 @@
+extern "C" {
 #include "core.h"
 #include "actor.h"
+}
 
 /*
  * ROM 0x08175760-0x08178F80. Linked in ROM order between data/data.s

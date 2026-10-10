@@ -12,7 +12,9 @@ progress".
 A converted table is a `const` object in a `src/data/*.cpp` file, written
 in C++ like the rest of the game code (#844; the tables were C files until
 then), with a real element type (from a shared header when the consuming
-code has one) and real symbol references for every pointer. The linker
+code has one) and real symbol references for every pointer. The
+exception is the string tables, which stay C (see "Text tables in C"
+below). The linker
 script places the file's `.rodata` at the table's ROM address, between the
 raw parts of `data/data.s`. A library's own tables (GAX2's, AgbEeprom's,
 libgcc's `__clz_tab`) follow the same convention in C under
@@ -149,6 +151,32 @@ they became C++, #844):
   (`(void (*)(void))0xffffffef` for the non-code slots of
   `struct category_vtable`).
 
+### Text tables in C
+
+The string tables are C: `cutscene_text_16d4d8.c` and
+`cutscene_text_16e8a4.c` (the cutscenes' pages) and `ui_text_172cd4.c`
+(the UI text). They are the only C files left in `src/`. Each is a run
+of `const u8 s[] = "..."` arrays with, after them, the arrays of pointers
+that list them, which C++ can't write: g++ 2.9's `decay_conversion`
+(`cp/typeck.c`) replaces a `const` variable by its initializer wherever
+it decays to a pointer, unless the initializer is a brace list, and it
+doesn't except arrays. A string array named in another table's
+initializer then becomes a pointer to a new copy of the literal, so the
+table points at a duplicate string (`.LC0: .ascii "..."`, `.word .LC0`)
+instead of the array. `&s[0]` and `s + 0` are folded the same way, at
+any optimization level. C's `default_conversion` (`c-typeck.c`) does the
+same only under `-O` and never for an array, so agbcc keeps the
+references.
+
+The C files include nothing: a local `typedef unsigned char u8;`, the
+strings, their pointer arrays and `extern` declarations for strings
+another of the files defines. The C++ code that uses them declares
+them itself: `system.h` the UI text's six arrays, and the cutscene
+files (`cutscenes_16d1c8.cpp`, `cutscene_slides_16e064.cpp`) the page
+arrays their `struct cutscene_page` tables point at. A table that has
+strings and other data is split at the ROM boundary between them: the
+cutscenes are four files in ROM order.
+
 ### Pitfalls
 
 - **Forgetting `const`.** A non-`const` initialized object goes to
@@ -228,7 +256,10 @@ The first batch (all pointer tables, all byte-exact):
 | `map_tables_16c5f0.cpp` | `0x0816C5F0` | level-select offsets, animation ids, OBJ sizes |
 | `dispatch_table_16c6a4.c` | `0x0816C6A4` | the unified 92-slot function-pointer dispatch array |
 | `level_table_16c814.c` | `0x0816C814` | the level table (25 `struct level_info`), the levels' room lists and 48 room records, the theme music cues, 5 colour-cycle lists (see "Level data") |
-| `cutscenes_16d1c8.c` | `0x0816D1C8` | the 11 cutscenes: slide lists, 24 slides, the text of 6 languages (see "Cutscenes") |
+| `cutscenes_16d1c8.cpp` | `0x0816D1C8` | the 11 cutscenes' language tables and slide lists, the English pages (see "Cutscenes") |
+| `cutscene_text_16d4d8.c` | `0x0816D4D8` | the cutscenes' English text, in C (see "Text tables in C") |
+| `cutscene_slides_16e064.cpp` | `0x0816E064` | the other five languages' pages, the 24 slides |
+| `cutscene_text_16e8a4.c` | `0x0816E8A4` | the French, German, Spanish, Italian and Dutch text, in C |
 | `terrain_1725a8.c` | `0x081725A8` | the 51 terrain types of the collision maps |
 | `ui_text_172cd4.c` | `0x08172CD4` | the game's UI text in six languages (see "UI text") |
 | `hud_fonts_174be0.c` | `0x08174BE0` | the HUD digit slots and the two HUD fonts' character lists and glyph metrics |
@@ -651,8 +682,11 @@ through its own local views (`MedalTableEntry`, `threshold_table_entry`,
 ### Cutscenes
 
 The 11 cutscenes (the intro, the story scenes between worlds, the
-endings) are `src/data/cutscenes_16d1c8.c` (`0x0816D1C8`-`0x081725A8`,
-types in `include/cutscene.h`) and `src/data/cutscene_pictures_5a9f70.c`
+endings) are `src/data/cutscenes_16d1c8.cpp`, `cutscene_text_16d4d8.c`,
+`cutscene_slides_16e064.cpp` and `cutscene_text_16e8a4.c`
+(`0x0816D1C8`-`0x081725A8` in that order, types in `include/cutscene.h`;
+the text is C, see "Text tables in C") and
+`src/data/cutscene_pictures_5a9f70.cpp`
 (`0x085A9F70`-`0x0861BADC`). `PlayCutscene` plays cutscene `idx`: the
 slides of `gCutscenes[idx]` (`struct cutscene_slides`), each a
 `struct cutscene_slide` (picture, timing, fades, music cue, sound

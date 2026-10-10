@@ -347,6 +347,9 @@ SECTIONS
         build/crashbandicootxs/src/data/dispatch_table_16c6a4.o(.rodata);
         build/crashbandicootxs/src/data/level_table_16c814.o(.rodata);
         build/crashbandicootxs/src/data/cutscenes_16d1c8.o(.rodata);
+        build/crashbandicootxs/src/data/cutscene_text_16d4d8.o(.rodata);
+        build/crashbandicootxs/src/data/cutscene_slides_16e064.o(.rodata);
+        build/crashbandicootxs/src/data/cutscene_text_16e8a4.o(.rodata);
         build/crashbandicootxs/src/data/terrain_1725a8.o(.rodata);
         build/crashbandicootxs/src/data/ui_text_172cd4.o(.rodata);
         build/crashbandicootxs/src/data/hud_fonts_174be0.o(.rodata);

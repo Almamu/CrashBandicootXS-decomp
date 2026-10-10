@@ -380,7 +380,7 @@ def room_c(room_dir):
     def ext(s):
         if s:
             externs.add(s)
-        return s or "NULL"
+        return s or "0"
 
     by_name = {n: t for t, n in enumerate(entity_type_names()) if n}
     types = [entity_type(name, e["type"], by_name) for e in room["entities"]]
@@ -399,11 +399,11 @@ def room_c(room_dir):
     for i, r in enumerate(recs):
         out.append("    u32 r%d[%d];" % (i, len(r)))
     out.append("};\n")
-    out.append("const struct %s %s =\n{" % (stype, sym["params"]))
+    out.append("extern const struct %s %s =\n{" % (stype, sym["params"]))
     for r in recs:
         out.append("    { " + ", ".join("%#x" % v for v in r) + " },")
     out.append("};\n")
-    out.append("const u16 %s[%d] =\n{" % (sym["param_offsets"], len(recs)))
+    out.append("extern const u16 %s[%d] =\n{" % (sym["param_offsets"], len(recs)))
     for i in range(len(recs)):
         out.append("    LEVEL_PARAM_OFFSET(struct %s, r%d)," % (stype, i))
     out.append("};\n")
@@ -413,7 +413,7 @@ def room_c(room_dir):
         g = grids[lname]
         w, h = layer["size_chunks"]
         out.append("/* %s chunk grid, %d x %d */" % (lname, w, h))
-        out.append("const u16 %s[%d] =\n{" % (layer["grid_symbol"], len(g)))
+        out.append("extern const u16 %s[%d] =\n{" % (layer["grid_symbol"], len(g)))
         out.append(c_array(g, "%d", w))
         out.append("};\n")
 
@@ -421,7 +421,7 @@ def room_c(room_dir):
     pal = [int(c, 16) for c in room["palette"]]
     if len(pal) != 256:
         sys.exit("%s: the palette needs 256 colours" % name)
-    out.append("const u16 %s[256] =\n{" % sym["palette"])
+    out.append("extern const u16 %s[256] =\n{" % sym["palette"])
     out.append(c_array(pal, "0x%04X", 8))
     out.append("};\n")
 
@@ -429,14 +429,14 @@ def room_c(room_dir):
     counts = [0] * ENTITY_TYPES
     for t in types:
         counts[t] += 1
-    out.append("const u16 %s[%d] =\n{" % (sym["type_counts"], ENTITY_TYPES))
+    out.append("extern const u16 %s[%d] =\n{" % (sym["type_counts"], ENTITY_TYPES))
     out.append(c_array(counts, "%d", 16))
     out.append("};\n")
 
     # Entity links.
     links = room.get("links")
     if links is not None:
-        out.append("const LEVEL_LINKS(%d) %s =\n{\n    %d,\n    {" % (len(links), sym["links"], len(links)))
+        out.append("extern const LEVEL_LINKS(%d) %s =\n{\n    %d,\n    {" % (len(links), sym["links"], len(links)))
         for i in range(0, len(links), 6):
             out.append("        " + " ".join("{ %d, %d }," % tuple(l) for l in links[i:i + 6]))
         out.append("    },\n};\n")
@@ -445,29 +445,29 @@ def room_c(room_dir):
     layer_idx = {n: i for i, (n, _) in enumerate(room_layers(room))}
 
     def lref(n):
-        return "&%s[%d]" % (sym["layers"], layer_idx[n]) if n in layer_idx else "NULL"
+        return "&%s[%d]" % (sym["layers"], layer_idx[n]) if n in layer_idx else "0"
 
     a = room["asset"]
-    out.append("const struct level_desc %s =\n{" % sym["desc"])
+    out.append("extern const struct level_desc %s =\n{" % sym["desc"])
     out.append("    { %s, %s, %s }," % (lref("bg1"), lref("bg2"), lref("bg3")))
     out.append("    %s," % lref("bg0"))
     out.append("    %s," % lref("collision"))
     out.append("    %s," % ext(a["symbol"]))
     out.append("    %d," % (1 if a["packed"] else 0))
     out.append("    &%s," % sym["entities"])
-    out.append("    %s," % ("(const struct level_link_list *)&%s" % sym["links"] if links is not None else "NULL"))
+    out.append("    %s," % ("(const struct level_link_list *)&%s" % sym["links"] if links is not None else "0"))
     out.append("};\n")
 
     # Entity list header.
     groups = entity_groups(room)
-    out.append("const struct level_entity_list %s =\n{" % sym["entities"])
+    out.append("extern const struct level_entity_list %s =\n{" % sym["entities"])
     out.append("    %d, %d, %s, %s, (const u32 *)&%s, %s,"
                % (len(room["entities"]), len(groups), sym["groups"], sym["param_offsets"],
                   sym["params"], sym["type_counts"]))
     out.append("};\n")
 
     # Layer descriptors.
-    out.append("const struct level_layer_desc %s[%d] =\n{" % (sym["layers"], len(layer_idx)))
+    out.append("extern const struct level_layer_desc %s[%d] =\n{" % (sym["layers"], len(layer_idx)))
     for lname, layer in room_layers(room):
         w, h = layer["size_chunks"]
         out.append("    { /* %s */" % lname)
@@ -479,13 +479,13 @@ def room_c(room_dir):
     out.append("};\n")
 
     # Entity groups and the entities.
-    out.append("const struct level_entity_group %s[%d] =\n{" % (sym["groups"], len(groups)))
+    out.append("extern const struct level_entity_group %s[%d] =\n{" % (sym["groups"], len(groups)))
     for first, count, stored in groups:
         out.append("    { %d, %d, &%s[%d] }," % (first, count, sym["items"], stored))
     out.append("};\n")
     ents = room["entities"]
     out.append("/* In id order: type, x, y, param */")
-    out.append("const struct level_entity %s[%d] =\n{" % (sym["items"], len(ents)))
+    out.append("extern const struct level_entity %s[%d] =\n{" % (sym["items"], len(ents)))
     for i, e in enumerate(ents):
         out.append("    { %d, %d, %d, %d }, /* %d */" % (types[i], e["x"], e["y"], e["param"], i))
     out.append("};\n")
