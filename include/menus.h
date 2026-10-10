@@ -14,7 +14,6 @@
 
 #include "core.h"
 #include "aabb.h"
-#include "vtable.h"
 #include "graphics_package.h"
 #include "constants/levels.h"
 

@@ -2,7 +2,6 @@
 #define GUARD_ACTOR_SELF_H
 
 #include "core.h"
-#include "vtable.h"
 
 /*
  * The plain records of the 3D actors (class ActorSelf and its AnimPart

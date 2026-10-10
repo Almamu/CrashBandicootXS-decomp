@@ -13,7 +13,6 @@
 #include "core.h"
 #include "actor_self.h"
 #include "graphics_package.h"
-#include "vtable.h"
 
 /* One step of a logo piece's motion (the gTitleLogoPieceMotionN and
  * gVvLogoPieceMotionNN tables). When the piece's hold count runs out it

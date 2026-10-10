@@ -16,7 +16,6 @@
 #include "actor.h"
 #include "actor_self.h"
 #include "aabb.h"
-#include "vtable.h"
 #include "objects.h"
 #include "constants/action_states.h"
 #include "constants/attack_kinds.h"
