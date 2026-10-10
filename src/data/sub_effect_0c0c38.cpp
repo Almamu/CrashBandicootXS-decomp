@@ -1,5 +1,7 @@
+extern "C" {
 #include "core.h"
 #include "actor_anim.h"
+}
 
 /*
  * ROM 0x080C0C38-0x080C2758: categories 1 and 2's sub_effect_tables.
@@ -9,7 +11,7 @@
 
 /* Category 1's spawnTable (gActorCategories[1].spawnTable,
  * read by SelectActorCategory (actor_category_select.cpp) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
-const SUB_EFFECT_TABLE(175) gCategory1SpawnTable = {
+extern const SUB_EFFECT_TABLE(175) gCategory1SpawnTable = {
     {
         { 4000, 175, 3, 3, 3, 0, 0, 54 },
         { 18, -1, 1, 1, 1, 0, 30, 54 },
@@ -192,7 +194,7 @@ const SUB_EFFECT_TABLE(175) gCategory1SpawnTable = {
 
 /* Category 2's spawnTable (gActorCategories[2].spawnTable,
  * read by SelectActorCategory (actor_category_select.cpp) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
-const SUB_EFFECT_TABLE(171) gCategory2SpawnTable = {
+extern const SUB_EFFECT_TABLE(171) gCategory2SpawnTable = {
     {
         { 4000, 171, 3, 3, 3, 0, 0, 54 },
         { 18, -1, 30, 7, 30, 0, 30, 54 },

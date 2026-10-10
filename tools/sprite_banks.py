@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Extracts the sprite-bank animation tables (gSpriteBankTable,
 0x084A5600-0x084C0006) from baserom.gba as typed C, the src/data/
-sprite_banks_*.c files (see docs/data.md and docs/data_map.md).
+sprite_banks_*.cpp files (see docs/data.md and docs/data_map.md).
 
 This is a one-time extraction, like tools/tile_pools.py: the C it writes is
 the editable source, and the build compiles it like any other data file.
@@ -175,16 +175,20 @@ def emit_bank(rom, ranges, i, em, out, decls):
     out.append("")
 
     em.place(anims, 0x1C * nanims, 4)
-    out.append(f"const struct sprite_anim {B}Anims[{nanims}] = {{")
+    # The first file declares every bank's Anims and Frames up front; in
+    # the others they are defined with `extern`, which C++ needs for a
+    # const object with no earlier declaration to keep external linkage.
+    ext = "extern " if i >= FILES[0][1] + 1 else ""
+    out.append(f"{ext}const struct sprite_anim {B}Anims[{nanims}] = {{")
     for k, x in enumerate(an):
         flags = "SPRITE_ANIM_LOOP" if x["flags"] else "0"
-        out.append(f"    [{k}] = {{")
-        out.append(f"        .seq = {x['name']},")
-        out.append(f"        .box = {{ {x['boxes'][0]}, {x['boxes'][1]} }},")
-        out.append(f"        .paletteId = {x['palette_id']},")
-        out.append(f"        .duration = {x['duration']},")
-        out.append(f"        .frameCount = ARRAY_COUNT({x['name']}),")
-        out.append(f"        .flags = {flags},")
+        out.append(f"    /* {k} */ {{")
+        out.append(f"        /* seq */ {x['name']},")
+        out.append(f"        /* box */ {{ {x['boxes'][0]}, {x['boxes'][1]} }},")
+        out.append(f"        /* paletteId */ {x['palette_id']},")
+        out.append(f"        /* duration */ {x['duration']},")
+        out.append(f"        /* frameCount */ ARRAY_COUNT({x['name']}),")
+        out.append(f"        /* flags */ {flags},")
         out.append("    },")
     out.append("};")
     out.append("")
@@ -199,7 +203,7 @@ def emit_bank(rom, ranges, i, em, out, decls):
     out.append("")
 
     em.place(frames, 4 * nframes, 4)
-    out.append(f"const struct sprite_frame *const {B}Frames[{nframes}] = {{")
+    out.append(f"{ext}const struct sprite_frame *const {B}Frames[{nframes}] = {{")
     for f in fr:
         ref = f"&{f['name']}" if f["layout"] == 1 else f"&{f['name']}.frame"
         out.append(f"    {ref},")
@@ -257,7 +261,7 @@ FILE_COMMENT = """\
  * the frame pointer array, the frames (header plus the boxes/anchor of
  * their layout type), then every frame's piece positions and piece bytes.
  * A frame's tiles are an offset into the sprite tile pool
- * (src/data/sprite_tiles_2bf120.c), written relative to the pool range of
+ * (src/data/sprite_tiles_2bf120.cpp), written relative to the pool range of
  * the bank that owns them (SPRITE_TILES_BANKnn). Editing a piece's shape,
  * adding a piece or moving the tiles means redrawing
  * graphics/sprites/bankNN_*.png to match.
@@ -277,7 +281,7 @@ def main():
     for fi, (lo, hi) in enumerate(FILES):
         start = TABLE if lo == 0 else starts[lo]
         end = starts[hi + 1] if hi + 1 < nbanks else END
-        name = f"sprite_banks_{start & 0xFFFFFF:06x}.c"
+        name = f"sprite_banks_{start & 0xFFFFFF:06x}.cpp"
         out, decls = [], []
         body = []
         if lo == 0:
@@ -289,12 +293,14 @@ def main():
         if hi + 1 < nbanks:
             assert end % 4 == 0
 
+        out.append('extern "C" {')
         out.append('#include "gba/types.h"')
         out.append('#include "sprite_bank.h"')
+        out.append("}")
         out.append("")
         out.append(FILE_COMMENT.format(start=start, end=end, first=lo, last=hi))
         if lo == 0:
-            out.append("extern const u8 gSpriteBank00Tiles[];  /* sprite_tiles_2bf120.c, bank 0's tiles */")
+            out.append("extern const u8 gSpriteBank00Tiles[];  /* sprite_tiles_2bf120.cpp, bank 0's tiles */")
             out.append("extern const u8 gObjPalettes[0xfa0];")
             out.append("extern const struct sprite_bank gSpriteBanks[56];")
             for i in range(nbanks):
@@ -309,19 +315,19 @@ def main():
             out.append(" * *gSpriteBankSet here. GetSpriteTileBase returns tileBase;")
             out.append(" * InitLevelState and RunPauseMenu (pause_menu.cpp) build the palette")
             out.append(" * cache from palettes/paletteCount. */")
-            out.append("const struct sprite_bank_table gSpriteBankTable = {")
-            out.append("    .banks = gSpriteBanks,")
-            out.append("    .tileBase = gSpriteBank00Tiles,")
-            out.append("    .palettes = gObjPalettes,")
-            out.append("    .bankCount = ARRAY_COUNT(gSpriteBanks),")
-            out.append("    .paletteCount = sizeof(gObjPalettes) / 32,")
+            out.append("extern const struct sprite_bank_table gSpriteBankTable = {")
+            out.append("    /* banks */ gSpriteBanks,")
+            out.append("    /* tileBase */ gSpriteBank00Tiles,")
+            out.append("    /* palettes */ gObjPalettes,")
+            out.append("    /* bankCount */ ARRAY_COUNT(gSpriteBanks),")
+            out.append("    /* paletteCount */ sizeof(gObjPalettes) / 32,")
             out.append("};")
             out.append("")
             out.append("/* Bank N is `**gSpriteBankSet + 12 * N` in the code (a part's +0x20). */")
             out.append("const struct sprite_bank gSpriteBanks[56] = {")
             for i in range(nbanks):
                 b = f"gSpriteBank{i:02}"
-                out.append(f"    [{i}] = {{ {b}Anims, {b}Frames, 0, ARRAY_COUNT({b}Anims) }},")
+                out.append(f"    /* {i} */ {{ {b}Anims, {b}Frames, 0, ARRAY_COUNT({b}Anims) }},")
             out.append("};")
             out.append("")
         out.extend(body)

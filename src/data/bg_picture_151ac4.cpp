@@ -1,5 +1,7 @@
+extern "C" {
 #include "core.h"
 #include "actor_anim.h"
+}
 
 /*
  * ROM 0x08151AC4-0x0815A050: categories 4-6's BG1 pictures and
@@ -17,9 +19,9 @@ struct bg_picture_151ac4 {
     u8 tiles[237 * 32];
     u8 banks[(38 * 16 + 1) / 2];
 };
-COMPILE_TIME_ASSERT(bg_picture_151ac4_c, sizeof(struct bg_picture_151ac4) == 0x208 + 608 * 2 + 237 * 32 + 608 / 2);
+COMPILE_TIME_ASSERT(bg_picture_151ac4_cpp, sizeof(struct bg_picture_151ac4) == 0x208 + 608 * 2 + 237 * 32 + 608 / 2);
 
-const struct bg_picture_151ac4 gCategory4BgPicture = {
+extern const struct bg_picture_151ac4 gCategory4BgPicture = {
     {
         {
 #include "category_bg/151ac4_picture.pal.inc"
@@ -39,7 +41,7 @@ const struct bg_picture_151ac4 gCategory4BgPicture = {
 
 /* Category 4's spawnTable (gActorCategories[4].spawnTable,
  * read by SelectActorCategory (actor_category_select.cpp) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
-const SUB_EFFECT_TABLE(230) gCategory4SpawnTable = {
+extern const SUB_EFFECT_TABLE(230) gCategory4SpawnTable = {
     {
         { 7240, 230, 29, 29, 29, 0, -32, -30 },
         { 364, -1, 20, 27, 20, 0, 66, -30 },
@@ -286,9 +288,9 @@ struct bg_picture_155260 {
     u8 tiles[374 * 32];
     u8 banks[(38 * 16 + 1) / 2];
 };
-COMPILE_TIME_ASSERT(bg_picture_151ac4_c, sizeof(struct bg_picture_155260) == 0x208 + 608 * 2 + 374 * 32 + 608 / 2);
+COMPILE_TIME_ASSERT(bg_picture_151ac4_cpp, sizeof(struct bg_picture_155260) == 0x208 + 608 * 2 + 374 * 32 + 608 / 2);
 
-const struct bg_picture_155260 gCategory5BgPicture = {
+extern const struct bg_picture_155260 gCategory5BgPicture = {
     {
         {
 #include "category_bg/155260_picture.pal.inc"
@@ -308,7 +310,7 @@ const struct bg_picture_155260 gCategory5BgPicture = {
 
 /* Category 5's spawnTable (gActorCategories[5].spawnTable,
  * read by SelectActorCategory (actor_category_select.cpp) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
-const SUB_EFFECT_TABLE(295) gCategory5SpawnTable = {
+extern const SUB_EFFECT_TABLE(295) gCategory5SpawnTable = {
     {
         { 8452, 295, 29, 29, 29, 0, -96, -30 },
         { 280, -1, 20, 24, 20, 0, 32, -30 },
@@ -611,7 +613,7 @@ const SUB_EFFECT_TABLE(295) gCategory5SpawnTable = {
 
 /* Category 6's spawnTable (gActorCategories[6].spawnTable,
  * read by SelectActorCategory (actor_category_select.cpp) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
-const SUB_EFFECT_TABLE(1) gCategory6SpawnTable = {
+extern const SUB_EFFECT_TABLE(1) gCategory6SpawnTable = {
     {
         { 712, 1, 10, 10, 10, 0, 160, 30 },
     },

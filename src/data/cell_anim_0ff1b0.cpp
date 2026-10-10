@@ -1,5 +1,7 @@
+extern "C" {
 #include "core.h"
 #include "actor_anim.h"
+}
 
 /*
  * ROM 0x080FF1B0-0x0814174C: BG0 cell animation B (categories 3-6),
@@ -21,9 +23,9 @@ struct cell_anim_0ff1b0 {
         u8 tiles[38 * 10 * 32];
     } frames[21];
 };
-COMPILE_TIME_ASSERT(cell_anim_0ff1b0_c, sizeof(struct cell_anim_0ff1b0) == 0x3E784);
+COMPILE_TIME_ASSERT(cell_anim_0ff1b0_cpp, sizeof(struct cell_anim_0ff1b0) == 0x3E784);
 
-const struct cell_anim_0ff1b0 gCategoryFamily1CellAnim = {
+extern const struct cell_anim_0ff1b0 gCategoryFamily1CellAnim = {
     {
         {
 #include "category_bg/0ff1b0_cell_anim.pal.inc"
@@ -45,9 +47,9 @@ struct bg_picture_13d934 {
     u8 tiles[357 * 32];
     u8 banks[(38 * 16 + 1) / 2];
 };
-COMPILE_TIME_ASSERT(cell_anim_0ff1b0_c, sizeof(struct bg_picture_13d934) == 0x208 + 608 * 2 + 357 * 32 + 608 / 2);
+COMPILE_TIME_ASSERT(cell_anim_0ff1b0_cpp, sizeof(struct bg_picture_13d934) == 0x208 + 608 * 2 + 357 * 32 + 608 / 2);
 
-const struct bg_picture_13d934 gCategory3BgPicture = {
+extern const struct bg_picture_13d934 gCategory3BgPicture = {
     {
         {
 #include "category_bg/13d934_picture.pal.inc"
@@ -67,7 +69,7 @@ const struct bg_picture_13d934 gCategory3BgPicture = {
 
 /* Category 3's spawnTable (gActorCategories[3].spawnTable,
  * read by SelectActorCategory (actor_category_select.cpp) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
-const SUB_EFFECT_TABLE(121) gCategory3SpawnTable = {
+extern const SUB_EFFECT_TABLE(121) gCategory3SpawnTable = {
     {
         { 5608, 121, 29, 29, 29, 33, -96, -30 },
         { 312, -1, 21, 24, 19, 138, -4, -30 },

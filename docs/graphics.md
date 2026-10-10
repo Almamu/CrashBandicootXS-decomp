@@ -68,7 +68,7 @@ same Dimps-engine lineage) does the PNG<->4bpp/8bpp/gbapal conversion and
 LZ77 compress/decompress.
 
 The 24 intro/cutscene Mode 4 bitmaps (`graphics/intro/*_bitmap.png`) are
-built as C const arrays (`src/data/cutscene_pictures_5a9f70.c`, each after
+built as C const arrays (`src/data/cutscene_pictures_5a9f70.cpp`, each after
 its palette) instead of `data.s` incbins, like the category backgrounds
 and the raw tile pools. The pipeline is grit (`tools/grit`, pixel layout) ->
 gbagfx (LZ77) -> `tools/bin2c.py --lz`. grit's layout and palettes are
