@@ -1133,7 +1133,8 @@ Round 2 in bosses/, enemies/ and actor/ (C++):
     `ActionCtrl::HandleEvent`: jump2 merges a test's identical arms
     after reload and leaves the test's load, because no flow pass runs
     after it to delete it. Reproduced, but only with identical arms or
-    a dead store.
+    a dead store. (Player::HandleEvent's later took the dead store, owner
+    decision: see "Player::HandleEvent's dead load" below.)
   - `ReleaseHang`: reload's spill round-robin.
   - `StartTornadoFall`'s entry: global priority, `this` with 8 refs over
     38 insns ahead of entry's 4 over 26.
@@ -1964,6 +1965,28 @@ doesn't count them; 7 functions freed:
   as asm inputs leave one `add r2, sp, #4` too many, `volatile`
   parameters reload r7/r8 from the stack, and an inline helper or macro
   taking `&src`/`&dst` folds `*&x` back and loses the stores.
+
+**Player::HandleEvent's dead load: a dead test (owner decision, #662).**
+After the controller call of a masked hit the ROM reloads
+`gLevelState->maskLevel` into r0 and overwrites it straight away. The
+volatile read that reproduced it is replaced by
+`if (gLevelState->maskLevel == MASK_LEVEL_NONE) m = 0;`, where `m` (the
+mirror flag) is set for real a few lines later. That is a dead store,
+accepted here because it is the only shape that leaves the load the
+way the ROM has it, and it is commented as such at the site. How gcc 2.9
+leaves the load: jump1 can't delete the test while its body does
+something; flow1 deletes the dead `m = 0` but not the branch or its
+compare; jump2 (after reload) deletes the empty branch and compare but
+not the load that fed them, and no flow pass follows. What doesn't work
+(52 variants on top of rounds 3-9): an empty body, every release-mode
+assert or log macro (`((void)0)`, `((void)(c))`, `c ? (void)0 : (void)0`,
+`c ? (void)0 : DebugHalt()` with an empty inline, `&&`/`||` forms,
+`if (!(c)) (void)0`), all deleted by jump1 with their load; a store to a
+global or static error flag, which keeps the load but also its own
+compare and store; and the value stored in a reused local with no test
+(`m`, `cx`, `cy`, `c`), deleted by flow1 with its load. ActionCtrl::
+HandleEvent's bump load has the same mechanism and keeps its volatile
+read for now.
 
 The ARM DSP routines, hand-written in every GAX version, are assembly:
 `lib/gax/asm/gax_arm_dsp.s`, disassembled from the raw `.byte` block

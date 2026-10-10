@@ -63,37 +63,21 @@ static inline s32 IsBlinking(Player *p)
  * starts a 90-frame invulnerability; without, it is a death. Most events
  * also go to the controller (`mover`), some after the Y ramp is cleared.
  *
- * The case bodies are in the ROM's block order. The ROM reloads the mask
- * level after the controller call of a masked hit and never uses it; only
- * a volatile read reproduces that load. #662 round 3 found what leaves
- * such a load in gcc 2.9: a test on it whose two arms jump2 merges after
- * reload (no flow pass runs after jump2 to delete the load). Both
- * `if (maskLevel != MASK_LEVEL_NONE) { spawn } else { the same spawn }`
- * and a dead `if (maskLevel == MASK_LEVEL_NONE) m = 0;` before `m`'s
- * store give the ROM's load (the second the whole object), but neither
- * is source anyone wrote, so the volatile read stays. #662 round 4 traced
- * why only those two work (jump.c's delete_computation keeps the feeding
- * load after reload, and no flow pass follows jump2; see
- * ActionCtrl::HandleEvent's bump case, action_ctrl_event.cpp): the test
- * must reach jump2 with nothing left to do, so its body has to be dead
- * code flow1 removes, or arms jump2 finds identical. #662 round 5: and
- * the body's register needs a use elsewhere, or cse1's
- * delete_trivially_dead_insns takes it first (see HandleEvent's bump
- * case); an inline Aku Aku spawn with an unused mask-level parameter, a
- * `const bool &` or by-value struct parameter, or the mirror read
- * through an inline taking the level all leave no load. #662 round 7:
- * the only other such load in the ROM (DMA reads aside) that isn't this
- * one or HandleEvent's bump is Crate::QueuePlayerCollision's, matched
- * from a `side` computed with a test on a path that never reads it (see
- * ActionCtrl::HandleEvent's bump case); no variable here fits that.
- * #662 round 8: tools/rtl_corpus.py's dead_load query (final RTL, every
- * object) finds the same three. #662 round 9 (120 variants): `maskLevel`
- * as s32, u32 or an enum (0-3, 0-INT_MAX, -1-3), `event` s32 or u32, with
- * the spawn plain or under a re-test of the level (`>= NONE`, `<=
- * INVINCIBLE`, `!= INVINCIBLE`, `< INVINCIBLE`, `<= TWO`, `< TWO`, `<=
- * ONE`) or a `switch` on it: every test is compiled as a real compare
- * (5 instructions off at best, with the enum, which also drops the
- * reload for SetMaskLevel's argument), none is deleted after the load. */
+ * The case bodies are in the ROM's block order. After the controller
+ * call of a masked hit, the ROM reloads the mask level into r0 and
+ * overwrites it straight away. That is the leftover of a test whose body
+ * is a dead store to `m` (the mirror flag, set for real a few lines
+ * later), kept as `if (maskLevel == MASK_LEVEL_NONE) m = 0;` (owner
+ * decision, #662). gcc 2.9 removes it in stages: jump1 can't delete the
+ * test because its body still does something, flow1 then deletes the
+ * dead `m = 0` but not the branch or its compare, and jump2 (after
+ * reload) deletes the now-empty branch and compare but not the load that
+ * fed them, and no flow pass runs after it. An empty body (`if (c) {}`,
+ * any release-mode assert or log macro, `(void)(c)`, `c ? (void)0 :
+ * (void)0`) is deleted by jump1 with its load, and a store to a local
+ * with no test (`m = maskLevel;`) is deleted by flow1 with its load
+ * (#662: rounds 3-9, plus 52 macro and reused-local variants). The only
+ * other form that leaves the load is an if/else with identical arms.  */
 void Player::HandleEvent(s32 from, s32 event, s32 arg)
 {
     switch (event) {
@@ -194,8 +178,14 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
                         gAudioContext->PlaySfx(SFX_AKU_AKU_LOSE, 0x100);
                         gAudioContext->PlaySfx(SFX_PLAYER_HURT, 0x100);
                         mover->HandleEvent((MovingSprite *)from, EVENT_MASK_HIT, arg);
-                        /* The ROM reloads the mode here and never uses it. */
-                        (void)*(volatile s32 *)&gLevelState->maskLevel;
+                        /* Dead on purpose: the ROM reloads the mask level
+                         * here and never uses it. This test is what leaves
+                         * that load; its `m = 0` is dead (m is set from the
+                         * mirror flag below), so the compiler drops the
+                         * store, then the empty test, but not the load.
+                         * See the comment above the function. */
+                        if (gLevelState->maskLevel == MASK_LEVEL_NONE)
+                            m = 0;
                         c = child;
                         cx = Q8_TO_INT(c->x);
                         cy = Q8_TO_INT(c->y);
