@@ -2112,6 +2112,47 @@ variants on the two priorities (not on lines off, which stay at 15 until
 the order flips) found nothing natural. When a `-dl` live length is
 exactly twice the flow dump's, look for a constant first set.
 
+**Round 11, GaxChannelMix (root causes; both workarounds stay).**
+
+- **The volatile instrument read is a gcse bug, decided by alias-set
+  numbering.**
+  - `compute_transp` checks the memory-setting insns of each block
+    against a load. For a CLOBBER insn it passes the CLOBBER rtx, not its
+    MEM, to `true_dependence`. `MEM_ALIAS_SET (clobber)` then reads the
+    word after the 16-byte clobber, which is the header of the INSN that
+    holds it: rtx code 31.
+  - So a struct initializer's `(clobber (mem:BLK ...))` kills every
+    later load in alias set 0 or 31, and no others.
+  - In gax_note_trigger.c, `struct GaxChannelInstrument *` is the 9th
+    type the file numbers. The read survives, and PRE makes it a copy (15
+    instructions off).
+  - With 22 extra pointer-type externs ahead of the function, the type is
+    set 31 and the plain read matches. Shin'en's file numbered about 22
+    more types first.
+  - Real declarations can't do it. GAX2's other globals add no alias set
+    (char and u8 arrays are set 0; the rest reuse sets 1-4). The whole GAX
+    library as one file, in ROM order, only reaches set 21.
+  - An instrumented agbcc (printing PRE's per-block bitmaps, each kill
+    with its alias sets, and each new alias set) showed this.
+  - A side note: the row-in-a-local variant appeared not to need the
+    volatile. But its clobber sat at an obstack chunk end, so the "alias
+    set" was uninitialised heap (`MALLOC_PERTURB_` changes its output).
+    The matched source is stable under `MALLOC_PERTURB_`.
+- **The clamp keep needs a block end that cse1 and cse2 both see.** The
+  plain one-armed `if` is skipped by cse's skip-blocks rule, so cse reuses
+  `row * 28` in the ping-pong test.
+  - An `else MATCH_KEEP` arm at the clamp, at the vol17 step or at the
+    flag volume step all leave only their own jump. Shin'en's if/else-if
+    clamp with `(s32)idx < 0` is the ROM except for its own test.
+  - A break that only cse1 sees doesn't do: gcse makes both row loads
+    copies of one register, and cse2 merges the products.
+  - The breaks that survive to reload are cross-jumping, which needs
+    identical arm tails, and copies that become no-ops after allocation.
+    The second gives the wrong registers (a separate final volume, an
+    early-return volume inline: 31-63 off). The row in a local read
+    before the transposition is 14-32 off: two row registers where the
+    ROM has one.
+
 **Player::HandleEvent's dead load: a dead test (owner decision, #662).**
 After the controller call of a masked hit the ROM reloads
 `gLevelState->maskLevel` into r0 and overwrites it straight away. The

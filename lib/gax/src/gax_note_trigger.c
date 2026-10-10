@@ -96,39 +96,45 @@ u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, voi
         idx = pitch + t;
         m = 0xef3;
         inst = ip;
-        /* A two-armed clamp: its join label ends cse1's extended basic
-         * block, so the ping-pong test below computes `row * 28` again
-         * (as the ROM does) instead of reusing the tune's product.
-         * Cross-jumping later merges the two table loads. The no-code
-         * escape keeps cse from rewriting `tab[idx]` as `tab[m]` in the
-         * first arm, so both arms end in identical insns. #662 round 3:
-         * the one-armed `if (idx > m) idx = m; period = tab[idx];` that
-         * the ROM's code reads as is 256 lines off. cse1 carries `row * 28`
-         * across the join and keeps the row in r9, which costs a stack
-         * slot. With -fno-cse-skip-blocks it is still 151 lines off, and
-         * the other swept flags are worse. Round 4: the ROM needs both
-         * at once - a join that ends cse1's block before the ping-pong
-         * test, and one table load after it - and every single-load form
-         * (`tab[idx > m ? m : idx]`, `idx = idx > m ? m : idx`, `idx < m
-         * ? idx : m`, the `if`) is lowered by jump.c to the one-armed
-         * `if`, whose join cse1 skips (220 lines off); two loads with no
-         * escape (`idx > m ? tab[m] : tab[idx]`, the two-armed `if`)
-         * fold the first to `tab[0xef3]`, which cross-jumping can't
-         * merge (132 lines off). Round 6: the clamp and table load as an
-         * inline `GaxPeriod(idx)` (u32 or s32 parameter, called with the
-         * tuned pitch, before or after `inst` is set) is 101-107 lines
-         * off; the inline's return adds no join cse1 stops at. Round 7:
-         * no other matched function has a clamp feeding a table index
-         * (`cmp; bls; adds; lsls`) to compare spellings with. Round 8,
-         * tools/natural_enum.py (all pairs of 103 edits: the clamp as
-         * `m < idx`, `idx >= m + 1`, else-first, `tab[m]` in the arm, a
-         * block-local copy of m, pointer arithmetic, an inline returning
-         * from each arm, s32 idx or m, the tune lines reordered, and
-         * the automatic type/compound/order edits): none comes under
-         * the escape-free code's 14 instructions. Round 9: no same-size
-         * retype of a member or the signature (alone or in pairs; see
-         * the sweep length below) brings the escape-free code under 132
-         * diff lines. */
+        /* A two-armed clamp. Its join label ends cse's extended basic
+         * block, so the ping-pong test below computes `row * 28` again,
+         * as the ROM does, instead of reusing the tune's product. The
+         * no-code escape stops cse rewriting `tab[idx]` as `tab[m]` in the
+         * first arm, so both arms end in the same insns, and
+         * cross-jumping (jump2, after reload) merges them into the ROM's
+         * one-armed clamp.
+         *
+         * What the ROM needs (#662 round 11, from -dc/-dt dumps): a block
+         * end between the tune and the ping-pong test in cse1 *and* cse2
+         * that is gone by the final code. Where it is doesn't matter: an
+         * `else MATCH_KEEP` arm at the clamp, at the vol17 step or at the
+         * flag volume step leaves only its own jump (9 instructions off),
+         * and `else if ((s32)idx < 0) idx = 0;` (Shin'en's if/else-if
+         * clamp) gives the ROM except for that test's 4 instructions. A
+         * break that cse1 sees but the jump pass after it folds back
+         * (an inline `GaxScaleVolume(vol, v)` with an early return) is
+         * not enough: gcse turns both row loads into copies of one
+         * register and cse2 then reuses the product. A one-armed `if` is
+         * skipped by cse's skip-blocks rule, and its 7 branches before
+         * the test don't reach the path limit (PATHLENGTH 10).
+         *
+         * What doesn't work: the one-armed `if` (71 instructions off; with
+         * -fno-cse-skip-blocks 79); every single-load spelling, which
+         * jump.c lowers to the one-armed `if`; two loads with no escape
+         * (`if (idx > m) period = tab[m]; else period = tab[idx];` and 7
+         * other spellings, 27-59 off), because cse makes the first arm's
+         * index `m`, not `idx`, and cross-jumping only merges the load;
+         * if/else and `?:` forms of the volume steps, which jump1
+         * converts to one-armed before cse1; a clamp inline (one or both
+         * bounds, 64-72); a separate final volume variable or a
+         * GaxChannelVolume() inline with an early return (the break
+         * survives to reload, but the two values get different
+         * registers, 31-63); the row in a local read before the
+         * transposition (14-32: cse no longer reuses the product, but
+         * the local and gcse's copy of the row are two registers where
+         * the ROM has one, r9). Rounds 3-9 (one-armed forms, inlines,
+         * natural_enum.py over 103 edits, every same-size retype) are in
+         * docs/matching_techniques.md. */
         if (idx > m) {
             idx = m;
             MATCH_KEEP(idx);
@@ -168,63 +174,36 @@ u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, voi
         s32 pos = self->samplePos;
         /* The ARM routine updates the item through the pointer the call
          * passes; only `done` is read back where gcc can't know it changed
-         * (see GaxMixItem). The sweep length re-reads `self->instrument`
-         * (volatile read) where gcse would reuse `inst`: #662 round 4
-         * (-dG), PRE finds the load redundant with the tune's
-         * `self->instrument` read (expression available on every path,
-         * nothing killing it: the __muldi3 between them is a const
-         * libcall and the item's stores have other alias sets) and
-         * replaces it with a copy that reload then spills, 46 lines off.
-         * Retyping the item's pointer fields to `struct
-         * GaxChannelInstrument *`, an explicit `__muldi3()` call (112
-         * lines off) and the swept -f flags don't give the ROM's fresh
-         * `ldr r1, [r6, #60]`. #662 round 5: gcse.c checks a load
-         * against each store with alias.c's true_dependence, and the
-         * item's stores are frame-based while the load is off `self`, an
-         * argument, so no store between can kill it; only a call can.
-         * `__muldi3` called through libgcc.h's prototype (not a const
-         * libcall) does, but the register allocation then differs from
-         * the function's first block on (878 lines off).
-         * #662 round 6 (-dG): without the volatile, PRE inserts a fresh
-         * load of `self->instrument` at the end of the clamp's block
-         * ("PRE/HOIST: end of bb 9") and makes this one a copy of it;
-         * the row load beside it stays. Through the prototype with the
-         * s64 `prod` (`prod = __muldi3(prod, gGaxMixRateReciprocal) >>
-         * 32`) the load is right and the rest is 84 lines off, ignoring
-         * addresses, all allocation: the call clobbers memory, so the
-         * row is loaded again after it and `wave` is not spilled. The
-         * ROM keeps the row in r9 across the call, so its `__muldi3`
-         * was the const libcall and the kill is elsewhere. -fargument-
-         * noalias, -fno-strict-aliasing and the -f sweep don't help.
-         * #662 round 7, private agbcc builds with the plain read (48
-         * lines off): gcse killing every load at any store (egcs 1.1's
-         * rule, before load_killed_in_block_p) is 224 lines off;
-         * alias.c without base_alias_check's "a stack reference can't
-         * alias a parameter" is 34 off, and unchanged (48) when only
-         * gcse's kill test drops it, so the item's stores are not what
-         * the ROM's PRE saw as the kill. #662 round 8, a private agbcc
-         * printing gcse's occurrences: the tune's `ip = self->instrument`
-         * is anticipatable and available in its block, yet PRE inserts
-         * a fresh load at that block's end and copies it here (cse2
-         * then merges the two into `inst`); nothing between kills it.
-         * tools/natural_enum.py (all pairs of 101 edits): an inline
-         * `GaxSweepLen(self)` (here or at all three sweep reads), one
-         * taking `(self->instrument, self->row)`, a `GaxCurRow(self)`
-         * row accessor, `inst` here, `self->instrument` in the ping-pong
-         * test and the automatic type/order edits are all 15-18
-         * instructions off like the plain read; the loop length set by
-         * an `if` after the initializer, through a local, or the item
-         * filled field by field are 140-195. #662 round 9, types beyond
-         * the function: every same-size retype of the GaxChannelState,
-         * GaxChannelInstrument, GaxInstrumentRow, GaxSongData,
-         * GaxInfoHandler and GaxOrderEntry members (signedness,
-         * volatile, const pointees), of GaxMixItem's fields, and of the
-         * signature (u8/s32 return, u32/s32 `flag`, s32 `arg`, s16 *
-         * `buf`), alone and in pairs, is 13 diff lines off or worse
-         * without the volatile read; `instrument` itself volatile is 12
-         * but changes three other functions. `wave` as a struct copy
-         * (an 8-byte pair) is 51 instructions off; natural_enum.py over
-         * these 98 edits (all 4700 pairs) finds nothing under 15. */
+         * (see GaxMixItem).
+         *
+         * The loop length reads `self->instrument` again through a
+         * volatile lvalue: the ROM loads it fresh, which a gcc 2.9 gcse
+         * bug decides (#662 round 11, from an instrumented agbcc). The
+         * item initializer emits `(clobber (mem:BLK item))`, and
+         * compute_transp passes that CLOBBER rtx, not its MEM, to
+         * true_dependence. MEM_ALIAS_SET then reads the word after the
+         * clobber, which is the header of the insn that holds it: rtx
+         * code 31 (INSN). So the clobber kills every load whose alias set
+         * is 0 or 31 (the row loads after it are fresh, as in the ROM),
+         * and the plain `self->instrument` read, alias set 9 here (a
+         * `struct GaxChannelInstrument *`, the 9th type this file gives an
+         * alias set), survives it: PRE turns it into a copy of a load it
+         * inserts at the end of the tune's block, which reload spills (15
+         * instructions off). Declaring 22 more pointer types ahead of the
+         * function puts that type in set 31, and the plain read then
+         * compiles to the ROM's code, so Shin'en's file numbered about
+         * 22 more types first. None of the GAX2's other real globals adds
+         * an alias set (char and u8 arrays are set 0, the rest reuse
+         * existing sets), and the whole GAX library in one file, in ROM
+         * order, gets this type only to set 21. A union field (set 0)
+         * would change the data layout.
+         *
+         * What else was tried (rounds 4-9): retyped item fields, an
+         * explicit `__muldi3()` call through libgcc.h's prototype (the
+         * load is right, the rest 84 lines off), the -f flags (with
+         * -fno-strict-aliasing the read is right but the mixer patches
+         * reload gGaxPlayerState, 30 off), inlines for the sweep length,
+         * and every same-size retype of the structs involved. */
         // clang-format off
         struct GaxMixItem item = {
             data, buf, pos, len << 11, frames, 0, vol, step, 0,
