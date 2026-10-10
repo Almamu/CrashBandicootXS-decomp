@@ -140,6 +140,7 @@ the names with the header it already includes. A data table in
 | `sfx.h` (generated) | `SFX_` | sound-effect IDs (`PlaySfx`, `PlayAmbientSfx`, `StopSfx`), from `sound/sfx_table.json` |
 | `songs.h` (generated) | `SONG_` | song IDs, the `gSongTable` index (`PlaySong`, `StartSong`), from `sound/gax_manifest.json` |
 | `level_flags.h` | `LEVEL_FLAG_` | the bits of a `game_progress.levels[]` word |
+| `progress_flags.h` | `PROGRESS_FLAG_`, `PROGRESS_BIT_` | `GameProgress::flags`: the coloured gems and the powers ([docs/flags/progress.md](flags/progress.md)) |
 | `mask_level.h` | `MASK_LEVEL_` | `level_state.maskLevel` values |
 | `packed_stats.h` | `PACKED_STATS_` | the packed lives/mask/wumpa halfword |
 | `action_states.h` | `ACTION_STATE_` | the player's action-controller states, the `gActionCtrlStateTable` index |
@@ -196,12 +197,26 @@ confidence (`--json` for agents).
   identical.
 - **Flag bits are masks:** `#define LEVEL_FLAG_CRATE_GEM (1 << 1)`, used
   as `flags & LEVEL_FLAG_CRATE_GEM` and `flags |= LEVEL_FLAG_CRATE_GEM`.
-  A multi-bit field gets a `_MASK` and a `_SHIFT`.
+  A multi-bit field gets a `_MASK` and a `_SHIFT`. Where the code
+  shifts a single bit out (`(x >> n) & 1`, `(u32)(x << m) >> 31`), the
+  bit's number gets a `_BIT_` name next to the mask, and the mask is
+  built from it: `#define PROGRESS_BIT_TURBO_RUN 4`, `#define
+  PROGRESS_FLAG_TURBO_RUN (1 << PROGRESS_BIT_TURBO_RUN)`. The site keeps
+  its spelling through core.h's matching helper (below): `(save->flags >>
+  5) & 1` is `TEST_BIT_SHR(save->flags, PROGRESS_BIT_SUPER_BODY_SLAM)`.
+  A mask that the code builds by arithmetic (`tmp += 0x20` to turn
+  `~0x40` into `~0x20`) or as a byte (`0x7f` for `~0x80`) keeps its
+  literal, with a comment naming the bits. `tools/magic_numbers.py
+  --bits` lists the bit tests, masks and state values left, by field
+  (#843), and docs/flags/ has the bit tables, one page per field.
 - **Names come from evidence:** the ROM's strings, the GAX manifests,
   the code that uses the value, existing comments. A comment on each
   define says where it comes from. A value whose meaning isn't clear
   keeps its number (as the naming rounds did); `<PREFIX>_<n>`-style
-  names are not used, with one exception below.
+  names are not used, with two exceptions: the sound effects below, and
+  a flag bit that has to be named with its neighbours (a field's full
+  set, or a mask built from it) but whose meaning isn't clear, which is
+  `<PREFIX>_UNK<n>` with a comment saying what is known (#843).
 - **`SFX_UNKNOWN_<ID>` placeholders.** Every sound-effect ID the code
   plays has a name. One whose sound can't be identified from where it
   plays is `SFX_UNKNOWN_<ID>`, the ID in two upper-case hex digits
@@ -220,6 +235,7 @@ the expression out or adding another file-local copy:
 | Header | Helpers | What |
 |---|---|---|
 | `core.h` | `ARRAY_COUNT(a)` | element count of an array |
+| `core.h` | `BIT(n)`, `TEST_BIT_SHR(x, n)`, `TEST_BIT_SIGN(x, n)`, `TEST_BIT_SIGN_U(x, n)` | bit `n`'s mask `1 << n`; bit `n` of `x` as 0/1, spelled `(x >> n) & 1`, `(u32)(x << (31 - n)) >> 31` or `((u32)x << (31 - n)) >> 31` (each compiles differently: keep the site's) |
 | `math_util.h` | `Q8_TO_INT`, `INT_TO_Q8`, `Q12_*`, `Q16_*` | fixed-point conversions (`x >> 8`, `x << 8`, ...) |
 | `math_util.h` | `Q8_TO_INT_INPLACE(x)` | the in-place conversion `x >>= 8` |
 | `math_util.h` | `Q8_MUL(a, b)`, `Q8_DIV(a, b)`, `Q12_MUL(a, b)` | the Q8 product `(a * b) >> 8`, the Q8 quotient `(a << 8) / b` (a ratio or scale), a value times a Q12 scale `(a * b) >> 12` (the screen projections) |

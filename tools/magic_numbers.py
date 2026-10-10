@@ -91,6 +91,12 @@ hardware addresses and register values that include/gba/ names:
   tools/magic_numbers.py --sizes [--show] [--json] [--report [OUT]]
       [--category C ...] [--min-confidence high|medium|low] [--path P ...]
       [--db FILE [--rebuild]] [-j N] [--samples N]
+
+--bits is another (#843, tools/magic_bits.py): single-bit tests, flag
+masks and raw state/mode/type/status values, grouped by field (every use
+of `Entity::f.flags`, each bit with its sites), most-used field first:
+  tools/magic_numbers.py --bits [--json] [--report [OUT]] [--path P ...]
+      [--field REGEX] [--samples N]
 """
 
 import argparse
@@ -1642,7 +1648,15 @@ def main():
     g.add_argument("--db", metavar="FILE", help="type database JSON: read if it exists, else written")
     g.add_argument("--rebuild", action="store_true", help="recompile even if --db exists")
     g.add_argument("-j", "--jobs", type=int, default=os.cpu_count() or 4)
+    g = ap.add_argument_group("--bits (#843, see tools/magic_bits.py)")
+    g.add_argument("--bits", action="store_true", help="flag bits, masks and raw state values, per field")
+    g.add_argument("--field", metavar="RE", help="--bits: only fields matching RE")
     args = ap.parse_args()
+
+    if args.bits:
+        import magic_bits
+
+        return magic_bits.run(args)
 
     if args.sizes:
         import magic_sizes

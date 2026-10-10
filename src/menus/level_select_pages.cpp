@@ -124,20 +124,21 @@ u8 LevelSelect::HasPrevWorld()
     return (-w | w) >> 31;
 }
 
-/* Whether the next page has been opened (save byte 2, bits 5/7/6). */
+/* Whether the next page has been opened: the power its boss gives
+ * (PROGRESS_FLAG_*, constants/progress_flags.h). */
 u8 LevelSelect::IsNextWorldOpen()
 {
     u8 r = 0;
 
     switch (world) {
     case 0:
-        r = (save->flags >> 5) & 1;
+        r = TEST_BIT_SHR(save->flags, PROGRESS_BIT_SUPER_BODY_SLAM);
         break;
     case 1:
-        r = (save->flags >> 7) & 1;
+        r = TEST_BIT_SHR(save->flags, PROGRESS_BIT_DOUBLE_JUMP);
         break;
     case 2:
-        r = (save->flags >> 6) & 1;
+        r = TEST_BIT_SHR(save->flags, PROGRESS_BIT_TORNADO_SPIN);
         break;
     }
     return r;

@@ -119,19 +119,19 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
         break;
     case EVENT_YELLOW_GEM:
         gAudioContext->PlaySfx(SFX_GEM, 0x100);
-        gLevelState->progress.flags |= 2;
+        gLevelState->progress.flags |= PROGRESS_FLAG_YELLOW_GEM;
         break;
     case EVENT_GREEN_GEM:
         gAudioContext->PlaySfx(SFX_GEM, 0x100);
-        gLevelState->progress.flags |= 4;
+        gLevelState->progress.flags |= PROGRESS_FLAG_GREEN_GEM;
         break;
     case EVENT_RED_GEM:
         gAudioContext->PlaySfx(SFX_GEM, 0x100);
-        gLevelState->progress.flags |= 1;
+        gLevelState->progress.flags |= PROGRESS_FLAG_RED_GEM;
         break;
     case EVENT_BLUE_GEM:
         gAudioContext->PlaySfx(SFX_GEM, 0x100);
-        gLevelState->progress.flags |= 8;
+        gLevelState->progress.flags |= PROGRESS_FLAG_BLUE_GEM;
         break;
     case EVENT_POWER_DOUBLE_JUMP:
     case EVENT_POWER_TORNADO_SPIN:

@@ -348,14 +348,14 @@ void LevelState::ClearPowers()
     /* The step-by-step accumulator/mask split reproduces the ROM's
      * sequence (a fresh mov+neg pair for -0x41, then `tmp += 0x20`); a
      * plain `&= ~0xf0` compiles to a different one. */
-    s32 acc = -0x11;
+    s32 acc = ~PROGRESS_FLAG_TURBO_RUN;
     s32 tmp = progress.flags;
     acc &= tmp;
-    tmp = -0x41;
+    tmp = ~PROGRESS_FLAG_TORNADO_SPIN;
     acc &= tmp;
-    tmp += 0x20;
+    tmp += 0x20; // ~PROGRESS_FLAG_SUPER_BODY_SLAM, from the register
     acc &= tmp;
-    tmp = 0x7f;
+    tmp = 0x7f; // ~PROGRESS_FLAG_DOUBLE_JUMP in the byte
     acc &= tmp;
     progress.flags = acc;
 }
@@ -368,7 +368,7 @@ void LevelState::ClearPowers()
  * `PressSwitchCrate`'s `*flags |= 2;` above). */
 void LevelState::GiveTornadoSpin()
 {
-    s32 mask = 0x40;
+    s32 mask = PROGRESS_FLAG_TORNADO_SPIN;
     s32 value = progress.flags;
     mask |= value;
     progress.flags = mask;
@@ -376,7 +376,7 @@ void LevelState::GiveTornadoSpin()
 
 void LevelState::GiveSuperBodySlam()
 {
-    s32 mask = 0x20;
+    s32 mask = PROGRESS_FLAG_SUPER_BODY_SLAM;
     s32 value = progress.flags;
     mask |= value;
     progress.flags = mask;
@@ -384,7 +384,7 @@ void LevelState::GiveSuperBodySlam()
 
 void LevelState::GiveTurboRun()
 {
-    s32 mask = 0x10;
+    s32 mask = PROGRESS_FLAG_TURBO_RUN;
     s32 value = progress.flags;
     mask |= value;
     progress.flags = mask;
@@ -392,7 +392,7 @@ void LevelState::GiveTurboRun()
 
 void LevelState::GiveDoubleJump()
 {
-    s32 mask = 0x80;
+    s32 mask = PROGRESS_FLAG_DOUBLE_JUMP;
     s32 value = progress.flags;
     mask |= value;
     progress.flags = mask;
@@ -406,17 +406,17 @@ void LevelState::GiveDoubleJump()
  * `!= 0` test (see docs/workflow.md step 7 / matching.md). */
 s32 LevelState::HasTornadoSpin()
 {
-    return (u32)(progress.flags << 25) >> 31;
+    return TEST_BIT_SIGN(progress.flags, PROGRESS_BIT_TORNADO_SPIN);
 }
 
 s32 LevelState::HasSuperBodySlam()
 {
-    return (u32)(progress.flags << 26) >> 31;
+    return TEST_BIT_SIGN(progress.flags, PROGRESS_BIT_SUPER_BODY_SLAM);
 }
 
 s32 LevelState::HasTurboRun()
 {
-    return (u32)(progress.flags << 27) >> 31;
+    return TEST_BIT_SIGN(progress.flags, PROGRESS_BIT_TURBO_RUN);
 }
 
 /* GitHub issues #35/#36: 0x080231CC-0x08023488, the remainder of the
@@ -428,7 +428,7 @@ s32 LevelState::HasTurboRun()
  * file's own family already covers bits 4-6 of. */
 s32 LevelState::HasDoubleJump()
 {
-    return progress.flags >> 7;
+    return progress.flags >> PROGRESS_BIT_DOUBLE_JUMP;
 }
 
 /* +0x70/+0xbc form a counter/threshold pair (`AddBrokenCrate`/

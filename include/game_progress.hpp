@@ -19,6 +19,7 @@ extern "C" {
 #include "core.h"
 #include "level_data.h"
 #include "constants/level_flags.h"
+#include "constants/progress_flags.h"
 #include "constants/mask_level.h"
 }
 
@@ -85,9 +86,10 @@ public:
     u16 lives:7;     // 0-99
     u16 maskLevel:2; // MASK_LEVEL_*
     u16 wumpa:7;     // 0-99
-    // 0x02 - bits 0-3: colored gems (CountGems, DrawPauseGemsPage); bits 4-7:
-    // powers (HasTurboRun, HasSuperBodySlam, HasTornadoSpin, HasDoubleJump);
-    // bits 5/7/6 make level-select pages 1/2/3 reachable
+    // 0x02 - PROGRESS_FLAG_* (constants/progress_flags.h): bits 0-3 the
+    // coloured gems (CountGems, DrawPauseGemsPage); bits 4-7 the powers
+    // (HasTurboRun, HasSuperBodySlam, HasTornadoSpin, HasDoubleJump), which
+    // also open the next level-select page
     u8 flags;
     // 0x04 - one word per level, indexed by `level` (GetLevelFlags);
     // LEVEL_FLAG_* (crystal, the two clear gems, best time); five per
