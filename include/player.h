@@ -38,11 +38,11 @@ struct level_anim {
 };
 
 /* The attack kind of each action controller state (QueueCratePlayerCollision,
- * src/data/object_tables_16bb6c.c). */
+ * src/data/object_tables_16bb6c.cpp). */
 extern const s32 gActionCtrlStateAttackKinds[ACTION_STATE_COUNT];
 
 /* The swim controller's animations: one row of 13 tilt levels per mode
- * (src/data/speed_table_16c090.c, action_table_16bf20.cpp), and the
+ * (src/data/speed_table_16c090.cpp, action_table_16bf20.cpp), and the
  * stroke speeds. */
 extern const struct level_anim gSwimCtrlModeLevelAnims[8][13];
 extern const struct level_anim *const gSwimCtrlModeAnimRows[8];
@@ -57,13 +57,13 @@ extern s32 gAkuAkuInvincibleFrame;
 extern s32 gAkuAkuFollowFrame;
 
 /* The player controller's and the input controller's motion records
- * (src/data/motion_records_16b304.c; `struct speed_ramp`, objects.h). */
+ * (src/data/motion_records_16b304.cpp; `struct speed_ramp`, objects.h). */
 extern const struct speed_ramp gSwimCtrlMotionRecords[31];
 extern const struct speed_ramp gInputCtrlMotionRecords[9];
 
 /* The entry sets PlayRoom gives the action, player and input controllers
- * through SetCtrlAnimSet (src/data/entry_set_16b92c.c,
- * src/data/entry_set_16b93c.c). */
+ * through SetCtrlAnimSet (src/data/entry_set_16b92c.cpp,
+ * src/data/entry_set_16b93c.cpp). */
 extern const struct entry_set gActionCtrlMotionSet;
 extern const struct entry_set gSwimCtrlMotionSet;
 extern const struct entry_set gInputCtrlMotionSet;

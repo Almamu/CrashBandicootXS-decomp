@@ -1,7 +1,9 @@
+extern "C" {
 #include "core.h"
 #include "sprite_bank.h"
 #include "objects.h"
 #include "gfx.h"
+}
 
 /*
  * ROM 0x0816B2E0-0x0816B304. Linked in ROM order between data/data.s

@@ -23,7 +23,7 @@
 struct entry_set;
 
 /* The motion entry set ResetEnemyCtrl gives every controller
- * (`manager`, src/data/object_tables_16bb6c.c). */
+ * (`manager`, src/data/object_tables_16bb6c.cpp). */
 extern const struct entry_set gEnemyCtrlMotionSet;
 
 /* The part position UpdateEnemyCtrl's state 9 records the first time it

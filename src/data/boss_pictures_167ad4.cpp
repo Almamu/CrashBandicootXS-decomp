@@ -1,5 +1,10 @@
+#include "airship.hpp"
+#include "hovercraft.hpp"
+
+extern "C" {
 #include "core.h"
 #include "system.h"
+}
 
 /*
  * ROM 0x08167AD4-0x0816AA20. Linked in ROM order between data/data.s
@@ -30,7 +35,7 @@
 /* N. Gin's airship (Airship::palette, include/airship.hpp): its palette,
  * 16 colours that LoadAirshipGraphics (airship_graphics.cpp) DMAs to BG
  * palette 1 (the rest is zero). */
-const u16 gAirshipPalette[256] = {
+const u16 Airship::palette[256] = {
     0x03E0, 0x30E7, 0x3549, 0x41AC, 0x46C5, 0x3222, 0x1DA0, 0x033F,
     0x02BF, 0x3AB9, 0x05F7, 0x0194, 0x5B3B, 0x29B0, 0x14BF, 0x7FFF,
 };
@@ -40,13 +45,14 @@ const u16 gAirshipPalette[256] = {
 /* Airship::picture: the airship, 4 frames (the propellers turn).
  * CreateAirship (airship.cpp) reads cols and rows, ConvertAirshipTiles
  * (airship_graphics.cpp) uploads the tiles. */
-const struct airship_picture {
+struct airship_picture {
     struct boss_picture_size size;
     BOSS_FRAME(AIRSHIP_CELLS, BOSS_PICTURE_167CD4_FRAME0_TILES) frame0;
     BOSS_FRAME(AIRSHIP_CELLS, BOSS_PICTURE_167CD4_FRAME1_TILES) frame1;
     BOSS_FRAME(AIRSHIP_CELLS, BOSS_PICTURE_167CD4_FRAME2_TILES) frame2;
     BOSS_FRAME(AIRSHIP_CELLS, BOSS_PICTURE_167CD4_FRAME3_TILES) frame3;
-} gAirshipPicture = {
+};
+const struct airship_picture Airship::picture = {
     { BOSS_PICTURE_167CD4_COLS, BOSS_PICTURE_167CD4_ROWS },
 #include "boss_pictures/167cd4.inc"
 };
@@ -55,7 +61,7 @@ const struct airship_picture {
  * palette. LoadHovercraftGraphics (hovercraft.cpp) DMAs the first 16 colours
  * to BG palette 1 and UpdateHovercraftHitFlash restores them from here; the
  * other 240 entries are the 0x03E0 filler colour. */
-const u16 gHovercraftPalette[256] = {
+const u16 Hovercraft::palette[256] = {
     0x03E0, 0x66F5, 0x5250, 0x41EF, 0x25AF, 0x7FFF, 0x1CE9, 0x2D04,
     0x3988, 0x0C45, 0x35DE, 0x003C, 0x14B5, 0x0936, 0x15F5, 0x16FF,
     0x03E0, 0x03E0, 0x03E0, 0x03E0, 0x03E0, 0x03E0, 0x03E0, 0x03E0,
@@ -93,10 +99,11 @@ const u16 gHovercraftPalette[256] = {
 /* Hovercraft::picture: the hovercraft, 1 frame. CreateHovercraft
  * (hovercraft.cpp) reads cols and rows, ConvertHovercraftTiles uploads the
  * tiles. */
-const struct hovercraft_picture {
+struct hovercraft_picture {
     struct boss_picture_size size;
     BOSS_FRAME(BOSS_PICTURE_169CE8_COLS * BOSS_PICTURE_169CE8_ROWS, BOSS_PICTURE_169CE8_FRAME0_TILES) frame0;
-} gHovercraftPicture = {
+};
+const struct hovercraft_picture Hovercraft::picture = {
     { BOSS_PICTURE_169CE8_COLS, BOSS_PICTURE_169CE8_ROWS },
 #include "boss_pictures/169ce8.inc"
 };

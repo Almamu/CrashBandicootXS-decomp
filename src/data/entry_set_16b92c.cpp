@@ -1,13 +1,15 @@
+extern "C" {
 #include "core.h"
 #include "objects.h"
 #include "player.h"
+}
 
 /*
  * ROM 0x0816B92C-0x0816B93C: two entry sets. Linked in ROM order between
  * data/data.s sections by ldscript.txt - see docs/data.md.
  */
 
-/* Their entries, in motion_records_16b304.c. */
+/* Their entries, in motion_records_16b304.cpp. */
 extern const u32 gActionCtrlMotionEntries[][2];
 extern const u32 gSwimCtrlMotionEntries[][2];
 

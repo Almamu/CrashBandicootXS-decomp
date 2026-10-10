@@ -1,6 +1,8 @@
+extern "C" {
 #include "core.h"
 #include "objects.h"
 #include "bosses.h"
+}
 
 /*
  * ROM 0x0816C418-0x0816C460: an entry table and the entry set that
