@@ -31,13 +31,13 @@ void Player::TouchPlayer()
     if (latch != 0)
         return;
 
-    if ((f.flags >> 1) & 1) {
+    if (GetFlag1()) {
         struct aabb box = GetAttackBox();
 
         CollidableList()->Collide(box, dir, this);
     }
 
-    if (f.flags >> 7) {
+    if (f.flags >> ENTITY_BIT_COLLIDES) {
         CollisionQueue *q = &collisionQueue;
 
         q->count = latch;
@@ -166,7 +166,7 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
     case EVENT_HIT_DART:
     case EVENT_HIT_CORTEX_SHOT:
     case EVENT_HIT_CRUSH:
-        if ((f.flags >> 6) & 1) {
+        if ((f.flags >> ENTITY_BIT_VULNERABLE) & 1) {
             if (!IsBlinking(this)) {
                 if (gLevelState->maskLevel != MASK_LEVEL_NONE) {
                     if (gLevelState->maskLevel <= MASK_LEVEL_TWO) {

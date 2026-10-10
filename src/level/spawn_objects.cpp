@@ -136,6 +136,6 @@ void SpawnSealSpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     obj->phase = zero;
     obj->x = INT_TO_Q8(arg1);
     obj->y = INT_TO_Q8(arg2);
-    obj->f.flags |= 0x10;
+    obj->f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
     AddUpdateOnly(obj);
 }

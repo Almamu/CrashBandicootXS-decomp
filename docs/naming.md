@@ -146,6 +146,7 @@ the names with the header it already includes. A data table in
 | `action_states.h` | `ACTION_STATE_` | the player's action-controller states, the `gActionCtrlStateTable` index |
 | `attack_kinds.h` | `ATTACK_KIND_` | how the player hits a crate, the `gCrateHitResponse` column |
 | `entities.h` (generated) | `ENTITY_`, `ENEMY_KIND_` | entity types (the `gEntitySpawnFuncs` index), enemy-controller kinds |
+| `actor.h` (next to `union EntityFlags`) | `ENTITY_FLAG_`, `ENTITY_FLAG2_`, `ENTITY_BIT_`, `ENTITY_BIT2_` | `Entity::f`'s two flag bytes, for whole-byte access ([docs/flags/entity.md](flags/entity.md)) |
 | `crates.h` (generated) | `CRATE_KIND_` | `crate.kind` (`CreateCrate`, the `gCrateKind*` tables) |
 | `events.h` | `EVENT_` | event IDs (the event method's `case` labels, `NOTIFY`, the `handleEvent` slot calls); also the kinds that touched objects send |
 | `levels.h` (generated) | `LEVEL_` | level ids, the `gLevelTable` index, from `data/levels/levels.json` |

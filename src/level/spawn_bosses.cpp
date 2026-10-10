@@ -78,7 +78,7 @@ void SpawnDingodile(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
     part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x288);
     part->palette = part->GetAnimPaletteSlot();
-    part->f.flags |= 0x10;
+    part->f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
     part->SetKind(1);
     SetMirrorFromRecord(part, arg3);
     CollidableList()->Add(part);
@@ -101,7 +101,7 @@ void SpawnTiny(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->mover = hdr;
     hdr->Attach(part);
     SetMirrorFromRecord(part, arg3);
-    part->f.flags |= 0x10;
+    part->f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
     CollidableList()->Add(part);
     gLevelState->SetLevelBoss(hdr);
 }
@@ -121,7 +121,7 @@ void SpawnCortexBoss(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->mover = hdr;
     hdr->Attach(part);
     SetMirrorFromRecord(part, arg3);
-    part->f.flags |= 0x10;
+    part->f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
     ForegroundList()->Add(part);
     part->animating = 0;
     gLevelState->SetLevelBoss(hdr);

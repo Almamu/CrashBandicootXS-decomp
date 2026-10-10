@@ -22,7 +22,7 @@ extern "C" {
  * (layer 0's position less 100/60 px, 440x280, in Q8). */
 u8 Entity::IsNearCamera()
 {
-    u8 result = (f.flags >> 4) & 1;
+    u8 result = IsAlwaysActive();
 
     if (!result) {
         struct aabb near;
@@ -59,7 +59,7 @@ s32 Entity::CheckPlayerContact()
 
     SetAabbPos(&box, bx + offX, by + offY);
     SetAabbSize(&box, w, h);
-    s32 inContact = (f.flags >> 2) & 1;
+    s32 inContact = IsContactEnabled();
 
     if (inContact) {
         if (gPlayer->TouchesBox(&box)) {
@@ -108,7 +108,7 @@ u8 Entity::IsOnScreen()
  * position) are inside `box`. */
 s32 Entity::IsInsideRect(struct aabb *box)
 {
-    u8 result = (f.flags >> 4) & 1;
+    u8 result = IsAlwaysActive();
 
     if (!result) {
         const struct hitbox_quad *rec = GetBounds();

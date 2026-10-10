@@ -198,7 +198,7 @@ s32 Sprite::CheckPlayerContact()
     if (!IsTouched() && IsContactEnabled()) {
         struct aabb a = GetAnimHitbox();
 
-        if (gPlayer->f.flags >> 7) {
+        if (gPlayer->f.flags >> ENTITY_BIT_COLLIDES) {
             struct aabb b = gPlayer->GetAnimHitbox();
 
             if (AabbOverlaps(&b, &a)) {
@@ -248,7 +248,7 @@ u8 Sprite::IsOnScreen()
 
     if (screenSpace == 1)
         return 1;
-    s32 hidden = (f.bytes.flags2 >> 2) & 1;
+    s32 hidden = (f.bytes.flags2 >> ENTITY_BIT2_HIDDEN) & 1;
 
     if (!hidden) {
         struct aabb screen;
@@ -276,7 +276,7 @@ s32 Sprite::OverlapsRect(struct aabb *region)
 
     if (screenSpace == 1)
         return 1;
-    s32 hidden = (f.bytes.flags2 >> 2) & 1;
+    s32 hidden = (f.bytes.flags2 >> ENTITY_BIT2_HIDDEN) & 1;
 
     if (!hidden) {
         struct aabb box = GetAnimBounds();

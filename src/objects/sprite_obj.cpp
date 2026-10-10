@@ -386,7 +386,7 @@ void Sprite::SetScreenSpace(u8 value)
 
 s32 Sprite::IsHidden()
 {
-    return (f.bytes.flags2 >> 2) & 1;
+    return (f.bytes.flags2 >> ENTITY_BIT2_HIDDEN) & 1;
 }
 
 void Sprite::ToggleHidden()
@@ -396,7 +396,7 @@ void Sprite::ToggleHidden()
 
 s32 Sprite::IsSolid()
 {
-    return (f.bytes.flags2 >> 3) & 1;
+    return (f.bytes.flags2 >> ENTITY_BIT2_SOLID) & 1;
 }
 
 void Sprite::ClearSolid()
@@ -411,7 +411,7 @@ void Sprite::SetSolid()
 
 s32 Sprite::IsVulnerable()
 {
-    return (f.flags >> 6) & 1;
+    return (f.flags >> ENTITY_BIT_VULNERABLE) & 1;
 }
 
 void Sprite::ClearVulnerable()
@@ -431,7 +431,7 @@ void Sprite::ResetAnimIndex()
 
 s32 Sprite::IsCollisionEnabled()
 {
-    return f.flags >> 7;
+    return f.flags >> ENTITY_BIT_COLLIDES;
 }
 
 void Sprite::DisableCollision()

@@ -30,9 +30,9 @@ void ExtraLife::CheckPickup()
         u32 flags = f.flags << 24;
         s32 contact;
 
-        if ((flags >> 27) & 1)
+        if ((flags >> (24 + ENTITY_BIT_TOUCHED)) & 1)
             return;
-        contact = (flags >> 26) & 1;
+        contact = (flags >> (24 + ENTITY_BIT_CONTACT)) & 1;
         if (!contact)
             return;
     }
@@ -248,7 +248,7 @@ ExtraLife::ExtraLife()
 s32 ExtraLife::CheckPlayerContact()
 {
     if (state == 0) {
-        if (gPlayer->f.flags >> 7)
+        if (gPlayer->f.flags >> ENTITY_BIT_COLLIDES)
             CheckPickup();
     }
     return 0;

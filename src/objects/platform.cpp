@@ -36,7 +36,7 @@ void Platform::Update()
  * back from the bonus round on the platform X-mirrored when it is set. */
 s32 Platform::GetExitMirror()
 {
-    return (f.bytes.flags2 >> 4) & 1;
+    return (f.bytes.flags2 >> ENTITY_BIT2_EXIT_MIRROR) & 1;
 }
 
 /* Sets the exit facing GetExitMirror reads (CreatePlatform, type 3: the

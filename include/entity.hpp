@@ -144,7 +144,7 @@ public:
 
     u8 GetFlag1()
     {
-        return (f.flags >> 1) & 1;
+        return (f.flags >> ENTITY_BIT_ATTACKS) & 1;
     }
 
     void EnableContact()
@@ -159,7 +159,7 @@ public:
 
     u8 IsContactEnabled()
     {
-        return (f.flags >> 2) & 1;
+        return (f.flags >> ENTITY_BIT_CONTACT) & 1;
     }
 
     /* MarkEntityGone: the `gone` flag, and unless the id is
@@ -188,12 +188,12 @@ public:
 
     u8 IsGone()
     {
-        return f.flags & 1;
+        return f.flags & ENTITY_FLAG_GONE;
     }
 
     u8 IsTouched()
     {
-        return (f.flags >> 3) & 1;
+        return (f.flags >> ENTITY_BIT_TOUCHED) & 1;
     }
 
     void SetTouched()
@@ -208,7 +208,7 @@ public:
 
     u8 IsAlwaysActive()
     {
-        return (f.flags >> 4) & 1;
+        return (f.flags >> ENTITY_BIT_ALWAYS_ACTIVE) & 1;
     }
 
     void SetAlwaysActive()

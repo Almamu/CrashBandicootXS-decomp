@@ -87,7 +87,7 @@ void CrateList::Unlink(Crate *sprite)
         u16 id = sprite->id;
 
         if (found != 0 && id != ENTITY_ID_NONE) {
-            s32 active = (sprite->f.flags >> 4) & 1;
+            s32 active = sprite->IsAlwaysActive();
 
             if (!active)
                 return;
@@ -227,7 +227,7 @@ void CrateList::Update()
         while (node != 0) {
             /* Reading `node->data` twice gives the ROM's load into r2 and
              * the copy into r5. */
-            s32 active = (node->data->f.flags >> 4) & 1;
+            s32 active = node->data->IsAlwaysActive();
             Crate *sprite = node->data;
 
             if (active && node->link == 0) {

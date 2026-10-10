@@ -101,7 +101,7 @@ void SpawnLizard(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->mover = hdr;
     hdr->Attach(part);
     SetKind(part, 1);
-    part->f.flags &= 0x7f;
+    part->f.flags &= ~ENTITY_FLAG_COLLIDES;
     rec = EntityParams(arg3);
     SetMirror(part, rec);
     CollidableList()->Add(part);
@@ -128,7 +128,7 @@ void SpawnVulture(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->mover = hdr;
     hdr->Attach(part);
     SetKind(part, 1);
-    part->f.flags &= 0x7f;
+    part->f.flags &= ~ENTITY_FLAG_COLLIDES;
     rec = EntityParams(arg3);
     SetMirror(part, rec);
     CollidableList()->Add(part);
@@ -154,7 +154,7 @@ void SpawnVenusFlytrap(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->mover = hdr;
     hdr->Attach(part);
     SetKind(part, 1);
-    part->f.flags &= 0x7f;
+    part->f.flags &= ~ENTITY_FLAG_COLLIDES;
     rec = EntityParams(arg3);
     SetMirror(part, rec);
     CollidableList()->Add(part);
@@ -186,7 +186,7 @@ void SpawnPatrollingJungleEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->mover = hdr;
     hdr->Attach(part);
     SetKind(part, 1);
-    part->f.flags &= 0x7f;
+    part->f.flags &= ~ENTITY_FLAG_COLLIDES;
     rec = EntityParams(arg3);
     SetMirror(part, rec);
     CollidableList()->Add(part);
@@ -215,7 +215,7 @@ void SpawnBlowgunTribesman(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->mover = hdr;
     hdr->Attach(part);
     SetKind(part, 1);
-    part->f.flags &= 0x7f;
+    part->f.flags &= ~ENTITY_FLAG_COLLIDES;
     rec = EntityParams(arg3);
     SetMirror(part, rec);
     CollidableList()->Add(part);
@@ -246,7 +246,7 @@ void SpawnPenguin(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->mover = hdr;
     hdr->Attach(part);
     SetKind(part, 1);
-    part->f.flags &= 0x7f;
+    part->f.flags &= ~ENTITY_FLAG_COLLIDES;
     rec = EntityParams(arg3);
     SetMirror(part, rec);
     CollidableList()->Add(part);
@@ -278,10 +278,10 @@ void SpawnSeal(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->mover = hdr;
     hdr->Attach(part);
     SetKind(part, 1);
-    part->f.flags &= 0x7f;
+    part->f.flags &= ~ENTITY_FLAG_COLLIDES;
     rec = EntityParams(arg3);
     SetMirror(part, rec);
-    part->f.flags |= 0x10;
+    part->f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
     hdr->SetState(5);
@@ -304,7 +304,7 @@ void SpawnPolarBear(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->mover = hdr;
     hdr->Attach(part);
     SetKind(part, 1);
-    part->f.flags &= 0x7f;
+    part->f.flags &= ~ENTITY_FLAG_COLLIDES;
     rec = EntityParams(arg3);
     SetMirror(part, rec);
     CollidableList()->Add(part);
@@ -332,7 +332,7 @@ void SpawnPufferfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->mover = hdr;
     hdr->Attach(part);
     SetKind(part, 1);
-    part->f.flags &= 0x7f;
+    part->f.flags &= ~ENTITY_FLAG_COLLIDES;
     rec = EntityParams(arg3);
     SetMirror(part, rec);
     CollidableList()->Add(part);
@@ -364,7 +364,7 @@ void SpawnShark(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->mover = hdr;
     hdr->Attach(part);
     SetKind(part, 1);
-    part->f.flags &= 0x7f;
+    part->f.flags &= ~ENTITY_FLAG_COLLIDES;
     rec = EntityParams(arg3);
     SetMirror(part, rec);
     CollidableList()->Add(part);
@@ -393,7 +393,7 @@ void SpawnMorayEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->mover = hdr;
     hdr->Attach(part);
     SetKind(part, 1);
-    part->f.flags &= 0x7f;
+    part->f.flags &= ~ENTITY_FLAG_COLLIDES;
     rec = EntityParams(arg3);
     SetMirror(part, rec);
     CollidableList()->Add(part);
@@ -424,7 +424,7 @@ void SpawnElectricEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->mover = hdr;
     hdr->Attach(part);
     SetKind(part, 1);
-    part->f.flags &= 0x7f;
+    part->f.flags &= ~ENTITY_FLAG_COLLIDES;
     rec = EntityParams(arg3);
     SetMirror(part, rec);
     CollidableList()->Add(part);
@@ -453,7 +453,7 @@ void SpawnSquid(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->mover = hdr;
     hdr->Attach(part);
     SetKind(part, 1);
-    part->f.flags &= 0x7f;
+    part->f.flags &= ~ENTITY_FLAG_COLLIDES;
     rec = EntityParams(arg3);
     SetMirror(part, rec);
     CollidableList()->Add(part);
@@ -477,7 +477,7 @@ void SpawnJellyfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->mover = hdr;
     hdr->Attach(part);
     SetKind(part, 1);
-    part->f.flags &= 0x7f;
+    part->f.flags &= ~ENTITY_FLAG_COLLIDES;
     rec = EntityParams(arg3);
     SetMirror(part, rec);
     CollidableList()->Add(part);
@@ -502,7 +502,7 @@ void SpawnLaserBarrier(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->mover = hdr;
     hdr->Attach(part);
     SetKind(part, 1);
-    part->f.flags &= 0x7f;
+    part->f.flags &= ~ENTITY_FLAG_COLLIDES;
     rec = EntityParams(arg3);
     SetMirror(part, rec);
     CollidableList()->Add(part);
@@ -512,7 +512,7 @@ void SpawnLaserBarrier(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         part->mirrorFlags.mirrorX = f == 0;
     }
     SetKind(part, 2);
-    AndFlags(part, ~0x40);
+    AndFlags(part, ~ENTITY_FLAG_VULNERABLE);
     hdr->SetState(1);
 }
 
@@ -537,7 +537,7 @@ void SpawnStationarySpaceEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->mover = hdr;
     hdr->Attach(part);
     SetKind(part, 1);
-    part->f.flags &= 0x7f;
+    part->f.flags &= ~ENTITY_FLAG_COLLIDES;
     rec = EntityParams(arg3);
     SetMirror(part, rec);
     CollidableList()->Add(part);
@@ -569,7 +569,7 @@ void SpawnPatrollingSpaceEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->mover = hdr;
     hdr->Attach(part);
     SetKind(part, 1);
-    part->f.flags &= 0x7f;
+    part->f.flags &= ~ENTITY_FLAG_COLLIDES;
     rec = EntityParams(arg3);
     SetMirror(part, rec);
     CollidableList()->Add(part);
@@ -601,7 +601,7 @@ void SpawnSaucerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->mover = hdr;
     hdr->Attach(part);
     SetKind(part, 1);
-    part->f.flags &= 0x7f;
+    part->f.flags &= ~ENTITY_FLAG_COLLIDES;
     rec = EntityParams(arg3);
     SetMirror(part, rec);
     CollidableList()->Add(part);
@@ -630,14 +630,14 @@ void SpawnPistonCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->mover = hdr;
     hdr->Attach(part);
     SetKind(part, 1);
-    part->f.flags &= 0x7f;
+    part->f.flags &= ~ENTITY_FLAG_COLLIDES;
     rec = EntityParams(arg3);
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
     rec2 = EntityParams(arg3);
     SetKind(part, 0xa);
-    AndFlags(part, ~0x40);
+    AndFlags(part, ~ENTITY_FLAG_VULNERABLE);
     SetAnims(hdr, gCrusherAnimMap);
     SetAttackCycle(hdr, rec2->p.cycle.idleTime, rec2->p.cycle.attackTime,
                    rec2->p.cycle.cycleOffset);
@@ -676,7 +676,7 @@ void SpawnFlamethrowerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->mover = hdr;
     hdr->Attach(part);
     SetKind(part, 1);
-    part->f.flags &= 0x7f;
+    part->f.flags &= ~ENTITY_FLAG_COLLIDES;
     rec = EntityParams(arg3);
     SetMirror(part, rec);
     CollidableList()->Add(part);
@@ -712,7 +712,7 @@ void SpawnHomingSewerEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->mover = hdr;
     hdr->Attach(part);
     SetKind(part, 1);
-    part->f.flags &= 0x7f;
+    part->f.flags &= ~ENTITY_FLAG_COLLIDES;
     rec = EntityParams(arg3);
     SetMirror(part, rec);
     CollidableList()->Add(part);
@@ -743,7 +743,7 @@ void SpawnPatrollingSewerEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->mover = hdr;
     hdr->Attach(part);
     SetKind(part, 1);
-    part->f.flags &= 0x7f;
+    part->f.flags &= ~ENTITY_FLAG_COLLIDES;
     rec = EntityParams(arg3);
     SetMirror(part, rec);
     CollidableList()->Add(part);
@@ -770,7 +770,7 @@ void SpawnRat(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->mover = hdr;
     hdr->Attach(part);
     SetKind(part, 1);
-    part->f.flags &= 0x7f;
+    part->f.flags &= ~ENTITY_FLAG_COLLIDES;
     rec = EntityParams(arg3);
     SetMirror(part, rec);
     CollidableList()->Add(part);
@@ -795,7 +795,7 @@ void SpawnFrog(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->mover = hdr;
     hdr->Attach(part);
     SetKind(part, 1);
-    part->f.flags &= 0x7f;
+    part->f.flags &= ~ENTITY_FLAG_COLLIDES;
     rec = EntityParams(arg3);
     SetMirror(part, rec);
     CollidableList()->Add(part);
@@ -822,7 +822,7 @@ void SpawnSeaMine(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->mover = hdr;
     hdr->Attach(part);
     SetKind(part, 1);
-    part->f.flags &= 0x7f;
+    part->f.flags &= ~ENTITY_FLAG_COLLIDES;
     rec = EntityParams(arg3);
     SetMirror(part, rec);
     CollidableList()->Add(part);
@@ -851,14 +851,14 @@ void SpawnWoodenCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->mover = hdr;
     hdr->Attach(part);
     SetKind(part, 1);
-    part->f.flags &= 0x7f;
+    part->f.flags &= ~ENTITY_FLAG_COLLIDES;
     rec = EntityParams(arg3);
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
     rec2 = EntityParams(arg3);
     part->kind = EVENT_HIT_CRUSH;
-    AndFlags(part, ~0x40);
+    AndFlags(part, ~ENTITY_FLAG_VULNERABLE);
     hdr->anims = gCrusherAnimMap;
     SetAttackCycle(hdr, rec2->p.cycle.idleTime, rec2->p.cycle.attackTime,
                    rec2->p.cycle.cycleOffset);

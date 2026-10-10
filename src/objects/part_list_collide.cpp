@@ -72,7 +72,7 @@ void PartList::Update()
     for (i = 0; i < count; i++) {
         Sprite *part = items[i];
 
-        if (part->f.flags & PART_FLAG_GONE) {
+        if (part->IsGone()) {
             if (i < capacity) {
                 CpuSet(&items[i + 1], &items[i],
                        ((count - i) & CPU_SET_COUNT_MASK) | CPU_SET_32BIT);
@@ -104,7 +104,7 @@ void PartList::Collide(struct aabb box, s32 unused, MovingSprite *other)
         if (s->GetClassId() <= 4)
             continue;
         MovingSprite *part = (MovingSprite *)s; // class 5 or 6
-        s32 inContact = (part->f.flags >> 2) & 1;
+        s32 inContact = part->IsContactEnabled();
 
         if (!inContact)
             continue;
@@ -130,7 +130,7 @@ void PartList::CollideWithPlayer(struct aabb box, MovingSprite *part)
         if (!part->ClassifyContact(&box))
             return;
         part->HandleEvent(1, gPlayer->kind, 0);
-    } else if ((part->f.bytes.flags2 >> 3) & 1) {
+    } else if ((part->f.bytes.flags2 >> ENTITY_BIT2_SOLID) & 1) {
         struct aabb a = gPlayer->GetAnimHitbox();
         struct aabb b = part->GetBodyBox();
         s32 px;
@@ -165,7 +165,7 @@ void PartList::CollideWithPlayer(struct aabb box, MovingSprite *part)
             }
             break;
         case 2:
-            part->f.flags |= PART_FLAG_TOUCHED;
+            part->f.flags |= ENTITY_FLAG_TOUCHED;
             if (gLevelState->maskLevel)
                 part->HandleEvent(1, EVENT_HIT, 0);
             gPlayer->HandleEvent(1, part->kind, 0);
@@ -228,7 +228,7 @@ void PartList::CollideClass(s32 classId)
 
         if (part->GetClassId() != classId)
             continue;
-        s32 inContact = (part->f.flags >> 2) & 1;
+        s32 inContact = part->IsContactEnabled();
 
         if (!inContact)
             continue;

@@ -547,7 +547,7 @@ void DingodileProjectileCtrl::Update(MovingSprite *part)
 
             /* the vulnerable bit, extracted (as a 1-bit field, g++ tests
              * it with `movs #0x40; ands`) */
-            if ((t->f.flags >> 6) & 1) {
+            if ((t->f.flags >> ENTITY_BIT_VULNERABLE) & 1) {
                 struct aabb hit = t->GetAnimHitbox();
 
                 if (AabbOverlaps(&a, &hit)) {

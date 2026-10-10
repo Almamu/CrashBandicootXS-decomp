@@ -47,7 +47,7 @@ void ActionCtrl::StateLeftGround()
         {
             u8 *flags2 = &part->f.bytes.flags2;
 
-            *flags2 |= 1;
+            *flags2 |= ENTITY_FLAG2_FLOOR_PROBE;
         }
         {
             u8 *blocked = &slamBlocked;
@@ -121,7 +121,7 @@ void ActionCtrl::StateLeftGround()
             alt = t;
 
             if (alt) {
-                ActOrFlags0D(part, 1);
+                ActOrFlags0D(part, ENTITY_FLAG2_FLOOR_PROBE);
                 slamBlocked = fire;
                 if (gKeys.all & DPAD_SIDEWAYS)
                     QueueX(fire, 1, 1);
@@ -132,7 +132,7 @@ void ActionCtrl::StateLeftGround()
                 else
                     SetMode(ACTION_STATE_SPIN);
             } else if (INPUT_HELD(in) & R_BUTTON) {
-                ActOrFlags0D(part, 1);
+                ActOrFlags0D(part, ENTITY_FLAG2_FLOOR_PROBE);
                 slamBlocked = alt;
                 SetMode(ACTION_STATE_CROUCH_DOWN);
                 SetTargetAnim(part, 3);
@@ -497,7 +497,8 @@ void ActionCtrl::DoSuperBodySlamShockwave()
         if (other->GetClassId() > 4) {
             dx = ABS_BRANCHLESS(Q8_TO_INT(other->x) - px);
             dy = ABS_BRANCHLESS(Q8_TO_INT(other->y) - py);
-            if (dx + dy <= range && ((other->f.flags >> 6) & 1) != 0 && dy <= 0x11)
+            if (dx + dy <= range && ((other->f.flags >> ENTITY_BIT_VULNERABLE) & 1) != 0 &&
+                dy <= 0x11)
                 other->HandleEvent(0, EVENT_ATTACK_SUPER_BODY_SLAM, 0);
         }
         i++;
@@ -626,7 +627,7 @@ void ActionCtrl::StartTornadoFall()
      * dead `& 0` leaves a 0 that cse reuses for slamBlocked's store,
      * loaded before the `ldrb` (an r0 pin on the 0 before; #662 round
      * 3). */
-    ActOrFlags0D(part, 1);
+    ActOrFlags0D(part, ENTITY_FLAG2_FLOOR_PROBE);
     slamBlocked = 0;
 }
 
@@ -838,7 +839,7 @@ void ActionCtrl::StateHangGrab()
 void ActionCtrl::StateWarpOut()
 {
     if (part->animDone != 0) {
-        gPlayer->f.flags |= 0x80;
+        gPlayer->f.flags |= ENTITY_FLAG_COLLIDES;
         RequestRoomExit();
     }
 }

@@ -328,8 +328,8 @@ void ActionCtrl::StateRun()
  * 0xD (once `frame` counts a double jump) or 7. */
 void ActionCtrl::StateJump()
 {
-    ActAndFlags0D(part, -2);
-    ActAndFlags0D(part, -3);
+    ActAndFlags0D(part, ~ENTITY_FLAG2_FLOOR_PROBE);
+    ActAndFlags0D(part, ~ENTITY_FLAG2_GROUNDED);
     if (part->hitAxes & 4) {
         Player *p;
         s32 frame;
@@ -508,7 +508,7 @@ void ActionCtrl::StateAirborne()
 
         if (bit4) {
             if (this->state != ACTION_STATE_AIRBORNE_FALL) {
-                ActOrFlags0D(part, 1);
+                ActOrFlags0D(part, ENTITY_FLAG2_FLOOR_PROBE);
                 slamBlocked = 0;
                 if (this->state != ACTION_STATE_AIR_SPIN) {
                     Player *p;
@@ -539,7 +539,7 @@ void ActionCtrl::StateAirborne()
         if ((contact & 8) && part->speedY >= 0) {
             s32 st;
 
-            part->f.bytes.flags2 |= 1;
+            part->f.bytes.flags2 |= ENTITY_FLAG2_FLOOR_PROBE;
             slamBlocked = bit4;
             st = this->state;
             if ((u32)(st - ACTION_STATE_AIRBORNE_BODY_SLAM) <= 1) {
@@ -818,7 +818,7 @@ void ActionCtrl::StateAirSpin()
         {
             u8 *flags2 = &p->f.bytes.flags2;
 
-            *flags2 |= 1;
+            *flags2 |= ENTITY_FLAG2_FLOOR_PROBE;
         }
         slamBlocked = 0;
         SetMode(ACTION_STATE_SPIN);
@@ -840,7 +840,7 @@ void ActionCtrl::StateAirSpin()
         if (frame >= frames || p->animDone) {
             u8 charge;
 
-            ActOrFlags0D(p, 1);
+            ActOrFlags0D(p, ENTITY_FLAG2_FLOOR_PROBE);
             charge = this->charge;
             if (charge) {
                 StartTornadoSpin(ACTION_STATE_AIR_SPIN, ACTION_STATE_AIR_SPIN);

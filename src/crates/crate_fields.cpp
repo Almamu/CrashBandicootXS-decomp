@@ -18,7 +18,7 @@ void Crate::OpenAkuAku()
 {
     Player *p = gPlayer;
 
-    if (p->f.flags >> 7) {
+    if (p->f.flags >> ENTITY_BIT_COLLIDES) {
         p->HandleEvent(0, EVENT_MASK_GAIN, 0);
         gAudioContext->PlaySfx(SFX_AKU_AKU_GAIN, 0x100);
     }

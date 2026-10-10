@@ -111,7 +111,7 @@ Wumpa::Wumpa()
 s32 Wumpa::CheckPlayerContact()
 {
     if (state == 0) {
-        if (gPlayer->f.flags >> 7)
+        if (gPlayer->f.flags >> ENTITY_BIT_COLLIDES)
             CheckPickup();
     }
     return 0;

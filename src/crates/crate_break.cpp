@@ -454,10 +454,10 @@ tail:
                 dy = Span(pbox.y, pbox.h, prev.y);
             }
             if (dx > 5 && f21 == 0) {
-                if ((gLevelState->maskLevel == MASK_LEVEL_NONE && ((gPlayer->f.flags >> 6) & 1) &&
-                     !PlayerInvulnerable()) ||
+                if ((gLevelState->maskLevel == MASK_LEVEL_NONE &&
+                     ((gPlayer->f.flags >> ENTITY_BIT_VULNERABLE) & 1) && !PlayerInvulnerable()) ||
                     kind != CRATE_KIND_REINFORCED) {
-                    gPlayer->f.flags |= 0x40;
+                    gPlayer->f.flags |= ENTITY_FLAG_VULNERABLE;
                     gLevelState->SetMaskLevel(MASK_LEVEL_NONE);
                     gPlayer->HandleEvent(0, EVENT_HIT_CRUSH, 0);
                 } else {
@@ -1290,7 +1290,7 @@ void Crate::OpenMystery(bool flag)
         {
             Player *p = gPlayer;
 
-            if (p->f.flags >> 7) {
+            if (p->f.flags >> ENTITY_BIT_COLLIDES) {
                 p->HandleEvent(0, EVENT_MASK_GAIN, 0);
                 Sfx(SFX_AKU_AKU_GAIN);
             }
@@ -1434,7 +1434,7 @@ void Crate::DropAbove()
 
             n->fallSpeed = t + d;
         }
-        n->f.flags |= 0x10;
+        n->f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
         Crates()->LinkActive(n);
         if (tbl[n->kind] && blastState == 0 && n->fallDistance > 0x1600) {
             Crate *next = n->GetAbove();
@@ -1472,7 +1472,7 @@ void Crate::Explode(u8 near)
     timer = 0;
     state &= CRATE_STATE_MASK;
     gPlayer->busy = 0;
-    f.flags |= 0x10;
+    f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
     Crates()->LinkActive(this);
     one = 1;
     state = (state & CRATE_STATE_BUSY) | one;
@@ -1489,7 +1489,7 @@ void Crate::Explode(u8 near)
     gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
     DropAbove();
 
-    if ((gPlayer->f.flags >> 6) & 1 && !PlayerInvulnerable()) {
+    if ((gPlayer->f.flags >> ENTITY_BIT_VULNERABLE) & 1 && !PlayerInvulnerable()) {
         GroundSprite *p;
         s32 t1 = Q8_TO_INT(gPlayer->x) - Q8_TO_INT(x);
         s32 dx = ABS_BRANCHLESS(t1);
@@ -1570,7 +1570,7 @@ void Crate::BlastNearby(s32 dist)
 
                 if (dx + dy <= dist) {
                     o->PickUp(1);
-                    o->f.flags |= 0x10;
+                    o->f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
                 }
             }
             i++;

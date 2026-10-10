@@ -42,6 +42,46 @@ union EntityFlags {
     } bytes;
 };
 
+/* The bits of the two bytes (#843, docs/flags/entity.md), for the code
+ * that reads or writes the whole byte rather than a bitfield of `b`:
+ * ENTITY_BIT_* / ENTITY_BIT2_* is a bit's number in `f.flags` (+0x0C) /
+ * `f.bytes.flags2` (+0x0D), ENTITY_FLAG_* / ENTITY_FLAG2_* its mask. The
+ * names follow the accessors (entity.hpp, sprite_obj.hpp); the bitfield
+ * names above are older (`visible` is the contact bit, `bit3` touched,
+ * `active` always active, `blink` hidden). */
+#define ENTITY_BIT_GONE 0          // removed (MarkGone); the part and crate lists drop it
+#define ENTITY_BIT_ATTACKS 1       // its attack box hits (Player::Reset; Get/Set/ClearFlag1)
+#define ENTITY_BIT_CONTACT 2       // in contact with the player (Is/Enable/DisableContact)
+#define ENTITY_BIT_TOUCHED 3       // touched by the player or an object (IsTouched)
+#define ENTITY_BIT_ALWAYS_ACTIVE 4 // updated off screen too (IsAlwaysActive; the spawners)
+// Set by GroundSprite::CheckPlayerContact when its floor hit has no edge
+// terrain under it (it walked off a ledge), cleared on each floor hit; only
+// GetFlag5 reads it, so what it is for isn't known.
+#define ENTITY_BIT_UNK5 5
+#define ENTITY_BIT_VULNERABLE 6 // the player's attacks hit it (Sprite::IsVulnerable)
+#define ENTITY_BIT_COLLIDES 7   // probes the terrain (Is/Enable/DisableCollision)
+
+#define ENTITY_FLAG_GONE (1 << ENTITY_BIT_GONE)
+#define ENTITY_FLAG_ATTACKS (1 << ENTITY_BIT_ATTACKS)
+#define ENTITY_FLAG_CONTACT (1 << ENTITY_BIT_CONTACT)
+#define ENTITY_FLAG_TOUCHED (1 << ENTITY_BIT_TOUCHED)
+#define ENTITY_FLAG_ALWAYS_ACTIVE (1 << ENTITY_BIT_ALWAYS_ACTIVE)
+#define ENTITY_FLAG_UNK5 (1 << ENTITY_BIT_UNK5)
+#define ENTITY_FLAG_VULNERABLE (1 << ENTITY_BIT_VULNERABLE)
+#define ENTITY_FLAG_COLLIDES (1 << ENTITY_BIT_COLLIDES)
+
+#define ENTITY_BIT2_FLOOR_PROBE 0 // a ground sprite probes the floor (Enable/DisableFloorProbe)
+#define ENTITY_BIT2_GROUNDED 1    // on the floor (ProbeFloor; IsGrounded)
+#define ENTITY_BIT2_HIDDEN 2      // hidden this frame, a blinking sprite (Is/ToggleHidden)
+#define ENTITY_BIT2_SOLID 3       // pushes the player out (Is/Set/ClearSolid)
+#define ENTITY_BIT2_EXIT_MIRROR 4 // a bonus platform's exit facing (Get/SetExitMirror)
+
+#define ENTITY_FLAG2_FLOOR_PROBE (1 << ENTITY_BIT2_FLOOR_PROBE)
+#define ENTITY_FLAG2_GROUNDED (1 << ENTITY_BIT2_GROUNDED)
+#define ENTITY_FLAG2_HIDDEN (1 << ENTITY_BIT2_HIDDEN)
+#define ENTITY_FLAG2_SOLID (1 << ENTITY_BIT2_SOLID)
+#define ENTITY_FLAG2_EXIT_MIRROR (1 << ENTITY_BIT2_EXIT_MIRROR)
+
 /* actor_anim.h has the full definitions; it can't be included here,
  * since several includers of this header define their own `struct
  * anim_box`/`struct sprite_frame` (docs/headers_plan.md, batch 7). */

@@ -25,7 +25,7 @@ extern "C" {
 static inline void CollidePart(CrateList *list, MovingSprite *part, struct aabb *screen,
                                struct aabb &box, MovingSprite *other)
 {
-    if ((u8)part->OverlapsRect(screen) && ((part->f.flags >> 2) & 1)) {
+    if ((u8)part->OverlapsRect(screen) && part->IsContactEnabled()) {
         if (part->GetClassId() > 4) {
             if (other == gPlayer)
                 list->CollideWithPlayer(box, part);
@@ -88,7 +88,7 @@ void CrateList::CollideWithPlayer(struct aabb box, MovingSprite *part)
         if (!part->ClassifyContact(&box))
             return;
         part->HandleEvent(1, gPlayer->kind, 0);
-    } else if ((part->f.bytes.flags2 >> 3) & 1) {
+    } else if ((part->f.bytes.flags2 >> ENTITY_BIT2_SOLID) & 1) {
         struct aabb a = gPlayer->GetAnimHitbox();
         struct aabb b = part->GetBodyBox();
         s32 px;
@@ -123,7 +123,7 @@ void CrateList::CollideWithPlayer(struct aabb box, MovingSprite *part)
             }
             break;
         case 2:
-            part->f.flags |= PART_FLAG_TOUCHED;
+            part->f.flags |= ENTITY_FLAG_TOUCHED;
             if (gLevelState->maskLevel)
                 part->HandleEvent(1, EVENT_HIT, 0);
             gPlayer->HandleEvent(1, part->kind, 0);
