@@ -150,7 +150,8 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
         {
             s32 mode = gLevelState->maskLevel;
 
-            if ((mode <= MASK_LEVEL_TWO && gPlayer->ctrlMode != 1) || mode <= MASK_LEVEL_ONE)
+            if ((mode <= MASK_LEVEL_TWO && gPlayer->ctrlMode != PLAYER_CTRL_MODE_SWIM) ||
+                mode <= MASK_LEVEL_ONE)
                 gLevelState->RaiseMaskLevel();
         }
         if (gLevelState->maskLevel == MASK_LEVEL_INVINCIBLE)

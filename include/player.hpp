@@ -87,6 +87,15 @@ extern class SwimCtrl *gSwimCtrl;
 
 class Crate;
 
+/* `ctrlMode` (#843, docs/flags/player_ctrl_mode.md): which controller
+ * the player has, from the room kind. PlayRoom builds the controller and
+ * sets the mode, and ResetForRoom restarts the controller it names. */
+#define PLAYER_CTRL_MODE_ACTION 0 // ActionCtrl, on foot (ROOM_KIND_ON_FOOT)
+#define PLAYER_CTRL_MODE_SWIM 1   // SwimCtrl, underwater (ROOM_KIND_UNDERWATER)
+// An empty case in ResetForRoom; nothing sets it.
+#define PLAYER_CTRL_MODE_UNK2 2
+#define PLAYER_CTRL_MODE_INPUT 3 // InputCtrl, the hover levels (ROOM_KIND_HOVER)
+
 /* The player (gPlayer): a ground sprite with the player's own fields after
  * it. PlayRoom builds it (`new Player(0xFFFF, 0, 0, 0)`, InitPlayer on a
  * 0x350-byte block in its C). Its controller, `mover`, is the room kind's:
@@ -99,9 +108,9 @@ public:
     //        cleared when it ends; enemies skip the player meanwhile
     u8 busy;
     u8 unk_81[7];
-    // 0x88 - the control mode 0-3, which picks the controller (ResetForRoom); 1: crates
-    //        fall at quarter speed and touched enemies just vanish; nonzero stops `list`
-    //        recording
+    // 0x88 - the controller, PLAYER_CTRL_MODE_* (ResetForRoom); underwater, crates
+    //        fall at quarter speed and touched enemies just vanish; only on foot is
+    //        `list` recorded
     u8 ctrlMode;
     u32 deadline; // 0x8C - the gRoomFrameCount frame the invulnerability lasts until
     // 0x90 - a crate's side stopped the X motion (ActionCtrl::HandleEvent, event 12);

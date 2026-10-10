@@ -166,7 +166,7 @@ u8 Player::IsBusy()
     return busy;
 }
 
-/* `listCount` (+0x94) clear/increment (only in control mode 0, like the
+/* `listCount` (+0x94) clear/increment (only on foot, PLAYER_CTRL_MODE_ACTION, like the
  * crate list recording itself)/get accessors, then a plain
  * clear/increment/get triple on the same field (the `Alt` copies; the ROM
  * has both - reproduced as-is rather than deduplicated). UNUSED. */
@@ -177,7 +177,7 @@ void Player::ClearListCount()
 
 void Player::IncrementListCount()
 {
-    if (ctrlMode == 0) {
+    if (ctrlMode == PLAYER_CTRL_MODE_ACTION) {
         listCount += 1;
     }
 }
@@ -278,7 +278,7 @@ void Player::SetSlippery(u8 value)
  * method, the plain test matches. */
 Crate *Player::GetListEntry(s32 idx)
 {
-    if (ctrlMode == 0 && (idx <= 4 || idx < listCount))
+    if (ctrlMode == PLAYER_CTRL_MODE_ACTION && (idx <= 4 || idx < listCount))
         return list[idx];
     return 0;
 }
@@ -289,7 +289,7 @@ Crate *Player::GetListEntry(s32 idx)
  * matches. */
 void Player::StoreListEntry(Crate *crate)
 {
-    if (ctrlMode == 0) {
+    if (ctrlMode == PLAYER_CTRL_MODE_ACTION) {
         u32 idx = listCount;
 
         if (idx <= 4)

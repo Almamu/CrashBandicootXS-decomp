@@ -141,6 +141,7 @@ the names with the header it already includes. A data table in
 | `songs.h` (generated) | `SONG_` | song IDs, the `gSongTable` index (`PlaySong`, `StartSong`), from `sound/gax_manifest.json` |
 | `level_flags.h` | `LEVEL_FLAG_` | the bits of a `game_progress.levels[]` word |
 | `progress_flags.h` | `PROGRESS_FLAG_`, `PROGRESS_BIT_` | `GameProgress::flags`: the coloured gems and the powers ([docs/flags/progress.md](flags/progress.md)) |
+| `player.hpp` (next to Player) | `PLAYER_CTRL_MODE_` | `Player::ctrlMode`, the player's controller (on foot, underwater, hovering) ([docs/flags/player_ctrl_mode.md](flags/player_ctrl_mode.md)) |
 | `mask_level.h` | `MASK_LEVEL_` | `level_state.maskLevel` values |
 | `packed_stats.h` | `PACKED_STATS_` | the packed lives/mask/wumpa halfword |
 | `action_states.h` | `ACTION_STATE_` | the player's action-controller states, the `gActionCtrlStateTable` index |

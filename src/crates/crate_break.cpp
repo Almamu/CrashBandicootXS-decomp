@@ -65,7 +65,7 @@ static inline s32 HitResponseAt(const s32 (*t)[7], u8 *row, s32 k)
     return *(const s32 *)((const u8 *)t + (*row * 28 + k * 4));
 }
 
-/* The ring lock byte as an int, for the first test in RingPush.
+/* The player's `ctrlMode` as an int, for the first test in RingPush.
  * Written in place, both tests are the same expression and cse's jump
  * following sends a failed first test straight past the second one; the
  * ROM re-tests (its `bne` goes to the second load). */
@@ -107,9 +107,9 @@ static inline s32 PlayerInvulnerable(void)
 /* Pushes `obj` onto the player's 5-slot ring of touched crates. */
 static inline void RingPush(Crate *obj)
 {
-    if (PlayerCtrlMode() == 0 && gPlayer->listCount <= 4)
+    if (PlayerCtrlMode() == PLAYER_CTRL_MODE_ACTION && gPlayer->listCount <= 4)
         gPlayer->list[gPlayer->listCount] = (Crate *)obj;
-    if (gPlayer->ctrlMode == 0)
+    if (gPlayer->ctrlMode == PLAYER_CTRL_MODE_ACTION)
         gPlayer->listCount++;
 }
 
@@ -163,8 +163,8 @@ static inline void SetPlayerBusy(void)
  * on top, from the player's previous position, with FindLineCrossing for
  * a diagonal approach) and how deep it is in decide where the player is
  * put back and which crate of the stack the hit goes to. The result is
- * queued on the player's collision queue, for ApplyCollision. In control
- * mode 1, a TNT crate the player touches is lit.
+ * queued on the player's collision queue, for ApplyCollision. Underwater
+ * (PLAYER_CTRL_MODE_SWIM), a TNT crate the player touches is lit.
  *
  * The shapes the ROM needs are in the comments below; the C was matched
  * over three passes (docs/matching/archive/huge-naked-retry-3.md). The
@@ -300,7 +300,7 @@ void Crate::QueuePlayerCollision(s32 idx)
         for (i = 0; i < gPlayer->listCount; i++) {
             Crate *e;
 
-            if (gPlayer->ctrlMode == 0 && (i <= 4 || i < gPlayer->listCount))
+            if (gPlayer->ctrlMode == PLAYER_CTRL_MODE_ACTION && (i <= 4 || i < gPlayer->listCount))
                 e = gPlayer->list[i];
             else
                 e = 0;
@@ -496,7 +496,7 @@ tail:
             } else {
                 s32 py2;
 
-                if (gPlayer->ctrlMode != 1)
+                if (gPlayer->ctrlMode != PLAYER_CTRL_MODE_SWIM)
                     return;
                 p3.x = gPlayer->x;
                 py2 = gPlayer->y;
@@ -643,7 +643,7 @@ tail:
                         px = pbox.x;
                         r = FindLineCrossing(ax, ay, px, py, box.x + box.w);
                     }
-                    if (gPlayer->ctrlMode == 1)
+                    if (gPlayer->ctrlMode == PLAYER_CTRL_MODE_SWIM)
                         r += 2;
                     if ((r < 0 && f21 == 0 && dx > 5) || (r > 0 && r >= box.y + box.h))
                         edge = 4;
@@ -756,7 +756,7 @@ tail:
         }
         break;
     }
-    if (gPlayer->ctrlMode == 1 && kind == CRATE_KIND_TNT && code <= 1 &&
+    if (gPlayer->ctrlMode == PLAYER_CTRL_MODE_SWIM && kind == CRATE_KIND_TNT && code <= 1 &&
         AabbOverlapsInclusiveX(&prev, &pbox) == 1)
         tgt->LightTnt();
     PlayerQueue()->Add(tgt, attack, code, edge, dy, pos, hit, (struct byte_arg){ f20 },
@@ -783,7 +783,7 @@ void Crate::ApplyCollision(s32 attack, s32 code, s32 edge, s32 depth, struct vec
 
     if ((state & CRATE_STATE_MASK) != 0)
         goto commit;
-    if (gPlayer->ctrlMode == 1 && code > 2) {
+    if (gPlayer->ctrlMode == PLAYER_CTRL_MODE_SWIM && code > 2) {
         pos.x = gPlayer->x;
         pos.y = gPlayer->y;
     }
@@ -896,9 +896,9 @@ void Crate::ApplyCollision(s32 attack, s32 code, s32 edge, s32 depth, struct vec
                 return;
             if (edge == 8 || edge == 4) {
                 BreakInStack(0, 0, edge);
-                if ((*pp)->ctrlMode == 0 && (*pp)->listCount <= 4)
+                if ((*pp)->ctrlMode == PLAYER_CTRL_MODE_ACTION && (*pp)->listCount <= 4)
                     (*pp)->list[(*pp)->listCount] = this;
-                if (gPlayer->ctrlMode == 0)
+                if (gPlayer->ctrlMode == PLAYER_CTRL_MODE_ACTION)
                     gPlayer->listCount++;
             }
         }

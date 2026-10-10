@@ -25,10 +25,10 @@ extern "C" {
  * old_agbcp, as the C was with old_agbcc. */
 
 /* Entry `i` of the player's ring of touched crates (GetPlayerListEntry
- * inlined): none while the ring is locked (`ctrlMode`). */
+ * inlined): none unless the player is on foot (`ctrlMode`). */
 static inline Crate *RingAt(Player *p, s32 i)
 {
-    if (p->ctrlMode == 0 && (i <= 4 || i < p->listCount))
+    if (p->ctrlMode == PLAYER_CTRL_MODE_ACTION && (i <= 4 || i < p->listCount))
         return (Crate *)p->list[i];
     return 0;
 }
@@ -314,7 +314,7 @@ void Crate::UpdateFall()
     } else {
         do {
             if (remaining > 0) {
-                if (gPlayer->ctrlMode == 1) {
+                if (gPlayer->ctrlMode == PLAYER_CTRL_MODE_SWIM) {
                     acc += 0x40;
                     remaining -= 0x40;
                     speed--;

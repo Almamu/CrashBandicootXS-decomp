@@ -36,7 +36,7 @@ void Player::Reset()
     bumped = 0;
     carried = 0;
     busy = 0;
-    ctrlMode = 0;
+    ctrlMode = PLAYER_CTRL_MODE_ACTION;
     deadline = gRoomFrameCount;
     countdown = 0;
     listCount = 0;
@@ -73,15 +73,15 @@ void Player::ResetForRoom()
         s32 m = mode;
 
         switch (m) {
-        case 0:
+        case PLAYER_CTRL_MODE_ACTION:
             ((ActionCtrl *)mover)->Restart();
             break;
-        case 1:
+        case PLAYER_CTRL_MODE_SWIM:
             ((SwimCtrl *)mover)->Restart();
             break;
-        case 2:
+        case PLAYER_CTRL_MODE_UNK2:
             break;
-        case 3:
+        case PLAYER_CTRL_MODE_INPUT:
             ((InputCtrl *)mover)->Restart();
             break;
         }
