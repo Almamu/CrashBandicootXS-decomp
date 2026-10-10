@@ -101,7 +101,7 @@ void SpawnGemPathGem(u32 a0, u16 a1, u16 a2, u16 a3)
 void SpawnRedGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
     if (gLevelState->GetBossIndex() != BOSS_NEO_CORTEX) {
-        if ((gLevelState->progress.flags & 1) == 0) {
+        if ((gLevelState->progress.flags & PROGRESS_FLAG_RED_GEM) == 0) {
             u8 tag = 3;
             u8 type = 0x1F;
             Sprite *part = Sprite::Create(a0, a1, a2, a3);
@@ -123,7 +123,7 @@ void SpawnRedGem(u32 a0, u16 a1, u16 a2, u16 a3)
 void SpawnGreenGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
     if (gLevelState->GetBossIndex() != BOSS_NEO_CORTEX) {
-        if ((gLevelState->progress.flags & 4) == 0) {
+        if ((gLevelState->progress.flags & PROGRESS_FLAG_GREEN_GEM) == 0) {
             u8 tag = 2;
             u8 type = 0x20;
             Sprite *part = Sprite::Create(a0, a1, a2, a3);
@@ -145,7 +145,7 @@ void SpawnGreenGem(u32 a0, u16 a1, u16 a2, u16 a3)
 void SpawnYellowGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
     if (gLevelState->GetBossIndex() != BOSS_NEO_CORTEX) {
-        u8 bit = gLevelState->progress.flags & 2;
+        u8 bit = gLevelState->progress.flags & PROGRESS_FLAG_YELLOW_GEM;
 
         if (bit == 0) {
             u8 type = 0x22;

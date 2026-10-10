@@ -412,19 +412,19 @@ void LevelSelect::LoadRecord()
             gemIconY = 0x1C;
         break;
     case 1:
-        if (save->flags & 1)
+        if (save->flags & PROGRESS_FLAG_RED_GEM)
             gemIconY = 0x1C;
         break;
     case 2:
-        if (save->flags & 4)
+        if (save->flags & PROGRESS_FLAG_GREEN_GEM)
             gemIconY = 0x1C;
         break;
     case 3:
-        if (save->flags & 8)
+        if (save->flags & PROGRESS_FLAG_BLUE_GEM)
             gemIconY = 0x1C;
         break;
     case 4:
-        if (save->flags & 2)
+        if (save->flags & PROGRESS_FLAG_YELLOW_GEM)
             gemIconY = 0x1C;
         break;
     case 5:

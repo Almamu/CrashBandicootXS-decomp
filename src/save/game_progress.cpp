@@ -109,10 +109,10 @@ s32 GameProgress::CountGems() const
         total += levels[i].b.flag1 + levels[i].b.flag2;
     total += levels[24].b.flag1 + levels[24].b.flag2;
     bits = flags;
-    result = total + (((u32)bits << 31) >> 31);
-    result += ((u32)bits << 29) >> 31;
-    result += ((u32)bits << 28) >> 31;
-    result += ((u32)bits << 30) >> 31;
+    result = total + TEST_BIT_SIGN_U(bits, PROGRESS_BIT_RED_GEM);
+    result += TEST_BIT_SIGN_U(bits, PROGRESS_BIT_GREEN_GEM);
+    result += TEST_BIT_SIGN_U(bits, PROGRESS_BIT_BLUE_GEM);
+    result += TEST_BIT_SIGN_U(bits, PROGRESS_BIT_YELLOW_GEM);
     return result;
 }
 
@@ -140,7 +140,8 @@ s32 GameProgress::CountCrystals() const
 }
 
 /* The save's completion percentage: the crystals, gems, relics (a
- * sapphire counts half) and the four secret flags, out of 72. */
+ * sapphire counts half) and the four powers (PROGRESS_FLAG_*), out of
+ * 72. */
 s32 GameProgress::GetCompletionPercent() const
 {
     s32 total = CountCrystals();
@@ -155,9 +156,9 @@ s32 GameProgress::GetCompletionPercent() const
     total += golds;
     total += platinums;
     bits = flags;
-    total += bits >> 7;
-    total += ((u32)bits << 26) >> 31;
-    total += ((u32)bits << 25) >> 31;
-    total += ((u32)bits << 27) >> 31;
+    total += bits >> PROGRESS_BIT_DOUBLE_JUMP;
+    total += TEST_BIT_SIGN_U(bits, PROGRESS_BIT_SUPER_BODY_SLAM);
+    total += TEST_BIT_SIGN_U(bits, PROGRESS_BIT_TORNADO_SPIN);
+    total += TEST_BIT_SIGN_U(bits, PROGRESS_BIT_TURBO_RUN);
     return __divsi3(total * 100, 0x48);
 }

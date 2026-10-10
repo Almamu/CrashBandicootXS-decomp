@@ -13,7 +13,7 @@ extern "C" {
  * They were pause_menu_powers.cpp and pause_menu_gems.cpp until #771. */
 
 /* PauseMenu::DrawPowersPage: the
- * icons of the powers the player has (flag bits 0x20, 0x80, 0x40, 0x10),
+ * icons of the powers the player has (PROGRESS_FLAG_*),
  * or, with none, a centred "no powers" label (text 0x3a).
  *
  * Built with old_agbcp (Makefile OLD_AGBCC_OBJS; agbcc as C, where 12
@@ -23,19 +23,19 @@ void PauseMenu::DrawPowersPage()
 {
     s32 none = 1;
 
-    if (progress->flags & 0x20) {
+    if (progress->flags & PROGRESS_FLAG_SUPER_BODY_SLAM) {
         powerIcons[0]->DrawWithOffset(0, 0);
         none = 0;
     }
-    if (progress->flags & 0x80) {
+    if (progress->flags & PROGRESS_FLAG_DOUBLE_JUMP) {
         powerIcons[1]->DrawWithOffset(0, 0);
         none = 0;
     }
-    if (progress->flags & 0x40) {
+    if (progress->flags & PROGRESS_FLAG_TORNADO_SPIN) {
         powerIcons[2]->DrawWithOffset(0, 0);
         none = 0;
     }
-    if (progress->flags & 0x10) {
+    if (progress->flags & PROGRESS_FLAG_TURBO_RUN) {
         powerIcons[3]->DrawWithOffset(0, 0);
         none = 0;
     }
@@ -52,18 +52,18 @@ void PauseMenu::DrawPowersPage()
 /* DrawGemsPage and DrawRelicsPage: built with old_agbcp (old_agbcc as C),
  * whose mask-before-ldrb order shows in DrawGemsPage's flag tests. */
 
-/* The gems page: the four coloured gems the player has (flag bits
- * 1/4/8/2), the clear gem, the clear gems found and the gems found out
+/* The gems page: the four coloured gems the player has (PROGRESS_FLAG_*),
+ * the clear gem, the clear gems found and the gems found out
  * of the total. */
 void PauseMenu::DrawGemsPage()
 {
-    if (progress->flags & 1)
+    if (progress->flags & PROGRESS_FLAG_RED_GEM)
         gemIcons[1]->DrawWithOffset(0, 0);
-    if (progress->flags & 4)
+    if (progress->flags & PROGRESS_FLAG_GREEN_GEM)
         gemIcons[2]->DrawWithOffset(0, 0);
-    if (progress->flags & 8)
+    if (progress->flags & PROGRESS_FLAG_BLUE_GEM)
         gemIcons[3]->DrawWithOffset(0, 0);
-    if (progress->flags & 2)
+    if (progress->flags & PROGRESS_FLAG_YELLOW_GEM)
         gemIcons[4]->DrawWithOffset(0, 0);
     gemIcons[0]->DrawWithOffset(0, 0);
 

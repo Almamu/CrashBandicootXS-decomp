@@ -36,4 +36,21 @@
  * of a base class's field. */
 #define ASSERT_VIEW_FIELD(T, C, V, F) COMPILE_TIME_ASSERT(T, offsetof(C, F) == offsetof(struct V, F))
 
+/* Single bits by number (#843, docs/naming.md "Flag bits"), for a field
+ * that no class owns or a site that shifts the bit out. agbcc compiles
+ * each spelling of a bit test differently, so each helper is one
+ * spelling, expanded exactly as the ROM's code needs it; a site keeps
+ * the helper of the spelling it had:
+ *
+ * - BIT(n): the mask, `1 << n`;
+ * - TEST_BIT_SHR(x, n): `(x >> n) & 1`, a shift right and an `and #1`;
+ * - TEST_BIT_SIGN(x, n): `(u32)(x << (31 - n)) >> 31`, the bit shifted
+ *   up into the sign bit and back down (two shifts, no `and`);
+ * - TEST_BIT_SIGN_U(x, n): the same with `x` cast to u32 before the
+ *   shift, `((u32)x << (31 - n)) >> 31`. */
+#define BIT(n) (1 << (n))
+#define TEST_BIT_SHR(x, n) (((x) >> (n)) & 1)
+#define TEST_BIT_SIGN(x, n) ((u32)((x) << (31 - (n))) >> 31)
+#define TEST_BIT_SIGN_U(x, n) (((u32)(x) << (31 - (n))) >> 31)
+
 #endif /* __CORE_H__ */
