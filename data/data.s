@@ -140,24 +140,24 @@ gSfxTable:
 
 @ gContinuePromptSmokeBg..gContinuePromptUkaUkaBg: src/data/bg_package_17c594.cpp
 
-@ gCreditsText..gCreditsEmptyText: src/data/credits_17c5d0.c
+@ gCreditsText..gCreditsEmptyText: src/data/credits_17c5d0.cpp
 
-@ gCreditsLogos..gTitleLogoPieceSeeds: src/data/popup_glyphs_17cf40.c
+@ gCreditsLogos..gTitleLogoPieceSeeds: src/data/popup_glyphs_17cf40.cpp
 
-@ gTitleArrowPieceOffsets..gLogoActorAnim: src/data/level_gfx_17cff4.c
+@ gTitleArrowPieceOffsets..gLogoActorAnim: src/data/level_gfx_17cff4.cpp
 
-@ gVvLogoPieceSeeds..gVvLogoUrlObj: src/data/slot_seeds_17d6c0.c
+@ gVvLogoPieceSeeds..gVvLogoUrlObj: src/data/slot_seeds_17d6c0.cpp
 
-@ gUniversalLogoBg..0x0817E714: src/data/countdown_17d7a4.c
+@ gUniversalLogoBg..0x0817E714: src/data/countdown_17d7a4.cpp
 
-@ gLanguageNames: src/data/digit_glyphs_17e714.c
+@ gLanguageNames: src/data/digit_glyphs_17e714.cpp
 
-@ gLanguageSelectPalette0..gLanguageSelectPalette2: src/data/palettes_17e72c.c
+@ gLanguageSelectPalette0..gLanguageSelectPalette2: src/data/palettes_17e72c.cpp
 
-@ gLanguageSelectPalette3..gUnderwaterBg0Tiles: src/data/level_tilesets_17e78c.c
+@ gLanguageSelectPalette3..gUnderwaterBg0Tiles: src/data/level_tilesets_17e78c.cpp
 
 @ 0x0824B638..0x08270F08 (33 rooms' level data): src/data/level_rooms_24b638.c
-@ gSewerBg0Tiles..gSpaceBg0Tiles: src/data/level_tilesets_270f08.c
+@ gSewerBg0Tiles..gSpaceBg0Tiles: src/data/level_tilesets_270f08.cpp
 @ 0x082B91D0..0x082BF120 (8 rooms' level data): src/data/level_rooms_2b91d0.c
 @ gSpriteBank00Tiles..gObjPalettes: src/data/sprite_tiles_2bf120.c
 

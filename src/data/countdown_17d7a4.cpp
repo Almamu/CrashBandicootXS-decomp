@@ -1,4 +1,6 @@
+extern "C" {
 #include "core.h"
+}
 
 /*
  * ROM 0x0817D7A4-0x0817E714. Linked in ROM order between data/data.s
@@ -14,9 +16,9 @@ extern const u8 gUniversalLogoBgMap[];
 const struct bg_package gUniversalLogoBg = { 30, 20, (void *)gUniversalLogoBgPalette, (void *)gUniversalLogoBgTiles, (void *)gUniversalLogoBgMap };
 
 /* The motion sequences of the twenty countdown slots of InitVvLogoPieces
- * (company_logos.cpp), which slot_seeds_17d6c0.c's
+ * (company_logos.cpp), which slot_seeds_17d6c0.cpp's
  * gVvLogoPieceSeeds seeds: each ends with a zero hold. */
-const struct delta_record gVvLogoPieceMotion00[11] = {
+extern const struct delta_record gVvLogoPieceMotion00[11] = {
     { 79, 120, 80, 0, 76, 76, 0, 0, 0, 580, 580 },
     { 4, 120, 80, 0, 256, 256, 0, -819, 0, 3276, 3276 },
     { 4, 120, 79, 0, 307, 307, 0, 819, 0, -3276, -3276 },
@@ -30,7 +32,7 @@ const struct delta_record gVvLogoPieceMotion00[11] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gVvLogoPieceMotion01[6] = {
+extern const struct delta_record gVvLogoPieceMotion01[6] = {
     { 18, 248, 68, 0, 256, 256, -575260, 0, 0, 0, 0 },
     { 4, 90, 68, 0, 256, 256, -262144, 0, 0, -8192, 8192 },
     { 4, 74, 68, 0, 128, 384, 262144, 0, 0, 8192, -8192 },
@@ -39,7 +41,7 @@ const struct delta_record gVvLogoPieceMotion01[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gVvLogoPieceMotion02[6] = {
+extern const struct delta_record gVvLogoPieceMotion02[6] = {
     { 14, 248, 68, 0, 256, 256, -711533, 0, 0, 0, 0 },
     { 2, 96, 68, 0, 256, 256, -262144, 0, 0, -16384, 16384 },
     { 4, 88, 68, 0, 128, 384, 262144, 0, 0, 8192, -8192 },
@@ -48,7 +50,7 @@ const struct delta_record gVvLogoPieceMotion02[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gVvLogoPieceMotion03[6] = {
+extern const struct delta_record gVvLogoPieceMotion03[6] = {
     { 12, 248, 70, 0, 256, 256, -720896, 0, 0, 0, 0 },
     { 4, 116, 70, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 116, 70, 0, 128, 384, 0, 0, 0, 8192, -8192 },
@@ -57,7 +59,7 @@ const struct delta_record gVvLogoPieceMotion03[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gVvLogoPieceMotion04[6] = {
+extern const struct delta_record gVvLogoPieceMotion04[6] = {
     { 14, 248, 70, 0, 256, 256, -547693, 0, 0, 0, 0 },
     { 4, 131, 70, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 131, 70, 0, 128, 384, 0, 0, 0, 8192, -8192 },
@@ -66,7 +68,7 @@ const struct delta_record gVvLogoPieceMotion04[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gVvLogoPieceMotion05[6] = {
+extern const struct delta_record gVvLogoPieceMotion05[6] = {
     { 13, 248, 69, 0, 256, 256, -514205, 0, 0, 0, 0 },
     { 4, 146, 69, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 146, 69, 0, 128, 384, 0, 0, 0, 8192, -8192 },
@@ -75,7 +77,7 @@ const struct delta_record gVvLogoPieceMotion05[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gVvLogoPieceMotion06[6] = {
+extern const struct delta_record gVvLogoPieceMotion06[6] = {
     { 13, 248, 68, 0, 256, 256, -458752, 0, 0, 0, 0 },
     { 4, 157, 68, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 157, 68, 0, 128, 384, 0, 0, 0, 8192, -8192 },
@@ -84,7 +86,7 @@ const struct delta_record gVvLogoPieceMotion06[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gVvLogoPieceMotion07[6] = {
+extern const struct delta_record gVvLogoPieceMotion07[6] = {
     { 12, 248, 69, 0, 256, 256, -425984, 0, 0, 0, 0 },
     { 4, 170, 69, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 170, 69, 0, 128, 384, 0, 0, 0, 8192, -8191 },
@@ -93,7 +95,7 @@ const struct delta_record gVvLogoPieceMotion07[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gVvLogoPieceMotion08[6] = {
+extern const struct delta_record gVvLogoPieceMotion08[6] = {
     { 12, 248, 69, 0, 256, 256, -338602, 0, 0, 0, 0 },
     { 4, 186, 69, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 186, 69, 0, 128, 384, 0, 0, 0, 8192, -8192 },
@@ -102,7 +104,7 @@ const struct delta_record gVvLogoPieceMotion08[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gVvLogoPieceMotion09[6] = {
+extern const struct delta_record gVvLogoPieceMotion09[6] = {
     { 11, 248, 70, 0, 256, 256, -274059, 0, 0, 0, 0 },
     { 4, 202, 70, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 202, 70, 0, 128, 384, 0, 0, 0, 8192, -8192 },
@@ -111,7 +113,7 @@ const struct delta_record gVvLogoPieceMotion09[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gVvLogoPieceMotion10[6] = {
+extern const struct delta_record gVvLogoPieceMotion10[6] = {
     { 11, 248, 64, 0, 256, 256, -190650, 0, 0, 0, 0 },
     { 4, 216, 64, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 216, 64, 0, 128, 384, 0, 0, 0, 8192, -8192 },
@@ -120,7 +122,7 @@ const struct delta_record gVvLogoPieceMotion10[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gVvLogoPieceMotion11[6] = {
+extern const struct delta_record gVvLogoPieceMotion11[6] = {
     { 19, 248, 92, 0, 256, 256, -517389, 0, 0, 0, 0 },
     { 4, 98, 92, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 98, 92, 0, 128, 384, 0, 0, 0, 8192, -8192 },
@@ -129,7 +131,7 @@ const struct delta_record gVvLogoPieceMotion11[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gVvLogoPieceMotion12[6] = {
+extern const struct delta_record gVvLogoPieceMotion12[6] = {
     { 18, 248, 92, 0, 256, 256, -495160, 0, 0, 0, 0 },
     { 4, 112, 92, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 112, 92, 0, 128, 384, 0, 0, 0, 8192, -8192 },
@@ -138,14 +140,14 @@ const struct delta_record gVvLogoPieceMotion12[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gVvLogoPieceMotion13[4] = {
+extern const struct delta_record gVvLogoPieceMotion13[4] = {
     { 17, 248, 95, 0, 256, 256, -470317, 0, 0, 0, 0 },
     { 23, 126, 95, 0, 256, 256, 0, 0, 0, 0, 0 },
     { 1, 126, 95, 0, 256, 256, 0, 0, 0, 0, 0 },
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gVvLogoPieceMotion14[6] = {
+extern const struct delta_record gVvLogoPieceMotion14[6] = {
     { 16, 248, 92, 0, 256, 256, -458752, 0, 0, 0, 0 },
     { 4, 136, 92, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 136, 92, 0, 128, 384, 0, 0, 0, 8192, -8192 },
@@ -154,7 +156,7 @@ const struct delta_record gVvLogoPieceMotion14[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gVvLogoPieceMotion15[6] = {
+extern const struct delta_record gVvLogoPieceMotion15[6] = {
     { 14, 248, 95, 0, 256, 256, -458752, 0, 0, 0, 0 },
     { 4, 150, 95, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 150, 95, 0, 128, 384, 0, 0, 0, 8192, -8192 },
@@ -163,7 +165,7 @@ const struct delta_record gVvLogoPieceMotion15[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gVvLogoPieceMotion16[6] = {
+extern const struct delta_record gVvLogoPieceMotion16[6] = {
     { 12, 248, 95, 0, 256, 256, -447829, 0, 0, 0, 0 },
     { 4, 166, 95, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 166, 95, 0, 128, 384, 0, 0, 0, 8192, -8192 },
@@ -172,7 +174,7 @@ const struct delta_record gVvLogoPieceMotion16[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gVvLogoPieceMotion17[6] = {
+extern const struct delta_record gVvLogoPieceMotion17[6] = {
     { 10, 248, 94, 0, 256, 256, -432537, 0, 0, 0, 0 },
     { 4, 182, 94, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 182, 94, 0, 128, 384, 0, 0, 0, 8192, -8192 },
@@ -181,7 +183,7 @@ const struct delta_record gVvLogoPieceMotion17[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gVvLogoPieceMotion18[6] = {
+extern const struct delta_record gVvLogoPieceMotion18[6] = {
     { 9, 248, 91, 0, 256, 256, -364088, 0, 0, 0, 0 },
     { 4, 198, 91, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 198, 91, 0, 128, 384, 0, 0, 0, 8192, -8192 },
@@ -190,7 +192,7 @@ const struct delta_record gVvLogoPieceMotion18[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gVvLogoPieceMotion19[4] = {
+extern const struct delta_record gVvLogoPieceMotion19[4] = {
     { 8, 240, 100, 0, 256, 256, -1212416, 0, 0, 0, 0 },
     { 1, 92, 100, 0, 256, 256, 0, 0, 0, 0, 0 },
     { 1, 92, 100, 0, 256, 256, 0, 0, 0, 0, 0 },
@@ -198,13 +200,13 @@ const struct delta_record gVvLogoPieceMotion19[4] = {
 };
 
 /* The language names the language menu draws (DrawLanguageSelect,
- * language_select.cpp, through digit_glyphs_17e714.c's
+ * language_select.cpp, through digit_glyphs_17e714.cpp's
  * gLanguageNames), in the order of the language setting. */
-const u8 gLanguageNameEnglish[] = "english";
-const u8 gLanguageNameFrench[] = "fran\347ais";
-const u8 gLanguageNameGerman[] = "deutsch";
-const u8 gLanguageNameSpanish[] = "espa\361ol";
-const u8 gLanguageNameItalian[] = "italiano";
-const u8 gLanguageNameDutch[12] = "nederlands";
+extern const u8 gLanguageNameEnglish[] = "english";
+extern const u8 gLanguageNameFrench[] = "fran\347ais";
+extern const u8 gLanguageNameGerman[] = "deutsch";
+extern const u8 gLanguageNameSpanish[] = "espa\361ol";
+extern const u8 gLanguageNameItalian[] = "italiano";
+extern const u8 gLanguageNameDutch[12] = "nederlands";
 /* (The last one is sized to 12 bytes: the two zero bytes after it are the
  * padding to the word-aligned table that follows.) */

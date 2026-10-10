@@ -4564,7 +4564,7 @@
    "effort": "medium",
    "confidence": "high",
    "notes": "",
-   "status": "converted: src/data/credits_17c5d0.c"
+   "status": "converted: src/data/credits_17c5d0.cpp"
   },
   {
    "address": "0x0817CF3C",
@@ -4585,7 +4585,7 @@
    "format": "all zero (zero-initialised table)",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/credits_17c5d0.c"
+   "status": "converted: src/data/credits_17c5d0.cpp"
   },
   {
    "address": "0x0817CF40",
@@ -4653,7 +4653,7 @@
    "element_type": "u16",
    "element_size": 2,
    "element_count": 32,
-   "status": "converted: src/data/level_gfx_17cff4.c"
+   "status": "converted: src/data/level_gfx_17cff4.cpp"
   },
   {
    "address": "0x0817D034",
@@ -4674,7 +4674,7 @@
    "format": "table (element layout: see consumers); 1 word(s) look like ROM pointers",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/data/level_gfx_17cff4.c"
+   "status": "converted: src/data/level_gfx_17cff4.cpp"
   },
   {
    "address": "0x0817D054",
@@ -4698,7 +4698,7 @@
    "element_type": "u16",
    "element_size": 2,
    "element_count": 16,
-   "status": "converted: src/data/level_gfx_17cff4.c"
+   "status": "converted: src/data/level_gfx_17cff4.cpp"
   },
   {
    "address": "0x0817D074",
@@ -4719,7 +4719,7 @@
    "format": "table (element layout: see consumers); 12 word(s) look like ROM pointers",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/data/level_gfx_17cff4.c"
+   "status": "converted: src/data/level_gfx_17cff4.cpp"
   },
   {
    "address": "0x0817D0E4",
@@ -4744,7 +4744,7 @@
    "effort": "easy",
    "confidence": "high",
    "notes": "",
-   "status": "converted: src/data/level_gfx_17cff4.c"
+   "status": "converted: src/data/level_gfx_17cff4.cpp"
   },
   {
    "address": "0x0817D698",
@@ -4765,7 +4765,7 @@
    "format": "table (element layout: see consumers); 2 word(s) look like ROM pointers",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/data/level_gfx_17cff4.c"
+   "status": "converted: src/data/level_gfx_17cff4.cpp"
   },
   {
    "address": "0x0817D6C0",
@@ -4867,7 +4867,7 @@
    "effort": "medium",
    "confidence": "medium",
    "notes": "",
-   "status": "converted: src/data/countdown_17d7a4.c"
+   "status": "converted: src/data/countdown_17d7a4.cpp"
   },
   {
    "address": "0x0817E714",
@@ -4914,7 +4914,7 @@
    "format": "table of u16; 1 word(s) look like ROM pointers",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/palettes_17e72c.c"
+   "status": "converted: src/data/palettes_17e72c.cpp"
   },
   {
    "address": "0x0817E74C",
@@ -4938,7 +4938,7 @@
    "format": "BGR555 palette(s): 1 x 16 colours",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/palettes_17e72c.c"
+   "status": "converted: src/data/palettes_17e72c.cpp"
   },
   {
    "address": "0x0817E76C",
@@ -4962,7 +4962,7 @@
    "format": "table of u16",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/palettes_17e72c.c"
+   "status": "converted: src/data/palettes_17e72c.cpp"
   },
   {
    "address": "0x0817E78C",
