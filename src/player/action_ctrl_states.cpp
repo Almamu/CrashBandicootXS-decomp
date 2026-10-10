@@ -168,14 +168,14 @@ skip:
 
         if (left)
             return;
-        if (INPUT_PRESSED(in) & 1) {
+        if (INPUT_PRESSED(in) & A_BUTTON) {
             gAudioContext->PlaySfx(SFX_JUMP, 0x100);
             SetMode(ACTION_STATE_JUMP);
             SetTargetAnim(part, 0x13);
             frame = left;
             QueueNowY(7);
         } else {
-            u16 alt = INPUT_PRESSED(in) & 2;
+            u16 alt = INPUT_PRESSED(in) & B_BUTTON;
 
             if (alt) {
                 StartSpin();
@@ -241,7 +241,7 @@ void ActionCtrl::StateRun()
 
     if (busy)
         return;
-    if (INPUT_PRESSED(in) & 1) {
+    if (INPUT_PRESSED(in) & A_BUTTON) {
         gAudioContext->PlaySfx(SFX_JUMP, 0x100);
         SetMode(ACTION_STATE_JUMP);
         SetTargetAnim(part, 0x13);
@@ -250,7 +250,7 @@ void ActionCtrl::StateRun()
         return;
     }
     {
-        u16 alt = INPUT_PRESSED(in) & 2;
+        u16 alt = INPUT_PRESSED(in) & B_BUTTON;
 
         if (alt) {
             StartSpin();
@@ -350,7 +350,7 @@ void ActionCtrl::StateJump()
         u32 in = gKeys.all;
         u8 busy = spinCooldown;
 
-        if (busy == 0 && (INPUT_PRESSED(in) & 2)) {
+        if (busy == 0 && (INPUT_PRESSED(in) & B_BUTTON)) {
             s32 frames;
 
             gAudioContext->PlaySfx(SFX_SPIN, 0x100);
@@ -465,7 +465,7 @@ void ActionCtrl::StateAirborne()
     if (state != ACTION_STATE_AIR_SPIN) {
         u8 busy = spinCooldown;
 
-        if (busy == 0 && (INPUT_PRESSED(in) & 2) &&
+        if (busy == 0 && (INPUT_PRESSED(in) & B_BUTTON) &&
             (u32)(state - ACTION_STATE_AIRBORNE_BODY_SLAM) > 1) {
             s32 frames;
 
@@ -665,7 +665,7 @@ void ActionCtrl::StateSlide()
 
         if (p->hitAxes == 0) {
             QueueNowY(5);
-        } else if (INPUT_HELD(in) & 1) {
+        } else if (INPUT_HELD(in) & A_BUTTON) {
             if (p->HasRoomForAnim(0xB) == 1) {
                 gAudioContext->PlaySfx(SFX_HIGH_JUMP, 0x100);
                 ActAndFlags0D(part, -2);
@@ -673,7 +673,7 @@ void ActionCtrl::StateSlide()
                 StartHighJump();
                 return;
             }
-        } else if (INPUT_PRESSED(in) & 2) {
+        } else if (INPUT_PRESSED(in) & B_BUTTON) {
             if (p->HasRoomForAnim(0x10) == 1) {
                 StartSpin();
                 QueueX(0, 1, 1);
@@ -776,7 +776,7 @@ void ActionCtrl::StateSpin()
     }
     if (part->hitAxes == 0)
         QueueNowY(5);
-    if ((INPUT_PRESSED(in) & 1) && (part->hitAxes & 8)) {
+    if ((INPUT_PRESSED(in) & A_BUTTON) && (part->hitAxes & 8)) {
         ActAndFlags0D(part, -2);
         ActAndFlags0D(part, -3);
         SetMode(ACTION_STATE_AIR_SPIN);
@@ -786,7 +786,7 @@ void ActionCtrl::StateSpin()
         part->hitAxes = 0;
         return;
     }
-    if ((u8)gLevelState->HasTornadoSpin() && (INPUT_PRESSED(in) & 2) && spinCooldown == 0) {
+    if ((u8)gLevelState->HasTornadoSpin() && (INPUT_PRESSED(in) & B_BUTTON) && spinCooldown == 0) {
         if (++charge > 3)
             charge = 3;
     }
@@ -828,7 +828,7 @@ void ActionCtrl::StateAirSpin()
         StateSpin();
         return;
     }
-    if ((u8)gLevelState->HasTornadoSpin() && (INPUT_PRESSED(in) & 2) && spinCooldown == 0) {
+    if ((u8)gLevelState->HasTornadoSpin() && (INPUT_PRESSED(in) & B_BUTTON) && spinCooldown == 0) {
         if (++charge > 3)
             charge = 3;
     }
@@ -876,7 +876,7 @@ void ActionCtrl::StateTornadoSpin()
         else
             QueueNowY(5);
     }
-    if ((INPUT_PRESSED(in) & 1) && (part->hitAxes & 8)) {
+    if ((INPUT_PRESSED(in) & A_BUTTON) && (part->hitAxes & 8)) {
         ActAndFlags0D(part, -2);
         ActAndFlags0D(part, -3);
         SetMode(ACTION_STATE_AIR_SPIN);
@@ -885,7 +885,7 @@ void ActionCtrl::StateTornadoSpin()
         part->hitAxes = 0;
         return;
     }
-    if ((u8)gLevelState->HasTornadoSpin() && (INPUT_PRESSED(in) & 2) && spinCooldown == 0) {
+    if ((u8)gLevelState->HasTornadoSpin() && (INPUT_PRESSED(in) & B_BUTTON) && spinCooldown == 0) {
         if (++charge > 3)
             charge = 3;
     }
@@ -902,7 +902,7 @@ void ActionCtrl::StateCrouchDown()
     s32 fire;
 
     in = gKeys.all;
-    fire = INPUT_PRESSED(in) & 1;
+    fire = INPUT_PRESSED(in) & A_BUTTON;
 
     if (fire) {
         gAudioContext->PlaySfx(SFX_HIGH_JUMP, 0x100);
@@ -962,7 +962,7 @@ void ActionCtrl::StateCrouch()
         in = gKeys.all;
         dir = pad->GetDpadDirection();
     }
-    if ((INPUT_PRESSED(in) & 1) && part->HasRoomForAnim(0xB) == 1) {
+    if ((INPUT_PRESSED(in) & A_BUTTON) && part->HasRoomForAnim(0xB) == 1) {
         gAudioContext->PlaySfx(SFX_HIGH_JUMP, 0x100);
         ActAndFlags0D(part, -2);
         ActAndFlags0D(part, -3);
@@ -1052,7 +1052,7 @@ void ActionCtrl::StateCrawlStart()
 {
     u32 in = gKeys.all;
 
-    if ((INPUT_PRESSED(in) & 1) != 0 && part->HasRoomForAnim(0xB) == 1) {
+    if ((INPUT_PRESSED(in) & A_BUTTON) != 0 && part->HasRoomForAnim(0xB) == 1) {
         gAudioContext->PlaySfx(SFX_HIGH_JUMP, 0x100);
         ActAndFlags0D(part, -2);
         ActAndFlags0D(part, -3);
@@ -1078,7 +1078,7 @@ void ActionCtrl::StateCrawl()
     u8 hit;
     u32 held;
 
-    if ((INPUT_PRESSED(in) & 1) && part->HasRoomForAnim(0xB) == 1) {
+    if ((INPUT_PRESSED(in) & A_BUTTON) && part->HasRoomForAnim(0xB) == 1) {
         gAudioContext->PlaySfx(SFX_HIGH_JUMP, 0x100);
         ActAndFlags0D(part, -2);
         ActAndFlags0D(part, -3);
