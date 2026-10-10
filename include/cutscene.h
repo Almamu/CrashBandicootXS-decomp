@@ -17,10 +17,9 @@
  * (docs/headers_plan.md).
  *
  * The slideshow and the cutscene player are C++ classes
- * (include/cutscene.hpp) with no C view. The background streamer and
- * layer classes that follow cutscene_player.cpp in the ROM
- * (BgStreamer, BgLayerBase: include/bg_layer.hpp; src/level/bg_streamer.cpp
- * and bg_layer_base.cpp) only share its ROM range.
+ * (include/cutscene.hpp) with no C view. This header keeps what C needs:
+ * the slide and text tables, which src/data/cutscenes_16d1c8.c defines,
+ * and the C-linkage data and function the C++ shares with them.
  */
 
 /* One slide. */
