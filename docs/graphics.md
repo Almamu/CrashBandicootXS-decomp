@@ -4,10 +4,11 @@ How graphics assets were located and extracted from the ROM, and ongoing
 notes on the sprite/actor rendering system. For byte-exact matching
 decompilation notes (workflow, register-allocation gotchas, per-function
 parked/matched log across the whole codebase, including the
-graphics-adjacent functions in `src/gfx/graphics.c` (split into `src/gfx/oam_buffer.cpp`,
-`vram_dma_queue.cpp`, `obj_vram_cursor.cpp`, `palette_cache.cpp`, `sprite_bank_set.cpp`,
-`src/objects/entity.cpp` and `src/save/game_progress.cpp` in #767)/`src/menus/power_dialog_draw.cpp`/
-`src/actor/inline_copies_actors.cpp`), see [matching.md](./matching.md) instead.
+graphics-adjacent functions in `src/gfx/` (`oam_buffer.cpp`, `vram_dma_queue.cpp`,
+`obj_vram_cursor.cpp`, `palette_cache.cpp`, `sprite_bank_set.cpp`; `src/gfx/graphics.c`
+until #767, which also moved some to `src/objects/entity.cpp` and
+`src/save/game_progress.cpp`), `src/menus/power_dialog_draw.cpp` and
+`src/actor/inline_copies_actors.cpp`, see [matching.md](./matching.md) instead.
 
 ## Background/tileset extraction (done)
 

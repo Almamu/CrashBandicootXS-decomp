@@ -4130,7 +4130,7 @@ above) - `asm/code_3_2_11.s` is retired entirely.
 ## Everything else
 
 The remaining small gaps between landmarks (a few hundred bytes to ~20
-KB each - see `tools/map_rom_regions.py`'s output for the exact list) are
+KB each - the removed `tools/map_rom_regions.py` listed them) are
 mostly too fragmented (dozens of small, mostly-disconnected components)
 to say anything useful about yet. One exception, **now stale - see
 "Cross-checked the `UpdateGameFrame`-`MainLoop` cluster" and its many
