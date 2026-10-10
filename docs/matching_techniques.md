@@ -1310,9 +1310,12 @@ local-alloc's quantity order):
   code flow1 removed or arms jump2 merges); the bounce and `StateJump`
   1s (cse puts two equal constants in one extended block into one
   quantity in either order; only an init moved later by update_equiv_regs
-  escapes it); `StateCrouch` (local-alloc's three-quantity exchange
-  allocates the address first whatever the priorities, the volatile byte
-  load is a fourth quantity); `ReleaseHang` (find_reload_regs spills the
+  escapes it); `StateCrouch` (with the quantities born in the ROM's
+  order, address, mask, 0x10, local-alloc's three-quantity exchange
+  allocates the address or the 0x10 first whatever the priorities; born
+  address, 0x10, mask it can reverse them into the ROM's registers, but
+  then the 0x10's `movs` comes before the mask; the volatile byte load is
+  a fourth quantity); `ReleaseHang` (find_reload_regs spills the
   first free call-clobbered register in number order, so r2 must be live
   at the add, and nothing is).
 
@@ -1893,6 +1896,12 @@ deciding contest:
   `switch`; each stays a real compare, 5 off at best), StateCrouch (15360:
   GetDpadDirection's and CheckLeftGround's returns, `motionXPending` u8 or
   bool, the flip forms and locals' types; 2 off, round 3's form).
+  Round 10 (dump-guided, not a sweep): a `SetMirror(u8 *p, s32 clear,
+  s32 set)` inline gets the flip's registers right (the exchange
+  reverses address, 0x10, mask), but `set` is loaded at the inline's
+  entry, so the byte load moves to r5 and reload uses r5 at three other
+  sites (18 lines off); enum, `~mask` or swapped parameters give the
+  same, and the other shapes give back the plain three quantities.
 
 **Round 9, GAX2_init, GaxChannelMix and itoa_arm (types beyond the
 function).** 3 functions -> 3; GAX2_init loses its size use:
