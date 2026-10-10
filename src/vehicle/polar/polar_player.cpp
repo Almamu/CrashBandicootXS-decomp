@@ -272,7 +272,7 @@ void PolarPlayer::StateRun()
             RestartAnim(0);
     }
     if (gPolarSteerEnabled != 0) {
-        if (gKeys.half.pressed & 1) {
+        if (gKeys.half.pressed & A_BUTTON) {
             SetState(4, 3);
             gAudioContext->PlaySfx(SFX_JUMP, 0x100);
             gPolarPlayerVelY = 0xFFFFF880;
@@ -297,7 +297,7 @@ void PolarPlayer::StateJump()
     y += gPolarPlayerVelY;
     gPolarPlayerVelY += 0x60;
     LIMIT_MAX(gPolarPlayerVelY, 0x780);
-    if (stateTime <= 10 && (gKeys.all & 1) == 0 && gPolarPlayerVelY < -0x400)
+    if (stateTime <= 10 && (gKeys.all & A_BUTTON) == 0 && gPolarPlayerVelY < -0x400)
         gPolarPlayerVelY = -0x400;
     if (y > 0x2800) {
         y = 0x2800;
@@ -310,12 +310,12 @@ void PolarPlayer::StateJump()
  * as in StateRun. */
 void PolarPlayer::StateDash()
 {
-    if ((u16)(gKeys.all & 2) == 0) {
+    if ((u16)(gKeys.all & B_BUTTON) == 0) {
         SetState(1, 0);
         SetCellAnimSpeed(0x24);
     }
 
-    if (gKeys.half.pressed & 1) {
+    if (gKeys.half.pressed & A_BUTTON) {
         SetState(4, 3);
         gAudioContext->PlaySfx(SFX_JUMP, 0x100);
         gPolarPlayerVelY = 0xFFFFF880;

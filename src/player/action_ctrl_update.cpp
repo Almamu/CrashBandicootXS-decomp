@@ -155,7 +155,7 @@ u8 ActionCtrl::TryDoubleJump()
 
     if (state == ACTION_STATE_AIR_SPIN)
         return 0;
-    pressed = INPUT_PRESSED(in) & 1;
+    pressed = INPUT_PRESSED(in) & A_BUTTON;
     one = 1;
     if (pressed) {
         s32 jumps = frame;

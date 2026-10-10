@@ -155,6 +155,7 @@ the names with the header it already includes. A data table in
 | `bosses.h` | `BOSS_` | `GetBossIndex` results |
 | `categories.h` | `CATEGORY_` | actor categories (`gActorCategories` index), `CATEGORY_TYPE_*` and the `CATEGORY_EXIT_*` statuses |
 | `chunk_tokens.h` | `CHUNK_TOKEN_` | the run kinds of a layer/collision chunk's token stream (`DecodeCollisionChunk`, `DecodeLayerChunk`) |
+| `gba/io_reg.h` (hardware) | `A_BUTTON`, `B_BUTTON`, `SELECT_BUTTON`, `START_BUTTON`, `DPAD_*`, ... | the KEYINPUT bits of `gKeys` and ActionCtrl's `INPUT_HELD`/`INPUT_PRESSED` ([docs/flags/input.md](flags/input.md)) |
 
 **Constants that describe data the repository has as source files are
 generated from those files**, not written by hand: the names live in the

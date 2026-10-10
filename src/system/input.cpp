@@ -48,10 +48,10 @@ s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask)
             gInput->Update();
             keys = (u16)mask & gKeys.half.pressed;
             if (checkButtons) {
-                if (keys & 1) {
+                if (keys & A_BUTTON) {
                     break;
                 }
-                if (keys & 8) {
+                if (keys & START_BUTTON) {
                     goto fail;
                 }
             }
@@ -61,10 +61,10 @@ s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask)
             WaitForVBlank();
             gInput->Update();
             keys = (u16)mask & gKeys.half.pressed;
-            if (keys & 1) {
+            if (keys & A_BUTTON) {
                 break;
             }
-            if (keys & 8) {
+            if (keys & START_BUTTON) {
             fail:
                 result = 0;
                 break;

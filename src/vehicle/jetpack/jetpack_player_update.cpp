@@ -271,7 +271,7 @@ void JetpackPlayer::StateFly()
             gJetpackFlashTimer = 0x12;
             gAudioContext->PlaySfx(SFX_SPIN, 0x100);
             SetState(3, 2);
-        } else if (gJetpackShotCooldown == 0 && (keys.held & 1)) {
+        } else if (gJetpackShotCooldown == 0 && (keys.held & A_BUTTON)) {
             s32 sx, sy;
 
             gJetpackShotCooldown = 0x12;

@@ -198,12 +198,12 @@ void ActionCtrl::StateHang()
             SetTargetAnim(part, 0x20);
             break;
         }
-    if (INPUT_PRESSED(in) & 1) {
+    if (INPUT_PRESSED(in) & A_BUTTON) {
         gAudioContext->PlaySfx(SFX_JUMP, 0x100);
         ReleaseHang();
         return;
     }
-    if (INPUT_PRESSED(in) & 2) {
+    if (INPUT_PRESSED(in) & B_BUTTON) {
         StartHangSpin();
         UpdateFacing();
     } else {
@@ -216,14 +216,14 @@ void ActionCtrl::StateHang()
 void ActionCtrl::StateUnusedHang()
 {
     u32 in = gKeys.all;
-    s32 fire = INPUT_PRESSED(in) & 1;
+    s32 fire = INPUT_PRESSED(in) & A_BUTTON;
 
     if (fire) {
         gAudioContext->PlaySfx(SFX_JUMP, 0x100);
         ReleaseHang();
         return;
     }
-    if (INPUT_PRESSED(in) & 2) {
+    if (INPUT_PRESSED(in) & B_BUTTON) {
         StartHangSpin();
         UpdateFacing();
         motionXKeepSpeed = fire;
@@ -269,7 +269,7 @@ void ActionCtrl::StateHangMoveStart()
 {
     KeyInput *pad = gInput;
     u32 in = gKeys.all;
-    s32 v = INPUT_PRESSED(in) & 1;
+    s32 v = INPUT_PRESSED(in) & A_BUTTON;
 
     if (v) {
         gAudioContext->PlaySfx(SFX_JUMP, 0x100);
@@ -277,7 +277,7 @@ void ActionCtrl::StateHangMoveStart()
         ReleaseHang();
         return;
     }
-    if (INPUT_PRESSED(in) & 2) {
+    if (INPUT_PRESSED(in) & B_BUTTON) {
         StartHangSpin();
         UpdateFacing();
         motionXKeepSpeed = 0;
@@ -338,14 +338,14 @@ void ActionCtrl::StateHangMove()
 
     if (p->animDone)
         p->StartAnim(0x21);
-    fire = INPUT_PRESSED(in) & 1;
+    fire = INPUT_PRESSED(in) & A_BUTTON;
     if (fire) {
         gAudioContext->PlaySfx(SFX_JUMP, 0x100);
         QueuePendingX(0, 0);
         ReleaseHang();
         return;
     }
-    alt = INPUT_PRESSED(in) & 2;
+    alt = INPUT_PRESSED(in) & B_BUTTON;
     if (alt) {
         StartHangSpin();
         UpdateFacing();
@@ -436,7 +436,7 @@ void ActionCtrl::StateHangMove()
 void ActionCtrl::StateHangStop()
 {
     u32 in = gKeys.all;
-    s32 fire = INPUT_PRESSED(in) & 1;
+    s32 fire = INPUT_PRESSED(in) & A_BUTTON;
     u16 alt;
 
     if (fire) {
@@ -445,7 +445,7 @@ void ActionCtrl::StateHangStop()
         ReleaseHang();
         return;
     }
-    alt = INPUT_PRESSED(in) & 2;
+    alt = INPUT_PRESSED(in) & B_BUTTON;
     if (alt) {
         StartHangSpin();
         UpdateFacing();

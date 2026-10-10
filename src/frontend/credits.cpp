@@ -77,7 +77,7 @@ void Credits::Loop()
 
     for (;;) {
         gInput->Update();
-        if (gKeys.half.pressed & 9) {
+        if (gKeys.half.pressed & (A_BUTTON | START_BUTTON)) {
             break;
         }
 

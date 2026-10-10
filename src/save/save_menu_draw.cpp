@@ -53,7 +53,7 @@ s32 SaveMenu::LinkExchange()
     do {
         WaitForVBlank();
         gInput->Update();
-        if ((u16)(gKeys.all & 2)) {
+        if ((u16)(gKeys.all & B_BUTTON)) {
             result = 3;
         } else {
             if (gLinkSessionReset) {

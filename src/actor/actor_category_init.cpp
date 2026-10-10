@@ -191,7 +191,7 @@ s32 InitActorCategory(s32 category)
                 }
             } else {
                 open = 0;
-                if ((u8)IsBrightnessFadeActive() == 0 && ((gKeys.all >> 16) & 8))
+                if ((u8)IsBrightnessFadeActive() == 0 && ((gKeys.all >> 16) & START_BUTTON))
                     open = -CanPauseActorCategory() < 0;
                 if (open) {
                     result = RunCategoryPauseMenu(dma);
@@ -208,7 +208,7 @@ s32 InitActorCategory(s32 category)
                         goto done;
                     }
                 }
-                if (gKeys.all & 4)
+                if (gKeys.all & SELECT_BUTTON)
                     gHud->ShowCounters();
                 continue;
             }

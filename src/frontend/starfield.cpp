@@ -265,7 +265,7 @@ void Starfield::WaitForButton()
 {
     for (;;) {
         gInput->Update();
-        if (gKeys.half.pressed & 9) {
+        if (gKeys.half.pressed & (A_BUTTON | START_BUTTON)) {
             break;
         }
         WaitForVBlank();
