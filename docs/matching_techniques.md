@@ -2005,6 +2005,29 @@ The ARM DSP routines, hand-written in every GAX version, are assembly:
 that ended `gax_sound_handler_mixer_play.c`, `HANDWRITTEN` in the
 report. The function count stays 2059.
 
+**LinkSession::ResetState's 13 `MATCH_USE(id)`: local-alloc, not
+global-alloc (round 10).** Rounds 3-9 ranked `id` against `self` in
+global-alloc (0.10 against 1.21, 12 references needed where the code has
+3) because the source was `id = this->id; MakeLinkHandshakeId(id);`,
+which makes the call's argument the long-lived `id` pseudo. Written as
+`MakeLinkHandshakeId(this->id); id = this->id;`, the call's `self + 0x30`
+is a temporary that lives in the first basic block only and crosses the
+call, so local-alloc, which runs before global-alloc, gives it the first
+call-saved register, r4. `self` then conflicts with r4 and takes r5, and
+`id` (2 references, no longer crossing the call) gets r4 by its copy
+preference, as in the ROM. With that allocation the nibble decrement's
+`nb` pointer local swaps its pointer and base registers, so the
+decrement goes back to the cast expression (`&players[i].id[1]` is 2
+lines off, for the `self + t` operand order only). The `-dl` dump shows
+what decided it: a "Register N ... in block 0; crosses 1 call" line is a
+local-alloc quantity, outside allocno_compare's ranking. Function
+freed, no other code changed. With no `id` local at all and the first
+loop written naturally (`prevPacket[k * 2] = this->id[k * 2]`, which loop.c
+already turns into the ROM's single `p[9]`/`p[8]` pointer) gets the
+registers through gcse's PRE copy instead, but `k` then has givs and
+check_dbra_loop won't reverse the loop (it needs a counter with no
+givs), so the `p[8]` form stays.
+
 ## Survey and conversion record (#576)
 
 The conversion is complete. `tools/match_idioms.py` after part 4
