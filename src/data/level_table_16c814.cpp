@@ -1,7 +1,9 @@
+extern "C" {
 #include "core.h"
 #include "level_data.h"
 #include "level.h"
 #include "constants/songs.h"
+}
 
 /*
  * ROM 0x0816C814-0x0816D1C8: the level table and the room records under
@@ -20,13 +22,18 @@
  * Every pointer is a symbol reference, so the room data can move.
  */
 
-COMPILE_TIME_ASSERT(level_table_16c814_c, sizeof(struct level_info) == 0x24);
-COMPILE_TIME_ASSERT(level_table_16c814_c, sizeof(struct level_room_list) == 0x10);
-COMPILE_TIME_ASSERT(level_table_16c814_c, sizeof(struct level_room_blend) == 4);
-COMPILE_TIME_ASSERT(level_table_16c814_c, sizeof(struct level_room) == 0x14);
-COMPILE_TIME_ASSERT(level_table_16c814_c, offsetof(struct level_room, param) == 0x10);
-COMPILE_TIME_ASSERT(level_table_16c814_c, offsetof(struct level_room, param.blend.eva) == 0x12);
-COMPILE_TIME_ASSERT(level_table_16c814_c, offsetof(struct level_room, param.blend.evb) == 0x13);
+COMPILE_TIME_ASSERT(level_table_16c814_cpp, sizeof(struct level_info) == 0x24);
+COMPILE_TIME_ASSERT(level_table_16c814_cpp, sizeof(struct level_room_list) == 0x10);
+COMPILE_TIME_ASSERT(level_table_16c814_cpp, sizeof(struct level_room_blend) == 4);
+COMPILE_TIME_ASSERT(level_table_16c814_cpp, sizeof(struct level_room) == 0x14);
+COMPILE_TIME_ASSERT(level_table_16c814_cpp, offsetof(struct level_room, param) == 0x10);
+COMPILE_TIME_ASSERT(level_table_16c814_cpp, offsetof(struct level_room, param.blend.eva) == 0x12);
+COMPILE_TIME_ASSERT(level_table_16c814_cpp, offsetof(struct level_room, param.blend.evb) == 0x13);
+
+/* A stage's `param.catIndex` is written as `param.blend`'s first field:
+ * C++ initialises only a union's first member, and `catIndex` is the
+ * same halfword as `blend.effect`. */
+COMPILE_TIME_ASSERT(level_table_16c814_cpp, sizeof(((struct level_room *)0)->param.catIndex) == 2);
 
 /* The rooms' palettes and descriptors (src/data/level_rooms_*.c). */
 extern const u16 gRoom00Palette[];
@@ -205,150 +212,150 @@ const u16 gThemePaletteCycle5[5] = { 0x97, 0xb4, 0xf7, 0xf8, 0xff };
  * is the text id of the level's name). Declared in level.h.
  */
 const struct level_info gLevelTable[LEVEL_COUNT] = {
-    [LEVEL_JUNGLE_JAM] = { 1, 1, { 355, 275, 233 }, 4, 4, 0, &gLevelRoomLists[LEVEL_JUNGLE_JAM] },
-    [LEVEL_SHIPWRECKED] = { 2, 3, { 777, 677, 544 }, 4, 1, 0, &gLevelRoomLists[LEVEL_SHIPWRECKED] },
-    [LEVEL_TEMPLE_OF_BOOM] = { 3,
+    /* LEVEL_JUNGLE_JAM */ { 1, 1, { 355, 275, 233 }, 4, 4, 0, &gLevelRoomLists[LEVEL_JUNGLE_JAM] },
+    /* LEVEL_SHIPWRECKED */ { 2, 3, { 777, 677, 544 }, 4, 1, 0, &gLevelRoomLists[LEVEL_SHIPWRECKED] },
+    /* LEVEL_TEMPLE_OF_BOOM */ { 3,
                                1,
                                { 627, 557, 490 },
                                4,
                                4,
                                0,
                                &gLevelRoomLists[LEVEL_TEMPLE_OF_BOOM] },
-    [LEVEL_FROSTBITE_CAVERN] = { 4,
+    /* LEVEL_FROSTBITE_CAVERN */ { 4,
                                  0,
                                  { 917, 771, 660 },
                                  4,
                                  4,
                                  0,
                                  &gLevelRoomLists[LEVEL_FROSTBITE_CAVERN] },
-    [LEVEL_JUST_IN_SLIME] = { 5,
+    /* LEVEL_JUST_IN_SLIME */ { 5,
                               2,
                               { 994, 756, 665 },
                               5,
                               5,
                               0,
                               &gLevelRoomLists[LEVEL_JUST_IN_SLIME] },
-    [LEVEL_SNOW_CRASH] = { 6, 0, { 1030, 967, 880 }, 5, 5, 0, &gLevelRoomLists[LEVEL_SNOW_CRASH] },
-    [LEVEL_ROCKET_RACKET] = { 7,
+    /* LEVEL_SNOW_CRASH */ { 6, 0, { 1030, 967, 880 }, 5, 5, 0, &gLevelRoomLists[LEVEL_SNOW_CRASH] },
+    /* LEVEL_ROCKET_RACKET */ { 7,
                               4,
                               { 1502, 1375, 1250 },
                               5,
                               5,
                               0,
                               &gLevelRoomLists[LEVEL_ROCKET_RACKET] },
-    [LEVEL_JUST_HANGIN] = { 8,
+    /* LEVEL_JUST_HANGIN */ { 8,
                             2,
                             { 1094, 1030, 870 },
                             5,
                             5,
                             0,
                             &gLevelRoomLists[LEVEL_JUST_HANGIN] },
-    [LEVEL_SHARK_ATTACK] = { 9,
+    /* LEVEL_SHARK_ATTACK */ { 9,
                              3,
                              { 916, 770, 694 },
                              5,
                              1,
                              0,
                              &gLevelRoomLists[LEVEL_SHARK_ATTACK] },
-    [LEVEL_RUINED] = { 10, 1, { 1618, 1588, 1200 }, 5, 5, 0, &gLevelRoomLists[LEVEL_RUINED] },
-    [LEVEL_SNOW_JOB] = { 11, 0, { 1321, 1280, 1244 }, 6, 6, 0, &gLevelRoomLists[LEVEL_SNOW_JOB] },
-    [LEVEL_ACE_OF_SPACE] = { 12,
+    /* LEVEL_RUINED */ { 10, 1, { 1618, 1588, 1200 }, 5, 5, 0, &gLevelRoomLists[LEVEL_RUINED] },
+    /* LEVEL_SNOW_JOB */ { 11, 0, { 1321, 1280, 1244 }, 6, 6, 0, &gLevelRoomLists[LEVEL_SNOW_JOB] },
+    /* LEVEL_ACE_OF_SPACE */ { 12,
                              5,
                              { 1184, 1158, 995 },
                              6,
                              6,
                              0,
                              &gLevelRoomLists[LEVEL_ACE_OF_SPACE] },
-    [LEVEL_SUNKEN_CITY] = { 13,
+    /* LEVEL_SUNKEN_CITY */ { 13,
                             3,
                             { 996, 817, 742 },
                             6,
                             1,
                             0,
                             &gLevelRoomLists[LEVEL_SUNKEN_CITY] },
-    [LEVEL_DOWN_THE_HOLE] = { 14,
+    /* LEVEL_DOWN_THE_HOLE */ { 14,
                               1,
                               { 924, 834, 674 },
                               6,
                               6,
                               0,
                               &gLevelRoomLists[LEVEL_DOWN_THE_HOLE] },
-    [LEVEL_BLIMP_BONANZA] = { 15,
+    /* LEVEL_BLIMP_BONANZA */ { 15,
                               4,
                               { 1782, 1649, 1563 },
                               6,
                               6,
                               0,
                               &gLevelRoomLists[LEVEL_BLIMP_BONANZA] },
-    [LEVEL_STAR_TO_FINISH] = { 16,
+    /* LEVEL_STAR_TO_FINISH */ { 16,
                                5,
                                { 1276, 1195, 1041 },
                                7,
                                7,
                                0,
                                &gLevelRoomLists[LEVEL_STAR_TO_FINISH] },
-    [LEVEL_AIR_SUPPLY] = { 17,
+    /* LEVEL_AIR_SUPPLY */ { 17,
                            3,
                            { 1293, 1104, 1017 },
                            7,
                            1,
                            0,
                            &gLevelRoomLists[LEVEL_AIR_SUPPLY] },
-    [LEVEL_NO_FLY_ZONE] = { 18,
+    /* LEVEL_NO_FLY_ZONE */ { 18,
                             4,
                             { 2063, 1971, 1896 },
                             7,
                             7,
                             0,
                             &gLevelRoomLists[LEVEL_NO_FLY_ZONE] },
-    [LEVEL_DRIP_DRIP_DRIP] = { 19,
+    /* LEVEL_DRIP_DRIP_DRIP */ { 19,
                                2,
                                { 1484, 970, 896 },
                                7,
                                7,
                                0,
                                &gLevelRoomLists[LEVEL_DRIP_DRIP_DRIP] },
-    [LEVEL_FINAL_COUNTDOWN] = { 20,
+    /* LEVEL_FINAL_COUNTDOWN */ { 20,
                                 5,
                                 { 1504, 1338, 1182 },
                                 7,
                                 7,
                                 0,
                                 &gLevelRoomLists[LEVEL_FINAL_COUNTDOWN] },
-    [LEVEL_DINGODILE] = { 22, 7, { 1000, 500, 250 }, 4, 5, 1, &gLevelRoomLists[LEVEL_DINGODILE] },
-    [LEVEL_N_GIN] = { 23, 8, { 1000, 500, 250 }, 5, 5, 1, &gLevelRoomLists[LEVEL_N_GIN] },
-    [LEVEL_TINY] = { 21, 6, { 1000, 500, 250 }, 6, 6, 1, &gLevelRoomLists[LEVEL_TINY] },
-    [LEVEL_NEO_CORTEX] = { 24, 9, { 1000, 500, 250 }, 7, 7, 1, &gLevelRoomLists[LEVEL_NEO_CORTEX] },
-    [LEVEL_MEGA_MIX] = { 25, 10, { 1000, 500, 250 }, 7, 7, 1, &gLevelRoomLists[LEVEL_MEGA_MIX] },
+    /* LEVEL_DINGODILE */ { 22, 7, { 1000, 500, 250 }, 4, 5, 1, &gLevelRoomLists[LEVEL_DINGODILE] },
+    /* LEVEL_N_GIN */ { 23, 8, { 1000, 500, 250 }, 5, 5, 1, &gLevelRoomLists[LEVEL_N_GIN] },
+    /* LEVEL_TINY */ { 21, 6, { 1000, 500, 250 }, 6, 6, 1, &gLevelRoomLists[LEVEL_TINY] },
+    /* LEVEL_NEO_CORTEX */ { 24, 9, { 1000, 500, 250 }, 7, 7, 1, &gLevelRoomLists[LEVEL_NEO_CORTEX] },
+    /* LEVEL_MEGA_MIX */ { 25, 10, { 1000, 500, 250 }, 7, 7, 1, &gLevelRoomLists[LEVEL_MEGA_MIX] },
 };
 
 /* Each level's rooms (the `rooms` of its `struct level_info`). */
 const struct level_room_list gLevelRoomLists[LEVEL_COUNT] = {
-    { ARRAY_COUNT(gLevel00Rooms), gLevel00Rooms, &gLevelRoom00, NULL },
-    { ARRAY_COUNT(gLevel01Rooms), gLevel01Rooms, NULL, NULL },
+    { ARRAY_COUNT(gLevel00Rooms), gLevel00Rooms, &gLevelRoom00, 0 },
+    { ARRAY_COUNT(gLevel01Rooms), gLevel01Rooms, 0, 0 },
     { ARRAY_COUNT(gLevel02Rooms), gLevel02Rooms, &gLevelRoom01, &gLevelRoom15 },
-    { ARRAY_COUNT(gLevel03Rooms), gLevel03Rooms, &gLevelRoom02, NULL },
-    { ARRAY_COUNT(gLevel04Rooms), gLevel04Rooms, &gLevelRoom03, NULL },
+    { ARRAY_COUNT(gLevel03Rooms), gLevel03Rooms, &gLevelRoom02, 0 },
+    { ARRAY_COUNT(gLevel04Rooms), gLevel04Rooms, &gLevelRoom03, 0 },
     { ARRAY_COUNT(gLevel05Rooms), gLevel05Rooms, &gLevelRoom04, &gLevelRoom13 },
-    { ARRAY_COUNT(gLevel06Rooms), gLevel06Rooms, NULL, NULL },
+    { ARRAY_COUNT(gLevel06Rooms), gLevel06Rooms, 0, 0 },
     { ARRAY_COUNT(gLevel07Rooms), gLevel07Rooms, &gLevelRoom05, &gLevelRoom14 },
-    { ARRAY_COUNT(gLevel08Rooms), gLevel08Rooms, NULL, NULL },
-    { ARRAY_COUNT(gLevel09Rooms), gLevel09Rooms, &gLevelRoom06, NULL },
-    { ARRAY_COUNT(gLevel10Rooms), gLevel10Rooms, &gLevelRoom07, NULL },
+    { ARRAY_COUNT(gLevel08Rooms), gLevel08Rooms, 0, 0 },
+    { ARRAY_COUNT(gLevel09Rooms), gLevel09Rooms, &gLevelRoom06, 0 },
+    { ARRAY_COUNT(gLevel10Rooms), gLevel10Rooms, &gLevelRoom07, 0 },
     { ARRAY_COUNT(gLevel11Rooms), gLevel11Rooms, &gLevelRoom08, &gLevelRoom16 },
-    { ARRAY_COUNT(gLevel12Rooms), gLevel12Rooms, NULL, NULL },
-    { ARRAY_COUNT(gLevel13Rooms), gLevel13Rooms, &gLevelRoom09, NULL },
-    { ARRAY_COUNT(gLevel14Rooms), gLevel14Rooms, NULL, NULL },
-    { ARRAY_COUNT(gLevel15Rooms), gLevel15Rooms, &gLevelRoom10, NULL },
-    { ARRAY_COUNT(gLevel16Rooms), gLevel16Rooms, NULL, NULL },
-    { ARRAY_COUNT(gLevel17Rooms), gLevel17Rooms, NULL, NULL },
-    { ARRAY_COUNT(gLevel18Rooms), gLevel18Rooms, &gLevelRoom11, NULL },
-    { ARRAY_COUNT(gLevel19Rooms), gLevel19Rooms, &gLevelRoom12, NULL },
-    { ARRAY_COUNT(gLevel20Rooms), gLevel20Rooms, NULL, NULL },
-    { ARRAY_COUNT(gLevel21Rooms), gLevel21Rooms, NULL, NULL },
-    { ARRAY_COUNT(gLevel22Rooms), gLevel22Rooms, NULL, NULL },
-    { ARRAY_COUNT(gLevel23Rooms), gLevel23Rooms, NULL, NULL },
-    { ARRAY_COUNT(gLevel24Rooms), gLevel24Rooms, NULL, NULL },
+    { ARRAY_COUNT(gLevel12Rooms), gLevel12Rooms, 0, 0 },
+    { ARRAY_COUNT(gLevel13Rooms), gLevel13Rooms, &gLevelRoom09, 0 },
+    { ARRAY_COUNT(gLevel14Rooms), gLevel14Rooms, 0, 0 },
+    { ARRAY_COUNT(gLevel15Rooms), gLevel15Rooms, &gLevelRoom10, 0 },
+    { ARRAY_COUNT(gLevel16Rooms), gLevel16Rooms, 0, 0 },
+    { ARRAY_COUNT(gLevel17Rooms), gLevel17Rooms, 0, 0 },
+    { ARRAY_COUNT(gLevel18Rooms), gLevel18Rooms, &gLevelRoom11, 0 },
+    { ARRAY_COUNT(gLevel19Rooms), gLevel19Rooms, &gLevelRoom12, 0 },
+    { ARRAY_COUNT(gLevel20Rooms), gLevel20Rooms, 0, 0 },
+    { ARRAY_COUNT(gLevel21Rooms), gLevel21Rooms, 0, 0 },
+    { ARRAY_COUNT(gLevel22Rooms), gLevel22Rooms, 0, 0 },
+    { ARRAY_COUNT(gLevel23Rooms), gLevel23Rooms, 0, 0 },
+    { ARRAY_COUNT(gLevel24Rooms), gLevel24Rooms, 0, 0 },
 };
 
 /*
@@ -454,7 +461,7 @@ const struct level_room gLevelRoom20 = {
     gRoom20Palette, &gRoom20Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room20_25f11c */
 const struct level_room gLevelStage0 = {
-    NULL, NULL, ROOM_KIND_CATEGORY, 0, { .catIndex = CATEGORY_FROSTBITE_CAVERN }
+    0, 0, ROOM_KIND_CATEGORY, 0, { { /* catIndex */ CATEGORY_FROSTBITE_CAVERN } }
 };
 const struct level_room gLevelRoom21 = {
     gRoom21Palette, &gRoom21Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
@@ -466,13 +473,13 @@ const struct level_room gLevelRoom23 = {
     gRoom23Palette, &gRoom23Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room23_25cf20 */
 const struct level_room gLevelStage1 = {
-    NULL, NULL, ROOM_KIND_CATEGORY, 0, { .catIndex = CATEGORY_SNOW_CRASH }
+    0, 0, ROOM_KIND_CATEGORY, 0, { { /* catIndex */ CATEGORY_SNOW_CRASH } }
 };
 const struct level_room gLevelRoom24 = {
     gRoom24Palette, &gRoom24Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room24_25c640 */
 const struct level_room gLevelStage3 = {
-    NULL, NULL, ROOM_KIND_CATEGORY, 0, { .catIndex = CATEGORY_ROCKET_RACKET }
+    0, 0, ROOM_KIND_CATEGORY, 0, { { /* catIndex */ CATEGORY_ROCKET_RACKET } }
 };
 const struct level_room gLevelRoom25 = {
     gRoom25Palette, &gRoom25Desc, ROOM_KIND_ON_FOOT, 0, { { 1, 4, 16 } }
@@ -487,7 +494,7 @@ const struct level_room gLevelRoom28 = {
     gRoom28Palette, &gRoom28Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room28_254ed0 */
 const struct level_room gLevelStage2 = {
-    NULL, NULL, ROOM_KIND_CATEGORY, 0, { .catIndex = CATEGORY_SNOW_JOB }
+    0, 0, ROOM_KIND_CATEGORY, 0, { { /* catIndex */ CATEGORY_SNOW_JOB } }
 };
 const struct level_room gLevelRoom29 = {
     gRoom29Palette, &gRoom29Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
@@ -502,7 +509,7 @@ const struct level_room gLevelRoom32 = {
     gRoom32Palette, &gRoom32Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room32_24e104 */
 const struct level_room gLevelStage4 = {
-    NULL, NULL, ROOM_KIND_CATEGORY, 0, { .catIndex = CATEGORY_BLIMP_BONANZA }
+    0, 0, ROOM_KIND_CATEGORY, 0, { { /* catIndex */ CATEGORY_BLIMP_BONANZA } }
 };
 const struct level_room gLevelRoom33 = {
     gRoom33Palette, &gRoom33Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
@@ -511,7 +518,7 @@ const struct level_room gLevelRoom34 = {
     gRoom34Palette, &gRoom34Desc, ROOM_KIND_UNDERWATER, 0, { { 1, 4, 16 } }
 }; /* data/levels/room34_24c400 */
 const struct level_room gLevelStage5 = {
-    NULL, NULL, ROOM_KIND_CATEGORY, 0, { .catIndex = CATEGORY_NO_FLY_ZONE }
+    0, 0, ROOM_KIND_CATEGORY, 0, { { /* catIndex */ CATEGORY_NO_FLY_ZONE } }
 };
 const struct level_room gLevelRoom35 = {
     gRoom35Palette, &gRoom35Desc, ROOM_KIND_ON_FOOT, 0, { { 1, 4, 16 } }
@@ -532,5 +539,5 @@ const struct level_room gLevelRoom40 = {
     gRoom40Palette, &gRoom40Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room40_2bb094 */
 const struct level_room gLevelStage6 = {
-    NULL, NULL, ROOM_KIND_CATEGORY, 0, { .catIndex = CATEGORY_N_GIN }
+    0, 0, ROOM_KIND_CATEGORY, 0, { { /* catIndex */ CATEGORY_N_GIN } }
 };

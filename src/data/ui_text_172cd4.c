@@ -1,10 +1,17 @@
-#include "core.h"
-#include "system.h"
-
 /*
  * ROM 0x08172CD4-0x08174BE0. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.
+ *
+ * C, not C++ like the rest of src/: each language's array points at the
+ * strings defined before it, and g++ 2.9 (decay_conversion, cp/typeck.c)
+ * replaces a const array initialised from a string literal by that
+ * literal wherever the array decays to a pointer, so the arrays would
+ * point at new copies of the strings. C's default_conversion leaves
+ * arrays alone. The file includes nothing; system.h declares the six
+ * arrays for the C++ code. See docs/data.md, "Text tables in C".
  */
+
+typedef unsigned char u8;
 
 /* The game's own text (menus, level names, popups, credits labels) in
  * the six languages: per language an array of 70 strings, which

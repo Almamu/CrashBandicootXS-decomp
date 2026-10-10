@@ -3,7 +3,7 @@
 
 /* The audio front end's C-linkage data and functions. The audio context
  * itself is C++, class AudioContext (include/audio.hpp, with its field
- * list); C (src/data/song_table_16aa20.c) needs the song table and the
+ * list); C (src/data/song_table_16aa20.cpp) needs the song table and the
  * music block here. */
 
 #include "core.h"
@@ -28,7 +28,7 @@ struct SfxTableEntry {
 extern struct SfxTableEntry gSfxTable[99];
 
 /* The GAX2 music block (data/data.s, built by tools/gax_audio.py) and
- * the song table pointing into it (src/data/song_table_16aa20.c). */
+ * the song table pointing into it (src/data/song_table_16aa20.cpp). */
 extern const u8 gGaxMusicData[];
 extern const void *const gSongTable[SONG_COUNT];
 

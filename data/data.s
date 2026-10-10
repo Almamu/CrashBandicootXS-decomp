@@ -86,7 +86,7 @@ gSfxTable:
 
 @ gThemePaletteCycle2..gThemeMusicCues: src/data/level_table_16c814.c
 
-@ gCutsceneTextEnglish..gCutscenes: src/data/cutscenes_16d1c8.c
+@ gCutsceneTextEnglish..gCutscene10DutchPage5: src/data/cutscenes_16d1c8.cpp, cutscene_text_16d4d8.c, cutscene_slides_16e064.cpp, cutscene_text_16e8a4.c
 
 @ gTerrainTypes..0x08172CD4 (terrain types): src/data/terrain_1725a8.c
 

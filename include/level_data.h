@@ -165,7 +165,7 @@ struct level_desc {
 };
 
 /*
- * One room record of the level table (src/data/level_table_16c814.c):
+ * One room record of the level table (src/data/level_table_16c814.cpp):
  * the record RunRoom hands to LoadRoom, and the current room
  * (`LevelProgress::cat`, `LevelState::room.cat`). It merges level_layers.cpp's
  * `struct level_load_args` (batch 8b), level_query.cpp's `MedalListItem`

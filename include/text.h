@@ -24,7 +24,7 @@ extern class Font *gLargeFont;
 #endif
 
 /* The two fonts' character sets and glyph metrics
- * (src/data/hud_fonts_174be0.c) and tile data (data/data.s). */
+ * (src/data/hud_fonts_174be0.cpp) and tile data (data/data.s). */
 extern const u8 gSmallFontChars[];
 extern const struct icon_glyph_metrics gSmallFontGlyphs[79];
 extern const u8 gLargeFontChars[];
