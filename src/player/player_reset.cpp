@@ -28,7 +28,7 @@ void Player::Reset()
     rampY.step = 0;
     rampY.target = 0;
     mirrorFlags.mirrorX = 0;
-    hitAxes = 8;
+    hitAxes = PART_DIR_DOWN;
     dir = 0;
     mover = 0;
     type = 0;
@@ -59,7 +59,7 @@ void Player::ResetForRoom()
 {
     speedX = 0;
     speedY = 0;
-    hitAxes = 8;
+    hitAxes = PART_DIR_DOWN;
     dir = 0;
     mirrorFlags.mirrorY = 0;
     tag = 0;

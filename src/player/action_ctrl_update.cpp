@@ -100,8 +100,8 @@ void ActionCtrl::Update(MovingSprite *)
         }
     }
     (this->*stateFuncs[state])();
-    part->hitAxes &= 8;
-    if (part->hitAxes == 8) {
+    part->hitAxes &= PART_DIR_DOWN;
+    if (part->hitAxes == PART_DIR_DOWN) {
         if (motionY == 4 || motionY == 5) {
             motionYKeepSpeed = 0;
             motionYPending = 1;

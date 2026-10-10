@@ -310,7 +310,7 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
         KillPlayer(0x2a);
         break;
     case EVENT_MASK_HIT:
-        if ((gPlayer->hitAxes & 8) && part->HasRoomForAnim(0xb) == 1) {
+        if ((gPlayer->hitAxes & PART_DIR_DOWN) && part->HasRoomForAnim(0xb) == 1) {
             ActAndFlags0D(part, ~ENTITY_FLAG2_FLOOR_PROBE);
             ActAndFlags0D(part, ~ENTITY_FLAG2_GROUNDED);
             StartMaskHitJump();

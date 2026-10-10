@@ -98,10 +98,10 @@ void CrateList::CollideWithPlayer(struct aabb box, MovingSprite *part)
         px = part->x;
         if (px < gPlayer->x) {
             gPlayer->x = px + ((b.w + a.w) << 7);
-            gPlayer->HandleEvent(0, EVENT_BUMP, 2);
+            gPlayer->HandleEvent(0, EVENT_BUMP, PART_DIR_LEFT);
         } else {
             gPlayer->x = px - ((b.w + a.w) << 7);
-            gPlayer->HandleEvent(0, EVENT_BUMP, 1);
+            gPlayer->HandleEvent(0, EVENT_BUMP, PART_DIR_RIGHT);
         }
     } else {
         u8 kind;

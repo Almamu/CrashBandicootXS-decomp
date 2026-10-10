@@ -35,7 +35,7 @@ void ActionCtrl::StateLeftGround()
 {
     u8 hit;
 
-    if ((hit = part->hitAxes & 8) != 0) {
+    if ((hit = part->hitAxes & PART_DIR_DOWN) != 0) {
         u8 tag;
         /* the ROM's r5 zero, reused by the air spin's trio below */
         u8 z;

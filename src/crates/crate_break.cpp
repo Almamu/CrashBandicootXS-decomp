@@ -236,7 +236,8 @@ void Crate::QueuePlayerCollision(s32 idx)
         attack = ATTACK_KIND_INVINCIBLE;
     else {
         attack = gActionCtrlStateAttackKinds[idx];
-        if (kind == CRATE_KIND_REINFORCED && attack == ATTACK_KIND_BODY_SLAM && gPlayer->dir == 4)
+        if (kind == CRATE_KIND_REINFORCED && attack == ATTACK_KIND_BODY_SLAM &&
+            gPlayer->dir == PART_DIR_UP)
             attack = ATTACK_KIND_JUMP;
     }
     {
@@ -360,12 +361,12 @@ void Crate::QueuePlayerCollision(s32 idx)
             return;
         if (Q8_TO_INT(gPlayer->x) < Q8_TO_INT(x)) {
             if (attack != ATTACK_KIND_SLIDE || obj->GetAbove() != 0) {
-                gPlayer->HandleEvent(0, EVENT_BUMP, 1);
-                AddPlayerHit(gPlayer, 1);
+                gPlayer->HandleEvent(0, EVENT_BUMP, PART_DIR_RIGHT);
+                AddPlayerHit(gPlayer, PART_DIR_RIGHT);
             }
         } else if (attack != ATTACK_KIND_SLIDE || obj->GetAbove() != 0) {
-            gPlayer->HandleEvent(0, EVENT_BUMP, 2);
-            AddPlayerHit(gPlayer, 2);
+            gPlayer->HandleEvent(0, EVENT_BUMP, PART_DIR_LEFT);
+            AddPlayerHit(gPlayer, PART_DIR_LEFT);
         }
         RingPush(obj);
         if (gPlayer->bounce == 0)
@@ -383,7 +384,7 @@ void Crate::QueuePlayerCollision(s32 idx)
     }
 tail:
     if (attack == ATTACK_KIND_BODY_SLAM) {
-        if (gPlayer->dir == 4)
+        if (gPlayer->dir == PART_DIR_UP)
             attack = ATTACK_KIND_JUMP;
     } else if (attack == ATTACK_KIND_SLIDE)
         attack = ATTACK_KIND_TOUCH;
@@ -440,17 +441,17 @@ tail:
             if (px > prevX)
                 side = 1;
             if (Q8_TO_INT(gPlayer->x) < Q8_TO_INT(x)) {
-                dirX = 1;
+                dirX = PART_DIR_RIGHT;
                 dx = Span(pbox.x, pbox.w, prev.x) + 1;
             } else {
-                dirX = 2;
+                dirX = PART_DIR_LEFT;
                 dx = Span(prev.x, prev.w, pbox.x) + 1;
             }
             if (Q8_TO_INT(gPlayer->y) > Q8_TO_INT(y)) {
-                dirY = 4;
+                dirY = PART_DIR_UP;
                 dy = Span(prev.y, prev.h, pbox.y);
             } else {
-                dirY = 8;
+                dirY = PART_DIR_DOWN;
                 dy = Span(pbox.y, pbox.h, prev.y);
             }
             if (dx > 5 && f21 == 0) {
@@ -483,9 +484,9 @@ tail:
                 p2.x = gPlayer->x;
                 py2 = gPlayer->y;
                 PosPtr(&p2)->y = py2;
-                if (dirX == 2)
+                if (dirX == PART_DIR_LEFT)
                     p2.x = INT_TO_Q8(dx) + p2.x;
-                else if (dirX == 1)
+                else if (dirX == PART_DIR_RIGHT)
                     p2.x -= INT_TO_Q8(dx);
                 SetEntityPos(gPlayer, p2.x, PosPtr(&p2)->y);
                 PlayerQueue()->posCommitted = 1;
@@ -501,9 +502,11 @@ tail:
                 py2 = gPlayer->y;
                 PosPtr(&p3)->y = py2;
                 pp = &p3; /* shared with the p1 arm, where it gets r2 */
-                if (dirY == 4)
+                if (dirY == PART_DIR_UP)
                     pp->y = INT_TO_Q8(dy) + pp->y;
-                else if (dirX == 8)
+                /* `dirX`, not `dirY`, in the ROM: dirX is never
+                 * PART_DIR_DOWN, so the push down is dead code. */
+                else if (dirX == PART_DIR_DOWN)
                     pp->y -= INT_TO_Q8(dy);
                 SetEntityPos(gPlayer, p3.x, pp->y);
                 PlayerQueue()->posCommitted = 1;
@@ -681,9 +684,9 @@ tail:
             code = 3;
         if (attack <= ATTACK_KIND_SLIDE || attack == ATTACK_KIND_INVINCIBLE ||
             (attack == ATTACK_KIND_SPIN && code <= 2)) {
-            gPlayer->HandleEvent(0, EVENT_BUMP, 4);
-            AddPlayerHit(gPlayer, 4);
-            if (gPlayer->hitAxes != 8)
+            gPlayer->HandleEvent(0, EVENT_BUMP, PART_DIR_UP);
+            AddPlayerHit(gPlayer, PART_DIR_UP);
+            if (gPlayer->hitAxes != PART_DIR_DOWN)
                 PosPtr(&pos)->y = INT_TO_Q8(dy) + PosPtr(&pos)->y;
         }
         break;
@@ -839,12 +842,12 @@ void Crate::ApplyCollision(s32 attack, s32 code, s32 edge, s32 depth, struct vec
     switch (code) {
     case 0:
     case 1:
-        if (!(gPlayer->dir & 4) && above) {
+        if (!(gPlayer->dir & PART_DIR_UP) && above) {
             if ((edge == 8 && depth <= 1) || (depth <= 1 && code == 1) ||
                 (depth <= 7 && code == 1 && edge == 8)) {
                 gPlayer->carried = this;
                 {
-                    u8 m = 8;
+                    u8 m = PART_DIR_DOWN;
 
                     gPlayer->hitAxes = m;
                 }

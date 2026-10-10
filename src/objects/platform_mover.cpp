@@ -231,7 +231,7 @@ void PlatformMover::MovePlayer(MovingSprite *part)
             /* the 8 as a variable set here: the ROM forms hitAxes'
              * address from carried's (`subs r0, #0x44`) */
             {
-                u8 m = 8;
+                u8 m = PART_DIR_DOWN;
 
                 p->hitAxes = m;
             }
@@ -248,13 +248,13 @@ void PlatformMover::MovePlayer(MovingSprite *part)
             }
             dir = gPlayer->dir;
             if (part->speedX > 0)
-                dir |= 1;
+                dir |= PART_DIR_RIGHT;
             else if (part->speedX < 0)
-                dir |= 2;
+                dir |= PART_DIR_LEFT;
             if (part->speedY > 0)
-                dir |= 8;
+                dir |= PART_DIR_DOWN;
             else if (part->speedY < 0)
-                dir |= 4;
+                dir |= PART_DIR_UP;
             gPlayer->dir = dir;
             if (kind == PLATFORM_TYPE_FALLING && timer == 0)
                 timer = gRoomFrameCount;

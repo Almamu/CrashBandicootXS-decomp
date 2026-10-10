@@ -180,7 +180,7 @@ void SwimCtrl::StartSpin()
     speed = 960;
     flag = 0;
     gAudioContext->PlaySfx(SFX_UNKNOWN_09, 256);
-    if ((target->hitAxes & 3) && gInput->GetDpadDirection() <= 2)
+    if ((target->hitAxes & PART_DIR_X_MASK) && gInput->GetDpadDirection() <= 2)
         flag = 1;
 
     if (state == SWIM_STATE_TURN) {

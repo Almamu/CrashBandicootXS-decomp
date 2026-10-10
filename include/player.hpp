@@ -73,20 +73,9 @@ extern const struct entry_set gInputCtrlMotionSet;
  * (swim_ctrl.hpp's class). */
 extern class SwimCtrl *gSwimCtrl;
 
-/* Player::dir's bits (the motion direction, ApplyPlayerVelocity); also
- * the camera's followed sprite's (PlayRoom points gCamera->target at
- * gPlayer). */
-#define PLAYER_DIR_RIGHT 1
-#define PLAYER_DIR_LEFT 2
-#define PLAYER_DIR_UP 4
-#define PLAYER_DIR_DOWN 8
-#define PLAYER_DIR_X 3   // PLAYER_DIR_RIGHT | PLAYER_DIR_LEFT
-#define PLAYER_DIR_Y 0xC // PLAYER_DIR_UP | PLAYER_DIR_DOWN
-
-/* Player::hitMask's axes: the swim controller zeroes speedX on an X hit
- * and speedY on a Y hit (SwimCtrl::Update, swim_ctrl.cpp). */
-#define PLAYER_HIT_X 3
-#define PLAYER_HIT_Y 0xC
+/* Player::dir, hitAxes and hitMask hold box_part.h's direction bits
+ * (PART_DIR_*): the motion direction, ApplyPlayerVelocity; the camera
+ * follows them too (PlayRoom points gCamera->target at gPlayer). */
 
 /* The controllers share a base, ctrl.hpp's class Ctrl (InitCtrl/
  * DestroyCtrl, ctrl.cpp): +0x04 the motion entry set (SetCtrlAnimSet),

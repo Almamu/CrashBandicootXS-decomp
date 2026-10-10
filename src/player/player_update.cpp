@@ -364,13 +364,13 @@ s32 Player::ApplyVelocity()
 
     dir = 0;
     if (speedX > 0)
-        dir = 1;
+        dir = PART_DIR_RIGHT;
     else if (speedX < 0)
-        dir = 2;
+        dir = PART_DIR_LEFT;
     if (speedY > 0)
-        dir |= 8;
+        dir |= PART_DIR_DOWN;
     else if (speedY < 0)
-        dir |= 4;
+        dir |= PART_DIR_UP;
 
     PrevPos() = Pos();
     x += speedX;

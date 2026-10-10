@@ -111,13 +111,13 @@ s32 MovingSprite::ApplyVelocity()
 
     dir = 0;
     if (speedX > 0)
-        dir = 1;
+        dir = PART_DIR_RIGHT;
     else if (speedX < 0)
-        dir = 2;
+        dir = PART_DIR_LEFT;
     if (speedY > 0)
-        dir |= 8;
+        dir |= PART_DIR_DOWN;
     else if (speedY < 0)
-        dir |= 4;
+        dir |= PART_DIR_UP;
 
     PrevPos() = Pos();
     x += speedX;
@@ -179,7 +179,7 @@ void MovingSprite::Reset()
     rampY.start = 0;
     rampY.step = 0;
     rampY.target = 0;
-    hitAxes = 8;
+    hitAxes = PART_DIR_DOWN;
     dir = 0;
     probeTries = 0;
     mover = 0;
