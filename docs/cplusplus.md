@@ -997,7 +997,8 @@ from the top of the function),
 `StateJump`'s `MATCH_KEEP` and `HandleEvent`'s three `MATCH_CONST`s (a 1
 the ROM loads apart from the A test's own 1), `HandleEvent`'s dead
 `volatile` read of `state`, and `StateCrouch`'s scoped `volatile` pointer
-(the `+0x28` address computed in the part's register). Two C idioms stay:
+(the `+0x28` address computed in the part's register; freed in #662
+round 11 by a FaceRight inline, docs/matching_techniques.md). Two C idioms stay:
 action_obj.h's byte view of `flags2` (`ACT_PART_FLAGS0D`) in
 `StateLeftGround`, `StateAirborne` and `StateAirSpin`, and a `do { }
 while (0)` around one call in `StateCrawl` (gotchas).
