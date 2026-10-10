@@ -1,6 +1,8 @@
+extern "C" {
 #include "core.h"
 #include "objects.h"
 #include "player.h"
+}
 
 /*
  * ROM 0x0816B304-0x0816B92C. Linked in ROM order between data/data.s
@@ -57,7 +59,7 @@ const struct speed_ramp gCtrlMotionRecords[44] = {
 };
 
 /* gActionCtrlMotionSet's entries: indices into gCtrlMotionRecords. */
-const u32 gActionCtrlMotionEntries[33][2] = {
+extern const u32 gActionCtrlMotionEntries[33][2] = {
     { 0, 0 },
     { 3, 0 },
     { 7, 11 },
@@ -129,7 +131,7 @@ const struct speed_ramp gSwimCtrlMotionRecords[31] = {
 };
 
 /* gSwimCtrlMotionSet's entries: indices into gSwimCtrlMotionRecords. */
-const u32 gSwimCtrlMotionEntries[38][2] = {
+extern const u32 gSwimCtrlMotionEntries[38][2] = {
     { 0, 0 },
     { 0, 8 },
     { 0, 9 },

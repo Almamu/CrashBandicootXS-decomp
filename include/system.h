@@ -35,7 +35,7 @@ extern u32 gFrameLimitTarget;
 extern u32 gFrameLimitInterval;
 
 /* Held d-pad bits (right/left/down/up as bits 3-0) -> direction 0-8
- * (src/data/boss_pictures_167ad4.c). */
+ * (src/data/boss_pictures_167ad4.cpp). */
 extern const u8 gDpadDirectionTable[16];
 
 /* src/system/asset.cpp */

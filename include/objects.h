@@ -87,19 +87,19 @@ extern void OffsetFromHitboxEdge(void *dest, s32 kind, void *rec);
 extern void OffsetToHitboxEdge(void *dest, s32 kind, void *rec);
 extern void OffsetToHitboxEdgeStart(void *dest, s32 kind, void *rec);
 
-/* The controllers' motion records (src/data/motion_records_16b304.c),
+/* The controllers' motion records (src/data/motion_records_16b304.cpp),
  * read by StartCtrlTargetMotionYFromSet/StartCtrlTargetMotionXFromSet and
  * ApplyActionCtrlMotion. player.h has the player's two tables. */
 extern const struct speed_ramp gCtrlMotionRecords[44];
 
-/* The platform mover's entry set (src/data/entry_set_16c418.c), whose
+/* The platform mover's entry set (src/data/entry_set_16c418.cpp), whose
  * entries are gDingodileMotionEntries[4..7] (bosses.h), and its motion
- * records (src/data/velocity_16c460.c). */
+ * records (src/data/velocity_16c460.cpp). */
 extern const struct entry_set gPlatformMoverMotionSet;
 extern const struct speed_ramp gPlatformMoverMotionRecords[3];
 
 /* The empty box GetSpriteFrameBodyBox and friends return for a frame
- * without one (src/data/obj_sizes_16b2e0.c). */
+ * without one (src/data/obj_sizes_16b2e0.cpp). */
 extern const struct hitbox_quad gEmptySpriteBox;
 /* The anchor point GetSpriteFrameAnchor returns for a frame without one
  * (same file): {0, 0}. */

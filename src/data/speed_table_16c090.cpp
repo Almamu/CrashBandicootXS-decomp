@@ -1,5 +1,7 @@
+extern "C" {
 #include "core.h"
 #include "player.h"
+}
 
 /*
  * ROM 0x0816C090-0x0816C250. Linked in ROM order between data/data.s
