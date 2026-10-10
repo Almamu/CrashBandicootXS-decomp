@@ -1133,8 +1133,8 @@ Round 2 in bosses/, enemies/ and actor/ (C++):
     `ActionCtrl::HandleEvent`: jump2 merges a test's identical arms
     after reload and leaves the test's load, because no flow pass runs
     after it to delete it. Reproduced, but only with identical arms or
-    a dead store. (Player::HandleEvent's later took the dead store, owner
-    decision: see "Player::HandleEvent's dead load" below.)
+    a dead store. (Both later took the dead store, owner decision: see
+    "Player::HandleEvent's dead load" below.)
   - `ReleaseHang`: reload's spill round-robin.
   - `StartTornadoFall`'s entry: global priority, `this` with 8 refs over
     38 insns ahead of entry's 4 over 26.
@@ -1985,8 +1985,11 @@ assert or log macro (`((void)0)`, `((void)(c))`, `c ? (void)0 : (void)0`,
 global or static error flag, which keeps the load but also its own
 compare and store; and the value stored in a reused local with no test
 (`m`, `cx`, `cy`, `c`), deleted by flow1 with its load. ActionCtrl::
-HandleEvent's bump load has the same mechanism and keeps its volatile
-read for now.
+HandleEvent's bump load has the same mechanism and takes the same fix,
+`if (state == ACTION_STATE_SLIDE) m = 0;` (`m` the bump case's
+contact-axis local, dead after it), documented the same way; without it
+that function is only 1 instruction short (the load), not the 57-58 a
+line-diff count once gave.
 
 The ARM DSP routines, hand-written in every GAX version, are assembly:
 `lib/gax/asm/gax_arm_dsp.s`, disassembled from the raw `.byte` block
