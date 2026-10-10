@@ -11,7 +11,6 @@ extern "C" {
 #include "globals.h"
 #include "entity_bits.h"
 #include "math_util.h"
-#include "player.h"
 }
 
 /* EnemyCtrl's Update (UpdateEnemyCtrl, gEnemyCtrlVtable slot 1) and

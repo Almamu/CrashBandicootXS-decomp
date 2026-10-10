@@ -1,5 +1,6 @@
 #include "sprite_obj.hpp"
 #include "hud.hpp"
+#include "vehicle.hpp"
 
 extern "C" {
 #include "core.h"
@@ -7,7 +8,6 @@ extern "C" {
 #include "sprite_bank.h"
 #include "actor.h"
 #include "bosses.h"
-#include "vehicle.h"
 #include "gfx.h"
 #include "globals.h"
 }

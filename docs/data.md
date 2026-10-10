@@ -36,7 +36,7 @@ libgcc's `__clz_tab`) follow the same convention in C under
 - **Types come from the code's headers** when there is one:
   `struct category_descriptor` /
   `struct category_vtable` (`actor_anim.h`) and `struct bg_package`
-  (`graphics_package.h`).
+  (`graphics_package.hpp`).
   When the only view is a struct local to one source file, the data file
   uses a plain type or a small local struct and says whose view it
   mirrors. Moving such structs into headers is a separate cleanup.
@@ -373,7 +373,7 @@ two), the animation table (`struct anim_table_record`, `actor_anim.h`,
 41 and 47 records), and the arrays the records point at:
 
 - **table_A**: the clip's keyframes, `struct anim_frame_record`
-  (`actor_self.h`: duration, index into table_B, loop threshold and
+  (`actor_anim.h`: duration, index into table_B, loop threshold and
   base, OAM attribute bits). Nothing stores a count.
 - **table_B**: the frames. Record 0's points at compressed frames
   (`gPolarPlayerRleFrames + RLE_SPRITES_0C2758_FRAME_nnn`, set C for the

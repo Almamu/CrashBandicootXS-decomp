@@ -1,9 +1,9 @@
 #include "level_state.hpp"
+#include "frontend.hpp"
 
 extern "C" {
 #include "core.h"
 #include "system.h"
-#include "frontend.h"
 #include "level.h"
 #include "globals.h"
 }

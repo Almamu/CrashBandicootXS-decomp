@@ -22,7 +22,7 @@
  *
  * The fields keep their offsets in comments. No C file reads these
  * objects, and they have no C view: level.h's `struct camera_target` (the
- * camera's followed Sprite) and player.h's `struct player` went in #754.
+ * camera's followed Sprite) and the C `struct player` went in #754.
  *
  * No `#pragma interface`: g++ emits the vtables of Sprite (sprite.cpp),
  * UiSprite (ui_sprite.cpp), MovingSprite (moving_sprite_collide.cpp) and

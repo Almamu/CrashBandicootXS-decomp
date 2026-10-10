@@ -1,6 +1,7 @@
+#include "frontend.hpp"
+
 extern "C" {
 #include "tagged_asset.h"
-#include "frontend.h"
 }
 
 /*

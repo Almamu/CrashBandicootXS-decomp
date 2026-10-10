@@ -5,7 +5,7 @@
  * src/iwram/string_arm.cpp), with the prototypes of their definitions
  * (docs/headers_plan.md). The Thumb code doesn't call them directly: it
  * goes through the hooks in src/iwram/iwram_data.cpp, declared with their
- * users (gfx.h, actor.h, vehicle.h). */
+ * users (gfx.h, actor.h, vehicle.hpp). */
 
 #include "core.h"
 

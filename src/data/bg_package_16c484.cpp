@@ -1,6 +1,7 @@
+#include "graphics_package.hpp"
+
 extern "C" {
 #include "core.h"
-#include "graphics_package.h"
 #include "gfx.h"
 }
 

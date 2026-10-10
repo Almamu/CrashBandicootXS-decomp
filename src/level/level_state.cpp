@@ -16,10 +16,8 @@ extern "C" {
 #include "core.h"
 #include "actor.h"
 #include <agb_syscall.h>
-#include "frontend.h"
 #include "system.h"
 #include "bosses.h"
-#include "player.h"
 #include "sprite_bank.h"
 }
 

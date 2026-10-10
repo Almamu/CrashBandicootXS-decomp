@@ -1,6 +1,7 @@
 #include "actor_self.hpp"
 #include "audio.hpp"
 #include "yeti.hpp"
+#include "vehicle.hpp"
 
 extern "C" {
 #include "core.h"
@@ -8,7 +9,6 @@ extern "C" {
 #include "memory.h"
 #include "util.h"
 #include "actor.h"
-#include "vehicle.h"
 #include "globals.h"
 }
 

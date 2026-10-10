@@ -8,7 +8,6 @@ extern "C" {
 #include "actor_anim.h"
 #include "actor.h"
 #include "bosses.h"
-#include "vehicle.h"
 #include "globals.h"
 }
 

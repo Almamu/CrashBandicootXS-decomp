@@ -2,6 +2,7 @@
 #include "frontend.hpp"
 #include "audio.hpp"
 #include "key_input.hpp"
+#include "menus.hpp"
 
 extern "C" {
 #include "gba/io_reg.h"
@@ -9,7 +10,6 @@ extern "C" {
 #include <agb_syscall.h>
 #include "text.h"
 #include "system.h"
-#include "menus.h"
 #include "gfx.h"
 #include "globals.h"
 #include "math_util.h"

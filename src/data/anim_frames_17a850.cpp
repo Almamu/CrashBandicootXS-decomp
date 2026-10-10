@@ -1,9 +1,9 @@
 #include "yeti.hpp"
+#include "vehicle.hpp"
 
 extern "C" {
 #include "core.h"
-#include "actor_self.h"
-#include "vehicle.h"
+#include "actor_anim.h"
 }
 
 /*

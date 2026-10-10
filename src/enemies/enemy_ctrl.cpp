@@ -6,7 +6,6 @@
 extern "C" {
 #include "util.h"
 #include <libgcc.h>
-#include "player.h"
 #include "objects.h"
 #include "level.h"
 #include "globals.h"

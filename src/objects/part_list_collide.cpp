@@ -13,7 +13,6 @@ extern "C" {
 #include "gfx.h"
 #include "level.h"
 #include "globals.h"
-#include "player.h"
 }
 
 /* The part list's per-frame passes (#664, part 7c; include/part_list.hpp):

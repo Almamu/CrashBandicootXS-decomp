@@ -6,11 +6,9 @@ extern "C" {
 #include "core.h"
 #include "math_util.h"
 #include "memory.h"
-#include "actor_self.h"
 #include "actor_anim.h"
 #include "actor.h"
 #include "bosses.h"
-#include "vehicle.h"
 #include "globals.h"
 }
 

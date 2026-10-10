@@ -13,7 +13,6 @@
  * with a `codegen:` comment. */
 
 #include "core.h"
-#include "graphics_package.h"
 #include "hitbox_quad.h"
 #include "sprite_bank.h"
 
@@ -251,7 +250,9 @@ extern void FreeCategorySpriteSheet(void);
 extern void DecompressCategorySpriteSheet(const void *sheet);
 
 /* The menus' sky background (src/data/bg_package_16c484.cpp): the language
- * select, level select, power dialog and save menu load it on BG0. */
+ * select, level select, power dialog and save menu load it on BG0. Its
+ * type is graphics_package.hpp's. */
+struct bg_package;
 extern const struct bg_package gMenuSkyBg;
 
 /* The blend register shadow (sym_iwram.txt). */

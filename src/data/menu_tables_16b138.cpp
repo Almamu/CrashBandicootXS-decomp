@@ -1,7 +1,8 @@
+#include "menus.hpp"
+
 extern "C" {
 #include "core.h"
 #include "save.h"
-#include "menus.h"
 }
 
 /*

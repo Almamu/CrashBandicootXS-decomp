@@ -3,7 +3,6 @@
 
 extern "C" {
 #include "globals.h"
-#include "player.h"
 }
 
 /* The general line stepper and Crate::Reset (#664, include/crate.hpp). */

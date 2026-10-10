@@ -3,6 +3,7 @@
 #include "spawners.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "menus.hpp"
 
 extern "C" {
 #include "core.h"
@@ -10,10 +11,8 @@ extern "C" {
 #include "gba/io_reg.h"
 #include "gba/dma_macros.h"
 #include "save.h"
-#include "frontend.h"
 #include "util.h"
 #include "system.h"
-#include "menus.h"
 #include "actor.h"
 #include "gfx.h"
 #include "level.h"

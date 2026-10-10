@@ -9,7 +9,7 @@
  * src/data/actor_pmf_17a6b8.cpp). Part 11b added the polar actors' fields
  * and the constructors src/actor/actor_factory.cpp uses. Their other
  * methods, and the jetpack actors' fields past HpActor's, are still C
- * (vehicle.h, src/vehicle/); cxx_symbols.txt maps the C++ names to the C
+ * (src/vehicle/); cxx_symbols.txt maps the C++ names to the C
  * ones. The constructors are declared with ActorSelf's arguments and the
  * extra ones of their C prototypes (Create*, Init*, named in a comment);
  * where the ROM only has a constructor inlined and its code is still C,
@@ -31,8 +31,133 @@
 #include "actor_self.hpp"
 
 extern "C" {
-#include "vehicle.h"
+#include "core.h"
+#include "actor.h"
 }
+
+/* Every function the vehicle levels define with C linkage (or a C name,
+ * cxx_symbols.txt) is declared here, including those the file layout put
+ * in actor or bosses files for ROM order (the teardown functions in
+ * inline_copies_actors.cpp, the per-category hooks in
+ * actor_category_hooks.cpp, actor_category_frame.cpp and
+ * actor_category.cpp, ...), plus their globals and data tables. */
+
+/* src/actor/actor_category_hooks.cpp */
+extern "C" void JetpackReloadPlayerTiles(void);
+extern "C" void PolarReloadPlayerTiles(void);
+extern "C" void JetpackReachCourseEnd(void);
+extern "C" void PolarReachCourseEnd(void);
+
+/* src/actor/inline_copies_actors.cpp: the C-linkage copies of the balloon crate
+ * kinds' implicit destructors (below), which the g++-emitted
+ * vtables point at (cxx_symbols.txt); PolarCrate's is below */
+extern "C" void DestroyJetpackHealthCrate(void *self, u32 flags);
+extern "C" void DestroyJetpackTimeCrate(void *self, u32 flags);
+extern "C" void DestroyJetpackQuestionCrate(void *self, u32 flags);
+
+/* src/actor/actor_category_frame.cpp */
+extern "C" s32 PolarIsTouchingPlayer(struct ActorSelf *self);
+extern "C" s32 JetpackIsTouchingPlayer(struct ActorSelf *self);
+
+/* src/actor/actor_factory.cpp */
+extern "C" void CreatePolarCheckpointText(s32 x, s32 y, s32 z);
+extern "C" void SpawnPolarCollectedWumpa(s32 x, s32 y, s32 z);
+extern "C" class PolarAkuAku *SpawnPolarAkuAku(s32 x, s32 y, s32 z, s32 arg);
+
+/* src/actor/actor_category.cpp */
+extern "C" s32 JetpackIsPauseLocked(void);
+extern "C" s32 PolarIsPauseLocked(void);
+
+/* src/vehicle/jetpack/jetpack_crates.cpp: JetpackBalloonCrate's destructor
+ * (below), for inline_copies_actors.cpp's kinds' destructors */
+extern "C" void DestroyJetpackBalloonCrate(void *self, s32 flags);
+
+/* src/vehicle/jetpack/jetpack_player.cpp: a C-linkage getter */
+extern "C" u8 IsJetpackPlayerInactive(void);
+
+/* src/vehicle/jetpack/jetpack_spawn.cpp: the spawners (C linkage) */
+extern "C" struct ActorSelf *SpawnJetpackActor(struct actor_spawn *rec, u8 alt, s32 dz);
+extern "C" struct ActorSelf *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z,
+                                                struct actor_spawn *spawn);
+extern "C" void CreateJetpackCheckpointText(void);
+extern "C" void CreateJetpackExplosion(s32 x, s32 y, s32 z);
+extern "C" void SpawnJetpackCollectedWumpa(s32 a, s32 b, s32 c);
+extern "C" void *SpawnJetpackBalloon(u8 kind, s32 a, s32 b, s32 c, s32 d);
+extern "C" void SpawnJetpackCannonball(s32 a, s32 b, s32 c, s32 d, s32 e);
+extern "C" void SpawnJetpackShot(s32 a, s32 b, s32 c, s32 d, s32 e);
+extern "C" void CreateJetpackPlayer(struct anim_table_record *table, s32 z);
+
+/* src/vehicle/polar/polar_aku_aku.cpp and polar_player_states.cpp: the
+ * C-linkage functions. */
+extern "C" s32 GetPolarMaskLevel(void);
+extern "C" u8 IsPolarPlayerInactive(void);
+
+/* The vehicles' globals (sym_iwram.txt). */
+extern struct anim_table_record *gJetpackAnimTable; /* actor_anim.h */
+extern s32 gJetpackBomberCount;
+extern s32 gJetpackBomberSfxTimer;
+extern u8 gJetpackFadeStarted;
+extern s32 gJetpackFlashTimer;
+extern u8 gJetpackInputEnabled;
+extern u8 gJetpackPauseLocked;
+extern u8 gJetpackPlayerHalted;
+extern u8 *gJetpackPlayerLastFrame;
+extern s32 gJetpackPlayerMaxHp;
+extern s32 gJetpackPlayerTileBuffer;
+extern void *gJetpackPlayerTiles[2];
+extern s32 gJetpackPlayerVelX;
+extern s32 gJetpackPlayerVelY;
+extern s32 gJetpackQueuedWumpa;
+extern s32 gJetpackRingChain;
+extern s32 gJetpackRingLastFrame;
+extern s32 gJetpackShotCooldown;
+extern s32 gJetpackWumpaDispenseTimer;
+/* The polar actors the player keeps. */
+extern class PolarAkuAku *gPolarAkuAku;
+extern s32 gPolarAkuAkuInvincibleTimer;
+extern u8 gPolarFadeStarted;
+extern s32 gPolarFinishTimer;
+extern s32 gPolarInvulnTimer;
+extern u8 gPolarPauseLocked;
+extern u8 gPolarPlayerHalted;
+extern u8 gPolarPlayerInactive;
+extern u8 *gPolarPlayerLastFrame;  // the frame last uploaded
+extern s32 gPolarPlayerTileBuffer; // which buffer holds the current frame
+extern void *gPolarPlayerTiles[2]; // the two VRAM tile buffers
+extern s32 gPolarPlayerVelY;
+extern s32 gPolarQueuedWumpa;
+extern u8 gPolarSteerEnabled;
+extern s32 gPolarSteerTime;
+extern s32 gPolarWumpaDispenseTimer;
+extern class ActorSelf *gRiderlessPolar;
+/* The yeti's (gYeti, gYetiX, ...) are Yeti's static data members
+ * (include/yeti.hpp). */
+
+/* src/data/palette_strip_17c200.cpp */
+extern const u16 gJetpackFlashPalettes[3][16];
+
+/* src/data/actor_box_17c444.cpp */
+extern const struct anim_box gJetpackRocketBox;
+
+/* src/data/actor_tables_17a728.cpp */
+extern const u16 gPolarAkuAkuPalette1[16];
+extern const u16 gPolarAkuAkuPalette2[16];
+extern const u16 gPolarAkuAkuPalette3[16];
+extern const struct anim_box gPolarElectricFenceLeftPostBox;
+extern const struct anim_box gPolarElectricFenceRightPostBox;
+extern const struct anim_box gPolarElectricFenceWireBox;
+extern const struct anim_box gPolarNitroCrateBox;
+extern const u16 gPolarPlayerShockBlinkPalette[16];
+extern const u16 gPolarPlayerShockPalette[16];
+
+/* src/iwram/iwram_data.cpp */
+extern s32 gPolarPenguinSpeeds[3];
+extern s32 gJetpackPlaneHopSpeeds[6];
+extern void (*gUnpackNibbleTilesFunc)(u16 *src, s32 lowBlock);
+
+/* The yeti's tables (gYetiChargeParams, gYetiBox, gYetiCatchBox,
+ * gYetiPalette, gYetiFrames, gYetiKeyframes, gYetiStateFuncs) are Yeti's
+ * static data members (include/yeti.hpp). */
 
 /* The spawn argument of CreateJetpackPlane and PolarPenguin's
  * constructor (below): the level spawn record CreateJetpackActor and
@@ -63,7 +188,7 @@ public:
 /* The polar run's player (gPolarPlayerVtable; src/vehicle/polar/polar_player.cpp
  * and polar_player_states.cpp): it rides the polar bear, steered left and
  * right, and jumps; the rest of its state is in the gPolar* globals
- * (vehicle.h), as the ROM has it. ConstructAnimTableState
+ * (above), as the ROM has it. ConstructAnimTableState
  * (actor_factory.cpp) makes it gActorList, the actor list's root. The
  * other actors call its methods on `static_cast<PolarPlayer *>(gActorList)`,
  * as do the actor zone's C-linkage category hooks
@@ -408,7 +533,7 @@ public:
  * src/vehicle/jetpack/jetpack_player_update.cpp and jetpack_player.cpp;
  * jetpack_spawn.cpp's CreateJetpackPlayer): its hit points are HpActor's,
  * shown as a percentage (GetHp); the rest of its state is in the
- * gJetpack* globals (vehicle.h), as the ROM has it. CreateJetpackPlayer
+ * gJetpack* globals (above), as the ROM has it. CreateJetpackPlayer
  * makes it gActorList, the actor list's root. */
 class JetpackPlayer : public HpActor
 {

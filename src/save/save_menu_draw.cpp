@@ -2,12 +2,11 @@
 #include "link_session.hpp"
 #include "graphics_package.hpp"
 #include "key_input.hpp"
+#include "menus.hpp"
 
 extern "C" {
 #include "core.h"
 #include "actor.h"
-#include "menus.h"
-#include "graphics_package.h"
 #include "objects.h"
 #include "text.h"
 #include "link.h"

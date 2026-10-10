@@ -11,10 +11,9 @@
  *   for codegen keeps it as an asm-label alias with a `codegen:` comment.
  *
  * The bosses and vehicles built on ActorSelf (actor_self.hpp) are
- * declared in bosses.h and vehicle.h. */
+ * declared in bosses.h and vehicle.hpp. */
 
 #include "core.h"
-#include "actor_self.h"
 #include "constants/categories.h"
 
 /* The entity flags byte at +0x0C and the one after it, +0x0D (Entity's
@@ -50,7 +49,7 @@ struct anim_table_record;
 struct category_vtable;
 struct sub_effect_record;
 
-/* A level spawn record as SpawnActor and SpawnJetpackActor (vehicle.h)
+/* A level spawn record as SpawnActor and SpawnJetpackActor (vehicle.hpp)
  * take it: the actor kinds, then the position in tile units (<< 8 to Q8).
  * It is the tail of a spawn table's struct sub_effect_record (actor_anim.h)
  * from its `kind` on, and the next record's `depth` (actor_factory.cpp's
@@ -75,7 +74,7 @@ struct actor_spawn {
  * class to C++. */
 struct ActorSelf;
 
-/* src/actor/actor_category_hooks.cpp (the rest: vehicle.h) */
+/* src/actor/actor_category_hooks.cpp (the rest: vehicle.hpp) */
 extern s32 IsTouchingPlayer(struct ActorSelf *self);
 
 /* src/actor/actor_spawn_collected.cpp */

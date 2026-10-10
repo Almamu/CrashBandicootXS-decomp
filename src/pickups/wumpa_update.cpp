@@ -11,7 +11,6 @@ extern "C" {
 #include "gfx.h"
 #include "level.h"
 #include "globals.h"
-#include "player.h"
 }
 
 /* The wumpa's pick-up check, pick-up, update and spawn (#664,

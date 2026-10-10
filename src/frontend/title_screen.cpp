@@ -2,10 +2,10 @@
 #include "frontend.hpp"
 #include "audio.hpp"
 #include "key_input.hpp"
+#include "graphics_package.hpp"
 
 extern "C" {
 #include "gba/dma_macros.h"
-#include "graphics_package.h"
 #include "gba/io_reg.h"
 #include "text.h"
 #include "util.h"

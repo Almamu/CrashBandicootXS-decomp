@@ -1,6 +1,7 @@
+#include "menus.hpp"
+
 extern "C" {
 #include "core.h"
-#include "menus.h"
 #include "gfx.h"
 }
 

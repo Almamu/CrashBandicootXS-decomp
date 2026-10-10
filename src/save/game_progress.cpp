@@ -5,11 +5,11 @@
  * both were old_agbcc, as this file is. */
 
 #include "game_progress.hpp"
+#include "menus.hpp"
 
 extern "C" {
 #include "core.h"
 #include <libgcc.h>
-#include "menus.h"
 #include "level.h"
 #include "globals.h"
 }

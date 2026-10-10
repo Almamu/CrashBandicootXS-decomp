@@ -1,6 +1,7 @@
+#include "vehicle.hpp"
+
 extern "C" {
 #include "core.h"
-#include "vehicle.h"
 }
 
 /*

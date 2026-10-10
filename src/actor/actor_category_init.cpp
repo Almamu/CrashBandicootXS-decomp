@@ -2,6 +2,8 @@
 #include "hud.hpp"
 #include "level_state.hpp"
 #include "key_input.hpp"
+#include "menus.hpp"
+#include "vehicle.hpp"
 
 extern "C" {
 #include "core.h"
@@ -9,10 +11,8 @@ extern "C" {
 #include "gba/dma_macros.h"
 #include "system.h"
 #include "util.h"
-#include "menus.h"
 #include "actor.h"
 #include "bosses.h"
-#include "vehicle.h"
 #include "gfx.h"
 #include "level.h"
 #include "globals.h"

@@ -4,7 +4,6 @@
 extern "C" {
 #include "util.h"
 #include "globals.h"
-#include "player.h"
 }
 
 /* Crate::PlayerAnimWouldTouch (#664, include/crate.hpp). */

@@ -16,7 +16,6 @@ extern "C" {
 #include "globals.h"
 #include <agb_syscall.h>
 #include "system.h"
-#include "player.h"
 }
 
 /* Sprite's methods (#664, include/sprite_obj.hpp): the virtual ones, the

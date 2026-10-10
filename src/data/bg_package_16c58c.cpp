@@ -1,7 +1,8 @@
+#include "graphics_package.hpp"
+#include "menus.hpp"
+
 extern "C" {
 #include "core.h"
-#include "menus.h"
-#include "graphics_package.h"
 }
 
 /*

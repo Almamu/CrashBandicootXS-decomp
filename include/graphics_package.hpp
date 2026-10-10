@@ -2,15 +2,27 @@
 #define GUARD_GRAPHICS_PACKAGE_HPP
 
 /* The BG setup and the sprite box as C++ (#753; src/gfx/graphics_package.cpp
- * and scaled_sprite.cpp).
- * Neither has a vtable. cxx_symbols.txt maps the methods' mangled names
+ * and scaled_sprite.cpp), and the graphics package they load.
+ * Neither class has a vtable. cxx_symbols.txt maps the methods' mangled names
  * onto their C names. */
 
 extern "C" {
 #include "core.h"
 #include "gfx.h"
-#include "graphics_package.h"
 }
+
+/* A 5-field {width, height, paletteAsset, tileAsset, mapAsset} asset
+ * package descriptor, read by `LoadGraphicsPackage`
+ * (src/gfx/graphics_package.cpp) and the level/obj loaders
+ * (`LoadTitleScreenBg`/`LoadTitleScreenObjTiles`, src/frontend/title_screen.cpp).
+ * The src/data tables define the packages. */
+struct bg_package {
+    u32 width;
+    u32 height;
+    void *paletteAsset;
+    void *tileAsset;
+    void *mapAsset;
+};
 
 /* REG_BGnCNT as bitfields. As a stack variable it is 4 bytes (agbcc pads
  * every union to a word); level_select.hpp's `ZoomBg` holds

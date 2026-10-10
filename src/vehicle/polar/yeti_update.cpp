@@ -7,7 +7,6 @@ extern "C" {
 #include "actor_anim.h"
 #include "system.h"
 #include "actor.h"
-#include "vehicle.h"
 #include "globals.h"
 }
 

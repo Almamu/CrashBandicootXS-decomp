@@ -8,10 +8,11 @@
 #include "frontend.hpp"
 #include "audio.hpp"
 #include "key_input.hpp"
+#include "graphics_package.hpp"
+#include "menus.hpp"
 
 extern "C" {
 #include "gba/io_reg.h"
-#include "graphics_package.h"
 #include "memory.h"
 #include "globals.h"
 #include "text.h"

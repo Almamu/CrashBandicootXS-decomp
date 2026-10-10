@@ -11,6 +11,7 @@
 #include "audio.hpp"
 #include "key_input.hpp"
 #include "camera.hpp"
+#include "menus.hpp"
 
 extern "C" {
 #include "core.h"
@@ -24,9 +25,6 @@ extern "C" {
 #include "globals.h"
 #include "util.h"
 #include "system.h"
-#include "menus.h"
-#include "player.h"
-#include "actor_self.h"
 #include "sprite_bank.h"
 }
 

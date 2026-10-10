@@ -8,7 +8,6 @@ extern "C" {
 #include "memory.h"
 #include "objects.h"
 #include "globals.h"
-#include "player.h"
 }
 
 /* The crate's overlap test, stack links, constructor and destructor

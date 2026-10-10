@@ -4,7 +4,6 @@
 #include <libgcc.h>
 #include "util.h"
 #include "crates.h"
-#include "player.h"
 #include "bosses.h"
 #include "gfx.h"
 #include "objects.h"

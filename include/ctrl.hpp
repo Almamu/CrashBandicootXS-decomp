@@ -15,7 +15,6 @@
 extern "C" {
 #include "core.h"
 #include "objects.h"
-#include "player.h"
 #include "bosses.h"
 }
 

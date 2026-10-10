@@ -1,6 +1,7 @@
+#include "menus.hpp"
+
 extern "C" {
 #include "core.h"
-#include "menus.h"
 }
 
 /*
@@ -8,7 +9,7 @@ extern "C" {
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* `struct vec2` (menus.h) positions and animation ids of the level-select
+/* `struct vec2` (aabb.h) positions and animation ids of the level-select
  * screens: level_select.cpp (InitLevelSelect, DrawLevelSelectTime, LoadLevelSelectRecord,
  * InitLaunchPad, now launch_pad.cpp) and level_select_pages.cpp (its level menu's item positions
  * and skins, RefreshLevelSelectPage). */
