@@ -85,7 +85,7 @@ extern void SpawnAirshipFireball(s32 x, s32 y, s32 z);
  * hovercraft's variables are Airship's and Hovercraft's static members
  * (include/airship.hpp, include/hovercraft.hpp; #772). */
 
-/* src/data/boss_pictures_167ad4.c: the two boss pictures, a {cols, rows}
+/* src/data/boss_pictures_167ad4.cpp: the two boss pictures, a {cols, rows}
  * head, then the frames (docs/data.md "Boss pictures"). Each picture's struct is sized by its generated picture
  * header (build/.../boss_pictures/<addr>.h), so it is only complete in the
  * data file; the code reads the head through BOSS_PICTURE_SIZE, and finds
@@ -127,7 +127,7 @@ extern u16 *gFlashObjPalette;
 /* src/data/player_pmf_16c250.cpp */
 extern const struct entry_set gMegaMixMotionSet;
 
-/* The {a, b} motion record index pairs (src/data/entry_set_16c418.c):
+/* The {a, b} motion record index pairs (src/data/entry_set_16c418.cpp):
  * CreateDingodile and friends index gDingodileMotionRecords with entries
  * 0-3; 4-7 are gPlatformMoverMotionSet's (objects.h). */
 extern const u32 gDingodileMotionEntries[8][2];

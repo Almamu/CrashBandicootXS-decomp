@@ -149,7 +149,7 @@ private:
 
     /* The ROM tables (src/data): attacks, box and keyframes are in
      * singleton_kind_17c460.cpp, palette and picture in
-     * boss_pictures_167ad4.c. */
+     * boss_pictures_167ad4.cpp. */
     static const struct hovercraft_attack attacks[2];   // gHovercraftAttacks
     static const struct anim_box box;                   // gHovercraftBox
     static const struct anim_frame_record keyframes[1]; // gHovercraftKeyframes

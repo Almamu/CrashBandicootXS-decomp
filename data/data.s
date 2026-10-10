@@ -1,6 +1,6 @@
 .section .rodata
 
-@ gCategoryFamily0CellAnim..gCategory0SpawnTable: src/data/cell_anim_03b8b0.c
+@ gCategoryFamily0CellAnim..gCategory0SpawnTable: src/data/cell_anim_03b8b0.cpp
 
 .section .rodata.080B2120
 
@@ -9,11 +9,11 @@ gPolarSpriteSheet:
 	@ LZ77 compressed data (unidentified) (213064 bytes decompressed)
 	.incbin "build/crashbandicootxs/graphics/unknown/00_0b2120.bin.lz"
 
-@ gCategory1SpawnTable..gCategory2SpawnTable: src/data/sub_effect_0c0c38.c
+@ gCategory1SpawnTable..gCategory2SpawnTable: src/data/sub_effect_0c0c38.cpp
 
-@ gPolarPlayerRleFrames..gYetiRleFrames: src/data/rle_sprites_0c2758.c
+@ gPolarPlayerRleFrames..gYetiRleFrames: src/data/rle_sprites_0c2758.cpp
 
-@ gCategoryFamily1CellAnim..gCategory3SpawnTable: src/data/cell_anim_0ff1b0.c
+@ gCategoryFamily1CellAnim..gCategory3SpawnTable: src/data/cell_anim_0ff1b0.cpp
 
 .section .rodata.0814174C
 
@@ -22,13 +22,13 @@ gJetpackSpriteSheet:
 	@ LZ77 compressed data (unidentified) (207124 bytes decompressed)
 	.incbin "build/crashbandicootxs/graphics/unknown/01_14174c.bin.lz"
 
-@ gCategory4BgPicture..gCategory6SpawnTable: src/data/bg_picture_151ac4.c
+@ gCategory4BgPicture..gCategory6SpawnTable: src/data/bg_picture_151ac4.cpp
 
-@ gJetpackPlayerRleFrames: src/data/rle_sprites_15a050.c
+@ gJetpackPlayerRleFrames: src/data/rle_sprites_15a050.cpp
 
-@ gAirshipPalette..gSineTable: src/data/boss_pictures_167ad4.c
+@ gAirshipPalette..gSineTable: src/data/boss_pictures_167ad4.cpp
 
-@ gSongTable: src/data/song_table_16aa20.c
+@ gSongTable: src/data/song_table_16aa20.cpp
 
 .section .rodata.0816AA6C
 
@@ -42,7 +42,7 @@ gSfxTable:
 	@ Built from sound/sfx_table.json by tools/sfx_table.py.
 	.incbin "build/crashbandicootxs/sound/sfx_table.bin"
 
-@ gCrc16Table..gCrash3LinkText: src/data/link_crc_16af10.c
+@ gCrc16Table..gCrash3LinkText: src/data/link_crc_16af10.cpp
 
 @ gMenuCursorText..gPauseTimeTrialIconPos: src/data/menu_tables_16b138.cpp
 
@@ -50,31 +50,31 @@ gSfxTable:
 
 @ gPauseMenuRows..gPauseMenuPalette: src/data/pause_rows_16b298.cpp
 
-@ gObjPieceWidths..gEmptySpritePoint: src/data/obj_sizes_16b2e0.c
+@ gObjPieceWidths..gEmptySpritePoint: src/data/obj_sizes_16b2e0.cpp
 
-@ gCtrlMotionRecords..gInputCtrlMotionRecords: src/data/motion_records_16b304.c
+@ gCtrlMotionRecords..gInputCtrlMotionRecords: src/data/motion_records_16b304.cpp
 
-@ gActionCtrlMotionSet..gSwimCtrlMotionSet: src/data/entry_set_16b92c.c
+@ gActionCtrlMotionSet..gSwimCtrlMotionSet: src/data/entry_set_16b92c.cpp
 
-@ gInputCtrlMotionSet..gInputCtrlMotionEntries: src/data/entry_set_16b93c.c
+@ gInputCtrlMotionSet..gInputCtrlMotionEntries: src/data/entry_set_16b93c.cpp
 
-@ gEnemyDefaultAnimMap..gSaucerLabAssistantAnimMap: src/data/popup_tables_16b98c.c
+@ gEnemyDefaultAnimMap..gSaucerLabAssistantAnimMap: src/data/popup_tables_16b98c.cpp
 
-@ gEnemyCtrlMotionSet..gWumpaHopWidths: src/data/object_tables_16bb6c.c
+@ gEnemyCtrlMotionSet..gWumpaHopWidths: src/data/object_tables_16bb6c.cpp
 
 @ gActionCtrlStateTable..gSwimCtrlModeAnimRows: src/data/action_table_16bf20.cpp
 
-@ gSwimCtrlTurnSpeeds..gSwimCtrlModeLevelAnims: src/data/speed_table_16c090.c
+@ gSwimCtrlTurnSpeeds..gSwimCtrlModeLevelAnims: src/data/speed_table_16c090.cpp
 
 @ gSwimCtrlStateFuncs..gMegaMixMotionSet: src/data/player_pmf_16c250.cpp
 
-@ gMegaMixMotionRecords..gDingodileStalactiteFallMotion: src/data/actor_tables_16c2d8.c
+@ gMegaMixMotionRecords..gDingodileStalactiteFallMotion: src/data/actor_tables_16c2d8.cpp
 
-@ gDingodileMotionEntries..gPlatformMoverMotionSet: src/data/entry_set_16c418.c
+@ gDingodileMotionEntries..gPlatformMoverMotionSet: src/data/entry_set_16c418.cpp
 
-@ gPlatformMoverMotionRecords: src/data/velocity_16c460.c
+@ gPlatformMoverMotionRecords: src/data/velocity_16c460.cpp
 
-@ gMenuSkyBg: src/data/bg_package_16c484.c
+@ gMenuSkyBg: src/data/bg_package_16c484.cpp
 
 @ gLevelSelectWorldPos..gLevelSelectPalette: src/data/map_tables_16c498.cpp
 
@@ -82,45 +82,45 @@ gSfxTable:
 
 @ gZoomBgSlotOffsets..gObjSizeHeights: src/data/map_tables_16c5f0.cpp
 
-@ gEntitySpawnFuncs: src/data/dispatch_table_16c6a4.c
+@ gEntitySpawnFuncs: src/data/dispatch_table_16c6a4.cpp
 
-@ gThemePaletteCycle2..gThemeMusicCues: src/data/level_table_16c814.c
+@ gThemePaletteCycle2..gThemeMusicCues: src/data/level_table_16c814.cpp
 
 @ gCutsceneTextEnglish..gCutscene10DutchPage5: src/data/cutscenes_16d1c8.cpp, cutscene_text_16d4d8.c, cutscene_slides_16e064.cpp, cutscene_text_16e8a4.c
 
-@ gTerrainTypes..0x08172CD4 (terrain types): src/data/terrain_1725a8.c
+@ gTerrainTypes..0x08172CD4 (terrain types): src/data/terrain_1725a8.cpp
 
 @ 0x08172CD4..0x08174BE0 (the UI text of six languages): src/data/ui_text_172cd4.c
 
-@ gHudPartAnims..gLargeFontGlyphs: src/data/hud_fonts_174be0.c
+@ gHudPartAnims..gLargeFontGlyphs: src/data/hud_fonts_174be0.cpp
 
-@ gActorCategories..gActorCategoryVtables: src/data/actor_category_175558.c
+@ gActorCategories..gActorCategoryVtables: src/data/actor_category_175558.cpp
 
-@ gActorPaletteCycleFrames..gActorPaletteCycleTargetFrames: src/data/palette_cycle_175760.c
+@ gActorPaletteCycleFrames..gActorPaletteCycleTargetFrames: src/data/palette_cycle_175760.cpp
 
-@ gPolarCategoryPalette..0x0817A6B8 (categories 0-2 family data): src/data/anim_family_178f80.c
+@ gPolarCategoryPalette..0x0817A6B8 (categories 0-2 family data): src/data/anim_family_178f80.cpp
 
 @ gPolarPlayerStateFuncs: src/data/actor_pmf_17a6b8.cpp
 
-@ gPolarPlayerShockPalette..gYetiChargeParams: src/data/actor_tables_17a728.c
+@ gPolarPlayerShockPalette..gYetiChargeParams: src/data/actor_tables_17a728.cpp
 
 @ gYetiStateFuncs: src/data/actor_state_fn_17a840.cpp
 
-@ gYetiKeyframes: src/data/anim_frames_17a850.c
+@ gYetiKeyframes: src/data/anim_frames_17a850.cpp
 
-@ gYetiFrames: src/data/frame_table_17a880.c
+@ gYetiFrames: src/data/frame_table_17a880.cpp
 
-@ gYetiPalette..0x0817C1C0 (categories 3-6 family data): src/data/anim_family_17aa6c.c
+@ gYetiPalette..0x0817C1C0 (categories 3-6 family data): src/data/anim_family_17aa6c.cpp
 
 @ gJetpackPlayerStateFuncs: src/data/actor_pmf_17c1c0.cpp
 
-@ gJetpackFlashPalettes: src/data/palette_strip_17c200.c
+@ gJetpackFlashPalettes: src/data/palette_strip_17c200.cpp
 
 @ gJetpackPlaneStateFuncs..gJetpackBomberStateFuncs: src/data/actor_pmf_17c260.cpp
 
 @ gAirshipFireballStateFuncs: src/data/actor_pmf_17c2b8.cpp
 
-@ gAirshipAttacks..gAirshipKeyframes: src/data/weapon_kind_17c2d0.c
+@ gAirshipAttacks..gAirshipKeyframes: src/data/weapon_kind_17c2d0.cpp
 
 @ gAirshipStateFuncs: src/data/actor_state_17c3fc.cpp
 
@@ -128,11 +128,11 @@ gSfxTable:
 
 @ gJetpackBalloonCrateStateFuncs: src/data/actor_pmf_17c42c.cpp
 
-@ gJetpackRocketBox: src/data/actor_box_17c444.c
+@ gJetpackRocketBox: src/data/actor_box_17c444.cpp
 
 @ gHovercraftFireballStateFuncs: src/data/actor_pmf_17c450.cpp
 
-@ gHovercraftAttacks..gHovercraftKeyframes: src/data/singleton_kind_17c460.c
+@ gHovercraftAttacks..gHovercraftKeyframes: src/data/singleton_kind_17c460.cpp
 
 @ gHovercraftStateFuncs..gHovercraftLauncherStateFuncs: src/data/actor_state_17c4c8.cpp
 
@@ -156,13 +156,13 @@ gSfxTable:
 
 @ gLanguageSelectPalette3..gUnderwaterBg0Tiles: src/data/level_tilesets_17e78c.cpp
 
-@ 0x0824B638..0x08270F08 (33 rooms' level data): src/data/level_rooms_24b638.c
+@ 0x0824B638..0x08270F08 (33 rooms' level data): src/data/level_rooms_24b638.cpp
 @ gSewerBg0Tiles..gSpaceBg0Tiles: src/data/level_tilesets_270f08.cpp
-@ 0x082B91D0..0x082BF120 (8 rooms' level data): src/data/level_rooms_2b91d0.c
-@ gSpriteBank00Tiles..gObjPalettes: src/data/sprite_tiles_2bf120.c
+@ 0x082B91D0..0x082BF120 (8 rooms' level data): src/data/level_rooms_2b91d0.cpp
+@ gSpriteBank00Tiles..gObjPalettes: src/data/sprite_tiles_2bf120.cpp
 
-@ gSpriteBankTable..gSpriteBank55: src/data/sprite_banks_4a5600.c,
-@ sprite_banks_4b0ae0.c, sprite_banks_4b414c.c, sprite_banks_4b9d7c.c
+@ gSpriteBankTable..gSpriteBank55: src/data/sprite_banks_4a5600.cpp,
+@ sprite_banks_4b0ae0.cpp, sprite_banks_4b414c.cpp, sprite_banks_4b9d7c.cpp
 
 .section .rodata.084C0006
 
@@ -222,7 +222,7 @@ gLargeFontTiles:
 
 @ 0x085A9EEC..0x085A9F70 (EEPROM library data): lib/agb_eeprom/data/eeprom_5a9eec.c
 
-@ 0x085A9F70..0x0861BADC (the 24 cutscene pictures): src/data/cutscene_pictures_5a9f70.c
+@ 0x085A9F70..0x0861BADC (the 24 cutscene pictures): src/data/cutscene_pictures_5a9f70.cpp
 
 .section .rodata.0861BADC
 
@@ -963,7 +963,8 @@ gRoom33Asset:
 	@ raw level asset of room33_25233c (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room33_25233c/asset.bin"
 
-@ gEntityVtable..gLogoActorVtable: src/data/entity_vtables_7e3bec.c
+@ gEntityVtable..gLogoActorVtable: the C++ classes' vtables, each object's
+@ .gnu.linkonce.d._vt.* section placed by ldscript.txt
 
 @ 0x087E55E4..0x087E5FCC: the IWRAM image (asm/intr_main.s, src/iwram/),
 @ linked to run at 0x03000000 - the `iwram` section in ldscript.txt.

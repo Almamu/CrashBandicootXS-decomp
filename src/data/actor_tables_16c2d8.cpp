@@ -71,7 +71,7 @@ const s32 gDingodileStopXRightHurt[6] = {
 
 /* Motion records (`struct speed_ramp`, objects.h): UpdateDingodileShark
  * (dingodile.cpp), and StartDingodileMotion (dingodile_create.cpp) through the
- * entries of entry_set_16c418.c. */
+ * entries of entry_set_16c418.cpp. */
 const struct speed_ramp gDingodileMotionRecords[4] = {
     { 0, 0, 0 },
     { 0, 180, 300 },

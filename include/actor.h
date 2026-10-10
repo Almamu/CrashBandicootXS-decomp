@@ -256,7 +256,7 @@ extern void (*gDrawMirroredTilemapFunc)(u8 *pal, s32 lowBlock, s32 w, s32 h);
 extern void (*gHeapSortActorsByKeyFunc)(s32 n, class ActorSelf **list);
 #endif
 
-/* src/data/palette_cycle_175760.c */
+/* src/data/palette_cycle_175760.cpp */
 extern const u16 gActorPaletteCycleFrames[32][14 * 16];
 extern const s32 gActorPaletteCycleStartFrames[4];
 extern const s32 gActorPaletteCycleTargetFrames[4];

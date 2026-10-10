@@ -16,7 +16,7 @@ extern "C" {
  * ldscript.txt - see docs/data.md, "Category families".
  *
  * Record 0's table_B points at compressed frames of set C
- * (rle_sprites_15a050.c), the others' at frames of the framed sheet
+ * (rle_sprites_15a050.cpp), the others' at frames of the framed sheet
  * graphics/unknown/01_14174c/. Both are written with the offsets the
  * build generates.
  */

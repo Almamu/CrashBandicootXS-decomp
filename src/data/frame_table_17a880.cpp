@@ -17,7 +17,7 @@ extern const u8 gYetiRleFrames[];
 /* Yeti::frames (include/yeti.hpp): the yeti animation's frame table (its
  * `frameOffsets`, set up by CreateYeti in yeti.cpp next to the
  * gYetiKeyframes animation records): 123 pointers to compressed
- * frames of gYetiRleFrames (rle_sprites_0c2758.c). The offsets come
+ * frames of gYetiRleFrames (rle_sprites_0c2758.cpp). The offsets come
  * from the header tools/rle_sprites.py generates, so they follow edits to
  * graphics/rle_sprites/0da1d8_frames.png. */
 const u8 *const Yeti::frames[123] = {
