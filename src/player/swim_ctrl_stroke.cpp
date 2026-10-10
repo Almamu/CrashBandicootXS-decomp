@@ -21,14 +21,14 @@ extern "C" {
 void SwimCtrl::Reset()
 {
     unk_26 = 0;
-    state = 0;
+    state = SWIM_STATE_IDLE;
     motionX = 0;
     motionY = 0;
     motionXPending = 1;
     motionYPending = 1;
     unk_14 = 0;
     target = 0;
-    mode = 0;
+    mode = SWIM_MODE_IDLE;
     spinCooldown = 0;
     idleTimer = 0;
     repeat = 0;
@@ -42,11 +42,11 @@ void SwimCtrl::Reset()
  * motion entries 0 pending. */
 void SwimCtrl::Restart()
 {
-    SetState(0, 0, 0, 0);
+    SetState(SWIM_STATE_IDLE, SWIM_MODE_IDLE, 0, 0);
     idleTimer = 0;
     repeat = 0;
     tilt = 6;
-    mode = 0;
+    mode = SWIM_MODE_IDLE;
     gPlayer->bounce = 0;
     motionXPending = 1;
     motionX = 0;
@@ -84,10 +84,10 @@ void SwimCtrl::StartStroke()
     Player *t;
 
     deadline = gRoomFrameCount + 16;
-    if (state == 4) {
+    if (state == SWIM_STATE_TURN) {
         struct speed_table tbl = gSwimCtrlTurnSpeeds;
 
-        if (mode == 6)
+        if (mode == SWIM_MODE_TURN_LEFT)
             target->speedX = tbl.v[target->frame];
         else
             target->speedX = -tbl.v[target->frame];
@@ -96,7 +96,7 @@ void SwimCtrl::StartStroke()
 
     t = target;
     t->StartAnim(t->tag);
-    SetState(2, 2, CTRL_KEEP, CTRL_KEEP);
+    SetState(SWIM_STATE_STROKE, SWIM_MODE_STROKE, CTRL_KEEP, CTRL_KEEP);
 
     switch (tilt) {
     case 1:
@@ -183,19 +183,19 @@ void SwimCtrl::StartSpin()
     if ((target->hitAxes & 3) && gInput->GetDpadDirection() <= 2)
         flag = 1;
 
-    if (state == 4) {
+    if (state == SWIM_STATE_TURN) {
         if (flag) {
             target->speedX = 0;
         } else {
             s32 v = speed;
-            if (mode == 7)
+            if (mode == SWIM_MODE_SPIN_TURN_LEFT)
                 v = -speed;
             target->speedX = v;
         }
         return;
     }
 
-    SetState(3, 3, 0, 24);
+    SetState(SWIM_STATE_SPIN, SWIM_MODE_SPIN, 0, 24);
     switch (tilt) {
     case 6:
         if (!flag) {
@@ -257,11 +257,11 @@ void SwimCtrl::ApplySwimDrift()
     u8 valA;
     u8 dir;
 
-    if (state == 2) {
+    if (state == SWIM_STATE_STROKE) {
         mag = 300;
         valB = 20;
         valA = 30;
-    } else if (state == 3) {
+    } else if (state == SWIM_STATE_SPIN) {
         mag = 300;
         valB = 20;
         valA = 32;

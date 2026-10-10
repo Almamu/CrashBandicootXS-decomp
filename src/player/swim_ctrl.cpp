@@ -80,7 +80,7 @@ static inline void SetStateNow(SwimCtrl *self, s32 newState, s32 newMode, s32 ne
 /* the out-of-line copy is StartSwim */
 static inline void ResetMode(SwimCtrl *self)
 {
-    self->SetState(1, 1, CTRL_KEEP, 0);
+    self->SetState(SWIM_STATE_SWIM, SWIM_MODE_SWIM, CTRL_KEEP, 0);
 }
 
 /* The facing tests: as C++, a test of the unsigned `mirrorFlags.mirrorX`
@@ -113,24 +113,24 @@ void SwimCtrl::CheckTurn()
     u8 dir = gInput->GetDpadDirection();
 
     switch (state) {
-    case 0 ... 3:
-    case 5 ... 6:
+    case SWIM_STATE_IDLE ... SWIM_STATE_SPIN:
+    case SWIM_STATE_STOP ... SWIM_STATE_SWIM_START:
         target->mirrorFlags.mirrorY = 0;
         if (target->mirrorBits.flipX < 0 && (dir == 4 || dir == 6 || dir == 8)) {
             target->mirrorFlags.mirrorX = 0;
-            if (state != 3) {
-                SetState(4, 4, CTRL_KEEP, CTRL_KEEP);
+            if (state != SWIM_STATE_SPIN) {
+                SetState(SWIM_STATE_TURN, SWIM_MODE_TURN_RIGHT, CTRL_KEEP, CTRL_KEEP);
                 timerMax = 0;
             } else {
-                SetState(4, 5, CTRL_KEEP, CTRL_KEEP);
+                SetState(SWIM_STATE_TURN, SWIM_MODE_SPIN_TURN_RIGHT, CTRL_KEEP, CTRL_KEEP);
             }
             unk_26 = 0;
         } else if (!(target->mirrorFlags.mirrorX & 1) && (dir == 3 || dir == 5 || dir == 7)) {
-            if (state != 3) {
-                SetState(4, 6, CTRL_KEEP, CTRL_KEEP);
+            if (state != SWIM_STATE_SPIN) {
+                SetState(SWIM_STATE_TURN, SWIM_MODE_TURN_LEFT, CTRL_KEEP, CTRL_KEEP);
                 timerMax = 0;
             } else {
-                SetState(4, 7, CTRL_KEEP, CTRL_KEEP);
+                SetState(SWIM_STATE_TURN, SWIM_MODE_SPIN_TURN_LEFT, CTRL_KEEP, CTRL_KEEP);
             }
             unk_26 = 0;
         }
@@ -178,7 +178,7 @@ void SwimCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
 void SwimCtrl::KillPlayer(s32 anim)
 {
     gAudioContext->PlaySfx(SFX_PLAYER_HURT, 0x100);
-    SetMode(7);
+    SetMode(SWIM_STATE_DEAD);
     SetTargetAnim(target, anim);
     target->f.b.collides = 0;
     target->f.b.vulnerable = 0;
@@ -258,6 +258,10 @@ static inline void ApplyLevel(SwimCtrl *self)
         s32 frame;
         s32 f34;
 
+        /* The labels stay numbers (#843): `mode` is a SWIM_MODE_* (0-7),
+         * so only 7 (SPIN_TURN_LEFT) can match. What 14-18, 23, 33-37
+         * and 41 were meant to be isn't known (they aren't swim modes),
+         * and the ROM's jump table has them all. */
         switch (self->mode) {
         case 7:
         case 14 ... 18:
@@ -278,7 +282,7 @@ static inline void ApplyLevel(SwimCtrl *self)
 
 void SwimCtrl::Update(MovingSprite *)
 {
-    if (state == 7) {
+    if (state == SWIM_STATE_DEAD) {
         (this->*stateFuncs[state])();
     } else {
         u32 keys;
@@ -291,7 +295,7 @@ void SwimCtrl::Update(MovingSprite *)
         keys = gKeys.all; /* the whole word, held keys low */
         dir = inp->GetDpadDirection();
 
-        if (!(keys & (DPAD_UP | DPAD_DOWN)) && state != 2) {
+        if (!(keys & (DPAD_UP | DPAD_DOWN)) && state != SWIM_STATE_STROKE) {
             if (repeat && tilt != 6)
                 repeat = repeat - 1;
             else
@@ -305,7 +309,7 @@ void SwimCtrl::Update(MovingSprite *)
                     repeat = 3;
                 ApplyLevel(this);
             }
-        } else if (state != 2 || dir != 0) {
+        } else if (state != SWIM_STATE_STROKE || dir != 0) {
             if (repeat == 0 || --repeat == 0) {
                 repeat = 3;
                 if (keys & DPAD_UP) {
@@ -347,7 +351,8 @@ void SwimCtrl::Update(MovingSprite *)
         ApplySwimDrift();
     }
 
-    if (state == 3 || mode == 5 || mode == 7)
+    if (state == SWIM_STATE_SPIN || mode == SWIM_MODE_SPIN_TURN_RIGHT ||
+        mode == SWIM_MODE_SPIN_TURN_LEFT)
         target->kind = EVENT_ATTACK_SPIN;
     else
         target->kind = EVENT_HIT;
@@ -393,7 +398,7 @@ void SwimCtrl::StateIdle()
     } else if (k.pressed & (B_BUTTON | R_BUTTON)) {
         StartSpin();
     } else if (dir) {
-        SetMode(6);
+        SetMode(SWIM_STATE_SWIM_START);
         SetTargetAnim(target, 0x1D);
         QueueNowX(this, 0xC);
     }
@@ -414,7 +419,7 @@ void SwimCtrl::StateSwim()
     if (k.pressed & (B_BUTTON | R_BUTTON))
         StartSpin();
     if (dir == 0 && tilt == 6) {
-        SetMode(5);
+        SetMode(SWIM_STATE_STOP);
         SetTargetAnim(target, 0x20);
         mode = dir;
     }
@@ -439,7 +444,7 @@ void SwimCtrl::StateStroke()
         else if (dir)
             ResetMode(this);
         else if (tilt == 6) {
-            SetMode(5);
+            SetMode(SWIM_STATE_STOP);
             SetTargetAnim(target, 0x20);
         } else
             ResetMode(this);
@@ -473,16 +478,16 @@ void SwimCtrl::StateTurn()
         spinCooldown = 0xC;
         timerMax = 0;
         switch (mode) {
-        case 7:
+        case SWIM_MODE_SPIN_TURN_LEFT:
             frame = target->frame;
-            mode = 6;
-            SetTargetAnim(target, gSwimCtrlModeAnimRows[6][tilt].anim);
+            mode = SWIM_MODE_TURN_LEFT;
+            SetTargetAnim(target, gSwimCtrlModeAnimRows[SWIM_MODE_TURN_LEFT][tilt].anim);
             ClampFrame(target, frame);
             break;
-        case 5:
+        case SWIM_MODE_SPIN_TURN_RIGHT:
             frame = target->frame;
-            mode = 4;
-            SetTargetAnim(target, gSwimCtrlModeAnimRows[4][tilt].anim);
+            mode = SWIM_MODE_TURN_RIGHT;
+            SetTargetAnim(target, gSwimCtrlModeAnimRows[SWIM_MODE_TURN_RIGHT][tilt].anim);
             ClampFrame(target, frame);
             break;
         }
@@ -493,10 +498,10 @@ void SwimCtrl::StateTurn()
         timer = 0;
         timerMax = 0x18;
         frame = target->frame;
-        if (mode == 4)
-            mode = 5;
+        if (mode == SWIM_MODE_TURN_RIGHT)
+            mode = SWIM_MODE_SPIN_TURN_RIGHT;
         else
-            mode = 7;
+            mode = SWIM_MODE_SPIN_TURN_LEFT;
         SetTargetAnim(target, gSwimCtrlModeAnimRows[mode][tilt].anim);
         StartSpin();
         ClampFrame(target, frame);
@@ -507,23 +512,23 @@ void SwimCtrl::StateTurn()
     if (target->animDone == 0)
         return;
     switch (mode) {
-    case 4:
+    case SWIM_MODE_TURN_RIGHT:
         if (target->mirrorBits.flipX < 0)
             target->mirrorFlags.mirrorX = 0;
         ResetMode(this);
         break;
-    case 6:
+    case SWIM_MODE_TURN_LEFT:
         target->SetFlipX(1);
         ResetMode(this);
         break;
-    case 5:
+    case SWIM_MODE_SPIN_TURN_RIGHT:
         if (target->mirrorBits.flipX < 0)
             target->mirrorFlags.mirrorX = 0;
-        SetStateNow(this, 3, 3, CTRL_KEEP, CTRL_KEEP);
+        SetStateNow(this, SWIM_STATE_SPIN, SWIM_MODE_SPIN, CTRL_KEEP, CTRL_KEEP);
         break;
-    case 7:
+    case SWIM_MODE_SPIN_TURN_LEFT:
         target->SetFlipX(1);
-        SetStateNow(this, 3, 3, CTRL_KEEP, CTRL_KEEP);
+        SetStateNow(this, SWIM_STATE_SPIN, SWIM_MODE_SPIN, CTRL_KEEP, CTRL_KEEP);
         break;
     }
     motionXPending = 1;
@@ -547,7 +552,7 @@ void SwimCtrl::StateSwimStart()
         else if (dir)
             ResetMode(this);
         else if (tilt == 6) {
-            SetMode(5);
+            SetMode(SWIM_STATE_STOP);
             SetTargetAnim(target, 0x20);
         }
     }
@@ -567,8 +572,8 @@ void SwimCtrl::StateStop()
         return;
     }
     if (target->animDone) {
-        mode = 0;
-        SetStateNow(this, 0, 0, 0, 0);
+        mode = SWIM_MODE_IDLE;
+        SetStateNow(this, SWIM_STATE_IDLE, SWIM_MODE_IDLE, 0, 0);
     }
     CheckTurn();
 }
@@ -624,7 +629,7 @@ void SwimCtrl::ApplyTilt()
 /* UNUSED */
 void SwimCtrl::StartSwim()
 {
-    SetState(1, 1, CTRL_KEEP, 0);
+    SetState(SWIM_STATE_SWIM, SWIM_MODE_SWIM, CTRL_KEEP, 0);
 }
 
 /* g++ stores gSwimCtrlVtable and calls ~Ctrl (DestroyCtrl). */

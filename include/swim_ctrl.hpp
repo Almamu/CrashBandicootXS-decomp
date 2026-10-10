@@ -14,6 +14,29 @@
  * one. */
 #define CTRL_KEEP 0x7FFFFFFF
 
+/* SwimCtrl's `state` (Ctrl::state; #843, docs/flags/swim_ctrl.md): the
+ * stateFuncs index, the state method Update runs. */
+#define SWIM_STATE_IDLE 0       // StateIdle: floating, a slow bob
+#define SWIM_STATE_SWIM 1       // StateSwim
+#define SWIM_STATE_STROKE 2     // StateStroke: a stroke (A)
+#define SWIM_STATE_SPIN 3       // StateSpin: a spin (B or R)
+#define SWIM_STATE_TURN 4       // StateTurn: turning round (`mode` says which way)
+#define SWIM_STATE_STOP 5       // StateStop: slowing down, back to idle
+#define SWIM_STATE_SWIM_START 6 // StateSwimStart: the D-pad pressed while idle
+#define SWIM_STATE_DEAD 7       // StateDead: KillPlayer
+
+/* SwimCtrl's `mode`: the gSwimCtrlModeAnimRows row, the animation set
+ * the state plays. The turns go towards the side the D-pad points to;
+ * the spin turns are a spin started during a turn. */
+#define SWIM_MODE_IDLE 0
+#define SWIM_MODE_SWIM 1
+#define SWIM_MODE_STROKE 2
+#define SWIM_MODE_SPIN 3
+#define SWIM_MODE_TURN_RIGHT 4      // was facing left (X-mirrored)
+#define SWIM_MODE_SPIN_TURN_RIGHT 5
+#define SWIM_MODE_TURN_LEFT 6       // was facing right
+#define SWIM_MODE_SPIN_TURN_LEFT 7
+
 /* The swim controller (gSwimCtrlVtable; 0x30 bytes): the diving Crash's controller in the room-kind-1
  * (underwater) rooms, where play_room.cpp creates it (`new SwimCtrl`,
  * InitSwimCtrl(OperatorNew(0x30)) in its C). See swim_ctrl.cpp for the
@@ -30,7 +53,7 @@ public:
     u8 repeat;      // 0x20 - D-pad auto-repeat countdown
     // 0x21 - swim direction, 0 (up) .. 6 (level) .. 12 (down); column of gSwimCtrlModeAnimRows
     u8 tilt;
-    // 0x22 - row of gSwimCtrlModeAnimRows (0 idle, 1 swim, 2 stroke, 3 spin, 4-7 turn)
+    // 0x22 - row of gSwimCtrlModeAnimRows (SWIM_MODE_*: idle, swim, stroke, spin, 4 turns)
     u8 mode;
     u8 spinCooldown; // 0x23 - frames until StartSpin is allowed again (set to 12)
     u8 motionX;      // 0x24 - queued X motion entry (animSet->entries[][0])
