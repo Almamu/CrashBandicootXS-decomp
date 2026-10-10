@@ -77,10 +77,10 @@ static inline u32 TargetHit(MovingSprite *t)
 void EnemyCtrl::Update(MovingSprite *)
 {
     switch (state) {
-    case 1:
-    case 12:
+    case ENEMY_STATE_STILL:
+    case ENEMY_STATE_UNK12:
         break;
-    case 17:
+    case ENEMY_STATE_SWOOP:
         if (target->y >= baseY) {
             if (target->speedX == 0 && target->speedY != 0) {
                 SetMotionY(0);
@@ -88,7 +88,7 @@ void EnemyCtrl::Update(MovingSprite *)
                 u8 onScreen;
 
                 if (target->animDone)
-                    SetAnimMode(0);
+                    SetAnimMode(ENEMY_MODE_NORMAL);
                 onScreen = target->IsOnScreen();
                 if (onScreen == 0) {
                     MovingSprite *t;
@@ -110,7 +110,7 @@ void EnemyCtrl::Update(MovingSprite *)
                 gAudioContext->PlaySfx(SFX_UNKNOWN_13, 0x100);
         }
         break;
-    case 5:
+    case ENEMY_STATE_FALL:
         {
             MovingSprite *t = target;
             s32 y = t->y;
@@ -131,7 +131,7 @@ void EnemyCtrl::Update(MovingSprite *)
             }
         }
         break;
-    case 18:
+    case ENEMY_STATE_SAUCER:
         {
             MovingSprite *t = target;
             s32 x = Q8_TO_INT(t->x);
@@ -154,32 +154,32 @@ void EnemyCtrl::Update(MovingSprite *)
              * animDone through a volatile cast). */
             MovingSprite *t = target;
 
-            if (t->animDone && mode == 3) {
+            if (t->animDone && mode == ENEMY_MODE_ATTACK_START) {
                 MovingSprite *pop = LaunchHarmfulEffectPart(0x1d, 0, 0, 0x2b, 0, t);
 
                 popup = pop;
                 pop->kind = EVENT_HIT_ELECTRIC;
                 gAudioContext->PlaySfx(SFX_SAUCER_ATTACK, 0x100);
-            } else if (target->animDone && mode == 5) {
+            } else if (target->animDone && mode == ENEMY_MODE_ATTACK_END) {
                 MarkGone(popup);
                 popup = 0;
             }
         }
         UpdatePatrol();
         UpdateAttackCycle();
-        if (mode == 1) {
+        if (mode == ENEMY_MODE_TURN) {
             MovingSprite *t = target;
             u32 m = t->mirrorFlags.mirrorX;
 
             t->mirrorFlags.mirrorX = !m;
-            SetAnimMode(0);
+            SetAnimMode(ENEMY_MODE_NORMAL);
             SetMotionX(1);
-        } else if (mode == 6) {
+        } else if (mode == ENEMY_MODE_ATTACK_TURN) {
             MovingSprite *t = target;
             u32 m = t->mirrorFlags.mirrorX;
 
             t->mirrorFlags.mirrorX = !m;
-            SetAnimMode(4);
+            SetAnimMode(ENEMY_MODE_ATTACK);
             {
                 MovingSprite *t2 = target;
 
@@ -190,32 +190,32 @@ void EnemyCtrl::Update(MovingSprite *)
         if (popup)
             popup->x = target->x;
         break;
-    case 3:
+    case ENEMY_STATE_TRIGGER:
         UpdateTriggerBox();
         break;
-    case 2:
+    case ENEMY_STATE_PATROL:
         UpdatePatrol();
         break;
-    case 13:
+    case ENEMY_STATE_PATROL_ATTACK:
         UpdatePatrol();
         /* fallthrough */
-    case 4:
+    case ENEMY_STATE_ATTACK_CYCLE:
         UpdateAttackCycle();
         break;
-    case 14:
+    case ENEMY_STATE_ATTACK_OSCILLATE:
         UpdateAttackCycle();
         UpdateOscillateY();
         break;
-    case 6:
+    case ENEMY_STATE_BOB:
         UpdateBob();
         break;
-    case 7:
+    case ENEMY_STATE_FLIP_CYCLE:
         UpdateFlipCycle();
         break;
-    case 8:
+    case ENEMY_STATE_HOP:
         UpdateHop();
         break;
-    case 9:
+    case ENEMY_STATE_HOME_X_OSCILLATE:
         if (!gHomingEnemyXSaved) {
             s32 x = target->x;
 
@@ -240,7 +240,7 @@ void EnemyCtrl::Update(MovingSprite *)
             gHomingEnemyY = y;
         }
         break;
-    case 11:
+    case ENEMY_STATE_HOME:
         UpdateHomingX();
         UpdateHomingY();
         /* A sea mine that touched something explodes: it hits itself. */
@@ -249,13 +249,13 @@ void EnemyCtrl::Update(MovingSprite *)
             gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
         }
         break;
-    case 15:
+    case ENEMY_STATE_PATROL_HOME_Y:
         UpdatePatrol();
         /* fallthrough */
-    case 10:
+    case ENEMY_STATE_HOME_Y:
         UpdateHomingY();
         break;
-    case 16:
+    case ENEMY_STATE_ATTACK_SHOOT:
         UpdateAttackCycle();
         UpdateShooter();
         break;

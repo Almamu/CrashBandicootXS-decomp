@@ -35,18 +35,18 @@ void EnemyCtrl::UpdatePatrol()
     s32 steps;
 
     switch (mode) {
-    case 0:
+    case ENEMY_MODE_NORMAL:
         if (((s32)(target->mirror << 27) < 0 && target->x < rangeX[0]) ||
             ((s8)(target->mirror << 3) >= 0 && target->x > rangeX[1])) {
-            SetAnimMode(1);
+            SetAnimMode(ENEMY_MODE_TURN);
             SetMotionX(0);
         }
         break;
-    case 1:
+    case ENEMY_MODE_TURN:
         if (target->animDone) {
             u32 m = target->mirrorFlags.mirrorX;
             target->mirrorFlags.mirrorX = !m;
-            SetAnimMode(0);
+            SetAnimMode(ENEMY_MODE_NORMAL);
             SetMotionX(1);
             if (kind == ENEMY_KIND_PENGUIN) {
                 part = target;
@@ -57,18 +57,18 @@ void EnemyCtrl::UpdatePatrol()
             }
         }
         break;
-    case 4:
+    case ENEMY_MODE_ATTACK:
         if (((s32)(target->mirror << 27) < 0 && target->x < rangeX[0]) ||
             ((s8)(target->mirror << 3) >= 0 && target->x > rangeX[1])) {
-            SetAnimMode(6);
+            SetAnimMode(ENEMY_MODE_ATTACK_TURN);
             SetMotionX(0);
         }
         break;
-    case 6:
+    case ENEMY_MODE_ATTACK_TURN:
         if (target->animDone) {
             u32 m = target->mirrorFlags.mirrorX;
             target->mirrorFlags.mirrorX = !m;
-            SetAnimMode(4);
+            SetAnimMode(ENEMY_MODE_ATTACK);
             SetMotionX(1);
         }
         break;

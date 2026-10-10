@@ -53,14 +53,14 @@ static inline MovingSprite *SpawnPart(s32 a, s32 b, s32 c, s32 d, s32 e, MovingS
 void EnemyCtrl::UpdateAttackCycle()
 {
     switch (mode) {
-    case 0:
+    case ENEMY_MODE_NORMAL:
         if (attackTime > 0 &&
             __modsi3(gRoomFrameCount + (idleTime + attackTime) * 2 - cycleOffset - idleTime,
                      idleTime + attackTime) == 0) {
-            if (anims[3] != 8)
-                SetAnimMode(3);
+            if (anims[ENEMY_MODE_ATTACK_START] != ENEMY_ANIM_NONE)
+                SetAnimMode(ENEMY_MODE_ATTACK_START);
             else
-                SetAnimMode(4);
+                SetAnimMode(ENEMY_MODE_ATTACK);
             if (kind == ENEMY_KIND_PENGUIN) {
                 SetMotionX(0);
             } else if (kind == ENEMY_KIND_WOODEN_CRUSHER || kind == ENEMY_KIND_PISTON_CRUSHER) {
@@ -68,18 +68,18 @@ void EnemyCtrl::UpdateAttackCycle()
             }
         }
         break;
-    case 4:
+    case ENEMY_MODE_ATTACK:
         if (idleTime > 0 && __modsi3(gRoomFrameCount + idleTime + attackTime - cycleOffset,
                                      idleTime + attackTime) == 0) {
-            if (anims[5] != 8)
-                SetAnimMode(5);
+            if (anims[ENEMY_MODE_ATTACK_END] != ENEMY_ANIM_NONE)
+                SetAnimMode(ENEMY_MODE_ATTACK_END);
             else
-                SetAnimMode(0);
+                SetAnimMode(ENEMY_MODE_NORMAL);
         }
         break;
-    case 3:
+    case ENEMY_MODE_ATTACK_START:
         if (target->animDone) {
-            SetAnimMode(4);
+            SetAnimMode(ENEMY_MODE_ATTACK);
             if (kind == ENEMY_KIND_WOODEN_CRUSHER || kind == ENEMY_KIND_PISTON_CRUSHER) {
                 target->f.b.solid = 1;
                 gAudioContext->PlaySfx(SFX_CRUSHER_SLAM, 0x100);
@@ -93,9 +93,9 @@ void EnemyCtrl::UpdateAttackCycle()
             gAudioContext->PlaySfx(SFX_FLAMETHROWER, 0x100);
         }
         break;
-    case 5:
+    case ENEMY_MODE_ATTACK_END:
         if (target->animDone) {
-            SetAnimMode(0);
+            SetAnimMode(ENEMY_MODE_NORMAL);
             if (kind != ENEMY_KIND_PENGUIN)
                 break;
             SetMotionX(1);
@@ -130,7 +130,7 @@ void EnemyCtrl::UpdateTriggerBox()
         }
     }
     switch (m = mode) {
-    case 0:
+    case ENEMY_MODE_NORMAL:
         x = Q8_TO_INT(target->x);
         y = Q8_TO_INT(target->y);
         w = boxR - boxL;
@@ -142,7 +142,7 @@ void EnemyCtrl::UpdateTriggerBox()
         if ((s32)(target->mirror << 27) < 0)
             box.x = Q8_TO_INT(target->x) * 2 - (box.x + box.w);
         if (gPlayer->TouchesBox(&box)) {
-            SetAnimMode(2);
+            SetAnimMode(ENEMY_MODE_STRIKE);
             if (kind == ENEMY_KIND_VULTURE) {
                 MovingSprite *part = target;
                 s32 a = 0x300, b = 0x20, c;
@@ -159,9 +159,9 @@ void EnemyCtrl::UpdateTriggerBox()
             }
         }
         break;
-    case 2:
+    case ENEMY_MODE_STRIKE:
         if (target->animDone)
-            SetAnimMode(0);
+            SetAnimMode(ENEMY_MODE_NORMAL);
         break;
     }
 }
@@ -222,7 +222,7 @@ void EnemyCtrl::SetState(s32 newState)
 {
     state = newState;
     switch (newState) {
-    case 5:
+    case ENEMY_STATE_FALL:
         {
             MovingSprite *part = target;
 
@@ -231,53 +231,53 @@ void EnemyCtrl::SetState(s32 newState)
             part->f.b.collides = 1;
         }
         break;
-    case 6:
-    case 9:
-    case 10:
-    case 11:
-        SetAnimModeInline(this, 0);
+    case ENEMY_STATE_BOB:
+    case ENEMY_STATE_HOME_X_OSCILLATE:
+    case ENEMY_STATE_HOME_Y:
+    case ENEMY_STATE_HOME:
+        SetAnimModeInline(this, ENEMY_MODE_NORMAL);
         break;
-    case 2:
-    case 15:
+    case ENEMY_STATE_PATROL:
+    case ENEMY_STATE_PATROL_HOME_Y:
         SetMotionXInline(this, 1);
-        SetAnimModeInline(this, 0);
+        SetAnimModeInline(this, ENEMY_MODE_NORMAL);
         break;
-    case 13:
-    case 18:
+    case ENEMY_STATE_PATROL_ATTACK:
+    case ENEMY_STATE_SAUCER:
         SetMotionXInline(this, 1);
-    case 4:
-    case 14:
-    case 16:
+    case ENEMY_STATE_ATTACK_CYCLE:
+    case ENEMY_STATE_ATTACK_OSCILLATE:
+    case ENEMY_STATE_ATTACK_SHOOT:
         if (cycleOffset >= idleTime) {
-            SetAnimModeInline(this, 4);
+            SetAnimModeInline(this, ENEMY_MODE_ATTACK);
             {
                 MovingSprite *part = target;
                 part->frame = part->bank->anims[part->tag].frameCount - 1;
             }
         } else {
-            SetAnimModeInline(this, 0);
+            SetAnimModeInline(this, ENEMY_MODE_NORMAL);
             if (kind == ENEMY_KIND_STATIONARY_SPACE_ENEMY) {
                 MovingSprite *part = target;
                 part->frame = part->bank->anims[part->tag].frameCount - 1;
             }
         }
         break;
-    case 1:
-    case 3:
-    case 17:
-        SetAnimModeInline(this, 0);
+    case ENEMY_STATE_STILL:
+    case ENEMY_STATE_TRIGGER:
+    case ENEMY_STATE_SWOOP:
+        SetAnimModeInline(this, ENEMY_MODE_NORMAL);
         break;
-    case 8:
+    case ENEMY_STATE_HOP:
         SetMotionXInline(this, 3);
         SetMotionYInline(this, 3);
-        SetAnimModeInline(this, 0);
+        SetAnimModeInline(this, ENEMY_MODE_NORMAL);
         break;
-    case 7:
+    case ENEMY_STATE_FLIP_CYCLE:
         SetMotionXInline(this, 2);
-        SetAnimModeInline(this, 0);
+        SetAnimModeInline(this, ENEMY_MODE_NORMAL);
         counter = 0;
         break;
-    case 12:
+    case ENEMY_STATE_UNK12:
         break;
     }
     baseX = target->x;
