@@ -106,13 +106,13 @@ s32 GetActorCheckpoint(void)
  * caller passes the state only and leaves r1 as it is. docs/headers_plan.md */
 extern void SetCheckpointAtPlayer_1(void *self) asm("SetCheckpointAtPlayer");
 
-/* Re-bases the category's secondary tick counter from `arg0` (net of
+/* Re-bases the category's secondary tick counter from `z` (net of
  * `GetActorSpawnOffset`'s current Q8.8 offset), resets the active-instance
  * counters, and re-syncs the frame-tick snapshot for a freshly
  * (re)selected category. */
-void SetActorCheckpoint(s32 arg0)
+void SetActorCheckpoint(s32 z)
 {
-    gActorCheckpoint = arg0 - GetActorSpawnOffset();
+    gActorCheckpoint = z - GetActorSpawnOffset();
     gActorCategoryDeaths = 0;
     gActorCategoryBossDeaths = 0;
     SetCheckpointAtPlayer_1(gLevelState);

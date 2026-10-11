@@ -44,7 +44,7 @@ void UploadCellAnimFrame(void)
 }
 
 /* (Re)configures the console/text-plane cell geometry from a fresh
- * cell record at `arg1` (a `struct cell_anim_header`: its `cols`/`rows`) - cell pixel area, its DMA-scroll-wrap threshold, and the
+ * cell record at `cellAnim` (a `struct cell_anim_header`: its `cols`/`rows`) - cell pixel area, its DMA-scroll-wrap threshold, and the
  * initial X/Y scroll accumulators - then rebuilds both VRAM screen
  * blocks via `ResetCellAnimBg`.
  *
@@ -52,13 +52,13 @@ void UploadCellAnimFrame(void)
  * `gCellAnimFrameSize` once, after the `if`, then reloads it for the
  * division through a *copy* of its address taken before the branch
  * (`ldr r4, =A4; ...; add r1, r4, #0`). The copy is a second pointer
- * local, `reload` (dividing through `*a4` itself loses it). Evaluation order
+ * local, `reload` (dividing through `*frameSize` itself loses it). Evaluation order
  * fixes the rest: the flag goes through a pointer to
  * `gCellAnimHasBanks` loaded first, `area` is assigned inside the
  * `gCellAnimTileBytes` store so that global's address loads before the
  * multiply, and `size` is read back from `gCellAnimTileBytes` between
  * taking the address and copying it. Matches under both compilers. */
-void InitCellAnim(s32 arg0, void *cellAnim, u32 animSize, s32 arg3)
+void InitCellAnim(s32 type, void *cellAnim, u32 animSize, s32 checkpoint)
 {
     struct cell_anim_header *cell = (struct cell_anim_header *)cellAnim;
     s32 area;
@@ -66,48 +66,48 @@ void InitCellAnim(s32 arg0, void *cellAnim, u32 animSize, s32 arg3)
     s32 size;
     u8 *pFlag = &gCellAnimHasBanks;
 
-    flag = (arg0 == CATEGORY_TYPE_POLAR);
+    flag = (type == CATEGORY_TYPE_POLAR);
     *pFlag = flag;
     gCellAnim = cell;
     gCellAnimCols = cell->cols;
     gCellAnimRows = cell->rows;
     gCellAnimTileBytes = (area = gCellAnimCols * gCellAnimRows) << 5;
     {
-        s32 *a4 = &gCellAnimFrameSize;
+        s32 *frameSize = &gCellAnimFrameSize;
         s32 *reload;
 
         size = gCellAnimTileBytes;
-        reload = a4;
+        reload = frameSize;
         if (flag)
             size += (area + 7) / 8 * 4;
-        *a4 = size;
+        *frameSize = size;
         gCellAnimLength = INT_TO_Q8(__divsi3(animSize - 0x204, *reload));
     }
     gCellAnimTime = 0;
     ResetCellAnimBg();
     gCellAnimSpeed = 0;
     if (gCellAnimHasBanks == 0)
-        gCellAnimDistance = Q8_TO_INT(arg3 - gActorFocalLength);
+        gCellAnimDistance = Q8_TO_INT(checkpoint - gActorFocalLength);
     else
-        gCellAnimDistance = Q8_TO_INT(arg3 + gActorFocalLength);
+        gCellAnimDistance = Q8_TO_INT(checkpoint + gActorFocalLength);
     gCellAnimFrameStep = 0;
 }
 
 /* `FillCellAnimTilemap` (below), inlined here twice: fills screen
- * block 0x0600E400 (or 0x0600F400 when `arg0` is set, numbering on
+ * block 0x0600E400 (or 0x0600F400 for `page` 1, numbering on
  * from `w * h + 1`) with consecutive tile numbers for a `w` x `h` cell
  * grid; columns past 31 go to the next screen block (+0x7c0 bytes).
  * `tile++` sits in each branch: with one increment after the `if`,
  * `base` and `tile` swap registers. Unlike the standalone copy, both
  * branches assign `base` here; the default-initializer form is 5
- * halfwords off once inlined with a constant `arg0`. */
-static inline void FillTileMap(s32 arg0, s32 w, s32 h)
+ * halfwords off once inlined with a constant `page`. */
+static inline void FillTileMap(s32 page, s32 w, s32 h)
 {
     u16 *base;
     s32 tile;
     s32 row, col;
 
-    if (arg0 != 0) {
+    if (page != 0) {
         base = (u16 *)(BG_SCREEN_ADDR(30) + 0x400);
         tile = h * w + 1;
     } else {
@@ -263,14 +263,14 @@ s32 GetCellAnimSpeed(void)
  * destination's address ahead of the call so it survives across it in
  * a register `bl` doesn't clobber, rather than recomputing it from the
  * return value's position afterward (see docs/workflow.md step 3). */
-void SetCellAnimSpeed(s32 arg0)
+void SetCellAnimSpeed(s32 speed)
 {
     s32 *dest = &gCellAnimSpeed;
 
-    *dest = __divsi3(INT_TO_Q8(arg0), 0x3c);
+    *dest = __divsi3(INT_TO_Q8(speed), 0x3c);
 }
 
-/* Fills screen block 28 from row 16 on (block 30 when `arg0` is set,
+/* Fills screen block 28 from row 16 on (block 30 for `page` 1,
  * numbering on from `w * h + 1`) with consecutive tile numbers for a
  * `w` x `h` cell grid; columns past 31 go to the next screen block
  * (+0x7c0 bytes). `ResetCellAnimBg` above inlines the same body
@@ -283,13 +283,13 @@ void SetCellAnimSpeed(s32 arg0)
  * and `h` follow from that). Matches under both compilers. */
 /* UNUSED - no caller anywhere in the ROM (no Thumb `bl` to it and no
  * pointer to it in baserom.gba, nor any reference in asm/ or src/). */
-void FillCellAnimTilemap(s32 arg0, s32 w, s32 h)
+void FillCellAnimTilemap(s32 page, s32 w, s32 h)
 {
     u16 *base = (u16 *)(BG_SCREEN_ADDR(28) + 0x400);
     s32 tile;
     s32 row, col;
 
-    if (arg0 != 0) {
+    if (page != 0) {
         base = (u16 *)(BG_SCREEN_ADDR(30) + 0x400);
         tile = h * w + 1;
     } else {
