@@ -336,6 +336,8 @@ static inline void RefreshPlayerTiles(void)
 
 s32 LevelProgress::RunRoom()
 {
+    /* ROOM_EXIT_RETRY, and below the camera's mode 1 (StepFacing): the ROM
+     * stores the one 1 in both, so it stays a number */
     s32 ret = 1;
     s32 i;
 
@@ -419,11 +421,11 @@ s32 LevelProgress::RunRoom()
                 gInput->Update();
             }
             if (r == 1) {
-                ret = 1;
+                ret = ROOM_EXIT_RETRY;
                 goto fade;
             }
             if (r == 2) {
-                ret = 2;
+                ret = ROOM_EXIT_QUIT;
                 goto fade;
             }
         }
@@ -445,7 +447,7 @@ s32 LevelProgress::RunRoom()
 fade:
     FadePaletteToBlack();
     if (IsRoomExitRequested()) {
-        ret = 0;
+        ret = ROOM_EXIT_CLEARED;
         if (!(u8)IsInBonusRoom() && gLevelState->IsInBonusRound()) {
             struct vec2 point;
             s32 x;

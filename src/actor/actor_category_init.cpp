@@ -99,7 +99,7 @@ static inline s32 RunCategoryPauseMenu(struct dma_regs *dma)
 
 s32 InitActorCategory(s32 category)
 {
-    s32 ret = 1;
+    s32 ret = ROOM_EXIT_RETRY;
     s32 *activeCount;
     s32 *variantCount;
     LevelState **state;
@@ -173,7 +173,7 @@ s32 InitActorCategory(s32 category)
 
             if (status != CATEGORY_EXIT_NONE) {
                 if (status == CATEGORY_EXIT_CLEARED) {
-                    ret = 0;
+                    ret = ROOM_EXIT_CLEARED;
                 } else if (status == CATEGORY_EXIT_BOSS_DEATH) {
                     if ((*state)->timeTrial != 0)
                         goto again;
@@ -187,7 +187,7 @@ s32 InitActorCategory(s32 category)
                     }
                     (*activeCount)++;
                 again:
-                    ret = 1;
+                    ret = ROOM_EXIT_RETRY;
                 }
             } else {
                 open = 0;
@@ -196,15 +196,15 @@ s32 InitActorCategory(s32 category)
                 if (open) {
                     result = RunCategoryPauseMenu(dma);
                     if (result == 2) {
-                        ret = 2;
+                        ret = ROOM_EXIT_QUIT;
                         goto done;
                     }
                     if (result == 3) {
-                        ret = 0;
+                        ret = ROOM_EXIT_CLEARED;
                         goto done;
                     }
                     if (result == 1) {
-                        ret = 1;
+                        ret = ROOM_EXIT_RETRY;
                         goto done;
                     }
                 }
@@ -217,7 +217,7 @@ s32 InitActorCategory(s32 category)
     done:
         DestroyAllActors();
         ActorCategoryAttemptEndStub();
-    } while (ret == 1 && gLevelState->GetLives() >= 0 && PAUSED == 0);
+    } while (ret == ROOM_EXIT_RETRY && gLevelState->GetLives() >= 0 && PAUSED == 0);
 
     ActorCategoryEndStub();
     FreeSpriteFrameCache();

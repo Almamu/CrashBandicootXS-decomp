@@ -134,7 +134,7 @@ void LevelState::UpdateGameFrame()
         room.roomIndex = 0;
         room.checkpointCrateCount = 0;
         room.checkpointFlags = 0;
-        status = 1;
+        status = ROOM_EXIT_RETRY;
         crateTotal = CountLevelCrates(room.level);
         gHud = new Hud;
         gHud->SetCrateTotal(crateTotal);
@@ -188,7 +188,7 @@ void LevelState::UpdateGameFrame()
                 break;
             case ROOM_KIND_CATEGORY:
                 status = InitActorCategory(room.cat->param.catIndex);
-                if (status == 0) {
+                if (status == ROOM_EXIT_CLEARED) {
                     AddPendingSwitchCrates(GetActorMissedNitros());
                     SetCheckpointAtPlayer(0);
                 }
@@ -207,18 +207,18 @@ void LevelState::UpdateGameFrame()
             if ((u8)room.IsInBonusRoom() && IsInBonusRound()) {
                 delete gEntityFlags;
                 gEntityFlags = savedBitmap;
-                EndBonusRound(status == 0);
+                EndBonusRound(status == ROOM_EXIT_CLEARED);
             }
             if ((u8)room.IsInGemPathRoom() && IsInGemPath()) {
                 delete gEntityFlags;
                 gEntityFlags = savedBitmap;
-                EndGemPath(status == 0);
+                EndGemPath(status == ROOM_EXIT_CLEARED);
             }
-            if (status == 2)
+            if (status == ROOM_EXIT_QUIT)
                 break;
-            if (status == 1 && GetLives() < 0)
+            if (status == ROOM_EXIT_RETRY && GetLives() < 0)
                 break;
-            if (timeTrial && status == 1) {
+            if (timeTrial && status == ROOM_EXIT_RETRY) {
                 pendingSwitchCrates = 0;
                 room.checkpointSwitchPressed = 0;
                 room.roomIndex = 0;
@@ -226,7 +226,7 @@ void LevelState::UpdateGameFrame()
                 ArmStartSpawn();
                 ClearTimeTrial();
             }
-            if (status == 0) {
+            if (status == ROOM_EXIT_CLEARED) {
                 u8 done;
 
                 if (!(u8)room.IsInBonusRoom() && !IsInBonusRound() && !(u8)room.IsInGemPathRoom() &&
@@ -249,13 +249,13 @@ void LevelState::UpdateGameFrame()
                 break;
         }
 
-        if (status == 2) {
+        if (status == ROOM_EXIT_QUIT) {
             s32 tier = best;
 
             LIMIT_MAX(tier, maskLevel);
             maskLevel = tier;
         }
-        if (status == 0) {
+        if (status == ROOM_EXIT_CLEARED) {
             switch (room.level) {
             case LEVEL_DINGODILE:
                 if (!(u8)HasSuperBodySlam()) {
