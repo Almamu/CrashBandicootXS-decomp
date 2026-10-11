@@ -373,7 +373,7 @@ void JetpackBalloonCrate::RunState()
 }
 
 /* Slot 5: broken or touched. */
-s32 JetpackBalloonCrate::IsUnshootable()
+u8 JetpackBalloonCrate::IsUnshootable()
 {
     return done;
 }
@@ -431,7 +431,7 @@ JetpackParachuteNitro::JetpackParachuteNitro(const struct anim_table_record *rec
 }
 
 /* Slot 5: exploded. */
-s32 JetpackParachuteNitro::IsUnshootable()
+u8 JetpackParachuteNitro::IsUnshootable()
 {
     return dead;
 }

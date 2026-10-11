@@ -45,7 +45,7 @@ public:
     virtual ~AirshipFireball();      // 1 DestroyAirshipFireball
     virtual void Update();           // 2 UpdateAirshipFireball
     virtual void Damage(s32 amount); // 4 DamageAirshipFireball
-    virtual s32 IsUnshootable();     // 5 IsAirshipFireballUnshootable
+    virtual u8 IsUnshootable();      // 5 IsAirshipFireballUnshootable
 
     void RunState(); // RunAirshipFireballState
 
@@ -90,7 +90,7 @@ public:
     virtual ~HovercraftFireball();   // 1 DestroyHovercraftFireball
     virtual void Update();           // 2 UpdateHovercraftFireball
     virtual void Damage(s32 amount); // 4 DamageHovercraftFireball
-    virtual s32 IsUnshootable();     // 5 IsHovercraftFireballUnshootable
+    virtual u8 IsUnshootable();      // 5 IsHovercraftFireballUnshootable
 
     void RunState(); // RunHovercraftFireballState
 
@@ -126,7 +126,7 @@ public:
     virtual ~HovercraftCannon();     // 1 DestroyHovercraftCannon
     virtual void Update();           // 2 UpdateHovercraftCannon
     virtual void Damage(s32 amount); // 4 DamageHovercraftCannon
-    virtual s32 IsUnshootable();     // 5 IsHovercraftCannonUnshootable
+    virtual u8 IsUnshootable();      // 5 IsHovercraftCannonUnshootable
 
     s32 RunState(); // RunHovercraftCannonState
 
@@ -165,7 +165,7 @@ public:
     virtual ~HovercraftLauncher();   // 1 DestroyHovercraftLauncher
     virtual void Update();           // 2 UpdateHovercraftLauncher
     virtual void Damage(s32 amount); // 4 DamageHovercraftLauncher
-    virtual s32 IsUnshootable();     // 5 IsHovercraftLauncherUnshootable
+    virtual u8 IsUnshootable();      // 5 IsHovercraftLauncherUnshootable
 
     s32 RunState(); // RunHovercraftLauncherState
 
@@ -202,7 +202,7 @@ public:
     virtual ~HovercraftSideGun();    // 1 DestroyHovercraftSideGun
     virtual void Update();           // 2 UpdateHovercraftSideGun
     virtual void Damage(s32 amount); // 4 DamageHovercraftSideGun
-    virtual s32 IsUnshootable();     // 5 IsHovercraftSideGunUnshootable
+    virtual u8 IsUnshootable();      // 5 IsHovercraftSideGunUnshootable
 
     void RunState(); // RunHovercraftSideGunState (UNUSED)
 };
@@ -222,7 +222,7 @@ public:
     virtual ~HovercraftCannonFlash(); // 1 DestroyHovercraftCannonFlash
     virtual void Update();            // 2 UpdateHovercraftCannonFlash
     virtual void Damage(s32 amount);  // 4 DamageHovercraftCannonFlash (none)
-    virtual s32 IsUnshootable();      // 5 IsHovercraftCannonFlashUnshootable
+    virtual u8 IsUnshootable();       // 5 IsHovercraftCannonFlashUnshootable
 
     s32 RunState(); // RunHovercraftCannonFlashState (UNUSED)
 };

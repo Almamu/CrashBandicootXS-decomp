@@ -39,7 +39,7 @@ JetpackCannonball::JetpackCannonball(const struct anim_table_record *rec, s32 x,
 }
 
 /* Slot 5: cannonballs can't be shot. */
-s32 JetpackCannonball::IsUnshootable()
+u8 JetpackCannonball::IsUnshootable()
 {
     return 1;
 }

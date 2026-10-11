@@ -110,7 +110,7 @@ JetpackRocket::JetpackRocket(const struct anim_table_record *rec, s32 x, s32 y, 
 }
 
 /* Slot 5: exploded or shot. */
-s32 JetpackRocket::IsUnshootable()
+u8 JetpackRocket::IsUnshootable()
 {
     return triggered;
 }

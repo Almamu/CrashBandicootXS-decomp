@@ -128,7 +128,7 @@ void JetpackBalloon::RunState()
 }
 
 /* Slot 5: a popping balloon can't be shot. */
-s32 JetpackBalloon::IsUnshootable()
+u8 JetpackBalloon::IsUnshootable()
 {
     return dying;
 }

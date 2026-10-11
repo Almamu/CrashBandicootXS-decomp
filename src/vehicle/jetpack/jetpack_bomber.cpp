@@ -157,7 +157,7 @@ void JetpackBomber::RunState()
     (this->*stateFuncs[state])();
 }
 
-s32 JetpackBomber::IsUnshootable()
+u8 JetpackBomber::IsUnshootable()
 {
     return unshootable;
 }

@@ -91,7 +91,7 @@ void HovercraftFireball::RunState()
 }
 
 /* Exploding fireballs can't be shot. */
-s32 HovercraftFireball::IsUnshootable()
+u8 HovercraftFireball::IsUnshootable()
 {
     return exploding;
 }

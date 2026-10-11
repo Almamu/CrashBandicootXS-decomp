@@ -127,7 +127,7 @@ HpActor *FindShotTarget(ActorSelf *self)
     HpActor *n = gActorList->next->AsHpActor();
 
     do {
-        if (n != self && (u8)n->IsUnshootable() == 0 && ActorsOverlap(self, n))
+        if (n != self && n->IsUnshootable() == 0 && ActorsOverlap(self, n))
             return n;
         n = n->next->AsHpActor();
     } while (n != gActorList);

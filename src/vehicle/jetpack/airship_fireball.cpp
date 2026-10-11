@@ -157,7 +157,7 @@ void AirshipFireball::RunState()
 }
 
 /* Exploding fireballs can't be shot. */
-s32 AirshipFireball::IsUnshootable()
+u8 AirshipFireball::IsUnshootable()
 {
     return exploding;
 }

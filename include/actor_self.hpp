@@ -334,8 +334,11 @@ public:
     }
 
     virtual void Damage(s32 amount); // 4 DamageActor (no damage)
-    virtual s32 IsUnshootable();     // 5 IsJetpackPlayerUnshootable (0)
-    virtual s32 GetHp();             // 6 GetActorHp
+    /* u8, not bool (#855): most overrides return a u8 field (`dead`,
+     * `exploding`), which as a bool gets a `!= 0` test the ROM doesn't
+     * have. */
+    virtual u8 IsUnshootable(); // 5 IsJetpackPlayerUnshootable (0)
+    virtual s32 GetHp();        // 6 GetActorHp
 };
 
 COMPILE_TIME_ASSERT(actor_self_hpp, sizeof(HpActor) == 0x58);

@@ -174,7 +174,7 @@ s32 HovercraftLauncher::RunState()
     return 1;
 }
 
-s32 HovercraftLauncher::IsUnshootable()
+u8 HovercraftLauncher::IsUnshootable()
 {
     return dead;
 }

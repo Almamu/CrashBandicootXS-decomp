@@ -234,7 +234,7 @@ void JetpackPlane::RunState()
 }
 
 /* Slot 5: a dying plane can't be shot. */
-s32 JetpackPlane::IsUnshootable()
+u8 JetpackPlane::IsUnshootable()
 {
     return dying;
 }

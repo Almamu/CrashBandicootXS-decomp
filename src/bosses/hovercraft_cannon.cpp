@@ -159,7 +159,7 @@ s32 HovercraftCannon::RunState()
     return 1;
 }
 
-s32 HovercraftCannon::IsUnshootable()
+u8 HovercraftCannon::IsUnshootable()
 {
     return dead;
 }
