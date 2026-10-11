@@ -33,7 +33,7 @@ inline void JetpackBalloonCrate::Hang(s32 x, s32 y, s32 z, u8 kind)
     done = 0;
     centerX = x;
     centerY = y;
-    phase = (u16)RandRange(0xFF);
+    phase = RandRange(0xFF);
     balloon = (JetpackBalloon *)SpawnJetpackBalloon(kind, x, y - 0x3DB6, z, (s32)this);
 }
 

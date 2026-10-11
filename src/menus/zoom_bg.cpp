@@ -265,10 +265,10 @@ void ZoomBg::MoveTwinkle(Twinkle *t)
 /* Picks a new random frame, duration and blink window for a twinkle. */
 void ZoomBg::RandomizeTwinkle(Twinkle *t)
 {
-    ShowFrame(t->part, (u16)RandRange(8));
-    t->timer = (u16)RandRange(0x3C);
+    ShowFrame(t->part, RandRange(8));
+    t->timer = RandRange(0x3C);
     if (t->timer != 0)
-        t->blink = (u16)RandRange(t->timer / 2 + 1);
+        t->blink = RandRange(t->timer / 2 + 1);
 }
 
 void ZoomBg::TickTwinkle(Twinkle *t)

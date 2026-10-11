@@ -318,7 +318,7 @@ public:
     /* ResetIdleTimer's and MoveTo's bodies, which other methods inline. */
     void ResetIdleTimerNow()
     {
-        timer = (u16)RandRange(300) + 600;
+        timer = RandRange(300) + 600;
     }
     void MoveToNow(struct vec2 *pos)
     {

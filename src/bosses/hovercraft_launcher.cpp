@@ -50,7 +50,7 @@ void HovercraftLauncher::StateLaunch()
             s32 absDy = (dy ^ signDy) - signDy;
 
             if (absDx + absDy <= 0xFFF) {
-                s32 kind = (u16)RandRange(3); // a roll, 0-2: which bomber
+                s32 kind = RandRange(3); // a roll, 0-2: which bomber
                 const struct hovercraft_attack *table;
                 s32 n;
 

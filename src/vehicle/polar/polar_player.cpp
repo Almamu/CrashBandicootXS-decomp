@@ -266,7 +266,7 @@ void PolarPlayer::StateRun()
         SetCellAnimSpeed(0x24);
         if (animIndex != 0)
             RestartAnim(0);
-        else if ((u16)RandRange(3) == 0)
+        else if (RandRange(3) == 0)
             RestartAnim(1);
         else
             RestartAnim(0);

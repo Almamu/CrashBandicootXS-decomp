@@ -220,8 +220,8 @@ void Starfield::SpawnStar(s32 idx)
     slot->x = 0x7800;
     slot->y = 0x5000;
 
-    angle = (u16)RandRange(0x100);
-    speed = (u16)RandRange(0x200) + 0x100;
+    angle = RandRange(0x100);
+    speed = RandRange(0x200) + 0x100;
 
     slot->dx = Q8_MUL(COS_Q8(angle), speed);
     slot->dy = Q8_MUL(SIN_Q8(angle), speed);

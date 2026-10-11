@@ -140,14 +140,14 @@ void PolarPenguin::Update()
         if ((u8)IsTouchingPlayer(this)) {
             if ((u8)static_cast<PolarPlayer *>(gActorList)->Hurt()) {
                 velX = x > 0 ? 0x600 : -0x600;
-                velY = -(s32)(u16)RandRange(0x300);
+                velY = -(s32)RandRange(0x300);
                 velZ += 0x200;
                 gAudioContext->PlaySfx(SFX_ENEMY_KNOCKED_AWAY, 0x100);
                 SetState(POLAR_PENGUIN_STATE_KNOCKED_AWAY, 0);
             }
         } else if (Yeti::IsTouching(this)) {
             velX = x > 0 ? 0x600 : -0x600;
-            velY = -(s32)(u16)RandRange(0x300);
+            velY = -(s32)RandRange(0x300);
             velZ += 0x200;
             gAudioContext->PlaySfx(SFX_ENEMY_KNOCKED_AWAY, 0x100);
             SetState(POLAR_PENGUIN_STATE_KNOCKED_AWAY, 0);

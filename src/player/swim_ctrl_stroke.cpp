@@ -272,7 +272,7 @@ void SwimCtrl::ApplySwimDrift()
     }
 
     dir = gInput->GetDpadDirection();
-    if ((gRoomFrameCount & 0x7F) == 0 && (u16)RandRange(2) == 0) {
+    if ((gRoomFrameCount & 0x7F) == 0 && RandRange(2) == 0) {
         Player *t = target;
         s32 x = Q8_TO_INT(t->x);
         s32 y = Q8_TO_INT(t->y) - 20;

@@ -59,7 +59,7 @@ void ExtraLife::PickUp(u8 randomize)
     affine = 0xa0;
 
     if (randomize) {
-        u32 rv = (u16)rand();
+        u32 rv = rand();
         u8 lowbit = rv & 1;
 
         counter = lowbit;

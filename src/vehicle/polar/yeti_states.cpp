@@ -75,7 +75,7 @@ void Yeti::StateChase()
             }
 
             if (GetCellAnimSpeed() > 0x24) {
-                s32 v = (u16)RandRange(0x100);
+                s32 v = RandRange(0x100);
                 u8 *tableBase = (u8 *)chargeParams;
                 s32 offset = paramsIndex * 0xc;
                 u8 *tablePlus4 = tableBase + 4;
@@ -90,7 +90,7 @@ void Yeti::StateChase()
                 goto end_transition;
             }
             {
-                s32 v = (u16)RandRange(0x100);
+                s32 v = RandRange(0x100);
                 u8 *tableBase = (u8 *)chargeParams;
                 s32 offset = paramsIndex * 0xc;
                 u8 *tablePlus8 = tableBase + 8;

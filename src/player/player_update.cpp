@@ -310,7 +310,7 @@ void Player::Draw()
             if (!(gRoomFrameCount & 7)) {
                 s32 v;
 
-                gAkuAkuFollowFrame = gAkuAkuFollowFrame + (u16)RandRange(3) - 1;
+                gAkuAkuFollowFrame = gAkuAkuFollowFrame + RandRange(3) - 1;
                 v = gAkuAkuFollowFrame;
                 LIMIT_MAX(v, 3);
                 LIMIT_MIN(v, 0);

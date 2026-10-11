@@ -1254,7 +1254,7 @@ void Crate::OpenMystery(bool flag)
 {
     gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
     if (paramB == 9) {
-        u8 r = (u16)rand() >> 8;
+        u8 r = rand() >> 8;
 
         if (r <= 0x56)
             paramB = 1;

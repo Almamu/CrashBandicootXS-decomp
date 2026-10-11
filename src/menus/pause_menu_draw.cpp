@@ -84,7 +84,7 @@ void PauseMenu::Animate()
                 icon->ResetFrameTimer();
                 icon->ResetFrameIndex();
                 icon->SetAnimDone(0);
-                result = (u16)RandRange(0x78) + 0x78;
+                result = RandRange(0x78) + 0x78;
                 goto store;
             } else {
                 icon->AdvanceAnim();
