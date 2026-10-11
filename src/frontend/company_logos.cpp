@@ -628,7 +628,7 @@ void LogoActor::Update()
             state = LOGO_ACTOR_STATE_GONE;
         break;
     }
-    animTime += (s16)animTimer;
+    animTime += animTimer;
     animDone = 0;
     if (GetAnimFrameBaseOffset() >= anims[animIndex].loopThreshold) {
         ANIM_REWIND(animTime, anims[animIndex]);

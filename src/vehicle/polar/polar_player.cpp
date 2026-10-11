@@ -51,7 +51,7 @@ void PolarPlayer::Update()
         sortKey = d | (((ABS_BRANCHLESS(y) + ABS_BRANCHLESS(x)) >> 11) & 0x7f);
     }
     stateTime++;
-    animTime += (s16)animTimer;
+    animTime += animTimer;
     animDone = 0;
     if (GetAnimFrameBaseOffset() >= anims[animIndex].loopThreshold) {
         ANIM_REWIND(animTime, anims[animIndex]);

@@ -378,7 +378,7 @@ void Hovercraft::Update(void)
         s32 scale;
 
         self = anim;
-        self->animTime += (s16)self->animTimer;
+        self->animTime += self->animTimer;
         self->animDone = 0;
         if (self->GetAnimFrameBaseOffset() >= self->anims[self->animIndex].loopThreshold) {
             ANIM_REWIND(self->animTime, self->anims[self->animIndex]);

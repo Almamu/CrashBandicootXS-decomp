@@ -51,7 +51,7 @@ void JetpackCollectedWumpa::Update()
         delete this;
         return;
     }
-    animTime += (s16)animTimer;
+    animTime += animTimer;
     animDone = 0;
     if (GetAnimFrameBaseOffset() >= anims[animIndex].loopThreshold) {
         ANIM_REWIND(animTime, anims[animIndex]);

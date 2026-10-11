@@ -83,7 +83,7 @@ void ActorSelf::Update()
     }
 
     stateTime += 1;
-    animTime += (s16)animTimer;
+    animTime += animTimer;
     animDone = 0;
 
     if (GetAnimFrameBaseOffset() >= anims[animIndex].loopThreshold) {
