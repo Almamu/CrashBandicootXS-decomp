@@ -39,8 +39,12 @@ extern "C" {
  *   `str r4, [sp, #4]`.
  * - rxSeq goes through a `f30` base plus an `s32 t` offset, so the
  *   base is hoisted and the add is `f30 + t`.
- * - The inner destination is `((LinkPlayer *)(self + 8))[i + 1]`,
- *   which gives the ROM's `i + 1` precompute and per-pass `self + 0xd0`.
+ * - The inner destination is `(players - 1)[i + 1]`, players[i]
+ *   indexed from the record before it (`self + 8`), which gives the
+ *   ROM's `i + 1` precompute and per-pass `self + 0xd0` (#855: it was
+ *   `((LinkPlayer *)((u8 *)this + 8))[i + 1]`, the same code). Plain
+ *   `players[i]` changes the code, and so does an inline `Player(i)`
+ *   accessor, whose pointer is its own pseudo.
  * - The nibble address is `self + t` with `t = i * 0xc8` in a local, so
  *   the add is built as (plus self t): the ROM's `adds r0, r5, r2`.
  *   `&self->players[i]` expands to (plus (mult i 200) self) instead.
@@ -109,8 +113,8 @@ s32 LinkSession::ResetState()
                 u32 w = (src[j * 2 + 1] << 8) | src[j * 2];
                 u32 lo = w & 0xff;
 
-                ((LinkPlayer *)((u8 *)this + 8))[i + 1].id[j * 2] = lo;
-                ((LinkPlayer *)((u8 *)this + 8))[i + 1].id[j * 2 + 1] = w >> 8;
+                (players - 1)[i + 1].id[j * 2] = lo;
+                (players - 1)[i + 1].id[j * 2 + 1] = w >> 8;
             }
         }
         {
