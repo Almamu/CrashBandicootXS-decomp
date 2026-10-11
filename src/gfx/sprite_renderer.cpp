@@ -93,7 +93,7 @@ void SpriteRenderer::DrawPieces(Sprite *part, s32 *pos)
         tile += tiles;
         total += tiles << 5;
     }
-    gObjVramCursor->Upload((void *)(part->GetTileBase() + (info->u.packed & 0xffffff)), total);
+    gObjVramCursor->Upload(part->GetTileBase() + (info->u.packed & 0xffffff), total);
 }
 
 /* GitHub issue #9: SpriteRenderer::DrawAffinePieces (DrawAffineSpritePieces,
@@ -272,7 +272,7 @@ void SpriteRenderer::DrawAffinePieces(Sprite *part, s32 *pos)
         tile += tiles;
         total += tiles << 5;
     }
-    gObjVramCursor->Upload((void *)(part->GetTileBase() + (info->u.packed & 0xffffff)), total);
+    gObjVramCursor->Upload(part->GetTileBase() + (info->u.packed & 0xffffff), total);
 }
 
 /* `screenSpace` says whether (x, y) are already screen coordinates;

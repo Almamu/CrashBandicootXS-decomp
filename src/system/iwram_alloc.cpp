@@ -8,7 +8,7 @@ extern "C" {
 #include "util.h"
 }
 
-void IwramFree(u8 *address)
+void IwramFree(void *address)
 {
     mem_free(address);
 }
