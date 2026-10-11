@@ -79,10 +79,10 @@ void SetActorCategoryExitStatus(s32 arg0)
  * a TU-wide allocator quirk; it was just the missing return value. */
 s32 JetpackIsPauseLocked(void)
 {
-    return ((JetpackPlayer *)gActorList)->IsPauseLocked();
+    return gActorList->AsJetpackPlayer()->IsPauseLocked();
 }
 
 s32 PolarIsPauseLocked(void)
 {
-    return ((PolarPlayer *)gActorList)->IsPauseLocked();
+    return gActorList->AsPolarPlayer()->IsPauseLocked();
 }

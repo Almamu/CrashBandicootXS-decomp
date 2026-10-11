@@ -103,7 +103,7 @@ void PartList::Collide(struct aabb box, s32 unused, MovingSprite *other)
 
         if (s->GetClassId() <= 4)
             continue;
-        MovingSprite *part = (MovingSprite *)s; // class 5 or 6
+        MovingSprite *part = s->AsMovingSprite(); // class 5 or 6
         s32 inContact = part->IsContactEnabled();
 
         if (!inContact)

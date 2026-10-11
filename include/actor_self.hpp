@@ -42,6 +42,10 @@ extern "C" {
  * priority 2 (attr 2 | 0x800) so it goes behind the BG layer. */
 #define SORT_KEY_FLAG_BEHIND_BG 0x8000
 
+class HpActor;
+class JetpackPlayer; // vehicle.hpp
+class PolarPlayer;   // vehicle.hpp
+
 class AnimPart
 {
 public:
@@ -174,6 +178,13 @@ public:
     }
 
     void DrawFrameAt(s32 screenX, s32 screenY, s32 scale);
+
+    /* This actor as one of its subclasses (#855): the actor list's root,
+     * gActorList, is the stage's player, and the shot targets are
+     * HpActors. Defined after each class (below; vehicle.hpp). */
+    inline HpActor *AsHpActor();
+    inline JetpackPlayer *AsJetpackPlayer();
+    inline PolarPlayer *AsPolarPlayer();
 };
 
 COMPILE_TIME_ASSERT(actor_self_hpp, sizeof(ActorSelf) == 0x54);
@@ -328,6 +339,11 @@ public:
 };
 
 COMPILE_TIME_ASSERT(actor_self_hpp, sizeof(HpActor) == 0x58);
+
+inline HpActor *ActorSelf::AsHpActor()
+{
+    return (HpActor *)this;
+}
 
 /* src/actor/actor_category_frame.cpp: the first actor other than `self`
  * a shot hits (JetpackShot::Update). C linkage, C++ callers only. */

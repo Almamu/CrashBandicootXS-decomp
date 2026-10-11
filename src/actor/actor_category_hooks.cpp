@@ -21,22 +21,22 @@ extern "C" {
  * (gActorList, the list's root). */
 void JetpackReloadPlayerTiles(void)
 {
-    ((JetpackPlayer *)gActorList)->AllocTiles();
+    gActorList->AsJetpackPlayer()->AllocTiles();
 }
 
 void PolarReloadPlayerTiles(void)
 {
-    ((PolarPlayer *)gActorList)->AllocTiles();
+    gActorList->AsPolarPlayer()->AllocTiles();
 }
 
 void JetpackReachCourseEnd(void)
 {
-    ((JetpackPlayer *)gActorList)->FinishRun();
+    gActorList->AsJetpackPlayer()->FinishRun();
 }
 
 void PolarReachCourseEnd(void)
 {
-    ((PolarPlayer *)gActorList)->FinishRun();
+    gActorList->AsPolarPlayer()->FinishRun();
 }
 
 /* The selected category's slot 9 (its player contact test) on `self`. */

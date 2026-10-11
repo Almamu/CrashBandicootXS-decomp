@@ -64,6 +64,8 @@ void TinyCtrl::Update(MovingSprite *part)
     s32 state;
 
     if (stomped != -1) {
+        /* The cast, not AsMovingSprite(): through the inline, the item is
+         * loaded into r0 and copied to r4 (#855). */
         MovingSprite *pad = (MovingSprite *)gTouchableList->items[stomped];
         Ctrl *ctrl;
 
@@ -260,7 +262,7 @@ void TinyCtrl::SetState(MovingSprite *part, s32 next)
             else
                 SetTargetAnim(part, 1);
             SetFrame(part, 4);
-            pad = (MovingSprite *)gTouchableList->items[anchor];
+            pad = gTouchableList->items[anchor]->AsMovingSprite();
             x = pad->x;
             this->x = x;
             if (next == TINY_STATE_DROP_IN || next == TINY_STATE_OFFSCREEN)
@@ -278,7 +280,7 @@ void TinyCtrl::SetState(MovingSprite *part, s32 next)
 
             anchor = PickHopTarget();
             SetTargetAnim(part, 4);
-            pad = (MovingSprite *)gTouchableList->items[anchor];
+            pad = gTouchableList->items[anchor]->AsMovingSprite();
             ax = pad->x;
             ay = pad->y;
             y = ay - 0x2400;
@@ -314,7 +316,7 @@ void TinyCtrl::SetState(MovingSprite *part, s32 next)
         break;
     case TINY_STATE_DEFEATED:
         {
-            MovingSprite *pad = (MovingSprite *)gTouchableList->items[2];
+            MovingSprite *pad = gTouchableList->items[2]->AsMovingSprite();
             s32 x = pad->x;
             s32 y = pad->y - 0x1800;
 
@@ -345,7 +347,7 @@ s32 TinyCtrl::PickHopTarget()
     s32 i;
 
     for (i = 0; i < gTouchableList->count; i++) {
-        MovingSprite *pad = (MovingSprite *)gTouchableList->items[i];
+        MovingSprite *pad = gTouchableList->items[i]->AsMovingSprite();
         s32 px = gPlayer->x;
         s32 py = gPlayer->y;
         s32 ax = pad->x;

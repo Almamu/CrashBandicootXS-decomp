@@ -255,6 +255,11 @@ public:
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(PolarPlayer) == sizeof(ActorSelf));
 
+inline PolarPlayer *ActorSelf::AsPolarPlayer()
+{
+    return (PolarPlayer *)this;
+}
+
 class PolarCheckpointText : public ActorSelf
 {
 public:
@@ -616,6 +621,11 @@ public:
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackPlayer) == 0x58);
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackPlayer) == 0x58);
+
+inline JetpackPlayer *ActorSelf::AsJetpackPlayer()
+{
+    return (JetpackPlayer *)this;
+}
 
 /* The checkpoint banner, drawn at a fixed screen position. */
 class JetpackCheckpointText : public HpActor

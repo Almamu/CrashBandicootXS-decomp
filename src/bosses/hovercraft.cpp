@@ -262,7 +262,7 @@ void Hovercraft::StateFall(void)
 
         if (y > 0x4b00) {
             ResumeActorSpawns();
-            ((JetpackPlayer *)gActorList)->FinishRun();
+            gActorList->AsJetpackPlayer()->FinishRun();
         }
     }
 
