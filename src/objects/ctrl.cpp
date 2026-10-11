@@ -155,7 +155,7 @@ void Ctrl::StartTargetMotionXFromSet(MovingSprite *part, s32 index)
 
 /* The base controller ignores events (ActionCtrlHandleEvent,
  * SwimCtrlHandleEvent and HitEnemy override it). */
-void Ctrl::HandleEvent(MovingSprite *, s32, s32)
+void Ctrl::HandleEvent(s32, s32, s32)
 {
 }
 

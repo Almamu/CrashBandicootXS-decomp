@@ -140,7 +140,7 @@ void SwimCtrl::CheckTurn()
     }
 }
 
-void SwimCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
+void SwimCtrl::HandleEvent(s32, s32 event, s32 arg)
 {
     s32 side;
 

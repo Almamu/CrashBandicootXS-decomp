@@ -6,9 +6,9 @@
  * Dingodile with his shield and rocket/stalactite. g++ emits
  * gBossCtrlVtable here. */
 
-/* Keeps the event's msg and arg; the sender is unused. Nothing reads
- * them back. */
-void BossCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
+/* Keeps the event's msg and arg; `from` is unused. Nothing reads them
+ * back. */
+void BossCtrl::HandleEvent(s32, s32 event, s32 arg)
 {
     msg = event;
     this->arg = arg;

@@ -74,11 +74,11 @@ public:
     typedef void (SwimCtrl::*StateFunc)();
     static const StateFunc stateFuncs[8];
 
-    SwimCtrl();                                                         // InitSwimCtrl
-    virtual void Update(MovingSprite *part);                            // 1
-    virtual void HandleEvent(MovingSprite *sender, s32 event, s32 arg); // 2
-    virtual void Attach(MovingSprite *owner);                           // 3
-    virtual ~SwimCtrl();                                                // 9 DestroySwimCtrl
+    SwimCtrl();                                             // InitSwimCtrl
+    virtual void Update(MovingSprite *part);                // 1
+    virtual void HandleEvent(s32 from, s32 event, s32 arg); // 2
+    virtual void Attach(MovingSprite *owner);               // 3
+    virtual ~SwimCtrl();                                    // 9 DestroySwimCtrl
     void CheckTurn();
     void KillPlayer(s32 anim);
     void ApplyMotion();

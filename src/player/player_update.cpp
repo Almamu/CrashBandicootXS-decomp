@@ -92,16 +92,16 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
     case EVENT_WARP_EXIT:
         if (gLevelState->timeTrial)
             gLevelState->FreezeLevelClock(100);
-        mover->HandleEvent((MovingSprite *)from, event, arg);
+        mover->HandleEvent(from, event, arg);
         gHud->ShowCounters();
         break;
     case EVENT_WARP_BONUS_ROUND:
         gLevelState->RequestBonusRound();
-        mover->HandleEvent((MovingSprite *)from, event, arg);
+        mover->HandleEvent(from, event, arg);
         break;
     case EVENT_WARP_GEM_PATH:
         gLevelState->RequestGemPath();
-        mover->HandleEvent((MovingSprite *)from, event, arg);
+        mover->HandleEvent(from, event, arg);
         break;
     case EVENT_STOPWATCH:
         if (gLevelState->maskLevel == MASK_LEVEL_INVINCIBLE)
@@ -178,7 +178,7 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
                         gLevelState->SetMaskLevel(gLevelState->maskLevel - 1);
                         gAudioContext->PlaySfx(SFX_AKU_AKU_LOSE, 0x100);
                         gAudioContext->PlaySfx(SFX_PLAYER_HURT, 0x100);
-                        mover->HandleEvent((MovingSprite *)from, EVENT_MASK_HIT, arg);
+                        mover->HandleEvent(from, EVENT_MASK_HIT, arg);
                         /* Dead on purpose: the ROM reloads the mask level
                          * here and never uses it. This test is what leaves
                          * that load; its `m = 0` is dead (m is set from the
@@ -195,7 +195,7 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
                     }
                 } else {
                     gLevelState->AddDeath();
-                    mover->HandleEvent((MovingSprite *)from, event, arg);
+                    mover->HandleEvent(from, event, arg);
                 }
             }
         }
@@ -205,10 +205,10 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
         rampY.start = 0;
         rampY.step = 0;
         rampY.target = 0;
-        mover->HandleEvent((MovingSprite *)from, event, arg);
+        mover->HandleEvent(from, event, arg);
         break;
     case EVENT_BUMP:
-        mover->HandleEvent((MovingSprite *)from, event, arg);
+        mover->HandleEvent(from, event, arg);
         break;
     case EVENT_BOUNCE:
     case EVENT_BOUNCE_HIGH:
@@ -216,7 +216,7 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
         rampY.start = 0;
         rampY.step = 0;
         rampY.target = 0;
-        mover->HandleEvent((MovingSprite *)from, event, arg);
+        mover->HandleEvent(from, event, arg);
         break;
     }
 }

@@ -104,11 +104,11 @@ public:
                           //        bank anim (gEnemyDefaultAnimMap..., SetModeTable)
     MovingSprite *popup;  // 0x88 - floating popup spawned in state 18
 
-    EnemyCtrl();                                                        // CreateEnemyCtrl
-    virtual void Update(MovingSprite *part);                            // UpdateEnemyCtrl
-    virtual void HandleEvent(MovingSprite *sender, s32 event, s32 arg); // HitEnemy
-    virtual void Attach(MovingSprite *part);                            // AttachEnemyCtrl
-    virtual ~EnemyCtrl();                                               // DestroyEnemyCtrl
+    EnemyCtrl();                                            // CreateEnemyCtrl
+    virtual void Update(MovingSprite *part);                // UpdateEnemyCtrl
+    virtual void HandleEvent(s32 from, s32 event, s32 arg); // HitEnemy
+    virtual void Attach(MovingSprite *part);                // AttachEnemyCtrl
+    virtual ~EnemyCtrl();                                   // DestroyEnemyCtrl
 
     /* src/enemies/enemy_ctrl.cpp */
     void SetMotionY(s32 mode);

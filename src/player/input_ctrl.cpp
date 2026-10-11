@@ -231,7 +231,7 @@ void InputCtrl::Reset()
 }
 
 /* Events 1-4 (the hits) kill the player on animation 1. */
-void InputCtrl::HandleEvent(MovingSprite *, s32 event, s32)
+void InputCtrl::HandleEvent(s32, s32 event, s32)
 {
     /* a non-literal lower bound keeps gcc from folding `>= 1` into
      * `> 0` (the ROM compares against 1) and from merging the two tests

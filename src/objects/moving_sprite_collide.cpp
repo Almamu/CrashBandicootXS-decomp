@@ -12,7 +12,7 @@ extern "C" {
 void MovingSprite::HandleEvent(s32 from, s32 event, s32 arg)
 {
     if (mover != 0)
-        mover->HandleEvent((MovingSprite *)from, event, arg);
+        mover->HandleEvent(from, event, arg);
 }
 
 /* How the sprite touches `region`: 2 when its attack box does, or when

@@ -253,7 +253,7 @@ class EffectCtrl : public Ctrl
 public:
     EffectCtrl(); // InitEffectCtrl
     virtual void Update(MovingSprite *part);
-    virtual void HandleEvent(MovingSprite *sender, s32 event, s32 arg);
+    virtual void HandleEvent(s32 from, s32 event, s32 arg);
     virtual ~EffectCtrl(); // DestroyEffectCtrl
     void Reset();          // ResetEffectCtrl
 };
