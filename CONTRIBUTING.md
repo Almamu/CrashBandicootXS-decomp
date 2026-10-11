@@ -269,6 +269,24 @@ full rules and the history (#574). For new code:
   suggestions use a define that doesn't exist yet (`new_defines`:
   `PALETTE_SIZE_16`, `BG_SCREEN_SIZE`, `BG_CHAR_SIZE`); add it to
   include/gba/defines.h with the first use.
+- **Casts:** `python3 tools/magic_numbers.py --casts` (#855) lists the
+  casts in src/ (not src/data/) and include/, grouped by the thing cast (a
+  field, a local or parameter, a global, a function's result, an address,
+  an address macro), with its declared type, how many of its reads are
+  cast and each cast's kind (`scalar`, `ptrint`, `pointer`, `derived`,
+  `byteoff`, `same`), ranked by cast uses x consistency: a thing every
+  read casts the same way is a retype candidate. See
+  [docs/casts.md](docs/casts.md):
+
+  ```
+  tools/magic_numbers.py --casts [--samples N]           # per thing, ranked, with its sites
+  tools/magic_numbers.py --casts --report OUT            # Markdown: counts, candidates, per kind
+  tools/magic_numbers.py --casts --json --path src/menus # for agents: every cast
+  tools/magic_numbers.py --casts --kind byteoff          # one kind (repeatable)
+  ```
+
+  Retype one field or signature at a time and rebuild the whole ROM: a
+  type reaches every reader. A cast the match needs stays, with a comment.
 - **One layout, one type (#656).** A record that extends another embeds
   it, so each field has one name and one type:
   - **Plain C:** the base is the named first member (memory.h's `struct
