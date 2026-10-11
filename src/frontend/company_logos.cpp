@@ -125,9 +125,9 @@ void CompanyLogos::Run()
         REG_BG2PC = 0;
         bg->Update();
     } while (fade != 0);
-    ((struct dispcnt_bits *)gDispcnt)->bg2 = 0;
-    ((struct dispcnt_bits *)gDispcnt)->obj = 1;
-    ((struct dispcnt_bits *)gDispcnt)->objMap1D = 1;
+    gDispcnt.bits.bg2 = 0;
+    gDispcnt.bits.obj = 1;
+    gDispcnt.bits.objMap1D = 1;
     CommitDispcnt();
     *(vu32 *)REG_ADDR_BLDCNT = 0;
     fade = -1;
@@ -193,9 +193,9 @@ void CompanyLogos::LoadVvLogoGraphics()
     tilesA = (u32)AllocVramTileBlock(0x1200);
     tilesB = (u32)AllocVramTileBlock(0x400);
     tilesC = (u32)AllocVramTileBlock(0x1000);
-    LoadAssetBuffered(gVvLogoEmblemObj.paletteAsset, (void *)(OBJ_PLTT + 15 * PALETTE_SIZE_16));
-    LoadAssetBuffered(gVvLogoLettersObj.paletteAsset, (void *)(OBJ_PLTT + 14 * PALETTE_SIZE_16));
-    LoadAssetBuffered(gVvLogoUrlObj.paletteAsset, (void *)(OBJ_PLTT + 13 * PALETTE_SIZE_16));
+    LoadAssetBuffered(gVvLogoEmblemObj.paletteAsset, OBJ_PALETTE(15));
+    LoadAssetBuffered(gVvLogoLettersObj.paletteAsset, OBJ_PALETTE(14));
+    LoadAssetBuffered(gVvLogoUrlObj.paletteAsset, OBJ_PALETTE(13));
     LoadAssetBuffered(gVvLogoLettersObj.tileAsset, (void *)tilesA);
     LoadAssetBuffered(gVvLogoUrlObj.tileAsset, (void *)tilesB);
     {
@@ -569,8 +569,8 @@ void CompanyLogos::LoadUniversalLogoBg()
     bg2cnt.bits.priority = 1;
     bg2cnt.bits.size = 1;
     REG_BG2CNT = bg2cnt.raw;
-    ((struct dispcnt_bits *)gDispcnt)->bg2 = 1;
-    ((struct dispcnt_bits *)gDispcnt)->mode = DISPCNT_MODE_1;
+    gDispcnt.bits.bg2 = 1;
+    gDispcnt.bits.mode = DISPCNT_MODE_1;
     delete[] mapBuf;
 }
 

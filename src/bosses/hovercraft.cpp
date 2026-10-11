@@ -53,7 +53,7 @@ void Hovercraft::UpdateHitFlash(void)
         hitFlashTimer = 0;
 
     src = palette;
-    dst = (u16 *)(BG_PLTT + PALETTE_SIZE_16);
+    dst = BG_PALETTE(1);
     for (i = 0; i < 16; i++) {
         if (hitFlashOn != 0)
             dst[i] = RGB_WHITE;
@@ -445,7 +445,7 @@ void Hovercraft::LoadGraphics(void)
     s32 base;
     u32 zero;
 
-    DmaCopy16(3, palette, (void *)(BG_PLTT + PALETTE_SIZE_16), PALETTE_SIZE_16);
+    DmaCopy16(3, palette, BG_PLTT + PALETTE_SIZE_16, PALETTE_SIZE_16);
     base = BG_CHAR_ADDR(2) + 0xFF * TILE_SIZE_8BPP;
     zero = 0;
     for (i = base + 0x3c; i >= base; i -= 4)

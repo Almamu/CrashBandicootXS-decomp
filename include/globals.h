@@ -40,8 +40,6 @@ extern u32 gRoomFrameCount;
 extern class ActorSelf *gActorList;
 #endif
 
-/* sym_iwram.txt */
-extern u8 gDispcnt[2]; /* the REG_DISPCNT shadow (CommitDispcnt), read and written bytewise */
 #ifdef __cplusplus
 extern class PaletteCache *gPaletteCache;
 #endif

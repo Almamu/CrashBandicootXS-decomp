@@ -139,7 +139,7 @@ LevelState::LevelState()
     gEntityFlags = new LevelEntityFlags;
     gPaletteCycles = new PaletteCycles;
     {
-        u16 *dispcnt = (u16 *)gDispcnt;
+        u16 *dispcnt = &gDispcnt.raw;
         u16 zero = 0;
 
         *dispcnt = zero;

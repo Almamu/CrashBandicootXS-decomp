@@ -63,7 +63,7 @@ Credits::Credits()
     streamBase = gCreditsText;
     stream = gCreditsText;
     lineDelay = 0;
-    gDispcnt[1] |= 0x10;
+    gDispcnt.bits.obj = 1;
     CommitDispcnt();
     frameParity = 0;
     gAudioContext->PlaySong(SONG_CREDITS);
@@ -342,7 +342,7 @@ struct popup_glyph_src {
  * then lives in memory until the addressof pass and loses the `slot + 1`
  * hoist (55 lines off); by value the copy is folded and the shift
  * hoisted (50). */
-static inline void CopyPaletteToSlot(u8 (*slots)[TILE_SIZE_4BPP], const u32 &slot, const u16 *s)
+static inline void CopyPaletteToSlot(u16 (*slots)[16], const u32 &slot, const u16 *s)
 {
     u16 *d = (u16 *)(slot * TILE_SIZE_4BPP + (u32)slots);
     s32 k;
@@ -356,7 +356,7 @@ static inline void CopyPaletteToSlot(u8 (*slots)[TILE_SIZE_4BPP], const u32 &slo
  * and its palette into palette-cache slots 1-5. */
 void Credits::LoadLogos()
 {
-    u8 (*palSlots)[TILE_SIZE_4BPP] = gPaletteCache->slots;
+    u16 (*palSlots)[16] = gPaletteCache->slots;
     s32 slot = 1;
     s32 i;
 

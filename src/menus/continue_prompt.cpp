@@ -34,7 +34,7 @@ ContinuePrompt::ContinuePrompt()
     bg1Buf->Load(&gContinuePromptUkaUkaBg);
     bg0Buf->Load(&gContinuePromptSmokeBg);
     bg2Buf->Load(&gContinuePromptGlowBg);
-    *(vu16 *)PLTT = 0;
+    BACKDROP_COLOR = 0;
     dispcnt.raw = 0;
     dispcnt.bits.objMap1D = 1;
     dispcnt.bits.mode = DISPCNT_MODE_0;
@@ -95,8 +95,8 @@ void ContinuePrompt::InitGraphics()
 
     cache = gPaletteCache;
     {
-        u16 *destA = (u16 *)cache->slots[0];
-        u16 *destB = (u16 *)cache->slots[2];
+        u16 *destA = cache->slots[0];
+        u16 *destB = cache->slots[2];
 
         for (i = 0; i < 16; i++) {
             destA[i] = gContinuePromptPalette0[i];

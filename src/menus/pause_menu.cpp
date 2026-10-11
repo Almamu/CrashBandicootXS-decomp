@@ -45,7 +45,7 @@ s32 PauseMenu::Run()
     mem_free_bytes(MEM_HEAP_BOTH);
     gAudioContext->StopAmbientSfx();
     WaitForVBlank();
-    *(vu16 *)PLTT = 0;
+    BACKDROP_COLOR = 0;
     *(vu16 *)REG_ADDR_DISPCNT = 0;
 
     oldCache = gPaletteCache;

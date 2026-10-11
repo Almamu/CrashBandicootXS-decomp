@@ -95,7 +95,7 @@ void Airship::LoadGraphics()
         }
         REG_DISPCNT |= DISPCNT_BG2_ON;
         UpdateBg2();
-        pal = (vu16 *)(BG_PLTT + PALETTE_SIZE_16);
+        pal = BG_PALETTE(1);
         DmaCopy16(3, palette, pal, PALETTE_SIZE_16);
         if (state == AIRSHIP_STATE_FALL) {
             pal[15] = pal[1] = pal[4] = pal[8] = 0;
@@ -301,7 +301,7 @@ void Airship::ConvertTiles()
  * (a flags word driving this effect's per-frame look). */
 void Airship::UpdateFlashColor()
 {
-    vu16 *bank1 = (vu16 *)(BG_PLTT + PALETTE_SIZE_16);
+    vu16 *bank1 = BG_PALETTE(1);
 
     if (stateTimer & 8) {
         bank1[0xf] = 0x7fff;
@@ -329,8 +329,7 @@ void Airship::AnimatePalette()
         v = 5 - v;
     }
 
-    QueueVramDmaTransfer((void *)hitFlashPalettes[v], (void *)(BG_PLTT + PALETTE_SIZE_16),
-                         PALETTE_SIZE_16, 0x10);
+    QueueVramDmaTransfer(hitFlashPalettes[v], BG_PALETTE(1), PALETTE_SIZE_16, 0x10);
 }
 
 /* The end of the airship's code (#664 part 11f): its HP gauge, its

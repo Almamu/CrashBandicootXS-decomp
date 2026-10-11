@@ -118,7 +118,7 @@ void LevelState::PlayCutscene(s32 idx)
 
     SetBoxPos(&f.box, 7, 0x7E);
     SetBoxSize(&f.box, 0xE4, 0x1E);
-    dispcnt = (u16 *)gDispcnt;
+    dispcnt = &gDispcnt.raw;
     zero = 0;
     mode = 0x40;
     *dispcnt = mode;

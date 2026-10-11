@@ -10,18 +10,21 @@ extern "C" {
 #include "globals.h"
 }
 
-/* Loads palette `id` into bank `slot` (DMA into `slots`). */
+/* Loads palette `id` into bank `slot` (DMA into `slots`). The bank's
+ * colours are `slots[0]` moved on by `slot` banks, as in GetSlot: the ROM
+ * adds `slots`' offset (0x2C) to `this` before the bank's, and
+ * `&slots[slot]` adds them the other way round. */
 void PaletteCache::LoadSlot(s32 slot, s32 id)
 {
     const u8 *src;
-    u8 *dst;
+    u16 *dst;
 
     slotOf[id] = slot;
     dirty = 1;
     src = palettes;
     dst = slots[0];
     src += id << 5;
-    dst += slot << 5;
+    dst += slot * 16;
     DMA3.src = (u32)src;
     DMA3.dst = (u32)dst;
     DMA3.cnt = (DMA_ENABLE << 16) | 16;
@@ -84,14 +87,14 @@ u8 PaletteCache::GetSlot(s32 id)
     for (i = 0; i <= 15; i++) {
         if (isFree[i] != 0) {
             const u8 *src;
-            u8 *dst;
+            u16 *dst;
 
             isFree[i] = 0;
             slotOf[id] = i;
             src = palettes;
             dst = slots[0];
             src += id << 5;
-            dst += i << 5;
+            dst += i * 16;
             DMA3.src = (u32)src;
             DMA3.dst = (u32)dst;
             DMA3.cnt = (DMA_ENABLE << 16) | 16;

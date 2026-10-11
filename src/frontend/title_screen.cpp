@@ -97,7 +97,7 @@ void TitleScreen::LoadBg()
     s32 i;
     union bgcnt bg2cnt;
 
-    LoadTaggedAsset(pkg->paletteAsset, (void *)BG_PLTT);
+    LoadTaggedAsset(pkg->paletteAsset, BG_PALETTE(0));
     LoadTaggedAsset(pkg->tileAsset, (void *)BG_CHAR_ADDR(2));
     map = new u16[pkg->height * pkg->width];
     LoadTaggedAsset(pkg->mapAsset, map);
@@ -659,10 +659,10 @@ TitleScreen::~TitleScreen()
     s32 zero;
 
     delete starfield;
-    *(u16 *)gDispcnt = 0;
+    gDispcnt.raw = 0;
     CommitDispcnt();
     zero = 0;
-    pal = (u16 *)PLTT;
+    pal = BG_PALETTE(0);
     for (i = 0xff; i >= 0; i--)
         *pal++ = zero;
     REG_BLDCNT = BLDCNT_TGT1_ALL | BLDCNT_EFFECT_DARKEN;

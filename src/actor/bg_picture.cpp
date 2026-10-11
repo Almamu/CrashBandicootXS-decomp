@@ -85,7 +85,7 @@ void LoadBgPicture(u8 *pic)
     u32 tiles;
     u8 *tileData;
 
-    DmaCopy16(3, pic, (void *)PLTT, BG_PLTT_SIZE);
+    DmaCopy16(3, pic, PLTT, BG_PLTT_SIZE);
     cols = ((struct bg_picture_header *)pic)->cols;
     rows = ((struct bg_picture_header *)pic)->rows;
     pic += 0x204;

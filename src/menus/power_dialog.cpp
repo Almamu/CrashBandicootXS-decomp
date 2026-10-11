@@ -34,7 +34,7 @@ void PowerDialog::Show(s32 title, s32 desc, s32 type)
 
     mem_free_bytes(0xC0000000);
     WaitForVBlank();
-    *(vu16 *)PLTT = 0;
+    BACKDROP_COLOR = 0;
     *(vu16 *)REG_ADDR_DISPCNT = 0;
     gPaletteCache->FreeUnlockedSlots();
     gSmallFont->ResetPalette();

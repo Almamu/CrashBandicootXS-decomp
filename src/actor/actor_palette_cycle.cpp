@@ -42,8 +42,8 @@ void UpdateActorPaletteCycle(void)
 {
     if (!gActorPaletteCycleEnabled)
         return;
-    QueueVramDmaTransfer((void *)gActorPaletteCycleFrames[gActorPaletteCycleFrame], (void *)BG_PLTT,
-                         0x1c0, 0x10);
+    QueueVramDmaTransfer(gActorPaletteCycleFrames[gActorPaletteCycleFrame], BG_PALETTE(0), 0x1c0,
+                         0x10);
     if (++gActorPaletteCycleTimer > 0x23) {
         gActorPaletteCycleTimer = 0;
         {

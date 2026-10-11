@@ -151,8 +151,8 @@ void LanguageSelect::InitGraphics()
     gPaletteCache->ClaimSlot(3);
     {
         PaletteCache *cache = gPaletteCache;
-        u16 *destA = (u16 *)cache->slots[0];
-        u16 *destB = (u16 *)cache->slots[2];
+        u16 *destA = cache->slots[0];
+        u16 *destB = cache->slots[2];
 
         for (i = 0; i < 16; i++) {
             destA[i] = gLanguageSelectPalette0[i];
