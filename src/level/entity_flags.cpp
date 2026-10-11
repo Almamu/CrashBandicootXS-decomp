@@ -43,17 +43,20 @@ s32 LevelEntityFlags::CountCrateEntities(const struct level_entity_list *list)
             const struct level_entity *item = &group->entities[j];
             s32 type = item->type;
 
-            if (type == 0x1a)
+            if (type == ENTITY_OUTLINE_CRATE)
                 type =
                     *(const s16 *)((const u8 *)list->params + list->paramOffsets[item->param] + 8);
 
             // clang-format off
             switch (type) {
-            case 0x18: case 0x1a: case 0x1b: case 0x1c: case 0x1d:
+            case ENTITY_IRON_SWITCH_CRATE: case ENTITY_OUTLINE_CRATE: case ENTITY_NITRO_SWITCH_CRATE:
+            case ENTITY_IRON_CRATE: case ENTITY_IRON_ARROW_CRATE:
                 break;
-            case 0x15: case 0x16: case 0x17: case 0x19:
-            case 0x1e: case 0x1f: case 0x20: case 0x21: case 0x22:
-            case 0x23: case 0x24: case 0x25: case 0x26: case 0x27:
+            case ENTITY_BASIC_CRATE: case ENTITY_CHECKPOINT_CRATE: case ENTITY_AKU_AKU_CRATE:
+            case ENTITY_ARROW_CRATE: case ENTITY_LIFE_CRATE: case ENTITY_NITRO_CRATE:
+            case ENTITY_MYSTERY_CRATE: case ENTITY_BOUNCY_WUMPA_CRATE: case ENTITY_REINFORCED_CRATE:
+            case ENTITY_TNT_CRATE: case ENTITY_SLOT_CRATE:
+            case ENTITY_TIME_CRATE_1: case ENTITY_TIME_CRATE_2: case ENTITY_TIME_CRATE_3:
                 count++;
                 break;
             }

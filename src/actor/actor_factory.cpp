@@ -42,62 +42,68 @@ ActorSelf *CreateActor(u8 kind, s32 x, s32 y, s32 z, struct actor_spawn *spawn)
     y += gActorAnimTable[kind].spawnY;
 
     switch (kind) {
-    case 9:
+    case POLAR_KIND_AKU_AKU_CRATE:
         return new PolarAkuAkuCrate(gActorAnimTable + kind, x, y, z);
-    case 3:
+    case POLAR_KIND_CHECKPOINT_CRATE:
         return new PolarCheckpointCrate(gActorAnimTable + kind, gActorAnimTable[kind].spawnX, y, z);
-    case 5:
-    case 6:
-    case 7:
+    case POLAR_KIND_TIME_CRATE_1:
+    case POLAR_KIND_TIME_CRATE_2:
+    case POLAR_KIND_TIME_CRATE_3:
         return new PolarTimeCrate(gActorAnimTable + kind, x, y, z);
-    case 1:
+    case POLAR_KIND_BASIC_CRATE:
         return new PolarBasicCrate(gActorAnimTable + kind, x, y, z);
-    case 4:
+    case POLAR_KIND_NITRO_CRATE:
         return new PolarNitroCrate(gActorAnimTable + kind, x, y, z);
-    case 22:
+    case POLAR_KIND_LAUNCHER:
         return new PolarLauncher(gActorAnimTable + kind, x, y, z);
-    case 12:
+    case POLAR_KIND_BOOST_PAD:
         return new PolarBoostPad(gActorAnimTable + kind, x, y, z);
-    case 24:
+    case POLAR_KIND_PENGUIN:
         return new PolarPenguin(gActorAnimTable + kind, x, y, z, (struct spawn_arg *)spawn);
-    case 28:
-    case 29:
-    case 30:
-    case 31:
+    case POLAR_KIND_QUESTION_CRATE_WUMPA_1:
+    case POLAR_KIND_QUESTION_CRATE_WUMPA_3:
+    case POLAR_KIND_QUESTION_CRATE_WUMPA_5:
+    case POLAR_KIND_QUESTION_CRATE_AKU_AKU:
         return new PolarQuestionCrate(gActorAnimTable + kind, x, y, z);
-    case 35:
+    case POLAR_KIND_QUESTION_CRATE_LIFE:
         if ((u8)IsSpawnCollected(spawn))
-            return new PolarQuestionCrate(gActorAnimTable + 28, x, y, z);
+            return new PolarQuestionCrate(gActorAnimTable + POLAR_KIND_QUESTION_CRATE_WUMPA_1, x, y,
+                                          z);
         return new PolarLifeCrate(gActorAnimTable + kind, x, y, z, spawn);
-    case 8:
+    case POLAR_KIND_LIFE_CRATE:
         if ((u8)IsSpawnCollected(spawn))
-            return new PolarQuestionCrate(gActorAnimTable + 28, x, y, z);
+            return new PolarQuestionCrate(gActorAnimTable + POLAR_KIND_QUESTION_CRATE_WUMPA_1, x, y,
+                                          z);
         return new PolarLifeCrate(gActorAnimTable + kind, x, y, z, spawn);
-    case 10:
+    case POLAR_KIND_FOUR_WUMPA_CRATE:
         return new PolarFourWumpaCrate(gActorAnimTable + kind, x, y, z);
-    case 11:
+    case POLAR_KIND_WUMPA:
         return new PolarWumpa(gActorAnimTable + kind, x, y, z);
-    case 23:
+    case POLAR_KIND_ELECTRIC_FENCE:
         return new PolarElectricFence(gActorAnimTable + kind, x, y, z);
-    case 16:
-    case 18:
-    case 20:
+    case POLAR_KIND_ICICLE_A:
+    case POLAR_KIND_ICICLE_B:
+    case POLAR_KIND_ICICLE_C:
         return new PolarIcicle(gActorAnimTable + kind, x, y, z);
-    case 25:
+    case POLAR_KIND_GOAL:
         /* The goal's second part (record 26), on its second animation. */
-        (new PolarGoal(gActorAnimTable + 26, gActorAnimTable[26].spawnX, y, z))->RestartAnim(1);
+        (new PolarGoal(gActorAnimTable + POLAR_KIND_GOAL_2,
+                       gActorAnimTable[POLAR_KIND_GOAL_2].spawnX, y, z))
+            ->RestartAnim(1);
         return new PolarGoal(gActorAnimTable + kind, gActorAnimTable[kind].spawnX, y, z);
-    case 13:
+    case POLAR_KIND_OBSTACLE:
         /* The obstacle's second part (record 14), the same way. */
-        (new PolarObstacle(gActorAnimTable + 14, gActorAnimTable[14].spawnX, y, z))->RestartAnim(1);
+        (new PolarObstacle(gActorAnimTable + POLAR_KIND_OBSTACLE_2,
+                           gActorAnimTable[POLAR_KIND_OBSTACLE_2].spawnX, y, z))
+            ->RestartAnim(1);
         return new PolarObstacle(gActorAnimTable + kind, gActorAnimTable[kind].spawnX, y, z);
-    case 2:
+    case POLAR_KIND_RIDERLESS_POLAR:
         return new RiderlessPolar(gActorAnimTable + kind, x, y, z);
-    case 36:
-    case 37:
-    case 38:
-    case 39:
-        SetActorPaletteCycle(kind - 36);
+    case POLAR_KIND_PALETTE_CYCLE_0:
+    case POLAR_KIND_PALETTE_CYCLE_1:
+    case POLAR_KIND_PALETTE_CYCLE_2:
+    case POLAR_KIND_PALETTE_CYCLE_3:
+        SetActorPaletteCycle(kind - POLAR_KIND_PALETTE_CYCLE_0);
         break;
     }
     return 0;
@@ -105,17 +111,17 @@ ActorSelf *CreateActor(u8 kind, s32 x, s32 y, s32 z, struct actor_spawn *spawn)
 
 void CreatePolarCheckpointText(s32 x, s32 y, s32 z)
 {
-    new PolarCheckpointText(&gActorAnimTable[40], x, y, z);
+    new PolarCheckpointText(&gActorAnimTable[POLAR_KIND_CHECKPOINT_TEXT], x, y, z);
 }
 
 void SpawnPolarCollectedWumpa(s32 x, s32 y, s32 count)
 {
-    new PolarCollectedWumpa(&gActorAnimTable[11], x, y, count);
+    new PolarCollectedWumpa(&gActorAnimTable[POLAR_KIND_WUMPA], x, y, count);
 }
 
 PolarAkuAku *SpawnPolarAkuAku(s32 x, s32 y, s32 z, s32 arg)
 {
-    return new PolarAkuAku(&gActorAnimTable[27], x, y, z, arg);
+    return new PolarAkuAku(&gActorAnimTable[POLAR_KIND_AKU_AKU], x, y, z, arg);
 }
 
 void ConstructAnimTableState(struct anim_table_record *table, s32 z)
@@ -131,15 +137,19 @@ ActorSelf *SpawnActor(struct actor_spawn *spawn, u8 useBonus, s32 zOffset)
 
     if (gLevelState->timeTrial != 0) {
         kind = spawn->altKind;
-        if (kind == 11)
+        if (kind == POLAR_KIND_WUMPA)
             return 0;
-        if (kind == 3 || kind == 8 || kind == 28 || kind == 29 || kind == 30 || kind == 31 ||
-            kind == 35)
-            kind = 1;
+        if (kind == POLAR_KIND_CHECKPOINT_CRATE || kind == POLAR_KIND_LIFE_CRATE ||
+            kind == POLAR_KIND_QUESTION_CRATE_WUMPA_1 ||
+            kind == POLAR_KIND_QUESTION_CRATE_WUMPA_3 ||
+            kind == POLAR_KIND_QUESTION_CRATE_WUMPA_5 ||
+            kind == POLAR_KIND_QUESTION_CRATE_AKU_AKU || kind == POLAR_KIND_QUESTION_CRATE_LIFE)
+            kind = POLAR_KIND_BASIC_CRATE;
     } else if (useBonus) {
         kind = spawn->bonusKind;
     }
-    if (kind == 0 || kind == 32 || kind == 33 || kind == 34 || kind == 62)
+    if (kind == POLAR_KIND_PLAYER || kind == POLAR_KIND_PATH_SLOW ||
+        kind == POLAR_KIND_PATH_MEDIUM || kind == POLAR_KIND_PATH_FAST || kind == POLAR_KIND_UNK62)
         return 0;
     return CreateActor(kind, INT_TO_Q8(spawn->x), INT_TO_Q8(spawn->y),
                        INT_TO_Q8(spawn->z) + zOffset, spawn);

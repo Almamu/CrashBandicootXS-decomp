@@ -126,7 +126,7 @@ s32 JetpackRocket::IsUnshootable()
  * offset), and plays its cue once; then ActorSelf's update. */
 void JetpackRing::Update()
 {
-    if ((u8)record->index == 0x1F && (u8)IsTouchingPlayer(this)) {
+    if ((u8)record->index == JETPACK_KIND_RING_LEFT && (u8)IsTouchingPlayer(this)) {
         JetpackPlayer *player = Player();
 
         player->PassRing(x - record->spawnX, y);

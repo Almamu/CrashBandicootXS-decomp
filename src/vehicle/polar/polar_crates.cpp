@@ -46,13 +46,13 @@ void PolarTimeCrate::Update()
         gLevelState->AddBrokenCrate();
 
         switch ((u8)record->index) {
-        case 5:
+        case POLAR_KIND_TIME_CRATE_1:
             gLevelState->FreezeLevelClock(1);
             break;
-        case 6:
+        case POLAR_KIND_TIME_CRATE_2:
             gLevelState->FreezeLevelClock(2);
             break;
-        case 7:
+        case POLAR_KIND_TIME_CRATE_3:
             gLevelState->FreezeLevelClock(3);
             break;
         }

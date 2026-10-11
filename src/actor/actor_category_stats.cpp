@@ -36,8 +36,13 @@ s32 CountCategoryCrates(s32 categoryIdx)
         if (count < total) {
             do {
                 u8 v = table[i].kind;
-                if (v == 1 || v == 3 || v == 4 || v == 8 || v == 9 || v == 0xa || v == 0x1c ||
-                    v == 0x1d || v == 0x1e || v == 0x1f || v == 0x23) {
+                if (v == POLAR_KIND_BASIC_CRATE || v == POLAR_KIND_CHECKPOINT_CRATE ||
+                    v == POLAR_KIND_NITRO_CRATE || v == POLAR_KIND_LIFE_CRATE ||
+                    v == POLAR_KIND_AKU_AKU_CRATE || v == POLAR_KIND_FOUR_WUMPA_CRATE ||
+                    v == POLAR_KIND_QUESTION_CRATE_WUMPA_1 ||
+                    v == POLAR_KIND_QUESTION_CRATE_WUMPA_3 ||
+                    v == POLAR_KIND_QUESTION_CRATE_WUMPA_5 ||
+                    v == POLAR_KIND_QUESTION_CRATE_AKU_AKU || v == POLAR_KIND_QUESTION_CRATE_LIFE) {
                     count++;
                 }
                 i++;
@@ -61,12 +66,14 @@ s32 CountCategoryCrates(s32 categoryIdx)
             do {
                 u8 v = table->kind;
 
-                if ((u8)(v - 0x13) <= 4) {
+                if ((u8)(v - JETPACK_KIND_HEALTH_CRATE) <=
+                    JETPACK_KIND_QUESTION_CRATE_LIFE - JETPACK_KIND_HEALTH_CRATE) {
                     count++;
                 } else {
                     /* Reads the field again: cse turns the second read
                      * into the ROM's `adds r0, r1, #0` copy of `v`. */
-                    if (table->kind == 0x1b || table->kind == 0x1e) {
+                    if (table->kind == JETPACK_KIND_PARACHUTE_NITRO ||
+                        table->kind == JETPACK_KIND_UNK30) {
                         count++;
                     }
                 }

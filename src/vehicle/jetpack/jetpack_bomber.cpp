@@ -30,22 +30,22 @@ JetpackBomber::JetpackBomber(const struct anim_table_record *rec, s32 x, s32 y, 
     homeY = y;
     unshootable = 0;
     switch ((u8)rec->index) {
-    case 4:
+    case JETPACK_KIND_BOMBER_IDLE:
         SetState(JETPACK_BOMBER_STATE_IDLE, 0);
         break;
-    case 5:
+    case JETPACK_KIND_BOMBER_HOME:
         SetState(JETPACK_BOMBER_STATE_HOME, 0);
         break;
-    case 6:
+    case JETPACK_KIND_BOMBER_BOB_VERTICAL:
         SetState(JETPACK_BOMBER_STATE_BOB_VERTICAL, 0);
         break;
-    case 7:
+    case JETPACK_KIND_BOMBER_SWING_HORIZONTAL:
         SetState(JETPACK_BOMBER_STATE_SWING_HORIZONTAL, 0);
         break;
-    case 8:
+    case JETPACK_KIND_BOMBER_CIRCLE:
         SetState(JETPACK_BOMBER_STATE_CIRCLE, 0);
         break;
-    case 9:
+    case JETPACK_KIND_BOMBER_DROP:
         SetState(JETPACK_BOMBER_STATE_DROP, 0);
         break;
     }
