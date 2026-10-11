@@ -54,9 +54,10 @@ struct CrateGridLink {
 COMPILE_TIME_ASSERT(crate_list_hpp, sizeof(CrateGridLink) == 8);
 
 /* codegen: a grid node with untyped pointers, the view ResetGrid (below)
- * zeroes the nodes through: through the real `CrateGridNode *` fields, gcc
- * takes the zeroing stores as possible writes to the list's `nodes` and
- * reloads it (docs/headers_plan.md, "Codegen findings"). Formerly crates.h's
+ * zeroes the nodes through (CrateList::InitView): through the real
+ * `CrateGridNode *` fields, gcc takes the zeroing stores as possible writes
+ * to the list's `nodes` and reloads it (docs/casts/crate_grid.md,
+ * docs/headers_plan.md "Codegen findings"). Formerly crates.h's
  * `struct pool_init_node`. */
 struct CrateGridNodeInit {
     void *data;
@@ -154,6 +155,18 @@ public:
         }
     }
 
+    /* codegen: the nodes as CrateGridNodeInit, the view ResetGrid zeroes
+     * them through (docs/casts/crate_grid.md). The ROM reloads `nodes`
+     * after the free-list store and after `mark`'s byte store, but not
+     * after the `data`/`next`/`link` stores: those weren't stores of a
+     * `CrateGridNode *`, which may alias `nodes`. Each call reads `nodes`
+     * again. It comes before ResetGrid: defined after it, the two
+     * objects that inline ResetGrid change. */
+    CrateGridNodeInit *InitView()
+    {
+        return (CrateGridNodeInit *)nodes;
+    }
+
     /* Empties the grid and threads the free list through every node: the
      * constructor's tail, and Reset's. Two source details give the ROM's
      * registers: the column clear is a plain indexed loop (gcc reverses it
@@ -161,8 +174,7 @@ public:
      * free-list loop reads `links` through a copy (`fl`) taken inside the
      * `if (i < n)`, right before the `do` (the ROM's `mov ip, sb`); read
      * directly, the loop optimizer hoists `this + 0x810` above the clear.
-     * The nodes are zeroed through CrateGridNodeInit, the untyped view: through `CrateGridNode *` fields, gcc takes the stores
-     * as possible writes to `nodes` and reloads it. */
+     * The nodes are zeroed through InitView (above). */
     void ResetGrid()
     {
         s32 i;
@@ -183,11 +195,11 @@ public:
                 CrateGridLink *arr;
 
                 (*fl)[i].node = &nodes[i];
-                ((CrateGridNodeInit *)nodes)[i].data = 0;
-                ((CrateGridNodeInit *)nodes)[i].next = 0;
-                ((CrateGridNodeInit *)nodes)[i].link = 0;
-                ((CrateGridNodeInit *)nodes)[i].mark = 0;
-                ((CrateGridNodeInit *)nodes)[i].wrap = link = &(arr = *fl)[i];
+                InitView()[i].data = 0;
+                InitView()[i].next = 0;
+                InitView()[i].link = 0;
+                InitView()[i].mark = 0;
+                InitView()[i].wrap = link = &(arr = *fl)[i];
                 if (i == capacity - 1)
                     link->next = 0;
                 else
