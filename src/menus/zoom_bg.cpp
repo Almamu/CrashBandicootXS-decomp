@@ -79,7 +79,7 @@ ZoomBg::ZoomBg(s32 charBlock, s32 screenBlock)
     for (i = 0; i <= 3; i++) {
         twinkles[i].part = new UiSprite;
         SetBankNow(twinkles[i].part, AnimTable(0x258));
-        SetMode(twinkles[i].part, 1);
+        SetMode(twinkles[i].part, OAM_OBJ_MODE_SEMI_TRANSPARENT);
         twinkles[i].part->SetPixelPos(x + gZoomBgSlotOffsets[i].x, y + gZoomBgSlotOffsets[i].y);
         twinkles[i].part->SetPriority(1);
         SetPalette(twinkles[i].part, twinkles[0].part->GetAnimPaletteSlot());

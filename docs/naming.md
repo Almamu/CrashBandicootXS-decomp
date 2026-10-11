@@ -164,6 +164,10 @@ the names with the header it already includes. A data table in
 | `box_part.h` | `PART_DIR_` | the direction bits: Sprite's `dir`, MovingSprite's `hitAxes` and `hitMask`, EVENT_BUMP's side ([docs/flags/direction.md](flags/direction.md)) |
 | `platform.hpp` (next to Platform) | `PLATFORM_TYPE_` | `Platform::type` and `PlatformMover::kind`, what a platform does ([docs/flags/platform.md](flags/platform.md)) |
 | `save.h` (next to RunSaveMenu) | `SAVE_MENU_STATE_` | `SaveMenu::state`, the save menu's screen ([docs/flags/save_menu.md](flags/save_menu.md)) |
+| `menus.hpp` (next to `struct pause_row`) | `PAUSE_ROW_TYPE_` | `pause_row::type` and RunPauseMenu's result: resume, restart, quit, the volume rows ([docs/flags/pause_menu.md](flags/pause_menu.md)) |
+| `hud.hpp` (next to Hud) | `HUD_SLIDE_STATE_` | the HUD counters' `livesSlide`/`wumpaSlide`/`crateSlide` (hidden, sliding in, held, sliding out) ([docs/flags/hud_slide.md](flags/hud_slide.md)) |
+| `gfx.h` (next to the OAM structs; hardware) | `OAM_OBJ_MODE_` | attr0's `objMode` and Sprite's `gfxMode`: normal, semi-transparent, OBJ window ([docs/flags/oam.md](flags/oam.md)) |
+| `gba/io_reg.h` (hardware) | `DISPCNT_MODE_` | `dispcnt_bits::mode`, SetDispcntMode's argument: the BG mode ([docs/flags/display.md](flags/display.md)) |
 | `bosses.h` | `BOSS_` | `GetBossIndex` results |
 | `boss_ctrl.hpp` (next to each class) | `DINGODILE_STATE_`, `DINGODILE_SHIELD_STATE_`, `DINGODILE_PROJECTILE_STATE_`, `DINGODILE_SHARK_STATE_`, `TINY_STATE_`, `CORTEX_BOSS_STATE_`, `CORTEX_TARGET_STATE_`, `CORTEX_BOSS_GEM_STATE_`, `CORTEX_CANNON_STATE_`, `MEGA_MIX_STATE_` | `Ctrl::state` of the boss controllers: Dingodile, Tiny, Mega Mix and the Neo Cortex fight ([docs/flags/boss_ctrl.md](flags/boss_ctrl.md)) |
 | `boss_ctrl.hpp`, `bosses.h` | `DINGODILE_SPAWN_MODE_`, `CORTEX_SHOT_KIND_`, `CORTEX_BOSS_GEM_KIND_` | SpawnShieldOrRocket's `mode`, FireShot's `kind`, SpawnCortexBossGem's / CortexBossGemCtrl's `kind` ([docs/flags/boss_ctrl.md](flags/boss_ctrl.md)) |

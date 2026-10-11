@@ -124,7 +124,7 @@ void Hud::UpdateLives()
 {
     HudPart *cur;
 
-    if (livesSlide == 0)
+    if (livesSlide == HUD_SLIDE_STATE_HIDDEN)
         return;
 
     if (gLevelState->GetLives() > 0)
@@ -132,7 +132,7 @@ void Hud::UpdateLives()
     else
         lives = 0;
 
-    if (livesSlide == 1 || livesSlide == 3)
+    if (livesSlide == HUD_SLIDE_STATE_IN || livesSlide == HUD_SLIDE_STATE_OUT)
         gHudSlideOffset = livesSlideTimer * 2 - 0x28;
     else
         gHudSlideOffset = 0;
@@ -199,10 +199,10 @@ void Hud::UpdateCrates()
     s32 w;
     s32 off;
 
-    if (crateSlide == 0)
+    if (crateSlide == HUD_SLIDE_STATE_HIDDEN)
         return;
     crateCount = gLevelState->GetCrateCount();
-    if (crateSlide == 1 || crateSlide == 3)
+    if (crateSlide == HUD_SLIDE_STATE_IN || crateSlide == HUD_SLIDE_STATE_OUT)
         gHudSlideOffset = crateSlideTimer * 2 - 0x28;
     else
         gHudSlideOffset = 0;
@@ -304,9 +304,9 @@ void Hud::UpdateWumpa()
     HudPart *cur;
     s32 v;
 
-    if (wumpaSlide == 0)
+    if (wumpaSlide == HUD_SLIDE_STATE_HIDDEN)
         return;
-    if (wumpaSlide == 1 || wumpaSlide == 3)
+    if (wumpaSlide == HUD_SLIDE_STATE_IN || wumpaSlide == HUD_SLIDE_STATE_OUT)
         gHudSlideOffset = wumpaSlideTimer * 2 - 0x28;
     else
         gHudSlideOffset = 0;

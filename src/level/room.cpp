@@ -50,7 +50,7 @@ void LevelProgress::ResumeRoomAfterPause()
     gCamera->Snap();
     gLevelLayers->Reset();
     UpdateRoomFrame();
-    SetDispcntMode(0);
+    SetDispcntMode(DISPCNT_MODE_0);
     ShowObj();
     CommitDispcnt();
     CommitBlendRegs();

@@ -42,7 +42,8 @@ void Hud::Update()
         parts[34].Draw(0, 0);
     }
 
-    if (gLevelState->timeTrial != 0 && livesSlide == 0 && wumpaSlide == 0) {
+    if (gLevelState->timeTrial != 0 && livesSlide == HUD_SLIDE_STATE_HIDDEN &&
+        wumpaSlide == HUD_SLIDE_STATE_HIDDEN) {
         UpdateClock();
     }
 

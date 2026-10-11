@@ -229,7 +229,8 @@ s32 Sprite::CheckPlayerContact()
                     break;
                 }
                 if (spawned) {
-                    u32 mode = 1; // materialized before the mask, as in the ROM
+                    u32 mode =
+                        OAM_OBJ_MODE_SEMI_TRANSPARENT; // materialized before the mask, as in the ROM
 
                     spawned->mirrorBits.gfxMode = mode;
                     spawned->f.b.visible = 0;

@@ -19,8 +19,9 @@
  * UpdatePercentCounters (docs/rom_map.md's "hud" investigation). The
  * lives, wumpa and crate counters each slide in from the top of the
  * screen (ShowLives/ShowWumpa/ShowCrates/UpdateSlides, hud_slide.cpp): a
- * counter's slide state is 0 hidden, 1 sliding in, 2 held, 3 sliding out,
- * and while it slides `gHudSlideOffset = slideTimer * 2 - 40`.
+ * counter's slide state is 0 hidden, 1 sliding in, 2 held, 3 sliding out
+ * (HUD_SLIDE_STATE_*), and while it slides
+ * `gHudSlideOffset = slideTimer * 2 - 40`.
  *
  * Hud has no C view; cxx_symbols.txt maps the methods to their C names. */
 
@@ -61,6 +62,15 @@ extern const struct vec2 gHudPartPositions[35];
         CLAMP_INDEX(_f, _n);                                                   \
         _p->frame = _f;                                                        \
     }
+
+/* A counter's slide state, Hud's livesSlide/wumpaSlide/crateSlide
+ * (#843, docs/flags/hud_slide.md). Show* starts a hidden or sliding-out
+ * counter sliding in, or refreshes a held one's timer; StepSlide moves
+ * each on when its timer runs out. */
+#define HUD_SLIDE_STATE_HIDDEN 0 // not drawn
+#define HUD_SLIDE_STATE_IN     1 // the timer counts up to 0x14: sliding down into view
+#define HUD_SLIDE_STATE_HELD   2 // shown; the timer counts down from StepSlide's threshold (0x78)
+#define HUD_SLIDE_STATE_OUT    3 // the timer counts down from 0x14: sliding back up
 
 /* The HUD object (`gHud`, 0x68 bytes). The lives, wumpa and crate
  * counters each have a {slide state, slide timer} pair, stepped by

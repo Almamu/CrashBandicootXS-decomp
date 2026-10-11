@@ -73,7 +73,7 @@ TitleScreen::TitleScreen()
 
     SetObjMapping1D();
     ShowObj();
-    SetDispcntMode(1);
+    SetDispcntMode(DISPCNT_MODE_1);
     CommitDispcnt();
 
     selection = 0;

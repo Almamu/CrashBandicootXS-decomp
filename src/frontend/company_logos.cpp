@@ -570,7 +570,7 @@ void CompanyLogos::LoadUniversalLogoBg()
     bg2cnt.bits.size = 1;
     REG_BG2CNT = bg2cnt.raw;
     ((struct dispcnt_bits *)gDispcnt)->bg2 = 1;
-    ((struct dispcnt_bits *)gDispcnt)->mode = 1;
+    ((struct dispcnt_bits *)gDispcnt)->mode = DISPCNT_MODE_1;
     delete[] mapBuf;
 }
 

@@ -43,12 +43,23 @@ extern "C" {
 }
 
 /* One row of the pause menu (gPauseMenuRows, PauseMenu::rows): a
- * GetUiText label id, then the row's type (4/5 are the music/sound
- * volume rows; PauseMenuLoop returns the confirmed row's type). */
+ * GetUiText label id, then the row's type (PAUSE_ROW_TYPE_*; PauseMenu::Loop
+ * returns the confirmed row's type). */
 struct pause_row {
     s32 labelId;
     s32 type;
 };
+
+/* pause_row::type, and what RunPauseMenu returns (#843,
+ * docs/flags/pause_menu.md). A confirms a row; on the two volume rows it
+ * only plays a cue, and START returns PAUSE_ROW_TYPE_RESUME. RunRoom and
+ * InitActorCategory turn the result into a ROOM_EXIT_* status. */
+#define PAUSE_ROW_TYPE_RESUME  0 // "resume" (row 0), and START
+#define PAUSE_ROW_TYPE_RESTART 1 // row 4, shown only in a time trial: ROOM_EXIT_RETRY
+#define PAUSE_ROW_TYPE_QUIT    2 // row 3: ROOM_EXIT_QUIT
+#define PAUSE_ROW_TYPE_UNK3    3 // no row has it; InitActorCategory takes it as ROOM_EXIT_CLEARED
+#define PAUSE_ROW_TYPE_MUSIC   4 // row 1, the music volume (left/right)
+#define PAUSE_ROW_TYPE_SOUND   5 // row 2, the sound-effect volume (left/right)
 
 /* One level-select picture (gLevelSelectPictures): the tagged-asset
  * palette and tiles UpdateZoomBg loads with LoadTaggedAsset. */

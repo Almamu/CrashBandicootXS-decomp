@@ -22,5 +22,5 @@ UpdateGameFrame starts `status` at `ROOM_EXIT_RETRY` before the room loop.
 
 - RunRoom's `s32 ret = 1`: the ROM stores the same 1 as the camera's mode
   (`gCamera->mode = ret`), so it stays a number, with a comment.
-- The pause menu's results (`r == 1`, `result == 2`, ...): they are
-  `gPauseMenuRows`' row types, a later field.
+- The pause menu's results are `PAUSE_ROW_TYPE_*` (menus.hpp,
+  [pause_menu.md](pause_menu.md)), not room exit statuses.

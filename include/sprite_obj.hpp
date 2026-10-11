@@ -73,7 +73,7 @@ public:
     union {
         u8 mirror; // bit 4: X mirrored, bit 5: Y mirrored
         struct MirrorBits {
-            u8 gfxMode:2; // OBJ mode (Get/SetSpriteGfxMode); 1: semi-transparent
+            u8 gfxMode:2; // OBJ mode (Get/SetSpriteGfxMode): OAM_OBJ_MODE_*
             u8 mosaic:1;
             u8 colorMode:1; // 8bpp
             s32 flipX:1;    // signed: test them with `< 0` (`lsl #27`, a sign test)

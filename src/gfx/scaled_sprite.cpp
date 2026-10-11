@@ -142,7 +142,7 @@ void ScaledSprite::SetPos(u32 x, u32 y)
  * mode and shape bits of attr0 and the priority. */
 void ScaledSprite::ResetAttrs()
 {
-    oam.objMode = 0;
+    oam.objMode = OAM_OBJ_MODE_NORMAL;
     oam.mosaic = 0;
     oam.bpp = 0;
     oam.shape = 0;

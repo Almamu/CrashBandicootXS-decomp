@@ -122,7 +122,7 @@ void LevelState::PlayCutscene(s32 idx)
     zero = 0;
     mode = 0x40;
     *dispcnt = mode;
-    SetDispcntMode(4);
+    SetDispcntMode(DISPCNT_MODE_4);
     ShowBg2();
     ShowObj();
     {

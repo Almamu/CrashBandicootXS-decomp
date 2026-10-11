@@ -17,3 +17,21 @@ structs in gfx.h.
 ScaledSprite::Draw switches on it to place the OBJ: as is when `NORMAL`,
 centred on the preset box when `AFFINE`, and centred on the double-size
 box when `DOUBLE`; any mode but `NORMAL` takes an affine matrix.
+
+# `objMode`: the OBJ mode (#843)
+
+attr0 bits 10-11, `objMode` in the same structs. Sprites keep it as
+`mirrorBits.gfxMode` / `mirrorFlags.gfxMode` (sprite_obj.hpp), and
+SpriteRenderer::DrawPieces / DrawAffinePieces copy it into the entry.
+The names, `OAM_OBJ_MODE_*`, are the hardware's, next to the affine
+modes in gfx.h.
+
+| Value | Name | Hardware | Set by |
+|---|---|---|---|
+| 0 | `OAM_OBJ_MODE_NORMAL` | drawn as is | ScaledSprite and the level select's cursor build their entry with it; a new sprite starts at 0 |
+| 1 | `OAM_OBJ_MODE_SEMI_TRANSPARENT` | always alpha-blended, as the first target | the effects LaunchEffectPart / SpawnEffectPart / SpawnAt / SpawnPickupEffect spawn (ActionCtrl::StateRun and StateAirborne, SpawnCrateGem, the super body slam's hit, the pickup effects in sprite.cpp), the level select picture's twinkles, Dingodile's shield |
+| 2 | `OAM_OBJ_MODE_WINDOW` | the OBJ window's mask, not drawn | nothing |
+| 3 | `OAM_OBJ_MODE_UNK3` | prohibited | nothing |
+
+Left as numbers: Dingodile's SpawnShieldOrRocket stores one `kind = 1` as
+both the shield's `gfxMode` and its part `kind`, so it stays a number.

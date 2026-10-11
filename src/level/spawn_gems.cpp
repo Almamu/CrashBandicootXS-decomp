@@ -74,7 +74,7 @@ void SpawnCrateGem(u32 a0, u16 a1, u16 a2, u16 a3)
 
         {
             MovingSprite *p = gEntitySpawner->SpawnEffectPart(0x2B, 2, a1, a2, bit);
-            p->mirrorBits.gfxMode = 1;
+            p->mirrorBits.gfxMode = OAM_OBJ_MODE_SEMI_TRANSPARENT;
             p->f.b.visible = 0;
         }
     }

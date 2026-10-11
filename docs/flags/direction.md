@@ -74,6 +74,16 @@ it out the same way: `side` and `hdir` are `RIGHT` or `LEFT`, `vdir` is
 which side it resolves the overlap on, is one of the four.
 Crate::QueuePlayerCollision's `dirX`/`dirY` are the same.
 
+## The hitbox edges
+
+OffsetToHitboxEdge, OffsetToHitboxEdgeStart and OffsetFromHitboxEdge
+(sprite_obj.cpp; the last is UNUSED) take one of these directions as
+`kind`: the edge of the hitbox that faces it (`RIGHT`/`LEFT`: x +/- w/2;
+`UP`: y + offY; `DOWN`: y + offY + h). Their switches also take
+`PART_DIR_Y_MASK` (12, both vertical bits) as `DOWN`. GroundSprite's
+probes pass `PART_DIR_DOWN` for the point under its feet, and
+`dir & PART_DIR_X_MASK` / `& PART_DIR_Y_MASK` for the scan's start.
+
 ## Not named here
 
 - `GetDpadDirection()`'s results (the `dir` locals of the action and swim

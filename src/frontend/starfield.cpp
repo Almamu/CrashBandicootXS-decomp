@@ -70,7 +70,7 @@ Starfield::Starfield()
         zero = 0;
         *dispcntShadow = DISPCNT_OBJ_1D_MAP;
     }
-    SetDispcntMode(0);
+    SetDispcntMode(DISPCNT_MODE_0);
 
     /* Clears BG0HOFS/BG0VOFS together via one word store. */
     *(vu32 *)REG_ADDR_BG0HOFS = zero;

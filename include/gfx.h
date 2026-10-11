@@ -32,6 +32,14 @@ struct vram_tile_block;
 #define OAM_AFFINE_MODE_HIDDEN 2 // not displayed (OamBuffer::HideUnused)
 #define OAM_AFFINE_MODE_DOUBLE 3 // affine, drawn in a box twice the OBJ's size
 
+/* attr0 bits 10-11, the OBJ mode (`objMode`; Sprite's `mirrorBits.gfxMode`,
+ * which DrawSpritePieces copies into it; docs/flags/oam.md). Hardware
+ * values. The game sets only the first two. */
+#define OAM_OBJ_MODE_NORMAL           0
+#define OAM_OBJ_MODE_SEMI_TRANSPARENT 1 // always alpha-blended, as a first target
+#define OAM_OBJ_MODE_WINDOW           2 // the OBJ window's mask, not drawn
+#define OAM_OBJ_MODE_UNK3             3 // prohibited on the GBA
+
 /* One shadow OAM entry: attributes 0-2, then the affine-parameter
  * halfword the hardware interleaves between entries. */
 union oam_shadow_entry {
@@ -40,7 +48,7 @@ union oam_shadow_entry {
     struct {
         u8 y;
         u8 affineMode:2; // OAM_AFFINE_MODE_*
-        u8 objMode:2;    // struct oam_attrs' names
+        u8 objMode:2;    // OAM_OBJ_MODE_*
         u8 mosaic:1;
         u8 bpp:1;
         u8 shape:2;
@@ -119,7 +127,7 @@ union dispcnt {
 struct oam_attrs {
     u32 y:8;          // 0x00
     u32 affineMode:2; // 0x01 - OAM_AFFINE_MODE_*
-    u32 objMode:2;
+    u32 objMode:2;    // OAM_OBJ_MODE_*
     u32 mosaic:1;
     u32 bpp:1;
     u32 shape:2;

@@ -56,25 +56,26 @@ s32 Sprite::GetAnimPaletteSlot()
 
 /* UNUSED - no caller anywhere in the ROM. The inverse of
  * OffsetToHitboxEdge: moves the Q8 position `dest` back from the edge of
- * hitbox `rec` that faces direction `kind` (ProbeTerrain's 1 right, 2
- * left, 4 up, 8 down) to the object's origin. */
+ * hitbox `rec` that faces direction `kind` (PART_DIR_*, ProbeTerrain's
+ * directions; PART_DIR_Y_MASK, both vertical bits, counts as down) to
+ * the object's origin. */
 void OffsetFromHitboxEdge(void *destArg, s32 kind, void *recArg)
 {
     struct vec2 *dest = (struct vec2 *)destArg;
     struct hitbox_quad *rec = (struct hitbox_quad *)recArg;
 
     switch (kind) {
-    case 2:
+    case PART_DIR_LEFT:
         dest->x += rec->w << 7;
         break;
-    case 1:
+    case PART_DIR_RIGHT:
         dest->x -= rec->w << 7;
         break;
-    case 4:
+    case PART_DIR_UP:
         dest->y -= INT_TO_Q8(rec->offY);
         break;
-    case 8:
-    case 12:
+    case PART_DIR_DOWN:
+    case PART_DIR_Y_MASK:
         dest->y -= INT_TO_Q8(rec->offY + rec->h);
         break;
     }
@@ -83,24 +84,24 @@ void OffsetFromHitboxEdge(void *destArg, s32 kind, void *recArg)
 /* Moves the Q8 position `dest` (an object's origin) to the edge of its
  * hitbox `rec` that faces direction `kind`: x +/- w/2, or y + offY (top)
  * / y + offY + h (bottom). ProbeGroundSpriteFloor/ProbeGroundSpriteTerrain
- * use it with 8 for the point under the object's feet. */
+ * use it with PART_DIR_DOWN for the point under the object's feet. */
 void OffsetToHitboxEdge(void *destArg, s32 kind, void *recArg)
 {
     struct vec2 *dest = (struct vec2 *)destArg;
     struct hitbox_quad *rec = (struct hitbox_quad *)recArg;
 
     switch (kind) {
-    case 2:
+    case PART_DIR_LEFT:
         dest->x -= rec->w << 7;
         break;
-    case 1:
+    case PART_DIR_RIGHT:
         dest->x += rec->w << 7;
         break;
-    case 4:
+    case PART_DIR_UP:
         dest->y += INT_TO_Q8(rec->offY);
         break;
-    case 8:
-    case 12:
+    case PART_DIR_DOWN:
+    case PART_DIR_Y_MASK:
         dest->y += INT_TO_Q8(rec->offY + rec->h);
         break;
     }
@@ -117,20 +118,20 @@ void OffsetToHitboxEdgeStart(void *destArg, s32 kind, void *recArg)
     struct hitbox_quad *rec = (struct hitbox_quad *)recArg;
 
     switch (kind) {
-    case 2:
+    case PART_DIR_LEFT:
         dest->x -= rec->w << 7;
         dest->y += INT_TO_Q8(rec->offY);
         break;
-    case 1:
+    case PART_DIR_RIGHT:
         dest->x += rec->w << 7;
         dest->y += INT_TO_Q8(rec->offY);
         break;
-    case 4:
+    case PART_DIR_UP:
         dest->y += INT_TO_Q8(rec->offY);
         dest->x -= rec->w << 7;
         break;
-    case 8:
-    case 12:
+    case PART_DIR_DOWN:
+    case PART_DIR_Y_MASK:
         dest->y += INT_TO_Q8(rec->offY + rec->h);
         dest->x -= rec->w << 7;
         break;
