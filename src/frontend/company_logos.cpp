@@ -420,7 +420,7 @@ void CompanyLogos::DrawVvLogoPieces()
                         gAudioContext->PlaySfx(SFX_UNKNOWN_4E, 0x100);
                     }
                     SetAffine(gOamBuffer, matrix, pa, 0, 0, pd);
-                    oamB.affineMode = 1;
+                    oamB.affineMode = OAM_AFFINE_MODE_AFFINE;
                     oamB.matrixLo = matrix;
                     matrix++;
                 }
@@ -491,7 +491,7 @@ void CompanyLogos::DrawVvLogoPieces()
         affine = (pa != 0x100 || pd != pa);
         if (affine) {
             SetAffineZ(gOamBuffer, matrix, pa, pd);
-            oamC.affineMode = 3;
+            oamC.affineMode = OAM_AFFINE_MODE_DOUBLE;
             oamC.matrixLo = matrix;
         }
         oamC.palette = 0xf;

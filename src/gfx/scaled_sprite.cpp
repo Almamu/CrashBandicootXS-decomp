@@ -46,11 +46,11 @@ void ScaledSprite::Fit(s32 width, s32 height)
     scaleX = Q8_DIV(widths[idx], width);
     scaleY = Q8_DIV(heights[idx], height);
     if (scaleX < 0x100 || scaleY < 0x100)
-        oam.affineMode = 3;
+        oam.affineMode = OAM_AFFINE_MODE_DOUBLE;
     else if (scaleX > 0x100 || scaleY > 0x100)
-        oam.affineMode = 1;
+        oam.affineMode = OAM_AFFINE_MODE_AFFINE;
     else
-        oam.affineMode = 0;
+        oam.affineMode = OAM_AFFINE_MODE_NORMAL;
 }
 
 /* Positions the OAM template for the box's affine mode (centred on the
@@ -65,20 +65,20 @@ void ScaledSprite::Draw()
     s32 n;
 
     switch ((u32)oam.affineMode) {
-    case 0:
+    case OAM_AFFINE_MODE_NORMAL:
         oam.x = x;
         oam.y = y;
         break;
-    case 1:
+    case OAM_AFFINE_MODE_AFFINE:
         oam.x = x - (gObjSizeWidths[sizeIndex] - width) / 2;
         oam.y = y - (gObjSizeHeights[sizeIndex] - height) / 2;
         break;
-    case 3:
+    case OAM_AFFINE_MODE_DOUBLE:
         oam.x = x + width / 2 - gObjSizeWidths[sizeIndex];
         oam.y = y + height / 2 - gObjSizeHeights[sizeIndex];
         break;
     }
-    if (oam.affineMode == 0) {
+    if (oam.affineMode == OAM_AFFINE_MODE_NORMAL) {
         oam.matrixBit3 = 0;
         oam.matrixBit4 = 0;
     } else {
