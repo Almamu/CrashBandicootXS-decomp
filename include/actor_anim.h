@@ -3,6 +3,7 @@
 
 #include "core.h"
 #include "constants/categories.h"
+#include "constants/actor_kinds.h"
 
 /*
  * The category-descriptor -> vtable -> animation-table -> keyframe ->

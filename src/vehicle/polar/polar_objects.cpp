@@ -211,8 +211,9 @@ void PolarIcicle::Update()
     ActorSelf::Update();
 }
 
-/* Its look: record 16, 18 or 20, on the right (x > 0) one more, four
- * animations each. */
+/* Its look: record POLAR_KIND_ICICLE_A, _B or _C, on the right (x > 0)
+ * the next one (the _RIGHT kind), four animations each: `kind * 4 - 0x40`
+ * is (kind - POLAR_KIND_ICICLE_A) * 4, as the ROM computes it. */
 PolarIcicle::PolarIcicle(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
     : ActorSelf(rec, x, y, z)
 {

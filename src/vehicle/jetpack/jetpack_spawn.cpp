@@ -57,21 +57,22 @@ ActorSelf *SpawnJetpackActor(struct actor_spawn *rec, u8 alt, s32 dz)
 
     if (gLevelState->timeTrial != 0) {
         kind = rec->altKind;
-        if (kind == 0x17)
-            kind = 0x14;
+        if (kind == JETPACK_KIND_QUESTION_CRATE_LIFE)
+            kind = JETPACK_KIND_QUESTION_CRATE_WUMPA_1;
     } else if (alt != 0) {
         kind = rec->bonusKind;
     }
-    if (kind == 0x1d && !(u8)gLevelState->IsCrystalSaved())
+    if (kind == JETPACK_KIND_STOPWATCH && !(u8)gLevelState->IsCrystalSaved())
         return 0;
-    if (kind == 0 || kind == 0x3e || (u8)(kind - 0x20) <= 5)
+    if (kind == JETPACK_KIND_PLAYER || kind == JETPACK_KIND_UNK62 ||
+        (u8)(kind - JETPACK_KIND_PATH_0) <= JETPACK_KIND_PATH_5 - JETPACK_KIND_PATH_0)
         return 0;
     x = INT_TO_Q8(rec->x);
     y = INT_TO_Q8(rec->y);
     z = INT_TO_Q8(rec->z) + dz;
-    if ((u8)(kind - 0x10) <= 2) {
-        Airship::Spawn(kind - 0x10, x, y, z);
-    } else if (kind != 0xa) {
+    if ((u8)(kind - JETPACK_KIND_AIRSHIP_0) <= JETPACK_KIND_AIRSHIP_2 - JETPACK_KIND_AIRSHIP_0) {
+        Airship::Spawn(kind - JETPACK_KIND_AIRSHIP_0, x, y, z);
+    } else if (kind != JETPACK_KIND_HOVERCRAFT) {
         return CreateJetpackActor(kind, x, y, z, rec);
     } else {
         Hovercraft::Spawn(0, x, y, z);
@@ -87,37 +88,40 @@ ActorSelf *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, struct actor_spawn *
     x += gJetpackAnimTable[kind].spawnX;
     y += gJetpackAnimTable[kind].spawnY;
     switch (kind) {
-    case 1:
+    case JETPACK_KIND_PLANE:
         return new JetpackPlane(&gJetpackAnimTable[kind], x, y, z, (struct spawn_arg *)spawn);
-    case 4:
-    case 5:
-    case 6:
-    case 7:
-    case 8:
-    case 9:
+    case JETPACK_KIND_BOMBER_IDLE:
+    case JETPACK_KIND_BOMBER_HOME:
+    case JETPACK_KIND_BOMBER_BOB_VERTICAL:
+    case JETPACK_KIND_BOMBER_SWING_HORIZONTAL:
+    case JETPACK_KIND_BOMBER_CIRCLE:
+    case JETPACK_KIND_BOMBER_DROP:
         return new JetpackBomber(&gJetpackAnimTable[kind], x, y, z);
-    case 19:
+    case JETPACK_KIND_HEALTH_CRATE:
         return new JetpackHealthCrate(&gJetpackAnimTable[kind], x, y, z);
-    case 23:
+    case JETPACK_KIND_QUESTION_CRATE_LIFE:
         if ((u8)IsSpawnCollected(spawn))
-            return new JetpackQuestionCrate(&gJetpackAnimTable[20], x, y, z, spawn);
+            return new JetpackQuestionCrate(&gJetpackAnimTable[JETPACK_KIND_QUESTION_CRATE_WUMPA_1],
+                                            x, y, z, spawn);
         /* fallthrough */
-    case 20:
-    case 21:
-    case 22:
+    case JETPACK_KIND_QUESTION_CRATE_WUMPA_1:
+    case JETPACK_KIND_QUESTION_CRATE_WUMPA_3:
+    case JETPACK_KIND_QUESTION_CRATE_WUMPA_5:
         return new JetpackQuestionCrate(&gJetpackAnimTable[kind], x, y, z, spawn);
-    case 24:
-    case 25:
-    case 26:
-    case 29:
+    case JETPACK_KIND_TIME_CRATE_1:
+    case JETPACK_KIND_TIME_CRATE_2:
+    case JETPACK_KIND_TIME_CRATE_3:
+    case JETPACK_KIND_STOPWATCH:
         return new JetpackTimeCrate(&gJetpackAnimTable[kind], x, y, z);
-    case 27:
+    case JETPACK_KIND_PARACHUTE_NITRO:
         return new JetpackParachuteNitro(&gJetpackAnimTable[kind], x, y, z);
-    case 28:
+    case JETPACK_KIND_ROCKET:
         return new JetpackRocket(&gJetpackAnimTable[kind], x, y, z);
-    case 31:
-        new JetpackRing(&gJetpackAnimTable[43],
-                        x - gJetpackAnimTable[kind].spawnX + gJetpackAnimTable[43].spawnX, y, z);
+    case JETPACK_KIND_RING_LEFT:
+        new JetpackRing(&gJetpackAnimTable[JETPACK_KIND_RING_RIGHT],
+                        x - gJetpackAnimTable[kind].spawnX +
+                            gJetpackAnimTable[JETPACK_KIND_RING_RIGHT].spawnX,
+                        y, z);
         return new JetpackRing(&gJetpackAnimTable[kind], x, y, z);
     }
     return 0;
@@ -127,20 +131,20 @@ ActorSelf *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, struct actor_spawn *
 void CreateJetpackCheckpointText(void)
 {
     gAudioContext->PlaySfx(SFX_CHECKPOINT, 0x100);
-    new JetpackCheckpointText(&gJetpackAnimTable[46], 0, 0, 0);
+    new JetpackCheckpointText(&gJetpackAnimTable[JETPACK_KIND_CHECKPOINT_TEXT], 0, 0, 0);
 }
 
 /* Plays sfx 4 and spawns an explosion (record 45) at (x, y, z). */
 void CreateJetpackExplosion(s32 x, s32 y, s32 z)
 {
     gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
-    new JetpackExplosion(&gJetpackAnimTable[45], x, y, z);
+    new JetpackExplosion(&gJetpackAnimTable[JETPACK_KIND_EXPLOSION], x, y, z);
 }
 
 /* Kind-44 constructor. */
 void SpawnJetpackCollectedWumpa(s32 a, s32 b, s32 c)
 {
-    new JetpackCollectedWumpa(&gJetpackAnimTable[44], a, b, c);
+    new JetpackCollectedWumpa(&gJetpackAnimTable[JETPACK_KIND_COLLECTED_WUMPA], a, b, c);
 }
 
 /* A balloon of record `kind` holding crate `d` (the crates' constructors,
@@ -153,53 +157,53 @@ void *SpawnJetpackBalloon(u8 kind, s32 a, s32 b, s32 c, s32 d)
 /* Kind-14 constructor. */
 void SpawnHovercraftCannonFlash(s32 a, s32 b, s32 c)
 {
-    new HovercraftCannonFlash(&gJetpackAnimTable[14], a, b, c);
+    new HovercraftCannonFlash(&gJetpackAnimTable[JETPACK_KIND_HOVERCRAFT_CANNON_FLASH], a, b, c);
 }
 
 /* Kind-13 constructor. The side gun's `left` is a `bool`, which g++
  * passes as a byte on the stack (`add r2, sp, #4; strb`). */
 void SpawnHovercraftSideGun(s32 a, s32 b, s32 c, bool left)
 {
-    new HovercraftSideGun(&gJetpackAnimTable[13], a, b, c, left);
+    new HovercraftSideGun(&gJetpackAnimTable[JETPACK_KIND_HOVERCRAFT_SIDE_GUN], a, b, c, left);
 }
 
 /* Kind-12 constructor. */
 void SpawnHovercraftLauncher(s32 a, s32 b, s32 c)
 {
-    new HovercraftLauncher(&gJetpackAnimTable[12], a, b, c);
+    new HovercraftLauncher(&gJetpackAnimTable[JETPACK_KIND_HOVERCRAFT_LAUNCHER], a, b, c);
 }
 
 /* Kind-11 constructor. */
 void SpawnHovercraftCannon(s32 a, s32 b, s32 c)
 {
-    new HovercraftCannon(&gJetpackAnimTable[11], a, b, c);
+    new HovercraftCannon(&gJetpackAnimTable[JETPACK_KIND_HOVERCRAFT_CANNON], a, b, c);
 }
 
 /* Plays sfx 0x38 and spawns a kind-39 object. */
 void SpawnHovercraftFireball(s32 x, s32 y, s32 z)
 {
     gAudioContext->PlaySfx(SFX_FIREBALL_LAUNCH, 0x100);
-    new HovercraftFireball(&gJetpackAnimTable[39], x, y, z);
+    new HovercraftFireball(&gJetpackAnimTable[JETPACK_KIND_HOVERCRAFT_FIREBALL], x, y, z);
 }
 
 /* Plays sfx 0x38 and spawns an airship fireball (record 38). */
 void SpawnAirshipFireball(s32 x, s32 y, s32 z)
 {
     gAudioContext->PlaySfx(SFX_FIREBALL_LAUNCH, 0x100);
-    new AirshipFireball(&gJetpackAnimTable[38], x, y, z);
+    new AirshipFireball(&gJetpackAnimTable[JETPACK_KIND_AIRSHIP_FIREBALL], x, y, z);
 }
 
 /* Plays sfx 0x30 and fires a cannonball (record 3) at (d, e). */
 void SpawnJetpackCannonball(s32 a, s32 b, s32 c, s32 d, s32 e)
 {
     gAudioContext->PlaySfx(SFX_CANNONBALL_FIRE, 0x100);
-    new JetpackCannonball(&gJetpackAnimTable[3], a, b, c, d, e);
+    new JetpackCannonball(&gJetpackAnimTable[JETPACK_KIND_CANNONBALL], a, b, c, d, e);
 }
 
 /* Spawns the player's shot (record 2; JetpackPlayer::StateFly). */
 void SpawnJetpackShot(s32 x, s32 y, s32 z, s32 velX, s32 velY)
 {
-    new JetpackShot(&gJetpackAnimTable[2], x, y, z, velX, velY);
+    new JetpackShot(&gJetpackAnimTable[JETPACK_KIND_SHOT], x, y, z, velX, velY);
 }
 
 /* Installs the level's per-kind table and builds the player from its

@@ -77,19 +77,19 @@ void JetpackQuestionCrate::Update()
     if (kind == 0 && (u8)IsTouchingPlayer(this)) {
         SetState(JETPACK_BALLOON_CRATE_STATE_DESTROYED, 1);
         switch ((u8)record->index) {
-        case 0x14:
+        case JETPACK_KIND_QUESTION_CRATE_WUMPA_1:
             gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
             Player()->QueueWumpa(1);
             break;
-        case 0x15:
+        case JETPACK_KIND_QUESTION_CRATE_WUMPA_3:
             gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
             Player()->QueueWumpa(3);
             break;
-        case 0x16:
+        case JETPACK_KIND_QUESTION_CRATE_WUMPA_5:
             gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
             Player()->QueueWumpa(5);
             break;
-        case 0x17:
+        case JETPACK_KIND_QUESTION_CRATE_LIFE:
             gAudioContext->PlaySfx(SFX_EXTRA_LIFE, 0x100);
             MarkSpawnCollected(spawn);
             gLevelState->AddLife();
@@ -116,19 +116,19 @@ void JetpackQuestionCrate::Damage(s32 amount)
 
     SetState(JETPACK_BALLOON_CRATE_STATE_DESTROYED, 1);
     switch ((u8)record->index) {
-    case 0x14:
+    case JETPACK_KIND_QUESTION_CRATE_WUMPA_1:
         gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         Player()->QueueWumpa(1);
         break;
-    case 0x15:
+    case JETPACK_KIND_QUESTION_CRATE_WUMPA_3:
         gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         Player()->QueueWumpa(3);
         break;
-    case 0x16:
+    case JETPACK_KIND_QUESTION_CRATE_WUMPA_5:
         gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         Player()->QueueWumpa(5);
         break;
-    case 0x17:
+    case JETPACK_KIND_QUESTION_CRATE_LIFE:
         gAudioContext->PlaySfx(SFX_EXTRA_LIFE, 0x100);
         MarkSpawnCollected(spawn);
         gLevelState->AddLife();
@@ -173,25 +173,25 @@ void JetpackTimeCrate::Update()
     if (kind == 0 && (u8)IsTouchingPlayer(this)) {
         SetState(JETPACK_BALLOON_CRATE_STATE_DESTROYED, 1);
         switch ((u8)record->index) {
-        case 0x18:
+        case JETPACK_KIND_TIME_CRATE_1:
             gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
             gLevelState->FreezeLevelClock(1);
             break;
-        case 0x19:
+        case JETPACK_KIND_TIME_CRATE_2:
             gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
             gLevelState->FreezeLevelClock(2);
             break;
-        case 0x1A:
+        case JETPACK_KIND_TIME_CRATE_3:
             gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
             gLevelState->FreezeLevelClock(3);
             break;
-        case 0x1D:
+        case JETPACK_KIND_STOPWATCH:
             gAudioContext->PlaySfx(SFX_CLOCK, 0x100);
             gLevelState->StartTimeTrial();
             break;
         }
         if (balloon != 0) {
-            if ((u8)record->index != 0x1D) {
+            if ((u8)record->index != JETPACK_KIND_STOPWATCH) {
                 gLevelState->AddBrokenCrate();
             }
             balloon->Release();
@@ -213,25 +213,25 @@ void JetpackTimeCrate::Damage(s32 amount)
 
     SetState(JETPACK_BALLOON_CRATE_STATE_DESTROYED, 1);
     switch ((u8)record->index) {
-    case 0x18:
+    case JETPACK_KIND_TIME_CRATE_1:
         gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         gLevelState->FreezeLevelClock(1);
         break;
-    case 0x19:
+    case JETPACK_KIND_TIME_CRATE_2:
         gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         gLevelState->FreezeLevelClock(2);
         break;
-    case 0x1A:
+    case JETPACK_KIND_TIME_CRATE_3:
         gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         gLevelState->FreezeLevelClock(3);
         break;
-    case 0x1D:
+    case JETPACK_KIND_STOPWATCH:
         gAudioContext->PlaySfx(SFX_CLOCK, 0x100);
         gLevelState->StartTimeTrial();
         break;
     }
     if (balloon != 0) {
-        if ((u8)record->index != 0x1D) {
+        if ((u8)record->index != JETPACK_KIND_STOPWATCH) {
             gLevelState->AddBrokenCrate();
         }
         balloon->Release();
@@ -242,7 +242,7 @@ void JetpackTimeCrate::Damage(s32 amount)
 
 /* CreateJetpackTimeCrate: the balloon is record 0x28. */
 JetpackTimeCrate::JetpackTimeCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
-    : JetpackBalloonCrate(rec, x, y, z, 0x28)
+    : JetpackBalloonCrate(rec, x, y, z, JETPACK_KIND_BALLOON_RED_YELLOW)
 {
 }
 
@@ -267,7 +267,7 @@ void JetpackHealthCrate::Damage(s32 amount)
 
 /* CreateJetpackHealthCrate: the balloon is record 0x2A. */
 JetpackHealthCrate::JetpackHealthCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
-    : JetpackBalloonCrate(rec, x, y, z, 0x2A)
+    : JetpackBalloonCrate(rec, x, y, z, JETPACK_KIND_BALLOON_YELLOW_BLUE)
 {
 }
 
@@ -275,7 +275,7 @@ JetpackHealthCrate::JetpackHealthCrate(const struct anim_table_record *rec, s32 
  * level's spawn record, marked collected for the life. */
 JetpackQuestionCrate::JetpackQuestionCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z,
                                            struct actor_spawn *spawn)
-    : JetpackBalloonCrate(rec, x, y, z, 0x29)
+    : JetpackBalloonCrate(rec, x, y, z, JETPACK_KIND_BALLOON_ORANGE_BLUE)
 {
     this->spawn = spawn;
 }

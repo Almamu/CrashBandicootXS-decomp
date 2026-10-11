@@ -43,19 +43,19 @@ void PolarQuestionCrate::Update()
         gLevelState->AddBrokenCrate();
 
         switch ((u8)record->index) {
-        case 0x1c:
+        case POLAR_KIND_QUESTION_CRATE_WUMPA_1:
             gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
             static_cast<PolarPlayer *>(gActorList)->QueueWumpa(1);
             break;
-        case 0x1d:
+        case POLAR_KIND_QUESTION_CRATE_WUMPA_3:
             gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
             static_cast<PolarPlayer *>(gActorList)->QueueWumpa(3);
             break;
-        case 0x1e:
+        case POLAR_KIND_QUESTION_CRATE_WUMPA_5:
             gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
             static_cast<PolarPlayer *>(gActorList)->QueueWumpa(5);
             break;
-        case 0x1f:
+        case POLAR_KIND_QUESTION_CRATE_AKU_AKU:
             static_cast<PolarPlayer *>(gActorList)->GiveMask();
             break;
         }

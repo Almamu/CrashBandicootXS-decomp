@@ -124,5 +124,5 @@ s32 GetActorSpawnKindIndex(s32 idx)
     } else if (gActorSpawnUseBonus != 0) {
         v = record->bonusKind;
     }
-    return v - 0x20;
+    return v - ACTOR_KIND_PATH_POINT;
 }
