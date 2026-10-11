@@ -992,6 +992,8 @@ void Crate::BounceWumpa()
                 timer = 6;
                 paramA = 1;
             }
+            /* Both fly to the HUD: SendToHud reads the mode (0xE, 0) as a
+             * pixel offset to the left, not a PICKUP_MODE_*. */
             {
                 s32 px = Q8_TO_INT(x);
                 s32 py = Q8_TO_INT(y) - 6;
@@ -1227,7 +1229,7 @@ void Crate::Break(u32 arg1)
             s32 px = Q8_TO_INT(x);
             s32 py = Q8_TO_INT(y) + 3;
 
-            gEntitySpawner->DropWumpa(px, py, 0, 3, chained);
+            gEntitySpawner->DropWumpa(px, py, 0, PICKUP_MODE_HOP_UP, chained);
         }
         if (flag == 0)
             gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
@@ -1269,7 +1271,7 @@ void Crate::OpenMystery(bool flag)
             s32 px = Q8_TO_INT(x);
             s32 py = Q8_TO_INT(y);
 
-            gEntitySpawner->DropWumpa(px, py, 0, 0xff, false);
+            gEntitySpawner->DropWumpa(px, py, 0, WUMPA_MODE_PAYOUT, false);
         }
         break;
     case 8:
@@ -1286,7 +1288,7 @@ void Crate::OpenMystery(bool flag)
             s32 px = Q8_TO_INT(x);
             s32 py = Q8_TO_INT(y) + 3;
 
-            gEntitySpawner->DropExtraLife(px, py, 0, 3, flag);
+            gEntitySpawner->DropExtraLife(px, py, 0, PICKUP_MODE_HOP_UP, flag);
         }
         break;
     case 7:
@@ -1304,35 +1306,35 @@ void Crate::OpenMystery(bool flag)
             s32 px = Q8_TO_INT(x) - 1;
             s32 py = Q8_TO_INT(y) + 3;
 
-            gEntitySpawner->DropWumpa(px, py, 1, 3, flag);
+            gEntitySpawner->DropWumpa(px, py, 1, PICKUP_MODE_HOP_UP, flag);
         }
     case 5:
         {
             s32 px = Q8_TO_INT(x) + 1;
             s32 py = Q8_TO_INT(y) + 1;
 
-            gEntitySpawner->DropWumpa(px, py, 0, 3, flag);
+            gEntitySpawner->DropWumpa(px, py, 0, PICKUP_MODE_HOP_UP, flag);
         }
     case 4:
         {
             s32 px = Q8_TO_INT(x) - 3;
             s32 py = Q8_TO_INT(y) + 3;
 
-            gEntitySpawner->DropWumpa(px, py, 1, 1, flag);
+            gEntitySpawner->DropWumpa(px, py, 1, PICKUP_MODE_HOP_LEFT, flag);
         }
     case 3:
         {
             s32 px = Q8_TO_INT(x) + 3;
             s32 py = Q8_TO_INT(y) + 2;
 
-            gEntitySpawner->DropWumpa(px, py, 0, 1, flag);
+            gEntitySpawner->DropWumpa(px, py, 0, PICKUP_MODE_HOP_LEFT, flag);
         }
     case 2:
         {
             s32 px = Q8_TO_INT(x) + 5;
             s32 py = Q8_TO_INT(y) + 2;
 
-            gEntitySpawner->DropWumpa(px, py, 0, 2, flag);
+            gEntitySpawner->DropWumpa(px, py, 0, PICKUP_MODE_HOP_RIGHT, flag);
         }
     case 1:
     default:
@@ -1340,7 +1342,7 @@ void Crate::OpenMystery(bool flag)
             s32 px = Q8_TO_INT(x) - 5;
             s32 py = Q8_TO_INT(y) + 3;
 
-            gEntitySpawner->DropWumpa(px, py, 1, 2, flag);
+            gEntitySpawner->DropWumpa(px, py, 1, PICKUP_MODE_HOP_RIGHT, flag);
         }
         break;
     }
@@ -1371,7 +1373,7 @@ void Crate::OpenSlot(bool flag)
             s32 px = Q8_TO_INT(x);
             s32 py = Q8_TO_INT(y) + 3;
 
-            gEntitySpawner->DropExtraLife(px, py, 0, 3, flag);
+            gEntitySpawner->DropExtraLife(px, py, 0, PICKUP_MODE_HOP_UP, flag);
         }
         break;
     case 2:
