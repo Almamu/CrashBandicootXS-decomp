@@ -242,7 +242,7 @@ s32 GetFreeVramTileBytes(void)
 void FreeObjTileFreeList(void)
 {
     mem_free(gVramTileBlockIndex);
-    mem_free((u8 *)gVramTileBlockPool);
+    mem_free(gVramTileBlockPool);
 }
 
 /* One queued OAM entry the overflow arrays below buffer up during a
@@ -312,8 +312,8 @@ void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority)
  * allocated. */
 void FreeSpriteFrameOamQueue(void)
 {
-    mem_free((u8 *)gSpriteAffineQueue);
-    mem_free((u8 *)gSpriteOamQueue);
+    mem_free(gSpriteAffineQueue);
+    mem_free(gSpriteOamQueue);
 }
 
 /* ROM 0x08028EA8 - commits this frame's overflow OAM queue into the
@@ -462,7 +462,7 @@ void SetupSpriteFrameOam(u8 *frame, u32 attr01, u32 arg2, s32 priority)
 /* ROM 0x0802907C - frees the pool `InitSpriteFrameCache` allocated. */
 void FreeSpriteFrameCache(void)
 {
-    mem_free((u8 *)gSpriteFrameCachePool);
+    mem_free(gSpriteFrameCachePool);
 }
 
 /* ROM 0x08029090 - ages the frame cache one generation: splices every
@@ -567,7 +567,7 @@ done:
  * allocated. */
 void FreeCategorySpriteSheet(void)
 {
-    mem_free((u8 *)gCategorySpriteSheet);
+    mem_free(gCategorySpriteSheet);
 }
 
 /* ROM 0x0802917C - `InitActorCategory`'s reader for a category

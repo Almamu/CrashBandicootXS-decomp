@@ -136,7 +136,7 @@ public:
     void AdvanceAnim();                      // AdvanceSpriteAnim
     s32 HitboxOverlaps(struct aabb *region); // SpriteHitboxOverlaps
     s32 GetAnimPaletteSlot();
-    s32 GetTileBase();
+    const u8 *GetTileBase();
     const struct sprite_frame *GetFrame(); // GetSpriteFrame
     const struct sprite_point *GetFrameAnchor();
     const struct hitbox_quad *GetFrameThirdBox();
@@ -505,7 +505,7 @@ public:
     s32 GetTile();
     void Reset();
     s32 Reserve(s32 size);
-    s32 Upload(void *src, s32 size);
+    s32 Upload(const void *src, s32 size);
 };
 
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(ObjVramCursor) == 0xC);

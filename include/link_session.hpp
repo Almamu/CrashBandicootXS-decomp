@@ -194,7 +194,7 @@ public:
     }
     static void operator delete(void *p)
     {
-        IwramFree((u8 *)p);
+        IwramFree(p);
     }
 };
 

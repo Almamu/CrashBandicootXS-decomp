@@ -27,7 +27,7 @@ extern u8 AabbOverlapsInclusiveX(struct aabb *a, struct aabb *b);
 extern u8 AabbOverlaps(struct aabb *a, struct aabb *b);
 
 /* src/system/iwram_alloc.cpp */
-extern void IwramFree(u8 *address);
+extern void IwramFree(void *address);
 extern void *IwramAlloc(u32 size);
 
 /* src/system/inline_copies_misc.cpp */

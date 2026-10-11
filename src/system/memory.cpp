@@ -247,7 +247,7 @@ void mem_free(void *address)
         return;
     }
 
-    if (address >= (void *)mem_iwram_heap_pointer) {
+    if (address >= mem_iwram_heap_pointer) {
         heap = mem_iwram_heap_pointer;
     } else {
         heap = mem_ewram_heap_pointer;

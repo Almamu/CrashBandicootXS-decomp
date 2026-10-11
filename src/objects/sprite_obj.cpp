@@ -189,9 +189,9 @@ const struct hitbox_quad *Sprite::GetBounds()
 }
 
 /* The sprite tile pool (the bank table's `tileBase`). */
-s32 Sprite::GetTileBase()
+const u8 *Sprite::GetTileBase()
 {
-    return (s32)gSpriteBankSet->table->tileBase;
+    return gSpriteBankSet->table->tileBase;
 }
 
 /* The current frame: the animation's `seq` entry for the current step,

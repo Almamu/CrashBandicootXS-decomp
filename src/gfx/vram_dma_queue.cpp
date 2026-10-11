@@ -65,7 +65,7 @@ s32 QueueVramDmaTransfer(const void *src, void *dest, u16 size, u16 unit)
 void FreeVramDmaQueue(void)
 {
     if (gVramDmaQueue.entries != 0) {
-        mem_free((u8 *)gVramDmaQueue.entries);
+        mem_free(gVramDmaQueue.entries);
         gVramDmaQueue.entries = 0;
     }
 }

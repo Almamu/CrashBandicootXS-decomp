@@ -51,7 +51,7 @@ s32 ObjVramCursor::Reserve(s32 size)
 /* Queues `size` bytes from `src` for upload (QueueVramDmaTransfer);
  * returns their first tile, -1 when VRAM is full, -2 when the queue
  * is. */
-s32 ObjVramCursor::Upload(void *src, s32 size)
+s32 ObjVramCursor::Upload(const void *src, s32 size)
 {
     if (offset + size <= OBJ_VRAM0_SIZE) {
         if (QueueVramDmaTransfer(src, OBJ_VRAM0 + offset, (u16)size, 0x20) == 0) {
