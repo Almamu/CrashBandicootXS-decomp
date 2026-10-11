@@ -16,9 +16,9 @@ extern "C" {
  * dispatch context. Neither caller needed anything more than the
  * return value, so it was never examined on its own until now.
  *
- * `GetTerrainFlagsAt(arg0, x, y)` is a small wrapper around the already-
- * matched terrain-tile-cache lookup `GetTerrainType` (`src/level/
- * tile_cache.cpp`, GitHub issue #40): it takes `arg0+0x20`'s pointed-to
+ * `GetTerrainFlagsAt(x, y)` (LevelLayers::GetTerrainFlags) is a small
+ * wrapper around the already-matched terrain-tile-cache lookup `GetTerrainType` (`src/level/
+ * tile_cache.cpp`, GitHub issue #40): it takes `this->tiles` (+0x20), the
  * TileCache (include/bg_layer.hpp), converts `x`/`y` into that cache's own lookup
  * units via a plain `>>3` (clamped to a minimum of 0 on each axis
  * independently - `ProbeTerrain`'s own bounds-clamp neighbors use the
@@ -34,8 +34,8 @@ extern "C" {
  * both known call sites, which only ever compare the return code
  * against a small constant.
  *
- * `arg0` is always `gLevelLayers` at both known call sites
- * (`player_collide.c`'s camera-probe tail); `arg0+0x20` is that same
+ * `this` is always `gLevelLayers` at both known call sites
+ * (`player_collide.c`'s camera-probe tail); `this+0x20` is that same
  * global struct's tile-cache-pointer field, the same offset
  * `CollidePlayer`'s own doc already established other fields of
  * (`+0x29`/`+0x2a`) for - not given its own named struct here since
@@ -83,7 +83,7 @@ s32 LevelLayers::GetTerrainFlags(s32 x, s32 y)
  * *outValue)`, computing `pos->x >> 3`/`pos->y >> 3` tile coords from
  * `player+0x20`'s terrain-data pointer (the same `TileCache *`
  * field `GetTerrainFlagsAt` (above) already established that offset
- * for on the same `player`/`arg0` global, `gLevelLayers`).
+ * for on the same `player`/`this` global, `gLevelLayers`).
  *
  * `ProbeFloorHeight` looks the tile row up via the already-matched
  * `GetTerrainHeights` ("the raw terrain streamer" - `tile_cache.cpp`, GitHub
@@ -158,9 +158,10 @@ s32 LevelLayers::GetTerrainFlags(s32 x, s32 y)
  * project usual practice of still routing genuinely dead code through
  * the normal matching workflow:
  *
- * sub_8026C80(void *arg0, s32 arg1, s32 *arg2): arg0 is never touched
- * (dead parameter). If arg1 is nonzero, dereferences arg2 and discards
- * the result, a real load with no observable effect, needing arg2 typed
+ * sub_8026C80(s32 cond, volatile s32 *ptr), a LevelLayers method:
+ * `this` is never touched (dead parameter). If `cond` is nonzero,
+ * dereferences `ptr` and discards the result, a real load with no
+ * observable effect, needing `ptr` typed
  * as a pointer to volatile to survive optimization (matching the ROM own unconditional
  * ldr r0, [r2], whose result is immediately clobbered by the trailing
  * movs r0, #0). Always returns 0 regardless of which path was taken.
@@ -222,10 +223,10 @@ s32 LevelLayers::ProbeSolidFloor(struct vec2 *pos, s32 *outValue)
 /* UNUSED - no caller anywhere in the ROM (checked every asm/*.s,
  * expected/*.s, and every .c file under src/ for a bl/.4byte reference).
  * See the file-level comment above. */
-s32 LevelLayers::sub_8026C80(s32 arg1, volatile s32 *arg2)
+s32 LevelLayers::sub_8026C80(s32 cond, volatile s32 *ptr)
 {
-    if (arg1 != 0)
-        (void)*arg2;
+    if (cond != 0)
+        (void)*ptr;
     return 0;
 }
 

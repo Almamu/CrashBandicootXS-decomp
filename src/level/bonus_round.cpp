@@ -13,7 +13,9 @@ extern "C" {
 #include "globals.h"
 }
 
-/* Called at level start/checkpoint-restore: `arg1` selects whether to
+/* Called at level start/checkpoint-restore: `cleared` (UpdateGameFrame
+ * passes whether the bonus room's exit status is ROOM_EXIT_CLEARED)
+ * selects whether to
  * accumulate this attempt's progress into the running totals
  * (`crateCount`/`wumpa`/`lives`, carrying every 100 wumpa into a life the
  * same way `TickLevelClock`'s odometer carries) or to just reset those
@@ -31,13 +33,13 @@ extern "C" {
  * exactly. Caching *all* of them in pointers (the earlier attempt here)
  * forced 3 extra always-live locals the natural allocator had to spill
  * into `r8`/`r9`/`sl`. */
-void LevelState::EndBonusRound(u8 arg1)
+void LevelState::EndBonusRound(u8 cleared)
 {
     s32 *fieldbc;
 
     ClearSpawnAtStart();
 
-    if (arg1 != 0) {
+    if (cleared != 0) {
         s32 *fieldb4 = &savedCrateCount;
 
         crateCount += *fieldb4;
@@ -101,8 +103,9 @@ static inline void CopyBitmapSpan(void *dst, void *src)
     CpuSet(dst, src, CPU_SET_32BIT | 0x40);
 }
 
-/* `arg1` truncated to a byte, matching the ROM's own `lsls/lsrs #0x18`
- * parameter normalization. If `cat->kind == 3`, just
+/* `checkpointFlags` (CHECKPOINT_FLAG_*, kept in
+ * `room.checkpointFlags`) truncated to a byte, matching the ROM's own
+ * `lsls/lsrs #0x18` parameter normalization. If `cat->kind == 3`, just
  * refreshes `checkpointCrateCount`/`checkpointSwitchPressed` (a cached frame count / a copy of the
  * `+0xa9` byte) and snapshots the first `0x68` bytes (`progress`) into
  * `checkpointData` (+0xe4). Otherwise it also stashes the camera's `{x, y}`
@@ -110,7 +113,7 @@ static inline void CopyBitmapSpan(void *dst, void *src)
  * bytes, and syncs two spans of the `gEntityFlags` bitmap
  * (`+0x108`->`+8`, `+0x308`->`+0x208`) via the BIOS `CpuSet` wrapper -
  * reads like an end-of-level "freeze the HUD/save state" snapshot. */
-void LevelState::SetCheckpointAtPlayer(u8 arg1)
+void LevelState::SetCheckpointAtPlayer(u8 checkpointFlags)
 {
     const struct level_room *level = room.cat;
 
@@ -125,7 +128,7 @@ void LevelState::SetCheckpointAtPlayer(u8 arg1)
         s32 y = player->y;
         LevelEntityFlags *flags;
 
-        room.checkpointFlags = arg1;
+        room.checkpointFlags = checkpointFlags;
         room.checkpointCrateCount = GetCrateCount();
 
         room.checkpointSwitchPressed = switchPressed;

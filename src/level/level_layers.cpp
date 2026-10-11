@@ -34,13 +34,14 @@ extern "C" {
  *   position, then the same method of each enabled BG1-3 layer with
  *   layer 0's resulting position. `CommitScroll` commits layer 0's and
  *   each enabled layer's scroll registers.
- * - `sub_80269DC`/`sub_80269F8` - identical predicates: 0 if `arg1`,
- *   `*arg2` and `arg3` are all nonzero, else 1. `sub_8026A14` returns 0.
+ * - `sub_80269DC`/`sub_80269F8` - identical predicates: 0 if `cond1`,
+ *   `*cond2` and `cond3` are all nonzero, else 1. `sub_8026A14` returns 0.
  *   All three are UNUSED: no caller anywhere in the ROM (checked src/,
  *   asm/, the method tables and every word-aligned Thumb pointer in
  *   baserom.gba). They keep their `sub_XXXXXXXX` names (docs/naming.md):
  *   with no caller and no table slot, nothing shows what the arguments
- *   are or what the predicates answer.
+ *   are or what the predicates answer, so they are named after their
+ *   use only (`cond1`-`cond3`).
  *
  * Only `SetScroll`
  * needed a matching tweak (separate temps per axis); the C's hand-written
@@ -182,20 +183,20 @@ void LevelLayers::Reset()
     }
 }
 
-s32 LevelLayers::sub_80269DC(s32 arg1, s32 *arg2, s32 arg3)
+s32 LevelLayers::sub_80269DC(s32 cond1, s32 *cond2, s32 cond3)
 {
     s32 result = 1;
 
-    if (arg1 != 0 && *arg2 != 0 && arg3 != 0)
+    if (cond1 != 0 && *cond2 != 0 && cond3 != 0)
         result = 0;
     return result;
 }
 
-s32 LevelLayers::sub_80269F8(s32 arg1, s32 *arg2, s32 arg3)
+s32 LevelLayers::sub_80269F8(s32 cond1, s32 *cond2, s32 cond3)
 {
     s32 result = 1;
 
-    if (arg1 != 0 && *arg2 != 0 && arg3 != 0)
+    if (cond1 != 0 && *cond2 != 0 && cond3 != 0)
         result = 0;
     return result;
 }
