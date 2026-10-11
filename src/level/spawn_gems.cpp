@@ -40,7 +40,7 @@ void SpawnCrystal(u32 a0, u16 a1, u16 a2, u16 a3)
     s32 bit = *gLevelState->GetCurrentLevelFlags() & LEVEL_FLAG_CRYSTAL;
 
     if (bit == 0) {
-        u8 type = 0x1B;
+        u8 type = EVENT_CRYSTAL;
         Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
         part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x1BC);
@@ -60,7 +60,7 @@ void SpawnCrateGem(u32 a0, u16 a1, u16 a2, u16 a3)
 
     if (bit == 0) {
         u8 tag = 1;
-        u8 type = 0x1D;
+        u8 type = EVENT_CRATE_GEM;
         Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
         part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x180);
@@ -84,7 +84,7 @@ void SpawnGemPathGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
     if ((*gLevelState->GetCurrentLevelFlags() & LEVEL_FLAG_GEM_PATH_GEM) == 0) {
         u8 tag = 1;
-        u8 type = 0x1E;
+        u8 type = EVENT_GEM_PATH_GEM;
         Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
         part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x180);
@@ -103,7 +103,7 @@ void SpawnRedGem(u32 a0, u16 a1, u16 a2, u16 a3)
     if (gLevelState->GetBossIndex() != BOSS_NEO_CORTEX) {
         if ((gLevelState->progress.flags & PROGRESS_FLAG_RED_GEM) == 0) {
             u8 tag = 3;
-            u8 type = 0x1F;
+            u8 type = EVENT_RED_GEM;
             Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
             part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x180);
@@ -125,7 +125,7 @@ void SpawnGreenGem(u32 a0, u16 a1, u16 a2, u16 a3)
     if (gLevelState->GetBossIndex() != BOSS_NEO_CORTEX) {
         if ((gLevelState->progress.flags & PROGRESS_FLAG_GREEN_GEM) == 0) {
             u8 tag = 2;
-            u8 type = 0x20;
+            u8 type = EVENT_GREEN_GEM;
             Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
             part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x180);
@@ -148,7 +148,7 @@ void SpawnYellowGem(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 bit = gLevelState->progress.flags & PROGRESS_FLAG_YELLOW_GEM;
 
         if (bit == 0) {
-            u8 type = 0x22;
+            u8 type = EVENT_YELLOW_GEM;
             Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
             part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x180);
