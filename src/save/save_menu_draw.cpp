@@ -258,19 +258,19 @@ void SaveMenu::DrawSlotStats(s32 label1, s32 label2, s32 rowIdx, struct byte_arg
 }
 
 /* An inlined copy of DrawEmptySlotLabel (below in this file): the
- * row's highlighted/dimmed 0x25 glyph centred at (arg1 + 0x1d, arg2 + 0xc). */
-static inline void draw_row_mark(SaveMenu *self, s32 arg1, s32 arg2, u8 arg3)
+ * row's highlighted/dimmed 0x25 glyph centred at (x + 0x1d, y + 0xc). */
+static inline void draw_row_mark(SaveMenu *self, s32 x, s32 y, u8 highlight)
 {
-    s32 x = arg1 + 0x1d;
-    s32 y = arg2 + 0xc;
+    s32 centerX = x + 0x1d;
+    s32 textY = y + 0xc;
     s32 w;
 
-    if (arg3)
+    if (highlight)
         gSmallFont->SetPalette(self->IsBlinkOn() ? 1 : 2);
     else
         gSmallFont->SetPalette(0);
     w = gSmallFont->MeasureText(GetUiText(0x25));
-    gSmallFont->SetPos(x - w / 2, y);
+    gSmallFont->SetPos(centerX - w / 2, textY);
     gSmallFont->DrawText(GetUiText(0x25));
 }
 
@@ -504,25 +504,25 @@ void SaveMenu::SummarizeProgress(struct settings_row_stats *dest, const GameProg
  * until the issue #4/#6/#8 retry
  * (docs/matching/archive/issue-4-6-8-naked-retry.md). */
 
-/* `arg1`/`arg2` are plain coordinate values here (not pointers - the
- * ROM does raw integer arithmetic on them, `arg1+0x1d`/`arg2+0xc`),
+/* `x`/`y` are plain coordinate values here (not pointers - the
+ * ROM does raw integer arithmetic on them, `x+0x1d`/`y+0xc`),
  * used as the on-screen anchor for a centered numeric glyph (label
  * 0x25) into gSmallFont.
  *
  * The C wrote the draws as `record->slots[n]` calls (`ICON_TEXT_CALL`);
  * they are Font's virtual MeasureText and DrawText. */
-void SaveMenu::DrawEmptySlotLabel(s32 arg1, s32 arg2, u8 arg3)
+void SaveMenu::DrawEmptySlotLabel(s32 x, s32 y, u8 highlight)
 {
-    s32 x = arg1 + 0x1d;
-    s32 y = arg2 + 0xc;
+    s32 centerX = x + 0x1d;
+    s32 textY = y + 0xc;
     s32 w;
 
-    if (arg3)
+    if (highlight)
         gSmallFont->SetPalette(IsBlinkOn() ? 1 : 2);
     else
         gSmallFont->SetPalette(0);
     w = gSmallFont->MeasureText(GetUiText(0x25));
-    gSmallFont->SetPos(x - w / 2, y);
+    gSmallFont->SetPos(centerX - w / 2, textY);
     gSmallFont->DrawText(GetUiText(0x25));
 }
 
@@ -655,13 +655,13 @@ void SaveMenu::Draw()
     gOamBuffer->HideUnused();
 }
 
-void SaveMenu::DeleteSlot(s32 arg1)
+void SaveMenu::DeleteSlot(s32 row)
 {
     u8 buf[0x70];
 
-    cartSave->ReadSlot(arg1, buf);
-    cartSave->EraseSlot(arg1);
+    cartSave->ReadSlot(row, buf);
+    cartSave->EraseSlot(row);
     if (cartSave->Store()) {
-        cartSave->WriteSlot(arg1, buf);
+        cartSave->WriteSlot(row, buf);
     }
 }

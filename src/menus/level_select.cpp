@@ -14,7 +14,7 @@ extern "C" {
 /* GitHub issue #26: 0x0801B85C-0x0801CEE0 (include/level_select.hpp).
  * LevelSelect: the paged level-select screen. RunLevelSelect is the whole
  * modal screen: it builds the menu, runs it (Loop) and returns the chosen
- * level through `*arg`. Five levels per page (`arg / 5`, `arg % 5`); each
+ * level through `*level`. Five levels per page (`level / 5`, `level % 5`); each
  * level's fixed record (name text, three time-trial thresholds) is
  * gLevelTable, its saved record a bitfield word (cleared flag, two more
  * flags, best time). The rest of its methods are in
@@ -32,8 +32,8 @@ extern "C" struct vec2 gLevelSelectTrialIconPos_rw asm("gLevelSelectTrialIconPos
 
 /* The level-select screen, modal (called from game_frame.cpp): resets the
  * display, palette, VRAM cursor and both fonts (the same setup as
- * ShowPowerDialog), builds the menu for level `*arg`, runs it, stores the
- * chosen level back through `arg`, tears the menu down and returns its
+ * ShowPowerDialog), builds the menu for level `*level`, runs it, stores the
+ * chosen level back through `level`, tears the menu down and returns its
  * `result` byte. The font steps are inline functions (Font::SetTileBase
  * and IconReserve): the ROM recomputes every field address after each
  * call instead of keeping the offsets in registers, which is what
@@ -50,7 +50,7 @@ static inline void LoadMenuPalette(PaletteCache *cache)
     CpuSet(gLevelSelectPalette, cache->slots[15], sizeof(gLevelSelectPalette) / sizeof(u16));
 }
 
-s32 RunLevelSelect(s32 *arg)
+s32 RunLevelSelect(s32 *level)
 {
     LevelSelect *menu;
     u8 result;
@@ -79,8 +79,8 @@ s32 RunLevelSelect(s32 *arg)
     {
         LevelSelect **menuAddr = &gLevelSelect;
 
-        *menuAddr = new LevelSelect(*arg);
-        *arg = (*menuAddr)->Loop();
+        *menuAddr = new LevelSelect(*level);
+        *level = (*menuAddr)->Loop();
         menu = *menuAddr;
         result = menu->result;
         delete menu;
@@ -92,13 +92,13 @@ s32 RunLevelSelect(s32 *arg)
 }
 
 /* The constructor: blend/display shadow registers (alpha blend, evy 16,
- * mode 1, BG0/BG1/OBJ), page/cursor from `arg` (5 levels per page, 20+ is
+ * mode 1, BG0/BG1/OBJ), page/cursor from `level` (5 levels per page, 20+ is
  * the last page), the save block, both BG layers, the cursor, six level
  * entries and ten sprites, then the cursor position and the BG registers.
  * The six-entry loop needs its own counter and the sprite loop's 0x80 a
  * variable set with the counter, for the ROM's register choice and hoisted
  * constant. */
-LevelSelect::LevelSelect(s32 arg)
+LevelSelect::LevelSelect(s32 level)
 {
     s32 i;
     UiSprite *s;
@@ -120,11 +120,11 @@ LevelSelect::LevelSelect(s32 arg)
     dispcnt.bits.bg0 = 1;
     dispcnt.bits.bg1 = 1;
     dispcnt.bits.obj = 1;
-    if (arg <= LEVEL_LAST_NUMBERED) {
-        world = __divsi3(arg, LEVELS_PER_WORLD);
-        index = __modsi3(arg, LEVELS_PER_WORLD);
+    if (level <= LEVEL_LAST_NUMBERED) {
+        world = __divsi3(level, LEVELS_PER_WORLD);
+        index = __modsi3(level, LEVELS_PER_WORLD);
     } else {
-        world = arg - LEVEL_FIRST_BOSS;
+        world = level - LEVEL_FIRST_BOSS;
         index = 5;
     }
     nameText = 0;
