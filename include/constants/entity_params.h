@@ -4,9 +4,9 @@
 /*
  * The flags byte of a room entity's parameter record, byte 0 of
  * `params + paramOffsets[id]` (level_data.h). The code reads it through
- * three views: `struct entity_params.flags` (the spawners),
- * `struct crate_placement.flags` (Crate::Create, crate.hpp) and
- * `struct spawn_rec.flags` (Platform::Create, gobj_1a794.h). What a bit
+ * two views: `struct entity_params.flags` (the spawners and
+ * Platform::Create) and `struct crate_placement.flags` (Crate::Create,
+ * crate.hpp). What a bit
  * means depends on the entity type (docs/flags/entity_params.md):
  *
  * - Bit 0: the bonus platform's exit facing (Platform::SetExitMirror);

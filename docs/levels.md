@@ -174,8 +174,8 @@ links use), and unless that bit is set calls the spawn function `type`
 of the table at `gEntitySpawner` (`SpawnEntity`) with the id, x, y and
 `param`. `param` indexes the parameter records: a flags word (bits 1 and
 2 go to the spawned object's `+0x28` flags: `SpawnBasicCrate`, `SpawnStartMarker`,
-`dingodile.c`) and per-type words, e.g. `struct spawn_rec` of
-`CreatePlatform` (mover kind and distances); type 0x1A takes its effective
+`dingodile.c`) and per-type words, e.g. `struct entity_params`'
+`p.platform` of `CreatePlatform` (mover kind and distances); type 0x1A takes its effective
 type from the record's `+8` (`CountCrateEntities`).
 
 In the ROM:

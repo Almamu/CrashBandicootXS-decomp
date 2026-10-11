@@ -16,7 +16,7 @@ extern "C" {
 /* The room's entity parameter records (struct level_entity_list). */
 #define PLACEMENT_LEVEL (gEntityFlags->list)
 #define PLACEMENT(i)                                                           \
-    ((struct crate_placement *)((u8 *)PLACEMENT_LEVEL->params + PLACEMENT_LEVEL->paramOffsets[i]))
+    ((struct crate_placement *)(PLACEMENT_LEVEL->params + PLACEMENT_LEVEL->paramOffsets[i]))
 /* PLACEMENT as an inline: its return value is copied, which gives the
  * ROM's pointer copies (the 0xB pre-check, the time-trial block and the
  * slot crate's case: `add r2,r0,#0` / `add r3,r1,#0` / `mov sl,r6`). */

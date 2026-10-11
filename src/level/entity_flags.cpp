@@ -44,8 +44,7 @@ s32 LevelEntityFlags::CountCrateEntities(const struct level_entity_list *list)
             s32 type = item->type;
 
             if (type == ENTITY_OUTLINE_CRATE)
-                type =
-                    *(const s16 *)((const u8 *)list->params + list->paramOffsets[item->param] + 8);
+                type = *(const s16 *)(list->params + list->paramOffsets[item->param] + 8);
 
             // clang-format off
             switch (type) {

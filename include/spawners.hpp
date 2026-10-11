@@ -35,7 +35,7 @@ static inline const struct entity_params *EntityParams(u16 index)
 {
     const struct level_entity_list *lvl = gEntityFlags->list;
 
-    return (const struct entity_params *)((const u8 *)lvl->params + lvl->paramOffsets[index]);
+    return (const struct entity_params *)(lvl->params + lvl->paramOffsets[index]);
 }
 
 /* The level's other part lists (level.h), as the class, as

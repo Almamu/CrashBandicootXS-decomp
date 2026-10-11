@@ -1,5 +1,6 @@
 #include "platform.hpp"
 #include "level_state.hpp"
+#include "spawners.hpp"
 
 extern "C" {
 #include "level.h"
@@ -26,20 +27,15 @@ inline Platform::Platform()
 Platform *Platform::Create(u16 id, u16 x, u16 y, u16 index, s32 kind)
 {
     Platform *obj = new Platform;
-    struct spawn_rec *rec;
+    const struct entity_params *rec;
     u32 type;
     PlatformMover *m;
 
     obj->id = id;
     obj->x = INT_TO_Q8(x);
     obj->y = INT_TO_Q8(y);
-    {
-        const struct level_entity_list *lvl = gEntityFlags->list;
-        const u16 *offsets = lvl->paramOffsets;
-
-        rec = (struct spawn_rec *)((const u8 *)lvl->params + offsets[index]);
-        type = rec->type;
-    }
+    rec = EntityParams(index);
+    type = rec->p.platform.type;
     switch (kind) {
     case PLATFORM_KIND_EXIT_PAD:
         type = PLATFORM_TYPE_WARP_EXIT;
@@ -67,11 +63,12 @@ Platform *Platform::Create(u16 id, u16 x, u16 y, u16 index, s32 kind)
         break;
     case PLATFORM_TYPE_MOVING:
         obj->type = PLATFORM_TYPE_MOVING;
-        m = new PlatformMover(rec->distX, rec->distY, rec->dirX != 0, rec->dirY != 0,
+        m = new PlatformMover(rec->p.platform.distX, rec->p.platform.distY,
+                              rec->p.platform.dirX != 0, rec->p.platform.dirY != 0,
                               PLATFORM_TYPE_MOVING);
         obj->mover = m;
         m->Attach(obj);
-        if (rec->flag)
+        if (rec->p.platform.flag)
             obj->SetAlwaysActive();
         break;
     case PLATFORM_TYPE_WARP_EXIT:
