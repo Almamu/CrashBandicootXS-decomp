@@ -187,11 +187,11 @@ void LevelState::UpdateGameFrame()
             gAudioContext->ResetAmbientSfx();
             {
                 s32 tier = maskLevel;
-                s32 arg = MASK_LEVEL_TWO;
+                s32 capped = MASK_LEVEL_TWO;
 
                 if (tier <= MASK_LEVEL_ONE)
-                    arg = tier;
-                SetMaskLevel(arg);
+                    capped = tier;
+                SetMaskLevel(capped);
             }
             mem_free_bytes(0xC0000000);
             if (room.IsInBonusRoom() && IsInBonusRound()) {

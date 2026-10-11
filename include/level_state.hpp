@@ -110,8 +110,8 @@ public:
     void PlayCutscene(s32 idx); // level_cutscene.cpp
     void UpdateGameFrame();     // game_frame.cpp
     // bonus_round.cpp
-    void EndBonusRound(u8 arg1);
-    void SetCheckpointAtPlayer(u8 arg1);
+    void EndBonusRound(u8 cleared);
+    void SetCheckpointAtPlayer(u8 checkpointFlags);
     void StartTimeTrial(); // level_state.cpp
     s32 GetLives();        // inline_copies_misc.cpp
 
