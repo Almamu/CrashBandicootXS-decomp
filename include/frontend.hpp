@@ -374,6 +374,13 @@ COMPILE_TIME_ASSERT(frontend_hpp, sizeof(CompanyLogos) == 0x44C);
 /* The company logos' 3D actor (gLogoActorVtable): Crash, who walks on
  * between the logos (UpdateLogoActor's states 0-4), double-buffering his
  * frames in the two VRAM tile blocks gLogoActorTiles. */
+
+/* LogoActor's `state` (#843, docs/flags/actor_states_polar.md). */
+#define LOGO_ACTOR_STATE_ENTER 0   // the first animation plays through
+#define LOGO_ACTOR_STATE_WALK 1    // sequence 1, until its frame 0x12
+#define LOGO_ACTOR_STATE_HIT 2     // sequence 7, frozen at its frame 7 (SFX_PLAYER_HURT)
+#define LOGO_ACTOR_STATE_FLY_OFF 3 // towards the camera and up, for 16 frames
+#define LOGO_ACTOR_STATE_GONE 4    // the end: Draw draws nothing
 class LogoActor : public ActorSelf
 {
 public:

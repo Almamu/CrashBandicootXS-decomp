@@ -34,7 +34,7 @@ void PolarPlayer::Update()
     if (gPolarFinishTimer != 0 && --gPolarFinishTimer == 0) {
         gPolarPlayerHalted = 1;
         SetCellAnimSpeed(0);
-        SetState(10, 10);
+        SetState(POLAR_PLAYER_STATE_FINISH, 10);
     }
     if (gPolarInvulnTimer != 0 && --gPolarInvulnTimer != 0 && gPolarPlayerInactive == 0 &&
         gLevelState->maskLevel != MASK_LEVEL_INVINCIBLE)
@@ -172,7 +172,7 @@ s32 PolarPlayer::Hurt()
     if (tier == MASK_LEVEL_NONE) {
         gAudioContext->PlaySfx(SFX_PLAYER_HURT, 0x100);
         QueueVramDmaTransfer((void *)gPolarPlayerShockPalette, (void *)OBJ_PLTT, 0x20, 0x10);
-        SetState(6, 5);
+        SetState(POLAR_PLAYER_STATE_KNOCKED_OFF, 5);
         gPolarPauseLocked = 1;
         if (gLevelState->timeTrial == 0)
             gLevelState->LoseLife();
@@ -201,7 +201,7 @@ s32 PolarPlayer::Shock()
     s32 tier = gLevelState->maskLevel;
 
     if (tier == MASK_LEVEL_NONE) {
-        SetState(0xc, 0xb);
+        SetState(POLAR_PLAYER_STATE_SHOCKED, 0xb);
         gAudioContext->PlaySfx(SFX_ELECTRIC_SHOCK, 0x100);
         gPolarSteerEnabled = 0;
         gPolarPlayerInactive = 1;
@@ -248,7 +248,7 @@ void PolarPlayer::StateMount()
     if (ny > 0x2800) {
         gAudioContext->PlaySfx(SFX_POLAR_MOUNT, 0x100);
         y = 0x2800;
-        SetState(9, 9);
+        SetState(POLAR_PLAYER_STATE_LAND, 9);
         gPolarPlayerInactive = 0;
         delete gRiderlessPolar;
         gRiderlessPolar = 0;
@@ -273,7 +273,7 @@ void PolarPlayer::StateRun()
     }
     if (gPolarSteerEnabled != 0) {
         if (gKeys.half.pressed & A_BUTTON) {
-            SetState(4, 3);
+            SetState(POLAR_PLAYER_STATE_JUMP, 3);
             gAudioContext->PlaySfx(SFX_JUMP, 0x100);
             gPolarPlayerVelY = 0xFFFFF880;
         }
@@ -283,7 +283,7 @@ void PolarPlayer::StateRun()
 
         bit = keys &= bit;
         if (bit) {
-            SetState(2, 2);
+            SetState(POLAR_PLAYER_STATE_DASH, 2);
             SetCellAnimSpeed(0x38);
         }
     }
@@ -301,7 +301,7 @@ void PolarPlayer::StateJump()
         gPolarPlayerVelY = -0x400;
     if (y > 0x2800) {
         y = 0x2800;
-        SetState(1, 4);
+        SetState(POLAR_PLAYER_STATE_RUN, 4);
         SetCellAnimSpeed(0x24);
     }
 }
@@ -311,12 +311,12 @@ void PolarPlayer::StateJump()
 void PolarPlayer::StateDash()
 {
     if ((u16)(gKeys.all & B_BUTTON) == 0) {
-        SetState(1, 0);
+        SetState(POLAR_PLAYER_STATE_RUN, 0);
         SetCellAnimSpeed(0x24);
     }
 
     if (gKeys.half.pressed & A_BUTTON) {
-        SetState(4, 3);
+        SetState(POLAR_PLAYER_STATE_JUMP, 3);
         gAudioContext->PlaySfx(SFX_JUMP, 0x100);
         gPolarPlayerVelY = 0xFFFFF880;
     }
@@ -332,7 +332,7 @@ void PolarPlayer::StateShocked()
     if (counter > 0x2c) {
         QueueVramDmaTransfer((void *)gPolarPlayerShockPalette, (void *)OBJ_PLTT, 0x20, 0x10);
         gPolarPauseLocked = 1;
-        SetState(6, 5);
+        SetState(POLAR_PLAYER_STATE_KNOCKED_OFF, 5);
         if (gLevelState->timeTrial == 0)
             gLevelState->LoseLife();
     } else if (counter & 4) {
@@ -351,7 +351,7 @@ void PolarPlayer::StateCaught()
         gPolarPlayerVelY = 0xFFFFF980;
         if (y > 0x2000)
             gRiderlessPolar = CreateActor(2, x, 0x2800, z, 0);
-        SetState(8, 7);
+        SetState(POLAR_PLAYER_STATE_CARRIED_OFF, 7);
         gPolarPauseLocked = 1;
         if (gLevelState->timeTrial == 0)
             gLevelState->LoseLife();

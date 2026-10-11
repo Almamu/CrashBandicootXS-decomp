@@ -193,6 +193,24 @@ public:
  * other actors call its methods on `static_cast<PolarPlayer *>(gActorList)`,
  * as do the actor zone's C-linkage category hooks
  * (actor_category_hooks.cpp, actor_category.cpp) and UpdateYeti (yeti_update.cpp). */
+
+/* PolarPlayer's `state` (#843, docs/flags/actor_states_polar.md): the
+ * stateFuncs index, named after its method. */
+#define POLAR_PLAYER_STATE_MOUNT 0        // StateMount: drops onto the bear
+#define POLAR_PLAYER_STATE_RUN 1          // StateRun: riding
+#define POLAR_PLAYER_STATE_DASH 2         // StateDash: B held
+#define POLAR_PLAYER_STATE_BOOST 3        // StateBoost: on a boost pad (Boost)
+#define POLAR_PLAYER_STATE_JUMP 4         // StateJump
+#define POLAR_PLAYER_STATE_LAUNCHED 5     // StateLaunched: off a launcher (Launch)
+#define POLAR_PLAYER_STATE_KNOCKED_OFF 6  // StateKnockedOff: hurt with no mask (Hurt)
+#define POLAR_PLAYER_STATE_CAUGHT 7       // StateCaught: by the yeti (Catch)
+#define POLAR_PLAYER_STATE_CARRIED_OFF 8  // StateCarriedOff
+#define POLAR_PLAYER_STATE_LAND 9         // StateLand: back on the bear
+#define POLAR_PLAYER_STATE_FINISH 10      // StateFinish: the finish countdown ran out
+#define POLAR_PLAYER_STATE_FINISH_LEAP 11 // StateFinishLeap
+#define POLAR_PLAYER_STATE_SHOCKED 12     // StateShocked: the electric fence (Shock)
+#define POLAR_PLAYER_STATE_RECOVER 13     // StateRecover: nothing enters it
+
 class PolarPlayer : public ActorSelf
 {
 public:
@@ -430,6 +448,8 @@ public:
 };
 
 /* A ramp that launches the player (state 1 once used). */
+#define POLAR_LAUNCHER_STATE_READY 0   // launches the player, or is set off by the yeti
+#define POLAR_LAUNCHER_STATE_EXPLODE 1 // used: deleted when the animation is done
 class PolarLauncher : public ActorSelf
 {
 public:
@@ -441,6 +461,8 @@ public:
 
 /* Hops from spawn to spawn (Aim); knocked away (state 1) by the player or
  * the yeti. */
+#define POLAR_PENGUIN_STATE_FLY 0          // flies from spawn to spawn
+#define POLAR_PENGUIN_STATE_KNOCKED_AWAY 1 // flies off, harmless
 class PolarPenguin : public ActorSelf
 {
 public:
@@ -461,7 +483,12 @@ public:
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(PolarPenguin) == 0x68);
 
 /* An icicle: its look depends on its record and side, and it falls in
- * steps (state 0-2) as it comes near. */
+ * steps (state 0-2) as it comes near. Each step is the next animation,
+ * and `state` counts them (`state + 1`). */
+#define POLAR_ICICLE_STATE_HANGING 0 // until depth 0x5000
+#define POLAR_ICICLE_STATE_DROP1 1   // until depth 0x5A00
+#define POLAR_ICICLE_STATE_DROP2 2   // until depth 0x6400
+#define POLAR_ICICLE_STATE_DROP3 3   // the last step
 class PolarIcicle : public ActorSelf
 {
 public:
@@ -474,6 +501,9 @@ public:
 /* Aku Aku following the player (gPolarAkuAku; SpawnPolarAkuAku): its look
  * is the mask level (gLevelState->maskLevel), state 1 is invincible
  * (gPolarAkuAkuInvincibleTimer), state 2 a lost mask. */
+#define POLAR_AKU_AKU_STATE_FOLLOW 0     // hovers round behind the player
+#define POLAR_AKU_AKU_STATE_INVINCIBLE 1 // sits on the player, in front
+#define POLAR_AKU_AKU_STATE_LOSE_MASK 2  // the lost-mask animation, then Refresh
 class PolarAkuAku : public ActorSelf
 {
 public:

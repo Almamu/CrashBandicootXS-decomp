@@ -48,14 +48,14 @@ void PolarAkuAku::Refresh(u8 lost)
 
     if (level == MASK_LEVEL_INVINCIBLE) {
         gPolarAkuAkuInvincibleTimer = 0x1F4;
-        SetState(1, 0);
+        SetState(POLAR_AKU_AKU_STATE_INVINCIBLE, 0);
     } else if (level == MASK_LEVEL_NONE && lost != 0) {
         gPolarAkuAkuInvincibleTimer = level;
-        SetState(2, 1);
+        SetState(POLAR_AKU_AKU_STATE_LOSE_MASK, 1);
     } else {
         gPolarAkuAkuInvincibleTimer = 0;
-        if (state != 0)
-            SetState(0, 0);
+        if (state != POLAR_AKU_AKU_STATE_FOLLOW)
+            SetState(POLAR_AKU_AKU_STATE_FOLLOW, 0);
     }
 }
 
@@ -79,7 +79,7 @@ void PolarAkuAku::Update()
         }
     }
 
-    if (state == 2 && animDone != 0)
+    if (state == POLAR_AKU_AKU_STATE_LOSE_MASK && animDone != 0)
         Refresh(0);
 
     UpdateDepth();
@@ -104,7 +104,7 @@ void PolarAkuAku::Move(s32 posX, s32 posY, s32 posZ)
     s32 tx, ty, tz;
     s32 cur, d;
 
-    if (state == 0) {
+    if (state == POLAR_AKU_AKU_STATE_FOLLOW) {
         s32 ox = SIN_Q8(stateTime * 4) * 24 - 0x1000;
         s32 oy;
 
@@ -116,7 +116,7 @@ void PolarAkuAku::Move(s32 posX, s32 posY, s32 posZ)
         cur = y;
         d = ty - cur;
         goto ease_y;
-    } else if (state == 1) {
+    } else if (state == POLAR_AKU_AKU_STATE_INVINCIBLE) {
         s32 oy;
 
         x = posX;

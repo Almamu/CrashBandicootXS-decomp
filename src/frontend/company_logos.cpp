@@ -602,30 +602,30 @@ void LogoActor::Update()
 
     /* On the unsigned state: one bounds check for the jump table. */
     switch ((u32)state) {
-    case 0:
+    case LOGO_ACTOR_STATE_ENTER:
         if (animDone) {
-            SetState(1, 1);
+            SetState(LOGO_ACTOR_STATE_WALK, 1);
         }
         break;
-    case 1:
+    case LOGO_ACTOR_STATE_WALK:
         if (Q8_TO_INT(animTime) == 0x12) {
-            SetState(2, 7);
+            SetState(LOGO_ACTOR_STATE_HIT, 7);
             gAudioContext->PlaySfx(SFX_UNKNOWN_4F, 0x100);
         }
         break;
-    case 2:
+    case LOGO_ACTOR_STATE_HIT:
         if (Q8_TO_INT(animTime) == 7) {
             animTimer = 0;
-            state = 3;
+            state = LOGO_ACTOR_STATE_FLY_OFF;
             stateTime = 0;
             gAudioContext->PlaySfx(SFX_PLAYER_HURT, 0x100);
         }
         break;
-    case 3:
+    case LOGO_ACTOR_STATE_FLY_OFF:
         z -= 0xe;
         y -= 0x100;
         if (time > 0xf)
-            state = 4;
+            state = LOGO_ACTOR_STATE_GONE;
         break;
     }
     animTime += (s16)animTimer;
@@ -648,7 +648,7 @@ void LogoActor::Draw()
     struct anim_frame_record *rec;
     u8 *frame;
 
-    if (state == 4)
+    if (state == LOGO_ACTOR_STATE_GONE)
         return;
     {
         s32 base = Q8_TO_INT(animTime);

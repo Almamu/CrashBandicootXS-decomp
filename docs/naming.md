@@ -159,6 +159,7 @@ the names with the header it already includes. A data table in
 | `save.h` (next to RunSaveMenu) | `SAVE_MENU_STATE_` | `SaveMenu::state`, the save menu's screen ([docs/flags/save_menu.md](flags/save_menu.md)) |
 | `bosses.h` | `BOSS_` | `GetBossIndex` results |
 | `categories.h` | `CATEGORY_` | actor categories (`gActorCategories` index), `CATEGORY_TYPE_*` and the `CATEGORY_EXIT_*` statuses |
+| `vehicle.hpp`, `frontend.hpp` (next to each class) | `POLAR_PLAYER_STATE_`, `POLAR_AKU_AKU_STATE_`, `POLAR_LAUNCHER_STATE_`, `POLAR_PENGUIN_STATE_`, `POLAR_ICICLE_STATE_`, `LOGO_ACTOR_STATE_` | `ActorSelf::state` of the polar run's actors and the logo actor ([docs/flags/actor_states_polar.md](flags/actor_states_polar.md)) |
 | `chunk_tokens.h` | `CHUNK_TOKEN_` | the run kinds of a layer/collision chunk's token stream (`DecodeCollisionChunk`, `DecodeLayerChunk`) |
 | `gba/io_reg.h` (hardware) | `A_BUTTON`, `B_BUTTON`, `SELECT_BUTTON`, `START_BUTTON`, `DPAD_*`, ... | the KEYINPUT bits of `gKeys` and ActionCtrl's `INPUT_HELD`/`INPUT_PRESSED` ([docs/flags/input.md](flags/input.md)) |
 
