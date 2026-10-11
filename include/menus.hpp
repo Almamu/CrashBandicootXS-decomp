@@ -211,32 +211,32 @@ public:
     struct bldy bldy;             // 0xCC - REG_BLDY
     union dispcnt dispcnt;        // 0xD0 - REG_DISPCNT (gfx.h)
 
-    PauseMenu();                                 // InitPauseMenu
-    ~PauseMenu();                                // DestroyPauseMenu
-    static s32 Run();                            // RunPauseMenu
-    void InitInfo();                             // InitPauseMenuInfo
-    s32 Loop();                                  // PauseMenuLoop
-    void InitCrystalsPage();                     // InitPauseCrystalsPage
-    void InitPowersPage();                       // InitPausePowersPage
-    void InitGemsPage();                         // InitPauseGemsPage
-    void InitRelicsPage();                       // InitPauseRelicsPage
-    void InitTimeTrialPage();                    // InitPauseTimeTrialPage
-    void DrawPowersPage();                       // DrawPausePowersPage
-    void DrawGemsPage();                         // DrawPauseGemsPage
-    void DrawRelicsPage();                       // DrawPauseRelicsPage
-    void DrawFraction(void *count, void *total); // DrawPauseFraction
-    void VolumeDown();                           // PauseMenuVolumeDown
-    void VolumeUp();                             // PauseMenuVolumeUp
-    void CursorDown();                           // PauseMenuCursorDown
-    s32 CursorUp();                              // PauseMenuCursorUp
-    void FormatVolume(s32 volume, u8 *out);      // FormatVolumePercent
-    void DrawTimeTrialPage();                    // DrawPauseTimeTrialPage
-    void DrawCrystalsPage();                     // DrawPauseCrystalsPage
-    void DrawPageTitle();                        // DrawPauseMenuPageTitle
-    void CommitFrame();                          // CommitPauseMenuFrame
-    void Animate();                              // AnimatePauseMenu
-    void Draw();                                 // DrawPauseMenu
-    void DrawRows();                             // DrawPauseMenuRows
+    PauseMenu();                                         // InitPauseMenu
+    ~PauseMenu();                                        // DestroyPauseMenu
+    static s32 Run();                                    // RunPauseMenu
+    void InitInfo();                                     // InitPauseMenuInfo
+    s32 Loop();                                          // PauseMenuLoop
+    void InitCrystalsPage();                             // InitPauseCrystalsPage
+    void InitPowersPage();                               // InitPausePowersPage
+    void InitGemsPage();                                 // InitPauseGemsPage
+    void InitRelicsPage();                               // InitPauseRelicsPage
+    void InitTimeTrialPage();                            // InitPauseTimeTrialPage
+    void DrawPowersPage();                               // DrawPausePowersPage
+    void DrawGemsPage();                                 // DrawPauseGemsPage
+    void DrawRelicsPage();                               // DrawPauseRelicsPage
+    void DrawFraction(const u8 *count, const u8 *total); // DrawPauseFraction
+    void VolumeDown();                                   // PauseMenuVolumeDown
+    void VolumeUp();                                     // PauseMenuVolumeUp
+    void CursorDown();                                   // PauseMenuCursorDown
+    s32 CursorUp();                                      // PauseMenuCursorUp
+    void FormatVolume(s32 volume, u8 *out);              // FormatVolumePercent
+    void DrawTimeTrialPage();                            // DrawPauseTimeTrialPage
+    void DrawCrystalsPage();                             // DrawPauseCrystalsPage
+    void DrawPageTitle();                                // DrawPauseMenuPageTitle
+    void CommitFrame();                                  // CommitPauseMenuFrame
+    void Animate();                                      // AnimatePauseMenu
+    void Draw();                                         // DrawPauseMenu
+    void DrawRows();                                     // DrawPauseMenuRows
 };
 
 COMPILE_TIME_ASSERT(menus_hpp, sizeof(PauseMenu) == 0xD4);

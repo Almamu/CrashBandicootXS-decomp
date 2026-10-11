@@ -195,7 +195,7 @@ void JetpackCheckpointText::Update()
     }
 }
 
-s32 JetpackCheckpointText::IsUnshootable()
+u8 JetpackCheckpointText::IsUnshootable()
 {
     return 1;
 }
@@ -215,7 +215,7 @@ void JetpackExplosion::Update()
         ActorSelf::Update();
 }
 
-s32 JetpackExplosion::IsUnshootable()
+u8 JetpackExplosion::IsUnshootable()
 {
     return 1;
 }
@@ -235,7 +235,7 @@ void HpActor::Damage(s32 amount)
 }
 
 /* Shootable (the jetpack player's: the other classes return their own). */
-s32 HpActor::IsUnshootable()
+u8 HpActor::IsUnshootable()
 {
     return 0;
 }

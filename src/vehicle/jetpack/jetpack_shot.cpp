@@ -44,7 +44,7 @@ JetpackShot::JetpackShot(const struct anim_table_record *rec, s32 x, s32 y, s32 
 }
 
 /* Slot 5: its own shots can't be shot. */
-s32 JetpackShot::IsUnshootable()
+u8 JetpackShot::IsUnshootable()
 {
     return 1;
 }

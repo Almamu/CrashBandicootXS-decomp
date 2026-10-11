@@ -30,7 +30,7 @@ JetpackRing::JetpackRing(const struct anim_table_record *rec, s32 x, s32 y, s32 
 }
 
 /* Rings can't be shot. */
-s32 JetpackRing::IsUnshootable()
+u8 JetpackRing::IsUnshootable()
 {
     return 1;
 }
@@ -154,7 +154,7 @@ JetpackCollectedWumpa::JetpackCollectedWumpa(const struct anim_table_record *rec
 }
 
 /* Collected wumpas can't be shot. */
-s32 JetpackCollectedWumpa::IsUnshootable()
+u8 JetpackCollectedWumpa::IsUnshootable()
 {
     return 1;
 }

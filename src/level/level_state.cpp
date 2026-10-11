@@ -58,13 +58,13 @@ void LevelState::StartTimeTrial()
     if (part != 0) {
         part->StartAnim(7);
     }
-    part = (Platform *)gemPlatform;
+    part = gemPlatform;
     if (part != 0) {
         part->StartAnim(0xc);
         // clang-format off
-        gPaletteCache->LoadSlot(((Platform *)gemPlatform)->palette,
-                        ((Platform *)gemPlatform)->bank->anims[
-                            ((Platform *)gemPlatform)->tag].paletteId);
+        gPaletteCache->LoadSlot(gemPlatform->palette,
+                        gemPlatform->bank->anims[
+                            gemPlatform->tag].paletteId);
         // clang-format on
     }
     ConvertCratesForTimeTrial();
@@ -835,9 +835,9 @@ void LevelState::CheckAllCratesBroken()
     }
 }
 
-/* Sets `+0x1bc` (a Q-format camera/position field paired with the
- * `SetCrateGemPos` two-word setter below). */
-void LevelState::SetGemPlatform(void *value)
+/* Sets the gem-path platform (`+0x1bc`), which the spawners in
+ * spawn_gem_platforms.cpp create. */
+void LevelState::SetGemPlatform(Platform *value)
 {
     gemPlatform = value;
 }

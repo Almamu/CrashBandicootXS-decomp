@@ -42,7 +42,7 @@ void PolarQuestionCrate::Update()
     if (animIndex != 0x12 && (u8)IsTouchingPlayer(this)) {
         gLevelState->AddBrokenCrate();
 
-        switch ((u8)record->index) {
+        switch (record->index) {
         case POLAR_KIND_QUESTION_CRATE_WUMPA_1:
             gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
             static_cast<PolarPlayer *>(gActorList)->QueueWumpa(1);

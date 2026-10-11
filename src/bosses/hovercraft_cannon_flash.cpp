@@ -54,7 +54,7 @@ s32 HovercraftCannonFlash::RunState()
     return StepCannonFlash(this);
 }
 
-s32 HovercraftCannonFlash::IsUnshootable()
+u8 HovercraftCannonFlash::IsUnshootable()
 {
     return unshootable;
 }

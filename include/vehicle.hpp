@@ -639,7 +639,7 @@ public:
     virtual ~JetpackCheckpointText(); // 1 DestroyJetpackCheckpointText
     virtual void Update();            // 2 UpdateJetpackCheckpointText
     virtual void Draw();              // 3 DrawJetpackCheckpointText
-    virtual s32 IsUnshootable();      // 5 IsJetpackCheckpointTextUnshootable
+    virtual u8 IsUnshootable();       // 5 IsJetpackCheckpointTextUnshootable
 };
 
 class JetpackExplosion : public HpActor
@@ -652,7 +652,7 @@ public:
     }
     virtual ~JetpackExplosion(); // 1 DestroyJetpackExplosion
     virtual void Update();       // 2 UpdateJetpackExplosion
-    virtual s32 IsUnshootable(); // 5 IsJetpackExplosionUnshootable
+    virtual u8 IsUnshootable();  // 5 IsJetpackExplosionUnshootable
 };
 
 /* The jetpack player's shot (src/vehicle/jetpack/jetpack_shot.cpp): it flies by
@@ -665,9 +665,9 @@ public:
 
     // CreateJetpackShot
     JetpackShot(const struct anim_table_record *rec, s32 x, s32 y, s32 z, s32 velX, s32 velY);
-    virtual ~JetpackShot();      // 1 DestroyJetpackShot
-    virtual void Update();       // 2 UpdateJetpackShot
-    virtual s32 IsUnshootable(); // 5 IsJetpackShotUnshootable
+    virtual ~JetpackShot();     // 1 DestroyJetpackShot
+    virtual void Update();      // 2 UpdateJetpackShot
+    virtual u8 IsUnshootable(); // 5 IsJetpackShotUnshootable
 };
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackShot) == 0x60);
@@ -700,7 +700,7 @@ public:
     virtual ~JetpackPlane();         // 1 DestroyJetpackPlane
     virtual void Update();           // 2 UpdateJetpackPlane
     virtual void Damage(s32 amount); // 4 DamageJetpackPlane
-    virtual s32 IsUnshootable();     // 5 IsJetpackPlaneUnshootable
+    virtual u8 IsUnshootable();      // 5 IsJetpackPlaneUnshootable
 
     void Aim(s32 target); // AimJetpackPlane
     void RunState();      // RunJetpackPlaneState
@@ -741,7 +741,7 @@ public:
     virtual ~JetpackBomber();        // 1 DestroyJetpackBomber
     virtual void Update();           // 2 UpdateJetpackBomber
     virtual void Damage(s32 amount); // 4 DamageJetpackBomber
-    virtual s32 IsUnshootable();     // 5 IsJetpackBomberUnshootable
+    virtual u8 IsUnshootable();      // 5 IsJetpackBomberUnshootable
 
     void Home();     // HomeJetpackBomber
     void RunState(); // RunJetpackBomberState
@@ -773,7 +773,7 @@ public:
     JetpackCannonball(const struct anim_table_record *rec, s32 x, s32 y, s32 z, s32 velX, s32 velY);
     virtual ~JetpackCannonball(); // 1 DestroyJetpackCannonball
     virtual void Update();        // 2 UpdateJetpackCannonball
-    virtual s32 IsUnshootable();  // 5 IsJetpackCannonballUnshootable
+    virtual u8 IsUnshootable();   // 5 IsJetpackCannonballUnshootable
 };
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackCannonball) == 0x60);
@@ -801,7 +801,7 @@ public:
     virtual ~JetpackBalloon();       // 1 DestroyJetpackBalloon
     virtual void Update();           // 2 UpdateJetpackBalloon
     virtual void Damage(s32 amount); // 4 DamageJetpackBalloon
-    virtual s32 IsUnshootable();     // 5 IsJetpackBalloonUnshootable
+    virtual u8 IsUnshootable();      // 5 IsJetpackBalloonUnshootable
 
     void ClearCrate();              // ClearJetpackBalloonCrate
     void Release();                 // ReleaseJetpackBalloon
@@ -849,7 +849,7 @@ public:
     virtual ~JetpackBalloonCrate();  // 1 DestroyJetpackBalloonCrate
     virtual void Update();           // 2 UpdateJetpackBalloonCrate
     virtual void Damage(s32 amount); // 4 DamageJetpackBalloonCrate
-    virtual s32 IsUnshootable();     // 5 IsJetpackBalloonCrateUnshootable
+    virtual u8 IsUnshootable();      // 5 IsJetpackBalloonCrateUnshootable
     virtual void Break();            // 7 BreakJetpackBalloonCrate
 
     void ClearBalloon(); // ClearJetpackCrateBalloon
@@ -925,7 +925,7 @@ public:
     virtual ~JetpackParachuteNitro(); // 1 DestroyJetpackParachuteNitro
     virtual void Update();            // 2 UpdateJetpackParachuteNitro
     virtual void Damage(s32 amount);  // 4 DamageJetpackParachuteNitro
-    virtual s32 IsUnshootable();      // 5 IsJetpackParachuteNitroUnshootable
+    virtual u8 IsUnshootable();       // 5 IsJetpackParachuteNitroUnshootable
 };
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackParachuteNitro) == 0x60);
@@ -947,7 +947,7 @@ public:
     virtual ~JetpackRocket();        // 1 DestroyJetpackRocket
     virtual void Update();           // 2 UpdateJetpackRocket
     virtual void Damage(s32 amount); // 4 DamageJetpackRocket
-    virtual s32 IsUnshootable();     // 5 IsJetpackRocketUnshootable
+    virtual u8 IsUnshootable();      // 5 IsJetpackRocketUnshootable
 
     void Launch(); // LaunchJetpackRocket
 };
@@ -964,9 +964,9 @@ public:
 
     // CreateJetpackRing
     JetpackRing(const struct anim_table_record *rec, s32 x, s32 y, s32 z);
-    virtual ~JetpackRing();      // 1 DestroyJetpackRing
-    virtual void Update();       // 2 UpdateJetpackRing
-    virtual s32 IsUnshootable(); // 5 IsJetpackRingUnshootable
+    virtual ~JetpackRing();     // 1 DestroyJetpackRing
+    virtual void Update();      // 2 UpdateJetpackRing
+    virtual u8 IsUnshootable(); // 5 IsJetpackRingUnshootable
 };
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackRing) == 0x5C);
@@ -988,7 +988,7 @@ public:
     virtual ~JetpackCollectedWumpa(); // 1 DestroyJetpackCollectedWumpa
     virtual void Update();            // 2 UpdateJetpackCollectedWumpa
     virtual void Draw();              // 3 DrawJetpackCollectedWumpa
-    virtual s32 IsUnshootable();      // 5 IsJetpackCollectedWumpaUnshootable
+    virtual u8 IsUnshootable();       // 5 IsJetpackCollectedWumpaUnshootable
 };
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackCollectedWumpa) == 0x64);

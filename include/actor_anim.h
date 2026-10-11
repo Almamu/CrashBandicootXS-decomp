@@ -52,7 +52,9 @@ COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct anim_box) == 0xC);
  * share another slot's table_A/table_B arrays (see "duplicate_of_slot"
  * in entities.json), and slots 32-34 of the first table are all zero. */
 struct anim_table_record {
-    u32 index; // 0x00 - equals the record's own slot number in every valid record observed
+    /* 0x00 - equals the record's own slot number in every valid record
+     * observed. Read with ldrb; 0x01-0x03 are padding, 0 in every table. */
+    u8 index;
     // 0x04 - the clip's keyframes (struct anim_frame_record, above), no count stored
     struct anim_frame_record *table_A;
     u32 *table_B; // 0x08 - frame address/offset array, see the comment below

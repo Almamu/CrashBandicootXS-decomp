@@ -110,7 +110,7 @@ JetpackRocket::JetpackRocket(const struct anim_table_record *rec, s32 x, s32 y, 
 }
 
 /* Slot 5: exploded or shot. */
-s32 JetpackRocket::IsUnshootable()
+u8 JetpackRocket::IsUnshootable()
 {
     return triggered;
 }
@@ -120,7 +120,7 @@ s32 JetpackRocket::IsUnshootable()
  * offset), and plays its cue once; then ActorSelf's update. */
 void JetpackRing::Update()
 {
-    if ((u8)record->index == JETPACK_KIND_RING_LEFT && (u8)IsTouchingPlayer(this)) {
+    if (record->index == JETPACK_KIND_RING_LEFT && (u8)IsTouchingPlayer(this)) {
         JetpackPlayer *player = gActorList->AsJetpackPlayer();
 
         player->PassRing(x - record->spawnX, y);

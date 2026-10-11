@@ -124,7 +124,7 @@ void HovercraftSideGun::RunState()
     StepSideGun(this);
 }
 
-s32 HovercraftSideGun::IsUnshootable()
+u8 HovercraftSideGun::IsUnshootable()
 {
     return dead;
 }
