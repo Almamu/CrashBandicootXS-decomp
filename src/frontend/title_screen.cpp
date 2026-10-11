@@ -99,10 +99,10 @@ void TitleScreen::LoadBg()
 
     LoadTaggedAsset(pkg->paletteAsset, (void *)BG_PLTT);
     LoadTaggedAsset(pkg->tileAsset, (void *)BG_CHAR_ADDR(2));
-    map = new u16[(s32)pkg->height * (s32)pkg->width];
+    map = new u16[pkg->height * pkg->width];
     LoadTaggedAsset(pkg->mapAsset, map);
     dest = (u16 *)BG_SCREEN_ADDR(30);
-    for (i = 0; i < (s32)pkg->height * (s32)pkg->width; i += 2) {
+    for (i = 0; i < pkg->height * pkg->width; i += 2) {
         *dest = (map[i] & 0xff) | ((map[i + 1] & 0xff) << 8);
         dest++;
     }

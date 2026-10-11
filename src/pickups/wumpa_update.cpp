@@ -71,7 +71,7 @@ void Wumpa::PickUp(u8 randomize)
 
     gAudioContext->PlaySfx(SFX_WUMPA, 0x100);
     if (randomize) {
-        u32 rv = (u16)rand();
+        u32 rv = rand();
         u8 lowbit = rv & 1;
 
         counter = lowbit;

@@ -314,7 +314,7 @@ void EnemyCtrl::HandleEvent(MovingSprite *, s32 event, s32)
                 SetVelX(t, 0x1000, 0, 0x1800);
             else
                 SetVelX(t, -0x1000, 0, -0x1800);
-            v = ((u16)RandRange(3) << 9) - 0x200;
+            v = (RandRange(3) << 9) - 0x200;
             {
                 MovingSprite *t2 = target;
 

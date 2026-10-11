@@ -53,7 +53,7 @@ public:
     u32 *frameOffsets;               // 0x04
     s32 animTime;                    // 0x08 - Q8 frame accumulator
     s32 animIndex;                   // 0x0C - current index into anims
-    u16 animTimer;                   // 0x10
+    s16 animTimer;                   // 0x10
     u8 animDone;                     // 0x12 - set once the current sequence has played through
     // 0x14 - draw order: RunActorCategoryFrame heapsorts the draw list by it
     //        (HeapSortActorsByKey); bit 15 also sets OAM priority

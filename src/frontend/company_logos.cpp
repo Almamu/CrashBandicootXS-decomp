@@ -549,13 +549,13 @@ void CompanyLogos::LoadUniversalLogoBg()
     }
     delete[] palBuf;
     LoadTaggedAsset(pkg->tileAsset, (void *)BG_CHAR_ADDR(2));
-    mapBuf = new u16[(s32)pkg->height * (s32)pkg->width];
+    mapBuf = new u16[pkg->height * pkg->width];
     LoadTaggedAsset(pkg->mapAsset, mapBuf);
     dest = (u16 *)BG_SCREEN_ADDR(30);
     for (y = 0; y <= 0x1f; y++) {
         for (x = 0; x <= 0x1f; x += 2) {
-            if (y < (s32)pkg->height && x < (s32)pkg->width) {
-                s32 i = (s32)pkg->width * y + x;
+            if (y < pkg->height && x < pkg->width) {
+                s32 i = pkg->width * y + x;
                 *dest++ = (mapBuf[i] & 0xff) | ((mapBuf[i + 1] & 0xff) << 8);
             } else {
                 *dest++ = 0;
@@ -628,7 +628,7 @@ void LogoActor::Update()
             state = LOGO_ACTOR_STATE_GONE;
         break;
     }
-    animTime += (s16)animTimer;
+    animTime += animTimer;
     animDone = 0;
     if (GetAnimFrameBaseOffset() >= anims[animIndex].loopThreshold) {
         ANIM_REWIND(animTime, anims[animIndex]);

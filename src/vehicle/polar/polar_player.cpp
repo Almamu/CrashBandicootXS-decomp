@@ -51,7 +51,7 @@ void PolarPlayer::Update()
         sortKey = d | (((ABS_BRANCHLESS(y) + ABS_BRANCHLESS(x)) >> 11) & 0x7f);
     }
     stateTime++;
-    animTime += (s16)animTimer;
+    animTime += animTimer;
     animDone = 0;
     if (GetAnimFrameBaseOffset() >= anims[animIndex].loopThreshold) {
         ANIM_REWIND(animTime, anims[animIndex]);
@@ -266,7 +266,7 @@ void PolarPlayer::StateRun()
         SetCellAnimSpeed(0x24);
         if (animIndex != 0)
             RestartAnim(0);
-        else if ((u16)RandRange(3) == 0)
+        else if (RandRange(3) == 0)
             RestartAnim(1);
         else
             RestartAnim(0);

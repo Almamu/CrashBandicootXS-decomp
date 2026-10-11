@@ -39,9 +39,9 @@ void BgSetup::Load(const struct bg_package *pkg)
     pal = paletteBank << 12;
     src = map;
     dest = (u16 *)(VRAM + (screenBlock << 11));
-    for (y = 0; y < (s32)pkg->height; y++) {
+    for (y = 0; y < pkg->height; y++) {
         u16 *next = dest + 0x20;
-        for (x = 0; x < (s32)pkg->width; x++)
+        for (x = 0; x < pkg->width; x++)
             dest[x] = pal | src[x];
         src += pkg->width;
         dest = next;

@@ -115,7 +115,7 @@ PauseMenu::PauseMenu() : bg(0, 0x1f, 0, 3)
         blinkEyes->palette = s->GetAnimPaletteSlot();
     }
     blinkEyes->SetPixelPos(119, 94);
-    blinkTimer = (u16)RandRange(0x78) + 0x78;
+    blinkTimer = RandRange(0x78) + 0x78;
     rows = gPauseMenuRows;
     cursor = 0;
     if (gLevelState->timeTrial != 0)

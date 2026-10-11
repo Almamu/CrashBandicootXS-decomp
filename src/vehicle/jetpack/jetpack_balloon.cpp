@@ -71,7 +71,7 @@ void JetpackBalloon::Release()
 inline void JetpackBalloon::Animate()
 {
     stateTime++;
-    animTime += (s16)animTimer;
+    animTime += animTimer;
     animDone = 0;
     if (GetAnimFrameBaseOffset() >= anims[animIndex].loopThreshold) {
         ANIM_REWIND(animTime, anims[animIndex]);

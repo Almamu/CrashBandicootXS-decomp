@@ -31,7 +31,7 @@ void PolarCollectedWumpa::Update()
         return;
     }
 
-    animTime += (s16)animTimer;
+    animTime += animTimer;
     animDone = 0;
     if (GetAnimFrameBaseOffset() >= anims[animIndex].loopThreshold) {
         animTime -= INT_TO_Q8(anims[animIndex].loopThreshold - anims[animIndex].loopBase);
