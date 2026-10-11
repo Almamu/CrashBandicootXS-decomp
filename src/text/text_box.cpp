@@ -8,7 +8,7 @@
  * including) the NUL terminator if no space is found first. Used by
  * DrawWrappedText (src/text/wrapped_text.cpp) to walk text one
  * token at a time. */
-s32 GetWordLength(u8 *s)
+s32 GetWordLength(const u8 *s)
 {
     s32 len = 0;
     u8 c;
@@ -44,7 +44,7 @@ done:
  * still-parked `DrawPowerDialog`, but the ROM does actually propagate it -
  * confirmed by the epilogue needing r1, not r0, to restore the return
  * address, since r0 holds the forwarded value at that point). */
-s32 DrawWrappedTextInBox(u8 *text, Font *self, struct aabb *box, s32 mode)
+s32 DrawWrappedTextInBox(const u8 *text, Font *self, struct aabb *box, s32 mode)
 {
     self->SetMargin(box->x);
     return DrawWrappedText(text, self, box, self->HeightToLines(box->h), mode);

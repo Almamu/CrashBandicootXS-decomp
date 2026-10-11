@@ -115,24 +115,24 @@ void PauseMenu::Animate()
  * the ROM. */
 void PauseMenu::Draw()
 {
-    void *label;
+    const u8 *label;
     u32 width;
     u32 x, t;
 
     gOamBuffer->Reset();
     gObjVramCursor->Rewind();
     {
-        u32 w = gLargeFont->MeasureText((u8 *)levelName);
+        u32 w = gLargeFont->MeasureText(levelName);
 
         t = 0xf0 - w;
         x = t >> 1;
         gLargeFont->SetPos(x, 0xe);
     }
-    gLargeFont->DrawText((u8 *)levelName);
+    gLargeFont->DrawText(levelName);
     label = levelLabel;
     if (label != NULL) {
         gLargeFont->SetPos(0x20, 0x26);
-        gLargeFont->DrawText((u8 *)label);
+        gLargeFont->DrawText(label);
         gLargeFont->DrawText(levelNumber);
     }
     width = gLargeFont->MeasureText(percentText);
@@ -175,14 +175,14 @@ void PauseMenu::DrawRows()
     s32 i;
 
     for (i = 0; i < rowCount; i++) {
-        u8 *label;
+        const u8 *label;
         s32 x;
 
         if (i == cursor)
             gSmallFont->SetPalette(0xf);
         else
             gSmallFont->ResetPalette();
-        label = (u8 *)GetUiText(rows[i].labelId);
+        label = GetUiText(rows[i].labelId);
         x = 0x32 - ((u32)gSmallFont->MeasureText(label) >> 1);
         switch (rows[i].type) {
         case PAUSE_ROW_TYPE_MUSIC:

@@ -585,7 +585,7 @@ void TitleScreen::CommitFrame()
 /* Draws menu item `item` (`text`, a GetUiText string) centred at row
  * 0x80 + 10 * item: blinking between palettes 14 and 15 when it is
  * selected, palette 13 otherwise. */
-void TitleScreen::DrawMenuItem(s32 text, s32 item)
+void TitleScreen::DrawMenuItem(const u8 *text, s32 item)
 {
     Font *m;
     s32 x;
@@ -598,10 +598,10 @@ void TitleScreen::DrawMenuItem(s32 text, s32 item)
     } else {
         font->SetPalette(0xd);
     }
-    x = (0xf0 - font->MeasureText((u8 *)text)) >> 1;
+    x = (0xf0 - font->MeasureText(text)) >> 1;
     m = font;
     m->SetPos(x, item * 10 + 0x80);
-    m->DrawText((u8 *)text);
+    m->DrawText(text);
 }
 
 /* Builds the frame's OAM: the logo pieces, and the menu once it is

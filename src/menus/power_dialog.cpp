@@ -62,7 +62,7 @@ void PowerDialog::Show(s32 title, s32 desc, s32 type)
  * it in), BG0 and the OBJs on, the two texts, the sky background, and the
  * power's icon (animation `type` of sprite bank 0x1C8) at (240, 160) / 2,
  * then BG0's registers and the intro song. */
-PowerDialog::PowerDialog(s32 titleText, s32 descText, s32 type) : bg(0, 0x1f, 0, 3)
+PowerDialog::PowerDialog(const u8 *titleText, const u8 *descText, s32 type) : bg(0, 0x1f, 0, 3)
 {
     blend.raw = 0;
     blend.bits.effect = 3;

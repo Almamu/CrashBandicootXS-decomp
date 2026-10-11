@@ -63,12 +63,12 @@ public:
     u8 done;    // 0x08 - set to leave RunSaveMenu's loop
     u32 state;  // 0x0C - see above
     s32 cursor; // 0x10
-    u32 messageLine1; // 0x14 - state 4's first text line
-    u32 messageLine2; // 0x18 - and its second
-    u16 dispcnt;      // 0x1C - the REG_DISPCNT shadow
-    u8 unused_1e[2];  //
-    u8 gameLoaded;    // 0x20 - a game was loaded; RunSaveMenu returns it
-    u32 pendingSlot;  // 0x24 - the slot the "delete?"/"overwrite?" prompt acts on
+    const u8 *messageLine1; // 0x14 - state 4's first text line
+    const u8 *messageLine2; // 0x18 - and its second
+    u16 dispcnt;            // 0x1C - the REG_DISPCNT shadow
+    u8 unused_1e[2];        //
+    u8 gameLoaded;          // 0x20 - a game was loaded; RunSaveMenu returns it
+    u32 pendingSlot;        // 0x24 - the slot the "delete?"/"overwrite?" prompt acts on
     struct settings_row_stats currentStats; // 0x28
     struct settings_row_stats rowStats[4];  // 0x3C
     SaveData *cartSave;                     // 0x8C - the cartridge's save data
@@ -86,10 +86,10 @@ public:
     void CommitFrame();          // CommitSaveMenuFrame
 
     /* src/save/save_menu_draw.cpp */
-    s32 LinkExchange();                            // LinkExchangeSaveData
-    void DrawMessageLines(s32 label1, s32 label2); // DrawSaveMenuMessageLines
-    void DrawCancel(u8 highlight);                 // DrawSaveMenuCancel
-    void DrawYesNoPrompt(s32 value);               // DrawYesNoPrompt
+    s32 LinkExchange();                                        // LinkExchangeSaveData
+    void DrawMessageLines(const u8 *label1, const u8 *label2); // DrawSaveMenuMessageLines
+    void DrawCancel(u8 highlight);                             // DrawSaveMenuCancel
+    void DrawYesNoPrompt(s32 value);                           // DrawYesNoPrompt
     void DrawSlotStats(s32 label1, s32 label2, s32 rowIdx,
                        struct byte_arg flag);            // DrawSaveSlotStats
     void DrawSlots(SaveData *handle, s32 selectedIndex); // DrawSaveSlots

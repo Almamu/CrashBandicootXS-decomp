@@ -376,13 +376,13 @@ void SaveMenu::LinkInput()
         cartSave->SetFlags(2);
         cartSave->Store();
         state = SAVE_MENU_STATE_MESSAGE;
-        messageLine1 = (u32)gCrash2LinkTextPtr;
+        messageLine1 = gCrash2LinkTextPtr;
         break;
     case 3:
         cartSave->SetFlags(4);
         cartSave->Store();
         state = SAVE_MENU_STATE_MESSAGE;
-        messageLine1 = (u32)gCrash3LinkTextPtr;
+        messageLine1 = gCrash3LinkTextPtr;
         break;
     default:
         state = SAVE_MENU_STATE_MAIN;
@@ -645,9 +645,9 @@ void SaveMenu::DrawMain()
             gSmallFont->SetPalette(GetBlinkPalette());
         else
             gSmallFont->SetPalette(0);
-        w = gSmallFont->MeasureText((u8 *)GetUiText(label = gSaveMenuOptions[i]));
+        w = gSmallFont->MeasureText(GetUiText(label = gSaveMenuOptions[i]));
         gSmallFont->SetPos((0xf0 - w) >> 1, y);
-        gSmallFont->DrawText((u8 *)GetUiText(label));
+        gSmallFont->DrawText(GetUiText(label));
         y += 0xa;
     }
 

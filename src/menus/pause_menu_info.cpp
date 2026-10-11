@@ -23,10 +23,10 @@ void PauseMenu::InitInfo()
      * gLevelTable's address before the multiply instead of after. */
     u32 labelId = *(u32 *)((u8 *)gLevelTable + levelIdx * sizeof(struct level_info));
 
-    levelName = (void *)GetUiText(labelId);
+    levelName = GetUiText(labelId);
 
     if (levelIdx <= LEVEL_LAST_NUMBERED) {
-        levelLabel = (void *)GetUiText(0);
+        levelLabel = GetUiText(0);
         levelNumber[0] = ' ';
         FormatDecimal(levelIdx + 1, &levelNumber[1]);
     } else {

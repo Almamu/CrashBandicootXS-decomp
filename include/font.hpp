@@ -58,16 +58,16 @@ public:
     {
     }
 
-    virtual s32 MeasureText(u8 *text);            // 2 FontMeasureText
-    virtual s32 MeasureChars(u8 *str, s32 count); // 3 FontMeasureChars
-    virtual void DrawText(u8 *str);               // 4 FontDrawText
-    virtual void DrawChars(u8 *str, s32 count);   // 5 FontDrawChars
-    virtual void DrawGlyph(u8 charByte);          // 6 FontDrawGlyph
-    virtual void PutChar(u32 charByte);           // 7 FontPutChar
-    virtual void UploadTiles();                   // 8 FontUploadTiles
-    void SetPalette(u8 palette);                  // FontSetPalette
-    void ResetPalette();                          // FontResetPalette
-    s32 TextHeight(u8 *str);                      // FontTextHeight
+    virtual s32 MeasureText(const u8 *text);            // 2 FontMeasureText
+    virtual s32 MeasureChars(const u8 *str, s32 count); // 3 FontMeasureChars
+    virtual void DrawText(const u8 *str);               // 4 FontDrawText
+    virtual void DrawChars(const u8 *str, s32 count);   // 5 FontDrawChars
+    virtual void DrawGlyph(u8 charByte);                // 6 FontDrawGlyph
+    virtual void PutChar(u32 charByte);                 // 7 FontPutChar
+    virtual void UploadTiles();                         // 8 FontUploadTiles
+    void SetPalette(u8 palette);                        // FontSetPalette
+    void ResetPalette();                                // FontResetPalette
+    s32 TextHeight(const u8 *str);                      // FontTextHeight
 
     /* FontSetTileBase */
     void SetTileBase(u32 base)

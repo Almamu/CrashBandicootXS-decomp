@@ -107,9 +107,9 @@ void LanguageSelect::Draw()
             gSmallFont->SetPalette(Blink());
         else
             gSmallFont->SetPalette(0);
-        x = (240 - gSmallFont->MeasureText((u8 *)(glyph = gLanguageNames[i]))) >> 1;
+        x = (240 - gSmallFont->MeasureText(glyph = gLanguageNames[i])) >> 1;
         gSmallFont->SetPos(x, y);
-        gSmallFont->DrawText((u8 *)glyph);
+        gSmallFont->DrawText(glyph);
         y += 10;
     }
     gOamBuffer->HideUnused();

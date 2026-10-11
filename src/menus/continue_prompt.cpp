@@ -200,24 +200,24 @@ void ContinuePrompt::Draw()
 
     gOamBuffer->Reset();
     gObjVramCursor->Rewind();
-    w = icons->MeasureText((u8 *)GetUiText(0x28));
+    w = icons->MeasureText(GetUiText(0x28));
     icons->SetPalette(0);
     icons->SetPos(0x88 - w, 0x87);
-    icons->DrawText((u8 *)GetUiText(0x28));
+    icons->DrawText(GetUiText(0x28));
     icons->SetPalette(Blink(0));
     if (selection == 0) {
         icons->SetPos(0x90, 0x87);
-        icons->DrawText((u8 *)gContinuePromptCursorText);
+        icons->DrawText(gContinuePromptCursorText);
     }
     icons->SetPos(0x98, 0x87);
-    icons->DrawText((u8 *)GetUiText(0x29));
+    icons->DrawText(GetUiText(0x29));
     icons->SetPalette(Blink(1));
     if (selection == 1) {
         icons->SetPos(0x90, 0x91);
-        icons->DrawText((u8 *)gContinuePromptCursorText);
+        icons->DrawText(gContinuePromptCursorText);
     }
     icons->SetPos(0x98, 0x91);
-    icons->DrawText((u8 *)GetUiText(0x2a));
+    icons->DrawText(GetUiText(0x2a));
     gOamBuffer->HideUnused();
 }
 

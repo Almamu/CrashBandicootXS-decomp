@@ -38,7 +38,7 @@ s32 MainLoop(void)
  * string table per language (src/data/ui_text_172cd4.cpp), and
  * `gLanguage` (0-5, set above from the language selector
  * `RunLanguageSelect`'s return) picks one. */
-s32 GetUiText(s32 index)
+const u8 *GetUiText(s32 index)
 {
-    return (s32)gUiTextTables[gLanguage][index];
+    return gUiTextTables[gLanguage][index];
 }
