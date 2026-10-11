@@ -12,27 +12,17 @@ extern "C" {
  * They are class Bitmap's methods (include/entity_flags.hpp, #762) under
  * their C names (cxx_symbols.txt); all UNUSED. */
 
-/* Sets bit `n & 0x1f` of the (32-bit-word-per-block) bitmap array at
- * `this`, floor-dividing `n` by 32 to find the word (so it behaves
- * correctly for negative `n` too). Returns 1 if the bit was previously
- * clear (newly set), 0 if it was already set. */
+/* Sets bit `n % 32` of word `n / 32` of `bits` (the signed division is
+ * the ROM's `n < 0 ? n + 31 : n` then `asr #5`). Returns 1 if the bit
+ * was previously clear (newly set), 0 if it was already set. */
 s32 Bitmap::Set(s32 n)
 {
-    s32 t = n;
     s32 result = 0;
-    s32 wordIndex, bitIndex, mask;
-    s32 *word;
+    s32 word = n / 32;
+    u32 mask = 1 << (n % 32);
 
-    if (t < 0) {
-        t += 0x1f;
-    }
-    wordIndex = t >> 5;
-    bitIndex = n - (wordIndex << 5);
-    mask = 1 << bitIndex;
-    word = (s32 *)((u8 *)bits + (wordIndex << 2));
-
-    if (!(*word & mask)) {
-        *word |= mask;
+    if (!(bits[word] & mask)) {
+        bits[word] |= mask;
         result = 1;
     }
     return result;
@@ -41,19 +31,10 @@ s32 Bitmap::Set(s32 n)
 /* Clears bit `n & 0x1f` of the bitmap (SetBitmapBit sets them). */
 void Bitmap::ClearBit(s32 n)
 {
-    s32 t = n;
-    s32 wordIndex, bitIndex, mask;
-    s32 *word;
+    s32 word = n / 32;
+    u32 mask = 1 << (n % 32);
 
-    if (t < 0) {
-        t += 0x1f;
-    }
-    wordIndex = t >> 5;
-    bitIndex = n - (wordIndex << 5);
-    mask = 1 << bitIndex;
-    word = (s32 *)((u8 *)bits + (wordIndex << 2));
-
-    *word &= ~mask;
+    bits[word] &= ~mask;
 }
 
 /* ClearBitmap: zero-fills `bits` via the BIOS `CpuSet` wrapper, 32-bit

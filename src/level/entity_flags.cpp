@@ -75,49 +75,23 @@ s32 LevelEntityFlags::CountCrateEntities(const struct level_entity_list *list)
  * copy (like MarkEntityGone's bits0Copy write).
  *
  * UNUSED - no caller anywhere in the ROM (checked src/ and asm/). Sets
- * bit `n` of `bits0` (floor-divided into a 32-bit-word row, same idiom as
- * `SetBitmapBit` in entity_bitmap.cpp). */
+ * bit `n` of `bits0` (word `n / 32`, the same idiom as `SetBitmapBit` in
+ * entity_bitmap.cpp). */
 void LevelEntityFlags::SetGone(s32 n)
 {
-    u8 *base = (u8 *)this;
-    s32 t = n;
-    s32 wordIndex, shifted, bitIndex, mask;
-    s32 *word;
+    s32 word = n / 32;
 
-    if (t < 0) {
-        t += 0x1f;
-    }
-    wordIndex = t >> 5;
-    shifted = wordIndex << 2;
-    base += 8;
-    word = (s32 *)(base + shifted);
-    bitIndex = n - (wordIndex << 5);
-    mask = 1 << bitIndex;
-
-    *word |= mask;
+    bits0[word] |= 1 << (n % 32);
 }
 
 /* Tests bit `n` of `bits0`, the committed "gone" set `SetEntityIdGone`
  * sets. */
 bool LevelEntityFlags::IsGone(s32 n)
 {
-    u8 *base = (u8 *)this;
     s32 result = 0;
-    s32 t = n;
-    s32 wordIndex, shifted, bitIndex, mask;
-    s32 *word;
+    s32 word = n / 32;
 
-    if (t < 0) {
-        t += 0x1f;
-    }
-    wordIndex = t >> 5;
-    shifted = wordIndex << 2;
-    base += 8;
-    word = (s32 *)(base + shifted);
-    bitIndex = n - (wordIndex << 5);
-    mask = 1 << bitIndex;
-
-    if (*word & mask) {
+    if (bits0[word] & (1 << (n % 32))) {
         result = 1;
     }
     return result;
@@ -127,23 +101,10 @@ bool LevelEntityFlags::IsGone(s32 n)
  * set. */
 bool LevelEntityFlags::IsActivated(s32 n)
 {
-    u8 *base = (u8 *)this;
     s32 result = 0;
-    s32 t = n;
-    s32 wordIndex, shifted, bitIndex, mask;
-    s32 *word;
+    s32 word = n / 32;
 
-    if (t < 0) {
-        t += 0x1f;
-    }
-    wordIndex = t >> 5;
-    shifted = wordIndex << 2;
-    base += 0x208;
-    word = (s32 *)(base + shifted);
-    bitIndex = n - (wordIndex << 5);
-    mask = 1 << bitIndex;
-
-    if (*word & mask) {
+    if (bits1[word] & (1 << (n % 32))) {
         result = 1;
     }
     return result;
@@ -156,30 +117,18 @@ bool LevelEntityFlags::IsActivated(s32 n)
  *
  * Was NAKED asm, not plain C - see
  * docs/matching/archive/naked-sub_80259d4-matched.md for the derivation of how
- * this was finally matched. This is a true leaf function in the ROM
+ * this was first matched. This is a true leaf function in the ROM
  * (no `push`/`pop` at all - `self` lives in `ip`/`r12` for the whole
- * function, which old_agbcp does on its own). The ROM shifts the word
- * index to a byte offset before it builds `bits1`'s address
- * (`movs r1, #0x82; lsls; add r1, ip`) and adds the two: the offset is
- * its own statement and is added to the separately loaded `bits1`
- * pointer (`committed += word` would shift after the address, and
- * `&bits1[word]` adds the constant to the offset first). The copy then
- * reuses the shifted index (`live += word`). This replaced an integer
- * address pinned to r1 (#662 round 2). */
+ * function, which old_agbcp does on its own). Indexing the two arrays
+ * directly gives the ROM's code: the shifted word index is computed once
+ * and added to each array's address (#855; it was a byte-offset pointer
+ * before). */
 void LevelEntityFlags::SetActivated(s32 n)
 {
     s32 word = n / 32;
-    s32 offset = word * 4;
-    u32 *committed = bits1;
-    u32 *live;
-    u32 mask;
 
-    committed = (u32 *)((u8 *)committed + offset);
-    mask = 1 << (n % 32);
-    *committed |= mask;
-    live = bits1Copy;
-    live += word;
-    *live |= mask;
+    bits1[word] |= 1 << (n % 32);
+    bits1Copy[word] |= 1 << (n % 32);
 }
 
 /* Sets bit `n` of `bits1Copy` (`self+0x308`) only: the live "activated"
@@ -187,22 +136,9 @@ void LevelEntityFlags::SetActivated(s32 n)
  * switch itself and the outline crates it makes solid). */
 void LevelEntityFlags::MarkActivated(s32 n)
 {
-    u8 *base = (u8 *)this;
-    s32 t = n;
-    s32 wordIndex, shifted, bitIndex, mask;
-    s32 *word;
+    s32 word = n / 32;
 
-    if (t < 0) {
-        t += 0x1f;
-    }
-    wordIndex = t >> 5;
-    shifted = wordIndex << 2;
-    base += 0x308;
-    word = (s32 *)(base + shifted);
-    bitIndex = n - (wordIndex << 5);
-    mask = 1 << bitIndex;
-
-    *word |= mask;
+    bits1Copy[word] |= 1 << (n % 32);
 }
 
 /* UNUSED - no caller anywhere in the ROM (checked src/ and asm/). Stores
