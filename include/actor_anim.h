@@ -179,13 +179,13 @@ struct category_descriptor {
     const u8 *sprite_sheet; // 0x1C - this category family's LZ77-compressed sprite sheet
     // 0x20 - deaths since the checkpoint (gActorCategoryDeaths) after which
     // IsActorMaskAssistDue reports true
-    u32 maskAssistDeaths;
+    s32 maskAssistDeaths;
     // 0x24 - deaths since the checkpoint (gActorCategoryDeaths) after which the
     // spawns use their `bonusKind` (InitActorCategory -> gActorSpawnUseBonus)
-    u32 bonusKindDeaths;
+    s32 bonusKindDeaths;
     // 0x28 - boss deaths (gActorCategoryBossDeaths) after which the boss is
     // created with `retryBossLevel` instead of `bossLevel`
-    u32 retryBossDeaths;
+    s32 retryBossDeaths;
     // 0x2C - the argument InitActorCategory passes to the boss's constructor
     // (category vtable slot 2: CreateYeti's gYetiParamsIndex,
     // CreateAirship's gAirshipLevel, CreateHovercraft's gHovercraftLevel)

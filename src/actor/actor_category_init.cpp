@@ -117,7 +117,7 @@ s32 InitActorCategory(s32 category)
         variantCount = &gActorCategoryBossDeaths;
         gActorMissedNitros = gActorCheckpointMissedNitros;
         gLevelState->RestoreCheckpoint();
-        if (*variantCount >= (s32)CUR_CATEGORY.retryBossDeaths)
+        if (*variantCount >= CUR_CATEGORY.retryBossDeaths)
             variant = CUR_CATEGORY.retryBossLevel;
         else
             variant = CUR_CATEGORY.bossLevel;
@@ -129,7 +129,7 @@ s32 InitActorCategory(s32 category)
             LoadBgPicture((u8 *)CUR_CATEGORY.bgPicture);
         RestoreActorPaletteCycle();
         SelectActorCategory(CUR_CATEGORY.type, CUR_CATEGORY.spawnTable, CUR_CATEGORY.anim_table,
-                            *activeCount >= (s32)CUR_CATEGORY.bonusKindDeaths, variant,
+                            *activeCount >= CUR_CATEGORY.bonusKindDeaths, variant,
                             gActorCheckpoint);
         DmaCopy16(3, CUR_CATEGORY.palette, OBJ_PLTT, OBJ_PLTT_SIZE);
 

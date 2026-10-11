@@ -149,9 +149,9 @@ void SpawnJetpackCollectedWumpa(s32 a, s32 b, s32 c)
 
 /* A balloon of record `kind` holding crate `d` (the crates' constructors,
  * jetpack_crates.cpp). */
-void *SpawnJetpackBalloon(u8 kind, s32 a, s32 b, s32 c, s32 d)
+JetpackBalloon *SpawnJetpackBalloon(u8 kind, s32 a, s32 b, s32 c, JetpackBalloonCrate *crate)
 {
-    return new JetpackBalloon(&gJetpackAnimTable[kind], a, b, c, (JetpackBalloonCrate *)d);
+    return new JetpackBalloon(&gJetpackAnimTable[kind], a, b, c, crate);
 }
 
 /* Kind-14 constructor. */

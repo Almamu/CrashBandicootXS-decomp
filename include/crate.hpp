@@ -201,19 +201,19 @@ public:
     /* The slot crate's word (crate_fields.cpp). */
     u32 GetSlotStage();
     void DecrementSlotStage();
-    void SetSlotStage(u32 stage);
+    void SetSlotStage(u8 stage);
     void ClearSlotStage();
     u32 GetSlotSpins();
     void DecrementSlotSpins();
-    void SetSlotSpins(u32 spins);
-    void SetSlotPhase(u32 phase);
+    void SetSlotSpins(u8 spins);
+    void SetSlotPhase(u8 phase);
     u32 GetSlotPhase();
     /* The other accessors (crate_fields.cpp). */
     void SetKind(u8 value);
     u8 GetKind();
     void SetFallDistance(s32 value);
     s32 GetFallDistance();
-    void SetState(u32 value);
+    void SetState(u8 value);
     u32 GetState();
     void SetFallSpeed(u8 value);
     s32 GetFallSpeed();
@@ -223,7 +223,7 @@ public:
     void SetTouched(u8 value);
     u8 GetParamB();
     u8 GetParamA();
-    void SetSolidKind(u32 value);
+    void SetSolidKind(u8 value);
     void SetTrialKind(s32 value);
     s32 GetTrialKind();
 

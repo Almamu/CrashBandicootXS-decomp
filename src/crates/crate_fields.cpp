@@ -132,18 +132,17 @@ u32 Crate::GetSlotStage()
 /* Steps the stage down by one, unless it is 0. */
 void Crate::DecrementSlotStage()
 {
-    u8 stage = (u8)GetSlotStage();
+    u8 stage = GetSlotStage();
 
     if (stage != 0) {
-        u8 next = (u8)(stage - 1);
+        u8 next = stage - 1;
         slotState = (slotState & CRATE_SLOT_CLEAR_STAGE) | (next << CRATE_SLOT_STAGE_SHIFT);
     }
 }
 
-void Crate::SetSlotStage(u32 stage)
+void Crate::SetSlotStage(u8 stage)
 {
-    u8 s = (u8)stage;
-    slotState = (slotState & CRATE_SLOT_CLEAR_STAGE) | (s << CRATE_SLOT_STAGE_SHIFT);
+    slotState = (slotState & CRATE_SLOT_CLEAR_STAGE) | (stage << CRATE_SLOT_STAGE_SHIFT);
 }
 
 void Crate::ClearSlotStage()
@@ -162,25 +161,23 @@ u32 Crate::GetSlotSpins()
 /* Steps the spins down by one, unless they are 0. */
 void Crate::DecrementSlotSpins()
 {
-    u8 spins = (u8)GetSlotSpins();
+    u8 spins = GetSlotSpins();
 
     if (spins != 0) {
-        u8 next = (u8)(spins - 1);
+        u8 next = spins - 1;
         slotState = (slotState & CRATE_SLOT_CLEAR_SPINS) | (next << CRATE_SLOT_SPINS_SHIFT);
     }
 }
 
-void Crate::SetSlotSpins(u32 spins)
+void Crate::SetSlotSpins(u8 spins)
 {
-    u8 s = (u8)spins;
-    slotState = (slotState & CRATE_SLOT_CLEAR_SPINS) | (s << CRATE_SLOT_SPINS_SHIFT);
+    slotState = (slotState & CRATE_SLOT_CLEAR_SPINS) | (spins << CRATE_SLOT_SPINS_SHIFT);
 }
 
 /* The face (`slotState` bits 0-2). */
-void Crate::SetSlotPhase(u32 phase)
+void Crate::SetSlotPhase(u8 phase)
 {
-    u8 s = (u8)phase;
-    slotState = (slotState & CRATE_SLOT_CLEAR_PHASE) | s;
+    slotState = (slotState & CRATE_SLOT_CLEAR_PHASE) | phase;
 }
 
 u32 Crate::GetSlotPhase()
@@ -209,10 +206,9 @@ s32 Crate::GetFallDistance()
 }
 
 /* The low 7 bits of `state`; the busy bit stays. */
-void Crate::SetState(u32 value)
+void Crate::SetState(u8 value)
 {
-    u8 v = (u8)value;
-    state = v | (state & CRATE_STATE_BUSY);
+    state = value | (state & CRATE_STATE_BUSY);
 }
 
 u32 Crate::GetState()
@@ -274,9 +270,9 @@ u8 Crate::GetParamA()
 }
 
 /* The whole word at 0x48, from a byte (unlike SetSlotPhase). */
-void Crate::SetSolidKind(u32 value)
+void Crate::SetSolidKind(u8 value)
 {
-    solidKind = (u8)value;
+    solidKind = value;
 }
 
 void Crate::SetTrialKind(s32 value)
