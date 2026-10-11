@@ -38,8 +38,6 @@ extern "C" s32 RandRange_s32(s32 max) asm("RandRange");
  * graphics, starts the starfield and the title music. */
 TitleScreen::TitleScreen()
 {
-    struct dma_regs *dma;
-
     font = gSmallFont;
     gOamBuffer->Reset();
     gOamBuffer->HideUnused();
@@ -53,19 +51,9 @@ TitleScreen::TitleScreen()
     font->SetPalette(0xe);
     font->SetTileBase(0x200);
 
-    dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
-    dma->src = (u32)gTitleMenuPalette;
-    dma->dst = OBJ_PLTT + 13 * PALETTE_SIZE_16;
-    dma->cnt = 0x80000010;
-    dma->cnt;
-    dma->src = (u32)gTitleMenuSelectedPalette;
-    dma->dst = OBJ_PLTT + 14 * PALETTE_SIZE_16;
-    dma->cnt = 0x80000010;
-    dma->cnt;
-    dma->src = (u32)gTitleMenuBlinkPalette;
-    dma->dst = OBJ_PLTT + 15 * PALETTE_SIZE_16;
-    dma->cnt = 0x80000010;
-    dma->cnt;
+    DmaCopy16(3, gTitleMenuPalette, OBJ_PLTT + 13 * PALETTE_SIZE_16, PALETTE_SIZE_16);
+    DmaCopy16(3, gTitleMenuSelectedPalette, OBJ_PLTT + 14 * PALETTE_SIZE_16, PALETTE_SIZE_16);
+    DmaCopy16(3, gTitleMenuBlinkPalette, OBJ_PLTT + 15 * PALETTE_SIZE_16, PALETTE_SIZE_16);
 
     LoadBg();
     LoadObjTiles();
@@ -225,8 +213,8 @@ static inline void SetAffine(OamBuffer *buf, s32 m, u16 pa, u16 pb, u16 pc, u16 
  *   Strength reduction reverses it (check_dbra_loop) and emits the
  *   `j = 3` start after the hoisted invariants, as in the ROM.
  * - CLEAR_OAM is a macro that stores `zero` before loading the DMA base.
- *   The second slot loop does its DMA through `dma2`, set before the
- *   loop, so loop.c hoists it into r9 and the table pointer is spilled.
+ *   loop.c hoists the second slot loop's DMA base into r9, and the
+ *   table pointer is spilled.
  * - The counter addresses compute the scaled index before
  *   `this + 0x1e4`. `px + dx` locals stop fold from reassociating the
  *   -0x20. The random shake keeps `a - 5` as its own local after the
@@ -321,10 +309,8 @@ void TitleScreen::DrawLogoPieces()
     }
     {
         const s32 *tbl = &gTitleArrowPieceOffsets[0][0];
-        struct dma_regs *dma2;
 
         k = 0;
-        dma2 = (struct dma_regs *)REG_ADDR_DMA3SAD;
         for (; k <= 1; k++) {
             LogoPiece *slot = &pieces[k];
             s32 j;
@@ -346,11 +332,7 @@ void TitleScreen::DrawLogoPieces()
                     }
                 }
             }
-            zero = 0;
-            dma2->src = (u32)&zero;
-            dma2->dst = (u32)&oamC;
-            dma2->cnt = 0x81000004;
-            dma2->cnt;
+            CLEAR_OAM(&oamC);
             oamC.palette = k + 1;
             oamC.tileNum = (k << 6) + 0x140;
             oamC.size = 2;

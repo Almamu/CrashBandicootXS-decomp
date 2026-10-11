@@ -34,6 +34,21 @@ struct dma_regs {
 #define DmaFill16(dmaNum, value, dest, size) DMA_FILL(dmaNum, value, dest, size, 16)
 #define DmaFill32(dmaNum, value, dest, size) DMA_FILL(dmaNum, value, dest, size, 32)
 
+/* Fills `size` bytes at `dest` with the halfword/word at `src`, a fixed
+ * source the caller owns. DmaFill16/32 put the value in a volatile
+ * temporary of their own; some fills in the ROM read it from a plain
+ * local the caller set earlier (and whose zero it shares with other
+ * stores), or from an address computed ahead of time. */
+#define DMA_FILL_FROM(dmaNum, src, dest, size, bit)                                         \
+    DmaSet(dmaNum,                                                                          \
+           src,                                                                             \
+           dest,                                                                            \
+           (u32)((DMA_ENABLE | DMA_START_NOW | DMA_##bit##BIT | DMA_SRC_FIXED | DMA_DEST_INC) << 16 \
+         | ((size)/(bit/8))))
+
+#define DmaFill16From(dmaNum, src, dest, size) DMA_FILL_FROM(dmaNum, src, dest, size, 16)
+#define DmaFill32From(dmaNum, src, dest, size) DMA_FILL_FROM(dmaNum, src, dest, size, 32)
+
 // Note that the DMA clear macros cause the DMA control value to be calculated
 // at runtime rather than compile time. The size is divided by the DMA transfer
 // unit size (2 or 4 bytes) and then combined with the DMA control flags using a

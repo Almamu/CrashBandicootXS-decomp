@@ -24,19 +24,13 @@ extern "C" {
  * the logo screen (LoadVvLogoGraphics's), which it doesn't use. */
 void CompanyLogos::LoadAssetBuffered(const void *asset, void *dest)
 {
-    u32 val = *(const u32 *)asset;
-    struct dma_regs *dma;
+    u32 size = *(const u32 *)asset;
     u8 *buf;
 
-    val >>= 8;
-    buf = new u8[val];
+    size >>= 8;
+    buf = new u8[size];
     LoadTaggedAsset(asset, buf);
-    dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
-    dma->src = (u32)buf;
-    dma->dst = (u32)dest;
-    val >>= 1;
-    dma->cnt = val | 0x80000000;
-    dma->cnt;
+    DmaCopy16(3, buf, dest, size);
     delete[] buf;
 }
 
