@@ -82,9 +82,9 @@ extern void *GetSpriteBodyBox(void *dest, void *pt);
 /* src/objects/sprite_obj.cpp */
 
 /* src/objects/sprite_obj.cpp */
-extern void OffsetFromHitboxEdge(void *dest, s32 kind, void *rec);
-extern void OffsetToHitboxEdge(void *dest, s32 kind, void *rec);
-extern void OffsetToHitboxEdgeStart(void *dest, s32 kind, void *rec);
+extern void OffsetFromHitboxEdge(struct vec2 *dest, s32 kind, const struct hitbox_quad *rec);
+extern void OffsetToHitboxEdge(struct vec2 *dest, s32 kind, const struct hitbox_quad *rec);
+extern void OffsetToHitboxEdgeStart(struct vec2 *dest, s32 kind, const struct hitbox_quad *rec);
 
 /* The controllers' motion records (src/data/motion_records_16b304.cpp),
  * read by StartCtrlTargetMotionYFromSet/StartCtrlTargetMotionXFromSet and

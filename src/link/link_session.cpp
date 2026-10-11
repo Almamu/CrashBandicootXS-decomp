@@ -221,7 +221,7 @@ void LinkSession::HandleSerial(u16 *data)
         goto send;
     if (!connected) {
         s32 nId, nFree, same;
-        struct link_id_word *f20;
+        union link_id_word *f20;
 
         if (!((siocnt >> 3) & one))
             goto send;
@@ -258,11 +258,11 @@ void LinkSession::HandleSerial(u16 *data)
             peerMask = ~(-1 << nId);
             peerMask &= ~(1 << playerId);
         }
-        f20->lo = nId;
+        f20->bits.lo = nId;
         {
             u16 *dst = &sendWord;
 
-            *dst = *(u16 *)&handshakeWord;
+            *dst = handshakeWord.raw;
         }
         goto send;
     }

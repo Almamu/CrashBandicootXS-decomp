@@ -84,7 +84,7 @@ static inline s32 RunCategoryPauseMenu(void)
     mem_free(buf);
     ResetCellAnimBg();
     if (CUR_CATEGORY.bgPicture != NULL)
-        LoadBgPicture((u8 *)CUR_CATEGORY.bgPicture);
+        LoadBgPicture(CUR_CATEGORY.bgPicture);
     ReloadActorCategoryGraphics();
     return result;
 }
@@ -126,7 +126,7 @@ s32 InitActorCategory(s32 category)
         InitCellAnim(CUR_CATEGORY.type, CUR_CATEGORY.cellAnim, CUR_CATEGORY.cellAnimSize,
                      gActorCheckpoint);
         if (CUR_CATEGORY.bgPicture != NULL)
-            LoadBgPicture((u8 *)CUR_CATEGORY.bgPicture);
+            LoadBgPicture(CUR_CATEGORY.bgPicture);
         RestoreActorPaletteCycle();
         SelectActorCategory(CUR_CATEGORY.type, CUR_CATEGORY.spawnTable, CUR_CATEGORY.anim_table,
                             *activeCount >= (s32)CUR_CATEGORY.bonusKindDeaths, variant,

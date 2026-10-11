@@ -341,8 +341,7 @@ void Crate::QueuePlayerCollision(s32 idx)
         if (gPlayer->listCount == 0) {
             const struct sprite_anim *a = &gPlayer->bank->anims[gPlayer->tag];
 
-            if (attack != ATTACK_KIND_SLIDE &&
-                PlayerHitboxOverlapsAt((struct hitbox_quad *)&a->box[0], &box, px, py)) {
+            if (attack != ATTACK_KIND_SLIDE && PlayerHitboxOverlapsAt(&a->box[0], &box, px, py)) {
                 Crate *e = obj->GetAbove();
 
                 if (e != 0 && (e->state & CRATE_STATE_MASK) != 1) {

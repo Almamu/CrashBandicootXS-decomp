@@ -139,13 +139,13 @@ const u8 gAttackKindBreakLimited[8] = {
 
 /* The {x, y, z} scale triples of UpdateExtraLifeHop (extra_life.cpp) and
  * UpdateWumpaHop (wumpa_update.cpp). */
-const s32 gExtraLifeHopWidths[3] = {
+const struct three_words gExtraLifeHopWidths = { {
     0x300,
     0x0,
     0x200,
-};
-const s32 gWumpaHopWidths[3] = {
+} };
+const struct three_words gWumpaHopWidths = { {
     0x300,
     0x0,
     0x200,
-};
+} };

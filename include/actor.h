@@ -228,8 +228,8 @@ extern void SetActorCategoryExitStatus(s32 arg0);
 extern void SetupActorVramPool(void);
 
 /* src/actor/bg_picture.cpp */
-extern void LoadBgPicture(u8 *pic);
-extern void FillBgPictureMap(u8 *nib, u16 *map, s32 cols, s32 rows);
+extern void LoadBgPicture(const u8 *pic);
+extern void FillBgPictureMap(const u8 *nib, const u16 *map, s32 cols, s32 rows);
 
 /* src/actor/cell_anim.cpp */
 extern void UploadCellAnimFrame(void);

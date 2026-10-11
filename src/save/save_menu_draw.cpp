@@ -432,27 +432,21 @@ void SaveMenu::InitIcons()
  * without the C's r1 pin. */
 
 /* Same shape as LoadLanguageSelectBg (src/frontend/language_select_setup.cpp) - reset
- * the DISPCNT shadow (`dispcnt`) and set its two bytes one at a time,
+ * the DISPCNT shadow (`dispcnt`) and set its fields (mode 1, 1D OBJ
+ * mapping, BG0 and OBJ on; each byte is read, masked and written back),
  * request a BG tile/map graphics package, set BG0's
  * control register from it - plus zeroing `frame`, which LoadLanguageSelectBg's
  * language_select doesn't have. */
 void SaveMenu::LoadBg()
 {
     u32 zero = 0;
-    s32 a;
-    s32 b;
 
-    dispcnt = zero;
-    a = 0x40;
-    a |= ((u8 *)&dispcnt)[0];
-    a &= -8;
-    a |= 1;
-    ((u8 *)&dispcnt)[0] = a;
-    b = 1;
-    b |= ((u8 *)&dispcnt)[1];
-    b &= -3;
-    b |= 0x10;
-    ((u8 *)&dispcnt)[1] = b;
+    dispcnt.raw = zero;
+    dispcnt.bits.objMap1D = 1;
+    dispcnt.bits.mode = DISPCNT_MODE_1;
+    dispcnt.bits.bg0 = 1;
+    dispcnt.bits.bg1 = 0;
+    dispcnt.bits.obj = 1;
 
     BgSetup buf(2, 0x1e, 1, 3);
     buf.Load(&gMenuSkyBg);

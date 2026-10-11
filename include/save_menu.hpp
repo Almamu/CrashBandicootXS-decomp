@@ -65,8 +65,7 @@ public:
     s32 cursor; // 0x10
     const u8 *messageLine1; // 0x14 - state 4's first text line
     const u8 *messageLine2; // 0x18 - and its second
-    u16 dispcnt;            // 0x1C - the REG_DISPCNT shadow
-    u8 unused_1e[2];        //
+    union dispcnt dispcnt;  // 0x1C - the REG_DISPCNT shadow (gfx.h)
     u8 gameLoaded;          // 0x20 - a game was loaded; RunSaveMenu returns it
     u32 pendingSlot;        // 0x24 - the slot the "delete?"/"overwrite?" prompt acts on
     struct settings_row_stats currentStats; // 0x28

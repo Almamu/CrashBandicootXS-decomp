@@ -59,11 +59,8 @@ s32 Sprite::GetAnimPaletteSlot()
  * hitbox `rec` that faces direction `kind` (PART_DIR_*, ProbeTerrain's
  * directions; PART_DIR_Y_MASK, both vertical bits, counts as down) to
  * the object's origin. */
-void OffsetFromHitboxEdge(void *destArg, s32 kind, void *recArg)
+void OffsetFromHitboxEdge(struct vec2 *dest, s32 kind, const struct hitbox_quad *rec)
 {
-    struct vec2 *dest = (struct vec2 *)destArg;
-    struct hitbox_quad *rec = (struct hitbox_quad *)recArg;
-
     switch (kind) {
     case PART_DIR_LEFT:
         dest->x += rec->w << 7;
@@ -85,11 +82,8 @@ void OffsetFromHitboxEdge(void *destArg, s32 kind, void *recArg)
  * hitbox `rec` that faces direction `kind`: x +/- w/2, or y + offY (top)
  * / y + offY + h (bottom). ProbeGroundSpriteFloor/ProbeGroundSpriteTerrain
  * use it with PART_DIR_DOWN for the point under the object's feet. */
-void OffsetToHitboxEdge(void *destArg, s32 kind, void *recArg)
+void OffsetToHitboxEdge(struct vec2 *dest, s32 kind, const struct hitbox_quad *rec)
 {
-    struct vec2 *dest = (struct vec2 *)destArg;
-    struct hitbox_quad *rec = (struct hitbox_quad *)recArg;
-
     switch (kind) {
     case PART_DIR_LEFT:
         dest->x -= rec->w << 7;
@@ -112,11 +106,8 @@ void OffsetToHitboxEdge(void *destArg, s32 kind, void *recArg)
  * starts from: for 1/2 (right/left) the top end of the side edge (x +/-
  * w/2, y + offY; the scan runs down over `h`), for 4/8 (up/down) the left
  * end of the top or bottom edge (x - w/2; the scan runs right over `w`). */
-void OffsetToHitboxEdgeStart(void *destArg, s32 kind, void *recArg)
+void OffsetToHitboxEdgeStart(struct vec2 *dest, s32 kind, const struct hitbox_quad *rec)
 {
-    struct vec2 *dest = (struct vec2 *)destArg;
-    struct hitbox_quad *rec = (struct hitbox_quad *)recArg;
-
     switch (kind) {
     case PART_DIR_LEFT:
         dest->x -= rec->w << 7;
@@ -485,14 +476,14 @@ void Sprite::SetPalette(s32 value)
     palette = value;
 }
 
-void Sprite::SetBank(void *value)
+void Sprite::SetBank(const struct sprite_bank *value)
 {
-    bank = (const struct sprite_bank *)value;
+    bank = value;
 }
 
-void *Sprite::GetBank()
+const struct sprite_bank *Sprite::GetBank()
 {
-    return (void *)bank;
+    return bank;
 }
 
 u8 Sprite::IsAnimLooping()

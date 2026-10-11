@@ -57,7 +57,8 @@ class Player; // player.hpp
 class Sprite : public Entity
 {
 public:
-    void *lastHitbox; // 0x1C - the last hitbox record (AnchorGroundSpriteHitbox)
+    const struct hitbox_quad
+        *lastHitbox; // 0x1C - the last hitbox record (AnchorGroundSpriteHitbox)
     /* 0x20 - the sprite bank. A union of one: gcc gives every access to a
      * union member alias set 0, and the ROM's code was compiled with that
      * (a store to it doesn't kill other loads; see hud.hpp's
@@ -166,8 +167,8 @@ public:
     u8 GetAnimPaletteId();
     s32 GetPalette();
     void SetPalette(s32 value);
-    void SetBank(void *bank); // SetSpriteAnimTable
-    void *GetBank();          // GetSpriteAnimTable
+    void SetBank(const struct sprite_bank *bank); // SetSpriteAnimTable
+    const struct sprite_bank *GetBank();          // GetSpriteAnimTable
     u8 IsAnimLooping();
     u8 GetAnimFrameCount();
     u8 GetAnimDuration();

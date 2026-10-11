@@ -132,13 +132,13 @@ s32 LinkSession::ResetState()
     peerMask = 0;
     sendWordIndex = 0;
     sendRound = 0;
-    handshakeWord.hi = 0xF0B;
-    handshakeWord.lo = 0;
+    handshakeWord.bits.hi = 0xF0B;
+    handshakeWord.bits.lo = 0;
     {
         u16 *p400 = &sendWord;
         u16 v;
 
-        *p400 = *(u16 *)&handshakeWord;
+        *p400 = handshakeWord.raw;
         v = *p400;
         REG_SIOMLT_SEND = v;
     }

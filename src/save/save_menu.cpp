@@ -30,7 +30,7 @@ void SaveMenu::MessageInput(u32 keys)
  * once-a-frame commit. */
 void SaveMenu::CommitFrame()
 {
-    REG_DISPCNT = dispcnt;
+    REG_DISPCNT = dispcnt.raw;
     REG_BG0HOFS = frame >> 3;
     gPaletteCache->Upload();
     gOamBuffer->Commit();

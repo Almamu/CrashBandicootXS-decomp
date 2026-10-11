@@ -624,9 +624,9 @@ void LevelState::ArmStartSpawn()
 /* Sets the boss's controller (`boss`; the spawners' BossCtrl,
  * spawn_bosses.cpp), right after the `+0x1c0`/`0x1c4` pair
  * `CheckAllCratesBroken` below reads. */
-void LevelState::SetLevelBoss(void *value)
+void LevelState::SetLevelBoss(BossCtrl *value)
 {
-    boss = (BossCtrl *)value;
+    boss = value;
 }
 
 /* Plain getter/getter/setter trio for `room.roomIndex` (`+0xc8`, the

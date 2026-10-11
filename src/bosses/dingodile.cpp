@@ -579,7 +579,7 @@ void DingodileProjectileCtrl::Update(MovingSprite *part)
 
     switch (state) {
     case DINGODILE_PROJECTILE_STATE_LAUNCH:
-        StartTargetMotionY(part, (const struct speed_ramp *)gDingodileRocketRiseMotion);
+        StartTargetMotionY(part, &gDingodileRocketRiseMotion);
         SetMode(DINGODILE_PROJECTILE_STATE_RISE);
         break;
     case DINGODILE_PROJECTILE_STATE_RISE:
@@ -596,7 +596,7 @@ void DingodileProjectileCtrl::Update(MovingSprite *part)
         break;
     case DINGODILE_PROJECTILE_STATE_DROP:
         SetTargetAnim(part, 9);
-        StartTargetMotionY(part, (const struct speed_ramp *)gDingodileStalactiteFallMotion);
+        StartTargetMotionY(part, &gDingodileStalactiteFallMotion[0]);
         SetMode(DINGODILE_PROJECTILE_STATE_FALL);
         break;
     case DINGODILE_PROJECTILE_STATE_FALL:

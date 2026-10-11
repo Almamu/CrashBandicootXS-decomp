@@ -40,10 +40,14 @@ struct nibble_pair {
     u8 hi:4;
 } __attribute__((packed));
 
-struct link_id_word {
-    u16 lo:4;
-    u16 hi:12;
-} __attribute__((packed));
+/* The handshake word: its fields, or the halfword that is sent. */
+union link_id_word {
+    struct {
+        u16 lo:4;
+        u16 hi:12;
+    } __attribute__((packed)) bits;
+    u16 raw;
+};
 
 /* A 0x90-byte byte ring: the session's outgoing ring at +0x40 and each
  * player record's incoming ring at +0x38 (SaveTransfer::SendChunk and
@@ -151,9 +155,9 @@ public:
     s32 idleFrames;     // 0x14 - frames without `progressed`; > 0x1d resets
     u8 progressed;      // 0x18 - set by HandleSerial when a packet moved
     s32 playerCount;    // 0x1c - consoles that answered the handshake
-    struct link_id_word handshakeWord; // 0x20 - 0xF0B, low nibble = answers seen
-    s32 totalSent;                     // 0x24 - payload bytes popped from `ring`
-    u8 prevPacket[8];                  // 0x28 - the previous `id`, re-sent every fourth round
+    union link_id_word handshakeWord; // 0x20 - 0xF0B, low nibble = answers seen
+    s32 totalSent;                    // 0x24 - payload bytes popped from `ring`
+    u8 prevPacket[8];                 // 0x28 - the previous `id`, re-sent every fourth round
     /* 0x30 - with `hash`, the outgoing 8-byte packet (first
      * MakeLinkHandshakeId's id) */
     u8 id[6];

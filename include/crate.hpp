@@ -190,7 +190,8 @@ public:
     Crate *GetTop();
     Crate *GetBottom();
     s32 CollideWithPlayer(u32 idx, s32 testX, s32 testY); // CollideCrateWithPlayer
-    u8 PlayerHitboxOverlapsAt(struct hitbox_quad *quad, struct aabb *box, s32 xOffset, s32 yOffset);
+    u8 PlayerHitboxOverlapsAt(const struct hitbox_quad *quad, struct aabb *box, s32 xOffset,
+                              s32 yOffset);
     Crate *ResolveStackHit(struct aabb *box, u8 *foundFlag); // ResolveStackCrateHit
     void BreakIfTouchedByPlayer();                           // BreakCrateTouchedByPlayer
     u8 PlayerAnimWouldTouch(s32 action);                     // PlayerAnimWouldTouchCrate

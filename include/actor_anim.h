@@ -168,7 +168,7 @@ struct category_descriptor {
     u32 cellAnimSize; // 0x08 - its size in bytes
     // 0x0C - the BG1 picture LoadBgPicture shows (gCategoryNBgPicture);
     // NULL for type-0 categories (0-2), 5 and 6 share one
-    void *bgPicture;
+    const u8 *bgPicture;
     // 0x10 - raw 16-color RGB555 palette, DMA'd to OBJ palette RAM (InitActorCategory)
     const u16 *palette;
     // 0x14 - the stage's actor spawn list (gCategoryNSpawnTable)

@@ -29,7 +29,7 @@ bool MovingSprite::ProbeEdgeTerrain(s32 mode, const struct hitbox_quad *quad)
 
     f.origY = y;
     f.pos = Pos();
-    OffsetToHitboxEdgeStart(&f.pos, mode, (void *)quad);
+    OffsetToHitboxEdgeStart(&f.pos, mode, quad);
     f.pos.x = Q8_TO_INT(f.pos.x);
     f.pos.y = Q8_TO_INT(f.pos.y);
     tries = &probeTries;

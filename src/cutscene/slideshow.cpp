@@ -153,15 +153,16 @@ void Slideshow::ShowPicture(s32 idx)
 {
     Slideshow *self = this;
     const struct cutscene_slide *item = self->slides[idx];
-    void *asset = (void *)item->picture;
+    const u16 *asset = item->picture;
     s32 toggle = self->toggle ^ 1;
 
     self->toggle = toggle;
 
+    /* the bitmap follows the 256-colour palette */
     if (toggle == 0) {
-        LoadTaggedAsset((u8 *)asset + 0x200, (void *)VRAM);
+        LoadTaggedAsset(&asset[0x100], (void *)VRAM);
     } else {
-        LoadTaggedAsset((u8 *)asset + 0x200, (void *)(VRAM + 0xA000));
+        LoadTaggedAsset(&asset[0x100], (void *)(VRAM + 0xA000));
     }
 
     {
