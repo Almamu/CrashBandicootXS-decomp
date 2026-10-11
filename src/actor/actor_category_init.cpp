@@ -52,8 +52,6 @@ extern void SetCheckpointAtPlayer_1(void *self) asm("SetCheckpointAtPlayer");
  *  - `-CanPauseActorCategory() < 0` gives the ROM's `neg; lsr #31` (`!= 0` adds
  *    an `orr`), and the new-press test is `(keys >> 16) & 8` so it shares
  *    the gKeys literal with the `& 4` word test.
- *  - `zero` is volatile, as in the DmaFill16 idiom (address before the
- *    `strh`).
  *  - The pause menu round trip is its own inline function. The C++ front
  *    end puts a deleted note after every expression statement, and loop.c
  *    counts notes in a register's lifetime; inlined bodies leave them out.
@@ -70,25 +68,19 @@ extern void SetCheckpointAtPlayer_1(void *self) asm("SetCheckpointAtPlayer");
  * frees the sprite caches, runs the menu, then rebuilds the VRAM pool,
  * restores the palette and redraws the background. Returns the menu's
  * result. */
-static inline s32 RunCategoryPauseMenu(struct dma_regs *dma)
+static inline s32 RunCategoryPauseMenu(void)
 {
     void *buf = mem_alloc(OBJ_PLTT_SIZE, MEM_HEAP_IWRAM);
     s32 result;
 
-    dma->src = OBJ_PLTT;
-    dma->dst = (u32)buf;
-    dma->cnt = 0x80000100;
-    dma->cnt;
+    DmaCopy16(3, OBJ_PLTT, buf, OBJ_PLTT_SIZE);
     FreeSpriteFrameCache();
     FreeSpriteFrameOamQueue();
     FreeObjTileFreeList();
     result = RunPauseMenu();
     SetupActorVramPool();
     FadeBrightness(0x80, 1, 1);
-    dma->src = (u32)buf;
-    dma->dst = OBJ_PLTT;
-    dma->cnt = 0x80000100;
-    dma->cnt;
+    DmaCopy16(3, buf, OBJ_PLTT, OBJ_PLTT_SIZE);
     mem_free(buf);
     ResetCellAnimBg();
     if (CUR_CATEGORY.bgPicture != NULL)
@@ -103,8 +95,6 @@ s32 InitActorCategory(s32 category)
     s32 *activeCount;
     s32 *variantCount;
     LevelState **state;
-    struct dma_regs *dma;
-    vu16 zero;
     u32 variant;
     s32 status;
     s32 result;
@@ -131,12 +121,7 @@ s32 InitActorCategory(s32 category)
             variant = CUR_CATEGORY.retryBossLevel;
         else
             variant = CUR_CATEGORY.bossLevel;
-        zero = 0;
-        dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
-        dma->src = (u32)&zero;
-        dma->dst = PLTT;
-        dma->cnt = 0x81000200;
-        dma->cnt;
+        DmaFill16(3, 0, PLTT, PLTT_SIZE);
         FadeBrightness(0x80, 2, 1);
         InitCellAnim(CUR_CATEGORY.type, CUR_CATEGORY.cellAnim, CUR_CATEGORY.cellAnimSize,
                      gActorCheckpoint);
@@ -146,10 +131,7 @@ s32 InitActorCategory(s32 category)
         SelectActorCategory(CUR_CATEGORY.type, CUR_CATEGORY.spawnTable, CUR_CATEGORY.anim_table,
                             *activeCount >= (s32)CUR_CATEGORY.bonusKindDeaths, variant,
                             gActorCheckpoint);
-        dma->src = (u32)CUR_CATEGORY.palette;
-        dma->dst = OBJ_PLTT;
-        dma->cnt = 0x80000100;
-        dma->cnt;
+        DmaCopy16(3, CUR_CATEGORY.palette, OBJ_PLTT, OBJ_PLTT_SIZE);
 
         state = &gLevelState;
         for (;;) {
@@ -194,7 +176,7 @@ s32 InitActorCategory(s32 category)
                 if (IsBrightnessFadeActive() == 0 && ((gKeys.all >> 16) & START_BUTTON))
                     open = -CanPauseActorCategory() < 0;
                 if (open) {
-                    result = RunCategoryPauseMenu(dma);
+                    result = RunCategoryPauseMenu();
                     if (result == PAUSE_ROW_TYPE_QUIT) {
                         ret = ROOM_EXIT_QUIT;
                         goto done;

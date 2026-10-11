@@ -32,18 +32,10 @@ u8 IsRoomExitRequested(void)
  * `display.cpp` state resets. */
 void LevelProgress::ResumeRoomAfterPause()
 {
-    struct dma_regs *dma;
-    u32 pltt;
-
     gPaletteCache->Upload();
 
-    dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
-    dma->src = (u32)cat->palette;
-    pltt = PLTT;
-    dma->dst = pltt;
-    dma->cnt = 0x80000100;
-    (void)dma->cnt;
-    *(vu16 *)pltt = 0;
+    DmaCopy16(3, cat->palette, PLTT, BG_PLTT_SIZE);
+    BACKDROP_COLOR = 0;
 
     gObjVramCursor->Reset();
     gOamBuffer->Reset();
