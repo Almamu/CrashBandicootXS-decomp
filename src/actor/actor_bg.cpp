@@ -13,16 +13,16 @@ extern "C" {
  * at the end of cell_anim.cpp until #770) and BG2 boss layer (the
  * shake, the layer depth, the scroll commit and its centre). */
 
-/* Selects one of two fixed BG0/BG1 scroll-effect parameter sets
- * (arg0 == 0 vs nonzero), then derives the shared initial scroll
+/* Selects one of two fixed BG0/BG1 scroll-effect parameter sets by the
+ * category `type` (CATEGORY_TYPE_POLAR or not), then derives the shared initial scroll
  * position/register state from them. */
-void InitActorBgScroll(s32 arg0)
+void InitActorBgScroll(s32 type)
 {
     s32 v;
 
-    gActorBgScrollType = arg0;
+    gActorBgScrollType = type;
 
-    if (arg0 == CATEGORY_TYPE_POLAR) {
+    if (type == CATEGORY_TYPE_POLAR) {
         gActorNearClipDepth = 0x88 << 5;
         gActorFarClipDepth = 0xa0 << 8;
         gActorFocalLength = 0xbc << 6;
@@ -31,7 +31,7 @@ void InitActorBgScroll(s32 arg0)
         gActorBgScrollEaseShift = 2;
         gActorBgScrollRangeX = 0x64;
         gActorBgScrollRangeY = 0x51;
-        gActorBg0VOffset = arg0;
+        gActorBg0VOffset = type;
     } else {
         gActorNearClipDepth = 0xd0 << 5;
         gActorFarClipDepth = 0xaa << 8;
@@ -86,10 +86,11 @@ void InitActorBgScroll(s32 arg0)
 /* Eases the BG0/BG1 scroll accumulators (gActorBgScrollX/gActorBgScrollY)
  * toward their per-axis target/scale-derived offsets
  * (gActorBgScrollMaxX/gActorBgScrollMaxY), clamping each to
- * [0, target]. arg0/arg1 are the two axes' own driving values. Each
+ * [0, target]. `x`/`y` are the two axes' own driving values (the
+ * polar and jetpack players pass their position). Each
  * axis has its own target and delta locals (shared ones put the clamps in
  * other registers). */
-void UpdateActorBgScroll(s32 arg0, s32 arg1)
+void UpdateActorBgScroll(s32 x, s32 y)
 {
     s32 targetX, targetY;
     s32 deltaX, deltaY;
@@ -97,7 +98,7 @@ void UpdateActorBgScroll(s32 arg0, s32 arg1)
     s32 shift;
 
     targetX = gActorBgScrollMaxX;
-    deltaX = __divsi3(arg0 * Q8_TO_INT(targetX), gActorBgScrollRangeX);
+    deltaX = __divsi3(x * Q8_TO_INT(targetX), gActorBgScrollRangeX);
     deltaX += targetX / 2;
     cur = gActorBgScrollX;
     deltaX -= cur;
@@ -110,7 +111,7 @@ void UpdateActorBgScroll(s32 arg0, s32 arg1)
     gActorBgScrollX = cur;
 
     targetY = gActorBgScrollMaxY;
-    deltaY = __divsi3(arg1 * Q8_TO_INT(targetY), gActorBgScrollRangeY);
+    deltaY = __divsi3(y * Q8_TO_INT(targetY), gActorBgScrollRangeY);
     deltaY += targetY / 2;
     cur = gActorBgScrollY;
     deltaY -= cur;
@@ -123,18 +124,18 @@ void UpdateActorBgScroll(s32 arg0, s32 arg1)
     gActorBgScrollY = cur;
 }
 
-void ShakeActorBg(s32 arg0)
+void ShakeActorBg(s32 shake)
 {
-    gActorBgShake = arg0;
+    gActorBgShake = shake;
 }
 
 /* gActorBgLayerDepth's setter and getter: the depth past which actors
  * draw behind the BG2 boss layer. The yeti, airship and hovercraft set it
  * to their own distance; UpdateActor/UpdateActorDepth compare each actor's
  * depth with it. */
-void SetActorBgLayerDepth(s32 arg0)
+void SetActorBgLayerDepth(s32 depth)
 {
-    gActorBgLayerDepth = arg0;
+    gActorBgLayerDepth = depth;
 }
 
 s32 GetActorBgLayerDepth(void)

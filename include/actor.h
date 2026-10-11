@@ -165,10 +165,10 @@ extern void SetActorPaletteCycle(s32 idx);
 extern void EnableActorPaletteCycle(u8 flag);
 
 /* src/actor/actor_bg.cpp */
-extern void InitActorBgScroll(s32 arg0);
-extern void UpdateActorBgScroll(s32 arg0, s32 arg1);
-extern void ShakeActorBg(s32 arg0);
-extern void SetActorBgLayerDepth(s32 arg0);
+extern void InitActorBgScroll(s32 type);
+extern void UpdateActorBgScroll(s32 x, s32 y);
+extern void ShakeActorBg(s32 shake);
+extern void SetActorBgLayerDepth(s32 depth);
 extern s32 GetActorBgLayerDepth(void);
 extern void ActorCategoryEndStub(void);
 extern void CommitActorBgScroll(void);
@@ -191,7 +191,7 @@ extern s32 CountCategoryCrates(s32 categoryIdx);
 extern void AddActorMissedNitro(void);
 extern s32 GetActorMissedNitros(void);
 extern s32 GetActorCheckpoint(void);
-extern void SetActorCheckpoint(s32 arg0);
+extern void SetActorCheckpoint(s32 z);
 extern bool IsActorMaskAssistDue(void);
 
 /* src/actor/actor_factory.cpp. SpawnActor is also slot 1 of the category
@@ -222,7 +222,7 @@ extern bool CanPauseActorCategory(void);
 extern void ReloadActorCategoryGraphics(void);
 extern void DestroyAllActors(void);
 extern void UpdateActorCategoryBg2(void);
-extern void SetActorCategoryExitStatus(s32 arg0);
+extern void SetActorCategoryExitStatus(s32 status);
 
 /* src/actor/actor_vram_pool.cpp */
 extern void SetupActorVramPool(void);
@@ -233,7 +233,7 @@ extern void FillBgPictureMap(const u8 *nib, const u16 *map, s32 cols, s32 rows);
 
 /* src/actor/cell_anim.cpp */
 extern void UploadCellAnimFrame(void);
-extern void InitCellAnim(s32 arg0, void *cellAnim, u32 animSize, s32 arg3);
+extern void InitCellAnim(s32 type, void *cellAnim, u32 animSize, s32 checkpoint);
 extern void ResetCellAnimBg(void);
 extern void ActorCategoryAttemptEndStub(void);
 extern s32 GetCellAnimFreeTile(void);
@@ -242,8 +242,8 @@ extern s32 GetCellAnimDistance(void);
 extern void AdvanceCellAnim(void);
 extern s32 GetCellAnimFrameStep(void);
 extern s32 GetCellAnimSpeed(void);
-extern void SetCellAnimSpeed(s32 arg0);
-extern void FillCellAnimTilemap(s32 arg0, s32 w, s32 h);
+extern void SetCellAnimSpeed(s32 speed);
+extern void FillCellAnimTilemap(s32 page, s32 w, s32 h);
 
 /* The actor zone's globals (sym_iwram.txt). */
 extern struct anim_table_record *gActorAnimTable;

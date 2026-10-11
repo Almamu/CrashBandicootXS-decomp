@@ -67,9 +67,9 @@ void UpdateActorCategoryBg2(void)
         gActorCategoryVtable->updateBossBg2();
 }
 
-void SetActorCategoryExitStatus(s32 arg0)
+void SetActorCategoryExitStatus(s32 status)
 {
-    gActorCategoryExitStatus = arg0;
+    gActorCategoryExitStatus = status;
 }
 
 /* Both forward the player's IsPauseLocked untouched: it returns `s32`

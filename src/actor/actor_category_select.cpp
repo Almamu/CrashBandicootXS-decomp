@@ -15,7 +15,7 @@ extern "C" {
  * actor_spawn_table, actor.h),
  * resets `gActorSpawnIndex`/`gActorSpawnsPaused`/`gActorSpawnOffset` to
  * 0, draws the vtable's slot-0 function pointer via `_call_via_r3`
- * (arg2/arg3 as x/y - the 5th argument, stack-passed, per the ROM's own
+ * (its 3rd/4th arguments as x/y - the 5th argument, stack-passed, per the ROM's own
  * `ldr r6, [sp, #0x20]`), then runs a two-pass scan over the
  * spawns comparing each one's depth (`spawn.z`) plus `gActorSpawnOffset`'s
  * offset against `gActorCategoryVtable->skipDistance` (the table's +0x20
