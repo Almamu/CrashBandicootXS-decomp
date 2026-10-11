@@ -23,7 +23,7 @@ static inline void SetGlyphX(struct oam_attrs *oam, s32 x)
  * AddOamEntry, then advances `posX` by the glyph's width. */
 void Font::DrawGlyph(u8 charByte)
 {
-    struct oam_attrs *oam = (struct oam_attrs *)oam_scratch;
+    struct oam_attrs *oam = &oam_scratch;
     u8 glyph = charLookup[charByte];
 
     SetGlyphX(oam, posX);
@@ -74,7 +74,7 @@ LargeFont::LargeFont()
     glyphTileStride = 4;
     glyphRecords = gLargeFontGlyphs;
     tiles = gLargeFontTiles;
-    ((struct oam_attrs *)oam_scratch)->size = 1;
+    oam_scratch.size = 1;
     for (i = 0; i <= 0xff; i++) {
         charLookup[i] = 0;
         for (j = 0; j <= 0x4b; j++) {

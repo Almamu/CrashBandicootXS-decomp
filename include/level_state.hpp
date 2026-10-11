@@ -182,8 +182,8 @@ public:
     bool LevelHasGemPathGem(s32 idx);
     s32 GetBossHealth();
     s32 GetBossIndex();
-    u8 *GetLevelFlags(s32 idx);
-    u8 *GetCurrentLevelFlags();
+    union level_record *GetLevelFlags(s32 idx);
+    union level_record *GetCurrentLevelFlags();
     s32 GetCrateCount();
     bool IsCrystalSaved();
     void CollectWumpa();

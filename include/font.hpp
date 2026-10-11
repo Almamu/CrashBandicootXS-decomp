@@ -16,6 +16,7 @@
 
 extern "C" {
 #include "core.h"
+#include "gfx.h"
 #include "text.h"
 #include <agb_syscall.h>
 #include <libgcc.h>
@@ -35,7 +36,7 @@ class Font
 public:
     // 0x000 - the glyph's OAM entry, rebuilt by DrawGlyph for every glyph and
     //         handed to AddOamEntry; the constructor zeroes it
-    u8 oam_scratch[8];
+    struct oam_attrs oam_scratch;
     // 0x008 - char -> glyph index (1-0x4F; 0: not in the font), built by the
     //         subclasses' constructors from the font's character set
     u8 charLookup[0x100];
