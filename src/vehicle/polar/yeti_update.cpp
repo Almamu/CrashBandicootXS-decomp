@@ -83,7 +83,7 @@ void Yeti::Update()
     AnimPart *obj;
     s32 old, cur;
 
-    if (state != 3)
+    if (state != YETI_STATE_STOP)
         x += ((gActorList)->x - x) / 32;
     obj = anim;
     old = Q8_TO_INT(obj->animTime);
@@ -106,7 +106,7 @@ void Yeti::Update()
     UpdatePalette();
     f.a = catchBox;
     BoxMove(&f.a, Q8_TO_INT(x), 0, Q8_TO_INT(position));
-    if ((u32)state <= 1) {
+    if ((u32)state <= YETI_STATE_CHARGE) {
         ActorSelf **playerAddr = &gActorList;
         ActorSelf *pl;
         struct anim_box *b;
@@ -122,7 +122,7 @@ void Yeti::Update()
         if (BoxOverlap(b, &f.a)) {
             AnimPart *g;
 
-            state = 2;
+            state = YETI_STATE_CAUGHT;
             g = anim;
             g->RestartAnim(2);
             static_cast<PolarPlayer *>(gActorList)->Catch();

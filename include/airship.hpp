@@ -30,6 +30,15 @@ extern "C" {
 #include "bosses.h"
 }
 
+/* Airship::state (#843, docs/flags/boss_states_vehicle.md): the
+ * stateFuncs index, named after its method. */
+#define AIRSHIP_STATE_INACTIVE 0  // StateInactive: Create's, until Spawn; StateFall's end
+#define AIRSHIP_STATE_APPROACH 1  // StateApproach: Spawn starts the fight
+#define AIRSHIP_STATE_FIREBALLS 2 // StateFireballs: close (0x81FF), or the cannon past 0x4300
+#define AIRSHIP_STATE_CANNON 3    // StateCannon: the fireballs closer than 0x3200
+#define AIRSHIP_STATE_EXPLODE 4   // StateExplode: no hit points left (Damage)
+#define AIRSHIP_STATE_FALL 5      // StateFall: the explosion's end (stateTimer 0xAA)
+
 class Airship
 {
 public:

@@ -79,7 +79,7 @@ void HovercraftLauncher::StateLaunch()
         cooldown = next;
     }
 
-    if (depth > 0x4B00 && Hovercraft::GetState() == 3)
+    if (depth > 0x4B00 && Hovercraft::GetState() == HOVERCRAFT_STATE_FALL_BACK)
         SetState(HOVERCRAFT_LAUNCHER_STATE_WAIT, 2);
 }
 
@@ -150,7 +150,8 @@ void HovercraftLauncher::StateWait()
     z = Hovercraft::GetZ() - 0x100;
 
     if (Hovercraft::GetPartsLeft() <= 2 &&
-        (Hovercraft::GetState() == 2 || (Hovercraft::GetState() == 3 && depth <= 0x4AFF))) {
+        (Hovercraft::GetState() == HOVERCRAFT_STATE_CLOSE_IN ||
+         (Hovercraft::GetState() == HOVERCRAFT_STATE_FALL_BACK && depth <= 0x4AFF))) {
         cooldown = 0;
         count = 0;
         SetState(HOVERCRAFT_LAUNCHER_STATE_LAUNCH, 1);

@@ -24,6 +24,23 @@ extern "C" {
 #include "bosses.h"
 }
 
+/* Hovercraft::state (#843, docs/flags/boss_states_vehicle.md): the
+ * stateFuncs index, named after its method; the airship's states. */
+#define HOVERCRAFT_STATE_INACTIVE 0  // StateInactive: Create's, until Spawn
+#define HOVERCRAFT_STATE_APPROACH 1  // StateApproach: Spawn starts the fight
+#define HOVERCRAFT_STATE_CLOSE_IN 2  // StateCloseIn: close enough (0x81FF), or fallen back far enough
+#define HOVERCRAFT_STATE_FALL_BACK 3 // StateFallBack: closed in (0x27FF)
+#define HOVERCRAFT_STATE_EXPLODE 4   // StateExplodeStub: empty, and nothing enters it
+#define HOVERCRAFT_STATE_FALL 5      // StateFall: the last weapon lost (LosePart)
+
+/* Hovercraft::phase: in CLOSE_IN, how it moves; in FALL_BACK, the
+ * side-to-side legs it has swept, counted up from 0. */
+#define HOVERCRAFT_PHASE_STEER 0     // CLOSE_IN: steers toward the player (Spawn's)
+#define HOVERCRAFT_PHASE_SWEEP 1     // CLOSE_IN: sweeps from side to side (more than two weapons left)
+#define HOVERCRAFT_PHASE_CIRCLE 2    // CLOSE_IN: circles with a growing radius (two or fewer)
+#define HOVERCRAFT_PHASE_FIRST_LEG 0 // FALL_BACK: the leg count's start
+#define HOVERCRAFT_PHASE_LAST_LEG 3  // FALL_BACK: the last sweeping leg; past it, back to X 0
+
 class Hovercraft
 {
 public:

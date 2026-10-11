@@ -34,7 +34,7 @@ void Airship::Damage(s32 delta)
         velX = 0;
         velY = 0;
         velZ = 0xaa;
-        SetState(4, 1);
+        SetState(AIRSHIP_STATE_EXPLODE, 1);
     } else {
         gAudioContext->PlaySfx(SFX_AIRSHIP_HIT, 0x100);
     }
@@ -82,7 +82,7 @@ void Airship::LoadGraphics()
         *(u32 *)i = zero;
     DmaFill16(3, 0xFFFF, (void *)BG_SCREEN_ADDR(24), 2 * BG_SCREEN_SIZE);
     ConvertTiles();
-    if (state != 0) {
+    if (state != AIRSHIP_STATE_INACTIVE) {
         AnimPart *self;
         vu16 *pal;
 
@@ -97,9 +97,9 @@ void Airship::LoadGraphics()
         UpdateBg2();
         pal = (vu16 *)(BG_PLTT + PALETTE_SIZE_16);
         DmaCopy16(3, palette, pal, PALETTE_SIZE_16);
-        if (state == 5) {
+        if (state == AIRSHIP_STATE_FALL) {
             pal[15] = pal[1] = pal[4] = pal[8] = 0;
-        } else if (state == 4) {
+        } else if (state == AIRSHIP_STATE_EXPLODE) {
             if ((u32)stateTimer > 9)
                 pal[15] = 0;
             if ((u32)stateTimer > 0x31)
@@ -346,7 +346,7 @@ s32 Airship::GetHpPercent()
     s32 left;
     s32 result;
 
-    if (state == 0) {
+    if (state == AIRSHIP_STATE_INACTIVE) {
         return -1;
     }
 
