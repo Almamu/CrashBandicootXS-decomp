@@ -8,6 +8,7 @@ extern "C" {
 #include "actor.h"
 #include "globals.h"
 #include "math_util.h"
+#include "constants/actor_kinds.h"
 }
 
 /* The hovercraft's launcher (#664 part 11h, include/boss_actors.hpp): the
@@ -18,7 +19,8 @@ extern "C" {
 
 /* HovercraftCannon::StateFire's sibling: follows the hovercraft and, once
  * the cooldown is over and the player is in range, launches one of three
- * kinds at random (CreateJetpackActor kinds 5, 6 and 8) and starts the
+ * bombers at random (CreateJetpackActor's JETPACK_KIND_BOMBER_HOME,
+ * _BOB_VERTICAL and _CIRCLE) and starts the
  * next cooldown from the attack's launcher timing. Once the hovercraft
  * is past it (depth 0x4B00) and falling back (its state 3), back to
  * state 0 with animation 2. */
@@ -48,16 +50,19 @@ void HovercraftLauncher::StateLaunch()
             s32 absDy = (dy ^ signDy) - signDy;
 
             if (absDx + absDy <= 0xFFF) {
-                s32 kind = (u16)RandRange(3);
+                s32 kind = (u16)RandRange(3); // a roll, 0-2: which bomber
                 const struct hovercraft_attack *table;
                 s32 n;
 
                 if (kind == 0)
-                    CreateJetpackActor(5, x, y, z, (struct actor_spawn *)slot);
+                    CreateJetpackActor(JETPACK_KIND_BOMBER_HOME, x, y, z,
+                                       (struct actor_spawn *)slot);
                 else if (kind == 1)
-                    CreateJetpackActor(6, x, y, z, (struct actor_spawn *)slot);
+                    CreateJetpackActor(JETPACK_KIND_BOMBER_BOB_VERTICAL, x, y, z,
+                                       (struct actor_spawn *)slot);
                 else
-                    CreateJetpackActor(8, x, y, z, (struct actor_spawn *)slot);
+                    CreateJetpackActor(JETPACK_KIND_BOMBER_CIRCLE, x, y, z,
+                                       (struct actor_spawn *)slot);
 
                 n = count + 1;
                 count = n;
