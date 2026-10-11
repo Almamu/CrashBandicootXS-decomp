@@ -80,7 +80,7 @@ void HovercraftLauncher::StateLaunch()
     }
 
     if (depth > 0x4B00 && Hovercraft::GetState() == 3)
-        SetState(0, 2);
+        SetState(HOVERCRAFT_LAUNCHER_STATE_WAIT, 2);
 }
 
 /* HovercraftCannon::Damage's twin, but only while launching (state 1),
@@ -89,14 +89,14 @@ void HovercraftLauncher::Damage(s32 amount)
 {
     s32 st = state;
 
-    if (st == 1) {
+    if (st == HOVERCRAFT_LAUNCHER_STATE_LAUNCH) {
         Hovercraft::StartHitFlash();
         hp -= amount;
 
         if (hp <= 0) {
             dead = st;
             Hovercraft::LosePart();
-            SetState(2, 3);
+            SetState(HOVERCRAFT_LAUNCHER_STATE_DESTROYED, 3);
             gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
         } else {
             gAudioContext->PlaySfx(SFX_HOVERCRAFT_PART_HIT, 0x100);
@@ -115,7 +115,7 @@ void HovercraftLauncher::Update()
 
     st = state;
     step = 1;
-    if (st == 2 && animDone != 0)
+    if (st == HOVERCRAFT_LAUNCHER_STATE_DESTROYED && animDone != 0)
         step = 0;
     if (step)
         ActorSelf::Update();
@@ -127,7 +127,7 @@ HovercraftLauncher::HovercraftLauncher(const struct anim_table_record *rec, s32 
 {
     spawnX = x;
     spawnY = y;
-    SetState(0, 0);
+    SetState(HOVERCRAFT_LAUNCHER_STATE_WAIT, 0);
     dead = 0;
 }
 
@@ -153,7 +153,7 @@ void HovercraftLauncher::StateWait()
         (Hovercraft::GetState() == 2 || (Hovercraft::GetState() == 3 && depth <= 0x4AFF))) {
         cooldown = 0;
         count = 0;
-        SetState(1, 1);
+        SetState(HOVERCRAFT_LAUNCHER_STATE_LAUNCH, 1);
     }
 }
 
@@ -163,7 +163,7 @@ s32 HovercraftLauncher::RunState()
 {
     (this->*stateFuncs[state])();
 
-    if (state == 2 && animDone != 0)
+    if (state == HOVERCRAFT_LAUNCHER_STATE_DESTROYED && animDone != 0)
         return 0;
     return 1;
 }

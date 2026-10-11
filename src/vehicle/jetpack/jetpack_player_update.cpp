@@ -42,7 +42,7 @@ JetpackPlayer::JetpackPlayer(const struct anim_table_record *rec, s32 z)
     gJetpackPlayerVelX = 0;
     if (this->z != 0) {
         gJetpackPlayerVelY = 0;
-        SetState(7, 0);
+        SetState(JETPACK_PLAYER_STATE_RESUME, 0);
         SetCellAnimSpeed(0x28);
     } else {
         SetCellAnimSpeed(0x1e);
@@ -187,7 +187,7 @@ void JetpackPlayer::Damage(s32 dmg)
     if (hp <= 0) {
         hp = 0;
         gAudioContext->PlaySfx(SFX_JETPACK_PLAYER_DOWN, 0x100);
-        SetState(4, 3);
+        SetState(JETPACK_PLAYER_STATE_FALL, 3);
         if (gLevelState->timeTrial == 0)
             gLevelState->LoseLife();
         gJetpackInputEnabled = 0;
@@ -266,11 +266,11 @@ void JetpackPlayer::StateFly()
         if (keys.held & L_BUTTON) {
             gJetpackFlashTimer = 0x12;
             gAudioContext->PlaySfx(SFX_SPIN, 0x100);
-            SetState(2, 1);
+            SetState(JETPACK_PLAYER_STATE_ROLL_LEFT, 1);
         } else if (keys.held & R_BUTTON) {
             gJetpackFlashTimer = 0x12;
             gAudioContext->PlaySfx(SFX_SPIN, 0x100);
-            SetState(3, 2);
+            SetState(JETPACK_PLAYER_STATE_ROLL_RIGHT, 2);
         } else if (gJetpackShotCooldown == 0 && (keys.held & A_BUTTON)) {
             s32 sx, sy;
 
@@ -304,15 +304,15 @@ void JetpackPlayer::StateRollLeft()
         if (keys.held & L_BUTTON) {
             gJetpackFlashTimer = 0x12;
             gAudioContext->PlaySfx(SFX_SPIN, 0x100);
-            SetState(2, 1);
+            SetState(JETPACK_PLAYER_STATE_ROLL_LEFT, 1);
         } else if (keys.held & R_BUTTON) {
             gJetpackFlashTimer = 0x12;
             gAudioContext->PlaySfx(SFX_SPIN, 0x100);
-            SetState(3, 2);
+            SetState(JETPACK_PLAYER_STATE_ROLL_RIGHT, 2);
         }
     }
     if (animDone)
-        SetState(1, 0);
+        SetState(JETPACK_PLAYER_STATE_FLY, 0);
 }
 
 /* State 3, rolling right: the mirror of StateRollLeft. */
@@ -334,15 +334,15 @@ void JetpackPlayer::StateRollRight()
         if (keys.held & L_BUTTON) {
             gJetpackFlashTimer = 0x12;
             gAudioContext->PlaySfx(SFX_SPIN, 0x100);
-            SetState(2, 1);
+            SetState(JETPACK_PLAYER_STATE_ROLL_LEFT, 1);
         } else if (keys.held & R_BUTTON) {
             gJetpackFlashTimer = 0x12;
             gAudioContext->PlaySfx(SFX_SPIN, 0x100);
-            SetState(3, 2);
+            SetState(JETPACK_PLAYER_STATE_ROLL_RIGHT, 2);
         }
     }
     if (animDone)
-        SetState(1, 0);
+        SetState(JETPACK_PLAYER_STATE_FLY, 0);
 }
 
 
@@ -360,7 +360,7 @@ void JetpackPlayer::FinishRun()
         SetCellAnimSpeed(0x3c);
         gJetpackPlayerVelY = zero;
         gJetpackPlayerVelX = zero;
-        SetState(5, 4);
+        SetState(JETPACK_PLAYER_STATE_FINISH, 4);
         gAudioContext->PlaySfx(SFX_JETPACK_RUN_FINISH, 0x100);
         if (gLevelState->timeTrial != 0)
             gLevelState->FreezeLevelClock(0x2710);
@@ -378,7 +378,8 @@ void JetpackPlayer::PassRing(s32 x, s32 y)
     s32 state = this->state;
     u8 paused;
 
-    if (state != 1 && state != 6 && state != 2 && state != 3)
+    if (state != JETPACK_PLAYER_STATE_FLY && state != JETPACK_PLAYER_STATE_BOOST &&
+        state != JETPACK_PLAYER_STATE_ROLL_LEFT && state != JETPACK_PLAYER_STATE_ROLL_RIGHT)
         return;
 
     if (animIndex != 5) {
@@ -391,9 +392,9 @@ void JetpackPlayer::PassRing(s32 x, s32 y)
     this->x = x;
     this->y = y;
 
-    if (this->state != 6)
+    if (this->state != JETPACK_PLAYER_STATE_BOOST)
         SetCellAnimSpeed(0x50);
-    this->state = 6;
+    this->state = JETPACK_PLAYER_STATE_BOOST;
 
     /* Both addresses first, as the ROM loads them (stored in place,
      * each address is loaded just before its store). */

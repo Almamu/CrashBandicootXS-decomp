@@ -26,6 +26,11 @@ extern "C" {
  * point it was spawned at (StateOrbit), then spirals in on it
  * (StateSpiralIn); the ROM has those two flight states first, right
  * after jetpack_cannonball.cpp. */
+/* AirshipFireball's `state` (#843, docs/flags/actor_states_jetpack.md): the
+ * stateFuncs index. */
+#define AIRSHIP_FIREBALL_STATE_ORBIT 0     // StateOrbit
+#define AIRSHIP_FIREBALL_STATE_SPIRAL_IN 1 // StateSpiralIn
+#define AIRSHIP_FIREBALL_STATE_EXPLODE 2   // StateExplode: gone when the animation is done
 class AirshipFireball : public HpActor
 {
 public:
@@ -68,6 +73,9 @@ COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(AirshipFireball) == 0x6C);
  * the airship fireball's layout): the side guns fire it (SpawnHovercraftFireball). It sets the
  * orbit fields up as the airship's does, but never reads them: it flies
  * straight on at `velZ`. */
+/* HovercraftFireball's `state`: the stateFuncs index. */
+#define HOVERCRAFT_FIREBALL_STATE_FLY 0     // StateFly
+#define HOVERCRAFT_FIREBALL_STATE_EXPLODE 1 // StateExplode: gone when the animation is done
 class HovercraftFireball : public HpActor
 {
 public:
@@ -99,6 +107,10 @@ COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftFireball) == 0x6C);
 /* The cannon (gHovercraftCannonVtable, hovercraft_cannon.cpp): it waits until the hovercraft is close
  * enough (StateWait), then fires cannonballs at the player in bursts
  * (StateFire), and is destroyed when shot down (StateDestroyed). */
+/* HovercraftCannon's `state`: the stateFuncs index. */
+#define HOVERCRAFT_CANNON_STATE_WAIT 0      // StateWait
+#define HOVERCRAFT_CANNON_STATE_FIRE 1      // StateFire
+#define HOVERCRAFT_CANNON_STATE_DESTROYED 2 // StateDestroyed
 class HovercraftCannon : public HpActor
 {
 public:
@@ -134,6 +146,10 @@ COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftCannon) == 0x70);
  * same layout as the cannon): it launches planes,
  * bombers and balloons (CreateJetpackActor kinds 5, 6 and 8) once the
  * hovercraft has lost two parts. */
+/* HovercraftLauncher's `state`: the stateFuncs index. */
+#define HOVERCRAFT_LAUNCHER_STATE_WAIT 0      // StateWait
+#define HOVERCRAFT_LAUNCHER_STATE_LAUNCH 1    // StateLaunch; it can be hit only now
+#define HOVERCRAFT_LAUNCHER_STATE_DESTROYED 2 // StateDestroyed
 class HovercraftLauncher : public HpActor
 {
 public:
@@ -167,6 +183,9 @@ COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftLauncher) == 0x70);
 
 /* A side gun (gHovercraftSideGunVtable, hovercraft_side_gun.cpp): one on
  * each side of the hovercraft (`left`), firing fireballs in bursts. */
+/* HovercraftSideGun's `state` (it has no state methods). */
+#define HOVERCRAFT_SIDE_GUN_STATE_ALIVE 0     // follows the hovercraft and fires
+#define HOVERCRAFT_SIDE_GUN_STATE_DESTROYED 1 // shot down (Damage)
 class HovercraftSideGun : public HpActor
 {
 public:

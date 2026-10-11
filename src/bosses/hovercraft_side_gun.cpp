@@ -29,12 +29,12 @@ HovercraftSideGun::HovercraftSideGun(const struct anim_table_record *rec, s32 x,
     u8 l;
 
     this->left = left;
-    state = 0;
+    state = HOVERCRAFT_SIDE_GUN_STATE_ALIVE;
     l = this->left;
     idx = 1;
     if (l != 0)
         idx = 0;
-    SetState(0, idx);
+    SetState(HOVERCRAFT_SIDE_GUN_STATE_ALIVE, idx);
     dead = 0;
     if (this->left != 0)
         offX = -0x4100;
@@ -67,7 +67,7 @@ void HovercraftSideGun::Damage(s32 amount)
         idx = 1;
         if (l != 0)
             idx = 0;
-        SetState(1, idx);
+        SetState(HOVERCRAFT_SIDE_GUN_STATE_DESTROYED, idx);
         gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
     } else {
         gAudioContext->PlaySfx(SFX_HOVERCRAFT_PART_HIT, 0x100);
@@ -84,7 +84,7 @@ static inline void StepSideGun(HovercraftSideGun *self)
     self->y = Hovercraft::GetY() + self->offY;
     self->z = Hovercraft::GetZ() + self->offZ;
 
-    if (self->state == 0 && self->depth > 0x2800) {
+    if (self->state == HOVERCRAFT_SIDE_GUN_STATE_ALIVE && self->depth > 0x2800) {
         s32 timer = self->orbitTimer;
         s32 next;
 

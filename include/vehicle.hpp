@@ -565,6 +565,17 @@ public:
  * shown as a percentage (GetHp); the rest of its state is in the
  * gJetpack* globals (above), as the ROM has it. CreateJetpackPlayer
  * makes it gActorList, the actor list's root. */
+/* JetpackPlayer's `state` (#843, docs/flags/actor_states_jetpack.md): the
+ * stateFuncs index, named after its method. */
+#define JETPACK_PLAYER_STATE_ENTER 0      // StateEnter: flies in, the input off
+#define JETPACK_PLAYER_STATE_FLY 1        // StateFly: steered by the player
+#define JETPACK_PLAYER_STATE_ROLL_LEFT 2  // StateRollLeft: the L barrel roll
+#define JETPACK_PLAYER_STATE_ROLL_RIGHT 3 // StateRollRight: the R barrel roll
+#define JETPACK_PLAYER_STATE_FALL 4       // StateFall: shot down (Damage)
+#define JETPACK_PLAYER_STATE_FINISH 5     // StateFinish: the course's end (FinishRun)
+#define JETPACK_PLAYER_STATE_BOOST 6      // StateBoost: through a ring (PassRing)
+#define JETPACK_PLAYER_STATE_RESUME 7     // StateResume: from a checkpoint (the constructor)
+
 class JetpackPlayer : public HpActor
 {
 public:
@@ -655,6 +666,11 @@ COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackShot) == 0x60);
  * from spawn point to spawn point (Aim, the GetActorSpawn* accessors) and
  * fires cannonballs at the player from its low pose; shot down, it falls
  * out of the sky. */
+/* JetpackPlane's `state`: the stateFuncs index. */
+#define JETPACK_PLANE_STATE_FLY 0         // StateFly: to the next spawn point
+#define JETPACK_PLANE_STATE_FOLLOW 1      // StateFollow: eases to the player (Aim, after a slow hop chain)
+#define JETPACK_PLANE_STATE_KNOCKED_OUT 2 // StateKnockedOut: shot down (Damage)
+#define JETPACK_PLANE_STATE_FALL 3        // StateFall: out of the sky, gone below 0xE100
 class JetpackPlane : public HpActor
 {
 public:
@@ -694,6 +710,15 @@ COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackPlane) == 0x80);
 /* The bomber (gJetpackBomberVtable, src/vehicle/jetpack/jetpack_bomber.cpp): its
  * record's kind (4-9) picks how it moves around its home point; it
  * explodes on the player. */
+/* JetpackBomber's `state`: the stateFuncs index. The constructor picks
+ * 0-5 from the record's kind; 6 is the explosion. */
+#define JETPACK_BOMBER_STATE_IDLE 0             // StateIdle
+#define JETPACK_BOMBER_STATE_HOME 1             // StateHome
+#define JETPACK_BOMBER_STATE_BOB_VERTICAL 2     // StateBobVertical
+#define JETPACK_BOMBER_STATE_SWING_HORIZONTAL 3 // StateSwingHorizontal
+#define JETPACK_BOMBER_STATE_CIRCLE 4           // StateCircle
+#define JETPACK_BOMBER_STATE_DROP 5             // StateDrop
+#define JETPACK_BOMBER_STATE_DYING 6            // StateDying: touched or shot down
 class JetpackBomber : public HpActor
 {
 public:
@@ -745,6 +770,11 @@ COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackCannonball) == 0x60);
 
 class JetpackBalloonCrate;
 
+/* JetpackBalloon's `state`: the stateFuncs index. */
+#define JETPACK_BALLOON_STATE_ATTACHED 0   // StateAttached: the crate moves it
+#define JETPACK_BALLOON_STATE_FLOAT_AWAY 1 // StateFloatAway: released, gone above -0xE100
+#define JETPACK_BALLOON_STATE_POP 2        // StatePop: shot; gone when the animation is done
+
 /* The balloon a crate hangs from (gJetpackBalloonVtable,
  * src/vehicle/jetpack/jetpack_balloon.cpp): the crate moves it (Move) until it is
  * released (Release) and floats away, or is shot and pops. */
@@ -788,6 +818,11 @@ COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackBalloon) == 0x64);
  * broken or touched; their destructors are g++'s implicit ones
  * (DestroyJetpackHealthCrate, DestroyJetpackTimeCrate and
  * DestroyJetpackQuestionCrate, inline_copies_actors.cpp). */
+/* JetpackBalloonCrate's `state` (and its three kinds'): the stateFuncs
+ * index. */
+#define JETPACK_BALLOON_CRATE_STATE_HANG 0      // StateHang: from its balloon
+#define JETPACK_BALLOON_CRATE_STATE_FALL 1      // StateFall: its balloon popped (Break)
+#define JETPACK_BALLOON_CRATE_STATE_DESTROYED 2 // StateDestroyed: broken, pays out
 class JetpackBalloonCrate : public HpActor
 {
 public:

@@ -31,7 +31,7 @@ void HovercraftFireball::Damage(s32 amount)
 
     palette = 4;
     gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
-    SetState(1, 1);
+    SetState(HOVERCRAFT_FIREBALL_STATE_EXPLODE, 1);
 }
 
 /* The state method, then deletes itself once the explosion has played
@@ -40,7 +40,7 @@ void HovercraftFireball::Update()
 {
     (this->*stateFuncs[state])();
 
-    if (state == 1 && animDone != 0)
+    if (state == HOVERCRAFT_FIREBALL_STATE_EXPLODE && animDone != 0)
         delete this;
     else
         ActorSelf::Update();
@@ -80,7 +80,7 @@ void HovercraftFireball::StateFly()
         ((HpActor *)gActorList)->Damage(6);
         palette = 4;
         gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
-        SetState(1, 1);
+        SetState(HOVERCRAFT_FIREBALL_STATE_EXPLODE, 1);
     }
 }
 

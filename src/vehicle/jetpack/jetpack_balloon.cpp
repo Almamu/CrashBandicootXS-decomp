@@ -25,7 +25,8 @@ void JetpackBalloon::Update()
             crate = 0;
         }
         delete this;
-    } else if ((state == 2 && animDone != 0) || (state == 1 && y < -0xE100)) {
+    } else if ((state == JETPACK_BALLOON_STATE_POP && animDone != 0) ||
+               (state == JETPACK_BALLOON_STATE_FLOAT_AWAY && y < -0xE100)) {
         delete this;
     } else {
         RunState();
@@ -52,7 +53,7 @@ void JetpackBalloon::Damage(s32 amount)
         crate = 0;
     }
     gAudioContext->PlaySfx(SFX_UNKNOWN_2E, 0x100);
-    SetState(2, 1);
+    SetState(JETPACK_BALLOON_STATE_POP, 1);
 }
 
 /* Lets go of the crate and floats away (state 1, animation 0). */
@@ -60,7 +61,7 @@ void JetpackBalloon::Release()
 {
     crate = 0;
     velY = 0;
-    SetState(1, 0);
+    SetState(JETPACK_BALLOON_STATE_FLOAT_AWAY, 0);
 }
 
 /* The animation step: counts the state's frames and plays the

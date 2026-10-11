@@ -144,7 +144,7 @@ void JetpackPlayer::QueueWumpa(s32 delta)
 void JetpackPlayer::StateResume()
 {
     if (animDone != 0) {
-        SetState(1, 0);
+        SetState(JETPACK_PLAYER_STATE_FLY, 0);
         SetCellAnimSpeed(0x28);
         gJetpackInputEnabled = 1;
         gJetpackPlayerInactive = 0;
@@ -163,7 +163,7 @@ void JetpackPlayer::StateBoost()
     }
 
     if (stateTime == 0x32) {
-        state = 1;
+        state = JETPACK_PLAYER_STATE_FLY;
         stateTime = 0;
         SetCellAnimSpeed(0x28);
     }
@@ -218,7 +218,7 @@ void JetpackPlayer::StateFinish()
 void JetpackPlayer::StateEnter()
 {
     if (y > 0x1E00) {
-        SetState(1, 0);
+        SetState(JETPACK_PLAYER_STATE_FLY, 0);
         SetCellAnimSpeed(0x28);
         gJetpackInputEnabled = 1;
         gJetpackPlayerInactive = 0;

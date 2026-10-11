@@ -59,9 +59,9 @@ void JetpackBalloonCrate::Update()
 {
     (this->*stateFuncs[state])();
 
-    if (state == 1 && y > 0xE100) {
+    if (state == JETPACK_BALLOON_CRATE_STATE_FALL && y > 0xE100) {
         delete this;
-    } else if (state == 2 && animDone != 0) {
+    } else if (state == JETPACK_BALLOON_CRATE_STATE_DESTROYED && animDone != 0) {
         delete this;
     } else {
         ActorSelf::Update();
@@ -75,7 +75,7 @@ void JetpackQuestionCrate::Update()
     s32 kind = animIndex;
 
     if (kind == 0 && (u8)IsTouchingPlayer(this)) {
-        SetState(2, 1);
+        SetState(JETPACK_BALLOON_CRATE_STATE_DESTROYED, 1);
         switch ((u8)record->index) {
         case 0x14:
             gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
@@ -114,7 +114,7 @@ void JetpackQuestionCrate::Damage(s32 amount)
         return;
     }
 
-    SetState(2, 1);
+    SetState(JETPACK_BALLOON_CRATE_STATE_DESTROYED, 1);
     switch ((u8)record->index) {
     case 0x14:
         gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
@@ -149,7 +149,7 @@ void JetpackHealthCrate::Update()
     s32 kind = animIndex;
 
     if (kind == 0 && (u8)IsTouchingPlayer(this)) {
-        SetState(2, 1);
+        SetState(JETPACK_BALLOON_CRATE_STATE_DESTROYED, 1);
         Player()->Heal(0x14);
         gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         if (balloon != 0) {
@@ -171,7 +171,7 @@ void JetpackTimeCrate::Update()
     s32 kind = animIndex;
 
     if (kind == 0 && (u8)IsTouchingPlayer(this)) {
-        SetState(2, 1);
+        SetState(JETPACK_BALLOON_CRATE_STATE_DESTROYED, 1);
         switch ((u8)record->index) {
         case 0x18:
             gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
@@ -211,7 +211,7 @@ void JetpackTimeCrate::Damage(s32 amount)
         return;
     }
 
-    SetState(2, 1);
+    SetState(JETPACK_BALLOON_CRATE_STATE_DESTROYED, 1);
     switch ((u8)record->index) {
     case 0x18:
         gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
@@ -254,7 +254,7 @@ void JetpackHealthCrate::Damage(s32 amount)
         return;
     }
 
-    SetState(2, 1);
+    SetState(JETPACK_BALLOON_CRATE_STATE_DESTROYED, 1);
     Player()->Heal(0x14);
     gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
     if (balloon != 0) {
@@ -292,7 +292,7 @@ void JetpackBalloonCrate::ClearBalloon()
 void JetpackBalloonCrate::Break()
 {
     fallSpeed = 0;
-    SetState(1, 0);
+    SetState(JETPACK_BALLOON_CRATE_STATE_FALL, 0);
     gLevelState->AddBrokenCrate();
     balloon = 0;
 }
@@ -305,7 +305,7 @@ void JetpackBalloonCrate::Damage(s32 amount)
         return;
     }
 
-    SetState(2, 1);
+    SetState(JETPACK_BALLOON_CRATE_STATE_DESTROYED, 1);
     if (balloon != 0) {
         gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         gLevelState->AddBrokenCrate();

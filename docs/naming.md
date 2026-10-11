@@ -146,6 +146,7 @@ the names with the header it already includes. A data table in
 | `packed_stats.h` | `PACKED_STATS_` | the packed lives/mask/wumpa halfword |
 | `action_states.h` | `ACTION_STATE_` | the player's action-controller states, the `gActionCtrlStateTable` index |
 | `swim_ctrl.hpp` (next to SwimCtrl) | `SWIM_STATE_`, `SWIM_MODE_` | the swim controller's `state` (the state method) and `mode` (the gSwimCtrlModeAnimRows row) ([docs/flags/swim_ctrl.md](flags/swim_ctrl.md)) |
+| `vehicle.hpp`, `boss_actors.hpp` (next to each class) | `JETPACK_PLAYER_STATE_`, `JETPACK_PLANE_STATE_`, `JETPACK_BOMBER_STATE_`, `JETPACK_BALLOON_STATE_`, `JETPACK_BALLOON_CRATE_STATE_`, `AIRSHIP_FIREBALL_STATE_`, `HOVERCRAFT_FIREBALL_STATE_`, `HOVERCRAFT_CANNON_STATE_`, `HOVERCRAFT_LAUNCHER_STATE_`, `HOVERCRAFT_SIDE_GUN_STATE_` | `ActorSelf::state` of the jetpack actors and the airship's and hovercraft's parts, mostly the `stateFuncs` index ([docs/flags/actor_states_jetpack.md](flags/actor_states_jetpack.md)) |
 | `attack_kinds.h` | `ATTACK_KIND_` | how the player hits a crate, the `gCrateHitResponse` column |
 | `entities.h` (generated) | `ENTITY_`, `ENEMY_KIND_` | entity types (the `gEntitySpawnFuncs` index), enemy-controller kinds |
 | `enemy_ctrl.hpp` (next to EnemyCtrl) | `ENEMY_STATE_`, `ENEMY_MODE_`, `ENEMY_ANIM_NONE` | `EnemyCtrl::state` (what Update runs, SetState) and `mode` (the animation mode, SetAnimMode) ([docs/flags/enemy_ctrl.md](flags/enemy_ctrl.md)) |
