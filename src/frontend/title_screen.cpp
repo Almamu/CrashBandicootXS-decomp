@@ -270,6 +270,9 @@ void TitleScreen::DrawLogoPieces()
             u16 scale;
             s32 off;
 
+            /* landTimer[7 - i] as a byte offset added to an integer
+             * address: the ROM shifts the index before it builds
+             * `&landTimer[0]`, which `&landTimer[7 - i]` doesn't. */
             {
                 u32 idx = (7 - i) << 2;
                 u32 base = (u32)landTimer;
@@ -317,6 +320,7 @@ void TitleScreen::DrawLogoPieces()
 
             if (slot->active) {
                 s32 *cnt;
+                /* landTimer[k], built like landTimer[7 - i] above */
                 {
                     u32 off = k << 2;
                     u32 base = (u32)landTimer;

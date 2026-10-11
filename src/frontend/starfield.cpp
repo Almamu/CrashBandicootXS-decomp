@@ -38,7 +38,7 @@ inline void Starfield::Plot(u32 x, s32 y, s32 val)
         addr += ((blockY << 4) - blockY) << 7;
         addr += (x & 7);
         addr += (y & 7) << 3;
-        entry = (u16 *)(tileBuffer + ((addr >> 2) << 1));
+        entry = &tileBuffer[addr >> 2];
         shift = (addr & 3) << 2;
         *entry = (*entry & ~(0xf << shift)) | (val << shift);
     }
@@ -133,7 +133,7 @@ Starfield::Starfield()
 
     count = 0;
 
-    tileBuffer = new u8[0x4B00];
+    tileBuffer = new u16[0x4B00 / 2];
 
     /* Zero-fills the new `tileBuffer` (a fixed-source 32-bit fill from
      * one stack word). */

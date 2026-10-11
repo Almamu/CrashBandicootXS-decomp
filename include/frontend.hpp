@@ -167,7 +167,7 @@ public:
     u32 mapVramBase;         // 0x04 - BG0's screen base
     StarParticle *particles; // 0x08 - 128 stars
     s32 count;               // 0x0C - stars alive
-    u8 *tileBuffer;          // 0x10 - the 4bpp screen buffer
+    u16 *tileBuffer;         // 0x10 - the 4bpp screen buffer
 
     Starfield();                           // InitStarfield
     ~Starfield();                          // DestroyStarfield

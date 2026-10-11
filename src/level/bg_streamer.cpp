@@ -184,7 +184,7 @@ u16 *BgStreamer::GetColumn(s32 x, s32 y, s32 *rowOut)
     u8 sx;
     u8 sy;
     s32 shifted;
-    u8 *base;
+    u16 *base;
     u16 *ret;
 
     sx = subX;
@@ -196,8 +196,7 @@ u16 *BgStreamer::GetColumn(s32 x, s32 y, s32 *rowOut)
     col &= 0x3f;
     row &= 0x1f;
     base = ring;
-    col <<= 1;
-    ret = (u16 *)(base + col);
+    ret = &base[col];
     *rowOut = row;
     return ret;
 }
@@ -213,7 +212,7 @@ u16 *BgStreamer::GetRow(s32 x, s32 y, s32 *colOut)
     u8 sx;
     u8 sy;
     s32 shifted;
-    u8 *base;
+    u16 *base;
     u16 *ret;
 
     sx = subX;
@@ -225,8 +224,7 @@ u16 *BgStreamer::GetRow(s32 x, s32 y, s32 *colOut)
     col &= 0x3f;
     row &= 0x1f;
     base = ring;
-    row <<= 7;
-    ret = (u16 *)(base + row);
+    ret = &base[row * 0x40];
     *colOut = col;
     return ret;
 }
@@ -241,7 +239,7 @@ u16 BgStreamer::GetCell(s32 x, s32 y)
     u8 sx;
     u8 sy;
     s32 shifted;
-    u8 *base;
+    u16 *base;
     s32 idx;
 
     sx = subX;
@@ -255,8 +253,8 @@ u16 BgStreamer::GetCell(s32 x, s32 y)
     base = ring;
     idx = row << 6;
     idx += col;
-    idx <<= 1;
-    return *(u16 *)(base + idx);
+    base += idx;
+    return *base;
 }
 
 /* Streams in the newly exposed tile row `row`: decodes each of its up to
@@ -272,10 +270,10 @@ void BgStreamer::StreamRow(s32 row)
         idx += tileX;
         for (i = 0; i <= 3; i++) {
             if (i + tileX < source->gridWidth) {
-                u8 *dest = ring;
-                dest += ((subY + 4) & 3) << 10;
-                dest += ((subX + i + 4) & 3) << 5;
-                DecodeChunk(source->chunkGrid[idx++], (u16 *)dest);
+                u16 *dest = ring;
+                dest += ((subY + 4) & 3) * 0x200;
+                dest += ((subX + i + 4) & 3) * 0x10;
+                DecodeChunk(source->chunkGrid[idx++], dest);
             }
         }
     }
@@ -295,14 +293,14 @@ void BgStreamer::StreamColumn(s32 col)
             const struct level_layer_desc *src;
 
             if (i + tileY < (src = source)->gridHeight) {
-                u8 *dest = ring;
+                u16 *dest = ring;
                 u16 id;
 
-                dest += ((subY + i + 4) & 3) << 10;
-                dest += ((subX + 4) & 3) << 5;
+                dest += ((subY + i + 4) & 3) * 0x200;
+                dest += ((subX + 4) & 3) * 0x10;
                 id = src->chunkGrid[idx];
                 idx += src->gridWidth;
-                DecodeChunk(id, (u16 *)dest);
+                DecodeChunk(id, dest);
             }
         }
     }
@@ -333,7 +331,7 @@ void BgStreamer::Fill(const s32 *pos)
 
                 if (x < (src = source)->gridWidth) {
                     u16 id = src->chunkGrid[(tileY + j) * src->gridWidth + x];
-                    u16 *cells = (u16 *)ring;
+                    u16 *cells = ring;
 
                     DecodeChunk(id, &cells[rowBase + (blockH >> 1) * i]);
                 }
@@ -369,7 +367,7 @@ BgStreamer::~BgStreamer()
  * per this file's header comment). */
 BgStreamer::BgStreamer()
 {
-    ring = new u8[0x1000];
+    ring = new u16[0x800];
 }
 
 /* UNUSED: no caller anywhere in the ROM. */

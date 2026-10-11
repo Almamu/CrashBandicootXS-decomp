@@ -59,7 +59,9 @@ static inline s32 HitResponse(s32 row, s32 k)
 /* The response code at the first lookup. There the ROM loads the table
  * address first, then `&obj->kind`, then adds `row * 28 + k * 4` to the
  * table: the table is an argument (all inline arguments are expanded
- * before the body), and the offset sum is written in that order. */
+ * before the body), and the offset sum is written in that order. The
+ * byte-offset cast stays: `t[*row][k]` adds the row to the table before
+ * it adds `k * 4`. */
 static inline s32 HitResponseAt(const s32 (*t)[7], u8 *row, s32 k)
 {
     return *(const s32 *)((const u8 *)t + (*row * 28 + k * 4));
@@ -1173,11 +1175,8 @@ void Crate::Break(u32 arg1)
         s32 eid = id;
         LevelEntityFlags *base = gEntityFlags;
         s32 word = eid / 32;
-        s32 off = word * 4;
-        u32 *slot = base->bits0Copy;
 
-        slot = (u32 *)((u8 *)slot + off);
-        *slot |= one << (eid - word * 32);
+        base->bits0Copy[word] |= one << (eid - word * 32);
     }
     DropAbove();
     switch (kind) {

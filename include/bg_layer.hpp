@@ -36,7 +36,7 @@ class BgStreamer
 public:
     const struct level_layer_desc *source; // 0x00
     const u16 *records;                    // 0x04 - the chunk decoder's record table
-    u8 *ring;                              // 0x08 - 0x1000 bytes
+    u16 *ring;                             // 0x08 - 64x32 cells, 0x1000 bytes
     s32 tileX;                             // 0x0C - the window's chunk column
     s32 tileY;                             // 0x10 - and row
     u8 subX;                               // 0x14

@@ -20,14 +20,11 @@ extern "C" {
  * building the category's status-icon OAM row via ConfigureHudParts, gated on
  * whether the category's type is nonzero.
  *
- * `gActorCategories[category]`'s address is deliberately computed
- * without a named `struct category_descriptor *` local - keeping it in
- * an unnamed rolling register (matching this compiler's own choice for
- * an expression it never has to keep alive past one immediate use)
- * rather than letting the register allocator give it a stable "home"
- * register, which changes which register ends up holding the combined
- * pointer. Likewise the final `ConfigureHudParts` call's arguments are broken
- * into their own local variables in the exact order this compiler
+ * The table and the index are loaded into locals first (`arr`, `idx`)
+ * and `arr[idx].type` read from them: reading
+ * `gActorCategories[gActorCategory]` directly loads the index before
+ * the table. Likewise the final `ConfigureHudParts` call's arguments are
+ * broken into their own local variables in the exact order this compiler
  * evaluates them (icon array pointer, then the array base, then the
  * index) to reproduce the ROM's exact register assignment - see
  * docs/matching/archive/issue-48-0x080291a4-actor.md. */
@@ -48,10 +45,10 @@ void SetupActorVramPool(void)
     cache->FreeUnlockedSlots();
 
     {
-        u8 *arr = (u8 *)gActorCategories;
+        const struct category_descriptor *arr = gActorCategories;
         s32 idx = gActorCategory;
 
-        if (*(s32 *)(arr + idx * sizeof(struct category_descriptor)) == CATEGORY_TYPE_POLAR) {
+        if (arr[idx].type == CATEGORY_TYPE_POLAR) {
             anims = entityBank->anims;
             cache->BindSlot(7, anims[0].paletteId);
             anims = otherBank->anims;
@@ -72,10 +69,9 @@ void SetupActorVramPool(void)
 
     {
         Hud *iconArray = gHud;
-        u8 *arr = (u8 *)gActorCategories;
+        const struct category_descriptor *arr = gActorCategories;
         s32 idx = gActorCategory;
 
-        iconArray->ConfigureParts(*(s32 *)(arr + idx * sizeof(struct category_descriptor)) !=
-                                  CATEGORY_TYPE_POLAR);
+        iconArray->ConfigureParts(arr[idx].type != CATEGORY_TYPE_POLAR);
     }
 }
