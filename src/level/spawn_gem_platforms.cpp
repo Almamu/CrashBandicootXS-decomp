@@ -12,19 +12,19 @@ extern "C" {
  * SpawnCrystal-SpawnYellowGem (src/level/spawn_gems.cpp).
  *
  * Each one tests one "collected" bit of the level progress record
- * (gLevelState + 2). If it is set, the effect only plays a sound:
- * a platform (Platform::Create) with a per-slot id, or the shared id 0xC when
- * IsGemPathDone says so or the record's +0x8C byte is set, handed to
+ * (gLevelState + 2). If it is set, it spawns the gem platform
+ * (Platform::Create) with a per-gem kind, or PLATFORM_KIND_GEM_PATH_DONE
+ * when IsGemPathDone says so or the record's +0x8C byte is set, handed to
  * SetGemPlatform. Otherwise it spawns the full visual effect: a
  * CreateSpriteObj part on anim bank offset 0x180, with a per-slot tag,
  * built through the ResetSpriteFrameTimer/ResetSpriteFrameIndex/SetSpriteAnimDone OAM trio, and
  * registered with the gTouchableList manager.
  *
- *   function     bit  sound  tag
- *   SpawnRedGemPlatform   1    0xB    7
- *   SpawnYellowGemPlatform   2    0x3    5
- *   SpawnGreenGemPlatform   4    0xA    6
- *   SpawnBlueGemPlatform   8    0x9    8
+ *   function                bit  kind (PLATFORM_KIND_*)  tag
+ *   SpawnRedGemPlatform      1    0xB GEM_RED            7
+ *   SpawnYellowGemPlatform   2    0x3 GEM_YELLOW         5
+ *   SpawnGreenGemPlatform    4    0xA GEM_GREEN          6
+ *   SpawnBlueGemPlatform     8    0x9 GEM_BLUE           8
  *
  * C++ since #664 part 9 (include/spawners.hpp), built with old_agbcp
  * (Makefile OLD_AGBCC_OBJS): the ROM materializes the bit mask before
@@ -33,7 +33,7 @@ extern "C" {
  * parked as NAKED after drafts under the current agbcc stalled on
  * register allocation (see docs/matching/archive/issue-31-trigger-effect-type-n.md,
  * "Old-compiler pass"). The two Platform::Create calls are written
- * separately, one per sound id: the ROM repeats the a0 truncation in
+ * separately, one per kind: the ROM repeats the a0 truncation in
  * both arms and shares the rest of the call, which is gcc's
  * cross-jumping of two call sites (a single call with an `id` variable
  * truncates a0 once, after the join). */
@@ -49,9 +49,9 @@ void SpawnRedGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         Platform *snd;
 
         if (gLevelState->IsGemPathDone() || gLevelState->timeTrial)
-            snd = Platform::Create(a0, a1, a2, a3, 0xC);
+            snd = Platform::Create(a0, a1, a2, a3, PLATFORM_KIND_GEM_PATH_DONE);
         else
-            snd = Platform::Create(a0, a1, a2, a3, 0xB);
+            snd = Platform::Create(a0, a1, a2, a3, PLATFORM_KIND_GEM_RED);
         gLevelState->SetGemPlatform(snd);
     } else {
         u8 tag = 7;
@@ -77,9 +77,9 @@ void SpawnYellowGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         Platform *snd;
 
         if (gLevelState->IsGemPathDone() || gLevelState->timeTrial)
-            snd = Platform::Create(a0, a1, a2, a3, 0xC);
+            snd = Platform::Create(a0, a1, a2, a3, PLATFORM_KIND_GEM_PATH_DONE);
         else
-            snd = Platform::Create(a0, a1, a2, a3, 0x3);
+            snd = Platform::Create(a0, a1, a2, a3, PLATFORM_KIND_GEM_YELLOW);
         gLevelState->SetGemPlatform(snd);
     } else {
         u8 tag = 5;
@@ -105,9 +105,9 @@ void SpawnGreenGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         Platform *snd;
 
         if (gLevelState->IsGemPathDone() || gLevelState->timeTrial)
-            snd = Platform::Create(a0, a1, a2, a3, 0xC);
+            snd = Platform::Create(a0, a1, a2, a3, PLATFORM_KIND_GEM_PATH_DONE);
         else
-            snd = Platform::Create(a0, a1, a2, a3, 0xA);
+            snd = Platform::Create(a0, a1, a2, a3, PLATFORM_KIND_GEM_GREEN);
         gLevelState->SetGemPlatform(snd);
     } else {
         u8 tag = 6;
@@ -135,9 +135,9 @@ void SpawnBlueGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         Platform *snd;
 
         if (gLevelState->IsGemPathDone() || gLevelState->timeTrial)
-            snd = Platform::Create(a0, a1, a2, a3, 0xC);
+            snd = Platform::Create(a0, a1, a2, a3, PLATFORM_KIND_GEM_PATH_DONE);
         else
-            snd = Platform::Create(a0, a1, a2, a3, 0x9);
+            snd = Platform::Create(a0, a1, a2, a3, PLATFORM_KIND_GEM_BLUE);
         gLevelState->SetGemPlatform(snd);
     } else {
         u8 tag = 8;

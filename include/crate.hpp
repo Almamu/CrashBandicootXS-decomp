@@ -59,6 +59,13 @@ struct crate_group {
 #define CRATE_SLOT_FACE_LIFE    2 // phase 1, animation 9: an extra life
 #define CRATE_SLOT_FACE_TNT     4 // phase 3, animation 0xD: it explodes
 
+/* An explosive crate's `blastState` (#843, docs/flags/crate_blast.md).
+ * DropAbove arms the explosive crates it drops far only while the crate
+ * it runs for is NONE. */
+#define CRATE_BLAST_STATE_NONE    0    // not armed
+#define CRATE_BLAST_STATE_ARMED   1    // dropped far enough to explode when it lands (UpdateFall)
+#define CRATE_BLAST_STATE_BLASTED 0xff // BlastNearby has run
+
 /* A crate's placement record: entry `slot` of the room's parameter
  * records (`gEntityFlags->list`, level_data.h), as CreateCrate reads it.
  * Bytes 6-8 are per-kind (see Crate's paramA/paramB/fallSpeed and the
@@ -136,9 +143,9 @@ public:
                          //   left at this stage, 6-7 stage (gSlotCrateTimers index; 0
                          //   idle); see UpdateSlotCrate and CRATE_SLOT_*
         s32 pressed;     // 6 (nitro switch): set once ActivateNitroSwitchCrate has fired
-        s32 blastState;  // explosive kinds: 1 once it has fallen far enough to explode
-                         //   on landing (DropCratesAbove/UpdateCrateFall), 0xFF once it
-                         //   has blasted (BlastNearbyCrates)
+        s32 blastState;  // explosive kinds: CRATE_BLAST_STATE_*, ARMED once it has fallen
+                         //   far enough to explode on landing (DropCratesAbove/
+                         //   UpdateCrateFall), BLASTED once it has blasted (BlastNearbyCrates)
     };
     s8 fallSpeed; // 0x4C - UpdateCrateFall's per-tick speed (ramps up to 5); the iron
                   //        switch instead keeps its step delay here (placement byte 8,

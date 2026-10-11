@@ -61,10 +61,10 @@ void SpawnFlame(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 }
 
 /* Plain `CreatePlatform` trampoline (docs/rom_map.md; same callee as
- * spawn_gem_platforms.cpp's twin family), id `8`. */
+ * spawn_gem_platforms.cpp's twin family), kind PLATFORM_KIND_ROCK. */
 void SpawnRockPlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    Platform::Create(arg0, arg1, arg2, arg3, 8);
+    Platform::Create(arg0, arg1, arg2, arg3, PLATFORM_KIND_ROCK);
 }
 
 /* Entity type 0x57: plain `CreatePlatform` trampoline, kind `6` - bank 39
@@ -74,39 +74,39 @@ void SpawnRockPlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * CreateCortexBossPlatformMover. */
 void SpawnFlipPlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    Platform::Create(arg0, arg1, arg2, arg3, 6);
+    Platform::Create(arg0, arg1, arg2, arg3, PLATFORM_KIND_FLIP);
 }
 
-/* Spawns a platform of kind 7 if gLevelState->IsBonusRoundDone()
- * is set or gLevelState+0x8C is nonzero, else id 5, and hands the
+/* Spawns a PLATFORM_KIND_BONUS_DONE platform if gLevelState->IsBonusRoundDone()
+ * is set or gLevelState+0x8C is nonzero, else PLATFORM_KIND_BONUS, and hands the
  * result to SetBonusPlatform. */
 void SpawnBonusPlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     Platform *result;
 
     if (gLevelState->IsBonusRoundDone() || gLevelState->timeTrial)
-        result = Platform::Create(arg0, arg1, arg2, arg3, 7);
+        result = Platform::Create(arg0, arg1, arg2, arg3, PLATFORM_KIND_BONUS_DONE);
     else
-        result = Platform::Create(arg0, arg1, arg2, arg3, 5);
+        result = Platform::Create(arg0, arg1, arg2, arg3, PLATFORM_KIND_BONUS);
     gLevelState->SetBonusPlatform(result);
 }
 
-/* Plain `CreatePlatform` trampoline, id `2`. */
+/* Plain `CreatePlatform` trampoline, kind PLATFORM_KIND_MEDIUM. */
 void SpawnMediumPlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    Platform::Create(arg0, arg1, arg2, arg3, 2);
+    Platform::Create(arg0, arg1, arg2, arg3, PLATFORM_KIND_MEDIUM);
 }
 
-/* Plain `CreatePlatform` trampoline, id `1`. */
+/* Plain `CreatePlatform` trampoline, kind PLATFORM_KIND_SMALL. */
 void SpawnSmallPlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    Platform::Create(arg0, arg1, arg2, arg3, 1);
+    Platform::Create(arg0, arg1, arg2, arg3, PLATFORM_KIND_SMALL);
 }
 
-/* Plain `CreatePlatform` trampoline, id `0`. */
+/* Plain `CreatePlatform` trampoline, kind PLATFORM_KIND_LARGE. */
 void SpawnLargePlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    Platform::Create(arg0, arg1, arg2, arg3, 0);
+    Platform::Create(arg0, arg1, arg2, arg3, PLATFORM_KIND_LARGE);
 }
 
 /* Plain tail-call trampoline to LaunchPad::Spawn (SpawnLaunchPad,

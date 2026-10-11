@@ -41,23 +41,23 @@ Platform *Platform::Create(u16 id, u16 x, u16 y, u16 index, s32 kind)
         type = rec->type;
     }
     switch (kind) {
-    case 4:
+    case PLATFORM_KIND_EXIT_PAD:
         type = PLATFORM_TYPE_WARP_EXIT;
         break;
-    case 5:
+    case PLATFORM_KIND_BONUS:
         type = PLATFORM_TYPE_WARP_BONUS;
         break;
-    case 8:
+    case PLATFORM_KIND_ROCK:
         type = PLATFORM_TYPE_ROCK;
         break;
-    case 3:
-    case 9:
-    case 10:
-    case 11:
-    case 12:
+    case PLATFORM_KIND_GEM_YELLOW:
+    case PLATFORM_KIND_GEM_BLUE:
+    case PLATFORM_KIND_GEM_GREEN:
+    case PLATFORM_KIND_GEM_RED:
+    case PLATFORM_KIND_GEM_PATH_DONE:
         type = PLATFORM_TYPE_WARP_GEM_PATH;
         break;
-    case 6:
+    case PLATFORM_KIND_FLIP:
         type = PLATFORM_TYPE_FLIP;
         break;
     }

@@ -333,7 +333,7 @@ void Crate::UpdateFall()
                 acc = 0;
                 fallDistance = remaining;
                 if (gCrateKindExplosive[k = kind]) {
-                    if (blastState != 0 || k == CRATE_KIND_NITRO) {
+                    if (blastState != CRATE_BLAST_STATE_NONE || k == CRATE_KIND_NITRO) {
                         if ((state & CRATE_STATE_MASK) == 0)
                             Explode(0);
                     } else if (k == CRATE_KIND_TNT) {

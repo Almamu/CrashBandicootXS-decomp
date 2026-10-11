@@ -825,7 +825,7 @@ void Crate::ApplyCollision(s32 attack, s32 code, s32 edge, s32 depth, struct vec
             u8 e = CRATE_KIND_TNT;
 
             kind = e;
-            blastState = 0;
+            blastState = CRATE_BLAST_STATE_NONE;
         }
         code = gCrateHitResponse[kind][attack];
     }
@@ -1441,7 +1441,7 @@ void Crate::DropAbove()
         }
         n->f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
         Crates()->LinkActive(n);
-        if (tbl[n->kind] && blastState == 0 && n->fallDistance > 0x1600) {
+        if (tbl[n->kind] && blastState == CRATE_BLAST_STATE_NONE && n->fallDistance > 0x1600) {
             Crate *next = n->GetAbove();
             Crate *prev = n->GetBelow();
 
@@ -1452,7 +1452,7 @@ void Crate::DropAbove()
                     goto advance;
             }
             n->timer = 0;
-            n->blastState = 1;
+            n->blastState = CRATE_BLAST_STATE_ARMED;
         }
     advance:
         n = n->GetAbove();
@@ -1581,5 +1581,5 @@ void Crate::BlastNearby(s32 dist)
             i++;
         } while (i < gTouchableList->count);
     }
-    blastState = 0xff;
+    blastState = CRATE_BLAST_STATE_BLASTED;
 }
