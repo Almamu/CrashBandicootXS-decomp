@@ -69,7 +69,7 @@ ZoomBg::ZoomBg(s32 charBlock, s32 screenBlock)
         }
     }
     image = 0xB;
-    state = 2;
+    state = ZOOM_BG_STATE_WAIT;
     scale = 8;
     dx = dy = phase = 0;
     affine.texY = affine.texX = 0x2000;
@@ -111,46 +111,46 @@ void ZoomBg::Update()
     u8 buf[0x200];
 
     switch (state) {
-    case 0:
+    case ZOOM_BG_STATE_ZOOM_IN:
         if (scale <= 0xFF) {
             scale += 8;
             break;
         }
         scale = 0x100;
-        state = 3;
+        state = ZOOM_BG_STATE_SHOWN;
         break;
-    case 1:
+    case ZOOM_BG_STATE_ZOOM_OUT:
         if (scale > 8) {
             scale -= 8;
             break;
         }
         scale = 8;
-        state = 2;
+        state = ZOOM_BG_STATE_WAIT;
         break;
-    case 3:
+    case ZOOM_BG_STATE_SHOWN:
         phase = (phase + 1) & 0xFF;
         /* `* 4 >> 8`, not `>> 6`: gcc's combiner turns the latter into
          * ldrh+lsl+asr instead of the ROM's ldrsh+asr. */
         dx = Q8_MUL(SIN_Q8(phase), 4);
         dy = Q8_MUL(SIN_Q8(phase << 1), 4);
         break;
-    case 2:
+    case ZOOM_BG_STATE_WAIT:
         if (image == 11)
             break;
         gAudioContext->PlaySfx(SFX_ZOOM_BG_IN, 0x100);
         LoadTaggedAsset(gLevelSelectPictures[image].palette, buf);
         DmaCopy16(3, buf, BG_PLTT, 2 * PALETTE_SIZE_16);
         LoadTaggedAsset(gLevelSelectPictures[image].tiles, (void *)(BG_VRAM + (charBlock << 14)));
-        state = 0;
+        state = ZOOM_BG_STATE_ZOOM_IN;
         break;
-    case 4:
+    case ZOOM_BG_STATE_EXIT:
         if (scale > 8) {
             scale -= 8;
             affine.angle += 0x100;
             break;
         }
         scale = 8;
-        state = 5;
+        state = ZOOM_BG_STATE_GONE;
         break;
     }
     TickTwinkle(&twinkles[0]);
@@ -170,7 +170,7 @@ void ZoomBg::Draw()
         MoveTwinkle(&twinkles[3]);
     }
     switch (state) {
-    case 0 ... 3:
+    case ZOOM_BG_STATE_ZOOM_IN ... ZOOM_BG_STATE_SHOWN:
         {
             u16 s;
 
@@ -181,7 +181,7 @@ void ZoomBg::Draw()
             affine.sy = s;
             break;
         }
-    case 4 ... 5:
+    case ZOOM_BG_STATE_EXIT ... ZOOM_BG_STATE_GONE:
         affine.sx = scale;
         affine.sy = scale;
         break;
@@ -203,45 +203,45 @@ void ZoomBg::Commit()
 /* Zooming away (state 4). */
 u8 ZoomBg::IsExiting()
 {
-    return state == 4;
+    return state == ZOOM_BG_STATE_EXIT;
 }
 
 /* Gone (state 5). */
 u8 ZoomBg::IsGone()
 {
-    return state == 5;
+    return state == ZOOM_BG_STATE_GONE;
 }
 
 /* Shown (state 3). */
 u8 ZoomBg::IsShown()
 {
-    return state == 3;
+    return state == ZOOM_BG_STATE_SHOWN;
 }
 
 /* Waiting for a picture (state 2). */
 u8 ZoomBg::IsWaiting()
 {
-    return state == 2;
+    return state == ZOOM_BG_STATE_WAIT;
 }
 
 /* Zooming out (state 1). */
 u8 ZoomBg::IsZoomingOut()
 {
-    return state == 1;
+    return state == ZOOM_BG_STATE_ZOOM_OUT;
 }
 
 /* Starts the exit zoom, with BG2 at the front. */
 void ZoomBg::StartExit()
 {
     bgcnt.bits16.priority = 0;
-    state = 4;
+    state = ZOOM_BG_STATE_EXIT;
 }
 
 /* Zooms the picture out with no follow-up picture (page turn). */
 void ZoomBg::ClearPicture()
 {
     gAudioContext->PlaySfx(SFX_ZOOM_BG_OUT, 0x100);
-    state = 1;
+    state = ZOOM_BG_STATE_ZOOM_OUT;
     image = 11;
 }
 
@@ -249,7 +249,7 @@ void ZoomBg::ClearPicture()
 void ZoomBg::SetPicture(s32 image)
 {
     switch (state) {
-    case 1 ... 2:
+    case ZOOM_BG_STATE_ZOOM_OUT ... ZOOM_BG_STATE_WAIT:
         this->image = image;
         break;
     }

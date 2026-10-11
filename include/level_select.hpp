@@ -201,6 +201,14 @@ struct ZoomBgCntBits16 {
  * shown (state 3) and zooms away on exit (states 4 -> 5). Four twinkles
  * sit on top of it, each showing a random frame for a random time and
  * blinking along with the wobble. */
+
+/* ZoomBg's `state` (#843, docs/flags/level_select.md): what Update does. */
+#define ZOOM_BG_STATE_ZOOM_IN 0  // zooms in to 1:1, then SHOWN
+#define ZOOM_BG_STATE_ZOOM_OUT 1 // zooms out (ClearPicture), then WAIT
+#define ZOOM_BG_STATE_WAIT 2     // waits for a picture (SetPicture), loads it, then ZOOM_IN
+#define ZOOM_BG_STATE_SHOWN 3    // shown, wobbling
+#define ZOOM_BG_STATE_EXIT 4     // zooms away while turning (StartExit), then GONE
+#define ZOOM_BG_STATE_GONE 5     // the end: zoomed away
 class ZoomBg
 {
 public:
@@ -269,6 +277,15 @@ COMPILE_TIME_ASSERT(level_select_hpp, sizeof(ZoomBg) == 0x8C);
  * line (two steps per frame), plays an idle animation cycle at random
  * intervals, and grows in (state 4) / shrinks away (state 5) as an affine
  * OBJ drawn straight into the OAM shadow buffer. */
+
+/* LevelSelectCursor's `state` (#843, docs/flags/level_select.md): 0-3 are
+ * the idle animation cycle, 4-5 the affine zoom. */
+#define LEVEL_SELECT_CURSOR_STATE_IDLE 0   // gLevelSelectCursorAnims[0]; waits for `timer`
+#define LEVEL_SELECT_CURSOR_STATE_CYCLE1 1 // gLevelSelectCursorAnims[1], to its end
+#define LEVEL_SELECT_CURSOR_STATE_CYCLE2 2 // gLevelSelectCursorAnims[2], to its end
+#define LEVEL_SELECT_CURSOR_STATE_CYCLE3 3 // gLevelSelectCursorAnims[3], to its end, then IDLE
+#define LEVEL_SELECT_CURSOR_STATE_GROW 4   // grows in to 1:1 (the constructor), then IDLE
+#define LEVEL_SELECT_CURSOR_STATE_SHRINK 5 // shrinks away (Hide)
 class LevelSelectCursor
 {
 public:
