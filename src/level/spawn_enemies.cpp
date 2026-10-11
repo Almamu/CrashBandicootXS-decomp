@@ -315,8 +315,8 @@ void SpawnPolarBear(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->SetRangeX(rec2->p.patrol.rangeX);
 }
 
-/* Bank +0x3C, animation 2 from its start, kind 5, gPufferfishAnimMap; the
- * record's attack cycle and wave; state 14. */
+/* Bank +0x3C, animation 2 from its start, kind EVENT_HIT_PUFFERFISH,
+ * gPufferfishAnimMap; the record's attack cycle and wave; state 14. */
 void SpawnPufferfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
@@ -339,7 +339,7 @@ void SpawnPufferfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetAnims(hdr, gEnemyDefaultAnimMap);
     rec2 = EntityParams(arg3);
     part->StartAnim(2);
-    part->kind = 5;
+    part->kind = EVENT_HIT_PUFFERFISH;
     SetAnims(hdr, gPufferfishAnimMap);
     SetAttackCycle(hdr, rec2->p.cycle.idleTime, rec2->p.cycle.attackTime,
                    rec2->p.cycle.cycleOffset);
@@ -780,7 +780,7 @@ void SpawnRat(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->SetRangeX(rec2->p.patrol.rangeX);
 }
 
-/* Bank +0xE4, kind 7, gPatrollingSewerEnemyAnimMap; state 8. */
+/* Bank +0xE4, kind EVENT_HIT_FROG, gPatrollingSewerEnemyAnimMap; state 8. */
 void SpawnFrog(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
@@ -800,7 +800,7 @@ void SpawnFrog(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
-    part->kind = 7;
+    part->kind = EVENT_HIT_FROG;
     hdr->anims = gPatrollingSewerEnemyAnimMap;
     hdr->SetState(ENEMY_STATE_HOP);
 }

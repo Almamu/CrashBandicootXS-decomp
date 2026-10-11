@@ -11,19 +11,19 @@ extern "C" {
 #include "globals.h"
 }
 
-/* The held d-pad bits as a direction 0-8 (0 = none), through
+/* The held d-pad bits as a direction (KEY_DIR_*), through
  * gDpadDirectionTable. */
 u8 KeyInput::GetDpadDirection()
 {
     u8 idx = 0;
     if (gKeys.half.held & DPAD_RIGHT)
-        idx |= 8;
+        idx |= KEY_DIR_INDEX_RIGHT;
     if (gKeys.half.held & DPAD_LEFT)
-        idx |= 4;
+        idx |= KEY_DIR_INDEX_LEFT;
     if (gKeys.half.held & DPAD_DOWN)
-        idx |= 2;
+        idx |= KEY_DIR_INDEX_DOWN;
     if (gKeys.half.held & DPAD_UP)
-        idx |= 1;
+        idx |= KEY_DIR_INDEX_UP;
     return gDpadDirectionTable[idx];
 }
 

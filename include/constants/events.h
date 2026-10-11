@@ -18,9 +18,9 @@
  * Hits 1-10: PlayerHandleEvent takes a mask away (then sends
  * EVENT_MASK_HIT) or, without one, kills the player; the controller picks
  * the death animation (KillPlayer: ActionCtrlHandleEvent, SwimCtrlKillPlayer).
- * Hits 5 and 7 keep their numbers: 5 comes only from the pufferfish
- * (SpawnPufferfish) and 7 only from the frog (SpawnFrog), and neither
- * says what kind of hit it is (the controllers only pick a death
+ * Hits 5 and 7 are named after their only sender: 5 comes only from the
+ * pufferfish (SpawnPufferfish) and 7 only from the frog (SpawnFrog), and
+ * neither says what kind of hit it is (the controllers only pick a death
  * animation for them).
  */
 
@@ -42,9 +42,13 @@
 // An exploding crate (ExplodeCrate, SFX_EXPLOSION), the sea mine
 // (SpawnSeaMine) and Dingodile's projectile
 #define EVENT_HIT_EXPLOSION 4
+// The pufferfish (SpawnPufferfish): underwater, SwimCtrl's death animation 0x2D
+#define EVENT_HIT_PUFFERFISH 5
 // The shark, moray eel, polar bear and venus flytrap (spawn_enemies.cpp) and
 // Dingodile's shark (SpawnDingodileShark)
 #define EVENT_HIT_BITE 6
+// The frog (SpawnFrog): on foot, ActionCtrl's death animation 0x2B
+#define EVENT_HIT_FROG 7
 // The blowgun tribesman's dart (EnemyCtrl::UpdateShooter, its state 16)
 #define EVENT_HIT_DART 8
 // Neo Cortex's shot (UpdateCortexShot)

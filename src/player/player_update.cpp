@@ -161,9 +161,9 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
     case EVENT_HIT_FIRE:
     case EVENT_HIT_ELECTRIC:
     case EVENT_HIT_EXPLOSION:
-    case 5:
+    case EVENT_HIT_PUFFERFISH:
     case EVENT_HIT_BITE:
-    case 7:
+    case EVENT_HIT_FROG:
     case EVENT_HIT_DART:
     case EVENT_HIT_CORTEX_SHOT:
     case EVENT_HIT_CRUSH:

@@ -16,6 +16,25 @@ extern "C" {
 #include "core.h"
 }
 
+/* GetDpadDirection's result (#843, docs/flags/input.md): the held D-pad
+ * as one direction, through gDpadDirectionTable. Up and down together
+ * read as down, left and right together as right. */
+#define KEY_DIR_NONE 0
+#define KEY_DIR_UP 1
+#define KEY_DIR_DOWN 2
+#define KEY_DIR_LEFT 3
+#define KEY_DIR_RIGHT 4
+#define KEY_DIR_UP_LEFT 5
+#define KEY_DIR_UP_RIGHT 6
+#define KEY_DIR_DOWN_LEFT 7
+#define KEY_DIR_DOWN_RIGHT 8
+
+/* gDpadDirectionTable's index: one bit per held D-pad button. */
+#define KEY_DIR_INDEX_UP 1
+#define KEY_DIR_INDEX_DOWN 2
+#define KEY_DIR_INDEX_LEFT 4
+#define KEY_DIR_INDEX_RIGHT 8
+
 class KeyInput
 {
 public:

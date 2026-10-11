@@ -187,6 +187,8 @@ the names with the header it already includes. A data table in
 | `audio.hpp` (next to `struct audio_context`) | `AUDIO_STATE_` | `audio_context::state`, the song's playback state (stopped, playing, paused) ([docs/flags/audio.md](flags/audio.md)) |
 | `gfx.h` (next to the OAM structs; hardware) | `OAM_AFFINE_MODE_` | attr0's `affineMode`: normal, affine, hidden (OBJ disable), double-size affine ([docs/flags/oam.md](flags/oam.md)) |
 | `gba/io_reg.h` (hardware) | `A_BUTTON`, `B_BUTTON`, `SELECT_BUTTON`, `START_BUTTON`, `DPAD_*`, ... | the KEYINPUT bits of `gKeys` and ActionCtrl's `INPUT_HELD`/`INPUT_PRESSED` ([docs/flags/input.md](flags/input.md)) |
+| `key_input.hpp` | `KEY_DIR_`, `KEY_DIR_INDEX_` | KeyInput::GetDpadDirection's result, the held D-pad as one direction (also SteerSpin's and EndSpin's `mode`), and gDpadDirectionTable's index bits ([docs/flags/input.md](flags/input.md)) |
+| `events.h` | `EVENT_HIT_PUFFERFISH`, `EVENT_HIT_FROG` | the two hits named after their only sender: the pufferfish's and the frog's `kind` ([docs/flags/hit_events.md](flags/hit_events.md)) |
 
 **Constants that describe data the repository has as source files are
 generated from those files**, not written by hand: the names live in the

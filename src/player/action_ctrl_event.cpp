@@ -278,7 +278,7 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
     case EVENT_HIT_ELECTRIC:
         KillPlayer(0x2c);
         break;
-    case 7:
+    case EVENT_HIT_FROG:
         KillPlayer(0x2b);
         break;
     case EVENT_HIT_DART:
@@ -457,9 +457,11 @@ s32 ActionCtrl::UpdateFacing()
         goto done;
     }
     part->mirrorFlags.mirrorY = 0;
-    if (part->mirrorBits.flipX < 0 && (dir == 4 || dir == 6 || dir == 8)) {
+    if (part->mirrorBits.flipX < 0 &&
+        (dir == KEY_DIR_RIGHT || dir == KEY_DIR_UP_RIGHT || dir == KEY_DIR_DOWN_RIGHT)) {
         FaceLeft(this, part, 0);
-    } else if ((s32)(part->mirror << 27) >= 0 && (dir == 3 || dir == 5 || dir == 7)) {
+    } else if ((s32)(part->mirror << 27) >= 0 &&
+               (dir == KEY_DIR_LEFT || dir == KEY_DIR_UP_LEFT || dir == KEY_DIR_DOWN_LEFT)) {
         FaceRight(this, part, 1);
     } else {
         goto done;
