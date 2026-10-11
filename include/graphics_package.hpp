@@ -17,8 +17,8 @@ extern "C" {
  * (`LoadTitleScreenBg`/`LoadTitleScreenObjTiles`, src/frontend/title_screen.cpp).
  * The src/data tables define the packages. */
 struct bg_package {
-    u32 width;
-    u32 height;
+    s32 width;
+    s32 height;
     void *paletteAsset;
     void *tileAsset;
     void *mapAsset;
