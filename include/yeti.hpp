@@ -11,8 +11,8 @@
  *
  * cxx_symbols.txt maps every member onto its C name: the IWRAM variables
  * get their addresses from sym_iwram.txt under those names, and the ROM
- * tables are defined in src/data/*.cpp as the members (`const s32
- * Yeti::chargeParams[6][3] = ...`). The actor category table
+ * tables are defined in src/data/*.cpp as the members (`const
+ * struct YetiCharge Yeti::chargeParams[6] = ...`). The actor category table
  * (src/data/actor_category_175558.cpp) points at Create, Update,
  * UpdateBg2, Destroy and LoadGraphics.
  *
@@ -34,6 +34,15 @@ class AnimPart;
 #define YETI_STATE_CHARGE 1 // StateCharge: picked at random by StateChase (chargeParams)
 #define YETI_STATE_CAUGHT 2 // StateCaught: Update, its catch box on the player
 #define YETI_STATE_STOP 3   // StateStop: Stop, the run is over (finish, knocked off, shocked)
+
+/* A record of Yeti::chargeParams (gYetiChargeParams), picked by
+ * Yeti::paramsIndex: how far StateCharge moves the yeti each frame, and
+ * StateChase's two rolls (out of 0x100) for starting a charge. */
+struct YetiCharge {
+    s32 step;       // 0x00 - StateCharge adds it to position (Q8)
+    s32 fastChance; // 0x04 - the roll while GetCellAnimSpeed() > 0x24
+    s32 slowChance; // 0x08 - the roll otherwise
+};
 
 class Yeti
 {
@@ -68,7 +77,7 @@ private:
 
     /* ROM (src/data) */
     static const StateFunc stateFuncs[4];               // gYetiStateFuncs
-    static const s32 chargeParams[6][3];                // gYetiChargeParams
+    static const struct YetiCharge chargeParams[6];     // gYetiChargeParams
     static const struct anim_box box;                   // gYetiBox - IsTouching's
     static const struct anim_box catchBox;              // gYetiCatchBox - Update's
     static const u16 palette[16];                       // gYetiPalette

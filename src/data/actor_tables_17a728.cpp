@@ -52,9 +52,9 @@ const u16 gPolarAkuAkuPalette3[16] = {
 
 /* Yeti::chargeParams (include/yeti.hpp): the records Yeti::StateChase and
  * Yeti::StateCharge (yeti_states.cpp) index by
- * gYetiParamsIndex: a value, then two random-roll thresholds (out of
- * 0x100) for the state change. */
-const s32 Yeti::chargeParams[6][3] = {
+ * gYetiParamsIndex: StateCharge's step, then StateChase's two rolls (out
+ * of 0x100) for starting a charge (struct YetiCharge). */
+const struct YetiCharge Yeti::chargeParams[6] = {
     { 243, 5, 1 },
     { 243, 10, 1 },
     { 243, 10, 1 },

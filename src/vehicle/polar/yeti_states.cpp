@@ -16,8 +16,8 @@ extern "C" {
  * threshold sound cues, already documented in docs/rom_map.md ("A
  * fourth vtable table, a third RAM-struct family" onward): an
  * accumulate-then-clamp-at-0xA000 pair on `gYetiPosition`/`gYetiDistance`
- * driven from `gYetiChargeParams` (a table of `{s32,s32,s32}`,
- * stride 0xc, indexed by `gYetiParamsIndex`), branching to different
+ * driven from `gYetiChargeParams` (struct YetiCharge records, indexed
+ * by `gYetiParamsIndex`), branching to different
  * `PlaySfx`/`PlayAmbientSfx` tier cues depending on the current "tier"
  * value read from the object's own `+8` field, and a shared
  * kind/anim-reset "transition" tail gated on the object's `+0x12` done
@@ -35,7 +35,7 @@ extern "C" {
  * tiers `0xd`/`0x1d` call `ShakeActorBg(0x100)` alone. Finally, while the
  * object's `+0x12` done flag is set, runs a two-stage
  * `GetCellAnimSpeed()`/`RandRange()`-gated check against
- * `gYetiChargeParams[gYetiParamsIndex]`'s `+4`/`+8` thresholds to
+ * `chargeParams[paramsIndex]`'s `fastChance`/`slowChance` rolls to
  * decide whether to fire the kind-1/anim-reset transition (plus a sound
  * cue while `gYetiDistance <= 0x7800`). */
 void Yeti::StateChase()
@@ -76,12 +76,8 @@ void Yeti::StateChase()
 
             if (GetCellAnimSpeed() > 0x24) {
                 s32 v = RandRange(0x100);
-                u8 *tableBase = (u8 *)chargeParams;
-                s32 offset = paramsIndex * 0xc;
-                u8 *tablePlus4 = tableBase + 4;
-                s32 threshold = *(s32 *)(tablePlus4 + offset);
 
-                if (v < threshold) {
+                if (v < chargeParams[paramsIndex].fastChance) {
                     goto do_transition;
                 }
             }
@@ -91,12 +87,8 @@ void Yeti::StateChase()
             }
             {
                 s32 v = RandRange(0x100);
-                u8 *tableBase = (u8 *)chargeParams;
-                s32 offset = paramsIndex * 0xc;
-                u8 *tablePlus8 = tableBase + 8;
-                s32 threshold = *(s32 *)(tablePlus8 + offset);
 
-                if (v >= threshold) {
+                if (v >= chargeParams[paramsIndex].slowChance) {
                     goto end_transition;
                 }
             }
@@ -117,7 +109,7 @@ void Yeti::StateChase()
 
 /* Sibling to `YetiStateChase` above, on the same object: instead of the
  * ease/settle pair, directly nudges `gYetiPosition` by
- * `gYetiChargeParams[gYetiParamsIndex]`'s own `+0` field before
+ * `chargeParams[paramsIndex].step` before
  * re-deriving `gYetiDistance`/clamping. The tier cues use plain `PlaySfx`
  * (ids `0x3f`/`0x40`) instead of `PlayAmbientSfx`, keyed off tiers
  * `0xb`/`0x1b` (with `0xc`/`0x1c` sharing the `ShakeActorBg(0x100)`-only
@@ -126,11 +118,7 @@ void Yeti::StateChase()
  * "settle" step to `YetiStateChase`'s tier-1 "arm" step. */
 void Yeti::StateCharge()
 {
-    s32 *c8 = &position;
-    u8 *table = (u8 *)chargeParams;
-    s32 idx = paramsIndex;
-
-    *c8 += *(s32 *)(table + idx * 0xc);
+    position += chargeParams[paramsIndex].step;
     distance = INT_TO_Q8(GetCellAnimDistance()) - position;
 
     if (distance > 0xa000) {

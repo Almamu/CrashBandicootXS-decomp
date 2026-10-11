@@ -37,7 +37,7 @@ extern "C" {
  * variable set before the call (a literal would be loaded at the store). */
 void SpawnCrystal(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    s32 bit = *gLevelState->GetCurrentLevelFlags() & LEVEL_FLAG_CRYSTAL;
+    s32 bit = gLevelState->GetCurrentLevelFlags()->flags & LEVEL_FLAG_CRYSTAL;
 
     if (bit == 0) {
         u8 type = EVENT_CRYSTAL;
@@ -56,7 +56,7 @@ void SpawnCrystal(u32 a0, u16 a1, u16 a2, u16 a3)
 
 void SpawnCrateGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    u8 bit = *gLevelState->GetCurrentLevelFlags() & LEVEL_FLAG_CRATE_GEM;
+    u8 bit = gLevelState->GetCurrentLevelFlags()->flags & LEVEL_FLAG_CRATE_GEM;
 
     if (bit == 0) {
         u8 tag = 1;
@@ -82,7 +82,7 @@ void SpawnCrateGem(u32 a0, u16 a1, u16 a2, u16 a3)
 
 void SpawnGemPathGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    if ((*gLevelState->GetCurrentLevelFlags() & LEVEL_FLAG_GEM_PATH_GEM) == 0) {
+    if ((gLevelState->GetCurrentLevelFlags()->flags & LEVEL_FLAG_GEM_PATH_GEM) == 0) {
         u8 tag = 1;
         u8 type = EVENT_GEM_PATH_GEM;
         Sprite *part = Sprite::Create(a0, a1, a2, a3);

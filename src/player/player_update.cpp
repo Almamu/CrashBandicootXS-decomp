@@ -82,7 +82,7 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
 {
     switch (event) {
     case EVENT_CRYSTAL:
-        *gLevelState->GetCurrentLevelFlags() |= LEVEL_FLAG_CRYSTAL;
+        gLevelState->GetCurrentLevelFlags()->flags |= LEVEL_FLAG_CRYSTAL;
         gAudioContext->PlaySfx(SFX_CRYSTAL, 0x100);
         break;
     case EVENT_ROOM_EXIT:
@@ -111,11 +111,11 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
         break;
     case EVENT_CRATE_GEM:
         gAudioContext->PlaySfx(SFX_GEM, 0x100);
-        *gLevelState->GetCurrentLevelFlags() |= LEVEL_FLAG_CRATE_GEM;
+        gLevelState->GetCurrentLevelFlags()->flags |= LEVEL_FLAG_CRATE_GEM;
         break;
     case EVENT_GEM_PATH_GEM:
         gAudioContext->PlaySfx(SFX_GEM, 0x100);
-        *gLevelState->GetCurrentLevelFlags() |= LEVEL_FLAG_GEM_PATH_GEM;
+        gLevelState->GetCurrentLevelFlags()->flags |= LEVEL_FLAG_GEM_PATH_GEM;
         break;
     case EVENT_YELLOW_GEM:
         gAudioContext->PlaySfx(SFX_GEM, 0x100);

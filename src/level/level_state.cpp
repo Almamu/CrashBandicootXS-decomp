@@ -218,7 +218,7 @@ void LevelState::AddBrokenCrate()
             const struct level_room *level = room.cat;
 
             if (level->kind == ROOM_KIND_CATEGORY) {
-                u8 *flags = GetCurrentLevelFlags();
+                u8 *flags = &GetCurrentLevelFlags()->flags;
                 /* Separate `mask`/`value` locals reproduce the ROM's
                  * "build the OR mask before loading the byte" order - a plain
                  * `*flags |= LEVEL_FLAG_CRATE_GEM;` loads the byte first regardless of
@@ -262,7 +262,7 @@ void LevelState::PressSwitchCrate()
         const struct level_room *level = room.cat;
 
         if (level->kind == ROOM_KIND_CATEGORY) {
-            u8 *flags = GetCurrentLevelFlags();
+            u8 *flags = &GetCurrentLevelFlags()->flags;
             s32 mask = LEVEL_FLAG_CRATE_GEM;
             s32 value = *flags;
             mask |= value;
@@ -744,15 +744,15 @@ s32 LevelState::GetBossIndex()
 }
 
 /* Address-of-slot helper: level `idx`'s word in `progress.levels`. */
-u8 *LevelState::GetLevelFlags(s32 idx)
+union level_record *LevelState::GetLevelFlags(s32 idx)
 {
-    return (u8 *)&progress.levels[idx];
+    return &progress.levels[idx];
 }
 
 /* Resolves the "current index" field (`room.level`, `+0xc4`) into its own slot
  * address via `GetLevelFlags` - the address this file's `AddBrokenCrate`/
  * `PressSwitchCrate`/`CheckAllCratesBroken` all call "flags" and OR a bit into. */
-u8 *LevelState::GetCurrentLevelFlags()
+union level_record *LevelState::GetCurrentLevelFlags()
 {
     s32 idx = room.level;
     return GetLevelFlags(idx);
@@ -824,7 +824,7 @@ void LevelState::CheckAllCratesBroken()
         const struct level_room *level = room.cat;
 
         if (level->kind == ROOM_KIND_CATEGORY) {
-            u8 *flags = GetCurrentLevelFlags();
+            u8 *flags = &GetCurrentLevelFlags()->flags;
             s32 mask = LEVEL_FLAG_CRATE_GEM;
             s32 value = *flags;
             mask |= value;

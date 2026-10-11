@@ -63,6 +63,9 @@ union level_record {
     // the low halfword as a whole: UpdateGameFrame's "no best time yet"
     // test (`low & LEVEL_FLAG_TIME_MASK`) reads it as one
     u16 low;
+    // the low byte: the crystal and gem bits, which the pickups OR in a
+    // byte at a time
+    u8 flags;
 };
 
 COMPILE_TIME_ASSERT(game_progress_hpp, sizeof(union level_record) == 4);

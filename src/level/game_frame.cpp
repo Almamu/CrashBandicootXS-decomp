@@ -302,17 +302,16 @@ void LevelState::UpdateGameFrame()
                 break;
             default:
                 if (room.cat->kind == ROOM_KIND_CATEGORY)
-                    ((union level_record *)GetCurrentLevelFlags())->w.cleared = 1;
+                    GetCurrentLevelFlags()->w.cleared = 1;
                 break;
             }
             if (timeTrial) {
                 u32 t = tenths + seconds * 10 + minutes * 600;
 
                 LIMIT_MAX(t, LEVEL_FLAG_TIME_MAX);
-                if (t < ((union level_record *)GetCurrentLevelFlags())->w.time ||
-                    (((union level_record *)GetCurrentLevelFlags())->low & LEVEL_FLAG_TIME_MASK) ==
-                        0)
-                    ((union level_record *)GetCurrentLevelFlags())->w.time = t;
+                if (t < GetCurrentLevelFlags()->w.time ||
+                    (GetCurrentLevelFlags()->low & LEVEL_FLAG_TIME_MASK) == 0)
+                    GetCurrentLevelFlags()->w.time = t;
             }
             MemCopy32(&saveData, &progress, sizeof(GameProgress));
         }

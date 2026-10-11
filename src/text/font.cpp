@@ -61,13 +61,12 @@ void Font::UploadTiles()
     LoadTaggedAsset(asset, OBJ_VRAM0 + (tileBase << 5));
 }
 
-/* Sets the palette of the glyphs' OBJs (attr2's top nibble, the high
- * half of `oam_scratch[5]`). */
+/* Sets the palette of the glyphs' OBJs (`oam_scratch.palette`, attr2's
+ * top nibble). gcc stores the 4-bit field as the high half of byte 5
+ * (`ldrb`, `and #0xF`, `orr`, `strb`). */
 void Font::SetPalette(u8 palette)
 {
-    u32 shifted = palette << 4;
-
-    oam_scratch[5] = (oam_scratch[5] & 0xF) | shifted;
+    oam_scratch.palette = palette;
 }
 
 /* codegen: GetPaletteSlot returns u8 (gfx.h); with the u8 return
@@ -77,7 +76,7 @@ extern "C" s32 GetPaletteSlot_s32(u8 *cache, s32 recordId) asm("GetPaletteSlot")
 
 /* Sets the glyphs' palette back to the palette-cache slot of sprite bank
  * 35's first animation's palette (see docs/rom_map.md's
- * `gSpriteBankTable` investigation), the same `oam_scratch[5]` nibble
+ * `gSpriteBankTable` investigation), the same `oam_scratch.palette`
  * SetPalette sets. */
 void Font::ResetPalette()
 {
@@ -85,7 +84,5 @@ void Font::ResetPalette()
     const struct sprite_anim *anim = gSpriteBankSet->table->banks[35].anims;
     u8 field = anim->paletteId;
     s32 slot = GetPaletteSlot_s32(cache, field);
-    u32 shifted = slot << 4;
-
-    oam_scratch[5] = (oam_scratch[5] & 0xF) | shifted;
+    oam_scratch.palette = slot;
 }
