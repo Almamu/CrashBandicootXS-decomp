@@ -120,7 +120,7 @@ u8 JetpackRocket::IsUnshootable()
  * offset), and plays its cue once; then ActorSelf's update. */
 void JetpackRing::Update()
 {
-    if ((u8)record->index == JETPACK_KIND_RING_LEFT && (u8)IsTouchingPlayer(this)) {
+    if (record->index == JETPACK_KIND_RING_LEFT && (u8)IsTouchingPlayer(this)) {
         JetpackPlayer *player = gActorList->AsJetpackPlayer();
 
         player->PassRing(x - record->spawnX, y);

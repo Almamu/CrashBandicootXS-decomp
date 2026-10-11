@@ -45,7 +45,7 @@ void PolarTimeCrate::Update()
         gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         gLevelState->AddBrokenCrate();
 
-        switch ((u8)record->index) {
+        switch (record->index) {
         case POLAR_KIND_TIME_CRATE_1:
             gLevelState->FreezeLevelClock(1);
             break;

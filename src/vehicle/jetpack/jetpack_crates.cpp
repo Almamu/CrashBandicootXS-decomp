@@ -70,7 +70,7 @@ void JetpackQuestionCrate::Update()
 
     if (kind == 0 && (u8)IsTouchingPlayer(this)) {
         SetState(JETPACK_BALLOON_CRATE_STATE_DESTROYED, 1);
-        switch ((u8)record->index) {
+        switch (record->index) {
         case JETPACK_KIND_QUESTION_CRATE_WUMPA_1:
             gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
             gActorList->AsJetpackPlayer()->QueueWumpa(1);
@@ -109,7 +109,7 @@ void JetpackQuestionCrate::Damage(s32 amount)
     }
 
     SetState(JETPACK_BALLOON_CRATE_STATE_DESTROYED, 1);
-    switch ((u8)record->index) {
+    switch (record->index) {
     case JETPACK_KIND_QUESTION_CRATE_WUMPA_1:
         gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         gActorList->AsJetpackPlayer()->QueueWumpa(1);
@@ -166,7 +166,7 @@ void JetpackTimeCrate::Update()
 
     if (kind == 0 && (u8)IsTouchingPlayer(this)) {
         SetState(JETPACK_BALLOON_CRATE_STATE_DESTROYED, 1);
-        switch ((u8)record->index) {
+        switch (record->index) {
         case JETPACK_KIND_TIME_CRATE_1:
             gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
             gLevelState->FreezeLevelClock(1);
@@ -185,7 +185,7 @@ void JetpackTimeCrate::Update()
             break;
         }
         if (balloon != 0) {
-            if ((u8)record->index != JETPACK_KIND_STOPWATCH) {
+            if (record->index != JETPACK_KIND_STOPWATCH) {
                 gLevelState->AddBrokenCrate();
             }
             balloon->Release();
@@ -206,7 +206,7 @@ void JetpackTimeCrate::Damage(s32 amount)
     }
 
     SetState(JETPACK_BALLOON_CRATE_STATE_DESTROYED, 1);
-    switch ((u8)record->index) {
+    switch (record->index) {
     case JETPACK_KIND_TIME_CRATE_1:
         gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         gLevelState->FreezeLevelClock(1);
@@ -225,7 +225,7 @@ void JetpackTimeCrate::Damage(s32 amount)
         break;
     }
     if (balloon != 0) {
-        if ((u8)record->index != JETPACK_KIND_STOPWATCH) {
+        if (record->index != JETPACK_KIND_STOPWATCH) {
             gLevelState->AddBrokenCrate();
         }
         balloon->Release();

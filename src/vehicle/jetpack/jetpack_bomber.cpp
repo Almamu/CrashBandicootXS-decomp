@@ -23,7 +23,7 @@ JetpackBomber::JetpackBomber(const struct anim_table_record *rec, s32 x, s32 y, 
     homeX = x;
     homeY = y;
     unshootable = 0;
-    switch ((u8)rec->index) {
+    switch (rec->index) {
     case JETPACK_KIND_BOMBER_IDLE:
         SetState(JETPACK_BOMBER_STATE_IDLE, 0);
         break;

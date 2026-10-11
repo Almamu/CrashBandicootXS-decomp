@@ -28,7 +28,7 @@ void PolarNitroCrate::DetonateNearby()
     ActorSelf *n = gActorList->next;
 
     do {
-        if ((u8)n->record->index == POLAR_KIND_NITRO_CRATE && n != this && ActorsOverlap(this, n) &&
+        if (n->record->index == POLAR_KIND_NITRO_CRATE && n != this && ActorsOverlap(this, n) &&
             n->animIndex != 0x12) {
             gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
             gLevelState->AddBrokenCrate();

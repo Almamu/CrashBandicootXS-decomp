@@ -217,7 +217,7 @@ void PolarIcicle::Update()
 PolarIcicle::PolarIcicle(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
     : ActorSelf(rec, x, y, z)
 {
-    s32 kind = (u8)rec->index;
+    s32 kind = rec->index;
 
     if (x > 0)
         kind += 1;
