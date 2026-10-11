@@ -92,112 +92,112 @@ extern u8 IsRoomExitRequested(void);
 extern void ResetObjBuffers(void);
 
 /* src/level/spawn_bosses.cpp */
-extern void SpawnRoomExit(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnDingodile(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnTiny(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnCortexBoss(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnMegaMix(u32 arg, u16 arg1, u16 arg2, u16 arg3);
+extern void SpawnRoomExit(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnDingodile(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnTiny(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnCortexBoss(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnMegaMix(u32 id, u16 x, u16 y, u16 param);
 
 /* src/level/spawn_crates.cpp */
-extern void SpawnTimeCrate3(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnTimeCrate2(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnTimeCrate1(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnSlotCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnTntCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnReinforcedCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnBouncyWumpaCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnMysteryCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnNitroCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnLifeCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnIronArrowCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnIronCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnNitroSwitchCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnOutlineCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnArrowCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnIronSwitchCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnAkuAkuCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnCheckpointCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnBasicCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
+extern void SpawnTimeCrate3(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnTimeCrate2(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnTimeCrate1(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnSlotCrate(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnTntCrate(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnReinforcedCrate(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnBouncyWumpaCrate(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnMysteryCrate(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnNitroCrate(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnLifeCrate(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnIronArrowCrate(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnIronCrate(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnNitroSwitchCrate(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnOutlineCrate(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnArrowCrate(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnIronSwitchCrate(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnAkuAkuCrate(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnCheckpointCrate(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnBasicCrate(u32 id, u16 x, u16 y, u16 param);
 
 /* src/level/spawn_enemies.cpp */
-extern void SpawnLizard(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnVulture(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnVenusFlytrap(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnPatrollingJungleEnemy(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnBlowgunTribesman(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnPenguin(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnSeal(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnPolarBear(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnPufferfish(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnShark(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnMorayEel(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnElectricEel(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnSquid(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnJellyfish(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnLaserBarrier(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnStationarySpaceEnemy(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnPatrollingSpaceEnemy(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnSaucerLabAssistant(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnPistonCrusher(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnFlamethrowerLabAssistant(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnHomingSewerEnemy(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnPatrollingSewerEnemy(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnRat(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnFrog(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnSeaMine(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnWoodenCrusher(u32 arg, u16 arg1, u16 arg2, u16 arg3);
+extern void SpawnLizard(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnVulture(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnVenusFlytrap(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnPatrollingJungleEnemy(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnBlowgunTribesman(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnPenguin(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnSeal(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnPolarBear(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnPufferfish(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnShark(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnMorayEel(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnElectricEel(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnSquid(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnJellyfish(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnLaserBarrier(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnStationarySpaceEnemy(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnPatrollingSpaceEnemy(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnSaucerLabAssistant(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnPistonCrusher(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnFlamethrowerLabAssistant(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnHomingSewerEnemy(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnPatrollingSewerEnemy(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnRat(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnFrog(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnSeaMine(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnWoodenCrusher(u32 id, u16 x, u16 y, u16 param);
 
 /* src/level/spawn_gem_platforms.cpp */
-extern void SpawnRedGemPlatform(u32 a, u16 a1, u16 a2, u16 a3);
-extern void SpawnYellowGemPlatform(u32 a, u16 a1, u16 a2, u16 a3);
-extern void SpawnGreenGemPlatform(u32 a, u16 a1, u16 a2, u16 a3);
-extern void SpawnBlueGemPlatform(u32 a, u16 a1, u16 a2, u16 a3);
+extern void SpawnRedGemPlatform(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnYellowGemPlatform(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnGreenGemPlatform(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnBlueGemPlatform(u32 id, u16 x, u16 y, u16 param);
 
 /* src/level/spawn_gems.cpp */
-extern void SpawnCrystal(u32 a, u16 a1, u16 a2, u16 a3);
-extern void SpawnCrateGem(u32 a, u16 a1, u16 a2, u16 a3);
-extern void SpawnGemPathGem(u32 a, u16 a1, u16 a2, u16 a3);
-extern void SpawnRedGem(u32 a, u16 a1, u16 a2, u16 a3);
-extern void SpawnGreenGem(u32 a, u16 a1, u16 a2, u16 a3);
-extern void SpawnYellowGem(u32 a, u16 a1, u16 a2, u16 a3);
+extern void SpawnCrystal(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnCrateGem(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnGemPathGem(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnRedGem(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnGreenGem(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnYellowGem(u32 id, u16 x, u16 y, u16 param);
 
 /* src/level/spawn_objects.cpp */
-extern void SpawnSeaweed(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnSeaweedNoAnimReset(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnFlame(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnRockPlatform(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnFlipPlatform(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnBonusPlatform(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnMediumPlatform(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnSmallPlatform(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnLargePlatform(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnLaunchPadEntity(u32 arg, u16 arg1, u16 arg2, u16 arg3);
+extern void SpawnSeaweed(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnSeaweedNoAnimReset(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnFlame(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnRockPlatform(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnFlipPlatform(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnBonusPlatform(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnMediumPlatform(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnSmallPlatform(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnLargePlatform(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnLaunchPadEntity(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnNoEntity(void);
-extern void SpawnSealSpawner(u32 arg, u16 arg1, u16 arg2, u16 arg3);
+extern void SpawnSealSpawner(u32 id, u16 x, u16 y, u16 param);
 
 /* src/level/spawn_pickups.cpp */
-extern void SpawnBodySlamPower(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnTornadoSpinPower(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnDoubleJumpPower(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnTurboRunPower(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnStopwatch(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnBlueGem(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnCrateGemMarker(u32 arg, u16 arg1, u16 arg2, u16 arg3);
+extern void SpawnBodySlamPower(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnTornadoSpinPower(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnDoubleJumpPower(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnTurboRunPower(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnStopwatch(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnBlueGem(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnCrateGemMarker(u32 id, u16 x, u16 y, u16 param);
 extern void *CreateTouchableSprite(u32 index, u32 tag, u32 field0A, u32 cx, u16 cy, u16 cw, u16 ch);
-extern void SpawnWumpa(u32 arg, u16 arg1, u16 arg2, u16 arg3);
+extern void SpawnWumpa(u32 id, u16 x, u16 y, u16 param);
 
 /* src/level/spawn_markers.cpp */
 extern void SpawnHoverPlayerPosition(void);
-extern void SpawnHoverStartMarker(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnUnderwaterPlayerPosition(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnUnderwaterStartMarker(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnPlayerPosition(u32 arg, u16 arg1, u16 arg2, u16 arg3);
+extern void SpawnHoverStartMarker(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnUnderwaterPlayerPosition(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnUnderwaterStartMarker(u32 id, u16 x, u16 y, u16 param);
+extern void SpawnPlayerPosition(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnStartMarkerStub(void);
 extern void DestroyEntitySpawner(void);
 extern void CreateEntitySpawner(void);
 
 /* src/level/spawn_start_marker.cpp */
-extern void SpawnStartMarker(u32 arg, u16 x, u16 y, u16 z);
+extern void SpawnStartMarker(u32 id, u16 x, u16 y, u16 param);
 
 /* src/level/terrain.cpp (the terrain probes are LevelLayers' methods:
  * bg_layer.hpp) */
@@ -240,9 +240,11 @@ extern const s32 gStationarySpaceEnemyAnimMap[8];
 extern const s32 gVenusFlytrapAnimMap[8];
 extern const s32 gVultureAnimMap[8];
 
-/* An entity spawner: the entity's type-specific id and its x/y and index
- * (SpawnEntity passes the entity record's four halfwords). */
-typedef void (*entity_spawn_fn)(u32 id, u16 x, u16 y, u16 index);
+/* An entity spawner: the entity's id (its index in the room's entity list,
+ * which numbers its gone bit), its x/y and its parameter record's index
+ * (SpawnEntity passes the id and the entity record's x, y and param; every
+ * spawner below takes the same four, as `id, x, y, param`). */
+typedef void (*entity_spawn_fn)(u32 id, u16 x, u16 y, u16 param);
 
 /* The entity spawners, indexed by entity type (src/data/dispatch_table_16c6a4.cpp);
  * the few with other parameters are cast. */

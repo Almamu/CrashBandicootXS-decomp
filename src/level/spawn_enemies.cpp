@@ -80,9 +80,9 @@ static inline void SetMirrorX(Sprite::MirrorFlags *bits, u8 value)
 
 /* Bank +0x9C, animation 0 from its start; patrols (state 2) within the
  * record's X range. */
-void SpawnLizard(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnLizard(u32 id, u16 x, u16 y, u16 param)
 {
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
     const struct entity_params *rec;
     const struct entity_params *rec2;
@@ -96,11 +96,11 @@ void SpawnLizard(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->Attach(part);
     SetKind(part, 1);
     part->f.flags &= ~ENTITY_FLAG_COLLIDES;
-    rec = EntityParams(arg3);
+    rec = EntityParams(param);
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
-    rec2 = EntityParams(arg3);
+    rec2 = EntityParams(param);
     part->StartAnim(0);
     hdr->SetState(ENEMY_STATE_PATROL);
     hdr->SetRangeX(rec2->p.patrol.rangeX);
@@ -108,9 +108,9 @@ void SpawnLizard(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
 /* Bank +0x84; state 0x11, then gVultureAnimMap and a 100x50 trigger box at
  * its origin. */
-void SpawnVulture(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnVulture(u32 id, u16 x, u16 y, u16 param)
 {
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
     const struct entity_params *rec;
 
@@ -123,7 +123,7 @@ void SpawnVulture(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->Attach(part);
     SetKind(part, 1);
     part->f.flags &= ~ENTITY_FLAG_COLLIDES;
-    rec = EntityParams(arg3);
+    rec = EntityParams(param);
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
@@ -134,9 +134,9 @@ void SpawnVulture(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
 /* Bank +0x78, animation 1 from its start, kind 6; state 3, then
  * gVenusFlytrapAnimMap and a 45x20 trigger box raised 20 pixels. */
-void SpawnVenusFlytrap(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnVenusFlytrap(u32 id, u16 x, u16 y, u16 param)
 {
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
     const struct entity_params *rec;
 
@@ -149,7 +149,7 @@ void SpawnVenusFlytrap(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->Attach(part);
     SetKind(part, 1);
     part->f.flags &= ~ENTITY_FLAG_COLLIDES;
-    rec = EntityParams(arg3);
+    rec = EntityParams(param);
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
@@ -165,9 +165,9 @@ void SpawnVenusFlytrap(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * species isn't identified, so the name is generic.
  *
  * Bank +0xA8; patrols (state 2) within the record's X range. */
-void SpawnPatrollingJungleEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnPatrollingJungleEnemy(u32 id, u16 x, u16 y, u16 param)
 {
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
     const struct entity_params *rec;
     const struct entity_params *rec2;
@@ -181,11 +181,11 @@ void SpawnPatrollingJungleEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->Attach(part);
     SetKind(part, 1);
     part->f.flags &= ~ENTITY_FLAG_COLLIDES;
-    rec = EntityParams(arg3);
+    rec = EntityParams(param);
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
-    rec2 = EntityParams(arg3);
+    rec2 = EntityParams(param);
     hdr->SetState(ENEMY_STATE_PATROL);
     hdr->SetRangeX(rec2->p.patrol.rangeX);
 }
@@ -193,9 +193,9 @@ void SpawnPatrollingJungleEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 /* Bank +0x90, gBlowgunTribesmanAnimMap; the record's attack cycle, and a
  * shot every (idle + attack) / 2 frames, offset by the cycle offset plus a
  * quarter of that; state 0x10. */
-void SpawnBlowgunTribesman(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnBlowgunTribesman(u32 id, u16 x, u16 y, u16 param)
 {
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
     const struct entity_params *rec;
     const struct entity_params *rec2;
@@ -210,11 +210,11 @@ void SpawnBlowgunTribesman(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->Attach(part);
     SetKind(part, 1);
     part->f.flags &= ~ENTITY_FLAG_COLLIDES;
-    rec = EntityParams(arg3);
+    rec = EntityParams(param);
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
-    rec2 = EntityParams(arg3);
+    rec2 = EntityParams(param);
     SetAnims(hdr, gBlowgunTribesmanAnimMap);
     SetAttackCycle(hdr, rec2->p.cycle.idleTime, rec2->p.cycle.attackTime,
                    rec2->p.cycle.cycleOffset);
@@ -225,9 +225,9 @@ void SpawnBlowgunTribesman(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
 /* Bank +0xB4, animation 0 from its start, gPenguinAnimMap; the record's
  * attack cycle and X range; state 0xD. */
-void SpawnPenguin(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnPenguin(u32 id, u16 x, u16 y, u16 param)
 {
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
     const struct entity_params *rec;
     const struct entity_params *rec2;
@@ -241,11 +241,11 @@ void SpawnPenguin(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->Attach(part);
     SetKind(part, 1);
     part->f.flags &= ~ENTITY_FLAG_COLLIDES;
-    rec = EntityParams(arg3);
+    rec = EntityParams(param);
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
-    rec2 = EntityParams(arg3);
+    rec2 = EntityParams(param);
     part->StartAnim(0);
     SetAnims(hdr, gPenguinAnimMap);
     SetAttackCycle(hdr, rec2->p.rangeAttackFirst.idleTime, rec2->p.rangeAttackFirst.attackTime,
@@ -257,9 +257,9 @@ void SpawnPenguin(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 /* A ground sprite on bank 17, animation 0 (set before the second attach),
  * always active; state 5, and SFX_SEAL_SPAWN. The seal spawner
  * (SpawnSealSpawner, a PeriodicSpawner) calls it. */
-void SpawnSeal(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnSeal(u32 id, u16 x, u16 y, u16 param)
 {
-    GroundSprite *part = GroundSprite::Create(arg0, arg1, arg2, arg3);
+    GroundSprite *part = GroundSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
     const struct entity_params *rec;
 
@@ -273,7 +273,7 @@ void SpawnSeal(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->Attach(part);
     SetKind(part, 1);
     part->f.flags &= ~ENTITY_FLAG_COLLIDES;
-    rec = EntityParams(arg3);
+    rec = EntityParams(param);
     SetMirror(part, rec);
     part->f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
     CollidableList()->Add(part);
@@ -283,9 +283,9 @@ void SpawnSeal(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 }
 
 /* Bank +0xC0, kind 6; patrols (state 2) within the record's X range. */
-void SpawnPolarBear(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnPolarBear(u32 id, u16 x, u16 y, u16 param)
 {
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
     const struct entity_params *rec;
     const struct entity_params *rec2;
@@ -299,11 +299,11 @@ void SpawnPolarBear(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->Attach(part);
     SetKind(part, 1);
     part->f.flags &= ~ENTITY_FLAG_COLLIDES;
-    rec = EntityParams(arg3);
+    rec = EntityParams(param);
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
-    rec2 = EntityParams(arg3);
+    rec2 = EntityParams(param);
     part->kind = EVENT_HIT_BITE;
     hdr->SetState(ENEMY_STATE_PATROL);
     hdr->SetRangeX(rec2->p.patrol.rangeX);
@@ -311,9 +311,9 @@ void SpawnPolarBear(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
 /* Bank +0x3C, animation 2 from its start, kind EVENT_HIT_PUFFERFISH,
  * gPufferfishAnimMap; the record's attack cycle and wave; state 14. */
-void SpawnPufferfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnPufferfish(u32 id, u16 x, u16 y, u16 param)
 {
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
     const struct entity_params *rec;
     const struct entity_params *rec2;
@@ -327,11 +327,11 @@ void SpawnPufferfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->Attach(part);
     SetKind(part, 1);
     part->f.flags &= ~ENTITY_FLAG_COLLIDES;
-    rec = EntityParams(arg3);
+    rec = EntityParams(param);
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
-    rec2 = EntityParams(arg3);
+    rec2 = EntityParams(param);
     part->StartAnim(2);
     part->kind = EVENT_HIT_PUFFERFISH;
     SetAnims(hdr, gPufferfishAnimMap);
@@ -343,9 +343,9 @@ void SpawnPufferfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
 /* Bank +0x30, kind 6, gSharkAnimMap; state 15, then the record's X range and
  * Y range and speed. */
-void SpawnShark(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnShark(u32 id, u16 x, u16 y, u16 param)
 {
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
     const struct entity_params *rec;
     const struct entity_params *rec2;
@@ -359,11 +359,11 @@ void SpawnShark(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->Attach(part);
     SetKind(part, 1);
     part->f.flags &= ~ENTITY_FLAG_COLLIDES;
-    rec = EntityParams(arg3);
+    rec = EntityParams(param);
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
-    rec2 = EntityParams(arg3);
+    rec2 = EntityParams(param);
     part->kind = EVENT_HIT_BITE;
     SetAnims(hdr, gSharkAnimMap);
     hdr->SetState(ENEMY_STATE_PATROL_HOME_Y);
@@ -373,9 +373,9 @@ void SpawnShark(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 }
 
 /* Bank +0x24, animation 0 from its start, X mirror flipped, kind 6; state 1. */
-void SpawnMorayEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnMorayEel(u32 id, u16 x, u16 y, u16 param)
 {
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
     const struct entity_params *rec;
 
@@ -388,7 +388,7 @@ void SpawnMorayEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->Attach(part);
     SetKind(part, 1);
     part->f.flags &= ~ENTITY_FLAG_COLLIDES;
-    rec = EntityParams(arg3);
+    rec = EntityParams(param);
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
@@ -403,9 +403,9 @@ void SpawnMorayEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
 /* Bank +0x60, kind 3, gElectricEelAnimMap; the record's attack cycle and X
  * range; state 13. */
-void SpawnElectricEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnElectricEel(u32 id, u16 x, u16 y, u16 param)
 {
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
     const struct entity_params *rec;
     const struct entity_params *rec2;
@@ -419,11 +419,11 @@ void SpawnElectricEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->Attach(part);
     SetKind(part, 1);
     part->f.flags &= ~ENTITY_FLAG_COLLIDES;
-    rec = EntityParams(arg3);
+    rec = EntityParams(param);
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
-    rec2 = EntityParams(arg3);
+    rec2 = EntityParams(param);
     part->kind = EVENT_HIT_ELECTRIC;
     SetAnims(hdr, gElectricEelAnimMap);
     SetAttackCycle(hdr, rec2->p.rangeCycle.idleTime, rec2->p.rangeCycle.attackTime,
@@ -433,9 +433,9 @@ void SpawnElectricEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 }
 
 /* Bank +0x54, gSquidAnimMap (without the default map first); state 7. */
-void SpawnSquid(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnSquid(u32 id, u16 x, u16 y, u16 param)
 {
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
     const struct entity_params *rec;
 
@@ -448,7 +448,7 @@ void SpawnSquid(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->Attach(part);
     SetKind(part, 1);
     part->f.flags &= ~ENTITY_FLAG_COLLIDES;
-    rec = EntityParams(arg3);
+    rec = EntityParams(param);
     SetMirror(part, rec);
     CollidableList()->Add(part);
     hdr->anims = gSquidAnimMap;
@@ -456,9 +456,9 @@ void SpawnSquid(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 }
 
 /* Bank +0x6C; state 6, then the record's wave. */
-void SpawnJellyfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnJellyfish(u32 id, u16 x, u16 y, u16 param)
 {
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
     const struct entity_params *rec;
     const struct entity_params *rec2;
@@ -472,19 +472,19 @@ void SpawnJellyfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->Attach(part);
     SetKind(part, 1);
     part->f.flags &= ~ENTITY_FLAG_COLLIDES;
-    rec = EntityParams(arg3);
+    rec = EntityParams(param);
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
-    rec2 = EntityParams(arg3);
+    rec2 = EntityParams(param);
     hdr->SetState(ENEMY_STATE_BOB);
     SetWave(hdr, rec2->p.wave.period, rec2->p.wave.phase, rec2->p.wave.amplitude);
 }
 
 /* Bank +0x12C, X mirror flipped, kind 2, flag bit 6 cleared; state 1. */
-void SpawnLaserBarrier(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnLaserBarrier(u32 id, u16 x, u16 y, u16 param)
 {
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
     const struct entity_params *rec;
 
@@ -497,7 +497,7 @@ void SpawnLaserBarrier(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->Attach(part);
     SetKind(part, 1);
     part->f.flags &= ~ENTITY_FLAG_COLLIDES;
-    rec = EntityParams(arg3);
+    rec = EntityParams(param);
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
@@ -516,9 +516,9 @@ void SpawnLaserBarrier(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  *
  * Bank +0x144, gStationarySpaceEnemyAnimMap; the record's attack cycle;
  * state 4. */
-void SpawnStationarySpaceEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnStationarySpaceEnemy(u32 id, u16 x, u16 y, u16 param)
 {
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
     const struct entity_params *rec;
     const struct entity_params *rec2;
@@ -532,11 +532,11 @@ void SpawnStationarySpaceEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->Attach(part);
     SetKind(part, 1);
     part->f.flags &= ~ENTITY_FLAG_COLLIDES;
-    rec = EntityParams(arg3);
+    rec = EntityParams(param);
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
-    rec2 = EntityParams(arg3);
+    rec2 = EntityParams(param);
     SetAnims(hdr, gStationarySpaceEnemyAnimMap);
     SetAttackCycle(hdr, rec2->p.attackFirst.idleTime, rec2->p.attackFirst.attackTime,
                    rec2->p.attackFirst.cycleOffset);
@@ -548,9 +548,9 @@ void SpawnStationarySpaceEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  *
  * Bank +0x120, gPatrollingSpaceEnemyAnimMap; the record's attack cycle and X
  * range; state 0xD. */
-void SpawnPatrollingSpaceEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnPatrollingSpaceEnemy(u32 id, u16 x, u16 y, u16 param)
 {
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
     const struct entity_params *rec;
     const struct entity_params *rec2;
@@ -564,11 +564,11 @@ void SpawnPatrollingSpaceEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->Attach(part);
     SetKind(part, 1);
     part->f.flags &= ~ENTITY_FLAG_COLLIDES;
-    rec = EntityParams(arg3);
+    rec = EntityParams(param);
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
-    rec2 = EntityParams(arg3);
+    rec2 = EntityParams(param);
     SetAnims(hdr, gPatrollingSpaceEnemyAnimMap);
     SetAttackCycle(hdr, rec2->p.rangeCycle.idleTime, rec2->p.rangeCycle.attackTime,
                    rec2->p.rangeCycle.cycleOffset);
@@ -579,10 +579,10 @@ void SpawnPatrollingSpaceEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 /* 0x28 pixels above its spot, bank 29, gSaucerLabAssistantAnimMap; an
  * attack cycle of 0x78 and 0x5A frames from the record's offset, an X range
  * of 0x28; state 0x12. */
-void SpawnSaucerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnSaucerLabAssistant(u32 id, u16 x, u16 y, u16 param)
 {
-    u16 y = arg2 - 0x28;
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, y, arg3);
+    u16 raisedY = y - 0x28;
+    MovingSprite *part = MovingSprite::Create(id, x, raisedY, param);
     EnemyCtrl *hdr;
     const struct entity_params *rec;
     const struct entity_params *rec2;
@@ -596,11 +596,11 @@ void SpawnSaucerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->Attach(part);
     SetKind(part, 1);
     part->f.flags &= ~ENTITY_FLAG_COLLIDES;
-    rec = EntityParams(arg3);
+    rec = EntityParams(param);
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
-    rec2 = EntityParams(arg3);
+    rec2 = EntityParams(param);
     SetAnims(hdr, gSaucerLabAssistantAnimMap);
     SetAttackCycle(hdr, 0x78, 0x5a, rec2->p.cycle.cycleOffset);
     hdr->SetRangeX(0x28);
@@ -609,9 +609,9 @@ void SpawnSaucerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
 /* Bank +0x138, kind 0xA, flag bit 6 cleared, gCrusherAnimMap; the record's
  * attack cycle; state 4. */
-void SpawnPistonCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnPistonCrusher(u32 id, u16 x, u16 y, u16 param)
 {
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
     const struct entity_params *rec;
     const struct entity_params *rec2;
@@ -625,11 +625,11 @@ void SpawnPistonCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->Attach(part);
     SetKind(part, 1);
     part->f.flags &= ~ENTITY_FLAG_COLLIDES;
-    rec = EntityParams(arg3);
+    rec = EntityParams(param);
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
-    rec2 = EntityParams(arg3);
+    rec2 = EntityParams(param);
     SetKind(part, 0xa);
     AndFlags(part, ~ENTITY_FLAG_VULNERABLE);
     SetAnims(hdr, gCrusherAnimMap);
@@ -651,12 +651,12 @@ void SpawnPistonCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * 14 insns (3 refs: floor_log2(refs) * refs / length = 0.21) and ranks
  * below the address (6 refs over 54 insns, 0.22), as in the ROM; with an
  * `s32` copy it lives 12 (0.25), goes first, and the address ends up in
- * r5 with arg3 and &gEntityFlags pushed to r9 and a stack slot (86 lines
+ * r5 with param and &gEntityFlags pushed to r9 and a stack slot (86 lines
  * off; the draft needed a register hold, a stack-slot `MATCH_USE_MEM`,
  * a `MATCH_KEEP` and four `MATCH_USE`s for that). */
-void SpawnFlamethrowerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnFlamethrowerLabAssistant(u32 id, u16 x, u16 y, u16 param)
 {
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
     const struct entity_params *rec;
     const struct entity_params *rec2;
@@ -671,11 +671,11 @@ void SpawnFlamethrowerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->Attach(part);
     SetKind(part, 1);
     part->f.flags &= ~ENTITY_FLAG_COLLIDES;
-    rec = EntityParams(arg3);
+    rec = EntityParams(param);
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
-    rec2 = EntityParams(arg3);
+    rec2 = EntityParams(param);
     f = part->mirrorFlags.mirrorX;
     SetMirrorX(&part->mirrorFlags, !f);
     SetKind(part, 1);
@@ -691,9 +691,9 @@ void SpawnFlamethrowerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  *
  * Bank +0x108; state 9, then the record's X range and speed and a wave of
  * {0x80, 0, 0x14}. */
-void SpawnHomingSewerEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnHomingSewerEnemy(u32 id, u16 x, u16 y, u16 param)
 {
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
     const struct entity_params *rec;
     const struct entity_params *rec2;
@@ -707,11 +707,11 @@ void SpawnHomingSewerEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->Attach(part);
     SetKind(part, 1);
     part->f.flags &= ~ENTITY_FLAG_COLLIDES;
-    rec = EntityParams(arg3);
+    rec = EntityParams(param);
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
-    rec2 = EntityParams(arg3);
+    rec2 = EntityParams(param);
     hdr->SetState(ENEMY_STATE_HOME_X_OSCILLATE);
     hdr->SetRangeXSpeed(rec2->p.homingX.rangeX, rec2->p.homingX.speedX, rec2->p.homingX.accelX);
     SetWave(hdr, 0x80, 0, 0x14);
@@ -722,9 +722,9 @@ void SpawnHomingSewerEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  *
  * Bank +0xF0, gPatrollingSewerEnemyAnimMap; patrols (state 2) within the
  * record's X range. */
-void SpawnPatrollingSewerEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnPatrollingSewerEnemy(u32 id, u16 x, u16 y, u16 param)
 {
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
     const struct entity_params *rec;
     const struct entity_params *rec2;
@@ -738,20 +738,20 @@ void SpawnPatrollingSewerEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->Attach(part);
     SetKind(part, 1);
     part->f.flags &= ~ENTITY_FLAG_COLLIDES;
-    rec = EntityParams(arg3);
+    rec = EntityParams(param);
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
-    rec2 = EntityParams(arg3);
+    rec2 = EntityParams(param);
     SetAnims(hdr, gPatrollingSewerEnemyAnimMap);
     hdr->SetState(ENEMY_STATE_PATROL);
     hdr->SetRangeX(rec2->p.patrol.rangeX);
 }
 
 /* Bank +0xFC; patrols (state 2) within the record's X range. */
-void SpawnRat(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnRat(u32 id, u16 x, u16 y, u16 param)
 {
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
     const struct entity_params *rec;
     const struct entity_params *rec2;
@@ -765,19 +765,19 @@ void SpawnRat(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->Attach(part);
     SetKind(part, 1);
     part->f.flags &= ~ENTITY_FLAG_COLLIDES;
-    rec = EntityParams(arg3);
+    rec = EntityParams(param);
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
-    rec2 = EntityParams(arg3);
+    rec2 = EntityParams(param);
     hdr->SetState(ENEMY_STATE_PATROL);
     hdr->SetRangeX(rec2->p.patrol.rangeX);
 }
 
 /* Bank +0xE4, kind EVENT_HIT_FROG, gPatrollingSewerEnemyAnimMap; state 8. */
-void SpawnFrog(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnFrog(u32 id, u16 x, u16 y, u16 param)
 {
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
     const struct entity_params *rec;
 
@@ -790,7 +790,7 @@ void SpawnFrog(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->Attach(part);
     SetKind(part, 1);
     part->f.flags &= ~ENTITY_FLAG_COLLIDES;
-    rec = EntityParams(arg3);
+    rec = EntityParams(param);
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
@@ -801,9 +801,9 @@ void SpawnFrog(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
 /* Bank +0x48, kind 4; state 0xB, then the record's X and Y ranges and
  * speeds. */
-void SpawnSeaMine(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnSeaMine(u32 id, u16 x, u16 y, u16 param)
 {
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
     const struct entity_params *rec;
     const struct entity_params *rec2;
@@ -817,11 +817,11 @@ void SpawnSeaMine(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->Attach(part);
     SetKind(part, 1);
     part->f.flags &= ~ENTITY_FLAG_COLLIDES;
-    rec = EntityParams(arg3);
+    rec = EntityParams(param);
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
-    rec2 = EntityParams(arg3);
+    rec2 = EntityParams(param);
     part->kind = EVENT_HIT_EXPLOSION;
     hdr->SetState(ENEMY_STATE_HOME);
     hdr->SetRangeXSpeed(rec2->p.homingXY.rangeX, rec2->p.homingXY.speedX, rec2->p.homingXY.accelX);
@@ -830,9 +830,9 @@ void SpawnSeaMine(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
 /* Bank +0xD8, kind 0xA, flag bit 6 cleared, gCrusherAnimMap; the record's
  * attack cycle; state 4. */
-void SpawnWoodenCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnWoodenCrusher(u32 id, u16 x, u16 y, u16 param)
 {
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
     const struct entity_params *rec;
     const struct entity_params *rec2;
@@ -846,11 +846,11 @@ void SpawnWoodenCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->Attach(part);
     SetKind(part, 1);
     part->f.flags &= ~ENTITY_FLAG_COLLIDES;
-    rec = EntityParams(arg3);
+    rec = EntityParams(param);
     SetMirror(part, rec);
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
-    rec2 = EntityParams(arg3);
+    rec2 = EntityParams(param);
     part->kind = EVENT_HIT_CRUSH;
     AndFlags(part, ~ENTITY_FLAG_VULNERABLE);
     hdr->anims = gCrusherAnimMap;

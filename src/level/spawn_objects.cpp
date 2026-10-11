@@ -17,9 +17,9 @@ extern "C" {
 /* Builds a sprite on sprite bank 45, resets
  * its OAM state and frame nibble, clears flags bits 7 and 2 and
  * registers it with gDecorationList's manager. */
-void SpawnSeaweed(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnSeaweed(u32 id, u16 x, u16 y, u16 param)
 {
-    Sprite *part = Sprite::Create(arg0, arg1, arg2, arg3);
+    Sprite *part = Sprite::Create(id, x, y, param);
 
     part->bank = gSpriteBankSet->Bank(45);
     part->StartAnim(0);
@@ -32,9 +32,9 @@ void SpawnSeaweed(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
 /* UNUSED - no caller anywhere in the ROM (checked src/, asm/ and the spawn
  * table). SpawnSeaweed without the animation reset. */
-void SpawnSeaweedNoAnimReset(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnSeaweedNoAnimReset(u32 id, u16 x, u16 y, u16 param)
 {
-    Sprite *part = Sprite::Create(arg0, arg1, arg2, arg3);
+    Sprite *part = Sprite::Create(id, x, y, param);
 
     part->bank = gSpriteBankSet->Bank(45);
     part->palette = part->GetAnimPaletteSlot();
@@ -47,9 +47,9 @@ void SpawnSeaweedNoAnimReset(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 /* Builds a sprite on sprite bank 44, resets
  * its OAM state and frame nibble, clears flags bits 7 and 2 and
  * registers it with gDecorationList's manager. */
-void SpawnFlame(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnFlame(u32 id, u16 x, u16 y, u16 param)
 {
-    Sprite *part = Sprite::Create(arg0, arg1, arg2, arg3);
+    Sprite *part = Sprite::Create(id, x, y, param);
 
     part->bank = gSpriteBankSet->Bank(44);
     part->StartAnim(0);
@@ -62,9 +62,9 @@ void SpawnFlame(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
 /* Plain `CreatePlatform` trampoline (docs/rom_map.md; same callee as
  * spawn_gem_platforms.cpp's twin family), kind PLATFORM_KIND_ROCK. */
-void SpawnRockPlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnRockPlatform(u32 id, u16 x, u16 y, u16 param)
 {
-    Platform::Create(arg0, arg1, arg2, arg3, PLATFORM_KIND_ROCK);
+    Platform::Create(id, x, y, param, PLATFORM_KIND_ROCK);
 }
 
 /* Entity type 0x57: plain `CreatePlatform` trampoline, kind `6` - bank 39
@@ -72,48 +72,48 @@ void SpawnRockPlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * (UpdatePlatformMover kind 6) brings it back 120 frames after the
  * animation ends. In the Neo Cortex fight the mover is
  * CreateCortexBossPlatformMover. */
-void SpawnFlipPlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnFlipPlatform(u32 id, u16 x, u16 y, u16 param)
 {
-    Platform::Create(arg0, arg1, arg2, arg3, PLATFORM_KIND_FLIP);
+    Platform::Create(id, x, y, param, PLATFORM_KIND_FLIP);
 }
 
 /* Spawns a PLATFORM_KIND_BONUS_DONE platform if gLevelState->IsBonusRoundDone()
  * is set or gLevelState+0x8C is nonzero, else PLATFORM_KIND_BONUS, and hands the
  * result to SetBonusPlatform. */
-void SpawnBonusPlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnBonusPlatform(u32 id, u16 x, u16 y, u16 param)
 {
     Platform *result;
 
     if (gLevelState->IsBonusRoundDone() || gLevelState->timeTrial)
-        result = Platform::Create(arg0, arg1, arg2, arg3, PLATFORM_KIND_BONUS_DONE);
+        result = Platform::Create(id, x, y, param, PLATFORM_KIND_BONUS_DONE);
     else
-        result = Platform::Create(arg0, arg1, arg2, arg3, PLATFORM_KIND_BONUS);
+        result = Platform::Create(id, x, y, param, PLATFORM_KIND_BONUS);
     gLevelState->SetBonusPlatform(result);
 }
 
 /* Plain `CreatePlatform` trampoline, kind PLATFORM_KIND_MEDIUM. */
-void SpawnMediumPlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnMediumPlatform(u32 id, u16 x, u16 y, u16 param)
 {
-    Platform::Create(arg0, arg1, arg2, arg3, PLATFORM_KIND_MEDIUM);
+    Platform::Create(id, x, y, param, PLATFORM_KIND_MEDIUM);
 }
 
 /* Plain `CreatePlatform` trampoline, kind PLATFORM_KIND_SMALL. */
-void SpawnSmallPlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnSmallPlatform(u32 id, u16 x, u16 y, u16 param)
 {
-    Platform::Create(arg0, arg1, arg2, arg3, PLATFORM_KIND_SMALL);
+    Platform::Create(id, x, y, param, PLATFORM_KIND_SMALL);
 }
 
 /* Plain `CreatePlatform` trampoline, kind PLATFORM_KIND_LARGE. */
-void SpawnLargePlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnLargePlatform(u32 id, u16 x, u16 y, u16 param)
 {
-    Platform::Create(arg0, arg1, arg2, arg3, PLATFORM_KIND_LARGE);
+    Platform::Create(id, x, y, param, PLATFORM_KIND_LARGE);
 }
 
 /* Plain tail-call trampoline to LaunchPad::Spawn (SpawnLaunchPad,
  * level_select.cpp). */
-void SpawnLaunchPadEntity(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnLaunchPadEntity(u32 id, u16 x, u16 y, u16 param)
 {
-    LaunchPad::Spawn(arg0, arg1, arg2, arg3);
+    LaunchPad::Spawn(id, x, y, param);
 }
 
 /* The spawner of entity types 0x0D-0x0F, 0x11, 0x36, 0x3C, 0x3E and 0x46
@@ -123,8 +123,8 @@ void SpawnNoEntity(void)
 }
 
 /* A PeriodicSpawner (0x28 bytes) that spawns a seal (SpawnSeal) every 0x78
- * frames at (arg1, arg2), always active, in the update-only list. */
-void SpawnSealSpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+ * frames at (x, y), always active, in the update-only list. */
+void SpawnSealSpawner(u32 id, u16 x, u16 y, u16 param)
 {
     PeriodicSpawner *obj;
     s32 zero;
@@ -134,8 +134,8 @@ void SpawnSealSpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     obj->callback = SpawnSeal;
     obj->period = 0x78;
     obj->phase = zero;
-    obj->x = INT_TO_Q8(arg1);
-    obj->y = INT_TO_Q8(arg2);
+    obj->x = INT_TO_Q8(x);
+    obj->y = INT_TO_Q8(y);
     obj->f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
     AddUpdateOnly(obj);
 }

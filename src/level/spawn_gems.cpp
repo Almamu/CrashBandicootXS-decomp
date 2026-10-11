@@ -35,13 +35,13 @@ extern "C" {
  * constants into callee-saved registers before the Sprite::Create call and
  * stores them from there afterwards, which is how this compiler treats a
  * variable set before the call (a literal would be loaded at the store). */
-void SpawnCrystal(u32 a0, u16 a1, u16 a2, u16 a3)
+void SpawnCrystal(u32 id, u16 x, u16 y, u16 param)
 {
     s32 bit = gLevelState->GetCurrentLevelFlags()->flags & LEVEL_FLAG_CRYSTAL;
 
     if (bit == 0) {
         u8 type = EVENT_CRYSTAL;
-        Sprite *part = Sprite::Create(a0, a1, a2, a3);
+        Sprite *part = Sprite::Create(id, x, y, param);
 
         part->bank = gSpriteBankSet->Bank(37);
         part->tag = bit;
@@ -54,14 +54,14 @@ void SpawnCrystal(u32 a0, u16 a1, u16 a2, u16 a3)
     }
 }
 
-void SpawnCrateGem(u32 a0, u16 a1, u16 a2, u16 a3)
+void SpawnCrateGem(u32 id, u16 x, u16 y, u16 param)
 {
     u8 bit = gLevelState->GetCurrentLevelFlags()->flags & LEVEL_FLAG_CRATE_GEM;
 
     if (bit == 0) {
         u8 tag = 1;
         u8 type = EVENT_CRATE_GEM;
-        Sprite *part = Sprite::Create(a0, a1, a2, a3);
+        Sprite *part = Sprite::Create(id, x, y, param);
 
         part->bank = gSpriteBankSet->Bank(32);
         part->tag = tag;
@@ -73,19 +73,19 @@ void SpawnCrateGem(u32 a0, u16 a1, u16 a2, u16 a3)
         TouchableList()->Add(part);
 
         {
-            MovingSprite *p = gEntitySpawner->SpawnEffectPart(0x2B, 2, a1, a2, bit);
+            MovingSprite *p = gEntitySpawner->SpawnEffectPart(0x2B, 2, x, y, bit);
             p->mirrorBits.gfxMode = OAM_OBJ_MODE_SEMI_TRANSPARENT;
             p->f.b.visible = 0;
         }
     }
 }
 
-void SpawnGemPathGem(u32 a0, u16 a1, u16 a2, u16 a3)
+void SpawnGemPathGem(u32 id, u16 x, u16 y, u16 param)
 {
     if ((gLevelState->GetCurrentLevelFlags()->flags & LEVEL_FLAG_GEM_PATH_GEM) == 0) {
         u8 tag = 1;
         u8 type = EVENT_GEM_PATH_GEM;
-        Sprite *part = Sprite::Create(a0, a1, a2, a3);
+        Sprite *part = Sprite::Create(id, x, y, param);
 
         part->bank = gSpriteBankSet->Bank(32);
         part->tag = tag;
@@ -98,13 +98,13 @@ void SpawnGemPathGem(u32 a0, u16 a1, u16 a2, u16 a3)
     }
 }
 
-void SpawnRedGem(u32 a0, u16 a1, u16 a2, u16 a3)
+void SpawnRedGem(u32 id, u16 x, u16 y, u16 param)
 {
     if (gLevelState->GetBossIndex() != BOSS_NEO_CORTEX) {
         if ((gLevelState->progress.flags & PROGRESS_FLAG_RED_GEM) == 0) {
             u8 tag = 3;
             u8 type = EVENT_RED_GEM;
-            Sprite *part = Sprite::Create(a0, a1, a2, a3);
+            Sprite *part = Sprite::Create(id, x, y, param);
 
             part->bank = gSpriteBankSet->Bank(32);
             part->tag = tag;
@@ -116,17 +116,17 @@ void SpawnRedGem(u32 a0, u16 a1, u16 a2, u16 a3)
             TouchableList()->Add(part);
         }
     } else {
-        SpawnCortexBossGem(a0, a1, a2, a3, CORTEX_BOSS_GEM_KIND_RED);
+        SpawnCortexBossGem(id, x, y, param, CORTEX_BOSS_GEM_KIND_RED);
     }
 }
 
-void SpawnGreenGem(u32 a0, u16 a1, u16 a2, u16 a3)
+void SpawnGreenGem(u32 id, u16 x, u16 y, u16 param)
 {
     if (gLevelState->GetBossIndex() != BOSS_NEO_CORTEX) {
         if ((gLevelState->progress.flags & PROGRESS_FLAG_GREEN_GEM) == 0) {
             u8 tag = 2;
             u8 type = EVENT_GREEN_GEM;
-            Sprite *part = Sprite::Create(a0, a1, a2, a3);
+            Sprite *part = Sprite::Create(id, x, y, param);
 
             part->bank = gSpriteBankSet->Bank(32);
             part->tag = tag;
@@ -138,18 +138,18 @@ void SpawnGreenGem(u32 a0, u16 a1, u16 a2, u16 a3)
             TouchableList()->Add(part);
         }
     } else {
-        SpawnCortexBossGem(a0, a1, a2, a3, CORTEX_BOSS_GEM_KIND_GREEN);
+        SpawnCortexBossGem(id, x, y, param, CORTEX_BOSS_GEM_KIND_GREEN);
     }
 }
 
-void SpawnYellowGem(u32 a0, u16 a1, u16 a2, u16 a3)
+void SpawnYellowGem(u32 id, u16 x, u16 y, u16 param)
 {
     if (gLevelState->GetBossIndex() != BOSS_NEO_CORTEX) {
         u8 bit = gLevelState->progress.flags & PROGRESS_FLAG_YELLOW_GEM;
 
         if (bit == 0) {
             u8 type = EVENT_YELLOW_GEM;
-            Sprite *part = Sprite::Create(a0, a1, a2, a3);
+            Sprite *part = Sprite::Create(id, x, y, param);
 
             part->bank = gSpriteBankSet->Bank(32);
             part->tag = bit;
@@ -161,6 +161,6 @@ void SpawnYellowGem(u32 a0, u16 a1, u16 a2, u16 a3)
             TouchableList()->Add(part);
         }
     } else {
-        SpawnCortexBossGem(a0, a1, a2, a3, CORTEX_BOSS_GEM_KIND_YELLOW);
+        SpawnCortexBossGem(id, x, y, param, CORTEX_BOSS_GEM_KIND_YELLOW);
     }
 }

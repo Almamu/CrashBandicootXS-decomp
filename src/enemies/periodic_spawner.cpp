@@ -51,7 +51,7 @@ void PeriodicSpawner::SetPeriod(s32 newPeriod, s32 newPhase)
  * `callback` directly.
  * UNUSED - no caller anywhere in the ROM (checked every src/ and lib/ .c
  * file and every word-aligned Thumb pointer in baserom.gba). */
-void PeriodicSpawner::SetCallback(void (*newCallback)(u32 arg, u16 x, u16 y, u16 arg3))
+void PeriodicSpawner::SetCallback(void (*newCallback)(u32 id, u16 x, u16 y, u16 param))
 {
     callback = newCallback;
 }

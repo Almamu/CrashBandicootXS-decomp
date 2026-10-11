@@ -34,35 +34,35 @@ void SpawnHoverPlayerPosition(void)
 /* Entity type 0x04: the player start of the kind-2 (hover vehicle) room
  * 16, the only room that places it. Forwards to `SpawnStartMarker`
  * (type 0x00, the start of the kind-0 rooms). */
-void SpawnHoverStartMarker(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnHoverStartMarker(u32 id, u16 x, u16 y, u16 param)
 {
-    SpawnStartMarker(arg0, arg1, arg2, arg3);
+    SpawnStartMarker(id, x, y, param);
 }
 
 /* Entity type 0x03: moves the player to the entity's position (Q8),
  * without a start marker; the underwater counterpart of type 0x01 (see
- * SpawnHoverPlayerPosition). Ignores `arg0`/`arg3` entirely, matching the
+ * SpawnHoverPlayerPosition). Ignores `id`/`param` entirely, matching the
  * ROM (a leaf function, no `push`/`pop` at all). */
-void SpawnUnderwaterPlayerPosition(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnUnderwaterPlayerPosition(u32 id, u16 x, u16 y, u16 param)
 {
-    gPlayer->x = INT_TO_Q8(arg1);
-    gPlayer->y = INT_TO_Q8(arg2);
+    gPlayer->x = INT_TO_Q8(x);
+    gPlayer->y = INT_TO_Q8(y);
 }
 
 /* Entity type 0x02: the player start of the kind-1 (underwater) rooms;
  * every kind-1 room places one and no other room does. Same trampoline
  * as `SpawnHoverStartMarker` above. */
-void SpawnUnderwaterStartMarker(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnUnderwaterStartMarker(u32 id, u16 x, u16 y, u16 param)
 {
-    SpawnStartMarker(arg0, arg1, arg2, arg3);
+    SpawnStartMarker(id, x, y, param);
 }
 
 /* Entity type 0x01: the same as `SpawnUnderwaterPlayerPosition` above, for
  * the normal rooms (see SpawnHoverPlayerPosition). */
-void SpawnPlayerPosition(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnPlayerPosition(u32 id, u16 x, u16 y, u16 param)
 {
-    gPlayer->x = INT_TO_Q8(arg1);
-    gPlayer->y = INT_TO_Q8(arg2);
+    gPlayer->x = INT_TO_Q8(x);
+    gPlayer->y = INT_TO_Q8(y);
 }
 
 /* UNUSED - no caller anywhere in the ROM (checked src/, asm/ and the spawn

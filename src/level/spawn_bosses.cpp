@@ -44,23 +44,23 @@ static inline void SetMirrorFromRecord(MovingSprite *part, u16 index)
  * the source addressable, so it gets a stack slot of its own; one copied
  * field by field is two SImode values offset in place (`subs r1, #2`).
  * #662 round 3 (the C++ had four pins and a MATCH_KEEP). */
-void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnRoomExit(u32 id, u16 x, u16 y, u16 param)
 {
     if (!gLevelState->IsInGemPath() && !gLevelState->IsInBonusRound() &&
         !gLevelState->GetRoomIndex() && gLevelTable[gLevelState->GetCurrentLevel()].theme == 0) {
-        Entity *part = Entity::Create(arg0, arg1, arg2, arg3);
+        Entity *part = Entity::Create(id, x, y, param);
 
         part->SetSize(0x64, 0x64);
         part->kind = EVENT_ROOM_EXIT;
         AddUpdateOnly(part);
     } else if (gPlayer->ctrlMode == PLAYER_CTRL_MODE_ACTION) {
-        Platform *pad = Platform::Create(arg0, arg1, arg2, arg3, PLATFORM_KIND_EXIT_PAD);
+        Platform *pad = Platform::Create(id, x, y, param, PLATFORM_KIND_EXIT_PAD);
         struct vec2 point;
 
         point = (struct vec2){ Q8_TO_INT(pad->x) - 2, Q8_TO_INT(pad->y) - 0x1E };
         gLevelState->SetCrateGemPos(&point.x);
     } else {
-        Entity *part = Entity::Create(arg0, arg1, arg2, arg3);
+        Entity *part = Entity::Create(id, x, y, param);
 
         part->SetSize(0x28, 0x28);
         part->kind = EVENT_ROOM_EXIT;
@@ -71,18 +71,18 @@ void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 /* Dingodile: his part (bank 0x288), always active, kind 1, mirrored by
  * his record, in the collidable list, and his controller
  * (DingodileCtrl, from his position), the level's boss. */
-void SpawnDingodile(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnDingodile(u32 id, u16 x, u16 y, u16 param)
 {
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MovingSprite *part = MovingSprite::Create(id, x, y, param);
     DingodileCtrl *hdr;
 
     part->bank = gSpriteBankSet->Bank(54);
     part->palette = part->GetAnimPaletteSlot();
     part->f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
     part->SetKind(1);
-    SetMirrorFromRecord(part, arg3);
+    SetMirrorFromRecord(part, param);
     CollidableList()->Add(part);
-    hdr = new DingodileCtrl(arg1, arg2);
+    hdr = new DingodileCtrl(x, y);
     part->mover = hdr;
     hdr->Attach(part);
     gLevelState->SetLevelBoss(hdr);
@@ -90,9 +90,9 @@ void SpawnDingodile(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
 /* Tiny: his part (bank 0x294) and controller (TinyCtrl), mirrored by
  * his record, always active, in the collidable list; the level's boss. */
-void SpawnTiny(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnTiny(u32 id, u16 x, u16 y, u16 param)
 {
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MovingSprite *part = MovingSprite::Create(id, x, y, param);
     TinyCtrl *hdr;
 
     part->bank = gSpriteBankSet->Bank(55);
@@ -100,7 +100,7 @@ void SpawnTiny(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr = new TinyCtrl;
     part->mover = hdr;
     hdr->Attach(part);
-    SetMirrorFromRecord(part, arg3);
+    SetMirrorFromRecord(part, param);
     part->f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
     CollidableList()->Add(part);
     gLevelState->SetLevelBoss(hdr);
@@ -109,9 +109,9 @@ void SpawnTiny(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 /* Neo Cortex: his part (bank 0x27C, animation 1) and controller
  * (CortexBossCtrl), mirrored by his record, always active, in the
  * foreground list and not animating; the level's boss. */
-void SpawnCortexBoss(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnCortexBoss(u32 id, u16 x, u16 y, u16 param)
 {
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MovingSprite *part = MovingSprite::Create(id, x, y, param);
     CortexBossCtrl *hdr;
 
     part->bank = gSpriteBankSet->Bank(53);
@@ -120,7 +120,7 @@ void SpawnCortexBoss(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr = new CortexBossCtrl;
     part->mover = hdr;
     hdr->Attach(part);
-    SetMirrorFromRecord(part, arg3);
+    SetMirrorFromRecord(part, param);
     part->f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
     ForegroundList()->Add(part);
     part->animating = 0;
@@ -135,18 +135,18 @@ static inline void SetPalette(MovingSprite *part, s32 slot)
 }
 
 /* Entity type 0x49, Mega-Mix (see mega_mix_update.cpp): a moving sprite
- * on sprite bank 30 at (arg1, arg2), its palette that of its first
+ * on sprite bank 30 at (x, y), its palette that of its first
  * animation, not mirrored, driven by a MegaMixCtrl; kind 1, not
  * colliding, out of contact, invulnerable and always active, in the
  * collidable list. */
-void SpawnMegaMix(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnMegaMix(u32 id, u16 x, u16 y, u16 param)
 {
-    MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
+    MovingSprite *part = MovingSprite::Create(id, x, y, param);
     MegaMixCtrl *hdr;
 
     part->bank = gSpriteBankSet->Bank(30);
-    part->x = INT_TO_Q8(arg1);
-    part->y = INT_TO_Q8(arg2);
+    part->x = INT_TO_Q8(x);
+    part->y = INT_TO_Q8(y);
     part->StartAnim(0);
     SetPalette(part, gPaletteCache->GetSlot(part->bank->anims->paletteId));
     part->mirrorFlags.mirrorX = 0;
