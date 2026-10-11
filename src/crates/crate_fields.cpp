@@ -37,7 +37,7 @@ void Crate::OpenLife(bool flag6)
     }
     s32 px = Q8_TO_INT(x);
     s32 py = Q8_TO_INT(y) + 3;
-    gEntitySpawner->DropExtraLife(px, py, 0, 3, flag6);
+    gEntitySpawner->DropExtraLife(px, py, 0, PICKUP_MODE_HOP_UP, flag6);
 }
 
 /* gCrateKindBreakable[kind]. */

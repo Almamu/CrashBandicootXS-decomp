@@ -22,7 +22,7 @@ extern "C" {
  * picked up to fly to the HUD. */
 void ExtraLife::CheckPickup()
 {
-    if (mode != 0 && phase <= 0x16) {
+    if (mode != PICKUP_MODE_BOB && phase <= PICKUP_PHASE_NO_PICKUP) {
         if (gPlayer->ctrlMode != PLAYER_CTRL_MODE_INPUT)
             return;
     }
@@ -72,11 +72,11 @@ void ExtraLife::PickUp(u8 randomize)
             dx = INT_TO_Q8((rv & 0x7f) + 0x24);
         }
         dy = INT_TO_Q8((rv & 0x1f) + 0x10);
-        state = 2;
+        state = EXTRA_LIFE_STATE_FLY_OFF;
     } else {
         dx = 0xb400;
         dy = 0xc00;
-        state = 1;
+        state = EXTRA_LIFE_STATE_TO_HUD;
         gHud->ShowLives();
     }
     f.b.active = 1;
@@ -103,7 +103,7 @@ void ExtraLife::Update()
 {
     u8 s = state;
 
-    if (s == 1) {
+    if (s == EXTRA_LIFE_STATE_TO_HUD) {
         /* `n` is the new x, then the new y: the arrival test computes the
          * x again from the old position and the step, as the ROM does. */
         s32 px = x, vx = velX, n;
@@ -117,7 +117,7 @@ void ExtraLife::Update()
             gLevelState->AddLife();
             MarkGone();
         }
-    } else if (s == 2) {
+    } else if (s == EXTRA_LIFE_STATE_FLY_OFF) {
         s32 fire;
 
         Fly();
@@ -136,14 +136,14 @@ void ExtraLife::Update()
         if (fire)
             MarkGone();
     } else {
-        if (mode == 0)
+        if (mode == PICKUP_MODE_BOB)
             counter++;
-        else if (++phase > 0x1f)
-            mode = 0;
+        else if (++phase > PICKUP_PHASE_LAST)
+            mode = PICKUP_MODE_BOB;
     }
 
-    if (state == 0) {
-        if (mode == 0) {
+    if (state == EXTRA_LIFE_STATE_IDLE) {
+        if (mode == PICKUP_MODE_BOB) {
             s32 sn = gSineTable[(counter & 0x7f) * 2];
 
             sn = FixedMul(sn, 0x280);
@@ -166,7 +166,7 @@ ExtraLife *ExtraLife::Create(u16 id, u16 x, u16 y, s32 unused)
     self->mirrorBits.flipX = 0;
     self->mirrorBits.flipY = 0;
     self->counter = 0;
-    self->mode = 0;
+    self->mode = PICKUP_MODE_BOB;
     self->phase = 0;
     return self;
 }
@@ -179,7 +179,7 @@ void ExtraLife::SendToHud()
     s32 newX, newY;
 
     gAudioContext->PlaySfx(SFX_EXTRA_LIFE, 0x100);
-    state = 1;
+    state = EXTRA_LIFE_STATE_TO_HUD;
     x -= INT_TO_Q8(mode);
     screenSpace = 1;
 
@@ -207,9 +207,9 @@ void ExtraLife::UpdateHop()
     y = anchor.y - dy;
     sn = gSineTable[phase * 2];
     sn = FixedMul(sn, widths.a[mode - 1]);
-    if (mode == 1)
+    if (mode == PICKUP_MODE_HOP_LEFT)
         x = anchor.x - sn;
-    else if (mode == 2)
+    else if (mode == PICKUP_MODE_HOP_RIGHT)
         x = anchor.x + sn;
     else
         x = anchor.x;
@@ -236,7 +236,7 @@ ExtraLife::~ExtraLife()
 /* On the spot. */
 void ExtraLife::Reset()
 {
-    state = 0;
+    state = EXTRA_LIFE_STATE_IDLE;
 }
 
 ExtraLife::ExtraLife()
@@ -247,7 +247,7 @@ ExtraLife::ExtraLife()
 /* While on the spot, and while the player is in contact: CheckPickup. */
 s32 ExtraLife::CheckPlayerContact()
 {
-    if (state == 0) {
+    if (state == EXTRA_LIFE_STATE_IDLE) {
         if (gPlayer->f.flags >> ENTITY_BIT_COLLIDES)
             CheckPickup();
     }

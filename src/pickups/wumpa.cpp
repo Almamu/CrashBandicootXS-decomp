@@ -32,7 +32,7 @@ void Wumpa::SendToHud()
     s32 newX, newY;
 
     gAudioContext->PlaySfx(SFX_WUMPA, 0x100);
-    state = 1;
+    state = WUMPA_STATE_TO_HUD;
     x -= INT_TO_Q8(mode);
     affine = 0xa0;
     ClampFrame(this);
@@ -52,7 +52,7 @@ void Wumpa::SendToHud()
 /* The payout: 10 drops, the first on the next frame (Update). */
 void Wumpa::StartPayout()
 {
-    state = 3;
+    state = WUMPA_STATE_PAYOUT;
     counter = 0xa;
 }
 
@@ -69,9 +69,9 @@ void Wumpa::UpdateHop()
     y = anchor.y - dy;
     sn = gSineTable[phase * 2];
     sn = FixedMul(sn, widths.a[mode - 1]);
-    if (mode == 1)
+    if (mode == PICKUP_MODE_HOP_LEFT)
         x = anchor.x - sn;
-    else if (mode == 2)
+    else if (mode == PICKUP_MODE_HOP_RIGHT)
         x = anchor.x + sn;
     else
         x = anchor.x;
@@ -99,7 +99,7 @@ Wumpa::~Wumpa()
 void Wumpa::Reset()
 {
     f.b.vulnerable = 1;
-    state = 0;
+    state = WUMPA_STATE_IDLE;
 }
 
 Wumpa::Wumpa()
@@ -110,7 +110,7 @@ Wumpa::Wumpa()
 /* While on the spot, and while the player is in contact: CheckPickup. */
 s32 Wumpa::CheckPlayerContact()
 {
-    if (state == 0) {
+    if (state == WUMPA_STATE_IDLE) {
         if (gPlayer->f.flags >> ENTITY_BIT_COLLIDES)
             CheckPickup();
     }
@@ -129,7 +129,7 @@ void Wumpa::SetHop(s32 mode)
 {
     this->mode = mode;
     phase = 0;
-    if (mode == 0xff)
+    if (mode == WUMPA_MODE_PAYOUT)
         StartPayout();
 }
 

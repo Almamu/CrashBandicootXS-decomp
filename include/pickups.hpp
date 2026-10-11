@@ -56,6 +56,27 @@ static inline s32 Affine(Sprite *part)
     return part->affine;
 }
 
+/* The extra life's and the wumpa's `mode` (#843, docs/flags/pickups.md):
+ * how it moves on the spot. A hop's x offset scale is
+ * gExtraLifeHopWidths/gWumpaHopWidths[mode - 1]. SendToHud reads `mode` as
+ * a pixel offset instead (the bounce crate's DropWumpa(..., 0xe, true)). */
+#define PICKUP_MODE_BOB 0       // bobs (`counter` steps a sine)
+#define PICKUP_MODE_HOP_LEFT 1  // hops to the left (width 0x300)
+#define PICKUP_MODE_HOP_RIGHT 2 // hops to the right (width 0: in place)
+#define PICKUP_MODE_HOP_UP 3    // hops in place (UpdateHop's else)
+#define WUMPA_MODE_PAYOUT 0xff  // the wumpa only: SetHop/Create/DropWumpa start the payout
+
+/* `phase` steps a hop (UpdateHop's sine index); then `mode` goes back to
+ * PICKUP_MODE_BOB. Up to PICKUP_PHASE_NO_PICKUP, the hop can't be picked
+ * up but on a hover level. */
+#define PICKUP_PHASE_NO_PICKUP 0x16
+#define PICKUP_PHASE_LAST 0x1f
+
+/* ExtraLife's `state`. */
+#define EXTRA_LIFE_STATE_IDLE 0    // on the spot: bobs or hops, picked up on contact
+#define EXTRA_LIFE_STATE_TO_HUD 1  // flies to the HUD's lives counter, adds a life there
+#define EXTRA_LIFE_STATE_FLY_OFF 2 // flies off the screen (`counter`: which way), gone
+
 /* The extra life (gExtraLifeVtable). It bobs on the spot (`counter`
  * steps a sine) or hops (`mode` 1-3, `phase` steps the hop: UpdateHop)
  * until the player touches it (CheckPickup); then it flies off (`state` 1:
@@ -116,6 +137,10 @@ COMPILE_TIME_ASSERT(pickups_hpp, sizeof(ExtraLife) == 0x54);
 /* The wumpa fruit (gWumpaVtable): the extra life's fields and behaviour,
  * plus a payout (`state` 3: it stays at the player and drops 10 wumpas
  * that fly to the HUD, one every 11 frames; StartPayout). */
+#define WUMPA_STATE_IDLE 0    // on the spot: bobs or hops, picked up on contact
+#define WUMPA_STATE_TO_HUD 1  // flies to the HUD's wumpa counter, collected there
+#define WUMPA_STATE_FLY_OFF 2 // flies off the screen (`counter`: which way), gone
+#define WUMPA_STATE_PAYOUT 3  // stays at the player, dropping 10 wumpas to the HUD
 class Wumpa : public Sprite
 {
 public:

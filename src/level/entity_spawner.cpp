@@ -130,7 +130,7 @@ Wumpa *EntitySpawner::DropWumpa(u32 x, u32 y, u32 p3, u32 p4, bool toHud)
     Wumpa *part = 0;
 
     if (gLevelState->timeTrial == 0) {
-        if (toHud || p4 == 0xff)
+        if (toHud || p4 == WUMPA_MODE_PAYOUT)
             part = Wumpa::Create(0xffff, x, y, 0xffff);
         else
             part = Wumpa::Create(0xffff, x, y, 0);
@@ -138,7 +138,7 @@ Wumpa *EntitySpawner::DropWumpa(u32 x, u32 y, u32 p3, u32 p4, bool toHud)
         part->counter = p3;
         part->mode = p4;
         part->phase = 0;
-        if (p4 == 0xff)
+        if (p4 == WUMPA_MODE_PAYOUT)
             part->StartPayout();
         if (toHud)
             part->SendToHud();
