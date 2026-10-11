@@ -109,7 +109,8 @@ Crate *Crate::Create(u16 id, u16 x, u16 y, u16 slot, u8 type)
         self->StartAnim(0x1f);
         break;
     case CRATE_KIND_CHECKPOINT:
-        self->paramA = (u32)(PLACEMENT(slot)->flags << 25) >> 31;
+        self->paramA =
+            TEST_BIT_SIGN(PLACEMENT(slot)->flags, CRATE_PLACEMENT_BIT_CHECKPOINT_MIRROR_X);
         self->StartAnim(0x1a);
         break;
     case CRATE_KIND_AKU_AKU:
@@ -198,12 +199,12 @@ Crate *Crate::Create(u16 id, u16 x, u16 y, u16 slot, u8 type)
             }
             self->paramB = rec->param6;
             self->paramA = 0;
-            if (rec->options & 2)
-                self->paramA = 1;
-            if (rec->options & 4)
-                self->paramA |= 2;
-            if (rec->options & 8)
-                self->paramA |= 4;
+            if (rec->options & CRATE_PLACEMENT_OPTION_SLOT_MYSTERY)
+                self->paramA = CRATE_SLOT_FACE_MYSTERY;
+            if (rec->options & CRATE_PLACEMENT_OPTION_SLOT_LIFE)
+                self->paramA |= CRATE_SLOT_FACE_LIFE;
+            if (rec->options & CRATE_PLACEMENT_OPTION_SLOT_TNT)
+                self->paramA |= CRATE_SLOT_FACE_TNT;
         }
         break;
     case CRATE_KIND_TIME_1:

@@ -52,15 +52,24 @@ struct crate_group {
 #define CRATE_SLOT_CLEAR_SPINS   0xc7
 #define CRATE_SLOT_CLEAR_STAGE   0x3f
 
+/* A slot crate's paramA: the faces it may stop on (Crate::UpdateSlot
+ * skips a face whose bit is clear; Crate::OpenSlot opens the face of the
+ * phase it stopped on). */
+#define CRATE_SLOT_FACE_MYSTERY 1 // phase 2, animation 0xB: a "?" crate (OpenMystery)
+#define CRATE_SLOT_FACE_LIFE    2 // phase 1, animation 9: an extra life
+#define CRATE_SLOT_FACE_TNT     4 // phase 3, animation 0xD: it explodes
+
 /* A crate's placement record: entry `slot` of the room's parameter
  * records (`gEntityFlags->list`, level_data.h), as CreateCrate reads it.
  * Bytes 6-8 are per-kind (see Crate's paramA/paramB/fallSpeed and the
  * word at 0x48). */
 struct crate_placement {
     u8 flags;   // 0x00 - bit 5: has a time-trial kind; bit 6: Aku Aku when assisted
-                //        (checkpoint: SetCheckpointAtPlayer's flag); bit 7: checkpoint
-                //        when assisted (CRATE_PLACEMENT_FLAG_*)
+                //        (checkpoint: the respawn's X mirror); bit 7: checkpoint
+                //        when assisted (CRATE_PLACEMENT_FLAG_*; bits 1-2, the basic
+                //        crate's mirror: ENTITY_PARAMS_FLAG_*, constants/entity_params.h)
     u8 options; // 0x01 - bit 0: life crate when assisted; bits 1-3 (slot): its faces
+                //        (CRATE_PLACEMENT_OPTION_*); bits 4-7 unused
     u8 unk_02[2];
     s16 trialKind;     // 0x04 - kind + 0x15 in a time trial, 0x1B read as 0x15
     u8 param6;         // 0x06 - 3/5: paramA (group id); 11/15: paramB
@@ -78,9 +87,25 @@ struct crate_placement {
 #define CRATE_PLACEMENT_FLAG_ASSIST_AKU_AKU    0x40
 #define CRATE_PLACEMENT_FLAG_ASSIST_CHECKPOINT 0x80 // also: an activated "?"/slot crate is a checkpoint
 
+/* On a checkpoint crate, bit 6 is instead the respawn's X mirror:
+ * Crate::Create copies it into paramA (`TEST_BIT_SIGN`, core.h), and
+ * breaking the crate hands it to SetCheckpointAtPlayer, which keeps it as
+ * LevelProgress::checkpointFlags (CHECKPOINT_FLAG_MIRROR_X). Set on 5
+ * checkpoint crates in the data. */
+#define CRATE_PLACEMENT_BIT_CHECKPOINT_MIRROR_X  6
+#define CRATE_PLACEMENT_FLAG_CHECKPOINT_MIRROR_X (1 << CRATE_PLACEMENT_BIT_CHECKPOINT_MIRROR_X)
+
 /* crate_placement.options bit 0: an assisted "?" or slot crate becomes a
  * life crate (after the two flags above). */
 #define CRATE_PLACEMENT_OPTION_ASSIST_LIFE 1
+
+/* crate_placement.options bits 1-3: the faces a slot crate may stop on
+ * (Crate::Create turns them into paramA's CRATE_SLOT_FACE_*). Every slot
+ * crate in the data has the "?" and life faces. Bits 4-7 are never set
+ * or read. */
+#define CRATE_PLACEMENT_OPTION_SLOT_MYSTERY 2
+#define CRATE_PLACEMENT_OPTION_SLOT_LIFE    4
+#define CRATE_PLACEMENT_OPTION_SLOT_TNT     8
 
 /* Crate::trialKind with no time-trial kind (ResetCrate):
  * ConvertCratesForTimeTrial leaves such a crate alone. */
@@ -115,19 +140,19 @@ public:
                          //   on landing (DropCratesAbove/UpdateCrateFall), 0xFF once it
                          //   has blasted (BlastNearbyCrates)
     };
-    s8 fallSpeed;      // 0x4C - UpdateCrateFall's per-tick speed (ramps up to 5); the iron
-                       //        switch instead keeps its step delay here (placement byte 8,
-                       //        reloaded into `timer` after each step)
-    u8 state;          // 0x4D - low 7 bits: state (1: committed), bit 7: busy (CRATE_STATE_*)
-    u8 kind;           // 0x4E - index into the gCrateKind* tables and gCrateHitResponse
-    u8 timer;          // 0x4F
-    u8 paramA;         // 0x50 - per-kind parameter (placement byte 6 for kinds 3/5):
-                       //        1 (checkpoint): placement flag bit 6, handed to
-                       //        SetCheckpointAtPlayer; 3 (iron switch): group id, then the
-                       //        step counter once activated; 5 (outline): group id (matches
-                       //        its switch's); 12 (bouncy wumpa): set while a bounce
-                       //        animation runs; 15 (slot): mask of the faces it may stop on
-                       //        (placement byte 1 bits 1-3)
+    s8 fallSpeed; // 0x4C - UpdateCrateFall's per-tick speed (ramps up to 5); the iron
+                  //        switch instead keeps its step delay here (placement byte 8,
+                  //        reloaded into `timer` after each step)
+    u8 state;     // 0x4D - low 7 bits: state (1: committed), bit 7: busy (CRATE_STATE_*)
+    u8 kind;      // 0x4E - index into the gCrateKind* tables and gCrateHitResponse
+    u8 timer;     // 0x4F
+    u8 paramA;    // 0x50 - per-kind parameter (placement byte 6 for kinds 3/5):
+                  //        1 (checkpoint): placement flag bit 6, the respawn's X
+    //        mirror, handed to SetCheckpointAtPlayer; 3 (iron switch): group id, then the
+    //        step counter once activated; 5 (outline): group id (matches
+    //        its switch's); 12 (bouncy wumpa): set while a bounce
+    //        animation runs; 15 (slot): mask of the faces it may stop on
+    //        (CRATE_SLOT_FACE_*, from placement byte 1 bits 1-3)
     u8 paramB;         // 0x51 - per-kind parameter (placement byte 6/7): 3 (iron switch):
                        //        number of steps; 5 (outline): the step it solidifies on;
                        //        11 ("?"): contents (9: random, OpenMysteryCrate); 12 (bouncy

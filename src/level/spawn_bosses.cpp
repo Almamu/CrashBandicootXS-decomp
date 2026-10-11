@@ -19,8 +19,8 @@ static inline void SetMirrorFromRecord(MovingSprite *part, u16 index)
 {
     const struct entity_params *rec = EntityParams(index);
 
-    part->mirrorFlags.mirrorX = (rec->flags >> 1 ^ 1) & 1;
-    part->mirrorFlags.mirrorY = rec->flags >> 2 & 1;
+    part->mirrorFlags.mirrorX = (rec->flags >> ENTITY_PARAMS_BIT_FLIP_X ^ 1) & 1;
+    part->mirrorFlags.mirrorY = TEST_BIT_SHR(rec->flags, ENTITY_PARAMS_BIT_FLIP_Y);
 }
 
 /* Entity type 0x55, the room's exit. Every room but room 16 and the boss

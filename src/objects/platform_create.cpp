@@ -79,7 +79,7 @@ Platform *Platform::Create(u16 id, u16 x, u16 y, u16 index, s32 kind)
         break;
     case PLATFORM_TYPE_WARP_BONUS:
         obj->type = PLATFORM_TYPE_WARP_BONUS;
-        obj->SetExitMirror(rec->flags & 1);
+        obj->SetExitMirror(rec->flags & ENTITY_PARAMS_FLAG_EXIT_MIRROR);
         break;
     case PLATFORM_TYPE_WARP_GEM_PATH:
         obj->type = PLATFORM_TYPE_WARP_GEM_PATH;

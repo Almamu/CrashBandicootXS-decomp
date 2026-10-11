@@ -141,8 +141,8 @@ void SpawnBasicCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     Crate *obj = Crate::Create(arg0, arg1, arg2, arg3, CRATE_KIND_BASIC);
     const struct entity_params *rec = EntityParams(arg3);
 
-    if (rec->flags & 2)
+    if (rec->flags & ENTITY_PARAMS_FLAG_FLIP_X)
         obj->SetFlipX(1);
-    if (rec->flags & 4)
+    if (rec->flags & ENTITY_PARAMS_FLAG_FLIP_Y)
         obj->SetFlipY(1);
 }

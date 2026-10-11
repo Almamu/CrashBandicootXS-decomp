@@ -29,7 +29,7 @@ void SpawnStartMarker(u32 arg0, u16 x, u16 y, u16 z)
     if (gLevelState->GetSpawnAtStart()) {
         const struct entity_params *rec = EntityParams(z);
 
-        gPlayer->SetFlipX((rec->flags >> 1) & 1);
+        gPlayer->SetFlipX(TEST_BIT_SHR(rec->flags, ENTITY_PARAMS_BIT_FLIP_X));
         gPlayer->x = INT_TO_Q8(x);
         gPlayer->y = INT_TO_Q8(y);
     }

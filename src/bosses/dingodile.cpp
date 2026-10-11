@@ -425,8 +425,8 @@ void DingodileCtrl::SpawnShieldOrRocket(s32 mode, u16 x, u16 y, MovingSprite *ow
     p->mover = ctl;
     ctl->Attach(p);
     bits = &((u8 *)gEntityFlags->list->params)[*gEntityFlags->list->paramOffsets];
-    p->mirrorBits.flipX = ((*bits >> 1) ^ 1) & 1;
-    p->mirrorBits.flipY = (*bits >> 2) & 1;
+    p->mirrorBits.flipX = ((*bits >> ENTITY_PARAMS_BIT_FLIP_X) ^ 1) & 1;
+    p->mirrorBits.flipY = TEST_BIT_SHR(*bits, ENTITY_PARAMS_BIT_FLIP_Y);
     p->f.b.active = 1;
     if (mode == DINGODILE_SPAWN_MODE_SHIELD)
         TouchableList()->Add(p);
