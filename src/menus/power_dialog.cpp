@@ -77,7 +77,7 @@ PowerDialog::PowerDialog(s32 titleText, s32 descText, s32 type) : bg(0, 0x1f, 0,
     *(vu16 *)REG_ADDR_BLDY = bldy.evy;
     dispcnt.raw = 0;
     dispcnt.bits.objMap1D = 1;
-    dispcnt.bits.mode = 0;
+    dispcnt.bits.mode = DISPCNT_MODE_0;
     dispcnt.bits.bg0 = 1;
     dispcnt.bits.obj = 1;
     this->titleText = titleText;

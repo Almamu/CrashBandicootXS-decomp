@@ -330,10 +330,10 @@ void EnemyCtrl::HandleEvent(MovingSprite *, s32 event, s32)
     case EVENT_ATTACK_SUPER_BODY_SLAM:
         {
             MovingSprite *obj = SpawnAt(0x29, Q8_TO_INT(target->x), Q8_TO_INT(target->y));
-            s32 one = 1;
+            s32 mode = OAM_OBJ_MODE_SEMI_TRANSPARENT;
 
             obj->f.b.visible = 0;
-            obj->mirrorFlags.gfxMode = one;
+            obj->mirrorFlags.gfxMode = mode;
             target->MarkGone();
         }
         break;

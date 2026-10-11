@@ -271,7 +271,7 @@ void ActionCtrl::StateRun()
             gPlayer->listCount = alt;
             obj = gEntitySpawner->LaunchEffectPart(0x29, 1, 0, 0xA, alt, gPlayer);
             obj->f.b.visible = 0;
-            obj->mirrorBits.gfxMode = 1;
+            obj->mirrorBits.gfxMode = OAM_OBJ_MODE_SEMI_TRANSPARENT;
         }
     }
     {
@@ -556,7 +556,7 @@ void ActionCtrl::StateAirborne()
                 Q8_TO_INT_INPLACE(y);
                 y += 0xC;
                 obj = SpawnSpark(x, y, 1);
-                obj->mirrorBits.gfxMode = 1;
+                obj->mirrorBits.gfxMode = OAM_OBJ_MODE_SEMI_TRANSPARENT;
                 obj->f.b.visible = 0;
                 obj->f.b.visible = 0;
                 OrMaskByte(&obj->mirror, -0x11, 0x10);
@@ -572,7 +572,7 @@ void ActionCtrl::StateAirborne()
                 Q8_TO_INT_INPLACE(y);
                 y += 0xC;
                 obj = SpawnSpark(x, y, bit4);
-                obj->mirrorBits.gfxMode = 1;
+                obj->mirrorBits.gfxMode = OAM_OBJ_MODE_SEMI_TRANSPARENT;
                 obj->f.b.visible = 0;
                 AndByte(&obj->mirror, -0x11);
                 frame = 3;

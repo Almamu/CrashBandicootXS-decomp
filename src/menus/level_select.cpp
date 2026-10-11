@@ -116,7 +116,7 @@ LevelSelect::LevelSelect(s32 arg)
     *(vu16 *)REG_ADDR_BLDY = bldy.evy;
     dispcnt.raw = 0;
     dispcnt.bits.objMap1D = 1;
-    dispcnt.bits.mode = 1;
+    dispcnt.bits.mode = DISPCNT_MODE_1;
     dispcnt.bits.bg0 = 1;
     dispcnt.bits.bg1 = 1;
     dispcnt.bits.obj = 1;

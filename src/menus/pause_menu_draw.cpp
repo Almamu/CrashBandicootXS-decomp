@@ -185,13 +185,13 @@ void PauseMenu::DrawRows()
         label = (u8 *)GetUiText(rows[i].labelId);
         x = 0x32 - ((u32)gSmallFont->MeasureText(label) >> 1);
         switch (rows[i].type) {
-        case 4:
+        case PAUSE_ROW_TYPE_MUSIC:
             x -= (u32)gSmallFont->MeasureText(musicVolumeText) >> 1;
             gSmallFont->SetPos(x, y);
             gSmallFont->DrawText(label);
             gSmallFont->DrawText(musicVolumeText);
             break;
-        case 5:
+        case PAUSE_ROW_TYPE_SOUND:
             x -= (u32)gSmallFont->MeasureText(soundVolumeText) >> 1;
             gSmallFont->SetPos(x, y);
             gSmallFont->DrawText(label);

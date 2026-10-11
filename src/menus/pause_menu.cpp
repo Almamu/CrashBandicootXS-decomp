@@ -100,7 +100,7 @@ PauseMenu::PauseMenu() : bg(0, 0x1f, 0, 3)
     *(vu16 *)REG_ADDR_BLDY = bldy.evy;
     dispcnt.raw = 0;
     dispcnt.bits.objMap1D = 1;
-    dispcnt.bits.mode = 0;
+    dispcnt.bits.mode = DISPCNT_MODE_0;
     dispcnt.bits.bg0 = 1;
     dispcnt.bits.obj = 1;
     bg.Load(&gPauseMenuBg);
@@ -234,7 +234,8 @@ s32 PauseMenu::Loop()
         }
         if (KEYS.pressed & A_BUTTON) {
             result = rows[cursor].type;
-            if ((u32)(result - 4) <= 1) {
+            if ((u32)(result - PAUSE_ROW_TYPE_MUSIC) <=
+                PAUSE_ROW_TYPE_SOUND - PAUSE_ROW_TYPE_MUSIC) {
                 gAudioContext->PlaySfx(SFX_MENU_ERROR, 0x100);
             } else {
                 gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
@@ -243,7 +244,7 @@ s32 PauseMenu::Loop()
         }
         if (KEYS.pressed & START_BUTTON) {
             gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
-            result = 0;
+            result = PAUSE_ROW_TYPE_RESUME;
             break;
         }
     }

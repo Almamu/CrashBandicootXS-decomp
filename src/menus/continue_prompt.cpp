@@ -37,7 +37,7 @@ ContinuePrompt::ContinuePrompt()
     *(vu16 *)PLTT = 0;
     dispcnt.raw = 0;
     dispcnt.bits.objMap1D = 1;
-    dispcnt.bits.mode = 0;
+    dispcnt.bits.mode = DISPCNT_MODE_0;
     dispcnt.bits.bg0 = 1;
     dispcnt.bits.bg1 = 1;
     dispcnt.bits.bg2 = 1;

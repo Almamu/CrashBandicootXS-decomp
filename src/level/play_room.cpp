@@ -252,7 +252,7 @@ s32 LevelProgress::PlayRoom()
  * (`CullPartList` on `gForegroundList`, `gTouchableList`,
  * `gCollidableList` and `gDecorationList`), a
  * `UpdateRoomFrame()` VRAM/OAM refresh, and the fade-cluster
- * `SetDispcntMode(0)`/`ShowObj`/`CommitDispcnt`/`CommitBlendRegs` reset
+ * `SetDispcntMode(DISPCNT_MODE_0)`/`ShowObj`/`CommitDispcnt`/`CommitBlendRegs` reset
  * quartet, landing at the **wait loop** (`_08023E5A`/`_08023D7C`,
  * `docs/rom_map.md`'s "Traced the fade-to-black's trigger" section):
  * poll `IsRoomExitRequested` (the `gRoomExitRequested` readiness flag,
@@ -403,7 +403,7 @@ s32 LevelProgress::RunRoom()
     gCollidableList->Cull();
     gDecorationList->Cull();
     UpdateRoomFrame();
-    SetDispcntMode(0);
+    SetDispcntMode(DISPCNT_MODE_0);
     SetObjMapping1D();
     ShowObj();
     CommitDispcnt();
@@ -416,15 +416,15 @@ s32 LevelProgress::RunRoom()
         if (!gPlayer->dead && (gKeys.half.pressed & START_BUTTON)) {
             s32 r = RunPauseMenu();
 
-            if (r == 0) {
+            if (r == PAUSE_ROW_TYPE_RESUME) {
                 ResumeRoomAfterPause();
                 gInput->Update();
             }
-            if (r == 1) {
+            if (r == PAUSE_ROW_TYPE_RESTART) {
                 ret = ROOM_EXIT_RETRY;
                 goto fade;
             }
-            if (r == 2) {
+            if (r == PAUSE_ROW_TYPE_QUIT) {
                 ret = ROOM_EXIT_QUIT;
                 goto fade;
             }

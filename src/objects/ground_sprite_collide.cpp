@@ -82,7 +82,7 @@ s32 GroundSprite::ProbeTerrainAxes()
 
         origY = y;
         pos = *(struct vec2 *)&Pos();
-        OffsetToHitboxEdge(&pos, 8, (void *)quad);
+        OffsetToHitboxEdge(&pos, PART_DIR_DOWN, (void *)quad);
         pos.x = Q8_TO_INT(pos.x);
         pos.y = Q8_TO_INT(pos.y);
         if (mirrorBits.flipX < 0)
@@ -178,7 +178,7 @@ u8 GroundSprite::ProbeFloor(const struct hitbox_quad *quad, u8 *outFlag)
     s32 grounded;
 
     pos = *(struct vec2 *)&Pos();
-    OffsetToHitboxEdge(&pos, 8, (void *)quad);
+    OffsetToHitboxEdge(&pos, PART_DIR_DOWN, (void *)quad);
     pos.x = Q8_TO_INT(pos.x);
     pos.y = Q8_TO_INT(pos.y);
     grounded = (f.bytes.flags2 >> ENTITY_BIT2_GROUNDED) & 1;

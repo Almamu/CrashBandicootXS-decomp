@@ -195,15 +195,15 @@ s32 InitActorCategory(s32 category)
                     open = -CanPauseActorCategory() < 0;
                 if (open) {
                     result = RunCategoryPauseMenu(dma);
-                    if (result == 2) {
+                    if (result == PAUSE_ROW_TYPE_QUIT) {
                         ret = ROOM_EXIT_QUIT;
                         goto done;
                     }
-                    if (result == 3) {
+                    if (result == PAUSE_ROW_TYPE_UNK3) {
                         ret = ROOM_EXIT_CLEARED;
                         goto done;
                     }
-                    if (result == 1) {
+                    if (result == PAUSE_ROW_TYPE_RESTART) {
                         ret = ROOM_EXIT_RETRY;
                         goto done;
                     }

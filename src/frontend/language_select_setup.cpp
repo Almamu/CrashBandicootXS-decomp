@@ -23,7 +23,7 @@ void LanguageSelect::LoadBg()
 
     dispcnt.raw = zero;
     dispcnt.bits.objMap1D = 1;
-    dispcnt.bits.mode = 1;
+    dispcnt.bits.mode = DISPCNT_MODE_1;
     dispcnt.bits.bg0 = 1;
     dispcnt.bits.bg1 = 0;
     dispcnt.bits.obj = 1;
@@ -68,7 +68,7 @@ LanguageSelect::LanguageSelect()
     FadeBrightness(FADE_FLAG_IN, 1, 0);
     SetObjMapping1D();
     ShowObj();
-    SetDispcntMode(1);
+    SetDispcntMode(DISPCNT_MODE_1);
     CommitDispcnt();
 }
 

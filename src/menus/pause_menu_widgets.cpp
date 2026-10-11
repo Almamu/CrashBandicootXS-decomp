@@ -65,7 +65,7 @@ static inline void FormatPercent(u8 *buf, s32 value)
     buf[len + 4] = '\0';
 }
 
-/* On the music row (type 4) or the sound row (type 5), turns that volume
+/* On the music row (PAUSE_ROW_TYPE_MUSIC) or the sound row (PAUSE_ROW_TYPE_SOUND), turns that volume
  * down one 5% step, unless it is 0: the new " <NN%>" text, and the
  * volume `((v << 8) + 1) / 20` set on the audio context. The sound row
  * also plays a cue. */
@@ -74,7 +74,7 @@ void PauseMenu::VolumeDown()
     s32 count;
 
     switch (rows[cursor].type) {
-    case 4:
+    case PAUSE_ROW_TYPE_MUSIC:
         count = musicVolume;
         if (count != 0) {
             count--;
@@ -83,7 +83,7 @@ void PauseMenu::VolumeDown()
             gAudioContext->SetMusicVolume(((musicVolume << 8) + 1) / 20);
         }
         break;
-    case 5:
+    case PAUSE_ROW_TYPE_SOUND:
         count = soundVolume;
         if (count != 0) {
             count--;
@@ -102,7 +102,7 @@ void PauseMenu::VolumeUp()
     s32 count;
 
     switch (rows[cursor].type) {
-    case 4:
+    case PAUSE_ROW_TYPE_MUSIC:
         count = musicVolume;
         if (count <= 0x13) {
             count++;
@@ -111,7 +111,7 @@ void PauseMenu::VolumeUp()
             gAudioContext->SetMusicVolume(((musicVolume << 8) + 1) / 20);
         }
         break;
-    case 5:
+    case PAUSE_ROW_TYPE_SOUND:
         count = soundVolume;
         if (count <= 0x13) {
             count++;

@@ -46,9 +46,9 @@ Hud::Hud()
     s32 i;
 
     parts = new HudPart[35];
-    livesSlide = 0;
-    crateSlide = 0;
-    wumpaSlide = 0;
+    livesSlide = HUD_SLIDE_STATE_HIDDEN;
+    crateSlide = HUD_SLIDE_STATE_HIDDEN;
+    wumpaSlide = HUD_SLIDE_STATE_HIDDEN;
     livesSlideTimer = 0;
     crateSlideTimer = 0;
     wumpaSlideTimer = 0;

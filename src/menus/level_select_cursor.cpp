@@ -38,7 +38,7 @@ LevelSelectCursor::LevelSelectCursor()
     SetPos(0x78, 0x35);
     oam.y = line.y0 - 0x20;
     oam.affineMode = OAM_AFFINE_MODE_AFFINE;
-    oam.objMode = 0;
+    oam.objMode = OAM_OBJ_MODE_NORMAL;
     oam.mosaic = 0;
     oam.bpp = 0;
     oam.shape = 0;

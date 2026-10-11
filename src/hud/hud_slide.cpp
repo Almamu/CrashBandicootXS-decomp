@@ -39,33 +39,33 @@ void Hud::UpdateSlides()
         s32 v;
 
         v = livesSlide;
-        if (v == 1) {
+        if (v == HUD_SLIDE_STATE_IN) {
             goto set0;
         }
-        if (v <= 1) {
+        if (v <= HUD_SLIDE_STATE_IN) {
             goto skip0;
         }
-        if (v != 2) {
+        if (v != HUD_SLIDE_STATE_HELD) {
             goto skip0;
         }
         livesSlideTimer = 0x14;
     set0:
-        livesSlide = 3;
+        livesSlide = HUD_SLIDE_STATE_OUT;
     skip0:
 
         v = wumpaSlide;
-        if (v == 1) {
+        if (v == HUD_SLIDE_STATE_IN) {
             goto set1;
         }
-        if (v <= 1) {
+        if (v <= HUD_SLIDE_STATE_IN) {
             goto skip1;
         }
-        if (v != 2) {
+        if (v != HUD_SLIDE_STATE_HELD) {
             goto skip1;
         }
         wumpaSlideTimer = 0x14;
     set1:
-        wumpaSlide = 3;
+        wumpaSlide = HUD_SLIDE_STATE_OUT;
     skip1:;
     }
 
@@ -86,9 +86,9 @@ void Hud::ShowCrates()
     if (gLevelState->timeTrial == 0) {
         slotState = crateSlide;
 
-        if (slotState == 0 || slotState == 3) {
-            crateSlide = 1;
-        } else if (slotState == 2) {
+        if (slotState == HUD_SLIDE_STATE_HIDDEN || slotState == HUD_SLIDE_STATE_OUT) {
+            crateSlide = HUD_SLIDE_STATE_IN;
+        } else if (slotState == HUD_SLIDE_STATE_HELD) {
             crateSlideTimer = 0x78;
         }
     }
@@ -102,9 +102,9 @@ void Hud::ShowLives()
     if (gLevelState->timeTrial == 0) {
         slotState = livesSlide;
 
-        if (slotState == 0 || slotState == 3) {
-            livesSlide = 1;
-        } else if (slotState == 2) {
+        if (slotState == HUD_SLIDE_STATE_HIDDEN || slotState == HUD_SLIDE_STATE_OUT) {
+            livesSlide = HUD_SLIDE_STATE_IN;
+        } else if (slotState == HUD_SLIDE_STATE_HELD) {
             livesSlideTimer = 0x78;
         }
     }
@@ -118,9 +118,9 @@ void Hud::ShowWumpa()
     if (gLevelState->timeTrial == 0) {
         slotState = wumpaSlide;
 
-        if (slotState == 0 || slotState == 3) {
-            wumpaSlide = 1;
-        } else if (slotState == 2) {
+        if (slotState == HUD_SLIDE_STATE_HIDDEN || slotState == HUD_SLIDE_STATE_OUT) {
+            wumpaSlide = HUD_SLIDE_STATE_IN;
+        } else if (slotState == HUD_SLIDE_STATE_HELD) {
             wumpaSlideTimer = 0x78;
         }
     }
@@ -146,25 +146,26 @@ void Hud::ShowCounters()
 void Hud::StepSlide(s32 *state, s32 *timer, s32 threshold)
 {
     switch (*state) {
-    case 1:
+    case HUD_SLIDE_STATE_IN:
         *timer += 1;
         if (*timer > 0x13) {
-            *state = 2;
+            *state = HUD_SLIDE_STATE_HELD;
             *timer = threshold;
         }
         break;
-    case 0:
+    case HUD_SLIDE_STATE_HIDDEN:
         break;
-    case 3:
+    case HUD_SLIDE_STATE_OUT:
         *timer -= 1;
         if (*timer == 0) {
+            /* HUD_SLIDE_STATE_HIDDEN: the ROM stores the timer's 0 */
             *state = *timer;
         }
         break;
-    case 2:
+    case HUD_SLIDE_STATE_HELD:
         *timer -= 1;
         if (*timer == 0) {
-            *state = 3;
+            *state = HUD_SLIDE_STATE_OUT;
             *timer = 0x14;
         }
         break;
