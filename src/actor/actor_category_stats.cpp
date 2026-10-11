@@ -9,15 +9,13 @@ extern "C" {
 #include "globals.h"
 }
 
-/* Counts how many of category `categoryIdx`'s sub-effect-table entries
- * (see `struct sub_effect_record`/`category_descriptor.spawnTable`
- * in actor_anim.h) match one of two fixed sets of `kind` byte
- * values - a different set depending on the category's own `type`
- * field. Record 0 (the table's own header, `link` holding the real
- * entry count) doubles as entry 0 for this scan too. */
+/* Counts how many of category `categoryIdx`'s spawns (its
+ * category_descriptor.spawnTable, struct actor_spawn_table in actor.h)
+ * have a `kind` in one of two fixed sets - a different set depending on
+ * the category's own `type` field. */
 s32 CountCategoryCrates(s32 categoryIdx)
 {
-    struct sub_effect_record *table;
+    struct actor_spawn_table *table;
     s32 total;
     s32 count;
     s32 i;
@@ -26,7 +24,7 @@ s32 CountCategoryCrates(s32 categoryIdx)
     table = gActorCategories[categoryIdx].spawnTable;
     if (gActorCategories[categoryIdx].type == CATEGORY_TYPE_POLAR) {
         i = 0;
-        total = table[0].link;
+        total = table->count;
         /* Manual pre-rotated `if (count<total) do {...} while (++i<total)`
          * instead of a plain `for` - gcc 2.9's own loop rotation of a
          * `for` here strength-reduces the ascending index into a
@@ -35,7 +33,7 @@ s32 CountCategoryCrates(s32 categoryIdx)
          * (`adds r5,#1; cmp r5,r2; blt`) - see docs/workflow.md step 3. */
         if (count < total) {
             do {
-                u8 v = table[i].kind;
+                u8 v = table->entries[i].spawn.kind;
                 if (v == POLAR_KIND_BASIC_CRATE || v == POLAR_KIND_CHECKPOINT_CRATE ||
                     v == POLAR_KIND_NITRO_CRATE || v == POLAR_KIND_LIFE_CRATE ||
                     v == POLAR_KIND_AKU_AKU_CRATE || v == POLAR_KIND_FOUR_WUMPA_CRATE ||
@@ -49,22 +47,24 @@ s32 CountCategoryCrates(s32 categoryIdx)
             } while (i < total);
         }
     } else {
-        /* This branch's own loop is a plain decrementing walk over
-         * `table` (pointer-increment, reusing `total2` itself as the
-         * down-counter, no separate index register) - a different
-         * shape from the type==0 branch above, matching the ROM's own
-         * `subs r2,#1`/`adds r3,#0x14` pattern exactly. The entry guard
+        /* This branch's loop counts `total2` down to 0 beside the
+         * index, which gcc strength-reduces into a walk over the table
+         * pointer itself, the ROM's `subs r2,#1`/`adds r3,#0x14` (with
+         * `while (i < total2)` it walks copies of both). A pointer to the
+         * entries would add `entries`' offset (8) ahead of the loop. The
+         * entry guard
          * reuses `count` (always 0 here, since this branch is only
          * reached before the type==0 branch's loop ever runs) rather
          * than testing `total2 > 0` directly - the ROM's own
          * `cmp r4,r2` compares the (zero) accumulator against the
          * count, not the count against a literal 0 (see
          * docs/workflow.md step 3). */
-        s32 total2 = table[0].link;
+        s32 total2 = table->count;
 
         if (count < total2) {
+            i = 0;
             do {
-                u8 v = table->kind;
+                u8 v = table->entries[i].spawn.kind;
 
                 if ((u8)(v - JETPACK_KIND_HEALTH_CRATE) <=
                     JETPACK_KIND_QUESTION_CRATE_LIFE - JETPACK_KIND_HEALTH_CRATE) {
@@ -72,12 +72,12 @@ s32 CountCategoryCrates(s32 categoryIdx)
                 } else {
                     /* Reads the field again: cse turns the second read
                      * into the ROM's `adds r0, r1, #0` copy of `v`. */
-                    if (table->kind == JETPACK_KIND_PARACHUTE_NITRO ||
-                        table->kind == JETPACK_KIND_UNK30) {
+                    if (table->entries[i].spawn.kind == JETPACK_KIND_PARACHUTE_NITRO ||
+                        table->entries[i].spawn.kind == JETPACK_KIND_UNK30) {
                         count++;
                     }
                 }
-                table++;
+                i++;
                 total2--;
             } while (total2 != 0);
         }

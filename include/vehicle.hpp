@@ -162,7 +162,8 @@ extern void (*gUnpackNibbleTilesFunc)(u16 *src, s32 lowBlock);
 /* The spawn argument of CreateJetpackPlane and PolarPenguin's
  * constructor (below): the level spawn record CreateJetpackActor and
  * CreateActor were handed (SpawnJetpackActor, SpawnActor), and the word
- * after it, the next sub_effect_record's `link` (actor_anim.h). */
+ * after it, its next target: a struct actor_spawn_entry (actor.h) of the
+ * spawn table. */
 struct spawn_arg {
     struct actor_spawn spawn; // 0x00 (actor.h)
     s32 target;               // 0x10 - the first hop target index (AimJetpackPlane,

@@ -87,14 +87,13 @@ as the kind it turns into.
 
 The seven spawn tables (`gCategory0SpawnTable`..`gCategory6SpawnTable`,
 src/data/cell_anim_03b8b0.cpp, sub_effect_0c0c38.cpp, cell_anim_0ff1b0.cpp
-and bg_picture_151ac4.cpp) spell each record's `kind`, `altKind` and
+and bg_picture_151ac4.cpp) spell each spawn's `kind`, `altKind` and
 `bonusKind` with their family's names: `POLAR_KIND_*` in categories 0-2,
-`JETPACK_KIND_*` in 3-6. Record 0 is a spawn too (the polar runs start
-with a checkpoint crate, the jetpack stages with the stopwatch, the
-hovercraft's table with the hovercraft), its `link` holding the record
-count. A `PLAYER` (0) alternative means nothing spawns there in that mode.
-The 12 bytes after the last record (`struct sub_effect_table_end`) stay
-numbers: they belong to no record.
+`JETPACK_KIND_*` in 3-6. The polar runs start with a checkpoint crate,
+the jetpack stages with the stopwatch, the hovercraft's table with the
+hovercraft. A `PLAYER` (0) alternative means nothing spawns there in that mode.
+The 4 bytes after the last spawn (`end` in `ACTOR_SPAWN_TABLE`) stay
+numbers: they belong to no spawn.
 
 HovercraftLauncher::StateLaunch's three CreateJetpackActor calls build
 `BOMBER_HOME`, `BOMBER_BOB_VERTICAL` or `BOMBER_CIRCLE`, picked by a

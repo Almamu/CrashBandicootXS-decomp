@@ -1558,6 +1558,8 @@ free; PlatformMover::Update loses its 0x300 pin and keep):
   takes the lower pseudo, and `s32 base = GetCellAnimDistance();`
   declared at its set (C++) is created after the address's pseudo. With
   `base` declared at the top, or a `while`, they still swap.
+  (#855: with the spawn table as a struct, the test reads
+  `t->entries[gActorSpawnIndex].spawn.z` and the macro is SPAWN_DUE.)
 - **A setter with the other coordinate passed back** (above):
   `part->SetPos(part->x, part->y + 0x600)` in `ReleaseHang` keeps the X
   in r2 across the add, which is what made reload spill r3 for the
