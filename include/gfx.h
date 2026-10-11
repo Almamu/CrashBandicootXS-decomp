@@ -16,6 +16,14 @@
 #include "hitbox_quad.h"
 #include "sprite_bank.h"
 
+/* Palette RAM as colours, as the REG_* macros give the I/O registers:
+ * BG palette `n` and OBJ palette `n` (16 colours each, the 256-colour
+ * palettes starting at palette 0), and the backdrop colour (BG colour 0).
+ * BG_PLTT/OBJ_PLTT stay addresses for the DMA registers. */
+#define BG_PALETTE(n)  ((u16 *)(BG_PLTT + (n) * PALETTE_SIZE_16))
+#define OBJ_PALETTE(n) ((u16 *)(OBJ_PLTT + (n) * PALETTE_SIZE_16))
+#define BACKDROP_COLOR (*(vu16 *)PLTT)
+
 struct aabb;
 struct dma_queue;
 struct queued_oam_entry;
@@ -108,6 +116,11 @@ union dispcnt {
     u16 raw;
     struct dispcnt_bits bits;
 };
+
+/* The REG_DISPCNT shadow (sym_iwram.txt) that CommitDispcnt commits: its
+ * bitfields (the Show/Hide helpers' byte-wide read-modify-writes) or the
+ * halfword. */
+extern union dispcnt gDispcnt;
 
 /* One hardware OAM entry as bitfields, as AddOamEntry copies it into the
  * shadow buffer: attributes 0-2, then the affine parameter. The u32
@@ -237,7 +250,7 @@ extern bool IsBrightnessFadeActive(void);
 
 /* src/gfx/vram_dma_queue.cpp */
 extern void FlushVramDmaQueue(void);
-extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
+extern s32 QueueVramDmaTransfer(const void *src, void *dest, u16 size, u16 unit);
 extern void FreeVramDmaQueue(void);
 extern s32 AllocVramDmaQueue(void);
 

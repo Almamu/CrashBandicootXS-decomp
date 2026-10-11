@@ -313,10 +313,8 @@ extern void AddPaletteCycle_fx(PaletteCycles *self, u16 *targets, const u16 *lis
                                s32 count, struct fx_direction direction) asm("AddPaletteCycle");
 
 #define FX_CYCLE(lists, rate, count, dir) \
-    AddPaletteCycle_fx(gPaletteCycles, PAL_RAM, (lists), (rate), (count), \
+    AddPaletteCycle_fx(gPaletteCycles, BG_PALETTE(0), (lists), (rate), (count), \
                 (struct fx_direction){ (dir) })
-
-#define PAL_RAM ((u16 *)PLTT)
 
 static inline void SetPoint(struct vec2 *point, s32 x, s32 y)
 {

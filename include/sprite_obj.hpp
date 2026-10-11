@@ -520,13 +520,13 @@ COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(ObjVramCursor) == 0xC);
 class PaletteCache
 {
 public:
-    u16 count;                    // 0x00
-    const u8 *palettes;           // 0x04
-    u8 *slotOf;                   // 0x08 - the bank palette `id` is in, or 0xFF
-    u8 isFree[16];                // 0x0C
-    u8 locked[16];                // 0x1C
-    u8 slots[16][TILE_SIZE_4BPP]; // 0x2C - each bank's colours
-    u8 dirty;                     // 0x22C
+    u16 count;          // 0x00
+    const u8 *palettes; // 0x04
+    u8 *slotOf;         // 0x08 - the bank palette `id` is in, or 0xFF
+    u8 isFree[16];      // 0x0C
+    u8 locked[16];      // 0x1C
+    u16 slots[16][16];  // 0x2C - each bank's 16 colours
+    u8 dirty;           // 0x22C
 
     PaletteCache();  // InitPaletteCache
     ~PaletteCache(); // DestroyPaletteCache

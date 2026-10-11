@@ -186,7 +186,7 @@ void Airship::StateExplode()
     y += velY;
     z += velZ;
     hitFlashTimer = 0;
-    pal = (u16 *)(BG_PLTT + PALETTE_SIZE_16);
+    pal = BG_PALETTE(1);
     bx = x + INT_TO_Q8(box.x);
     by = y + INT_TO_Q8(box.y);
 

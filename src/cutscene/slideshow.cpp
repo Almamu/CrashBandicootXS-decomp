@@ -179,7 +179,7 @@ void Slideshow::ShowPicture(s32 idx)
     WaitForVBlank();
 
     DmaSet(
-        3, asset, (void *)PLTT,
+        3, asset, PLTT,
         (u32)((DMA_ENABLE | DMA_START_NOW | DMA_16BIT | DMA_SRC_INC | DMA_DEST_INC) << 16 | 0x100));
     REG_DISPCNT = *(u16 *)&gSlideshowDispcnt;
 }

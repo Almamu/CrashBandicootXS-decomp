@@ -183,8 +183,7 @@ void Airship::Spawn(s32 kind, s32 sx, s32 sy, s32 sz)
     REG_DISPCNT |= DISPCNT_BG2_ON;
     UpdateBg2();
     hitFlashTimer = 0;
-    QueueVramDmaTransfer((void *)hitFlashPalettes, (void *)(BG_PLTT + PALETTE_SIZE_16),
-                         PALETTE_SIZE_16, 0x10);
+    QueueVramDmaTransfer(hitFlashPalettes, BG_PALETTE(1), PALETTE_SIZE_16, 0x10);
 }
 
 /* The airship's frame: the state function (gAirshipStateFuncs, a plain

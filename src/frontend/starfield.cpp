@@ -66,7 +66,7 @@ Starfield::Starfield()
     particles = new StarParticle[0x80];
 
     {
-        u16 *dispcntShadow = (u16 *)gDispcnt;
+        u16 *dispcntShadow = &gDispcnt.raw;
         zero = 0;
         *dispcntShadow = DISPCNT_OBJ_1D_MAP;
     }
@@ -86,11 +86,11 @@ Starfield::Starfield()
     ShowBg0();
 
     /* Clears BG palette entry 0 (the backdrop color). */
-    *(vu16 *)BG_PLTT = zero;
+    BACKDROP_COLOR = zero;
 
     /* A 3-step white-to-black grey gradient into BG palette bank 15's
      * first 3 entries (palette index 240). */
-    gradDst = (u16 *)(BG_PLTT + 240 * sizeof(u16));
+    gradDst = BG_PALETTE(15);
     dma2Src = &dmaFillSrc32;
     gradIdx = 0;
     gradCount = 2;

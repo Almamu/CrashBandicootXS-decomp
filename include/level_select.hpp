@@ -395,7 +395,7 @@ public:
         *(vu32 *)REG_ADDR_BG1HOFS = bg1->GetOffsets();
         *(vu16 *)REG_ADDR_BG1CNT = bg1->bg.GetControl();
         *(vu16 *)REG_ADDR_BG2CNT = bg2->GetControl();
-        *(vu16 *)PLTT = 0;
+        BACKDROP_COLOR = 0;
         *(vu32 *)REG_ADDR_BLDCNT = blend.raw;
         *(vu16 *)REG_ADDR_BLDY = bldy.evy;
         *(vu16 *)REG_ADDR_DISPCNT = dispcnt.raw;

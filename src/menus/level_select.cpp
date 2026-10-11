@@ -58,7 +58,7 @@ s32 RunLevelSelect(s32 *arg)
 
     mem_free_bytes(heaps);
     WaitForVBlank();
-    *(vu16 *)PLTT = 0;
+    BACKDROP_COLOR = 0;
     *(vu16 *)REG_ADDR_DISPCNT = 0;
     gPaletteCache->FreeUnlockedSlots();
     gPaletteCache->ClaimSlot(0xF);

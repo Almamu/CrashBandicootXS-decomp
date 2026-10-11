@@ -55,7 +55,7 @@ void PowerDialog::CommitFrame()
     gOamBuffer->Commit();
     FlushVramDmaQueue();
     *(vu16 *)REG_ADDR_BG0HOFS = frame >> 3;
-    *(vu16 *)PLTT = 0;
+    BACKDROP_COLOR = 0;
     *(vu32 *)REG_ADDR_BLDCNT = blend.raw;
     *(vu16 *)REG_ADDR_BLDY = bldy.evy;
     *(vu16 *)REG_ADDR_DISPCNT = dispcnt.raw;

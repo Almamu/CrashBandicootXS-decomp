@@ -151,13 +151,13 @@ void Yeti::UpdatePalette()
     s32 v = distance;
 
     if (v <= 0x4fff) {
-        DmaCopy16(3, palette, (void *)(BG_PLTT + 15 * PALETTE_SIZE_16), PALETTE_SIZE_16);
+        DmaCopy16(3, palette, BG_PLTT + 15 * PALETTE_SIZE_16, PALETTE_SIZE_16);
     } else if (v > 0xbdff) {
-        DmaFill16(3, 0, (void *)(BG_PLTT + 15 * PALETTE_SIZE_16), PALETTE_SIZE_16);
+        DmaFill16(3, 0, BG_PLTT + 15 * PALETTE_SIZE_16, PALETTE_SIZE_16);
     } else {
         s32 f = Q8_DIV(0xbe00 - v, 0x6e00);
         s32 mask = 0x1f;
-        u16 *dst = (u16 *)(BG_PLTT + 15 * PALETTE_SIZE_16);
+        u16 *dst = BG_PALETTE(15);
         const u16 *src = palette;
         s32 mask2 = 0x1f;
         s32 i;

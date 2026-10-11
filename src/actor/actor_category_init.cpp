@@ -225,6 +225,6 @@ s32 InitActorCategory(s32 category)
     FreeObjTileFreeList();
     FreeCategorySpriteSheet();
     REG_DISPCNT = DISPCNT_MODE_1 | DISPCNT_OBJ_1D_MAP;
-    *(vu16 *)PLTT = 0;
+    BACKDROP_COLOR = 0;
     return ret;
 }

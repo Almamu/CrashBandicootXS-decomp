@@ -11,7 +11,7 @@ extern "C" {
 
 struct dma_queue_entry {
     void *dest;
-    void *src;
+    const void *src;
     u16 size;
     u16 unit;
 };
@@ -51,7 +51,7 @@ void FlushVramDmaQueue(void)
 
 /* Queues a transfer of `size` bytes in units of `unit` bits: 0 when
  * there is nothing to send, -1 when the queue is full. */
-s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit)
+s32 QueueVramDmaTransfer(const void *src, void *dest, u16 size, u16 unit)
 {
     struct dma_queue_entry *entry;
 
