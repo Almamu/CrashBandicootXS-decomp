@@ -15,12 +15,6 @@ extern "C" {
  * down. See docs/matching/archive/issue-57-0x0802fbf0-actor.md and
  * issue-58-0x08030334-actor.md. */
 
-/* The jetpack player, the actor list's root. */
-static inline HpActor *PlayerActor()
-{
-    return (HpActor *)gActorList;
-}
-
 /* gAirshipFireballStateFuncs[0]: climbs with a decaying Z step, widens
  * its orbit up to 0x2A00, eases its centre a 32nd of the way to a point
  * off the player, and sits on the circle at the angle `stateTime` gives.
@@ -67,7 +61,7 @@ void AirshipFireball::StateOrbit()
         stateTime = t;
     }
     if ((u8)IsTouchingPlayer(this)) {
-        PlayerActor()->Damage(6);
+        gActorList->AsHpActor()->Damage(6);
         palette = 4;
         gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
         SetState(AIRSHIP_FIREBALL_STATE_EXPLODE, 1);
@@ -109,7 +103,7 @@ void AirshipFireball::StateSpiralIn()
         y = cy + Q8_MUL(sine[angle], radius);
     }
     if ((u8)IsTouchingPlayer(this)) {
-        PlayerActor()->Damage(6);
+        gActorList->AsHpActor()->Damage(6);
         palette = 4;
         gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
         SetState(AIRSHIP_FIREBALL_STATE_EXPLODE, 1);

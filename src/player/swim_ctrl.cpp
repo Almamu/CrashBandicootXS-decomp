@@ -591,7 +591,7 @@ void SwimCtrl::StateDead()
 
 void SwimCtrl::Attach(MovingSprite *owner)
 {
-    target = (Player *)owner;
+    target = owner->AsPlayer();
 }
 
 /* UNUSED */

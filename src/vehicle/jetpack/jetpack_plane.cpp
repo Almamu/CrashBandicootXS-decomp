@@ -17,12 +17,6 @@ extern "C" {
  * docs/matching/archive/issue-56-0x0802f0dc-actor.md,
  * issue-57-0x0802fbf0-actor.md and pmf-dispatch-retry.md. */
 
-/* The jetpack player, the actor list's root. */
-static inline HpActor *PlayerActor()
-{
-    return (HpActor *)gActorList;
-}
-
 /* Slot 2: drawn only past a depth; flies by its velocity (Q4) and runs
  * its state. While its low pose (animation 3) plays and the cooldown has
  * run out, it fires a cannonball at the player when the player is close
@@ -76,7 +70,7 @@ void JetpackPlane::Update()
     }
 
     if (dying == 0 && (u8)IsTouchingPlayer(this)) {
-        PlayerActor()->Damage(6);
+        gActorList->AsHpActor()->Damage(6);
         Damage(4);
     }
 

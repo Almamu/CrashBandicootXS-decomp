@@ -21,12 +21,6 @@ extern "C" {
  * See docs/matching/archive/issue-59-0x08031784-actor.md and
  * issue-60-61-gap-31a6c-part2.md. */
 
-/* The jetpack player, the actor list's root. */
-static inline JetpackPlayer *Player()
-{
-    return (JetpackPlayer *)gActorList;
-}
-
 /* Slot 2: while it flies (animation 0), it swings around `originX` and
  * comes down by `stepY` until `limitY`, where it explodes (Launch); on the
  * player it explodes at once, hurting the player by 0xE. Once exploded,
@@ -39,7 +33,7 @@ void JetpackRocket::Update()
     }
 
     if ((u8)IsTouchingPlayer(this)) {
-        Player()->Damage(0xE);
+        gActorList->AsJetpackPlayer()->Damage(0xE);
         hit = 1;
         Launch();
     }
@@ -65,7 +59,7 @@ exploded:
     }
 
     if (hit == 0 && (u8)IsTouchingPlayer(this)) {
-        Player()->Damage(0xE);
+        gActorList->AsJetpackPlayer()->Damage(0xE);
         hit = 1;
     }
 
@@ -127,7 +121,7 @@ s32 JetpackRocket::IsUnshootable()
 void JetpackRing::Update()
 {
     if ((u8)record->index == JETPACK_KIND_RING_LEFT && (u8)IsTouchingPlayer(this)) {
-        JetpackPlayer *player = Player();
+        JetpackPlayer *player = gActorList->AsJetpackPlayer();
 
         player->PassRing(x - record->spawnX, y);
         if (cued == 0) {

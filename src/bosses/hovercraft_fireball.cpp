@@ -77,7 +77,7 @@ void HovercraftFireball::StateFly()
         velZ = 0x14;
 
     if ((u8)IsTouchingPlayer(this)) {
-        ((HpActor *)gActorList)->Damage(6);
+        gActorList->AsHpActor()->Damage(6);
         palette = 4;
         gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
         SetState(HOVERCRAFT_FIREBALL_STATE_EXPLODE, 1);

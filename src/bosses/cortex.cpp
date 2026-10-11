@@ -440,7 +440,7 @@ void CortexShotCtrl::Update(MovingSprite *part)
             s32 i;
 
             for (i = 0; i < n; i++) {
-                MovingSprite *e = (MovingSprite *)gCollidableList->items[i];
+                MovingSprite *e = gCollidableList->items[i]->AsMovingSprite();
                 struct aabb c = e->GetAnimHitbox();
 
                 if (AabbOverlaps(&c, &b)) {
@@ -554,7 +554,7 @@ void CortexTargetCtrl::SetPlatformsKind(u8 flag)
     s32 n = gTouchableList->count;
 
     for (i = 0; i < n; i++) {
-        MovingSprite *p = (MovingSprite *)gTouchableList->items[i];
+        MovingSprite *p = gTouchableList->items[i]->AsMovingSprite();
 
         if (flag)
             p->kind = EVENT_HIT;

@@ -124,12 +124,12 @@ s32 RunActorCategoryFrame(void)
  * the ROM tests its low byte) and whose box overlaps `self`'s, or 0. */
 HpActor *FindShotTarget(ActorSelf *self)
 {
-    HpActor *n = (HpActor *)gActorList->next;
+    HpActor *n = gActorList->next->AsHpActor();
 
     do {
         if (n != self && (u8)n->IsUnshootable() == 0 && ActorsOverlap(self, n))
             return n;
-        n = (HpActor *)n->next;
+        n = n->next->AsHpActor();
     } while (n != gActorList);
     return 0;
 }

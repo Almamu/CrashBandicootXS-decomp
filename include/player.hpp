@@ -254,4 +254,9 @@ public:
 
 COMPILE_TIME_ASSERT(player_hpp, sizeof(Player) == 0x350);
 
+inline Player *MovingSprite::AsPlayer()
+{
+    return (Player *)this;
+}
+
 #endif /* !GUARD_PLAYER_HPP */

@@ -245,7 +245,7 @@ void InputCtrl::HandleEvent(MovingSprite *, s32 event, s32)
 /* The controlled sprite object is the player. */
 void InputCtrl::Attach(MovingSprite *owner)
 {
-    target = (Player *)owner;
+    target = owner->AsPlayer();
 }
 
 /* g++ stores gInputCtrlVtable and calls ~Ctrl (DestroyCtrl). */

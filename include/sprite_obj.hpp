@@ -47,6 +47,8 @@ extern "C" {
 }
 
 class Ctrl;
+class MovingSprite;
+class Player; // player.hpp
 
 /* The sprite object (src/objects/sprite_obj.cpp, sprite.cpp,
  * sprite_obj.cpp; gSpriteObjVtable): an entity with a sprite bank
@@ -218,6 +220,11 @@ public:
         ResetFrameIndex();
         SetAnimDone(0);
     }
+
+    /* This sprite as a moving sprite (#855): the collidable and touchable
+     * lists hold Sprites, and the bosses, the crates and the player's
+     * shockwave move theirs. Defined after MovingSprite (below). */
+    inline MovingSprite *AsMovingSprite();
 };
 
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(Sprite) == 0x40);
@@ -291,6 +298,11 @@ public:
     }
     static MovingSprite *Create(u16 id, u16 x, u16 y, u16 unused); // CreateMovingSprite
 
+    /* This sprite as the player (#855): a controller's owner
+     * (ActionCtrl::Attach and the others). Defined after Player
+     * (player.hpp). */
+    inline Player *AsPlayer();
+
     /* The previous position as a vector, as Sprite's Pos(): a copy of
      * it is a block copy (both loads, then both stores). */
     struct vec2 &PrevPos()
@@ -330,6 +342,11 @@ public:
 };
 
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(MovingSprite) == 0x78);
+
+inline MovingSprite *Sprite::AsMovingSprite()
+{
+    return (MovingSprite *)this;
+}
 
 /* The ground sprite (src/objects/ground_sprite.cpp, ground_sprite_collide.cpp,
  * ground_sprite.cpp; gGroundSpriteVtable): a moving sprite that

@@ -26,12 +26,6 @@ extern "C" {
  * See docs/matching/archive/issue-59-0x08031784-actor.md and
  * issue-60-61-gap-31a6c-part2.md. */
 
-/* The jetpack player, the actor list's root. */
-static inline JetpackPlayer *Player()
-{
-    return (JetpackPlayer *)gActorList;
-}
-
 /* Sways around (x, y), hanging from a new balloon of record `kind` above
  * it. */
 inline void JetpackBalloonCrate::Hang(s32 x, s32 y, s32 z, u8 kind)
@@ -79,15 +73,15 @@ void JetpackQuestionCrate::Update()
         switch ((u8)record->index) {
         case JETPACK_KIND_QUESTION_CRATE_WUMPA_1:
             gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
-            Player()->QueueWumpa(1);
+            gActorList->AsJetpackPlayer()->QueueWumpa(1);
             break;
         case JETPACK_KIND_QUESTION_CRATE_WUMPA_3:
             gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
-            Player()->QueueWumpa(3);
+            gActorList->AsJetpackPlayer()->QueueWumpa(3);
             break;
         case JETPACK_KIND_QUESTION_CRATE_WUMPA_5:
             gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
-            Player()->QueueWumpa(5);
+            gActorList->AsJetpackPlayer()->QueueWumpa(5);
             break;
         case JETPACK_KIND_QUESTION_CRATE_LIFE:
             gAudioContext->PlaySfx(SFX_EXTRA_LIFE, 0x100);
@@ -118,15 +112,15 @@ void JetpackQuestionCrate::Damage(s32 amount)
     switch ((u8)record->index) {
     case JETPACK_KIND_QUESTION_CRATE_WUMPA_1:
         gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
-        Player()->QueueWumpa(1);
+        gActorList->AsJetpackPlayer()->QueueWumpa(1);
         break;
     case JETPACK_KIND_QUESTION_CRATE_WUMPA_3:
         gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
-        Player()->QueueWumpa(3);
+        gActorList->AsJetpackPlayer()->QueueWumpa(3);
         break;
     case JETPACK_KIND_QUESTION_CRATE_WUMPA_5:
         gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
-        Player()->QueueWumpa(5);
+        gActorList->AsJetpackPlayer()->QueueWumpa(5);
         break;
     case JETPACK_KIND_QUESTION_CRATE_LIFE:
         gAudioContext->PlaySfx(SFX_EXTRA_LIFE, 0x100);
@@ -150,7 +144,7 @@ void JetpackHealthCrate::Update()
 
     if (kind == 0 && (u8)IsTouchingPlayer(this)) {
         SetState(JETPACK_BALLOON_CRATE_STATE_DESTROYED, 1);
-        Player()->Heal(0x14);
+        gActorList->AsJetpackPlayer()->Heal(0x14);
         gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         if (balloon != 0) {
             gLevelState->AddBrokenCrate();
@@ -255,7 +249,7 @@ void JetpackHealthCrate::Damage(s32 amount)
     }
 
     SetState(JETPACK_BALLOON_CRATE_STATE_DESTROYED, 1);
-    Player()->Heal(0x14);
+    gActorList->AsJetpackPlayer()->Heal(0x14);
     gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
     if (balloon != 0) {
         gLevelState->AddBrokenCrate();
@@ -398,7 +392,7 @@ void JetpackParachuteNitro::Update()
     }
 
     if ((u8)IsTouchingPlayer(this)) {
-        Player()->Damage(0x14);
+        gActorList->AsJetpackPlayer()->Damage(0x14);
         gLevelState->AddBrokenCrate();
         gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
         RestartAnim(1);

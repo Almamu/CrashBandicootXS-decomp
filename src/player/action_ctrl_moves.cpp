@@ -490,7 +490,7 @@ void ActionCtrl::DoSuperBodySlamShockwave()
     py = Q8_TO_INT(p->y);
     i = 0;
     while (i < CollidableCount()) {
-        MovingSprite *other = (MovingSprite *)gCollidableList->items[i];
+        MovingSprite *other = gCollidableList->items[i]->AsMovingSprite();
         s32 dx;
         s32 dy;
 
@@ -790,7 +790,7 @@ void ActionCtrl::StartMaskHitJump()
 
 void ActionCtrl::Attach(MovingSprite *owner)
 {
-    part = (Player *)owner;
+    part = owner->AsPlayer();
 }
 
 /* gActionCtrlStateTable's slot 0x27, a state nothing sets: runs

@@ -14,12 +14,6 @@ extern "C" {
  * straight-line projectile that damages the player on contact. See
  * docs/matching/archive/issue-57-0x0802fbf0-actor.md. */
 
-/* The jetpack player, the actor list's root. */
-static inline HpActor *PlayerActor()
-{
-    return (HpActor *)gActorList;
-}
-
 /* Slot 2: flies by its velocity, falling; on the player it damages it
  * (2) and is gone, else ActorSelf's update. */
 void JetpackCannonball::Update()
@@ -28,7 +22,7 @@ void JetpackCannonball::Update()
     y += velY;
     z += -0x100;
     if ((u8)IsTouchingPlayer(this)) {
-        PlayerActor()->Damage(2);
+        gActorList->AsHpActor()->Damage(2);
         delete this;
     } else {
         ActorSelf::Update();

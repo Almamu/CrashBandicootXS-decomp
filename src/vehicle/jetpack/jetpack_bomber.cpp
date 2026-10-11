@@ -15,12 +15,6 @@ extern "C" {
  * circle its home point on gSineTable or drift toward the player. See
  * docs/matching/archive/issue-57-0x0802fbf0-actor.md. */
 
-/* The jetpack player, the actor list's root. */
-static inline HpActor *PlayerActor()
-{
-    return (HpActor *)gActorList;
-}
-
 /* CreateJetpackBomber: 2 hit points, its home point at (x, y); the
  * record's kind (4-9) picks the first state (0-5). */
 JetpackBomber::JetpackBomber(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
@@ -58,9 +52,9 @@ JetpackBomber::JetpackBomber(const struct anim_table_record *rec, s32 x, s32 y, 
 void JetpackBomber::Update()
 {
     if (state != JETPACK_BOMBER_STATE_DYING) {
-        ((JetpackPlayer *)gActorList)->CountBomber();
+        gActorList->AsJetpackPlayer()->CountBomber();
         if (state != JETPACK_BOMBER_STATE_DYING && (u8)IsTouchingPlayer(this)) {
-            PlayerActor()->Damage(10);
+            gActorList->AsHpActor()->Damage(10);
             palette = 4;
             gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
             SetState(JETPACK_BOMBER_STATE_DYING, 1);
