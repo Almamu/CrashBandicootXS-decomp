@@ -57,17 +57,14 @@ s32 JetpackIsTouchingPlayer(ActorSelf *self)
  * The spawn loop is a plain `while` whose exit test gcc copies ahead of
  * the loop (jump.c's duplicate_loop_exit_test), so the loop body starts at
  * a label and re-reads every global. The test must stay free of inline
- * functions (their block notes stop the copy), hence the macro, and
- * builds the "next record" address in the `GetActorSpawnZ` order (`off`,
- * then `base + 0x14`, then the sum) through two locals. */
+ * functions (their block notes stop the copy), hence the macro. */
 
-/* "The next sub-effect record's threshold has scrolled into view":
- * `gActorSpawnTable[idx + 1].depth + gActorSpawnOffset <= scroll +
- * vtable slot 7` (read as a value), bounded by record 0's entry count. */
-#define SUB_EFFECT_DUE()                                                       \
-    (gActorSpawnIndex < gActorSpawnTable->link                                 \
-     && (off = gActorSpawnIndex * 0x14, tb = (u8 *)gActorSpawnTable + 0x14, \
-         *(s32 *)(tb + off)) + gActorSpawnOffset                              \
+/* "The next spawn's depth has scrolled into view": its `spawn.z` plus
+ * gActorSpawnOffset is at most the scroll plus vtable slot 7 (read as a
+ * value), bounded by the table's spawn count. */
+#define SPAWN_DUE()                                                            \
+    (gActorSpawnIndex < gActorSpawnTable->count                                \
+     && gActorSpawnTable->entries[gActorSpawnIndex].spawn.z + gActorSpawnOffset \
             <= scroll + gActorCategoryVtable->spawnDistance)
 
 s32 RunActorCategoryFrame(void)
@@ -75,24 +72,19 @@ s32 RunActorCategoryFrame(void)
     s32 scroll;
     ActorSelf *n;
     s32 i;
-    u8 *tb;
-    s32 off;
 
     if (gActorCategoryVtable->updateBoss != NULL)
         gActorCategoryVtable->updateBoss();
     gActorCategoryExitStatus = CATEGORY_EXIT_NONE;
     scroll = GetCellAnimDistance();
-    if (scroll - gActorSpawnOffset > gActorSpawnTable->depth)
+    if (scroll - gActorSpawnOffset > gActorSpawnTable->length)
         gActorCategoryVtable->reachCourseEnd();
     if (gActorSpawnsPaused != 0) {
         gActorSpawnOffset += GetCellAnimFrameStep();
     } else {
-        while (SUB_EFFECT_DUE()) {
-            gActorCategoryVtable->spawn(
-                (struct actor_spawn *)((u8 *)gActorSpawnTable +
-                                       (gActorSpawnIndex * sizeof(struct sub_effect_record) +
-                                        offsetof(struct sub_effect_record, kind))),
-                gActorSpawnUseBonus, INT_TO_Q8(gActorSpawnOffset));
+        while (SPAWN_DUE()) {
+            gActorCategoryVtable->spawn(&gActorSpawnTable->entries[gActorSpawnIndex].spawn,
+                                        gActorSpawnUseBonus, INT_TO_Q8(gActorSpawnOffset));
             gActorSpawnIndex++;
         }
     }

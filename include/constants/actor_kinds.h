@@ -3,8 +3,8 @@
 
 /*
  * The actor kinds of the 3D stages (#843, docs/flags/actor_kinds.md): a
- * spawn record's `kind`/`altKind`/`bonusKind` (struct sub_effect_record,
- * actor_anim.h) and the index into the category family's animation table
+ * spawn record's `kind`/`altKind`/`bonusKind` (struct actor_spawn,
+ * actor.h) and the index into the category family's animation table
  * (`gActorAnimTable` / `gJetpackAnimTable`), whose records hold the same
  * number in `index`. Each family has its own numbering: POLAR_KIND_* for
  * family 0 (categories 0-2, the polar runs, CreateActor and

@@ -870,10 +870,11 @@ keep a non-zero colour somewhere. The header fields (`cols`, `rows`,
 `tileCount`) are hand-written in the data files, and each one checks
 its struct's size with `COMPILE_TIME_ASSERT`.
 
-The `sub_effect_record` tables in the same regions are hand-written C:
-`SUB_EFFECT_TABLE(n)` (`actor_anim.h`) is the `n` records plus the
-12-byte `struct sub_effect_table_end` that the one-record-ahead
-accessors read after the last one.
+The spawn tables in the same regions are hand-written C:
+`ACTOR_SPAWN_TABLE(n)` (`actor.h`) is the course length, the spawn
+count, the `n` spawns (`struct actor_spawn_entry`: the `struct
+actor_spawn` and the next target) and 4 bytes after the last one that
+nothing reads (docs/casts/spawn_table.md).
 
 The 2-byte pads after the two LZ77 sheets (formerly
 `gStaticData_080C0C36`, `gStaticData_08151AC2`) are built: see "LZ77

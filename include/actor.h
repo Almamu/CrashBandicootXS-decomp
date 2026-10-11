@@ -87,25 +87,57 @@ union EntityFlags {
  * anim_box`/`struct sprite_frame` (docs/headers_plan.md, batch 7). */
 struct anim_table_record;
 struct category_vtable;
-struct sub_effect_record;
+struct actor_spawn_table;
 
 /* A level spawn record as SpawnActor and SpawnJetpackActor (vehicle.hpp)
- * take it: the actor kinds, then the position in tile units (<< 8 to Q8).
- * It is the tail of a spawn table's struct sub_effect_record (actor_anim.h)
- * from its `kind` on, and the next record's `depth` (actor_factory.cpp's
- * and jetpack_spawn.cpp's copies were merged here, #656). */
+ * take it: the actor kinds, then the position in tile units (<< 8 to Q8)
+ * and the depth. It is an entry of a spawn table (struct
+ * actor_spawn_table below; actor_factory.cpp's and jetpack_spawn.cpp's
+ * copies were merged here, #656). */
 struct actor_spawn {
     u8 kind;      // 0x00 - the normal kind
     u8 altKind;   // 0x01 - in time trial mode
     u8 bonusKind; // 0x02 - when the bonus kinds are on (`useBonus`, `alt`)
-    // 0x03 - sub_effect_record's `pad_0b`: not padding, the spawn tables
-    //        (src/data/) hold 0 in most records and 1, 3, 17, 33, 53, 108,
-    //        125, 138, 155, 157, 161 or 191 in others; nothing reads it
+    // 0x03 - not padding: the spawn tables (src/data/) hold 0 in most
+    //        records and 1, 3, 17, 33, 53, 108, 125, 138, 155, 157, 161
+    //        or 191 in others; nothing reads it
     u8 unk_03;
-    s32 x; // 0x04
-    s32 y; // 0x08
-    s32 z; // 0x0C
+    s32 x; // 0x04 - Q8.8 after GetActorSpawnX's <<8
+    s32 y; // 0x08 - Q8.8 after GetActorSpawnY's <<8
+    // 0x0C - the course distance at which the spawn is due (GetActorSpawnZ:
+    //        Q8 after <<8; SelectActorCategory, RunActorCategoryFrame)
+    s32 z;
 };
+
+/* One spawn of a spawn table: the spawn record SpawnActor is handed, and
+ * the spawn index a jetpack plane or polar penguin homes in on after this
+ * one (GetActorSpawnNextTarget; -1: none). vehicle.hpp's struct spawn_arg
+ * is the same record, as the planes' and the penguins' constructors take
+ * it. */
+struct actor_spawn_entry {
+    struct actor_spawn spawn; // 0x00
+    s32 next;                 // 0x10
+}; // 0x14
+COMPILE_TIME_ASSERT(actor_h, sizeof(struct actor_spawn_entry) == 0x14);
+
+/* A stage's actor spawn list (category_descriptor.spawnTable, actor_anim.h;
+ * gActorSpawnTable), ordered by depth: the course length (past it
+ * RunActorCategoryFrame calls the vtable's reachCourseEnd), the number of
+ * spawns, then the spawns. The accessors (actor_spawn.cpp) take a spawn by
+ * its index. Every access is `table->entries[i].field`, whose address
+ * gcc builds as the ROM does: `entries`' offset and the field's are added
+ * to the table pointer, then the index (GetActorSpawnX's
+ * `adds r2, #12; adds r2, r2, r1`). */
+struct actor_spawn_table {
+    s32 length;                          // 0x00 - the course length, in course distance units
+    s32 count;                           // 0x04 - the number of spawns
+    struct actor_spawn_entry entries[0]; // 0x08
+};
+
+/* A whole spawn table as the ROM stores it (src/data/): `n` spawns, then 4
+ * bytes that no spawn reads (zero in three of the seven tables). */
+#define ACTOR_SPAWN_TABLE(n) \
+    struct { s32 length; s32 count; struct actor_spawn_entry entries[n]; u8 end[4]; }
 
 /* The actor zone (src/actor/): the 3D actor object (ActorSelf),
  * its animation, spawning, category frame and backgrounds. */
@@ -150,7 +182,7 @@ extern s32 RunActorCategoryFrame(void);
 extern s32 InitActorCategory(s32 category);
 
 /* src/actor/actor_category_select.cpp */
-extern void SelectActorCategory(s32 type, struct sub_effect_record *table,
+extern void SelectActorCategory(s32 type, struct actor_spawn_table *table,
                                 struct anim_table_record *animTable, u8 active, s32 variant,
                                 s32 checkpoint);
 
@@ -249,7 +281,7 @@ extern s32 gActorPaletteCycleTarget;
 extern s32 gActorPaletteCycleTimer;
 extern s32 gActorSpawnIndex;
 extern s32 gActorSpawnOffset;
-extern struct sub_effect_record *gActorSpawnTable;
+extern struct actor_spawn_table *gActorSpawnTable;
 extern u8 gActorSpawnsPaused;
 extern void *gCategorySpriteSheet; /* the decompressed category sprite sheet */
 extern void *gCellAnim;

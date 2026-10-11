@@ -131,61 +131,8 @@ struct actor_frame_pixels {
  * unrelated - it doesn't decode as a 4th/5th/6th/7th vtable no matter
  * how it's sliced (verified directly against the raw bytes), so
  * there's no "categories 3-6 vtable" to go looking for. */
-/* category_descriptor.spawnTable's record layout: the stage's actor spawn
- * list, ordered by `depth`. A spawn's data straddles two records:
- * RunActorCategoryFrame hands `&record[i].kind` of each due record to the
- * category vtable's slot 1 (SpawnActor for type 0), which reads it as
- * `{kind, altKind, bonusKind, pad, x, y, depth, link}` - so a spawn's own
- * depth (the course distance at which it is due) and link are the
- * *following* record's `depth`/`link`. GetActorSpawnZ and
- * GetActorSpawnNextTarget read them that way (`idx*0x14+0x14 ==
- * (idx+1)*0x14+0x0`: one record ahead, not an oversized record), and
- * SelectActorCategory/RunActorCategoryFrame's due tests do the same.
- * Record 0 doubles as the table header: its `depth` is the course length
- * (past it RunActorCategoryFrame calls the vtable's slot 10, the "reach
- * course end" function) and its `link` the entry count
- * (CountCategoryCrates/SelectActorCategory). Resolved from
- * `CountCategoryCrates` (counts matching `kind` entries), `SelectActorCategory`
- * (which stores this pointer directly into `gActorSpawnTable`, indexing
- * with `idx*0x14`), and the GetActorSpawnX/Y/Z/KindIndex/NextTarget
- * per-index accessor family (see docs/rom_map.md's "The sub_802A5xx
- * siblings pin down spawnTable's runtime shape"). */
-struct sub_effect_record {
-    // 0x00 - the previous record's spawn depth, in course distance units
-    // (GetActorSpawnZ: Q8 after <<8); record 0: the course length
-    s32 depth;
-    // 0x04 - the previous record's next target: the spawn index a jetpack plane or
-    // polar penguin homes in on after this one (GetActorSpawnNextTarget), -1: none;
-    // record 0: the table's entry count
-    s32 link;
-    u8 kind; // 0x08 - the actor kind CreateActor builds; counted by CountCategoryCrates
-    // 0x09 - the kind used instead when gLevelState+0x8c is set (SpawnActor, GetActorSpawnKindIndex)
-    u8 altKind;
-    // 0x0a - the kind used instead when gActorSpawnUseBonus
-    // is set (SpawnActor's useBonus, GetActorSpawnKindIndex)
-    u8 bonusKind;
-    u8 pad_0b;
-    s32 offsetX; // 0x0c - Q8.8 after GetActorSpawnX's <<8
-    s32 offsetY; // 0x10 - Q8.8 after GetActorSpawnY's <<8
-}; // 0x14
-COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct sub_effect_record) == 0x14);
-
-/* The 12 bytes after a table's last record: the first three words of a
- * record that isn't there, which the one-record-ahead accessors
- * (`GetActorSpawnZ`/`GetActorSpawnNextTarget`) read for the last record. */
-struct sub_effect_table_end {
-    s32 depth; // 0x00 - the last spawn's depth
-    s32 link;  // 0x04 - the last spawn's next target (always -1)
-    // 0x08 - no real record's bytes: zero in three of the seven tables, arbitrary in the rest
-    u8 kind;
-    u8 altKind;
-    u8 bonusKind;
-    u8 pad_0b;
-}; // 0xC
-COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct sub_effect_table_end) == 0xC);
-
-/* A whole spawnTable as the ROM stores it (src/data/). */
-#define SUB_EFFECT_TABLE(n) struct { struct sub_effect_record records[n]; struct sub_effect_table_end end; }
+/* category_descriptor.spawnTable is a struct actor_spawn_table (actor.h). */
+struct actor_spawn_table;
 
 /* The start of a BG0 cell animation (category_descriptor.cellAnim,
  * read by InitCellAnim/ResetCellAnimBg/UploadCellAnimFrame in cell_anim.cpp): a
@@ -224,9 +171,8 @@ struct category_descriptor {
     void *bgPicture;
     // 0x10 - raw 16-color RGB555 palette, DMA'd to OBJ palette RAM (InitActorCategory)
     const u16 *palette;
-    // 0x14 - the stage's actor spawn list
-    // (gCategoryNSpawnTable), see struct sub_effect_record above
-    struct sub_effect_record *spawnTable;
+    // 0x14 - the stage's actor spawn list (gCategoryNSpawnTable)
+    struct actor_spawn_table *spawnTable;
     // 0x18 - this category's animation table base
     // (gCategoryFamily0AnimTable or gCategoryFamily1AnimTable)
     struct anim_table_record *anim_table;

@@ -11,14 +11,13 @@ extern "C" {
  * `gActorCategoryVtable` = `&gActorCategoryVtables[type]` (the category's
  * shared vtable, `type` being the first argument), `gActorSpawnUseBonus`
  * = the 4th argument (a variant-selector byte), `gActorSpawnTable` =
- * the 2nd argument (the category's `spawnTable` array pointer,
- * see `struct sub_effect_record` in actor_spawn.cpp/include/actor_anim.h),
+ * the 2nd argument (the category's `spawnTable`, a struct
+ * actor_spawn_table, actor.h),
  * resets `gActorSpawnIndex`/`gActorSpawnsPaused`/`gActorSpawnOffset` to
  * 0, draws the vtable's slot-0 function pointer via `_call_via_r3`
  * (arg2/arg3 as x/y - the 5th argument, stack-passed, per the ROM's own
  * `ldr r6, [sp, #0x20]`), then runs a two-pass scan over the
- * `gActorSpawnTable[]` array comparing each entry's threshold field
- * (see `struct sub_effect_record.depth`) plus `gActorSpawnOffset`'s
+ * spawns comparing each one's depth (`spawn.z`) plus `gActorSpawnOffset`'s
  * offset against `gActorCategoryVtable->skipDistance` (the table's +0x20
  * slot, a value): the first pass finds the last
  * entry whose adjusted threshold the vtable slot still exceeds
@@ -31,44 +30,28 @@ extern "C" {
  * The ROM passes a 6th argument: `[sp, #0x1c]` is the 5th (handed to
  * vtable slot 2), `[sp, #0x20]` the 6th (`y`).
  *
- * The skip loop's test is RunActorCategoryFrame's SUB_EFFECT_DUE
- * (actor_category_frame.cpp): the next record's address built through
- * the two locals `off` and `tb`, in a comma expression, and `base` is
- * declared where GetCellAnimDistance sets it. Matched in the second
+ * The skip loop's test reads `t->entries[gActorSpawnIndex].spawn.z`, and
+ * `base` is declared where GetCellAnimDistance sets it (the spawn loop's
+ * test is RunActorCategoryFrame's SPAWN_DUE, actor_category_frame.cpp). Matched in the second
  * near-miss sweep with `&gActorSpawnIndex` (ROM: r7) and `base` (ROM:
  * r8) swapped unless the store went through a local pointer `idx` with
  * one extra `MATCH_USE(idx)` reference; #662 rounds 2-4 found it was
  * global-alloc's ranking (references times floor_log2 over the live
  * length): the address had 4 references over 62 insns (0.129) against
  * `base`'s 7 over 105 (0.133). #662 round 5: the comma-expression test
- * leaves fewer insns in the address's life than NextThreshold's inline
- * (60, 0.1333), and the `for` puts `base` at 105 insns (0.1333); on the
- * tie global.c's allocno_compare takes the lower pseudo first, and a
- * `base` declared at its first set is created after the address's
- * pseudo. As a `while`, or with `base` declared at the top, the two
- * still swap.
- * NextThreshold is actor_spawn.cpp's `GetActorSpawnZ` address shape,
- * returned as a pointer so the load lands after the limit. */
+ * (then the record's address through two locals) left fewer insns in the
+ * address's life than an inline's (60, 0.1333), and the `for` puts `base`
+ * at 105 insns (0.1333); on the tie global.c's allocno_compare takes the
+ * lower pseudo first, and a `base` declared at its first set is created
+ * after the address's pseudo. As a `while`, or with `base` declared at
+ * the top, the two still swap. Read as a field of the spawn table (#855),
+ * the depths need neither the locals nor an inline. */
 
-/* `table[idx + 1].depth`, with the record-boundary constant added
- * to the base before the index (same shape as actor_spawn.cpp's
- * `GetActorSpawnZ`). */
-static inline s32 *NextThreshold(struct sub_effect_record *table, s32 idx)
-{
-    u8 *b = (u8 *)table;
-    s32 off = idx * 0x14;
-
-    b = b + 0x14;
-    return (s32 *)(b + off);
-}
-
-void SelectActorCategory(s32 type, struct sub_effect_record *table,
+void SelectActorCategory(s32 type, struct actor_spawn_table *table,
                          struct anim_table_record *animTable, u8 active, s32 variant,
                          s32 checkpoint)
 {
-    struct sub_effect_record *t;
-    u8 *tb;
-    s32 off;
+    struct actor_spawn_table *t;
 
     gActorCategoryVtable = &gActorCategoryVtables[type];
     gActorSpawnUseBonus = active;
@@ -80,23 +63,18 @@ void SelectActorCategory(s32 type, struct sub_effect_record *table,
     s32 base = GetCellAnimDistance();
 
     t = gActorSpawnTable;
-    for (; gActorSpawnIndex < t->link &&
-           (off = gActorSpawnIndex * sizeof(struct sub_effect_record),
-           tb = (u8 *)t + sizeof(struct sub_effect_record),
-           *(s32 *)(tb + off)) < gActorCategoryVtable->skipDistance + base;
+    for (; gActorSpawnIndex < t->count &&
+           t->entries[gActorSpawnIndex].spawn.z < gActorCategoryVtable->skipDistance + base;
          gActorSpawnIndex++)
         ;
     gActorDrawList = (ActorSelf **)mem_alloc(50 * sizeof(ActorSelf *), MEM_HEAP_IWRAM);
     if (gActorCategoryVtable->createBoss != NULL)
         gActorCategoryVtable->createBoss(variant);
-    while (gActorSpawnIndex < gActorSpawnTable->link &&
-           *NextThreshold(gActorSpawnTable, gActorSpawnIndex) <=
+    while (gActorSpawnIndex < gActorSpawnTable->count &&
+           gActorSpawnTable->entries[gActorSpawnIndex].spawn.z <=
                gActorCategoryVtable->spawnDistance + base) {
-        gActorCategoryVtable->spawn(
-            (struct actor_spawn *)((u8 *)gActorSpawnTable +
-                                   (gActorSpawnIndex * sizeof(struct sub_effect_record) +
-                                    offsetof(struct sub_effect_record, kind))),
-            gActorSpawnUseBonus, 0);
+        gActorCategoryVtable->spawn(&gActorSpawnTable->entries[gActorSpawnIndex].spawn,
+                                    gActorSpawnUseBonus, 0);
         gActorSpawnIndex++;
     }
     gActorCategoryFrameCount = 0;
