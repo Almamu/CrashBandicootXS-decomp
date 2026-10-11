@@ -378,7 +378,7 @@ s32 LevelProgress::RunRoom()
     ResetObjBuffers();
     if (cat->kind == ROOM_KIND_UNDERWATER) {
         gPlayer->StartAnim(0x1F);
-        gCamera->mode = 2;
+        gCamera->mode = CAMERA_MODE_DIRECTIONAL;
     }
     gPlayer->palette = gPlayer->GetAnimPaletteSlot();
     RefreshPlayerTiles();

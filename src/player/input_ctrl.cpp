@@ -41,7 +41,7 @@ extern "C" {
  * on: old_agbcp loads the constant before the `ldrb`).
  * The C wrote out the virtual calls (a vtable-slot macro around
  * `_call_via_r2`/`_call_via_r3`) and the pointer-to-member dispatch (16
- * lines of slot arithmetic); here they are `SetMode(3)` and
+ * lines of slot arithmetic); here they are `SetMode(INPUT_CTRL_STATE_DEAD)` and
  * `(this->*stateFuncs[state])()`. The "mark gone" bitmap sequence
  * (MarkEntityGone's, inlined twice) is Entity::MarkGone. */
 
@@ -51,7 +51,7 @@ extern "C" {
 void InputCtrl::KillPlayer(s32 anim)
 {
     gAudioContext->PlaySfx(SFX_PLAYER_HURT, 0x100);
-    SetMode(3);
+    SetMode(INPUT_CTRL_STATE_DEAD);
     SetTargetAnim(target, anim);
     target->f.b.collides = 0;
     target->f.b.vulnerable = 0;
@@ -65,12 +65,12 @@ void InputCtrl::KillPlayer(s32 anim)
  * time) reset. */
 void InputCtrl::StateStart()
 {
-    SetModeAnim(1, 0, 0, 0);
+    SetModeAnim(INPUT_CTRL_STATE_RIDE, 0, 0, 0);
     motionXPending = 1;
     motionX = 1;
     motionYPending = 1;
     motionY = 0;
-    dirState = 0;
+    dirState = INPUT_CTRL_DIR_STATE_NONE;
     if (cameraLead == 0) {
         cameraLead = new CameraLead;
         CollidableList()->Add(cameraLead);
@@ -85,7 +85,7 @@ void InputCtrl::StateStart()
  * the state method, then the queued motion. */
 void InputCtrl::Update(MovingSprite *)
 {
-    if (state != 3) {
+    if (state != INPUT_CTRL_STATE_DEAD) {
         u32 keys;
         s32 x = target->x;
 
@@ -98,16 +98,16 @@ void InputCtrl::Update(MovingSprite *)
         }
 
         keys = gKeys.all;
-        if ((keys & DPAD_UP) && dirState != 1) {
+        if ((keys & DPAD_UP) && dirState != INPUT_CTRL_DIR_STATE_UP) {
             QueueNowY(3);
-            dirState = 1;
+            dirState = INPUT_CTRL_DIR_STATE_UP;
         } else {
-            if ((keys & DPAD_DOWN) && dirState != 2) {
+            if ((keys & DPAD_DOWN) && dirState != INPUT_CTRL_DIR_STATE_DOWN) {
                 QueueNowY(5);
-                dirState = 2;
+                dirState = INPUT_CTRL_DIR_STATE_DOWN;
             } else if (!(keys & (DPAD_UP | DPAD_DOWN))) {
                 QueueNowY(0);
-                dirState = 0;
+                dirState = INPUT_CTRL_DIR_STATE_NONE;
             }
         }
 
@@ -190,7 +190,7 @@ void InputCtrl::StateDead()
 void InputCtrl::StateUnusedRide()
 {
     if (target->animDone) {
-        SetModeAnim(1, 0, 0, 0);
+        SetModeAnim(INPUT_CTRL_STATE_RIDE, 0, 0, 0);
         QueueNowX(2);
     }
 }
@@ -203,14 +203,14 @@ void InputCtrl::StateUnusedRide()
 void InputCtrl::StateRide()
 {
     if (target->animDone)
-        SetModeAnim(2, 0, 0, 0);
+        SetModeAnim(INPUT_CTRL_STATE_UNUSED_RIDE, 0, 0, 0);
 }
 
-/* State 0 on animation 0, both motion entries 0 queued. Nothing calls
- * it. */
+/* START on animation 0, both motion entries 0 queued: Player::ResetForRoom
+ * calls it for each room (PLAYER_CTRL_MODE_INPUT). */
 void InputCtrl::Restart()
 {
-    SetModeAnim(0, 0, 0, 0);
+    SetModeAnim(INPUT_CTRL_STATE_START, 0, 0, 0);
     motionXPending = 1;
     motionX = 0;
     motionYPending = 1;
@@ -220,7 +220,7 @@ void InputCtrl::Restart()
 /* State 1, entries 0 queued, no target or camera lead yet. */
 void InputCtrl::Reset()
 {
-    state = 1;
+    state = INPUT_CTRL_STATE_RIDE;
     motionX = 0;
     motionY = 0;
     motionXPending = 1;

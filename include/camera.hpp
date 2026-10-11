@@ -21,6 +21,12 @@ extern "C" {
 
 class Sprite;
 
+/* Camera's `mode` (#843, docs/flags/camera.md): how Update eases the
+ * look-ahead. `new Camera` leaves it unset; RunRoom sets FACING. */
+#define CAMERA_MODE_FACING 1      // StepFacing: ahead of the target's facing (on foot, the hover ride)
+#define CAMERA_MODE_DIRECTIONAL 2 // StepDirectional: towards the player's `dir` bits (underwater)
+#define CAMERA_MODE_STILL 3       // no easing: the camera stays put (a plain hit kills the player)
+
 class Camera
 {
 public:
@@ -29,7 +35,7 @@ public:
     s32 vx;         // 0x08 - Q8 look-ahead
     s32 vy;         // 0x0C - Q8 look-ahead
     Sprite *target; // 0x10 - gPlayer, or the level select's camera lead (CameraLead)
-    s32 mode;       // 0x14 - 1/2 select StepFacing/StepDirectional
+    s32 mode;       // 0x14 - CAMERA_MODE_*
 
     void StepDirectional(); // StepCameraDirectional
     void StepFacing();      // StepCameraFacing
