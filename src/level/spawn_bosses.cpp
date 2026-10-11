@@ -54,7 +54,7 @@ void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         part->kind = EVENT_ROOM_EXIT;
         AddUpdateOnly(part);
     } else if (gPlayer->ctrlMode == PLAYER_CTRL_MODE_ACTION) {
-        Platform *pad = Platform::Create(arg0, arg1, arg2, arg3, 4);
+        Platform *pad = Platform::Create(arg0, arg1, arg2, arg3, PLATFORM_KIND_EXIT_PAD);
         struct vec2 point;
 
         point = (struct vec2){ Q8_TO_INT(pad->x) - 2, Q8_TO_INT(pad->y) - 0x1E };

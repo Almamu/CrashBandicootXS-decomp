@@ -33,6 +33,24 @@ class PlatformMover;
 // while not `active` and is gone when it ends, but nothing activates it
 #define PLATFORM_TYPE_ROCK 7
 
+/* Platform::Create's spawn `kind` (#843, docs/flags/platform.md): the
+ * spawner's look, the platform's animation in sprite bank 0x1D4 (its
+ * `tag`). The warp kinds force a PLATFORM_TYPE_*; the others keep the
+ * record's type. */
+#define PLATFORM_KIND_LARGE 0           // SpawnLargePlatform
+#define PLATFORM_KIND_SMALL 1           // SpawnSmallPlatform
+#define PLATFORM_KIND_MEDIUM 2          // SpawnMediumPlatform
+#define PLATFORM_KIND_GEM_YELLOW 3      // SpawnYellowGemPlatform: WARP_GEM_PATH
+#define PLATFORM_KIND_EXIT_PAD 4        // SpawnRoomExit's pad: WARP_EXIT
+#define PLATFORM_KIND_BONUS 5           // SpawnBonusPlatform: WARP_BONUS
+#define PLATFORM_KIND_FLIP 6            // SpawnFlipPlatform: FLIP
+#define PLATFORM_KIND_BONUS_DONE 7      // SpawnBonusPlatform once the round is done or in a time trial
+#define PLATFORM_KIND_ROCK 8            // SpawnRockPlatform: ROCK
+#define PLATFORM_KIND_GEM_BLUE 9        // SpawnBlueGemPlatform: WARP_GEM_PATH
+#define PLATFORM_KIND_GEM_GREEN 0xA     // SpawnGreenGemPlatform: WARP_GEM_PATH
+#define PLATFORM_KIND_GEM_RED 0xB       // SpawnRedGemPlatform: WARP_GEM_PATH
+#define PLATFORM_KIND_GEM_PATH_DONE 0xC // the gem platforms once the gem path is done or in a time trial
+
 /* A level platform (CreatePlatform allocates 0x80 bytes): a moving sprite
  * with a `type` (PLATFORM_TYPE_*), from its spawn record or forced by the
  * spawn kind. Types 1 (a moving platform), 5 (one that falls after the

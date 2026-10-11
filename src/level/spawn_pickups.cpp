@@ -49,7 +49,7 @@ static inline Sprite *SpawnTouchable(u32 a0, u16 a1, u16 a2, u16 a3, s32 bank, u
 void SpawnBodySlamPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     u8 tag = 1;
-    u8 kind = 0x25;
+    u8 kind = EVENT_POWER_BODY_SLAM;
 
     SpawnTouchable(arg0, arg1, arg2, arg3, 0x1c8, tag, kind);
 }
@@ -57,7 +57,7 @@ void SpawnBodySlamPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void SpawnTornadoSpinPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     u8 tag = 0;
-    u8 kind = 0x24;
+    u8 kind = EVENT_POWER_TORNADO_SPIN;
 
     SpawnTouchable(arg0, arg1, arg2, arg3, 0x1c8, tag, kind);
 }
@@ -65,7 +65,7 @@ void SpawnTornadoSpinPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void SpawnDoubleJumpPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     u8 tag = 2;
-    u8 kind = 0x23;
+    u8 kind = EVENT_POWER_DOUBLE_JUMP;
 
     SpawnTouchable(arg0, arg1, arg2, arg3, 0x1c8, tag, kind);
 }
@@ -73,7 +73,7 @@ void SpawnDoubleJumpPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void SpawnTurboRunPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     u8 tag = 3;
-    u8 kind = 0x26;
+    u8 kind = EVENT_POWER_TURBO_RUN;
 
     SpawnTouchable(arg0, arg1, arg2, arg3, 0x1c8, tag, kind);
 }
@@ -101,7 +101,7 @@ void SpawnBlueGem(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     if (gLevelState->progress.flags & PROGRESS_FLAG_BLUE_GEM)
         return;
     u8 tag = 4;
-    u8 kind = 0x21;
+    u8 kind = EVENT_BLUE_GEM;
 
     SpawnTouchable(arg0, arg1, arg2, arg3, 0x180, tag, kind);
 }

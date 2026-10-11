@@ -158,7 +158,7 @@ the names with the header it already includes. A data table in
 | `actor.h` (next to `union EntityFlags`) | `ENTITY_FLAG_`, `ENTITY_FLAG2_`, `ENTITY_BIT_`, `ENTITY_BIT2_` | `Entity::f`'s two flag bytes, for whole-byte access ([docs/flags/entity.md](flags/entity.md)) |
 | `crates.h` (generated) | `CRATE_KIND_` | `crate.kind` (`CreateCrate`, the `gCrateKind*` tables) |
 | `entity_params.h` | `ENTITY_PARAMS_FLAG_`, `ENTITY_PARAMS_BIT_` | byte 0 of a room entity's parameter record: `entity_params`, `crate_placement` and `spawn_rec`'s `flags` (exit facing, flip X, flip Y) ([docs/flags/entity_params.md](flags/entity_params.md)) |
-| `crate.hpp` (next to `struct crate_placement` and Crate) | `CRATE_PLACEMENT_FLAG_`, `CRATE_PLACEMENT_BIT_`, `CRATE_PLACEMENT_OPTION_`, `CRATE_SLOT_FACE_` | a crate's placement flags (bits 5-7 of the same byte) and options byte, and the slot crate's `paramA` faces ([docs/flags/entity_params.md](flags/entity_params.md)) |
+| `crate.hpp` (next to `struct crate_placement` and Crate) | `CRATE_PLACEMENT_FLAG_`, `CRATE_PLACEMENT_BIT_`, `CRATE_PLACEMENT_OPTION_`, `CRATE_SLOT_FACE_`, `CRATE_BLAST_STATE_` | a crate's placement flags (bits 5-7 of the same byte) and options byte, and the slot crate's `paramA` faces ([docs/flags/entity_params.md](flags/entity_params.md)); an explosive crate's `blastState` (none, armed, blasted; [docs/flags/crate_blast.md](flags/crate_blast.md)) |
 | `level_state.hpp` (next to LevelProgress) | `CHECKPOINT_FLAG_` | `LevelProgress::checkpointFlags`, the respawn's X mirror ([docs/flags/entity_params.md](flags/entity_params.md)) |
 | `events.h` | `EVENT_` | event IDs (the event method's `case` labels, `NOTIFY`, the `handleEvent` slot calls); also the kinds that touched objects send |
 | `levels.h` (generated) | `LEVEL_` | level ids, the `gLevelTable` index, from `data/levels/levels.json` |
@@ -166,7 +166,7 @@ the names with the header it already includes. A data table in
 | `rooms.h` | `ROOM_EXIT_` | how a room ended: PlayRoom's and InitActorCategory's result, UpdateGameFrame's `status` (cleared, retry, quit) ([docs/flags/room_exit.md](flags/room_exit.md)) |
 | `level_select.hpp` (next to each class) | `ZOOM_BG_STATE_`, `LEVEL_SELECT_CURSOR_STATE_` | the level select's `ZoomBg::state` (the picture's zoom) and `LevelSelectCursor::state` (idle cycle, grow, shrink) ([docs/flags/level_select.md](flags/level_select.md)) |
 | `box_part.h` | `PART_DIR_` | the direction bits: Sprite's `dir`, MovingSprite's `hitAxes` and `hitMask`, EVENT_BUMP's side ([docs/flags/direction.md](flags/direction.md)) |
-| `platform.hpp` (next to Platform) | `PLATFORM_TYPE_` | `Platform::type` and `PlatformMover::kind`, what a platform does ([docs/flags/platform.md](flags/platform.md)) |
+| `platform.hpp` (next to Platform) | `PLATFORM_TYPE_`, `PLATFORM_KIND_` | `Platform::type` and `PlatformMover::kind`, what a platform does; Platform::Create's spawn `kind`, the platform's look ([docs/flags/platform.md](flags/platform.md)) |
 | `save.h` (next to RunSaveMenu) | `SAVE_MENU_STATE_` | `SaveMenu::state`, the save menu's screen ([docs/flags/save_menu.md](flags/save_menu.md)) |
 | `menus.hpp` (next to `struct pause_row`) | `PAUSE_ROW_TYPE_` | `pause_row::type` and RunPauseMenu's result: resume, restart, quit, the volume rows ([docs/flags/pause_menu.md](flags/pause_menu.md)) |
 | `hud.hpp` (next to Hud) | `HUD_SLIDE_STATE_` | the HUD counters' `livesSlide`/`wumpaSlide`/`crateSlide` (hidden, sliding in, held, sliding out) ([docs/flags/hud_slide.md](flags/hud_slide.md)) |

@@ -27,10 +27,34 @@ The PlatformMover constructor gives types 6 and 7 no travel distance. Its
 test is one unsigned range check, `(u32)(kind - PLATFORM_TYPE_FLIP) <=
 PLATFORM_TYPE_ROCK - PLATFORM_TYPE_FLIP`, which is how the ROM has it.
 
+## The spawn kind, `PLATFORM_KIND_*`
+
+Platform::Create's last argument is the spawner's `kind`: the platform's
+animation in sprite bank 0x1D4 (stored in its `tag`). The warp kinds also
+force a type; the others keep the record's. The names sit next to
+`PLATFORM_TYPE_*` in platform.hpp.
+
+| Kind | Name | Spawner | Forced type |
+|---|---|---|---|
+| 0 | `LARGE` | SpawnLargePlatform | |
+| 1 | `SMALL` | SpawnSmallPlatform | |
+| 2 | `MEDIUM` | SpawnMediumPlatform | |
+| 3 | `GEM_YELLOW` | SpawnYellowGemPlatform, once the yellow gem is collected | `WARP_GEM_PATH` |
+| 4 | `EXIT_PAD` | SpawnRoomExit, with the player on foot | `WARP_EXIT` |
+| 5 | `BONUS` | SpawnBonusPlatform | `WARP_BONUS` |
+| 6 | `FLIP` | SpawnFlipPlatform (entity 0x57) | `FLIP` |
+| 7 | `BONUS_DONE` | SpawnBonusPlatform once the bonus round is done, or in a time trial | |
+| 8 | `ROCK` | SpawnRockPlatform | `ROCK` |
+| 9 | `GEM_BLUE` | SpawnBlueGemPlatform | `WARP_GEM_PATH` |
+| 0xA | `GEM_GREEN` | SpawnGreenGemPlatform | `WARP_GEM_PATH` |
+| 0xB | `GEM_RED` | SpawnRedGemPlatform | `WARP_GEM_PATH` |
+| 0xC | `GEM_PATH_DONE` | the four gem spawners once the gem path is done, or in a time trial | `WARP_GEM_PATH` |
+
+The types in the room data (the parameter record's `type` word) stay
+numbers: tools/levels.py writes the records as raw words.
+
 ## Not named here
 
-- The spawn kind (Create's `kind`, the animation of sprite bank 0x1D4)
-  stays a number.
 - CortexBossPlatformMover reuses `kind` as a 0/1 flag
   (CortexTargetCtrl::SetPlatformsKind), so cortex.cpp's uses aren't
   platform types.
