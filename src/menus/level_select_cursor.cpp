@@ -37,7 +37,7 @@ LevelSelectCursor::LevelSelectCursor()
     gPaletteCache->Lock(part->bank->anims[part->tag].paletteId);
     SetPos(0x78, 0x35);
     oam.y = line.y0 - 0x20;
-    oam.affineMode = 1;
+    oam.affineMode = OAM_AFFINE_MODE_AFFINE;
     oam.objMode = 0;
     oam.mosaic = 0;
     oam.bpp = 0;

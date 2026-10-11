@@ -23,6 +23,15 @@ struct rle_frame;
 struct sprite_bank_table;
 struct vram_tile_block;
 
+/* attr0 bits 8-9, the OBJ's affine mode (`affineMode` in the shadow
+ * entry and in struct oam_attrs; #843, docs/flags/oam.md): the GBA
+ * hardware's rotation/scaling flag (bit 8), and bit 9, which is double
+ * size with it and OBJ disable without it. */
+#define OAM_AFFINE_MODE_NORMAL 0 // a regular OBJ: attr1 bits 12-13 are the h/v flip
+#define OAM_AFFINE_MODE_AFFINE 1 // rotated/scaled by the affine matrix attr1 bits 9-13 pick
+#define OAM_AFFINE_MODE_HIDDEN 2 // not displayed (OamBuffer::HideUnused)
+#define OAM_AFFINE_MODE_DOUBLE 3 // affine, drawn in a box twice the OBJ's size
+
 /* One shadow OAM entry: attributes 0-2, then the affine-parameter
  * halfword the hardware interleaves between entries. */
 union oam_shadow_entry {
@@ -30,7 +39,7 @@ union oam_shadow_entry {
     u16 attr[4]; // [3] is the affine parameter
     struct {
         u8 y;
-        u8 affineMode:2; // 0 regular, 1 affine, 2 hidden, 3 affine at double size
+        u8 affineMode:2; // OAM_AFFINE_MODE_*
         u8 objMode:2;    // struct oam_attrs' names
         u8 mosaic:1;
         u8 bpp:1;
@@ -109,7 +118,7 @@ union dispcnt {
  * compile to the same code with these units (#656). */
 struct oam_attrs {
     u32 y:8;          // 0x00
-    u32 affineMode:2; // 0x01
+    u32 affineMode:2; // 0x01 - OAM_AFFINE_MODE_*
     u32 objMode:2;
     u32 mosaic:1;
     u32 bpp:1;

@@ -99,9 +99,14 @@ struct SfxRecord {
     s32 volume;   // target the owning ambientSfxVolume fade ramps toward
 };
 
+/* `state` (#843, docs/flags/audio.md): the song's playback state. */
+#define AUDIO_STATE_STOPPED 0 // no song: the constructor, StopSong, StartSong before a new one
+#define AUDIO_STATE_PLAYING 1 // StartSong (GAX2_init succeeded), ResumeSong
+#define AUDIO_STATE_PAUSED 2  // PauseSong (from PLAYING only)
+
 struct audio_context {
     u32 unused_00;   // 0x00 - never read or written (InitAudioContext skips it too)
-    u32 state;       // 0x04 - 0 = stopped, 1 = playing, 2 = paused
+    u32 state;       // 0x04 - AUDIO_STATE_*
     u32 currentSong; // 0x08 - index into gSongTable (SONG_*); SONG_NONE = none
     u32 pendingSong; // 0x0c - queued song index, started once the duck-out fade completes
     // 0x10/0x14 - round-robin record of the last 2 PlaySfx ids (StopSfx stop-if-playing scan)
@@ -166,15 +171,15 @@ public:
 
     bool IsStopped()
     {
-        return state == 0;
+        return state == AUDIO_STATE_STOPPED;
     }
     bool IsPlaying()
     {
-        return state == 1;
+        return state == AUDIO_STATE_PLAYING;
     }
     bool IsPaused()
     {
-        return state == 2;
+        return state == AUDIO_STATE_PAUSED;
     }
 
     static void *operator new(size_t size)

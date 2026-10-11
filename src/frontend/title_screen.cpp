@@ -250,7 +250,7 @@ void TitleScreen::DrawLogoPieces()
             u16 scale = 0x1000000 / slot->velA;
             SetAffine(gOamBuffer, matrix, scale, 0, 0, scale);
             CLEAR_OAM(&oamA);
-            oamA.affineMode = 3;
+            oamA.affineMode = OAM_AFFINE_MODE_DOUBLE;
             oamA.matrixLo = 0;
             oamA.palette = 3;
             oamA.size = 2;
@@ -300,9 +300,9 @@ void TitleScreen::DrawLogoPieces()
             off = 0;
             if (d != 0x100) {
                 off = -32;
-                oamB.affineMode = 3;
+                oamB.affineMode = OAM_AFFINE_MODE_DOUBLE;
             } else {
-                oamB.affineMode = 1;
+                oamB.affineMode = OAM_AFFINE_MODE_AFFINE;
             }
             oamB.matrixLo = matrix;
             matrix++;

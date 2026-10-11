@@ -50,7 +50,7 @@ void OamBuffer::HideUnused()
     if (i > OAM_ENTRY_COUNT - 1)
         return;
     do {
-        table[i].attr0.affineMode = 2;
+        table[i].attr0.affineMode = OAM_AFFINE_MODE_HIDDEN;
         i++;
     } while (i <= OAM_ENTRY_COUNT - 1);
 }

@@ -46,7 +46,7 @@ void SpriteRenderer::DrawPieces(Sprite *part, s32 *pos)
     s32 tile = gObjVramCursor->GetTile();
     s32 i;
 
-    oam.affineMode = 0;
+    oam.affineMode = OAM_AFFINE_MODE_NORMAL;
     oam.objMode = part->mirrorFlags.gfxMode;
     oam.mosaic = part->mirrorFlags.mosaic;
     oam.bpp = part->mirrorFlags.colorMode;
@@ -159,9 +159,9 @@ void SpriteRenderer::DrawAffinePieces(Sprite *part, s32 *pos)
     pa = FixedInverse16((s16)scale);
     pd = pa;
     if (scale <= 0x100)
-        oam.affineMode = 1;
+        oam.affineMode = OAM_AFFINE_MODE_AFFINE;
     else
-        oam.affineMode = 3;
+        oam.affineMode = OAM_AFFINE_MODE_DOUBLE;
     buf = gOamBuffer;
     idx = buf->matrixCount++;
     oam.matrixLo = idx;

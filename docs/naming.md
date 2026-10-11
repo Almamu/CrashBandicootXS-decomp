@@ -166,6 +166,8 @@ the names with the header it already includes. A data table in
 | `categories.h` | `CATEGORY_` | actor categories (`gActorCategories` index), `CATEGORY_TYPE_*` and the `CATEGORY_EXIT_*` statuses |
 | `vehicle.hpp`, `frontend.hpp` (next to each class) | `POLAR_PLAYER_STATE_`, `POLAR_AKU_AKU_STATE_`, `POLAR_LAUNCHER_STATE_`, `POLAR_PENGUIN_STATE_`, `POLAR_ICICLE_STATE_`, `LOGO_ACTOR_STATE_` | `ActorSelf::state` of the polar run's actors and the logo actor ([docs/flags/actor_states_polar.md](flags/actor_states_polar.md)) |
 | `chunk_tokens.h` | `CHUNK_TOKEN_` | the run kinds of a layer/collision chunk's token stream (`DecodeCollisionChunk`, `DecodeLayerChunk`) |
+| `audio.hpp` (next to `struct audio_context`) | `AUDIO_STATE_` | `audio_context::state`, the song's playback state (stopped, playing, paused) ([docs/flags/audio.md](flags/audio.md)) |
+| `gfx.h` (next to the OAM structs; hardware) | `OAM_AFFINE_MODE_` | attr0's `affineMode`: normal, affine, hidden (OBJ disable), double-size affine ([docs/flags/oam.md](flags/oam.md)) |
 | `gba/io_reg.h` (hardware) | `A_BUTTON`, `B_BUTTON`, `SELECT_BUTTON`, `START_BUTTON`, `DPAD_*`, ... | the KEYINPUT bits of `gKeys` and ActionCtrl's `INPUT_HELD`/`INPUT_PRESSED` ([docs/flags/input.md](flags/input.md)) |
 
 **Constants that describe data the repository has as source files are

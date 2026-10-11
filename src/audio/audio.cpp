@@ -80,7 +80,7 @@ void AudioContext::StartSong(u32 songIndex)
     if (!IsStopped()) {
         pendingSong = SONG_NONE;
         currentSong = SONG_NONE;
-        state = 0;
+        state = AUDIO_STATE_STOPPED;
         GAX_stop();
         gGaxIrqEnabled = 0;
     }
@@ -96,7 +96,7 @@ void AudioContext::StartSong(u32 songIndex)
         field_54 = 0;
         FadeInMusic();
         gGaxIrqEnabled = 1;
-        state = 1;
+        state = AUDIO_STATE_PLAYING;
     }
 }
 
@@ -380,7 +380,7 @@ void AudioContext::ResumeSong()
     if (IsPaused()) {
         WaitForVBlank();
         GAX_resume();
-        state = 1;
+        state = AUDIO_STATE_PLAYING;
     }
 }
 
@@ -388,7 +388,7 @@ void AudioContext::ResumeSong()
 void AudioContext::PauseSong()
 {
     if (IsPlaying()) {
-        state = 2;
+        state = AUDIO_STATE_PAUSED;
         WaitForVBlank();
         GAX_play();
         GAX_pause();
@@ -402,7 +402,7 @@ void AudioContext::StopSong()
     if (!IsStopped()) {
         pendingSong = SONG_NONE;
         currentSong = SONG_NONE;
-        state = 0;
+        state = AUDIO_STATE_STOPPED;
         GAX_stop();
         gGaxIrqEnabled = 0;
     }
@@ -421,7 +421,7 @@ AudioContext::~AudioContext()
  * sentinel, every fade-direction flag cleared). */
 AudioContext::AudioContext()
 {
-    state = 0;
+    state = AUDIO_STATE_STOPPED;
     pendingSong = SONG_NONE;
     currentSong = SONG_NONE;
     musicVolCurrent = 0x100;
