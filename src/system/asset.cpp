@@ -30,16 +30,8 @@ void LoadTaggedAsset(const void *asset, void *dest)
 
     switch (type) {
     case ASSET_TYPE_RAW:
-        {
-            struct dma_regs *dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
-            u32 size;
-            dma->src = (u32)asset + 4;
-            dma->dst = (u32)dest;
-            size = *(const u32 *)asset;
-            dma->cnt = ((size >> 8) - 4) >> 2 | 0x84000000;
-            size = dma->cnt;
-            break;
-        }
+        DmaCopy32(3, (const u8 *)asset + 4, dest, (*(const u32 *)asset >> 8) - 4);
+        break;
     case ASSET_TYPE_LZ77:
         LZ77UnCompVram((void *)asset);
         break;
@@ -55,14 +47,7 @@ void LoadTaggedAsset(const void *asset, void *dest)
  * RAM (`PLTT`). */
 void LoadBackgroundTileAndPalette(const void *asset)
 {
-    struct dma_regs *dma;
-    u32 val;
-
     LoadTaggedAsset((const u8 *)asset + 0x200, (void *)VRAM);
     WaitForVBlank();
-    dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
-    dma->src = (u32)asset;
-    dma->dst = PLTT;
-    dma->cnt = 0x80000100;
-    val = dma->cnt;
+    DmaCopy16(3, asset, PLTT, BG_PLTT_SIZE);
 }
