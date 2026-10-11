@@ -180,8 +180,8 @@ Entity *Entity::Create(u16 id, u16 x, u16 y, u16)
     Entity *e = new Entity;
 
     e->id = id;
-    e->x = INT_TO_Q8((s32)x);
-    e->y = INT_TO_Q8((s32)y);
+    e->x = INT_TO_Q8(x);
+    e->y = INT_TO_Q8(y);
     return e;
 }
 

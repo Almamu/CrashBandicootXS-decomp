@@ -121,13 +121,10 @@ void SetActorCheckpoint(s32 arg0)
 }
 
 /* True once the running active-instance count reaches the current
- * category's `maskAssistDeaths` threshold. The cast to `s32` matches the
- * ROM's own signed comparison (`blt`) - `maskAssistDeaths` is declared `u32`
- * in actor_anim.h (its sign isn't otherwise pinned down), and the
- * unsigned usual-arithmetic-conversion comparison that produces
- * compiles to the unsigned `bcc` instead (see docs/workflow.md
- * step 3). */
+ * category's `maskAssistDeaths` threshold. The ROM compares signed
+ * (`blt`), so the threshold is an `s32` (actor_anim.h), as
+ * LevelState's and level_info's are. */
 bool IsActorMaskAssistDue(void)
 {
-    return gActorCategoryDeaths >= (s32)gActorCategories[gActorCategory].maskAssistDeaths;
+    return gActorCategoryDeaths >= gActorCategories[gActorCategory].maskAssistDeaths;
 }

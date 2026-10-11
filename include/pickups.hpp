@@ -105,9 +105,9 @@ public:
     {
         Reset();
         this->id = id;
-        x = INT_TO_Q8((s32)px);
-        y = INT_TO_Q8((s32)py);
-        anchor = *(struct vec2 *)&x;
+        x = INT_TO_Q8(px);
+        y = INT_TO_Q8(py);
+        anchor = Pos();
     }
     static ExtraLife *Create(u16 id, u16 x, u16 y, s32 unused); // CreateExtraLife
     void PickUp(u8 randomize);                                  // PickUpExtraLife
@@ -165,9 +165,9 @@ public:
     {
         Reset();
         this->id = id;
-        x = INT_TO_Q8((s32)px);
-        y = INT_TO_Q8((s32)py);
-        anchor = *(struct vec2 *)&x;
+        x = INT_TO_Q8(px);
+        y = INT_TO_Q8(py);
+        anchor = Pos();
     }
     static Wumpa *Create(u16 id, u16 x, u16 y, u16 special); // CreateWumpa
     void PickUp(u8 randomize);                               // PickUpWumpa
@@ -208,8 +208,8 @@ public:
     {
         Reset();
         this->id = id;
-        x = INT_TO_Q8((s32)px);
-        y = INT_TO_Q8((s32)py);
+        x = INT_TO_Q8(px);
+        y = INT_TO_Q8(py);
     }
     static Stopwatch *Create(u16 id, u16 x, u16 y, u16 unused); // CreateStopwatch
     void Reset();                                               // ResetStopwatch

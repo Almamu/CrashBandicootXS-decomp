@@ -185,9 +185,8 @@ bool LevelProgress::IsInGemPathRoom()
 {
     const struct level_room_list *list = gLevelTable[level].rooms;
     s32 result = 0;
-    s32 cached = (s32)cat;
 
-    if (cached == (s32)list->extra2) {
+    if (cat == list->extra2) {
         result = 1;
     }
     return result;
@@ -198,9 +197,8 @@ bool LevelProgress::IsInBonusRoom()
 {
     const struct level_room_list *list = gLevelTable[level].rooms;
     s32 result = 0;
-    s32 cached = (s32)cat;
 
-    if (cached == (s32)list->extra1) {
+    if (cat == list->extra1) {
         result = 1;
     }
     return result;

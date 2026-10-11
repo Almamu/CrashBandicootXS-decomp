@@ -32,8 +32,8 @@ Player::Player(u16 id, u16 px, u16 py, u16 unused)
     Reset();
 
     this->id = id;
-    x = INT_TO_Q8((s32)px);
-    y = INT_TO_Q8((s32)py);
+    x = INT_TO_Q8(px);
+    y = INT_TO_Q8(py);
 }
 
 /* The player's accessors (Player, include/player.hpp; part 8). They were

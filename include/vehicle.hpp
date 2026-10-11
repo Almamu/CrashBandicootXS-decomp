@@ -82,7 +82,10 @@ extern "C" struct ActorSelf *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z,
 extern "C" void CreateJetpackCheckpointText(void);
 extern "C" void CreateJetpackExplosion(s32 x, s32 y, s32 z);
 extern "C" void SpawnJetpackCollectedWumpa(s32 a, s32 b, s32 c);
-extern "C" void *SpawnJetpackBalloon(u8 kind, s32 a, s32 b, s32 c, s32 d);
+class JetpackBalloon;
+class JetpackBalloonCrate;
+extern "C" JetpackBalloon *SpawnJetpackBalloon(u8 kind, s32 a, s32 b, s32 c,
+                                               JetpackBalloonCrate *crate);
 extern "C" void SpawnJetpackCannonball(s32 a, s32 b, s32 c, s32 d, s32 e);
 extern "C" void SpawnJetpackShot(s32 a, s32 b, s32 c, s32 d, s32 e);
 extern "C" void CreateJetpackPlayer(struct anim_table_record *table, s32 z);

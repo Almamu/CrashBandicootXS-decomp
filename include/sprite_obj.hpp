@@ -124,8 +124,8 @@ public:
     {
         Reset();
         this->id = id;
-        x = INT_TO_Q8((s32)px);
-        y = INT_TO_Q8((s32)py);
+        x = INT_TO_Q8(px);
+        y = INT_TO_Q8(py);
     }
     static Sprite *Create(u16 id, u16 x, u16 y, u16 unused); // CreateSpriteObj
 
@@ -297,8 +297,8 @@ public:
     {
         Reset();
         this->id = id;
-        x = INT_TO_Q8((s32)px);
-        y = INT_TO_Q8((s32)py);
+        x = INT_TO_Q8(px);
+        y = INT_TO_Q8(py);
     }
     static MovingSprite *Create(u16 id, u16 x, u16 y, u16 unused); // CreateMovingSprite
 
@@ -375,8 +375,8 @@ public:
     {
         Reset();
         this->id = id;
-        x = INT_TO_Q8((s32)px);
-        y = INT_TO_Q8((s32)py);
+        x = INT_TO_Q8(px);
+        y = INT_TO_Q8(py);
     }
     static GroundSprite *Create(u16 id, u16 x, u16 y, u16 unused); // CreateGroundSprite
 
