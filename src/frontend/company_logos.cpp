@@ -57,13 +57,7 @@ void CompanyLogos::Run()
     InitSpriteFrameOamQueue();
     InitSpriteFrameCache();
     part = new LogoActor(&gLogoActorAnim);
-    {
-        struct dma_regs *dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
-        dma->src = (u32)gPolarCategoryPalette;
-        dma->dst = OBJ_PLTT;
-        dma->cnt = 0x80000100;
-        dma->cnt;
-    }
+    DmaCopy16(3, gPolarCategoryPalette, OBJ_PLTT, OBJ_PLTT_SIZE);
     LoadVvLogoGraphics();
     InitVvLogoPieces();
     bg = new Starfield;
@@ -455,22 +449,16 @@ void CompanyLogos::DrawVvLogoPieces()
         tile = (tilesC - (u32)OBJ_VRAM0) >> 5;
         /* `scratch` cleared with a 32-bit DMA3 fill from `zero32`, as
          * CLEAR_OAM does (include/frontend.hpp), and in the loop each row's
-         * two halves copied with DmaCopy16. Written with one `dma` pointer
-         * for the whole block (the loop's copies through it), the base
-         * and `&frames` swapped r2 and r3, and the loop's insn count was
-         * three short of the ROM's hoisting (#481); this needed an r2 pin
-         * and three empty asm()s. DmaCopy16's own pointer, set in the
-         * loop, gives both. */
+         * two halves copied with DmaCopy16. `buf` is assigned inside the
+         * fill's destination argument: the ROM loads `scratch` between the
+         * SAD and DAD stores, straight into `buf`'s register. Written with
+         * one `dma` pointer for the whole block (the loop's copies through
+         * it), the base and `&frames` swapped r2 and r3, and the loop's
+         * insn count was three short of the ROM's hoisting (#481); this
+         * needed an r2 pin and three empty asm()s. DmaCopy16's own
+         * pointer, set in the loop, gives both. */
         zero32 = 0;
-        {
-            struct dma_regs *dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
-
-            dma->src = (u32)&zero32;
-            buf = scratch;
-            dma->dst = (u32)buf;
-            dma->cnt = 0x85000400;
-            dma->cnt;
-        }
+        DmaFill32From(3, &zero32, buf = scratch, 0x1000);
         src = frames + frame * 0xa00;
         /* `base + row * 0x100 + 0x60` is a giv of the row counter, which
          * check_dbra_loop reverses, so loop.c must reduce it into its own
@@ -540,13 +528,7 @@ void CompanyLogos::LoadUniversalLogoBg()
 
     palBuf = new u16[0x100];
     LoadTaggedAsset(pkg->paletteAsset, palBuf);
-    {
-        struct dma_regs *dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
-        dma->src = (u32)(palBuf + 1);
-        dma->dst = PLTT + 2;
-        dma->cnt = 0x80000040;
-        dma->cnt;
-    }
+    DmaCopy16(3, palBuf + 1, PLTT + 2, 0x80);
     delete[] palBuf;
     LoadTaggedAsset(pkg->tileAsset, (void *)BG_CHAR_ADDR(2));
     mapBuf = new u16[pkg->height * pkg->width];

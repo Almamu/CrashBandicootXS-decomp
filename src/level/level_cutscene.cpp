@@ -129,9 +129,7 @@ void LevelState::PlayCutscene(s32 idx)
         u16 *src = &f.fill;
 
         *src = zero;
-        DmaSet(3, src, PLTT,
-               (DMA_ENABLE | DMA_START_NOW | DMA_16BIT | DMA_SRC_FIXED | DMA_DEST_INC) << 16 |
-                   (BG_PLTT_SIZE / 2));
+        DmaFill16From(3, src, PLTT, BG_PLTT_SIZE);
     }
     REG_BG2PA = 0x100;
     REG_BG2PB = zero;

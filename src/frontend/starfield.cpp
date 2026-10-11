@@ -49,7 +49,6 @@ inline void Starfield::Plot(u32 x, s32 y, s32 val)
  * and the shadow buffer cleared. */
 Starfield::Starfield()
 {
-    struct dma_regs *dma;
     union bgcnt bg0cnt;
     s32 gradIdx;
     s32 gradCount;
@@ -127,11 +126,7 @@ Starfield::Starfield()
     /* Zero-fills the 19200-byte tile VRAM (a fixed-source 16-bit fill
      * from one stack halfword). */
     dmaFillSrc16 = 0;
-    dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
-    dma->src = (u32)&dmaFillSrc16;
-    dma->dst = tileBase;
-    dma->cnt = 0x81002580;
-    dma->cnt;
+    DmaFill16From(3, &dmaFillSrc16, tileBase, 0x4B00);
 
     REG_BLDCNT = 0;
     CommitDispcnt();
@@ -143,10 +138,7 @@ Starfield::Starfield()
     /* Zero-fills the new `tileBuffer` (a fixed-source 32-bit fill from
      * one stack word). */
     dmaFillSrc32 = 0;
-    dma->src = (u32)dma2Src;
-    dma->dst = (u32)tileBuffer;
-    dma->cnt = 0x850012C0;
-    dma->cnt;
+    DmaFill32From(3, dma2Src, tileBuffer, 0x4B00);
 }
 
 /* Every frame: commits last frame's `tileBuffer` to the tile VRAM (DMA3,
@@ -158,23 +150,12 @@ Starfield::Starfield()
  * bounds tests are unsigned (the ROM's `bhi`). */
 void Starfield::Draw()
 {
-    struct dma_regs *dma;
     StarParticle *slot;
     s32 i;
     s32 n;
-    u32 fillZero;
 
-    dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
-    dma->src = (u32)tileBuffer;
-    dma->dst = tileVramBase;
-    dma->cnt = 0x840012C0;
-    dma->cnt;
-
-    fillZero = 0;
-    dma->src = (u32)&fillZero;
-    dma->dst = (u32)tileBuffer;
-    dma->cnt = 0x850012C0;
-    dma->cnt;
+    DmaCopy32(3, tileBuffer, tileVramBase, 0x4B00);
+    DmaFill32(3, 0, tileBuffer, 0x4B00);
 
     slot = particles;
     i = 0;

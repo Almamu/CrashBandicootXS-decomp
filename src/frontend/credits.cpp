@@ -381,27 +381,16 @@ void Credits::LoadLogos()
         LoadTaggedAsset(src->tiles, tiles);
         size = (logo->cols * logo->rows) << 9;
         logo->tiles = new u8[size];
-        {
-            u32 zero = 0;
-            struct dma_regs *dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
-
-            dma->src = (u32)&zero;
-            dma->dst = (u32)logo->tiles;
-            dma->cnt = (size / 4) | 0x85000000;
-            dma->cnt;
-        }
+        DmaFill32(3, 0, logo->tiles, size);
         for (y = 0; y < src->h; y++) {
             s32 x;
 
             for (x = 0; x < src->w; x++) {
                 s32 cell = (y >> 2) * logo->cols + (x >> 2);
                 s32 sub = (x & 3) + ((y & 3) << 2);
-                struct dma_regs *dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
 
-                dma->src = (u32)(tiles + (y * src->w + x) * 32);
-                dma->dst = (u32)(logo->tiles + (((cell << 4) + sub) << 5));
-                dma->cnt = 0x84000008;
-                dma->cnt;
+                DmaCopy32(3, tiles + (y * src->w + x) * 32,
+                          logo->tiles + (((cell << 4) + sub) << 5), TILE_SIZE_4BPP);
             }
         }
         delete[] tiles;
