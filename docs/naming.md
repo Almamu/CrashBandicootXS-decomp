@@ -142,6 +142,8 @@ the names with the header it already includes. A data table in
 | `level_flags.h` | `LEVEL_FLAG_` | the bits of a `game_progress.levels[]` word |
 | `progress_flags.h` | `PROGRESS_FLAG_`, `PROGRESS_BIT_` | `GameProgress::flags`: the coloured gems and the powers ([docs/flags/progress.md](flags/progress.md)) |
 | `player.hpp` (next to Player) | `PLAYER_CTRL_MODE_` | `Player::ctrlMode`, the player's controller (on foot, underwater, hovering) ([docs/flags/player_ctrl_mode.md](flags/player_ctrl_mode.md)) |
+| `input_ctrl.hpp` (next to InputCtrl) | `INPUT_CTRL_STATE_`, `INPUT_CTRL_DIR_STATE_` | the hover ride's controller: `Ctrl::state` (the `stateFuncs` index) and `dirState` (the D-pad's last vertical direction) ([docs/flags/input_ctrl.md](flags/input_ctrl.md)) |
+| `camera.hpp` (next to Camera) | `CAMERA_MODE_` | `Camera::mode`: facing, directional (underwater), still ([docs/flags/camera.md](flags/camera.md)) |
 | `mask_level.h` | `MASK_LEVEL_` | `level_state.maskLevel` values |
 | `pickups.hpp` (next to ExtraLife and Wumpa) | `EXTRA_LIFE_STATE_`, `WUMPA_STATE_`, `PICKUP_MODE_`, `WUMPA_MODE_PAYOUT`, `PICKUP_PHASE_` | the extra life's and the wumpa's `state` (on the spot, flying off, the payout), `mode` (bob or hop) and hop `phase` ([docs/flags/pickups.md](flags/pickups.md)) |
 | `packed_stats.h` | `PACKED_STATS_` | the packed lives/mask/wumpa halfword |

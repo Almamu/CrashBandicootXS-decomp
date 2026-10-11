@@ -79,7 +79,7 @@ static inline void SetSpeedY(Player *p, s32 speed, s32 step, s32 target)
  * - the warps: the warp out (animation 0x24), the music faded for the
  *   bonus round;
  * - the hits: KillPlayer with the death animation of each, the plain hits
- *   also stopping the player and setting the camera mode 3;
+ *   also stopping the player and setting CAMERA_MODE_STILL;
  * - EVENT_MASK_HIT: the Aku Aku mask absorbed a hit: on the ground and
  *   with room for it, StartMaskHitJump. */
 void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
@@ -303,7 +303,7 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
             p->rampX.step = z;
             p->rampX.target = z;
             SetSpeedY(part, -0x100, 0, -0x100);
-            gCamera->mode = 3;
+            gCamera->mode = CAMERA_MODE_STILL;
         }
         break;
     case EVENT_HIT_CRUSH:

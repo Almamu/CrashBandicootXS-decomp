@@ -123,7 +123,7 @@ void Camera::Snap()
     x = followed->x;
     y = followed->y;
 
-    if (mode == 1) {
+    if (mode == CAMERA_MODE_FACING) {
         if ((followed->mirror << 27) < 0)
             vx = -0x1276;
         else
@@ -142,13 +142,13 @@ void Camera::Snap()
 void Camera::Update()
 {
     switch (mode) {
-    case 1:
+    case CAMERA_MODE_FACING:
         StepFacing();
         break;
-    case 2:
+    case CAMERA_MODE_DIRECTIONAL:
         StepDirectional();
         break;
-    case 3: // no behavior - needed for the ROM's switch shape (see the file comment)
+    case CAMERA_MODE_STILL: // no behavior - needed for the ROM's switch shape (see the file comment)
         break;
     }
 

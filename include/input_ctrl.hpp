@@ -11,6 +11,18 @@
 #include "player.hpp"
 #include "level_select.hpp"
 
+/* InputCtrl's `state` (Ctrl::state; #843, docs/flags/input_ctrl.md): the
+ * `stateFuncs` index. */
+#define INPUT_CTRL_STATE_START 0       // StateStart: the ride's set-up (Restart, from Player::ResetForRoom)
+#define INPUT_CTRL_STATE_RIDE 1        // StateRide: the whole ride (StateStart; Reset)
+#define INPUT_CTRL_STATE_UNUSED_RIDE 2 // StateUnusedRide: StateRide's at animation 0's end, never reached
+#define INPUT_CTRL_STATE_DEAD 3        // StateDead: KillPlayer; Update skips the steering
+
+/* `dirState`: the D-pad's last vertical direction, queued once. */
+#define INPUT_CTRL_DIR_STATE_NONE 0 // neither up nor down: Y entry 0
+#define INPUT_CTRL_DIR_STATE_UP 1   // up: Y entry 3
+#define INPUT_CTRL_DIR_STATE_DOWN 2 // down: Y entry 5
+
 /* The input controller (gInputCtrlVtable; 0x28 bytes):
  * the player's controller in room kind 2 (play_room.cpp creates it), where
  * the player uses sprite bank 2 (Crash riding a hover vehicle) and the
@@ -24,7 +36,7 @@ public:
     Player *target;         // 0x10
     u8 motionX;             // 0x14 - queued X motion entry (animSet->entries[][0])
     u8 motionY;             // 0x15 - queued Y motion entry (animSet->entries[][1])
-    u8 dirState;            // 0x16 - the D-pad's last vertical direction: 0 none, 1 up, 2 down
+    u8 dirState;            // 0x16 - the D-pad's last vertical direction: INPUT_CTRL_DIR_STATE_*
     u8 motionXPending;      // 0x17 - ApplyMotion applies motionX
     u8 motionYPending;      // 0x18 - ApplyMotion applies motionY
     u8 motionXKeepSpeed;    // 0x19 - apply with SetTargetMotionX (speed kept), not Start...
@@ -34,8 +46,7 @@ public:
     s32 timer;              // 0x24 - how long left has been held, and the cooldown after
 
     /* The state methods, indexed by `state` (gInputCtrlStateFuncs,
-     * src/data/player_pmf_16c250.cpp): 0 StateStart, 1 StateRide,
-     * 2 StateUnusedRide, 3 StateDead. */
+     * src/data/player_pmf_16c250.cpp): INPUT_CTRL_STATE_*. */
     typedef void (InputCtrl::*StateFunc)();
     static const StateFunc stateFuncs[4];
 
