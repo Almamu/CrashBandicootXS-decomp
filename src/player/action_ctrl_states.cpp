@@ -202,7 +202,7 @@ skip:
             if (wait == 0) {
                 switch (dir) {
                 case KEY_DIR_LEFT ... KEY_DIR_DOWN_RIGHT:
-                    if ((INPUT_HELD(in) & L_BUTTON) && (u8)gLevelState->HasTurboRun()) {
+                    if ((INPUT_HELD(in) & L_BUTTON) && gLevelState->HasTurboRun()) {
                         turboRun = 1;
                         SetMode(ACTION_STATE_TURBO_RUN);
                         SetTargetAnim(part, 0x18);
@@ -302,7 +302,7 @@ void ActionCtrl::StateRun()
         s32 held = (u16)(INPUT_HELD(in) & L_BUTTON);
 
         if (held) {
-            if (state == ACTION_STATE_RUN && (u8)gLevelState->HasTurboRun()) {
+            if (state == ACTION_STATE_RUN && gLevelState->HasTurboRun()) {
                 turboRun = 1;
                 SetMode(ACTION_STATE_TURBO_RUN);
                 SetTargetAnim(part, 0x18);
@@ -640,7 +640,7 @@ void ActionCtrl::StateFlipBodySlamStart()
         else if (frame > 3 || p->animDone)
             SetTargetAnim(p, 8);
     } else if (p->animDone) {
-        if ((u8)gLevelState->HasSuperBodySlam()) {
+        if (gLevelState->HasSuperBodySlam()) {
             SetMode(ACTION_STATE_AIRBORNE_SUPER_BODY_SLAM);
             SetTargetAnim(part, 7);
         } else {
@@ -727,7 +727,7 @@ void ActionCtrl::StateSlide()
             if (dir != KEY_DIR_NONE && part->HasRoomForAnim(2)) {
                 switch (dir) {
                 case KEY_DIR_LEFT ... KEY_DIR_RIGHT:
-                    if ((INPUT_HELD(in) & L_BUTTON) && (u8)gLevelState->HasTurboRun()) {
+                    if ((INPUT_HELD(in) & L_BUTTON) && gLevelState->HasTurboRun()) {
                         turboRun = 1;
                         SetMode(ACTION_STATE_TURBO_RUN);
                         SetTargetAnim(part, 0x18);
@@ -786,7 +786,7 @@ void ActionCtrl::StateSpin()
         part->hitAxes = 0;
         return;
     }
-    if ((u8)gLevelState->HasTornadoSpin() && (INPUT_PRESSED(in) & B_BUTTON) && spinCooldown == 0) {
+    if (gLevelState->HasTornadoSpin() && (INPUT_PRESSED(in) & B_BUTTON) && spinCooldown == 0) {
         if (++charge > 3)
             charge = 3;
     }
@@ -828,7 +828,7 @@ void ActionCtrl::StateAirSpin()
         StateSpin();
         return;
     }
-    if ((u8)gLevelState->HasTornadoSpin() && (INPUT_PRESSED(in) & B_BUTTON) && spinCooldown == 0) {
+    if (gLevelState->HasTornadoSpin() && (INPUT_PRESSED(in) & B_BUTTON) && spinCooldown == 0) {
         if (++charge > 3)
             charge = 3;
     }
@@ -885,7 +885,7 @@ void ActionCtrl::StateTornadoSpin()
         part->hitAxes = 0;
         return;
     }
-    if ((u8)gLevelState->HasTornadoSpin() && (INPUT_PRESSED(in) & B_BUTTON) && spinCooldown == 0) {
+    if (gLevelState->HasTornadoSpin() && (INPUT_PRESSED(in) & B_BUTTON) && spinCooldown == 0) {
         if (++charge > 3)
             charge = 3;
     }

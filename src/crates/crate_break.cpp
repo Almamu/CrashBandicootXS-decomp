@@ -1280,7 +1280,7 @@ void Crate::OpenMystery(bool flag)
             u16 eid = id;
 
             if (eid != 0xffff) {
-                if ((u8)gEntityFlags->IsActivated(eid) == 0)
+                if (gEntityFlags->IsActivated(eid) == 0)
                     gEntityFlags->SetActivated(id);
             }
         }
@@ -1365,7 +1365,7 @@ void Crate::OpenSlot(bool flag)
             u16 eid = id;
 
             if (eid != 0xffff) {
-                if ((u8)gEntityFlags->IsActivated(eid) == 0)
+                if (gEntityFlags->IsActivated(eid) == 0)
                     gEntityFlags->SetActivated(id);
             }
         }

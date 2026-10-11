@@ -191,7 +191,7 @@ s32 InitActorCategory(s32 category)
                 }
             } else {
                 open = 0;
-                if ((u8)IsBrightnessFadeActive() == 0 && ((gKeys.all >> 16) & START_BUTTON))
+                if (IsBrightnessFadeActive() == 0 && ((gKeys.all >> 16) & START_BUTTON))
                     open = -CanPauseActorCategory() < 0;
                 if (open) {
                     result = RunCategoryPauseMenu(dma);

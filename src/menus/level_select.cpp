@@ -386,15 +386,15 @@ void LevelSelect::LoadRecord()
     struct level_save_h *sv;
 
     *r = 5;
-    if ((u8)gLevelState->LevelHasGemPathGem(levelId))
+    if (gLevelState->LevelHasGemPathGem(levelId))
         *r = 0;
-    if ((u8)gLevelState->LevelHasRedGem(levelId))
+    if (gLevelState->LevelHasRedGem(levelId))
         *r = 1;
-    if ((u8)gLevelState->LevelHasGreenGem(levelId))
+    if (gLevelState->LevelHasGreenGem(levelId))
         *r = 2;
-    if ((u8)gLevelState->LevelHasBlueGem(levelId))
+    if (gLevelState->LevelHasBlueGem(levelId))
         *r = 3;
-    if ((u8)gLevelState->LevelHasYellowGem(levelId))
+    if (gLevelState->LevelHasYellowGem(levelId))
         *r = 4;
     clearedIconY = 0;
     flag1IconY = 0;

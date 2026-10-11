@@ -39,7 +39,7 @@ void FadePaletteToBlack(void)
 
 /* `gBrightnessFade.period != -1`: the "idle" sentinel (gfx.h). */
 
-s32 IsBrightnessFadeActive(void)
+bool IsBrightnessFadeActive(void)
 {
     return gBrightnessFade.period != -1;
 }

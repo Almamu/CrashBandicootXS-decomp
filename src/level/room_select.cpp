@@ -32,7 +32,7 @@ void LevelProgress::PlayRoomMusic()
 
     if (mode == MASK_LEVEL_INVINCIBLE) {
         id = SONG_DRUMS;
-    } else if ((u8)IsInBonusRoom() != 0) {
+    } else if (IsInBonusRoom() != 0) {
         id = SONG_BONUS_ROUND;
     } else {
         u32 offset = gLevelTable[level].theme;
@@ -46,7 +46,7 @@ void LevelProgress::PlayRoomMusic()
 /* Advances `roomIndex` (a cursor into `gLevelTable[level]`'s
  * item list) by one if it's still below `count - 1`; returns whether
  * it advanced. */
-s32 LevelProgress::NextRoom()
+bool LevelProgress::NextRoom()
 {
     s32 advanced = 0;
     const struct level_room_list *list = gLevelTable[level].rooms;
@@ -85,7 +85,7 @@ void LevelProgress::EnterBonusRoom()
  * `if (expr != 0)` earlier in the same function, which compiles as a
  * plain compare-and-branch) - see matching_decomp_register_pinning-
  * style notes in docs/matching.md for other instances of this split. */
-s32 LevelProgress::SelectRoom()
+bool LevelProgress::SelectRoom()
 {
     const struct level_room_list *list = gLevelTable[level].rooms;
 

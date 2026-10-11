@@ -45,14 +45,14 @@ class LevelProgress
 {
 public:
     // level_query.cpp
-    s32 IsInGemPathRoom();
-    s32 IsInBonusRoom();
+    bool IsInGemPathRoom();
+    bool IsInBonusRoom();
     // room_select.cpp
     void PlayRoomMusic();
-    s32 NextRoom();
+    bool NextRoom();
     void EnterGemPathRoom();
     void EnterBonusRoom();
-    s32 SelectRoom();
+    bool SelectRoom();
     s32 PlayRoom();              // play_room.cpp
     void ResumeRoomAfterPause(); // room.cpp
     void UpdateRoomFrame();      // play_room.cpp
@@ -134,10 +134,12 @@ public:
     void GiveSuperBodySlam();
     void GiveTurboRun();
     void GiveDoubleJump();
-    s32 HasTornadoSpin();
-    s32 HasSuperBodySlam();
-    s32 HasTurboRun();
-    s32 HasDoubleJump();
+    bool HasTornadoSpin();
+    bool HasSuperBodySlam();
+    bool HasTurboRun();
+    /* u8, not bool: as a bool, `flags >> 7` gets a `!= 0` test the ROM
+     * doesn't have (#855). */
+    u8 HasDoubleJump();
     void ResetCrateCount();
     void ResetWumpa();
     void ResetLives();
@@ -172,17 +174,17 @@ public:
     s32 GetRoomIndex();
     s32 GetCurrentLevel();
     void SetCurrentLevel(s32 value);
-    s32 LevelHasYellowGem(s32 idx);
-    s32 LevelHasBlueGem(s32 idx);
-    s32 LevelHasGreenGem(s32 idx);
-    s32 LevelHasRedGem(s32 idx);
-    s32 LevelHasGemPathGem(s32 idx);
+    bool LevelHasYellowGem(s32 idx);
+    bool LevelHasBlueGem(s32 idx);
+    bool LevelHasGreenGem(s32 idx);
+    bool LevelHasRedGem(s32 idx);
+    bool LevelHasGemPathGem(s32 idx);
     s32 GetBossHealth();
     s32 GetBossIndex();
     u8 *GetLevelFlags(s32 idx);
     u8 *GetCurrentLevelFlags();
     s32 GetCrateCount();
-    s32 IsCrystalSaved();
+    bool IsCrystalSaved();
     void CollectWumpa();
     void AddLife();
     void CheckAllCratesBroken();

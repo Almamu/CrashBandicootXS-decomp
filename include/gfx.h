@@ -233,7 +233,7 @@ extern void DarkenPalette(s32 factor);
 
 /* src/gfx/fade_to_black.cpp */
 extern void FadePaletteToBlack(void);
-extern s32 IsBrightnessFadeActive(void);
+extern bool IsBrightnessFadeActive(void);
 
 /* src/gfx/vram_dma_queue.cpp */
 extern void FlushVramDmaQueue(void);

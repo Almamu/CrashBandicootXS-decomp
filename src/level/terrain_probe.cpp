@@ -85,7 +85,7 @@ extern "C" {
 /* `this` is gLevelLayers; the bounds are layer 0's `widthPx`/`heightPx`
  * (BgLayerBase's), the right/lower edge of the level, compared
  * directly against the caller's plain-int probe position, not Q8. */
-s32 LevelLayers::Probe(s32 mode, struct vec2 *pos, s32 span, s32 *outValue)
+bool LevelLayers::Probe(s32 mode, struct vec2 *pos, s32 span, s32 *outValue)
 {
     s32 hit = 0;
 
@@ -94,7 +94,7 @@ s32 LevelLayers::Probe(s32 mode, struct vec2 *pos, s32 span, s32 *outValue)
         if (pos->x < 0) {
             *outValue = 0;
             hit = 1;
-        } else if ((u8)ProbeX(pos, span, outValue, TERRAIN_MODE_LEFT) != 0) {
+        } else if (ProbeX(pos, span, outValue, TERRAIN_MODE_LEFT)) {
             hit = 1;
         }
         break;
@@ -104,13 +104,13 @@ s32 LevelLayers::Probe(s32 mode, struct vec2 *pos, s32 span, s32 *outValue)
             if (pos->x > bound) {
                 *outValue = INT_TO_Q8(bound);
                 hit = 1;
-            } else if ((u8)ProbeX(pos, span, outValue, mode) != 0) { // mode: TERRAIN_MODE_RIGHT
+            } else if (ProbeX(pos, span, outValue, mode)) { // mode: TERRAIN_MODE_RIGHT
                 hit = 1;
             }
             break;
         }
     case PART_DIR_UP:
-        if ((u8)ProbeY(pos, span, outValue, TERRAIN_MODE_UP) != 0) {
+        if (ProbeY(pos, span, outValue, TERRAIN_MODE_UP)) {
             hit = 1;
         }
         break;
@@ -120,7 +120,7 @@ s32 LevelLayers::Probe(s32 mode, struct vec2 *pos, s32 span, s32 *outValue)
             if (pos->y > bound) {
                 *outValue = INT_TO_Q8(bound);
                 hit = 1;
-            } else if ((u8)ProbeY(pos, span, outValue, TERRAIN_MODE_DOWN) != 0) {
+            } else if (ProbeY(pos, span, outValue, TERRAIN_MODE_DOWN)) {
                 hit = 1;
             }
             break;

@@ -171,7 +171,7 @@ void LevelState::UpdateGameFrame()
                     gHud->SetCrateTotal(CountRoomCrates(room.cat));
                 }
                 ArmStartSpawn();
-            } else if (!(u8)room.SelectRoom()) {
+            } else if (!room.SelectRoom()) {
                 break;
             }
             gPaletteCache->FreeUnlockedSlots();
@@ -204,12 +204,12 @@ void LevelState::UpdateGameFrame()
                 SetMaskLevel(arg);
             }
             mem_free_bytes(0xC0000000);
-            if ((u8)room.IsInBonusRoom() && IsInBonusRound()) {
+            if (room.IsInBonusRoom() && IsInBonusRound()) {
                 delete gEntityFlags;
                 gEntityFlags = savedBitmap;
                 EndBonusRound(status == ROOM_EXIT_CLEARED);
             }
-            if ((u8)room.IsInGemPathRoom() && IsInGemPath()) {
+            if (room.IsInGemPathRoom() && IsInGemPath()) {
                 delete gEntityFlags;
                 gEntityFlags = savedBitmap;
                 EndGemPath(status == ROOM_EXIT_CLEARED);
@@ -229,9 +229,9 @@ void LevelState::UpdateGameFrame()
             if (status == ROOM_EXIT_CLEARED) {
                 u8 done;
 
-                if (!(u8)room.IsInBonusRoom() && !IsInBonusRound() && !(u8)room.IsInGemPathRoom() &&
+                if (!room.IsInBonusRoom() && !IsInBonusRound() && !room.IsInGemPathRoom() &&
                     !(done = IsInGemPath())) {
-                    if (!(u8)room.NextRoom())
+                    if (!room.NextRoom())
                         break;
                     ArmStartSpawn();
                     *(s32 *)*bitmap = done;
@@ -258,7 +258,7 @@ void LevelState::UpdateGameFrame()
         if (status == ROOM_EXIT_CLEARED) {
             switch (room.level) {
             case LEVEL_DINGODILE:
-                if (!(u8)HasSuperBodySlam()) {
+                if (!HasSuperBodySlam()) {
                     SetNewWorldOpened();
                     GiveSuperBodySlam();
                     ShowSuperBodySlamDialog();
@@ -266,7 +266,7 @@ void LevelState::UpdateGameFrame()
                 }
                 break;
             case LEVEL_N_GIN:
-                if (!(u8)HasDoubleJump()) {
+                if (!HasDoubleJump()) {
                     SetNewWorldOpened();
                     GiveDoubleJump();
                     ShowDoubleJumpDialog();
@@ -274,7 +274,7 @@ void LevelState::UpdateGameFrame()
                 }
                 break;
             case LEVEL_TINY:
-                if (!(u8)HasTornadoSpin()) {
+                if (!HasTornadoSpin()) {
                     SetNewWorldOpened();
                     GiveTornadoSpin();
                     ShowTornadoSpinDialog();
@@ -282,7 +282,7 @@ void LevelState::UpdateGameFrame()
                 }
                 break;
             case LEVEL_NEO_CORTEX:
-                if (!(u8)HasTurboRun()) {
+                if (!HasTurboRun()) {
                     SetNewWorldOpened();
                     GiveTurboRun();
                     ShowTurboRunDialog();

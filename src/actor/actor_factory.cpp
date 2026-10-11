@@ -66,12 +66,12 @@ ActorSelf *CreateActor(u8 kind, s32 x, s32 y, s32 z, struct actor_spawn *spawn)
     case POLAR_KIND_QUESTION_CRATE_AKU_AKU:
         return new PolarQuestionCrate(gActorAnimTable + kind, x, y, z);
     case POLAR_KIND_QUESTION_CRATE_LIFE:
-        if ((u8)IsSpawnCollected(spawn))
+        if (IsSpawnCollected(spawn))
             return new PolarQuestionCrate(gActorAnimTable + POLAR_KIND_QUESTION_CRATE_WUMPA_1, x, y,
                                           z);
         return new PolarLifeCrate(gActorAnimTable + kind, x, y, z, spawn);
     case POLAR_KIND_LIFE_CRATE:
-        if ((u8)IsSpawnCollected(spawn))
+        if (IsSpawnCollected(spawn))
             return new PolarQuestionCrate(gActorAnimTable + POLAR_KIND_QUESTION_CRATE_WUMPA_1, x, y,
                                           z);
         return new PolarLifeCrate(gActorAnimTable + kind, x, y, z, spawn);

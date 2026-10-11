@@ -49,6 +49,9 @@ public:
     u8 unused_16[2];
     // 0x18: the vtable pointer
 
+    // OverlapsRect (6) and IsInsideRect (8) are yes/no tests that stay s32:
+    // their callers' `(u8)` is the ROM's truncation, but as bools, Entity's,
+    // Sprite's and Crate's versions change (#855).
     Entity();                                      // InitEntity: inline in entity.cpp (see there)
     virtual s32 CheckPlayerContact();              // 1
     virtual const struct hitbox_quad *GetBounds(); // 2 - the hitbox record

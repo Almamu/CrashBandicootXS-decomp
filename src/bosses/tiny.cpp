@@ -123,7 +123,7 @@ void TinyCtrl::Update(MovingSprite *part)
                 break;
             gAudioContext->PlaySfx(SFX_TINY_LAND, 0x100);
             if (this->state == TINY_STATE_FALL_OUT) {
-                if ((u8)gLevelState->HasTornadoSpin())
+                if (gLevelState->HasTornadoSpin())
                     RequestRoomExit();
                 SetState(part, TINY_STATE_GONE);
             } else if (this->state == TINY_STATE_HOP_DOWN) {
@@ -318,7 +318,7 @@ void TinyCtrl::SetState(MovingSprite *part, s32 next)
             s32 x = pad->x;
             s32 y = pad->y - 0x1800;
 
-            if (!(u8)gLevelState->HasTornadoSpin())
+            if (!gLevelState->HasTornadoSpin())
                 SpawnTornadoSpinPower(0xFFFF, Q8_TO_INT(x), Q8_TO_INT(y), 0);
             break;
         }

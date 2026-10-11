@@ -311,7 +311,7 @@ void DingodileCtrl::Update(MovingSprite *part)
 
             if (y >= LevelBottom() + 0x2000) {
                 StartMotion(part, 0);
-                if ((u8)gLevelState->HasSuperBodySlam())
+                if (gLevelState->HasSuperBodySlam())
                     RequestRoomExit();
                 SetState(part, DINGODILE_STATE_GONE);
             }
@@ -329,7 +329,7 @@ void DingodileCtrl::SetState(MovingSprite *part, s32 next)
     SetMode(next);
     switch (next) {
     case DINGODILE_STATE_DEFEATED:
-        if (!(u8)gLevelState->HasSuperBodySlam())
+        if (!gLevelState->HasSuperBodySlam())
             SpawnTurboRunPower(0xFFFF, 0xA0, 0xA9, 0);
         StartMotion(part, 3);
         break;

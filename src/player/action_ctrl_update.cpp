@@ -160,7 +160,7 @@ u8 ActionCtrl::TryDoubleJump()
     if (pressed) {
         s32 jumps = frame;
 
-        if (jumps == 0 && (u8)gLevelState->HasDoubleJump()) {
+        if (jumps == 0 && gLevelState->HasDoubleJump()) {
             if (part->tag == 6 && part->frame >= 0) {
                 frame++;
                 gPlayer->StoreSlippery(jumps);

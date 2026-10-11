@@ -404,17 +404,17 @@ void LevelState::GiveDoubleJump()
  * shifting it up into the sign bit and shifting back down unsigned,
  * the same branchless idiom already used for `TestUnusedFlags`'s
  * `!= 0` test (see docs/workflow.md step 7 / matching.md). */
-s32 LevelState::HasTornadoSpin()
+bool LevelState::HasTornadoSpin()
 {
     return TEST_BIT_SIGN(progress.flags, PROGRESS_BIT_TORNADO_SPIN);
 }
 
-s32 LevelState::HasSuperBodySlam()
+bool LevelState::HasSuperBodySlam()
 {
     return TEST_BIT_SIGN(progress.flags, PROGRESS_BIT_SUPER_BODY_SLAM);
 }
 
-s32 LevelState::HasTurboRun()
+bool LevelState::HasTurboRun()
 {
     return TEST_BIT_SIGN(progress.flags, PROGRESS_BIT_TURBO_RUN);
 }
@@ -426,7 +426,7 @@ s32 LevelState::HasTurboRun()
  * still the same object file). See docs/matching/archive/issue-35-36-0x080231cc-game-loop.md
  * for the full write-up. Bit-7 getter for the `+2` flags byte this
  * file's own family already covers bits 4-6 of. */
-s32 LevelState::HasDoubleJump()
+u8 LevelState::HasDoubleJump()
 {
     return progress.flags >> PROGRESS_BIT_DOUBLE_JUMP;
 }
@@ -652,27 +652,27 @@ void LevelState::SetCurrentLevel(s32 value)
 /* Five thin two-argument wrappers that drop `this` entirely and forward
  * straight to one of `LevelHasYellowGemEntity`/`34`/`40`/`4C`/`58` (the medal
  * "flag index" wrappers, `level_query.cpp`). */
-s32 LevelState::LevelHasYellowGem(s32 idx)
+bool LevelState::LevelHasYellowGem(s32 idx)
 {
     return LevelHasYellowGemEntity(idx);
 }
 
-s32 LevelState::LevelHasBlueGem(s32 idx)
+bool LevelState::LevelHasBlueGem(s32 idx)
 {
     return LevelHasBlueGemEntity(idx);
 }
 
-s32 LevelState::LevelHasGreenGem(s32 idx)
+bool LevelState::LevelHasGreenGem(s32 idx)
 {
     return LevelHasGreenGemEntity(idx);
 }
 
-s32 LevelState::LevelHasRedGem(s32 idx)
+bool LevelState::LevelHasRedGem(s32 idx)
 {
     return LevelHasRedGemEntity(idx);
 }
 
-s32 LevelState::LevelHasGemPathGem(s32 idx)
+bool LevelState::LevelHasGemPathGem(s32 idx)
 {
     return LevelHasGemPathGemEntity(idx);
 }
@@ -769,7 +769,7 @@ s32 LevelState::GetCrateCount()
  * `this + idx * sizeof(union level_record) + offset`: taking
  * `&...levels[idx]` inside the snapshot adds the constant first, which
  * the ROM doesn't. */
-s32 LevelState::IsCrystalSaved()
+bool LevelState::IsCrystalSaved()
 {
     s32 idx = room.level;
     u8 *addr =
