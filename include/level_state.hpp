@@ -171,7 +171,7 @@ public:
     u8 GetSpawnAtStart();
     void ClearSpawnAtStart();
     void ArmStartSpawn();
-    void SetLevelBoss(void *value);
+    void SetLevelBoss(BossCtrl *value);
     s32 GetRoomIndex();
     s32 GetCurrentLevel();
     void SetCurrentLevel(s32 value);

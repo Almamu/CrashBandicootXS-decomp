@@ -27,16 +27,15 @@ extern "C" {
 }
 
 /* The x offset scale of each hop mode (1-3) of UpdateExtraLifeHop and
- * UpdateWumpaHop (src/data/object_tables_16bb6c.cpp). */
-extern const s32 gExtraLifeHopWidths[3];
-extern const s32 gWumpaHopWidths[3];
-
-/* A copy of one of the hop width tables (gExtraLifeHopWidths,
- * gWumpaHopWidths), as the struct ExtraLife::UpdateHop and
- * Wumpa::UpdateHop copy onto the stack in one go. */
+ * UpdateWumpaHop (src/data/object_tables_16bb6c.cpp), a struct:
+ * ExtraLife::UpdateHop and Wumpa::UpdateHop copy the table onto the
+ * stack in one go. */
 struct three_words {
     s32 a[3];
 };
+
+extern const struct three_words gExtraLifeHopWidths;
+extern const struct three_words gWumpaHopWidths;
 
 /* Sets `frame` to the animation's first step: 0, or the last one
  * (frameCount - 1) if that is lower. */

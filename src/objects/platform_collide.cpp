@@ -40,7 +40,7 @@ void Platform::ResolveCollision(void *)
     s32 py;
     s32 tx;
     s32 ty;
-    struct hitbox_quad *box;
+    const struct hitbox_quad *box;
     s32 result;
     s32 flags;
     s32 r;
@@ -58,7 +58,7 @@ void Platform::ResolveCollision(void *)
      * explicit-destination alias of GetSpriteHitbox. */
     struct aabb b = gPlayer->GetAnimHitbox();
 
-    box = (struct hitbox_quad *)&gPlayer->bank->anims[gPlayer->tag].box[0];
+    box = &gPlayer->bank->anims[gPlayer->tag].box[0];
     if (AabbOverlaps(&a, &b)) {
         result = 0;
         above = 0;

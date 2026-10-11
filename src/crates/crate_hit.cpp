@@ -105,7 +105,7 @@ u8 Crate::PlayerAnimWouldTouch(s32 action)
  * `bumped` (a crate's side stopped it), the box is 2 pixels wider on each
  * side. The crate itself isn't used. The wide box's x is `x += xOffset;
  * x -= 2;`, two statements, as the ROM adds and subtracts. */
-u8 Crate::PlayerHitboxOverlapsAt(struct hitbox_quad *quad, struct aabb *box, s32 xOffset,
+u8 Crate::PlayerHitboxOverlapsAt(const struct hitbox_quad *quad, struct aabb *box, s32 xOffset,
                                  s32 yOffset)
 {
     struct aabb b;

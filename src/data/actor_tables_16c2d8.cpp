@@ -84,9 +84,11 @@ const struct speed_ramp gDingodileMotionRecords[4] = {
  * (state 0, until it reaches the top and drops the stalactite) and the
  * stalactite's fall (state 5). Only the first three words of the second
  * table are read. */
-const s32 gDingodileRocketRiseMotion[3] = {
+const struct speed_ramp gDingodileRocketRiseMotion = {
     0, 7, -1024,
 };
-const s32 gDingodileStalactiteFallMotion[9] = {
-    0, 4, 736, -1024, 64, 1024, -600, 10, 0,
+const struct speed_ramp gDingodileStalactiteFallMotion[3] = {
+    { 0, 4, 736 },
+    { -1024, 64, 1024 },
+    { -600, 10, 0 },
 };

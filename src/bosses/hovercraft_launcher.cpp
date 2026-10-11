@@ -20,7 +20,7 @@ extern "C" {
 /* HovercraftCannon::StateFire's sibling: follows the hovercraft and, once
  * the cooldown is over and the player is in range, launches one of three
  * bombers at random (CreateJetpackActor's JETPACK_KIND_BOMBER_HOME,
- * _BOB_VERTICAL and _CIRCLE) and starts the
+ * _BOB_VERTICAL and _CIRCLE, with no spawn record) and starts the
  * next cooldown from the attack's launcher timing. Once the hovercraft
  * is past it (depth 0x4B00) and falling back (its state 3), back to
  * state 0 with animation 2. */
@@ -55,14 +55,11 @@ void HovercraftLauncher::StateLaunch()
                 s32 n;
 
                 if (kind == 0)
-                    CreateJetpackActor(JETPACK_KIND_BOMBER_HOME, x, y, z,
-                                       (struct actor_spawn *)slot);
+                    CreateJetpackActor(JETPACK_KIND_BOMBER_HOME, x, y, z, 0);
                 else if (kind == 1)
-                    CreateJetpackActor(JETPACK_KIND_BOMBER_BOB_VERTICAL, x, y, z,
-                                       (struct actor_spawn *)slot);
+                    CreateJetpackActor(JETPACK_KIND_BOMBER_BOB_VERTICAL, x, y, z, 0);
                 else
-                    CreateJetpackActor(JETPACK_KIND_BOMBER_CIRCLE, x, y, z,
-                                       (struct actor_spawn *)slot);
+                    CreateJetpackActor(JETPACK_KIND_BOMBER_CIRCLE, x, y, z, 0);
 
                 n = count + 1;
                 count = n;

@@ -16,7 +16,7 @@ extern "C" {
 static inline void KeepHitboxAnchored(GroundSprite *self)
 {
     const struct hitbox_quad *box = self->GetBounds();
-    const struct hitbox_quad *prev = (const struct hitbox_quad *)self->lastHitbox;
+    const struct hitbox_quad *prev = self->lastHitbox;
 
     if (prev != box && prev != 0) {
         if (self->hitAxes == PART_DIR_DOWN) {
@@ -33,7 +33,7 @@ static inline void KeepHitboxAnchored(GroundSprite *self)
                 self->y += INT_TO_Q8(prevTop - top);
         }
     }
-    self->lastHitbox = (void *)box;
+    self->lastHitbox = box;
 }
 
 /* MovingSprite's update, then the hitbox anchoring. */

@@ -44,7 +44,7 @@ extern "C" {
  * (#662 round 2; docs/matching/archive/late-rom-naked-retry.md). 8E8
  * compiles the same either way. */
 
-static inline void MapFill(u8 *nib, u16 *map, s32 cols, s32 rows)
+static inline void MapFill(const u8 *nib, const u16 *map, s32 cols, s32 rows)
 {
     u16 *dest;
     s32 base;
@@ -79,20 +79,20 @@ static inline void MapFill(u8 *nib, u16 *map, s32 cols, s32 rows)
     }
 }
 
-void LoadBgPicture(u8 *pic)
+void LoadBgPicture(const u8 *pic)
 {
     s32 cols, rows;
     u32 tiles;
-    u8 *tileData;
+    const u8 *tileData;
 
     DmaCopy16(3, pic, PLTT, BG_PLTT_SIZE);
-    cols = ((struct bg_picture_header *)pic)->cols;
-    rows = ((struct bg_picture_header *)pic)->rows;
+    cols = ((const struct bg_picture_header *)pic)->cols;
+    rows = ((const struct bg_picture_header *)pic)->rows;
     pic += 0x204;
-    tiles = *(u32 *)pic;
+    tiles = *(const u32 *)pic;
     pic += 4;
     tileData = pic + ((cols * rows + 1) / 2) * 4;
-    MapFill(tileData + tiles * 32, (u16 *)pic, cols, rows);
+    MapFill(tileData + tiles * 32, (const u16 *)pic, cols, rows);
     REG_DISPCNT |= DISPCNT_BG1_ON;
     REG_BG1CNT = BGCNT_PRIORITY(3) | BGCNT_CHARBASE(1) | BGCNT_SCREENBASE(26) | BGCNT_TXT512x256;
     {
@@ -104,7 +104,7 @@ void LoadBgPicture(u8 *pic)
 
 /* UNUSED - no caller anywhere in the ROM (no Thumb `bl` to it and no
  * pointer to it in baserom.gba, nor any reference in asm/ or src/). */
-void FillBgPictureMap(u8 *nib, u16 *map, s32 cols, s32 rows)
+void FillBgPictureMap(const u8 *nib, const u16 *map, s32 cols, s32 rows)
 {
     u16 *dest;
     s32 base;

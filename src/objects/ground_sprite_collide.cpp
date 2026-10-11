@@ -82,7 +82,7 @@ s32 GroundSprite::ProbeTerrainAxes()
 
         origY = y;
         pos = Pos();
-        OffsetToHitboxEdge(&pos, PART_DIR_DOWN, (void *)quad);
+        OffsetToHitboxEdge(&pos, PART_DIR_DOWN, quad);
         pos.x = Q8_TO_INT(pos.x);
         pos.y = Q8_TO_INT(pos.y);
         if (mirrorBits.flipX < 0)
@@ -116,7 +116,7 @@ s32 GroundSprite::ProbeTerrainAxes()
         pos = Pos();
         span = quad->h - 0x10;
         origX = x;
-        OffsetToHitboxEdgeStart(&pos, mode, (void *)quad);
+        OffsetToHitboxEdgeStart(&pos, mode, quad);
         pos.x = Q8_TO_INT(pos.x);
         pos.y = Q8_TO_INT(pos.y) + 8;
         if (gLevelLayers->Probe(mode, &pos, span, &origX)) {
@@ -134,7 +134,7 @@ y_probe:
         span = quad->w;
         origX = x;
         origY = y;
-        OffsetToHitboxEdgeStart(&pos, mode, (void *)quad);
+        OffsetToHitboxEdgeStart(&pos, mode, quad);
         pos.x = Q8_TO_INT(pos.x);
         pos.y = Q8_TO_INT(pos.y);
         if (gLevelLayers->Probe(mode, &pos, span, &origY)) {
@@ -150,7 +150,7 @@ y_probe:
         pos = Pos();
         span = quad->h;
         origX = x;
-        OffsetToHitboxEdgeStart(&pos, mode, (void *)quad);
+        OffsetToHitboxEdgeStart(&pos, mode, quad);
         pos.x = Q8_TO_INT(pos.x);
         pos.y = Q8_TO_INT(pos.y);
         if (gLevelLayers->Probe(mode, &pos, span, &origX)) {
@@ -178,7 +178,7 @@ u8 GroundSprite::ProbeFloor(const struct hitbox_quad *quad, u8 *outFlag)
     s32 grounded;
 
     pos = Pos();
-    OffsetToHitboxEdge(&pos, PART_DIR_DOWN, (void *)quad);
+    OffsetToHitboxEdge(&pos, PART_DIR_DOWN, quad);
     pos.x = Q8_TO_INT(pos.x);
     pos.y = Q8_TO_INT(pos.y);
     grounded = (f.bytes.flags2 >> ENTITY_BIT2_GROUNDED) & 1;
