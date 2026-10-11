@@ -83,8 +83,24 @@ entity types, so its cases are the generated `ENTITY_*` names
 outline, nitro switch, iron and iron arrow crates. An outline crate counts
 as the kind it turns into.
 
+## The spawn tables
+
+The seven spawn tables (`gCategory0SpawnTable`..`gCategory6SpawnTable`,
+src/data/cell_anim_03b8b0.cpp, sub_effect_0c0c38.cpp, cell_anim_0ff1b0.cpp
+and bg_picture_151ac4.cpp) spell each record's `kind`, `altKind` and
+`bonusKind` with their family's names: `POLAR_KIND_*` in categories 0-2,
+`JETPACK_KIND_*` in 3-6. Record 0 is a spawn too (the polar runs start
+with a checkpoint crate, the jetpack stages with the stopwatch, the
+hovercraft's table with the hovercraft), its `link` holding the record
+count. A `PLAYER` (0) alternative means nothing spawns there in that mode.
+The 12 bytes after the last record (`struct sub_effect_table_end`) stay
+numbers: they belong to no record.
+
+HovercraftLauncher::StateLaunch's three CreateJetpackActor calls build
+`BOMBER_HOME`, `BOMBER_BOB_VERTICAL` or `BOMBER_CIRCLE`, picked by a
+`RandRange(3)` roll that stays a number.
+
 ## Left as numbers
 
-- **The spawn tables in src/data.** Their kinds stay numbers for now.
 - **PolarIcicle's `kind * 4 - 0x40`.** That is `(kind - POLAR_KIND_ICICLE_A) * 4`, spelled the ROM's way. It has a comment.
 - **CountCrateEntities' outline lookup.** The `s16` eight bytes into the record is `crate_placement`'s `solidKind`, still read through a raw cast.
