@@ -33,7 +33,7 @@ void PowerDialog::Draw()
     gLargeFont->DrawText((u8 *)titleText);
     SetAabbPos(&box, 0x10, 0x6a);
     SetAabbSize(&box, 0xd0, 0x35);
-    DrawWrappedTextInBox((u8 *)descText, gSmallFont, &box, 0);
+    DrawWrappedTextInBox((u8 *)descText, gSmallFont, &box, WRAPPED_TEXT_MODE_BUFFERED);
     n = GetUiText(0x2e);
     w = gSmallFont->MeasureText((u8 *)n);
     x = (u32)(240 - w) >> 1;

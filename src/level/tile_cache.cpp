@@ -82,13 +82,14 @@ void *TileCache::GetTerrainHeights(s32 x, s32 y)
     if (nibble)
         *hiOut = nibble;
     type = cell & 0xff;
-    if (type == 0 || type > 0x23)
+    if (type == TERRAIN_TYPE_NONE || type > TERRAIN_TYPE_LAST_HEIGHTS)
         return NULL;
     return gTerrainHeights0 + type * 36;
 }
 
-/* Like GetTerrainHeights with a collision mode (0-3): each mode has its own
- * property table and its own "not solid" bit in the cell's top nibble.
+/* Like GetTerrainHeights with a collision mode (TERRAIN_MODE_*): each mode
+ * has its own property table and its own "open" bit (TERRAIN_FLAG_OPEN_*)
+ * in the cell's top nibble.
  * The flag nibble is written to flagsOut. */
 void *TileCache::GetSolidTerrainHeights(s32 x, s32 y, s32 mode, u8 *flagsOut)
 {
@@ -97,7 +98,7 @@ void *TileCache::GetSolidTerrainHeights(s32 x, s32 y, s32 mode, u8 *flagsOut)
     s32 type;
 
     if (x < 0 || y < 0)
-        type = 0;
+        type = TERRAIN_TYPE_NONE;
     else {
         u16 cell = CellAt(x, y);
         u8 nibble;
@@ -108,29 +109,29 @@ void *TileCache::GetSolidTerrainHeights(s32 x, s32 y, s32 mode, u8 *flagsOut)
             *flagsOut = nibble;
         type = cell & 0xff;
     }
-    if (type <= 0x23)
+    if (type <= TERRAIN_TYPE_LAST_HEIGHTS)
         return NULL;
     switch (mode) {
-    case 0:
-        if (hi & 4)
+    case TERRAIN_MODE_DOWN:
+        if (hi & TERRAIN_FLAG_OPEN_DOWN)
             result = NULL;
         else
             result = gTerrainHeights0 + type * 36;
         break;
-    case 1:
-        if (hi & mode)
+    case TERRAIN_MODE_RIGHT:
+        if (hi & mode) // mode == TERRAIN_FLAG_OPEN_RIGHT; the ROM ANDs its register
             result = NULL;
         else
             result = gTerrainHeights1 + type * 36;
         break;
-    case 2:
-        if (hi & 8)
+    case TERRAIN_MODE_UP:
+        if (hi & TERRAIN_FLAG_OPEN_UP)
             result = NULL;
         else
             result = gTerrainHeights2 + type * 36;
         break;
-    case 3:
-        if (hi & 2)
+    case TERRAIN_MODE_LEFT:
+        if (hi & TERRAIN_FLAG_OPEN_LEFT)
             result = NULL;
         else
             result = gTerrainHeights3 + type * 36;
@@ -149,7 +150,7 @@ s8 TileCache::GetSolidTerrainModeValue(s32 x, s32 y, s32 mode, u8 *flagsOut)
     s32 type;
 
     if (x < 0 || y < 0)
-        type = 0;
+        type = TERRAIN_TYPE_NONE;
     else {
         u16 cell = CellAt(x, y);
         u8 nibble;
@@ -160,29 +161,29 @@ s8 TileCache::GetSolidTerrainModeValue(s32 x, s32 y, s32 mode, u8 *flagsOut)
             *flagsOut = nibble;
         type = cell & 0xff;
     }
-    if (type <= 0x23)
+    if (type <= TERRAIN_TYPE_LAST_HEIGHTS)
         return -1;
     switch (mode) {
-    case 0:
-        if (hi & 4)
+    case TERRAIN_MODE_DOWN:
+        if (hi & TERRAIN_FLAG_OPEN_DOWN)
             result = 0;
         else
             result = gTerrainTypes[type].modeValue[0];
         break;
-    case 1:
-        if (hi & mode)
+    case TERRAIN_MODE_RIGHT:
+        if (hi & mode) // mode == TERRAIN_FLAG_OPEN_RIGHT; the ROM ANDs its register
             result = 0;
         else
             result = gTerrainTypes[type].modeValue[1];
         break;
-    case 2:
-        if (hi & 8)
+    case TERRAIN_MODE_UP:
+        if (hi & TERRAIN_FLAG_OPEN_UP)
             result = 0;
         else
             result = gTerrainTypes[type].modeValue[2];
         break;
-    case 3:
-        if (hi & 2)
+    case TERRAIN_MODE_LEFT:
+        if (hi & TERRAIN_FLAG_OPEN_LEFT)
             result = 0;
         else
             result = gTerrainTypes[type].modeValue[3];

@@ -35,6 +35,12 @@ extern const u8 gLargeFontTiles[];
 /* src/text/text_box.cpp and src/text/wrapped_text.cpp (C linkage). Their
  * callers are all C++. */
 extern s32 GetWordLength(u8 *s);
+
+/* DrawWrappedText's `mode` (#843, docs/flags/text.md): when the words
+ * reach the screen. */
+#define WRAPPED_TEXT_MODE_BUFFERED 0 // never: the caller commits the OAM buffer
+#define WRAPPED_TEXT_MODE_PER_WORD 1 // after every word (WaitForVBlank, Commit): typed out
+#define WRAPPED_TEXT_MODE_PER_LINE 2 // after every line wrap
 #ifdef __cplusplus
 extern s32 DrawWrappedTextInBox(u8 *text, class Font *self, struct aabb *box, s32 mode);
 extern s32 DrawWrappedText(u8 *text, class Font *self, struct aabb *box, s32 limit, s32 mode);

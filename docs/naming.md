@@ -172,6 +172,11 @@ the names with the header it already includes. A data table in
 | `hud.hpp` (next to Hud) | `HUD_SLIDE_STATE_` | the HUD counters' `livesSlide`/`wumpaSlide`/`crateSlide` (hidden, sliding in, held, sliding out) ([docs/flags/hud_slide.md](flags/hud_slide.md)) |
 | `gfx.h` (next to the OAM structs; hardware) | `OAM_OBJ_MODE_` | attr0's `objMode` and Sprite's `gfxMode`: normal, semi-transparent, OBJ window ([docs/flags/oam.md](flags/oam.md)) |
 | `gba/io_reg.h` (hardware) | `DISPCNT_MODE_` | `dispcnt_bits::mode`, SetDispcntMode's argument: the BG mode ([docs/flags/display.md](flags/display.md)) |
+| `gba/io_reg.h` (hardware) | `BGCNT_COLOR_MODE_` | `union bgcnt`'s `colorMode`: 16 or 256 colours ([docs/flags/display.md](flags/display.md)) |
+| `level.h` (next to `struct terrain_type`) | `TERRAIN_TYPE_`, `TERRAIN_MODE_`, `TERRAIN_FLAG_OPEN_` | a collision cell's terrain type, the collision mode (the probe's direction: GetSolidTerrain*'s `mode`, ProbeX/ProbeY's `submode`) and the cell's open bits ([docs/flags/terrain.md](flags/terrain.md)) |
+| `text.h` | `WRAPPED_TEXT_MODE_` | DrawWrappedText's `mode`: when the words are committed (never, per word, per line) ([docs/flags/text.md](flags/text.md)) |
+| `frontend.hpp` (next to `struct CreditsPopup`) | `CREDITS_OP_`, `CREDITS_POPUP_MODE_` | the credits stream's opcodes and a popup's `mode` (small or large character, logo) ([docs/flags/text.md](flags/text.md)) |
+| `system.h` (next to LoadTaggedAsset) | `ASSET_TYPE_` | a tagged asset's type, the BIOS compression type (raw, LZ77, Huffman, run-length) ([docs/flags/asset.md](flags/asset.md)) |
 | `bosses.h` | `BOSS_` | `GetBossIndex` results |
 | `boss_ctrl.hpp` (next to each class) | `DINGODILE_STATE_`, `DINGODILE_SHIELD_STATE_`, `DINGODILE_PROJECTILE_STATE_`, `DINGODILE_SHARK_STATE_`, `TINY_STATE_`, `CORTEX_BOSS_STATE_`, `CORTEX_TARGET_STATE_`, `CORTEX_BOSS_GEM_STATE_`, `CORTEX_CANNON_STATE_`, `MEGA_MIX_STATE_` | `Ctrl::state` of the boss controllers: Dingodile, Tiny, Mega Mix and the Neo Cortex fight ([docs/flags/boss_ctrl.md](flags/boss_ctrl.md)) |
 | `boss_ctrl.hpp`, `bosses.h` | `DINGODILE_SPAWN_MODE_`, `CORTEX_SHOT_KIND_`, `CORTEX_BOSS_GEM_KIND_` | SpawnShieldOrRocket's `mode`, FireShot's `kind`, SpawnCortexBossGem's / CortexBossGemCtrl's `kind` ([docs/flags/boss_ctrl.md](flags/boss_ctrl.md)) |

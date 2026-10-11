@@ -9,11 +9,11 @@ extern "C" {
 extern "C" void LZ77UnCompVram(void *src);
 extern "C" void RLUnCompVram(void *src);
 
-/* Decompresses (or raw-DMA-copies) a "tagged" asset into `dest`. The
- * asset's first word's high nibble (bits 28-31) selects the format:
- * 0 = uncompressed (DMA3, word transfers, size taken from the
- * remaining 24 bits of the header word), 1 = LZ77, 3 = run-length;
- * anything else (2, or 4-15) is a silent no-op. Written as a `switch`
+/* Decompresses (or raw-DMA-copies) a "tagged" asset into `dest`. Bits 4-7
+ * of the asset's first word, the BIOS's compression type (ASSET_TYPE_*),
+ * select the format: RAW = uncompressed (DMA3, word transfers, size taken
+ * from the header word's top 24 bits), LZ77, RL = run-length; anything
+ * else (HUFFMAN, or 4-15) is a silent no-op. Written as a `switch`
  * (not an if/else chain) specifically to reproduce the ROM's exact
  * compare sequence (`cmp #1; beq; cmp #1; blo; cmp #3; beq; b`) - an
  * equivalent if/else chain compiles to a shorter, differently-ordered
@@ -29,7 +29,7 @@ void LoadTaggedAsset(const void *asset, void *dest)
     u32 type = (header << 24) >> 28;
 
     switch (type) {
-    case 0:
+    case ASSET_TYPE_RAW:
         {
             struct dma_regs *dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
             u32 size;
@@ -40,10 +40,10 @@ void LoadTaggedAsset(const void *asset, void *dest)
             size = dma->cnt;
             break;
         }
-    case 1:
+    case ASSET_TYPE_LZ77:
         LZ77UnCompVram((void *)asset);
         break;
-    case 3:
+    case ASSET_TYPE_RL:
         RLUnCompVram((void *)asset);
         break;
     }

@@ -532,6 +532,9 @@
 #define BGCNT_MOSAIC            0x0040
 #define BGCNT_16COLOR           0x0000 // 4 bits per pixel
 #define BGCNT_256COLOR          0x0080 // 8 bits per pixel
+// The same bit as `union bgcnt`'s 1-bit `colorMode` (graphics_package.hpp)
+#define BGCNT_COLOR_MODE_16          0 // 4 bits per pixel, 16 palettes of 16 colors
+#define BGCNT_COLOR_MODE_256         1 // 8 bits per pixel, one palette of 256 colors
 #define BGCNT_SCREENBASE(n) ((n) << 8) // Values 0 - 31. Base block for tile map.
 #define BGCNT_WRAP              0x2000 // Only affects affine BGs. Text BGs wrap by default.
 #define BGCNT_TXT256x256        0x0000 // Internal screen size size of text mode BG in pixels.

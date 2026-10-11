@@ -4,6 +4,7 @@ extern "C" {
 #include "core.h"
 #include "math_util.h"
 #include "level.h"
+#include "box_part.h"
 }
 
 /* GitHub issues #9/#10/#41's shared cross-reference: `ProbeHitboxEdgeTerrain`'s
@@ -18,14 +19,15 @@ extern "C" {
  * pass confirms that shape exactly (modulo it being 4 real dispatch
  * arms, not 5 - see below) and closes it as real matched C.
  *
- * `mode` selects one of two axis resolvers and, for three of the four
- * modes, a cheap out-of-range short-circuit that skips the tile scan
- * entirely:
+ * `mode` (a PART_DIR_* direction, box_part.h; #843) selects one of two
+ * axis resolvers and the collision mode (TERRAIN_MODE_*, level.h) and,
+ * for three of the four modes, a cheap out-of-range short-circuit that
+ * skips the tile scan entirely:
  *
  *   - `mode == 2`: if `pos->x < 0`, clamps `*outValue = 0` and reports
  *     a hit immediately (the probe position is already off the left
  *     edge of the loaded region - nothing to scan). Otherwise calls
- *     `ProbeX(pos, span, outValue, 3)`.
+ *     `ProbeX(pos, span, outValue, TERRAIN_MODE_LEFT)`.
  *   - `mode == 1`: reads `self+0x10`'s pointed-to record's own `+0x10`
  *     field (`bounds->widthPx` below - a right/loaded-region edge, plain
  *     ints, not Q8, matching `pos`'s own units). If `pos->x` is past
@@ -88,37 +90,37 @@ s32 LevelLayers::Probe(s32 mode, struct vec2 *pos, s32 span, s32 *outValue)
     s32 hit = 0;
 
     switch (mode) {
-    case 2:
+    case PART_DIR_LEFT:
         if (pos->x < 0) {
             *outValue = 0;
             hit = 1;
-        } else if ((u8)ProbeX(pos, span, outValue, 3) != 0) {
+        } else if ((u8)ProbeX(pos, span, outValue, TERRAIN_MODE_LEFT) != 0) {
             hit = 1;
         }
         break;
-    case 1:
+    case PART_DIR_RIGHT:
         {
             s32 bound = layer0->widthPx;
             if (pos->x > bound) {
                 *outValue = INT_TO_Q8(bound);
                 hit = 1;
-            } else if ((u8)ProbeX(pos, span, outValue, mode) != 0) {
+            } else if ((u8)ProbeX(pos, span, outValue, mode) != 0) { // mode: TERRAIN_MODE_RIGHT
                 hit = 1;
             }
             break;
         }
-    case 4:
-        if ((u8)ProbeY(pos, span, outValue, 2) != 0) {
+    case PART_DIR_UP:
+        if ((u8)ProbeY(pos, span, outValue, TERRAIN_MODE_UP) != 0) {
             hit = 1;
         }
         break;
-    case 8:
+    case PART_DIR_DOWN:
         {
             s32 bound = layer0->heightPx;
             if (pos->y > bound) {
                 *outValue = INT_TO_Q8(bound);
                 hit = 1;
-            } else if ((u8)ProbeY(pos, span, outValue, 0) != 0) {
+            } else if ((u8)ProbeY(pos, span, outValue, TERRAIN_MODE_DOWN) != 0) {
                 hit = 1;
             }
             break;
