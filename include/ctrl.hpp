@@ -39,7 +39,7 @@ public:
 
     Ctrl();                                                              // InitCtrl
     virtual void Update(MovingSprite *part);                             // 1 UpdateCtrl
-    virtual void HandleEvent(MovingSprite *sender, s32 event, s32 arg);  // 2 CtrlHandleEvent
+    virtual void HandleEvent(s32 from, s32 event, s32 arg);              // 2 CtrlHandleEvent
     virtual void Attach(MovingSprite *owner);                            // 3 AttachCtrl
     virtual void SetMode(s32 mode);                                      // 4 SetCtrlMode
     virtual void StartTargetMotionX(MovingSprite *part, const s32 *vec); // 5
@@ -65,7 +65,7 @@ class EffectCtrl : public Ctrl
 public:
     EffectCtrl(); // InitEffectCtrl
     virtual void Update(MovingSprite *part);
-    virtual void HandleEvent(MovingSprite *sender, s32 event, s32 arg);
+    virtual void HandleEvent(s32 from, s32 event, s32 arg);
     virtual ~EffectCtrl(); // DestroyEffectCtrl
     void Reset();          // ResetEffectCtrl
 };

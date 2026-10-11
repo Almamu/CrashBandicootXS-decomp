@@ -82,7 +82,7 @@ static inline void SetSpeedY(Player *p, s32 speed, s32 step, s32 target)
  *   also stopping the player and setting CAMERA_MODE_STILL;
  * - EVENT_MASK_HIT: the Aku Aku mask absorbed a hit: on the ground and
  *   with room for it, StartMaskHitJump. */
-void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
+void ActionCtrl::HandleEvent(s32, s32 event, s32 arg)
 {
     if (state == ACTION_STATE_DYING)
         return;

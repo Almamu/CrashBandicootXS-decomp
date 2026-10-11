@@ -24,7 +24,7 @@ void EffectCtrl::Update(MovingSprite *part)
         part->MarkGone();
 }
 
-void EffectCtrl::HandleEvent(MovingSprite *, s32, s32)
+void EffectCtrl::HandleEvent(s32, s32, s32)
 {
 }
 

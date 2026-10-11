@@ -3,7 +3,7 @@
 
 /*
  * Event IDs: the third argument of an object's event method (vtable
- * +0x68, `handleEvent`: this, sender, event, arg). PlayerHandleEvent is the
+ * +0x68, `handleEvent`: this, from, event, arg). PlayerHandleEvent is the
  * player's; it handles some itself and forwards the rest to its
  * controller's event slot (NOTIFY: ActionCtrlHandleEvent on foot,
  * SwimCtrlHandleEvent swimming, InputCtrlHandleEvent). An enemy's is

@@ -278,6 +278,9 @@ public:
     s32 prevY;               // 0x70
     s32 hitMask;             // 0x74 - the probe axes hit this frame
 
+    /* HandleEvent's `from` is the 0 or 1 its callers pass, an int: it goes
+     * on to the controller's HandleEvent (Ctrl, ctrl.hpp), and no handler
+     * reads it. */
     MovingSprite();                                         // InitMovingSprite
     virtual s32 CheckPlayerContact();                       // 1 CollideMovingSprite
     virtual void Update();                                  // 3 UpdateMovingSprite
