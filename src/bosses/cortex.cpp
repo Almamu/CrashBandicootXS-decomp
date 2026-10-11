@@ -113,7 +113,7 @@ void CortexBossCtrl::Update(MovingSprite *part)
         cannon->y += 0x80;
         part->y += 0x80;
         if (part->y >= INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x4000) {
-            if ((u8)gLevelState->HasTurboRun())
+            if (gLevelState->HasTurboRun())
                 RequestRoomExit();
             SetState(part, CORTEX_BOSS_STATE_GONE);
         }
@@ -615,7 +615,7 @@ void CortexBossCtrl::SetState(MovingSprite *, s32 next)
 {
     if (next == CORTEX_BOSS_STATE_DEFEATED) {
         target->mover->SetMode(CORTEX_TARGET_STATE_STOP);
-        if (!(u8)gLevelState->HasTurboRun())
+        if (!gLevelState->HasTurboRun())
             SpawnBodySlamPower(0xFFFF, 0x8C, 0x98, 0);
     }
     SetMode(next);

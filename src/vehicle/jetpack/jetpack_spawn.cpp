@@ -62,7 +62,7 @@ ActorSelf *SpawnJetpackActor(struct actor_spawn *rec, u8 alt, s32 dz)
     } else if (alt != 0) {
         kind = rec->bonusKind;
     }
-    if (kind == JETPACK_KIND_STOPWATCH && !(u8)gLevelState->IsCrystalSaved())
+    if (kind == JETPACK_KIND_STOPWATCH && !gLevelState->IsCrystalSaved())
         return 0;
     if (kind == JETPACK_KIND_PLAYER || kind == JETPACK_KIND_UNK62 ||
         (u8)(kind - JETPACK_KIND_PATH_0) <= JETPACK_KIND_PATH_5 - JETPACK_KIND_PATH_0)
@@ -100,7 +100,7 @@ ActorSelf *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, struct actor_spawn *
     case JETPACK_KIND_HEALTH_CRATE:
         return new JetpackHealthCrate(&gJetpackAnimTable[kind], x, y, z);
     case JETPACK_KIND_QUESTION_CRATE_LIFE:
-        if ((u8)IsSpawnCollected(spawn))
+        if (IsSpawnCollected(spawn))
             return new JetpackQuestionCrate(&gJetpackAnimTable[JETPACK_KIND_QUESTION_CRATE_WUMPA_1],
                                             x, y, z, spawn);
         /* fallthrough */

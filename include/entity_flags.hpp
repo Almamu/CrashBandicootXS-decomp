@@ -38,8 +38,8 @@ public:
     ~LevelEntityFlags();                                          // DestroyEntityFlags
     s32 CountCrateEntities(const struct level_entity_list *list); // CountCrateEntities
     void SetGone(s32 n);                                          // SetEntityIdGone (UNUSED)
-    s32 IsGone(s32 n);                                            // IsEntityIdGone
-    s32 IsActivated(s32 n);                                       // IsEntityIdActivated
+    bool IsGone(s32 n);                                           // IsEntityIdGone
+    bool IsActivated(s32 n);                                      // IsEntityIdActivated
     void SetActivated(s32 n);                                     // SetEntityIdActivated
     void MarkActivated(s32 n);                                    // MarkEntityIdActivated
     void SetPos(s32 val);                                         // SetEntityFlagsPos (UNUSED)

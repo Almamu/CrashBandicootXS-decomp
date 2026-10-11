@@ -388,8 +388,8 @@ s32 LevelProgress::RunRoom()
     gLevelLayers->Reset();
 
     if (cat->kind == ROOM_KIND_ON_FOOT) {
-        if ((gLevelState->IsInBonusRound() && (u8)IsInBonusRoom()) ||
-            (gLevelState->IsInGemPath() && (u8)IsInGemPathRoom())) {
+        if ((gLevelState->IsInBonusRound() && IsInBonusRoom()) ||
+            (gLevelState->IsInGemPath() && IsInGemPathRoom())) {
             gPlayer->f.bytes.flags &= ~ENTITY_FLAG_COLLIDES;
             gPlayer->StartAnim(0x29);
             gAudioContext->PlaySfx(SFX_WARP, 0x100);
@@ -448,7 +448,7 @@ fade:
     FadePaletteToBlack();
     if (IsRoomExitRequested()) {
         ret = ROOM_EXIT_CLEARED;
-        if (!(u8)IsInBonusRoom() && gLevelState->IsInBonusRound()) {
+        if (!IsInBonusRoom() && gLevelState->IsInBonusRound()) {
             struct vec2 point;
             s32 x;
 
@@ -464,7 +464,7 @@ fade:
                 state->SetCheckpoint(((Platform *)state->GetBonusPlatform())->GetExitMirror(),
                                      &point.x);
             }
-        } else if (!(u8)IsInGemPathRoom() && gLevelState->IsInGemPath()) {
+        } else if (!IsInGemPathRoom() && gLevelState->IsInGemPath()) {
             struct vec2 point;
 
             /* The ROM loads the two words into r0 and r1 through the

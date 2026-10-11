@@ -326,7 +326,7 @@ public:
     void ResolvePlayerContact();
     /* ProbeHitboxEdgeTerrain: ProbeTerrain along the edge of `quad` that
      * faces `mode`, retried lower (src/objects/moving_sprite_probe.cpp). */
-    s32 ProbeEdgeTerrain(s32 mode, const struct hitbox_quad *quad);
+    bool ProbeEdgeTerrain(s32 mode, const struct hitbox_quad *quad);
 };
 
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(MovingSprite) == 0x78);

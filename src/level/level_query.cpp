@@ -146,7 +146,7 @@ s32 CountLevelCrates(s32 idx)
  *
  * `flagIdx` stays in `ip`/r12 for the whole function, as in the ROM,
  * with no pin (old_agbcp; agbcp needs pins for the table reads). */
-s32 LevelHasEntityType(s32 idx, s32 flagIdx)
+bool LevelHasEntityType(s32 idx, s32 flagIdx)
 {
     s32 result = 0;
     const struct level_room_list *list = gLevelTable[idx].rooms;
@@ -181,7 +181,7 @@ s32 LevelHasEntityType(s32 idx, s32 flagIdx)
  * "does this object's cached value (see SelectRoom) match this medal entry's
  * item list's `extra2` slot" - a sibling read of the same field
  * EnterGemPathRoom copies out. */
-s32 LevelProgress::IsInGemPathRoom()
+bool LevelProgress::IsInGemPathRoom()
 {
     const struct level_room_list *list = gLevelTable[level].rooms;
     s32 result = 0;
@@ -194,7 +194,7 @@ s32 LevelProgress::IsInGemPathRoom()
 }
 
 /* Same as IsInGemPathRoom but against the item list's `extra1` slot. */
-s32 LevelProgress::IsInBonusRoom()
+bool LevelProgress::IsInBonusRoom()
 {
     const struct level_room_list *list = gLevelTable[level].rooms;
     s32 result = 0;
@@ -210,27 +210,27 @@ s32 LevelProgress::IsInBonusRoom()
  * the medal "flag index" constant baked in (0xc, 9, 0xb, 0xa, 8 -
  * plausibly per-medal-type slot indices into the halfword table
  * LevelHasEntityType reads). */
-s32 LevelHasYellowGemEntity(s32 idx)
+bool LevelHasYellowGemEntity(s32 idx)
 {
     return LevelHasEntityType(idx, ENTITY_YELLOW_GEM);
 }
 
-s32 LevelHasBlueGemEntity(s32 idx)
+bool LevelHasBlueGemEntity(s32 idx)
 {
     return LevelHasEntityType(idx, ENTITY_BLUE_GEM);
 }
 
-s32 LevelHasGreenGemEntity(s32 idx)
+bool LevelHasGreenGemEntity(s32 idx)
 {
     return LevelHasEntityType(idx, ENTITY_GREEN_GEM);
 }
 
-s32 LevelHasRedGemEntity(s32 idx)
+bool LevelHasRedGemEntity(s32 idx)
 {
     return LevelHasEntityType(idx, ENTITY_RED_GEM);
 }
 
-s32 LevelHasGemPathGemEntity(s32 idx)
+bool LevelHasGemPathGemEntity(s32 idx)
 {
     return LevelHasEntityType(idx, ENTITY_GEM_PATH_GEM);
 }

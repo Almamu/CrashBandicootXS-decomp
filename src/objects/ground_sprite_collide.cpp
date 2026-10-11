@@ -31,7 +31,7 @@ s32 GroundSprite::CheckPlayerContact()
             f.b.unk_5 = 0;
             grounded = (f.bytes.flags2 >> ENTITY_BIT2_GROUNDED) & 1;
             if (!grounded) {
-                if (!(u8)ProbeEdgeTerrain(PART_DIR_DOWN, GetBounds())) {
+                if (!ProbeEdgeTerrain(PART_DIR_DOWN, GetBounds())) {
                     f.b.unk_5 = 1;
                     *p &= PART_DIR_X_MASK | PART_DIR_UP;
                 }
@@ -119,7 +119,7 @@ s32 GroundSprite::ProbeTerrainAxes()
         OffsetToHitboxEdgeStart(&pos, mode, (void *)quad);
         pos.x = Q8_TO_INT(pos.x);
         pos.y = Q8_TO_INT(pos.y) + 8;
-        if ((u8)gLevelLayers->Probe(mode, &pos, span, &origX)) {
+        if (gLevelLayers->Probe(mode, &pos, span, &origX)) {
             hitMask |= mode;
             result |= mode;
             x = origX;
@@ -137,7 +137,7 @@ y_probe:
         OffsetToHitboxEdgeStart(&pos, mode, (void *)quad);
         pos.x = Q8_TO_INT(pos.x);
         pos.y = Q8_TO_INT(pos.y);
-        if ((u8)gLevelLayers->Probe(mode, &pos, span, &origY)) {
+        if (gLevelLayers->Probe(mode, &pos, span, &origY)) {
             result |= mode;
             hitMask |= mode;
             y = origY;
@@ -153,7 +153,7 @@ y_probe:
         OffsetToHitboxEdgeStart(&pos, mode, (void *)quad);
         pos.x = Q8_TO_INT(pos.x);
         pos.y = Q8_TO_INT(pos.y);
-        if ((u8)gLevelLayers->Probe(mode, &pos, span, &origX)) {
+        if (gLevelLayers->Probe(mode, &pos, span, &origX)) {
             hitMask |= mode;
             result |= mode;
             x = origX;

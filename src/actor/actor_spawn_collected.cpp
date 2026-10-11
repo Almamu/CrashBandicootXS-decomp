@@ -17,7 +17,7 @@ extern "C" {
 
 /* Whether `spawn` is among gCollectedSpawns' first gCollectedSpawnCount
  * entries. */
-s32 IsSpawnCollected(struct actor_spawn *spawn)
+bool IsSpawnCollected(struct actor_spawn *spawn)
 {
     s32 i;
 

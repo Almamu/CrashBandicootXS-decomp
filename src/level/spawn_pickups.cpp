@@ -82,7 +82,7 @@ void SpawnTurboRunPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * once the level's crystal is saved. */
 void SpawnStopwatch(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    if ((u8)gLevelState->IsCrystalSaved()) {
+    if (gLevelState->IsCrystalSaved()) {
         Stopwatch *part = Stopwatch::Create(arg0, arg1, arg2, arg3);
 
         part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x1b0);

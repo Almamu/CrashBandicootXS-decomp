@@ -114,11 +114,14 @@ struct actor_spawn {
  * class to C++. */
 struct ActorSelf;
 
-/* src/actor/actor_category_hooks.cpp (the rest: vehicle.hpp) */
+/* src/actor/actor_category_hooks.cpp (the rest: vehicle.hpp). A yes/no
+ * that stays s32: every caller's `(u8)` is the ROM's truncation, but as a
+ * bool, PolarIsTouchingPlayer and JetpackIsTouchingPlayer (the category
+ * hooks it calls) get a second return path (#855). */
 extern s32 IsTouchingPlayer(struct ActorSelf *self);
 
 /* src/actor/actor_spawn_collected.cpp */
-extern s32 IsSpawnCollected(struct actor_spawn *spawn);
+extern bool IsSpawnCollected(struct actor_spawn *spawn);
 extern void MarkSpawnCollected(struct actor_spawn *spawn);
 extern void ClearCollectedSpawns(void);
 
@@ -157,7 +160,7 @@ extern void AddActorMissedNitro(void);
 extern s32 GetActorMissedNitros(void);
 extern s32 GetActorCheckpoint(void);
 extern void SetActorCheckpoint(s32 arg0);
-extern s32 IsActorMaskAssistDue(void);
+extern bool IsActorMaskAssistDue(void);
 
 /* src/actor/actor_factory.cpp. SpawnActor is also slot 1 of the category
  * vtables (src/data/actor_category_175558.cpp): to C, `struct ActorSelf` is

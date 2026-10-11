@@ -69,12 +69,12 @@ extern s32 sub_8026A14(void);
 
 /* src/level/level_query.cpp (C linkage) */
 extern s32 CountLevelCrates(s32 idx);
-extern s32 LevelHasEntityType(s32 idx, s32 flagIdx);
-extern s32 LevelHasYellowGemEntity(s32 idx);
-extern s32 LevelHasBlueGemEntity(s32 idx);
-extern s32 LevelHasGreenGemEntity(s32 idx);
-extern s32 LevelHasRedGemEntity(s32 idx);
-extern s32 LevelHasGemPathGemEntity(s32 idx);
+extern bool LevelHasEntityType(s32 idx, s32 flagIdx);
+extern bool LevelHasYellowGemEntity(s32 idx);
+extern bool LevelHasBlueGemEntity(s32 idx);
+extern bool LevelHasGreenGemEntity(s32 idx);
+extern bool LevelHasRedGemEntity(s32 idx);
+extern bool LevelHasGemPathGemEntity(s32 idx);
 extern s32 CountRoomCrates(const struct level_room *item);
 
 /* src/level/level_state.cpp (LevelState's methods: level_state.hpp) */

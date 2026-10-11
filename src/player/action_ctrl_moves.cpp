@@ -653,7 +653,7 @@ void ActionCtrl::EndSpin(u8 mode, s32 flags)
              * output to it (block-local and dying there) instead. */
             u16 turbo = flags & L_BUTTON;
 
-            if (turbo && (u8)gLevelState->HasTurboRun()) {
+            if (turbo && gLevelState->HasTurboRun()) {
                 turboRun = 1;
                 SetMode(ACTION_STATE_TURBO_RUN);
                 SetTargetAnim(part, 0x18);
@@ -858,7 +858,7 @@ void ActionCtrl::StateCrawlStop()
 void ActionCtrl::StateBodySlamStart()
 {
     if (part->animDone != 0) {
-        if ((u8)gLevelState->HasSuperBodySlam()) {
+        if (gLevelState->HasSuperBodySlam()) {
             SetMode(ACTION_STATE_AIRBORNE_SUPER_BODY_SLAM);
             SetTargetAnim(part, 7);
         } else {

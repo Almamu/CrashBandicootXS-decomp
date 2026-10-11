@@ -100,7 +100,7 @@ void LevelEntityFlags::SetGone(s32 n)
 
 /* Tests bit `n` of `bits0`, the committed "gone" set `SetEntityIdGone`
  * sets. */
-s32 LevelEntityFlags::IsGone(s32 n)
+bool LevelEntityFlags::IsGone(s32 n)
 {
     u8 *base = (u8 *)this;
     s32 result = 0;
@@ -126,7 +126,7 @@ s32 LevelEntityFlags::IsGone(s32 n)
 
 /* Tests bit `n` of `bits1` (`self+0x208`), the committed "activated"
  * set. */
-s32 LevelEntityFlags::IsActivated(s32 n)
+bool LevelEntityFlags::IsActivated(s32 n)
 {
     u8 *base = (u8 *)this;
     s32 result = 0;

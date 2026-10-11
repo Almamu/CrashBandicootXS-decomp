@@ -127,7 +127,7 @@ void SetActorCheckpoint(s32 arg0)
  * unsigned usual-arithmetic-conversion comparison that produces
  * compiles to the unsigned `bcc` instead (see docs/workflow.md
  * step 3). */
-s32 IsActorMaskAssistDue(void)
+bool IsActorMaskAssistDue(void)
 {
     return gActorCategoryDeaths >= (s32)gActorCategories[gActorCategory].maskAssistDeaths;
 }

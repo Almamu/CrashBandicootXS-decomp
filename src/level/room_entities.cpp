@@ -110,7 +110,7 @@ void LevelEntityFlags::SpawnRoomEntities(const struct level_entity_list *list,
         s32 k;
 
         for (k = 0; k < group->count; k++) {
-            if (!(u8)IsGone(counter))
+            if (!IsGone(counter))
                 gEntitySpawner->Spawn(counter, &group->entities[k]);
             counter++;
         }

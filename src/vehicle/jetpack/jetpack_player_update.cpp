@@ -59,7 +59,7 @@ JetpackPlayer::JetpackPlayer(const struct anim_table_record *rec, s32 z)
     gJetpackRingLastFrame = -0xbe;
     gJetpackRingChain = 0;
     gJetpackPauseLocked = 0;
-    if ((u8)IsActorMaskAssistDue())
+    if (IsActorMaskAssistDue())
         hp = 0x78;
     gJetpackPlayerMaxHp = hp;
     gJetpackBomberCount = 0;
