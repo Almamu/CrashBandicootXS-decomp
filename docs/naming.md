@@ -159,6 +159,7 @@ the names with the header it already includes. A data table in
 | `platform.hpp` (next to Platform) | `PLATFORM_TYPE_` | `Platform::type` and `PlatformMover::kind`, what a platform does ([docs/flags/platform.md](flags/platform.md)) |
 | `save.h` (next to RunSaveMenu) | `SAVE_MENU_STATE_` | `SaveMenu::state`, the save menu's screen ([docs/flags/save_menu.md](flags/save_menu.md)) |
 | `bosses.h` | `BOSS_` | `GetBossIndex` results |
+| `boss_ctrl.hpp` (next to each class) | `DINGODILE_STATE_`, `DINGODILE_SHIELD_STATE_`, `DINGODILE_PROJECTILE_STATE_`, `TINY_STATE_`, `CORTEX_BOSS_STATE_`, `CORTEX_TARGET_STATE_`, `CORTEX_BOSS_GEM_STATE_`, `CORTEX_CANNON_STATE_` | `Ctrl::state` of the boss controllers: Dingodile, Tiny and the Neo Cortex fight ([docs/flags/boss_ctrl.md](flags/boss_ctrl.md)) |
 | `categories.h` | `CATEGORY_` | actor categories (`gActorCategories` index), `CATEGORY_TYPE_*` and the `CATEGORY_EXIT_*` statuses |
 | `vehicle.hpp`, `frontend.hpp` (next to each class) | `POLAR_PLAYER_STATE_`, `POLAR_AKU_AKU_STATE_`, `POLAR_LAUNCHER_STATE_`, `POLAR_PENGUIN_STATE_`, `POLAR_ICICLE_STATE_`, `LOGO_ACTOR_STATE_` | `ActorSelf::state` of the polar run's actors and the logo actor ([docs/flags/actor_states_polar.md](flags/actor_states_polar.md)) |
 | `chunk_tokens.h` | `CHUNK_TOKEN_` | the run kinds of a layer/collision chunk's token stream (`DecodeCollisionChunk`, `DecodeLayerChunk`) |

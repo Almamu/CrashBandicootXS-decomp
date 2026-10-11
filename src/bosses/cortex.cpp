@@ -68,12 +68,12 @@ static inline void ClampFrame(MovingSprite *p, s32 idx)
 void CortexBossCtrl::Update(MovingSprite *part)
 {
     switch (state) {
-    case 0:
+    case CORTEX_BOSS_STATE_START:
         SpawnCannon(part);
         SpawnTarget(part);
         part->f.b.visible = 0;
         goto mode1;
-    case 1:
+    case CORTEX_BOSS_STATE_AIM:
         {
             s32 y = target->y;
             s32 n;
@@ -99,23 +99,23 @@ void CortexBossCtrl::Update(MovingSprite *part)
             ClampFrame(cannon, n);
             break;
         }
-    case 2:
+    case CORTEX_BOSS_STATE_HIT:
         if (++counter > 2) {
-            SetState(part, 3);
+            SetState(part, CORTEX_BOSS_STATE_DEFEATED);
             break;
         }
     mode1:
-        SetState(part, 1);
+        SetState(part, CORTEX_BOSS_STATE_AIM);
         break;
-    case 4:
+    case CORTEX_BOSS_STATE_GONE:
         break;
-    case 3:
+    case CORTEX_BOSS_STATE_DEFEATED:
         cannon->y += 0x80;
         part->y += 0x80;
         if (part->y >= INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x4000) {
             if ((u8)gLevelState->HasTurboRun())
                 RequestRoomExit();
-            SetState(part, 4);
+            SetState(part, CORTEX_BOSS_STATE_GONE);
         }
         break;
     }
@@ -228,33 +228,33 @@ void CortexTargetCtrl::Update(MovingSprite *part)
     }
 
     switch (state) {
-    case 0:
+    case CORTEX_TARGET_STATE_START:
         part->f.b.visible = 0;
-        SetState(part, 1);
+        SetState(part, CORTEX_TARGET_STATE_ENTER);
         break;
-    case 1:
-    case 2:
-    case 6:
+    case CORTEX_TARGET_STATE_ENTER:
+    case CORTEX_TARGET_STATE_HOP:
+    case CORTEX_TARGET_STATE_HOP_OFF:
         if (stepsLeft != 0)
             break;
         goto next;
-    case 3:
-        nextState = 4;
+    case CORTEX_TARGET_STATE_AIM:
+        nextState = CORTEX_TARGET_STATE_FIRE;
         SetTargetAnim(part, 0x12);
-        SetState(part, 7);
+        SetState(part, CORTEX_TARGET_STATE_ANIM);
         break;
-    case 4:
+    case CORTEX_TARGET_STATE_FIRE:
         FireShot(part, 0);
-        SetState(part, 2);
+        SetState(part, CORTEX_TARGET_STATE_HOP);
         SetTargetAnim(part, 0xF);
         break;
-    case 7:
+    case CORTEX_TARGET_STATE_ANIM:
         if (part->animDone) {
         next:
             SetState(part, nextState);
         }
         break;
-    case 5:
+    case CORTEX_TARGET_STATE_CHASE:
         {
             s32 left;
 
@@ -265,7 +265,7 @@ void CortexTargetCtrl::Update(MovingSprite *part)
             if ((left = stepsLeft) != 0)
                 break;
             if (--timer == 0) {
-                SetState(part, 1);
+                SetState(part, CORTEX_TARGET_STATE_ENTER);
                 FireShot(part, 1);
                 break;
             }
@@ -291,14 +291,14 @@ void CortexTargetCtrl::Update(MovingSprite *part)
             }
             break;
         }
-    case 8:
-        nextState = 10;
-        SetState(part, 6);
+    case CORTEX_TARGET_STATE_LEAVE:
+        nextState = CORTEX_TARGET_STATE_GONE;
+        SetState(part, CORTEX_TARGET_STATE_HOP_OFF);
         break;
-    case 9:
-        SetState(part, 8);
+    case CORTEX_TARGET_STATE_STOP:
+        SetState(part, CORTEX_TARGET_STATE_LEAVE);
         break;
-    case 10:
+    case CORTEX_TARGET_STATE_GONE:
         break;
     }
 }
@@ -329,11 +329,11 @@ static inline void StepHeight(CortexTargetCtrl *t, s32 pattern)
 void CortexTargetCtrl::SetState(MovingSprite *part, s32 next)
 {
     switch (next) {
-    case 8:
+    case CORTEX_TARGET_STATE_LEAVE:
         SetDest(part, (u32)INT_TO_Q8(gLevelLayers->layer0->widthPx) >> 1,
                 INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x2000);
         break;
-    case 1:
+    case CORTEX_TARGET_STATE_ENTER:
         SetPlatformsKind(0);
         part->animating = next;
         SetTargetAnim(part, 0xF);
@@ -341,19 +341,19 @@ void CortexTargetCtrl::SetState(MovingSprite *part, s32 next)
         high = next;
         top = 0;
         SetDest(part, INT_TO_Q8(gLevelLayers->layer0->widthPx) - 0x400, 0x9800);
-        nextState = 2;
+        nextState = CORTEX_TARGET_STATE_HOP;
         break;
-    case 2:
+    case CORTEX_TARGET_STATE_HOP:
         {
             s32 x, y;
 
-            nextState = 3;
+            nextState = CORTEX_TARGET_STATE_AIM;
             x = this->x;
             if (dirLeft) {
                 if (x - 0x1800 <= 0x400)
                     dirLeft = 0;
             } else if (x + 0x1C00 >= INT_TO_Q8(gLevelLayers->layer0->widthPx)) {
-                nextState = 5;
+                nextState = CORTEX_TARGET_STATE_CHASE;
             }
             StepHeight(this, boss->counter);
             if (dirLeft)
@@ -372,7 +372,7 @@ void CortexTargetCtrl::SetState(MovingSprite *part, s32 next)
             SetDest(part, x, y);
             break;
         }
-    case 5:
+    case CORTEX_TARGET_STATE_CHASE:
         blinking = 0;
         SetPlatformsKind(1);
         timer = 0x14;
@@ -444,7 +444,7 @@ void CortexShotCtrl::Update(MovingSprite *part)
                 struct aabb c = e->GetAnimHitbox();
 
                 if (AabbOverlaps(&c, &b)) {
-                    boss->SetMode(2);
+                    boss->SetMode(CORTEX_BOSS_STATE_HIT);
                     /* through the inline: with a plain `e->kind = EVENT_HIT`,
                      * reload picks other registers for `part` (r8) in
                      * the next store and in MarkGone */
@@ -489,7 +489,7 @@ void CortexBossPlatformMover::Update(MovingSprite *part)
 void CortexBossGemCtrl::Update(MovingSprite *part)
 {
     switch (state) {
-    case 0:
+    case CORTEX_BOSS_GEM_STATE_WAIT:
         if (part->kind == EVENT_HIT) {
             part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x27C);
             switch (kind) {
@@ -504,10 +504,10 @@ void CortexBossGemCtrl::Update(MovingSprite *part)
                 break;
             }
             part->palette = part->GetAnimPaletteSlot();
-            SetMode(1);
+            SetMode(CORTEX_BOSS_GEM_STATE_SHRINK);
         }
         break;
-    case 1:
+    case CORTEX_BOSS_GEM_STATE_SHRINK:
         if (part->animDone)
             part->MarkGone();
         break;
@@ -597,7 +597,7 @@ void CortexCannonCtrl::SetState(MovingSprite *, s32 next)
 
 void CortexCannonCtrl::Update(MovingSprite *part)
 {
-    if (state == 0)
+    if (state == CORTEX_CANNON_STATE_IDLE)
         part->f.b.visible = 0;
 }
 
@@ -613,8 +613,8 @@ CortexCannonCtrl::CortexCannonCtrl()
  * the player has it, spawns the body slam power. */
 void CortexBossCtrl::SetState(MovingSprite *, s32 next)
 {
-    if (next == 3) {
-        target->mover->SetMode(9);
+    if (next == CORTEX_BOSS_STATE_DEFEATED) {
+        target->mover->SetMode(CORTEX_TARGET_STATE_STOP);
         if (!(u8)gLevelState->HasTurboRun())
             SpawnBodySlamPower(0xFFFF, 0x8C, 0x98, 0);
     }
