@@ -88,12 +88,12 @@ void Hovercraft::RunState(void)
 void Hovercraft::StateCloseIn(void)
 {
     z += velZ;
-    if (phase == 0) {
+    if (phase == HOVERCRAFT_PHASE_STEER) {
         if (velZ <= 0x98)
             velZ = velZ + 1;
         else
             velZ = velZ - 1;
-    } else if (phase == 1) {
+    } else if (phase == HOVERCRAFT_PHASE_SWEEP) {
         if (velZ <= 0x3f)
             velZ = velZ + 1;
         else if (velZ > 0x40)
@@ -105,7 +105,7 @@ void Hovercraft::StateCloseIn(void)
             velZ = velZ - 1;
     }
 
-    if (phase == 0) {
+    if (phase == HOVERCRAFT_PHASE_STEER) {
         ActorSelf *pl;
         s32 vx, vy, px, py, cx, cy;
 
@@ -138,7 +138,7 @@ void Hovercraft::StateCloseIn(void)
             velY = 0x200;
         if (screenY > 0x2bff)
             velY = -0x200;
-    } else if (phase == 1) {
+    } else if (phase == HOVERCRAFT_PHASE_SWEEP) {
         x += velX;
         if (x > 0xffff && velX > 0)
             velX = -0x400;
@@ -162,8 +162,8 @@ void Hovercraft::StateCloseIn(void)
     if (distance <= 0x27ff) {
         fireTimer = attack->timing[1].delay;
         volleyCount = 0;
-        EnterState(3, 0);
-        phase = 0;
+        EnterState(HOVERCRAFT_STATE_FALL_BACK, 0);
+        phase = HOVERCRAFT_PHASE_FIRST_LEG;
         velZ = 0xae;
     }
 }
@@ -188,7 +188,7 @@ void Hovercraft::StateFallBack(void)
     else
         velY = 0;
 
-    if (phase <= 3) {
+    if (phase <= HOVERCRAFT_PHASE_LAST_LEG) {
         s32 v = velZ;
 
         if (v <= 0xad)
@@ -219,17 +219,17 @@ void Hovercraft::StateFallBack(void)
             velX = 0;
     }
 
-    if (phase > 3 && distance > 0x8000) {
+    if (phase > HOVERCRAFT_PHASE_LAST_LEG && distance > 0x8000) {
         frameCount = 0;
         orbitRadius = 0;
         fireTimer = attack->timing[1].delay;
         volleyCount = 0;
-        EnterState(2, 0);
+        EnterState(HOVERCRAFT_STATE_CLOSE_IN, 0);
         if (partsLeft > 2) {
-            phase = 1;
+            phase = HOVERCRAFT_PHASE_SWEEP;
             velZ = 0x40;
         } else {
-            phase = 2;
+            phase = HOVERCRAFT_PHASE_CIRCLE;
             velZ = 0x6a;
         }
         velX = -0xa00;
@@ -306,7 +306,7 @@ void Hovercraft::Create(s32 lvl)
     mapCols = BOSS_PICTURE_SIZE(picture)->cols;
     mapRows = BOSS_PICTURE_SIZE(picture)->rows;
     anim = new AnimPart((struct anim_frame_record *)keyframes, mapFrames, 1);
-    EnterState(0, 0);
+    EnterState(HOVERCRAFT_STATE_INACTIVE, 0);
     LoadGraphics();
     bg2PageFlip = 0;
     partsLeft = 4;
@@ -323,7 +323,7 @@ void Hovercraft::Spawn(s32 kind, s32 sx, s32 sy, s32 sz)
     s32 scale;
 
     velZ = 0x66;
-    EnterState(1, 0);
+    EnterState(HOVERCRAFT_STATE_APPROACH, 0);
     x = sx * 5;
     y = sy * 3;
     z = sz;
@@ -338,7 +338,7 @@ void Hovercraft::Spawn(s32 kind, s32 sx, s32 sy, s32 sz)
     REG_DISPCNT |= DISPCNT_BG2_ON;
     bg2PageFlip = 1;
     bg2Page = 0;
-    phase = 0;
+    phase = HOVERCRAFT_PHASE_STEER;
     frameCount = 0;
     orbitRadius = 0;
     partsLeft = 4;
@@ -374,7 +374,7 @@ void Hovercraft::Update(void)
     AnimPart *self;
 
     RunState();
-    if (state != 0) {
+    if (state != HOVERCRAFT_STATE_INACTIVE) {
         s32 scale;
 
         self = anim;
@@ -452,7 +452,7 @@ void Hovercraft::LoadGraphics(void)
         *(u32 *)i = zero;
     DmaFill16(3, 0xFFFF, (void *)BG_SCREEN_ADDR(24), 2 * BG_SCREEN_SIZE);
     ConvertTiles();
-    if (state != 0) {
+    if (state != HOVERCRAFT_STATE_INACTIVE) {
         AnimPart *self;
 
         bg2PageFlip = 1;

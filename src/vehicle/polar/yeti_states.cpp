@@ -102,7 +102,7 @@ void Yeti::StateChase()
             }
 
         do_transition:
-            state = 1;
+            state = YETI_STATE_CHARGE;
             {
                 anim->RestartAnim(1);
             }
@@ -160,7 +160,7 @@ void Yeti::StateCharge()
         AnimPart *bc = anim;
 
         if (bc->animDone != 0) {
-            state = 0;
+            state = YETI_STATE_CHASE;
             bc->RestartAnim(0);
         }
     }

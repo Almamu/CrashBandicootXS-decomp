@@ -27,7 +27,7 @@ extern "C" {
 
 u8 Airship::IsTouching(ActorSelf *self)
 {
-    if ((u32)(state - 2) <= 1) {
+    if ((u32)(state - AIRSHIP_STATE_FIREBALLS) <= AIRSHIP_STATE_CANNON - AIRSHIP_STATE_FIREBALLS) {
         struct {
             struct anim_box a, c, t;
         } f;

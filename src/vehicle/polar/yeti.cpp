@@ -13,12 +13,12 @@ extern "C" {
  * polar_aku_aku.cpp's header comment): a state-flag setter, its
  * destructor, and its constructor. */
 
-/* Arms `gYetiState = 3` - a state value none of this chunk's
- * other functions read back, plausibly consumed by the vtable-dispatch
- * caller itself. */
+/* The run is over (PolarPlayer::FinishRun, or Hurt/Shock with no mask
+ * left): the yeti stops following
+ * (Update) and stops catching, and StateStop plays its last animation. */
 void Yeti::Stop()
 {
-    state = 3;
+    state = YETI_STATE_STOP;
 }
 
 /* Destructor: frees the object. */
@@ -46,7 +46,7 @@ void Yeti::Create(s32 level)
     position = INT_TO_Q8(GetCellAnimDistance()) - distance;
     SetActorBgLayerDepth(distance);
 
-    state = 0;
+    state = YETI_STATE_CHASE;
     LoadGraphics();
 }
 

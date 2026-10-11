@@ -124,7 +124,7 @@ void Airship::Create(s32 lvl)
     mapCols = BOSS_PICTURE_SIZE(picture)->cols;
     mapRows = BOSS_PICTURE_SIZE(picture)->rows;
     anim = new AnimPart((struct anim_frame_record *)keyframes, mapFrames, 1);
-    SetState(0, 0);
+    SetState(AIRSHIP_STATE_INACTIVE, 0);
     LoadGraphics();
     bg2PageFlip = 0;
 }
@@ -156,7 +156,7 @@ void Airship::Spawn(s32 kind, s32 sx, s32 sy, s32 sz)
     AnimPart *self;
 
     velZ = 0x66;
-    SetState(1, 0);
+    SetState(AIRSHIP_STATE_APPROACH, 0);
     x = sx * 5;
     y = sy * 2;
     z = sz + 0xA000;
@@ -205,7 +205,7 @@ void Airship::Update()
     stateFuncs[state]();
     AnimatePalette();
     stateTimer++;
-    if (state != 0) {
+    if (state != AIRSHIP_STATE_INACTIVE) {
         s32 scale;
 
         self = anim;

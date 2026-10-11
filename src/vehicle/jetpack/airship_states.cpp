@@ -32,7 +32,7 @@ void Airship::StateApproach()
 
         *vy = 0;
         *vx = 0;
-        SetState(2, 0);
+        SetState(AIRSHIP_STATE_FIREBALLS, 0);
         PauseActorSpawns();
     }
 }
@@ -76,7 +76,7 @@ void Airship::StateFireballs()
     if (distance <= 0x31FF) {
         fireTimer = attack->cannonDelay;
         volleyCount = 0;
-        SetState(3, 0);
+        SetState(AIRSHIP_STATE_CANNON, 0);
     }
     UpdateFlashColor();
 }
@@ -142,7 +142,7 @@ void Airship::StateCannon()
     if (distance > 0x4300) {
         fireTimer = attack->fireballDelay;
         volleyCount = 0;
-        SetState(2, 0);
+        SetState(AIRSHIP_STATE_FIREBALLS, 0);
     }
     UpdateFlashColor();
 }
@@ -210,7 +210,7 @@ void Airship::StateExplode()
         SPAWN(bx, by);
     } else if (stateTimer == 0xaa) {
         ResumeActorSpawns();
-        SetState(5, 1);
+        SetState(AIRSHIP_STATE_FALL, 1);
         gAudioContext->PlaySfx(SFX_UNKNOWN_42, 0x100);
         velZ = 0x9d;
         if (gLevelState->timeTrial == 0 && checkpointCount <= 1) {
@@ -246,7 +246,7 @@ void Airship::StateFall()
     }
 
     if (total > 0xbb80) {
-        SetState(0, 0);
+        SetState(AIRSHIP_STATE_INACTIVE, 0);
         REG_DISPCNT &= ~DISPCNT_BG2_ON;
     }
 }

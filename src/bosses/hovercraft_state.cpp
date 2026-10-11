@@ -45,7 +45,7 @@ void Hovercraft::LosePart(void)
     partsLeft -= 1;
     if (partsLeft == 0) {
         gone = partsLeft;
-        SetState(5, 0);
+        SetState(HOVERCRAFT_STATE_FALL, 0);
     }
 }
 
@@ -107,7 +107,7 @@ void Hovercraft::StateApproach(void)
 
         *vy = 0;
         *vx = 0;
-        EnterState(2, 0);
+        EnterState(HOVERCRAFT_STATE_CLOSE_IN, 0);
     }
 }
 

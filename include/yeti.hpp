@@ -28,6 +28,13 @@ extern "C" {
 class ActorSelf;
 class AnimPart;
 
+/* Yeti::state (#843, docs/flags/boss_states_vehicle.md): the stateFuncs
+ * index, named after its method. */
+#define YETI_STATE_CHASE 0  // StateChase: Create's; StateCharge's end
+#define YETI_STATE_CHARGE 1 // StateCharge: picked at random by StateChase (chargeParams)
+#define YETI_STATE_CAUGHT 2 // StateCaught: Update, its catch box on the player
+#define YETI_STATE_STOP 3   // StateStop: Stop, the run is over (finish, knocked off, shocked)
+
 class Yeti
 {
 public:
