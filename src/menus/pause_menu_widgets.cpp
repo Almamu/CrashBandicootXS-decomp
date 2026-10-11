@@ -26,12 +26,12 @@ extern "C" {
  * 0x114 to r7 (move2add's `adds r7, #4`). The second half's reads go
  * through the inline getters and its new position is passed straight to
  * the inline setter, which puts both loads ahead of the `*pdc` load. */
-void PauseMenu::DrawFraction(void *count, void *total)
+void PauseMenu::DrawFraction(const u8 *count, const u8 *total)
 {
     Font **pdc = &gSmallFont;
     Font **pe0;
 
-    (*pdc)->DrawText((u8 *)count);
+    (*pdc)->DrawText(count);
     {
         Font *d = *pdc;
         u32 x = d->posX;
@@ -48,7 +48,7 @@ void PauseMenu::DrawFraction(void *count, void *total)
 
         (*pdc)->SetPos(e->GetX() - 5, e->GetY() + 8);
     }
-    (*pdc)->DrawText((u8 *)total);
+    (*pdc)->DrawText(total);
 }
 
 /* Writes " <NN%>" into `buf`: the digits of `value` land at `buf + 2`

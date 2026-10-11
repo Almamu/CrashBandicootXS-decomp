@@ -254,8 +254,8 @@ public:
     // updated when one is won, packed for the save menus (PackSaveData)
     GameProgress saveData;
     LevelEntityFlags
-        *savedBitmap;    // 0x1B4 - gEntityFlags, while a bonus round or gem path has its own
-    void *bonusPlatform; // 0x1B8 - the bonus-round platform object (SetBonusPlatform)
+        *savedBitmap;      // 0x1B4 - gEntityFlags, while a bonus round or gem path has its own
+    void *bonusPlatform;   // 0x1B8 - the bonus-round platform object (SetBonusPlatform)
     Platform *gemPlatform; // 0x1BC - the gem-path platform object (SetGemPlatform)
     // 0x1C0 - where the crate gem appears (SetCrateGemPos); low halves go to SpawnCrateGem
     s32 crateGemX;
