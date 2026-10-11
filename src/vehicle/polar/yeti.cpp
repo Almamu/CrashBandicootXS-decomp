@@ -39,7 +39,7 @@ void Yeti::Destroy()
 void Yeti::Create(s32 level)
 {
     paramsIndex = level;
-    anim = new AnimPart((struct anim_frame_record *)keyframes, (u32 *)frames, 0xf);
+    anim = new AnimPart(keyframes, (u32 *)frames, 0xf);
 
     x = 0;
     distance = 0xa000;

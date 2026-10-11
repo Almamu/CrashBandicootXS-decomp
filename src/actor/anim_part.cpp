@@ -25,7 +25,7 @@ s32 AnimPart::GetAnimFrameBaseOffset()
  * word's flags (DrawActor, DrawJetpackCheckpointText). */
 s32 AnimPart::GetAnimFrameAttr()
 {
-    return (s32)anims[animIndex].attr << 16;
+    return anims[animIndex].attr << 16;
 }
 
 /* The current frame's graphics: the keyframe's frameIndex plus the

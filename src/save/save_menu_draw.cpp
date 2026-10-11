@@ -623,7 +623,7 @@ void SaveMenu::Draw()
 {
     gOamBuffer->Reset();
     gObjVramCursor->Rewind();
-    if ((u32)state <= SAVE_MENU_STATE_UNK10) {
+    if (state <= SAVE_MENU_STATE_UNK10) {
         switch (state) {
         case SAVE_MENU_STATE_MAIN:
             DrawMain();

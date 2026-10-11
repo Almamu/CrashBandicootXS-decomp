@@ -49,20 +49,22 @@ class PolarPlayer;   // vehicle.hpp
 class AnimPart
 {
 public:
-    struct anim_frame_record *anims; // 0x00
-    u32 *frameOffsets;               // 0x04
-    s32 animTime;                    // 0x08 - Q8 frame accumulator
-    s32 animIndex;                   // 0x0C - current index into anims
-    s16 animTimer;                   // 0x10
-    u8 animDone;                     // 0x12 - set once the current sequence has played through
+    const struct anim_frame_record *anims; // 0x00
+    u32 *frameOffsets;                     // 0x04
+    s32 animTime;                          // 0x08 - Q8 frame accumulator
+    s32 animIndex;                         // 0x0C - current index into anims
+    s16 animTimer;                         // 0x10
+    // 0x12 - set once the current sequence has played through
+    u8 animDone;
     // 0x14 - draw order: RunActorCategoryFrame heapsorts the draw list by it
     //        (HeapSortActorsByKey); bit 15 also sets OAM priority
-    //        (SORT_KEY_FLAG_BEHIND_BG, above)
-    s32 sortKey;
+    //        (SORT_KEY_FLAG_BEHIND_BG, above); unsigned, as KeyGreater
+    //        compares it
+    u32 sortKey;
     s32 palette; // 0x18 - OBJ palette bank (OAM attr 2 << 12), from anim_table_record.palette
 
     /* Inline: InitActorPart and CreateAirship expand it. */
-    AnimPart(struct anim_frame_record *a, u32 *offsets, s32 pal)
+    AnimPart(const struct anim_frame_record *a, u32 *offsets, s32 pal)
     {
         anims = a;
         frameOffsets = offsets;
@@ -101,9 +103,9 @@ public:
     s32 CurAttr()
     {
         s32 idx = animIndex;
-        struct anim_frame_record *table = anims;
+        const struct anim_frame_record *table = anims;
 
-        return (s32)table[idx].attr << 16;
+        return table[idx].attr << 16;
     }
 
     static void *operator new(size_t size)
@@ -130,7 +132,7 @@ public:
     u8 visible;
     // 0x30 - the record InitActorPart was given (actor_anim.h); the draw
     //        functions scale by its baseDepth
-    struct anim_table_record *record;
+    const struct anim_table_record *record;
     s32 depth;           // 0x34
     struct anim_box box; // 0x38 - collision box, copied from record->box_14 by InitActorPart
     s32 stateTime;       // 0x44 - frames spent in `state`

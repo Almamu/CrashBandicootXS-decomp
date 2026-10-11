@@ -94,7 +94,7 @@ private:
     static s32 mapTileBase; // gAirshipMapTileBase
     static AnimPart *anim;  // gAirship
     static s32 state;       // gAirshipState
-    static s32 stateTimer;  // gAirshipStateTimer
+    static u32 stateTimer;  // gAirshipStateTimer
     static s32 x;           // gAirshipX
     static s32 y;           // gAirshipY
     static s32 z;           // gAirshipZ

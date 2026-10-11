@@ -142,7 +142,7 @@ void SaveMenu::Input(u32 keys)
         rowObjC[i]->Update();
     }
 
-    if ((u32)state <= SAVE_MENU_STATE_UNK10) {
+    if (state <= SAVE_MENU_STATE_UNK10) {
         switch (state) {
         case SAVE_MENU_STATE_MAIN:
             MainInput(keys);
@@ -357,7 +357,7 @@ void SaveMenu::LinkInput()
         return;
     }
 
-    if (result == 2 || !(u8)linkSave->CheckChecksum()) {
+    if (result == 2 || !linkSave->CheckChecksum()) {
         state = SAVE_MENU_STATE_MESSAGE;
         messageLine1 = GetUiText(0x2c);
         messageLine2 = GetUiText(0x2e);

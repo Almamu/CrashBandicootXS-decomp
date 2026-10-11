@@ -54,6 +54,9 @@ void LevelLayers::LoadRoom(const struct level_room *args)
     const struct level_desc *desc = args->desc;
 
     if (desc->assetPacked == 0) {
+        /* `asset` is also the buffer a packed asset is unpacked into and
+         * freed from (`assetOwned`), so it isn't const: the ROM's asset
+         * drops its const here. */
         asset = (void *)desc->asset;
         assetOwned = 0;
     } else {
@@ -63,7 +66,7 @@ void LevelLayers::LoadRoom(const struct level_room *args)
     }
 
     layer0->Load(args->desc->layer0);
-    tiles->SetSource((struct level_layer_desc *)args->desc->collision);
+    tiles->SetSource(args->desc->collision);
     maxScrollX = layer0->widthPx - DISPLAY_WIDTH;
     maxScrollY = layer0->heightPx - DISPLAY_HEIGHT;
     ShowBg0();

@@ -100,13 +100,13 @@ void Airship::LoadGraphics()
         if (state == AIRSHIP_STATE_FALL) {
             pal[15] = pal[1] = pal[4] = pal[8] = 0;
         } else if (state == AIRSHIP_STATE_EXPLODE) {
-            if ((u32)stateTimer > 9)
+            if (stateTimer > 9)
                 pal[15] = 0;
-            if ((u32)stateTimer > 0x31)
+            if (stateTimer > 0x31)
                 pal[1] = 0;
-            if ((u32)stateTimer > 0x4f)
+            if (stateTimer > 0x4f)
                 pal[4] = 0;
-            if ((u32)stateTimer > 0x6d)
+            if (stateTimer > 0x6d)
                 pal[8] = 0;
         }
     }

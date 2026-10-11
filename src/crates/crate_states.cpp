@@ -29,7 +29,7 @@ extern "C" {
 static inline Crate *RingAt(Player *p, s32 i)
 {
     if (p->ctrlMode == PLAYER_CTRL_MODE_ACTION && (i <= 4 || i < p->listCount))
-        return (Crate *)p->list[i];
+        return p->list[i];
     return 0;
 }
 

@@ -627,7 +627,7 @@ void LogoActor::Draw()
 {
     s32 scale;
     s32 attr1;
-    struct anim_frame_record *rec;
+    const struct anim_frame_record *rec;
     u8 *frame;
 
     if (state == LOGO_ACTOR_STATE_GONE)
@@ -635,7 +635,7 @@ void LogoActor::Draw()
     {
         s32 base = Q8_TO_INT(animTime);
         s32 idx = animIndex;
-        struct anim_frame_record *table = anims;
+        const struct anim_frame_record *table = anims;
         s32 val;
 
         val = table[idx].frameIndex;
@@ -670,7 +670,7 @@ void LogoActor::Draw()
         sx -= halfW;
         sy -= halfH;
         if (sy <= 0x9f && sy + halfH * 2 >= 0 && sx <= 0xef && sx + halfW * 2 >= 0) {
-            u32 attr = (s32)rec->attr << 16;
+            u32 attr = rec->attr << 16;
 
             attr1 |= (sy & 0xff) | ((sx & 0x1ff) << 16) | attr | GetSpriteShapeSizeBits(frame);
             if (frame != gLogoActorLastFrame) {

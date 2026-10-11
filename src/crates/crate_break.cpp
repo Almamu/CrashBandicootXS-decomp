@@ -108,7 +108,7 @@ static inline s32 PlayerInvulnerable(void)
 static inline void RingPush(Crate *obj)
 {
     if (PlayerCtrlMode() == PLAYER_CTRL_MODE_ACTION && gPlayer->listCount <= 4)
-        gPlayer->list[gPlayer->listCount] = (Crate *)obj;
+        gPlayer->list[gPlayer->listCount] = obj;
     if (gPlayer->ctrlMode == PLAYER_CTRL_MODE_ACTION)
         gPlayer->listCount++;
 }
