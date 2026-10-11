@@ -51,14 +51,14 @@ static inline void Run(MegaMixCtrl *self, MovingSprite *part)
     else
         self->SetMotionXFromSet(part, 1);
     self->SetTargetAnim(part, 0);
-    self->SetMode(1);
+    self->SetMode(MEGA_MIX_STATE_RUN);
 }
 
 /* Stops: anim 2, mode 0, X record 0. */
 static inline void Stop(MegaMixCtrl *self, MovingSprite *part)
 {
     self->SetTargetAnim(part, 2);
-    self->SetMode(0);
+    self->SetMode(MEGA_MIX_STATE_STOP);
     self->StartTargetMotionXFromSet(part, 0);
 }
 
@@ -70,12 +70,12 @@ void MegaMixCtrl::Update(MovingSprite *part)
     }
 
     switch (state) {
-    case 0:
+    case MEGA_MIX_STATE_STOP:
         if (gPlayer->dead != 0)
             return;
         Run(this, part);
         return;
-    case 1:
+    case MEGA_MIX_STATE_RUN:
         {
             s32 i;
             s32 px;
@@ -134,7 +134,7 @@ void MegaMixCtrl::Update(MovingSprite *part)
                 if (ABS_BRANCHLESS(pl->x - part->x) <= 0x27FF &&
                     ABS_BRANCHLESS(pl->y - part->y) <= 0x31FF) {
                     SetMotionXFromSet(part, 0);
-                    SetMode(2);
+                    SetMode(MEGA_MIX_STATE_GRAB);
                     SetTargetAnim(part, 1);
                     return;
                 }
@@ -173,7 +173,7 @@ void MegaMixCtrl::Update(MovingSprite *part)
             }
             return;
         }
-    case 2:
+    case MEGA_MIX_STATE_GRAB:
         if (part->frame == 8 && part->stepTimer == 0) {
             Player *pl = gPlayer;
 

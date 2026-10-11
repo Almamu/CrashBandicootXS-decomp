@@ -63,7 +63,7 @@ DingodileCtrl::~DingodileCtrl()
 /* Spawns the shield at (x, y). */
 DingodileCtrl::DingodileCtrl(u32 x, u32 y)
 {
-    SpawnShieldOrRocket(0, (u16)x, (u16)y, 0);
+    SpawnShieldOrRocket(DINGODILE_SPAWN_MODE_SHIELD, (u16)x, (u16)y, 0);
 }
 
 void DingodileCtrl::SetStep(s32 value)

@@ -108,6 +108,9 @@ COMPILE_TIME_ASSERT(platform_hpp, sizeof(PlatformMover) == 0x38);
  * PlatformMover whose Update runs the platform's animation to frame 0x1A,
  * or to frame 10 while the target has set the platform's `kind` (its
  * state 5, CortexTargetCtrl::SetPlatformsKind). */
+/* Its `state` (Ctrl::state; #843, docs/flags/boss_ctrl.md). */
+#define CORTEX_BOSS_PLATFORM_STATE_START 0 // the first frame: the animation to frame 0x1A, then RUN
+#define CORTEX_BOSS_PLATFORM_STATE_RUN 1   // runs the animation to frame 0x1A (10 while `kind` is set)
 class CortexBossPlatformMover : public PlatformMover
 {
 public:
