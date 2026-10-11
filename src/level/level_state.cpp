@@ -54,7 +54,7 @@ void LevelState::StartTimeTrial()
     if (room.cat->kind == ROOM_KIND_CATEGORY)
         return;
 
-    part = (Platform *)bonusPlatform;
+    part = bonusPlatform;
     if (part != 0) {
         part->StartAnim(7);
     }
@@ -275,7 +275,7 @@ void LevelState::PressSwitchCrate()
     }
 }
 
-void *LevelState::GetBonusPlatform()
+Platform *LevelState::GetBonusPlatform()
 {
     return bonusPlatform;
 }
@@ -843,7 +843,7 @@ void LevelState::SetGemPlatform(Platform *value)
 }
 
 /* Sets `+0x1b8`, the companion field to `SetGemPlatform` above. */
-void LevelState::SetBonusPlatform(void *value)
+void LevelState::SetBonusPlatform(Platform *value)
 {
     bonusPlatform = value;
 }

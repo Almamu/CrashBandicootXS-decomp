@@ -448,7 +448,7 @@ fade:
             struct vec2 point;
             s32 x;
 
-            x = *(s32 *)gLevelState->GetBonusPlatform() + -0x1E00;
+            x = gLevelState->GetBonusPlatform()->x + -0x1E00;
             i = gPlayer->y + 0x1200;
             point.x = x;
             point.y = i;
@@ -457,8 +457,7 @@ fade:
             {
                 LevelState *state = (LevelState *)x;
 
-                state->SetCheckpoint(((Platform *)state->GetBonusPlatform())->GetExitMirror(),
-                                     &point.x);
+                state->SetCheckpoint(state->GetBonusPlatform()->GetExitMirror(), &point.x);
             }
         } else if (!IsInGemPathRoom() && gLevelState->IsInGemPath()) {
             struct vec2 point;
