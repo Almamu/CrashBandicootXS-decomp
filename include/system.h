@@ -39,6 +39,12 @@ extern u32 gFrameLimitInterval;
 extern const u8 gDpadDirectionTable[16];
 
 /* src/system/asset.cpp */
+/* A tagged asset's type: bits 4-7 of its header word, the GBA BIOS's
+ * compression type (#843, docs/flags/asset.md). */
+#define ASSET_TYPE_RAW 0     // uncompressed: LoadTaggedAsset DMAs it
+#define ASSET_TYPE_LZ77 1    // LZ77UnCompVram
+#define ASSET_TYPE_HUFFMAN 2 // the BIOS's Huffman; LoadTaggedAsset skips it
+#define ASSET_TYPE_RL 3      // run-length: RLUnCompVram
 extern void LoadTaggedAsset(const void *asset, void *dest);
 extern void LoadBackgroundTileAndPalette(const void *asset);
 

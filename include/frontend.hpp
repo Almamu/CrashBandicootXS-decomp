@@ -186,6 +186,18 @@ public:
 
 COMPILE_TIME_ASSERT(frontend_hpp, sizeof(Starfield) == 0x14);
 
+/* The credits stream's opcodes (gCreditsText, credits_17c5d0.cpp spells
+ * them as CREDITS_PICTURE_n / CREDITS_SMALL / CREDITS_LARGE strings;
+ * #843, docs/flags/text.md). */
+#define CREDITS_OP_PICTURE 1 // the next byte is a logo's index
+#define CREDITS_OP_SMALL 2   // the text that follows in gSmallFont
+#define CREDITS_OP_LARGE 3   // ... in gLargeFont
+
+/* CreditsPopup's `mode`: what it draws. */
+#define CREDITS_POPUP_MODE_SMALL_CHAR 0 // a character of gSmallFont
+#define CREDITS_POPUP_MODE_LARGE_CHAR 1 // a character of gLargeFont
+#define CREDITS_POPUP_MODE_LOGO 2       // one of the logos
+
 /* One line of the credits on screen: a run of text, or one of the
  * logos, floating up from the bottom (0x18 bytes). */
 struct CreditsPopup {
@@ -193,7 +205,7 @@ struct CreditsPopup {
     s32 x;              // 0x04
     s32 y;              // 0x08 - counts down while alive
     s32 height;         // 0x0C - it dies once y + height <= 0
-    s32 mode;           // 0x10 - 0/1: a character of gSmallFont/gLargeFont, 2: a logo
+    s32 mode;           // 0x10 - CREDITS_POPUP_MODE_*: a small or large character, a logo
     u8 index;           // 0x14 - the character, or the logo's index
 };
 

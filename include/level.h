@@ -36,6 +36,28 @@ struct terrain_type {
     u8 heights[4][8];
 };
 
+/* The terrain names (#843, docs/flags/terrain.md). A cell's low byte is
+ * its terrain type: 0 is empty, 1-0x23 have per-column heights
+ * (GetTerrainHeights), 0x24 and above are solid (GetSolidTerrainHeights,
+ * GetSolidTerrainModeValue). */
+#define TERRAIN_TYPE_NONE 0
+#define TERRAIN_TYPE_LAST_HEIGHTS 0x23 // the last type GetTerrainHeights reads
+
+/* The collision mode, the `modeValue`/`heights` index: the direction the
+ * probe moves in (LevelLayers::ProbeX's and ProbeY's `submode`, picked by
+ * Probe from its PART_DIR_* direction). */
+#define TERRAIN_MODE_DOWN 0  // a floor: ProbeY pushes the position up to the cell's top
+#define TERRAIN_MODE_RIGHT 1 // ProbeX pushes it left of the cell
+#define TERRAIN_MODE_UP 2    // a ceiling: ProbeY pushes it down below the cell
+#define TERRAIN_MODE_LEFT 3  // ProbeX pushes it right of the cell
+
+/* A cell's top nibble (bits 12-15): set, a solid cell is open to the
+ * probes of one collision mode, which pass through it. */
+#define TERRAIN_FLAG_OPEN_RIGHT 1 // TERRAIN_MODE_RIGHT
+#define TERRAIN_FLAG_OPEN_LEFT 2  // TERRAIN_MODE_LEFT
+#define TERRAIN_FLAG_OPEN_DOWN 4  // TERRAIN_MODE_DOWN
+#define TERRAIN_FLAG_OPEN_UP 8    // TERRAIN_MODE_UP
+
 /* The entity flags (`gEntityFlags`) are LevelEntityFlags, include/entity_flags.hpp. */
 
 /* src/level/pooled_bg_layer.cpp (the BG layers' methods are BgLayer's and

@@ -74,10 +74,10 @@ s32 LevelLayers::ProbeY(struct vec2 *pos, s32 span, s32 *outValue, s32 submode)
     }
     if (hit) {
         switch (submode) {
-        case 2:
+        case TERRAIN_MODE_UP:
             *outValue += INT_TO_Q8(8 - (pos->y & 7));
             break;
-        case 0:
+        case TERRAIN_MODE_DOWN:
             *outValue -= INT_TO_Q8(pos->y & 7);
             break;
         }
@@ -112,13 +112,13 @@ s32 LevelLayers::ProbeX(struct vec2 *pos, s32 span, s32 *outValue, s32 submode)
     }
     if (hit) {
         switch (submode) {
-        case 3:
+        case TERRAIN_MODE_LEFT:
             {
                 s32 v = *outValue + 1;
                 *outValue = v + INT_TO_Q8(8 - (pos->x & 7));
             }
             break;
-        case 1:
+        case TERRAIN_MODE_RIGHT:
             {
                 s32 v = *outValue - 1;
                 *outValue = v - INT_TO_Q8(pos->x & 7);

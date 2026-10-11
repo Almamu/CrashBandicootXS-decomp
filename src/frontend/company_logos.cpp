@@ -565,7 +565,7 @@ void CompanyLogos::LoadUniversalLogoBg()
     bg2cnt.raw = 0;
     bg2cnt.bits.charBase = 2;
     bg2cnt.bits.screenBase = 0x1e;
-    bg2cnt.bits.colorMode = 1;
+    bg2cnt.bits.colorMode = BGCNT_COLOR_MODE_256;
     bg2cnt.bits.priority = 1;
     bg2cnt.bits.size = 1;
     REG_BG2CNT = bg2cnt.raw;

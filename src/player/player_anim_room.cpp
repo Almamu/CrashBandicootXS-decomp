@@ -43,9 +43,9 @@ u8 Player::HasRoomForAnim(s32 anim)
     pos = Pos();
     origY = y;
     if (mirrorBits.flipX < 0)
-        probeDir = 2;
+        probeDir = PART_DIR_LEFT;
     else
-        probeDir = 1;
+        probeDir = PART_DIR_RIGHT;
     pos.y = INT_TO_Q8(box->offY) + pos.y;
     Q8_TO_INT_INPLACE(pos.x);
     Q8_TO_INT_INPLACE(pos.y);

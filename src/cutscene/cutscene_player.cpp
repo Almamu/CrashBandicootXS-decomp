@@ -89,7 +89,8 @@ void CutscenePlayer::Run()
                 s32 pos = 0;
 
                 while (str[pos] != 0 && res == 1) {
-                    pos += DrawWrappedText(str + pos, self->font, &self->box, limit, 1);
+                    pos += DrawWrappedText(str + pos, self->font, &self->box, limit,
+                                           WRAPPED_TEXT_MODE_PER_WORD);
                     res = WaitForKeyPress(self->slides[i]->wait, self->slides[i]->buttons, 9);
                 }
             }

@@ -29,9 +29,9 @@ void BgSetup::Load(const struct bg_package *pkg)
     s32 y;
 
     if (*(u32 *)pkg->paletteAsset >> 8 <= 0x20)
-        ctrl.bits.colorMode = 0;
+        ctrl.bits.colorMode = BGCNT_COLOR_MODE_16;
     else
-        ctrl.bits.colorMode = 1;
+        ctrl.bits.colorMode = BGCNT_COLOR_MODE_256;
     LoadTaggedAsset(pkg->paletteAsset, (void *)(PLTT + (paletteBank << 5)));
     LoadTaggedAsset(pkg->tileAsset, (void *)(VRAM + (charBlock << 14)));
     map = new u16[*(u32 *)pkg->mapAsset >> 9];

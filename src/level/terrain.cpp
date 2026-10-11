@@ -208,7 +208,7 @@ s32 LevelLayers::ProbeSolidFloor(struct vec2 *pos, s32 *outValue)
     u8 scratch;
     s32 tileX = pos->x >> 3;
     s32 tileY = pos->y >> 3;
-    s8 height = tiles->GetSolidTerrainModeValue(tileX, tileY, 0, &scratch);
+    s8 height = tiles->GetSolidTerrainModeValue(tileX, tileY, TERRAIN_MODE_DOWN, &scratch);
 
     if (height >= 0) {
         s32 y = pos->y;

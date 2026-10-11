@@ -26,10 +26,11 @@ extern "C" {
  * against a per-line budget (`box->w`). When the running width would
  * overflow, it advances to a new line (PutChar('\n'), then re-draws the
  * just-measured token at the line's start) and optionally flushes
- * (WaitForVBlank then CommitOamBuffer) depending on `mode` (0 = never
- * flush per-token, 1 = flush after every token, 2 = only flush after a
- * line wrap) - and flushes once more after the whole string is consumed
- * if `mode != 0`. Recognizes two escape sequences, `/b` (nudge the
+ * (WaitForVBlank then CommitOamBuffer) depending on `mode`
+ * (WRAPPED_TEXT_MODE_*: BUFFERED = never flush, and don't reset the OAM
+ * buffer either; PER_WORD = flush after every token; PER_LINE = only
+ * flush after a line wrap) - and flushes once more after the whole
+ * string is consumed unless BUFFERED. Recognizes two escape sequences, `/b` (nudge the
  * position down by 4, a half-line break) and `/n` (newline). Returns the
  * number of bytes consumed.
  *
@@ -60,7 +61,7 @@ s32 DrawWrappedText(u8 *text, Font *self, struct aabb *box, s32 limit, s32 mode)
     s32 combined;
 
     posAccum = 0;
-    if (mode != 0) {
+    if (mode != WRAPPED_TEXT_MODE_BUFFERED) {
         gOamBuffer->Reset();
         gOamBuffer->HideUnused();
     }
@@ -90,7 +91,7 @@ s32 DrawWrappedText(u8 *text, Font *self, struct aabb *box, s32 limit, s32 mode)
             if (combined <= box->w) {
                 self->DrawChars(token, len);
                 widthAccum = combined;
-                if (mode == 1) {
+                if (mode == WRAPPED_TEXT_MODE_PER_WORD) {
                     WaitForVBlank();
                     gOamBuffer->Commit();
                 }
@@ -102,7 +103,7 @@ s32 DrawWrappedText(u8 *text, Font *self, struct aabb *box, s32 limit, s32 mode)
                 self->PutChar('\n');
                 self->DrawChars(token, len);
                 widthAccum = charWidth;
-                if (mode == 1 || mode == 2) {
+                if (mode == WRAPPED_TEXT_MODE_PER_WORD || mode == WRAPPED_TEXT_MODE_PER_LINE) {
                     WaitForVBlank();
                     gOamBuffer->Commit();
                 }
@@ -110,7 +111,7 @@ s32 DrawWrappedText(u8 *text, Font *self, struct aabb *box, s32 limit, s32 mode)
             }
         }
     }
-    if (mode != 0) {
+    if (mode != WRAPPED_TEXT_MODE_BUFFERED) {
         WaitForVBlank();
         gOamBuffer->Commit();
     }

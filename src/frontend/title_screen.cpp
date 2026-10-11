@@ -109,7 +109,7 @@ void TitleScreen::LoadBg()
     bg2cnt.raw = 0;
     bg2cnt.bits.charBase = 2;
     bg2cnt.bits.screenBase = 30;
-    bg2cnt.bits.colorMode = 1;
+    bg2cnt.bits.colorMode = BGCNT_COLOR_MODE_256;
     bg2cnt.bits.priority = 1;
     REG_BG2CNT = bg2cnt.raw;
     delete[] map;

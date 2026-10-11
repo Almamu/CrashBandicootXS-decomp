@@ -139,16 +139,16 @@ void Credits::DrawText()
         s32 i;
 
         switch (node->mode) {
-        case 0:
+        case CREDITS_POPUP_MODE_SMALL_CHAR:
             m = gSmallFont;
             goto draw;
-        case 1:
+        case CREDITS_POPUP_MODE_LARGE_CHAR:
             m = gLargeFont;
         draw:
             m->SetPos(node->x, node->y);
             m->DrawGlyph(node->index);
             break;
-        case 2:
+        case CREDITS_POPUP_MODE_LOGO:
             logo = &logos[node->index];
             tile = gObjVramCursor->GetTile();
             gObjVramCursor->Upload(logo->tiles, (logo->rows * logo->cols) << 9);
@@ -235,17 +235,17 @@ void Credits::UpdateText()
                 s32 advance = 0;
                 s32 height = 0;
 
-                if (*p == 2) {
-                    largeFont = height;
-                } else if (*p == 3) {
+                if (*p == CREDITS_OP_SMALL) {
+                    largeFont = height; // height is still 0 here
+                } else if (*p == CREDITS_OP_LARGE) {
                     largeFont = 1;
-                } else if (*p == 1) {
+                } else if (*p == CREDITS_OP_PICTURE) {
                     CreditsPopup *n;
 
                     stream = p + 1;
                     n = new CreditsPopup;
                     tail->next = n;
-                    n->mode = 2;
+                    n->mode = CREDITS_POPUP_MODE_LOGO;
                     n->y = height;
                     n->x = penX;
                     n->index = *stream;
