@@ -168,7 +168,7 @@ COMPILE_TIME_ASSERT(enemy_ctrl_hpp, sizeof(KnockedEnemyCtrl) == 0x10);
 class PeriodicSpawner : public Entity
 {
 public:
-    void (*callback)(u32 arg, u16 x, u16 y, u16 arg3); // 0x1C
+    void (*callback)(u32 id, u16 x, u16 y, u16 param); // 0x1C
     s32 period;                                        // 0x20
     s32 phase;                                         // 0x24
 
@@ -176,7 +176,7 @@ public:
     virtual void Update();      // UpdatePeriodicSpawner
     virtual ~PeriodicSpawner(); // DestroyPeriodicSpawner
     void SetPeriod(s32 period, s32 phase);
-    void SetCallback(void (*callback)(u32 arg, u16 x, u16 y, u16 arg3));
+    void SetCallback(void (*callback)(u32 id, u16 x, u16 y, u16 param));
 };
 
 COMPILE_TIME_ASSERT(enemy_ctrl_hpp, sizeof(PeriodicSpawner) == 0x28);

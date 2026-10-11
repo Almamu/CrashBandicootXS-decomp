@@ -27,9 +27,9 @@ extern "C" {
  * `tag` and `kind` in variables: the ROM loads both into callee-saved
  * registers before the Sprite::Create call and stores them from there
  * (a literal 0 is loaded again at the store). */
-static inline Sprite *SpawnTouchable(u32 a0, u16 a1, u16 a2, u16 a3, s32 bank, u8 tag, u8 kind)
+static inline Sprite *SpawnTouchable(u32 id, u16 x, u16 y, u16 param, s32 bank, u8 tag, u8 kind)
 {
-    Sprite *part = Sprite::Create(a0, a1, a2, a3);
+    Sprite *part = Sprite::Create(id, x, y, param);
 
     part->bank = gSpriteBankSet->Bank(bank);
     part->tag = tag;
@@ -46,44 +46,44 @@ static inline Sprite *SpawnTouchable(u32 a0, u16 a1, u16 a2, u16 a3, s32 bank, u
  * InitPowerDialog's dialog box uses): body slam (tag 1, kind 0x25),
  * tornado spin (0, 0x24), double jump (2, 0x23) and turbo run (3,
  * 0x26). */
-void SpawnBodySlamPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnBodySlamPower(u32 id, u16 x, u16 y, u16 param)
 {
     u8 tag = 1;
     u8 kind = EVENT_POWER_BODY_SLAM;
 
-    SpawnTouchable(arg0, arg1, arg2, arg3, 38, tag, kind);
+    SpawnTouchable(id, x, y, param, 38, tag, kind);
 }
 
-void SpawnTornadoSpinPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnTornadoSpinPower(u32 id, u16 x, u16 y, u16 param)
 {
     u8 tag = 0;
     u8 kind = EVENT_POWER_TORNADO_SPIN;
 
-    SpawnTouchable(arg0, arg1, arg2, arg3, 38, tag, kind);
+    SpawnTouchable(id, x, y, param, 38, tag, kind);
 }
 
-void SpawnDoubleJumpPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnDoubleJumpPower(u32 id, u16 x, u16 y, u16 param)
 {
     u8 tag = 2;
     u8 kind = EVENT_POWER_DOUBLE_JUMP;
 
-    SpawnTouchable(arg0, arg1, arg2, arg3, 38, tag, kind);
+    SpawnTouchable(id, x, y, param, 38, tag, kind);
 }
 
-void SpawnTurboRunPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnTurboRunPower(u32 id, u16 x, u16 y, u16 param)
 {
     u8 tag = 3;
     u8 kind = EVENT_POWER_TURBO_RUN;
 
-    SpawnTouchable(arg0, arg1, arg2, arg3, 38, tag, kind);
+    SpawnTouchable(id, x, y, param, 38, tag, kind);
 }
 
 /* The time trial's stopwatch (bank 36, kind 0x1C, always active),
  * once the level's crystal is saved. */
-void SpawnStopwatch(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnStopwatch(u32 id, u16 x, u16 y, u16 param)
 {
     if (gLevelState->IsCrystalSaved()) {
-        Stopwatch *part = Stopwatch::Create(arg0, arg1, arg2, arg3);
+        Stopwatch *part = Stopwatch::Create(id, x, y, param);
 
         part->bank = gSpriteBankSet->Bank(36);
         part->StartAnim(0);
@@ -96,14 +96,14 @@ void SpawnStopwatch(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
 /* The blue gem (bank record 32, `+0x180`, tag 4, kind 0x21), unless
  * collected (bit 3 of the level state's gem flags). */
-void SpawnBlueGem(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnBlueGem(u32 id, u16 x, u16 y, u16 param)
 {
     if (gLevelState->progress.flags & PROGRESS_FLAG_BLUE_GEM)
         return;
     u8 tag = 4;
     u8 kind = EVENT_BLUE_GEM;
 
-    SpawnTouchable(arg0, arg1, arg2, arg3, 32, tag, kind);
+    SpawnTouchable(id, x, y, param, 32, tag, kind);
 }
 
 /* Entity type 0x0C (the crate gem's marker): where the crate gem appears
@@ -118,11 +118,11 @@ void SpawnBlueGem(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * copy constructor's reference argument, which makes it addressable, so
  * it lives on the stack (#662 round 3; the C had the four instructions
  * in asm). */
-void SpawnCrateGemMarker(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnCrateGemMarker(u32 id, u16 x, u16 y, u16 param)
 {
     struct vec2 point;
 
-    point = (struct vec2){ arg1, arg2 };
+    point = (struct vec2){ x, y };
     gLevelState->SetCrateGemPos(&point.x);
 }
 
@@ -153,8 +153,8 @@ void *CreateTouchableSprite(u32 index, u32 tag, u32 field0A, u32 cx, u16 cy, u16
 
 /* Spawns a wumpa (`CreateWumpa`, wumpa_update.cpp) with this slot's four
  * arguments, unless `gLevelState+0x8c` (time trial) is set. */
-void SpawnWumpa(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnWumpa(u32 id, u16 x, u16 y, u16 param)
 {
     if (gLevelState->timeTrial == 0)
-        Wumpa::Create(arg0, arg1, arg2, arg3);
+        Wumpa::Create(id, x, y, param);
 }

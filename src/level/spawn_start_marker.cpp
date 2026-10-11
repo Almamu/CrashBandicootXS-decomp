@@ -24,10 +24,10 @@ extern "C" {
  * transcription for a long time (docs/matching/archive/naked-sub_801e990-matched.md),
  * then 17 pins and 2 `asm` statements, a hand-written slot-13 call and
  * gotos; the C++ needs none. */
-void SpawnStartMarker(u32 arg0, u16 x, u16 y, u16 z)
+void SpawnStartMarker(u32 id, u16 x, u16 y, u16 param)
 {
     if (gLevelState->GetSpawnAtStart()) {
-        const struct entity_params *rec = EntityParams(z);
+        const struct entity_params *rec = EntityParams(param);
 
         gPlayer->SetFlipX(TEST_BIT_SHR(rec->flags, ENTITY_PARAMS_BIT_FLIP_X));
         gPlayer->x = INT_TO_Q8(x);

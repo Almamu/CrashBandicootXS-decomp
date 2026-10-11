@@ -6315,7 +6315,8 @@ documents).
 
 **Real fixes found along the way**, all kept in the parked C since
 they're genuinely correct, not guesses:
-- `arg0` (the spawn-position x argument) has to stay `u32` in the
+- `id` (`arg0` then, read at the time as the spawn position's x; it is
+  the entity id, include/level.h's `entity_spawn_fn`) has to stay `u32` in the
   signature, not `u16` like the other three - the ROM never truncates
   it at function entry, only at each of its two call sites (`CreatePlatform`/
   `CreateSpriteObj`), which only happens when the *caller's* declared

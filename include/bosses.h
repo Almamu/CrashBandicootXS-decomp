@@ -70,7 +70,7 @@ struct entry_set;
 #define CORTEX_BOSS_GEM_KIND_RED 0    // SpawnRedGem: animation 3, shrinks with 0xC
 #define CORTEX_BOSS_GEM_KIND_GREEN 1  // SpawnGreenGem: animation 2, shrinks with 0xB
 #define CORTEX_BOSS_GEM_KIND_YELLOW 2 // SpawnYellowGem: animation 0, shrinks with 0xD
-extern void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind);
+extern void SpawnCortexBossGem(u32 id, u16 x, u16 y, u16 param, s32 kind);
 
 /* src/vehicle/jetpack/jetpack_spawn.cpp */
 extern void SpawnHovercraftCannonFlash(s32 a, s32 b, s32 c);

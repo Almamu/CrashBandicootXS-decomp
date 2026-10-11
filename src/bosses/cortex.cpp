@@ -169,9 +169,9 @@ void CortexBossCtrl::SpawnTarget(MovingSprite *part)
 /* A gem of the Neo Cortex fight (the red, green or yellow gem spawners'
  * hand-over): bank 32's gem `kind`, in the collidable list, where a fast
  * shot finds it. */
-void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
+void SpawnCortexBossGem(u32 id, u16 x, u16 y, u16 param, s32 kind)
 {
-    MovingSprite *c = MovingSprite::Create(a0, a1, a2, a3);
+    MovingSprite *c = MovingSprite::Create(id, x, y, param);
     Ctrl *ctrl;
 
     c->bank = gSpriteBankSet->Bank(32);

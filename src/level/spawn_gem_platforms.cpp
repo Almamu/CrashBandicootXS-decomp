@@ -33,15 +33,15 @@ extern "C" {
  * parked as NAKED after drafts under the current agbcc stalled on
  * register allocation (see docs/matching/archive/issue-31-trigger-effect-type-n.md,
  * "Old-compiler pass"). The two Platform::Create calls are written
- * separately, one per kind: the ROM repeats the a0 truncation in
+ * separately, one per kind: the ROM repeats the `id` truncation in
  * both arms and shares the rest of the call, which is gcc's
- * cross-jumping of two call sites (a single call with an `id` variable
- * truncates a0 once, after the join). */
+ * cross-jumping of two call sites (a single call with the kind in a
+ * variable truncates `id` once, after the join). */
 
 /* The `tag` locals are set before the Sprite::Create call on purpose: the
  * ROM loads the constant into a callee-saved register up front and
  * stores it from there afterwards. */
-void SpawnRedGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
+void SpawnRedGemPlatform(u32 id, u16 x, u16 y, u16 param)
 {
     u8 bit = gLevelState->progress.flags & PROGRESS_FLAG_RED_GEM;
 
@@ -49,13 +49,13 @@ void SpawnRedGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         Platform *snd;
 
         if (gLevelState->IsGemPathDone() || gLevelState->timeTrial)
-            snd = Platform::Create(a0, a1, a2, a3, PLATFORM_KIND_GEM_PATH_DONE);
+            snd = Platform::Create(id, x, y, param, PLATFORM_KIND_GEM_PATH_DONE);
         else
-            snd = Platform::Create(a0, a1, a2, a3, PLATFORM_KIND_GEM_RED);
+            snd = Platform::Create(id, x, y, param, PLATFORM_KIND_GEM_RED);
         gLevelState->SetGemPlatform(snd);
     } else {
         u8 tag = 7;
-        Sprite *part = Sprite::Create(a0, a1, a2, a3);
+        Sprite *part = Sprite::Create(id, x, y, param);
 
         part->bank = gSpriteBankSet->Bank(32);
         part->tag = tag;
@@ -69,7 +69,7 @@ void SpawnRedGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
     }
 }
 
-void SpawnYellowGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
+void SpawnYellowGemPlatform(u32 id, u16 x, u16 y, u16 param)
 {
     u8 bit = gLevelState->progress.flags & PROGRESS_FLAG_YELLOW_GEM;
 
@@ -77,13 +77,13 @@ void SpawnYellowGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         Platform *snd;
 
         if (gLevelState->IsGemPathDone() || gLevelState->timeTrial)
-            snd = Platform::Create(a0, a1, a2, a3, PLATFORM_KIND_GEM_PATH_DONE);
+            snd = Platform::Create(id, x, y, param, PLATFORM_KIND_GEM_PATH_DONE);
         else
-            snd = Platform::Create(a0, a1, a2, a3, PLATFORM_KIND_GEM_YELLOW);
+            snd = Platform::Create(id, x, y, param, PLATFORM_KIND_GEM_YELLOW);
         gLevelState->SetGemPlatform(snd);
     } else {
         u8 tag = 5;
-        Sprite *part = Sprite::Create(a0, a1, a2, a3);
+        Sprite *part = Sprite::Create(id, x, y, param);
 
         part->bank = gSpriteBankSet->Bank(32);
         part->tag = tag;
@@ -97,7 +97,7 @@ void SpawnYellowGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
     }
 }
 
-void SpawnGreenGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
+void SpawnGreenGemPlatform(u32 id, u16 x, u16 y, u16 param)
 {
     u8 bit = gLevelState->progress.flags & PROGRESS_FLAG_GREEN_GEM;
 
@@ -105,13 +105,13 @@ void SpawnGreenGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         Platform *snd;
 
         if (gLevelState->IsGemPathDone() || gLevelState->timeTrial)
-            snd = Platform::Create(a0, a1, a2, a3, PLATFORM_KIND_GEM_PATH_DONE);
+            snd = Platform::Create(id, x, y, param, PLATFORM_KIND_GEM_PATH_DONE);
         else
-            snd = Platform::Create(a0, a1, a2, a3, PLATFORM_KIND_GEM_GREEN);
+            snd = Platform::Create(id, x, y, param, PLATFORM_KIND_GEM_GREEN);
         gLevelState->SetGemPlatform(snd);
     } else {
         u8 tag = 6;
-        Sprite *part = Sprite::Create(a0, a1, a2, a3);
+        Sprite *part = Sprite::Create(id, x, y, param);
 
         part->bank = gSpriteBankSet->Bank(32);
         part->tag = tag;
@@ -127,7 +127,7 @@ void SpawnGreenGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
 
 /* Mask and tag are the same constant here, so the ROM keeps one copy of
  * it in a callee-saved register for both uses. */
-void SpawnBlueGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
+void SpawnBlueGemPlatform(u32 id, u16 x, u16 y, u16 param)
 {
     u8 bit = gLevelState->progress.flags & PROGRESS_FLAG_BLUE_GEM;
 
@@ -135,13 +135,13 @@ void SpawnBlueGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         Platform *snd;
 
         if (gLevelState->IsGemPathDone() || gLevelState->timeTrial)
-            snd = Platform::Create(a0, a1, a2, a3, PLATFORM_KIND_GEM_PATH_DONE);
+            snd = Platform::Create(id, x, y, param, PLATFORM_KIND_GEM_PATH_DONE);
         else
-            snd = Platform::Create(a0, a1, a2, a3, PLATFORM_KIND_GEM_BLUE);
+            snd = Platform::Create(id, x, y, param, PLATFORM_KIND_GEM_BLUE);
         gLevelState->SetGemPlatform(snd);
     } else {
         u8 tag = 8;
-        Sprite *part = Sprite::Create(a0, a1, a2, a3);
+        Sprite *part = Sprite::Create(id, x, y, param);
 
         part->bank = gSpriteBankSet->Bank(32);
         part->tag = tag;
