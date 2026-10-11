@@ -176,13 +176,13 @@ void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
 
     c->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x180);
     switch (kind) {
-    case 0:
+    case CORTEX_BOSS_GEM_KIND_RED:
         c->StartAnim(3);
         break;
-    case 1:
+    case CORTEX_BOSS_GEM_KIND_GREEN:
         c->StartAnim(2);
         break;
-    case 2:
+    case CORTEX_BOSS_GEM_KIND_YELLOW:
         c->StartAnim(0);
         break;
     }
@@ -244,7 +244,7 @@ void CortexTargetCtrl::Update(MovingSprite *part)
         SetState(part, CORTEX_TARGET_STATE_ANIM);
         break;
     case CORTEX_TARGET_STATE_FIRE:
-        FireShot(part, 0);
+        FireShot(part, CORTEX_SHOT_KIND_SLOW);
         SetState(part, CORTEX_TARGET_STATE_HOP);
         SetTargetAnim(part, 0xF);
         break;
@@ -266,7 +266,7 @@ void CortexTargetCtrl::Update(MovingSprite *part)
                 break;
             if (--timer == 0) {
                 SetState(part, CORTEX_TARGET_STATE_ENTER);
-                FireShot(part, 1);
+                FireShot(part, CORTEX_SHOT_KIND_FAST);
                 break;
             }
             if (timer == gCortexTargetBlinkStartTimes[boss->counter]) {
@@ -390,16 +390,16 @@ void CortexTargetCtrl::FireShot(MovingSprite *part, s32 kind)
 
     c->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x27C);
     switch (kind) {
-    case 0:
+    case CORTEX_SHOT_KIND_SLOW:
         c->StartAnim(0xE);
         break;
-    case 1:
+    case CORTEX_SHOT_KIND_FAST:
         c->StartAnim(0x11);
         break;
     }
     c->palette = c->GetAnimPaletteSlot();
     ctrl = new CortexShotCtrl(boss);
-    ctrl->fast = kind == 1;
+    ctrl->fast = kind == CORTEX_SHOT_KIND_FAST;
     c->mover = ctrl;
     ctrl->Attach(c);
     /* the inline's parameters (two loads of `part`, where the block copy
@@ -410,7 +410,7 @@ void CortexTargetCtrl::FireShot(MovingSprite *part, s32 kind)
     c->kind = EVENT_HIT;
     c->f.b.active = 1;
     ForegroundList()->Add(c);
-    if (kind == 1)
+    if (kind == CORTEX_SHOT_KIND_FAST)
         gAudioContext->PlaySfx(SFX_CORTEX_SHOT_FAST, 0x100);
     else
         gAudioContext->PlaySfx(SFX_CORTEX_SHOT, 0x100);
@@ -464,9 +464,9 @@ void CortexBossPlatformMover::Update(MovingSprite *part)
 {
     s32 target;
 
-    if (state == 0) {
+    if (state == CORTEX_BOSS_PLATFORM_STATE_START) {
         ClampFrame(part, 0x1A);
-        state = 1;
+        state = CORTEX_BOSS_PLATFORM_STATE_RUN;
     }
     target = 0x1A;
     if (part->kind == EVENT_HIT)
@@ -493,13 +493,13 @@ void CortexBossGemCtrl::Update(MovingSprite *part)
         if (part->kind == EVENT_HIT) {
             part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x27C);
             switch (kind) {
-            case 0:
+            case CORTEX_BOSS_GEM_KIND_RED:
                 SetTargetAnim(part, 0xC);
                 break;
-            case 1:
+            case CORTEX_BOSS_GEM_KIND_GREEN:
                 SetTargetAnim(part, 0xB);
                 break;
-            case 2:
+            case CORTEX_BOSS_GEM_KIND_YELLOW:
                 SetTargetAnim(part, 0xD);
                 break;
             }

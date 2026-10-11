@@ -116,7 +116,7 @@ void SpawnRedGem(u32 a0, u16 a1, u16 a2, u16 a3)
             TouchableList()->Add(part);
         }
     } else {
-        SpawnCortexBossGem(a0, a1, a2, a3, 0);
+        SpawnCortexBossGem(a0, a1, a2, a3, CORTEX_BOSS_GEM_KIND_RED);
     }
 }
 
@@ -138,7 +138,7 @@ void SpawnGreenGem(u32 a0, u16 a1, u16 a2, u16 a3)
             TouchableList()->Add(part);
         }
     } else {
-        SpawnCortexBossGem(a0, a1, a2, a3, 1);
+        SpawnCortexBossGem(a0, a1, a2, a3, CORTEX_BOSS_GEM_KIND_GREEN);
     }
 }
 
@@ -161,6 +161,6 @@ void SpawnYellowGem(u32 a0, u16 a1, u16 a2, u16 a3)
             TouchableList()->Add(part);
         }
     } else {
-        SpawnCortexBossGem(a0, a1, a2, a3, 2);
+        SpawnCortexBossGem(a0, a1, a2, a3, CORTEX_BOSS_GEM_KIND_YELLOW);
     }
 }

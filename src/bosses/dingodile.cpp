@@ -233,9 +233,11 @@ void DingodileCtrl::Update(MovingSprite *part)
     case DINGODILE_STATE_FIRE_TURN:
         if (part->frame == 0x14 && part->stepTimer == 0) {
             if (part->mirrorBits.flipX < 0)
-                SpawnShieldOrRocket(1, Q8_TO_INT(part->x) + 6, Q8_TO_INT(part->y) - 0x32, part);
+                SpawnShieldOrRocket(DINGODILE_SPAWN_MODE_ROCKET, Q8_TO_INT(part->x) + 6,
+                                    Q8_TO_INT(part->y) - 0x32, part);
             else
-                SpawnShieldOrRocket(1, Q8_TO_INT(part->x) - 6, Q8_TO_INT(part->y) - 0x32, part);
+                SpawnShieldOrRocket(DINGODILE_SPAWN_MODE_ROCKET, Q8_TO_INT(part->x) - 6,
+                                    Q8_TO_INT(part->y) - 0x32, part);
         }
         if (!part->animDone)
             break;
@@ -388,7 +390,7 @@ void DingodileCtrl::SpawnShieldOrRocket(s32 mode, u16 x, u16 y, MovingSprite *ow
     p->f.b.visible = 0;
     p->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x288);
     switch (mode) {
-    case 0:
+    case DINGODILE_SPAWN_MODE_SHIELD:
         {
             s32 kind = 1;
 
@@ -404,7 +406,7 @@ void DingodileCtrl::SpawnShieldOrRocket(s32 mode, u16 x, u16 y, MovingSprite *ow
         }
         shield = p;
         break;
-    case 1:
+    case DINGODILE_SPAWN_MODE_ROCKET:
         gAudioContext->PlaySfx(SFX_DINGODILE_ROCKET, 0x100);
         p->StartAnim(7);
         p->kind = EVENT_HIT_EXPLOSION;
@@ -426,7 +428,7 @@ void DingodileCtrl::SpawnShieldOrRocket(s32 mode, u16 x, u16 y, MovingSprite *ow
     p->mirrorBits.flipX = ((*bits >> 1) ^ 1) & 1;
     p->mirrorBits.flipY = (*bits >> 2) & 1;
     p->f.b.active = 1;
-    if (mode == 0)
+    if (mode == DINGODILE_SPAWN_MODE_SHIELD)
         TouchableList()->Add(p);
     else
         CollidableList()->Add(p);
@@ -646,7 +648,7 @@ void DingodileProjectileCtrl::SpawnStalactite(u16 x, u16 y)
 void DingodileSharkCtrl::Update(MovingSprite *part)
 {
     switch (Ctrl::state) {
-    case 0:
+    case DINGODILE_SHARK_STATE_START:
         if (part->mirrorBits.flipX < 0) {
             s32 a = -gDingodileMotionRecords[3].start;
             s32 c = -gDingodileMotionRecords[3].target;
@@ -665,7 +667,7 @@ void DingodileSharkCtrl::Update(MovingSprite *part)
             part->rampX.target = c;
         }
         break;
-    case 1:
+    case DINGODILE_SHARK_STATE_UNK1:
         if (part->mirrorBits.flipX < 0) {
             if (part->x + 0x2800 <= 0)
                 part->MarkGone();

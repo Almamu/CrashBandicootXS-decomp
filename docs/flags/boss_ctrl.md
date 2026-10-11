@@ -132,11 +132,78 @@ The hops (`ENTER`, `HOP`, `HOP_OFF`) and `ANIM` go on to `nextState`.
 | | 1 | `CORTEX_BOSS_GEM_STATE_SHRINK` | the shrink animation, then gone |
 | CortexCannonCtrl | 0 | `CORTEX_CANNON_STATE_IDLE` | its only state: contact with the player off |
 
+## The other boss controllers
+
+### MegaMixCtrl (`MEGA_MIX_STATE_*`)
+
+Reset (the constructor) sets `RUN`; `stamp` -1 makes the first frame
+start X motion record 1.
+
+| Value | Name | Entered by / meaning |
+|---|---|---|
+| 0 | `STOP` | `RUN` or `GRAB` while the player is dead (or, in `RUN`, warping out, `ACTION_STATE_WARP_OUT`): animation 2, X record 0; `RUN` again once he is alive |
+| 1 | `RUN` | Reset, `STOP`, `GRAB`: faces and runs after the player, hits what its hitbox touches, blows up TNT and nitro crates and breaks the others; in range (0x27FF by 0x31FF): `GRAB` |
+| 2 | `GRAB` | `RUN` in range: animation 1; on its frame 8 a player still in range takes `EVENT_HIT`, else `RUN`; when it ends, `RUN` (or `STOP`) |
+
+### StompedHopPadCtrl (`STOMPED_HOP_PAD_STATE_*`, ctrl.hpp)
+
+TinyCtrl::Update swaps it in as the stomped pad's controller (`stomped`,
+set by `TINY_STATE_STOMP_PAD`).
+
+| Value | Name | Entered by / meaning |
+|---|---|---|
+| 0 | `START` | the constructor: animation 8, then `SINK` |
+| 1 | `SINK` | `START`: the pad sinks 4 px a frame until it is 0x20 px below the level, then `GONE` |
+| 2 | `GONE` | nothing runs |
+
+### CortexBossPlatformMover (`CORTEX_BOSS_PLATFORM_STATE_*`, platform.hpp)
+
+| Value | Name | Entered by / meaning |
+|---|---|---|
+| 0 | `START` | the constructor (Ctrl's 0): the animation set to frame 0x1A, then `RUN` |
+| 1 | `RUN` | runs the animation to frame 0x1A, or to frame 10 while the platform's `kind` is `EVENT_HIT` (`CORTEX_TARGET_STATE_CHASE`, SetPlatformsKind), and stops it there |
+
+### DingodileSharkCtrl (`DINGODILE_SHARK_STATE_*`)
+
+The shark is an EnemyCtrl, but its Update switches on Ctrl's `state`
+(+0x08), not EnemyCtrl's (+0x74). The constructor leaves it 0, and
+nothing sets it.
+
+| Value | Name | Meaning |
+|---|---|---|
+| 0 | `START` | sets the motion across the level (X record 3, negated facing left), every frame |
+| 1 | `UNK1` | gone once 0x28 px past the level's edge; nothing enters it |
+
+## Kinds and modes
+
+### SpawnShieldOrRocket's `mode` (`DINGODILE_SPAWN_MODE_*`)
+
+| Value | Name | Caller / what it spawns |
+|---|---|---|
+| 0 | `SHIELD` | the constructor (dingodile_create.cpp): animation 3, alpha-blended (`gfxMode` 1), a DingodileShieldCtrl; kept in `shield`, added to gTouchableList |
+| 1 | `ROCKET` | Dingodile's `FIRE`/`FIRE_TURN`: SFX_DINGODILE_ROCKET, animation 7, `EVENT_HIT_EXPLOSION`, a DingodileProjectileCtrl; added to gCollidableList |
+
+Any other value leaves the controller null.
+
+### The Neo Cortex gems' `kind` (`CORTEX_BOSS_GEM_KIND_*`, bosses.h)
+
+In the Neo Cortex fight (`BOSS_NEO_CORTEX`), the gem spawners hand over
+to SpawnCortexBossGem, which keeps the `kind` in CortexBossGemCtrl.
+
+| Value | Name | Spawner | Animation (bank 32) | Shrink (bank 53) |
+|---|---|---|---|---|
+| 0 | `RED` | SpawnRedGem | 3 | 0xC |
+| 1 | `GREEN` | SpawnGreenGem | 2 | 0xB |
+| 2 | `YELLOW` | SpawnYellowGem | 0 | 0xD |
+
+### The target's shots' `kind` (`CORTEX_SHOT_KIND_*`)
+
+| Value | Name | Fired by / meaning |
+|---|---|---|
+| 0 | `SLOW` | `CORTEX_TARGET_STATE_FIRE`: animation 0xE, SFX_CORTEX_SHOT; hurts the player |
+| 1 | `FAST` | the end of `CORTEX_TARGET_STATE_CHASE`: animation 0x11, SFX_CORTEX_SHOT_FAST; also shrinks the gems it hits and sends Neo Cortex to `HIT` (CortexShotCtrl's `fast`) |
+
 ## Not named here
 
 - Tiny's `nextState` as the leaves' countdown (above).
 - The SetTargetAnim / StartMotion indices and the timers.
-- `SpawnShieldOrRocket`'s `mode` (0 the shield, 1 the rocket), the
-  gems' and shots' `kind`.
-- The Mega Mix controller, StompedHopPadCtrl, CortexBossPlatformMover
-  and DingodileSharkCtrl: later fields.

@@ -75,6 +75,10 @@ COMPILE_TIME_ASSERT(ctrl_hpp, sizeof(EffectCtrl) == 0x10);
 /* The Tiny boss's stomped hop pad's controller
  * (src/bosses/tiny.cpp, gStompedHopPadVtable): `state` 0 plays
  * animation 8, 1 sinks the pad, 2 is done. */
+/* Its `state` (#843, docs/flags/boss_ctrl.md). */
+#define STOMPED_HOP_PAD_STATE_START 0 // TINY_STATE_STOMP_PAD swapped it in: animation 8, then SINK
+#define STOMPED_HOP_PAD_STATE_SINK 1  // sinks 4 px a frame until below the level, then GONE
+#define STOMPED_HOP_PAD_STATE_GONE 2  // nothing runs
 class StompedHopPadCtrl : public Ctrl
 {
 public:

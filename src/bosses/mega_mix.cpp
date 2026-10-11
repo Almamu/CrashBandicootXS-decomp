@@ -74,7 +74,7 @@ void MegaMixCtrl::StartTargetMotionXFromSet(MovingSprite *part, s32 index)
  * set. */
 void MegaMixCtrl::Reset()
 {
-    SetMode(1);
+    SetMode(MEGA_MIX_STATE_RUN);
     latch = 0;
     stamp = -1;
     animSet = &gMegaMixMotionSet;

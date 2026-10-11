@@ -41,6 +41,11 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(BossCtrl) == 0x1C);
  * src/bosses/mega_mix.cpp, and its Update,
  * UpdateMegaMix, in src/bosses/mega_mix_update.cpp). Its motion records
  * are gMegaMixMotionRecords, not gCtrlMotionRecords. */
+/* MegaMixCtrl's `state` (#843, docs/flags/boss_ctrl.md): Reset starts it
+ * running; it stops while the player is dead. */
+#define MEGA_MIX_STATE_STOP 0 // the player is dead or warping out: anim 2, X record 0; runs once he lives
+#define MEGA_MIX_STATE_RUN 1  // runs after the player, breaking crates; in range: GRAB
+#define MEGA_MIX_STATE_GRAB 2 // anim 1: the player takes a hit on frame 8; then RUN (or STOP)
 class MegaMixCtrl : public BossCtrl
 {
 public:
@@ -204,10 +209,13 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexTargetCtrl) == 0x40);
 /* The target's shot (gCortexShotVtable, 0x18 bytes; src/bosses/cortex.cpp):
  * a slow one (kind 0) hurts the player, a fast one (1) also shrinks the
  * Neo Cortex gems it hits (CortexBossGemCtrl) and tells the boss. */
+/* FireShot's `kind` (#843, docs/flags/boss_ctrl.md). */
+#define CORTEX_SHOT_KIND_SLOW 0 // CORTEX_TARGET_STATE_FIRE: animation 0xE, SFX_CORTEX_SHOT
+#define CORTEX_SHOT_KIND_FAST 1 // the end of CHASE: animation 0x11, SFX_CORTEX_SHOT_FAST; shrinks gems
 class CortexShotCtrl : public Ctrl
 {
 public:
-    u8 fast;              // 0x10 - kind 1 (FireShot)
+    u8 fast;              // 0x10 - CORTEX_SHOT_KIND_FAST (FireShot)
     CortexBossCtrl *boss; // 0x14
 
     CortexShotCtrl(CortexBossCtrl *boss); // CreateCortexShotCtrl
@@ -226,7 +234,7 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexShotCtrl) == 0x18);
 class CortexBossGemCtrl : public Ctrl
 {
 public:
-    s32 kind; // 0x10 - 0 red, 1 green, 2 yellow
+    s32 kind; // 0x10 - CORTEX_BOSS_GEM_KIND_* (bosses.h)
 
     CortexBossGemCtrl(s32 kind); // CreateCortexBossGemCtrl
     virtual void Update(MovingSprite *part);
@@ -273,6 +281,9 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(UnusedOneShotAnimCtrl) == 0x10);
 #define DINGODILE_STATE_SHARK 15       // a shark from behind him, then WALK
 #define DINGODILE_STATE_DEFEATED 16    // the power-up; falls out of the level
 #define DINGODILE_STATE_GONE 17        // fell off: RequestRoomExit done, nothing runs
+/* SpawnShieldOrRocket's `mode` (#843, docs/flags/boss_ctrl.md). */
+#define DINGODILE_SPAWN_MODE_SHIELD 0 // the constructor: the shield (DingodileShieldCtrl), in gTouchableList
+#define DINGODILE_SPAWN_MODE_ROCKET 1 // FIRE/FIRE_TURN: a rocket (DingodileProjectileCtrl), in gCollidableList
 class DingodileCtrl : public BossCtrl
 {
 public:
@@ -280,7 +291,7 @@ public:
     s32 timer;            // 0x20
     s32 nextState;        // 0x24
     s32 passes;           // 0x28
-    MovingSprite *shield; // 0x2C - SpawnShieldOrRocket's mode-0 part
+    MovingSprite *shield; // 0x2C - SpawnShieldOrRocket's DINGODILE_SPAWN_MODE_SHIELD part
 
     DingodileCtrl(u32 x, u32 y); // CreateDingodile
     virtual void Update(MovingSprite *part);
@@ -353,6 +364,11 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(DingodileProjectileCtrl) == 0x20);
 
 /* The shark Dingodile's fight sends across the level
  * (gDingodileSharkVtable): an enemy controller in a 0x8C-byte block. */
+/* DingodileSharkCtrl's `state` (Ctrl::state, not EnemyCtrl's; #843,
+ * docs/flags/boss_ctrl.md): the constructor leaves it 0 and nothing sets
+ * another value. */
+#define DINGODILE_SHARK_STATE_START 0 // sets the motion across the level (record 3) every frame
+#define DINGODILE_SHARK_STATE_UNK1 1  // gone once past the level's edge; nothing enters it
 class DingodileSharkCtrl : public EnemyCtrl
 {
 public:

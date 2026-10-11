@@ -426,17 +426,17 @@ void StompedHopPadCtrl::Update(MovingSprite *part)
     s32 y;
 
     switch (state) {
-    case 0:
-        state = 1;
+    case STOMPED_HOP_PAD_STATE_START:
+        state = STOMPED_HOP_PAD_STATE_SINK;
         SetTargetAnim(part, 8);
         break;
-    case 1:
+    case STOMPED_HOP_PAD_STATE_SINK:
         y = part->y + 0x400;
         part->SetPos(part->x, y);
         if (y >= INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x2000)
-            state = 2;
+            state = STOMPED_HOP_PAD_STATE_GONE;
         break;
-    case 2:
+    case STOMPED_HOP_PAD_STATE_GONE:
         break;
     }
 }
