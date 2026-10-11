@@ -79,7 +79,7 @@ s32 DingodileCtrl::GetHits()
 static inline void Approach(DingodileCtrl *self, MovingSprite *part, s32 d)
 {
     if (d <= 0x1FFF)
-        self->SetState(part, 5);
+        self->SetState(part, DINGODILE_STATE_FIRE);
 }
 
 static inline s32 AtLevelEdge(Sprite::MirrorBits *f, s32 x)
@@ -112,31 +112,31 @@ void DingodileCtrl::Update(MovingSprite *part)
         p->y = y;
     }
     GetSpriteBodyBox(&hurt, part);
-    if (this->state == 8 && gPlayer->kind == EVENT_ATTACK_SPIN) {
+    if (this->state == DINGODILE_STATE_DAZED && gPlayer->kind == EVENT_ATTACK_SPIN) {
         GetSpriteAttackBox(&box, gPlayer);
         if (AabbW(&box) && AabbOverlaps(&box, &hurt)) {
             counter++;
-            SetState(part, 11);
+            SetState(part, DINGODILE_STATE_HIT);
         }
     }
 
     state = this->state;
     switch (state) {
-    case 0:
-        SetState(part, 1);
+    case DINGODILE_STATE_START:
+        SetState(part, DINGODILE_STATE_WALK);
         step = 0;
         passes = 0;
         part->kind = EVENT_NONE;
         part->f.b.visible = 0;
         part->f.b.vulnerable = 0;
         break;
-    case 1:
-    case 14:
+    case DINGODILE_STATE_WALK:
+    case DINGODILE_STATE_WALK_BACK:
         {
             Sprite::MirrorBits *f = &part->mirrorBits;
             s32 x = part->x;
 
-            if (state == 1) {
+            if (state == DINGODILE_STATE_WALK) {
                 if (f->flipX < 0) {
                     const s32 *tbl = gDingodileStopXLeft;
                     if (counter > 0)
@@ -159,24 +159,24 @@ void DingodileCtrl::Update(MovingSprite *part)
             }
             if (!AtLevelEdge(f, x))
                 break;
-            if (state == 1) {
+            if (state == DINGODILE_STATE_WALK) {
                 s32 lim = 1;
                 if (counter > 0)
                     lim = 2;
                 if (++passes >= lim) {
-                    SetState(part, 6);
+                    SetState(part, DINGODILE_STATE_FIRE_TURN);
                     break;
                 }
             }
             goto turn;
         }
-    case 3:
-    case 13:
+    case DINGODILE_STATE_TURN:
+    case DINGODILE_STATE_TURN_BACK:
         if (part->animDone) {
             u32 prev = state;
             s32 n;
 
-            SetState(part, 1);
+            SetState(part, DINGODILE_STATE_WALK);
             if (part->mirrorBits.flipX < 0) {
                 s32 x = Q8_TO_INT(part->x);
                 s32 y = Q8_TO_INT(part->y);
@@ -200,37 +200,37 @@ void DingodileCtrl::Update(MovingSprite *part)
 
                 part->mirrorBits.flipX = v ? 0 : 1;
             }
-            if (prev == 3) {
+            if (prev == DINGODILE_STATE_TURN) {
                 if (passes == 0) {
                     timer = 0x73;
                     if (counter > 1)
-                        nextState = 15;
+                        nextState = DINGODILE_STATE_SHARK;
                     else
-                        nextState = 1;
-                    SetState(part, 2);
+                        nextState = DINGODILE_STATE_WALK;
+                    SetState(part, DINGODILE_STATE_WAIT);
                 } else {
                     timer = 0x64;
-                    nextState = 1;
-                    SetState(part, 2);
+                    nextState = DINGODILE_STATE_WALK;
+                    SetState(part, DINGODILE_STATE_WAIT);
                 }
                 step = 0;
             } else {
-                SetState(part, 14);
+                SetState(part, DINGODILE_STATE_WALK_BACK);
             }
         }
         break;
-    case 15:
+    case DINGODILE_STATE_SHARK:
         if (part->mirrorBits.flipX < 0)
             SpawnShark(0, 0x2D, 0);
         else
             SpawnShark(LayerWidthPlus(0x28), 0x2D, 1);
         goto idle;
-    case 4:
+    case DINGODILE_STATE_UNK4:
         if (!part->animDone)
             break;
         goto idle;
-    case 5:
-    case 6:
+    case DINGODILE_STATE_FIRE:
+    case DINGODILE_STATE_FIRE_TURN:
         if (part->frame == 0x14 && part->stepTimer == 0) {
             if (part->mirrorBits.flipX < 0)
                 SpawnShieldOrRocket(1, Q8_TO_INT(part->x) + 6, Q8_TO_INT(part->y) - 0x32, part);
@@ -239,54 +239,54 @@ void DingodileCtrl::Update(MovingSprite *part)
         }
         if (!part->animDone)
             break;
-        if (this->state == 6) {
+        if (this->state == DINGODILE_STATE_FIRE_TURN) {
             part->f.b.vulnerable = 1;
         turn:
-            SetState(part, 3);
+            SetState(part, DINGODILE_STATE_TURN);
             break;
         }
-        SetState(part, 1);
+        SetState(part, DINGODILE_STATE_WALK);
         {
             s32 n = 8;
             CLAMP_INDEX(n, part->bank->anims[part->tag].frameCount);
             part->frame = n;
         }
         break;
-    case 2:
+    case DINGODILE_STATE_WAIT:
         if (--timer == 0)
             SetState(part, nextState);
         break;
-    case 7:
+    case DINGODILE_STATE_STUNNED:
         StartMotion(part, 0);
         SetTargetAnim(part, 5);
-        SetState(part, 8);
+        SetState(part, DINGODILE_STATE_DAZED);
         break;
-    case 8:
+    case DINGODILE_STATE_DAZED:
         if (--timer == 0)
-            SetState(part, 9);
+            SetState(part, DINGODILE_STATE_RECOVER);
         break;
-    case 9:
-    case 10:
+    case DINGODILE_STATE_RECOVER:
+    case DINGODILE_STATE_RECOVER_HIT:
         if (!part->animDone)
             break;
-        if (state == 9) {
+        if (state == DINGODILE_STATE_RECOVER) {
         idle:
-            SetState(part, 1);
+            SetState(part, DINGODILE_STATE_WALK);
             break;
         }
-        SetState(part, 12);
+        SetState(part, DINGODILE_STATE_RETREAT);
         break;
-    case 11:
+    case DINGODILE_STATE_HIT:
         if (timer != 0) {
             timer--;
             break;
         }
         if (counter > 2)
-            SetState(part, 16);
+            SetState(part, DINGODILE_STATE_DEFEATED);
         if (part->animDone)
-            SetState(part, 10);
+            SetState(part, DINGODILE_STATE_RECOVER_HIT);
         break;
-    case 12:
+    case DINGODILE_STATE_RETREAT:
         {
             s32 lim = 0x4000;
             if (counter > 0)
@@ -300,10 +300,10 @@ void DingodileCtrl::Update(MovingSprite *part)
                 if (x < LevelRight() - lim)
                     break;
             }
-            SetState(part, 13);
+            SetState(part, DINGODILE_STATE_TURN_BACK);
             break;
         }
-    case 16:
+    case DINGODILE_STATE_DEFEATED:
         {
             s32 y = part->y;
 
@@ -311,11 +311,11 @@ void DingodileCtrl::Update(MovingSprite *part)
                 StartMotion(part, 0);
                 if ((u8)gLevelState->HasSuperBodySlam())
                     RequestRoomExit();
-                SetState(part, 17);
+                SetState(part, DINGODILE_STATE_GONE);
             }
             break;
         }
-    case 17:
+    case DINGODILE_STATE_GONE:
         break;
     }
 }
@@ -326,48 +326,48 @@ void DingodileCtrl::SetState(MovingSprite *part, s32 next)
 {
     SetMode(next);
     switch (next) {
-    case 16:
+    case DINGODILE_STATE_DEFEATED:
         if (!(u8)gLevelState->HasSuperBodySlam())
             SpawnTurboRunPower(0xFFFF, 0xA0, 0xA9, 0);
         StartMotion(part, 3);
         break;
-    case 12:
+    case DINGODILE_STATE_RETREAT:
         SpawnShark(gLevelLayers->layer0->widthPx, 0x28, 1);
         SpawnShark(0, 0x46, 0);
         SpawnShark(LayerWidthPlus(0x46), 0x64, 1);
-    case 1:
-    case 14:
+    case DINGODILE_STATE_WALK:
+    case DINGODILE_STATE_WALK_BACK:
         SetTargetAnim(part, 0);
         StartMotion(part, 1);
         break;
-    case 3:
-    case 13:
+    case DINGODILE_STATE_TURN:
+    case DINGODILE_STATE_TURN_BACK:
         SetTargetAnim(part, 6);
         StartMotion(part, 0);
         break;
-    case 4:
+    case DINGODILE_STATE_UNK4:
         SetTargetAnim(part, 1);
         StartMotion(part, 0);
         break;
-    case 6:
+    case DINGODILE_STATE_FIRE_TURN:
         passes = 0;
-    case 5:
+    case DINGODILE_STATE_FIRE:
         SetTargetAnim(part, 4);
         StartMotion(part, 0);
         break;
-    case 2:
+    case DINGODILE_STATE_WAIT:
         StartMotion(part, 0);
         break;
-    case 8:
-        shield->mover->SetMode(2);
+    case DINGODILE_STATE_DAZED:
+        shield->mover->SetMode(DINGODILE_SHIELD_STATE_BLINK_START_DAZED);
         timer = 0xD2;
         break;
-    case 9:
-    case 10:
-        shield->mover->SetMode(1);
+    case DINGODILE_STATE_RECOVER:
+    case DINGODILE_STATE_RECOVER_HIT:
+        shield->mover->SetMode(DINGODILE_SHIELD_STATE_BLINK_START);
         SetTargetAnim(part, 2);
         break;
-    case 11:
+    case DINGODILE_STATE_HIT:
         timer = 0x64;
         if (counter > 2)
             timer = 1;
@@ -474,7 +474,7 @@ void DingodileShieldCtrl::Update(MovingSprite *part)
     }
 
     switch (state) {
-    case 0:
+    case DINGODILE_SHIELD_STATE_START:
         {
             /* The blend value is built in a `struct blend_regs` (gfx.h,
              * gBlendRegs' type): BLDCNT/BLDALPHA's word and BLDY's byte.
@@ -503,30 +503,30 @@ void DingodileShieldCtrl::Update(MovingSprite *part)
             w |= 0x10000000; /* EVB 16 */
             *(vu32 *)REG_ADDR_BLDCNT = w;
         }
-        SetMode(5);
+        SetMode(DINGODILE_SHIELD_STATE_STEADY);
         break;
-    case 1:
+    case DINGODILE_SHIELD_STATE_BLINK_START:
         blinksLeft = 2;
         blinkTimer = 0;
-        SetMode(3);
+        SetMode(DINGODILE_SHIELD_STATE_BLINK);
         break;
-    case 2:
+    case DINGODILE_SHIELD_STATE_BLINK_START_DAZED:
         blinksLeft = 2;
         blinkTimer = 0;
-        SetMode(4);
+        SetMode(DINGODILE_SHIELD_STATE_BLINK_DAZED);
         break;
-    case 3:
-    case 4:
+    case DINGODILE_SHIELD_STATE_BLINK:
+    case DINGODILE_SHIELD_STATE_BLINK_DAZED:
         if (blinkTimer == 0) {
             blinkTimer = 0x14;
             part->f.b.blink = !part->f.b.blink;
             if (blinksLeft == 0)
-                SetMode(5);
+                SetMode(DINGODILE_SHIELD_STATE_STEADY);
             blinksLeft--;
         }
         blinkTimer--;
         break;
-    case 5:
+    case DINGODILE_SHIELD_STATE_STEADY:
         break;
     }
 }
@@ -542,7 +542,7 @@ void DingodileProjectileCtrl::Update(MovingSprite *part)
 
     GetSpriteAttackBox(&a, part);
     if (a.w) {
-        if (state != 4 && state != 6) {
+        if (state != DINGODILE_PROJECTILE_STATE_UNK4 && state != DINGODILE_PROJECTILE_STATE_BREAK) {
             MovingSprite *t = owner;
 
             /* the vulnerable bit, extracted (as a 1-bit field, g++ tests
@@ -551,8 +551,8 @@ void DingodileProjectileCtrl::Update(MovingSprite *part)
                 struct aabb hit = t->GetAnimHitbox();
 
                 if (AabbOverlaps(&a, &hit)) {
-                    owner->mover->SetMode(7);
-                    SetMode(6);
+                    owner->mover->SetMode(DINGODILE_STATE_STUNNED);
+                    SetMode(DINGODILE_PROJECTILE_STATE_BREAK);
                     SetTargetAnim(part, 8);
                     gAudioContext->PlaySfx(SFX_UNKNOWN_39, 0x100);
                 }
@@ -566,8 +566,8 @@ void DingodileProjectileCtrl::Update(MovingSprite *part)
                 b = GetSpriteAttackBox_s(gPlayer);
             if (AabbOverlaps(&a, &b)) {
                 HitPlayer(part);
-                if (state == 3) {
-                    SetMode(6);
+                if (state == DINGODILE_PROJECTILE_STATE_FALL) {
+                    SetMode(DINGODILE_PROJECTILE_STATE_BREAK);
                     SetTargetAnim(part, 8);
                     gAudioContext->PlaySfx(SFX_UNKNOWN_39, 0x100);
                 }
@@ -576,11 +576,11 @@ void DingodileProjectileCtrl::Update(MovingSprite *part)
     }
 
     switch (state) {
-    case 0:
+    case DINGODILE_PROJECTILE_STATE_LAUNCH:
         StartTargetMotionY(part, (const struct speed_ramp *)gDingodileRocketRiseMotion);
-        SetMode(1);
+        SetMode(DINGODILE_PROJECTILE_STATE_RISE);
         break;
-    case 1:
+    case DINGODILE_PROJECTILE_STATE_RISE:
         if (part->y <= 0x800) {
             part->speedY = 0;
             part->rampY.start = 0;
@@ -589,32 +589,32 @@ void DingodileProjectileCtrl::Update(MovingSprite *part)
             SetTargetAnim(part, 8);
             part->palette = part->GetAnimPaletteSlot();
             SpawnStalactite(Q8_TO_INT(part->x), Q8_TO_INT(part->y));
-            SetMode(2);
+            SetMode(DINGODILE_PROJECTILE_STATE_SPENT);
         }
         break;
-    case 5:
+    case DINGODILE_PROJECTILE_STATE_DROP:
         SetTargetAnim(part, 9);
         StartTargetMotionY(part, (const struct speed_ramp *)gDingodileStalactiteFallMotion);
-        SetMode(3);
+        SetMode(DINGODILE_PROJECTILE_STATE_FALL);
         break;
-    case 3:
-    case 4:
+    case DINGODILE_PROJECTILE_STATE_FALL:
+    case DINGODILE_PROJECTILE_STATE_UNK4:
         {
             s32 y = part->y;
 
             if (y >= LevelBottom() - 0x2000) {
-                SetMode(6);
+                SetMode(DINGODILE_PROJECTILE_STATE_BREAK);
                 SetTargetAnim(part, 8);
                 gAudioContext->PlaySfx(SFX_UNKNOWN_39, 0x100);
             }
             break;
         }
-    case 6:
+    case DINGODILE_PROJECTILE_STATE_BREAK:
         part->speedY = 0;
         part->rampY.start = 0;
         part->rampY.step = 0;
         part->rampY.target = 0;
-    case 2:
+    case DINGODILE_PROJECTILE_STATE_SPENT:
         if (part->animDone)
             part->MarkGone();
         break;
@@ -632,7 +632,7 @@ void DingodileProjectileCtrl::SpawnStalactite(u16 x, u16 y)
     p->StartAnim(8);
     p->kind = EVENT_HIT;
     c = new DingodileProjectileCtrl(this);
-    c->SetMode(5);
+    c->SetMode(DINGODILE_PROJECTILE_STATE_DROP);
     p->palette = p->GetAnimPaletteSlot();
     p->mover = c;
     c->Attach(p);

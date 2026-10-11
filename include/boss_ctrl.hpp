@@ -64,10 +64,31 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(MegaMixCtrl) == 0x24);
  * anchors (the hop pads), stomping them: Update steps the hop and the
  * state machine, SetState enters a state. `counter` is the round (1-3,
  * the hits taken). spawn_bosses.cpp creates it in a 0x4C-byte block. */
+
+/* TinyCtrl's `state` (#843, docs/flags/boss_ctrl.md): what Update runs,
+ * entered by SetState. A hop is two states: the rise to its top (`x`,
+ * `y`), then the drop onto the pad. */
+#define TINY_STATE_START 0          // contact off, then HOP_DOWN onto pad 1
+#define TINY_STATE_HOP_DOWN 1       // drops onto the pad, then STOMP
+#define TINY_STATE_HOP_DOWN_REST 2  // drops onto the pad, then REST
+#define TINY_STATE_HOP_UP 3         // rises towards the next pad (PickHopTarget), then HOP_DOWN
+#define TINY_STATE_WAIT 4           // `timer` runs out, then nextState; only ANIM falls into it
+#define TINY_STATE_ANIM 5           // the animation plays out (or `timer` runs out), then nextState
+#define TINY_STATE_STOMP 6          // the stomp animation; the fourth: HOP_UP_REST
+#define TINY_STATE_HOP_UP_REST 7    // rises, then HOP_DOWN_REST
+#define TINY_STATE_REST 8           // 0xB4 frames: a spin attack is a HIT; then HOP_UP
+#define TINY_STATE_HIT 9            // SFX_BOSS_HIT, the hit counted; the third: DEFEATED
+#define TINY_STATE_LEAP_OFF 10      // rises off the top of the screen, then OFFSCREEN
+#define TINY_STATE_DROP_IN 11       // drops onto the round's pad, then STOMP_PAD
+#define TINY_STATE_STOMP_PAD 12     // the round's pad sinks (`stomped`), then HOP_UP
+#define TINY_STATE_OFFSCREEN 13     // three falling leaves, 0x46 frames apart, then DROP_IN
+#define TINY_STATE_DEFEATED 14      // rises; the tornado spin power, then FALL_OUT
+#define TINY_STATE_FALL_OUT 15      // drops out of the level: RequestRoomExit, then GONE
+#define TINY_STATE_GONE 16          // the end: nothing runs
 class TinyCtrl : public BossCtrl
 {
 public:
-    s32 nextState; // 0x1C - the state after the anim (5) or the wait (4)
+    s32 nextState; // 0x1C - the state after ANIM or WAIT; in OFFSCREEN, the leaves' countdown
     s32 timer;     // 0x20
     s32 stomped;   // 0x24 - the anchor to stomp, or -1
     s32 anchor;    // 0x28 - the anchor hopped to (a gTouchableList index)
@@ -96,6 +117,13 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(TinyCtrl) == 0x4C);
  * src/bosses/cortex.cpp). `counter` is the round. It spawns the
  * cannon and the target (crosshair) parts. spawn_bosses.cpp creates it in
  * a 0x24-byte block. */
+
+/* CortexBossCtrl's `state` (#843, docs/flags/boss_ctrl.md). */
+#define CORTEX_BOSS_STATE_START 0    // spawns the cannon and the target, then AIM
+#define CORTEX_BOSS_STATE_AIM 1      // turns Neo Cortex and the cannon to the target
+#define CORTEX_BOSS_STATE_HIT 2      // a fast shot hit a gem (CortexShotCtrl): the round counted
+#define CORTEX_BOSS_STATE_DEFEATED 3 // the third: the target stops, the power; sinks out of the level
+#define CORTEX_BOSS_STATE_GONE 4     // RequestRoomExit done: nothing runs
 class CortexBossCtrl : public BossCtrl
 {
 public:
@@ -114,6 +142,8 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexBossCtrl) == 0x24);
 
 /* The Neo Cortex fight's cannon (gCortexCannonVtable; 0x10 bytes,
  * src/bosses/cortex.cpp): hides its part in state 0. */
+/* CortexCannonCtrl's `state`: only 0, nothing sets another. */
+#define CORTEX_CANNON_STATE_IDLE 0 // contact with the player off
 class CortexCannonCtrl : public Ctrl
 {
 public:
@@ -128,6 +158,20 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexCannonCtrl) == 0x10);
 /* The Neo Cortex fight's target, the crosshair that hops between the
  * player and the platforms (gCortexTargetVtable, 0x40 bytes;
  * src/bosses/cortex.cpp). */
+
+/* CortexTargetCtrl's `state` (#843, docs/flags/boss_ctrl.md). The hops
+ * (ENTER, HOP, HOP_OFF) and ANIM go on to `nextState`. */
+#define CORTEX_TARGET_STATE_START 0   // contact off, then ENTER
+#define CORTEX_TARGET_STATE_ENTER 1   // hops to the level's top right, then HOP
+#define CORTEX_TARGET_STATE_HOP 2     // a hop across the level, then AIM, or CHASE at the far edge
+#define CORTEX_TARGET_STATE_AIM 3     // the red crosshair, then FIRE after ANIM
+#define CORTEX_TARGET_STATE_FIRE 4    // a slow shot, then HOP
+#define CORTEX_TARGET_STATE_CHASE 5   // hops after the player, blinking; a fast shot, then ENTER
+#define CORTEX_TARGET_STATE_HOP_OFF 6 // LEAVE's hop off the bottom, then GONE
+#define CORTEX_TARGET_STATE_ANIM 7    // the animation plays out, then nextState
+#define CORTEX_TARGET_STATE_LEAVE 8   // aims below the level, then HOP_OFF
+#define CORTEX_TARGET_STATE_STOP 9    // Neo Cortex is beaten (CORTEX_BOSS_STATE_DEFEATED): LEAVE
+#define CORTEX_TARGET_STATE_GONE 10   // the end: nothing runs
 class CortexTargetCtrl : public Ctrl
 {
 public:
@@ -176,6 +220,9 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexShotCtrl) == 0x18);
 /* A gem of the Neo Cortex fight (gCortexBossGemVtable, 0x14 bytes;
  * src/bosses/cortex.cpp, SpawnCortexBossGem): once a fast shot hits it
  * (the part's `kind` 1), it plays its shrink animation and goes. */
+/* CortexBossGemCtrl's `state`. */
+#define CORTEX_BOSS_GEM_STATE_WAIT 0   // until a fast shot hits it (the part's `kind`)
+#define CORTEX_BOSS_GEM_STATE_SHRINK 1 // the shrink animation, then gone
 class CortexBossGemCtrl : public Ctrl
 {
 public:
@@ -205,6 +252,27 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(UnusedOneShotAnimCtrl) == 0x10);
  * tables' x positions to fire a rocket, turns round at the level's ends
  * and hides behind his shield (`shield`). `counter` is the hits he has
  * taken. spawn_bosses.cpp creates him in a 0x30-byte block. */
+
+/* DingodileCtrl's `state` (#843, docs/flags/boss_ctrl.md): what Update
+ * runs, entered by SetState. */
+#define DINGODILE_STATE_START 0        // contact and vulnerability off, then WALK
+#define DINGODILE_STATE_WALK 1         // to the approach table's next stop (FIRE) or the edge (TURN)
+#define DINGODILE_STATE_WAIT 2         // `timer` runs out, then nextState
+#define DINGODILE_STATE_TURN 3         // the turn animation, then WAIT before the next pass
+#define DINGODILE_STATE_UNK4 4         // animation 1, then WALK; nothing enters it
+#define DINGODILE_STATE_FIRE 5         // a rocket at frame 0x14, then WALK on
+#define DINGODILE_STATE_FIRE_TURN 6    // the pass's last rocket, then vulnerable and TURN
+#define DINGODILE_STATE_STUNNED 7      // the stalactite landed on him (DingodileProjectileCtrl)
+#define DINGODILE_STATE_DAZED 8        // 0xD2 frames, the shield blinking: a spin attack is a HIT
+#define DINGODILE_STATE_RECOVER 9      // animation 2, then WALK
+#define DINGODILE_STATE_RECOVER_HIT 10 // animation 2 after a hit, then RETREAT
+#define DINGODILE_STATE_HIT 11         // SFX_BOSS_HIT, the hit counted; the third: DEFEATED
+#define DINGODILE_STATE_RETREAT 12     // three sharks; walks to near the level's edge
+#define DINGODILE_STATE_TURN_BACK 13   // the turn animation, then WALK_BACK
+#define DINGODILE_STATE_WALK_BACK 14   // walks to the edge without stopping, then TURN
+#define DINGODILE_STATE_SHARK 15       // a shark from behind him, then WALK
+#define DINGODILE_STATE_DEFEATED 16    // the power-up; falls out of the level
+#define DINGODILE_STATE_GONE 17        // fell off: RequestRoomExit done, nothing runs
 class DingodileCtrl : public BossCtrl
 {
 public:
@@ -230,6 +298,14 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(DingodileCtrl) == 0x30);
 
 /* Dingodile's shield (gDingodileShieldVtable, 0x28 bytes): hurts the
  * player on contact, and blinks twice when Dingodile is hit. */
+/* DingodileShieldCtrl's `state`: Dingodile sets 1 and 2 (SetMode) to
+ * make it blink twice; 1/3 and 2/4 run the same code. */
+#define DINGODILE_SHIELD_STATE_START 0             // the alpha blending on, then STEADY
+#define DINGODILE_SHIELD_STATE_BLINK_START 1       // DINGODILE_STATE_RECOVER(_HIT): two blinks
+#define DINGODILE_SHIELD_STATE_BLINK_START_DAZED 2 // DINGODILE_STATE_DAZED: two blinks
+#define DINGODILE_SHIELD_STATE_BLINK 3             // toggles the blink bit every 20 frames, then STEADY
+#define DINGODILE_SHIELD_STATE_BLINK_DAZED 4       // the same
+#define DINGODILE_SHIELD_STATE_STEADY 5            // nothing more
 class DingodileShieldCtrl : public BossCtrl
 {
 public:
@@ -247,6 +323,15 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(DingodileShieldCtrl) == 0x28);
 /* Dingodile's rocket, and the stalactite it drops
  * (gDingodileProjectileVtable, 0x20 bytes): both hurt the player, and
  * the stalactite hurts Dingodile (`owner`) if it lands on him. */
+/* DingodileProjectileCtrl's `state`: the rocket (0-2) and the
+ * stalactite it spawns (5, 3). */
+#define DINGODILE_PROJECTILE_STATE_LAUNCH 0 // the rocket: the rise motion, then RISE
+#define DINGODILE_PROJECTILE_STATE_RISE 1   // at the top, spawns the stalactite, then SPENT
+#define DINGODILE_PROJECTILE_STATE_SPENT 2  // the animation plays out, then gone
+#define DINGODILE_PROJECTILE_STATE_FALL 3   // the stalactite falls: BREAK on the player or the floor
+#define DINGODILE_PROJECTILE_STATE_UNK4 4   // falls as FALL, but breaks only on the floor; nothing enters it
+#define DINGODILE_PROJECTILE_STATE_DROP 5   // the stalactite (SpawnStalactite): the fall, then FALL
+#define DINGODILE_PROJECTILE_STATE_BREAK 6  // stops; the animation plays out, then gone
 class DingodileProjectileCtrl : public BossCtrl
 {
 public:

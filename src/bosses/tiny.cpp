@@ -75,11 +75,11 @@ void TinyCtrl::Update(MovingSprite *part)
         gAudioContext->PlaySfx(SFX_UNKNOWN_39, 0x100);
     }
 
-    if (this->state == 8) {
+    if (this->state == TINY_STATE_REST) {
         GetSpriteAttackBox(&a, gPlayer);
         GetSpriteBodyBox(&b, part);
         if (a.w != 0 && AabbW(&b) && AabbOverlaps(&b, &a) && gPlayer->kind == EVENT_ATTACK_SPIN)
-            SetState(part, 9);
+            SetState(part, TINY_STATE_HIT);
     } else if (gPlayer->dead == 0) {
         GetSpriteBodyBox(&a, gPlayer);
         if (a.w == 0) {
@@ -93,7 +93,7 @@ void TinyCtrl::Update(MovingSprite *part)
 
     state = this->state;
     switch (state) {
-    case 0:
+    case TINY_STATE_START:
         ClearFlags(&part->f.flags, ~ENTITY_FLAG_CONTACT);
         {
             /* a named `one`: written as three plain `= 1`/`= 0` stores, the
@@ -105,12 +105,12 @@ void TinyCtrl::Update(MovingSprite *part)
             anchor = one;
             count = 0;
         }
-        SetState(part, 1);
+        SetState(part, TINY_STATE_HOP_DOWN);
         break;
-    case 1:
-    case 2:
-    case 11:
-    case 15:
+    case TINY_STATE_HOP_DOWN:
+    case TINY_STATE_HOP_DOWN_REST:
+    case TINY_STATE_DROP_IN:
+    case TINY_STATE_FALL_OUT:
         {
             s32 steps = --this->steps;
             s32 x = dx * steps / total + this->x;
@@ -122,27 +122,27 @@ void TinyCtrl::Update(MovingSprite *part)
             if (steps != 0)
                 break;
             gAudioContext->PlaySfx(SFX_TINY_LAND, 0x100);
-            if (this->state == 15) {
+            if (this->state == TINY_STATE_FALL_OUT) {
                 if ((u8)gLevelState->HasTornadoSpin())
                     RequestRoomExit();
-                SetState(part, 16);
-            } else if (this->state == 1) {
-                SetState(part, 6);
-            } else if (this->state == 11) {
+                SetState(part, TINY_STATE_GONE);
+            } else if (this->state == TINY_STATE_HOP_DOWN) {
+                SetState(part, TINY_STATE_STOMP);
+            } else if (this->state == TINY_STATE_DROP_IN) {
                 count = steps;
                 SetTargetAnim(part, 3);
-                nextState = 12;
-                SetState(part, 5);
+                nextState = TINY_STATE_STOMP_PAD;
+                SetState(part, TINY_STATE_ANIM);
             } else {
                 gAudioContext->PlaySfx(SFX_UNKNOWN_3D, 0x100);
-                SetState(part, 8);
+                SetState(part, TINY_STATE_REST);
             }
             break;
         }
-    case 3:
-    case 7:
-    case 10:
-    case 14:
+    case TINY_STATE_HOP_UP:
+    case TINY_STATE_HOP_UP_REST:
+    case TINY_STATE_LEAP_OFF:
+    case TINY_STATE_DEFEATED:
         {
             s32 steps = --this->steps;
             s32 x = dx * steps / total + this->x;
@@ -153,22 +153,24 @@ void TinyCtrl::Update(MovingSprite *part)
             part->y = y;
             if (steps != 0)
                 break;
-            if (this->state == 14)
-                SetState(part, 15);
-            else if (this->state == 3)
-                SetState(part, 1);
-            else if (this->state == 7)
-                SetState(part, 2);
+            if (this->state == TINY_STATE_DEFEATED)
+                SetState(part, TINY_STATE_FALL_OUT);
+            else if (this->state == TINY_STATE_HOP_UP)
+                SetState(part, TINY_STATE_HOP_DOWN);
+            else if (this->state == TINY_STATE_HOP_UP_REST)
+                SetState(part, TINY_STATE_HOP_DOWN_REST);
             else
-                SetState(part, 13);
+                SetState(part, TINY_STATE_OFFSCREEN);
             break;
         }
-    case 13:
+    case TINY_STATE_OFFSCREEN:
+        /* Here `nextState` is a frame countdown, not a state: the leaves
+         * fall 0x46 frames apart. */
         if (nextState == 0) {
             s32 timer = --this->timer;
 
             if (timer == 0) {
-                SetState(part, 11);
+                SetState(part, TINY_STATE_DROP_IN);
             } else {
                 nextState = 0x46;
                 SpawnFallingLeaves(part, timer);
@@ -176,42 +178,42 @@ void TinyCtrl::Update(MovingSprite *part)
         }
         nextState--;
         break;
-    case 6:
+    case TINY_STATE_STOMP:
         if (part->animDone) {
             if (++count > 3) {
                 count = 0;
-                SetState(part, 7);
+                SetState(part, TINY_STATE_HOP_UP_REST);
             } else {
-                SetState(part, 3);
+                SetState(part, TINY_STATE_HOP_UP);
             }
         }
         break;
-    case 8:
+    case TINY_STATE_REST:
         if (timer != 0) {
             timer--;
             break;
         }
         timer--;
         SetTargetAnim(part, 0);
-        nextState = 3;
-        SetState(part, 5);
+        nextState = TINY_STATE_HOP_UP;
+        SetState(part, TINY_STATE_ANIM);
         break;
-    case 5:
+    case TINY_STATE_ANIM:
         if (part->animDone)
             SetState(part, nextState);
-    case 4:
+    case TINY_STATE_WAIT:
         if (--timer == 0)
             SetState(part, nextState);
         break;
-    case 12:
+    case TINY_STATE_STOMP_PAD:
         stomped = gTinyRoundAnchors[counter - 1];
-        SetState(part, 3);
+        SetState(part, TINY_STATE_HOP_UP);
         break;
-    case 9:
+    case TINY_STATE_HIT:
         if (counter > 2)
-            SetState(part, 14);
+            SetState(part, TINY_STATE_DEFEATED);
         if (part->animDone) {
-            SetState(part, 10);
+            SetState(part, TINY_STATE_LEAP_OFF);
             gAudioContext->PlaySfx(SFX_JUMP, 0x100);
         }
         break;
@@ -233,13 +235,13 @@ static inline void SetFrame(MovingSprite *part, s32 frame)
 void TinyCtrl::SetState(MovingSprite *part, s32 next)
 {
     switch (next) {
-    case 13:
-        nextState = 0;
+    case TINY_STATE_OFFSCREEN:
+        nextState = 0; // OFFSCREEN's leaf countdown, not a state
         timer = 4;
-    case 11:
+    case TINY_STATE_DROP_IN:
         anchor = gTinyRoundAnchors[counter - 1];
-    case 1:
-    case 2:
+    case TINY_STATE_HOP_DOWN:
+    case TINY_STATE_HOP_DOWN_REST:
         {
             /* Rounds 11 and 13 also move Tiny onto the pad's x, through
              * Entity::SetPos with the y unchanged, as EnemyCtrl's motion
@@ -253,7 +255,7 @@ void TinyCtrl::SetState(MovingSprite *part, s32 next)
             MovingSprite *pad;
             s32 x;
 
-            if (next == 1)
+            if (next == TINY_STATE_HOP_DOWN)
                 SetTargetAnim(part, 2);
             else
                 SetTargetAnim(part, 1);
@@ -261,13 +263,13 @@ void TinyCtrl::SetState(MovingSprite *part, s32 next)
             pad = (MovingSprite *)gTouchableList->items[anchor];
             x = pad->x;
             this->x = x;
-            if (next == 11 || next == 13)
+            if (next == TINY_STATE_DROP_IN || next == TINY_STATE_OFFSCREEN)
                 part->SetPos(x, part->y);
             this->y = pad->y - 0x2400;
             goto hop;
         }
-    case 3:
-    case 7:
+    case TINY_STATE_HOP_UP:
+    case TINY_STATE_HOP_UP_REST:
         {
             MovingSprite *pad;
             s32 ax;
@@ -288,17 +290,17 @@ void TinyCtrl::SetState(MovingSprite *part, s32 next)
             this->y = y;
             goto hop;
         }
-    case 10:
+    case TINY_STATE_LEAP_OFF:
         this->y = -0x3000;
         this->x = part->x;
     hop:
         StartHop(part);
         break;
-    case 8:
+    case TINY_STATE_REST:
         SetTargetAnim(part, 6);
         timer = 0xB4;
         break;
-    case 9:
+    case TINY_STATE_HIT:
         gAudioContext->PlaySfx(SFX_BOSS_HIT, 0x100);
         if (++counter > 2) {
             s32 x = part->x;
@@ -310,7 +312,7 @@ void TinyCtrl::SetState(MovingSprite *part, s32 next)
         HitStub(part);
         SetTargetAnim(part, 7);
         break;
-    case 14:
+    case TINY_STATE_DEFEATED:
         {
             MovingSprite *pad = (MovingSprite *)gTouchableList->items[2];
             s32 x = pad->x;
@@ -320,7 +322,7 @@ void TinyCtrl::SetState(MovingSprite *part, s32 next)
                 SpawnTornadoSpinPower(0xFFFF, Q8_TO_INT(x), Q8_TO_INT(y), 0);
             break;
         }
-    case 15:
+    case TINY_STATE_FALL_OUT:
         {
             s32 x = part->x;
 
