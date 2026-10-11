@@ -406,7 +406,7 @@ public:
     {
         s32 base = Q8_TO_INT(animTime);
         s32 idx = animIndex;
-        struct anim_frame_record *table = anims;
+        const struct anim_frame_record *table = anims;
         s32 val = table[idx].frameIndex;
 
         val += base;

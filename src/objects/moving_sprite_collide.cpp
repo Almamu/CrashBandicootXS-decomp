@@ -23,11 +23,11 @@ s32 MovingSprite::ClassifyContact(struct aabb *region)
     struct aabb box = GetAttackBox();
     s32 result;
 
-    if ((u8)AabbOverlaps(&box, region) != 0) {
+    if (AabbOverlaps(&box, region) != 0) {
         result = 2;
     } else {
         box = GetBodyBox();
-        result = (u8)AabbOverlaps(&box, region);
+        result = AabbOverlaps(&box, region);
         if (result != 0) {
             s32 vulnerable = (f.flags >> ENTITY_BIT_VULNERABLE) & 1;
 

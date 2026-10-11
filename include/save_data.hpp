@@ -106,7 +106,7 @@ public:
     s32 Write(s32 len);                 // WriteSaveData
     s32 Load();                         // LoadSaveData
     void Validate();                    // ValidateSaveData (UNUSED)
-    u32 CheckChecksum();                // CheckSaveChecksum
+    u8 CheckChecksum();                 // CheckSaveChecksum
     void UpdateChecksum();              // UpdateSaveChecksum
     u32 GetGameId();                    // GetSaveGameId
     s32 Store();                        // StoreSaveData

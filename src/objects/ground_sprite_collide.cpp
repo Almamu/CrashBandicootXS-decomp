@@ -67,7 +67,7 @@ s32 GroundSprite::ProbeTerrainAxes()
     result = 0;
     floorMiss = 0;
     hit = 0;
-    if (!(u8)IsNearCamera() || !(f.flags >> ENTITY_BIT_COLLIDES))
+    if (!IsNearCamera() || !(f.flags >> ENTITY_BIT_COLLIDES))
         goto done;
     if (!(dir & PART_DIR_Y_MASK) && (f.bytes.flags2 & ENTITY_FLAG2_FLOOR_PROBE))
         result = PART_DIR_DOWN;
@@ -81,7 +81,7 @@ s32 GroundSprite::ProbeTerrainAxes()
         u8 c;
 
         origY = y;
-        pos = *(struct vec2 *)&Pos();
+        pos = Pos();
         OffsetToHitboxEdge(&pos, PART_DIR_DOWN, (void *)quad);
         pos.x = Q8_TO_INT(pos.x);
         pos.y = Q8_TO_INT(pos.y);
@@ -113,7 +113,7 @@ s32 GroundSprite::ProbeTerrainAxes()
     if (mode && !hit) {
         s32 span;
 
-        pos = *(struct vec2 *)&Pos();
+        pos = Pos();
         span = quad->h - 0x10;
         origX = x;
         OffsetToHitboxEdgeStart(&pos, mode, (void *)quad);
@@ -130,7 +130,7 @@ y_probe:
     if (mode && !hit) {
         s32 span;
 
-        pos = *(struct vec2 *)&Pos();
+        pos = Pos();
         span = quad->w;
         origX = x;
         origY = y;
@@ -147,7 +147,7 @@ y_probe:
     if (mode && !hit) {
         s32 span;
 
-        pos = *(struct vec2 *)&Pos();
+        pos = Pos();
         span = quad->h;
         origX = x;
         OffsetToHitboxEdgeStart(&pos, mode, (void *)quad);
@@ -177,7 +177,7 @@ u8 GroundSprite::ProbeFloor(const struct hitbox_quad *quad, u8 *outFlag)
     u8 hit;
     s32 grounded;
 
-    pos = *(struct vec2 *)&Pos();
+    pos = Pos();
     OffsetToHitboxEdge(&pos, PART_DIR_DOWN, (void *)quad);
     pos.x = Q8_TO_INT(pos.x);
     pos.y = Q8_TO_INT(pos.y);

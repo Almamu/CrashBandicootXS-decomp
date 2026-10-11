@@ -121,17 +121,17 @@ COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(BgLayerBase) == 0x34);
 class BgLayer : public BgLayerBase
 {
 public:
-    union bg_cnt cnt; // 0x34 - BGnCNT shadow
-    vu16 *cntReg;     // 0x38 - &REG_BGnCNT
-    s32 rowLo;        // 0x3C
-    s32 rowHi;        // 0x40
-    s32 colLo;        // 0x44
-    s32 colHi;        // 0x48
-    u16 *screen;      // 0x4C - BG screen block (32x32 entries)
-    void *tileData;   // 0x50 - tagged asset for the char block
-    u16 hofs;         // 0x54
-    u16 vofs;         // 0x56
-    vu32 *ofsReg;     // 0x58 - &REG_BGnHOFS (written with VOFS as one word)
+    union bg_cnt cnt;     // 0x34 - BGnCNT shadow
+    vu16 *cntReg;         // 0x38 - &REG_BGnCNT
+    s32 rowLo;            // 0x3C
+    s32 rowHi;            // 0x40
+    s32 colLo;            // 0x44
+    s32 colHi;            // 0x48
+    u16 *screen;          // 0x4C - BG screen block (32x32 entries)
+    const void *tileData; // 0x50 - tagged asset for the char block
+    u16 hofs;             // 0x54
+    u16 vofs;             // 0x56
+    vu32 *ofsReg;         // 0x58 - &REG_BGnHOFS (written with VOFS as one word)
 
     BgLayer(s32 bgIndex); // InitBgLayer
 
@@ -309,7 +309,7 @@ COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(PooledBgLayer) == 0x60);
 class TileCache
 {
 public:
-    void *source;      // 0x000
+    const struct level_layer_desc *source; // 0x000
     void *decodeBase;  // 0x004 - gLevelLayers->asset + source->assetOffset; DecodeChunk's table
     s32 widthPx;       // 0x008 - widthTiles << 3; nothing reads it
     s32 heightPx;      // 0x00C - heightTiles << 3; nothing reads it
@@ -329,8 +329,8 @@ public:
     s8 GetSolidTerrainModeValue(s32 x, s32 y, s32 mode, u8 *flagsOut);
     void DecodeChunk(s32 recordId, void *dest); // DecodeCollisionChunk
     u16 GetTerrainType(s32 x, s32 y, u8 *flagsOut, s32 *hiOut);
-    u16 GetCell(s32 x, s32 y);                       // GetCollisionCell
-    void SetSource(struct level_layer_desc *source); // SetCollisionSource
+    u16 GetCell(s32 x, s32 y);                             // GetCollisionCell
+    void SetSource(const struct level_layer_desc *source); // SetCollisionSource
 
 private:
     /* The decoded cell at pixel (x, y): 16x8-pixel tiles, one 256-byte
@@ -339,7 +339,7 @@ private:
     {
         s32 tileX = x >> 4;
         s32 tileY = y >> 3;
-        u16 *cell = (u16 *)GetChunk((*(u16 **)source)[tileY * width + tileX]);
+        u16 *cell = (u16 *)GetChunk(source->chunkGrid[tileY * width + tileX]);
         return cell[(y & 7) * 16 + (x & 0xf)];
     }
 };

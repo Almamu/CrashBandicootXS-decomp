@@ -6,8 +6,8 @@ extern "C" {
 /* Sits right after the still-parked WaitForKeyPress (asm/code_3_1_5.s) and
  * before whatever's still raw in asm/code_3_1_6.s. */
 
-extern "C" void LZ77UnCompVram(void *src);
-extern "C" void RLUnCompVram(void *src);
+extern "C" void LZ77UnCompVram(const void *src);
+extern "C" void RLUnCompVram(const void *src);
 
 /* Decompresses (or raw-DMA-copies) a "tagged" asset into `dest`. Bits 4-7
  * of the asset's first word, the BIOS's compression type (ASSET_TYPE_*),
@@ -41,10 +41,10 @@ void LoadTaggedAsset(const void *asset, void *dest)
             break;
         }
     case ASSET_TYPE_LZ77:
-        LZ77UnCompVram((void *)asset);
+        LZ77UnCompVram(asset);
         break;
     case ASSET_TYPE_RL:
-        RLUnCompVram((void *)asset);
+        RLUnCompVram(asset);
         break;
     }
 }

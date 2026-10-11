@@ -123,7 +123,7 @@ void Airship::Create(s32 lvl)
         checkpointCount = 0;
     mapCols = BOSS_PICTURE_SIZE(picture)->cols;
     mapRows = BOSS_PICTURE_SIZE(picture)->rows;
-    anim = new AnimPart((struct anim_frame_record *)keyframes, mapFrames, 1);
+    anim = new AnimPart(keyframes, mapFrames, 1);
     SetState(AIRSHIP_STATE_INACTIVE, 0);
     LoadGraphics();
     bg2PageFlip = 0;

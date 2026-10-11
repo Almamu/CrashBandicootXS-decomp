@@ -180,7 +180,7 @@ s32 SaveData::Load()
     if (versionNibble != 0x12) {
         return 1;
     }
-    if ((u8)CheckChecksum() == 0) {
+    if (CheckChecksum() == 0) {
         return 3;
     }
     return 0;
@@ -218,7 +218,7 @@ void SaveData::Validate()
  * 0x1fc bytes (127 words) and compares it against the stored
  * `checksum` field, returning 1 on match. Counterpart to `SaveData::UpdateChecksum`
  * below, which stores instead of comparing. */
-u32 SaveData::CheckChecksum()
+u8 SaveData::CheckChecksum()
 {
     return ChecksumOk();
 }

@@ -218,7 +218,7 @@ void BgLayer::Load(const struct level_layer_desc *desc)
     if (enabled) {
         u16 c;
 
-        tileData = (void *)desc->tileData;
+        tileData = desc->tileData;
         c = desc->cnt;
         SetPriority(c);
     }

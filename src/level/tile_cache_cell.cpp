@@ -20,9 +20,9 @@ u16 TileCache::GetCell(s32 x, s32 y)
 {
     s32 tileX = x >> 4;
     s32 tileY = y >> 3;
-    void *src = source;
+    const struct level_layer_desc *src = source;
     s32 tileIdx = tileY * width + tileX;
-    u16 recordId = (*(u16 **)src)[tileIdx];
+    u16 recordId = src->chunkGrid[tileIdx];
     u16 *cache = (u16 *)GetChunk(recordId);
     s32 my = y & 7;
     s32 mx = x & 0xf;
@@ -37,7 +37,7 @@ u16 TileCache::GetCell(s32 x, s32 y)
  * dimensions, and the pixel-dimension fields nothing in this cluster
  * reads back - then resets every cache slot's resident id to -1 and the
  * eviction cursor to 0. Does nothing when `source` is NULL. */
-void TileCache::SetSource(struct level_layer_desc *source)
+void TileCache::SetSource(const struct level_layer_desc *source)
 {
     s32 i;
 

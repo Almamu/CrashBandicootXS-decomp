@@ -112,7 +112,7 @@ void DrawMirroredTilemap(u8 *pal, s32 lowBlock, s32 w, s32 h)
  * test instead of reusing it. */
 static inline u8 KeyGreater(ActorSelf **a, s32 i, s32 j, u8 one, u8 zero)
 {
-    if ((u32)a[i]->sortKey <= (u32)a[j]->sortKey)
+    if (a[i]->sortKey <= a[j]->sortKey)
         return zero;
     return one;
 }

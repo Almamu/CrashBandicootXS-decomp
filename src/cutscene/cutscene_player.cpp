@@ -85,7 +85,7 @@ void CutscenePlayer::Run()
             s32 j;
 
             for (j = 0; j < self->pages[i].count && res == 1; j++) {
-                u8 *str = (u8 *)self->pages[i].strings[j];
+                const u8 *str = self->pages[i].strings[j];
                 s32 pos = 0;
 
                 while (str[pos] != 0 && res == 1) {

@@ -64,7 +64,7 @@ void ScaledSprite::Draw()
     OamBuffer *buf;
     s32 n;
 
-    switch ((u32)oam.affineMode) {
+    switch (oam.affineMode) {
     case OAM_AFFINE_MODE_NORMAL:
         oam.x = x;
         oam.y = y;

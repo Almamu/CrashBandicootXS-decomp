@@ -241,7 +241,7 @@ s32 GetFreeVramTileBytes(void)
  * EWRAM buffers it allocated. */
 void FreeObjTileFreeList(void)
 {
-    mem_free((u8 *)gVramTileBlockIndex);
+    mem_free(gVramTileBlockIndex);
     mem_free((u8 *)gVramTileBlockPool);
 }
 

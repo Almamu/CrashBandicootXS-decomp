@@ -44,14 +44,14 @@ s32 Sprite::HitboxOverlaps(struct aabb *region)
         box.x = px * 2 - (box.x + box.w);
     if (flipY)
         box.y = py * 2 - (box.y + box.h);
-    return (u8)AabbOverlaps(&box, region);
+    return AabbOverlaps(&box, region);
 }
 
 /* The OBJ palette slot of the current animation's palette
  * (GetPaletteSlot). */
 s32 Sprite::GetAnimPaletteSlot()
 {
-    return (u8)gPaletteCache->GetSlot(bank->anims[tag].paletteId);
+    return gPaletteCache->GetSlot(bank->anims[tag].paletteId);
 }
 
 /* UNUSED - no caller anywhere in the ROM. The inverse of

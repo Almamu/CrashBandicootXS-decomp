@@ -45,7 +45,7 @@ ActorSelf::ActorSelf(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
     this->x = x;
     this->y = y;
     this->z = z;
-    record = (struct anim_table_record *)rec;
+    record = rec;
     box = rec->box_14;
 
     state = 0;
