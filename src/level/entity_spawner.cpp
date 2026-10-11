@@ -27,7 +27,7 @@ ExtraLife *EntitySpawner::DropExtraLife(u32 x, u32 y, u32 p3, u32 p5, bool toHud
         part->counter = p3;
         part->mode = p5;
         part->phase = state;
-        part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x8d * 4);
+        part->bank = gSpriteBankSet->Bank(47);
         part->StartAnim(0xa);
         part->palette = part->GetAnimPaletteSlot();
         if (toHud)
@@ -106,7 +106,7 @@ MovingSprite *EntitySpawner::SpawnEffectPart(s32 anim, s32 tag, s32 x, s32 y, s3
         y = ((u32)layer->heightPx << 8 >> 8) - 1;
     part = MovingSprite::Create(0xffff, x, y, 0);
     part->mirrorFlags.mirrorX = mirror != 0;
-    part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + anim * sizeof(struct sprite_bank));
+    part->bank = gSpriteBankSet->Bank(anim);
     part->tag = tag;
     part->ResetFrameTimer();
     part->ResetFrameIndex();

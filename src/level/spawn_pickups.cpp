@@ -22,7 +22,7 @@ extern "C" {
  * and InitLevelState follow in spawn_markers.cpp. Built with
  * old_agbcp. */
 
-/* A sprite of bank `bank` (an offset into the sprite bank table),
+/* A sprite of bank `bank` (an index into the sprite bank table),
  * animation `tag`, kind `kind`, in the touchable list. The callers pass
  * `tag` and `kind` in variables: the ROM loads both into callee-saved
  * registers before the Sprite::Create call and stores them from there
@@ -31,7 +31,7 @@ static inline Sprite *SpawnTouchable(u32 a0, u16 a1, u16 a2, u16 a3, s32 bank, u
 {
     Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
-    part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + bank);
+    part->bank = gSpriteBankSet->Bank(bank);
     part->tag = tag;
     part->ResetFrameTimer();
     part->ResetFrameIndex();
@@ -51,7 +51,7 @@ void SpawnBodySlamPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     u8 tag = 1;
     u8 kind = EVENT_POWER_BODY_SLAM;
 
-    SpawnTouchable(arg0, arg1, arg2, arg3, 0x1c8, tag, kind);
+    SpawnTouchable(arg0, arg1, arg2, arg3, 38, tag, kind);
 }
 
 void SpawnTornadoSpinPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
@@ -59,7 +59,7 @@ void SpawnTornadoSpinPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     u8 tag = 0;
     u8 kind = EVENT_POWER_TORNADO_SPIN;
 
-    SpawnTouchable(arg0, arg1, arg2, arg3, 0x1c8, tag, kind);
+    SpawnTouchable(arg0, arg1, arg2, arg3, 38, tag, kind);
 }
 
 void SpawnDoubleJumpPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
@@ -67,7 +67,7 @@ void SpawnDoubleJumpPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     u8 tag = 2;
     u8 kind = EVENT_POWER_DOUBLE_JUMP;
 
-    SpawnTouchable(arg0, arg1, arg2, arg3, 0x1c8, tag, kind);
+    SpawnTouchable(arg0, arg1, arg2, arg3, 38, tag, kind);
 }
 
 void SpawnTurboRunPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
@@ -75,17 +75,17 @@ void SpawnTurboRunPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     u8 tag = 3;
     u8 kind = EVENT_POWER_TURBO_RUN;
 
-    SpawnTouchable(arg0, arg1, arg2, arg3, 0x1c8, tag, kind);
+    SpawnTouchable(arg0, arg1, arg2, arg3, 38, tag, kind);
 }
 
-/* The time trial's stopwatch (bank `+0x1B0`, kind 0x1C, always active),
+/* The time trial's stopwatch (bank 36, kind 0x1C, always active),
  * once the level's crystal is saved. */
 void SpawnStopwatch(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     if (gLevelState->IsCrystalSaved()) {
         Stopwatch *part = Stopwatch::Create(arg0, arg1, arg2, arg3);
 
-        part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x1b0);
+        part->bank = gSpriteBankSet->Bank(36);
         part->StartAnim(0);
         part->palette = part->GetAnimPaletteSlot();
         part->kind = EVENT_STOPWATCH;
@@ -103,7 +103,7 @@ void SpawnBlueGem(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     u8 tag = 4;
     u8 kind = EVENT_BLUE_GEM;
 
-    SpawnTouchable(arg0, arg1, arg2, arg3, 0x180, tag, kind);
+    SpawnTouchable(arg0, arg1, arg2, arg3, 32, tag, kind);
 }
 
 /* Entity type 0x0C (the crate gem's marker): where the crate gem appears
@@ -140,8 +140,7 @@ void *CreateTouchableSprite(u32 index, u32 tag, u32 field0A, u32 cx, u16 cy, u16
 {
     Sprite *part = Sprite::Create(cx, cy, cw, ch);
 
-    part->bank =
-        (const struct sprite_bank *)(SPRITE_BANK_BASE + index * sizeof(struct sprite_bank));
+    part->bank = gSpriteBankSet->Bank(index);
     part->tag = tag;
     part->ResetFrameTimer();
     part->ResetFrameIndex();

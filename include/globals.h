@@ -31,13 +31,6 @@ union key_state {
     u32 all;
 };
 
-/* The first byte of the sprite bank set's banks (`gSpriteBankSet`, class
- * SpriteBankSet, sprite_obj.hpp: `table->banks`, 12 bytes per bank), the
- * base its users take their byte offsets from. It is read through the table's first word, so that this header
- * doesn't need sprite_bank.h (its `struct sprite_frame` clashes with
- * actor_anim.h's). */
-#define SPRITE_BANK_BASE (*(u8 *const *)gSpriteBankSet->table)
-
 /* src/iwram/iwram_data.cpp */
 extern union key_state gKeys;
 extern u32 gRoomFrameCount;

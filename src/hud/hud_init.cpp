@@ -13,7 +13,6 @@ extern "C" {
  * Built with old_agbcp, as the C was with old_agbcc - see
  * docs/matching/archive/game-loop-old-agbcc.md. */
 
-#define HUD_ANIM(offset) ((const struct sprite_bank *)(SPRITE_BANK_BASE + (offset)))
 #define SLOT_RECORD(s) ((s)->bank->anims[(s)->tag])
 
 static inline void RestartSlot(HudPart *slot)
@@ -58,7 +57,7 @@ Hud::Hud()
 
         parts[i].SetPriority(0);
         {
-            const struct sprite_bank *anim = HUD_ANIM(0x234);
+            const struct sprite_bank *anim = gSpriteBankSet->Bank(47);
 
             slot = (HudPart *)(i * sizeof(HudPart) + (u32)parts);
             SET_PART_BANK(slot, anim);
@@ -81,7 +80,7 @@ Hud::Hud()
         HudPart *slot;
 
         i = 13;
-        anim = HUD_ANIM(0x1A4);
+        anim = gSpriteBankSet->Bank(35);
         slot = &parts[i];
         SET_PART_BANK(slot, anim);
         parts[13].tag = gHudPartAnims[13];
@@ -137,7 +136,7 @@ void Hud::ConfigureParts(u8 iconFlag)
         HudPart *slot;
         s32 k = 13;
 
-        anim = HUD_ANIM(0x1A4);
+        anim = gSpriteBankSet->Bank(35);
         slot = &parts[k];
 
         SET_PART_BANK(slot, anim);

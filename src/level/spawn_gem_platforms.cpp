@@ -16,7 +16,7 @@ extern "C" {
  * (Platform::Create) with a per-gem kind, or PLATFORM_KIND_GEM_PATH_DONE
  * when IsGemPathDone says so or the record's +0x8C byte is set, handed to
  * SetGemPlatform. Otherwise it spawns the full visual effect: a
- * CreateSpriteObj part on anim bank offset 0x180, with a per-slot tag,
+ * CreateSpriteObj part on sprite bank 32, with a per-slot tag,
  * built through the ResetSpriteFrameTimer/ResetSpriteFrameIndex/SetSpriteAnimDone OAM trio, and
  * registered with the gTouchableList manager.
  *
@@ -57,7 +57,7 @@ void SpawnRedGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 tag = 7;
         Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
-        part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x180);
+        part->bank = gSpriteBankSet->Bank(32);
         part->tag = tag;
         part->ResetFrameTimer();
         part->ResetFrameIndex();
@@ -85,7 +85,7 @@ void SpawnYellowGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 tag = 5;
         Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
-        part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x180);
+        part->bank = gSpriteBankSet->Bank(32);
         part->tag = tag;
         part->ResetFrameTimer();
         part->ResetFrameIndex();
@@ -113,7 +113,7 @@ void SpawnGreenGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 tag = 6;
         Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
-        part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x180);
+        part->bank = gSpriteBankSet->Bank(32);
         part->tag = tag;
         part->ResetFrameTimer();
         part->ResetFrameIndex();
@@ -143,7 +143,7 @@ void SpawnBlueGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 tag = 8;
         Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
-        part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x180);
+        part->bank = gSpriteBankSet->Bank(32);
         part->tag = tag;
         part->ResetFrameTimer();
         part->ResetFrameIndex();

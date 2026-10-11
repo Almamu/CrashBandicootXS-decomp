@@ -156,36 +156,36 @@ LevelSelect::LevelSelect(s32 arg)
                 sprites[i]->affine = v;
         }
     }
-    SetBankNow(sprites[0], AnimTable(0x234));
+    SetBankNow(sprites[0], gSpriteBankSet->Bank(47));
     sprites[0]->StartAnim(gLevelSelectWorldAnims[world]);
     SetEntityPixelPos(sprites[0], gLevelSelectWorldPos.x, gLevelSelectWorldPos.y);
-    SetBankNow(sprites[1], AnimTable(0x234));
+    SetBankNow(sprites[1], gSpriteBankSet->Bank(47));
     sprites[1]->StartAnim(10);
     SetEntityPixelPos(sprites[1], gLevelSelectCrashIconPos.x, gLevelSelectCrashIconPos.y);
-    SetBankNow(sprites[2], AnimTable(0x1BC));
+    SetBankNow(sprites[2], gSpriteBankSet->Bank(37));
     SetEntityPixelPos(sprites[2], gLevelSelectCrystalPos.x, gLevelSelectCrystalPos.y);
-    SetBankNow(sprites[3], AnimTable(0x180));
+    SetBankNow(sprites[3], gSpriteBankSet->Bank(32));
     sprites[3]->StartAnim(1);
     SetEntityPixelPos(sprites[3], gLevelSelectGemPos_rw.x, gLevelSelectGemPos_rw.y);
-    SetBankNow(sprites[4], AnimTable(0x180));
+    SetBankNow(sprites[4], gSpriteBankSet->Bank(32));
     sprites[4]->StartAnim(1);
     SetEntityPixelPos(sprites[4], gLevelSelectGemPos_rw.x, gLevelSelectGemPos_rw.y);
-    SetBankNow(sprites[5], AnimTable(0x18C));
+    SetBankNow(sprites[5], gSpriteBankSet->Bank(33));
     SetEntityPixelPos(sprites[5], gLevelSelectTrialIconPos_rw.x, gLevelSelectTrialIconPos_rw.y);
-    SetBankNow(sprites[6], AnimTable(0x18C));
+    SetBankNow(sprites[6], gSpriteBankSet->Bank(33));
     SetEntityPixelPos(sprites[6], gLevelSelectTrialIconPos_rw.x, gLevelSelectTrialIconPos_rw.y);
-    SetBankNow(sprites[7], AnimTable(0x18C));
+    SetBankNow(sprites[7], gSpriteBankSet->Bank(33));
     SetEntityPixelPos(sprites[7], gLevelSelectTimePos.x, gLevelSelectTimePos.y);
     s = new UiSprite;
     sprites[8] = s;
     s->SetPriority(1);
-    SetBankNow(sprites[8], AnimTable(0x270));
+    SetBankNow(sprites[8], gSpriteBankSet->Bank(52));
     sprites[8]->StartAnim(1);
     SetEntityPixelPos(sprites[8], gLevelSelectNextWorldArrowPos.x, gLevelSelectNextWorldArrowPos.y);
     s = new UiSprite;
     sprites[9] = s;
     s->SetPriority(1);
-    SetBankNow(sprites[9], AnimTable(0x270));
+    SetBankNow(sprites[9], gSpriteBankSet->Bank(52));
     sprites[9]->StartAnim(0);
     SetEntityPixelPos(sprites[9], gLevelSelectPrevWorldArrowPos.x, gLevelSelectPrevWorldArrowPos.y);
     if (gNewWorldOpened && IsNextWorldOpen()) {

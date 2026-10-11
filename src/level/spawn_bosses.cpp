@@ -76,7 +76,7 @@ void SpawnDingodile(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
     DingodileCtrl *hdr;
 
-    part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x288);
+    part->bank = gSpriteBankSet->Bank(54);
     part->palette = part->GetAnimPaletteSlot();
     part->f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
     part->SetKind(1);
@@ -95,7 +95,7 @@ void SpawnTiny(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
     TinyCtrl *hdr;
 
-    part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x294);
+    part->bank = gSpriteBankSet->Bank(55);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new TinyCtrl;
     part->mover = hdr;
@@ -114,7 +114,7 @@ void SpawnCortexBoss(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
     CortexBossCtrl *hdr;
 
-    part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x27c);
+    part->bank = gSpriteBankSet->Bank(53);
     part->StartAnim(1);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new CortexBossCtrl;
@@ -135,7 +135,7 @@ static inline void SetPalette(MovingSprite *part, s32 slot)
 }
 
 /* Entity type 0x49, Mega-Mix (see mega_mix_update.cpp): a moving sprite
- * on sprite bank +0x168 at (arg1, arg2), its palette that of its first
+ * on sprite bank 30 at (arg1, arg2), its palette that of its first
  * animation, not mirrored, driven by a MegaMixCtrl; kind 1, not
  * colliding, out of contact, invulnerable and always active, in the
  * collidable list. */
@@ -144,7 +144,7 @@ void SpawnMegaMix(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
     MegaMixCtrl *hdr;
 
-    part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x168);
+    part->bank = gSpriteBankSet->Bank(30);
     part->x = INT_TO_Q8(arg1);
     part->y = INT_TO_Q8(arg2);
     part->StartAnim(0);

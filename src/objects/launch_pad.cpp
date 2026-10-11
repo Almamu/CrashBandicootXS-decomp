@@ -35,7 +35,7 @@ LaunchPad *LaunchPad::Spawn(u16 id, u16 x, u16 y, u16 unused)
     LaunchPad *obj = new LaunchPad(id, x, y);
 
     CollidableList()->Add(obj);
-    obj->bank = AnimTable(0x150);
+    obj->bank = gSpriteBankSet->Bank(28);
     obj->StartAnim(0);
     obj->mirrorFlags.mirrorX = 0;
     obj->mirrorFlags.mirrorY = 0;

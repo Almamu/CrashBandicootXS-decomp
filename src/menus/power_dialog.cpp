@@ -88,7 +88,7 @@ PowerDialog::PowerDialog(const u8 *titleText, const u8 *descText, s32 type) : bg
         UiSprite *s = new UiSprite;
 
         icon = s;
-        SetIconBank(s, 0xe4 << 1);
+        SetIconBank(s, 38);
         s->tag = type;
         s->ResetFrameTimer();
         s->ResetFrameIndex();

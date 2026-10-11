@@ -111,7 +111,7 @@ PauseMenu::PauseMenu() : bg(0, 0x1f, 0, 3)
 
         blinkEyes = new UiSprite;
         s = blinkEyes;
-        SetIconBank(s, 0x8a << 2);
+        SetIconBank(s, 46);
         blinkEyes->palette = s->GetAnimPaletteSlot();
     }
     blinkEyes->SetPixelPos(119, 94);

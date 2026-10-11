@@ -34,7 +34,7 @@ static inline void SetPalette(Sprite *s, s32 pal)
 
 /* BG2's constructor: the BGCNT fields (priority 1, 256 colours), a cleared
  * screen block with an 8x4 block of tile entries at its top left, and four
- * corner sprites (animation bank `+0x258` of the level graphics, mirrored
+ * corner sprites (animation bank 50 of the level graphics, mirrored
  * per corner) positioned around (x, y) = (0x78, 0x35) by
  * gZoomBgSlotOffsets. */
 ZoomBg::ZoomBg(s32 charBlock, s32 screenBlock)
@@ -78,7 +78,7 @@ ZoomBg::ZoomBg(s32 charBlock, s32 screenBlock)
     affine.angle = 0;
     for (i = 0; i <= 3; i++) {
         twinkles[i].part = new UiSprite;
-        SetBankNow(twinkles[i].part, AnimTable(0x258));
+        SetBankNow(twinkles[i].part, gSpriteBankSet->Bank(50));
         SetMode(twinkles[i].part, OAM_OBJ_MODE_SEMI_TRANSPARENT);
         twinkles[i].part->SetPixelPos(x + gZoomBgSlotOffsets[i].x, y + gZoomBgSlotOffsets[i].y);
         twinkles[i].part->SetPriority(1);

@@ -545,8 +545,7 @@ COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(PaletteCache) == 0x230);
 
 /* The sprite bank set (gSpriteBankSet, 4 bytes): InitLevelState points it
  * at gSpriteBankTable, the table the level's sprites come from. Its users
- * take the first bank's animations (`table->banks`, globals.h's
- * SPRITE_BANK_BASE) as the base of their byte offsets. */
+ * take a bank by its index (Bank), 12 bytes each. */
 class SpriteBankSet
 {
 public:
@@ -560,6 +559,12 @@ public:
     const struct sprite_anim *Anims(s32 bank) const
     {
         return table->banks[bank].anims;
+    }
+
+    /* Bank `index` of the table (#855): the sprites' `bank`. */
+    const struct sprite_bank *Bank(s32 index) const
+    {
+        return &table->banks[index];
     }
 
     SpriteBankSet();  // InitSpriteBankSet

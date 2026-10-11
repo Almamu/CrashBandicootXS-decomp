@@ -31,7 +31,7 @@ LevelSelectCursor::LevelSelectCursor()
     UiSprite *p = new UiSprite;
 
     part = p;
-    p->bank = AnimTable(0x240);
+    p->bank = gSpriteBankSet->Bank(48);
     p->StartAnim(0);
     part->palette = part->GetAnimPaletteSlot();
     gPaletteCache->Lock(part->bank->anims[part->tag].paletteId);

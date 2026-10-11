@@ -388,7 +388,7 @@ void DingodileCtrl::SpawnShieldOrRocket(s32 mode, u16 x, u16 y, MovingSprite *ow
     u8 *bits;
 
     p->f.b.visible = 0;
-    p->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x288);
+    p->bank = gSpriteBankSet->Bank(54);
     switch (mode) {
     case DINGODILE_SPAWN_MODE_SHIELD:
         {
@@ -441,7 +441,7 @@ void DingodileCtrl::SpawnShark(u16 x, u16 y, u8 facing)
     MovingSprite *p = MovingSprite::Create(0xFFFF, x, y, 0);
     Ctrl *ctl;
 
-    p->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x30);
+    p->bank = gSpriteBankSet->Bank(4);
     p->StartAnim(1);
     p->kind = EVENT_HIT_BITE;
     ctl = new DingodileSharkCtrl;
@@ -630,7 +630,7 @@ void DingodileProjectileCtrl::SpawnStalactite(u16 x, u16 y)
     DingodileProjectileCtrl *c;
 
     p->f.b.visible = 0;
-    p->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x288);
+    p->bank = gSpriteBankSet->Bank(54);
     p->StartAnim(8);
     p->kind = EVENT_HIT;
     c = new DingodileProjectileCtrl(this);

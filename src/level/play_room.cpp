@@ -89,7 +89,7 @@ s32 LevelProgress::PlayRoom()
             ctrl->SetAnimSet(&gActionCtrlMotionSet);
             gPlayer->ctrlMode = mode;
             {
-                const struct sprite_bank *bank = (const struct sprite_bank *)SPRITE_BANK_BASE;
+                const struct sprite_bank *bank = gSpriteBankSet->Bank(0);
                 Player *pl = gPlayer;
 
                 pl->bank = bank;
@@ -104,8 +104,7 @@ s32 LevelProgress::PlayRoom()
             gSwimCtrl->SetAnimSet(&gSwimCtrlMotionSet);
             gPlayer->ctrlMode = mode;
             {
-                const struct sprite_bank *bank =
-                    (const struct sprite_bank *)(SPRITE_BANK_BASE + 0xc);
+                const struct sprite_bank *bank = gSpriteBankSet->Bank(1);
                 Player *pl = gPlayer;
 
                 pl->bank = bank;
@@ -139,8 +138,7 @@ s32 LevelProgress::PlayRoom()
                 pl->ctrlMode = hover;
             }
             {
-                const struct sprite_bank *bank =
-                    (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x18);
+                const struct sprite_bank *bank = gSpriteBankSet->Bank(2);
                 Player *pl = gPlayer;
 
                 pl->bank = bank;
