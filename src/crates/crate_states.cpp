@@ -206,19 +206,19 @@ void Crate::UpdateSlot()
                 }
                 goto out;
             case 1:
-                if (paramA & 2) {
+                if (paramA & CRATE_SLOT_FACE_LIFE) {
                     StartAnim(9);
                     goto out;
                 }
                 break;
             case 2:
-                if (paramA & 1) {
+                if (paramA & CRATE_SLOT_FACE_MYSTERY) {
                     StartAnim(0xb);
                     goto out;
                 }
                 break;
             case 3:
-                if (paramA & 4) {
+                if (paramA & CRATE_SLOT_FACE_TNT) {
                     StartAnim(0xd);
                     done = 1;
                 }

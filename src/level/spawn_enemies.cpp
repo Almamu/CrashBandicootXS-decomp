@@ -75,8 +75,8 @@ static inline void SetShotTiming(EnemyCtrl *hdr, s32 period, s32 phase)
  * X mirrored; bit 2: Y mirrored). */
 static inline void SetMirror(Sprite *part, const struct entity_params *rec)
 {
-    part->mirrorFlags.mirrorX = (rec->flags >> 1 ^ 1) & 1;
-    part->mirrorFlags.mirrorY = rec->flags >> 2 & 1;
+    part->mirrorFlags.mirrorX = (rec->flags >> ENTITY_PARAMS_BIT_FLIP_X ^ 1) & 1;
+    part->mirrorFlags.mirrorY = TEST_BIT_SHR(rec->flags, ENTITY_PARAMS_BIT_FLIP_Y);
 }
 
 static inline void SetMirrorX(Sprite::MirrorFlags *bits, u8 value)

@@ -22,7 +22,7 @@
  * the platform spawn record (CreatePlatform). */
 
 struct spawn_rec {
-    u8 flags;  // 0x00
+    u8 flags;  // 0x00 - ENTITY_PARAMS_FLAG_* (bit 0: the bonus platform's exit facing)
     u32 type;  // 0x04
     s32 distX; // 0x08
     s32 distY; // 0x0C

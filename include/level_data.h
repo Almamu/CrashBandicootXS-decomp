@@ -5,6 +5,7 @@
 #include "constants/levels.h"
 #include "constants/rooms.h"
 #include "constants/categories.h"
+#include "constants/entity_params.h"
 
 /*
  * The rooms' level data (docs/levels.md), as src/data/level_rooms_*.c
@@ -73,7 +74,8 @@ struct level_entity_list {
  * SetEnemyAttackCycle: `idleTime`/`attackTime`/`cycleOffset`;
  * SetEnemyWave: `period`/`phase`/`amplitude`). */
 struct entity_params {
-    u8 flags; // bit 1: clear = X-mirrored (the X mirror bit), bit 2: Y-mirrored
+    u8 flags; // ENTITY_PARAMS_FLAG_* (constants/entity_params.h): bit 1 flips the
+              // facing (an enemy: clear = X-mirrored), bit 2: Y-mirrored
     union {
         // lizard, patrolling jungle enemy, polar bear, patrolling sewer enemy, rat
         struct {

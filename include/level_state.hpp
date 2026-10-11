@@ -73,11 +73,19 @@ public:
     // 0x18 (0x0DC) - the current room (SelectRoom); kind 3 is a stage
     // played in an actor category
     const struct level_room *cat;
-    // 0x1C (0x0E0) - checkpoint flags (SetCheckpoint, SetCheckpointAtPlayer);
-    // bit 0: PlayRoom starts the player X-mirrored. Not the level state's
-    // own `flags` (+0x002, the gems and powers)
+    // 0x1C (0x0E0) - checkpoint flags (SetCheckpoint, SetCheckpointAtPlayer):
+    // CHECKPOINT_FLAG_MIRROR_X or 0. Not the level state's own `flags`
+    // (+0x002, the gems and powers)
     u8 checkpointFlags;
 };
+
+/* LevelProgress::checkpointFlags' one value: PlayRoom starts the player
+ * X-mirrored, facing left (`mirrorX = checkpointFlags`). It comes from the
+ * checkpoint crate's placement bit 6 (CRATE_PLACEMENT_FLAG_CHECKPOINT_MIRROR_X,
+ * through its paramA) or the bonus platform's exit facing (SetCheckpoint
+ * with GetExitMirror); UpdateGameFrame clears it at the level's start. The
+ * code only stores and copies the byte, so the name has no sites. */
+#define CHECKPOINT_FLAG_MIRROR_X 1
 
 COMPILE_TIME_ASSERT(level_state_hpp, offsetof(LevelProgress, cat) == 0x18);
 COMPILE_TIME_ASSERT(level_state_hpp, offsetof(LevelProgress, checkpointFlags) == 0x1C);
