@@ -79,22 +79,22 @@ s32 SaveMenu::LinkExchange()
  * Once a NAKED transcription; it matches as plain C under both
  * compilers once the centre X gets its own local (`x = (0xf0 - w) >> 1`),
  * which is what puts it in r3 and the Y constant in ip. */
-void SaveMenu::DrawMessageLines(s32 label1, s32 label2)
+void SaveMenu::DrawMessageLines(const u8 *label1, const u8 *label2)
 {
     s32 w, x;
 
     gSmallFont->SetPalette(0);
     if (label1) {
-        w = gSmallFont->MeasureText((u8 *)label1);
+        w = gSmallFont->MeasureText(label1);
         x = (0xf0 - w) >> 1;
         gSmallFont->SetPos(x, 0x87);
-        gSmallFont->DrawText((u8 *)label1);
+        gSmallFont->DrawText(label1);
     }
     if (label2) {
-        w = gSmallFont->MeasureText((u8 *)label2);
+        w = gSmallFont->MeasureText(label2);
         x = (0xf0 - w) >> 1;
         gSmallFont->SetPos(x, 0x91);
-        gSmallFont->DrawText((u8 *)label2);
+        gSmallFont->DrawText(label2);
     }
 }
 
@@ -111,9 +111,9 @@ void SaveMenu::DrawCancel(u8 highlight)
         gSmallFont->SetPalette(IsBlinkOn() ? 1 : 2);
     else
         gSmallFont->SetPalette(0);
-    w = gSmallFont->MeasureText((u8 *)GetUiText(0x23));
+    w = gSmallFont->MeasureText(GetUiText(0x23));
     gSmallFont->SetPos((0xf0 - w) >> 1, 0x87);
-    gSmallFont->DrawText((u8 *)GetUiText(0x23));
+    gSmallFont->DrawText(GetUiText(0x23));
 }
 
 /* Draws `value`'s label centered at Y=0x87, then draws a
@@ -133,30 +133,30 @@ void SaveMenu::DrawYesNoPrompt(s32 value)
     s32 w;
 
     gSmallFont->SetPalette(0);
-    w = gSmallFont->MeasureText((u8 *)GetUiText(value));
+    w = gSmallFont->MeasureText(GetUiText(value));
     gSmallFont->SetPos(0xa0 - w, 0x87);
-    gSmallFont->DrawText((u8 *)GetUiText(value));
+    gSmallFont->DrawText(GetUiText(value));
     /* spelled out: IsBlinkOn() here swaps r8 and sb in the rest of the
      * function (#843) */
     gSmallFont->SetPalette(((flags >> SAVE_MENU_BLINK_BIT) & 1) ? 1 : 2);
     if (!cursor) {
         gSmallFont->SetPos(0xa8, 0x87);
-        gSmallFont->DrawText((u8 *)gMenuCursorText);
+        gSmallFont->DrawText(gMenuCursorText);
         gSmallFont->SetPos(0xb0, 0x87);
-        gSmallFont->DrawText((u8 *)GetUiText(0x29));
+        gSmallFont->DrawText(GetUiText(0x29));
     } else {
         gSmallFont->SetPos(0xa8, 0x91);
-        gSmallFont->DrawText((u8 *)gMenuCursorText);
+        gSmallFont->DrawText(gMenuCursorText);
         gSmallFont->SetPos(0xb0, 0x91);
-        gSmallFont->DrawText((u8 *)GetUiText(0x2a));
+        gSmallFont->DrawText(GetUiText(0x2a));
     }
     gSmallFont->SetPalette(0);
     if (!cursor) {
         gSmallFont->SetPos(0xb0, 0x91);
-        gSmallFont->DrawText((u8 *)GetUiText(0x2a));
+        gSmallFont->DrawText(GetUiText(0x2a));
     } else {
         gSmallFont->SetPos(0xb0, 0x87);
-        gSmallFont->DrawText((u8 *)GetUiText(0x29));
+        gSmallFont->DrawText(GetUiText(0x29));
     }
 }
 
@@ -219,7 +219,7 @@ void SaveMenu::DrawSlotStats(s32 label1, s32 label2, s32 rowIdx, struct byte_arg
     itoa(stats->gems, buf, 10);
     SET_HIGHLIGHT(gSmallFont, flag);
     gSmallFont->SetPos(x, y);
-    gSmallFont->DrawText((u8 *)buf);
+    gSmallFont->DrawText(buf);
 
     x = label1 + 7;
     y = label2 + 0x1e;
@@ -229,7 +229,7 @@ void SaveMenu::DrawSlotStats(s32 label1, s32 label2, s32 rowIdx, struct byte_arg
     itoa(stats->crystals, buf, 10);
     SET_HIGHLIGHT(gSmallFont, flag);
     gSmallFont->SetPos(x, y);
-    gSmallFont->DrawText((u8 *)buf);
+    gSmallFont->DrawText(buf);
 
     x = label1 + 0x2b;
     y = label2 + 0x1e;
@@ -239,7 +239,7 @@ void SaveMenu::DrawSlotStats(s32 label1, s32 label2, s32 rowIdx, struct byte_arg
     itoa(stats->relics, buf, 10);
     SET_HIGHLIGHT(gSmallFont, flag);
     gSmallFont->SetPos(x, y);
-    gSmallFont->DrawText((u8 *)buf);
+    gSmallFont->DrawText(buf);
 
     itoa(stats->percent, buf, 10);
     i = 0;
@@ -251,10 +251,10 @@ void SaveMenu::DrawSlotStats(s32 label1, s32 label2, s32 rowIdx, struct byte_arg
             break;
         }
     }
-    w = gLargeFont->MeasureText((u8 *)buf);
+    w = gLargeFont->MeasureText(buf);
     SET_HIGHLIGHT(gLargeFont, flag);
     gLargeFont->SetPos(label1 - w + 0x1f, y);
-    gLargeFont->DrawText((u8 *)buf);
+    gLargeFont->DrawText(buf);
 }
 
 /* An inlined copy of DrawEmptySlotLabel (below in this file): the
@@ -269,9 +269,9 @@ static inline void draw_row_mark(SaveMenu *self, s32 arg1, s32 arg2, u8 arg3)
         gSmallFont->SetPalette(self->IsBlinkOn() ? 1 : 2);
     else
         gSmallFont->SetPalette(0);
-    w = gSmallFont->MeasureText((u8 *)GetUiText(0x25));
+    w = gSmallFont->MeasureText(GetUiText(0x25));
     gSmallFont->SetPos(x - w / 2, y);
-    gSmallFont->DrawText((u8 *)GetUiText(0x25));
+    gSmallFont->DrawText(GetUiText(0x25));
 }
 
 #define DRAW_ROW(i, labelX, labelY)                                             \
@@ -527,9 +527,9 @@ void SaveMenu::DrawEmptySlotLabel(s32 arg1, s32 arg2, u8 arg3)
         gSmallFont->SetPalette(IsBlinkOn() ? 1 : 2);
     else
         gSmallFont->SetPalette(0);
-    w = gSmallFont->MeasureText((u8 *)GetUiText(0x25));
+    w = gSmallFont->MeasureText(GetUiText(0x25));
     gSmallFont->SetPos(x - w / 2, y);
-    gSmallFont->DrawText((u8 *)GetUiText(0x25));
+    gSmallFont->DrawText(GetUiText(0x25));
 }
 
 /* Draws a centred title (a GetUiText label) at Y=6 in gLargeFont; `this`
@@ -540,9 +540,9 @@ void SaveMenu::DrawTitle(s32 labelIndex)
     s32 w;
 
     gLargeFont->SetPalette(0);
-    w = gLargeFont->MeasureText((u8 *)GetUiText(labelIndex));
+    w = gLargeFont->MeasureText(GetUiText(labelIndex));
     gLargeFont->SetPos((0xf0 - w) >> 1, 6);
-    gLargeFont->DrawText((u8 *)GetUiText(labelIndex));
+    gLargeFont->DrawText(GetUiText(labelIndex));
 }
 
 /* The highlight's blink: palette 1 or 2, by bit 2 of the frame counter

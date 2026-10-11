@@ -232,10 +232,10 @@ void LevelSelect::Update()
     gObjVramCursor->Rewind();
     panel->Draw();
     if (bg2->IsShown() && items[index]->IsSelected()) {
-        u32 x = (u32)(0xF0 - gLargeFont->MeasureText((u8 *)nameText)) >> 1;
+        u32 x = (u32)(0xF0 - gLargeFont->MeasureText(nameText)) >> 1;
 
         gLargeFont->SetPos(x, -panelSlideX + 2);
-        gLargeFont->DrawText((u8 *)nameText);
+        gLargeFont->DrawText(nameText);
         if (index <= 4)
             DrawRecord();
     }
@@ -244,12 +244,12 @@ void LevelSelect::Update()
         items[i]->Animate(bg1->GetScroll());
     if (bg1->IsSettled()) {
         if (!bg2->IsExiting()) {
-            s32 text = GetUiText(0x2F);
-            u32 x = (u32)(0xF0 - gSmallFont->MeasureText((u8 *)text)) >> 1;
+            const u8 *text = GetUiText(0x2F);
+            u32 x = (u32)(0xF0 - gSmallFont->MeasureText(text)) >> 1;
 
             gSmallFont->SetPos(x, 0x96);
             gSmallFont->SetPalette(0xF);
-            gSmallFont->DrawText((u8 *)text);
+            gSmallFont->DrawText(text);
             UpdatePageArrows();
         }
         bg2->Draw();
@@ -316,15 +316,15 @@ void LevelSelect::DrawTime(u32 time)
     info = &gLevelTable[levelId];
     if (time != 0 && time <= info->times[2]) {
         gLargeFont->SetPos(panelSlideX + gLevelSelectTimePos.x + 10, gLevelSelectTimePos.y - 8);
-        gLargeFont->DrawText((u8 *)timeText);
+        gLargeFont->DrawText(timeText);
     } else {
         sprites[7]->DrawWithOffset(panelSlideX, 0);
         gLargeFont->SetPalette(sprites[7]->palette);
         gLargeFont->SetPos(panelSlideX + gLevelSelectTimePos.x + 10, gLevelSelectTimePos.y - 8);
-        gLargeFont->DrawText((u8 *)recordText);
+        gLargeFont->DrawText(recordText);
         gLargeFont->ResetPalette();
         gLargeFont->SetPos(panelSlideX + gLevelSelectTimePos.x + 10, gLevelSelectTimePos.y + 8);
-        gLargeFont->DrawText((u8 *)timeText);
+        gLargeFont->DrawText(timeText);
     }
 }
 

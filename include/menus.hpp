@@ -196,8 +196,8 @@ public:
     s32 soundVolume;              // 0x64
     s32 flashTimer;               // 0x68
     u8 trialEarned;               // 0x6C
-    void *levelName;              // 0x70
-    void *levelLabel;             // 0x74
+    const u8 *levelName;          // 0x70
+    const u8 *levelLabel;         // 0x74
     u8 levelNumber[4];            // 0x78
     u8 timeText[0xC];             // 0x7C
     UiSprite *crystalIcon;        // 0x88
@@ -249,21 +249,21 @@ class PowerDialog
 {
 public:
     BgSetup bg;            // 0x00 - BG0
-    s32 titleText;         // 0x10 - GetUiText's result
-    s32 descText;          // 0x14
+    const u8 *titleText;   // 0x10 - GetUiText's result
+    const u8 *descText;    // 0x14
     UiSprite *icon;        // 0x18 - the power's icon
     u32 frame;             // 0x1C - frame counter; BG0HOFS = frame >> 3
     union blend blend;     // 0x20 - REG_BLDCNT
     struct bldy bldy;      // 0x24 - REG_BLDY, faded 16 -> 0 -> 16 by Loop
     union dispcnt dispcnt; // 0x28 - REG_DISPCNT (gfx.h)
 
-    PowerDialog(s32 titleText, s32 descText, s32 type); // InitPowerDialog
-    ~PowerDialog();                                     // DestroyPowerDialog
-    static void Show(s32 title, s32 desc, s32 type);    // ShowPowerDialog
-    void Draw();                                        // DrawPowerDialog
-    void Animate();                                     // AnimatePowerDialog
-    void CommitFrame();                                 // CommitPowerDialogFrame
-    void Loop();                                        // PowerDialogLoop
+    PowerDialog(const u8 *titleText, const u8 *descText, s32 type); // InitPowerDialog
+    ~PowerDialog();                                                 // DestroyPowerDialog
+    static void Show(s32 title, s32 desc, s32 type);                // ShowPowerDialog
+    void Draw();                                                    // DrawPowerDialog
+    void Animate();                                                 // AnimatePowerDialog
+    void CommitFrame();                                             // CommitPowerDialogFrame
+    void Loop();                                                    // PowerDialogLoop
 };
 
 COMPILE_TIME_ASSERT(menus_hpp, sizeof(PowerDialog) == 0x2C);

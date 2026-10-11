@@ -26,7 +26,7 @@ extern "C" {
 /* Width of the widest line of `text`: sums each line's advance widths
  * (space = `spaceWidth`, other characters = their glyph's width),
  * resetting at each newline and keeping the running maximum. */
-s32 Font::MeasureText(u8 *text)
+s32 Font::MeasureText(const u8 *text)
 {
     u32 maxWidth = 0;
     u32 cur = 0;

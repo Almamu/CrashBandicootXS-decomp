@@ -6,7 +6,7 @@
 /* Draws a NUL-terminated string: PutChar's per-character logic in a loop,
  * newline and space handled in place, every other character drawn
  * (DrawGlyph, virtual). */
-void Font::DrawText(u8 *str)
+void Font::DrawText(const u8 *str)
 {
     u8 c;
 
@@ -30,7 +30,7 @@ void Font::DrawText(u8 *str)
  * (MeasureText's fixed-count sibling): newline contributes nothing,
  * space contributes `spaceWidth`, everything else contributes
  * `glyphRecords[charLookup[c]].width`. */
-s32 Font::MeasureChars(u8 *str, s32 count)
+s32 Font::MeasureChars(const u8 *str, s32 count)
 {
     s32 total = 0;
     s32 i;

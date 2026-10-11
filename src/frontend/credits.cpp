@@ -219,8 +219,8 @@ void Credits::UpdateText()
     }
     tail = lineStart;
 
-    smallHeight = gSmallFont->TextHeight((u8 *)gCreditsEmptyText);
-    largeHeight = gLargeFont->TextHeight((u8 *)gCreditsEmptyText);
+    smallHeight = gSmallFont->TextHeight(gCreditsEmptyText);
+    largeHeight = gLargeFont->TextHeight(gCreditsEmptyText);
     maxHeight = smallHeight;
     penX = 0;
     if (*stream == 0) {
@@ -256,10 +256,10 @@ void Credits::UpdateText()
                     advance = logos[n->index].width;
                 } else {
                     if (largeFont == 0) {
-                        advance = gSmallFont->MeasureChars((u8 *)p, 1);
+                        advance = gSmallFont->MeasureChars(p, 1);
                         height = smallHeight;
                     } else {
-                        advance = gLargeFont->MeasureChars((u8 *)p, 1);
+                        advance = gLargeFont->MeasureChars(p, 1);
                         height = largeHeight;
                     }
                     if (*stream != ' ') {

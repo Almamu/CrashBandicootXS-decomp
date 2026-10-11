@@ -5,7 +5,7 @@
 
 /* The height of a block of text: `lineHeight` for the first line plus
  * once more per newline in `str`. */
-s32 Font::TextHeight(u8 *str)
+s32 Font::TextHeight(const u8 *str)
 {
     s32 total = lineHeight;
     u8 c;

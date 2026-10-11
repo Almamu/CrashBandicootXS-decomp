@@ -332,21 +332,21 @@ public:
     s32 bgY;              // 0x218 - REG_BG2Y
     s32 bgScale;          // 0x21C - REG_BG2PA/PD
 
-    TitleScreen();                         // InitTitleScreen
-    ~TitleScreen();                        // DestroyTitleScreen
-    void LoadBg();                         // LoadTitleScreenBg
-    void LoadObjTiles();                   // LoadTitleScreenObjTiles
-    void UpdateLogoPieces();               // UpdateTitleLogoPieces
-    void DrawLogoPieces();                 // DrawTitleLogoPieces
-    u32 CheatInput(u32 pressed);           // TitleScreenCheatInput
-    void HashInput(u32 val);               // inline: CheatInput's, HashCheatInput's body
-    void SeedLogoPieces();                 // inline: Run's seed loop
-    s32 Run();                             // RunTitleScreen
-    void CommitFrame();                    // CommitTitleScreenFrame
-    void DrawMenuItem(s32 text, s32 item); // DrawTitleMenuItem
-    void Draw();                           // DrawTitleScreen
-    void HashCheatInput(u32 val);          // HashTitleCheatInput (unused)
-    void ResetLogoPieces();                // ResetTitleLogoPieces (unused)
+    TitleScreen();                               // InitTitleScreen
+    ~TitleScreen();                              // DestroyTitleScreen
+    void LoadBg();                               // LoadTitleScreenBg
+    void LoadObjTiles();                         // LoadTitleScreenObjTiles
+    void UpdateLogoPieces();                     // UpdateTitleLogoPieces
+    void DrawLogoPieces();                       // DrawTitleLogoPieces
+    u32 CheatInput(u32 pressed);                 // TitleScreenCheatInput
+    void HashInput(u32 val);                     // inline: CheatInput's, HashCheatInput's body
+    void SeedLogoPieces();                       // inline: Run's seed loop
+    s32 Run();                                   // RunTitleScreen
+    void CommitFrame();                          // CommitTitleScreenFrame
+    void DrawMenuItem(const u8 *text, s32 item); // DrawTitleMenuItem
+    void Draw();                                 // DrawTitleScreen
+    void HashCheatInput(u32 val);                // HashTitleCheatInput (unused)
+    void ResetLogoPieces();                      // ResetTitleLogoPieces (unused)
 };
 
 COMPILE_TIME_ASSERT(frontend_hpp, sizeof(TitleScreen) == 0x220);

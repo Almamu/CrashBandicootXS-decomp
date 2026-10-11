@@ -66,9 +66,9 @@ extern void SetFrameLimit(u32 interval);
 /* src/system/main.cpp */
 extern s32 AgbMain(void);
 
-/* src/system/main_loop.cpp. GetUiText returns the string's address as an
- * s32 (its callers store it in s32 fields). */
+/* src/system/main_loop.cpp. GetUiText returns UI string `index` in the
+ * current language (docs/casts/text.md). */
 extern s32 MainLoop(void);
-extern s32 GetUiText(s32 index);
+extern const u8 *GetUiText(s32 index);
 
 #endif // GUARD_SYSTEM_H

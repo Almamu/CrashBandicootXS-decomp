@@ -341,7 +341,7 @@ public:
     s32 index;                    // 0x08 - cursor, 0-5
     s32 world;                    // 0x0C - page
     s32 levelId;                  // 0x10 - gLevelTable index
-    s32 nameText;                 // 0x14 - the level name's text
+    const u8 *nameText;           // 0x14 - the level name's text
     const struct vec2 *positions; // 0x18 - cursor position per index
     LevelSelectPageBg *bg1;       // 0x1C - BG1, the page strip
     ZoomBg *bg2;                  // 0x20 - BG2, the level picture

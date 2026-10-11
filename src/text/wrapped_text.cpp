@@ -50,12 +50,12 @@ extern "C" {
  * 91 (0.46) against `self`'s 0.51, and needed an extra `MATCH_USE(len)`
  * reference and an r1 hold at the wrap's `lineCount++` for the reload
  * rotation that followed. */
-s32 DrawWrappedText(u8 *text, Font *self, struct aabb *box, s32 limit, s32 mode)
+s32 DrawWrappedText(const u8 *text, Font *self, struct aabb *box, s32 limit, s32 mode)
 {
     s32 widthAccum;
     s32 lineCount;
     s32 posAccum;
-    u8 *token;
+    const u8 *token;
     s32 len;
     s32 charWidth;
     s32 combined;
