@@ -97,6 +97,14 @@ masks and raw state/mode/type/status values, grouped by field (every use
 of `Entity::f.flags`, each bit with its sites), most-used field first:
   tools/magic_numbers.py --bits [--json] [--report [OUT]] [--path P ...]
       [--field REGEX] [--samples N]
+
+--casts is another (#855, tools/magic_casts.py): the casts, grouped by
+the thing being cast (a field, a local, a parameter, a global, a
+function's result), with the cast types, how many of its reads are cast
+and each cast's kind (scalar, ptrint, pointer, derived, byteoff, same),
+ranked by cast uses x consistency:
+  tools/magic_numbers.py --casts [--json] [--report [OUT]] [--path P ...]
+      [--field REGEX] [--kind K ...] [--samples N]
 """
 
 import argparse
@@ -1650,8 +1658,16 @@ def main():
     g.add_argument("-j", "--jobs", type=int, default=os.cpu_count() or 4)
     g = ap.add_argument_group("--bits (#843, see tools/magic_bits.py)")
     g.add_argument("--bits", action="store_true", help="flag bits, masks and raw state values, per field")
-    g.add_argument("--field", metavar="RE", help="--bits: only fields matching RE")
+    g.add_argument("--field", metavar="RE", help="--bits, --casts: only fields (things) matching RE")
+    g = ap.add_argument_group("--casts (#855, see tools/magic_casts.py)")
+    g.add_argument("--casts", action="store_true", help="the casts, per thing cast, ranked by uses x consistency")
+    g.add_argument("--kind", action="append", metavar="K", help="--casts: only casts of kind K (repeatable)")
     args = ap.parse_args()
+
+    if args.casts:
+        import magic_casts
+
+        return magic_casts.run(args)
 
     if args.bits:
         import magic_bits
