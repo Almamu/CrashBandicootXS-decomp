@@ -127,7 +127,7 @@ void CortexBossCtrl::SpawnCannon(MovingSprite *part)
     MovingSprite *c = MovingSprite::Create(0xFFFF, 0, 0, 0);
     Ctrl *ctrl;
 
-    c->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x27C);
+    c->bank = gSpriteBankSet->Bank(53);
     c->StartAnim(3);
     c->animating = 0;
     ctrl = new CortexCannonCtrl;
@@ -149,7 +149,7 @@ void CortexBossCtrl::SpawnTarget(MovingSprite *part)
     Ctrl *ctrl;
     s32 x, y;
 
-    c->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x27C);
+    c->bank = gSpriteBankSet->Bank(53);
     c->StartAnim(0xF);
     c->palette = c->GetAnimPaletteSlot();
     ctrl = new CortexTargetCtrl(this);
@@ -174,7 +174,7 @@ void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
     MovingSprite *c = MovingSprite::Create(a0, a1, a2, a3);
     Ctrl *ctrl;
 
-    c->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x180);
+    c->bank = gSpriteBankSet->Bank(32);
     switch (kind) {
     case CORTEX_BOSS_GEM_KIND_RED:
         c->StartAnim(3);
@@ -388,7 +388,7 @@ void CortexTargetCtrl::FireShot(MovingSprite *part, s32 kind)
     MovingSprite *c = MovingSprite::Create(0xFFFF, 0, 0, 0);
     CortexShotCtrl *ctrl;
 
-    c->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x27C);
+    c->bank = gSpriteBankSet->Bank(53);
     switch (kind) {
     case CORTEX_SHOT_KIND_SLOW:
         c->StartAnim(0xE);
@@ -491,7 +491,7 @@ void CortexBossGemCtrl::Update(MovingSprite *part)
     switch (state) {
     case CORTEX_BOSS_GEM_STATE_WAIT:
         if (part->kind == EVENT_HIT) {
-            part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x27C);
+            part->bank = gSpriteBankSet->Bank(53);
             switch (kind) {
             case CORTEX_BOSS_GEM_KIND_RED:
                 SetTargetAnim(part, 0xC);

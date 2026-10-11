@@ -50,12 +50,6 @@ extern "C" {
 #include "globals.h"
 }
 
-/* The animation set at `offset` in the sprite bank data. */
-static inline const struct sprite_bank *AnimTable(s32 offset)
-{
-    return (const struct sprite_bank *)(SPRITE_BANK_BASE + offset);
-}
-
 /* Sets the sprite's bank. `bank` is in Sprite's one-member union (sprite_obj.hpp),
  * and gcc gives every access to a union member alias set 0, so a
  * store to it would make gcc reload everything after it (the ROM's class

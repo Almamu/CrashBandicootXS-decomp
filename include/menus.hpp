@@ -150,17 +150,16 @@ extern "C" void ShowTornadoSpinDialog(void);
 extern "C" void ShowDoubleJumpDialog(void);
 extern "C" void ShowSuperBodySlamDialog(void);
 
-/* Sets an icon's sprite bank to the one at `offset` in the sprite bank
- * data. `bank` is in Sprite's one-member union (sprite_obj.hpp), and gcc
+/* Sets an icon's sprite bank to bank `index` of the sprite bank table. `bank` is in Sprite's one-member union (sprite_obj.hpp), and gcc
  * gives every access to a union member alias set 0, so a plain store would make
  * gcc reload everything after it. Through a pointer to the member, the
  * store has the pointer's own alias set (as level_select.hpp's
  * SetBankNow). */
-static inline void SetIconBank(Sprite *p, s32 offset)
+static inline void SetIconBank(Sprite *p, s32 index)
 {
     const struct sprite_bank **field = &p->bank;
 
-    *field = (const struct sprite_bank *)(SPRITE_BANK_BASE + offset);
+    *field = gSpriteBankSet->Bank(index);
 }
 
 /* The pause menu (RunPauseMenu, called from the rooms and the 3D actors'

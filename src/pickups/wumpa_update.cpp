@@ -196,7 +196,7 @@ void Wumpa::Update()
 /* The wumpa spawner (SpawnWumpa, spawn_pickups.cpp; DropWumpa): a wumpa at
  * pixel (x, y), at home there, in the foreground list if `special` is
  * 0xFFFF and the touchable list otherwise, with animation 1 of the sprite
- * bank at SPRITE_BANK_BASE + 0x1A4.
+ * bank 35.
  *
  * `mode` is a 0 set before the first call: CSE loses it at the list
  * `if`/`else` join, so the ROM's dead `cmp r7, #0xff` (SetHop's payout
@@ -219,7 +219,7 @@ Wumpa *Wumpa::Create(u16 id, u16 x, u16 y, u16 special)
         ForegroundList()->Add(self);
     else
         TouchableList()->Add(self);
-    self->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0xd2 * 2);
+    self->bank = gSpriteBankSet->Bank(35);
     {
         u8 one = 1;
         u8 *tag = &self->tag;

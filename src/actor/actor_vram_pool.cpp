@@ -42,7 +42,7 @@ void SetupActorVramPool(void)
     InitSpriteFrameOamQueue();
     InitSpriteFrameCache();
 
-    entityBank = (const struct sprite_bank *)SPRITE_BANK_BASE + 35;
+    entityBank = gSpriteBankSet->Bank(35);
     otherBank = entityBank + 12;
     cache = gPaletteCache;
     cache->FreeUnlockedSlots();

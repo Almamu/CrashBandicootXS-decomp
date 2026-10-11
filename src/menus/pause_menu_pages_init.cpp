@@ -26,7 +26,7 @@ static inline void SetIconPos(Sprite *s, const struct vec2 *p)
 void PauseMenu::InitCrystalsPage()
 {
     crystalIcon = new UiSprite;
-    SetIconBank(crystalIcon, 0xde << 1);
+    SetIconBank(crystalIcon, 37);
     SetIconPos(crystalIcon, &gPauseCrystalIconPos);
     crystalIcon->palette = crystalIcon->GetAnimPaletteSlot();
     FormatDecimal(progress->CountCrystals(), crystalCount);
@@ -44,7 +44,7 @@ void PauseMenu::InitPowersPage()
         UiSprite *icon;
 
         powerIcons[i] = icon = new UiSprite;
-        SetIconBank(icon, 0xe4 << 1);
+        SetIconBank(icon, 38);
         icon->StartAnim(gPausePowerIconFrames[i]);
         SetIconPos(powerIcons[i], &gPausePowerIconPos[i]);
         powerIcons[i]->palette = powerIcons[i]->GetAnimPaletteSlot();
@@ -62,7 +62,7 @@ void PauseMenu::InitGemsPage()
         UiSprite *icon;
 
         gemIcons[i] = icon = new UiSprite;
-        SetIconBank(icon, 0xc0 << 1);
+        SetIconBank(icon, 32);
         icon->StartAnim(gPauseGemIconFrames[i]);
         SetIconPos(gemIcons[i], &gPauseGemIconPos[i]);
         gemIcons[i]->palette = gemIcons[i]->GetAnimPaletteSlot();
@@ -86,7 +86,7 @@ void PauseMenu::InitRelicsPage()
         UiSprite *icon;
 
         relicIcons[i] = icon = new UiSprite;
-        SetIconBank(icon, 0xc6 << 1);
+        SetIconBank(icon, 33);
         icon->StartAnim(gPauseRelicIconFrames[i]);
         SetIconPos(relicIcons[i], &gPauseRelicIconPos[i]);
         relicIcons[i]->palette = relicIcons[i]->GetAnimPaletteSlot();
@@ -128,7 +128,7 @@ void PauseMenu::InitTimeTrialPage()
     trialEarned = earned;
 
     trialIcon = new UiSprite;
-    SetIconBank(trialIcon, 0xc6 << 1);
+    SetIconBank(trialIcon, 33);
     SetIconPos(trialIcon, &gPauseTimeTrialIconPos);
 
     if (time != 0) {

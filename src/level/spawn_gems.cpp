@@ -11,7 +11,7 @@ extern "C" {
  * asm/code_3_2_17_1e990.s: six spawners, five of them entity spawners of
  * gEntitySpawnFuncs (types 0x07, 0x08, 0x0A-0x0C) and SpawnCrateGem, which
  * level_state.cpp calls directly. Each one
- * spawns a sprite (Sprite::Create, CreateSpriteObj) with a fixed bank offset, tag and type byte
+ * spawns a sprite (Sprite::Create, CreateSpriteObj) with a fixed bank, tag and type byte
  * (+0x0A) and registers it with the gTouchableList manager, unless
  * the level's "already collected" bit for it is set:
  *
@@ -43,7 +43,7 @@ void SpawnCrystal(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 type = EVENT_CRYSTAL;
         Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
-        part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x1BC);
+        part->bank = gSpriteBankSet->Bank(37);
         part->tag = bit;
         part->ResetFrameTimer();
         part->ResetFrameIndex();
@@ -63,7 +63,7 @@ void SpawnCrateGem(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 type = EVENT_CRATE_GEM;
         Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
-        part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x180);
+        part->bank = gSpriteBankSet->Bank(32);
         part->tag = tag;
         part->ResetFrameTimer();
         part->ResetFrameIndex();
@@ -87,7 +87,7 @@ void SpawnGemPathGem(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 type = EVENT_GEM_PATH_GEM;
         Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
-        part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x180);
+        part->bank = gSpriteBankSet->Bank(32);
         part->tag = tag;
         part->ResetFrameTimer();
         part->ResetFrameIndex();
@@ -106,7 +106,7 @@ void SpawnRedGem(u32 a0, u16 a1, u16 a2, u16 a3)
             u8 type = EVENT_RED_GEM;
             Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
-            part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x180);
+            part->bank = gSpriteBankSet->Bank(32);
             part->tag = tag;
             part->ResetFrameTimer();
             part->ResetFrameIndex();
@@ -128,7 +128,7 @@ void SpawnGreenGem(u32 a0, u16 a1, u16 a2, u16 a3)
             u8 type = EVENT_GREEN_GEM;
             Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
-            part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x180);
+            part->bank = gSpriteBankSet->Bank(32);
             part->tag = tag;
             part->ResetFrameTimer();
             part->ResetFrameIndex();
@@ -151,7 +151,7 @@ void SpawnYellowGem(u32 a0, u16 a1, u16 a2, u16 a3)
             u8 type = EVENT_YELLOW_GEM;
             Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
-            part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x180);
+            part->bank = gSpriteBankSet->Bank(32);
             part->tag = bit;
             part->ResetFrameTimer();
             part->ResetFrameIndex();

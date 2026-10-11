@@ -371,7 +371,7 @@ void TinyCtrl::SpawnFallingLeaves(MovingSprite *part, s32 n)
     Ctrl *ctrl;
     s32 x;
 
-    p->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x294);
+    p->bank = gSpriteBankSet->Bank(55);
     p->StartAnim(5);
     ctrl = new OneShotAnimCtrl;
     p->palette = p->GetAnimPaletteSlot();

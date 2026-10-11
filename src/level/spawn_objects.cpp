@@ -14,14 +14,14 @@ extern "C" {
  * bosses' and the crates' (ROM 0x08021748-0x08021A4C; #664,
  * include/spawners.hpp). Built with old_agbcp. */
 
-/* Builds a sprite on sprite bank +0x21c, resets
+/* Builds a sprite on sprite bank 45, resets
  * its OAM state and frame nibble, clears flags bits 7 and 2 and
  * registers it with gDecorationList's manager. */
 void SpawnSeaweed(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     Sprite *part = Sprite::Create(arg0, arg1, arg2, arg3);
 
-    part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x21c);
+    part->bank = gSpriteBankSet->Bank(45);
     part->StartAnim(0);
     part->palette = part->GetAnimPaletteSlot();
     part->f.b.collides = 0;
@@ -36,7 +36,7 @@ void SpawnSeaweedNoAnimReset(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     Sprite *part = Sprite::Create(arg0, arg1, arg2, arg3);
 
-    part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x21c);
+    part->bank = gSpriteBankSet->Bank(45);
     part->palette = part->GetAnimPaletteSlot();
     part->f.b.collides = 0;
     part->f.b.visible = 0;
@@ -44,14 +44,14 @@ void SpawnSeaweedNoAnimReset(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     DecorationList()->Add(part);
 }
 
-/* Builds a sprite on sprite bank +0x210, resets
+/* Builds a sprite on sprite bank 44, resets
  * its OAM state and frame nibble, clears flags bits 7 and 2 and
  * registers it with gDecorationList's manager. */
 void SpawnFlame(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     Sprite *part = Sprite::Create(arg0, arg1, arg2, arg3);
 
-    part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x210);
+    part->bank = gSpriteBankSet->Bank(44);
     part->StartAnim(0);
     part->palette = part->GetAnimPaletteSlot();
     part->f.b.collides = 0;

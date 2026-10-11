@@ -100,9 +100,9 @@ LevelSelectEntry::LevelSelectEntry()
 {
     selected = 0;
     frame = new UiSprite;
-    SetBankNow(frame, AnimTable(0x24C));
+    SetBankNow(frame, gSpriteBankSet->Bank(49));
     frame->SetPriority(1);
     icon = new UiSprite;
-    SetBankNow(icon, AnimTable(0x264));
+    SetBankNow(icon, gSpriteBankSet->Bank(51));
     icon->SetPriority(1);
 }

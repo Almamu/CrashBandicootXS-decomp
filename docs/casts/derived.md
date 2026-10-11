@@ -32,6 +32,13 @@ ROM loads it into r4 directly. Every other site is the same.
   Crate::BlastNearby), `(Sprite *)e` (AddUpdateOnly).
 - `MovingSprite::mover` as each controller (Player::ResetForRoom,
   Platform::Mover): one cast per controller.
-- LinkSession's player records, `((LinkPlayer *)((u8 *)this + 8))[i + 1]`
-  in ResetState: the byte-offset view, which a `Player(i)` accessor would
-  replace.
+
+## LinkSession's player records
+
+ResetState wrote the players' ids through
+`((LinkPlayer *)((u8 *)this + 8))[i + 1]`, players[i] indexed from the
+record before it. It is now `(players - 1)[i + 1]`, the same address
+without the cast and the same code. A `Player(i)` accessor
+(`&players[i]` or the same expression) changes the register allocation,
+as plain `players[i]` does, so the index stays written out, with a
+comment in link_session_reset.cpp.

@@ -329,13 +329,13 @@ static inline s32 Opaque(s32 v)
     return v;
 }
 
-static inline void new_row_icon(UiSprite **slot, u32 tblOff, u32 frame)
+static inline void new_row_icon(UiSprite **slot, u32 bank, u32 frame)
 {
     UiSprite *icon;
 
     icon = new UiSprite;
     *slot = icon;
-    icon->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + tblOff);
+    icon->bank = gSpriteBankSet->Bank(bank);
     icon->tag = Opaque(frame);
     icon->ResetFrameTimer();
     icon->ResetFrameIndex();
@@ -359,7 +359,7 @@ static inline void new_row_icon(UiSprite **slot, u32 tblOff, u32 frame)
  * buffer and the tile cache, loads four 16-colour palettes into cache
  * slots 0-3, uploads both fonts' tiles (the same SetTileBase/IconReserve
  * sequence as PowerDialog::Show), builds the three 5-entry icon arrays
- * `rowObjA/B/C` (`new UiSprite`s; sprite bank offsets 0x180/0x18c/0x1bc,
+ * `rowObjA/B/C` (`new UiSprite`s; sprite banks 32/33/37,
  * frames 1/2/0, half size: `affine` 0x80) and places five of them.
  *
  * Was raw asm (asm/code_3_1_10_4.s) with a NON_MATCHING draft; closed
@@ -416,9 +416,9 @@ void SaveMenu::InitIcons()
     b = rowObjB;
     c = rowObjC;
     for (i = 0; i < 5; i++) {
-        new_row_icon(&a[i], 0xc0 << 1, 1);
-        new_row_icon(&b[i], 0xc6 << 1, 2);
-        new_row_icon(&c[i], 0xde << 1, 0);
+        new_row_icon(&a[i], 32, 1);
+        new_row_icon(&b[i], 33, 2);
+        new_row_icon(&c[i], 37, 0);
     }
     SET_ROW_OBJ_POS(rowObjA[0], 0x14, 0x28);
     SET_ROW_OBJ_POS(rowObjB[0], 0x14, 0x50);
