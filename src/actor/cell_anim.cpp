@@ -39,7 +39,7 @@ void UploadCellAnimFrame(void)
     } else {
         dst = gCellAnimTileBytes + (VRAM + 0x20);
     }
-    DmaSet(3, src, dst, 0x80000000 | (gCellAnimTileBytes / 2));
+    DmaCopy16(3, src, dst, gCellAnimTileBytes);
     gCellAnimUploaded = 1;
 }
 
@@ -135,7 +135,7 @@ void ResetCellAnimBg(void)
 {
     REG_DISPCNT = DISPCNT_MODE_1 | DISPCNT_OBJ_1D_MAP | DISPCNT_BG0_ON | DISPCNT_OBJ_ON;
     REG_BG0CNT = BGCNT_PRIORITY(2) | BGCNT_SCREENBASE(28) | BGCNT_TXT512x256;
-    DmaSet(3, gCellAnim, PLTT, 0x80000100);
+    DmaCopy16(3, gCellAnim, PLTT, BG_PLTT_SIZE);
     if (gCellAnimHasBanks == 0) {
         u32 *vram = (u32 *)VRAM;
         s32 i;

@@ -35,10 +35,7 @@ void OamBuffer::Append(void *entries, s32 n)
 {
     if (n == 0)
         return;
-    DMA3.src = (u32)entries;
-    DMA3.dst = (u32)&table[count];
-    DMA3.cnt = (n << 1) | ((DMA_ENABLE | DMA_32BIT) << 16);
-    (void)DMA3.cnt;
+    DmaCopy32(3, entries, &table[count], n * sizeof(table[0]));
     count += n;
 }
 
@@ -78,10 +75,7 @@ void OamBuffer::Reset()
 /* Copies the shadow table to OAM (DMA). */
 void OamBuffer::Commit()
 {
-    DMA3.src = (u32)table;
-    DMA3.dst = OAM;
-    DMA3.cnt = ((DMA_ENABLE | DMA_32BIT) << 16) | 0x100;
-    (void)DMA3.cnt;
+    DmaCopy32(3, table, OAM, sizeof(table));
 }
 
 /* Adds one entry, keeping the affine parameter (attr[3]) of the slot it

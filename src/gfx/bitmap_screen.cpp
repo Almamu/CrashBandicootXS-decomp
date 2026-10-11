@@ -60,8 +60,6 @@ void ShowBitmapScreen(void *asset, void *palette)
     u16 rawD;
     s16 scaleD;
     s32 xLow, yLow;
-    u32 val;
-    struct dma_regs *dma;
 
     REG_BG2CNT = BGCNT_PRIORITY(3) | BGCNT_CHARBASE(3) | BGCNT_256COLOR | BGCNT_SCREENBASE(8);
     REG_DISPCNT = DISPCNT_MODE_4 | DISPCNT_OBJ_1D_MAP | DISPCNT_BG_ALL_ON | DISPCNT_OBJ_ON;
@@ -86,11 +84,7 @@ void ShowBitmapScreen(void *asset, void *palette)
     REG_BG2Y_L = yLow;
     REG_BG2Y_H = (yLow & 0x0FFF0000) >> 16;
 
-    dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
-    dma->src = (u32)palette;
-    dma->dst = PLTT;
-    dma->cnt = 0x80000100;
-    val = dma->cnt;
+    DmaCopy16(3, palette, PLTT, BG_PLTT_SIZE);
 
     LoadTaggedAsset(asset, (void *)VRAM);
 }

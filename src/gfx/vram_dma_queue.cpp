@@ -33,20 +33,14 @@ void FlushVramDmaQueue(void)
         struct dma_queue_entry *entry = &gVramDmaQueue.entries[i];
 
         if (entry->unit == 0x20) {
-            DMA3.src = (u32)entry->src;
-            DMA3.dst = (u32)entry->dest;
-            DMA3.cnt = (entry->size >> 2) | ((DMA_ENABLE | DMA_32BIT) << 16);
+            DmaCopy32(3, entry->src, entry->dest, entry->size);
         } else {
-            DMA3.src = (u32)entry->src;
-            DMA3.dst = (u32)entry->dest;
-            DMA3.cnt = (entry->size >> 1) | ((DMA_ENABLE | DMA_16BIT) << 16);
+            DmaCopy16(3, entry->src, entry->dest, entry->size);
         }
-        (void)DMA3.cnt;
     }
     gVramDmaQueue.count = 0;
 
-    while (DMA3.cnt & (DMA_ENABLE << 16)) {
-    }
+    DmaWait(3);
 }
 
 /* Queues a transfer of `size` bytes in units of `unit` bits: 0 when

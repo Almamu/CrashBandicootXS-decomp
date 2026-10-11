@@ -25,10 +25,7 @@ void PaletteCache::LoadSlot(s32 slot, s32 id)
     dst = slots[0];
     src += id << 5;
     dst += slot * 16;
-    DMA3.src = (u32)src;
-    DMA3.dst = (u32)dst;
-    DMA3.cnt = (DMA_ENABLE << 16) | 16;
-    (void)DMA3.cnt;
+    DmaCopy16(3, src, dst, PALETTE_SIZE_16);
 }
 
 void PaletteCache::BindSlot(s32 slot, s32 id)
@@ -59,19 +56,13 @@ void PaletteCache::Lock(s32 id)
 
 void PaletteCache::UploadSlot(s32 slot)
 {
-    DMA3.src = (u32)slots[slot];
-    DMA3.dst = OBJ_PLTT + (slot << 5);
-    DMA3.cnt = (DMA_ENABLE << 16) | 16;
-    (void)DMA3.cnt;
+    DmaCopy16(3, slots[slot], OBJ_PLTT + (slot << 5), PALETTE_SIZE_16);
 }
 
 void PaletteCache::Upload()
 {
     if (dirty) {
-        DMA3.src = (u32)slots;
-        DMA3.dst = OBJ_PLTT;
-        DMA3.cnt = (DMA_ENABLE << 16) | 0x100;
-        (void)DMA3.cnt;
+        DmaCopy16(3, slots, OBJ_PLTT, OBJ_PLTT_SIZE);
     }
 }
 
@@ -95,10 +86,7 @@ u8 PaletteCache::GetSlot(s32 id)
             dst = slots[0];
             src += id << 5;
             dst += i * 16;
-            DMA3.src = (u32)src;
-            DMA3.dst = (u32)dst;
-            DMA3.cnt = (DMA_ENABLE << 16) | 16;
-            (void)DMA3.cnt;
+            DmaCopy16(3, src, dst, PALETTE_SIZE_16);
             return i;
         }
     }
