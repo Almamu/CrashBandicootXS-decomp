@@ -53,7 +53,7 @@ LevelSelectCursor::LevelSelectCursor()
     LoadTaggedAsset(gLevelSelectCursorZoomTiles, OBJ_VRAM0 + 0x7800);
     affine.angle = 0;
     scale = 8;
-    state = 4;
+    state = LEVEL_SELECT_CURSOR_STATE_GROW;
 }
 
 /* Per-frame update. Steps the glide; states 0-3 are the idle animation
@@ -63,49 +63,49 @@ void LevelSelectCursor::Update()
 {
     Glide();
     switch (state) {
-    case 0:
+    case LEVEL_SELECT_CURSOR_STATE_IDLE:
         part->AdvanceAnim();
         if (timer != 0) {
             timer--;
             break;
         }
         if (part->frame == 0) {
-            state = 1;
+            state = LEVEL_SELECT_CURSOR_STATE_CYCLE1;
             part->StartAnim(gLevelSelectCursorAnims[1]);
         }
         break;
-    case 1:
+    case LEVEL_SELECT_CURSOR_STATE_CYCLE1:
         part->AdvanceAnim();
         if (part->animDone) {
-            state = 2;
+            state = LEVEL_SELECT_CURSOR_STATE_CYCLE2;
             part->StartAnim(gLevelSelectCursorAnims[2]);
         }
         break;
-    case 2:
+    case LEVEL_SELECT_CURSOR_STATE_CYCLE2:
         part->AdvanceAnim();
         if (part->animDone) {
-            state = 3;
+            state = LEVEL_SELECT_CURSOR_STATE_CYCLE3;
             part->StartAnim(gLevelSelectCursorAnims[3]);
         }
         break;
-    case 3:
+    case LEVEL_SELECT_CURSOR_STATE_CYCLE3:
         part->AdvanceAnim();
         if (part->animDone) {
-            state = 0;
+            state = LEVEL_SELECT_CURSOR_STATE_IDLE;
             part->StartAnim(gLevelSelectCursorAnims[0]);
             ResetIdleTimer();
         }
         break;
-    case 4:
+    case LEVEL_SELECT_CURSOR_STATE_GROW:
         if (scale <= 0xFF) {
             scale += speed;
         } else {
             scale = 0x100;
-            state = 0;
+            state = LEVEL_SELECT_CURSOR_STATE_IDLE;
             ResetIdleTimer();
         }
         break;
-    case 5:
+    case LEVEL_SELECT_CURSOR_STATE_SHRINK:
         if (scale > 8)
             scale -= speed;
         else
@@ -120,7 +120,7 @@ void LevelSelectCursor::Draw()
 {
     SetEntityPixelPos(part, line.x0, line.y0);
     switch (state) {
-    case 4 ... 5:
+    case LEVEL_SELECT_CURSOR_STATE_GROW ... LEVEL_SELECT_CURSOR_STATE_SHRINK:
         if (scale > 8) {
             s32 idx;
 
@@ -157,19 +157,19 @@ void LevelSelectCursor::SetMatrix()
 /* UNUSED. Shrunk away (state 5). */
 u8 LevelSelectCursor::IsHidden()
 {
-    return state == 5;
+    return state == LEVEL_SELECT_CURSOR_STATE_SHRINK;
 }
 
 /* UNUSED. Growing (state 4). */
 u8 LevelSelectCursor::IsGrowing()
 {
-    return state == 4;
+    return state == LEVEL_SELECT_CURSOR_STATE_GROW;
 }
 
 /* Starts the shrink-away. */
 void LevelSelectCursor::Hide()
 {
-    state = 5;
+    state = LEVEL_SELECT_CURSOR_STATE_SHRINK;
     scale = 0x100;
     Update();
 }
@@ -227,7 +227,7 @@ void LevelSelectCursor::Move(s32 x, s32 y)
         MAKE_ABS(d);
         speed = 0xF8 / d;
     }
-    if (state == 0)
+    if (state == LEVEL_SELECT_CURSOR_STATE_IDLE)
         ResetIdleTimerNow();
 }
 
