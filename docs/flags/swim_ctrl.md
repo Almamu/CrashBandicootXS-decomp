@@ -59,6 +59,8 @@ CheckTurn tests.
 ## Left as numbers
 
 ApplyLevel (the out-of-line copy is ApplyTilt) switches on `mode` with
-the labels 7, 14-18, 23, 33-37 and 41. Only 7 can be a swim mode. What the
-others were meant to be isn't known, and the ROM's jump table has them,
-so the labels stay numbers, with a comment.
+the labels 7, 14-18, 23, 33-37 and 41. Only 7 can be a swim mode, and it
+is spelled `SWIM_MODE_SPIN_TURN_LEFT`. What the others were meant to be
+isn't known: read as `ACTION_STATE_*` they are no set the code uses
+together (AIR_SPIN to STAND_UP, LAND, HANG_SPIN to HANG_MOVE, WARP_IN),
+and the ROM's jump table has them, so they stay numbers, with a comment.

@@ -116,7 +116,8 @@ void SwimCtrl::CheckTurn()
     case SWIM_STATE_IDLE ... SWIM_STATE_SPIN:
     case SWIM_STATE_STOP ... SWIM_STATE_SWIM_START:
         target->mirrorFlags.mirrorY = 0;
-        if (target->mirrorBits.flipX < 0 && (dir == 4 || dir == 6 || dir == 8)) {
+        if (target->mirrorBits.flipX < 0 &&
+            (dir == KEY_DIR_RIGHT || dir == KEY_DIR_UP_RIGHT || dir == KEY_DIR_DOWN_RIGHT)) {
             target->mirrorFlags.mirrorX = 0;
             if (state != SWIM_STATE_SPIN) {
                 SetState(SWIM_STATE_TURN, SWIM_MODE_TURN_RIGHT, CTRL_KEEP, CTRL_KEEP);
@@ -125,7 +126,8 @@ void SwimCtrl::CheckTurn()
                 SetState(SWIM_STATE_TURN, SWIM_MODE_SPIN_TURN_RIGHT, CTRL_KEEP, CTRL_KEEP);
             }
             unk_26 = 0;
-        } else if (!(target->mirrorFlags.mirrorX & 1) && (dir == 3 || dir == 5 || dir == 7)) {
+        } else if (!(target->mirrorFlags.mirrorX & 1) &&
+                   (dir == KEY_DIR_LEFT || dir == KEY_DIR_UP_LEFT || dir == KEY_DIR_DOWN_LEFT)) {
             if (state != SWIM_STATE_SPIN) {
                 SetState(SWIM_STATE_TURN, SWIM_MODE_TURN_LEFT, CTRL_KEEP, CTRL_KEEP);
                 timerMax = 0;
@@ -156,7 +158,7 @@ void SwimCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
         }
         target->speedX = 0;
         break;
-    case 5:
+    case EVENT_HIT_PUFFERFISH:
         KillPlayer(0x2D);
         break;
     case EVENT_HIT_ELECTRIC:
@@ -258,12 +260,13 @@ static inline void ApplyLevel(SwimCtrl *self)
         s32 frame;
         s32 f34;
 
-        /* The labels stay numbers (#843): `mode` is a SWIM_MODE_* (0-7),
-         * so only 7 (SPIN_TURN_LEFT) can match. What 14-18, 23, 33-37
-         * and 41 were meant to be isn't known (they aren't swim modes),
-         * and the ROM's jump table has them all. */
+        /* `mode` is a SWIM_MODE_* (0-7), so only SPIN_TURN_LEFT can
+         * match (#843). The other labels stay numbers: what 14-18, 23,
+         * 33-37 and 41 were meant to be isn't known (they aren't swim
+         * modes, and as ACTION_STATE_* they form no set), and the ROM's
+         * jump table has them all. */
         switch (self->mode) {
-        case 7:
+        case SWIM_MODE_SPIN_TURN_LEFT:
         case 14 ... 18:
         case 23:
         case 33 ... 37:
@@ -309,7 +312,7 @@ void SwimCtrl::Update(MovingSprite *)
                     repeat = 3;
                 ApplyLevel(this);
             }
-        } else if (state != SWIM_STATE_STROKE || dir != 0) {
+        } else if (state != SWIM_STATE_STROKE || dir != KEY_DIR_NONE) {
             if (repeat == 0 || --repeat == 0) {
                 repeat = 3;
                 if (keys & DPAD_UP) {
@@ -418,10 +421,10 @@ void SwimCtrl::StateSwim()
     }
     if (k.pressed & (B_BUTTON | R_BUTTON))
         StartSpin();
-    if (dir == 0 && tilt == 6) {
+    if (dir == KEY_DIR_NONE && tilt == 6) {
         SetMode(SWIM_STATE_STOP);
         SetTargetAnim(target, 0x20);
-        mode = dir;
+        mode = dir; // KEY_DIR_NONE: SWIM_MODE_IDLE
     }
     CheckTurn();
 }
@@ -459,7 +462,7 @@ void SwimCtrl::StateSpin()
     if (++timer >= timerMax || target->animDone) {
         gPlayer->bounce = 0;
         spinCooldown = 0xC;
-        if (dir == 0) {
+        if (dir == KEY_DIR_NONE) {
             ResetMode(this);
             timerMax = 1;
         } else {

@@ -632,15 +632,15 @@ void ActionCtrl::StartTornadoFall()
 }
 
 /* The end of a ground spin: the spin cooldown starts (12 frames). With
- * the D-pad sideways (`mode` 3/4) the run restarts: the turbo run if L
+ * the D-pad sideways (`mode`, a KEY_DIR_*: LEFT/RIGHT) the run restarts: the turbo run if L
  * is held (`flags` is the input word) and HasTurboRun allows it,
  * otherwise StartRun. Any other direction goes back to idle. */
 void ActionCtrl::EndSpin(u8 mode, s32 flags)
 {
     spinCooldown = 0xC;
     switch (mode) {
-    case 3:
-    case 4:
+    case KEY_DIR_LEFT:
+    case KEY_DIR_RIGHT:
         {
             /* The L bit as a `u16`, the key word's width (#662 round 4):
              * the ROM builds 0x200 in r1 and ANDs through a copy in r0
@@ -676,19 +676,19 @@ void ActionCtrl::EndSpin(u8 mode, s32 flags)
 }
 
 /* Steering during a spin: with no X motion queued and no crate bump, the
- * D-pad sideways (`mode` 3/4) queues X entry 0x17; `mode` 0-2 queues
- * entry 0. Then the facing (UpdateFacing). */
+ * D-pad sideways (`mode` KEY_DIR_LEFT/RIGHT) queues X entry 0x17; NONE, UP
+ * or DOWN queues entry 0. Then the facing (UpdateFacing). */
 void ActionCtrl::SteerSpin(u8 mode)
 {
     if (motionX == 0 && bumpTimer == 0) {
         switch (mode) {
-        case 3:
-        case 4:
+        case KEY_DIR_LEFT:
+        case KEY_DIR_RIGHT:
             QueueNowX(0x17);
             break;
         }
     }
-    if (mode <= 2)
+    if (mode <= KEY_DIR_DOWN)
         QueueNowX(0);
     UpdateFacing();
 }

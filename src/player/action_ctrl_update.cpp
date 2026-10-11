@@ -291,7 +291,7 @@ done:
     if (state == ACTION_STATE_AIRBORNE_JUMP || state == ACTION_STATE_AIRBORNE_FLIP_JUMP ||
         state == ACTION_STATE_AIRBORNE_HIGH_JUMP || state == ACTION_STATE_AIR_SPIN ||
         state == ACTION_STATE_AIRBORNE_FALL) {
-        if (gInput->GetDpadDirection() <= 2) {
+        if (gInput->GetDpadDirection() <= KEY_DIR_DOWN) {
             QueueNowX(0);
         } else {
             if (motionX == 0x1B || motionX == 0x1C) {

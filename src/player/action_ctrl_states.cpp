@@ -136,7 +136,7 @@ void ActionCtrl::StateIdle()
 
     if (dpadLockTimer != 0) {
         dpadLockTimer--;
-        if (dir == 0)
+        if (dir == KEY_DIR_NONE)
             dpadLockTimer = dir;
     }
     p = part;
@@ -191,7 +191,7 @@ skip:
         return;
     other:
         turboRun = held;
-        if (dir == 0) {
+        if (dir == KEY_DIR_NONE) {
             Player *q = part;
 
             if (IsSlippery(q) && motionX != 0x1F && q->speedX != 0)
@@ -201,7 +201,7 @@ skip:
 
             if (wait == 0) {
                 switch (dir) {
-                case 3 ... 8:
+                case KEY_DIR_LEFT ... KEY_DIR_DOWN_RIGHT:
                     if ((INPUT_HELD(in) & L_BUTTON) && (u8)gLevelState->HasTurboRun()) {
                         turboRun = 1;
                         SetMode(ACTION_STATE_TURBO_RUN);
@@ -211,7 +211,7 @@ skip:
                         StartRun();
                     }
                     break;
-                case 2:
+                case KEY_DIR_DOWN:
                     SetMode(ACTION_STATE_CROUCH_DOWN);
                     SetTargetAnim(part, 3);
                     frames = wait;
@@ -278,15 +278,15 @@ void ActionCtrl::StateRun()
         u8 dir = (*pad)->GetDpadDirection();
 
         switch (dir) {
-        case 0:
+        case KEY_DIR_NONE: // dir is 0 in the calls below
             SetModeAnim(ACTION_STATE_IDLE, 0x12, 0, dir);
             QueueX(dir, 1, dir);
             QueueY(dir, 1, dir);
             QueueX(dir, 1, 0x1D);
             break;
-        case 2:
-        case 7:
-        case 8:
+        case KEY_DIR_DOWN:
+        case KEY_DIR_DOWN_LEFT:
+        case KEY_DIR_DOWN_RIGHT:
             {
                 s32 zero = 0;
 
@@ -402,7 +402,7 @@ void ActionCtrl::StateJump()
             }
         }
     }
-    if (gInput->GetDpadDirection() <= 2) {
+    if (gInput->GetDpadDirection() <= KEY_DIR_DOWN) {
         if (gPlayer->slippery == 0)
             QueueNowX(0);
     } else {
@@ -490,7 +490,7 @@ void ActionCtrl::StateAirborne()
         timer = &dpadLockTimer;
         if (*timer != 0) {
             (*timer)--;
-            if (dir == 0)
+            if (dir == KEY_DIR_NONE)
                 *timer = contact;
             return;
         }
@@ -724,9 +724,9 @@ void ActionCtrl::StateSlide()
         {
             u8 dir = gInput->GetDpadDirection();
 
-            if (dir != 0 && part->HasRoomForAnim(2)) {
+            if (dir != KEY_DIR_NONE && part->HasRoomForAnim(2)) {
                 switch (dir) {
-                case 3 ... 4:
+                case KEY_DIR_LEFT ... KEY_DIR_RIGHT:
                     if ((INPUT_HELD(in) & L_BUTTON) && (u8)gLevelState->HasTurboRun()) {
                         turboRun = 1;
                         SetMode(ACTION_STATE_TURBO_RUN);
@@ -973,7 +973,8 @@ void ActionCtrl::StateCrouch()
         return;
 
     turned = 0;
-    if ((s32)(part->mirror << 27) < 0 && (dir == 4 || dir == 6 || dir == 8)) {
+    if ((s32)(part->mirror << 27) < 0 &&
+        (dir == KEY_DIR_RIGHT || dir == KEY_DIR_UP_RIGHT || dir == KEY_DIR_DOWN_RIGHT)) {
         u8 *p = &part->mirror;
         s32 m = -0x11;
 
@@ -983,7 +984,8 @@ void ActionCtrl::StateCrouch()
         turned = 1;
         goto turn_done;
     }
-    if ((s8)(part->mirror << 3) >= 0 && (dir == 3 || dir == 5 || dir == 7)) {
+    if ((s8)(part->mirror << 3) >= 0 &&
+        (dir == KEY_DIR_LEFT || dir == KEY_DIR_UP_LEFT || dir == KEY_DIR_DOWN_LEFT)) {
         FaceRight(this, part, 1);
         turned = 1;
     }
@@ -992,10 +994,10 @@ turn_done:
     moved = 0;
     if (!turned) {
         switch (gInput->GetDpadDirection()) {
-        case 3:
-        case 4:
-        case 7:
-        case 8:
+        case KEY_DIR_LEFT:
+        case KEY_DIR_RIGHT:
+        case KEY_DIR_DOWN_LEFT:
+        case KEY_DIR_DOWN_RIGHT:
             SetMode(ACTION_STATE_CRAWL_START);
             SetTargetAnim(part, 0x14);
             QueuePendingX(moved, 3);
@@ -1090,13 +1092,13 @@ void ActionCtrl::StateCrawl()
         return;
     dir = gInput->GetDpadDirection();
     switch (dir) {
-    case 0:
-    case 2:
+    case KEY_DIR_NONE:
+    case KEY_DIR_DOWN:
         SetMode(ACTION_STATE_CRAWL_STOP);
         SetTargetAnim(part, 1);
         QueuePendingX(0, 0);
         break;
-    case 1:
+    case KEY_DIR_UP: // dir is 1 in the QueueX calls below
         if (part->HasRoomForAnim(2) == 1) {
             SetMode(ACTION_STATE_CRAWL_STAND_UP);
             SetTargetAnim(part, 2);

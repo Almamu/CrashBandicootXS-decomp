@@ -38,9 +38,9 @@ void ActionCtrl::StateBodySlamLand()
         u8 crouch = held != 0;
 
         switch (pad->GetDpadDirection()) {
-        case 2:
-        case 7:
-        case 8:
+        case KEY_DIR_DOWN:
+        case KEY_DIR_DOWN_LEFT:
+        case KEY_DIR_DOWN_RIGHT:
             crouch = 1;
             break;
         }
