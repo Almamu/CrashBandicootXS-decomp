@@ -51,8 +51,6 @@ extern "C" {
 
 void LevelLayers::LoadRoom(const struct level_room *args)
 {
-    struct dma_regs *dma;
-    u32 pltt;
     const struct level_desc *desc = args->desc;
 
     if (desc->assetPacked == 0) {
@@ -82,13 +80,8 @@ void LevelLayers::LoadRoom(const struct level_room *args)
 
     gEntityFlags->SpawnRoomEntities(args->desc->entities, args->desc->links, 0, 0);
 
-    dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
-    dma->src = (u32)args->palette;
-    pltt = PLTT;
-    dma->dst = pltt;
-    dma->cnt = 0x80000100;
-    (void)dma->cnt;
-    *(vu16 *)pltt = 0;
+    DmaCopy16(3, args->palette, PLTT, BG_PLTT_SIZE);
+    BACKDROP_COLOR = 0;
 }
 
 LevelLayers::LevelLayers()

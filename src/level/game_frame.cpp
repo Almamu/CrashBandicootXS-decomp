@@ -58,7 +58,6 @@ extern "C" {
  */
 void LevelState::UpdateGameFrame()
 {
-    vu16 zero;
     s32 best;
     s32 status;
     LevelEntityFlags **bitmap;
@@ -72,16 +71,7 @@ void LevelState::UpdateGameFrame()
     SetCrateAssistDeaths(5);
     room.level = LEVEL_JUNGLE_JAM;
     room.checkpointFlags = 0;
-    {
-        struct dma_regs *dma;
-
-        zero = 0;
-        dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
-        dma->src = (u32)&zero;
-        dma->dst = (u32)this;
-        dma->cnt = 0x81000034;
-        dma->cnt;
-    }
+    DmaFill16(3, 0, &progress, sizeof(progress));
     MemCopy32(&saveData, &progress, sizeof(GameProgress));
     gGameFrameLevelState = this;
     maskLevel = MASK_LEVEL_NONE;

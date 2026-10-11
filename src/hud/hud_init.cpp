@@ -111,9 +111,7 @@ Hud::Hud()
  * handful of specific ones (13, 22, 29 - byte offsets `0x340`/`0x580`/
  * `0x740` off `parts`) depending on the current level/game-mode
  * (`GetBossIndex`) and `icon_flag`, before DMA-filling nine words
- * at `this+0x40` (`shownLives`...) with `-1` (a raw `REG_DMA3SAD`/`DAD`/`CNT` poke, the
- * same low-level idiom `save_data.cpp`'s `ValidateSaveData` and
- * `link_handshake.cpp` already document for this ROM).
+ * at `this+0x40` (`shownLives`...) with `-1` (`DmaFill32`).
  *
  * Matching notes (old_agbcp, as the C under old_agbcc): the two inner palette stores go through
  * the `SetPal` inline so the ROM's three separate nibble-insert copies

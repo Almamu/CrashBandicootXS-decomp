@@ -133,9 +133,9 @@ void Yeti::Update()
 
 /* Palette-gradient cursor for the `gYeti` "gauge" object.
  * Below `0x5000`, DMAs a fixed 16-color gradient (`gYetiPalette`)
- * straight into BG palette RAM at `0x050001E0` (`REG_DMA3` at
- * `0x040000D4`). Above `0xBE00`, DMAs a single zeroed halfword instead
- * (blanking the gradient). In between, computes a `__divsi3`-scaled
+ * straight into BG palette RAM at `0x050001E0` (`DmaCopy16`). Above
+ * `0xBE00`, fills it from a single zeroed halfword instead (`DmaFill16`,
+ * blanking the gradient). In between, computes a `__divsi3`-scaled
  * factor from how far `gYetiDistance` sits into that `[0x5000,
  * 0xBE00]` range, then directly writes 16 colors: for each
  * `gYetiPalette` source halfword (a packed BGR555 color), its

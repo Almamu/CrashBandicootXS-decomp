@@ -61,8 +61,7 @@ u8 Yeti::IsTouching(ActorSelf *self)
  * there by seed/destination but fixed here to a `0`/`0x80` seed pair) -
  * DMA3-transferring the first fill to BG2's map in screen block 26
  * (`0x0600D000`) and the second to screen block 27 (`0x0600D800`)
- * (`REG_DMA3SAD`/`DAD`/`CNT` at `0x040000D4`, 0x80 words, 32-bit
- * transfers). Then clears tile 0xff of char block 2 (`0x0600BFC0`-
+ * (`DmaCopy16`, 0x100 bytes each). Then clears tile 0xff of char block 2 (`0x0600BFC0`-
  * `0x0600BFFC`, the 8bpp blank tile the maps' 0xff entries use)
  * word-by-word, arms the object
  * (`gYetiBg2Page = 1`), passes the object's current frame data

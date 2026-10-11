@@ -25,9 +25,8 @@ extern "C" {
  * one): if `list` differs from `self`'s cached copy at `self+0`,
  * `self+8`/`self+0x208` (the first two of the three overlapping
  * collision-bitmap arrays `entity_flags.cpp`'s header comment documents)
- * are DMA3-zero-filled 64 bytes each (`DmaFill32(3, 0, dest, 64)`,
- * expanding to the exact same `REG_DMA3`-field-by-field store sequence
- * seen here); either way `self+8`->`self+0x108` and
+ * are DMA3-zero-filled 64 bytes each (`DmaFill32(3, 0, dest, 64)`);
+ * either way `self+8`->`self+0x108` and
  * `self+0x208`->`self+0x308` get unconditionally `CpuSet`-copied via
  * `CpuSet(src, dst, 0x04000040)` (the same idiom `SetCheckpointAtPlayer`,
  * bonus_round.cpp, already documents in the opposite direction), and
