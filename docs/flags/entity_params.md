@@ -3,12 +3,12 @@
 Each entity a room places has a parameter record, at `params +
 paramOffsets[id]` in the room's entity list (level_data.h,
 `gEntityFlags->list`). Its byte 0 is a flags byte, and the code reads it
-through three views:
+through two views:
 
 - `struct entity_params.flags` (level_data.h): the enemy, boss, basic-crate
-  and start-marker spawners;
-- `struct crate_placement.flags` (crate.hpp): Crate::Create;
-- `struct spawn_rec.flags` (gobj_1a794.h): Platform::Create.
+  and start-marker spawners, and Platform::Create (`p.platform`, which was
+  gobj_1a794.h's `struct spawn_rec`);
+- `struct crate_placement.flags` (crate.hpp): Crate::Create.
 
 What a bit means depends on the entity type. The names are in
 include/constants/entity_params.h (`ENTITY_PARAMS_*`), which level_data.h

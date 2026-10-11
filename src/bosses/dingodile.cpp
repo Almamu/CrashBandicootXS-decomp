@@ -385,7 +385,7 @@ void DingodileCtrl::SpawnShieldOrRocket(s32 mode, u16 x, u16 y, MovingSprite *ow
 {
     MovingSprite *p = MovingSprite::Create(0xFFFF, x, y, 0);
     Ctrl *ctl;
-    u8 *bits;
+    const u8 *bits;
 
     p->f.b.visible = 0;
     p->bank = gSpriteBankSet->Bank(54);
@@ -424,7 +424,7 @@ void DingodileCtrl::SpawnShieldOrRocket(s32 mode, u16 x, u16 y, MovingSprite *ow
     p->palette = p->GetAnimPaletteSlot();
     p->mover = ctl;
     ctl->Attach(p);
-    bits = &((u8 *)gEntityFlags->list->params)[*gEntityFlags->list->paramOffsets];
+    bits = &gEntityFlags->list->params[*gEntityFlags->list->paramOffsets];
     p->mirrorBits.flipX = ((*bits >> ENTITY_PARAMS_BIT_FLIP_X) ^ 1) & 1;
     p->mirrorBits.flipY = TEST_BIT_SHR(*bits, ENTITY_PARAMS_BIT_FLIP_Y);
     p->f.b.active = 1;

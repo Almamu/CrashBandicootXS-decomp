@@ -18,18 +18,8 @@
  * gobj`, their and the ground sprites' C view, went with its last user
  * (#656), as did the sprite bank's copies (`struct anim_table` and its
  * `struct anim_rec` records: Sprite's `bank` is sprite_bank.h's `struct
- * sprite_bank`). Kept here: the platform collision's position pair and
- * the platform spawn record (CreatePlatform). */
-
-struct spawn_rec {
-    u8 flags;  // 0x00 - ENTITY_PARAMS_FLAG_* (bit 0: the bonus platform's exit facing)
-    u32 type;  // 0x04
-    s32 distX; // 0x08
-    s32 distY; // 0x0C
-    s16 dirX;  // 0x10
-    s16 dirY;  // 0x12
-    s16 flag;  // 0x14
-};
+ * sprite_bank`). The platform spawn record, `struct spawn_rec`, is
+ * level_data.h's struct entity_params' `p.platform` (#855). */
 
 extern s32 _call_via_r1(void *self, void *fn);
 extern s32 _call_via_r2(void *self, void *arg, void *fn);

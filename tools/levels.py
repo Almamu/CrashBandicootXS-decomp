@@ -461,7 +461,7 @@ def room_c(room_dir):
     # Entity list header.
     groups = entity_groups(room)
     out.append("extern const struct level_entity_list %s =\n{" % sym["entities"])
-    out.append("    %d, %d, %s, %s, (const u32 *)&%s, %s,"
+    out.append("    %d, %d, %s, %s, (const u8 *)&%s, %s,"
                % (len(room["entities"]), len(groups), sym["groups"], sym["param_offsets"],
                   sym["params"], sym["type_counts"]))
     out.append("};\n")

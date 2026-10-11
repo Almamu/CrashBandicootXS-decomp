@@ -59,8 +59,9 @@ struct level_entity_list {
     u16 groupCount;                          // 0x02
     const struct level_entity_group *groups; // 0x04
     const u16 *paramOffsets;                 // 0x08 - byte offset of each parameter record
-    // 0x0C - the records: a flags word, then per-type words
-    const u32 *params;
+    // 0x0C - the records, `paramOffsets` bytes in: a flags word, then
+    // per-type words (struct entity_params and the other views)
+    const u8 *params;
     const u16 *typeCounts; // 0x10 - entities per type
 };
 
@@ -139,6 +140,15 @@ struct entity_params {
             s32 speedX; // 0x14
             s32 accelX; // 0x18
         } homingXY;
+        // platform (Platform::Create)
+        struct {
+            u32 type;  // 0x04 - PLATFORM_TYPE_*
+            s32 distX; // 0x08 - a moving platform's path
+            s32 distY; // 0x0C
+            s16 dirX;  // 0x10
+            s16 dirY;  // 0x12
+            s16 flag;  // 0x14
+        } platform;
     } p;
 };
 
