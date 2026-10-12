@@ -152,16 +152,22 @@ rebuilds both the tile set and the map from that PNG, byte for byte:
 | `62b34c_continue_prompt_uka_uka` (`gContinuePromptUkaUkaBg`) | 8 | 30x20 | text |
 | `62d0cc_universal_logo` (`gUniversalLogoBg`) | 8 | 30x20 | affine, + high-byte JSON |
 | `62e3b0_title_screen` (`gTitleScreenBg`) | 8 | 16x16 | affine |
-| `62c2c8_title_bandicoot_obj` (`gTitleBandicootObj`) | 4 | 4x6 | OBJ |
-| `62c4b0_title_crash_obj` (`gTitleCrashObj`) | 4 | 8x40 | OBJ |
-| `62cc3c_title_arrow1_obj` (`gTitleArrow1Obj`) | 4 | 4x16 | OBJ |
-| `62ce70_title_arrow2_obj` (`gTitleArrow2Obj`) | 4 | 4x16 | OBJ |
+| `62c2c8_title_bandicoot_obj` (`gTitleBandicootObj`) | 4 | 4x6 | OBJ, 3 32x16 OBJs |
+| `62c4b0_title_crash_obj` (`gTitleCrashObj`) | 4 | 8x40 | OBJ, 5 64x64 OBJs |
+| `62cc3c_title_arrow1_obj` (`gTitleArrow1Obj`) | 4 | 4x16 | OBJ, 4 32x32 OBJs |
+| `62ce70_title_arrow2_obj` (`gTitleArrow2Obj`) | 4 | 4x16 | OBJ, 4 32x32 OBJs |
 
 An OBJ map is one `u16` per OBJ tile. `LoadObjTiles` copies the sheet tile
 named by its low byte into OBJ VRAM, in map order, and ignores the h/v
-flip bits that the original tool left on 2 cells. The PNG draws those
-cells flipped, as the map says, so the reduction gets the same bits
-back. In game, those cells show their tile unflipped.
+flip bits that the original tool left on 2 cells (CRASH's "R", arrow 1's
+third OBJ). The PNG draws those cells flipped, as the map says, so the
+reduction gets the same bits back. In game, those cells show their tile
+unflipped.
+
+The four OBJ pictures aren't drawn as their map, but as the OBJs the
+title screen draws: "BANDICOOT" as one 96x16 row, CRASH as a 320x64 row
+of letters, each arrow assembled whole (see "OBJ sheets" below). The
+build puts their tiles back in map order before grit reduces them.
 
 How the build does it (`graphics.mk`):
 
@@ -1417,11 +1423,51 @@ bytes gbagfx did, checked on all 21 sheets of `graphics/intro/` and
 - the credits and VV logo sheets (`intro/68`-`75`) carry their real
   16-colour palettes (`intro/60`-`67`);
 - the two HUD fonts (`intro/00_5a4e70`, `00_5a551c`) and the level-select
-  cursor zoom (`tileset1/00`) have no fixed palette (OAM picks one at
-  run time), so they carry a grayscale placeholder that looks like the
-  old PNGs. See "Placeholder palettes" below.
+  cursor zoom (`tileset1/00`) carry the palette the game draws them with
+  by default (OAM picks it at run time). See "Run-time palettes" below.
 
-### Placeholder palettes
+### OBJ sheets
+
+Some tile sets are made of whole OBJs: with 1D OBJ mapping, a W x H OBJ is
+(W/8) * (H/8) tiles in a row, and these tile sets are those runs back to
+back. Drawn as a plain tile sheet, their OBJs came out cut into strips.
+Their PNGs now show each OBJ whole:
+
+| PNG | OBJs | sheet |
+|---|---|---|
+| `intro/00_5a4e70_tiles.png` (`gSmallFontTiles`) | 77 8x16 glyphs, then 2 16x8 | 16 per row, each in a 16x16 cell |
+| `intro/00_5a551c_tiles.png` (`gLargeFontTiles`) | 75 16x16 glyphs | 16 per row |
+| `intro/74_636ef4_tiles.png` (the VV logo's letters) | 18 16x32 | one 288x32 row |
+| `intro/75_637604_tiles.png` (the VV web address) | 4 32x16 | one 128x16 row |
+| `bg_package/62c2c8_title_bandicoot_obj.png` | 3 32x16 | one 96x16 row |
+| `bg_package/62c4b0_title_crash_obj.png` | 5 64x64 | one 320x64 row |
+| `bg_package/62ce70_title_arrow2_obj.png` | 4 32x32 | at `gTitleArrowPieceOffsets[0-3]` |
+| `bg_package/62cc3c_title_arrow1_obj.png` | 4 32x32 | at `gTitleArrowPieceOffsets[4-7]` |
+
+The OBJ sizes come from the code that draws them:
+- `gSmallFontGlyphs` (shape 2, tall, except the last two: shape 1, wide);
+- `LargeFont`'s OBJ size 1, its glyph stride of 4 tiles;
+- `DrawVvLogoPieces` and `DrawLogoPieces` (the title) for the rest.
+
+`DrawLogoPieces` draws arrow 2's tiles (loaded second, at OBJ tile
+`0x140`) with the first four offsets and arrow 1's with the last four.
+So each arrow PNG is the arrow as it appears on the title screen.
+
+Arrow 1's OBJs overlap. Where they do, the later OBJ is transparent in
+the ROM, so a pixel there belongs to the first OBJ that covers it. That
+is also the one the GBA draws on top: the OBJ with the lower OAM index.
+
+The build (`graphics.mk`, `OBJ_SHEET_*`) runs `tools/obj_sheet.py
+to-tiles` with each sheet's layout. It writes the tiles in upload order,
+and grit then converts them as before:
+- for the tile sets, `-gt -gB4`;
+- for the title's OBJ packages, the map-order picture, reduced like the
+  other `bg_package` pictures.
+
+Any pixel outside the OBJs must be 0, so drawing there fails the build.
+`obj_sheet.py from-tiles` lays out a plain tile sheet again.
+
+### Run-time palettes
 
 Three tile sheets have no palette of their own in the ROM:
 `gSmallFontTiles` (`graphics/intro/00_5a4e70_tiles.png`),
@@ -1433,10 +1479,17 @@ which `Font::SetPalette` sets and `Font::ResetPalette` points back at
 the palette-cache slot of sprite bank 35's palette (`src/text/font.cpp`),
 and the cursor zoom takes the palette of the cursor's sprite part
 (`oam.palette = part->palette`, `src/menus/level_select_cursor.cpp`).
-So no single ROM palette is "theirs".
+So no ROM palette is tied to them.
 
-Their PNGs are indexed with a 16-entry grayscale placeholder palette
-(index 0 white, index 15 black, as gbagfx drew them). Only the indices
-are built: grit `-gt -gB4 -p!` ignores the palette, so recolouring the
-placeholder changes nothing in the ROM. Edit these sheets by index,
-not by colour.
+Their PNGs carry the palette the game uses by default, taken from
+`gObjPalettes` (the 125 OBJ palettes at `0x084A4660`):
+- the fonts: `gObjPalettes[33]`, sprite bank 35's palette, which
+  `Font::ResetPalette` selects;
+- the cursor zoom: `gObjPalettes[102]`, the palette of the cursor's
+  sprite part.
+
+The game can still swap them at run time (`Font::SetPalette`, or another
+part palette), so this is how the sheets usually look, not the only
+way. Only the indices are built: grit `-gt -gB4 -p!` ignores the
+palette, so recolouring a sheet changes nothing in the ROM. Edit these
+sheets by index, not by colour.

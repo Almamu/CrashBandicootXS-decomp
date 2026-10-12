@@ -4,9 +4,9 @@ extern "C" {
 
 /*
  * ROM 0x085A4E70-0x085A6100: the glyph tiles of the two HUD fonts
- * (src/text/font_glyph.cpp). OAM picks their palette at run time, so the
- * PNGs carry a grayscale placeholder one (docs/graphics.md, "Placeholder
- * palettes").
+ * (src/text/font_glyph.cpp), one OBJ per glyph (docs/graphics.md, "OBJ
+ * sheets"). OAM picks their palette at run time; the PNGs carry the default
+ * one, sprite bank 35's (docs/graphics.md, "Run-time palettes").
  * Every asset is an LZ77 stream (gbagfx) that starts on a word boundary,
  * hence aligned(4): the 0-3 zero bytes after a stream are the next one's
  * alignment. tools/bin2c.py --lz writes the stream's bytes (graphics.mk).

@@ -4,9 +4,9 @@ extern "C" {
 
 /*
  * ROM 0x086377C0-0x0863D4C0: the level-select cursor's zoom tiles (OAM
- * picks their palette at run time, so the PNG carries a grayscale
- * placeholder one), the ten level-select pictures (8bpp) and their
- * palettes, in ROM order.
+ * picks their palette at run time; the PNG carries the cursor part's,
+ * docs/graphics.md "Run-time palettes"), the ten level-select pictures
+ * (8bpp) and their palettes, in ROM order.
  * Every asset is an LZ77 stream (gbagfx) that starts on a word boundary,
  * hence aligned(4): the 0-3 zero bytes after a stream are the next one's
  * alignment. tools/bin2c.py --lz writes the stream's bytes (graphics.mk).
