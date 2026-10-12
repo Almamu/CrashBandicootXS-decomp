@@ -87,41 +87,38 @@ void PlatformMover::Update(MovingSprite *part)
         }
     }
 
-    {
-        s32 d = distX;
+    s32 d = distX;
 
-        if (d != -1) {
-            s32 v = Q8_TO_INT(part->x) - lastX;
-            s32 sign;
+    if (d != -1) {
+        s32 v = Q8_TO_INT(part->x) - lastX;
+        s32 sign;
 
-            MAKE_ABS_BRANCHLESS(v, sign);
-            distX = d + v;
-        } else {
-            s32 v = part->speedX;
-            s32 sign;
+        MAKE_ABS_BRANCHLESS(v, sign);
+        distX = d + v;
+    } else {
+        s32 v = part->speedX;
+        s32 sign;
 
-            MAKE_ABS_BRANCHLESS(v, sign);
-            if (v >= gPlatformMoverMotionRecords[animSet->entries[1][0]].target)
-                distX = 0;
-        }
+        MAKE_ABS_BRANCHLESS(v, sign);
+        if (v >= gPlatformMoverMotionRecords[animSet->entries[1][0]].target)
+            distX = 0;
     }
-    {
-        s32 d = distY;
 
-        if (d != -1) {
-            s32 v = Q8_TO_INT(part->y) - lastY;
-            s32 sign;
+    d = distY;
 
-            MAKE_ABS_BRANCHLESS(v, sign);
-            distY = d + v;
-        } else {
-            s32 v = part->speedY;
-            s32 sign;
+    if (d != -1) {
+        s32 v = Q8_TO_INT(part->y) - lastY;
+        s32 sign;
 
-            MAKE_ABS_BRANCHLESS(v, sign);
-            if (v >= gPlatformMoverMotionRecords[animSet->entries[1][0]].target)
-                distY = 0;
-        }
+        MAKE_ABS_BRANCHLESS(v, sign);
+        distY = d + v;
+    } else {
+        s32 v = part->speedY;
+        s32 sign;
+
+        MAKE_ABS_BRANCHLESS(v, sign);
+        if (v >= gPlatformMoverMotionRecords[animSet->entries[1][0]].target)
+            distY = 0;
     }
 
     if (distX > rangeX && rangeX != 0) {
@@ -222,9 +219,8 @@ void PlatformMover::MovePlayer(MovingSprite *part)
 {
     if (active && kind != PLATFORM_TYPE_FLIP) {
         Player *p = gPlayer;
-        u32 f = p->f.flags;
 
-        if (f >> ENTITY_BIT_COLLIDES) {
+        if (p->f.flags >> ENTITY_BIT_COLLIDES) {
             u8 dir;
 
             p->carried = part;
@@ -235,17 +231,16 @@ void PlatformMover::MovePlayer(MovingSprite *part)
 
                 p->hitAxes = m;
             }
-            {
-                Player *q = gPlayer;
-                s32 px = Q8_TO_INT(q->x);
-                s32 dx = Q8_TO_INT(part->x) - lastX;
-                s32 py = Q8_TO_INT(q->y);
-                s32 dy = Q8_TO_INT(part->y) - lastY;
 
-                px += dx;
-                py += dy;
-                q->SetPrevPos(q->x = INT_TO_Q8(px), q->y = INT_TO_Q8(py));
-            }
+            Player *q = gPlayer;
+            s32 px = Q8_TO_INT(q->x);
+            s32 dx = Q8_TO_INT(part->x) - lastX;
+            s32 py = Q8_TO_INT(q->y);
+            s32 dy = Q8_TO_INT(part->y) - lastY;
+
+            px += dx;
+            py += dy;
+            q->SetPrevPos(q->x = INT_TO_Q8(px), q->y = INT_TO_Q8(py));
             dir = gPlayer->dir;
             if (part->speedX > 0)
                 dir |= PART_DIR_RIGHT;

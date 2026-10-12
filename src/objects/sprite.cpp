@@ -99,14 +99,12 @@ struct aabb Sprite::GetAttackBox()
     case 4:
         rec = &info->box[1];
         break;
-    case 1:
-    case 2:
-    case 6:
-        rec = &gEmptySpriteBox;
-        break;
     case 5:
         rec = &info->box[0];
         break;
+    case 1:
+    case 2:
+    case 6:
     default:
         rec = &gEmptySpriteBox;
         break;
@@ -149,8 +147,6 @@ struct aabb Sprite::GetBodyBox()
         break;
     case 1:
     case 5:
-        rec = &gEmptySpriteBox;
-        break;
     default:
         rec = &gEmptySpriteBox;
         break;

@@ -191,16 +191,14 @@ void Platform::ResolveCollision(void *)
 
             if (!(q->dir & PART_DIR_UP) && above) {
                 q->carried = this;
-                {
-                    u8 m = PART_DIR_DOWN;
 
-                    q->hitAxes = m;
-                }
-                {
-                    s32 y = gPlayer->y;
+                u8 m = PART_DIR_DOWN;
 
-                    PosPtr(&pos)->y = y - INT_TO_Q8(oy - 1);
-                }
+                q->hitAxes = m;
+
+                s32 y = gPlayer->y;
+
+                PosPtr(&pos)->y = y - INT_TO_Q8(oy - 1);
                 flags = 0;
                 pos.x = gPlayer->x;
             }
@@ -247,11 +245,10 @@ void Platform::ResolveCollision(void *)
                 Player *q = gPlayer;
 
                 q->carried = this;
-                {
-                    u8 m = PART_DIR_DOWN;
 
-                    q->hitAxes = m;
-                }
+                u8 m = PART_DIR_DOWN;
+
+                q->hitAxes = m;
             }
             break;
         case PLATFORM_TYPE_WARP_EXIT:

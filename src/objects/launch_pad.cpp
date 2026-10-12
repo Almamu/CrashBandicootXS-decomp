@@ -39,13 +39,12 @@ LaunchPad *LaunchPad::Spawn(u16 id, u16 x, u16 y, u16 unused)
     obj->StartAnim(0);
     obj->mirrorFlags.mirrorX = 0;
     obj->mirrorFlags.mirrorY = 0;
-    {
-        const struct sprite_anim *anims = obj->bank->anims;
-        const struct sprite_anim *rec = &anims[obj->tag];
-        u32 slot = gPaletteCache->GetSlot(rec->paletteId);
 
-        obj->palette = slot;
-    }
+    const struct sprite_anim *anims = obj->bank->anims;
+    const struct sprite_anim *rec = &anims[obj->tag];
+    u32 slot = gPaletteCache->GetSlot(rec->paletteId);
+
+    obj->palette = slot;
     return obj;
 }
 

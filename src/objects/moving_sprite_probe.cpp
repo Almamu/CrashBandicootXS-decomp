@@ -39,28 +39,27 @@ bool MovingSprite::ProbeEdgeTerrain(s32 mode, const struct hitbox_quad *quad)
         y = f.origY;
         return 1;
     }
-    {
-        u8 saved = gLevelLayers->probeFlag;
-        /* The ROM keeps `&probeTries` in two registers, one for the
-         * increment and one for the loop test: two copies of `tries`
-         * (decomp-permuter; the C pinned `tries` instead). */
-        u8 *count;
-        u8 *limit;
-        struct vec2 *pp;
 
-        gLevelLayers->probeFlag = 0;
-        count = tries;
-        limit = tries;
-        pp = &f.pos;
-        do {
-            (*count)++;
-            pp->y += 8;
-            if (gLevelLayers->Probe(mode, &f.pos, span, &f.origY)) {
-                gLevelLayers->probeFlag = saved;
-                return 0;
-            }
-        } while (*limit <= 2);
-        gLevelLayers->probeFlag = saved;
-    }
+    u8 saved = gLevelLayers->probeFlag;
+    /* The ROM keeps `&probeTries` in two registers, one for the
+     * increment and one for the loop test: two copies of `tries`
+     * (decomp-permuter; the C pinned `tries` instead). */
+    u8 *count;
+    u8 *limit;
+    struct vec2 *pp;
+
+    gLevelLayers->probeFlag = 0;
+    count = tries;
+    limit = tries;
+    pp = &f.pos;
+    do {
+        (*count)++;
+        pp->y += 8;
+        if (gLevelLayers->Probe(mode, &f.pos, span, &f.origY)) {
+            gLevelLayers->probeFlag = saved;
+            return 0;
+        }
+    } while (*limit <= 2);
+    gLevelLayers->probeFlag = saved;
     return 0;
 }

@@ -59,13 +59,10 @@ s32 Entity::CheckPlayerContact()
 
     SetAabbPos(&box, bx + offX, by + offY);
     SetAabbSize(&box, w, h);
-    s32 inContact = IsContactEnabled();
 
-    if (inContact) {
-        if (gPlayer->TouchesBox(&box)) {
-            f.b.bit3 = 1;
-            gPlayer->HandleEvent(0, kind, 0);
-        }
+    if (IsContactEnabled() && gPlayer->TouchesBox(&box)) {
+        f.b.bit3 = 1;
+        gPlayer->HandleEvent(0, kind, 0);
     }
     return 0;
 }

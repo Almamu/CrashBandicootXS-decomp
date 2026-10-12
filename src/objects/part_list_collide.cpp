@@ -183,18 +183,15 @@ void PartList::Cull()
     struct aabb screen;
     BgLayer *cam = gLevelLayers->layer0;
 
-    {
-        s32 cx = INT_TO_Q8(cam->x);
-        s32 cy = INT_TO_Q8(cam->y);
-        screen.x = cx;
-        screen.y = cy;
-    }
-    {
-        s32 w = INT_TO_Q8(240);
-        s32 h = INT_TO_Q8(160);
-        screen.w = w;
-        screen.h = h;
-    }
+    s32 cx = INT_TO_Q8(cam->x);
+    s32 cy = INT_TO_Q8(cam->y);
+    screen.x = cx;
+    screen.y = cy;
+
+    s32 w = INT_TO_Q8(240);
+    s32 h = INT_TO_Q8(160);
+    screen.w = w;
+    screen.h = h;
     visibleCount = 0;
     for (i = 0; i < count; i++) {
         Sprite *part = items[i];
@@ -228,9 +225,8 @@ void PartList::CollideClass(s32 classId)
 
         if (part->GetClassId() != classId)
             continue;
-        s32 inContact = part->IsContactEnabled();
 
-        if (!inContact)
+        if (!part->IsContactEnabled())
             continue;
         part->CheckPlayerContact();
     }

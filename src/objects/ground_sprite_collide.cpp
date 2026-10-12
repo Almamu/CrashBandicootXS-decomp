@@ -30,11 +30,9 @@ s32 GroundSprite::CheckPlayerContact()
 
             f.b.unk_5 = 0;
             grounded = (f.bytes.flags2 >> ENTITY_BIT2_GROUNDED) & 1;
-            if (!grounded) {
-                if (!ProbeEdgeTerrain(PART_DIR_DOWN, GetBounds())) {
-                    f.b.unk_5 = 1;
-                    *p &= PART_DIR_X_MASK | PART_DIR_UP;
-                }
+            if (!grounded && !ProbeEdgeTerrain(PART_DIR_DOWN, GetBounds())) {
+                f.b.unk_5 = 1;
+                *p &= PART_DIR_X_MASK | PART_DIR_UP;
             }
         }
     }
@@ -94,16 +92,15 @@ s32 GroundSprite::ProbeTerrainAxes()
         if (c) {
             y = origY & 0xFFFFFF00;
             hit = ProbeFloor(quad, &unused);
-            {
-                u32 xm = dir & PART_DIR_X_MASK;
 
-                if (xm == 0)
-                    goto y_probe;
-                if (xm == PART_DIR_LEFT)
-                    x += (s32)0xFFFFFF00;
-                else
-                    x += 0x100;
-            }
+            u32 xm = dir & PART_DIR_X_MASK;
+
+            if (xm == 0)
+                goto y_probe;
+            if (xm == PART_DIR_LEFT)
+                x += (s32)0xFFFFFF00;
+            else
+                x += 0x100;
         } else {
             y += 0x100;
             hit = ProbeFloor(quad, &unused);
