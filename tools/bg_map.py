@@ -14,23 +14,16 @@ from grit.
         drops the ones the map doesn't use (grit's blank, unless the
         picture has one). Flip and palette bits are kept.
 
-    tools/bg_map.py pick TILES MAP CHOICES OUT_MAP --bpp N
-        For a picture whose tile set has identical tiles (built with grit
-        `-fx` against its own tile-set strip): grit maps a cell to the first
-        tile that matches, and CHOICES (JSON, {"cell": "entry", ...}, hex
-        entries) gives the cells where the ROM uses another one. Each choice
-        must draw the same pixels as grit's entry, so a choice for a cell
-        that was redrawn fails with a message. Delete that line of the JSON
-        to let grit pick.
+        --high JSON: for an affine map, whose game code keeps only the
+        entries' low byte: JSON ({"cell": "byte", ...}, hex) gives the
+        cells whose ROM entry has a nonzero high byte anyway, a leftover
+        of the original tool that nothing reads. It is put back as is.
 
     tools/bg_map.py extract [baserom.gba]
         Writes the graphics/bg_package/ sources from the ROM: each package's
-        whole picture (indexed, with the package's palette), and for a
-        tile set with identical or unused tiles its tile-set strip. Then
-        run grit on them as graphics.mk does and write CHOICES with:
-
-    tools/bg_map.py extract-choices TILES MAP ROM_MAP OUT.json
-        Writes CHOICES: the cells where ROM_MAP differs from grit's MAP.
+        whole picture (indexed, with the package's palette) and, for an
+        affine map with nonzero high bytes, the --high JSON
+        (<name>_high.json).
 """
 import argparse
 import json
@@ -50,7 +43,10 @@ PACKAGES = [
     ("628c50_continue_prompt_smoke", 0x0861BF30, 0x08628C50, 0x086308F0, 30, 20, 4, False),
     ("62a958_continue_prompt_glow", 0x0861BF58, 0x0862A958, 0x08630E1C, 30, 20, 4, False),
     ("62b34c_continue_prompt_uka_uka", 0x0861BF80, 0x0862B34C, 0x08631158, 30, 20, 8, False),
-    ("62d0cc_universal_logo", 0x0861C1FC, 0x0862D0CC, 0x086315BC, 30, 20, 4, False),
+    # CompanyLogos::LoadUniversalLogoBg loads it as an 8bpp affine BG2
+    # (mode 1), keeping each map entry's low byte; 5 entries have a stray
+    # high byte (62d0cc_universal_logo_high.json).
+    ("62d0cc_universal_logo", 0x0861C1FC, 0x0862D0CC, 0x086315BC, 30, 20, 8, True),
     ("62e3b0_title_screen", 0x0861C224, 0x0862E3B0, 0x0863183C, 16, 16, 8, True),
     # The title's OBJ sprites (TitleScreen::LoadObjTiles copies one tile
     # per map entry to OBJ VRAM, by the entry's low byte; it ignores the
@@ -108,13 +104,12 @@ def extract(args):
         img.save(OUT_DIR / (name + ".png"))
         used = {(e & 0xFF) if affine else (e & 0x3FF) for e in entries}
         if len(set(tiles)) != len(tiles) or len(used) != len(tiles):
-            strip = Image.new("P", (8, 8 * len(tiles)))
-            spx = strip.load()
-            for t, tile in enumerate(tiles):
-                for k, c in enumerate(pixels(tile, bpp, 0)):
-                    spx[k % 8, t * 8 + k // 8] = c
-            strip.putpalette(rgb)
-            strip.save(OUT_DIR / (name + "_tiles.png"))
+            sys.exit("bg_map: %s: the tile set has identical or unused tiles, "
+                     "which one picture can't rebuild" % name)
+        high = {i: e >> 8 for i, e in enumerate(entries) if affine and e >> 8}
+        if high:
+            lines = ['    "%d": "%02X"' % (i, b) for i, b in high.items()]
+            open(OUT_DIR / (name + "_high.json"), "w").write("{\n" + ",\n".join(lines) + "\n}\n")
 
 
 def read_u16(path):
@@ -158,32 +153,15 @@ def first_use(args):
     for t, n in order.items():
         out_tiles[n] = tiles[t]
     open(args.out_tiles, "wb").write(b"".join(out_tiles))
-    write_u16(args.out_map, [e & ~0x3FF | order[e & 0x3FF] for e in entries])
-
-
-def pick(args):
-    tiles = split_tiles(open(args.tiles, "rb").read(), args.bpp)
-    entries = read_u16(args.map)
-    choices = json.load(open(args.choices))
-    for cell, want in choices.items():
-        i, want = int(cell), int(want, 16)
-        got = entries[i]
-        if (want & 0x3FF) >= len(tiles) or \
-                pixels(tiles[want & 0x3FF], args.bpp, want) != pixels(tiles[got & 0x3FF], args.bpp, got) or \
-                want >> 12 != got >> 12:
-            sys.exit("bg_map: %s: cell %d (x %d, y %d) no longer matches entry %#06x; "
-                     "remove it from the file to let grit pick" % (args.choices, i, i % args.width, i // args.width, want)
-                     if args.width else
-                     "bg_map: %s: cell %d no longer matches entry %#06x; remove it from the file" % (args.choices, i, want))
-        entries[i] = want
+    entries = [e & ~0x3FF | order[e & 0x3FF] for e in entries]
+    if args.high:
+        for cell, byte in json.load(open(args.high)).items():
+            i, byte = int(cell), int(byte, 16)
+            if not 0 <= i < len(entries) or entries[i] >> 8 or not 0 < byte <= 0xFF:
+                sys.exit("bg_map: %s: can't give cell %s the high byte %#x"
+                         % (args.high, cell, byte))
+            entries[i] |= byte << 8
     write_u16(args.out_map, entries)
-
-
-def extract_choices(args):
-    entries = read_u16(args.map)
-    rom = read_u16(args.rom_map)
-    lines = ['    "%d": "%04X"' % (i, r) for i, (g, r) in enumerate(zip(entries, rom)) if g != r]
-    open(args.out_json, "w").write("{\n" + ",\n".join(lines) + "\n}\n")
 
 
 def main():
@@ -195,24 +173,11 @@ def main():
     p.add_argument("out_tiles")
     p.add_argument("out_map")
     p.add_argument("--bpp", type=int, choices=(4, 8), required=True)
+    p.add_argument("--high", help="JSON of an affine map's nonzero high bytes")
     p.set_defaults(fn=first_use)
-    p = sub.add_parser("pick")
-    p.add_argument("tiles")
-    p.add_argument("map")
-    p.add_argument("choices")
-    p.add_argument("out_map")
-    p.add_argument("--bpp", type=int, choices=(4, 8), required=True)
-    p.add_argument("--width", type=int, help="map width in cells, for the error messages")
-    p.set_defaults(fn=pick)
     p = sub.add_parser("extract")
     p.add_argument("rom", nargs="?", default="baserom.gba")
     p.set_defaults(fn=extract)
-    p = sub.add_parser("extract-choices")
-    p.add_argument("tiles")
-    p.add_argument("map")
-    p.add_argument("rom_map")
-    p.add_argument("out_json")
-    p.set_defaults(fn=extract_choices)
     args = ap.parse_args()
     args.fn(args)
 
