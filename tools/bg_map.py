@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Post-processing of grit's tile set + map output for the menu and title
-backgrounds of graphics/menu_bg/ (docs/graphics.md, "Menu and title
-backgrounds"). grit does the pixel conversion and the tile reduction;
+"""Post-processing of grit's tile set + map output for the struct
+bg_package pictures of graphics/bg_package/ (the menu and title
+backgrounds and the title's OBJ sprites; docs/graphics.md, "Menu and title
+pictures"). grit does the pixel conversion and the tile reduction;
 this only renumbers or picks entries, so every tile and flip still comes
 from grit.
 
@@ -23,7 +24,7 @@ from grit.
         to let grit pick.
 
     tools/bg_map.py extract [baserom.gba]
-        Writes the graphics/menu_bg/ sources from the ROM: each package's
+        Writes the graphics/bg_package/ sources from the ROM: each package's
         whole picture (indexed, with the package's palette), and for a
         tile set with identical or unused tiles its tile-set strip. Then
         run grit on them as graphics.mk does and write CHOICES with:
@@ -37,10 +38,11 @@ import struct
 import sys
 from pathlib import Path
 
-# The packages (struct bg_package, read by LoadGraphicsPackage and
-# TitleScreen::LoadBg): file name, palette, tiles, map, width and height
-# in cells, bpp, and whether the map is the affine title map (entries
-# are plain tile numbers; LoadBg keeps their low byte).
+# The packages (struct bg_package, read by BgSetup::Load,
+# TitleScreen::LoadBg and TitleScreen::LoadObjTiles): file name, palette,
+# tiles, map, width and height in cells, bpp, and whether the map is the
+# affine title map (entries are plain tile numbers; LoadBg keeps their
+# low byte).
 PACKAGES = [
     ("61c30c_menu_sky", 0x0861BADC, 0x0861C30C, 0x0862FB24, 32, 20, 4, False),
     ("61e5f8_pause_menu", 0x0861BB04, 0x0861E5F8, 0x0862FFF4, 30, 20, 8, False),
@@ -50,8 +52,15 @@ PACKAGES = [
     ("62b34c_continue_prompt_uka_uka", 0x0861BF80, 0x0862B34C, 0x08631158, 30, 20, 8, False),
     ("62d0cc_universal_logo", 0x0861C1FC, 0x0862D0CC, 0x086315BC, 30, 20, 4, False),
     ("62e3b0_title_screen", 0x0861C224, 0x0862E3B0, 0x0863183C, 16, 16, 8, True),
+    # The title's OBJ sprites (TitleScreen::LoadObjTiles copies one tile
+    # per map entry to OBJ VRAM, by the entry's low byte; it ignores the
+    # flip bits the maps have on a few symmetric-looking cells).
+    ("62c2c8_title_bandicoot_obj", 0x0861C15C, 0x0862C2C8, 0x08631374, 4, 6, 4, False),
+    ("62c4b0_title_crash_obj", 0x0861C184, 0x0862C4B0, 0x086313B0, 8, 40, 4, False),
+    ("62cc3c_title_arrow1_obj", 0x0861C1AC, 0x0862CC3C, 0x086314F0, 4, 16, 4, False),
+    ("62ce70_title_arrow2_obj", 0x0861C1D4, 0x0862CE70, 0x08631558, 4, 16, 4, False),
 ]
-OUT_DIR = Path("graphics/menu_bg")
+OUT_DIR = Path("graphics/bg_package")
 
 
 def lz77_decompress(rom, addr):

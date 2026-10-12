@@ -76,16 +76,20 @@ byte-exact for every PNG asset here, but its own LZ77 isn't. The findings
 and the grit flags for each asset kind are in
 [data.md, "Resources (grit-style)"](./data.md#resources-grit-style).
 
-### Menu and title backgrounds
+### Menu and title pictures
 
-The eight BG pictures of the menus, the continue prompt, the legal
-screen and the title are each a `struct bg_package` (`{w, h, palette,
-tiles, map}`, read by `BgSetup::Load` / `TitleScreen::LoadBg`). Before,
-they were stored as a tile-set PNG plus a raw `.bin` map. Now each one is
-a single indexed PNG of the whole picture, as it appears on screen, in
-`graphics/menu_bg/` (`<tiles addr>_<name>.png`, drawn with the package's
-palette). The build rebuilds both the tile set and the map from that
-PNG, byte for byte:
+Twelve pictures are each a `struct bg_package` (`{w, h, palette, tiles,
+map}`):
+- the eight BG pictures of the menus, the continue prompt, the legal
+  screen and the title, read by `BgSetup::Load` / `TitleScreen::LoadBg`;
+- the four OBJ sprites of the title screen, read by
+  `TitleScreen::LoadObjTiles`.
+
+Before, each was stored as a tile-set PNG plus a raw `.bin` map, or as a
+map misfiled as tiles or as a palette. Now each one is a single indexed
+PNG of the whole picture in `graphics/bg_package/`, named
+`<tiles addr>_<name>.png` and drawn with the package's palette. The build
+rebuilds both the tile set and the map from that PNG, byte for byte:
 
 | picture | bpp | cells | map |
 |---|---|---|---|
@@ -97,6 +101,16 @@ PNG, byte for byte:
 | `62b34c_continue_prompt_uka_uka` (`gContinuePromptUkaUkaBg`) | 8 | 30x20 | text |
 | `62d0cc_universal_logo` (`gUniversalLogoBg`) | 4 | 30x20 | text, + tile-set strip |
 | `62e3b0_title_screen` (`gTitleScreenBg`) | 8 | 16x16 | affine |
+| `62c2c8_title_bandicoot_obj` (`gTitleBandicootObj`) | 4 | 4x6 | OBJ |
+| `62c4b0_title_crash_obj` (`gTitleCrashObj`) | 4 | 8x40 | OBJ |
+| `62cc3c_title_arrow1_obj` (`gTitleArrow1Obj`) | 4 | 4x16 | OBJ |
+| `62ce70_title_arrow2_obj` (`gTitleArrow2Obj`) | 4 | 4x16 | OBJ |
+
+An OBJ map is one `u16` per OBJ tile. `LoadObjTiles` copies the sheet tile
+named by its low byte into OBJ VRAM, in map order, and ignores the h/v
+flip bits that the original tool left on 2 cells. The PNG draws those
+cells flipped, as the map says, so the reduction gets the same bits
+back. In game, those cells show their tile unflipped.
 
 How the build does it (`graphics.mk`):
 
@@ -127,8 +141,7 @@ A choice must still draw the cell's pixels. If you redraw such a cell,
 the build stops and names the cell, and you delete its line from the
 JSON.
 
-The palettes are still separate assets (`graphics/intro/24`-`29`, `34`,
-`35`). The PNG's own palette is a copy for viewing, so edit the palette
+The palettes are still separate assets (`graphics/intro/24`-`35`). The PNG's own palette is a copy for viewing, so edit the palette
 file to change colours. `tools/bg_map.py extract` writes the PNGs from
 `baserom.gba` again.
 
