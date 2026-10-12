@@ -31,6 +31,7 @@ void Crate::Update()
 
         s32 k = kind;
 
+        /* nested: as one `&&` test, the code is 2 instructions shorter */
         if (k > CRATE_KIND_TIME_3) {
             if (k <= CRATE_KIND_TNT_LIT_3) {
                 UpdateTntCountdown();
@@ -38,6 +39,7 @@ void Crate::Update()
                 goto done;
             }
         }
+        /* nested: as one `&&` test, the code is 1 instruction shorter */
         if (kind == CRATE_KIND_SLOT) {
             if ((state & CRATE_STATE_MASK) == 0) {
                 UpdateSlot();
@@ -62,6 +64,7 @@ void Crate::Update()
             gPlayer->busy = 0;
             if (kind == CRATE_KIND_NITRO_SWITCH) {
                 const struct sprite_anim *anims;
+                /* `anim` is needed: inlined, the instructions are reordered */
                 const struct sprite_anim *anim;
                 u32 slot; // a u32: the ROM zero-extends the u8 result before the 4-bit store
 

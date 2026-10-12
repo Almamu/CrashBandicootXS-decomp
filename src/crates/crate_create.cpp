@@ -183,6 +183,7 @@ Crate *Crate::Create(u16 id, u16 x, u16 y, u16 slot, u8 type)
         {
             struct crate_placement *rec = Placement(slot);
 
+            /* `anim` is needed: inlined, the instructions are reordered */
             const struct sprite_anim *anim = &self->bank->anims[8];
 
             gPaletteCache->GetSlot(anim->paletteId);

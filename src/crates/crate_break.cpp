@@ -218,6 +218,7 @@ void Crate::QueuePlayerCollision(s32 idx)
     s32 offY;
     u8 w;
     u8 h;
+    /* `bnc` is needed: inlined, the instructions differ */
     s32 bnc;
 
     px = Q8_TO_INT(x);
@@ -257,11 +258,13 @@ void Crate::QueuePlayerCollision(s32 idx)
 
     hb = PlayerThirdBox();
     empty = 0;
+    /* nested: as one `&&` test, the code is 4 instructions shorter */
     if (hb->w == 0)
         if (hb->h == 0)
             empty = 1;
     if (empty)
         goto tail;
+    /* scoped: its own `offX`/`offY`/`w`/`h` (shared, the code is 2 instructions shorter) */
     {
         s32 offX;
         s32 offY;
@@ -397,6 +400,7 @@ tail:
     *pc = box;
     if (attack != ATTACK_KIND_INVINCIBLE)
         MarkStackTouched(&box);
+    /* scoped: its own `offX`/`offY`/`w`/`h` (shared, the registers differ) */
     {
         s32 offX;
         s32 offY;
@@ -781,6 +785,7 @@ void Crate::ApplyCollision(s32 attack, s32 code, s32 edge, s32 depth, struct vec
     }
     if ((u32)(code - 2) <= 1 || code == 5) {
         u8 k = kind;
+        /* `d` is needed: inlined, the code is 2 instructions longer */
         s32 d = gPlayer->dir;
 
         if ((d & 4) == 0) {
@@ -836,11 +841,13 @@ void Crate::ApplyCollision(s32 attack, s32 code, s32 edge, s32 depth, struct vec
                 (depth <= 7 && code == 1 && edge == 8)) {
                 gPlayer->carried = this;
 
+                /* `m` is needed: inlined, the instructions are reordered */
                 u8 m = PART_DIR_DOWN;
 
                 gPlayer->hitAxes = m;
 
                 struct vec2 *pp = &pos;
+                /* `py` is needed: inlined, the instructions are reordered */
                 s32 py = gPlayer->y;
 
                 pp->y = py - INT_TO_Q8(depth - 1);
@@ -900,6 +907,7 @@ void Crate::ApplyCollision(s32 attack, s32 code, s32 edge, s32 depth, struct vec
     }
 commit:
     Player *p = gPlayer;
+    /* `q` is needed: inlined, the instructions differ */
     CollisionQueue *q = &p->collisionQueue;
 
     if (q->posCommitted == 0)
@@ -984,6 +992,7 @@ void Crate::BounceWumpa()
             s32 py = Q8_TO_INT(y) - 6;
 
             gEntitySpawner->DropWumpa(px, py, 0, 0xe, true);
+            /* scoped: its own `px`/`py` (shared, the code is 4 instructions longer) */
             {
                 s32 px = Q8_TO_INT(x) + 3;
                 s32 py = Q8_TO_INT(y);
@@ -1001,7 +1010,9 @@ void Crate::BounceWumpa()
 void Crate::LightTnt()
 {
     const struct sprite_anim *anims;
+    /* `a` is needed: inlined, the instructions are reordered */
     const struct sprite_anim *a;
+    /* `slot` is needed: inlined, the code is 2 instructions shorter */
     u32 slot;
 
     kind = CRATE_KIND_TNT_LIT_3;
@@ -1035,6 +1046,7 @@ void Crate::OpenCheckpoint()
     MovingSprite *puff;
     u8 one;
 
+    /* `px`, `py` are needed: inlined, the instructions are reordered */
     s32 px = Q8_TO_INT(x) - 10;
     s32 py = Q8_TO_INT(y);
 
@@ -1141,6 +1153,7 @@ void Crate::Break(u32 byBlast)
 
     const struct sprite_anim *anims = bank->anims;
     const struct sprite_anim *a = &anims[tag];
+    /* `slot` is needed: inlined, the code is 2 instructions shorter */
     u32 slot = gPaletteCache->GetSlot(a->paletteId);
 
     palette = slot;
@@ -1151,6 +1164,7 @@ void Crate::Break(u32 byBlast)
      * block: the macro's do/while(0) changes this object. */
     {
         s32 eid = id;
+        /* `base` is needed: inlined, the instructions are reordered */
         LevelEntityFlags *base = gEntityFlags;
         s32 word = eid / 32;
 
@@ -1203,6 +1217,7 @@ void Crate::Break(u32 byBlast)
         break;
     case CRATE_KIND_BASIC:
         {
+            /* `px`, `py` are needed: inlined, the instructions are reordered */
             s32 px = Q8_TO_INT(x);
             s32 py = Q8_TO_INT(y) + 3;
 
@@ -1259,6 +1274,8 @@ void Crate::OpenMystery(bool flag)
 
         if (eid != 0xffff && gEntityFlags->IsActivated(eid) == 0)
             gEntityFlags->SetActivated(id);
+        /* scoped: case 10 has a `px`/`py` too, and the next case labels
+         * would cross these */
         {
             s32 px = Q8_TO_INT(x);
             s32 py = Q8_TO_INT(y) + 3;
@@ -1331,6 +1348,7 @@ void Crate::OpenMystery(bool flag)
 void Crate::OpenSlot(bool flag)
 {
     u16 eid;
+    /* `px`, `py` are needed: inlined, the instructions are reordered */
     s32 px;
     s32 py;
 
@@ -1376,6 +1394,7 @@ void Crate::DropAbove()
 {
     s8 delta = -2;
     const struct sprite_bank *b = bank;
+    /* `a` is needed: inlined, the instructions are reordered */
     const struct sprite_anim *a = &b->anims[tag];
     s32 base = INT_TO_Q8(a->box[0].h + 1);
     Crate *n = GetAbove();
@@ -1408,13 +1427,16 @@ void Crate::DropAbove()
         t = n->fallSpeed;
         LIMIT_MAX(t, 0);
 
+        /* `d` is needed: inlined, the registers differ */
         s32 d = delta;
 
         n->fallSpeed = t + d;
         n->f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
         Crates()->LinkActive(n);
         if (tbl[n->kind] && blastState == CRATE_BLAST_STATE_NONE && n->fallDistance > 0x1600) {
+            /* `next` is needed: inlined, the registers differ */
             Crate *next = n->GetAbove();
+            /* `prev` is needed: inlined, the code is 7 instructions shorter */
             Crate *prev = n->GetBelow();
 
             if (next == 0 && prev != 0) {

@@ -47,16 +47,20 @@ void CrateList::Collide(struct aabb box, s32 unused, MovingSprite *other)
     s32 lo;
     s32 i;
     CrateGridNode *node;
+    /* `last` is needed: inlined, the code is 4 instructions shorter */
     CrateGridNode **last;
+    /* `columns` is needed: inlined, the instructions are reordered */
     CrateGridNode **columns;
 
     cam = gLevelLayers->layer0;
 
+    /* `x`, `y` are needed: inlined, the instructions are reordered */
     s32 x = INT_TO_Q8(cam->x);
     s32 y = INT_TO_Q8(cam->y);
     screen.x = x;
     screen.y = y;
 
+    /* `w`, `h` are needed: inlined, the instructions are reordered */
     s32 w = INT_TO_Q8(240);
     s32 h = INT_TO_Q8(160);
     screen.w = w;
@@ -160,6 +164,7 @@ void CrateList::CollidePlayer(s32 unused)
         } while (i >= lo);
     } else {
         s32 action = p->mover->state;
+        /* `px`, `py` are needed: inlined, the code is 1 instruction longer */
         s32 px = p->x;
         s32 py = p->y;
 

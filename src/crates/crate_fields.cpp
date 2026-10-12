@@ -33,6 +33,7 @@ void Crate::OpenLife(bool flag6)
     u16 eid = id;
     if (eid != 0xFFFF && gEntityFlags->IsActivated(eid) == 0)
         gEntityFlags->SetActivated(id);
+    /* `px`, `py` are needed: inlined, the instructions are reordered */
     s32 px = Q8_TO_INT(x);
     s32 py = Q8_TO_INT(y) + 3;
     gEntitySpawner->DropExtraLife(px, py, 0, PICKUP_MODE_HOP_UP, flag6);
@@ -131,6 +132,7 @@ void Crate::DecrementSlotStage()
     u8 stage = GetSlotStage();
 
     if (stage != 0) {
+        /* `next` is needed: inlined, the code is 1 instruction shorter */
         u8 next = stage - 1;
         slotState = (slotState & CRATE_SLOT_CLEAR_STAGE) | (next << CRATE_SLOT_STAGE_SHIFT);
     }
@@ -160,6 +162,7 @@ void Crate::DecrementSlotSpins()
     u8 spins = GetSlotSpins();
 
     if (spins != 0) {
+        /* `next` is needed: inlined, the code is 1 instruction shorter */
         u8 next = spins - 1;
         slotState = (slotState & CRATE_SLOT_CLEAR_SPINS) | (next << CRATE_SLOT_SPINS_SHIFT);
     }
@@ -234,6 +237,7 @@ u32 Crate::IsBusy()
  * between the two. */
 void Crate::SetBusy()
 {
+    /* `p` is needed: inlined, the instructions are reordered */
     Player *p;
     u32 one;
 

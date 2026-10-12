@@ -81,6 +81,7 @@ void Crate::FinishBroken()
  * with its animation and tick), then it explodes (if idle). */
 void Crate::UpdateTntCountdown()
 {
+    /* `k` is needed: inlined, the code is 2 instructions shorter */
     u8 k;
 
     if (timer != 0)
@@ -159,6 +160,7 @@ void Crate::UpdateSlot()
         s32 done = 0;
 
         do {
+            /* `ph` is needed: inlined, the instructions differ */
             s32 ph;
             s32 nx;
             s32 lw;
@@ -331,7 +333,9 @@ void Crate::UpdateFall()
                         if ((state & CRATE_STATE_MASK) == 0)
                             Explode(0);
                     } else if (k == CRATE_KIND_TNT) {
+                        /* `next` is needed: inlined, the registers differ */
                         Crate *next = GetAbove();
+                        /* `prev` is needed: inlined, the code is 1 instruction shorter */
                         Crate *prev = GetBelow();
 
                         if (next != 0 || prev == 0)
@@ -353,6 +357,7 @@ void Crate::UpdateFall()
         } while (speed != 0);
     }
 
+    /* `ny` is needed: inlined, the instructions are reordered */
     s32 ny = y + acc;
 
     x = t;

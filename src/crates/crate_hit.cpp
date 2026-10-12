@@ -54,6 +54,7 @@ u8 Crate::PlayerAnimWouldTouch(s32 action)
         FlipAabbX(&a, px);
     if (mirrorBits.flipY < 0)
         FlipAabbY(&a, py);
+    /* scoped: its own `q`/`offX`/`offY`/`w`/`h` (shared, the code is 2 instructions longer) */
     {
         Player *p = gPlayer;
         const struct hitbox_quad *q;
@@ -76,6 +77,7 @@ u8 Crate::PlayerAnimWouldTouch(s32 action)
     }
     if (AabbOverlapsInclusiveX(&a, &b))
         return 0;
+    /* scoped: its own `q`/`offX`/`offY`/`w`/`h` (shared, the code is 2 instructions longer) */
     {
         const struct hitbox_quad *q = &gPlayer->bank->anims[action].box[0];
         s32 offX, offY;
@@ -147,6 +149,7 @@ u8 Crate::PlayerHitboxOverlapsAt(const struct hitbox_quad *quad, struct aabb *bo
 Crate *Crate::ResolveStackHit(struct aabb *box, u8 *foundFlag)
 {
     Crate *hit = this;
+    /* `next` is needed: inlined, the code is 1 instruction shorter */
     Crate *next = hit->GetAbove();
     Crate *prev = hit->GetBelow();
 
@@ -160,8 +163,10 @@ Crate *Crate::ResolveStackHit(struct aabb *box, u8 *foundFlag)
     struct aabb b;
     s32 px = Q8_TO_INT(prev->x);
     s32 py = Q8_TO_INT(prev->y);
+    /* `offX`, `offY` are needed: inlined, the instructions are reordered */
     s32 offX = q->offX;
     s32 offY = q->offY;
+    /* `w`, `h` are needed: inlined, the code is 1 instruction shorter */
     u8 w = q->w;
     u8 h = q->h;
 
@@ -208,6 +213,7 @@ void Crate::BreakIfTouchedByPlayer()
         FlipAabbX(&a, px);
     if (mirrorBits.flipY < 0)
         FlipAabbY(&a, py);
+    /* scoped: its own `q`/`offX`/`offY`/`w`/`h` (shared, the code is 2 instructions longer) */
     {
         Player *p = gPlayer;
         const struct hitbox_quad *q;

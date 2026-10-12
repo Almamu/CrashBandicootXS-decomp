@@ -24,11 +24,13 @@ void CrateList::Draw()
     CrateGridNode *node;
     CrateGridNode **last;
 
+    /* `cx`, `cy` are needed: inlined, the instructions are reordered */
     s32 cx = INT_TO_Q8(cam->x);
     s32 cy = INT_TO_Q8(cam->y);
     screen.x = cx;
     screen.y = cy;
 
+    /* `w`, `h` are needed: inlined, the instructions are reordered */
     s32 w = INT_TO_Q8(240);
     s32 h = INT_TO_Q8(160);
     screen.w = w;

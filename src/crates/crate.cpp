@@ -32,6 +32,7 @@ s32 Crate::IsInsideRect(struct aabb *box)
         s32 left = x - halfW;
         s32 top = y - halfH;
         s32 right = x + halfW;
+        /* `bottom` is needed: inlined, the code is 2 instructions longer */
         s32 bottom = y + halfH;
         u8 inside = 0;
 
