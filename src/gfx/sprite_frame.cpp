@@ -414,13 +414,13 @@ s32 LoadSpriteFrameTiles(u8 *frame)
  * `GetSpriteShapeSizeBits` above, inlined here rather than called -
  * see that function's own comment), ORs them into the caller's own
  * `attr01` bits, resolves the frame's VRAM tile index via
- * `LoadSpriteFrameTiles` and ORs that into the caller's `arg2` (the
- * attr2-to-be), then hands both off to `QueueSpriteFrameOam` alongside
- * `priority` (used only for the affine-scale path). */
-void SetupSpriteFrameOam(u8 *frame, u32 attr01, u32 arg2, s32 priority)
+ * `LoadSpriteFrameTiles` and ORs that into the caller's `attr2`, then
+ * hands both off to `QueueSpriteFrameOam` alongside `priority` (used
+ * only for the affine-scale path). */
+void SetupSpriteFrameOam(u8 *frame, u32 attr01, u32 attr2, s32 priority)
 {
     u32 shapeBits;
-    u16 packed = (u16)arg2;
+    u16 packed = (u16)attr2;
     s32 w = frame[0];
     s32 h = frame[1];
     s32 tileIdx;

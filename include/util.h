@@ -49,11 +49,11 @@ static inline void SetAabb(struct aabb *dest, s32 x, s32 y, s32 w, s32 h)
 /* src/util/fixed_math.cpp */
 extern s32 FixedDistSq(s32 x1, s32 x2, s32 y1, s32 y2);
 extern u32 FixedDist(s32 x1, s32 x2, s32 y1, s32 y2);
-extern s32 FixedDiv(s32 a, s32 b);
+extern s32 FixedDiv(s32 numerator, s32 denominator);
 extern s32 FixedMul(s32 a, s32 b);
-extern s32 FixedInverse16(s32 a);
-extern s32 FixedDiv16(s32 a, s32 b);
-extern s32 FixedMul16(s32 a, s32 b);
+extern s32 FixedInverse16(s32 denominator);
+extern s32 FixedDiv16(s32 numerator, s32 denominator);
+extern s32 FixedMul16(s32 lhs, s32 rhs);
 
 /* src/util/line.cpp, src/util/line_step.cpp */
 extern void InitBresenhamLine(struct bresenham_line *line);
