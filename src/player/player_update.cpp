@@ -80,6 +80,8 @@ static inline s32 IsBlinking(Player *p)
  * other form that leaves the load is an if/else with identical arms.  */
 void Player::HandleEvent(s32 from, s32 event, s32 arg)
 {
+    s32 mode;
+
     switch (event) {
     case EVENT_CRYSTAL:
         gLevelState->GetCurrentLevelFlags()->flags |= LEVEL_FLAG_CRYSTAL;
@@ -147,13 +149,11 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
             for (i = 7; i >= 0; i--)
                 *h++ = Pos();
         }
-        {
-            s32 mode = gLevelState->maskLevel;
+        mode = gLevelState->maskLevel;
 
-            if ((mode <= MASK_LEVEL_TWO && gPlayer->ctrlMode != PLAYER_CTRL_MODE_SWIM) ||
-                mode <= MASK_LEVEL_ONE)
-                gLevelState->RaiseMaskLevel();
-        }
+        if ((mode <= MASK_LEVEL_TWO && gPlayer->ctrlMode != PLAYER_CTRL_MODE_SWIM) ||
+            mode <= MASK_LEVEL_ONE)
+            gLevelState->RaiseMaskLevel();
         if (gLevelState->maskLevel == MASK_LEVEL_INVINCIBLE)
             deadline = gRoomFrameCount + 1200;
         break;
@@ -167,36 +167,34 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
     case EVENT_HIT_DART:
     case EVENT_HIT_CORTEX_SHOT:
     case EVENT_HIT_CRUSH:
-        if ((f.flags >> ENTITY_BIT_VULNERABLE) & 1) {
-            if (!IsBlinking(this)) {
-                if (gLevelState->maskLevel != MASK_LEVEL_NONE) {
-                    if (gLevelState->maskLevel <= MASK_LEVEL_TWO) {
-                        Sprite *c;
-                        s32 cx, cy, m;
+        if (((f.flags >> ENTITY_BIT_VULNERABLE) & 1) && !IsBlinking(this)) {
+            if (gLevelState->maskLevel != MASK_LEVEL_NONE) {
+                if (gLevelState->maskLevel <= MASK_LEVEL_TWO) {
+                    Sprite *c;
+                    s32 cx, cy, m;
 
-                        deadline = gRoomFrameCount + 90;
-                        gLevelState->SetMaskLevel(gLevelState->maskLevel - 1);
-                        gAudioContext->PlaySfx(SFX_AKU_AKU_LOSE, 0x100);
-                        gAudioContext->PlaySfx(SFX_PLAYER_HURT, 0x100);
-                        mover->HandleEvent(from, EVENT_MASK_HIT, arg);
-                        /* Dead on purpose: the ROM reloads the mask level
-                         * here and never uses it. This test is what leaves
-                         * that load; its `m = 0` is dead (m is set from the
-                         * mirror flag below), so the compiler drops the
-                         * store, then the empty test, but not the load.
-                         * See the comment above the function. */
-                        if (gLevelState->maskLevel == MASK_LEVEL_NONE)
-                            m = 0;
-                        c = child;
-                        cx = Q8_TO_INT(c->x);
-                        cy = Q8_TO_INT(c->y);
-                        m = c->mirrorFlags.mirrorX;
-                        gEntitySpawner->SpawnEffectPart(0x22, 3, cx, cy, m);
-                    }
-                } else {
-                    gLevelState->AddDeath();
-                    mover->HandleEvent(from, event, arg);
+                    deadline = gRoomFrameCount + 90;
+                    gLevelState->SetMaskLevel(gLevelState->maskLevel - 1);
+                    gAudioContext->PlaySfx(SFX_AKU_AKU_LOSE, 0x100);
+                    gAudioContext->PlaySfx(SFX_PLAYER_HURT, 0x100);
+                    mover->HandleEvent(from, EVENT_MASK_HIT, arg);
+                    /* Dead on purpose: the ROM reloads the mask level
+                     * here and never uses it. This test is what leaves
+                     * that load; its `m = 0` is dead (m is set from the
+                     * mirror flag below), so the compiler drops the
+                     * store, then the empty test, but not the load.
+                     * See the comment above the function. */
+                    if (gLevelState->maskLevel == MASK_LEVEL_NONE)
+                        m = 0;
+                    c = child;
+                    cx = Q8_TO_INT(c->x);
+                    cy = Q8_TO_INT(c->y);
+                    m = c->mirrorFlags.mirrorX;
+                    gEntitySpawner->SpawnEffectPart(0x22, 3, cx, cy, m);
                 }
+            } else {
+                gLevelState->AddDeath();
+                mover->HandleEvent(from, event, arg);
             }
         }
         break;
@@ -281,54 +279,49 @@ void Player::Draw()
             child->SetTag(2);
         child->Draw();
     }
-    {
-        /* Through a local, the mask level is loaded again here: tested
-         * straight from gLevelState, a not-invincible first test jumps past
-         * this one (jump threading). */
-        LevelState *game = gLevelState;
 
-        if (game->maskLevel == MASK_LEVEL_INVINCIBLE || !IsBlinking(this) || (gRoomFrameCount & 4))
-            gSpriteRenderer->Draw(this);
-    }
+    /* Through a local, the mask level is loaded again here: tested
+     * straight from gLevelState, a not-invincible first test jumps past
+     * this one (jump threading). */
+    LevelState *game = gLevelState;
+
+    if (game->maskLevel == MASK_LEVEL_INVINCIBLE || !IsBlinking(this) || (gRoomFrameCount & 4))
+        gSpriteRenderer->Draw(this);
     if (gLevelState->maskLevel == MASK_LEVEL_INVINCIBLE && !IsBlinking(this))
         gLevelState->SetMaskLevel(MASK_LEVEL_TWO);
-    {
-        s32 px = x;
 
-        maskTrail[maskTrailIdx].x = px;
-    }
-    {
-        s32 py = y;
+    s32 px = x;
 
-        maskTrail[maskTrailIdx].y = py;
-    }
+    maskTrail[maskTrailIdx].x = px;
+
+    s32 py = y;
+
+    maskTrail[maskTrailIdx].y = py;
     maskTrailIdx = (maskTrailIdx + 1) % 8;
-    {
-        s32 mode = gLevelState->maskLevel;
 
-        if ((u32)(mode - MASK_LEVEL_ONE) <= 1) {
-            if (!(gRoomFrameCount & 7)) {
-                s32 v;
+    s32 mode = gLevelState->maskLevel;
 
-                gAkuAkuFollowFrame = gAkuAkuFollowFrame + RandRange(3) - 1;
-                v = gAkuAkuFollowFrame;
-                LIMIT_MAX(v, 3);
-                LIMIT_MIN(v, 0);
-                gAkuAkuFollowFrame = v;
-            }
-            ClampStep(child, gAkuAkuFollowFrame);
-            {
-                s32 idx = maskTrailIdx;
+    if ((u32)(mode - MASK_LEVEL_ONE) <= 1) {
+        if (!(gRoomFrameCount & 7)) {
+            s32 v;
 
-                // clang-format off
-                PlaceChild(child,
-                           maskTrail[idx].x + SIN_Q8(gRoomFrameCount) * 16,
-                           maskTrail[idx].y + SIN_Q8(gRoomFrameCount >> 1) * 8 - 0x1800);
-                // clang-format on
-            }
-            child->tag = mode - 1;
-            child->Draw();
+            gAkuAkuFollowFrame = gAkuAkuFollowFrame + RandRange(3) - 1;
+            v = gAkuAkuFollowFrame;
+            LIMIT_MAX(v, 3);
+            LIMIT_MIN(v, 0);
+            gAkuAkuFollowFrame = v;
         }
+        ClampStep(child, gAkuAkuFollowFrame);
+
+        s32 idx = maskTrailIdx;
+
+        // clang-format off
+        PlaceChild(child,
+                   maskTrail[idx].x + SIN_Q8(gRoomFrameCount) * 16,
+                   maskTrail[idx].y + SIN_Q8(gRoomFrameCount >> 1) * 8 - 0x1800);
+        // clang-format on
+        child->tag = mode - 1;
+        child->Draw();
     }
     if (animDone)
         f.b.bit3 = 0;

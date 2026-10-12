@@ -65,25 +65,24 @@ void Player::ResetForRoom()
     tag = 0;
     f.b.bit3 = 0;
     f.b.vulnerable = 1;
-    {
-        /* The switch is on a copy: the ROM runs the compares of `2` and `3`
-         * on a copy of the mode in another register (docs/cplusplus.md,
-         * "A switch on a copy"). */
-        s32 mode = ctrlMode;
-        s32 m = mode;
 
-        switch (m) {
-        case PLAYER_CTRL_MODE_ACTION:
-            ((ActionCtrl *)mover)->Restart();
-            break;
-        case PLAYER_CTRL_MODE_SWIM:
-            ((SwimCtrl *)mover)->Restart();
-            break;
-        case PLAYER_CTRL_MODE_UNK2:
-            break;
-        case PLAYER_CTRL_MODE_INPUT:
-            ((InputCtrl *)mover)->Restart();
-            break;
-        }
+    /* The switch is on a copy: the ROM runs the compares of `2` and `3`
+     * on a copy of the mode in another register (docs/cplusplus.md,
+     * "A switch on a copy"). */
+    s32 mode = ctrlMode;
+    s32 m = mode;
+
+    switch (m) {
+    case PLAYER_CTRL_MODE_ACTION:
+        ((ActionCtrl *)mover)->Restart();
+        break;
+    case PLAYER_CTRL_MODE_SWIM:
+        ((SwimCtrl *)mover)->Restart();
+        break;
+    case PLAYER_CTRL_MODE_UNK2:
+        break;
+    case PLAYER_CTRL_MODE_INPUT:
+        ((InputCtrl *)mover)->Restart();
+        break;
     }
 }

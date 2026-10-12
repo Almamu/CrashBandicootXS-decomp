@@ -81,32 +81,31 @@ skip:
         if (p->speedX != 0 && p->slippery == 0)
             QueueNowX(0);
     }
-    {
-        u8 pending = motionXPending;
 
-        if (pending == 1) {
-            Player *q;
+    u8 pending = motionXPending;
 
-            rec = gCtrlMotionRecords[animSet->entries[motionX][0]];
-            q = gPlayer;
-            if (IsSlippery(q) && part->hitAxes == PART_DIR_DOWN && q->speedX != 0) {
-                motionXKeepSpeed = pending;
-                rec.target = FixedMul(rec.target, 0x180);
-                rec.step /= 2;
-            }
-            if (motionX == 0x1E) {
-                motionXKeepSpeed = 0;
-                if (gPlayer->slippery) {
-                    rec.step = FixedMul(rec.step, 0x200);
-                    rec.start = FixedMul(rec.start, 0x180);
-                }
-            }
-            if (motionXKeepSpeed)
-                SetTargetMotionX(part, &rec.start);
-            else
-                StartTargetMotionX(part, &rec.start);
-            motionXPending = 0;
+    if (pending == 1) {
+        Player *q;
+
+        rec = gCtrlMotionRecords[animSet->entries[motionX][0]];
+        q = gPlayer;
+        if (IsSlippery(q) && part->hitAxes == PART_DIR_DOWN && q->speedX != 0) {
+            motionXKeepSpeed = pending;
+            rec.target = FixedMul(rec.target, 0x180);
+            rec.step /= 2;
         }
+        if (motionX == 0x1E) {
+            motionXKeepSpeed = 0;
+            if (gPlayer->slippery) {
+                rec.step = FixedMul(rec.step, 0x200);
+                rec.start = FixedMul(rec.start, 0x180);
+            }
+        }
+        if (motionXKeepSpeed)
+            SetTargetMotionX(part, &rec.start);
+        else
+            StartTargetMotionX(part, &rec.start);
+        motionXPending = 0;
     }
     if (motionYPending == 1) {
         rec = gCtrlMotionRecords[animSet->entries[motionY][1]];
@@ -162,65 +161,63 @@ void ActionCtrl::StateIdle()
         idleFidget = 1;
     }
 skip:
-    {
-        u8 left = CheckLeftGround();
-        u16 held;
+    u8 left = CheckLeftGround();
+    u16 held;
 
-        if (left)
-            return;
-        if (INPUT_PRESSED(in) & A_BUTTON) {
-            gAudioContext->PlaySfx(SFX_JUMP, 0x100);
-            SetMode(ACTION_STATE_JUMP);
-            SetTargetAnim(part, 0x13);
-            frame = left;
-            QueueNowY(7);
+    if (left)
+        return;
+    if (INPUT_PRESSED(in) & A_BUTTON) {
+        gAudioContext->PlaySfx(SFX_JUMP, 0x100);
+        SetMode(ACTION_STATE_JUMP);
+        SetTargetAnim(part, 0x13);
+        frame = left;
+        QueueNowY(7);
+    } else {
+        u16 alt = INPUT_PRESSED(in) & B_BUTTON;
+
+        if (alt) {
+            StartSpin();
         } else {
-            u16 alt = INPUT_PRESSED(in) & B_BUTTON;
+            if ((held = INPUT_HELD(in) & R_BUTTON) == 0)
+                goto other;
+            SetMode(ACTION_STATE_CROUCH_DOWN);
+            SetTargetAnim(part, 3);
+            frames = alt;
+        }
+    }
+    UpdateFacing();
+    return;
+other:
+    turboRun = held;
+    if (dir == KEY_DIR_NONE) {
+        Player *q = part;
 
-            if (alt) {
-                StartSpin();
-            } else {
-                if ((held = INPUT_HELD(in) & R_BUTTON) == 0)
-                    goto other;
+        if (IsSlippery(q) && motionX != 0x1F && q->speedX != 0)
+            QueueNowXKeepSpeed(0x1F);
+    } else {
+        u8 wait = dpadLockTimer;
+
+        if (wait == 0) {
+            switch (dir) {
+            case KEY_DIR_LEFT ... KEY_DIR_DOWN_RIGHT:
+                if ((INPUT_HELD(in) & L_BUTTON) && gLevelState->HasTurboRun()) {
+                    turboRun = 1;
+                    SetMode(ACTION_STATE_TURBO_RUN);
+                    SetTargetAnim(part, 0x18);
+                    QueueX(wait, 1, 0x1B);
+                } else {
+                    StartRun();
+                }
+                break;
+            case KEY_DIR_DOWN:
                 SetMode(ACTION_STATE_CROUCH_DOWN);
                 SetTargetAnim(part, 3);
-                frames = alt;
+                frames = wait;
+                break;
             }
         }
-        UpdateFacing();
-        return;
-    other:
-        turboRun = held;
-        if (dir == KEY_DIR_NONE) {
-            Player *q = part;
-
-            if (IsSlippery(q) && motionX != 0x1F && q->speedX != 0)
-                QueueNowXKeepSpeed(0x1F);
-        } else {
-            u8 wait = dpadLockTimer;
-
-            if (wait == 0) {
-                switch (dir) {
-                case KEY_DIR_LEFT ... KEY_DIR_DOWN_RIGHT:
-                    if ((INPUT_HELD(in) & L_BUTTON) && gLevelState->HasTurboRun()) {
-                        turboRun = 1;
-                        SetMode(ACTION_STATE_TURBO_RUN);
-                        SetTargetAnim(part, 0x18);
-                        QueueX(wait, 1, 0x1B);
-                    } else {
-                        StartRun();
-                    }
-                    break;
-                case KEY_DIR_DOWN:
-                    SetMode(ACTION_STATE_CROUCH_DOWN);
-                    SetTargetAnim(part, 3);
-                    frames = wait;
-                    break;
-                }
-            }
-        }
-        UpdateFacing();
     }
+    UpdateFacing();
 }
 
 /* ActionCtrl's run and jump states (include/action_ctrl.hpp; #664,
@@ -249,71 +246,68 @@ void ActionCtrl::StateRun()
         QueueNowY(7);
         return;
     }
-    {
-        u16 alt = INPUT_PRESSED(in) & B_BUTTON;
 
-        if (alt) {
-            StartSpin();
-            return;
-        }
-        if (INPUT_PRESSED(in) & R_BUTTON) {
-            s32 frames;
-            MovingSprite *obj;
+    u16 alt = INPUT_PRESSED(in) & B_BUTTON;
 
-            gAudioContext->PlaySfx(SFX_SLIDE, 0x100);
-            frames = 0x10;
-            SetMode(ACTION_STATE_SLIDE);
-            SetTargetAnim(part, 0xF);
-            frame = alt;
-            this->frames = frames;
-            QueueX(alt, 1, 0x1E);
-            gPlayer->listCount = alt;
-            gPlayer->listCount = alt;
-            obj = gEntitySpawner->LaunchEffectPart(0x29, 1, 0, 0xA, alt, gPlayer);
-            obj->f.b.visible = 0;
-            obj->mirrorBits.gfxMode = OAM_OBJ_MODE_SEMI_TRANSPARENT;
-        }
+    if (alt) {
+        StartSpin();
+        return;
     }
-    {
-        u8 dir = (*pad)->GetDpadDirection();
+    if (INPUT_PRESSED(in) & R_BUTTON) {
+        s32 frames;
+        MovingSprite *obj;
 
-        switch (dir) {
-        case KEY_DIR_NONE: // dir is 0 in the calls below
-            SetModeAnim(ACTION_STATE_IDLE, 0x12, 0, dir);
-            QueueX(dir, 1, dir);
-            QueueY(dir, 1, dir);
-            QueueX(dir, 1, 0x1D);
-            break;
-        case KEY_DIR_DOWN:
-        case KEY_DIR_DOWN_LEFT:
-        case KEY_DIR_DOWN_RIGHT:
-            {
-                s32 zero = 0;
-
-                SetMode(ACTION_STATE_CROUCH_DOWN);
-                SetTargetAnim(part, 3);
-                frames = zero;
-                QueuePendingX(zero, 0x1D);
-            }
-            break;
-        }
+        gAudioContext->PlaySfx(SFX_SLIDE, 0x100);
+        frames = 0x10;
+        SetMode(ACTION_STATE_SLIDE);
+        SetTargetAnim(part, 0xF);
+        frame = alt;
+        this->frames = frames;
+        QueueX(alt, 1, 0x1E);
+        gPlayer->listCount = alt;
+        gPlayer->listCount = alt;
+        obj = gEntitySpawner->LaunchEffectPart(0x29, 1, 0, 0xA, alt, gPlayer);
+        obj->f.b.visible = 0;
+        obj->mirrorBits.gfxMode = OAM_OBJ_MODE_SEMI_TRANSPARENT;
     }
-    {
-        s32 held = (u16)(INPUT_HELD(in) & L_BUTTON);
 
-        if (held) {
-            if (state == ACTION_STATE_RUN && gLevelState->HasTurboRun()) {
-                turboRun = 1;
-                SetMode(ACTION_STATE_TURBO_RUN);
-                SetTargetAnim(part, 0x18);
-                QueueX(0, 1, 0x1B);
-            }
-        } else if (state == ACTION_STATE_TURBO_RUN) {
-            turboRun = held;
-            StartRun();
-        } else if (frame != 0) {
-            frame = held;
+    u8 dir = (*pad)->GetDpadDirection();
+
+    switch (dir) {
+    case KEY_DIR_NONE: // dir is 0 in the calls below
+        SetModeAnim(ACTION_STATE_IDLE, 0x12, 0, dir);
+        QueueX(dir, 1, dir);
+        QueueY(dir, 1, dir);
+        QueueX(dir, 1, 0x1D);
+        break;
+    case KEY_DIR_DOWN:
+    case KEY_DIR_DOWN_LEFT:
+    case KEY_DIR_DOWN_RIGHT:
+        {
+            s32 zero = 0;
+
+            SetMode(ACTION_STATE_CROUCH_DOWN);
+            SetTargetAnim(part, 3);
+            frames = zero;
+            QueuePendingX(zero, 0x1D);
         }
+        break;
+    }
+
+    s32 held = (u16)(INPUT_HELD(in) & L_BUTTON);
+
+    if (held) {
+        if (state == ACTION_STATE_RUN && gLevelState->HasTurboRun()) {
+            turboRun = 1;
+            SetMode(ACTION_STATE_TURBO_RUN);
+            SetTargetAnim(part, 0x18);
+            QueueX(0, 1, 0x1B);
+        }
+    } else if (state == ACTION_STATE_TURBO_RUN) {
+        turboRun = held;
+        StartRun();
+    } else if (frame != 0) {
+        frame = held;
     }
     UpdateFacing();
 }
@@ -346,59 +340,56 @@ void ActionCtrl::StateJump()
         part->StoreHitAxes(0);
         return;
     }
-    {
-        u32 in = gKeys.all;
-        u8 busy = spinCooldown;
 
-        if (busy == 0 && (INPUT_PRESSED(in) & B_BUTTON)) {
-            s32 frames;
+    u32 in = gKeys.all;
+    u8 busy = spinCooldown;
 
-            gAudioContext->PlaySfx(SFX_SPIN, 0x100);
-            frames = 0x18;
-            SetMode(ACTION_STATE_AIR_SPIN);
-            SetTargetAnim(part, 0x10);
-            frame = busy;
-            this->frames = frames;
-            tornadoVariant = busy;
-            charge = busy;
-            tornadoTurn = busy;
-            tornadoFallQueued = busy;
-            tornadoUnwinding = busy;
-            gPlayer->bounce = busy;
-            return;
-        }
+    if (busy == 0 && (INPUT_PRESSED(in) & B_BUTTON)) {
+        s32 frames;
+
+        gAudioContext->PlaySfx(SFX_SPIN, 0x100);
+        frames = 0x18;
+        SetMode(ACTION_STATE_AIR_SPIN);
+        SetTargetAnim(part, 0x10);
+        frame = busy;
+        this->frames = frames;
+        tornadoVariant = busy;
+        charge = busy;
+        tornadoTurn = busy;
+        tornadoFallQueued = busy;
+        tornadoUnwinding = busy;
+        gPlayer->bounce = busy;
+        return;
     }
-    {
-        Player *p = part;
 
-        if (p->animDone) {
-            u32 cur = gKeys.all;
+    Player *p = part;
 
-            if ((cur & A_BUTTON) && (cur & DPAD_SIDEWAYS)) {
-                if (p->tag == 6) {
-                    SetMode(ACTION_STATE_AIRBORNE_FLIP_JUMP);
-                } else {
-                    SetMode(ACTION_STATE_AIRBORNE_FLIP_JUMP);
-                    SetTargetAnim(part, 6);
-                }
-                if (motionY == 7)
-                    QueueNowY(0xA);
+    if (p->animDone) {
+        u32 cur = gKeys.all;
+
+        if ((cur & A_BUTTON) && (cur & DPAD_SIDEWAYS)) {
+            if (p->tag == 6) {
+                SetMode(ACTION_STATE_AIRBORNE_FLIP_JUMP);
             } else {
-                SetMode(ACTION_STATE_AIRBORNE_JUMP);
-                SetTargetAnim(part, 0xC);
-                {
-                    u8 *slot = &motionY;
+                SetMode(ACTION_STATE_AIRBORNE_FLIP_JUMP);
+                SetTargetAnim(part, 6);
+            }
+            if (motionY == 7)
+                QueueNowY(0xA);
+        } else {
+            SetMode(ACTION_STATE_AIRBORNE_JUMP);
+            SetTargetAnim(part, 0xC);
 
-                    /* INPUT_HELD's u16 AND keeps the queue's 1 (r6) apart
-                     * from the test's, as in HandleEvent's bounce cases
-                     * (#662 round 7). */
-                    if (*slot == 7) {
-                        if (INPUT_HELD(cur) & A_BUTTON)
-                            QueueNowYAt(slot, 9);
-                        else
-                            QueueNowYAt(slot, 8);
-                    }
-                }
+            u8 *slot = &motionY;
+
+            /* INPUT_HELD's u16 AND keeps the queue's 1 (r6) apart
+             * from the test's, as in HandleEvent's bounce cases
+             * (#662 round 7). */
+            if (*slot == 7) {
+                if (INPUT_HELD(cur) & A_BUTTON)
+                    QueueNowYAt(slot, 9);
+                else
+                    QueueNowYAt(slot, 8);
             }
         }
     }
@@ -503,123 +494,122 @@ void ActionCtrl::StateAirborne()
         }
         return;
     }
-    {
-        u8 bit4 = contact & PART_DIR_UP;
 
-        if (bit4) {
-            if (this->state != ACTION_STATE_AIRBORNE_FALL) {
-                ActOrFlags0D(part, ENTITY_FLAG2_FLOOR_PROBE);
-                slamBlocked = 0;
-                if (this->state != ACTION_STATE_AIR_SPIN) {
-                    Player *p;
-                    s32 frame;
-                    s32 count;
+    u8 bit4 = contact & PART_DIR_UP;
 
-                    SetMode(ACTION_STATE_AIRBORNE_FALL);
-                    SetTargetAnim(part, 0x15);
-                    p = part;
-                    frame = 2;
-                    count = p->bank->anims[p->tag].frameCount;
-                    CLAMP_INDEX(frame, count);
-                    p->frame = frame;
-                }
-                part->ClearSpeedY();
-            }
-            UpdateFacing();
-            HandleAirInput();
-            part->StoreHitAxes(0);
-            return;
-        }
-        if (contact == PART_DIR_RIGHT || contact == PART_DIR_LEFT) {
-            UpdateFacing();
-            HandleAirInput();
-            part->hitAxes = bit4;
-            return;
-        }
-        if ((contact & PART_DIR_DOWN) && part->speedY >= 0) {
-            s32 st;
-
-            part->f.bytes.flags2 |= ENTITY_FLAG2_FLOOR_PROBE;
-            slamBlocked = bit4;
-            st = this->state;
-            if ((u32)(st - ACTION_STATE_AIRBORNE_BODY_SLAM) <= 1) {
-                MovingSprite *obj;
-                s32 x;
-                s32 y;
+    if (bit4) {
+        if (this->state != ACTION_STATE_AIRBORNE_FALL) {
+            ActOrFlags0D(part, ENTITY_FLAG2_FLOOR_PROBE);
+            slamBlocked = 0;
+            if (this->state != ACTION_STATE_AIR_SPIN) {
+                Player *p;
                 s32 frame;
                 s32 count;
 
-                x = gPlayer->x;
-                Q8_TO_INT_INPLACE(x);
-                x += 0x14;
-                y = gPlayer->y;
-                Q8_TO_INT_INPLACE(y);
-                y += 0xC;
-                obj = SpawnSpark(x, y, 1);
-                obj->mirrorBits.gfxMode = OAM_OBJ_MODE_SEMI_TRANSPARENT;
-                obj->f.b.visible = 0;
-                obj->f.b.visible = 0;
-                OrMaskByte(&obj->mirror, -0x11, 0x10);
-                frame = 3;
-                count = obj->bank->anims[obj->tag].frameCount;
+                SetMode(ACTION_STATE_AIRBORNE_FALL);
+                SetTargetAnim(part, 0x15);
+                p = part;
+                frame = 2;
+                count = p->bank->anims[p->tag].frameCount;
                 CLAMP_INDEX(frame, count);
-                obj->frame = frame;
-
-                x = gPlayer->x;
-                Q8_TO_INT_INPLACE(x);
-                x -= 0x14;
-                y = gPlayer->y;
-                Q8_TO_INT_INPLACE(y);
-                y += 0xC;
-                obj = SpawnSpark(x, y, bit4);
-                obj->mirrorBits.gfxMode = OAM_OBJ_MODE_SEMI_TRANSPARENT;
-                obj->f.b.visible = 0;
-                AndByte(&obj->mirror, -0x11);
-                frame = 3;
-                count = obj->bank->anims[obj->tag].frameCount;
-                CLAMP_INDEX(frame, count);
-                obj->frame = frame;
-
-                if (this->state == ACTION_STATE_AIRBORNE_SUPER_BODY_SLAM)
-                    DoSuperBodySlamShockwave();
-                if (this->state != ACTION_STATE_DYING) {
-                    gAudioContext->PlaySfx(SFX_BODY_SLAM_LAND, 0x100);
-                    SetMode(ACTION_STATE_BODY_SLAM_LAND);
-                    SetTargetAnim(part, 0x11);
-                    motionYKeepSpeed = bit4;
-                    motionYPending = 1;
-                    motionY = bit4;
-                }
-                return;
+                p->frame = frame;
             }
-            if (st == ACTION_STATE_AIR_SPIN) {
-                u16 held = INPUT_HELD(in) & DPAD_SIDEWAYS;
+            part->ClearSpeedY();
+        }
+        UpdateFacing();
+        HandleAirInput();
+        part->StoreHitAxes(0);
+        return;
+    }
+    if (contact == PART_DIR_RIGHT || contact == PART_DIR_LEFT) {
+        UpdateFacing();
+        HandleAirInput();
+        part->hitAxes = bit4;
+        return;
+    }
+    if ((contact & PART_DIR_DOWN) && part->speedY >= 0) {
+        s32 st;
 
-                if (held) {
-                    QueueX(bit4, 1, 1);
-                } else {
-                    motionXKeepSpeed = held;
-                    motionXPending = 1;
-                    motionX = held;
-                }
-                QueueNowY(0);
-                if (tornadoTurn)
-                    SetMode(ACTION_STATE_TORNADO_SPIN);
-                else
-                    SetMode(ACTION_STATE_SPIN);
-                return;
+        part->f.bytes.flags2 |= ENTITY_FLAG2_FLOOR_PROBE;
+        slamBlocked = bit4;
+        st = this->state;
+        if ((u32)(st - ACTION_STATE_AIRBORNE_BODY_SLAM) <= 1) {
+            MovingSprite *obj;
+            s32 x;
+            s32 y;
+            s32 frame;
+            s32 count;
+
+            x = gPlayer->x;
+            Q8_TO_INT_INPLACE(x);
+            x += 0x14;
+            y = gPlayer->y;
+            Q8_TO_INT_INPLACE(y);
+            y += 0xC;
+            obj = SpawnSpark(x, y, 1);
+            obj->mirrorBits.gfxMode = OAM_OBJ_MODE_SEMI_TRANSPARENT;
+            obj->f.b.visible = 0;
+            obj->f.b.visible = 0;
+            OrMaskByte(&obj->mirror, -0x11, 0x10);
+            frame = 3;
+            count = obj->bank->anims[obj->tag].frameCount;
+            CLAMP_INDEX(frame, count);
+            obj->frame = frame;
+
+            x = gPlayer->x;
+            Q8_TO_INT_INPLACE(x);
+            x -= 0x14;
+            y = gPlayer->y;
+            Q8_TO_INT_INPLACE(y);
+            y += 0xC;
+            obj = SpawnSpark(x, y, bit4);
+            obj->mirrorBits.gfxMode = OAM_OBJ_MODE_SEMI_TRANSPARENT;
+            obj->f.b.visible = 0;
+            AndByte(&obj->mirror, -0x11);
+            frame = 3;
+            count = obj->bank->anims[obj->tag].frameCount;
+            CLAMP_INDEX(frame, count);
+            obj->frame = frame;
+
+            if (this->state == ACTION_STATE_AIRBORNE_SUPER_BODY_SLAM)
+                DoSuperBodySlamShockwave();
+            if (this->state != ACTION_STATE_DYING) {
+                gAudioContext->PlaySfx(SFX_BODY_SLAM_LAND, 0x100);
+                SetMode(ACTION_STATE_BODY_SLAM_LAND);
+                SetTargetAnim(part, 0x11);
+                motionYKeepSpeed = bit4;
+                motionYPending = 1;
+                motionY = bit4;
             }
-            if (gPlayer->slippery) {
-                SetMode(ACTION_STATE_LAND);
-                SetTargetAnim(part, 0x16);
-            } else {
-                SetMode(ACTION_STATE_LAND);
-                SetTargetAnim(part, 0x16);
-            }
-            QueuePendingX(0, 0);
-            QueueNowY(0);
             return;
         }
+        if (st == ACTION_STATE_AIR_SPIN) {
+            u16 held = INPUT_HELD(in) & DPAD_SIDEWAYS;
+
+            if (held) {
+                QueueX(bit4, 1, 1);
+            } else {
+                motionXKeepSpeed = held;
+                motionXPending = 1;
+                motionX = held;
+            }
+            QueueNowY(0);
+            if (tornadoTurn)
+                SetMode(ACTION_STATE_TORNADO_SPIN);
+            else
+                SetMode(ACTION_STATE_SPIN);
+            return;
+        }
+        if (gPlayer->slippery) {
+            SetMode(ACTION_STATE_LAND);
+            SetTargetAnim(part, 0x16);
+        } else {
+            SetMode(ACTION_STATE_LAND);
+            SetTargetAnim(part, 0x16);
+        }
+        QueuePendingX(0, 0);
+        QueueNowY(0);
+        return;
     }
     QueuePendingX(0, 0);
 }
@@ -660,25 +650,23 @@ void ActionCtrl::StateSlide()
 {
     u32 in = gKeys.all;
 
-    {
-        Player *p = part;
+    Player *p = part;
 
-        if (p->hitAxes == 0) {
-            QueueNowY(5);
-        } else if (INPUT_HELD(in) & A_BUTTON) {
-            if (p->HasRoomForAnim(0xB) == 1) {
-                gAudioContext->PlaySfx(SFX_HIGH_JUMP, 0x100);
-                ActAndFlags0D(part, ~ENTITY_FLAG2_FLOOR_PROBE);
-                ActAndFlags0D(part, ~ENTITY_FLAG2_GROUNDED);
-                StartHighJump();
-                return;
-            }
-        } else if (INPUT_PRESSED(in) & B_BUTTON) {
-            if (p->HasRoomForAnim(0x10) == 1) {
-                StartSpin();
-                QueueX(0, 1, 1);
-                return;
-            }
+    if (p->hitAxes == 0) {
+        QueueNowY(5);
+    } else if (INPUT_HELD(in) & A_BUTTON) {
+        if (p->HasRoomForAnim(0xB) == 1) {
+            gAudioContext->PlaySfx(SFX_HIGH_JUMP, 0x100);
+            ActAndFlags0D(part, ~ENTITY_FLAG2_FLOOR_PROBE);
+            ActAndFlags0D(part, ~ENTITY_FLAG2_GROUNDED);
+            StartHighJump();
+            return;
+        }
+    } else if (INPUT_PRESSED(in) & B_BUTTON) {
+        if (p->HasRoomForAnim(0x10) == 1) {
+            StartSpin();
+            QueueX(0, 1, 1);
+            return;
         }
     }
 
@@ -696,65 +684,61 @@ void ActionCtrl::StateSlide()
     }
     {
         Player *p = part;
-        u8 contact;
 
         if (!p->animDone)
             return;
-        contact = p->hitAxes;
-        if (contact == 0) {
+        if (p->hitAxes == 0) {
             SetMode(ACTION_STATE_AIRBORNE_FALL);
             SetTargetAnim(part, 0x1B);
             QueueNowY(4);
             return;
         }
     }
-    {
-        u16 held = INPUT_HELD(in) & R_BUTTON;
 
-        if (held) {
-            s32 zero = 0;
+    u16 held = INPUT_HELD(in) & R_BUTTON;
 
-            SetMode(ACTION_STATE_CRAWL);
-            SetTargetAnim(part, 0);
-            frames = zero;
-            QueuePendingX(zero, 3);
-            StateCrawl();
+    if (held) {
+        s32 zero = 0;
+
+        SetMode(ACTION_STATE_CRAWL);
+        SetTargetAnim(part, 0);
+        frames = zero;
+        QueuePendingX(zero, 3);
+        StateCrawl();
+        return;
+    }
+
+    u8 dir = gInput->GetDpadDirection();
+
+    if (dir != KEY_DIR_NONE && part->HasRoomForAnim(2)) {
+        switch (dir) {
+        case KEY_DIR_LEFT ... KEY_DIR_RIGHT:
+            if ((INPUT_HELD(in) & L_BUTTON) && gLevelState->HasTurboRun()) {
+                turboRun = 1;
+                SetMode(ACTION_STATE_TURBO_RUN);
+                SetTargetAnim(part, 0x18);
+                QueueX(held, 1, 0x1B);
+                return;
+            }
+            StartRun();
             return;
         }
-        {
-            u8 dir = gInput->GetDpadDirection();
+        SetMode(ACTION_STATE_STAND_UP);
+        SetTargetAnim(part, 2);
+        QueuePendingX(0, 0);
+        return;
+    } else {
+        u8 hit = part->HasRoomForAnim(2);
 
-            if (dir != KEY_DIR_NONE && part->HasRoomForAnim(2)) {
-                switch (dir) {
-                case KEY_DIR_LEFT ... KEY_DIR_RIGHT:
-                    if ((INPUT_HELD(in) & L_BUTTON) && gLevelState->HasTurboRun()) {
-                        turboRun = 1;
-                        SetMode(ACTION_STATE_TURBO_RUN);
-                        SetTargetAnim(part, 0x18);
-                        QueueX(held, 1, 0x1B);
-                        return;
-                    }
-                    StartRun();
-                    return;
-                }
-                SetMode(ACTION_STATE_STAND_UP);
-                SetTargetAnim(part, 2);
-                QueuePendingX(0, 0);
-                return;
-            } else {
-                u8 hit = part->HasRoomForAnim(2);
-
-                if (hit == 1) {
-                    SetMode(ACTION_STATE_STAND_UP);
-                    SetTargetAnim(part, 2);
-                    QueueX(0, hit, 0);
-                    return;
-                }
-                SetMode(ACTION_STATE_CROUCH);
-                SetTargetAnim(part, 4);
-                QueuePendingX(0, 0);
-            }
+        if (hit == 1) {
+            SetMode(ACTION_STATE_STAND_UP);
+            SetTargetAnim(part, 2);
+            QueueX(0, hit, 0);
+            return;
         }
+        SetMode(ACTION_STATE_CROUCH);
+        SetTargetAnim(part, 4);
+        QueuePendingX(0, 0);
     }
 }
 
@@ -768,12 +752,10 @@ void ActionCtrl::StateSpin()
     u32 in;
     u8 dir;
 
-    {
-        KeyInput *pad = gInput;
+    KeyInput *pad = gInput;
 
-        in = gKeys.all;
-        dir = pad->GetDpadDirection();
-    }
+    in = gKeys.all;
+    dir = pad->GetDpadDirection();
     if (part->hitAxes == 0)
         QueueNowY(5);
     if ((INPUT_PRESSED(in) & A_BUTTON) && (part->hitAxes & PART_DIR_DOWN)) {
@@ -832,25 +814,24 @@ void ActionCtrl::StateAirSpin()
         if (++charge > 3)
             charge = 3;
     }
-    {
-        s32 frame = ++this->frame;
-        s32 frames = this->frames;
 
-        p = part;
-        if (frame >= frames || p->animDone) {
-            u8 charge;
+    s32 frame = ++this->frame;
+    s32 frames = this->frames;
 
-            ActOrFlags0D(p, ENTITY_FLAG2_FLOOR_PROBE);
-            charge = this->charge;
-            if (charge) {
-                StartTornadoSpin(ACTION_STATE_AIR_SPIN, ACTION_STATE_AIR_SPIN);
-            } else {
-                spinCooldown = 0xC;
-                SetMode(ACTION_STATE_AIRBORNE_FALL);
-                SetTargetAnim(part, 0x15);
-                this->frame = charge;
-                this->frames = charge;
-            }
+    p = part;
+    if (frame >= frames || p->animDone) {
+        u8 charge;
+
+        ActOrFlags0D(p, ENTITY_FLAG2_FLOOR_PROBE);
+        charge = this->charge;
+        if (charge) {
+            StartTornadoSpin(ACTION_STATE_AIR_SPIN, ACTION_STATE_AIR_SPIN);
+        } else {
+            spinCooldown = 0xC;
+            SetMode(ACTION_STATE_AIRBORNE_FALL);
+            SetTargetAnim(part, 0x15);
+            this->frame = charge;
+            this->frames = charge;
         }
     }
     StateAirborne();
@@ -864,12 +845,10 @@ void ActionCtrl::StateTornadoSpin()
     u32 in;
     u8 dir;
 
-    {
-        KeyInput *pad = gInput;
+    KeyInput *pad = gInput;
 
-        in = gKeys.all;
-        dir = pad->GetDpadDirection();
-    }
+    in = gKeys.all;
+    dir = pad->GetDpadDirection();
     if (part->hitAxes == 0) {
         if (tornadoTurn)
             StartTornadoFall();
@@ -956,12 +935,10 @@ void ActionCtrl::StateCrouch()
     s32 turned;
     s32 moved;
 
-    {
-        KeyInput *pad = gInput;
+    KeyInput *pad = gInput;
 
-        in = gKeys.all;
-        dir = pad->GetDpadDirection();
-    }
+    in = gKeys.all;
+    dir = pad->GetDpadDirection();
     if ((INPUT_PRESSED(in) & A_BUTTON) && part->HasRoomForAnim(0xB) == 1) {
         gAudioContext->PlaySfx(SFX_HIGH_JUMP, 0x100);
         ActAndFlags0D(part, ~ENTITY_FLAG2_FLOOR_PROBE);
@@ -1006,28 +983,26 @@ turn_done:
         }
     }
 
-    {
-        s32 held = INPUT_HELD(in) & (DPAD_DOWN | R_BUTTON);
+    s32 held = INPUT_HELD(in) & (DPAD_DOWN | R_BUTTON);
 
-        if (held == 0) {
-            u8 hit = part->HasRoomForAnim(2);
+    if (held == 0) {
+        u8 hit = part->HasRoomForAnim(2);
 
-            if (hit == 1) {
-                SetMode(ACTION_STATE_STAND_UP);
-                SetTargetAnim(part, 2);
-                motionXKeepSpeed = held;
-                motionXPending = hit;
-                motionX = held;
-            } else if (!moved) {
-                SetMode(ACTION_STATE_CROUCH);
-                SetTargetAnim(part, 4);
-                motionXKeepSpeed = moved;
-                motionXPending = 1;
-                motionX = moved;
-                motionYKeepSpeed = moved;
-                motionYPending = 1;
-                motionY = moved;
-            }
+        if (hit == 1) {
+            SetMode(ACTION_STATE_STAND_UP);
+            SetTargetAnim(part, 2);
+            motionXKeepSpeed = held;
+            motionXPending = hit;
+            motionX = held;
+        } else if (!moved) {
+            SetMode(ACTION_STATE_CROUCH);
+            SetTargetAnim(part, 4);
+            motionXKeepSpeed = moved;
+            motionXPending = 1;
+            motionX = moved;
+            motionYKeepSpeed = moved;
+            motionYPending = 1;
+            motionY = moved;
         }
     }
 }
@@ -1035,9 +1010,7 @@ turn_done:
 /* Standing up: once the animation is done, idle. */
 void ActionCtrl::StateStandUp()
 {
-    Player *p = part;
-
-    if (p->animDone != 0) {
+    if (part->animDone != 0) {
         SetModeAnim(ACTION_STATE_IDLE, 0x12, 0, 0);
         motionXKeepSpeed = 0;
         motionXPending = 1;

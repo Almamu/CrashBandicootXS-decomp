@@ -33,6 +33,7 @@ void SwimCtrl::SetDriftY(s32 start, s32 step, s32 target)
     s32 t = (v * v / 0x4000 + 4) * 3 / 2;
     s32 signV;
     s32 signC;
+    /* `absV` and `absC`: |speed| and |target|, side by side */
     s32 absV;
     s32 absC;
 

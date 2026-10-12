@@ -140,10 +140,7 @@ void SwimCtrl::StartStroke()
         tilt = 12;
         break;
     case 6:
-        {
-            s32 v = SIGNED_X(target, 704);
-            target->speedX = v;
-        }
+        target->speedX = SIGNED_X(target, 704);
         break;
     case 3:
         target->speedX = SIGNED_X(target, 528);

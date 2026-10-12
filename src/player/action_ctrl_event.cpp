@@ -84,6 +84,9 @@ static inline void SetSpeedY(Player *p, s32 speed, s32 step, s32 target)
  *   with room for it, StartMaskHitJump. */
 void ActionCtrl::HandleEvent(s32, s32 event, s32 arg)
 {
+    s32 m;
+    u8 *f;
+
     if (state == ACTION_STATE_DYING)
         return;
     switch (event) {
@@ -97,12 +100,11 @@ void ActionCtrl::HandleEvent(s32, s32 event, s32 arg)
             QueueNowX(0);
             QueueNowY(0);
             to = part->FrameAnchor();
-            {
-                s32 d = to->y - from->y;
-                s32 y = part->y;
 
-                part->y = y - INT_TO_Q8(d);
-            }
+            s32 d = to->y - from->y;
+            s32 y = part->y;
+
+            part->y = y - INT_TO_Q8(d);
         }
         break;
     case EVENT_HANG_RELEASE:
@@ -118,63 +120,61 @@ void ActionCtrl::HandleEvent(s32, s32 event, s32 arg)
             part->speedX = 0;
             break;
         }
-        {
-            s32 m = arg & 3;
+        m = arg & 3;
 
-            if (m == 2) {
-                if (motionX != 0 && (s8)(gPlayer->mirror << 3) < 0) {
-                    bumpedMotionX = motionX;
-                    QueueNowX(0);
-                    part->speedX = 0;
-                }
-            } else if (m == 1) {
-                if (motionX != 0 && !((u32)(gPlayer->mirror << 27) >> 31)) {
-                    bumpedMotionX = motionX;
-                    QueueX(0, m, 0);
-                    part->speedX = 0;
-                }
-            } else {
-                goto check_slide;
+        if (m == 2) {
+            if (motionX != 0 && (s8)(gPlayer->mirror << 3) < 0) {
+                bumpedMotionX = motionX;
+                QueueNowX(0);
+                part->speedX = 0;
             }
-            /* Dead on purpose (owner decision, #662): the ROM loads
-             * `state` here and never uses it. This test is what leaves
-             * that load; its `m = 0` is dead (`m` isn't read after
-             * this), so the compiler drops the store, then the empty
-             * test, but not the load. gcc 2.9 does it in stages
-             * (#662 rounds 3-5, from jump.c, flow.c and cse.c):
-             * - jump1 can't delete the test, because its body still
-             *   does something;
-             * - cse1's delete_trivially_dead_insns keeps `m = 0`,
-             *   because `m` is used elsewhere in the function;
-             * - flow1 deletes the dead store but keeps the branch and
-             *   its compare;
-             * - jump2, after reload, deletes the empty branch and its
-             *   compare, but not the load feeding them (the `if (!
-             *   reload_completed)` in delete_computation), and no flow
-             *   pass runs after it.
-             * Without it the function is 1 instruction short (the load;
-             * plus a halfword of padding). What doesn't work:
-             * - an empty body, every release-mode assert or log macro
-             *   (`if (!(c)) {}`, an empty inline DebugHalt with or
-             *   without __FILE__/__LINE__, a debug-level gate,
-             *   `((void)(c))`, `do {} while (0)`), and anything built
-             *   from inlines (an unused parameter, a discarded return
-             *   value): deleted with their load before flow1 or by
-             *   cse1;
-             * - a store to a global or static error flag: keeps the
-             *   load, but also its own compare and store (+5);
-             * - round 9's 3240 type and test variants: every natural
-             *   test stays a real compare.
-             * The only other form that leaves the load is an if/else
-             * with identical arms. Player::HandleEvent's mask-level
-             * load (player_update.cpp) is the same mechanism and the
-             * same fix; Crate::QueuePlayerCollision's (crate_break.cpp)
-             * is the same shape written for a reason. */
-            if (state == ACTION_STATE_SLIDE)
-                m = 0;
-            bumpTimer = 3;
-            SetBumped(part, 1);
+        } else if (m == 1) {
+            if (motionX != 0 && !((u32)(gPlayer->mirror << 27) >> 31)) {
+                bumpedMotionX = motionX;
+                QueueX(0, m, 0);
+                part->speedX = 0;
+            }
+        } else {
+            goto check_slide;
         }
+        /* Dead on purpose (owner decision, #662): the ROM loads
+         * `state` here and never uses it. This test is what leaves
+         * that load; its `m = 0` is dead (`m` isn't read after
+         * this), so the compiler drops the store, then the empty
+         * test, but not the load. gcc 2.9 does it in stages
+         * (#662 rounds 3-5, from jump.c, flow.c and cse.c):
+         * - jump1 can't delete the test, because its body still
+         *   does something;
+         * - cse1's delete_trivially_dead_insns keeps `m = 0`,
+         *   because `m` is used elsewhere in the function;
+         * - flow1 deletes the dead store but keeps the branch and
+         *   its compare;
+         * - jump2, after reload, deletes the empty branch and its
+         *   compare, but not the load feeding them (the `if (!
+         *   reload_completed)` in delete_computation), and no flow
+         *   pass runs after it.
+         * Without it the function is 1 instruction short (the load;
+         * plus a halfword of padding). What doesn't work:
+         * - an empty body, every release-mode assert or log macro
+         *   (`if (!(c)) {}`, an empty inline DebugHalt with or
+         *   without __FILE__/__LINE__, a debug-level gate,
+         *   `((void)(c))`, `do {} while (0)`), and anything built
+         *   from inlines (an unused parameter, a discarded return
+         *   value): deleted with their load before flow1 or by
+         *   cse1;
+         * - a store to a global or static error flag: keeps the
+         *   load, but also its own compare and store (+5);
+         * - round 9's 3240 type and test variants: every natural
+         *   test stays a real compare.
+         * The only other form that leaves the load is an if/else
+         * with identical arms. Player::HandleEvent's mask-level
+         * load (player_update.cpp) is the same mechanism and the
+         * same fix; Crate::QueuePlayerCollision's (crate_break.cpp)
+         * is the same shape written for a reason. */
+        if (state == ACTION_STATE_SLIDE)
+            m = 0;
+        bumpTimer = 3;
+        SetBumped(part, 1);
     check_slide:
         if (state == ACTION_STATE_SLIDE && gPlayer->frame != 0) {
             Player *pl = gPlayer;
@@ -262,11 +262,9 @@ void ActionCtrl::HandleEvent(s32, s32 event, s32 arg)
     case EVENT_WARP_GEM_PATH:
     case EVENT_WARP_EXIT:
         gAudioContext->PlaySfx(SFX_WARP, 0x100);
-        {
-            u8 *f = &gPlayer->f.flags;
+        f = &gPlayer->f.flags;
 
-            *f &= ~ENTITY_FLAG_COLLIDES;
-        }
+        *f &= ~ENTITY_FLAG_COLLIDES;
         SetModeAnim(ACTION_STATE_WARP_OUT, 0x24, 0x7FFFFFFF, 0x7FFFFFFF);
         gPaletteCache->LoadSlot(part->palette, part->bank->anims[part->tag].paletteId);
         QueueNowX(0);

@@ -57,10 +57,8 @@ u8 Player::HasRoomForAnim(s32 anim)
         do {
             Crate *c = Crates()->slots[i];
 
-            if (c->GetClassId() == 3) {
-                if (c->PlayerAnimWouldTouch(anim) == 1)
-                    return 0;
-            }
+            if (c->GetClassId() == 3 && c->PlayerAnimWouldTouch(anim) == 1)
+                return 0;
             i++;
         } while (i < Crates()->count);
     return 1;
