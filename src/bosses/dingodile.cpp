@@ -173,6 +173,7 @@ void DingodileCtrl::Update(MovingSprite *part)
     case DINGODILE_STATE_TURN:
     case DINGODILE_STATE_TURN_BACK:
         if (part->animDone) {
+            /* `prev` is needed: inlined, the code is 4 instructions shorter */
             u32 prev = state;
             s32 n;
 
@@ -196,6 +197,7 @@ void DingodileCtrl::Update(MovingSprite *part)
             CLAMP_INDEX(n, part->bank->anims[part->tag].frameCount);
             part->frame = n;
 
+            /* `v` is needed: inlined, the code is 2 instructions shorter */
             s32 v = part->mirrorBits.flipX;
 
             part->mirrorBits.flipX = v ? 0 : 1;
@@ -247,6 +249,7 @@ void DingodileCtrl::Update(MovingSprite *part)
             break;
         }
         SetState(part, DINGODILE_STATE_WALK);
+        /* scoped: the case labels below would cross `n` */
         {
             s32 n = 8;
             CLAMP_INDEX(n, part->bank->anims[part->tag].frameCount);
@@ -397,6 +400,7 @@ void DingodileCtrl::SpawnShieldOrRocket(s32 mode, u16 x, u16 y, MovingSprite *ow
             p->StartAnim(3);
             p->kind = kind;
         }
+        /* scoped, as the rocket's below, where `c` has the other type */
         {
             DingodileShieldCtrl *c;
 
@@ -409,6 +413,7 @@ void DingodileCtrl::SpawnShieldOrRocket(s32 mode, u16 x, u16 y, MovingSprite *ow
         gAudioContext->PlaySfx(SFX_DINGODILE_ROCKET, 0x100);
         p->StartAnim(7);
         p->kind = EVENT_HIT_EXPLOSION;
+        /* scoped, as the shield's */
         {
             DingodileProjectileCtrl *c;
 
@@ -601,6 +606,7 @@ void DingodileProjectileCtrl::Update(MovingSprite *part)
     case DINGODILE_PROJECTILE_STATE_FALL:
     case DINGODILE_PROJECTILE_STATE_UNK4:
         {
+            /* `y` is needed: inlined, the instructions are reordered */
             s32 y = part->y;
 
             if (y >= LevelBottom() - 0x2000) {
@@ -671,6 +677,7 @@ void DingodileSharkCtrl::Update(MovingSprite *part)
             if (part->x + 0x2800 <= 0)
                 part->MarkGone();
         } else {
+            /* `x` is needed: inlined, the code is 9 instructions shorter */
             s32 x = part->x;
 
             if (x >= LevelRight() + 0x2800)

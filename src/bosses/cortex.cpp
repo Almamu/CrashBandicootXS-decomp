@@ -87,6 +87,7 @@ void CortexBossCtrl::Update(MovingSprite *part)
             part->mirrorFlags.mirrorX = n >= 0;
             cannon->mirrorFlags.mirrorX = n >= 0;
 
+            /* `w` is needed: inlined, the instructions are reordered */
             s32 w = INT_TO_Q8(gLevelLayers->layer0->widthPx);
 
             n = (u32)(ABS_BRANCHLESS(n) * 12) / w;
@@ -218,7 +219,9 @@ void CortexTargetCtrl::Update(MovingSprite *part)
         n = --stepsLeft;
         t = dx * n;
         total = steps;
+        /* `nx` is needed: inlined, the code is 4 instructions longer */
         nx = x - t / total;
+        /* `ny` is needed: inlined, the code is 4 instructions shorter */
         ny = y - dy * n / total;
         part->x = nx;
         part->y = ny;
@@ -432,6 +435,7 @@ void CortexShotCtrl::Update(MovingSprite *part)
                 HitPlayer(gPlayer, EVENT_HIT_CORTEX_SHOT);
             part->kind = EVENT_NONE;
         } else if (fast) {
+            /* `n` is needed: inlined, the code is 2 instructions longer */
             s32 n = gCollidableList->count;
             s32 i;
 
@@ -547,6 +551,7 @@ CortexShotCtrl::CortexShotCtrl(CortexBossCtrl *boss)
 void CortexTargetCtrl::SetPlatformsKind(u8 flag)
 {
     s32 i;
+    /* `n` is needed: inlined, the code is 2 instructions longer */
     s32 n = gTouchableList->count;
 
     for (i = 0; i < n; i++) {

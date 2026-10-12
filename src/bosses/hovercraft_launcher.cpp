@@ -41,10 +41,14 @@ void HovercraftLauncher::StateLaunch()
         if (angle > 0) {
             s32 scale = 0x1000 / angle;
             s32 rawDx = (player->x - x) * scale;
+            /* `dx` is needed: inlined, the instructions differ */
             s32 dx = Q12_TO_INT(rawDx);
             s32 rawDy = (player->y - y) * scale;
+            /* `dy` is needed: inlined, the instructions are reordered */
             s32 dy = Q12_TO_INT(rawDy);
             s32 signDx = rawDx >> 31;
+            /* `absDx` is needed (inlined, the instructions are reordered); `absDy`
+             * stays beside it */
             s32 absDx = (dx ^ signDx) - signDx;
             s32 signDy = rawDy >> 31;
             s32 absDy = (dy ^ signDy) - signDy;
@@ -110,6 +114,7 @@ void HovercraftLauncher::Damage(s32 amount)
  * animation has played through. */
 void HovercraftLauncher::Update()
 {
+    /* `st` is needed: inlined, the instructions are reordered */
     s32 st;
     s32 step;
 

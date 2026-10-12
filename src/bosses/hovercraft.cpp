@@ -43,6 +43,7 @@ void Hovercraft::UpdateHitFlash(void)
 
     hitFlashTimer += 1;
 
+    /* `three` is needed: inlined, the code is 2 instructions shorter */
     s32 three = 3;
 
     if ((three & hitFlashTimer) == 0)
@@ -110,10 +111,13 @@ void Hovercraft::StateCloseIn(void)
         y += velY;
         pl = gActorList;
         px = pl->x;
+        /* `cx` is needed: inlined, the code is 1 instruction shorter */
         cx = screenX - 0x1200;
         velX -= (px - cx - (box.x + box.w / 2)) >> 12;
         vx = velX;
+        /* `py` is needed: inlined, the code is 2 instructions longer */
         py = pl->y;
+        /* `cy` is needed: inlined, the code is 1 instruction longer */
         cy = screenY + 0x1800;
         vy = velY - ((py - cy - (box.y + box.h / 2)) >> 12);
         velY = vy;
@@ -365,6 +369,7 @@ void Hovercraft::Spawn(s32 kind, s32 sx, s32 sy, s32 sz)
  * and the tail reads the hovercraft through a fresh local. */
 void Hovercraft::Update(void)
 {
+    /* `prev` is needed: inlined, the code is 25 instructions shorter */
     s32 prev = Q8_TO_INT(anim->animTime);
     AnimPart *self;
 
@@ -401,7 +406,9 @@ void Hovercraft::Update(void)
 void Hovercraft::UpdateBg2(void)
 {
     s32 scale;
+    /* `dy` is needed: inlined, the code is 1 instruction longer */
     s32 dy;
+    /* `dx` is needed: inlined, the code is 2 instructions longer */
     s32 dx;
 
     if (bg2PageFlip != 0) {
@@ -508,8 +515,11 @@ void Hovercraft::ConvertTiles(void)
     dst = (u32 *)(((0xFF - sum) << 6) + BG_CHAR_ADDR(2));
     for (row_i = 0; row_i <= 0; row_i++) {
         u8 *src;
+        /* `row` is needed: inlined, the code is 2 instructions longer */
         u8 *row;
+        /* `hp` is needed: inlined, the instructions are reordered */
         s32 *hp;
+        /* `n` is needed: inlined, the code is 2 instructions longer */
         s32 n;
         s32 j;
         u32 *d;

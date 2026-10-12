@@ -225,8 +225,7 @@ void TinyCtrl::Update(MovingSprite *part)
 static inline void SetFrame(MovingSprite *part, s32 frame)
 {
     const struct sprite_bank *bank = part->bank;
-    u8 *tag = &part->tag;
-    s32 count = bank->anims[*tag].frameCount;
+    s32 count = bank->anims[part->tag].frameCount;
 
     CLAMP_INDEX(frame, count);
     part->frame = frame;
@@ -272,6 +271,7 @@ void TinyCtrl::SetState(MovingSprite *part, s32 next)
     case TINY_STATE_HOP_UP_REST:
         {
             MovingSprite *pad;
+            /* `ax` is needed: inlined, the instructions are reordered */
             s32 ax;
             s32 ay;
             s32 y;
@@ -367,6 +367,7 @@ void TinyCtrl::SpawnFallingLeaves(MovingSprite *part, s32 n)
 {
     MovingSprite *p = MovingSprite::Create(0xFFFF, 0, 0, 0);
     Ctrl *ctrl;
+    /* `x` is needed: inlined, the code is 2 instructions longer */
     s32 x;
 
     p->bank = gSpriteBankSet->Bank(55);
@@ -387,6 +388,7 @@ void TinyCtrl::SpawnFallingLeaves(MovingSprite *part, s32 n)
     p->rampY.target = k;
 
     s32 x0 = part->x;
+    /* `y` is needed: inlined, the instructions are reordered */
     s32 y;
 
     x = x0 + (gPlayer->x - x0) * (n - 1) / 3;
@@ -493,6 +495,7 @@ void TinyCtrl::HitStub(MovingSprite *part)
  * through the byte; a bitfield store of 1 is one `orr`. */
 void TinyCtrl::StartHop(MovingSprite *part)
 {
+    /* `px` is needed: inlined, the code is 1 instruction longer */
     s32 px = part->x;
 
     if (x <= px) {
