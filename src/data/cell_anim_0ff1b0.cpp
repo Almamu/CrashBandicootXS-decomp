@@ -16,7 +16,7 @@ extern "C" {
  * UploadCellAnimFrame (cell_anim.cpp): 38x10 cells, 21 frames. Not a type-0
  * category, so there are no per-cell banks: ResetCellAnimBg maps the cells to
  * consecutive tiles in palette bank 0. Built from
- * graphics/category_bg/0ff1b0_cell_anim.png, all 21 frames stacked top to
+ * graphics/vehicles/jetpack/clouds.png, all 21 frames stacked top to
  * bottom. */
 struct cell_anim_0ff1b0 {
     struct cell_anim_header header;
@@ -29,18 +29,18 @@ COMPILE_TIME_ASSERT(cell_anim_0ff1b0_cpp, sizeof(struct cell_anim_0ff1b0) == 0x3
 extern const struct cell_anim_0ff1b0 gCategoryFamily1CellAnim = {
     {
         {
-#include "category_bg/0ff1b0_cell_anim.pal.inc"
+#include "vehicles/jetpack/clouds.pal.inc"
         },
         38, 10,
     },
     {
-#include "category_bg/0ff1b0_cell_anim_frames.inc"
+#include "vehicles/jetpack/clouds_frames.inc"
     },
 };
 
 /* Category 3's BG1 picture (gActorCategories[3].bgPicture,
  * loaded by LoadBgPicture in bg_picture.cpp): 38x16 map, 357 tiles. Built from
- * graphics/category_bg/13d934_picture.png (palette and map) and
+ * graphics/vehicles/jetpack/skies/rocket_racket.png (palette and map) and
  * 13d934_picture_tiles.png (the tile set, grit's -fx external tileset). */
 struct bg_picture_13d934 {
     struct bg_picture_header header;
@@ -53,18 +53,18 @@ COMPILE_TIME_ASSERT(cell_anim_0ff1b0_cpp, sizeof(struct bg_picture_13d934) == 0x
 extern const struct bg_picture_13d934 gCategory3BgPicture = {
     {
         {
-#include "category_bg/13d934_picture.pal.inc"
+#include "vehicles/jetpack/skies/rocket_racket.pal.inc"
         },
         38, 16, 357,
     },
     {
-#include "category_bg/13d934_picture_map.inc"
+#include "vehicles/jetpack/skies/rocket_racket_map.inc"
     },
     {
-#include "category_bg/13d934_picture_tiles.img.inc"
+#include "vehicles/jetpack/skies/rocket_racket_tiles.img.inc"
     },
     {
-#include "category_bg/13d934_picture_banks.inc"
+#include "vehicles/jetpack/skies/rocket_racket_banks.inc"
     },
 };
 

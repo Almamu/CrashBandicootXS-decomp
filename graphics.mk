@@ -179,61 +179,72 @@ $(C_BUILDDIR)/data/level_select_graphics_6377c0.o: $(GRAPHICS_BUILDDIR)/level_se
 	$(foreach p,$(LEVEL_SELECT_PICTURES),$(GRAPHICS_BUILDDIR)/$(p).img.bin.lz.inc $(GRAPHICS_BUILDDIR)/$(p).gbapal.lz.inc)
 
 # Actor-category backgrounds (docs/data.md, "Category backgrounds"): the
-# BG0 cell animations and BG1 pictures of graphics/category_bg/. They are
-# uncompressed, so grit's -ftb output goes straight into C initializers;
-# tools/grit_bg.py only splits/interleaves it into the ROM's record layout.
-# Every PNG is 8bpp indexed with the asset's 256-colour palette, each 8x8
-# cell drawn in one 16-colour bank (index = bank * 16 + 4bpp pixel), which
-# grit's -mRtp map reduction turns back into the bank bits.
-CATBG_DIR := $(GRAPHICS_BUILDDIR)/category_bg
+# BG0 cell animations (vehicles/polar/ice_wall, vehicles/jetpack/clouds) and
+# the BG1 pictures (vehicles/jetpack/skies/). They are uncompressed, so
+# grit's -ftb output goes straight into C initializers; tools/grit_bg.py
+# only splits/interleaves it into the ROM's record layout. Every PNG is
+# 8bpp indexed with the asset's 256-colour palette, each 8x8 cell drawn in
+# one 16-colour bank (index = bank * 16 + 4bpp pixel), which grit's -mRtp
+# map reduction turns back into the bank bits.
 
 # Cell animation: all frames stacked in one tall PNG (row-major tiles, so
-# the tile stream is the frames back to back), plus the 256-colour palette.
-$(CATBG_DIR)/%_cell_anim.img.bin $(CATBG_DIR)/%_cell_anim.pal.bin: graphics/category_bg/%_cell_anim.png | $(GRIT)
-	@mkdir -p $(dir $@)
-	$(GRIT) $< -gt -gB4 -p -pn256 -ftb -fh! -o $(CATBG_DIR)/$*_cell_anim
-# ... and its per-cell palette banks: only the bank bits of this map are
-# used (its tile indices are a reduced set and are ignored).
-$(CATBG_DIR)/%_cell_anim_banks.map.bin: graphics/category_bg/%_cell_anim.png | $(GRIT)
-	@mkdir -p $(dir $@)
-	$(GRIT) $< -gt -gB4 -p! -m -mRtp -mLf -ftb -fh! -o $(CATBG_DIR)/$*_cell_anim_banks
-$(CATBG_DIR)/03b8b0_cell_anim_frames.inc: $(CATBG_DIR)/03b8b0_cell_anim.img.bin $(CATBG_DIR)/03b8b0_cell_anim_banks.map.bin tools/grit_bg.py
-	python3 tools/grit_bg.py frames $< $@ --cells 247 --banks $(CATBG_DIR)/03b8b0_cell_anim_banks.map.bin
-$(CATBG_DIR)/0ff1b0_cell_anim_frames.inc: $(CATBG_DIR)/0ff1b0_cell_anim.img.bin tools/grit_bg.py
-	python3 tools/grit_bg.py frames $< $@ --cells 380
+# the tile stream is the frames back to back), plus the 256-colour palette,
+# and, for $(3) = banks, its per-cell palette banks: only the bank bits of
+# that map are used (its tile indices are a reduced set and are ignored).
+# $(2) is the number of cells in a frame.
+define CELL_ANIM_RULE
+$(GRAPHICS_BUILDDIR)/$(1).img.bin $(GRAPHICS_BUILDDIR)/$(1).pal.bin &: graphics/$(1).png | $(GRIT)
+	@mkdir -p $$(dir $$@)
+	$(GRIT) $$< -gt -gB4 -p -pn256 -ftb -fh! -o $(GRAPHICS_BUILDDIR)/$(1)
+$(GRAPHICS_BUILDDIR)/$(1)_banks.map.bin: graphics/$(1).png | $(GRIT)
+	@mkdir -p $$(dir $$@)
+	$(GRIT) $$< -gt -gB4 -p! -m -mRtp -mLf -ftb -fh! -o $(GRAPHICS_BUILDDIR)/$(1)_banks
+$(GRAPHICS_BUILDDIR)/$(1)_frames.inc: $(GRAPHICS_BUILDDIR)/$(1).img.bin $(if $(3),$(GRAPHICS_BUILDDIR)/$(1)_banks.map.bin) tools/grit_bg.py
+	python3 tools/grit_bg.py frames $$< $$@ --cells $(2) $(if $(3),--banks $(GRAPHICS_BUILDDIR)/$(1)_banks.map.bin)
+$(GRAPHICS_BUILDDIR)/$(1).pal.inc: $(GRAPHICS_BUILDDIR)/$(1).pal.bin tools/bin2c.py
+	python3 tools/bin2c.py $$< $$@ --u16
+endef
+$(eval $(call CELL_ANIM_RULE,vehicles/polar/ice_wall,247,banks))
+$(eval $(call CELL_ANIM_RULE,vehicles/jetpack/clouds,380,))
 
-# BG1 picture: the tile set is its own 8px-wide strip PNG (grit's external
-# tileset, -fx, so the map indices are the ROM's), the picture PNG gives
-# the palette and, reduced against that tile set, the map.
+# BG1 picture: the tile set is its own 8px-wide strip PNG (<picture>_tiles,
+# grit's external tileset, -fx, so the map indices are the ROM's), the
+# picture PNG gives the palette and, reduced against that tile set, the map.
 # grit doesn't only read the -fx tile set, it also writes it back when it
-# exits. Pointing -fx at graphics/ rewrote a source PNG while the
-# %_picture_tiles.img.bin rule could be reading it, so a parallel clean
-# build sometimes failed with "grit: can't read '..._picture_tiles.png'".
-# The map rule therefore works on a private copy under build/.
-$(CATBG_DIR)/%_picture.pal.bin: graphics/category_bg/%_picture.png | $(GRIT)
-	@mkdir -p $(dir $@)
-	$(GRIT) $< -g! -p -pn256 -ftb -fh! -o $(CATBG_DIR)/$*_picture
-$(CATBG_DIR)/%_picture_tiles.img.bin: graphics/category_bg/%_picture_tiles.png | $(GRIT)
-	@mkdir -p $(dir $@)
-	$(GRIT) $< -gt -gB4 -p! -ftb -fh! -o $(CATBG_DIR)/$*_picture_tiles
-$(CATBG_DIR)/%_picture_map.map.bin: graphics/category_bg/%_picture.png graphics/category_bg/%_picture_tiles.png | $(GRIT)
-	@mkdir -p $(dir $@)
-	cp $(word 2,$^) $(CATBG_DIR)/$*_picture_map_fx.png
-	$(GRIT) $< -gt -gB4 -p! -m -mRtp -mLf -fx $(CATBG_DIR)/$*_picture_map_fx.png -ftb -fh! -o $(CATBG_DIR)/$*_picture_map
-$(CATBG_DIR)/%_picture_map.inc: $(CATBG_DIR)/%_picture_map.map.bin tools/grit_bg.py
-	python3 tools/grit_bg.py map $< $@
-$(CATBG_DIR)/%_picture_banks.inc: $(CATBG_DIR)/%_picture_map.map.bin tools/grit_bg.py
-	python3 tools/grit_bg.py banks $< $@
+# exits. Pointing -fx at graphics/ rewrote a source PNG while the tile
+# set's rule could be reading it, so a parallel clean build sometimes
+# failed with "grit: can't read '..._tiles.png'". The map rule therefore
+# works on a private copy under build/.
+define BG_PICTURE_RULE
+$(GRAPHICS_BUILDDIR)/$(1).pal.bin: graphics/$(1).png | $(GRIT)
+	@mkdir -p $$(dir $$@)
+	$(GRIT) $$< -g! -p -pn256 -ftb -fh! -o $(GRAPHICS_BUILDDIR)/$(1)
+$(GRAPHICS_BUILDDIR)/$(1)_tiles.img.bin: graphics/$(1)_tiles.png | $(GRIT)
+	@mkdir -p $$(dir $$@)
+	$(GRIT) $$< -gt -gB4 -p! -ftb -fh! -o $(GRAPHICS_BUILDDIR)/$(1)_tiles
+$(GRAPHICS_BUILDDIR)/$(1)_map.map.bin: graphics/$(1).png graphics/$(1)_tiles.png | $(GRIT)
+	@mkdir -p $$(dir $$@)
+	cp $$(word 2,$$^) $(GRAPHICS_BUILDDIR)/$(1)_map_fx.png
+	$(GRIT) $$< -gt -gB4 -p! -m -mRtp -mLf -fx $(GRAPHICS_BUILDDIR)/$(1)_map_fx.png -ftb -fh! -o $(GRAPHICS_BUILDDIR)/$(1)_map
+$(GRAPHICS_BUILDDIR)/$(1)_map.inc: $(GRAPHICS_BUILDDIR)/$(1)_map.map.bin tools/grit_bg.py
+	python3 tools/grit_bg.py map $$< $$@
+$(GRAPHICS_BUILDDIR)/$(1)_banks.inc: $(GRAPHICS_BUILDDIR)/$(1)_map.map.bin tools/grit_bg.py
+	python3 tools/grit_bg.py banks $$< $$@
+$(GRAPHICS_BUILDDIR)/$(1).pal.inc: $(GRAPHICS_BUILDDIR)/$(1).pal.bin tools/bin2c.py
+	python3 tools/bin2c.py $$< $$@ --u16
+$(GRAPHICS_BUILDDIR)/$(1)_tiles.img.inc: $(GRAPHICS_BUILDDIR)/$(1)_tiles.img.bin tools/bin2c.py
+	python3 tools/bin2c.py $$< $$@
+endef
+SKIES := $(addprefix vehicles/jetpack/skies/,rocket_racket blimp_bonanza no_fly_zone)
+$(foreach p,$(SKIES),$(eval $(call BG_PICTURE_RULE,$(p))))
 
-$(CATBG_DIR)/%.pal.inc: $(CATBG_DIR)/%.pal.bin tools/bin2c.py
-	python3 tools/bin2c.py $< $@ --u16
-$(CATBG_DIR)/%.img.inc: $(CATBG_DIR)/%.img.bin tools/bin2c.py
-	python3 tools/bin2c.py $< $@
-
-catbg_picture_incs = $(foreach p,$(1),$(CATBG_DIR)/$(p)_picture.pal.inc $(CATBG_DIR)/$(p)_picture_tiles.img.inc $(CATBG_DIR)/$(p)_picture_map.inc $(CATBG_DIR)/$(p)_picture_banks.inc)
-$(C_BUILDDIR)/data/cell_anim_03b8b0.o: $(CATBG_DIR)/03b8b0_cell_anim.pal.inc $(CATBG_DIR)/03b8b0_cell_anim_frames.inc
-$(C_BUILDDIR)/data/cell_anim_0ff1b0.o: $(CATBG_DIR)/0ff1b0_cell_anim.pal.inc $(CATBG_DIR)/0ff1b0_cell_anim_frames.inc $(call catbg_picture_incs,13d934)
-$(C_BUILDDIR)/data/bg_picture_151ac4.o: $(call catbg_picture_incs,151ac4 155260)
+bg_picture_incs = $(foreach p,$(1),$(GRAPHICS_BUILDDIR)/$(p).pal.inc $(GRAPHICS_BUILDDIR)/$(p)_tiles.img.inc \
+	$(GRAPHICS_BUILDDIR)/$(p)_map.inc $(GRAPHICS_BUILDDIR)/$(p)_banks.inc)
+$(C_BUILDDIR)/data/cell_anim_03b8b0.o: $(GRAPHICS_BUILDDIR)/vehicles/polar/ice_wall.pal.inc \
+	$(GRAPHICS_BUILDDIR)/vehicles/polar/ice_wall_frames.inc
+$(C_BUILDDIR)/data/cell_anim_0ff1b0.o: $(GRAPHICS_BUILDDIR)/vehicles/jetpack/clouds.pal.inc \
+	$(GRAPHICS_BUILDDIR)/vehicles/jetpack/clouds_frames.inc $(call bg_picture_incs,vehicles/jetpack/skies/rocket_racket)
+$(C_BUILDDIR)/data/bg_picture_151ac4.o: $(call bg_picture_incs,vehicles/jetpack/skies/blimp_bonanza vehicles/jetpack/skies/no_fly_zone)
 
 # The struct bg_package pictures (docs/graphics.md "Menu and title
 # pictures"): the menu backgrounds (graphics/menus/), the title screen's
@@ -336,53 +347,57 @@ $(GRAPHICS_BUILDDIR)/level_tilesets/%.img.bin.inc: $(GRAPHICS_BUILDDIR)/level_ti
 
 tile_pool_incs = $(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.img.bin.inc,$(1))
 
-# The two boss pictures (graphics/boss_pictures/, see docs/data.md "Boss
-# pictures"): grit turns each frame into 4bpp tiles in cell order, and
-# tools/boss_pictures.py deduplicates them into the ROM's shared tile
-# pool and per-frame maps.
-BOSS_PICTURE_PNGS := $(wildcard graphics/boss_pictures/*.png)
-BOSS_PICTURE_DIR := $(GRAPHICS_BUILDDIR)/boss_pictures
-
-$(BOSS_PICTURE_DIR)/%.img.bin: graphics/boss_pictures/%.png | $(GRIT)
+# The two boss pictures (docs/data.md "Boss pictures"): the airship
+# (graphics/vehicles/jetpack/airship/frameN.png, 4 frames) and N. Gin's
+# hovercraft (graphics/bosses/hovercraft.png, 1 frame). grit turns each
+# frame into 4bpp tiles in cell order, and tools/boss_pictures.py
+# deduplicates them into the ROM's shared tile pool and per-frame maps.
+AIRSHIP_FRAMES := $(addprefix vehicles/jetpack/airship/frame,0 1 2 3)
+BOSS_PICTURE_FRAMES := $(AIRSHIP_FRAMES) bosses/hovercraft
+$(patsubst %,$(GRAPHICS_BUILDDIR)/%.img.bin,$(BOSS_PICTURE_FRAMES)): $(GRAPHICS_BUILDDIR)/%.img.bin: graphics/%.png | $(GRIT)
 	@mkdir -p $(dir $@)
 	$(GRIT) $< -gt -gB4 -p! -ftb -fh! -o $(@:.img.bin=)
 
-boss_picture_tiles = $(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.img.bin,$(sort $(wildcard graphics/boss_pictures/$(1)_frame*.png)))
-# $(1): the picture's address, $(2): the same in upper case, $(3): its width in cells.
+# $(1): the picture's built name, $(2): its frames, $(3): its macro prefix,
+# $(4): its width in cells.
 define BOSS_PICTURE_RULE
-$(BOSS_PICTURE_DIR)/$(1).inc $(BOSS_PICTURE_DIR)/$(1).h &: tools/boss_pictures.py $(call boss_picture_tiles,$(1))
-	python3 tools/boss_pictures.py pack $(BOSS_PICTURE_DIR)/$(1).inc $(BOSS_PICTURE_DIR)/$(1).h --name BOSS_PICTURE_$(2) --cols $(3) $(call boss_picture_tiles,$(1))
+$(GRAPHICS_BUILDDIR)/$(1).inc $(GRAPHICS_BUILDDIR)/$(1).h &: tools/boss_pictures.py $(patsubst %,$(GRAPHICS_BUILDDIR)/%.img.bin,$(2))
+	@mkdir -p $$(dir $$@)
+	python3 tools/boss_pictures.py pack $(GRAPHICS_BUILDDIR)/$(1).inc $(GRAPHICS_BUILDDIR)/$(1).h --name $(3) --cols $(4) $(patsubst %,$(GRAPHICS_BUILDDIR)/%.img.bin,$(2))
 endef
-$(eval $(call BOSS_PICTURE_RULE,167cd4,167CD4,18))
-$(eval $(call BOSS_PICTURE_RULE,169ce8,169CE8,16))
+$(eval $(call BOSS_PICTURE_RULE,vehicles/jetpack/airship,$(AIRSHIP_FRAMES),AIRSHIP_PICTURE,18))
+$(eval $(call BOSS_PICTURE_RULE,bosses/hovercraft,bosses/hovercraft,HOVERCRAFT_PICTURE,16))
 
-$(C_BUILDDIR)/data/boss_pictures_167ad4.o: $(foreach p,167cd4 169ce8,$(BOSS_PICTURE_DIR)/$(p).inc $(BOSS_PICTURE_DIR)/$(p).h)
+$(C_BUILDDIR)/data/boss_pictures_167ad4.o: $(foreach p,vehicles/jetpack/airship bosses/hovercraft,$(GRAPHICS_BUILDDIR)/$(p).inc $(GRAPHICS_BUILDDIR)/$(p).h)
 $(C_BUILDDIR)/data/level_tilesets_17e78c.o: $(call tile_pool_incs,$(filter graphics/level_tilesets/tileset1_% graphics/level_tilesets/tileset2_% graphics/level_tilesets/tileset3_%,$(TILE_POOL_8BPP_PNGS)))
 $(C_BUILDDIR)/data/level_tilesets_270f08.o: $(call tile_pool_incs,$(filter graphics/level_tilesets/tileset4_% graphics/level_tilesets/tileset5_%,$(TILE_POOL_8BPP_PNGS)))
 
 # Zero-run-compressed OBJ frame sets (the old "rotation strips", see
 # docs/data.md "Compressed sprite frames"): one PNG per set, the frames
-# stacked top to bottom. grit does the 4bpp layout, tools/rle_sprites.py
-# compresses each frame the way the ROM's encoder did and writes the bytes
-# plus a header of frame offsets (for the frame pointer tables).
-RLE_SPRITE_PNGS := $(wildcard graphics/rle_sprites/*.png)
-RLE_SPRITE_DIR := $(GRAPHICS_BUILDDIR)/rle_sprites
-RLE_FRAME_0c2758 := 8x8
-RLE_FRAME_0da1d8 := 10x10
-RLE_FRAME_15a050 := 8x8
+# stacked top to bottom: the polar player and the Yeti
+# (graphics/vehicles/polar/player.png, yeti.png) and the jetpack player
+# (graphics/vehicles/jetpack/player.png). grit does the 4bpp layout,
+# tools/rle_sprites.py compresses each frame the way the ROM's encoder did
+# and writes the bytes plus a header of frame offsets (for the frame
+# pointer tables), RLE_SPRITES_<name>_FRAME_nnn.
+# $(1): the set, $(2): its frame size in tiles, $(3): its macro name.
+define RLE_SPRITE_RULE
+$(GRAPHICS_BUILDDIR)/$(1).img.bin: graphics/$(1).png | $(GRIT)
+	@mkdir -p $$(dir $$@)
+	$(GRIT) $$< -gt -gB4 -p! -ftb -fh! -o $(GRAPHICS_BUILDDIR)/$(1)
+$(GRAPHICS_BUILDDIR)/$(1).inc $(GRAPHICS_BUILDDIR)/$(1).h &: $(GRAPHICS_BUILDDIR)/$(1).img.bin tools/rle_sprites.py
+	python3 tools/rle_sprites.py pack $$< $(GRAPHICS_BUILDDIR)/$(1).inc $(GRAPHICS_BUILDDIR)/$(1).h --frame $(2) --name RLE_SPRITES_$(3)
+endef
+$(eval $(call RLE_SPRITE_RULE,vehicles/polar/player,8x8,POLAR_PLAYER))
+$(eval $(call RLE_SPRITE_RULE,vehicles/polar/yeti,10x10,YETI))
+$(eval $(call RLE_SPRITE_RULE,vehicles/jetpack/player,8x8,JETPACK_PLAYER))
 
-$(RLE_SPRITE_DIR)/%_frames.img.bin: graphics/rle_sprites/%_frames.png | $(GRIT)
-	@mkdir -p $(dir $@)
-	$(GRIT) $< -gt -gB4 -p! -ftb -fh! -o $(@:.img.bin=)
-$(RLE_SPRITE_DIR)/%_frames.inc $(RLE_SPRITE_DIR)/%_frames.h: $(RLE_SPRITE_DIR)/%_frames.img.bin tools/rle_sprites.py
-	python3 tools/rle_sprites.py pack $< $(RLE_SPRITE_DIR)/$*_frames.inc $(RLE_SPRITE_DIR)/$*_frames.h --frame $(RLE_FRAME_$*) --name RLE_SPRITES_$(shell echo $* | tr a-f A-F)
-
-rle_sprite_files = $(foreach s,$(1),$(RLE_SPRITE_DIR)/$(s)_frames.inc $(RLE_SPRITE_DIR)/$(s)_frames.h)
-$(C_BUILDDIR)/data/rle_sprites_0c2758.o: $(call rle_sprite_files,0c2758 0da1d8)
-$(C_BUILDDIR)/data/rle_sprites_15a050.o: $(call rle_sprite_files,15a050)
-$(C_BUILDDIR)/data/frame_table_17a880.o: $(call rle_sprite_files,0da1d8)
-$(C_BUILDDIR)/data/anim_family_178f80.o: $(call rle_sprite_files,0c2758) $(GRAPHICS_BUILDDIR)/unknown/00_0b2120_frames.h
-$(C_BUILDDIR)/data/anim_family_17aa6c.o: $(call rle_sprite_files,15a050) $(GRAPHICS_BUILDDIR)/unknown/01_14174c_frames.h
+rle_sprite_files = $(foreach s,$(1),$(GRAPHICS_BUILDDIR)/$(s).inc $(GRAPHICS_BUILDDIR)/$(s).h)
+$(C_BUILDDIR)/data/rle_sprites_0c2758.o: $(call rle_sprite_files,vehicles/polar/player vehicles/polar/yeti)
+$(C_BUILDDIR)/data/rle_sprites_15a050.o: $(call rle_sprite_files,vehicles/jetpack/player)
+$(C_BUILDDIR)/data/frame_table_17a880.o: $(call rle_sprite_files,vehicles/polar/yeti)
+$(C_BUILDDIR)/data/anim_family_178f80.o: $(call rle_sprite_files,vehicles/polar/player) $(GRAPHICS_BUILDDIR)/unknown/00_0b2120_frames.h
+$(C_BUILDDIR)/data/anim_family_17aa6c.o: $(call rle_sprite_files,vehicles/jetpack/player) $(GRAPHICS_BUILDDIR)/unknown/01_14174c_frames.h
 
 # The six 4bpp tile sets of the level BG1-3 layers (graphics/level_bg_tiles/,
 # docs/graphics.md "Level BG tile sets"). Each PNG is 8bpp indexed with a

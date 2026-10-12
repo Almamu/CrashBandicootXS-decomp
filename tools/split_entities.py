@@ -146,7 +146,7 @@ def read_records(anim_base, slot_count, data_end):
         end = min(s for s in starts if s > table_b)
         values = struct.unpack(f'<{(end - table_b) // 4}I', rd(table_b, end - table_b))
         if values[0] >= 0x08000000:
-            continue  # the player's compressed frames (graphics/rle_sprites/)
+            continue  # the player's compressed frames (graphics/vehicles/*/player.png)
         records.append((slot, table_b, bank, values))
     return records
 

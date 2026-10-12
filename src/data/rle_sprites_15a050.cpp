@@ -9,11 +9,11 @@ extern "C" {
  * ("Compressed sprite frames").
  */
 
-#include "rle_sprites/15a050_frames.h"
+#include "vehicles/jetpack/player.h"
 
 /* Categories 3-6's animation record 0 (table_B gJetpackPlayerFrames):
  * 80 frames of 8x8 tiles (64x64). Built from
- * graphics/rle_sprites/15a050_frames.png. */
-extern const u8 gJetpackPlayerRleFrames[RLE_SPRITES_15A050_SIZE] = {
-#include "rle_sprites/15a050_frames.inc"
+ * graphics/vehicles/jetpack/player.png. */
+extern const u8 gJetpackPlayerRleFrames[RLE_SPRITES_JETPACK_PLAYER_SIZE] = {
+#include "vehicles/jetpack/player.inc"
 };

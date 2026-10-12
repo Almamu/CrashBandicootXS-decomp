@@ -20,15 +20,16 @@ extern "C" {
  * must stay back to back.
  *
  * The frames and their tile counts are built from
- * graphics/boss_pictures/<addr>_frameN.png by grit and
+ * graphics/vehicles/jetpack/airship/frameN.png and
+ * graphics/bosses/hovercraft.png by grit and
  * tools/boss_pictures.py. The game converts the 4bpp tiles to 8bpp VRAM
  * tiles of BG palette 1 (the picture is drawn on an affine BG, which
  * only takes 8bpp tiles), and lays them out by the maps with
  * DrawAirshipMap. */
 #define BOSS_FRAME(ncells, ntiles) struct { s32 tileCount; u16 map[ncells]; u8 tiles[(ntiles) * 32]; }
 
-#include "boss_pictures/167cd4.h"
-#include "boss_pictures/169ce8.h"
+#include "vehicles/jetpack/airship.h"
+#include "bosses/hovercraft.h"
 #include "bosses.h"
 #include "globals.h"
 
@@ -40,24 +41,24 @@ const u16 Airship::palette[256] = {
     0x02BF, 0x3AB9, 0x05F7, 0x0194, 0x5B3B, 0x29B0, 0x14BF, 0x7FFF,
 };
 
-#define AIRSHIP_CELLS (BOSS_PICTURE_167CD4_COLS * BOSS_PICTURE_167CD4_ROWS)
+#define AIRSHIP_CELLS (AIRSHIP_PICTURE_COLS * AIRSHIP_PICTURE_ROWS)
 
 /* Airship::picture: the airship, 4 frames (the propellers turn).
  * CreateAirship (airship.cpp) reads cols and rows, ConvertAirshipTiles
  * (airship_graphics.cpp) uploads the tiles. */
 struct airship_picture {
     struct boss_picture_size size;
-    BOSS_FRAME(AIRSHIP_CELLS, BOSS_PICTURE_167CD4_FRAME0_TILES) frame0;
-    BOSS_FRAME(AIRSHIP_CELLS, BOSS_PICTURE_167CD4_FRAME1_TILES) frame1;
-    BOSS_FRAME(AIRSHIP_CELLS, BOSS_PICTURE_167CD4_FRAME2_TILES) frame2;
-    BOSS_FRAME(AIRSHIP_CELLS, BOSS_PICTURE_167CD4_FRAME3_TILES) frame3;
+    BOSS_FRAME(AIRSHIP_CELLS, AIRSHIP_PICTURE_FRAME0_TILES) frame0;
+    BOSS_FRAME(AIRSHIP_CELLS, AIRSHIP_PICTURE_FRAME1_TILES) frame1;
+    BOSS_FRAME(AIRSHIP_CELLS, AIRSHIP_PICTURE_FRAME2_TILES) frame2;
+    BOSS_FRAME(AIRSHIP_CELLS, AIRSHIP_PICTURE_FRAME3_TILES) frame3;
 };
 const struct airship_picture Airship::picture = {
-    { BOSS_PICTURE_167CD4_COLS, BOSS_PICTURE_167CD4_ROWS },
-#include "boss_pictures/167cd4.inc"
+    { AIRSHIP_PICTURE_COLS, AIRSHIP_PICTURE_ROWS },
+#include "vehicles/jetpack/airship.inc"
 };
 
-/* Cortex's hovercraft (Hovercraft::palette, include/hovercraft.hpp): its
+/* N. Gin's hovercraft (Hovercraft::palette, include/hovercraft.hpp): its
  * palette. LoadHovercraftGraphics (hovercraft.cpp) DMAs the first 16 colours
  * to BG palette 1 and UpdateHovercraftHitFlash restores them from here; the
  * other 240 entries are the 0x03E0 filler colour. */
@@ -101,11 +102,11 @@ const u16 Hovercraft::palette[256] = {
  * tiles. */
 struct hovercraft_picture {
     struct boss_picture_size size;
-    BOSS_FRAME(BOSS_PICTURE_169CE8_COLS * BOSS_PICTURE_169CE8_ROWS, BOSS_PICTURE_169CE8_FRAME0_TILES) frame0;
+    BOSS_FRAME(HOVERCRAFT_PICTURE_COLS * HOVERCRAFT_PICTURE_ROWS, HOVERCRAFT_PICTURE_FRAME0_TILES) frame0;
 };
 const struct hovercraft_picture Hovercraft::picture = {
-    { BOSS_PICTURE_169CE8_COLS, BOSS_PICTURE_169CE8_ROWS },
-#include "boss_pictures/169ce8.inc"
+    { HOVERCRAFT_PICTURE_COLS, HOVERCRAFT_PICTURE_ROWS },
+#include "bosses/hovercraft.inc"
 };
 
 /* KeyInput::GetDpadDirection (key_input.cpp): the d-pad direction (0-8,
