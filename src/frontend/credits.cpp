@@ -51,11 +51,10 @@ Credits::Credits()
     gObjVramCursor->Reset();
     gSmallFont->SetTileBase(0);
     ReserveFontVram(gObjVramCursor, gSmallFont);
-    {
-        u32 base = gSmallFont->tileCount;
 
-        gLargeFont->SetTileBase(base);
-    }
+    u32 base = gSmallFont->tileCount;
+
+    gLargeFont->SetTileBase(base);
     ReserveFontVram(gObjVramCursor, gLargeFont);
     gObjVramCursor->Mark();
     popups = 0;
@@ -277,16 +276,15 @@ void Credits::UpdateText()
                 }
                 penX += advance;
                 LIMIT_MIN(maxHeight, height);
-                {
-                    const u8 *q = stream;
 
-                    stream = q + 1;
-                    c = q[1];
-                    if (c == '\n') {
-                        goto newline;
-                    }
-                    p = q + 1;
+                const u8 *q = stream;
+
+                stream = q + 1;
+                c = q[1];
+                if (c == '\n') {
+                    goto newline;
                 }
+                p = q + 1;
             } while (c != 0);
         }
         if (*stream != '\n') {
@@ -296,24 +294,20 @@ void Credits::UpdateText()
 newline:
     stream++;
 place:
-    {
-        CreditsPopup *n = lineStart->next;
-        s32 delay = maxHeight + 6;
+    CreditsPopup *n = lineStart->next;
+    s32 delay = maxHeight + 6;
 
-        if (n != 0) {
-            s32 dx = (0xf0 - penX) / 2;
+    if (n != 0) {
+        do {
+            s32 y = n->y;
+            s32 top = y + 0xa0;
 
-            do {
-                s32 y = n->y;
-                s32 top = y + 0xa0;
-
-                n->y = top + (maxHeight - (y + n->height)) / 2;
-                n->x += dx;
-                n = n->next;
-            } while (n != 0);
-        }
-        lineDelay = delay;
+            n->y = top + (maxHeight - (y + n->height)) / 2;
+            n->x += (0xf0 - penX) / 2;
+            n = n->next;
+        } while (n != 0);
     }
+    lineDelay = delay;
 }
 
 /* One `gCreditsLogos` record (0x14 bytes), read through its own view of
@@ -368,15 +362,13 @@ void Credits::LoadLogos()
         s32 size;
         s32 y;
 
-        {
-            s32 w = src->w;
-            s32 h = src->h;
+        s32 w = src->w;
+        s32 h = src->h;
 
-            logo->height = h << 3;
-            logo->width = w << 3;
-            logo->cols = (w + 3) / 4;
-            logo->rows = (h + 3) / 4;
-        }
+        logo->height = h << 3;
+        logo->width = w << 3;
+        logo->cols = (w + 3) / 4;
+        logo->rows = (h + 3) / 4;
         tiles = new u8[*src->tiles >> 8];
         LoadTaggedAsset(src->tiles, tiles);
         size = (logo->cols * logo->rows) << 9;

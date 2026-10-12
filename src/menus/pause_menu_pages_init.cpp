@@ -113,13 +113,12 @@ void PauseMenu::InitTimeTrialPage()
     u8 earned;
 
     levelIdx = gLevelState->GetCurrentLevel();
-    {
-        /* A byte offset, not an index: keeps the ROM's `idx*4 + 4`
-         * computed before the base is loaded. */
-        s32 off = levelIdx * 4 + offsetof(GameProgress, levels);
 
-        time = (u16)*(u32 *)((u8 *)progress + off) >> 3;
-    }
+    /* A byte offset, not an index: keeps the ROM's `idx*4 + 4`
+     * computed before the base is loaded. */
+    s32 off = levelIdx * 4 + offsetof(GameProgress, levels);
+
+    time = (u16)*(u32 *)((u8 *)progress + off) >> 3;
     FormatCentiseconds(time, timeText);
     entry = &gLevelTable[levelIdx];
     earned = 0;

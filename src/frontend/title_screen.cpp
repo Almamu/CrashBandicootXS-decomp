@@ -132,13 +132,12 @@ void TitleScreen::LoadObjTiles()
         count = (*pkg)->height * (*pkg)->width;
         map = new u16[count];
         LoadTaggedAsset((*pkg)->mapAsset, map);
-        {
-            s32 i;
 
-            for (i = 0; i < count; i++) {
-                DmaCopy16(3, tiles + ((map[i] & 0xff) << 5), tileDest, TILE_SIZE_4BPP);
-                tileDest += TILE_SIZE_4BPP;
-            }
+        s32 i;
+
+        for (i = 0; i < count; i++) {
+            DmaCopy16(3, tiles + ((map[i] & 0xff) << 5), tileDest, TILE_SIZE_4BPP);
+            tileDest += TILE_SIZE_4BPP;
         }
 
         delete[] map;
@@ -231,35 +230,32 @@ void TitleScreen::DrawLogoPieces()
     struct oam_attrs oamB;
     struct oam_attrs oamC;
 
-    {
-        LogoPiece *slot = &pieces[8];
+    LogoPiece *slot = &pieces[8];
 
-        if (slot->active) {
-            u16 scale = 0x1000000 / slot->velA;
-            SetAffine(gOamBuffer, matrix, scale, 0, 0, scale);
-            CLEAR_OAM(&oamA);
-            oamA.affineMode = OAM_AFFINE_MODE_DOUBLE;
-            oamA.matrixLo = 0;
-            oamA.palette = 3;
-            oamA.size = 2;
-            oamA.shape = 1;
-            oamA.y = Q16_TO_INT(slot->posB.q) - 16;
-            oamA.tileNum = 0x1c0;
-            oamA.x = Q16_TO_INT(slot->posA.q) - 0x20 - Q16_TO_INT(slot->velA << 5);
-            gOamBuffer->Add(&oamA);
-            oamA.tileNum += 8;
-            oamA.x = Q16_TO_INT(slot->posA.q) - 0x20;
-            gOamBuffer->Add(&oamA);
-            oamA.tileNum += 8;
-            {
-                s32 px = Q16_TO_INT(slot->posA.q);
-                s32 dx = Q16_TO_INT(slot->velA << 5) - 0x20;
+    if (slot->active) {
+        u16 scale = 0x1000000 / slot->velA;
+        SetAffine(gOamBuffer, matrix, scale, 0, 0, scale);
+        CLEAR_OAM(&oamA);
+        oamA.affineMode = OAM_AFFINE_MODE_DOUBLE;
+        oamA.matrixLo = 0;
+        oamA.palette = 3;
+        oamA.size = 2;
+        oamA.shape = 1;
+        oamA.y = Q16_TO_INT(slot->posB.q) - 16;
+        oamA.tileNum = 0x1c0;
+        oamA.x = Q16_TO_INT(slot->posA.q) - 0x20 - Q16_TO_INT(slot->velA << 5);
+        gOamBuffer->Add(&oamA);
+        oamA.tileNum += 8;
+        oamA.x = Q16_TO_INT(slot->posA.q) - 0x20;
+        gOamBuffer->Add(&oamA);
+        oamA.tileNum += 8;
 
-                oamA.x = px + dx;
-            }
-            gOamBuffer->Add(&oamA);
-            matrix = 2;
-        }
+        s32 px = Q16_TO_INT(slot->posA.q);
+        s32 dx = Q16_TO_INT(slot->velA << 5) - 0x20;
+
+        oamA.x = px + dx;
+        gOamBuffer->Add(&oamA);
+        matrix = 2;
     }
     for (i = 0; i <= 4; i++) {
         LogoPiece *slot = &pieces[7] - i;
@@ -300,87 +296,82 @@ void TitleScreen::DrawLogoPieces()
             oamB.palette = 0;
             oamB.tileNum = i << 6;
             oamB.size = 3;
-            {
-                s32 px = Q16_TO_INT(slot->posA.q);
-                s32 dx = off - 32;
 
-                oamB.x = px + dx;
-            }
+            s32 px = Q16_TO_INT(slot->posA.q);
+            s32 dx = off - 32;
+
+            oamB.x = px + dx;
             oamB.y = Q16_TO_INT(slot->posB.q) - 32 + off;
             gOamBuffer->Add(&oamB);
         }
     }
-    {
-        const s32 *tbl = &gTitleArrowPieceOffsets[0][0];
 
-        k = 0;
-        for (; k <= 1; k++) {
-            LogoPiece *slot = &pieces[k];
-            s32 j;
+    const s32 *tbl = &gTitleArrowPieceOffsets[0][0];
 
-            if (slot->active) {
-                s32 *cnt;
-                /* landTimer[k], built like landTimer[7 - i] above */
-                {
-                    u32 off = k << 2;
-                    u32 base = (u32)landTimer;
-                    cnt = (s32 *)(base + off);
-                }
+    k = 0;
+    for (; k <= 1; k++) {
+        LogoPiece *slot = &pieces[k];
+        s32 j;
 
-                if (*cnt != 0) {
-                    if (*cnt == -1) {
-                        *cnt = 8;
-                        gAudioContext->PlaySfx(SFX_UNKNOWN_3D, 0x100);
-                    } else if (--*cnt == 0) {
-                        shake = 30;
-                    }
+        if (slot->active) {
+            s32 *cnt;
+            /* landTimer[k], built like landTimer[7 - i] above */
+
+            u32 off = k << 2;
+            u32 base = (u32)landTimer;
+            cnt = (s32 *)(base + off);
+
+            if (*cnt != 0) {
+                if (*cnt == -1) {
+                    *cnt = 8;
+                    gAudioContext->PlaySfx(SFX_UNKNOWN_3D, 0x100);
+                } else if (--*cnt == 0) {
+                    shake = 30;
                 }
             }
-            CLEAR_OAM(&oamC);
-            oamC.palette = k + 1;
-            oamC.tileNum = (k << 6) + 0x140;
-            oamC.size = 2;
-            oamC.priority = 2;
-            for (j = 0; j < 4; j++) {
-                s32 x = Q16_TO_INT(slot->posA.q) + *tbl++;
-                s32 y = Q16_TO_INT(slot->posB.q) + *tbl++;
+        }
+        CLEAR_OAM(&oamC);
+        oamC.palette = k + 1;
+        oamC.tileNum = (k << 6) + 0x140;
+        oamC.size = 2;
+        oamC.priority = 2;
+        for (j = 0; j < 4; j++) {
+            s32 x = Q16_TO_INT(slot->posA.q) + *tbl++;
+            s32 y = Q16_TO_INT(slot->posB.q) + *tbl++;
 
-                if (y <= 0x8b) {
-                    oamC.x = x;
-                    oamC.y = y;
-                    if (slot->active)
-                        gOamBuffer->Add(&oamC);
-                }
-                oamC.tileNum += 0x10;
+            if (y <= 0x8b) {
+                oamC.x = x;
+                oamC.y = y;
+                if (slot->active)
+                    gOamBuffer->Add(&oamC);
             }
+            oamC.tileNum += 0x10;
         }
     }
-    {
-        LogoPiece *rec = &pieces[2];
 
-        if (rec->active) {
-            s32 a, b;
+    LogoPiece *rec = &pieces[2];
 
-            ShowBg2();
-            a = rec->posA.q;
-            b = rec->posB.q;
-            if (shake != 0) {
-                --shake;
-                {
-                    s32 r = RandRange_s32(10);
-                    s32 t = a - 5;
-                    a = t + (u16)r;
-                }
-                {
-                    s32 r = RandRange_s32(10);
-                    s32 t = b - 5;
-                    b = t + (u16)r;
-                }
+    if (rec->active) {
+        s32 a, b;
+
+        ShowBg2();
+        a = rec->posA.q;
+        b = rec->posB.q;
+        if (shake != 0) {
+            --shake;
+
+            s32 r = RandRange_s32(10);
+            s32 t = a - 5;
+            a = t + (u16)r;
+            {
+                s32 r = RandRange_s32(10);
+                s32 t = b - 5;
+                b = t + (u16)r;
             }
-            bgScale = 0x1000000 / rec->velA;
-            bgX = bgScale * Q16_TO_INT(-a) + 0x4000;
-            bgY = Q16_TO_INT(-b) * bgScale + 0x4000;
         }
+        bgScale = 0x1000000 / rec->velA;
+        bgX = bgScale * Q16_TO_INT(-a) + 0x4000;
+        bgY = Q16_TO_INT(-b) * bgScale + 0x4000;
     }
 }
 
@@ -505,11 +496,9 @@ s32 TitleScreen::Run()
         *(vu32 *)REG_ADDR_BLDCNT = 0;
         CommitFrame();
     }
-    {
-        u32 z = 0;
-        menuShown = 1;
-        cheatHash = z;
-    }
+
+    menuShown = 1;
+    cheatHash = 0;
     for (;;) {
         Draw();
         starfield->Update();

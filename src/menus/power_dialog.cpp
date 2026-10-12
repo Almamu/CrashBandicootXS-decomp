@@ -19,9 +19,7 @@ extern "C" {
  * RunLevelSelect's (level_select.cpp). */
 static inline void IconReserve(Font **m)
 {
-    ObjVramCursor *c = gObjVramCursor;
-
-    c->Reserve((*m)->tileCount << 5);
+    gObjVramCursor->Reserve((*m)->tileCount << 5);
 }
 
 /* Runs the dialog to completion: resets the display, the palette cache
@@ -44,11 +42,10 @@ void PowerDialog::Show(s32 title, s32 desc, s32 type)
     gObjVramCursor->Reset();
     gSmallFont->SetTileBase(0);
     IconReserve(&gSmallFont);
-    {
-        u32 v = gSmallFont->tileCount;
 
-        gLargeFont->SetTileBase(v);
-    }
+    u32 v = gSmallFont->tileCount;
+
+    gLargeFont->SetTileBase(v);
     IconReserve(&gLargeFont);
     gObjVramCursor->Mark();
     dialog = new PowerDialog(GetUiText(title), GetUiText(desc), type);
@@ -84,16 +81,15 @@ PowerDialog::PowerDialog(const u8 *titleText, const u8 *descText, s32 type) : bg
     this->descText = descText;
     bg.Load(&gMenuSkyBg);
     frame = 0;
-    {
-        UiSprite *s = new UiSprite;
 
-        icon = s;
-        SetIconBank(s, 38);
-        s->tag = type;
-        s->ResetFrameTimer();
-        s->ResetFrameIndex();
-        s->SetAnimDone(0);
-    }
+    UiSprite *s = new UiSprite;
+
+    icon = s;
+    SetIconBank(s, 38);
+    s->tag = type;
+    s->ResetFrameTimer();
+    s->ResetFrameIndex();
+    s->SetAnimDone(0);
     icon->x = 0xf0 << 7;
     icon->y = 0xa0 << 7;
     icon->palette = icon->GetAnimPaletteSlot();

@@ -32,22 +32,20 @@ void PauseMenu::DrawFraction(const u8 *count, const u8 *total)
     Font **pe0;
 
     (*pdc)->DrawText(count);
-    {
-        Font *d = *pdc;
-        u32 x = d->posX;
-        u32 y = d->posY;
 
-        /* Assigned here, not at the top: that keeps the
-         * &gLargeFont load after the posX/posY loads. */
-        pe0 = &gLargeFont;
-        (*pe0)->SetPos(x - 2, y);
-    }
+    Font *d = *pdc;
+    u32 x = d->posX;
+    u32 y = d->posY;
+
+    /* Assigned here, not at the top: that keeps the
+     * &gLargeFont load after the posX/posY loads. */
+    pe0 = &gLargeFont;
+    (*pe0)->SetPos(x - 2, y);
     (*pe0)->DrawGlyph('/');
-    {
-        Font *e = *pe0;
 
-        (*pdc)->SetPos(e->GetX() - 5, e->GetY() + 8);
-    }
+    Font *e = *pe0;
+
+    (*pdc)->SetPos(e->GetX() - 5, e->GetY() + 8);
     (*pdc)->DrawText(total);
 }
 

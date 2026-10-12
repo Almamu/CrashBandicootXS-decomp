@@ -40,9 +40,7 @@ extern "C" struct vec2 gLevelSelectTrialIconPos_rw asm("gLevelSelectTrialIconPos
  * separate inlined expansions give. */
 static inline void IconReserve(Font **m)
 {
-    ObjVramCursor *c = gObjVramCursor;
-
-    c->Reserve((*m)->tileCount << 5);
+    gObjVramCursor->Reserve((*m)->tileCount << 5);
 }
 
 static inline void LoadMenuPalette(PaletteCache *cache)
@@ -68,24 +66,22 @@ s32 RunLevelSelect(s32 *level)
     gObjVramCursor->Reset();
     gSmallFont->SetTileBase(0);
     IconReserve(&gSmallFont);
-    {
-        u32 v = gSmallFont->tileCount;
 
-        gLargeFont->SetTileBase(v);
-    }
+    u32 v = gSmallFont->tileCount;
+
+    gLargeFont->SetTileBase(v);
     IconReserve(&gLargeFont);
     gObjVramCursor->Mark();
     gAudioContext->PlaySong(SONG_WARP_ROOM);
-    {
-        LevelSelect **menuAddr = &gLevelSelect;
 
-        *menuAddr = new LevelSelect(*level);
-        *level = (*menuAddr)->Loop();
-        menu = *menuAddr;
-        result = menu->result;
-        delete menu;
-        *menuAddr = 0;
-    }
+    LevelSelect **menuAddr = &gLevelSelect;
+
+    *menuAddr = new LevelSelect(*level);
+    *level = (*menuAddr)->Loop();
+    menu = *menuAddr;
+    result = menu->result;
+    delete menu;
+    *menuAddr = 0;
     gPaletteCache->FreeUnlockedSlots();
     mem_free_bytes(heaps);
     return result;
@@ -136,25 +132,23 @@ LevelSelect::LevelSelect(s32 level)
     scroll = 0;
     panel = new LevelSelectCursor;
     bg2 = new ZoomBg(3, 0x1F);
-    {
-        s32 j;
 
-        for (j = 0; j < 6; j++)
-            items[j] = new LevelSelectEntry;
-    }
+    s32 j;
+
+    for (j = 0; j < 6; j++)
+        items[j] = new LevelSelectEntry;
     LoadEntries();
     PlaceEntries();
     SetEntryBoxes();
-    {
-        s32 v;
 
-        for (i = 0, v = 0x80; i < 8; i++) {
-            s = new UiSprite;
-            sprites[i] = s;
-            s->SetPriority(1);
-            if (i > 1)
-                sprites[i]->affine = v;
-        }
+    s32 v;
+
+    for (i = 0, v = 0x80; i < 8; i++) {
+        s = new UiSprite;
+        sprites[i] = s;
+        s->SetPriority(1);
+        if (i > 1)
+            sprites[i]->affine = v;
     }
     SetBankNow(sprites[0], gSpriteBankSet->Bank(47));
     sprites[0]->StartAnim(gLevelSelectWorldAnims[world]);
@@ -296,12 +290,11 @@ void LevelSelect::DrawRecord()
     sprites[3]->DrawWithOffset(-panelSlideX, flag1IconY);
     if (rank != 5)
         sprites[4]->DrawWithOffset(-panelSlideX, gemIconY);
-    {
-        struct level_save_h *sv = &save->levels[levelId].h;
 
-        if (sv->cleared)
-            DrawTime(sv->time);
-    }
+    struct level_save_h *sv = &save->levels[levelId].h;
+
+    if (sv->cleared)
+        DrawTime(sv->time);
 }
 
 /* Draws the time readout: just the best time if it beats the tightest
@@ -367,12 +360,11 @@ void LevelSelect::Draw()
     for (i = 5; i >= 0; i--)
         (*it++)->Draw();
     bg2->Update();
-    {
-        UiSprite **p = sp + 2;
 
-        for (i = 5; i >= 0; i--)
-            (*p++)->AdvanceAnim();
-    }
+    UiSprite **p = sp + 2;
+
+    for (i = 5; i >= 0; i--)
+        (*p++)->AdvanceAnim();
 }
 
 /* Loads the selected level's record into the panel: its `rank` (first of
@@ -495,6 +487,7 @@ static inline struct held_pressed_pair KeyHalf(union key_state k)
 s32 LevelSelect::Loop()
 {
     const struct level_info *info;
+    u32 a;
 
     result = 0;
     levelId = items[index]->GetLevel();
@@ -544,12 +537,10 @@ loop:
         CursorLeft();
     else if (KeyHalf(gKeys).pressed & DPAD_RIGHT)
         CursorRight();
-    {
-        u32 a = gKeys.half.pressed & A_BUTTON;
+    a = gKeys.half.pressed & A_BUTTON;
 
-        if (!a)
-            goto check_exit;
-    }
+    if (!a)
+        goto check_exit;
     if (!items[index]->IsSelected())
         goto check_exit;
     if (!bg2->IsShown())
