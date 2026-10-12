@@ -210,8 +210,8 @@ counting that code as unmatched (or as "matched", which is what happened
 while a NAKED transcription sat inside a C unit) would misstate progress.
 `tools/report_units.py` marks these ranges with `HANDWRITTEN` and emits no
 unit for them, so they drop out of both the matched and the total counts.
-crt0 is excluded the same way: its range comes before the first unit. The
-bytes are still verified by `make compare`. Only mark a range
+crt0 is excluded the same way: its range (up to 0x08000140) comes before
+the first unit. The bytes are still verified by `make compare`. Only mark a range
 `HANDWRITTEN` once it's confirmed to be hand-written, not just hard to
 match. GAX2's ARM DSP routines (`lib/gax/asm/gax_arm_dsp.s`, from
 0x0803A628) are one: hand-written ARM in every GAX version
@@ -228,7 +228,18 @@ than as C++ held together by pins and patched-compiler options, and to
 keep counting it as a function (#662; iwram-image.md, "itoa_arm:
 assembly"). Its unit's base object is the assembled `asm/itoa_arm.o`
 (the `report` target builds it), so it reports as a matched function and
-the total stays 2059.
+it counts as one of the 2062.
+
+`bios_util.cpp` (`DivMod`, `MemCopy32` and `Ctrl::Update`, 0x08000140-
+0x0800016F, right after crt0) had no unit until #662's audit, so its 3
+functions were in neither total (2059, and the clean-function count,
+which only counts report units). They were still in `asm/crt0.s` when
+the per-file units were made (`ae75a634`), so the first unit started at
+`AgbMain` and their range fell into crt0's. When they were decompiled
+(#191) nothing added the unit. It has one now: `expected/legacy.s` was
+regenerated to start at `sub_8000140` (expected/README.md), and
+`corrections.txt` renames `nullsub_9` to `UpdateCtrl`. The total went
+from 2059 to 2062.
 
 ## The IWRAM image
 

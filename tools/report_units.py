@@ -74,10 +74,11 @@ LD = ["arm-none-eabi-ld", "-r"]
 # counts as a function; see IWRAM_UNITS.) No unit is emitted
 # for it, which leaves it out of decomp.dev's progress totals entirely.
 # It counts neither as matched nor as unmatched. crt0.s (0x08000000 up to
-# the first entry below) is excluded the same way, by never having a unit.
-# The ROM bytes are still byte-verified by `make compare`.
+# the first entry below, 0x08000140) is excluded the same way, by never
+# having a unit. The ROM bytes are still byte-verified by `make compare`.
 HANDWRITTEN = "handwritten"
 UNITS = [
+    (0x08000140, "src/system/bios_util.o", "system"),  # DivMod/MemCopy32/UpdateCtrl (Ctrl::Update), right after crt0's boot stub; this range had no unit until #662's audit, so its 3 functions weren't counted - see docs/decomp_dev.md
     (0x08000170, "src/system/main.o", "system"),
     (0x080001CC, "src/system/memory.o", "system"),
     (0x08000544, "src/system/irq.o", "system"),

@@ -17,9 +17,10 @@ Thumb code, and one for the ARM code of the IWRAM image:
   symbol names the current `src/*.c` files use for anything since matched.
 - **`legacy.s`** is `asm/code.s` (the ROM's *entire* code, in one file) as it
   existed at `8b090ca`, the very first commit - covering ROM addresses
-  `0x08000170`-`0x080006A7`, i.e. `main.c`/`memory.c`/part of `irq.c`
-  (`AgbMain` through `AddVBlankCallback`), matched away in 2025, well before
-  `code_3.s` ever existed as its own file. `AgbMain` was already named at
+  `0x08000140`-`0x080006A7`, i.e. `bios_util.cpp` (`DivMod`, `sub_8000140`
+  there, `MemCopy32`, `Ctrl::Update`) and `main.c`/`memory.c`/part of
+  `irq.c` (`AgbMain` through `AddVBlankCallback`, matched away in 2025,
+  well before `code_3.s` ever existed as its own file). `AgbMain` was already named at
   this commit (a standard-enough GBA convention that it carried over from
   the reference project this repo started from); everything else here is
   still `sub_XXXXXXXX`, renamed via `expected/corrections.txt` instead.
@@ -33,6 +34,12 @@ Thumb code, and one for the ARM code of the IWRAM image:
   the symbols they point at, function names as in `src/iwram/`), checked
   to reassemble to the same 0x7CC bytes, and frozen. Its labels carry
   IWRAM addresses. See docs/decomp_dev.md's "The IWRAM image".
+
+`legacy.s` first started at `AgbMain` (`0x08000170`): the three functions
+before it, now `bios_util.cpp`'s, were still in `asm/crt0.s` when the
+report units were made, so they had no unit. It was regenerated from the
+same commit to start at `sub_8000140` (lines 46-770 of `8b090ca:asm/code.s`
+after its 5-line header, instead of 78-770) when they got one (#662).
 
 `code_3.s` and `legacy.s` were both verified byte-identical to their source commit's blob via
 `git hash-object` (for `legacy.s`, of the exact line range extracted -

@@ -411,6 +411,7 @@ rename sub_8037E54 __udivsi3
 rename sub_8037ECC __muldi3
 rename sub_8000140 DivMod
 rename sub_800014C MemCopy32
+rename nullsub_9 UpdateCtrl
 rename sub_8000544 IrqClearHandler
 rename sub_8000558 IrqRestoreHandler
 rename sub_80005A0 IrqSetHandler
