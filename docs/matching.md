@@ -4843,7 +4843,11 @@ contribution workflow:
   through a callee-saved register (`r4`) with a normal push/pop-list
   prologue instead, a real but differently-shaped save. Embedding the
   `push`/`pop` literally inside the inline-asm text (rather than as a
-  clobber list) reproduced the ROM byte-for-byte.
+  clobber list) reproduced the ROM byte-for-byte. It first pinned r2
+  (`remainderOut`) too; that pin was redundant, since the argument
+  arrives in r2 and nothing else wants it (#662's bios_util audit: two
+  pins, r0/r1, the SWI's operands, and an `r3` clobber for its third
+  result).
 - **`MemCopy32`**: the already-matched `CpuSet` (BIOS SWI
   wrapper) with swapped src/dst argument order and `byteCount`
   converted to `CpuSet`'s 32-bit-word count field (masked to the low 23
