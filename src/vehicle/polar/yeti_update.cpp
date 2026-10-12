@@ -206,12 +206,11 @@ void Yeti::UpdateBg2()
     t = Q8_DIV(x * 47, distance) + base;
     *(vs32 *)REG_ADDR_BG2X = 0x4000 - Q8_MUL(t, scale);
     *(vs32 *)REG_ADDR_BG2Y = 0x4400 - Q8_MUL(GetActorBgCenterY(), scale);
-    {
-        vu16 *pa = (vu16 *)REG_ADDR_BG2PA;
 
-        *pa++ = scale;
-        *pa++ = 0;
-        *pa++ = 0;
-        *pa = scale;
-    }
+    vu16 *pa = (vu16 *)REG_ADDR_BG2PA;
+
+    *pa++ = scale;
+    *pa++ = 0;
+    *pa++ = 0;
+    *pa = scale;
 }

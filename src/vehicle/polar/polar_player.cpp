@@ -45,11 +45,8 @@ void PolarPlayer::Update()
         depth = 0x2f00;
         z = INT_TO_Q8(GetCellAnimDistance()) - depth;
     }
-    {
-        s32 d = (depth >> 1) & 0x7f80;
 
-        sortKey = d | (((ABS_BRANCHLESS(y) + ABS_BRANCHLESS(x)) >> 11) & 0x7f);
-    }
+    sortKey = ((depth >> 1) & 0x7f80) | (((ABS_BRANCHLESS(y) + ABS_BRANCHLESS(x)) >> 11) & 0x7f);
     stateTime++;
     animTime += animTimer;
     animDone = 0;
@@ -134,21 +131,18 @@ void PolarPlayer::Draw()
     sx -= halfW;
     sy -= halfH;
     if (sy <= 0x9f && sy + halfH * 2 >= 0 && sx <= 0xef && sx + halfW * 2 >= 0) {
-        u32 attr = CurAttr();
-
-        attr1 |= (sy & 0xff) | ((sx & 0x1ff) << 16) | attr | GetSpriteShapeSizeBits(frame);
+        attr1 |= (sy & 0xff) | ((sx & 0x1ff) << 16) | CurAttr() | GetSpriteShapeSizeBits(frame);
         if (frame != gPolarPlayerLastFrame) {
             gPolarPlayerTileBuffer ^= 1;
             gUnpackRleSpriteFrameFunc((u16 *)gPolarPlayerTiles[gPolarPlayerTileBuffer],
                                       (struct rle_frame *)frame);
             gPolarPlayerLastFrame = frame;
         }
-        {
-            /* computed first, into r0 */
-            u32 tile = GET_TILE_NUM(gPolarPlayerTiles[gPolarPlayerTileBuffer]);
 
-            QueueSpriteFrameOam(attr1, (palette << 12) | tile, scale);
-        }
+        /* computed first, into r0 */
+        u32 tile = GET_TILE_NUM(gPolarPlayerTiles[gPolarPlayerTileBuffer]);
+
+        QueueSpriteFrameOam(attr1, (palette << 12) | tile, scale);
     }
 }
 
@@ -167,9 +161,8 @@ s32 PolarPlayer::Hurt()
         return 1;
 
     PolarAkuAku **aku = &gPolarAkuAku;
-    s32 tier = gLevelState->maskLevel;
 
-    if (tier == MASK_LEVEL_NONE) {
+    if (gLevelState->maskLevel == MASK_LEVEL_NONE) {
         gAudioContext->PlaySfx(SFX_PLAYER_HURT, 0x100);
         QueueVramDmaTransfer(gPolarPlayerShockPalette, OBJ_PALETTE(0), 0x20, 0x10);
         SetState(POLAR_PLAYER_STATE_KNOCKED_OFF, 5);
@@ -198,9 +191,8 @@ s32 PolarPlayer::Shock()
         return 1;
 
     PolarAkuAku **aku = &gPolarAkuAku;
-    s32 tier = gLevelState->maskLevel;
 
-    if (tier == MASK_LEVEL_NONE) {
+    if (gLevelState->maskLevel == MASK_LEVEL_NONE) {
         SetState(POLAR_PLAYER_STATE_SHOCKED, 0xb);
         gAudioContext->PlaySfx(SFX_ELECTRIC_SHOCK, 0x100);
         gPolarSteerEnabled = 0;

@@ -22,20 +22,18 @@ extern "C" {
  * picked up to fly to the HUD. */
 void ExtraLife::CheckPickup()
 {
-    if (mode != PICKUP_MODE_BOB && phase <= PICKUP_PHASE_NO_PICKUP) {
-        if (gPlayer->ctrlMode != PLAYER_CTRL_MODE_INPUT)
-            return;
-    }
-    {
-        u32 flags = f.flags << 24;
-        s32 contact;
+    if (mode != PICKUP_MODE_BOB && phase <= PICKUP_PHASE_NO_PICKUP &&
+        gPlayer->ctrlMode != PLAYER_CTRL_MODE_INPUT)
+        return;
 
-        if ((flags >> (24 + ENTITY_BIT_TOUCHED)) & 1)
-            return;
-        contact = (flags >> (24 + ENTITY_BIT_CONTACT)) & 1;
-        if (!contact)
-            return;
-    }
+    u32 flags = f.flags << 24;
+    s32 contact;
+
+    if ((flags >> (24 + ENTITY_BIT_TOUCHED)) & 1)
+        return;
+    contact = (flags >> (24 + ENTITY_BIT_CONTACT)) & 1;
+    if (!contact)
+        return;
     struct aabb box = GetAnimHitbox();
     Player *player = gPlayer;
     struct aabb playerBox = player->GetAnimHitbox();
@@ -80,11 +78,10 @@ void ExtraLife::PickUp(u8 randomize)
         gHud->ShowLives();
     }
     f.b.active = 1;
-    {
-        u8 one = 1; // materialized before the field's address
 
-        screenSpace = one;
-    }
+    u8 one = 1; // materialized before the field's address
+
+    screenSpace = one;
 
     WorldToScreen(this, Q8_TO_INT(x), Q8_TO_INT(y), &outX, &outY);
 
@@ -199,12 +196,10 @@ void ExtraLife::SendToHud()
 void ExtraLife::UpdateHop()
 {
     struct three_words widths = gExtraLifeHopWidths;
-    s32 dy;
     s32 sn;
 
     sn = gSineTable[phase * 4];
-    dy = FixedMul(sn, 0x800);
-    y = anchor.y - dy;
+    y = anchor.y - FixedMul(sn, 0x800);
     sn = gSineTable[phase * 2];
     sn = FixedMul(sn, widths.a[mode - 1]);
     if (mode == PICKUP_MODE_HOP_LEFT)
@@ -247,10 +242,8 @@ ExtraLife::ExtraLife()
 /* While on the spot, and while the player is in contact: CheckPickup. */
 s32 ExtraLife::CheckPlayerContact()
 {
-    if (state == EXTRA_LIFE_STATE_IDLE) {
-        if (gPlayer->f.flags >> ENTITY_BIT_COLLIDES)
-            CheckPickup();
-    }
+    if (state == EXTRA_LIFE_STATE_IDLE && gPlayer->f.flags >> ENTITY_BIT_COLLIDES)
+        CheckPickup();
     return 0;
 }
 

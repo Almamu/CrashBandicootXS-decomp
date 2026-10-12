@@ -22,20 +22,18 @@ extern "C" {
  * screen, with the hit sound; otherwise it flies to the HUD. */
 void Wumpa::CheckPickup()
 {
-    if (mode != PICKUP_MODE_BOB && phase <= PICKUP_PHASE_NO_PICKUP) {
-        if (gPlayer->ctrlMode != PLAYER_CTRL_MODE_INPUT)
-            return;
-    }
-    {
-        u32 flags = f.flags << 24;
-        s32 contact;
+    if (mode != PICKUP_MODE_BOB && phase <= PICKUP_PHASE_NO_PICKUP &&
+        gPlayer->ctrlMode != PLAYER_CTRL_MODE_INPUT)
+        return;
 
-        if ((flags >> (24 + ENTITY_BIT_TOUCHED)) & 1)
-            return;
-        contact = (flags >> (24 + ENTITY_BIT_CONTACT)) & 1;
-        if (!contact)
-            return;
-    }
+    u32 flags = f.flags << 24;
+    s32 contact;
+
+    if ((flags >> (24 + ENTITY_BIT_TOUCHED)) & 1)
+        return;
+    contact = (flags >> (24 + ENTITY_BIT_CONTACT)) & 1;
+    if (!contact)
+        return;
     struct aabb box = GetAnimHitbox();
     Player *player = gPlayer;
 
@@ -92,11 +90,10 @@ void Wumpa::PickUp(u8 randomize)
     }
     affine = 0xa0;
     ClampFrame(this);
-    {
-        u8 one = 1; // materialized before the field's address
 
-        screenSpace = one;
-    }
+    u8 one = 1; // materialized before the field's address
+
+    screenSpace = one;
     f.b.active = 1;
 
     WorldToScreen(this, Q8_TO_INT(x), Q8_TO_INT(y), &outX, &outY);
@@ -220,24 +217,22 @@ Wumpa *Wumpa::Create(u16 id, u16 x, u16 y, u16 special)
     else
         TouchableList()->Add(self);
     self->bank = gSpriteBankSet->Bank(35);
-    {
-        u8 one = 1;
-        u8 *tag = &self->tag;
 
-        phase = 0;
-        *tag = one;
-    }
+    u8 one = 1;
+    u8 *tag = &self->tag;
+
+    phase = 0;
+    *tag = one;
     self->ResetFrameTimer();
     self->ResetFrameIndex();
     self->SetAnimDone(0);
-    {
-        s32 frame = 0;
-        s32 count = self->bank->anims[self->tag].frameCount;
 
-        if (phase >= count)
-            frame = count - 1;
-        self->frame = frame;
-    }
+    s32 frame = 0;
+    s32 count = self->bank->anims[self->tag].frameCount;
+
+    if (phase >= count)
+        frame = count - 1;
+    self->frame = frame;
     self->mirrorBits.flipX = 0;
     self->mirrorBits.flipY = 0;
     self->counter = 0;
@@ -245,10 +240,9 @@ Wumpa *Wumpa::Create(u16 id, u16 x, u16 y, u16 special)
     self->phase = phase;
     if (mode == WUMPA_MODE_PAYOUT)
         self->StartPayout();
-    {
-        s32 slot = gPaletteCache->GetSlot(self->bank->anims->paletteId);
 
-        self->palette = slot;
-    }
+    s32 slot = gPaletteCache->GetSlot(self->bank->anims->paletteId);
+
+    self->palette = slot;
     return self;
 }
