@@ -22,8 +22,9 @@ $(GRAPHICS_BUILDDIR)/%.gbapal: graphics/%.pal tools/jasc_pal.py
 # frame's own tile dimensions are just its PNG size / 8. gbagfx can't be
 # used directly: each frame has a 4-byte non-pixel header not present in
 # a plain PNG<->4bpp round trip. Explicit (non-pattern) rules, one per
-# entity folder found under each sheet, so editing/adding/removing a
-# frame PNG is tracked like any other prerequisite.
+# entity folder, so editing/adding/removing a frame PNG is tracked like
+# any other prerequisite. The sheet's folders.json lists the entities in
+# the sheet's order (FRAMED_ENTITIES, tools/framed_gfx.py order).
 define FRAMED_ENTITY_RULE
 $(GRAPHICS_BUILDDIR)/unknown/$(1)/$(2).bin: $$(sort $$(wildcard graphics/unknown/$(1)/$(2)/*.png)) tools/framed_gfx.py
 	@mkdir -p $$(dir $$@)
@@ -32,16 +33,18 @@ endef
 
 # Split multi-record sprite sheets: each ROM asset below was originally one
 # big LZ77 stream, so it must be recompressed as a single unit - every
-# entity's converted bytes get concatenated back in folder-name order
-# (numeric prefixes preserve original ROM order) before compression.
+# entity's converted bytes get concatenated back in the order of the
+# sheet's folders.json before compression.
+FRAMED_ENTITIES_00_0b2120 := $(shell python3 tools/framed_gfx.py order graphics/unknown/00_0b2120)
+FRAMED_ENTITIES_01_14174c := $(shell python3 tools/framed_gfx.py order graphics/unknown/01_14174c)
 define FRAMED_SHEET_RULE
-$(GRAPHICS_BUILDDIR)/unknown/$(1).bin: $(foreach e,$(sort $(notdir $(patsubst %/,%,$(wildcard graphics/unknown/$(1)/*/)))),$(GRAPHICS_BUILDDIR)/unknown/$(1)/$(e).bin)
+$(GRAPHICS_BUILDDIR)/unknown/$(1).bin: $(foreach e,$(FRAMED_ENTITIES_$(1)),$(GRAPHICS_BUILDDIR)/unknown/$(1)/$(e).bin) graphics/unknown/$(1)/folders.json
 	@mkdir -p $$(dir $$@)
-	cat $$^ > $$@
+	cat $$(filter %.bin,$$^) > $$@
 endef
 
 $(foreach sheet,00_0b2120 01_14174c,\
-  $(foreach entity,$(sort $(notdir $(patsubst %/,%,$(wildcard graphics/unknown/$(sheet)/*/)))),\
+  $(foreach entity,$(FRAMED_ENTITIES_$(sheet)),\
     $(eval $(call FRAMED_ENTITY_RULE,$(sheet),$(entity)))))
 
 $(eval $(call FRAMED_SHEET_RULE,00_0b2120))
@@ -50,7 +53,7 @@ $(eval $(call FRAMED_SHEET_RULE,01_14174c))
 # The byte offset of every frame in a sheet (FRAMED_<SHEET>_<ENTITY>_<NN>),
 # for the category families' pool_offset table_B arrays in src/data/.
 define FRAMED_HEADER_RULE
-$(GRAPHICS_BUILDDIR)/unknown/$(1)_frames.h: $(sort $(wildcard graphics/unknown/$(1)/*/*.png)) tools/framed_gfx.py
+$(GRAPHICS_BUILDDIR)/unknown/$(1)_frames.h: $(sort $(wildcard graphics/unknown/$(1)/*/*.png)) graphics/unknown/$(1)/folders.json tools/framed_gfx.py
 	@mkdir -p $$(dir $$@)
 	python3 tools/framed_gfx.py header graphics/unknown/$(1) $$@
 endef

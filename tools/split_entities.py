@@ -10,10 +10,12 @@
 # consecutive frames that the same records use (docs/graphics.md, "The
 # framed sheets"). A record's frames can therefore span several folders:
 # the polar crates all end in the shared crate_shards run, the jetpack
-# rocket's frames are rocket + explosion + rocket_burst, and so on. Folder
-# order is the sheet's byte order, which is also the order the build packs
-# them in (graphics.mk's FRAMED_SHEET_RULE), so the names below may change
-# freely as long as the NN prefixes stay in order.
+# rocket's frames are rocket + explosion + rocket_burst, and so on. The
+# order of folders.json's "folders" list is the sheet's byte order, which
+# is also the order the build packs them in (graphics.mk's
+# FRAMED_SHEET_RULE, tools/framed_gfx.py order), so the names below may
+# change freely. (The folders still carry an NN_ prefix, which
+# framed_gfx.py accepts; folders.json names them without it.)
 #
 # Colours: each folder's PNGs carry the 16 colours of the palette bank its
 # first record (in table order) draws it with - anim_table_record.palette
@@ -206,7 +208,7 @@ def split_family(sheet_rom_addr, decompressed_size, sheet_dir, anim_table_base,
         os.rmdir(tmp)
 
         entry = {
-            'folder': os.path.basename(entity_dir),
+            'folder': name,
             'frames': last - first + 1,
             'records': list(slots),
             'palette': PALETTES[palette],
