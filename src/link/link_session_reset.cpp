@@ -84,39 +84,39 @@ s32 LinkSession::ResetState()
     ring.Reset();
     MakeLinkHandshakeId(this->id);
     id = this->id;
-    {
-        u8 *p = prevPacket;
 
-        for (k = 0; k <= 3; k++) {
-            u32 v = (p[9] << 8) | p[8];
-            u32 lo = v & 0xff;
+    u8 *p = prevPacket;
 
-            p[0] = lo;
-            p[1] = v >> 8;
-            p += 2;
-        }
+    for (k = 0; k <= 3; k++) {
+        u32 v = (p[9] << 8) | p[8];
+        u32 lo = v & 0xff;
+
+        p[0] = lo;
+        p[1] = v >> 8;
+        p += 2;
     }
     connectCounter = 0;
     totalSent = 0;
     for (i = 0; i <= 3; i++) {
         players[i].ring.Reset();
+        /* scoped, as the `t` block below */
         {
             s32 *f30 = &players[0].rxSeq;
             s32 t = i * sizeof(LinkPlayer);
 
             *(s32 *)((u8 *)f30 + t) = 0;
         }
-        {
-            u8 *src = id;
 
-            for (j = 0; j <= 3; j++) {
-                u32 w = (src[j * 2 + 1] << 8) | src[j * 2];
-                u32 lo = w & 0xff;
+        u8 *src = id;
 
-                (players - 1)[i + 1].id[j * 2] = lo;
-                (players - 1)[i + 1].id[j * 2 + 1] = w >> 8;
-            }
+        for (j = 0; j <= 3; j++) {
+            u32 w = (src[j * 2 + 1] << 8) | src[j * 2];
+            u32 lo = w & 0xff;
+
+            (players - 1)[i + 1].id[j * 2] = lo;
+            (players - 1)[i + 1].id[j * 2 + 1] = w >> 8;
         }
+        /* scoped: its own `t` (shared, the registers differ) */
         {
             s32 t = i * sizeof(LinkPlayer);
 
@@ -134,13 +134,12 @@ s32 LinkSession::ResetState()
     sendRound = 0;
     handshakeWord.bits.hi = 0xF0B;
     handshakeWord.bits.lo = 0;
-    {
-        u16 *p400 = &sendWord;
-        u16 v;
 
-        *p400 = handshakeWord.raw;
-        v = *p400;
-        REG_SIOMLT_SEND = v;
-    }
+    u16 *p400 = &sendWord;
+    u16 v;
+
+    *p400 = handshakeWord.raw;
+    v = *p400;
+    REG_SIOMLT_SEND = v;
     return 0;
 }

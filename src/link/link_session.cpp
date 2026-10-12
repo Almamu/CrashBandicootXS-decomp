@@ -113,19 +113,18 @@ s32 LinkSession::Update()
             ResetState();
         }
     }
-    {
-        s32 a = peakIdleFrames;
-        s32 b = idleFrames;
 
-        LIMIT_MIN(a, b);
-        peakIdleFrames = a;
-        b = progressed ? 0 : b + 1;
-        idleFrames = b;
-        progressed = 0;
-        if (b > 0x1d) {
-            Stop();
-            ResetState();
-        }
+    s32 a = peakIdleFrames;
+    s32 b = idleFrames;
+
+    LIMIT_MIN(a, b);
+    peakIdleFrames = a;
+    b = progressed ? 0 : b + 1;
+    idleFrames = b;
+    progressed = 0;
+    if (b > 0x1d) {
+        Stop();
+        ResetState();
     }
     connectCounter++;
     return 1;
@@ -221,27 +220,24 @@ void LinkSession::HandleSerial(u16 *data)
         goto send;
     if (!connected) {
         s32 nId, nFree, same;
-        union link_id_word *f20;
 
         if (!((siocnt >> 3) & one))
             goto send;
         nId = 0;
         nFree = 0;
-        {
-            /* SIOMULTI0-3 are hardware registers: the ROM reads each one
-             * twice, as the word copy into `w` and for the 0xffff test
-             * (#662 round 2: the C read them through a pointer biv, with
-             * the test's constant in a MATCH_CONST). */
-            vu16 *multi = data;
 
-            f20 = &handshakeWord;
-            for (i = 0; i <= 3; i++) {
-                w[i] = *(struct link_rx_word *)&multi[i];
-                if (w[i].hi == 0xF0B)
-                    nId++;
-                if (multi[i] == 0xffff)
-                    nFree++;
-            }
+        /* SIOMULTI0-3 are hardware registers: the ROM reads each one
+         * twice, as the word copy into `w` and for the 0xffff test
+         * (#662 round 2: the C read them through a pointer biv, with
+         * the test's constant in a MATCH_CONST). */
+        vu16 *multi = data;
+
+        for (i = 0; i <= 3; i++) {
+            w[i] = *(struct link_rx_word *)&multi[i];
+            if (w[i].hi == 0xF0B)
+                nId++;
+            if (multi[i] == 0xffff)
+                nFree++;
         }
         same = 1;
         for (i = 0; i < nId; i++) {
@@ -250,20 +246,19 @@ void LinkSession::HandleSerial(u16 *data)
         }
         if (nFree + nId == 4 && same && nId > 1) {
             playerCount = nId;
-            {
-                s32 me = (REG_SIOCNT & SIO_ID) >> 4;
 
-                playerId = me;
-            }
+            /* `me` is needed: inlined, the instructions are reordered */
+            s32 me = (REG_SIOCNT & SIO_ID) >> 4;
+
+            playerId = me;
             peerMask = ~(-1 << nId);
             peerMask &= ~(1 << playerId);
         }
-        f20->bits.lo = nId;
-        {
-            u16 *dst = &sendWord;
+        handshakeWord.bits.lo = nId;
 
-            *dst = handshakeWord.raw;
-        }
+        u16 *dst = &sendWord;
+
+        *dst = handshakeWord.raw;
         goto send;
     }
 
@@ -288,6 +283,7 @@ void LinkSession::HandleSerial(u16 *data)
                  * `lo`'s zero-extension is emitted at the compare (the
                  * ROM's split lsls/lsrs #28 pair). */
                 u8 lo = LINK_NIB(&q[0]).lo;
+                /* `sum` is needed: inlined, the instructions are reordered */
                 u16 sum = (u16)(LINK_NIB(&q[0]).hi + ((q[7] << 8) | q[6])) % 16;
 
                 if (lo == sum)
@@ -296,44 +292,42 @@ void LinkSession::HandleSerial(u16 *data)
         }
         if (!ok)
             continue;
-        {
-            if ((q[1] & 0xf) == (p->id[1] & 0xf)) {
-                u16 want = (q[7] << 8) | q[6];
-                u16 hash = p->prevHash;
+        if ((q[1] & 0xf) == (p->id[1] & 0xf)) {
+            u16 want = (q[7] << 8) | q[6];
+            u16 hash = p->prevHash;
 
-                LINK_HASH(hash, &q[1]);
-                if (want == hash)
-                    goto copy;
+            LINK_HASH(hash, &q[1]);
+            if (want == hash)
+                goto copy;
+            continue;
+        } else {
+            u16 want;
+            u16 hash;
+            u8 *payload;
+            s32 n;
+
+            if (LINK_NIB(&q[1]).lo != p->rxSeq)
                 continue;
-            } else {
-                u16 want;
-                u16 hash;
-                u8 *payload;
-                s32 n;
-
-                if (LINK_NIB(&q[1]).lo != p->rxSeq)
-                    continue;
-                want = (q[7] << 8) | q[6];
-                hash = p->hash;
-                LINK_HASH(hash, &q[1]);
-                if (want != hash)
-                    continue;
-                /* The stored packet's payload goes into the ring once the
-                 * next one in sequence arrives. `payload` before `n`:
-                 * `n`'s live range then starts one insn later (10 refs
-                 * over 54 insns), tying in global-alloc priority with the
-                 * wrap loop's hoisted `&ring.buf` (5 over 18); allocno
-                 * order gives `n` r7 as in the ROM. Read first (55), `n`
-                 * shares r8 with the id byte and is copied at each use.
-                 * Until #662 round 10 a MATCH_USE(n) stood in. */
-                payload = &p->id[2];
-                n = p->id[1] >> 4;
-                p->ring.Push(payload, n);
-                p->totalReceived += n;
-                p->prevHash = p->hash;
-                p->rxSeq = (p->rxSeq + 1) & 0xf;
-                receivedMask |= 1 << i;
-            }
+            want = (q[7] << 8) | q[6];
+            hash = p->hash;
+            LINK_HASH(hash, &q[1]);
+            if (want != hash)
+                continue;
+            /* The stored packet's payload goes into the ring once the
+             * next one in sequence arrives. `payload` before `n`:
+             * `n`'s live range then starts one insn later (10 refs
+             * over 54 insns), tying in global-alloc priority with the
+             * wrap loop's hoisted `&ring.buf` (5 over 18); allocno
+             * order gives `n` r7 as in the ROM. Read first (55), `n`
+             * shares r8 with the id byte and is copied at each use.
+             * Until #662 round 10 a MATCH_USE(n) stood in. */
+            payload = &p->id[2];
+            n = p->id[1] >> 4;
+            p->ring.Push(payload, n);
+            p->totalReceived += n;
+            p->prevHash = p->hash;
+            p->rxSeq = (p->rxSeq + 1) & 0xf;
+            receivedMask |= 1 << i;
         }
     copy:
         LINK_COPY_ID(p->id, q);
@@ -384,22 +378,20 @@ void LinkSession::HandleSerial(u16 *data)
             LINK_NIB(&id[1]).hi = n;
             ring->Pop(&this->id[2], n);
             totalSent += n;
-            {
-                /* A signed QImode read-modify-write: the ROM's mask is
-                 * -16 and `nib` (already masked) is not masked again. */
-                s8 *b = (s8 *)&this->id[1];
 
-                *b = (*b & ~0xf) | nib;
-            }
+            /* A signed QImode read-modify-write: the ROM's mask is
+             * -16 and `nib` (already masked) is not masked again. */
+            s8 *b = (s8 *)&this->id[1];
+
+            *b = (*b & ~0xf) | nib;
             hash = this->hash;
             LINK_HASH(hash, &this->id[1]);
-            {
-                /* The ROM sets this 0 before the hash store. */
-                s32 z = 0;
 
-                this->hash = hash;
-                sendRound = z;
-            }
+            /* The ROM sets this 0 before the hash store. */
+            s32 z = 0;
+
+            this->hash = hash;
+            sendRound = z;
             changed = 1;
         }
         if (receivedMask == peerMask) {
@@ -410,41 +402,37 @@ void LinkSession::HandleSerial(u16 *data)
         if (changed) {
             sendWordIndex = 0;
             progressed = 1;
-            {
-                u8 *id = this->id;
-                u32 n = LINK_NIB(&id[0]).hi;
-                u32 v = (id[7] << 8) | id[6];
-                s32 w = (n + v) & 0xf;
 
-                LINK_NIB(&id[0]).lo = w;
-            }
+            u8 *id = this->id;
+            u32 n = LINK_NIB(&id[0]).hi;
+            u32 v = (id[7] << 8) | id[6];
+            s32 w = (n + v) & 0xf;
+
+            LINK_NIB(&id[0]).lo = w;
         }
     }
-    {
-        u8 *lo, *hi;
 
-        if ((sendRound & 3) == 3) {
-            u8 *b = (u8 *)this + sendWordIndex * 2;
+    u8 *lo, *hi;
 
-            lo = b + 0x28;
-            hi = b + 0x29;
-        } else {
-            u8 *b = (u8 *)this + sendWordIndex * 2;
+    if ((sendRound & 3) == 3) {
+        u8 *b = (u8 *)this + sendWordIndex * 2;
 
-            lo = b + 0x30;
-            hi = b + 0x31;
-        }
-        sendWord = (*hi << 8) | *lo;
+        lo = b + 0x28;
+        hi = b + 0x29;
+    } else {
+        u8 *b = (u8 *)this + sendWordIndex * 2;
+
+        lo = b + 0x30;
+        hi = b + 0x31;
     }
+    sendWord = (*hi << 8) | *lo;
     if (++sendWordIndex == 4) {
         sendWordIndex = 0;
         sendRound++;
     }
 send:
-    {
-        u16 v = sendWord;
+    u16 v = sendWord;
 
-        REG_SIOMLT_SEND = v;
-    }
+    REG_SIOMLT_SEND = v;
     inSerialIrq = 0;
 }

@@ -18,10 +18,13 @@ u8 AabbOverlapsInclusiveX(struct aabb *a, struct aabb *b)
     u8 result = 0;
 
     if (a->w > 0 && b->w > 0) {
+        /* `aMaxX` is needed (inlined, the instructions are reordered), and
+         * `bMaxX` stays beside it */
         s32 aMaxX = a->x + a->w;
         s32 bMaxX = b->x + b->w;
 
         if (a->x <= bMaxX && b->x <= aMaxX) {
+            /* `aMaxY`, `bMaxY` are needed: inlined, the instructions are reordered */
             s32 aMaxY = a->y + a->h;
             s32 bMaxY = b->y + b->h;
             u8 temp = 0;
@@ -45,10 +48,13 @@ u8 AabbOverlaps(struct aabb *a, struct aabb *b)
     u8 result = 0;
 
     if (a->w > 0 && b->w > 0) {
+        /* `aMaxX` is needed (inlined, the instructions are reordered), and
+         * `bMaxX` stays beside it */
         s32 aMaxX = a->x + a->w;
         s32 bMaxX = b->x + b->w;
 
         if (a->x < bMaxX && b->x < aMaxX) {
+            /* `aMaxY`, `bMaxY` are needed: inlined, the instructions are reordered */
             s32 aMaxY = a->y + a->h;
             s32 bMaxY = b->y + b->h;
             u8 temp = 0;

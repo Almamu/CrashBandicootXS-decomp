@@ -125,8 +125,7 @@ void AudioContext::PlaySfx(u32 id, u32 volumeParam)
                 voice = GAX_fx_ex(handle, toggle, chanArg, -1);
             }
             if (voice != -1) {
-                u32 baseVolume = gSfxTable[id].baseVolume;
-                u32 volume = Q16_TO_INT((baseVolume * sfxVolume) * volumeParam);
+                u32 volume = Q16_TO_INT((gSfxTable[id].baseVolume * sfxVolume) * volumeParam);
 
                 GAX_set_fx_volume(voice, volume);
                 lastSfxId[gSfxVoiceToggle] = id;
@@ -145,13 +144,10 @@ void AudioContext::PlaySfx(u32 id, u32 volumeParam)
  * include/audio.hpp) and triggering it via `GAX_fx_ex`. */
 void AudioContext::TickAmbientSfx()
 {
-    u32 now;
-
     if (activeSfx.id == 0x63) {
         return;
     }
-    now = gRoomFrameCount;
-    if (now >= activeSfx.deadline) {
+    if (gRoomFrameCount >= activeSfx.deadline) {
         activeSfx.volume = 0;
         ambientSfxVolume -= 0x10;
         if (ambientSfxVolume <= 0) {
@@ -159,11 +155,8 @@ void AudioContext::TickAmbientSfx()
             GAX_stop_fx(2);
             activeSfx = pendingSfx;
             if (activeSfx.id != 0x63) {
-                u32 handle;
-
                 pendingSfx.id = 0x63;
-                handle = gSfxTable[activeSfx.id].slotId;
-                GAX_fx_ex(handle, 2, 0, -1);
+                GAX_fx_ex(gSfxTable[activeSfx.id].slotId, 2, 0, -1);
             }
         }
         GAX_set_fx_volume(2, ambientSfxVolume);
@@ -233,7 +226,6 @@ void AudioContext::StopAmbientSfx()
  * ldrb`: docs/cplusplus.md's gotchas), the C's one-byte struct. */
 void AudioContext::PlayAmbientSfx(u32 id, u32 frameOffset, s32 volumeMul, bool force)
 {
-    u8 forceFlag = force;
     u32 handle = gSfxTable[id].slotId;
 
     if (handle != 0 && volumeMul > 0) {
@@ -250,7 +242,7 @@ void AudioContext::PlayAmbientSfx(u32 id, u32 frameOffset, s32 volumeMul, bool f
             if (cur == id) {
                 activeSfx.deadline = gRoomFrameCount + frameOffset;
                 activeSfx.volume = volume;
-                if (forceFlag) {
+                if (force) {
                     GAX_fx_ex(handle, 2, 0, -1);
                     GAX_set_fx_volume(2, ambientSfxVolume);
                 }
@@ -443,6 +435,7 @@ AudioContext::AudioContext()
  * LevelState's destructor calls it on gAudioContext. */
 void AudioContext::DisableVCountIrq()
 {
+    /* `tmp` is needed: inlined, the instructions differ */
     u8 tmp = DISPSTAT_VCOUNT_INTR;
 
     *(u8 *)REG_ADDR_DISPSTAT &= ~tmp;

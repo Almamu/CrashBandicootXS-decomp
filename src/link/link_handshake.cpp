@@ -42,14 +42,12 @@ void MakeLinkHandshakeId(u8 *self)
     u32 hash;
     s32 i;
 
-    {
-        u8 c = 0xec;
-        s32 a = (s32)self + 7;
+    u8 c = 0xec;
+    s32 a = (s32)self + 7;
 
-        do {
-            *(u8 *)a = c;
-        } while (--a >= (s32)self);
-    }
+    do {
+        *(u8 *)a = c;
+    } while (--a >= (s32)self);
     self[0] &= 0xf;
     self[1] = 0;
     hash = 0x1234;
@@ -58,18 +56,18 @@ void MakeLinkHandshakeId(u8 *self)
         hash = (u16)(gCrc16Table[((hash >> 8) ^ *p) & 0xff] ^ (hash << 8));
         p++;
     }
-    {
-        u32 hi;
-        u32 v, n;
-        s32 w;
 
-        self[6] = hash;
-        self[7] = hi = (u16)hash >> 8;
-        n = ((struct nibble_pair *)self)->hi;
-        v = (hi << 8) | self[6];
-        w = (n + v) & 0xf;
-        ((struct nibble_pair *)self)->lo = w;
-    }
+    u32 hi;
+    /* `n` and `v`: the high nibble and the hash word, the sum's two terms */
+    u32 v, n;
+    s32 w;
+
+    self[6] = hash;
+    self[7] = hi = (u16)hash >> 8;
+    n = ((struct nibble_pair *)self)->hi;
+    v = (hi << 8) | self[6];
+    w = (n + v) & 0xf;
+    ((struct nibble_pair *)self)->lo = w;
 }
 
 /* "Stop" step of the link session: disables the Serial and Timer3 IRQ

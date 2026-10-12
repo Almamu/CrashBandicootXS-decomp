@@ -106,16 +106,15 @@ void strcat(u8 *dst, u8 *src)
             i++;
         } while (dst[i] != 0);
     }
-    {
-        u8 *q = dst + i;
 
-        while (*src != 0) {
-            *q = *src;
-            src++;
-            q++;
-        }
-        *q = 0;
+    u8 *q = dst + i;
+
+    while (*src != 0) {
+        *q = *src;
+        src++;
+        q++;
     }
+    *q = 0;
 }
 
 /* strncpy: copies at most n bytes from src into dst, stopping early at
