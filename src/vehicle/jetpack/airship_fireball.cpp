@@ -40,13 +40,17 @@ void AirshipFireball::StateOrbit()
     s32 px, py, tx, ty, cx, cy;
     const s16 *sine;
 
+    /* `px` is needed: inlined, the instructions are reordered */
     px = player->x;
     cx = centerX;
+    /* `tx` is needed: inlined, the code is 1 instruction shorter */
     tx = cx + -0x600;
     cx += (px - tx) >> 5;
     centerX = cx;
+    /* `py` is needed: inlined, the instructions are reordered */
     py = player->y;
     cy = centerY;
+    /* `ty` is needed: inlined, the code is 1 instruction longer */
     ty = cy + 0x800;
     cy += (py - ty) >> 5;
     centerY = cy;
@@ -86,13 +90,17 @@ void AirshipFireball::StateSpiralIn()
     s32 px, py, tx, ty, cx, cy;
     const s16 *sine;
 
+    /* `px` is needed: inlined, the instructions are reordered */
     px = player->x;
     cx = centerX;
+    /* `tx` is needed: inlined, the instructions differ */
     tx = cx + -0x600;
     cx += (px - tx) >> 4;
     centerX = cx;
+    /* `py` is needed: inlined, the instructions are reordered */
     py = player->y;
     cy = centerY;
+    /* `ty` is needed: inlined, the code is 1 instruction longer */
     ty = cy + 0x800;
     cy += (py - ty) >> 4;
     centerY = cy;

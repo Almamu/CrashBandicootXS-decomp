@@ -76,7 +76,9 @@ void JetpackCollectedWumpa::Draw()
     u32 attr;
     u32 attr2;
     u16 attr2Out;
+    /* `oamPriority` is needed: inlined, the code is 5 instructions longer */
     s32 oamPriority = 0x180;
+    /* `highBit` is needed: inlined, the code is 2 instructions longer */
     u32 highBit = 0x800;
 
     s32 qx = x, qy = y;
@@ -135,6 +137,8 @@ JetpackCollectedWumpa::JetpackCollectedWumpa(const struct anim_table_record *rec
     this->x = nx;
 
     s32 dx = nx - 0x1000;
+    /* `absDx` is needed (inlined, the instructions are reordered); `absDy`
+     * stays beside it */
     s32 absDx = ABS_BRANCHLESS(dx);
     s32 ny = this->y;
     s32 dy = ny - 0x1000;

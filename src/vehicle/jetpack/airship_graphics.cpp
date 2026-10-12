@@ -260,6 +260,7 @@ void Airship::ConvertTiles()
     dst = (u32 *)(((0xFF - sum) << 6) + BG_CHAR_ADDR(2));
     for (row_i = 0; row_i <= 3; row_i++) {
         u8 *src;
+        /* `row`, `hp`, `n` are needed: inlined, the code is 2 instructions longer */
         u8 *row;
         s32 *hp;
         s32 n;

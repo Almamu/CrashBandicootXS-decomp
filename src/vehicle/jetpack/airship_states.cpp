@@ -214,6 +214,7 @@ void Airship::StateExplode()
         gAudioContext->PlaySfx(SFX_UNKNOWN_42, 0x100);
         velZ = 0x9d;
         if (gLevelState->timeTrial == 0 && checkpointCount <= 1) {
+            /* `pl` is needed: inlined, the instructions are reordered */
             ActorSelf **pl = &gActorList;
             if (gJetpackPlayerInactive == 0) {
                 ((JetpackPlayer *)*pl)->SetCheckpoint();

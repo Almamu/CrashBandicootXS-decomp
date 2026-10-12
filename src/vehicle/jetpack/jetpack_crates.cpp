@@ -329,6 +329,7 @@ void JetpackBalloonCrate::StateDestroyed()
  * (`fallSpeed` grows by 0x12 a frame, up to 0x4C0). */
 void JetpackBalloonCrate::StateFall()
 {
+    /* `pos` is needed: inlined, the instructions are reordered */
     s32 pos = y;
     s32 v = fallSpeed;
 

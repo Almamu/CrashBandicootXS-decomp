@@ -45,10 +45,14 @@ void Airship::Steer()
     y += velY;
 
     pl = gActorList;
+    /* `px` is needed: inlined, the instructions are reordered */
     px = pl->x;
+    /* `cx` is needed: inlined, the code is 1 instruction longer */
     cx = screenX - 0x1200;
     dx = px - cx - (box.x + box.w / 2);
+    /* `py` is needed: inlined, the code is 2 instructions longer */
     py = pl->y;
+    /* `cy` is needed: inlined, the code is 3 instructions longer */
     cy = screenY + 0x1800;
     dy = py - cy - (box.y + box.h / 2);
 
@@ -91,15 +95,14 @@ dy_done:
     if (screenY > 0x13FF)
         velY -= 3;
 
-    {
-        s32 *p = &velX;
-        s32 v = *p;
+    s32 *p = &velX;
+    s32 v = *p;
 
-        LIMIT_MAX(v, 0x180);
-        *p = v;
-        LIMIT_MIN(v, -0x180);
-        velX = v;
-    }
+    LIMIT_MAX(v, 0x180);
+    *p = v;
+    LIMIT_MIN(v, -0x180);
+    velX = v;
+    /* scoped: its own `p`/`v` (shared, the code is 4 instructions shorter) */
     {
         s32 *p = &velY;
         s32 v = *p;
@@ -197,6 +200,7 @@ void Airship::Spawn(s32 kind, s32 sx, s32 sy, s32 sz)
  * pseudo from the head's own `self`). */
 void Airship::Update()
 {
+    /* `prev` is needed: inlined, the code is 25 instructions shorter */
     s32 prev = Q8_TO_INT(anim->animTime);
     AnimPart *self;
 
@@ -254,7 +258,9 @@ void Airship::UpdateBg2()
     }
 
     s32 scale = __divsi3(distance << 8, 0x3c00);
+    /* `dy` is needed: inlined, the code is 1 instruction longer */
     s32 dy = screenX + GetActorBgCenterX();
+    /* `dx` is needed: inlined, the code is 2 instructions longer */
     s32 dx = screenY + GetActorBgCenterY();
 
     REG_BG2X = 0x8000 - Q8_MUL(dy, scale);
