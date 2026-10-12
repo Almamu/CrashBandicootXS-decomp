@@ -114,6 +114,7 @@ void CommitDispcnt(void)
  * loads it from a second literal. */
 void CommitBlendRegs(void)
 {
+    /* `bldy` is needed: inlined, the instructions differ */
     u32 bldy;
 
     *(vu32 *)REG_ADDR_BLDCNT = gBlendRegs.blend.raw;

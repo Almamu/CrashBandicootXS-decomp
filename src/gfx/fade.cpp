@@ -7,7 +7,6 @@ extern "C" {
 /* Sits right after StepBresenhamLine (ROM 0x08001254, in src/util/line_step.cpp)
  * and before whatever's still raw in asm/code_3_1_7.s. */
 
-
 /* A per-frame screen-brightness fade tick: every `gBrightnessFade`.
  * `period` frames, writes the next brightness step to `REG_BLDY`,
  * counting either up or down depending on `flags`' top bit (fading
@@ -50,14 +49,11 @@ void StepBrightnessFade(void)
  * `frameDelay` VBlanks between each via `WaitForVBlank`. */
 void FadeBrightness(u8 flags, s32 frameDelay, u8 sync)
 {
-    {
-        s32 f = gBrightnessFade.period;
-        s32 notf = ~f;
-        s32 t = -notf;
-        t |= notf;
-        if (t < 0) {
-            return;
-        }
+    s32 notf = ~gBrightnessFade.period;
+    s32 t = -notf;
+    t |= notf;
+    if (t < 0) {
+        return;
     }
 
     if (frameDelay <= 0) {
@@ -84,15 +80,12 @@ void FadeBrightness(u8 flags, s32 frameDelay, u8 sync)
         REG_IME = 1;
     } else {
         s32 i = 0;
-        s32 dirBit8 = flags & FADE_FLAG_IN;
         do {
-            s32 next;
-            if (dirBit8 != 0) {
+            if ((flags & FADE_FLAG_IN) != 0) {
                 REG_BLDY = 0x10 - i;
             } else {
                 REG_BLDY = i;
             }
-            next = i + 1;
             if (frameDelay > 0) {
                 s32 k = frameDelay;
                 do {
@@ -100,7 +93,7 @@ void FadeBrightness(u8 flags, s32 frameDelay, u8 sync)
                     k--;
                 } while (k != 0);
             }
-            i = next;
+            i++;
         } while (i <= 0x10);
     }
 }

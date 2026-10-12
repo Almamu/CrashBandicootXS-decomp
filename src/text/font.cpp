@@ -81,8 +81,6 @@ extern "C" s32 GetPaletteSlot_s32(u8 *cache, s32 recordId) asm("GetPaletteSlot")
 void Font::ResetPalette()
 {
     u8 *cache = (u8 *)gPaletteCache;
-    const struct sprite_anim *anim = gSpriteBankSet->table->banks[35].anims;
-    u8 field = anim->paletteId;
-    s32 slot = GetPaletteSlot_s32(cache, field);
+    s32 slot = GetPaletteSlot_s32(cache, gSpriteBankSet->table->banks[35].anims->paletteId);
     oam_scratch.palette = slot;
 }

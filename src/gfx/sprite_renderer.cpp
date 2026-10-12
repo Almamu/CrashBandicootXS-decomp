@@ -148,6 +148,7 @@ void SpriteRenderer::DrawAffinePieces(Sprite *part, s32 *pos)
     s32 tile = gObjVramCursor->GetTile();
     s32 scale = part->affine;
     s16 pa; // the matrix scales, signed 8.8
+    /* `pd` is needed: inlined, the instructions differ */
     s16 pd;
     s32 idx;
     s32 k;
@@ -206,6 +207,7 @@ void SpriteRenderer::DrawAffinePieces(Sprite *part, s32 *pos)
             else
                 x = pos[0] + ox;
             if (x + w > 0 && x <= 0xef) {
+                /* `saved` is needed: inlined, the code is 4 instructions shorter */
                 s32 saved = part->frame;
                 struct piece_info *first;
                 s32 cx, cy;
@@ -215,9 +217,9 @@ void SpriteRenderer::DrawAffinePieces(Sprite *part, s32 *pos)
                 ClampTick7634(part, 0);
                 first = (struct piece_info *)part->GetFrame();
                 ClampTick7634(part, saved);
-                /* The size-table addresses are taken before `pos` is read;
-                 * that keeps r0-r4 busy at the `pos` reload, which makes
-                 * reload spill r7 and sets the ROM's reload-register
+                /* The size-table addresses `pw`/`ph` are taken before `pos`
+                 * is read; that keeps r0-r4 busy at the `pos` reload, which
+                 * makes reload spill r7 and sets the ROM's reload-register
                  * rotation for the whole function. */
                 cx = first->offsets[0].x;
                 cy = first->offsets[0].y;

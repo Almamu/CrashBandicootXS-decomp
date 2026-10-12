@@ -42,20 +42,16 @@ void Slideshow::EndSlide(s32 idx)
         gAudioContext->FadeOutMusic(0);
     }
 
-    {
-        s32 v = slides[idx]->fadeAfter;
+    s32 v = slides[idx]->fadeAfter;
 
-        if (v != -1) {
-            FadeBrightness((u8)v, 1, 0);
-        }
+    if (v != -1) {
+        FadeBrightness((u8)v, 1, 0);
     }
 
-    {
-        const struct cutscene_slide *item = slides[idx];
+    const struct cutscene_slide *item = slides[idx];
 
-        if (item->rearmSfx != 0 && item->sfx != SFX_NONE) {
-            gAudioContext->StopSfx(item->sfx);
-        }
+    if (item->rearmSfx != 0 && item->sfx != SFX_NONE) {
+        gAudioContext->StopSfx(item->sfx);
     }
 }
 

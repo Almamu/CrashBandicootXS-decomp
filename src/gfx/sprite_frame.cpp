@@ -100,6 +100,7 @@ void FreeVramTileBlock(void *addr)
     struct vram_tile_block *node;
     struct vram_tile_block *adj;
     struct vram_tile_block *next;
+    /* `tile` is needed: inlined, the code is 1 instruction longer */
     u32 tile;
 
     if (addr == 0) {
@@ -157,6 +158,7 @@ void FreeVramTileBlock(void *addr)
 void *AllocVramTileBlock(s32 size)
 {
     struct vram_tile_block *cur;
+    /* `last` is needed: inlined, the code is 2 instructions shorter */
     struct vram_tile_block *last;
     struct vram_tile_block *rover;
     s32 rest;
@@ -375,7 +377,6 @@ void InitSpriteFrameOamQueue(void)
 s32 LoadSpriteFrameTiles(u8 *frame)
 {
     struct sprite_frame_cache_node *node;
-    struct sprite_frame_cache_node *oldFirst;
     s32 byteCount;
     s32 result;
 
@@ -388,8 +389,7 @@ s32 LoadSpriteFrameTiles(u8 *frame)
     gSpriteFrameCacheSpares = node->next;
     node->frame = frame;
     node->prev = &gSpriteFrameCacheCurrent;
-    oldFirst = gSpriteFrameCacheCurrent.next;
-    node->next = oldFirst;
+    node->next = gSpriteFrameCacheCurrent.next;
     gSpriteFrameCacheCurrent.next->prev = node;
     gSpriteFrameCacheCurrent.next = node;
 
@@ -423,7 +423,6 @@ void SetupSpriteFrameOam(u8 *frame, u32 attr01, u32 attr2, s32 priority)
     u16 packed = (u16)attr2;
     s32 w = frame[0];
     s32 h = frame[1];
-    s32 tileIdx;
 
     if (w == h) {
         shapeBits = 0;
@@ -453,8 +452,7 @@ void SetupSpriteFrameOam(u8 *frame, u32 attr01, u32 attr2, s32 priority)
     }
     attr01 |= shapeBits;
 
-    tileIdx = LoadSpriteFrameTiles(frame);
-    packed |= (u16)tileIdx;
+    packed |= (u16)LoadSpriteFrameTiles(frame);
 
     QueueSpriteFrameOam(attr01, packed, priority);
 }

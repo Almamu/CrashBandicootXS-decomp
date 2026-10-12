@@ -86,6 +86,7 @@ void OamBuffer::Add(const void *entry)
 
     if (n > OAM_ENTRY_COUNT - 1)
         return;
+    /* `saved` is needed: inlined, the instructions are reordered */
     u16 saved = table[n].attr[3];
 
     table[n] = *(const union oam_shadow_entry *)entry;

@@ -24,6 +24,7 @@ void BgSetup::Load(const struct bg_package *pkg)
     u16 *map;
     u16 *src;
     u16 *dest;
+    /* `pal` is needed: inlined, the code is 10 instructions longer */
     s32 pal;
     s32 x;
     s32 y;
@@ -40,6 +41,7 @@ void BgSetup::Load(const struct bg_package *pkg)
     src = map;
     dest = (u16 *)(VRAM + (screenBlock << 11));
     for (y = 0; y < pkg->height; y++) {
+        /* `next` is needed: inlined, the instructions differ */
         u16 *next = dest + 0x20;
         for (x = 0; x < pkg->width; x++)
             dest[x] = pal | src[x];

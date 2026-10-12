@@ -63,13 +63,12 @@ void CutscenePlayer::Run()
     s32 limit;
     s32 i;
 
-    {
-        s32 b = self->box.x;
-        Font *t = self->font;
+    /* `b` is needed: inlined, the instructions are reordered */
+    s32 b = self->box.x;
+    Font *t = self->font;
 
-        t->SetMargin(b);
-        limit = t->HeightToLines(self->box.h);
-    }
+    t->SetMargin(b);
+    limit = t->HeightToLines(self->box.h);
     for (i = 0; i < self->count; i++) {
         u8 res = 1;
 

@@ -15,13 +15,11 @@ extern "C" {
 void PaletteCycles::Tick()
 {
     s32 i;
-    s32 n;
 
     if (!active)
         return;
     i = 0;
-    n = count;
-    for (; i < n; i++) {
+    for (; i < count; i++) {
         u16 *target;
         u16 *list;
         u16 carry;
@@ -58,8 +56,6 @@ void PaletteCycles::Tick()
 void PaletteCycles::Add(u16 *targets, u16 *lists, s32 rate, s32 listCount,
                         struct byte_arg direction)
 {
-    u8 dir = direction.v;
-
     if (targets == 0 || lists == 0 || counts == 0) {
         active = 0;
         return;
@@ -71,7 +67,7 @@ void PaletteCycles::Add(u16 *targets, u16 *lists, s32 rate, s32 listCount,
     fields_e[count] = 0;
     counts[count] = listCount;
     count += 1;
-    this->direction = dir;
+    this->direction = direction.v;
 }
 
 /* Removes every cycle. */

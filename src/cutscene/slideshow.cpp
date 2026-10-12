@@ -59,6 +59,7 @@ void Slideshow::Run()
     s32 i;
 
     for (i = 0; i < self->count; i++) {
+        /* `checkButtons` is needed: inlined, the code is 2 instructions shorter */
         u8 checkButtons;
         const struct cutscene_slide *item;
 
@@ -72,20 +73,16 @@ void Slideshow::Run()
             gAudioContext->FadeOutMusic(0);
         }
 
-        {
-            s32 v = self->slides[i]->fadeAfter;
+        s32 v = self->slides[i]->fadeAfter;
 
-            if (v != -1) {
-                FadeBrightness((u8)v, 1, 0);
-            }
+        if (v != -1) {
+            FadeBrightness((u8)v, 1, 0);
         }
 
-        {
-            const struct cutscene_slide *item2 = self->slides[i];
+        const struct cutscene_slide *item2 = self->slides[i];
 
-            if (item2->rearmSfx != 0 && item2->sfx != SFX_NONE) {
-                gAudioContext->StopSfx(item2->sfx);
-            }
+        if (item2->rearmSfx != 0 && item2->sfx != SFX_NONE) {
+            gAudioContext->StopSfx(item2->sfx);
         }
 
         i = self->Skip(i, checkButtons);
@@ -103,6 +100,7 @@ s32 Slideshow::Skip(s32 startIdx, u8 condFlag)
     s32 cur = startIdx;
     s32 next;
     s32 count;
+    /* `items` is needed: inlined, the code is 1 instruction longer */
     const struct cutscene_slide *const *items;
 
     if (condFlag) {
@@ -152,8 +150,7 @@ s32 Slideshow::Skip(s32 startIdx, u8 condFlag)
 void Slideshow::ShowPicture(s32 idx)
 {
     Slideshow *self = this;
-    const struct cutscene_slide *item = self->slides[idx];
-    const u16 *asset = item->picture;
+    const u16 *asset = self->slides[idx]->picture;
     s32 toggle = self->toggle ^ 1;
 
     self->toggle = toggle;
@@ -165,17 +162,15 @@ void Slideshow::ShowPicture(s32 idx)
         LoadTaggedAsset(&asset[0x100], (void *)(VRAM + 0xA000));
     }
 
-    {
-        u8 *shadow = (u8 *)&gSlideshowDispcnt;
-        {
-            u8 toggleByte = self->toggle;
-            s32 bit4 = (1 & toggleByte) << 4;
-            s32 mask = ~0x10;
-            s32 byte = *shadow;
+    u8 *shadow = (u8 *)&gSlideshowDispcnt;
 
-            *shadow = (mask & byte) | bit4;
-        }
-    }
+    u8 toggleByte = self->toggle;
+    /* `bit4` is needed: inlined, the instructions are reordered */
+    s32 bit4 = (1 & toggleByte) << 4;
+    s32 mask = ~0x10;
+    s32 byte = *shadow;
+
+    *shadow = (mask & byte) | bit4;
 
     WaitForVBlank();
 
