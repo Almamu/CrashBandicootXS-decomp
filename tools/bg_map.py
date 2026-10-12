@@ -19,12 +19,8 @@ from grit.
         cells whose ROM entry has a nonzero high byte anyway, a leftover
         of the original tool that nothing reads. It is put back as is.
 
-    tools/bg_map.py extract [baserom.gba]
-        Writes the graphics/bg_package/ sources from the ROM: each package's
-        whole picture (indexed, with the package's palette, which the build
-        reads back with tools/jasc_pal.py png-to-gba) and, for an
-        affine map with nonzero high bytes, the --high JSON
-        (<name>_high.json).
+The packages' sources are extracted from baserom.gba by
+tools/gfx_manifest.py extract (render() below), which has their addresses.
 """
 import argparse
 import json
@@ -34,33 +30,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import jasc_pal  # noqa: E402
-
-# The packages (struct bg_package, read by BgSetup::Load,
-# TitleScreen::LoadBg and TitleScreen::LoadObjTiles): file name, palette,
-# tiles, map, width and height in cells, bpp, and whether the map is the
-# affine title map (entries are plain tile numbers; LoadBg keeps their
-# low byte).
-PACKAGES = [
-    ("61c30c_menu_sky", 0x0861BADC, 0x0861C30C, 0x0862FB24, 32, 20, 4, False),
-    ("61e5f8_pause_menu", 0x0861BB04, 0x0861E5F8, 0x0862FFF4, 30, 20, 8, False),
-    ("62556c_level_select_page", 0x0861BD48, 0x0862556C, 0x0863053C, 32, 32, 8, False),
-    ("628c50_continue_prompt_smoke", 0x0861BF30, 0x08628C50, 0x086308F0, 30, 20, 4, False),
-    ("62a958_continue_prompt_glow", 0x0861BF58, 0x0862A958, 0x08630E1C, 30, 20, 4, False),
-    ("62b34c_continue_prompt_uka_uka", 0x0861BF80, 0x0862B34C, 0x08631158, 30, 20, 8, False),
-    # CompanyLogos::LoadUniversalLogoBg loads it as an 8bpp affine BG2
-    # (mode 1), keeping each map entry's low byte; 5 entries have a stray
-    # high byte (62d0cc_universal_logo_high.json).
-    ("62d0cc_universal_logo", 0x0861C1FC, 0x0862D0CC, 0x086315BC, 30, 20, 8, True),
-    ("62e3b0_title_screen", 0x0861C224, 0x0862E3B0, 0x0863183C, 16, 16, 8, True),
-    # The title's OBJ sprites (TitleScreen::LoadObjTiles copies one tile
-    # per map entry to OBJ VRAM, by the entry's low byte; it ignores the
-    # flip bits the maps have on a few symmetric-looking cells).
-    ("62c2c8_title_bandicoot_obj", 0x0861C15C, 0x0862C2C8, 0x08631374, 4, 6, 4, False),
-    ("62c4b0_title_crash_obj", 0x0861C184, 0x0862C4B0, 0x086313B0, 8, 40, 4, False),
-    ("62cc3c_title_arrow1_obj", 0x0861C1AC, 0x0862CC3C, 0x086314F0, 4, 16, 4, False),
-    ("62ce70_title_arrow2_obj", 0x0861C1D4, 0x0862CE70, 0x08631558, 4, 16, 4, False),
-]
-OUT_DIR = Path("graphics/bg_package")
 
 
 def lz77_decompress(rom, addr):
@@ -87,34 +56,27 @@ def lz77_decompress(rom, addr):
     return bytes(out)
 
 
-def extract(args):
+def render(rom, palette, tiles_a, map_a, w, h, bpp, affine):
+    """A package's whole picture from the ROM (tools/gfx_manifest.py
+    extract): indexed, w x h cells, with `palette` (the package's entries,
+    kept as tools/jasc_pal.py writes them, bit 15 too). Returns the image
+    and, for an affine map, its nonzero high bytes ({cell: byte})."""
     from PIL import Image
 
-    rom = open(args.rom, "rb").read()
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    for name, pal_a, tiles_a, map_a, w, h, bpp, affine in PACKAGES:
-        raw = lz77_decompress(rom, pal_a)
-        pal = struct.unpack("<%dH" % (len(raw) // 2), raw)
-        # the package's palette, kept in the PNG (bit 15 too, jasc_pal.py)
-        rgb = [c for v in pal for c in jasc_pal.to_rgb(v)]
-        tiles = split_tiles(lz77_decompress(rom, tiles_a), bpp)
-        entries = struct.unpack("<%dH" % (w * h), lz77_decompress(rom, map_a))
-        img = Image.new("P", (w * 8, h * 8))
-        px = img.load()
-        for i, e in enumerate(entries):
-            draw = pixels(tiles[(e & 0xFF) if affine else (e & 0x3FF)], bpp, 0 if affine else e)
-            for k, c in enumerate(draw):
-                px[i % w * 8 + k % 8, i // w * 8 + k // 8] = c
-        img.putpalette(rgb)
-        img.save(OUT_DIR / (name + ".png"))
-        used = {(e & 0xFF) if affine else (e & 0x3FF) for e in entries}
-        if len(set(tiles)) != len(tiles) or len(used) != len(tiles):
-            sys.exit("bg_map: %s: the tile set has identical or unused tiles, "
-                     "which one picture can't rebuild" % name)
-        high = {i: e >> 8 for i, e in enumerate(entries) if affine and e >> 8}
-        if high:
-            lines = ['    "%d": "%02X"' % (i, b) for i, b in high.items()]
-            open(OUT_DIR / (name + "_high.json"), "w").write("{\n" + ",\n".join(lines) + "\n}\n")
+    tiles = split_tiles(lz77_decompress(rom, tiles_a), bpp)
+    entries = struct.unpack("<%dH" % (w * h), lz77_decompress(rom, map_a))
+    img = Image.new("P", (w * 8, h * 8))
+    px = img.load()
+    for i, e in enumerate(entries):
+        draw = pixels(tiles[(e & 0xFF) if affine else (e & 0x3FF)], bpp, 0 if affine else e)
+        for k, c in enumerate(draw):
+            px[i % w * 8 + k % 8, i // w * 8 + k // 8] = c
+    img.putpalette([c for v in palette for c in jasc_pal.to_rgb(v)])
+    used = {(e & 0xFF) if affine else (e & 0x3FF) for e in entries}
+    if len(set(tiles)) != len(tiles) or len(used) != len(tiles):
+        sys.exit("bg_map: %#x: the tile set has identical or unused tiles, "
+                 "which one picture can't rebuild" % tiles_a)
+    return img, {i: e >> 8 for i, e in enumerate(entries) if affine and e >> 8}
 
 
 def read_u16(path):
@@ -180,9 +142,6 @@ def main():
     p.add_argument("--bpp", type=int, choices=(4, 8), required=True)
     p.add_argument("--high", help="JSON of an affine map's nonzero high bytes")
     p.set_defaults(fn=first_use)
-    p = sub.add_parser("extract")
-    p.add_argument("rom", nargs="?", default="baserom.gba")
-    p.set_defaults(fn=extract)
     args = ap.parse_args()
     args.fn(args)
 

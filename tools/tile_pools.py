@@ -1,37 +1,38 @@
 #!/usr/bin/env python3
-"""Extracts the raw level tile sets and the OBJ palettes inside
-gLanguageSelectPalette3 (0x0817E78C-0x084A5600) from baserom.gba, the
-editable sources graphics.mk rebuilds (see docs/data.md, "Resources
-(grit-style)"). The sprite banks' tile pool in between is
-tools/sprite_frames.py's.
+"""Extracts the level BG tile sets from baserom.gba, the editable sources
+graphics.mk rebuilds (see docs/data.md, "Resources (grit-style)"):
 
-- graphics/sprites/palettes/NNN.pal: the 125 16-colour OBJ palettes
-  (gObjPalettes, 0x084A4660, the header's +0x08/+0x0E), one JASC file per
-  palette, NNN being the paletteId the animations give
-  (sprite_anim.paletteId). graphics.mk builds them with tools/jasc_pal.py.
 - graphics/level_tilesets/tilesetN_<addr>.png: the five tag-0x00 raw level
-  BG tile sets (8bpp); the 4-byte {size << 8} header is written by the C.
+  BG0 tile sets (8bpp, inside gLanguageSelectPalette3, 0x0817E78C-
+  0x084A5600); the 4-byte {size << 8} header is written by the C. Each
+  carries the 256-colour BG palette of the first room (in ROM order) whose
+  layers use it, found through the room records.
+- graphics/level_bg_tiles/<addr>_<name>.png: the six LZ77 4bpp tile sets of
+  the BG1-3 layers. Each carries the palette of the first room (in room
+  table order) that uses it, and every tile is drawn in the palette bank
+  the rooms' cells use it with most (the lowest of a tie): index = bank *
+  16 + 4bpp pixel.
 
-Each PNG is `width` tiles wide and padded to whole rows with blank (index 0)
+Each PNG is 16 tiles wide and padded to whole rows with blank (index 0)
 tiles; graphics.mk passes the real byte count to `tools/bin2c.py --size`,
-which trims that padding again. The tile sets carry the 256-colour BG
-palette of the first room (in ROM order) whose layers use them, found
-through the room records.
+which trims that padding again. tools/gfx_manifest.py extract runs this.
 
     tools/tile_pools.py [baserom.gba]     writes the PNGs, prints the sizes
 """
 import struct
 import sys
-
-import jasc_pal
+from collections import Counter
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import levels  # noqa: E402
 
 from PIL import Image
 
 ROM_BASE = 0x08000000
-BANK_TABLE = 0x084A5600
-OBJ_PALETTES = 0x084A4660  # gObjPalettes, 125 x 16 colours
 TILESETS = [0x0817E7AC, 0x081E6330, 0x08200DF4, 0x08270F08, 0x08299DCC]
+BG_TILESETS = [(0x0863D4C0, "snow"), (0x08640EF8, "jungle"), (0x08644A88, "temple"),
+               (0x08649418, "sewer"), (0x0864BB5C, "space"), (0x0864D7E8, "underwater")]
 ROOM_BLOCKS = [(0x0824B638, 0x08270F08), (0x082B91D0, 0x082BF120)]
 
 
@@ -101,15 +102,58 @@ def bgr555(raw):
     return out
 
 
+def bg_layer_cells(rom):
+    """Every BG1-3 layer of the 41 rooms, in room table order: (room
+    palette address, tile set address, its cells)."""
+    out = []
+    for pal, desc in levels.find_rooms(rom):
+        asset_addr, packed = rom.w(desc + 0x14), rom.b(desc + 0x18)
+        if packed:
+            asset = levels.lz77_decompress(rom.bytes(asset_addr, 0x20000))
+        else:
+            asset = rom.bytes(asset_addr, levels.RAW_ASSETS[asset_addr])
+        for slot in range(3):
+            p = rom.w(desc + 4 * slot)
+            if not p:
+                continue
+            grid_addr, off, tiles = rom.w(p), rom.w(p + 4), rom.w(p + 8)
+            cw, ch = rom.h(p + 0x16), rom.h(p + 0x18)
+            grid = [rom.h(grid_addr + 2 * i) for i in range(cw * ch)]
+            table = struct.unpack_from("<%dH" % (max(grid) + 1), asset, off)
+            chunks = [levels.decode_chunk(asset, off + 4 * o)[0] for o in table]
+            out.append((pal, tiles, [c for g in grid for c in chunks[g]]))
+    return out
+
+
+def bg_tiles(rom, addr, layers):
+    """A BG1-3 tile set's tiles, each 64 pixels drawn in its most used bank."""
+    data = levels.lz77_decompress(rom.bytes(addr, 0x10000))
+    use = {}
+    for _, tiles, cells in layers:
+        if tiles == addr:
+            for c in cells:
+                use.setdefault(c & 0x3FF, Counter())[c >> 12] += 1
+    out = bytearray()
+    for t in range(len(data) // 32):
+        cnt = use.get(t, Counter({0: 1}))
+        top = max(cnt.values())
+        bank = min(b for b, n in cnt.items() if n == top)
+        tile = data[t * 32:(t + 1) * 32]
+        out += bytes(bank * 16 + (tile[i // 2] >> 4 * (i & 1) & 0xF) for i in range(64))
+    return bytes(out), len(data)
+
+
 def main():
     rom = Rom(sys.argv[1] if len(sys.argv) > 1 else "baserom.gba")
     sizes = []
-    assert rom.w(BANK_TABLE + 8) == OBJ_PALETTES and rom.h(BANK_TABLE + 14) == 125
-    pal_dir = Path("graphics/sprites/palettes")
-    pal_dir.mkdir(parents=True, exist_ok=True)
-    for k in range(125):
-        raw = rom.bytes(OBJ_PALETTES + 32 * k, 32)
-        jasc_pal.write_jasc(pal_dir / f"{k:03}.pal", struct.unpack("<16H", raw))
+    layers = bg_layer_cells(levels.Rom(sys.argv[1] if len(sys.argv) > 1 else "baserom.gba"))
+    for addr, name in BG_TILESETS:
+        pal = next(p for p, tiles, _ in layers if tiles == addr)
+        px, n = bg_tiles(rom, addr, layers)
+        rgb = [((c >> s) & 31) << 3 for c in struct.unpack("<256H", rom.bytes(pal, 0x200)) for s in (0, 5, 10)]
+        name = f"{addr & 0xFFFFFF:06x}_{name}"
+        write_png(Path("graphics/level_bg_tiles") / f"{name}.png", px, 8, 16, list(zip(*[iter(rgb)] * 3)))
+        sizes.append(("LEVEL_BG_TILE_BYTES_" + name, n))
     for k, addr in enumerate(TILESETS, 1):
         header = rom.w(addr)
         assert header & 0xFF == 0
@@ -117,9 +161,9 @@ def main():
         n = write_png(Path("graphics/level_tilesets") / f"{name}.png",
                       rom.bytes(addr + 4, header >> 8), 8, 16,
                       bgr555(room_palette(rom, addr)))
-        sizes.append((name, n))
+        sizes.append(("TILE_BYTES_" + name, n))
     for name, n in sizes:
-        print(f"TILE_BYTES_{name} := {n:#x}")
+        print(f"{name} := {n:#x}")
 
 
 if __name__ == "__main__":

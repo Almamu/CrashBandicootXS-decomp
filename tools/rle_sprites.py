@@ -15,11 +15,10 @@ halfwords into a zero run and keeps shorter ones inside the literal runs;
 the frame's leading zeros are always a zero run (empty if the frame starts
 with pixels). That rule rebuilds all 344 frames byte for byte.
 
-    tools/rle_sprites.py extract [baserom.gba]
-        Writes graphics/rle_sprites/<addr>_frames.png for the three sets:
-        indexed 4bpp, one frame per w*8 x h*8 block, stacked top to bottom
-        (so grit's row-major tile output is the frames back to back). Checks
-        that re-encoding gives the ROM's bytes.
+A set's PNG is indexed 4bpp, one frame per w*8 x h*8 block, stacked top
+to bottom (so grit's row-major tile output is the frames back to back).
+tools/gfx_manifest.py extract writes the three from baserom.gba (render()
+below, which checks that re-encoding gives the ROM's bytes).
 
     tools/rle_sprites.py pack TILES OUT.inc OUT.h --frame WxH --name NAME
         TILES is grit's 4bpp tile output (-gt -gB4 -ftb) of such a PNG.
@@ -40,13 +39,6 @@ MIN_ZERO_RUN = 7
 # palette (category_descriptor.palette; both player records' bank is 0);
 # the Yeti's is Yeti::palette, which Yeti::UpdatePalette DMAs to OBJ
 # palette 15 for it. Only the PNG's colours depend on this.
-SETS = [
-    (0x080C2758, 0x080DA1D8, 0x08178F80),  # gPolarCategoryPalette
-    (0x080DA1D8, 0x080FF1B0, 0x0817AA6C),  # Yeti::palette
-    (0x0815A050, 0x08167AD4, 0x0817AAA4),  # gAirshipCategoryPalette
-]
-
-
 def decode(data, pos):
     """-> (w, h, halfwords, end) for the frame at data[pos:]."""
     w, h, tag, pad = data[pos:pos + 4]
@@ -102,37 +94,37 @@ def encode(w, h, hw):
     return bytes(out)
 
 
-def extract(rom_path):
+def render(rom, start, end, pal):
+    """The frame set at ROM start-end as its PNG (tools/gfx_manifest.py
+    extract): indexed 4bpp, one frame per w*8 x h*8 block, stacked top to
+    bottom (so grit's row-major tile output is the frames back to back),
+    with the 16 colours at `pal`. Checks that re-encoding gives the ROM's
+    bytes."""
     from PIL import Image
 
-    rom = Path(rom_path).read_bytes()
-    for start, end, pal in SETS:
-        pos, frames = start - ROM_BASE, []
-        while pos < end - ROM_BASE:
-            w, h, hw, nxt = decode(rom, pos)
-            if encode(w, h, hw) != rom[pos:nxt]:
-                sys.exit(f"rle_sprites: frame at {pos + ROM_BASE:#x} does not re-encode")
-            frames.append((w, h, struct.pack(f"<{len(hw)}H", *hw)))
-            pos = nxt
-        if pos != end - ROM_BASE or len({f[:2] for f in frames}) != 1:
-            sys.exit(f"rle_sprites: {start:#x}: frames don't tile the set")
-        w, h = frames[0][:2]
-        img = Image.new("P", (w * 8, h * 8 * len(frames)), 0)
-        px = img.load()
-        for f, (_, _, tiles) in enumerate(frames):
-            for t in range(w * h):
-                tx, ty = t % w * 8, (f * h + t // w) * 8
-                for i in range(64):
-                    px[tx + i % 8, ty + i // 8] = tiles[t * 32 + i // 2] >> (4 * (i & 1)) & 0xF
-        palette = []
-        for i in range(16):
-            (c,) = struct.unpack_from("<H", rom, pal - ROM_BASE + 2 * i)
-            palette += [((c >> s) & 31) * 255 // 31 for s in (0, 5, 10)]
-        img.putpalette(palette)
-        path = Path(f"graphics/rle_sprites/{start - ROM_BASE:06x}_frames.png")
-        path.parent.mkdir(parents=True, exist_ok=True)
-        img.save(path, bits=4)
-        print(f"{path}: {len(frames)} frames of {w}x{h} tiles, {end - start:#x} bytes")
+    pos, frames = start - ROM_BASE, []
+    while pos < end - ROM_BASE:
+        w, h, hw, nxt = decode(rom, pos)
+        if encode(w, h, hw) != rom[pos:nxt]:
+            sys.exit(f"rle_sprites: frame at {pos + ROM_BASE:#x} does not re-encode")
+        frames.append((w, h, struct.pack(f"<{len(hw)}H", *hw)))
+        pos = nxt
+    if pos != end - ROM_BASE or len({f[:2] for f in frames}) != 1:
+        sys.exit(f"rle_sprites: {start:#x}: frames don't tile the set")
+    w, h = frames[0][:2]
+    img = Image.new("P", (w * 8, h * 8 * len(frames)), 0)
+    px = img.load()
+    for f, (_, _, tiles) in enumerate(frames):
+        for t in range(w * h):
+            tx, ty = t % w * 8, (f * h + t // w) * 8
+            for i in range(64):
+                px[tx + i % 8, ty + i // 8] = tiles[t * 32 + i // 2] >> (4 * (i & 1)) & 0xF
+    palette = []
+    for i in range(16):
+        (c,) = struct.unpack_from("<H", rom, pal - ROM_BASE + 2 * i)
+        palette += [((c >> s) & 31) * 255 // 31 for s in (0, 5, 10)]
+    img.putpalette(palette)
+    return img
 
 
 def pack(args):
@@ -166,8 +158,6 @@ def pack(args):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     sub = ap.add_subparsers(dest="mode", required=True)
-    ex = sub.add_parser("extract")
-    ex.add_argument("rom", nargs="?", default="baserom.gba")
     pk = sub.add_parser("pack")
     pk.add_argument("input")
     pk.add_argument("output")
@@ -175,10 +165,7 @@ def main():
     pk.add_argument("--frame", required=True)
     pk.add_argument("--name", required=True)
     args = ap.parse_args()
-    if args.mode == "extract":
-        extract(args.rom)
-    else:
-        pack(args)
+    pack(args)
 
 
 if __name__ == "__main__":

@@ -1,4 +1,6 @@
-.DEFAULT_GOAL := compare
+# `make` builds the ROM from whatever is in the tree; `make compare` also
+# checks it against checksum.sha1 (the original ROM's).
+.DEFAULT_GOAL := all
 
 #### Tools ####
 
@@ -126,6 +128,9 @@ SOUND_BUILT := $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/gax_defaul
 	$(SOUND_BUILDDIR)/gax_sfx_data.bin $(SOUND_BUILDDIR)/sfx_table.bin
 
 #### Main Targets ####
+
+.PHONY: all compare
+all: $(ROM)
 
 compare: $(ROM)
 	sha1sum -c checksum.sha1

@@ -11,10 +11,10 @@ frames' cells in reading order gives (the first identical tile, no
 flips, frame by frame), so the frames are kept as whole pictures and the
 tiles and maps are built from them again.
 
-    tools/boss_pictures.py extract [baserom.gba]
-        Writes graphics/boss_pictures/<addr>_frameN.png (indexed 4bpp,
-        cols*8 x rows*8, with the 16 colours the game loads for them) and
-        checks that packing them gives the ROM's bytes.
+A frame's PNG is indexed 4bpp, cols*8 x rows*8, with the 16 colours the
+game loads for the picture. tools/gfx_manifest.py extract writes them
+from baserom.gba (render() below, which checks that packing them gives
+the ROM's bytes).
 
     tools/boss_pictures.py pack OUT.inc OUT.h --name NAME --cols N TILES...
         TILES is grit's 4bpp tile output (-gt -gB4 -ftb) of each frame's
@@ -28,13 +28,6 @@ import sys
 from pathlib import Path
 
 ROM_BASE = 0x08000000
-
-# (picture, end, palette): the palette's first 16 colours are what the
-# game DMAs to BG palette 1, which the tiles are drawn with.
-PICTURES = [
-    (0x08167CD4, 0x08169AE8, 0x08167AD4),
-    (0x08169CE8, 0x0816A810, 0x08169AE8),
-]
 
 
 def build(frames, cols):
@@ -81,30 +74,31 @@ def encode(cols, rows, built):
     return out
 
 
-def extract(rom_path):
+def render(rom, start, end, pal):
+    """The picture at ROM start-end as one PNG per frame (tools/
+    gfx_manifest.py extract): indexed 4bpp, cols*8 x rows*8, with the 16
+    colours the game loads for it (at `pal`). Checks that packing them
+    gives the ROM's bytes."""
     from PIL import Image
 
-    rom = Path(rom_path).read_bytes()
-    for start, end, pal in PICTURES:
-        cols, rows, frames = rom_frames(rom, start, end)
-        if encode(cols, rows, build(frames, cols)) != rom[start - ROM_BASE:end - ROM_BASE]:
-            sys.exit(f"boss_pictures: {start:#x} does not rebuild")
-        palette = []
-        for i in range(16):
-            (c,) = struct.unpack_from("<H", rom, pal - ROM_BASE + 2 * i)
-            palette += [((c >> s) & 31) * 255 // 31 for s in (0, 5, 10)]
-        for f, tiles in enumerate(frames):
-            img = Image.new("P", (cols * 8, rows * 8), 0)
-            px = img.load()
-            for t in range(cols * rows):
-                tx, ty = t % cols * 8, t // cols * 8
-                for i in range(64):
-                    px[tx + i % 8, ty + i // 8] = tiles[t * 32 + i // 2] >> (4 * (i & 1)) & 0xF
-            img.putpalette(palette)
-            path = Path(f"graphics/boss_pictures/{start - ROM_BASE:06x}_frame{f}.png")
-            path.parent.mkdir(parents=True, exist_ok=True)
-            img.save(path, bits=4)
-            print(f"{path}: {cols}x{rows} cells")
+    cols, rows, frames = rom_frames(rom, start, end)
+    if encode(cols, rows, build(frames, cols)) != rom[start - ROM_BASE:end - ROM_BASE]:
+        sys.exit(f"boss_pictures: {start:#x} does not rebuild")
+    palette = []
+    for i in range(16):
+        (c,) = struct.unpack_from("<H", rom, pal - ROM_BASE + 2 * i)
+        palette += [((c >> s) & 31) * 255 // 31 for s in (0, 5, 10)]
+    imgs = []
+    for tiles in frames:
+        img = Image.new("P", (cols * 8, rows * 8), 0)
+        px = img.load()
+        for t in range(cols * rows):
+            tx, ty = t % cols * 8, t // cols * 8
+            for i in range(64):
+                px[tx + i % 8, ty + i // 8] = tiles[t * 32 + i // 2] >> (4 * (i & 1)) & 0xF
+        img.putpalette(palette)
+        imgs.append(img)
+    return imgs
 
 
 def pack(args):
@@ -137,8 +131,6 @@ def pack(args):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     sub = ap.add_subparsers(dest="mode", required=True)
-    ex = sub.add_parser("extract")
-    ex.add_argument("rom", nargs="?", default="baserom.gba")
     pk = sub.add_parser("pack")
     pk.add_argument("output")
     pk.add_argument("header")
@@ -146,10 +138,7 @@ def main():
     pk.add_argument("--cols", type=int, required=True)
     pk.add_argument("tiles", nargs="+")
     args = ap.parse_args()
-    if args.mode == "extract":
-        extract(args.rom)
-    else:
-        pack(args)
+    pack(args)
 
 
 if __name__ == "__main__":

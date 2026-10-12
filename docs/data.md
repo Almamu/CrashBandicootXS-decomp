@@ -657,8 +657,9 @@ C (see "Level data").
   into the padding is caught.
 - **Room data** is decoded typed C now (see "Level data" below): an
   undecoded `.bin` copy wouldn't have counted as converted data.
-- `tools/tile_pools.py` extracts the tile sets and the palettes from
-  `baserom.gba` and prints the `TILE_BYTES_*` lines. Its output is
+- `tools/tile_pools.py` extracts the tile sets from `baserom.gba` and
+  prints the `TILE_BYTES_*` lines (`tools/gfx_manifest.py extract` runs
+  it, and writes the OBJ palettes itself). Its output is
   deterministic, and the five PNGs round-trip through grit byte-exact.
 
 
@@ -685,8 +686,9 @@ sources are the whole frames, `graphics/boss_pictures/<addr>_frameN.png`
 tiles in cell order, and `tools/boss_pictures.py pack` deduplicates them
 into the `.inc` with the frames' initializers and a header with the tile
 counts and the size in cells, which the C struct's array sizes use. So a
-frame can be redrawn freely. `tools/boss_pictures.py extract` writes the
-PNGs from `baserom.gba` again and checks the round trip.
+frame can be redrawn freely. `tools/gfx_manifest.py extract` writes the
+PNGs from `baserom.gba` again (`boss_pictures.render`, which checks the
+round trip).
 
 ### Small tables around 0x0816B000
 
@@ -1004,8 +1006,9 @@ frame tables (`gPolarPlayerFrames`, `gJetpackPlayerFrames`, in the
 category family files) use `RLE_SPRITES_0C2758_FRAME_nnn` /
 `RLE_SPRITES_15A050_FRAME_nnn` the same way.
 
-`tools/rle_sprites.py extract` writes the three PNGs from `baserom.gba`
-again and checks that every frame re-encodes to the ROM's bytes.
+`tools/gfx_manifest.py extract` writes the three PNGs from `baserom.gba`
+again (`rle_sprites.render`, which checks that every frame re-encodes to
+the ROM's bytes).
 
 ### LZ77 stream padding
 
