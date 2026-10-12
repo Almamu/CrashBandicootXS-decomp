@@ -67,10 +67,17 @@ $(GRAPHICS_BUILDDIR)/%.lz: $(GRAPHICS_BUILDDIR)/% | $(GFX)
 # reproduce the ROM's streams), tools/bin2c.py the initializer bytes that a
 # src/data/*.cpp file #includes.
 
-# Mode 4 bitmaps: linear 8bpp, no palette (it's a separate asset).
+# Mode 4 bitmaps: linear 8bpp. Their palette is the PNG's own (256
+# colours, bit 15 kept as tools/jasc_pal.py does), an uncompressed u16
+# array (bin2c --u16).
 $(GRAPHICS_BUILDDIR)/%_bitmap.img.bin: graphics/%_bitmap.png | $(GRIT)
 	@mkdir -p $(dir $@)
 	$(GRIT) $< -gb -gB8 -p! -ftb -fh! -o $(@:.img.bin=)
+$(GRAPHICS_BUILDDIR)/%_bitmap.gbapal: graphics/%_bitmap.png tools/jasc_pal.py
+	@mkdir -p $(dir $@)
+	python3 tools/jasc_pal.py png-to-gba $< $@
+$(GRAPHICS_BUILDDIR)/%_bitmap.pal.inc: $(GRAPHICS_BUILDDIR)/%_bitmap.gbapal tools/bin2c.py
+	python3 tools/bin2c.py $< $@ --u16
 
 # Tile sheets (graphics/intro/*_tiles.png, graphics/tileset1/*_tiles.png:
 # the HUD fonts, the credits and VV logos, the level-select cursor zoom and
@@ -91,7 +98,9 @@ $(GRAPHICS_BUILDDIR)/%.lz.inc: $(GRAPHICS_BUILDDIR)/%.lz tools/bin2c.py
 
 $(C_BUILDDIR)/data/%.o: CPPFLAGS += -iquote $(GRAPHICS_BUILDDIR)
 # The 24 cutscene pictures (palette + Mode 4 bitmap each).
-$(C_BUILDDIR)/data/cutscene_pictures_5a9f70.o: $(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.img.bin.lz.inc,$(wildcard graphics/intro/*_bitmap.png))
+CUTSCENE_PICTURE_PNGS := $(wildcard graphics/intro/*_bitmap.png)
+$(C_BUILDDIR)/data/cutscene_pictures_5a9f70.o: $(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.img.bin.lz.inc,$(CUTSCENE_PICTURE_PNGS)) \
+	$(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.pal.inc,$(CUTSCENE_PICTURE_PNGS))
 
 # The two framed OBJ sprite sheets.
 $(C_BUILDDIR)/data/sprite_sheet_0b2120.o: $(GRAPHICS_BUILDDIR)/unknown/00_0b2120.bin.lz.inc

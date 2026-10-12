@@ -18,6 +18,15 @@ which the hardware ignores. See docs/graphics.md, "Palettes".
 
     tools/jasc_pal.py to-gba IN.pal OUT.gbapal
     tools/jasc_pal.py to-jasc IN.gbapal OUT.pal
+
+The same rule applies to the palette of an indexed PNG, for an asset whose
+palette lives in its picture (the cutscene pictures):
+
+    tools/jasc_pal.py png-to-gba IN.png OUT.gbapal
+        writes the PNG's palette (all of its entries) as a raw palette.
+    tools/jasc_pal.py gba-to-png IN.gbapal PNG
+        replaces the palette of the indexed PNG with IN, keeping its
+        pixels.
 """
 import struct
 import sys
@@ -42,32 +51,67 @@ def read_jasc(path):
         rgb = [int(x) for x in row.split(" ")]
         if len(rgb) != 3 or not all(0 <= c <= 255 for c in rgb):
             sys.exit("jasc_pal: %s: colour %d: %r" % (path, i, row))
-        r, g, b = (c >> 3 for c in rgb)
-        bit15 = (rgb[0] ^ standard(r)) & 1
-        out.append(bit15 << 15 | b << 10 | g << 5 | r)
+        out.append(from_rgb(rgb))
     return out
+
+
+def from_rgb(rgb):
+    r, g, b = (c >> 3 for c in rgb)
+    bit15 = (rgb[0] ^ standard(r)) & 1
+    return bit15 << 15 | b << 10 | g << 5 | r
+
+
+def to_rgb(v):
+    r, g, b = v & 31, v >> 5 & 31, v >> 10 & 31
+    return standard(r) ^ (v >> 15), standard(g), standard(b)
 
 
 def write_jasc(path, entries):
     lines = ["JASC-PAL", "0100", str(len(entries))]
     for v in entries:
-        r, g, b = v & 31, v >> 5 & 31, v >> 10 & 31
-        lines.append("%d %d %d" % (standard(r) ^ (v >> 15), standard(g), standard(b)))
+        lines.append("%d %d %d" % to_rgb(v))
     open(path, "wb").write(("\r\n".join(lines) + "\r\n").encode("ascii"))
 
 
+def read_gba(path):
+    data = open(path, "rb").read()
+    if len(data) % 2:
+        sys.exit("jasc_pal: %s: odd size" % path)
+    return struct.unpack("<%dH" % (len(data) // 2), data)
+
+
+def read_png(path):
+    from PIL import Image
+
+    img = Image.open(path)
+    if img.mode != "P":
+        sys.exit("jasc_pal: %s: not an indexed PNG" % path)
+    rgb = img.getpalette("RGB")
+    return [from_rgb(rgb[i:i + 3]) for i in range(0, len(rgb), 3)]
+
+
+def write_png(path, entries):
+    from PIL import Image
+
+    img = Image.open(path)
+    if img.mode != "P":
+        sys.exit("jasc_pal: %s: not an indexed PNG" % path)
+    img.load()
+    img.putpalette([c for v in entries for c in to_rgb(v)])
+    img.save(path)
+
+
 def main():
-    if len(sys.argv) != 4 or sys.argv[1] not in ("to-gba", "to-jasc"):
+    if len(sys.argv) != 4 or sys.argv[1] not in ("to-gba", "to-jasc", "png-to-gba", "gba-to-png"):
         sys.exit(__doc__)
     mode, src, dst = sys.argv[1:]
-    if mode == "to-gba":
-        entries = read_jasc(src)
+    if mode in ("to-gba", "png-to-gba"):
+        entries = read_jasc(src) if mode == "to-gba" else read_png(src)
         open(dst, "wb").write(struct.pack("<%dH" % len(entries), *entries))
+    elif mode == "to-jasc":
+        write_jasc(dst, read_gba(src))
     else:
-        data = open(src, "rb").read()
-        if len(data) % 2:
-            sys.exit("jasc_pal: %s: odd size" % src)
-        write_jasc(dst, struct.unpack("<%dH" % (len(data) // 2), data))
+        write_png(dst, read_gba(src))
 
 
 if __name__ == "__main__":

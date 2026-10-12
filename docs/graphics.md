@@ -110,9 +110,13 @@ colour picked freely in an editor may toggle bit 15, which the hardware
 ignores. `tools/jasc_pal.py to-jasc` turns a raw palette back into a
 `.pal`.
 
-The palettes written out in C (`u16` arrays: the cutscene pictures, room
-palettes, HUD and menu palettes) aren't affected. They keep bit 15 as part
-of their hex values.
+The 24 cutscene pictures' palettes (uncompressed `u16[256]`) follow the
+same rule, but live in the picture itself: each
+`graphics/intro/*_bitmap.png` carries its real palette, and
+`tools/jasc_pal.py png-to-gba` reads it back (bit 15 included) for
+`tools/bin2c.py --u16`. `jasc_pal.py gba-to-png` puts a raw palette into
+an indexed PNG. The palettes still written out in C (room palettes, HUD
+and menu palettes) keep bit 15 as part of their hex values.
 
 The 24 intro/cutscene Mode 4 bitmaps (`graphics/intro/*_bitmap.png`) are
 built as C const arrays (`src/data/cutscene_pictures_5a9f70.cpp`, each after
