@@ -51,3 +51,6 @@ lookups then return NULL / 0.
 
 The `RIGHT` arms of both lookups test `hi & mode` (mode is 1 there), the
 register the ROM ANDs; they keep that spelling with a comment.
+
+The collision layers themselves are images now: `data/levels/<room>/collision.bmp`,
+one colour per cell value, legend in [levels.md, "Collision layers"](../levels.md#collision-layers).

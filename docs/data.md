@@ -650,8 +650,10 @@ arrays aren't aligned by agbcc, so they stay in place.
 The rooms' level data and level assets ([levels.md](./levels.md)) are
 built from `data/levels/` by `tools/levels.py`, from editable sources:
 per room a `room.json` (palette, layer settings, entities, parameter
-records, links, symbol names) and one decoded tilemap per layer
-(`<layer>.map.bin`, `u16` cells, grit's flat map layout). The build
+records, links, symbol names), one decoded tilemap per BG layer
+(`<layer>.map.bin`, `u16` cells, grit's flat map layout), and the
+collision layer as an image (`collision.bmp`, one colour per cell value,
+see [levels.md, "Collision layers"](./levels.md#collision-layers)). The build
 (`levels.mk`) generates:
 
 | output | from | used by |
