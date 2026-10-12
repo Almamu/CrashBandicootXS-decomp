@@ -51,22 +51,21 @@ ZoomBg::ZoomBg(s32 charBlock, s32 screenBlock)
     this->screenBlock = screenBlock;
     bgcnt.bits.screenBase = screenBlock;
     bgcnt.bits.color256 = 1;
-    {
-        u16 *dst = (u16 *)(VRAM + (this->screenBlock << 11));
-        u32 v;
-        s32 row;
 
-        DmaFill16(3, 0, dst, 0x100);
-        v = 0x100;
-        for (row = 0; row <= 7; row++) {
-            s32 j;
+    u16 *dst = (u16 *)(VRAM + (this->screenBlock << 11));
+    u32 v;
+    s32 row;
 
-            for (j = 0; j <= 3; j++) {
-                dst[j] = v;
-                v += 0x202;
-            }
-            dst += 8;
+    DmaFill16(3, 0, dst, 0x100);
+    v = 0x100;
+    for (row = 0; row <= 7; row++) {
+        s32 j;
+
+        for (j = 0; j <= 3; j++) {
+            dst[j] = v;
+            v += 0x202;
         }
+        dst += 8;
     }
     image = 0xB;
     state = ZOOM_BG_STATE_WAIT;

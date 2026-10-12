@@ -149,34 +149,32 @@ void LanguageSelect::InitGraphics()
     gPaletteCache->ClaimSlot(1);
     gPaletteCache->ClaimSlot(2);
     gPaletteCache->ClaimSlot(3);
-    {
-        PaletteCache *cache = gPaletteCache;
-        u16 *destA = cache->slots[0];
-        u16 *destB = cache->slots[2];
 
-        for (i = 0; i < 16; i++) {
-            destA[i] = gLanguageSelectPalette0[i];
-            destA[i + 0x10] = gLanguageSelectPalette1[i];
-            destB[i] = gLanguageSelectPalette2[i];
-            destB[i + 0x10] = gLanguageSelectPalette3[i];
-        }
+    PaletteCache *cache = gPaletteCache;
+    u16 *destA = cache->slots[0];
+    u16 *destB = cache->slots[2];
+
+    for (i = 0; i < 16; i++) {
+        destA[i] = gLanguageSelectPalette0[i];
+        destA[i + 0x10] = gLanguageSelectPalette1[i];
+        destB[i] = gLanguageSelectPalette2[i];
+        destB[i + 0x10] = gLanguageSelectPalette3[i];
     }
-    {
-        u32 zero = 0;
 
-        gSmallFont->SetPalette(0);
-        gLargeFont->SetPalette(0);
-        gObjVramCursor->baseTile = zero;
-        gObjVramCursor->Reset();
-        gObjVramCursor->Reset();
-        gSmallFont->SetTileBase(zero);
-        IconReserveVram(gObjVramCursor, gSmallFont);
-        {
-            u32 base = gSmallFont->tileCount;
+    u32 zero = 0;
 
-            gLargeFont->SetTileBase(base);
-        }
-        IconReserveVram(gObjVramCursor, gLargeFont);
-    }
+    gSmallFont->SetPalette(0);
+    gLargeFont->SetPalette(0);
+    gObjVramCursor->baseTile = zero;
+    gObjVramCursor->Reset();
+    gObjVramCursor->Reset();
+    gSmallFont->SetTileBase(zero);
+    IconReserveVram(gObjVramCursor, gSmallFont);
+
+    /* `base` is needed: inlined, the instructions are reordered */
+    u32 base = gSmallFont->tileCount;
+
+    gLargeFont->SetTileBase(base);
+    IconReserveVram(gObjVramCursor, gLargeFont);
     gObjVramCursor->Mark();
 }

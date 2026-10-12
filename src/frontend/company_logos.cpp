@@ -80,10 +80,8 @@ void CompanyLogos::Run()
         s32 q;
 
         gInput->Update();
-        if (gKeys.half.pressed & (A_BUTTON | START_BUTTON)) {
-            if (fade > 0x40)
-                fade = 0x40;
-        }
+        if ((gKeys.half.pressed & (A_BUTTON | START_BUTTON)) && fade > 0x40)
+            fade = 0x40;
         WaitForVBlank();
         CommitDispcnt();
         if (fade != -1) {
@@ -107,12 +105,12 @@ void CompanyLogos::Run()
             scale = Q8_MUL(scale, 0x118);
         }
         q = 0x1000000 / scale;
-        {
-            s32 x = -(q * 120) + 0x7800;
-            s32 y = -(q * 80) + 0x5000;
-            REG_BG2X = x;
-            REG_BG2Y = y;
-        }
+
+        /* `x`, `y` are needed: inlined, the instructions differ */
+        s32 x = -(q * 120) + 0x7800;
+        s32 y = -(q * 80) + 0x5000;
+        REG_BG2X = x;
+        REG_BG2Y = y;
         REG_BG2PA = q;
         REG_BG2PD = q;
         REG_BG2PB = 0;
@@ -130,10 +128,8 @@ void CompanyLogos::Run()
         s32 v;
 
         gInput->Update();
-        if (gKeys.half.pressed & (A_BUTTON | START_BUTTON)) {
-            if (timer > 0)
-                timer = 1;
-        }
+        if ((gKeys.half.pressed & (A_BUTTON | START_BUTTON)) && timer > 0)
+            timer = 1;
         part->Update();
         part->Draw();
         gOamBuffer->Rewind();
@@ -192,13 +188,12 @@ void CompanyLogos::LoadVvLogoGraphics()
     LoadAssetBuffered(gVvLogoUrlObj.paletteAsset, OBJ_PALETTE(13));
     LoadAssetBuffered(gVvLogoLettersObj.tileAsset, (void *)tilesA);
     LoadAssetBuffered(gVvLogoUrlObj.tileAsset, (void *)tilesB);
-    {
-        u32 size = *(u32 *)gVvLogoEmblemObj.tileAsset >> 8;
-        u8 *buf;
 
-        frames = buf = new u8[size];
-        LoadTaggedAsset(gVvLogoEmblemObj.tileAsset, buf);
-    }
+    u32 size = *(u32 *)gVvLogoEmblemObj.tileAsset >> 8;
+    u8 *buf;
+
+    frames = buf = new u8[size];
+    LoadTaggedAsset(gVvLogoEmblemObj.tileAsset, buf);
     scratch = new u8[0x1000];
 }
 
@@ -223,14 +218,14 @@ void CompanyLogos::InitVvLogoPieces()
         slots[i].countdown = gVvLogoPieceSeeds[i].hold + 1;
         slots[i].record = gVvLogoPieceSeeds[i].record;
     }
-    {
-        u8 one = 1;
-        s32 j = 0x11;
-        u8 *flags = &sfxPending[0x11];
 
-        for (; j >= 0; j--)
-            *flags-- = one;
-    }
+    /* `one` is needed: inlined, the code is 2 instructions shorter */
+    u8 one = 1;
+    s32 j = 0x11;
+    u8 *flags = &sfxPending[0x11];
+
+    for (; j >= 0; j--)
+        *flags-- = one;
     frame = 0;
     loops = 0;
     frameTick = 0;
@@ -300,6 +295,7 @@ void CompanyLogos::UpdateVvLogoPieces()
     if (timer == 0) {
         s32 allDone = 1;
         LogoPiece *slot;
+        /* `end` is needed: inlined, the instructions differ */
         LogoPiece *end;
 
         slot = slots;
@@ -366,69 +362,67 @@ void CompanyLogos::DrawVvLogoPieces()
     s32 matrix = 1;
     s32 i;
 
-    {
-        LogoPiece *hdr = &slots[19];
+    LogoPiece *hdr = &slots[19];
 
-        if (hdr->active) {
-            u32 tiles;
-            s32 j;
+    if (hdr->active) {
+        u32 tiles;
+        s32 j;
 
-            CLEAR_OAM(&oamA);
-            tiles = tilesB;
-            oamA.palette = 0xd;
-            oamA.size = 2;
-            oamA.shape = 1;
-            oamA.y = Q16_TO_INT(hdr->posB.q);
-            oamA.x = hdr->posA.h.i;
-            oamA.tileNum = tiles >> 5;
-            for (j = 0; j < 4; j++) {
-                gOamBuffer->Add(&oamA);
-                oamA.tileNum += 8;
-                oamA.x += 0x20;
-            }
+        CLEAR_OAM(&oamA);
+        tiles = tilesB;
+        oamA.palette = 0xd;
+        oamA.size = 2;
+        oamA.shape = 1;
+        oamA.y = Q16_TO_INT(hdr->posB.q);
+        oamA.x = hdr->posA.h.i;
+        oamA.tileNum = tiles >> 5;
+        for (j = 0; j < 4; j++) {
+            gOamBuffer->Add(&oamA);
+            oamA.tileNum += 8;
+            oamA.x += 0x20;
         }
     }
-    {
-        LogoPiece *slot = &slots[1];
-        u32 tile = (tilesA - (u32)OBJ_VRAM0) >> 5;
 
-        for (i = 0; i <= 0x11; i++) {
-            if (slot->active) {
-                s32 pa, pd, affine;
+    LogoPiece *slot = &slots[1];
+    u32 tile = (tilesA - (u32)OBJ_VRAM0) >> 5;
 
-                CLEAR_OAM(&oamB);
-                pa = 0x1000000 / slot->velA;
-                pd = 0x1000000 / slot->velB;
-                affine = (pa != 0x100 || pd != pa);
-                if (affine) {
-                    u8 *flags = sfxPending;
-                    u8 *flag = flags + i;
+    for (i = 0; i <= 0x11; i++) {
+        if (slot->active) {
+            s32 pa, pd, affine;
 
-                    if (*flag) {
-                        /* A u8 local for the 0 gives the ROM's r3
-                         * reload for the store (and so the matrix
-                         * reload in r0 below). */
-                        u8 z = 0;
+            CLEAR_OAM(&oamB);
+            pa = 0x1000000 / slot->velA;
+            pd = 0x1000000 / slot->velB;
+            affine = (pa != 0x100 || pd != pa);
+            if (affine) {
+                /* `flags` is needed: inlined, the code is 2 instructions longer */
+                u8 *flags = sfxPending;
+                u8 *flag = flags + i;
 
-                        *flag = z;
-                        gAudioContext->PlaySfx(SFX_UNKNOWN_4E, 0x100);
-                    }
-                    SetAffine(gOamBuffer, matrix, pa, 0, 0, pd);
-                    oamB.affineMode = OAM_AFFINE_MODE_AFFINE;
-                    oamB.matrixLo = matrix;
-                    matrix++;
+                if (*flag) {
+                    /* A u8 local for the 0 gives the ROM's r3
+                     * reload for the store (and so the matrix
+                     * reload in r0 below). */
+                    u8 z = 0;
+
+                    *flag = z;
+                    gAudioContext->PlaySfx(SFX_UNKNOWN_4E, 0x100);
                 }
-                oamB.palette = 0xe;
-                oamB.size = 2;
-                oamB.shape = 2;
-                oamB.y = Q16_TO_INT(slot->posB.q) - 0x10;
-                oamB.x = slot->posA.h.i - 8;
-                oamB.tileNum = tile;
-                gOamBuffer->Add(&oamB);
+                SetAffine(gOamBuffer, matrix, pa, 0, 0, pd);
+                oamB.affineMode = OAM_AFFINE_MODE_AFFINE;
+                oamB.matrixLo = matrix;
+                matrix++;
             }
-            tile += 8;
-            slot++;
+            oamB.palette = 0xe;
+            oamB.size = 2;
+            oamB.shape = 2;
+            oamB.y = Q16_TO_INT(slot->posB.q) - 0x10;
+            oamB.x = slot->posA.h.i - 8;
+            oamB.tileNum = tile;
+            gOamBuffer->Add(&oamB);
         }
+        tile += 8;
+        slot++;
     }
     if (slots[0].active) {
         u8 *flag = sfxPending;
@@ -632,17 +626,17 @@ void LogoActor::Draw()
 
     if (state == LOGO_ACTOR_STATE_GONE)
         return;
-    {
-        s32 base = Q8_TO_INT(animTime);
-        s32 idx = animIndex;
-        const struct anim_frame_record *table = anims;
-        s32 val;
 
-        val = table[idx].frameIndex;
-        rec = &table[idx];
-        val += base;
-        frame = (u8 *)frameOffsets[val];
-    }
+    /* `base` is needed: inlined, the instructions differ */
+    s32 base = Q8_TO_INT(animTime);
+    s32 idx = animIndex;
+    const struct anim_frame_record *table = anims;
+    s32 val;
+
+    val = table[idx].frameIndex;
+    rec = &table[idx];
+    val += base;
+    frame = (u8 *)frameOffsets[val];
     /* Declared in a nested block so their stack slots land after
      * `rec`'s, as in the ROM. */
     {
@@ -679,13 +673,12 @@ void LogoActor::Draw()
                                           (struct rle_frame *)frame);
                 gLogoActorLastFrame = frame;
             }
-            {
-                /* The tile number first (r0), then the palette into r1:
-                 * a local, ORed into the palette. */
-                u32 tile = GET_TILE_NUM(gLogoActorTiles[gLogoActorTileBuffer]);
 
-                QueueSpriteFrameOam(attr1, (palette << 12) | tile, scale);
-            }
+            /* The tile number first (r0), then the palette into r1:
+             * a local, ORed into the palette. */
+            u32 tile = GET_TILE_NUM(gLogoActorTiles[gLogoActorTileBuffer]);
+
+            QueueSpriteFrameOam(attr1, (palette << 12) | tile, scale);
         }
     }
 }

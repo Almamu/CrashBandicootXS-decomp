@@ -32,22 +32,22 @@ void PauseMenu::DrawFraction(const u8 *count, const u8 *total)
     Font **pe0;
 
     (*pdc)->DrawText(count);
-    {
-        Font *d = *pdc;
-        u32 x = d->posX;
-        u32 y = d->posY;
 
-        /* Assigned here, not at the top: that keeps the
-         * &gLargeFont load after the posX/posY loads. */
-        pe0 = &gLargeFont;
-        (*pe0)->SetPos(x - 2, y);
-    }
+    Font *d = *pdc;
+    /* `x` is needed: inlined, the code is 2 instructions shorter */
+    u32 x = d->posX;
+    /* `y` is needed: inlined, the instructions are reordered */
+    u32 y = d->posY;
+
+    /* Assigned here, not at the top: that keeps the
+     * &gLargeFont load after the posX/posY loads. */
+    pe0 = &gLargeFont;
+    (*pe0)->SetPos(x - 2, y);
     (*pe0)->DrawGlyph('/');
-    {
-        Font *e = *pe0;
 
-        (*pdc)->SetPos(e->GetX() - 5, e->GetY() + 8);
-    }
+    Font *e = *pe0;
+
+    (*pdc)->SetPos(e->GetX() - 5, e->GetY() + 8);
     (*pdc)->DrawText(total);
 }
 
@@ -187,6 +187,7 @@ s32 FormatDecimal(s32 value, u8 *dest)
  * unused (the ROM's first instruction discards r0). */
 void PauseMenu::FormatVolume(s32 volume, u8 *out)
 {
+    /* `value` is needed: inlined, the instructions are reordered */
     s32 value = volume * 5;
     s32 count;
 

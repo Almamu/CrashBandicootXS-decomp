@@ -23,6 +23,8 @@ extern "C" {
  * it is done it is rewound and a new countdown (0x78-0xef) starts. */
 void PauseMenu::Animate()
 {
+    UiSprite *icon;
+
     switch (page) {
     case 0:
         crystalIcon->AdvanceAnim();
@@ -69,34 +71,30 @@ void PauseMenu::Animate()
         pageTimer = 0xb4;
     }
 
-    {
-        s32 *countAddr = &blinkTimer;
-        s32 result;
+    s32 *countAddr = &blinkTimer;
+    s32 result;
 
-        if (*countAddr != 0) {
-            goto decrement;
-        }
-        {
-            UiSprite *icon = blinkEyes;
-
-            if (icon->animDone != 0) {
-                icon->tag = 0;
-                icon->ResetFrameTimer();
-                icon->ResetFrameIndex();
-                icon->SetAnimDone(0);
-                result = RandRange(0x78) + 0x78;
-                goto store;
-            } else {
-                icon->AdvanceAnim();
-                goto done;
-            }
-        }
-    decrement:
-        result = *countAddr - 1;
-    store:
-        *countAddr = result;
-    done:;
+    if (*countAddr != 0) {
+        goto decrement;
     }
+    icon = blinkEyes;
+
+    if (icon->animDone != 0) {
+        icon->tag = 0;
+        icon->ResetFrameTimer();
+        icon->ResetFrameIndex();
+        icon->SetAnimDone(0);
+        result = RandRange(0x78) + 0x78;
+        goto store;
+    } else {
+        icon->AdvanceAnim();
+        goto done;
+    }
+decrement:
+    result = *countAddr - 1;
+store:
+    *countAddr = result;
+done:;
 }
 
 /* Draws the frame: the level's name centred at the top, "LEVEL N" under
@@ -116,18 +114,16 @@ void PauseMenu::Animate()
 void PauseMenu::Draw()
 {
     const u8 *label;
+    /* `width` is needed: inlined, the code is 6 instructions longer */
     u32 width;
     u32 x, t;
 
     gOamBuffer->Reset();
     gObjVramCursor->Rewind();
-    {
-        u32 w = gLargeFont->MeasureText(levelName);
 
-        t = 0xf0 - w;
-        x = t >> 1;
-        gLargeFont->SetPos(x, 0xe);
-    }
+    t = 0xf0 - gLargeFont->MeasureText(levelName);
+    x = t >> 1;
+    gLargeFont->SetPos(x, 0xe);
     gLargeFont->DrawText(levelName);
     label = levelLabel;
     if (label != NULL) {

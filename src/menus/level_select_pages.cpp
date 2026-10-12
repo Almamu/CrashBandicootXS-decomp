@@ -150,11 +150,10 @@ void LevelSelect::RefreshPage()
 {
     sprites[0]->StartAnim(gLevelSelectWorldAnims[world]);
     LIMIT_MAX(index, lastIndex);
-    {
-        const struct vec2 *pos = &positions[index];
 
-        panel->Move(pos->x, pos->y - 0x18);
-    }
+    const struct vec2 *pos = &positions[index];
+
+    panel->Move(pos->x, pos->y - 0x18);
 }
 
 /* Down: turn back one page (repeating while Down is held); sound 0x48 on

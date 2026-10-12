@@ -33,11 +33,9 @@ void PauseMenu::InitInfo()
         levelLabel = 0;
     }
 
-    {
-        s32 count = FormatDecimal(progress->GetCompletionPercent(), percentText);
-        percentText[count] = '%';
-        percentText[count + 1] = 0;
-    }
+    s32 count = FormatDecimal(progress->GetCompletionPercent(), percentText);
+    percentText[count] = '%';
+    percentText[count + 1] = 0;
 
     musicVolume = (gAudioContext->GetMusicVolume() + 0xc) * 20 / 256;
     soundVolume = (gAudioContext->GetSfxVolume() + 0xc) * 20 / 256;

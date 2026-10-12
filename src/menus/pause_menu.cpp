@@ -38,8 +38,10 @@ static inline void reserve_icon_vram(u32 n)
 
 s32 PauseMenu::Run()
 {
+    /* `oldCache` is needed: inlined, the code is 6 instructions shorter */
     PaletteCache *oldCache;
     PauseMenu *screen;
+    /* `result` is needed: inlined, the code is 6 instructions shorter */
     s32 result;
 
     mem_free_bytes(MEM_HEAP_BOTH);
@@ -52,23 +54,19 @@ s32 PauseMenu::Run()
     gPaletteCache = (PaletteCache *)new PaletteCache;
     gPaletteCache->SetSource(gSpriteBankTable.paletteCount, gSpriteBankTable.palettes);
     gPaletteCache->ClaimSlot(0xf);
-    {
-        PaletteCache *cache = gPaletteCache;
 
-        CpuSet(gPauseMenuPalette, cache->slots[15], sizeof(gPauseMenuPalette) / sizeof(u16));
-    }
+    /* `cache` is needed: inlined, the instructions are reordered */
+    PaletteCache *cache = gPaletteCache;
+
+    CpuSet(gPauseMenuPalette, cache->slots[15], sizeof(gPauseMenuPalette) / sizeof(u16));
 
     gSmallFont->ResetPalette();
     gLargeFont->ResetPalette();
     gSmallFont->SetTileBase(0);
     gLargeFont->SetTileBase(gSmallFont->GetTileCount());
-    {
-        u32 a = gSmallFont->GetTileCount();
-        u32 b = gLargeFont->GetTileCount();
 
-        gObjVramCursor->baseTile = a + b;
-        gObjVramCursor->Reset();
-    }
+    gObjVramCursor->baseTile = gSmallFont->GetTileCount() + gLargeFont->GetTileCount();
+    gObjVramCursor->Reset();
 
     screen = new PauseMenu;
     result = screen->Loop();
@@ -106,14 +104,13 @@ PauseMenu::PauseMenu() : bg(0, 0x1f, 0, 3)
     bg.Load(&gPauseMenuBg);
     progress = gLevelState->PackSaveData();
     InitInfo();
-    {
-        UiSprite *s;
 
-        blinkEyes = new UiSprite;
-        s = blinkEyes;
-        SetIconBank(s, 46);
-        blinkEyes->palette = s->GetAnimPaletteSlot();
-    }
+    UiSprite *s;
+
+    blinkEyes = new UiSprite;
+    s = blinkEyes;
+    SetIconBank(s, 46);
+    blinkEyes->palette = s->GetAnimPaletteSlot();
     blinkEyes->SetPixelPos(119, 94);
     blinkTimer = RandRange(0x78) + 0x78;
     rows = gPauseMenuRows;
@@ -204,20 +201,20 @@ s32 PauseMenu::Loop()
             flashTimer = 0x1e;
             gAudioContext->PlaySfx(SFX_MENU_MOVE, 0x100);
         }
-        {
-            struct held_pressed_pair k = KEYS;
-            if (k.pressed & DPAD_LEFT) {
+
+        struct held_pressed_pair k = KEYS;
+        if (k.pressed & DPAD_LEFT) {
+            VolumeDown();
+            flashTimer = 0x1e;
+        } else if (k.held & DPAD_LEFT) {
+            if (flashTimer == 0) {
                 VolumeDown();
-                flashTimer = 0x1e;
-            } else if (k.held & DPAD_LEFT) {
-                if (flashTimer == 0) {
-                    VolumeDown();
-                    flashTimer = 5;
-                } else {
-                    flashTimer--;
-                }
+                flashTimer = 5;
+            } else {
+                flashTimer--;
             }
         }
+        /* scoped: its own `k` (shared, the code is 14 instructions longer) */
         {
             struct held_pressed_pair k = KEYS;
             if (k.pressed & DPAD_RIGHT) {

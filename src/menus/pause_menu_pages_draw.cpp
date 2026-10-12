@@ -42,6 +42,7 @@ void PauseMenu::DrawCrystalsPage()
 void PauseMenu::DrawPageTitle()
 {
     const u8 *label = GetUiText(gPauseMenuPageTitles[page]);
+    /* `w` is needed: inlined, the instructions differ */
     u32 w = gSmallFont->MeasureText(label);
 
     gSmallFont->SetPos(0xc2 - (w >> 1), 0x2c);

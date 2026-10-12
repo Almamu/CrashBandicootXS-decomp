@@ -42,6 +42,7 @@ void PauseMenu::DrawPowersPage()
 
     if (none) {
         const u8 *label = GetUiText(0x3a);
+        /* `width` is needed: inlined, the instructions differ */
         u32 width = gSmallFont->MeasureText(label);
 
         gSmallFont->SetPos(0xc2 - (width >> 1), 0x64);

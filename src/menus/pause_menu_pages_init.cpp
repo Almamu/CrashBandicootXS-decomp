@@ -69,7 +69,9 @@ void PauseMenu::InitGemsPage()
         gemIcons[i]->affine = 0x80;
     }
 
+    /* `a` is needed: inlined, the code is 2 instructions shorter */
     a = progress->CountClearGems();
+    /* `b` is needed: inlined, the code is 4 instructions shorter */
     b = progress->CountGems();
     FormatDecimal(a, clearGemCount);
     FormatDecimal(b, gemCount);
@@ -113,13 +115,12 @@ void PauseMenu::InitTimeTrialPage()
     u8 earned;
 
     levelIdx = gLevelState->GetCurrentLevel();
-    {
-        /* A byte offset, not an index: keeps the ROM's `idx*4 + 4`
-         * computed before the base is loaded. */
-        s32 off = levelIdx * 4 + offsetof(GameProgress, levels);
 
-        time = (u16)*(u32 *)((u8 *)progress + off) >> 3;
-    }
+    /* A byte offset, not an index: keeps the ROM's `idx*4 + 4`
+     * computed before the base is loaded. */
+    s32 off = levelIdx * 4 + offsetof(GameProgress, levels);
+
+    time = (u16)*(u32 *)((u8 *)progress + off) >> 3;
     FormatCentiseconds(time, timeText);
     entry = &gLevelTable[levelIdx];
     earned = 0;

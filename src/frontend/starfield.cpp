@@ -54,21 +54,20 @@ Starfield::Starfield()
     s32 gradCount;
     s32 row;
     s32 tileIdx;
+    /* `tileBase` is needed: inlined, the code is 2 instructions shorter */
     u32 tileBase;
-    u32 mapBase;
     u16 *gradDst;
     u16 dmaFillSrc16;
     u32 dmaFillSrc32;
+    /* `dma2Src` is needed: inlined, the instructions are reordered */
     u32 *dma2Src;
     u32 zero;
 
     particles = new StarParticle[0x80];
 
-    {
-        u16 *dispcntShadow = &gDispcnt.raw;
-        zero = 0;
-        *dispcntShadow = DISPCNT_OBJ_1D_MAP;
-    }
+    u16 *dispcntShadow = &gDispcnt.raw;
+    zero = 0;
+    *dispcntShadow = DISPCNT_OBJ_1D_MAP;
     SetDispcntMode(DISPCNT_MODE_0);
 
     /* Clears BG0HOFS/BG0VOFS together via one word store. */
@@ -108,10 +107,10 @@ Starfield::Starfield()
     tileIdx = 0;
     row = 0;
     tileBase = tileVramBase;
-    mapBase = mapVramBase;
     do {
+        /* `nextRow` is needed: inlined, the instructions differ */
         s32 nextRow = row + 1;
-        u16 *rowPtr = (u16 *)((row << 6) + mapBase);
+        u16 *rowPtr = (u16 *)((row << 6) + mapVramBase);
         s32 col = 0x1d;
 
         do {
@@ -163,17 +162,16 @@ void Starfield::Draw()
     if (i < n) {
         do {
             Plot(Q8_TO_INT(slot->x), Q8_TO_INT(slot->y), 1);
-            {
-                s32 newX, newY;
 
-                newX = slot->x + slot->dx;
-                slot->x = newX;
-                newY = slot->y + slot->dy;
-                slot->y = newY;
+            s32 newX, newY;
 
-                if ((u32)newX > 0xEFFF || newY < 0 || newY > 0x9FFF) {
-                    SpawnStar(i);
-                }
+            newX = slot->x + slot->dx;
+            slot->x = newX;
+            newY = slot->y + slot->dy;
+            slot->y = newY;
+
+            if ((u32)newX > 0xEFFF || newY < 0 || newY > 0x9FFF) {
+                SpawnStar(i);
             }
             Plot(Q8_TO_INT(slot->x), Q8_TO_INT(slot->y), 2);
             slot++;
@@ -231,12 +229,10 @@ void Starfield::Update()
         n -= 1;
 
         if (n != -1) {
-            s32 end = -1;
-
             do {
                 SpawnStar(count++);
                 n -= 1;
-            } while (n != end);
+            } while (n != -1);
         }
     }
 }

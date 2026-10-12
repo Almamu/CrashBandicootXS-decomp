@@ -94,16 +94,15 @@ void ContinuePrompt::InitGraphics()
     gPaletteCache->ClaimSlot(3);
 
     cache = gPaletteCache;
-    {
-        u16 *destA = cache->slots[0];
-        u16 *destB = cache->slots[2];
 
-        for (i = 0; i < 16; i++) {
-            destA[i] = gContinuePromptPalette0[i];
-            destA[i + 0x10] = gContinuePromptPalette1[i];
-            destB[i] = gContinuePromptPalette2[i];
-            destB[i + 0x10] = gContinuePromptPalette3[i];
-        }
+    u16 *destA = cache->slots[0];
+    u16 *destB = cache->slots[2];
+
+    for (i = 0; i < 16; i++) {
+        destA[i] = gContinuePromptPalette0[i];
+        destA[i + 0x10] = gContinuePromptPalette1[i];
+        destB[i] = gContinuePromptPalette2[i];
+        destB[i + 0x10] = gContinuePromptPalette3[i];
     }
     gPaletteCache->Upload();
 
@@ -153,21 +152,20 @@ s32 ContinuePrompt::Loop()
 
     while (dir >= 0) {
         gInput->Update();
-        {
-            struct held_pressed_pair k = *input;
 
-            if (k.pressed & A_BUTTON) {
-                gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
-                goto done;
-            }
-            if (k.pressed & START_BUTTON) {
-                gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
-                goto done;
-            }
-            if ((k.pressed & DPAD_UP) && selection == 1) {
-                gAudioContext->PlaySfx(SFX_MENU_MOVE, 0x100);
-                selection = 0;
-            }
+        struct held_pressed_pair k = *input;
+
+        if (k.pressed & A_BUTTON) {
+            gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
+            goto done;
+        }
+        if (k.pressed & START_BUTTON) {
+            gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
+            goto done;
+        }
+        if ((k.pressed & DPAD_UP) && selection == 1) {
+            gAudioContext->PlaySfx(SFX_MENU_MOVE, 0x100);
+            selection = 0;
         }
         if ((input->pressed & DPAD_DOWN) && selection == 0) {
             gAudioContext->PlaySfx(SFX_MENU_MOVE, 0x100);
@@ -196,6 +194,7 @@ done:
  * selected one blinking (Blink) and marked with the cursor. */
 void ContinuePrompt::Draw()
 {
+    /* `w` is needed: inlined, the code is 1 instruction shorter */
     s32 w;
 
     gOamBuffer->Reset();
@@ -251,6 +250,7 @@ ContinuePrompt::~ContinuePrompt()
 u8 ContinuePrompt::Run()
 {
     ContinuePrompt *self;
+    /* `result` is needed: inlined, the code is 1 instruction shorter */
     u8 result;
 
     mem_free_bytes(0xc0000000);
