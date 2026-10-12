@@ -56,12 +56,11 @@ Hud::Hud()
         HudPart *slot;
 
         parts[i].SetPriority(0);
-        {
-            const struct sprite_bank *anim = gSpriteBankSet->Bank(47);
 
-            slot = (HudPart *)(i * sizeof(HudPart) + (u32)parts);
-            SET_PART_BANK(slot, anim);
-        }
+        const struct sprite_bank *anim = gSpriteBankSet->Bank(47);
+
+        slot = (HudPart *)(i * sizeof(HudPart) + (u32)parts);
+        SET_PART_BANK(slot, anim);
         if (i == 0x16) {
             s32 life = gLevelState->GetBossIndex();
 
@@ -75,24 +74,22 @@ Hud::Hud()
         SetSlotPos(&parts[i], &gHudPartPositions[i]);
     }
 
-    {
-        const struct sprite_bank *anim;
-        HudPart *slot;
+    const struct sprite_bank *anim;
+    HudPart *slot;
 
-        i = 13;
-        anim = gSpriteBankSet->Bank(35);
-        slot = &parts[i];
-        SET_PART_BANK(slot, anim);
-        parts[13].tag = gHudPartAnims[13];
-        RestartSlot(slot);
-    }
-    {
-        const struct sprite_anim *records = parts[13].bank->anims;
-        const struct sprite_anim *rec = &records[parts[13].tag];
-        s32 palette = gPaletteCache->GetSlot(rec->paletteId);
+    i = 13;
+    anim = gSpriteBankSet->Bank(35);
+    slot = &parts[i];
+    SET_PART_BANK(slot, anim);
+    parts[13].tag = gHudPartAnims[13];
+    RestartSlot(slot);
 
-        parts[13].palette = palette;
-    }
+    const struct sprite_anim *records = parts[13].bank->anims;
+    /* `rec` is needed: inlined, the code is 2 instructions shorter */
+    const struct sprite_anim *rec = &records[parts[13].tag];
+    s32 palette = gPaletteCache->GetSlot(rec->paletteId);
+
+    parts[13].palette = palette;
 
     SetSlotFrame(&parts[16], 10);
     SetSlotFrame(&parts[19], 11);
@@ -129,9 +126,12 @@ void Hud::ConfigureParts(u8 iconFlag)
     s32 i;
 
     icon_flag = iconFlag;
+    /* scoped: the loop below declares its own `slot` */
     {
+        /* `anim` is needed: inlined, the instructions are reordered */
         const struct sprite_bank *anim;
         HudPart *slot;
+        /* `k` is needed: inlined, the instructions are reordered */
         s32 k = 13;
 
         anim = gSpriteBankSet->Bank(35);
@@ -148,6 +148,7 @@ void Hud::ConfigureParts(u8 iconFlag)
         s32 frame;
 
         if (i == 0x16) {
+            /* `life` is needed: inlined, the code is 6 instructions shorter */
             s32 life = gLevelState->GetBossIndex();
             HudPart *slot = &parts[i];
 
@@ -176,6 +177,7 @@ void Hud::ConfigureParts(u8 iconFlag)
             switch (i) {
             case 0xE ... 0x15:
                 {
+                    /* `tbl`, `pos` are needed: inlined, the instructions are reordered */
                     const struct vec2 *tbl = gHudPartPositions;
                     const struct vec2 *pos = tbl + i;
 

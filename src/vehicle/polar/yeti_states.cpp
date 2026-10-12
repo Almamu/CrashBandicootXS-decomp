@@ -52,58 +52,44 @@ void Yeti::StateChase()
         position = INT_TO_Q8(GetCellAnimDistance()) - distance;
     }
 
-    {
-        s32 tier = Q8_TO_INT(anim->animTime);
+    s32 tier = Q8_TO_INT(anim->animTime);
 
-        if (distance <= 0x4FFF) {
-            if (tier == 0xc) {
-                gAudioContext->PlayAmbientSfx(SFX_YETI_STOMP_1, 0x3E8, 0x100, true);
-                ShakeActorBg(0x200);
-            } else if (tier == 0x1c) {
-                gAudioContext->PlayAmbientSfx(SFX_YETI_STOMP_2, 0x3E8, 0x100, true);
-                ShakeActorBg(0x200);
-            } else if (tier == 0xd || tier == 0x1d) {
-                ShakeActorBg(0x100);
-            }
+    if (distance <= 0x4FFF) {
+        if (tier == 0xc) {
+            gAudioContext->PlayAmbientSfx(SFX_YETI_STOMP_1, 0x3E8, 0x100, true);
+            ShakeActorBg(0x200);
+        } else if (tier == 0x1c) {
+            gAudioContext->PlayAmbientSfx(SFX_YETI_STOMP_2, 0x3E8, 0x100, true);
+            ShakeActorBg(0x200);
+        } else if (tier == 0xd || tier == 0x1d) {
+            ShakeActorBg(0x100);
         }
     }
 
-    {
-        if (anim->animDone != 0) {
-            if (distance > 0x5A00) {
-                goto do_transition;
-            }
-
-            if (GetCellAnimSpeed() > 0x24) {
-                s32 v = RandRange(0x100);
-
-                if (v < chargeParams[paramsIndex].fastChance) {
-                    goto do_transition;
-                }
-            }
-
-            if (GetCellAnimSpeed() > 0x24) {
-                goto end_transition;
-            }
-            {
-                s32 v = RandRange(0x100);
-
-                if (v >= chargeParams[paramsIndex].slowChance) {
-                    goto end_transition;
-                }
-            }
-
-        do_transition:
-            state = YETI_STATE_CHARGE;
-            {
-                anim->RestartAnim(1);
-            }
-
-            if (distance <= 0x7800) {
-                gAudioContext->PlaySfx(SFX_YETI_CHASE, 0x100);
-            }
-        end_transition:;
+    if (anim->animDone != 0) {
+        if (distance > 0x5A00) {
+            goto do_transition;
         }
+
+        if (GetCellAnimSpeed() > 0x24 && RandRange(0x100) < chargeParams[paramsIndex].fastChance) {
+            goto do_transition;
+        }
+
+        if (GetCellAnimSpeed() > 0x24) {
+            goto end_transition;
+        }
+        if (RandRange(0x100) >= chargeParams[paramsIndex].slowChance) {
+            goto end_transition;
+        }
+
+    do_transition:
+        state = YETI_STATE_CHARGE;
+        anim->RestartAnim(1);
+
+        if (distance <= 0x7800) {
+            gAudioContext->PlaySfx(SFX_YETI_CHASE, 0x100);
+        }
+    end_transition:;
     }
 }
 
@@ -126,30 +112,26 @@ void Yeti::StateCharge()
         position = INT_TO_Q8(GetCellAnimDistance()) - distance;
     }
 
-    {
-        s32 tier = Q8_TO_INT(anim->animTime);
+    s32 tier = Q8_TO_INT(anim->animTime);
 
-        if (distance <= 0x4FFF) {
-            /* The two stomp cues share their ShakeActorBg(0x200) (the
-             * ROM's one cross-jumped tail). */
-            if (tier == 0xb || tier == 0x1b) {
-                if (tier == 0xb)
-                    gAudioContext->PlaySfx(SFX_YETI_STOMP_1, 0x100);
-                else
-                    gAudioContext->PlaySfx(SFX_YETI_STOMP_2, 0x100);
-                ShakeActorBg(0x200);
-            } else if (tier == 0xc || tier == 0x1c) {
-                ShakeActorBg(0x100);
-            }
+    if (distance <= 0x4FFF) {
+        /* The two stomp cues share their ShakeActorBg(0x200) (the
+         * ROM's one cross-jumped tail). */
+        if (tier == 0xb || tier == 0x1b) {
+            if (tier == 0xb)
+                gAudioContext->PlaySfx(SFX_YETI_STOMP_1, 0x100);
+            else
+                gAudioContext->PlaySfx(SFX_YETI_STOMP_2, 0x100);
+            ShakeActorBg(0x200);
+        } else if (tier == 0xc || tier == 0x1c) {
+            ShakeActorBg(0x100);
         }
     }
 
-    {
-        AnimPart *bc = anim;
+    AnimPart *bc = anim;
 
-        if (bc->animDone != 0) {
-            state = YETI_STATE_CHASE;
-            bc->RestartAnim(0);
-        }
+    if (bc->animDone != 0) {
+        state = YETI_STATE_CHASE;
+        bc->RestartAnim(0);
     }
 }

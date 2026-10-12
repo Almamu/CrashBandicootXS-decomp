@@ -137,24 +137,23 @@ void Hud::UpdateLives()
     else
         gHudSlideOffset = 0;
 
-    {
-        s32 v = lives;
-        s32 w = shownLives;
+    s32 v = lives;
+    /* `w` is needed: inlined, the instructions are reordered */
+    s32 w = shownLives;
 
-        cur = parts;
-        if (v != w) {
-            if (v > 9) {
-                s32 f = __divsi3(v, 10);
+    cur = parts;
+    if (v != w) {
+        if (v > 9) {
+            s32 f = __divsi3(v, 10);
 
-                HUDPART_CLAMP_FRAME(&cur[0], cur[0].tag, f);
-                f = __modsi3(lives, 10);
-                HUDPART_CLAMP_FRAME(&cur[1], cur[1].tag, f);
-            } else {
-                HUDPART_CLAMP_FRAME(&cur[0], cur[0].tag, v);
-                /* The ROM keeps this clamp's dead `tag` load: -1 is
-                 * never past the end, so only the store is left. */
-                HUDPART_CLAMP_FRAME(&cur[1], cur[1].tag, -1);
-            }
+            HUDPART_CLAMP_FRAME(&cur[0], cur[0].tag, f);
+            f = __modsi3(lives, 10);
+            HUDPART_CLAMP_FRAME(&cur[1], cur[1].tag, f);
+        } else {
+            HUDPART_CLAMP_FRAME(&cur[0], cur[0].tag, v);
+            /* The ROM keeps this clamp's dead `tag` load: -1 is
+             * never past the end, so only the store is left. */
+            HUDPART_CLAMP_FRAME(&cur[1], cur[1].tag, -1);
         }
     }
 
@@ -196,6 +195,7 @@ void Hud::UpdateCrates()
     HudPart *cur;
     s32 v;
     s32 digits;
+    /* `w` is needed: inlined, the instructions are reordered */
     s32 w;
     s32 off;
 
@@ -280,13 +280,11 @@ void Hud::UpdateCrates()
     parts[7].Draw(off, 0);
     parts[8].Draw(off, 0);
 
-    {
-        HudPart *part;
+    HudPart *part;
 
-        SetPartPos(gHudPartPositions[10].x + off, gHudPartPositions[10].y, (part = &parts[10]));
-        HUDPART_CLAMP_FRAME(part, parts[10].tag, 0);
-        part->Draw(0, 0);
-    }
+    SetPartPos(gHudPartPositions[10].x + off, gHudPartPositions[10].y, (part = &parts[10]));
+    HUDPART_CLAMP_FRAME(part, parts[10].tag, 0);
+    part->Draw(0, 0);
     parts[9].Draw(0, 0);
     shownCrateTotal = crateTotal;
     shownCrateCount = crateCount;

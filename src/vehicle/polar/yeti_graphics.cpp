@@ -97,14 +97,14 @@ void Yeti::LoadGraphics()
     DmaCopy16(3, buf, (void *)BG_SCREEN_ADDR(26), sizeof(buf));
     FillDotPattern(buf, 0x80);
     DmaCopy16(3, buf, (void *)BG_SCREEN_ADDR(27), sizeof(buf));
-    {
-        s32 base = BG_CHAR_ADDR(2) + 0xff * TILE_SIZE_8BPP;
-        u32 zero = 0;
-        s32 p;
 
-        for (p = base + TILE_SIZE_8BPP - 4; p >= base; p -= 4)
-            *(u32 *)p = zero;
-    }
+    s32 base = BG_CHAR_ADDR(2) + 0xff * TILE_SIZE_8BPP;
+    /* `zero` is needed: inlined, the instructions are reordered */
+    u32 zero = 0;
+    s32 p;
+
+    for (p = base + TILE_SIZE_8BPP - 4; p >= base; p -= 4)
+        *(u32 *)p = zero;
     bg2Page = 1;
     gUnpackNibbleTilesFunc((u16 *)(anim->CurFrame() + 4), 1);
     bg2PageFlip = 1;

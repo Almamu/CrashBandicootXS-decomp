@@ -20,12 +20,10 @@ extern "C" {
  * broken animation has played it is deleted. */
 void PolarCrate::Update()
 {
-    if (animIndex != 0x12) {
-        if (Yeti::IsTouching(this)) {
-            gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
-            gLevelState->AddBrokenCrate();
-            Break();
-        }
+    if (animIndex != 0x12 && Yeti::IsTouching(this)) {
+        gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
+        gLevelState->AddBrokenCrate();
+        Break();
     }
 
     if (animIndex == 0x12 && animDone != 0) {

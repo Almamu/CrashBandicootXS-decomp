@@ -103,11 +103,14 @@ void PolarAkuAku::Move(s32 posX, s32 posY, s32 posZ)
     s32 cur, d;
 
     if (state == POLAR_AKU_AKU_STATE_FOLLOW) {
+        /* `ox` is needed: inlined, the code is 4 instructions longer */
         s32 ox = SIN_Q8(stateTime * 4) * 24 - 0x1000;
         s32 oy;
 
+        /* `tx` is needed: inlined, the instructions are reordered */
         tx = posX + ox;
         oy = SIN_Q8(stateTime * 2) * 10 - 0x1e00;
+        /* `ty` is needed: inlined, the instructions differ */
         ty = posY + oy;
         tz = posZ - 0x200;
         x += (tx - x) / 16;

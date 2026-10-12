@@ -60,13 +60,12 @@ void Wumpa::StartPayout()
  * the left and hop 2 to the right, by gWumpaHopWidths[mode - 1]. */
 void Wumpa::UpdateHop()
 {
+    /* `widths` is needed: inlined, the code is 5 instructions shorter */
     struct three_words widths = gWumpaHopWidths;
-    s32 dy;
     s32 sn;
 
     sn = gSineTable[phase * 4];
-    dy = FixedMul(sn, 0x3000);
-    y = anchor.y - dy;
+    y = anchor.y - FixedMul(sn, 0x3000);
     sn = gSineTable[phase * 2];
     sn = FixedMul(sn, widths.a[mode - 1]);
     if (mode == PICKUP_MODE_HOP_LEFT)
@@ -110,10 +109,8 @@ Wumpa::Wumpa()
 /* While on the spot, and while the player is in contact: CheckPickup. */
 s32 Wumpa::CheckPlayerContact()
 {
-    if (state == WUMPA_STATE_IDLE) {
-        if (gPlayer->f.flags >> ENTITY_BIT_COLLIDES)
-            CheckPickup();
-    }
+    if (state == WUMPA_STATE_IDLE && gPlayer->f.flags >> ENTITY_BIT_COLLIDES)
+        CheckPickup();
     return 0;
 }
 
