@@ -307,7 +307,7 @@ The first batch (all pointer tables, all byte-exact):
 | `font_tiles_5a4e70.cpp` | `0x085A4E70` | the two HUD fonts' glyph tiles (grit, LZ77) |
 | `gax_tables_5a6100.c` | `0x085A6100` | the GAX2 engine's strings, mixing-rate table, period table and vibrato wave |
 | `eeprom_5a9eec.c` | `0x085A9EEC` | the SDK EEPROM library's id string, chip configs, timeout and address constants |
-| `cutscene_pictures_5a9f70.cpp` | `0x085A9F70` | the 24 cutscene pictures: palette (C) + Mode 4 bitmap (grit) each |
+| `cutscene_pictures_5a9f70.cpp` | `0x085A9F70` | the 24 cutscene pictures: palette + Mode 4 bitmap each, both from one PNG |
 | `menu_graphics_61badc.cpp` | `0x0861BADC` | the menu, title, legal-screen and credits palettes, `bg_package` tiles and maps and logo tiles (LZ77, docs/graphics.md) |
 | `level_select_graphics_6377c0.cpp` | `0x086377C0` | the level-select cursor zoom tiles, the ten level-select pictures and their palettes (LZ77) |
 | `level_bg_tiles_63d4c0.cpp` | `0x0863D4C0` | the six level BG1-3 tile sets (LZ77) |
@@ -717,11 +717,14 @@ are `ARRAY_COUNT()`s.
 A picture is a 256-colour palette followed directly by its LZ77 Mode 4
 bitmap: a slide points at the palette and `ShowSlidePicture` reads the bitmap
 at `+0x200`. The bitmaps are the grit-built `graphics/intro/*_bitmap.png`
-(the Mode 4 row of the table above). The palettes are written out in C
-(`gCutscenePictureNN`), because about half of their entries have bit 15
-set, which the hardware ignores but a PNG palette can't carry. Each
-palette is `aligned(4)`: the 0-3 zero bytes before it in the ROM are the
-alignment after the previous (odd-length) bitmap stream.
+(the Mode 4 row of the table above). Each palette (`gCutscenePictureNN`,
+an uncompressed `u16[256]`) is the PNG's own palette:
+`tools/jasc_pal.py png-to-gba` reads it and `tools/bin2c.py --u16` writes
+the C values. About half of the entries have bit 15 set, which the
+hardware ignores; the PNG keeps it in the red value's lowest bit, as the
+`.pal` files do (docs/graphics.md, "Palettes"). Each palette is
+`aligned(4)`: the 0-3 zero bytes before it in the ROM are the alignment
+after the previous (odd-length) bitmap stream.
 
 ### Library data
 
