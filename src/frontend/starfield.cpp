@@ -54,10 +54,12 @@ Starfield::Starfield()
     s32 gradCount;
     s32 row;
     s32 tileIdx;
+    /* `tileBase` is needed: inlined, the code is 2 instructions shorter */
     u32 tileBase;
     u16 *gradDst;
     u16 dmaFillSrc16;
     u32 dmaFillSrc32;
+    /* `dma2Src` is needed: inlined, the instructions are reordered */
     u32 *dma2Src;
     u32 zero;
 
@@ -106,6 +108,7 @@ Starfield::Starfield()
     row = 0;
     tileBase = tileVramBase;
     do {
+        /* `nextRow` is needed: inlined, the instructions differ */
         s32 nextRow = row + 1;
         u16 *rowPtr = (u16 *)((row << 6) + mapVramBase);
         s32 col = 0x1d;

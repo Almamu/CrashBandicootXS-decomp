@@ -194,6 +194,7 @@ done:
  * selected one blinking (Blink) and marked with the cursor. */
 void ContinuePrompt::Draw()
 {
+    /* `w` is needed: inlined, the code is 1 instruction shorter */
     s32 w;
 
     gOamBuffer->Reset();
@@ -249,6 +250,7 @@ ContinuePrompt::~ContinuePrompt()
 u8 ContinuePrompt::Run()
 {
     ContinuePrompt *self;
+    /* `result` is needed: inlined, the code is 1 instruction shorter */
     u8 result;
 
     mem_free_bytes(0xc0000000);

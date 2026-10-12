@@ -43,6 +43,7 @@ void PowerDialog::Show(s32 title, s32 desc, s32 type)
     gSmallFont->SetTileBase(0);
     IconReserve(&gSmallFont);
 
+    /* `v` is needed: inlined, the code is 1 instruction longer */
     u32 v = gSmallFont->tileCount;
 
     gLargeFont->SetTileBase(v);

@@ -69,7 +69,9 @@ void PauseMenu::InitGemsPage()
         gemIcons[i]->affine = 0x80;
     }
 
+    /* `a` is needed: inlined, the code is 2 instructions shorter */
     a = progress->CountClearGems();
+    /* `b` is needed: inlined, the code is 4 instructions shorter */
     b = progress->CountGems();
     FormatDecimal(a, clearGemCount);
     FormatDecimal(b, gemCount);

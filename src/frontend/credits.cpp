@@ -52,6 +52,7 @@ Credits::Credits()
     gSmallFont->SetTileBase(0);
     ReserveFontVram(gObjVramCursor, gSmallFont);
 
+    /* `base` is needed: inlined, the code is 1 instruction longer */
     u32 base = gSmallFont->tileCount;
 
     gLargeFont->SetTileBase(base);
@@ -111,6 +112,7 @@ void Credits::Loop()
         CreditsPopup *node = popups;
 
         do {
+            /* `next` is needed: inlined, the instructions differ */
             CreditsPopup *next = node->next;
 
             delete node;
@@ -190,6 +192,7 @@ void Credits::UpdateText()
     CreditsPopup *lineStart;
     CreditsPopup *tail;
     s32 smallHeight;
+    /* `largeHeight` is needed: inlined, the code is 3 instructions shorter */
     s32 largeHeight;
     s32 maxHeight;
     s32 penX;
@@ -300,6 +303,7 @@ place:
     if (n != 0) {
         do {
             s32 y = n->y;
+            /* `top` is needed: inlined, the instructions differ */
             s32 top = y + 0xa0;
 
             n->y = top + (maxHeight - (y + n->height)) / 2;

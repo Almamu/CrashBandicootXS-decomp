@@ -114,6 +114,7 @@ done:;
 void PauseMenu::Draw()
 {
     const u8 *label;
+    /* `width` is needed: inlined, the code is 6 instructions longer */
     u32 width;
     u32 x, t;
 

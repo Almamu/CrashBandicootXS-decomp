@@ -106,6 +106,7 @@ void CompanyLogos::Run()
         }
         q = 0x1000000 / scale;
 
+        /* `x`, `y` are needed: inlined, the instructions differ */
         s32 x = -(q * 120) + 0x7800;
         s32 y = -(q * 80) + 0x5000;
         REG_BG2X = x;
@@ -218,6 +219,7 @@ void CompanyLogos::InitVvLogoPieces()
         slots[i].record = gVvLogoPieceSeeds[i].record;
     }
 
+    /* `one` is needed: inlined, the code is 2 instructions shorter */
     u8 one = 1;
     s32 j = 0x11;
     u8 *flags = &sfxPending[0x11];
@@ -293,6 +295,7 @@ void CompanyLogos::UpdateVvLogoPieces()
     if (timer == 0) {
         s32 allDone = 1;
         LogoPiece *slot;
+        /* `end` is needed: inlined, the instructions differ */
         LogoPiece *end;
 
         slot = slots;
@@ -392,6 +395,7 @@ void CompanyLogos::DrawVvLogoPieces()
             pd = 0x1000000 / slot->velB;
             affine = (pa != 0x100 || pd != pa);
             if (affine) {
+                /* `flags` is needed: inlined, the code is 2 instructions longer */
                 u8 *flags = sfxPending;
                 u8 *flag = flags + i;
 
@@ -623,6 +627,7 @@ void LogoActor::Draw()
     if (state == LOGO_ACTOR_STATE_GONE)
         return;
 
+    /* `base` is needed: inlined, the instructions differ */
     s32 base = Q8_TO_INT(animTime);
     s32 idx = animIndex;
     const struct anim_frame_record *table = anims;

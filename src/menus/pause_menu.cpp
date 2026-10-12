@@ -38,8 +38,10 @@ static inline void reserve_icon_vram(u32 n)
 
 s32 PauseMenu::Run()
 {
+    /* `oldCache` is needed: inlined, the code is 6 instructions shorter */
     PaletteCache *oldCache;
     PauseMenu *screen;
+    /* `result` is needed: inlined, the code is 6 instructions shorter */
     s32 result;
 
     mem_free_bytes(MEM_HEAP_BOTH);
@@ -53,6 +55,7 @@ s32 PauseMenu::Run()
     gPaletteCache->SetSource(gSpriteBankTable.paletteCount, gSpriteBankTable.palettes);
     gPaletteCache->ClaimSlot(0xf);
 
+    /* `cache` is needed: inlined, the instructions are reordered */
     PaletteCache *cache = gPaletteCache;
 
     CpuSet(gPauseMenuPalette, cache->slots[15], sizeof(gPauseMenuPalette) / sizeof(u16));
@@ -62,9 +65,7 @@ s32 PauseMenu::Run()
     gSmallFont->SetTileBase(0);
     gLargeFont->SetTileBase(gSmallFont->GetTileCount());
 
-    u32 a = gSmallFont->GetTileCount();
-
-    gObjVramCursor->baseTile = a + gLargeFont->GetTileCount();
+    gObjVramCursor->baseTile = gSmallFont->GetTileCount() + gLargeFont->GetTileCount();
     gObjVramCursor->Reset();
 
     screen = new PauseMenu;
@@ -213,6 +214,7 @@ s32 PauseMenu::Loop()
                 flashTimer--;
             }
         }
+        /* scoped: its own `k` (shared, the code is 14 instructions longer) */
         {
             struct held_pressed_pair k = KEYS;
             if (k.pressed & DPAD_RIGHT) {

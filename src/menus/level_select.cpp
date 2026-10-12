@@ -51,6 +51,7 @@ static inline void LoadMenuPalette(PaletteCache *cache)
 s32 RunLevelSelect(s32 *level)
 {
     LevelSelect *menu;
+    /* `result` is needed: inlined, the instructions are reordered */
     u8 result;
     s32 heaps = 0xC0000000;
 
@@ -67,6 +68,7 @@ s32 RunLevelSelect(s32 *level)
     gSmallFont->SetTileBase(0);
     IconReserve(&gSmallFont);
 
+    /* `v` is needed: inlined, the instructions are reordered */
     u32 v = gSmallFont->tileCount;
 
     gLargeFont->SetTileBase(v);
@@ -302,6 +304,7 @@ void LevelSelect::DrawRecord()
  * the best time. */
 void LevelSelect::DrawTime(u32 time)
 {
+    /* `info` is needed: inlined, the code is 2 instructions longer */
     const struct level_info *info;
 
     sprites[5]->DrawWithOffset(-panelSlideX, trialIconY);
@@ -328,6 +331,7 @@ void LevelSelect::DrawTime(u32 time)
 void LevelSelect::Draw()
 {
     LevelSelectEntry **it;
+    /* `sp` is needed: inlined, the code is 1 instruction shorter */
     UiSprite **sp;
     s32 i;
 
@@ -487,6 +491,7 @@ static inline struct held_pressed_pair KeyHalf(union key_state k)
 s32 LevelSelect::Loop()
 {
     const struct level_info *info;
+    /* `a` is needed: inlined, the instructions differ */
     u32 a;
 
     result = 0;

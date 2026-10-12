@@ -270,6 +270,7 @@ void TitleScreen::DrawLogoPieces()
              * address: the ROM shifts the index before it builds
              * `&landTimer[0]`, which `&landTimer[7 - i]` doesn't. */
             {
+                /* `idx` is needed: inlined, the instructions are reordered */
                 u32 idx = (7 - i) << 2;
                 u32 base = (u32)landTimer;
                 cnt = (s32 *)(base + idx);
@@ -363,6 +364,7 @@ void TitleScreen::DrawLogoPieces()
             s32 r = RandRange_s32(10);
             s32 t = a - 5;
             a = t + (u16)r;
+            /* scoped: its own `r`/`t` (shared, the registers differ) */
             {
                 s32 r = RandRange_s32(10);
                 s32 t = b - 5;
@@ -416,6 +418,7 @@ inline void TitleScreen::HashInput(u32 val)
  * rest. */
 u32 TitleScreen::CheatInput(u32 pressed)
 {
+    /* `input` is needed: inlined, the code is 2 instructions shorter */
     struct held_pressed_pair input = gKeys.half;
 
     if (!(input.held & R_BUTTON)) {
@@ -563,6 +566,7 @@ void TitleScreen::CommitFrame()
 void TitleScreen::DrawMenuItem(const u8 *text, s32 item)
 {
     Font *m;
+    /* `x` is needed: inlined, the code is 1 instruction shorter */
     s32 x;
 
     if (item == selection) {

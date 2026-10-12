@@ -171,6 +171,7 @@ void LanguageSelect::InitGraphics()
     gSmallFont->SetTileBase(zero);
     IconReserveVram(gObjVramCursor, gSmallFont);
 
+    /* `base` is needed: inlined, the instructions are reordered */
     u32 base = gSmallFont->tileCount;
 
     gLargeFont->SetTileBase(base);
