@@ -89,10 +89,9 @@ void Airship::LoadGraphics()
         bg2PageFlip = 1;
         bg2Page = 0;
         self = anim;
-        {
-            s32 t = Q8_TO_INT(self->animTime);
-            DrawMap((u16 *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
-        }
+
+        s32 t = Q8_TO_INT(self->animTime);
+        DrawMap((u16 *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
         REG_DISPCNT |= DISPCNT_BG2_ON;
         UpdateBg2();
         pal = BG_PALETTE(1);
@@ -245,7 +244,6 @@ void Airship::ConvertTiles()
     s32 k;
     s32 row_i;
     u32 *dst;
-    u32 *rows = mapFrames;
     u32 mask = 0xf;
 
     stride = (u32)(mapCols * mapRows + 1) >> 1 << 2;
@@ -254,7 +252,7 @@ void Airship::ConvertTiles()
         heights[k] = x;
         sum += x;
         off += 4;
-        rows[k] = (u32)((u8 *)palette + off);
+        mapFrames[k] = (u32)((u8 *)palette + off);
         off += stride;
         off += heights[k] << 5;
     }
@@ -262,6 +260,7 @@ void Airship::ConvertTiles()
     dst = (u32 *)(((0xFF - sum) << 6) + BG_CHAR_ADDR(2));
     for (row_i = 0; row_i <= 3; row_i++) {
         u8 *src;
+        /* `row`, `hp`, `n` are needed: inlined, the code is 2 instructions longer */
         u8 *row;
         s32 *hp;
         s32 n;

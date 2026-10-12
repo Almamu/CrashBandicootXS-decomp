@@ -118,8 +118,7 @@ void JetpackPlayer::Heal(s32 delta)
 {
     if (gJetpackPlayerInactive == 0) {
         s32 max = gJetpackPlayerMaxHp;
-        s32 add = __divsi3(delta * max, 0x64);
-        s32 v = hp + add;
+        s32 v = hp + __divsi3(delta * max, 0x64);
 
         hp = v;
         if (v > max)

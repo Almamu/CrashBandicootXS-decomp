@@ -101,11 +101,8 @@ void JetpackPlayer::Update()
         depth = 0x1c00;
         z = INT_TO_Q8(GetCellAnimDistance()) + depth;
     }
-    {
-        s32 d = (depth >> 1) & 0x7f80;
 
-        sortKey = d | (((ABS_BRANCHLESS(y) + ABS_BRANCHLESS(x)) >> 11) & 0x7f);
-    }
+    sortKey = ((depth >> 1) & 0x7f80) | (((ABS_BRANCHLESS(y) + ABS_BRANCHLESS(x)) >> 11) & 0x7f);
     stateTime++;
     animTime += animTimer;
     animDone = 0;
@@ -157,21 +154,18 @@ void JetpackPlayer::Draw()
     sx -= halfW;
     sy -= halfH;
     if (sy <= 0x9f && sy + halfH * 2 >= 0 && sx <= 0xef && sx + halfW * 2 >= 0) {
-        u32 attr = CurAttr();
-
-        attr1 |= (sy & 0xff) | ((sx & 0x1ff) << 16) | attr | GetSpriteShapeSizeBits(frame);
+        attr1 |= (sy & 0xff) | ((sx & 0x1ff) << 16) | CurAttr() | GetSpriteShapeSizeBits(frame);
         if (frame != gJetpackPlayerLastFrame) {
             gJetpackPlayerTileBuffer ^= 1;
             gUnpackRleSpriteFrameFunc((u16 *)gJetpackPlayerTiles[gJetpackPlayerTileBuffer],
                                       (struct rle_frame *)frame);
             gJetpackPlayerLastFrame = frame;
         }
-        {
-            /* computed first, into r0 */
-            u32 tile = GET_TILE_NUM(gJetpackPlayerTiles[gJetpackPlayerTileBuffer]);
 
-            QueueSpriteFrameOam(attr1, (palette << 12) | tile, scale);
-        }
+        /* computed first, into r0 */
+        u32 tile = GET_TILE_NUM(gJetpackPlayerTiles[gJetpackPlayerTileBuffer]);
+
+        QueueSpriteFrameOam(attr1, (palette << 12) | tile, scale);
     }
 }
 
@@ -344,7 +338,6 @@ void JetpackPlayer::StateRollRight()
     if (animDone)
         SetState(JETPACK_PLAYER_STATE_FLY, 0);
 }
-
 
 /* The course's end (the category's hook, JetpackReachCourseEnd): unless
  * the player is already inactive, it stops, loses the input and enters

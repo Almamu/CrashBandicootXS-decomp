@@ -50,6 +50,8 @@ void JetpackPlane::Update()
                 s32 rawDy = (player->y - y) * scale;
                 s32 dy = Q12_TO_INT(rawDy);
                 s32 signDx = rawDx >> 31;
+                /* `absDx` is needed (inlined, the instructions are reordered); `absDy`
+                 * stays beside it */
                 s32 absDx = (dx ^ signDx) - signDx;
                 s32 signDy = rawDy >> 31;
                 s32 absDy = (dy ^ signDy) - signDy;
