@@ -18,25 +18,42 @@ See docs/levels.md for the format. In short, a room is
 The editable sources live in data/levels/: levels.json (the two ROM
 regions and which rooms they hold, in ROM order, and the ROM order of the
 level assets) and one directory per
-room with room.json and one `<layer>.map.bin` per BG layer, the layer's
-whole decoded tilemap (little-endian u16 cells, row-major, grit's flat
-`-mLf` map layout), and `collision.png`, the collision layer as an image
-the size of the BG0 picture (one 8x8 block per cell, coloured by
-data/levels/collision_legend.json, see tools/collision_bmp.py). The chunk set, the chunk grid, the asset offsets, the
-entity groups, the parameter offsets and the per-type counts are all
-derived from those again.
+room with room.json, one `<layer>.png` per BG layer, the layer's whole
+picture (8bpp indexed with the room's palette, 8x8 pixels per cell; a
+BG1-3 pixel is `bank * 16 + pixel`, see "BG layer pictures" below), and
+`collision.png`, the collision layer as an image the size of the BG0
+picture (one 8x8 block per cell, coloured by
+data/levels/collision_legend.json, see tools/collision_bmp.py). The
+cells, the chunk set, the chunk grid, the asset offsets, the entity
+groups, the parameter offsets and the per-type counts are all derived
+from those again.
 
     tools/levels.py extract [baserom.gba]     write data/levels/ from the ROM
-    tools/levels.py asset ROOMDIR OUT         build a room's level asset
-    tools/levels.py c REGION OUT              C definitions of one room region
-                                              (REGION = its name in levels.json)
+    tools/levels.py from-png ROOMDIR LAYER OUT
+                                              a BG layer's picture -> its cells
+                                              (little-endian u16, row-major), and
+                                              OUT.d, make's dependency on the
+                                              layer's tile set PNG
+    tools/levels.py to-png ROOMDIR LAYER MAP OUT
+                                              the way back: cells -> picture
+    tools/levels.py asset ROOMDIR OUT [--build DIR]
+                                              build a room's level asset, and
+                                              asset.layout.json next to it (the
+                                              layers' offsets and chunk grids);
+                                              with --build, the BG cells are
+                                              DIR/<room>/<layer>.map.bin (from-png)
+    tools/levels.py c REGION OUT [--build DIR]
+                                              C definitions of one room region
+                                              (REGION = its name in levels.json);
+                                              with --build, from the rooms'
+                                              DIR/<room>/asset.layout.json
     tools/levels.py assets OUT                C definitions of the 41 level assets,
                                               in levels.json's "assets" order; each
                                               #includes the room's asset bytes
                                               (bin2c output, see levels.mk)
-    tools/levels.py render ROOMDIR LAYER OUT  preview PNG of one layer, drawn with
-                                              the room palette and the built tile
-                                              sets (run make first)
+    tools/levels.py render ROOMDIR LAYER OUT  one layer's picture: a BG layer's
+                                              PNG drawn again from its cells, or
+                                              the collision image
     tools/levels.py constants entities OUT    constants/entities.h (ENTITY_*,
                                               ENEMY_KIND_*) from entity_types.json
     tools/levels.py constants crates OUT      constants/crates.h (CRATE_KIND_*)
@@ -313,10 +330,17 @@ def entity_type(room_name, t, by_name):
     return t
 
 
-def load_map(room_dir, layer):
+def load_map(room_dir, lname, layer, build_dir=None):
+    """A layer's cells, row-major. A BG layer's come from its picture
+    (read_layer_png), or with `build_dir` from the map `from-png` decoded it
+    to, `<build_dir>/<room>/<layer>.map.bin` (the build's copy)."""
     path = Path(room_dir) / layer["map"]
     w, h = layer["size_chunks"]
-    if path.suffix in (".png", ".bmp"):
+    if lname != "collision":
+        if build_dir is None:
+            return read_layer_png(path, lname, layer)
+        path = Path(build_dir) / Path(room_dir).name / ("%s.map.bin" % lname)
+    elif path.suffix in (".png", ".bmp"):
         # the collision layer: an image of its cells, 8x8 pixels each, the
         # size of the BG0 picture (tools/collision_bmp.py)
         px = collision_bmp.CELL_PX
@@ -328,7 +352,7 @@ def load_map(room_dir, layer):
         return cells
     data = path.read_bytes()
     if len(data) != w * h * CHUNK_CELLS * 2:
-        sys.exit("%s/%s: %d bytes, expected %d x %d chunks" % (room_dir, layer["map"], len(data), w, h))
+        sys.exit("%s: %d bytes, expected %d x %d chunks" % (path, len(data), w, h))
     return list(struct.unpack("<%dH" % (len(data) // 2), data))
 
 
@@ -336,7 +360,7 @@ def room_layers(room):
     return [(name, room["layers"][name]) for name in LAYERS if name in room["layers"]]
 
 
-def build_asset(room_dir):
+def build_asset(room_dir, build_dir=None):
     """The room's level asset (uncompressed) and each layer's offset in it.
     Sections are in slot order: BG1, BG2, BG3, BG0, collision."""
     room = read_json(Path(room_dir) / "room.json")
@@ -344,7 +368,7 @@ def build_asset(room_dir):
     offsets, grids = {}, {}
     for name, layer in room_layers(room):
         w, h = layer["size_chunks"]
-        chunks, grid = split_chunks(load_map(room_dir, layer), w, h)
+        chunks, grid = split_chunks(load_map(room_dir, name, layer, build_dir), w, h)
         offsets[name] = len(asset)
         grids[name] = grid
         asset += encode_section(chunks, layer.get("pad_overrides"))
@@ -392,11 +416,18 @@ def entity_groups(room):
     return groups
 
 
-def room_c(room_dir):
+def room_c(room_dir, build_dir=None):
+    """The room's C definitions. The layers' asset offsets and chunk grids
+    come from the asset: built here, or with `build_dir` read from the
+    layout `asset` wrote next to it (`<build_dir>/<room>/asset.layout.json`)."""
     room = read_json(Path(room_dir) / "room.json")
     name = room["name"]
     sym = room["symbols"]
-    asset, offsets, grids = build_asset(room_dir)
+    if build_dir is None:
+        _, offsets, grids = build_asset(room_dir)
+    else:
+        layout = read_json(Path(build_dir) / Path(room_dir).name / "asset.layout.json")
+        offsets, grids = layout["offsets"], layout["grids"]
     out = []
     externs = set()
 
@@ -515,14 +546,14 @@ def room_c(room_dir):
     return externs, "\n".join(out) + "\n"
 
 
-def region_c(region_name, out_path):
+def region_c(region_name, out_path, build_dir=None):
     levels = read_json(LEVELS_DIR / "levels.json")
     region = next((r for r in levels["regions"] if r["name"] == region_name), None)
     if region is None:
         sys.exit("levels.json has no region %s" % region_name)
     externs, bodies = set(), []
     for rname in region["rooms"]:
-        e, body = room_c(LEVELS_DIR / rname)
+        e, body = room_c(LEVELS_DIR / rname, build_dir)
         externs |= e
         bodies.append(body)
     text = ["/* Generated by tools/levels.py from data/levels/ - do not edit. */", ""]
@@ -557,68 +588,229 @@ def assets_c(out_path):
 
 
 # ---------------------------------------------------------------------------
-# Preview rendering (not part of the build)
+# BG layer pictures (data/levels/<room>/bg0-3.png)
+#
+# A BG layer is kept as its whole picture: 8x8 pixels per cell, 8bpp
+# indexed with the room's palette. A cell's block is its tile, flipped as
+# the cell says. BG0's tiles are 8bpp, so a pixel is the tile's colour
+# index. A BG1-3 pixel is `bank * 16 + p`, p the 4bpp tile's pixel, for all
+# 64 pixels, the transparent ones (p = 0) too: that keeps the cell's
+# palette bank even in a blank cell, so every cell comes back exactly.
+#
+# Reading a picture back looks each block up among the tile set's tiles
+# under the four flips. Several tiles (or flips of one tile) can draw the
+# same block; the cell is then the lowest tile index, and for that tile the
+# first flip of none, h, v, hv. That reproduces every cell of the ROM's
+# 131 BG layers.
 
-def find_tileset(symbol):
-    """A layer's tile set as a list of 64-pixel tiles (colour indices),
-    read from its source: graphics/level_tilesets/*.png (BG0, 8bpp) or
-    graphics/level_bg_tiles/*.png (BG1-3, 4bpp; drawn in palette banks,
-    so only the low nibble of an index is the pixel)."""
-    from PIL import Image
+# The flips a block is looked up under, in order of preference: (h, v).
+FLIPS = ((0, 0), (1, 0), (0, 1), (1, 1))
+# One 8-pixel row of a block as a little-endian u64 (pixel 0 in the low
+# byte): a block is a tuple of 8 of these, top row first.
+_NIBBLES = 0x0F0F0F0F0F0F0F0F
+_HIGH_NIBBLES = 0xF0F0F0F0F0F0F0F0
+_BYTES = 0x0101010101010101
 
+
+def tileset_png(symbol):
+    """The source PNG of a layer's tile set: graphics/level_tilesets/ (BG0,
+    8bpp) or graphics/level_bg_tiles/ (BG1-3, 4bpp)."""
     named = {n: a for a, n in TILESET_SYMBOLS.items()}
     addr = "%06x" % (named[symbol] & 0xFFFFFF) if symbol in named else symbol[-6:].lower()
-    for pat, mask in (("graphics/level_tilesets/*_%s.png", 0xFF), ("graphics/level_bg_tiles/%s_*.png", 0x0F)):
+    for pat in ("graphics/level_tilesets/*_%s.png", "graphics/level_bg_tiles/%s_*.png"):
         hits = sorted(Path(".").glob(pat % addr))
         if hits:
-            im = Image.open(hits[0])
-            px = im.load()
-            tw = im.size[0] // 8
-            tiles = []
-            for t in range(tw * (im.size[1] // 8)):
-                tx, ty = t % tw * 8, t // tw * 8
-                tiles.append([px[tx + x, ty + y] & mask for y in range(8) for x in range(8)])
-            return tiles
+            return hits[0]
     sys.exit("no tile set source for %s" % symbol)
 
 
-def render(room_dir, lname, out_path):
+def tileset_rows(symbol):
+    """A layer's tile set, read from its source PNG (tileset_png), as a
+    list of tiles, each 8 rows of 8 colour indices (bytes). The BG1-3 sets
+    are drawn in palette banks (graphics/level_bg_tiles/), so only the low
+    nibble of an index is the pixel."""
     from PIL import Image
 
-    room = read_json(Path(room_dir) / "room.json")
-    layer = room["layers"][lname]
-    cells = load_map(room_dir, layer)
-    w, h = layer["size_chunks"]
-    W, H = w * CHUNK_W, h * CHUNK_H
-    if lname == "collision":
-        # the collision image itself: the legend's colours, 8x8 pixels per cell
-        collision_bmp.write_image(out_path, W, cells)
-        return
-    img = Image.new("P", (W * 8, H * 8))
+    path = tileset_png(symbol)
+    im = Image.open(path)
+    raw = im.tobytes()
+    if "level_bg_tiles" in path.parts:
+        raw = raw.translate(bytes(i & 0x0F for i in range(256)))
+    pw = im.size[0]
+    tw = pw // 8
+    tiles = []
+    for t in range(tw * (im.size[1] // 8)):
+        o = t // tw * 8 * pw + t % tw * 8
+        tiles.append([raw[o + y * pw:o + y * pw + 8] for y in range(8)])
+    return tiles
+
+
+def find_tileset(symbol):
+    """A layer's tile set as a list of 64-pixel tiles (colour indices)."""
+    return [list(b"".join(rows)) for rows in tileset_rows(symbol)]
+
+
+class LayerTiles:
+    """A BG layer's tile set, both ways: cell -> its 8x8 block, and block ->
+    cell. bg0: the cells are tile-slot pool ids (tile in bits 0-13, h/v
+    flip in 14-15) of an 8bpp set; else BG screen entries (tile 0-9, h/v
+    flip 10-11, palette bank 12-15) of a 4bpp set."""
+
+    _cache = {}
+
+    @classmethod
+    def get(cls, symbol, bg0):
+        key = (symbol, bg0)
+        if key not in cls._cache:
+            cls._cache[key] = cls(symbol, bg0)
+        return cls._cache[key]
+
+    def __init__(self, symbol, bg0):
+        self.symbol = symbol
+        self.bg0 = bg0
+        # per tile, its block under each flip of FLIPS
+        self.flipped = []
+        for rows in tileset_rows(symbol):
+            plain = tuple(int.from_bytes(r, "little") for r in rows)
+            mirrored = tuple(int.from_bytes(r, "big") for r in rows)  # h flip
+            self.flipped.append((plain, mirrored, plain[::-1], mirrored[::-1]))
+        self.blocks = {}  # cell value -> block
+        self.cells = {}  # block -> cell value; for BG1-3 filled per bank as met
+        self.base = {}  # BG1-3: bank-0 block -> cell value without the bank
+        table = self.cells if bg0 else self.base
+        shift = 14 if bg0 else 10
+        for t, blocks in enumerate(self.flipped):
+            for (hf, vf), block in zip(FLIPS, blocks):
+                table.setdefault(block, t | hf << shift | vf << shift + 1)
+
+    def block(self, v):
+        """The 8x8 block a cell draws, as 8 u64 rows (None for a tile past
+        the end of the set)."""
+        b = self.blocks.get(v)
+        if b is None:
+            if self.bg0:
+                t, flip, bank = v & 0x3FFF, v >> 14 & 3, 0
+            else:
+                t, flip, bank = v & 0x3FF, v >> 10 & 3, v >> 12
+            if t >= len(self.flipped):
+                return None
+            b = self.flipped[t][FLIPS.index((flip & 1, flip >> 1))]
+            if bank:
+                b = tuple(r | bank * 16 * _BYTES for r in b)
+            self.blocks[v] = b
+        return b
+
+    def cell(self, block):
+        """The cell that draws `block`: (value, None), or (None, why not)."""
+        v = self.cells.get(block)
+        if v is not None:
+            return v, None
+        if self.bg0:
+            return None, "isn't a tile of %s under any flip" % self.symbol
+        bank = block[0] >> 4 & 0xF
+        if any(r & _HIGH_NIBBLES != bank * 16 * _BYTES for r in block):
+            banks = sorted({p >> 4 for r in block for p in r.to_bytes(8, "little")})
+            return None, ("mixes palette banks %s: a BG1-3 cell draws all 64 pixels from one bank "
+                          "(indices bank * 16 to bank * 16 + 15)" % ", ".join(map(str, banks)))
+        v = self.base.get(tuple(r & _NIBBLES for r in block))
+        if v is None:
+            return None, ("isn't a tile of %s under any flip (in palette bank %d, indices %d-%d)"
+                          % (self.symbol, bank, bank * 16, bank * 16 + 15))
+        v |= bank << 12
+        self.cells[block] = v
+        return v, None
+
+
+def layer_tiles(lname, layer):
+    return LayerTiles.get(layer["tileset"], lname == "bg0")
+
+
+def room_palette_rgb(room):
     pal = []
     for c in room["palette"]:
         v = int(c, 16)
         pal += [(v & 31) << 3, (v >> 5 & 31) << 3, (v >> 10 & 31) << 3]
-    tiles = find_tileset(layer["tileset"])
-    px = img.load()
+    return pal
+
+
+def write_layer_png(path, room, lname, cells):
+    """A BG layer's cells as its picture (see above), with the room's palette."""
+    from PIL import Image
+
+    layer = room["layers"][lname]
+    tiles = layer_tiles(lname, layer)
+    w, h = layer["size_chunks"]
+    W = w * CHUNK_W
+    if len(cells) != W * h * CHUNK_H:
+        sys.exit("%s: %d cells, expected %d x %d chunks" % (path, len(cells), w, h))
+    pack = struct.Struct("<%dQ" % W).pack
+    out = []
+    for y in range(h * CHUNK_H):
+        blocks = []
+        for x, v in enumerate(cells[y * W:(y + 1) * W]):
+            b = tiles.block(v)
+            if b is None:
+                sys.exit("%s: cell (%d, %d) is %#06x, a tile past the end of %s"
+                         % (path, x, y, v, layer["tileset"]))
+            blocks.append(b)
+        out += [pack(*row) for row in zip(*blocks)]
+    img = Image.frombytes("P", (W * 8, h * CHUNK_H * 8), b"".join(out))
+    img.putpalette(room_palette_rgb(room))
+    img.save(path, optimize=True)
+
+
+def _pixels(x, y):
+    return "(pixels %d-%d, %d-%d)" % (x * 8, x * 8 + 7, y * 8, y * 8 + 7)
+
+
+def read_layer_png(path, lname, layer):
+    """A BG layer's picture -> its cells (row-major)."""
+    from PIL import Image
+
+    tiles = layer_tiles(lname, layer)
+    w, h = layer["size_chunks"]
+    W, H = w * CHUNK_W, h * CHUNK_H
+    img = Image.open(path)
+    if img.mode != "P":
+        sys.exit("%s: an image of mode %s; a BG layer is an 8bpp indexed PNG (its pixels are palette "
+                 "indices, see docs/levels.md)" % (path, img.mode))
+    if img.size != (W * 8, H * 8):
+        sys.exit("%s: %dx%d pixels, expected %dx%d (%d x %d chunks of 128x64 pixels)"
+                 % ((path,) + img.size + (W * 8, H * 8, w, h)))
+    raw = img.tobytes()
+    unpack = struct.Struct("<%dQ" % W).unpack_from
+    pw = W * 8
+    lookup = tiles.cells.get
+    cells = []
+    errors = []
     for y in range(H):
-        for x in range(W):
-            v = cells[y * W + x]
-            if lname == "bg0":  # tile-slot pool entry: 14-bit 8bpp tile, flips in bits 14-15
-                t, hf, vf, bank = v & 0x3FFF, v >> 14 & 1, v >> 15 & 1, None
-            else:  # 4bpp BG screen entry
-                t, hf, vf, bank = v & 0x3FF, v >> 10 & 1, v >> 11 & 1, v >> 12
-            if t >= len(tiles):
-                continue
-            data = tiles[t]
-            for yy in range(8):
-                for xx in range(8):
-                    c = data[yy * 8 + xx]
-                    if bank is not None and c:
-                        c += bank * 16
-                    px[x * 8 + (7 - xx if hf else xx), y * 8 + (7 - yy if vf else yy)] = c
-    img.putpalette(pal)
-    img.save(out_path)
+        blocks = list(zip(*[unpack(raw, (y * 8 + r) * pw) for r in range(8)]))
+        row = list(map(lookup, blocks))
+        if None in row:
+            for x, v in enumerate(row):
+                if v is None:
+                    v, why = tiles.cell(blocks[x])
+                    if why:
+                        errors.append("%s: cell (%d, %d) %s %s" % (path, x, y, _pixels(x, y), why))
+                    row[x] = v
+        cells += row
+    if errors:
+        more = len(errors) - 20
+        sys.exit("\n".join(errors[:20] + (["... and %d more cells" % more] if more > 0 else [])))
+    return cells
+
+
+def render(room_dir, lname, out_path):
+    """A layer's picture: the BG layer's PNG drawn again from its cells, or
+    the collision image."""
+    room = read_json(Path(room_dir) / "room.json")
+    layer = room["layers"][lname]
+    cells = load_map(room_dir, lname, layer)
+    if lname == "collision":
+        # the collision image itself: the legend's colours, 8x8 pixels per cell
+        collision_bmp.write_image(out_path, layer["size_chunks"][0] * CHUNK_W, cells)
+        return
+    write_layer_png(out_path, room, lname, cells)
 
 
 # ---------------------------------------------------------------------------
@@ -773,12 +965,7 @@ def extract(rom_path):
                               (gy * CHUNK_H + y) * width + gx * CHUNK_W + CHUNK_W] = c[y * CHUNK_W:(y + 1) * CHUNK_W]
             re_chunks, re_grid = split_chunks(cells, cw, ch)
             assert re_grid == grid and [list(c) for c in re_chunks] == chunks, name + " " + lname
-            if lname == "collision":
-                fname = "collision.png"
-                collision_bmp.write_image(room_dir / fname, width, cells)
-            else:
-                fname = "%s.map.bin" % lname
-                (room_dir / fname).write_bytes(struct.pack("<%dH" % len(cells), *cells))
+            fname = "%s.png" % lname
             layer = {
                 "map": fname,
                 "size_chunks": [cw, ch],
@@ -791,13 +978,18 @@ def extract(rom_path):
                 "grid_symbol": pre + LAYER_SYMBOLS[lname] + "Grid",
             }
             room["layers"][lname] = layer
+            if lname == "collision":
+                collision_bmp.write_image(room_dir / fname, width, cells)
+            else:
+                write_layer_png(room_dir / fname, room, lname, cells)
         room["symbols"]["layers"] = pre + "Layers"
         assert sec_starts == sorted(sec_starts) and sec_starts[0] == 0
         # the pad bytes the encoder model can't predict (encoder heap garbage)
         for i, (lname, layer) in enumerate(room_layers(room)):
             off = sec_starts[i]
             end = sec_starts[i + 1] if i + 1 < len(sec_starts) else len(asset)
-            chunks, _ = split_chunks(load_map(room_dir, layer), *layer["size_chunks"])
+            # read back from the written sources, which checks their round trip
+            chunks, _ = split_chunks(load_map(room_dir, lname, layer), *layer["size_chunks"])
             want = asset[off:end]
             got = encode_section(chunks)
             if got != want:
@@ -985,15 +1177,38 @@ def main():
         print(__doc__)
         return
     cmd = args[0]
+    build_dir = None
+    if "--build" in args:
+        i = args.index("--build")
+        build_dir = args[i + 1]
+        del args[i:i + 2]
     if cmd == "extract":
         extract(args[1] if len(args) > 1 else "baserom.gba")
     elif cmd == "asset":
-        asset, _, _ = build_asset(args[1])
+        asset, offsets, grids = build_asset(args[1], build_dir)
         Path(args[2]).write_bytes(asset)
+        layout = Path(args[2]).with_name("asset.layout.json")
+        layout.write_text(json.dumps({"offsets": offsets, "grids": grids}) + "\n")
     elif cmd == "c":
-        region_c(args[1], args[2])
+        region_c(args[1], args[2], build_dir)
     elif cmd == "assets":
         assets_c(args[1])
+    elif cmd in ("from-png", "to-png"):
+        room_dir, lname = args[1], args[2]
+        room = read_json(Path(room_dir) / "room.json")
+        layer = room["layers"].get(lname)
+        if lname not in ("bg0", "bg1", "bg2", "bg3") or layer is None:
+            sys.exit("%s has no BG layer %s" % (room_dir, lname))
+        if cmd == "to-png":
+            data = Path(args[3]).read_bytes()
+            write_layer_png(args[4], room, lname, list(struct.unpack("<%dH" % (len(data) // 2), data)))
+            return
+        cells = read_layer_png(Path(room_dir) / layer["map"], lname, layer)
+        out = Path(args[3])
+        out.write_bytes(struct.pack("<%dH" % len(cells), *cells))
+        # make's dependencies on the picture's tile set
+        tiles = tileset_png(layer["tileset"]).as_posix()
+        Path(str(out) + ".d").write_text("%s: %s\n%s:\n" % (out.as_posix(), tiles, tiles))
     elif cmd == "render":
         render(args[1], args[2], args[3])
     elif cmd == "constants":

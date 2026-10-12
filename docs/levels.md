@@ -290,31 +290,39 @@ each region in ROM order.
   room's objects: `gRoomNN` and what the object is (`gRoom17Desc`,
   `gRoom17Palette`, `gRoom17Bg1Grid`, `gRoom17Asset`, ...; the tile sets
   keep their own names).
-- `roomNN_xxxxxx/<layer>.map.bin` (BG0-3): the layer's decoded tilemap,
-  `gridWidth * 16` by `gridHeight * 8` little-endian `u16` cells,
-  row-major (grit's flat `-mLf` map layout). These are the cells above,
-  not ROM bytes: the ROM only has the chunk streams.
+- `roomNN_xxxxxx/<layer>.png` (`bg0`-`bg3`): the layer's whole picture,
+  8bpp indexed with the room's palette, 8x8 pixels per cell,
+  `gridWidth * 128` by `gridHeight * 64` pixels (see "BG layers"). The
+  build decodes it back to the cells above, which aren't ROM bytes
+  either: the ROM only has the chunk streams.
 - `roomNN_xxxxxx/collision.png`: the collision layer as an image the
   size of the BG0 picture, each cell an 8x8 block, `gridWidth * 128` by
   `gridHeight * 64` pixels, coloured by the legend below (see "Collision
   layers").
 
-Everything else is derived again: the chunk set and grid (from the map),
+Everything else is derived again: the cells (from the pictures), the
+chunk set and grid,
 the asset and the layers' `assetOffset`s, the entity groups, the counts,
 the parameter offsets (`LEVEL_PARAM_OFFSET`, an `offsetof` into the
 room's generated parameter struct).
 
 `levels.mk` runs:
 
-- `tools/levels.py asset data/levels/<room> build/.../data/levels/<room>/asset.bin`
-  per room; gbagfx compresses the 34 packed ones, and `tools/bin2c.py`
-  turns each asset into C initializer bytes (`asset.bin.inc`, or
-  `asset.bin.lz.inc` trimmed to the LZ77 stream);
+- `tools/levels.py from-png data/levels/<room> <layer> build/.../data/levels/<room>/<layer>.map.bin`
+  per BG layer: the picture's cells (little-endian `u16`, row-major), and
+  a `.d` file naming the layer's tile set PNG, so an edited tile set
+  decodes only the layers drawn with it;
+- `tools/levels.py asset data/levels/<room> build/.../data/levels/<room>/asset.bin --build build/.../data/levels`
+  per room, from those cells and `collision.png`; it also writes
+  `asset.layout.json`, the layers' asset offsets and chunk grids, which
+  the room data takes. gbagfx compresses the 34 packed assets, and
+  `tools/bin2c.py` turns each asset into C initializer bytes
+  (`asset.bin.inc`, or `asset.bin.lz.inc` trimmed to the LZ77 stream);
 - `tools/levels.py assets build/.../data/levels/level_assets_64f830.inc`:
   the 41 asset definitions, in the ROM order of `levels.json`'s
   `"assets"` list, `#include`d by `src/data/level_assets_64f830.cpp`;
-- `tools/levels.py c <region> build/.../data/levels/<region>.inc` per
-  region, `#include`d by the two `src/data/level_rooms_*.c` files;
+- `tools/levels.py c <region> build/.../data/levels/<region>.inc --build build/.../data/levels`
+  per region, `#include`d by the two `src/data/level_rooms_*.cpp` files;
 - `tools/levels.py constants entities|crates build/include/constants/<name>.h`:
   the constants headers named in this data, `constants/entities.h`
   (`ENTITY_*`, `ENEMY_KIND_*`) and `constants/crates.h` (`CRATE_KIND_*`).
@@ -322,11 +330,87 @@ room's generated parameter struct).
   them, so code includes them like the hand-written ones. To rename a
   type or a kind, edit the JSON, not the header.
 
+A layer edit rebuilds only its room's map, asset and the room data.
+
 `tools/levels.py extract` writes `data/levels/` from `baserom.gba` (and
-checks that every asset re-encodes exactly). `tools/levels.py render
-data/levels/<room> <layer> out.png` draws a layer with the room's palette
-and its tile set (from `graphics/`), to see what a map holds; for the
-collision layer it writes the collision image again.
+checks that every asset re-encodes exactly from the written sources);
+extracting again gives the same files byte for byte. `tools/levels.py
+render data/levels/<room> <layer> out.png` draws a layer's picture again
+from its cells (for the collision layer, the collision image).
+
+### BG layers
+
+Each BG layer is `<layer>.png`, its whole picture: the chunk grid, with
+every cell drawn as its tile, flipped as the cell says, 8x8 pixels per
+cell. It is 8bpp indexed, and its palette is the room's 256-colour BG
+palette from `room.json`. Cell `(cx, cy)` is pixels `cx * 8` to
+`cx * 8 + 7` across and `cy * 8` to `cy * 8 + 7` down, and the image is
+`gridWidth * 128` by `gridHeight * 64` pixels. BG0's picture is the same
+size as `collision.png` and lines up with it (see "Collision layers").
+The largest is room 27's BG0, 10240 x 1600 pixels.
+
+**Drawing.** The pixels are palette indices:
+
+- BG0's tile sets are 8bpp (`graphics/level_tilesets/`), so a pixel is
+  the tile's own colour index.
+- BG1-3's tile sets are 4bpp (`graphics/level_bg_tiles/`), and a cell
+  picks one 16-colour bank (cell bits 12-15). A pixel is
+  `bank * 16 + p`, `p` the tile's 4-bit pixel, for all 64 pixels of the
+  cell. That includes the transparent ones (`p = 0`), which are index
+  `bank * 16`, not 0: that is how the picture keeps a cell's bank even
+  where the cell is blank, so every cell can be read back exactly. The
+  cost is that a transparent area shows the colour at entry `bank * 16`
+  of the room palette. That colour is never drawn in game; the layers
+  behind show through there.
+
+**Reading a picture back** (`from-png`, `read_layer_png`). Each 8x8 block
+is looked up among the tile set's tiles under the four flips: none, h,
+v, hv. For BG1-3, the block's bank is the high nibble of its pixels, and
+the low nibbles are matched against the tiles. Several tiles, or
+several flips of one tile, can draw the same block (a blank tile, a
+symmetric one, a duplicate in the set). The cell is then the **lowest
+tile index**, and for that tile the first flip in the order **none, h,
+v, hv**. That rule gives back every one of the ROM's 4,356,096 BG cells
+(131 layers), so the ROM still matches. The lookup is a table from block
+to cell, built once per tile set, so all 131 layers decode in about 2
+seconds.
+
+**Editing.** Open the PNG in an editor that keeps indexed images and
+their palette as they are (Aseprite, GIMP in indexed mode, ...). Paint
+whole 8x8 blocks on the 8-pixel grid, copied from elsewhere in the layer
+or from the tile set, so that each block is a tile of the layer's set
+under some flip:
+
+- Only tiles that are already in the tile set can be used. A new tile
+  means editing the tile set PNG (`graphics/level_tilesets/` for BG0,
+  `graphics/level_bg_tiles/` for BG1-3, see
+  [graphics.md, "Level BG tile sets"](./graphics.md#level-bg-tile-sets))
+  first.
+- On BG1-3, all 64 pixels of a block must come from one bank. To move a
+  cell to another bank, shift all of its indices, the transparent ones
+  too, by a multiple of 16.
+- Don't let the editor reduce, sort or merge the palette (several
+  entries of a room palette have the same colour): the indices are
+  what is read, not the colours. A true-colour image is rejected.
+- A tile set is a dictionary for its layers: changing an existing tile
+  changes how the pictures that use it decode. To change a tile, decode
+  the layers that use it first (`tools/levels.py from-png data/levels/<room>
+  <layer> <layer>.map.bin`), edit the tile set, then draw them again
+  (`tools/levels.py to-png data/levels/<room> <layer> <layer>.map.bin
+  data/levels/<room>/<layer>.png`).
+
+These are errors, and each message names the PNG, the cell and its pixels:
+
+- a block that isn't a tile of the set under any flip (for BG1-3, in the
+  block's bank: `... cell (12, 3) (pixels 96-103, 24-31) isn't a tile of
+  gTempleBgTiles under any flip (in palette bank 2, indices 32-47)`);
+- a BG1-3 block that mixes palette banks (`... mixes palette banks 2,
+  3: a BG1-3 cell draws all 64 pixels from one bank`);
+- an image that isn't the layer's size (`... 2040x320 pixels, expected
+  2048x320 (16 x 5 chunks of 128x64 pixels)`), or isn't indexed.
+
+The make rule that failed names the layer too; at most 20 cells are
+listed per layer.
 
 ### Collision layers
 
@@ -340,7 +424,7 @@ colour:
   to `cy * 8 + 7` down;
 - the image is `gridWidth * 16 * 8` by `gridHeight * 8 * 8` pixels (the
   whole chunk grid, `gridWidth * 128` by `gridHeight * 64`), the same as
-  the BG0 picture `tools/levels.py render data/levels/<room> bg0` draws.
+  the BG0 picture `bg0.png`.
   The collision and BG0 layers always have the same grid. For example,
   room 00 is 16 x 5 chunks, 256 x 40 cells, and both its BG0 picture and
   `collision.png` are 2048 x 320 pixels;
@@ -376,14 +460,13 @@ byte for byte.
 
 To edit the collision against the level picture:
 
-1. render the BG0 picture, `tools/levels.py render data/levels/<room> bg0
-   bg0.png`;
-2. open `bg0.png` in an editor with layers (GIMP, Krita, Aseprite, ...)
-   and add `collision.png` as a layer above it at offset 0, 0: the two are
-   the same size, so they line up pixel for pixel;
-3. lower the collision layer's opacity (about 50%) to see the level
+1. open the BG0 picture, `data/levels/<room>/bg0.png`, in an editor with
+   layers (GIMP, Krita, Aseprite, ...) and add `collision.png` as a layer
+   above it at offset 0, 0: the two are the same size, so they line up
+   pixel for pixel;
+2. lower the collision layer's opacity (about 50%) to see the level
    through it, and set a grid of 8x8 pixels to paint on whole cells;
-4. paint on the collision layer only, with the pencil (no antialiasing)
+3. paint on the collision layer only, with the pencil (no antialiasing)
    and the legend's colours, then export that layer alone as
    `collision.png`, at full opacity.
 

@@ -45,9 +45,11 @@ ROM.
 
 ### GBA Mode 4 bitmaps
 
-Full-screen 240x160 linear (non-tiled) framebuffers needed a dedicated tool,
-`tools/linear_gfx.py` — `gbagfx` always arranges pixel data into 8x8 tiles,
-which is the wrong layout for these.
+Full-screen 240x160 linear (non-tiled) framebuffers are scanlines, not
+8x8 tiles, which `gbagfx` always produces. grit's bitmap mode (`-gb -gB8`)
+keeps scanline order, so the build converts them with grit (see "Build
+pipeline"). The dedicated tool they once had, `tools/linear_gfx.py`, was
+unused once grit took over, and is gone.
 
 ### Picking a legible tile width
 
@@ -988,8 +990,7 @@ standard swizzled 4bpp tile data, exactly like every other 4bpp asset in
 this project, just interleaved with non-pixel header bytes and (within a
 single record) sometimes varying frame sizes, which is what stops plain
 `gbagfx` from handling them directly. A new tool, `tools/framed_gfx.py`
-(same idea as the existing `linear_gfx.py` for Mode 4 bitmaps - bypass
-`gbagfx`, do the pixel conversion directly), strips the per-frame headers
+(bypass `gbagfx`, do the pixel conversion directly), strips the per-frame headers
 and lays every frame out on a grid (cells sized to the record's largest
 frame, each frame's real pixels anchored top-left, unused cell space
 filled with palette index 0 - already the transparent/background index
@@ -1318,11 +1319,45 @@ The build (`graphics.mk`):
 - gbagfx compresses, and `tools/bin2c.py --lz` writes the C bytes of
   `src/data/level_bg_tiles_63d4c0.cpp`.
 
-`tools/levels.py render` reads these PNGs, masking the index to 4 bits.
+`tools/levels.py` reads these PNGs, masking the index to 4 bits, to
+draw and decode the level BG layer pictures (below).
 
 When you edit a set, keep each tile's pixels within one bank. Only the
 low nibble is built, so colouring a tile from another bank changes
 nothing in game; the map's bank decides the colours there.
+
+The layer pictures are decoded against these sets (and BG0's against
+`graphics/level_tilesets/`), so changing a tile that a layer uses makes
+that layer's picture fail to build until it is drawn again. Decode the
+layers first and draw them again after the edit (levels.md, "BG
+layers"). Adding tiles at the end of a set leaves the layers as they are
+(update the set's `LEVEL_BG_TILE_BYTES_*` / `TILE_BYTES_*` in
+`graphics.mk`).
+
+### Level BG layer pictures
+
+The 131 BG layers of the 41 rooms are `data/levels/<room>/bg0-3.png`, each
+the layer's whole picture (the chunk grid, 8x8 pixels per cell), 8bpp
+indexed with the room's BG palette. They used to be raw `u16` maps
+(`<layer>.map.bin`). [levels.md, "BG layers"](./levels.md#bg-layers) has
+the details. In short:
+
+- a BG0 pixel is its 8bpp tile's colour index;
+- a BG1-3 pixel is `bank * 16 + pixel`, for the transparent pixels too
+  (index `bank * 16`), so a blank cell keeps its bank and every cell
+  reads back exactly. Transparent areas show the colour at entry
+  `bank * 16` of the room palette;
+- the build (`levels.mk`, `tools/levels.py from-png`) looks each 8x8 block
+  up in the layer's tile set under the four flips and takes the lowest
+  tile index, then the first flip of none, h, v, hv. That reproduces all
+  4,356,096 cells of the ROM;
+- a block that isn't a tile of the set, or a BG1-3 block that mixes
+  banks, fails the build with the layer, the cell and its pixels;
+- only tiles already in the set can be used: a new tile goes into the
+  tile set PNG first.
+
+No sidecar file is needed. The pictures take 12.3 MB against the
+8.7 MB of the maps they replace.
 
 ### Indexed tile PNGs
 
