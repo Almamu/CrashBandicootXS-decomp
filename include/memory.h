@@ -40,12 +40,12 @@ extern int iwram_end;
 
 // TODO: THIS SHOULD NOT BE PUBLIC, BUT UNTIL THE WHOLE MEMORY.C CONTENT IS REVERSED
 // WE NEED TO LEAVE IT LIKE TI IS, BUT THE INLINED FUNCTION SHOULD BE USED INSTEAD OF THIS
-s32 mem_free_bytes(s32 arg0);
+s32 mem_free_bytes(s32 heaps);
 void *mem_alloc(u32 requestedSize, u32 flags);
 void mem_free(void *address);
 
-s32 mem_heap_init(u32 arg0);
-void mem_collect(s32 arg0);
+s32 mem_heap_init(u32 reservedBytes);
+void mem_collect(s32 heaps);
 void mem_heap_shutdown(void);
 
 /* The C++ new/delete operators: EWRAM allocations through mem_alloc/

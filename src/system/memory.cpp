@@ -23,11 +23,13 @@ static inline void mem_heap_init_section(struct mem_heap_header *first, struct m
     block->size = length - sizeof(struct mem_heap_header);
 }
 
-s32 mem_heap_init(u32 arg0)
+/* `reservedBytes`: the bytes at the top of IWRAM, below `iwram_end`, that
+ * the IWRAM heap leaves out (main passes 0x400). */
+s32 mem_heap_init(u32 reservedBytes)
 {
     u32 start = (u32)&mem_iwram_heap;
     u32 end = (u32)&iwram_end;
-    u32 iwram_size_left = end - start - arg0;
+    u32 iwram_size_left = end - start - reservedBytes;
 
     // zero-out the regions we're going to use
     DmaClear32(3, &mem_iwram_heap, iwram_size_left);
@@ -113,13 +115,13 @@ static inline void mem_collect_heap(struct mem_heap_header *start)
     } while (current != heapblock);
 }
 
-void mem_collect(s32 arg0)
+void mem_collect(s32 heaps)
 {
-    if (MEM_HEAP_IWRAM & arg0) {
+    if (MEM_HEAP_IWRAM & heaps) {
         mem_collect_heap(&mem_iwram_heap_pointer->base);
     }
 
-    if (MEM_HEAP_EWRAM & arg0) {
+    if (MEM_HEAP_EWRAM & heaps) {
         mem_collect_heap(&mem_ewram_heap_pointer->base);
     }
 }
@@ -169,15 +171,15 @@ static inline u32 mem_free_bytes_for_heap(struct mem_heap *heap)
     return result;
 }
 
-s32 mem_free_bytes(s32 arg0)
+s32 mem_free_bytes(s32 heaps)
 {
     u32 free_bytes = 0;
 
-    if (MEM_HEAP_IWRAM & arg0) {
+    if (MEM_HEAP_IWRAM & heaps) {
         free_bytes += mem_free_bytes_for_heap(mem_iwram_heap_pointer);
     }
 
-    if (MEM_HEAP_EWRAM & arg0) {
+    if (MEM_HEAP_EWRAM & heaps) {
         free_bytes += mem_free_bytes_for_heap(mem_ewram_heap_pointer);
     }
 
