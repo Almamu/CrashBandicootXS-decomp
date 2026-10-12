@@ -255,13 +255,22 @@ $(BG_PACKAGE_DIR)/%.img.bin $(BG_PACKAGE_DIR)/%.map.bin: $(BG_PACKAGE_DIR)/%_gri
 $(BG_PACKAGE_DIR)/62d0cc_universal_logo.img.bin $(BG_PACKAGE_DIR)/62d0cc_universal_logo.map.bin: graphics/bg_package/62d0cc_universal_logo_high.json
 
 # Raw (uncompressed) tile pools of gLanguageSelectPalette3, see docs/data.md:
-# the 56 sprite banks and the 125 fixed OBJ tiles (4bpp, graphics/sprites/)
+# the 56 sprite banks (4bpp, graphics/sprites/)
 # and the five tag-0x00 level BG tile sets (8bpp, graphics/level_tilesets/).
 # grit does the layout, tools/bin2c.py the initializer bytes. The PNGs are
 # padded to whole rows of tiles with blank tiles (tools/tile_pools.py, which
 # also extracts them), so each one's real byte count is listed below, and
 # bin2c --size trims the (all-zero) padding again.
 TILE_POOL_4BPP_PNGS := $(wildcard graphics/sprites/*.png)
+
+# The 125 OBJ palettes (gObjPalettes): one JASC file per paletteId,
+# graphics/sprites/palettes/NNN.pal, back to back in index order.
+OBJ_PALETTE_PALS := $(sort $(wildcard graphics/sprites/palettes/*.pal))
+$(GRAPHICS_BUILDDIR)/sprites/obj_palettes.bin: $(patsubst graphics/%.pal,$(GRAPHICS_BUILDDIR)/%.gbapal,$(OBJ_PALETTE_PALS))
+	@mkdir -p $(dir $@)
+	cat $^ > $@
+$(GRAPHICS_BUILDDIR)/sprites/obj_palettes.bin.inc: $(GRAPHICS_BUILDDIR)/sprites/obj_palettes.bin tools/bin2c.py
+	python3 tools/bin2c.py $< $@
 TILE_POOL_8BPP_PNGS := $(wildcard graphics/level_tilesets/*.png)
 
 TILE_BYTES_bank00_2bf120 := 0x3cfe0
@@ -320,7 +329,6 @@ TILE_BYTES_bank52_41cec0 := 0x200
 TILE_BYTES_bank53_41d0c0 := 0x103c0
 TILE_BYTES_bank54_42d480 := 0x3dd20
 TILE_BYTES_bank55_46b1a0 := 0x394c0
-TILE_BYTES_tile_pool_4a4660 := 0xfa0
 TILE_BYTES_tileset1_17e7ac := 0x67b80
 TILE_BYTES_tileset2_1e6330 := 0x1aac0
 TILE_BYTES_tileset3_200df4 := 0x4a840
@@ -366,7 +374,7 @@ $(eval $(call BOSS_PICTURE_RULE,169ce8,169CE8,16))
 $(C_BUILDDIR)/data/boss_pictures_167ad4.o: $(foreach p,167cd4 169ce8,$(BOSS_PICTURE_DIR)/$(p).inc $(BOSS_PICTURE_DIR)/$(p).h)
 $(C_BUILDDIR)/data/level_tilesets_17e78c.o: $(call tile_pool_incs,$(filter graphics/level_tilesets/tileset1_% graphics/level_tilesets/tileset2_% graphics/level_tilesets/tileset3_%,$(TILE_POOL_8BPP_PNGS)))
 $(C_BUILDDIR)/data/level_tilesets_270f08.o: $(call tile_pool_incs,$(filter graphics/level_tilesets/tileset4_% graphics/level_tilesets/tileset5_%,$(TILE_POOL_8BPP_PNGS)))
-$(C_BUILDDIR)/data/sprite_tiles_2bf120.o: $(call tile_pool_incs,$(TILE_POOL_4BPP_PNGS))
+$(C_BUILDDIR)/data/sprite_tiles_2bf120.o: $(call tile_pool_incs,$(TILE_POOL_4BPP_PNGS)) $(GRAPHICS_BUILDDIR)/sprites/obj_palettes.bin.inc
 
 # Zero-run-compressed OBJ frame sets (the old "rotation strips", see
 # docs/data.md "Compressed sprite frames"): one PNG per set, the frames

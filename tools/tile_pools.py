@@ -9,8 +9,10 @@ rebuilds with grit (see docs/data.md, "Resources (grit-style)"):
   (frame.packed & 0xFFFFFF), and the banks own disjoint, back-to-back ranges
   in bank order (banks 42 and 47 also reuse one frame of bank 0's). A bank's
   range runs from its lowest own frame offset to its highest frame end.
-- graphics/sprites/tile_pool_4a4660.png: the 125 fixed 4bpp tiles
-  (header +0x08, the RunPauseMenu tile-asset cache).
+- graphics/sprites/palettes/NNN.pal: the 125 16-colour OBJ palettes
+  (gObjPalettes, 0x084A4660, the header's +0x08/+0x0E), one JASC file per
+  palette, NNN being the paletteId the animations give
+  (sprite_anim.paletteId). graphics.mk builds them with tools/jasc_pal.py.
 - graphics/level_tilesets/tilesetN_<addr>.png: the five tag-0x00 raw level
   BG tile sets (8bpp); the 4-byte {size << 8} header is written by the C.
 
@@ -18,15 +20,16 @@ Each PNG is `width` tiles wide and padded to whole rows with blank (index 0)
 tiles; graphics.mk passes the real byte count to `tools/bin2c.py --size`,
 which trims that padding again. Sprite banks are drawn as wide as their most
 common OBJ piece (by tile area, at least 4 tiles), so with the 1D OBJ tile
-mapping those pieces read correctly. Their palette is a grayscale placeholder:
-the palette is picked per actor at run time (OAM attribute 2), nothing ties a
-bank to one. The tile sets carry the 256-colour BG palette of the first room
+mapping those pieces read correctly. Their palette is a grayscale placeholder,
+although each animation names its palette (sprite_anim.paletteId). The tile sets carry the 256-colour BG palette of the first room
 (in ROM order) whose layers use them, found through the room records.
 
     tools/tile_pools.py [baserom.gba]     writes the PNGs, prints the sizes
 """
 import struct
 import sys
+
+import jasc_pal
 from collections import Counter
 from pathlib import Path
 
@@ -34,7 +37,7 @@ from PIL import Image
 
 ROM_BASE = 0x08000000
 BANK_TABLE = 0x084A5600
-FIXED_POOL = 0x084A4660
+OBJ_PALETTES = 0x084A4660  # gObjPalettes, 125 x 16 colours
 TILESETS = [0x0817E7AC, 0x081E6330, 0x08200DF4, 0x08270F08, 0x08299DCC]
 ROOM_BLOCKS = [(0x0824B638, 0x08270F08), (0x082B91D0, 0x082BF120)]
 OBJ_W = 0x0816B2E0  # u8[12] piece widths (px) by shape/size index
@@ -93,7 +96,7 @@ def sprite_banks(rom):
         assert start == prev_end, f"bank {i}: gap before {start:#x}"
         out.append((start, end, max(4, area.most_common(1)[0][0])))
         prev_end = end
-    assert prev_end == FIXED_POOL - tile_base
+    assert prev_end == OBJ_PALETTES - tile_base
     return out
 
 
@@ -156,9 +159,12 @@ def main():
         n = write_png(Path("graphics/sprites") / f"{name}.png",
                       rom.bytes(tile_base + start, end - start), 4, width, gray)
         sizes.append((name, n))
-    n = write_png(Path("graphics/sprites/tile_pool_4a4660.png"),
-                  rom.bytes(FIXED_POOL, 125 * 32), 4, 25, gray)
-    sizes.append(("tile_pool_4a4660", n))
+    assert rom.w(BANK_TABLE + 8) == OBJ_PALETTES and rom.h(BANK_TABLE + 14) == 125
+    pal_dir = Path("graphics/sprites/palettes")
+    pal_dir.mkdir(parents=True, exist_ok=True)
+    for k in range(125):
+        raw = rom.bytes(OBJ_PALETTES + 32 * k, 32)
+        jasc_pal.write_jasc(pal_dir / f"{k:03}.pal", struct.unpack("<16H", raw))
     for k, addr in enumerate(TILESETS, 1):
         header = rom.w(addr)
         assert header & 0xFF == 0
