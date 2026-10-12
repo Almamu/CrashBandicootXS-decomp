@@ -21,7 +21,8 @@ from grit.
 
     tools/bg_map.py extract [baserom.gba]
         Writes the graphics/bg_package/ sources from the ROM: each package's
-        whole picture (indexed, with the package's palette) and, for an
+        whole picture (indexed, with the package's palette, which the build
+        reads back with tools/jasc_pal.py png-to-gba) and, for an
         affine map with nonzero high bytes, the --high JSON
         (<name>_high.json).
 """
@@ -30,6 +31,9 @@ import json
 import struct
 import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import jasc_pal  # noqa: E402
 
 # The packages (struct bg_package, read by BgSetup::Load,
 # TitleScreen::LoadBg and TitleScreen::LoadObjTiles): file name, palette,
@@ -91,7 +95,8 @@ def extract(args):
     for name, pal_a, tiles_a, map_a, w, h, bpp, affine in PACKAGES:
         raw = lz77_decompress(rom, pal_a)
         pal = struct.unpack("<%dH" % (len(raw) // 2), raw)
-        rgb = [c for v in pal for c in ((v & 31) << 3, (v >> 5 & 31) << 3, (v >> 10 & 31) << 3)]
+        # the package's palette, kept in the PNG (bit 15 too, jasc_pal.py)
+        rgb = [c for v in pal for c in jasc_pal.to_rgb(v)]
         tiles = split_tiles(lz77_decompress(rom, tiles_a), bpp)
         entries = struct.unpack("<%dH" % (w * h), lz77_decompress(rom, map_a))
         img = Image.new("P", (w * 8, h * 8))

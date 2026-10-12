@@ -62,7 +62,7 @@ rather than a "garbled" one.
 ## Build pipeline
 
 `graphics.mk` + `Makefile` (`GRAPHICS_BUILDDIR`) convert the `graphics/`
-sources (PNGs and JASC `.pal` files) into the original bytes, output to
+sources (PNGs, with their palettes, and JASC `.pal` files) into the original bytes, output to
 `build/crashbandicootxs/graphics/` (mirroring the source subdirectory
 layout) — `graphics/` itself only ever holds editable sources, never build
 products. grit (`tools/grit`) does the pixel layout of every PNG, and
@@ -88,12 +88,30 @@ padding"](./data.md#lz77-stream-padding)).
 
 ### Palettes
 
-Every LZ77 palette in `graphics/intro/` and `graphics/tileset1/` is a
-JASC-PAL `.pal` file (CRLF line endings, see `.gitattributes`). There are
-30 of them: 16 with 16 colours and 14 with 256. `tools/jasc_pal.py`
-builds each one into the raw `.gbapal`, and gbagfx compresses it.
+A palette that belongs to one picture lives in that picture's PNG: the
+PNG's palette *is* the asset. That covers 54 palettes:
+- the 30 LZ77 palettes of the menu, title and logo pictures
+  (`graphics/bg_package/*.png`, the credits and VV logo sheets
+  `graphics/intro/68`-`75`) and of the ten level-select pictures
+  (`graphics/tileset1/*_8bpp_tiles.png`): 16 with 16 colours and 14 with
+  256;
+- the 24 cutscene pictures' uncompressed palettes (below).
 
-A JASC file has 8 bits per channel. The tool reads a channel as gbagfx
+`tools/jasc_pal.py png-to-gba` reads the PNG's palette into the raw
+`.gbapal`, and gbagfx compresses it. The PNG's palette must have exactly
+as many entries as the ROM's palette: graphics.mk passes `--colors 16`
+for the pictures in `PALETTE_COLORS_16` and `--colors 256` for the rest,
+and the build fails on any other count. So an editor that pads a
+16-colour palette to 256, or trims unused entries, is caught. The count
+can't be read from the bpp: the Universal logo is an 8bpp picture with a
+16-colour palette.
+
+The standalone palettes, which belong to no single picture, are JASC-PAL
+`.pal` files (CRLF line endings, see `.gitattributes`): the 125 OBJ
+palettes of `graphics/sprites/palettes/` (`gObjPalettes`).
+`tools/jasc_pal.py to-gba` builds those.
+
+A JASC file, like a PNG palette, has 8 bits per channel. The tool reads a channel as gbagfx
 does (value / 8) and writes it as gbagfx does (`c * 255 / 31`), with one
 addition for the hardware-ignored **bit 15**. 25 of the ROM's palettes
 set bit 15 on random entries, which made them impossible to round-trip
@@ -107,15 +125,14 @@ that were stored as one-tile 4bpp PNGs. The rule:
 So a palette without bit 15 is byte for byte what gbagfx writes. An entry
 with bit 15 shows the same colour, with its red one 8-bit step off. A
 colour picked freely in an editor may toggle bit 15, which the hardware
-ignores. `tools/jasc_pal.py to-jasc` turns a raw palette back into a
-`.pal`.
+ignores. The same rule applies to a PNG's palette. `tools/jasc_pal.py
+to-jasc` turns a raw palette back into a `.pal`, and `jasc_pal.py
+gba-to-png` puts a raw palette into an indexed PNG, keeping its pixels.
 
-The 24 cutscene pictures' palettes (uncompressed `u16[256]`) follow the
-same rule, but live in the picture itself: each
-`graphics/intro/*_bitmap.png` carries its real palette, and
-`tools/jasc_pal.py png-to-gba` reads it back (bit 15 included) for
-`tools/bin2c.py --u16`. `jasc_pal.py gba-to-png` puts a raw palette into
-an indexed PNG. The palettes still written out in C (room palettes, HUD
+The 24 cutscene pictures' palettes (uncompressed `u16[256]`) live in the
+pictures too: each `graphics/intro/*_bitmap.png` carries its real
+palette, and `tools/jasc_pal.py png-to-gba` reads it back (bit 15
+included) for `tools/bin2c.py --u16`. The palettes still written out in C (room palettes, HUD
 and menu palettes) keep bit 15 as part of their hex values.
 
 The 24 intro/cutscene Mode 4 bitmaps (`graphics/intro/*_bitmap.png`) are
@@ -196,9 +213,9 @@ byte (`0x04`, `0x08`, `0x0C`), which nothing reads.
 `62d0cc_universal_logo_high.json` lists them, and `bg_map.py first-use
 --high` puts them back.
 
-The palettes are still separate assets (`graphics/intro/24`-`35`). The PNG's own palette is a copy for viewing, so edit the palette
-file to change colours. `tools/bg_map.py extract` writes the PNGs from
-`baserom.gba` again.
+Each package's palette is its PNG's palette (see "Palettes"), so editing
+the PNG's colours changes the ROM's palette. `tools/bg_map.py extract`
+writes the PNGs, palettes included, from `baserom.gba` again.
 
 ## Sprites (in progress)
 
@@ -1548,7 +1565,7 @@ or `-gB8` for the `*_8bpp_tiles.png` level-select pictures) builds the same
 bytes gbagfx did, checked on all 21 sheets of `graphics/intro/` and
 `graphics/tileset1/`:
 - the credits and VV logo sheets (`intro/68`-`75`) carry their real
-  16-colour palettes (`intro/60`-`67`);
+  16-colour palettes, which the build reads (see "Palettes");
 - the two HUD fonts (`intro/00_5a4e70`, `00_5a551c`) and the level-select
   cursor zoom (`tileset1/00`) carry the palette the game draws them with
   by default (OAM picks it at run time). See "Run-time palettes" below.

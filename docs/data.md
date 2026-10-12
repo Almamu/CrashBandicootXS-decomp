@@ -515,13 +515,13 @@ do anyway. Every `_bitmap` PNG, every other `_8bpp_tiles` PNG, and every
 framed sprite-sheet frame is already indexed. Tile order is row-major
 8x8, the same as gbagfx. Flips only matter for maps (see below).
 
-**Palettes.** An indexed PNG carrying `intro/24_61badc.pal` (16 colours)
+**Palettes.** An indexed PNG carrying `gMenuSkyBgPalette` (16 colours)
 gives the ROM's bytes with `-g! -p -pn16`. One carrying
-`tileset1/11_63cf98.pal` (256 colours) gives them with `-g! -p -pn256`.
+`gLevelSelectPicture0Palette` (256 colours) gives them with `-g! -p -pn256`.
 The palettes whose entries have bit 15 set can't be produced by grit or
-by gbagfx's `.pal`. They are JASC `.pal` files read by `tools/jasc_pal.py`,
-which keeps bit 15 in the red value's lowest bit (docs/graphics.md,
-"Palettes").
+by gbagfx's `.pal`. They are kept in their pictures' PNGs, read by
+`tools/jasc_pal.py png-to-gba`, which keeps bit 15 in the red value's
+lowest bit (docs/graphics.md, "Palettes").
 
 **Tilemaps.** The intro sky background (tileset `36_61c30c`, map
 `48_62fb24`, palette `24_61badc`) was composited into one 256x160 indexed
@@ -601,7 +601,7 @@ Per asset kind:
 | 8bpp tileset (`*_8bpp_tiles.png`) | `-gt -gB8 -p!` | gbagfx LZ77 | verified, 14/14 |
 | 4bpp tileset (`*_tiles.png`) | `-gt -gB4 -p!` | gbagfx LZ77 | verified 35/35; needs the PNG re-saved as indexed first |
 | 16-colour palette | `-g! -p -pn16` on an indexed PNG carrying it | gbagfx LZ77 | verified |
-| 256-colour palette | `-g! -p -pn256` | gbagfx LZ77 | verified; the bit-15 palettes are `.pal` files built by `tools/jasc_pal.py` |
+| 256-colour palette | `-g! -p -pn256` | gbagfx LZ77 | verified; the bit-15 palettes are their PNGs' palettes, read by `tools/jasc_pal.py` |
 | tilemap (+ tileset) from one full image | `-gt -gB4 -m -mRtf -mLf -fx <tileset.png>` | gbagfx LZ77 | map verified; the tileset itself stays a separate PNG |
 | framed OBJ sheets (`graphics/unknown/0*/`) | not migrated: each frame has a 4-byte header grit doesn't know about | `tools/framed_gfx.py` | - |
 | raw 4bpp tile pool (`graphics/sprites/`) | `-gt -gB4 -p!` | `tools/bin2c.py --size` | used, 57 PNGs |
@@ -772,8 +772,8 @@ at `+0x200`. The bitmaps are the grit-built `graphics/intro/*_bitmap.png`
 an uncompressed `u16[256]`) is the PNG's own palette:
 `tools/jasc_pal.py png-to-gba` reads it and `tools/bin2c.py --u16` writes
 the C values. About half of the entries have bit 15 set, which the
-hardware ignores; the PNG keeps it in the red value's lowest bit, as the
-`.pal` files do (docs/graphics.md, "Palettes"). Each palette is
+hardware ignores; the PNG keeps it in the red value's lowest bit, as every
+palette kept in a PNG does (docs/graphics.md, "Palettes"). Each palette is
 `aligned(4)`: the 0-3 zero bytes before it in the ROM are the alignment
 after the previous (odd-length) bitmap stream.
 

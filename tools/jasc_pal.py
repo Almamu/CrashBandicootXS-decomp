@@ -20,10 +20,14 @@ which the hardware ignores. See docs/graphics.md, "Palettes".
     tools/jasc_pal.py to-jasc IN.gbapal OUT.pal
 
 The same rule applies to the palette of an indexed PNG, for an asset whose
-palette lives in its picture (the cutscene pictures):
+palette lives in its picture (the cutscene, menu, title, logo and
+level-select pictures):
 
-    tools/jasc_pal.py png-to-gba IN.png OUT.gbapal
+    tools/jasc_pal.py png-to-gba IN.png OUT.gbapal [--colors N]
         writes the PNG's palette (all of its entries) as a raw palette.
+        With --colors, the palette must have exactly N entries: the
+        palette's size in the ROM, which an editor that pads or trims
+        the PNG's palette would otherwise change.
     tools/jasc_pal.py gba-to-png IN.gbapal PNG
         replaces the palette of the indexed PNG with IN, keeping its
         pixels.
@@ -102,11 +106,19 @@ def write_png(path, entries):
 
 
 def main():
-    if len(sys.argv) != 4 or sys.argv[1] not in ("to-gba", "to-jasc", "png-to-gba", "gba-to-png"):
+    args = sys.argv[1:]
+    colors = None
+    if len(args) == 5 and args[0] == "png-to-gba" and args[3] == "--colors":
+        colors = int(args[4])
+        args = args[:3]
+    if len(args) != 3 or args[0] not in ("to-gba", "to-jasc", "png-to-gba", "gba-to-png"):
         sys.exit(__doc__)
-    mode, src, dst = sys.argv[1:]
+    mode, src, dst = args
     if mode in ("to-gba", "png-to-gba"):
         entries = read_jasc(src) if mode == "to-gba" else read_png(src)
+        if colors is not None and len(entries) != colors:
+            sys.exit("jasc_pal: %s: a palette of %d colours, expected %d (keep the PNG's palette at "
+                     "%d entries, see docs/graphics.md \"Palettes\")" % (src, len(entries), colors, colors))
         open(dst, "wb").write(struct.pack("<%dH" % len(entries), *entries))
     elif mode == "to-jasc":
         write_jasc(dst, read_gba(src))
