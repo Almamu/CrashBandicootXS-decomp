@@ -655,8 +655,8 @@ BG tile sets are in [levels.md](./levels.md).
 | `08299DCC` | `gSpaceBg0Tiles` | level_tileset | `level_tilesets/tileset5_299dcc.png` |
 | `084A4660` | `gObjPalettes` | obj_palettes | `sprites/palettes/` |
 | `084A5600` | `gSpriteBankTable` | sprite_banks | `sprites/` |
-| `085A4E70` | `gSmallFontTiles` | tiles | `intro/00_5a4e70_tiles.png` |
-| `085A551C` | `gLargeFontTiles` | tiles | `intro/00_5a551c_tiles.png` |
+| `085A4E70` | `gSmallFontTiles` | tiles | `fonts/small.png` |
+| `085A551C` | `gLargeFontTiles` | tiles | `fonts/large.png` |
 | `085A9F70` | `gCutscenePicture00` | palette | `cutscenes/00_space_station.png` (its palette) |
 | `085AA170` | `gCutscenePicture00Bitmap` | bitmap | `cutscenes/00_space_station.png` |
 | `085ADBD4` | `gCutscenePicture01` | palette | `cutscenes/01_uka_uka_and_cortex.png` (its palette) |
@@ -705,58 +705,58 @@ BG tile sets are in [levels.md](./levels.md).
 | `08616560` | `gCutscenePicture22Bitmap` | bitmap | `cutscenes/22_reversed_beam.png` |
 | `08619F54` | `gCutscenePicture23` | palette | `cutscenes/23_legal_notice.png` (its palette) |
 | `0861A154` | `gCutscenePicture23Bitmap` | bitmap | `cutscenes/23_legal_notice.png` |
-| `0861BADC` | `gMenuSkyBgPalette` | palette | `bg_package/61c30c_menu_sky.png` (its palette) |
-| `0861BB04` | `gPauseMenuBgPalette` | palette | `bg_package/61e5f8_pause_menu.png` (its palette) |
+| `0861BADC` | `gMenuSkyBgPalette` | palette | `menus/sky.png` (its palette) |
+| `0861BB04` | `gPauseMenuBgPalette` | palette | `menus/pause.png` (its palette) |
 | `0861BD48` | `gLevelSelectPageBgPalette` | palette | `bg_package/62556c_level_select_page.png` (its palette) |
-| `0861BF30` | `gContinuePromptSmokeBgPalette` | palette | `bg_package/628c50_continue_prompt_smoke.png` (its palette) |
-| `0861BF58` | `gContinuePromptGlowBgPalette` | palette | `bg_package/62a958_continue_prompt_glow.png` (its palette) |
-| `0861BF80` | `gContinuePromptUkaUkaBgPalette` | palette | `bg_package/62b34c_continue_prompt_uka_uka.png` (its palette) |
-| `0861C15C` | `gTitleBandicootObjPalette` | palette | `bg_package/62c2c8_title_bandicoot_obj.png` (its palette) |
-| `0861C184` | `gTitleCrashObjPalette` | palette | `bg_package/62c4b0_title_crash_obj.png` (its palette) |
-| `0861C1AC` | `gTitleArrow1ObjPalette` | palette | `bg_package/62cc3c_title_arrow1_obj.png` (its palette) |
-| `0861C1D4` | `gTitleArrow2ObjPalette` | palette | `bg_package/62ce70_title_arrow2_obj.png` (its palette) |
-| `0861C1FC` | `gUniversalLogoBgPalette` | palette | `bg_package/62d0cc_universal_logo.png`, `bg_package/62d0cc_universal_logo_high.json` (its palette) |
-| `0861C224` | `gTitleScreenBgPalette` | palette | `bg_package/62e3b0_title_screen.png` (its palette) |
-| `0861C30C` | `gMenuSkyBgTiles` | bg_package | `bg_package/61c30c_menu_sky.png` |
-| `0861E5F8` | `gPauseMenuBgTiles` | bg_package | `bg_package/61e5f8_pause_menu.png` |
+| `0861BF30` | `gContinuePromptSmokeBgPalette` | palette | `menus/continue_prompt/smoke.png` (its palette) |
+| `0861BF58` | `gContinuePromptGlowBgPalette` | palette | `menus/continue_prompt/glow.png` (its palette) |
+| `0861BF80` | `gContinuePromptUkaUkaBgPalette` | palette | `menus/continue_prompt/uka_uka.png` (its palette) |
+| `0861C15C` | `gTitleBandicootObjPalette` | palette | `title/bandicoot.png` (its palette) |
+| `0861C184` | `gTitleCrashObjPalette` | palette | `title/crash.png` (its palette) |
+| `0861C1AC` | `gTitleArrow1ObjPalette` | palette | `title/arrow1.png` (its palette) |
+| `0861C1D4` | `gTitleArrow2ObjPalette` | palette | `title/arrow2.png` (its palette) |
+| `0861C1FC` | `gUniversalLogoBgPalette` | palette | `logos/universal.png`, `logos/universal_high.json` (its palette) |
+| `0861C224` | `gTitleScreenBgPalette` | palette | `title/logo.png` (its palette) |
+| `0861C30C` | `gMenuSkyBgTiles` | bg_package | `menus/sky.png` |
+| `0861E5F8` | `gPauseMenuBgTiles` | bg_package | `menus/pause.png` |
 | `0862556C` | `gLevelSelectPageBgTiles` | bg_package | `bg_package/62556c_level_select_page.png` |
-| `08628C50` | `gContinuePromptSmokeBgTiles` | bg_package | `bg_package/628c50_continue_prompt_smoke.png` |
-| `0862A958` | `gContinuePromptGlowBgTiles` | bg_package | `bg_package/62a958_continue_prompt_glow.png` |
-| `0862B34C` | `gContinuePromptUkaUkaBgTiles` | bg_package | `bg_package/62b34c_continue_prompt_uka_uka.png` |
-| `0862C2C8` | `gTitleBandicootObjTiles` | bg_package | `bg_package/62c2c8_title_bandicoot_obj.png` |
-| `0862C4B0` | `gTitleCrashObjTiles` | bg_package | `bg_package/62c4b0_title_crash_obj.png` |
-| `0862CC3C` | `gTitleArrow1ObjTiles` | bg_package | `bg_package/62cc3c_title_arrow1_obj.png` |
-| `0862CE70` | `gTitleArrow2ObjTiles` | bg_package | `bg_package/62ce70_title_arrow2_obj.png` |
-| `0862D0CC` | `gUniversalLogoBgTiles` | bg_package | `bg_package/62d0cc_universal_logo.png`, `bg_package/62d0cc_universal_logo_high.json` |
-| `0862E3B0` | `gTitleScreenBgTiles` | bg_package | `bg_package/62e3b0_title_screen.png` |
-| `0862FB24` | `gMenuSkyBgMap` | map | `bg_package/61c30c_menu_sky.png` (its map) |
-| `0862FFF4` | `gPauseMenuBgMap` | map | `bg_package/61e5f8_pause_menu.png` (its map) |
+| `08628C50` | `gContinuePromptSmokeBgTiles` | bg_package | `menus/continue_prompt/smoke.png` |
+| `0862A958` | `gContinuePromptGlowBgTiles` | bg_package | `menus/continue_prompt/glow.png` |
+| `0862B34C` | `gContinuePromptUkaUkaBgTiles` | bg_package | `menus/continue_prompt/uka_uka.png` |
+| `0862C2C8` | `gTitleBandicootObjTiles` | bg_package | `title/bandicoot.png` |
+| `0862C4B0` | `gTitleCrashObjTiles` | bg_package | `title/crash.png` |
+| `0862CC3C` | `gTitleArrow1ObjTiles` | bg_package | `title/arrow1.png` |
+| `0862CE70` | `gTitleArrow2ObjTiles` | bg_package | `title/arrow2.png` |
+| `0862D0CC` | `gUniversalLogoBgTiles` | bg_package | `logos/universal.png`, `logos/universal_high.json` |
+| `0862E3B0` | `gTitleScreenBgTiles` | bg_package | `title/logo.png` |
+| `0862FB24` | `gMenuSkyBgMap` | map | `menus/sky.png` (its map) |
+| `0862FFF4` | `gPauseMenuBgMap` | map | `menus/pause.png` (its map) |
 | `0863053C` | `gLevelSelectPageBgMap` | map | `bg_package/62556c_level_select_page.png` (its map) |
-| `086308F0` | `gContinuePromptSmokeBgMap` | map | `bg_package/628c50_continue_prompt_smoke.png` (its map) |
-| `08630E1C` | `gContinuePromptGlowBgMap` | map | `bg_package/62a958_continue_prompt_glow.png` (its map) |
-| `08631158` | `gContinuePromptUkaUkaBgMap` | map | `bg_package/62b34c_continue_prompt_uka_uka.png` (its map) |
-| `08631374` | `gTitleBandicootObjMap` | map | `bg_package/62c2c8_title_bandicoot_obj.png` (its map) |
-| `086313B0` | `gTitleCrashObjMap` | map | `bg_package/62c4b0_title_crash_obj.png` (its map) |
-| `086314F0` | `gTitleArrow1ObjMap` | map | `bg_package/62cc3c_title_arrow1_obj.png` (its map) |
-| `08631558` | `gTitleArrow2ObjMap` | map | `bg_package/62ce70_title_arrow2_obj.png` (its map) |
-| `086315BC` | `gUniversalLogoBgMap` | map | `bg_package/62d0cc_universal_logo.png`, `bg_package/62d0cc_universal_logo_high.json` (its map) |
-| `0863183C` | `gTitleScreenBgMap` | map | `bg_package/62e3b0_title_screen.png` (its map) |
-| `086319A0` | `gCreditsRedEyeStudiosLogoPalette` | palette | `intro/68_631acc_tiles.png` (its palette) |
-| `086319C8` | `gCreditsShinenLogoPalette` | palette | `intro/69_6324b4_tiles.png` (its palette) |
-| `086319F0` | `gCreditsCosmigoLogoPalette` | palette | `intro/70_632820_tiles.png` (its palette) |
-| `08631A18` | `gCreditsUniversalLogoPalette` | palette | `intro/71_632bc4_tiles.png` (its palette) |
-| `08631A40` | `gCreditsVvLogoPalette` | palette | `intro/72_6334c4_tiles.png` (its palette) |
-| `08631A68` | `gVvLogoEmblemPalette` | palette | `intro/73_634270_tiles.png` (its palette) |
-| `08631A90` | `gVvLogoLettersPalette` | palette | `intro/74_636ef4_tiles.png` (its palette) |
-| `08631AB8` | `gVvLogoUrlPalette` | palette | `intro/75_637604_tiles.png` (its palette) |
-| `08631ACC` | `gCreditsRedEyeStudiosLogoTiles` | tiles | `intro/68_631acc_tiles.png` |
-| `086324B4` | `gCreditsShinenLogoTiles` | tiles | `intro/69_6324b4_tiles.png` |
-| `08632820` | `gCreditsCosmigoLogoTiles` | tiles | `intro/70_632820_tiles.png` |
-| `08632BC4` | `gCreditsUniversalLogoTiles` | tiles | `intro/71_632bc4_tiles.png` |
-| `086334C4` | `gCreditsVvLogoTiles` | tiles | `intro/72_6334c4_tiles.png` |
-| `08634270` | `gVvLogoEmblemTiles` | tiles | `intro/73_634270_tiles.png` |
-| `08636EF4` | `gVvLogoLettersTiles` | tiles | `intro/74_636ef4_tiles.png` |
-| `08637604` | `gVvLogoUrlTiles` | tiles | `intro/75_637604_tiles.png` |
+| `086308F0` | `gContinuePromptSmokeBgMap` | map | `menus/continue_prompt/smoke.png` (its map) |
+| `08630E1C` | `gContinuePromptGlowBgMap` | map | `menus/continue_prompt/glow.png` (its map) |
+| `08631158` | `gContinuePromptUkaUkaBgMap` | map | `menus/continue_prompt/uka_uka.png` (its map) |
+| `08631374` | `gTitleBandicootObjMap` | map | `title/bandicoot.png` (its map) |
+| `086313B0` | `gTitleCrashObjMap` | map | `title/crash.png` (its map) |
+| `086314F0` | `gTitleArrow1ObjMap` | map | `title/arrow1.png` (its map) |
+| `08631558` | `gTitleArrow2ObjMap` | map | `title/arrow2.png` (its map) |
+| `086315BC` | `gUniversalLogoBgMap` | map | `logos/universal.png`, `logos/universal_high.json` (its map) |
+| `0863183C` | `gTitleScreenBgMap` | map | `title/logo.png` (its map) |
+| `086319A0` | `gCreditsRedEyeStudiosLogoPalette` | palette | `logos/credits/red_eye_studios.png` (its palette) |
+| `086319C8` | `gCreditsShinenLogoPalette` | palette | `logos/credits/shinen.png` (its palette) |
+| `086319F0` | `gCreditsCosmigoLogoPalette` | palette | `logos/credits/cosmigo.png` (its palette) |
+| `08631A18` | `gCreditsUniversalLogoPalette` | palette | `logos/credits/universal.png` (its palette) |
+| `08631A40` | `gCreditsVvLogoPalette` | palette | `logos/credits/vicarious_visions.png` (its palette) |
+| `08631A68` | `gVvLogoEmblemPalette` | palette | `logos/vicarious_visions/emblem.png` (its palette) |
+| `08631A90` | `gVvLogoLettersPalette` | palette | `logos/vicarious_visions/letters.png` (its palette) |
+| `08631AB8` | `gVvLogoUrlPalette` | palette | `logos/vicarious_visions/url.png` (its palette) |
+| `08631ACC` | `gCreditsRedEyeStudiosLogoTiles` | tiles | `logos/credits/red_eye_studios.png` |
+| `086324B4` | `gCreditsShinenLogoTiles` | tiles | `logos/credits/shinen.png` |
+| `08632820` | `gCreditsCosmigoLogoTiles` | tiles | `logos/credits/cosmigo.png` |
+| `08632BC4` | `gCreditsUniversalLogoTiles` | tiles | `logos/credits/universal.png` |
+| `086334C4` | `gCreditsVvLogoTiles` | tiles | `logos/credits/vicarious_visions.png` |
+| `08634270` | `gVvLogoEmblemTiles` | tiles | `logos/vicarious_visions/emblem.png` |
+| `08636EF4` | `gVvLogoLettersTiles` | tiles | `logos/vicarious_visions/letters.png` |
+| `08637604` | `gVvLogoUrlTiles` | tiles | `logos/vicarious_visions/url.png` |
 | `086377C0` | `gLevelSelectCursorZoomTiles` | tiles | `tileset1/00_6377c0_tiles.png` |
 | `08637A70` | `gLevelSelectPicture0Tiles` | tiles | `tileset1/01_637a70_8bpp_tiles.png` |
 | `086382C8` | `gLevelSelectPicture1Tiles` | tiles | `tileset1/02_6382c8_8bpp_tiles.png` |

@@ -123,9 +123,10 @@ ROM needs no entry: the build doesn't read the manifest.
 
 A palette that belongs to one picture lives in that picture's PNG: the
 PNG's palette *is* the asset. That covers 54 palettes:
-- the 30 LZ77 palettes of the menu, title and logo pictures
-  (`graphics/bg_package/*.png`, the credits and VV logo sheets
-  `graphics/intro/68`-`75`) and of the ten level-select pictures
+- the 30 LZ77 palettes of the menu, title and logo pictures (the 12 BG
+  packages in `graphics/menus/`, `graphics/title/`, `graphics/logos/` and
+  the level-select page, the credits and VV logo sheets in
+  `graphics/logos/`) and of the ten level-select pictures
   (`graphics/tileset1/*_8bpp_tiles.png`): 16 with 16 colours and 14 with
   256;
 - the 24 cutscene pictures' uncompressed palettes (below).
@@ -188,24 +189,25 @@ map}`):
 
 Before, each was stored as a tile-set PNG plus a raw `.bin` map, or as a
 map misfiled as tiles or as a palette. Now each one is a single indexed
-PNG of the whole picture in `graphics/bg_package/`, named
-`<tiles addr>_<name>.png` and drawn with the package's palette. The build
+PNG of the whole picture, drawn with the package's palette, in the
+folder of what it is: `graphics/menus/`, `graphics/title/`,
+`graphics/logos/` (graphics.mk's `BG_PACKAGES` lists them). The build
 rebuilds both the tile set and the map from that PNG, byte for byte:
 
 | picture | bpp | cells | map |
 |---|---|---|---|
-| `61c30c_menu_sky` (`gMenuSkyBg`) | 4 | 32x20 | text |
-| `61e5f8_pause_menu` (`gPauseMenuBg`) | 8 | 30x20 | text |
+| `menus/sky` (`gMenuSkyBg`) | 4 | 32x20 | text |
+| `menus/pause` (`gPauseMenuBg`) | 8 | 30x20 | text |
 | `62556c_level_select_page` (`gLevelSelectPageBg`) | 8 | 32x32 | text |
-| `628c50_continue_prompt_smoke` (`gContinuePromptSmokeBg`) | 4 | 30x20 | text |
-| `62a958_continue_prompt_glow` (`gContinuePromptGlowBg`) | 4 | 30x20 | text |
-| `62b34c_continue_prompt_uka_uka` (`gContinuePromptUkaUkaBg`) | 8 | 30x20 | text |
-| `62d0cc_universal_logo` (`gUniversalLogoBg`) | 8 | 30x20 | affine, + high-byte JSON |
-| `62e3b0_title_screen` (`gTitleScreenBg`) | 8 | 16x16 | affine |
-| `62c2c8_title_bandicoot_obj` (`gTitleBandicootObj`) | 4 | 4x6 | OBJ, 3 32x16 OBJs |
-| `62c4b0_title_crash_obj` (`gTitleCrashObj`) | 4 | 8x40 | OBJ, 5 64x64 OBJs |
-| `62cc3c_title_arrow1_obj` (`gTitleArrow1Obj`) | 4 | 4x16 | OBJ, 4 32x32 OBJs |
-| `62ce70_title_arrow2_obj` (`gTitleArrow2Obj`) | 4 | 4x16 | OBJ, 4 32x32 OBJs |
+| `menus/continue_prompt/smoke` (`gContinuePromptSmokeBg`) | 4 | 30x20 | text |
+| `menus/continue_prompt/glow` (`gContinuePromptGlowBg`) | 4 | 30x20 | text |
+| `menus/continue_prompt/uka_uka` (`gContinuePromptUkaUkaBg`) | 8 | 30x20 | text |
+| `logos/universal` (`gUniversalLogoBg`) | 8 | 30x20 | affine, + high-byte JSON |
+| `title/logo` (`gTitleScreenBg`) | 8 | 16x16 | affine |
+| `title/bandicoot` (`gTitleBandicootObj`) | 4 | 4x6 | OBJ, 3 32x16 OBJs |
+| `title/crash` (`gTitleCrashObj`) | 4 | 8x40 | OBJ, 5 64x64 OBJs |
+| `title/arrow1` (`gTitleArrow1Obj`) | 4 | 4x16 | OBJ, 4 32x32 OBJs |
+| `title/arrow2` (`gTitleArrow2Obj`) | 4 | 4x16 | OBJ, 4 32x32 OBJs |
 
 An OBJ map is one `u16` per OBJ tile. `LoadObjTiles` copies the sheet tile
 named by its low byte into OBJ VRAM, in map order, and ignores the h/v
@@ -368,10 +370,10 @@ HUD widget:
   `_087E4D64`/`_087E4D1C` and set a graphics-package pointer at a struct
   offset that varies by variant:
   - `InitSmallFont` -> `_087E4D64`: sets `self+0x128 = gSmallFontTiles`
-    (an *already-extracted* graphics block, `graphics/intro/00_5a4e70_tiles.png`
+    (an *already-extracted* graphics block, `graphics/fonts/small.png`
     - 5056 bytes decompressed, only 16px wide).
   - `InitLargeFont` -> `_087E4D1C`: sets `self+0x110 = gLargeFontTiles`
-    (also already extracted, `graphics/intro/00_5a551c_tiles.png` - 9600
+    (also already extracted, `graphics/fonts/large.png` - 9600
     bytes decompressed) and flips a bit in a `+3` flags byte
     (`& 0x3F | 0x40`), which is presumably what tells the shared rendering
     code which struct offset to treat as the graphics pointer for this
@@ -1600,11 +1602,12 @@ No sidecar file is needed. The pictures take 12.3 MB against the
 The remaining 4bpp tile PNGs that gbagfx had written as grayscale are
 indexed (`P` mode) PNGs now, with the same indices. grit (`-gt -gB4 -p!`,
 or `-gB8` for the `*_8bpp_tiles.png` level-select pictures) builds the same
-bytes gbagfx did, checked on all 21 sheets of `graphics/intro/` and
-`graphics/tileset1/`:
-- the credits and VV logo sheets (`intro/68`-`75`) carry their real
-  16-colour palettes, which the build reads (see "Palettes");
-- the two HUD fonts (`intro/00_5a4e70`, `00_5a551c`) and the level-select
+bytes gbagfx did, checked on all 21 sheets (`graphics/fonts/`,
+`graphics/logos/` and `graphics/tileset1/` today):
+- the credits and VV logo sheets (`logos/credits/`, `logos/vicarious_visions/`)
+  carry their real 16-colour palettes, which the build reads (see
+  "Palettes");
+- the two HUD fonts (`fonts/small`, `fonts/large`) and the level-select
   cursor zoom (`tileset1/00`) carry the palette the game draws them with
   by default (OAM picks it at run time). See "Run-time palettes" below.
 
@@ -1617,14 +1620,14 @@ Their PNGs now show each OBJ whole:
 
 | PNG | OBJs | sheet |
 |---|---|---|
-| `intro/00_5a4e70_tiles.png` (`gSmallFontTiles`) | 77 8x16 glyphs, then 2 16x8 | 16 per row, each in a 16x16 cell |
-| `intro/00_5a551c_tiles.png` (`gLargeFontTiles`) | 75 16x16 glyphs | 16 per row |
-| `intro/74_636ef4_tiles.png` (the VV logo's letters) | 18 16x32 | one 288x32 row |
-| `intro/75_637604_tiles.png` (the VV web address) | 4 32x16 | one 128x16 row |
-| `bg_package/62c2c8_title_bandicoot_obj.png` | 3 32x16 | one 96x16 row |
-| `bg_package/62c4b0_title_crash_obj.png` | 5 64x64 | one 320x64 row |
-| `bg_package/62ce70_title_arrow2_obj.png` | 4 32x32 | at `gTitleArrowPieceOffsets[0-3]` |
-| `bg_package/62cc3c_title_arrow1_obj.png` | 4 32x32 | at `gTitleArrowPieceOffsets[4-7]` |
+| `fonts/small.png` (`gSmallFontTiles`) | 77 8x16 glyphs, then 2 16x8 | 16 per row, each in a 16x16 cell |
+| `fonts/large.png` (`gLargeFontTiles`) | 75 16x16 glyphs | 16 per row |
+| `logos/vicarious_visions/letters.png` (the VV logo's letters) | 18 16x32 | one 288x32 row |
+| `logos/vicarious_visions/url.png` (the VV web address) | 4 32x16 | one 128x16 row |
+| `title/bandicoot.png` | 3 32x16 | one 96x16 row |
+| `title/crash.png` | 5 64x64 | one 320x64 row |
+| `title/arrow2.png` | 4 32x32 | at `gTitleArrowPieceOffsets[0-3]` |
+| `title/arrow1.png` | 4 32x32 | at `gTitleArrowPieceOffsets[4-7]` |
 
 The OBJ sizes come from the code that draws them:
 - `gSmallFontGlyphs` (shape 2, tall, except the last two: shape 1, wide);
@@ -1652,7 +1655,7 @@ Any pixel outside the OBJs must be 0, so drawing there fails the build.
 ### Run-time palettes
 
 Three tile sheets have no palette of their own in the ROM:
-`gSmallFontTiles` (`graphics/intro/00_5a4e70_tiles.png`),
+`gSmallFontTiles` (`graphics/fonts/small.png`),
 `gLargeFontTiles` (`00_5a551c_tiles.png`) and
 `gLevelSelectCursorZoomTiles` (`graphics/tileset1/00_6377c0_tiles.png`).
 The game picks their OBJ palette bank at run time, through the OAM

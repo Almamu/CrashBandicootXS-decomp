@@ -14,12 +14,12 @@ extern "C" {
  * docs/data.md.
  */
 
-/* The small HUD font's 4bpp glyph tiles: graphics/intro/00_5a4e70_tiles.png. */
+/* The small HUD font's 4bpp glyph tiles: graphics/fonts/small.png. */
 extern const u8 gSmallFontTiles[] __attribute__((aligned(4))) = {
-#include "intro/00_5a4e70_tiles.img.bin.lz.inc"
+#include "fonts/small.img.bin.lz.inc"
 };
 
-/* The large HUD font's 4bpp glyph tiles: graphics/intro/00_5a551c_tiles.png. */
+/* The large HUD font's 4bpp glyph tiles: graphics/fonts/large.png. */
 extern const u8 gLargeFontTiles[] __attribute__((aligned(4))) = {
-#include "intro/00_5a551c_tiles.img.bin.lz.inc"
+#include "fonts/large.img.bin.lz.inc"
 };

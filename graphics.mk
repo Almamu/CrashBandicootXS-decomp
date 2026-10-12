@@ -17,11 +17,11 @@
 $(GRAPHICS_BUILDDIR)/%.gbapal: graphics/%.pal tools/jasc_pal.py
 	@mkdir -p $(dir $@)
 	python3 tools/jasc_pal.py to-gba $< $@
-PALETTE_COLORS_16 := bg_package/61c30c_menu_sky bg_package/628c50_continue_prompt_smoke \
-	bg_package/62a958_continue_prompt_glow bg_package/62c2c8_title_bandicoot_obj \
-	bg_package/62c4b0_title_crash_obj bg_package/62cc3c_title_arrow1_obj bg_package/62ce70_title_arrow2_obj \
-	bg_package/62d0cc_universal_logo intro/68_631acc_tiles intro/69_6324b4_tiles intro/70_632820_tiles \
-	intro/71_632bc4_tiles intro/72_6334c4_tiles intro/73_634270_tiles intro/74_636ef4_tiles intro/75_637604_tiles
+PALETTE_COLORS_16 := menus/sky menus/continue_prompt/smoke \
+	menus/continue_prompt/glow title/bandicoot \
+	title/crash title/arrow1 title/arrow2 \
+	logos/universal logos/credits/red_eye_studios logos/credits/shinen logos/credits/cosmigo \
+	logos/credits/universal logos/credits/vicarious_visions logos/vicarious_visions/emblem logos/vicarious_visions/letters logos/vicarious_visions/url
 $(GRAPHICS_BUILDDIR)/%.gbapal: graphics/%.png tools/jasc_pal.py
 	@mkdir -p $(dir $@)
 	python3 tools/jasc_pal.py png-to-gba $< $@ --colors $(if $(filter $*,$(PALETTE_COLORS_16)),16,256)
@@ -92,13 +92,19 @@ $(GRAPHICS_BUILDDIR)/cutscenes/%.img.bin: graphics/cutscenes/%.png | $(GRIT)
 $(GRAPHICS_BUILDDIR)/cutscenes/%.pal.inc: $(GRAPHICS_BUILDDIR)/cutscenes/%.gbapal tools/bin2c.py
 	python3 tools/bin2c.py $< $@ --u16
 
-# Tile sheets (graphics/intro/*_tiles.png, graphics/tileset1/*_tiles.png:
-# the HUD fonts, the credits and VV logos, the level-select cursor zoom and
-# pictures): grit -gt, 4bpp, or 8bpp for the *_8bpp_tiles.png ones.
+# Tile sheets: grit -gt, 4bpp (TILE_SHEETS_4BPP: the credits logos and the
+# VV emblem), or 8bpp for the tileset1/*_8bpp_tiles.png level-select
+# pictures (graphics/tileset1/: TILE_SHEET_BPP). The fonts and the VV
+# letters and URL are OBJ sheets (below).
+TILE_SHEETS_4BPP := logos/credits/red_eye_studios logos/credits/shinen logos/credits/cosmigo \
+	logos/credits/universal logos/credits/vicarious_visions logos/vicarious_visions/emblem
+define TILE_SHEET_RULE
+$(GRAPHICS_BUILDDIR)/$(1).img.bin: graphics/$(1).png | $(GRIT)
+	@mkdir -p $$(dir $$@)
+	$(GRIT) $$< -gt -gB$(2) -p! -ftb -fh! -o $(GRAPHICS_BUILDDIR)/$(1)
+endef
+$(foreach s,$(TILE_SHEETS_4BPP),$(eval $(call TILE_SHEET_RULE,$(s),4)))
 TILE_SHEET_BPP = $(if $(filter %_8bpp_tiles.png,$<),8,4)
-$(GRAPHICS_BUILDDIR)/intro/%_tiles.img.bin: graphics/intro/%_tiles.png | $(GRIT)
-	@mkdir -p $(dir $@)
-	$(GRIT) $< -gt -gB$(TILE_SHEET_BPP) -p! -ftb -fh! -o $(@:.img.bin=)
 $(GRAPHICS_BUILDDIR)/tileset1/%_tiles.img.bin: graphics/tileset1/%_tiles.png | $(GRIT)
 	@mkdir -p $(dir $@)
 	$(GRIT) $< -gt -gB$(TILE_SHEET_BPP) -p! -ftb -fh! -o $(@:.img.bin=)
@@ -109,20 +115,20 @@ $(GRAPHICS_BUILDDIR)/tileset1/%_tiles.img.bin: graphics/tileset1/%_tiles.png | $
 # game uploads them, then grit converts that as it would the plain sheet.
 # OBJ_SHEET_<sheet>: the layout (OBJ sizes in tile order, then a grid or
 # each OBJ's position), and for the title's OBJ packages the width of
-# their map (--width), which grit reduces like the other bg_package maps.
-OBJ_SHEET_TILE_SETS := intro/00_5a4e70_tiles intro/00_5a551c_tiles intro/74_636ef4_tiles intro/75_637604_tiles
-OBJ_SHEET_PACKAGES := bg_package/62c2c8_title_bandicoot_obj bg_package/62c4b0_title_crash_obj \
-	bg_package/62ce70_title_arrow2_obj bg_package/62cc3c_title_arrow1_obj
-OBJ_SHEET_intro/00_5a4e70_tiles := --obj 8x16*77 --obj 16x8*2 --columns 16 --cell 16x16
-OBJ_SHEET_intro/00_5a551c_tiles := --obj 16x16*75 --columns 16
-OBJ_SHEET_intro/74_636ef4_tiles := --obj 16x32*18 --columns 18
-OBJ_SHEET_intro/75_637604_tiles := --obj 32x16*4 --columns 4
-OBJ_SHEET_bg_package/62c2c8_title_bandicoot_obj := --obj 32x16*3 --columns 3 --width 4
-OBJ_SHEET_bg_package/62c4b0_title_crash_obj := --obj 64x64*5 --columns 5 --width 8
+# their map (--width), which grit reduces like the other BG packages' maps.
+OBJ_SHEET_TILE_SETS := fonts/small fonts/large logos/vicarious_visions/letters logos/vicarious_visions/url
+OBJ_SHEET_PACKAGES := title/bandicoot title/crash \
+	title/arrow2 title/arrow1
+OBJ_SHEET_fonts/small := --obj 8x16*77 --obj 16x8*2 --columns 16 --cell 16x16
+OBJ_SHEET_fonts/large := --obj 16x16*75 --columns 16
+OBJ_SHEET_logos/vicarious_visions/letters := --obj 16x32*18 --columns 18
+OBJ_SHEET_logos/vicarious_visions/url := --obj 32x16*4 --columns 4
+OBJ_SHEET_title/bandicoot := --obj 32x16*3 --columns 3 --width 4
+OBJ_SHEET_title/crash := --obj 64x64*5 --columns 5 --width 8
 # The arrows: their four 32x32 OBJs at gTitleArrowPieceOffsets (title
 # screen slot 0 draws arrow 2, slot 1 arrow 1).
-OBJ_SHEET_bg_package/62ce70_title_arrow2_obj := --obj 32x32*4 --at 0,0 --at 15,32 --at 32,64 --at 49,96 --width 4
-OBJ_SHEET_bg_package/62cc3c_title_arrow1_obj := --obj 32x32*4 --at 61,0 --at 34,32 --at 5,61 --at 0,70 --width 4
+OBJ_SHEET_title/arrow2 := --obj 32x32*4 --at 0,0 --at 15,32 --at 32,64 --at 49,96 --width 4
+OBJ_SHEET_title/arrow1 := --obj 32x32*4 --at 61,0 --at 34,32 --at 5,61 --at 0,70 --width 4
 
 define OBJ_SHEET_TILES_RULE
 $(GRAPHICS_BUILDDIR)/$(1).img.bin: graphics/$(1).png tools/obj_sheet.py | $(GRIT)
@@ -155,17 +161,15 @@ $(C_BUILDDIR)/data/cutscene_pictures_5a9f70.o: $(patsubst graphics/%.png,$(GRAPH
 $(C_BUILDDIR)/data/sprite_sheet_0b2120.o: $(GRAPHICS_BUILDDIR)/unknown/00_0b2120.bin.lz.inc
 $(C_BUILDDIR)/data/sprite_sheet_14174c.o: $(GRAPHICS_BUILDDIR)/unknown/01_14174c.bin.lz.inc
 
-# The two HUD fonts.
-FONT_TILE_PNGS := $(wildcard graphics/intro/00_*_tiles.png)
-$(C_BUILDDIR)/data/font_tiles_5a4e70.o: $(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.img.bin.lz.inc,$(FONT_TILE_PNGS))
+# The two HUD fonts (graphics/fonts/).
+$(C_BUILDDIR)/data/font_tiles_5a4e70.o: $(GRAPHICS_BUILDDIR)/fonts/small.img.bin.lz.inc $(GRAPHICS_BUILDDIR)/fonts/large.img.bin.lz.inc
 
-# The menu, title and credits graphics (0x0861BADC-0x086377C0): the
-# bg_package pictures (below) and the credits and VV logo tile sheets, each
-# with the palette of its PNG.
-LOGO_TILE_PNGS := $(filter-out $(FONT_TILE_PNGS),$(wildcard graphics/intro/*_tiles.png))
-MENU_GRAPHICS_INCS := $(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.img.bin.lz.inc,$(LOGO_TILE_PNGS)) \
-	$(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.gbapal.lz.inc,$(LOGO_TILE_PNGS))
-$(C_BUILDDIR)/data/menu_graphics_61badc.o: $(MENU_GRAPHICS_INCS)
+# The menu, title and credits graphics (0x0861BADC-0x086377C0): the BG
+# packages (below) and the credits and VV logo tile sheets
+# (graphics/logos/), each with the palette of its PNG.
+LOGO_SHEETS := $(TILE_SHEETS_4BPP) logos/vicarious_visions/letters logos/vicarious_visions/url
+$(C_BUILDDIR)/data/menu_graphics_61badc.o: \
+	$(foreach s,$(LOGO_SHEETS),$(GRAPHICS_BUILDDIR)/$(s).img.bin.lz.inc $(GRAPHICS_BUILDDIR)/$(s).gbapal.lz.inc)
 
 # The level-select cursor zoom, the ten level-select pictures and their
 # palettes, each the palette of its picture's PNG (graphics/tileset1/,
@@ -231,45 +235,54 @@ $(C_BUILDDIR)/data/cell_anim_03b8b0.o: $(CATBG_DIR)/03b8b0_cell_anim.pal.inc $(C
 $(C_BUILDDIR)/data/cell_anim_0ff1b0.o: $(CATBG_DIR)/0ff1b0_cell_anim.pal.inc $(CATBG_DIR)/0ff1b0_cell_anim_frames.inc $(call catbg_picture_incs,13d934)
 $(C_BUILDDIR)/data/bg_picture_151ac4.o: $(call catbg_picture_incs,151ac4 155260)
 
-# The struct bg_package pictures (graphics/bg_package/, docs/graphics.md
-# "Menu and title pictures"): the menu and title backgrounds and the four
-# title OBJ sprites. The tile set and map of each are rebuilt from one PNG
-# of the whole picture. grit reduces the picture to tiles + map, and
-# tools/bg_map.py first-use puts the tiles in the ROM's order (order of
-# first use; grit starts with a forced blank tile). gbagfx compresses, and
-# src/data/menu_graphics_61badc.cpp holds the results. Each package's
-# palette is its PNG's palette.
-BG_PACKAGE_DIR := $(GRAPHICS_BUILDDIR)/bg_package
-BG_PACKAGE_NAMES := $(basename $(notdir $(wildcard graphics/bg_package/*.png)))
+# The struct bg_package pictures (docs/graphics.md "Menu and title
+# pictures"): the menu backgrounds (graphics/menus/), the title screen's
+# logo and OBJ sprites (graphics/title/), the Universal logo
+# (graphics/logos/) and the level-select page. The tile set and map of
+# each are rebuilt from one PNG of the whole picture. grit reduces the
+# picture to tiles + map, and tools/bg_map.py first-use puts the tiles in
+# the ROM's order (order of first use; grit starts with a forced blank
+# tile). gbagfx compresses, and src/data/menu_graphics_61badc.cpp holds the
+# results. Each package's palette is its PNG's palette.
+BG_PACKAGES := menus/sky menus/pause bg_package/62556c_level_select_page menus/continue_prompt/smoke \
+	menus/continue_prompt/glow menus/continue_prompt/uka_uka logos/universal title/logo \
+	title/bandicoot title/crash title/arrow1 title/arrow2
 $(C_BUILDDIR)/data/menu_graphics_61badc.o: \
-	$(foreach n,$(BG_PACKAGE_NAMES),$(BG_PACKAGE_DIR)/$(n).img.bin.lz.inc $(BG_PACKAGE_DIR)/$(n).map.bin.lz.inc \
-	$(BG_PACKAGE_DIR)/$(n).gbapal.lz.inc)
+	$(foreach p,$(BG_PACKAGES),$(GRAPHICS_BUILDDIR)/$(p).img.bin.lz.inc $(GRAPHICS_BUILDDIR)/$(p).map.bin.lz.inc \
+	$(GRAPHICS_BUILDDIR)/$(p).gbapal.lz.inc)
 
-BG_PACKAGE_BPP_61c30c_menu_sky := 4
-BG_PACKAGE_BPP_61e5f8_pause_menu := 8
-BG_PACKAGE_BPP_62556c_level_select_page := 8
-BG_PACKAGE_BPP_628c50_continue_prompt_smoke := 4
-BG_PACKAGE_BPP_62a958_continue_prompt_glow := 4
-BG_PACKAGE_BPP_62b34c_continue_prompt_uka_uka := 8
-BG_PACKAGE_BPP_62d0cc_universal_logo := 8
-BG_PACKAGE_BPP_62e3b0_title_screen := 8
-BG_PACKAGE_BPP_62c2c8_title_bandicoot_obj := 4
-BG_PACKAGE_BPP_62c4b0_title_crash_obj := 4
-BG_PACKAGE_BPP_62cc3c_title_arrow1_obj := 4
-BG_PACKAGE_BPP_62ce70_title_arrow2_obj := 4
+BG_PACKAGE_BPP_menus/sky := 4
+BG_PACKAGE_BPP_menus/pause := 8
+BG_PACKAGE_BPP_bg_package/62556c_level_select_page := 8
+BG_PACKAGE_BPP_menus/continue_prompt/smoke := 4
+BG_PACKAGE_BPP_menus/continue_prompt/glow := 4
+BG_PACKAGE_BPP_menus/continue_prompt/uka_uka := 8
+BG_PACKAGE_BPP_logos/universal := 8
+BG_PACKAGE_BPP_title/logo := 8
+BG_PACKAGE_BPP_title/bandicoot := 4
+BG_PACKAGE_BPP_title/crash := 4
+BG_PACKAGE_BPP_title/arrow1 := 4
+BG_PACKAGE_BPP_title/arrow2 := 4
 # Tile reduction: tiles and flips, except for the affine maps (no flips):
 # the title and the universal logo.
-BG_PACKAGE_REDUCE = $(if $(filter 62e3b0_title_screen 62d0cc_universal_logo,$(1)),-mRt,-mRtf)
-
-$(BG_PACKAGE_DIR)/%_grit.img.bin $(BG_PACKAGE_DIR)/%_grit.map.bin: graphics/bg_package/%.png | $(GRIT)
-	@mkdir -p $(dir $@)
-	$(GRIT) $< -gt -gB$(BG_PACKAGE_BPP_$*) -p! -m -mLf $(call BG_PACKAGE_REDUCE,$*) -ftb -fh! -o $(BG_PACKAGE_DIR)/$*_grit
-$(BG_PACKAGE_DIR)/%.img.bin $(BG_PACKAGE_DIR)/%.map.bin: $(BG_PACKAGE_DIR)/%_grit.img.bin $(BG_PACKAGE_DIR)/%_grit.map.bin tools/bg_map.py
-	python3 tools/bg_map.py first-use $(word 1,$^) $(word 2,$^) $(BG_PACKAGE_DIR)/$*.img.bin $(BG_PACKAGE_DIR)/$*.map.bin --bpp $(BG_PACKAGE_BPP_$*) $(addprefix --high ,$(filter %_high.json,$^))
-
+BG_PACKAGE_REDUCE = $(if $(filter title/logo logos/universal,$(1)),-mRt,-mRtf)
 # The universal logo's affine map has 5 entries with a stray high byte,
 # which nothing reads (bg_map.py first-use --high puts them back).
-$(BG_PACKAGE_DIR)/62d0cc_universal_logo.img.bin $(BG_PACKAGE_DIR)/62d0cc_universal_logo.map.bin: graphics/bg_package/62d0cc_universal_logo_high.json
+BG_PACKAGE_HIGH_logos/universal := graphics/logos/universal_high.json
+
+# $(1): the package. The title's OBJ packages get their grit output from
+# OBJ_SHEET_PACKAGE_RULE (above).
+define BG_PACKAGE_GRIT_RULE
+$(GRAPHICS_BUILDDIR)/$(1)_grit.img.bin $(GRAPHICS_BUILDDIR)/$(1)_grit.map.bin &: graphics/$(1).png | $(GRIT)
+	@mkdir -p $$(dir $$@)
+	$(GRIT) $$< -gt -gB$(BG_PACKAGE_BPP_$(1)) -p! -m -mLf $(call BG_PACKAGE_REDUCE,$(1)) -ftb -fh! -o $(GRAPHICS_BUILDDIR)/$(1)_grit
+endef
+define BG_PACKAGE_RULE
+$(GRAPHICS_BUILDDIR)/$(1).img.bin $(GRAPHICS_BUILDDIR)/$(1).map.bin &: $(GRAPHICS_BUILDDIR)/$(1)_grit.img.bin $(GRAPHICS_BUILDDIR)/$(1)_grit.map.bin tools/bg_map.py $(BG_PACKAGE_HIGH_$(1))
+	python3 tools/bg_map.py first-use $$(word 1,$$^) $$(word 2,$$^) $(GRAPHICS_BUILDDIR)/$(1).img.bin $(GRAPHICS_BUILDDIR)/$(1).map.bin --bpp $(BG_PACKAGE_BPP_$(1)) $(addprefix --high ,$(BG_PACKAGE_HIGH_$(1)))
+endef
+$(foreach p,$(filter-out $(OBJ_SHEET_PACKAGES),$(BG_PACKAGES)),$(eval $(call BG_PACKAGE_GRIT_RULE,$(p))))
+$(foreach p,$(BG_PACKAGES),$(eval $(call BG_PACKAGE_RULE,$(p))))
 
 # The sprite banks (graphics/sprites/bankNN_<name>/, docs/graphics.md
 # "Sprite banks"): a PNG per frame and bank.json per bank.
