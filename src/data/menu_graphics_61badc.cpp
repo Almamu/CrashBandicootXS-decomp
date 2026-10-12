@@ -5,7 +5,8 @@ extern "C" {
 /*
  * ROM 0x0861BADC-0x086377C0: the graphics of the menus, the title screen,
  * the continue prompt, the legal screen and the credits: their palettes
- * (JASC .pal, tools/jasc_pal.py, which keeps the entries' bit 15), the
+ * (each the palette of its picture's PNG, read by tools/jasc_pal.py
+ * png-to-gba, which keeps the entries' bit 15), the
  * struct bg_package pictures (tiles and maps rebuilt from one PNG each,
  * docs/graphics.md "Menu and title pictures") and the credits and VV logo
  * tile sheets.
@@ -18,74 +19,97 @@ extern "C" {
 
 /*
  * Palette of gMenuSkyBg (the sky/clouds menu background), 16 colours:
- * graphics/intro/24_61badc.pal.
+ * the palette of graphics/bg_package/61c30c_menu_sky.png.
  */
 extern const u8 gMenuSkyBgPalette[] __attribute__((aligned(4))) = {
-#include "intro/24_61badc.gbapal.lz.inc"
+#include "bg_package/61c30c_menu_sky.gbapal.lz.inc"
 };
 
-/* Palette of gPauseMenuBg, 256 colours: graphics/intro/25_61bb04.pal. */
+/*
+ * Palette of gPauseMenuBg, 256 colours: the palette of graphics/bg_package/61e5f8_pause_menu.png.
+ */
 extern const u8 gPauseMenuBgPalette[] __attribute__((aligned(4))) = {
-#include "intro/25_61bb04.gbapal.lz.inc"
+#include "bg_package/61e5f8_pause_menu.gbapal.lz.inc"
 };
 
-/* Palette of gLevelSelectPageBg, 256 colours: graphics/intro/26_61bd48.pal. */
+/*
+ * Palette of gLevelSelectPageBg, 256 colours: the palette of
+ * graphics/bg_package/62556c_level_select_page.png.
+ */
 extern const u8 gLevelSelectPageBgPalette[] __attribute__((aligned(4))) = {
-#include "intro/26_61bd48.gbapal.lz.inc"
+#include "bg_package/62556c_level_select_page.gbapal.lz.inc"
 };
 
 /*
  * Palette of gContinuePromptSmokeBg (the red smoke texture), 16 colours:
- * graphics/intro/27_61bf30.pal.
+ * the palette of graphics/bg_package/628c50_continue_prompt_smoke.png.
  */
 extern const u8 gContinuePromptSmokeBgPalette[] __attribute__((aligned(4))) = {
-#include "intro/27_61bf30.gbapal.lz.inc"
+#include "bg_package/628c50_continue_prompt_smoke.gbapal.lz.inc"
 };
 
 /*
  * Palette of gContinuePromptGlowBg (the fire/aura glow), 16 colours:
- * graphics/intro/28_61bf58.pal.
+ * the palette of graphics/bg_package/62a958_continue_prompt_glow.png.
  */
 extern const u8 gContinuePromptGlowBgPalette[] __attribute__((aligned(4))) = {
-#include "intro/28_61bf58.gbapal.lz.inc"
+#include "bg_package/62a958_continue_prompt_glow.gbapal.lz.inc"
 };
 
-/* Palette of gContinuePromptUkaUkaBg, 256 colours: graphics/intro/29_61bf80.pal. */
+/*
+ * Palette of gContinuePromptUkaUkaBg, 256 colours: the palette of
+ * graphics/bg_package/62b34c_continue_prompt_uka_uka.png.
+ */
 extern const u8 gContinuePromptUkaUkaBgPalette[] __attribute__((aligned(4))) = {
-#include "intro/29_61bf80.gbapal.lz.inc"
+#include "bg_package/62b34c_continue_prompt_uka_uka.gbapal.lz.inc"
 };
 
-/* OBJ palette of gTitleBandicootObj, 16 colours: graphics/intro/30_61c15c.pal. */
+/*
+ * OBJ palette of gTitleBandicootObj, 16 colours: the palette of
+ * graphics/bg_package/62c2c8_title_bandicoot_obj.png.
+ */
 extern const u8 gTitleBandicootObjPalette[] __attribute__((aligned(4))) = {
-#include "intro/30_61c15c.gbapal.lz.inc"
+#include "bg_package/62c2c8_title_bandicoot_obj.gbapal.lz.inc"
 };
 
-/* OBJ palette of gTitleCrashObj, 16 colours: graphics/intro/31_61c184.pal. */
+/*
+ * OBJ palette of gTitleCrashObj, 16 colours: the palette of
+ * graphics/bg_package/62c4b0_title_crash_obj.png.
+ */
 extern const u8 gTitleCrashObjPalette[] __attribute__((aligned(4))) = {
-#include "intro/31_61c184.gbapal.lz.inc"
+#include "bg_package/62c4b0_title_crash_obj.gbapal.lz.inc"
 };
 
-/* OBJ palette of gTitleArrow1Obj, 16 colours: graphics/intro/32_61c1ac.pal. */
+/*
+ * OBJ palette of gTitleArrow1Obj, 16 colours: the palette of
+ * graphics/bg_package/62cc3c_title_arrow1_obj.png.
+ */
 extern const u8 gTitleArrow1ObjPalette[] __attribute__((aligned(4))) = {
-#include "intro/32_61c1ac.gbapal.lz.inc"
+#include "bg_package/62cc3c_title_arrow1_obj.gbapal.lz.inc"
 };
 
-/* OBJ palette of gTitleArrow2Obj, 16 colours: graphics/intro/33_61c1d4.pal. */
+/*
+ * OBJ palette of gTitleArrow2Obj, 16 colours: the palette of
+ * graphics/bg_package/62ce70_title_arrow2_obj.png.
+ */
 extern const u8 gTitleArrow2ObjPalette[] __attribute__((aligned(4))) = {
-#include "intro/33_61c1d4.gbapal.lz.inc"
+#include "bg_package/62ce70_title_arrow2_obj.gbapal.lz.inc"
 };
 
 /*
  * Palette of gUniversalLogoBg (the Universal Interactive logo), 16 colours:
- * graphics/intro/34_61c1fc.pal.
+ * the palette of graphics/bg_package/62d0cc_universal_logo.png.
  */
 extern const u8 gUniversalLogoBgPalette[] __attribute__((aligned(4))) = {
-#include "intro/34_61c1fc.gbapal.lz.inc"
+#include "bg_package/62d0cc_universal_logo.gbapal.lz.inc"
 };
 
-/* Palette of gTitleScreenBg, 256 colours: graphics/intro/35_61c224.pal. */
+/*
+ * Palette of gTitleScreenBg, 256 colours: the palette of
+ * graphics/bg_package/62e3b0_title_screen.png.
+ */
 extern const u8 gTitleScreenBgPalette[] __attribute__((aligned(4))) = {
-#include "intro/35_61c224.gbapal.lz.inc"
+#include "bg_package/62e3b0_title_screen.gbapal.lz.inc"
 };
 
 /*
@@ -273,44 +297,67 @@ extern const u8 gTitleScreenBgMap[] __attribute__((aligned(4))) = {
 #include "bg_package/62e3b0_title_screen.map.bin.lz.inc"
 };
 
-/* Palette of the credits' Red Eye Studios logo, 16 colours: graphics/intro/60_6319a0.pal. */
+/*
+ * Palette of the credits' Red Eye Studios logo, 16 colours: the palette of
+ * graphics/intro/68_631acc_tiles.png.
+ */
 extern const u8 gCreditsRedEyeStudiosLogoPalette[] __attribute__((aligned(4))) = {
-#include "intro/60_6319a0.gbapal.lz.inc"
+#include "intro/68_631acc_tiles.gbapal.lz.inc"
 };
 
-/* Palette of the credits' Shin'en logo, 16 colours: graphics/intro/61_6319c8.pal. */
+/*
+ * Palette of the credits' Shin'en logo, 16 colours: the palette of
+ * graphics/intro/69_6324b4_tiles.png.
+ */
 extern const u8 gCreditsShinenLogoPalette[] __attribute__((aligned(4))) = {
-#include "intro/61_6319c8.gbapal.lz.inc"
+#include "intro/69_6324b4_tiles.gbapal.lz.inc"
 };
 
-/* Palette of the credits' Cosmigo logo, 16 colours: graphics/intro/62_6319f0.pal. */
+/*
+ * Palette of the credits' Cosmigo logo, 16 colours: the palette of
+ * graphics/intro/70_632820_tiles.png.
+ */
 extern const u8 gCreditsCosmigoLogoPalette[] __attribute__((aligned(4))) = {
-#include "intro/62_6319f0.gbapal.lz.inc"
+#include "intro/70_632820_tiles.gbapal.lz.inc"
 };
 
-/* Palette of the credits' Universal logo, 16 colours: graphics/intro/63_631a18.pal. */
+/*
+ * Palette of the credits' Universal logo, 16 colours: the palette of
+ * graphics/intro/71_632bc4_tiles.png.
+ */
 extern const u8 gCreditsUniversalLogoPalette[] __attribute__((aligned(4))) = {
-#include "intro/63_631a18.gbapal.lz.inc"
+#include "intro/71_632bc4_tiles.gbapal.lz.inc"
 };
 
-/* Palette of the credits' VV logo, 16 colours: graphics/intro/64_631a40.pal. */
+/*
+ * Palette of the credits' VV logo, 16 colours: the palette of graphics/intro/72_6334c4_tiles.png.
+ */
 extern const u8 gCreditsVvLogoPalette[] __attribute__((aligned(4))) = {
-#include "intro/64_631a40.gbapal.lz.inc"
+#include "intro/72_6334c4_tiles.gbapal.lz.inc"
 };
 
-/* Palette of the VV logo screen's emblem, 16 colours: graphics/intro/65_631a68.pal. */
+/*
+ * Palette of the VV logo screen's emblem, 16 colours: the palette of
+ * graphics/intro/73_634270_tiles.png.
+ */
 extern const u8 gVvLogoEmblemPalette[] __attribute__((aligned(4))) = {
-#include "intro/65_631a68.gbapal.lz.inc"
+#include "intro/73_634270_tiles.gbapal.lz.inc"
 };
 
-/* Palette of the VV logo screen's letters, 16 colours: graphics/intro/66_631a90.pal. */
+/*
+ * Palette of the VV logo screen's letters, 16 colours: the palette of
+ * graphics/intro/74_636ef4_tiles.png.
+ */
 extern const u8 gVvLogoLettersPalette[] __attribute__((aligned(4))) = {
-#include "intro/66_631a90.gbapal.lz.inc"
+#include "intro/74_636ef4_tiles.gbapal.lz.inc"
 };
 
-/* Palette of the VV logo screen's URL, 16 colours: graphics/intro/67_631ab8.pal. */
+/*
+ * Palette of the VV logo screen's URL, 16 colours: the palette of
+ * graphics/intro/75_637604_tiles.png.
+ */
 extern const u8 gVvLogoUrlPalette[] __attribute__((aligned(4))) = {
-#include "intro/67_631ab8.gbapal.lz.inc"
+#include "intro/75_637604_tiles.gbapal.lz.inc"
 };
 
 /* 4bpp tiles of the credits' Red Eye Studios logo: graphics/intro/68_631acc_tiles.png. */

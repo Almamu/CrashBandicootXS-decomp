@@ -6,13 +6,25 @@
 # src/data/*.cpp definition #includes (docs/data.md, "Resources");
 # data/data.s incbins no graphics.
 
-# Palettes: JASC .pal text (human editable) -> raw GBA .gbapal. Read as
-# gbagfx reads them, plus the ROM's stray bit-15 entries, which
-# tools/jasc_pal.py keeps in the red value's lowest bit (docs/graphics.md,
-# "Palettes").
+# Palettes -> raw GBA .gbapal. Read as gbagfx reads them, plus the ROM's
+# stray bit-15 entries, which tools/jasc_pal.py keeps in the red value's
+# lowest bit (docs/graphics.md, "Palettes"). A standalone palette is JASC
+# .pal text (the OBJ palettes, graphics/sprites/palettes/); a palette that
+# belongs to one picture is that picture's PNG palette, which must have
+# exactly the colours the ROM's palette has: 256, or 16 for the pictures
+# listed in PALETTE_COLORS_16 (png-to-gba --colors fails otherwise, so an
+# editor that pads or trims the palette is caught).
 $(GRAPHICS_BUILDDIR)/%.gbapal: graphics/%.pal tools/jasc_pal.py
 	@mkdir -p $(dir $@)
 	python3 tools/jasc_pal.py to-gba $< $@
+PALETTE_COLORS_16 := bg_package/61c30c_menu_sky bg_package/628c50_continue_prompt_smoke \
+	bg_package/62a958_continue_prompt_glow bg_package/62c2c8_title_bandicoot_obj \
+	bg_package/62c4b0_title_crash_obj bg_package/62cc3c_title_arrow1_obj bg_package/62ce70_title_arrow2_obj \
+	bg_package/62d0cc_universal_logo intro/68_631acc_tiles intro/69_6324b4_tiles intro/70_632820_tiles \
+	intro/71_632bc4_tiles intro/72_6334c4_tiles intro/73_634270_tiles intro/74_636ef4_tiles intro/75_637604_tiles
+$(GRAPHICS_BUILDDIR)/%.gbapal: graphics/%.png tools/jasc_pal.py
+	@mkdir -p $(dir $@)
+	python3 tools/jasc_pal.py png-to-gba $< $@ --colors $(if $(filter $*,$(PALETTE_COLORS_16)),16,256)
 
 # Framed OBJ sprite sheet entities: each subdirectory under
 # graphics/unknown/<sheet>/ is one distinct entity (one animation's worth
@@ -68,14 +80,11 @@ $(GRAPHICS_BUILDDIR)/%.lz: $(GRAPHICS_BUILDDIR)/% | $(GFX)
 # src/data/*.cpp file #includes.
 
 # Mode 4 bitmaps: linear 8bpp. Their palette is the PNG's own (256
-# colours, bit 15 kept as tools/jasc_pal.py does), an uncompressed u16
-# array (bin2c --u16).
+# colours, the .gbapal rule above), an uncompressed u16 array (bin2c
+# --u16).
 $(GRAPHICS_BUILDDIR)/%_bitmap.img.bin: graphics/%_bitmap.png | $(GRIT)
 	@mkdir -p $(dir $@)
 	$(GRIT) $< -gb -gB8 -p! -ftb -fh! -o $(@:.img.bin=)
-$(GRAPHICS_BUILDDIR)/%_bitmap.gbapal: graphics/%_bitmap.png tools/jasc_pal.py
-	@mkdir -p $(dir $@)
-	python3 tools/jasc_pal.py png-to-gba $< $@
 $(GRAPHICS_BUILDDIR)/%_bitmap.pal.inc: $(GRAPHICS_BUILDDIR)/%_bitmap.gbapal tools/bin2c.py
 	python3 tools/bin2c.py $< $@ --u16
 
@@ -147,17 +156,19 @@ FONT_TILE_PNGS := $(wildcard graphics/intro/00_*_tiles.png)
 $(C_BUILDDIR)/data/font_tiles_5a4e70.o: $(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.img.bin.lz.inc,$(FONT_TILE_PNGS))
 
 # The menu, title and credits graphics (0x0861BADC-0x086377C0): the
-# palettes of graphics/intro/, the bg_package pictures (below) and the
-# credits and VV logo tile sheets.
-MENU_GRAPHICS_INCS := $(patsubst graphics/%.pal,$(GRAPHICS_BUILDDIR)/%.gbapal.lz.inc,$(wildcard graphics/intro/*.pal)) \
-	$(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.img.bin.lz.inc,$(filter-out $(FONT_TILE_PNGS),$(wildcard graphics/intro/*_tiles.png)))
+# bg_package pictures (below) and the credits and VV logo tile sheets, each
+# with the palette of its PNG.
+LOGO_TILE_PNGS := $(filter-out $(FONT_TILE_PNGS),$(wildcard graphics/intro/*_tiles.png))
+MENU_GRAPHICS_INCS := $(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.img.bin.lz.inc,$(LOGO_TILE_PNGS)) \
+	$(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.gbapal.lz.inc,$(LOGO_TILE_PNGS))
 $(C_BUILDDIR)/data/menu_graphics_61badc.o: $(MENU_GRAPHICS_INCS)
 
 # The level-select cursor zoom, the ten level-select pictures and their
-# palettes (graphics/tileset1/, 0x086377C0-0x0863D4C0).
+# palettes, each the palette of its picture's PNG (graphics/tileset1/,
+# 0x086377C0-0x0863D4C0).
 $(C_BUILDDIR)/data/level_select_graphics_6377c0.o: \
 	$(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.img.bin.lz.inc,$(wildcard graphics/tileset1/*_tiles.png)) \
-	$(patsubst graphics/%.pal,$(GRAPHICS_BUILDDIR)/%.gbapal.lz.inc,$(wildcard graphics/tileset1/*.pal))
+	$(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.gbapal.lz.inc,$(wildcard graphics/tileset1/*_8bpp_tiles.png))
 
 # Actor-category backgrounds (docs/data.md, "Category backgrounds"): the
 # BG0 cell animations and BG1 pictures of graphics/category_bg/. They are
@@ -222,11 +233,13 @@ $(C_BUILDDIR)/data/bg_picture_151ac4.o: $(call catbg_picture_incs,151ac4 155260)
 # of the whole picture. grit reduces the picture to tiles + map, and
 # tools/bg_map.py first-use puts the tiles in the ROM's order (order of
 # first use; grit starts with a forced blank tile). gbagfx compresses, and
-# src/data/menu_graphics_61badc.cpp holds the results. The palettes are separate assets in graphics/intro/.
+# src/data/menu_graphics_61badc.cpp holds the results. Each package's
+# palette is its PNG's palette.
 BG_PACKAGE_DIR := $(GRAPHICS_BUILDDIR)/bg_package
 BG_PACKAGE_NAMES := $(basename $(notdir $(wildcard graphics/bg_package/*.png)))
 $(C_BUILDDIR)/data/menu_graphics_61badc.o: \
-	$(foreach n,$(BG_PACKAGE_NAMES),$(BG_PACKAGE_DIR)/$(n).img.bin.lz.inc $(BG_PACKAGE_DIR)/$(n).map.bin.lz.inc)
+	$(foreach n,$(BG_PACKAGE_NAMES),$(BG_PACKAGE_DIR)/$(n).img.bin.lz.inc $(BG_PACKAGE_DIR)/$(n).map.bin.lz.inc \
+	$(BG_PACKAGE_DIR)/$(n).gbapal.lz.inc)
 
 BG_PACKAGE_BPP_61c30c_menu_sky := 4
 BG_PACKAGE_BPP_61e5f8_pause_menu := 8
