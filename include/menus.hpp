@@ -132,7 +132,7 @@ extern const u16 gContinuePromptPalette3[17];
 extern "C" u8 RunContinuePrompt(void);
 
 /* src/menus/level_select.cpp */
-extern "C" s32 RunLevelSelect(s32 *arg);
+extern "C" s32 RunLevelSelect(s32 *level);
 
 /* src/menus/level_select_pages.cpp */
 extern "C" void SetNewWorldOpened(void);

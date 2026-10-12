@@ -357,9 +357,9 @@ public:
     struct bldy bldy;             // 0xA4 - REG_BLDY
     union dispcnt dispcnt;        // 0xA8 - REG_DISPCNT (gfx.h)
 
-    LevelSelect(s32 arg); // InitLevelSelect
-    ~LevelSelect();       // DestroyLevelSelect
-    void Update();        // UpdateLevelSelect
+    LevelSelect(s32 level); // InitLevelSelect
+    ~LevelSelect();         // DestroyLevelSelect
+    void Update();          // UpdateLevelSelect
     void UpdatePageArrows();
     void DrawRecord();
     void DrawTime(u32 time);
