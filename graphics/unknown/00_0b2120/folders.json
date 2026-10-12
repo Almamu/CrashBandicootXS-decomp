@@ -2,7 +2,7 @@
   "sheet_rom_address": "0x080B2120",
   "folders": [
     {
-      "folder": "00_time_crate_1",
+      "folder": "time_crate_1",
       "frames": 18,
       "records": [
         5
@@ -11,7 +11,7 @@
       "bank": 4
     },
     {
-      "folder": "01_time_crate_2",
+      "folder": "time_crate_2",
       "frames": 18,
       "records": [
         6
@@ -20,7 +20,7 @@
       "bank": 4
     },
     {
-      "folder": "02_time_crate_3",
+      "folder": "time_crate_3",
       "frames": 18,
       "records": [
         7
@@ -29,7 +29,7 @@
       "bank": 4
     },
     {
-      "folder": "03_question_crate",
+      "folder": "question_crate",
       "frames": 18,
       "records": [
         28,
@@ -42,7 +42,7 @@
       "bank": 1
     },
     {
-      "folder": "04_life_crate",
+      "folder": "life_crate",
       "frames": 18,
       "records": [
         8
@@ -51,7 +51,7 @@
       "bank": 3
     },
     {
-      "folder": "05_aku_aku_crate",
+      "folder": "aku_aku_crate",
       "frames": 18,
       "records": [
         9
@@ -60,7 +60,7 @@
       "bank": 3
     },
     {
-      "folder": "06_nitro_crate",
+      "folder": "nitro_crate",
       "frames": 18,
       "records": [
         4
@@ -69,7 +69,7 @@
       "bank": 2
     },
     {
-      "folder": "07_basic_crate",
+      "folder": "basic_crate",
       "frames": 9,
       "records": [
         1,
@@ -79,7 +79,7 @@
       "bank": 1
     },
     {
-      "folder": "08_goal",
+      "folder": "goal",
       "frames": 1,
       "records": [
         25,
@@ -89,7 +89,7 @@
       "bank": 12
     },
     {
-      "folder": "09_obstacle",
+      "folder": "obstacle",
       "frames": 1,
       "records": [
         13,
@@ -99,7 +99,7 @@
       "bank": 11
     },
     {
-      "folder": "10_aku_aku",
+      "folder": "aku_aku",
       "frames": 2,
       "records": [
         27
@@ -108,7 +108,7 @@
       "bank": 14
     },
     {
-      "folder": "11_penguin",
+      "folder": "penguin",
       "frames": 9,
       "records": [
         24
@@ -117,7 +117,7 @@
       "bank": 13
     },
     {
-      "folder": "12_checkpoint_crate",
+      "folder": "checkpoint_crate",
       "frames": 14,
       "records": [
         3
@@ -126,7 +126,7 @@
       "bank": 5
     },
     {
-      "folder": "13_boost_pad",
+      "folder": "boost_pad",
       "frames": 8,
       "records": [
         12,
@@ -140,7 +140,7 @@
       "bank": 6
     },
     {
-      "folder": "14_icicle",
+      "folder": "icicle",
       "frames": 12,
       "records": [
         16,
@@ -154,7 +154,7 @@
       "bank": 10
     },
     {
-      "folder": "15_riderless_polar",
+      "folder": "riderless_polar",
       "frames": 10,
       "records": [
         2
@@ -163,7 +163,7 @@
       "bank": 0
     },
     {
-      "folder": "16_electric_fence",
+      "folder": "electric_fence",
       "frames": 8,
       "records": [
         23
@@ -172,7 +172,7 @@
       "bank": 9
     },
     {
-      "folder": "17_wumpa",
+      "folder": "wumpa",
       "frames": 14,
       "records": [
         11
@@ -181,7 +181,7 @@
       "bank": 7
     },
     {
-      "folder": "18_launcher",
+      "folder": "launcher",
       "frames": 20,
       "records": [
         22
@@ -190,7 +190,7 @@
       "bank": 8
     },
     {
-      "folder": "19_crate_shards",
+      "folder": "crate_shards",
       "frames": 6,
       "records": [
         1,
@@ -212,7 +212,7 @@
       ]
     },
     {
-      "folder": "20_nitro_crate_burst",
+      "folder": "nitro_crate_burst",
       "frames": 8,
       "records": [
         4
@@ -221,7 +221,7 @@
       "bank": 2
     },
     {
-      "folder": "21_time_crate_shards",
+      "folder": "time_crate_shards",
       "frames": 6,
       "records": [
         5,
@@ -232,7 +232,7 @@
       "bank": 4
     },
     {
-      "folder": "22_electric_fence_wreck",
+      "folder": "electric_fence_wreck",
       "frames": 14,
       "records": [
         23
@@ -241,7 +241,7 @@
       "bank": 9
     },
     {
-      "folder": "23_aku_aku_feathers",
+      "folder": "aku_aku_feathers",
       "frames": 5,
       "records": [
         27
@@ -250,7 +250,7 @@
       "bank": 14
     },
     {
-      "folder": "24_checkpoint_text",
+      "folder": "checkpoint_text",
       "frames": 1,
       "records": [
         40

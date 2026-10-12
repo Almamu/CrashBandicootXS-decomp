@@ -2,7 +2,7 @@
   "sheet_rom_address": "0x0814174C",
   "folders": [
     {
-      "folder": "00_shot",
+      "folder": "shot",
       "frames": 3,
       "records": [
         2
@@ -11,7 +11,7 @@
       "bank": 1
     },
     {
-      "folder": "01_plane",
+      "folder": "plane",
       "frames": 32,
       "records": [
         1
@@ -20,7 +20,7 @@
       "bank": 2
     },
     {
-      "folder": "02_bomber",
+      "folder": "bomber",
       "frames": 10,
       "records": [
         4,
@@ -34,7 +34,7 @@
       "bank": 2
     },
     {
-      "folder": "03_cannonball",
+      "folder": "cannonball",
       "frames": 1,
       "records": [
         3
@@ -43,7 +43,7 @@
       "bank": 2
     },
     {
-      "folder": "04_fireball",
+      "folder": "fireball",
       "frames": 8,
       "records": [
         38,
@@ -53,7 +53,7 @@
       "bank": 3
     },
     {
-      "folder": "05_balloon_red_cross",
+      "folder": "balloon_red_cross",
       "frames": 6,
       "records": [
         42
@@ -62,7 +62,7 @@
       "bank": 7
     },
     {
-      "folder": "06_balloon_red",
+      "folder": "balloon_red",
       "frames": 6,
       "records": [
         40
@@ -71,7 +71,7 @@
       "bank": 5
     },
     {
-      "folder": "07_balloon_yellow",
+      "folder": "balloon_yellow",
       "frames": 6,
       "records": [
         41
@@ -80,7 +80,7 @@
       "bank": 6
     },
     {
-      "folder": "08_question_crate",
+      "folder": "question_crate",
       "frames": 1,
       "records": [
         19,
@@ -93,7 +93,7 @@
       "bank": 7
     },
     {
-      "folder": "09_time_crate_1",
+      "folder": "time_crate_1",
       "frames": 1,
       "records": [
         24
@@ -102,7 +102,7 @@
       "bank": 5
     },
     {
-      "folder": "10_time_crate_2",
+      "folder": "time_crate_2",
       "frames": 1,
       "records": [
         25
@@ -111,7 +111,7 @@
       "bank": 5
     },
     {
-      "folder": "11_time_crate_3",
+      "folder": "time_crate_3",
       "frames": 1,
       "records": [
         26
@@ -120,7 +120,7 @@
       "bank": 5
     },
     {
-      "folder": "12_crate_shards",
+      "folder": "crate_shards",
       "frames": 8,
       "records": [
         19,
@@ -133,7 +133,7 @@
       "bank": 7
     },
     {
-      "folder": "13_fireball_burst",
+      "folder": "fireball_burst",
       "frames": 10,
       "records": [
         38,
@@ -143,7 +143,7 @@
       "bank": 3
     },
     {
-      "folder": "14_explosion",
+      "folder": "explosion",
       "frames": 10,
       "records": [
         4,
@@ -164,7 +164,7 @@
       ]
     },
     {
-      "folder": "15_parachute_nitro",
+      "folder": "parachute_nitro",
       "frames": 14,
       "records": [
         27
@@ -173,7 +173,7 @@
       "bank": 8
     },
     {
-      "folder": "16_collected_wumpa",
+      "folder": "collected_wumpa",
       "frames": 14,
       "records": [
         44
@@ -182,7 +182,7 @@
       "bank": 9
     },
     {
-      "folder": "17_ring",
+      "folder": "ring",
       "frames": 4,
       "records": [
         31,
@@ -192,7 +192,7 @@
       "bank": 11
     },
     {
-      "folder": "18_rocket",
+      "folder": "rocket",
       "frames": 5,
       "records": [
         28,
@@ -202,7 +202,7 @@
       "bank": 5
     },
     {
-      "folder": "19_stopwatch",
+      "folder": "stopwatch",
       "frames": 6,
       "records": [
         29
@@ -211,7 +211,7 @@
       "bank": 5
     },
     {
-      "folder": "20_time_crate_shards",
+      "folder": "time_crate_shards",
       "frames": 8,
       "records": [
         24,
@@ -222,7 +222,7 @@
       "bank": 5
     },
     {
-      "folder": "21_rocket_burst",
+      "folder": "rocket_burst",
       "frames": 11,
       "records": [
         28,
@@ -232,7 +232,7 @@
       "bank": 5
     },
     {
-      "folder": "22_hovercraft_cannon",
+      "folder": "hovercraft_cannon",
       "frames": 25,
       "records": [
         10,
@@ -252,7 +252,7 @@
       "bank": 10
     },
     {
-      "folder": "23_hovercraft_launcher",
+      "folder": "hovercraft_launcher",
       "frames": 22,
       "records": [
         12
@@ -261,7 +261,7 @@
       "bank": 10
     },
     {
-      "folder": "24_hovercraft_side_gun",
+      "folder": "hovercraft_side_gun",
       "frames": 1,
       "records": [
         13
@@ -270,7 +270,7 @@
       "bank": 10
     },
     {
-      "folder": "25_hovercraft_cannon_flash",
+      "folder": "hovercraft_cannon_flash",
       "frames": 6,
       "records": [
         14
@@ -279,7 +279,7 @@
       "bank": 4
     },
     {
-      "folder": "26_checkpoint_text",
+      "folder": "checkpoint_text",
       "frames": 1,
       "records": [
         46

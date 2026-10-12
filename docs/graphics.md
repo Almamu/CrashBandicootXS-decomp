@@ -1297,10 +1297,14 @@ the folder names are the records' actor kinds
 frames can span several folders - the polar Nitro crate is
 `06_nitro_crate/` then `20_nitro_crate_burst/`, every wooden polar crate
 ends in the shared `19_crate_shards/`, the jetpack rocket is
-`18_rocket/`, `14_explosion/` and `21_rocket_burst/`. The `NN_` order is
-the sheet's byte order, which is also the build's pack order, so the ROM
-doesn't change; the `FRAMED_<SHEET>_<FOLDER>_<NN>` names in
-`src/data/anim_family_*.cpp` follow the folders.
+`18_rocket/`, `14_explosion/` and `21_rocket_burst/`. The order of the
+`"folders"` list in the sheet's `folders.json` is the sheet's byte order,
+which is also the build's pack order (`tools/framed_gfx.py order`,
+graphics.mk's `FRAMED_ENTITIES_<sheet>`), so the ROM doesn't change. The
+list names each folder without its `NN_` prefix: the prefix no longer
+decides anything (`framed_gfx.py` still accepts it). The
+`FRAMED_<SHEET>_<FOLDER>_<NN>` names in `src/data/anim_family_*.cpp`
+follow the folders' names.
 
 Each folder's PNGs carry the 16 colours the game draws them with:
 `anim_table_record.palette` (`+0x0C`) is the OBJ palette bank, an index
