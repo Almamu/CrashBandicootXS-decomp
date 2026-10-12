@@ -585,7 +585,9 @@ then inputs of its `swi` asm, Shin'en's source (#662).
 
 `ORIGINAL_SOURCE`, next to it, lists the asm that is the original
 program's own source rather than a workaround: GAX2's inline asm
-(below). `--check` allows it spelled out as the original wrote it, and
+(below) and `DivMod`'s inline `svc` with its r0/r1 register variables
+(the SWI wrapper's operand binding, [Instruction asm](#instruction-asm)).
+`--check` allows it spelled out as the original wrote it, and
 `--functions` doesn't count it.
 
 ## Memory accesses
@@ -665,9 +667,12 @@ address when it can
 ### Instruction asm
 
 5 asm statements emit real instructions (from 253 when the #576 survey
-counted them). One is a workaround: the `svc` call of
-`src/system/bios_util.cpp`, with its registers (`itoa_arm`'s `swi` went
-with it into `asm/itoa_arm.s`, #662). Four are GAX2's own
+counted them). None is a workaround (`itoa_arm`'s `swi` went with it
+into `asm/itoa_arm.s`, #662). `DivMod`'s `svc` call
+(`src/system/bios_util.cpp`), with its `push {r2}`/`pop {r2}` and its
+r0/r1 register variables, is the SWI wrapper as its source wrote it, the
+same classification as `GaxHuffUnComp`'s (`ORIGINAL_SOURCE`, #662). Four
+are GAX2's own
 source (`ORIGINAL_SOURCE`, not counted as workarounds; docs/libraries.md,
 "GAX implementation notes"): `GAX_DMA_WAIT` (the DMA settle delay,
 `mov r3, r3` and three `nop`s, as GAX 3.05A's matched C writes it; the

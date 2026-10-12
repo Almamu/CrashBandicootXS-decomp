@@ -3,7 +3,6 @@
 #include "ctrl.hpp"
 
 extern "C" {
-#include "match.h"
 #include <agb_syscall.h>
 #include "system.h"
 }
@@ -22,11 +21,17 @@ extern "C" {
  * `push {r2}`/`pop {r2}`. gcc never saves a register that way (an "r2"
  * clobber gets a copy in callee-saved r4 and a push/pop-list prologue
  * instead), so the pair is in the asm, as the ROM's source had it. r2
- * needs no binding: nothing else wants it. */
+ * needs no binding: nothing else wants it.
+ *
+ * The register variables are the SWI's operand binding, the way an
+ * inline SWI wrapper is written for gcc (ARM has no per-register asm
+ * constraints), not a nudge of gcc's register choice: like
+ * GaxHuffUnComp's (lib/gax/src/gax_swi.c), they and the asm count as the
+ * original source (tools/match_idioms.py's ORIGINAL_SOURCE; #662). */
 s32 DivMod(s32 number, s32 denom, s32 *remainderOut)
 {
-    MATCH_HOLD_REG(s32, quotient, r0) = number;
-    MATCH_HOLD_REG(s32, remainder, r1) = denom;
+    register s32 quotient asm("r0") = number;
+    register s32 remainder asm("r1") = denom;
 
     // clang-format off
     asm volatile("push {r2}\n\tsvc #6\n\tpop {r2}"
