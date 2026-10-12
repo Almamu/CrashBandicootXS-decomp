@@ -12,10 +12,13 @@ $(GRAPHICS_BUILDDIR)/%.8bpp: graphics/%.png | $(GFX)
 	@mkdir -p $(dir $@)
 	$(GFX) $< $@
 
-# Palettes: JASC .pal text (human editable) -> raw GBA .gbapal.
-$(GRAPHICS_BUILDDIR)/%.gbapal: graphics/%.pal | $(GFX)
+# Palettes: JASC .pal text (human editable) -> raw GBA .gbapal. Read as
+# gbagfx reads them, plus the ROM's stray bit-15 entries, which
+# tools/jasc_pal.py keeps in the red value's lowest bit (docs/graphics.md,
+# "Palettes").
+$(GRAPHICS_BUILDDIR)/%.gbapal: graphics/%.pal tools/jasc_pal.py
 	@mkdir -p $(dir $@)
-	$(GFX) $< $@
+	python3 tools/jasc_pal.py to-gba $< $@
 
 # Full-screen Mode 4 bitmaps (240x160, linear/non-tiled framebuffers).
 # gbagfx always arranges pixel data into 8x8 tiles, which is the wrong

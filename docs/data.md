@@ -473,8 +473,10 @@ framed sprite-sheet frame is already indexed. Tile order is row-major
 **Palettes.** An indexed PNG carrying `intro/24_61badc.pal` (16 colours)
 gives the ROM's bytes with `-g! -p -pn16`. One carrying
 `tileset1/11_63cf98.pal` (256 colours) gives them with `-g! -p -pn256`.
-The `.bin` palettes whose entries have bit 15 set can't be produced by grit
-or by gbagfx's `.pal`. They stay raw `.bin`.
+The palettes whose entries have bit 15 set can't be produced by grit or
+by gbagfx's `.pal`. They are JASC `.pal` files read by `tools/jasc_pal.py`,
+which keeps bit 15 in the red value's lowest bit (docs/graphics.md,
+"Palettes").
 
 **Tilemaps.** The intro sky background (tileset `36_61c30c`, map
 `48_62fb24`, palette `24_61badc`) was composited into one 256x160 indexed
@@ -554,7 +556,7 @@ Per asset kind:
 | 8bpp tileset (`*_8bpp_tiles.png`) | `-gt -gB8 -p!` | gbagfx LZ77 | verified, 14/14 |
 | 4bpp tileset (`*_tiles.png`) | `-gt -gB4 -p!` | gbagfx LZ77 | verified 35/35; needs the PNG re-saved as indexed first |
 | 16-colour palette | `-g! -p -pn16` on an indexed PNG carrying it | gbagfx LZ77 | verified |
-| 256-colour palette | `-g! -p -pn256` | gbagfx LZ77 | verified; bit-15 `.bin` palettes stay raw |
+| 256-colour palette | `-g! -p -pn256` | gbagfx LZ77 | verified; the bit-15 palettes are `.pal` files built by `tools/jasc_pal.py` |
 | tilemap (+ tileset) from one full image | `-gt -gB4 -m -mRtf -mLf -fx <tileset.png>` | gbagfx LZ77 | map verified; the tileset itself stays a separate PNG |
 | framed OBJ sheets (`graphics/unknown/0*/`) | not migrated: each frame has a 4-byte header grit doesn't know about | `tools/framed_gfx.py` | - |
 | raw 4bpp tile pool (`graphics/sprites/`) | `-gt -gB4 -p!` | `tools/bin2c.py --size` | used, 57 PNGs |
