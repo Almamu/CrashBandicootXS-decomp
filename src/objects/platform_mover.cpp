@@ -234,8 +234,10 @@ void PlatformMover::MovePlayer(MovingSprite *part)
 
             Player *q = gPlayer;
             s32 px = Q8_TO_INT(q->x);
+            /* `dx` is needed: inlined, the instructions are reordered */
             s32 dx = Q8_TO_INT(part->x) - lastX;
             s32 py = Q8_TO_INT(q->y);
+            /* `dy` is needed: inlined, the code is 8 instructions shorter */
             s32 dy = Q8_TO_INT(part->y) - lastY;
 
             px += dx;

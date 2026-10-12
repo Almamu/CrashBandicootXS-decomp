@@ -45,7 +45,9 @@ bool MovingSprite::ProbeEdgeTerrain(s32 mode, const struct hitbox_quad *quad)
      * increment and one for the loop test: two copies of `tries`
      * (decomp-permuter; the C pinned `tries` instead). */
     u8 *count;
+    /* `limit` is needed: inlined, the registers differ */
     u8 *limit;
+    /* `pp` is needed: inlined, the code is 2 instructions shorter */
     struct vec2 *pp;
 
     gLevelLayers->probeFlag = 0;

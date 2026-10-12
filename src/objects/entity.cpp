@@ -27,12 +27,14 @@ u8 Entity::IsNearCamera()
     if (!result) {
         struct aabb near;
         BgLayer *layer;
+        /* `w`, `h` are needed: inlined, the instructions are reordered */
         s32 w = INT_TO_Q8(440);
         s32 h = INT_TO_Q8(280);
 
         near.w = w;
         near.h = h;
         layer = gLevelLayers->layer0;
+        /* `nx`, `ny` are needed: inlined, the instructions are reordered */
         s32 nx = INT_TO_Q8(layer->x) - INT_TO_Q8(100);
         s32 ny = INT_TO_Q8(layer->y) - INT_TO_Q8(60);
 
@@ -50,8 +52,10 @@ s32 Entity::CheckPlayerContact()
 {
     const struct hitbox_quad *rec = GetBounds();
     struct aabb box;
+    /* `bx`, `offX` are needed: inlined, the instructions are reordered */
     s32 bx = Q8_TO_INT(x);
     s32 offX = rec->offX;
+    /* `by`, `offY`, `w`, `h` are needed: inlined, the instructions differ */
     s32 by = Q8_TO_INT(y);
     s32 offY = rec->offY;
     u8 w = rec->w;
@@ -111,9 +115,13 @@ s32 Entity::IsInsideRect(struct aabb *box)
         const struct hitbox_quad *rec = GetBounds();
         s32 hw = rec->w << 7;
         s32 hh = rec->h << 7;
+        /* `x0` is needed: inlined, the instructions are reordered */
         s32 x0 = x - hw;
+        /* `y0` is needed: inlined, the code is 2 instructions longer */
         s32 y0 = y - hh;
+        /* `x1` is needed: inlined, the code is 7 instructions longer */
         s32 x1 = x + hw;
+        /* `y1` is needed: inlined, the code is 2 instructions longer */
         s32 y1 = y + hh;
         s32 inside = 0;
 
@@ -129,6 +137,7 @@ s32 Entity::IsInsideRect(struct aabb *box)
 void WorldToScreen(void *unused, s32 x, s32 y, s32 *outX, s32 *outY)
 {
     BgLayer *layer = gLevelLayers->layer0;
+    /* `dx`, `dy` are needed: inlined, the instructions are reordered */
     s32 dx = (layer->x << 8) >> 8;
     s32 dy = (layer->y << 8) >> 8;
 
@@ -148,6 +157,7 @@ void WorldPosToScreen(s32 *pos, s32 *outX, s32 *outY)
     if (y & 0x80)
         y += 0x80;
     layer = gLevelLayers->layer0;
+    /* `cx`, `cy` are needed: inlined, the instructions are reordered */
     s32 cx = INT_TO_Q8(layer->x);
     s32 cy = INT_TO_Q8(layer->y);
 

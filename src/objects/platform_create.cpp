@@ -113,6 +113,7 @@ Platform *Platform::Create(u16 id, u16 x, u16 y, u16 index, s32 kind)
     obj->mirrorFlags.mirrorY = 0;
 
     const struct sprite_anim *r = obj->bank->anims;
+    /* `slot` is needed: inlined, the code is 2 instructions shorter */
     u32 slot;
 
     r += obj->tag;

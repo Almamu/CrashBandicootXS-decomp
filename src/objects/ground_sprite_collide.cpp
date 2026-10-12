@@ -76,6 +76,7 @@ s32 GroundSprite::ProbeTerrainAxes()
     if (hit && result == 0)
         result = PART_DIR_DOWN;
     if (floorMiss == 1) {
+        /* `c` is needed: inlined, the instructions differ */
         u8 c;
 
         origY = y;

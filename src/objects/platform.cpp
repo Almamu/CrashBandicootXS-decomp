@@ -43,6 +43,7 @@ s32 Platform::GetExitMirror()
  * active bonus platform). */
 void Platform::SetExitMirror(u8 value)
 {
+    /* `mirror` is needed: inlined, the code is 1 instruction shorter */
     s32 mirror = value;
 
     f.b.exitMirror = mirror;

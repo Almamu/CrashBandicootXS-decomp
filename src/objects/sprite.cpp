@@ -43,10 +43,14 @@ struct aabb Sprite::GetAnimBounds()
 {
     struct aabb box;
     const struct hitbox_quad *pb = &bank->anims[tag].box[1];
+    /* `px`, `offX` are needed: inlined, the instructions are reordered */
     s32 px = Q8_TO_INT(x);
     s32 offX = pb->offX;
+    /* `py` is needed: inlined, the code is 4 instructions shorter */
     s32 py = Q8_TO_INT(y);
+    /* `offY` is needed: inlined, the code is 1 instruction longer */
     s32 offY = pb->offY;
+    /* `w`, `h` are needed: inlined, the code is 5 instructions shorter */
     u8 w = pb->w;
     u8 h = pb->h;
 
@@ -64,10 +68,14 @@ struct aabb Sprite::GetAnimHitbox()
 {
     struct aabb box;
     const struct hitbox_quad *pb = &bank->anims[tag].box[0];
+    /* `px`, `offX` are needed: inlined, the instructions are reordered */
     s32 px = Q8_TO_INT(x);
     s32 offX = pb->offX;
+    /* `py` is needed: inlined, the code is 4 instructions shorter */
     s32 py = Q8_TO_INT(y);
+    /* `offY` is needed: inlined, the code is 1 instruction longer */
     s32 offY = pb->offY;
+    /* `w`, `h` are needed: inlined, the code is 5 instructions shorter */
     u8 w = pb->w;
     u8 h = pb->h;
 
@@ -110,10 +118,15 @@ struct aabb Sprite::GetAttackBox()
         break;
     }
 
+    /* `px` is needed: inlined, the instructions are reordered */
     px = Q8_TO_INT(x);
+    /* `offX` is needed: inlined, the code is 6 instructions longer */
     offX = rec->offX;
+    /* `py` is needed: inlined, the instructions are reordered */
     py = Q8_TO_INT(y);
+    /* `offY` is needed: inlined, the code is 6 instructions longer */
     offY = rec->offY;
+    /* `w`, `h` are needed: inlined, the instructions differ */
     w = rec->w;
     h = rec->h;
 
@@ -152,10 +165,15 @@ struct aabb Sprite::GetBodyBox()
         break;
     }
 
+    /* `px` is needed: inlined, the instructions are reordered */
     px = Q8_TO_INT(x);
+    /* `offX` is needed: inlined, the code is 4 instructions longer */
     offX = rec->offX;
+    /* `py` is needed: inlined, the instructions are reordered */
     py = Q8_TO_INT(y);
+    /* `offY` is needed: inlined, the code is 4 instructions longer */
     offY = rec->offY;
+    /* `w`, `h` are needed: inlined, the code is 2 instructions shorter */
     w = rec->w;
     h = rec->h;
 
@@ -245,17 +263,20 @@ u8 Sprite::IsOnScreen()
 
     if (screenSpace == 1)
         return 1;
+    /* `hidden` is needed: inlined, the instructions differ */
     s32 hidden = (f.bytes.flags2 >> ENTITY_BIT2_HIDDEN) & 1;
 
     if (!hidden) {
         struct aabb screen;
         BgLayer *cam = gLevelLayers->layer0;
+        /* `cx`, `cy` are needed: inlined, the instructions are reordered */
         s32 cx = INT_TO_Q8(cam->x);
         s32 cy = INT_TO_Q8(cam->y);
         s32 w, h;
 
         screen.x = cx;
         screen.y = cy;
+        /* `w`, `h` are needed: inlined, the instructions are reordered */
         w = INT_TO_Q8(0xf0);
         h = INT_TO_Q8(0xa0);
         screen.w = w;
@@ -273,12 +294,14 @@ s32 Sprite::OverlapsRect(struct aabb *region)
 
     if (screenSpace == 1)
         return 1;
+    /* `hidden` is needed: inlined, the code is 1 instruction longer */
     s32 hidden = (f.bytes.flags2 >> ENTITY_BIT2_HIDDEN) & 1;
 
     if (!hidden) {
         struct aabb box = GetAnimBounds();
         s32 x1 = INT_TO_Q8(box.x);
         s32 y1 = INT_TO_Q8(box.y);
+        /* `x2`, `y2` are needed: inlined, the instructions differ */
         s32 x2 = x1 + INT_TO_Q8(box.w);
         s32 y2 = y1 + INT_TO_Q8(box.h);
         s32 in = 0;
@@ -315,6 +338,7 @@ void Sprite::AdvanceAnim()
             frame = 0;
             stepTimer = 0;
             if (!(anims[tag].flags & SPRITE_ANIM_LOOP)) {
+                /* `done` is needed: inlined, the instructions are reordered */
                 u8 done = TRUE;
 
                 animDone = done;

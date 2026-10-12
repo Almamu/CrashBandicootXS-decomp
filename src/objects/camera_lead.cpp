@@ -69,6 +69,7 @@ void CameraLead::Reset()
     gCamera->target = this;
 
     Player *p = gPlayer;
+    /* `px`, `py` are needed: inlined, the instructions are reordered */
     s32 px = p->x;
     s32 py = p->y;
     s32 off = 0x1E00;
@@ -105,6 +106,7 @@ void CameraLead::Update()
     }
 
     Player *p = gPlayer;
+    /* `px`, `py` are needed: inlined, the instructions are reordered */
     s32 px = p->x;
     s32 py = p->y;
 

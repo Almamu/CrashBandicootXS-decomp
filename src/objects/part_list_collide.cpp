@@ -33,27 +33,26 @@ void PartList::Update()
     } f;
     BgLayer *cam;
     s32 i;
+    /* `zero` is needed: inlined, the instructions are reordered */
     s32 zero;
     struct aabb *ps;
 
-    {
-        s32 w = INT_TO_Q8(440);
-        s32 h = INT_TO_Q8(280);
-        f.near.w = w;
-        f.near.h = h;
-    }
+    s32 w = INT_TO_Q8(440);
+    s32 h = INT_TO_Q8(280);
+    f.near.w = w;
+    f.near.h = h;
     cam = gLevelLayers->layer0;
-    {
-        s32 cx;
-        s32 cy;
 
-        cx = INT_TO_Q8(cam->x);
-        zero = 0;
-        cx -= INT_TO_Q8(100);
-        cy = INT_TO_Q8(cam->y) - INT_TO_Q8(60);
-        f.near.x = cx;
-        f.near.y = cy;
-    }
+    s32 cx;
+    s32 cy;
+
+    cx = INT_TO_Q8(cam->x);
+    zero = 0;
+    cx -= INT_TO_Q8(100);
+    cy = INT_TO_Q8(cam->y) - INT_TO_Q8(60);
+    f.near.x = cx;
+    f.near.y = cy;
+    /* scoped: its own `cx`/`cy` (shared, the registers differ) */
     {
         s32 cx = INT_TO_Q8(cam->x);
         s32 cy = INT_TO_Q8(cam->y);
@@ -61,6 +60,7 @@ void PartList::Update()
         f.screen.y = cy;
     }
     ps = &f.screen;
+    /* scoped: its own `w`/`h` (shared, the registers differ) */
     {
         s32 w = INT_TO_Q8(240);
         s32 h = INT_TO_Q8(160);
@@ -183,11 +183,13 @@ void PartList::Cull()
     struct aabb screen;
     BgLayer *cam = gLevelLayers->layer0;
 
+    /* `cx`, `cy` are needed: inlined, the instructions are reordered */
     s32 cx = INT_TO_Q8(cam->x);
     s32 cy = INT_TO_Q8(cam->y);
     screen.x = cx;
     screen.y = cy;
 
+    /* `w`, `h` are needed: inlined, the instructions are reordered */
     s32 w = INT_TO_Q8(240);
     s32 h = INT_TO_Q8(160);
     screen.w = w;

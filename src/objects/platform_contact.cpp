@@ -12,6 +12,7 @@ s32 Platform::CheckPlayerContact()
 {
     if (type != PLATFORM_TYPE_FLIP || frame <= 0x12) {
         Player *p = gPlayer;
+        /* `state` is needed: inlined, the instructions differ */
         void *state = (void *)p->mover->state;
         s32 collides = p->f.flags >> ENTITY_BIT_COLLIDES;
 

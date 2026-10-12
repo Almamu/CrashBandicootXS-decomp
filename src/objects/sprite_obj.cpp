@@ -27,14 +27,17 @@ extern "C" {
 s32 Sprite::HitboxOverlaps(struct aabb *region)
 {
     struct aabb box;
+    /* `flipX`, `flipY` are needed: inlined, the code is 1 instruction longer */
     s32 flipX = mirrorFlags.mirrorX;
     s32 flipY = mirrorFlags.mirrorY;
     s32 px = Q8_TO_INT(x);
     s32 py = Q8_TO_INT(y);
     const struct sprite_anim *rec = &bank->anims[tag];
     const struct hitbox_quad *hb = &rec->box[0];
+    /* `offX`, `offY` are needed: inlined, the instructions are reordered */
     s32 offX = rec->box[0].offX;
     s32 offY = hb->offY;
+    /* `w`, `h` are needed: inlined, the code is 1 instruction shorter */
     s32 w = hb->w;
     s32 h = hb->h;
 
