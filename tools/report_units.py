@@ -896,7 +896,17 @@ def parse_data():
         else:
             sys.exit(f"ldscript.txt: unexpected object {obj} in the data block")
         if addr % align:
-            sys.exit(f"{obj}({section}) needs {align}-byte alignment but would start at {addr:#x}")
+            # The linker's zero fill up to an aligned object: the padding
+            # after a src/data object's last LZ77 stream (an aligned(4)
+            # array's 0-3 trailing zeros, docs/data.md "LZ77 stream
+            # padding"). It counts toward that blob, as the padding between
+            # two arrays of one object does.
+            prev = blobs[-1] if blobs else None
+            if prev is None or not prev.get("c_source"):
+                sys.exit(f"{obj}({section}) needs {align}-byte alignment but would start at {addr:#x}")
+            fill = -addr % align
+            prev["size"] += fill
+            addr += fill
         for blob in part:
             blob["addr"] = addr
             if not blob["built"] and int(blob["off"], 0) != addr - ROM_BASE:

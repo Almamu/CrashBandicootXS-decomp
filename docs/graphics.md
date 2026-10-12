@@ -59,13 +59,30 @@ rather than a "garbled" one.
 
 ## Build pipeline
 
-`graphics.mk` + `Makefile` (`GRAPHICS_BUILDDIR`) convert `graphics/*/*.png`
-+ `*.pal` + `*.bin` sources into the original compressed bytes, output to
+`graphics.mk` + `Makefile` (`GRAPHICS_BUILDDIR`) convert the `graphics/`
+sources (PNGs and JASC `.pal` files) into the original bytes, output to
 `build/crashbandicootxs/graphics/` (mirroring the source subdirectory
 layout) — `graphics/` itself only ever holds editable sources, never build
-products. `tools/gbagfx` (vendored from the sibling `sa2` decompilation,
-same Dimps-engine lineage) does the PNG<->4bpp/8bpp/gbapal conversion and
-LZ77 compress/decompress.
+products. grit (`tools/grit`) does the pixel layout of every PNG, and
+`tools/jasc_pal.py` the palettes. `tools/gbagfx` (vendored from the sibling
+`sa2` decompilation, same Dimps-engine lineage) does the LZ77 compression.
+`tools/bin2c.py` writes the result as C initializer bytes that a
+`src/data/*.cpp` definition `#include`s, so every graphics asset is a C
+array (`data/data.s` incbins no graphics).
+
+| ROM | object | contents |
+|---|---|---|
+| `080B2120`, `0814174C` | `sprite_sheet_0b2120.cpp`, `sprite_sheet_14174c.cpp` | the two framed OBJ sprite sheets (`graphics/unknown/`, `tools/framed_gfx.py`) |
+| `085A4E70` | `font_tiles_5a4e70.cpp` | the two HUD fonts |
+| `085A9F70` | `cutscene_pictures_5a9f70.cpp` | the 24 cutscene pictures |
+| `0861BADC` | `menu_graphics_61badc.cpp` | menu/title palettes, the `bg_package` pictures, the credits and VV logos |
+| `086377C0` | `level_select_graphics_6377c0.cpp` | the level-select cursor zoom, pictures and their palettes |
+| `0863D4C0` | `level_bg_tiles_63d4c0.cpp` | the six level BG1-3 tile sets |
+
+The LZ77 ones are `u8` arrays trimmed to the stream (`bin2c.py --lz`). All
+but the cutscene bitmaps start on a word boundary in the ROM and are
+declared `aligned(4)` ([data.md, "LZ77 stream
+padding"](./data.md#lz77-stream-padding)).
 
 ### Palettes
 
@@ -153,7 +170,8 @@ How the build does it (`graphics.mk`):
    step renumbers grit's tiles by first use and drops the ones the map
    doesn't use. On three pictures (sky, pause menu, smoke) that drops
    grit's blank. On the others it changes nothing.
-3. **gbagfx compresses the result** (LZ77), and `data/data.s` incbins it.
+3. **gbagfx compresses the result** (LZ77), and `tools/bin2c.py --lz`
+   writes it as the C bytes of `src/data/menu_graphics_61badc.cpp`.
 
 The universal logo is the exception. Its tile set has 234 tiles that its
 map doesn't use, and duplicates among the ones it does use: identical
@@ -993,9 +1011,10 @@ fragments back together in filename order (numeric prefixes preserve
 original ROM order, computed via `$(patsubst ...,$(sort $(wildcard
 graphics/unknown/<name>/*.png)))` so new/removed records stay in sync
 automatically) before the existing generic `.bin.lz` compression rule
-runs - `Makefile`'s `GRAPHICS_BUILT` lists the two composite `.bin.lz`
+runs - `Makefile`'s `GRAPHICS_BUILT` listed the two composite `.bin.lz`
 targets explicitly since the flat `graphics/*/*.bin`/`*.png` wildcards
-don't reach 3 directory levels deep. Verified byte-exact via a full clean
+don't reach 3 directory levels deep (today `graphics.mk` makes
+`src/data/sprite_sheet_0b2120.o`/`sprite_sheet_14174c.o` depend on them). Verified byte-exact via a full clean
 `make compare` (including rebuilding `gbagfx`) after the change.
 
 Not done: further breaking down the two `unidentified*.png` catch-all
@@ -1296,7 +1315,8 @@ The build (`graphics.mk`):
 - grit `-gt -gB4` keeps each index's low nibble;
 - `tools/bin2c.py --size N --bin` trims the blank tiles that pad the last
   row (`LEVEL_BG_TILE_BYTES_*`; trimmed bytes must be zero);
-- gbagfx compresses, and `data/data.s` incbins the result.
+- gbagfx compresses, and `tools/bin2c.py --lz` writes the C bytes of
+  `src/data/level_bg_tiles_63d4c0.cpp`.
 
 `tools/levels.py render` reads these PNGs, masking the index to 4 bits.
 
@@ -1307,11 +1327,33 @@ nothing in game; the map's bank decides the colours there.
 ### Indexed tile PNGs
 
 The remaining 4bpp tile PNGs that gbagfx had written as grayscale are
-indexed (`P` mode) PNGs now, with the same indices, so gbagfx builds the
-same bytes:
+indexed (`P` mode) PNGs now, with the same indices. grit (`-gt -gB4 -p!`,
+or `-gB8` for the `*_8bpp_tiles.png` level-select pictures) builds the same
+bytes gbagfx did, checked on all 21 sheets of `graphics/intro/` and
+`graphics/tileset1/`:
 - the credits and VV logo sheets (`intro/68`-`75`) carry their real
   16-colour palettes (`intro/60`-`67`);
 - the two HUD fonts (`intro/00_5a4e70`, `00_5a551c`) and the level-select
   cursor zoom (`tileset1/00`) have no fixed palette (OAM picks one at
   run time), so they carry a grayscale placeholder that looks like the
-  old PNGs.
+  old PNGs. See "Placeholder palettes" below.
+
+### Placeholder palettes
+
+Three tile sheets have no palette of their own in the ROM:
+`gSmallFontTiles` (`graphics/intro/00_5a4e70_tiles.png`),
+`gLargeFontTiles` (`00_5a551c_tiles.png`) and
+`gLevelSelectCursorZoomTiles` (`graphics/tileset1/00_6377c0_tiles.png`).
+The game picks their OBJ palette bank at run time, through the OAM
+entry that draws them: the font glyphs take `oam_scratch.palette`,
+which `Font::SetPalette` sets and `Font::ResetPalette` points back at
+the palette-cache slot of sprite bank 35's palette (`src/text/font.cpp`),
+and the cursor zoom takes the palette of the cursor's sprite part
+(`oam.palette = part->palette`, `src/menus/level_select_cursor.cpp`).
+So no single ROM palette is "theirs".
+
+Their PNGs are indexed with a 16-entry grayscale placeholder palette
+(index 0 white, index 15 black, as gbagfx drew them). Only the indices
+are built: grit `-gt -gB4 -p!` ignores the palette, so recolouring the
+placeholder changes nothing in the ROM. Edit these sheets by index,
+not by colour.

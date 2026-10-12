@@ -444,12 +444,15 @@ Jump tables and literal pools inside code are counted as code.
    has to agree with the computed address, or the script stops, which
    also catches a C table of the wrong size. So does a `data.s` section
    the linker script doesn't place, or a C object that would start
-   misaligned.
+   misaligned. The one gap allowed is the linker's zero fill in front of
+   an aligned `src/data` object when a `src/data` blob comes before it
+   (the word alignment after an LZ77 stream, data.md "LZ77 stream
+   padding"): it counts toward that blob.
 2. It groups adjacent blobs into units: each run of blobs built from the
-   same asset directory (`data_graphics_intro_XXXXXXXX`,
-   `data_sound_XXXXXXXX`, ...), each `src/data` file
-   (`data_src_data_<file>_XXXXXXXX`) and each run of baserom blobs
-   (`data_raw_XXXXXXXX`). That currently comes to 240 units.
+   same asset directory (`data_sound_XXXXXXXX`), each `src/data` file
+   (`data_src_data_<file>_XXXXXXXX`), each `lib/*/data` file and each run
+   of baserom blobs (`data_raw_XXXXXXXX`). That currently comes to 140
+   units.
 3. For every unit it assembles a **target** object with each blob as a
    global, `.type %object`, `.size`d symbol in `.rodata`, its bytes taken
    from `baserom.gba`. A built unit also gets a **base** object with the
