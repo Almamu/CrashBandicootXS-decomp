@@ -559,7 +559,7 @@ Per asset kind:
 
 | asset | grit flags | then | status |
 |---|---|---|---|
-| Mode 4 bitmap (`*_bitmap.png`, 240x160 8bpp linear) | `-gb -gB8 -p!` | gbagfx LZ77 | used (replaces `tools/linear_gfx.py`) |
+| Mode 4 bitmap (`*_bitmap.png`, 240x160 8bpp linear) | `-gb -gB8 -p!` | gbagfx LZ77 | used |
 | 8bpp tileset (`*_8bpp_tiles.png`) | `-gt -gB8 -p!` | gbagfx LZ77 | verified, 14/14 |
 | 4bpp tileset (`*_tiles.png`) | `-gt -gB4 -p!` | gbagfx LZ77 | verified 35/35; needs the PNG re-saved as indexed first |
 | 16-colour palette | `-g! -p -pn16` on an indexed PNG carrying it | gbagfx LZ77 | verified |
@@ -658,8 +658,10 @@ arrays aren't aligned by agbcc, so they stay in place.
 The rooms' level data and level assets ([levels.md](./levels.md)) are
 built from `data/levels/` by `tools/levels.py`, from editable sources:
 per room a `room.json` (palette, layer settings, entities, parameter
-records, links, symbol names), one decoded tilemap per BG layer
-(`<layer>.map.bin`, `u16` cells, grit's flat map layout), and the
+records, links, symbol names), each BG layer as its whole picture
+(`<layer>.png`, 8bpp indexed with the room palette, decoded back to
+cells against the layer's tile set, see
+[levels.md, "BG layers"](./levels.md#bg-layers)), and the
 collision layer as an image (`collision.png`, the size of the BG0 picture, one
 8x8 block per cell, one colour per cell value,
 see [levels.md, "Collision layers"](./levels.md#collision-layers)). The build
@@ -667,6 +669,7 @@ see [levels.md, "Collision layers"](./levels.md#collision-layers)). The build
 
 | output | from | used by |
 |---|---|---|
+| `build/.../data/levels/<room>/<layer>.map.bin` | the BG layer's picture, decoded to cells (`levels.py from-png`) | the room's asset |
 | `build/.../data/levels/<room>/asset.bin.inc` | the room's tilemaps, re-encoded into the ROM's chunk streams, as `tools/bin2c.py` bytes | `level_assets_64f830.inc` (7 raw assets) |
 | `build/.../data/levels/<room>/asset.bin.lz.inc` | the same, gbagfx LZ77, `tools/bin2c.py --lz` bytes | `level_assets_64f830.inc` (34 packed assets, formerly `graphics/tileset1/27`-`60`) |
 | `build/.../data/levels/level_assets_64f830.inc` | the 41 `gRoomNNAsset` definitions, in `levels.json`'s `"assets"` (ROM) order | `#include`d by `src/data/level_assets_64f830.cpp` |

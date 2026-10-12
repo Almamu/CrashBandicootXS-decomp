@@ -9,9 +9,8 @@
 #   4-byte header {w_tiles, h_tiles, 0x10, 0x00} + w_tiles*h_tiles*32 bytes
 #   of standard swizzled 4bpp tile data (row-major within the frame)
 #
-# gbagfx can't be used directly (the header bytes aren't pixels), so -
-# like linear_gfx.py for Mode 4 bitmaps - this bypasses gbagfx and does
-# the conversion directly. A frame's own PNG is sized to exactly
+# gbagfx can't be used directly (the header bytes aren't pixels), so
+# this bypasses gbagfx and does the conversion directly. A frame's own PNG is sized to exactly
 # w_tiles*8 x h_tiles*8 pixels, so its tile dimensions are always
 # self-describing (png.width // 8, png.height // 8) - no sidecar needed.
 # Frame order is filename sort order (00.png, 01.png, ...), which is why

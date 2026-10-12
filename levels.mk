@@ -1,7 +1,9 @@
 # The rooms' level data (docs/levels.md): data/levels/ holds the editable
-# sources (room.json, one decoded tilemap per BG layer and the collision
-# layer as an image, collision.png), tools/levels.py
-# builds them back:
+# sources (room.json, each BG layer as its whole picture, bg0-3.png, and
+# the collision layer as an image, collision.png), tools/levels.py builds
+# them back:
+# - each BG layer's cells, decoded from its picture against its tile set
+#   (levels.py from-png, into build/.../data/levels/<room>/<layer>.map.bin);
 # - each room's level asset (the per-layer chunk streams): raw for 7 rooms,
 #   LZ77-packed by gbagfx for the other 34, as C initializer bytes
 #   (tools/bin2c.py);
@@ -14,14 +16,29 @@ LEVEL_PACKED_ROOMS := $(notdir $(patsubst %/room.json,%,$(shell grep -l '"packed
 LEVEL_REGIONS := level_rooms_24b638 level_rooms_2b91d0
 
 LEVEL_TOOLS := tools/levels.py tools/collision_bmp.py data/levels/collision_legend.json
-LEVEL_SOURCES := data/levels/levels.json $(wildcard data/levels/room*/room.json) $(wildcard data/levels/room*/*.map.bin) \
-	$(wildcard data/levels/room*/collision.png)
+# A room's BG layers (bg0-3), from its pictures, and their decoded maps.
+level_bg_layers = $(patsubst data/levels/$(1)/%.png,%,$(wildcard data/levels/$(1)/bg?.png))
+level_bg_maps = $(foreach l,$(call level_bg_layers,$(1)),$(LEVELS_BUILDDIR)/$(1)/$(l).map.bin)
+LEVEL_BG_MAPS := $(foreach room,$(LEVEL_ROOMS),$(call level_bg_maps,$(room)))
+
+# A BG layer's picture -> its cells (docs/levels.md, "BG layers"). An
+# error names the layer, the cell and its pixels. levels.py also writes a
+# .d file naming the layer's tile set PNG (graphics/level_tilesets/ for
+# BG0, graphics/level_bg_tiles/ for BG1-3), so editing a tile set decodes
+# again only the layers drawn with it.
+define LEVEL_MAP_RULE
+$(LEVELS_BUILDDIR)/$(1)/$(2).map.bin: data/levels/$(1)/$(2).png data/levels/$(1)/room.json tools/levels.py
+	@mkdir -p $$(dir $$@)
+	python3 tools/levels.py from-png data/levels/$(1) $(2) $$@
+endef
+$(foreach room,$(LEVEL_ROOMS),$(foreach l,$(call level_bg_layers,$(room)),$(eval $(call LEVEL_MAP_RULE,$(room),$(l)))))
+-include $(LEVEL_BG_MAPS:=.d)
 
 define LEVEL_ASSET_RULE
-$(LEVELS_BUILDDIR)/$(1)/asset.bin: data/levels/$(1)/room.json $$(wildcard data/levels/$(1)/*.map.bin) \
+$(LEVELS_BUILDDIR)/$(1)/asset.bin: data/levels/$(1)/room.json $(call level_bg_maps,$(1)) \
 		$$(wildcard data/levels/$(1)/collision.png) $(LEVEL_TOOLS)
 	@mkdir -p $$(dir $$@)
-	python3 tools/levels.py asset data/levels/$(1) $$@
+	python3 tools/levels.py asset data/levels/$(1) $$@ --build $(LEVELS_BUILDDIR)
 endef
 $(foreach room,$(LEVEL_ROOMS),$(eval $(call LEVEL_ASSET_RULE,$(room))))
 
@@ -35,9 +52,12 @@ $(LEVELS_BUILDDIR)/%.lz.inc: $(LEVELS_BUILDDIR)/%.lz tools/bin2c.py
 $(LEVELS_BUILDDIR)/%/asset.bin.inc: $(LEVELS_BUILDDIR)/%/asset.bin tools/bin2c.py
 	python3 tools/bin2c.py $< $@
 
-$(LEVELS_BUILDDIR)/level_rooms_%.inc: $(LEVEL_SOURCES) data/levels/entity_types.json $(LEVEL_TOOLS)
+# The room data takes the layers' asset offsets and chunk grids from the
+# asset.layout.json `levels.py asset` writes next to each asset.bin.
+$(LEVELS_BUILDDIR)/level_rooms_%.inc: data/levels/levels.json $(wildcard data/levels/room*/room.json) \
+		$(foreach room,$(LEVEL_ROOMS),$(LEVELS_BUILDDIR)/$(room)/asset.bin) data/levels/entity_types.json $(LEVEL_TOOLS)
 	@mkdir -p $(dir $@)
-	python3 tools/levels.py c level_rooms_$* $@
+	python3 tools/levels.py c level_rooms_$* $@ --build $(LEVELS_BUILDDIR)
 
 LEVEL_ASSET_INCS := $(foreach room,$(filter-out $(LEVEL_PACKED_ROOMS),$(LEVEL_ROOMS)),$(LEVELS_BUILDDIR)/$(room)/asset.bin.inc) \
 	$(foreach room,$(LEVEL_PACKED_ROOMS),$(LEVELS_BUILDDIR)/$(room)/asset.bin.lz.inc)
