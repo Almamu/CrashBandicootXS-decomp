@@ -24,6 +24,12 @@ Everything between those is zero alignment padding, which agbcc reproduces
 from the types alone. A frame with no pieces shares the next frame's
 arrays, and its 12-byte header is directly followed by the next frame.
 
+The piece arrays (positions and piece bytes) and each frame's tile offset
+are not written here: tools/sprite_frames.py generates them from
+graphics/sprites/bankNN_<name>/bank.json (`sprites/bankNN_pieces.inc`,
+`sprites/sprite_frames.h`), which `sprite_frames.py extract` writes from
+the same ROM. This script still checks that they sit where the ROM has them.
+
     tools/sprite_banks.py [baserom.gba]
 """
 import struct
@@ -31,13 +37,13 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from tile_pools import Rom, sprite_banks  # noqa: E402
+from sprite_frames import BANK_NAMES, Rom  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 TABLE = 0x084A5600
 END = 0x084C0006
 TILE_BASE = 0x082BF120
-FIXED_POOL = 0x084A4660
+OBJ_PALETTES = 0x084A4660
 
 # The banks each C file holds. A file must end 4-aligned (the next one
 # starts with a word-aligned struct and tools/report_units.py doesn't allow
@@ -87,13 +93,6 @@ def point(rom, a):
     return f"{{ {x}, {y} }}"
 
 
-def pool_bank(ranges, off):
-    for i, (start, end, _) in enumerate(ranges):
-        if start <= off < end:
-            return i, off - start
-    raise ValueError(f"tile offset {off:#x} outside the pool")
-
-
 def read_bank(rom, i):
     base = rom.w(TABLE) + 12 * i
     anims, frames, unk, nanims = rom.w(base), rom.w(base + 4), rom.h(base + 8), rom.h(base + 10)
@@ -108,7 +107,7 @@ def read_bank(rom, i):
     return anims, frames, nanims, ptrs
 
 
-def emit_bank(rom, ranges, i, em, out, decls):
+def emit_bank(rom, i, em, out, decls):
     anims, frames, nanims, ptrs = read_bank(rom, i)
     B = f"gSpriteBank{i:02}"
     nframes = len(ptrs)
@@ -149,29 +148,19 @@ def emit_bank(rom, ranges, i, em, out, decls):
                        name=f"{B}Anim{k:02}Seq"))
     assert len({x["seq"] for x in an}) == nanims
 
-    first_pool = pool_bank(ranges, min(f["off"] for f in fr if f["count"] and pool_bank(ranges, f["off"])[0] == i))[0]
-    assert first_pool == i
-    tile_arr = f"gStaticData_{0x08000000 | (TILE_BASE + ranges[i][0]) & 0xFFFFFF:08X}"
-
+    d = f"bank{i:02}_{BANK_NAMES[i]}"
     out.append(f"/* {'-' * 70} */")
     out.append(f"/* Bank {i}: {nanims} animation{'s' if nanims != 1 else ''}, {nframes} frames,"
-               f" tiles in {tile_arr} (SPRITE_TILES_BANK{i:02}). */")
+               f" graphics/sprites/{d}/. */")
     out.append("")
 
     # Forward declarations (everything below is referenced before it is
-    # defined, the ROM's order).
+    # defined, the ROM's order). The frames and their piece arrays are
+    # declared in sprites/sprite_frames.h.
     decls.append(f"extern const struct sprite_anim {B}Anims[{nanims}];")
     decls.append(f"extern const struct sprite_frame *const {B}Frames[{nframes}];")
     for x in sorted(an, key=lambda x: x["seq"]):
         out.append(f"extern const u16 {x['name']}[{x['count']}];")
-    for f in fr:
-        out.append(f"extern const struct {LAYOUTS[f['layout']][0]} {f['name']};")
-    for f in fr:
-        if f["count"]:
-            out.append(f"extern const struct sprite_piece_pos {f['name']}Pos[{f['count']}];")
-    for f in fr:
-        if f["count"]:
-            out.append(f"extern const u8 {f['name']}Pieces[{f['count']}];")
     out.append("")
 
     em.place(anims, 0x1C * nanims, 4)
@@ -210,10 +199,9 @@ def emit_bank(rom, ranges, i, em, out, decls):
     out.append("};")
     out.append("")
 
-    for f in fr:
+    for k, f in enumerate(fr):
         em.place(f["addr"], frame_size(f["layout"]), 4)
-        pb, rel = pool_bank(ranges, f["off"])
-        tiles = f"SPRITE_TILES_BANK{pb:02} + {rel:#07x}"
+        tiles = f"SPRITE_TILES_BANK{i:02}_FRAME{k:03}"
         struct_name, nbox, anchor = LAYOUTS[f["layout"]]
         if f["count"]:
             head = f"SPRITE_FRAME({f['name']}, {tiles})"
@@ -232,20 +220,16 @@ def emit_bank(rom, ranges, i, em, out, decls):
         out.append("};")
     out.append("")
 
+    # The piece arrays: every frame's positions, then every frame's piece
+    # bytes (tools/sprite_frames.py pack).
     for f in fr:
-        if not f["count"]:
-            continue
-        em.place(f["pos"], 4 * f["count"], 4)
-        vals = [point(rom, f["pos"] + 4 * j) for j in range(f["count"])]
-        out.append(f"const struct sprite_piece_pos {f['name']}Pos[{f['count']}] = {{ " + ", ".join(vals) + " };")
-    out.append("")
-
+        if f["count"]:
+            em.place(f["pos"], 4 * f["count"], 4)
     for f in fr:
-        if not f["count"]:
-            continue
-        em.place(f["pieces"], f["count"], 1)
-        vals = [f"SPRITE_PIECE({b >> 4}, {b & 15})" for b in rom.bytes(f["pieces"], f["count"])]
-        out.append(f"const u8 {f['name']}Pieces[{f['count']}] = {{ " + ", ".join(vals) + " };")
+        if f["count"]:
+            em.place(f["pieces"], f["count"], 1)
+    out.append(f"/* The piece arrays, from graphics/sprites/{d}/bank.json. */")
+    out.append(f'#include "sprites/bank{i:02}_pieces.inc"')
     out.append("")
 
 
@@ -260,20 +244,21 @@ FILE_COMMENT = """\
  * the source now. Per bank: the animations (a frame-index sequence each),
  * the frame pointer array, the frames (header plus the boxes/anchor of
  * their layout type), then every frame's piece positions and piece bytes.
- * A frame's tiles are an offset into the sprite tile pool
- * (src/data/sprite_tiles_2bf120.cpp), written relative to the pool range of
- * the bank that owns them (SPRITE_TILES_BANKnn). Editing a piece's shape,
- * adding a piece or moving the tiles means redrawing
- * graphics/sprites/bankNN_*.png to match.
+ * The pieces and the frames' tiles come from graphics/sprites/bankNN_<name>/
+ * (a PNG per frame and bank.json, see docs/graphics.md "Sprite banks"):
+ * tools/sprite_frames.py generates the piece arrays (sprites/bankNN_pieces.inc),
+ * and sprites/sprite_frames.h declares the frames and gives each one's
+ * offset in the sprite tile pool (src/data/sprite_tiles_2bf120.cpp),
+ * SPRITE_TILES_BANKnn_FRAMEkkk. A frame's struct type has to match its
+ * "layout" in bank.json.
  */
 """
 
 
 def main():
     rom = Rom(sys.argv[1] if len(sys.argv) > 1 else ROOT / "baserom.gba")
-    assert rom.w(TABLE + 4) == TILE_BASE and rom.w(TABLE + 8) == FIXED_POOL
+    assert rom.w(TABLE + 4) == TILE_BASE and rom.w(TABLE + 8) == OBJ_PALETTES
     assert rom.w(TABLE) == TABLE + 16 and rom.h(TABLE + 12) == 56 and rom.h(TABLE + 14) == 125
-    ranges = sprite_banks(rom)
     nbanks = 56
     starts = [read_bank(rom, i)[0] for i in range(nbanks)]
 
@@ -288,7 +273,7 @@ def main():
             em.place(TABLE, 16, 4)
             em.place(TABLE + 16, 12 * nbanks, 4)
         for i in range(lo, hi + 1):
-            emit_bank(rom, ranges, i, em, body, decls)
+            emit_bank(rom, i, em, body, decls)
         assert em.pos == end, f"{name}: ends at {em.pos:#x}, expected {end:#x}"
         if hi + 1 < nbanks:
             assert end % 4 == 0
@@ -296,7 +281,10 @@ def main():
         out.append('extern "C" {')
         out.append('#include "gba/types.h"')
         out.append('#include "sprite_bank.h"')
+        if lo == 0:
+            out.append('#include "globals.h"')
         out.append("}")
+        out.append('#include "sprites/sprite_frames.h"')
         out.append("")
         out.append(FILE_COMMENT.format(start=start, end=end, first=lo, last=hi))
         if lo == 0:
@@ -336,10 +324,6 @@ def main():
         (ROOT / "src" / "data" / name).write_text("\n".join(out) + "\n")
         print(f"wrote src/data/{name}: {start:#x}-{end:#x}")
     assert em.pos == END
-
-    print("/* pool offsets for include/sprite_bank.h */")
-    for i, (start, end, _) in enumerate(ranges):
-        print(f"#define SPRITE_TILES_BANK{i:02} {start:#07x}")
 
 
 if __name__ == "__main__":

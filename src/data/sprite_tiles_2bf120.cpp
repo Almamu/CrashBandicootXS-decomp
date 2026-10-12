@@ -1,6 +1,7 @@
 extern "C" {
 #include "gba/types.h"
 }
+#include "sprites/sprite_frames.h"
 
 /*
  * ROM 0x082BF120-0x084A5600: the sprite tile pool and the 125 OBJ
@@ -10,302 +11,297 @@ extern "C" {
  * The sprite-bank table gSpriteBankTable (sprite_banks_4a5600.cpp) starts
  * with {banks, tileBase = gSpriteBank00Tiles, palettes =
  * gObjPalettes, 56, 125}. GetSpriteTileBase returns tileBase, and
- * sprite_renderer.cpp's DrawPieces/DrawAffinePieces upload a frame's pieces from tileBase +
- * (frame.tiles & 0xFFFFFF). The 56 banks own disjoint, back-to-back ranges
- * of that pool in bank order (banks 42 and 47 also reuse one frame of bank
- * 0's), so each bank is one array below, labeled with its ROM address. The
- * only pointer into the pool is the header's tileBase; the frames hold
- * offsets from it, written as SPRITE_TILES_BANKnn + offset
- * (include/sprite_bank.h), so resizing a bank here means updating those.
+ * sprite_renderer.cpp's DrawPieces/DrawAffinePieces upload a frame's pieces
+ * from tileBase + (frame.tiles & 0xFFFFFF). Each of the 56 banks has its
+ * own range of that pool, back to back in bank order, so each bank is one
+ * array below. The only pointer into the pool is the header's tileBase; the
+ * frames hold offsets from it, SPRITE_TILES_BANKnn_FRAMEkkk.
  *
- * Raw 4bpp (32-byte) OBJ tiles, no header. The bytes come from
- * graphics/sprites/bankNN_<addr>.png via graphics.mk (grit -gt -gB4 -p!,
- * then tools/bin2c.py); tools/tile_pools.py extracted the PNGs. Each PNG is
- * as wide as the bank's most common OBJ piece, so with the 1D OBJ mapping
- * those pieces read correctly. Their palette is a grayscale placeholder,
- * although each animation names its palette (sprite_anim.paletteId).
- * A part drawn in 8bpp mode (part flag 28) looks scrambled in this 4bpp
- * view, but round-trips all the same.
+ * Raw 4bpp (32-byte) OBJ tiles, no header. tools/sprite_frames.py pack
+ * builds them from graphics/sprites/bankNN_<name>/ (a PNG per frame and
+ * bank.json, see docs/graphics.md "Sprite banks"), and writes
+ * sprites/sprite_frames.h with each bank's offset and size and each frame's
+ * tile offset. So a bank can grow or shrink: the offsets follow.
  */
 
-/* Bank 0: 7807 tiles (48 animations, 465 frames: probably the player). */
-extern const u8 gSpriteBank00Tiles[0x3cfe0] = {
-#include "sprites/bank00_2bf120.img.bin.inc"
+/* Bank 0: graphics/sprites/bank00_crash/. */
+extern const u8 gSpriteBank00Tiles[SPRITE_TILES_BANK00_SIZE] = {
+#include "sprites/bank00_tiles.inc"
 };
 
-/* Bank 1: 5548 tiles. */
-extern const u8 gSpriteBank01Tiles[0x2b580] = {
-#include "sprites/bank01_2fc100.img.bin.inc"
+/* Bank 1: graphics/sprites/bank01_crash_underwater/. */
+extern const u8 gSpriteBank01Tiles[SPRITE_TILES_BANK01_SIZE] = {
+#include "sprites/bank01_tiles.inc"
 };
 
-/* Bank 2: 979 tiles. */
-extern const u8 gSpriteBank02Tiles[0x7a60] = {
-#include "sprites/bank02_327680.img.bin.inc"
+/* Bank 2: graphics/sprites/bank02_crash_hover/. */
+extern const u8 gSpriteBank02Tiles[SPRITE_TILES_BANK02_SIZE] = {
+#include "sprites/bank02_tiles.inc"
 };
 
-/* Bank 3: 827 tiles. */
-extern const u8 gSpriteBank03Tiles[0x6760] = {
-#include "sprites/bank03_32f0e0.img.bin.inc"
+/* Bank 3: graphics/sprites/bank03_moray_eel/. */
+extern const u8 gSpriteBank03Tiles[SPRITE_TILES_BANK03_SIZE] = {
+#include "sprites/bank03_tiles.inc"
 };
 
-/* Bank 4: 1017 tiles. */
-extern const u8 gSpriteBank04Tiles[0x7f20] = {
-#include "sprites/bank04_335840.img.bin.inc"
+/* Bank 4: graphics/sprites/bank04_shark/. */
+extern const u8 gSpriteBank04Tiles[SPRITE_TILES_BANK04_SIZE] = {
+#include "sprites/bank04_tiles.inc"
 };
 
-/* Bank 5: 414 tiles. */
-extern const u8 gSpriteBank05Tiles[0x33c0] = {
-#include "sprites/bank05_33d760.img.bin.inc"
+/* Bank 5: graphics/sprites/bank05_pufferfish/. */
+extern const u8 gSpriteBank05Tiles[SPRITE_TILES_BANK05_SIZE] = {
+#include "sprites/bank05_tiles.inc"
 };
 
-/* Bank 6: 158 tiles. */
-extern const u8 gSpriteBank06Tiles[0x13c0] = {
-#include "sprites/bank06_340b20.img.bin.inc"
+/* Bank 6: graphics/sprites/bank06_sea_mine/. */
+extern const u8 gSpriteBank06Tiles[SPRITE_TILES_BANK06_SIZE] = {
+#include "sprites/bank06_tiles.inc"
 };
 
-/* Bank 7: 902 tiles. */
-extern const u8 gSpriteBank07Tiles[0x70c0] = {
-#include "sprites/bank07_341ee0.img.bin.inc"
+/* Bank 7: graphics/sprites/bank07_squid/. */
+extern const u8 gSpriteBank07Tiles[SPRITE_TILES_BANK07_SIZE] = {
+#include "sprites/bank07_tiles.inc"
 };
 
-/* Bank 8: 438 tiles. */
-extern const u8 gSpriteBank08Tiles[0x36c0] = {
-#include "sprites/bank08_348fa0.img.bin.inc"
+/* Bank 8: graphics/sprites/bank08_electric_eel/. */
+extern const u8 gSpriteBank08Tiles[SPRITE_TILES_BANK08_SIZE] = {
+#include "sprites/bank08_tiles.inc"
 };
 
-/* Bank 9: 165 tiles. */
-extern const u8 gSpriteBank09Tiles[0x14a0] = {
-#include "sprites/bank09_34c660.img.bin.inc"
+/* Bank 9: graphics/sprites/bank09_jellyfish/. */
+extern const u8 gSpriteBank09Tiles[SPRITE_TILES_BANK09_SIZE] = {
+#include "sprites/bank09_tiles.inc"
 };
 
-/* Bank 10: 774 tiles. */
-extern const u8 gSpriteBank10Tiles[0x60c0] = {
-#include "sprites/bank10_34db00.img.bin.inc"
+/* Bank 10: graphics/sprites/bank10_venus_flytrap/. */
+extern const u8 gSpriteBank10Tiles[SPRITE_TILES_BANK10_SIZE] = {
+#include "sprites/bank10_tiles.inc"
 };
 
-/* Bank 11: 723 tiles. */
-extern const u8 gSpriteBank11Tiles[0x5a60] = {
-#include "sprites/bank11_353bc0.img.bin.inc"
+/* Bank 11: graphics/sprites/bank11_vulture/. */
+extern const u8 gSpriteBank11Tiles[SPRITE_TILES_BANK11_SIZE] = {
+#include "sprites/bank11_tiles.inc"
 };
 
-/* Bank 12: 1381 tiles. */
-extern const u8 gSpriteBank12Tiles[0xaca0] = {
-#include "sprites/bank12_359620.img.bin.inc"
+/* Bank 12: graphics/sprites/bank12_blowgun_tribesman/. */
+extern const u8 gSpriteBank12Tiles[SPRITE_TILES_BANK12_SIZE] = {
+#include "sprites/bank12_tiles.inc"
 };
 
-/* Bank 13: 263 tiles. */
-extern const u8 gSpriteBank13Tiles[0x20e0] = {
-#include "sprites/bank13_3642c0.img.bin.inc"
+/* Bank 13: graphics/sprites/bank13_lizard/. */
+extern const u8 gSpriteBank13Tiles[SPRITE_TILES_BANK13_SIZE] = {
+#include "sprites/bank13_tiles.inc"
 };
 
-/* Bank 14: 618 tiles. */
-extern const u8 gSpriteBank14Tiles[0x4d40] = {
-#include "sprites/bank14_3663a0.img.bin.inc"
+/* Bank 14: graphics/sprites/bank14_patrolling_jungle_enemy/. */
+extern const u8 gSpriteBank14Tiles[SPRITE_TILES_BANK14_SIZE] = {
+#include "sprites/bank14_tiles.inc"
 };
 
-/* Bank 15: 754 tiles. */
-extern const u8 gSpriteBank15Tiles[0x5e40] = {
-#include "sprites/bank15_36b0e0.img.bin.inc"
+/* Bank 15: graphics/sprites/bank15_penguin/. */
+extern const u8 gSpriteBank15Tiles[SPRITE_TILES_BANK15_SIZE] = {
+#include "sprites/bank15_tiles.inc"
 };
 
-/* Bank 16: 714 tiles. */
-extern const u8 gSpriteBank16Tiles[0x5940] = {
-#include "sprites/bank16_370f20.img.bin.inc"
+/* Bank 16: graphics/sprites/bank16_polar_bear/. */
+extern const u8 gSpriteBank16Tiles[SPRITE_TILES_BANK16_SIZE] = {
+#include "sprites/bank16_tiles.inc"
 };
 
-/* Bank 17: 301 tiles. */
-extern const u8 gSpriteBank17Tiles[0x25a0] = {
-#include "sprites/bank17_376860.img.bin.inc"
+/* Bank 17: graphics/sprites/bank17_seal/. */
+extern const u8 gSpriteBank17Tiles[SPRITE_TILES_BANK17_SIZE] = {
+#include "sprites/bank17_tiles.inc"
 };
 
-/* Bank 18: 471 tiles. */
-extern const u8 gSpriteBank18Tiles[0x3ae0] = {
-#include "sprites/bank18_378e00.img.bin.inc"
+/* Bank 18: graphics/sprites/bank18_wooden_crusher/. */
+extern const u8 gSpriteBank18Tiles[SPRITE_TILES_BANK18_SIZE] = {
+#include "sprites/bank18_tiles.inc"
 };
 
-/* Bank 19: 502 tiles. */
-extern const u8 gSpriteBank19Tiles[0x3ec0] = {
-#include "sprites/bank19_37c8e0.img.bin.inc"
+/* Bank 19: graphics/sprites/bank19_frog/. */
+extern const u8 gSpriteBank19Tiles[SPRITE_TILES_BANK19_SIZE] = {
+#include "sprites/bank19_tiles.inc"
 };
 
-/* Bank 20: 287 tiles. */
-extern const u8 gSpriteBank20Tiles[0x23e0] = {
-#include "sprites/bank20_3807a0.img.bin.inc"
+/* Bank 20: graphics/sprites/bank20_patrolling_sewer_enemy/. */
+extern const u8 gSpriteBank20Tiles[SPRITE_TILES_BANK20_SIZE] = {
+#include "sprites/bank20_tiles.inc"
 };
 
-/* Bank 21: 192 tiles. */
-extern const u8 gSpriteBank21Tiles[0x1800] = {
-#include "sprites/bank21_382b80.img.bin.inc"
+/* Bank 21: graphics/sprites/bank21_rat/. */
+extern const u8 gSpriteBank21Tiles[SPRITE_TILES_BANK21_SIZE] = {
+#include "sprites/bank21_tiles.inc"
 };
 
-/* Bank 22: 724 tiles. */
-extern const u8 gSpriteBank22Tiles[0x5a80] = {
-#include "sprites/bank22_384380.img.bin.inc"
+/* Bank 22: graphics/sprites/bank22_homing_sewer_enemy/. */
+extern const u8 gSpriteBank22Tiles[SPRITE_TILES_BANK22_SIZE] = {
+#include "sprites/bank22_tiles.inc"
 };
 
-/* Bank 23: 2542 tiles. */
-extern const u8 gSpriteBank23Tiles[0x13dc0] = {
-#include "sprites/bank23_389e00.img.bin.inc"
+/* Bank 23: graphics/sprites/bank23_flamethrower_lab_assistant/. */
+extern const u8 gSpriteBank23Tiles[SPRITE_TILES_BANK23_SIZE] = {
+#include "sprites/bank23_tiles.inc"
 };
 
-/* Bank 24: 1707 tiles. */
-extern const u8 gSpriteBank24Tiles[0xd560] = {
-#include "sprites/bank24_39dbc0.img.bin.inc"
+/* Bank 24: graphics/sprites/bank24_patrolling_space_enemy/. */
+extern const u8 gSpriteBank24Tiles[SPRITE_TILES_BANK24_SIZE] = {
+#include "sprites/bank24_tiles.inc"
 };
 
-/* Bank 25: 964 tiles. */
-extern const u8 gSpriteBank25Tiles[0x7880] = {
-#include "sprites/bank25_3ab120.img.bin.inc"
+/* Bank 25: graphics/sprites/bank25_laser_barrier/. */
+extern const u8 gSpriteBank25Tiles[SPRITE_TILES_BANK25_SIZE] = {
+#include "sprites/bank25_tiles.inc"
 };
 
-/* Bank 26: 468 tiles. */
-extern const u8 gSpriteBank26Tiles[0x3a80] = {
-#include "sprites/bank26_3b29a0.img.bin.inc"
+/* Bank 26: graphics/sprites/bank26_piston_crusher/. */
+extern const u8 gSpriteBank26Tiles[SPRITE_TILES_BANK26_SIZE] = {
+#include "sprites/bank26_tiles.inc"
 };
 
-/* Bank 27: 275 tiles. */
-extern const u8 gSpriteBank27Tiles[0x2260] = {
-#include "sprites/bank27_3b6420.img.bin.inc"
+/* Bank 27: graphics/sprites/bank27_stationary_space_enemy/. */
+extern const u8 gSpriteBank27Tiles[SPRITE_TILES_BANK27_SIZE] = {
+#include "sprites/bank27_tiles.inc"
 };
 
-/* Bank 28: 24 tiles. */
-extern const u8 gSpriteBank28Tiles[0x300] = {
-#include "sprites/bank28_3b8680.img.bin.inc"
+/* Bank 28: graphics/sprites/bank28_launch_pad/. */
+extern const u8 gSpriteBank28Tiles[SPRITE_TILES_BANK28_SIZE] = {
+#include "sprites/bank28_tiles.inc"
 };
 
-/* Bank 29: 1532 tiles. */
-extern const u8 gSpriteBank29Tiles[0xbf80] = {
-#include "sprites/bank29_3b8980.img.bin.inc"
+/* Bank 29: graphics/sprites/bank29_saucer_lab_assistant/. */
+extern const u8 gSpriteBank29Tiles[SPRITE_TILES_BANK29_SIZE] = {
+#include "sprites/bank29_tiles.inc"
 };
 
-/* Bank 30: 3238 tiles. */
-extern const u8 gSpriteBank30Tiles[0x194c0] = {
-#include "sprites/bank30_3c4900.img.bin.inc"
+/* Bank 30: graphics/sprites/bank30_mega_mix/. */
+extern const u8 gSpriteBank30Tiles[SPRITE_TILES_BANK30_SIZE] = {
+#include "sprites/bank30_tiles.inc"
 };
 
-/* Bank 31: 2605 tiles. */
-extern const u8 gSpriteBank31Tiles[0x145a0] = {
-#include "sprites/bank31_3dddc0.img.bin.inc"
+/* Bank 31: graphics/sprites/bank31_crates/. */
+extern const u8 gSpriteBank31Tiles[SPRITE_TILES_BANK31_SIZE] = {
+#include "sprites/bank31_tiles.inc"
 };
 
-/* Bank 32: 102 tiles. */
-extern const u8 gSpriteBank32Tiles[0xcc0] = {
-#include "sprites/bank32_3f2360.img.bin.inc"
+/* Bank 32: graphics/sprites/bank32_gems/. */
+extern const u8 gSpriteBank32Tiles[SPRITE_TILES_BANK32_SIZE] = {
+#include "sprites/bank32_tiles.inc"
 };
 
-/* Bank 33: 224 tiles. */
-extern const u8 gSpriteBank33Tiles[0x1c00] = {
-#include "sprites/bank33_3f3020.img.bin.inc"
+/* Bank 33: graphics/sprites/bank33_trial_icons/. */
+extern const u8 gSpriteBank33Tiles[SPRITE_TILES_BANK33_SIZE] = {
+#include "sprites/bank33_tiles.inc"
 };
 
-/* Bank 34: 127 tiles. */
-extern const u8 gSpriteBank34Tiles[0xfe0] = {
-#include "sprites/bank34_3f4c20.img.bin.inc"
+/* Bank 34: graphics/sprites/bank34_aku_aku/. */
+extern const u8 gSpriteBank34Tiles[SPRITE_TILES_BANK34_SIZE] = {
+#include "sprites/bank34_tiles.inc"
 };
 
-/* Bank 35: 178 tiles. */
-extern const u8 gSpriteBank35Tiles[0x1640] = {
-#include "sprites/bank35_3f5c00.img.bin.inc"
+/* Bank 35: graphics/sprites/bank35_wumpa/. */
+extern const u8 gSpriteBank35Tiles[SPRITE_TILES_BANK35_SIZE] = {
+#include "sprites/bank35_tiles.inc"
 };
 
-/* Bank 36: 69 tiles. */
-extern const u8 gSpriteBank36Tiles[0x8a0] = {
-#include "sprites/bank36_3f7240.img.bin.inc"
+/* Bank 36: graphics/sprites/bank36_stopwatch/. */
+extern const u8 gSpriteBank36Tiles[SPRITE_TILES_BANK36_SIZE] = {
+#include "sprites/bank36_tiles.inc"
 };
 
-/* Bank 37: 80 tiles. */
-extern const u8 gSpriteBank37Tiles[0xa00] = {
-#include "sprites/bank37_3f7ae0.img.bin.inc"
+/* Bank 37: graphics/sprites/bank37_crystal/. */
+extern const u8 gSpriteBank37Tiles[SPRITE_TILES_BANK37_SIZE] = {
+#include "sprites/bank37_tiles.inc"
 };
 
-/* Bank 38: 680 tiles. */
-extern const u8 gSpriteBank38Tiles[0x5500] = {
-#include "sprites/bank38_3f84e0.img.bin.inc"
+/* Bank 38: graphics/sprites/bank38_powers/. */
+extern const u8 gSpriteBank38Tiles[SPRITE_TILES_BANK38_SIZE] = {
+#include "sprites/bank38_tiles.inc"
 };
 
-/* Bank 39: 820 tiles. */
-extern const u8 gSpriteBank39Tiles[0x6680] = {
-#include "sprites/bank39_3fd9e0.img.bin.inc"
+/* Bank 39: graphics/sprites/bank39_platforms/. */
+extern const u8 gSpriteBank39Tiles[SPRITE_TILES_BANK39_SIZE] = {
+#include "sprites/bank39_tiles.inc"
 };
 
-/* Bank 40: 385 tiles. */
-extern const u8 gSpriteBank40Tiles[0x3020] = {
-#include "sprites/bank40_404060.img.bin.inc"
+/* Bank 40: graphics/sprites/bank40_bubbles/. */
+extern const u8 gSpriteBank40Tiles[SPRITE_TILES_BANK40_SIZE] = {
+#include "sprites/bank40_tiles.inc"
 };
 
-/* Bank 41: 88 tiles. */
-extern const u8 gSpriteBank41Tiles[0xb00] = {
-#include "sprites/bank41_407080.img.bin.inc"
+/* Bank 41: graphics/sprites/bank41_spark/. */
+extern const u8 gSpriteBank41Tiles[SPRITE_TILES_BANK41_SIZE] = {
+#include "sprites/bank41_tiles.inc"
 };
 
-/* Bank 42: 31 tiles. */
-extern const u8 gSpriteBank42Tiles[0x3e0] = {
-#include "sprites/bank42_407b80.img.bin.inc"
+/* Bank 42: graphics/sprites/bank42_checkpoint_text/. */
+extern const u8 gSpriteBank42Tiles[SPRITE_TILES_BANK42_SIZE] = {
+#include "sprites/bank42_tiles.inc"
 };
 
-/* Bank 43: 493 tiles. */
-extern const u8 gSpriteBank43Tiles[0x3da0] = {
-#include "sprites/bank43_407f60.img.bin.inc"
+/* Bank 43: graphics/sprites/bank43_sparkle/. */
+extern const u8 gSpriteBank43Tiles[SPRITE_TILES_BANK43_SIZE] = {
+#include "sprites/bank43_tiles.inc"
 };
 
-/* Bank 44: 51 tiles. */
-extern const u8 gSpriteBank44Tiles[0x660] = {
-#include "sprites/bank44_40bd00.img.bin.inc"
+/* Bank 44: graphics/sprites/bank44_flame/. */
+extern const u8 gSpriteBank44Tiles[SPRITE_TILES_BANK44_SIZE] = {
+#include "sprites/bank44_tiles.inc"
 };
 
-/* Bank 45: 416 tiles. */
-extern const u8 gSpriteBank45Tiles[0x3400] = {
-#include "sprites/bank45_40c360.img.bin.inc"
+/* Bank 45: graphics/sprites/bank45_seaweed/. */
+extern const u8 gSpriteBank45Tiles[SPRITE_TILES_BANK45_SIZE] = {
+#include "sprites/bank45_tiles.inc"
 };
 
-/* Bank 46: 10 tiles. */
-extern const u8 gSpriteBank46Tiles[0x140] = {
-#include "sprites/bank46_40f760.img.bin.inc"
+/* Bank 46: graphics/sprites/bank46_crash_eyes/. */
+extern const u8 gSpriteBank46Tiles[SPRITE_TILES_BANK46_SIZE] = {
+#include "sprites/bank46_tiles.inc"
 };
 
-/* Bank 47: 246 tiles. */
-extern const u8 gSpriteBank47Tiles[0x1ec0] = {
-#include "sprites/bank47_40f8a0.img.bin.inc"
+/* Bank 47: graphics/sprites/bank47_icons/. */
+extern const u8 gSpriteBank47Tiles[SPRITE_TILES_BANK47_SIZE] = {
+#include "sprites/bank47_tiles.inc"
 };
 
-/* Bank 48: 1024 tiles. */
-extern const u8 gSpriteBank48Tiles[0x8000] = {
-#include "sprites/bank48_411760.img.bin.inc"
+/* Bank 48: graphics/sprites/bank48_level_select_cursor/. */
+extern const u8 gSpriteBank48Tiles[SPRITE_TILES_BANK48_SIZE] = {
+#include "sprites/bank48_tiles.inc"
 };
 
-/* Bank 49: 28 tiles. */
-extern const u8 gSpriteBank49Tiles[0x380] = {
-#include "sprites/bank49_419760.img.bin.inc"
+/* Bank 49: graphics/sprites/bank49_level_select_frame/. */
+extern const u8 gSpriteBank49Tiles[SPRITE_TILES_BANK49_SIZE] = {
+#include "sprites/bank49_tiles.inc"
 };
 
-/* Bank 50: 309 tiles. */
-extern const u8 gSpriteBank50Tiles[0x26a0] = {
-#include "sprites/bank50_419ae0.img.bin.inc"
+/* Bank 50: graphics/sprites/bank50_twinkles/. */
+extern const u8 gSpriteBank50Tiles[SPRITE_TILES_BANK50_SIZE] = {
+#include "sprites/bank50_tiles.inc"
 };
 
-/* Bank 51: 106 tiles. */
-extern const u8 gSpriteBank51Tiles[0xd40] = {
-#include "sprites/bank51_41c180.img.bin.inc"
+/* Bank 51: graphics/sprites/bank51_level_select_icons/. */
+extern const u8 gSpriteBank51Tiles[SPRITE_TILES_BANK51_SIZE] = {
+#include "sprites/bank51_tiles.inc"
 };
 
-/* Bank 52: 16 tiles. */
-extern const u8 gSpriteBank52Tiles[0x200] = {
-#include "sprites/bank52_41cec0.img.bin.inc"
+/* Bank 52: graphics/sprites/bank52_level_select_arrows/. */
+extern const u8 gSpriteBank52Tiles[SPRITE_TILES_BANK52_SIZE] = {
+#include "sprites/bank52_tiles.inc"
 };
 
-/* Bank 53: 2078 tiles. */
-extern const u8 gSpriteBank53Tiles[0x103c0] = {
-#include "sprites/bank53_41d0c0.img.bin.inc"
+/* Bank 53: graphics/sprites/bank53_cortex/. */
+extern const u8 gSpriteBank53Tiles[SPRITE_TILES_BANK53_SIZE] = {
+#include "sprites/bank53_tiles.inc"
 };
 
-/* Bank 54: 7913 tiles. */
-extern const u8 gSpriteBank54Tiles[0x3dd20] = {
-#include "sprites/bank54_42d480.img.bin.inc"
+/* Bank 54: graphics/sprites/bank54_dingodile/. */
+extern const u8 gSpriteBank54Tiles[SPRITE_TILES_BANK54_SIZE] = {
+#include "sprites/bank54_tiles.inc"
 };
 
-/* Bank 55: 7334 tiles. */
-extern const u8 gSpriteBank55Tiles[0x394c0] = {
-#include "sprites/bank55_46b1a0.img.bin.inc"
+/* Bank 55: graphics/sprites/bank55_tiny/. */
+extern const u8 gSpriteBank55Tiles[SPRITE_TILES_BANK55_SIZE] = {
+#include "sprites/bank55_tiles.inc"
 };
 
 /* The 125 16-colour OBJ palettes (32 bytes each), the header's

@@ -1,0 +1,7 @@
+{
+  "frames": [
+    {"origin": [13, 7], "pieces": [["32x16", -13, -7]], "layout": 1, "tiles": "own", "palettes": [41]},
+    {"origin": [13, 7], "pieces": [["32x16", -13, -7]], "layout": 1, "tiles": "own", "palettes": [41]},
+    {"origin": [13, 7], "pieces": [["32x16", -13, -7]], "layout": 1, "tiles": "own", "palettes": [41]}
+  ]
+}

@@ -55,7 +55,7 @@ struct sprite_point {
 
 /* `tiles`: bits 0-23 are the frame's byte offset into the sprite tile pool
  * (tileBase, gSpriteBank00Tiles), bits 24-31 the piece count. The
- * pieces' tiles are back to back from there. */
+ * pieces' tiles are back to back from there, each piece's in 1D OBJ order. */
 #define SPRITE_FRAME_TILES(offset, count) (((u32)(count) << 24) | (offset))
 
 struct sprite_frame {
@@ -70,68 +70,12 @@ struct sprite_frame {
     { name##Pos, name##Pieces, SPRITE_FRAME_TILES(offset, ARRAY_COUNT(name##Pos)) }
 
 /*
- * Where each bank's tiles start in the sprite tile pool: the offset of the
- * bank's array in src/data/sprite_tiles_2bf120.cpp from gSpriteBank00Tiles
- * (graphics/sprites/bankNN_*.png, TILE_BYTES_bankNN_* in graphics.mk).
- * Frames give their tile offset relative to these. Resizing a bank's PNG
- * moves every later bank, so these have to follow.
+ * Each frame's tile offset, SPRITE_TILES_BANKnn_FRAMEkkk, and each bank's
+ * range of the pool, SPRITE_TILES_BANKnn(_SIZE), are generated from
+ * graphics/sprites/bankNN_<name>/ by tools/sprite_frames.py, in
+ * sprites/sprite_frames.h (built under build/, included by
+ * src/data/sprite_banks_*.cpp and sprite_tiles_2bf120.cpp).
  */
-#define SPRITE_TILES_BANK00 0x000000
-#define SPRITE_TILES_BANK01 0x03cfe0
-#define SPRITE_TILES_BANK02 0x068560
-#define SPRITE_TILES_BANK03 0x06ffc0
-#define SPRITE_TILES_BANK04 0x076720
-#define SPRITE_TILES_BANK05 0x07e640
-#define SPRITE_TILES_BANK06 0x081a00
-#define SPRITE_TILES_BANK07 0x082dc0
-#define SPRITE_TILES_BANK08 0x089e80
-#define SPRITE_TILES_BANK09 0x08d540
-#define SPRITE_TILES_BANK10 0x08e9e0
-#define SPRITE_TILES_BANK11 0x094aa0
-#define SPRITE_TILES_BANK12 0x09a500
-#define SPRITE_TILES_BANK13 0x0a51a0
-#define SPRITE_TILES_BANK14 0x0a7280
-#define SPRITE_TILES_BANK15 0x0abfc0
-#define SPRITE_TILES_BANK16 0x0b1e00
-#define SPRITE_TILES_BANK17 0x0b7740
-#define SPRITE_TILES_BANK18 0x0b9ce0
-#define SPRITE_TILES_BANK19 0x0bd7c0
-#define SPRITE_TILES_BANK20 0x0c1680
-#define SPRITE_TILES_BANK21 0x0c3a60
-#define SPRITE_TILES_BANK22 0x0c5260
-#define SPRITE_TILES_BANK23 0x0cace0
-#define SPRITE_TILES_BANK24 0x0deaa0
-#define SPRITE_TILES_BANK25 0x0ec000
-#define SPRITE_TILES_BANK26 0x0f3880
-#define SPRITE_TILES_BANK27 0x0f7300
-#define SPRITE_TILES_BANK28 0x0f9560
-#define SPRITE_TILES_BANK29 0x0f9860
-#define SPRITE_TILES_BANK30 0x1057e0
-#define SPRITE_TILES_BANK31 0x11eca0
-#define SPRITE_TILES_BANK32 0x133240
-#define SPRITE_TILES_BANK33 0x133f00
-#define SPRITE_TILES_BANK34 0x135b00
-#define SPRITE_TILES_BANK35 0x136ae0
-#define SPRITE_TILES_BANK36 0x138120
-#define SPRITE_TILES_BANK37 0x1389c0
-#define SPRITE_TILES_BANK38 0x1393c0
-#define SPRITE_TILES_BANK39 0x13e8c0
-#define SPRITE_TILES_BANK40 0x144f40
-#define SPRITE_TILES_BANK41 0x147f60
-#define SPRITE_TILES_BANK42 0x148a60
-#define SPRITE_TILES_BANK43 0x148e40
-#define SPRITE_TILES_BANK44 0x14cbe0
-#define SPRITE_TILES_BANK45 0x14d240
-#define SPRITE_TILES_BANK46 0x150640
-#define SPRITE_TILES_BANK47 0x150780
-#define SPRITE_TILES_BANK48 0x152640
-#define SPRITE_TILES_BANK49 0x15a640
-#define SPRITE_TILES_BANK50 0x15a9c0
-#define SPRITE_TILES_BANK51 0x15d060
-#define SPRITE_TILES_BANK52 0x15dda0
-#define SPRITE_TILES_BANK53 0x15dfa0
-#define SPRITE_TILES_BANK54 0x16e360
-#define SPRITE_TILES_BANK55 0x1ac080
 
 struct sprite_frame_1box {
     struct sprite_frame frame;

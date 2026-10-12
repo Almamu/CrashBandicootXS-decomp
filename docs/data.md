@@ -298,7 +298,7 @@ The first batch (all pointer tables, all byte-exact):
 | `level_rooms_24b638.cpp` | `0x0824B638` | the level data of 33 rooms, generated from `data/levels/` (see "Level data") |
 | `level_tilesets_270f08.cpp` | `0x08270F08` | level BG tile sets 4-5 (grit) |
 | `level_rooms_2b91d0.cpp` | `0x082B91D0` | the level data of the other 8 rooms (same) |
-| `sprite_tiles_2bf120.cpp` | `0x082BF120` | the sprite tile pool (56 banks, grit) and the 125 OBJ palettes (JASC `.pal`) |
+| `sprite_tiles_2bf120.cpp` | `0x082BF120` | the sprite tile pool (56 banks, `tools/sprite_frames.py`) and the 125 OBJ palettes (JASC `.pal`) |
 | `sprite_banks_4a5600.cpp` | `0x084A5600` | the sprite-bank table header, 56 `struct sprite_bank`, banks 0-9 (see "Sprite banks" below) |
 | `sprite_banks_4b0ae0.cpp` | `0x084B0AE0` | sprite banks 10-21 |
 | `sprite_banks_4b414c.cpp` | `0x084B414C` | sprite banks 22-38 |
@@ -360,8 +360,13 @@ the C is the source from then on.
   type means changing its struct type too.
 - A frame's `tiles` is an offset into the sprite tile pool, not a
   pointer, so it can't be a symbol reference. It is written as
-  `SPRITE_TILES_BANKnn + offset`, relative to the owning bank's array in
-  `sprite_tiles_2bf120.cpp`; those bases are in `sprite_bank.h`.
+  `SPRITE_TILES_BANKnn_FRAMEkkk`, which `tools/sprite_frames.py`
+  generates (`sprites/sprite_frames.h`) from the frame PNGs and
+  `bank.json` of `graphics/sprites/bankNN_<name>/`.
+- The piece arrays (`...FrameKKKPos`, `...FrameKKKPieces`) are generated
+  from `bank.json` too (`sprites/bankNN_pieces.inc`, included where the
+  ROM has them), and the same header declares the frames, with the
+  struct type of their `layout`.
 - The file cuts sit after banks whose piece bytes end on a word: each
   file starts with a word-aligned struct, and `tools/report_units.py`
   doesn't accept linker fill between objects.
@@ -590,15 +595,14 @@ C (see "Level data").
 | `level_rooms_24b638.cpp` | room data, 33 rooms | `data/levels/` via `tools/levels.py` (see "Level data") |
 | `level_tilesets_270f08.cpp` | tile sets 4-5 | `graphics/level_tilesets/tileset{4,5}_*.png` |
 | `level_rooms_2b91d0.cpp` | room data, 8 rooms | same |
-| `sprite_tiles_2bf120.cpp` | 56 sprite banks, 125 OBJ palettes | `graphics/sprites/bankNN_*.png`, `graphics/sprites/palettes/NNN.pal` |
+| `sprite_tiles_2bf120.cpp` | 56 sprite banks, 125 OBJ palettes | `graphics/sprites/bankNN_<name>/`, `graphics/sprites/palettes/NNN.pal` |
 
 - **Sprite banks.** The pool at `0x082BF120` has no header. Each of the 56
   banks of `gSpriteBankTable` owns one back-to-back range of it, in
-  bank order. Each range becomes one `const u8 gStaticData_<addr>[]` and one
-  4bpp PNG, `bankNN_<addr>.png`. The PNG is as wide as the bank's most
-  common OBJ piece (at least 4 tiles), so with 1D OBJ mapping those pieces
-  read as sprites. The palette is a grayscale placeholder for now, though
-  each animation names its palette (see "OBJ palettes").
+  bank order, and each range is one `const u8 gSpriteBankNNTiles[]`. The
+  sources are the banks' frames, a PNG each in the palette of its
+  animation, in `graphics/sprites/bankNN_<name>/`; `tools/sprite_frames.py`
+  extracts and packs them (see docs/graphics.md, "Sprite banks").
 - **OBJ palettes.** `gObjPalettes` (`0x084A4660`, 4,000 bytes) is 125
   16-colour palettes, the table header's `palettes`/`paletteCount`. An
   animation's palette is `gObjPalettes[anim.paletteId]`
@@ -625,9 +629,9 @@ C (see "Level data").
   into the padding is caught.
 - **Room data** is decoded typed C now (see "Level data" below): an
   undecoded `.bin` copy wouldn't have counted as converted data.
-- `tools/tile_pools.py` extracts all of it from `baserom.gba` (the palettes
-  included) and prints the `TILE_BYTES_*` lines. Its output is deterministic, and all 62 PNGs
-  round-trip through grit byte-exact.
+- `tools/tile_pools.py` extracts the tile sets and the palettes from
+  `baserom.gba` and prints the `TILE_BYTES_*` lines. Its output is
+  deterministic, and the five PNGs round-trip through grit byte-exact.
 
 
 ### Boss pictures
