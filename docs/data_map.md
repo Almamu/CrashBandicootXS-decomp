@@ -657,54 +657,54 @@ BG tile sets are in [levels.md](./levels.md).
 | `084A5600` | `gSpriteBankTable` | sprite_banks | `sprites/` |
 | `085A4E70` | `gSmallFontTiles` | tiles | `intro/00_5a4e70_tiles.png` |
 | `085A551C` | `gLargeFontTiles` | tiles | `intro/00_5a551c_tiles.png` |
-| `085A9F70` | `gCutscenePicture00` | palette | `intro/00_5aa170_bitmap.png` (its palette) |
-| `085AA170` | `gCutscenePicture00Bitmap` | bitmap | `intro/00_5aa170_bitmap.png` |
-| `085ADBD4` | `gCutscenePicture01` | palette | `intro/01_5addd4_bitmap.png` (its palette) |
-| `085ADDD4` | `gCutscenePicture01Bitmap` | bitmap | `intro/01_5addd4_bitmap.png` |
-| `085B34E4` | `gCutscenePicture02` | palette | `intro/02_5b36e4_bitmap.png` (its palette) |
-| `085B36E4` | `gCutscenePicture02Bitmap` | bitmap | `intro/02_5b36e4_bitmap.png` |
-| `085B82BC` | `gCutscenePicture03` | palette | `intro/03_5b84bc_bitmap.png` (its palette) |
-| `085B84BC` | `gCutscenePicture03Bitmap` | bitmap | `intro/03_5b84bc_bitmap.png` |
-| `085BC6E8` | `gCutscenePicture04` | palette | `intro/04_5bc8e8_bitmap.png` (its palette) |
-| `085BC8E8` | `gCutscenePicture04Bitmap` | bitmap | `intro/04_5bc8e8_bitmap.png` |
-| `085C1938` | `gCutscenePicture05` | palette | `intro/05_5c1b38_bitmap.png` (its palette) |
-| `085C1B38` | `gCutscenePicture05Bitmap` | bitmap | `intro/05_5c1b38_bitmap.png` |
-| `085C6750` | `gCutscenePicture06` | palette | `intro/06_5c6950_bitmap.png` (its palette) |
-| `085C6950` | `gCutscenePicture06Bitmap` | bitmap | `intro/06_5c6950_bitmap.png` |
-| `085CB160` | `gCutscenePicture07` | palette | `intro/07_5cb360_bitmap.png` (its palette) |
-| `085CB360` | `gCutscenePicture07Bitmap` | bitmap | `intro/07_5cb360_bitmap.png` |
-| `085CFECC` | `gCutscenePicture08` | palette | `intro/08_5d00cc_bitmap.png` (its palette) |
-| `085D00CC` | `gCutscenePicture08Bitmap` | bitmap | `intro/08_5d00cc_bitmap.png` |
-| `085D6534` | `gCutscenePicture09` | palette | `intro/09_5d6734_bitmap.png` (its palette) |
-| `085D6734` | `gCutscenePicture09Bitmap` | bitmap | `intro/09_5d6734_bitmap.png` |
-| `085DB768` | `gCutscenePicture10` | palette | `intro/10_5db968_bitmap.png` (its palette) |
-| `085DB968` | `gCutscenePicture10Bitmap` | bitmap | `intro/10_5db968_bitmap.png` |
-| `085DFABC` | `gCutscenePicture11` | palette | `intro/11_5dfcbc_bitmap.png` (its palette) |
-| `085DFCBC` | `gCutscenePicture11Bitmap` | bitmap | `intro/11_5dfcbc_bitmap.png` |
-| `085E550C` | `gCutscenePicture12` | palette | `intro/12_5e570c_bitmap.png` (its palette) |
-| `085E570C` | `gCutscenePicture12Bitmap` | bitmap | `intro/12_5e570c_bitmap.png` |
-| `085EAC44` | `gCutscenePicture13` | palette | `intro/13_5eae44_bitmap.png` (its palette) |
-| `085EAE44` | `gCutscenePicture13Bitmap` | bitmap | `intro/13_5eae44_bitmap.png` |
-| `085F0368` | `gCutscenePicture14` | palette | `intro/14_5f0568_bitmap.png` (its palette) |
-| `085F0568` | `gCutscenePicture14Bitmap` | bitmap | `intro/14_5f0568_bitmap.png` |
-| `085F4CC4` | `gCutscenePicture15` | palette | `intro/15_5f4ec4_bitmap.png` (its palette) |
-| `085F4EC4` | `gCutscenePicture15Bitmap` | bitmap | `intro/15_5f4ec4_bitmap.png` |
-| `085FA1D4` | `gCutscenePicture16` | palette | `intro/16_5fa3d4_bitmap.png` (its palette) |
-| `085FA3D4` | `gCutscenePicture16Bitmap` | bitmap | `intro/16_5fa3d4_bitmap.png` |
-| `085FF77C` | `gCutscenePicture17` | palette | `intro/17_5ff97c_bitmap.png` (its palette) |
-| `085FF97C` | `gCutscenePicture17Bitmap` | bitmap | `intro/17_5ff97c_bitmap.png` |
-| `086039B4` | `gCutscenePicture18` | palette | `intro/18_603bb4_bitmap.png` (its palette) |
-| `08603BB4` | `gCutscenePicture18Bitmap` | bitmap | `intro/18_603bb4_bitmap.png` |
-| `08608A50` | `gCutscenePicture19` | palette | `intro/19_608c50_bitmap.png` (its palette) |
-| `08608C50` | `gCutscenePicture19Bitmap` | bitmap | `intro/19_608c50_bitmap.png` |
-| `0860D578` | `gCutscenePicture20` | palette | `intro/20_60d778_bitmap.png` (its palette) |
-| `0860D778` | `gCutscenePicture20Bitmap` | bitmap | `intro/20_60d778_bitmap.png` |
-| `08611BDC` | `gCutscenePicture21` | palette | `intro/21_611ddc_bitmap.png` (its palette) |
-| `08611DDC` | `gCutscenePicture21Bitmap` | bitmap | `intro/21_611ddc_bitmap.png` |
-| `08616360` | `gCutscenePicture22` | palette | `intro/22_616560_bitmap.png` (its palette) |
-| `08616560` | `gCutscenePicture22Bitmap` | bitmap | `intro/22_616560_bitmap.png` |
-| `08619F54` | `gCutscenePicture23` | palette | `intro/23_61a154_bitmap.png` (its palette) |
-| `0861A154` | `gCutscenePicture23Bitmap` | bitmap | `intro/23_61a154_bitmap.png` |
+| `085A9F70` | `gCutscenePicture00` | palette | `cutscenes/00_space_station.png` (its palette) |
+| `085AA170` | `gCutscenePicture00Bitmap` | bitmap | `cutscenes/00_space_station.png` |
+| `085ADBD4` | `gCutscenePicture01` | palette | `cutscenes/01_uka_uka_and_cortex.png` (its palette) |
+| `085ADDD4` | `gCutscenePicture01Bitmap` | bitmap | `cutscenes/01_uka_uka_and_cortex.png` |
+| `085B34E4` | `gCutscenePicture02` | palette | `cutscenes/02_cortex.png` (its palette) |
+| `085B36E4` | `gCutscenePicture02Bitmap` | bitmap | `cutscenes/02_cortex.png` |
+| `085B82BC` | `gCutscenePicture03` | palette | `cutscenes/03_cortex_hologram.png` (its palette) |
+| `085B84BC` | `gCutscenePicture03Bitmap` | bitmap | `cutscenes/03_cortex_hologram.png` |
+| `085BC6E8` | `gCutscenePicture04` | palette | `cutscenes/04_minimizer_console.png` (its palette) |
+| `085BC8E8` | `gCutscenePicture04Bitmap` | bitmap | `cutscenes/04_minimizer_console.png` |
+| `085C1938` | `gCutscenePicture05` | palette | `cutscenes/05_minimizer_beam.png` (its palette) |
+| `085C1B38` | `gCutscenePicture05Bitmap` | bitmap | `cutscenes/05_minimizer_beam.png` |
+| `085C6750` | `gCutscenePicture06` | palette | `cutscenes/06_earth_shrinking.png` (its palette) |
+| `085C6950` | `gCutscenePicture06Bitmap` | bitmap | `cutscenes/06_earth_shrinking.png` |
+| `085CB160` | `gCutscenePicture07` | palette | `cutscenes/07_cortex_on_monitors.png` (its palette) |
+| `085CB360` | `gCutscenePicture07Bitmap` | bitmap | `cutscenes/07_cortex_on_monitors.png` |
+| `085CFECC` | `gCutscenePicture08` | palette | `cutscenes/08_aku_aku_crash_and_coco.png` (its palette) |
+| `085D00CC` | `gCutscenePicture08Bitmap` | bitmap | `cutscenes/08_aku_aku_crash_and_coco.png` |
+| `085D6534` | `gCutscenePicture09` | palette | `cutscenes/09_cortex_holding_earth.png` (its palette) |
+| `085D6734` | `gCutscenePicture09Bitmap` | bitmap | `cutscenes/09_cortex_holding_earth.png` |
+| `085DB768` | `gCutscenePicture10` | palette | `cutscenes/10_aku_aku.png` (its palette) |
+| `085DB968` | `gCutscenePicture10Bitmap` | bitmap | `cutscenes/10_aku_aku.png` |
+| `085DFABC` | `gCutscenePicture11` | palette | `cutscenes/11_cortex_on_screen.png` (its palette) |
+| `085DFCBC` | `gCutscenePicture11Bitmap` | bitmap | `cutscenes/11_cortex_on_screen.png` |
+| `085E550C` | `gCutscenePicture12` | palette | `cutscenes/12_coco_on_screen.png` (its palette) |
+| `085E570C` | `gCutscenePicture12Bitmap` | bitmap | `cutscenes/12_coco_on_screen.png` |
+| `085EAC44` | `gCutscenePicture13` | palette | `cutscenes/13_minimizer_overload.png` (its palette) |
+| `085EAE44` | `gCutscenePicture13Bitmap` | bitmap | `cutscenes/13_minimizer_overload.png` |
+| `085F0368` | `gCutscenePicture14` | palette | `cutscenes/14_bosses_shocked.png` (its palette) |
+| `085F0568` | `gCutscenePicture14Bitmap` | bitmap | `cutscenes/14_bosses_shocked.png` |
+| `085F4CC4` | `gCutscenePicture15` | palette | `cutscenes/15_monster.png` (its palette) |
+| `085F4EC4` | `gCutscenePicture15Bitmap` | bitmap | `cutscenes/15_monster.png` |
+| `085FA1D4` | `gCutscenePicture16` | palette | `cutscenes/16_monster_and_crash.png` (its palette) |
+| `085FA3D4` | `gCutscenePicture16Bitmap` | bitmap | `cutscenes/16_monster_and_crash.png` |
+| `085FF77C` | `gCutscenePicture17` | palette | `cutscenes/17_crash_flying_to_station.png` (its palette) |
+| `085FF97C` | `gCutscenePicture17Bitmap` | bitmap | `cutscenes/17_crash_flying_to_station.png` |
+| `086039B4` | `gCutscenePicture18` | palette | `cutscenes/18_coco_at_enlarger.png` (its palette) |
+| `08603BB4` | `gCutscenePicture18Bitmap` | bitmap | `cutscenes/18_coco_at_enlarger.png` |
+| `08608A50` | `gCutscenePicture19` | palette | `cutscenes/19_earth_growing.png` (its palette) |
+| `08608C50` | `gCutscenePicture19Bitmap` | bitmap | `cutscenes/19_earth_growing.png` |
+| `0860D578` | `gCutscenePicture20` | palette | `cutscenes/20_earth_beam_ring.png` (its palette) |
+| `0860D778` | `gCutscenePicture20Bitmap` | bitmap | `cutscenes/20_earth_beam_ring.png` |
+| `08611BDC` | `gCutscenePicture21` | palette | `cutscenes/21_station_exploding.png` (its palette) |
+| `08611DDC` | `gCutscenePicture21Bitmap` | bitmap | `cutscenes/21_station_exploding.png` |
+| `08616360` | `gCutscenePicture22` | palette | `cutscenes/22_reversed_beam.png` (its palette) |
+| `08616560` | `gCutscenePicture22Bitmap` | bitmap | `cutscenes/22_reversed_beam.png` |
+| `08619F54` | `gCutscenePicture23` | palette | `cutscenes/23_legal_notice.png` (its palette) |
+| `0861A154` | `gCutscenePicture23Bitmap` | bitmap | `cutscenes/23_legal_notice.png` |
 | `0861BADC` | `gMenuSkyBgPalette` | palette | `bg_package/61c30c_menu_sky.png` (its palette) |
 | `0861BB04` | `gPauseMenuBgPalette` | palette | `bg_package/61e5f8_pause_menu.png` (its palette) |
 | `0861BD48` | `gLevelSelectPageBgPalette` | palette | `bg_package/62556c_level_select_page.png` (its palette) |

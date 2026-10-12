@@ -18,8 +18,7 @@ extern "C" {
  * screen, then DMAs `palette` into palette RAM and loads `asset`'s
  * tile/tilemap data into VRAM via the already-matched
  * `LoadTaggedAsset`. Used for full-screen bitmap-style images (the
- * intro sequence's individual frames, per the `graphics/intro/`
- * assets this ties into).
+ * cutscene pictures, `graphics/cutscenes/`).
  *
  * The two `FixedInverse16` results each need a genuinely separate
  * unsigned-truncate (for the raw `BG2PA`/`BG2PD` halfword store) and
