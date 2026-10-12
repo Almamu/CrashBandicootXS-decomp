@@ -323,30 +323,6 @@ $(GRAPHICS_BUILDDIR)/sprites/obj_palettes.bin.inc: $(GRAPHICS_BUILDDIR)/sprites/
 	python3 tools/bin2c.py $< $@
 $(C_BUILDDIR)/data/sprite_tiles_2bf120.o: $(GRAPHICS_BUILDDIR)/sprites/obj_palettes.bin.inc
 
-# Raw (uncompressed) level tile sets of gLanguageSelectPalette3, see
-# docs/data.md: the five tag-0x00 level BG tile sets (8bpp,
-# graphics/level_tilesets/). grit does the layout, tools/bin2c.py the
-# initializer bytes. The PNGs are padded to whole rows of tiles with blank
-# tiles (tools/tile_pools.py, which also extracts them), so each one's real
-# byte count is listed below, and bin2c --size trims the (all-zero) padding
-# again.
-TILE_POOL_8BPP_PNGS := $(wildcard graphics/level_tilesets/*.png)
-
-TILE_BYTES_tileset1_17e7ac := 0x67b80
-TILE_BYTES_tileset2_1e6330 := 0x1aac0
-TILE_BYTES_tileset3_200df4 := 0x4a840
-TILE_BYTES_tileset4_270f08 := 0x28ec0
-TILE_BYTES_tileset5_299dcc := 0x1f400
-
-$(GRAPHICS_BUILDDIR)/level_tilesets/%.img.bin: graphics/level_tilesets/%.png | $(GRIT)
-	@mkdir -p $(dir $@)
-	$(GRIT) $< -gt -gB8 -p! -ftb -fh! -o $(@:.img.bin=)
-
-$(GRAPHICS_BUILDDIR)/level_tilesets/%.img.bin.inc: $(GRAPHICS_BUILDDIR)/level_tilesets/%.img.bin tools/bin2c.py
-	python3 tools/bin2c.py $< $@ --size $(TILE_BYTES_$*)
-
-tile_pool_incs = $(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.img.bin.inc,$(1))
-
 # The two boss pictures (docs/data.md "Boss pictures"): the airship
 # (graphics/vehicles/jetpack/airship/frameN.png, 4 frames) and N. Gin's
 # hovercraft (graphics/bosses/hovercraft.png, 1 frame). grit turns each
@@ -369,9 +345,6 @@ $(eval $(call BOSS_PICTURE_RULE,vehicles/jetpack/airship,$(AIRSHIP_FRAMES),AIRSH
 $(eval $(call BOSS_PICTURE_RULE,bosses/hovercraft,bosses/hovercraft,HOVERCRAFT_PICTURE,16))
 
 $(C_BUILDDIR)/data/boss_pictures_167ad4.o: $(foreach p,vehicles/jetpack/airship bosses/hovercraft,$(GRAPHICS_BUILDDIR)/$(p).inc $(GRAPHICS_BUILDDIR)/$(p).h)
-$(C_BUILDDIR)/data/level_tilesets_17e78c.o: $(call tile_pool_incs,$(filter graphics/level_tilesets/tileset1_% graphics/level_tilesets/tileset2_% graphics/level_tilesets/tileset3_%,$(TILE_POOL_8BPP_PNGS)))
-$(C_BUILDDIR)/data/level_tilesets_270f08.o: $(call tile_pool_incs,$(filter graphics/level_tilesets/tileset4_% graphics/level_tilesets/tileset5_%,$(TILE_POOL_8BPP_PNGS)))
-
 # Zero-run-compressed OBJ frame sets (the old "rotation strips", see
 # docs/data.md "Compressed sprite frames"): one PNG per set, the frames
 # stacked top to bottom: the polar player and the Yeti
@@ -398,26 +371,3 @@ $(C_BUILDDIR)/data/rle_sprites_15a050.o: $(call rle_sprite_files,vehicles/jetpac
 $(C_BUILDDIR)/data/frame_table_17a880.o: $(call rle_sprite_files,vehicles/polar/yeti)
 $(C_BUILDDIR)/data/anim_family_178f80.o: $(call rle_sprite_files,vehicles/polar/player) $(GRAPHICS_BUILDDIR)/unknown/00_0b2120_frames.h
 $(C_BUILDDIR)/data/anim_family_17aa6c.o: $(call rle_sprite_files,vehicles/jetpack/player) $(GRAPHICS_BUILDDIR)/unknown/01_14174c_frames.h
-
-# The six 4bpp tile sets of the level BG1-3 layers (graphics/level_bg_tiles/,
-# docs/graphics.md "Level BG tile sets"). Each PNG is 8bpp indexed with a
-# room's 256-colour BG palette, every tile drawn in the palette bank the
-# rooms' maps use it with most (index = bank * 16 + 4bpp pixel), so it shows
-# its real colours; grit -gB4 keeps the low nibble. The PNGs are 16 tiles
-# wide, padded with blank tiles, which bin2c.py --size trims again.
-LEVEL_BG_TILES_DIR := $(GRAPHICS_BUILDDIR)/level_bg_tiles
-LEVEL_BG_TILES_PNGS := $(wildcard graphics/level_bg_tiles/*.png)
-$(C_BUILDDIR)/data/level_bg_tiles_63d4c0.o: $(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.tiles.bin.lz.inc,$(LEVEL_BG_TILES_PNGS))
-
-LEVEL_BG_TILE_BYTES_63d4c0_snow := 0x5be0
-LEVEL_BG_TILE_BYTES_640ef8_jungle := 0x5b60
-LEVEL_BG_TILE_BYTES_644a88_temple := 0x5f20
-LEVEL_BG_TILE_BYTES_649418_sewer := 0x3e60
-LEVEL_BG_TILE_BYTES_64bb5c_space := 0x3120
-LEVEL_BG_TILE_BYTES_64d7e8_underwater := 0x37a0
-
-$(LEVEL_BG_TILES_DIR)/%.img.bin: graphics/level_bg_tiles/%.png | $(GRIT)
-	@mkdir -p $(dir $@)
-	$(GRIT) $< -gt -gB4 -p! -ftb -fh! -o $(@:.img.bin=)
-$(LEVEL_BG_TILES_DIR)/%.tiles.bin: $(LEVEL_BG_TILES_DIR)/%.img.bin tools/bin2c.py
-	python3 tools/bin2c.py $< $@ --size $(LEVEL_BG_TILE_BYTES_$*) --bin

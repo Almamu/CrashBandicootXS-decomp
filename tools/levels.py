@@ -15,47 +15,57 @@ See docs/levels.md for the format. In short, a room is
   records in 256-px columns), the spawn parameter records and the
   per-type entity counts.
 
-The editable sources live in data/levels/: levels.json (the two ROM
-regions and which rooms they hold, in ROM order, and the ROM order of the
-level assets) and one directory per
+The editable sources live in data/levels/: levels.json (the rooms, the
+two ROM regions and which rooms they hold, in ROM order, and the ROM order
+of the level assets), tileset_order.json (the room order of 8 of the ROM's
+BG tile sets, see "BG tile sets" below) and one directory per
 room with room.json, one `<layer>.png` per BG layer, the layer's whole
 picture (8bpp indexed with the room's palette, 8x8 pixels per cell; a
 BG1-3 pixel is `bank * 16 + pixel`, see "BG layer pictures" below), and
 `collision.png`, the collision layer as an image the size of the BG0
 picture (one 8x8 block per cell, coloured by
-data/levels/collision_legend.json, see tools/collision_bmp.py). The
-cells, the chunk set, the chunk grid, the asset offsets, the entity
-groups, the parameter offsets and the per-type counts are all derived
-from those again.
+data/levels/collision_legend.json, see tools/collision_bmp.py). The BG
+tile sets, the cells, the chunk set, the chunk grid, the asset offsets,
+the entity groups, the parameter offsets and the per-type counts are all
+derived from those again.
 
     tools/levels.py extract [baserom.gba]     write data/levels/ from the ROM
-    tools/levels.py rooms [--packed]          levels.json's rooms (with --packed,
-                                              those with an LZ77-packed asset)
-    tools/levels.py from-png ROOMDIR LAYER OUT
-                                              a BG layer's picture -> its cells
-                                              (little-endian u16, row-major), and
-                                              OUT.d, make's dependency on the
-                                              layer's tile set PNG
-    tools/levels.py to-png ROOMDIR LAYER MAP OUT
-                                              the way back: cells -> picture
-    tools/levels.py asset ROOMDIR OUT [--build DIR]
+    tools/levels.py rooms [--packed] [--new]  levels.json's rooms (with --packed,
+                                              those with an LZ77-packed asset;
+                                              with --new, those in no ROM region)
+    tools/levels.py tileset SYMBOL --build DIR
+                                              generate a BG tile set from its
+                                              rooms' pictures: DIR/tilesets/
+                                              SYMBOL.bin (.h, .png), and each of
+                                              its layers' cells, DIR/<room>/
+                                              <layer>.map.bin (little-endian u16,
+                                              row-major); each written only if it
+                                              changed
+    tools/levels.py tilesets-mk OUT --build DIR
+                                              levels.mk's rules for the tile sets
+    tools/levels.py asset ROOMDIR OUT --build DIR
                                               build a room's level asset, and
                                               asset.layout.json next to it (the
                                               layers' offsets and chunk grids);
-                                              with --build, the BG cells are
-                                              DIR/<room>/<layer>.map.bin (from-png)
+                                              the BG cells are
+                                              DIR/<room>/<layer>.map.bin
     tools/levels.py c REGION OUT [--build DIR]
                                               C definitions of one room region
                                               (REGION = its name in levels.json);
                                               with --build, from the rooms'
                                               DIR/<room>/asset.layout.json
-    tools/levels.py assets OUT                C definitions of the 41 level assets,
+    tools/levels.py assets OUT                C definitions of the ROM's level assets,
                                               in levels.json's "assets" order; each
                                               #includes the room's asset bytes
                                               (bin2c output, see levels.mk)
-    tools/levels.py render ROOMDIR LAYER OUT  one layer's picture: a BG layer's
-                                              PNG drawn again from its cells, or
-                                              the collision image
+    tools/levels.py appended OUT --build DIR  C definitions of the level data that
+                                              isn't the ROM's: the new tile sets,
+                                              the new rooms and their assets
+                                              (src/data/level_appended.cpp)
+    tools/levels.py render ROOMDIR LAYER OUT [--build DIR]
+                                              one layer's picture: the collision
+                                              image, or a BG layer drawn again
+                                              from the build's cells and tile set
     tools/levels.py constants entities OUT    constants/entities.h (ENTITY_*,
                                               ENEMY_KIND_*) from entity_types.json
     tools/levels.py constants crates OUT      constants/crates.h (CRATE_KIND_*)
@@ -377,14 +387,15 @@ def entity_type(room_name, t, by_name):
 
 
 def load_map(room_dir, lname, layer, build_dir=None):
-    """A layer's cells, row-major. A BG layer's come from its picture
-    (read_layer_png), or with `build_dir` from the map `from-png` decoded it
-    to, `<build_dir>/<room>/<layer>.map.bin` (the build's copy)."""
+    """A layer's cells, row-major. A BG layer's are the ones the tile set
+    generator gave its picture (`levels.py tileset`),
+    `<build_dir>/<room>/<layer>.map.bin`; the collision layer's come from
+    its image."""
     path = Path(room_dir) / layer["map"]
     w, h = layer["size_chunks"]
     if lname != "collision":
         if build_dir is None:
-            return read_layer_png(path, lname, layer)
+            sys.exit("%s: a BG layer's cells come from its tile set (levels.py tileset): give --build" % path)
         path = Path(build_dir) / room_key(room_dir) / ("%s.map.bin" % lname)
     elif path.suffix in (".png", ".bmp"):
         # the collision layer: an image of its cells, 8x8 pixels each, the
@@ -616,8 +627,9 @@ def assets_c(out_path):
     alignment."""
     levels = read_json(LEVELS_JSON)
     rooms = levels["assets"]["rooms"]
-    if sorted(rooms) != sorted(levels["rooms"]):
-        sys.exit("levels.json: the \"assets\" order must list every room once")
+    if sorted(rooms) != sorted(rom_region_rooms(levels)):
+        sys.exit("levels.json: the \"assets\" order must list every room of the ROM's regions once "
+                 "(a new room's asset goes with the room, after the IWRAM image)")
     text = ["/* Generated by tools/levels.py from data/levels/ - do not edit. */", ""]
     for rname in rooms:
         asset = read_json(LEVELS_DIR / rname / "room.json")["asset"]
@@ -631,7 +643,7 @@ def assets_c(out_path):
 
 
 # ---------------------------------------------------------------------------
-# BG layer pictures (data/levels/<room>/bg0-3.png)
+# BG layer pictures (data/levels/<level>/<slot>/bg0-3.png) and BG tile sets
 #
 # A BG layer is kept as its whole picture: 8x8 pixels per cell, 8bpp
 # indexed with the room's palette. A cell's block is its tile, flipped as
@@ -640,13 +652,20 @@ def assets_c(out_path):
 # 64 pixels, the transparent ones (p = 0) too: that keeps the cell's
 # palette bank even in a blank cell, so every cell comes back exactly.
 #
-# Reading a picture back looks each block up among the tile set's tiles
-# under the four flips. Several tiles (or flips of one tile) can draw the
-# same block; the cell is then the lowest tile index, and for that tile the
-# first flip of none, h, v, hv. That reproduces every cell of the ROM's
-# 131 BG layers.
+# The BG tile sets aren't sources: each one is generated from the pictures
+# of the layers that name it in room.json (docs/levels.md, "Tile sets"):
+# - tile 0 is the blank tile;
+# - then the rooms that use the set, one after another: first the ones
+#   data/levels/tileset_order.json lists for it, then the other rooms of the
+#   ROM's regions in levels.json order, then the new rooms (in no region);
+# - inside a room bg1, bg2, bg3 (a BG0 set: bg0), each picture in chunk
+#   order (the 16x8-cell chunks row by row, a chunk's cells row by row);
+# - a block that isn't a tile yet under any of the four flips becomes the
+#   next tile, in the orientation it is first seen in. A cell is its
+#   block's tile and flip (and, BG1-3, its bank).
+# That gives back the ROM's 11 sets and every cell of its 131 BG layers.
 
-# The flips a block is looked up under, in order of preference: (h, v).
+# The flips of a cell, in its flip bits' order: (h, v).
 FLIPS = ((0, 0), (1, 0), (0, 1), (1, 1))
 # One 8-pixel row of a block as a little-endian u64 (pixel 0 in the low
 # byte): a block is a tuple of 8 of these, top row first.
@@ -654,81 +673,45 @@ _NIBBLES = 0x0F0F0F0F0F0F0F0F
 _HIGH_NIBBLES = 0xF0F0F0F0F0F0F0F0
 _BYTES = 0x0101010101010101
 
-
-def tileset_png(symbol):
-    """The source PNG of a layer's tile set: graphics/level_tilesets/ (BG0,
-    8bpp) or graphics/level_bg_tiles/ (BG1-3, 4bpp)."""
-    named = {n: a for a, n in TILESET_SYMBOLS.items()}
-    addr = "%06x" % (named[symbol] & 0xFFFFFF) if symbol in named else symbol[-6:].lower()
-    for pat in ("graphics/level_tilesets/*_%s.png", "graphics/level_bg_tiles/%s_*.png"):
-        hits = sorted(Path(".").glob(pat % addr))
-        if hits:
-            return hits[0]
-    sys.exit("no tile set source for %s" % symbol)
+TILESET_ORDER_JSON = LEVELS_DIR / "tileset_order.json"
+# The most tiles a cell can name: BG0's 14-bit tile-slot pool ids, BG1-3's
+# 10-bit screen entries.
+MAX_TILES = {8: 0x4000, 4: 0x400}
 
 
-def tileset_rows(symbol):
-    """A layer's tile set, read from its source PNG (tileset_png), as a
-    list of tiles, each 8 rows of 8 colour indices (bytes). The BG1-3 sets
-    are drawn in palette banks (graphics/level_bg_tiles/), so only the low
-    nibble of an index is the pixel."""
-    from PIL import Image
-
-    path = tileset_png(symbol)
-    im = Image.open(path)
-    raw = im.tobytes()
-    if "level_bg_tiles" in path.parts:
-        raw = raw.translate(bytes(i & 0x0F for i in range(256)))
-    pw = im.size[0]
-    tw = pw // 8
-    tiles = []
-    for t in range(tw * (im.size[1] // 8)):
-        o = t // tw * 8 * pw + t % tw * 8
-        tiles.append([raw[o + y * pw:o + y * pw + 8] for y in range(8)])
-    return tiles
+def tile_blocks(data, bpp):
+    """Tile bytes (8bpp, or 4bpp low nibble first) -> one block per tile."""
+    size = 8 * bpp
+    out = []
+    for t in range(len(data) // size):
+        tile = data[t * size:(t + 1) * size]
+        if bpp == 4:
+            tile = bytes(tile[i // 2] >> 4 * (i & 1) & 0xF for i in range(64))
+        out.append(tuple(int.from_bytes(tile[y * 8:y * 8 + 8], "little") for y in range(8)))
+    return out
 
 
-def find_tileset(symbol):
-    """A layer's tile set as a list of 64-pixel tiles (colour indices)."""
-    return [list(b"".join(rows)) for rows in tileset_rows(symbol)]
+def flips(b):
+    """A block under the four flips of FLIPS."""
+    m = tuple(int.from_bytes(r.to_bytes(8, "little"), "big") for r in b)  # h flip
+    return b, m, b[::-1], m[::-1]
 
 
 class LayerTiles:
-    """A BG layer's tile set, both ways: cell -> its 8x8 block, and block ->
-    cell. bg0: the cells are tile-slot pool ids (tile in bits 0-13, h/v
-    flip in 14-15) of an 8bpp set; else BG screen entries (tile 0-9, h/v
-    flip 10-11, palette bank 12-15) of a 4bpp set."""
+    """A BG layer's tile set, cell -> its 8x8 block. bg0: the cells are
+    tile-slot pool ids (tile in bits 0-13, h/v flip in 14-15) of an 8bpp
+    set; else BG screen entries (tile 0-9, h/v flip 10-11, palette bank
+    12-15) of a 4bpp set."""
 
-    _cache = {}
-
-    @classmethod
-    def get(cls, symbol, bg0):
-        key = (symbol, bg0)
-        if key not in cls._cache:
-            cls._cache[key] = cls(symbol, bg0)
-        return cls._cache[key]
-
-    def __init__(self, symbol, bg0):
+    def __init__(self, symbol, bg0, blocks):
         self.symbol = symbol
         self.bg0 = bg0
-        # per tile, its block under each flip of FLIPS
-        self.flipped = []
-        for rows in tileset_rows(symbol):
-            plain = tuple(int.from_bytes(r, "little") for r in rows)
-            mirrored = tuple(int.from_bytes(r, "big") for r in rows)  # h flip
-            self.flipped.append((plain, mirrored, plain[::-1], mirrored[::-1]))
-        self.blocks = {}  # cell value -> block
-        self.cells = {}  # block -> cell value; for BG1-3 filled per bank as met
-        self.base = {}  # BG1-3: bank-0 block -> cell value without the bank
-        table = self.cells if bg0 else self.base
-        shift = 14 if bg0 else 10
-        for t, blocks in enumerate(self.flipped):
-            for (hf, vf), block in zip(FLIPS, blocks):
-                table.setdefault(block, t | hf << shift | vf << shift + 1)
+        self.flipped = [flips(b) for b in blocks]
+        self.blocks = {}
 
     def block(self, v):
-        """The 8x8 block a cell draws, as 8 u64 rows (None for a tile past
-        the end of the set)."""
+        """The 8x8 block a cell draws (None for a tile past the end of the
+        set)."""
         b = self.blocks.get(v)
         if b is None:
             if self.bg0:
@@ -743,38 +726,13 @@ class LayerTiles:
             self.blocks[v] = b
         return b
 
-    def cell(self, block):
-        """The cell that draws `block`: (value, None), or (None, why not)."""
-        v = self.cells.get(block)
-        if v is not None:
-            return v, None
-        if self.bg0:
-            return None, "isn't a tile of %s under any flip" % self.symbol
-        bank = block[0] >> 4 & 0xF
-        if any(r & _HIGH_NIBBLES != bank * 16 * _BYTES for r in block):
-            banks = sorted({p >> 4 for r in block for p in r.to_bytes(8, "little")})
-            return None, ("mixes palette banks %s: a BG1-3 cell draws all 64 pixels from one bank "
-                          "(indices bank * 16 to bank * 16 + 15)" % ", ".join(map(str, banks)))
-        v = self.base.get(tuple(r & _NIBBLES for r in block))
-        if v is None:
-            return None, ("isn't a tile of %s under any flip (in palette bank %d, indices %d-%d)"
-                          % (self.symbol, bank, bank * 16, bank * 16 + 15))
-        v |= bank << 12
-        self.cells[block] = v
-        return v, None
 
-
-def layer_tiles(lname, layer):
-    return LayerTiles.get(layer["tileset"], lname == "bg0")
-
-
-def write_layer_png(path, room, lname, cells, palette):
-    """A BG layer's cells as its picture (see above), with the room's palette
-    (256 entries, written as tools/jasc_pal.py writes a PNG's palette)."""
+def write_layer_png(path, layer, tiles, cells, palette):
+    """A BG layer's cells as its picture (see above), drawn with `tiles` (a
+    LayerTiles) and the room's palette (256 entries, written as
+    tools/jasc_pal.py writes a PNG's palette)."""
     from PIL import Image
 
-    layer = room["layers"][lname]
-    tiles = layer_tiles(lname, layer)
     w, h = layer["size_chunks"]
     W = w * CHUNK_W
     if len(cells) != W * h * CHUNK_H:
@@ -787,7 +745,7 @@ def write_layer_png(path, room, lname, cells, palette):
             b = tiles.block(v)
             if b is None:
                 sys.exit("%s: cell (%d, %d) is %#06x, a tile past the end of %s"
-                         % (path, x, y, v, layer["tileset"]))
+                         % (path, x, y, v, tiles.symbol))
             blocks.append(b)
         out += [pack(*row) for row in zip(*blocks)]
     img = Image.frombytes("P", (W * 8, h * CHUNK_H * 8), b"".join(out))
@@ -799,11 +757,68 @@ def _pixels(x, y):
     return "(pixels %d-%d, %d-%d)" % (x * 8, x * 8 + 7, y * 8, y * 8 + 7)
 
 
-def read_layer_png(path, lname, layer):
-    """A BG layer's picture -> its cells (row-major)."""
+def rom_region_rooms(levels):
+    """The rooms of the ROM's regions: their data is the ROM's."""
+    return [r for region in levels["regions"] for r in region["rooms"]]
+
+
+def new_rooms(levels):
+    """The rooms in no ROM region (docs/levels.md, "Adding a room"), in
+    levels.json order: src/data/level_appended.cpp holds them."""
+    rom = set(rom_region_rooms(levels))
+    return [r for r in levels["rooms"] if r not in rom]
+
+
+def tileset_users(levels):
+    """Every BG tile set the rooms' layers name, which makes the set:
+    {symbol: {"bpp": 8 for a BG0 set, 4 for a BG1-3 one, "rooms": {room:
+    [its layers naming the set]}}}, rooms in levels.json order."""
+    sets = {}
+    for r in levels["rooms"]:
+        room = read_json(LEVELS_DIR / r / "room.json")
+        for lname in ("bg0", "bg1", "bg2", "bg3"):
+            layer = room["layers"].get(lname)
+            if layer is None:
+                continue
+            bpp = 8 if lname == "bg0" else 4
+            s = sets.setdefault(layer["tileset"], {"bpp": bpp, "rooms": {}})
+            if s["bpp"] != bpp:
+                sys.exit("data/levels/%s: %s names %s, which other rooms use for %s: a BG0 tile set "
+                         "(8bpp) can't be a BG1-3 one (4bpp)" % (r, lname, layer["tileset"],
+                                                                  "BG0" if s["bpp"] == 8 else "BG1-3"))
+            s["rooms"].setdefault(r, []).append(lname)
+    return sets
+
+
+def load_tileset_order():
+    return read_json(TILESET_ORDER_JSON) if TILESET_ORDER_JSON.exists() else {}
+
+
+def is_rom_tileset(spec, levels):
+    """A tile set the ROM's rooms use (the ROM's own, defined by the
+    hand-written src/data files); the others are new ones."""
+    rom = set(rom_region_rooms(levels))
+    return any(r in rom for r in spec["rooms"])
+
+
+def tileset_rooms(symbol, spec, levels, order):
+    """The rooms of a tile set in the order its tiles are made: [(room,
+    [layers])]. See above."""
+    listed = order.get(symbol, [])
+    for r in listed:
+        if r not in spec["rooms"]:
+            sys.exit("%s: %s lists %s, which doesn't use it" % (TILESET_ORDER_JSON, symbol, r))
+    rom = set(rom_region_rooms(levels))
+    users = list(spec["rooms"])
+    seq = listed + [r for r in users if r in rom and r not in listed] + \
+        [r for r in users if r not in rom and r not in listed]
+    return [(r, spec["rooms"][r]) for r in seq]
+
+
+def layer_blocks(path, layer):
+    """A BG layer picture's 8x8 blocks in chunk order: (cell index, block)."""
     from PIL import Image
 
-    tiles = layer_tiles(lname, layer)
     w, h = layer["size_chunks"]
     W, H = w * CHUNK_W, h * CHUNK_H
     img = Image.open(path)
@@ -815,38 +830,285 @@ def read_layer_png(path, lname, layer):
                  % ((path,) + img.size + (W * 8, H * 8, w, h)))
     raw = img.tobytes()
     unpack = struct.Struct("<%dQ" % W).unpack_from
-    pw = W * 8
-    lookup = tiles.cells.get
-    cells = []
-    errors = []
-    for y in range(H):
-        blocks = list(zip(*[unpack(raw, (y * 8 + r) * pw) for r in range(8)]))
-        row = list(map(lookup, blocks))
-        if None in row:
-            for x, v in enumerate(row):
+    rows = [unpack(raw, y * W * 8) for y in range(H * 8)]
+    for gy in range(h):
+        for gx in range(w):
+            for cy in range(CHUNK_H):
+                y = gy * CHUNK_H + cy
+                band = rows[y * 8:y * 8 + 8]
+                for cx in range(CHUNK_W):
+                    x = gx * CHUNK_W + cx
+                    yield y * W + x, tuple(r[x] for r in band)
+
+
+def generate_tileset(symbol, levels, users=None, order=None):
+    """A BG tile set from its rooms' pictures (see above): (its tiles'
+    blocks, each tile's palette bank where first drawn, {(room, layer):
+    cells}). A new room may only use the tiles a set of the ROM's rooms
+    has: its tiles would move later ROM data."""
+    users = users if users is not None else tileset_users(levels)
+    order = order if order is not None else load_tileset_order()
+    if symbol not in users:
+        sys.exit("no room's layer names the tile set %s" % symbol)
+    spec = users[symbol]
+    bg0 = spec["bpp"] == 8
+    shift = 14 if bg0 else 10
+    rom = set(rom_region_rooms(levels))
+    rom_set = is_rom_tileset(spec, levels)
+    tiles, banks, index = [], [], {}
+
+    def add(b, bank):
+        t = len(tiles)
+        tiles.append(b)
+        banks.append(bank)
+        for f, blk in enumerate(flips(b)):
+            index.setdefault(blk, t | (f & 1) << shift | (f >> 1) << shift + 1)
+
+    add((0,) * 8, 0)
+    maps, errors = {}, []
+    for room, lays in tileset_rooms(symbol, spec, levels, order):
+        new = room not in rom
+        layers = read_json(LEVELS_DIR / room / "room.json")["layers"]
+        for lname in lays:
+            layer = layers[lname]
+            path = LEVELS_DIR / room / layer["map"]
+            W = layer["size_chunks"][0] * CHUNK_W
+            cells = [0] * (W * layer["size_chunks"][1] * CHUNK_H)
+            for i, b in layer_blocks(path, layer):
+                x, y = i % W, i // W
+                bank = 0
+                if not bg0:
+                    bank = b[0] >> 4 & 0xF
+                    if any(r & _HIGH_NIBBLES != bank * 16 * _BYTES for r in b):
+                        bs = sorted({p >> 4 for r in b for p in r.to_bytes(8, "little")})
+                        errors.append("%s: cell (%d, %d) %s mixes palette banks %s: a BG1-3 cell draws all 64 "
+                                      "pixels from one bank (indices bank * 16 to bank * 16 + 15)"
+                                      % (path, x, y, _pixels(x, y), ", ".join(map(str, bs))))
+                        continue
+                    b = tuple(r & _NIBBLES for r in b)
+                v = index.get(b)
                 if v is None:
-                    v, why = tiles.cell(blocks[x])
-                    if why:
-                        errors.append("%s: cell (%d, %d) %s %s" % (path, x, y, _pixels(x, y), why))
-                    row[x] = v
-        cells += row
+                    if new and rom_set:
+                        errors.append("%s: cell (%d, %d) %s isn't a tile of %s under any flip, and %s is a tile "
+                                      "set of the ROM's rooms: a new room can only use its tiles. Name a new tile "
+                                      "set in the layer's \"tileset\" (room.json) to have one made from the "
+                                      "room's pictures" % (path, x, y, _pixels(x, y), symbol, symbol))
+                        continue
+                    v = len(tiles)
+                    add(b, bank)
+                cells[i] = v | bank << 12
+            maps[(room, lname)] = cells
     if errors:
         more = len(errors) - 20
         sys.exit("\n".join(errors[:20] + (["... and %d more cells" % more] if more > 0 else [])))
-    return cells
+    if len(tiles) > MAX_TILES[spec["bpp"]]:
+        sys.exit("%s: %d tiles, more than a cell can name (%d)" % (symbol, len(tiles), MAX_TILES[spec["bpp"]]))
+    return tiles, banks, maps
 
 
-def render(room_dir, lname, out_path):
-    """A layer's picture: the BG layer's PNG drawn again from its cells, or
-    the collision image."""
+def tileset_bytes(tiles, bpp):
+    out = bytearray()
+    for b in tiles:
+        for r in b:
+            row = r.to_bytes(8, "little")
+            out += row if bpp == 8 else bytes(row[i] | row[i + 1] << 4 for i in range(0, 8, 2))
+    return bytes(out)
+
+
+def write_if_changed(path, data):
+    """Writes `data` unless the file already holds it, so make sees an
+    unchanged output as unchanged (levels.mk's tile set rules)."""
+    path = Path(path)
+    if path.exists() and path.read_bytes() == data:
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(data)
+
+
+def tileset_png(tiles, banks, bpp, palette):
+    """A viewing picture of a tile set: 16 tiles a row, a BG1-3 tile drawn in
+    the bank of its first cell, with the palette of its first room."""
+    import io
+
+    from PIL import Image
+
+    rows = -(-len(tiles) // 16)
+    img = Image.new("P", (128, rows * 8), 0)
+    px = img.load()
+    for t, b in enumerate(tiles):
+        add = 0 if bpp == 8 else banks[t] * 16
+        for y, r in enumerate(b):
+            for x, p in enumerate(r.to_bytes(8, "little")):
+                px[t % 16 * 8 + x, t // 16 * 8 + y] = p + add
+    img.putpalette([c for v in palette for c in jasc_pal.to_rgb(v)])
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()
+
+
+def tileset_build(symbol, build_dir):
+    """`levels.py tileset`: the set's tiles (BUILD/tilesets/SYMBOL.bin), its
+    size (SYMBOL.h), a viewing picture (SYMBOL.png) and its layers' cells
+    (BUILD/<room>/<layer>.map.bin), each written only if it changed."""
+    levels = read_json(LEVELS_JSON)
+    users = tileset_users(levels)
+    tiles, banks, maps = generate_tileset(symbol, levels, users)
+    bpp = users[symbol]["bpp"]
+    data = tileset_bytes(tiles, bpp)
+    out = Path(build_dir) / "tilesets"
+    write_if_changed(out / (symbol + ".bin"), data)
+    write_if_changed(out / (symbol + ".h"), ("/* Generated by tools/levels.py tileset - do not edit. */\n"
+                                             "#define TILES_SIZE_%s %#x\n" % (symbol, len(data))).encode())
+    first = next(iter(maps))[0]
+    room_dir = LEVELS_DIR / first
+    write_if_changed(out / (symbol + ".png"),
+                     tileset_png(tiles, banks, bpp, room_palette(room_dir, load_room(room_dir))))
+    for (room, lname), cells in maps.items():
+        write_if_changed(Path(build_dir) / room / ("%s.map.bin" % lname), struct.pack("<%dH" % len(cells), *cells))
+
+
+def tilesets_mk(out_path, build_dir):
+    """`levels.py tilesets-mk`: levels.mk's rules for the tile sets, one per
+    set the rooms name. A set's stamp depends on its rooms' room.json and
+    layer pictures; its outputs depend on the stamp with an empty recipe,
+    so an output tileset_build left as it was doesn't rebuild what uses it."""
+    levels = read_json(LEVELS_JSON)
+    users = tileset_users(levels)
+    order = load_tileset_order()
+    order_dep = " " + TILESET_ORDER_JSON.as_posix() if TILESET_ORDER_JSON.exists() else ""
+    b = build_dir
+    new = [s for s, spec in users.items() if not is_rom_tileset(spec, levels)]
+    lines = ["# Generated by tools/levels.py tilesets-mk from data/levels/ - do not edit.",
+             "LEVEL_TILESETS := " + " ".join(users),
+             "LEVEL_NEW_TILESETS_8BPP := " + " ".join(s for s in new if users[s]["bpp"] == 8),
+             "LEVEL_NEW_TILESETS_4BPP := " + " ".join(s for s in new if users[s]["bpp"] == 4)]
+    for symbol, spec in users.items():
+        rooms = tileset_rooms(symbol, spec, levels, order)
+        deps = []
+        for r, lays in rooms:
+            layers = read_json(LEVELS_DIR / r / "room.json")["layers"]
+            deps.append("data/levels/%s/room.json" % r)
+            deps += ["data/levels/%s/%s" % (r, layers[lname]["map"]) for lname in lays]
+        stamp = "%s/tilesets/%s.stamp" % (b, symbol)
+        lines += ["%s: %s%s tools/levels.py" % (stamp, " ".join(deps), order_dep),
+                  "\t@mkdir -p $(dir $@)",
+                  "\tpython3 tools/levels.py tileset %s --build %s" % (symbol, b),
+                  "\t@touch $@",
+                  "%s/tilesets/%s.bin %s/tilesets/%s.h: %s ;" % (b, symbol, b, symbol, stamp)]
+        lines += ["%s/%s/%s.map.bin: %s ;" % (b, r, lname, stamp) for r, lays in rooms for lname in lays]
+    Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+    Path(out_path).write_text("\n".join(lines) + "\n")
+
+
+def appended_c(out_path, build_dir):
+    """`levels.py appended`: the C of src/data/level_appended.cpp, the level
+    data that isn't the ROM's: the new tile sets (used by no room of a ROM
+    region), then the new rooms' data and their assets. Empty with the
+    original data."""
+    levels = read_json(LEVELS_JSON)
+    users = tileset_users(levels)
+    text = ["/* Generated by tools/levels.py from data/levels/ - do not edit. */", ""]
+    defs, externs = [], set()
+    for symbol, spec in users.items():
+        if is_rom_tileset(spec, levels):
+            continue
+        defs.append("/* new tile set, %dbpp */" % spec["bpp"])
+        defs.append("extern const u8 %s[] __attribute__((aligned(4))) = {" % symbol)
+        if spec["bpp"] == 8:
+            # a tag-0x00 raw tagged asset: {size << 8}, then the tiles
+            n = (Path(build_dir) / "tilesets" / (symbol + ".bin")).stat().st_size
+            defs.append("    0x00, 0x%02X, 0x%02X, 0x%02X," % (n & 0xFF, n >> 8 & 0xFF, n >> 16 & 0xFF))
+            defs.append('#include "tilesets/%s.bin.inc"' % symbol)
+        else:
+            defs.append('#include "tilesets/%s.bin.lz.inc"' % symbol)
+        defs += ["};", ""]
+    rooms = new_rooms(levels)
+    for r in rooms:
+        e, body = room_c(LEVELS_DIR / r, build_dir)
+        externs |= e
+        defs.append(body)
+    for r in rooms:
+        asset = read_json(LEVELS_DIR / r / "room.json")["asset"]
+        defs.append("/* %s's asset: %s */" % (r, "LZ77-packed" if asset["packed"] else "raw"))
+        defs.append("extern const u8 %s[] __attribute__((aligned(4))) = {" % asset["symbol"])
+        defs.append('#include "%s/asset.bin%s.inc"' % (r, ".lz" if asset["packed"] else ""))
+        defs += ["};", ""]
+    text += ["extern const u8 %s[];" % s for s in sorted(externs)] + [""] + defs
+    Path(out_path).write_text("\n".join(text))
+
+
+def tileset_order_lists(sets, levels):
+    """For extract: each tile set's room order, the shortest list of rooms
+    that, put before the set's other rooms (in levels.json order), gives
+    the ROM's tile order. `sets`: {symbol: (the ROM's tile blocks, {room:
+    [the blocks of its layers using the set, in chunk order]})}, the
+    rooms in levels.json order. Every tile set of the ROM is a run of whole
+    rooms in some order, which this finds first."""
+
+    def simulate(seq, blocks):
+        seen, out = set(flips((0,) * 8)), [(0,) * 8]
+        for r in seq:
+            for b in blocks[r]:
+                if b not in seen:
+                    out.append(b)
+                    seen.update(flips(b))
+        return out
+
+    out = {}
+    for symbol, (want, blocks) in sets.items():
+        default = list(blocks)
+        # the rooms in the ROM's order: each one's new tiles are the ROM's next
+        seen, pos, order, left = set(flips((0,) * 8)), 1, [], list(default)
+        while pos < len(want):
+            for r in left:
+                new = []
+                s = set(seen)
+                for b in blocks[r]:
+                    if b not in s:
+                        new.append(b)
+                        s.update(flips(b))
+                if new and want[pos:pos + len(new)] == new:
+                    order.append(r)
+                    left.remove(r)
+                    seen, pos = s, pos + len(new)
+                    break
+            else:
+                sys.exit("%s isn't a run of whole rooms in any order" % symbol)
+        for k in range(len(order) + 1):
+            seq = order[:k] + [r for r in default if r not in order[:k]]
+            if simulate(seq, blocks) == want:
+                if k:
+                    out[symbol] = order[:k]
+                break
+    return out
+
+
+def write_tileset_order(lists):
+    lines = ["{"]
+    items = list(lists.items())
+    for i, (symbol, rooms) in enumerate(items):
+        lines.append('  "%s": %s%s' % (symbol, json.dumps(rooms), "," if i + 1 < len(items) else ""))
+    lines.append("}")
+    TILESET_ORDER_JSON.write_text("\n".join(lines) + "\n")
+
+
+def render(room_dir, lname, out_path, build_dir=None):
+    """A layer's picture: the collision image, or a BG layer's picture drawn
+    again from the build's cells and generated tile set (with --build)."""
     room = load_room(room_dir)
     layer = room["layers"][lname]
-    cells = load_map(room_dir, lname, layer)
     if lname == "collision":
         # the collision image itself: the legend's colours, 8x8 pixels per cell
+        cells = load_map(room_dir, lname, layer)
         collision_bmp.write_image(out_path, layer["size_chunks"][0] * CHUNK_W, cells)
         return
-    write_layer_png(out_path, room, lname, cells, room_palette(room_dir, room))
+    if build_dir is None:
+        sys.exit("render: a BG layer is drawn from the build's cells and tile set: give --build")
+    cells = load_map(room_dir, lname, layer, build_dir)
+    bpp = 8 if lname == "bg0" else 4
+    data = (Path(build_dir) / "tilesets" / (layer["tileset"] + ".bin")).read_bytes()
+    tiles = LayerTiles(layer["tileset"], lname == "bg0", tile_blocks(data, bpp))
+    write_layer_png(out_path, layer, tiles, cells, room_palette(room_dir, room))
 
 
 # ---------------------------------------------------------------------------
@@ -977,6 +1239,9 @@ def extract(rom_path):
     assets = []  # (asset addr, room name) for the ROM order of the assets
     type_names = entity_type_names()
     names = []
+    rom_tiles = {}  # tile set address -> LayerTiles of the ROM's tiles
+    decoded = {}  # (room, layer) -> its cells
+    set_blocks = {}  # tile set symbol -> {room: its blocks in chunk order}
     for idx, (pal, desc) in enumerate(rooms):
         name = folder = folders[records[idx]]
         pre = "gRoom%02d" % idx
@@ -1055,15 +1320,27 @@ def extract(rom_path):
             if lname == "collision":
                 collision_bmp.write_image(room_dir / fname, width, cells)
             else:
-                write_layer_png(room_dir / fname, room, lname, cells, palette)
+                if tiles not in rom_tiles:
+                    if lname == "bg0":  # a tag-0x00 raw tagged asset: {size << 8}, then 8bpp tiles
+                        data = rom.bytes(tiles + 4, rom.w(tiles) >> 8)
+                    else:  # LZ77, 4bpp tiles
+                        data = lz77_decompress(rom.bytes(tiles, 0x10000))
+                    rom_tiles[tiles] = LayerTiles(layer["tileset"], lname == "bg0",
+                                                  tile_blocks(data, 8 if lname == "bg0" else 4))
+                lt = rom_tiles[tiles]
+                write_layer_png(room_dir / fname, layer, lt, cells, palette)
+                decoded[(folder, lname)] = cells
+                mask = 0xFFFF if lname == "bg0" else 0x0FFF
+                set_blocks.setdefault(layer["tileset"], {}).setdefault(folder, []).extend(
+                    lt.block(cells[k] & mask) for k in chunk_order(cw, ch))
         room["symbols"]["layers"] = pre + "Layers"
         assert sec_starts == sorted(sec_starts) and sec_starts[0] == 0
         # the pad bytes the encoder model can't predict (encoder heap garbage)
         for i, (lname, layer) in enumerate(room_layers(room)):
             off = sec_starts[i]
             end = sec_starts[i + 1] if i + 1 < len(sec_starts) else len(asset)
-            # read back from the written sources, which checks their round trip
-            chunks, _ = split_chunks(load_map(room_dir, lname, layer), *layer["size_chunks"])
+            cells = decoded[(folder, lname)] if lname != "collision" else load_map(room_dir, lname, layer)
+            chunks, _ = split_chunks(cells, *layer["size_chunks"])
             want = asset[off:end]
             got = encode_section(chunks)
             if got != want:
@@ -1119,7 +1396,32 @@ def extract(rom_path):
     levels = {"rooms": names, "regions": regions,
               "assets": {"name": aname, "rooms": [n for _, n in sorted(assets)]}, "levels": level_list}
     (LEVELS_DIR / "levels.json").write_text(json.dumps(levels, indent=2) + "\n")
+    # The tile sets aren't extracted: the build makes them from the layer
+    # pictures. What their order needs beyond levels.json goes into
+    # tileset_order.json; then the generator must give back the ROM's tiles
+    # and every layer's cells.
+    by_symbol = {lt.symbol: lt for lt in rom_tiles.values()}
+    sets = {}
+    for symbol in TILESET_SYMBOLS.values():
+        users = set_blocks[symbol]
+        sets[symbol] = ([f[0] for f in by_symbol[symbol].flipped], {r: users[r] for r in names if r in users})
+    write_tileset_order(tileset_order_lists(sets, levels))
+    order = load_tileset_order()
+    users = tileset_users(levels)
+    for symbol, lt in by_symbol.items():
+        tiles, _, maps = generate_tileset(symbol, levels, users, order)
+        assert tiles == [f[0] for f in lt.flipped], "%s: the generated tile set isn't the ROM's" % symbol
+        for key, cells in maps.items():
+            assert cells == decoded[key], "%s %s: the generated cells aren't the ROM's" % key
     return names
+
+
+def chunk_order(w, h):
+    """A layer's cell indices (row-major) in chunk order (see "BG layer
+    pictures")."""
+    W = w * CHUNK_W
+    return [(gy * CHUNK_H + cy) * W + gx * CHUNK_W + cx
+            for gy in range(h) for gx in range(w) for cy in range(CHUNK_H) for cx in range(CHUNK_W)]
 
 
 def write_room_json(path, room):
@@ -1249,12 +1551,19 @@ def main():
     if cmd == "extract":
         extract(args[1] if len(args) > 1 else "baserom.gba")
     elif cmd == "rooms":
-        # levels.json's rooms (their folders), or with --packed the ones
-        # whose asset is LZ77-packed
-        rooms = read_json(LEVELS_JSON)["rooms"]
+        # levels.json's rooms (their folders); with --packed the ones whose
+        # asset is LZ77-packed, with --new the ones in no ROM region
+        levels = read_json(LEVELS_JSON)
+        rooms = new_rooms(levels) if "--new" in args else levels["rooms"]
         if "--packed" in args:
             rooms = [r for r in rooms if read_json(LEVELS_DIR / r / "room.json")["asset"]["packed"]]
         print(" ".join(rooms))
+    elif cmd == "tileset":
+        tileset_build(args[1], build_dir)
+    elif cmd == "tilesets-mk":
+        tilesets_mk(args[1], build_dir)
+    elif cmd == "appended":
+        appended_c(args[1], build_dir)
     elif cmd == "asset":
         asset, offsets, grids = build_asset(args[1], build_dir)
         Path(args[2]).write_bytes(asset)
@@ -1264,25 +1573,8 @@ def main():
         region_c(args[1], args[2], build_dir)
     elif cmd == "assets":
         assets_c(args[1])
-    elif cmd in ("from-png", "to-png"):
-        room_dir, lname = args[1], args[2]
-        room = load_room(room_dir)
-        layer = room["layers"].get(lname)
-        if lname not in ("bg0", "bg1", "bg2", "bg3") or layer is None:
-            sys.exit("%s has no BG layer %s" % (room_dir, lname))
-        if cmd == "to-png":
-            data = Path(args[3]).read_bytes()
-            write_layer_png(args[4], room, lname, list(struct.unpack("<%dH" % (len(data) // 2), data)),
-                            room_palette(room_dir, room))
-            return
-        cells = read_layer_png(Path(room_dir) / layer["map"], lname, layer)
-        out = Path(args[3])
-        out.write_bytes(struct.pack("<%dH" % len(cells), *cells))
-        # make's dependencies on the picture's tile set
-        tiles = tileset_png(layer["tileset"]).as_posix()
-        Path(str(out) + ".d").write_text("%s: %s\n%s:\n" % (out.as_posix(), tiles, tiles))
     elif cmd == "render":
-        render(args[1], args[2], args[3])
+        render(args[1], args[2], args[3], build_dir)
     elif cmd == "constants":
         Path(args[2]).write_text(constants_h(args[1]))
     else:

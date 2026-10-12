@@ -3,7 +3,7 @@
 0x084A5600-0x084C0006) from baserom.gba as typed C, the src/data/
 sprite_banks_*.cpp files (see docs/data.md and docs/data_map.md).
 
-This is a one-time extraction, like tools/tile_pools.py: the C it writes is
+This is a one-time extraction: the C it writes is
 the editable source, and the build compiles it like any other data file.
 Rerunning it overwrites those files with the ROM's tables.
 

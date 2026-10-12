@@ -103,8 +103,8 @@ extracted from `baserom.gba` again:
   under `graphics/` and `data/levels/` from the ROM. Most kinds are
   written by `gfx_manifest.py` itself. The sprite banks
   (`tools/sprite_frames.py extract`), the framed sheets
-  (`tools/split_entities.py`, `tools/dump_entities.py`), the level tile
-  sets (`tools/tile_pools.py`) and the rooms (`tools/levels.py extract`)
+  (`tools/split_entities.py`, `tools/dump_entities.py`) and the rooms
+  (`tools/levels.py extract`, which also finds `tileset_order.json`)
   are found through the ROM's tables by their own tools, which it runs.
 - `tools/gfx_manifest.py extract --check` does the same into a
   temporary tree and compares it with the sources: PNGs by size, mode,
@@ -1538,41 +1538,11 @@ change.
 
 ### Level BG tile sets
 
-The six 4bpp tile sets of the level BG1-3 layers (`gSnowBgTiles`,
-`gJungleBgTiles`, `gTempleBgTiles`, `gSewerBgTiles`, `gSpaceBgTiles`,
-`gUnderwaterBgTiles`) are `graphics/level_bg_tiles/<addr>_<theme>.png`.
-They used to be `graphics/tileset1/21`-`26`: two grayscale PNGs and four
-raw `.bin` files.
-
-Each PNG is 16 tiles wide and drawn in its real colours. A 4bpp tile has
-no palette of its own: the map entry picks a 16-colour bank of the
-room's 256-colour BG palette. So the PNG is 8bpp indexed with the
-palette of the room that uses the set most, and each tile is drawn in
-the bank the rooms' maps use it with most (index = bank * 16 + pixel),
-like the category backgrounds. Every tile of all six sets is used by
-some map.
-
-The build (`graphics.mk`):
-- grit `-gt -gB4` keeps each index's low nibble;
-- `tools/bin2c.py --size N --bin` trims the blank tiles that pad the last
-  row (`LEVEL_BG_TILE_BYTES_*`; trimmed bytes must be zero);
-- gbagfx compresses, and `tools/bin2c.py --lz` writes the C bytes of
-  `src/data/level_bg_tiles_63d4c0.cpp`.
-
-`tools/levels.py` reads these PNGs, masking the index to 4 bits, to
-draw and decode the level BG layer pictures (below).
-
-When you edit a set, keep each tile's pixels within one bank. Only the
-low nibble is built, so colouring a tile from another bank changes
-nothing in game; the map's bank decides the colours there.
-
-The layer pictures are decoded against these sets (and BG0's against
-`graphics/level_tilesets/`), so changing a tile that a layer uses makes
-that layer's picture fail to build until it is drawn again. Decode the
-layers first and draw them again after the edit (levels.md, "BG
-layers"). Adding tiles at the end of a set leaves the layers as they are
-(update the set's `LEVEL_BG_TILE_BYTES_*` / `TILE_BYTES_*` in
-`graphics.mk`).
+The six 4bpp tile sets of the level BG1-3 layers and the five 8bpp BG0
+ones used to be PNGs here (`graphics/level_bg_tiles/`,
+`graphics/level_tilesets/`). They aren't sources any more: the build
+makes each set from the room layer pictures that use it, and the PNGs are
+gone. See [levels.md, "Tile sets"](./levels.md#tile-sets).
 
 ### Level BG layer pictures
 
@@ -1587,14 +1557,12 @@ the details. In short:
   (index `bank * 16`), so a blank cell keeps its bank and every cell
   reads back exactly. Transparent areas show the colour at entry
   `bank * 16` of the room palette;
-- the build (`levels.mk`, `tools/levels.py from-png`) looks each 8x8 block
-  up in the layer's tile set under the four flips and takes the lowest
-  tile index, then the first flip of none, h, v, hv. That reproduces all
-  4,356,096 cells of the ROM;
-- a block that isn't a tile of the set, or a BG1-3 block that mixes
-  banks, fails the build with the layer, the cell and its pixels;
-- only tiles already in the set can be used: a new tile goes into the
-  tile set PNG first.
+- the build (`levels.mk`, `tools/levels.py tileset`) makes the tile sets
+  from the pictures and each cell from its block (levels.md, "Tile
+  sets"). That reproduces all 4,356,096 cells of the ROM and its 11 sets;
+- a BG1-3 block that mixes banks fails the build with the layer, the
+  cell and its pixels;
+- a new tile is just drawn in the picture.
 
 No sidecar file is needed. The pictures take 12.3 MB against the
 8.7 MB of the maps they replace.

@@ -3,41 +3,60 @@
 # BG layer as its whole picture, bg0-3.png, and the collision layer as an
 # image, collision.png), listed by levels.json's "rooms"; tools/levels.py
 # builds them back:
-# - each BG layer's cells, decoded from its picture against its tile set
-#   (levels.py from-png, into build/.../data/levels/<room>/<layer>.map.bin);
-# - each room's level asset (the per-layer chunk streams): raw for 7 rooms,
-#   LZ77-packed by gbagfx for the other 34, as C initializer bytes
-#   (tools/bin2c.py);
+# - the BG tile sets, each generated from the pictures of the layers that
+#   name it, and with them every BG layer's cells (levels.py tileset, into
+#   build/.../data/levels/tilesets/ and <room>/<layer>.map.bin);
+# - each room's level asset (the per-layer chunk streams), raw or
+#   LZ77-packed by gbagfx, as C initializer bytes (tools/bin2c.py);
 # - the C definitions of the two room-data regions (each room's palette
 #   read from its layer pictures, which must all carry the same one), which
-#   src/data/level_rooms_*.cpp #include, and of the 41 assets, which
-#   src/data/level_assets_64f830.cpp #includes.
+#   src/data/level_rooms_*.cpp #include, and of their rooms' assets, which
+#   src/data/level_assets_64f830.cpp #includes;
+# - the level data that isn't the ROM's: the rooms in no region of
+#   levels.json, their assets and the tile sets only they use, which
+#   src/data/level_appended.cpp #includes and ldscript.txt links after the
+#   IWRAM image (docs/levels.md, "Adding a room").
 LEVELS_BUILDDIR := $(OBJ_DIR)/data/levels
 LEVEL_ROOMS := $(shell python3 tools/levels.py rooms)
 LEVEL_PACKED_ROOMS := $(shell python3 tools/levels.py rooms --packed)
+LEVEL_NEW_ROOMS := $(shell python3 tools/levels.py rooms --new)
+LEVEL_ROM_ROOMS := $(filter-out $(LEVEL_NEW_ROOMS),$(LEVEL_ROOMS))
 LEVEL_ROOM_JSONS := $(foreach room,$(LEVEL_ROOMS),data/levels/$(room)/room.json)
 # The rooms' layer pictures, which also carry each room's palette.
 LEVEL_BG_PNGS := $(foreach room,$(LEVEL_ROOMS),$(wildcard data/levels/$(room)/bg?.png))
 LEVEL_REGIONS := level_rooms_24b638 level_rooms_2b91d0
 
 LEVEL_TOOLS := tools/levels.py tools/collision_bmp.py data/levels/collision_legend.json
-# A room's BG layers (bg0-3), from its pictures, and their decoded maps.
+# A room's BG layers (bg0-3) and their cells.
 level_bg_layers = $(patsubst data/levels/$(1)/%.png,%,$(wildcard data/levels/$(1)/bg?.png))
 level_bg_maps = $(foreach l,$(call level_bg_layers,$(1)),$(LEVELS_BUILDDIR)/$(1)/$(l).map.bin)
-LEVEL_BG_MAPS := $(foreach room,$(LEVEL_ROOMS),$(call level_bg_maps,$(room)))
 
-# A BG layer's picture -> its cells (docs/levels.md, "BG layers"). An
-# error names the layer, the cell and its pixels. levels.py also writes a
-# .d file naming the layer's tile set PNG (graphics/level_tilesets/ for
-# BG0, graphics/level_bg_tiles/ for BG1-3), so editing a tile set decodes
-# again only the layers drawn with it.
-define LEVEL_MAP_RULE
-$(LEVELS_BUILDDIR)/$(1)/$(2).map.bin: data/levels/$(1)/$(2).png data/levels/$(1)/room.json tools/levels.py
-	@mkdir -p $$(dir $$@)
-	python3 tools/levels.py from-png data/levels/$(1) $(2) $$@
-endef
-$(foreach room,$(LEVEL_ROOMS),$(foreach l,$(call level_bg_layers,$(room)),$(eval $(call LEVEL_MAP_RULE,$(room),$(l)))))
--include $(LEVEL_BG_MAPS:=.d)
+# The BG tile sets (docs/levels.md, "Tile sets"): one per symbol the rooms'
+# layers name, generated from their pictures together with those layers'
+# cells. tilesets.mk, generated from levels.json and the rooms, has a rule
+# per set: a stamp that depends on the pictures and room.json of every room
+# using the set (and tileset_order.json), whose recipe writes the set's
+# tiles, its size header and its layers' cells, each only if it changed;
+# the outputs depend on the stamp with an empty recipe, so an unchanged map
+# doesn't rebuild its room. It also lists the new tile sets
+# (LEVEL_NEW_TILESETS_8BPP, _4BPP), which no room of the ROM uses.
+$(LEVELS_BUILDDIR)/tilesets.mk: data/levels/levels.json $(LEVEL_ROOM_JSONS) $(wildcard data/levels/tileset_order.json) \
+		tools/levels.py
+	python3 tools/levels.py tilesets-mk $@ --build $(LEVELS_BUILDDIR)
+include $(LEVELS_BUILDDIR)/tilesets.mk
+
+$(LEVELS_BUILDDIR)/tilesets/%.bin.inc: $(LEVELS_BUILDDIR)/tilesets/%.bin tools/bin2c.py
+	python3 tools/bin2c.py $< $@
+
+# The ROM's tile sets, defined by hand in src/data/ (the BG0 ones raw 8bpp
+# tagged assets, sized by tilesets/<set>.h; the BG1-3 ones LZ77 4bpp).
+LEVEL_TILESET_DEFS = $(foreach t,$(1),$(LEVELS_BUILDDIR)/tilesets/$(t).bin.inc $(LEVELS_BUILDDIR)/tilesets/$(t).h)
+$(C_BUILDDIR)/data/level_tilesets_17e78c.o: $(call LEVEL_TILESET_DEFS,gJungleBg0Tiles gSnowBg0Tiles gUnderwaterBg0Tiles)
+$(C_BUILDDIR)/data/level_tilesets_270f08.o: $(call LEVEL_TILESET_DEFS,gSewerBg0Tiles gSpaceBg0Tiles)
+$(C_BUILDDIR)/data/level_bg_tiles_63d4c0.o: $(foreach t,gSnowBgTiles gJungleBgTiles gTempleBgTiles gSewerBgTiles \
+	gSpaceBgTiles gUnderwaterBgTiles,$(LEVELS_BUILDDIR)/tilesets/$(t).bin.lz.inc)
+$(foreach o,level_tilesets_17e78c level_tilesets_270f08 level_bg_tiles_63d4c0,\
+	$(eval $(C_BUILDDIR)/data/$(o).o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)))
 
 define LEVEL_ASSET_RULE
 $(LEVELS_BUILDDIR)/$(1)/asset.bin: data/levels/$(1)/room.json $(call level_bg_maps,$(1)) \
@@ -60,12 +79,12 @@ $(LEVELS_BUILDDIR)/%/asset.bin.inc: $(LEVELS_BUILDDIR)/%/asset.bin tools/bin2c.p
 # The room data takes the layers' asset offsets and chunk grids from the
 # asset.layout.json `levels.py asset` writes next to each asset.bin.
 $(LEVELS_BUILDDIR)/level_rooms_%.inc: data/levels/levels.json $(LEVEL_ROOM_JSONS) $(LEVEL_BG_PNGS) \
-		$(foreach room,$(LEVEL_ROOMS),$(LEVELS_BUILDDIR)/$(room)/asset.bin) data/levels/entity_types.json $(LEVEL_TOOLS)
+		$(foreach room,$(LEVEL_ROM_ROOMS),$(LEVELS_BUILDDIR)/$(room)/asset.bin) data/levels/entity_types.json $(LEVEL_TOOLS)
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py c level_rooms_$* $@ --build $(LEVELS_BUILDDIR)
 
-LEVEL_ASSET_INCS := $(foreach room,$(filter-out $(LEVEL_PACKED_ROOMS),$(LEVEL_ROOMS)),$(LEVELS_BUILDDIR)/$(room)/asset.bin.inc) \
-	$(foreach room,$(LEVEL_PACKED_ROOMS),$(LEVELS_BUILDDIR)/$(room)/asset.bin.lz.inc)
+level_asset_incs = $(foreach room,$(filter-out $(LEVEL_PACKED_ROOMS),$(1)),$(LEVELS_BUILDDIR)/$(room)/asset.bin.inc) \
+	$(foreach room,$(filter $(LEVEL_PACKED_ROOMS),$(1)),$(LEVELS_BUILDDIR)/$(room)/asset.bin.lz.inc)
 
 $(LEVELS_BUILDDIR)/level_assets_64f830.inc: data/levels/levels.json $(LEVEL_ROOM_JSONS) tools/levels.py
 	@mkdir -p $(dir $@)
@@ -73,8 +92,22 @@ $(LEVELS_BUILDDIR)/level_assets_64f830.inc: data/levels/levels.json $(LEVEL_ROOM
 
 $(foreach r,$(LEVEL_REGIONS),$(eval $(C_BUILDDIR)/data/$(r).o: $(LEVELS_BUILDDIR)/$(r).inc))
 $(foreach r,$(LEVEL_REGIONS),$(eval $(C_BUILDDIR)/data/$(r).o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)))
-$(C_BUILDDIR)/data/level_assets_64f830.o: $(LEVELS_BUILDDIR)/level_assets_64f830.inc $(LEVEL_ASSET_INCS)
+$(C_BUILDDIR)/data/level_assets_64f830.o: $(LEVELS_BUILDDIR)/level_assets_64f830.inc $(call level_asset_incs,$(LEVEL_ROM_ROOMS))
 $(C_BUILDDIR)/data/level_assets_64f830.o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)
+
+# The level data that isn't the ROM's (src/data/level_appended.cpp): the
+# new tile sets, the new rooms' data and their assets. With the original
+# data it is empty.
+$(LEVELS_BUILDDIR)/level_appended.inc: data/levels/levels.json $(LEVEL_ROOM_JSONS) $(LEVEL_BG_PNGS) \
+		$(foreach room,$(LEVEL_NEW_ROOMS),$(LEVELS_BUILDDIR)/$(room)/asset.bin) \
+		$(foreach t,$(LEVEL_NEW_TILESETS_8BPP),$(LEVELS_BUILDDIR)/tilesets/$(t).bin) \
+		data/levels/entity_types.json $(LEVEL_TOOLS)
+	@mkdir -p $(dir $@)
+	python3 tools/levels.py appended $@ --build $(LEVELS_BUILDDIR)
+$(C_BUILDDIR)/data/level_appended.o: $(LEVELS_BUILDDIR)/level_appended.inc $(call level_asset_incs,$(LEVEL_NEW_ROOMS)) \
+	$(foreach t,$(LEVEL_NEW_TILESETS_8BPP),$(LEVELS_BUILDDIR)/tilesets/$(t).bin.inc) \
+	$(foreach t,$(LEVEL_NEW_TILESETS_4BPP),$(LEVELS_BUILDDIR)/tilesets/$(t).bin.lz.inc)
+$(C_BUILDDIR)/data/level_appended.o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)
 
 # The constants headers named in the level data (#655): the entity types
 # (data/levels/entity_types.json), the crate kinds (crate_kinds.json) and

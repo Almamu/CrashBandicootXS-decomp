@@ -605,7 +605,7 @@ Per asset kind:
 | tilemap (+ tileset) from one full image | `-gt -gB4 -m -mRtf -mLf -fx <tileset.png>` | gbagfx LZ77 | map verified; the tileset itself stays a separate PNG |
 | framed OBJ sheets (`graphics/unknown/0*/`) | not migrated: each frame has a 4-byte header grit doesn't know about | `tools/framed_gfx.py` | - |
 | raw 4bpp tile pool (`graphics/sprites/`) | `-gt -gB4 -p!` | `tools/bin2c.py --size` | used, 57 PNGs |
-| raw 8bpp tag-0x00 tile set (`graphics/level_tilesets/`) | `-gt -gB8 -p!` | `tools/bin2c.py --size`, header in C | used, 5 PNGs |
+| raw 8bpp tag-0x00 tile set | none: generated from the rooms' pictures (levels.md, "Tile sets") | `tools/bin2c.py`, header in C | used, 5 sets |
 
 **Never** use grit's `-gzl`/`-pzl`/`-mzl` or its `-ftc` for LZ77 assets.
 
@@ -619,9 +619,9 @@ C (see "Level data").
 
 | object | contents | source |
 |---|---|---|
-| `level_tilesets_17e78c.cpp` | `gLanguageSelectPalette3` (`u16[16]`), tile sets 1-3 | `graphics/level_tilesets/tileset{1,2,3}_*.png` |
+| `level_tilesets_17e78c.cpp` | `gLanguageSelectPalette3` (`u16[16]`), tile sets 1-3 | generated from `data/levels/` (levels.md, "Tile sets") |
 | `level_rooms_24b638.cpp` | room data, 33 rooms | `data/levels/` via `tools/levels.py` (see "Level data") |
-| `level_tilesets_270f08.cpp` | tile sets 4-5 | `graphics/level_tilesets/tileset{4,5}_*.png` |
+| `level_tilesets_270f08.cpp` | tile sets 4-5 | generated from `data/levels/` |
 | `level_rooms_2b91d0.cpp` | room data, 8 rooms | same |
 | `sprite_tiles_2bf120.cpp` | 56 sprite banks, 125 OBJ palettes | `graphics/sprites/bankNN_<name>/`, `graphics/sprites/palettes/NNN.pal` |
 
@@ -648,19 +648,15 @@ C (see "Level data").
 - **Level tile sets.** These are tag-0x00 raw tagged assets: a
   `{size << 8}` word, then 8bpp tiles. `include/tagged_asset.h` gives each
   one a sized struct (`TAGGED_RAW_ASSET(n)`, `TAGGED_RAW_HEADER(n)`) whose
-  `data` member `#include`s the grit output. Each PNG is 16 tiles wide and
-  carries the 256-colour BG palette of the first room that uses it.
-- **Padding.** Tile counts are rarely a multiple of the PNG width, so the
-  PNGs are padded to whole rows with blank tiles. `graphics.mk` lists each
-  asset's real byte count (`TILE_BYTES_<name>`), and `bin2c.py --size`
-  trims the padding. It fails if any trimmed byte is non-zero, so drawing
-  into the padding is caught.
+  `data` member `#include`s the tiles, its size being
+  `TILES_SIZE_<set>` from the generated `tilesets/<set>.h`. The tiles
+  aren't a source: the build makes each set from the room layer pictures
+  that use it ([levels.md, "Tile sets"](./levels.md#tile-sets)).
 - **Room data** is decoded typed C now (see "Level data" below): an
   undecoded `.bin` copy wouldn't have counted as converted data.
-- `tools/tile_pools.py` extracts the tile sets from `baserom.gba` and
-  prints the `TILE_BYTES_*` lines (`tools/gfx_manifest.py extract` runs
-  it, and writes the OBJ palettes itself). Its output is
-  deterministic, and the five PNGs round-trip through grit byte-exact.
+- `tools/gfx_manifest.py extract` writes the OBJ palettes from
+  `baserom.gba`; `tools/levels.py extract` writes the rooms, from which
+  the tile sets are made again.
 
 
 ### Boss pictures
@@ -729,7 +725,8 @@ see [levels.md, "Collision layers"](./levels.md#collision-layers)). The build
 
 | output | from | used by |
 |---|---|---|
-| `build/.../data/levels/<room>/<layer>.map.bin` | the BG layer's picture, decoded to cells (`levels.py from-png`) | the room's asset |
+| `build/.../data/levels/<room>/<layer>.map.bin` | the BG layer's cells, made with its tile set (`levels.py tileset`) | the room's asset |
+| `build/.../data/levels/tilesets/<set>.bin` | a BG tile set, made from its rooms' pictures (`levels.py tileset`) | `level_tilesets_*.cpp`, `level_bg_tiles_63d4c0.cpp` |
 | `build/.../data/levels/<room>/asset.bin.inc` | the room's tilemaps, re-encoded into the ROM's chunk streams, as `tools/bin2c.py` bytes | `level_assets_64f830.inc` (7 raw assets) |
 | `build/.../data/levels/<room>/asset.bin.lz.inc` | the same, gbagfx LZ77, `tools/bin2c.py --lz` bytes | `level_assets_64f830.inc` (34 packed assets, formerly `graphics/tileset1/27`-`60`) |
 | `build/.../data/levels/level_assets_64f830.inc` | the 41 `gRoomNNAsset` definitions, in `levels.json`'s `"assets"` (ROM) order | `#include`d by `src/data/level_assets_64f830.cpp` |

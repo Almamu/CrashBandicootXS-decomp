@@ -12,11 +12,6 @@
     {"path": "vehicles/jetpack/player.png", "kind": "rle_frames", "symbol": "gJetpackPlayerRleFrames", "rom": "0x0815A050", "end": "0x08167AD4", "palette": {"symbol": "gAirshipCategoryPalette", "rom": "0x0817AAA4"}},
     {"paths": ["vehicles/jetpack/airship/frame0.png", "vehicles/jetpack/airship/frame1.png", "vehicles/jetpack/airship/frame2.png", "vehicles/jetpack/airship/frame3.png"], "kind": "boss_picture", "symbol": "gAirshipPicture", "rom": "0x08167CD4", "end": "0x08169AE8", "palette": {"symbol": "gAirshipPalette", "rom": "0x08167AD4"}},
     {"paths": ["bosses/hovercraft.png"], "kind": "boss_picture", "symbol": "gHovercraftPicture", "rom": "0x08169CE8", "end": "0x0816A810", "palette": {"symbol": "gHovercraftPalette", "rom": "0x08169AE8"}},
-    {"path": "level_tilesets/tileset1_17e7ac.png", "kind": "level_tileset", "symbol": "gJungleBg0Tiles", "rom": "0x0817E7AC"},
-    {"path": "level_tilesets/tileset2_1e6330.png", "kind": "level_tileset", "symbol": "gSnowBg0Tiles", "rom": "0x081E6330"},
-    {"path": "level_tilesets/tileset3_200df4.png", "kind": "level_tileset", "symbol": "gUnderwaterBg0Tiles", "rom": "0x08200DF4"},
-    {"path": "level_tilesets/tileset4_270f08.png", "kind": "level_tileset", "symbol": "gSewerBg0Tiles", "rom": "0x08270F08"},
-    {"path": "level_tilesets/tileset5_299dcc.png", "kind": "level_tileset", "symbol": "gSpaceBg0Tiles", "rom": "0x08299DCC"},
     {"path": "sprites/palettes/", "kind": "obj_palettes", "symbol": "gObjPalettes", "rom": "0x084A4660", "count": 125},
     {"path": "sprites/", "kind": "sprite_banks", "symbol": "gSpriteBankTable", "rom": "0x084A5600"},
     {"path": "fonts/small.png", "kind": "tiles", "symbol": "gSmallFontTiles", "rom": "0x085A4E70", "bpp": 4, "obj_sheet": "--obj 8x16*77 --obj 16x8*2 --columns 16 --cell 16x16", "palette": {"obj_palette": 33}},
@@ -75,12 +70,6 @@
     {"path": "level_select/pictures/neo_cortex.png", "kind": "tiles", "symbol": "gLevelSelectPicture9Tiles", "rom": "0x0863AD90", "bpp": 8, "width": 8, "palette": {"symbol": "gLevelSelectPicture9Palette", "rom": "0x0863D2B0", "colors": 256, "lz77": true}},
     {"path": "level_select/pictures/dingodile.png", "kind": "tiles", "symbol": "gLevelSelectPicture7Tiles", "rom": "0x0863B668", "bpp": 8, "width": 8, "palette": {"symbol": "gLevelSelectPicture7Palette", "rom": "0x0863D334", "colors": 256, "lz77": true}},
     {"path": "level_select/pictures/n_gin.png", "kind": "tiles", "symbol": "gLevelSelectPicture8Tiles", "rom": "0x0863BDD4", "bpp": 8, "width": 8, "palette": {"symbol": "gLevelSelectPicture8Palette", "rom": "0x0863D3B8", "colors": 256, "lz77": true}},
-    {"path": "level_select/pictures/tiny.png", "kind": "tiles", "symbol": "gLevelSelectPicture6Tiles", "rom": "0x0863C5E4", "bpp": 8, "width": 8, "palette": {"symbol": "gLevelSelectPicture6Palette", "rom": "0x0863D43C", "colors": 256, "lz77": true}},
-    {"path": "level_bg_tiles/63d4c0_snow.png", "kind": "level_bg_tiles", "symbol": "gSnowBgTiles", "rom": "0x0863D4C0"},
-    {"path": "level_bg_tiles/640ef8_jungle.png", "kind": "level_bg_tiles", "symbol": "gJungleBgTiles", "rom": "0x08640EF8"},
-    {"path": "level_bg_tiles/644a88_temple.png", "kind": "level_bg_tiles", "symbol": "gTempleBgTiles", "rom": "0x08644A88"},
-    {"path": "level_bg_tiles/649418_sewer.png", "kind": "level_bg_tiles", "symbol": "gSewerBgTiles", "rom": "0x08649418"},
-    {"path": "level_bg_tiles/64bb5c_space.png", "kind": "level_bg_tiles", "symbol": "gSpaceBgTiles", "rom": "0x0864BB5C"},
-    {"path": "level_bg_tiles/64d7e8_underwater.png", "kind": "level_bg_tiles", "symbol": "gUnderwaterBgTiles", "rom": "0x0864D7E8"}
+    {"path": "level_select/pictures/tiny.png", "kind": "tiles", "symbol": "gLevelSelectPicture6Tiles", "rom": "0x0863C5E4", "bpp": 8, "width": 8, "palette": {"symbol": "gLevelSelectPicture6Palette", "rom": "0x0863D43C", "colors": 256, "lz77": true}}
   ]
 }
