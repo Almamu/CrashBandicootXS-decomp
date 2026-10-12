@@ -58,6 +58,7 @@ void MakeLinkHandshakeId(u8 *self)
     }
 
     u32 hi;
+    /* `n` and `v`: the high nibble and the hash word, the sum's two terms */
     u32 v, n;
     s32 w;
 

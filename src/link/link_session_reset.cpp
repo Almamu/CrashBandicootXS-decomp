@@ -99,6 +99,7 @@ s32 LinkSession::ResetState()
     totalSent = 0;
     for (i = 0; i <= 3; i++) {
         players[i].ring.Reset();
+        /* scoped, as the `t` block below */
         {
             s32 *f30 = &players[0].rxSeq;
             s32 t = i * sizeof(LinkPlayer);
@@ -115,6 +116,7 @@ s32 LinkSession::ResetState()
             (players - 1)[i + 1].id[j * 2] = lo;
             (players - 1)[i + 1].id[j * 2 + 1] = w >> 8;
         }
+        /* scoped: its own `t` (shared, the registers differ) */
         {
             s32 t = i * sizeof(LinkPlayer);
 

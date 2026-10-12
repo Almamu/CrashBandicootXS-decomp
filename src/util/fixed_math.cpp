@@ -14,6 +14,8 @@ extern "C" {
 s32 FixedDistSq(s32 x1, s32 x2, s32 y1, s32 y2)
 {
     s32 dx = Q8_TO_INT(x1 - x2);
+    /* `dxSq` is needed (inlined, the instructions are reordered), and `dySq`
+     * stays beside it */
     s32 dxSq = dx * dx;
     s32 dy = Q8_TO_INT(y1 - y2);
     s32 dySq = dy * dy;
@@ -25,6 +27,8 @@ s32 FixedDistSq(s32 x1, s32 x2, s32 y1, s32 y2)
 u32 FixedDist(s32 x1, s32 x2, s32 y1, s32 y2)
 {
     s32 dx = Q8_TO_INT(x1 - x2);
+    /* `dxSq` is needed (inlined, the instructions are reordered), and `dySq`
+     * stays beside it */
     s32 dxSq = dx * dx;
     s32 dy = Q8_TO_INT(y1 - y2);
     s32 dySq = dy * dy;
@@ -64,6 +68,7 @@ s32 FixedDiv16(s32 numerator, s32 denominator)
 
 s32 FixedMul16(s32 lhs, s32 rhs)
 {
+    /* `a` and `b`: the two operands, side by side */
     s32 a = (s16)lhs;
     s32 b = (s16)rhs;
     a = a * b;

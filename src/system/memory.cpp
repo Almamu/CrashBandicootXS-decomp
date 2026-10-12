@@ -26,6 +26,7 @@ static inline void mem_heap_init_section(struct mem_heap_header *first, struct m
  * the IWRAM heap leaves out (main passes 0x400). */
 s32 mem_heap_init(u32 reservedBytes)
 {
+    /* `start`, `end` are needed: inlined, the registers differ */
     u32 start = (u32)&mem_iwram_heap;
     u32 end = (u32)&iwram_end;
     u32 iwram_size_left = end - start - reservedBytes;
@@ -75,6 +76,7 @@ static inline void mem_collect_heap(struct mem_heap_header *start)
         struct mem_block *relative;
         struct mem_heap *boundary;
         struct mem_block *block;
+        /* `next` is needed: inlined, the code is 2 instructions shorter */
         struct mem_block *next = current->next;
 
         if (current->status != MEMORY_STATUS_COLLECT) {
@@ -188,6 +190,7 @@ s32 mem_free_bytes(s32 heaps)
 void *mem_alloc(u32 requestedSize, u32 flags)
 {
     struct mem_block *current;
+    /* `end` is needed: inlined, the code is 1 instruction shorter */
     struct mem_block *end;
     struct mem_heap *heap;
     u32 alignedSize = requestedSize;
@@ -289,6 +292,7 @@ void mem_free(void *address)
  * mem_free_bytes result is unused. */
 void mem_heap_shutdown(void)
 {
+    /* `currentFreeBytes` is needed: inlined, the instructions differ */
     s32 currentFreeBytes = mem_free_bytes(MEM_HEAP_BOTH);
 
     if (mem_initial_free_bytes != currentFreeBytes) {

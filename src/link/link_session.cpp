@@ -247,6 +247,7 @@ void LinkSession::HandleSerial(u16 *data)
         if (nFree + nId == 4 && same && nId > 1) {
             playerCount = nId;
 
+            /* `me` is needed: inlined, the instructions are reordered */
             s32 me = (REG_SIOCNT & SIO_ID) >> 4;
 
             playerId = me;
@@ -282,6 +283,7 @@ void LinkSession::HandleSerial(u16 *data)
                  * `lo`'s zero-extension is emitted at the compare (the
                  * ROM's split lsls/lsrs #28 pair). */
                 u8 lo = LINK_NIB(&q[0]).lo;
+                /* `sum` is needed: inlined, the instructions are reordered */
                 u16 sum = (u16)(LINK_NIB(&q[0]).hi + ((q[7] << 8) | q[6])) % 16;
 
                 if (lo == sum)

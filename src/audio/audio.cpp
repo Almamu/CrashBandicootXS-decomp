@@ -435,6 +435,7 @@ AudioContext::AudioContext()
  * LevelState's destructor calls it on gAudioContext. */
 void AudioContext::DisableVCountIrq()
 {
+    /* `tmp` is needed: inlined, the instructions differ */
     u8 tmp = DISPSTAT_VCOUNT_INTR;
 
     *(u8 *)REG_ADDR_DISPSTAT &= ~tmp;

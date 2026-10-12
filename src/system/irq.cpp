@@ -22,6 +22,7 @@ void IrqRestoreHandler(s32 interruptIndex)
     irq_handler_t tmp = gIntrTable[interruptIndex] = gPrevIntrTable[interruptIndex];
 
     if (tmp == 0) {
+        /* `previousIMEvalue` is needed: inlined, the instructions differ */
         u16 previousIMEvalue = REG_IME;
         REG_IME = 0;                      // disable IME
         REG_IE &= ~(1 << interruptIndex); // disable specific interrupt
@@ -48,6 +49,7 @@ void IrqDisable(void)
 
 u32 IrqSetup(void)
 {
+    /* `intrbuffer` is needed: inlined, the instructions are reordered */
     u32 *intrbuffer = &IntrMain_Buffer;
     irq_handler_t fn = IrqEmptyHandler;
     irq_handler_t *dst1 = gPrevIntrTable;
@@ -73,8 +75,10 @@ void IrqEmptyHandler(void)
  * VBlank IRQ in DISPSTAT. Called once from AgbMain. */
 void EnableVBlankHandler(void)
 {
+    /* `fn` is needed: inlined, the instructions are reordered */
     irq_handler_t fn = VBlankHandler;
     struct vblank_callbacks *base = &gVBlankCallbacks;
+    /* `zero` is needed: inlined, the instructions are reordered */
     s32 zero = 0;
     s32 *current = &base->funcs[7];
 
@@ -91,6 +95,7 @@ void EnableVBlankHandler(void)
  * DISPSTAT and reinstalls the previous VBlank handler. */
 void DisableVBlankHandler(void)
 {
+    /* `tmp` is needed: inlined, the instructions differ */
     u8 tmp = DISPSTAT_VBLANK_INTR;
 
     *(u8 *)REG_ADDR_DISPSTAT &= ~tmp;
@@ -129,6 +134,7 @@ void WaitForVBlank(void)
 {
     u32 *p1;
     u32 *p2;
+    /* `p3` is needed: inlined, the code is 1 instruction longer */
     u32 *p3;
     u32 v1;
     u32 v2;

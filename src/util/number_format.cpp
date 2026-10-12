@@ -68,6 +68,7 @@ s32 itoa(s32 value, u8 *buffer, s32 base)
     k = 0;
     while (k < j) {
         u8 *p1 = &buffer[k];
+        /* `tmp` is needed: inlined, the code is 1 instruction shorter */
         u8 tmp = *p1;
         u8 *p2 = &buffer[j];
         *p1 = *p2;
@@ -119,6 +120,7 @@ static inline s32 InlineStringLength(u8 *s)
 u8 *FormatPaddedNumber(u8 *dest, u8 *fmt, s32 *valuePtr, u8 padChar, s32 *charsConsumedPtr)
 {
     u8 buf[0x20];
+    /* `start` is needed: inlined, the code is 7 instructions shorter */
     u8 *start = fmt;
     u8 c = *fmt++;
     s32 width = c - '0';
