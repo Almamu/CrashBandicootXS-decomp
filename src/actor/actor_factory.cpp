@@ -119,9 +119,9 @@ void SpawnPolarCollectedWumpa(s32 x, s32 y, s32 count)
     new PolarCollectedWumpa(&gActorAnimTable[POLAR_KIND_WUMPA], x, y, count);
 }
 
-PolarAkuAku *SpawnPolarAkuAku(s32 x, s32 y, s32 z, s32 arg)
+PolarAkuAku *SpawnPolarAkuAku(s32 x, s32 y, s32 z, s32 level)
 {
-    return new PolarAkuAku(&gActorAnimTable[POLAR_KIND_AKU_AKU], x, y, z, arg);
+    return new PolarAkuAku(&gActorAnimTable[POLAR_KIND_AKU_AKU], x, y, z, level);
 }
 
 void ConstructAnimTableState(struct anim_table_record *table, s32 z)

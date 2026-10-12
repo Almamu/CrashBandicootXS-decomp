@@ -25,7 +25,10 @@ extern "C" {
  * `UpdateYetiPalette` matches under both. */
 
 extern void _call_via_r0(void *fn);
-extern void _call_via_r2(void *arg0, s32 arg1, void *fn);
+/* The ROM calls gUnpackNibbleTilesFunc(src, lowBlock) through
+ * `_call_via_r2`. Yeti::Update writes that call through the pointer, so
+ * nothing here uses this declaration. */
+extern void _call_via_r2(void *src, s32 lowBlock, void *fn);
 
 /* One of two confirmed slots (index 3, dispatched via
  * `stateFuncs[state]`) of the type-0

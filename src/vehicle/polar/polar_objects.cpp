@@ -185,10 +185,10 @@ void PolarPenguin::Aim(s32 target)
 }
 
 PolarPenguin::PolarPenguin(const struct anim_table_record *rec, s32 x, s32 y, s32 z,
-                           struct spawn_arg *arg)
+                           struct spawn_arg *spawn)
     : ActorSelf(rec, x, y, z)
 {
-    Aim(arg->target);
+    Aim(spawn->target);
 }
 
 /* Hurts the player on touch, and falls in steps as it comes near: the

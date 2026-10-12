@@ -83,9 +83,9 @@ s32 Hovercraft::GetX(void)
 }
 
 /* EnterHovercraftState out of line. */
-void Hovercraft::SetState(s32 a0, s32 a1)
+void Hovercraft::SetState(s32 st, s32 idx)
 {
-    EnterState(a0, a1);
+    EnterState(st, idx);
 }
 
 /* gHovercraftStateFuncs[0]: the state CreateHovercraft sets before

@@ -162,7 +162,7 @@ void JetpackPlane::Damage(s32 amount)
 /* CreateJetpackPlane: 4 hit points; a spawn whose first target needs a
  * fast hop starts further back, with the fast speed. */
 JetpackPlane::JetpackPlane(const struct anim_table_record *rec, s32 x, s32 y, s32 z,
-                           struct spawn_arg *arg)
+                           struct spawn_arg *spawn)
     : HpActor(rec, x, y, z, 4)
 {
     cooldown = 0x3c;
@@ -171,11 +171,12 @@ JetpackPlane::JetpackPlane(const struct anim_table_record *rec, s32 x, s32 y, s3
     velY = 0;
     velX = 0;
     velZ = 0x955;
-    if (arg->target >= 0 && gJetpackPlaneHopSpeeds[GetActorSpawnKindIndex(arg->target)] > 0x955) {
+    if (spawn->target >= 0 &&
+        gJetpackPlaneHopSpeeds[GetActorSpawnKindIndex(spawn->target)] > 0x955) {
         this->z += -0x8e00;
         velZ = 0xd55;
     }
-    Aim(arg->target);
+    Aim(spawn->target);
 }
 
 /* gJetpackPlaneStateFuncs[3], entered by StateKnockedOut: falls, the
