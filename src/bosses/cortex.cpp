@@ -53,9 +53,7 @@ static inline void HitPlayer(Player *pl, s32 event)
 /* Sets `frame` to `idx`, clamped to the animation's last step. */
 static inline void ClampFrame(MovingSprite *p, s32 idx)
 {
-    u8 n = p->bank->anims[p->tag].frameCount;
-
-    CLAMP_INDEX(idx, n);
+    CLAMP_INDEX(idx, p->bank->anims[p->tag].frameCount);
     p->frame = idx;
 }
 
@@ -88,11 +86,11 @@ void CortexBossCtrl::Update(MovingSprite *part)
             n = target->x - part->x;
             part->mirrorFlags.mirrorX = n >= 0;
             cannon->mirrorFlags.mirrorX = n >= 0;
-            {
-                s32 w = INT_TO_Q8(gLevelLayers->layer0->widthPx);
 
-                n = (u32)(ABS_BRANCHLESS(n) * 12) / w;
-            }
+            /* `w` is needed: inlined, the instructions are reordered */
+            s32 w = INT_TO_Q8(gLevelLayers->layer0->widthPx);
+
+            n = (u32)(ABS_BRANCHLESS(n) * 12) / w;
             LIMIT_MAX(n, 5);
             n = 5 - n;
             ClampFrame(part, n);
@@ -221,7 +219,9 @@ void CortexTargetCtrl::Update(MovingSprite *part)
         n = --stepsLeft;
         t = dx * n;
         total = steps;
+        /* `nx` is needed: inlined, the code is 4 instructions longer */
         nx = x - t / total;
+        /* `ny` is needed: inlined, the code is 4 instructions shorter */
         ny = y - dy * n / total;
         part->x = nx;
         part->y = ny;
@@ -283,12 +283,11 @@ void CortexTargetCtrl::Update(MovingSprite *part)
                 ClampFrame(part, 1);
             }
             SetDest(part, gPlayer->x, gPlayer->y - 0xA00);
-            {
-                /* the round first, then the table's address */
-                s32 round = boss->counter;
 
-                stepsLeft = steps = gCortexTargetChaseSteps[round];
-            }
+            /* the round first, then the table's address */
+            s32 round = boss->counter;
+
+            stepsLeft = steps = gCortexTargetChaseSteps[round];
             break;
         }
     case CORTEX_TARGET_STATE_LEAVE:
@@ -436,6 +435,7 @@ void CortexShotCtrl::Update(MovingSprite *part)
                 HitPlayer(gPlayer, EVENT_HIT_CORTEX_SHOT);
             part->kind = EVENT_NONE;
         } else if (fast) {
+            /* `n` is needed: inlined, the code is 2 instructions longer */
             s32 n = gCollidableList->count;
             s32 i;
 
@@ -551,6 +551,7 @@ CortexShotCtrl::CortexShotCtrl(CortexBossCtrl *boss)
 void CortexTargetCtrl::SetPlatformsKind(u8 flag)
 {
     s32 i;
+    /* `n` is needed: inlined, the code is 2 instructions longer */
     s32 n = gTouchableList->count;
 
     for (i = 0; i < n; i++) {

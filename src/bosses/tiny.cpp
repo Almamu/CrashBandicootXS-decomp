@@ -62,6 +62,7 @@ void TinyCtrl::Update(MovingSprite *part)
     struct aabb a;
     struct aabb b;
     s32 state;
+    s32 one;
 
     if (stomped != -1) {
         /* The cast, not AsMovingSprite(): through the inline, the item is
@@ -97,16 +98,14 @@ void TinyCtrl::Update(MovingSprite *part)
     switch (state) {
     case TINY_STATE_START:
         ClearFlags(&part->f.flags, ~ENTITY_FLAG_CONTACT);
-        {
-            /* a named `one`: written as three plain `= 1`/`= 0` stores, the
-             * 0 is materialized first (it is CSE'd from the dead `& 0` of
-             * the byte store's expansion) */
-            s32 one = 1;
+        /* a named `one`: written as three plain `= 1`/`= 0` stores, the
+         * 0 is materialized first (it is CSE'd from the dead `& 0` of
+         * the byte store's expansion) */
+        one = 1;
 
-            part->kind = one;
-            anchor = one;
-            count = 0;
-        }
+        part->kind = one;
+        anchor = one;
+        count = 0;
         SetState(part, TINY_STATE_HOP_DOWN);
         break;
     case TINY_STATE_HOP_DOWN:
@@ -226,9 +225,7 @@ void TinyCtrl::Update(MovingSprite *part)
 static inline void SetFrame(MovingSprite *part, s32 frame)
 {
     const struct sprite_bank *bank = part->bank;
-    u8 *tag = &part->tag;
-    const struct sprite_anim *records = bank->anims;
-    s32 count = records[*tag].frameCount;
+    s32 count = bank->anims[part->tag].frameCount;
 
     CLAMP_INDEX(frame, count);
     part->frame = frame;
@@ -274,6 +271,7 @@ void TinyCtrl::SetState(MovingSprite *part, s32 next)
     case TINY_STATE_HOP_UP_REST:
         {
             MovingSprite *pad;
+            /* `ax` is needed: inlined, the instructions are reordered */
             s32 ax;
             s32 ay;
             s32 y;
@@ -369,6 +367,7 @@ void TinyCtrl::SpawnFallingLeaves(MovingSprite *part, s32 n)
 {
     MovingSprite *p = MovingSprite::Create(0xFFFF, 0, 0, 0);
     Ctrl *ctrl;
+    /* `x` is needed: inlined, the code is 2 instructions longer */
     s32 x;
 
     p->bank = gSpriteBankSet->Bank(55);
@@ -379,33 +378,31 @@ void TinyCtrl::SpawnFallingLeaves(MovingSprite *part, s32 n)
     ctrl->Attach(p);
     p->f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
     CollidableList()->Add(p);
-    {
-        /* the ROM materializes 0x80 before storing the 0s */
-        s32 k = 0x80;
 
-        p->speedY = 0;
-        p->rampY.start = 0;
-        p->rampY.step = k;
-        p->rampY.target = k;
-    }
-    {
-        s32 x0 = part->x;
-        s32 y;
+    /* the ROM materializes 0x80 before storing the 0s */
+    s32 k = 0x80;
 
-        x = x0 + (gPlayer->x - x0) * (n - 1) / 3;
-        y = INT_TO_Q8(gLevelLayers->layer0->y);
-        p->x = x;
-        p->y = y;
-    }
+    p->speedY = 0;
+    p->rampY.start = 0;
+    p->rampY.step = k;
+    p->rampY.target = k;
+
+    s32 x0 = part->x;
+    /* `y` is needed: inlined, the instructions are reordered */
+    s32 y;
+
+    x = x0 + (gPlayer->x - x0) * (n - 1) / 3;
+    y = INT_TO_Q8(gLevelLayers->layer0->y);
+    p->x = x;
+    p->y = y;
     p->kind = EVENT_HIT;
-    {
-        /* two masks, not folded to ~0x44; the -5 is derived from the 1 */
-        s32 m = ~ENTITY_FLAG_CONTACT;
 
-        m &= p->f.flags;
-        m &= ~ENTITY_FLAG_VULNERABLE;
-        p->f.flags = m;
-    }
+    /* two masks, not folded to ~0x44; the -5 is derived from the 1 */
+    s32 m = ~ENTITY_FLAG_CONTACT;
+
+    m &= p->f.flags;
+    m &= ~ENTITY_FLAG_VULNERABLE;
+    p->f.flags = m;
     gAudioContext->PlaySfx(SFX_UNKNOWN_13, 0x100);
 }
 
@@ -498,6 +495,7 @@ void TinyCtrl::HitStub(MovingSprite *part)
  * through the byte; a bitfield store of 1 is one `orr`. */
 void TinyCtrl::StartHop(MovingSprite *part)
 {
+    /* `px` is needed: inlined, the code is 1 instruction longer */
     s32 px = part->x;
 
     if (x <= px) {

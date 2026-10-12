@@ -26,6 +26,7 @@ HovercraftSideGun::HovercraftSideGun(const struct anim_table_record *rec, s32 x,
     : HpActor(rec, x, y, z, Hovercraft::GetLevel() == 0 ? 0x18 : 0x10)
 {
     s32 idx;
+    /* `l` is needed: inlined, the instructions are reordered */
     u8 l;
 
     this->left = left;
@@ -58,6 +59,7 @@ void HovercraftSideGun::Damage(s32 amount)
 
     if (hp <= 0) {
         s32 idx;
+        /* `l` is needed: inlined, the instructions are reordered */
         u8 l;
 
         Hovercraft::LosePart();

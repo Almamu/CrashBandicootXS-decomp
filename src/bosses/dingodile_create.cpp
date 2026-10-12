@@ -43,17 +43,16 @@ void DingodileCtrl::StartMotion(MovingSprite *part, s32 index)
         part->rampX.step = y;
         part->rampX.target = z;
     }
-    {
-        const struct speed_ramp *e2 = &gDingodileMotionRecords[gDingodileMotionEntries[index][1]];
-        s32 x = e2->start;
-        s32 y = e2->step;
-        s32 z = e2->target;
 
-        part->speedY = x;
-        part->rampY.start = x;
-        part->rampY.step = y;
-        part->rampY.target = z;
-    }
+    const struct speed_ramp *e2 = &gDingodileMotionRecords[gDingodileMotionEntries[index][1]];
+    s32 x = e2->start;
+    s32 y = e2->step;
+    s32 z = e2->target;
+
+    part->speedY = x;
+    part->rampY.start = x;
+    part->rampY.step = y;
+    part->rampY.target = z;
 }
 
 DingodileCtrl::~DingodileCtrl()
