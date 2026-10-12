@@ -8,13 +8,16 @@
 # - each room's level asset (the per-layer chunk streams): raw for 7 rooms,
 #   LZ77-packed by gbagfx for the other 34, as C initializer bytes
 #   (tools/bin2c.py);
-# - the C definitions of the two room-data regions, which
+# - the C definitions of the two room-data regions (each room's palette
+#   read from its layer pictures, which must all carry the same one), which
 #   src/data/level_rooms_*.cpp #include, and of the 41 assets, which
 #   src/data/level_assets_64f830.cpp #includes.
 LEVELS_BUILDDIR := $(OBJ_DIR)/data/levels
 LEVEL_ROOMS := $(shell python3 tools/levels.py rooms)
 LEVEL_PACKED_ROOMS := $(shell python3 tools/levels.py rooms --packed)
 LEVEL_ROOM_JSONS := $(foreach room,$(LEVEL_ROOMS),data/levels/$(room)/room.json)
+# The rooms' layer pictures, which also carry each room's palette.
+LEVEL_BG_PNGS := $(foreach room,$(LEVEL_ROOMS),$(wildcard data/levels/$(room)/bg?.png))
 LEVEL_REGIONS := level_rooms_24b638 level_rooms_2b91d0
 
 LEVEL_TOOLS := tools/levels.py tools/collision_bmp.py data/levels/collision_legend.json
@@ -56,7 +59,7 @@ $(LEVELS_BUILDDIR)/%/asset.bin.inc: $(LEVELS_BUILDDIR)/%/asset.bin tools/bin2c.p
 
 # The room data takes the layers' asset offsets and chunk grids from the
 # asset.layout.json `levels.py asset` writes next to each asset.bin.
-$(LEVELS_BUILDDIR)/level_rooms_%.inc: data/levels/levels.json $(LEVEL_ROOM_JSONS) \
+$(LEVELS_BUILDDIR)/level_rooms_%.inc: data/levels/levels.json $(LEVEL_ROOM_JSONS) $(LEVEL_BG_PNGS) \
 		$(foreach room,$(LEVEL_ROOMS),$(LEVELS_BUILDDIR)/$(room)/asset.bin) data/levels/entity_types.json $(LEVEL_TOOLS)
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py c level_rooms_$* $@ --build $(LEVELS_BUILDDIR)

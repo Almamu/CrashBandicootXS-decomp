@@ -166,7 +166,8 @@ gba-to-png` puts a raw palette into an indexed PNG, keeping its pixels.
 The 24 cutscene pictures' palettes (uncompressed `u16[256]`) live in the
 pictures too: each `graphics/cutscenes/NN_<what>.png` carries its real
 palette, and `tools/jasc_pal.py png-to-gba` reads it back (bit 15
-included) for `tools/bin2c.py --u16`. The palettes still written out in C (room palettes, HUD
+included) for `tools/bin2c.py --u16`. The room palettes live in the room's layer pictures
+([levels.md, "BG layers"](./levels.md#bg-layers)). The palettes still written out in C (HUD
 and menu palettes) keep bit 15 as part of their hex values.
 
 The 24 cutscene Mode 4 bitmaps (`graphics/cutscenes/NN_<what>.png`) are
