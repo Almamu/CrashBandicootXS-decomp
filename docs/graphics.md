@@ -86,6 +86,39 @@ but the cutscene bitmaps start on a word boundary in the ROM and are
 declared `aligned(4)` ([data.md, "LZ77 stream
 padding"](./data.md#lz77-stream-padding)).
 
+### The manifest
+
+`graphics/manifest.json` lists every source under `graphics/`, one entry
+per asset: its path, what kind of asset it is, its symbol and its ROM
+address, and what extracting it needs (bpp, width, palette, OBJ layout).
+Its header comment in `tools/gfx_manifest.py` describes each kind.
+
+**Nothing in the build reads it.** The ROM's layout comes from
+`ldscript.txt` and the order of the definitions in each `src/data/*.cpp`,
+and every reference is a symbol, so an asset that grows or shrinks just
+moves what follows it. The addresses are kept only so the sources can be
+extracted from `baserom.gba` again:
+
+- `tools/gfx_manifest.py extract [baserom.gba]` writes every source
+  under `graphics/` and `data/levels/` from the ROM. Most kinds are
+  written by `gfx_manifest.py` itself. The sprite banks
+  (`tools/sprite_frames.py extract`), the framed sheets
+  (`tools/split_entities.py`, `tools/dump_entities.py`), the level tile
+  sets (`tools/tile_pools.py`) and the rooms (`tools/levels.py extract`)
+  are found through the ROM's tables by their own tools, which it runs.
+- `tools/gfx_manifest.py extract --check` does the same into a
+  temporary tree and compares it with the sources: PNGs by size, mode,
+  pixels and palette, other files byte for byte. On the original data it
+  reproduces the whole tree.
+- `tools/gfx_manifest.py check` checks that every file under
+  `graphics/` belongs to an entry and every entry's files exist.
+- `tools/gfx_manifest.py table` writes the "Graphics assets" table of
+  [data_map.md](./data_map.md) from the manifest: the reverse lookup from
+  an address to its source.
+
+A PR that moves a source updates its entry. A new asset that isn't in the
+ROM needs no entry: the build doesn't read the manifest.
+
 ### Palettes
 
 A palette that belongs to one picture lives in that picture's PNG: the
@@ -214,8 +247,9 @@ byte (`0x04`, `0x08`, `0x0C`), which nothing reads.
 --high` puts them back.
 
 Each package's palette is its PNG's palette (see "Palettes"), so editing
-the PNG's colours changes the ROM's palette. `tools/bg_map.py extract`
-writes the PNGs, palettes included, from `baserom.gba` again.
+the PNG's colours changes the ROM's palette. `tools/gfx_manifest.py
+extract` writes the PNGs, palettes included, from `baserom.gba` again
+(see "The manifest").
 
 ## Sprites (in progress)
 

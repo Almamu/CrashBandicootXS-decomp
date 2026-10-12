@@ -76,7 +76,9 @@ make compare
 
 builds `crashbandicootxs.gba` and checks its SHA-1. It must print
 `crashbandicootxs.gba: OK` (`sha1sum` translates the "OK" in some
-locales). The Makefile tracks header dependencies, so
+locales). A plain `make` builds the ROM from whatever is in the tree
+without checking it, for example with edited graphics or levels. The
+Makefile tracks header dependencies, so
 after editing a header a plain `make` rebuilds the files that include
 it. Before opening a PR, check from clean:
 

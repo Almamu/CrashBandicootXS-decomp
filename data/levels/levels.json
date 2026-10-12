@@ -45,8 +45,6 @@
   "regions": [
     {
       "name": "level_rooms_24b638",
-      "start": "0x0824B638",
-      "end": "0x08270F08",
       "rooms": [
         "room34_24c400",
         "room32_24e104",
@@ -85,8 +83,6 @@
     },
     {
       "name": "level_rooms_2b91d0",
-      "start": "0x082B91D0",
-      "end": "0x082BF120",
       "rooms": [
         "room37_2b9ed0",
         "room39_2ba810",
@@ -101,8 +97,6 @@
   ],
   "assets": {
     "name": "level_assets_64f830",
-    "start": "0x0864F830",
-    "end": "0x087E3BEC",
     "rooms": [
       "room00_264730",
       "room01_263f4c",

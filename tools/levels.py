@@ -1039,12 +1039,11 @@ def extract(rom_path):
         for a, n in sorted(pieces):
             if lo <= a < hi and n not in order:
                 order.append(n)
-        regions.append({"name": rname, "start": "0x%08X" % lo, "end": "0x%08X" % hi, "rooms": order})
+        regions.append({"name": rname, "rooms": order})
     aname, lo, hi = ASSET_REGION
     assert all(lo <= a < hi for a, _ in assets)
     levels = {"rooms": names, "regions": regions,
-              "assets": {"name": aname, "start": "0x%08X" % lo, "end": "0x%08X" % hi,
-                         "rooms": [n for _, n in sorted(assets)]}}
+              "assets": {"name": aname, "rooms": [n for _, n in sorted(assets)]}}
     old = LEVELS_DIR / "levels.json"
     if old.exists():
         # the level list isn't extracted: keep the hand-written one
