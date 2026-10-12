@@ -5,8 +5,7 @@ extern "C" {
 
 static inline void mem_free_bytes_update(s32 flags)
 {
-    s32 result = mem_free_bytes(flags);
-    mem_initial_free_bytes = result;
+    mem_initial_free_bytes = mem_free_bytes(flags);
 }
 
 static inline void mem_heap_init_section(struct mem_heap_header *first, struct mem_block *block,

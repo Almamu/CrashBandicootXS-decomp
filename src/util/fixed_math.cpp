@@ -20,7 +20,6 @@ s32 FixedDistSq(s32 x1, s32 x2, s32 y1, s32 y2)
     return INT_TO_Q8(dxSq + dySq);
 }
 
-
 /* Distance between (x1, y1) and (x2, y2): FixedDistSq's sum of squares
  * through the BIOS Sqrt, shifted back to 24.8. */
 u32 FixedDist(s32 x1, s32 x2, s32 y1, s32 y2)

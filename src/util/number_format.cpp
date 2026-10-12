@@ -48,10 +48,8 @@ s32 itoa(s32 value, u8 *buffer, s32 base)
         } while (value > 0);
     } else {
         s32 rem2;
-        s32 quotient;
         do {
-            quotient = DivMod(value, base, &rem2);
-            value = quotient;
+            value = DivMod(value, base, &rem2);
             rem2 += 0x30;
             buffer[len] = rem2;
             len++;
@@ -72,8 +70,7 @@ s32 itoa(s32 value, u8 *buffer, s32 base)
         u8 *p1 = &buffer[k];
         u8 tmp = *p1;
         u8 *p2 = &buffer[j];
-        u8 val = *p2;
-        *p1 = val;
+        *p1 = *p2;
         *p2 = tmp;
         k++;
         j--;
@@ -144,14 +141,13 @@ u8 *FormatPaddedNumber(u8 *dest, u8 *fmt, s32 *valuePtr, u8 padChar, s32 *charsC
         break;
     }
     width--;
-    {
-        s32 negOne = -1;
 
-        consumed = fmt - start;
-        while (width != negOne) {
-            *dest++ = padChar;
-            width--;
-        }
+    s32 negOne = -1;
+
+    consumed = fmt - start;
+    while (width != negOne) {
+        *dest++ = padChar;
+        width--;
     }
     *dest = 0;
     InlineCopyString(dest, buf);
