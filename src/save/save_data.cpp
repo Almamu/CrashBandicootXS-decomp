@@ -57,6 +57,7 @@ s32 SaveData::Read(s32 len)
         i++;
     }
 
+    /* scoped: `goto fail_restore` would cross `savedIme` */
     {
         u16 savedIme = REG_IME;
         REG_IME = 0;
@@ -69,13 +70,11 @@ s32 SaveData::Read(s32 len)
     return 0;
 
 fail_restore:
-    {
-        u16 savedIme = REG_IME;
-        REG_IME = 0;
-        REG_IE &= ~INTR_FLAG_TIMER2;
-        REG_IME = savedIme;
-        REG_IME = 1;
-    }
+    u16 savedIme = REG_IME;
+    REG_IME = 0;
+    REG_IE &= ~INTR_FLAG_TIMER2;
+    REG_IME = savedIme;
+    REG_IME = 1;
     return -1;
 }
 
@@ -115,6 +114,7 @@ s32 SaveData::Write(s32 len)
         i++;
     }
 
+    /* scoped: `goto fail_restore` would cross `savedIme` */
     {
         u16 savedIme = REG_IME;
         REG_IME = 0;
@@ -126,13 +126,11 @@ s32 SaveData::Write(s32 len)
     return 0;
 
 fail_restore:
-    {
-        u16 savedIme = REG_IME;
-        REG_IME = 0;
-        REG_IE &= ~INTR_FLAG_TIMER2;
-        REG_IME = savedIme;
-        REG_IME = 1;
-    }
+    u16 savedIme = REG_IME;
+    REG_IME = 0;
+    REG_IE &= ~INTR_FLAG_TIMER2;
+    REG_IME = savedIme;
+    REG_IME = 1;
     return -1;
 }
 
@@ -147,6 +145,7 @@ s32 SaveData::Load()
 {
     AudioContext *audio;
     bool wasPlaying;
+    /* `savedSong` is needed: inlined, the code is 2 instructions longer */
     u32 savedSong;
     s32 i;
     s32 result;
@@ -254,6 +253,7 @@ s32 SaveData::Store()
 {
     AudioContext *audio;
     bool wasPlaying;
+    /* `savedSong` is needed: inlined, the instructions differ */
     u32 savedSong;
     s32 i;
     s32 result;

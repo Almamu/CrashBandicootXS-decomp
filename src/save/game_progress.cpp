@@ -80,7 +80,9 @@ s32 GameProgress::CountSapphireRelics() const
 s32 GameProgress::CountRelics() const
 {
     s32 total;
+    /* `b` is needed: inlined, the instructions are reordered */
     s32 b;
+    /* `c` is needed: inlined, the code is 1 instruction shorter */
     s32 c;
 
     total = CountSapphireRelics();
@@ -140,8 +142,10 @@ s32 GameProgress::GetCompletionPercent() const
 {
     s32 total = CountCrystals();
     s32 gems = CountGems();
+    /* `sapphires`, `golds` are needed: inlined, a call moves */
     s32 sapphires = CountSapphireRelics();
     s32 golds = CountGoldRelics();
+    /* `platinums` is needed: inlined, the code is 3 instructions shorter */
     s32 platinums = CountPlatinumRelics();
     u8 bits;
 

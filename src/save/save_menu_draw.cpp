@@ -65,6 +65,7 @@ s32 SaveMenu::LinkExchange()
         }
     } while (result == 1);
     if (result == 0) {
+        /* `data` is needed: inlined, the code is 1 instruction longer */
         s32 data = (s32)spinner->GetData();
 
         MemCopy32(linkSave, (void *)data, sizeof(SaveData));
@@ -203,6 +204,7 @@ void SaveMenu::DrawSlotStats(s32 label1, s32 label2, s32 rowIdx, struct byte_arg
     u8 buf[8];
     struct settings_row_stats *stats = &(&currentStats)[rowIdx];
     s32 x, y, i;
+    /* `w` is needed: inlined, the code is 2 instructions shorter */
     s32 w;
 
     x = label1 + 0x2b;
@@ -255,7 +257,9 @@ void SaveMenu::DrawSlotStats(s32 label1, s32 label2, s32 rowIdx, struct byte_arg
  * row's highlighted/dimmed 0x25 glyph centred at (x + 0x1d, y + 0xc). */
 static inline void draw_row_mark(SaveMenu *self, s32 x, s32 y, u8 highlight)
 {
+    /* `centerX` is needed: inlined, the instructions differ */
     s32 centerX = x + 0x1d;
+    /* `textY` is needed: inlined, the code is 8 instructions shorter */
     s32 textY = y + 0xc;
 
     if (highlight)
@@ -338,6 +342,7 @@ static inline void new_row_icon(UiSprite **slot, u32 bank, u32 frame)
     lo &= 15;
     *p = (*p & m) | lo;
 
+    /* `half` is needed: inlined, the instructions differ */
     u16 half = 0x80;
 
     (*slot)->affine = half;
@@ -393,6 +398,7 @@ void SaveMenu::InitIcons()
     gSmallFont->SetTileBase(0);
     IconReserve(&gSmallFont);
 
+    /* `v` is needed: inlined, the code is 1 instruction longer */
     u32 v = gSmallFont->tileCount;
 
     gLargeFont->SetTileBase(v);
@@ -499,6 +505,7 @@ void SaveMenu::SummarizeProgress(struct settings_row_stats *dest, const GameProg
  * they are Font's virtual MeasureText and DrawText. */
 void SaveMenu::DrawEmptySlotLabel(s32 x, s32 y, u8 highlight)
 {
+    /* `centerX`, `textY` are needed: inlined, the instructions differ */
     s32 centerX = x + 0x1d;
     s32 textY = y + 0xc;
 

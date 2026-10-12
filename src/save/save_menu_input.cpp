@@ -54,6 +54,7 @@ u8 RunSaveMenu(u32 state, u32 cursor)
 
     goto dispatch;
     for (;;) {
+        /* `keys` is needed: inlined, the instructions are reordered */
         u16 keys;
 
         gInput->Update();
