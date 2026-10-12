@@ -707,7 +707,7 @@ BG tile sets are in [levels.md](./levels.md).
 | `0861A154` | `gCutscenePicture23Bitmap` | bitmap | `cutscenes/23_legal_notice.png` |
 | `0861BADC` | `gMenuSkyBgPalette` | palette | `menus/sky.png` (its palette) |
 | `0861BB04` | `gPauseMenuBgPalette` | palette | `menus/pause.png` (its palette) |
-| `0861BD48` | `gLevelSelectPageBgPalette` | palette | `bg_package/62556c_level_select_page.png` (its palette) |
+| `0861BD48` | `gLevelSelectPageBgPalette` | palette | `level_select/platform.png` (its palette) |
 | `0861BF30` | `gContinuePromptSmokeBgPalette` | palette | `menus/continue_prompt/smoke.png` (its palette) |
 | `0861BF58` | `gContinuePromptGlowBgPalette` | palette | `menus/continue_prompt/glow.png` (its palette) |
 | `0861BF80` | `gContinuePromptUkaUkaBgPalette` | palette | `menus/continue_prompt/uka_uka.png` (its palette) |
@@ -719,7 +719,7 @@ BG tile sets are in [levels.md](./levels.md).
 | `0861C224` | `gTitleScreenBgPalette` | palette | `title/logo.png` (its palette) |
 | `0861C30C` | `gMenuSkyBgTiles` | bg_package | `menus/sky.png` |
 | `0861E5F8` | `gPauseMenuBgTiles` | bg_package | `menus/pause.png` |
-| `0862556C` | `gLevelSelectPageBgTiles` | bg_package | `bg_package/62556c_level_select_page.png` |
+| `0862556C` | `gLevelSelectPageBgTiles` | bg_package | `level_select/platform.png` |
 | `08628C50` | `gContinuePromptSmokeBgTiles` | bg_package | `menus/continue_prompt/smoke.png` |
 | `0862A958` | `gContinuePromptGlowBgTiles` | bg_package | `menus/continue_prompt/glow.png` |
 | `0862B34C` | `gContinuePromptUkaUkaBgTiles` | bg_package | `menus/continue_prompt/uka_uka.png` |
@@ -731,7 +731,7 @@ BG tile sets are in [levels.md](./levels.md).
 | `0862E3B0` | `gTitleScreenBgTiles` | bg_package | `title/logo.png` |
 | `0862FB24` | `gMenuSkyBgMap` | map | `menus/sky.png` (its map) |
 | `0862FFF4` | `gPauseMenuBgMap` | map | `menus/pause.png` (its map) |
-| `0863053C` | `gLevelSelectPageBgMap` | map | `bg_package/62556c_level_select_page.png` (its map) |
+| `0863053C` | `gLevelSelectPageBgMap` | map | `level_select/platform.png` (its map) |
 | `086308F0` | `gContinuePromptSmokeBgMap` | map | `menus/continue_prompt/smoke.png` (its map) |
 | `08630E1C` | `gContinuePromptGlowBgMap` | map | `menus/continue_prompt/glow.png` (its map) |
 | `08631158` | `gContinuePromptUkaUkaBgMap` | map | `menus/continue_prompt/uka_uka.png` (its map) |
@@ -757,27 +757,27 @@ BG tile sets are in [levels.md](./levels.md).
 | `08634270` | `gVvLogoEmblemTiles` | tiles | `logos/vicarious_visions/emblem.png` |
 | `08636EF4` | `gVvLogoLettersTiles` | tiles | `logos/vicarious_visions/letters.png` |
 | `08637604` | `gVvLogoUrlTiles` | tiles | `logos/vicarious_visions/url.png` |
-| `086377C0` | `gLevelSelectCursorZoomTiles` | tiles | `tileset1/00_6377c0_tiles.png` |
-| `08637A70` | `gLevelSelectPicture0Tiles` | tiles | `tileset1/01_637a70_8bpp_tiles.png` |
-| `086382C8` | `gLevelSelectPicture1Tiles` | tiles | `tileset1/02_6382c8_8bpp_tiles.png` |
-| `08638D68` | `gLevelSelectPicture4Tiles` | tiles | `tileset1/03_638d68_8bpp_tiles.png` |
-| `0863945C` | `gLevelSelectPicture2Tiles` | tiles | `tileset1/04_63945c_8bpp_tiles.png` |
-| `08639D18` | `gLevelSelectPicture5Tiles` | tiles | `tileset1/05_639d18_8bpp_tiles.png` |
-| `0863A60C` | `gLevelSelectPicture3Tiles` | tiles | `tileset1/06_63a60c_8bpp_tiles.png` |
-| `0863AD90` | `gLevelSelectPicture9Tiles` | tiles | `tileset1/07_63ad90_8bpp_tiles.png` |
-| `0863B668` | `gLevelSelectPicture7Tiles` | tiles | `tileset1/08_63b668_8bpp_tiles.png` |
-| `0863BDD4` | `gLevelSelectPicture8Tiles` | tiles | `tileset1/09_63bdd4_8bpp_tiles.png` |
-| `0863C5E4` | `gLevelSelectPicture6Tiles` | tiles | `tileset1/10_63c5e4_8bpp_tiles.png` |
-| `0863CF98` | `gLevelSelectPicture0Palette` | palette | `tileset1/01_637a70_8bpp_tiles.png` (its palette) |
-| `0863D01C` | `gLevelSelectPicture1Palette` | palette | `tileset1/02_6382c8_8bpp_tiles.png` (its palette) |
-| `0863D0A0` | `gLevelSelectPicture4Palette` | palette | `tileset1/03_638d68_8bpp_tiles.png` (its palette) |
-| `0863D124` | `gLevelSelectPicture2Palette` | palette | `tileset1/04_63945c_8bpp_tiles.png` (its palette) |
-| `0863D1A8` | `gLevelSelectPicture5Palette` | palette | `tileset1/05_639d18_8bpp_tiles.png` (its palette) |
-| `0863D22C` | `gLevelSelectPicture3Palette` | palette | `tileset1/06_63a60c_8bpp_tiles.png` (its palette) |
-| `0863D2B0` | `gLevelSelectPicture9Palette` | palette | `tileset1/07_63ad90_8bpp_tiles.png` (its palette) |
-| `0863D334` | `gLevelSelectPicture7Palette` | palette | `tileset1/08_63b668_8bpp_tiles.png` (its palette) |
-| `0863D3B8` | `gLevelSelectPicture8Palette` | palette | `tileset1/09_63bdd4_8bpp_tiles.png` (its palette) |
-| `0863D43C` | `gLevelSelectPicture6Palette` | palette | `tileset1/10_63c5e4_8bpp_tiles.png` (its palette) |
+| `086377C0` | `gLevelSelectCursorZoomTiles` | tiles | `level_select/cursor_zoom.png` |
+| `08637A70` | `gLevelSelectPicture0Tiles` | tiles | `level_select/pictures/snow.png` |
+| `086382C8` | `gLevelSelectPicture1Tiles` | tiles | `level_select/pictures/jungle.png` |
+| `08638D68` | `gLevelSelectPicture4Tiles` | tiles | `level_select/pictures/sky.png` |
+| `0863945C` | `gLevelSelectPicture2Tiles` | tiles | `level_select/pictures/sewer.png` |
+| `08639D18` | `gLevelSelectPicture5Tiles` | tiles | `level_select/pictures/space.png` |
+| `0863A60C` | `gLevelSelectPicture3Tiles` | tiles | `level_select/pictures/underwater.png` |
+| `0863AD90` | `gLevelSelectPicture9Tiles` | tiles | `level_select/pictures/neo_cortex.png` |
+| `0863B668` | `gLevelSelectPicture7Tiles` | tiles | `level_select/pictures/dingodile.png` |
+| `0863BDD4` | `gLevelSelectPicture8Tiles` | tiles | `level_select/pictures/n_gin.png` |
+| `0863C5E4` | `gLevelSelectPicture6Tiles` | tiles | `level_select/pictures/tiny.png` |
+| `0863CF98` | `gLevelSelectPicture0Palette` | palette | `level_select/pictures/snow.png` (its palette) |
+| `0863D01C` | `gLevelSelectPicture1Palette` | palette | `level_select/pictures/jungle.png` (its palette) |
+| `0863D0A0` | `gLevelSelectPicture4Palette` | palette | `level_select/pictures/sky.png` (its palette) |
+| `0863D124` | `gLevelSelectPicture2Palette` | palette | `level_select/pictures/sewer.png` (its palette) |
+| `0863D1A8` | `gLevelSelectPicture5Palette` | palette | `level_select/pictures/space.png` (its palette) |
+| `0863D22C` | `gLevelSelectPicture3Palette` | palette | `level_select/pictures/underwater.png` (its palette) |
+| `0863D2B0` | `gLevelSelectPicture9Palette` | palette | `level_select/pictures/neo_cortex.png` (its palette) |
+| `0863D334` | `gLevelSelectPicture7Palette` | palette | `level_select/pictures/dingodile.png` (its palette) |
+| `0863D3B8` | `gLevelSelectPicture8Palette` | palette | `level_select/pictures/n_gin.png` (its palette) |
+| `0863D43C` | `gLevelSelectPicture6Palette` | palette | `level_select/pictures/tiny.png` (its palette) |
 | `0863D4C0` | `gSnowBgTiles` | level_bg_tiles | `level_bg_tiles/63d4c0_snow.png` |
 | `08640EF8` | `gJungleBgTiles` | level_bg_tiles | `level_bg_tiles/640ef8_jungle.png` |
 | `08644A88` | `gTempleBgTiles` | level_bg_tiles | `level_bg_tiles/644a88_temple.png` |
