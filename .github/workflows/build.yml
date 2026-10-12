@@ -2,12 +2,29 @@ on:
   push:
     branches: [ main ]
   pull_request:
+  # decomp.dev reads the progress report artifact. A report on every push
+  # floods it, so main reports once a day, and only after a change.
+  schedule:
+    - cron: "0 12 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
+  # A scheduled run goes ahead only if main got a commit in the last 24 hours.
+  changed:
+    runs-on: ubuntu-24.04
+    outputs:
+      recent: ${{ steps.age.outputs.recent }}
+    steps:
+    - uses: actions/checkout@v5
+    - id: age
+      run: echo "recent=$(( $(date +%s) - $(git log -1 --format=%ct) < 86400 ))" >> "$GITHUB_OUTPUT"
+
   build:
+    needs: [ changed ]
+    if: github.event_name != 'schedule' || needs.changed.outputs.recent == '1'
     runs-on: ubuntu-24.04
     # GitHub gives no repository secrets to pull_request runs from forks, so
     # those can't fetch the ROM. They compile every C file and generate the
@@ -97,7 +114,9 @@ jobs:
     - name: Generate progress report
       run: ./objdiff-cli report generate -o report.json
 
+    # Only the daily (or manual) run publishes the report for decomp.dev.
     - name: Upload progress report artifact
+      if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
       uses: actions/upload-artifact@v7
       with:
         name: europe_report
