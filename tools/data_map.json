@@ -6994,10 +6994,10 @@
      "size": 100912,
      "format": "level asset (room 0x0825E7DC)",
      "effort": "medium",
-     "status": "converted: built from data/levels/room17_25e7dc by tools/levels.py (data.s incbins the build output)"
+     "status": "converted: built from data/levels/jungle_jam/main by tools/levels.py (data.s incbins the build output)"
     }
    ],
-   "status": "converted: built from data/levels/room17_25e7dc by tools/levels.py (data.s incbins the build output)"
+   "status": "converted: built from data/levels/jungle_jam/main by tools/levels.py (data.s incbins the build output)"
   },
   {
    "address": "0x086E044B",
@@ -7088,42 +7088,42 @@
      "size": 111748,
      "format": "level asset (room 0x082BDF98)",
      "effort": "medium",
-     "status": "converted: built from data/levels/room15_2bdf98 by tools/levels.py"
+     "status": "converted: built from data/levels/temple_of_boom/gem_path by tools/levels.py"
     },
     {
      "address": "0x08708158",
      "size": 193896,
      "format": "level asset (room 0x08260768)",
      "effort": "medium",
-     "status": "converted: built from data/levels/room19_260768 by tools/levels.py"
+     "status": "converted: built from data/levels/temple_of_boom/main by tools/levels.py"
     },
     {
      "address": "0x087376C0",
      "size": 112260,
      "format": "level asset (room 0x0825BCDC)",
      "effort": "medium",
-     "status": "converted: built from data/levels/room26_25bcdc by tools/levels.py"
+     "status": "converted: built from data/levels/shark_attack/main by tools/levels.py"
     },
     {
      "address": "0x08752D44",
      "size": 229476,
      "format": "level asset (room 0x0825A390)",
      "effort": "medium",
-     "status": "converted: built from data/levels/room27_25a390 by tools/levels.py"
+     "status": "converted: built from data/levels/ruined/main by tools/levels.py"
     },
     {
      "address": "0x0878ADA8",
      "size": 201620,
      "format": "level asset (room 0x0824E104)",
      "effort": "medium",
-     "status": "converted: built from data/levels/room32_24e104 by tools/levels.py"
+     "status": "converted: built from data/levels/down_the_hole/main by tools/levels.py"
     },
     {
      "address": "0x087BC13C",
      "size": 162480,
      "format": "level asset (room 0x0825233C)",
      "effort": "medium",
-     "status": "converted: built from data/levels/room33_25233c by tools/levels.py"
+     "status": "converted: built from data/levels/star_to_finish/main by tools/levels.py"
     }
    ],
    "status": "converted (every region)"

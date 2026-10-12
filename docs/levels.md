@@ -36,7 +36,7 @@ cache the collision layer, hands the entity list and links to
 `SpawnRoomEntities` (`room_entities.c`) and DMAs the palette to BG palette RAM.
 The rooms are numbered here in the order of their records
 (`room00`..`room40`); the directory names add the descriptor's ROM
-offset (`room17_25e7dc` is the room whose `level_desc` is at
+offset (`jungle_jam/main` is the room whose `level_desc` is at
 `0x0825E7DC`).
 
 The types are in [`include/level_data.h`](../include/level_data.h). Each
@@ -270,18 +270,44 @@ The only gaps are the zero bytes agbcc's alignment gives a 4-aligned
 object after a `u16` one. `data/levels/levels.json` lists the rooms of
 each region in ROM order.
 
+## Room folders
+
+Each room's folder is `data/levels/<level>/<slot>/`: the level whose
+`gLevelRoomLists` entry plays it (named after its name in `levels.json`),
+and its slot there:
+
+| slot | `struct level_room_list` | rooms |
+|---|---|---|
+| `main` | the level's one played room (`rooms[0]`) | 18 |
+| `part1`, `part2` | `rooms[0]` and `rooms[2]` of Frostbite Cavern, Snow Crash and Snow Job, around the polar ride (`rooms[1]`, a stage with no room data) | 6 |
+| `bonus` | `extra1`, `EnterBonusRoom` | 13 |
+| `gem_path` | `extra2`, `EnterGemPathRoom` | 4 |
+
+Rocket Racket, Blimp Bonanza, No-Fly Zone and N. Gin are stages only, so
+they have no folder. The rooms keep their `gRoomNN` symbols (room.json's
+`"symbols"`), NN being the room's index in the room table and in
+`levels.json`'s `"rooms"`. `tools/levels.py extract` names the folders
+the same way, from the ROM's `gLevelRoomLists` and the hand-written level
+names.
+
+The build takes its rooms from `levels.json`'s `"rooms"` (`levels.py
+rooms`), not from the folders on disk.
+
 ## Sources and build
 
 `data/levels/`:
 
-- `levels.json`: the rooms, and per region its C file name and its rooms
-  in ROM order; and the levels in id order (`"levels"`: each one's
+- `levels.json`: the rooms (their folders, `"rooms"`, in room-table
+  order: `gRoomNN` is the NNth), and per region its C file name and its
+  rooms in ROM order, and the rooms' assets in ROM order; and the levels
+  in id order (`"levels"`: each one's
   `LEVEL_*` name, name text and world), from which
   `tools/levels.py constants levels` generates `constants/levels.h`. `extract`
   keeps this list, which doesn't come from the ROM's room data.
 - `entity_types.json`: the name of each entity type (see "Entity
   types"); `crate_kinds.json`: the name of each crate kind (`crate.kind`).
-- `roomNN_xxxxxx/room.json`: the palette (BGR555), the asset's symbol and
+- one folder per room, `<level>/<slot>/` (see "Room folders" below).
+- `<level>/<slot>/room.json`: the palette (BGR555), the asset's symbol and
   whether it is packed, per layer its tile set, scale, `cnt`, size in
   chunks and tiles and map file, the parameter records (lists of words),
   the links and the entities (in id order; an entity's `type` is its
@@ -290,12 +316,12 @@ each region in ROM order.
   room's objects: `gRoomNN` and what the object is (`gRoom17Desc`,
   `gRoom17Palette`, `gRoom17Bg1Grid`, `gRoom17Asset`, ...; the tile sets
   keep their own names).
-- `roomNN_xxxxxx/<layer>.png` (`bg0`-`bg3`): the layer's whole picture,
+- `<level>/<slot>/<layer>.png` (`bg0`-`bg3`): the layer's whole picture,
   8bpp indexed with the room's palette, 8x8 pixels per cell,
   `gridWidth * 128` by `gridHeight * 64` pixels (see "BG layers"). The
   build decodes it back to the cells above, which aren't ROM bytes
   either: the ROM only has the chunk streams.
-- `roomNN_xxxxxx/collision.png`: the collision layer as an image the
+- `<level>/<slot>/collision.png`: the collision layer as an image the
   size of the BG0 picture, each cell an 8x8 block, `gridWidth * 128` by
   `gridHeight * 64` pixels, coloured by the legend below (see "Collision
   layers").

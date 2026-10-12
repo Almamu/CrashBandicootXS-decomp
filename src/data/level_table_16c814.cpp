@@ -370,55 +370,55 @@ const u8 gThemeMusicCues[11] = {
 /* The extra rooms of the room lists (rooms 00-16). */
 const struct level_room gLevelRoom00 = {
     gRoom00Palette, &gRoom00Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room00_264730 */
+}; /* data/levels/jungle_jam/bonus */
 const struct level_room gLevelRoom01 = {
     gRoom01Palette, &gRoom01Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room01_263f4c */
+}; /* data/levels/temple_of_boom/bonus */
 const struct level_room gLevelRoom02 = {
     gRoom02Palette, &gRoom02Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room02_2636e0 */
+}; /* data/levels/frostbite_cavern/bonus */
 const struct level_room gLevelRoom03 = {
     gRoom03Palette, &gRoom03Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room03_270bcc */
+}; /* data/levels/just_in_slime/bonus */
 const struct level_room gLevelRoom04 = {
     gRoom04Palette, &gRoom04Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room04_262e64 */
+}; /* data/levels/snow_crash/bonus */
 const struct level_room gLevelRoom05 = {
     gRoom05Palette, &gRoom05Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room05_270154 */
+}; /* data/levels/just_hangin/bonus */
 const struct level_room gLevelRoom06 = {
     gRoom06Palette, &gRoom06Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room06_267428 */
+}; /* data/levels/ruined/bonus */
 const struct level_room gLevelRoom07 = {
     gRoom07Palette, &gRoom07Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room07_264e64 */
+}; /* data/levels/snow_job/bonus */
 const struct level_room gLevelRoom08 = {
     gRoom08Palette, &gRoom08Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room08_265804 */
+}; /* data/levels/ace_of_space/bonus */
 const struct level_room gLevelRoom09 = {
     gRoom09Palette, &gRoom09Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room09_262654 */
+}; /* data/levels/down_the_hole/bonus */
 const struct level_room gLevelRoom10 = {
     gRoom10Palette, &gRoom10Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room10_266194 */
+}; /* data/levels/star_to_finish/bonus */
 const struct level_room gLevelRoom11 = {
     gRoom11Palette, &gRoom11Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room11_26f5c0 */
+}; /* data/levels/drip_drip_drip/bonus */
 const struct level_room gLevelRoom12 = {
     gRoom12Palette, &gRoom12Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room12_266b40 */
+}; /* data/levels/final_countdown/bonus */
 const struct level_room gLevelRoom13 = {
     gRoom13Palette, &gRoom13Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room13_2bbde0 */
+}; /* data/levels/snow_crash/gem_path */
 const struct level_room gLevelRoom14 = {
     gRoom14Palette, &gRoom14Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room14_2bcf40 */
+}; /* data/levels/just_hangin/gem_path */
 const struct level_room gLevelRoom15 = {
     gRoom15Palette, &gRoom15Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room15_2bdf98 */
+}; /* data/levels/temple_of_boom/gem_path */
 const struct level_room gLevelRoom16 = {
     gRoom16Palette, &gRoom16Desc, ROOM_KIND_HOVER, 0, { { 0, 0, 0 } }
-}; /* data/levels/room16_2beadc */
+}; /* data/levels/ace_of_space/gem_path */
 
 /* The rooms of each level, in play order. */
 const struct level_room *const gLevel00Rooms[1] = { &gLevelRoom17 };
@@ -450,94 +450,94 @@ const struct level_room *const gLevel21Rooms[1] = { &gLevelStage6 };
 /* The rooms of the lists above (rooms 17-40 and the category stages). */
 const struct level_room gLevelRoom17 = {
     gRoom17Palette, &gRoom17Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room17_25e7dc */
+}; /* data/levels/jungle_jam/main */
 const struct level_room gLevelRoom18 = {
     gRoom18Palette, &gRoom18Desc, ROOM_KIND_UNDERWATER, 0, { { 1, 4, 16 } }
-}; /* data/levels/room18_261c40 */
+}; /* data/levels/shipwrecked/main */
 const struct level_room gLevelRoom19 = {
     gRoom19Palette, &gRoom19Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room19_260768 */
+}; /* data/levels/temple_of_boom/main */
 const struct level_room gLevelRoom20 = {
     gRoom20Palette, &gRoom20Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room20_25f11c */
+}; /* data/levels/frostbite_cavern/part1 */
 const struct level_room gLevelStage0 = {
     0, 0, ROOM_KIND_CATEGORY, 0, { { /* catIndex */ CATEGORY_FROSTBITE_CAVERN } }
 };
 const struct level_room gLevelRoom21 = {
     gRoom21Palette, &gRoom21Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room21_25d81c */
+}; /* data/levels/frostbite_cavern/part2 */
 const struct level_room gLevelRoom22 = {
     gRoom22Palette, &gRoom22Desc, ROOM_KIND_ON_FOOT, 0, { { 1, 4, 16 } }
-}; /* data/levels/room22_26e760 */
+}; /* data/levels/just_in_slime/main */
 const struct level_room gLevelRoom23 = {
     gRoom23Palette, &gRoom23Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room23_25cf20 */
+}; /* data/levels/snow_crash/part1 */
 const struct level_room gLevelStage1 = {
     0, 0, ROOM_KIND_CATEGORY, 0, { { /* catIndex */ CATEGORY_SNOW_CRASH } }
 };
 const struct level_room gLevelRoom24 = {
     gRoom24Palette, &gRoom24Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room24_25c640 */
+}; /* data/levels/snow_crash/part2 */
 const struct level_room gLevelStage3 = {
     0, 0, ROOM_KIND_CATEGORY, 0, { { /* catIndex */ CATEGORY_ROCKET_RACKET } }
 };
 const struct level_room gLevelRoom25 = {
     gRoom25Palette, &gRoom25Desc, ROOM_KIND_ON_FOOT, 0, { { 1, 4, 16 } }
-}; /* data/levels/room25_26d388 */
+}; /* data/levels/just_hangin/main */
 const struct level_room gLevelRoom26 = {
     gRoom26Palette, &gRoom26Desc, ROOM_KIND_UNDERWATER, 0, { { 1, 4, 16 } }
-}; /* data/levels/room26_25bcdc */
+}; /* data/levels/shark_attack/main */
 const struct level_room gLevelRoom27 = {
     gRoom27Palette, &gRoom27Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room27_25a390 */
+}; /* data/levels/ruined/main */
 const struct level_room gLevelRoom28 = {
     gRoom28Palette, &gRoom28Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room28_254ed0 */
+}; /* data/levels/snow_job/part1 */
 const struct level_room gLevelStage2 = {
     0, 0, ROOM_KIND_CATEGORY, 0, { { /* catIndex */ CATEGORY_SNOW_JOB } }
 };
 const struct level_room gLevelRoom29 = {
     gRoom29Palette, &gRoom29Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room29_2544fc */
+}; /* data/levels/snow_job/part2 */
 const struct level_room gLevelRoom30 = {
     gRoom30Palette, &gRoom30Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room30_26ac10 */
+}; /* data/levels/ace_of_space/main */
 const struct level_room gLevelRoom31 = {
     gRoom31Palette, &gRoom31Desc, ROOM_KIND_UNDERWATER, 0, { { 1, 4, 16 } }
-}; /* data/levels/room31_2539b0 */
+}; /* data/levels/sunken_city/main */
 const struct level_room gLevelRoom32 = {
     gRoom32Palette, &gRoom32Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room32_24e104 */
+}; /* data/levels/down_the_hole/main */
 const struct level_room gLevelStage4 = {
     0, 0, ROOM_KIND_CATEGORY, 0, { { /* catIndex */ CATEGORY_BLIMP_BONANZA } }
 };
 const struct level_room gLevelRoom33 = {
     gRoom33Palette, &gRoom33Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room33_25233c */
+}; /* data/levels/star_to_finish/main */
 const struct level_room gLevelRoom34 = {
     gRoom34Palette, &gRoom34Desc, ROOM_KIND_UNDERWATER, 0, { { 1, 4, 16 } }
-}; /* data/levels/room34_24c400 */
+}; /* data/levels/air_supply/main */
 const struct level_room gLevelStage5 = {
     0, 0, ROOM_KIND_CATEGORY, 0, { { /* catIndex */ CATEGORY_NO_FLY_ZONE } }
 };
 const struct level_room gLevelRoom35 = {
     gRoom35Palette, &gRoom35Desc, ROOM_KIND_ON_FOOT, 0, { { 1, 4, 16 } }
-}; /* data/levels/room35_26c1bc */
+}; /* data/levels/drip_drip_drip/main */
 const struct level_room gLevelRoom36 = {
     gRoom36Palette, &gRoom36Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room36_268cf0 */
+}; /* data/levels/final_countdown/main */
 const struct level_room gLevelRoom37 = {
     gRoom37Palette, &gRoom37Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room37_2b9ed0 */
+}; /* data/levels/mega_mix/main */
 const struct level_room gLevelRoom38 = {
     gRoom38Palette, &gRoom38Desc, ROOM_KIND_UNDERWATER, 0, { { 0, 0, 0 } }
-}; /* data/levels/room38_2bac1c */
+}; /* data/levels/dingodile/main */
 const struct level_room gLevelRoom39 = {
     gRoom39Palette, &gRoom39Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room39_2ba810 */
+}; /* data/levels/tiny/main */
 const struct level_room gLevelRoom40 = {
     gRoom40Palette, &gRoom40Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
-}; /* data/levels/room40_2bb094 */
+}; /* data/levels/neo_cortex/main */
 const struct level_room gLevelStage6 = {
     0, 0, ROOM_KIND_CATEGORY, 0, { { /* catIndex */ CATEGORY_N_GIN } }
 };
