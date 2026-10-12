@@ -76,7 +76,7 @@ extern const u8 gTitleArrow2ObjPalette[] __attribute__((aligned(4))) = {
 };
 
 /*
- * Palette of gUniversalLogoBg (the legal/credits text screen), 16 colours:
+ * Palette of gUniversalLogoBg (the Universal Interactive logo), 16 colours:
  * graphics/intro/34_61c1fc.pal.
  */
 extern const u8 gUniversalLogoBgPalette[] __attribute__((aligned(4))) = {
@@ -169,8 +169,9 @@ extern const u8 gTitleArrow2ObjTiles[] __attribute__((aligned(4))) = {
 };
 
 /*
- * 4bpp tiles of gUniversalLogoBg: the legal/credits text screen (30x20):
- * graphics/bg_package/62d0cc_universal_logo_tiles.png.
+ * 8bpp tiles of gUniversalLogoBg, the Universal Interactive logo (30x20,
+ * an affine BG2 of CompanyLogos::LoadUniversalLogoBg):
+ * graphics/bg_package/62d0cc_universal_logo.png.
  */
 extern const u8 gUniversalLogoBgTiles[] __attribute__((aligned(4))) = {
 #include "bg_package/62d0cc_universal_logo.img.bin.lz.inc"
@@ -254,7 +255,12 @@ extern const u8 gTitleArrow2ObjMap[] __attribute__((aligned(4))) = {
 #include "bg_package/62ce70_title_arrow2_obj.map.bin.lz.inc"
 };
 
-/* Text BG map of gUniversalLogoBg: graphics/bg_package/62d0cc_universal_logo.png. */
+/*
+ * Affine BG map of gUniversalLogoBg (u16 entries, LoadUniversalLogoBg keeps
+ * the low byte; 5 have a stray high byte,
+ * graphics/bg_package/62d0cc_universal_logo_high.json):
+ * graphics/bg_package/62d0cc_universal_logo.png.
+ */
 extern const u8 gUniversalLogoBgMap[] __attribute__((aligned(4))) = {
 #include "bg_package/62d0cc_universal_logo.map.bin.lz.inc"
 };

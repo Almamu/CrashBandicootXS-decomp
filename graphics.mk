@@ -176,13 +176,10 @@ $(C_BUILDDIR)/data/bg_picture_151ac4.o: $(call catbg_picture_incs,151ac4 155260)
 # title OBJ sprites. The tile set and map of each are rebuilt from one PNG
 # of the whole picture. grit reduces the picture to tiles + map, and
 # tools/bg_map.py first-use puts the tiles in the ROM's order (order of
-# first use; grit starts with a forced blank tile). The universal logo's
-# tile set has identical and unused tiles, so it is its own strip PNG (grit
-# -fx), and bg_map.py pick applies the ROM's choice among identical tiles
-# (62d0cc_universal_logo.json). gbagfx compresses, and
+# first use; grit starts with a forced blank tile). gbagfx compresses, and
 # src/data/menu_graphics_61badc.cpp holds the results. The palettes are separate assets in graphics/intro/.
 BG_PACKAGE_DIR := $(GRAPHICS_BUILDDIR)/bg_package
-BG_PACKAGE_NAMES := $(basename $(notdir $(filter-out %_tiles.png,$(wildcard graphics/bg_package/*.png))))
+BG_PACKAGE_NAMES := $(basename $(notdir $(wildcard graphics/bg_package/*.png)))
 $(C_BUILDDIR)/data/menu_graphics_61badc.o: \
 	$(foreach n,$(BG_PACKAGE_NAMES),$(BG_PACKAGE_DIR)/$(n).img.bin.lz.inc $(BG_PACKAGE_DIR)/$(n).map.bin.lz.inc)
 
@@ -192,32 +189,25 @@ BG_PACKAGE_BPP_62556c_level_select_page := 8
 BG_PACKAGE_BPP_628c50_continue_prompt_smoke := 4
 BG_PACKAGE_BPP_62a958_continue_prompt_glow := 4
 BG_PACKAGE_BPP_62b34c_continue_prompt_uka_uka := 8
+BG_PACKAGE_BPP_62d0cc_universal_logo := 8
 BG_PACKAGE_BPP_62e3b0_title_screen := 8
 BG_PACKAGE_BPP_62c2c8_title_bandicoot_obj := 4
 BG_PACKAGE_BPP_62c4b0_title_crash_obj := 4
 BG_PACKAGE_BPP_62cc3c_title_arrow1_obj := 4
 BG_PACKAGE_BPP_62ce70_title_arrow2_obj := 4
-# Tile reduction: tiles and flips, except for the affine title map (no flips).
-BG_PACKAGE_REDUCE = $(if $(filter 62e3b0_title_screen,$(1)),-mRt,-mRtf)
+# Tile reduction: tiles and flips, except for the affine maps (no flips):
+# the title and the universal logo.
+BG_PACKAGE_REDUCE = $(if $(filter 62e3b0_title_screen 62d0cc_universal_logo,$(1)),-mRt,-mRtf)
 
 $(BG_PACKAGE_DIR)/%_grit.img.bin $(BG_PACKAGE_DIR)/%_grit.map.bin: graphics/bg_package/%.png | $(GRIT)
 	@mkdir -p $(dir $@)
 	$(GRIT) $< -gt -gB$(BG_PACKAGE_BPP_$*) -p! -m -mLf $(call BG_PACKAGE_REDUCE,$*) -ftb -fh! -o $(BG_PACKAGE_DIR)/$*_grit
 $(BG_PACKAGE_DIR)/%.img.bin $(BG_PACKAGE_DIR)/%.map.bin: $(BG_PACKAGE_DIR)/%_grit.img.bin $(BG_PACKAGE_DIR)/%_grit.map.bin tools/bg_map.py
-	python3 tools/bg_map.py first-use $(word 1,$^) $(word 2,$^) $(BG_PACKAGE_DIR)/$*.img.bin $(BG_PACKAGE_DIR)/$*.map.bin --bpp $(BG_PACKAGE_BPP_$*)
+	python3 tools/bg_map.py first-use $(word 1,$^) $(word 2,$^) $(BG_PACKAGE_DIR)/$*.img.bin $(BG_PACKAGE_DIR)/$*.map.bin --bpp $(BG_PACKAGE_BPP_$*) $(addprefix --high ,$(filter %_high.json,$^))
 
-# The universal logo: tiles from the strip, map reduced against a private
-# copy of it (grit writes the -fx tile set back out, see category_bg).
-UNIVERSAL_LOGO := $(BG_PACKAGE_DIR)/62d0cc_universal_logo
-$(UNIVERSAL_LOGO).img.bin: graphics/bg_package/62d0cc_universal_logo_tiles.png | $(GRIT)
-	@mkdir -p $(dir $@)
-	$(GRIT) $< -gt -gB4 -p! -ftb -fh! -o $(UNIVERSAL_LOGO)
-$(UNIVERSAL_LOGO)_fx.map.bin: graphics/bg_package/62d0cc_universal_logo.png graphics/bg_package/62d0cc_universal_logo_tiles.png | $(GRIT)
-	@mkdir -p $(dir $@)
-	cp $(word 2,$^) $(UNIVERSAL_LOGO)_fx.png
-	$(GRIT) $< -gt -gB4 -p! -m -mLf -mRtf -fx $(UNIVERSAL_LOGO)_fx.png -ftb -fh! -o $(UNIVERSAL_LOGO)_fx
-$(UNIVERSAL_LOGO).map.bin: $(UNIVERSAL_LOGO).img.bin $(UNIVERSAL_LOGO)_fx.map.bin graphics/bg_package/62d0cc_universal_logo.json tools/bg_map.py
-	python3 tools/bg_map.py pick $(word 1,$^) $(word 2,$^) $(word 3,$^) $@ --bpp 4 --width 30
+# The universal logo's affine map has 5 entries with a stray high byte,
+# which nothing reads (bg_map.py first-use --high puts them back).
+$(BG_PACKAGE_DIR)/62d0cc_universal_logo.img.bin $(BG_PACKAGE_DIR)/62d0cc_universal_logo.map.bin: graphics/bg_package/62d0cc_universal_logo_high.json
 
 # Raw (uncompressed) tile pools of gLanguageSelectPalette3, see docs/data.md:
 # the 56 sprite banks and the 125 fixed OBJ tiles (4bpp, graphics/sprites/)

@@ -146,7 +146,7 @@ rebuilds both the tile set and the map from that PNG, byte for byte:
 | `628c50_continue_prompt_smoke` (`gContinuePromptSmokeBg`) | 4 | 30x20 | text |
 | `62a958_continue_prompt_glow` (`gContinuePromptGlowBg`) | 4 | 30x20 | text |
 | `62b34c_continue_prompt_uka_uka` (`gContinuePromptUkaUkaBg`) | 8 | 30x20 | text |
-| `62d0cc_universal_logo` (`gUniversalLogoBg`) | 4 | 30x20 | text, + tile-set strip |
+| `62d0cc_universal_logo` (`gUniversalLogoBg`) | 8 | 30x20 | affine, + high-byte JSON |
 | `62e3b0_title_screen` (`gTitleScreenBg`) | 8 | 16x16 | affine |
 | `62c2c8_title_bandicoot_obj` (`gTitleBandicootObj`) | 4 | 4x6 | OBJ |
 | `62c4b0_title_crash_obj` (`gTitleCrashObj`) | 4 | 8x40 | OBJ |
@@ -163,9 +163,9 @@ How the build does it (`graphics.mk`):
 
 1. **grit reduces the picture** (`-gt -gB4/8 -m -mLf -mRtf`) to a tile
    set and a map. Its dedup and its h/v-flip choices match the ROM's on
-   all of them except the universal logo (below). For the affine title it uses `-mRt` (no flips). The title
-   map's `u16` entries are plain tile numbers, and `LoadBg` keeps their
-   low byte.
+   all of them. For the two affine maps (the title and the universal
+   logo) it uses `-mRt` (no flips). Their `u16` entries are plain tile
+   numbers, and `LoadBg` / `LoadUniversalLogoBg` keep their low byte.
 2. **`tools/bg_map.py first-use` reorders the tiles.** The ROM's tile
    sets are in order of first use in the map (reading order). grit's are
    in that order too, but always start with a forced blank tile. So this
@@ -175,19 +175,16 @@ How the build does it (`graphics.mk`):
 3. **gbagfx compresses the result** (LZ77), and `tools/bin2c.py --lz`
    writes it as the C bytes of `src/data/menu_graphics_61badc.cpp`.
 
-The universal logo is the exception. Its tile set has 234 tiles that its
-map doesn't use, and duplicates among the ones it does use: identical
-tiles that the map still references separately. So:
-- the tiles are their own 8px-wide strip,
-  `62d0cc_universal_logo_tiles.png` (grit `-fx`, as for the category
-  pictures);
-- grit maps each cell to the first matching tile;
-- `62d0cc_universal_logo.json` lists the 41 cells where the ROM picks
-  another identical tile, and `bg_map.py pick` applies them.
-
-A choice must still draw the cell's pixels. If you redraw such a cell,
-the build stops and names the cell, and you delete its line from the
-JSON.
+The universal logo (`gUniversalLogoBg`, the Universal Interactive logo
+before the title) used to be built as a 4bpp text BG, which drew it as
+noise, with a tile-set strip and 41 tile choices to rebuild it. The game
+loads it as an **8bpp affine BG2** (`CompanyLogos::LoadUniversalLogoBg`:
+mode 1, a byte per map entry, the entry's low byte). Read that way, its
+234 tiles are all used, in order of first use, with no duplicates, so it
+is built like the title. Only 5 of its map entries have a nonzero high
+byte (`0x04`, `0x08`, `0x0C`), which nothing reads.
+`62d0cc_universal_logo_high.json` lists them, and `bg_map.py first-use
+--high` puts them back.
 
 The palettes are still separate assets (`graphics/intro/24`-`35`). The PNG's own palette is a copy for viewing, so edit the palette
 file to change colours. `tools/bg_map.py extract` writes the PNGs from
