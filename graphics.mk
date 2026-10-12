@@ -2,15 +2,9 @@
 # All rules below take a source under graphics/ and produce the
 # corresponding built file under $(GRAPHICS_BUILDDIR), mirroring the
 # subdirectory layout, so graphics/ only ever holds editable sources.
-
-# Tile-based graphics (sprites, tilesets): plain gbagfx round trip.
-$(GRAPHICS_BUILDDIR)/%.4bpp: graphics/%.png | $(GFX)
-	@mkdir -p $(dir $@)
-	$(GFX) $< $@
-
-$(GRAPHICS_BUILDDIR)/%.8bpp: graphics/%.png | $(GFX)
-	@mkdir -p $(dir $@)
-	$(GFX) $< $@
+# Every asset ends up as C initializer bytes (tools/bin2c.py) that a
+# src/data/*.cpp definition #includes (docs/data.md, "Resources");
+# data/data.s incbins no graphics.
 
 # Palettes: JASC .pal text (human editable) -> raw GBA .gbapal. Read as
 # gbagfx reads them, plus the ROM's stray bit-15 entries, which
@@ -19,19 +13,6 @@ $(GRAPHICS_BUILDDIR)/%.8bpp: graphics/%.png | $(GFX)
 $(GRAPHICS_BUILDDIR)/%.gbapal: graphics/%.pal tools/jasc_pal.py
 	@mkdir -p $(dir $@)
 	python3 tools/jasc_pal.py to-gba $< $@
-
-# Full-screen Mode 4 bitmaps (240x160, linear/non-tiled framebuffers).
-# gbagfx always arranges pixel data into 8x8 tiles, which is the wrong
-# layout for these, so they go through tools/linear_gfx.py instead.
-# (to regenerate a PNG from a .bin, run tools/linear_gfx.py directly)
-$(GRAPHICS_BUILDDIR)/%_bitmap.bin: graphics/%_bitmap.png tools/linear_gfx.py
-	@mkdir -p $(dir $@)
-	python3 tools/linear_gfx.py to-bin $< $@
-
-# Raw binary blobs that need no conversion, just repacking byte-for-byte.
-$(GRAPHICS_BUILDDIR)/%.bin: graphics/%.bin
-	@mkdir -p $(dir $@)
-	cp $< $@
 
 # Framed OBJ sprite sheet entities: each subdirectory under
 # graphics/unknown/<sheet>/ is one distinct entity (one animation's worth
@@ -84,22 +65,54 @@ $(GRAPHICS_BUILDDIR)/%.lz: $(GRAPHICS_BUILDDIR)/% | $(GFX)
 # PNG -> C const array (grit), see docs/graphics.md. grit does the pixel
 # layout, gbagfx the byte-exact LZ77 (grit's own -gzl compressor does not
 # reproduce the ROM's streams), tools/bin2c.py the initializer bytes that a
-# src/data/*.c file #includes. GRIT_C_PNGS lists the PNGs converted this
-# way, so the Makefile doesn't also build them through the .s incbin path.
-GRIT_C_PNGS := $(wildcard graphics/intro/*_bitmap.png) \
-	$(wildcard graphics/category_bg/*.png)
+# src/data/*.cpp file #includes.
 
 # Mode 4 bitmaps: linear 8bpp, no palette (it's a separate asset).
 $(GRAPHICS_BUILDDIR)/%_bitmap.img.bin: graphics/%_bitmap.png | $(GRIT)
 	@mkdir -p $(dir $@)
 	$(GRIT) $< -gb -gB8 -p! -ftb -fh! -o $(@:.img.bin=)
 
+# Tile sheets (graphics/intro/*_tiles.png, graphics/tileset1/*_tiles.png:
+# the HUD fonts, the credits and VV logos, the level-select cursor zoom and
+# pictures): grit -gt, 4bpp, or 8bpp for the *_8bpp_tiles.png ones.
+TILE_SHEET_BPP = $(if $(filter %_8bpp_tiles.png,$<),8,4)
+$(GRAPHICS_BUILDDIR)/intro/%_tiles.img.bin: graphics/intro/%_tiles.png | $(GRIT)
+	@mkdir -p $(dir $@)
+	$(GRIT) $< -gt -gB$(TILE_SHEET_BPP) -p! -ftb -fh! -o $(@:.img.bin=)
+$(GRAPHICS_BUILDDIR)/tileset1/%_tiles.img.bin: graphics/tileset1/%_tiles.png | $(GRIT)
+	@mkdir -p $(dir $@)
+	$(GRIT) $< -gt -gB$(TILE_SHEET_BPP) -p! -ftb -fh! -o $(@:.img.bin=)
+
+# The C bytes of an LZ77 stream, trimmed to the stream: gbagfx pads its
+# output to 4 bytes, which the definitions' aligned(4) gives back where the
+# ROM has it.
 $(GRAPHICS_BUILDDIR)/%.lz.inc: $(GRAPHICS_BUILDDIR)/%.lz tools/bin2c.py
 	python3 tools/bin2c.py $< $@ --lz
 
 $(C_BUILDDIR)/data/%.o: CPPFLAGS += -iquote $(GRAPHICS_BUILDDIR)
 # The 24 cutscene pictures (palette + Mode 4 bitmap each).
 $(C_BUILDDIR)/data/cutscene_pictures_5a9f70.o: $(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.img.bin.lz.inc,$(wildcard graphics/intro/*_bitmap.png))
+
+# The two framed OBJ sprite sheets.
+$(C_BUILDDIR)/data/sprite_sheet_0b2120.o: $(GRAPHICS_BUILDDIR)/unknown/00_0b2120.bin.lz.inc
+$(C_BUILDDIR)/data/sprite_sheet_14174c.o: $(GRAPHICS_BUILDDIR)/unknown/01_14174c.bin.lz.inc
+
+# The two HUD fonts.
+FONT_TILE_PNGS := $(wildcard graphics/intro/00_*_tiles.png)
+$(C_BUILDDIR)/data/font_tiles_5a4e70.o: $(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.img.bin.lz.inc,$(FONT_TILE_PNGS))
+
+# The menu, title and credits graphics (0x0861BADC-0x086377C0): the
+# palettes of graphics/intro/, the bg_package pictures (below) and the
+# credits and VV logo tile sheets.
+MENU_GRAPHICS_INCS := $(patsubst graphics/%.pal,$(GRAPHICS_BUILDDIR)/%.gbapal.lz.inc,$(wildcard graphics/intro/*.pal)) \
+	$(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.img.bin.lz.inc,$(filter-out $(FONT_TILE_PNGS),$(wildcard graphics/intro/*_tiles.png)))
+$(C_BUILDDIR)/data/menu_graphics_61badc.o: $(MENU_GRAPHICS_INCS)
+
+# The level-select cursor zoom, the ten level-select pictures and their
+# palettes (graphics/tileset1/, 0x086377C0-0x0863D4C0).
+$(C_BUILDDIR)/data/level_select_graphics_6377c0.o: \
+	$(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.img.bin.lz.inc,$(wildcard graphics/tileset1/*_tiles.png)) \
+	$(patsubst graphics/%.pal,$(GRAPHICS_BUILDDIR)/%.gbapal.lz.inc,$(wildcard graphics/tileset1/*.pal))
 
 # Actor-category backgrounds (docs/data.md, "Category backgrounds"): the
 # BG0 cell animations and BG1 pictures of graphics/category_bg/. They are
@@ -166,13 +179,12 @@ $(C_BUILDDIR)/data/bg_picture_151ac4.o: $(call catbg_picture_incs,151ac4 155260)
 # first use; grit starts with a forced blank tile). The universal logo's
 # tile set has identical and unused tiles, so it is its own strip PNG (grit
 # -fx), and bg_map.py pick applies the ROM's choice among identical tiles
-# (62d0cc_universal_logo.json). gbagfx compresses; data.s incbins the
-# results. The palettes are separate assets in graphics/intro/.
+# (62d0cc_universal_logo.json). gbagfx compresses, and
+# src/data/menu_graphics_61badc.cpp holds the results. The palettes are separate assets in graphics/intro/.
 BG_PACKAGE_DIR := $(GRAPHICS_BUILDDIR)/bg_package
 BG_PACKAGE_NAMES := $(basename $(notdir $(filter-out %_tiles.png,$(wildcard graphics/bg_package/*.png))))
-GRIT_C_PNGS += $(wildcard graphics/bg_package/*.png)
-BG_PACKAGE_BUILT := $(foreach n,$(BG_PACKAGE_NAMES),$(BG_PACKAGE_DIR)/$(n).img.bin.lz $(BG_PACKAGE_DIR)/$(n).map.bin.lz)
-$(DATA_ASM_OBJS) report: $(BG_PACKAGE_BUILT)
+$(C_BUILDDIR)/data/menu_graphics_61badc.o: \
+	$(foreach n,$(BG_PACKAGE_NAMES),$(BG_PACKAGE_DIR)/$(n).img.bin.lz.inc $(BG_PACKAGE_DIR)/$(n).map.bin.lz.inc)
 
 BG_PACKAGE_BPP_61c30c_menu_sky := 4
 BG_PACKAGE_BPP_61e5f8_pause_menu := 8
@@ -216,7 +228,6 @@ $(UNIVERSAL_LOGO).map.bin: $(UNIVERSAL_LOGO).img.bin $(UNIVERSAL_LOGO)_fx.map.bi
 # bin2c --size trims the (all-zero) padding again.
 TILE_POOL_4BPP_PNGS := $(wildcard graphics/sprites/*.png)
 TILE_POOL_8BPP_PNGS := $(wildcard graphics/level_tilesets/*.png)
-GRIT_C_PNGS += $(TILE_POOL_4BPP_PNGS) $(TILE_POOL_8BPP_PNGS)
 
 TILE_BYTES_bank00_2bf120 := 0x3cfe0
 TILE_BYTES_bank01_2fc100 := 0x2b580
@@ -302,7 +313,6 @@ tile_pool_incs = $(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.img.bin.inc,$(
 # tools/boss_pictures.py deduplicates them into the ROM's shared tile
 # pool and per-frame maps.
 BOSS_PICTURE_PNGS := $(wildcard graphics/boss_pictures/*.png)
-GRIT_C_PNGS += $(BOSS_PICTURE_PNGS)
 BOSS_PICTURE_DIR := $(GRAPHICS_BUILDDIR)/boss_pictures
 
 $(BOSS_PICTURE_DIR)/%.img.bin: graphics/boss_pictures/%.png | $(GRIT)
@@ -329,7 +339,6 @@ $(C_BUILDDIR)/data/sprite_tiles_2bf120.o: $(call tile_pool_incs,$(TILE_POOL_4BPP
 # compresses each frame the way the ROM's encoder did and writes the bytes
 # plus a header of frame offsets (for the frame pointer tables).
 RLE_SPRITE_PNGS := $(wildcard graphics/rle_sprites/*.png)
-GRIT_C_PNGS += $(RLE_SPRITE_PNGS)
 RLE_SPRITE_DIR := $(GRAPHICS_BUILDDIR)/rle_sprites
 RLE_FRAME_0c2758 := 8x8
 RLE_FRAME_0da1d8 := 10x10
@@ -356,9 +365,7 @@ $(C_BUILDDIR)/data/anim_family_17aa6c.o: $(call rle_sprite_files,15a050) $(GRAPH
 # wide, padded with blank tiles, which bin2c.py --size trims again.
 LEVEL_BG_TILES_DIR := $(GRAPHICS_BUILDDIR)/level_bg_tiles
 LEVEL_BG_TILES_PNGS := $(wildcard graphics/level_bg_tiles/*.png)
-GRIT_C_PNGS += $(LEVEL_BG_TILES_PNGS)
-LEVEL_BG_TILES_BUILT := $(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.tiles.bin.lz,$(LEVEL_BG_TILES_PNGS))
-$(DATA_ASM_OBJS) report: $(LEVEL_BG_TILES_BUILT)
+$(C_BUILDDIR)/data/level_bg_tiles_63d4c0.o: $(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.tiles.bin.lz.inc,$(LEVEL_BG_TILES_PNGS))
 
 LEVEL_BG_TILE_BYTES_63d4c0_snow := 0x5be0
 LEVEL_BG_TILE_BYTES_640ef8_jungle := 0x5b60

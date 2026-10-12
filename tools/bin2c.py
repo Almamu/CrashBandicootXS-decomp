@@ -20,8 +20,8 @@ the padding is trimmed again, and it too must be all zero.
 (a grit `-p -ftb` palette, say). Applies after --lz/--size trimming.
 
 --bin: write the trimmed bytes as a binary file instead of C text, for an
-asset data/data.s still incbins (the level BG tile sets: --size trims the
-PNG's padding before gbagfx compresses them).
+asset that is compressed afterwards (the level BG tile sets: --size trims
+the PNG's padding before gbagfx compresses them).
 """
 import sys
 

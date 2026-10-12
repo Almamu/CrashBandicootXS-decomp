@@ -441,8 +441,9 @@ of the LZ77 asset before it). The chunk
 streams are decoded into one tilemap per layer (`data/levels/<room>/`),
 and `tools/levels.py` re-encodes them byte for byte, the LZ77 ones
 included: its encoder reproduces the original tool's token choices and
-its leftover bytes. `data/data.s` incbins the built assets under new
-labels (`gRoom15Asset`, `gRoom19Asset`, ...). The format
+its leftover bytes. The built assets are C arrays under new
+labels (`gRoom15Asset`, `gRoom19Asset`, ...) in
+`src/data/level_assets_64f830.cpp`. The format
 and the encoder are in [levels.md](./levels.md).
 
 ### The IWRAM image (`087E55E4`-`087E5FCC`) + fill
@@ -473,7 +474,7 @@ By kind (from `tools/data_map.json`):
 | function-pointer / pointer-to-member tables | 16 | 1,232 | `0816BF20` (42 `act_pmf`), `0816C6A4` (92 fn ptrs), `081756C4` (3 `category_vtable`), the `actor_pmf` tables in `0817A6B8`-`0817C4F8` |
 | pointer tables | 11 | 272 | e.g. `0816AA20` (19 song pointers into the built audio), `0816C5A0`, `0817E714` |
 | palettes (16- or 256-colour BGR555) | 51 | 63,397 | 23 are the 256-colour palettes of the intro Mode-4 slides (`085ADBD1`...`08619F51`, each after 0-3 B of alignment pad; some entries have bit 15 set, so they can't round-trip through `gbagfx .pal`; **converted** as C `u16` arrays, `cutscene_pictures_5a9f70.cpp`), plus `08175760` (32 palette-cycle frames x 0x1C0) and many 0x20 menu/HUD palettes |
-| alignment padding | 67 | 133 | 1-3 zero bytes before a 4-aligned LZ77 blob, all between `085A5519` and `086EA0C9`. **Built**: each one is exactly the zero padding gbagfx appends to the `.lz` stream before it, so `data.s` incbins the whole padded file (docs/data.md, "LZ77 stream padding") |
+| alignment padding | 67 | 133 | 1-3 zero bytes before a 4-aligned LZ77 blob, all between `085A5519` and `086EA0C9`. **Built**: each one is the word alignment of the next stream, an `aligned(4)` C array (docs/data.md, "LZ77 stream padding") |
 | other typed tables | 166 | 56,125 | `s32`/`u16`/struct tables with known consumers; notable ones below |
 
 Notable mid-size tables:

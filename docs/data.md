@@ -304,9 +304,14 @@ The first batch (all pointer tables, all byte-exact):
 | `sprite_banks_4b414c.cpp` | `0x084B414C` | sprite banks 22-38 |
 | `sprite_banks_4b9d7c.cpp` | `0x084B9D7C` | sprite banks 39-55 |
 | `clz_tab_5a4c70.c` | `0x085A4C70` | libgcc's `__clz_tab`, twice (see "Library data" below) |
+| `font_tiles_5a4e70.cpp` | `0x085A4E70` | the two HUD fonts' glyph tiles (grit, LZ77) |
 | `gax_tables_5a6100.c` | `0x085A6100` | the GAX2 engine's strings, mixing-rate table, period table and vibrato wave |
 | `eeprom_5a9eec.c` | `0x085A9EEC` | the SDK EEPROM library's id string, chip configs, timeout and address constants |
 | `cutscene_pictures_5a9f70.cpp` | `0x085A9F70` | the 24 cutscene pictures: palette (C) + Mode 4 bitmap (grit) each |
+| `menu_graphics_61badc.cpp` | `0x0861BADC` | the menu, title, legal-screen and credits palettes, `bg_package` tiles and maps and logo tiles (LZ77, docs/graphics.md) |
+| `level_select_graphics_6377c0.cpp` | `0x086377C0` | the level-select cursor zoom tiles, the ten level-select pictures and their palettes (LZ77) |
+| `level_bg_tiles_63d4c0.cpp` | `0x0863D4C0` | the six level BG1-3 tile sets (LZ77) |
+| `level_assets_64f830.cpp` | `0x0864F830` | the 41 level assets `gRoomNNAsset` (generated, see "Level data") |
 
 The actor-category backgrounds and tables (grit-built, see "Category
 backgrounds" below):
@@ -314,9 +319,11 @@ backgrounds" below):
 | File | ROM | Contents |
 |---|---|---|
 | `cell_anim_03b8b0.cpp` | `0x0803B8B0` | BG0 cell animation A (19x13, 60 frames, per-cell banks), category 0 `sub_effect_table` |
+| `sprite_sheet_0b2120.cpp` | `0x080B2120` | `gPolarSpriteSheet`, the framed OBJ sheet of categories 0-2 (`tools/framed_gfx.py`, LZ77) |
 | `sub_effect_0c0c38.cpp` | `0x080C0C38` | categories 1 and 2 `sub_effect_table`s |
 | `rle_sprites_0c2758.cpp` | `0x080C2758` | compressed OBJ frame sets A and B (see "Compressed sprite frames") |
 | `cell_anim_0ff1b0.cpp` | `0x080FF1B0` | BG0 cell animation B (38x10, 21 frames), category 3 BG1 picture and `sub_effect_table` |
+| `sprite_sheet_14174c.cpp` | `0x0814174C` | `gJetpackSpriteSheet`, the framed OBJ sheet of categories 3-6 |
 | `bg_picture_151ac4.cpp` | `0x08151AC4` | category 4 and 5/6 BG1 pictures, categories 4-6 `sub_effect_table`s |
 | `rle_sprites_15a050.cpp` | `0x0815A050` | compressed OBJ frame set C |
 
@@ -603,7 +610,6 @@ C (see "Level data").
   `TILE_BYTES_*` lines. Its output is deterministic, and all 62 PNGs
   round-trip through grit byte-exact.
 
-`graphics.mk` adds the PNGs to `GRIT_C_PNGS`.
 
 ### Boss pictures
 
@@ -661,8 +667,9 @@ see [levels.md, "Collision layers"](./levels.md#collision-layers)). The build
 
 | output | from | used by |
 |---|---|---|
-| `build/.../data/levels/<room>/asset.bin` | the room's tilemaps, re-encoded into the ROM's chunk streams | `data/data.s` incbin (7 raw assets) |
-| `build/.../data/levels/<room>/asset.bin.lz` | the same, gbagfx LZ77 | `data/data.s` incbin (34 packed assets, formerly `graphics/tileset1/27`-`60`) |
+| `build/.../data/levels/<room>/asset.bin.inc` | the room's tilemaps, re-encoded into the ROM's chunk streams, as `tools/bin2c.py` bytes | `level_assets_64f830.inc` (7 raw assets) |
+| `build/.../data/levels/<room>/asset.bin.lz.inc` | the same, gbagfx LZ77, `tools/bin2c.py --lz` bytes | `level_assets_64f830.inc` (34 packed assets, formerly `graphics/tileset1/27`-`60`) |
+| `build/.../data/levels/level_assets_64f830.inc` | the 41 `gRoomNNAsset` definitions, in `levels.json`'s `"assets"` (ROM) order | `#include`d by `src/data/level_assets_64f830.cpp` |
 | `build/.../data/levels/level_rooms_<addr>.inc` | all rooms of a region | `#include`d by `src/data/level_rooms_<addr>.c` |
 
 Every pointer in the room data is a symbol reference (the room's own
@@ -739,9 +746,9 @@ music block and the cutscene pictures, are C in three files:
   it, but every word is a symbol, so it is written as symbol references
   and doesn't pin anything in place.
 
-The one-byte pad before the version string is the zero padding gbagfx
-writes after the `.lz` stream before it (it rounds `.lz` files up to 4
-bytes), so `data.s` incbins that file whole instead of trimming it.
+The one-byte pad before the version string is the alignment after the
+LZ77 stream before it, `gLargeFontTiles` (`font_tiles_5a4e70.cpp`): the
+linker's zero fill up to the 4-aligned `.rodata` of `gax_tables_5a6100.o`.
 
 ### Placing it and counting it
 
@@ -752,7 +759,9 @@ follows; `ldscript.txt` links the object's `.rodata` in between (the
 first asset done this way was the intro bitmap `gCutscenePicture00Bitmap`,
 now part of `cutscene_pictures_5a9f70.cpp`). agbcc doesn't align a `u8`
 array, so whatever follows starts right at the array's end, which is
-what the ROM has for these unaligned stream lengths.
+what the ROM has for these unaligned stream lengths. Where the ROM starts
+a stream on a word boundary (every other LZ77 asset), the definition says
+`__attribute__((aligned(4)))`, see "LZ77 stream padding".
 
 The report needs nothing extra. The object is in `src/data/`, so
 `tools/report_units.py` counts it as built data from the `ldscript.txt`
@@ -766,13 +775,11 @@ was an `.incbin` of the gbagfx output, so converting it doesn't change
 
 1. Make sure the PNG is indexed (convert the grayscale ones first) and the
    grit rule for its kind is in `graphics.mk`.
-2. Add it to `GRIT_C_PNGS` in `graphics.mk`, so it's no longer built for a
-   `data.s` incbin.
-3. Write `src/data/<kind>_<addr>.c` with the hand-written declaration.
+2. Write `src/data/<kind>_<addr>.c` with the hand-written declaration.
    Add a `$(C_BUILDDIR)/data/<kind>_<addr>.o: <...>.lz.inc` dependency
    line to `graphics.mk`.
-4. Split `data/data.s` and add the `ldscript.txt` lines, as for any table.
-5. Run a full clean `make` (`make tidy && make`). It must print
+3. Split `data/data.s` and add the `ldscript.txt` lines, as for any table.
+4. Run a full clean `make` (`make tidy && make`). It must print
    `crashbandicootxs.gba: OK`.
 
 ### Terrain types and UI text
@@ -940,20 +947,24 @@ again and checks that every frame re-encodes to the ROM's bytes.
 
 ### LZ77 stream padding
 
-The LZ77 streams in `data/data.s` start on a word boundary, and most
-are followed by 1-3 zero bytes that bring the next asset back to one.
-Those bytes used to be 70 raw labels (`gStaticData_080C0C36`,
+Apart from the cutscene bitmaps, the ROM's LZ77 streams (the graphics
+and the packed level assets) start on a word boundary, and most are
+followed by 1-3 zero bytes that bring the next asset back to one. Those
+bytes used to be 70 raw labels (`gStaticData_080C0C36`,
 `gStaticData_08151AC2`, `gStaticData_085A5519`, 66 between
-`0x0861BF2E` and `0x086EA0C9`, `gStaticData_086ECCD2`). Each one is
-exactly the padding gbagfx writes: it rounds every `.lz` file up to a
-multiple of 4 with zeros. So the stream's `.incbin` takes the whole
-padded file instead of trimming it to the stream length (`, 0, 0x1E6`),
-and the pad label is gone (no code referenced any of them).
-`tools/report_units.py` counts the padding as part of the built blob.
+`0x0861BF2E` and `0x086EA0C9`, `gStaticData_086ECCD2`); no code
+referenced any of them.
 
-This only holds where the stream starts word-aligned and the ROM pad
-is all zeros, which is true of every one of the 70 (checked against the
-built `.lz` files). An edited asset that compresses to a different
-length gets the right padding for its new length, so the next asset
-stays aligned. Streams that the ROM packs back to back without a pad
-(the cutscene bitmaps, `cutscene_pictures_5a9f70.cpp`) keep the trimming.
+They are alignment. Each of these streams is a `u8` array declared
+`__attribute__((aligned(4)))` in `src/data/` (`sprite_sheet_0b2120.cpp`,
+`sprite_sheet_14174c.cpp`, `font_tiles_5a4e70.cpp`,
+`menu_graphics_61badc.cpp`, `level_select_graphics_6377c0.cpp`,
+`level_bg_tiles_63d4c0.cpp`, `level_assets_64f830.cpp`), with
+`tools/bin2c.py --lz` trimming gbagfx's output to the stream itself.
+Between two arrays of one object the assembler pads with zeros; after an
+object's last array the linker does, up to the next object's aligned
+`.rodata`. `tools/report_units.py` counts the padding toward the blob in
+front of it, the linker's fill included. An edited asset that compresses
+to a different length gets the right padding for its new length, so the
+next asset stays aligned. The cutscene bitmaps, which the ROM packs back
+to back without a pad, have no `aligned(4)`.

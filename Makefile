@@ -119,20 +119,6 @@ DEPS := $(C_OBJS:.o=.d) $(CXX_OBJS:.o=.d) $(LIB_C_OBJS:.o=.d) $(LIBGCC2_OBJS:.o=
 include graphics.mk
 include levels.mk
 
-# PNGs in GRIT_C_PNGS (graphics.mk) become C arrays, not data.s incbins.
-GRAPHICS_PNGS := $(filter-out $(GRIT_C_PNGS),$(wildcard graphics/*/*.png))
-GRAPHICS_PALS := $(wildcard graphics/*/*.pal)
-GRAPHICS_BINS := $(wildcard graphics/*/*.bin)
-
-GRAPHICS_BUILT := \
-	$(patsubst graphics/%_bitmap.png,$(GRAPHICS_BUILDDIR)/%_bitmap.bin.lz,$(filter %_bitmap.png,$(GRAPHICS_PNGS))) \
-	$(patsubst graphics/%_8bpp_tiles.png,$(GRAPHICS_BUILDDIR)/%_8bpp_tiles.8bpp.lz,$(filter %_8bpp_tiles.png,$(GRAPHICS_PNGS))) \
-	$(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.4bpp.lz,$(filter-out %_bitmap.png %_8bpp_tiles.png,$(GRAPHICS_PNGS))) \
-	$(patsubst graphics/%.pal,$(GRAPHICS_BUILDDIR)/%.gbapal.lz,$(GRAPHICS_PALS)) \
-	$(patsubst graphics/%.bin,$(GRAPHICS_BUILDDIR)/%.bin.lz,$(GRAPHICS_BINS)) \
-	$(GRAPHICS_BUILDDIR)/unknown/00_0b2120.bin.lz \
-	$(GRAPHICS_BUILDDIR)/unknown/01_14174c.bin.lz
-
 SOUND_SONGS := $(wildcard sound/songs/*.xm)
 SOUND_SAMPLES := $(wildcard sound/samples/*.wav)
 SOUND_SFX_SOURCES := sound/gax_sfx_manifest.json $(wildcard sound/sfx_samples/*.wav)
@@ -144,9 +130,10 @@ SOUND_BUILT := $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/gax_defaul
 compare: $(ROM)
 	sha1sum -c checksum.sha1
 
-# Every incbin in data/*.s that pulls from graphics/ or sound/ needs the
-# corresponding built file to exist first.
-$(DATA_ASM_OBJS): $(GRAPHICS_BUILT) $(LEVELS_BUILT) $(SOUND_BUILT)
+# Every incbin in data/*.s (the sound blocks) needs the corresponding
+# built file to exist first. The graphics and the level assets are C
+# arrays in src/data/ (graphics.mk, levels.mk).
+$(DATA_ASM_OBJS): $(SOUND_BUILT)
 
 # The music block starts with pointers into the sound-effect set, so it
 # depends on the set's sources too. The same run writes the default song's
@@ -200,11 +187,11 @@ tidy:
 # under `NON_MATCHING=1` so parked functions are included as their
 # (possibly imperfect) C reconstruction rather than omitted or silently
 # swapped for raw asm. The data units (data/data.s) need the repo-built
-# assets it incbins, but not data.o itself (that needs baserom.gba).
+# sound blocks it incbins, but not data.o itself (that needs baserom.gba).
 # itoa_arm's unit is an assembly object (asm/itoa_arm.s, #662).
 
 .PHONY: report
-report: $(C_OBJS) $(CXX_OBJS) $(LIB_C_OBJS) $(LIBGCC2_OBJS) $(ASM_BUILDDIR)/itoa_arm.o $(GRAPHICS_BUILT) $(LEVELS_BUILT) $(SOUND_BUILT)
+report: $(C_OBJS) $(CXX_OBJS) $(LIB_C_OBJS) $(LIBGCC2_OBJS) $(ASM_BUILDDIR)/itoa_arm.o $(SOUND_BUILT)
 	python3 tools/report_units.py
 
 #### Recipes ####

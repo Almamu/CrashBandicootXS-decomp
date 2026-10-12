@@ -9,7 +9,7 @@ its tile graphics is built from [`data/levels/`](../data/levels) by
   8 rooms): descriptors, chunk grids, palettes and entity lists, as typed
   C in `src/data/level_rooms_24b638.cpp` and `src/data/level_rooms_2b91d0.cpp`;
 - the 41 level assets (the per-layer tilemaps, compressed), `gRoomNNAsset`
-  in `data/data.s`: 7 raw ones at `0x086C127C` and
+  in `src/data/level_assets_64f830.cpp`: 7 raw ones at `0x086C127C` and
   `0x086ECCD4`-`0x087BC13C` (1,112,392 bytes), and 34 LZ77-packed ones
   between the intro graphics (`0x0864F830`-`0x086EC63C`, formerly the
   "unidentified" `graphics/tileset1/27`-`60` `.bin` files).
@@ -307,8 +307,12 @@ room's generated parameter struct).
 `levels.mk` runs:
 
 - `tools/levels.py asset data/levels/<room> build/.../data/levels/<room>/asset.bin`
-  per room; gbagfx compresses the 34 packed ones, and `data/data.s`
-  incbins the results;
+  per room; gbagfx compresses the 34 packed ones, and `tools/bin2c.py`
+  turns each asset into C initializer bytes (`asset.bin.inc`, or
+  `asset.bin.lz.inc` trimmed to the LZ77 stream);
+- `tools/levels.py assets build/.../data/levels/level_assets_64f830.inc`:
+  the 41 asset definitions, in the ROM order of `levels.json`'s
+  `"assets"` list, `#include`d by `src/data/level_assets_64f830.cpp`;
 - `tools/levels.py c <region> build/.../data/levels/<region>.inc` per
   region, `#include`d by the two `src/data/level_rooms_*.c` files;
 - `tools/levels.py constants entities|crates build/include/constants/<name>.h`:
@@ -436,10 +440,9 @@ Colour groups:
 
 Editing notes: an entity must stay in its column's id order (the list
 runs from the last column to the first); a room can't change its layers'
-tile sets without the matching palette; `data/data.s`'s incbin lengths of
-the packed assets and the region sizes in `ldscript.txt`'s layout are
-fixed by what follows them in the ROM, so a change of size needs those
-moved too. The room records point at each room's palette and descriptor
+tile sets without the matching palette. The assets and the room data
+are C arrays linked back to back, so an asset or a room that changes size
+moves everything after it (and the ROM no longer matches). The room records point at each room's palette and descriptor
 by symbol, so they follow the room data wherever it is linked.
 
 ## Numbers

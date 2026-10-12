@@ -2,10 +2,12 @@
 # sources (room.json, one decoded tilemap per BG layer and the collision
 # layer as an image, collision.png), tools/levels.py
 # builds them back:
-# - each room's level asset (the per-layer chunk streams), which data/data.s
-#   incbins: raw for 7 rooms, LZ77-packed by gbagfx for the other 34;
+# - each room's level asset (the per-layer chunk streams): raw for 7 rooms,
+#   LZ77-packed by gbagfx for the other 34, as C initializer bytes
+#   (tools/bin2c.py);
 # - the C definitions of the two room-data regions, which
-#   src/data/level_rooms_*.c #include.
+#   src/data/level_rooms_*.cpp #include, and of the 41 assets, which
+#   src/data/level_assets_64f830.cpp #includes.
 LEVELS_BUILDDIR := $(OBJ_DIR)/data/levels
 LEVEL_ROOMS := $(notdir $(wildcard data/levels/room*))
 LEVEL_PACKED_ROOMS := $(notdir $(patsubst %/room.json,%,$(shell grep -l '"packed": true' data/levels/room*/room.json)))
@@ -26,15 +28,28 @@ $(foreach room,$(LEVEL_ROOMS),$(eval $(call LEVEL_ASSET_RULE,$(room))))
 $(LEVELS_BUILDDIR)/%.lz: $(LEVELS_BUILDDIR)/% | $(GFX)
 	$(GFX) $< $@
 
+# The asset bytes: a packed one trimmed to its LZ77 stream (the zero bytes
+# gbagfx pads it with are the next asset's word alignment), a raw one whole.
+$(LEVELS_BUILDDIR)/%.lz.inc: $(LEVELS_BUILDDIR)/%.lz tools/bin2c.py
+	python3 tools/bin2c.py $< $@ --lz
+$(LEVELS_BUILDDIR)/%/asset.bin.inc: $(LEVELS_BUILDDIR)/%/asset.bin tools/bin2c.py
+	python3 tools/bin2c.py $< $@
+
 $(LEVELS_BUILDDIR)/level_rooms_%.inc: $(LEVEL_SOURCES) data/levels/entity_types.json $(LEVEL_TOOLS)
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py c level_rooms_$* $@
 
-LEVELS_BUILT := $(foreach room,$(LEVEL_ROOMS),$(LEVELS_BUILDDIR)/$(room)/asset.bin) \
-	$(foreach room,$(LEVEL_PACKED_ROOMS),$(LEVELS_BUILDDIR)/$(room)/asset.bin.lz)
+LEVEL_ASSET_INCS := $(foreach room,$(filter-out $(LEVEL_PACKED_ROOMS),$(LEVEL_ROOMS)),$(LEVELS_BUILDDIR)/$(room)/asset.bin.inc) \
+	$(foreach room,$(LEVEL_PACKED_ROOMS),$(LEVELS_BUILDDIR)/$(room)/asset.bin.lz.inc)
+
+$(LEVELS_BUILDDIR)/level_assets_64f830.inc: data/levels/levels.json $(wildcard data/levels/room*/room.json) tools/levels.py
+	@mkdir -p $(dir $@)
+	python3 tools/levels.py assets $@
 
 $(foreach r,$(LEVEL_REGIONS),$(eval $(C_BUILDDIR)/data/$(r).o: $(LEVELS_BUILDDIR)/$(r).inc))
 $(foreach r,$(LEVEL_REGIONS),$(eval $(C_BUILDDIR)/data/$(r).o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)))
+$(C_BUILDDIR)/data/level_assets_64f830.o: $(LEVELS_BUILDDIR)/level_assets_64f830.inc $(LEVEL_ASSET_INCS)
+$(C_BUILDDIR)/data/level_assets_64f830.o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)
 
 # The constants headers named in the level data (#655): the entity types
 # (data/levels/entity_types.json), the crate kinds (crate_kinds.json) and
