@@ -63,12 +63,12 @@ public:
     static s32 GetX();                                  // GetHovercraftX
 
 private:
-    static void UpdateHitFlash();         // UpdateHovercraftHitFlash
-    static void RunState();               // RunHovercraftState
-    static void DrawMap(void *tileRow);   // DrawHovercraftMap
-    static void ConvertTiles();           // ConvertHovercraftTiles
-    static void SetFlashColor(u8 flag);   // SetHovercraftFlashColor
-    static void SetState(s32 a0, s32 a1); // SetHovercraftState
+    static void UpdateHitFlash();          // UpdateHovercraftHitFlash
+    static void RunState();                // RunHovercraftState
+    static void DrawMap(void *tileRow);    // DrawHovercraftMap
+    static void ConvertTiles();            // ConvertHovercraftTiles
+    static void SetFlashColor(u8 flag);    // SetHovercraftFlashColor
+    static void SetState(s32 st, s32 idx); // SetHovercraftState
 
     /* The states, indexed by `state` (stateFuncs). */
     static void StateInactive();    // HovercraftStateInactive

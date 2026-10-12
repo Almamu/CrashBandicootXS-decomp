@@ -137,13 +137,13 @@ JetpackCollectedWumpa::JetpackCollectedWumpa(const struct anim_table_record *rec
     this->x = nx;
 
     {
-        s32 a1 = nx - 0x1000;
-        s32 a2 = ABS_BRANCHLESS(a1);
+        s32 dx = nx - 0x1000;
+        s32 absDx = ABS_BRANCHLESS(dx);
         s32 ny = this->y;
-        s32 b1 = ny - 0x1000;
-        s32 b2 = ABS_BRANCHLESS(b1);
+        s32 dy = ny - 0x1000;
+        s32 absDy = ABS_BRANCHLESS(dy);
 
-        sum = a2 + b2;
+        sum = absDx + absDy;
         if (sum < 0)
             sum += 0x7ff;
         q = sum >> 0xb;

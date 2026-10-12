@@ -62,7 +62,7 @@ extern "C" s32 JetpackIsTouchingPlayer(struct ActorSelf *self);
 /* src/actor/actor_factory.cpp */
 extern "C" void CreatePolarCheckpointText(s32 x, s32 y, s32 z);
 extern "C" void SpawnPolarCollectedWumpa(s32 x, s32 y, s32 z);
-extern "C" class PolarAkuAku *SpawnPolarAkuAku(s32 x, s32 y, s32 z, s32 arg);
+extern "C" class PolarAkuAku *SpawnPolarAkuAku(s32 x, s32 y, s32 z, s32 level);
 
 /* src/actor/actor_category.cpp */
 extern "C" s32 JetpackIsPauseLocked(void);
@@ -482,7 +482,7 @@ public:
     s32 nextTarget; // 0x64 - the spawn index it aims for next
 
     // CreatePolarPenguin
-    PolarPenguin(const struct anim_table_record *rec, s32 x, s32 y, s32 z, struct spawn_arg *arg);
+    PolarPenguin(const struct anim_table_record *rec, s32 x, s32 y, s32 z, struct spawn_arg *spawn);
     virtual ~PolarPenguin(); // 1 DestroyPolarPenguin
     virtual void Update();   // 2 UpdatePolarPenguin
 
@@ -700,7 +700,7 @@ public:
     u8 dying;      // 0x7C
 
     // CreateJetpackPlane
-    JetpackPlane(const struct anim_table_record *rec, s32 x, s32 y, s32 z, struct spawn_arg *arg);
+    JetpackPlane(const struct anim_table_record *rec, s32 x, s32 y, s32 z, struct spawn_arg *spawn);
     virtual ~JetpackPlane();         // 1 DestroyJetpackPlane
     virtual void Update();           // 2 UpdateJetpackPlane
     virtual void Damage(s32 amount); // 4 DamageJetpackPlane
