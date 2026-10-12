@@ -2,6 +2,7 @@ extern "C" {
 #include "gba/types.h"
 #include "sprite_bank.h"
 }
+#include "sprites/sprite_frames.h"
 
 /*
  * ROM 0x084b0ae0-0x084b414c: sprite banks 10-21 of the sprite-bank
@@ -13,78 +14,20 @@ extern "C" {
  * the source now. Per bank: the animations (a frame-index sequence each),
  * the frame pointer array, the frames (header plus the boxes/anchor of
  * their layout type), then every frame's piece positions and piece bytes.
- * A frame's tiles are an offset into the sprite tile pool
- * (src/data/sprite_tiles_2bf120.cpp), written relative to the pool range of
- * the bank that owns them (SPRITE_TILES_BANKnn). Editing a piece's shape,
- * adding a piece or moving the tiles means redrawing
- * graphics/sprites/bankNN_*.png to match.
+ * The pieces and the frames' tiles come from graphics/sprites/bankNN_<name>/
+ * (a PNG per frame and bank.json, see docs/graphics.md "Sprite banks"):
+ * tools/sprite_frames.py generates the piece arrays (sprites/bankNN_pieces.inc),
+ * and sprites/sprite_frames.h declares the frames and gives each one's
+ * offset in the sprite tile pool (src/data/sprite_tiles_2bf120.cpp),
+ * SPRITE_TILES_BANKnn_FRAMEkkk. A frame's struct type has to match its
+ * "layout" in bank.json.
  */
 
 /* ---------------------------------------------------------------------- */
-/* Bank 10: 2 animations, 20 frames, tiles in gSpriteBank10Tiles (SPRITE_TILES_BANK10). */
+/* Bank 10: 2 animations, 20 frames, graphics/sprites/bank10_venus_flytrap/. */
 
 extern const u16 gSpriteBank10Anim00Seq[9];
 extern const u16 gSpriteBank10Anim01Seq[11];
-extern const struct sprite_frame_1box gSpriteBank10Frame000;
-extern const struct sprite_frame_1box gSpriteBank10Frame001;
-extern const struct sprite_frame_1box gSpriteBank10Frame002;
-extern const struct sprite_frame_1box gSpriteBank10Frame003;
-extern const struct sprite_frame_1box gSpriteBank10Frame004;
-extern const struct sprite_frame_1box gSpriteBank10Frame005;
-extern const struct sprite_frame_1box gSpriteBank10Frame006;
-extern const struct sprite_frame_1box gSpriteBank10Frame007;
-extern const struct sprite_frame_1box gSpriteBank10Frame008;
-extern const struct sprite_frame_1box gSpriteBank10Frame009;
-extern const struct sprite_frame_1box gSpriteBank10Frame010;
-extern const struct sprite_frame_1box gSpriteBank10Frame011;
-extern const struct sprite_frame_1box gSpriteBank10Frame012;
-extern const struct sprite_frame_1box gSpriteBank10Frame013;
-extern const struct sprite_frame_1box gSpriteBank10Frame014;
-extern const struct sprite_frame_1box gSpriteBank10Frame015;
-extern const struct sprite_frame_1box gSpriteBank10Frame016;
-extern const struct sprite_frame_1box gSpriteBank10Frame017;
-extern const struct sprite_frame_1box gSpriteBank10Frame018;
-extern const struct sprite_frame_1box gSpriteBank10Frame019;
-extern const struct sprite_piece_pos gSpriteBank10Frame000Pos[5];
-extern const struct sprite_piece_pos gSpriteBank10Frame001Pos[5];
-extern const struct sprite_piece_pos gSpriteBank10Frame002Pos[3];
-extern const struct sprite_piece_pos gSpriteBank10Frame003Pos[3];
-extern const struct sprite_piece_pos gSpriteBank10Frame004Pos[1];
-extern const struct sprite_piece_pos gSpriteBank10Frame005Pos[6];
-extern const struct sprite_piece_pos gSpriteBank10Frame006Pos[4];
-extern const struct sprite_piece_pos gSpriteBank10Frame007Pos[3];
-extern const struct sprite_piece_pos gSpriteBank10Frame008Pos[4];
-extern const struct sprite_piece_pos gSpriteBank10Frame009Pos[3];
-extern const struct sprite_piece_pos gSpriteBank10Frame010Pos[4];
-extern const struct sprite_piece_pos gSpriteBank10Frame011Pos[2];
-extern const struct sprite_piece_pos gSpriteBank10Frame012Pos[2];
-extern const struct sprite_piece_pos gSpriteBank10Frame013Pos[4];
-extern const struct sprite_piece_pos gSpriteBank10Frame014Pos[4];
-extern const struct sprite_piece_pos gSpriteBank10Frame015Pos[3];
-extern const struct sprite_piece_pos gSpriteBank10Frame016Pos[2];
-extern const struct sprite_piece_pos gSpriteBank10Frame017Pos[1];
-extern const struct sprite_piece_pos gSpriteBank10Frame018Pos[1];
-extern const struct sprite_piece_pos gSpriteBank10Frame019Pos[5];
-extern const u8 gSpriteBank10Frame000Pieces[5];
-extern const u8 gSpriteBank10Frame001Pieces[5];
-extern const u8 gSpriteBank10Frame002Pieces[3];
-extern const u8 gSpriteBank10Frame003Pieces[3];
-extern const u8 gSpriteBank10Frame004Pieces[1];
-extern const u8 gSpriteBank10Frame005Pieces[6];
-extern const u8 gSpriteBank10Frame006Pieces[4];
-extern const u8 gSpriteBank10Frame007Pieces[3];
-extern const u8 gSpriteBank10Frame008Pieces[4];
-extern const u8 gSpriteBank10Frame009Pieces[3];
-extern const u8 gSpriteBank10Frame010Pieces[4];
-extern const u8 gSpriteBank10Frame011Pieces[2];
-extern const u8 gSpriteBank10Frame012Pieces[2];
-extern const u8 gSpriteBank10Frame013Pieces[4];
-extern const u8 gSpriteBank10Frame014Pieces[4];
-extern const u8 gSpriteBank10Frame015Pieces[3];
-extern const u8 gSpriteBank10Frame016Pieces[2];
-extern const u8 gSpriteBank10Frame017Pieces[1];
-extern const u8 gSpriteBank10Frame018Pieces[1];
-extern const u8 gSpriteBank10Frame019Pieces[5];
 
 extern const struct sprite_anim gSpriteBank10Anims[2] = {
     /* 0 */ {
@@ -136,208 +79,94 @@ extern const struct sprite_frame *const gSpriteBank10Frames[20] = {
 };
 
 const struct sprite_frame_1box gSpriteBank10Frame000 = {
-    SPRITE_FRAME(gSpriteBank10Frame000, SPRITE_TILES_BANK10 + 0x00000),
+    SPRITE_FRAME(gSpriteBank10Frame000, SPRITE_TILES_BANK10_FRAME000),
     { { -10, -18, 24, 35 } },
 };
 const struct sprite_frame_1box gSpriteBank10Frame001 = {
-    SPRITE_FRAME(gSpriteBank10Frame001, SPRITE_TILES_BANK10 + 0x00380),
+    SPRITE_FRAME(gSpriteBank10Frame001, SPRITE_TILES_BANK10_FRAME001),
     { { -12, -22, 25, 39 } },
 };
 const struct sprite_frame_1box gSpriteBank10Frame002 = {
-    SPRITE_FRAME(gSpriteBank10Frame002, SPRITE_TILES_BANK10 + 0x00740),
+    SPRITE_FRAME(gSpriteBank10Frame002, SPRITE_TILES_BANK10_FRAME002),
     { { -15, -24, 27, 41 } },
 };
 const struct sprite_frame_1box gSpriteBank10Frame003 = {
-    SPRITE_FRAME(gSpriteBank10Frame003, SPRITE_TILES_BANK10 + 0x00c60),
+    SPRITE_FRAME(gSpriteBank10Frame003, SPRITE_TILES_BANK10_FRAME003),
     { { -17, -25, 26, 42 } },
 };
 const struct sprite_frame_1box gSpriteBank10Frame004 = {
-    SPRITE_FRAME(gSpriteBank10Frame004, SPRITE_TILES_BANK10 + 0x01180),
+    SPRITE_FRAME(gSpriteBank10Frame004, SPRITE_TILES_BANK10_FRAME004),
     { { -17, -26, 27, 44 } },
 };
 const struct sprite_frame_1box gSpriteBank10Frame005 = {
-    SPRITE_FRAME(gSpriteBank10Frame005, SPRITE_TILES_BANK10 + 0x01980),
+    SPRITE_FRAME(gSpriteBank10Frame005, SPRITE_TILES_BANK10_FRAME005),
     { { -15, -20, 28, 43 } },
 };
 const struct sprite_frame_1box gSpriteBank10Frame006 = {
-    SPRITE_FRAME(gSpriteBank10Frame006, SPRITE_TILES_BANK10 + 0x01d80),
+    SPRITE_FRAME(gSpriteBank10Frame006, SPRITE_TILES_BANK10_FRAME006),
     { { -10, -15, 23, 35 } },
 };
 const struct sprite_frame_1box gSpriteBank10Frame007 = {
-    SPRITE_FRAME(gSpriteBank10Frame007, SPRITE_TILES_BANK10 + 0x020a0),
+    SPRITE_FRAME(gSpriteBank10Frame007, SPRITE_TILES_BANK10_FRAME007),
     { { -10, -12, 22, 33 } },
 };
 const struct sprite_frame_1box gSpriteBank10Frame008 = {
-    SPRITE_FRAME(gSpriteBank10Frame008, SPRITE_TILES_BANK10 + 0x023a0),
+    SPRITE_FRAME(gSpriteBank10Frame008, SPRITE_TILES_BANK10_FRAME008),
     { { -11, -14, 23, 33 } },
 };
 const struct sprite_frame_1box gSpriteBank10Frame009 = {
-    SPRITE_FRAME(gSpriteBank10Frame009, SPRITE_TILES_BANK10 + 0x026c0),
+    SPRITE_FRAME(gSpriteBank10Frame009, SPRITE_TILES_BANK10_FRAME009),
     { { -19, -18, 23, 38 } },
 };
 const struct sprite_frame_1box gSpriteBank10Frame010 = {
-    SPRITE_FRAME(gSpriteBank10Frame010, SPRITE_TILES_BANK10 + 0x02a40),
+    SPRITE_FRAME(gSpriteBank10Frame010, SPRITE_TILES_BANK10_FRAME010),
     { { -24, -14, 27, 33 } },
 };
 const struct sprite_frame_1box gSpriteBank10Frame011 = {
-    SPRITE_FRAME(gSpriteBank10Frame011, SPRITE_TILES_BANK10 + 0x02e00),
+    SPRITE_FRAME(gSpriteBank10Frame011, SPRITE_TILES_BANK10_FRAME011),
     { { -15, -27, 22, 46 } },
 };
 const struct sprite_frame_1box gSpriteBank10Frame012 = {
-    SPRITE_FRAME(gSpriteBank10Frame012, SPRITE_TILES_BANK10 + 0x03280),
+    SPRITE_FRAME(gSpriteBank10Frame012, SPRITE_TILES_BANK10_FRAME012),
     { { -4, -16, 40, 35 } },
 };
 const struct sprite_frame_1box gSpriteBank10Frame013 = {
-    SPRITE_FRAME(gSpriteBank10Frame013, SPRITE_TILES_BANK10 + 0x03aa0),
+    SPRITE_FRAME(gSpriteBank10Frame013, SPRITE_TILES_BANK10_FRAME013),
     { { -5, -5, 63, 26 } },
 };
 const struct sprite_frame_1box gSpriteBank10Frame014 = {
-    SPRITE_FRAME(gSpriteBank10Frame014, SPRITE_TILES_BANK10 + 0x03f40),
+    SPRITE_FRAME(gSpriteBank10Frame014, SPRITE_TILES_BANK10_FRAME014),
     { { -5, -5, 61, 22 } },
 };
 const struct sprite_frame_1box gSpriteBank10Frame015 = {
-    SPRITE_FRAME(gSpriteBank10Frame015, SPRITE_TILES_BANK10 + 0x04420),
+    SPRITE_FRAME(gSpriteBank10Frame015, SPRITE_TILES_BANK10_FRAME015),
     { { -7, -6, 54, 23 } },
 };
 const struct sprite_frame_1box gSpriteBank10Frame016 = {
-    SPRITE_FRAME(gSpriteBank10Frame016, SPRITE_TILES_BANK10 + 0x04860),
+    SPRITE_FRAME(gSpriteBank10Frame016, SPRITE_TILES_BANK10_FRAME016),
     { { -8, -11, 51, 25 } },
 };
 const struct sprite_frame_1box gSpriteBank10Frame017 = {
-    SPRITE_FRAME(gSpriteBank10Frame017, SPRITE_TILES_BANK10 + 0x04d20),
+    SPRITE_FRAME(gSpriteBank10Frame017, SPRITE_TILES_BANK10_FRAME017),
     { { -4, -13, 39, 33 } },
 };
 const struct sprite_frame_1box gSpriteBank10Frame018 = {
-    SPRITE_FRAME(gSpriteBank10Frame018, SPRITE_TILES_BANK10 + 0x054e0),
+    SPRITE_FRAME(gSpriteBank10Frame018, SPRITE_TILES_BANK10_FRAME018),
     { { -7, -16, 34, 34 } },
 };
 const struct sprite_frame_1box gSpriteBank10Frame019 = {
-    SPRITE_FRAME(gSpriteBank10Frame019, SPRITE_TILES_BANK10 + 0x05ce0),
+    SPRITE_FRAME(gSpriteBank10Frame019, SPRITE_TILES_BANK10_FRAME019),
     { { -7, -17, 29, 35 } },
 };
 
-const struct sprite_piece_pos gSpriteBank10Frame000Pos[5] = { { -19, -21 }, { 13, -20 }, { 13, -4 }, { -19, 11 }, { 13, 13 } };
-const struct sprite_piece_pos gSpriteBank10Frame001Pos[5] = { { -19, -23 }, { 11, -23 }, { 19, -14 }, { -21, 9 }, { 11, 12 } };
-const struct sprite_piece_pos gSpriteBank10Frame002Pos[3] = { { -24, -25 }, { 8, -25 }, { 8, 9 } };
-const struct sprite_piece_pos gSpriteBank10Frame003Pos[3] = { { -27, -27 }, { 5, -27 }, { 5, 11 } };
-const struct sprite_piece_pos gSpriteBank10Frame004Pos[1] = { { -29, -28 } };
-const struct sprite_piece_pos gSpriteBank10Frame005Pos[6] = { { -21, -20 }, { 6, -20 }, { 14, -20 }, { 14, -4 }, { -26, 12 }, { 6, 12 } };
-const struct sprite_piece_pos gSpriteBank10Frame006Pos[4] = { { -17, -16 }, { 13, -12 }, { -19, 16 }, { 13, 16 } };
-const struct sprite_piece_pos gSpriteBank10Frame007Pos[3] = { { -17, -14 }, { 14, -12 }, { -18, 18 } };
-const struct sprite_piece_pos gSpriteBank10Frame008Pos[4] = { { -17, -17 }, { 13, -16 }, { -19, 15 }, { 13, 15 } };
-const struct sprite_piece_pos gSpriteBank10Frame009Pos[3] = { { -28, -18 }, { 4, -14 }, { -24, 14 } };
-const struct sprite_piece_pos gSpriteBank10Frame010Pos[4] = { { -36, -16 }, { -4, -11 }, { 4, 5 }, { -25, 16 } };
-const struct sprite_piece_pos gSpriteBank10Frame011Pos[2] = { { -25, -31 }, { 7, -15 } };
-const struct sprite_piece_pos gSpriteBank10Frame012Pos[2] = { { -21, -26 }, { 43, -1 } };
-const struct sprite_piece_pos gSpriteBank10Frame013Pos[4] = { { -17, -10 }, { 47, -4 }, { 55, 0 }, { -9, 22 } };
-const struct sprite_piece_pos gSpriteBank10Frame014Pos[4] = { { -18, -12 }, { 46, -3 }, { 54, 2 }, { -9, 20 } };
-const struct sprite_piece_pos gSpriteBank10Frame015Pos[3] = { { -18, -12 }, { 46, 10 }, { -9, 20 } };
-const struct sprite_piece_pos gSpriteBank10Frame016Pos[2] = { { -19, -19 }, { -10, 13 } };
-const struct sprite_piece_pos gSpriteBank10Frame017Pos[1] = { { -19, -25 } };
-const struct sprite_piece_pos gSpriteBank10Frame018Pos[1] = { { -20, -25 } };
-const struct sprite_piece_pos gSpriteBank10Frame019Pos[5] = { { -16, -21 }, { 13, -19 }, { 21, -17 }, { -19, 11 }, { 13, 13 } };
-
-const u8 gSpriteBank10Frame000Pieces[5] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank10Frame001Pieces[5] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank10Frame002Pieces[3] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 10), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank10Frame003Pieces[3] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 10), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank10Frame004Pieces[1] = { SPRITE_PIECE(2, 3) };
-const u8 gSpriteBank10Frame005Pieces[6] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank10Frame006Pieces[4] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 5), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank10Frame007Pieces[3] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 5) };
-const u8 gSpriteBank10Frame008Pieces[4] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 5), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank10Frame009Pieces[3] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 6) };
-const u8 gSpriteBank10Frame010Pieces[4] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 6) };
-const u8 gSpriteBank10Frame011Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 9) };
-const u8 gSpriteBank10Frame012Pieces[2] = { SPRITE_PIECE(2, 3), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank10Frame013Pieces[4] = { SPRITE_PIECE(2, 7), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank10Frame014Pieces[4] = { SPRITE_PIECE(2, 7), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank10Frame015Pieces[3] = { SPRITE_PIECE(2, 7), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank10Frame016Pieces[2] = { SPRITE_PIECE(2, 7), SPRITE_PIECE(0, 6) };
-const u8 gSpriteBank10Frame017Pieces[1] = { SPRITE_PIECE(2, 3) };
-const u8 gSpriteBank10Frame018Pieces[1] = { SPRITE_PIECE(2, 3) };
-const u8 gSpriteBank10Frame019Pieces[5] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 6), SPRITE_PIECE(0, 0) };
+/* The piece arrays, from graphics/sprites/bank10_venus_flytrap/bank.json. */
+#include "sprites/bank10_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 11: 2 animations, 25 frames, tiles in gSpriteBank11Tiles (SPRITE_TILES_BANK11). */
+/* Bank 11: 2 animations, 25 frames, graphics/sprites/bank11_vulture/. */
 
 extern const u16 gSpriteBank11Anim00Seq[11];
 extern const u16 gSpriteBank11Anim01Seq[14];
-extern const struct sprite_frame_1box gSpriteBank11Frame000;
-extern const struct sprite_frame_1box gSpriteBank11Frame001;
-extern const struct sprite_frame_1box gSpriteBank11Frame002;
-extern const struct sprite_frame_1box gSpriteBank11Frame003;
-extern const struct sprite_frame_1box gSpriteBank11Frame004;
-extern const struct sprite_frame_1box gSpriteBank11Frame005;
-extern const struct sprite_frame_1box gSpriteBank11Frame006;
-extern const struct sprite_frame_1box gSpriteBank11Frame007;
-extern const struct sprite_frame_1box gSpriteBank11Frame008;
-extern const struct sprite_frame_1box gSpriteBank11Frame009;
-extern const struct sprite_frame_1box gSpriteBank11Frame010;
-extern const struct sprite_frame_1box gSpriteBank11Frame011;
-extern const struct sprite_frame_1box gSpriteBank11Frame012;
-extern const struct sprite_frame_1box gSpriteBank11Frame013;
-extern const struct sprite_frame_1box gSpriteBank11Frame014;
-extern const struct sprite_frame_1box gSpriteBank11Frame015;
-extern const struct sprite_frame_1box gSpriteBank11Frame016;
-extern const struct sprite_frame_1box gSpriteBank11Frame017;
-extern const struct sprite_frame_1box gSpriteBank11Frame018;
-extern const struct sprite_frame_1box gSpriteBank11Frame019;
-extern const struct sprite_frame_1box gSpriteBank11Frame020;
-extern const struct sprite_frame_1box gSpriteBank11Frame021;
-extern const struct sprite_frame_1box gSpriteBank11Frame022;
-extern const struct sprite_frame_1box gSpriteBank11Frame023;
-extern const struct sprite_frame_1box gSpriteBank11Frame024;
-extern const struct sprite_piece_pos gSpriteBank11Frame000Pos[4];
-extern const struct sprite_piece_pos gSpriteBank11Frame001Pos[2];
-extern const struct sprite_piece_pos gSpriteBank11Frame002Pos[4];
-extern const struct sprite_piece_pos gSpriteBank11Frame003Pos[3];
-extern const struct sprite_piece_pos gSpriteBank11Frame004Pos[4];
-extern const struct sprite_piece_pos gSpriteBank11Frame005Pos[2];
-extern const struct sprite_piece_pos gSpriteBank11Frame006Pos[4];
-extern const struct sprite_piece_pos gSpriteBank11Frame007Pos[1];
-extern const struct sprite_piece_pos gSpriteBank11Frame008Pos[3];
-extern const struct sprite_piece_pos gSpriteBank11Frame009Pos[2];
-extern const struct sprite_piece_pos gSpriteBank11Frame010Pos[4];
-extern const struct sprite_piece_pos gSpriteBank11Frame011Pos[1];
-extern const struct sprite_piece_pos gSpriteBank11Frame012Pos[2];
-extern const struct sprite_piece_pos gSpriteBank11Frame013Pos[2];
-extern const struct sprite_piece_pos gSpriteBank11Frame014Pos[2];
-extern const struct sprite_piece_pos gSpriteBank11Frame015Pos[2];
-extern const struct sprite_piece_pos gSpriteBank11Frame016Pos[3];
-extern const struct sprite_piece_pos gSpriteBank11Frame017Pos[3];
-extern const struct sprite_piece_pos gSpriteBank11Frame018Pos[2];
-extern const struct sprite_piece_pos gSpriteBank11Frame019Pos[2];
-extern const struct sprite_piece_pos gSpriteBank11Frame020Pos[2];
-extern const struct sprite_piece_pos gSpriteBank11Frame021Pos[2];
-extern const struct sprite_piece_pos gSpriteBank11Frame022Pos[2];
-extern const struct sprite_piece_pos gSpriteBank11Frame023Pos[1];
-extern const struct sprite_piece_pos gSpriteBank11Frame024Pos[1];
-extern const u8 gSpriteBank11Frame000Pieces[4];
-extern const u8 gSpriteBank11Frame001Pieces[2];
-extern const u8 gSpriteBank11Frame002Pieces[4];
-extern const u8 gSpriteBank11Frame003Pieces[3];
-extern const u8 gSpriteBank11Frame004Pieces[4];
-extern const u8 gSpriteBank11Frame005Pieces[2];
-extern const u8 gSpriteBank11Frame006Pieces[4];
-extern const u8 gSpriteBank11Frame007Pieces[1];
-extern const u8 gSpriteBank11Frame008Pieces[3];
-extern const u8 gSpriteBank11Frame009Pieces[2];
-extern const u8 gSpriteBank11Frame010Pieces[4];
-extern const u8 gSpriteBank11Frame011Pieces[1];
-extern const u8 gSpriteBank11Frame012Pieces[2];
-extern const u8 gSpriteBank11Frame013Pieces[2];
-extern const u8 gSpriteBank11Frame014Pieces[2];
-extern const u8 gSpriteBank11Frame015Pieces[2];
-extern const u8 gSpriteBank11Frame016Pieces[3];
-extern const u8 gSpriteBank11Frame017Pieces[3];
-extern const u8 gSpriteBank11Frame018Pieces[2];
-extern const u8 gSpriteBank11Frame019Pieces[2];
-extern const u8 gSpriteBank11Frame020Pieces[2];
-extern const u8 gSpriteBank11Frame021Pieces[2];
-extern const u8 gSpriteBank11Frame022Pieces[2];
-extern const u8 gSpriteBank11Frame023Pieces[1];
-extern const u8 gSpriteBank11Frame024Pieces[1];
 
 extern const struct sprite_anim gSpriteBank11Anims[2] = {
     /* 0 */ {
@@ -394,160 +223,111 @@ extern const struct sprite_frame *const gSpriteBank11Frames[25] = {
 };
 
 const struct sprite_frame_1box gSpriteBank11Frame000 = {
-    SPRITE_FRAME(gSpriteBank11Frame000, SPRITE_TILES_BANK11 + 0x00000),
+    SPRITE_FRAME(gSpriteBank11Frame000, SPRITE_TILES_BANK11_FRAME000),
     { { -17, -9, 37, 21 } },
 };
 const struct sprite_frame_1box gSpriteBank11Frame001 = {
-    SPRITE_FRAME(gSpriteBank11Frame001, SPRITE_TILES_BANK11 + 0x002c0),
+    SPRITE_FRAME(gSpriteBank11Frame001, SPRITE_TILES_BANK11_FRAME001),
     { { -23, -12, 41, 24 } },
 };
 const struct sprite_frame_1box gSpriteBank11Frame002 = {
-    SPRITE_FRAME(gSpriteBank11Frame002, SPRITE_TILES_BANK11 + 0x006e0),
+    SPRITE_FRAME(gSpriteBank11Frame002, SPRITE_TILES_BANK11_FRAME002),
     { { -16, -1, 32, 26 } },
 };
 const struct sprite_frame_1box gSpriteBank11Frame003 = {
-    SPRITE_FRAME(gSpriteBank11Frame003, SPRITE_TILES_BANK11 + 0x009c0),
+    SPRITE_FRAME(gSpriteBank11Frame003, SPRITE_TILES_BANK11_FRAME003),
     { { -12, -2, 28, 19 } },
 };
 const struct sprite_frame_1box gSpriteBank11Frame004 = {
-    SPRITE_FRAME(gSpriteBank11Frame004, SPRITE_TILES_BANK11 + 0x00c20),
+    SPRITE_FRAME(gSpriteBank11Frame004, SPRITE_TILES_BANK11_FRAME004),
     { { -19, -4, 37, 17 } },
 };
 const struct sprite_frame_1box gSpriteBank11Frame005 = {
-    SPRITE_FRAME(gSpriteBank11Frame005, SPRITE_TILES_BANK11 + 0x00f00),
+    SPRITE_FRAME(gSpriteBank11Frame005, SPRITE_TILES_BANK11_FRAME005),
     { { -23, -7, 34, 19 } },
 };
 const struct sprite_frame_1box gSpriteBank11Frame006 = {
-    SPRITE_FRAME(gSpriteBank11Frame006, SPRITE_TILES_BANK11 + 0x01320),
+    SPRITE_FRAME(gSpriteBank11Frame006, SPRITE_TILES_BANK11_FRAME006),
     { { -18, -11, 28, 19 } },
 };
 const struct sprite_frame_1box gSpriteBank11Frame007 = {
-    SPRITE_FRAME(gSpriteBank11Frame007, SPRITE_TILES_BANK11 + 0x01600),
+    SPRITE_FRAME(gSpriteBank11Frame007, SPRITE_TILES_BANK11_FRAME007),
     { { -31, -12, 39, 17 } },
 };
 const struct sprite_frame_1box gSpriteBank11Frame008 = {
-    SPRITE_FRAME(gSpriteBank11Frame008, SPRITE_TILES_BANK11 + 0x01a00),
+    SPRITE_FRAME(gSpriteBank11Frame008, SPRITE_TILES_BANK11_FRAME008),
     { { -12, -14, 26, 24 } },
 };
 const struct sprite_frame_1box gSpriteBank11Frame009 = {
-    SPRITE_FRAME(gSpriteBank11Frame009, SPRITE_TILES_BANK11 + 0x01c80),
+    SPRITE_FRAME(gSpriteBank11Frame009, SPRITE_TILES_BANK11_FRAME009),
     { { -12, -14, 28, 19 } },
 };
 const struct sprite_frame_1box gSpriteBank11Frame010 = {
-    SPRITE_FRAME(gSpriteBank11Frame010, SPRITE_TILES_BANK11 + 0x01f00),
+    SPRITE_FRAME(gSpriteBank11Frame010, SPRITE_TILES_BANK11_FRAME010),
     { { -17, -15, 32, 21 } },
 };
 const struct sprite_frame_1box gSpriteBank11Frame011 = {
-    SPRITE_FRAME(gSpriteBank11Frame011, SPRITE_TILES_BANK11 + 0x021e0),
+    SPRITE_FRAME(gSpriteBank11Frame011, SPRITE_TILES_BANK11_FRAME011),
     { { -20, -13, 42, 20 } },
 };
 const struct sprite_frame_1box gSpriteBank11Frame012 = {
-    SPRITE_FRAME(gSpriteBank11Frame012, SPRITE_TILES_BANK11 + 0x025e0),
+    SPRITE_FRAME(gSpriteBank11Frame012, SPRITE_TILES_BANK11_FRAME012),
     { { -19, -21, 41, 30 } },
 };
 const struct sprite_frame_1box gSpriteBank11Frame013 = {
-    SPRITE_FRAME(gSpriteBank11Frame013, SPRITE_TILES_BANK11 + 0x02a60),
+    SPRITE_FRAME(gSpriteBank11Frame013, SPRITE_TILES_BANK11_FRAME013),
     { { -9, -27, 26, 42 } },
 };
 const struct sprite_frame_1box gSpriteBank11Frame014 = {
-    SPRITE_FRAME(gSpriteBank11Frame014, SPRITE_TILES_BANK11 + 0x03260),
+    SPRITE_FRAME(gSpriteBank11Frame014, SPRITE_TILES_BANK11_FRAME014),
     { { -11, -23, 31, 44 } },
 };
 const struct sprite_frame_1box gSpriteBank11Frame015 = {
-    SPRITE_FRAME(gSpriteBank11Frame015, SPRITE_TILES_BANK11 + 0x036a0),
+    SPRITE_FRAME(gSpriteBank11Frame015, SPRITE_TILES_BANK11_FRAME015),
     { { -9, -16, 30, 40 } },
 };
 const struct sprite_frame_1box gSpriteBank11Frame016 = {
-    SPRITE_FRAME(gSpriteBank11Frame016, SPRITE_TILES_BANK11 + 0x03ae0),
+    SPRITE_FRAME(gSpriteBank11Frame016, SPRITE_TILES_BANK11_FRAME016),
     { { -11, -10, 30, 38 } },
 };
 const struct sprite_frame_1box gSpriteBank11Frame017 = {
-    SPRITE_FRAME(gSpriteBank11Frame017, SPRITE_TILES_BANK11 + 0x03da0),
+    SPRITE_FRAME(gSpriteBank11Frame017, SPRITE_TILES_BANK11_FRAME017),
     { { -22, -5, 43, 34 } },
 };
 const struct sprite_frame_1box gSpriteBank11Frame018 = {
-    SPRITE_FRAME(gSpriteBank11Frame018, SPRITE_TILES_BANK11 + 0x041e0),
+    SPRITE_FRAME(gSpriteBank11Frame018, SPRITE_TILES_BANK11_FRAME018),
     { { -22, -2, 43, 24 } },
 };
 const struct sprite_frame_1box gSpriteBank11Frame019 = {
-    SPRITE_FRAME(gSpriteBank11Frame019, SPRITE_TILES_BANK11 + 0x04600),
+    SPRITE_FRAME(gSpriteBank11Frame019, SPRITE_TILES_BANK11_FRAME019),
     { { -27, -2, 49, 23 } },
 };
 const struct sprite_frame_1box gSpriteBank11Frame020 = {
-    SPRITE_FRAME(gSpriteBank11Frame020, SPRITE_TILES_BANK11 + 0x04a20),
+    SPRITE_FRAME(gSpriteBank11Frame020, SPRITE_TILES_BANK11_FRAME020),
     { { -28, -4, 51, 26 } },
 };
 const struct sprite_frame_1box gSpriteBank11Frame021 = {
-    SPRITE_FRAME(gSpriteBank11Frame021, SPRITE_TILES_BANK11 + 0x04600),
+    SPRITE_FRAME(gSpriteBank11Frame021, SPRITE_TILES_BANK11_FRAME021),
     { { -27, -4, 46, 27 } },
 };
 const struct sprite_frame_1box gSpriteBank11Frame022 = {
-    SPRITE_FRAME(gSpriteBank11Frame022, SPRITE_TILES_BANK11 + 0x04e40),
+    SPRITE_FRAME(gSpriteBank11Frame022, SPRITE_TILES_BANK11_FRAME022),
     { { -29, -3, 49, 24 } },
 };
 const struct sprite_frame_1box gSpriteBank11Frame023 = {
-    SPRITE_FRAME(gSpriteBank11Frame023, SPRITE_TILES_BANK11 + 0x05260),
+    SPRITE_FRAME(gSpriteBank11Frame023, SPRITE_TILES_BANK11_FRAME023),
     { { -27, 0, 47, 17 } },
 };
 const struct sprite_frame_1box gSpriteBank11Frame024 = {
-    SPRITE_FRAME(gSpriteBank11Frame024, SPRITE_TILES_BANK11 + 0x05660),
+    SPRITE_FRAME(gSpriteBank11Frame024, SPRITE_TILES_BANK11_FRAME024),
     { { -31, -8, 48, 19 } },
 };
 
-const struct sprite_piece_pos gSpriteBank11Frame000Pos[4] = { { -21, -17 }, { 11, -10 }, { 19, 5 }, { -3, 15 } };
-const struct sprite_piece_pos gSpriteBank11Frame001Pos[2] = { { -30, -16 }, { -6, 16 } };
-const struct sprite_piece_pos gSpriteBank11Frame002Pos[4] = { { -22, -4 }, { 10, -8 }, { 18, 9 }, { -22, 24 } };
-const struct sprite_piece_pos gSpriteBank11Frame003Pos[3] = { { -18, -9 }, { 14, -7 }, { 14, 9 } };
-const struct sprite_piece_pos gSpriteBank11Frame004Pos[4] = { { -22, -5 }, { 10, -12 }, { 18, 3 }, { -3, 20 } };
-const struct sprite_piece_pos gSpriteBank11Frame005Pos[2] = { { -29, -14 }, { -2, 18 } };
-const struct sprite_piece_pos gSpriteBank11Frame006Pos[4] = { { -24, -18 }, { 8, -17 }, { 16, -3 }, { 1, 14 } };
-const struct sprite_piece_pos gSpriteBank11Frame007Pos[1] = { { -37, -19 } };
-const struct sprite_piece_pos gSpriteBank11Frame008Pos[3] = { { -17, -21 }, { 15, -6 }, { -14, 11 } };
-const struct sprite_piece_pos gSpriteBank11Frame009Pos[2] = { { -18, -21 }, { 14, -20 } };
-const struct sprite_piece_pos gSpriteBank11Frame010Pos[4] = { { -23, -14 }, { 9, -21 }, { 17, -6 }, { -3, 11 } };
-const struct sprite_piece_pos gSpriteBank11Frame011Pos[1] = { { -26, -17 } };
-const struct sprite_piece_pos gSpriteBank11Frame012Pos[2] = { { -27, -27 }, { 10, 5 } };
-const struct sprite_piece_pos gSpriteBank11Frame013Pos[2] = { { -16, -37 }, { 16, -32 } };
-const struct sprite_piece_pos gSpriteBank11Frame014Pos[2] = { { -14, -28 }, { 18, -25 } };
-const struct sprite_piece_pos gSpriteBank11Frame015Pos[2] = { { -13, -23 }, { 19, -20 } };
-const struct sprite_piece_pos gSpriteBank11Frame016Pos[3] = { { -19, -14 }, { 13, -13 }, { 4, 18 } };
-const struct sprite_piece_pos gSpriteBank11Frame017Pos[3] = { { -28, -9 }, { 12, 23 }, { 20, 24 } };
-const struct sprite_piece_pos gSpriteBank11Frame018Pos[2] = { { -30, -7 }, { 16, 25 } };
-const struct sprite_piece_pos gSpriteBank11Frame019Pos[2] = { { -32, -7 }, { 17, 25 } };
-const struct sprite_piece_pos gSpriteBank11Frame020Pos[2] = { { -34, -7 }, { 18, 25 } };
-const struct sprite_piece_pos gSpriteBank11Frame021Pos[2] = { { -32, -7 }, { 17, 25 } };
-const struct sprite_piece_pos gSpriteBank11Frame022Pos[2] = { { -30, -6 }, { 19, 26 } };
-const struct sprite_piece_pos gSpriteBank11Frame023Pos[1] = { { -33, -5 } };
-const struct sprite_piece_pos gSpriteBank11Frame024Pos[1] = { { -36, -12 } };
-
-const u8 gSpriteBank11Frame000Pieces[4] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank11Frame001Pieces[2] = { SPRITE_PIECE(2, 7), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank11Frame002Pieces[4] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 4) };
-const u8 gSpriteBank11Frame003Pieces[3] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank11Frame004Pieces[4] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank11Frame005Pieces[2] = { SPRITE_PIECE(2, 7), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank11Frame006Pieces[4] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank11Frame007Pieces[1] = { SPRITE_PIECE(2, 7) };
-const u8 gSpriteBank11Frame008Pieces[3] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 4) };
-const u8 gSpriteBank11Frame009Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 9) };
-const u8 gSpriteBank11Frame010Pieces[4] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank11Frame011Pieces[1] = { SPRITE_PIECE(2, 7) };
-const u8 gSpriteBank11Frame012Pieces[2] = { SPRITE_PIECE(2, 7), SPRITE_PIECE(0, 1) };
-const u8 gSpriteBank11Frame013Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 11) };
-const u8 gSpriteBank11Frame014Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank11Frame015Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank11Frame016Pieces[3] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 1) };
-const u8 gSpriteBank11Frame017Pieces[3] = { SPRITE_PIECE(2, 7), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank11Frame018Pieces[2] = { SPRITE_PIECE(2, 7), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank11Frame019Pieces[2] = { SPRITE_PIECE(2, 7), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank11Frame020Pieces[2] = { SPRITE_PIECE(2, 7), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank11Frame021Pieces[2] = { SPRITE_PIECE(2, 7), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank11Frame022Pieces[2] = { SPRITE_PIECE(2, 7), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank11Frame023Pieces[1] = { SPRITE_PIECE(2, 7) };
-const u8 gSpriteBank11Frame024Pieces[1] = { SPRITE_PIECE(2, 7) };
+/* The piece arrays, from graphics/sprites/bank11_vulture/bank.json. */
+#include "sprites/bank11_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 12: 7 animations, 57 frames, tiles in gSpriteBank12Tiles (SPRITE_TILES_BANK12). */
+/* Bank 12: 7 animations, 57 frames, graphics/sprites/bank12_blowgun_tribesman/. */
 
 extern const u16 gSpriteBank12Anim00Seq[17];
 extern const u16 gSpriteBank12Anim01Seq[5];
@@ -556,177 +336,6 @@ extern const u16 gSpriteBank12Anim03Seq[5];
 extern const u16 gSpriteBank12Anim04Seq[6];
 extern const u16 gSpriteBank12Anim05Seq[16];
 extern const u16 gSpriteBank12Anim06Seq[2];
-extern const struct sprite_frame_1box gSpriteBank12Frame000;
-extern const struct sprite_frame_1box gSpriteBank12Frame001;
-extern const struct sprite_frame_1box gSpriteBank12Frame002;
-extern const struct sprite_frame_1box gSpriteBank12Frame003;
-extern const struct sprite_frame_1box gSpriteBank12Frame004;
-extern const struct sprite_frame_1box gSpriteBank12Frame005;
-extern const struct sprite_frame_1box gSpriteBank12Frame006;
-extern const struct sprite_frame_1box gSpriteBank12Frame007;
-extern const struct sprite_frame_1box gSpriteBank12Frame008;
-extern const struct sprite_frame_1box gSpriteBank12Frame009;
-extern const struct sprite_frame_1box gSpriteBank12Frame010;
-extern const struct sprite_frame_1box gSpriteBank12Frame011;
-extern const struct sprite_frame_1box gSpriteBank12Frame012;
-extern const struct sprite_frame_1box gSpriteBank12Frame013;
-extern const struct sprite_frame_1box gSpriteBank12Frame014;
-extern const struct sprite_frame_1box gSpriteBank12Frame015;
-extern const struct sprite_frame_1box gSpriteBank12Frame016;
-extern const struct sprite_frame_1box gSpriteBank12Frame017;
-extern const struct sprite_frame_1box gSpriteBank12Frame018;
-extern const struct sprite_frame_1box gSpriteBank12Frame019;
-extern const struct sprite_frame_1box gSpriteBank12Frame020;
-extern const struct sprite_frame_1box gSpriteBank12Frame021;
-extern const struct sprite_frame_1box gSpriteBank12Frame022;
-extern const struct sprite_frame_1box gSpriteBank12Frame023;
-extern const struct sprite_frame_1box gSpriteBank12Frame024;
-extern const struct sprite_frame_1box gSpriteBank12Frame025;
-extern const struct sprite_frame_1box gSpriteBank12Frame026;
-extern const struct sprite_frame_1box gSpriteBank12Frame027;
-extern const struct sprite_frame_1box gSpriteBank12Frame028;
-extern const struct sprite_frame_1box gSpriteBank12Frame029;
-extern const struct sprite_frame_1box gSpriteBank12Frame030;
-extern const struct sprite_frame_1box gSpriteBank12Frame031;
-extern const struct sprite_frame_1box gSpriteBank12Frame032;
-extern const struct sprite_frame_1box gSpriteBank12Frame033;
-extern const struct sprite_frame_1box gSpriteBank12Frame034;
-extern const struct sprite_frame_1box gSpriteBank12Frame035;
-extern const struct sprite_frame_1box gSpriteBank12Frame036;
-extern const struct sprite_frame_1box gSpriteBank12Frame037;
-extern const struct sprite_frame_1box gSpriteBank12Frame038;
-extern const struct sprite_frame_1box gSpriteBank12Frame039;
-extern const struct sprite_frame_1box gSpriteBank12Frame040;
-extern const struct sprite_frame_1box gSpriteBank12Frame041;
-extern const struct sprite_frame_1box gSpriteBank12Frame042;
-extern const struct sprite_frame_1box gSpriteBank12Frame043;
-extern const struct sprite_frame_1box gSpriteBank12Frame044;
-extern const struct sprite_frame_1box gSpriteBank12Frame045;
-extern const struct sprite_frame_1box gSpriteBank12Frame046;
-extern const struct sprite_frame_1box gSpriteBank12Frame047;
-extern const struct sprite_frame_1box gSpriteBank12Frame048;
-extern const struct sprite_frame_1box gSpriteBank12Frame049;
-extern const struct sprite_frame_1box gSpriteBank12Frame050;
-extern const struct sprite_frame_1box gSpriteBank12Frame051;
-extern const struct sprite_frame_1box gSpriteBank12Frame052;
-extern const struct sprite_frame_1box gSpriteBank12Frame053;
-extern const struct sprite_frame_1box gSpriteBank12Frame054;
-extern const struct sprite_frame_1box gSpriteBank12Frame055;
-extern const struct sprite_frame_1box gSpriteBank12Frame056;
-extern const struct sprite_piece_pos gSpriteBank12Frame000Pos[1];
-extern const struct sprite_piece_pos gSpriteBank12Frame001Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame002Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame003Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame004Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame005Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame006Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame007Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame008Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame009Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame010Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame011Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame012Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame013Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame014Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame015Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame016Pos[1];
-extern const struct sprite_piece_pos gSpriteBank12Frame017Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame018Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame019Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame020Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame021Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame022Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame023Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame024Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame025Pos[1];
-extern const struct sprite_piece_pos gSpriteBank12Frame026Pos[1];
-extern const struct sprite_piece_pos gSpriteBank12Frame027Pos[1];
-extern const struct sprite_piece_pos gSpriteBank12Frame028Pos[1];
-extern const struct sprite_piece_pos gSpriteBank12Frame029Pos[1];
-extern const struct sprite_piece_pos gSpriteBank12Frame030Pos[1];
-extern const struct sprite_piece_pos gSpriteBank12Frame031Pos[1];
-extern const struct sprite_piece_pos gSpriteBank12Frame032Pos[1];
-extern const struct sprite_piece_pos gSpriteBank12Frame033Pos[1];
-extern const struct sprite_piece_pos gSpriteBank12Frame034Pos[1];
-extern const struct sprite_piece_pos gSpriteBank12Frame035Pos[1];
-extern const struct sprite_piece_pos gSpriteBank12Frame036Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame037Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame038Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame039Pos[3];
-extern const struct sprite_piece_pos gSpriteBank12Frame040Pos[4];
-extern const struct sprite_piece_pos gSpriteBank12Frame041Pos[4];
-extern const struct sprite_piece_pos gSpriteBank12Frame042Pos[4];
-extern const struct sprite_piece_pos gSpriteBank12Frame043Pos[4];
-extern const struct sprite_piece_pos gSpriteBank12Frame044Pos[4];
-extern const struct sprite_piece_pos gSpriteBank12Frame045Pos[4];
-extern const struct sprite_piece_pos gSpriteBank12Frame046Pos[4];
-extern const struct sprite_piece_pos gSpriteBank12Frame047Pos[4];
-extern const struct sprite_piece_pos gSpriteBank12Frame048Pos[4];
-extern const struct sprite_piece_pos gSpriteBank12Frame049Pos[4];
-extern const struct sprite_piece_pos gSpriteBank12Frame050Pos[4];
-extern const struct sprite_piece_pos gSpriteBank12Frame051Pos[4];
-extern const struct sprite_piece_pos gSpriteBank12Frame052Pos[4];
-extern const struct sprite_piece_pos gSpriteBank12Frame053Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame054Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame055Pos[2];
-extern const struct sprite_piece_pos gSpriteBank12Frame056Pos[1];
-extern const u8 gSpriteBank12Frame000Pieces[1];
-extern const u8 gSpriteBank12Frame001Pieces[2];
-extern const u8 gSpriteBank12Frame002Pieces[2];
-extern const u8 gSpriteBank12Frame003Pieces[2];
-extern const u8 gSpriteBank12Frame004Pieces[2];
-extern const u8 gSpriteBank12Frame005Pieces[2];
-extern const u8 gSpriteBank12Frame006Pieces[2];
-extern const u8 gSpriteBank12Frame007Pieces[2];
-extern const u8 gSpriteBank12Frame008Pieces[2];
-extern const u8 gSpriteBank12Frame009Pieces[2];
-extern const u8 gSpriteBank12Frame010Pieces[2];
-extern const u8 gSpriteBank12Frame011Pieces[2];
-extern const u8 gSpriteBank12Frame012Pieces[2];
-extern const u8 gSpriteBank12Frame013Pieces[2];
-extern const u8 gSpriteBank12Frame014Pieces[2];
-extern const u8 gSpriteBank12Frame015Pieces[2];
-extern const u8 gSpriteBank12Frame016Pieces[1];
-extern const u8 gSpriteBank12Frame017Pieces[2];
-extern const u8 gSpriteBank12Frame018Pieces[2];
-extern const u8 gSpriteBank12Frame019Pieces[2];
-extern const u8 gSpriteBank12Frame020Pieces[2];
-extern const u8 gSpriteBank12Frame021Pieces[2];
-extern const u8 gSpriteBank12Frame022Pieces[2];
-extern const u8 gSpriteBank12Frame023Pieces[2];
-extern const u8 gSpriteBank12Frame024Pieces[2];
-extern const u8 gSpriteBank12Frame025Pieces[1];
-extern const u8 gSpriteBank12Frame026Pieces[1];
-extern const u8 gSpriteBank12Frame027Pieces[1];
-extern const u8 gSpriteBank12Frame028Pieces[1];
-extern const u8 gSpriteBank12Frame029Pieces[1];
-extern const u8 gSpriteBank12Frame030Pieces[1];
-extern const u8 gSpriteBank12Frame031Pieces[1];
-extern const u8 gSpriteBank12Frame032Pieces[1];
-extern const u8 gSpriteBank12Frame033Pieces[1];
-extern const u8 gSpriteBank12Frame034Pieces[1];
-extern const u8 gSpriteBank12Frame035Pieces[1];
-extern const u8 gSpriteBank12Frame036Pieces[2];
-extern const u8 gSpriteBank12Frame037Pieces[2];
-extern const u8 gSpriteBank12Frame038Pieces[2];
-extern const u8 gSpriteBank12Frame039Pieces[3];
-extern const u8 gSpriteBank12Frame040Pieces[4];
-extern const u8 gSpriteBank12Frame041Pieces[4];
-extern const u8 gSpriteBank12Frame042Pieces[4];
-extern const u8 gSpriteBank12Frame043Pieces[4];
-extern const u8 gSpriteBank12Frame044Pieces[4];
-extern const u8 gSpriteBank12Frame045Pieces[4];
-extern const u8 gSpriteBank12Frame046Pieces[4];
-extern const u8 gSpriteBank12Frame047Pieces[4];
-extern const u8 gSpriteBank12Frame048Pieces[4];
-extern const u8 gSpriteBank12Frame049Pieces[4];
-extern const u8 gSpriteBank12Frame050Pieces[4];
-extern const u8 gSpriteBank12Frame051Pieces[4];
-extern const u8 gSpriteBank12Frame052Pieces[4];
-extern const u8 gSpriteBank12Frame053Pieces[2];
-extern const u8 gSpriteBank12Frame054Pieces[2];
-extern const u8 gSpriteBank12Frame055Pieces[2];
-extern const u8 gSpriteBank12Frame056Pieces[1];
 
 extern const struct sprite_anim gSpriteBank12Anims[7] = {
     /* 0 */ {
@@ -871,412 +480,242 @@ extern const struct sprite_frame *const gSpriteBank12Frames[57] = {
 };
 
 const struct sprite_frame_1box gSpriteBank12Frame000 = {
-    SPRITE_FRAME(gSpriteBank12Frame000, SPRITE_TILES_BANK12 + 0x00000),
+    SPRITE_FRAME(gSpriteBank12Frame000, SPRITE_TILES_BANK12_FRAME000),
     { { -5, -19, 8, 43 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame001 = {
-    SPRITE_FRAME(gSpriteBank12Frame001, SPRITE_TILES_BANK12 + 0x00400),
+    SPRITE_FRAME(gSpriteBank12Frame001, SPRITE_TILES_BANK12_FRAME001),
     { { -5, -19, 8, 43 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame002 = {
-    SPRITE_FRAME(gSpriteBank12Frame002, SPRITE_TILES_BANK12 + 0x00820),
+    SPRITE_FRAME(gSpriteBank12Frame002, SPRITE_TILES_BANK12_FRAME002),
     { { -5, -19, 8, 43 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame003 = {
-    SPRITE_FRAME(gSpriteBank12Frame003, SPRITE_TILES_BANK12 + 0x00c40),
+    SPRITE_FRAME(gSpriteBank12Frame003, SPRITE_TILES_BANK12_FRAME003),
     { { -5, -19, 8, 43 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame004 = {
-    SPRITE_FRAME(gSpriteBank12Frame004, SPRITE_TILES_BANK12 + 0x01080),
+    SPRITE_FRAME(gSpriteBank12Frame004, SPRITE_TILES_BANK12_FRAME004),
     { { -5, -19, 8, 43 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame005 = {
-    SPRITE_FRAME(gSpriteBank12Frame005, SPRITE_TILES_BANK12 + 0x014c0),
+    SPRITE_FRAME(gSpriteBank12Frame005, SPRITE_TILES_BANK12_FRAME005),
     { { -5, -19, 8, 43 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame006 = {
-    SPRITE_FRAME(gSpriteBank12Frame006, SPRITE_TILES_BANK12 + 0x01900),
+    SPRITE_FRAME(gSpriteBank12Frame006, SPRITE_TILES_BANK12_FRAME006),
     { { -5, -19, 8, 43 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame007 = {
-    SPRITE_FRAME(gSpriteBank12Frame007, SPRITE_TILES_BANK12 + 0x01d20),
+    SPRITE_FRAME(gSpriteBank12Frame007, SPRITE_TILES_BANK12_FRAME007),
     { { -5, -19, 8, 43 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame008 = {
-    SPRITE_FRAME(gSpriteBank12Frame008, SPRITE_TILES_BANK12 + 0x02140),
+    SPRITE_FRAME(gSpriteBank12Frame008, SPRITE_TILES_BANK12_FRAME008),
     { { -5, -19, 8, 43 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame009 = {
-    SPRITE_FRAME(gSpriteBank12Frame009, SPRITE_TILES_BANK12 + 0x02560),
+    SPRITE_FRAME(gSpriteBank12Frame009, SPRITE_TILES_BANK12_FRAME009),
     { { -5, -19, 8, 43 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame010 = {
-    SPRITE_FRAME(gSpriteBank12Frame010, SPRITE_TILES_BANK12 + 0x02980),
+    SPRITE_FRAME(gSpriteBank12Frame010, SPRITE_TILES_BANK12_FRAME010),
     { { -5, -19, 8, 43 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame011 = {
-    SPRITE_FRAME(gSpriteBank12Frame011, SPRITE_TILES_BANK12 + 0x02da0),
+    SPRITE_FRAME(gSpriteBank12Frame011, SPRITE_TILES_BANK12_FRAME011),
     { { -5, -19, 8, 43 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame012 = {
-    SPRITE_FRAME(gSpriteBank12Frame012, SPRITE_TILES_BANK12 + 0x031c0),
+    SPRITE_FRAME(gSpriteBank12Frame012, SPRITE_TILES_BANK12_FRAME012),
     { { -5, -19, 8, 43 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame013 = {
-    SPRITE_FRAME(gSpriteBank12Frame013, SPRITE_TILES_BANK12 + 0x035e0),
+    SPRITE_FRAME(gSpriteBank12Frame013, SPRITE_TILES_BANK12_FRAME013),
     { { -5, -19, 8, 43 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame014 = {
-    SPRITE_FRAME(gSpriteBank12Frame014, SPRITE_TILES_BANK12 + 0x03a00),
+    SPRITE_FRAME(gSpriteBank12Frame014, SPRITE_TILES_BANK12_FRAME014),
     { { -5, -19, 8, 43 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame015 = {
-    SPRITE_FRAME(gSpriteBank12Frame015, SPRITE_TILES_BANK12 + 0x03e20),
+    SPRITE_FRAME(gSpriteBank12Frame015, SPRITE_TILES_BANK12_FRAME015),
     { { -5, -19, 8, 43 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame016 = {
-    SPRITE_FRAME(gSpriteBank12Frame016, SPRITE_TILES_BANK12 + 0x04240),
+    SPRITE_FRAME(gSpriteBank12Frame016, SPRITE_TILES_BANK12_FRAME016),
     { { -5, -19, 8, 43 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame017 = {
-    SPRITE_FRAME(gSpriteBank12Frame017, SPRITE_TILES_BANK12 + 0x04640),
+    SPRITE_FRAME(gSpriteBank12Frame017, SPRITE_TILES_BANK12_FRAME017),
     { { -6, -5, 6, 31 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame018 = {
-    SPRITE_FRAME(gSpriteBank12Frame018, SPRITE_TILES_BANK12 + 0x04940),
+    SPRITE_FRAME(gSpriteBank12Frame018, SPRITE_TILES_BANK12_FRAME018),
     { { -6, -5, 6, 31 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame019 = {
-    SPRITE_FRAME(gSpriteBank12Frame019, SPRITE_TILES_BANK12 + 0x04c40),
+    SPRITE_FRAME(gSpriteBank12Frame019, SPRITE_TILES_BANK12_FRAME019),
     { { -6, -5, 6, 31 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame020 = {
-    SPRITE_FRAME(gSpriteBank12Frame020, SPRITE_TILES_BANK12 + 0x04f40),
+    SPRITE_FRAME(gSpriteBank12Frame020, SPRITE_TILES_BANK12_FRAME020),
     { { -6, -5, 6, 31 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame021 = {
-    SPRITE_FRAME(gSpriteBank12Frame021, SPRITE_TILES_BANK12 + 0x05240),
+    SPRITE_FRAME(gSpriteBank12Frame021, SPRITE_TILES_BANK12_FRAME021),
     { { -6, -5, 6, 31 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame022 = {
-    SPRITE_FRAME(gSpriteBank12Frame022, SPRITE_TILES_BANK12 + 0x05540),
+    SPRITE_FRAME(gSpriteBank12Frame022, SPRITE_TILES_BANK12_FRAME022),
     { { -6, -5, 6, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame023 = {
-    SPRITE_FRAME(gSpriteBank12Frame023, SPRITE_TILES_BANK12 + 0x05840),
+    SPRITE_FRAME(gSpriteBank12Frame023, SPRITE_TILES_BANK12_FRAME023),
     { { -6, -5, 6, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame024 = {
-    SPRITE_FRAME(gSpriteBank12Frame024, SPRITE_TILES_BANK12 + 0x05b40),
+    SPRITE_FRAME(gSpriteBank12Frame024, SPRITE_TILES_BANK12_FRAME024),
     { { -6, -5, 6, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame025 = {
-    SPRITE_FRAME(gSpriteBank12Frame025, SPRITE_TILES_BANK12 + 0x05f60),
+    SPRITE_FRAME(gSpriteBank12Frame025, SPRITE_TILES_BANK12_FRAME025),
     { { -6, -5, 6, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame026 = {
-    SPRITE_FRAME(gSpriteBank12Frame026, SPRITE_TILES_BANK12 + 0x06360),
+    SPRITE_FRAME(gSpriteBank12Frame026, SPRITE_TILES_BANK12_FRAME026),
     { { -6, -5, 6, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame027 = {
-    SPRITE_FRAME(gSpriteBank12Frame027, SPRITE_TILES_BANK12 + 0x06760),
+    SPRITE_FRAME(gSpriteBank12Frame027, SPRITE_TILES_BANK12_FRAME027),
     { { -6, -5, 6, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame028 = {
-    SPRITE_FRAME(gSpriteBank12Frame028, SPRITE_TILES_BANK12 + 0x06b60),
+    SPRITE_FRAME(gSpriteBank12Frame028, SPRITE_TILES_BANK12_FRAME028),
     { { -5, -19, 6, 45 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame029 = {
-    SPRITE_FRAME(gSpriteBank12Frame029, SPRITE_TILES_BANK12 + 0x06f60),
+    SPRITE_FRAME(gSpriteBank12Frame029, SPRITE_TILES_BANK12_FRAME029),
     { { -5, -19, 6, 45 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame030 = {
-    SPRITE_FRAME(gSpriteBank12Frame030, SPRITE_TILES_BANK12 + 0x07360),
+    SPRITE_FRAME(gSpriteBank12Frame030, SPRITE_TILES_BANK12_FRAME030),
     { { -5, -19, 6, 45 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame031 = {
-    SPRITE_FRAME(gSpriteBank12Frame031, SPRITE_TILES_BANK12 + 0x07760),
+    SPRITE_FRAME(gSpriteBank12Frame031, SPRITE_TILES_BANK12_FRAME031),
     { { -5, -19, 6, 45 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame032 = {
-    SPRITE_FRAME(gSpriteBank12Frame032, SPRITE_TILES_BANK12 + 0x07b60),
+    SPRITE_FRAME(gSpriteBank12Frame032, SPRITE_TILES_BANK12_FRAME032),
     { { -5, -19, 6, 45 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame033 = {
-    SPRITE_FRAME(gSpriteBank12Frame033, SPRITE_TILES_BANK12 + 0x06760),
+    SPRITE_FRAME(gSpriteBank12Frame033, SPRITE_TILES_BANK12_FRAME033),
     { { -5, -17, 6, 40 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame034 = {
-    SPRITE_FRAME(gSpriteBank12Frame034, SPRITE_TILES_BANK12 + 0x06360),
+    SPRITE_FRAME(gSpriteBank12Frame034, SPRITE_TILES_BANK12_FRAME034),
     { { -5, -17, 6, 40 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame035 = {
-    SPRITE_FRAME(gSpriteBank12Frame035, SPRITE_TILES_BANK12 + 0x05f60),
+    SPRITE_FRAME(gSpriteBank12Frame035, SPRITE_TILES_BANK12_FRAME035),
     { { -5, -17, 6, 40 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame036 = {
-    SPRITE_FRAME(gSpriteBank12Frame036, SPRITE_TILES_BANK12 + 0x05b40),
+    SPRITE_FRAME(gSpriteBank12Frame036, SPRITE_TILES_BANK12_FRAME036),
     { { -5, -17, 6, 40 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame037 = {
-    SPRITE_FRAME(gSpriteBank12Frame037, SPRITE_TILES_BANK12 + 0x05840),
+    SPRITE_FRAME(gSpriteBank12Frame037, SPRITE_TILES_BANK12_FRAME037),
     { { -6, -10, 7, 36 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame038 = {
-    SPRITE_FRAME(gSpriteBank12Frame038, SPRITE_TILES_BANK12 + 0x05540),
+    SPRITE_FRAME(gSpriteBank12Frame038, SPRITE_TILES_BANK12_FRAME038),
     { { -6, -9, 7, 32 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame039 = {
-    SPRITE_FRAME(gSpriteBank12Frame039, SPRITE_TILES_BANK12 + 0x07f60),
+    SPRITE_FRAME(gSpriteBank12Frame039, SPRITE_TILES_BANK12_FRAME039),
     { { -7, -7, 7, 32 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame040 = {
-    SPRITE_FRAME(gSpriteBank12Frame040, SPRITE_TILES_BANK12 + 0x08280),
+    SPRITE_FRAME(gSpriteBank12Frame040, SPRITE_TILES_BANK12_FRAME040),
     { { -7, -7, 7, 32 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame041 = {
-    SPRITE_FRAME(gSpriteBank12Frame041, SPRITE_TILES_BANK12 + 0x08540),
+    SPRITE_FRAME(gSpriteBank12Frame041, SPRITE_TILES_BANK12_FRAME041),
     { { -7, -7, 7, 32 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame042 = {
-    SPRITE_FRAME(gSpriteBank12Frame042, SPRITE_TILES_BANK12 + 0x08800),
+    SPRITE_FRAME(gSpriteBank12Frame042, SPRITE_TILES_BANK12_FRAME042),
     { { -7, -7, 7, 32 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame043 = {
-    SPRITE_FRAME(gSpriteBank12Frame043, SPRITE_TILES_BANK12 + 0x08ac0),
+    SPRITE_FRAME(gSpriteBank12Frame043, SPRITE_TILES_BANK12_FRAME043),
     { { -7, -7, 7, 32 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame044 = {
-    SPRITE_FRAME(gSpriteBank12Frame044, SPRITE_TILES_BANK12 + 0x08d80),
+    SPRITE_FRAME(gSpriteBank12Frame044, SPRITE_TILES_BANK12_FRAME044),
     { { -7, -7, 7, 32 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame045 = {
-    SPRITE_FRAME(gSpriteBank12Frame045, SPRITE_TILES_BANK12 + 0x09040),
+    SPRITE_FRAME(gSpriteBank12Frame045, SPRITE_TILES_BANK12_FRAME045),
     { { -7, -7, 7, 32 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame046 = {
-    SPRITE_FRAME(gSpriteBank12Frame046, SPRITE_TILES_BANK12 + 0x09300),
+    SPRITE_FRAME(gSpriteBank12Frame046, SPRITE_TILES_BANK12_FRAME046),
     { { -7, -7, 7, 32 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame047 = {
-    SPRITE_FRAME(gSpriteBank12Frame047, SPRITE_TILES_BANK12 + 0x095c0),
+    SPRITE_FRAME(gSpriteBank12Frame047, SPRITE_TILES_BANK12_FRAME047),
     { { -7, -7, 7, 32 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame048 = {
-    SPRITE_FRAME(gSpriteBank12Frame048, SPRITE_TILES_BANK12 + 0x09880),
+    SPRITE_FRAME(gSpriteBank12Frame048, SPRITE_TILES_BANK12_FRAME048),
     { { -7, -7, 7, 32 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame049 = {
-    SPRITE_FRAME(gSpriteBank12Frame049, SPRITE_TILES_BANK12 + 0x09b40),
+    SPRITE_FRAME(gSpriteBank12Frame049, SPRITE_TILES_BANK12_FRAME049),
     { { -7, -7, 7, 32 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame050 = {
-    SPRITE_FRAME(gSpriteBank12Frame050, SPRITE_TILES_BANK12 + 0x09e00),
+    SPRITE_FRAME(gSpriteBank12Frame050, SPRITE_TILES_BANK12_FRAME050),
     { { -7, -7, 7, 32 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame051 = {
-    SPRITE_FRAME(gSpriteBank12Frame051, SPRITE_TILES_BANK12 + 0x0a0c0),
+    SPRITE_FRAME(gSpriteBank12Frame051, SPRITE_TILES_BANK12_FRAME051),
     { { -7, -7, 7, 32 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame052 = {
-    SPRITE_FRAME(gSpriteBank12Frame052, SPRITE_TILES_BANK12 + 0x0a380),
+    SPRITE_FRAME(gSpriteBank12Frame052, SPRITE_TILES_BANK12_FRAME052),
     { { -7, -7, 7, 32 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame053 = {
-    SPRITE_FRAME(gSpriteBank12Frame053, SPRITE_TILES_BANK12 + 0x0a640),
+    SPRITE_FRAME(gSpriteBank12Frame053, SPRITE_TILES_BANK12_FRAME053),
     { { -7, -7, 7, 32 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame054 = {
-    SPRITE_FRAME(gSpriteBank12Frame054, SPRITE_TILES_BANK12 + 0x0a940),
+    SPRITE_FRAME(gSpriteBank12Frame054, SPRITE_TILES_BANK12_FRAME054),
     { { -7, -7, 7, 32 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame055 = {
-    SPRITE_FRAME(gSpriteBank12Frame055, SPRITE_TILES_BANK12 + 0x0ac40),
+    SPRITE_FRAME(gSpriteBank12Frame055, SPRITE_TILES_BANK12_FRAME055),
     { { -4, -2, 6, 4 } },
 };
 const struct sprite_frame_1box gSpriteBank12Frame056 = {
-    SPRITE_FRAME(gSpriteBank12Frame056, SPRITE_TILES_BANK12 + 0x0ac80),
+    SPRITE_FRAME(gSpriteBank12Frame056, SPRITE_TILES_BANK12_FRAME056),
     { { -4, -2, 6, 4 } },
 };
 
-const struct sprite_piece_pos gSpriteBank12Frame000Pos[1] = { { -14, -27 } };
-const struct sprite_piece_pos gSpriteBank12Frame001Pos[2] = { { -14, -28 }, { 18, 7 } };
-const struct sprite_piece_pos gSpriteBank12Frame002Pos[2] = { { -15, -27 }, { 17, 0 } };
-const struct sprite_piece_pos gSpriteBank12Frame003Pos[2] = { { -17, -27 }, { 15, -5 } };
-const struct sprite_piece_pos gSpriteBank12Frame004Pos[2] = { { -18, -27 }, { 14, -10 } };
-const struct sprite_piece_pos gSpriteBank12Frame005Pos[2] = { { -19, -27 }, { 13, -14 } };
-const struct sprite_piece_pos gSpriteBank12Frame006Pos[2] = { { -17, -29 }, { 15, -16 } };
-const struct sprite_piece_pos gSpriteBank12Frame007Pos[2] = { { -14, -30 }, { 18, -16 } };
-const struct sprite_piece_pos gSpriteBank12Frame008Pos[2] = { { -11, -30 }, { 21, -12 } };
-const struct sprite_piece_pos gSpriteBank12Frame009Pos[2] = { { -11, -28 }, { 21, -11 } };
-const struct sprite_piece_pos gSpriteBank12Frame010Pos[2] = { { -13, -27 }, { 19, -11 } };
-const struct sprite_piece_pos gSpriteBank12Frame011Pos[2] = { { -15, -26 }, { 17, -13 } };
-const struct sprite_piece_pos gSpriteBank12Frame012Pos[2] = { { -15, -27 }, { 17, -11 } };
-const struct sprite_piece_pos gSpriteBank12Frame013Pos[2] = { { -15, -27 }, { 17, -7 } };
-const struct sprite_piece_pos gSpriteBank12Frame014Pos[2] = { { -15, -27 }, { 17, -1 } };
-const struct sprite_piece_pos gSpriteBank12Frame015Pos[2] = { { -14, -27 }, { 18, 4 } };
-const struct sprite_piece_pos gSpriteBank12Frame016Pos[1] = { { -14, -27 } };
-const struct sprite_piece_pos gSpriteBank12Frame017Pos[2] = { { -15, -13 }, { -7, 19 } };
-const struct sprite_piece_pos gSpriteBank12Frame018Pos[2] = { { -15, -14 }, { -7, 18 } };
-const struct sprite_piece_pos gSpriteBank12Frame019Pos[2] = { { -14, -14 }, { -7, 18 } };
-const struct sprite_piece_pos gSpriteBank12Frame020Pos[2] = { { -15, -14 }, { -7, 18 } };
-const struct sprite_piece_pos gSpriteBank12Frame021Pos[2] = { { -15, -14 }, { -7, 18 } };
-const struct sprite_piece_pos gSpriteBank12Frame022Pos[2] = { { -15, -15 }, { -7, 17 } };
-const struct sprite_piece_pos gSpriteBank12Frame023Pos[2] = { { -15, -17 }, { -7, 15 } };
-const struct sprite_piece_pos gSpriteBank12Frame024Pos[2] = { { -15, -20 }, { 17, 17 } };
-const struct sprite_piece_pos gSpriteBank12Frame025Pos[1] = { { -15, -22 } };
-const struct sprite_piece_pos gSpriteBank12Frame026Pos[1] = { { -14, -25 } };
-const struct sprite_piece_pos gSpriteBank12Frame027Pos[1] = { { -15, -27 } };
-const struct sprite_piece_pos gSpriteBank12Frame028Pos[1] = { { -14, -27 } };
-const struct sprite_piece_pos gSpriteBank12Frame029Pos[1] = { { -15, -27 } };
-const struct sprite_piece_pos gSpriteBank12Frame030Pos[1] = { { -14, -27 } };
-const struct sprite_piece_pos gSpriteBank12Frame031Pos[1] = { { -14, -27 } };
-const struct sprite_piece_pos gSpriteBank12Frame032Pos[1] = { { -14, -27 } };
-const struct sprite_piece_pos gSpriteBank12Frame033Pos[1] = { { -15, -27 } };
-const struct sprite_piece_pos gSpriteBank12Frame034Pos[1] = { { -14, -25 } };
-const struct sprite_piece_pos gSpriteBank12Frame035Pos[1] = { { -15, -22 } };
-const struct sprite_piece_pos gSpriteBank12Frame036Pos[2] = { { -15, -20 }, { 17, 17 } };
-const struct sprite_piece_pos gSpriteBank12Frame037Pos[2] = { { -15, -17 }, { -7, 15 } };
-const struct sprite_piece_pos gSpriteBank12Frame038Pos[2] = { { -15, -15 }, { -7, 17 } };
-const struct sprite_piece_pos gSpriteBank12Frame039Pos[3] = { { -16, -13 }, { 16, 16 }, { -7, 19 } };
-const struct sprite_piece_pos gSpriteBank12Frame040Pos[4] = { { -17, -14 }, { 15, 9 }, { -7, 18 }, { 9, 26 } };
-const struct sprite_piece_pos gSpriteBank12Frame041Pos[4] = { { -17, -14 }, { 15, 4 }, { -7, 18 }, { 9, 26 } };
-const struct sprite_piece_pos gSpriteBank12Frame042Pos[4] = { { -15, -13 }, { 17, 4 }, { -7, 19 }, { 9, 26 } };
-const struct sprite_piece_pos gSpriteBank12Frame043Pos[4] = { { -14, -13 }, { 18, 4 }, { -7, 19 }, { 9, 26 } };
-const struct sprite_piece_pos gSpriteBank12Frame044Pos[4] = { { -11, -13 }, { 21, 3 }, { -7, 19 }, { 9, 26 } };
-const struct sprite_piece_pos gSpriteBank12Frame045Pos[4] = { { -10, -13 }, { 22, 3 }, { -7, 19 }, { 9, 26 } };
-const struct sprite_piece_pos gSpriteBank12Frame046Pos[4] = { { -12, -14 }, { 20, 2 }, { -7, 18 }, { 9, 26 } };
-const struct sprite_piece_pos gSpriteBank12Frame047Pos[4] = { { -14, -15 }, { 18, 4 }, { -7, 17 }, { 9, 26 } };
-const struct sprite_piece_pos gSpriteBank12Frame048Pos[4] = { { -14, -14 }, { 18, 4 }, { -7, 18 }, { 9, 26 } };
-const struct sprite_piece_pos gSpriteBank12Frame049Pos[4] = { { -15, -14 }, { 17, 5 }, { -7, 18 }, { 9, 26 } };
-const struct sprite_piece_pos gSpriteBank12Frame050Pos[4] = { { -15, -14 }, { 17, 6 }, { -7, 18 }, { 9, 26 } };
-const struct sprite_piece_pos gSpriteBank12Frame051Pos[4] = { { -13, -14 }, { 19, 9 }, { -7, 18 }, { 9, 26 } };
-const struct sprite_piece_pos gSpriteBank12Frame052Pos[4] = { { -13, -14 }, { 19, 14 }, { -7, 18 }, { 9, 26 } };
-const struct sprite_piece_pos gSpriteBank12Frame053Pos[2] = { { -14, -14 }, { -7, 18 } };
-const struct sprite_piece_pos gSpriteBank12Frame054Pos[2] = { { -15, -14 }, { -7, 18 } };
-const struct sprite_piece_pos gSpriteBank12Frame055Pos[2] = { { -4, -2 }, { 4, 0 } };
-const struct sprite_piece_pos gSpriteBank12Frame056Pos[1] = { { -3, -2 } };
-
-const u8 gSpriteBank12Frame000Pieces[1] = { SPRITE_PIECE(2, 11) };
-const u8 gSpriteBank12Frame001Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank12Frame002Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank12Frame003Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 4) };
-const u8 gSpriteBank12Frame004Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 4) };
-const u8 gSpriteBank12Frame005Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 4) };
-const u8 gSpriteBank12Frame006Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank12Frame007Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank12Frame008Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank12Frame009Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank12Frame010Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank12Frame011Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank12Frame012Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank12Frame013Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank12Frame014Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank12Frame015Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank12Frame016Pieces[1] = { SPRITE_PIECE(2, 11) };
-const u8 gSpriteBank12Frame017Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 6) };
-const u8 gSpriteBank12Frame018Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 6) };
-const u8 gSpriteBank12Frame019Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 6) };
-const u8 gSpriteBank12Frame020Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 6) };
-const u8 gSpriteBank12Frame021Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 6) };
-const u8 gSpriteBank12Frame022Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 6) };
-const u8 gSpriteBank12Frame023Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 6) };
-const u8 gSpriteBank12Frame024Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank12Frame025Pieces[1] = { SPRITE_PIECE(2, 11) };
-const u8 gSpriteBank12Frame026Pieces[1] = { SPRITE_PIECE(2, 11) };
-const u8 gSpriteBank12Frame027Pieces[1] = { SPRITE_PIECE(2, 11) };
-const u8 gSpriteBank12Frame028Pieces[1] = { SPRITE_PIECE(2, 11) };
-const u8 gSpriteBank12Frame029Pieces[1] = { SPRITE_PIECE(2, 11) };
-const u8 gSpriteBank12Frame030Pieces[1] = { SPRITE_PIECE(2, 11) };
-const u8 gSpriteBank12Frame031Pieces[1] = { SPRITE_PIECE(2, 11) };
-const u8 gSpriteBank12Frame032Pieces[1] = { SPRITE_PIECE(2, 11) };
-const u8 gSpriteBank12Frame033Pieces[1] = { SPRITE_PIECE(2, 11) };
-const u8 gSpriteBank12Frame034Pieces[1] = { SPRITE_PIECE(2, 11) };
-const u8 gSpriteBank12Frame035Pieces[1] = { SPRITE_PIECE(2, 11) };
-const u8 gSpriteBank12Frame036Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank12Frame037Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 6) };
-const u8 gSpriteBank12Frame038Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 6) };
-const u8 gSpriteBank12Frame039Pieces[3] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 6) };
-const u8 gSpriteBank12Frame040Pieces[4] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank12Frame041Pieces[4] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank12Frame042Pieces[4] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank12Frame043Pieces[4] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank12Frame044Pieces[4] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank12Frame045Pieces[4] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank12Frame046Pieces[4] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank12Frame047Pieces[4] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank12Frame048Pieces[4] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank12Frame049Pieces[4] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank12Frame050Pieces[4] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank12Frame051Pieces[4] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank12Frame052Pieces[4] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank12Frame053Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 6) };
-const u8 gSpriteBank12Frame054Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 6) };
-const u8 gSpriteBank12Frame055Pieces[2] = { SPRITE_PIECE(5, 0), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank12Frame056Pieces[1] = { SPRITE_PIECE(5, 0) };
+/* The piece arrays, from graphics/sprites/bank12_blowgun_tribesman/bank.json. */
+#include "sprites/bank12_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 13: 2 animations, 19 frames, tiles in gSpriteBank13Tiles (SPRITE_TILES_BANK13). */
+/* Bank 13: 2 animations, 19 frames, graphics/sprites/bank13_lizard/. */
 
 extern const u16 gSpriteBank13Anim00Seq[10];
 extern const u16 gSpriteBank13Anim01Seq[9];
-extern const struct sprite_frame_1box gSpriteBank13Frame000;
-extern const struct sprite_frame_1box gSpriteBank13Frame001;
-extern const struct sprite_frame_1box gSpriteBank13Frame002;
-extern const struct sprite_frame_1box gSpriteBank13Frame003;
-extern const struct sprite_frame_1box gSpriteBank13Frame004;
-extern const struct sprite_frame_1box gSpriteBank13Frame005;
-extern const struct sprite_frame_1box gSpriteBank13Frame006;
-extern const struct sprite_frame_1box gSpriteBank13Frame007;
-extern const struct sprite_frame_1box gSpriteBank13Frame008;
-extern const struct sprite_frame_1box gSpriteBank13Frame009;
-extern const struct sprite_frame_1box gSpriteBank13Frame010;
-extern const struct sprite_frame_1box gSpriteBank13Frame011;
-extern const struct sprite_frame_1box gSpriteBank13Frame012;
-extern const struct sprite_frame_1box gSpriteBank13Frame013;
-extern const struct sprite_frame_1box gSpriteBank13Frame014;
-extern const struct sprite_frame_1box gSpriteBank13Frame015;
-extern const struct sprite_frame_1box gSpriteBank13Frame016;
-extern const struct sprite_frame_1box gSpriteBank13Frame017;
-extern const struct sprite_frame_1box gSpriteBank13Frame018;
-extern const struct sprite_piece_pos gSpriteBank13Frame000Pos[4];
-extern const struct sprite_piece_pos gSpriteBank13Frame001Pos[4];
-extern const struct sprite_piece_pos gSpriteBank13Frame002Pos[4];
-extern const struct sprite_piece_pos gSpriteBank13Frame003Pos[4];
-extern const struct sprite_piece_pos gSpriteBank13Frame004Pos[5];
-extern const struct sprite_piece_pos gSpriteBank13Frame005Pos[5];
-extern const struct sprite_piece_pos gSpriteBank13Frame006Pos[5];
-extern const struct sprite_piece_pos gSpriteBank13Frame007Pos[4];
-extern const struct sprite_piece_pos gSpriteBank13Frame008Pos[4];
-extern const struct sprite_piece_pos gSpriteBank13Frame009Pos[4];
-extern const struct sprite_piece_pos gSpriteBank13Frame010Pos[4];
-extern const struct sprite_piece_pos gSpriteBank13Frame011Pos[3];
-extern const struct sprite_piece_pos gSpriteBank13Frame012Pos[3];
-extern const struct sprite_piece_pos gSpriteBank13Frame013Pos[3];
-extern const struct sprite_piece_pos gSpriteBank13Frame014Pos[2];
-extern const struct sprite_piece_pos gSpriteBank13Frame015Pos[3];
-extern const struct sprite_piece_pos gSpriteBank13Frame016Pos[3];
-extern const struct sprite_piece_pos gSpriteBank13Frame017Pos[3];
-extern const struct sprite_piece_pos gSpriteBank13Frame018Pos[4];
-extern const u8 gSpriteBank13Frame000Pieces[4];
-extern const u8 gSpriteBank13Frame001Pieces[4];
-extern const u8 gSpriteBank13Frame002Pieces[4];
-extern const u8 gSpriteBank13Frame003Pieces[4];
-extern const u8 gSpriteBank13Frame004Pieces[5];
-extern const u8 gSpriteBank13Frame005Pieces[5];
-extern const u8 gSpriteBank13Frame006Pieces[5];
-extern const u8 gSpriteBank13Frame007Pieces[4];
-extern const u8 gSpriteBank13Frame008Pieces[4];
-extern const u8 gSpriteBank13Frame009Pieces[4];
-extern const u8 gSpriteBank13Frame010Pieces[4];
-extern const u8 gSpriteBank13Frame011Pieces[3];
-extern const u8 gSpriteBank13Frame012Pieces[3];
-extern const u8 gSpriteBank13Frame013Pieces[3];
-extern const u8 gSpriteBank13Frame014Pieces[2];
-extern const u8 gSpriteBank13Frame015Pieces[3];
-extern const u8 gSpriteBank13Frame016Pieces[3];
-extern const u8 gSpriteBank13Frame017Pieces[3];
-extern const u8 gSpriteBank13Frame018Pieces[4];
 
 extern const struct sprite_anim gSpriteBank13Anims[2] = {
     /* 0 */ {
@@ -1327,196 +766,90 @@ extern const struct sprite_frame *const gSpriteBank13Frames[19] = {
 };
 
 const struct sprite_frame_1box gSpriteBank13Frame000 = {
-    SPRITE_FRAME(gSpriteBank13Frame000, SPRITE_TILES_BANK13 + 0x00000),
+    SPRITE_FRAME(gSpriteBank13Frame000, SPRITE_TILES_BANK13_FRAME000),
     { { -12, -7, 31, 11 } },
 };
 const struct sprite_frame_1box gSpriteBank13Frame001 = {
-    SPRITE_FRAME(gSpriteBank13Frame001, SPRITE_TILES_BANK13 + 0x001c0),
+    SPRITE_FRAME(gSpriteBank13Frame001, SPRITE_TILES_BANK13_FRAME001),
     { { -13, -8, 32, 12 } },
 };
 const struct sprite_frame_1box gSpriteBank13Frame002 = {
-    SPRITE_FRAME(gSpriteBank13Frame002, SPRITE_TILES_BANK13 + 0x00380),
+    SPRITE_FRAME(gSpriteBank13Frame002, SPRITE_TILES_BANK13_FRAME002),
     { { -14, -8, 30, 12 } },
 };
 const struct sprite_frame_1box gSpriteBank13Frame003 = {
-    SPRITE_FRAME(gSpriteBank13Frame003, SPRITE_TILES_BANK13 + 0x00540),
+    SPRITE_FRAME(gSpriteBank13Frame003, SPRITE_TILES_BANK13_FRAME003),
     { { -15, -7, 31, 12 } },
 };
 const struct sprite_frame_1box gSpriteBank13Frame004 = {
-    SPRITE_FRAME(gSpriteBank13Frame004, SPRITE_TILES_BANK13 + 0x00700),
+    SPRITE_FRAME(gSpriteBank13Frame004, SPRITE_TILES_BANK13_FRAME004),
     { { -12, -7, 28, 12 } },
 };
 const struct sprite_frame_1box gSpriteBank13Frame005 = {
-    SPRITE_FRAME(gSpriteBank13Frame005, SPRITE_TILES_BANK13 + 0x00960),
+    SPRITE_FRAME(gSpriteBank13Frame005, SPRITE_TILES_BANK13_FRAME005),
     { { -10, -6, 28, 12 } },
 };
 const struct sprite_frame_1box gSpriteBank13Frame006 = {
-    SPRITE_FRAME(gSpriteBank13Frame006, SPRITE_TILES_BANK13 + 0x00bc0),
+    SPRITE_FRAME(gSpriteBank13Frame006, SPRITE_TILES_BANK13_FRAME006),
     { { -10, -6, 25, 12 } },
 };
 const struct sprite_frame_1box gSpriteBank13Frame007 = {
-    SPRITE_FRAME(gSpriteBank13Frame007, SPRITE_TILES_BANK13 + 0x00e20),
+    SPRITE_FRAME(gSpriteBank13Frame007, SPRITE_TILES_BANK13_FRAME007),
     { { -11, -6, 30, 11 } },
 };
 const struct sprite_frame_1box gSpriteBank13Frame008 = {
-    SPRITE_FRAME(gSpriteBank13Frame008, SPRITE_TILES_BANK13 + 0x01000),
+    SPRITE_FRAME(gSpriteBank13Frame008, SPRITE_TILES_BANK13_FRAME008),
     { { -10, -6, 27, 11 } },
 };
 const struct sprite_frame_1box gSpriteBank13Frame009 = {
-    SPRITE_FRAME(gSpriteBank13Frame009, SPRITE_TILES_BANK13 + 0x011c0),
+    SPRITE_FRAME(gSpriteBank13Frame009, SPRITE_TILES_BANK13_FRAME009),
     { { -10, -7, 28, 12 } },
 };
 const struct sprite_frame_1box gSpriteBank13Frame010 = {
-    SPRITE_FRAME(gSpriteBank13Frame010, SPRITE_TILES_BANK13 + 0x01380),
+    SPRITE_FRAME(gSpriteBank13Frame010, SPRITE_TILES_BANK13_FRAME010),
     { { -15, -7, 34, 16 } },
 };
 const struct sprite_frame_1box gSpriteBank13Frame011 = {
-    SPRITE_FRAME(gSpriteBank13Frame011, SPRITE_TILES_BANK13 + 0x01540),
+    SPRITE_FRAME(gSpriteBank13Frame011, SPRITE_TILES_BANK13_FRAME011),
     { { -15, -8, 32, 16 } },
 };
 const struct sprite_frame_1box gSpriteBank13Frame012 = {
-    SPRITE_FRAME(gSpriteBank13Frame012, SPRITE_TILES_BANK13 + 0x016e0),
+    SPRITE_FRAME(gSpriteBank13Frame012, SPRITE_TILES_BANK13_FRAME012),
     { { -13, -7, 32, 12 } },
 };
 const struct sprite_frame_1box gSpriteBank13Frame013 = {
-    SPRITE_FRAME(gSpriteBank13Frame013, SPRITE_TILES_BANK13 + 0x01880),
+    SPRITE_FRAME(gSpriteBank13Frame013, SPRITE_TILES_BANK13_FRAME013),
     { { -13, -6, 28, 12 } },
 };
 const struct sprite_frame_1box gSpriteBank13Frame014 = {
-    SPRITE_FRAME(gSpriteBank13Frame014, SPRITE_TILES_BANK13 + 0x019c0),
+    SPRITE_FRAME(gSpriteBank13Frame014, SPRITE_TILES_BANK13_FRAME014),
     { { -12, -6, 22, 12 } },
 };
 const struct sprite_frame_1box gSpriteBank13Frame015 = {
-    SPRITE_FRAME(gSpriteBank13Frame015, SPRITE_TILES_BANK13 + 0x01ae0),
+    SPRITE_FRAME(gSpriteBank13Frame015, SPRITE_TILES_BANK13_FRAME015),
     { { -16, -7, 25, 12 } },
 };
 const struct sprite_frame_1box gSpriteBank13Frame016 = {
-    SPRITE_FRAME(gSpriteBank13Frame016, SPRITE_TILES_BANK13 + 0x01c20),
+    SPRITE_FRAME(gSpriteBank13Frame016, SPRITE_TILES_BANK13_FRAME016),
     { { -15, -8, 23, 12 } },
 };
 const struct sprite_frame_1box gSpriteBank13Frame017 = {
-    SPRITE_FRAME(gSpriteBank13Frame017, SPRITE_TILES_BANK13 + 0x01d80),
+    SPRITE_FRAME(gSpriteBank13Frame017, SPRITE_TILES_BANK13_FRAME017),
     { { -17, -8, 26, 12 } },
 };
 const struct sprite_frame_1box gSpriteBank13Frame018 = {
-    SPRITE_FRAME(gSpriteBank13Frame018, SPRITE_TILES_BANK13 + 0x01f20),
+    SPRITE_FRAME(gSpriteBank13Frame018, SPRITE_TILES_BANK13_FRAME018),
     { { -19, -7, 30, 12 } },
 };
 
-const struct sprite_piece_pos gSpriteBank13Frame000Pos[4] = { { -25, -8 }, { 7, -5 }, { 23, -4 }, { 13, 8 } };
-const struct sprite_piece_pos gSpriteBank13Frame001Pos[4] = { { -26, -9 }, { 6, -7 }, { 22, -4 }, { 9, 7 } };
-const struct sprite_piece_pos gSpriteBank13Frame002Pos[4] = { { -26, -9 }, { 6, -7 }, { 22, -3 }, { 7, 7 } };
-const struct sprite_piece_pos gSpriteBank13Frame003Pos[4] = { { -26, -8 }, { 6, -6 }, { 22, -3 }, { 4, 8 } };
-const struct sprite_piece_pos gSpriteBank13Frame004Pos[5] = { { -25, -8 }, { 7, -6 }, { 23, -8 }, { -9, 8 }, { 23, 8 } };
-const struct sprite_piece_pos gSpriteBank13Frame005Pos[5] = { { -26, -8 }, { 6, -6 }, { 22, -1 }, { -10, 8 }, { 22, 8 } };
-const struct sprite_piece_pos gSpriteBank13Frame006Pos[5] = { { -27, -9 }, { 5, -7 }, { 21, -4 }, { -12, 7 }, { 20, 7 } };
-const struct sprite_piece_pos gSpriteBank13Frame007Pos[4] = { { -27, -9 }, { 5, -7 }, { 21, -3 }, { -14, 7 } };
-const struct sprite_piece_pos gSpriteBank13Frame008Pos[4] = { { -25, -8 }, { 7, -6 }, { 23, -4 }, { -14, 8 } };
-const struct sprite_piece_pos gSpriteBank13Frame009Pos[4] = { { -24, -8 }, { 8, -6 }, { 24, -4 }, { 16, 8 } };
-const struct sprite_piece_pos gSpriteBank13Frame010Pos[4] = { { -23, -8 }, { 9, -5 }, { 25, -1 }, { 12, 8 } };
-const struct sprite_piece_pos gSpriteBank13Frame011Pos[3] = { { -21, -9 }, { 11, -3 }, { 5, 7 } };
-const struct sprite_piece_pos gSpriteBank13Frame012Pos[3] = { { -21, -9 }, { 11, -3 }, { -3, 7 } };
-const struct sprite_piece_pos gSpriteBank13Frame013Pos[3] = { { -19, -8 }, { 13, 1 }, { -12, 8 } };
-const struct sprite_piece_pos gSpriteBank13Frame014Pos[2] = { { -17, -8 }, { 4, 8 } };
-const struct sprite_piece_pos gSpriteBank13Frame015Pos[3] = { { -21, -8 }, { 11, -2 }, { -2, 8 } };
-const struct sprite_piece_pos gSpriteBank13Frame016Pos[3] = { { -23, -9 }, { 9, -6 }, { -3, 7 } };
-const struct sprite_piece_pos gSpriteBank13Frame017Pos[3] = { { -25, -9 }, { 7, -6 }, { -5, 7 } };
-const struct sprite_piece_pos gSpriteBank13Frame018Pos[4] = { { -27, -8 }, { 5, -5 }, { 21, -3 }, { -5, 8 } };
-
-const u8 gSpriteBank13Frame000Pieces[4] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank13Frame001Pieces[4] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank13Frame002Pieces[4] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank13Frame003Pieces[4] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank13Frame004Pieces[5] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 5), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank13Frame005Pieces[5] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 5), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank13Frame006Pieces[5] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 5), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank13Frame007Pieces[4] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank13Frame008Pieces[4] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank13Frame009Pieces[4] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank13Frame010Pieces[4] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank13Frame011Pieces[3] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank13Frame012Pieces[3] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank13Frame013Pieces[3] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank13Frame014Pieces[2] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank13Frame015Pieces[3] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank13Frame016Pieces[3] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 4), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank13Frame017Pieces[3] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank13Frame018Pieces[4] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 0) };
+/* The piece arrays, from graphics/sprites/bank13_lizard/bank.json. */
+#include "sprites/bank13_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 14: 2 animations, 23 frames, tiles in gSpriteBank14Tiles (SPRITE_TILES_BANK14). */
+/* Bank 14: 2 animations, 23 frames, graphics/sprites/bank14_patrolling_jungle_enemy/. */
 
 extern const u16 gSpriteBank14Anim00Seq[12];
 extern const u16 gSpriteBank14Anim01Seq[11];
-extern const struct sprite_frame_2box gSpriteBank14Frame000;
-extern const struct sprite_frame_2box gSpriteBank14Frame001;
-extern const struct sprite_frame_2box gSpriteBank14Frame002;
-extern const struct sprite_frame_2box gSpriteBank14Frame003;
-extern const struct sprite_frame_2box gSpriteBank14Frame004;
-extern const struct sprite_frame_2box gSpriteBank14Frame005;
-extern const struct sprite_frame_2box gSpriteBank14Frame006;
-extern const struct sprite_frame_2box gSpriteBank14Frame007;
-extern const struct sprite_frame_2box gSpriteBank14Frame008;
-extern const struct sprite_frame_2box gSpriteBank14Frame009;
-extern const struct sprite_frame_2box gSpriteBank14Frame010;
-extern const struct sprite_frame_2box gSpriteBank14Frame011;
-extern const struct sprite_frame_2box gSpriteBank14Frame012;
-extern const struct sprite_frame_2box gSpriteBank14Frame013;
-extern const struct sprite_frame_2box gSpriteBank14Frame014;
-extern const struct sprite_frame_2box gSpriteBank14Frame015;
-extern const struct sprite_frame_2box gSpriteBank14Frame016;
-extern const struct sprite_frame_2box gSpriteBank14Frame017;
-extern const struct sprite_frame_2box gSpriteBank14Frame018;
-extern const struct sprite_frame_2box gSpriteBank14Frame019;
-extern const struct sprite_frame_2box gSpriteBank14Frame020;
-extern const struct sprite_frame_2box gSpriteBank14Frame021;
-extern const struct sprite_frame_2box gSpriteBank14Frame022;
-extern const struct sprite_piece_pos gSpriteBank14Frame000Pos[5];
-extern const struct sprite_piece_pos gSpriteBank14Frame001Pos[5];
-extern const struct sprite_piece_pos gSpriteBank14Frame002Pos[4];
-extern const struct sprite_piece_pos gSpriteBank14Frame003Pos[5];
-extern const struct sprite_piece_pos gSpriteBank14Frame004Pos[6];
-extern const struct sprite_piece_pos gSpriteBank14Frame005Pos[3];
-extern const struct sprite_piece_pos gSpriteBank14Frame006Pos[3];
-extern const struct sprite_piece_pos gSpriteBank14Frame007Pos[3];
-extern const struct sprite_piece_pos gSpriteBank14Frame008Pos[3];
-extern const struct sprite_piece_pos gSpriteBank14Frame009Pos[3];
-extern const struct sprite_piece_pos gSpriteBank14Frame010Pos[5];
-extern const struct sprite_piece_pos gSpriteBank14Frame011Pos[3];
-extern const struct sprite_piece_pos gSpriteBank14Frame012Pos[5];
-extern const struct sprite_piece_pos gSpriteBank14Frame013Pos[5];
-extern const struct sprite_piece_pos gSpriteBank14Frame014Pos[5];
-extern const struct sprite_piece_pos gSpriteBank14Frame015Pos[4];
-extern const struct sprite_piece_pos gSpriteBank14Frame016Pos[4];
-extern const struct sprite_piece_pos gSpriteBank14Frame017Pos[3];
-extern const struct sprite_piece_pos gSpriteBank14Frame018Pos[4];
-extern const struct sprite_piece_pos gSpriteBank14Frame019Pos[4];
-extern const struct sprite_piece_pos gSpriteBank14Frame020Pos[5];
-extern const struct sprite_piece_pos gSpriteBank14Frame021Pos[4];
-extern const struct sprite_piece_pos gSpriteBank14Frame022Pos[5];
-extern const u8 gSpriteBank14Frame000Pieces[5];
-extern const u8 gSpriteBank14Frame001Pieces[5];
-extern const u8 gSpriteBank14Frame002Pieces[4];
-extern const u8 gSpriteBank14Frame003Pieces[5];
-extern const u8 gSpriteBank14Frame004Pieces[6];
-extern const u8 gSpriteBank14Frame005Pieces[3];
-extern const u8 gSpriteBank14Frame006Pieces[3];
-extern const u8 gSpriteBank14Frame007Pieces[3];
-extern const u8 gSpriteBank14Frame008Pieces[3];
-extern const u8 gSpriteBank14Frame009Pieces[3];
-extern const u8 gSpriteBank14Frame010Pieces[5];
-extern const u8 gSpriteBank14Frame011Pieces[3];
-extern const u8 gSpriteBank14Frame012Pieces[5];
-extern const u8 gSpriteBank14Frame013Pieces[5];
-extern const u8 gSpriteBank14Frame014Pieces[5];
-extern const u8 gSpriteBank14Frame015Pieces[4];
-extern const u8 gSpriteBank14Frame016Pieces[4];
-extern const u8 gSpriteBank14Frame017Pieces[3];
-extern const u8 gSpriteBank14Frame018Pieces[4];
-extern const u8 gSpriteBank14Frame019Pieces[4];
-extern const u8 gSpriteBank14Frame020Pieces[5];
-extern const u8 gSpriteBank14Frame021Pieces[4];
-extern const u8 gSpriteBank14Frame022Pieces[5];
 
 extern const struct sprite_anim gSpriteBank14Anims[2] = {
     /* 0 */ {
@@ -1571,328 +904,109 @@ extern const struct sprite_frame *const gSpriteBank14Frames[23] = {
 };
 
 const struct sprite_frame_2box gSpriteBank14Frame000 = {
-    SPRITE_FRAME(gSpriteBank14Frame000, SPRITE_TILES_BANK14 + 0x00000),
+    SPRITE_FRAME(gSpriteBank14Frame000, SPRITE_TILES_BANK14_FRAME000),
     { { -10, 5, 24, 14 }, { -16, -12, 41, 13 } },
 };
 const struct sprite_frame_2box gSpriteBank14Frame001 = {
-    SPRITE_FRAME(gSpriteBank14Frame001, SPRITE_TILES_BANK14 + 0x003e0),
+    SPRITE_FRAME(gSpriteBank14Frame001, SPRITE_TILES_BANK14_FRAME001),
     { { -10, 5, 24, 14 }, { -16, -12, 41, 13 } },
 };
 const struct sprite_frame_2box gSpriteBank14Frame002 = {
-    SPRITE_FRAME(gSpriteBank14Frame002, SPRITE_TILES_BANK14 + 0x007a0),
+    SPRITE_FRAME(gSpriteBank14Frame002, SPRITE_TILES_BANK14_FRAME002),
     { { -10, 5, 24, 14 }, { -16, -12, 41, 13 } },
 };
 const struct sprite_frame_2box gSpriteBank14Frame003 = {
-    SPRITE_FRAME(gSpriteBank14Frame003, SPRITE_TILES_BANK14 + 0x00b40),
+    SPRITE_FRAME(gSpriteBank14Frame003, SPRITE_TILES_BANK14_FRAME003),
     { { -10, 5, 24, 14 }, { -16, -12, 41, 13 } },
 };
 const struct sprite_frame_2box gSpriteBank14Frame004 = {
-    SPRITE_FRAME(gSpriteBank14Frame004, SPRITE_TILES_BANK14 + 0x00f20),
+    SPRITE_FRAME(gSpriteBank14Frame004, SPRITE_TILES_BANK14_FRAME004),
     { { -10, 5, 24, 14 }, { -16, -12, 41, 13 } },
 };
 const struct sprite_frame_2box gSpriteBank14Frame005 = {
-    SPRITE_FRAME(gSpriteBank14Frame005, SPRITE_TILES_BANK14 + 0x01320),
+    SPRITE_FRAME(gSpriteBank14Frame005, SPRITE_TILES_BANK14_FRAME005),
     { { -10, 5, 24, 14 }, { -16, -12, 41, 13 } },
 };
 const struct sprite_frame_2box gSpriteBank14Frame006 = {
-    SPRITE_FRAME(gSpriteBank14Frame006, SPRITE_TILES_BANK14 + 0x01640),
+    SPRITE_FRAME(gSpriteBank14Frame006, SPRITE_TILES_BANK14_FRAME006),
     { { -10, 5, 24, 14 }, { -16, -12, 41, 13 } },
 };
 const struct sprite_frame_2box gSpriteBank14Frame007 = {
-    SPRITE_FRAME(gSpriteBank14Frame007, SPRITE_TILES_BANK14 + 0x01960),
+    SPRITE_FRAME(gSpriteBank14Frame007, SPRITE_TILES_BANK14_FRAME007),
     { { -10, 5, 24, 14 }, { -16, -12, 41, 13 } },
 };
 const struct sprite_frame_2box gSpriteBank14Frame008 = {
-    SPRITE_FRAME(gSpriteBank14Frame008, SPRITE_TILES_BANK14 + 0x01c80),
+    SPRITE_FRAME(gSpriteBank14Frame008, SPRITE_TILES_BANK14_FRAME008),
     { { -10, 5, 24, 14 }, { -16, -12, 41, 13 } },
 };
 const struct sprite_frame_2box gSpriteBank14Frame009 = {
-    SPRITE_FRAME(gSpriteBank14Frame009, SPRITE_TILES_BANK14 + 0x01fa0),
+    SPRITE_FRAME(gSpriteBank14Frame009, SPRITE_TILES_BANK14_FRAME009),
     { { -10, 5, 24, 14 }, { -16, -12, 41, 13 } },
 };
 const struct sprite_frame_2box gSpriteBank14Frame010 = {
-    SPRITE_FRAME(gSpriteBank14Frame010, SPRITE_TILES_BANK14 + 0x022c0),
+    SPRITE_FRAME(gSpriteBank14Frame010, SPRITE_TILES_BANK14_FRAME010),
     { { -10, 5, 24, 14 }, { -16, -12, 41, 13 } },
 };
 const struct sprite_frame_2box gSpriteBank14Frame011 = {
-    SPRITE_FRAME(gSpriteBank14Frame011, SPRITE_TILES_BANK14 + 0x026a0),
+    SPRITE_FRAME(gSpriteBank14Frame011, SPRITE_TILES_BANK14_FRAME011),
     { { -10, 5, 24, 14 }, { -16, -12, 41, 13 } },
 };
 const struct sprite_frame_2box gSpriteBank14Frame012 = {
-    SPRITE_FRAME(gSpriteBank14Frame012, SPRITE_TILES_BANK14 + 0x00000),
+    SPRITE_FRAME(gSpriteBank14Frame012, SPRITE_TILES_BANK14_FRAME012),
     { { -12, 4, 22, 16 }, { -19, -13, 40, 13 } },
 };
 const struct sprite_frame_2box gSpriteBank14Frame013 = {
-    SPRITE_FRAME(gSpriteBank14Frame013, SPRITE_TILES_BANK14 + 0x02b40),
+    SPRITE_FRAME(gSpriteBank14Frame013, SPRITE_TILES_BANK14_FRAME013),
     { { -12, 4, 22, 16 }, { -19, -13, 40, 13 } },
 };
 const struct sprite_frame_2box gSpriteBank14Frame014 = {
-    SPRITE_FRAME(gSpriteBank14Frame014, SPRITE_TILES_BANK14 + 0x02f00),
+    SPRITE_FRAME(gSpriteBank14Frame014, SPRITE_TILES_BANK14_FRAME014),
     { { -12, 4, 22, 16 }, { -19, -13, 40, 13 } },
 };
 const struct sprite_frame_2box gSpriteBank14Frame015 = {
-    SPRITE_FRAME(gSpriteBank14Frame015, SPRITE_TILES_BANK14 + 0x032c0),
+    SPRITE_FRAME(gSpriteBank14Frame015, SPRITE_TILES_BANK14_FRAME015),
     { { -12, 4, 22, 16 }, { -19, -13, 40, 13 } },
 };
 const struct sprite_frame_2box gSpriteBank14Frame016 = {
-    SPRITE_FRAME(gSpriteBank14Frame016, SPRITE_TILES_BANK14 + 0x03620),
+    SPRITE_FRAME(gSpriteBank14Frame016, SPRITE_TILES_BANK14_FRAME016),
     { { -12, 4, 22, 16 }, { -19, -13, 40, 13 } },
 };
 const struct sprite_frame_2box gSpriteBank14Frame017 = {
-    SPRITE_FRAME(gSpriteBank14Frame017, SPRITE_TILES_BANK14 + 0x03980),
+    SPRITE_FRAME(gSpriteBank14Frame017, SPRITE_TILES_BANK14_FRAME017),
     { { -12, 4, 22, 16 }, { -19, -13, 40, 13 } },
 };
 const struct sprite_frame_2box gSpriteBank14Frame018 = {
-    SPRITE_FRAME(gSpriteBank14Frame018, SPRITE_TILES_BANK14 + 0x03ca0),
+    SPRITE_FRAME(gSpriteBank14Frame018, SPRITE_TILES_BANK14_FRAME018),
     { { -12, 4, 22, 16 }, { -19, -13, 40, 13 } },
 };
 const struct sprite_frame_2box gSpriteBank14Frame019 = {
-    SPRITE_FRAME(gSpriteBank14Frame019, SPRITE_TILES_BANK14 + 0x03fe0),
+    SPRITE_FRAME(gSpriteBank14Frame019, SPRITE_TILES_BANK14_FRAME019),
     { { -12, 4, 22, 16 }, { -19, -13, 40, 13 } },
 };
 const struct sprite_frame_2box gSpriteBank14Frame020 = {
-    SPRITE_FRAME(gSpriteBank14Frame020, SPRITE_TILES_BANK14 + 0x04320),
+    SPRITE_FRAME(gSpriteBank14Frame020, SPRITE_TILES_BANK14_FRAME020),
     { { -12, 4, 22, 16 }, { -19, -13, 40, 13 } },
 };
 const struct sprite_frame_2box gSpriteBank14Frame021 = {
-    SPRITE_FRAME(gSpriteBank14Frame021, SPRITE_TILES_BANK14 + 0x046a0),
+    SPRITE_FRAME(gSpriteBank14Frame021, SPRITE_TILES_BANK14_FRAME021),
     { { -12, 4, 22, 16 }, { -19, -13, 40, 13 } },
 };
 const struct sprite_frame_2box gSpriteBank14Frame022 = {
-    SPRITE_FRAME(gSpriteBank14Frame022, SPRITE_TILES_BANK14 + 0x049e0),
+    SPRITE_FRAME(gSpriteBank14Frame022, SPRITE_TILES_BANK14_FRAME022),
     { { -12, 4, 22, 16 }, { -19, -13, 40, 13 } },
 };
 
-const struct sprite_piece_pos gSpriteBank14Frame000Pos[5] = { { -16, -21 }, { 10, -19 }, { 18, -4 }, { -22, 11 }, { 10, 20 } };
-const struct sprite_piece_pos gSpriteBank14Frame001Pos[5] = { { -16, -22 }, { 12, -16 }, { 20, -4 }, { -20, 10 }, { 12, 20 } };
-const struct sprite_piece_pos gSpriteBank14Frame002Pos[4] = { { -17, -24 }, { 11, -22 }, { 19, -6 }, { -21, 8 } };
-const struct sprite_piece_pos gSpriteBank14Frame003Pos[5] = { { -17, -25 }, { 10, -23 }, { 18, -8 }, { -22, 7 }, { 10, 7 } };
-const struct sprite_piece_pos gSpriteBank14Frame004Pos[6] = { { -16, -24 }, { 10, -22 }, { 18, -7 }, { -22, 8 }, { 10, 8 }, { 18, 8 } };
-const struct sprite_piece_pos gSpriteBank14Frame005Pos[3] = { { -15, -22 }, { 17, -5 }, { -13, 10 } };
-const struct sprite_piece_pos gSpriteBank14Frame006Pos[3] = { { -14, -21 }, { 18, -5 }, { -9, 11 } };
-const struct sprite_piece_pos gSpriteBank14Frame007Pos[3] = { { -14, -22 }, { 18, -6 }, { -7, 10 } };
-const struct sprite_piece_pos gSpriteBank14Frame008Pos[3] = { { -13, -24 }, { 19, -7 }, { -10, 8 } };
-const struct sprite_piece_pos gSpriteBank14Frame009Pos[3] = { { -14, -25 }, { 17, -8 }, { -15, 7 } };
-const struct sprite_piece_pos gSpriteBank14Frame010Pos[5] = { { -14, -24 }, { 11, -21 }, { 19, -7 }, { -21, 8 }, { 11, 9 } };
-const struct sprite_piece_pos gSpriteBank14Frame011Pos[3] = { { -15, -22 }, { -25, 10 }, { 7, 11 } };
-const struct sprite_piece_pos gSpriteBank14Frame012Pos[5] = { { -16, -21 }, { 10, -19 }, { 18, -4 }, { -22, 11 }, { 10, 20 } };
-const struct sprite_piece_pos gSpriteBank14Frame013Pos[5] = { { -16, -22 }, { 11, -20 }, { 19, -4 }, { -21, 10 }, { 11, 20 } };
-const struct sprite_piece_pos gSpriteBank14Frame014Pos[5] = { { -18, -24 }, { 11, -13 }, { 19, -4 }, { -21, 8 }, { 11, 11 } };
-const struct sprite_piece_pos gSpriteBank14Frame015Pos[4] = { { -19, -25 }, { 12, -8 }, { -20, 7 }, { 12, 7 } };
-const struct sprite_piece_pos gSpriteBank14Frame016Pos[4] = { { -19, -24 }, { 13, -6 }, { -13, 8 }, { 19, 8 } };
-const struct sprite_piece_pos gSpriteBank14Frame017Pos[3] = { { -17, -22 }, { 15, -3 }, { -13, 10 } };
-const struct sprite_piece_pos gSpriteBank14Frame018Pos[4] = { { -16, -21 }, { 16, -5 }, { -14, 11 }, { 18, 11 } };
-const struct sprite_piece_pos gSpriteBank14Frame019Pos[4] = { { -15, -22 }, { 17, -6 }, { -15, 10 }, { 17, 15 } };
-const struct sprite_piece_pos gSpriteBank14Frame020Pos[5] = { { -15, -23 }, { 17, -9 }, { 17, 7 }, { -15, 9 }, { 17, 9 } };
-const struct sprite_piece_pos gSpriteBank14Frame021Pos[4] = { { -18, -25 }, { 14, -11 }, { -13, 7 }, { 19, 15 } };
-const struct sprite_piece_pos gSpriteBank14Frame022Pos[5] = { { -19, -24 }, { 13, -10 }, { -19, 8 }, { 13, 10 }, { 21, 10 } };
-
-const u8 gSpriteBank14Frame000Pieces[5] = { SPRITE_PIECE(3, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank14Frame001Pieces[5] = { SPRITE_PIECE(3, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank14Frame002Pieces[4] = { SPRITE_PIECE(3, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 6) };
-const u8 gSpriteBank14Frame003Pieces[5] = { SPRITE_PIECE(3, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 6), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank14Frame004Pieces[6] = { SPRITE_PIECE(3, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 6), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank14Frame005Pieces[3] = { SPRITE_PIECE(3, 2), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 6) };
-const u8 gSpriteBank14Frame006Pieces[3] = { SPRITE_PIECE(3, 2), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 6) };
-const u8 gSpriteBank14Frame007Pieces[3] = { SPRITE_PIECE(3, 2), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 6) };
-const u8 gSpriteBank14Frame008Pieces[3] = { SPRITE_PIECE(3, 2), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 6) };
-const u8 gSpriteBank14Frame009Pieces[3] = { SPRITE_PIECE(3, 2), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 6) };
-const u8 gSpriteBank14Frame010Pieces[5] = { SPRITE_PIECE(3, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 6), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank14Frame011Pieces[3] = { SPRITE_PIECE(3, 7), SPRITE_PIECE(0, 5), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank14Frame012Pieces[5] = { SPRITE_PIECE(3, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank14Frame013Pieces[5] = { SPRITE_PIECE(3, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank14Frame014Pieces[5] = { SPRITE_PIECE(3, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank14Frame015Pieces[4] = { SPRITE_PIECE(3, 2), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank14Frame016Pieces[4] = { SPRITE_PIECE(3, 2), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank14Frame017Pieces[3] = { SPRITE_PIECE(3, 2), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 6) };
-const u8 gSpriteBank14Frame018Pieces[4] = { SPRITE_PIECE(3, 2), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank14Frame019Pieces[4] = { SPRITE_PIECE(3, 2), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank14Frame020Pieces[5] = { SPRITE_PIECE(3, 2), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 6), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank14Frame021Pieces[4] = { SPRITE_PIECE(3, 2), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank14Frame022Pieces[5] = { SPRITE_PIECE(3, 2), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 6), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 0) };
+/* The piece arrays, from graphics/sprites/bank14_patrolling_jungle_enemy/bank.json. */
+#include "sprites/bank14_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 15: 5 animations, 58 frames, tiles in gSpriteBank15Tiles (SPRITE_TILES_BANK15). */
+/* Bank 15: 5 animations, 58 frames, graphics/sprites/bank15_penguin/. */
 
 extern const u16 gSpriteBank15Anim00Seq[15];
 extern const u16 gSpriteBank15Anim01Seq[4];
 extern const u16 gSpriteBank15Anim02Seq[9];
 extern const u16 gSpriteBank15Anim03Seq[15];
 extern const u16 gSpriteBank15Anim04Seq[17];
-extern const struct sprite_frame_1box gSpriteBank15Frame000;
-extern const struct sprite_frame_1box gSpriteBank15Frame001;
-extern const struct sprite_frame_1box gSpriteBank15Frame002;
-extern const struct sprite_frame_1box gSpriteBank15Frame003;
-extern const struct sprite_frame_1box gSpriteBank15Frame004;
-extern const struct sprite_frame_1box gSpriteBank15Frame005;
-extern const struct sprite_frame_1box gSpriteBank15Frame006;
-extern const struct sprite_frame_1box gSpriteBank15Frame007;
-extern const struct sprite_frame_1box gSpriteBank15Frame008;
-extern const struct sprite_frame_1box gSpriteBank15Frame009;
-extern const struct sprite_frame_1box gSpriteBank15Frame010;
-extern const struct sprite_frame_1box gSpriteBank15Frame011;
-extern const struct sprite_frame_1box gSpriteBank15Frame012;
-extern const struct sprite_frame_1box gSpriteBank15Frame013;
-extern const struct sprite_frame_1box gSpriteBank15Frame014;
-extern const struct sprite_frame_1box gSpriteBank15Frame015;
-extern const struct sprite_frame_1box gSpriteBank15Frame016;
-extern const struct sprite_frame_1box gSpriteBank15Frame017;
-extern const struct sprite_frame_1box gSpriteBank15Frame018;
-extern const struct sprite_frame_1box gSpriteBank15Frame019;
-extern const struct sprite_frame_1box gSpriteBank15Frame020;
-extern const struct sprite_frame_1box gSpriteBank15Frame021;
-extern const struct sprite_frame_1box gSpriteBank15Frame022;
-extern const struct sprite_frame_1box gSpriteBank15Frame023;
-extern const struct sprite_frame_1box gSpriteBank15Frame024;
-extern const struct sprite_frame_1box gSpriteBank15Frame025;
-extern const struct sprite_frame_1box gSpriteBank15Frame026;
-extern const struct sprite_frame_1box gSpriteBank15Frame027;
-extern const struct sprite_frame_1box gSpriteBank15Frame028;
-extern const struct sprite_frame_1box gSpriteBank15Frame029;
-extern const struct sprite_frame_1box gSpriteBank15Frame030;
-extern const struct sprite_frame_1box gSpriteBank15Frame031;
-extern const struct sprite_frame_1box gSpriteBank15Frame032;
-extern const struct sprite_frame_1box gSpriteBank15Frame033;
-extern const struct sprite_frame_1box gSpriteBank15Frame034;
-extern const struct sprite_frame_1box gSpriteBank15Frame035;
-extern const struct sprite_frame_1box gSpriteBank15Frame036;
-extern const struct sprite_frame_1box gSpriteBank15Frame037;
-extern const struct sprite_frame_1box gSpriteBank15Frame038;
-extern const struct sprite_frame_1box gSpriteBank15Frame039;
-extern const struct sprite_frame_1box gSpriteBank15Frame040;
-extern const struct sprite_frame_1box gSpriteBank15Frame041;
-extern const struct sprite_frame_1box gSpriteBank15Frame042;
-extern const struct sprite_frame_1box gSpriteBank15Frame043;
-extern const struct sprite_frame_1box gSpriteBank15Frame044;
-extern const struct sprite_frame_1box gSpriteBank15Frame045;
-extern const struct sprite_frame_1box gSpriteBank15Frame046;
-extern const struct sprite_frame_1box gSpriteBank15Frame047;
-extern const struct sprite_frame_1box gSpriteBank15Frame048;
-extern const struct sprite_frame_1box gSpriteBank15Frame049;
-extern const struct sprite_frame_1box gSpriteBank15Frame050;
-extern const struct sprite_frame_1box gSpriteBank15Frame051;
-extern const struct sprite_frame_1box gSpriteBank15Frame052;
-extern const struct sprite_frame_1box gSpriteBank15Frame053;
-extern const struct sprite_frame_1box gSpriteBank15Frame054;
-extern const struct sprite_frame_1box gSpriteBank15Frame055;
-extern const struct sprite_frame_1box gSpriteBank15Frame056;
-extern const struct sprite_frame_1box gSpriteBank15Frame057;
-extern const struct sprite_piece_pos gSpriteBank15Frame000Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame001Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame002Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame003Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame004Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame005Pos[1];
-extern const struct sprite_piece_pos gSpriteBank15Frame006Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame007Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame008Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame009Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame010Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame011Pos[1];
-extern const struct sprite_piece_pos gSpriteBank15Frame012Pos[1];
-extern const struct sprite_piece_pos gSpriteBank15Frame013Pos[1];
-extern const struct sprite_piece_pos gSpriteBank15Frame014Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame015Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame016Pos[1];
-extern const struct sprite_piece_pos gSpriteBank15Frame017Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame018Pos[1];
-extern const struct sprite_piece_pos gSpriteBank15Frame019Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame020Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame021Pos[1];
-extern const struct sprite_piece_pos gSpriteBank15Frame022Pos[1];
-extern const struct sprite_piece_pos gSpriteBank15Frame023Pos[1];
-extern const struct sprite_piece_pos gSpriteBank15Frame024Pos[1];
-extern const struct sprite_piece_pos gSpriteBank15Frame025Pos[1];
-extern const struct sprite_piece_pos gSpriteBank15Frame026Pos[1];
-extern const struct sprite_piece_pos gSpriteBank15Frame027Pos[1];
-extern const struct sprite_piece_pos gSpriteBank15Frame028Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame029Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame030Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame031Pos[1];
-extern const struct sprite_piece_pos gSpriteBank15Frame032Pos[1];
-extern const struct sprite_piece_pos gSpriteBank15Frame033Pos[1];
-extern const struct sprite_piece_pos gSpriteBank15Frame034Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame035Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame036Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame037Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame038Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame039Pos[1];
-extern const struct sprite_piece_pos gSpriteBank15Frame040Pos[1];
-extern const struct sprite_piece_pos gSpriteBank15Frame041Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame042Pos[1];
-extern const struct sprite_piece_pos gSpriteBank15Frame043Pos[1];
-extern const struct sprite_piece_pos gSpriteBank15Frame044Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame045Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame046Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame047Pos[3];
-extern const struct sprite_piece_pos gSpriteBank15Frame048Pos[3];
-extern const struct sprite_piece_pos gSpriteBank15Frame049Pos[3];
-extern const struct sprite_piece_pos gSpriteBank15Frame050Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame051Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame052Pos[3];
-extern const struct sprite_piece_pos gSpriteBank15Frame053Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame054Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame055Pos[2];
-extern const struct sprite_piece_pos gSpriteBank15Frame056Pos[3];
-extern const struct sprite_piece_pos gSpriteBank15Frame057Pos[2];
-extern const u8 gSpriteBank15Frame000Pieces[2];
-extern const u8 gSpriteBank15Frame001Pieces[2];
-extern const u8 gSpriteBank15Frame002Pieces[2];
-extern const u8 gSpriteBank15Frame003Pieces[2];
-extern const u8 gSpriteBank15Frame004Pieces[2];
-extern const u8 gSpriteBank15Frame005Pieces[1];
-extern const u8 gSpriteBank15Frame006Pieces[2];
-extern const u8 gSpriteBank15Frame007Pieces[2];
-extern const u8 gSpriteBank15Frame008Pieces[2];
-extern const u8 gSpriteBank15Frame009Pieces[2];
-extern const u8 gSpriteBank15Frame010Pieces[2];
-extern const u8 gSpriteBank15Frame011Pieces[1];
-extern const u8 gSpriteBank15Frame012Pieces[1];
-extern const u8 gSpriteBank15Frame013Pieces[1];
-extern const u8 gSpriteBank15Frame014Pieces[2];
-extern const u8 gSpriteBank15Frame015Pieces[2];
-extern const u8 gSpriteBank15Frame016Pieces[1];
-extern const u8 gSpriteBank15Frame017Pieces[2];
-extern const u8 gSpriteBank15Frame018Pieces[1];
-extern const u8 gSpriteBank15Frame019Pieces[2];
-extern const u8 gSpriteBank15Frame020Pieces[2];
-extern const u8 gSpriteBank15Frame021Pieces[1];
-extern const u8 gSpriteBank15Frame022Pieces[1];
-extern const u8 gSpriteBank15Frame023Pieces[1];
-extern const u8 gSpriteBank15Frame024Pieces[1];
-extern const u8 gSpriteBank15Frame025Pieces[1];
-extern const u8 gSpriteBank15Frame026Pieces[1];
-extern const u8 gSpriteBank15Frame027Pieces[1];
-extern const u8 gSpriteBank15Frame028Pieces[2];
-extern const u8 gSpriteBank15Frame029Pieces[2];
-extern const u8 gSpriteBank15Frame030Pieces[2];
-extern const u8 gSpriteBank15Frame031Pieces[1];
-extern const u8 gSpriteBank15Frame032Pieces[1];
-extern const u8 gSpriteBank15Frame033Pieces[1];
-extern const u8 gSpriteBank15Frame034Pieces[2];
-extern const u8 gSpriteBank15Frame035Pieces[2];
-extern const u8 gSpriteBank15Frame036Pieces[2];
-extern const u8 gSpriteBank15Frame037Pieces[2];
-extern const u8 gSpriteBank15Frame038Pieces[2];
-extern const u8 gSpriteBank15Frame039Pieces[1];
-extern const u8 gSpriteBank15Frame040Pieces[1];
-extern const u8 gSpriteBank15Frame041Pieces[2];
-extern const u8 gSpriteBank15Frame042Pieces[1];
-extern const u8 gSpriteBank15Frame043Pieces[1];
-extern const u8 gSpriteBank15Frame044Pieces[2];
-extern const u8 gSpriteBank15Frame045Pieces[2];
-extern const u8 gSpriteBank15Frame046Pieces[2];
-extern const u8 gSpriteBank15Frame047Pieces[3];
-extern const u8 gSpriteBank15Frame048Pieces[3];
-extern const u8 gSpriteBank15Frame049Pieces[3];
-extern const u8 gSpriteBank15Frame050Pieces[2];
-extern const u8 gSpriteBank15Frame051Pieces[2];
-extern const u8 gSpriteBank15Frame052Pieces[3];
-extern const u8 gSpriteBank15Frame053Pieces[2];
-extern const u8 gSpriteBank15Frame054Pieces[2];
-extern const u8 gSpriteBank15Frame055Pieces[2];
-extern const u8 gSpriteBank15Frame056Pieces[3];
-extern const u8 gSpriteBank15Frame057Pieces[2];
 
 extern const struct sprite_anim gSpriteBank15Anims[5] = {
     /* 0 */ {
@@ -2016,433 +1130,246 @@ extern const struct sprite_frame *const gSpriteBank15Frames[58] = {
 };
 
 const struct sprite_frame_1box gSpriteBank15Frame000 = {
-    SPRITE_FRAME(gSpriteBank15Frame000, SPRITE_TILES_BANK15 + 0x00000),
+    SPRITE_FRAME(gSpriteBank15Frame000, SPRITE_TILES_BANK15_FRAME000),
     { { -6, -13, 12, 27 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame001 = {
-    SPRITE_FRAME(gSpriteBank15Frame001, SPRITE_TILES_BANK15 + 0x00180),
+    SPRITE_FRAME(gSpriteBank15Frame001, SPRITE_TILES_BANK15_FRAME001),
     { { -6, -13, 12, 27 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame002 = {
-    SPRITE_FRAME(gSpriteBank15Frame002, SPRITE_TILES_BANK15 + 0x00300),
+    SPRITE_FRAME(gSpriteBank15Frame002, SPRITE_TILES_BANK15_FRAME002),
     { { -6, -14, 11, 27 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame003 = {
-    SPRITE_FRAME(gSpriteBank15Frame003, SPRITE_TILES_BANK15 + 0x00480),
+    SPRITE_FRAME(gSpriteBank15Frame003, SPRITE_TILES_BANK15_FRAME003),
     { { -7, -15, 11, 28 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame004 = {
-    SPRITE_FRAME(gSpriteBank15Frame004, SPRITE_TILES_BANK15 + 0x00600),
+    SPRITE_FRAME(gSpriteBank15Frame004, SPRITE_TILES_BANK15_FRAME004),
     { { -9, -15, 12, 28 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame005 = {
-    SPRITE_FRAME(gSpriteBank15Frame005, SPRITE_TILES_BANK15 + 0x00780),
+    SPRITE_FRAME(gSpriteBank15Frame005, SPRITE_TILES_BANK15_FRAME005),
     { { -6, -12, 12, 23 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame006 = {
-    SPRITE_FRAME(gSpriteBank15Frame006, SPRITE_TILES_BANK15 + 0x00980),
+    SPRITE_FRAME(gSpriteBank15Frame006, SPRITE_TILES_BANK15_FRAME006),
     { { -6, -12, 12, 23 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame007 = {
-    SPRITE_FRAME(gSpriteBank15Frame007, SPRITE_TILES_BANK15 + 0x00b00),
+    SPRITE_FRAME(gSpriteBank15Frame007, SPRITE_TILES_BANK15_FRAME007),
     { { -8, -14, 12, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame008 = {
-    SPRITE_FRAME(gSpriteBank15Frame008, SPRITE_TILES_BANK15 + 0x00c80),
+    SPRITE_FRAME(gSpriteBank15Frame008, SPRITE_TILES_BANK15_FRAME008),
     { { -8, -14, 12, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame009 = {
-    SPRITE_FRAME(gSpriteBank15Frame009, SPRITE_TILES_BANK15 + 0x00e00),
+    SPRITE_FRAME(gSpriteBank15Frame009, SPRITE_TILES_BANK15_FRAME009),
     { { -8, -14, 12, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame010 = {
-    SPRITE_FRAME(gSpriteBank15Frame010, SPRITE_TILES_BANK15 + 0x00f80),
+    SPRITE_FRAME(gSpriteBank15Frame010, SPRITE_TILES_BANK15_FRAME010),
     { { -9, -15, 13, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame011 = {
-    SPRITE_FRAME(gSpriteBank15Frame011, SPRITE_TILES_BANK15 + 0x01100),
+    SPRITE_FRAME(gSpriteBank15Frame011, SPRITE_TILES_BANK15_FRAME011),
     { { -9, -15, 15, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame012 = {
-    SPRITE_FRAME(gSpriteBank15Frame012, SPRITE_TILES_BANK15 + 0x01300),
+    SPRITE_FRAME(gSpriteBank15Frame012, SPRITE_TILES_BANK15_FRAME012),
     { { -9, -15, 16, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame013 = {
-    SPRITE_FRAME(gSpriteBank15Frame013, SPRITE_TILES_BANK15 + 0x01500),
+    SPRITE_FRAME(gSpriteBank15Frame013, SPRITE_TILES_BANK15_FRAME013),
     { { -8, -15, 15, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame014 = {
-    SPRITE_FRAME(gSpriteBank15Frame014, SPRITE_TILES_BANK15 + 0x01700),
+    SPRITE_FRAME(gSpriteBank15Frame014, SPRITE_TILES_BANK15_FRAME014),
     { { -6, -14, 12, 28 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame015 = {
-    SPRITE_FRAME(gSpriteBank15Frame015, SPRITE_TILES_BANK15 + 0x01880),
+    SPRITE_FRAME(gSpriteBank15Frame015, SPRITE_TILES_BANK15_FRAME015),
     { { -9, -13, 18, 27 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame016 = {
-    SPRITE_FRAME(gSpriteBank15Frame016, SPRITE_TILES_BANK15 + 0x01aa0),
+    SPRITE_FRAME(gSpriteBank15Frame016, SPRITE_TILES_BANK15_FRAME016),
     { { -9, -13, 18, 27 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame017 = {
-    SPRITE_FRAME(gSpriteBank15Frame017, SPRITE_TILES_BANK15 + 0x01ca0),
+    SPRITE_FRAME(gSpriteBank15Frame017, SPRITE_TILES_BANK15_FRAME017),
     { { -9, -13, 18, 27 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame018 = {
-    SPRITE_FRAME(gSpriteBank15Frame018, SPRITE_TILES_BANK15 + 0x01ec0),
+    SPRITE_FRAME(gSpriteBank15Frame018, SPRITE_TILES_BANK15_FRAME018),
     { { -9, -13, 18, 27 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame019 = {
-    SPRITE_FRAME(gSpriteBank15Frame019, SPRITE_TILES_BANK15 + 0x020c0),
+    SPRITE_FRAME(gSpriteBank15Frame019, SPRITE_TILES_BANK15_FRAME019),
     { { -4, -13, 10, 27 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame020 = {
-    SPRITE_FRAME(gSpriteBank15Frame020, SPRITE_TILES_BANK15 + 0x02240),
+    SPRITE_FRAME(gSpriteBank15Frame020, SPRITE_TILES_BANK15_FRAME020),
     { { -4, -14, 10, 28 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame021 = {
-    SPRITE_FRAME(gSpriteBank15Frame021, SPRITE_TILES_BANK15 + 0x023c0),
+    SPRITE_FRAME(gSpriteBank15Frame021, SPRITE_TILES_BANK15_FRAME021),
     { { -6, -14, 13, 28 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame022 = {
-    SPRITE_FRAME(gSpriteBank15Frame022, SPRITE_TILES_BANK15 + 0x025c0),
+    SPRITE_FRAME(gSpriteBank15Frame022, SPRITE_TILES_BANK15_FRAME022),
     { { -9, -14, 16, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame023 = {
-    SPRITE_FRAME(gSpriteBank15Frame023, SPRITE_TILES_BANK15 + 0x027c0),
+    SPRITE_FRAME(gSpriteBank15Frame023, SPRITE_TILES_BANK15_FRAME023),
     { { -10, -15, 17, 30 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame024 = {
-    SPRITE_FRAME(gSpriteBank15Frame024, SPRITE_TILES_BANK15 + 0x029c0),
+    SPRITE_FRAME(gSpriteBank15Frame024, SPRITE_TILES_BANK15_FRAME024),
     { { -10, -15, 17, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame025 = {
-    SPRITE_FRAME(gSpriteBank15Frame025, SPRITE_TILES_BANK15 + 0x02bc0),
+    SPRITE_FRAME(gSpriteBank15Frame025, SPRITE_TILES_BANK15_FRAME025),
     { { -10, -15, 18, 30 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame026 = {
-    SPRITE_FRAME(gSpriteBank15Frame026, SPRITE_TILES_BANK15 + 0x02dc0),
+    SPRITE_FRAME(gSpriteBank15Frame026, SPRITE_TILES_BANK15_FRAME026),
     { { -10, -14, 19, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame027 = {
-    SPRITE_FRAME(gSpriteBank15Frame027, SPRITE_TILES_BANK15 + 0x02fc0),
+    SPRITE_FRAME(gSpriteBank15Frame027, SPRITE_TILES_BANK15_FRAME027),
     { { -8, -14, 14, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame028 = {
-    SPRITE_FRAME(gSpriteBank15Frame028, SPRITE_TILES_BANK15 + 0x031c0),
+    SPRITE_FRAME(gSpriteBank15Frame028, SPRITE_TILES_BANK15_FRAME028),
     { { -6, -13, 12, 27 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame029 = {
-    SPRITE_FRAME(gSpriteBank15Frame029, SPRITE_TILES_BANK15 + 0x03340),
+    SPRITE_FRAME(gSpriteBank15Frame029, SPRITE_TILES_BANK15_FRAME029),
     { { -7, -14, 12, 27 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame030 = {
-    SPRITE_FRAME(gSpriteBank15Frame030, SPRITE_TILES_BANK15 + 0x034c0),
+    SPRITE_FRAME(gSpriteBank15Frame030, SPRITE_TILES_BANK15_FRAME030),
     { { -8, -15, 12, 28 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame031 = {
-    SPRITE_FRAME(gSpriteBank15Frame031, SPRITE_TILES_BANK15 + 0x03640),
+    SPRITE_FRAME(gSpriteBank15Frame031, SPRITE_TILES_BANK15_FRAME031),
     { { -10, -15, 15, 28 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame032 = {
-    SPRITE_FRAME(gSpriteBank15Frame032, SPRITE_TILES_BANK15 + 0x03840),
+    SPRITE_FRAME(gSpriteBank15Frame032, SPRITE_TILES_BANK15_FRAME032),
     { { -10, -15, 17, 28 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame033 = {
-    SPRITE_FRAME(gSpriteBank15Frame033, SPRITE_TILES_BANK15 + 0x03a40),
+    SPRITE_FRAME(gSpriteBank15Frame033, SPRITE_TILES_BANK15_FRAME033),
     { { -9, -15, 16, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame034 = {
-    SPRITE_FRAME(gSpriteBank15Frame034, SPRITE_TILES_BANK15 + 0x03c40),
+    SPRITE_FRAME(gSpriteBank15Frame034, SPRITE_TILES_BANK15_FRAME034),
     { { -7, -14, 11, 28 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame035 = {
-    SPRITE_FRAME(gSpriteBank15Frame035, SPRITE_TILES_BANK15 + 0x03d80),
+    SPRITE_FRAME(gSpriteBank15Frame035, SPRITE_TILES_BANK15_FRAME035),
     { { -7, -14, 11, 28 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame036 = {
-    SPRITE_FRAME(gSpriteBank15Frame036, SPRITE_TILES_BANK15 + 0x03ec0),
+    SPRITE_FRAME(gSpriteBank15Frame036, SPRITE_TILES_BANK15_FRAME036),
     { { -7, -14, 12, 28 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame037 = {
-    SPRITE_FRAME(gSpriteBank15Frame037, SPRITE_TILES_BANK15 + 0x04000),
+    SPRITE_FRAME(gSpriteBank15Frame037, SPRITE_TILES_BANK15_FRAME037),
     { { -7, -15, 12, 28 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame038 = {
-    SPRITE_FRAME(gSpriteBank15Frame038, SPRITE_TILES_BANK15 + 0x04120),
+    SPRITE_FRAME(gSpriteBank15Frame038, SPRITE_TILES_BANK15_FRAME038),
     { { -8, -15, 14, 28 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame039 = {
-    SPRITE_FRAME(gSpriteBank15Frame039, SPRITE_TILES_BANK15 + 0x04260),
+    SPRITE_FRAME(gSpriteBank15Frame039, SPRITE_TILES_BANK15_FRAME039),
     { { -9, -15, 16, 28 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame040 = {
-    SPRITE_FRAME(gSpriteBank15Frame040, SPRITE_TILES_BANK15 + 0x04460),
+    SPRITE_FRAME(gSpriteBank15Frame040, SPRITE_TILES_BANK15_FRAME040),
     { { -9, -14, 16, 28 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame041 = {
-    SPRITE_FRAME(gSpriteBank15Frame041, SPRITE_TILES_BANK15 + 0x04660),
+    SPRITE_FRAME(gSpriteBank15Frame041, SPRITE_TILES_BANK15_FRAME041),
     { { -8, -14, 14, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame042 = {
-    SPRITE_FRAME(gSpriteBank15Frame042, SPRITE_TILES_BANK15 + 0x047a0),
+    SPRITE_FRAME(gSpriteBank15Frame042, SPRITE_TILES_BANK15_FRAME042),
     { { -7, -14, 14, 27 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame043 = {
-    SPRITE_FRAME(gSpriteBank15Frame043, SPRITE_TILES_BANK15 + 0x049a0),
+    SPRITE_FRAME(gSpriteBank15Frame043, SPRITE_TILES_BANK15_FRAME043),
     { { -11, -14, 18, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame044 = {
-    SPRITE_FRAME(gSpriteBank15Frame044, SPRITE_TILES_BANK15 + 0x04ba0),
+    SPRITE_FRAME(gSpriteBank15Frame044, SPRITE_TILES_BANK15_FRAME044),
     { { -10, -14, 16, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame045 = {
-    SPRITE_FRAME(gSpriteBank15Frame045, SPRITE_TILES_BANK15 + 0x04d20),
+    SPRITE_FRAME(gSpriteBank15Frame045, SPRITE_TILES_BANK15_FRAME045),
     { { -8, -14, 15, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame046 = {
-    SPRITE_FRAME(gSpriteBank15Frame046, SPRITE_TILES_BANK15 + 0x04ea0),
+    SPRITE_FRAME(gSpriteBank15Frame046, SPRITE_TILES_BANK15_FRAME046),
     { { -4, -14, 14, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame047 = {
-    SPRITE_FRAME(gSpriteBank15Frame047, SPRITE_TILES_BANK15 + 0x04fe0),
+    SPRITE_FRAME(gSpriteBank15Frame047, SPRITE_TILES_BANK15_FRAME047),
     { { -4, -14, 12, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame048 = {
-    SPRITE_FRAME(gSpriteBank15Frame048, SPRITE_TILES_BANK15 + 0x05120),
+    SPRITE_FRAME(gSpriteBank15Frame048, SPRITE_TILES_BANK15_FRAME048),
     { { -4, -14, 11, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame049 = {
-    SPRITE_FRAME(gSpriteBank15Frame049, SPRITE_TILES_BANK15 + 0x05260),
+    SPRITE_FRAME(gSpriteBank15Frame049, SPRITE_TILES_BANK15_FRAME049),
     { { -4, -14, 12, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame050 = {
-    SPRITE_FRAME(gSpriteBank15Frame050, SPRITE_TILES_BANK15 + 0x053c0),
+    SPRITE_FRAME(gSpriteBank15Frame050, SPRITE_TILES_BANK15_FRAME050),
     { { -4, -14, 12, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame051 = {
-    SPRITE_FRAME(gSpriteBank15Frame051, SPRITE_TILES_BANK15 + 0x05500),
+    SPRITE_FRAME(gSpriteBank15Frame051, SPRITE_TILES_BANK15_FRAME051),
     { { -4, -14, 12, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame052 = {
-    SPRITE_FRAME(gSpriteBank15Frame052, SPRITE_TILES_BANK15 + 0x05640),
+    SPRITE_FRAME(gSpriteBank15Frame052, SPRITE_TILES_BANK15_FRAME052),
     { { -4, -14, 12, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame053 = {
-    SPRITE_FRAME(gSpriteBank15Frame053, SPRITE_TILES_BANK15 + 0x057a0),
+    SPRITE_FRAME(gSpriteBank15Frame053, SPRITE_TILES_BANK15_FRAME053),
     { { -4, -14, 12, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame054 = {
-    SPRITE_FRAME(gSpriteBank15Frame054, SPRITE_TILES_BANK15 + 0x058e0),
+    SPRITE_FRAME(gSpriteBank15Frame054, SPRITE_TILES_BANK15_FRAME054),
     { { -4, -14, 12, 28 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame055 = {
-    SPRITE_FRAME(gSpriteBank15Frame055, SPRITE_TILES_BANK15 + 0x05a20),
+    SPRITE_FRAME(gSpriteBank15Frame055, SPRITE_TILES_BANK15_FRAME055),
     { { -5, -15, 13, 29 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame056 = {
-    SPRITE_FRAME(gSpriteBank15Frame056, SPRITE_TILES_BANK15 + 0x05b60),
+    SPRITE_FRAME(gSpriteBank15Frame056, SPRITE_TILES_BANK15_FRAME056),
     { { -6, -14, 14, 28 } },
 };
 const struct sprite_frame_1box gSpriteBank15Frame057 = {
-    SPRITE_FRAME(gSpriteBank15Frame057, SPRITE_TILES_BANK15 + 0x05cc0),
+    SPRITE_FRAME(gSpriteBank15Frame057, SPRITE_TILES_BANK15_FRAME057),
     { { -7, -14, 14, 28 } },
 };
 
-const struct sprite_piece_pos gSpriteBank15Frame000Pos[2] = { { -10, -13 }, { 6, -11 } };
-const struct sprite_piece_pos gSpriteBank15Frame001Pos[2] = { { -10, -13 }, { 6, -11 } };
-const struct sprite_piece_pos gSpriteBank15Frame002Pos[2] = { { -10, -14 }, { 6, -11 } };
-const struct sprite_piece_pos gSpriteBank15Frame003Pos[2] = { { -11, -15 }, { 5, -12 } };
-const struct sprite_piece_pos gSpriteBank15Frame004Pos[2] = { { -13, -15 }, { 3, -13 } };
-const struct sprite_piece_pos gSpriteBank15Frame005Pos[1] = { { -14, -15 } };
-const struct sprite_piece_pos gSpriteBank15Frame006Pos[2] = { { -13, -14 }, { 3, -13 } };
-const struct sprite_piece_pos gSpriteBank15Frame007Pos[2] = { { -12, -14 }, { 4, -12 } };
-const struct sprite_piece_pos gSpriteBank15Frame008Pos[2] = { { -12, -14 }, { 4, -13 } };
-const struct sprite_piece_pos gSpriteBank15Frame009Pos[2] = { { -12, -14 }, { 4, -13 } };
-const struct sprite_piece_pos gSpriteBank15Frame010Pos[2] = { { -13, -15 }, { 3, -15 } };
-const struct sprite_piece_pos gSpriteBank15Frame011Pos[1] = { { -13, -15 } };
-const struct sprite_piece_pos gSpriteBank15Frame012Pos[1] = { { -13, -15 } };
-const struct sprite_piece_pos gSpriteBank15Frame013Pos[1] = { { -12, -15 } };
-const struct sprite_piece_pos gSpriteBank15Frame014Pos[2] = { { -10, -14 }, { 6, -11 } };
-const struct sprite_piece_pos gSpriteBank15Frame015Pos[2] = { { -17, -15 }, { 15, -3 } };
-const struct sprite_piece_pos gSpriteBank15Frame016Pos[1] = { { -16, -15 } };
-const struct sprite_piece_pos gSpriteBank15Frame017Pos[2] = { { -17, -14 }, { 15, -1 } };
-const struct sprite_piece_pos gSpriteBank15Frame018Pos[1] = { { -16, -14 } };
-const struct sprite_piece_pos gSpriteBank15Frame019Pos[2] = { { -10, -13 }, { 6, -11 } };
-const struct sprite_piece_pos gSpriteBank15Frame020Pos[2] = { { -9, -14 }, { 7, -10 } };
-const struct sprite_piece_pos gSpriteBank15Frame021Pos[1] = { { -12, -14 } };
-const struct sprite_piece_pos gSpriteBank15Frame022Pos[1] = { { -15, -14 } };
-const struct sprite_piece_pos gSpriteBank15Frame023Pos[1] = { { -16, -15 } };
-const struct sprite_piece_pos gSpriteBank15Frame024Pos[1] = { { -16, -15 } };
-const struct sprite_piece_pos gSpriteBank15Frame025Pos[1] = { { -16, -15 } };
-const struct sprite_piece_pos gSpriteBank15Frame026Pos[1] = { { -16, -14 } };
-const struct sprite_piece_pos gSpriteBank15Frame027Pos[1] = { { -14, -14 } };
-const struct sprite_piece_pos gSpriteBank15Frame028Pos[2] = { { -10, -13 }, { 6, -11 } };
-const struct sprite_piece_pos gSpriteBank15Frame029Pos[2] = { { -11, -14 }, { 5, -12 } };
-const struct sprite_piece_pos gSpriteBank15Frame030Pos[2] = { { -12, -15 }, { 4, -12 } };
-const struct sprite_piece_pos gSpriteBank15Frame031Pos[1] = { { -14, -15 } };
-const struct sprite_piece_pos gSpriteBank15Frame032Pos[1] = { { -14, -15 } };
-const struct sprite_piece_pos gSpriteBank15Frame033Pos[1] = { { -13, -15 } };
-const struct sprite_piece_pos gSpriteBank15Frame034Pos[2] = { { -11, -14 }, { 5, -1 } };
-const struct sprite_piece_pos gSpriteBank15Frame035Pos[2] = { { -11, -14 }, { 5, 1 } };
-const struct sprite_piece_pos gSpriteBank15Frame036Pos[2] = { { -11, -14 }, { 5, 3 } };
-const struct sprite_piece_pos gSpriteBank15Frame037Pos[2] = { { -11, -15 }, { 5, 4 } };
-const struct sprite_piece_pos gSpriteBank15Frame038Pos[2] = { { -12, -15 }, { 4, 1 } };
-const struct sprite_piece_pos gSpriteBank15Frame039Pos[1] = { { -13, -15 } };
-const struct sprite_piece_pos gSpriteBank15Frame040Pos[1] = { { -13, -14 } };
-const struct sprite_piece_pos gSpriteBank15Frame041Pos[2] = { { -12, -14 }, { 4, 1 } };
-const struct sprite_piece_pos gSpriteBank15Frame042Pos[1] = { { -14, -14 } };
-const struct sprite_piece_pos gSpriteBank15Frame043Pos[1] = { { -14, -14 } };
-const struct sprite_piece_pos gSpriteBank15Frame044Pos[2] = { { -13, -14 }, { 3, -12 } };
-const struct sprite_piece_pos gSpriteBank15Frame045Pos[2] = { { -11, -14 }, { 5, -12 } };
-const struct sprite_piece_pos gSpriteBank15Frame046Pos[2] = { { -7, -14 }, { 9, -1 } };
-const struct sprite_piece_pos gSpriteBank15Frame047Pos[3] = { { -7, -14 }, { 9, -7 }, { 9, 12 } };
-const struct sprite_piece_pos gSpriteBank15Frame048Pos[3] = { { -7, -14 }, { 9, -6 }, { 9, 12 } };
-const struct sprite_piece_pos gSpriteBank15Frame049Pos[3] = { { -7, -14 }, { 9, -3 }, { 9, 13 } };
-const struct sprite_piece_pos gSpriteBank15Frame050Pos[2] = { { -7, -14 }, { 9, 0 } };
-const struct sprite_piece_pos gSpriteBank15Frame051Pos[2] = { { -7, -14 }, { 9, 0 } };
-const struct sprite_piece_pos gSpriteBank15Frame052Pos[3] = { { -7, -14 }, { 9, -6 }, { 9, 12 } };
-const struct sprite_piece_pos gSpriteBank15Frame053Pos[2] = { { -7, -14 }, { 9, 0 } };
-const struct sprite_piece_pos gSpriteBank15Frame054Pos[2] = { { -7, -14 }, { 9, 1 } };
-const struct sprite_piece_pos gSpriteBank15Frame055Pos[2] = { { -8, -15 }, { 8, 1 } };
-const struct sprite_piece_pos gSpriteBank15Frame056Pos[3] = { { -9, -14 }, { 7, -11 }, { 7, 5 } };
-const struct sprite_piece_pos gSpriteBank15Frame057Pos[2] = { { -10, -14 }, { 6, -11 } };
-
-const u8 gSpriteBank15Frame000Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 9) };
-const u8 gSpriteBank15Frame001Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 9) };
-const u8 gSpriteBank15Frame002Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 9) };
-const u8 gSpriteBank15Frame003Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 9) };
-const u8 gSpriteBank15Frame004Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 9) };
-const u8 gSpriteBank15Frame005Pieces[1] = { SPRITE_PIECE(2, 2) };
-const u8 gSpriteBank15Frame006Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 9) };
-const u8 gSpriteBank15Frame007Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 9) };
-const u8 gSpriteBank15Frame008Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 9) };
-const u8 gSpriteBank15Frame009Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 9) };
-const u8 gSpriteBank15Frame010Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 9) };
-const u8 gSpriteBank15Frame011Pieces[1] = { SPRITE_PIECE(2, 2) };
-const u8 gSpriteBank15Frame012Pieces[1] = { SPRITE_PIECE(2, 2) };
-const u8 gSpriteBank15Frame013Pieces[1] = { SPRITE_PIECE(2, 2) };
-const u8 gSpriteBank15Frame014Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 9) };
-const u8 gSpriteBank15Frame015Pieces[2] = { SPRITE_PIECE(5, 2), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank15Frame016Pieces[1] = { SPRITE_PIECE(5, 2) };
-const u8 gSpriteBank15Frame017Pieces[2] = { SPRITE_PIECE(5, 2), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank15Frame018Pieces[1] = { SPRITE_PIECE(5, 2) };
-const u8 gSpriteBank15Frame019Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 9) };
-const u8 gSpriteBank15Frame020Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 9) };
-const u8 gSpriteBank15Frame021Pieces[1] = { SPRITE_PIECE(2, 2) };
-const u8 gSpriteBank15Frame022Pieces[1] = { SPRITE_PIECE(2, 2) };
-const u8 gSpriteBank15Frame023Pieces[1] = { SPRITE_PIECE(2, 2) };
-const u8 gSpriteBank15Frame024Pieces[1] = { SPRITE_PIECE(2, 2) };
-const u8 gSpriteBank15Frame025Pieces[1] = { SPRITE_PIECE(2, 2) };
-const u8 gSpriteBank15Frame026Pieces[1] = { SPRITE_PIECE(2, 2) };
-const u8 gSpriteBank15Frame027Pieces[1] = { SPRITE_PIECE(2, 2) };
-const u8 gSpriteBank15Frame028Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 9) };
-const u8 gSpriteBank15Frame029Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 9) };
-const u8 gSpriteBank15Frame030Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 9) };
-const u8 gSpriteBank15Frame031Pieces[1] = { SPRITE_PIECE(2, 2) };
-const u8 gSpriteBank15Frame032Pieces[1] = { SPRITE_PIECE(2, 2) };
-const u8 gSpriteBank15Frame033Pieces[1] = { SPRITE_PIECE(2, 2) };
-const u8 gSpriteBank15Frame034Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank15Frame035Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank15Frame036Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank15Frame037Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank15Frame038Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank15Frame039Pieces[1] = { SPRITE_PIECE(2, 2) };
-const u8 gSpriteBank15Frame040Pieces[1] = { SPRITE_PIECE(2, 2) };
-const u8 gSpriteBank15Frame041Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank15Frame042Pieces[1] = { SPRITE_PIECE(2, 2) };
-const u8 gSpriteBank15Frame043Pieces[1] = { SPRITE_PIECE(2, 2) };
-const u8 gSpriteBank15Frame044Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 9) };
-const u8 gSpriteBank15Frame045Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 9) };
-const u8 gSpriteBank15Frame046Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank15Frame047Pieces[3] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank15Frame048Pieces[3] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank15Frame049Pieces[3] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank15Frame050Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank15Frame051Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank15Frame052Pieces[3] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank15Frame053Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank15Frame054Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank15Frame055Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank15Frame056Pieces[3] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank15Frame057Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 9) };
+/* The piece arrays, from graphics/sprites/bank15_penguin/bank.json. */
+#include "sprites/bank15_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 16: 2 animations, 24 frames, tiles in gSpriteBank16Tiles (SPRITE_TILES_BANK16). */
+/* Bank 16: 2 animations, 24 frames, graphics/sprites/bank16_polar_bear/. */
 
 extern const u16 gSpriteBank16Anim00Seq[12];
 extern const u16 gSpriteBank16Anim01Seq[12];
-extern const struct sprite_frame_1box gSpriteBank16Frame000;
-extern const struct sprite_frame_1box gSpriteBank16Frame001;
-extern const struct sprite_frame_1box gSpriteBank16Frame002;
-extern const struct sprite_frame_1box gSpriteBank16Frame003;
-extern const struct sprite_frame_1box gSpriteBank16Frame004;
-extern const struct sprite_frame_1box gSpriteBank16Frame005;
-extern const struct sprite_frame_1box gSpriteBank16Frame006;
-extern const struct sprite_frame_1box gSpriteBank16Frame007;
-extern const struct sprite_frame_1box gSpriteBank16Frame008;
-extern const struct sprite_frame_1box gSpriteBank16Frame009;
-extern const struct sprite_frame_1box gSpriteBank16Frame010;
-extern const struct sprite_frame_1box gSpriteBank16Frame011;
-extern const struct sprite_frame_1box gSpriteBank16Frame012;
-extern const struct sprite_frame_1box gSpriteBank16Frame013;
-extern const struct sprite_frame_1box gSpriteBank16Frame014;
-extern const struct sprite_frame_1box gSpriteBank16Frame015;
-extern const struct sprite_frame_1box gSpriteBank16Frame016;
-extern const struct sprite_frame_1box gSpriteBank16Frame017;
-extern const struct sprite_frame_1box gSpriteBank16Frame018;
-extern const struct sprite_frame_1box gSpriteBank16Frame019;
-extern const struct sprite_frame_1box gSpriteBank16Frame020;
-extern const struct sprite_frame_1box gSpriteBank16Frame021;
-extern const struct sprite_frame_1box gSpriteBank16Frame022;
-extern const struct sprite_frame_1box gSpriteBank16Frame023;
-extern const struct sprite_piece_pos gSpriteBank16Frame000Pos[1];
-extern const struct sprite_piece_pos gSpriteBank16Frame001Pos[1];
-extern const struct sprite_piece_pos gSpriteBank16Frame002Pos[1];
-extern const struct sprite_piece_pos gSpriteBank16Frame003Pos[1];
-extern const struct sprite_piece_pos gSpriteBank16Frame004Pos[1];
-extern const struct sprite_piece_pos gSpriteBank16Frame005Pos[1];
-extern const struct sprite_piece_pos gSpriteBank16Frame006Pos[2];
-extern const struct sprite_piece_pos gSpriteBank16Frame007Pos[2];
-extern const struct sprite_piece_pos gSpriteBank16Frame008Pos[2];
-extern const struct sprite_piece_pos gSpriteBank16Frame009Pos[2];
-extern const struct sprite_piece_pos gSpriteBank16Frame010Pos[2];
-extern const struct sprite_piece_pos gSpriteBank16Frame011Pos[2];
-extern const struct sprite_piece_pos gSpriteBank16Frame012Pos[1];
-extern const struct sprite_piece_pos gSpriteBank16Frame013Pos[1];
-extern const struct sprite_piece_pos gSpriteBank16Frame014Pos[1];
-extern const struct sprite_piece_pos gSpriteBank16Frame015Pos[1];
-extern const struct sprite_piece_pos gSpriteBank16Frame016Pos[3];
-extern const struct sprite_piece_pos gSpriteBank16Frame017Pos[3];
-extern const struct sprite_piece_pos gSpriteBank16Frame018Pos[1];
-extern const struct sprite_piece_pos gSpriteBank16Frame019Pos[2];
-extern const struct sprite_piece_pos gSpriteBank16Frame020Pos[3];
-extern const struct sprite_piece_pos gSpriteBank16Frame021Pos[1];
-extern const struct sprite_piece_pos gSpriteBank16Frame022Pos[1];
-extern const struct sprite_piece_pos gSpriteBank16Frame023Pos[1];
-extern const u8 gSpriteBank16Frame000Pieces[1];
-extern const u8 gSpriteBank16Frame001Pieces[1];
-extern const u8 gSpriteBank16Frame002Pieces[1];
-extern const u8 gSpriteBank16Frame003Pieces[1];
-extern const u8 gSpriteBank16Frame004Pieces[1];
-extern const u8 gSpriteBank16Frame005Pieces[1];
-extern const u8 gSpriteBank16Frame006Pieces[2];
-extern const u8 gSpriteBank16Frame007Pieces[2];
-extern const u8 gSpriteBank16Frame008Pieces[2];
-extern const u8 gSpriteBank16Frame009Pieces[2];
-extern const u8 gSpriteBank16Frame010Pieces[2];
-extern const u8 gSpriteBank16Frame011Pieces[2];
-extern const u8 gSpriteBank16Frame012Pieces[1];
-extern const u8 gSpriteBank16Frame013Pieces[1];
-extern const u8 gSpriteBank16Frame014Pieces[1];
-extern const u8 gSpriteBank16Frame015Pieces[1];
-extern const u8 gSpriteBank16Frame016Pieces[3];
-extern const u8 gSpriteBank16Frame017Pieces[3];
-extern const u8 gSpriteBank16Frame018Pieces[1];
-extern const u8 gSpriteBank16Frame019Pieces[2];
-extern const u8 gSpriteBank16Frame020Pieces[3];
-extern const u8 gSpriteBank16Frame021Pieces[1];
-extern const u8 gSpriteBank16Frame022Pieces[1];
-extern const u8 gSpriteBank16Frame023Pieces[1];
 
 extern const struct sprite_anim gSpriteBank16Anims[2] = {
     /* 0 */ {
@@ -2498,201 +1425,109 @@ extern const struct sprite_frame *const gSpriteBank16Frames[24] = {
 };
 
 const struct sprite_frame_1box gSpriteBank16Frame000 = {
-    SPRITE_FRAME(gSpriteBank16Frame000, SPRITE_TILES_BANK16 + 0x00000),
+    SPRITE_FRAME(gSpriteBank16Frame000, SPRITE_TILES_BANK16_FRAME000),
     { { -25, -10, 50, 21 } },
 };
 const struct sprite_frame_1box gSpriteBank16Frame001 = {
-    SPRITE_FRAME(gSpriteBank16Frame001, SPRITE_TILES_BANK16 + 0x00400),
+    SPRITE_FRAME(gSpriteBank16Frame001, SPRITE_TILES_BANK16_FRAME001),
     { { -24, -9, 49, 20 } },
 };
 const struct sprite_frame_1box gSpriteBank16Frame002 = {
-    SPRITE_FRAME(gSpriteBank16Frame002, SPRITE_TILES_BANK16 + 0x00800),
+    SPRITE_FRAME(gSpriteBank16Frame002, SPRITE_TILES_BANK16_FRAME002),
     { { -24, -8, 49, 18 } },
 };
 const struct sprite_frame_1box gSpriteBank16Frame003 = {
-    SPRITE_FRAME(gSpriteBank16Frame003, SPRITE_TILES_BANK16 + 0x00c00),
+    SPRITE_FRAME(gSpriteBank16Frame003, SPRITE_TILES_BANK16_FRAME003),
     { { -23, -8, 49, 18 } },
 };
 const struct sprite_frame_1box gSpriteBank16Frame004 = {
-    SPRITE_FRAME(gSpriteBank16Frame004, SPRITE_TILES_BANK16 + 0x01000),
+    SPRITE_FRAME(gSpriteBank16Frame004, SPRITE_TILES_BANK16_FRAME004),
     { { -23, -8, 49, 18 } },
 };
 const struct sprite_frame_1box gSpriteBank16Frame005 = {
-    SPRITE_FRAME(gSpriteBank16Frame005, SPRITE_TILES_BANK16 + 0x01400),
+    SPRITE_FRAME(gSpriteBank16Frame005, SPRITE_TILES_BANK16_FRAME005),
     { { -25, -9, 52, 20 } },
 };
 const struct sprite_frame_1box gSpriteBank16Frame006 = {
-    SPRITE_FRAME(gSpriteBank16Frame006, SPRITE_TILES_BANK16 + 0x01800),
+    SPRITE_FRAME(gSpriteBank16Frame006, SPRITE_TILES_BANK16_FRAME006),
     { { -29, -10, 57, 21 } },
 };
 const struct sprite_frame_1box gSpriteBank16Frame007 = {
-    SPRITE_FRAME(gSpriteBank16Frame007, SPRITE_TILES_BANK16 + 0x01c20),
+    SPRITE_FRAME(gSpriteBank16Frame007, SPRITE_TILES_BANK16_FRAME007),
     { { -31, -9, 59, 20 } },
 };
 const struct sprite_frame_1box gSpriteBank16Frame008 = {
-    SPRITE_FRAME(gSpriteBank16Frame008, SPRITE_TILES_BANK16 + 0x02060),
+    SPRITE_FRAME(gSpriteBank16Frame008, SPRITE_TILES_BANK16_FRAME008),
     { { -33, -8, 61, 18 } },
 };
 const struct sprite_frame_1box gSpriteBank16Frame009 = {
-    SPRITE_FRAME(gSpriteBank16Frame009, SPRITE_TILES_BANK16 + 0x024a0),
+    SPRITE_FRAME(gSpriteBank16Frame009, SPRITE_TILES_BANK16_FRAME009),
     { { -33, -8, 60, 18 } },
 };
 const struct sprite_frame_1box gSpriteBank16Frame010 = {
-    SPRITE_FRAME(gSpriteBank16Frame010, SPRITE_TILES_BANK16 + 0x028e0),
+    SPRITE_FRAME(gSpriteBank16Frame010, SPRITE_TILES_BANK16_FRAME010),
     { { -33, -8, 59, 18 } },
 };
 const struct sprite_frame_1box gSpriteBank16Frame011 = {
-    SPRITE_FRAME(gSpriteBank16Frame011, SPRITE_TILES_BANK16 + 0x02d20),
+    SPRITE_FRAME(gSpriteBank16Frame011, SPRITE_TILES_BANK16_FRAME011),
     { { -29, -9, 55, 19 } },
 };
 const struct sprite_frame_1box gSpriteBank16Frame012 = {
-    SPRITE_FRAME(gSpriteBank16Frame012, SPRITE_TILES_BANK16 + 0x03140),
+    SPRITE_FRAME(gSpriteBank16Frame012, SPRITE_TILES_BANK16_FRAME012),
     { { -27, -11, 54, 23 } },
 };
 const struct sprite_frame_1box gSpriteBank16Frame013 = {
-    SPRITE_FRAME(gSpriteBank16Frame013, SPRITE_TILES_BANK16 + 0x03540),
+    SPRITE_FRAME(gSpriteBank16Frame013, SPRITE_TILES_BANK16_FRAME013),
     { { -25, -10, 51, 22 } },
 };
 const struct sprite_frame_1box gSpriteBank16Frame014 = {
-    SPRITE_FRAME(gSpriteBank16Frame014, SPRITE_TILES_BANK16 + 0x03940),
+    SPRITE_FRAME(gSpriteBank16Frame014, SPRITE_TILES_BANK16_FRAME014),
     { { -23, -9, 47, 20 } },
 };
 const struct sprite_frame_1box gSpriteBank16Frame015 = {
-    SPRITE_FRAME(gSpriteBank16Frame015, SPRITE_TILES_BANK16 + 0x03d40),
+    SPRITE_FRAME(gSpriteBank16Frame015, SPRITE_TILES_BANK16_FRAME015),
     { { -20, -9, 41, 20 } },
 };
 const struct sprite_frame_1box gSpriteBank16Frame016 = {
-    SPRITE_FRAME(gSpriteBank16Frame016, SPRITE_TILES_BANK16 + 0x04140),
+    SPRITE_FRAME(gSpriteBank16Frame016, SPRITE_TILES_BANK16_FRAME016),
     { { -19, -9, 36, 20 } },
 };
 const struct sprite_frame_1box gSpriteBank16Frame017 = {
-    SPRITE_FRAME(gSpriteBank16Frame017, SPRITE_TILES_BANK16 + 0x04400),
+    SPRITE_FRAME(gSpriteBank16Frame017, SPRITE_TILES_BANK16_FRAME017),
     { { -18, -10, 31, 21 } },
 };
 const struct sprite_frame_1box gSpriteBank16Frame018 = {
-    SPRITE_FRAME(gSpriteBank16Frame018, SPRITE_TILES_BANK16 + 0x04660),
+    SPRITE_FRAME(gSpriteBank16Frame018, SPRITE_TILES_BANK16_FRAME018),
     { { -13, -10, 23, 22 } },
 };
 const struct sprite_frame_1box gSpriteBank16Frame019 = {
-    SPRITE_FRAME(gSpriteBank16Frame019, SPRITE_TILES_BANK16 + 0x04860),
+    SPRITE_FRAME(gSpriteBank16Frame019, SPRITE_TILES_BANK16_FRAME019),
     { { -13, -10, 27, 22 } },
 };
 const struct sprite_frame_1box gSpriteBank16Frame020 = {
-    SPRITE_FRAME(gSpriteBank16Frame020, SPRITE_TILES_BANK16 + 0x04aa0),
+    SPRITE_FRAME(gSpriteBank16Frame020, SPRITE_TILES_BANK16_FRAME020),
     { { -18, -9, 34, 20 } },
 };
 const struct sprite_frame_1box gSpriteBank16Frame021 = {
-    SPRITE_FRAME(gSpriteBank16Frame021, SPRITE_TILES_BANK16 + 0x04d40),
+    SPRITE_FRAME(gSpriteBank16Frame021, SPRITE_TILES_BANK16_FRAME021),
     { { -24, -9, 41, 20 } },
 };
 const struct sprite_frame_1box gSpriteBank16Frame022 = {
-    SPRITE_FRAME(gSpriteBank16Frame022, SPRITE_TILES_BANK16 + 0x05140),
+    SPRITE_FRAME(gSpriteBank16Frame022, SPRITE_TILES_BANK16_FRAME022),
     { { -29, -10, 48, 21 } },
 };
 const struct sprite_frame_1box gSpriteBank16Frame023 = {
-    SPRITE_FRAME(gSpriteBank16Frame023, SPRITE_TILES_BANK16 + 0x05540),
+    SPRITE_FRAME(gSpriteBank16Frame023, SPRITE_TILES_BANK16_FRAME023),
     { { -32, -11, 55, 22 } },
 };
 
-const struct sprite_piece_pos gSpriteBank16Frame000Pos[1] = { { -30, -14 } };
-const struct sprite_piece_pos gSpriteBank16Frame001Pos[1] = { { -29, -13 } };
-const struct sprite_piece_pos gSpriteBank16Frame002Pos[1] = { { -29, -12 } };
-const struct sprite_piece_pos gSpriteBank16Frame003Pos[1] = { { -28, -12 } };
-const struct sprite_piece_pos gSpriteBank16Frame004Pos[1] = { { -28, -12 } };
-const struct sprite_piece_pos gSpriteBank16Frame005Pos[1] = { { -30, -13 } };
-const struct sprite_piece_pos gSpriteBank16Frame006Pos[2] = { { -34, -14 }, { 30, 0 } };
-const struct sprite_piece_pos gSpriteBank16Frame007Pos[2] = { { -36, -13 }, { 28, -2 } };
-const struct sprite_piece_pos gSpriteBank16Frame008Pos[2] = { { -38, -12 }, { 26, -4 } };
-const struct sprite_piece_pos gSpriteBank16Frame009Pos[2] = { { -38, -12 }, { 26, -4 } };
-const struct sprite_piece_pos gSpriteBank16Frame010Pos[2] = { { -38, -12 }, { 26, -2 } };
-const struct sprite_piece_pos gSpriteBank16Frame011Pos[2] = { { -34, -13 }, { 30, 1 } };
-const struct sprite_piece_pos gSpriteBank16Frame012Pos[1] = { { -30, -14 } };
-const struct sprite_piece_pos gSpriteBank16Frame013Pos[1] = { { -28, -13 } };
-const struct sprite_piece_pos gSpriteBank16Frame014Pos[1] = { { -26, -12 } };
-const struct sprite_piece_pos gSpriteBank16Frame015Pos[1] = { { -23, -12 } };
-const struct sprite_piece_pos gSpriteBank16Frame016Pos[3] = { { -22, -12 }, { 10, -9 }, { 18, -2 } };
-const struct sprite_piece_pos gSpriteBank16Frame017Pos[3] = { { -21, -13 }, { 11, -7 }, { 11, 9 } };
-const struct sprite_piece_pos gSpriteBank16Frame018Pos[1] = { { -16, -13 } };
-const struct sprite_piece_pos gSpriteBank16Frame019Pos[2] = { { -16, -13 }, { 16, 0 } };
-const struct sprite_piece_pos gSpriteBank16Frame020Pos[3] = { { -21, -12 }, { 11, -12 }, { 19, 7 } };
-const struct sprite_piece_pos gSpriteBank16Frame021Pos[1] = { { -27, -12 } };
-const struct sprite_piece_pos gSpriteBank16Frame022Pos[1] = { { -32, -13 } };
-const struct sprite_piece_pos gSpriteBank16Frame023Pos[1] = { { -35, -14 } };
-
-const u8 gSpriteBank16Frame000Pieces[1] = { SPRITE_PIECE(2, 7) };
-const u8 gSpriteBank16Frame001Pieces[1] = { SPRITE_PIECE(2, 7) };
-const u8 gSpriteBank16Frame002Pieces[1] = { SPRITE_PIECE(2, 7) };
-const u8 gSpriteBank16Frame003Pieces[1] = { SPRITE_PIECE(2, 7) };
-const u8 gSpriteBank16Frame004Pieces[1] = { SPRITE_PIECE(2, 7) };
-const u8 gSpriteBank16Frame005Pieces[1] = { SPRITE_PIECE(2, 7) };
-const u8 gSpriteBank16Frame006Pieces[2] = { SPRITE_PIECE(2, 7), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank16Frame007Pieces[2] = { SPRITE_PIECE(2, 7), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank16Frame008Pieces[2] = { SPRITE_PIECE(2, 7), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank16Frame009Pieces[2] = { SPRITE_PIECE(2, 7), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank16Frame010Pieces[2] = { SPRITE_PIECE(2, 7), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank16Frame011Pieces[2] = { SPRITE_PIECE(2, 7), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank16Frame012Pieces[1] = { SPRITE_PIECE(2, 7) };
-const u8 gSpriteBank16Frame013Pieces[1] = { SPRITE_PIECE(2, 7) };
-const u8 gSpriteBank16Frame014Pieces[1] = { SPRITE_PIECE(2, 7) };
-const u8 gSpriteBank16Frame015Pieces[1] = { SPRITE_PIECE(2, 7) };
-const u8 gSpriteBank16Frame016Pieces[3] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank16Frame017Pieces[3] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank16Frame018Pieces[1] = { SPRITE_PIECE(2, 2) };
-const u8 gSpriteBank16Frame019Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank16Frame020Pieces[3] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank16Frame021Pieces[1] = { SPRITE_PIECE(2, 7) };
-const u8 gSpriteBank16Frame022Pieces[1] = { SPRITE_PIECE(2, 7) };
-const u8 gSpriteBank16Frame023Pieces[1] = { SPRITE_PIECE(2, 7) };
+/* The piece arrays, from graphics/sprites/bank16_polar_bear/bank.json. */
+#include "sprites/bank16_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 17: 1 animation, 15 frames, tiles in gSpriteBank17Tiles (SPRITE_TILES_BANK17). */
+/* Bank 17: 1 animation, 15 frames, graphics/sprites/bank17_seal/. */
 
 extern const u16 gSpriteBank17Anim00Seq[15];
-extern const struct sprite_frame_1box gSpriteBank17Frame000;
-extern const struct sprite_frame_1box gSpriteBank17Frame001;
-extern const struct sprite_frame_1box gSpriteBank17Frame002;
-extern const struct sprite_frame_1box gSpriteBank17Frame003;
-extern const struct sprite_frame_1box gSpriteBank17Frame004;
-extern const struct sprite_frame_1box gSpriteBank17Frame005;
-extern const struct sprite_frame_1box gSpriteBank17Frame006;
-extern const struct sprite_frame_1box gSpriteBank17Frame007;
-extern const struct sprite_frame_1box gSpriteBank17Frame008;
-extern const struct sprite_frame_1box gSpriteBank17Frame009;
-extern const struct sprite_frame_1box gSpriteBank17Frame010;
-extern const struct sprite_frame_1box gSpriteBank17Frame011;
-extern const struct sprite_frame_1box gSpriteBank17Frame012;
-extern const struct sprite_frame_1box gSpriteBank17Frame013;
-extern const struct sprite_frame_1box gSpriteBank17Frame014;
-extern const struct sprite_piece_pos gSpriteBank17Frame000Pos[3];
-extern const struct sprite_piece_pos gSpriteBank17Frame001Pos[3];
-extern const struct sprite_piece_pos gSpriteBank17Frame002Pos[2];
-extern const struct sprite_piece_pos gSpriteBank17Frame003Pos[3];
-extern const struct sprite_piece_pos gSpriteBank17Frame004Pos[1];
-extern const struct sprite_piece_pos gSpriteBank17Frame005Pos[5];
-extern const struct sprite_piece_pos gSpriteBank17Frame006Pos[4];
-extern const struct sprite_piece_pos gSpriteBank17Frame007Pos[4];
-extern const struct sprite_piece_pos gSpriteBank17Frame008Pos[4];
-extern const struct sprite_piece_pos gSpriteBank17Frame009Pos[5];
-extern const struct sprite_piece_pos gSpriteBank17Frame010Pos[4];
-extern const struct sprite_piece_pos gSpriteBank17Frame011Pos[1];
-extern const struct sprite_piece_pos gSpriteBank17Frame012Pos[3];
-extern const struct sprite_piece_pos gSpriteBank17Frame013Pos[3];
-extern const struct sprite_piece_pos gSpriteBank17Frame014Pos[3];
-extern const u8 gSpriteBank17Frame000Pieces[3];
-extern const u8 gSpriteBank17Frame001Pieces[3];
-extern const u8 gSpriteBank17Frame002Pieces[2];
-extern const u8 gSpriteBank17Frame003Pieces[3];
-extern const u8 gSpriteBank17Frame004Pieces[1];
-extern const u8 gSpriteBank17Frame005Pieces[5];
-extern const u8 gSpriteBank17Frame006Pieces[4];
-extern const u8 gSpriteBank17Frame007Pieces[4];
-extern const u8 gSpriteBank17Frame008Pieces[4];
-extern const u8 gSpriteBank17Frame009Pieces[5];
-extern const u8 gSpriteBank17Frame010Pieces[4];
-extern const u8 gSpriteBank17Frame011Pieces[1];
-extern const u8 gSpriteBank17Frame012Pieces[3];
-extern const u8 gSpriteBank17Frame013Pieces[3];
-extern const u8 gSpriteBank17Frame014Pieces[3];
 
 extern const struct sprite_anim gSpriteBank17Anims[1] = {
     /* 0 */ {
@@ -2728,145 +1563,74 @@ extern const struct sprite_frame *const gSpriteBank17Frames[15] = {
 };
 
 const struct sprite_frame_1box gSpriteBank17Frame000 = {
-    SPRITE_FRAME(gSpriteBank17Frame000, SPRITE_TILES_BANK17 + 0x00000),
+    SPRITE_FRAME(gSpriteBank17Frame000, SPRITE_TILES_BANK17_FRAME000),
     { { -10, -4, 29, 13 } },
 };
 const struct sprite_frame_1box gSpriteBank17Frame001 = {
-    SPRITE_FRAME(gSpriteBank17Frame001, SPRITE_TILES_BANK17 + 0x00260),
+    SPRITE_FRAME(gSpriteBank17Frame001, SPRITE_TILES_BANK17_FRAME001),
     { { -10, -4, 29, 13 } },
 };
 const struct sprite_frame_1box gSpriteBank17Frame002 = {
-    SPRITE_FRAME(gSpriteBank17Frame002, SPRITE_TILES_BANK17 + 0x004c0),
+    SPRITE_FRAME(gSpriteBank17Frame002, SPRITE_TILES_BANK17_FRAME002),
     { { -10, -4, 29, 13 } },
 };
 const struct sprite_frame_1box gSpriteBank17Frame003 = {
-    SPRITE_FRAME(gSpriteBank17Frame003, SPRITE_TILES_BANK17 + 0x00740),
+    SPRITE_FRAME(gSpriteBank17Frame003, SPRITE_TILES_BANK17_FRAME003),
     { { -10, -4, 29, 13 } },
 };
 const struct sprite_frame_1box gSpriteBank17Frame004 = {
-    SPRITE_FRAME(gSpriteBank17Frame004, SPRITE_TILES_BANK17 + 0x00a00),
+    SPRITE_FRAME(gSpriteBank17Frame004, SPRITE_TILES_BANK17_FRAME004),
     { { -10, -4, 29, 13 } },
 };
 const struct sprite_frame_1box gSpriteBank17Frame005 = {
-    SPRITE_FRAME(gSpriteBank17Frame005, SPRITE_TILES_BANK17 + 0x00e00),
+    SPRITE_FRAME(gSpriteBank17Frame005, SPRITE_TILES_BANK17_FRAME005),
     { { -10, -4, 29, 13 } },
 };
 const struct sprite_frame_1box gSpriteBank17Frame006 = {
-    SPRITE_FRAME(gSpriteBank17Frame006, SPRITE_TILES_BANK17 + 0x01060),
+    SPRITE_FRAME(gSpriteBank17Frame006, SPRITE_TILES_BANK17_FRAME006),
     { { -10, -4, 29, 13 } },
 };
 const struct sprite_frame_1box gSpriteBank17Frame007 = {
-    SPRITE_FRAME(gSpriteBank17Frame007, SPRITE_TILES_BANK17 + 0x01260),
+    SPRITE_FRAME(gSpriteBank17Frame007, SPRITE_TILES_BANK17_FRAME007),
     { { -10, -4, 29, 13 } },
 };
 const struct sprite_frame_1box gSpriteBank17Frame008 = {
-    SPRITE_FRAME(gSpriteBank17Frame008, SPRITE_TILES_BANK17 + 0x01440),
+    SPRITE_FRAME(gSpriteBank17Frame008, SPRITE_TILES_BANK17_FRAME008),
     { { -10, -4, 29, 13 } },
 };
 const struct sprite_frame_1box gSpriteBank17Frame009 = {
-    SPRITE_FRAME(gSpriteBank17Frame009, SPRITE_TILES_BANK17 + 0x01620),
+    SPRITE_FRAME(gSpriteBank17Frame009, SPRITE_TILES_BANK17_FRAME009),
     { { -10, -4, 29, 13 } },
 };
 const struct sprite_frame_1box gSpriteBank17Frame010 = {
-    SPRITE_FRAME(gSpriteBank17Frame010, SPRITE_TILES_BANK17 + 0x01800),
+    SPRITE_FRAME(gSpriteBank17Frame010, SPRITE_TILES_BANK17_FRAME010),
     { { -10, -4, 29, 13 } },
 };
 const struct sprite_frame_1box gSpriteBank17Frame011 = {
-    SPRITE_FRAME(gSpriteBank17Frame011, SPRITE_TILES_BANK17 + 0x019e0),
+    SPRITE_FRAME(gSpriteBank17Frame011, SPRITE_TILES_BANK17_FRAME011),
     { { -10, -4, 29, 13 } },
 };
 const struct sprite_frame_1box gSpriteBank17Frame012 = {
-    SPRITE_FRAME(gSpriteBank17Frame012, SPRITE_TILES_BANK17 + 0x01de0),
+    SPRITE_FRAME(gSpriteBank17Frame012, SPRITE_TILES_BANK17_FRAME012),
     { { -10, -4, 29, 13 } },
 };
 const struct sprite_frame_1box gSpriteBank17Frame013 = {
-    SPRITE_FRAME(gSpriteBank17Frame013, SPRITE_TILES_BANK17 + 0x020a0),
+    SPRITE_FRAME(gSpriteBank17Frame013, SPRITE_TILES_BANK17_FRAME013),
     { { -10, -4, 29, 13 } },
 };
 const struct sprite_frame_1box gSpriteBank17Frame014 = {
-    SPRITE_FRAME(gSpriteBank17Frame014, SPRITE_TILES_BANK17 + 0x02340),
+    SPRITE_FRAME(gSpriteBank17Frame014, SPRITE_TILES_BANK17_FRAME014),
     { { -10, -4, 29, 13 } },
 };
 
-const struct sprite_piece_pos gSpriteBank17Frame000Pos[3] = { { -18, -15 }, { 14, -14 }, { 14, 2 } };
-const struct sprite_piece_pos gSpriteBank17Frame001Pos[3] = { { -18, -16 }, { 14, -14 }, { 14, 2 } };
-const struct sprite_piece_pos gSpriteBank17Frame002Pos[2] = { { -19, -18 }, { 13, -15 } };
-const struct sprite_piece_pos gSpriteBank17Frame003Pos[3] = { { -22, -19 }, { 10, -17 }, { 18, -15 } };
-const struct sprite_piece_pos gSpriteBank17Frame004Pos[1] = { { -26, -17 } };
-const struct sprite_piece_pos gSpriteBank17Frame005Pos[5] = { { -26, -6 }, { 3, -12 }, { 19, -5 }, { -29, 4 }, { 3, 4 } };
-const struct sprite_piece_pos gSpriteBank17Frame006Pos[4] = { { -30, -5 }, { 2, -8 }, { 18, -5 }, { -4, 8 } };
-const struct sprite_piece_pos gSpriteBank17Frame007Pos[4] = { { -30, -5 }, { 2, -5 }, { 18, -5 }, { 1, 11 } };
-const struct sprite_piece_pos gSpriteBank17Frame008Pos[4] = { { -29, -5 }, { 3, -5 }, { 19, -3 }, { 0, 11 } };
-const struct sprite_piece_pos gSpriteBank17Frame009Pos[5] = { { -27, -5 }, { 5, -6 }, { 21, -3 }, { 1, 10 }, { 9, 10 } };
-const struct sprite_piece_pos gSpriteBank17Frame010Pos[4] = { { -26, -5 }, { 6, -7 }, { 22, -4 }, { -3, 9 } };
-const struct sprite_piece_pos gSpriteBank17Frame011Pos[1] = { { -24, -9 } };
-const struct sprite_piece_pos gSpriteBank17Frame012Pos[3] = { { -22, -5 }, { 10, -11 }, { 18, -10 } };
-const struct sprite_piece_pos gSpriteBank17Frame013Pos[3] = { { -20, -8 }, { 12, -13 }, { 20, -10 } };
-const struct sprite_piece_pos gSpriteBank17Frame014Pos[3] = { { -18, -14 }, { 14, -14 }, { 14, 2 } };
-
-const u8 gSpriteBank17Frame000Pieces[3] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank17Frame001Pieces[3] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank17Frame002Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 9) };
-const u8 gSpriteBank17Frame003Pieces[3] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank17Frame004Pieces[1] = { SPRITE_PIECE(2, 7) };
-const u8 gSpriteBank17Frame005Pieces[5] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 5), SPRITE_PIECE(0, 4) };
-const u8 gSpriteBank17Frame006Pieces[4] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 4) };
-const u8 gSpriteBank17Frame007Pieces[4] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank17Frame008Pieces[4] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank17Frame009Pieces[5] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank17Frame010Pieces[4] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 4) };
-const u8 gSpriteBank17Frame011Pieces[1] = { SPRITE_PIECE(2, 7) };
-const u8 gSpriteBank17Frame012Pieces[3] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank17Frame013Pieces[3] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank17Frame014Pieces[3] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 0) };
+/* The piece arrays, from graphics/sprites/bank17_seal/bank.json. */
+#include "sprites/bank17_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 18: 2 animations, 14 frames, tiles in gSpriteBank18Tiles (SPRITE_TILES_BANK18). */
+/* Bank 18: 2 animations, 14 frames, graphics/sprites/bank18_wooden_crusher/. */
 
 extern const u16 gSpriteBank18Anim00Seq[9];
 extern const u16 gSpriteBank18Anim01Seq[5];
-extern const struct sprite_frame_1box gSpriteBank18Frame000;
-extern const struct sprite_frame_1box gSpriteBank18Frame001;
-extern const struct sprite_frame_1box gSpriteBank18Frame002;
-extern const struct sprite_frame_1box gSpriteBank18Frame003;
-extern const struct sprite_frame_1box gSpriteBank18Frame004;
-extern const struct sprite_frame_1box gSpriteBank18Frame005;
-extern const struct sprite_frame_1box gSpriteBank18Frame006;
-extern const struct sprite_frame_1box gSpriteBank18Frame007;
-extern const struct sprite_frame_1box gSpriteBank18Frame008;
-extern const struct sprite_frame_1box gSpriteBank18Frame009;
-extern const struct sprite_frame_1box gSpriteBank18Frame010;
-extern const struct sprite_frame_1box gSpriteBank18Frame011;
-extern const struct sprite_frame_1box gSpriteBank18Frame012;
-extern const struct sprite_frame_1box gSpriteBank18Frame013;
-extern const struct sprite_piece_pos gSpriteBank18Frame000Pos[2];
-extern const struct sprite_piece_pos gSpriteBank18Frame001Pos[2];
-extern const struct sprite_piece_pos gSpriteBank18Frame002Pos[3];
-extern const struct sprite_piece_pos gSpriteBank18Frame003Pos[2];
-extern const struct sprite_piece_pos gSpriteBank18Frame004Pos[3];
-extern const struct sprite_piece_pos gSpriteBank18Frame005Pos[1];
-extern const struct sprite_piece_pos gSpriteBank18Frame006Pos[1];
-extern const struct sprite_piece_pos gSpriteBank18Frame007Pos[2];
-extern const struct sprite_piece_pos gSpriteBank18Frame008Pos[2];
-extern const struct sprite_piece_pos gSpriteBank18Frame009Pos[2];
-extern const struct sprite_piece_pos gSpriteBank18Frame010Pos[2];
-extern const struct sprite_piece_pos gSpriteBank18Frame011Pos[1];
-extern const struct sprite_piece_pos gSpriteBank18Frame012Pos[2];
-extern const struct sprite_piece_pos gSpriteBank18Frame013Pos[2];
-extern const u8 gSpriteBank18Frame000Pieces[2];
-extern const u8 gSpriteBank18Frame001Pieces[2];
-extern const u8 gSpriteBank18Frame002Pieces[3];
-extern const u8 gSpriteBank18Frame003Pieces[2];
-extern const u8 gSpriteBank18Frame004Pieces[3];
-extern const u8 gSpriteBank18Frame005Pieces[1];
-extern const u8 gSpriteBank18Frame006Pieces[1];
-extern const u8 gSpriteBank18Frame007Pieces[2];
-extern const u8 gSpriteBank18Frame008Pieces[2];
-extern const u8 gSpriteBank18Frame009Pieces[2];
-extern const u8 gSpriteBank18Frame010Pieces[2];
-extern const u8 gSpriteBank18Frame011Pieces[1];
-extern const u8 gSpriteBank18Frame012Pieces[2];
-extern const u8 gSpriteBank18Frame013Pieces[2];
 
 extern const struct sprite_anim gSpriteBank18Anims[2] = {
     /* 0 */ {
@@ -2912,202 +1676,70 @@ extern const struct sprite_frame *const gSpriteBank18Frames[14] = {
 };
 
 const struct sprite_frame_1box gSpriteBank18Frame000 = {
-    SPRITE_FRAME(gSpriteBank18Frame000, SPRITE_TILES_BANK18 + 0x00000),
+    SPRITE_FRAME(gSpriteBank18Frame000, SPRITE_TILES_BANK18_FRAME000),
     { { -11, -67, 23, 116 } },
 };
 const struct sprite_frame_1box gSpriteBank18Frame001 = {
-    SPRITE_FRAME(gSpriteBank18Frame001, SPRITE_TILES_BANK18 + 0x00800),
+    SPRITE_FRAME(gSpriteBank18Frame001, SPRITE_TILES_BANK18_FRAME001),
     { { -11, -68, 23, 125 } },
 };
 const struct sprite_frame_1box gSpriteBank18Frame002 = {
-    SPRITE_FRAME(gSpriteBank18Frame002, SPRITE_TILES_BANK18 + 0x01000),
+    SPRITE_FRAME(gSpriteBank18Frame002, SPRITE_TILES_BANK18_FRAME002),
     { { -11, -67, 23, 100 } },
 };
 const struct sprite_frame_1box gSpriteBank18Frame003 = {
-    SPRITE_FRAME(gSpriteBank18Frame003, SPRITE_TILES_BANK18 + 0x01700),
+    SPRITE_FRAME(gSpriteBank18Frame003, SPRITE_TILES_BANK18_FRAME003),
     { { -11, -66, 23, 81 } },
 };
 const struct sprite_frame_1box gSpriteBank18Frame004 = {
-    SPRITE_FRAME(gSpriteBank18Frame004, SPRITE_TILES_BANK18 + 0x01d00),
+    SPRITE_FRAME(gSpriteBank18Frame004, SPRITE_TILES_BANK18_FRAME004),
     { { -11, -67, 23, 59 } },
 };
 const struct sprite_frame_1box gSpriteBank18Frame005 = {
-    SPRITE_FRAME(gSpriteBank18Frame005, SPRITE_TILES_BANK18 + 0x02160),
+    SPRITE_FRAME(gSpriteBank18Frame005, SPRITE_TILES_BANK18_FRAME005),
     { { -11, -66, 23, 50 } },
 };
 const struct sprite_frame_1box gSpriteBank18Frame006 = {
-    SPRITE_FRAME(gSpriteBank18Frame006, SPRITE_TILES_BANK18 + 0x02560),
+    SPRITE_FRAME(gSpriteBank18Frame006, SPRITE_TILES_BANK18_FRAME006),
     { { -11, -67, 23, 44 } },
 };
 const struct sprite_frame_1box gSpriteBank18Frame007 = {
-    SPRITE_FRAME(gSpriteBank18Frame007, SPRITE_TILES_BANK18 + 0x02960),
+    SPRITE_FRAME(gSpriteBank18Frame007, SPRITE_TILES_BANK18_FRAME007),
     { { -11, -68, 23, 39 } },
 };
 const struct sprite_frame_1box gSpriteBank18Frame008 = {
-    SPRITE_FRAME(gSpriteBank18Frame008, SPRITE_TILES_BANK18 + 0x02c60),
+    SPRITE_FRAME(gSpriteBank18Frame008, SPRITE_TILES_BANK18_FRAME008),
     { { -11, -66, 23, 30 } },
 };
 const struct sprite_frame_1box gSpriteBank18Frame009 = {
-    SPRITE_FRAME(gSpriteBank18Frame009, SPRITE_TILES_BANK18 + 0x02c60),
+    SPRITE_FRAME(gSpriteBank18Frame009, SPRITE_TILES_BANK18_FRAME009),
     { { -11, -67, 24, 32 } },
 };
 const struct sprite_frame_1box gSpriteBank18Frame010 = {
-    SPRITE_FRAME(gSpriteBank18Frame010, SPRITE_TILES_BANK18 + 0x02ee0),
+    SPRITE_FRAME(gSpriteBank18Frame010, SPRITE_TILES_BANK18_FRAME010),
     { { -10, -67, 22, 40 } },
 };
 const struct sprite_frame_1box gSpriteBank18Frame011 = {
-    SPRITE_FRAME(gSpriteBank18Frame011, SPRITE_TILES_BANK18 + 0x031e0),
+    SPRITE_FRAME(gSpriteBank18Frame011, SPRITE_TILES_BANK18_FRAME011),
     { { -11, -67, 23, 48 } },
 };
 const struct sprite_frame_1box gSpriteBank18Frame012 = {
-    SPRITE_FRAME(gSpriteBank18Frame012, SPRITE_TILES_BANK18 + 0x035e0),
+    SPRITE_FRAME(gSpriteBank18Frame012, SPRITE_TILES_BANK18_FRAME012),
     { { -11, -67, 23, 75 } },
 };
 const struct sprite_frame_1box gSpriteBank18Frame013 = {
-    SPRITE_FRAME(gSpriteBank18Frame013, SPRITE_TILES_BANK18 + 0x00000),
+    SPRITE_FRAME(gSpriteBank18Frame013, SPRITE_TILES_BANK18_FRAME013),
     { { -11, -68, 23, 113 } },
 };
 
-const struct sprite_piece_pos gSpriteBank18Frame000Pos[2] = { { -11, -67 }, { -15, -3 } };
-const struct sprite_piece_pos gSpriteBank18Frame001Pos[2] = { { -11, -67 }, { -15, -3 } };
-const struct sprite_piece_pos gSpriteBank18Frame002Pos[3] = { { -11, -67 }, { -13, -3 }, { -15, 29 } };
-const struct sprite_piece_pos gSpriteBank18Frame003Pos[2] = { { -11, -67 }, { -15, -3 } };
-const struct sprite_piece_pos gSpriteBank18Frame004Pos[3] = { { -15, -67 }, { -8, -3 }, { 8, -3 } };
-const struct sprite_piece_pos gSpriteBank18Frame005Pos[1] = { { -15, -67 } };
-const struct sprite_piece_pos gSpriteBank18Frame006Pos[1] = { { -15, -67 } };
-const struct sprite_piece_pos gSpriteBank18Frame007Pos[2] = { { -11, -67 }, { -15, -35 } };
-const struct sprite_piece_pos gSpriteBank18Frame008Pos[2] = { { -15, -67 }, { -13, -35 } };
-const struct sprite_piece_pos gSpriteBank18Frame009Pos[2] = { { -15, -67 }, { -13, -35 } };
-const struct sprite_piece_pos gSpriteBank18Frame010Pos[2] = { { -11, -67 }, { -15, -35 } };
-const struct sprite_piece_pos gSpriteBank18Frame011Pos[1] = { { -15, -67 } };
-const struct sprite_piece_pos gSpriteBank18Frame012Pos[2] = { { -11, -67 }, { -15, -3 } };
-const struct sprite_piece_pos gSpriteBank18Frame013Pos[2] = { { -11, -67 }, { -15, -3 } };
-
-const u8 gSpriteBank18Frame000Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 11) };
-const u8 gSpriteBank18Frame001Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 11) };
-const u8 gSpriteBank18Frame002Pieces[3] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 2), SPRITE_PIECE(0, 6) };
-const u8 gSpriteBank18Frame003Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 2) };
-const u8 gSpriteBank18Frame004Pieces[3] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 4), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank18Frame005Pieces[1] = { SPRITE_PIECE(2, 11) };
-const u8 gSpriteBank18Frame006Pieces[1] = { SPRITE_PIECE(2, 11) };
-const u8 gSpriteBank18Frame007Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 6) };
-const u8 gSpriteBank18Frame008Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 5) };
-const u8 gSpriteBank18Frame009Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 5) };
-const u8 gSpriteBank18Frame010Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 6) };
-const u8 gSpriteBank18Frame011Pieces[1] = { SPRITE_PIECE(2, 11) };
-const u8 gSpriteBank18Frame012Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 6) };
-const u8 gSpriteBank18Frame013Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 11) };
+/* The piece arrays, from graphics/sprites/bank18_wooden_crusher/bank.json. */
+#include "sprites/bank18_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 19: 2 animations, 35 frames, tiles in gSpriteBank19Tiles (SPRITE_TILES_BANK19). */
+/* Bank 19: 2 animations, 35 frames, graphics/sprites/bank19_frog/. */
 
 extern const u16 gSpriteBank19Anim00Seq[14];
 extern const u16 gSpriteBank19Anim01Seq[21];
-extern const struct sprite_frame_1box gSpriteBank19Frame000;
-extern const struct sprite_frame_1box gSpriteBank19Frame001;
-extern const struct sprite_frame_1box gSpriteBank19Frame002;
-extern const struct sprite_frame_1box gSpriteBank19Frame003;
-extern const struct sprite_frame_1box gSpriteBank19Frame004;
-extern const struct sprite_frame_1box gSpriteBank19Frame005;
-extern const struct sprite_frame_1box gSpriteBank19Frame006;
-extern const struct sprite_frame_1box gSpriteBank19Frame007;
-extern const struct sprite_frame_1box gSpriteBank19Frame008;
-extern const struct sprite_frame_1box gSpriteBank19Frame009;
-extern const struct sprite_frame_1box gSpriteBank19Frame010;
-extern const struct sprite_frame_1box gSpriteBank19Frame011;
-extern const struct sprite_frame_1box gSpriteBank19Frame012;
-extern const struct sprite_frame_1box gSpriteBank19Frame013;
-extern const struct sprite_frame_1box gSpriteBank19Frame014;
-extern const struct sprite_frame_1box gSpriteBank19Frame015;
-extern const struct sprite_frame_1box gSpriteBank19Frame016;
-extern const struct sprite_frame_1box gSpriteBank19Frame017;
-extern const struct sprite_frame_1box gSpriteBank19Frame018;
-extern const struct sprite_frame_1box gSpriteBank19Frame019;
-extern const struct sprite_frame_1box gSpriteBank19Frame020;
-extern const struct sprite_frame_1box gSpriteBank19Frame021;
-extern const struct sprite_frame_1box gSpriteBank19Frame022;
-extern const struct sprite_frame_1box gSpriteBank19Frame023;
-extern const struct sprite_frame_1box gSpriteBank19Frame024;
-extern const struct sprite_frame_1box gSpriteBank19Frame025;
-extern const struct sprite_frame_1box gSpriteBank19Frame026;
-extern const struct sprite_frame_1box gSpriteBank19Frame027;
-extern const struct sprite_frame_1box gSpriteBank19Frame028;
-extern const struct sprite_frame_1box gSpriteBank19Frame029;
-extern const struct sprite_frame_1box gSpriteBank19Frame030;
-extern const struct sprite_frame_1box gSpriteBank19Frame031;
-extern const struct sprite_frame_1box gSpriteBank19Frame032;
-extern const struct sprite_frame_1box gSpriteBank19Frame033;
-extern const struct sprite_frame_1box gSpriteBank19Frame034;
-extern const struct sprite_piece_pos gSpriteBank19Frame000Pos[2];
-extern const struct sprite_piece_pos gSpriteBank19Frame001Pos[2];
-extern const struct sprite_piece_pos gSpriteBank19Frame002Pos[2];
-extern const struct sprite_piece_pos gSpriteBank19Frame003Pos[1];
-extern const struct sprite_piece_pos gSpriteBank19Frame004Pos[1];
-extern const struct sprite_piece_pos gSpriteBank19Frame005Pos[1];
-extern const struct sprite_piece_pos gSpriteBank19Frame006Pos[2];
-extern const struct sprite_piece_pos gSpriteBank19Frame007Pos[2];
-extern const struct sprite_piece_pos gSpriteBank19Frame008Pos[2];
-extern const struct sprite_piece_pos gSpriteBank19Frame009Pos[3];
-extern const struct sprite_piece_pos gSpriteBank19Frame010Pos[4];
-extern const struct sprite_piece_pos gSpriteBank19Frame011Pos[3];
-extern const struct sprite_piece_pos gSpriteBank19Frame012Pos[2];
-extern const struct sprite_piece_pos gSpriteBank19Frame013Pos[1];
-extern const struct sprite_piece_pos gSpriteBank19Frame014Pos[2];
-extern const struct sprite_piece_pos gSpriteBank19Frame015Pos[2];
-extern const struct sprite_piece_pos gSpriteBank19Frame016Pos[2];
-extern const struct sprite_piece_pos gSpriteBank19Frame017Pos[1];
-extern const struct sprite_piece_pos gSpriteBank19Frame018Pos[1];
-extern const struct sprite_piece_pos gSpriteBank19Frame019Pos[1];
-extern const struct sprite_piece_pos gSpriteBank19Frame020Pos[2];
-extern const struct sprite_piece_pos gSpriteBank19Frame021Pos[2];
-extern const struct sprite_piece_pos gSpriteBank19Frame022Pos[3];
-extern const struct sprite_piece_pos gSpriteBank19Frame023Pos[2];
-extern const struct sprite_piece_pos gSpriteBank19Frame024Pos[3];
-extern const struct sprite_piece_pos gSpriteBank19Frame025Pos[4];
-extern const struct sprite_piece_pos gSpriteBank19Frame026Pos[2];
-extern const struct sprite_piece_pos gSpriteBank19Frame027Pos[2];
-extern const struct sprite_piece_pos gSpriteBank19Frame028Pos[2];
-extern const struct sprite_piece_pos gSpriteBank19Frame029Pos[2];
-extern const struct sprite_piece_pos gSpriteBank19Frame030Pos[2];
-extern const struct sprite_piece_pos gSpriteBank19Frame031Pos[2];
-extern const struct sprite_piece_pos gSpriteBank19Frame032Pos[2];
-extern const struct sprite_piece_pos gSpriteBank19Frame033Pos[2];
-extern const struct sprite_piece_pos gSpriteBank19Frame034Pos[2];
-extern const u8 gSpriteBank19Frame000Pieces[2];
-extern const u8 gSpriteBank19Frame001Pieces[2];
-extern const u8 gSpriteBank19Frame002Pieces[2];
-extern const u8 gSpriteBank19Frame003Pieces[1];
-extern const u8 gSpriteBank19Frame004Pieces[1];
-extern const u8 gSpriteBank19Frame005Pieces[1];
-extern const u8 gSpriteBank19Frame006Pieces[2];
-extern const u8 gSpriteBank19Frame007Pieces[2];
-extern const u8 gSpriteBank19Frame008Pieces[2];
-extern const u8 gSpriteBank19Frame009Pieces[3];
-extern const u8 gSpriteBank19Frame010Pieces[4];
-extern const u8 gSpriteBank19Frame011Pieces[3];
-extern const u8 gSpriteBank19Frame012Pieces[2];
-extern const u8 gSpriteBank19Frame013Pieces[1];
-extern const u8 gSpriteBank19Frame014Pieces[2];
-extern const u8 gSpriteBank19Frame015Pieces[2];
-extern const u8 gSpriteBank19Frame016Pieces[2];
-extern const u8 gSpriteBank19Frame017Pieces[1];
-extern const u8 gSpriteBank19Frame018Pieces[1];
-extern const u8 gSpriteBank19Frame019Pieces[1];
-extern const u8 gSpriteBank19Frame020Pieces[2];
-extern const u8 gSpriteBank19Frame021Pieces[2];
-extern const u8 gSpriteBank19Frame022Pieces[3];
-extern const u8 gSpriteBank19Frame023Pieces[2];
-extern const u8 gSpriteBank19Frame024Pieces[3];
-extern const u8 gSpriteBank19Frame025Pieces[4];
-extern const u8 gSpriteBank19Frame026Pieces[2];
-extern const u8 gSpriteBank19Frame027Pieces[2];
-extern const u8 gSpriteBank19Frame028Pieces[2];
-extern const u8 gSpriteBank19Frame029Pieces[2];
-extern const u8 gSpriteBank19Frame030Pieces[2];
-extern const u8 gSpriteBank19Frame031Pieces[2];
-extern const u8 gSpriteBank19Frame032Pieces[2];
-extern const u8 gSpriteBank19Frame033Pieces[2];
-extern const u8 gSpriteBank19Frame034Pieces[2];
 
 extern const struct sprite_anim gSpriteBank19Anims[2] = {
     /* 0 */ {
@@ -3175,319 +1807,154 @@ extern const struct sprite_frame *const gSpriteBank19Frames[35] = {
 };
 
 const struct sprite_frame_1box gSpriteBank19Frame000 = {
-    SPRITE_FRAME(gSpriteBank19Frame000, SPRITE_TILES_BANK19 + 0x00000),
+    SPRITE_FRAME(gSpriteBank19Frame000, SPRITE_TILES_BANK19_FRAME000),
     { { -15, -10, 30, 11 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame001 = {
-    SPRITE_FRAME(gSpriteBank19Frame001, SPRITE_TILES_BANK19 + 0x00220),
+    SPRITE_FRAME(gSpriteBank19Frame001, SPRITE_TILES_BANK19_FRAME001),
     { { -15, -9, 30, 10 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame002 = {
-    SPRITE_FRAME(gSpriteBank19Frame002, SPRITE_TILES_BANK19 + 0x00440),
+    SPRITE_FRAME(gSpriteBank19Frame002, SPRITE_TILES_BANK19_FRAME002),
     { { -14, -8, 28, 9 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame003 = {
-    SPRITE_FRAME(gSpriteBank19Frame003, SPRITE_TILES_BANK19 + 0x00660),
+    SPRITE_FRAME(gSpriteBank19Frame003, SPRITE_TILES_BANK19_FRAME003),
     { { -14, -8, 26, 9 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame004 = {
-    SPRITE_FRAME(gSpriteBank19Frame004, SPRITE_TILES_BANK19 + 0x00860),
+    SPRITE_FRAME(gSpriteBank19Frame004, SPRITE_TILES_BANK19_FRAME004),
     { { -14, -8, 25, 9 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame005 = {
-    SPRITE_FRAME(gSpriteBank19Frame005, SPRITE_TILES_BANK19 + 0x00a60),
+    SPRITE_FRAME(gSpriteBank19Frame005, SPRITE_TILES_BANK19_FRAME005),
     { { -14, -8, 26, 8 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame006 = {
-    SPRITE_FRAME(gSpriteBank19Frame006, SPRITE_TILES_BANK19 + 0x00c60),
+    SPRITE_FRAME(gSpriteBank19Frame006, SPRITE_TILES_BANK19_FRAME006),
     { { -14, -8, 28, 8 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame007 = {
-    SPRITE_FRAME(gSpriteBank19Frame007, SPRITE_TILES_BANK19 + 0x00e80),
+    SPRITE_FRAME(gSpriteBank19Frame007, SPRITE_TILES_BANK19_FRAME007),
     { { -14, -8, 29, 8 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame008 = {
-    SPRITE_FRAME(gSpriteBank19Frame008, SPRITE_TILES_BANK19 + 0x010a0),
+    SPRITE_FRAME(gSpriteBank19Frame008, SPRITE_TILES_BANK19_FRAME008),
     { { -16, -12, 30, 6 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame009 = {
-    SPRITE_FRAME(gSpriteBank19Frame009, SPRITE_TILES_BANK19 + 0x012c0),
+    SPRITE_FRAME(gSpriteBank19Frame009, SPRITE_TILES_BANK19_FRAME009),
     { { -20, -34, 31, 21 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame010 = {
-    SPRITE_FRAME(gSpriteBank19Frame010, SPRITE_TILES_BANK19 + 0x015c0),
+    SPRITE_FRAME(gSpriteBank19Frame010, SPRITE_TILES_BANK19_FRAME010),
     { { -16, -39, 29, 20 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame011 = {
-    SPRITE_FRAME(gSpriteBank19Frame011, SPRITE_TILES_BANK19 + 0x01840),
+    SPRITE_FRAME(gSpriteBank19Frame011, SPRITE_TILES_BANK19_FRAME011),
     { { -15, -23, 28, 1 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame012 = {
-    SPRITE_FRAME(gSpriteBank19Frame012, SPRITE_TILES_BANK19 + 0x019e0),
+    SPRITE_FRAME(gSpriteBank19Frame012, SPRITE_TILES_BANK19_FRAME012),
     { { -17, -16, 35, 6 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame013 = {
-    SPRITE_FRAME(gSpriteBank19Frame013, SPRITE_TILES_BANK19 + 0x01c00),
+    SPRITE_FRAME(gSpriteBank19Frame013, SPRITE_TILES_BANK19_FRAME013),
     { { -18, -11, 27, 12 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame014 = {
-    SPRITE_FRAME(gSpriteBank19Frame014, SPRITE_TILES_BANK19 + 0x00000),
+    SPRITE_FRAME(gSpriteBank19Frame014, SPRITE_TILES_BANK19_FRAME014),
     { { -14, -11, 28, 13 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame015 = {
-    SPRITE_FRAME(gSpriteBank19Frame015, SPRITE_TILES_BANK19 + 0x00220),
+    SPRITE_FRAME(gSpriteBank19Frame015, SPRITE_TILES_BANK19_FRAME015),
     { { -14, -10, 28, 12 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame016 = {
-    SPRITE_FRAME(gSpriteBank19Frame016, SPRITE_TILES_BANK19 + 0x00440),
+    SPRITE_FRAME(gSpriteBank19Frame016, SPRITE_TILES_BANK19_FRAME016),
     { { -13, -9, 26, 11 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame017 = {
-    SPRITE_FRAME(gSpriteBank19Frame017, SPRITE_TILES_BANK19 + 0x00660),
+    SPRITE_FRAME(gSpriteBank19Frame017, SPRITE_TILES_BANK19_FRAME017),
     { { -13, -9, 24, 11 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame018 = {
-    SPRITE_FRAME(gSpriteBank19Frame018, SPRITE_TILES_BANK19 + 0x00860),
+    SPRITE_FRAME(gSpriteBank19Frame018, SPRITE_TILES_BANK19_FRAME018),
     { { -13, -9, 23, 11 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame019 = {
-    SPRITE_FRAME(gSpriteBank19Frame019, SPRITE_TILES_BANK19 + 0x00a60),
+    SPRITE_FRAME(gSpriteBank19Frame019, SPRITE_TILES_BANK19_FRAME019),
     { { -13, -9, 24, 10 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame020 = {
-    SPRITE_FRAME(gSpriteBank19Frame020, SPRITE_TILES_BANK19 + 0x00c60),
+    SPRITE_FRAME(gSpriteBank19Frame020, SPRITE_TILES_BANK19_FRAME020),
     { { -13, -9, 26, 10 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame021 = {
-    SPRITE_FRAME(gSpriteBank19Frame021, SPRITE_TILES_BANK19 + 0x01e00),
+    SPRITE_FRAME(gSpriteBank19Frame021, SPRITE_TILES_BANK19_FRAME021),
     { { -13, -9, 28, 11 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame022 = {
-    SPRITE_FRAME(gSpriteBank19Frame022, SPRITE_TILES_BANK19 + 0x02020),
+    SPRITE_FRAME(gSpriteBank19Frame022, SPRITE_TILES_BANK19_FRAME022),
     { { -15, -22, 28, 17 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame023 = {
-    SPRITE_FRAME(gSpriteBank19Frame023, SPRITE_TILES_BANK19 + 0x02260),
+    SPRITE_FRAME(gSpriteBank19Frame023, SPRITE_TILES_BANK19_FRAME023),
     { { -18, -41, 29, 33 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame024 = {
-    SPRITE_FRAME(gSpriteBank19Frame024, SPRITE_TILES_BANK19 + 0x026a0),
+    SPRITE_FRAME(gSpriteBank19Frame024, SPRITE_TILES_BANK19_FRAME024),
     { { -24, -31, 39, 14 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame025 = {
-    SPRITE_FRAME(gSpriteBank19Frame025, SPRITE_TILES_BANK19 + 0x02940),
+    SPRITE_FRAME(gSpriteBank19Frame025, SPRITE_TILES_BANK19_FRAME025),
     { { -13, -18, 29, 9 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame026 = {
-    SPRITE_FRAME(gSpriteBank19Frame026, SPRITE_TILES_BANK19 + 0x02b00),
+    SPRITE_FRAME(gSpriteBank19Frame026, SPRITE_TILES_BANK19_FRAME026),
     { { -16, -14, 29, 11 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame027 = {
-    SPRITE_FRAME(gSpriteBank19Frame027, SPRITE_TILES_BANK19 + 0x02d40),
+    SPRITE_FRAME(gSpriteBank19Frame027, SPRITE_TILES_BANK19_FRAME027),
     { { -13, -8, 28, 10 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame028 = {
-    SPRITE_FRAME(gSpriteBank19Frame028, SPRITE_TILES_BANK19 + 0x02f80),
+    SPRITE_FRAME(gSpriteBank19Frame028, SPRITE_TILES_BANK19_FRAME028),
     { { -14, -8, 30, 10 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame029 = {
-    SPRITE_FRAME(gSpriteBank19Frame029, SPRITE_TILES_BANK19 + 0x031c0),
+    SPRITE_FRAME(gSpriteBank19Frame029, SPRITE_TILES_BANK19_FRAME029),
     { { -15, -8, 30, 10 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame030 = {
-    SPRITE_FRAME(gSpriteBank19Frame030, SPRITE_TILES_BANK19 + 0x03400),
+    SPRITE_FRAME(gSpriteBank19Frame030, SPRITE_TILES_BANK19_FRAME030),
     { { -14, -9, 28, 11 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame031 = {
-    SPRITE_FRAME(gSpriteBank19Frame031, SPRITE_TILES_BANK19 + 0x03640),
+    SPRITE_FRAME(gSpriteBank19Frame031, SPRITE_TILES_BANK19_FRAME031),
     { { -13, -9, 27, 11 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame032 = {
-    SPRITE_FRAME(gSpriteBank19Frame032, SPRITE_TILES_BANK19 + 0x03860),
+    SPRITE_FRAME(gSpriteBank19Frame032, SPRITE_TILES_BANK19_FRAME032),
     { { -13, -9, 27, 11 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame033 = {
-    SPRITE_FRAME(gSpriteBank19Frame033, SPRITE_TILES_BANK19 + 0x03a80),
+    SPRITE_FRAME(gSpriteBank19Frame033, SPRITE_TILES_BANK19_FRAME033),
     { { -13, -10, 27, 12 } },
 };
 const struct sprite_frame_1box gSpriteBank19Frame034 = {
-    SPRITE_FRAME(gSpriteBank19Frame034, SPRITE_TILES_BANK19 + 0x03ca0),
+    SPRITE_FRAME(gSpriteBank19Frame034, SPRITE_TILES_BANK19_FRAME034),
     { { -14, -11, 28, 13 } },
 };
 
-const struct sprite_piece_pos gSpriteBank19Frame000Pos[2] = { { -17, -14 }, { 15, -8 } };
-const struct sprite_piece_pos gSpriteBank19Frame001Pos[2] = { { -17, -13 }, { 15, -7 } };
-const struct sprite_piece_pos gSpriteBank19Frame002Pos[2] = { { -16, -12 }, { 16, -3 } };
-const struct sprite_piece_pos gSpriteBank19Frame003Pos[1] = { { -16, -12 } };
-const struct sprite_piece_pos gSpriteBank19Frame004Pos[1] = { { -16, -12 } };
-const struct sprite_piece_pos gSpriteBank19Frame005Pos[1] = { { -16, -12 } };
-const struct sprite_piece_pos gSpriteBank19Frame006Pos[2] = { { -16, -12 }, { 16, 0 } };
-const struct sprite_piece_pos gSpriteBank19Frame007Pos[2] = { { -16, -12 }, { 16, -3 } };
-const struct sprite_piece_pos gSpriteBank19Frame008Pos[2] = { { -18, -16 }, { 14, -12 } };
-const struct sprite_piece_pos gSpriteBank19Frame009Pos[3] = { { -22, -38 }, { 10, -37 }, { -16, -6 } };
-const struct sprite_piece_pos gSpriteBank19Frame010Pos[4] = { { -18, -43 }, { 14, -20 }, { -12, -11 }, { 4, -11 } };
-const struct sprite_piece_pos gSpriteBank19Frame011Pos[3] = { { -16, -27 }, { 15, -16 }, { -17, -11 } };
-const struct sprite_piece_pos gSpriteBank19Frame012Pos[2] = { { -19, -20 }, { 13, -19 } };
-const struct sprite_piece_pos gSpriteBank19Frame013Pos[1] = { { -20, -15 } };
-const struct sprite_piece_pos gSpriteBank19Frame014Pos[2] = { { -17, -14 }, { 15, -8 } };
-const struct sprite_piece_pos gSpriteBank19Frame015Pos[2] = { { -17, -13 }, { 15, -7 } };
-const struct sprite_piece_pos gSpriteBank19Frame016Pos[2] = { { -16, -12 }, { 16, -3 } };
-const struct sprite_piece_pos gSpriteBank19Frame017Pos[1] = { { -16, -12 } };
-const struct sprite_piece_pos gSpriteBank19Frame018Pos[1] = { { -16, -12 } };
-const struct sprite_piece_pos gSpriteBank19Frame019Pos[1] = { { -16, -12 } };
-const struct sprite_piece_pos gSpriteBank19Frame020Pos[2] = { { -16, -12 }, { 16, 0 } };
-const struct sprite_piece_pos gSpriteBank19Frame021Pos[2] = { { -16, -12 }, { 16, -6 } };
-const struct sprite_piece_pos gSpriteBank19Frame022Pos[3] = { { -18, -25 }, { 14, -24 }, { -18, 7 } };
-const struct sprite_piece_pos gSpriteBank19Frame023Pos[2] = { { -21, -43 }, { 11, -44 } };
-const struct sprite_piece_pos gSpriteBank19Frame024Pos[3] = { { -27, -34 }, { 5, -34 }, { 13, -31 } };
-const struct sprite_piece_pos gSpriteBank19Frame025Pos[4] = { { -27, -22 }, { 5, -19 }, { -6, -6 }, { 15, -6 } };
-const struct sprite_piece_pos gSpriteBank19Frame026Pos[2] = { { -19, -17 }, { 13, -9 } };
-const struct sprite_piece_pos gSpriteBank19Frame027Pos[2] = { { -16, -11 }, { 16, 0 } };
-const struct sprite_piece_pos gSpriteBank19Frame028Pos[2] = { { -17, -11 }, { 15, -3 } };
-const struct sprite_piece_pos gSpriteBank19Frame029Pos[2] = { { -18, -11 }, { 14, -5 } };
-const struct sprite_piece_pos gSpriteBank19Frame030Pos[2] = { { -17, -12 }, { 15, -2 } };
-const struct sprite_piece_pos gSpriteBank19Frame031Pos[2] = { { -16, -12 }, { 16, -1 } };
-const struct sprite_piece_pos gSpriteBank19Frame032Pos[2] = { { -16, -12 }, { 16, -4 } };
-const struct sprite_piece_pos gSpriteBank19Frame033Pos[2] = { { -16, -13 }, { 16, -6 } };
-const struct sprite_piece_pos gSpriteBank19Frame034Pos[2] = { { -17, -14 }, { 15, -8 } };
-
-const u8 gSpriteBank19Frame000Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank19Frame001Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank19Frame002Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank19Frame003Pieces[1] = { SPRITE_PIECE(2, 2) };
-const u8 gSpriteBank19Frame004Pieces[1] = { SPRITE_PIECE(2, 2) };
-const u8 gSpriteBank19Frame005Pieces[1] = { SPRITE_PIECE(2, 2) };
-const u8 gSpriteBank19Frame006Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank19Frame007Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank19Frame008Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank19Frame009Pieces[3] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 5) };
-const u8 gSpriteBank19Frame010Pieces[4] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 4), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank19Frame011Pieces[3] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 5) };
-const u8 gSpriteBank19Frame012Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank19Frame013Pieces[1] = { SPRITE_PIECE(2, 2) };
-const u8 gSpriteBank19Frame014Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank19Frame015Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank19Frame016Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank19Frame017Pieces[1] = { SPRITE_PIECE(2, 2) };
-const u8 gSpriteBank19Frame018Pieces[1] = { SPRITE_PIECE(2, 2) };
-const u8 gSpriteBank19Frame019Pieces[1] = { SPRITE_PIECE(2, 2) };
-const u8 gSpriteBank19Frame020Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank19Frame021Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank19Frame022Pieces[3] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank19Frame023Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank19Frame024Pieces[3] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank19Frame025Pieces[4] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank19Frame026Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank19Frame027Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank19Frame028Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank19Frame029Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank19Frame030Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 8) };
-const u8 gSpriteBank19Frame031Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank19Frame032Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank19Frame033Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank19Frame034Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0) };
+/* The piece arrays, from graphics/sprites/bank19_frog/bank.json. */
+#include "sprites/bank19_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 20: 2 animations, 32 frames, tiles in gSpriteBank20Tiles (SPRITE_TILES_BANK20). */
+/* Bank 20: 2 animations, 32 frames, graphics/sprites/bank20_patrolling_sewer_enemy/. */
 
 extern const u16 gSpriteBank20Anim00Seq[16];
 extern const u16 gSpriteBank20Anim01Seq[16];
-extern const struct sprite_frame_1box gSpriteBank20Frame000;
-extern const struct sprite_frame_1box gSpriteBank20Frame001;
-extern const struct sprite_frame_1box gSpriteBank20Frame002;
-extern const struct sprite_frame_1box gSpriteBank20Frame003;
-extern const struct sprite_frame_1box gSpriteBank20Frame004;
-extern const struct sprite_frame_1box gSpriteBank20Frame005;
-extern const struct sprite_frame_1box gSpriteBank20Frame006;
-extern const struct sprite_frame_1box gSpriteBank20Frame007;
-extern const struct sprite_frame_1box gSpriteBank20Frame008;
-extern const struct sprite_frame_1box gSpriteBank20Frame009;
-extern const struct sprite_frame_1box gSpriteBank20Frame010;
-extern const struct sprite_frame_1box gSpriteBank20Frame011;
-extern const struct sprite_frame_1box gSpriteBank20Frame012;
-extern const struct sprite_frame_1box gSpriteBank20Frame013;
-extern const struct sprite_frame_1box gSpriteBank20Frame014;
-extern const struct sprite_frame_1box gSpriteBank20Frame015;
-extern const struct sprite_frame_1box gSpriteBank20Frame016;
-extern const struct sprite_frame_1box gSpriteBank20Frame017;
-extern const struct sprite_frame_1box gSpriteBank20Frame018;
-extern const struct sprite_frame_1box gSpriteBank20Frame019;
-extern const struct sprite_frame_1box gSpriteBank20Frame020;
-extern const struct sprite_frame_1box gSpriteBank20Frame021;
-extern const struct sprite_frame_1box gSpriteBank20Frame022;
-extern const struct sprite_frame_1box gSpriteBank20Frame023;
-extern const struct sprite_frame_1box gSpriteBank20Frame024;
-extern const struct sprite_frame_1box gSpriteBank20Frame025;
-extern const struct sprite_frame_1box gSpriteBank20Frame026;
-extern const struct sprite_frame_1box gSpriteBank20Frame027;
-extern const struct sprite_frame_1box gSpriteBank20Frame028;
-extern const struct sprite_frame_1box gSpriteBank20Frame029;
-extern const struct sprite_frame_1box gSpriteBank20Frame030;
-extern const struct sprite_frame_1box gSpriteBank20Frame031;
-extern const struct sprite_piece_pos gSpriteBank20Frame000Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame001Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame002Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame003Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame004Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame005Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame006Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame007Pos[3];
-extern const struct sprite_piece_pos gSpriteBank20Frame008Pos[3];
-extern const struct sprite_piece_pos gSpriteBank20Frame009Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame010Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame011Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame012Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame013Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame014Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame015Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame016Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame017Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame018Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame019Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame020Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame021Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame022Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame023Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame024Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame025Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame026Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame027Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame028Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame029Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame030Pos[2];
-extern const struct sprite_piece_pos gSpriteBank20Frame031Pos[2];
-extern const u8 gSpriteBank20Frame000Pieces[2];
-extern const u8 gSpriteBank20Frame001Pieces[2];
-extern const u8 gSpriteBank20Frame002Pieces[2];
-extern const u8 gSpriteBank20Frame003Pieces[2];
-extern const u8 gSpriteBank20Frame004Pieces[2];
-extern const u8 gSpriteBank20Frame005Pieces[2];
-extern const u8 gSpriteBank20Frame006Pieces[2];
-extern const u8 gSpriteBank20Frame007Pieces[3];
-extern const u8 gSpriteBank20Frame008Pieces[3];
-extern const u8 gSpriteBank20Frame009Pieces[2];
-extern const u8 gSpriteBank20Frame010Pieces[2];
-extern const u8 gSpriteBank20Frame011Pieces[2];
-extern const u8 gSpriteBank20Frame012Pieces[2];
-extern const u8 gSpriteBank20Frame013Pieces[2];
-extern const u8 gSpriteBank20Frame014Pieces[2];
-extern const u8 gSpriteBank20Frame015Pieces[2];
-extern const u8 gSpriteBank20Frame016Pieces[2];
-extern const u8 gSpriteBank20Frame017Pieces[2];
-extern const u8 gSpriteBank20Frame018Pieces[2];
-extern const u8 gSpriteBank20Frame019Pieces[2];
-extern const u8 gSpriteBank20Frame020Pieces[2];
-extern const u8 gSpriteBank20Frame021Pieces[2];
-extern const u8 gSpriteBank20Frame022Pieces[2];
-extern const u8 gSpriteBank20Frame023Pieces[2];
-extern const u8 gSpriteBank20Frame024Pieces[2];
-extern const u8 gSpriteBank20Frame025Pieces[2];
-extern const u8 gSpriteBank20Frame026Pieces[2];
-extern const u8 gSpriteBank20Frame027Pieces[2];
-extern const u8 gSpriteBank20Frame028Pieces[2];
-extern const u8 gSpriteBank20Frame029Pieces[2];
-extern const u8 gSpriteBank20Frame030Pieces[2];
-extern const u8 gSpriteBank20Frame031Pieces[2];
 
 extern const struct sprite_anim gSpriteBank20Anims[2] = {
     /* 0 */ {
@@ -3551,250 +2018,142 @@ extern const struct sprite_frame *const gSpriteBank20Frames[32] = {
 };
 
 const struct sprite_frame_1box gSpriteBank20Frame000 = {
-    SPRITE_FRAME(gSpriteBank20Frame000, SPRITE_TILES_BANK20 + 0x00000),
+    SPRITE_FRAME(gSpriteBank20Frame000, SPRITE_TILES_BANK20_FRAME000),
     { { -12, -8, 26, 16 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame001 = {
-    SPRITE_FRAME(gSpriteBank20Frame001, SPRITE_TILES_BANK20 + 0x00120),
+    SPRITE_FRAME(gSpriteBank20Frame001, SPRITE_TILES_BANK20_FRAME001),
     { { -12, -8, 26, 16 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame002 = {
-    SPRITE_FRAME(gSpriteBank20Frame002, SPRITE_TILES_BANK20 + 0x00240),
+    SPRITE_FRAME(gSpriteBank20Frame002, SPRITE_TILES_BANK20_FRAME002),
     { { -12, -8, 26, 16 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame003 = {
-    SPRITE_FRAME(gSpriteBank20Frame003, SPRITE_TILES_BANK20 + 0x00360),
+    SPRITE_FRAME(gSpriteBank20Frame003, SPRITE_TILES_BANK20_FRAME003),
     { { -12, -8, 26, 16 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame004 = {
-    SPRITE_FRAME(gSpriteBank20Frame004, SPRITE_TILES_BANK20 + 0x00480),
+    SPRITE_FRAME(gSpriteBank20Frame004, SPRITE_TILES_BANK20_FRAME004),
     { { -12, -8, 26, 16 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame005 = {
-    SPRITE_FRAME(gSpriteBank20Frame005, SPRITE_TILES_BANK20 + 0x005a0),
+    SPRITE_FRAME(gSpriteBank20Frame005, SPRITE_TILES_BANK20_FRAME005),
     { { -12, -8, 26, 16 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame006 = {
-    SPRITE_FRAME(gSpriteBank20Frame006, SPRITE_TILES_BANK20 + 0x006c0),
+    SPRITE_FRAME(gSpriteBank20Frame006, SPRITE_TILES_BANK20_FRAME006),
     { { -12, -8, 26, 16 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame007 = {
-    SPRITE_FRAME(gSpriteBank20Frame007, SPRITE_TILES_BANK20 + 0x007e0),
+    SPRITE_FRAME(gSpriteBank20Frame007, SPRITE_TILES_BANK20_FRAME007),
     { { -12, -8, 26, 16 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame008 = {
-    SPRITE_FRAME(gSpriteBank20Frame008, SPRITE_TILES_BANK20 + 0x00920),
+    SPRITE_FRAME(gSpriteBank20Frame008, SPRITE_TILES_BANK20_FRAME008),
     { { -12, -8, 26, 16 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame009 = {
-    SPRITE_FRAME(gSpriteBank20Frame009, SPRITE_TILES_BANK20 + 0x00a00),
+    SPRITE_FRAME(gSpriteBank20Frame009, SPRITE_TILES_BANK20_FRAME009),
     { { -12, -8, 26, 16 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame010 = {
-    SPRITE_FRAME(gSpriteBank20Frame010, SPRITE_TILES_BANK20 + 0x00b20),
+    SPRITE_FRAME(gSpriteBank20Frame010, SPRITE_TILES_BANK20_FRAME010),
     { { -12, -8, 26, 16 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame011 = {
-    SPRITE_FRAME(gSpriteBank20Frame011, SPRITE_TILES_BANK20 + 0x00c40),
+    SPRITE_FRAME(gSpriteBank20Frame011, SPRITE_TILES_BANK20_FRAME011),
     { { -12, -8, 26, 16 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame012 = {
-    SPRITE_FRAME(gSpriteBank20Frame012, SPRITE_TILES_BANK20 + 0x00d60),
+    SPRITE_FRAME(gSpriteBank20Frame012, SPRITE_TILES_BANK20_FRAME012),
     { { -12, -8, 26, 16 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame013 = {
-    SPRITE_FRAME(gSpriteBank20Frame013, SPRITE_TILES_BANK20 + 0x00e80),
+    SPRITE_FRAME(gSpriteBank20Frame013, SPRITE_TILES_BANK20_FRAME013),
     { { -12, -8, 26, 16 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame014 = {
-    SPRITE_FRAME(gSpriteBank20Frame014, SPRITE_TILES_BANK20 + 0x00fa0),
+    SPRITE_FRAME(gSpriteBank20Frame014, SPRITE_TILES_BANK20_FRAME014),
     { { -12, -8, 26, 16 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame015 = {
-    SPRITE_FRAME(gSpriteBank20Frame015, SPRITE_TILES_BANK20 + 0x010c0),
+    SPRITE_FRAME(gSpriteBank20Frame015, SPRITE_TILES_BANK20_FRAME015),
     { { -12, -8, 26, 16 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame016 = {
-    SPRITE_FRAME(gSpriteBank20Frame016, SPRITE_TILES_BANK20 + 0x011e0),
+    SPRITE_FRAME(gSpriteBank20Frame016, SPRITE_TILES_BANK20_FRAME016),
     { { -12, -8, 24, 17 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame017 = {
-    SPRITE_FRAME(gSpriteBank20Frame017, SPRITE_TILES_BANK20 + 0x01300),
+    SPRITE_FRAME(gSpriteBank20Frame017, SPRITE_TILES_BANK20_FRAME017),
     { { -12, -8, 24, 17 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame018 = {
-    SPRITE_FRAME(gSpriteBank20Frame018, SPRITE_TILES_BANK20 + 0x01420),
+    SPRITE_FRAME(gSpriteBank20Frame018, SPRITE_TILES_BANK20_FRAME018),
     { { -12, -8, 24, 17 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame019 = {
-    SPRITE_FRAME(gSpriteBank20Frame019, SPRITE_TILES_BANK20 + 0x01540),
+    SPRITE_FRAME(gSpriteBank20Frame019, SPRITE_TILES_BANK20_FRAME019),
     { { -12, -8, 24, 17 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame020 = {
-    SPRITE_FRAME(gSpriteBank20Frame020, SPRITE_TILES_BANK20 + 0x01660),
+    SPRITE_FRAME(gSpriteBank20Frame020, SPRITE_TILES_BANK20_FRAME020),
     { { -12, -8, 24, 17 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame021 = {
-    SPRITE_FRAME(gSpriteBank20Frame021, SPRITE_TILES_BANK20 + 0x01780),
+    SPRITE_FRAME(gSpriteBank20Frame021, SPRITE_TILES_BANK20_FRAME021),
     { { -12, -8, 24, 17 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame022 = {
-    SPRITE_FRAME(gSpriteBank20Frame022, SPRITE_TILES_BANK20 + 0x018a0),
+    SPRITE_FRAME(gSpriteBank20Frame022, SPRITE_TILES_BANK20_FRAME022),
     { { -12, -8, 24, 17 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame023 = {
-    SPRITE_FRAME(gSpriteBank20Frame023, SPRITE_TILES_BANK20 + 0x019c0),
+    SPRITE_FRAME(gSpriteBank20Frame023, SPRITE_TILES_BANK20_FRAME023),
     { { -12, -8, 24, 17 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame024 = {
-    SPRITE_FRAME(gSpriteBank20Frame024, SPRITE_TILES_BANK20 + 0x01ae0),
+    SPRITE_FRAME(gSpriteBank20Frame024, SPRITE_TILES_BANK20_FRAME024),
     { { -12, -8, 24, 17 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame025 = {
-    SPRITE_FRAME(gSpriteBank20Frame025, SPRITE_TILES_BANK20 + 0x01c00),
+    SPRITE_FRAME(gSpriteBank20Frame025, SPRITE_TILES_BANK20_FRAME025),
     { { -12, -8, 24, 17 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame026 = {
-    SPRITE_FRAME(gSpriteBank20Frame026, SPRITE_TILES_BANK20 + 0x01d20),
+    SPRITE_FRAME(gSpriteBank20Frame026, SPRITE_TILES_BANK20_FRAME026),
     { { -12, -8, 24, 17 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame027 = {
-    SPRITE_FRAME(gSpriteBank20Frame027, SPRITE_TILES_BANK20 + 0x01e40),
+    SPRITE_FRAME(gSpriteBank20Frame027, SPRITE_TILES_BANK20_FRAME027),
     { { -12, -8, 24, 17 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame028 = {
-    SPRITE_FRAME(gSpriteBank20Frame028, SPRITE_TILES_BANK20 + 0x01f60),
+    SPRITE_FRAME(gSpriteBank20Frame028, SPRITE_TILES_BANK20_FRAME028),
     { { -12, -8, 24, 17 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame029 = {
-    SPRITE_FRAME(gSpriteBank20Frame029, SPRITE_TILES_BANK20 + 0x02080),
+    SPRITE_FRAME(gSpriteBank20Frame029, SPRITE_TILES_BANK20_FRAME029),
     { { -12, -8, 24, 17 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame030 = {
-    SPRITE_FRAME(gSpriteBank20Frame030, SPRITE_TILES_BANK20 + 0x021a0),
+    SPRITE_FRAME(gSpriteBank20Frame030, SPRITE_TILES_BANK20_FRAME030),
     { { -12, -8, 24, 17 } },
 };
 const struct sprite_frame_1box gSpriteBank20Frame031 = {
-    SPRITE_FRAME(gSpriteBank20Frame031, SPRITE_TILES_BANK20 + 0x022c0),
+    SPRITE_FRAME(gSpriteBank20Frame031, SPRITE_TILES_BANK20_FRAME031),
     { { -12, -8, 24, 17 } },
 };
 
-const struct sprite_piece_pos gSpriteBank20Frame000Pos[2] = { { -14, -9 }, { 1, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame001Pos[2] = { { -13, -9 }, { 1, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame002Pos[2] = { { -14, -9 }, { 2, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame003Pos[2] = { { -14, -9 }, { 1, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame004Pos[2] = { { -14, -9 }, { 0, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame005Pos[2] = { { -14, -9 }, { -3, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame006Pos[2] = { { -13, -9 }, { 1, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame007Pos[3] = { { -12, -9 }, { -8, 7 }, { 0, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame008Pos[3] = { { -11, -9 }, { 5, -9 }, { -1, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame009Pos[2] = { { -12, -9 }, { -2, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame010Pos[2] = { { -14, -9 }, { -3, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame011Pos[2] = { { -15, -9 }, { -3, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame012Pos[2] = { { -15, -9 }, { -3, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame013Pos[2] = { { -15, -9 }, { -3, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame014Pos[2] = { { -15, -9 }, { -3, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame015Pos[2] = { { -15, -9 }, { -3, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame016Pos[2] = { { -14, -9 }, { 1, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame017Pos[2] = { { -13, -9 }, { 1, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame018Pos[2] = { { -13, -9 }, { 2, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame019Pos[2] = { { -14, -9 }, { 2, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame020Pos[2] = { { -14, -9 }, { 2, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame021Pos[2] = { { -14, -9 }, { 2, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame022Pos[2] = { { -14, -9 }, { 1, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame023Pos[2] = { { -14, -9 }, { 0, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame024Pos[2] = { { -14, -9 }, { 0, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame025Pos[2] = { { -13, -9 }, { 0, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame026Pos[2] = { { -14, -9 }, { -1, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame027Pos[2] = { { -15, -9 }, { -1, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame028Pos[2] = { { -14, -9 }, { -1, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame029Pos[2] = { { -14, -9 }, { 0, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame030Pos[2] = { { -14, -9 }, { 0, 7 } };
-const struct sprite_piece_pos gSpriteBank20Frame031Pos[2] = { { -14, -9 }, { 0, 7 } };
-
-const u8 gSpriteBank20Frame000Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame001Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame002Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame003Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame004Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame005Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame006Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame007Pieces[3] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame008Pieces[3] = { SPRITE_PIECE(5, 1), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame009Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame010Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame011Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame012Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame013Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame014Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame015Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame016Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame017Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame018Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame019Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame020Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame021Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame022Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame023Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame024Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame025Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame026Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame027Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame028Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame029Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame030Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank20Frame031Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
+/* The piece arrays, from graphics/sprites/bank20_patrolling_sewer_enemy/bank.json. */
+#include "sprites/bank20_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 21: 2 animations, 15 frames, tiles in gSpriteBank21Tiles (SPRITE_TILES_BANK21). */
+/* Bank 21: 2 animations, 15 frames, graphics/sprites/bank21_rat/. */
 
 extern const u16 gSpriteBank21Anim00Seq[8];
 extern const u16 gSpriteBank21Anim01Seq[7];
-extern const struct sprite_frame_1box gSpriteBank21Frame000;
-extern const struct sprite_frame_1box gSpriteBank21Frame001;
-extern const struct sprite_frame_1box gSpriteBank21Frame002;
-extern const struct sprite_frame_1box gSpriteBank21Frame003;
-extern const struct sprite_frame_1box gSpriteBank21Frame004;
-extern const struct sprite_frame_1box gSpriteBank21Frame005;
-extern const struct sprite_frame_1box gSpriteBank21Frame006;
-extern const struct sprite_frame_1box gSpriteBank21Frame007;
-extern const struct sprite_frame_1box gSpriteBank21Frame008;
-extern const struct sprite_frame_1box gSpriteBank21Frame009;
-extern const struct sprite_frame_1box gSpriteBank21Frame010;
-extern const struct sprite_frame_1box gSpriteBank21Frame011;
-extern const struct sprite_frame_1box gSpriteBank21Frame012;
-extern const struct sprite_frame_1box gSpriteBank21Frame013;
-extern const struct sprite_frame_1box gSpriteBank21Frame014;
-extern const struct sprite_piece_pos gSpriteBank21Frame000Pos[4];
-extern const struct sprite_piece_pos gSpriteBank21Frame001Pos[4];
-extern const struct sprite_piece_pos gSpriteBank21Frame002Pos[4];
-extern const struct sprite_piece_pos gSpriteBank21Frame003Pos[3];
-extern const struct sprite_piece_pos gSpriteBank21Frame004Pos[2];
-extern const struct sprite_piece_pos gSpriteBank21Frame005Pos[2];
-extern const struct sprite_piece_pos gSpriteBank21Frame006Pos[3];
-extern const struct sprite_piece_pos gSpriteBank21Frame007Pos[3];
-extern const struct sprite_piece_pos gSpriteBank21Frame008Pos[5];
-extern const struct sprite_piece_pos gSpriteBank21Frame009Pos[2];
-extern const struct sprite_piece_pos gSpriteBank21Frame010Pos[4];
-extern const struct sprite_piece_pos gSpriteBank21Frame011Pos[3];
-extern const struct sprite_piece_pos gSpriteBank21Frame012Pos[3];
-extern const struct sprite_piece_pos gSpriteBank21Frame013Pos[3];
-extern const struct sprite_piece_pos gSpriteBank21Frame014Pos[3];
-extern const u8 gSpriteBank21Frame000Pieces[4];
-extern const u8 gSpriteBank21Frame001Pieces[4];
-extern const u8 gSpriteBank21Frame002Pieces[4];
-extern const u8 gSpriteBank21Frame003Pieces[3];
-extern const u8 gSpriteBank21Frame004Pieces[2];
-extern const u8 gSpriteBank21Frame005Pieces[2];
-extern const u8 gSpriteBank21Frame006Pieces[3];
-extern const u8 gSpriteBank21Frame007Pieces[3];
-extern const u8 gSpriteBank21Frame008Pieces[5];
-extern const u8 gSpriteBank21Frame009Pieces[2];
-extern const u8 gSpriteBank21Frame010Pieces[4];
-extern const u8 gSpriteBank21Frame011Pieces[3];
-extern const u8 gSpriteBank21Frame012Pieces[3];
-extern const u8 gSpriteBank21Frame013Pieces[3];
-extern const u8 gSpriteBank21Frame014Pieces[3];
 
 extern const struct sprite_anim gSpriteBank21Anims[2] = {
     /* 0 */ {
@@ -3841,94 +2200,65 @@ extern const struct sprite_frame *const gSpriteBank21Frames[15] = {
 };
 
 const struct sprite_frame_1box gSpriteBank21Frame000 = {
-    SPRITE_FRAME(gSpriteBank21Frame000, SPRITE_TILES_BANK21 + 0x00000),
+    SPRITE_FRAME(gSpriteBank21Frame000, SPRITE_TILES_BANK21_FRAME000),
     { { -6, -7, 25, 15 } },
 };
 const struct sprite_frame_1box gSpriteBank21Frame001 = {
-    SPRITE_FRAME(gSpriteBank21Frame001, SPRITE_TILES_BANK21 + 0x00200),
+    SPRITE_FRAME(gSpriteBank21Frame001, SPRITE_TILES_BANK21_FRAME001),
     { { -7, -7, 27, 14 } },
 };
 const struct sprite_frame_1box gSpriteBank21Frame002 = {
-    SPRITE_FRAME(gSpriteBank21Frame002, SPRITE_TILES_BANK21 + 0x00440),
+    SPRITE_FRAME(gSpriteBank21Frame002, SPRITE_TILES_BANK21_FRAME002),
     { { -3, -6, 24, 12 } },
 };
 const struct sprite_frame_1box gSpriteBank21Frame003 = {
-    SPRITE_FRAME(gSpriteBank21Frame003, SPRITE_TILES_BANK21 + 0x00640),
+    SPRITE_FRAME(gSpriteBank21Frame003, SPRITE_TILES_BANK21_FRAME003),
     { { -4, -4, 24, 13 } },
 };
 const struct sprite_frame_1box gSpriteBank21Frame004 = {
-    SPRITE_FRAME(gSpriteBank21Frame004, SPRITE_TILES_BANK21 + 0x007e0),
+    SPRITE_FRAME(gSpriteBank21Frame004, SPRITE_TILES_BANK21_FRAME004),
     { { -6, -4, 25, 13 } },
 };
 const struct sprite_frame_1box gSpriteBank21Frame005 = {
-    SPRITE_FRAME(gSpriteBank21Frame005, SPRITE_TILES_BANK21 + 0x00960),
+    SPRITE_FRAME(gSpriteBank21Frame005, SPRITE_TILES_BANK21_FRAME005),
     { { -7, -3, 26, 12 } },
 };
 const struct sprite_frame_1box gSpriteBank21Frame006 = {
-    SPRITE_FRAME(gSpriteBank21Frame006, SPRITE_TILES_BANK21 + 0x00ae0),
+    SPRITE_FRAME(gSpriteBank21Frame006, SPRITE_TILES_BANK21_FRAME006),
     { { -6, -1, 24, 10 } },
 };
 const struct sprite_frame_1box gSpriteBank21Frame007 = {
-    SPRITE_FRAME(gSpriteBank21Frame007, SPRITE_TILES_BANK21 + 0x00ca0),
+    SPRITE_FRAME(gSpriteBank21Frame007, SPRITE_TILES_BANK21_FRAME007),
     { { -5, -2, 21, 10 } },
 };
 const struct sprite_frame_1box gSpriteBank21Frame008 = {
-    SPRITE_FRAME(gSpriteBank21Frame008, SPRITE_TILES_BANK21 + 0x00e40),
+    SPRITE_FRAME(gSpriteBank21Frame008, SPRITE_TILES_BANK21_FRAME008),
     { { -4, -2, 22, 11 } },
 };
 const struct sprite_frame_1box gSpriteBank21Frame009 = {
-    SPRITE_FRAME(gSpriteBank21Frame009, SPRITE_TILES_BANK21 + 0x01040),
+    SPRITE_FRAME(gSpriteBank21Frame009, SPRITE_TILES_BANK21_FRAME009),
     { { -4, -3, 19, 12 } },
 };
 const struct sprite_frame_1box gSpriteBank21Frame010 = {
-    SPRITE_FRAME(gSpriteBank21Frame010, SPRITE_TILES_BANK21 + 0x011c0),
+    SPRITE_FRAME(gSpriteBank21Frame010, SPRITE_TILES_BANK21_FRAME010),
     { { -3, -3, 17, 11 } },
 };
 const struct sprite_frame_1box gSpriteBank21Frame011 = {
-    SPRITE_FRAME(gSpriteBank21Frame011, SPRITE_TILES_BANK21 + 0x012e0),
+    SPRITE_FRAME(gSpriteBank21Frame011, SPRITE_TILES_BANK21_FRAME011),
     { { -4, -5, 18, 14 } },
 };
 const struct sprite_frame_1box gSpriteBank21Frame012 = {
-    SPRITE_FRAME(gSpriteBank21Frame012, SPRITE_TILES_BANK21 + 0x013c0),
+    SPRITE_FRAME(gSpriteBank21Frame012, SPRITE_TILES_BANK21_FRAME012),
     { { -7, -3, 18, 13 } },
 };
 const struct sprite_frame_1box gSpriteBank21Frame013 = {
-    SPRITE_FRAME(gSpriteBank21Frame013, SPRITE_TILES_BANK21 + 0x014c0),
+    SPRITE_FRAME(gSpriteBank21Frame013, SPRITE_TILES_BANK21_FRAME013),
     { { -12, -2, 19, 11 } },
 };
 const struct sprite_frame_1box gSpriteBank21Frame014 = {
-    SPRITE_FRAME(gSpriteBank21Frame014, SPRITE_TILES_BANK21 + 0x01660),
+    SPRITE_FRAME(gSpriteBank21Frame014, SPRITE_TILES_BANK21_FRAME014),
     { { -15, -3, 24, 12 } },
 };
 
-const struct sprite_piece_pos gSpriteBank21Frame000Pos[4] = { { -8, -7 }, { 11, -10 }, { -21, 6 }, { 11, 6 } };
-const struct sprite_piece_pos gSpriteBank21Frame001Pos[4] = { { -9, -5 }, { 10, -10 }, { -22, 6 }, { 10, 6 } };
-const struct sprite_piece_pos gSpriteBank21Frame002Pos[4] = { { -18, -5 }, { 14, -9 }, { 22, -9 }, { -5, 7 } };
-const struct sprite_piece_pos gSpriteBank21Frame003Pos[3] = { { -11, -9 }, { 21, 5 }, { -6, 7 } };
-const struct sprite_piece_pos gSpriteBank21Frame004Pos[2] = { { -6, -11 }, { -7, 5 } };
-const struct sprite_piece_pos gSpriteBank21Frame005Pos[2] = { { -7, -10 }, { -8, 6 } };
-const struct sprite_piece_pos gSpriteBank21Frame006Pos[3] = { { -9, -9 }, { 23, -9 }, { -6, 7 } };
-const struct sprite_piece_pos gSpriteBank21Frame007Pos[3] = { { -16, -9 }, { 16, -1 }, { -4, 7 } };
-const struct sprite_piece_pos gSpriteBank21Frame008Pos[5] = { { -12, -6 }, { 12, -10 }, { -20, 6 }, { 12, 6 }, { 20, 6 } };
-const struct sprite_piece_pos gSpriteBank21Frame009Pos[2] = { { -13, -9 }, { -6, 7 } };
-const struct sprite_piece_pos gSpriteBank21Frame010Pos[4] = { { -6, -9 }, { 10, -8 }, { -4, 7 }, { 12, 7 } };
-const struct sprite_piece_pos gSpriteBank21Frame011Pos[3] = { { -5, -11 }, { 11, -7 }, { -4, 5 } };
-const struct sprite_piece_pos gSpriteBank21Frame012Pos[3] = { { -7, -10 }, { 9, -5 }, { -7, 6 } };
-const struct sprite_piece_pos gSpriteBank21Frame013Pos[3] = { { -13, -9 }, { 16, 3 }, { -16, 7 } };
-const struct sprite_piece_pos gSpriteBank21Frame014Pos[3] = { { -17, -9 }, { 13, 2 }, { -19, 7 } };
-
-const u8 gSpriteBank21Frame000Pieces[4] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 5), SPRITE_PIECE(0, 4) };
-const u8 gSpriteBank21Frame001Pieces[4] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 5), SPRITE_PIECE(0, 4) };
-const u8 gSpriteBank21Frame002Pieces[4] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 5) };
-const u8 gSpriteBank21Frame003Pieces[3] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 5) };
-const u8 gSpriteBank21Frame004Pieces[2] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 5) };
-const u8 gSpriteBank21Frame005Pieces[2] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 5) };
-const u8 gSpriteBank21Frame006Pieces[3] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 5) };
-const u8 gSpriteBank21Frame007Pieces[3] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 5) };
-const u8 gSpriteBank21Frame008Pieces[5] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 5), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank21Frame009Pieces[2] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 5) };
-const u8 gSpriteBank21Frame010Pieces[4] = { SPRITE_PIECE(2, 1), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 4), SPRITE_PIECE(0, 0) };
-const u8 gSpriteBank21Frame011Pieces[3] = { SPRITE_PIECE(2, 1), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 4) };
-const u8 gSpriteBank21Frame012Pieces[3] = { SPRITE_PIECE(2, 1), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 4) };
-const u8 gSpriteBank21Frame013Pieces[3] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 5) };
-const u8 gSpriteBank21Frame014Pieces[3] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 5) };
+/* The piece arrays, from graphics/sprites/bank21_rat/bank.json. */
+#include "sprites/bank21_pieces.inc"

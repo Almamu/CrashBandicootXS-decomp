@@ -1,0 +1,20 @@
+{
+  "frames": [
+    {"origin": [30, 29], "pieces": [["64x64", -30, -29]], "layout": 5, "tiles": "own", "palettes": [35]},
+    {"origin": [30, 29], "pieces": [["64x64", -30, -29]], "layout": 5, "tiles": {"frame": 0, "tile": 60}, "palettes": [35]},
+    {"origin": [30, 30], "pieces": [["64x64", -30, -30]], "layout": 5, "tiles": {"frame": 1, "tile": 60}, "palettes": [35]},
+    {"origin": [30, 30], "pieces": [["64x64", -30, -30]], "layout": 5, "tiles": {"frame": 2, "tile": 60}, "palettes": [35]},
+    {"origin": [31, 31], "pieces": [["64x64", -31, -31]], "layout": 5, "tiles": {"frame": 3, "tile": 60}, "palettes": [35]},
+    {"origin": [31, 32], "pieces": [["64x64", -31, -32]], "layout": 5, "tiles": {"frame": 4, "tile": 60}, "palettes": [35]},
+    {"origin": [31, 32], "pieces": [["64x64", -31, -32]], "layout": 5, "tiles": {"frame": 5, "tile": 60}, "palettes": [35]},
+    {"origin": [31, 31], "pieces": [["64x64", -31, -31]], "layout": 5, "tiles": {"frame": 6, "tile": 60}, "palettes": [35]},
+    {"origin": [31, 31], "pieces": [["64x64", -31, -31]], "layout": 5, "tiles": {"frame": 7, "tile": 60}, "palettes": [35]},
+    {"origin": [31, 31], "pieces": [["64x64", -31, -31]], "layout": 5, "tiles": {"frame": 8, "tile": 60}, "palettes": [35]},
+    {"origin": [31, 30], "pieces": [["64x64", -31, -30]], "layout": 5, "tiles": {"frame": 9, "tile": 60}, "palettes": [35]},
+    {"origin": [30, 29], "pieces": [["64x64", -30, -29]], "layout": 5, "tiles": {"frame": 10, "tile": 60}, "palettes": [35]},
+    {"origin": [30, 29], "pieces": [["64x64", -30, -29]], "layout": 5, "tiles": {"frame": 11, "tile": 60}, "palettes": [35]},
+    {"origin": [31, 29], "pieces": [["64x64", -31, -29]], "layout": 5, "tiles": {"frame": 12, "tile": 60}, "palettes": [35]},
+    {"origin": [31, 29], "pieces": [["64x64", -31, -29]], "layout": 5, "tiles": {"frame": 13, "tile": 60}, "palettes": [35]},
+    {"origin": [30, 29], "pieces": [["64x64", -30, -29]], "layout": 5, "tiles": {"frame": 14, "tile": 60}, "palettes": [35]}
+  ]
+}

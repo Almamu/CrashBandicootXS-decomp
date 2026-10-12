@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
-"""Extracts the raw tile pools inside gLanguageSelectPalette3 (0x0817E78C-0x084A5600)
-from baserom.gba as indexed PNGs, the editable sources that graphics.mk
-rebuilds with grit (see docs/data.md, "Resources (grit-style)"):
+"""Extracts the raw level tile sets and the OBJ palettes inside
+gLanguageSelectPalette3 (0x0817E78C-0x084A5600) from baserom.gba, the
+editable sources graphics.mk rebuilds (see docs/data.md, "Resources
+(grit-style)"). The sprite banks' tile pool in between is
+tools/sprite_frames.py's.
 
-- graphics/sprites/bankNN_<addr>.png: the 56 sprite banks' OBJ tiles (4bpp).
-  The gSpriteBankTable header's tileBase (0x082BF120) is the start of one
-  headerless pool; each bank's frames address it as tileBase +
-  (frame.packed & 0xFFFFFF), and the banks own disjoint, back-to-back ranges
-  in bank order (banks 42 and 47 also reuse one frame of bank 0's). A bank's
-  range runs from its lowest own frame offset to its highest frame end.
 - graphics/sprites/palettes/NNN.pal: the 125 16-colour OBJ palettes
   (gObjPalettes, 0x084A4660, the header's +0x08/+0x0E), one JASC file per
   palette, NNN being the paletteId the animations give
@@ -18,11 +14,9 @@ rebuilds with grit (see docs/data.md, "Resources (grit-style)"):
 
 Each PNG is `width` tiles wide and padded to whole rows with blank (index 0)
 tiles; graphics.mk passes the real byte count to `tools/bin2c.py --size`,
-which trims that padding again. Sprite banks are drawn as wide as their most
-common OBJ piece (by tile area, at least 4 tiles), so with the 1D OBJ tile
-mapping those pieces read correctly. Their palette is a grayscale placeholder,
-although each animation names its palette (sprite_anim.paletteId). The tile sets carry the 256-colour BG palette of the first room
-(in ROM order) whose layers use them, found through the room records.
+which trims that padding again. The tile sets carry the 256-colour BG
+palette of the first room (in ROM order) whose layers use them, found
+through the room records.
 
     tools/tile_pools.py [baserom.gba]     writes the PNGs, prints the sizes
 """
@@ -30,7 +24,6 @@ import struct
 import sys
 
 import jasc_pal
-from collections import Counter
 from pathlib import Path
 
 from PIL import Image
@@ -40,8 +33,6 @@ BANK_TABLE = 0x084A5600
 OBJ_PALETTES = 0x084A4660  # gObjPalettes, 125 x 16 colours
 TILESETS = [0x0817E7AC, 0x081E6330, 0x08200DF4, 0x08270F08, 0x08299DCC]
 ROOM_BLOCKS = [(0x0824B638, 0x08270F08), (0x082B91D0, 0x082BF120)]
-OBJ_W = 0x0816B2E0  # u8[12] piece widths (px) by shape/size index
-OBJ_H = 0x0816B2EC  # u8[12] piece heights
 
 
 class Rom:
@@ -59,45 +50,6 @@ class Rom:
 
     def bytes(self, a, n):
         return self.data[a - ROM_BASE:a - ROM_BASE + n]
-
-
-def sprite_banks(rom):
-    """[(start, end, piece width in tiles)] per bank, as pool offsets."""
-    banks, tile_base = rom.w(BANK_TABLE), rom.w(BANK_TABLE + 4)
-    nbanks = rom.h(BANK_TABLE + 12)
-    assert tile_base == 0x082BF120 and nbanks == 56
-    widths = rom.bytes(OBJ_W, 12)
-    heights = rom.bytes(OBJ_H, 12)
-    out = []
-    prev_end = 0
-    for i in range(nbanks):
-        frames = rom.w(banks + 12 * i + 4)
-        # frame_desc *frames[], directly followed by the first frame_desc
-        ptrs, a, first = [], frames, None
-        while a != first:
-            p = rom.w(a)
-            first = p if first is None else min(first, p)
-            ptrs.append(p)
-            a += 4
-        start, end, area = None, 0, Counter()
-        for p in ptrs:
-            packed = rom.w(p + 8)
-            off, count, ids = packed & 0xFFFFFF, packed >> 24, rom.w(p + 4)
-            if off < prev_end:
-                continue  # a frame reused from an earlier bank's range
-            size = 0
-            for k in range(count):
-                shape = rom.b(ids + k) & 0xF
-                tiles = widths[shape] * heights[shape] // 64
-                area[widths[shape] // 8] += tiles
-                size += tiles * 32
-            start = off if start is None else min(start, off)
-            end = max(end, off + size)
-        assert start == prev_end, f"bank {i}: gap before {start:#x}"
-        out.append((start, end, max(4, area.most_common(1)[0][0])))
-        prev_end = end
-    assert prev_end == OBJ_PALETTES - tile_base
-    return out
 
 
 def room_palette(rom, tileset):
@@ -151,14 +103,7 @@ def bgr555(raw):
 
 def main():
     rom = Rom(sys.argv[1] if len(sys.argv) > 1 else "baserom.gba")
-    gray = [(i * 17,) * 3 for i in range(16)]
     sizes = []
-    tile_base = rom.w(BANK_TABLE + 4)
-    for i, (start, end, width) in enumerate(sprite_banks(rom)):
-        name = f"bank{i:02}_{(tile_base + start) & 0xFFFFFF:06x}"
-        n = write_png(Path("graphics/sprites") / f"{name}.png",
-                      rom.bytes(tile_base + start, end - start), 4, width, gray)
-        sizes.append((name, n))
     assert rom.w(BANK_TABLE + 8) == OBJ_PALETTES and rom.h(BANK_TABLE + 14) == 125
     pal_dir = Path("graphics/sprites/palettes")
     pal_dir.mkdir(parents=True, exist_ok=True)
