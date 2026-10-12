@@ -122,6 +122,7 @@ void LevelEntityFlags::SpawnRoomEntities(const struct level_entity_list *list,
 
     for (i = gCrateList->count - 1; i >= 0; i--) {
         Crate *actor = Slot(i);
+        /* `id` is needed: inlined, the instructions differ */
         u16 id = actor->id;
         s32 j;
 
@@ -166,6 +167,7 @@ void LevelEntityFlags::SpawnRoomEntities(const struct level_entity_list *list,
     s32 j;
 
     for (j = 0; j < n; j++) {
+        /* `from` is needed: inlined, the code is 2 instructions shorter */
         u16 from = lk[j].from;
         s32 found = 0;
         s32 k;
@@ -244,6 +246,7 @@ void LevelEntityFlags::SpawnRoomEntities(const struct level_entity_list *list,
         }
     move:
         if (got && actor != 0) {
+            /* `lift` is needed: inlined, the instructions differ */
             s32 lift = INT_TO_Q8(actor->GetBounds()->h + 1);
             struct vec2 p;
             struct vec2 *pp = &p;

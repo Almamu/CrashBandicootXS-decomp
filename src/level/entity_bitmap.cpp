@@ -31,7 +31,9 @@ s32 Bitmap::Set(s32 n)
 /* Clears bit `n & 0x1f` of the bitmap (SetBitmapBit sets them). */
 void Bitmap::ClearBit(s32 n)
 {
+    /* `word` is needed: inlined, the code is 3 instructions longer */
     s32 word = n / 32;
+    /* `mask` is needed: inlined, the instructions are reordered */
     u32 mask = 1 << (n % 32);
 
     bits[word] &= ~mask;

@@ -82,7 +82,9 @@ void BgLayerBase::StepScroll(const s32 *target)
 {
     s32 dx, dy;
 
+    /* `dx` is needed: inlined, the instructions are reordered */
     dx = ClampScrollStep(target[0] - x);
+    /* `dy` is needed: inlined, the code is 1 instruction shorter */
     dy = ClampScrollStep(target[1] - y);
 
     x += dx;
@@ -94,6 +96,7 @@ void BgLayerBase::StepScroll(const s32 *target)
 void BgLayerBase::Scroll(const s32 *delta)
 {
     s32 scaled[2];
+    /* `dx`, `dy` are needed: inlined, the instructions are reordered */
     s32 dx = delta[0];
     s32 dy = delta[1];
 
@@ -107,6 +110,7 @@ void BgLayerBase::Scroll(const s32 *delta)
  * the streamer's window there. */
 void BgLayerBase::Reset(const s32 *pos)
 {
+    /* `px`, `py` are needed: inlined, the instructions are reordered */
     s32 px = pos[0];
     s32 py = pos[1];
 

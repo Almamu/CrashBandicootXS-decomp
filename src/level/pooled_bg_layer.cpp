@@ -28,6 +28,7 @@ extern "C" {
 void PooledBgLayer::DrawColumn(s32 col)
 {
     s32 srcRow;
+    /* `src` is needed: inlined, the code is 6 instructions longer */
     u16 *src = streamer->GetColumn(col, rowLo, &srcRow);
     s32 idx = GetScreenIndex(col, rowLo);
     s32 r;
@@ -52,6 +53,7 @@ s32 PooledBgLayer::ClampScrollStep(s32 step)
 void PooledBgLayer::ReleaseColumn(s32 col)
 {
     s32 srcRow;
+    /* `src` is needed: inlined, the code is 2 instructions longer */
     u16 *src = streamer->GetColumn(col, rowLo, &srcRow);
     s32 r;
 
@@ -65,6 +67,7 @@ void PooledBgLayer::ReleaseColumn(s32 col)
 void PooledBgLayer::ReleaseRow(s32 row)
 {
     s32 srcCol;
+    /* `src` is needed: inlined, the code is 1 instruction longer */
     u16 *src = streamer->GetRow(colLo, row, &srcCol);
     s32 c;
 
@@ -105,8 +108,10 @@ void PooledBgLayer::ClipRows(s32 lo, s32 hi)
  * through the pool. */
 void PooledBgLayer::DrawRow(s32 row)
 {
+    /* `dst` is needed: inlined, the code is 4 instructions longer */
     u16 *dst = &screen[WrapRow(row) * 32];
     s32 srcCol;
+    /* `src` is needed: inlined, the code is 4 instructions longer */
     u16 *src = streamer->GetRow(colLo, row, &srcCol);
     s32 c;
 
@@ -128,6 +133,7 @@ void PooledBgLayer::Reset(const s32 *pos)
  * data (past its 4-byte header). */
 void PooledBgLayer::LoadTiles()
 {
+    /* `tiles` is needed: inlined, the code is 1 instruction longer */
     u32 tiles = (u32)tileData;
 
     pool->SetSource(GetCharBase(), tiles + 4);

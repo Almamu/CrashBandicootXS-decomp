@@ -127,6 +127,7 @@ void SpawnNoEntity(void)
 void SpawnSealSpawner(u32 id, u16 x, u16 y, u16 param)
 {
     PeriodicSpawner *obj;
+    /* `zero` is needed: inlined, the instructions are reordered */
     s32 zero;
 
     obj = new PeriodicSpawner;

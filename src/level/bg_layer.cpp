@@ -137,6 +137,7 @@ void BgLayer::CommitScroll()
 void BgLayer::DrawColumn(s32 col)
 {
     s32 srcRow;
+    /* `src` is needed: inlined, the code is 8 instructions shorter */
     u16 *src = streamer->GetColumn(col, rowLo, &srcRow);
     s32 i = GetScreenIndex(col, rowLo);
     s32 r;
@@ -152,8 +153,10 @@ void BgLayer::DrawColumn(s32 col)
  * from the streamer into screen row `row % 32`. */
 void BgLayer::DrawRow(s32 row)
 {
+    /* `dst` is needed: inlined, the code is 3 instructions longer */
     u16 *dst = &screen[WrapRow(row) * 32];
     s32 srcCol;
+    /* `src` is needed: inlined, the code is 11 instructions longer */
     u16 *src = streamer->GetRow(colLo, row, &srcCol);
     s32 c = colLo;
     s32 end;

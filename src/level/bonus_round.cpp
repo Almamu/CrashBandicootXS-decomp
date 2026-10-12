@@ -44,8 +44,10 @@ void LevelState::EndBonusRound(u8 cleared)
 
         wumpa += savedWumpa;
 
+        /* `fieldb8` is needed: inlined, the instructions are reordered */
         s32 *fieldb8 = &savedLives;
         s32 *fieldd4 = &room.checkpointX;
+        /* `fielde0` is needed: inlined, the instructions are reordered */
         u8 *fielde0 = &room.checkpointFlags;
         s32 total;
 

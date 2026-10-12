@@ -259,7 +259,9 @@ void TileCache::DecodeChunk(s32 recordId, void *dest)
 
                 acc = a + (lo >> 24);
                 out[written++] = acc;
+                /* scoped: its own `a` (shared, the registers differ) */
                 {
+                    /* `hi` is needed: inlined, the instructions are reordered */
                     s32 hi = pair << 16;
                     s32 a = acc;
 

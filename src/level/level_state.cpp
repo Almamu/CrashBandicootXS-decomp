@@ -261,6 +261,7 @@ void LevelState::PressSwitchCrate()
             mask |= *flags;
             *flags = mask;
         } else {
+            /* `b`, `c` are needed: inlined, the code is 2 instructions shorter */
             u16 b = crateGemX;
             u16 c = crateGemY;
             SpawnCrateGem(0xffff, b, c, 0);
@@ -894,6 +895,7 @@ void LevelState::SetCheckpoint(s32 flag, s32 *pair)
     ResetDeaths();
 
     s32 *dst = &room.checkpointX;
+    /* `px`, `py` are needed: inlined, the instructions are reordered */
     s32 px = pair[0];
     s32 py = pair[1];
     dst[0] = px;
@@ -987,6 +989,7 @@ void LevelState::UnpackSaveData(const GameProgress *src)
  * As there, `wumpa` goes through `this` (`strb [this, 0x14d]`). */
 GameProgress *LevelState::PackSaveData()
 {
+    /* `l` is needed: inlined, the instructions are reordered */
     s32 l = lives;
     GameProgress *snap = &saveData;
 

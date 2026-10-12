@@ -102,7 +102,9 @@ void BgStreamer::DecodeChunk(s32 recordId, u16 *dest)
                 acc = a + (lo >> 24);
                 RING_CELL(out, written) = acc;
                 written++;
+                /* scoped: its own `a` (shared, the registers differ) */
                 {
+                    /* `hi` is needed: inlined, the instructions are reordered */
                     s32 hi = pair << 16;
                     s32 a = acc;
 
@@ -181,6 +183,7 @@ u16 *BgStreamer::GetColumn(s32 x, s32 y, s32 *rowOut)
     s32 row = y - tileY * 8;
     s32 shifted;
     u16 *base;
+    /* `ret` is needed: inlined, the instructions are reordered */
     u16 *ret;
 
     shifted = subX * 16;
@@ -205,6 +208,7 @@ u16 *BgStreamer::GetRow(s32 x, s32 y, s32 *colOut)
     s32 row = y - tileY * 8;
     s32 shifted;
     u16 *base;
+    /* `ret` is needed: inlined, the instructions are reordered */
     u16 *ret;
 
     shifted = subX * 16;
@@ -280,6 +284,7 @@ void BgStreamer::StreamColumn(s32 col)
 
             if (i + tileY < (src = source)->gridHeight) {
                 u16 *dest = ring;
+                /* `id` is needed: inlined, the instructions are reordered */
                 u16 id;
 
                 dest += ((subY + i + 4) & 3) * 0x200;
@@ -298,6 +303,7 @@ void BgStreamer::StreamColumn(s32 col)
  * and block height stay in registers across the loops, as in the ROM. */
 void BgStreamer::Fill(const s32 *pos)
 {
+    /* `rowLen`, `blockH` are needed: inlined, the code is 6 instructions shorter */
     s32 rowLen = 0x40;
     s32 blockH = 0x20;
     s32 j;
@@ -332,6 +338,7 @@ void BgStreamer::Fill(const s32 *pos)
  * cache's `decodeBase` (TileCache, bg_layer.hpp). */
 void BgStreamer::SetSource(const struct level_layer_desc *src)
 {
+    /* `w`, `h` are needed: inlined, the instructions are reordered */
     s32 w;
     s32 h;
 
@@ -371,6 +378,7 @@ s32 BgStreamer::GetWidth()
 /* UNUSED: no caller anywhere in the ROM. */
 void BgStreamer::SetSize(const s32 *size)
 {
+    /* `h` is needed: inlined, the instructions are reordered */
     s32 h = size[1];
 
     widthTiles = size[0];

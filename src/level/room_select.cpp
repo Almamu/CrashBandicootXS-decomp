@@ -49,6 +49,7 @@ bool LevelProgress::NextRoom()
 {
     s32 advanced = 0;
     const struct level_room_list *list = gLevelTable[level].rooms;
+    /* `threshold` is needed: inlined, the instructions are reordered */
     s32 threshold = list->count - 1;
     s32 cur = roomIndex;
 

@@ -84,6 +84,7 @@ void SpawnLizard(u32 id, u16 x, u16 y, u16 param)
 {
     MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
+    /* `rec2` is needed: inlined, a call moves */
     const struct entity_params *rec2;
 
     part->bank = gSpriteBankSet->Bank(13);
@@ -163,6 +164,7 @@ void SpawnPatrollingJungleEnemy(u32 id, u16 x, u16 y, u16 param)
 {
     MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
+    /* `rec2` is needed: inlined, a call moves */
     const struct entity_params *rec2;
 
     part->bank = gSpriteBankSet->Bank(14);
@@ -273,6 +275,7 @@ void SpawnPolarBear(u32 id, u16 x, u16 y, u16 param)
 {
     MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
+    /* `rec2` is needed: inlined, a call moves */
     const struct entity_params *rec2;
 
     part->bank = gSpriteBankSet->Bank(16);
@@ -372,6 +375,7 @@ void SpawnMorayEel(u32 id, u16 x, u16 y, u16 param)
     SetAnims(hdr, gEnemyDefaultAnimMap);
     part->StartAnim(0);
 
+    /* `f` is needed: inlined, the code is 1 instruction longer */
     s32 f = part->mirrorFlags.mirrorX;
     part->SetFlipX(!f);
     part->kind = EVENT_HIT_BITE;
@@ -471,6 +475,7 @@ void SpawnLaserBarrier(u32 id, u16 x, u16 y, u16 param)
     CollidableList()->Add(part);
     SetAnims(hdr, gEnemyDefaultAnimMap);
 
+    /* `f` is needed: inlined, the code is 8 instructions longer */
     s32 f = part->mirrorFlags.mirrorX;
     part->mirrorFlags.mirrorX = f == 0;
     SetKind(part, 2);
@@ -545,9 +550,11 @@ void SpawnPatrollingSpaceEnemy(u32 id, u16 x, u16 y, u16 param)
  * of 0x28; state 0x12. */
 void SpawnSaucerLabAssistant(u32 id, u16 x, u16 y, u16 param)
 {
+    /* `raisedY` is needed: inlined, the instructions are reordered */
     u16 raisedY = y - 0x28;
     MovingSprite *part = MovingSprite::Create(id, x, raisedY, param);
     EnemyCtrl *hdr;
+    /* `rec2` is needed: inlined, the code is 2 instructions shorter */
     const struct entity_params *rec2;
 
     part->bank = gSpriteBankSet->Bank(29);
@@ -682,6 +689,7 @@ void SpawnPatrollingSewerEnemy(u32 id, u16 x, u16 y, u16 param)
 {
     MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
+    /* `rec2` is needed: inlined, the code is 2 instructions shorter */
     const struct entity_params *rec2;
 
     part->bank = gSpriteBankSet->Bank(20);
@@ -707,6 +715,7 @@ void SpawnRat(u32 id, u16 x, u16 y, u16 param)
 {
     MovingSprite *part = MovingSprite::Create(id, x, y, param);
     EnemyCtrl *hdr;
+    /* `rec2` is needed: inlined, a call moves */
     const struct entity_params *rec2;
 
     part->bank = gSpriteBankSet->Bank(21);

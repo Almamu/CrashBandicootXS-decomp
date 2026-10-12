@@ -187,12 +187,14 @@ s32 LevelLayers::GetTerrainFlags(s32 x, s32 y)
  * none (ProbeGroundSpriteFloor). */
 s32 LevelLayers::ProbeFloor(struct vec2 *pos, s32 *outValue)
 {
+    /* `tileX` is needed: inlined, the instructions are reordered */
     s32 tileX = pos->x >> 3;
     s32 tileY = pos->y >> 3;
     s8 *row = (s8 *)tiles->GetTerrainHeights(tileX, tileY);
 
     if (row != NULL) {
         s32 y = pos->y;
+        /* `height` is needed: inlined, the code is 1 instruction longer */
         s32 height = row[pos->x & 7];
 
         *outValue += INT_TO_Q8((tileY << 3) + height - y);
@@ -207,11 +209,13 @@ s32 LevelLayers::ProbeFloor(struct vec2 *pos, s32 *outValue)
 s32 LevelLayers::ProbeSolidFloor(struct vec2 *pos, s32 *outValue)
 {
     u8 scratch;
+    /* `tileX` is needed: inlined, the instructions are reordered */
     s32 tileX = pos->x >> 3;
     s32 tileY = pos->y >> 3;
     s8 height = tiles->GetSolidTerrainModeValue(tileX, tileY, TERRAIN_MODE_DOWN, &scratch);
 
     if (height >= 0) {
+        /* `y` is needed: inlined, the instructions are reordered */
         s32 y = pos->y;
 
         *outValue += INT_TO_Q8((tileY << 3) + height - y);

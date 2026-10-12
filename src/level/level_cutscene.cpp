@@ -147,12 +147,14 @@ void LevelState::PlayCutscene(s32 idx)
      * words sp-relative and the two y words through one pointer
      * register - see docs/matching/archive/gap-22354-game-context.md. */
     s32 x0 = f.box.x;
+    /* `y0` is needed: inlined, the instructions are reordered */
     s32 y0 = f.box.y;
     s32 *d = &((CutscenePlayer *)&f.pager)->box.x;
     s32 x1, y1;
 
     d[0] = x0;
     d[1] = y0;
+    /* `x1`, `y1` are needed: inlined, the instructions are reordered */
     x1 = f.box.w;
     y1 = f.box.h;
     ((CutscenePlayer *)&f.pager)->box.w = x1;
