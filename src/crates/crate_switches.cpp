@@ -28,6 +28,7 @@ extern "C" {
  * in SetCrateBusy. */
 static inline void SetPlayerBusy(void)
 {
+    /* `p`, `one` are needed: inlined, the instructions are reordered */
     Player *p = gPlayer;
     u8 one = 1;
 
@@ -69,6 +70,7 @@ void DetonateNitroCrates(void)
         do {
             Crate *o = Crates()->slots[i];
 
+            /* nested: as one `&&` test, the code is 5 instructions shorter */
             if (o->GetClassId() == 3 && o->kind == CRATE_KIND_NITRO) {
                 if ((o->state & CRATE_STATE_MASK) == 0)
                     o->Explode(0);
@@ -84,17 +86,20 @@ void DetonateNitroCrates(void)
 void Crate::ActivateNitroSwitch()
 {
     if (pressed == 0) {
+        /* `one` is needed: inlined, the instructions are reordered */
         s32 one;
         const struct sprite_anim *anims;
+        /* `a` is needed: inlined, the instructions are reordered */
         const struct sprite_anim *a;
+        /* `slot` is needed: inlined, the code is 2 instructions shorter */
         u32 slot;
 
         state |= CRATE_STATE_BUSY;
-        {
-            Player *player = gPlayer;
-            one = 1;
-            player->busy = one;
-        }
+
+        /* `player` is needed: inlined, the instructions are reordered */
+        Player *player = gPlayer;
+        one = 1;
+        player->busy = one;
         StartAnim(0x23);
         anims = bank->anims;
         a = &anims[tag];
@@ -129,13 +134,14 @@ void Crate::ActivateIronSwitch()
     state |= CRATE_STATE_BUSY;
     SetPlayerBusy();
     StartAnim(0x22);
-    {
-        const struct sprite_anim *anims = bank->anims;
-        const struct sprite_anim *a = &anims[tag];
-        u32 slot = gPaletteCache->GetSlot(a->paletteId);
 
-        palette = slot;
-    }
+    const struct sprite_anim *anims = bank->anims;
+    /* `a` is needed: inlined, the instructions are reordered */
+    const struct sprite_anim *a = &anims[tag];
+    /* `slot` is needed: inlined, the code is 2 instructions shorter */
+    u32 slot = gPaletteCache->GetSlot(a->paletteId);
+
+    palette = slot;
     gEntityFlags->MarkActivated(id);
 
     i = 0;
@@ -143,6 +149,7 @@ void Crate::ActivateIronSwitch()
         do {
             Crate *o = Crates()->slots[i];
 
+            /* nested: as one `&&` test, the code is 3 instructions shorter */
             if (o->GetClassId() == 3 && (o->state & CRATE_STATE_MASK) == 0) {
                 if (o->kind == CRATE_KIND_OUTLINE && o->paramA == paramA) {
                     found[n] = o;
@@ -193,16 +200,18 @@ void Crate::SolidifyOutlines()
             groupAllocated = 0;
         }
         group = PHYS_NO_GROUP;
-        {
-            u8 k = CRATE_KIND_IRON;
-            kind = k;
-        }
+
+        /* `k` is needed: inlined, the instructions are reordered */
+        u8 k = CRATE_KIND_IRON;
+        kind = k;
     } else {
         struct crate_group *g = group;
 
         if (PHYS_HAS_GROUP(g)) {
             s32 i;
+            /* `n` is needed: inlined, the code is 4 instructions longer */
             s32 n = g->count;
+            /* `items` is needed: inlined, the code is 2 instructions longer */
             Crate **items = g->items;
             s32 played = FALSE;
 
@@ -284,6 +293,7 @@ void BreakCratesInArea(s32 x, s32 y, s32 dist, s32 height)
     s32 i = 0;
 
     if (i < gCrateList->count) {
+        /* `commit` is needed: inlined, the code is 8 instructions shorter */
         const u8 *commit = gCrateKindExplosive;
 
         do {

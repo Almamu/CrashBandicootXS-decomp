@@ -32,6 +32,7 @@ s32 Crate::IsInsideRect(struct aabb *box)
         s32 left = x - halfW;
         s32 top = y - halfH;
         s32 right = x + halfW;
+        /* `bottom` is needed: inlined, the code is 2 instructions longer */
         s32 bottom = y + halfH;
         u8 inside = 0;
 
@@ -46,10 +47,9 @@ s32 Crate::IsInsideRect(struct aabb *box)
  * counts `bounce` up unless it is 0. */
 void ResolvePlayerCollisions(void)
 {
-    Player *p = gPlayer;
     u8 *bounce;
 
-    p->collisionQueue.Resolve();
+    gPlayer->collisionQueue.Resolve();
     bounce = &gPlayer->bounce;
     if (*bounce != 0)
         *bounce = *bounce + 1;

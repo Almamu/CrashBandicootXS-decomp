@@ -24,18 +24,17 @@ void CrateList::Draw()
     CrateGridNode *node;
     CrateGridNode **last;
 
-    {
-        s32 cx = INT_TO_Q8(cam->x);
-        s32 cy = INT_TO_Q8(cam->y);
-        screen.x = cx;
-        screen.y = cy;
-    }
-    {
-        s32 w = INT_TO_Q8(240);
-        s32 h = INT_TO_Q8(160);
-        screen.w = w;
-        screen.h = h;
-    }
+    /* `cx`, `cy` are needed: inlined, the instructions are reordered */
+    s32 cx = INT_TO_Q8(cam->x);
+    s32 cy = INT_TO_Q8(cam->y);
+    screen.x = cx;
+    screen.y = cy;
+
+    /* `w`, `h` are needed: inlined, the instructions are reordered */
+    s32 w = INT_TO_Q8(240);
+    s32 h = INT_TO_Q8(160);
+    screen.w = w;
+    screen.h = h;
     lo = cam->x;
     lo >>= 8;
     LIMIT_MIN(lo, 0);
