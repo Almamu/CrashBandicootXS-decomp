@@ -96,6 +96,7 @@ void LoadBgPicture(const u8 *pic)
     REG_DISPCNT |= DISPCNT_BG1_ON;
     REG_BG1CNT = BGCNT_PRIORITY(3) | BGCNT_CHARBASE(1) | BGCNT_SCREENBASE(26) | BGCNT_TXT512x256;
 
+    /* `vd` is needed: inlined, a call moves */
     void *vd = (void *)(VRAM + GetCellAnimFreeTile() * 32);
 
     DmaCopy16(3, tileData, vd, tiles * 32);
@@ -106,6 +107,7 @@ void LoadBgPicture(const u8 *pic)
 void FillBgPictureMap(const u8 *nib, const u16 *map, s32 cols, s32 rows)
 {
     u16 *dest;
+    /* `base` is needed: inlined, the code is 7 instructions longer */
     s32 base;
     bool odd;
     s32 r;

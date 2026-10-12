@@ -44,6 +44,8 @@ void SetupActorVramPool(void)
     cache = gPaletteCache;
     cache->FreeUnlockedSlots();
 
+    /* scoped: its own `arr`/`idx`, as the next block (shared, the registers
+     * differ) */
     {
         const struct category_descriptor *arr = gActorCategories;
         s32 idx = gActorCategory;
@@ -67,7 +69,9 @@ void SetupActorVramPool(void)
         }
     }
 
+    /* scoped, as the block above */
     {
+        /* `iconArray` is needed: inlined, the instructions are reordered */
         Hud *iconArray = gHud;
         const struct category_descriptor *arr = gActorCategories;
         s32 idx = gActorCategory;

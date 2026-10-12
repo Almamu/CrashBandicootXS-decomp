@@ -163,6 +163,7 @@ void JetpackCheckpointText::Draw()
 
     u32 packed = (y & 0xff) | ((x & 0x1ff) << 16) | GetAnimFrameAttr() | flag;
     u32 pal = palette;
+    /* `pre` is needed: inlined, the instructions are reordered */
     u32 pre = pal << 0xc;
     u32 attr2;
 

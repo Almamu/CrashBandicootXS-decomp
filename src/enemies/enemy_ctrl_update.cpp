@@ -131,6 +131,7 @@ void EnemyCtrl::Update(MovingSprite *)
             Player *p = gPlayer;
             s32 dx = ABS_BRANCHLESS(x - Q8_TO_INT(p->x));
             s32 d = ABS_BRANCHLESS(y - Q8_TO_INT(p->y));
+            /* `vol` is needed: inlined, the instructions differ */
             s32 vol;
 
             LIMIT_MIN(d, dx);
@@ -139,6 +140,7 @@ void EnemyCtrl::Update(MovingSprite *)
             vol = 0x100 - (d - 0x20) * 2;
             gAudioContext->PlayAmbientSfx(SFX_SAUCER_HUM, 8, vol, false);
         }
+        /* scoped: the case labels below would cross `t` */
         {
             /* The first test reads the target through a local and the
              * second reads it again: the ROM reloads the target and its
@@ -221,6 +223,7 @@ void EnemyCtrl::Update(MovingSprite *)
         }
         UpdateHomingX();
         UpdateOscillateX();
+        /* scoped: the case labels below would cross `t` */
         {
             MovingSprite *t = target;
             s32 x, y;
@@ -320,6 +323,7 @@ void EnemyCtrl::HandleEvent(s32, s32 event, s32)
     case EVENT_ATTACK_SUPER_BODY_SLAM:
         {
             MovingSprite *obj = SpawnAt(0x29, Q8_TO_INT(target->x), Q8_TO_INT(target->y));
+            /* `mode` is needed: inlined, the instructions are reordered */
             s32 mode = OAM_OBJ_MODE_SEMI_TRANSPARENT;
 
             obj->f.b.visible = 0;

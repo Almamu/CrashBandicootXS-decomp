@@ -19,6 +19,7 @@ extern "C" {
  * `phase`), the gate UpdateShooter uses too. */
 void PeriodicSpawner::Update()
 {
+    /* `selfX` and `cameraX`: the spawner's and the player's pixel x, side by side */
     s32 selfX = Q8_TO_INT(x);
     s32 cameraX = Q8_TO_INT(gPlayer->x);
 

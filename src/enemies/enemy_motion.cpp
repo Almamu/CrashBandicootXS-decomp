@@ -112,6 +112,7 @@ void EnemyCtrl::UpdateHop()
             break;
         case ENEMY_MODE_TURN:
             {
+                /* `m` is needed: inlined, the code is 2 instructions shorter */
                 u32 m = t->mirrorFlags.mirrorX;
                 t->mirrorFlags.mirrorX = !m;
             }

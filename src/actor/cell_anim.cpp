@@ -219,6 +219,7 @@ void AdvanceCellAnim(void)
 {
     s32 *b0ptr = &gCellAnimTime;
     s32 prev = *b0ptr;
+    /* `prevShifted` is needed: inlined, the instructions differ */
     s32 prevShifted = Q8_TO_INT(prev);
     s32 pos = prev + gCellAnimSpeed;
     s32 *bcPtr;
