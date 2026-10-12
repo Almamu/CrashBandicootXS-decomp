@@ -27,14 +27,17 @@ extern "C" {
 s32 Sprite::HitboxOverlaps(struct aabb *region)
 {
     struct aabb box;
+    /* `flipX`, `flipY` are needed: inlined, the code is 1 instruction longer */
     s32 flipX = mirrorFlags.mirrorX;
     s32 flipY = mirrorFlags.mirrorY;
     s32 px = Q8_TO_INT(x);
     s32 py = Q8_TO_INT(y);
     const struct sprite_anim *rec = &bank->anims[tag];
     const struct hitbox_quad *hb = &rec->box[0];
+    /* `offX`, `offY` are needed: inlined, the instructions are reordered */
     s32 offX = rec->box[0].offX;
     s32 offY = hb->offY;
+    /* `w`, `h` are needed: inlined, the code is 1 instruction shorter */
     s32 w = hb->w;
     s32 h = hb->h;
 
@@ -242,18 +245,15 @@ const struct sprite_point *Sprite::GetFrameAnchor()
         break;
     case 3:
     case 4:
-        result = &gEmptySpritePoint;
-        break;
-    case 1:
-    case 2:
-        result = &gEmptySpritePoint;
-        break;
-    case 5:
+        /* not merged with the default: the ROM has a block of its own here */
         result = &gEmptySpritePoint;
         break;
     case 6:
         result = &((const struct sprite_frame_1box_anchor *)info)->anchor;
         break;
+    case 1:
+    case 2:
+    case 5:
     default:
         result = &gEmptySpritePoint;
         break;
@@ -269,20 +269,14 @@ const struct hitbox_quad *Sprite::GetFrameThirdBox()
 
     switch ((u8)(info->pieces[0] >> 4)) {
     case 0:
+    case 4:
         result = &((const struct sprite_frame_3box *)info)->box[2];
         break;
     case 1:
     case 2:
     case 3:
-        result = &gEmptySpriteBox;
-        break;
-    case 4:
-        result = &((const struct sprite_frame_3box *)info)->box[2];
-        break;
     case 5:
     case 6:
-        result = &gEmptySpriteBox;
-        break;
     default:
         result = &gEmptySpriteBox;
         break;
@@ -303,14 +297,12 @@ const struct hitbox_quad *Sprite::GetFrameAttackBox()
     case 4:
         result = &((const struct sprite_frame_3box *)info)->box[1];
         break;
-    case 1:
-    case 2:
-    case 6:
-        result = &gEmptySpriteBox;
-        break;
     case 5:
         result = &((const struct sprite_frame_1box *)info)->box[0];
         break;
+    case 1:
+    case 2:
+    case 6:
     default:
         result = &gEmptySpriteBox;
         break;
@@ -327,22 +319,14 @@ const struct hitbox_quad *Sprite::GetFrameBodyBox()
 
     switch ((u8)(info->pieces[0] >> 4)) {
     case 0:
-        result = &((const struct sprite_frame_1box *)info)->box[0];
-        break;
-    case 1:
-        result = &gEmptySpriteBox;
-        break;
     case 2:
     case 3:
     case 4:
-        result = &((const struct sprite_frame_1box *)info)->box[0];
-        break;
-    case 5:
-        result = &gEmptySpriteBox;
-        break;
     case 6:
         result = &((const struct sprite_frame_1box *)info)->box[0];
         break;
+    case 1:
+    case 5:
     default:
         result = &gEmptySpriteBox;
         break;

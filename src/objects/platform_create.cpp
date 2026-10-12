@@ -111,14 +111,14 @@ Platform *Platform::Create(u16 id, u16 x, u16 y, u16 index, s32 kind)
     obj->SetAnimDone(0);
     obj->mirrorFlags.mirrorX = 0;
     obj->mirrorFlags.mirrorY = 0;
-    {
-        const struct sprite_anim *r = obj->bank->anims;
-        u32 slot;
 
-        r += obj->tag;
-        slot = gPaletteCache->GetSlot(r->paletteId);
+    const struct sprite_anim *r = obj->bank->anims;
+    /* `slot` is needed: inlined, the code is 2 instructions shorter */
+    u32 slot;
 
-        obj->palette = slot;
-    }
+    r += obj->tag;
+    slot = gPaletteCache->GetSlot(r->paletteId);
+
+    obj->palette = slot;
     return obj;
 }

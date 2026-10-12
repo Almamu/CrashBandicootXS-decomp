@@ -84,7 +84,9 @@ void CollisionQueue::Resolve()
 void CollisionQueue::Add(Crate *neighbor, s32 kind, s32 code, s32 edge, s32 depth, struct vec2 pos,
                          s32 hit, struct byte_arg p20, struct byte_arg p21)
 {
+    /* `f20` is needed: inlined, the instructions differ */
     u8 f20 = p20.v;
+    /* `f21` is needed: inlined, the instructions are reordered */
     u8 f21 = p21.v;
 
     candidates[count].neighbor = neighbor;

@@ -67,18 +67,18 @@ void CameraLead::Reset()
     if (!hidden)
         ToggleHiddenNow(this);
     gCamera->target = this;
-    {
-        Player *p = gPlayer;
-        s32 px = p->x;
-        s32 py = p->y;
-        s32 off = 0x1E00;
 
-        x = px + off;
-        y = py;
-        f.b.active = 1;
-        targetOffset = off;
-        offset = off;
-    }
+    Player *p = gPlayer;
+    /* `px`, `py` are needed: inlined, the instructions are reordered */
+    s32 px = p->x;
+    s32 py = p->y;
+    s32 off = 0x1E00;
+
+    x = px + off;
+    y = py;
+    f.b.active = 1;
+    targetOffset = off;
+    offset = off;
 }
 
 /* Slot 3: the moving sprite's update, then eases `offset` toward
@@ -104,14 +104,14 @@ void CameraLead::Update()
         else
             offset = cur;
     }
-    {
-        Player *p = gPlayer;
-        s32 px = p->x;
-        s32 py = p->y;
 
-        x = px + offset;
-        y = py;
-    }
+    Player *p = gPlayer;
+    /* `px`, `py` are needed: inlined, the instructions are reordered */
+    s32 px = p->x;
+    s32 py = p->y;
+
+    x = px + offset;
+    y = py;
     speedX = gPlayer->speedX;
 }
 
