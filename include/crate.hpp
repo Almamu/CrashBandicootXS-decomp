@@ -240,7 +240,7 @@ public:
     void LightTnt();                                            // LightTntCrate
     void OpenCheckpoint();                                      // OpenCheckpointCrate
     void BreakInStack(u8 flag, bool once, u32 dir);             // BreakCrateInStack
-    void Break(u32 arg1);                                       // BreakCrate
+    void Break(u32 byBlast);                                    // BreakCrate
     void OpenMystery(bool flag);                                // OpenMysteryCrate
     void OpenSlot(bool flag);                                   // OpenSlotCrate
     void DropAbove();                                           // DropCratesAbove

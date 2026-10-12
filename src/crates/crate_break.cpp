@@ -1080,7 +1080,7 @@ void Crate::OpenCheckpoint()
 
 /* Breaks the crate at the end of the stack in direction `dir` (4: down,
  * 8: up) that isn't committed yet, or this one for any other `dir`. With
- * `arg2`, only the first break of the player's countdown goes ahead.
+ * `once`, only the first break of the player's countdown goes ahead.
  *
  * The walk is written as the ROM's goto loops: the natural `for`
  * loops get rotated and their exit blocks laid out differently. */
@@ -1133,16 +1133,16 @@ other:
 
 /* Breaks the crate (unless it is committed already): its break animation
  * and palette, the broken crate count, its entity's gone bit, the crates
- * above it falling, and then what its kind does. `arg1` set: broken by a
+ * above it falling, and then what its kind does. `byBlast` set: broken by a
  * blast, so a crate's contents aren't given out. `chained`: another crate
  * stands on it (the drop's flag).
  *
  * The constant 1 of the state store is a local `one` that the bitmap
  * shift reuses (the ROM's r8), and the switch cases are in the ROM's
  * block order with an explicit empty case 22. */
-void Crate::Break(u32 arg1)
+void Crate::Break(u32 byBlast)
 {
-    u8 flag = arg1;
+    u8 flag = byBlast;
     bool chained;
     u8 one;
 
