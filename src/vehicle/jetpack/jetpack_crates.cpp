@@ -66,9 +66,7 @@ void JetpackBalloonCrate::Update()
  * (state 2, animation 1) and pays out; then the crate's update. */
 void JetpackQuestionCrate::Update()
 {
-    s32 kind = animIndex;
-
-    if (kind == 0 && (u8)IsTouchingPlayer(this)) {
+    if (animIndex == 0 && (u8)IsTouchingPlayer(this)) {
         SetState(JETPACK_BALLOON_CRATE_STATE_DESTROYED, 1);
         switch (record->index) {
         case JETPACK_KIND_QUESTION_CRATE_WUMPA_1:
@@ -140,9 +138,7 @@ void JetpackQuestionCrate::Damage(s32 amount)
  * animation 1) and heals the player by 0x14; then the crate's update. */
 void JetpackHealthCrate::Update()
 {
-    s32 kind = animIndex;
-
-    if (kind == 0 && (u8)IsTouchingPlayer(this)) {
+    if (animIndex == 0 && (u8)IsTouchingPlayer(this)) {
         SetState(JETPACK_BALLOON_CRATE_STATE_DESTROYED, 1);
         gActorList->AsJetpackPlayer()->Heal(0x14);
         gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
@@ -162,9 +158,7 @@ void JetpackHealthCrate::Update()
  * starts the time trial; then the crate's update. */
 void JetpackTimeCrate::Update()
 {
-    s32 kind = animIndex;
-
-    if (kind == 0 && (u8)IsTouchingPlayer(this)) {
+    if (animIndex == 0 && (u8)IsTouchingPlayer(this)) {
         SetState(JETPACK_BALLOON_CRATE_STATE_DESTROYED, 1);
         switch (record->index) {
         case JETPACK_KIND_TIME_CRATE_1:

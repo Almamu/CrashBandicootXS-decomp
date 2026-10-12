@@ -79,12 +79,10 @@ void JetpackCollectedWumpa::Draw()
     s32 oamPriority = 0x180;
     u32 highBit = 0x800;
 
-    {
-        s32 qx = x, qy = y;
+    s32 qx = x, qy = y;
 
-        sx = Q8_TO_INT(qx);
-        sy = Q8_TO_INT(qy);
-    }
+    sx = Q8_TO_INT(qx);
+    sy = Q8_TO_INT(qy);
     frame = GetAnimFrameData();
     scaled = 0;
     halfW = scaled ? frame[0] << 3 : frame[0] << 2;
@@ -136,21 +134,19 @@ JetpackCollectedWumpa::JetpackCollectedWumpa(const struct anim_table_record *rec
     nx = this->x + GetActorBgCenterX();
     this->x = nx;
 
-    {
-        s32 dx = nx - 0x1000;
-        s32 absDx = ABS_BRANCHLESS(dx);
-        s32 ny = this->y;
-        s32 dy = ny - 0x1000;
-        s32 absDy = ABS_BRANCHLESS(dy);
+    s32 dx = nx - 0x1000;
+    s32 absDx = ABS_BRANCHLESS(dx);
+    s32 ny = this->y;
+    s32 dy = ny - 0x1000;
+    s32 absDy = ABS_BRANCHLESS(dy);
 
-        sum = absDx + absDy;
-        if (sum < 0)
-            sum += 0x7ff;
-        q = sum >> 0xb;
+    sum = absDx + absDy;
+    if (sum < 0)
+        sum += 0x7ff;
+    q = sum >> 0xb;
 
-        velX = __divsi3(0x1000 - nx, q);
-        velY = __divsi3(0x1000 - ny, q);
-    }
+    velX = __divsi3(0x1000 - nx, q);
+    velY = __divsi3(0x1000 - ny, q);
 }
 
 /* Collected wumpas can't be shot. */

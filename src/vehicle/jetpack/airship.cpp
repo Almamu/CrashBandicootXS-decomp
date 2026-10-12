@@ -176,10 +176,9 @@ void Airship::Spawn(s32 kind, s32 sx, s32 sy, s32 sz)
     screenY = Q12_MUL(scale, y);
     SetActorBgLayerDepth(distance);
     self = anim;
-    {
-        s32 t = Q8_TO_INT(self->animTime);
-        DrawMap((u16 *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
-    }
+
+    s32 t = Q8_TO_INT(self->animTime);
+    DrawMap((u16 *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
     REG_DISPCNT |= DISPCNT_BG2_ON;
     UpdateBg2();
     hitFlashTimer = 0;
@@ -219,13 +218,12 @@ void Airship::Update()
         screenX = Q12_MUL(x, scale);
         screenY = Q12_MUL(scale, y);
         SetActorBgLayerDepth(distance);
-        {
-            AnimPart *cur = anim;
-            s32 t = Q8_TO_INT(cur->animTime);
-            if (prev != t) {
-                DrawMap((u16 *)cur->frameOffsets[cur->anims[cur->animIndex].frameIndex + t]);
-                bg2PageFlip = 1;
-            }
+
+        AnimPart *cur = anim;
+        s32 t = Q8_TO_INT(cur->animTime);
+        if (prev != t) {
+            DrawMap((u16 *)cur->frameOffsets[cur->anims[cur->animIndex].frameIndex + t]);
+            bg2PageFlip = 1;
         }
     }
 }
@@ -255,17 +253,15 @@ void Airship::UpdateBg2()
         bg2Page ^= 1;
     }
 
-    {
-        s32 scale = __divsi3(distance << 8, 0x3c00);
-        s32 dy = screenX + GetActorBgCenterX();
-        s32 dx = screenY + GetActorBgCenterY();
+    s32 scale = __divsi3(distance << 8, 0x3c00);
+    s32 dy = screenX + GetActorBgCenterX();
+    s32 dx = screenY + GetActorBgCenterY();
 
-        REG_BG2X = 0x8000 - Q8_MUL(dy, scale);
-        REG_BG2Y = 0x8000 - Q8_MUL(dx, scale);
+    REG_BG2X = 0x8000 - Q8_MUL(dy, scale);
+    REG_BG2Y = 0x8000 - Q8_MUL(dx, scale);
 
-        REG_BG2PA = scale;
-        REG_BG2PB = 0;
-        REG_BG2PC = 0;
-        REG_BG2PD = scale;
-    }
+    REG_BG2PA = scale;
+    REG_BG2PB = 0;
+    REG_BG2PC = 0;
+    REG_BG2PD = scale;
 }

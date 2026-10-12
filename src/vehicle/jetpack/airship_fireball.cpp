@@ -35,27 +35,26 @@ void AirshipFireball::StateOrbit()
     if ((radius += 0x100) > 0x2a00) {
         radius = 0x2a00;
     }
-    {
-        ActorSelf *player = gActorList;
-        s32 px, py, tx, ty, cx, cy;
-        const s16 *sine;
 
-        px = player->x;
-        cx = centerX;
-        tx = cx + -0x600;
-        cx += (px - tx) >> 5;
-        centerX = cx;
-        py = player->y;
-        cy = centerY;
-        ty = cy + 0x800;
-        cy += (py - ty) >> 5;
-        centerY = cy;
-        sine = gSineTable;
-        t = stateTime;
-        angle = ((t << 5) >> 4) & 0xff;
-        x = cx + Q8_MUL(sine[(angle + 0x40) & 0xff], radius);
-        y = cy + Q8_MUL(sine[angle], radius);
-    }
+    ActorSelf *player = gActorList;
+    s32 px, py, tx, ty, cx, cy;
+    const s16 *sine;
+
+    px = player->x;
+    cx = centerX;
+    tx = cx + -0x600;
+    cx += (px - tx) >> 5;
+    centerX = cx;
+    py = player->y;
+    cy = centerY;
+    ty = cy + 0x800;
+    cy += (py - ty) >> 5;
+    centerY = cy;
+    sine = gSineTable;
+    t = stateTime;
+    angle = ((t << 5) >> 4) & 0xff;
+    x = cx + Q8_MUL(sine[(angle + 0x40) & 0xff], radius);
+    y = cy + Q8_MUL(sine[angle], radius);
     if (depth <= 0x2bff) {
         SetState(AIRSHIP_FIREBALL_STATE_SPIRAL_IN, 0);
         stateTime = t;
@@ -82,26 +81,25 @@ void AirshipFireball::StateSpiralIn()
     if ((radius += -0x100) < 0) {
         radius = 0;
     }
-    {
-        ActorSelf *player = gActorList;
-        s32 px, py, tx, ty, cx, cy;
-        const s16 *sine;
 
-        px = player->x;
-        cx = centerX;
-        tx = cx + -0x600;
-        cx += (px - tx) >> 4;
-        centerX = cx;
-        py = player->y;
-        cy = centerY;
-        ty = cy + 0x800;
-        cy += (py - ty) >> 4;
-        centerY = cy;
-        sine = gSineTable;
-        angle = ((stateTime << 5) >> 4) & 0xff;
-        x = cx + Q8_MUL(sine[(angle + 0x40) & 0xff], radius);
-        y = cy + Q8_MUL(sine[angle], radius);
-    }
+    ActorSelf *player = gActorList;
+    s32 px, py, tx, ty, cx, cy;
+    const s16 *sine;
+
+    px = player->x;
+    cx = centerX;
+    tx = cx + -0x600;
+    cx += (px - tx) >> 4;
+    centerX = cx;
+    py = player->y;
+    cy = centerY;
+    ty = cy + 0x800;
+    cy += (py - ty) >> 4;
+    centerY = cy;
+    sine = gSineTable;
+    angle = ((stateTime << 5) >> 4) & 0xff;
+    x = cx + Q8_MUL(sine[(angle + 0x40) & 0xff], radius);
+    y = cy + Q8_MUL(sine[angle], radius);
     if ((u8)IsTouchingPlayer(this)) {
         gActorList->AsHpActor()->Damage(6);
         palette = 4;
