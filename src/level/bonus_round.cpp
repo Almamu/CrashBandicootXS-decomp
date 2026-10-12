@@ -40,45 +40,39 @@ void LevelState::EndBonusRound(u8 cleared)
     ClearSpawnAtStart();
 
     if (cleared != 0) {
-        s32 *fieldb4 = &savedCrateCount;
+        crateCount += savedCrateCount;
 
-        crateCount += *fieldb4;
+        wumpa += savedWumpa;
 
-        {
-            s32 *fieldb0 = &savedWumpa;
+        /* `fieldb8` is needed: inlined, the instructions are reordered */
+        s32 *fieldb8 = &savedLives;
+        s32 *fieldd4 = &room.checkpointX;
+        /* `fielde0` is needed: inlined, the instructions are reordered */
+        u8 *fielde0 = &room.checkpointFlags;
+        s32 total;
 
-            wumpa += *fieldb0;
+        fieldbc = &crateTotal;
+
+        if (wumpa > 0x63) {
+            s32 carry = lives;
+            s32 value = wumpa;
+
+            do {
+                carry++;
+                value -= 100;
+            } while (value > 0x63);
+
+            wumpa = value;
+            lives = carry;
         }
 
-        {
-            s32 *fieldb8 = &savedLives;
-            s32 *fieldd4 = &room.checkpointX;
-            u8 *fielde0 = &room.checkpointFlags;
-            s32 total;
+        total = lives + *fieldb8;
+        LIMIT_MAX(total, 0x63);
+        lives = total;
 
-            fieldbc = &crateTotal;
-
-            if (wumpa > 0x63) {
-                s32 carry = lives;
-                s32 value = wumpa;
-
-                do {
-                    carry++;
-                    value -= 100;
-                } while (value > 0x63);
-
-                wumpa = value;
-                lives = carry;
-            }
-
-            total = lives + *fieldb8;
-            LIMIT_MAX(total, 0x63);
-            lives = total;
-
-            SetBonusRoundDone();
-            SetEntityPos(gPlayer, fieldd4[0], fieldd4[1]);
-            SetCheckpointAtPlayer(*fielde0);
-        }
+        SetBonusRoundDone();
+        SetEntityPos(gPlayer, fieldd4[0], fieldd4[1]);
+        SetCheckpointAtPlayer(*fielde0);
     } else {
         crateCount = savedCrateCount;
         wumpa = savedWumpa;
@@ -134,20 +128,19 @@ void LevelState::SetCheckpointAtPlayer(u8 checkpointFlags)
         room.checkpointSwitchPressed = switchPressed;
         ClearSpawnAtStart();
         ResetDeaths();
-        {
-            /* Two-word field copy: a plain `room.checkpointX = x;
-             * room.checkpointY = y;` re-derives the destination address from scratch
-             * for the second store (`adds r0, #4` then `str r5,
-             * [r0]`); the ROM instead keeps the base pointer from the
-             * first store and uses its `[r0, #4]` immediate-offset
-             * form. Reproduced with a local pointer and indexed
-             * stores - same gotcha as `SetCrateGemPos`/`SetCheckpoint` in
-             * docs/matching/archive/issue-37-game-loop-234e8.md. */
-            s32 *dst = &room.checkpointX;
 
-            dst[0] = x;
-            dst[1] = y;
-        }
+        /* Two-word field copy: a plain `room.checkpointX = x;
+         * room.checkpointY = y;` re-derives the destination address from scratch
+         * for the second store (`adds r0, #4` then `str r5,
+         * [r0]`); the ROM instead keeps the base pointer from the
+         * first store and uses its `[r0, #4]` immediate-offset
+         * form. Reproduced with a local pointer and indexed
+         * stores - same gotcha as `SetCrateGemPos`/`SetCheckpoint` in
+         * docs/matching/archive/issue-37-game-loop-234e8.md. */
+        s32 *dst = &room.checkpointX;
+
+        dst[0] = x;
+        dst[1] = y;
 
         flags = gEntityFlags;
         CopyBitmapSpan(flags->bits0Copy, flags->bits0);

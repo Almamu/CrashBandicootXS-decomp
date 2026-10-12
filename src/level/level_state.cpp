@@ -213,28 +213,24 @@ void LevelState::AddBrokenCrate()
 {
     crateCount += 1;
 
-    if (crateCount == crateTotal) {
-        if (!IsInBonusRound() && !IsInGemPath()) {
-            const struct level_room *level = room.cat;
-
-            if (level->kind == ROOM_KIND_CATEGORY) {
-                u8 *flags = &GetCurrentLevelFlags()->flags;
-                /* Separate `mask`/`value` locals reproduce the ROM's
-                 * "build the OR mask before loading the byte" order - a plain
-                 * `*flags |= LEVEL_FLAG_CRATE_GEM;` loads the byte first regardless of
-                 * statement order (see docs/workflow.md step 7). */
-                s32 mask = LEVEL_FLAG_CRATE_GEM;
-                s32 value = *flags;
-                mask |= value;
-                *flags = mask;
-            } else {
-                /* `u16` copies: the ROM loads both halves before the
-                 * `0xffff`; passing the fields directly loads the constant
-                 * first, CheckAllCratesBroken's order. */
-                u16 b = crateGemX;
-                u16 c = crateGemY;
-                SpawnCrateGem(0xffff, b, c, 0);
-            }
+    if (crateCount == crateTotal && !IsInBonusRound() && !IsInGemPath()) {
+        if (room.cat->kind == ROOM_KIND_CATEGORY) {
+            u8 *flags = &GetCurrentLevelFlags()->flags;
+            /* Separate `mask`/`value` locals reproduce the ROM's
+             * "build the OR mask before loading the byte" order - a plain
+             * `*flags |= LEVEL_FLAG_CRATE_GEM;` loads the byte first regardless of
+             * statement order (see docs/workflow.md step 7). */
+            s32 mask = LEVEL_FLAG_CRATE_GEM;
+            s32 value = *flags;
+            mask |= value;
+            *flags = mask;
+        } else {
+            /* `u16` copies: the ROM loads both halves before the
+             * `0xffff`; passing the fields directly loads the constant
+             * first, CheckAllCratesBroken's order. */
+            u16 b = crateGemX;
+            u16 c = crateGemY;
+            SpawnCrateGem(0xffff, b, c, 0);
         }
     }
 
@@ -259,15 +255,13 @@ void LevelState::PressSwitchCrate()
     }
 
     if (!IsInBonusRound() && !IsInGemPath()) {
-        const struct level_room *level = room.cat;
-
-        if (level->kind == ROOM_KIND_CATEGORY) {
+        if (room.cat->kind == ROOM_KIND_CATEGORY) {
             u8 *flags = &GetCurrentLevelFlags()->flags;
             s32 mask = LEVEL_FLAG_CRATE_GEM;
-            s32 value = *flags;
-            mask |= value;
+            mask |= *flags;
             *flags = mask;
         } else {
+            /* `b`, `c` are needed: inlined, the code is 2 instructions shorter */
             u16 b = crateGemX;
             u16 c = crateGemY;
             SpawnCrateGem(0xffff, b, c, 0);
@@ -377,24 +371,21 @@ void LevelState::GiveTornadoSpin()
 void LevelState::GiveSuperBodySlam()
 {
     s32 mask = PROGRESS_FLAG_SUPER_BODY_SLAM;
-    s32 value = progress.flags;
-    mask |= value;
+    mask |= progress.flags;
     progress.flags = mask;
 }
 
 void LevelState::GiveTurboRun()
 {
     s32 mask = PROGRESS_FLAG_TURBO_RUN;
-    s32 value = progress.flags;
-    mask |= value;
+    mask |= progress.flags;
     progress.flags = mask;
 }
 
 void LevelState::GiveDoubleJump()
 {
     s32 mask = PROGRESS_FLAG_DOUBLE_JUMP;
-    s32 value = progress.flags;
-    mask |= value;
+    mask |= progress.flags;
     progress.flags = mask;
 }
 
@@ -474,8 +465,7 @@ void LevelState::SetLives(s32 value)
 /* Advances the `+0x78` latch by one via `SetMaskLevel`. */
 void LevelState::RaiseMaskLevel()
 {
-    s32 next = maskLevel + 1;
-    SetMaskLevel(next);
+    SetMaskLevel(maskLevel + 1);
 }
 
 /* Outside time trials (`timeTrial`, +0x8c): loses a life (`lives`,
@@ -684,9 +674,7 @@ bool LevelState::LevelHasGemPathGem(s32 idx)
  * sets; its counter is the hits taken); anything else returns `0`. */
 s32 LevelState::GetBossHealth()
 {
-    s32 idx = room.level;
-
-    switch (idx) {
+    switch (room.level) {
     case LEVEL_N_GIN:
         return Hovercraft::GetPartsLeft();
     case LEVEL_DINGODILE:
@@ -720,10 +708,9 @@ s32 LevelState::GetBossHealth()
  * so the subtraction has to stay a genuine runtime step). */
 s32 LevelState::GetBossIndex()
 {
-    s32 idx = room.level;
     s32 result;
 
-    switch (idx) {
+    switch (room.level) {
     case LEVEL_DINGODILE:
         result = BOSS_HUD_ANIM_BASE + BOSS_DINGODILE;
         break;
@@ -754,8 +741,7 @@ union level_record *LevelState::GetLevelFlags(s32 idx)
  * `PressSwitchCrate`/`CheckAllCratesBroken` all call "flags" and OR a bit into. */
 union level_record *LevelState::GetCurrentLevelFlags()
 {
-    s32 idx = room.level;
-    return GetLevelFlags(idx);
+    return GetLevelFlags(room.level);
 }
 
 /* Getter for `+0x70`, the counter `ResetCrateCount` resets. */
@@ -821,13 +807,10 @@ void LevelState::AddLife()
 void LevelState::CheckAllCratesBroken()
 {
     if (crateCount == crateTotal && !IsInBonusRound() && !IsInGemPath()) {
-        const struct level_room *level = room.cat;
-
-        if (level->kind == ROOM_KIND_CATEGORY) {
+        if (room.cat->kind == ROOM_KIND_CATEGORY) {
             u8 *flags = &GetCurrentLevelFlags()->flags;
             s32 mask = LEVEL_FLAG_CRATE_GEM;
-            s32 value = *flags;
-            mask |= value;
+            mask |= *flags;
             *flags = mask;
         } else {
             SpawnCrateGem(0xffff, crateGemX, crateGemY, 0);
@@ -881,11 +864,8 @@ void LevelState::RequestBonusRound()
  * `SetCheckpointAtPlayer`'s "stash a snapshot at +0xe4" below. */
 void LevelState::RestoreCheckpoint()
 {
-    u8 tmp;
-
     crateCount = room.checkpointCrateCount;
-    tmp = room.checkpointSwitchPressed;
-    switchPressed = tmp;
+    switchPressed = room.checkpointSwitchPressed;
     MemCopy32(&progress, &checkpointData, sizeof(GameProgress));
 }
 
@@ -907,21 +887,19 @@ static inline void CopyBitmapSpan(void *dst, void *src)
 void LevelState::SetCheckpoint(s32 flag, s32 *pair)
 {
     LevelEntityFlags *flags;
-    u8 tmp;
 
     room.checkpointFlags = flag;
     room.checkpointCrateCount = GetCrateCount();
-    tmp = switchPressed;
-    room.checkpointSwitchPressed = tmp;
+    room.checkpointSwitchPressed = switchPressed;
     ClearSpawnAtStart();
     ResetDeaths();
-    {
-        s32 *dst = &room.checkpointX;
-        s32 px = pair[0];
-        s32 py = pair[1];
-        dst[0] = px;
-        dst[1] = py;
-    }
+
+    s32 *dst = &room.checkpointX;
+    /* `px`, `py` are needed: inlined, the instructions are reordered */
+    s32 px = pair[0];
+    s32 py = pair[1];
+    dst[0] = px;
+    dst[1] = py;
 
     flags = gEntityFlags;
     CopyBitmapSpan(flags->bits0Copy, flags->bits0);
@@ -943,11 +921,10 @@ void LevelState::EndGemPath(u8 flag)
         ClearSpawnAtStart();
         SetGemPathDone();
         gHud->SetCrateTotal(crateTotal);
-        {
-            Player *player = gPlayer;
-            s32 *p = &room.checkpointX;
-            SetEntityPos(player, p[0], p[1]);
-        }
+
+        Player *player = gPlayer;
+        s32 *p = &room.checkpointX;
+        SetEntityPos(player, p[0], p[1]);
         SetCheckpointAtPlayer(room.checkpointFlags);
     } else {
         ResetCrateCount();
@@ -1012,6 +989,7 @@ void LevelState::UnpackSaveData(const GameProgress *src)
  * As there, `wumpa` goes through `this` (`strb [this, 0x14d]`). */
 GameProgress *LevelState::PackSaveData()
 {
+    /* `l` is needed: inlined, the instructions are reordered */
     s32 l = lives;
     GameProgress *snap = &saveData;
 

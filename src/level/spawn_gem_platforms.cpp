@@ -82,6 +82,7 @@ void SpawnYellowGemPlatform(u32 id, u16 x, u16 y, u16 param)
             snd = Platform::Create(id, x, y, param, PLATFORM_KIND_GEM_YELLOW);
         gLevelState->SetGemPlatform(snd);
     } else {
+        /* `tag` is needed: inlined, the code is 2 instructions shorter */
         u8 tag = 5;
         Sprite *part = Sprite::Create(id, x, y, param);
 
@@ -110,6 +111,7 @@ void SpawnGreenGemPlatform(u32 id, u16 x, u16 y, u16 param)
             snd = Platform::Create(id, x, y, param, PLATFORM_KIND_GEM_GREEN);
         gLevelState->SetGemPlatform(snd);
     } else {
+        /* `tag` is needed: inlined, the code is 2 instructions shorter */
         u8 tag = 6;
         Sprite *part = Sprite::Create(id, x, y, param);
 

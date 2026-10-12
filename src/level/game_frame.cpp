@@ -75,48 +75,43 @@ void LevelState::UpdateGameFrame()
     MemCopy32(&saveData, &progress, sizeof(GameProgress));
     gGameFrameLevelState = this;
     maskLevel = MASK_LEVEL_NONE;
-    {
-        TitleScreen *gfx;
-        s32 result;
 
-    load:
-        gfx = new TitleScreen;
-        result = gfx->Run();
-        delete gfx;
-        if (result == 2) {
-            RunCredits();
-            goto load;
-        }
-        if (result != 0) {
-            OpenSaveMenu();
-            RunSaveMenu(SAVE_MENU_STATE_LOAD, 0);
-            CloseSaveMenu();
-        } else {
-            gLevelState->PlayCutscene(2);
-        }
+    TitleScreen *gfx;
+    s32 result;
+
+load:
+    gfx = new TitleScreen;
+    result = gfx->Run();
+    delete gfx;
+    if (result == 2) {
+        RunCredits();
+        goto load;
+    }
+    if (result != 0) {
+        OpenSaveMenu();
+        RunSaveMenu(SAVE_MENU_STATE_LOAD, 0);
+        CloseSaveMenu();
+    } else {
+        gLevelState->PlayCutscene(2);
     }
     for (;;) {
-        {
-            u8 quit;
+        u8 quit;
 
-        restore:
-            {
-                s32 level = room.level;
+    restore:
+        s32 level = room.level;
 
-                LIMIT_MAX(level, LEVEL_NEO_CORTEX);
-                room.level = level;
-            }
-            quit = RunLevelSelect(&room.level);
-            MemCopy32(&progress, &saveData, sizeof(GameProgress));
-            MemCopy32(&checkpointData, &progress, sizeof(GameProgress));
-            if (quit) {
-                OpenSaveMenu();
-                quit = RunSaveMenu(SAVE_MENU_STATE_MAIN, 0);
-                CloseSaveMenu();
-                if (quit)
-                    room.checkpointFlags = 0;
-                goto restore;
-            }
+        LIMIT_MAX(level, LEVEL_NEO_CORTEX);
+        room.level = level;
+        quit = RunLevelSelect(&room.level);
+        MemCopy32(&progress, &saveData, sizeof(GameProgress));
+        MemCopy32(&checkpointData, &progress, sizeof(GameProgress));
+        if (quit) {
+            OpenSaveMenu();
+            quit = RunSaveMenu(SAVE_MENU_STATE_MAIN, 0);
+            CloseSaveMenu();
+            if (quit)
+                room.checkpointFlags = 0;
+            goto restore;
         }
         ClearTimeTrial();
 
@@ -185,14 +180,13 @@ void LevelState::UpdateGameFrame()
                 break;
             }
             gAudioContext->ResetAmbientSfx();
-            {
-                s32 tier = maskLevel;
-                s32 capped = MASK_LEVEL_TWO;
 
-                if (tier <= MASK_LEVEL_ONE)
-                    capped = tier;
-                SetMaskLevel(capped);
-            }
+            s32 tier = maskLevel;
+            s32 capped = MASK_LEVEL_TWO;
+
+            if (tier <= MASK_LEVEL_ONE)
+                capped = tier;
+            SetMaskLevel(capped);
             mem_free_bytes(0xC0000000);
             if (room.IsInBonusRoom() && IsInBonusRound()) {
                 delete gEntityFlags;

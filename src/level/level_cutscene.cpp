@@ -125,12 +125,11 @@ void LevelState::PlayCutscene(s32 idx)
     SetDispcntMode(DISPCNT_MODE_4);
     ShowBg2();
     ShowObj();
-    {
-        u16 *src = &f.fill;
 
-        *src = zero;
-        DmaFill16From(3, src, PLTT, BG_PLTT_SIZE);
-    }
+    u16 *src = &f.fill;
+
+    *src = zero;
+    DmaFill16From(3, src, PLTT, BG_PLTT_SIZE);
     REG_BG2PA = 0x100;
     REG_BG2PB = zero;
     REG_BG2PC = zero;
@@ -143,22 +142,23 @@ void LevelState::PlayCutscene(s32 idx)
     gPaletteCache->Upload();
     new (&f.pager) CutscenePlayer;
     ((CutscenePlayer *)&f.pager)->font = gSmallFont;
-    {
-        /* f.pager.box = f.box, spelled out: the ROM stores the two x
-         * words sp-relative and the two y words through one pointer
-         * register - see docs/matching/archive/gap-22354-game-context.md. */
-        s32 x0 = f.box.x;
-        s32 y0 = f.box.y;
-        s32 *d = &((CutscenePlayer *)&f.pager)->box.x;
-        s32 x1, y1;
 
-        d[0] = x0;
-        d[1] = y0;
-        x1 = f.box.w;
-        y1 = f.box.h;
-        ((CutscenePlayer *)&f.pager)->box.w = x1;
-        d[3] = y1;
-    }
+    /* f.pager.box = f.box, spelled out: the ROM stores the two x
+     * words sp-relative and the two y words through one pointer
+     * register - see docs/matching/archive/gap-22354-game-context.md. */
+    s32 x0 = f.box.x;
+    /* `y0` is needed: inlined, the instructions are reordered */
+    s32 y0 = f.box.y;
+    s32 *d = &((CutscenePlayer *)&f.pager)->box.x;
+    s32 x1, y1;
+
+    d[0] = x0;
+    d[1] = y0;
+    /* `x1`, `y1` are needed: inlined, the instructions are reordered */
+    x1 = f.box.w;
+    y1 = f.box.h;
+    ((CutscenePlayer *)&f.pager)->box.w = x1;
+    d[3] = y1;
     SetSlideshowDispcnt(*(u32 *)dispcnt);
     ((CutscenePlayer *)&f.pager)->slides = gCutscenes[idx].slides;
     ((CutscenePlayer *)&f.pager)->count = gCutscenes[idx].count;

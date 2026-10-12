@@ -56,26 +56,20 @@ void SpawnBodySlamPower(u32 id, u16 x, u16 y, u16 param)
 
 void SpawnTornadoSpinPower(u32 id, u16 x, u16 y, u16 param)
 {
+    /* `tag` is needed: inlined, the instructions differ */
     u8 tag = 0;
-    u8 kind = EVENT_POWER_TORNADO_SPIN;
 
-    SpawnTouchable(id, x, y, param, 38, tag, kind);
+    SpawnTouchable(id, x, y, param, 38, tag, EVENT_POWER_TORNADO_SPIN);
 }
 
 void SpawnDoubleJumpPower(u32 id, u16 x, u16 y, u16 param)
 {
-    u8 tag = 2;
-    u8 kind = EVENT_POWER_DOUBLE_JUMP;
-
-    SpawnTouchable(id, x, y, param, 38, tag, kind);
+    SpawnTouchable(id, x, y, param, 38, 2, EVENT_POWER_DOUBLE_JUMP);
 }
 
 void SpawnTurboRunPower(u32 id, u16 x, u16 y, u16 param)
 {
-    u8 tag = 3;
-    u8 kind = EVENT_POWER_TURBO_RUN;
-
-    SpawnTouchable(id, x, y, param, 38, tag, kind);
+    SpawnTouchable(id, x, y, param, 38, 3, EVENT_POWER_TURBO_RUN);
 }
 
 /* The time trial's stopwatch (bank 36, kind 0x1C, always active),

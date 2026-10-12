@@ -18,13 +18,14 @@ extern "C" {
  * decoded halfword unfiltered - no bounds check, no output params. */
 u16 TileCache::GetCell(s32 x, s32 y)
 {
+    /* `tileX` is needed: inlined, the instructions differ */
     s32 tileX = x >> 4;
+    /* `tileY` is needed: inlined, the instructions are reordered */
     s32 tileY = y >> 3;
-    const struct level_layer_desc *src = source;
-    s32 tileIdx = tileY * width + tileX;
-    u16 recordId = src->chunkGrid[tileIdx];
-    u16 *cache = (u16 *)GetChunk(recordId);
+    /* `cache` is needed: inlined, the code is 2 instructions shorter */
+    u16 *cache = (u16 *)GetChunk(source->chunkGrid[tileY * width + tileX]);
     s32 my = y & 7;
+    /* `mx` is needed: inlined, the instructions are reordered */
     s32 mx = x & 0xf;
 
     my <<= 4;

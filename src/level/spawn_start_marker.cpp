@@ -27,9 +27,7 @@ extern "C" {
 void SpawnStartMarker(u32 id, u16 x, u16 y, u16 param)
 {
     if (gLevelState->GetSpawnAtStart()) {
-        const struct entity_params *rec = EntityParams(param);
-
-        gPlayer->SetFlipX(TEST_BIT_SHR(rec->flags, ENTITY_PARAMS_BIT_FLIP_X));
+        gPlayer->SetFlipX(TEST_BIT_SHR(EntityParams(param)->flags, ENTITY_PARAMS_BIT_FLIP_X));
         gPlayer->x = INT_TO_Q8(x);
         gPlayer->y = INT_TO_Q8(y);
     }

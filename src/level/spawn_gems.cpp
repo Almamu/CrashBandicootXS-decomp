@@ -59,6 +59,7 @@ void SpawnCrateGem(u32 id, u16 x, u16 y, u16 param)
     u8 bit = gLevelState->GetCurrentLevelFlags()->flags & LEVEL_FLAG_CRATE_GEM;
 
     if (bit == 0) {
+        /* `tag`, `type` are needed: inlined, the code is 4 instructions shorter */
         u8 tag = 1;
         u8 type = EVENT_CRATE_GEM;
         Sprite *part = Sprite::Create(id, x, y, param);
@@ -72,17 +73,16 @@ void SpawnCrateGem(u32 id, u16 x, u16 y, u16 param)
         part->kind = type;
         TouchableList()->Add(part);
 
-        {
-            MovingSprite *p = gEntitySpawner->SpawnEffectPart(0x2B, 2, x, y, bit);
-            p->mirrorBits.gfxMode = OAM_OBJ_MODE_SEMI_TRANSPARENT;
-            p->f.b.visible = 0;
-        }
+        MovingSprite *p = gEntitySpawner->SpawnEffectPart(0x2B, 2, x, y, bit);
+        p->mirrorBits.gfxMode = OAM_OBJ_MODE_SEMI_TRANSPARENT;
+        p->f.b.visible = 0;
     }
 }
 
 void SpawnGemPathGem(u32 id, u16 x, u16 y, u16 param)
 {
     if ((gLevelState->GetCurrentLevelFlags()->flags & LEVEL_FLAG_GEM_PATH_GEM) == 0) {
+        /* `tag`, `type` are needed: inlined, the code is 4 instructions shorter */
         u8 tag = 1;
         u8 type = EVENT_GEM_PATH_GEM;
         Sprite *part = Sprite::Create(id, x, y, param);
@@ -102,6 +102,7 @@ void SpawnRedGem(u32 id, u16 x, u16 y, u16 param)
 {
     if (gLevelState->GetBossIndex() != BOSS_NEO_CORTEX) {
         if ((gLevelState->progress.flags & PROGRESS_FLAG_RED_GEM) == 0) {
+            /* `tag`, `type` are needed: inlined, the code is 5 instructions shorter */
             u8 tag = 3;
             u8 type = EVENT_RED_GEM;
             Sprite *part = Sprite::Create(id, x, y, param);
@@ -124,6 +125,7 @@ void SpawnGreenGem(u32 id, u16 x, u16 y, u16 param)
 {
     if (gLevelState->GetBossIndex() != BOSS_NEO_CORTEX) {
         if ((gLevelState->progress.flags & PROGRESS_FLAG_GREEN_GEM) == 0) {
+            /* `tag`, `type` are needed: inlined, the code is 5 instructions shorter */
             u8 tag = 2;
             u8 type = EVENT_GREEN_GEM;
             Sprite *part = Sprite::Create(id, x, y, param);
@@ -148,6 +150,7 @@ void SpawnYellowGem(u32 id, u16 x, u16 y, u16 param)
         u8 bit = gLevelState->progress.flags & PROGRESS_FLAG_YELLOW_GEM;
 
         if (bit == 0) {
+            /* `type` is needed: inlined, the code is 5 instructions shorter */
             u8 type = EVENT_YELLOW_GEM;
             Sprite *part = Sprite::Create(id, x, y, param);
 

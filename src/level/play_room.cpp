@@ -69,11 +69,9 @@ s32 LevelProgress::PlayRoom()
     gForegroundList = new PartList(0x40);
     gCamera = new Camera;
 
-    {
-        LevelLayers *layers = LevelLayers::Get();
+    LevelLayers *layers = LevelLayers::Get();
 
-        gLevelLayers = layers;
-    }
+    gLevelLayers = layers;
 
     gPlayer = new Player(0xffff, 0, 0, 0);
     SetEntityPos(gPlayer, checkpointX, checkpointY);
@@ -81,6 +79,8 @@ s32 LevelProgress::PlayRoom()
     gPlayer->mirrorFlags.mirrorX = checkpointFlags;
 
     mode = cat->kind;
+    /* scoped: each step has its own `bank` and `pl` (one shared `pl` makes
+     * the code 2 instructions longer, and the case labels cross them) */
     switch (mode) {
     case ROOM_KIND_ON_FOOT:
         {

@@ -56,29 +56,32 @@ MovingSprite *EntitySpawner::LaunchEffectPart(s32 anim, s32 tag, s32 margin, s32
     MovingSprite *part;
     s32 w1, w2, dist, x;
 
-    {
-        s32 x0 = Q8_TO_INT(src->x);
-        s32 y0 = Q8_TO_INT(src->y);
-        s32 m = src->mirrorFlags.mirrorX;
+    /* `x0`, `y0` are needed: inlined, the instructions are reordered */
+    s32 x0 = Q8_TO_INT(src->x);
+    s32 y0 = Q8_TO_INT(src->y);
+    /* `m` is needed: inlined, the code is 3 instructions shorter */
+    s32 m = src->mirrorFlags.mirrorX;
 
-        part = SpawnEffectPart(anim, tag, x0, y0, m);
-    }
-    {
-        struct aabb a = part->GetAnimHitbox();
+    part = SpawnEffectPart(anim, tag, x0, y0, m);
 
-        w1 = a.w;
-        w2 = src->GetAnimHitbox().w;
-    }
+    /* `a` is needed: inlined, the instructions differ */
+    struct aabb a = part->GetAnimHitbox();
+
+    /* `w1` is needed: inlined, the code is 1 instruction longer */
+    w1 = a.w;
+    /* `w2` is needed: inlined, a call moves */
+    w2 = src->GetAnimHitbox().w;
     dist = w1 / 2 + w2 / 2 + margin;
-    {
-        s32 ox = Q8_TO_INT(part->x);
-        s32 y;
 
-        x = part->mirrorBits.flipX < 0 ? ox - dist : ox + dist;
-        y = Q8_TO_INT(part->y) + z;
-        part->x = INT_TO_Q8(x);
-        part->y = INT_TO_Q8(y);
-    }
+    s32 ox = Q8_TO_INT(part->x);
+    /* `y` is needed: inlined, the instructions are reordered */
+    s32 y;
+
+    /* `x` is needed: inlined, the code is 3 instructions longer */
+    x = part->mirrorBits.flipX < 0 ? ox - dist : ox + dist;
+    y = Q8_TO_INT(part->y) + z;
+    part->x = INT_TO_Q8(x);
+    part->y = INT_TO_Q8(y);
     if (part->mirrorBits.flipX < 0)
         SetVel(part, -speed, 0x40);
     else
@@ -150,9 +153,11 @@ Wumpa *EntitySpawner::DropWumpa(u32 x, u32 y, u32 p3, u32 p4, bool toHud)
  * the entity's id and the record's x, y and index. */
 void EntitySpawner::Spawn(u32 id, const struct level_entity *rec)
 {
+    /* `table`, `e`, `px` are needed: inlined, the instructions are reordered */
     const entity_spawn_fn *table = funcs;
     const entity_spawn_fn *e = (const entity_spawn_fn *)((rec->type << 2) + (u32)table);
     u16 px = rec->x;
+    /* `py` is needed: inlined, the code is 1 instruction shorter */
     u16 py = rec->y;
     u16 index = rec->param;
 
