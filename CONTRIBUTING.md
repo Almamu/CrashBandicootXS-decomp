@@ -287,6 +287,18 @@ full rules and the history (#574). For new code:
 
   Retype one field or signature at a time and rebuild the whole ROM: a
   type reaches every reader. A cast the match needs stays, with a comment.
+- **Simplifications:** `python3 tools/simplify_scan.py` (#846) lists the
+  bare blocks, single-use locals and copies, nested ifs and duplicate
+  cases left in src/, and `--try` applies them one at a time, keeping
+  each only when the object stays byte-identical (`--annotate` comments
+  the ones the match needs). See [docs/simplify.md](docs/simplify.md):
+
+  ```
+  tools/simplify_scan.py [PATH...]                # inventory per kind and directory
+  tools/simplify_scan.py --list [PATH...]         # every candidate, one per line
+  tools/simplify_scan.py --try [-j N] [--kinds K] [--log TSV] PATH...   # try, keep the byte-identical ones
+  tools/simplify_scan.py --try --annotate PATH... # also comment what has to stay
+  ```
 - **One layout, one type (#656).** A record that extends another embeds
   it, so each field has one name and one type:
   - **Plain C:** the base is the named first member (memory.h's `struct

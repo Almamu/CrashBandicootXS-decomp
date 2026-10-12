@@ -760,15 +760,27 @@ COLUMNS = 100  # .clang-format's ColumnLimit
 _MACROS = None
 
 
+def overlong(old, new):
+    """Whether new has a line past COLUMNS that old doesn't: the changed
+    lines measured as they come out, with their indentation (a folded
+    `&&` test, an inlined value, a hoisted declaration)."""
+    def long_lines(text):
+        return Counter(l for l in text.split("\n") if len(l.expandtabs(4)) > COLUMNS)
+
+    return bool(long_lines(new) - long_lines(old))
+
+
 def macros(text):
     """{name: max uses of one parameter} for the function-like macros of include/ and text."""
     global _MACROS
     if _MACROS is None:
-        _MACROS = {}
+        # filled before it is published: --try's threads read it while it's built
+        found = {}
         for d, _, fs in os.walk(os.path.join(ROOT, "include")):
             for f in fs:
                 with open(os.path.join(d, f), errors="replace") as fh:
-                    _MACROS.update(_macro_defs(fh.read()))
+                    found.update(_macro_defs(fh.read()))
+        _MACROS = found
     out = dict(_MACROS)
     out.update(_macro_defs(text))
     return out
@@ -855,9 +867,6 @@ def apply_inline(p, text, c):
             edits.append((s, e, ""))
     else:
         edits.append(_stmt_line(p, text, sa, sb))
-    a, b = line_bounds(text, u.start)
-    if b - a + len(val) - (u.end - u.start) > COLUMNS:
-        return None
     for s, e, r in sorted(edits, reverse=True):
         text = text[:s] + r + text[e:]
     # a decl removed from a block that leaves a blank line after `{` or two blank lines
@@ -1045,14 +1054,14 @@ def attempt(cmds, base, work, p, text, c, rows, src):
     """Try candidate c: ("kept", new text, "") or (result, None, what)."""
     new = APPLY[c.kind](p, text, c)
     what = getattr(c, "name", "")
-    if new is None or new == text:
+    if new is None or new == text or overlong(text, new):
         return "skip", None, what
     got = build(cmds, new, work)
     if isinstance(got, str) and c.kind == "block" and "cross" in got:
         # a jump crosses a declaration: hoist the declarations instead
         rows.append((src, c.func, c.kind, c.line, "error", got))
         new = apply_hoist(p, text, c)
-        if new is None:
+        if new is None or overlong(text, new):
             return "skip", None, what
         got = build(cmds, new, work)
         c.kind = "hoist"
@@ -1061,7 +1070,7 @@ def attempt(cmds, base, work, p, text, c, rows, src):
         rows.append((src, c.func, c.kind, c.line, "error", got))
         names = set(re.findall(r"redeclaration of `[^']*?(\w+)'", build_log(cmds, new, work)))
         new = apply_merge(p, text, c, names)
-        if new is None:
+        if new is None or overlong(text, new):
             return "skip", None, what
         got = build(cmds, new, work)
         c.kind = "merge"
