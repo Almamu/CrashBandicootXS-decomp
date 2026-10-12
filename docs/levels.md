@@ -72,7 +72,7 @@ The source of a BG layer and its streamer (`BgLayerBase::SetSource`,
 | 0x1E | `u16`, 2 in every layer |
 
 A layer is a grid of **chunks** of 16x8 cells (128x64 pixels). BG1-3 use
-the six 4bpp LZ77 tile sets of `graphics/tileset1/21`-`26`, BG0 uses one of
+the six 4bpp LZ77 tile sets of `graphics/level_bg_tiles/`, BG0 uses one of
 the five 8bpp tag-0x00 tile sets (`graphics/level_tilesets/`). Each set
 belongs to one level theme, which names it (`tools/levels.py`'s
 `TILESET_SYMBOLS`):

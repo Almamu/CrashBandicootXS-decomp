@@ -730,33 +730,39 @@ gLevelSelectPicture6Palette:
 
 .global gSnowBgTiles
 gSnowBgTiles:
-	@ LZ77 tile graphics (4bpp) (23520 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/21_63d4c0_tiles.4bpp.lz"
+	@ LZ77 4bpp tile set of the level BG1-3 layers (snow rooms). Built by grit
+	@ from graphics/level_bg_tiles/63d4c0_snow.png (docs/graphics.md, "Level BG tile sets").
+	.incbin "build/crashbandicootxs/graphics/level_bg_tiles/63d4c0_snow.tiles.bin.lz"
 
 .global gJungleBgTiles
 gJungleBgTiles:
-	@ LZ77 tile graphics (4bpp) (23392 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/tileset1/22_640ef8_tiles.4bpp.lz"
+	@ LZ77 4bpp tile set of the level BG1-3 layers (jungle rooms). Built by grit
+	@ from graphics/level_bg_tiles/640ef8_jungle.png (docs/graphics.md, "Level BG tile sets").
+	.incbin "build/crashbandicootxs/graphics/level_bg_tiles/640ef8_jungle.tiles.bin.lz"
 
 .global gTempleBgTiles
 gTempleBgTiles:
-	@ LZ77 compressed data (24352 bytes decompressed) - not clearly identifiable as pixel graphics
-	.incbin "build/crashbandicootxs/graphics/tileset1/23_644a88.bin.lz"
+	@ LZ77 4bpp tile set of the level BG1-3 layers (temple rooms). Built by grit
+	@ from graphics/level_bg_tiles/644a88_temple.png (docs/graphics.md, "Level BG tile sets").
+	.incbin "build/crashbandicootxs/graphics/level_bg_tiles/644a88_temple.tiles.bin.lz"
 
 .global gSewerBgTiles
 gSewerBgTiles:
-	@ LZ77 compressed data (15968 bytes decompressed) - not clearly identifiable as pixel graphics
-	.incbin "build/crashbandicootxs/graphics/tileset1/24_649418.bin.lz", 0, 0x2744
+	@ LZ77 4bpp tile set of the level BG1-3 layers (sewer rooms). Built by grit
+	@ from graphics/level_bg_tiles/649418_sewer.png (docs/graphics.md, "Level BG tile sets").
+	.incbin "build/crashbandicootxs/graphics/level_bg_tiles/649418_sewer.tiles.bin.lz", 0, 0x2744
 
 .global gSpaceBgTiles
 gSpaceBgTiles:
-	@ LZ77 compressed data (12576 bytes decompressed) - not clearly identifiable as pixel graphics
-	.incbin "build/crashbandicootxs/graphics/tileset1/25_64bb5c.bin.lz"
+	@ LZ77 4bpp tile set of the level BG1-3 layers (space rooms). Built by grit
+	@ from graphics/level_bg_tiles/64bb5c_space.png (docs/graphics.md, "Level BG tile sets").
+	.incbin "build/crashbandicootxs/graphics/level_bg_tiles/64bb5c_space.tiles.bin.lz"
 
 .global gUnderwaterBgTiles
 gUnderwaterBgTiles:
-	@ LZ77 compressed data (14240 bytes decompressed) - not clearly identifiable as pixel graphics
-	.incbin "build/crashbandicootxs/graphics/tileset1/26_64d7e8.bin.lz"
+	@ LZ77 4bpp tile set of the level BG1-3 layers (underwater rooms). Built by grit
+	@ from graphics/level_bg_tiles/64d7e8_underwater.png (docs/graphics.md, "Level BG tile sets").
+	.incbin "build/crashbandicootxs/graphics/level_bg_tiles/64d7e8_underwater.tiles.bin.lz"
 
 .global gRoom00Asset
 gRoom00Asset:

@@ -295,3 +295,28 @@ $(C_BUILDDIR)/data/rle_sprites_15a050.o: $(call rle_sprite_files,15a050)
 $(C_BUILDDIR)/data/frame_table_17a880.o: $(call rle_sprite_files,0da1d8)
 $(C_BUILDDIR)/data/anim_family_178f80.o: $(call rle_sprite_files,0c2758) $(GRAPHICS_BUILDDIR)/unknown/00_0b2120_frames.h
 $(C_BUILDDIR)/data/anim_family_17aa6c.o: $(call rle_sprite_files,15a050) $(GRAPHICS_BUILDDIR)/unknown/01_14174c_frames.h
+
+# The six 4bpp tile sets of the level BG1-3 layers (graphics/level_bg_tiles/,
+# docs/graphics.md "Level BG tile sets"). Each PNG is 8bpp indexed with a
+# room's 256-colour BG palette, every tile drawn in the palette bank the
+# rooms' maps use it with most (index = bank * 16 + 4bpp pixel), so it shows
+# its real colours; grit -gB4 keeps the low nibble. The PNGs are 16 tiles
+# wide, padded with blank tiles, which bin2c.py --size trims again.
+LEVEL_BG_TILES_DIR := $(GRAPHICS_BUILDDIR)/level_bg_tiles
+LEVEL_BG_TILES_PNGS := $(wildcard graphics/level_bg_tiles/*.png)
+GRIT_C_PNGS += $(LEVEL_BG_TILES_PNGS)
+LEVEL_BG_TILES_BUILT := $(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.tiles.bin.lz,$(LEVEL_BG_TILES_PNGS))
+$(DATA_ASM_OBJS) report: $(LEVEL_BG_TILES_BUILT)
+
+LEVEL_BG_TILE_BYTES_63d4c0_snow := 0x5be0
+LEVEL_BG_TILE_BYTES_640ef8_jungle := 0x5b60
+LEVEL_BG_TILE_BYTES_644a88_temple := 0x5f20
+LEVEL_BG_TILE_BYTES_649418_sewer := 0x3e60
+LEVEL_BG_TILE_BYTES_64bb5c_space := 0x3120
+LEVEL_BG_TILE_BYTES_64d7e8_underwater := 0x37a0
+
+$(LEVEL_BG_TILES_DIR)/%.img.bin: graphics/level_bg_tiles/%.png | $(GRIT)
+	@mkdir -p $(dir $@)
+	$(GRIT) $< -gt -gB4 -p! -ftb -fh! -o $(@:.img.bin=)
+$(LEVEL_BG_TILES_DIR)/%.tiles.bin: $(LEVEL_BG_TILES_DIR)/%.img.bin tools/bin2c.py
+	python3 tools/bin2c.py $< $@ --size $(LEVEL_BG_TILE_BYTES_$*) --bin
