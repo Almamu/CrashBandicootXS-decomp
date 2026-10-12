@@ -200,7 +200,7 @@ public:
     void StateHangMove();
     void StateHangStop();
     void DoSuperBodySlamShockwave();
-    void StartTornadoSpin(s32 id, s32 param2);
+    void StartTornadoSpin(s32 turnState, s32 endState);
 
     /* src/player/action_ctrl_states.cpp */
     void ApplyMotion();

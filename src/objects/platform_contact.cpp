@@ -12,7 +12,7 @@ s32 Platform::CheckPlayerContact()
 {
     if (type != PLATFORM_TYPE_FLIP || frame <= 0x12) {
         Player *p = gPlayer;
-        void *arg = (void *)p->mover->state;
+        void *state = (void *)p->mover->state;
         s32 collides = p->f.flags >> ENTITY_BIT_COLLIDES;
 
         if (collides) {
@@ -25,7 +25,7 @@ s32 Platform::CheckPlayerContact()
                 d -= p->y;
                 MAKE_ABS(d);
                 if (d <= 0x7FFF)
-                    ResolveCollision(arg);
+                    ResolveCollision(state);
             }
         }
         ClearTouched();

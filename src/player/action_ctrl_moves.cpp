@@ -506,13 +506,13 @@ void ActionCtrl::DoSuperBodySlamShockwave()
 }
 
 /* The tornado spin's next turn (from the ground, air and tornado spins).
- * Winding up (`tornadoUnwinding` clear): enters state `id` with the turn's
- * animation (0x17, 0x28, 0x27 for turns 0-2) for 0x14 frames and its
- * sound; once `tornadoTurn` reaches `charge`, the turns count back down.
+ * Winding up (`tornadoUnwinding` clear): enters state `turnState` with
+ * the turn's animation (0x17, 0x28, 0x27 for turns 0-2) for 0x14 frames
+ * and its sound; once `tornadoTurn` reaches `charge`, the turns count back down.
  * Unwinding: the same, counting down, until the count wraps; then state
- * `param2` with the spin animation (0x10, 0x18 frames), and the spin
+ * `endState` with the spin animation (0x10, 0x18 frames), and the spin
  * cooldown at 0x63. */
-void ActionCtrl::StartTornadoSpin(s32 id, s32 param2)
+void ActionCtrl::StartTornadoSpin(s32 turnState, s32 endState)
 {
     if (tornadoUnwinding == 0) {
         s32 idx = 0x17;
@@ -529,7 +529,7 @@ void ActionCtrl::StartTornadoSpin(s32 id, s32 param2)
         }
         zero = 0;
         wait = 0x14;
-        SetMode(id);
+        SetMode(turnState);
         SetTargetAnim(part, idx);
         frame = zero;
         frames = wait;
@@ -558,7 +558,7 @@ void ActionCtrl::StartTornadoSpin(s32 id, s32 param2)
             }
             zero = 0;
             wait = 0x14;
-            SetMode(id);
+            SetMode(turnState);
             SetTargetAnim(part, idx);
             frame = zero;
             frames = wait;
@@ -571,7 +571,7 @@ void ActionCtrl::StartTornadoSpin(s32 id, s32 param2)
             *p21 = zero;
             charge = zero;
             wait = 0x18;
-            SetMode(param2);
+            SetMode(endState);
             SetTargetAnim(part, 0x10);
             frame = zero;
             frames = wait;
