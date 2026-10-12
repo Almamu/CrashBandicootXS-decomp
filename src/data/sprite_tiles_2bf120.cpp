@@ -308,7 +308,7 @@ extern const u8 gSpriteBank55Tiles[SPRITE_TILES_BANK55_SIZE] = {
  * palettes/paletteCount: InitLevelState and RunPauseMenu hand them to the
  * palette cache (SetPaletteCacheSource), and GetPaletteSlot copies palette
  * `paletteId` into a free OBJ palette slot. The sources are
- * graphics/sprites/palettes/NNN.pal (JASC, NNN = paletteId), built with
+ * graphics/sprites/palettes/NNN_<owner>.pal (JASC, NNN = paletteId), built with
  * tools/jasc_pal.py and concatenated in index order (graphics.mk). */
 extern const u8 gObjPalettes[0xfa0] = {
 #include "sprites/obj_palettes.bin.inc"

@@ -96,16 +96,21 @@ report (see [docs/decomp_dev.md](./docs/decomp_dev.md)). It must show
 The build regenerates every asset under `build/` from its source; no
 generated file is checked in.
 
-- **Graphics** (`graphics/`: PNGs, JASC `.pal` palettes and a few raw
-  `.bin` blobs): `tools/grit` lays out bitmaps, tilesets and tilemaps,
-  `tools/gbagfx` converts tiles and palettes and does the LZ77
+- **Graphics** (`graphics/`: indexed PNGs, most carrying their palette,
+  and JASC `.pal` OBJ palettes, in folders by what the game does with
+  them: `cutscenes/`, `fonts/`, `logos/`, `title/`, `menus/`,
+  `level_select/`, `sprites/`, `vehicles/`, `bosses/`): `tools/grit` lays
+  out bitmaps, tilesets and tilemaps, `tools/gbagfx` does the LZ77
   compression, and `tools/bin2c.py` turns the result into the bytes a
-  `src/data/*.c` file `#include`s. The rules are in `graphics.mk`. See
-  [docs/graphics.md](./docs/graphics.md) and
-  [docs/data.md](./docs/data.md), "Resources (grit-style)".
-- **Levels** (`data/levels/`: a `room.json` and one tilemap per layer for
-  each of the 41 rooms): `tools/levels.py` builds the room data and the
-  level assets. The rules are in `levels.mk`. See
+  `src/data/*.cpp` file `#include`s. The rules are in `graphics.mk`.
+  `graphics/manifest.json` records where the ROM has each asset, for
+  `tools/gfx_manifest.py extract`. See [docs/graphics.md](./docs/graphics.md)
+  and [docs/data.md](./docs/data.md), "Resources (grit-style)".
+- **Levels** (`data/levels/<level>/<slot>/`: a `room.json`, one picture
+  per BG layer and the collision layer as an image, for each of the 41
+  rooms): `tools/levels.py` builds the room data, the level assets and the
+  BG tile sets, which it makes from the pictures. The rules are in
+  `levels.mk`. A room added there is built too, after the ROM's data. See
   [docs/levels.md](./docs/levels.md).
 - **Audio** (`sound/`: XM songs, WAV samples and JSON manifests):
   `tools/gax_audio.py` rebuilds the GAX2 music and sound-effect data, and

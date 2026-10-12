@@ -15,7 +15,7 @@ extern "C" {
  *
  * Record 0's table_B points at compressed frames of set A
  * (rle_sprites_0c2758.cpp), the others' at frames of the framed sheet
- * graphics/unknown/00_0b2120/ (byte offsets into its decompressed
+ * graphics/vehicles/polar/sprite_sheet/ (byte offsets into its decompressed
  * data). Both kinds are written with the offsets the build generates,
  * so edited frames move them along. The arrays are cut at the next
  * array a record points at; nothing but the records references them.

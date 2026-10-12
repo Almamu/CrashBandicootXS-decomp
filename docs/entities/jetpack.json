@@ -1,7 +1,7 @@
 {
   "sheet_rom_address": "0x0814174C",
   "decompressed_size": 207124,
-  "graphics_dir": "graphics/unknown/01_14174c",
+  "graphics_dir": "graphics/vehicles/jetpack/sprite_sheet",
   "descriptor_rom_address": "0x08175558",
   "descriptor_stride": 52,
   "categories": [
@@ -1340,62 +1340,62 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/01_plane/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/plane/00.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/01_plane/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/plane/01.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/01_plane/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/plane/02.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/01_plane/10.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/plane/10.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/01_plane/11.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/plane/11.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/01_plane/12.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/plane/12.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/01_plane/03.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/plane/03.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/01_plane/04.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/plane/04.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/01_plane/05.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/plane/05.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/01_plane/16.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/plane/16.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "19": {
-          "asset_file": "graphics/unknown/01_14174c/01_plane/26.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/plane/26.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "25": {
-          "asset_file": "graphics/unknown/01_14174c/01_plane/19.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/plane/19.png",
           "w_tiles": 8,
           "h_tiles": 8
         }
@@ -1442,7 +1442,7 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/00_shot/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/shot/00.png",
           "w_tiles": 2,
           "h_tiles": 2
         }
@@ -1471,7 +1471,7 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/03_cannonball/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/cannonball/00.png",
           "w_tiles": 1,
           "h_tiles": 1
         }
@@ -2490,47 +2490,47 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/03.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/07.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/08.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/09.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/14_explosion/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/explosion/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/14_explosion/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/explosion/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -3549,47 +3549,47 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/03.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/07.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/08.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/09.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/14_explosion/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/explosion/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/14_explosion/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/explosion/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -4608,47 +4608,47 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/03.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/07.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/08.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/09.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/14_explosion/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/explosion/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/14_explosion/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/explosion/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -5667,47 +5667,47 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/03.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/07.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/08.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/09.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/14_explosion/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/explosion/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/14_explosion/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/explosion/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -6726,47 +6726,47 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/03.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/07.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/08.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/09.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/14_explosion/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/explosion/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/14_explosion/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/explosion/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -7785,47 +7785,47 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/03.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/07.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/08.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/02_bomber/09.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/bomber/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/14_explosion/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/explosion/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/14_explosion/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/explosion/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -8682,37 +8682,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/06.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/08.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/10.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -9569,37 +9569,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/06.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/08.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/10.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -10357,37 +10357,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/23_hovercraft_launcher/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_launcher/00.png",
           "w_tiles": 8,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/23_hovercraft_launcher/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_launcher/00.png",
           "w_tiles": 8,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/23_hovercraft_launcher/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_launcher/01.png",
           "w_tiles": 8,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/23_hovercraft_launcher/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_launcher/02.png",
           "w_tiles": 8,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/23_hovercraft_launcher/06.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_launcher/06.png",
           "w_tiles": 8,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/23_hovercraft_launcher/07.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_launcher/07.png",
           "w_tiles": 8,
           "h_tiles": 4
         },
         "17": {
-          "asset_file": "graphics/unknown/01_14174c/23_hovercraft_launcher/08.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_launcher/08.png",
           "w_tiles": 8,
           "h_tiles": 4
         }
@@ -10425,7 +10425,7 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/24_hovercraft_side_gun/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_side_gun/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -10607,22 +10607,22 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/25_hovercraft_cannon_flash/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon_flash/00.png",
           "w_tiles": 2,
           "h_tiles": 2
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/25_hovercraft_cannon_flash/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon_flash/01.png",
           "w_tiles": 2,
           "h_tiles": 2
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/25_hovercraft_cannon_flash/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon_flash/02.png",
           "w_tiles": 2,
           "h_tiles": 2
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/25_hovercraft_cannon_flash/03.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon_flash/03.png",
           "w_tiles": 2,
           "h_tiles": 2
         }
@@ -11479,37 +11479,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/06.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/08.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/10.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -12366,37 +12366,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/06.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/08.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/10.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -13253,37 +13253,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/06.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/08.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/10.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -14140,37 +14140,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/06.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/08.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/10.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -14748,42 +14748,42 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/08_question_crate/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/question_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/crate_shards/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/crate_shards/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/03.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/crate_shards/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/04.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/crate_shards/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/06.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_shards/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -15361,42 +15361,42 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/08_question_crate/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/question_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/crate_shards/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/crate_shards/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/03.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/crate_shards/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/04.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/crate_shards/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/06.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_shards/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -15974,42 +15974,42 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/08_question_crate/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/question_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/crate_shards/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/crate_shards/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/03.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/crate_shards/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/04.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/crate_shards/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/06.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_shards/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -16587,42 +16587,42 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/08_question_crate/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/question_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/crate_shards/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/crate_shards/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/03.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/crate_shards/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/04.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/crate_shards/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/06.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_shards/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -17200,42 +17200,42 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/08_question_crate/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/question_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/crate_shards/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/crate_shards/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/03.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/crate_shards/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/04.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/crate_shards/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/06.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_shards/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -17813,42 +17813,42 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/09_time_crate_1/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_shards/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_shards/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/03.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_shards/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/04.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_shards/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/06.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_shards/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -18426,42 +18426,42 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/10_time_crate_2/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_2/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_shards/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_shards/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/03.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_shards/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/04.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_shards/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/06.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_shards/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -18616,17 +18616,17 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/11_time_crate_3/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_3/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/time_crate_shards/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -19078,42 +19078,42 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/15_parachute_nitro/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/parachute_nitro/00.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/15_parachute_nitro/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/parachute_nitro/01.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/15_parachute_nitro/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/parachute_nitro/02.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/15_parachute_nitro/03.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/parachute_nitro/03.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/15_parachute_nitro/04.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/parachute_nitro/04.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/15_parachute_nitro/05.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/parachute_nitro/05.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/15_parachute_nitro/06.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/parachute_nitro/06.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/15_parachute_nitro/12.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/parachute_nitro/12.png",
           "w_tiles": 8,
           "h_tiles": 8
         }
@@ -19493,37 +19493,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/18_rocket/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/rocket/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/18_rocket/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/rocket/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/18_rocket/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/rocket/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/18_rocket/03.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/rocket/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/18_rocket/04.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/rocket/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/21_rocket_burst/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/rocket_burst/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/14_explosion/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/explosion/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -19741,17 +19741,17 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/19_stopwatch/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/stopwatch/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/19_stopwatch/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/stopwatch/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/19_stopwatch/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/stopwatch/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -20131,37 +20131,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/18_rocket/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/rocket/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/18_rocket/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/rocket/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/18_rocket/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/rocket/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/18_rocket/03.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/rocket/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/18_rocket/04.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/rocket/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/21_rocket_burst/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/rocket_burst/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/14_explosion/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/explosion/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -20271,12 +20271,12 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/17_ring/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/ring/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/17_ring/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/ring/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         }
@@ -21133,37 +21133,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/06.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/08.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/10.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -22020,37 +22020,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/06.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/08.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/10.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -22907,37 +22907,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/06.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/08.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/10.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -23794,37 +23794,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/06.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/08.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/10.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -24681,37 +24681,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/06.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/08.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/10.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -25568,37 +25568,37 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/06.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/08.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/10.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/hovercraft_cannon/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -26527,42 +26527,42 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/04_fireball/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/fireball/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/04_fireball/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/fireball/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/04_fireball/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/fireball/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/04_fireball/03.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/fireball/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/04_fireball/07.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/fireball/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/01_14174c/13_fireball_burst/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/fireball_burst/00.png",
           "w_tiles": 2,
           "h_tiles": 2
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/13_fireball_burst/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/fireball_burst/01.png",
           "w_tiles": 2,
           "h_tiles": 2
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/13_fireball_burst/03.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/fireball_burst/03.png",
           "w_tiles": 2,
           "h_tiles": 2
         }
@@ -27491,42 +27491,42 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/04_fireball/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/fireball/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/04_fireball/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/fireball/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/04_fireball/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/fireball/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/04_fireball/03.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/fireball/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/04_fireball/07.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/fireball/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/01_14174c/13_fireball_burst/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/fireball_burst/00.png",
           "w_tiles": 2,
           "h_tiles": 2
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/13_fireball_burst/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/fireball_burst/01.png",
           "w_tiles": 2,
           "h_tiles": 2
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/13_fireball_burst/03.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/fireball_burst/03.png",
           "w_tiles": 2,
           "h_tiles": 2
         }
@@ -27762,27 +27762,27 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/06_balloon_red/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/balloon_red/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/06_balloon_red/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/balloon_red/01.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/06_balloon_red/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/balloon_red/02.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/06_balloon_red/03.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/balloon_red/03.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/05_balloon_red_cross/03.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/balloon_red_cross/03.png",
           "w_tiles": 4,
           "h_tiles": 8
         }
@@ -27964,17 +27964,17 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/07_balloon_yellow/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/balloon_yellow/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/07_balloon_yellow/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/balloon_yellow/01.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/07_balloon_yellow/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/balloon_yellow/02.png",
           "w_tiles": 4,
           "h_tiles": 8
         }
@@ -28210,27 +28210,27 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/05_balloon_red_cross/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/balloon_red_cross/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/05_balloon_red_cross/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/balloon_red_cross/01.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/05_balloon_red_cross/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/balloon_red_cross/02.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/05_balloon_red_cross/03.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/balloon_red_cross/03.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/07_balloon_yellow/03.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/balloon_yellow/03.png",
           "w_tiles": 4,
           "h_tiles": 8
         }
@@ -28331,12 +28331,12 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/17_ring/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/ring/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/17_ring/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/ring/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         }
@@ -28464,27 +28464,27 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/16_collected_wumpa/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/collected_wumpa/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/16_collected_wumpa/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/collected_wumpa/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/16_collected_wumpa/02.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/collected_wumpa/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/16_collected_wumpa/03.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/collected_wumpa/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/16_collected_wumpa/09.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/collected_wumpa/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -28567,17 +28567,17 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/14_explosion/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/explosion/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/14_explosion/01.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/explosion/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/14_explosion/03.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/explosion/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
@@ -28606,7 +28606,7 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/26_checkpoint_text/00.png",
+          "asset_file": "graphics/vehicles/jetpack/sprite_sheet/checkpoint_text/00.png",
           "w_tiles": 8,
           "h_tiles": 4
         }

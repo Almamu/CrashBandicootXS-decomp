@@ -10,11 +10,52 @@ until #767, which also moved some to `src/objects/entity.cpp` and
 `src/save/game_progress.cpp`), `src/menus/power_dialog_draw.cpp` and
 `src/actor/inline_copies_actors.cpp`, see [matching.md](./matching.md) instead.
 
+## The `graphics/` tree
+
+`graphics/` holds only editable sources, grouped by what the game does
+with them. Every asset is built back into the ROM's bytes by
+`graphics.mk` (see "Build pipeline"), into C arrays that `src/data/*.cpp`
+`#include`s. File names carry no ROM addresses: `graphics/manifest.json`
+records them (see "The manifest"), and data_map.md's "Graphics assets"
+table lists them by address. A numeric prefix is kept only where it is an
+index the C or the build uses.
+
+| folder | what | symbols | built by |
+|---|---|---|---|
+| `cutscenes/` | the 24 cutscene pictures, `NN_<what>.png` (NN = the picture's number); Mode 4, palette in the PNG | `gCutscenePictureNN`, `...NNBitmap` | `cutscene_pictures_5a9f70.cpp` |
+| `fonts/` | the HUD fonts, `small.png`, `large.png` (OBJ sheets, run-time palette) | `gSmallFontTiles`, `gLargeFontTiles` | `font_tiles_5a4e70.cpp` |
+| `logos/` | the Universal logo (`universal.png`, a BG package, + `universal_high.json`), the VV logo screen (`vicarious_visions/emblem`, `letters`, `url`) and the credits logos (`credits/`) | `gUniversalLogoBg`, `gVvLogo*`, `gCredits*Logo*` | `menu_graphics_61badc.cpp` |
+| `title/` | the title screen: `logo.png` (affine BG package) and the OBJ packages `crash`, `bandicoot`, `arrow1`, `arrow2` | `gTitleScreenBg`, `gTitle*Obj` | `menu_graphics_61badc.cpp` |
+| `menus/` | the menu sky, the pause screen and the continue prompt's three layers (`continue_prompt/`), BG packages | `gMenuSkyBg`, `gPauseMenuBg`, `gContinuePrompt*Bg` | `menu_graphics_61badc.cpp` |
+| `level_select/` | the platform (a BG package), the cursor zoom and the ten theme pictures (`pictures/<theme>.png`) | `gLevelSelectPageBg`, `gLevelSelectCursorZoomTiles`, `gLevelSelectPictureN*` | `menu_graphics_61badc.cpp`, `level_select_graphics_6377c0.cpp` |
+| `sprites/` | the 56 sprite banks (`bankNN_<name>/fKKK.png`, `bank.json`) and the 125 OBJ palettes (`palettes/NNN_<owner>.pal`) | `gSpriteBankTable`, `gSpriteBankNN*`, `gObjPalettes` | `sprite_tiles_2bf120.cpp`, `sprite_banks_*.cpp` |
+| `vehicles/polar/` | the polar stages: the framed sprite sheet (`sprite_sheet/<kind>/NN.png`, `sheet.json`), the player and the Yeti (zero-run frame sets), the BG0 ice wall | `gPolarSpriteSheet`, `gPolarPlayerRleFrames`, `gYetiRleFrames`, `gCategoryFamily0CellAnim` | `sprite_sheet_0b2120.cpp`, `rle_sprites_0c2758.cpp`, `cell_anim_03b8b0.cpp` |
+| `vehicles/jetpack/` | the jetpack stages: the framed sprite sheet, the player, the BG0 clouds, the three skies (`skies/`) and the airship (`airship/frameN.png`) | `gJetpackSpriteSheet`, `gJetpackPlayerRleFrames`, `gCategoryFamily1CellAnim`, `gCategory3-5BgPicture`, `gAirshipPicture` | `sprite_sheet_14174c.cpp`, `rle_sprites_15a050.cpp`, `cell_anim_0ff1b0.cpp`, `bg_picture_151ac4.cpp`, `boss_pictures_167ad4.cpp` |
+| `bosses/` | N. Gin's hovercraft, `hovercraft.png` | `gHovercraftPicture` | `boss_pictures_167ad4.cpp` |
+
+`vehicles/` mirrors `src/vehicle/`: everything a polar or jetpack stage
+draws is in one place. The rooms' graphics aren't here: each room's BG
+layers are pictures under `data/levels/<level>/<slot>/`, and the BG tile
+sets are made from them ([levels.md](./levels.md), "Tile sets"). The
+framed sheets' record dumps are `docs/entities/polar.json` and
+`jetpack.json`.
+
+The sections below describe each kind of asset: "Palettes", "Menu and
+title pictures" (the BG packages of `menus/`, `title/`, `logos/` and
+`level_select/`), "OBJ sheets" (`fonts/`, the VV logo, the title
+sprites), "Level-select pictures", "Run-time palettes", "Sprite banks"
+and "OBJ palettes" (`sprites/`), "The framed sheets' folders and colours"
+(`vehicles/*/sprite_sheet/`), and data.md's "Category backgrounds",
+"Compressed sprite frames" and "Boss pictures" (the rest of `vehicles/`
+and `bosses/`). The other sections are the history of how the assets
+were found.
+
 ## Background/tileset extraction (done)
 
 Most of the ROM's background and tileset graphics have been identified and
 split out of the raw `baserom.gba` incbins in `data/data.s`, under
-`graphics/<region>/`:
+`graphics/<region>/` (the folders of that time, since regrouped as "The
+`graphics/` tree" above):
 
 - `graphics/intro/`, `graphics/tileset1/` — tile graphics (4bpp) and
   palettes for the regions scanned so far.
@@ -1419,7 +1460,8 @@ almost every moving thing in a level: Crash, the enemies, the bosses, the
 crates and pickups, the effects, and the level-select and HUD icons. Their
 art is the sprite tile pool (`0x082BF120`-`0x084A4660`, 1,987,904 bytes of
 raw 4bpp tiles), and their colours are the 125 OBJ palettes after it
-(`gObjPalettes`, `graphics/sprites/palettes/NNN.pal`).
+(`gObjPalettes`, `graphics/sprites/palettes/NNN_<owner>.pal`, see "OBJ
+palettes").
 
 ### Format
 
@@ -1536,8 +1578,25 @@ shape in several colours. Such a frame's PNG is drawn with
 the first one in `palettes` (the first animation that shows it), and the
 others are listed after it. The PNG's palette is only for viewing. To
 see the frame in another of its palettes, load
-`graphics/sprites/palettes/NNN.pal` into the image. The indices don't
-change.
+`graphics/sprites/palettes/NNN_<owner>.pal` into the image. The indices
+don't change.
+
+### OBJ palettes
+
+The 125 OBJ palettes (`gObjPalettes`) are JASC `.pal` files,
+`graphics/sprites/palettes/NNN_<owner>.pal`: NNN is the `paletteId` the
+animations give (`sprite_anim.paletteId`), which also fixes the build's
+order (graphics.mk concatenates them sorted), and `<owner>` says what
+uses it: the first sprite bank, in bank order, whose animations name it
+(`crash`, `penguin`, `level_select_icons`, ...), with a few shared ones
+named by hand (`033_hud`: the HUD fonts, wumpa, checkpoint text, flames,
+icons and arrows; `049`-`053` the gems by colour; `057_aku_aku`;
+`117_crystal`), and `unused` for the 27 no animation names. The NNN keeps
+palettes with the same owner apart. They are standalone files, not a
+picture's palette, because no picture owns them: several are shared by
+many banks, and all 125 hold 1,217 distinct colours, more than one
+indexed PNG can. The manifest keeps the names, so `tools/gfx_manifest.py
+extract` writes them again.
 
 ## Tile sheets with their palettes (#914)
 

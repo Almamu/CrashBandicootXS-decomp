@@ -13,7 +13,8 @@ sources can be extracted from baserom.gba again.
 
     tools/gfx_manifest.py extract [baserom.gba] [--check]
         Writes every source under graphics/ and data/levels/ from the ROM
-        (the room data through tools/levels.py extract). With --check, it
+        (the room data through tools/levels.py extract), and the framed
+        sheets' record dumps, docs/entities/. With --check, it
         writes them into a temporary tree instead and compares that with
         the sources: PNGs by size, mode, pixels and palette, the other
         files byte for byte. The tree must come out the same.
@@ -47,8 +48,9 @@ everything under it not claimed by a longer entry) or its `paths`, its
                   each frame carries its cells' palette banks
     bg_picture    a category BG1 picture; `paths` are the picture and its
                   tile set strip
-    obj_palettes  the `count` OBJ palettes of gObjPalettes, one JASC .pal
-                  per paletteId
+    obj_palettes  the OBJ palettes of gObjPalettes, one JASC .pal per
+                  paletteId, named by `names` (NNN_<owner>: the paletteId and
+                  what uses it)
 and, extracted by their own tools, which find them through the ROM's
 tables: sprite_banks (tools/sprite_frames.py extract) and framed_sheet
 (tools/split_entities.py, then tools/dump_entities.py). The level BG tile
@@ -333,8 +335,8 @@ def extract_bg_picture(rom, e, out, by_symbol):
 def extract_obj_palettes(rom, e, out, by_symbol):
     d = out / e["path"]
     d.mkdir(parents=True, exist_ok=True)
-    for k in range(e["count"]):
-        jasc_pal.write_jasc(d / ("%03d.pal" % k), rom.u16s(addr(e["rom"]) + 32 * k, 16))
+    for k, name in enumerate(e["names"]):
+        jasc_pal.write_jasc(d / (name + ".pal"), rom.u16s(addr(e["rom"]) + 32 * k, 16))
 
 
 EXTRACT = {
@@ -413,6 +415,7 @@ def extract_check(rom_path):
         errors = check()
         errors += compare(root / "graphics", Path("graphics"))
         errors += compare(root / "data/levels", Path("data/levels"))
+        errors += compare(root / "docs/entities", Path("docs/entities"))
     return errors
 
 
