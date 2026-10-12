@@ -53,6 +53,7 @@ void UnpackNibbleTiles(u16 *src, s32 lowBlock)
             u32 i = n;
             do {
                 u32 v = *src++;
+                /* `p0`, `p1`, `p2`, `p3`: the four expanded nibbles, side by side */
                 u32 p0 = ExpandNibble(v & 15);
                 u32 p1 = ExpandNibble((u16)v >> 4 & 15);
                 u32 p2 = ExpandNibble((u16)v >> 8 & 15);

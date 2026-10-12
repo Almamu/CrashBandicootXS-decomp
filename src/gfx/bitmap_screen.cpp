@@ -55,6 +55,7 @@ void ShowBitmapScreen(void *asset, void *palette)
     u16 rawA;
     s32 zero;
     s32 shiftedD;
+    /* `rawD` is needed: inlined, the code is 1 instruction longer */
     u16 rawD;
     s32 xLow, yLow;
 

@@ -63,6 +63,7 @@ void CutscenePlayer::Run()
     s32 limit;
     s32 i;
 
+    /* `b` is needed: inlined, the instructions are reordered */
     s32 b = self->box.x;
     Font *t = self->font;
 

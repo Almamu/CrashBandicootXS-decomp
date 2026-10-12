@@ -111,6 +111,7 @@ void ScaledSprite::Draw()
 void ScaledSprite::SetColor(s32 color)
 {
     u32 nibble;
+    /* `dest` is needed: inlined, the instructions differ */
     u32 dest;
 
     this->color = color;

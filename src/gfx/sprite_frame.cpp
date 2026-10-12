@@ -100,6 +100,7 @@ void FreeVramTileBlock(void *addr)
     struct vram_tile_block *node;
     struct vram_tile_block *adj;
     struct vram_tile_block *next;
+    /* `tile` is needed: inlined, the code is 1 instruction longer */
     u32 tile;
 
     if (addr == 0) {
@@ -157,6 +158,7 @@ void FreeVramTileBlock(void *addr)
 void *AllocVramTileBlock(s32 size)
 {
     struct vram_tile_block *cur;
+    /* `last` is needed: inlined, the code is 2 instructions shorter */
     struct vram_tile_block *last;
     struct vram_tile_block *rover;
     s32 rest;

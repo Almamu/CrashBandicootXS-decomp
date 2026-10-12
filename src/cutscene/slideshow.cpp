@@ -59,6 +59,7 @@ void Slideshow::Run()
     s32 i;
 
     for (i = 0; i < self->count; i++) {
+        /* `checkButtons` is needed: inlined, the code is 2 instructions shorter */
         u8 checkButtons;
         const struct cutscene_slide *item;
 
@@ -99,6 +100,7 @@ s32 Slideshow::Skip(s32 startIdx, u8 condFlag)
     s32 cur = startIdx;
     s32 next;
     s32 count;
+    /* `items` is needed: inlined, the code is 1 instruction longer */
     const struct cutscene_slide *const *items;
 
     if (condFlag) {
@@ -163,6 +165,7 @@ void Slideshow::ShowPicture(s32 idx)
     u8 *shadow = (u8 *)&gSlideshowDispcnt;
 
     u8 toggleByte = self->toggle;
+    /* `bit4` is needed: inlined, the instructions are reordered */
     s32 bit4 = (1 & toggleByte) << 4;
     s32 mask = ~0x10;
     s32 byte = *shadow;

@@ -28,6 +28,7 @@ void Font::DrawGlyph(u8 charByte)
 
     SetGlyphX(oam, posX);
 
+    /* `y` is needed: inlined, the code is 2 instructions longer */
     u8 *y = (u8 *)&posY;
 
     oam->y = glyphRecords[glyph].yOffset + *y;
