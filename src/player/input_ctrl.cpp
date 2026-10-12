@@ -87,6 +87,7 @@ void InputCtrl::Update(MovingSprite *)
 {
     if (state != INPUT_CTRL_STATE_DEAD) {
         u32 keys;
+        /* `x` is needed: inlined, the instructions are reordered */
         s32 x = target->x;
 
         if (x > INT_TO_Q8(gLevelLayers->layer0->widthPx) - 0xA00) {

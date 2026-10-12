@@ -45,6 +45,7 @@ void SwimCtrl::SetDriftY(s32 start, s32 step, s32 target)
         p->rampY.start = start;
         p->rampY.step = t;
     } else if (v * target < 0) {
+        /* `sum` is needed: inlined, the instructions are reordered */
         s32 sum = t + step;
 
         p->rampY.start = start;

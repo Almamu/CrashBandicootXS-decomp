@@ -209,6 +209,7 @@ static inline void SetDriftNowX(s32 start, s32 step, s32 target)
         p->rampX.start = start;
         p->rampX.step = t;
     } else if (v * target < 0) {
+        /* `sum` is needed: inlined, the instructions are reordered */
         s32 sum = t + step;
 
         p->rampX.start = start;
@@ -291,6 +292,7 @@ void SwimCtrl::Update(MovingSprite *)
     } else {
         u32 keys;
         u8 dir;
+        /* `inp` is needed: inlined, the registers differ */
         KeyInput *inp;
 
         if (spinCooldown)
@@ -382,8 +384,10 @@ void SwimCtrl::ApplyMotion()
 void SwimCtrl::StateIdle()
 {
     struct keys k;
+    /* `dir` is needed: inlined, the instructions differ */
     u8 dir;
     u8 count;
+    /* `inp` is needed: inlined, the instructions are reordered */
     KeyInput *inp = gInput;
 
     k = *(struct keys *)&gKeys;
@@ -432,6 +436,7 @@ void SwimCtrl::StateSwim()
 
 void SwimCtrl::StateStroke()
 {
+    /* `inp` is needed: inlined, the instructions differ */
     KeyInput *inp = gInput;
     struct keys k = *(struct keys *)&gKeys;
     struct keys *kp = &k;
@@ -441,6 +446,7 @@ void SwimCtrl::StateStroke()
         return;
     }
     if (target->animDone || gRoomFrameCount > deadline) {
+        /* `dir` is needed: inlined, the instructions differ */
         u8 dir = inp->GetDpadDirection();
 
         if (kp->pressed & A_BUTTON)
@@ -458,6 +464,7 @@ void SwimCtrl::StateStroke()
 
 void SwimCtrl::StateSpin()
 {
+    /* `dir` is needed: inlined, the code is 2 instructions shorter */
     u8 dir = gInput->GetDpadDirection();
 
     if (++timer >= timerMax || target->animDone) {
@@ -540,6 +547,7 @@ void SwimCtrl::StateTurn()
 
 void SwimCtrl::StateSwimStart()
 {
+    /* `inp` is needed: inlined, the instructions differ */
     KeyInput *inp = gInput;
     struct keys k = *(struct keys *)&gKeys;
     struct keys *kp = &k;
@@ -549,6 +557,7 @@ void SwimCtrl::StateSwimStart()
         return;
     }
     if (target->animDone) {
+        /* `dir` is needed: inlined, the code is 2 instructions shorter */
         u8 dir = inp->GetDpadDirection();
 
         if (kp->pressed & A_BUTTON)

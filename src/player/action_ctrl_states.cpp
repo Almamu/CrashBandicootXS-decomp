@@ -55,6 +55,7 @@ void ActionCtrl::ApplyMotion()
     Player *p;
 
     p = gPlayer;
+    /* nested: as one `&&` test, the code is 5 instructions shorter */
     if (p->pushLeft == 0) {
         if (p->pushRight == 0)
             goto skip;
@@ -345,6 +346,7 @@ void ActionCtrl::StateJump()
     u8 busy = spinCooldown;
 
     if (busy == 0 && (INPUT_PRESSED(in) & B_BUTTON)) {
+        /* `frames` is needed: inlined, a call moves */
         s32 frames;
 
         gAudioContext->PlaySfx(SFX_SPIN, 0x100);
@@ -450,6 +452,7 @@ void ActionCtrl::StateAirborne()
     KeyInput *pad = gInput;
     u32 in = gKeys.all;
     u8 contact = part->hitAxes;
+    /* `dir` is needed: inlined, the code is 2 instructions shorter */
     u8 dir = pad->GetDpadDirection();
     s32 state = this->state;
 
@@ -458,6 +461,7 @@ void ActionCtrl::StateAirborne()
 
         if (busy == 0 && (INPUT_PRESSED(in) & B_BUTTON) &&
             (u32)(state - ACTION_STATE_AIRBORNE_BODY_SLAM) > 1) {
+            /* `frames` is needed: inlined, the code is 2 instructions shorter */
             s32 frames;
 
             gAudioContext->PlaySfx(SFX_SPIN, 0x100);
@@ -682,6 +686,7 @@ void ActionCtrl::StateSlide()
         p->frame = frame;
         return;
     }
+    /* scoped: its own `p` (shared, the registers differ) */
     {
         Player *p = part;
 
@@ -816,6 +821,7 @@ void ActionCtrl::StateAirSpin()
     }
 
     s32 frame = ++this->frame;
+    /* `frames` is needed: inlined, the instructions are reordered */
     s32 frames = this->frames;
 
     p = part;
@@ -843,8 +849,10 @@ void ActionCtrl::StateAirSpin()
 void ActionCtrl::StateTornadoSpin()
 {
     u32 in;
+    /* `dir` is needed: inlined, the instructions differ */
     u8 dir;
 
+    /* `pad` is needed: inlined, the instructions are reordered */
     KeyInput *pad = gInput;
 
     in = gKeys.all;
@@ -877,6 +885,7 @@ void ActionCtrl::StateTornadoSpin()
  * is cancelled. Once the animation is done, crouching (animation 4). */
 void ActionCtrl::StateCrouchDown()
 {
+    /* `in` is needed: inlined, the code is 3 instructions shorter */
     u32 in;
     s32 fire;
 
@@ -1025,6 +1034,7 @@ void ActionCtrl::StateStandUp()
  * is done, crawling (animation 0), and the crawl state's method. */
 void ActionCtrl::StateCrawlStart()
 {
+    /* `in` is needed: inlined, the code is 3 instructions shorter */
     u32 in = gKeys.all;
 
     if ((INPUT_PRESSED(in) & A_BUTTON) != 0 && part->HasRoomForAnim(0xB) == 1) {

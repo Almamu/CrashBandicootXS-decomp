@@ -187,6 +187,7 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
                     if (gLevelState->maskLevel == MASK_LEVEL_NONE)
                         m = 0;
                     c = child;
+                    /* `cx`, `cy` are needed: inlined, the instructions differ */
                     cx = Q8_TO_INT(c->x);
                     cy = Q8_TO_INT(c->y);
                     m = c->mirrorFlags.mirrorX;
@@ -290,10 +291,12 @@ void Player::Draw()
     if (gLevelState->maskLevel == MASK_LEVEL_INVINCIBLE && !IsBlinking(this))
         gLevelState->SetMaskLevel(MASK_LEVEL_TWO);
 
+    /* `px` is needed: inlined, the instructions are reordered */
     s32 px = x;
 
     maskTrail[maskTrailIdx].x = px;
 
+    /* `py` is needed: inlined, the instructions are reordered */
     s32 py = y;
 
     maskTrail[maskTrailIdx].y = py;

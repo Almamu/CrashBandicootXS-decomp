@@ -32,6 +32,7 @@ static inline const struct hitbox_quad *AnimBox(const struct sprite_bank *bank, 
 u8 Player::HasRoomForAnim(s32 anim)
 {
     const struct hitbox_quad *box;
+    /* `h` is needed: inlined, the instructions differ */
     u8 h;
     struct vec2 pos;
     s32 origY;

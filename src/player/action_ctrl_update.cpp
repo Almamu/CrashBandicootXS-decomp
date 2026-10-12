@@ -40,6 +40,7 @@ static inline u32 KeysHeld(u32 in, u32 mask)
  * (`kind`: 0x13 spinning, 0x14 sliding, 0x15/0x16 body slamming, else 1). */
 void ActionCtrl::Update(MovingSprite *)
 {
+    /* `in` is needed: inlined, the instructions are reordered */
     u32 in = gKeys.all;
 
     if (slamBlocked != 0) {
@@ -53,6 +54,7 @@ void ActionCtrl::Update(MovingSprite *)
     prevSlippery = IsSlippery(part);
 
     Player *p = part;
+    /* `y` is needed: inlined, the code is 5 instructions shorter */
     s32 y = p->y;
 
     if (y > INT_TO_Q8(gLevelLayers->layer0->heightPx) - 0x1400) {
@@ -67,6 +69,7 @@ void ActionCtrl::Update(MovingSprite *)
         q->rampX.target = 0;
 
         Player *r = part;
+        /* `y2` is needed: inlined, the instructions are reordered */
         s32 y2 = r->y;
 
         if (y2 > INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x1400) {
@@ -78,6 +81,7 @@ void ActionCtrl::Update(MovingSprite *)
     if (spinCooldown)
         spinCooldown--;
     if (bumpTimer != 0) {
+        /* `count` is needed: inlined, the instructions differ */
         s32 count = part->listCount;
 
         if (count <= 1) {
@@ -85,6 +89,7 @@ void ActionCtrl::Update(MovingSprite *)
 
             if (left == 0) {
                 if (motionX == 0) {
+                    /* `entry` is needed: inlined, the code is 2 instructions shorter */
                     u8 entry = bumpedMotionX;
 
                     motionXKeepSpeed = left;
@@ -143,6 +148,7 @@ void ActionCtrl::Update(MovingSprite *)
  * whether it jumped. */
 u8 ActionCtrl::TryDoubleJump()
 {
+    /* `in` is needed: inlined, the code is 4 instructions shorter */
     u32 in = gKeys.all;
     u16 pressed;
     s32 one;

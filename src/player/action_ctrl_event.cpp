@@ -101,6 +101,7 @@ void ActionCtrl::HandleEvent(s32, s32 event, s32 arg)
             QueueNowY(0);
             to = part->FrameAnchor();
 
+            /* `d`, `y` are needed: inlined, the instructions are reordered */
             s32 d = to->y - from->y;
             s32 y = part->y;
 

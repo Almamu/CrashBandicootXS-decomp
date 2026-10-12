@@ -323,6 +323,7 @@ void ActionCtrl::StateHangMoveStart()
  * frame's anchor X (mirrored). */
 void ActionCtrl::StateHangMove()
 {
+    /* `dir` is needed: inlined, the code is 7 instructions shorter */
     u8 dir = gInput->GetDpadDirection();
     u32 in = gKeys.all;
     Player *p = part;
@@ -385,6 +386,7 @@ void ActionCtrl::StateHangMove()
         const struct sprite_frame *sf = part->GetFrame();
         const struct sprite_point *info;
         s32 x;
+        /* `y` is needed: inlined, the code is 3 instructions shorter */
         s32 y;
 
         switch (sf->pieces[0] >> 4) {
@@ -471,6 +473,7 @@ static inline s32 CollidableCount()
 void ActionCtrl::DoSuperBodySlamShockwave()
 {
     Player *p = part;
+    /* `range` is needed: inlined, the code is 6 instructions shorter */
     s32 range;
     s32 px;
     s32 py;
