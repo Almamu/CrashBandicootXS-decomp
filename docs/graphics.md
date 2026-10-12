@@ -1375,9 +1375,8 @@ bytes gbagfx did, checked on all 21 sheets of `graphics/intro/` and
 - the credits and VV logo sheets (`intro/68`-`75`) carry their real
   16-colour palettes (`intro/60`-`67`);
 - the two HUD fonts (`intro/00_5a4e70`, `00_5a551c`) and the level-select
-  cursor zoom (`tileset1/00`) have no fixed palette (OAM picks one at
-  run time), so they carry a grayscale placeholder that looks like the
-  old PNGs. See "Placeholder palettes" below.
+  cursor zoom (`tileset1/00`) carry the palette the game draws them with
+  by default (OAM picks it at run time). See "Run-time palettes" below.
 
 ### OBJ sheets
 
@@ -1420,7 +1419,7 @@ and grit then converts them as before:
 Any pixel outside the OBJs must be 0, so drawing there fails the build.
 `obj_sheet.py from-tiles` lays out a plain tile sheet again.
 
-### Placeholder palettes
+### Run-time palettes
 
 Three tile sheets have no palette of their own in the ROM:
 `gSmallFontTiles` (`graphics/intro/00_5a4e70_tiles.png`),
@@ -1432,10 +1431,17 @@ which `Font::SetPalette` sets and `Font::ResetPalette` points back at
 the palette-cache slot of sprite bank 35's palette (`src/text/font.cpp`),
 and the cursor zoom takes the palette of the cursor's sprite part
 (`oam.palette = part->palette`, `src/menus/level_select_cursor.cpp`).
-So no single ROM palette is "theirs".
+So no ROM palette is tied to them.
 
-Their PNGs are indexed with a 16-entry grayscale placeholder palette
-(index 0 white, index 15 black, as gbagfx drew them). Only the indices
-are built: grit `-gt -gB4 -p!` ignores the palette, so recolouring the
-placeholder changes nothing in the ROM. Edit these sheets by index,
-not by colour.
+Their PNGs carry the palette the game uses by default, taken from
+`gObjPalettes` (the 125 OBJ palettes at `0x084A4660`):
+- the fonts: `gObjPalettes[33]`, sprite bank 35's palette, which
+  `Font::ResetPalette` selects;
+- the cursor zoom: `gObjPalettes[102]`, the palette of the cursor's
+  sprite part.
+
+The game can still swap them at run time (`Font::SetPalette`, or another
+part palette), so this is how the sheets usually look, not the only
+way. Only the indices are built: grit `-gt -gB4 -p!` ignores the
+palette, so recolouring a sheet changes nothing in the ROM. Edit these
+sheets by index, not by colour.
