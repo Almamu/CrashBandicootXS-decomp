@@ -72,7 +72,7 @@ the appendix.
 | `08270F08`-`082B91D0` | 295,624 | level tile sets 4-5 | as tile sets 1-3 | high | **done** (grit) |
 | `082B91D0`-`082BF120` | 24,400 | per-room level data, 8 rooms | as block 1 | high | **done** (C) |
 | `082BF120`-`084A4660` | 1,987,904 | sprite tile pool for the 56 sprite banks | `sprite_renderer.cpp` (`GetSpriteTileBase` + frame offset) | high | **done** (grit) |
-| `084A4660`-`084A5600` | 4,000 | 125 OBJ palettes (`gObjPalettes`) | `InitLevelState`/`RunPauseMenu` palette cache, `GetPaletteSlot` | high | **done** (grit) |
+| `084A4660`-`084A5600` | 4,000 | 125 OBJ palettes (`gObjPalettes`) | `InitLevelState`/`RunPauseMenu` palette cache, `GetPaletteSlot` | high | **done** (JASC `.pal`) |
 | `084A5600`-`084C0006` | 109,062 | sprite-bank table ("master asset table"): header, 56 banks, 2,429 frames | `RunPauseMenu`, `InitLevelState`, every `**gSpriteBankSet` user | high | **converted** (C) |
 | `084C0006`-`0855BCB4` | 638,126 | GAX2 sound-effect data set: 88 instruments, 87 8-bit samples, sample table, the SFX voice handler type | `PlaySfx`/`GAX_fx_ex` voices via `GaxSongHeader.sfxTypes` (`StartSong`) | high | **converted** (`gax_audio.py --sfx`) |
 | `085A4C5C`-`086ECCD2` | 28,979 | 111 labels between the built intro/tileset1 LZ77 blobs: GAX2 tables and strings, libgcc `__clz_tab` x2, EEPROM tables, 23 intro palettes, 67 alignment pads | direct / slide packages | high | easy (the pads and palettes **done**) |
@@ -97,7 +97,7 @@ By category, as a share of the 8,038,172-byte data total:
 | Sprite-bank table | 109,062 | 1.36% | **converted** |
 | BG1 pictures (3) | 37,096 | 0.46% | medium |
 | `sub_effect_record` tables (7) | 23,224 | 0.29% | easy |
-| Other (125-tile pool, IWRAM image, pads, `u16[16]`) | 6,574 | 0.08% | easy/medium |
+| Other (125 OBJ palettes, IWRAM image, pads, `u16[16]`) | 6,574 | 0.08% | easy/medium |
 
 ### Findings that change earlier notes
 
@@ -293,8 +293,8 @@ Walking them:
 The full format (the object lists included) is in [levels.md](./levels.md).
 
 **Status: converted.** The blob is now five `src/data` objects
-(docs/data.md, "Raw tile pools"): the sprite banks, the 125 fixed tiles
-and the five tile sets are indexed PNGs built with grit
+(docs/data.md, "Raw tile pools"): the sprite banks and the five tile sets
+are indexed PNGs built with grit, the 125 OBJ palettes JASC `.pal` files
 (`graphics/sprites/`, `graphics/level_tilesets/`, extracted by
 `tools/tile_pools.py`), and `gLanguageSelectPalette3` is a C `u16[16]`. The
 two room-data blocks (`0824B638`, `082B91D0`) are typed C

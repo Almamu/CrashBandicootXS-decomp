@@ -298,7 +298,7 @@ The first batch (all pointer tables, all byte-exact):
 | `level_rooms_24b638.cpp` | `0x0824B638` | the level data of 33 rooms, generated from `data/levels/` (see "Level data") |
 | `level_tilesets_270f08.cpp` | `0x08270F08` | level BG tile sets 4-5 (grit) |
 | `level_rooms_2b91d0.cpp` | `0x082B91D0` | the level data of the other 8 rooms (same) |
-| `sprite_tiles_2bf120.cpp` | `0x082BF120` | the sprite tile pool (56 banks) and the 125 OBJ palettes (grit, stored as a tile PNG) |
+| `sprite_tiles_2bf120.cpp` | `0x082BF120` | the sprite tile pool (56 banks, grit) and the 125 OBJ palettes (JASC `.pal`) |
 | `sprite_banks_4a5600.cpp` | `0x084A5600` | the sprite-bank table header, 56 `struct sprite_bank`, banks 0-9 (see "Sprite banks" below) |
 | `sprite_banks_4b0ae0.cpp` | `0x084B0AE0` | sprite banks 10-21 |
 | `sprite_banks_4b414c.cpp` | `0x084B414C` | sprite banks 22-38 |
@@ -585,15 +585,29 @@ C (see "Level data").
 | `level_rooms_24b638.cpp` | room data, 33 rooms | `data/levels/` via `tools/levels.py` (see "Level data") |
 | `level_tilesets_270f08.cpp` | tile sets 4-5 | `graphics/level_tilesets/tileset{4,5}_*.png` |
 | `level_rooms_2b91d0.cpp` | room data, 8 rooms | same |
-| `sprite_tiles_2bf120.cpp` | 56 sprite banks, 125 OBJ palettes | `graphics/sprites/bankNN_*.png`, `tile_pool_4a4660.png` |
+| `sprite_tiles_2bf120.cpp` | 56 sprite banks, 125 OBJ palettes | `graphics/sprites/bankNN_*.png`, `graphics/sprites/palettes/NNN.pal` |
 
 - **Sprite banks.** The pool at `0x082BF120` has no header. Each of the 56
   banks of `gSpriteBankTable` owns one back-to-back range of it, in
   bank order. Each range becomes one `const u8 gStaticData_<addr>[]` and one
   4bpp PNG, `bankNN_<addr>.png`. The PNG is as wide as the bank's most
   common OBJ piece (at least 4 tiles), so with 1D OBJ mapping those pieces
-  read as sprites. The palette is a grayscale placeholder. Nothing ties a
-  bank to a palette: OAM picks one per actor at run time.
+  read as sprites. The palette is a grayscale placeholder for now, though
+  each animation names its palette (see "OBJ palettes").
+- **OBJ palettes.** `gObjPalettes` (`0x084A4660`, 4,000 bytes) is 125
+  16-colour palettes, the table header's `palettes`/`paletteCount`. An
+  animation's palette is `gObjPalettes[anim.paletteId]`
+  (`struct sprite_anim` +0x14): `GetPaletteSlot` copies it into a free
+  OBJ palette slot, and the slot goes into the OAM entries that draw the
+  animation's frames. Each palette is one JASC file,
+  `graphics/sprites/palettes/NNN.pal`, `NNN` being the `paletteId`;
+  `graphics.mk` builds each with `tools/jasc_pal.py` and concatenates them
+  in index order. None has bit 15 set. 98 of them are named by some
+  animation; 6, 14, 15, 20, 26, 31, 38-40, 42, 43, 63, 65, 66, 73, 90-94,
+  103, 104, 107, 108 and 111-113 are named by none. Most banks use their
+  own palettes; a few are shared (33 by banks 23, 35, 42, 44, 47 and 52;
+  49-53 by banks 32, 39, 43 and 53). This used to be
+  `tile_pool_4a4660.png`, read as "125 fixed OBJ tiles".
 - **Level tile sets.** These are tag-0x00 raw tagged assets: a
   `{size << 8}` word, then 8bpp tiles. `include/tagged_asset.h` gives each
   one a sized struct (`TAGGED_RAW_ASSET(n)`, `TAGGED_RAW_HEADER(n)`) whose
@@ -606,8 +620,8 @@ C (see "Level data").
   into the padding is caught.
 - **Room data** is decoded typed C now (see "Level data" below): an
   undecoded `.bin` copy wouldn't have counted as converted data.
-- `tools/tile_pools.py` extracts all of it from `baserom.gba` and prints the
-  `TILE_BYTES_*` lines. Its output is deterministic, and all 62 PNGs
+- `tools/tile_pools.py` extracts all of it from `baserom.gba` (the palettes
+  included) and prints the `TILE_BYTES_*` lines. Its output is deterministic, and all 62 PNGs
   round-trip through grit byte-exact.
 
 

@@ -22,8 +22,8 @@ extern "C" {
  * graphics/sprites/bankNN_<addr>.png via graphics.mk (grit -gt -gB4 -p!,
  * then tools/bin2c.py); tools/tile_pools.py extracted the PNGs. Each PNG is
  * as wide as the bank's most common OBJ piece, so with the 1D OBJ mapping
- * those pieces read correctly. Their palette is a grayscale placeholder:
- * OAM picks the palette per actor at run time, and no bank is tied to one.
+ * those pieces read correctly. Their palette is a grayscale placeholder,
+ * although each animation names its palette (sprite_anim.paletteId).
  * A part drawn in 8bpp mode (part flag 28) looks scrambled in this 4bpp
  * view, but round-trips all the same.
  */
@@ -311,9 +311,9 @@ extern const u8 gSpriteBank55Tiles[0x394c0] = {
 /* The 125 16-colour OBJ palettes (32 bytes each), the header's
  * palettes/paletteCount: InitLevelState and RunPauseMenu hand them to the
  * palette cache (SetPaletteCacheSource), and GetPaletteSlot copies palette
- * `paletteId` into a free OBJ palette slot. Still stored as a 4bpp tile PNG
- * (graphics/sprites/tile_pool_4a4660.png, one tile per palette); the bytes
- * are the same. */
+ * `paletteId` into a free OBJ palette slot. The sources are
+ * graphics/sprites/palettes/NNN.pal (JASC, NNN = paletteId), built with
+ * tools/jasc_pal.py and concatenated in index order (graphics.mk). */
 extern const u8 gObjPalettes[0xfa0] = {
-#include "sprites/tile_pool_4a4660.img.bin.inc"
+#include "sprites/obj_palettes.bin.inc"
 };
