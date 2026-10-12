@@ -371,6 +371,34 @@ the C is the source from then on.
   file starts with a word-aligned struct, and `tools/report_units.py`
   doesn't accept linker fill between objects.
 
+#### Sprite bank frames (`graphics/sprites/bankNN_<name>/`)
+
+The banks' art and pieces are not in the C. Each bank is a directory:
+- `fKKK.png`, one per frame: the frame with its pieces in place, a 4bpp
+  indexed PNG in the palette of the first animation that shows it.
+- `bank.json`, with one line per frame:
+  - `origin`;
+  - `pieces` (`["WxH", x, y]` each);
+  - `layout`, the high nibble of the first piece byte, which must match
+    the frame's struct type in the C;
+  - `tiles`, the tile source: `"own"`, or `{"frame": K, "tile": t}` for a
+    run shared with an earlier frame, with `"bank": B` for another bank;
+  - `palettes`, every palette id the frame is shown with, the first
+    being the PNG's.
+
+`tools/sprite_frames.py pack` builds:
+- the pool arrays (`gSpriteBankNNTiles`, `sprite_tiles_2bf120.cpp`);
+- the frames' `...Pos`/`...Pieces` arrays (`sprites/bankNN_pieces.inc`,
+  included at their place in `sprite_banks_*.cpp`);
+- `sprites/sprite_frames.h`, with the frames' tile offsets
+  (`SPRITE_TILES_BANKnn_FRAMEkkk`) and extern declarations.
+
+`extract` writes the directories from `baserom.gba`. When you edit a frame,
+the tiles it shares with other frames must stay the same in all of them,
+or the build fails. A frame shown with several palettes (43 of them) is
+drawn in the first, and the others are listed. docs/graphics.md, "Sprite
+banks (#914)", has the details.
+
 The category families' animation tables (`actor_anim.h`'s
 `gCategoryFamily0AnimTable`/`gCategoryFamily1AnimTable`) are C as well now, see
 "Category families" below.

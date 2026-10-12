@@ -1348,6 +1348,133 @@ calls the `+0x0C` field `palette_bank` (it was `header_byte`).
   character, the same way the original background/tileset scan worked -
   independent of and complementary to the code-tracing approach above.
 
+## Sprite banks (#914)
+
+The sprite banks (`gSpriteBankTable`, docs/data.md "Sprite banks") draw
+almost every moving thing in a level: Crash, the enemies, the bosses, the
+crates and pickups, the effects, and the level-select and HUD icons. Their
+art is the sprite tile pool (`0x082BF120`-`0x084A4660`, 1,987,904 bytes of
+raw 4bpp tiles), and their colours are the 125 OBJ palettes after it
+(`gObjPalettes`, `graphics/sprites/palettes/NNN.pal`).
+
+### Format
+
+A frame is a list of OBJ pieces, each an OBJ shape/size (8x8 to 64x64) and
+an x, y offset from the sprite's position, plus one run of tiles in the
+pool: the first piece's tiles, then the next piece's, each piece's tiles
+in 1D OBJ order (row by row). The renderer (`DrawPieces`,
+`DrawAffinePieces`) uploads the run and puts one OAM entry per piece.
+Each bank is a directory, `graphics/sprites/bankNN_<name>/`, with:
+
+- `fKKK.png` for frame KKK: the frame as the game draws it, every piece
+  in place. It is a 4bpp indexed PNG cropped to the pieces' bounding box.
+- `bank.json`, with one line per frame:
+
+  ```json
+  {"origin": [8, 4], "pieces": [["16x16", -8, -4], ["8x8", 8, -2]], "layout": 2, "tiles": "own", "palettes": [124]}
+  ```
+
+  - `origin` is the sprite's position in the PNG.
+  - `pieces` gives each piece's size and its offset from that position, in
+    piece order (the C's `...Pos` and `...Pieces` arrays).
+  - `layout` is the frame's layout type, the high nibble of its first
+    piece byte. It says which boxes and anchor follow the frame header in
+    the C, so it must match the frame's struct type there
+    (`include/sprite_bank.h`). The generated header declares each frame
+    with the struct of its layout, so a mismatch doesn't compile (except
+    for 2 against 5, which have the same struct).
+  - `tiles` says where the frame's tile run starts. `"own"` means new
+    tiles, after everything placed so far. `{"frame": K, "tile": t}` means
+    tile t of frame K's run, in an earlier frame of the bank. A run may
+    start inside another and go on past the end of the tiles placed so
+    far, and then the rest are new tiles. `{"bank": B, "frame": K,
+    "tile": t}` is the same in an earlier bank.
+  - `palettes` lists the palette ids of the animations that show the
+    frame, in animation order.
+
+The bank names come from the code that uses each bank
+(`gSpriteBankSet->Bank(n)`) and from what its frames show
+(`tools/sprite_frames.py`'s `BANK_NAMES` gives the evidence for each one).
+Bank 46, two frames of Crash's eyes open and shut, has no user in the
+code.
+
+In the ROM:
+- 2,162 frames have their own tiles.
+- 203 frames reuse another frame's exact run. 165 of them also have the
+  same pieces, so they are the same picture listed twice. The other 38
+  lay the same tiles out differently.
+- 62 frames start inside another frame's run.
+- 505 frames have overlapping pieces. Every overlapping pixel is the same
+  in both pieces, so a PNG holds the frame without loss.
+- 3 frames have no pieces and no PNG: bank 0's frame 440, bank 42's frame 5
+  and bank 47's frame 36. In the C each one borrows the next frame's
+  arrays with a count of 0. Their tile offset is bank 0's frame 441,
+  which is how bank 42 and bank 47 come to point into bank 0.
+
+### Tool and build
+
+`tools/sprite_frames.py extract` writes the 56 directories from
+`baserom.gba` and checks that packing them gives the ROM's pool and every
+frame's offset. `tools/sprite_frames.py pack OUTDIR` is the build step
+(`graphics.mk`, one run for all banks, since a bank's position depends on
+the size of every bank before it). It reads the PNG indices (the palette
+is ignored), cuts each piece's rectangle into tiles, and places the runs
+frame by frame. It writes:
+- `bankNN_tiles.inc`, the bytes of `gSpriteBankNNTiles`
+  (`src/data/sprite_tiles_2bf120.cpp`);
+- `bankNN_pieces.inc`, the frames' `...Pos` and `...Pieces` arrays, which
+  `src/data/sprite_banks_*.cpp` include where the ROM has them;
+- `sprite_frames.h`, with `SPRITE_TILES_BANKnn` (the bank's offset in the
+  pool), `SPRITE_TILES_BANKnn_SIZE`, `SPRITE_TILES_BANKnn_FRAMEkkk` (the
+  frame's tile offset, used by the frame headers in the C), and the
+  frames' and their arrays' extern declarations.
+
+The pieces and positions are only in `bank.json`, and the C is generated
+from it. The other choice was to keep the arrays in the C and have pack
+check `bank.json` against them, but then every piece would be written in
+two places. As it is, a frame's picture and layout are together, and the
+C keeps what isn't pixels: the animations, the frame headers with their
+boxes and anchors, and the tables. The C reads the same apart from
+`SPRITE_TILES_BANKnn_FRAMEkkk` in place of `SPRITE_TILES_BANKnn + offset`,
+and an `#include` where the piece arrays were.
+
+`tools/sprite_banks.py` (which extracted the C) writes the same C as is
+committed, and checks that the generated arrays sit where the ROM has them.
+
+### Editing a frame
+
+- **Redraw** `fKKK.png` with any editor that keeps indexed colour, using
+  indices 0-15 (0 is transparent). Only pixels inside a piece are built:
+  a pixel drawn outside every piece fails the build with its position.
+- **Shared tiles stay consistent.** If the frame shares tiles (`tiles` is
+  a reference, or a later frame refers to this one), each shared tile is
+  built once. Every frame that uses it has to show the same pixels, and
+  pack fails otherwise, naming the frame and the tile. To change one
+  frame without the others, give it its own tiles: set `"tiles": "own"`.
+  Its tiles then go after the ones placed so far, the rest of the bank and
+  every later bank move, and the generated offsets follow. Later frames
+  that refer to this one now share its new tiles.
+- **Overlapping pieces.** Where two pieces overlap, both read the same
+  pixels from the PNG, so they stay identical.
+- **Moving, resizing or adding pieces:** edit `pieces` (and `origin`, if
+  the bounding box changes), and draw the PNG to match. A piece must be
+  inside the PNG. Adding a piece adds its tiles to the frame's run, so a
+  frame with a shared run usually needs `"own"` too. Changing `layout`
+  means changing the frame's struct type and its boxes in the C.
+
+### Frames shown with several palettes
+
+The palette comes from the animation, not the frame:
+`gObjPalettes[anim.paletteId]` (`sprite_anim` +0x14). 43 frames appear in
+animations with different palettes. These are mostly the icons (bank 47),
+the sparkles (43), the gems (32) and the trial icons (33): each is one
+shape in several colours. Such a frame's PNG is drawn with
+the first one in `palettes` (the first animation that shows it), and the
+others are listed after it. The PNG's palette is only for viewing. To
+see the frame in another of its palettes, load
+`graphics/sprites/palettes/NNN.pal` into the image. The indices don't
+change.
+
 ## Tile sheets with their palettes (#914)
 
 ### Level BG tile sets
