@@ -1274,3 +1274,44 @@ looked at this specific folder yet".
   character, the same way the original background/tileset scan worked -
   independent of and complementary to the code-tracing approach above.
 
+## Tile sheets with their palettes (#914)
+
+### Level BG tile sets
+
+The six 4bpp tile sets of the level BG1-3 layers (`gSnowBgTiles`,
+`gJungleBgTiles`, `gTempleBgTiles`, `gSewerBgTiles`, `gSpaceBgTiles`,
+`gUnderwaterBgTiles`) are `graphics/level_bg_tiles/<addr>_<theme>.png`.
+They used to be `graphics/tileset1/21`-`26`: two grayscale PNGs and four
+raw `.bin` files.
+
+Each PNG is 16 tiles wide and drawn in its real colours. A 4bpp tile has
+no palette of its own: the map entry picks a 16-colour bank of the
+room's 256-colour BG palette. So the PNG is 8bpp indexed with the
+palette of the room that uses the set most, and each tile is drawn in
+the bank the rooms' maps use it with most (index = bank * 16 + pixel),
+like the category backgrounds. Every tile of all six sets is used by
+some map.
+
+The build (`graphics.mk`):
+- grit `-gt -gB4` keeps each index's low nibble;
+- `tools/bin2c.py --size N --bin` trims the blank tiles that pad the last
+  row (`LEVEL_BG_TILE_BYTES_*`; trimmed bytes must be zero);
+- gbagfx compresses, and `data/data.s` incbins the result.
+
+`tools/levels.py render` reads these PNGs, masking the index to 4 bits.
+
+When you edit a set, keep each tile's pixels within one bank. Only the
+low nibble is built, so colouring a tile from another bank changes
+nothing in game; the map's bank decides the colours there.
+
+### Indexed tile PNGs
+
+The remaining 4bpp tile PNGs that gbagfx had written as grayscale are
+indexed (`P` mode) PNGs now, with the same indices, so gbagfx builds the
+same bytes:
+- the credits and VV logo sheets (`intro/68`-`75`) carry their real
+  16-colour palettes (`intro/60`-`67`);
+- the two HUD fonts (`intro/00_5a4e70`, `00_5a551c`) and the level-select
+  cursor zoom (`tileset1/00`) have no fixed palette (OAM picks one at
+  run time), so they carry a grayscale placeholder that looks like the
+  old PNGs.

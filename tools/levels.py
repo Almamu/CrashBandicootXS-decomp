@@ -515,31 +515,24 @@ def region_c(region_name, out_path):
 
 def find_tileset(symbol):
     """A layer's tile set as a list of 64-pixel tiles (colour indices),
-    read from its source: graphics/level_tilesets/*.png (8bpp, indexed),
-    graphics/tileset1/21-22 (4bpp PNGs, gbagfx grayscale: index = 15 -
-    gray / 17) or graphics/tileset1/23-26 (raw 4bpp tiles)."""
+    read from its source: graphics/level_tilesets/*.png (BG0, 8bpp) or
+    graphics/level_bg_tiles/*.png (BG1-3, 4bpp; drawn in palette banks,
+    so only the low nibble of an index is the pixel)."""
     from PIL import Image
 
     named = {n: a for a, n in TILESET_SYMBOLS.items()}
     addr = "%06x" % (named[symbol] & 0xFFFFFF) if symbol in named else symbol[-6:].lower()
-    for pat in ("graphics/level_tilesets/*_%s.png", "graphics/tileset1/*_%s_tiles.png"):
+    for pat, mask in (("graphics/level_tilesets/*_%s.png", 0xFF), ("graphics/level_bg_tiles/%s_*.png", 0x0F)):
         hits = sorted(Path(".").glob(pat % addr))
         if hits:
             im = Image.open(hits[0])
             px = im.load()
-            gray = im.mode == "L"
             tw = im.size[0] // 8
             tiles = []
             for t in range(tw * (im.size[1] // 8)):
                 tx, ty = t % tw * 8, t // tw * 8
-                tiles.append([15 - px[tx + x, ty + y] // 17 if gray else px[tx + x, ty + y]
-                              for y in range(8) for x in range(8)])
+                tiles.append([px[tx + x, ty + y] & mask for y in range(8) for x in range(8)])
             return tiles
-    hits = sorted(Path(".").glob("graphics/tileset1/*_%s.bin" % addr))
-    if hits:
-        data = hits[0].read_bytes()
-        return [[data[t * 32 + i // 2] >> 4 * (i & 1) & 0xF for i in range(64)]
-                for t in range(len(data) // 32)]
     sys.exit("no tile set source for %s" % symbol)
 
 

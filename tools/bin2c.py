@@ -4,7 +4,7 @@ separated hex bytes), for a src/data/*.c file to `#include` inside its own
 `const u8 gFoo[] = { ... };`. The declaration (name, type, comment) stays in
 the hand-written .c file; only the bytes are generated.
 
-    tools/bin2c.py IN OUT [--lz | --size N] [--u16]
+    tools/bin2c.py IN OUT [--lz | --size N] [--u16 | --bin]
 
 --lz: IN is a GBA LZ77 stream (tag 0x10). gbagfx pads its output to a
 multiple of 4 bytes, but the ROM's streams are packed back to back with no
@@ -18,6 +18,10 @@ the padding is trimmed again, and it too must be all zero.
 
 --u16: write little-endian halfwords instead of bytes, for a `u16` array
 (a grit `-p -ftb` palette, say). Applies after --lz/--size trimming.
+
+--bin: write the trimmed bytes as a binary file instead of C text, for an
+asset data/data.s still incbins (the level BG tile sets: --size trims the
+PNG's padding before gbagfx compresses them).
 """
 import sys
 
@@ -49,7 +53,8 @@ def main():
     args = sys.argv[1:]
     lz = "--lz" in args
     u16 = "--u16" in args
-    args = [a for a in args if a not in ("--lz", "--u16")]
+    raw = "--bin" in args
+    args = [a for a in args if a not in ("--lz", "--u16", "--bin")]
     size = None
     if "--size" in args:
         i = args.index("--size")
@@ -71,6 +76,11 @@ def main():
         if any(data[end:]):
             sys.exit(f"bin2c: {args[0]}: non-zero bytes after the LZ77 stream")
         data = data[:end]
+    if raw:
+        if u16:
+            sys.exit(__doc__)
+        open(args[1], "wb").write(data)
+        return
     lines = []
     if u16:
         if len(data) % 2:
