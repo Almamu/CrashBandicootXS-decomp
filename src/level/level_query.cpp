@@ -240,9 +240,8 @@ bool LevelHasGemPathGemEntity(s32 idx)
 s32 CountRoomCrates(const struct level_room *item)
 {
     s32 v = 0;
-    s32 type = item->kind;
 
-    switch (type) {
+    switch (item->kind) {
     case ROOM_KIND_ON_FOOT:
     case ROOM_KIND_UNDERWATER:
     case ROOM_KIND_HOVER:

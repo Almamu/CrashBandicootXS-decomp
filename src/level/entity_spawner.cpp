@@ -56,29 +56,25 @@ MovingSprite *EntitySpawner::LaunchEffectPart(s32 anim, s32 tag, s32 margin, s32
     MovingSprite *part;
     s32 w1, w2, dist, x;
 
-    {
-        s32 x0 = Q8_TO_INT(src->x);
-        s32 y0 = Q8_TO_INT(src->y);
-        s32 m = src->mirrorFlags.mirrorX;
+    s32 x0 = Q8_TO_INT(src->x);
+    s32 y0 = Q8_TO_INT(src->y);
+    s32 m = src->mirrorFlags.mirrorX;
 
-        part = SpawnEffectPart(anim, tag, x0, y0, m);
-    }
-    {
-        struct aabb a = part->GetAnimHitbox();
+    part = SpawnEffectPart(anim, tag, x0, y0, m);
 
-        w1 = a.w;
-        w2 = src->GetAnimHitbox().w;
-    }
+    struct aabb a = part->GetAnimHitbox();
+
+    w1 = a.w;
+    w2 = src->GetAnimHitbox().w;
     dist = w1 / 2 + w2 / 2 + margin;
-    {
-        s32 ox = Q8_TO_INT(part->x);
-        s32 y;
 
-        x = part->mirrorBits.flipX < 0 ? ox - dist : ox + dist;
-        y = Q8_TO_INT(part->y) + z;
-        part->x = INT_TO_Q8(x);
-        part->y = INT_TO_Q8(y);
-    }
+    s32 ox = Q8_TO_INT(part->x);
+    s32 y;
+
+    x = part->mirrorBits.flipX < 0 ? ox - dist : ox + dist;
+    y = Q8_TO_INT(part->y) + z;
+    part->x = INT_TO_Q8(x);
+    part->y = INT_TO_Q8(y);
     if (part->mirrorBits.flipX < 0)
         SetVel(part, -speed, 0x40);
     else

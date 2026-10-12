@@ -44,12 +44,10 @@ void BgLayerBase::ClampScrollMax(s32 *pos)
     LIMIT_MAX(a, pos[0]);
     pos[0] = a;
 
-    {
-        s32 b = maxY;
+    s32 b = maxY;
 
-        LIMIT_MAX(b, pos[1]);
-        pos[1] = b;
-    }
+    LIMIT_MAX(b, pos[1]);
+    pos[1] = b;
 }
 
 /* Applies the layer's per-axis scale (`scaleX`/`scaleY`) to `vec`,

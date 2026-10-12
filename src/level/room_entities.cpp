@@ -120,144 +120,140 @@ void LevelEntityFlags::SpawnRoomEntities(const struct level_entity_list *list,
     n = links->count;
     lk = links->links;
 
-    {
-        for (i = gCrateList->count - 1; i >= 0; i--) {
-            Crate *actor = Slot(i);
-            u16 id = actor->id;
-            s32 j;
+    for (i = gCrateList->count - 1; i >= 0; i--) {
+        Crate *actor = Slot(i);
+        u16 id = actor->id;
+        s32 j;
 
-            for (j = 0; j < n; j++) {
-                if (id == lk[j].from) {
-                    s32 done = 0;
-                    s32 to = lk[j].to;
+        for (j = 0; j < n; j++) {
+            if (id == lk[j].from) {
+                s32 done = 0;
+                s32 to = lk[j].to;
 
-                    do {
-                        s32 k;
-                        s32 missing;
-                        s32 m;
+                do {
+                    s32 k;
+                    s32 missing;
+                    s32 m;
 
-                        for (k = gCrateList->count - 1; k >= 0; k--) {
-                            Crate *other = Slot(k);
+                    for (k = gCrateList->count - 1; k >= 0; k--) {
+                        Crate *other = Slot(k);
 
-                            if (to == other->id) {
-                                actor->SetAbove(other);
-                                other->SetBelow(actor);
-                                done = 1;
+                        if (to == other->id) {
+                            actor->SetAbove(other);
+                            other->SetBelow(actor);
+                            done = 1;
+                            break;
+                        }
+                    }
+                    if (!done) {
+                        missing = 1;
+                        for (m = 0; m < n; m++) {
+                            if (to == lk[m].from) {
+                                to = lk[m].to;
+                                missing = 0;
                                 break;
                             }
                         }
-                        if (!done) {
-                            missing = 1;
-                            for (m = 0; m < n; m++) {
-                                if (to == lk[m].from) {
-                                    to = lk[m].to;
-                                    missing = 0;
-                                    break;
-                                }
-                            }
-                            if (missing)
-                                done = 1;
-                        }
-                    } while (!done);
-                    break;
-                }
+                        if (missing)
+                            done = 1;
+                    }
+                } while (!done);
+                break;
             }
         }
     }
 
-    {
-        s32 j;
+    s32 j;
 
-        for (j = 0; j < n; j++) {
-            u16 from = lk[j].from;
-            s32 found = 0;
-            s32 k;
-            s32 k2;
-            s32 k3;
-            Crate *actor;
-            s32 to;
-            s32 missing;
-            s32 next;
-            s32 got;
-            s32 m;
-            /* The crate id of the first and second searches, one variable
-             * for both: the ROM keeps the second search's slot pointer in
-             * r0 and the id in r1. A variable used in one basic block only
-             * is local-alloc's, which runs before global-alloc and gives it
-             * r0 ahead of the strength-reduced slot pointer (a global
-             * pseudo); used in two loops it is global-alloc's too, and the
-             * pointer outranks it (#662 round 3, found with the -dl/-dg
-             * dumps; it was pinned to r1). */
-            u16 aid;
+    for (j = 0; j < n; j++) {
+        u16 from = lk[j].from;
+        s32 found = 0;
+        s32 k;
+        s32 k2;
+        s32 k3;
+        Crate *actor;
+        s32 to;
+        s32 missing;
+        s32 next;
+        s32 got;
+        s32 m;
+        /* The crate id of the first and second searches, one variable
+         * for both: the ROM keeps the second search's slot pointer in
+         * r0 and the id in r1. A variable used in one basic block only
+         * is local-alloc's, which runs before global-alloc and gives it
+         * r0 ahead of the strength-reduced slot pointer (a global
+         * pseudo); used in two loops it is global-alloc's too, and the
+         * pointer outranks it (#662 round 3, found with the -dl/-dg
+         * dumps; it was pinned to r1). */
+        u16 aid;
 
-            for (k = 0; k < gCrateList->count; k++) {
-                aid = Slot(k)->id;
-                if (aid == from) {
-                    found = 1;
-                    goto chk;
-                }
+        for (k = 0; k < gCrateList->count; k++) {
+            aid = Slot(k)->id;
+            if (aid == from) {
+                found = 1;
+                goto chk;
             }
-        chk:
-            if (found)
-                continue;
+        }
+    chk:
+        if (found)
+            continue;
 
-            to = (u16)lk[j].to;
-            actor = 0;
-            got = 0;
-            for (;;) {
-                missing = 1;
-                next = 0;
-                m = 0;
-                if (n > 0)
-                    do {
-                        if (to == lk[m].from) {
-                            missing = 0;
-                            next = (u16)lk[m].to;
-                            for (k2 = 0; k2 < gCrateList->count; k2++) {
-                                actor = Slot(k2);
-                                aid = actor->id;
-                                if (aid == to) {
-                                    got = 1;
-                                    goto t1;
-                                }
+        to = (u16)lk[j].to;
+        actor = 0;
+        got = 0;
+        for (;;) {
+            missing = 1;
+            next = 0;
+            m = 0;
+            if (n > 0)
+                do {
+                    if (to == lk[m].from) {
+                        missing = 0;
+                        next = (u16)lk[m].to;
+                        for (k2 = 0; k2 < gCrateList->count; k2++) {
+                            actor = Slot(k2);
+                            aid = actor->id;
+                            if (aid == to) {
+                                got = 1;
+                                goto t1;
                             }
-                            goto t1;
                         }
-                    } while (++m < n);
-            t1:
-                if (got)
-                    goto move;
-                if (missing) {
-                    for (k3 = 0; k3 < gCrateList->count; k3++) {
-                        Crate *a = Slot(k3);
+                        goto t1;
+                    }
+                } while (++m < n);
+        t1:
+            if (got)
+                goto move;
+            if (missing) {
+                for (k3 = 0; k3 < gCrateList->count; k3++) {
+                    Crate *a = Slot(k3);
 
-                        if (a->id == to) {
-                            actor = a;
-                            got = 1;
-                            goto t2;
-                        }
+                    if (a->id == to) {
+                        actor = a;
+                        got = 1;
+                        goto t2;
                     }
                 }
-            t2:
-                if (got)
-                    goto move;
-                if (missing)
-                    break;
-                to = next;
             }
-        move:
-            if (got && actor != 0) {
-                s32 lift = INT_TO_Q8(actor->GetBounds()->h + 1);
-                struct vec2 p;
-                struct vec2 *pp = &p;
+        t2:
+            if (got)
+                goto move;
+            if (missing)
+                break;
+            to = next;
+        }
+    move:
+        if (got && actor != 0) {
+            s32 lift = INT_TO_Q8(actor->GetBounds()->h + 1);
+            struct vec2 p;
+            struct vec2 *pp = &p;
 
-                do {
-                    p.x = actor->x;
-                    pp->y = actor->y + lift;
-                    SetEntityPos(actor, p.x, pp->y);
-                    actor = actor->GetAbove();
-                } while (actor != 0);
-            }
+            do {
+                p.x = actor->x;
+                pp->y = actor->y + lift;
+                SetEntityPos(actor, p.x, pp->y);
+                actor = actor->GetAbove();
+            } while (actor != 0);
         }
     }
 }

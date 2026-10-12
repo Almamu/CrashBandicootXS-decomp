@@ -21,9 +21,7 @@ u16 TileCache::GetCell(s32 x, s32 y)
     s32 tileX = x >> 4;
     s32 tileY = y >> 3;
     const struct level_layer_desc *src = source;
-    s32 tileIdx = tileY * width + tileX;
-    u16 recordId = src->chunkGrid[tileIdx];
-    u16 *cache = (u16 *)GetChunk(recordId);
+    u16 *cache = (u16 *)GetChunk(src->chunkGrid[tileY * width + tileX]);
     s32 my = y & 7;
     s32 mx = x & 0xf;
 

@@ -96,12 +96,10 @@ void BgStreamer::DecodeChunk(s32 recordId, u16 *dest)
             do {
                 u16 pair = *src++;
 
-                {
-                    s32 lo = pair << 24;
-                    s32 a = acc;
+                s32 lo = pair << 24;
+                s32 a = acc;
 
-                    acc = a + (lo >> 24);
-                }
+                acc = a + (lo >> 24);
                 RING_CELL(out, written) = acc;
                 written++;
                 {
@@ -181,17 +179,13 @@ u16 *BgStreamer::GetColumn(s32 x, s32 y, s32 *rowOut)
 {
     s32 col = x - tileX * 16;
     s32 row = y - tileY * 8;
-    u8 sx;
-    u8 sy;
     s32 shifted;
     u16 *base;
     u16 *ret;
 
-    sx = subX;
-    shifted = sx * 16;
+    shifted = subX * 16;
     col += shifted;
-    sy = subY;
-    shifted = sy * 8;
+    shifted = subY * 8;
     row += shifted;
     col &= 0x3f;
     row &= 0x1f;
@@ -209,17 +203,13 @@ u16 *BgStreamer::GetRow(s32 x, s32 y, s32 *colOut)
 {
     s32 col = x - tileX * 16;
     s32 row = y - tileY * 8;
-    u8 sx;
-    u8 sy;
     s32 shifted;
     u16 *base;
     u16 *ret;
 
-    sx = subX;
-    shifted = sx * 16;
+    shifted = subX * 16;
     col += shifted;
-    sy = subY;
-    shifted = sy * 8;
+    shifted = subY * 8;
     row += shifted;
     col &= 0x3f;
     row &= 0x1f;
@@ -236,17 +226,13 @@ u16 BgStreamer::GetCell(s32 x, s32 y)
 {
     s32 col = x - tileX * 16;
     s32 row = y - tileY * 8;
-    u8 sx;
-    u8 sy;
     s32 shifted;
     u16 *base;
     s32 idx;
 
-    sx = subX;
-    shifted = sx * 16;
+    shifted = subX * 16;
     col += shifted;
-    sy = subY;
-    shifted = sy * 8;
+    shifted = subY * 8;
     row += shifted;
     col &= 0x3f;
     row &= 0x1f;
@@ -386,9 +372,8 @@ s32 BgStreamer::GetWidth()
 void BgStreamer::SetSize(const s32 *size)
 {
     s32 h = size[1];
-    s32 w = size[0];
 
-    widthTiles = w;
+    widthTiles = size[0];
     heightTiles = h;
 }
 

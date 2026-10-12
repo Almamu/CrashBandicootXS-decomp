@@ -104,47 +104,41 @@ void CreateEntitySpawner(void)
  * operator new, IwramAlloc: include/audio.hpp). */
 LevelState::LevelState()
 {
-    {
-        AudioContext **audio = &gAudioContext;
+    AudioContext **audio = &gAudioContext;
 
-        *audio = new AudioContext;
-        EnableMusicVCountIrq();
-        (*audio)->SetSfxVolume(0xc0);
-        (*audio)->SetMusicVolume(0xc0);
-    }
+    *audio = new AudioContext;
+    EnableMusicVCountIrq();
+    (*audio)->SetSfxVolume(0xc0);
+    (*audio)->SetMusicVolume(0xc0);
     gSpriteRenderer = new SpriteRenderer;
-    {
-        SpriteBankSet *banks;
 
-        gSpriteBankSet = (banks = new SpriteBankSet);
-        banks->table = &gSpriteBankTable;
-    }
-    {
-        PaletteCache *cache;
+    SpriteBankSet *banks;
 
-        gPaletteCache = (cache = new PaletteCache);
-        cache->SetSource(gSpriteBankTable.paletteCount, gSpriteBankTable.palettes);
-    }
-    {
-        Font **font = &gSmallFont;
+    gSpriteBankSet = (banks = new SpriteBankSet);
+    banks->table = &gSpriteBankTable;
 
-        *font = new SmallFont;
-        font = &gLargeFont;
-        *font = new LargeFont;
-    }
+    PaletteCache *cache;
+
+    gPaletteCache = (cache = new PaletteCache);
+    cache->SetSource(gSpriteBankTable.paletteCount, gSpriteBankTable.palettes);
+
+    Font **font = &gSmallFont;
+
+    *font = new SmallFont;
+    font = &gLargeFont;
+    *font = new LargeFont;
     AllocVramDmaQueue();
     gOamBuffer = new OamBuffer;
     gObjVramCursor = new ObjVramCursor(0);
     gInput = new KeyInput;
     gEntityFlags = new LevelEntityFlags;
     gPaletteCycles = new PaletteCycles;
-    {
-        u16 *dispcnt = &gDispcnt.raw;
-        u16 zero = 0;
 
-        *dispcnt = zero;
-        SetObjMapping1D();
-        CommitDispcnt();
-        unusedFlags = zero;
-    }
+    u16 *dispcnt = &gDispcnt.raw;
+    u16 zero = 0;
+
+    *dispcnt = zero;
+    SetObjMapping1D();
+    CommitDispcnt();
+    unusedFlags = zero;
 }

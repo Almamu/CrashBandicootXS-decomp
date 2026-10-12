@@ -53,15 +53,14 @@ void *TileCache::GetChunk(s32 recordId)
         return buf[14];
     if (recordId == id[15])
         return buf[15];
-    {
-        s32 slot = (nextSlot + 15) & 0xf;
-        u8 *dest = buf[slot];
 
-        DecodeChunk(recordId, dest);
-        id[slot] = recordId;
-        nextSlot = (nextSlot + 1) & 0xf;
-        return dest;
-    }
+    s32 slot = (nextSlot + 15) & 0xf;
+    u8 *dest = buf[slot];
+
+    DecodeChunk(recordId, dest);
+    id[slot] = recordId;
+    nextSlot = (nextSlot + 1) & 0xf;
+    return dest;
 }
 
 /* The terrain-property row (36 bytes, gTerrainHeights0) for the cell at
@@ -255,12 +254,10 @@ void TileCache::DecodeChunk(s32 recordId, void *dest)
             do {
                 u16 pair = *src++;
 
-                {
-                    s32 lo = pair << 24;
-                    s32 a = acc;
+                s32 lo = pair << 24;
+                s32 a = acc;
 
-                    acc = a + (lo >> 24);
-                }
+                acc = a + (lo >> 24);
                 out[written++] = acc;
                 {
                     s32 hi = pair << 16;

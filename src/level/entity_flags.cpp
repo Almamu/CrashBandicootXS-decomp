@@ -89,9 +89,8 @@ void LevelEntityFlags::SetGone(s32 n)
 bool LevelEntityFlags::IsGone(s32 n)
 {
     s32 result = 0;
-    s32 word = n / 32;
 
-    if (bits0[word] & (1 << (n % 32))) {
+    if (bits0[n / 32] & (1 << (n % 32))) {
         result = 1;
     }
     return result;
@@ -102,9 +101,8 @@ bool LevelEntityFlags::IsGone(s32 n)
 bool LevelEntityFlags::IsActivated(s32 n)
 {
     s32 result = 0;
-    s32 word = n / 32;
 
-    if (bits1[word] & (1 << (n % 32))) {
+    if (bits1[n / 32] & (1 << (n % 32))) {
         result = 1;
     }
     return result;
@@ -136,9 +134,7 @@ void LevelEntityFlags::SetActivated(s32 n)
  * switch itself and the outline crates it makes solid). */
 void LevelEntityFlags::MarkActivated(s32 n)
 {
-    s32 word = n / 32;
-
-    bits1Copy[word] |= 1 << (n % 32);
+    bits1Copy[n / 32] |= 1 << (n % 32);
 }
 
 /* UNUSED - no caller anywhere in the ROM (checked src/ and asm/). Stores

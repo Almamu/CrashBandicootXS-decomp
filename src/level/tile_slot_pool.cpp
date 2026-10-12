@@ -78,16 +78,15 @@ u16 TileSlotPool::Acquire(u16 tile)
     u16 slot;
 
     ref.raw = tile;
-    {
-        s32 id = ref.bits.id;
 
-        if (slotForTile[id] != TILE_SLOT_NONE)
-            slot = GetSlot(id);
-        else {
-            slot = PopFreeSlot();
-            SetSlot(id, slot);
-            Upload(id, slot);
-        }
+    s32 id = ref.bits.id;
+
+    if (slotForTile[id] != TILE_SLOT_NONE)
+        slot = GetSlot(id);
+    else {
+        slot = PopFreeSlot();
+        SetSlot(id, slot);
+        Upload(id, slot);
     }
     refCount[slot]++;
     out.raw = slot;

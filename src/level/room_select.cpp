@@ -27,10 +27,9 @@ extern "C" {
  * is only byte-wide (see e.g. src/player/action_ctrl_moves.cpp). */
 void LevelProgress::PlayRoomMusic()
 {
-    s32 mode = gLevelState->maskLevel;
     u32 id;
 
-    if (mode == MASK_LEVEL_INVINCIBLE) {
+    if (gLevelState->maskLevel == MASK_LEVEL_INVINCIBLE) {
         id = SONG_DRUMS;
     } else if (IsInBonusRoom() != 0) {
         id = SONG_BONUS_ROUND;
@@ -90,13 +89,10 @@ bool LevelProgress::SelectRoom()
     const struct level_room_list *list = gLevelTable[level].rooms;
 
     if (list->count != 0) {
-        s32 cur = roomIndex;
-
-        cat = list->rooms[cur];
+        cat = list->rooms[roomIndex];
     }
-    {
-        s32 v = list->count;
 
-        return (u32)(-v | v) >> 31;
-    }
+    s32 v = list->count;
+
+    return (u32)(-v | v) >> 31;
 }

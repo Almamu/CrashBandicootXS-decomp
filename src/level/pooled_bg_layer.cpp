@@ -111,9 +111,7 @@ void PooledBgLayer::DrawRow(s32 row)
     s32 c;
 
     for (c = colLo; c <= colHi; c++) {
-        s32 i = WrapColumn(c);
-
-        dst[i] = pool->Acquire(src[srcCol++]);
+        dst[WrapColumn(c)] = pool->Acquire(src[srcCol++]);
         srcCol &= 0x3F;
     }
 }

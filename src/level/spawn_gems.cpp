@@ -72,11 +72,9 @@ void SpawnCrateGem(u32 id, u16 x, u16 y, u16 param)
         part->kind = type;
         TouchableList()->Add(part);
 
-        {
-            MovingSprite *p = gEntitySpawner->SpawnEffectPart(0x2B, 2, x, y, bit);
-            p->mirrorBits.gfxMode = OAM_OBJ_MODE_SEMI_TRANSPARENT;
-            p->f.b.visible = 0;
-        }
+        MovingSprite *p = gEntitySpawner->SpawnEffectPart(0x2B, 2, x, y, bit);
+        p->mirrorBits.gfxMode = OAM_OBJ_MODE_SEMI_TRANSPARENT;
+        p->f.b.visible = 0;
     }
 }
 
