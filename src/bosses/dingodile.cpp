@@ -195,11 +195,10 @@ void DingodileCtrl::Update(MovingSprite *part)
             n = 8;
             CLAMP_INDEX(n, part->bank->anims[part->tag].frameCount);
             part->frame = n;
-            {
-                s32 v = part->mirrorBits.flipX;
 
-                part->mirrorBits.flipX = v ? 0 : 1;
-            }
+            s32 v = part->mirrorBits.flipX;
+
+            part->mirrorBits.flipX = v ? 0 : 1;
             if (prev == DINGODILE_STATE_TURN) {
                 if (passes == 0) {
                     timer = 0x73;

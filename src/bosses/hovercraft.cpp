@@ -35,7 +35,6 @@ extern "C" {
  * a volatile cast (#662 round 2). */
 void Hovercraft::UpdateHitFlash(void)
 {
-    const u16 *src;
     u16 *dst;
     s32 i;
 
@@ -43,22 +42,20 @@ void Hovercraft::UpdateHitFlash(void)
         return;
 
     hitFlashTimer += 1;
-    {
-        s32 three = 3;
 
-        if ((three & hitFlashTimer) == 0)
-            hitFlashOn ^= 1;
-    }
+    s32 three = 3;
+
+    if ((three & hitFlashTimer) == 0)
+        hitFlashOn ^= 1;
     if (hitFlashTimer > 0xb)
         hitFlashTimer = 0;
 
-    src = palette;
     dst = BG_PALETTE(1);
     for (i = 0; i < 16; i++) {
         if (hitFlashOn != 0)
             dst[i] = RGB_WHITE;
         else
-            dst[i] = src[i];
+            dst[i] = palette[i];
     }
 }
 
@@ -149,14 +146,13 @@ void Hovercraft::StateCloseIn(void)
 
         if ((orbitRadius += 0x180) > 0x8000)
             orbitRadius = 0x8000;
-        {
-            s32 *px = &x;
-            const s16 *tbl = gSineTable;
 
-            a = ((frameCount * 30) >> 4) & 0xff;
-            *px = Q8_MUL(tbl[(a + 0x40) & 0xff], orbitRadius);
-            y = Q8_MUL(tbl[a], orbitRadius);
-        }
+        s32 *px = &x;
+        const s16 *tbl = gSineTable;
+
+        a = ((frameCount * 30) >> 4) & 0xff;
+        *px = Q8_MUL(tbl[(a + 0x40) & 0xff], orbitRadius);
+        y = Q8_MUL(tbl[a], orbitRadius);
     }
 
     if (distance <= 0x27ff) {
@@ -349,12 +345,11 @@ void Hovercraft::Spawn(s32 kind, s32 sx, s32 sy, s32 sz)
     screenX = Q12_MUL(x, scale);
     screenY = Q12_MUL(scale, y);
     SetActorBgLayerDepth(distance);
-    {
-        AnimPart *self = anim;
-        s32 t = Q8_TO_INT(self->animTime);
 
-        DrawMap((void *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
-    }
+    AnimPart *self = anim;
+    s32 t = Q8_TO_INT(self->animTime);
+
+    DrawMap((void *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
     SpawnHovercraftCannon(x + 0x2000, y + 0x3000, z - 0x100);
     SpawnHovercraftLauncher(x + 0x1e00, y - 0x3000, z - 0x100);
     SpawnHovercraftSideGun(x - 0x4100, y + 0xa00, z - 1, 1);
@@ -389,14 +384,13 @@ void Hovercraft::Update(void)
         screenX = Q12_MUL(x, scale);
         screenY = Q12_MUL(scale, y);
         SetActorBgLayerDepth(distance);
-        {
-            AnimPart *cur = anim;
-            s32 t = Q8_TO_INT(cur->animTime);
 
-            if (prev != t) {
-                DrawMap((void *)cur->frameOffsets[cur->anims[cur->animIndex].frameIndex + t]);
-                bg2PageFlip = 1;
-            }
+        AnimPart *cur = anim;
+        s32 t = Q8_TO_INT(cur->animTime);
+
+        if (prev != t) {
+            DrawMap((void *)cur->frameOffsets[cur->anims[cur->animIndex].frameIndex + t]);
+            bg2PageFlip = 1;
         }
     }
 }
@@ -458,11 +452,10 @@ void Hovercraft::LoadGraphics(void)
         bg2PageFlip = 1;
         bg2Page = 0;
         self = anim;
-        {
-            s32 t = Q8_TO_INT(self->animTime);
 
-            DrawMap((void *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
-        }
+        s32 t = Q8_TO_INT(self->animTime);
+
+        DrawMap((void *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
         REG_DISPCNT |= DISPCNT_BG2_ON;
         UpdateBg2();
     }
@@ -499,7 +492,6 @@ void Hovercraft::ConvertTiles(void)
     s32 k;
     s32 row_i;
     u32 *dst;
-    u32 *rows = mapFrames;
     u32 mask = 0xf;
 
     stride = (u32)(mapCols * mapRows + 1) >> 1 << 2;
@@ -508,7 +500,7 @@ void Hovercraft::ConvertTiles(void)
         heights[k] = x;
         sum += x;
         off += 4;
-        rows[k] = (u32)((u8 *)palette + off);
+        mapFrames[k] = (u32)((u8 *)palette + off);
         off += stride;
         off += heights[k] << 5;
     }

@@ -128,16 +128,15 @@ void MegaMixCtrl::Update(MovingSprite *part)
                     StartTargetMotionXFromSet(part, 1);
                 }
             }
-            {
-                Player *pl = gPlayer;
 
-                if (ABS_BRANCHLESS(pl->x - part->x) <= 0x27FF &&
-                    ABS_BRANCHLESS(pl->y - part->y) <= 0x31FF) {
-                    SetMotionXFromSet(part, 0);
-                    SetMode(MEGA_MIX_STATE_GRAB);
-                    SetTargetAnim(part, 1);
-                    return;
-                }
+            Player *pl = gPlayer;
+
+            if (ABS_BRANCHLESS(pl->x - part->x) <= 0x27FF &&
+                ABS_BRANCHLESS(pl->y - part->y) <= 0x31FF) {
+                SetMotionXFromSet(part, 0);
+                SetMode(MEGA_MIX_STATE_GRAB);
+                SetTargetAnim(part, 1);
+                return;
             }
             /* The hitbox goes to CollidePartList by value, straight from
              * GetSpriteHitbox: a local copy is copied again (memcpy). */

@@ -53,9 +53,7 @@ static inline void HitPlayer(Player *pl, s32 event)
 /* Sets `frame` to `idx`, clamped to the animation's last step. */
 static inline void ClampFrame(MovingSprite *p, s32 idx)
 {
-    u8 n = p->bank->anims[p->tag].frameCount;
-
-    CLAMP_INDEX(idx, n);
+    CLAMP_INDEX(idx, p->bank->anims[p->tag].frameCount);
     p->frame = idx;
 }
 
@@ -88,11 +86,10 @@ void CortexBossCtrl::Update(MovingSprite *part)
             n = target->x - part->x;
             part->mirrorFlags.mirrorX = n >= 0;
             cannon->mirrorFlags.mirrorX = n >= 0;
-            {
-                s32 w = INT_TO_Q8(gLevelLayers->layer0->widthPx);
 
-                n = (u32)(ABS_BRANCHLESS(n) * 12) / w;
-            }
+            s32 w = INT_TO_Q8(gLevelLayers->layer0->widthPx);
+
+            n = (u32)(ABS_BRANCHLESS(n) * 12) / w;
             LIMIT_MAX(n, 5);
             n = 5 - n;
             ClampFrame(part, n);
@@ -283,12 +280,11 @@ void CortexTargetCtrl::Update(MovingSprite *part)
                 ClampFrame(part, 1);
             }
             SetDest(part, gPlayer->x, gPlayer->y - 0xA00);
-            {
-                /* the round first, then the table's address */
-                s32 round = boss->counter;
 
-                stepsLeft = steps = gCortexTargetChaseSteps[round];
-            }
+            /* the round first, then the table's address */
+            s32 round = boss->counter;
+
+            stepsLeft = steps = gCortexTargetChaseSteps[round];
             break;
         }
     case CORTEX_TARGET_STATE_LEAVE:
