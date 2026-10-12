@@ -64,7 +64,7 @@ CountCategoryCrates counts kinds 1, 3, 4, 8, 9, 10, 28-31 and 35.
 | 31 | `RING_LEFT` | JetpackRing, with its right half (43); only kind 31 counts as passed |
 | 32-37 | `PATH_0`..`_5` | no actor: the points a plane flies to, at gJetpackPlaneHopSpeeds[kind - 0x20] |
 | 38, 39 | `AIRSHIP_FIREBALL`, `HOVERCRAFT_FIREBALL` | their spawners' records |
-| 40-42 | `BALLOON_RED_YELLOW`, `_ORANGE_BLUE`, `_YELLOW_BLUE` | the balloon crates' balloons: time crate, question crate, health crate |
+| 40-42 | `BALLOON_RED`, `_YELLOW`, `_RED_CROSS` | the balloon crates' balloons: time crate, question crate, health crate (named by how they look in their palette banks 5, 6 and 7) |
 | 43 | `RING_RIGHT` | the ring's right half |
 | 44-46 | `COLLECTED_WUMPA`, `EXPLOSION`, `CHECKPOINT_TEXT` | their spawners' records |
 | 62 | `UNK62` | SpawnJetpackActor skips it; no record, not in the data |

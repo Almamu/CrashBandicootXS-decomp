@@ -16,11 +16,11 @@
         "sub_effect_table_14": "0x080B1444",
         "anim_table_base_18": "0x081796CC",
         "sprite_sheet_1C": "0x080B2120",
-        "unknown_20": 4,
-        "threshold_24": 3,
-        "unknown_28": 2,
-        "flag_2C": 1,
-        "unknown_30": 0
+        "maskAssistDeaths": 4,
+        "bonusKindDeaths": 3,
+        "retryBossDeaths": 2,
+        "bossLevel": 1,
+        "retryBossLevel": 0
       }
     },
     {
@@ -34,11 +34,11 @@
         "sub_effect_table_14": "0x080C0C38",
         "anim_table_base_18": "0x081796CC",
         "sprite_sheet_1C": "0x080B2120",
-        "unknown_20": 4,
-        "threshold_24": 3,
-        "unknown_28": 2,
-        "flag_2C": 3,
-        "unknown_30": 2
+        "maskAssistDeaths": 4,
+        "bonusKindDeaths": 3,
+        "retryBossDeaths": 2,
+        "bossLevel": 3,
+        "retryBossLevel": 2
       }
     },
     {
@@ -52,11 +52,11 @@
         "sub_effect_table_14": "0x080C19F0",
         "anim_table_base_18": "0x081796CC",
         "sprite_sheet_1C": "0x080B2120",
-        "unknown_20": 4,
-        "threshold_24": 3,
-        "unknown_28": 2,
-        "flag_2C": 5,
-        "unknown_30": 4
+        "maskAssistDeaths": 4,
+        "bonusKindDeaths": 3,
+        "retryBossDeaths": 2,
+        "bossLevel": 5,
+        "retryBossLevel": 4
       }
     }
   ],
@@ -68,7 +68,7 @@
       "valid": true,
       "table_A_address": "0x08179380",
       "table_B_address": "0x0817941C",
-      "header_byte": 0,
+      "palette_bank": 0,
       "addressing_mode": "absolute_rom",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -253,15 +253,14 @@
           "h_tiles": 8
         }
       },
-      "label": "mask (possibly Aku Aku - unconfirmed)",
-      "identified": false
+      "label": "POLAR_KIND_PLAYER"
     },
     {
       "slot": 1,
       "valid": true,
       "table_A_address": "0x0817A04C",
       "table_B_address": "0x0817A130",
-      "header_byte": 1,
+      "palette_bank": 1,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -629,95 +628,94 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/07_tnt_crate/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/07_basic_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/07_tnt_crate/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/07_basic_crate/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/00_0b2120/07_tnt_crate/02.png",
+          "asset_file": "graphics/unknown/00_0b2120/07_basic_crate/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/00_0b2120/07_tnt_crate/03.png",
+          "asset_file": "graphics/unknown/00_0b2120/07_basic_crate/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/07_tnt_crate/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/07_basic_crate/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/00_0b2120/07_tnt_crate/05.png",
+          "asset_file": "graphics/unknown/00_0b2120/07_basic_crate/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/unknown/00_0b2120/07_tnt_crate/06.png",
+          "asset_file": "graphics/unknown/00_0b2120/07_basic_crate/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/00_0b2120/07_tnt_crate/07.png",
+          "asset_file": "graphics/unknown/00_0b2120/07_basic_crate/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/00_0b2120/07_tnt_crate/08.png",
+          "asset_file": "graphics/unknown/00_0b2120/07_basic_crate/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/20.png",
+          "asset_file": "graphics/unknown/00_0b2120/19_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/21.png",
+          "asset_file": "graphics/unknown/00_0b2120/19_crate_shards/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/22.png",
+          "asset_file": "graphics/unknown/00_0b2120/19_crate_shards/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/23.png",
+          "asset_file": "graphics/unknown/00_0b2120/19_crate_shards/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/24.png",
+          "asset_file": "graphics/unknown/00_0b2120/19_crate_shards/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "14": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/25.png",
+          "asset_file": "graphics/unknown/00_0b2120/19_crate_shards/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "15": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": "TNT crate",
-      "identified": true
+      "label": "POLAR_KIND_BASIC_CRATE"
     },
     {
       "slot": 2,
       "valid": true,
       "table_A_address": "0x0817968C",
       "table_B_address": "0x081796A4",
-      "header_byte": 0,
+      "palette_bank": 0,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -779,35 +777,34 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/15_small_creature/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/15_riderless_polar/00.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/15_small_creature/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/15_riderless_polar/01.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/00_0b2120/15_small_creature/02.png",
+          "asset_file": "graphics/unknown/00_0b2120/15_riderless_polar/02.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "9": {
-          "asset_file": "graphics/unknown/00_0b2120/15_small_creature/09.png",
+          "asset_file": "graphics/unknown/00_0b2120/15_riderless_polar/09.png",
           "w_tiles": 8,
           "h_tiles": 8
         }
       },
-      "label": "small gray/white creature",
-      "identified": false
+      "label": "POLAR_KIND_RIDERLESS_POLAR"
     },
     {
       "slot": 3,
       "valid": true,
       "table_A_address": "0x0817A62C",
       "table_B_address": "0x0817A5DC",
-      "header_byte": 5,
+      "palette_bank": 5,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -923,45 +920,44 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/12_barrel/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/12_checkpoint_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/12_barrel/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/12_checkpoint_crate/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/00_0b2120/12_barrel/03.png",
+          "asset_file": "graphics/unknown/00_0b2120/12_checkpoint_crate/03.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/12_barrel/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/12_checkpoint_crate/04.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "13": {
-          "asset_file": "graphics/unknown/00_0b2120/12_barrel/13.png",
+          "asset_file": "graphics/unknown/00_0b2120/12_checkpoint_crate/13.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "14": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/20.png",
+          "asset_file": "graphics/unknown/00_0b2120/19_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": "barrel/drum (unconfirmed beyond shape)",
-      "identified": false
+      "label": "POLAR_KIND_CHECKPOINT_CRATE"
     },
     {
       "slot": 4,
       "valid": true,
       "table_A_address": "0x0817A16C",
       "table_B_address": "0x0817A250",
-      "header_byte": 2,
+      "palette_bank": 2,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -2076,20 +2072,19 @@
           "h_tiles": 4
         },
         "18": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/26.png",
+          "asset_file": "graphics/unknown/00_0b2120/20_nitro_crate_burst/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": "Nitro crate (\"NITRO\" text visible)",
-      "identified": true
+      "label": "POLAR_KIND_NITRO_CRATE"
     },
     {
       "slot": 5,
       "valid": true,
       "table_A_address": "0x0817A2B8",
       "table_B_address": "0x0817A39C",
-      "header_byte": 4,
+      "palette_bank": 4,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -2871,110 +2866,109 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/02.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/03.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/05.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/06.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/07.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/08.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/09.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/10.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/11.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/11.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/12.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/13.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/13.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "14": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/14.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/14.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "15": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/15.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/15.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/16.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/16.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "17": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/17.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/17.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "18": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/34.png",
+          "asset_file": "graphics/unknown/00_0b2120/21_time_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": "decorated crate variant A",
-      "identified": false
+      "label": "POLAR_KIND_TIME_CRATE_1"
     },
     {
       "slot": 6,
       "valid": true,
       "table_A_address": "0x0817A2B8",
       "table_B_address": "0x0817A3FC",
-      "header_byte": 4,
+      "palette_bank": 4,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -3756,110 +3750,109 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/01_crate_variant_b/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/01_time_crate_2/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/01_crate_variant_b/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/01_time_crate_2/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/00_0b2120/01_crate_variant_b/02.png",
+          "asset_file": "graphics/unknown/00_0b2120/01_time_crate_2/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/00_0b2120/01_crate_variant_b/03.png",
+          "asset_file": "graphics/unknown/00_0b2120/01_time_crate_2/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/01_crate_variant_b/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/01_time_crate_2/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/00_0b2120/01_crate_variant_b/05.png",
+          "asset_file": "graphics/unknown/00_0b2120/01_time_crate_2/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/unknown/00_0b2120/01_crate_variant_b/06.png",
+          "asset_file": "graphics/unknown/00_0b2120/01_time_crate_2/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/00_0b2120/01_crate_variant_b/07.png",
+          "asset_file": "graphics/unknown/00_0b2120/01_time_crate_2/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/00_0b2120/01_crate_variant_b/08.png",
+          "asset_file": "graphics/unknown/00_0b2120/01_time_crate_2/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/00_0b2120/01_crate_variant_b/09.png",
+          "asset_file": "graphics/unknown/00_0b2120/01_time_crate_2/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/00_0b2120/01_crate_variant_b/10.png",
+          "asset_file": "graphics/unknown/00_0b2120/01_time_crate_2/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/00_0b2120/01_crate_variant_b/11.png",
+          "asset_file": "graphics/unknown/00_0b2120/01_time_crate_2/11.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/unknown/00_0b2120/01_crate_variant_b/12.png",
+          "asset_file": "graphics/unknown/00_0b2120/01_time_crate_2/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/unknown/00_0b2120/01_crate_variant_b/13.png",
+          "asset_file": "graphics/unknown/00_0b2120/01_time_crate_2/13.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "14": {
-          "asset_file": "graphics/unknown/00_0b2120/01_crate_variant_b/14.png",
+          "asset_file": "graphics/unknown/00_0b2120/01_time_crate_2/14.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "15": {
-          "asset_file": "graphics/unknown/00_0b2120/01_crate_variant_b/15.png",
+          "asset_file": "graphics/unknown/00_0b2120/01_time_crate_2/15.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/00_0b2120/01_crate_variant_b/16.png",
+          "asset_file": "graphics/unknown/00_0b2120/01_time_crate_2/16.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "17": {
-          "asset_file": "graphics/unknown/00_0b2120/01_crate_variant_b/17.png",
+          "asset_file": "graphics/unknown/00_0b2120/01_time_crate_2/17.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "18": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/34.png",
+          "asset_file": "graphics/unknown/00_0b2120/21_time_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": "decorated crate variant B",
-      "identified": false
+      "label": "POLAR_KIND_TIME_CRATE_2"
     },
     {
       "slot": 7,
       "valid": true,
       "table_A_address": "0x0817A2B8",
       "table_B_address": "0x0817A45C",
-      "header_byte": 4,
+      "palette_bank": 4,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -4641,110 +4634,109 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/02_crate_variant_c/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/02_time_crate_3/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/02_crate_variant_c/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/02_time_crate_3/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/00_0b2120/02_crate_variant_c/02.png",
+          "asset_file": "graphics/unknown/00_0b2120/02_time_crate_3/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/00_0b2120/02_crate_variant_c/03.png",
+          "asset_file": "graphics/unknown/00_0b2120/02_time_crate_3/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/02_crate_variant_c/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/02_time_crate_3/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/00_0b2120/02_crate_variant_c/05.png",
+          "asset_file": "graphics/unknown/00_0b2120/02_time_crate_3/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/unknown/00_0b2120/02_crate_variant_c/06.png",
+          "asset_file": "graphics/unknown/00_0b2120/02_time_crate_3/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/00_0b2120/02_crate_variant_c/07.png",
+          "asset_file": "graphics/unknown/00_0b2120/02_time_crate_3/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/00_0b2120/02_crate_variant_c/08.png",
+          "asset_file": "graphics/unknown/00_0b2120/02_time_crate_3/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/00_0b2120/02_crate_variant_c/09.png",
+          "asset_file": "graphics/unknown/00_0b2120/02_time_crate_3/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/00_0b2120/02_crate_variant_c/10.png",
+          "asset_file": "graphics/unknown/00_0b2120/02_time_crate_3/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/00_0b2120/02_crate_variant_c/11.png",
+          "asset_file": "graphics/unknown/00_0b2120/02_time_crate_3/11.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/unknown/00_0b2120/02_crate_variant_c/12.png",
+          "asset_file": "graphics/unknown/00_0b2120/02_time_crate_3/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/unknown/00_0b2120/02_crate_variant_c/13.png",
+          "asset_file": "graphics/unknown/00_0b2120/02_time_crate_3/13.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "14": {
-          "asset_file": "graphics/unknown/00_0b2120/02_crate_variant_c/14.png",
+          "asset_file": "graphics/unknown/00_0b2120/02_time_crate_3/14.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "15": {
-          "asset_file": "graphics/unknown/00_0b2120/02_crate_variant_c/15.png",
+          "asset_file": "graphics/unknown/00_0b2120/02_time_crate_3/15.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/00_0b2120/02_crate_variant_c/16.png",
+          "asset_file": "graphics/unknown/00_0b2120/02_time_crate_3/16.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "17": {
-          "asset_file": "graphics/unknown/00_0b2120/02_crate_variant_c/17.png",
+          "asset_file": "graphics/unknown/00_0b2120/02_time_crate_3/17.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "18": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/34.png",
+          "asset_file": "graphics/unknown/00_0b2120/21_time_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": "decorated crate variant C",
-      "identified": false
+      "label": "POLAR_KIND_TIME_CRATE_3"
     },
     {
       "slot": 8,
       "valid": true,
       "table_A_address": "0x0817A2B8",
       "table_B_address": "0x0817A51C",
-      "header_byte": 3,
+      "palette_bank": 3,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -5526,110 +5518,109 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/04_crate_variant_d/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/04_life_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/04_crate_variant_d/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/04_life_crate/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/00_0b2120/04_crate_variant_d/02.png",
+          "asset_file": "graphics/unknown/00_0b2120/04_life_crate/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/00_0b2120/04_crate_variant_d/03.png",
+          "asset_file": "graphics/unknown/00_0b2120/04_life_crate/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/04_crate_variant_d/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/04_life_crate/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/00_0b2120/04_crate_variant_d/05.png",
+          "asset_file": "graphics/unknown/00_0b2120/04_life_crate/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/unknown/00_0b2120/04_crate_variant_d/06.png",
+          "asset_file": "graphics/unknown/00_0b2120/04_life_crate/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/00_0b2120/04_crate_variant_d/07.png",
+          "asset_file": "graphics/unknown/00_0b2120/04_life_crate/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/00_0b2120/04_crate_variant_d/08.png",
+          "asset_file": "graphics/unknown/00_0b2120/04_life_crate/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/00_0b2120/04_crate_variant_d/09.png",
+          "asset_file": "graphics/unknown/00_0b2120/04_life_crate/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/00_0b2120/04_crate_variant_d/10.png",
+          "asset_file": "graphics/unknown/00_0b2120/04_life_crate/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/00_0b2120/04_crate_variant_d/11.png",
+          "asset_file": "graphics/unknown/00_0b2120/04_life_crate/11.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/unknown/00_0b2120/04_crate_variant_d/12.png",
+          "asset_file": "graphics/unknown/00_0b2120/04_life_crate/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/unknown/00_0b2120/04_crate_variant_d/13.png",
+          "asset_file": "graphics/unknown/00_0b2120/04_life_crate/13.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "14": {
-          "asset_file": "graphics/unknown/00_0b2120/04_crate_variant_d/14.png",
+          "asset_file": "graphics/unknown/00_0b2120/04_life_crate/14.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "15": {
-          "asset_file": "graphics/unknown/00_0b2120/04_crate_variant_d/15.png",
+          "asset_file": "graphics/unknown/00_0b2120/04_life_crate/15.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/00_0b2120/04_crate_variant_d/16.png",
+          "asset_file": "graphics/unknown/00_0b2120/04_life_crate/16.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "17": {
-          "asset_file": "graphics/unknown/00_0b2120/04_crate_variant_d/17.png",
+          "asset_file": "graphics/unknown/00_0b2120/04_life_crate/17.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "18": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/20.png",
+          "asset_file": "graphics/unknown/00_0b2120/19_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": "decorated crate variant D",
-      "identified": false
+      "label": "POLAR_KIND_LIFE_CRATE"
     },
     {
       "slot": 9,
       "valid": true,
       "table_A_address": "0x0817A2B8",
       "table_B_address": "0x0817A57C",
-      "header_byte": 3,
+      "palette_bank": 3,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -6411,110 +6402,109 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/05_crate_variant_e/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/05_aku_aku_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/05_crate_variant_e/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/05_aku_aku_crate/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/00_0b2120/05_crate_variant_e/02.png",
+          "asset_file": "graphics/unknown/00_0b2120/05_aku_aku_crate/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/00_0b2120/05_crate_variant_e/03.png",
+          "asset_file": "graphics/unknown/00_0b2120/05_aku_aku_crate/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/05_crate_variant_e/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/05_aku_aku_crate/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/00_0b2120/05_crate_variant_e/05.png",
+          "asset_file": "graphics/unknown/00_0b2120/05_aku_aku_crate/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/unknown/00_0b2120/05_crate_variant_e/06.png",
+          "asset_file": "graphics/unknown/00_0b2120/05_aku_aku_crate/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/00_0b2120/05_crate_variant_e/07.png",
+          "asset_file": "graphics/unknown/00_0b2120/05_aku_aku_crate/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/00_0b2120/05_crate_variant_e/08.png",
+          "asset_file": "graphics/unknown/00_0b2120/05_aku_aku_crate/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/00_0b2120/05_crate_variant_e/09.png",
+          "asset_file": "graphics/unknown/00_0b2120/05_aku_aku_crate/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/00_0b2120/05_crate_variant_e/10.png",
+          "asset_file": "graphics/unknown/00_0b2120/05_aku_aku_crate/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/00_0b2120/05_crate_variant_e/11.png",
+          "asset_file": "graphics/unknown/00_0b2120/05_aku_aku_crate/11.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/unknown/00_0b2120/05_crate_variant_e/12.png",
+          "asset_file": "graphics/unknown/00_0b2120/05_aku_aku_crate/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/unknown/00_0b2120/05_crate_variant_e/13.png",
+          "asset_file": "graphics/unknown/00_0b2120/05_aku_aku_crate/13.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "14": {
-          "asset_file": "graphics/unknown/00_0b2120/05_crate_variant_e/14.png",
+          "asset_file": "graphics/unknown/00_0b2120/05_aku_aku_crate/14.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "15": {
-          "asset_file": "graphics/unknown/00_0b2120/05_crate_variant_e/15.png",
+          "asset_file": "graphics/unknown/00_0b2120/05_aku_aku_crate/15.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/00_0b2120/05_crate_variant_e/16.png",
+          "asset_file": "graphics/unknown/00_0b2120/05_aku_aku_crate/16.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "17": {
-          "asset_file": "graphics/unknown/00_0b2120/05_crate_variant_e/17.png",
+          "asset_file": "graphics/unknown/00_0b2120/05_aku_aku_crate/17.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "18": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/20.png",
+          "asset_file": "graphics/unknown/00_0b2120/19_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": "decorated crate variant E",
-      "identified": false
+      "label": "POLAR_KIND_AKU_AKU_CRATE"
     },
     {
       "slot": 10,
       "valid": true,
       "table_A_address": "0x0817A04C",
       "table_B_address": "0x0817A130",
-      "header_byte": 1,
+      "palette_bank": 1,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 1,
       "keyframes": [
@@ -6882,95 +6872,94 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/07_tnt_crate/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/07_basic_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/07_tnt_crate/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/07_basic_crate/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/00_0b2120/07_tnt_crate/02.png",
+          "asset_file": "graphics/unknown/00_0b2120/07_basic_crate/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/00_0b2120/07_tnt_crate/03.png",
+          "asset_file": "graphics/unknown/00_0b2120/07_basic_crate/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/07_tnt_crate/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/07_basic_crate/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/00_0b2120/07_tnt_crate/05.png",
+          "asset_file": "graphics/unknown/00_0b2120/07_basic_crate/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/unknown/00_0b2120/07_tnt_crate/06.png",
+          "asset_file": "graphics/unknown/00_0b2120/07_basic_crate/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/00_0b2120/07_tnt_crate/07.png",
+          "asset_file": "graphics/unknown/00_0b2120/07_basic_crate/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/00_0b2120/07_tnt_crate/08.png",
+          "asset_file": "graphics/unknown/00_0b2120/07_basic_crate/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/20.png",
+          "asset_file": "graphics/unknown/00_0b2120/19_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/21.png",
+          "asset_file": "graphics/unknown/00_0b2120/19_crate_shards/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/22.png",
+          "asset_file": "graphics/unknown/00_0b2120/19_crate_shards/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/23.png",
+          "asset_file": "graphics/unknown/00_0b2120/19_crate_shards/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/24.png",
+          "asset_file": "graphics/unknown/00_0b2120/19_crate_shards/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "14": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/25.png",
+          "asset_file": "graphics/unknown/00_0b2120/19_crate_shards/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "15": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "POLAR_KIND_FOUR_WUMPA_CRATE"
     },
     {
       "slot": 11,
       "valid": true,
       "table_A_address": "0x08179D34",
       "table_B_address": "0x08179D40",
-      "header_byte": 7,
+      "palette_bank": 7,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -7914,85 +7903,84 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/17_wumpa_fruit/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/17_wumpa/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/17_wumpa_fruit/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/17_wumpa/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/00_0b2120/17_wumpa_fruit/02.png",
+          "asset_file": "graphics/unknown/00_0b2120/17_wumpa/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/00_0b2120/17_wumpa_fruit/03.png",
+          "asset_file": "graphics/unknown/00_0b2120/17_wumpa/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/17_wumpa_fruit/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/17_wumpa/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/00_0b2120/17_wumpa_fruit/05.png",
+          "asset_file": "graphics/unknown/00_0b2120/17_wumpa/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/unknown/00_0b2120/17_wumpa_fruit/06.png",
+          "asset_file": "graphics/unknown/00_0b2120/17_wumpa/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/00_0b2120/17_wumpa_fruit/07.png",
+          "asset_file": "graphics/unknown/00_0b2120/17_wumpa/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/00_0b2120/17_wumpa_fruit/08.png",
+          "asset_file": "graphics/unknown/00_0b2120/17_wumpa/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/00_0b2120/17_wumpa_fruit/09.png",
+          "asset_file": "graphics/unknown/00_0b2120/17_wumpa/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/00_0b2120/17_wumpa_fruit/10.png",
+          "asset_file": "graphics/unknown/00_0b2120/17_wumpa/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/00_0b2120/17_wumpa_fruit/11.png",
+          "asset_file": "graphics/unknown/00_0b2120/17_wumpa/11.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/unknown/00_0b2120/17_wumpa_fruit/12.png",
+          "asset_file": "graphics/unknown/00_0b2120/17_wumpa/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/unknown/00_0b2120/17_wumpa_fruit/13.png",
+          "asset_file": "graphics/unknown/00_0b2120/17_wumpa/13.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": "Wumpa Fruit",
-      "identified": true
+      "label": "POLAR_KIND_WUMPA"
     },
     {
       "slot": 12,
       "valid": true,
       "table_A_address": "0x08179DE0",
       "table_B_address": "0x08179E04",
-      "header_byte": 6,
+      "palette_bank": 6,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -8063,30 +8051,29 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/13_record_slot12/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/13_boost_pad/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/13_record_slot12/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/13_boost_pad/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/13_record_slot12/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/13_boost_pad/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "POLAR_KIND_BOOST_PAD"
     },
     {
       "slot": 13,
       "valid": true,
       "table_A_address": "0x08179FE8",
       "table_B_address": "0x08179FE4",
-      "header_byte": 11,
+      "palette_bank": 11,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -8373,25 +8360,24 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/09_record_slot13/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/09_obstacle/00.png",
           "w_tiles": 8,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "POLAR_KIND_OBSTACLE"
     },
     {
       "slot": 14,
       "valid": true,
       "table_A_address": "0x08179FE8",
       "table_B_address": "0x08179FE4",
-      "header_byte": 11,
+      "palette_bank": 11,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 13,
       "keyframes": [
@@ -8678,25 +8664,24 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/09_record_slot13/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/09_obstacle/00.png",
           "w_tiles": 8,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "POLAR_KIND_OBSTACLE_2"
     },
     {
       "slot": 15,
       "valid": true,
       "table_A_address": "0x08179DE0",
       "table_B_address": "0x08179E04",
-      "header_byte": 6,
+      "palette_bank": 6,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 12,
       "keyframes": [
@@ -8767,30 +8752,29 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/13_record_slot12/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/13_boost_pad/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/13_record_slot12/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/13_boost_pad/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/13_record_slot12/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/13_boost_pad/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "POLAR_KIND_UNK15"
     },
     {
       "slot": 16,
       "valid": true,
       "table_A_address": "0x08179E94",
       "table_B_address": "0x08179FB4",
-      "header_byte": 10,
+      "palette_bank": 10,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -10283,80 +10267,79 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/01.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/02.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/02.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "3": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/03.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/03.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/04.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "5": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/05.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/05.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "6": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/06.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/06.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "7": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/07.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/07.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "8": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/08.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/08.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/09.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/09.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/10.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/10.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/11.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/11.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "POLAR_KIND_ICICLE_A"
     },
     {
       "slot": 17,
       "valid": true,
       "table_A_address": "0x08179E94",
       "table_B_address": "0x08179FB4",
-      "header_byte": 10,
+      "palette_bank": 10,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 16,
       "keyframes": [
@@ -11849,80 +11832,79 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/01.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/02.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/02.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "3": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/03.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/03.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/04.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "5": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/05.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/05.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "6": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/06.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/06.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "7": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/07.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/07.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "8": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/08.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/08.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/09.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/09.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/10.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/10.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/11.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/11.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "POLAR_KIND_ICICLE_A_RIGHT"
     },
     {
       "slot": 18,
       "valid": true,
       "table_A_address": "0x08179E94",
       "table_B_address": "0x08179FB4",
-      "header_byte": 10,
+      "palette_bank": 10,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 16,
       "keyframes": [
@@ -13415,80 +13397,79 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/01.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/02.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/02.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "3": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/03.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/03.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/04.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "5": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/05.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/05.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "6": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/06.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/06.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "7": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/07.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/07.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "8": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/08.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/08.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/09.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/09.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/10.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/10.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/11.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/11.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "POLAR_KIND_ICICLE_B"
     },
     {
       "slot": 19,
       "valid": true,
       "table_A_address": "0x08179E94",
       "table_B_address": "0x08179FB4",
-      "header_byte": 10,
+      "palette_bank": 10,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 16,
       "keyframes": [
@@ -14981,80 +14962,79 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/01.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/02.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/02.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "3": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/03.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/03.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/04.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "5": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/05.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/05.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "6": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/06.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/06.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "7": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/07.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/07.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "8": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/08.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/08.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/09.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/09.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/10.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/10.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/11.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/11.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "POLAR_KIND_ICICLE_B_RIGHT"
     },
     {
       "slot": 20,
       "valid": true,
       "table_A_address": "0x08179E94",
       "table_B_address": "0x08179FB4",
-      "header_byte": 10,
+      "palette_bank": 10,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 16,
       "keyframes": [
@@ -16547,80 +16527,79 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/01.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/02.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/02.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "3": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/03.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/03.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/04.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "5": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/05.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/05.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "6": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/06.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/06.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "7": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/07.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/07.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "8": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/08.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/08.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/09.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/09.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/10.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/10.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/11.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/11.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "POLAR_KIND_ICICLE_C"
     },
     {
       "slot": 21,
       "valid": true,
       "table_A_address": "0x08179E94",
       "table_B_address": "0x08179FB4",
-      "header_byte": 10,
+      "palette_bank": 10,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 16,
       "keyframes": [
@@ -18113,80 +18092,79 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/01.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/02.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/02.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "3": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/03.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/03.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/04.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "5": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/05.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/05.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "6": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/06.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/06.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "7": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/07.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/07.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "8": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/08.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/08.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/09.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/09.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/10.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/10.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/00_0b2120/14_record_slot16/11.png",
+          "asset_file": "graphics/unknown/00_0b2120/14_icicle/11.png",
           "w_tiles": 1,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "POLAR_KIND_ICICLE_C_RIGHT"
     },
     {
       "slot": 22,
       "valid": true,
       "table_A_address": "0x08179D78",
       "table_B_address": "0x08179D90",
-      "header_byte": 8,
+      "palette_bank": 8,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -19976,110 +19954,109 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/18_launcher/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/18_launcher/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/02.png",
+          "asset_file": "graphics/unknown/00_0b2120/18_launcher/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/03.png",
+          "asset_file": "graphics/unknown/00_0b2120/18_launcher/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/18_launcher/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/05.png",
+          "asset_file": "graphics/unknown/00_0b2120/18_launcher/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/06.png",
+          "asset_file": "graphics/unknown/00_0b2120/18_launcher/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/07.png",
+          "asset_file": "graphics/unknown/00_0b2120/18_launcher/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/08.png",
+          "asset_file": "graphics/unknown/00_0b2120/18_launcher/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/09.png",
+          "asset_file": "graphics/unknown/00_0b2120/18_launcher/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/10.png",
+          "asset_file": "graphics/unknown/00_0b2120/18_launcher/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/11.png",
+          "asset_file": "graphics/unknown/00_0b2120/18_launcher/11.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/12.png",
+          "asset_file": "graphics/unknown/00_0b2120/18_launcher/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/13.png",
+          "asset_file": "graphics/unknown/00_0b2120/18_launcher/13.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "14": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/14.png",
+          "asset_file": "graphics/unknown/00_0b2120/18_launcher/14.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "15": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/15.png",
+          "asset_file": "graphics/unknown/00_0b2120/18_launcher/15.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/16.png",
+          "asset_file": "graphics/unknown/00_0b2120/18_launcher/16.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "17": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/17.png",
+          "asset_file": "graphics/unknown/00_0b2120/18_launcher/17.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "18": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/18.png",
+          "asset_file": "graphics/unknown/00_0b2120/18_launcher/18.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": "creature/item emerging from a shell (unconfirmed identity)",
-      "identified": false
+      "label": "POLAR_KIND_LAUNCHER"
     },
     {
       "slot": 23,
       "valid": true,
       "table_A_address": "0x08179E24",
       "table_B_address": "0x08179E3C",
-      "header_byte": 9,
+      "palette_bank": 9,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -21734,110 +21711,109 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/16_guard_barrier/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/16_electric_fence/00.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/16_guard_barrier/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/16_electric_fence/01.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/00_0b2120/16_guard_barrier/02.png",
+          "asset_file": "graphics/unknown/00_0b2120/16_electric_fence/02.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "3": {
-          "asset_file": "graphics/unknown/00_0b2120/16_guard_barrier/03.png",
+          "asset_file": "graphics/unknown/00_0b2120/16_electric_fence/03.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/16_guard_barrier/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/16_electric_fence/04.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "5": {
-          "asset_file": "graphics/unknown/00_0b2120/16_guard_barrier/05.png",
+          "asset_file": "graphics/unknown/00_0b2120/16_electric_fence/05.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "6": {
-          "asset_file": "graphics/unknown/00_0b2120/16_guard_barrier/06.png",
+          "asset_file": "graphics/unknown/00_0b2120/16_electric_fence/06.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "7": {
-          "asset_file": "graphics/unknown/00_0b2120/16_guard_barrier/07.png",
+          "asset_file": "graphics/unknown/00_0b2120/16_electric_fence/07.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "8": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/40.png",
+          "asset_file": "graphics/unknown/00_0b2120/22_electric_fence_wreck/00.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "9": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/41.png",
+          "asset_file": "graphics/unknown/00_0b2120/22_electric_fence_wreck/01.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "10": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/42.png",
+          "asset_file": "graphics/unknown/00_0b2120/22_electric_fence_wreck/02.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "11": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/43.png",
+          "asset_file": "graphics/unknown/00_0b2120/22_electric_fence_wreck/03.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "12": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/44.png",
+          "asset_file": "graphics/unknown/00_0b2120/22_electric_fence_wreck/04.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "13": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/45.png",
+          "asset_file": "graphics/unknown/00_0b2120/22_electric_fence_wreck/05.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "14": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/46.png",
+          "asset_file": "graphics/unknown/00_0b2120/22_electric_fence_wreck/06.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "15": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/47.png",
+          "asset_file": "graphics/unknown/00_0b2120/22_electric_fence_wreck/07.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "16": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/48.png",
+          "asset_file": "graphics/unknown/00_0b2120/22_electric_fence_wreck/08.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "17": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/49.png",
+          "asset_file": "graphics/unknown/00_0b2120/22_electric_fence_wreck/09.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "18": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/50.png",
+          "asset_file": "graphics/unknown/00_0b2120/22_electric_fence_wreck/10.png",
           "w_tiles": 8,
           "h_tiles": 8
         }
       },
-      "label": "two guards holding a chain barrier",
-      "identified": true
+      "label": "POLAR_KIND_ELECTRIC_FENCE"
     },
     {
       "slot": 24,
       "valid": true,
       "table_A_address": "0x0817A040",
       "table_B_address": "0x0817A01C",
-      "header_byte": 13,
+      "palette_bank": 13,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -22016,60 +21992,59 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/11_record_slot24/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/11_penguin/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/11_record_slot24/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/11_penguin/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/00_0b2120/11_record_slot24/02.png",
+          "asset_file": "graphics/unknown/00_0b2120/11_penguin/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/00_0b2120/11_record_slot24/03.png",
+          "asset_file": "graphics/unknown/00_0b2120/11_penguin/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/11_record_slot24/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/11_penguin/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/00_0b2120/11_record_slot24/05.png",
+          "asset_file": "graphics/unknown/00_0b2120/11_penguin/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/unknown/00_0b2120/11_record_slot24/06.png",
+          "asset_file": "graphics/unknown/00_0b2120/11_penguin/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/00_0b2120/11_record_slot24/07.png",
+          "asset_file": "graphics/unknown/00_0b2120/11_penguin/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/00_0b2120/11_record_slot24/08.png",
+          "asset_file": "graphics/unknown/00_0b2120/11_penguin/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "POLAR_KIND_PENGUIN"
     },
     {
       "slot": 25,
       "valid": true,
       "table_A_address": "0x0817A004",
       "table_B_address": "0x0817A000",
-      "header_byte": 12,
+      "palette_bank": 12,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -22149,25 +22124,24 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/08_record_slot25/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/08_goal/00.png",
           "w_tiles": 8,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "POLAR_KIND_GOAL"
     },
     {
       "slot": 26,
       "valid": true,
       "table_A_address": "0x0817A004",
       "table_B_address": "0x0817A000",
-      "header_byte": 12,
+      "palette_bank": 12,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 25,
       "keyframes": [
@@ -22247,25 +22221,24 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/08_record_slot25/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/08_goal/00.png",
           "w_tiles": 8,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/00_crate_variant_a/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/00_time_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "POLAR_KIND_GOAL_2"
     },
     {
       "slot": 27,
       "valid": true,
       "table_A_address": "0x0817A688",
       "table_B_address": "0x0817A65C",
-      "header_byte": 14,
+      "palette_bank": 14,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -22309,30 +22282,29 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/10_record_slot27/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/10_aku_aku/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/00_0b2120/10_record_slot27/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/10_aku_aku/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/54.png",
+          "asset_file": "graphics/unknown/00_0b2120/23_aku_aku_feathers/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "POLAR_KIND_AKU_AKU"
     },
     {
       "slot": 28,
       "valid": true,
       "table_A_address": "0x0817A2B8",
       "table_B_address": "0x0817A4BC",
-      "header_byte": 1,
+      "palette_bank": 1,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -23114,110 +23086,109 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/02.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/03.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/05.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/06.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/07.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/08.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/09.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/10.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/11.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/11.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/12.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/13.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/13.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "14": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/14.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/14.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "15": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/15.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/15.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/16.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/16.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "17": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/17.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/17.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "18": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/20.png",
+          "asset_file": "graphics/unknown/00_0b2120/19_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "POLAR_KIND_QUESTION_CRATE_WUMPA_1"
     },
     {
       "slot": 29,
       "valid": true,
       "table_A_address": "0x0817A2B8",
       "table_B_address": "0x0817A4BC",
-      "header_byte": 1,
+      "palette_bank": 1,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 28,
       "keyframes": [
@@ -23999,110 +23970,109 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/02.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/03.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/05.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/06.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/07.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/08.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/09.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/10.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/11.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/11.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/12.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/13.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/13.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "14": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/14.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/14.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "15": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/15.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/15.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/16.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/16.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "17": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/17.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/17.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "18": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/20.png",
+          "asset_file": "graphics/unknown/00_0b2120/19_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "POLAR_KIND_QUESTION_CRATE_WUMPA_3"
     },
     {
       "slot": 30,
       "valid": true,
       "table_A_address": "0x0817A2B8",
       "table_B_address": "0x0817A4BC",
-      "header_byte": 1,
+      "palette_bank": 1,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 28,
       "keyframes": [
@@ -24884,110 +24854,109 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/02.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/03.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/05.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/06.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/07.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/08.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/09.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/10.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/11.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/11.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/12.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/13.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/13.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "14": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/14.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/14.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "15": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/15.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/15.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/16.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/16.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "17": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/17.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/17.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "18": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/20.png",
+          "asset_file": "graphics/unknown/00_0b2120/19_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "POLAR_KIND_QUESTION_CRATE_WUMPA_5"
     },
     {
       "slot": 31,
       "valid": true,
       "table_A_address": "0x0817A2B8",
       "table_B_address": "0x0817A4BC",
-      "header_byte": 1,
+      "palette_bank": 1,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 28,
       "keyframes": [
@@ -25769,103 +25738,102 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/02.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/03.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/05.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/06.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/07.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/08.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/09.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/10.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/11.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/11.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/12.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/13.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/13.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "14": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/14.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/14.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "15": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/15.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/15.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/16.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/16.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "17": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/17.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/17.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "18": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/20.png",
+          "asset_file": "graphics/unknown/00_0b2120/19_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "POLAR_KIND_QUESTION_CRATE_AKU_AKU"
     },
     {
       "slot": 32,
@@ -25884,7 +25852,7 @@
       "valid": true,
       "table_A_address": "0x0817A2B8",
       "table_B_address": "0x0817A4BC",
-      "header_byte": 1,
+      "palette_bank": 1,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 28,
       "keyframes": [
@@ -26666,110 +26634,109 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/02.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/03.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/05.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/05.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "6": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/06.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/07.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/08.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/09.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/10.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/11.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/11.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "12": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/12.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/12.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "13": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/13.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/13.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "14": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/14.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/14.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "15": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/15.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/15.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/16.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/16.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "17": {
-          "asset_file": "graphics/unknown/00_0b2120/03_record_slot28/17.png",
+          "asset_file": "graphics/unknown/00_0b2120/03_question_crate/17.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "18": {
-          "asset_file": "graphics/unknown/00_0b2120/18_emerging_creature/20.png",
+          "asset_file": "graphics/unknown/00_0b2120/19_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": null
     },
     {
       "slot": 36,
       "valid": true,
       "table_A_address": "0x08179DE0",
       "table_B_address": "0x08179E04",
-      "header_byte": 6,
+      "palette_bank": 6,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 12,
       "keyframes": [
@@ -26840,30 +26807,29 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/13_record_slot12/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/13_boost_pad/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/13_record_slot12/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/13_boost_pad/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/13_record_slot12/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/13_boost_pad/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": null
     },
     {
       "slot": 37,
       "valid": true,
       "table_A_address": "0x08179DE0",
       "table_B_address": "0x08179E04",
-      "header_byte": 6,
+      "palette_bank": 6,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 12,
       "keyframes": [
@@ -26934,30 +26900,29 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/13_record_slot12/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/13_boost_pad/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/13_record_slot12/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/13_boost_pad/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/13_record_slot12/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/13_boost_pad/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": null
     },
     {
       "slot": 38,
       "valid": true,
       "table_A_address": "0x08179DE0",
       "table_B_address": "0x08179E04",
-      "header_byte": 6,
+      "palette_bank": 6,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 12,
       "keyframes": [
@@ -27028,30 +26993,29 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/13_record_slot12/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/13_boost_pad/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/13_record_slot12/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/13_boost_pad/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/13_record_slot12/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/13_boost_pad/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "POLAR_KIND_PALETTE_CYCLE_2"
     },
     {
       "slot": 39,
       "valid": true,
       "table_A_address": "0x08179DE0",
       "table_B_address": "0x08179E04",
-      "header_byte": 6,
+      "palette_bank": 6,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 12,
       "keyframes": [
@@ -27122,30 +27086,29 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/13_record_slot12/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/13_boost_pad/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/00_0b2120/13_record_slot12/01.png",
+          "asset_file": "graphics/unknown/00_0b2120/13_boost_pad/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/00_0b2120/13_record_slot12/04.png",
+          "asset_file": "graphics/unknown/00_0b2120/13_boost_pad/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "POLAR_KIND_PALETTE_CYCLE_3"
     },
     {
       "slot": 40,
       "valid": true,
       "table_A_address": "0x0817A6A0",
       "table_B_address": "0x0817A6AC",
-      "header_byte": 7,
+      "palette_bank": 7,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -27162,13 +27125,12 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/00_0b2120/19_checkpoint_text/00.png",
+          "asset_file": "graphics/unknown/00_0b2120/24_checkpoint_text/00.png",
           "w_tiles": 8,
           "h_tiles": 4
         }
       },
-      "label": "\"CHECK POINT\" text",
-      "identified": true
+      "label": "POLAR_KIND_CHECKPOINT_TEXT"
     }
   ]
 }

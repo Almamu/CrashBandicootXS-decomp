@@ -35,12 +35,15 @@ ROM_BASE = 0x08000000
 TAG = 0x30
 MIN_ZERO_RUN = 7
 
-# (address, end, palette for the PNG): the categories' 256-colour OBJ
-# palettes (category_descriptor.palette), bank 0, which draws them cleanly.
+# (address, end, palette for the PNG): the 16 colours each set is drawn
+# with. The players' sets use bank 0 of their categories' 256-colour OBJ
+# palette (category_descriptor.palette; both player records' bank is 0);
+# the Yeti's is Yeti::palette, which Yeti::UpdatePalette DMAs to OBJ
+# palette 15 for it. Only the PNG's colours depend on this.
 SETS = [
-    (0x080C2758, 0x080DA1D8, 0x08178F80),
-    (0x080DA1D8, 0x080FF1B0, 0x08178F80),
-    (0x0815A050, 0x08167AD4, 0x0817AAA4),
+    (0x080C2758, 0x080DA1D8, 0x08178F80),  # gPolarCategoryPalette
+    (0x080DA1D8, 0x080FF1B0, 0x0817AA6C),  # Yeti::palette
+    (0x0815A050, 0x08167AD4, 0x0817AAA4),  # gAirshipCategoryPalette
 ]
 
 

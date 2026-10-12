@@ -1,0 +1,291 @@
+{
+  "sheet_rom_address": "0x0814174C",
+  "folders": [
+    {
+      "folder": "00_shot",
+      "frames": 3,
+      "records": [
+        2
+      ],
+      "palette": "gAirshipCategoryPalette",
+      "bank": 1
+    },
+    {
+      "folder": "01_plane",
+      "frames": 32,
+      "records": [
+        1
+      ],
+      "palette": "gAirshipCategoryPalette",
+      "bank": 2
+    },
+    {
+      "folder": "02_bomber",
+      "frames": 10,
+      "records": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "palette": "gAirshipCategoryPalette",
+      "bank": 2
+    },
+    {
+      "folder": "03_cannonball",
+      "frames": 1,
+      "records": [
+        3
+      ],
+      "palette": "gAirshipCategoryPalette",
+      "bank": 2
+    },
+    {
+      "folder": "04_fireball",
+      "frames": 8,
+      "records": [
+        38,
+        39
+      ],
+      "palette": "gAirshipCategoryPalette",
+      "bank": 3
+    },
+    {
+      "folder": "05_balloon_red_cross",
+      "frames": 6,
+      "records": [
+        42
+      ],
+      "palette": "gAirshipCategoryPalette",
+      "bank": 7
+    },
+    {
+      "folder": "06_balloon_red",
+      "frames": 6,
+      "records": [
+        40
+      ],
+      "palette": "gAirshipCategoryPalette",
+      "bank": 5
+    },
+    {
+      "folder": "07_balloon_yellow",
+      "frames": 6,
+      "records": [
+        41
+      ],
+      "palette": "gAirshipCategoryPalette",
+      "bank": 6
+    },
+    {
+      "folder": "08_question_crate",
+      "frames": 1,
+      "records": [
+        19,
+        20,
+        21,
+        22,
+        23
+      ],
+      "palette": "gAirshipCategoryPalette",
+      "bank": 7
+    },
+    {
+      "folder": "09_time_crate_1",
+      "frames": 1,
+      "records": [
+        24
+      ],
+      "palette": "gAirshipCategoryPalette",
+      "bank": 5
+    },
+    {
+      "folder": "10_time_crate_2",
+      "frames": 1,
+      "records": [
+        25
+      ],
+      "palette": "gAirshipCategoryPalette",
+      "bank": 5
+    },
+    {
+      "folder": "11_time_crate_3",
+      "frames": 1,
+      "records": [
+        26
+      ],
+      "palette": "gAirshipCategoryPalette",
+      "bank": 5
+    },
+    {
+      "folder": "12_crate_shards",
+      "frames": 8,
+      "records": [
+        19,
+        20,
+        21,
+        22,
+        23
+      ],
+      "palette": "gAirshipCategoryPalette",
+      "bank": 7
+    },
+    {
+      "folder": "13_fireball_burst",
+      "frames": 10,
+      "records": [
+        38,
+        39
+      ],
+      "palette": "gAirshipCategoryPalette",
+      "bank": 3
+    },
+    {
+      "folder": "14_explosion",
+      "frames": 10,
+      "records": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        28,
+        30,
+        45
+      ],
+      "palette": "gAirshipCategoryPalette",
+      "bank": 2,
+      "other_banks": [
+        5,
+        4
+      ]
+    },
+    {
+      "folder": "15_parachute_nitro",
+      "frames": 14,
+      "records": [
+        27
+      ],
+      "palette": "gAirshipCategoryPalette",
+      "bank": 8
+    },
+    {
+      "folder": "16_collected_wumpa",
+      "frames": 14,
+      "records": [
+        44
+      ],
+      "palette": "gAirshipCategoryPalette",
+      "bank": 9
+    },
+    {
+      "folder": "17_ring",
+      "frames": 4,
+      "records": [
+        31,
+        43
+      ],
+      "palette": "gAirshipCategoryPalette",
+      "bank": 11
+    },
+    {
+      "folder": "18_rocket",
+      "frames": 5,
+      "records": [
+        28,
+        30
+      ],
+      "palette": "gAirshipCategoryPalette",
+      "bank": 5
+    },
+    {
+      "folder": "19_stopwatch",
+      "frames": 6,
+      "records": [
+        29
+      ],
+      "palette": "gAirshipCategoryPalette",
+      "bank": 5
+    },
+    {
+      "folder": "20_time_crate_shards",
+      "frames": 8,
+      "records": [
+        24,
+        25,
+        26
+      ],
+      "palette": "gAirshipCategoryPalette",
+      "bank": 5
+    },
+    {
+      "folder": "21_rocket_burst",
+      "frames": 11,
+      "records": [
+        28,
+        30
+      ],
+      "palette": "gAirshipCategoryPalette",
+      "bank": 5
+    },
+    {
+      "folder": "22_hovercraft_cannon",
+      "frames": 25,
+      "records": [
+        10,
+        11,
+        15,
+        16,
+        17,
+        18,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37
+      ],
+      "palette": "gHovercraftCategoryPalette",
+      "bank": 10
+    },
+    {
+      "folder": "23_hovercraft_launcher",
+      "frames": 22,
+      "records": [
+        12
+      ],
+      "palette": "gHovercraftCategoryPalette",
+      "bank": 10
+    },
+    {
+      "folder": "24_hovercraft_side_gun",
+      "frames": 1,
+      "records": [
+        13
+      ],
+      "palette": "gHovercraftCategoryPalette",
+      "bank": 10
+    },
+    {
+      "folder": "25_hovercraft_cannon_flash",
+      "frames": 6,
+      "records": [
+        14
+      ],
+      "palette": "gHovercraftCategoryPalette",
+      "bank": 4
+    },
+    {
+      "folder": "26_checkpoint_text",
+      "frames": 1,
+      "records": [
+        46
+      ],
+      "palette": "gAirshipCategoryPalette",
+      "bank": 9
+    }
+  ]
+}
