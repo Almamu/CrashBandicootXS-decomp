@@ -3,7 +3,6 @@
 #include "ctrl.hpp"
 
 extern "C" {
-#include "match.h"
 #include <agb_syscall.h>
 #include "system.h"
 }
@@ -14,28 +13,31 @@ extern "C" {
  * `AgbMain` in src/system/main.cpp can run) and before main.cpp itself. */
 
 /* BIOS `Div` (SWI 6) wrapper exposing both the quotient (return value)
- * and the remainder (via `remainderOut`). Written with inline asm
- * (rather than a plain `register`-pinned call) because the ROM saves
- * `remainderOut` across the SWI with a bare `push {r2}`/`pop {r2}`
- * pair - marking r2 as clobbered on a plain call makes the compiler
- * spill it through a callee-saved register (r4) with a normal
- * push/pop-list prologue instead, which is a real but differently-
- * shaped save. */
+ * and the remainder (via `remainderOut`). The SWI takes the dividend and
+ * divisor in r0/r1 and returns the quotient in r0, the remainder in r1
+ * and |quotient| in r3: `quotient`/`remainder` are bound to r0/r1 for
+ * the asm, and r3 is clobbered. `remainderOut` stays in r2, where it
+ * arrives, and the asm text saves it across the SWI itself with a bare
+ * `push {r2}`/`pop {r2}`. gcc never saves a register that way (an "r2"
+ * clobber gets a copy in callee-saved r4 and a push/pop-list prologue
+ * instead), so the pair is in the asm, as the ROM's source had it. r2
+ * needs no binding: nothing else wants it.
+ *
+ * The register variables are the SWI's operand binding, the way an
+ * inline SWI wrapper is written for gcc (ARM has no per-register asm
+ * constraints), not a nudge of gcc's register choice: like
+ * GaxHuffUnComp's (lib/gax/src/gax_swi.c), they and the asm count as the
+ * original source (tools/match_idioms.py's ORIGINAL_SOURCE; #662). */
 s32 DivMod(s32 number, s32 denom, s32 *remainderOut)
 {
-    MATCH_HOLD_REG(s32, quotient, r0) = number;
-    MATCH_HOLD_REG(s32, remainder, r1) = denom;
-    MATCH_HOLD_REG(s32 *, outPtr, r2) = remainderOut;
+    register s32 quotient asm("r0") = number;
+    register s32 remainder asm("r1") = denom;
 
     // clang-format off
-    asm volatile(
-        "push {r2}\n\t"
-        "svc #6\n\t"
-        "pop {r2}"
-        : "+r"(quotient), "+r"(remainder), "+r"(outPtr)
-    );
+    asm volatile("push {r2}\n\tsvc #6\n\tpop {r2}"
+                 : "+r"(quotient), "+r"(remainder) : : "r3");
     // clang-format on
-    *outPtr = remainder;
+    *remainderOut = remainder;
     return quotient;
 }
 
