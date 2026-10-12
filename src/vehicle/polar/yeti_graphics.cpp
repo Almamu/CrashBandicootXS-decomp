@@ -99,6 +99,7 @@ void Yeti::LoadGraphics()
     DmaCopy16(3, buf, (void *)BG_SCREEN_ADDR(27), sizeof(buf));
 
     s32 base = BG_CHAR_ADDR(2) + 0xff * TILE_SIZE_8BPP;
+    /* `zero` is needed: inlined, the instructions are reordered */
     u32 zero = 0;
     s32 p;
 

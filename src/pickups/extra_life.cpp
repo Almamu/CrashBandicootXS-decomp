@@ -195,6 +195,7 @@ void ExtraLife::SendToHud()
  * left and hop 2 to the right, by gExtraLifeHopWidths[mode - 1]. */
 void ExtraLife::UpdateHop()
 {
+    /* `widths` is needed: inlined, the code is 5 instructions shorter */
     struct three_words widths = gExtraLifeHopWidths;
     s32 sn;
 

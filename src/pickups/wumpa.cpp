@@ -60,6 +60,7 @@ void Wumpa::StartPayout()
  * the left and hop 2 to the right, by gWumpaHopWidths[mode - 1]. */
 void Wumpa::UpdateHop()
 {
+    /* `widths` is needed: inlined, the code is 5 instructions shorter */
     struct three_words widths = gWumpaHopWidths;
     s32 sn;
 

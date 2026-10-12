@@ -138,6 +138,7 @@ void Hud::UpdateLives()
         gHudSlideOffset = 0;
 
     s32 v = lives;
+    /* `w` is needed: inlined, the instructions are reordered */
     s32 w = shownLives;
 
     cur = parts;
@@ -194,6 +195,7 @@ void Hud::UpdateCrates()
     HudPart *cur;
     s32 v;
     s32 digits;
+    /* `w` is needed: inlined, the instructions are reordered */
     s32 w;
     s32 off;
 

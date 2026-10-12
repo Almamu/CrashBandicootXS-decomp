@@ -82,6 +82,7 @@ void PolarPlayer::Update()
     if (gPolarAkuAku != NULL) {
         gPolarAkuAku->Move(x, y, z);
     } else {
+        /* `tier` is needed: inlined, the instructions are reordered */
         s32 tier = gLevelState->maskLevel;
 
         gPolarAkuAku = SpawnPolarAkuAku(x, y, z, tier);
@@ -153,8 +154,9 @@ void PolarPlayer::Draw()
  * frames. */
 s32 PolarPlayer::Hurt()
 {
-    /* Both globals through pointers taken first: the ROM loads their
-     * addresses before the tests and keeps them for the else branch. */
+    /* Both globals through pointers (`timer`, `aku`) taken first: the
+     * ROM loads their addresses before the tests and keeps them for the
+     * else branch. */
     s32 *timer = &gPolarInvulnTimer;
 
     if (*timer != 0)
@@ -184,7 +186,7 @@ s32 PolarPlayer::Hurt()
  * (state 12, anim 11) with no life lost yet (StateShocked). */
 s32 PolarPlayer::Shock()
 {
-    /* The globals through pointers, as in Hurt. */
+    /* The globals through pointers (`timer`, `aku`), as in Hurt. */
     s32 *timer = &gPolarInvulnTimer;
 
     if (*timer != 0)

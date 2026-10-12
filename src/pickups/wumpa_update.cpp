@@ -27,6 +27,7 @@ void Wumpa::CheckPickup()
         return;
 
     u32 flags = f.flags << 24;
+    /* `contact` is needed: inlined, the code is 2 instructions longer */
     s32 contact;
 
     if ((flags >> (24 + ENTITY_BIT_TOUCHED)) & 1)
@@ -176,8 +177,8 @@ void Wumpa::Update()
             UpdateHop();
         }
     } else if (state == WUMPA_STATE_PAYOUT) {
-        /* Both coordinates loaded and offset before the stores, as in the
-         * ROM. */
+        /* Both coordinates loaded and offset (`nx`, `ny`) before the
+         * stores, as in the ROM. */
         Player *player = gPlayer;
         s32 px = player->x;
         s32 py = player->y;

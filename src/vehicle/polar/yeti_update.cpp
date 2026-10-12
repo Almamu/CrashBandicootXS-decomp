@@ -89,6 +89,7 @@ void Yeti::Update()
     if (state != YETI_STATE_STOP)
         x += ((gActorList)->x - x) / 32;
     obj = anim;
+    /* `old` is needed: inlined, the code is 29 instructions shorter */
     old = Q8_TO_INT(obj->animTime);
     obj->animTime += obj->animTimer;
     obj->animDone = 0;
@@ -110,6 +111,7 @@ void Yeti::Update()
     f.a = catchBox;
     BoxMove(&f.a, Q8_TO_INT(x), 0, Q8_TO_INT(position));
     if ((u32)state <= YETI_STATE_CHARGE) {
+        /* `playerAddr` is needed: inlined, the instructions are reordered */
         ActorSelf **playerAddr = &gActorList;
         ActorSelf *pl;
         struct anim_box *b;
@@ -162,11 +164,13 @@ void Yeti::UpdatePalette()
         s32 mask = 0x1f;
         u16 *dst = BG_PALETTE(15);
         const u16 *src = palette;
+        /* `mask2` is needed: inlined, the instructions are reordered */
         s32 mask2 = 0x1f;
         s32 i;
 
         for (i = 15; i >= 0; i--) {
             u16 c = *src;
+            /* `r` is needed: inlined, the code is 2 instructions shorter */
             s32 r = Q8_MUL(mask2 & c, f);
             s32 g = Q8_MUL((c >> 5) & mask, f);
 
@@ -203,6 +207,7 @@ void Yeti::UpdateBg2()
     }
     scale = Q8_DIV(distance, 0x5500);
     base = GetActorBgCenterX();
+    /* `t` is needed: inlined, the code is 8 instructions longer */
     t = Q8_DIV(x * 47, distance) + base;
     *(vs32 *)REG_ADDR_BG2X = 0x4000 - Q8_MUL(t, scale);
     *(vs32 *)REG_ADDR_BG2Y = 0x4400 - Q8_MUL(GetActorBgCenterY(), scale);
