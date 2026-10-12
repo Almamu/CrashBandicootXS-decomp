@@ -17,18 +17,17 @@ Player::Player(u16 id, u16 px, u16 py, u16 unused)
 
     child = c;
     c->bank = gSpriteBankSet->Bank(34);
-    {
-        /* One 0 for both stores, kept in a register across the calls, as
-         * in the ROM (two literals give `id` and the 0 each other's
-         * registers). */
-        s32 zero = 0;
 
-        c->tag = zero;
-        c->ResetFrameTimer();
-        c->ResetFrameIndex();
-        c->SetAnimDone(0);
-        maskTrailIdx = zero;
-    }
+    /* One 0 for both stores, kept in a register across the calls, as
+     * in the ROM (two literals give `id` and the 0 each other's
+     * registers). */
+    s32 zero = 0;
+
+    c->tag = zero;
+    c->ResetFrameTimer();
+    c->ResetFrameIndex();
+    c->SetAnimDone(0);
+    maskTrailIdx = zero;
     Reset();
 
     this->id = id;

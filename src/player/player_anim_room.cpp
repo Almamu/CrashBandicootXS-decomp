@@ -32,6 +32,7 @@ static inline const struct hitbox_quad *AnimBox(const struct sprite_bank *bank, 
 u8 Player::HasRoomForAnim(s32 anim)
 {
     const struct hitbox_quad *box;
+    /* `h` is needed: inlined, the instructions differ */
     u8 h;
     struct vec2 pos;
     s32 origY;
@@ -57,10 +58,8 @@ u8 Player::HasRoomForAnim(s32 anim)
         do {
             Crate *c = Crates()->slots[i];
 
-            if (c->GetClassId() == 3) {
-                if (c->PlayerAnimWouldTouch(anim) == 1)
-                    return 0;
-            }
+            if (c->GetClassId() == 3 && c->PlayerAnimWouldTouch(anim) == 1)
+                return 0;
             i++;
         } while (i < Crates()->count);
     return 1;

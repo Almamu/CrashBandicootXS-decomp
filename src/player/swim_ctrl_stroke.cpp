@@ -140,10 +140,7 @@ void SwimCtrl::StartStroke()
         tilt = 12;
         break;
     case 6:
-        {
-            s32 v = SIGNED_X(target, 704);
-            target->speedX = v;
-        }
+        target->speedX = SIGNED_X(target, 704);
         break;
     case 3:
         target->speedX = SIGNED_X(target, 528);
@@ -255,6 +252,7 @@ void SwimCtrl::ApplySwimDrift()
     u16 mag;
     u8 valB;
     u8 valA;
+    /* `dir` is needed: inlined, the code is 16 instructions shorter */
     u8 dir;
 
     if (state == SWIM_STATE_STROKE) {
@@ -275,6 +273,7 @@ void SwimCtrl::ApplySwimDrift()
     if ((gRoomFrameCount & 0x7F) == 0 && RandRange(2) == 0) {
         Player *t = target;
         s32 x = Q8_TO_INT(t->x);
+        /* `y` is needed: inlined, the instructions differ */
         s32 y = Q8_TO_INT(t->y) - 20;
         s32 flip = t->mirrorFlags.mirrorX;
         MovingSprite *obj = gEntitySpawner->SpawnEffectPart(40, 4, x, y, flip);

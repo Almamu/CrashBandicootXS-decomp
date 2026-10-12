@@ -44,17 +44,15 @@ void ActionCtrl::StateLeftGround()
          * `part->flags2 |= 1` and ActOrFlags0D allocate differently. The
          * 0 is stored through a pointer so it is loaded after the
          * address. */
-        {
-            u8 *flags2 = &part->f.bytes.flags2;
 
-            *flags2 |= ENTITY_FLAG2_FLOOR_PROBE;
-        }
-        {
-            u8 *blocked = &slamBlocked;
+        u8 *flags2 = &part->f.bytes.flags2;
 
-            z = 0;
-            *blocked = z;
-        }
+        *flags2 |= ENTITY_FLAG2_FLOOR_PROBE;
+
+        u8 *blocked = &slamBlocked;
+
+        z = 0;
+        *blocked = z;
         switch (tag = part->tag) {
         case 0xD:
         case 0x18:
@@ -103,52 +101,50 @@ void ActionCtrl::StateLeftGround()
         }
         return;
     }
-    {
-        u32 in = gKeys.all;
-        u16 p = INPUT_PRESSED(in);
-        s32 fire = p & 1;
 
-        if (fire) {
-            SetMode(ACTION_STATE_JUMP);
-            SetTargetAnim(part, 0x13);
-            frame = hit;
-            QueueY(hit, 1, 7);
-        } else {
-            s32 t = 2;
-            u16 alt;
+    u32 in = gKeys.all;
+    u16 p = INPUT_PRESSED(in);
+    s32 fire = p & 1;
 
-            t &= p;
-            alt = t;
+    if (fire) {
+        SetMode(ACTION_STATE_JUMP);
+        SetTargetAnim(part, 0x13);
+        frame = hit;
+        QueueY(hit, 1, 7);
+    } else {
+        s32 t = 2;
+        u16 alt;
 
-            if (alt) {
-                ActOrFlags0D(part, ENTITY_FLAG2_FLOOR_PROBE);
-                slamBlocked = fire;
-                if (gKeys.all & DPAD_SIDEWAYS)
-                    QueueX(fire, 1, 1);
-                else
-                    QueueX(0, 1, 0);
-                if ((u32)(state - ACTION_STATE_SPIN) > 1)
-                    StartSpin();
-                else
-                    SetMode(ACTION_STATE_SPIN);
-            } else if (INPUT_HELD(in) & R_BUTTON) {
-                ActOrFlags0D(part, ENTITY_FLAG2_FLOOR_PROBE);
-                slamBlocked = alt;
-                SetMode(ACTION_STATE_CROUCH_DOWN);
-                SetTargetAnim(part, 3);
-                frames = alt;
-                QueueX(alt, 1, alt);
-            }
+        t &= p;
+        alt = t;
+
+        if (alt) {
+            ActOrFlags0D(part, ENTITY_FLAG2_FLOOR_PROBE);
+            slamBlocked = fire;
+            if (gKeys.all & DPAD_SIDEWAYS)
+                QueueX(fire, 1, 1);
+            else
+                QueueX(0, 1, 0);
+            if ((u32)(state - ACTION_STATE_SPIN) > 1)
+                StartSpin();
+            else
+                SetMode(ACTION_STATE_SPIN);
+        } else if (INPUT_HELD(in) & R_BUTTON) {
+            ActOrFlags0D(part, ENTITY_FLAG2_FLOOR_PROBE);
+            slamBlocked = alt;
+            SetMode(ACTION_STATE_CROUCH_DOWN);
+            SetTargetAnim(part, 3);
+            frames = alt;
+            QueueX(alt, 1, alt);
         }
     }
-    {
-        u8 dir = gInput->GetDpadDirection();
 
-        if (dir == 0) {
-            motionXKeepSpeed = dir;
-            motionXPending = 1;
-            motionX = dir;
-        }
+    u8 dir = gInput->GetDpadDirection();
+
+    if (dir == 0) {
+        motionXKeepSpeed = dir;
+        motionXPending = 1;
+        motionX = dir;
     }
 }
 
@@ -249,15 +245,13 @@ void ActionCtrl::StateUnusedHang()
 void ActionCtrl::ReleaseHang()
 {
     Player *p;
-    s32 count;
 
     part->hanging = 0;
     part->SetPos(part->x, part->y + 0x600);
     SetMode(ACTION_STATE_AIRBORNE_FALL);
     SetTargetAnim(part, 0x1B);
     p = part;
-    count = p->bank->anims[p->tag].frameCount;
-    p->frame = count - 1;
+    p->frame = p->bank->anims[p->tag].frameCount - 1;
     QueueNowY(4);
 }
 
@@ -294,31 +288,30 @@ void ActionCtrl::StateHangMoveStart()
         motionX = 0;
         return;
     }
-    {
-        u8 cur = motionX;
 
-        if (cur == 0) {
-            switch (v) {
-            case 3 ... 8:
-                QueuePendingX(cur, 0x20);
-            }
-        }
-        if (part->animDone) {
-            Player *p;
-            s32 zero = 0;
-            s32 frame;
-            s32 count;
+    u8 cur = motionX;
 
-            SetMode(ACTION_STATE_HANG_MOVE);
-            SetTargetAnim(part, 0x21);
-            this->frame = zero;
-            p = part;
-            frame = 5;
-            count = p->bank->anims[p->tag].frameCount;
-            CLAMP_INDEX(frame, count);
-            p->frame = frame;
-            QueuePendingX(zero, 0x20);
+    if (cur == 0) {
+        switch (v) {
+        case 3 ... 8:
+            QueuePendingX(cur, 0x20);
         }
+    }
+    if (part->animDone) {
+        Player *p;
+        s32 zero = 0;
+        s32 frame;
+        s32 count;
+
+        SetMode(ACTION_STATE_HANG_MOVE);
+        SetTargetAnim(part, 0x21);
+        this->frame = zero;
+        p = part;
+        frame = 5;
+        count = p->bank->anims[p->tag].frameCount;
+        CLAMP_INDEX(frame, count);
+        p->frame = frame;
+        QueuePendingX(zero, 0x20);
     }
     UpdateFacing();
 }
@@ -330,6 +323,7 @@ void ActionCtrl::StateHangMoveStart()
  * frame's anchor X (mirrored). */
 void ActionCtrl::StateHangMove()
 {
+    /* `dir` is needed: inlined, the code is 7 instructions shorter */
     u8 dir = gInput->GetDpadDirection();
     u32 in = gKeys.all;
     Player *p = part;
@@ -392,6 +386,7 @@ void ActionCtrl::StateHangMove()
         const struct sprite_frame *sf = part->GetFrame();
         const struct sprite_point *info;
         s32 x;
+        /* `y` is needed: inlined, the code is 3 instructions shorter */
         s32 y;
 
         switch (sf->pieces[0] >> 4) {
@@ -478,6 +473,7 @@ static inline s32 CollidableCount()
 void ActionCtrl::DoSuperBodySlamShockwave()
 {
     Player *p = part;
+    /* `range` is needed: inlined, the code is 6 instructions shorter */
     s32 range;
     s32 px;
     s32 py;

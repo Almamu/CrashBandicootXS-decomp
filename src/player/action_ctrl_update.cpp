@@ -40,6 +40,7 @@ static inline u32 KeysHeld(u32 in, u32 mask)
  * (`kind`: 0x13 spinning, 0x14 sliding, 0x15/0x16 body slamming, else 1). */
 void ActionCtrl::Update(MovingSprite *)
 {
+    /* `in` is needed: inlined, the instructions are reordered */
     u32 in = gKeys.all;
 
     if (slamBlocked != 0) {
@@ -51,36 +52,36 @@ void ActionCtrl::Update(MovingSprite *)
     if (prevSlippery != IsSlippery(part))
         UpdateSkidAnim();
     prevSlippery = IsSlippery(part);
-    {
-        Player *p = part;
-        s32 y = p->y;
 
-        if (y > INT_TO_Q8(gLevelLayers->layer0->heightPx) - 0x1400) {
-            p->f.flags &= ~ENTITY_FLAG_COLLIDES;
-            {
-                Player *q = part;
+    Player *p = part;
+    /* `y` is needed: inlined, the code is 5 instructions shorter */
+    s32 y = p->y;
 
-                if (IsSlippery(q) == 0)
-                    q->speedX = 0;
-                q->rampX.start = 0;
-                q->rampX.step = 0;
-                q->rampX.target = 0;
-            }
-            {
-                Player *r = part;
-                s32 y2 = r->y;
+    if (y > INT_TO_Q8(gLevelLayers->layer0->heightPx) - 0x1400) {
+        p->f.flags &= ~ENTITY_FLAG_COLLIDES;
 
-                if (y2 > INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x1400) {
-                    r->deadline = 0;
-                    gLevelState->SetMaskLevel(MASK_LEVEL_NONE);
-                    HandleEvent(0, EVENT_HIT, 0);
-                }
-            }
+        Player *q = part;
+
+        if (IsSlippery(q) == 0)
+            q->speedX = 0;
+        q->rampX.start = 0;
+        q->rampX.step = 0;
+        q->rampX.target = 0;
+
+        Player *r = part;
+        /* `y2` is needed: inlined, the instructions are reordered */
+        s32 y2 = r->y;
+
+        if (y2 > INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x1400) {
+            r->deadline = 0;
+            gLevelState->SetMaskLevel(MASK_LEVEL_NONE);
+            HandleEvent(0, EVENT_HIT, 0);
         }
     }
     if (spinCooldown)
         spinCooldown--;
     if (bumpTimer != 0) {
+        /* `count` is needed: inlined, the instructions differ */
         s32 count = part->listCount;
 
         if (count <= 1) {
@@ -88,6 +89,7 @@ void ActionCtrl::Update(MovingSprite *)
 
             if (left == 0) {
                 if (motionX == 0) {
+                    /* `entry` is needed: inlined, the code is 2 instructions shorter */
                     u8 entry = bumpedMotionX;
 
                     motionXKeepSpeed = left;
@@ -101,25 +103,22 @@ void ActionCtrl::Update(MovingSprite *)
     }
     (this->*stateFuncs[state])();
     part->hitAxes &= PART_DIR_DOWN;
-    if (part->hitAxes == PART_DIR_DOWN) {
-        if (motionY == 4 || motionY == 5) {
-            motionYKeepSpeed = 0;
-            motionYPending = 1;
-            motionY = 0;
-        }
+    if (part->hitAxes == PART_DIR_DOWN && (motionY == 4 || motionY == 5)) {
+        motionYKeepSpeed = 0;
+        motionYPending = 1;
+        motionY = 0;
     }
     ApplyMotion();
-    {
-        Player *p = part;
-        u32 top = p->f.flags >> ENTITY_BIT_COLLIDES;
 
-        if (top == 0) {
-            if (IsSlippery(p) == 0)
-                p->speedX = top;
-            p->rampX.start = top;
-            p->rampX.step = top;
-            p->rampX.target = top;
-        }
+    p = part;
+    u32 top = p->f.flags >> ENTITY_BIT_COLLIDES;
+
+    if (top == 0) {
+        if (IsSlippery(p) == 0)
+            p->speedX = top;
+        p->rampX.start = top;
+        p->rampX.step = top;
+        p->rampX.target = top;
     }
     switch (state) {
     case ACTION_STATE_SPIN:
@@ -149,6 +148,7 @@ void ActionCtrl::Update(MovingSprite *)
  * whether it jumped. */
 u8 ActionCtrl::TryDoubleJump()
 {
+    /* `in` is needed: inlined, the code is 4 instructions shorter */
     u32 in = gKeys.all;
     u16 pressed;
     s32 one;
@@ -210,43 +210,42 @@ void ActionCtrl::HandleAirInput()
             return;
     }
     in = gKeys.all;
-    {
-        Player *p;
 
-        if (state == ACTION_STATE_AIRBORNE_JUMP) {
-            p = part;
-            if (-p->speedY > 0x1BF)
-                goto done;
-            if (-p->speedY > 0x17F)
-                goto done;
-            goto hit;
-        } else if (state == ACTION_STATE_AIRBORNE_FLIP_JUMP) {
-            p = part;
-            if (-p->speedY > 0x1BF)
-                goto done;
-            if (-p->speedY > 0x7F)
-                goto done;
-            goto hit;
-        } else if (state == ACTION_STATE_AIRBORNE_HIGH_JUMP) {
-            p = part;
-            if (-p->speedY > 0xFF)
-                goto done;
-            if (-p->speedY > 0x1F)
-                goto done;
-        hit:
-            ActOrFlags0D(p, ENTITY_FLAG2_FLOOR_PROBE);
-            SetMode(ACTION_STATE_AIRBORNE_FALL);
-        } else if (state == ACTION_STATE_AIR_SPIN) {
-            if (tornadoTurn) {
-                s32 speed;
+    Player *p;
 
-                p = part;
-                speed = p->speedY;
-                if (-speed <= 0x7F)
-                    ActOrFlags0D(p, ENTITY_FLAG2_FLOOR_PROBE);
-                if (speed > 0)
-                    StartTornadoFall();
-            }
+    if (state == ACTION_STATE_AIRBORNE_JUMP) {
+        p = part;
+        if (-p->speedY > 0x1BF)
+            goto done;
+        if (-p->speedY > 0x17F)
+            goto done;
+        goto hit;
+    } else if (state == ACTION_STATE_AIRBORNE_FLIP_JUMP) {
+        p = part;
+        if (-p->speedY > 0x1BF)
+            goto done;
+        if (-p->speedY > 0x7F)
+            goto done;
+        goto hit;
+    } else if (state == ACTION_STATE_AIRBORNE_HIGH_JUMP) {
+        p = part;
+        if (-p->speedY > 0xFF)
+            goto done;
+        if (-p->speedY > 0x1F)
+            goto done;
+    hit:
+        ActOrFlags0D(p, ENTITY_FLAG2_FLOOR_PROBE);
+        SetMode(ACTION_STATE_AIRBORNE_FALL);
+    } else if (state == ACTION_STATE_AIR_SPIN) {
+        if (tornadoTurn) {
+            s32 speed;
+
+            p = part;
+            speed = p->speedY;
+            if (-speed <= 0x7F)
+                ActOrFlags0D(p, ENTITY_FLAG2_FLOOR_PROBE);
+            if (speed > 0)
+                StartTornadoFall();
         }
     }
 done:
