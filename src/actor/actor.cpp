@@ -54,18 +54,16 @@ ActorSelf::ActorSelf(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
 
     RefreshDepth(this);
 
-    {
-        ActorSelf *head = gActorList;
+    ActorSelf *head = gActorList;
 
-        if (head != NULL) {
-            next = head;
-            prev = head->prev;
-            head->prev = this;
-            prev->next = this;
-        } else {
-            next = this;
-            prev = this;
-        }
+    if (head != NULL) {
+        next = head;
+        prev = head->prev;
+        head->prev = this;
+        prev->next = this;
+    } else {
+        next = this;
+        prev = this;
     }
 }
 

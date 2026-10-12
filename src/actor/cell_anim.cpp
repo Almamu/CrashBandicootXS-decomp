@@ -72,17 +72,16 @@ void InitCellAnim(s32 type, void *cellAnim, u32 animSize, s32 checkpoint)
     gCellAnimCols = cell->cols;
     gCellAnimRows = cell->rows;
     gCellAnimTileBytes = (area = gCellAnimCols * gCellAnimRows) << 5;
-    {
-        s32 *frameSize = &gCellAnimFrameSize;
-        s32 *reload;
 
-        size = gCellAnimTileBytes;
-        reload = frameSize;
-        if (flag)
-            size += (area + 7) / 8 * 4;
-        *frameSize = size;
-        gCellAnimLength = INT_TO_Q8(__divsi3(animSize - 0x204, *reload));
-    }
+    s32 *frameSize = &gCellAnimFrameSize;
+    s32 *reload;
+
+    size = gCellAnimTileBytes;
+    reload = frameSize;
+    if (flag)
+        size += (area + 7) / 8 * 4;
+    *frameSize = size;
+    gCellAnimLength = INT_TO_Q8(__divsi3(animSize - 0x204, *reload));
     gCellAnimTime = 0;
     ResetCellAnimBg();
     gCellAnimSpeed = 0;

@@ -46,21 +46,20 @@ void UpdateActorPaletteCycle(void)
                          0x10);
     if (++gActorPaletteCycleTimer > 0x23) {
         gActorPaletteCycleTimer = 0;
-        {
-            s32 *cur = &gActorPaletteCycleFrame;
-            s32 target = gActorPaletteCycleTarget;
-            s32 v = *cur;
-            s32 r;
 
-            if (target - v >= 0) {
-                r = v;
-                if (target != r)
-                    r++;
-            } else {
-                r = v - 1;
-            }
-            *cur = r;
+        s32 *cur = &gActorPaletteCycleFrame;
+        s32 target = gActorPaletteCycleTarget;
+        s32 v = *cur;
+        s32 r;
+
+        if (target - v >= 0) {
+            r = v;
+            if (target != r)
+                r++;
+        } else {
+            r = v - 1;
         }
+        *cur = r;
     }
 }
 

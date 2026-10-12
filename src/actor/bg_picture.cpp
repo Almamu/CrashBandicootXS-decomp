@@ -95,11 +95,10 @@ void LoadBgPicture(const u8 *pic)
     MapFill(tileData + tiles * 32, (const u16 *)pic, cols, rows);
     REG_DISPCNT |= DISPCNT_BG1_ON;
     REG_BG1CNT = BGCNT_PRIORITY(3) | BGCNT_CHARBASE(1) | BGCNT_SCREENBASE(26) | BGCNT_TXT512x256;
-    {
-        void *vd = (void *)(VRAM + GetCellAnimFreeTile() * 32);
 
-        DmaCopy16(3, tileData, vd, tiles * 32);
-    }
+    void *vd = (void *)(VRAM + GetCellAnimFreeTile() * 32);
+
+    DmaCopy16(3, tileData, vd, tiles * 32);
 }
 
 /* UNUSED - no caller anywhere in the ROM (no Thumb `bl` to it and no

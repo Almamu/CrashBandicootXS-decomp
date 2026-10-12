@@ -85,12 +85,9 @@ void EnemyCtrl::Update(MovingSprite *)
             if (target->speedX == 0 && target->speedY != 0) {
                 SetMotionY(0);
             } else if (target->speedX < 0) {
-                u8 onScreen;
-
                 if (target->animDone)
                     SetAnimMode(ENEMY_MODE_NORMAL);
-                onScreen = target->IsOnScreen();
-                if (onScreen == 0) {
+                if (target->IsOnScreen() == 0) {
                     MovingSprite *t;
 
                     SetPos(target, baseX, baseY - 0x6400);
@@ -103,12 +100,8 @@ void EnemyCtrl::Update(MovingSprite *)
                 UpdateTriggerBox();
             }
         }
-        {
-            MovingSprite *t = target;
-
-            if (t->frame == 0 && t->stepTimer == 0 && t->IsOnScreen())
-                gAudioContext->PlaySfx(SFX_UNKNOWN_13, 0x100);
-        }
+        if (target->frame == 0 && target->stepTimer == 0 && target->IsOnScreen())
+            gAudioContext->PlaySfx(SFX_UNKNOWN_13, 0x100);
         break;
     case ENEMY_STATE_FALL:
         {
@@ -117,13 +110,12 @@ void EnemyCtrl::Update(MovingSprite *)
 
             if (y > INT_TO_Q8(gLevelLayers->layer0->heightPx) - 0x1E00) {
                 t->f.b.collides = 0;
-                {
-                    MovingSprite *t2 = target;
 
-                    y = t2->y;
-                    if (y > INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x1E00)
-                        MarkGone(t2);
-                }
+                MovingSprite *t2 = target;
+
+                y = t2->y;
+                if (y > INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x1E00)
+                    MarkGone(t2);
             } else if (t->hitAxes == PART_DIR_DOWN) {
                 SetVelY(t, 0, 0, 0);
             } else {
@@ -180,11 +172,10 @@ void EnemyCtrl::Update(MovingSprite *)
 
             t->mirrorFlags.mirrorX = !m;
             SetAnimMode(ENEMY_MODE_ATTACK);
-            {
-                MovingSprite *t2 = target;
 
-                t2->frame = t2->bank->anims[t2->tag].frameCount - 1;
-            }
+            MovingSprite *t2 = target;
+
+            t2->frame = t2->bank->anims[t2->tag].frameCount - 1;
             SetMotionX(1);
         }
         if (popup)
@@ -315,12 +306,11 @@ void EnemyCtrl::HandleEvent(s32, s32 event, s32)
             else
                 SetVelX(t, -0x1000, 0, -0x1800);
             v = (RandRange(3) << 9) - 0x200;
-            {
-                MovingSprite *t2 = target;
 
-                SetVelY(t2, v, 0, v);
-                t2->f.b.visible = 0;
-            }
+            MovingSprite *t2 = target;
+
+            SetVelY(t2, v, 0, v);
+            t2->f.b.visible = 0;
             gAudioContext->PlaySfx(SFX_ENEMY_KNOCKED_AWAY, 0x80);
             delete this;
         }

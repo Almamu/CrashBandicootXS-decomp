@@ -250,10 +250,9 @@ void EnemyCtrl::SetState(s32 newState)
     case ENEMY_STATE_ATTACK_SHOOT:
         if (cycleOffset >= idleTime) {
             SetAnimModeInline(this, ENEMY_MODE_ATTACK);
-            {
-                MovingSprite *part = target;
-                part->frame = part->bank->anims[part->tag].frameCount - 1;
-            }
+
+            MovingSprite *part = target;
+            part->frame = part->bank->anims[part->tag].frameCount - 1;
         } else {
             SetAnimModeInline(this, ENEMY_MODE_NORMAL);
             if (kind == ENEMY_KIND_STATIONARY_SPACE_ENEMY) {
@@ -380,9 +379,8 @@ void EnemyCtrl::UpdateBob()
     MovingSprite *part = target;
     const s16 *table = gSineTable;
     s32 x = part->x;
-    u32 t = gRoomFrameCount / 2;
 
-    part->SetPos(x, baseY + table[(t + 0x100 - phase) & 0xff] * amplitude);
+    part->SetPos(x, baseY + table[(gRoomFrameCount / 2 + 0x100 - phase) & 0xff] * amplitude);
 }
 
 void EnemyCtrl::UpdateOscillateY()
