@@ -38,8 +38,7 @@ s32 SaveData::Read(s32 len)
     u8 *p;
 
     if (gEepromNeedsInit) {
-        u16 ret = (u16)EEPROMConfigure(4);
-        if (ret != 0) {
+        if ((u16)EEPROMConfigure(4) != 0) {
             return -1;
         }
         gEepromNeedsInit = 0;
@@ -95,8 +94,7 @@ s32 SaveData::Write(s32 len)
     u8 *p;
 
     if (gEepromNeedsInit) {
-        u16 ret = (u16)EEPROMConfigure(4);
-        if (ret != 0) {
+        if ((u16)EEPROMConfigure(4) != 0) {
             return -1;
         }
         gEepromNeedsInit = 0;

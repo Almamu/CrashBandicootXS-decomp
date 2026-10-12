@@ -38,10 +38,8 @@ s32 GameProgress::CountPlatinumRelics() const
     count = 0;
     for (i = 0; i < 20; i++) {
         val = levels[i].h.time;
-        if (val != 0) {
-            if (val <= gLevelTable[i].times[2]) {
-                count++;
-            }
+        if (val != 0 && val <= gLevelTable[i].times[2]) {
+            count++;
         }
     }
     return count;
@@ -56,10 +54,8 @@ s32 GameProgress::CountGoldRelics() const
     count = 0;
     for (i = 0; i < 20; i++) {
         val = levels[i].h.time;
-        if (val != 0) {
-            if (val <= gLevelTable[i].times[1] && val > gLevelTable[i].times[2]) {
-                count++;
-            }
+        if (val != 0 && val <= gLevelTable[i].times[1] && val > gLevelTable[i].times[2]) {
+            count++;
         }
     }
     return count;
@@ -74,10 +70,8 @@ s32 GameProgress::CountSapphireRelics() const
     count = 0;
     for (i = 0; i < 20; i++) {
         val = levels[i].h.time;
-        if (val != 0) {
-            if (val <= gLevelTable[i].times[0] && val > gLevelTable[i].times[1]) {
-                count++;
-            }
+        if (val != 0 && val <= gLevelTable[i].times[0] && val > gLevelTable[i].times[1]) {
+            count++;
         }
     }
     return count;

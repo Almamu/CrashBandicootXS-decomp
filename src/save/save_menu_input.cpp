@@ -99,11 +99,9 @@ SaveMenu::SaveMenu()
     SummarizeProgress(&currentStats, gLevelState->PackSaveData());
     RefreshSlotSummaries(*cartSaveAddr);
 
-    {
-        LinkSession **sessionAddr = &gLinkSession;
+    LinkSession **sessionAddr = &gLinkSession;
 
-        *sessionAddr = new LinkSession;
-    }
+    *sessionAddr = new LinkSession;
     FadeBrightness(0x80, 1, 0);
     gameLoaded = 0;
 }
@@ -168,11 +166,10 @@ void SaveMenu::Input(u32 keys)
         case SAVE_MENU_STATE_CONFIRM_OVERWRITE:
             OverwriteInput(keys);
             break;
-        case SAVE_MENU_STATE_UNK8:
-            break;
         case SAVE_MENU_STATE_CONFIRM_DELETE:
             ConfirmDeleteInput(keys);
             break;
+        case SAVE_MENU_STATE_UNK8:
         case SAVE_MENU_STATE_UNK10:
             break;
         }
@@ -283,11 +280,9 @@ void SaveMenu::MoveCursor(u32 keys)
         }
         return;
     }
-    if (keys & DPAD_SIDEWAYS) {
-        if (cursor != 4) {
-            gAudioContext->PlaySfx(SFX_MENU_MOVE, 0x100);
-            cursor ^= 2;
-        }
+    if ((keys & DPAD_SIDEWAYS) && cursor != 4) {
+        gAudioContext->PlaySfx(SFX_MENU_MOVE, 0x100);
+        cursor ^= 2;
     }
 }
 
@@ -414,15 +409,14 @@ void SaveMenu::SaveToSlot(s32 rowIndex)
     }
 
     c0Addr = &gLevelState;
-    {
-        /* The ROM evaluates PackSaveData()'s result before computing
-         * `&buf[1]` (the ROM's own callee-arg setup order for
-         * MemCopy32, not the other way around) - a plain nested call
-         * expression here lets this compiler compute the pointer
-         * argument first instead. */
-        GameProgress *result = (*c0Addr)->PackSaveData();
-        MemCopy32(&buf[1].progress, result, sizeof(GameProgress));
-    }
+
+    /* The ROM evaluates PackSaveData()'s result before computing
+     * `&buf[1]` (the ROM's own callee-arg setup order for
+     * MemCopy32, not the other way around) - a plain nested call
+     * expression here lets this compiler compute the pointer
+     * argument first instead. */
+    GameProgress *result = (*c0Addr)->PackSaveData();
+    MemCopy32(&buf[1].progress, result, sizeof(GameProgress));
     buf[1].level = (u8)(*c0Addr)->GetCurrentLevel();
 
     bcAddr = &gAudioContext;
@@ -484,11 +478,9 @@ void SaveMenu::OverwriteInput(u32 keys)
         }
         return;
     }
-    if (keys & DPAD_DOWN) {
-        if (cursor == 0) {
-            cursor = 1;
-            gAudioContext->PlaySfx(SFX_MENU_MOVE, 0x100);
-        }
+    if ((keys & DPAD_DOWN) && cursor == 0) {
+        cursor = 1;
+        gAudioContext->PlaySfx(SFX_MENU_MOVE, 0x100);
     }
 }
 
@@ -613,11 +605,9 @@ void SaveMenu::ConfirmDeleteInput(u32 keys)
         }
         return;
     }
-    if (keys & DPAD_DOWN) {
-        if (cursor == 0) {
-            cursor = 1;
-            gAudioContext->PlaySfx(SFX_MENU_MOVE, 0x100);
-        }
+    if ((keys & DPAD_DOWN) && cursor == 0) {
+        cursor = 1;
+        gAudioContext->PlaySfx(SFX_MENU_MOVE, 0x100);
     }
 }
 

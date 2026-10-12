@@ -105,14 +105,11 @@ void SaveMenu::DrawMessageLines(const u8 *label1, const u8 *label2)
  * compilers (same shape as DrawEmptySlotLabel, below). */
 void SaveMenu::DrawCancel(u8 highlight)
 {
-    s32 w;
-
     if (highlight)
         gSmallFont->SetPalette(IsBlinkOn() ? 1 : 2);
     else
         gSmallFont->SetPalette(0);
-    w = gSmallFont->MeasureText(GetUiText(0x23));
-    gSmallFont->SetPos((0xf0 - w) >> 1, 0x87);
+    gSmallFont->SetPos((0xf0 - gSmallFont->MeasureText(GetUiText(0x23))) >> 1, 0x87);
     gSmallFont->DrawText(GetUiText(0x23));
 }
 
@@ -130,11 +127,8 @@ void SaveMenu::DrawCancel(u8 highlight)
  * a `y` pinned to r9; #662 round 2). */
 void SaveMenu::DrawYesNoPrompt(s32 value)
 {
-    s32 w;
-
     gSmallFont->SetPalette(0);
-    w = gSmallFont->MeasureText(GetUiText(value));
-    gSmallFont->SetPos(0xa0 - w, 0x87);
+    gSmallFont->SetPos(0xa0 - gSmallFont->MeasureText(GetUiText(value)), 0x87);
     gSmallFont->DrawText(GetUiText(value));
     /* spelled out: IsBlinkOn() here swaps r8 and sb in the rest of the
      * function (#843) */
@@ -263,14 +257,12 @@ static inline void draw_row_mark(SaveMenu *self, s32 x, s32 y, u8 highlight)
 {
     s32 centerX = x + 0x1d;
     s32 textY = y + 0xc;
-    s32 w;
 
     if (highlight)
         gSmallFont->SetPalette(self->IsBlinkOn() ? 1 : 2);
     else
         gSmallFont->SetPalette(0);
-    w = gSmallFont->MeasureText(GetUiText(0x25));
-    gSmallFont->SetPos(centerX - w / 2, textY);
+    gSmallFont->SetPos(centerX - gSmallFont->MeasureText(GetUiText(0x25)) / 2, textY);
     gSmallFont->DrawText(GetUiText(0x25));
 }
 
@@ -309,9 +301,7 @@ void SaveMenu::DrawSlots(SaveData *handle, s32 selectedIndex)
 /* Reserves a font's tiles in OBJ VRAM (as power_dialog.cpp's). */
 static inline void IconReserve(Font **m)
 {
-    ObjVramCursor *c = gObjVramCursor;
-
-    c->Reserve((*m)->tileCount << 5);
+    gObjVramCursor->Reserve((*m)->tileCount << 5);
 }
 
 #define SET_ROW_OBJ_POS(objExpr, px, py)                                        \
@@ -340,19 +330,17 @@ static inline void new_row_icon(UiSprite **slot, u32 bank, u32 frame)
     icon->ResetFrameTimer();
     icon->ResetFrameIndex();
     icon->SetAnimDone(0);
-    {
-        s32 lo = (*slot)->GetAnimPaletteSlot();
-        u8 *p = (u8 *)*slot + 0x29; // the palette nibble's byte
-        s32 m = -16;
 
-        lo &= 15;
-        *p = (*p & m) | lo;
-    }
-    {
-        u16 half = 0x80;
+    s32 lo = (*slot)->GetAnimPaletteSlot();
+    u8 *p = (u8 *)*slot + 0x29; // the palette nibble's byte
+    s32 m = -16;
 
-        (*slot)->affine = half;
-    }
+    lo &= 15;
+    *p = (*p & m) | lo;
+
+    u16 half = 0x80;
+
+    (*slot)->affine = half;
 }
 
 /* The screen's graphics setup (InitSaveMenuIcons): resets the OAM shadow
@@ -404,11 +392,10 @@ void SaveMenu::InitIcons()
     gObjVramCursor->Reset();
     gSmallFont->SetTileBase(0);
     IconReserve(&gSmallFont);
-    {
-        u32 v = gSmallFont->tileCount;
 
-        gLargeFont->SetTileBase(v);
-    }
+    u32 v = gSmallFont->tileCount;
+
+    gLargeFont->SetTileBase(v);
     IconReserve(&gLargeFont);
     gObjVramCursor->Mark();
 
@@ -481,8 +468,7 @@ void SaveMenu::RefreshSlotSummaries(SaveData *handle)
 
 void SaveMenu::LoadData()
 {
-    s32 v = cartSave->Load();
-    if ((u32)(v - 1) <= 3) {
+    if ((u32)(cartSave->Load() - 1) <= 3) {
         cartSave->Reset();
         cartSave->Store();
     }
@@ -515,14 +501,12 @@ void SaveMenu::DrawEmptySlotLabel(s32 x, s32 y, u8 highlight)
 {
     s32 centerX = x + 0x1d;
     s32 textY = y + 0xc;
-    s32 w;
 
     if (highlight)
         gSmallFont->SetPalette(IsBlinkOn() ? 1 : 2);
     else
         gSmallFont->SetPalette(0);
-    w = gSmallFont->MeasureText(GetUiText(0x25));
-    gSmallFont->SetPos(centerX - w / 2, textY);
+    gSmallFont->SetPos(centerX - gSmallFont->MeasureText(GetUiText(0x25)) / 2, textY);
     gSmallFont->DrawText(GetUiText(0x25));
 }
 
@@ -531,11 +515,8 @@ void SaveMenu::DrawEmptySlotLabel(s32 x, s32 y, u8 highlight)
  * (src/menus/power_dialog_draw.cpp), for a single label. */
 void SaveMenu::DrawTitle(s32 labelIndex)
 {
-    s32 w;
-
     gLargeFont->SetPalette(0);
-    w = gLargeFont->MeasureText(GetUiText(labelIndex));
-    gLargeFont->SetPos((0xf0 - w) >> 1, 6);
+    gLargeFont->SetPos((0xf0 - gLargeFont->MeasureText(GetUiText(labelIndex))) >> 1, 6);
     gLargeFont->DrawText(GetUiText(labelIndex));
 }
 
@@ -645,9 +626,7 @@ void SaveMenu::Draw()
             DrawConfirmDelete();
             break;
         case SAVE_MENU_STATE_UNK8:
-            break;
         case SAVE_MENU_STATE_UNK10:
-            break;
         default:
             break;
         }
