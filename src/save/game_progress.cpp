@@ -38,10 +38,8 @@ s32 GameProgress::CountPlatinumRelics() const
     count = 0;
     for (i = 0; i < 20; i++) {
         val = levels[i].h.time;
-        if (val != 0) {
-            if (val <= gLevelTable[i].times[2]) {
-                count++;
-            }
+        if (val != 0 && val <= gLevelTable[i].times[2]) {
+            count++;
         }
     }
     return count;
@@ -56,10 +54,8 @@ s32 GameProgress::CountGoldRelics() const
     count = 0;
     for (i = 0; i < 20; i++) {
         val = levels[i].h.time;
-        if (val != 0) {
-            if (val <= gLevelTable[i].times[1] && val > gLevelTable[i].times[2]) {
-                count++;
-            }
+        if (val != 0 && val <= gLevelTable[i].times[1] && val > gLevelTable[i].times[2]) {
+            count++;
         }
     }
     return count;
@@ -74,10 +70,8 @@ s32 GameProgress::CountSapphireRelics() const
     count = 0;
     for (i = 0; i < 20; i++) {
         val = levels[i].h.time;
-        if (val != 0) {
-            if (val <= gLevelTable[i].times[0] && val > gLevelTable[i].times[1]) {
-                count++;
-            }
+        if (val != 0 && val <= gLevelTable[i].times[0] && val > gLevelTable[i].times[1]) {
+            count++;
         }
     }
     return count;
@@ -86,7 +80,9 @@ s32 GameProgress::CountSapphireRelics() const
 s32 GameProgress::CountRelics() const
 {
     s32 total;
+    /* `b` is needed: inlined, the instructions are reordered */
     s32 b;
+    /* `c` is needed: inlined, the code is 1 instruction shorter */
     s32 c;
 
     total = CountSapphireRelics();
@@ -146,8 +142,10 @@ s32 GameProgress::GetCompletionPercent() const
 {
     s32 total = CountCrystals();
     s32 gems = CountGems();
+    /* `sapphires`, `golds` are needed: inlined, a call moves */
     s32 sapphires = CountSapphireRelics();
     s32 golds = CountGoldRelics();
+    /* `platinums` is needed: inlined, the code is 3 instructions shorter */
     s32 platinums = CountPlatinumRelics();
     u8 bits;
 
