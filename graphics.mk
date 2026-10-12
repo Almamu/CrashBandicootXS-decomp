@@ -83,6 +83,42 @@ $(GRAPHICS_BUILDDIR)/tileset1/%_tiles.img.bin: graphics/tileset1/%_tiles.png | $
 	@mkdir -p $(dir $@)
 	$(GRIT) $< -gt -gB$(TILE_SHEET_BPP) -p! -ftb -fh! -o $(@:.img.bin=)
 
+# OBJ sheets (docs/graphics.md, "OBJ sheets"): tile sets made of whole
+# OBJs (1D mapping, each OBJ's tiles back to back), drawn with each OBJ
+# whole. tools/obj_sheet.py to-tiles puts their tiles back in the order the
+# game uploads them, then grit converts that as it would the plain sheet.
+# OBJ_SHEET_<sheet>: the layout (OBJ sizes in tile order, then a grid or
+# each OBJ's position), and for the title's OBJ packages the width of
+# their map (--width), which grit reduces like the other bg_package maps.
+OBJ_SHEET_TILE_SETS := intro/00_5a4e70_tiles intro/00_5a551c_tiles intro/74_636ef4_tiles intro/75_637604_tiles
+OBJ_SHEET_PACKAGES := bg_package/62c2c8_title_bandicoot_obj bg_package/62c4b0_title_crash_obj \
+	bg_package/62ce70_title_arrow2_obj bg_package/62cc3c_title_arrow1_obj
+OBJ_SHEET_intro/00_5a4e70_tiles := --obj 8x16*77 --obj 16x8*2 --columns 16 --cell 16x16
+OBJ_SHEET_intro/00_5a551c_tiles := --obj 16x16*75 --columns 16
+OBJ_SHEET_intro/74_636ef4_tiles := --obj 16x32*18 --columns 18
+OBJ_SHEET_intro/75_637604_tiles := --obj 32x16*4 --columns 4
+OBJ_SHEET_bg_package/62c2c8_title_bandicoot_obj := --obj 32x16*3 --columns 3 --width 4
+OBJ_SHEET_bg_package/62c4b0_title_crash_obj := --obj 64x64*5 --columns 5 --width 8
+# The arrows: their four 32x32 OBJs at gTitleArrowPieceOffsets (title
+# screen slot 0 draws arrow 2, slot 1 arrow 1).
+OBJ_SHEET_bg_package/62ce70_title_arrow2_obj := --obj 32x32*4 --at 0,0 --at 15,32 --at 32,64 --at 49,96 --width 4
+OBJ_SHEET_bg_package/62cc3c_title_arrow1_obj := --obj 32x32*4 --at 61,0 --at 34,32 --at 5,61 --at 0,70 --width 4
+
+define OBJ_SHEET_TILES_RULE
+$(GRAPHICS_BUILDDIR)/$(1).img.bin: graphics/$(1).png tools/obj_sheet.py | $(GRIT)
+	@mkdir -p $$(dir $$@)
+	python3 tools/obj_sheet.py to-tiles $$< $(GRAPHICS_BUILDDIR)/$(1)_objs.png $(OBJ_SHEET_$(1))
+	$(GRIT) $(GRAPHICS_BUILDDIR)/$(1)_objs.png -gt -gB4 -p! -ftb -fh! -o $(GRAPHICS_BUILDDIR)/$(1)
+endef
+define OBJ_SHEET_PACKAGE_RULE
+$(GRAPHICS_BUILDDIR)/$(1)_grit.img.bin $(GRAPHICS_BUILDDIR)/$(1)_grit.map.bin &: graphics/$(1).png tools/obj_sheet.py | $(GRIT)
+	@mkdir -p $$(dir $$@)
+	python3 tools/obj_sheet.py to-tiles $$< $(GRAPHICS_BUILDDIR)/$(1)_objs.png $(OBJ_SHEET_$(1))
+	$(GRIT) $(GRAPHICS_BUILDDIR)/$(1)_objs.png -gt -gB4 -p! -m -mLf -mRtf -ftb -fh! -o $(GRAPHICS_BUILDDIR)/$(1)_grit
+endef
+$(foreach s,$(OBJ_SHEET_TILE_SETS),$(eval $(call OBJ_SHEET_TILES_RULE,$(s))))
+$(foreach s,$(OBJ_SHEET_PACKAGES),$(eval $(call OBJ_SHEET_PACKAGE_RULE,$(s))))
+
 # The C bytes of an LZ77 stream, trimmed to the stream: gbagfx pads its
 # output to 4 bytes, which the definitions' aligned(4) gives back where the
 # ROM has it.
