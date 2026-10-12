@@ -67,6 +67,34 @@ products. `tools/gbagfx` (vendored from the sibling `sa2` decompilation,
 same Dimps-engine lineage) does the PNG<->4bpp/8bpp/gbapal conversion and
 LZ77 compress/decompress.
 
+### Palettes
+
+Every LZ77 palette in `graphics/intro/` and `graphics/tileset1/` is a
+JASC-PAL `.pal` file (CRLF line endings, see `.gitattributes`). There are
+30 of them: 16 with 16 colours and 14 with 256. `tools/jasc_pal.py`
+builds each one into the raw `.gbapal`, and gbagfx compresses it.
+
+A JASC file has 8 bits per channel. The tool reads a channel as gbagfx
+does (value / 8) and writes it as gbagfx does (`c * 255 / 31`), with one
+addition for the hardware-ignored **bit 15**. 25 of the ROM's palettes
+set bit 15 on random entries, which made them impossible to round-trip
+through gbagfx: the 13 raw `.bin` palettes and the 12 16-colour palettes
+that were stored as one-tile 4bpp PNGs. The rule:
+
+- **Bit 15 is set when the red value's lowest bit differs from the
+  standard value's.** For example, red 5 is normally written as 41; with
+  bit 15 set it is written as 40.
+
+So a palette without bit 15 is byte for byte what gbagfx writes. An entry
+with bit 15 shows the same colour, with its red one 8-bit step off. A
+colour picked freely in an editor may toggle bit 15, which the hardware
+ignores. `tools/jasc_pal.py to-jasc` turns a raw palette back into a
+`.pal`.
+
+The palettes written out in C (`u16` arrays: the cutscene pictures, room
+palettes, HUD and menu palettes) aren't affected. They keep bit 15 as part
+of their hex values.
+
 The 24 intro/cutscene Mode 4 bitmaps (`graphics/intro/*_bitmap.png`) are
 built as C const arrays (`src/data/cutscene_pictures_5a9f70.cpp`, each after
 its palette) instead of `data.s` incbins, like the category backgrounds
@@ -563,6 +591,9 @@ candidates; rendered all 25 as a contact sheet to review at once. Result:
   0-14 of each RGB555 entry, and several entries in these files have a
   stray bit 15 set that gets lost, breaking byte-exact rebuilding. Left as
   raw `.bin` with an explanatory comment rather than forcing a lossy format.
+  **Update (#914):** they are `.pal` files now, and `tools/jasc_pal.py`
+  keeps bit 15 (see "Palettes" above), as for every other bit-15 palette
+  mentioned below.
 - Similarly, 3 more small 512-byte blocks in `graphics/intro/` (`25_61bb04`,
   `26_61bd48`, `29_61bf80`) look plausibly palette-like (varied RGB555-ish
   values) but are unconfirmed and hit the same bit-15 round-trip problem -

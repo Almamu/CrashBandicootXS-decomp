@@ -237,25 +237,15 @@ gMenuSkyBgPalette:
 
 .global gPauseMenuBgPalette
 gPauseMenuBgPalette:
-	@ LZ77 compressed data (512 bytes decompressed) - the 256-color RGB555
-	@ palette for gPauseMenuBgTiles (Crash's face in a badge, warp-room
-	@ background), loaded as a package at gPauseMenuBg via
-	@ LoadGraphicsPackage. Kept as raw binary: some entries have a stray set bit 15
-	@ that a standard .pal round-trip through gbagfx can't reproduce
-	@ (RGB555 only uses bits 0-14), which broke byte-exact rebuilding when
-	@ tried as .pal
-	.incbin "build/crashbandicootxs/graphics/intro/25_61bb04.bin.lz", 0, 0x244
+	@ LZ77 palette (256 colours): graphics/intro/25_61bb04.pal. Some entries
+	@ have bit 15 set, which tools/jasc_pal.py keeps (docs/graphics.md, "Palettes").
+	.incbin "build/crashbandicootxs/graphics/intro/25_61bb04.gbapal.lz", 0, 0x244
 
 .global gLevelSelectPageBgPalette
 gLevelSelectPageBgPalette:
-	@ LZ77 compressed data (512 bytes decompressed) - the 256-color RGB555
-	@ palette for gLevelSelectPageBgTiles (a level-select platform icon: a
-	@ blue gem pool, palm trees, small ruins), loaded as a package at
-	@ gLevelSelectPageBg via LoadGraphicsPackage. Kept as raw binary: some
-	@ entries have a stray set bit 15 that a standard .pal round-trip
-	@ through gbagfx can't reproduce (RGB555 only uses bits 0-14), which
-	@ broke byte-exact rebuilding when tried as .pal
-	.incbin "build/crashbandicootxs/graphics/intro/26_61bd48.bin.lz"
+	@ LZ77 palette (256 colours): graphics/intro/26_61bd48.pal. Some entries
+	@ have bit 15 set, which tools/jasc_pal.py keeps (docs/graphics.md, "Palettes").
+	.incbin "build/crashbandicootxs/graphics/intro/26_61bd48.gbapal.lz"
 
 .global gContinuePromptSmokeBgPalette
 gContinuePromptSmokeBgPalette:
@@ -276,33 +266,33 @@ gContinuePromptGlowBgPalette:
 
 .global gContinuePromptUkaUkaBgPalette
 gContinuePromptUkaUkaBgPalette:
-	@ LZ77 compressed data (512 bytes decompressed) - the 256-color RGB555
-	@ palette for gContinuePromptUkaUkaBgTiles (Uka Uka's mask), loaded as a
-	@ package at gContinuePromptUkaUkaBg via LoadGraphicsPackage. Kept as raw binary:
-	@ some entries have a stray set bit 15 that a standard .pal round-trip
-	@ through gbagfx can't reproduce (RGB555 only uses bits 0-14), which
-	@ broke byte-exact rebuilding when tried as .pal
-	.incbin "build/crashbandicootxs/graphics/intro/29_61bf80.bin.lz", 0, 0x1DC
+	@ LZ77 palette (256 colours): graphics/intro/29_61bf80.pal. Some entries
+	@ have bit 15 set, which tools/jasc_pal.py keeps (docs/graphics.md, "Palettes").
+	.incbin "build/crashbandicootxs/graphics/intro/29_61bf80.gbapal.lz", 0, 0x1DC
 
 .global gTitleBandicootObjPalette
 gTitleBandicootObjPalette:
-	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/30_61c15c_tiles.4bpp.lz"
+	@ LZ77 palette (16 colours): graphics/intro/30_61c15c.pal. Some entries
+	@ have bit 15 set, which tools/jasc_pal.py keeps (docs/graphics.md, "Palettes").
+	.incbin "build/crashbandicootxs/graphics/intro/30_61c15c.gbapal.lz"
 
 .global gTitleCrashObjPalette
 gTitleCrashObjPalette:
-	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/31_61c184_tiles.4bpp.lz", 0, 0x28
+	@ LZ77 palette (16 colours): graphics/intro/31_61c184.pal. Some entries
+	@ have bit 15 set, which tools/jasc_pal.py keeps (docs/graphics.md, "Palettes").
+	.incbin "build/crashbandicootxs/graphics/intro/31_61c184.gbapal.lz", 0, 0x28
 
 .global gTitleArrow1ObjPalette
 gTitleArrow1ObjPalette:
-	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/32_61c1ac_tiles.4bpp.lz", 0, 0x28
+	@ LZ77 palette (16 colours): graphics/intro/32_61c1ac.pal. Some entries
+	@ have bit 15 set, which tools/jasc_pal.py keeps (docs/graphics.md, "Palettes").
+	.incbin "build/crashbandicootxs/graphics/intro/32_61c1ac.gbapal.lz", 0, 0x28
 
 .global gTitleArrow2ObjPalette
 gTitleArrow2ObjPalette:
-	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/33_61c1d4_tiles.4bpp.lz", 0, 0x28
+	@ LZ77 palette (16 colours): graphics/intro/33_61c1d4.pal. Some entries
+	@ have bit 15 set, which tools/jasc_pal.py keeps (docs/graphics.md, "Palettes").
+	.incbin "build/crashbandicootxs/graphics/intro/33_61c1d4.gbapal.lz", 0, 0x28
 
 .global gUniversalLogoBgPalette
 gUniversalLogoBgPalette:
@@ -313,14 +303,9 @@ gUniversalLogoBgPalette:
 
 .global gTitleScreenBgPalette
 gTitleScreenBgPalette:
-	@ LZ77 compressed data (512 bytes decompressed) - a 256-color RGB555
-	@ palette, CONFIRMED: this is the palette for gTitleScreenBgTiles (the
-	@ "Crash Bandicoot XS" title/logo tile graphics), referenced together
-	@ via the graphics package struct at gTitleScreenBg. Kept as raw
-	@ binary rather than .pal: some entries have a stray set bit 15 that a
-	@ standard .pal round-trip through gbagfx can't reproduce (RGB555 only
-	@ uses bits 0-14), which broke byte-exact rebuilding when tried as .pal
-	.incbin "build/crashbandicootxs/graphics/intro/35_61c224.bin.lz"
+	@ LZ77 palette (256 colours): graphics/intro/35_61c224.pal. Some entries
+	@ have bit 15 set, which tools/jasc_pal.py keeps (docs/graphics.md, "Palettes").
+	.incbin "build/crashbandicootxs/graphics/intro/35_61c224.gbapal.lz"
 
 .global gMenuSkyBgTiles
 gMenuSkyBgTiles:
@@ -492,43 +477,51 @@ gTitleScreenBgMap:
 
 .global gCreditsRedEyeStudiosLogoPalette
 gCreditsRedEyeStudiosLogoPalette:
-	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/60_6319a0_tiles.4bpp.lz", 0, 0x28
+	@ LZ77 palette (16 colours): graphics/intro/60_6319a0.pal. Some entries
+	@ have bit 15 set, which tools/jasc_pal.py keeps (docs/graphics.md, "Palettes").
+	.incbin "build/crashbandicootxs/graphics/intro/60_6319a0.gbapal.lz", 0, 0x28
 
 .global gCreditsShinenLogoPalette
 gCreditsShinenLogoPalette:
-	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/61_6319c8_tiles.4bpp.lz", 0, 0x28
+	@ LZ77 palette (16 colours): graphics/intro/61_6319c8.pal. Some entries
+	@ have bit 15 set, which tools/jasc_pal.py keeps (docs/graphics.md, "Palettes").
+	.incbin "build/crashbandicootxs/graphics/intro/61_6319c8.gbapal.lz", 0, 0x28
 
 .global gCreditsCosmigoLogoPalette
 gCreditsCosmigoLogoPalette:
-	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/62_6319f0_tiles.4bpp.lz", 0, 0x28
+	@ LZ77 palette (16 colours): graphics/intro/62_6319f0.pal. Some entries
+	@ have bit 15 set, which tools/jasc_pal.py keeps (docs/graphics.md, "Palettes").
+	.incbin "build/crashbandicootxs/graphics/intro/62_6319f0.gbapal.lz", 0, 0x28
 
 .global gCreditsUniversalLogoPalette
 gCreditsUniversalLogoPalette:
-	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/63_631a18_tiles.4bpp.lz", 0, 0x28
+	@ LZ77 palette (16 colours): graphics/intro/63_631a18.pal. Some entries
+	@ have bit 15 set, which tools/jasc_pal.py keeps (docs/graphics.md, "Palettes").
+	.incbin "build/crashbandicootxs/graphics/intro/63_631a18.gbapal.lz", 0, 0x28
 
 .global gCreditsVvLogoPalette
 gCreditsVvLogoPalette:
-	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/64_631a40_tiles.4bpp.lz", 0, 0x28
+	@ LZ77 palette (16 colours): graphics/intro/64_631a40.pal. Some entries
+	@ have bit 15 set, which tools/jasc_pal.py keeps (docs/graphics.md, "Palettes").
+	.incbin "build/crashbandicootxs/graphics/intro/64_631a40.gbapal.lz", 0, 0x28
 
 .global gVvLogoEmblemPalette
 gVvLogoEmblemPalette:
-	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/65_631a68_tiles.4bpp.lz", 0, 0x28
+	@ LZ77 palette (16 colours): graphics/intro/65_631a68.pal. Some entries
+	@ have bit 15 set, which tools/jasc_pal.py keeps (docs/graphics.md, "Palettes").
+	.incbin "build/crashbandicootxs/graphics/intro/65_631a68.gbapal.lz", 0, 0x28
 
 .global gVvLogoLettersPalette
 gVvLogoLettersPalette:
-	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/66_631a90_tiles.4bpp.lz", 0, 0x28
+	@ LZ77 palette (16 colours): graphics/intro/66_631a90.pal. Some entries
+	@ have bit 15 set, which tools/jasc_pal.py keeps (docs/graphics.md, "Palettes").
+	.incbin "build/crashbandicootxs/graphics/intro/66_631a90.gbapal.lz", 0, 0x28
 
 .global gVvLogoUrlPalette
 gVvLogoUrlPalette:
-	@ LZ77 tile graphics (4bpp) (32 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/67_631ab8_tiles.4bpp.lz", 0, 0x14
+	@ LZ77 palette (16 colours): graphics/intro/67_631ab8.pal. Some entries
+	@ have bit 15 set, which tools/jasc_pal.py keeps (docs/graphics.md, "Palettes").
+	.incbin "build/crashbandicootxs/graphics/intro/67_631ab8.gbapal.lz", 0, 0x14
 
 .global gCreditsRedEyeStudiosLogoTiles
 gCreditsRedEyeStudiosLogoTiles:
@@ -642,84 +635,57 @@ gLevelSelectPicture0Palette:
 
 .global gLevelSelectPicture1Palette
 gLevelSelectPicture1Palette:
-	@ LZ77 compressed data (512 bytes decompressed) - the 256-color RGB555
-	@ palette for the circular level-select icon at gLevelSelectPicture1Tiles.
-	@ Kept as raw binary: some entries have a stray set bit 15 that a
-	@ standard .pal round-trip through gbagfx can't reproduce (RGB555 only
-	@ uses bits 0-14), which broke byte-exact rebuilding when tried as .pal
-	.incbin "build/crashbandicootxs/graphics/tileset1/12_63d01c.bin.lz", 0, 0x84
+	@ LZ77 palette (256 colours): graphics/tileset1/12_63d01c.pal. Some entries
+	@ have bit 15 set, which tools/jasc_pal.py keeps (docs/graphics.md, "Palettes").
+	.incbin "build/crashbandicootxs/graphics/tileset1/12_63d01c.gbapal.lz", 0, 0x84
 
 .global gLevelSelectPicture4Palette
 gLevelSelectPicture4Palette:
-	@ LZ77 compressed data (512 bytes decompressed) - the 256-color RGB555
-	@ palette for the circular level-select icon at gLevelSelectPicture4Tiles.
-	@ Kept as raw binary: some entries have a stray set bit 15 that a
-	@ standard .pal round-trip through gbagfx can't reproduce (RGB555 only
-	@ uses bits 0-14), which broke byte-exact rebuilding when tried as .pal
-	.incbin "build/crashbandicootxs/graphics/tileset1/13_63d0a0.bin.lz", 0, 0x84
+	@ LZ77 palette (256 colours): graphics/tileset1/13_63d0a0.pal. Some entries
+	@ have bit 15 set, which tools/jasc_pal.py keeps (docs/graphics.md, "Palettes").
+	.incbin "build/crashbandicootxs/graphics/tileset1/13_63d0a0.gbapal.lz", 0, 0x84
 
 .global gLevelSelectPicture2Palette
 gLevelSelectPicture2Palette:
-	@ LZ77 compressed data (512 bytes decompressed) - the 256-color RGB555
-	@ palette for the circular level-select icon at gLevelSelectPicture2Tiles.
-	@ Kept as raw binary: some entries have a stray set bit 15 that a
-	@ standard .pal round-trip through gbagfx can't reproduce (RGB555 only
-	@ uses bits 0-14), which broke byte-exact rebuilding when tried as .pal
-	.incbin "build/crashbandicootxs/graphics/tileset1/14_63d124.bin.lz", 0, 0x84
+	@ LZ77 palette (256 colours): graphics/tileset1/14_63d124.pal. Some entries
+	@ have bit 15 set, which tools/jasc_pal.py keeps (docs/graphics.md, "Palettes").
+	.incbin "build/crashbandicootxs/graphics/tileset1/14_63d124.gbapal.lz", 0, 0x84
 
 .global gLevelSelectPicture5Palette
 gLevelSelectPicture5Palette:
-	@ LZ77 compressed data (512 bytes decompressed) - the 256-color RGB555
-	@ palette for the circular level-select icon at gLevelSelectPicture5Tiles.
-	@ Kept as raw binary: some entries have a stray set bit 15 that a
-	@ standard .pal round-trip through gbagfx can't reproduce (RGB555 only
-	@ uses bits 0-14), which broke byte-exact rebuilding when tried as .pal
-	.incbin "build/crashbandicootxs/graphics/tileset1/15_63d1a8.bin.lz", 0, 0x84
+	@ LZ77 palette (256 colours): graphics/tileset1/15_63d1a8.pal. Some entries
+	@ have bit 15 set, which tools/jasc_pal.py keeps (docs/graphics.md, "Palettes").
+	.incbin "build/crashbandicootxs/graphics/tileset1/15_63d1a8.gbapal.lz", 0, 0x84
 
 .global gLevelSelectPicture3Palette
 gLevelSelectPicture3Palette:
-	@ LZ77 compressed data (512 bytes decompressed) - the 256-color RGB555
-	@ palette for the circular level-select icon at gLevelSelectPicture3Tiles.
-	@ Kept as raw binary: some entries have a stray set bit 15 that a
-	@ standard .pal round-trip through gbagfx can't reproduce (RGB555 only
-	@ uses bits 0-14), which broke byte-exact rebuilding when tried as .pal
-	.incbin "build/crashbandicootxs/graphics/tileset1/16_63d22c.bin.lz", 0, 0x84
+	@ LZ77 palette (256 colours): graphics/tileset1/16_63d22c.pal. Some entries
+	@ have bit 15 set, which tools/jasc_pal.py keeps (docs/graphics.md, "Palettes").
+	.incbin "build/crashbandicootxs/graphics/tileset1/16_63d22c.gbapal.lz", 0, 0x84
 
 .global gLevelSelectPicture9Palette
 gLevelSelectPicture9Palette:
-	@ LZ77 compressed data (512 bytes decompressed) - the 256-color RGB555
-	@ palette for the circular level-select icon at gLevelSelectPicture9Tiles.
-	@ Kept as raw binary: some entries have a stray set bit 15 that a
-	@ standard .pal round-trip through gbagfx can't reproduce (RGB555 only
-	@ uses bits 0-14), which broke byte-exact rebuilding when tried as .pal
-	.incbin "build/crashbandicootxs/graphics/tileset1/17_63d2b0.bin.lz"
+	@ LZ77 palette (256 colours): graphics/tileset1/17_63d2b0.pal. Some entries
+	@ have bit 15 set, which tools/jasc_pal.py keeps (docs/graphics.md, "Palettes").
+	.incbin "build/crashbandicootxs/graphics/tileset1/17_63d2b0.gbapal.lz"
 
 .global gLevelSelectPicture7Palette
 gLevelSelectPicture7Palette:
-	@ LZ77 compressed data (512 bytes decompressed) - the 256-color RGB555
-	@ palette for the circular level-select icon at gLevelSelectPicture7Tiles.
-	@ Kept as raw binary: some entries have a stray set bit 15 that a
-	@ standard .pal round-trip through gbagfx can't reproduce (RGB555 only
-	@ uses bits 0-14), which broke byte-exact rebuilding when tried as .pal
-	.incbin "build/crashbandicootxs/graphics/tileset1/18_63d334.bin.lz", 0, 0x84
+	@ LZ77 palette (256 colours): graphics/tileset1/18_63d334.pal. Some entries
+	@ have bit 15 set, which tools/jasc_pal.py keeps (docs/graphics.md, "Palettes").
+	.incbin "build/crashbandicootxs/graphics/tileset1/18_63d334.gbapal.lz", 0, 0x84
 
 .global gLevelSelectPicture8Palette
 gLevelSelectPicture8Palette:
-	@ LZ77 compressed data (512 bytes decompressed) - the 256-color RGB555
-	@ palette for the circular level-select icon at gLevelSelectPicture8Tiles.
-	@ Kept as raw binary: some entries have a stray set bit 15 that a
-	@ standard .pal round-trip through gbagfx can't reproduce (RGB555 only
-	@ uses bits 0-14), which broke byte-exact rebuilding when tried as .pal
-	.incbin "build/crashbandicootxs/graphics/tileset1/19_63d3b8.bin.lz", 0, 0x84
+	@ LZ77 palette (256 colours): graphics/tileset1/19_63d3b8.pal. Some entries
+	@ have bit 15 set, which tools/jasc_pal.py keeps (docs/graphics.md, "Palettes").
+	.incbin "build/crashbandicootxs/graphics/tileset1/19_63d3b8.gbapal.lz", 0, 0x84
 
 .global gLevelSelectPicture6Palette
 gLevelSelectPicture6Palette:
-	@ LZ77 compressed data (512 bytes decompressed) - the 256-color RGB555
-	@ palette for the circular level-select icon at gLevelSelectPicture6Tiles.
-	@ Kept as raw binary: some entries have a stray set bit 15 that a
-	@ standard .pal round-trip through gbagfx can't reproduce (RGB555 only
-	@ uses bits 0-14), which broke byte-exact rebuilding when tried as .pal
-	.incbin "build/crashbandicootxs/graphics/tileset1/20_63d43c.bin.lz"
+	@ LZ77 palette (256 colours): graphics/tileset1/20_63d43c.pal. Some entries
+	@ have bit 15 set, which tools/jasc_pal.py keeps (docs/graphics.md, "Palettes").
+	.incbin "build/crashbandicootxs/graphics/tileset1/20_63d43c.gbapal.lz"
 
 .global gSnowBgTiles
 gSnowBgTiles:
