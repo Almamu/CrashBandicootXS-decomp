@@ -28,15 +28,14 @@ void Crate::Update()
 {
     if (timer != 0) {
         timer--;
-        {
-            s32 k = kind;
 
-            if (k > CRATE_KIND_TIME_3) {
-                if (k <= CRATE_KIND_TNT_LIT_3) {
-                    UpdateTntCountdown();
-                    gCrateListChanged = 1;
-                    goto done;
-                }
+        s32 k = kind;
+
+        if (k > CRATE_KIND_TIME_3) {
+            if (k <= CRATE_KIND_TNT_LIT_3) {
+                UpdateTntCountdown();
+                gCrateListChanged = 1;
+                goto done;
             }
         }
         if (kind == CRATE_KIND_SLOT) {

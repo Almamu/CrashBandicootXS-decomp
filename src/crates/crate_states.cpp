@@ -226,24 +226,19 @@ void Crate::UpdateSlot()
             }
         } while (!done);
     out:
-        {
-            const struct sprite_anim *anims = bank->anims;
-            const struct sprite_anim *a = &anims[tag];
-            u32 slot = gPaletteCache->GetSlot(a->paletteId);
+        const struct sprite_anim *anims = bank->anims;
+        const struct sprite_anim *a = &anims[tag];
+        u32 slot = gPaletteCache->GetSlot(a->paletteId);
 
-            palette = slot;
-        }
-        {
-            s32 d = (s32)((u32)(slotState & CRATE_SLOT_STAGE_MASK) >> CRATE_SLOT_STAGE_SHIFT);
+        palette = slot;
 
-            timer = gSlotCrateTimers[d];
-        }
+        s32 d = (s32)((u32)(slotState & CRATE_SLOT_STAGE_MASK) >> CRATE_SLOT_STAGE_SHIFT);
+
+        timer = gSlotCrateTimers[d];
     } else {
-        {
-            s32 p = (w1 & CRATE_SLOT_PHASE_MASK) | CRATE_SLOT_PHASE_STARTED;
+        s32 p = (w1 & CRATE_SLOT_PHASE_MASK) | CRATE_SLOT_PHASE_STARTED;
 
-            w1 = p | (w1 & CRATE_SLOT_CLEAR_PHASE);
-        }
+        w1 = p | (w1 & CRATE_SLOT_CLEAR_PHASE);
         slotState = w1;
         timer = 1;
         if (tag == 0xc)
@@ -264,13 +259,12 @@ void Crate::UpdateSlot()
                 break;
             }
         }
-        {
-            const struct sprite_anim *anims = bank->anims;
-            const struct sprite_anim *a = &anims[tag];
-            u32 slot = gPaletteCache->GetSlot(a->paletteId);
 
-            palette = slot;
-        }
+        const struct sprite_anim *anims = bank->anims;
+        const struct sprite_anim *a = &anims[tag];
+        u32 slot = gPaletteCache->GetSlot(a->paletteId);
+
+        palette = slot;
         if (slotState & CRATE_SLOT_STAGE_MASK)
             gAudioContext->PlaySfx(SFX_SLOT_CRATE_SPIN, 0x100);
     }
@@ -358,12 +352,11 @@ void Crate::UpdateFall()
             t = x;
         } while (speed != 0);
     }
-    {
-        s32 ny = y + acc;
 
-        x = t;
-        y = ny;
-    }
+    s32 ny = y + acc;
+
+    x = t;
+    y = ny;
     fallDistance = remaining;
     if (remaining == 0)
         fallSpeed = 0;

@@ -31,10 +31,8 @@ void Crate::OpenLife(bool flag6)
 {
     gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
     u16 eid = id;
-    if (eid != 0xFFFF) {
-        if (gEntityFlags->IsActivated(eid) == 0)
-            gEntityFlags->SetActivated(id);
-    }
+    if (eid != 0xFFFF && gEntityFlags->IsActivated(eid) == 0)
+        gEntityFlags->SetActivated(id);
     s32 px = Q8_TO_INT(x);
     s32 py = Q8_TO_INT(y) + 3;
     gEntitySpawner->DropExtraLife(px, py, 0, PICKUP_MODE_HOP_UP, flag6);
@@ -110,10 +108,8 @@ s32 Crate::CollideWithPlayer(u32 idx, s32 testX, s32 testY)
             s32 dy = y - testY;
 
             MAKE_ABS(dy);
-            if (dy <= 0x3FFF) {
-                if (kind != CRATE_KIND_OUTLINE)
-                    QueuePlayerCollision(idx);
-            }
+            if (dy <= 0x3FFF && kind != CRATE_KIND_OUTLINE)
+                QueuePlayerCollision(idx);
         }
     }
     ClearTouched();

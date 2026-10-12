@@ -90,11 +90,10 @@ void Crate::ActivateNitroSwitch()
         u32 slot;
 
         state |= CRATE_STATE_BUSY;
-        {
-            Player *player = gPlayer;
-            one = 1;
-            player->busy = one;
-        }
+
+        Player *player = gPlayer;
+        one = 1;
+        player->busy = one;
         StartAnim(0x23);
         anims = bank->anims;
         a = &anims[tag];
@@ -129,13 +128,12 @@ void Crate::ActivateIronSwitch()
     state |= CRATE_STATE_BUSY;
     SetPlayerBusy();
     StartAnim(0x22);
-    {
-        const struct sprite_anim *anims = bank->anims;
-        const struct sprite_anim *a = &anims[tag];
-        u32 slot = gPaletteCache->GetSlot(a->paletteId);
 
-        palette = slot;
-    }
+    const struct sprite_anim *anims = bank->anims;
+    const struct sprite_anim *a = &anims[tag];
+    u32 slot = gPaletteCache->GetSlot(a->paletteId);
+
+    palette = slot;
     gEntityFlags->MarkActivated(id);
 
     i = 0;
@@ -193,10 +191,9 @@ void Crate::SolidifyOutlines()
             groupAllocated = 0;
         }
         group = PHYS_NO_GROUP;
-        {
-            u8 k = CRATE_KIND_IRON;
-            kind = k;
-        }
+
+        u8 k = CRATE_KIND_IRON;
+        kind = k;
     } else {
         struct crate_group *g = group;
 

@@ -91,18 +91,17 @@ Crate *Crate::Create(u16 id, u16 x, u16 y, u16 slot, u8 type)
         break;
     }
     flagged = 0;
-    {
-        struct crate_placement *rec = Placement(slot);
 
-        if (special || (rec->flags & CRATE_PLACEMENT_FLAG_TRIAL_KIND)) {
-            flagged = 1;
-            if ((u16)rec->trialKind == ENTITY_NITRO_SWITCH_CRATE)
-                self->trialKind = ENTITY_BASIC_CRATE;
-            else
-                self->trialKind = rec->trialKind;
-            if (gLevelState->timeTrial)
-                type = self->trialKind - ENTITY_BASIC_CRATE;
-        }
+    struct crate_placement *rec = Placement(slot);
+
+    if (special || (rec->flags & CRATE_PLACEMENT_FLAG_TRIAL_KIND)) {
+        flagged = 1;
+        if ((u16)rec->trialKind == ENTITY_NITRO_SWITCH_CRATE)
+            self->trialKind = ENTITY_BASIC_CRATE;
+        else
+            self->trialKind = rec->trialKind;
+        if (gLevelState->timeTrial)
+            type = self->trialKind - ENTITY_BASIC_CRATE;
     }
     switch (type) {
     case CRATE_KIND_BASIC:
@@ -184,19 +183,16 @@ Crate *Crate::Create(u16 id, u16 x, u16 y, u16 slot, u8 type)
         {
             struct crate_placement *rec = Placement(slot);
 
-            {
-                const struct sprite_anim *anim = &self->bank->anims[8];
+            const struct sprite_anim *anim = &self->bank->anims[8];
 
-                gPaletteCache->GetSlot(anim->paletteId);
-            }
+            gPaletteCache->GetSlot(anim->paletteId);
             self->slotState &= CRATE_SLOT_CLEAR_STAGE;
             self->slotState &= CRATE_SLOT_CLEAR_PHASE;
             self->StartAnim(7);
-            {
-                u32 idx = (u32)(self->slotState & CRATE_SLOT_SPINS_MASK) >> CRATE_SLOT_SPINS_SHIFT;
 
-                self->timer = gSlotCrateTimers[idx];
-            }
+            u32 idx = (u32)(self->slotState & CRATE_SLOT_SPINS_MASK) >> CRATE_SLOT_SPINS_SHIFT;
+
+            self->timer = gSlotCrateTimers[idx];
             self->paramB = rec->param6;
             self->paramA = 0;
             if (rec->options & CRATE_PLACEMENT_OPTION_SLOT_MYSTERY)

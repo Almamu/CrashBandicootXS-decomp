@@ -36,25 +36,24 @@ u8 Crate::PlayerAnimWouldTouch(s32 action)
 
     if (k == CRATE_KIND_OUTLINE || k == CRATE_KIND_NITRO)
         return 0;
-    {
-        const struct hitbox_quad *q;
-        s32 offX, offY;
-        u8 w, h;
 
-        anim = &bank->anims[tag];
-        q = &anim->box[0];
-        px = Q8_TO_INT(x);
-        py = Q8_TO_INT(y);
-        offX = q->offX;
-        offY = q->offY;
-        w = q->w;
-        h = q->h;
-        SetAabb(&a, offX + px, offY + py, w, h);
-        if (mirrorBits.flipX < 0)
-            FlipAabbX(&a, px);
-        if (mirrorBits.flipY < 0)
-            FlipAabbY(&a, py);
-    }
+    const struct hitbox_quad *q;
+    s32 offX, offY;
+    u8 w, h;
+
+    anim = &bank->anims[tag];
+    q = &anim->box[0];
+    px = Q8_TO_INT(x);
+    py = Q8_TO_INT(y);
+    offX = q->offX;
+    offY = q->offY;
+    w = q->w;
+    h = q->h;
+    SetAabb(&a, offX + px, offY + py, w, h);
+    if (mirrorBits.flipX < 0)
+        FlipAabbX(&a, px);
+    if (mirrorBits.flipY < 0)
+        FlipAabbY(&a, py);
     {
         Player *p = gPlayer;
         const struct hitbox_quad *q;
@@ -156,25 +155,24 @@ Crate *Crate::ResolveStackHit(struct aabb *box, u8 *foundFlag)
     *foundFlag = 1;
     if (prev == 0 || (prev->state & CRATE_STATE_MASK) == 1)
         return hit;
-    {
-        const struct hitbox_quad *q = &prev->bank->anims[prev->tag].box[0];
-        struct aabb b;
-        s32 px = Q8_TO_INT(prev->x);
-        s32 py = Q8_TO_INT(prev->y);
-        s32 offX = q->offX;
-        s32 offY = q->offY;
-        u8 w = q->w;
-        u8 h = q->h;
 
-        SetAabbPos(&b, offX + px, offY + py);
-        SetAabbSize(&b, w, h);
-        if (hit->mirrorBits.flipX < 0)
-            b.x = px * 2 - (b.x + b.w);
-        if (hit->mirrorBits.flipY < 0)
-            b.y = py * 2 - (b.y + b.h);
-        if (AabbOverlaps(&b, box))
-            hit = prev;
-    }
+    const struct hitbox_quad *q = &prev->bank->anims[prev->tag].box[0];
+    struct aabb b;
+    s32 px = Q8_TO_INT(prev->x);
+    s32 py = Q8_TO_INT(prev->y);
+    s32 offX = q->offX;
+    s32 offY = q->offY;
+    u8 w = q->w;
+    u8 h = q->h;
+
+    SetAabbPos(&b, offX + px, offY + py);
+    SetAabbSize(&b, w, h);
+    if (hit->mirrorBits.flipX < 0)
+        b.x = px * 2 - (b.x + b.w);
+    if (hit->mirrorBits.flipY < 0)
+        b.y = py * 2 - (b.y + b.h);
+    if (AabbOverlaps(&b, box))
+        hit = prev;
     return hit;
 }
 
@@ -192,25 +190,24 @@ void Crate::BreakIfTouchedByPlayer()
 
     if ((state & CRATE_STATE_MASK) == 1)
         return;
-    {
-        const struct hitbox_quad *q = &bank->anims[tag].box[0];
-        s32 offX;
-        s32 offY;
-        u8 w;
-        u8 h;
 
-        px = Q8_TO_INT(x);
-        py = Q8_TO_INT(y);
-        offX = q->offX;
-        offY = q->offY;
-        w = q->w;
-        h = q->h;
-        SetAabb(&a, offX + px, offY + py, w, h);
-        if (mirrorBits.flipX < 0)
-            FlipAabbX(&a, px);
-        if (mirrorBits.flipY < 0)
-            FlipAabbY(&a, py);
-    }
+    const struct hitbox_quad *q = &bank->anims[tag].box[0];
+    s32 offX;
+    s32 offY;
+    u8 w;
+    u8 h;
+
+    px = Q8_TO_INT(x);
+    py = Q8_TO_INT(y);
+    offX = q->offX;
+    offY = q->offY;
+    w = q->w;
+    h = q->h;
+    SetAabb(&a, offX + px, offY + py, w, h);
+    if (mirrorBits.flipX < 0)
+        FlipAabbX(&a, px);
+    if (mirrorBits.flipY < 0)
+        FlipAabbY(&a, py);
     {
         Player *p = gPlayer;
         const struct hitbox_quad *q;

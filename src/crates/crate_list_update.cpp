@@ -83,15 +83,13 @@ void CrateList::Unlink(Crate *sprite)
         }
     }
 
-    {
-        u16 id = sprite->id;
+    u16 id = sprite->id;
 
-        if (found != 0 && id != ENTITY_ID_NONE) {
-            s32 active = sprite->IsAlwaysActive();
+    if (found != 0 && id != ENTITY_ID_NONE) {
+        s32 active = sprite->IsAlwaysActive();
 
-            if (!active)
-                return;
-        }
+        if (!active)
+            return;
     }
 
     for (i = 0xFF; i >= 0; i--) {
@@ -201,19 +199,16 @@ void CrateList::Update()
     CrateGridNode *node;
     CrateGridNode **last;
 
-    {
-        s32 w = 0x1b800;
-        s32 h = 0x11800;
-        region.w = w;
-        region.h = h;
-    }
+    s32 w = 0x1b800;
+    s32 h = 0x11800;
+    region.w = w;
+    region.h = h;
     cam = gLevelLayers->layer0;
-    {
-        s32 x = INT_TO_Q8(cam->x) - 0x6400;
-        s32 y = INT_TO_Q8(cam->y) - 0x3c00;
-        region.x = x;
-        region.y = y;
-    }
+
+    s32 x = INT_TO_Q8(cam->x) - 0x6400;
+    s32 y = INT_TO_Q8(cam->y) - 0x3c00;
+    region.x = x;
+    region.y = y;
     lo = cam->x;
     lo >>= 8;
     LIMIT_MIN(lo, 0);

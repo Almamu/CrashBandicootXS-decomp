@@ -46,10 +46,9 @@ s32 Crate::IsInsideRect(struct aabb *box)
  * counts `bounce` up unless it is 0. */
 void ResolvePlayerCollisions(void)
 {
-    Player *p = gPlayer;
     u8 *bounce;
 
-    p->collisionQueue.Resolve();
+    gPlayer->collisionQueue.Resolve();
     bounce = &gPlayer->bounce;
     if (*bounce != 0)
         *bounce = *bounce + 1;
