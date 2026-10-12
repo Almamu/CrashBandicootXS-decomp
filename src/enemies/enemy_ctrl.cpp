@@ -133,6 +133,7 @@ void EnemyCtrl::UpdateTriggerBox()
     case ENEMY_MODE_NORMAL:
         x = Q8_TO_INT(target->x);
         y = Q8_TO_INT(target->y);
+        /* `w`, `h` are needed: inlined, the instructions differ */
         w = boxR - boxL;
         h = boxB - boxT;
         SetAabbPos(&box, x + boxL, y + boxT);
@@ -151,6 +152,7 @@ void EnemyCtrl::UpdateTriggerBox()
                 part->rampY.start = a;
                 part->rampY.step = b;
                 part->rampY.target = m;
+                /* `c` is needed: inlined, the instructions are reordered */
                 c = -0x200;
                 part->speedX = m;
                 part->rampX.start = m;
@@ -250,10 +252,9 @@ void EnemyCtrl::SetState(s32 newState)
     case ENEMY_STATE_ATTACK_SHOOT:
         if (cycleOffset >= idleTime) {
             SetAnimModeInline(this, ENEMY_MODE_ATTACK);
-            {
-                MovingSprite *part = target;
-                part->frame = part->bank->anims[part->tag].frameCount - 1;
-            }
+
+            MovingSprite *part = target;
+            part->frame = part->bank->anims[part->tag].frameCount - 1;
         } else {
             SetAnimModeInline(this, ENEMY_MODE_NORMAL);
             if (kind == ENEMY_KIND_STATIONARY_SPACE_ENEMY) {
@@ -288,6 +289,7 @@ void EnemyCtrl::SetState(s32 newState)
  * caches the homing speed pair. */
 void EnemyCtrl::SetRangeXSpeed(s32 radius, s32 newSpeed, s32 newAccel)
 {
+    /* `x` is needed: inlined, the instructions are reordered */
     s32 x = target->x;
     rangeX[0] = x - INT_TO_Q8(radius);
     rangeX[1] = target->x + INT_TO_Q8(radius);
@@ -298,6 +300,7 @@ void EnemyCtrl::SetRangeXSpeed(s32 radius, s32 newSpeed, s32 newAccel)
 /* The Y-axis version of SetRangeXSpeed. */
 void EnemyCtrl::SetRangeYSpeed(s32 radius, s32 newSpeed, s32 newAccel)
 {
+    /* `y` is needed: inlined, the instructions are reordered */
     s32 y = target->y;
     rangeY[1] = y - INT_TO_Q8(radius);
     rangeY[0] = target->y + INT_TO_Q8(radius);
@@ -308,6 +311,7 @@ void EnemyCtrl::SetRangeYSpeed(s32 radius, s32 newSpeed, s32 newAccel)
 /* SetRangeXSpeed's bounds without the speed pair. */
 void EnemyCtrl::SetRangeX(s32 radius)
 {
+    /* `x` is needed: inlined, the instructions are reordered */
     s32 x = target->x;
     rangeX[0] = x - INT_TO_Q8(radius);
     rangeX[1] = target->x + INT_TO_Q8(radius);
@@ -369,6 +373,7 @@ void EnemyCtrl::SetAnimMode(s32 m)
  * declared function the x store stays. */
 void EnemyCtrl::UpdateOscillateX()
 {
+    /* `table` is needed: inlined, the instructions differ */
     const s16 *table = gSineTable;
     u32 t = INT_TO_Q8(gRoomFrameCount) / period;
 
@@ -378,16 +383,15 @@ void EnemyCtrl::UpdateOscillateX()
 void EnemyCtrl::UpdateBob()
 {
     MovingSprite *part = target;
-    const s16 *table = gSineTable;
     s32 x = part->x;
-    u32 t = gRoomFrameCount / 2;
 
-    part->SetPos(x, baseY + table[(t + 0x100 - phase) & 0xff] * amplitude);
+    part->SetPos(x, baseY + gSineTable[(gRoomFrameCount / 2 + 0x100 - phase) & 0xff] * amplitude);
 }
 
 void EnemyCtrl::UpdateOscillateY()
 {
     MovingSprite *part = target;
+    /* `table`, `x` are needed: inlined, the code is 4 instructions shorter */
     const s16 *table = gSineTable;
     s32 x = part->x;
     u32 t = INT_TO_Q8(gRoomFrameCount) / period;

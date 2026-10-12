@@ -32,6 +32,7 @@ static inline u8 ActorsOverlap(ActorSelf *pl, ActorSelf *self)
 
 s32 PolarIsTouchingPlayer(ActorSelf *self)
 {
+    /* `plAddr` is needed: inlined, the instructions are reordered */
     ActorSelf **plAddr = &gActorList;
 
     if (gPolarPlayerInactive != 0)
@@ -41,6 +42,7 @@ s32 PolarIsTouchingPlayer(ActorSelf *self)
 
 s32 JetpackIsTouchingPlayer(ActorSelf *self)
 {
+    /* `plAddr` is needed: inlined, the instructions are reordered */
     ActorSelf **plAddr = &gActorList;
 
     if (gJetpackPlayerInactive != 0)
@@ -91,6 +93,7 @@ s32 RunActorCategoryFrame(void)
 
     n = gActorList;
     do {
+        /* `next` is needed: inlined, the code is 1 instruction shorter */
         ActorSelf *next = n->next;
 
         n->Update();

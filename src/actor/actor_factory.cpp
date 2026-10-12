@@ -71,6 +71,7 @@ ActorSelf *CreateActor(u8 kind, s32 x, s32 y, s32 z, struct actor_spawn *spawn)
                                           z);
         return new PolarLifeCrate(gActorAnimTable + kind, x, y, z, spawn);
     case POLAR_KIND_LIFE_CRATE:
+        /* not merged with the case above: the ROM has its own copy of this body */
         if (IsSpawnCollected(spawn))
             return new PolarQuestionCrate(gActorAnimTable + POLAR_KIND_QUESTION_CRATE_WUMPA_1, x, y,
                                           z);

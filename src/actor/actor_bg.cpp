@@ -61,20 +61,16 @@ void InitActorBgScroll(s32 type)
     }
     gActorBgScrollMaxY = gActorBgHeight + (s32)0xFFFF6000;
 
-    {
-        s32 *d0Ptr = &gActorBgScrollX;
+    s32 *d0Ptr = &gActorBgScrollX;
 
-        v = v + (s32)((u32)v >> 31);
-        *d0Ptr = v >> 1;
-    }
+    v = v + (s32)((u32)v >> 31);
+    *d0Ptr = v >> 1;
     gActorBgScrollY = 0;
 
-    {
-        vu16 *bg0hofsPtr = &REG_BG0HOFS;
+    vu16 *bg0hofsPtr = &REG_BG0HOFS;
 
-        v >>= 9;
-        *bg0hofsPtr = v;
-    }
+    v >>= 9;
+    *bg0hofsPtr = v;
     REG_BG0VOFS = gActorBg0VOffset;
     REG_BG1HOFS = v;
     REG_BG1VOFS = 0;

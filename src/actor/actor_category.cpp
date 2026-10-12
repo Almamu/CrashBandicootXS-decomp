@@ -45,6 +45,7 @@ void ReloadActorCategoryGraphics(void)
 void DestroyAllActors(void)
 {
     ActorSelf *n;
+    /* `next` is needed: inlined, the code is 1 instruction shorter */
     ActorSelf *next;
 
     if (gActorCategoryVtable->destroyBoss != NULL)

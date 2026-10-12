@@ -161,20 +161,18 @@ void JetpackCheckpointText::Draw()
     if (x + halfW * 2 < 0)
         return;
 
-    {
-        s32 attr = GetAnimFrameAttr();
-        u32 packed = (y & 0xff) | ((x & 0x1ff) << 16) | attr | flag;
-        u32 pal = palette;
-        u32 pre = pal << 0xc;
-        u32 attr2;
+    u32 packed = (y & 0xff) | ((x & 0x1ff) << 16) | GetAnimFrameAttr() | flag;
+    u32 pal = palette;
+    /* `pre` is needed: inlined, the instructions are reordered */
+    u32 pre = pal << 0xc;
+    u32 attr2;
 
-        if (sortKey & SORT_KEY_FLAG_BEHIND_BG)
-            attr2 = ((pre | 0x800) << 0x10) >> 0x10;
-        else
-            attr2 = (pal << 0x1c) >> 0x10;
+    if (sortKey & SORT_KEY_FLAG_BEHIND_BG)
+        attr2 = ((pre | 0x800) << 0x10) >> 0x10;
+    else
+        attr2 = (pal << 0x1c) >> 0x10;
 
-        SetupSpriteFrameOam(frame, packed, attr2, scale);
-    }
+    SetupSpriteFrameOam(frame, packed, attr2, scale);
 }
 
 /* Plays the animation once (ActorSelf::Update's loop, without the depth

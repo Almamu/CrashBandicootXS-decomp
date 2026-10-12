@@ -54,18 +54,16 @@ ActorSelf::ActorSelf(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
 
     RefreshDepth(this);
 
-    {
-        ActorSelf *head = gActorList;
+    ActorSelf *head = gActorList;
 
-        if (head != NULL) {
-            next = head;
-            prev = head->prev;
-            head->prev = this;
-            prev->next = this;
-        } else {
-            next = this;
-            prev = this;
-        }
+    if (head != NULL) {
+        next = head;
+        prev = head->prev;
+        head->prev = this;
+        prev->next = this;
+    } else {
+        next = this;
+        prev = this;
     }
 }
 
@@ -100,11 +98,15 @@ void ActorSelf::Update()
 void ActorSelf::Draw()
 {
     s32 dist = depth;
+    /* `scale` is needed: inlined, the code is 2 instructions longer */
     s32 scale = (dist << 8) / record->baseDepth;
     s32 proj = (gActorFocalLength << 0xc) / dist;
     s32 screenY;
+    /* `screenX` is needed: inlined, the code is 6 instructions shorter */
     s32 screenX;
 
+    /* scoped: its own `off`/`t`, as the next block (shared, the code is 2
+     * instructions longer) */
     {
         s32 off = GetActorBgCenterY();
         s32 t = y;
@@ -114,6 +116,7 @@ void ActorSelf::Draw()
         screenY += off;
         screenY = Q8_TO_INT(screenY);
     }
+    /* scoped, as the block above */
     {
         s32 off = GetActorBgCenterX();
         s32 t = x;
@@ -162,6 +165,7 @@ s32 ActorSelf::GetX()
 struct anim_box ActorSelf::GetWorldBox()
 {
     struct anim_box b = box;
+    /* `dx`, `dy`, `dz` are needed: inlined, the instructions are reordered */
     s32 dx = x >> 8;
     s32 dy = y >> 8;
     s32 dz = z >> 8;
