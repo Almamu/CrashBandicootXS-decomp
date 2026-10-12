@@ -76,6 +76,75 @@ byte-exact for every PNG asset here, but its own LZ77 isn't. The findings
 and the grit flags for each asset kind are in
 [data.md, "Resources (grit-style)"](./data.md#resources-grit-style).
 
+### Menu and title pictures
+
+Twelve pictures are each a `struct bg_package` (`{w, h, palette, tiles,
+map}`):
+- the eight BG pictures of the menus, the continue prompt, the legal
+  screen and the title, read by `BgSetup::Load` / `TitleScreen::LoadBg`;
+- the four OBJ sprites of the title screen, read by
+  `TitleScreen::LoadObjTiles`.
+
+Before, each was stored as a tile-set PNG plus a raw `.bin` map, or as a
+map misfiled as tiles or as a palette. Now each one is a single indexed
+PNG of the whole picture in `graphics/bg_package/`, named
+`<tiles addr>_<name>.png` and drawn with the package's palette. The build
+rebuilds both the tile set and the map from that PNG, byte for byte:
+
+| picture | bpp | cells | map |
+|---|---|---|---|
+| `61c30c_menu_sky` (`gMenuSkyBg`) | 4 | 32x20 | text |
+| `61e5f8_pause_menu` (`gPauseMenuBg`) | 8 | 30x20 | text |
+| `62556c_level_select_page` (`gLevelSelectPageBg`) | 8 | 32x32 | text |
+| `628c50_continue_prompt_smoke` (`gContinuePromptSmokeBg`) | 4 | 30x20 | text |
+| `62a958_continue_prompt_glow` (`gContinuePromptGlowBg`) | 4 | 30x20 | text |
+| `62b34c_continue_prompt_uka_uka` (`gContinuePromptUkaUkaBg`) | 8 | 30x20 | text |
+| `62d0cc_universal_logo` (`gUniversalLogoBg`) | 4 | 30x20 | text, + tile-set strip |
+| `62e3b0_title_screen` (`gTitleScreenBg`) | 8 | 16x16 | affine |
+| `62c2c8_title_bandicoot_obj` (`gTitleBandicootObj`) | 4 | 4x6 | OBJ |
+| `62c4b0_title_crash_obj` (`gTitleCrashObj`) | 4 | 8x40 | OBJ |
+| `62cc3c_title_arrow1_obj` (`gTitleArrow1Obj`) | 4 | 4x16 | OBJ |
+| `62ce70_title_arrow2_obj` (`gTitleArrow2Obj`) | 4 | 4x16 | OBJ |
+
+An OBJ map is one `u16` per OBJ tile. `LoadObjTiles` copies the sheet tile
+named by its low byte into OBJ VRAM, in map order, and ignores the h/v
+flip bits that the original tool left on 2 cells. The PNG draws those
+cells flipped, as the map says, so the reduction gets the same bits
+back. In game, those cells show their tile unflipped.
+
+How the build does it (`graphics.mk`):
+
+1. **grit reduces the picture** (`-gt -gB4/8 -m -mLf -mRtf`) to a tile
+   set and a map. Its dedup and its h/v-flip choices match the ROM's on
+   all of them except the universal logo (below). For the affine title it uses `-mRt` (no flips). The title
+   map's `u16` entries are plain tile numbers, and `LoadBg` keeps their
+   low byte.
+2. **`tools/bg_map.py first-use` reorders the tiles.** The ROM's tile
+   sets are in order of first use in the map (reading order). grit's are
+   in that order too, but always start with a forced blank tile. So this
+   step renumbers grit's tiles by first use and drops the ones the map
+   doesn't use. On three pictures (sky, pause menu, smoke) that drops
+   grit's blank. On the others it changes nothing.
+3. **gbagfx compresses the result** (LZ77), and `data/data.s` incbins it.
+
+The universal logo is the exception. Its tile set has 234 tiles that its
+map doesn't use, and duplicates among the ones it does use: identical
+tiles that the map still references separately. So:
+- the tiles are their own 8px-wide strip,
+  `62d0cc_universal_logo_tiles.png` (grit `-fx`, as for the category
+  pictures);
+- grit maps each cell to the first matching tile;
+- `62d0cc_universal_logo.json` lists the 41 cells where the ROM picks
+  another identical tile, and `bg_map.py pick` applies them.
+
+A choice must still draw the cell's pixels. If you redraw such a cell,
+the build stops and names the cell, and you delete its line from the
+JSON.
+
+The palettes are still separate assets (`graphics/intro/24`-`35`). The PNG's own palette is a copy for viewing, so edit the palette
+file to change colours. `tools/bg_map.py extract` writes the PNGs from
+`baserom.gba` again.
+
 ## Sprites (in progress)
 
 As of this writing, none of the ROM's sprite graphics (player, enemies,

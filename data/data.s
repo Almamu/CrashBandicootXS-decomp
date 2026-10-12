@@ -324,178 +324,171 @@ gTitleScreenBgPalette:
 
 .global gMenuSkyBgTiles
 gMenuSkyBgTiles:
-	@ LZ77 tile graphics (4bpp) (16288 bytes decompressed, 509 tiles - a
-	@ prime tile count, so stored as a 1-tile-tall strip). A sky/clouds
-	@ background: composited with its real palette (gMenuSkyBgPalette)
-	@ and tilemap (gMenuSkyBgMap, 32x20 tiles) via the package at
-	@ gMenuSkyBg. Originally left as raw binary ("not clearly
-	@ identifiable") since a bare tileset doesn't look like anything on its
-	@ own without the tilemap.
-	.incbin "build/crashbandicootxs/graphics/intro/36_61c30c_tiles.4bpp.lz"
+	@ 4bpp tiles of gMenuSkyBg (LZ77): the sky/clouds background (32x20 cells).
+	@ Built by grit from graphics/bg_package/61c30c_menu_sky.png,
+	@ see docs/graphics.md, "Menu and title pictures".
+	.incbin "build/crashbandicootxs/graphics/bg_package/61c30c_menu_sky.img.bin.lz"
 
 .global gPauseMenuBgTiles
 gPauseMenuBgTiles:
-	@ LZ77 tile graphics (8bpp) (38400 bytes decompressed, 600 tiles - an
-	@ exact 30x20 screen's worth, no reuse). Crash's face in a blue badge
-	@ over a metallic warp-room background: composited with its real
-	@ palette (gPauseMenuBgPalette) and tilemap (gPauseMenuBgMap)
-	@ via the package at gPauseMenuBg. Originally misclassified as
-	@ a Mode 4 (linear/non-tiled) bitmap - it happens to be exactly
-	@ 240x160 like a real Mode 4 bitmap (30x20 tiles x 8px), but it's
-	@ genuine tiled+tilemapped BG graphics.
-	.incbin "build/crashbandicootxs/graphics/intro/37_61e5f8_8bpp_tiles.8bpp.lz"
+	@ 8bpp tiles of gPauseMenuBg (LZ77): Crash's face on the warp-room wall (30x20).
+	@ Built by grit from graphics/bg_package/61e5f8_pause_menu.png,
+	@ see docs/graphics.md, "Menu and title pictures".
+	.incbin "build/crashbandicootxs/graphics/bg_package/61e5f8_pause_menu.img.bin.lz"
 
 .global gLevelSelectPageBgTiles
 gLevelSelectPageBgTiles:
-	@ LZ77 tile graphics (8bpp) (20288 bytes decompressed, 317 tiles). A
-	@ level-select platform icon (blue gem pool, palm trees, small ruins,
-	@ magenta transparent background): composited with its real palette
-	@ (gLevelSelectPageBgPalette) and tilemap (gLevelSelectPageBgMap, 32x32
-	@ tiles) via the package at gLevelSelectPageBg.
-	.incbin "build/crashbandicootxs/graphics/intro/38_62556c_8bpp_tiles.8bpp.lz"
+	@ 8bpp tiles of gLevelSelectPageBg (LZ77): the level-select platform icon (32x32).
+	@ Built by grit from graphics/bg_package/62556c_level_select_page.png,
+	@ see docs/graphics.md, "Menu and title pictures".
+	.incbin "build/crashbandicootxs/graphics/bg_package/62556c_level_select_page.img.bin.lz"
 
 .global gContinuePromptSmokeBgTiles
 gContinuePromptSmokeBgTiles:
-	@ LZ77 tile graphics (4bpp) (16192 bytes decompressed, 506 tiles). A
-	@ red/fiery smoke texture: composited with its real palette
-	@ (gContinuePromptSmokeBgPalette) and tilemap (gContinuePromptSmokeBgMap) via the
-	@ package at gContinuePromptSmokeBg.
-	.incbin "build/crashbandicootxs/graphics/intro/39_628c50_tiles.4bpp.lz"
+	@ 4bpp tiles of gContinuePromptSmokeBg (LZ77): the red smoke texture (30x20).
+	@ Built by grit from graphics/bg_package/628c50_continue_prompt_smoke.png,
+	@ see docs/graphics.md, "Menu and title pictures".
+	.incbin "build/crashbandicootxs/graphics/bg_package/628c50_continue_prompt_smoke.img.bin.lz"
 
 .global gContinuePromptGlowBgTiles
 gContinuePromptGlowBgTiles:
-	@ LZ77 tile graphics (4bpp) (5344 bytes decompressed, 167 tiles - a
-	@ prime tile count, so stored as a 1-tile-tall strip). A fire/aura glow
-	@ effect (green transparent background, orange/red/magenta outline):
-	@ composited with its real palette (gContinuePromptGlowBgPalette) and tilemap
-	@ (gContinuePromptGlowBgMap) via the package at gContinuePromptGlowBg.
-	@ Originally left as raw binary ("not clearly identifiable") since a
-	@ bare tileset doesn't look like anything on its own without the
-	@ tilemap.
-	.incbin "build/crashbandicootxs/graphics/intro/40_62a958_tiles.4bpp.lz", 0, 0x9F4
+	@ 4bpp tiles of gContinuePromptGlowBg (LZ77): the fire/aura glow (30x20).
+	@ Built by grit from graphics/bg_package/62a958_continue_prompt_glow.png,
+	@ see docs/graphics.md, "Menu and title pictures".
+	.incbin "build/crashbandicootxs/graphics/bg_package/62a958_continue_prompt_glow.img.bin.lz", 0, 0x9F4
 
 .global gContinuePromptUkaUkaBgTiles
 gContinuePromptUkaUkaBgTiles:
-	@ LZ77 tile graphics (8bpp) (6272 bytes decompressed, 98 tiles). Uka
-	@ Uka's mask: composited with its real palette (gContinuePromptUkaUkaBgPalette)
-	@ and tilemap (gContinuePromptUkaUkaBgMap) via the package at
-	@ gContinuePromptUkaUkaBg.
-	.incbin "build/crashbandicootxs/graphics/intro/41_62b34c_8bpp_tiles.8bpp.lz"
+	@ 8bpp tiles of gContinuePromptUkaUkaBg (LZ77): Uka Uka's mask (30x20).
+	@ Built by grit from graphics/bg_package/62b34c_continue_prompt_uka_uka.png,
+	@ see docs/graphics.md, "Menu and title pictures".
+	.incbin "build/crashbandicootxs/graphics/bg_package/62b34c_continue_prompt_uka_uka.img.bin.lz"
 
 .global gTitleBandicootObjTiles
 gTitleBandicootObjTiles:
-	@ LZ77 tile graphics (4bpp) (704 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/42_62c2c8_tiles.4bpp.lz"
+	@ 4bpp OBJ tile sheet of gTitleBandicootObj (LZ77): "BANDICOOT" (4x6).
+	@ Built by grit from graphics/bg_package/62c2c8_title_bandicoot_obj.png,
+	@ see docs/graphics.md, "Menu and title pictures".
+	.incbin "build/crashbandicootxs/graphics/bg_package/62c2c8_title_bandicoot_obj.img.bin.lz"
 
 .global gTitleCrashObjTiles
 gTitleCrashObjTiles:
-	@ LZ77 tile graphics (4bpp) (3648 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/43_62c4b0_tiles.4bpp.lz"
+	@ 4bpp OBJ tile sheet of gTitleCrashObj (LZ77): the "CRASH" letters (8x40).
+	@ Built by grit from graphics/bg_package/62c4b0_title_crash_obj.png,
+	@ see docs/graphics.md, "Menu and title pictures".
+	.incbin "build/crashbandicootxs/graphics/bg_package/62c4b0_title_crash_obj.img.bin.lz"
 
 .global gTitleArrow1ObjTiles
 gTitleArrow1ObjTiles:
-	@ LZ77 compressed data (1184 bytes decompressed) - not clearly identifiable as pixel graphics
-	.incbin "build/crashbandicootxs/graphics/intro/44_62cc3c.bin.lz"
+	@ 4bpp OBJ tile sheet of gTitleArrow1Obj (LZ77): the first menu arrow (4x16).
+	@ Built by grit from graphics/bg_package/62cc3c_title_arrow1_obj.png,
+	@ see docs/graphics.md, "Menu and title pictures".
+	.incbin "build/crashbandicootxs/graphics/bg_package/62cc3c_title_arrow1_obj.img.bin.lz"
 
 .global gTitleArrow2ObjTiles
 gTitleArrow2ObjTiles:
-	@ LZ77 tile graphics (4bpp) (1088 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/45_62ce70_tiles.4bpp.lz"
+	@ 4bpp OBJ tile sheet of gTitleArrow2Obj (LZ77): the second menu arrow (4x16).
+	@ Built by grit from graphics/bg_package/62ce70_title_arrow2_obj.png,
+	@ see docs/graphics.md, "Menu and title pictures".
+	.incbin "build/crashbandicootxs/graphics/bg_package/62ce70_title_arrow2_obj.img.bin.lz"
 
 .global gUniversalLogoBgTiles
 gUniversalLogoBgTiles:
-	@ LZ77 tile graphics (4bpp) (14976 bytes decompressed, 468 tiles). This
-	@ is the legal/credits text screen: referenced (with palette
-	@ gUniversalLogoBgPalette and tilemap gUniversalLogoBgMap) from a graphics
-	@ package struct at gUniversalLogoBg. Originally misclassified as
-	@ 8bpp - 14976 divides evenly by both 32 and 64, and this only decodes
-	@ as a coherent image (not noise) once composited with its real
-	@ palette+tilemap as 4bpp.
-	.incbin "build/crashbandicootxs/graphics/intro/46_62d0cc_tiles.4bpp.lz"
+	@ 4bpp tiles of gUniversalLogoBg (LZ77): the legal/credits text screen (30x20).
+	@ Built by grit from graphics/bg_package/62d0cc_universal_logo_tiles.png,
+	@ see docs/graphics.md, "Menu and title pictures".
+	.incbin "build/crashbandicootxs/graphics/bg_package/62d0cc_universal_logo.img.bin.lz"
 
 .global gTitleScreenBgTiles
 gTitleScreenBgTiles:
-	@ LZ77 tile graphics (8bpp) (9152 bytes decompressed, 143 tiles). This is
-	@ the "Crash Bandicoot XS" title/logo art: referenced (with palette
-	@ gTitleScreenBgPalette and tilemap gTitleScreenBgMap) from a graphics
-	@ package struct at gTitleScreenBg, loaded onto BG2 by LoadTitleScreenBg.
-	.incbin "build/crashbandicootxs/graphics/intro/47_62e3b0_8bpp_tiles.8bpp.lz", 0, 0x1774
+	@ 8bpp tiles of gTitleScreenBg (LZ77): the "Crash Bandicoot XS" title logo (16x16, affine BG2).
+	@ Built by grit from graphics/bg_package/62e3b0_title_screen.png,
+	@ see docs/graphics.md, "Menu and title pictures".
+	.incbin "build/crashbandicootxs/graphics/bg_package/62e3b0_title_screen.img.bin.lz", 0, 0x1774
 
 .global gMenuSkyBgMap
 gMenuSkyBgMap:
-	@ LZ77 compressed data (1280 bytes decompressed) - the tilemap for the
-	@ sky/clouds background, gMenuSkyBgTiles (32x20 tiles, 16-bit
-	@ entries). Originally misclassified as 4bpp tile graphics (1280 bytes
-	@ divides evenly by 32, the 4bpp tile size, purely by coincidence).
-	.incbin "build/crashbandicootxs/graphics/intro/48_62fb24.bin.lz"
+	@ LZ77 text BG map (u16 entries) of gMenuSkyBg.
+	@ Built by grit and tools/bg_map.py from graphics/bg_package/61c30c_menu_sky.png,
+	@ see docs/graphics.md, "Menu and title pictures".
+	.incbin "build/crashbandicootxs/graphics/bg_package/61c30c_menu_sky.map.bin.lz"
 
 .global gPauseMenuBgMap
 gPauseMenuBgMap:
-	@ LZ77 compressed data (1200 bytes decompressed) - the tilemap for
-	@ Crash's face/warp-room background, gPauseMenuBgTiles (30x20
-	@ tiles, 16-bit entries).
-	.incbin "build/crashbandicootxs/graphics/intro/49_62fff4.bin.lz", 0, 0x548
+	@ LZ77 text BG map (u16 entries) of gPauseMenuBg.
+	@ Built by grit and tools/bg_map.py from graphics/bg_package/61e5f8_pause_menu.png,
+	@ see docs/graphics.md, "Menu and title pictures".
+	.incbin "build/crashbandicootxs/graphics/bg_package/61e5f8_pause_menu.map.bin.lz", 0, 0x548
 
 .global gLevelSelectPageBgMap
 gLevelSelectPageBgMap:
-	@ LZ77 compressed data (2048 bytes decompressed) - the tilemap for the
-	@ level-select platform icon, gLevelSelectPageBgTiles (32x32 tiles,
-	@ 16-bit entries). Originally misclassified as 4bpp tile graphics (2048
-	@ bytes divides evenly by 32, the 4bpp tile size, purely by
-	@ coincidence).
-	.incbin "build/crashbandicootxs/graphics/intro/50_63053c.bin.lz"
+	@ LZ77 text BG map (u16 entries) of gLevelSelectPageBg.
+	@ Built by grit and tools/bg_map.py from graphics/bg_package/62556c_level_select_page.png,
+	@ see docs/graphics.md, "Menu and title pictures".
+	.incbin "build/crashbandicootxs/graphics/bg_package/62556c_level_select_page.map.bin.lz"
 
 .global gContinuePromptSmokeBgMap
 gContinuePromptSmokeBgMap:
-	@ LZ77 compressed data (1200 bytes decompressed) - the tilemap for the
-	@ red/fiery smoke texture, gContinuePromptSmokeBgTiles (30x20 tiles, 16-bit
-	@ entries).
-	.incbin "build/crashbandicootxs/graphics/intro/51_6308f0.bin.lz"
+	@ LZ77 text BG map (u16 entries) of gContinuePromptSmokeBg.
+	@ Built by grit and tools/bg_map.py from graphics/bg_package/628c50_continue_prompt_smoke.png,
+	@ see docs/graphics.md, "Menu and title pictures".
+	.incbin "build/crashbandicootxs/graphics/bg_package/628c50_continue_prompt_smoke.map.bin.lz"
 
 .global gContinuePromptGlowBgMap
 gContinuePromptGlowBgMap:
-	@ LZ77 compressed data (1200 bytes decompressed) - the tilemap for the
-	@ fire/aura glow effect, gContinuePromptGlowBgTiles (30x20 tiles, 16-bit
-	@ entries).
-	.incbin "build/crashbandicootxs/graphics/intro/52_630e1c.bin.lz"
+	@ LZ77 text BG map (u16 entries) of gContinuePromptGlowBg.
+	@ Built by grit and tools/bg_map.py from graphics/bg_package/62a958_continue_prompt_glow.png,
+	@ see docs/graphics.md, "Menu and title pictures".
+	.incbin "build/crashbandicootxs/graphics/bg_package/62a958_continue_prompt_glow.map.bin.lz"
 
 .global gContinuePromptUkaUkaBgMap
 gContinuePromptUkaUkaBgMap:
-	@ LZ77 compressed data (1200 bytes decompressed) - the tilemap for Uka
-	@ Uka's mask, gContinuePromptUkaUkaBgTiles (30x20 tiles, 16-bit entries).
-	.incbin "build/crashbandicootxs/graphics/intro/53_631158.bin.lz"
+	@ LZ77 text BG map (u16 entries) of gContinuePromptUkaUkaBg.
+	@ Built by grit and tools/bg_map.py from graphics/bg_package/62b34c_continue_prompt_uka_uka.png,
+	@ see docs/graphics.md, "Menu and title pictures".
+	.incbin "build/crashbandicootxs/graphics/bg_package/62b34c_continue_prompt_uka_uka.map.bin.lz"
 
 .global gTitleBandicootObjMap
 gTitleBandicootObjMap:
-	@ LZ77 compressed data (unidentified) (48 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/54_631374.bin.lz"
+	@ LZ77 OBJ tile map of gTitleBandicootObj: a u16 per OBJ tile, whose low
+	@ byte picks the sheet tile (TitleScreen::LoadObjTiles). Built by grit and
+	@ tools/bg_map.py from graphics/bg_package/62c2c8_title_bandicoot_obj.png.
+	.incbin "build/crashbandicootxs/graphics/bg_package/62c2c8_title_bandicoot_obj.map.bin.lz"
 
 .global gTitleCrashObjMap
 gTitleCrashObjMap:
-	@ LZ77 tile graphics (4bpp) (640 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/55_6313b0_tiles.4bpp.lz", 0, 0x140
+	@ LZ77 OBJ tile map of gTitleCrashObj: a u16 per OBJ tile, whose low
+	@ byte picks the sheet tile (TitleScreen::LoadObjTiles). Built by grit and
+	@ tools/bg_map.py from graphics/bg_package/62c4b0_title_crash_obj.png.
+	.incbin "build/crashbandicootxs/graphics/bg_package/62c4b0_title_crash_obj.map.bin.lz", 0, 0x140
 
 .global gTitleArrow1ObjMap
 gTitleArrow1ObjMap:
-	@ LZ77 tile graphics (4bpp) (128 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/56_6314f0_tiles.4bpp.lz"
+	@ LZ77 OBJ tile map of gTitleArrow1Obj: a u16 per OBJ tile, whose low
+	@ byte picks the sheet tile (TitleScreen::LoadObjTiles). Built by grit and
+	@ tools/bg_map.py from graphics/bg_package/62cc3c_title_arrow1_obj.png.
+	.incbin "build/crashbandicootxs/graphics/bg_package/62cc3c_title_arrow1_obj.map.bin.lz"
 
 .global gTitleArrow2ObjMap
 gTitleArrow2ObjMap:
-	@ LZ77 tile graphics (4bpp) (128 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/57_631558_tiles.4bpp.lz"
+	@ LZ77 OBJ tile map of gTitleArrow2Obj: a u16 per OBJ tile, whose low
+	@ byte picks the sheet tile (TitleScreen::LoadObjTiles). Built by grit and
+	@ tools/bg_map.py from graphics/bg_package/62ce70_title_arrow2_obj.png.
+	.incbin "build/crashbandicootxs/graphics/bg_package/62ce70_title_arrow2_obj.map.bin.lz"
 
 .global gUniversalLogoBgMap
 gUniversalLogoBgMap:
-	@ LZ77 compressed data (1200 bytes decompressed) - the tilemap for the
-	@ legal/credits text screen, gUniversalLogoBgTiles (30x20 tiles, 16-bit
-	@ entries).
-	.incbin "build/crashbandicootxs/graphics/intro/58_6315bc.bin.lz"
+	@ LZ77 text BG map (u16 entries) of gUniversalLogoBg.
+	@ Built by grit and tools/bg_map.py from graphics/bg_package/62d0cc_universal_logo.png,
+	@ see docs/graphics.md, "Menu and title pictures".
+	.incbin "build/crashbandicootxs/graphics/bg_package/62d0cc_universal_logo.map.bin.lz"
 
 .global gTitleScreenBgMap
 gTitleScreenBgMap:
-	@ LZ77 palette (256 colors) (512 bytes decompressed)
-	.incbin "build/crashbandicootxs/graphics/intro/59_63183c.gbapal.lz"
+	@ LZ77 affine map (u16 entries, LoadBg keeps the low byte) of gTitleScreenBg.
+	@ Built by grit and tools/bg_map.py from graphics/bg_package/62e3b0_title_screen.png,
+	@ see docs/graphics.md, "Menu and title pictures".
+	.incbin "build/crashbandicootxs/graphics/bg_package/62e3b0_title_screen.map.bin.lz"
 
 .global gCreditsRedEyeStudiosLogoPalette
 gCreditsRedEyeStudiosLogoPalette:
