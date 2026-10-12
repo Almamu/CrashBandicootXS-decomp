@@ -1,6 +1,6 @@
 # Contributing
 
-The decompilation itself is done: all 2059 of the ROM's functions are
+The decompilation itself is done: all 2062 of the ROM's functions are
 byte-exact C (two of them through a locally patched ARM compiler, #553),
 and all of its data is source. What's left is making the code better to read without changing a
 byte of the ROM: real names for the remaining placeholders, compiler
@@ -135,7 +135,7 @@ rm -rf build objdiff.json && make NON_MATCHING=1 report && objdiff-cli report ge
 
 `make compare` must print `crashbandicootxs.gba: OK`. If it doesn't,
 `cmp` each touched object against the same object built from
-`origin/main` to find the one that changed, rather than guessing. The report must still show 2059/2059 functions and 100%
+`origin/main` to find the one that changed, rather than guessing. The report must still show 2062/2062 functions and 100%
 data. The Makefile tracks header
 dependencies, so a plain `make` is fine while you work, but the PR check
 is always from clean.

@@ -25,7 +25,7 @@ Usage:
                                      ALLOWED_SPELLED, or a kind the build
                                      made redundant (REDUNDANT_KINDS)
                                      appears at all (run by CI)
-  tools/match_idioms.py --functions  "N/2059 functions with no matching
+  tools/match_idioms.py --functions  "N/2062 functions with no matching
                                      workarounds" and a per-directory
                                      table (README.md's numbers; needs a
                                      build); with --files, also list each
@@ -762,7 +762,7 @@ def function_spans(text):
 def report_objects():
     """The objects tools/report_units.py turns into report units, as
     paths relative to build/crashbandicootxs/ without `.o`: the code
-    decomp.dev counts (crt0/boot and the hand-written assembly have no
+    decomp.dev counts (crt0 and the hand-written assembly have no
     unit)."""
     sys.path.insert(0, os.path.join(ROOT, "tools"))
     import report_units
@@ -868,7 +868,7 @@ def function_counts():
     for rel, name in dirty:
         obj = os.path.splitext(rel)[0]
         if obj not in total:
-            continue  # not a report unit (bios_util.cpp)
+            continue  # not a report unit
         with_wa[obj] += 1
     for obj in total:
         if with_wa[obj] > total[obj]:

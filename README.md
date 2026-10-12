@@ -19,7 +19,7 @@ songs and WAV samples. `baserom.gba` isn't needed to build it.
 
 ## Current state
 
-- **Code: all 2059 functions are byte-exact; 2058 are C.** The ARM functions in
+- **Code: all 2062 functions are byte-exact; 2061 are C.** The ARM functions in
   the IWRAM image (`src/iwram/`) are built with a locally patched ARM
   compiler (`agbcp_arm_patched`, see INSTALL.md): the ROM's ARM compiler
   is a later, unreleased build whose return code and jump rules stock
@@ -87,7 +87,7 @@ rm -rf build objdiff.json && make NON_MATCHING=1 report && objdiff-cli report ge
 
 The second line builds the [decomp.dev](https://decomp.dev) progress
 report (see [docs/decomp_dev.md](./docs/decomp_dev.md)). It must show
-2059/2059 functions and 100% data.
+2062/2062 functions and 100% data.
 
 ## Data and assets
 
