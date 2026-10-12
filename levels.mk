@@ -1,6 +1,6 @@
 # The rooms' level data (docs/levels.md): data/levels/ holds the editable
 # sources (room.json, one decoded tilemap per BG layer and the collision
-# layer as an image, collision.bmp), tools/levels.py
+# layer as an image, collision.png), tools/levels.py
 # builds them back:
 # - each room's level asset (the per-layer chunk streams), which data/data.s
 #   incbins: raw for 7 rooms, LZ77-packed by gbagfx for the other 34;
@@ -13,11 +13,11 @@ LEVEL_REGIONS := level_rooms_24b638 level_rooms_2b91d0
 
 LEVEL_TOOLS := tools/levels.py tools/collision_bmp.py data/levels/collision_legend.json
 LEVEL_SOURCES := data/levels/levels.json $(wildcard data/levels/room*/room.json) $(wildcard data/levels/room*/*.map.bin) \
-	$(wildcard data/levels/room*/collision.bmp)
+	$(wildcard data/levels/room*/collision.png)
 
 define LEVEL_ASSET_RULE
 $(LEVELS_BUILDDIR)/$(1)/asset.bin: data/levels/$(1)/room.json $$(wildcard data/levels/$(1)/*.map.bin) \
-		$$(wildcard data/levels/$(1)/collision.bmp) $(LEVEL_TOOLS)
+		$$(wildcard data/levels/$(1)/collision.png) $(LEVEL_TOOLS)
 	@mkdir -p $$(dir $$@)
 	python3 tools/levels.py asset data/levels/$(1) $$@
 endef

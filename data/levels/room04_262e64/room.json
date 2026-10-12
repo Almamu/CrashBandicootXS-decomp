@@ -5,7 +5,7 @@
   "layers": {
     "bg1": {"map": "bg1.map.bin", "size_chunks": [3, 11], "size_tiles": [38, 84], "tileset": "gSnowBgTiles", "scale": [179, 76], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom04Bg1Grid"},
     "bg0": {"map": "bg0.map.bin", "size_chunks": [4, 32], "size_tiles": [60, 250], "tileset": "gSnowBg0Tiles", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom04Bg0Grid"},
-    "collision": {"map": "collision.bmp", "size_chunks": [4, 32], "size_tiles": [60, 250], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom04CollisionGrid"}
+    "collision": {"map": "collision.png", "size_chunks": [4, 32], "size_tiles": [60, 250], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom04CollisionGrid"}
   },
   "palette": [
     "0BE2", "7F0E", "72AB", "6249", "55E8", "4986", "3D25", "3103", "30A3", "24A3", "0CA2", "20A2", "1862", "1862", "0C42", "0C42",

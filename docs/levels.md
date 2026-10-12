@@ -294,9 +294,10 @@ each region in ROM order.
   `gridWidth * 16` by `gridHeight * 8` little-endian `u16` cells,
   row-major (grit's flat `-mLf` map layout). These are the cells above,
   not ROM bytes: the ROM only has the chunk streams.
-- `roomNN_xxxxxx/collision.bmp`: the collision layer as an image, one
-  pixel per cell, `gridWidth * 16` by `gridHeight * 8`, coloured by the
-  legend below (see "Collision layers").
+- `roomNN_xxxxxx/collision.png`: the collision layer as an image the
+  size of the BG0 picture, each cell an 8x8 block, `gridWidth * 128` by
+  `gridHeight * 64` pixels, coloured by the legend below (see "Collision
+  layers").
 
 Everything else is derived again: the chunk set and grid (from the map),
 the asset and the layers' `assetOffset`s, the entity groups, the counts,
@@ -320,28 +321,70 @@ room's generated parameter struct).
 `tools/levels.py extract` writes `data/levels/` from `baserom.gba` (and
 checks that every asset re-encodes exactly). `tools/levels.py render
 data/levels/<room> <layer> out.png` draws a layer with the room's palette
-and its tile set (from `graphics/`), or the collision layer with the
-legend's colours at 8x8 pixels per cell, to see what a map holds.
+and its tile set (from `graphics/`), to see what a map holds; for the
+collision layer it writes the collision image again.
 
 ### Collision layers
 
-Each room's collision layer is `collision.bmp`, an 8bpp indexed BMP with
-one pixel per cell (8x8 pixels in game). Every cell value (terrain type,
-flag nibble and open bits, see "Cells" above and
-[flags/terrain.md](./flags/terrain.md)) has its own colour, listed in
-`data/levels/collision_legend.json`. All 41 rooms use only the 37 values
-below. `tools/levels.py` reads the BMP directly when it builds the asset
-and the room data. `tools/collision_bmp.py` converts in either direction:
+Each room's collision layer is `collision.png`, an 8bpp indexed PNG at
+the BG's scale. A collision cell covers one 8x8-pixel tile of the room,
+like a BG0 cell (the terrain code looks a cell up at `x >> 3`, `y >> 3`,
+`GetTerrainType`), so the image draws each cell as an 8x8 block of one
+colour:
 
-    tools/collision_bmp.py to-bmp MAP.bin OUT.bmp --width CELLS
-    tools/collision_bmp.py to-bin collision.bmp OUT.bin
+- cell `(cx, cy)` is pixels `cx * 8` to `cx * 8 + 7` across and `cy * 8`
+  to `cy * 8 + 7` down;
+- the image is `gridWidth * 16 * 8` by `gridHeight * 8 * 8` pixels (the
+  whole chunk grid, `gridWidth * 128` by `gridHeight * 64`), the same as
+  the BG0 picture `tools/levels.py render data/levels/<room> bg0` draws.
+  The collision and BG0 layers always have the same grid. For example,
+  room 00 is 16 x 5 chunks, 256 x 40 cells, and both its BG0 picture and
+  `collision.png` are 2048 x 320 pixels;
+- `widthTiles`, `heightTiles` (`size_tiles` in `room.json`) are the
+  scrollable part of that, also in 8-pixel cells; the rest of the last
+  chunk column and row is in the image too.
+
+Every cell value (terrain type, flag nibble and open bits, see "Cells"
+above and [flags/terrain.md](./flags/terrain.md)) has its own colour,
+listed in `data/levels/collision_legend.json`. All 41 rooms use only the
+37 values below. `tools/levels.py` reads the image directly when it
+builds the asset and the room data. `tools/collision_bmp.py` converts in
+either direction:
+
+    tools/collision_bmp.py to-image MAP.bin OUT.png --width CELLS
+    tools/collision_bmp.py to-bin collision.png OUT.bin
 
 An image is read by colour, not by palette index, so an editor can
-reorder or extend the palette. Paint with the legend's exact colours;
-any other colour is an error that names it. To use a value that no room
-has yet, add it to the legend with a new colour. The BMP's own palette
-is the legend's colours in legend order, but only the pixels' colours
-matter. `extract` writes the same BMPs again, byte for byte.
+reorder or extend the palette, or save the image as true colour (PNG or
+BMP). Paint with the legend's exact colours, in whole 8x8 blocks on the
+8-pixel grid. These are errors, and the message names the cell and its
+pixels:
+
+- a colour that isn't in the legend;
+- a block that isn't a single colour;
+- an image that isn't the room's size (the chunk grid times 128 x 64
+  pixels).
+
+To use a value that no room has yet, add it to the legend with a new
+colour. The PNG's own palette is the legend's colours in legend order, but
+only the pixels' colours matter. `extract` writes the same PNGs again,
+byte for byte.
+
+To edit the collision against the level picture:
+
+1. render the BG0 picture, `tools/levels.py render data/levels/<room> bg0
+   bg0.png`;
+2. open `bg0.png` in an editor with layers (GIMP, Krita, Aseprite, ...)
+   and add `collision.png` as a layer above it at offset 0, 0: the two are
+   the same size, so they line up pixel for pixel;
+3. lower the collision layer's opacity (about 50%) to see the level
+   through it, and set a grid of 8x8 pixels to paint on whole cells;
+4. paint on the collision layer only, with the pencil (no antialiasing)
+   and the legend's colours, then export that layer alone as
+   `collision.png`, at full opacity.
+
+The BG1-3 layers scroll at their own parallax scale and have their own
+grids, so they don't line up with the collision layer; only BG0 does.
 
 Colour groups:
 - black is empty;

@@ -6,7 +6,7 @@
     "bg1": {"map": "bg1.map.bin", "size_chunks": [3, 3], "size_tiles": [37, 21], "tileset": "gUnderwaterBgTiles", "scale": [128, 128], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom38Bg1Grid"},
     "bg2": {"map": "bg2.map.bin", "size_chunks": [3, 4], "size_tiles": [40, 25], "tileset": "gUnderwaterBgTiles", "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom38Bg2Grid"},
     "bg0": {"map": "bg0.map.bin", "size_chunks": [3, 4], "size_tiles": [40, 25], "tileset": "gUnderwaterBg0Tiles", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom38Bg0Grid"},
-    "collision": {"map": "collision.bmp", "size_chunks": [3, 4], "size_tiles": [40, 25], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom38CollisionGrid"}
+    "collision": {"map": "collision.png", "size_chunks": [3, 4], "size_tiles": [40, 25], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom38CollisionGrid"}
   },
   "palette": [
     "03E0", "7F00", "7EC0", "76A0", "6E80", "7660", "6660", "6A40", "5A20", "6220", "5200", "4DE0", "45C0", "3DA0", "3580", "3180",

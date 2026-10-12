@@ -652,7 +652,8 @@ built from `data/levels/` by `tools/levels.py`, from editable sources:
 per room a `room.json` (palette, layer settings, entities, parameter
 records, links, symbol names), one decoded tilemap per BG layer
 (`<layer>.map.bin`, `u16` cells, grit's flat map layout), and the
-collision layer as an image (`collision.bmp`, one colour per cell value,
+collision layer as an image (`collision.png`, the size of the BG0 picture, one
+8x8 block per cell, one colour per cell value,
 see [levels.md, "Collision layers"](./levels.md#collision-layers)). The build
 (`levels.mk`) generates:
 
