@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # Splits the two category-family framed OBJ sprite sheets (gPolarSpriteSheet,
-# gJetpackSpriteSheet) into graphics/unknown/<sheet>/NN_<name>/ folders of
-# one indexed PNG per frame, replacing whatever is there, and writes
-# graphics/unknown/<sheet>/folders.json (which records use each folder and
+# gJetpackSpriteSheet) into graphics/vehicles/<family>/sprite_sheet/<name>/
+# folders of one indexed PNG per frame, replacing whatever is there, and
+# writes graphics/vehicles/<family>/sprite_sheet/sheet.json (the folders in
+# the sheet's order, which records use each folder and
 # in which palette bank).
 #
 # Grouping: the sheet is cut wherever the set of animation-table records
@@ -11,11 +12,10 @@
 # framed sheets"). A record's frames can therefore span several folders:
 # the polar crates all end in the shared crate_shards run, the jetpack
 # rocket's frames are rocket + explosion + rocket_burst, and so on. The
-# order of folders.json's "folders" list is the sheet's byte order, which
+# order of sheet.json's "folders" list is the sheet's byte order, which
 # is also the order the build packs them in (graphics.mk's
 # FRAMED_SHEET_RULE, tools/framed_gfx.py order), so the names below may
-# change freely. (The folders still carry an NN_ prefix, which
-# framed_gfx.py accepts; folders.json names them without it.)
+# change freely.
 #
 # Colours: each folder's PNGs carry the 16 colours of the palette bank its
 # first record (in table order) draws it with - anim_table_record.palette
@@ -24,7 +24,7 @@
 # only category 6 spawns them) use category 6's gHovercraftCategoryPalette.
 # Only the colours change with the bank: the build reads the 4-bit indices
 # (tools/framed_gfx.py), so the bank chosen never affects the ROM. A folder
-# drawn with several banks lists the others in folders.json.
+# drawn with several banks lists the others in sheet.json.
 #
 # Run this BEFORE tools/dump_entities.py (which resolves keyframes to the
 # PNGs present). The pool_offset table_B arrays of src/data/anim_family_*.cpp
@@ -43,7 +43,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from dump_entities import rd, hx, lz77_decompress  # noqa: E402
 
 FRAMED_GFX = os.path.join(os.path.dirname(__file__), 'framed_gfx.py')
-GRAPHICS_ROOT = os.path.join(os.path.dirname(__file__), '..', 'graphics', 'unknown')
+GRAPHICS_ROOT = os.path.join(os.path.dirname(__file__), '..', 'graphics', 'vehicles')
 RECORD_SIZE = 40
 
 PALETTES = {
@@ -201,7 +201,7 @@ def split_family(sheet_rom_addr, decompressed_size, sheet_dir, anim_table_base,
             f.write(sheet_buf[offsets[first]:end])
         with open(pal_path, 'wb') as f:
             f.write(rd(palette + banks[0] * 32, 32))
-        entity_dir = os.path.join(sheet_dir, f'{n:02d}_{name}')
+        entity_dir = os.path.join(sheet_dir, name)
         subprocess.run([sys.executable, FRAMED_GFX, 'to-frames', bin_path, entity_dir, pal_path], check=True)
         os.remove(bin_path)
         os.remove(pal_path)
@@ -222,7 +222,7 @@ def split_family(sheet_rom_addr, decompressed_size, sheet_dir, anim_table_base,
 
     left = {k: v for k, v in pending.items() if v}
     assert not left, f'{sheet_dir}: unused names {left}'
-    with open(os.path.join(sheet_dir, 'folders.json'), 'w') as f:
+    with open(os.path.join(sheet_dir, 'sheet.json'), 'w') as f:
         json.dump({'sheet_rom_address': hx(sheet_rom_addr), 'folders': folders}, f, indent=2)
         f.write('\n')
 
@@ -230,13 +230,13 @@ def split_family(sheet_rom_addr, decompressed_size, sheet_dir, anim_table_base,
 def main():
     split_family(
         sheet_rom_addr=0x080B2120, decompressed_size=213064,
-        sheet_dir=os.path.join(GRAPHICS_ROOT, '00_0b2120'),
+        sheet_dir=os.path.join(GRAPHICS_ROOT, 'polar', 'sprite_sheet'),
         anim_table_base=0x081796CC, record_slot_count=41, data_end=0x0817A6B8,
         names=POLAR_NAMES, family_palette=0x08178F80,
     )
     split_family(
         sheet_rom_addr=0x0814174C, decompressed_size=207124,
-        sheet_dir=os.path.join(GRAPHICS_ROOT, '01_14174c'),
+        sheet_dir=os.path.join(GRAPHICS_ROOT, 'jetpack', 'sprite_sheet'),
         anim_table_base=0x0817B2A4, record_slot_count=47, data_end=0x0817C1C0,
         names=JETPACK_NAMES, family_palette=0x0817AAA4,
         own_palettes={slot: 0x0817AEA4 for slot in HOVERCRAFT_SLOTS},

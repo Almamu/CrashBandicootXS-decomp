@@ -5,14 +5,14 @@
 # the real per-actor animation-frame system" onward) into two JSON files,
 # one per sprite-sheet family:
 #
-#   graphics/unknown/00_0b2120/entities.json  (categories 0-2)
-#   graphics/unknown/01_14174c/entities.json  (categories 3-6)
+#   docs/entities/polar.json    (categories 0-2)
+#   docs/entities/jetpack.json  (categories 3-6)
 #
 # Purpose: once the actor/entity C code behind this system gets reversed,
 # these JSON files are the data half - real ROM addresses, keyframe
 # sequences, and (for records whose table_B holds small offsets rather
 # than absolute ROM addresses) a direct reference to the already-split
-# graphics/unknown/<sheet>/<folder>/*.png frames, so the frame pixel
+# graphics/vehicles/<family>/sprite_sheet/<folder>/*.png frames, so the frame pixel
 # data doesn't need to be re-derived from raw hex again.
 #
 # Re-run any time to regenerate from baserom.gba + the current split
@@ -21,10 +21,14 @@
 import glob
 import json
 import os
+import sys
 import struct
 
 ROM_PATH = os.path.join(os.path.dirname(__file__), '..', 'baserom.gba')
-GRAPHICS_ROOT = os.path.join(os.path.dirname(__file__), '..', 'graphics', 'unknown')
+GRAPHICS_ROOT = os.path.join(os.path.dirname(__file__), '..', 'graphics', 'vehicles')
+DOCS_ROOT = os.path.join(os.path.dirname(__file__), '..', 'docs', 'entities')
+sys.path.insert(0, os.path.dirname(__file__))
+from framed_gfx import entity_order  # noqa: E402
 
 with open(ROM_PATH, 'rb') as f:
     ROM = f.read()
@@ -41,6 +45,11 @@ def u32(addr):
 
 def hx(v):
     return f'0x{v:08X}'
+
+
+def graphics_dir(sheet_dir):
+    """A sheet's folder as the repo path, graphics/vehicles/<family>/sprite_sheet."""
+    return 'graphics/vehicles/' + os.path.relpath(sheet_dir, GRAPHICS_ROOT).replace(os.sep, '/')
 
 
 def lz77_decompress(data):
@@ -123,7 +132,7 @@ def build_frame_pool(sheet_dir):
 
     pool = []
     offset = 0
-    entity_dirs = sorted(d for d in glob.glob(os.path.join(sheet_dir, '*')) if os.path.isdir(d))
+    entity_dirs = [os.path.join(sheet_dir, e) for e in entity_order(sheet_dir)]
     for entity_dir in entity_dirs:
         frame_paths = sorted(glob.glob(os.path.join(entity_dir, '*.png')))
         for fp in frame_paths:
@@ -133,7 +142,7 @@ def build_frame_pool(sheet_dir):
             pool.append({
                 'start': offset,
                 'end': offset + size,
-                'file': f'graphics/unknown/{os.path.basename(sheet_dir)}/{os.path.basename(entity_dir)}/{os.path.basename(fp)}',
+                'file': f'{graphics_dir(sheet_dir)}/{os.path.basename(entity_dir)}/{os.path.basename(fp)}',
                 'w_tiles': w,
                 'h_tiles': h,
             })
@@ -278,7 +287,7 @@ def dump_family(sheet_rom_addr, decompressed_size, sheet_dir, anim_table_base,
     return {
         'sheet_rom_address': hx(sheet_rom_addr),
         'decompressed_size': decompressed_size,
-        'graphics_dir': f'graphics/unknown/{os.path.basename(sheet_dir)}',
+        'graphics_dir': graphics_dir(sheet_dir),
         'descriptor_rom_address': hx(DESCRIPTOR_BASE),
         'descriptor_stride': DESCRIPTOR_STRIDE,
         'categories': categories,
@@ -386,13 +395,14 @@ def main():
     family1 = dump_family(
         sheet_rom_addr=0x080B2120,
         decompressed_size=213064,
-        sheet_dir=os.path.join(GRAPHICS_ROOT, '00_0b2120'),
+        sheet_dir=os.path.join(GRAPHICS_ROOT, 'polar', 'sprite_sheet'),
         anim_table_base=0x081796CC,
         category_indices=[0, 1, 2],
         record_slot_count=41,
         labels=FAMILY1_LABELS,
     )
-    out1 = os.path.join(GRAPHICS_ROOT, '00_0b2120', 'entities.json')
+    os.makedirs(DOCS_ROOT, exist_ok=True)
+    out1 = os.path.join(DOCS_ROOT, 'polar.json')
     with open(out1, 'w') as f:
         json.dump(family1, f, indent=2)
         f.write('\n')
@@ -401,13 +411,13 @@ def main():
     family2 = dump_family(
         sheet_rom_addr=0x0814174C,
         decompressed_size=207124,
-        sheet_dir=os.path.join(GRAPHICS_ROOT, '01_14174c'),
+        sheet_dir=os.path.join(GRAPHICS_ROOT, 'jetpack', 'sprite_sheet'),
         anim_table_base=0x0817B2A4,
         category_indices=[3, 4, 5, 6],
         record_slot_count=47,
         labels=FAMILY2_LABELS,
     )
-    out2 = os.path.join(GRAPHICS_ROOT, '01_14174c', 'entities.json')
+    out2 = os.path.join(DOCS_ROOT, 'jetpack.json')
     with open(out2, 'w') as f:
         json.dump(family2, f, indent=2)
         f.write('\n')

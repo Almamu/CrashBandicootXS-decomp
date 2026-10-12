@@ -3484,7 +3484,7 @@
    "format": "categories 0-2 family data: 16-colour palettes, keyframe tables (table_A), anim table gCategoryFamily0AnimTable (41 x 0x28) and table_B arrays (absolute ROM pointers or sheet offsets)",
    "effort": "medium",
    "confidence": "high",
-   "notes": "Layout already documented in include/actor_anim.h and graphics/unknown/00_0b2120/entities.json; split into typed tables.",
+   "notes": "Layout already documented in include/actor_anim.h and docs/entities/polar.json; split into typed tables.",
    "status": "converted: src/data/anim_family_178f80.cpp"
   },
   {

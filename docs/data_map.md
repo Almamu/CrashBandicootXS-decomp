@@ -501,7 +501,7 @@ Notable mid-size tables:
 - `08178F80` (0x1738) / `0817AA98` (0x1728): the two actor-category
   families: palettes, `table_A` keyframes, `anim_table_record[41]`/`[47]`
   (`081796CC`/`0817B2A4`, already declared), and the `table_B` arrays.
-  `graphics/unknown/*/entities.json` already records all of it.
+  `docs/entities/*.json` already records all of it.
   **Converted** (`src/data/anim_family_178f80.cpp`,
   `src/data/anim_family_17aa6c.cpp`, docs/data.md "Category families").
 - `08175558`+`08175564`+`08175584`: one `category_descriptor[7]`, split over three labels.
@@ -633,12 +633,12 @@ BG tile sets are in [levels.md](./levels.md).
 | ROM | symbol | kind | source (graphics/) |
 |---|---|---|---|
 | `0803B8B0` | `gCategoryFamily0CellAnim` | cell_anim | `vehicles/polar/ice_wall.png` |
-| `080B2120` | `gPolarSpriteSheet` | framed_sheet | `unknown/00_0b2120/` |
+| `080B2120` | `gPolarSpriteSheet` | framed_sheet | `vehicles/polar/sprite_sheet/` |
 | `080C2758` | `gPolarPlayerRleFrames` | rle_frames | `vehicles/polar/player.png` |
 | `080DA1D8` | `gYetiRleFrames` | rle_frames | `vehicles/polar/yeti.png` |
 | `080FF1B0` | `gCategoryFamily1CellAnim` | cell_anim | `vehicles/jetpack/clouds.png` |
 | `0813D934` | `gCategory3BgPicture` | bg_picture | `vehicles/jetpack/skies/rocket_racket.png`, `vehicles/jetpack/skies/rocket_racket_tiles.png` |
-| `0814174C` | `gJetpackSpriteSheet` | framed_sheet | `unknown/01_14174c/` |
+| `0814174C` | `gJetpackSpriteSheet` | framed_sheet | `vehicles/jetpack/sprite_sheet/` |
 | `08151AC4` | `gCategory4BgPicture` | bg_picture | `vehicles/jetpack/skies/blimp_bonanza.png`, `vehicles/jetpack/skies/blimp_bonanza_tiles.png` |
 | `08155260` | `gCategory5BgPicture` | bg_picture | `vehicles/jetpack/skies/no_fly_zone.png`, `vehicles/jetpack/skies/no_fly_zone_tiles.png` |
 | `0815A050` | `gJetpackPlayerRleFrames` | rle_frames | `vehicles/jetpack/player.png` |

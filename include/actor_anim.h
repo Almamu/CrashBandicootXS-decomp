@@ -10,7 +10,7 @@
  * frame system used to render rotating pickup/hazard sprites (crates,
  * fruit, balloons, checkpoint text, ...). See docs/graphics.md, "Found
  * the real per-actor animation-frame system" onward, for how each of
- * these was reversed, and each graphics/unknown/<sheet>/entities.json
+ * these was reversed, and each docs/entities/<family>.json
  * for the actual data (every category, every animation-table record, every
  * keyframe, resolved to the exact ROM address or extracted frame PNG it
  * uses).
@@ -50,7 +50,7 @@ COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct anim_box) == 0xC);
  * (categories 3-6, 47 slots) - one record per animation clip, defined in
  * src/data/anim_family_178f80.cpp / anim_family_17aa6c.cpp. Several slots
  * share another slot's table_A/table_B arrays (see "duplicate_of_slot"
- * in entities.json), and slots 32-34 of the first table are all zero. */
+ * in docs/entities/), and slots 32-34 of the first table are all zero. */
 struct anim_table_record {
     /* 0x00 - equals the record's own slot number in every valid record
      * observed. Read with ldrb; 0x01-0x03 are padding, 0 in every table. */
@@ -95,9 +95,9 @@ COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct anim_table_record) == 0x28);
  *     category family's decompressed sprite sheet
  *     (gPolarSpriteSheet for categories 0-2, gJetpackSpriteSheet for
  *     3-6) to a struct actor_frame_pixels. These frames *are* extracted - see
- *     graphics/unknown/<sheet>/<entity>/NN.png, one file per frame.
+ *     graphics/vehicles/<family>/sprite_sheet/<entity>/NN.png, one file per frame.
  *
- * entities.json's "addressing_mode" field records which mode each
+ * docs/entities/'s "addressing_mode" field records which mode each
  * record uses; "frames" resolves every keyframe-used table_B entry to
  * either {rom_address, w_tiles, h_tiles} or {asset_file, w_tiles, h_tiles}
  * accordingly.
@@ -106,7 +106,7 @@ COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct anim_table_record) == 0x28);
 /* One animation frame's raw pixel data, exactly as DMA'd to VRAM with no
  * reformatting (confirmed via the DMA3 register writes in the queued
  * transfer flush routine, FlushVramDmaQueue) - so this is also exactly what
- * graphics/unknown/<sheet>/<entity>/NN.png round-trips to/from (that
+ * graphics/vehicles/<family>/sprite_sheet/<entity>/NN.png round-trips to/from (that
  * tool strips/reinserts this same 4-byte header - see tools/framed_gfx.py). */
 struct actor_frame_pixels {
     u8 width_tiles;  // 0x00 - always 1, 2, 4, or 8 in every frame observed
