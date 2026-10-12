@@ -290,10 +290,14 @@ each region in ROM order.
   room's objects: `gRoomNN` and what the object is (`gRoom17Desc`,
   `gRoom17Palette`, `gRoom17Bg1Grid`, `gRoom17Asset`, ...; the tile sets
   keep their own names).
-- `roomNN_xxxxxx/<layer>.map.bin`: the layer's decoded tilemap,
+- `roomNN_xxxxxx/<layer>.map.bin` (BG0-3): the layer's decoded tilemap,
   `gridWidth * 16` by `gridHeight * 8` little-endian `u16` cells,
   row-major (grit's flat `-mLf` map layout). These are the cells above,
   not ROM bytes: the ROM only has the chunk streams.
+- `roomNN_xxxxxx/collision.png`: the collision layer as an image the
+  size of the BG0 picture, each cell an 8x8 block, `gridWidth * 128` by
+  `gridHeight * 64` pixels, coloured by the legend below (see "Collision
+  layers").
 
 Everything else is derived again: the chunk set and grid (from the map),
 the asset and the layers' `assetOffset`s, the entity groups, the counts,
@@ -317,8 +321,118 @@ room's generated parameter struct).
 `tools/levels.py extract` writes `data/levels/` from `baserom.gba` (and
 checks that every asset re-encodes exactly). `tools/levels.py render
 data/levels/<room> <layer> out.png` draws a layer with the room's palette
-and its tile set (from `graphics/`), or the collision layer as terrain
-types, to see what a map holds.
+and its tile set (from `graphics/`), to see what a map holds; for the
+collision layer it writes the collision image again.
+
+### Collision layers
+
+Each room's collision layer is `collision.png`, an 8bpp indexed PNG at
+the BG's scale. A collision cell covers one 8x8-pixel tile of the room,
+like a BG0 cell (the terrain code looks a cell up at `x >> 3`, `y >> 3`,
+`GetTerrainType`), so the image draws each cell as an 8x8 block of one
+colour:
+
+- cell `(cx, cy)` is pixels `cx * 8` to `cx * 8 + 7` across and `cy * 8`
+  to `cy * 8 + 7` down;
+- the image is `gridWidth * 16 * 8` by `gridHeight * 8 * 8` pixels (the
+  whole chunk grid, `gridWidth * 128` by `gridHeight * 64`), the same as
+  the BG0 picture `tools/levels.py render data/levels/<room> bg0` draws.
+  The collision and BG0 layers always have the same grid. For example,
+  room 00 is 16 x 5 chunks, 256 x 40 cells, and both its BG0 picture and
+  `collision.png` are 2048 x 320 pixels;
+- `widthTiles`, `heightTiles` (`size_tiles` in `room.json`) are the
+  scrollable part of that, also in 8-pixel cells; the rest of the last
+  chunk column and row is in the image too.
+
+Every cell value (terrain type, flag nibble and open bits, see "Cells"
+above and [flags/terrain.md](./flags/terrain.md)) has its own colour,
+listed in `data/levels/collision_legend.json`. All 41 rooms use only the
+37 values below. `tools/levels.py` reads the image directly when it
+builds the asset and the room data. `tools/collision_bmp.py` converts in
+either direction:
+
+    tools/collision_bmp.py to-image MAP.bin OUT.png --width CELLS
+    tools/collision_bmp.py to-bin collision.png OUT.bin
+
+An image is read by colour, not by palette index, so an editor can
+reorder or extend the palette, or save the image as true colour (PNG or
+BMP). Paint with the legend's exact colours, in whole 8x8 blocks on the
+8-pixel grid. These are errors, and the message names the cell and its
+pixels:
+
+- a colour that isn't in the legend;
+- a block that isn't a single colour;
+- an image that isn't the room's size (the chunk grid times 128 x 64
+  pixels).
+
+To use a value that no room has yet, add it to the legend with a new
+colour. The PNG's own palette is the legend's colours in legend order, but
+only the pixels' colours matter. `extract` writes the same PNGs again,
+byte for byte.
+
+To edit the collision against the level picture:
+
+1. render the BG0 picture, `tools/levels.py render data/levels/<room> bg0
+   bg0.png`;
+2. open `bg0.png` in an editor with layers (GIMP, Krita, Aseprite, ...)
+   and add `collision.png` as a layer above it at offset 0, 0: the two are
+   the same size, so they line up pixel for pixel;
+3. lower the collision layer's opacity (about 50%) to see the level
+   through it, and set a grid of 8x8 pixels to paint on whole cells;
+4. paint on the collision layer only, with the pencil (no antialiasing)
+   and the legend's colours, then export that layer alone as
+   `collision.png`, at full opacity.
+
+The BG1-3 layers scroll at their own parallax scale and have their own
+grids, so they don't line up with the collision layer; only BG0 does.
+
+Colour groups:
+- black is empty;
+- greens are the height types (1-0x23, `GetTerrainHeights`);
+- greys are the solid types `0x2B`/`0x2E`;
+- oranges are the solid types with bit 7 set (`0x81`-`0x87`, `0xAB`);
+- blues, purples, pinks, yellows and cyans are the cells with a flag
+  nibble (bits 8-11) or open bits (12-15) set.
+
+| value | colour | cell |
+|---|---|---|
+| `0000` | `#000000` | TERRAIN_TYPE_NONE |
+| `0001` | `#1B5E20` | heights 0x01 |
+| `0002` | `#2E7D32` | heights 0x02 |
+| `0003` | `#43A047` | heights 0x03 |
+| `0005` | `#66BB6A` | heights 0x05 |
+| `0006` | `#81C784` | heights 0x06 |
+| `0007` | `#A5D6A7` | heights 0x07 |
+| `0008` | `#00695C` | heights 0x08 |
+| `000A` | `#00897B` | heights 0x0A |
+| `000C` | `#26A69A` | heights 0x0C |
+| `000D` | `#4DB6AC` | heights 0x0D |
+| `000E` | `#80CBC4` | heights 0x0E |
+| `000F` | `#B2DFDB` | heights 0x0F |
+| `002B` | `#C8C8C8` | solid 0x2B |
+| `002E` | `#8C8C8C` | solid 0x2E |
+| `0081` | `#BF360C` | solid 0x81 |
+| `0082` | `#D84315` | solid 0x82 |
+| `0083` | `#E64A19` | solid 0x83 |
+| `0085` | `#F4511E` | solid 0x85 |
+| `0086` | `#FF7043` | solid 0x86 |
+| `0087` | `#FF8A65` | solid 0x87 |
+| `00AB` | `#FFB300` | solid 0xAB |
+| `0100` | `#1A237E` | TERRAIN_TYPE_NONE, flags 0x1 |
+| `012B` | `#5C6BC0` | solid 0x2B, flags 0x1 |
+| `01AB` | `#FFD54F` | solid 0xAB, flags 0x1 |
+| `0500` | `#4A148C` | TERRAIN_TYPE_NONE, flags 0x5 |
+| `0505` | `#9C27B0` | heights 0x05, flags 0x5 |
+| `052B` | `#BA68C8` | solid 0x2B, flags 0x5 |
+| `0600` | `#880E4F` | TERRAIN_TYPE_NONE, flags 0x6 |
+| `062B` | `#F06292` | solid 0x2B, flags 0x6 |
+| `072B` | `#F8BBD0` | solid 0x2B, flags 0x7 |
+| `0A2B` | `#FFF176` | solid 0x2B, flags 0xA |
+| `3000` | `#006064` | TERRAIN_TYPE_NONE, TERRAIN_FLAG_OPEN_RIGHT|TERRAIN_FLAG_OPEN_LEFT |
+| `302B` | `#4DD0E1` | solid 0x2B, TERRAIN_FLAG_OPEN_RIGHT|TERRAIN_FLAG_OPEN_LEFT |
+| `30AB` | `#FFE082` | solid 0xAB, TERRAIN_FLAG_OPEN_RIGHT|TERRAIN_FLAG_OPEN_LEFT |
+| `3500` | `#01579B` | TERRAIN_TYPE_NONE, flags 0x5, TERRAIN_FLAG_OPEN_RIGHT|TERRAIN_FLAG_OPEN_LEFT |
+| `352B` | `#4FC3F7` | solid 0x2B, flags 0x5, TERRAIN_FLAG_OPEN_RIGHT|TERRAIN_FLAG_OPEN_LEFT |
 
 Editing notes: an entity must stay in its column's id order (the list
 runs from the last column to the first); a room can't change its layers'

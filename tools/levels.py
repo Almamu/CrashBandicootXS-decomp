@@ -17,9 +17,11 @@ See docs/levels.md for the format. In short, a room is
 
 The editable sources live in data/levels/: levels.json (the two ROM
 regions and which rooms they hold, in ROM order) and one directory per
-room with room.json and one `<layer>.map.bin` per layer, the layer's
+room with room.json and one `<layer>.map.bin` per BG layer, the layer's
 whole decoded tilemap (little-endian u16 cells, row-major, grit's flat
-`-mLf` map layout). The chunk set, the chunk grid, the asset offsets, the
+`-mLf` map layout), and `collision.png`, the collision layer as an image
+the size of the BG0 picture (one 8x8 block per cell, coloured by
+data/levels/collision_legend.json, see tools/collision_bmp.py). The chunk set, the chunk grid, the asset offsets, the
 entity groups, the parameter offsets and the per-type counts are all
 derived from those again.
 
@@ -46,6 +48,9 @@ import struct
 import sys
 import zlib
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import collision_bmp  # noqa: E402
 
 ROM_BASE = 0x08000000
 ROOM_TABLE = 0x0816CD80
@@ -302,8 +307,19 @@ def entity_type(room_name, t, by_name):
 
 
 def load_map(room_dir, layer):
-    data = (Path(room_dir) / layer["map"]).read_bytes()
+    path = Path(room_dir) / layer["map"]
     w, h = layer["size_chunks"]
+    if path.suffix in (".png", ".bmp"):
+        # the collision layer: an image of its cells, 8x8 pixels each, the
+        # size of the BG0 picture (tools/collision_bmp.py)
+        px = collision_bmp.CELL_PX
+        iw, ih, cells = collision_bmp.read_image(path)
+        if (iw, ih) != (w * CHUNK_W, h * CHUNK_H):
+            sys.exit("%s: %dx%d pixels, expected %dx%d (%dx%d cells of %dx%d pixels, %d x %d chunks)"
+                     % (path, iw * px, ih * px, w * CHUNK_W * px, h * CHUNK_H * px,
+                        w * CHUNK_W, h * CHUNK_H, px, px, w, h))
+        return cells
+    data = path.read_bytes()
     if len(data) != w * h * CHUNK_CELLS * 2:
         sys.exit("%s/%s: %d bytes, expected %d x %d chunks" % (room_dir, layer["map"], len(data), w, h))
     return list(struct.unpack("<%dH" % (len(data) // 2), data))
@@ -544,44 +560,33 @@ def render(room_dir, lname, out_path):
     cells = load_map(room_dir, layer)
     w, h = layer["size_chunks"]
     W, H = w * CHUNK_W, h * CHUNK_H
+    if lname == "collision":
+        # the collision image itself: the legend's colours, 8x8 pixels per cell
+        collision_bmp.write_image(out_path, W, cells)
+        return
     img = Image.new("P", (W * 8, H * 8))
     pal = []
     for c in room["palette"]:
         v = int(c, 16)
         pal += [(v & 31) << 3, (v >> 5 & 31) << 3, (v >> 10 & 31) << 3]
-    if lname == "collision":
-        # terrain type (low byte) as a colour, types 1-0x23 are the
-        # non-solid ones (GetTerrainHeights), the rest solid shapes (GetSolidTerrainHeights)
-        pal = []
-        for i in range(256):
-            pal += [0, 0, 0] if i == 0 else ([64 + i * 5 % 192, 160, 64] if i <= 0x23 else
-                                             [200, 64 + i * 7 % 192, 64 + i * 13 % 192])
-        px = img.load()
-        for y in range(H):
-            for x in range(W):
-                t = cells[y * W + x] & 0xFF
-                for yy in range(8):
-                    for xx in range(8):
-                        px[x * 8 + xx, y * 8 + yy] = t
-    else:
-        tiles = find_tileset(layer["tileset"])
-        px = img.load()
-        for y in range(H):
-            for x in range(W):
-                v = cells[y * W + x]
-                if lname == "bg0":  # tile-slot pool entry: 14-bit 8bpp tile, flips in bits 14-15
-                    t, hf, vf, bank = v & 0x3FFF, v >> 14 & 1, v >> 15 & 1, None
-                else:  # 4bpp BG screen entry
-                    t, hf, vf, bank = v & 0x3FF, v >> 10 & 1, v >> 11 & 1, v >> 12
-                if t >= len(tiles):
-                    continue
-                data = tiles[t]
-                for yy in range(8):
-                    for xx in range(8):
-                        c = data[yy * 8 + xx]
-                        if bank is not None and c:
-                            c += bank * 16
-                        px[x * 8 + (7 - xx if hf else xx), y * 8 + (7 - yy if vf else yy)] = c
+    tiles = find_tileset(layer["tileset"])
+    px = img.load()
+    for y in range(H):
+        for x in range(W):
+            v = cells[y * W + x]
+            if lname == "bg0":  # tile-slot pool entry: 14-bit 8bpp tile, flips in bits 14-15
+                t, hf, vf, bank = v & 0x3FFF, v >> 14 & 1, v >> 15 & 1, None
+            else:  # 4bpp BG screen entry
+                t, hf, vf, bank = v & 0x3FF, v >> 10 & 1, v >> 11 & 1, v >> 12
+            if t >= len(tiles):
+                continue
+            data = tiles[t]
+            for yy in range(8):
+                for xx in range(8):
+                    c = data[yy * 8 + xx]
+                    if bank is not None and c:
+                        c += bank * 16
+                    px[x * 8 + (7 - xx if hf else xx), y * 8 + (7 - yy if vf else yy)] = c
     img.putpalette(pal)
     img.save(out_path)
 
@@ -736,8 +741,12 @@ def extract(rom_path):
                               (gy * CHUNK_H + y) * width + gx * CHUNK_W + CHUNK_W] = c[y * CHUNK_W:(y + 1) * CHUNK_W]
             re_chunks, re_grid = split_chunks(cells, cw, ch)
             assert re_grid == grid and [list(c) for c in re_chunks] == chunks, name + " " + lname
-            fname = "%s.map.bin" % lname
-            (room_dir / fname).write_bytes(struct.pack("<%dH" % len(cells), *cells))
+            if lname == "collision":
+                fname = "collision.png"
+                collision_bmp.write_image(room_dir / fname, width, cells)
+            else:
+                fname = "%s.map.bin" % lname
+                (room_dir / fname).write_bytes(struct.pack("<%dH" % len(cells), *cells))
             layer = {
                 "map": fname,
                 "size_chunks": [cw, ch],

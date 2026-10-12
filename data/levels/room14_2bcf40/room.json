@@ -6,7 +6,7 @@
     "bg1": {"map": "bg1.map.bin", "size_chunks": [51, 6], "size_tiles": [810, 45], "tileset": "gSewerBgTiles", "scale": [128, 128], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom14Bg1Grid"},
     "bg2": {"map": "bg2.map.bin", "size_chunks": [51, 6], "size_tiles": [810, 45], "tileset": "gSewerBgTiles", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom14Bg2Grid"},
     "bg0": {"map": "bg0.map.bin", "size_chunks": [50, 6], "size_tiles": [800, 45], "tileset": "gSewerBg0Tiles", "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom14Bg0Grid"},
-    "collision": {"map": "collision.map.bin", "size_chunks": [50, 6], "size_tiles": [800, 45], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom14CollisionGrid"}
+    "collision": {"map": "collision.png", "size_chunks": [50, 6], "size_tiles": [800, 45], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom14CollisionGrid"}
   },
   "palette": [
     "7C1F", "462C", "2D65", "39CA", "14C3", "1D05", "2989", "0C62", "2149", "194B", "0CE8", "0485", "112B", "0043", "3185", "7FFF",
