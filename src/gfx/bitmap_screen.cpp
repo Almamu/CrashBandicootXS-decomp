@@ -54,11 +54,8 @@ void ShowBitmapScreen(void *asset, void *palette)
 {
     u16 rawA;
     s32 zero;
-    s32 rawDFull;
     s32 shiftedD;
-    s16 scaleA;
     u16 rawD;
-    s16 scaleD;
     s32 xLow, yLow;
 
     REG_BG2CNT = BGCNT_PRIORITY(3) | BGCNT_CHARBASE(3) | BGCNT_256COLOR | BGCNT_SCREENBASE(8);
@@ -66,14 +63,11 @@ void ShowBitmapScreen(void *asset, void *palette)
 
     rawA = FixedInverse16(0x100);
     zero = 0;
-    rawDFull = FixedInverse16(0x100);
-    shiftedD = rawDFull << 16;
-    scaleA = (s16)rawA;
-    xLow = 0x7788 - scaleA * 120;
+    shiftedD = FixedInverse16(0x100) << 16;
+    xLow = 0x7788 - (s16)rawA * 120;
     yLow = 0x4FB0;
     rawD = (u16)((u32)shiftedD >> 16);
-    scaleD = (s16)(shiftedD >> 16);
-    yLow -= scaleD * 80;
+    yLow -= (s16)(shiftedD >> 16) * 80;
 
     REG_BG2PA = rawA;
     REG_BG2PB = zero;

@@ -87,17 +87,16 @@ void ScaledSprite::Draw()
         oam.matrixLo = n;
         oam.matrixBit3 = n >> 3;
         oam.matrixBit4 = n >> 4;
-        {
-            /* Read through a u16 local: the ROM loads each scale with ldrh
-             * ahead of its store address. */
-            u16 param = scaleX;
-            s32 i = n * 4;
-            buf->table[i].attr[3] = param;
-            buf->table[i + 1].attr[3] = 0;
-            buf->table[i + 2].attr[3] = 0;
-            param = scaleY;
-            buf->table[i + 3].attr[3] = param;
-        }
+
+        /* Read through a u16 local: the ROM loads each scale with ldrh
+         * ahead of its store address. */
+        u16 param = scaleX;
+        s32 i = n * 4;
+        buf->table[i].attr[3] = param;
+        buf->table[i + 1].attr[3] = 0;
+        buf->table[i + 2].attr[3] = 0;
+        param = scaleY;
+        buf->table[i + 3].attr[3] = param;
     }
     gOamBuffer->Add(&oam);
 }

@@ -27,11 +27,10 @@ void Font::DrawGlyph(u8 charByte)
     u8 glyph = charLookup[charByte];
 
     SetGlyphX(oam, posX);
-    {
-        u8 *y = (u8 *)&posY;
 
-        oam->y = glyphRecords[glyph].yOffset + *y;
-    }
+    u8 *y = (u8 *)&posY;
+
+    oam->y = glyphRecords[glyph].yOffset + *y;
     oam->shape = glyphRecords[glyph].shape;
     oam->tileNum = tileBase + glyph * glyphTileStride;
     gOamBuffer->Add(this);
