@@ -387,10 +387,15 @@ two), the animation table (`struct anim_table_record`, `actor_anim.h`,
   second family), so it's a `const u8 *const []`. Every other record's
   is `u32` byte offsets into the family's framed sheet
   (`graphics/unknown/00_0b2120/`, `01_14174c/`, decompressed), written
-  `FRAMED_0B2120_<ENTITY>_<NN>`. `tools/framed_gfx.py header` generates
+  `FRAMED_0B2120_<FOLDER>_<NN>`. `tools/framed_gfx.py header` generates
   those from the sheet's frame PNGs, in the order the sheet is built
   (`graphics.mk`), so a resized frame moves the offsets with it. Every
-  offset in the ROM lands on a frame start.
+  offset in the ROM lands on a frame start. A sheet folder is one run of
+  frames used by the same records (`folders.json` beside it lists them
+  and the palette bank its PNGs show, docs/graphics.md "The framed
+  sheets' folders and colours"), so one array often spans several
+  folders: `gPolarNitroCrateFrames` is `NITRO_CRATE` then
+  `NITRO_CRATE_BURST`, the wooden crates all end in `CRATE_SHARDS`.
 
 The arrays have no labels in the code (only the records point at them),
 so they're named after their addresses. Each one runs to the next
@@ -921,8 +926,13 @@ unpacks a frame into a VRAM tile block. The frame pointer tables
 Each set is one PNG in `graphics/rle_sprites/`, `<addr>_frames.png`:
 4bpp indexed, one frame per `w*8` x `h*8` block, the frames stacked top to
 bottom, so grit's row-major tile order is the frames back to back. The
-palette is the category's OBJ palette, bank 0 (the frames aren't tied to
-a palette; OAM picks the bank). The build (`graphics.mk`):
+PNG's 16 colours are the ones the game draws the set with: the players'
+sets (A and C) use bank 0 of their category's OBJ palette
+(`gPolarCategoryPalette`, `gAirshipCategoryPalette`; both player records'
+`palette` is 0), the Yeti's (B) uses `Yeti::palette`, which
+`Yeti::UpdatePalette` DMAs to OBJ palette 15. The build reads only the
+4-bit indices (grit `-p!`), so the colours never reach the ROM. The build
+(`graphics.mk`):
 
 | step | tool | output |
 |---|---|---|

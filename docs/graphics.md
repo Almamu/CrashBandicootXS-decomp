@@ -1151,7 +1151,7 @@ every `gActorCategories` field, named where its role is known -
 "Found the real per-actor animation-frame system" above for what's known
 about each); `records` (one entry per animation-table slot, `valid:
 false` for empty/garbage slots) each with `table_A_address`,
-`table_B_address`, `header_byte`, `addressing_mode` (`pool_offset` vs the
+`table_B_address`, `palette_bank`, `addressing_mode` (`pool_offset` vs the
 mask-style `absolute_rom`), `duplicate_of_slot` (many slots are aliases
 of an earlier slot's exact same `table_A`/`table_B` pair), `keyframes`
 (every table_A entry actually used, its raw 12 bytes for the fields still
@@ -1159,9 +1159,8 @@ unexplained, and which `table_B` index it selects), and `frames` (each
 used `table_B` index resolved to either `{asset_file, w_tiles, h_tiles}`
 - `asset_file` pointing straight at that one frame's own PNG - for
 `pool_offset` records, or `{rom_address, w_tiles, h_tiles}` for
-`absolute_rom` ones). Confirmed content from this and the
-previous two sections is carried over as `label`/`identified` on the
-matching record.
+`absolute_rom` ones), and `label`, the record's actor kind
+(`include/constants/actor_kinds.h`).
 
 The matching C data layout - `struct category_descriptor`,
 `struct category_vtable`, `struct anim_table_record`,
@@ -1256,10 +1255,61 @@ reflects the current split - `asset_file` now points straight at one
 frame's own PNG, no `frame_index` field needed anymore either). Verified
 byte-exact via a full clean `make compare` after each step.
 
-Not-yet-identified entities are still real, individually-editable folders
-(e.g. `03_record_slot28/`, `18_record_slot10/`) - "not identified" no
-longer means "bundled in with everything else nearby", just "nobody's
-looked at this specific folder yet".
+**Superseded by the regrouping below**: cutting at each `table_B`'s
+first frame put a record's later frames into whichever folder came
+before them (`18_emerging_creature/` held the polar launcher plus five
+other actors' tails), and the colours were bank 0 for every folder.
+
+### The framed sheets' folders and colours (#914, done)
+
+`tools/split_entities.py` now cuts each sheet wherever the set of
+records whose `table_B` arrays reference a frame changes: a folder is one
+run of consecutive frames that exactly the same records use. Every frame
+of both sheets is referenced (274 + 221), so the cut is exhaustive, and
+the folder names are the records' actor kinds
+(`include/constants/actor_kinds.h`) and what the frames show:
+25 folders for categories 0-2 (`00_time_crate_1/` ... `24_checkpoint_text/`),
+27 for categories 3-6 (`00_shot/` ... `26_checkpoint_text/`). A record's
+frames can span several folders - the polar Nitro crate is
+`06_nitro_crate/` then `20_nitro_crate_burst/`, every wooden polar crate
+ends in the shared `19_crate_shards/`, the jetpack rocket is
+`18_rocket/`, `14_explosion/` and `21_rocket_burst/`. The `NN_` order is
+the sheet's byte order, which is also the build's pack order, so the ROM
+doesn't change; the `FRAMED_<SHEET>_<FOLDER>_<NN>` names in
+`src/data/anim_family_*.cpp` follow the folders.
+
+Each folder's PNGs carry the 16 colours the game draws them with:
+`anim_table_record.palette` (`+0x0C`) is the OBJ palette bank, an index
+into the family's 256-colour palette (`category_descriptor.palette`:
+`gPolarCategoryPalette` for categories 0-2, `gAirshipCategoryPalette` for
+3-5, `gHovercraftCategoryPalette` for 6). Only `riderless_polar` (record
+2) uses bank 0; wumpa is bank 7, the polar Nitro crate 2, the polar time
+crates 4, the jetpack balloons 5-7. The hovercraft's own parts (records 10-14:
+the hovercraft, cannon, launcher, side gun and cannon flash) are only
+created in category 6, whose spawn table holds just the hovercraft, so
+their folders use `gHovercraftCategoryPalette`; it differs from the
+airship palette only in bank 10, which is theirs. Everything else in the
+second sheet uses the airship palette (categories 3-5 come first). The
+build reads only the 4-bit indices (`framed_gfx.py to-bin-folder`), so the
+colours never reach the ROM.
+
+A folder that several records draw in different banks takes the first
+record's (in table order); `graphics/unknown/<sheet>/folders.json`, which
+`split_entities.py` writes, lists every folder's records, palette and
+bank, and `other_banks` for these two:
+
+| folder | frames | records (banks) | PNG bank |
+|---|---|---|---|
+| `00_0b2120/19_crate_shards/` | 6 | basic and question crates (1), life and Aku Aku crates (3), checkpoint crate (5) | 1 |
+| `01_14174c/14_explosion/` | 10 | the bombers (2), the rocket (5), the explosion actor (4) | 2 |
+
+The balloon names were colour guesses in bank 0: in their banks the
+jetpack balloons are red (record 40, the time crate's), yellow (41, the
+question crate's) and white with a red cross (42, the health crate's),
+now `JETPACK_KIND_BALLOON_RED`, `_YELLOW` and `_RED_CROSS`.
+
+`tools/dump_entities.py` labels every record with its actor kind and
+calls the `+0x0C` field `palette_bank` (it was `header_byte`).
 
 ### Open questions / next steps
 
@@ -1279,13 +1329,10 @@ looked at this specific folder yet".
   (working theory: a spinning Aku Aku mask for 0-2, unconfirmed), and the
   still-undecoded descriptor/record fields listed at the end of that
   section.
-- The two giant LZ77 sheets are now identified and split into per-record,
-  editable PNG sources under `graphics/unknown/00_0b2120/`, `01_14174c/`
-  (a TNT crate, a Nitro crate, 5 decorated crate variants, a winged
-  creature, badge icons, a barrel, all confirmed; two large
-  `unidentified.png` catch-all pools remain uncatalogued). See "Identified
-  the two giant LZ77 sheets" / "Splitting the two giant sprite sheets"
-  above. Not done: cataloguing the two `unidentified.png` pools further.
+- The two giant LZ77 sheets are split into editable PNG folders under
+  `graphics/unknown/00_0b2120/`, `01_14174c/`, one per run of frames the
+  same records use, named and coloured from the records - see "The framed
+  sheets' folders and colours".
 - Given the raw-tag (`0x0`) upload path exists (see the VRAM upload
   dispatcher above) and signature scanning can't find uncompressed data,
   the fastest path to *locating* more sprite pixels may still be empirical:

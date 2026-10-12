@@ -12,7 +12,7 @@
 # these JSON files are the data half - real ROM addresses, keyframe
 # sequences, and (for records whose table_B holds small offsets rather
 # than absolute ROM addresses) a direct reference to the already-split
-# graphics/unknown/<sheet>/*.png + .frames sources, so the frame pixel
+# graphics/unknown/<sheet>/<folder>/*.png frames, so the frame pixel
 # data doesn't need to be re-derived from raw hex again.
 #
 # Re-run any time to regenerate from baserom.gba + the current split
@@ -265,19 +265,14 @@ def dump_family(sheet_rom_addr, decompressed_size, sheet_dir, anim_table_base,
             'valid': True,
             'table_A_address': hx(table_a),
             'table_B_address': hx(table_b),
-            'header_byte': hdr,
+            'palette_bank': hdr,
             'addressing_mode': addressing_mode,
             'duplicate_of_slot': dup_of if dup_of != slot else None,
             'keyframes': keyframes,
             'keyframes_truncated_at_cap': truncated_at_cap,
             'frames': frames,
         }
-        if slot in labels:
-            rec['label'] = labels[slot]['label']
-            rec['identified'] = labels[slot]['identified']
-        else:
-            rec['label'] = None
-            rec['identified'] = False
+        rec['label'] = labels.get(slot)
         records.append(rec)
 
     return {
@@ -293,36 +288,97 @@ def dump_family(sheet_rom_addr, decompressed_size, sheet_dir, anim_table_base,
     }
 
 
+# Each record's actor kind (include/constants/actor_kinds.h): the record's
+# slot is the kind's number.
 FAMILY1_LABELS = {
-    0: {'label': 'mask (possibly Aku Aku - unconfirmed)', 'identified': False},
-    1: {'label': 'TNT crate', 'identified': True},
-    2: {'label': 'small gray/white creature', 'identified': False},
-    3: {'label': 'barrel/drum (unconfirmed beyond shape)', 'identified': False},
-    4: {'label': 'Nitro crate ("NITRO" text visible)', 'identified': True},
-    5: {'label': 'decorated crate variant A', 'identified': False},
-    6: {'label': 'decorated crate variant B', 'identified': False},
-    7: {'label': 'decorated crate variant C', 'identified': False},
-    8: {'label': 'decorated crate variant D', 'identified': False},
-    9: {'label': 'decorated crate variant E', 'identified': False},
-    11: {'label': 'Wumpa Fruit', 'identified': True},
-    22: {'label': 'creature/item emerging from a shell (unconfirmed identity)', 'identified': False},
-    23: {'label': 'two guards holding a chain barrier', 'identified': True},
-    40: {'label': '"CHECK POINT" text', 'identified': True},
+    0: 'POLAR_KIND_PLAYER',
+    1: 'POLAR_KIND_BASIC_CRATE',
+    2: 'POLAR_KIND_RIDERLESS_POLAR',
+    3: 'POLAR_KIND_CHECKPOINT_CRATE',
+    4: 'POLAR_KIND_NITRO_CRATE',
+    5: 'POLAR_KIND_TIME_CRATE_1',
+    6: 'POLAR_KIND_TIME_CRATE_2',
+    7: 'POLAR_KIND_TIME_CRATE_3',
+    8: 'POLAR_KIND_LIFE_CRATE',
+    9: 'POLAR_KIND_AKU_AKU_CRATE',
+    10: 'POLAR_KIND_FOUR_WUMPA_CRATE',
+    11: 'POLAR_KIND_WUMPA',
+    12: 'POLAR_KIND_BOOST_PAD',
+    13: 'POLAR_KIND_OBSTACLE',
+    14: 'POLAR_KIND_OBSTACLE_2',
+    15: 'POLAR_KIND_UNK15',
+    16: 'POLAR_KIND_ICICLE_A',
+    17: 'POLAR_KIND_ICICLE_A_RIGHT',
+    18: 'POLAR_KIND_ICICLE_B',
+    19: 'POLAR_KIND_ICICLE_B_RIGHT',
+    20: 'POLAR_KIND_ICICLE_C',
+    21: 'POLAR_KIND_ICICLE_C_RIGHT',
+    22: 'POLAR_KIND_LAUNCHER',
+    23: 'POLAR_KIND_ELECTRIC_FENCE',
+    24: 'POLAR_KIND_PENGUIN',
+    25: 'POLAR_KIND_GOAL',
+    26: 'POLAR_KIND_GOAL_2',
+    27: 'POLAR_KIND_AKU_AKU',
+    28: 'POLAR_KIND_QUESTION_CRATE_WUMPA_1',
+    29: 'POLAR_KIND_QUESTION_CRATE_WUMPA_3',
+    30: 'POLAR_KIND_QUESTION_CRATE_WUMPA_5',
+    31: 'POLAR_KIND_QUESTION_CRATE_AKU_AKU',
+    32: 'POLAR_KIND_PATH_SLOW',
+    33: 'POLAR_KIND_PATH_MEDIUM',
+    34: 'POLAR_KIND_PATH_FAST',
+    38: 'POLAR_KIND_PALETTE_CYCLE_2',
+    39: 'POLAR_KIND_PALETTE_CYCLE_3',
+    40: 'POLAR_KIND_CHECKPOINT_TEXT',
 }
 
 FAMILY2_LABELS = {
-    12: {'label': 'treasure chest', 'identified': True},
-    19: {'label': 'wooden crate with a "?" mark', 'identified': True},
-    24: {'label': 'wooden crate with a "1"', 'identified': True},
-    25: {'label': 'wooden crate with a "2"', 'identified': True},
-    26: {'label': 'wooden crate with a "3"-like digit', 'identified': True},
-    27: {'label': 'parachute-dropped crate', 'identified': True},
-    29: {'label': 'clock face', 'identified': True},
-    31: {'label': 'crescent/arch-shaped striped object (unconfirmed identity)', 'identified': False},
-    40: {'label': 'balloon (red/yellow)', 'identified': True},
-    41: {'label': 'balloon (orange/red/blue)', 'identified': True},
-    42: {'label': 'balloon (yellow/blue, cross/plus mark)', 'identified': True},
-    46: {'label': '"CHECK POINT" text', 'identified': True},
+    0: 'JETPACK_KIND_PLAYER',
+    1: 'JETPACK_KIND_PLANE',
+    2: 'JETPACK_KIND_SHOT',
+    3: 'JETPACK_KIND_CANNONBALL',
+    4: 'JETPACK_KIND_BOMBER_IDLE',
+    5: 'JETPACK_KIND_BOMBER_HOME',
+    6: 'JETPACK_KIND_BOMBER_BOB_VERTICAL',
+    7: 'JETPACK_KIND_BOMBER_SWING_HORIZONTAL',
+    8: 'JETPACK_KIND_BOMBER_CIRCLE',
+    9: 'JETPACK_KIND_BOMBER_DROP',
+    10: 'JETPACK_KIND_HOVERCRAFT',
+    11: 'JETPACK_KIND_HOVERCRAFT_CANNON',
+    12: 'JETPACK_KIND_HOVERCRAFT_LAUNCHER',
+    13: 'JETPACK_KIND_HOVERCRAFT_SIDE_GUN',
+    14: 'JETPACK_KIND_HOVERCRAFT_CANNON_FLASH',
+    15: 'JETPACK_KIND_UNK15',
+    16: 'JETPACK_KIND_AIRSHIP_0',
+    17: 'JETPACK_KIND_AIRSHIP_1',
+    18: 'JETPACK_KIND_AIRSHIP_2',
+    19: 'JETPACK_KIND_HEALTH_CRATE',
+    20: 'JETPACK_KIND_QUESTION_CRATE_WUMPA_1',
+    21: 'JETPACK_KIND_QUESTION_CRATE_WUMPA_3',
+    22: 'JETPACK_KIND_QUESTION_CRATE_WUMPA_5',
+    23: 'JETPACK_KIND_QUESTION_CRATE_LIFE',
+    24: 'JETPACK_KIND_TIME_CRATE_1',
+    25: 'JETPACK_KIND_TIME_CRATE_2',
+    26: 'JETPACK_KIND_TIME_CRATE_3',
+    27: 'JETPACK_KIND_PARACHUTE_NITRO',
+    28: 'JETPACK_KIND_ROCKET',
+    29: 'JETPACK_KIND_STOPWATCH',
+    30: 'JETPACK_KIND_UNK30',
+    31: 'JETPACK_KIND_RING_LEFT',
+    32: 'JETPACK_KIND_PATH_0',
+    33: 'JETPACK_KIND_PATH_1',
+    34: 'JETPACK_KIND_PATH_2',
+    35: 'JETPACK_KIND_PATH_3',
+    36: 'JETPACK_KIND_PATH_4',
+    37: 'JETPACK_KIND_PATH_5',
+    38: 'JETPACK_KIND_AIRSHIP_FIREBALL',
+    39: 'JETPACK_KIND_HOVERCRAFT_FIREBALL',
+    40: 'JETPACK_KIND_BALLOON_RED',
+    41: 'JETPACK_KIND_BALLOON_YELLOW',
+    42: 'JETPACK_KIND_BALLOON_RED_CROSS',
+    43: 'JETPACK_KIND_RING_RIGHT',
+    44: 'JETPACK_KIND_COLLECTED_WUMPA',
+    45: 'JETPACK_KIND_EXPLOSION',
+    46: 'JETPACK_KIND_CHECKPOINT_TEXT',
 }
 
 

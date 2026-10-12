@@ -16,11 +16,11 @@
         "sub_effect_table_14": "0x08140DCC",
         "anim_table_base_18": "0x0817B2A4",
         "sprite_sheet_1C": "0x0814174C",
-        "unknown_20": 7,
-        "threshold_24": 4,
-        "unknown_28": 6,
-        "flag_2C": 0,
-        "unknown_30": 3
+        "maskAssistDeaths": 7,
+        "bonusKindDeaths": 4,
+        "retryBossDeaths": 6,
+        "bossLevel": 0,
+        "retryBossLevel": 3
       }
     },
     {
@@ -34,11 +34,11 @@
         "sub_effect_table_14": "0x0815405C",
         "anim_table_base_18": "0x0817B2A4",
         "sprite_sheet_1C": "0x0814174C",
-        "unknown_20": 7,
-        "threshold_24": 4,
-        "unknown_28": 6,
-        "flag_2C": 0,
-        "unknown_30": 3
+        "maskAssistDeaths": 7,
+        "bonusKindDeaths": 4,
+        "retryBossDeaths": 6,
+        "bossLevel": 0,
+        "retryBossLevel": 3
       }
     },
     {
@@ -52,11 +52,11 @@
         "sub_effect_table_14": "0x08158918",
         "anim_table_base_18": "0x0817B2A4",
         "sprite_sheet_1C": "0x0814174C",
-        "unknown_20": 7,
-        "threshold_24": 4,
-        "unknown_28": 6,
-        "flag_2C": 0,
-        "unknown_30": 3
+        "maskAssistDeaths": 7,
+        "bonusKindDeaths": 4,
+        "retryBossDeaths": 6,
+        "bossLevel": 0,
+        "retryBossLevel": 3
       }
     },
     {
@@ -70,11 +70,11 @@
         "sub_effect_table_14": "0x0815A030",
         "anim_table_base_18": "0x0817B2A4",
         "sprite_sheet_1C": "0x0814174C",
-        "unknown_20": 4,
-        "threshold_24": 3,
-        "unknown_28": 3,
-        "flag_2C": 0,
-        "unknown_30": 1
+        "maskAssistDeaths": 4,
+        "bonusKindDeaths": 3,
+        "retryBossDeaths": 3,
+        "bossLevel": 0,
+        "retryBossLevel": 1
       }
     }
   ],
@@ -86,7 +86,7 @@
       "valid": true,
       "table_A_address": "0x0817B9FC",
       "table_B_address": "0x0817BA44",
-      "header_byte": 0,
+      "palette_bank": 0,
       "addressing_mode": "absolute_rom",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -173,15 +173,14 @@
           "h_tiles": 8
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_PLAYER"
     },
     {
       "slot": 1,
       "valid": true,
       "table_A_address": "0x0817BBC4",
       "table_B_address": "0x0817BC0C",
-      "header_byte": 2,
+      "palette_bank": 2,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -1341,75 +1340,74 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/01_winged_creature/00.png",
+          "asset_file": "graphics/unknown/01_14174c/01_plane/00.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/01_winged_creature/01.png",
+          "asset_file": "graphics/unknown/01_14174c/01_plane/01.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/01_winged_creature/02.png",
+          "asset_file": "graphics/unknown/01_14174c/01_plane/02.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/01_winged_creature/10.png",
+          "asset_file": "graphics/unknown/01_14174c/01_plane/10.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/01_winged_creature/11.png",
+          "asset_file": "graphics/unknown/01_14174c/01_plane/11.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/01_winged_creature/12.png",
+          "asset_file": "graphics/unknown/01_14174c/01_plane/12.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/01_winged_creature/03.png",
+          "asset_file": "graphics/unknown/01_14174c/01_plane/03.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/01_winged_creature/04.png",
+          "asset_file": "graphics/unknown/01_14174c/01_plane/04.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/01_winged_creature/05.png",
+          "asset_file": "graphics/unknown/01_14174c/01_plane/05.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/01_winged_creature/16.png",
+          "asset_file": "graphics/unknown/01_14174c/01_plane/16.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "19": {
-          "asset_file": "graphics/unknown/01_14174c/01_winged_creature/26.png",
+          "asset_file": "graphics/unknown/01_14174c/01_plane/26.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "25": {
-          "asset_file": "graphics/unknown/01_14174c/01_winged_creature/19.png",
+          "asset_file": "graphics/unknown/01_14174c/01_plane/19.png",
           "w_tiles": 8,
           "h_tiles": 8
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_PLANE"
     },
     {
       "slot": 2,
       "valid": true,
       "table_A_address": "0x0817BBAC",
       "table_B_address": "0x0817BBB8",
-      "header_byte": 1,
+      "palette_bank": 1,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -1444,20 +1442,19 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/00_record_slot02/00.png",
+          "asset_file": "graphics/unknown/01_14174c/00_shot/00.png",
           "w_tiles": 2,
           "h_tiles": 2
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_SHOT"
     },
     {
       "slot": 3,
       "valid": true,
       "table_A_address": "0x0817BCF4",
       "table_B_address": "0x0817BD00",
-      "header_byte": 2,
+      "palette_bank": 2,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -1474,20 +1471,19 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/03_record_slot03/00.png",
+          "asset_file": "graphics/unknown/01_14174c/03_cannonball/00.png",
           "w_tiles": 1,
           "h_tiles": 1
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_CANNONBALL"
     },
     {
       "slot": 4,
       "valid": true,
       "table_A_address": "0x0817BC8C",
       "table_B_address": "0x0817BCA4",
-      "header_byte": 2,
+      "palette_bank": 2,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -2494,60 +2490,59 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/00.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/01.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/02.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/03.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/07.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/08.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/09.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/00.png",
+          "asset_file": "graphics/unknown/01_14174c/14_explosion/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/01.png",
+          "asset_file": "graphics/unknown/01_14174c/14_explosion/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_BOMBER_IDLE"
     },
     {
       "slot": 5,
       "valid": true,
       "table_A_address": "0x0817BC8C",
       "table_B_address": "0x0817BCA4",
-      "header_byte": 2,
+      "palette_bank": 2,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 4,
       "keyframes": [
@@ -3554,60 +3549,59 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/00.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/01.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/02.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/03.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/07.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/08.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/09.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/00.png",
+          "asset_file": "graphics/unknown/01_14174c/14_explosion/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/01.png",
+          "asset_file": "graphics/unknown/01_14174c/14_explosion/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_BOMBER_HOME"
     },
     {
       "slot": 6,
       "valid": true,
       "table_A_address": "0x0817BC8C",
       "table_B_address": "0x0817BCA4",
-      "header_byte": 2,
+      "palette_bank": 2,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 4,
       "keyframes": [
@@ -4614,60 +4608,59 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/00.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/01.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/02.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/03.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/07.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/08.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/09.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/00.png",
+          "asset_file": "graphics/unknown/01_14174c/14_explosion/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/01.png",
+          "asset_file": "graphics/unknown/01_14174c/14_explosion/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_BOMBER_BOB_VERTICAL"
     },
     {
       "slot": 7,
       "valid": true,
       "table_A_address": "0x0817BC8C",
       "table_B_address": "0x0817BCA4",
-      "header_byte": 2,
+      "palette_bank": 2,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 4,
       "keyframes": [
@@ -5674,60 +5667,59 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/00.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/01.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/02.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/03.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/07.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/08.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/09.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/00.png",
+          "asset_file": "graphics/unknown/01_14174c/14_explosion/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/01.png",
+          "asset_file": "graphics/unknown/01_14174c/14_explosion/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_BOMBER_SWING_HORIZONTAL"
     },
     {
       "slot": 8,
       "valid": true,
       "table_A_address": "0x0817BC8C",
       "table_B_address": "0x0817BCA4",
-      "header_byte": 2,
+      "palette_bank": 2,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 4,
       "keyframes": [
@@ -6734,60 +6726,59 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/00.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/01.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/02.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/03.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/07.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/08.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/09.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/00.png",
+          "asset_file": "graphics/unknown/01_14174c/14_explosion/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/01.png",
+          "asset_file": "graphics/unknown/01_14174c/14_explosion/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_BOMBER_CIRCLE"
     },
     {
       "slot": 9,
       "valid": true,
       "table_A_address": "0x0817BC8C",
       "table_B_address": "0x0817BCA4",
-      "header_byte": 2,
+      "palette_bank": 2,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 4,
       "keyframes": [
@@ -7794,60 +7785,59 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/00.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/01.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/02.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/03.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/07.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/08.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/02_record_slot04/09.png",
+          "asset_file": "graphics/unknown/01_14174c/02_bomber/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/00.png",
+          "asset_file": "graphics/unknown/01_14174c/14_explosion/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/01.png",
+          "asset_file": "graphics/unknown/01_14174c/14_explosion/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_BOMBER_DROP"
     },
     {
       "slot": 10,
       "valid": true,
       "table_A_address": "0x0817BD64",
       "table_B_address": "0x0817BD88",
-      "header_byte": 10,
+      "palette_bank": 10,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -8692,50 +8682,49 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/01.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/02.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/06.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/08.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/10.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_HOVERCRAFT"
     },
     {
       "slot": 11,
       "valid": true,
       "table_A_address": "0x0817BD64",
       "table_B_address": "0x0817BD88",
-      "header_byte": 10,
+      "palette_bank": 10,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 10,
       "keyframes": [
@@ -9580,50 +9569,49 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/01.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/02.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/06.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/08.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/10.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_HOVERCRAFT_CANNON"
     },
     {
       "slot": 12,
       "valid": true,
       "table_A_address": "0x0817BDF0",
       "table_B_address": "0x0817BE20",
-      "header_byte": 10,
+      "palette_bank": 10,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -10369,50 +10357,49 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/19_treasure_chest/00.png",
+          "asset_file": "graphics/unknown/01_14174c/23_hovercraft_launcher/00.png",
           "w_tiles": 8,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/19_treasure_chest/00.png",
+          "asset_file": "graphics/unknown/01_14174c/23_hovercraft_launcher/00.png",
           "w_tiles": 8,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/19_treasure_chest/01.png",
+          "asset_file": "graphics/unknown/01_14174c/23_hovercraft_launcher/01.png",
           "w_tiles": 8,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/19_treasure_chest/02.png",
+          "asset_file": "graphics/unknown/01_14174c/23_hovercraft_launcher/02.png",
           "w_tiles": 8,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/19_treasure_chest/06.png",
+          "asset_file": "graphics/unknown/01_14174c/23_hovercraft_launcher/06.png",
           "w_tiles": 8,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/19_treasure_chest/07.png",
+          "asset_file": "graphics/unknown/01_14174c/23_hovercraft_launcher/07.png",
           "w_tiles": 8,
           "h_tiles": 4
         },
         "17": {
-          "asset_file": "graphics/unknown/01_14174c/19_treasure_chest/08.png",
+          "asset_file": "graphics/unknown/01_14174c/23_hovercraft_launcher/08.png",
           "w_tiles": 8,
           "h_tiles": 4
         }
       },
-      "label": "treasure chest",
-      "identified": true
+      "label": "JETPACK_KIND_HOVERCRAFT_LAUNCHER"
     },
     {
       "slot": 13,
       "valid": true,
       "table_A_address": "0x0817BE9C",
       "table_B_address": "0x0817BEB4",
-      "header_byte": 10,
+      "palette_bank": 10,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -10438,20 +10425,19 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/20_record_slot13/00.png",
+          "asset_file": "graphics/unknown/01_14174c/24_hovercraft_side_gun/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_HOVERCRAFT_SIDE_GUN"
     },
     {
       "slot": 14,
       "valid": true,
       "table_A_address": "0x0817BEB8",
       "table_B_address": "0x0817BEC4",
-      "header_byte": 4,
+      "palette_bank": 4,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -10621,35 +10607,34 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/21_record_slot14/00.png",
+          "asset_file": "graphics/unknown/01_14174c/25_hovercraft_cannon_flash/00.png",
           "w_tiles": 2,
           "h_tiles": 2
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/21_record_slot14/01.png",
+          "asset_file": "graphics/unknown/01_14174c/25_hovercraft_cannon_flash/01.png",
           "w_tiles": 2,
           "h_tiles": 2
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/21_record_slot14/02.png",
+          "asset_file": "graphics/unknown/01_14174c/25_hovercraft_cannon_flash/02.png",
           "w_tiles": 2,
           "h_tiles": 2
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/21_record_slot14/03.png",
+          "asset_file": "graphics/unknown/01_14174c/25_hovercraft_cannon_flash/03.png",
           "w_tiles": 2,
           "h_tiles": 2
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_HOVERCRAFT_CANNON_FLASH"
     },
     {
       "slot": 15,
       "valid": true,
       "table_A_address": "0x0817BD64",
       "table_B_address": "0x0817BD88",
-      "header_byte": 10,
+      "palette_bank": 10,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 10,
       "keyframes": [
@@ -11494,50 +11479,49 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/01.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/02.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/06.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/08.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/10.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_UNK15"
     },
     {
       "slot": 16,
       "valid": true,
       "table_A_address": "0x0817BD64",
       "table_B_address": "0x0817BD88",
-      "header_byte": 10,
+      "palette_bank": 10,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 10,
       "keyframes": [
@@ -12382,50 +12366,49 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/01.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/02.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/06.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/08.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/10.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_AIRSHIP_0"
     },
     {
       "slot": 17,
       "valid": true,
       "table_A_address": "0x0817BD64",
       "table_B_address": "0x0817BD88",
-      "header_byte": 10,
+      "palette_bank": 10,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 10,
       "keyframes": [
@@ -13270,50 +13253,49 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/01.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/02.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/06.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/08.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/10.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_AIRSHIP_1"
     },
     {
       "slot": 18,
       "valid": true,
       "table_A_address": "0x0817BD64",
       "table_B_address": "0x0817BD88",
-      "header_byte": 10,
+      "palette_bank": 10,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 10,
       "keyframes": [
@@ -14158,50 +14140,49 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/01.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/02.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/06.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/08.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/10.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_AIRSHIP_2"
     },
     {
       "slot": 19,
       "valid": true,
       "table_A_address": "0x0817BEDC",
       "table_B_address": "0x0817BEF4",
-      "header_byte": 7,
+      "palette_bank": 7,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -14767,55 +14748,54 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/08_crate_question_mark/00.png",
+          "asset_file": "graphics/unknown/01_14174c/08_question_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/01.png",
+          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/02.png",
+          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/03.png",
+          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/04.png",
+          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/05.png",
+          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/06.png",
+          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/12.png",
+          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": "wooden crate with a \"?\" mark",
-      "identified": true
+      "label": "JETPACK_KIND_HEALTH_CRATE"
     },
     {
       "slot": 20,
       "valid": true,
       "table_A_address": "0x0817BEDC",
       "table_B_address": "0x0817BEF4",
-      "header_byte": 7,
+      "palette_bank": 7,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 19,
       "keyframes": [
@@ -15381,55 +15361,54 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/08_crate_question_mark/00.png",
+          "asset_file": "graphics/unknown/01_14174c/08_question_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/01.png",
+          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/02.png",
+          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/03.png",
+          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/04.png",
+          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/05.png",
+          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/06.png",
+          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/12.png",
+          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_QUESTION_CRATE_WUMPA_1"
     },
     {
       "slot": 21,
       "valid": true,
       "table_A_address": "0x0817BEDC",
       "table_B_address": "0x0817BEF4",
-      "header_byte": 7,
+      "palette_bank": 7,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 19,
       "keyframes": [
@@ -15995,55 +15974,54 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/08_crate_question_mark/00.png",
+          "asset_file": "graphics/unknown/01_14174c/08_question_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/01.png",
+          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/02.png",
+          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/03.png",
+          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/04.png",
+          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/05.png",
+          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/06.png",
+          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/12.png",
+          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_QUESTION_CRATE_WUMPA_3"
     },
     {
       "slot": 22,
       "valid": true,
       "table_A_address": "0x0817BEDC",
       "table_B_address": "0x0817BEF4",
-      "header_byte": 7,
+      "palette_bank": 7,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 19,
       "keyframes": [
@@ -16609,55 +16587,54 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/08_crate_question_mark/00.png",
+          "asset_file": "graphics/unknown/01_14174c/08_question_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/01.png",
+          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/02.png",
+          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/03.png",
+          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/04.png",
+          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/05.png",
+          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/06.png",
+          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/12.png",
+          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_QUESTION_CRATE_WUMPA_5"
     },
     {
       "slot": 23,
       "valid": true,
       "table_A_address": "0x0817BEDC",
       "table_B_address": "0x0817BEF4",
-      "header_byte": 7,
+      "palette_bank": 7,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 19,
       "keyframes": [
@@ -17223,55 +17200,54 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/08_crate_question_mark/00.png",
+          "asset_file": "graphics/unknown/01_14174c/08_question_crate/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/01.png",
+          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/02.png",
+          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/03.png",
+          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/04.png",
+          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/05.png",
+          "asset_file": "graphics/unknown/01_14174c/12_crate_shards/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/06.png",
+          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/12.png",
+          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_QUESTION_CRATE_LIFE"
     },
     {
       "slot": 24,
       "valid": true,
       "table_A_address": "0x0817BEDC",
       "table_B_address": "0x0817BF18",
-      "header_byte": 5,
+      "palette_bank": 5,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -17837,55 +17813,54 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/09_crate_1/00.png",
+          "asset_file": "graphics/unknown/01_14174c/09_time_crate_1/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/06.png",
+          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/07.png",
+          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/08.png",
+          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/09.png",
+          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/10.png",
+          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/06.png",
+          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/12.png",
+          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": "wooden crate with a \"1\"",
-      "identified": true
+      "label": "JETPACK_KIND_TIME_CRATE_1"
     },
     {
       "slot": 25,
       "valid": true,
       "table_A_address": "0x0817BEDC",
       "table_B_address": "0x0817BF3C",
-      "header_byte": 5,
+      "palette_bank": 5,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -18451,55 +18426,54 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/10_crate_2/00.png",
+          "asset_file": "graphics/unknown/01_14174c/10_time_crate_2/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/06.png",
+          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/07.png",
+          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/08.png",
+          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/09.png",
+          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/10.png",
+          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/06.png",
+          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/12.png",
+          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": "wooden crate with a \"2\"",
-      "identified": true
+      "label": "JETPACK_KIND_TIME_CRATE_2"
     },
     {
       "slot": 26,
       "valid": true,
       "table_A_address": "0x0817BEDC",
       "table_B_address": "0x0817BF60",
-      "header_byte": 5,
+      "palette_bank": 5,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -18642,30 +18616,29 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/00.png",
+          "asset_file": "graphics/unknown/01_14174c/11_time_crate_3/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/06.png",
+          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/07.png",
+          "asset_file": "graphics/unknown/01_14174c/20_time_crate_shards/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": "wooden crate with a \"3\"-like digit",
-      "identified": true
+      "label": "JETPACK_KIND_TIME_CRATE_3"
     },
     {
       "slot": 27,
       "valid": true,
       "table_A_address": "0x0817BF84",
       "table_B_address": "0x0817BF9C",
-      "header_byte": 8,
+      "palette_bank": 8,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -19105,55 +19078,54 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/13_parachute_crate/00.png",
+          "asset_file": "graphics/unknown/01_14174c/15_parachute_nitro/00.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/13_parachute_crate/01.png",
+          "asset_file": "graphics/unknown/01_14174c/15_parachute_nitro/01.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/13_parachute_crate/02.png",
+          "asset_file": "graphics/unknown/01_14174c/15_parachute_nitro/02.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/13_parachute_crate/03.png",
+          "asset_file": "graphics/unknown/01_14174c/15_parachute_nitro/03.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/13_parachute_crate/04.png",
+          "asset_file": "graphics/unknown/01_14174c/15_parachute_nitro/04.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/13_parachute_crate/05.png",
+          "asset_file": "graphics/unknown/01_14174c/15_parachute_nitro/05.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "10": {
-          "asset_file": "graphics/unknown/01_14174c/13_parachute_crate/06.png",
+          "asset_file": "graphics/unknown/01_14174c/15_parachute_nitro/06.png",
           "w_tiles": 8,
           "h_tiles": 8
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/13_parachute_crate/12.png",
+          "asset_file": "graphics/unknown/01_14174c/15_parachute_nitro/12.png",
           "w_tiles": 8,
           "h_tiles": 8
         }
       },
-      "label": "parachute-dropped crate",
-      "identified": true
+      "label": "JETPACK_KIND_PARACHUTE_NITRO"
     },
     {
       "slot": 28,
       "valid": true,
       "table_A_address": "0x0817BFE4",
       "table_B_address": "0x0817C008",
-      "header_byte": 5,
+      "palette_bank": 5,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -19521,50 +19493,49 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/16_record_slot28/00.png",
+          "asset_file": "graphics/unknown/01_14174c/18_rocket/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/16_record_slot28/01.png",
+          "asset_file": "graphics/unknown/01_14174c/18_rocket/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/16_record_slot28/02.png",
+          "asset_file": "graphics/unknown/01_14174c/18_rocket/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/16_record_slot28/03.png",
+          "asset_file": "graphics/unknown/01_14174c/18_rocket/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/16_record_slot28/04.png",
+          "asset_file": "graphics/unknown/01_14174c/18_rocket/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/14.png",
+          "asset_file": "graphics/unknown/01_14174c/21_rocket_burst/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/00.png",
+          "asset_file": "graphics/unknown/01_14174c/14_explosion/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_ROCKET"
     },
     {
       "slot": 29,
       "valid": true,
       "table_A_address": "0x0817C070",
       "table_B_address": "0x0817C088",
-      "header_byte": 5,
+      "palette_bank": 5,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -19770,30 +19741,29 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/00.png",
+          "asset_file": "graphics/unknown/01_14174c/19_stopwatch/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/01.png",
+          "asset_file": "graphics/unknown/01_14174c/19_stopwatch/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/02.png",
+          "asset_file": "graphics/unknown/01_14174c/19_stopwatch/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": "clock face",
-      "identified": true
+      "label": "JETPACK_KIND_STOPWATCH"
     },
     {
       "slot": 30,
       "valid": true,
       "table_A_address": "0x0817BFE4",
       "table_B_address": "0x0817C008",
-      "header_byte": 5,
+      "palette_bank": 5,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 28,
       "keyframes": [
@@ -20161,50 +20131,49 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/16_record_slot28/00.png",
+          "asset_file": "graphics/unknown/01_14174c/18_rocket/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/16_record_slot28/01.png",
+          "asset_file": "graphics/unknown/01_14174c/18_rocket/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/16_record_slot28/02.png",
+          "asset_file": "graphics/unknown/01_14174c/18_rocket/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/16_record_slot28/03.png",
+          "asset_file": "graphics/unknown/01_14174c/18_rocket/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "4": {
-          "asset_file": "graphics/unknown/01_14174c/16_record_slot28/04.png",
+          "asset_file": "graphics/unknown/01_14174c/18_rocket/04.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "5": {
-          "asset_file": "graphics/unknown/01_14174c/17_clock/14.png",
+          "asset_file": "graphics/unknown/01_14174c/21_rocket_burst/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "16": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/00.png",
+          "asset_file": "graphics/unknown/01_14174c/14_explosion/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_UNK30"
     },
     {
       "slot": 31,
       "valid": true,
       "table_A_address": "0x0817C100",
       "table_B_address": "0x0817C118",
-      "header_byte": 11,
+      "palette_bank": 11,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -20302,25 +20271,24 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/15_crescent_arch/00.png",
+          "asset_file": "graphics/unknown/01_14174c/17_ring/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/15_crescent_arch/00.png",
+          "asset_file": "graphics/unknown/01_14174c/17_ring/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         }
       },
-      "label": "crescent/arch-shaped striped object (unconfirmed identity)",
-      "identified": false
+      "label": "JETPACK_KIND_RING_LEFT"
     },
     {
       "slot": 32,
       "valid": true,
       "table_A_address": "0x0817BD64",
       "table_B_address": "0x0817BD88",
-      "header_byte": 10,
+      "palette_bank": 10,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 10,
       "keyframes": [
@@ -21165,50 +21133,49 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/01.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/02.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/06.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/08.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/10.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_PATH_0"
     },
     {
       "slot": 33,
       "valid": true,
       "table_A_address": "0x0817BD64",
       "table_B_address": "0x0817BD88",
-      "header_byte": 10,
+      "palette_bank": 10,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 10,
       "keyframes": [
@@ -22053,50 +22020,49 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/01.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/02.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/06.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/08.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/10.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_PATH_1"
     },
     {
       "slot": 34,
       "valid": true,
       "table_A_address": "0x0817BD64",
       "table_B_address": "0x0817BD88",
-      "header_byte": 10,
+      "palette_bank": 10,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 10,
       "keyframes": [
@@ -22941,50 +22907,49 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/01.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/02.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/06.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/08.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/10.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_PATH_2"
     },
     {
       "slot": 35,
       "valid": true,
       "table_A_address": "0x0817BD64",
       "table_B_address": "0x0817BD88",
-      "header_byte": 10,
+      "palette_bank": 10,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 10,
       "keyframes": [
@@ -23829,50 +23794,49 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/01.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/02.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/06.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/08.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/10.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_PATH_3"
     },
     {
       "slot": 36,
       "valid": true,
       "table_A_address": "0x0817BD64",
       "table_B_address": "0x0817BD88",
-      "header_byte": 10,
+      "palette_bank": 10,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 10,
       "keyframes": [
@@ -24717,50 +24681,49 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/01.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/02.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/06.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/08.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/10.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_PATH_4"
     },
     {
       "slot": 37,
       "valid": true,
       "table_A_address": "0x0817BD64",
       "table_B_address": "0x0817BD88",
-      "header_byte": 10,
+      "palette_bank": 10,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 10,
       "keyframes": [
@@ -25605,50 +25568,49 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/00.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/01.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/02.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/06.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/06.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/08.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/08.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/18_record_slot10/10.png",
+          "asset_file": "graphics/unknown/01_14174c/22_hovercraft_cannon/10.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_PATH_5"
     },
     {
       "slot": 38,
       "valid": true,
       "table_A_address": "0x0817BD04",
       "table_B_address": "0x0817BD1C",
-      "header_byte": 3,
+      "palette_bank": 3,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -26565,55 +26527,54 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/04_record_slot38/00.png",
+          "asset_file": "graphics/unknown/01_14174c/04_fireball/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/04_record_slot38/01.png",
+          "asset_file": "graphics/unknown/01_14174c/04_fireball/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/04_record_slot38/02.png",
+          "asset_file": "graphics/unknown/01_14174c/04_fireball/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/04_record_slot38/03.png",
+          "asset_file": "graphics/unknown/01_14174c/04_fireball/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/04_record_slot38/07.png",
+          "asset_file": "graphics/unknown/01_14174c/04_fireball/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/09.png",
+          "asset_file": "graphics/unknown/01_14174c/13_fireball_burst/00.png",
           "w_tiles": 2,
           "h_tiles": 2
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/10.png",
+          "asset_file": "graphics/unknown/01_14174c/13_fireball_burst/01.png",
           "w_tiles": 2,
           "h_tiles": 2
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/12.png",
+          "asset_file": "graphics/unknown/01_14174c/13_fireball_burst/03.png",
           "w_tiles": 2,
           "h_tiles": 2
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_AIRSHIP_FIREBALL"
     },
     {
       "slot": 39,
       "valid": true,
       "table_A_address": "0x0817BD04",
       "table_B_address": "0x0817BD1C",
-      "header_byte": 3,
+      "palette_bank": 3,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": 38,
       "keyframes": [
@@ -27530,55 +27491,54 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/04_record_slot38/00.png",
+          "asset_file": "graphics/unknown/01_14174c/04_fireball/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/04_record_slot38/01.png",
+          "asset_file": "graphics/unknown/01_14174c/04_fireball/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/04_record_slot38/02.png",
+          "asset_file": "graphics/unknown/01_14174c/04_fireball/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/04_record_slot38/03.png",
+          "asset_file": "graphics/unknown/01_14174c/04_fireball/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "7": {
-          "asset_file": "graphics/unknown/01_14174c/04_record_slot38/07.png",
+          "asset_file": "graphics/unknown/01_14174c/04_fireball/07.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "8": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/09.png",
+          "asset_file": "graphics/unknown/01_14174c/13_fireball_burst/00.png",
           "w_tiles": 2,
           "h_tiles": 2
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/10.png",
+          "asset_file": "graphics/unknown/01_14174c/13_fireball_burst/01.png",
           "w_tiles": 2,
           "h_tiles": 2
         },
         "11": {
-          "asset_file": "graphics/unknown/01_14174c/11_crate_3/12.png",
+          "asset_file": "graphics/unknown/01_14174c/13_fireball_burst/03.png",
           "w_tiles": 2,
           "h_tiles": 2
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_HOVERCRAFT_FIREBALL"
     },
     {
       "slot": 40,
       "valid": true,
       "table_A_address": "0x0817C0A0",
       "table_B_address": "0x0817C0B8",
-      "header_byte": 5,
+      "palette_bank": 5,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -27802,40 +27762,39 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/06_balloon_red_yellow/00.png",
+          "asset_file": "graphics/unknown/01_14174c/06_balloon_red/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/06_balloon_red_yellow/01.png",
+          "asset_file": "graphics/unknown/01_14174c/06_balloon_red/01.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/06_balloon_red_yellow/02.png",
+          "asset_file": "graphics/unknown/01_14174c/06_balloon_red/02.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/06_balloon_red_yellow/03.png",
+          "asset_file": "graphics/unknown/01_14174c/06_balloon_red/03.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/05_balloon_yellow_blue_cross/03.png",
+          "asset_file": "graphics/unknown/01_14174c/05_balloon_red_cross/03.png",
           "w_tiles": 4,
           "h_tiles": 8
         }
       },
-      "label": "balloon (red/yellow)",
-      "identified": true
+      "label": "JETPACK_KIND_BALLOON_RED"
     },
     {
       "slot": 41,
       "valid": true,
       "table_A_address": "0x0817C0A0",
       "table_B_address": "0x0817C0E8",
-      "header_byte": 6,
+      "palette_bank": 6,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -28005,30 +27964,29 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/07_balloon_orange_blue/00.png",
+          "asset_file": "graphics/unknown/01_14174c/07_balloon_yellow/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/07_balloon_orange_blue/01.png",
+          "asset_file": "graphics/unknown/01_14174c/07_balloon_yellow/01.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/07_balloon_orange_blue/02.png",
+          "asset_file": "graphics/unknown/01_14174c/07_balloon_yellow/02.png",
           "w_tiles": 4,
           "h_tiles": 8
         }
       },
-      "label": "balloon (orange/red/blue)",
-      "identified": true
+      "label": "JETPACK_KIND_BALLOON_YELLOW"
     },
     {
       "slot": 42,
       "valid": true,
       "table_A_address": "0x0817C0A0",
       "table_B_address": "0x0817C0D0",
-      "header_byte": 7,
+      "palette_bank": 7,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -28252,40 +28210,39 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/05_balloon_yellow_blue_cross/00.png",
+          "asset_file": "graphics/unknown/01_14174c/05_balloon_red_cross/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/05_balloon_yellow_blue_cross/01.png",
+          "asset_file": "graphics/unknown/01_14174c/05_balloon_red_cross/01.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/05_balloon_yellow_blue_cross/02.png",
+          "asset_file": "graphics/unknown/01_14174c/05_balloon_red_cross/02.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/05_balloon_yellow_blue_cross/03.png",
+          "asset_file": "graphics/unknown/01_14174c/05_balloon_red_cross/03.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/07_balloon_orange_blue/03.png",
+          "asset_file": "graphics/unknown/01_14174c/07_balloon_yellow/03.png",
           "w_tiles": 4,
           "h_tiles": 8
         }
       },
-      "label": "balloon (yellow/blue, cross/plus mark)",
-      "identified": true
+      "label": "JETPACK_KIND_BALLOON_RED_CROSS"
     },
     {
       "slot": 43,
       "valid": true,
       "table_A_address": "0x0817C10C",
       "table_B_address": "0x0817C118",
-      "header_byte": 11,
+      "palette_bank": 11,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -28374,25 +28331,24 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/15_crescent_arch/00.png",
+          "asset_file": "graphics/unknown/01_14174c/17_ring/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/15_crescent_arch/00.png",
+          "asset_file": "graphics/unknown/01_14174c/17_ring/00.png",
           "w_tiles": 4,
           "h_tiles": 8
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_RING_RIGHT"
     },
     {
       "slot": 44,
       "valid": true,
       "table_A_address": "0x0817C130",
       "table_B_address": "0x0817C13C",
-      "header_byte": 9,
+      "palette_bank": 9,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -28508,40 +28464,39 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/14_record_slot44/00.png",
+          "asset_file": "graphics/unknown/01_14174c/16_collected_wumpa/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/14_record_slot44/01.png",
+          "asset_file": "graphics/unknown/01_14174c/16_collected_wumpa/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "2": {
-          "asset_file": "graphics/unknown/01_14174c/14_record_slot44/02.png",
+          "asset_file": "graphics/unknown/01_14174c/16_collected_wumpa/02.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/14_record_slot44/03.png",
+          "asset_file": "graphics/unknown/01_14174c/16_collected_wumpa/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "9": {
-          "asset_file": "graphics/unknown/01_14174c/14_record_slot44/09.png",
+          "asset_file": "graphics/unknown/01_14174c/16_collected_wumpa/09.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_COLLECTED_WUMPA"
     },
     {
       "slot": 45,
       "valid": true,
       "table_A_address": "0x0817C174",
       "table_B_address": "0x0817C180",
-      "header_byte": 4,
+      "palette_bank": 4,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -28612,30 +28567,29 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/00.png",
+          "asset_file": "graphics/unknown/01_14174c/14_explosion/00.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "1": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/01.png",
+          "asset_file": "graphics/unknown/01_14174c/14_explosion/01.png",
           "w_tiles": 4,
           "h_tiles": 4
         },
         "3": {
-          "asset_file": "graphics/unknown/01_14174c/12_record_slot45/03.png",
+          "asset_file": "graphics/unknown/01_14174c/14_explosion/03.png",
           "w_tiles": 4,
           "h_tiles": 4
         }
       },
-      "label": null,
-      "identified": false
+      "label": "JETPACK_KIND_EXPLOSION"
     },
     {
       "slot": 46,
       "valid": true,
       "table_A_address": "0x0817C1A8",
       "table_B_address": "0x0817C1B4",
-      "header_byte": 9,
+      "palette_bank": 9,
       "addressing_mode": "pool_offset",
       "duplicate_of_slot": null,
       "keyframes": [
@@ -28652,13 +28606,12 @@
       "keyframes_truncated_at_cap": false,
       "frames": {
         "0": {
-          "asset_file": "graphics/unknown/01_14174c/22_checkpoint_text/00.png",
+          "asset_file": "graphics/unknown/01_14174c/26_checkpoint_text/00.png",
           "w_tiles": 8,
           "h_tiles": 4
         }
       },
-      "label": "\"CHECK POINT\" text",
-      "identified": true
+      "label": "JETPACK_KIND_CHECKPOINT_TEXT"
     }
   ]
 }

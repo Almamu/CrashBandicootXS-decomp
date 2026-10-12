@@ -230,7 +230,7 @@ void JetpackTimeCrate::Damage(s32 amount)
 
 /* CreateJetpackTimeCrate: the balloon is record 0x28. */
 JetpackTimeCrate::JetpackTimeCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
-    : JetpackBalloonCrate(rec, x, y, z, JETPACK_KIND_BALLOON_RED_YELLOW)
+    : JetpackBalloonCrate(rec, x, y, z, JETPACK_KIND_BALLOON_RED)
 {
 }
 
@@ -255,7 +255,7 @@ void JetpackHealthCrate::Damage(s32 amount)
 
 /* CreateJetpackHealthCrate: the balloon is record 0x2A. */
 JetpackHealthCrate::JetpackHealthCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
-    : JetpackBalloonCrate(rec, x, y, z, JETPACK_KIND_BALLOON_YELLOW_BLUE)
+    : JetpackBalloonCrate(rec, x, y, z, JETPACK_KIND_BALLOON_RED_CROSS)
 {
 }
 
@@ -263,7 +263,7 @@ JetpackHealthCrate::JetpackHealthCrate(const struct anim_table_record *rec, s32 
  * level's spawn record, marked collected for the life. */
 JetpackQuestionCrate::JetpackQuestionCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z,
                                            struct actor_spawn *spawn)
-    : JetpackBalloonCrate(rec, x, y, z, JETPACK_KIND_BALLOON_ORANGE_BLUE)
+    : JetpackBalloonCrate(rec, x, y, z, JETPACK_KIND_BALLOON_YELLOW)
 {
     this->spawn = spawn;
 }
