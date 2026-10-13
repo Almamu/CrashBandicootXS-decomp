@@ -153,7 +153,7 @@ void Wumpa::Update()
             s32 py = Q8_TO_INT(y);
 
             /* To the HUD: SendToHud reads the mode, 0, as a pixel offset. */
-            gEntitySpawner->DropWumpa(px, py, 0, 0, true);
+            EntitySpawner::Get()->DropWumpa(px, py, 0, 0, true);
             /* The byte's zero-extension spelled out: `++phase > 9` gives an
              * `and` with a 0xFF hoisted to the top of the function. */
             u32 dropped = phase + 1;

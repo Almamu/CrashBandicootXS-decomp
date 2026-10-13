@@ -3,11 +3,11 @@
 
 /* The level's spawners as C++ (#664, docs/cplusplus.md, part 9).
  *
- * The entity spawner (gEntitySpawner, src/level/entity_spawner.cpp): the
+ * The entity spawner (EntitySpawner::instance, src/level/entity_spawner.cpp): the
  * table of spawn functions by entity type (gEntitySpawnFuncs), and the
  * methods that spawn the effect parts and the dropped pickups. Their
- * callers all pass gEntitySpawner, the `this` the C called `pool` or
- * `unused`. It has no vtable: `delete gEntitySpawner` calls the
+ * callers all pass EntitySpawner::Get(), the `this` the C called `pool` or
+ * `unused`. It has no vtable: `delete instance` calls the
  * destructor directly. It has no C view (level.h's `struct
  * entity_spawner` tag went in #754).
  *
@@ -63,13 +63,17 @@ public:
     ~EntitySpawner(); // DestroyEntitySpawnerObj
 
     /* The singleton (#915), static: they take no spawner. PlayRoom
-     * creates gEntitySpawner over gEntitySpawnFuncs when the room starts
-     * and destroys it when it ends (spawn_markers.cpp). gEntitySpawner
-     * stays a global (globals.h): the crates, the player, the enemies
-     * and the pickups all call through it. */
+     * creates `instance` over gEntitySpawnFuncs when the room starts and
+     * destroys it when it ends (spawn_markers.cpp). */
     static void Create();  // CreateEntitySpawner
     static void Destroy(); // DestroyEntitySpawner
-    /* LaunchEffectPart through gEntitySpawner, the new part harmful
+    /* The room's spawner, between Create and Destroy: the crates, the
+     * player, the enemies and the pickups all call through it. */
+    static EntitySpawner *Get()
+    {
+        return instance;
+    }
+    /* LaunchEffectPart through `instance`, the new part harmful
      * (bit 2 set, bit 6 cleared): the enemies' floating popup and the
      * shooters' shots (enemy_ctrl.cpp). */
     static MovingSprite *LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e,
@@ -89,6 +93,12 @@ public:
      * flies it to the HUD. */
     Wumpa *DropWumpa(u32 x, u32 y, u32 p3, u32 p4, bool toHud);
     ExtraLife *DropExtraLife(u32 x, u32 y, u32 p3, u32 p5, bool toHud);
+
+private:
+    /* gEntitySpawner, the one spawner: an IWRAM global at 0x30012E4
+     * (sym_iwram.txt; cxx_symbols.txt maps `_13EntitySpawner.instance`
+     * to it), not a field. */
+    static EntitySpawner *instance;
 };
 
 COMPILE_TIME_ASSERT(spawners_hpp, sizeof(EntitySpawner) == 8);

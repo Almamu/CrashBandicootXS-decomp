@@ -277,7 +277,7 @@ void SwimCtrl::ApplySwimDrift()
         /* `y` is needed: inlined, the instructions differ */
         s32 y = Q8_TO_INT(t->y) - 20;
         s32 flip = t->mirrorFlags.mirrorX;
-        MovingSprite *obj = gEntitySpawner->SpawnEffectPart(40, 4, x, y, flip);
+        MovingSprite *obj = EntitySpawner::Get()->SpawnEffectPart(40, 4, x, y, flip);
 
         if (obj != NULL)
             obj->f.b.visible = 0;

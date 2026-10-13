@@ -43,7 +43,7 @@ extern "C" {
 /* EntitySpawner::LaunchHarmfulEffectPart (below), inlined. */
 static inline MovingSprite *SpawnPart(s32 a, s32 b, s32 c, s32 d, s32 e, MovingSprite *f)
 {
-    MovingSprite *obj = gEntitySpawner->LaunchEffectPart(a, b, c, d, e, f);
+    MovingSprite *obj = EntitySpawner::Get()->LaunchEffectPart(a, b, c, d, e, f);
 
     obj->f.b.visible = 1;
     obj->f.b.vulnerable = 0;
@@ -400,7 +400,7 @@ void EnemyCtrl::UpdateOscillateY()
 }
 
 /* Launches a harmful effect part (state 18's floating popup, the
- * shooters' shots): LaunchEffectPart from gEntitySpawner, then flags
+ * shooters' shots): LaunchEffectPart from `instance`, then flags
  * bit 2 set and bit 6 cleared on the new part.
  *
  * The OR and the mask are separate locals, assigned in the ROM's order
@@ -415,7 +415,7 @@ MovingSprite *EntitySpawner::LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d,
     s32 flags;
     s32 mask;
 
-    obj = gEntitySpawner->LaunchEffectPart(a, b, c, d, e, src);
+    obj = instance->LaunchEffectPart(a, b, c, d, e, src);
     flags = ENTITY_FLAG_CONTACT;
     flags |= obj->f.flags;
     mask = ~ENTITY_FLAG_VULNERABLE;

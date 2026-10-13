@@ -1358,6 +1358,8 @@ __8KeyInput ClearKeys
 Create__13EntitySpawner CreateEntitySpawner
 Destroy__13EntitySpawner DestroyEntitySpawner
 LaunchHarmfulEffectPart__13EntitySpawneriiiiiP12MovingSprite LaunchHarmfulEffectPart
+# Its data member keeps the C name: sym_iwram.txt places it.
+_13EntitySpawner.instance gEntitySpawner
 #
 # part 10b: the front end (include/frontend.hpp, include/actor_self.hpp;
 # src/frontend/company_logos.cpp, language_select*.cpp)

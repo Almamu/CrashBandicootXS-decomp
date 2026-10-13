@@ -38,7 +38,7 @@ extern "C" {
  * (`IsEntityIdGone`), `SpawnEntity` (the table-indexed interworking-
  * trampoline dispatcher, entity_spawner.cpp) fires with a running,
  * never-reset-per-group counter as its own `self` argument, indexing
- * `gEntitySpawner`'s table.
+ * `EntitySpawner::Get()`'s table.
  *
  * Second half (skipped when `links` is NULL): each crate in
  * `gCrateList` whose id is a link's `from` is chained
@@ -110,7 +110,7 @@ void LevelEntityFlags::SpawnRoomEntities(const struct level_entity_list *list,
 
         for (k = 0; k < group->count; k++) {
             if (!IsGone(counter))
-                gEntitySpawner->Spawn(counter, &group->entities[k]);
+                EntitySpawner::Get()->Spawn(counter, &group->entities[k]);
             counter++;
         }
     }

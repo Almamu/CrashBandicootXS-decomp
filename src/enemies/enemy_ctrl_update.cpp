@@ -278,7 +278,7 @@ void EnemyCtrl::Update(MovingSprite *)
  * it. */
 static inline MovingSprite *SpawnAt(s32 kind, s32 x, s32 y)
 {
-    return gEntitySpawner->SpawnEffectPart(kind, 2, x, y, 0);
+    return EntitySpawner::Get()->SpawnEffectPart(kind, 2, x, y, 0);
 }
 
 void EnemyCtrl::HandleEvent(s32, s32 event, s32)

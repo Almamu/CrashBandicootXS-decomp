@@ -32,7 +32,7 @@ struct level_layer_desc {
 };
 
 /* One entity spawn record: `type` indexes the spawn-function table
- * (gEntitySpawner, dispatched by SpawnEntity), which gets the entity's
+ * (EntitySpawner::instance, dispatched by SpawnEntity), which gets the entity's
  * id, x, y and param; `param` indexes the room's parameter records
  * (`struct level_entity_list.paramOffsets`). */
 struct level_entity {

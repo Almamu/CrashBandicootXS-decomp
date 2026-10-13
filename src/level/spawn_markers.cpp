@@ -77,18 +77,18 @@ void SpawnStartMarkerStub(void)
 {
 }
 
-/* `delete gEntitySpawner`: the null test, then the destructor
+/* `delete instance`: the null test, then the destructor
  * (DestroyEntitySpawnerObj) with 3. */
 void EntitySpawner::Destroy()
 {
-    delete gEntitySpawner;
+    delete instance;
 }
 
-/* gEntitySpawner, over the 92 spawn functions of gEntitySpawnFuncs. */
+/* `instance`, over the 92 spawn functions of gEntitySpawnFuncs. */
 void EntitySpawner::Create()
 {
-    gEntitySpawner = new EntitySpawner;
-    gEntitySpawner->SetTable(gEntitySpawnFuncs, ENTITY_COUNT);
+    instance = new EntitySpawner;
+    instance->SetTable(gEntitySpawnFuncs, ENTITY_COUNT);
 }
 
 /* The level state's constructor (LevelState::Get calls it once, at the top
