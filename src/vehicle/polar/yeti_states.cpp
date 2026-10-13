@@ -3,6 +3,7 @@
 #include "yeti.hpp"
 #include "vehicle.hpp"
 #include "cell_anim.hpp"
+#include "actor_bg.hpp"
 
 extern "C" {
 #include "core.h"
@@ -32,8 +33,8 @@ extern "C" {
  * while `gYetiDistance <= 0x4FFF` - fires a tier-keyed cue off the object's
  * own `+8`-field-derived "tier": tiers `0xc`/`0x1c` call the
  * `PlaySfx`-sibling `PlayAmbientSfx` (id `0x3E8`, volume `0x100`, plus a
- * byte flag passed via the stack) followed by `ShakeActorBg(0x200)`;
- * tiers `0xd`/`0x1d` call `ShakeActorBg(0x100)` alone. Finally, while the
+ * byte flag passed via the stack) followed by `ActorBg::Shake(0x200)`;
+ * tiers `0xd`/`0x1d` call `ActorBg::Shake(0x100)` alone. Finally, while the
  * object's `+0x12` done flag is set, runs a two-stage
  * `CellAnim::GetSpeed()`/`RandRange()`-gated check against
  * `chargeParams[paramsIndex]`'s `fastChance`/`slowChance` rolls to
@@ -58,12 +59,12 @@ void Yeti::StateChase()
     if (distance <= INT_TO_Q8(80) - 1) {
         if (tier == 0xc) {
             gAudioContext->PlayAmbientSfx(SFX_YETI_STOMP_1, 0x3E8, 0x100, true);
-            ShakeActorBg(INT_TO_Q8(2));
+            ActorBg::Shake(INT_TO_Q8(2));
         } else if (tier == 0x1c) {
             gAudioContext->PlayAmbientSfx(SFX_YETI_STOMP_2, 0x3E8, 0x100, true);
-            ShakeActorBg(INT_TO_Q8(2));
+            ActorBg::Shake(INT_TO_Q8(2));
         } else if (tier == 0xd || tier == 0x1d) {
-            ShakeActorBg(INT_TO_Q8(1));
+            ActorBg::Shake(INT_TO_Q8(1));
         }
     }
 
@@ -100,7 +101,7 @@ void Yeti::StateChase()
  * `chargeParams[paramsIndex].step` before
  * re-deriving `gYetiDistance`/clamping. The tier cues use plain `PlaySfx`
  * (ids `0x3f`/`0x40`) instead of `PlayAmbientSfx`, keyed off tiers
- * `0xb`/`0x1b` (with `0xc`/`0x1c` sharing the `ShakeActorBg(0x100)`-only
+ * `0xb`/`0x1b` (with `0xc`/`0x1c` sharing the `ActorBg::Shake(0x100)`-only
  * branch this time). The done-flag tail is a plain unconditional
  * kind-0/anim-reset (no threshold gate, no sound cue) - the counterpart
  * "settle" step to `YetiStateChase`'s tier-1 "arm" step. */
@@ -117,16 +118,16 @@ void Yeti::StateCharge()
     s32 tier = Q8_TO_INT(anim->animTime);
 
     if (distance <= INT_TO_Q8(80) - 1) {
-        /* The two stomp cues share their ShakeActorBg(0x200) (the
+        /* The two stomp cues share their ActorBg::Shake(0x200) (the
          * ROM's one cross-jumped tail). */
         if (tier == 0xb || tier == 0x1b) {
             if (tier == 0xb)
                 gAudioContext->PlaySfx(SFX_YETI_STOMP_1, 0x100);
             else
                 gAudioContext->PlaySfx(SFX_YETI_STOMP_2, 0x100);
-            ShakeActorBg(INT_TO_Q8(2));
+            ActorBg::Shake(INT_TO_Q8(2));
         } else if (tier == 0xc || tier == 0x1c) {
-            ShakeActorBg(INT_TO_Q8(1));
+            ActorBg::Shake(INT_TO_Q8(1));
         }
     }
 

@@ -1,5 +1,6 @@
 #include "airship.hpp"
 #include "cell_anim.hpp"
+#include "actor_bg.hpp"
 
 extern "C" {
 #include <libgcc.h>
@@ -143,7 +144,7 @@ void Airship::Create(s32 lvl)
  * argument) and copies several of its fields into
  * `gAirshipFireTimer`/`gAirshipHp`, resets the DMA-refresh/
  * palette-strip counters, recomputes the BG2 zoom scale/offset via
- * `CellAnim::GetDistance`/`__divsi3`/`SetActorBgLayerDepth`, blits the airship's
+ * `CellAnim::GetDistance`/`__divsi3`/`ActorBg::SetLayerDepth`, blits the airship's
  * current frame via `DrawAirshipMap`, sets DISPCNT's bit10,
  * recomputes the BG2 affine matrix (`UpdateAirshipBg2`), and finally queues
  * a palette-strip DMA transfer (`QueueVramDmaTransfer`).
@@ -178,7 +179,7 @@ void Airship::Spawn(s32 kind, s32 sx, s32 sy, s32 sz)
     scale = __divsi3(ACTOR_PROJECTION, distance);
     screenX = Q12_MUL(x, scale);
     screenY = Q12_MUL(scale, y);
-    SetActorBgLayerDepth(distance);
+    ActorBg::SetLayerDepth(distance);
     self = anim;
 
     s32 t = Q8_TO_INT(self->animTime);
@@ -222,7 +223,7 @@ void Airship::Update()
         scale = __divsi3(ACTOR_PROJECTION, distance);
         screenX = Q12_MUL(x, scale);
         screenY = Q12_MUL(scale, y);
-        SetActorBgLayerDepth(distance);
+        ActorBg::SetLayerDepth(distance);
 
         AnimPart *cur = anim;
         s32 t = Q8_TO_INT(cur->animTime);
@@ -242,7 +243,7 @@ void Airship::Update()
  * `gAirshipBg2Page`) and clears the latch. Either way, recomputes the
  * BG2 affine matrix (a uniform `scale` from `gAirshipDistance` via
  * `__divsi3`, offset by the screen-projection helpers
- * `GetActorBgCenterX`/`GetActorBgCenterY`) so the effect stays centered while
+ * `ActorBg::GetCenterX`/`ActorBg::GetCenterY`) so the effect stays centered while
  * zooming. */
 void Airship::UpdateBg2()
 {
@@ -262,9 +263,9 @@ void Airship::UpdateBg2()
      * an explicit __divsi3 call (see Spawn) */
     s32 scale = __divsi3(distance << 8, INT_TO_Q8(60));
     /* `dy` is needed: inlined, the code is 1 instruction longer */
-    s32 dy = screenX + GetActorBgCenterX();
+    s32 dy = screenX + ActorBg::GetCenterX();
     /* `dx` is needed: inlined, the code is 2 instructions longer */
-    s32 dx = screenY + GetActorBgCenterY();
+    s32 dx = screenY + ActorBg::GetCenterY();
 
     REG_BG2X = 0x8000 - Q8_MUL(dy, scale);
     REG_BG2Y = 0x8000 - Q8_MUL(dx, scale);

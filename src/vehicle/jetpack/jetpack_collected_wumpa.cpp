@@ -2,6 +2,7 @@
 #include "vehicle.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "actor_bg.hpp"
 
 extern "C" {
 #include "match.h"
@@ -134,8 +135,8 @@ JetpackCollectedWumpa::JetpackCollectedWumpa(const struct anim_table_record *rec
     s32 nx;
 
     this->reward = reward;
-    this->y += GetActorBgCenterY();
-    nx = this->x + GetActorBgCenterX();
+    this->y += ActorBg::GetCenterY();
+    nx = this->x + ActorBg::GetCenterX();
     this->x = nx;
 
     s32 dx = nx - 0x1000;

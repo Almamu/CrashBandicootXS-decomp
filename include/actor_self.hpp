@@ -38,7 +38,7 @@ extern "C" {
 /* ActorSelf::sortKey's bits. The low 15 bits are the draw-order key
  * ((depth >> 1) & 0x7f80 | ((|x| + |y|) >> 11) & 0x7f); InitActorPart,
  * UpdateActor and UpdateActorDepth set bit 15 when the actor's depth is past
- * GetActorBgLayerDepth(), and the draw functions then give its sprite OAM
+ * ActorBg::GetLayerDepth(), and the draw functions then give its sprite OAM
  * priority 2 (attr 2 | 0x800) so it goes behind the BG layer. */
 #define SORT_KEY_FLAG_BEHIND_BG 0x8000
 

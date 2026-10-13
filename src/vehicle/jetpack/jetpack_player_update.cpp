@@ -4,6 +4,7 @@
 #include "audio.hpp"
 #include "level_state.hpp"
 #include "cell_anim.hpp"
+#include "actor_bg.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -112,7 +113,7 @@ void JetpackPlayer::Update()
         ANIM_REWIND(animTime, anims[animIndex]);
         animDone = 1;
     }
-    UpdateActorBgScroll(x, y);
+    ActorBg::UpdateScroll(x, y);
     (this->*stateFuncs[state])();
 }
 
@@ -137,16 +138,16 @@ void JetpackPlayer::Draw()
     halfH = h * 4;
     if (depth == record->baseDepth) {
         scale = INT_TO_Q8(1);
-        sy = Q8_TO_INT(y + GetActorBgCenterY());
-        sx = Q8_TO_INT(x + GetActorBgCenterX());
+        sy = Q8_TO_INT(y + ActorBg::GetCenterY());
+        sx = Q8_TO_INT(x + ActorBg::GetCenterX());
     } else {
         s32 d = depth;
         s32 f;
 
         scale = Q8_DIV(d, record->baseDepth);
         f = ACTOR_PROJECTION / d;
-        sy = Q8_TO_INT(Q12_MUL(y, f) + GetActorBgCenterY());
-        sx = Q8_TO_INT(Q12_MUL(x, f) + GetActorBgCenterX());
+        sy = Q8_TO_INT(Q12_MUL(y, f) + ActorBg::GetCenterY());
+        sx = Q8_TO_INT(Q12_MUL(x, f) + ActorBg::GetCenterX());
         attr1 = 0x100;
         if (scale <= INT_TO_Q8(1) - 1) {
             attr1 |= 0x200;
