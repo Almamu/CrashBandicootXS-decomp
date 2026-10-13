@@ -214,8 +214,8 @@ public:
     s32 screenBlock; // 0x1C
     screen_x_t x;    // 0x20 - screen centre
     screen_y_t y;    // 0x24
-    s32 dx;          // 0x28 - wobble offset
-    s32 dy;          // 0x2C
+    screen_dx_t dx;  // 0x28 - wobble offset
+    screen_dy_t dy;  // 0x2C
     u32 phase;       // 0x30 - wobble phase, 0-0xFF
     /* The BG2CNT shadow (GetControl). The constructor sets it through
      * byte bitfields (`bits`), StartExit through halfword ones
@@ -345,12 +345,12 @@ public:
     u8 timeText[9];               // 0x68 - best time
     u8 recordText[9];             // 0x71 - next threshold to beat
     u32 scroll;                   // 0x7C - BG0 auto-scroll counter
-    s32 panelSlideX;              // 0x80 - x offset of the record panel
-    s32 clearedIconY;             // 0x84 - sprite 2's y offset (0 or 0x1C), see LoadRecord
-    s32 flag1IconY;               // 0x88 - sprite 3's
-    s32 gemIconY;                 // 0x8C - sprite 4's (the `rank` gem icon)
-    s32 trialIconY;               // 0x90 - sprite 5's (time-trial icons)
-    s32 trialIcon2Y;              // 0x94 - sprite 6's
+    screen_dx_t panelSlideX;      // 0x80 - x offset of the record panel
+    screen_dy_t clearedIconY;     // 0x84 - sprite 2's y offset (0 or 0x1C), see LoadRecord
+    screen_dy_t flag1IconY;       // 0x88 - sprite 3's
+    screen_dy_t gemIconY;         // 0x8C - sprite 4's (the `rank` gem icon)
+    screen_dy_t trialIconY;       // 0x90 - sprite 5's (time-trial icons)
+    screen_dy_t trialIcon2Y;      // 0x94 - sprite 6's
     s32 rank;                     // 0x98 - LoadRecord's classification, 5 = none
     GameProgress *save;           // 0x9C - PackSaveData's save block
     union blend blend;            // 0xA0 - REG_BLDCNT + REG_BLDALPHA

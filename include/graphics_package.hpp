@@ -66,22 +66,22 @@ COMPILE_TIME_ASSERT(graphics_package_hpp, sizeof(BgSetup) == 0x10);
 class ScaledSprite
 {
 public:
-    s32 x;                // 0x00
-    s32 y;                // 0x04
-    s32 width;            // 0x08
-    s32 height;           // 0x0C
+    screen_x_t x;         // 0x00
+    screen_y_t y;         // 0x04
+    screen_w_t width;     // 0x08
+    screen_h_t height;    // 0x0C
     struct oam_attrs oam; // 0x10 (gfx.h)
     s32 sizeIndex;        // 0x18
     s32 color;            // 0x1C - SetColor
     s32 scaleX;           // 0x20 - Q8
     s32 scaleY;           // 0x24 - Q8
 
-    void Fit(s32 width, s32 height); // FitScaledSprite
-    void Draw();                     // DrawScaledSprite
-    void SetColor(s32 color);        // SetScaledSpriteColor
-    void SetPriority(u32 priority);  // SetScaledSpritePriority
-    void SetPos(u32 x, u32 y);       // SetScaledSpritePos
-    void ResetAttrs();               // ResetScaledSpriteAttrs
+    void Fit(s32 width, s32 height);           // FitScaledSprite
+    void Draw();                               // DrawScaledSprite
+    void SetColor(s32 color);                  // SetScaledSpriteColor
+    void SetPriority(u32 priority);            // SetScaledSpritePriority
+    void SetPos(screen_ux_t x, screen_uy_t y); // SetScaledSpritePos
+    void ResetAttrs();                         // ResetScaledSpriteAttrs
 };
 
 COMPILE_TIME_ASSERT(graphics_package_hpp, sizeof(ScaledSprite) == 0x28);

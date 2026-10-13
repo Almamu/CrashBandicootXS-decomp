@@ -165,7 +165,9 @@ void Credits::DrawText()
                 oam.y = y;
                 x = node->x;
                 for (j = 0; j < logo->cols; j++) {
-                    if ((u32)(y + 0x1f) <= 0xbe) {
+                    /* on screen: -0x1f <= y <= DISPLAY_HEIGHT - 1 (a 32x32
+                     * OBJ row) */
+                    if ((u32)(y + 0x1f) <= DISPLAY_HEIGHT - 1 + 0x1f) {
                         oam.x = x;
                         oam.tileNum = tile;
                         gOamBuffer->Add(&oam);

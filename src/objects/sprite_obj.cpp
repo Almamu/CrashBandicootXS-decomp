@@ -606,7 +606,7 @@ void Sprite::SetAffine(u16 value)
 
 /* Draws the sprite at its position plus (dx, dy): the affine pieces when
  * `affine` is set, the plain ones otherwise. */
-void Sprite::DrawWithOffset(s32 dx, s32 dy)
+void Sprite::DrawWithOffset(screen_dx_t dx, screen_dy_t dy)
 {
     s32 pos[2];
 

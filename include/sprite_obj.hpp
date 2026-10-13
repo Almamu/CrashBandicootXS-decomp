@@ -194,7 +194,7 @@ public:
     s32 GetColorMode();
     u16 GetAffine();
     void SetAffine(u16 value);
-    void DrawWithOffset(s32 dx, s32 dy);
+    void DrawWithOffset(screen_dx_t dx, screen_dy_t dy);
     void SetPriority(s32 value);
 
     /* The position as a vector: a copy of it is a block copy (both
