@@ -5,6 +5,7 @@
 #include "audio.hpp"
 #include "level_state.hpp"
 #include "yeti.hpp"
+#include "collected_spawns.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -82,7 +83,7 @@ ActorSelf *SpawnJetpackActor(struct actor_spawn *rec, u8 alt, s32 dz)
 
 /* The spawn dispatcher: offsets the position by the kind's record and
  * constructs the kind's object. Kind 23 turns into kind 20's object
- * when `IsSpawnCollected` says so; kind 31 spawns a kind-43 companion first. */
+ * when `CollectedSpawns::Contains` says so; kind 31 spawns a kind-43 companion first. */
 ActorSelf *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, struct actor_spawn *spawn)
 {
     x += gJetpackAnimTable[kind].spawnX;
@@ -100,7 +101,7 @@ ActorSelf *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, struct actor_spawn *
     case JETPACK_KIND_HEALTH_CRATE:
         return new JetpackHealthCrate(&gJetpackAnimTable[kind], x, y, z);
     case JETPACK_KIND_QUESTION_CRATE_LIFE:
-        if (IsSpawnCollected(spawn))
+        if (CollectedSpawns::Contains(spawn))
             return new JetpackQuestionCrate(&gJetpackAnimTable[JETPACK_KIND_QUESTION_CRATE_WUMPA_1],
                                             x, y, z, spawn);
         /* fallthrough */

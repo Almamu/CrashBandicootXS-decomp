@@ -2,6 +2,7 @@
 #include "audio.hpp"
 #include "level_state.hpp"
 #include "yeti.hpp"
+#include "collected_spawns.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -73,7 +74,7 @@ void PolarLifeCrate::Update()
             gAudioContext->PlaySfx(SFX_EXTRA_LIFE, 0x100);
             gLevelState->AddBrokenCrate();
             static_cast<PolarPlayer *>(gActorList)->GiveLife();
-            MarkSpawnCollected(spawn);
+            CollectedSpawns::Add(spawn);
             Break();
             palette = 1;
         }

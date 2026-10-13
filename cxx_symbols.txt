@@ -2152,6 +2152,16 @@ _16SpriteFrameCache.previous gSpriteFrameCachePrevious
 _16SpriteFrameCache.spares gSpriteFrameCacheSpares
 _16SpriteFrameCache.pool gSpriteFrameCachePool
 #
+# #915 CollectedSpawns: the collected spawn records as an all-static class
+# (include/collected_spawns.hpp, src/actor/actor_spawn_collected.cpp). Its
+# data members keep the C names: sym_iwram.txt places spawns,
+# iwram_data.cpp defines count.
+Contains__15CollectedSpawnsP11actor_spawn IsSpawnCollected
+Add__15CollectedSpawnsP11actor_spawn MarkSpawnCollected
+Clear__15CollectedSpawns ClearCollectedSpawns
+_15CollectedSpawns.spawns gCollectedSpawns
+_15CollectedSpawns.count gCollectedSpawnCount
+#
 # #915 ActorPaletteCycle: the 3D stages' BG palette cycle as an all-static
 # class (include/actor_palette_cycle.hpp, src/actor/actor_palette_cycle.cpp).
 # Its data members keep the C names: sym_iwram.txt places the IWRAM ones,

@@ -1,5 +1,6 @@
 #include "actor_self.hpp"
 #include "vehicle.hpp"
+#include "collected_spawns.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -10,40 +11,39 @@ extern "C" {
 #include "globals.h"
 }
 
-/* The collected-spawn list (gCollectedSpawns, at most 15 spawns): the
+/* The collected-spawn list (CollectedSpawns, at most 15 spawns): the
  * test, the append and the reset, ROM 0x0802AA80-0x0802AB08.
  * Built with old_agbcp and -fno-implement-inlines, like actor.cpp, where
  * it was until #770. See docs/matching/archive/issue-50-actor-2a69c.md. */
 
-/* Whether `spawn` is among gCollectedSpawns' first gCollectedSpawnCount
- * entries. */
-bool IsSpawnCollected(struct actor_spawn *spawn)
+/* Whether `spawn` is among the first `count` of `spawns`. */
+bool CollectedSpawns::Contains(struct actor_spawn *spawn)
 {
     s32 i;
 
-    for (i = 0; i < gCollectedSpawnCount; i++) {
-        if (gCollectedSpawns[i] == spawn)
+    for (i = 0; i < count; i++) {
+        if (spawns[i] == spawn)
             return 1;
     }
     return 0;
 }
 
-/* Appends `spawn` to gCollectedSpawns (15 entries at most), unless it is
+/* Appends `spawn` to `spawns` (15 entries at most), unless it is
  * NULL, the list is full or it is already there. */
-void MarkSpawnCollected(struct actor_spawn *spawn)
+void CollectedSpawns::Add(struct actor_spawn *spawn)
 {
     s32 i;
 
-    if (gCollectedSpawnCount == 0xf || spawn == NULL)
+    if (count == 0xf || spawn == NULL)
         return;
-    for (i = 0; i < gCollectedSpawnCount; i++) {
-        if (gCollectedSpawns[i] == spawn)
+    for (i = 0; i < count; i++) {
+        if (spawns[i] == spawn)
             return;
     }
-    gCollectedSpawns[gCollectedSpawnCount++] = spawn;
+    spawns[count++] = spawn;
 }
 
-void ClearCollectedSpawns(void)
+void CollectedSpawns::Clear()
 {
-    gCollectedSpawnCount = 0;
+    count = 0;
 }

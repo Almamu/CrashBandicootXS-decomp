@@ -152,11 +152,6 @@ struct ActorSelf;
  * hooks it calls) get a second return path (#855). */
 extern s32 IsTouchingPlayer(struct ActorSelf *self);
 
-/* src/actor/actor_spawn_collected.cpp */
-extern bool IsSpawnCollected(struct actor_spawn *spawn);
-extern void MarkSpawnCollected(struct actor_spawn *spawn);
-extern void ClearCollectedSpawns(void);
-
 /* src/actor/actor_bg.cpp (the rest is class ActorBg, actor_bg.hpp) */
 extern void ActorCategoryEndStub(void);
 
@@ -242,7 +237,6 @@ extern s32 gActorSpawnOffset;
 extern struct actor_spawn_table *gActorSpawnTable;
 extern u8 gActorSpawnsPaused;
 extern void *gCategorySpriteSheet; /* the decompressed category sprite sheet */
-extern struct actor_spawn *gCollectedSpawns[];
 /* The deaths since the checkpoint that count towards the category's
  * `retryBossDeaths` (InitActorCategory): being carried off by the yeti
  * (exit status 2) in a type-0 category, any death in the others. */
@@ -265,7 +259,6 @@ extern u8 gActorSpawnUseBonus;
 
 /* src/iwram/iwram_data.cpp */
 extern s32 gActorCheckpoint;
-extern s32 gCollectedSpawnCount;
 extern void (*gDrawMirroredTilemapFunc)(u8 *pal, s32 lowBlock, s32 w, s32 h);
 #ifdef __cplusplus
 extern void (*gHeapSortActorsByKeyFunc)(s32 n, class ActorSelf **list);

@@ -8,6 +8,7 @@
 #include "vehicle.hpp"
 #include "frame_limiter.hpp"
 #include "sprite_frame_cache.hpp"
+#include "collected_spawns.hpp"
 
 extern "C" {
 #include "core.h"
@@ -116,7 +117,7 @@ s32 gActorCheckpoint = 0;
 void (*gDrawMirroredTilemapFunc)(u8 *pal, s32 lowBlock, s32 w, s32 h) = DrawMirroredTilemap;
 void (*gHeapSortActorsByKeyFunc)(s32 n, ActorSelf **list) = HeapSortActorsByKey;
 ActorSelf *gActorList = 0;
-s32 gCollectedSpawnCount = 0;
+s32 CollectedSpawns::count = 0;
 /* The polar penguin's Z speed toward a path point, indexed by the
  * point's spawn kind minus 0x20 (GetActorSpawnKindIndex; AimPolarPenguin). */
 s32 gPolarPenguinSpeeds[3] = { 0x40, 0x62, 0x95 };
