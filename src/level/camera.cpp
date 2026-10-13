@@ -22,8 +22,9 @@ extern "C" {
  * (`vx`/`vy`), the followed object (`target`) and a `mode`. Every
  * per-frame update eases the position a quarter of the way toward
  * `target + look-ahead` (`x += (goal - x) / 4`), and both publishers
- * (`Snap`/`Update`) hand `(x - (120 << 8), y - (80 << 8))`
- * - the position offset by half the 240x160 screen - to the still-raw
+ * (`Snap`/`Update`) hand `(x - INT_TO_Q8(DISPLAY_CENTER_X), y -
+ * INT_TO_Q8(DISPLAY_CENTER_Y))` - the position offset by half the screen,
+ * (120, 80) on the GBA - to the still-raw
  * `SetLevelScroll` on `gLevelLayers`, which clamps it to `>= 0`,
  * converts Q8 to whole pixels, caps it at that object's own `+0x0`/`+0x4`
  * limits, and stores the result at its `+0x8`/`+0xC`. That is what makes
@@ -31,8 +32,9 @@ extern "C" {
  * the level bounds.
  *
  * - `StepDirectional` (StepCameraDirectional, mode 2): `target+0x24`
- *   direction bits steer the look-ahead in 0x100 steps (bit 0/1 = +x/-x up to +0x27FF/-0x2800,
- *   bit 2/3 = -y/+y up to -0x1AAA/+0x1AA9); an axis with neither of its
+ *   direction bits steer the look-ahead in 0x100 steps (bit 0/1 = +x/-x up to
+ *   +/-CAMERA_LOOK_AHEAD_X, bit 2/3 = -y/+y up to +/-CAMERA_LOOK_AHEAD_Y: a
+ *   sixth of the screen, 0x2800 x 0x1AAA); an axis with neither of its
  *   bits set decays back toward 0 by the same step. `target+0x24` is
  *   gPlayer's `dir` (PART_DIR_*, box_part.h; the target is gPlayer).
  * - `StepFacing` (StepCameraFacing, mode 1): horizontal look-ahead grows
@@ -64,28 +66,28 @@ void Camera::StepDirectional()
     u8 dir = target->dir;
 
     if (dir != 0) {
-        if ((dir & PART_DIR_UP) && vy > -0x1AAA)
-            vy -= 0x100;
-        else if ((dir & PART_DIR_DOWN) && vy <= 0x1AA9)
-            vy += 0x100;
+        if ((dir & PART_DIR_UP) && vy > -CAMERA_LOOK_AHEAD_Y)
+            vy -= CAMERA_LOOK_AHEAD_STEP;
+        else if ((dir & PART_DIR_DOWN) && vy <= CAMERA_LOOK_AHEAD_Y - 1)
+            vy += CAMERA_LOOK_AHEAD_STEP;
 
-        if ((dir & PART_DIR_LEFT) && vx > -0x2800)
-            vx -= 0x100;
-        else if ((dir & PART_DIR_RIGHT) && vx <= 0x27FF)
-            vx += 0x100;
+        if ((dir & PART_DIR_LEFT) && vx > -CAMERA_LOOK_AHEAD_X)
+            vx -= CAMERA_LOOK_AHEAD_STEP;
+        else if ((dir & PART_DIR_RIGHT) && vx <= CAMERA_LOOK_AHEAD_X - 1)
+            vx += CAMERA_LOOK_AHEAD_STEP;
 
         if (!(dir & PART_DIR_X_MASK)) {
             if (vx > 0)
-                vx -= 0x100;
+                vx -= CAMERA_LOOK_AHEAD_STEP;
             else if (vx < 0)
-                vx += 0x100;
+                vx += CAMERA_LOOK_AHEAD_STEP;
         }
 
         if (!(dir & PART_DIR_Y_MASK)) {
             if (vy > 0)
-                vy -= 0x100;
+                vy -= CAMERA_LOOK_AHEAD_STEP;
             else if (vy < 0)
-                vy += 0x100;
+                vy += CAMERA_LOOK_AHEAD_STEP;
         }
     }
 
@@ -102,14 +104,14 @@ void Camera::StepFacing()
     struct vec2 goal = target->Pos();
 
     if ((target->mirror << 27) < 0) {
-        if (vx > -0x1276)
-            vx -= 0x100;
+        if (vx > -CAMERA_FACING_LOOK_AHEAD_X)
+            vx -= CAMERA_LOOK_AHEAD_STEP;
     } else {
-        if (vx <= 0x1275)
-            vx += 0x100;
+        if (vx <= CAMERA_FACING_LOOK_AHEAD_X - 1)
+            vx += CAMERA_LOOK_AHEAD_STEP;
     }
 
-    vy = -0x1000;
+    vy = CAMERA_FACING_OFFSET_Y;
     goal.x += vx;
     goal.y += vy;
     x += (goal.x - x) / 4;
@@ -125,10 +127,10 @@ void Camera::Snap()
 
     if (mode == CAMERA_MODE_FACING) {
         if ((followed->mirror << 27) < 0)
-            vx = -0x1276;
+            vx = -CAMERA_FACING_LOOK_AHEAD_X;
         else
-            vx = 0x1276;
-        vy = -0x1000;
+            vx = CAMERA_FACING_LOOK_AHEAD_X;
+        vy = CAMERA_FACING_OFFSET_Y;
     } else {
         vx = 0;
         vy = 0;
@@ -136,7 +138,7 @@ void Camera::Snap()
 
     x += vx;
     y += vy;
-    gLevelLayers->SetScroll(x - INT_TO_Q8(120), y - INT_TO_Q8(80));
+    gLevelLayers->SetScroll(x - INT_TO_Q8(DISPLAY_CENTER_X), y - INT_TO_Q8(DISPLAY_CENTER_Y));
 }
 
 void Camera::Update()
@@ -152,5 +154,5 @@ void Camera::Update()
         break;
     }
 
-    gLevelLayers->SetScroll(x - INT_TO_Q8(120), y - INT_TO_Q8(80));
+    gLevelLayers->SetScroll(x - INT_TO_Q8(DISPLAY_CENTER_X), y - INT_TO_Q8(DISPLAY_CENTER_Y));
 }

@@ -68,8 +68,8 @@ void LevelLayers::LoadRoom(const struct level_room *args)
 
     layer0->Load(args->desc->layer0);
     tiles->SetSource(args->desc->collision);
-    maxScrollX = layer0->widthPx - DISPLAY_WIDTH;
-    maxScrollY = layer0->heightPx - DISPLAY_HEIGHT;
+    maxScrollX = CAMERA_MAX_X(layer0->widthPx);
+    maxScrollY = CAMERA_MAX_Y(layer0->heightPx);
     ShowBg0();
 
     layers[0]->Load(args->desc->layers[0]);

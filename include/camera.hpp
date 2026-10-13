@@ -17,6 +17,7 @@
 
 extern "C" {
 #include "core.h"
+#include "math_util.h"
 }
 
 class Sprite;
@@ -27,15 +28,28 @@ class Sprite;
 #define CAMERA_MODE_DIRECTIONAL 2 // StepDirectional: towards the player's `dir` bits (underwater)
 #define CAMERA_MODE_STILL 3       // no easing: the camera stays put (a plain hit kills the player)
 
+/* The camera's framing (#979, docs/screen.md). Update and Snap hand the
+ * position minus the screen's centre to the level's scroll, so the
+ * target (plus the look-ahead) ends up centred. StepDirectional's
+ * look-ahead reaches a sixth of the screen each way (0x2800 x 0x1AAA in
+ * Q8 on the GBA), so it scales with the screen; StepFacing's horizontal
+ * look-ahead and fixed vertical offset are distances in the level and
+ * stay. All Q8. */
+#define CAMERA_LOOK_AHEAD_X        (INT_TO_Q8(DISPLAY_WIDTH) / 6)  // StepDirectional, x: 0x2800
+#define CAMERA_LOOK_AHEAD_Y        (INT_TO_Q8(DISPLAY_HEIGHT) / 6) // StepDirectional, y: 0x1AAA
+#define CAMERA_LOOK_AHEAD_STEP     0x100                           // the look-ahead's step per frame
+#define CAMERA_FACING_LOOK_AHEAD_X 0x1276                          // StepFacing: ahead of the target
+#define CAMERA_FACING_OFFSET_Y     (-0x1000)                       // StepFacing: above the target
+
 class Camera
 {
 public:
-    s32 x;          // 0x00 - Q8
-    s32 y;          // 0x04 - Q8
-    s32 vx;         // 0x08 - Q8 look-ahead
-    s32 vy;         // 0x0C - Q8 look-ahead
-    Sprite *target; // 0x10 - gPlayer, or the level select's camera lead (CameraLead)
-    s32 mode;       // 0x14 - CAMERA_MODE_*
+    s32 x;             // 0x00 - Q8
+    s32 y;             // 0x04 - Q8
+    screen_dx_q8_t vx; // 0x08 - Q8 look-ahead
+    screen_dy_q8_t vy; // 0x0C - Q8 look-ahead
+    Sprite *target;    // 0x10 - gPlayer, or the level select's camera lead (CameraLead)
+    s32 mode;          // 0x14 - CAMERA_MODE_*
 
     void StepDirectional(); // StepCameraDirectional
     void StepFacing();      // StepCameraFacing
