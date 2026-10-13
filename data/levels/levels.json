@@ -141,135 +141,331 @@
       "star_to_finish/main"
     ]
   },
+  "table": {
+    "lists": [
+      {"level": "LEVEL_JUNGLE_JAM", "rooms": ["jungle_jam/main"]},
+      {"level": "LEVEL_SHIPWRECKED", "rooms": ["shipwrecked/main"]},
+      {"level": "LEVEL_TEMPLE_OF_BOOM", "rooms": ["temple_of_boom/main"]},
+      {"level": "LEVEL_FROSTBITE_CAVERN", "rooms": ["frostbite_cavern/part1", {"stage": "FROSTBITE_CAVERN"}, "frostbite_cavern/part2"]},
+      {"level": "LEVEL_JUST_IN_SLIME", "rooms": ["just_in_slime/main"]},
+      {"level": "LEVEL_SNOW_CRASH", "rooms": ["snow_crash/part1", {"stage": "SNOW_CRASH"}, "snow_crash/part2"]},
+      {"level": "LEVEL_ROCKET_RACKET", "rooms": [{"stage": "ROCKET_RACKET"}]},
+      {"level": "LEVEL_JUST_HANGIN", "rooms": ["just_hangin/main"]},
+      {"level": "LEVEL_SHARK_ATTACK", "rooms": ["shark_attack/main"]},
+      {"level": "LEVEL_RUINED", "rooms": ["ruined/main"]},
+      {"level": "LEVEL_SNOW_JOB", "rooms": ["snow_job/part1", {"stage": "SNOW_JOB"}, "snow_job/part2"]},
+      {"level": "LEVEL_ACE_OF_SPACE", "rooms": ["ace_of_space/main"]},
+      {"level": "LEVEL_SUNKEN_CITY", "rooms": ["sunken_city/main"]},
+      {"level": "LEVEL_DOWN_THE_HOLE", "rooms": ["down_the_hole/main"]},
+      {"level": "LEVEL_BLIMP_BONANZA", "rooms": [{"stage": "BLIMP_BONANZA"}]},
+      {"level": "LEVEL_STAR_TO_FINISH", "rooms": ["star_to_finish/main"]},
+      {"level": "LEVEL_AIR_SUPPLY", "rooms": ["air_supply/main"]},
+      {"level": "LEVEL_NO_FLY_ZONE", "rooms": [{"stage": "NO_FLY_ZONE"}]},
+      {"level": "LEVEL_DRIP_DRIP_DRIP", "rooms": ["drip_drip_drip/main"]},
+      {"level": "LEVEL_FINAL_COUNTDOWN", "rooms": ["final_countdown/main"]},
+      {"level": "LEVEL_MEGA_MIX", "rooms": ["mega_mix/main"]},
+      {"level": "LEVEL_DINGODILE", "rooms": ["dingodile/main"]},
+      {"level": "LEVEL_TINY", "rooms": ["tiny/main"]},
+      {"level": "LEVEL_NEO_CORTEX", "rooms": ["neo_cortex/main"]},
+      {"level": "LEVEL_N_GIN", "rooms": [{"stage": "N_GIN"}]}
+    ]
+  },
   "levels": [
     {
       "constant": "LEVEL_JUNGLE_JAM",
       "name": "jungle jam",
-      "world": 0
+      "world": 0,
+      "name_text": 1,
+      "theme": 1,
+      "times": [355, 275, 233],
+      "mask_assist_deaths": 4,
+      "crate_assist_deaths": 4,
+      "rooms": ["jungle_jam/main"],
+      "bonus": "jungle_jam/bonus"
     },
     {
       "constant": "LEVEL_SHIPWRECKED",
       "name": "shipwrecked",
-      "world": 0
+      "world": 0,
+      "name_text": 2,
+      "theme": 3,
+      "times": [777, 677, 544],
+      "mask_assist_deaths": 4,
+      "crate_assist_deaths": 1,
+      "rooms": ["shipwrecked/main"]
     },
     {
       "constant": "LEVEL_TEMPLE_OF_BOOM",
       "name": "temple of boom",
-      "world": 0
+      "world": 0,
+      "name_text": 3,
+      "theme": 1,
+      "times": [627, 557, 490],
+      "mask_assist_deaths": 4,
+      "crate_assist_deaths": 4,
+      "rooms": ["temple_of_boom/main"],
+      "bonus": "temple_of_boom/bonus",
+      "gem_path": "temple_of_boom/gem_path"
     },
     {
       "constant": "LEVEL_FROSTBITE_CAVERN",
       "name": "frostbite cavern",
-      "world": 0
+      "world": 0,
+      "name_text": 4,
+      "theme": 0,
+      "times": [917, 771, 660],
+      "mask_assist_deaths": 4,
+      "crate_assist_deaths": 4,
+      "rooms": ["frostbite_cavern/part1", {"stage": "FROSTBITE_CAVERN"}, "frostbite_cavern/part2"],
+      "bonus": "frostbite_cavern/bonus"
     },
     {
       "constant": "LEVEL_JUST_IN_SLIME",
       "name": "just in slime",
-      "world": 0
+      "world": 0,
+      "name_text": 5,
+      "theme": 2,
+      "times": [994, 756, 665],
+      "mask_assist_deaths": 5,
+      "crate_assist_deaths": 5,
+      "rooms": ["just_in_slime/main"],
+      "bonus": "just_in_slime/bonus"
     },
     {
       "constant": "LEVEL_SNOW_CRASH",
       "name": "snow crash",
-      "world": 1
+      "world": 1,
+      "name_text": 6,
+      "theme": 0,
+      "times": [1030, 967, 880],
+      "mask_assist_deaths": 5,
+      "crate_assist_deaths": 5,
+      "rooms": ["snow_crash/part1", {"stage": "SNOW_CRASH"}, "snow_crash/part2"],
+      "bonus": "snow_crash/bonus",
+      "gem_path": "snow_crash/gem_path"
     },
     {
       "constant": "LEVEL_ROCKET_RACKET",
       "name": "rocket racket",
-      "world": 1
+      "world": 1,
+      "name_text": 7,
+      "theme": 4,
+      "times": [1502, 1375, 1250],
+      "mask_assist_deaths": 5,
+      "crate_assist_deaths": 5,
+      "rooms": [{"stage": "ROCKET_RACKET"}]
     },
     {
       "constant": "LEVEL_JUST_HANGIN",
       "name": "just hangin'",
-      "world": 1
+      "world": 1,
+      "name_text": 8,
+      "theme": 2,
+      "times": [1094, 1030, 870],
+      "mask_assist_deaths": 5,
+      "crate_assist_deaths": 5,
+      "rooms": ["just_hangin/main"],
+      "bonus": "just_hangin/bonus",
+      "gem_path": "just_hangin/gem_path"
     },
     {
       "constant": "LEVEL_SHARK_ATTACK",
       "name": "shark attack",
-      "world": 1
+      "world": 1,
+      "name_text": 9,
+      "theme": 3,
+      "times": [916, 770, 694],
+      "mask_assist_deaths": 5,
+      "crate_assist_deaths": 1,
+      "rooms": ["shark_attack/main"]
     },
     {
       "constant": "LEVEL_RUINED",
       "name": "ruined",
-      "world": 1
+      "world": 1,
+      "name_text": 10,
+      "theme": 1,
+      "times": [1618, 1588, 1200],
+      "mask_assist_deaths": 5,
+      "crate_assist_deaths": 5,
+      "rooms": ["ruined/main"],
+      "bonus": "ruined/bonus"
     },
     {
       "constant": "LEVEL_SNOW_JOB",
       "name": "snow job",
-      "world": 2
+      "world": 2,
+      "name_text": 11,
+      "theme": 0,
+      "times": [1321, 1280, 1244],
+      "mask_assist_deaths": 6,
+      "crate_assist_deaths": 6,
+      "rooms": ["snow_job/part1", {"stage": "SNOW_JOB"}, "snow_job/part2"],
+      "bonus": "snow_job/bonus"
     },
     {
       "constant": "LEVEL_ACE_OF_SPACE",
       "name": "ace of space",
-      "world": 2
+      "world": 2,
+      "name_text": 12,
+      "theme": 5,
+      "times": [1184, 1158, 995],
+      "mask_assist_deaths": 6,
+      "crate_assist_deaths": 6,
+      "rooms": ["ace_of_space/main"],
+      "bonus": "ace_of_space/bonus",
+      "gem_path": "ace_of_space/gem_path"
     },
     {
       "constant": "LEVEL_SUNKEN_CITY",
       "name": "sunken city",
-      "world": 2
+      "world": 2,
+      "name_text": 13,
+      "theme": 3,
+      "times": [996, 817, 742],
+      "mask_assist_deaths": 6,
+      "crate_assist_deaths": 1,
+      "rooms": ["sunken_city/main"]
     },
     {
       "constant": "LEVEL_DOWN_THE_HOLE",
       "name": "down the hole",
-      "world": 2
+      "world": 2,
+      "name_text": 14,
+      "theme": 1,
+      "times": [924, 834, 674],
+      "mask_assist_deaths": 6,
+      "crate_assist_deaths": 6,
+      "rooms": ["down_the_hole/main"],
+      "bonus": "down_the_hole/bonus"
     },
     {
       "constant": "LEVEL_BLIMP_BONANZA",
       "name": "blimp bonanza",
-      "world": 2
+      "world": 2,
+      "name_text": 15,
+      "theme": 4,
+      "times": [1782, 1649, 1563],
+      "mask_assist_deaths": 6,
+      "crate_assist_deaths": 6,
+      "rooms": [{"stage": "BLIMP_BONANZA"}]
     },
     {
       "constant": "LEVEL_STAR_TO_FINISH",
       "name": "star to finish",
-      "world": 3
+      "world": 3,
+      "name_text": 16,
+      "theme": 5,
+      "times": [1276, 1195, 1041],
+      "mask_assist_deaths": 7,
+      "crate_assist_deaths": 7,
+      "rooms": ["star_to_finish/main"],
+      "bonus": "star_to_finish/bonus"
     },
     {
       "constant": "LEVEL_AIR_SUPPLY",
       "name": "air supply",
-      "world": 3
+      "world": 3,
+      "name_text": 17,
+      "theme": 3,
+      "times": [1293, 1104, 1017],
+      "mask_assist_deaths": 7,
+      "crate_assist_deaths": 1,
+      "rooms": ["air_supply/main"]
     },
     {
       "constant": "LEVEL_NO_FLY_ZONE",
       "name": "no-fly zone",
-      "world": 3
+      "world": 3,
+      "name_text": 18,
+      "theme": 4,
+      "times": [2063, 1971, 1896],
+      "mask_assist_deaths": 7,
+      "crate_assist_deaths": 7,
+      "rooms": [{"stage": "NO_FLY_ZONE"}]
     },
     {
       "constant": "LEVEL_DRIP_DRIP_DRIP",
       "name": "drip, drip, drip",
-      "world": 3
+      "world": 3,
+      "name_text": 19,
+      "theme": 2,
+      "times": [1484, 970, 896],
+      "mask_assist_deaths": 7,
+      "crate_assist_deaths": 7,
+      "rooms": ["drip_drip_drip/main"],
+      "bonus": "drip_drip_drip/bonus"
     },
     {
       "constant": "LEVEL_FINAL_COUNTDOWN",
       "name": "final countdown",
-      "world": 3
+      "world": 3,
+      "name_text": 20,
+      "theme": 5,
+      "times": [1504, 1338, 1182],
+      "mask_assist_deaths": 7,
+      "crate_assist_deaths": 7,
+      "rooms": ["final_countdown/main"],
+      "bonus": "final_countdown/bonus"
     },
     {
       "constant": "LEVEL_DINGODILE",
       "name": "dingodile",
       "world": 0,
-      "boss": true
+      "boss": true,
+      "name_text": 22,
+      "theme": 7,
+      "times": [1000, 500, 250],
+      "mask_assist_deaths": 4,
+      "crate_assist_deaths": 5,
+      "rooms": ["dingodile/main"]
     },
     {
       "constant": "LEVEL_N_GIN",
       "name": "n. gin",
       "world": 1,
-      "boss": true
+      "boss": true,
+      "name_text": 23,
+      "theme": 8,
+      "times": [1000, 500, 250],
+      "mask_assist_deaths": 5,
+      "crate_assist_deaths": 5,
+      "rooms": [{"stage": "N_GIN"}]
     },
     {
       "constant": "LEVEL_TINY",
       "name": "tiny",
       "world": 2,
-      "boss": true
+      "boss": true,
+      "name_text": 21,
+      "theme": 6,
+      "times": [1000, 500, 250],
+      "mask_assist_deaths": 6,
+      "crate_assist_deaths": 6,
+      "rooms": ["tiny/main"]
     },
     {
       "constant": "LEVEL_NEO_CORTEX",
       "name": "neo cortex",
       "world": 3,
-      "boss": true
+      "boss": true,
+      "name_text": 24,
+      "theme": 9,
+      "times": [1000, 500, 250],
+      "mask_assist_deaths": 7,
+      "crate_assist_deaths": 7,
+      "rooms": ["neo_cortex/main"]
     },
     {
       "constant": "LEVEL_MEGA_MIX",
       "name": "mega-mix",
-      "boss": true
+      "boss": true,
+      "name_text": 25,
+      "theme": 10,
+      "times": [1000, 500, 250],
+      "mask_assist_deaths": 7,
+      "crate_assist_deaths": 7,
+      "rooms": ["mega_mix/main"]
     }
   ]
 }

@@ -1,5 +1,6 @@
 {
   "asset": {"symbol": "gRoom34Asset", "packed": true},
+  "record": {"symbol": "gLevelRoom34", "kind": "UNDERWATER", "blend": {"effect": 1, "eva": 4, "evb": 16}},
   "symbols": {"desc": "gRoom34Desc", "palette": "gRoom34Palette", "entities": "gRoom34EntityList", "groups": "gRoom34EntityGroups", "param_offsets": "gRoom34ParamOffsets", "params": "gRoom34Params", "type_counts": "gRoom34TypeCounts", "layers": "gRoom34Layers", "items": "gRoom34Entities", "links": "gRoom34Links"},
   "layers": {
     "bg1": {"map": "bg1.png", "size_chunks": [3, 3], "size_tiles": [45, 24], "tileset": "gUnderwaterBgTiles", "scale": [12, 7], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom34Bg1Grid"},

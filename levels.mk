@@ -95,13 +95,31 @@ $(foreach r,$(LEVEL_REGIONS),$(eval $(C_BUILDDIR)/data/$(r).o: CPPFLAGS += -iquo
 $(C_BUILDDIR)/data/level_assets_64f830.o: $(LEVELS_BUILDDIR)/level_assets_64f830.inc $(call level_asset_incs,$(LEVEL_ROM_ROOMS))
 $(C_BUILDDIR)/data/level_assets_64f830.o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)
 
+# The level table (docs/levels.md, "The level table"), which
+# src/data/level_table_16c814.cpp #includes: gLevelTable and
+# gLevelRoomLists (`levels.py table levels`), and the room records and the
+# arrays of the rooms each level plays (`levels.py table records`), from
+# levels.json's "levels" and "table" and the rooms' room.json ("record").
+# The stages are named by include/constants/categories.h.
+LEVEL_TABLE_DEPS := data/levels/levels.json $(LEVEL_ROOM_JSONS) include/constants/categories.h tools/levels.py
+$(LEVELS_BUILDDIR)/level_table_16c814.inc: $(LEVEL_TABLE_DEPS)
+	@mkdir -p $(dir $@)
+	python3 tools/levels.py table levels $@
+$(LEVELS_BUILDDIR)/level_table_16c814_rooms.inc: $(LEVEL_TABLE_DEPS)
+	@mkdir -p $(dir $@)
+	python3 tools/levels.py table records $@
+$(C_BUILDDIR)/data/level_table_16c814.o: $(LEVELS_BUILDDIR)/level_table_16c814.inc \
+	$(LEVELS_BUILDDIR)/level_table_16c814_rooms.inc
+$(C_BUILDDIR)/data/level_table_16c814.o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)
+
 # The level data that isn't the ROM's (src/data/level_appended.cpp): the
-# new tile sets, the new rooms' data and their assets. With the original
-# data it is empty.
+# new tile sets, the new rooms' data, the level table's new records and
+# room lists, and the new rooms' assets. With the original data it is
+# empty.
 $(LEVELS_BUILDDIR)/level_appended.inc: data/levels/levels.json $(LEVEL_ROOM_JSONS) $(LEVEL_BG_PNGS) \
 		$(foreach room,$(LEVEL_NEW_ROOMS),$(LEVELS_BUILDDIR)/$(room)/asset.bin) \
 		$(foreach t,$(LEVEL_NEW_TILESETS_8BPP),$(LEVELS_BUILDDIR)/tilesets/$(t).bin) \
-		data/levels/entity_types.json $(LEVEL_TOOLS)
+		data/levels/entity_types.json include/constants/categories.h $(LEVEL_TOOLS)
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py appended $@ --build $(LEVELS_BUILDDIR)
 $(C_BUILDDIR)/data/level_appended.o: $(LEVELS_BUILDDIR)/level_appended.inc $(call level_asset_incs,$(LEVEL_NEW_ROOMS)) \

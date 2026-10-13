@@ -1,5 +1,6 @@
 {
   "asset": {"symbol": "gRoom14Asset", "packed": true},
+  "record": {"symbol": "gLevelRoom14", "kind": "ON_FOOT", "blend": {"effect": 0, "eva": 0, "evb": 0}},
   "symbols": {"desc": "gRoom14Desc", "palette": "gRoom14Palette", "entities": "gRoom14EntityList", "groups": "gRoom14EntityGroups", "param_offsets": "gRoom14ParamOffsets", "params": "gRoom14Params", "type_counts": "gRoom14TypeCounts", "layers": "gRoom14Layers", "items": "gRoom14Entities"},
   "layers": {
     "bg1": {"map": "bg1.png", "size_chunks": [51, 6], "size_tiles": [810, 45], "tileset": "gSewerBgTiles", "scale": [128, 128], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom14Bg1Grid"},

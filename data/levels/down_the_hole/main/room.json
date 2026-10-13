@@ -1,5 +1,6 @@
 {
   "asset": {"symbol": "gRoom32Asset", "packed": false},
+  "record": {"symbol": "gLevelRoom32", "kind": "ON_FOOT", "blend": {"effect": 0, "eva": 0, "evb": 0}},
   "symbols": {"desc": "gRoom32Desc", "palette": "gRoom32Palette", "entities": "gRoom32EntityList", "groups": "gRoom32EntityGroups", "param_offsets": "gRoom32ParamOffsets", "params": "gRoom32Params", "type_counts": "gRoom32TypeCounts", "layers": "gRoom32Layers", "items": "gRoom32Entities", "links": "gRoom32Links"},
   "layers": {
     "bg1": {"map": "bg1.png", "size_chunks": [26, 8], "size_tiles": [412, 60], "tileset": "gTempleBgTiles", "scale": [128, 128], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom32Bg1Grid"},

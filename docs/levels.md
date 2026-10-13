@@ -23,7 +23,8 @@ The level table `gLevelTable` (`struct level_info`, one per
 level) gives each level a room list: the rooms played in order and up
 to two extra rooms, each a `struct level_room` record
 `{const u16 *palette; const struct level_desc *desc; s32 kind; ...}`
-(0x14 bytes). All of it is C in `src/data/level_table_16c814.cpp`, with
+(0x14 bytes). All of it is in `src/data/level_table_16c814.cpp`, generated
+from `levels.json` and the rooms' `room.json` (see "The level table"), with
 one record per room (`gLevelRoom00`..`gLevelRoom40`) plus seven records
 of kind 3 for the stages played in an actor category, which have no
 room data. The union at +0x10 (`param`) is a stage's actor category
@@ -299,15 +300,19 @@ rooms`), not from the folders on disk.
 
 - `levels.json`: the rooms (their folders, `"rooms"`, in room-table
   order: `gRoomNN` is the NNth), and per region its C file name and its
-  rooms in ROM order, and the rooms' assets in ROM order; and the levels
-  in id order (`"levels"`: each one's
-  `LEVEL_*` name, name text and world), from which
-  `tools/levels.py constants levels` generates `constants/levels.h`. `extract`
-  keeps this list, which doesn't come from the ROM's room data.
+  rooms in ROM order, and the rooms' assets in ROM order; the ROM layout
+  of the level table (`"table"`); and the levels in id order
+  (`"levels"`): each one's `LEVEL_*` name, name and world, from which
+  `tools/levels.py constants levels` generates `constants/levels.h`, its
+  `gLevelTable` fields and the rooms it plays (see "The level table").
+  `extract` keeps the names and the worlds, which don't come from the
+  ROM, and writes the rest.
 - `entity_types.json`: the name of each entity type (see "Entity
   types"); `crate_kinds.json`: the name of each crate kind (`crate.kind`).
 - one folder per room, `<level>/<slot>/` (see "Room folders" below).
-- `<level>/<slot>/room.json`: the asset's symbol and whether it is packed, per layer its tile set, scale, `cnt`, size in
+- `<level>/<slot>/room.json`: the asset's symbol and whether it is packed,
+  the room's record in the level table (`"record"`, see "The level
+  table"), per layer its tile set, scale, `cnt`, size in
   chunks and tiles and map file, the parameter records (lists of words),
   the links and the entities (in id order; an entity's `type` is its
   name from `entity_types.json`, or a number for an unnamed type), and
@@ -352,6 +357,9 @@ room's generated parameter struct).
   `"assets"` list, `#include`d by `src/data/level_assets_64f830.cpp`;
 - `tools/levels.py c <region> build/.../data/levels/<region>.inc --build build/.../data/levels`
   per region, `#include`d by the two `src/data/level_rooms_*.cpp` files;
+- `tools/levels.py table levels|records build/.../data/levels/level_table_16c814[_rooms].inc`:
+  the level table, `#include`d by `src/data/level_table_16c814.cpp` (see
+  "The level table");
 - `tools/levels.py constants entities|crates build/include/constants/<name>.h`:
   the constants headers named in this data, `constants/entities.h`
   (`ENTITY_*`, `ENEMY_KIND_*`) and `constants/crates.h` (`CRATE_KIND_*`).
@@ -495,35 +503,164 @@ re-encode. The build also writes `tilesets/<set>.png`, a viewing
 picture of the set (16 tiles a row, a BG1-3 tile in the bank it is first
 drawn in, the palette of the set's first room).
 
+### The level table
+
+The level table is generated, like the room data. `src/data/level_table_16c814.cpp`
+`#include`s two files that `tools/levels.py table` writes into
+`build/.../data/levels/`:
+
+- `level_table_16c814.inc` (`table levels`): `gLevelTable` and
+  `gLevelRoomLists`, one entry per level of `levels.json`'s `"levels"`,
+  in id order;
+- `level_table_16c814_rooms.inc` (`table records`): the room records
+  (`struct level_room`) and the arrays of the rooms each level plays
+  (`gLevelNNRooms`, NN the level id).
+
+The colour-cycle lists and `gThemeMusicCues` stay hand-written in the
+.cpp, between the two `#include`s. They belong to the level themes, not
+to the levels: `RunRoom` picks a cycle with a `switch` on the theme, and
+`PlayRoomMusic` and the level select index their tables by it. New themes
+are #966.
+
+Where each field comes from:
+
+| table | field | from |
+|---|---|---|
+| `gLevelTable` (`struct level_info`) | `nameText` | the level's `"name_text"` |
+| | `theme` | `"theme"`: 0 snow, 1 jungle, 2 sewer, 3 underwater, 4 sky, 5 space, 6 tiny, 7 dingodile, 8 n. gin, 9 neo cortex, 10 mega-mix |
+| | `times[3]` | `"times"`, in centiseconds, loosest first |
+| | `maskAssistDeaths`, `crateAssistDeaths` | `"mask_assist_deaths"`, `"crate_assist_deaths"` |
+| | `isBoss` | `"boss"` (1 if true) |
+| | `rooms` | always `&gLevelRoomLists[<the level>]` |
+| `gLevelRoomLists` (`struct level_room_list`) | `count`, `rooms` | the level's `"rooms"`: its array and the array's length |
+| | `extra1`, `extra2` | the records of `"bonus"` and `"gem_path"` (room folders), or 0 |
+| `gLevelNNRooms` | the entries | the record of each entry of the level's `"rooms"`: a room folder, or `{"stage": "<NAME>"}` |
+| `gLevelRoomNN` (a room's record) | `palette`, `desc` | the room's `gRoomNNPalette`, `gRoomNNDesc` (room.json's `"symbols"`) |
+| | `kind` | room.json's `"record"` `"kind"`: `ON_FOOT`, `UNDERWATER` or `HOVER` (`ROOM_KIND_*`) |
+| | `unk_0C` | 0 |
+| | `param.blend` | `"record"` `"blend"`: `{"effect", "eva", "evb"}` |
+| `gLevelStageN` (a stage's record) | all | `{"stage": "<NAME>"}`: kind `ROOM_KIND_CATEGORY`, `param.catIndex` = `CATEGORY_<NAME>` (`include/constants/categories.h`), N its value; no palette or descriptor |
+
+The record's symbol is room.json's `"record"` `"symbol"`
+(`gLevelRoomNN`). A level looks like this:
+
+```json
+{
+  "constant": "LEVEL_SNOW_CRASH",
+  "name": "snow crash",
+  "world": 1,
+  "name_text": 6,
+  "theme": 0,
+  "times": [1030, 967, 880],
+  "mask_assist_deaths": 5,
+  "crate_assist_deaths": 5,
+  "rooms": ["snow_crash/part1", {"stage": "SNOW_CRASH"}, "snow_crash/part2"],
+  "bonus": "snow_crash/bonus",
+  "gem_path": "snow_crash/gem_path"
+}
+```
+
+and a room's record, in its room.json:
+
+```json
+"record": {"symbol": "gLevelRoom18", "kind": "UNDERWATER", "blend": {"effect": 1, "eva": 4, "evb": 16}},
+```
+
+**The ROM's layout.** `levels.json`'s `"table"` gives the ROM's 25
+played-room arrays, in ROM order (`"lists"`: each one's level and
+entries). `tools/levels.py extract` writes it, and nobody edits it: it
+is the residual that puts the table back in the ROM's order, as
+`"regions"` does for the room data. The objects are defined in this
+order:
+
+1. `gLevelTable`, then `gLevelRoomLists`, in level id order;
+2. (`gThemeMusicCues`, by hand);
+3. the records of the extra rooms: the rooms of the ROM's regions that no
+   `"table"` array plays, in `"rooms"` order;
+4. the arrays, in `"table"` order (`gLevel24Rooms`, mega-mix's, comes
+   after `gLevel19Rooms`, and `gLevel21Rooms`, n. gin's, last);
+5. the records of the rooms and stages those arrays play, each the first
+   time an array plays it.
+
+`extract` checks that this gives the ROM's objects back to back at their
+ROM addresses, and `make compare` that it gives the ROM's bytes.
+
+**New data never moves the ROM's table.** The generator only changes
+the table in place, and puts what is new after the IWRAM image, in
+`src/data/level_appended.cpp`:
+
+- a field of a level or of a room's record is changed in place;
+- a level whose `"rooms"` isn't its `"table"` array any more gets a new
+  array, `gLevelNNNewRooms`, in `level_appended.cpp`; its
+  `gLevelRoomLists` entry's `count` and `rooms` point at it. The ROM's
+  array stays where it was, unused;
+- a new room's record goes into `level_appended.cpp`, and the arrays and
+  the `extra1`/`extra2` pointers that name it are pointers like any
+  other;
+- a stage is one of the ROM's seven `gLevelStageN`: a stage of a new
+  actor category is #966.
+
+The limit is the number of levels. `gLevelTable` and `gLevelRoomLists`
+have one entry per level, and the code indexes other tables by level id
+(`LEVEL_COUNT`, the save data, the level select's grid), so a 26th level
+would grow tables in the middle of the ROM. The generator stops with an
+error naming the level (`... isn't one of the ROM's levels: gLevelTable
+has room for the ROM's 25 levels only (new levels are #966)`). #966 has
+to move `gLevelTable` and `gLevelRoomLists` (and the other per-level
+tables) after the IWRAM image, or #967 has to show that the ROM can
+shift.
+
 ### Adding a room
 
 A room is a folder `data/levels/<level>/<slot>/` (room.json, the layer
 pictures and `collision.png`), and `levels.json`'s `"rooms"` lists it.
 The ROM's rooms are those its `"regions"` list; a room in no region is a
-**new room**. The build handles a new room through the same `make`, with
-no setting:
+**new room**. Everything about it is data, and a plain `make` builds it:
 
-- its data and its asset go into `src/data/level_appended.cpp`
-  (`levels.py appended`), which `ldscript.txt` links after the IWRAM
-  image. That is where the ROM's 0xFF fill starts, so the ROM's own data
-  doesn't move; past the fill's 106,548 bytes, `rom_fill`'s
-  `ALIGN(0x800000)` grows the ROM to the next 8 MB. With the original
-  data the section is empty, so the ROM still matches;
-- its symbols are room.json's (`"symbols"`, the asset's `"symbol"`, each
-  layer's `"grid_symbol"`): give it its own, for example `gRoom41`;
-- its layers may name a set of the ROM's rooms, but then only use tiles
-  that set already has (a new tile there would move later ROM data): a
-  block that isn't one fails the build. To draw new tiles, name a new
-  set (`"tileset": "gMyBg0Tiles"`): a set no ROM room uses is made from
-  its rooms' pictures alone, in first-use order, and goes with the new
-  rooms after the IWRAM image.
+1. **Make the folder.** The quickest start is a copy of a room of the
+   same theme, `cp -r data/levels/snow_crash/part1 data/levels/jungle_jam/extra`.
+   Then edit the pictures, `collision.png` and the entities in room.json.
+2. **Give it its own symbols.** Every name in room.json is a symbol:
+   `"symbols"`, the asset's `"symbol"`, each layer's `"grid_symbol"` and
+   the record's `"symbol"`. For a copy of room 23, rename `gRoom23` to
+   `gRoom41` and `gLevelRoom23` to `gLevelRoom41`:
+   `sed -i 's/gRoom23/gRoom41/g; s/gLevelRoom23/gLevelRoom41/g' data/levels/jungle_jam/extra/room.json`.
+   Set the record's `"kind"` (`ON_FOOT`, `UNDERWATER` or `HOVER`, which
+   picks the player's controller) and `"blend"`.
+3. **List it** at the end of `levels.json`'s `"rooms"`.
+4. **Play it.** Add it to a level in `"levels"`: to `"rooms"`, in play
+   order (`["jungle_jam/extra", "jungle_jam/main"]` plays it first), or
+   as the level's `"bonus"` or `"gem_path"` room.
+5. **Run `make`.**
 
-The level tables (`gLevelTable`, `gLevelRoomLists`, the `gLevelRoomNN`
-records in `src/data/level_table_16c814.cpp`) are still hand-written C:
-to play a new room, point a room record at its descriptor and palette
-there (#965 is about generating them from `levels.json`; #966 about new
-levels and themes). Editing the ROM's own rooms changes their data in
-place, which can move the ROM data after it (#967).
+The build then puts the room's data, its asset, its record and the
+level's new room array into `src/data/level_appended.cpp` (`levels.py
+appended`), which `ldscript.txt` links after the IWRAM image. That is
+where the ROM's 0xFF fill starts, so the ROM's own data doesn't move;
+past the fill's 106,548 bytes, `rom_fill`'s `ALIGN(0x800000)` grows the
+ROM to the next 8 MB. With the original data the section is empty, so
+the ROM still matches. In the ROM's table only the pointers change
+(see "The level table").
+
+The steps above, with jungle jam playing the copy first and shipwrecked
+taking it as its bonus room, give an 8 MB ROM whose first 0x7E5FCC
+bytes differ from `baserom.gba` in three words only:
+`gLevelRoomLists[LEVEL_JUNGLE_JAM]`'s `count` (1 to 2) and `rooms` (to
+`gLevel00NewRooms`), and `gLevelRoomLists[LEVEL_SHIPWRECKED]`'s
+`extra1` (0 to `gLevelRoom41`). The new data fills 0x087E5FCC to
+0x087EB0A8. In mGBA, a new game loads `gLevelRoom41` where the
+original loads `gLevelRoom17`, with the room's palette.
+
+The room's layers may name a set of the ROM's rooms, but then only use
+tiles that set already has (a new tile there would move later ROM
+data): a block that isn't one fails the build. To draw new tiles, name a
+new set (`"tileset": "gMyBg0Tiles"`): a set no ROM room uses is made from
+its rooms' pictures alone, in first-use order, and goes with the new
+rooms after the IWRAM image.
+
+Editing the ROM's own rooms changes their data in place, which can move
+the ROM data after it (#967). New levels, themes and actor categories
+are #966.
 
 ### Collision layers
 

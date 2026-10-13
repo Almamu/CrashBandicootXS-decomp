@@ -1,5 +1,6 @@
 {
   "asset": {"symbol": "gRoom09Asset", "packed": true},
+  "record": {"symbol": "gLevelRoom09", "kind": "ON_FOOT", "blend": {"effect": 0, "eva": 0, "evb": 0}},
   "symbols": {"desc": "gRoom09Desc", "palette": "gRoom09Palette", "entities": "gRoom09EntityList", "groups": "gRoom09EntityGroups", "param_offsets": "gRoom09ParamOffsets", "params": "gRoom09Params", "type_counts": "gRoom09TypeCounts", "layers": "gRoom09Layers", "items": "gRoom09Entities", "links": "gRoom09Links"},
   "layers": {
     "bg1": {"map": "bg1.png", "size_chunks": [12, 4], "size_tiles": [187, 30], "tileset": "gTempleBgTiles", "scale": [128, 128], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom09Bg1Grid"},

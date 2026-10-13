@@ -256,7 +256,7 @@ The first batch (all pointer tables, all byte-exact):
 | `image_table_16c5a0.cpp` | `0x0816C5A0` | 10 `{palette, tiles}` asset pairs |
 | `map_tables_16c5f0.cpp` | `0x0816C5F0` | level-select offsets, animation ids, OBJ sizes |
 | `dispatch_table_16c6a4.cpp` | `0x0816C6A4` | the unified 92-slot function-pointer dispatch array |
-| `level_table_16c814.cpp` | `0x0816C814` | the level table (25 `struct level_info`), the levels' room lists and 48 room records, the theme music cues, 5 colour-cycle lists (see "Level data") |
+| `level_table_16c814.cpp` | `0x0816C814` | the level table (25 `struct level_info`), the levels' room lists and 48 room records, generated from `data/levels/` (`levels.py table`); the theme music cues and 5 colour-cycle lists by hand (see "Level data") |
 | `cutscenes_16d1c8.cpp` | `0x0816D1C8` | the 11 cutscenes' language tables and slide lists, the English pages (see "Cutscenes") |
 | `cutscene_text_16d4d8.c` | `0x0816D4D8` | the cutscenes' English text, in C (see "Text tables in C") |
 | `cutscene_slides_16e064.cpp` | `0x0816E064` | the other five languages' pages, the 24 slides |
@@ -732,6 +732,9 @@ see [levels.md, "Collision layers"](./levels.md#collision-layers)). The build
 | `build/.../data/levels/<room>/asset.bin.lz.inc` | the same, gbagfx LZ77, `tools/bin2c.py --lz` bytes | `level_assets_64f830.inc` (34 packed assets, formerly `graphics/tileset1/27`-`60`) |
 | `build/.../data/levels/level_assets_64f830.inc` | the 41 `gRoomNNAsset` definitions, in `levels.json`'s `"assets"` (ROM) order | `#include`d by `src/data/level_assets_64f830.cpp` |
 | `build/.../data/levels/level_rooms_<addr>.inc` | all rooms of a region | `#include`d by `src/data/level_rooms_<addr>.c` |
+| `build/.../data/levels/level_table_16c814.inc` | `gLevelTable` and `gLevelRoomLists`, from `levels.json`'s `"levels"` (`levels.py table levels`) | `#include`d by `src/data/level_table_16c814.cpp` |
+| `build/.../data/levels/level_table_16c814_rooms.inc` | the room records and the played-room arrays, from room.json's `"record"` and `levels.json`'s `"table"` and `"levels"` (`levels.py table records`) | the same, after `gThemeMusicCues` |
+| `build/.../data/levels/level_appended.inc` | the data that isn't the ROM's: new tile sets, new rooms with their records and assets, new played-room arrays (`levels.py appended`); empty with the original data | `#include`d by `src/data/level_appended.cpp` |
 
 Every pointer in the room data is a symbol reference (the room's own
 objects, the tile sets, the assets), and everything the ROM derives
@@ -739,19 +742,37 @@ objects, the tile sets, the assets), and everything the ROM derives
 offsets) is computed from the sources again. `include/level_data.h` has
 the types.
 
-The records that point at the rooms are hand-written C in
+The records that point at the rooms are generated too, into
 `src/data/level_table_16c814.cpp`: the level table `gLevelTable`
 (25 `struct level_info`, indexed by level id), one `struct
 level_room_list` per level (the rooms played in order, `gLevelNNRooms`,
 and up to two extra rooms), and the 48 `struct level_room` records
-(`gLevelRoom00`..`gLevelRoom40`, named after the `data/levels/` room
-directories, and 7 `gLevelStageN` records for the stages played in actor
-category N, which have no room data). A room record names the room's
-palette and `struct level_desc` by symbol, so the room data in
-`level_rooms_*.cpp` can move or change size: nothing outside the data files
-holds an address into it any more. The code still reads these tables
-through its own local views (`MedalTableEntry`, `threshold_table_entry`,
-`gl_level_entry`, ...); the header comment of each struct lists them.
+(`gLevelRoom00`..`gLevelRoom40`, one per room, and 7 `gLevelStageN`
+records for the stages played in actor category N, which have no room
+data). A room record names the room's palette and `struct level_desc` by
+symbol, so the room data in `level_rooms_*.cpp` can move or change size:
+nothing outside the data files holds an address into it any more. The
+code still reads these tables through its own local views
+(`MedalTableEntry`, `threshold_table_entry`, `gl_level_entry`, ...); the
+header comment of each struct lists them.
+
+**The generated level table.** The .cpp keeps what belongs to the level
+themes by hand (the colour-cycle lists and `gThemeMusicCues`, which the
+code indexes by theme) and `#include`s the two generated files around
+`gThemeMusicCues`, so the definitions stay in ROM order. The generator
+follows the conventions of the other generated data: every object is
+`extern const` with a positional initializer (no designated initializers),
+every pointer is a symbol (`&gLevelRoomLists[LEVEL_SNOW_CRASH]`,
+`&gLevelRoom17`, `gRoom17Palette`), and counts are `ARRAY_COUNT` of the
+array they count. The sources are `levels.json`'s `"levels"` (per level
+its `gLevelTable` fields and the rooms it plays, `{"stage": "<NAME>"}`
+for a stage) and `"table"` (the ROM's played-room arrays in ROM order,
+written by `levels.py extract`, which fixes the definition order), and
+each room's `"record"` (its symbol, `"kind"` and `"blend"`). What is new
+(a new room's record, a level's changed room array) is generated into
+`level_appended.inc` after the IWRAM image, and the ROM's entries are
+repointed in place. [levels.md, "The level table"](./levels.md#the-level-table)
+has the field-by-field sources and the limits.
 
 ### Cutscenes
 

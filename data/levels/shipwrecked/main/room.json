@@ -1,5 +1,6 @@
 {
   "asset": {"symbol": "gRoom18Asset", "packed": true},
+  "record": {"symbol": "gLevelRoom18", "kind": "UNDERWATER", "blend": {"effect": 1, "eva": 4, "evb": 16}},
   "symbols": {"desc": "gRoom18Desc", "palette": "gRoom18Palette", "entities": "gRoom18EntityList", "groups": "gRoom18EntityGroups", "param_offsets": "gRoom18ParamOffsets", "params": "gRoom18Params", "type_counts": "gRoom18TypeCounts", "layers": "gRoom18Layers", "items": "gRoom18Entities", "links": "gRoom18Links"},
   "layers": {
     "bg1": {"map": "bg1.png", "size_chunks": [3, 3], "size_tiles": [45, 24], "tileset": "gUnderwaterBgTiles", "scale": [12, 7], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom18Bg1Grid"},
