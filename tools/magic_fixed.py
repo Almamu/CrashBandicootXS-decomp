@@ -96,7 +96,8 @@ ROLES = [
     ("subframe", r"^(?:animTime|\w*SubFrame\w*|subFrame\w*)$"),
     (
         "position",
-        r"^(?:[xyz]|[xyz][0-9]|pos|pos[XYZ]|\w*Pos[XYZ]?|[a-z]+[XYZ]|[cpt][xyz]|[xyz]Lo|[xyz]Hi|left|right|top|bottom|q)$",
+        r"^(?:[xyz]|[xyz][0-9]|pos|pos[XYZ]|\w*Pos[XYZ]?|[a-z]+[XYZ]|[cpt][xyz]|[xyz]Lo|[xyz]Hi|left|right|top|bottom|q"
+        r"|depth|distance|dist|Get[XYZ]|GetSpawn[XYZ]|\w*Spawn[XYZ]|Level(?:Right|Left|Top|Bottom)|INT_TO_Q8)$",
     ),
 ]
 ROLES = [(r, re.compile(p)) for r, p in ROLES]
@@ -288,6 +289,8 @@ class FixedScan(mb.BitScan):
             thing, name, role = self.thing_at(s, m.start())
             if not role:
                 continue
+            if v == 1 and op == "-" and re.match(r"\s*-?\s*(?:INT_TO_Q\d+|Q\d+)\s*\(", text[s : m.start()]):
+                continue  # a bound just under a spelled value: `INT_TO_Q8(40) - 1`
             self.record("literal", op, v, ("-" if neg else "") + lit, m.start(3), thing, name, role)
         # clamps: LIMIT_MAX(x, K), CLAMP(x, lo, hi), MIN/MAX(x, K)
         for m in re.finditer(r"\b(LIMIT_MAX|LIMIT_MIN|CLAMP_MIN|CLAMP_MAX|CLAMP|MIN|MAX)\s*\(", text):
@@ -307,7 +310,9 @@ class FixedScan(mb.BitScan):
 
     # Calls that take a position or a speed in Q8 (outside the 2D layouts,
     # where SetPos/Move take pixels): a whole literal argument is one.
-    POS_CALL = re.compile(r"\b(SetPos|SetDest|PlaceAt|SetVelocity|SetSpeed|Spawn\w*|Create\w*|MoveTo|SetOffset)\s*\(")
+    POS_CALL = re.compile(
+        r"\b(SetPos|SetDest|PlaceAt|SetVel\w*|SetSpeed\w*|Spawn\w*|Create\w*|MoveTo|SetOffset|ShakeActorBg)\s*\("
+    )
 
     def scan_args(self):
         if UI.search(self.rel):
@@ -594,14 +599,19 @@ def suggestion(s):
     bits = int(s.fmt[1:]) if s.fmt and s.fmt[1:].isdigit() else 8
     one = 1 << bits
     v = s.value
+    if v > 0x7FFFFFFF:
+        v -= 1 << 32  # an unsigned word (`0xFFFFF880`): keep its type in a comparison
     sign = "-" if v < 0 else ""
     a = abs(v)
     if a % one == 0:
         return f"{sign}INT_TO_Q{bits}({a // one})"
-    if bits == 8 and a % 0x10 == 0:
-        d = a / one
-        return f"{sign}Q8({d:g})"
-    return f"{sign}Q{bits}_FRAC({a // one}, {a % one:#x})"
+    if bits != 8:
+        return ""
+    if a % 0x20 == 0 or (a % 0x10 == 0 and a < 0x100):
+        return f"{sign}Q8({a / one:g})"
+    if v > 0 and (a + 1) % one == 0:
+        return f"INT_TO_Q8({(a + 1) // one}) - 1"
+    return f"{sign}Q8_FRAC({a // one}, {a % one:#x})"
 
 
 def report(sites, out):
