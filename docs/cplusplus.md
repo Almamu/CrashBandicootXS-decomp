@@ -775,6 +775,8 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/actor/actor_category_init.cpp`, `actor_category_stats.cpp`, `actor_factory.cpp`, `cell_anim.cpp` | the callers: `ActorPaletteCycle::Update()` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-actor-palette-cycle-as-an-all-static-class-915) |
 | `src/gfx/sprite_frame.cpp`, `src/iwram/sprite_arm.cpp` | `SpriteOamQueue` and `SpriteFrameCache` (new include/sprite_oam_queue.hpp, sprite_frame_cache.hpp), all-static classes: their 4 + 4 IWRAM globals are static data members (`entries` is gSpriteOamQueue, `current` gSpriteFrameCacheCurrent, ...), their 4 + 5 functions static member functions (`Init`, `Add`, `Flush`, `Destroy`; `Init`, `LoadTiles`, `Age`, `Destroy` and the ARM `Lookup`); gfx.h's 8 prototypes and 8 externs and iwram.h's Lookup prototype go | 9 | (unchanged) | 0 -> 0 | [#915](#the-oam-queue-and-the-sprite-frame-cache-as-all-static-classes-915) |
 | `src/actor/actor_category_init.cpp`, `actor_vram_pool.cpp`, `src/frontend/company_logos.cpp`, `src/iwram/iwram_data.cpp`, `src/vehicle/jetpack/jetpack_player_update.cpp`, `src/vehicle/polar/polar_player.cpp` | the callers: `SpriteOamQueue::Flush()`, `SpriteFrameCache::Age()` & co.; gLookupSpriteFrameCacheFunc is `SpriteFrameCache::Lookup` | 0 | (unchanged) | 0 -> 0 | [#915](#the-oam-queue-and-the-sprite-frame-cache-as-all-static-classes-915) |
+| `src/gfx/sprite_frame.cpp` | `CategorySpriteSheet` (new include/category_sprite_sheet.hpp), an all-static class: gCategorySpriteSheet is the public static data member `data`, its 2 functions static member functions (`Free`, `Decompress`); gfx.h's 2 prototypes and actor.h's extern go | 2 | (unchanged) | 0 -> 0 | [#915](#the-category-sprite-sheet-as-an-all-static-class-915) |
+| `src/actor/actor_category_init.cpp`, `anim_part.cpp`, `src/frontend/company_logos.cpp` | the callers: `CategorySpriteSheet::Decompress(...)`, `CategorySpriteSheet::Free()`; AnimPart::GetAnimFrameData reads `CategorySpriteSheet::data` | 0 | (unchanged) | 0 -> 0 | [#915](#the-category-sprite-sheet-as-an-all-static-class-915) |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -4682,7 +4684,7 @@ plain functions, and every object is byte-identical.
 - **Left outside.** The rest of sprite_frame.cpp: the overflow OAM queue
   and the sprite frame cache, which have their own IWRAM variables and
   are [classes of their own](#the-oam-queue-and-the-sprite-frame-cache-as-all-static-classes-915),
-  and the category sprite sheet.
+  and the category sprite sheet, [another](#the-category-sprite-sheet-as-an-all-static-class-915).
 
 ### The actor palette cycle as an all-static class (#915)
 
@@ -4745,9 +4747,41 @@ and every object is byte-identical.
   iwram_data.cpp takes its address for gLookupSpriteFrameCacheFunc, the
   hook LoadTiles calls it through.
 - **Left outside.** SetupSpriteFrameOam (it uses both classes) and
-  GetSpriteShapeSizeBits stay free functions, as do the category sprite
-  sheet's FreeCategorySpriteSheet and DecompressCategorySpriteSheet with
-  gCategorySpriteSheet, which anim_part.cpp also reads.
+  GetSpriteShapeSizeBits stay free functions. The category sprite sheet
+  became [a class of its own](#the-category-sprite-sheet-as-an-all-static-class-915).
+
+### The category sprite sheet as an all-static class (#915)
+
+The last family of sprite_frame.cpp, family 8 of the #915 inventory:
+FreeCategorySpriteSheet and DecompressCategorySpriteSheet (ROM
+0x08029168-0x080291A4, right after the frame cache) and the one IWRAM
+global they share, gCategorySpriteSheet (0x0300137C, right after the
+frame cache's block). It is the category's sprite sheet, decompressed
+into an EWRAM buffer; the animation records' frame offsets are relative
+to it. It is now `CategorySpriteSheet`
+(include/category_sprite_sheet.hpp), all-static like
+[the sprite frame cache](#the-oam-queue-and-the-sprite-frame-cache-as-all-static-classes-915),
+and every object is byte-identical.
+
+- **Data.** `data` (gCategorySpriteSheet) is a public static data
+  member, only declared. cxx_symbols.txt's `#915 CategorySpriteSheet`
+  block maps it to its C name, which sym_iwram.txt places.
+- **Functions.** `Free` (FreeCategorySpriteSheet: the category's
+  teardown and the company logos') and `Decompress`
+  (DecompressCategorySpriteSheet: InitActorCategory) are public static
+  member functions under their C names.
+- **The reader.** AnimPart::GetAnimFrameData (anim_part.cpp) adds a frame
+  offset to the sheet, `(u8 *)CategorySpriteSheet::data + frameOffsets[...]`,
+  which is why `data` is public. An inline getter (`static u8 *Get()`)
+  was tried first and does not match: g++ evaluates the inlined call
+  first, so the sheet is loaded into r0 before the offset is computed
+  (`ldr r0, =data; ldr r0, [r0]` right after the
+  GetAnimFrameBaseOffset call), where the ROM loads it last. Reading the
+  member directly compiles like the global did.
+- **Why not part of the frame cache.** The sheet shares no data with
+  the cache: the cache tracks the frames copied to OBJ VRAM, the sheet
+  is the EWRAM buffer they are copied from. One small
+  class keeps the two separate, as the inventory proposed.
 
 ### Next batches
 

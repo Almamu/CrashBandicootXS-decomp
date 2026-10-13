@@ -2152,6 +2152,13 @@ _16SpriteFrameCache.previous gSpriteFrameCachePrevious
 _16SpriteFrameCache.spares gSpriteFrameCacheSpares
 _16SpriteFrameCache.pool gSpriteFrameCachePool
 #
+# #915 CategorySpriteSheet: the category sprite sheet as an all-static
+# class (include/category_sprite_sheet.hpp, src/gfx/sprite_frame.cpp). Its
+# data member keeps the C name: sym_iwram.txt places it.
+Free__19CategorySpriteSheet FreeCategorySpriteSheet
+Decompress__19CategorySpriteSheetPCv DecompressCategorySpriteSheet
+_19CategorySpriteSheet.data gCategorySpriteSheet
+#
 # #915 CollectedSpawns: the collected spawn records as an all-static class
 # (include/collected_spawns.hpp, src/actor/actor_spawn_collected.cpp). Its
 # data members keep the C names: sym_iwram.txt places spawns,
