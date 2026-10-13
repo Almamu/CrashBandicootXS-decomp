@@ -622,7 +622,7 @@ void SaveMenu::ConfirmDeleteInput(u32 keys)
  * argument slot's address, as the ROM does. */
 void SaveMenu::DrawMain()
 {
-    screen_y_t y = 0x64;
+    screen_y_t y = DISPLAY_ART_Y + 0x64;
     s32 i;
     struct byte_arg flag;
 
@@ -642,5 +642,5 @@ void SaveMenu::DrawMain()
         y += 0xa;
     }
 
-    DrawSlotStats(0x5a, 0x21, 0, flag);
+    DrawSlotStats(DISPLAY_ART_X + 0x5a, DISPLAY_ART_Y + 0x21, 0, flag);
 }

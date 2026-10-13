@@ -124,18 +124,18 @@ void PauseMenu::Draw()
 
     t = DISPLAY_WIDTH - gLargeFont->MeasureText(levelName);
     x = t >> 1;
-    gLargeFont->SetPos(x, 0xe);
+    gLargeFont->SetPos(x, DISPLAY_ART_Y + 0xe);
     gLargeFont->DrawText(levelName);
     label = levelLabel;
     if (label != NULL) {
-        gLargeFont->SetPos(0x20, 0x26);
+        gLargeFont->SetPos(DISPLAY_ART_X + 0x20, DISPLAY_ART_Y + 0x26);
         gLargeFont->DrawText(label);
         gLargeFont->DrawText(levelNumber);
     }
     width = gLargeFont->MeasureText(percentText);
-    t = 0x8c;
+    t = DISPLAY_ART_X + 0x8c;
     x = t - width;
-    gLargeFont->SetPos(x, 0x88);
+    gLargeFont->SetPos(x, DISPLAY_ART_Y + 0x88);
     gLargeFont->DrawText(percentText);
     DrawRows();
     DrawPageTitle();
@@ -168,7 +168,7 @@ void PauseMenu::Draw()
  * centred together. */
 void PauseMenu::DrawRows()
 {
-    s32 y = 0x4a;
+    s32 y = DISPLAY_ART_Y + 0x4a;
     s32 i;
 
     for (i = 0; i < rowCount; i++) {
@@ -180,7 +180,7 @@ void PauseMenu::DrawRows()
         else
             gSmallFont->ResetPalette();
         label = GetUiText(rows[i].labelId);
-        x = 0x32 - ((u32)gSmallFont->MeasureText(label) >> 1);
+        x = DISPLAY_ART_X + 0x32 - ((u32)gSmallFont->MeasureText(label) >> 1);
         switch (rows[i].type) {
         case PAUSE_ROW_TYPE_MUSIC:
             x -= (u32)gSmallFont->MeasureText(musicVolumeText) >> 1;

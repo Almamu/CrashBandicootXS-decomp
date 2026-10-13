@@ -2,9 +2,9 @@
 """`tools/magic_numbers.py --screen`: the literals that may come from the
 screen size (#979).
 
-Scans the game code (src/ without src/data/, and include/; comments and
-strings blanked) for the literals a 240x160 screen leaves behind, and
-puts each one under a kind:
+Scans the game code and its data tables (src/, src/data/ included, and
+include/; comments and strings blanked) for the literals a 240x160
+screen leaves behind, and puts each one under a kind:
 
   size      240 / 160 (`0xF0` / `0xA0`): the screen's width and height
   last      239 / 159 (`0xEF` / `0x9F`): its last column and row
@@ -27,6 +27,12 @@ puts each one under a kind:
             coordinate: OBJ X and Y wrap
   oam       128 (`0x80`) on a line that names the OAM: its entry count
   scanline  227 / 228 (`0xE3` / `0xE4`) and 68 on a VCOUNT line
+  layout    a fixed position in a 2D layout (LAYOUTS: a SetPos/Move
+            call, an icon or text box placement, a position table in
+            src/data): an argument that adds a literal to nothing but
+            measured sizes and counters, so it is measured from the
+            screen's (0,0) instead of from an anchor (the art's origin
+            DISPLAY_ART_X/Y, or an edge: DISPLAY_RIGHT/BOTTOM)
 
 and then classifies it with CLASSES, a hand-made table of (category,
 file, line pattern, reason), first match wins:
@@ -40,8 +46,10 @@ file, line pattern, reason), first match wins:
   unclassified no rule yet
 
 A literal that is already a name (`DISPLAY_WIDTH`, `DISPLAY_CENTER_X`,
-`OAM_X(x)`) isn't a literal, so the screen counts go down as sites are
-converted; the other two categories stay.
+`OAM_X(x)`) isn't a literal, and a literal added to a screen.h anchor
+(`DISPLAY_ART_X + 0xa8`, `DISPLAY_RIGHT(28)`) is an offset from it, not
+a candidate, so the screen counts go down as sites are converted; the
+other two categories stay.
 
 Usage:
   tools/magic_numbers.py --screen                  every site: file:line
@@ -119,7 +127,7 @@ CONTEXT = {
     0x2800: ("q8", re.compile(r"\bv[xy]\b")),  # INT_TO_Q8(240) / 6
     0x27FF: ("q8", re.compile(r"\bv[xy]\b")),
 }
-KINDS = ("size", "last", "centre", "q8", "range", "bitmap", "tiles", "mask", "wrap", "oam", "scanline")
+KINDS = ("size", "last", "centre", "q8", "range", "bitmap", "tiles", "mask", "wrap", "oam", "scanline", "layout")
 MASKS = (0x1FF, 0xFF)
 WRAPS = (0x200, 0x100)
 
@@ -128,6 +136,126 @@ LITERAL = re.compile(r"(?<![\w.])(0[xX][0-9a-fA-F]+|\d+)[uUlL]*(?![\w.])")
 COORD = re.compile(
     r"(?<![\w.>])(?:s?[xy]\d?|[xy](?:Lo|Hi|Low|High)|screen[XY]\w*|pos[XY]?|\w*Pos[XY]|left|right|top|bottom)\b"
 )
+
+# A literal just after one of these is an offset from a screen.h anchor
+# (`DISPLAY_ART_Y + 0x87`, `DISPLAY_RIGHT(0x14)`): spelled from the screen.
+ANCHORED = re.compile(r"\bDISPLAY_\w+\s*[-+]\s*$|\bDISPLAY_(?:RIGHT|BOTTOM)\(\s*$")
+
+# The 2D layouts (kind `layout`). On a line of a UI file (UI) with a
+# position call (LAYOUT_CALLS: the call's name and which of its arguments
+# are the x and y, None for all), a local row or column initialized to a
+# literal (LAYOUT_LOCAL) or a sprite's Q8 position set to one
+# (LAYOUT_Q8), and on a `{ x, y }` line of a position table in src/data
+# (LAYOUT_TABLES), each such argument is a position. One that adds a
+# literal to nothing but measured sizes, counters and slide offsets
+# (LAYOUT_FREE: `0x87`, `0xa0 - w`, `item * 10 + 0x80`) is measured from
+# the screen's (0,0): a layout site. One with a DISPLAY_ name or another
+# position in it (`x`, `pos.x`, `gPauseGemIconPos[0].x`, `label1`) is
+# anchored, or relative to something that is.
+UI = re.compile(r"src/(menus|save|frontend|hud|text)/")
+LAYOUT_CALLS = {
+    "SetPos": None,
+    "Move": None,
+    "SetPixelPos": None,
+    "SetEntityPixelPos": (1, 2),
+    "SetAabbPos": (1, 2),
+    "SET_ROW_OBJ_POS": (1, 2),
+    "DRAW_ROW": (1, 2),
+    "DrawSlotStats": (0, 1),
+}
+LAYOUT_CALL = re.compile(r"\b(" + "|".join(LAYOUT_CALLS) + r")\(")
+LAYOUT_LOCAL = re.compile(r"^\s*(?:screen_\w+ |s32 |u32 )?([xy]) = ([^;]*);")
+LAYOUT_Q8 = re.compile(r"(?:->|\.)[xy] = (INT_TO_Q8\(-?(?:0x[0-9a-fA-F]+|\d+)\)|0x[0-9a-fA-F]+00);")
+LAYOUT_TABLES = re.compile(r"src/data/(map_tables_16c498|menu_tables_16b138|hud_fonts_174be0)\.cpp")
+LAYOUT_PAIR = re.compile(r"\{ *(-?\d+), *(-?\d+) *\}")
+# The logo pieces' motions (struct delta_record, frontend.hpp): a hold,
+# then the piece's x and y on the logo art.
+LAYOUT_MOTIONS = re.compile(r"src/data/(countdown_17d7a4|level_gfx_17cff4)\.cpp")
+LAYOUT_MOTION = re.compile(r"^\s*\{ *\d+, *(\d+), *(\d+), ")
+LAYOUT_FREE = {
+    "w",
+    "width",
+    "item",
+    "MeasureText",
+    "GetUiText",
+    "gSmallFont",
+    "gLargeFont",
+    "font",
+    "text",
+    "nameText",
+    "panelSlideX",
+    "INT_TO_Q8",
+    "u32",
+    "s32",
+    "label",
+}
+IDENT = re.compile(r"[A-Za-z_]\w*")
+
+
+def split_args(line, open_paren):
+    """The arguments of the call whose `(` is at `open_paren`: a list of
+    (start, text) up to the matching `)`."""
+    out = []
+    depth = 0
+    start = open_paren + 1
+    for j in range(open_paren, len(line)):
+        c = line[j]
+        if c in "([{":
+            depth += 1
+        elif c in ")]}":
+            depth -= 1
+            if depth == 0:
+                out.append((start, line[start:j]))
+                return out
+        elif c == "," and depth == 1:
+            out.append((start, line[start:j]))
+            start = j + 1
+    out.append((start, line[start:]))
+    return out
+
+
+def layout_literals(start, arg):
+    """The offsets in the line of `arg`'s layout literals: those it adds
+    to nothing but LAYOUT_FREE terms. None when it has an anchor or another
+    position in it."""
+    bare = LITERAL.sub(" ", arg)
+    if any(name not in LAYOUT_FREE for name in IDENT.findall(bare)):
+        return []
+    out = []
+    for m in LITERAL.finditer(arg):
+        before = arg[: m.start()].rstrip()
+        after = arg[m.end() :].lstrip()
+        if before.endswith(("*", "/", "<<", ">>")) or after.startswith(("*", "/", "<<", ">>")):
+            continue
+        out.append(start + m.start())
+    return out
+
+
+def layout_sites(rel, line):
+    """The offsets of `line`'s layout literals (kind `layout`)."""
+    offsets = []
+    if UI.search(rel):
+        for m in LAYOUT_CALL.finditer(line):
+            which = LAYOUT_CALLS[m.group(1)]
+            for k, (start, arg) in enumerate(split_args(line, m.end() - 1)):
+                if which is None or k in which:
+                    offsets += layout_literals(start, arg)
+        m = LAYOUT_LOCAL.match(line)
+        if m:
+            offsets += layout_literals(m.start(2), m.group(2))
+        m = LAYOUT_Q8.search(line)
+        if m:
+            offsets += layout_literals(m.start(1), m.group(1))
+    if LAYOUT_TABLES.search(rel):
+        for m in LAYOUT_PAIR.finditer(line):
+            if m.group(1) != "0" or m.group(2) != "0":  # not an unused { 0, 0 } slot
+                offsets += [m.start(1), m.start(2)]
+    if LAYOUT_MOTIONS.search(rel):
+        m = LAYOUT_MOTION.match(line)
+        if m and (m.group(1) != "0" or m.group(2) != "0"):  # not the { 0, ... } terminator
+            offsets += [m.start(1), m.start(2)]
+    return offsets
+
 
 # The classification: (category, path regex, line regex, reason). The
 # path is relative to the repository root; the line regex is searched in
@@ -160,19 +288,32 @@ CLASSES = [
     ("hardware", r"src/menus/level_select_cursor\.cpp", r"OBJ_VRAM0 \+", "an OBJ VRAM offset"),
     ("hardware", r"src/frontend/starfield\.cpp", r"\| 0xF000", "a BG map entry's palette bank (15)"),
     ("hardware", r"src/iwram/sprite_arm\.cpp", r"0xF0", "a palette nibble"),
+    # --- the data tables (src/data) -----------------------------------
+    (
+        "hardware",
+        r"src/data/(countdown_17d7a4|popup_glyphs_17cf40)\.cpp",
+        r"bg_package|\{ 0x1e, 0x8,",
+        "a picture's own size in tiles (fixed art, like DISPLAY_ART_WIDTH)",
+    ),
+    (
+        "screen",
+        r"src/data/(countdown_17d7a4|level_gfx_17cff4)\.cpp",
+        r"^\s*\{ \d+, \d+, \d+, ",
+        "a logo piece's position on the 240x160 logo art (DISPLAY_ART_X/Y)",
+    ),
+    ("coincidence", r"src/data/actor_tables_16c2d8\.cpp", r".", "a position in the boss arena (Dingodile's stops, Q8)"),
+    ("coincidence", r"src/data/palette_cycle_175760\.cpp", r".", "a colour (BGR555)"),
+    ("coincidence", r"src/data/", r"^\s*(0x[0-9A-F]{4}, ){4}", "a colour (BGR555)"),
+    ("coincidence", r"src/data/anim_family_", r"\{ -?\d+, -?\d+, -?\d+, \d+, \d+, \d+ \}", "a hit box (offset and size)"),
+    ("coincidence", r"src/data/", r"(JETPACK|POLAR)_KIND_", "a 3D course's spawn record (offset, angle, distance)"),
+    ("coincidence", r"src/data/boss_pictures_167ad4\.cpp", r".", "the sine table"),
+    ("coincidence", r"src/data/cell_anim_03b8b0\.cpp", r"tiles\[", "a picture's frame in tiles"),
+    ("coincidence", r"src/data/motion_records_16b304\.cpp", r".", "a motion record's speeds"),
+    ("coincidence", r"src/data/(singleton|weapon)_kind_", r".", "a boss's attack parameters (frames, counts)"),
+    ("coincidence", r"src/data/slot_seeds_17d6c0\.cpp", r".", "a logo piece's first hold (frames)"),
+    ("coincidence", r"src/data/sprite_banks_", r".", "sprite bank data (frame numbers, boxes, palettes)"),
+    ("coincidence", r"src/data/cutscene_slides_16e064\.cpp", r".", "a slide's duration (frames)"),
     # --- screen: derived from the screen size -------------------------
-    (
-        "screen",
-        r"src/save/save_menu_draw\.cpp",
-        r"SET_ROW_OBJ_POS",
-        "a layout position on the 240x160 menu art (DISPLAY_ART_X/Y)",
-    ),
-    (
-        "screen",
-        r"src/save/save_menu_draw\.cpp",
-        r"0xa0 - gSmallFont",
-        "a layout column on the 240x160 menu art (DISPLAY_ART_X/Y)",
-    ),
     ("screen", r"src/level/camera\.cpp", r"INT_TO_Q8\((120|80)\)", "the camera's target at the screen centre"),
     ("screen", r"src/level/camera\.cpp", r"0x2800|0x27FF|0x1AA[A9]", "the camera's look-ahead, a sixth of the screen"),
     ("screen", r"src/level/bg_layer_base\.cpp", r"-= 0x(f0|a0)", "a BG's scroll limit (CAMERA_MAX_X/Y)"),
@@ -250,9 +391,31 @@ CLASSES = [
 ]
 CLASSES = [(c, re.compile(p), re.compile(l), r) for c, p, l, r in CLASSES]
 
+# The layout sites' classification (kind `layout`), the same way. A layout
+# over the 240x160 art (a menu, the title screen) is anchored to the art's
+# origin, DISPLAY_ART_X/Y; one over the game's view (the HUD) to the
+# screen's edges, DISPLAY_RIGHT/BOTTOM, or its centre (docs/screen.md,
+# "Layouts").
+LAYOUT_CLASSES = [
+    (
+        "screen",
+        r"src/hud/|src/data/hud_fonts_174be0\.cpp",
+        r".",
+        "a HUD position: anchor to the screen's edges or centre (DISPLAY_RIGHT/BOTTOM, DISPLAY_CENTER_X)",
+    ),
+    (
+        "screen",
+        r"src/data/(countdown_17d7a4|level_gfx_17cff4)\.cpp",
+        r".",
+        "a logo piece's position on the 240x160 logo art (DISPLAY_ART_X/Y)",
+    ),
+    ("screen", r".", r".", "a layout on the 240x160 art: anchor to DISPLAY_ART_X/Y"),
+]
+LAYOUT_CLASSES = [(c, re.compile(p), re.compile(l), r) for c, p, l, r in LAYOUT_CLASSES]
 
-def classify(rel, source):
-    for cat, path_re, line_re, reason in CLASSES:
+
+def classify(rel, source, kind=None):
+    for cat, path_re, line_re, reason in LAYOUT_CLASSES if kind == "layout" else CLASSES:
         if path_re.search(rel) and line_re.search(source):
             return cat, reason
     return "unclassified", ""
@@ -296,6 +459,8 @@ def operand_after(line, i):
 
 def candidate(value, line, start, end):
     """The kind of the literal at line[start:end], or None."""
+    if ANCHORED.search(line[:start]):
+        return None
     if value in VALUES:
         return VALUES[value]
     if value in CONTEXT:
@@ -339,14 +504,15 @@ def scan_file(path, rel):
         stripped = line.lstrip()
         guard = stripped.startswith("#") and re.match(r"#\s*(include|ifn?def|endif|pragma)\b", stripped)
         if not guard:
+            layout = set(layout_sites(rel, line))
             for m in LITERAL.finditer(line):
                 value = mn.parse_value(m.group(0))
-                kind = candidate(value, line, m.start(), m.end())
+                kind = "layout" if m.start() in layout else candidate(value, line, m.start(), m.end())
                 if kind is None:
                     continue
                 if sc is None:
                     sc = mn.scopes(text)
-                cat, reason = classify(rel, line)
+                cat, reason = classify(rel, line, kind)
                 out.append(
                     Site(
                         rel,
@@ -366,10 +532,7 @@ def scan_file(path, rel):
 
 def source_files():
     for path in mn.source_files():
-        rel = os.path.relpath(path, ROOT)
-        if rel.startswith(os.path.join("src", "data") + os.sep):
-            continue
-        yield path, rel
+        yield path, os.path.relpath(path, ROOT)
 
 
 def scan(paths=None):

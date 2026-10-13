@@ -12,21 +12,32 @@ extern "C" {
 /* `struct vec2` (aabb.h) positions and animation ids of the level-select
  * screens: level_select.cpp (InitLevelSelect, DrawLevelSelectTime, LoadLevelSelectRecord,
  * InitLaunchPad, now launch_pad.cpp) and level_select_pages.cpp (its level menu's item positions
- * and skins, RefreshLevelSelectPage). */
-const struct vec2 gLevelSelectWorldPos = { 16, 32 };
-const struct vec2 gLevelSelectCrashIconPos = { 16, 60 };
-const struct vec2 gLevelSelectCrystalPos = { 40, 33 };
-const struct vec2 gLevelSelectGemPos = { 50, 32 };
-const struct vec2 gLevelSelectTrialIconPos = { 66, 34 };
-const struct vec2 gLevelSelectTimePos = { 166, 34 };
-const struct vec2 gLevelSelectNextWorldArrowPos = { 201, 70 };
-const struct vec2 gLevelSelectPrevWorldArrowPos = { 201, 87 };
+ * and skins, RefreshLevelSelectPage). The positions are on the 240x160
+ * menu art, from its origin DISPLAY_ART_X/Y (screen.h, docs/screen.md). */
+const struct vec2 gLevelSelectWorldPos = { DISPLAY_ART_X + 16, DISPLAY_ART_Y + 32 };
+const struct vec2 gLevelSelectCrashIconPos = { DISPLAY_ART_X + 16, DISPLAY_ART_Y + 60 };
+const struct vec2 gLevelSelectCrystalPos = { DISPLAY_ART_X + 40, DISPLAY_ART_Y + 33 };
+const struct vec2 gLevelSelectGemPos = { DISPLAY_ART_X + 50, DISPLAY_ART_Y + 32 };
+const struct vec2 gLevelSelectTrialIconPos = { DISPLAY_ART_X + 66, DISPLAY_ART_Y + 34 };
+const struct vec2 gLevelSelectTimePos = { DISPLAY_ART_X + 166, DISPLAY_ART_Y + 34 };
+const struct vec2 gLevelSelectNextWorldArrowPos = { DISPLAY_ART_X + 201, DISPLAY_ART_Y + 70 };
+const struct vec2 gLevelSelectPrevWorldArrowPos = { DISPLAY_ART_X + 201, DISPLAY_ART_Y + 87 };
 
 const struct vec2 gLevelSelectEntryPositions[6] = {
-    { 30, 120 }, { 70, 132 }, { 120, 136 }, { 170, 132 }, { 210, 120 }, { 0, 0 },
+    { DISPLAY_ART_X + 30, DISPLAY_ART_Y + 120 },
+    { DISPLAY_ART_X + 70, DISPLAY_ART_Y + 132 },
+    { DISPLAY_ART_X + 120, DISPLAY_ART_Y + 136 },
+    { DISPLAY_ART_X + 170, DISPLAY_ART_Y + 132 },
+    { DISPLAY_ART_X + 210, DISPLAY_ART_Y + 120 },
+    { 0, 0 }, /* the sixth entry, hidden until the five levels are cleared */
 };
 const struct vec2 gLevelSelectEntryPositionsAllCleared[6] = {
-    { 26, 118 }, { 58, 130 }, { 99, 136 }, { 141, 136 }, { 182, 130 }, { 214, 118 },
+    { DISPLAY_ART_X + 26, DISPLAY_ART_Y + 118 },
+    { DISPLAY_ART_X + 58, DISPLAY_ART_Y + 130 },
+    { DISPLAY_ART_X + 99, DISPLAY_ART_Y + 136 },
+    { DISPLAY_ART_X + 141, DISPLAY_ART_Y + 136 },
+    { DISPLAY_ART_X + 182, DISPLAY_ART_Y + 130 },
+    { DISPLAY_ART_X + 214, DISPLAY_ART_Y + 118 },
 };
 const u32 gLevelSelectWorldEntryBoxAnims[4] = {
     0,

@@ -90,13 +90,13 @@ void SaveMenu::DrawMessageLines(const u8 *label1, const u8 *label2)
     if (label1) {
         w = gSmallFont->MeasureText(label1);
         x = (DISPLAY_WIDTH - w) >> 1;
-        gSmallFont->SetPos(x, 0x87);
+        gSmallFont->SetPos(x, DISPLAY_ART_Y + 0x87);
         gSmallFont->DrawText(label1);
     }
     if (label2) {
         w = gSmallFont->MeasureText(label2);
         x = (DISPLAY_WIDTH - w) >> 1;
-        gSmallFont->SetPos(x, 0x91);
+        gSmallFont->SetPos(x, DISPLAY_ART_Y + 0x91);
         gSmallFont->DrawText(label2);
     }
 }
@@ -112,7 +112,8 @@ void SaveMenu::DrawCancel(u8 highlight)
         gSmallFont->SetPalette(IsBlinkOn() ? 1 : 2);
     else
         gSmallFont->SetPalette(0);
-    gSmallFont->SetPos((DISPLAY_WIDTH - gSmallFont->MeasureText(GetUiText(0x23))) >> 1, 0x87);
+    gSmallFont->SetPos((DISPLAY_WIDTH - gSmallFont->MeasureText(GetUiText(0x23))) >> 1,
+                       DISPLAY_ART_Y + 0x87);
     gSmallFont->DrawText(GetUiText(0x23));
 }
 
@@ -125,34 +126,35 @@ void SaveMenu::DrawCancel(u8 highlight)
  * never used).
  *
  * Once a NAKED transcription. The ROM keeps the record offset 0x130 in
- * r8 and the Y constant 0x87 in sb; with the 0x87 written as a literal
- * at each SetPos, as here, gcc shares it the ROM's way (the C kept it in
- * a `y` pinned to r9; #662 round 2). */
+ * r8 and the Y constant 0x87 in sb; with the 0x87 written as a constant
+ * (`DISPLAY_ART_Y + 0x87`) at each SetPos, as here, gcc shares it the
+ * ROM's way (the C kept it in a `y` pinned to r9; #662 round 2). */
 void SaveMenu::DrawYesNoPrompt(s32 value)
 {
     gSmallFont->SetPalette(0);
-    gSmallFont->SetPos(0xa0 - gSmallFont->MeasureText(GetUiText(value)), 0x87);
+    gSmallFont->SetPos(DISPLAY_ART_X + 0xa0 - gSmallFont->MeasureText(GetUiText(value)),
+                       DISPLAY_ART_Y + 0x87);
     gSmallFont->DrawText(GetUiText(value));
     /* spelled out: IsBlinkOn() here swaps r8 and sb in the rest of the
      * function (#843) */
     gSmallFont->SetPalette(((flags >> SAVE_MENU_BLINK_BIT) & 1) ? 1 : 2);
     if (!cursor) {
-        gSmallFont->SetPos(0xa8, 0x87);
+        gSmallFont->SetPos(DISPLAY_ART_X + 0xa8, DISPLAY_ART_Y + 0x87);
         gSmallFont->DrawText(gMenuCursorText);
-        gSmallFont->SetPos(0xb0, 0x87);
+        gSmallFont->SetPos(DISPLAY_ART_X + 0xb0, DISPLAY_ART_Y + 0x87);
         gSmallFont->DrawText(GetUiText(0x29));
     } else {
-        gSmallFont->SetPos(0xa8, 0x91);
+        gSmallFont->SetPos(DISPLAY_ART_X + 0xa8, DISPLAY_ART_Y + 0x91);
         gSmallFont->DrawText(gMenuCursorText);
-        gSmallFont->SetPos(0xb0, 0x91);
+        gSmallFont->SetPos(DISPLAY_ART_X + 0xb0, DISPLAY_ART_Y + 0x91);
         gSmallFont->DrawText(GetUiText(0x2a));
     }
     gSmallFont->SetPalette(0);
     if (!cursor) {
-        gSmallFont->SetPos(0xb0, 0x91);
+        gSmallFont->SetPos(DISPLAY_ART_X + 0xb0, DISPLAY_ART_Y + 0x91);
         gSmallFont->DrawText(GetUiText(0x2a));
     } else {
-        gSmallFont->SetPos(0xb0, 0x87);
+        gSmallFont->SetPos(DISPLAY_ART_X + 0xb0, DISPLAY_ART_Y + 0x87);
         gSmallFont->DrawText(GetUiText(0x29));
     }
 }
@@ -298,10 +300,10 @@ static inline void draw_row_mark(SaveMenu *self, s32 x, s32 y, u8 highlight)
  * (below), `draw_row_mark` above. */
 void SaveMenu::DrawSlots(SaveData *handle, s32 selectedIndex)
 {
-    DRAW_ROW(0, 0x26, 0x21);
-    DRAW_ROW(1, 0x26, 0x53);
-    DRAW_ROW(2, 0x86, 0x21);
-    DRAW_ROW(3, 0x86, 0x53);
+    DRAW_ROW(0, DISPLAY_ART_X + 0x26, DISPLAY_ART_Y + 0x21);
+    DRAW_ROW(1, DISPLAY_ART_X + 0x26, DISPLAY_ART_Y + 0x53);
+    DRAW_ROW(2, DISPLAY_ART_X + 0x86, DISPLAY_ART_Y + 0x21);
+    DRAW_ROW(3, DISPLAY_ART_X + 0x86, DISPLAY_ART_Y + 0x53);
 }
 
 /* Reserves a font's tiles in OBJ VRAM (as power_dialog.cpp's). */
@@ -415,11 +417,11 @@ void SaveMenu::InitIcons()
         new_row_icon(&b[i], 33, 2);
         new_row_icon(&c[i], 37, 0);
     }
-    SET_ROW_OBJ_POS(rowObjA[0], 0x14, 0x28);
-    SET_ROW_OBJ_POS(rowObjB[0], 0x14, 0x50);
-    SET_ROW_OBJ_POS(rowObjB[1], 0x14, 0x3c);
-    SET_ROW_OBJ_POS(rowObjB[2], 0x14, 0x4b);
-    SET_ROW_OBJ_POS(rowObjC[0], 0x78, 0x50);
+    SET_ROW_OBJ_POS(rowObjA[0], DISPLAY_ART_X + 0x14, DISPLAY_ART_Y + 0x28);
+    SET_ROW_OBJ_POS(rowObjB[0], DISPLAY_ART_X + 0x14, DISPLAY_ART_Y + 0x50);
+    SET_ROW_OBJ_POS(rowObjB[1], DISPLAY_ART_X + 0x14, DISPLAY_ART_Y + 0x3c);
+    SET_ROW_OBJ_POS(rowObjB[2], DISPLAY_ART_X + 0x14, DISPLAY_ART_Y + 0x4b);
+    SET_ROW_OBJ_POS(rowObjC[0], DISPLAY_ART_X + 0x78, DISPLAY_ART_Y + 0x50);
 }
 
 /* SaveMenu's setup helpers and draw routines (save_menu_ui.cpp until
@@ -525,7 +527,8 @@ void SaveMenu::DrawEmptySlotLabel(s32 x, s32 y, u8 highlight)
 void SaveMenu::DrawTitle(s32 labelIndex)
 {
     gLargeFont->SetPalette(0);
-    gLargeFont->SetPos((DISPLAY_WIDTH - gLargeFont->MeasureText(GetUiText(labelIndex))) >> 1, 6);
+    gLargeFont->SetPos((DISPLAY_WIDTH - gLargeFont->MeasureText(GetUiText(labelIndex))) >> 1,
+                       DISPLAY_ART_Y + 6);
     gLargeFont->DrawText(GetUiText(labelIndex));
 }
 

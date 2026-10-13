@@ -45,6 +45,33 @@ another shape (`x < DISPLAY_WIDTH` for `x <= 239`) or move a constant to
 another operand. Each conversion is checked like any other change: a full
 clean `make compare`, and `make NON_MATCHING=1 report` at 100%.
 
+## Layouts
+
+A position in a 2D layout (a menu's text row, an icon, a HUD counter)
+is measured from an anchor, never from the screen's (0,0):
+
+- **Over the 240x160 art** (every menu, the title screen, the logos):
+  from the art's origin, `DISPLAY_ART_X + x`, `DISPLAY_ART_Y + y`. The
+  art is centred on a bigger screen, and the layout moves with it.
+  `x` and `y` are the ROM's numbers, measured on the art.
+- **Over the game's view** (the HUD): from the screen's edges or its
+  centre, `DISPLAY_RIGHT(w)`, `DISPLAY_BOTTOM(h)`, `DISPLAY_CENTER_X`.
+  A bigger screen shows more of the level, and the HUD stays in its
+  corners.
+- **Centred text** keeps `(DISPLAY_WIDTH - w) >> 1`: the art's centre is
+  the screen's.
+- **Relative positions** (`gPauseGemIconPos[0].x - 0x14`, `label1 + 0x2b`,
+  `-panelSlideX + ...`) take their anchor from the position they are
+  measured from, and stay as they are.
+
+The position tables in src/data (`gLevelSelect*Pos`, `gPause*IconPos`,
+`gHudPartPositions`, the logo pieces' motions) are anchored the same
+way, in their initializers. On the GBA every anchor is 0 or folds into
+the ROM's constant (`DISPLAY_ART_Y + 0x87` is 0x87), so the code and the
+data are unchanged. Keep the ROM's operation order: `item * 10 + 0x80`
+becomes `item * 10 + (DISPLAY_ART_Y + 0x80)`, `0xa0 - w` becomes
+`DISPLAY_ART_X + 0xa0 - w`.
+
 ## The types
 
 A value that holds a screen position, a screen-space offset or a size
@@ -71,9 +98,10 @@ instructions and register allocation (#855).
 
 ## The inventory: `tools/magic_numbers.py --screen`
 
-`tools/magic_screen.py` scans the game code (src/ without src/data/, and
-include/; comments and strings blanked) for the literals a 240x160 screen
-leaves behind and classifies each one with a hand-made table (`CLASSES`):
+`tools/magic_screen.py` scans the game code and its data tables (src/,
+src/data/ included, and include/; comments and strings blanked) for the
+literals a 240x160 screen leaves behind and classifies each one with a
+hand-made table (`CLASSES`, and `LAYOUT_CLASSES` for the layouts):
 
 - **screen**: derived from the screen size. Convert it.
 - **hardware**: fixed by the GBA: a register's field width, the 32x32 BG
@@ -98,15 +126,23 @@ camera's look-ahead), the 440x280 activation window (`range`), 240x160
 frames in bytes (`bitmap`), the screen in tiles next to a tile, row or
 column (`tiles`), `& 0x1FF`/`& 0xFF` on a coordinate (`mask`), 512/256
 added to or compared with a coordinate (`wrap`), 128 next to the OAM
-(`oam`) and VCOUNT scanline counts (`scanline`). A converted site isn't a
-literal any more, so the screen count goes down as subsystems are
-converted; the hardware and coincidence sites stay listed with their
-reason.
+(`oam`) and VCOUNT scanline counts (`scanline`). The `layout` kind is the
+layouts' fixed positions (see "Layouts" above): in the UI code
+(src/menus, src/save, src/frontend, src/hud, src/text), an argument of a
+position call (`SetPos`, `Move`, `SetPixelPos`, `SetEntityPixelPos`,
+`SetAabbPos`, the save menu's `SET_ROW_OBJ_POS`/`DRAW_ROW`/`DrawSlotStats`),
+a local `x`/`y` or a sprite's Q8 position that adds a literal to nothing
+but measured sizes and counters; in src/data, the `{ x, y }` entries of
+the position tables and the logo pieces' motions. A converted site isn't a
+literal any more, and a literal added to a screen.h anchor
+(`DISPLAY_ART_Y + 0x87`, `DISPLAY_RIGHT(0x14)`) is an offset from it, so
+the screen count goes down as subsystems are converted; the hardware and
+coincidence sites stay listed with their reason.
 
 Not every screen-dependent value is one of these literals: a value can
-be a sum (the activation window's 100x60 margin), a count (the crate
-grid's `lo + 2` columns) or a layout position on the 240x160 menu art.
-The table lists the ones found by hand; the list below has the rest.
+be a sum (the activation window's 100x60 margin) or a count (the crate
+grid's columns). The table lists the ones found by hand; the list below
+has the rest.
 
 ## Other screen-dependent things
 
@@ -137,11 +173,12 @@ The table lists the ones found by hand; the list below has the rest.
 5. **Fixed-size art.** Full-screen pictures (the cutscenes, the title
    screen, the menus' backgrounds) are 240x160 whatever the screen is;
    `DISPLAY_ART_X/Y` is their origin, and layouts drawn over them are
-   relative to it.
+   relative to it (see "Layouts").
 6. **Sprite count.** `OAM_ENTRY_COUNT` (128, more under `EXTENDED_OAM`)
    sizes the OAM shadow buffer.
 7. **A compile check.** `make screen-check` compiles every game object
-   (src/, not the src/data/ tables) with another screen size,
+   (src/, and the src/data/ tables that spell a `DISPLAY_` name: the
+   layouts' position tables) with another screen size,
    `SCREEN_CHECK_WIDTH` x `SCREEN_CHECK_HEIGHT` (PORTABLE's 426x240 by
    default; `make screen-check SCREEN_CHECK_WIDTH=256
    SCREEN_CHECK_HEIGHT=192` for another), into build/screen-check, with
