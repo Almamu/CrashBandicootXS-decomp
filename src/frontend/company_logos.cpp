@@ -1,3 +1,4 @@
+#include "obj_tile_allocator.hpp"
 #include "sprite_obj.hpp"
 #include "frontend.hpp"
 #include "audio.hpp"
@@ -53,7 +54,7 @@ void CompanyLogos::Run()
     s32 i;
     s32 scale;
 
-    InitObjTileFreeList(OBJ_VRAM0);
+    ObjTileAllocator::Init(OBJ_VRAM0);
     InitSpriteFrameOamQueue();
     InitSpriteFrameCache();
     part = new LogoActor(&gLogoActorAnim);
@@ -172,7 +173,7 @@ void CompanyLogos::Run()
     delete[] frames;
     FreeSpriteFrameCache();
     FreeSpriteFrameOamQueue();
-    FreeObjTileFreeList();
+    ObjTileAllocator::Destroy();
     FreeCategorySpriteSheet();
 }
 
@@ -184,9 +185,9 @@ void CompanyLogos::Run()
  * allocation (the ROM's order). */
 void CompanyLogos::LoadVvLogoGraphics()
 {
-    tilesA = (u32)AllocVramTileBlock(0x1200);
-    tilesB = (u32)AllocVramTileBlock(0x400);
-    tilesC = (u32)AllocVramTileBlock(0x1000);
+    tilesA = (u32)ObjTileAllocator::Alloc(0x1200);
+    tilesB = (u32)ObjTileAllocator::Alloc(0x400);
+    tilesC = (u32)ObjTileAllocator::Alloc(0x1000);
     LoadAssetBuffered(gVvLogoEmblemObj.paletteAsset, OBJ_PALETTE(15));
     LoadAssetBuffered(gVvLogoLettersObj.paletteAsset, OBJ_PALETTE(14));
     LoadAssetBuffered(gVvLogoUrlObj.paletteAsset, OBJ_PALETTE(13));
@@ -561,9 +562,9 @@ LogoActor::LogoActor(const struct anim_table_record *anim) : ActorSelf(anim, 0, 
     u8 *frame;
 
     frame = CurFrame();
-    gLogoActorTiles[0] = AllocVramTileBlock(frame[1] * frame[0] * 32);
+    gLogoActorTiles[0] = ObjTileAllocator::Alloc(frame[1] * frame[0] * 32);
     frame = CurFrame();
-    gLogoActorTiles[1] = AllocVramTileBlock(frame[1] * frame[0] * 32);
+    gLogoActorTiles[1] = ObjTileAllocator::Alloc(frame[1] * frame[0] * 32);
     gLogoActorTileBuffer = 1;
     gLogoActorLastFrame = 0;
 }

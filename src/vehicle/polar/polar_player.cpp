@@ -1,3 +1,4 @@
+#include "obj_tile_allocator.hpp"
 #include "vehicle.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
@@ -218,9 +219,9 @@ void PolarPlayer::AllocTiles()
     u8 *f;
 
     f = CurFrame();
-    gPolarPlayerTiles[0] = AllocVramTileBlock(f[1] * f[0] * 32);
+    gPolarPlayerTiles[0] = ObjTileAllocator::Alloc(f[1] * f[0] * 32);
     f = CurFrame();
-    gPolarPlayerTiles[1] = AllocVramTileBlock(f[1] * f[0] * 32);
+    gPolarPlayerTiles[1] = ObjTileAllocator::Alloc(f[1] * f[0] * 32);
     gPolarPlayerTileBuffer = 1;
     gPolarPlayerLastFrame = 0;
 }

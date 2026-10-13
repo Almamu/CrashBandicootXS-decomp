@@ -1,3 +1,4 @@
+#include "obj_tile_allocator.hpp"
 #include "sprite_obj.hpp"
 #include "frontend.hpp"
 #include "audio.hpp"
@@ -51,6 +52,6 @@ CompanyLogos::~CompanyLogos()
  * delete (mem_free). */
 LogoActor::~LogoActor()
 {
-    FreeVramTileBlock(gLogoActorTiles[0]);
-    FreeVramTileBlock(gLogoActorTiles[1]);
+    ObjTileAllocator::Free(gLogoActorTiles[0]);
+    ObjTileAllocator::Free(gLogoActorTiles[1]);
 }

@@ -1,3 +1,4 @@
+#include "obj_tile_allocator.hpp"
 #include "sprite_obj.hpp"
 
 extern "C" {
@@ -11,11 +12,11 @@ extern "C" {
 
 /* A meta-node for a doubly-linked, address-ordered free-block list that
  * tracks allocations inside the OBJ tile VRAM pool (OBJ_VRAM0,
- * OBJ_VRAM0_SIZE bytes) InitObjTileFreeList sets up. Metadata lives in
+ * OBJ_VRAM0_SIZE bytes) Init sets up. Metadata lives in
  * a separate fixed pool of these structs (never embedded in VRAM
  * itself, since VRAM holds real tile pixel data), looked up via a
- * byte-per-tile index table (`gVramTileBlockIndex`) - see
- * InitObjTileFreeList/AllocVramTileBlock/FreeVramTileBlock below.
+ * byte-per-tile index table (`index`) - see
+ * Init/Alloc/Free below.
  * `status` mirrors `struct mem_block`'s same-shaped field (0 = free),
  * but this allocator's own "in use" value (2) doesn't match
  * MEMORY_STATUS_USED (1) from memory.h, so it gets its own constant
@@ -31,10 +32,10 @@ struct vram_tile_block {
 #define VRAM_TILE_BLOCK_FREE 0
 #define VRAM_TILE_BLOCK_USED 2
 
-/* 128 preallocated `vram_tile_block` records; InitObjTileFreeList seeds
- * `gVramTileBlockSpares` with a singly-linked (via `next`) LIFO stack of
+/* 128 preallocated `vram_tile_block` records; Init seeds
+ * `spares` with a singly-linked (via `next`) LIFO stack of
  * 127 of them (indices 0-126) as "spare" records available whenever
- * AllocVramTileBlock/FreeVramTileBlock need to split or merge a block,
+ * Alloc/Free need to split or merge a block,
  * and uses the 128th (index 127) as the pool's initial single free
  * block, spanning the whole range. */
 #define VRAM_TILE_BLOCK_POOL_COUNT 128
@@ -47,24 +48,24 @@ struct vram_tile_block {
  * see the struct's own comment above). `base` is always OBJ_VRAM0 at
  * this ROM's one real call site, but the free-block list's own address
  * bookkeeping is relative to whatever's passed in. */
-void InitObjTileFreeList(void *base)
+void ObjTileAllocator::Init(void *base)
 {
     struct vram_tile_block *node;
     u8 **lookupSlot;
     s32 len;
     s32 i;
 
-    gVramTileBlockPool = (struct vram_tile_block *)mem_alloc(
+    pool = (struct vram_tile_block *)mem_alloc(
         sizeof(struct vram_tile_block) * VRAM_TILE_BLOCK_POOL_COUNT, MEM_HEAP_EWRAM);
-    lookupSlot = &gVramTileBlockIndex;
+    lookupSlot = &index;
     *lookupSlot = (u8 *)mem_alloc(TOTAL_OBJ_TILE_COUNT, MEM_HEAP_EWRAM);
 
     len = (s32)((u8 *)OBJ_VRAM0 + OBJ_VRAM0_SIZE - (u8 *)base);
 
     DmaFill16(3, 0, base, len);
 
-    gVramTileBlockSpares = gVramTileBlockPool;
-    node = gVramTileBlockPool;
+    spares = pool;
+    node = pool;
     i = VRAM_TILE_BLOCK_POOL_COUNT - 3;
     do {
         struct vram_tile_block *next = node + 1;
@@ -74,28 +75,28 @@ void InitObjTileFreeList(void *base)
     node->next = 0;
     node++;
 
-    gVramTileBlockList.next = node;
-    gVramTileBlockList.prev = node;
-    gVramTileBlockList.status = 1;
-    gVramTileBlockList.size = 0;
-    gVramTileBlockList.addr = (u8 *)OBJ_VRAM0 + OBJ_VRAM0_SIZE;
+    list.next = node;
+    list.prev = node;
+    list.status = 1;
+    list.size = 0;
+    list.addr = (u8 *)OBJ_VRAM0 + OBJ_VRAM0_SIZE;
 
     node->status = VRAM_TILE_BLOCK_FREE;
-    node->prev = &gVramTileBlockList;
-    node->next = &gVramTileBlockList;
+    node->prev = &list;
+    node->next = &list;
     node->size = (u16)len;
     node->addr = base;
-    gVramTileBlockRover = node;
+    rover = node;
 }
 
 /* ROM 0x08028C48 - frees a block previously returned by
- * AllocVramTileBlock, coalescing with its address-order neighbors when
+ * Alloc, coalescing with its address-order neighbors when
  * they're also free (the same two-sided merge `mem_free` in
  * src/system/memory.cpp does, but against this allocator's own external
  * node pool instead of an embedded-in-buffer header - see the struct's
  * comment above). Reclaimed node records go back onto the
- * `gVramTileBlockSpares` spare stack. */
-void FreeVramTileBlock(void *addr)
+ * `spares` spare stack. */
+void ObjTileAllocator::Free(void *addr)
 {
     struct vram_tile_block *node;
     struct vram_tile_block *adj;
@@ -108,7 +109,7 @@ void FreeVramTileBlock(void *addr)
     }
 
     tile = GET_TILE_NUM(addr);
-    node = &gVramTileBlockPool[gVramTileBlockIndex[tile]];
+    node = &pool[index[tile]];
     node->status = VRAM_TILE_BLOCK_FREE;
 
     adj = node->prev;
@@ -117,11 +118,11 @@ void FreeVramTileBlock(void *addr)
         next = node->next;
         adj->next = next;
         next->prev = adj;
-        if (node == gVramTileBlockRover) {
-            gVramTileBlockRover = adj;
+        if (node == rover) {
+            rover = adj;
         }
-        node->next = gVramTileBlockSpares;
-        gVramTileBlockSpares = node;
+        node->next = spares;
+        spares = node;
         node = adj;
     }
 
@@ -131,16 +132,16 @@ void FreeVramTileBlock(void *addr)
         next = adj->next;
         node->next = next;
         next->prev = node;
-        if (adj == gVramTileBlockRover) {
-            gVramTileBlockRover = node;
+        if (adj == rover) {
+            rover = node;
         }
-        adj->next = gVramTileBlockSpares;
-        gVramTileBlockSpares = adj;
+        adj->next = spares;
+        spares = adj;
     }
 }
 
 /* ROM 0x08028CD4 - next-fit search (starting from and updating the
- * `gVramTileBlockRover` rover, the same strategy `mem_alloc` uses over
+ * `rover`, the same strategy `mem_alloc` uses over
  * its own free list) for a free block at least `size` bytes,
  * splitting the remainder off into a spare record when there's enough
  * left over to bother (unlike `mem_alloc`'s in-place split, this one
@@ -148,24 +149,24 @@ void FreeVramTileBlock(void *addr)
  * spare stack is empty, the allocation fails even though a big enough
  * block exists, rather than allocate without being able to track the
  * leftover). Records the winning block's own pool-record index into
- * the `gVramTileBlockIndex` tile lookup table so FreeVramTileBlock can
+ * the `index` tile lookup table so Free can
  * find it again from a bare VRAM address.
  *
  * Was one `asm volatile` island (#662). Under old_agbcc the plain loop
- * matches, with `rover` as its own local: the ROM's copy of the search
+ * matches, with the rover in its own local (`start`): the ROM's copy of the search
  * test before the loop uses other registers than the one at its bottom,
  * so cross-jumping doesn't merge them. */
-void *AllocVramTileBlock(s32 size)
+void *ObjTileAllocator::Alloc(s32 size)
 {
     struct vram_tile_block *cur;
     /* `last` is needed: inlined, the code is 2 instructions shorter */
     struct vram_tile_block *last;
-    struct vram_tile_block *rover;
+    struct vram_tile_block *start;
     s32 rest;
 
-    rover = gVramTileBlockRover;
-    last = rover->prev;
-    cur = rover;
+    start = rover;
+    last = start->prev;
+    cur = start;
     while (cur->status != VRAM_TILE_BLOCK_FREE || cur->size < size) {
         if (cur == last) {
             return 0;
@@ -175,13 +176,13 @@ void *AllocVramTileBlock(s32 size)
 
     rest = cur->size - size;
     if (rest != 0) {
-        struct vram_tile_block *spare = gVramTileBlockSpares;
+        struct vram_tile_block *spare = spares;
         struct vram_tile_block *next;
 
         if (spare == 0) {
             return 0;
         }
-        gVramTileBlockSpares = spare->next;
+        spares = spare->next;
         spare->size = rest;
         spare->addr = (u8 *)cur->addr + size;
         spare->status = VRAM_TILE_BLOCK_FREE;
@@ -194,44 +195,44 @@ void *AllocVramTileBlock(s32 size)
     }
 
     cur->status = VRAM_TILE_BLOCK_USED;
-    gVramTileBlockRover = cur->next;
-    gVramTileBlockIndex[GET_TILE_NUM(cur->addr)] = cur - gVramTileBlockPool;
+    rover = cur->next;
+    index[GET_TILE_NUM(cur->addr)] = cur - pool;
     return cur->addr;
 }
 
 /* UNUSED - ROM 0x08028D6C, no caller anywhere in the ROM (checked
  * every asm file, expected disassembly and src tree for this address
  * and for a `bl`/`.4byte` reference to it). Walks the
- * `gVramTileBlockSpares` spare-node stack to its end, then the
- * `gVramTileBlockList` free-block list all the way around, discarding
+ * `spares` spare-node stack to its end, then the
+ * `list` free-block list all the way around, discarding
  * both results - the same "list-walk with the result never stored"
  * optimizer-leftover shape already documented for `mem_walk_heaps` in
  * src/system/memory.cpp (see that function's comment). */
-void WalkVramTileBlocks(void)
+void ObjTileAllocator::Walk()
 {
     struct vram_tile_block *p;
     struct vram_tile_block *q;
 
-    for (p = gVramTileBlockSpares; p != 0; p = p->next) {
+    for (p = spares; p != 0; p = p->next) {
     }
 
-    for (q = gVramTileBlockList.next; q != &gVramTileBlockList; q = q->next) {
+    for (q = list.next; q != &list; q = q->next) {
     }
 }
 
 /* ROM 0x08028D94 - the original disassembly never gave this address its
- * own function label; it's a separate function from `WalkVramTileBlocks`
+ * own function label; it's a separate function from `Walk`
  * above (see `expected/corrections.txt`'s `split` entry), also with no
  * caller anywhere in the ROM. Sums the `size` of every FREE block
- * currently in the `gVramTileBlockList` list - a "how many free VRAM
+ * currently in the `list` list - a "how many free VRAM
  * tile bytes are left" query the rest of this cluster never calls. */
-s32 GetFreeVramTileBytes(void)
+s32 ObjTileAllocator::GetFreeBytes()
 {
     struct vram_tile_block *node;
     s32 total;
 
     total = 0;
-    for (node = gVramTileBlockList.next; node != &gVramTileBlockList; node = node->next) {
+    for (node = list.next; node != &list; node = node->next) {
         if (node->status == VRAM_TILE_BLOCK_FREE) {
             total += node->size;
         }
@@ -239,12 +240,12 @@ s32 GetFreeVramTileBytes(void)
     return total;
 }
 
-/* ROM 0x08028DB8 - `InitObjTileFreeList`'s destructor: frees the two
+/* ROM 0x08028DB8 - `Init`'s destructor: frees the two
  * EWRAM buffers it allocated. */
-void FreeObjTileFreeList(void)
+void ObjTileAllocator::Destroy()
 {
-    mem_free(gVramTileBlockIndex);
-    mem_free(gVramTileBlockPool);
+    mem_free(index);
+    mem_free(pool);
 }
 
 /* One queued OAM entry the overflow arrays below buffer up during a
@@ -337,7 +338,7 @@ void FlushSpriteFrameOamQueue(void)
 /* ROM 0x08028EF0 - allocates the two overflow buffers above and DMA3-
  * fills the whole real hardware OAM with `0x0200` (ATTR0's "disable"
  * bit with every other field zeroed) - the same "DMA a single fixed
- * halfword across a whole region" trick `InitObjTileFreeList` uses,
+ * halfword across a whole region" trick `Init` uses,
  * here hiding every hardware sprite as this system's startup state. */
 void InitSpriteFrameOamQueue(void)
 {
@@ -351,7 +352,7 @@ void InitSpriteFrameOamQueue(void)
 
 /* A doubly-linked frame-cache entry: `frame` is the source animation-
  * frame record (see docs/graphics.md's `table_B` description) currently
- * resident in VRAM, and `vramAddr` is the `AllocVramTileBlock` result
+ * resident in VRAM, and `vramAddr` is the `ObjTileAllocator::Alloc` result
  * its pixel data was DMA'd into. Nodes live in a fixed pool
  * (`gSpriteFrameCacheSpares`, seeded by InitSpriteFrameCache) and move
  * between two ring lists as they age: `gSpriteFrameCacheCurrent` (this
@@ -367,7 +368,7 @@ void InitSpriteFrameOamQueue(void)
  * convention - see lib/libgcc/lib1funcs.s); if that returns
  * anything other than -1, that's used directly. Otherwise inserts a
  * fresh cache node at the head of the "this frame" MRU list
- * (`gSpriteFrameCacheCurrent`) and tries to `AllocVramTileBlock` the frame's
+ * (`gSpriteFrameCacheCurrent`) and tries to `ObjTileAllocator::Alloc` the frame's
  * `w*h*32`-byte payload, evicting the least-recently-used entry from
  * the "last frame" list (`gSpriteFrameCachePrevious`, freeing its VRAM block
  * and recycling its node back onto the spare stack) and retrying until
@@ -395,10 +396,10 @@ s32 LoadSpriteFrameTiles(u8 *frame)
 
     byteCount = frame[1] * frame[0] * 32;
 
-    while ((node->vramAddr = AllocVramTileBlock(byteCount)) == 0) {
+    while ((node->vramAddr = ObjTileAllocator::Alloc(byteCount)) == 0) {
         struct sprite_frame_cache_node *victim = gSpriteFrameCachePrevious.prev;
 
-        FreeVramTileBlock(victim->vramAddr);
+        ObjTileAllocator::Free(victim->vramAddr);
         victim->prev->next = victim->next;
         victim->next->prev = victim->prev;
         victim->next = gSpriteFrameCacheSpares;

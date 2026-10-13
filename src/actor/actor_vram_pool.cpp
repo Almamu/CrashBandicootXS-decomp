@@ -1,3 +1,4 @@
+#include "obj_tile_allocator.hpp"
 #include "sprite_obj.hpp"
 #include "hud.hpp"
 #include "vehicle.hpp"
@@ -35,7 +36,7 @@ void SetupActorVramPool(void)
     PaletteCache *cache;
     const struct sprite_anim *anims;
 
-    InitObjTileFreeList(OBJ_VRAM0 + 0x1400);
+    ObjTileAllocator::Init(OBJ_VRAM0 + 0x1400);
     InitSpriteFrameOamQueue();
     InitSpriteFrameCache();
 

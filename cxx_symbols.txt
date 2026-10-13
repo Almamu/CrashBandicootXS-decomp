@@ -2012,3 +2012,18 @@ _7Airship.hitFlashPalettes gAirshipHitFlashPalettes
 _7Airship.keyframes gAirshipKeyframes
 _7Airship.palette gAirshipPalette
 _7Airship.picture gAirshipPicture
+#
+# #915 ObjTileAllocator: the OBJ tile VRAM allocator as an all-static class
+# (include/obj_tile_allocator.hpp, the start of src/gfx/sprite_frame.cpp).
+# Its data members keep the C names: sym_iwram.txt places them.
+Init__16ObjTileAllocatorPv InitObjTileFreeList
+Free__16ObjTileAllocatorPv FreeVramTileBlock
+Alloc__16ObjTileAllocatori AllocVramTileBlock
+Walk__16ObjTileAllocator WalkVramTileBlocks
+GetFreeBytes__16ObjTileAllocator GetFreeVramTileBytes
+Destroy__16ObjTileAllocator FreeObjTileFreeList
+_16ObjTileAllocator.pool gVramTileBlockPool
+_16ObjTileAllocator.list gVramTileBlockList
+_16ObjTileAllocator.rover gVramTileBlockRover
+_16ObjTileAllocator.spares gVramTileBlockSpares
+_16ObjTileAllocator.index gVramTileBlockIndex
