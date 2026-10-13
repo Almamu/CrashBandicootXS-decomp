@@ -3,7 +3,7 @@
 
 /* The ARM routines of the IWRAM image (src/iwram/sprite_arm.cpp,
  * src/iwram/string_arm.cpp), with the prototypes of their definitions
- * (docs/headers_plan.md). The Thumb code doesn't call them directly: it
+ * (docs/headers.md). The Thumb code doesn't call them directly: it
  * goes through the hooks in src/iwram/iwram_data.cpp, declared with their
  * users (gfx.h, actor.h, vehicle.hpp). */
 

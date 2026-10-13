@@ -14,7 +14,7 @@
  * take `void *`. Some take a file-local view of their object, declared
  * here only by tag. A .c file that needs a different local declaration
  * for codegen keeps it as an asm-label alias with a `codegen:` comment
- * (docs/headers_plan.md). */
+ * (docs/headers.md). */
 
 #include "core.h"
 #include "actor.h"

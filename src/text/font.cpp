@@ -71,7 +71,7 @@ void Font::SetPalette(u8 palette)
 
 /* codegen: GetPaletteSlot returns u8 (gfx.h); with the u8 return
  * ResetPalette adds `lsl #0x18; lsr #0x14` where the ROM has one
- * `lsl #4`. docs/headers_plan.md */
+ * `lsl #4`. docs/headers.md */
 extern "C" s32 GetPaletteSlot_s32(u8 *cache, s32 recordId) asm("GetPaletteSlot");
 
 /* Sets the glyphs' palette back to the palette-cache slot of sprite bank

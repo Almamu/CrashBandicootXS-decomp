@@ -5,7 +5,7 @@
  * palette caches, the entity (class Entity, entity.hpp), brightness fades,
  * DISPCNT helpers, BG packages and the sprite frame cache. The C linkage
  * functions src/gfx/ defines, with the prototype of their definition, and
- * the globals and tables its files use (docs/headers_plan.md); the
+ * the globals and tables its files use (docs/headers.md); the
  * classes' methods are declared in their C++ headers (sprite_obj.hpp,
  * entity.hpp). HudPart's methods
  * (palette_cycle.cpp) are C++ only (part_list.hpp). A .c file that needs a

@@ -107,7 +107,7 @@ honest placeholder, since other code and docs will start depending on it.
 
 1. The function's own definition and prototype.
 2. Its declaration in the owning header (see
-   [`docs/headers_plan.md`](./headers_plan.md)), any codegen alias's
+   [`docs/headers.md`](./headers.md)), any codegen alias's
    `asm("<name>")` label, and every reference: `src/`, `lib/`, `asm/*.s`
    (`bl <name>`/`.4byte <name>`), `ldscript.txt` and `sym_*.txt`.
 3. `docs/matching.md`'s per-function entry.

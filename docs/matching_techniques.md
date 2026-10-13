@@ -427,13 +427,13 @@ bound to the real symbol with an asm label:
 ```c
 /* codegen: RandRange is u16, but this file was matched against an s32
  * return; the u16 prototype changes the stack slots in InitTitleScreen.
- * docs/headers_plan.md */
+ * docs/headers.md */
 extern s32 RandRange_s32(s32 max) asm("RandRange");
 ```
 
 The call is still `bl RandRange`. Redeclaring the real name with another
 type would be a "conflicting types" error. Each alias has a `codegen:`
-comment and a row in [headers_plan.md's "Codegen exceptions"](./headers_plan.md#codegen-exceptions);
+comment and a row in [headers.md's "Codegen exceptions"](./headers.md#codegen-exceptions);
 the rules are in CONTRIBUTING.md's "Declarations and headers".
 
 ## Register allocation
@@ -2264,7 +2264,7 @@ These have no macro, by design:
 | file-scope `.align 2, 0` | 276 / 131 | an assembler directive; all removed in #663, the build pads instead ([above](#align-2-0)) |
 | instruction asm | 253 / 90 | each is a specific instruction sequence; each needs a comment |
 | retyped field stores/reads | 191 / 31, 71 / 34 | part of the struct cleanup |
-| asm-label aliases | 20 / 16 | headers_plan's codegen exceptions |
+| asm-label aliases | 20 / 16 | headers.md's codegen exceptions |
 | scoped volatile casts and locals | 52 / 22 | a type, not a statement |
 | self-init | 6 / 6 | a declaration |
 | per-object flags | 6 groups | documented in the Makefile and [above](#per-object-flags) |

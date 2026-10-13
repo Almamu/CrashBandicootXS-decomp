@@ -7,7 +7,7 @@
  * frame. Every function src/level/ defines, with the prototype of its
  * definition (the BG layers are C++ classes, include/bg_layer.hpp), and
  * the globals and tables the level files use
- * (docs/headers_plan.md). OperatorNew and the other new/delete operators
+ * (docs/headers.md). OperatorNew and the other new/delete operators
  * (operator_new.cpp) are in memory.h. A .c file that needs a different local
  * declaration for codegen keeps it as an asm-label alias with a
  * `codegen:` comment.

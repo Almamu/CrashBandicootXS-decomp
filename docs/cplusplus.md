@@ -1535,7 +1535,7 @@ Kept, each with a comment:
 - `SetExitMirror`'s keep on the 1: reload would otherwise build the
   `-0x11` mask from it as `subs r2, #18` (as in the C).
 - `ResolveCollision`'s `pb` keep and the `GetSpriteHitbox_p` alias
-  (headers_plan.md's codegen exceptions): the ROM keeps `&b` in r4 from
+  (then one of docs/headers.md's codegen exceptions): the ROM keeps `&b` in r4 from
   the player's box call to the overlap tests of the no-contact branch, at
   the end of the function, where CSE forms it from sp again. With a
   struct return, `*pb = ...GetAnimHitbox()` goes through a temporary, so

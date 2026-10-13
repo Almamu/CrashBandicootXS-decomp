@@ -1,7 +1,7 @@
 #ifndef __ACTOR_H__
 #define __ACTOR_H__
 
-/* Two things share this header (docs/headers_plan.md):
+/* Two things share this header (docs/headers.md):
  *
  * - the entity's flags (`union EntityFlags`), class Entity's
  *   (include/entity.hpp);
@@ -84,7 +84,7 @@ union EntityFlags {
 
 /* actor_anim.h has the full definitions; it can't be included here,
  * since several includers of this header define their own `struct
- * anim_box`/`struct sprite_frame` (docs/headers_plan.md, batch 7). */
+ * anim_box`/`struct sprite_frame` (#574). */
 struct anim_table_record;
 struct category_vtable;
 struct actor_spawn_table;

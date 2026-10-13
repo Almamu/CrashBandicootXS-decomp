@@ -31,7 +31,7 @@ extern "C" {
 
 /* codegen: RandRange returns u16 (util.h), but DrawLogoPieces was matched
  * against an s32 return: with the u16 prototype its two stack slots
- * swap. docs/headers_plan.md */
+ * swap. docs/headers.md */
 extern "C" s32 RandRange_s32(s32 max) asm("RandRange");
 
 /* Blanks the screen, loads the menu font's palettes and the logo's

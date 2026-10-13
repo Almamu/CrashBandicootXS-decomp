@@ -9,7 +9,7 @@
  * Declarations here are the functions' real prototypes, copied from
  * their definitions. A .c file that needs a different local declaration
  * for codegen keeps it with a `codegen:` comment instead of including
- * this header (docs/headers_plan.md); none of the text subsystem's
+ * this header (docs/headers.md); none of the text subsystem's
  * callers needs one. */
 
 #include "core.h"

@@ -10,7 +10,7 @@
  * the signedness, or fold a constant divisor into a shift).
  *
  * `_call_via_r0`..`_call_via_r7` are not declared here: each call site
- * declares the shape it calls with (docs/headers_plan.md, rule 5). */
+ * declares the shape it calls with (docs/headers.md, rule 5). */
 
 extern u32 __udivsi3(u32 dividend, u32 divisor);
 extern s32 __divsi3(s32 dividend, s32 divisor);

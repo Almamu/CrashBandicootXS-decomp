@@ -28,7 +28,7 @@ or a plain function prototype) it reports:
                                return, extra parameters, struct by value)
 
 Each declaration is also sorted by why it is still in its .c file
-(docs/headers_plan.md, "Exceptions"): a codegen asm-label alias, a
+(docs/headers.md, "What stays local"): a codegen asm-label alias, a
 `_call_via_rN` thunk, a data table naming another data table, a library's
 own internal symbol, an entry of DOCUMENTED below, or "remaining" (it
 should move to a header; `--remaining` lists them).
@@ -697,8 +697,8 @@ def scan_asm_defs():
     return out
 
 
-# Declarations kept in a .c file on purpose, by policy (docs/headers_plan.md,
-# "Exceptions"). Anything else is "remaining" work for a header.
+# Declarations kept in a .c file on purpose, by policy (docs/headers.md,
+# "What stays local"). Anything else is "remaining" work for a header.
 DOCUMENTED = {
     # the one-argument SWI wrappers asset.cpp calls (docs/libraries.md)
     ('src/system/asset.cpp', 'LZ77UnCompVram'),

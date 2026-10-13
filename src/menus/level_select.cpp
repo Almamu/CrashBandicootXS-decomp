@@ -26,7 +26,7 @@ extern "C" {
 /* codegen: gLevelSelectGemPos and gLevelSelectTrialIconPos are const
  * (menus.hpp), but the constructor reads each one twice, across calls, and
  * the ROM loads it again each time: through the const object gcc keeps the
- * first loads in registers. docs/headers_plan.md */
+ * first loads in registers. docs/headers.md */
 extern "C" struct vec2 gLevelSelectGemPos_rw asm("gLevelSelectGemPos");
 extern "C" struct vec2 gLevelSelectTrialIconPos_rw asm("gLevelSelectTrialIconPos");
 
