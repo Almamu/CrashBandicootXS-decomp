@@ -53,11 +53,11 @@ struct pause_row {
 /* pause_row::type, and what RunPauseMenu returns (#843,
  * docs/flags/pause_menu.md). A confirms a row; on the two volume rows it
  * only plays a cue, and START returns PAUSE_ROW_TYPE_RESUME. RunRoom and
- * InitActorCategory turn the result into a ROOM_EXIT_* status. */
+ * ActorCategory::Init turn the result into a ROOM_EXIT_* status. */
 #define PAUSE_ROW_TYPE_RESUME  0 // "resume" (row 0), and START
 #define PAUSE_ROW_TYPE_RESTART 1 // row 4, shown only in a time trial: ROOM_EXIT_RETRY
 #define PAUSE_ROW_TYPE_QUIT    2 // row 3: ROOM_EXIT_QUIT
-#define PAUSE_ROW_TYPE_UNK3    3 // no row has it; InitActorCategory takes it as ROOM_EXIT_CLEARED
+#define PAUSE_ROW_TYPE_UNK3    3 // no row has it; ActorCategory::Init takes it as ROOM_EXIT_CLEARED
 #define PAUSE_ROW_TYPE_MUSIC   4 // row 1, the music volume (left/right)
 #define PAUSE_ROW_TYPE_SOUND   5 // row 2, the sound-effect volume (left/right)
 

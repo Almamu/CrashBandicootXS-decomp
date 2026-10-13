@@ -571,7 +571,7 @@ void CategorySpriteSheet::Free()
     mem_free(data);
 }
 
-/* ROM 0x0802917C - `InitActorCategory`'s reader for a category
+/* ROM 0x0802917C - `ActorCategory::Init`'s reader for a category
  * descriptor's `+0x1C` sheet pointer (see docs/graphics.md, "Identified
  * the two giant LZ77 sheets"): allocates a buffer for the declared
  * decompressed size (the tag+size header's top 24 bits) and

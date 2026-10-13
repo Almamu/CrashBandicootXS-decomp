@@ -2,6 +2,7 @@
 #include "vehicle.hpp"
 #include "cell_anim.hpp"
 #include "actor_spawns.hpp"
+#include "actor_category.hpp"
 
 extern "C" {
 #include "core.h"
@@ -14,9 +15,9 @@ extern "C" {
 }
 
 /* ROM 0x0802A018-0x0802A4D4, inside the actor zone that starts at
- * SetupActorVramPool (0x080291A4): the category hooks that test an actor
+ * ActorCategory::SetupVramPool (0x080291A4): the category hooks that test an actor
  * against the player (PolarIsTouchingPlayer, JetpackIsTouchingPlayer),
- * the category's frame (RunActorCategoryFrame) and the jetpack shot's
+ * the category's frame (ActorCategory::RunFrame) and the jetpack shot's
  * target search (FindShotTarget). C++ since #664 part 11b
  * (docs/cplusplus.md); an old_agbcc object (current agbcc schedules the
  * `asr`s differently).
@@ -69,26 +70,26 @@ s32 JetpackIsTouchingPlayer(ActorSelf *self)
 #define SPAWN_DUE()                                                                   \
     (ActorSpawns::index < ActorSpawns::table->count                                   \
      && ActorSpawns::table->entries[ActorSpawns::index].spawn.z + ActorSpawns::offset \
-            <= scroll + gActorCategoryVtable->spawnDistance)
+            <= scroll + vtable->spawnDistance)
 
-s32 RunActorCategoryFrame(void)
+s32 ActorCategory::RunFrame()
 {
     s32 scroll;
     ActorSelf *n;
     s32 i;
 
-    if (gActorCategoryVtable->updateBoss != NULL)
-        gActorCategoryVtable->updateBoss();
-    gActorCategoryExitStatus = CATEGORY_EXIT_NONE;
+    if (vtable->updateBoss != NULL)
+        vtable->updateBoss();
+    exitStatus = CATEGORY_EXIT_NONE;
     scroll = CellAnim::GetDistance();
     if (scroll - ActorSpawns::offset > ActorSpawns::table->length)
-        gActorCategoryVtable->reachCourseEnd();
+        vtable->reachCourseEnd();
     if (ActorSpawns::paused != 0) {
         ActorSpawns::offset += CellAnim::GetFrameStep();
     } else {
         while (SPAWN_DUE()) {
-            gActorCategoryVtable->spawn(&ActorSpawns::table->entries[ActorSpawns::index].spawn,
-                                        ActorSpawns::useBonus, INT_TO_Q8(ActorSpawns::offset));
+            vtable->spawn(&ActorSpawns::table->entries[ActorSpawns::index].spawn,
+                          ActorSpawns::useBonus, INT_TO_Q8(ActorSpawns::offset));
             ActorSpawns::index++;
         }
     }
@@ -102,19 +103,19 @@ s32 RunActorCategoryFrame(void)
         n = next;
     } while (n != gActorList);
 
-    gActorDrawCount = 0;
+    drawCount = 0;
     n = gActorList;
     do {
         if (n->visible != 0)
-            gActorDrawList[gActorDrawCount++] = n;
+            drawList[drawCount++] = n;
         n = n->next;
     } while (n != gActorList);
-    gHeapSortActorsByKeyFunc(gActorDrawCount, gActorDrawList);
+    gHeapSortActorsByKeyFunc(drawCount, drawList);
 
-    for (i = 0; i < gActorDrawCount; i++)
-        gActorDrawList[i]->Draw();
-    gActorCategoryFrameCount++;
-    return gActorCategoryExitStatus;
+    for (i = 0; i < drawCount; i++)
+        drawList[i]->Draw();
+    frameCount++;
+    return exitStatus;
 }
 
 /* The first actor other than `self` that can be shot (slot 5 returns 0;

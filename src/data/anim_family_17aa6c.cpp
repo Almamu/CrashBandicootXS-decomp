@@ -85,7 +85,7 @@ const struct anim_box Yeti::box = { -28, -24, -2, 56, 90, 4 };
 /* Yeti::catchBox: Yeti::Update's (yeti_update.cpp) hit box. */
 const struct anim_box Yeti::catchBox = { -80, -40, -14, 160, 110, 16 };
 
-/* The 256-colour OBJ palette InitActorCategory loads for these
+/* The 256-colour OBJ palette ActorCategory::Init loads for these
  * categories. The second 0x200 bytes are zero; nothing reads them. */
 extern const u16 gAirshipCategoryPalette[0x200] = {
     0x03E0, 0x00BD, 0x004A, 0x035D, 0x0071, 0x069A, 0x0DBB, 0x3C43, 0x0823, 0x198E, 0x2210, 0x10E8,
@@ -112,7 +112,7 @@ extern const u16 gAirshipCategoryPalette[0x200] = {
     0x0000, 0x0000, 0x0000, 0x0000,
 };
 
-/* The 256-colour OBJ palette InitActorCategory loads for these
+/* The 256-colour OBJ palette ActorCategory::Init loads for these
  * categories. The second 0x200 bytes are zero; nothing reads them. */
 extern const u16 gHovercraftCategoryPalette[0x200] = {
     0x03E0, 0x00BD, 0x004A, 0x035D, 0x0071, 0x069A, 0x0DBB, 0x3C43, 0x0823, 0x198E, 0x2210, 0x10E8,

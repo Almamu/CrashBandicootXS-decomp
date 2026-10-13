@@ -10,7 +10,7 @@ extern "C" {
  * ldscript.txt - see docs/data.md ("Category backgrounds").
  */
 
-/* Category 4's BG1 picture (gActorCategories[4].bgPicture,
+/* Category 4's BG1 picture (ActorCategory::descriptors[4].bgPicture,
  * loaded by LoadBgPicture in bg_picture.cpp): 38x16 map, 237 tiles. Built from
  * graphics/vehicles/jetpack/skies/blimp_bonanza.png (palette and map) and
  * 151ac4_picture_tiles.png (the tile set, grit's -fx external tileset). */
@@ -40,8 +40,8 @@ extern const struct bg_picture_151ac4 gCategory4BgPicture = {
     },
 };
 
-/* Category 4's spawnTable (gActorCategories[4].spawnTable), read by
- * SelectActorCategory (actor_category_select.cpp) and the actor_spawn.cpp
+/* Category 4's spawnTable (ActorCategory::descriptors[4].spawnTable), read by
+ * ActorCategory::Select (actor_category_select.cpp) and the actor_spawn.cpp
  * accessors: the course length, the spawn count, then each spawn's
  * {kinds, x, y, depth} and next target. */
 extern const ACTOR_SPAWN_TABLE(230) gCategory4SpawnTable = {
@@ -283,7 +283,7 @@ extern const ACTOR_SPAWN_TABLE(230) gCategory4SpawnTable = {
 };
 
 /* The BG1 picture shared by categories 5 and 6
- * (gActorCategories[5..6].bgPicture, loaded by LoadBgPicture
+ * (ActorCategory::descriptors[5..6].bgPicture, loaded by LoadBgPicture
  * in bg_picture.cpp): 38x16 map, 374 tiles. Built from
  * graphics/vehicles/jetpack/skies/no_fly_zone.png (palette and map) and
  * 155260_picture_tiles.png (the tile set, grit's -fx external tileset). */
@@ -313,8 +313,8 @@ extern const struct bg_picture_155260 gCategory5BgPicture = {
     },
 };
 
-/* Category 5's spawnTable (gActorCategories[5].spawnTable), read by
- * SelectActorCategory (actor_category_select.cpp) and the actor_spawn.cpp
+/* Category 5's spawnTable (ActorCategory::descriptors[5].spawnTable), read by
+ * ActorCategory::Select (actor_category_select.cpp) and the actor_spawn.cpp
  * accessors: the course length, the spawn count, then each spawn's
  * {kinds, x, y, depth} and next target. */
 extern const ACTOR_SPAWN_TABLE(295) gCategory5SpawnTable = {
@@ -620,8 +620,8 @@ extern const ACTOR_SPAWN_TABLE(295) gCategory5SpawnTable = {
     { 112, 29, 0, 0 },
 };
 
-/* Category 6's spawnTable (gActorCategories[6].spawnTable), read by
- * SelectActorCategory (actor_category_select.cpp) and the actor_spawn.cpp
+/* Category 6's spawnTable (ActorCategory::descriptors[6].spawnTable), read by
+ * ActorCategory::Select (actor_category_select.cpp) and the actor_spawn.cpp
  * accessors: the course length, the spawn count, then each spawn's
  * {kinds, x, y, depth} and next target. */
 extern const ACTOR_SPAWN_TABLE(1) gCategory6SpawnTable = {

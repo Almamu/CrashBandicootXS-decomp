@@ -3,6 +3,7 @@
 #include "audio.hpp"
 #include "level_state.hpp"
 #include "actor_bg.hpp"
+#include "actor_category.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -83,7 +84,7 @@ PolarCollectedWumpa::PolarCollectedWumpa(const struct anim_table_record *rec, s3
 /* Collected by the player: one wumpa. */
 void PolarWumpa::Update()
 {
-    if ((u8)IsTouchingPlayer(this)) {
+    if ((u8)ActorCategory::IsTouchingPlayer(this)) {
         static_cast<PolarPlayer *>(gActorList)->QueueWumpa(1);
         delete this;
     } else {

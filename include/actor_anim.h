@@ -15,7 +15,7 @@
  * keyframe, resolved to the exact ROM address or extracted frame PNG it
  * uses).
  *
- * None of the *code* behind this system (SelectActorCategory, InitActorPart,
+ * None of the *code* behind this system (ActorCategory::Select, InitActorPart,
  * GetAnimFrameData, the per-category vtable functions, ...) has been
  * reversed to C yet - these structs are only the data layout, written
  * ahead of that so the two can be matched up directly once it is.
@@ -105,18 +105,18 @@ COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct anim_table_record) == 0x28);
  * accordingly.
  */
 
-/* gActorCategories - 7 entries (categories 0-2 use the family rooted
+/* ActorCategory::descriptors - 7 entries (categories 0-2 use the family rooted
  * at gCategoryFamily0AnimTable, 3-6 the one at gCategoryFamily1AnimTable). Each
  * category's `type` field (0/1/2, see below) - NOT the category index
  * itself - selects a shared vtable: traced the one real call site, and
- * the caller reads gActorCategories[category].type into the
- * register it passes as SelectActorCategory's first argument, which
- * then computes gActorCategoryVtables + type*0x34 (confirmed against
- * SelectActorCategory's own disassembly). Categories 0/1/2 all have
+ * the caller reads ActorCategory::descriptors[category].type into the
+ * register it passes as ActorCategory::Select's first argument, which
+ * then computes ActorCategory::vtables + type*0x34 (confirmed against
+ * ActorCategory::Select's own disassembly). Categories 0/1/2 all have
  * type 0 and share one vtable; 3/4/5 all have type 1 and share another;
  * 6 is type 2, on its own - three real vtables total, not seven, so
- * gActorCategoryVtables below is declared [3]. Whatever data actually
- * follows those three at gActorCategoryVtables+0x9C (ROM 0x08175760) is
+ * ActorCategory::vtables below is declared [3]. Whatever data actually
+ * follows those three at ActorCategory::vtables+0x9C (ROM 0x08175760) is
  * unrelated - it doesn't decode as a 4th/5th/6th/7th vtable no matter
  * how it's sliced (verified directly against the raw bytes), so
  * there's no "categories 3-6 vtable" to go looking for. */
@@ -158,7 +158,7 @@ struct category_descriptor {
     // 0x0C - the BG1 picture LoadBgPicture shows (gCategoryNBgPicture);
     // NULL for type-0 categories (0-2), 5 and 6 share one
     const u8 *bgPicture;
-    // 0x10 - raw 16-color RGB555 palette, DMA'd to OBJ palette RAM (InitActorCategory)
+    // 0x10 - raw 16-color RGB555 palette, DMA'd to OBJ palette RAM (ActorCategory::Init)
     const u16 *palette;
     // 0x14 - the stage's actor spawn list (gCategoryNSpawnTable)
     struct actor_spawn_table *spawnTable;
@@ -170,12 +170,12 @@ struct category_descriptor {
     // which ActorCategoryStats::IsMaskAssistDue reports true
     s32 maskAssistDeaths;
     // 0x24 - deaths since the checkpoint (ActorCategoryStats::deaths) after which the
-    // spawns use their `bonusKind` (InitActorCategory -> ActorSpawns::useBonus)
+    // spawns use their `bonusKind` (ActorCategory::Init -> ActorSpawns::useBonus)
     s32 bonusKindDeaths;
     // 0x28 - boss deaths (ActorCategoryStats::bossDeaths) after which the boss is
     // created with `retryBossLevel` instead of `bossLevel`
     s32 retryBossDeaths;
-    // 0x2C - the argument InitActorCategory passes to the boss's constructor
+    // 0x2C - the argument ActorCategory::Init passes to the boss's constructor
     // (category vtable slot 2: CreateYeti's gYetiParamsIndex,
     // CreateAirship's gAirshipLevel, CreateHovercraft's gHovercraftLevel)
     u32 bossLevel;
@@ -186,9 +186,9 @@ COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct category_descriptor) == 0x34);
 struct actor_spawn; /* actor.h */
 struct ActorSelf;   /* actor_self.hpp's class */
 
-/* gActorCategoryVtables - 3 entries, type-indexed (see category_descriptor
+/* ActorCategory::vtables - 3 entries, type-indexed (see category_descriptor
  * above), not category-indexed: categories that share a type share one.
- * SelectActorCategory points gActorCategoryVtable at the selected type's.
+ * ActorCategory::Select points ActorCategory::vtable at the selected type's.
  * Not a g++ vtable: no RTTI slot, 4-byte slots, two of them values, and
  * the callers NULL-test the boss slots before calling them. Slots 2-6 are
  * the one interface the yeti, the airship and the hovercraft share; the
@@ -198,35 +198,34 @@ struct category_vtable {
      * CreateJetpackPlayer (jetpack, hovercraft) */
     void (*createPlayer)(struct anim_table_record *table, s32 checkpoint);
     /* 0x04 - spawns a level spawn record's object: SpawnActor,
-     * SpawnJetpackActor (RunActorCategoryFrame, SelectActorCategory) */
+     * SpawnJetpackActor (ActorCategory::RunFrame, ActorCategory::Select) */
     struct ActorSelf *(*spawn)(struct actor_spawn *spawn, u8 useBonus, s32 zOffset);
     void (*createBoss)(s32 level);  // 0x08 - CreateYeti/CreateAirship/CreateHovercraft
     void (*updateBoss)(void);       // 0x0C - each category frame's start
-    void (*updateBossBg2)(void);    // 0x10 - UpdateActorCategoryBg2
-    void (*destroyBoss)(void);      // 0x14 - DestroyAllActors
-    void (*loadBossGraphics)(void); // 0x18 - ReloadActorCategoryGraphics
+    void (*updateBossBg2)(void);    // 0x10 - ActorCategory::UpdateBg2
+    void (*destroyBoss)(void);      // 0x14 - ActorCategory::DestroyActors
+    void (*loadBossGraphics)(void); // 0x18 - ActorCategory::ReloadGraphics
     /* 0x1C - a spawn record is spawned once its depth is within this of
      * the scroll distance (-0x11 polar, 0xA9 jetpack/hovercraft) */
     s32 spawnDistance;
-    /* 0x20 - SelectActorCategory skips the records whose depth is below
+    /* 0x20 - ActorCategory::Select skips the records whose depth is below
      * this plus the start distance (-0x2F polar, 0x1C jetpack/hovercraft) */
     s32 skipDistance;
-    s32 (*isTouchingPlayer)(struct ActorSelf *self); // 0x24 - IsTouchingPlayer
+    s32 (*isTouchingPlayer)(struct ActorSelf *self); // 0x24 - ActorCategory::IsTouchingPlayer
     void (*reachCourseEnd)(void);                    // 0x28 - once the course length is passed
-    void (*reloadPlayerTiles)(void);                 // 0x2C - ReloadActorCategoryGraphics
-    s32 (*isPauseLocked)(void);                      // 0x30 - CanPauseActorCategory
+    void (*reloadPlayerTiles)(void);                 // 0x2C - ActorCategory::ReloadGraphics
+    s32 (*isPauseLocked)(void);                      // 0x30 - ActorCategory::CanPause
 }; // 0x34
 COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct category_vtable) == 0x34);
 
 /* Both tables are defined in src/data/actor_category_175558.cpp (7*0x34 =
- * 0x16C bytes of descriptors, then gActorCategoryVtables). The latter
+ * 0x16C bytes of descriptors, then ActorCategory::vtables). The latter
  * has 3 entries, which is also all of it - there is no 4th/5th/6th/7th
  * vtable to find,
  * see the comment on category_descriptor.type above. What follows it at
- * gActorCategoryVtables+0x9C (ROM 0x08175760) is unrelated: the BG
- * palette-cycle frames of src/data/palette_cycle_175760.cpp. */
-extern const struct category_descriptor gActorCategories[CATEGORY_COUNT];
-extern const struct category_vtable gActorCategoryVtables[CATEGORY_TYPE_COUNT];
+ * ActorCategory::vtables+0x9C (ROM 0x08175760) is unrelated: the BG
+ * palette-cycle frames of src/data/palette_cycle_175760.cpp. Both are
+ * ActorCategory's static data members (actor_category.hpp). */
 
 /* Defined in src/data/anim_family_178f80.cpp and anim_family_17aa6c.cpp. */
 extern const struct anim_table_record gCategoryFamily0AnimTable[41]; // 0x081796CC, categories 0-2

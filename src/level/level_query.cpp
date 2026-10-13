@@ -1,6 +1,7 @@
 #include "audio.hpp"
 #include "level_state.hpp"
 #include "entity_flags.hpp"
+#include "actor_category.hpp"
 extern "C" {
 #include "core.h"
 #include "actor.h"
@@ -52,7 +53,7 @@ UnusedLevelObject::UnusedLevelObject()
 /* Per-level medal tally: sums, across `gLevelTable[idx]`'s
  * item list (`rooms[]`, plus the two extra single-item slots), a
  * per-item value - `gEntityFlags->CountCrateEntities(item->desc->entities)` for
- * `kind` 0-2, `CountCategoryCrates(item->param.catIndex)` for `kind == 3`, 0
+ * `kind` 0-2, `ActorCategory::CountCrates(item->param.catIndex)` for `kind == 3`, 0
  * otherwise (including `kind < 0`). The same 4-branch
  * dispatch is inlined three times in the ROM (once per source: the
  * `rooms[]` array, `extra1`, `extra2`) rather than calling a shared
@@ -80,7 +81,7 @@ s32 CountLevelCrates(s32 idx)
             v = gEntityFlags->CountCrateEntities(item->desc->entities);
             break;
         case ROOM_KIND_CATEGORY:
-            v = CountCategoryCrates(item->param.catIndex);
+            v = ActorCategory::CountCrates(item->param.catIndex);
             break;
         }
         total += v;
@@ -98,7 +99,7 @@ s32 CountLevelCrates(s32 idx)
             v = gEntityFlags->CountCrateEntities(item->desc->entities);
             break;
         case ROOM_KIND_CATEGORY:
-            v = CountCategoryCrates(item->param.catIndex);
+            v = ActorCategory::CountCrates(item->param.catIndex);
             break;
         }
         total += v;
@@ -116,7 +117,7 @@ s32 CountLevelCrates(s32 idx)
             v = gEntityFlags->CountCrateEntities(item->desc->entities);
             break;
         case ROOM_KIND_CATEGORY:
-            v = CountCategoryCrates(item->param.catIndex);
+            v = ActorCategory::CountCrates(item->param.catIndex);
             break;
         }
         total += v;
@@ -248,7 +249,7 @@ s32 CountRoomCrates(const struct level_room *item)
         v = gEntityFlags->CountCrateEntities(item->desc->entities);
         break;
     case ROOM_KIND_CATEGORY:
-        v = CountCategoryCrates(item->param.catIndex);
+        v = ActorCategory::CountCrates(item->param.catIndex);
         break;
     }
     return v;

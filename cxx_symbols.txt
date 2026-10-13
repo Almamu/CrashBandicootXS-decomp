@@ -2226,6 +2226,34 @@ _11ActorSpawns.useBonus gActorSpawnUseBonus
 _11ActorSpawns.paused gActorSpawnsPaused
 _11ActorSpawns.offset gActorSpawnOffset
 #
+# #915 ActorCategory: the actor category driver as an all-static class
+# (include/actor_category.hpp; src/actor/actor_vram_pool.cpp,
+# actor_category_init.cpp, actor_category_stats.cpp,
+# actor_category_select.cpp, actor_category_frame.cpp, actor_spawn.cpp,
+# actor_category.cpp, actor_category_hooks.cpp). Its data members keep the
+# C names: sym_iwram.txt places the IWRAM ones,
+# src/data/actor_category_175558.cpp defines the ROM tables.
+SetupVramPool__13ActorCategory SetupActorVramPool
+Init__13ActorCategoryi InitActorCategory
+CountCrates__13ActorCategoryi CountCategoryCrates
+Select__13ActorCategoryiP17actor_spawn_tableP17anim_table_recordUcii SelectActorCategory
+RunFrame__13ActorCategory RunActorCategoryFrame
+GetFrameCount__13ActorCategory GetActorCategoryFrameCount
+CanPause__13ActorCategory CanPauseActorCategory
+ReloadGraphics__13ActorCategory ReloadActorCategoryGraphics
+DestroyActors__13ActorCategory DestroyAllActors
+UpdateBg2__13ActorCategory UpdateActorCategoryBg2
+SetExitStatus__13ActorCategoryi SetActorCategoryExitStatus
+IsTouchingPlayer__13ActorCategoryP9ActorSelf IsTouchingPlayer
+_13ActorCategory.current gActorCategory
+_13ActorCategory.drawList gActorDrawList
+_13ActorCategory.drawCount gActorDrawCount
+_13ActorCategory.exitStatus gActorCategoryExitStatus
+_13ActorCategory.vtable gActorCategoryVtable
+_13ActorCategory.frameCount gActorCategoryFrameCount
+_13ActorCategory.descriptors gActorCategories
+_13ActorCategory.vtables gActorCategoryVtables
+#
 # #915 ActorPaletteCycle: the 3D stages' BG palette cycle as an all-static
 # class (include/actor_palette_cycle.hpp, src/actor/actor_palette_cycle.cpp).
 # Its data members keep the C names: sym_iwram.txt places the IWRAM ones,

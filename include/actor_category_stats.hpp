@@ -5,7 +5,7 @@
  * #915): the deaths since the checkpoint (the mask assist, the spawns'
  * bonus kinds and the boss's retry level count them), the nitro crates
  * the player has missed (the room's pending switch crates) and the
- * checkpoint's course distance. InitActorCategory resets them when the
+ * checkpoint's course distance. ActorCategory::Init resets them when the
  * category starts and rewinds the missed nitros to the checkpoint's count
  * on every retry.
  *
@@ -27,7 +27,6 @@
 
 extern "C" {
 #include "core.h"
-#include "actor.h" /* InitActorCategory, the friend below, has C linkage */
 }
 
 class ActorCategoryStats
@@ -40,9 +39,9 @@ public:
     static bool IsMaskAssistDue();    // IsActorMaskAssistDue
 
 private:
-    /* InitActorCategory resets the counters, rewinds `missedNitros` and
+    /* ActorCategory::Init resets the counters, rewinds `missedNitros` and
      * counts the deaths */
-    friend s32 InitActorCategory(s32 category);
+    friend class ActorCategory;
 
     /* IWRAM (sym_iwram.txt) */
     static s32 deaths; // gActorCategoryDeaths - since the checkpoint

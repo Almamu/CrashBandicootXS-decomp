@@ -4,7 +4,7 @@
 /* The collected spawns (src/actor/actor_spawn_collected.cpp, #915): the
  * spawn records of the 3D stages' crates the player has broken, at most
  * 15. The factories skip them when the category restarts from a
- * checkpoint; InitActorCategory clears the list.
+ * checkpoint; ActorCategory::Init clears the list.
  *
  * An all-static class, like the yeti and the airship (docs/cplusplus.md,
  * "The collected spawns as an all-static class"): its variables are

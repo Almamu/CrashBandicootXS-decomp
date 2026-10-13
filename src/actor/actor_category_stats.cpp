@@ -2,6 +2,7 @@
 #include "actor_palette_cycle.hpp"
 #include "actor_category_stats.hpp"
 #include "actor_spawns.hpp"
+#include "actor_category.hpp"
 
 extern "C" {
 #include "core.h"
@@ -16,7 +17,7 @@ extern "C" {
  * category_descriptor.spawnTable, struct actor_spawn_table in actor.h)
  * have a `kind` in one of two fixed sets - a different set depending on
  * the category's own `type` field. */
-s32 CountCategoryCrates(s32 categoryIdx)
+s32 ActorCategory::CountCrates(s32 categoryIdx)
 {
     struct actor_spawn_table *table;
     s32 total;
@@ -24,8 +25,8 @@ s32 CountCategoryCrates(s32 categoryIdx)
     s32 i;
 
     count = 0;
-    table = gActorCategories[categoryIdx].spawnTable;
-    if (gActorCategories[categoryIdx].type == CATEGORY_TYPE_POLAR) {
+    table = descriptors[categoryIdx].spawnTable;
+    if (descriptors[categoryIdx].type == CATEGORY_TYPE_POLAR) {
         i = 0;
         total = table->count;
         /* Manual pre-rotated `if (count<total) do {...} while (++i<total)`
@@ -128,5 +129,5 @@ void ActorCategoryStats::SetCheckpoint(s32 z)
  * LevelState's and level_info's are. */
 bool ActorCategoryStats::IsMaskAssistDue()
 {
-    return deaths >= gActorCategories[gActorCategory].maskAssistDeaths;
+    return deaths >= ActorCategory::descriptors[ActorCategory::current].maskAssistDeaths;
 }

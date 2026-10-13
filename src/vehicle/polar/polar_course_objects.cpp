@@ -3,6 +3,7 @@
 #include "level_state.hpp"
 #include "yeti.hpp"
 #include "actor_category_stats.hpp"
+#include "actor_category.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -22,7 +23,7 @@ void PolarGoal::Update()
     if (stateTime > 5)
         visible = 1;
 
-    if ((u8)IsTouchingPlayer(this))
+    if ((u8)ActorCategory::IsTouchingPlayer(this))
         static_cast<PolarPlayer *>(gActorList)->FinishRun();
 
     ActorSelf::Update();
@@ -38,7 +39,7 @@ PolarGoal::PolarGoal(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
  * time. */
 void PolarBoostPad::Update()
 {
-    if ((u8)IsTouchingPlayer(this)) {
+    if ((u8)ActorCategory::IsTouchingPlayer(this)) {
         static_cast<PolarPlayer *>(gActorList)->Boost(x);
         if (once == 0) {
             gAudioContext->PlaySfx(SFX_BOOST_PAD, 0x100);
@@ -75,7 +76,7 @@ PolarBoostPad::PolarBoostPad(const struct anim_table_record *rec, s32 x, s32 y, 
 void PolarCheckpointCrate::Update()
 {
     if (animIndex == 0) {
-        if ((u8)IsTouchingPlayer(this)) {
+        if ((u8)ActorCategory::IsTouchingPlayer(this)) {
             RestartAnim(1);
             gAudioContext->PlaySfx(SFX_CHECKPOINT, 0x100);
             gLevelState->AddBrokenCrate();

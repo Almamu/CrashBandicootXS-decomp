@@ -1,6 +1,7 @@
 #include "vehicle.hpp"
 #include "boss_actors.hpp"
 #include "audio.hpp"
+#include "actor_category.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -53,7 +54,7 @@ void JetpackBomber::Update()
 {
     if (state != JETPACK_BOMBER_STATE_DYING) {
         gActorList->AsJetpackPlayer()->CountBomber();
-        if (state != JETPACK_BOMBER_STATE_DYING && (u8)IsTouchingPlayer(this)) {
+        if (state != JETPACK_BOMBER_STATE_DYING && (u8)ActorCategory::IsTouchingPlayer(this)) {
             gActorList->AsHpActor()->Damage(10);
             palette = 4;
             gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);

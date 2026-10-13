@@ -206,7 +206,7 @@ struct level_room {
     s32 unk_0C; // 0x0C - 0 in every record
     union {
         struct level_room_blend blend; // kinds 0-2
-        // kind 3: the actor category (CountCategoryCrates, InitActorCategory)
+        // kind 3: the actor category (ActorCategory::CountCrates, ActorCategory::Init)
         u16 catIndex;
     } param; // 0x10
 };

@@ -16,6 +16,7 @@
 #include "category_sprite_sheet.hpp"
 #include "collected_spawns.hpp"
 #include "actor_category_stats.hpp"
+#include "actor_category.hpp"
 
 extern "C" {
 #include "core.h"
@@ -35,12 +36,12 @@ extern "C" {
 extern void SetCheckpointAtPlayer_1(void *self) asm("SetCheckpointAtPlayer");
 
 /*
- * `InitActorCategory` - the category (re)initialization + loading-screen
- * driver: stores the category argument into gActorCategory, resets the
+ * `ActorCategory::Init` - the category (re)initialization + loading-screen
+ * driver: stores the category argument into ActorCategory::current, resets the
  * running counters, decompresses the category sprite sheet, rebuilds the
- * tile-cache pins (SetupActorVramPool) and hands off to
- * SelectActorCategory, then runs a per-VBlank loop (polling input,
- * redrawing, flushing the VRAM DMA queue) until `RunActorCategoryFrame` reports an
+ * tile-cache pins (ActorCategory::SetupVramPool) and hands off to
+ * ActorCategory::Select, then runs a per-VBlank loop (polling input,
+ * redrawing, flushing the VRAM DMA queue) until `ActorCategory::RunFrame` reports an
  * exit state. Returns the loop's exit code (0-2); 1 re-runs the outer
  * setup unless gLevelState's own state (GetLives, its +0x8c
  * byte) says to leave.
@@ -61,7 +62,7 @@ extern void SetCheckpointAtPlayer_1(void *self) asm("SetCheckpointAtPlayer");
  *  - The exit-state tests are an if/else chain (a switch builds a
  *    balanced compare tree); the "option screen" branch ends in
  *    `continue` so the inner loop is not rotated.
- *  - `-CanPauseActorCategory() < 0` gives the ROM's `neg; lsr #31` (`!= 0` adds
+ *  - `-ActorCategory::CanPause() < 0` gives the ROM's `neg; lsr #31` (`!= 0` adds
  *    an `orr`), and the new-press test is `(keys >> 16) & 8` so it shares
  *    the gKeys literal with the `& 4` word test.
  *  - The pause menu round trip is its own inline function. The C++ front
@@ -69,18 +70,18 @@ extern void SetCheckpointAtPlayer_1(void *self) asm("SetCheckpointAtPlayer");
  *    counts notes in a register's lifetime; inlined bodies leave them out.
  *    Written in line, the OBJ_PLTT and 0x80000100 constants of its two
  *    DMAs live long enough to be hoisted out of the inner loop, which
- *    spills gActorCategories and cross-jumps the `ret = 1` exits
+ *    spills ActorCategory::descriptors and cross-jumps the `ret = 1` exits
  *    (docs/cplusplus.md, "Dead ends and gotchas").
  */
 
-#define CUR_CATEGORY (gActorCategories[gActorCategory])
+#define CUR_CATEGORY (descriptors[current])
 #define PAUSED (gLevelState->timeTrial)
 
 /* The pause menu over a category: saves the OBJ palette to a heap buffer,
  * frees the sprite caches, runs the menu, then rebuilds the VRAM pool,
  * restores the palette and redraws the background. Returns the menu's
  * result. */
-static inline s32 RunCategoryPauseMenu(void)
+inline s32 ActorCategory::OpenPauseMenu()
 {
     void *buf = mem_alloc(OBJ_PLTT_SIZE, MEM_HEAP_IWRAM);
     s32 result;
@@ -90,18 +91,18 @@ static inline s32 RunCategoryPauseMenu(void)
     SpriteOamQueue::Destroy();
     ObjTileAllocator::Destroy();
     result = RunPauseMenu();
-    SetupActorVramPool();
+    SetupVramPool();
     BrightnessFade::Start(0x80, 1, 1);
     DmaCopy16(3, buf, OBJ_PLTT, OBJ_PLTT_SIZE);
     mem_free(buf);
     CellAnim::ResetBg();
     if (CUR_CATEGORY.bgPicture != NULL)
         LoadBgPicture(CUR_CATEGORY.bgPicture);
-    ReloadActorCategoryGraphics();
+    ReloadGraphics();
     return result;
 }
 
-s32 InitActorCategory(s32 category)
+s32 ActorCategory::Init(s32 category)
 {
     s32 ret = ROOM_EXIT_RETRY;
     s32 *activeCount;
@@ -113,13 +114,13 @@ s32 InitActorCategory(s32 category)
     u8 open;
 
     ActorCategoryStats::checkpointMissedNitros = 0;
-    gActorCategory = category;
+    current = category;
     ActorCategoryStats::checkpoint = 0;
     ActorCategoryStats::deaths = 0;
     ActorCategoryStats::bossDeaths = 0;
     SetCheckpointAtPlayer_1(gLevelState);
     CategorySpriteSheet::Decompress(CUR_CATEGORY.sprite_sheet);
-    SetupActorVramPool();
+    SetupVramPool();
     CollectedSpawns::Clear();
     ActorPaletteCycle::Enable(CUR_CATEGORY.type == CATEGORY_TYPE_POLAR);
     ActorBg::InitScroll(CUR_CATEGORY.type);
@@ -140,16 +141,16 @@ s32 InitActorCategory(s32 category)
         if (CUR_CATEGORY.bgPicture != NULL)
             LoadBgPicture(CUR_CATEGORY.bgPicture);
         ActorPaletteCycle::Restore();
-        SelectActorCategory(CUR_CATEGORY.type, CUR_CATEGORY.spawnTable, CUR_CATEGORY.anim_table,
-                            *activeCount >= CUR_CATEGORY.bonusKindDeaths, variant,
-                            ActorCategoryStats::checkpoint);
+        Select(CUR_CATEGORY.type, CUR_CATEGORY.spawnTable, CUR_CATEGORY.anim_table,
+               *activeCount >= CUR_CATEGORY.bonusKindDeaths, variant,
+               ActorCategoryStats::checkpoint);
         DmaCopy16(3, CUR_CATEGORY.palette, OBJ_PLTT, OBJ_PLTT_SIZE);
 
         state = &gLevelState;
         for (;;) {
             gInput->Update();
             CellAnim::Advance();
-            status = RunActorCategoryFrame();
+            status = RunFrame();
             if ((*state)->timeTrial != 0)
                 (*state)->TickLevelClock();
             gObjVramCursor->Reset();
@@ -162,7 +163,7 @@ s32 InitActorCategory(s32 category)
             gOamBuffer->Commit();
             VramDmaQueue::Flush();
             CellAnim::FlipPage();
-            UpdateActorCategoryBg2();
+            UpdateBg2();
             SpriteFrameCache::Age();
 
             if (status != CATEGORY_EXIT_NONE) {
@@ -186,9 +187,9 @@ s32 InitActorCategory(s32 category)
             } else {
                 open = 0;
                 if (BrightnessFade::IsActive() == 0 && ((gKeys.all >> 16) & START_BUTTON))
-                    open = -CanPauseActorCategory() < 0;
+                    open = -CanPause() < 0;
                 if (open) {
-                    result = RunCategoryPauseMenu();
+                    result = OpenPauseMenu();
                     if (result == PAUSE_ROW_TYPE_QUIT) {
                         ret = ROOM_EXIT_QUIT;
                         goto done;
@@ -209,7 +210,7 @@ s32 InitActorCategory(s32 category)
             break;
         }
     done:
-        DestroyAllActors();
+        DestroyActors();
         ActorCategoryAttemptEndStub();
     } while (ret == ROOM_EXIT_RETRY && gLevelState->GetLives() >= 0 && PAUSED == 0);
 

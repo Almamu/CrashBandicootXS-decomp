@@ -10,7 +10,7 @@ extern "C" {
  * sections by ldscript.txt - see docs/data.md ("Category backgrounds").
  */
 
-/* BG0 cell animation A, gActorCategories[0..2].cellAnim
+/* BG0 cell animation A, ActorCategory::descriptors[0..2].cellAnim
  * (cellAnimSize = its size, 0x75B94), played by InitCellAnim/
  * UploadCellAnimFrame (cell_anim.cpp): 19x13 cells, 60 frames. These are type-0
  * categories, so each frame carries its cells' palette banks after the
@@ -38,8 +38,8 @@ extern const struct cell_anim_03b8b0 gCategoryFamily0CellAnim = {
     },
 };
 
-/* Category 0's spawnTable (gActorCategories[0].spawnTable), read by
- * SelectActorCategory (actor_category_select.cpp) and the actor_spawn.cpp
+/* Category 0's spawnTable (ActorCategory::descriptors[0].spawnTable), read by
+ * ActorCategory::Select (actor_category_select.cpp) and the actor_spawn.cpp
  * accessors: the course length, the spawn count, then each spawn's
  * {kinds, x, y, depth} and next target. */
 extern const ACTOR_SPAWN_TABLE(164) gCategory0SpawnTable = {

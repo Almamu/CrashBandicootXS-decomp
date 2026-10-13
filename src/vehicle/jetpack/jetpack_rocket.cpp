@@ -1,6 +1,7 @@
 #include "vehicle.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "actor_category.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -32,7 +33,7 @@ void JetpackRocket::Update()
         goto exploded;
     }
 
-    if ((u8)IsTouchingPlayer(this)) {
+    if ((u8)ActorCategory::IsTouchingPlayer(this)) {
         gActorList->AsJetpackPlayer()->Damage(0xE);
         hit = 1;
         Launch();
@@ -58,7 +59,7 @@ exploded:
         return;
     }
 
-    if (hit == 0 && (u8)IsTouchingPlayer(this)) {
+    if (hit == 0 && (u8)ActorCategory::IsTouchingPlayer(this)) {
         gActorList->AsJetpackPlayer()->Damage(0xE);
         hit = 1;
     }
@@ -120,7 +121,7 @@ u8 JetpackRocket::IsUnshootable()
  * offset), and plays its cue once; then ActorSelf's update. */
 void JetpackRing::Update()
 {
-    if (record->index == JETPACK_KIND_RING_LEFT && (u8)IsTouchingPlayer(this)) {
+    if (record->index == JETPACK_KIND_RING_LEFT && (u8)ActorCategory::IsTouchingPlayer(this)) {
         JetpackPlayer *player = gActorList->AsJetpackPlayer();
 
         player->PassRing(x - record->spawnX, y);

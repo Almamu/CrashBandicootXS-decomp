@@ -140,7 +140,7 @@ s32 ActorBg::GetLayerDepth()
     return layerDepth;
 }
 
-/* Empty hook InitActorCategory calls once the category is over (after its
+/* Empty hook ActorCategory::Init calls once the category is over (after its
  * retry loop), before freeing the sprite caches. See
  * ActorCategoryAttemptEndStub (cell_anim.cpp). */
 void ActorCategoryEndStub(void)

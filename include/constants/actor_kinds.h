@@ -92,7 +92,7 @@
 #define JETPACK_KIND_PARACHUTE_NITRO 27
 #define JETPACK_KIND_ROCKET 28
 #define JETPACK_KIND_STOPWATCH 29 /* starts the time trial; only once the crystal is saved */
-#define JETPACK_KIND_UNK30 30     /* rocket frames; CountCategoryCrates counts it, nothing spawns it */
+#define JETPACK_KIND_UNK30 30     /* rocket frames; ActorCategory::CountCrates counts it, nothing spawns it */
 #define JETPACK_KIND_RING_LEFT 31 /* the ring the player passes; its right half is 43 */
 #define JETPACK_KIND_PATH_0 (ACTOR_KIND_PATH_POINT + 0) /* 0x20-0x25: gJetpackPlaneHopSpeeds */
 #define JETPACK_KIND_PATH_1 (ACTOR_KIND_PATH_POINT + 1)

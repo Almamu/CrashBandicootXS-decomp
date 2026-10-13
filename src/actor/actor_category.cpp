@@ -1,6 +1,7 @@
 #include "actor_self.hpp"
 #include "vehicle.hpp"
 #include "level_state.hpp"
+#include "actor_category.hpp"
 
 extern "C" {
 #include "core.h"
@@ -17,7 +18,7 @@ extern "C" {
  * actor_spawn.cpp (#770).
  *
  * The category vtable (include/actor_anim.h's 13-slot
- * `struct category_vtable`, set by SelectActorCategory) is a struct of
+ * `struct category_vtable`, set by ActorCategory::Select) is a struct of
  * plain function pointers and two values, not a C++ vtable (#765). C++
  * since #664 part 11b (docs/cplusplus.md). */
 
@@ -27,29 +28,29 @@ extern "C" {
  * `movs r1, #1; eors r0, r1` on the call's r0. Through an `s32` g++
  * copies the result to r1 and builds the 1 in r0; the C wrote the two
  * instructions in asm and the first C++ pinned the result to r0 (#662
- * round 2). Its caller (InitActorCategory) zero-extends the result, as
+ * round 2). Its caller (ActorCategory::Init) zero-extends the result, as
  * for a `bool`. */
-bool CanPauseActorCategory(void)
+bool ActorCategory::CanPause()
 {
-    return !((bool (*)(void))gActorCategoryVtable->isPauseLocked)();
+    return !((bool (*)(void))vtable->isPauseLocked)();
 }
 
-void ReloadActorCategoryGraphics(void)
+void ActorCategory::ReloadGraphics()
 {
-    gActorCategoryVtable->loadBossGraphics();
-    gActorCategoryVtable->reloadPlayerTiles();
+    vtable->loadBossGraphics();
+    vtable->reloadPlayerTiles();
 }
 
 /* Deletes every actor, the list's root (the player) last, then the draw
  * list's buffer. */
-void DestroyAllActors(void)
+void ActorCategory::DestroyActors()
 {
     ActorSelf *n;
     /* `next` is needed: inlined, the code is 1 instruction shorter */
     ActorSelf *next;
 
-    if (gActorCategoryVtable->destroyBoss != NULL)
-        gActorCategoryVtable->destroyBoss();
+    if (vtable->destroyBoss != NULL)
+        vtable->destroyBoss();
 
     n = gActorList->next;
     while (n != gActorList) {
@@ -59,18 +60,18 @@ void DestroyAllActors(void)
     }
     delete gActorList;
 
-    mem_free(gActorDrawList);
+    mem_free(drawList);
 }
 
-void UpdateActorCategoryBg2(void)
+void ActorCategory::UpdateBg2()
 {
-    if (gActorCategoryVtable->updateBossBg2 != NULL)
-        gActorCategoryVtable->updateBossBg2();
+    if (vtable->updateBossBg2 != NULL)
+        vtable->updateBossBg2();
 }
 
-void SetActorCategoryExitStatus(s32 status)
+void ActorCategory::SetExitStatus(s32 status)
 {
-    gActorCategoryExitStatus = status;
+    exitStatus = status;
 }
 
 /* Both forward the player's IsPauseLocked untouched: it returns `s32`

@@ -10,8 +10,8 @@ extern "C" {
  * docs/data.md.
  */
 
-/* Category 1's spawnTable (gActorCategories[1].spawnTable), read by
- * SelectActorCategory (actor_category_select.cpp) and the actor_spawn.cpp
+/* Category 1's spawnTable (ActorCategory::descriptors[1].spawnTable), read by
+ * ActorCategory::Select (actor_category_select.cpp) and the actor_spawn.cpp
  * accessors: the course length, the spawn count, then each spawn's
  * {kinds, x, y, depth} and next target. */
 extern const ACTOR_SPAWN_TABLE(175) gCategory1SpawnTable = {
@@ -197,8 +197,8 @@ extern const ACTOR_SPAWN_TABLE(175) gCategory1SpawnTable = {
     { 0, 0, 0, 0 },
 };
 
-/* Category 2's spawnTable (gActorCategories[2].spawnTable), read by
- * SelectActorCategory (actor_category_select.cpp) and the actor_spawn.cpp
+/* Category 2's spawnTable (ActorCategory::descriptors[2].spawnTable), read by
+ * ActorCategory::Select (actor_category_select.cpp) and the actor_spawn.cpp
  * accessors: the course length, the spawn count, then each spawn's
  * {kinds, x, y, depth} and next target. */
 extern const ACTOR_SPAWN_TABLE(171) gCategory2SpawnTable = {

@@ -2,6 +2,7 @@
 #include "vehicle.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "actor_category.hpp"
 
 extern "C" {
 #include "match.h"
@@ -76,7 +77,7 @@ void HovercraftFireball::StateFly()
     if (delta <= HOVERCRAFT_FIREBALL_MIN_SPEED_Z - 1)
         velZ = HOVERCRAFT_FIREBALL_MIN_SPEED_Z;
 
-    if ((u8)IsTouchingPlayer(this)) {
+    if ((u8)ActorCategory::IsTouchingPlayer(this)) {
         gActorList->AsHpActor()->Damage(6);
         palette = 4;
         gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);

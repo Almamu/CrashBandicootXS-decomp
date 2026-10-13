@@ -42,7 +42,7 @@ void Airship::Damage(s32 delta)
 }
 
 /* LoadAirshipGraphics: confirmed by docs/rom_map.md as a
- * `category_vtable` slot (`gActorCategoryVtables`, type 1, slot 6) - part of this actor's per-frame dispatch table.
+ * `category_vtable` slot (`ActorCategory::vtables`, type 1, slot 6) - part of this actor's per-frame dispatch table.
  *
  * Zero-fills tile 0xff of BG char block 2 (one 0x40-byte 8bpp tile,
  * right before `BG_CHAR_ADDR(3)`, the blank tile the map's 0xff entries

@@ -1,5 +1,6 @@
 #include "actor_self.hpp"
 #include "vehicle.hpp"
+#include "actor_category.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -12,11 +13,11 @@ extern "C" {
 
 /* The vehicle levels' category hooks before ActorSelf in the ROM
  * (0x0802A69C-0x0802A700): JetpackReloadPlayerTiles-PolarReachCourseEnd
- * and IsTouchingPlayer.
+ * and ActorCategory::IsTouchingPlayer.
  * Built with old_agbcp and -fno-implement-inlines, like actor.cpp, where
  * it was until #770. See docs/matching/archive/issue-50-actor-2a69c.md. */
 
-/* The vehicle levels' category hooks (gActorCategoryVtables' slots):
+/* The vehicle levels' category hooks (ActorCategory::vtables' slots):
  * each calls its method on the player
  * (gActorList, the list's root). */
 void JetpackReloadPlayerTiles(void)
@@ -40,7 +41,7 @@ void PolarReachCourseEnd(void)
 }
 
 /* The selected category's slot 9 (its player contact test) on `self`. */
-s32 IsTouchingPlayer(ActorSelf *self)
+s32 ActorCategory::IsTouchingPlayer(ActorSelf *self)
 {
-    return gActorCategoryVtable->isTouchingPlayer(self);
+    return vtable->isTouchingPlayer(self);
 }

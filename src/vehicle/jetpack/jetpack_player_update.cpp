@@ -7,6 +7,7 @@
 #include "actor_bg.hpp"
 #include "sprite_oam_queue.hpp"
 #include "actor_category_stats.hpp"
+#include "actor_category.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -412,10 +413,10 @@ void JetpackPlayer::PassRing(s32 x, s32 y)
     if (paused != 0)
         return;
 
-    if (GetActorCategoryFrameCount() - gJetpackRingLastFrame <= 0x14)
+    if (ActorCategory::GetFrameCount() - gJetpackRingLastFrame <= 0x14)
         return;
 
-    if (GetActorCategoryFrameCount() - gJetpackRingLastFrame > 0xbe)
+    if (ActorCategory::GetFrameCount() - gJetpackRingLastFrame > 0xbe)
         gJetpackRingChain = paused;
 
     switch (gJetpackRingChain) {
@@ -461,7 +462,7 @@ void JetpackPlayer::PassRing(s32 x, s32 y)
         break;
     }
 
-    gJetpackRingLastFrame = GetActorCategoryFrameCount();
+    gJetpackRingLastFrame = ActorCategory::GetFrameCount();
     gJetpackRingChain++;
     if (gJetpackRingChain == 5)
         gJetpackRingChain = 0;

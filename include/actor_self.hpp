@@ -56,7 +56,7 @@ public:
     s16 animTimer;                         // 0x10
     // 0x12 - set once the current sequence has played through
     u8 animDone;
-    // 0x14 - draw order: RunActorCategoryFrame heapsorts the draw list by it
+    // 0x14 - draw order: ActorCategory::RunFrame heapsorts the draw list by it
     //        (HeapSortActorsByKey); bit 15 also sets OAM priority
     //        (SORT_KEY_FLAG_BEHIND_BG, above); unsigned, as KeyGreater
     //        compares it
@@ -127,8 +127,8 @@ public:
     s32 y;     // 0x20
     s32 z;     // 0x24
     s32 state; // 0x28
-    // 0x2C - nonzero: drawn (RunActorCategoryFrame only puts these in
-    //        gActorDrawList); InitActorPart sets it to 1
+    // 0x2C - nonzero: drawn (ActorCategory::RunFrame only puts these in
+    //        ActorCategory::drawList); InitActorPart sets it to 1
     u8 visible;
     // 0x30 - the record InitActorPart was given (actor_anim.h); the draw
     //        functions scale by its baseDepth

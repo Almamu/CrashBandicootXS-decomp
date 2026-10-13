@@ -105,7 +105,7 @@ struct actor_spawn {
     s32 x; // 0x04 - Q8.8 after ActorSpawns::GetX's <<8
     s32 y; // 0x08 - Q8.8 after ActorSpawns::GetY's <<8
     // 0x0C - the course distance at which the spawn is due (ActorSpawns::GetZ:
-    //        Q8 after <<8; SelectActorCategory, RunActorCategoryFrame)
+    //        Q8 after <<8; ActorCategory::Select, ActorCategory::RunFrame)
     s32 z;
 };
 
@@ -122,7 +122,7 @@ COMPILE_TIME_ASSERT(actor_h, sizeof(struct actor_spawn_entry) == 0x14);
 
 /* A stage's actor spawn list (category_descriptor.spawnTable, actor_anim.h;
  * ActorSpawns::table), ordered by depth: the course length (past it
- * RunActorCategoryFrame calls the vtable's reachCourseEnd), the number of
+ * ActorCategory::RunFrame calls the vtable's reachCourseEnd), the number of
  * spawns, then the spawns. The accessors (actor_spawn.cpp) take a spawn by
  * its index. Every access is `table->entries[i].field`, whose address
  * gcc builds as the ROM does: `entries`' offset and the field's are added
@@ -146,29 +146,8 @@ struct actor_spawn_table {
  * class to C++. */
 struct ActorSelf;
 
-/* src/actor/actor_category_hooks.cpp (the rest: vehicle.hpp). A yes/no
- * that stays s32: every caller's `(u8)` is the ROM's truncation, but as a
- * bool, PolarIsTouchingPlayer and JetpackIsTouchingPlayer (the category
- * hooks it calls) get a second return path (#855). */
-extern s32 IsTouchingPlayer(struct ActorSelf *self);
-
 /* src/actor/actor_bg.cpp (the rest is class ActorBg, actor_bg.hpp) */
 extern void ActorCategoryEndStub(void);
-
-/* src/actor/actor_category_frame.cpp */
-extern s32 RunActorCategoryFrame(void);
-
-/* src/actor/actor_category_init.cpp */
-extern s32 InitActorCategory(s32 category);
-
-/* src/actor/actor_category_select.cpp */
-extern void SelectActorCategory(s32 type, struct actor_spawn_table *table,
-                                struct anim_table_record *animTable, u8 active, s32 variant,
-                                s32 checkpoint);
-
-/* src/actor/actor_category_stats.cpp (the rest is class
- * ActorCategoryStats, actor_category_stats.hpp) */
-extern s32 CountCategoryCrates(s32 categoryIdx);
 
 /* src/actor/actor_factory.cpp. SpawnActor is also slot 1 of the category
  * vtables (src/data/actor_category_175558.cpp): to C, `struct ActorSelf` is
@@ -179,23 +158,6 @@ extern class ActorSelf *CreateActor(u8 kind, s32 x, s32 y, s32 z, struct actor_s
 extern struct ActorSelf *SpawnActor(struct actor_spawn *spawn, u8 useBonus, s32 zOffset);
 extern void ConstructAnimTableState(struct anim_table_record *table, s32 z);
 
-/* src/actor/actor_spawn.cpp (the rest is class ActorSpawns,
- * actor_spawns.hpp) */
-extern s32 GetActorCategoryFrameCount(void);
-
-/* src/actor/actor_category.cpp. C++ only: CanPauseActorCategory returns a
- * `bool`. */
-#ifdef __cplusplus
-extern bool CanPauseActorCategory(void);
-#endif
-extern void ReloadActorCategoryGraphics(void);
-extern void DestroyAllActors(void);
-extern void UpdateActorCategoryBg2(void);
-extern void SetActorCategoryExitStatus(s32 status);
-
-/* src/actor/actor_vram_pool.cpp */
-extern void SetupActorVramPool(void);
-
 /* src/actor/bg_picture.cpp */
 extern void LoadBgPicture(const u8 *pic);
 extern void FillBgPictureMap(const u8 *nib, const u16 *map, s32 cols, s32 rows);
@@ -205,14 +167,6 @@ extern void ActorCategoryAttemptEndStub(void);
 
 /* The actor zone's globals (sym_iwram.txt). */
 extern struct anim_table_record *gActorAnimTable;
-extern s32 gActorCategory;
-extern s32 gActorCategoryExitStatus;
-extern s32 gActorCategoryFrameCount;
-extern const struct category_vtable *gActorCategoryVtable;
-extern s32 gActorDrawCount;
-#ifdef __cplusplus
-extern class ActorSelf **gActorDrawList;
-#endif
 extern s32 gActorFarClipDepth;
 extern s32 gActorNearClipDepth;
 /* The projection distance (Q8): DrawActor scales x/y by
