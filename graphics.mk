@@ -375,3 +375,26 @@ $(C_BUILDDIR)/data/rle_sprites_15a050.o: $(call rle_sprite_files,vehicles/jetpac
 $(C_BUILDDIR)/data/frame_table_17a880.o: $(call rle_sprite_files,vehicles/polar/yeti)
 $(C_BUILDDIR)/data/anim_family_178f80.o: $(call rle_sprite_files,vehicles/polar/player) $(GRAPHICS_BUILDDIR)/vehicles/polar/sprite_sheet_frames.h
 $(C_BUILDDIR)/data/anim_family_17aa6c.o: $(call rle_sprite_files,vehicles/jetpack/player) $(GRAPHICS_BUILDDIR)/vehicles/jetpack/sprite_sheet_frames.h
+
+# The graphics classes (docs/graphics.md, "Graphics classes"): a graphic of
+# graphics/manifest.json with a `class` is that class, its parts static const
+# data members. graphics.hpp declares them all (written only if it changed,
+# behind a stamp, so a manifest edit that keeps it rebuilds nothing). Each
+# object of the manifest's `objects` #includes the definitions of the members
+# in its ROM range, in ROM order, from <object>.inc.
+GRAPHICS_CLASSES_HEADER := $(GENERATED_INCLUDE_DIR)/graphics.hpp
+GENERATED_HEADERS += $(GRAPHICS_CLASSES_HEADER)
+$(GRAPHICS_CLASSES_HEADER).stamp: graphics/manifest.json tools/gfx_manifest.py
+	@mkdir -p $(dir $@)
+	python3 tools/gfx_manifest.py header $(GRAPHICS_CLASSES_HEADER)
+	@touch $@
+$(GRAPHICS_CLASSES_HEADER): $(GRAPHICS_CLASSES_HEADER).stamp
+	@test -f $@ || python3 tools/gfx_manifest.py header $@
+
+GRAPHICS_CLASS_OBJECTS := $(shell python3 tools/gfx_manifest.py objects)
+define GRAPHICS_DEFS_RULE
+$(GRAPHICS_BUILDDIR)/$(1).inc: graphics/manifest.json tools/gfx_manifest.py
+	python3 tools/gfx_manifest.py defs $(1) $$@
+$(C_BUILDDIR)/data/$(1).o: $(GRAPHICS_BUILDDIR)/$(1).inc
+endef
+$(foreach o,$(GRAPHICS_CLASS_OBJECTS),$(eval $(call GRAPHICS_DEFS_RULE,$(o))))

@@ -765,6 +765,8 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/bosses/hovercraft.cpp`, `src/data/singleton_kind_17c460.c`, `boss_pictures_167ad4.c` | the five ROM tables only the hovercraft reads are `Hovercraft`'s static data members (`attacks` is gHovercraftAttacks, `box`, `keyframes`, `palette`, `picture`), still defined in their C data files; bosses.h's five externs go | 0 | (unchanged) | 0 -> 0 | [#772](#the-hovercraft-as-an-all-static-class-772) |
 | `src/vehicle/polar/yeti.cpp`, `yeti_graphics.cpp`, `yeti_states.cpp`, `yeti_update.cpp`, `src/vehicle/jetpack/jetpack_spawn.cpp`, `src/data/actor_state_fn_17a840.cpp` (was .c) | `Yeti` (new include/yeti.hpp), an all-static class: its 8 IWRAM globals and 7 ROM tables are static data members (`anim` is gYeti, `x` gYetiX, `stateFuncs` gYetiStateFuncs, ...), its 13 functions static member functions (`Create`, `Update`, `UpdateBg2`, `Destroy`, `LoadGraphics`, `Stop`, `IsTouching`, the four states incl. jetpack_spawn.cpp's `StateStop`, `UpdatePalette`, `BuildBg2Map`); vehicle.h's 13 prototypes and 15 externs go (5 C-only prototypes stay for the category table) | 13 | (unchanged) | 0 -> 0 | [#772](#the-yeti-as-an-all-static-class-772) |
 | `src/vehicle/polar/polar_player.cpp`, `polar_player_states.cpp`, `polar_crate.cpp`, `polar_crates.cpp`, `polar_objects.cpp`, `polar_course_objects.cpp` | the callers: `Yeti::Stop()`, `Yeti::IsTouching(this)` | 0 | (unchanged) | 0 -> 0 | [#772](#the-yeti-as-an-all-static-class-772) |
+| `src/data/menu_graphics_61badc.cpp` (definitions generated since) | the menu, title and logo graphics (0x0861BADC-0x086377C0) as static classes of the generated build/include/graphics.hpp: each of the 20 graphics is a class (`MenuSkyBg`, `TitleScreenBg`, `CreditsShinenLogo`, `VvLogoUrl`, ...) whose palette, tiles and map are static const data members (`TitleScreenBg::palette`, `::tiles`, `::map`), defined in ROM order by `gfx_manifest.py defs`; cxx_symbols.txt's generated block maps the 52 members to their C names | 0 | (unchanged) | 0 -> 0 | [#915](#the-graphics-as-static-classes-915) |
+| `src/data/bg_package_16b284.cpp`, `bg_package_16c484.cpp`, `bg_package_16c58c.cpp`, `bg_package_17c594.cpp`, `countdown_17d7a4.cpp`, `level_gfx_17cff4.cpp`, `popup_glyphs_17cf40.cpp`, `slot_seeds_17d6c0.cpp` | the records: the `struct bg_package` pictures and the credits and VV logo tables point at the members (`(void *)TitleScreenBg::palette`); their 52 `extern const u8` declarations go | 0 | (unchanged) | 0 -> 0 | [#915](#the-graphics-as-static-classes-915) |
 | `src/actor/cell_anim.cpp` | `CellAnim` (new include/cell_anim.hpp), an all-static class: its 13 IWRAM globals are static data members (`data` is gCellAnim, `cols` gCellAnimCols, ...), its 11 functions static member functions (`Init`, `ResetBg`, `UploadFrame`, `Advance`, `FlipPage`, the getters, `SetSpeed`, the UNUSED `FillTilemap`); actor.h's 11 prototypes and 13 externs go | 11 | (unchanged) | 0 -> 0 | [#915](#the-cell-animation-as-an-all-static-class-915) |
 | `src/actor/actor.cpp`, `actor_category_frame.cpp`, `actor_category_init.cpp`, `actor_category_select.cpp`, `bg_picture.cpp`, `src/bosses/hovercraft.cpp`, `src/vehicle/jetpack/airship.cpp`, `jetpack_player.cpp`, `jetpack_player_update.cpp`, `src/vehicle/polar/polar_player.cpp`, `polar_player_states.cpp`, `yeti.cpp`, `yeti_states.cpp`, `yeti_update.cpp` | the callers: `CellAnim::GetDistance()`, `CellAnim::SetSpeed(...)` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-cell-animation-as-an-all-static-class-915) |
 | `src/actor/actor_bg.cpp` | `ActorBg` (new include/actor_bg.hpp), an all-static class: its 13 IWRAM globals are static data members (`scrollX` is gActorBgScrollX, `layerDepth` gActorBgLayerDepth, ...), its 8 functions static member functions (`InitScroll`, `UpdateScroll`, `CommitScroll`, `Shake`, `Set`/`GetLayerDepth`, `GetCenterX`/`Y`); actor.h's 8 prototypes and 13 externs go | 8 | (unchanged) | 0 -> 0 | [#915](#the-actor-bg-scroll-as-an-all-static-class-915) |
@@ -4609,6 +4611,46 @@ data objects included.
   (LoadGraphics's inlined copy of the map loop) stays a file-local helper,
   and gYetiRleFrames (the frames' pixels, rle_sprites_0c2758.c) a C
   global that only frame_table_17a880.c names.
+
+### The graphics as static classes (#915)
+
+An owner request added to #915: a graphic's parts, which were loose
+globals sharing a prefix (`gTitleScreenBgPalette`, `gTitleScreenBgTiles`,
+`gTitleScreenBgMap`), are the static const data members of one class per
+graphic (`TitleScreenBg::palette`, `::tiles`, `::map`). It is the
+[yeti's](#the-yeti-as-an-all-static-class-772) ROM tables again: a static
+data member defined out of the class with its initializer is one symbol
+in `.rodata`, like the global was, so the ROM's layout, alignment and link
+order don't change, and cxx_symbols.txt gives each member its C name back.
+The ROM and the .map are identical (the same symbols at the same
+addresses).
+
+- **Generated.** The classes are graphics/manifest.json's: an entry with a
+  `class` is one, its members named by their role (`palette`, `tiles` or
+  `bitmap`, `map`). `tools/gfx_manifest.py` writes the header declaring
+  them (`header`: build/include/graphics.hpp, a generated header like the
+  level constants), each data object's definitions in ROM order (`defs`:
+  `<object>.inc`, which the object `#include`s, for the manifest's
+  `objects`), and cxx_symbols.txt's block between the `graphics classes`
+  markers (`symbols`; `gfx_manifest.py check` fails when it is stale). A
+  graphic given a class in the manifest gets its class, its definition and
+  its C name with no hand-written code. docs/graphics.md, "Graphics
+  classes", has the rules.
+- **Records.** The pointer records stay ROM data as they were: the
+  `struct bg_package` pictures (gMenuSkyBg, gTitleScreenBg, ...) and the
+  credits' and VV logo screen's tables are initialised with the members
+  (`(void *)TitleScreenBg::palette`), and their files' `extern const u8`
+  declarations go.
+- **No duplicates.** g++ 2.9 replaces a const array initialised by a
+  string literal with a copy of the literal where it decays to a pointer,
+  which is why the cutscene and UI string tables stay C. The graphics'
+  initialisers are byte lists (tools/bin2c.py), not string literals: each
+  member is emitted once, where the generated .inc defines it, and the
+  records point at it. The .map has the same 12000 symbols.
+
+| object | graphics | classes |
+|---|---|---|
+| menu_graphics_61badc.cpp | the menus, the title, the Universal, credits and VV logos, the level-select platform | 20: `MenuSkyBg`, `PauseMenuBg`, `LevelSelectPlatformBg` (gLevelSelectPageBg: `LevelSelectPageBg` is the game's BG1 class), `ContinuePromptSmokeBg`, `ContinuePromptGlowBg`, `ContinuePromptUkaUkaBg`, `TitleBandicootObj`, `TitleCrashObj`, `TitleArrow1Obj`, `TitleArrow2Obj`, `UniversalLogoBg`, `TitleScreenBg`, `CreditsRedEyeStudiosLogo`, `CreditsShinenLogo`, `CreditsCosmigoLogo`, `CreditsUniversalLogo`, `CreditsVvLogo`, `VvLogoEmblem`, `VvLogoLetters`, `VvLogoUrl` |
 
 ### The cell animation as an all-static class (#915)
 

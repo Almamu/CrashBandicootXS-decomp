@@ -1,4 +1,5 @@
 #include "frontend.hpp"
+#include "graphics.hpp"
 #include "logo_fly_in.h"
 
 extern "C" {
@@ -12,21 +13,6 @@ extern "C" {
 
 #include "actor_anim.h"
 
-extern const u8 gTitleBandicootObjPalette[];
-extern const u8 gTitleCrashObjPalette[];
-extern const u8 gTitleArrow1ObjPalette[];
-extern const u8 gTitleArrow2ObjPalette[];
-extern const u8 gTitleScreenBgPalette[];
-extern const u8 gTitleBandicootObjTiles[];
-extern const u8 gTitleCrashObjTiles[];
-extern const u8 gTitleArrow1ObjTiles[];
-extern const u8 gTitleArrow2ObjTiles[];
-extern const u8 gTitleScreenBgTiles[];
-extern const u8 gTitleBandicootObjMap[];
-extern const u8 gTitleCrashObjMap[];
-extern const u8 gTitleArrow1ObjMap[];
-extern const u8 gTitleArrow2ObjMap[];
-extern const u8 gTitleScreenBgMap[];
 /* DrawTitleLogoPieces (title_screen.cpp): the {x, y} offsets of the
  * eight OAM pieces it draws around each of its two slots. */
 const s32 gTitleArrowPieceOffsets[8][2] = {
@@ -58,13 +44,13 @@ const u16 gTitleMenuBlinkPalette[16] = {
 /* The four OBJ sprites LoadTitleScreenObjTiles (title_screen.cpp) uploads,
  * through the IWRAM table gTitleObjPackages (src/iwram/iwram_data.cpp),
  * which lists them in the order 0817D0A8, 0817D0D0, 0817D0BC, 0817D094. */
-const struct bg_package gTitleBandicootObj = { 4, 6, (void *)gTitleBandicootObjPalette, (void *)gTitleBandicootObjTiles, (void *)gTitleBandicootObjMap };
-const struct bg_package gTitleCrashObj = { 8, 40, (void *)gTitleCrashObjPalette, (void *)gTitleCrashObjTiles, (void *)gTitleCrashObjMap };
-const struct bg_package gTitleArrow1Obj = { 4, 16, (void *)gTitleArrow1ObjPalette, (void *)gTitleArrow1ObjTiles, (void *)gTitleArrow1ObjMap };
-const struct bg_package gTitleArrow2Obj = { 4, 16, (void *)gTitleArrow2ObjPalette, (void *)gTitleArrow2ObjTiles, (void *)gTitleArrow2ObjMap };
+const struct bg_package gTitleBandicootObj = { 4, 6, (void *)TitleBandicootObj::palette, (void *)TitleBandicootObj::tiles, (void *)TitleBandicootObj::map };
+const struct bg_package gTitleCrashObj = { 8, 40, (void *)TitleCrashObj::palette, (void *)TitleCrashObj::tiles, (void *)TitleCrashObj::map };
+const struct bg_package gTitleArrow1Obj = { 4, 16, (void *)TitleArrow1Obj::palette, (void *)TitleArrow1Obj::tiles, (void *)TitleArrow1Obj::map };
+const struct bg_package gTitleArrow2Obj = { 4, 16, (void *)TitleArrow2Obj::palette, (void *)TitleArrow2Obj::tiles, (void *)TitleArrow2Obj::map };
 
 /* LoadTitleScreenBg's (title_screen.cpp) BG2 picture. */
-const struct bg_package gTitleScreenBg = { 16, 16, (void *)gTitleScreenBgPalette, (void *)gTitleScreenBgTiles, (void *)gTitleScreenBgMap };
+const struct bg_package gTitleScreenBg = { 16, 16, (void *)TitleScreenBg::palette, (void *)TitleScreenBg::tiles, (void *)TitleScreenBg::map };
 
 /* The motion sequences of the nine countdown slots of
  * title_screen.cpp (RunTitleScreen, ResetTitleLogoPieces), which

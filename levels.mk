@@ -119,14 +119,13 @@ $(C_BUILDDIR)/data/level_table_16c814.o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)
 # The constants headers named in the level data (#655): the entity types
 # (data/levels/entity_types.json), the crate kinds (crate_kinds.json) and
 # the level ids (levels.json's "levels" list).
-# They are generated into build/include, which is on every object's
-# include path. The Makefile adds the sound constants (songs.h, sfx.h) to
-# GENERATED_HEADERS, and makes every C object wait for the whole list.
-GENERATED_INCLUDE_DIR := build/include
-GENERATED_HEADERS := $(GENERATED_INCLUDE_DIR)/constants/entities.h $(GENERATED_INCLUDE_DIR)/constants/crates.h \
+# They are generated into build/include (GENERATED_INCLUDE_DIR), which is
+# on every object's include path. graphics.mk adds graphics.hpp and the
+# Makefile the sound constants (songs.h, sfx.h) to GENERATED_HEADERS, and
+# the Makefile makes every C object wait for the whole list.
+GENERATED_HEADERS += $(GENERATED_INCLUDE_DIR)/constants/entities.h $(GENERATED_INCLUDE_DIR)/constants/crates.h \
 	$(GENERATED_INCLUDE_DIR)/constants/levels.h $(GENERATED_INCLUDE_DIR)/constants/themes.h \
 	$(GENERATED_INCLUDE_DIR)/constants/save_version.h
-CPPFLAGS += -iquote $(GENERATED_INCLUDE_DIR)
 
 $(GENERATED_INCLUDE_DIR)/constants/entities.h: data/levels/entity_types.json tools/levels.py
 	@mkdir -p $(dir $@)

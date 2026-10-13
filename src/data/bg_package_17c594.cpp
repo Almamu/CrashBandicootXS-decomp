@@ -1,3 +1,4 @@
+#include "graphics.hpp"
 #include "graphics_package.hpp"
 #include "menus.hpp"
 
@@ -12,39 +13,29 @@ extern "C" {
  * docs/data.md.
  */
 
-extern const u8 gContinuePromptSmokeBgPalette[];
-extern const u8 gContinuePromptGlowBgPalette[];
-extern const u8 gContinuePromptUkaUkaBgPalette[];
-extern const u8 gContinuePromptSmokeBgTiles[];
-extern const u8 gContinuePromptGlowBgTiles[];
-extern const u8 gContinuePromptUkaUkaBgTiles[];
-extern const u8 gContinuePromptSmokeBgMap[];
-extern const u8 gContinuePromptGlowBgMap[];
-extern const u8 gContinuePromptUkaUkaBgMap[];
-
 /* BG0. */
 const struct bg_package gContinuePromptSmokeBg = {
     0x1e,
     0x14,
-    (void *)gContinuePromptSmokeBgPalette,
-    (void *)gContinuePromptSmokeBgTiles,
-    (void *)gContinuePromptSmokeBgMap,
+    (void *)ContinuePromptSmokeBg::palette,
+    (void *)ContinuePromptSmokeBg::tiles,
+    (void *)ContinuePromptSmokeBg::map,
 };
 
 /* BG2. */
 const struct bg_package gContinuePromptGlowBg = {
     0x1e,
     0x14,
-    (void *)gContinuePromptGlowBgPalette,
-    (void *)gContinuePromptGlowBgTiles,
-    (void *)gContinuePromptGlowBgMap,
+    (void *)ContinuePromptGlowBg::palette,
+    (void *)ContinuePromptGlowBg::tiles,
+    (void *)ContinuePromptGlowBg::map,
 };
 
 /* BG1. */
 const struct bg_package gContinuePromptUkaUkaBg = {
     0x1e,
     0x14,
-    (void *)gContinuePromptUkaUkaBgPalette,
-    (void *)gContinuePromptUkaUkaBgTiles,
-    (void *)gContinuePromptUkaUkaBgMap,
+    (void *)ContinuePromptUkaUkaBg::palette,
+    (void *)ContinuePromptUkaUkaBg::tiles,
+    (void *)ContinuePromptUkaUkaBg::map,
 };

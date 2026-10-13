@@ -1,4 +1,5 @@
 #include "frontend.hpp"
+#include "graphics.hpp"
 #include "logo_fly_in.h"
 
 extern "C" {
@@ -30,12 +31,6 @@ extern const struct delta_record gVvLogoPieceMotion16[];
 extern const struct delta_record gVvLogoPieceMotion17[];
 extern const struct delta_record gVvLogoPieceMotion18[];
 extern const struct delta_record gVvLogoPieceMotion19[];
-extern const u8 gVvLogoEmblemPalette[];
-extern const u8 gVvLogoLettersPalette[];
-extern const u8 gVvLogoUrlPalette[];
-extern const u8 gVvLogoEmblemTiles[];
-extern const u8 gVvLogoLettersTiles[];
-extern const u8 gVvLogoUrlTiles[];
 
 /* Twenty {record, hold} seeds read by InitVvLogoPieces
  * (company_logos.cpp): the motion sequences in
@@ -71,23 +66,23 @@ const struct slot_seed gVvLogoPieceSeeds[21] = {
 const struct bg_package gVvLogoEmblemObj = {
     0,
     0,
-    (void *)gVvLogoEmblemPalette,
-    (void *)gVvLogoEmblemTiles,
+    (void *)VvLogoEmblem::palette,
+    (void *)VvLogoEmblem::tiles,
     NULL,
 };
 
 const struct bg_package gVvLogoLettersObj = {
     0,
     0,
-    (void *)gVvLogoLettersPalette,
-    (void *)gVvLogoLettersTiles,
+    (void *)VvLogoLetters::palette,
+    (void *)VvLogoLetters::tiles,
     NULL,
 };
 
 const struct bg_package gVvLogoUrlObj = {
     0,
     0,
-    (void *)gVvLogoUrlPalette,
-    (void *)gVvLogoUrlTiles,
+    (void *)VvLogoUrl::palette,
+    (void *)VvLogoUrl::tiles,
     NULL,
 };

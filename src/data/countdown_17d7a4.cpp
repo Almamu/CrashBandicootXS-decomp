@@ -1,4 +1,5 @@
 #include "frontend.hpp"
+#include "graphics.hpp"
 #include "logo_fly_in.h"
 
 extern "C" {
@@ -10,12 +11,8 @@ extern "C" {
  * sections by ldscript.txt - see docs/data.md.
  */
 
-
-extern const u8 gUniversalLogoBgPalette[];
-extern const u8 gUniversalLogoBgTiles[];
-extern const u8 gUniversalLogoBgMap[];
 /* The BG2 picture LoadUniversalLogoBg (company_logos.cpp) loads. */
-const struct bg_package gUniversalLogoBg = { 30, 20, (void *)gUniversalLogoBgPalette, (void *)gUniversalLogoBgTiles, (void *)gUniversalLogoBgMap };
+const struct bg_package gUniversalLogoBg = { 30, 20, (void *)UniversalLogoBg::palette, (void *)UniversalLogoBg::tiles, (void *)UniversalLogoBg::map };
 
 /* The motion sequences of the twenty countdown slots of InitVvLogoPieces
  * (company_logos.cpp), which slot_seeds_17d6c0.cpp's

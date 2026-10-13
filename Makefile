@@ -118,6 +118,11 @@ OBJS := $(C_OBJS) $(CXX_OBJS) $(LIB_OBJS) $(ASM_OBJS) $(DATA_ASM_OBJS)
 # The .d files the C objects' preprocess step writes (see DEPFLAGS).
 DEPS := $(C_OBJS:.o=.d) $(CXX_OBJS:.o=.d) $(LIB_C_OBJS:.o=.d) $(LIBGCC2_OBJS:.o=.d)
 
+# The headers generated from the data (graphics.mk's graphics.hpp, levels.mk's
+# constants, the sound constants below), on every object's include path.
+GENERATED_INCLUDE_DIR := build/include
+CPPFLAGS += -iquote $(GENERATED_INCLUDE_DIR)
+
 include graphics.mk
 include levels.mk
 
