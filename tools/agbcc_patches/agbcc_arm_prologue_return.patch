@@ -2,8 +2,8 @@ agbcc_arm_patched: four opt-in options for the IWRAM ARM code
 =============================================================
 
 Applies to SAT-R/agbcc's gcc_arm (2.9-arm-000512) with `patch -p1` from
-the agbcc checkout's root. tools/build_patched_agbcc_arm.sh does that on
-a copy and installs the result as tools/agbcc/bin/agbcc_arm_patched.
+the agbcc checkout's root; built that way it was agbcc_arm_patched, the
+C compiler (nothing builds it any more, #844).
 tools/build_agbccpp.sh applies it, with the paths rewritten to g++_arm/,
 to notyourav/agbcc's `cp` branch's ARM C++ compiler (the same
 config/arm/arm.c and arm.h) and installs tools/agbcc/bin/agbcp_arm_patched,

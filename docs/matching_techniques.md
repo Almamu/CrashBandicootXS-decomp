@@ -202,8 +202,8 @@ the repo). Since the C++ conversion the two files are C++, built with
 agbcp_arm_patched: the same patch on notyourav/agbcc's ARM C++ compiler
 (`g++_arm`), built by `tools/build_agbccpp.sh` (INSTALL.md), whose
 output is the C compiler's with and without the options
-(iwram-image.md, "Eighth step"). `tools/build_patched_agbcc_arm.sh`
-still builds the C one. The Makefile uses agbcp_arm_patched only for
+(iwram-image.md, "Eighth step"). Nothing builds the C one any more
+(#844 removed its build script). The Makefile uses agbcp_arm_patched only for
 `ARM_OBJS`. Don't use either, or add
 options to the patch, for anything else without the same kind of
 evidence: a back-end path in agbcc_arm's source that no C can reach.

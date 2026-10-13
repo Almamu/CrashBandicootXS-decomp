@@ -23,14 +23,13 @@ real detail.
   not byte-exact. None is left (#553 was the last).
 - Category labels (`game_loop`, `actor`, `graphics`, `overlay_ui`,
   `graphics_loading`, `audio`, `hud`, `system`, `util`) tell you roughly
-  what part of the game an issue is about; [docs/status/](docs/status/)
-  has a page per category.
-- `python3 tools/chunk_remaining_work.py --cleanup-scan --issues-dir /tmp/issues`
-  scans `src/` and `lib/` for raw pointer-arithmetic field access and raw
-  hardware addresses. `--cleanup-report FILE` (or `-`) lists every site
-  by subsystem and file. #550 is converting the sites it found when it
-  learned the line-start, double-pointer and byte-pointer forms; run it
-  to check that new code doesn't add more.
+  what part of the game an issue is about.
+- `python3 tools/cleanup_scan.py [FILE]` scans the C in `src/` and `lib/`
+  for raw pointer-arithmetic field access and raw hardware addresses,
+  and lists every site by subsystem and file (to stdout, or to `FILE`).
+  The progress report uses the same scan to mark a unit complete
+  ([docs/decomp_dev.md](docs/decomp_dev.md)); run it to check that new
+  code doesn't add more.
 
 ## Claiming work
 
@@ -103,7 +102,7 @@ matched code - read it before starting.** In short:
   symbol. An honest placeholder is better than a wrong name.
 - **Files:** a new file goes in the `src/` subsystem directory that fits
   what it holds and is named after its subject (see
-  [docs/file_layout_plan.md](docs/file_layout_plan.md)); library code goes
+  [Source layout](#source-layout) below); library code goes
   under `lib/` (see [docs/libraries.md](docs/libraries.md)). Each object
   is placed at its ROM address by its position in `ldscript.txt`, so
   splitting or merging files means updating `ldscript.txt` and
@@ -124,6 +123,56 @@ matched code - read it before starting.** In short:
   workaround) follow the full matching loop in
   [docs/workflow.md](docs/workflow.md), steps 1 to 8.
 
+### Source layout
+
+`src/` has one directory per subsystem (#575 set it up; `vehicle/` has
+`polar/` and `jetpack/` below it since #769):
+
+| Directory | What goes there |
+|---|---|
+| `system/` | Boot, `AgbMain`, the heap, IRQ setup, input, asset loading, `MainLoop` |
+| `util/` | Fixed-point math, number/time formatting, `printf`, the libc-style string functions, `rand`, Bresenham lines, AABB helpers |
+| `text/` | Fonts, word-wrapped text and text boxes |
+| `gfx/` | Fades, display control, palette cycles, the OAM buffer and VRAM/palette caches, sprite-piece drawing, graphics packages, the sprite-frame VRAM pool, the bitmap screen |
+| `audio/` | The game's audio layer over GAX2 (GAX2 itself is `lib/gax/`) |
+| `link/` | The link-cable SIO session |
+| `save/` | EEPROM save data, save transfer over link, the save menu |
+| `objects/` | The side-view object framework: sprite objects, part lists, moving and ground sprites, the `Ctrl` base, effect controller, collision queue, platforms, contact probes |
+| `player/` | The player object, the action controller (the moveset's states), the swim and input controllers |
+| `enemies/` | The enemy controller and its behaviours |
+| `crates/` | The crate list and grid, crate behaviours, slot crates |
+| `pickups/` | Wumpa, extra lives, the stopwatch |
+| `bosses/` | Mega Mix, Tiny, Cortex, Dingodile, the hovercraft |
+| `level/` | Level state and game context, rooms, the `Spawn*` entity spawners, BG layers, terrain and collision, the camera |
+| `cutscene/` | The slideshow and cutscene player |
+| `hud/` | The HUD |
+| `menus/` | Pause menu, power dialog, level select, continue prompt |
+| `frontend/` | Title screen, company logos, language select, starfield, credits |
+| `actor/` | The actor-category engine behind the polar and jetpack levels: category init, select and frame, cell-animated BGs, the actor base and factory, BG pictures |
+| `vehicle/` | The polar (riding) and jetpack levels: their players, objects and crates; the yeti chase is in `polar/`, N. Gin's airship in `jetpack/` |
+| `iwram/` | The IWRAM image: its ARM code and data |
+| `data/` | ROM data tables |
+
+`actor/` and `objects/` are separate on purpose: `actor` is this
+project's name for the pseudo-3D category engine (`struct actor_self`,
+`InitActorPart`, `gActorCategory`), `objects` the side-view object
+framework of the platforming levels.
+
+File names:
+
+- **Code:** `src/<subsystem>/<subject>[_<role>].cpp`, lowercase
+  snake_case. The subject is the class or feature, spelled as its
+  functions spell it (`CrateList*` is `crate_list`, `PauseMenu*` is
+  `pause_menu`). Add a role suffix taken from the file's own functions
+  (`_init`, `_update`, `_draw`, `_states`, `_collide`, ...) only when one
+  subject spans several files. Never a number or a ROM address.
+- **Mixed files** are named after the subject with the most functions;
+  the header comment lists the rest. Each file opens with one line
+  saying what it holds.
+- **Data tables** are `src/data/<content>_<romaddr>.cpp` (three text
+  tables are still `.c`): each is one ROM range, and the address tells
+  apart files with the same content name.
+
 ### Verification
 
 Only a **full clean rebuild** counts as proof. Before every PR:
@@ -140,8 +189,8 @@ data. The Makefile tracks header
 dependencies, so a plain `make` is fine while you work, but the PR check
 is always from clean.
 
-If your change touches what a `docs/status/<category>.md` page or a
-`docs/` page says, update it in the same PR.
+If your change touches what a `docs/` page says, update it in the same
+PR.
 
 ### Declarations and headers
 
@@ -546,8 +595,4 @@ to the issue number at all - e.g. "issue #N stays open" or "the rest of
 ## If you're an AI agent
 
 The process above is tool-agnostic, and [README.md](README.md#ai-assisted-decompilation)
-has this project's stance on AI-assisted work in general. Claude Code
-sessions can also use the
-[`match-chunk` skill](.claude/skills/match-chunk/SKILL.md), written for
-the matching campaign: it takes an issue number, works through the
-functions it lists, verifies, and prepares the PR.
+has this project's stance on AI-assisted work in general.

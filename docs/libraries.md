@@ -188,5 +188,5 @@ No library object uses old_agbcc, agbcp_arm_patched or
 `gax` ("GAX2 sound engine (lib)"), `agb_eeprom` ("AgbEeprom SDK (lib)")
 and `libgcc` ("libgcc (lib)"); game audio keeps `audio`. The hand-written
 ranges (lib1funcs.s, libagbsyscall.s, `lib/gax/asm/gax_arm_dsp.s`) are
-`HANDWRITTEN`: no unit, out of the totals. `tools/chunk_remaining_work.py` scans `lib/**/*.c` as well as
-`src/**/*.c` for parked functions and cleanup candidates.
+`HANDWRITTEN`: no unit, out of the totals. `tools/cleanup_scan.py` scans `lib/**/*.c` as well as
+`src/**/*.c` for cleanup candidates.

@@ -631,7 +631,9 @@ checkout's objects are stock and the Makefile doesn't track `arm.h` -
 and `make cc1`), and installs `cc1` as
 `tools/agbcc/bin/agbcc_arm_patched`. agbcc, old_agbcc and agbcc_arm
 stay as they are. CI ran it after "Install agbcc" until the eighth step,
-which builds the C++ twin of this compiler instead.
+which builds the C++ twin of this compiler instead. The script was
+removed in #844, once nothing used the C compiler; commit `ab4f9c9b` has
+its last version.
 
 **Which objects.** The Makefile's `PATCHED_ARM_OBJS` builds
 `string_arm.o` and `sprite_arm.o` with agbcc_arm_patched, each with only
@@ -732,8 +734,9 @@ files (assembled code compared, `-O2 -fomit-frame-pointer
   prints `crashbandicootxs.gba: OK`.
 
 So the Makefile builds them as C++ (`ARM_OBJS`), and CI no longer
-builds agbcc_arm_patched: `tools/build_patched_agbcc_arm.sh` stays as
-the C build of the same patch, for comparisons like the ones above.
+builds agbcc_arm_patched: `tools/build_patched_agbcc_arm.sh` stayed as
+the C build of the same patch, for comparisons like the ones above,
+until #844 removed it.
 
 ## Ninth step: the two jump.c rules (#662)
 
@@ -784,8 +787,8 @@ new hunk 12; the header lists them):
   the option is a `target_flags` bit like the others and no `toplev.c`
   change is needed. `g++_arm/jump.c` differs from `gcc_arm/jump.c`
   elsewhere (coverage and branch-probability code), so the hunk applies
-  there 7 lines further down; `tools/build_agbccpp.sh` and
-  `tools/build_patched_agbcc_arm.sh` apply it unchanged.
+  there 7 lines further down; `tools/build_agbccpp.sh` applies it
+  unchanged (as `tools/build_patched_agbcc_arm.sh` did, until #844).
 
 **Which objects.** `string_arm.o` adds `-mno-cond-return`, and
 `sprite_arm.o` adds `-mstrict-cross-jump`. Each option changes only its

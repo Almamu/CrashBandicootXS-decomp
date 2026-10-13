@@ -23,8 +23,8 @@
 # compiler for the IWRAM image's ARM code (the Makefile's ARM_OBJS): the
 # branch's g++_arm/ tree (agbcc_arm's gcc 2.9-arm-000512 with the C++
 # front end) with tools/agbcc_patches/agbcc_arm_prologue_return.patch,
-# the patch tools/build_patched_agbcc_arm.sh applies to agbcc's gcc_arm/,
-# its paths rewritten to g++_arm/. The four options it adds are off by
+# the patch written for agbcc's gcc_arm/ (the C compiler
+# agbcc_arm_patched), its paths rewritten to g++_arm/. The four options it adds are off by
 # default; see docs/matching/iwram-image.md and docs/cplusplus.md.
 set -e
 

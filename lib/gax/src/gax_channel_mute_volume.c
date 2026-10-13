@@ -10,7 +10,7 @@
  * channel-chase into a named local (the obvious, idiomatic way to write
  * this) makes gcc-2.9 hoist it into r4-r7 as a loop invariant instead,
  * which never reproduces the ROM's bytes - this was previously documented
- * (docs/status/audio.md, issue #67) as a "confirmed many-register
+ * (issue #67) as a "confirmed many-register
  * loop-allocation ceiling" no C rephrasing could close. Writing every
  * occurrence as this same macro instead - textually re-expanded, so gcc
  * never gets the chance to treat it as one shared value - reproduces the

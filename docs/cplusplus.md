@@ -82,8 +82,10 @@ with no C++ constructs can't be told apart.
 
 ## Survey: which objects are C++
 
-`tools/cpp_survey.py` classifies each object by the C++ runtime
-structures its C writes out by hand. Its output when #685 landed (after
+`tools/cpp_survey.py` classified each object by the C++ runtime
+structures its C wrote out by hand. It was removed in #844, with the
+conversion done; commit `ab4f9c9b` has its last version. Its output when
+#685 landed (after
 the conversion, see [the final cleanup](#the-final-cleanup)):
 
 | Trait | Game objects | Count | What it is |
@@ -114,9 +116,8 @@ The C++ objects are spread over every game directory: player 20,
 objects 18, level 17, vehicle 14, bosses 13, crates 11, menus 8,
 frontend 7, actor 6, text 5, and a few in the others. The 106 C-like
 objects are mostly non-virtual member functions and helpers (level 16,
-bosses 10, menus 9, util 9, crates 8, ...). Run
-`tools/cpp_survey.py --objects` for the per-object table, `--plain` for
-the C-like list.
+bosses 10, menus 9, util 9, crates 8, ...). Its `--objects` mode gave
+the per-object table, `--plain` the C-like list.
 
 ## The compiler: agbcp and old_agbcp
 
@@ -3907,7 +3908,7 @@ rewritten from `gcc_arm/` to `g++_arm/` (it applies cleanly), and
 installs it as `tools/agbcc/bin/agbcp_arm_patched`. CI's "Build agbcp,
 old_agbcp and agbcp_arm_patched" step runs it; the step that built
 agbcc_arm_patched went, since nothing uses that compiler any more
-(tools/build_patched_agbcc_arm.sh stays, for comparisons).
+(tools/build_patched_agbcc_arm.sh stayed, for comparisons, until #844).
 
 Evidence, on both files (assembled code compared, the objects' flags):
 
@@ -5103,8 +5104,8 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   inline function's parameter, such as the inline base constructor's:
   `HpActor(rec, x, -0xFA00, z, 2)` (`JetpackParachuteNitro`, part 11g).
   Written directly as a call argument, it is loaded before the store.
-- **A class with no vtable is invisible to tools/cpp_survey.py:** it has
-  no vptr store, so its constructor and destructor aren't recognised.
+- **A class with no vtable was invisible to tools/cpp_survey.py:** it has
+  no vptr store, so its constructor and destructor weren't recognised.
   Look for a `Destroy*(self, flags)` that frees on bit 0, a caller that
   allocates and then calls an `Init*` returning `self`, and a state test
   repeated in the `flag = 0; if (x == k) flag = 1; if (flag)` shape (an

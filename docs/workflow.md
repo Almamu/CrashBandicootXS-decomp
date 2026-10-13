@@ -88,8 +88,8 @@ incomplete pass and should be finished before moving on.
    actually *does*, and is named after what it holds
    (`<subject>[_<role>].c`, never a number or a ROM address) - that split
    is orthogonal to the ROM-contiguity one above (see
-   `docs/file_layout_plan.md` for what each directory covers and the
-   naming convention). Third-party/SDK library code (GAX2, AgbEeprom,
+   CONTRIBUTING.md's "Source layout" for what each directory covers and
+   the naming convention). Third-party/SDK library code (GAX2, AgbEeprom,
    libgcc, the BIOS SWI wrappers) goes under its library in `lib/`
    instead - see `docs/libraries.md`.
 5. Rename every remaining `bl <old_name>`/`.4byte <old_name>` reference
@@ -187,11 +187,8 @@ incomplete pass and should be finished before moving on.
    paragraph like `docs/matching.md`'s old entries is enough; a subtler
    fix may deserve its own explained bullet like the "Cleanup pass"
    entries there did - `docs/matching.md` itself is now a frozen
-   historical record and never gains new sections, see its header) and
-   update the matched/parked list in `docs/status/<category>.md` for
-   whichever of the 9 category pages this function lives under (see
-   `docs/status/README.md` - not always the same as its `src/` directory,
-   several categories share a directory with another), then commit. If
+   historical record and never gains new sections, see its header), then
+   commit. If
    this function got a real name only now (rather than already having
    one before it was matched),
    or turned out to be a separate function the original disassembly
