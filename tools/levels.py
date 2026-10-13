@@ -29,6 +29,8 @@ groups, the parameter offsets and the per-type counts are all derived
 from those again.
 
     tools/levels.py extract [baserom.gba]     write data/levels/ from the ROM
+    tools/levels.py rooms [--packed]          levels.json's rooms (with --packed,
+                                              those with an LZ77-packed asset)
     tools/levels.py from-png ROOMDIR LAYER OUT
                                               a BG layer's picture -> its cells
                                               (little-endian u16, row-major), and
@@ -66,6 +68,7 @@ per gEntitySpawnFuncs slot) and room.json gives a placed entity's type by
 that name; the crate kinds are named in data/levels/crate_kinds.json.
 """
 import json
+import re
 import struct
 import sys
 import zlib
@@ -75,6 +78,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import collision_bmp  # noqa: E402
 
 ROM_BASE = 0x08000000
+# gLevelRoomLists: per level (levels.json's "levels" order) a struct
+# level_room_list {count, rooms, extra1, extra2}, which gives each room its
+# folder (room_folders).
+LEVEL_ROOM_LISTS = 0x0816CBF0
 ROOM_TABLE = 0x0816CD80
 ROOM_TABLE_SIZE = 0x474
 REGIONS = [
@@ -311,6 +318,12 @@ def read_json(path):
     return json.loads(Path(path).read_text())
 
 
+def room_key(room_dir):
+    """A room's folder under data/levels/, e.g. "jungle_jam/main": its name
+    in levels.json and under the build directory."""
+    return Path(room_dir).relative_to(LEVELS_DIR).as_posix()
+
+
 def entity_type_names():
     """type -> name (None for the unnamed types), from entity_types.json."""
     types = read_json(ENTITY_TYPES_JSON)["types"]
@@ -339,7 +352,7 @@ def load_map(room_dir, lname, layer, build_dir=None):
     if lname != "collision":
         if build_dir is None:
             return read_layer_png(path, lname, layer)
-        path = Path(build_dir) / Path(room_dir).name / ("%s.map.bin" % lname)
+        path = Path(build_dir) / room_key(room_dir) / ("%s.map.bin" % lname)
     elif path.suffix in (".png", ".bmp"):
         # the collision layer: an image of its cells, 8x8 pixels each, the
         # size of the BG0 picture (tools/collision_bmp.py)
@@ -426,7 +439,7 @@ def room_c(room_dir, build_dir=None):
     if build_dir is None:
         _, offsets, grids = build_asset(room_dir)
     else:
-        layout = read_json(Path(build_dir) / Path(room_dir).name / "asset.layout.json")
+        layout = read_json(Path(build_dir) / room_key(room_dir) / "asset.layout.json")
         offsets, grids = layout["offsets"], layout["grids"]
     out = []
     externs = set()
@@ -439,7 +452,7 @@ def room_c(room_dir, build_dir=None):
     by_name = {n: t for t, n in enumerate(entity_type_names()) if n}
     types = [entity_type(name, e["type"], by_name) for e in room["entities"]]
     out.append("/* %s: level_desc %s, %d entities (data/levels/%s) */"
-               % (name, sym["desc"], len(room["entities"]), Path(room_dir).name))
+               % (name, sym["desc"], len(room["entities"]), room_key(room_dir)))
     # forward declarations for the pointers to objects defined further down
     out.append("extern const struct level_entity_list %s;" % sym["entities"])
     out.append("extern const struct level_layer_desc %s[];" % sym["layers"])
@@ -884,19 +897,58 @@ TILESET_SYMBOLS = {
 LAYER_SYMBOLS = {"bg0": "Bg0", "bg1": "Bg1", "bg2": "Bg2", "bg3": "Bg3", "collision": "Collision"}
 
 
-def find_rooms(rom):
-    """Room records of the level table region from ROM_TABLE, in table order: [(pal, desc)]."""
+def room_records(rom):
+    """The room records (struct level_room) of the level table region from
+    ROM_TABLE, in table order: their addresses."""
     out = []
     for a in range(ROOM_TABLE, ROOM_TABLE + ROOM_TABLE_SIZE, 4):
         if in_regions(rom.w(a)) and in_regions(rom.w(a + 4)) and not in_regions(rom.w(a - 4)):
-            out.append((rom.w(a), rom.w(a + 4)))
+            out.append(a)
+    return out
+
+
+def find_rooms(rom):
+    """The room records' (palette, level_desc), in table order."""
+    return [(rom.w(a), rom.w(a + 4)) for a in room_records(rom)]
+
+
+def slug(name):
+    return re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
+
+
+def room_folders(rom, levels):
+    """Room record address -> its folder, `<level>/<slot>`: the level is the
+    one whose gLevelRoomLists entry lists the room (named after levels.json's
+    name), the slot `main` for a level's one played room, `part1`, `part2`
+    for the played rooms around a stage (Frostbite Cavern, Snow Crash and
+    Snow Job: rooms[0] and rooms[2], rooms[1] being the polar ride), `bonus`
+    for extra1 (EnterBonusRoom) and `gem_path` for extra2
+    (EnterGemPathRoom)."""
+    out = {}
+    for i, lv in enumerate(levels):
+        a = LEVEL_ROOM_LISTS + 16 * i
+        count, played, extra1, extra2 = rom.w(a), rom.w(a + 4), rom.w(a + 8), rom.w(a + 12)
+        rooms = [r for r in (rom.w(played + 4 * k) for k in range(count)) if rom.w(r + 4)]
+        slots = {r: "main" for r in rooms} if len(rooms) == 1 else \
+            {r: "part%d" % (k + 1) for k, r in enumerate(rooms)}
+        for r, slot in ((extra1, "bonus"), (extra2, "gem_path")):
+            if r:
+                slots[r] = slot
+        for r, slot in slots.items():
+            assert r not in out, "room record %#x is in two levels" % r
+            out[r] = "%s/%s" % (slug(lv["name"]), slot)
     return out
 
 
 def extract(rom_path):
     rom = Rom(rom_path)
+    records = room_records(rom)
     rooms = find_rooms(rom)
     assert len(rooms) == 41, len(rooms)
+    # the level list isn't extracted: the hand-written one names the folders
+    level_list = read_json(LEVELS_JSON)["levels"]
+    folders = room_folders(rom, level_list)
+    assert sorted(folders) == sorted(records), "rooms in no level's room list"
     LEVELS_DIR.mkdir(parents=True, exist_ok=True)
     pieces = []  # (addr, room name) for the ROM order of each region
     assets = []  # (asset addr, room name) for the ROM order of the assets
@@ -905,14 +957,15 @@ def extract(rom_path):
     for idx, (pal, desc) in enumerate(rooms):
         name = "room%02d_%06x" % (idx, desc - ROM_BASE)
         pre = "gRoom%02d" % idx
-        names.append(name)
-        room_dir = LEVELS_DIR / name
-        room_dir.mkdir(exist_ok=True)
+        folder = folders[records[idx]]
+        names.append(folder)
+        room_dir = LEVELS_DIR / folder
+        room_dir.mkdir(parents=True, exist_ok=True)
         L = [rom.w(desc + 4 * k) for k in range(9)]
         assert rom.bytes(desc + 0x19, 3) == b"\0\0\0" and not any(rom.bytes(desc + 0x24, 12))
         packed = rom.b(desc + 0x18)
         asset_addr = L[5]
-        assets.append((asset_addr, name))
+        assets.append((asset_addr, folder))
         if packed:
             # size from the LZ77 header; the stream length doesn't matter here
             asset = lz77_decompress(rom.bytes(asset_addr, 0x20000))
@@ -933,7 +986,7 @@ def extract(rom_path):
                 "params": pre + "Params", "type_counts": pre + "TypeCounts",
             },
         }
-        pieces.append((desc, name))
+        pieces.append((desc, folder))
         # layers
         first_ld = None
         slots = [L[0], L[1], L[2], L[3], L[4]]
@@ -1031,7 +1084,7 @@ def extract(rom_path):
             room["links"] = [[rom.w(L[8] + 4 + 8 * k), rom.w(L[8] + 8 + 8 * k)] for k in range(n)]
             room["symbols"]["links"] = pre + "Links"
         write_room_json(room_dir / "room.json", room)
-        pieces.append((params, name))
+        pieces.append((params, folder))
     # regions, rooms in ROM order
     regions = []
     for rname, lo, hi in REGIONS:
@@ -1043,11 +1096,7 @@ def extract(rom_path):
     aname, lo, hi = ASSET_REGION
     assert all(lo <= a < hi for a, _ in assets)
     levels = {"rooms": names, "regions": regions,
-              "assets": {"name": aname, "rooms": [n for _, n in sorted(assets)]}}
-    old = LEVELS_DIR / "levels.json"
-    if old.exists():
-        # the level list isn't extracted: keep the hand-written one
-        levels["levels"] = read_json(old).get("levels", [])
+              "assets": {"name": aname, "rooms": [n for _, n in sorted(assets)]}, "levels": level_list}
     (LEVELS_DIR / "levels.json").write_text(json.dumps(levels, indent=2) + "\n")
     return names
 
@@ -1183,6 +1232,13 @@ def main():
         del args[i:i + 2]
     if cmd == "extract":
         extract(args[1] if len(args) > 1 else "baserom.gba")
+    elif cmd == "rooms":
+        # levels.json's rooms (their folders), or with --packed the ones
+        # whose asset is LZ77-packed
+        rooms = read_json(LEVELS_JSON)["rooms"]
+        if "--packed" in args:
+            rooms = [r for r in rooms if read_json(LEVELS_DIR / r / "room.json")["asset"]["packed"]]
+        print(" ".join(rooms))
     elif cmd == "asset":
         asset, offsets, grids = build_asset(args[1], build_dir)
         Path(args[2]).write_bytes(asset)
