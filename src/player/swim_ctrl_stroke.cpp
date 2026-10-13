@@ -100,68 +100,69 @@ void SwimCtrl::StartStroke()
 
     switch (tilt) {
     case 1:
-        target->speedX = SIGNED_X(target, 176);
-        target->speedY = -704;
+        target->speedX = SIGNED_X(target, SWIM_STROKE_SPEED / 4);
+        target->speedY = -SWIM_STROKE_SPEED;
         tilt = 0;
         break;
     case 2:
-        target->speedX = SIGNED_X(target, 352);
-        target->speedY = -704;
+        target->speedX = SIGNED_X(target, SWIM_STROKE_SPEED / 2);
+        target->speedY = -SWIM_STROKE_SPEED;
         tilt = 3;
         break;
     case 4:
-        target->speedX = SIGNED_X(target, 704);
-        target->speedY = -352;
+        target->speedX = SIGNED_X(target, SWIM_STROKE_SPEED);
+        target->speedY = -(SWIM_STROKE_SPEED / 2);
         tilt = 3;
         break;
     case 5:
-        target->speedX = SIGNED_X(target, 704);
-        target->speedY = -176;
+        target->speedX = SIGNED_X(target, SWIM_STROKE_SPEED);
+        target->speedY = -(SWIM_STROKE_SPEED / 4);
         tilt = 6;
         break;
     case 7:
-        target->speedX = SIGNED_X(target, 704);
-        target->speedY = 176;
+        target->speedX = SIGNED_X(target, SWIM_STROKE_SPEED);
+        target->speedY = SWIM_STROKE_SPEED / 4;
         tilt = 6;
         break;
     case 8:
-        target->speedX = SIGNED_X(target, 704);
-        target->speedY = 352;
+        target->speedX = SIGNED_X(target, SWIM_STROKE_SPEED);
+        target->speedY = SWIM_STROKE_SPEED / 2;
         tilt = 9;
         break;
     case 10:
-        target->speedX = SIGNED_X(target, 352);
-        target->speedY = 704;
+        target->speedX = SIGNED_X(target, SWIM_STROKE_SPEED / 2);
+        target->speedY = SWIM_STROKE_SPEED;
         tilt = 9;
         break;
     case 11:
-        target->speedX = SIGNED_X(target, 176);
-        target->speedY = 704;
+        target->speedX = SIGNED_X(target, SWIM_STROKE_SPEED / 4);
+        target->speedY = SWIM_STROKE_SPEED;
         tilt = 12;
         break;
     case 6:
-        target->speedX = SIGNED_X(target, 704);
+        target->speedX = SIGNED_X(target, SWIM_STROKE_SPEED);
         break;
     case 3:
-        target->speedX = SIGNED_X(target, 528);
-        target->speedY = -528;
+        target->speedX = SIGNED_X(target, SWIM_STROKE_SPEED * 3 / 4);
+        target->speedY = -(SWIM_STROKE_SPEED * 3 / 4);
         break;
     case 0:
-        target->speedY = -704;
+        target->speedY = -SWIM_STROKE_SPEED;
         break;
     case 9:
-        target->speedX = SIGNED_X(target, 528);
-        target->speedY = 528;
+        target->speedX = SIGNED_X(target, SWIM_STROKE_SPEED * 3 / 4);
+        target->speedY = SWIM_STROKE_SPEED * 3 / 4;
         break;
     case 12:
-        target->speedY = 704;
+        target->speedY = SWIM_STROKE_SPEED;
         break;
     }
 }
 
-/* The same dispatch with a fixed speed of 960 and a 3/4 factor on the
- * diagonals. `speed` is a u16: gcc then knows `speed * 3` is non-negative
- * and divides by 4 with a plain shift, while `-speed * 3 / 4` gets the
+/* The same dispatch with a fixed speed of SWIM_SPIN_SPEED (3.75 px a
+ * frame) and a 3/4 factor on the diagonals. `speed` is a u16: gcc then
+ * knows `speed * 3` is non-negative and divides by 4 with a plain shift,
+ * while `-speed * 3 / 4` gets the
  * round-toward-zero adjustment (fold() distributes `* 3 / 4` over the
  * SIGNED_X ternary, so each arm is divided separately). `flag` zeroes the
  * horizontal speed when the target's +0x68 bits are set and the D-pad is
@@ -174,7 +175,7 @@ void SwimCtrl::StartSpin()
     if (spinCooldown != 0)
         return;
 
-    speed = 960;
+    speed = SWIM_SPIN_SPEED;
     flag = 0;
     gAudioContext->PlaySfx(SFX_UNKNOWN_09, 256);
     if ((target->hitAxes & PART_DIR_X_MASK) && gInput->GetDpadDirection() <= 2)

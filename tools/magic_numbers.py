@@ -113,6 +113,16 @@ wraps, the OAM entry count, scanline counts), each classified as
 derived from the screen, fixed by the hardware or a coincidence:
   tools/magic_numbers.py --screen [--show] [--json] [--report [OUT]]
       [--category C ...] [--path P ...] [--check]
+
+--fixed is another (#916, tools/magic_fixed.py, docs/fixed_point.md):
+the literals, shifts and masks on values that hold fixed-point
+quantities (positions, speeds, accelerations, the speed-ramp tables,
+camera, affine scales), each with its format (Q8, Q4, Q12, Q16) and
+classified as fixed point, a plain integer or a bit field, with the
+spelling a raw fixed-point literal takes (INT_TO_Q8(2), Q8(1.5),
+Q8_FRAC(0, 0x33)):
+  tools/magic_numbers.py --fixed [--show] [--json] [--report [OUT]]
+      [--category C ...] [--path P ...] [--field REGEX] [--values]
 """
 
 import argparse
@@ -1673,7 +1683,22 @@ def main():
     g = ap.add_argument_group("--screen (#979, see tools/magic_screen.py)")
     g.add_argument("--screen", action="store_true", help="screen-size literals, classified (--category screen ...)")
     g.add_argument("--check", action="store_true", help="--screen: fail if a literal has no classification rule")
+    g = ap.add_argument_group("--fixed (#916, see tools/magic_fixed.py)")
+    g.add_argument(
+        "--fixed",
+        action="store_true",
+        help="literals and shifts on fixed-point values, per format, field and directory "
+        "(--category fixed|integer|bitfield|spelled, --field, --values)",
+    )
     args = ap.parse_args()
+
+    if args.fixed:
+        import magic_fixed
+
+        for c in args.category or ():
+            if c not in magic_fixed.CATEGORIES:
+                ap.error(f"unknown category {c!r} (one of {', '.join(magic_fixed.CATEGORIES)})")
+        return magic_fixed.run(args)
 
     if args.screen:
         import magic_screen

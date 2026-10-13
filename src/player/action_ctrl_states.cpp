@@ -62,9 +62,9 @@ void ActionCtrl::ApplyMotion()
     }
     if (part->hitAxes == PART_DIR_DOWN) {
         if (p->pushLeft)
-            p->x -= 0x100;
+            p->x -= INT_TO_Q8(1);
         else if (p->pushRight)
-            p->x += 0x100;
+            p->x += INT_TO_Q8(1);
         gPlayer->SetPrevPos(gPlayer->x, gPlayer->y);
     }
 skip:

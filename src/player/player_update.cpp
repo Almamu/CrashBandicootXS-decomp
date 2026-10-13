@@ -271,9 +271,9 @@ void Player::Draw()
             });
         ClampStep(child, gAkuAkuInvincibleFrame);
         if (mirrorBits.flipX < 0)
-            PlaceAt(x, y, child, -0x600, -0x1300);
+            PlaceAt(x, y, child, -INT_TO_Q8(6), -INT_TO_Q8(19));
         else
-            PlaceAt(x, y, child, 0x600, -0x1300);
+            PlaceAt(x, y, child, INT_TO_Q8(6), -INT_TO_Q8(19));
         if (gRoomFrameCount & 4)
             child->SetTag(1);
         else
