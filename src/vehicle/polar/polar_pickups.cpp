@@ -25,7 +25,7 @@ void PolarCollectedWumpa::Update()
     x += velX;
     y += velY;
 
-    if (!(x > 0x1000 && y > 0x1000)) {
+    if (!(x > INT_TO_Q8(16) && y > INT_TO_Q8(16))) {
         gAudioContext->PlaySfx(SFX_HUD_COLLECT, 0x100);
         delete this;
         return;

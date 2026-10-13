@@ -42,7 +42,7 @@ void Yeti::Create(s32 level)
     anim = new AnimPart(keyframes, (u32 *)frames, 0xf);
 
     x = 0;
-    distance = 0xa000;
+    distance = INT_TO_Q8(160);
     position = INT_TO_Q8(GetCellAnimDistance()) - distance;
     SetActorBgLayerDepth(distance);
 

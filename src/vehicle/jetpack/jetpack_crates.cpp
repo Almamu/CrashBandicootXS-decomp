@@ -53,7 +53,7 @@ void JetpackBalloonCrate::Update()
 {
     (this->*stateFuncs[state])();
 
-    if (state == JETPACK_BALLOON_CRATE_STATE_FALL && y > 0xE100) {
+    if (state == JETPACK_BALLOON_CRATE_STATE_FALL && y > INT_TO_Q8(225)) {
         delete this;
     } else if (state == JETPACK_BALLOON_CRATE_STATE_DESTROYED && animDone != 0) {
         delete this;
@@ -339,7 +339,7 @@ void JetpackBalloonCrate::StateFall()
     if (v <= 0x4C0) {
         return;
     }
-    fallSpeed = 0x4C0;
+    fallSpeed = Q8(4.75);
 }
 
 /* gJetpackBalloonCrateStateFuncs[0]: sways around its centre on
@@ -395,7 +395,7 @@ void JetpackParachuteNitro::Update()
     }
 
     if (y < limitY) {
-        y += 0x140;
+        y += Q8(1.25);
     }
 
 tail:

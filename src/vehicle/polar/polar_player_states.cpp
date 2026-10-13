@@ -98,13 +98,13 @@ void PolarPlayer::StateFinishLeap()
     z += 0x3c;
     depth = INT_TO_Q8(GetCellAnimDistance()) - z;
 
-    if (gPolarFadeStarted == 0 && depth <= 0x16FF) {
+    if (gPolarFadeStarted == 0 && depth <= INT_TO_Q8(23) - 1) {
         FadeBrightness(0, 2, 1);
         gPolarPauseLocked = 1;
         gPolarFadeStarted = 1;
     }
 
-    if (depth <= 0x3FF)
+    if (depth <= INT_TO_Q8(4) - 1)
         SetActorCategoryExitStatus(CATEGORY_EXIT_CLEARED);
 }
 
@@ -117,12 +117,12 @@ void PolarPlayer::StateCarriedOff()
     z += 0x3c;
     depth = INT_TO_Q8(GetCellAnimDistance()) - z;
 
-    if (gPolarFadeStarted == 0 && depth <= 0x16FF) {
+    if (gPolarFadeStarted == 0 && depth <= INT_TO_Q8(23) - 1) {
         FadeBrightness(0, 2, 1);
         gPolarFadeStarted = 1;
     }
 
-    if (depth <= 0x3FF)
+    if (depth <= INT_TO_Q8(4) - 1)
         SetActorCategoryExitStatus(CATEGORY_EXIT_BOSS_DEATH);
 }
 
@@ -131,7 +131,7 @@ void PolarPlayer::StateCarriedOff()
  * -0x7200. */
 void PolarPlayer::StateKnockedOff()
 {
-    y += -0x100;
+    y += -INT_TO_Q8(1);
 
     if (gPolarFadeStarted == 0 && y < (s32)0xFFFFC000) {
         FadeBrightness(0, 2, 1);
@@ -168,18 +168,19 @@ void PolarPlayer::StateBoost()
 }
 
 /* State 5, launched by a launcher: rises and falls by `gPolarPlayerVelY`
- * (gravity 0x60, to 0x780) and, back on the ground (y 0x2800), runs again
+ * (POLAR_GRAVITY, to POLAR_MAX_FALL_SPEED) and, back on the ground
+ * (POLAR_GROUND_Y), runs again
  * (state 1, anim 4) with the steering on. */
 void PolarPlayer::StateLaunched()
 {
     s32 total = y + gPolarPlayerVelY;
 
     y = total;
-    gPolarPlayerVelY += 0x60;
-    LIMIT_MAX(gPolarPlayerVelY, 0x780);
+    gPolarPlayerVelY += POLAR_GRAVITY;
+    LIMIT_MAX(gPolarPlayerVelY, POLAR_MAX_FALL_SPEED);
 
-    if (total > 0x2800) {
-        y = 0x2800;
+    if (total > POLAR_GROUND_Y) {
+        y = POLAR_GROUND_Y;
         gPolarSteerEnabled = 1;
         SetCellAnimSpeed(0x24);
         SetState(POLAR_PLAYER_STATE_RUN, 4);
@@ -193,10 +194,10 @@ void PolarPlayer::StateFinish()
 {
     if (animDone != 0) {
         gAudioContext->PlaySfx(SFX_POLAR_FINISH_LEAP, 0x100);
-        gPolarPlayerVelY = 0xFFFFF980;
+        gPolarPlayerVelY = -Q8(6.5);
         SetState(POLAR_PLAYER_STATE_FINISH_LEAP, 7);
-        if (y > 0x2000)
-            gRiderlessPolar = CreateActor(2, x, 0x2800, z, 0);
+        if (y > INT_TO_Q8(32))
+            gRiderlessPolar = CreateActor(2, x, POLAR_GROUND_Y, z, 0);
     }
 }
 
@@ -304,7 +305,7 @@ void PolarPlayer::Launch()
         if (gPolarInvulnTimer == 0) {
             gPolarSteerEnabled = 0;
             SetState(POLAR_PLAYER_STATE_LAUNCHED, 3);
-            gPolarPlayerVelY = 0xFFFFF880;
+            gPolarPlayerVelY = -POLAR_JUMP_SPEED;
             SetCellAnimSpeed(0x1c);
         }
     }

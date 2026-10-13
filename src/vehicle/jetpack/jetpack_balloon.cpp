@@ -26,7 +26,7 @@ void JetpackBalloon::Update()
         }
         delete this;
     } else if ((state == JETPACK_BALLOON_STATE_POP && animDone != 0) ||
-               (state == JETPACK_BALLOON_STATE_FLOAT_AWAY && y < -0xE100)) {
+               (state == JETPACK_BALLOON_STATE_FLOAT_AWAY && y < -INT_TO_Q8(225))) {
         delete this;
     } else {
         RunState();

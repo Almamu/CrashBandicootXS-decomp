@@ -89,7 +89,7 @@ s32 JetpackPlayer::GetHp()
 /* Sets the actors' checkpoint 0x7800 past the player. */
 void JetpackPlayer::SetCheckpoint()
 {
-    SetActorCheckpoint(z + 0x7800);
+    SetActorCheckpoint(z + INT_TO_Q8(120));
 }
 
 s32 JetpackPlayer::IsPauseLocked()
@@ -179,14 +179,14 @@ void JetpackPlayer::StateFall()
     gJetpackPlayerVelY = v;
     MAKE_ABS_BRANCHLESS(v, sign);
     if (v > 0x140)
-        gJetpackPlayerVelY = 0x140;
+        gJetpackPlayerVelY = Q8(1.25);
 
-    if (gJetpackFadeStarted == 0 && y > 0x7080) {
+    if (gJetpackFadeStarted == 0 && y > Q8(112.5)) {
         FadeBrightness(0, 2, 1);
         gJetpackFadeStarted = 1;
     }
 
-    if (y > 0xE100)
+    if (y > INT_TO_Q8(225))
         SetActorCategoryExitStatus(CATEGORY_EXIT_DEATH);
 }
 
@@ -197,7 +197,7 @@ void JetpackPlayer::StateFinish()
 {
     s32 v;
 
-    z += 0x200;
+    z += INT_TO_Q8(2);
 
     v = z - INT_TO_Q8(GetCellAnimDistance());
     depth = v;
@@ -208,7 +208,7 @@ void JetpackPlayer::StateFinish()
         gJetpackPauseLocked = 1;
     }
 
-    if (depth > 0xA000)
+    if (depth > INT_TO_Q8(160))
         SetActorCategoryExitStatus(CATEGORY_EXIT_CLEARED);
 }
 
@@ -216,7 +216,7 @@ void JetpackPlayer::StateFinish()
  * input enabled. */
 void JetpackPlayer::StateEnter()
 {
-    if (y > 0x1E00) {
+    if (y > INT_TO_Q8(30)) {
         SetState(JETPACK_PLAYER_STATE_FLY, 0);
         SetCellAnimSpeed(0x28);
         gJetpackInputEnabled = 1;

@@ -46,7 +46,7 @@ JetpackPlayer::JetpackPlayer(const struct anim_table_record *rec, s32 z)
         SetCellAnimSpeed(0x28);
     } else {
         SetCellAnimSpeed(0x1e);
-        gJetpackPlayerVelY = 0x180;
+        gJetpackPlayerVelY = Q8(1.5);
     }
     gJetpackInputEnabled = 0;
     gJetpackPlayerInactive = 1;
@@ -93,12 +93,12 @@ void JetpackPlayer::Update()
     ny = y += gJetpackPlayerVelY;
     if (gJetpackPlayerInactive == 0) {
         x = CLAMP_MIN(nx, -0x8000);
-        x = CLAMP_MAX(x, 0x8000);
+        x = CLAMP_MAX(x, INT_TO_Q8(128));
         y = CLAMP_MIN(ny, -0x4b00);
-        y = CLAMP_MAX(y, 0x4b00);
+        y = CLAMP_MAX(y, INT_TO_Q8(75));
     }
     if (gJetpackPlayerHalted == 0) {
-        depth = 0x1c00;
+        depth = INT_TO_Q8(28);
         z = INT_TO_Q8(GetCellAnimDistance()) + depth;
     }
 
@@ -134,7 +134,7 @@ void JetpackPlayer::Draw()
     h = frame[1];
     halfH = h * 4;
     if (depth == record->baseDepth) {
-        scale = 0x100;
+        scale = INT_TO_Q8(1);
         sy = Q8_TO_INT(y + GetActorBgCenterY());
         sx = Q8_TO_INT(x + GetActorBgCenterX());
     } else {
@@ -146,7 +146,7 @@ void JetpackPlayer::Draw()
         sy = Q8_TO_INT(Q12_MUL(y, f) + GetActorBgCenterY());
         sx = Q8_TO_INT(Q12_MUL(x, f) + GetActorBgCenterX());
         attr1 = 0x100;
-        if (scale <= 0xff) {
+        if (scale <= INT_TO_Q8(1) - 1) {
             attr1 |= 0x200;
             halfW = w * 8;
             halfH = h * 8;
@@ -223,12 +223,12 @@ static inline void DecaySpeed(s32 *p)
 void JetpackPlayer::SteerY()
 {
     if (gJetpackInputEnabled && (ReadKeys().held & DPAD_UP))
-        gJetpackPlayerVelY -= 0x40;
+        gJetpackPlayerVelY -= Q8(0.25);
     else if (gJetpackInputEnabled && (ReadKeys().held & DPAD_DOWN))
-        gJetpackPlayerVelY += 0x40;
+        gJetpackPlayerVelY += Q8(0.25);
     else {
         DecaySpeed(&gJetpackPlayerVelY);
-        if (ABS_BRANCHLESS(gJetpackPlayerVelY) <= 0x40)
+        if (ABS_BRANCHLESS(gJetpackPlayerVelY) <= Q8(0.25))
             gJetpackPlayerVelY = 0;
     }
     CLAMP_SPEED(gJetpackPlayerVelY);
@@ -239,12 +239,12 @@ void JetpackPlayer::SteerY()
 void JetpackPlayer::SteerX()
 {
     if (gJetpackInputEnabled && (ReadKeys().held & DPAD_LEFT))
-        gJetpackPlayerVelX -= 0x40;
+        gJetpackPlayerVelX -= Q8(0.25);
     else if (gJetpackInputEnabled && (ReadKeys().held & DPAD_RIGHT))
-        gJetpackPlayerVelX += 0x40;
+        gJetpackPlayerVelX += Q8(0.25);
     else {
         DecaySpeed(&gJetpackPlayerVelX);
-        if (ABS_BRANCHLESS(gJetpackPlayerVelX) <= 0x40)
+        if (ABS_BRANCHLESS(gJetpackPlayerVelX) <= Q8(0.25))
             gJetpackPlayerVelX = 0;
     }
     CLAMP_SPEED(gJetpackPlayerVelX);
@@ -272,8 +272,8 @@ void JetpackPlayer::StateFly()
 
             gJetpackShotCooldown = 0x12;
             gAudioContext->PlayAmbientSfx(SFX_JETPACK_SHOOT, 1000, 0xa0, true);
-            sx = x + 0x1200;
-            sy = y - 0x1800;
+            sx = x + INT_TO_Q8(18);
+            sy = y - INT_TO_Q8(24);
             SpawnJetpackShot(sx, sy, z + 10, Q12_MUL(sx, 0x199), Q12_MUL(sy, 0x199));
         }
     }
@@ -286,8 +286,8 @@ void JetpackPlayer::StateRollLeft()
 {
     SteerY();
     if (stateTime <= 5) {
-        gJetpackPlayerVelX += -0x100;
-        LIMIT_MIN(gJetpackPlayerVelX, -0x500);
+        gJetpackPlayerVelX += -INT_TO_Q8(1);
+        LIMIT_MIN(gJetpackPlayerVelX, -INT_TO_Q8(5));
     } else {
         gJetpackPlayerVelX += 0x2d;
         if (ABS_BRANCHLESS(gJetpackPlayerVelX) <= 0x2d)
@@ -316,8 +316,8 @@ void JetpackPlayer::StateRollRight()
 {
     SteerY();
     if (stateTime <= 5) {
-        gJetpackPlayerVelX += 0x100;
-        LIMIT_MAX(gJetpackPlayerVelX, 0x500);
+        gJetpackPlayerVelX += INT_TO_Q8(1);
+        LIMIT_MAX(gJetpackPlayerVelX, INT_TO_Q8(5));
     } else {
         gJetpackPlayerVelX -= 0x2d;
         if (ABS_BRANCHLESS(gJetpackPlayerVelX) <= 0x2d)

@@ -56,7 +56,7 @@ void Airship::Steer()
     cy = screenY + 0x1800;
     dy = py - cy - (box.y + box.h / 2);
 
-    if (ABS_BRANCHLESS(dx) <= 0x2CFF) {
+    if (ABS_BRANCHLESS(dx) <= INT_TO_Q8(45) - 1) {
         s32 s = dx >> 10;
         s32 t;
 
@@ -71,7 +71,7 @@ void Airship::Steer()
         velX = t;
     }
 dx_done:
-    if (ABS_BRANCHLESS(dy) <= 0x2CFF) {
+    if (ABS_BRANCHLESS(dy) <= INT_TO_Q8(45) - 1) {
         s32 v;
 
         if ((dy >> 10) >= 0) {

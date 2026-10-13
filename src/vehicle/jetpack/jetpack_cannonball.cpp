@@ -20,7 +20,7 @@ void JetpackCannonball::Update()
 {
     x += velX;
     y += velY;
-    z += -0x100;
+    z += -INT_TO_Q8(1);
     if ((u8)IsTouchingPlayer(this)) {
         gActorList->AsHpActor()->Damage(2);
         delete this;

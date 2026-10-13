@@ -44,14 +44,14 @@ void AirshipFireball::StateOrbit()
     px = player->x;
     cx = centerX;
     /* `tx` is needed: inlined, the code is 1 instruction shorter */
-    tx = cx + -0x600;
+    tx = cx + -INT_TO_Q8(6);
     cx += (px - tx) >> 5;
     centerX = cx;
     /* `py` is needed: inlined, the instructions are reordered */
     py = player->y;
     cy = centerY;
     /* `ty` is needed: inlined, the code is 1 instruction longer */
-    ty = cy + 0x800;
+    ty = cy + INT_TO_Q8(8);
     cy += (py - ty) >> 5;
     centerY = cy;
     sine = gSineTable;
@@ -59,7 +59,7 @@ void AirshipFireball::StateOrbit()
     angle = ((t << 5) >> 4) & 0xff;
     x = cx + Q8_MUL(sine[(angle + 0x40) & 0xff], radius);
     y = cy + Q8_MUL(sine[angle], radius);
-    if (depth <= 0x2bff) {
+    if (depth <= INT_TO_Q8(44) - 1) {
         SetState(AIRSHIP_FIREBALL_STATE_SPIRAL_IN, 0);
         stateTime = t;
     }
@@ -94,14 +94,14 @@ void AirshipFireball::StateSpiralIn()
     px = player->x;
     cx = centerX;
     /* `tx` is needed: inlined, the instructions differ */
-    tx = cx + -0x600;
+    tx = cx + -INT_TO_Q8(6);
     cx += (px - tx) >> 4;
     centerX = cx;
     /* `py` is needed: inlined, the instructions are reordered */
     py = player->y;
     cy = centerY;
     /* `ty` is needed: inlined, the code is 1 instruction longer */
-    ty = cy + 0x800;
+    ty = cy + INT_TO_Q8(8);
     cy += (py - ty) >> 4;
     centerY = cy;
     sine = gSineTable;

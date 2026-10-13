@@ -97,13 +97,13 @@ void JetpackRocket::Damage(s32 amount)
 JetpackRocket::JetpackRocket(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
     : HpActor(rec, x, 0xFA00, z, 1)
 {
-    LIMIT_MAX(y, 0x3F00);
-    LIMIT_MIN(y, -0x3F00);
+    LIMIT_MAX(y, INT_TO_Q8(63));
+    LIMIT_MIN(y, -INT_TO_Q8(63));
     limitY = y;
-    LIMIT_MAX(this->x, 0x8000);
-    LIMIT_MIN(this->x, -0x8000);
+    LIMIT_MAX(this->x, INT_TO_Q8(128));
+    LIMIT_MIN(this->x, -INT_TO_Q8(128));
     originX = this->x;
-    stepY = (limitY - 0xFA00) / 0xC6;
+    stepY = (limitY - INT_TO_Q8(250)) / 0xC6;
     hit = 0;
     triggered = 0;
     gAudioContext->PlaySfx(SFX_JETPACK_ROCKET, 0x100);

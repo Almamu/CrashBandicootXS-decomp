@@ -37,7 +37,7 @@ static inline void SwitchAnim(ActorSelf *a, s32 idx)
  * arguments are loaded in the other order. */
 void PolarElectricFence::Update()
 {
-    if (depth > 0x15ff)
+    if (depth > INT_TO_Q8(22) - 1)
         visible = 1;
 
     if (animIndex == 0) {
@@ -141,14 +141,14 @@ void PolarPenguin::Update()
             if ((u8)static_cast<PolarPlayer *>(gActorList)->Hurt()) {
                 velX = x > 0 ? 0x600 : -0x600;
                 velY = -(s32)RandRange(0x300);
-                velZ += 0x200;
+                velZ += INT_TO_Q8(2);
                 gAudioContext->PlaySfx(SFX_ENEMY_KNOCKED_AWAY, 0x100);
                 SetState(POLAR_PENGUIN_STATE_KNOCKED_AWAY, 0);
             }
         } else if (Yeti::IsTouching(this)) {
             velX = x > 0 ? 0x600 : -0x600;
             velY = -(s32)RandRange(0x300);
-            velZ += 0x200;
+            velZ += INT_TO_Q8(2);
             gAudioContext->PlaySfx(SFX_ENEMY_KNOCKED_AWAY, 0x100);
             SetState(POLAR_PENGUIN_STATE_KNOCKED_AWAY, 0);
         }

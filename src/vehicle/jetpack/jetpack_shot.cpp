@@ -16,8 +16,8 @@ extern "C" {
 void JetpackShot::Update()
 {
     x += velX;
-    y += -0xc0 + velY;
-    z += 0x400;
+    y += -Q8(0.75) + velY;
+    z += INT_TO_Q8(4);
 
     HpActor *hit = FindShotTarget(this);
 
@@ -27,7 +27,7 @@ void JetpackShot::Update()
     } else if (Airship::IsTouching(this)) {
         Airship::Damage(2);
         delete this;
-    } else if (depth > 0x8200) {
+    } else if (depth > INT_TO_Q8(130)) {
         delete this;
     } else {
         ActorSelf::Update();
