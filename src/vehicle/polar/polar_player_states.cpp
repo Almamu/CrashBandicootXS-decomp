@@ -52,13 +52,13 @@ void PolarPlayer::DispenseWumpa()
 
     gPolarWumpaDispenseTimer = 0xf;
 
-    if (acc <= 9) {
+    if (acc <= VEHICLE_WUMPA_DISPENSE_1_MAX) {
         SpawnPolarCollectedWumpa(x, y, 1);
         gPolarQueuedWumpa -= 1;
-    } else if (acc <= 0x13) {
+    } else if (acc <= VEHICLE_WUMPA_DISPENSE_2_MAX) {
         SpawnPolarCollectedWumpa(x, y, 2);
         gPolarQueuedWumpa -= 2;
-    } else if (acc <= 0x27) {
+    } else if (acc <= VEHICLE_WUMPA_DISPENSE_4_MAX) {
         SpawnPolarCollectedWumpa(x, y, 4);
         gPolarQueuedWumpa -= 4;
     } else {
@@ -88,14 +88,14 @@ void PolarPlayer::StateRecover()
 }
 
 /* State 11, the leap over the finish line: rises by `gPolarPlayerVelY`
- * (slowing by 0x2d a frame) into the screen; the screen fades out (and
+ * (slowing by POLAR_PLAYER_AIR_GRAVITY a frame) into the screen; the screen fades out (and
  * the pause menu locks) past depth 0x16FF, and the category exits
  * (cleared) past 0x3FF. */
 void PolarPlayer::StateFinishLeap()
 {
     y += gPolarPlayerVelY;
-    gPolarPlayerVelY += 0x2d;
-    z += 0x3c;
+    gPolarPlayerVelY += POLAR_PLAYER_AIR_GRAVITY;
+    z += POLAR_LEAP_SPEED_Z;
     depth = INT_TO_Q8(GetCellAnimDistance()) - z;
 
     if (gPolarFadeStarted == 0 && depth <= INT_TO_Q8(23) - 1) {
@@ -113,8 +113,8 @@ void PolarPlayer::StateFinishLeap()
 void PolarPlayer::StateCarriedOff()
 {
     y += gPolarPlayerVelY;
-    gPolarPlayerVelY += 0x2d;
-    z += 0x3c;
+    gPolarPlayerVelY += POLAR_PLAYER_AIR_GRAVITY;
+    z += POLAR_LEAP_SPEED_Z;
     depth = INT_TO_Q8(GetCellAnimDistance()) - z;
 
     if (gPolarFadeStarted == 0 && depth <= INT_TO_Q8(23) - 1) {

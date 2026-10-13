@@ -165,7 +165,7 @@ void PolarPenguin::Aim(s32 target)
     if (target < 0) {
         velY = 0;
         velX = 0;
-        velZ = 0x62;
+        velZ = POLAR_PENGUIN_DRIFT_SPEED_Z;
         countdown = 0x40000000;
     } else {
         s32 n;

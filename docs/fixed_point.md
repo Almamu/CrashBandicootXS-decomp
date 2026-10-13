@@ -53,6 +53,8 @@ name in its subsystem's header, spelled with the macros:
 
 | Name | Value | Header |
 |---|---|---|
+| `JETPACK_PLANE_SLOW_HOP_SPEED`, `JETPACK_PLANE_FAST_START_SPEED`, `JETPACK_PLANE_FALL_GRAVITY`, `JETPACK_PLANE_MAX_FALL_SPEED` | `INT_TO_Q4(INT_TO_Q8(7)) / 12`, `INT_TO_Q4(INT_TO_Q8(10)) / 12`, `INT_TO_Q4(Q8_FRAC(0, 10))`, `INT_TO_Q4(Q8(1.25))` | `vehicle.hpp`: the planes' Q4 speeds: the hops are twelfths of a pixel a frame (0x955 is 7/12) |
+| `JETPACK_*`, `POLAR_*` speeds, gravities and offsets (`JETPACK_PLAYER_FALL_GRAVITY`, `JETPACK_ROLL_RECOVER_STEP`, `POLAR_PLAYER_AIR_GRAVITY`, `POLAR_STEER_START_SPEED`, ...) | `Q8_FRAC(n, f)` | `vehicle.hpp`: the jetpack and polar courses' players and actors |
 | `PLAYER_GRAVITY` | `Q8_FRAC(0, 51)` | `player.hpp`: the jump records' step, 51/256 px a frame per frame |
 | `LEVEL_SELECT_ZOOM_MIN`, `ZOOM_BG_ZOOM_STEP` | `Q8_FRAC(0, 8)` | `level_select.hpp`: the level-select zooms' smallest scale (1/32) and the picture's zoom a frame |
 | `PLAYER_MAX_FALL_SPEED` | `INT_TO_Q8(6)` | `player.hpp`: the jump and fall records' target |

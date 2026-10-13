@@ -45,13 +45,13 @@ void JetpackPlayer::DispenseWumpa()
 
     gJetpackWumpaDispenseTimer = 0xf;
 
-    if (acc <= 9) {
+    if (acc <= VEHICLE_WUMPA_DISPENSE_1_MAX) {
         SpawnJetpackCollectedWumpa(x, y, 1);
         gJetpackQueuedWumpa -= 1;
-    } else if (acc <= 0x13) {
+    } else if (acc <= VEHICLE_WUMPA_DISPENSE_2_MAX) {
         SpawnJetpackCollectedWumpa(x, y, 2);
         gJetpackQueuedWumpa -= 2;
-    } else if (acc <= 0x27) {
+    } else if (acc <= VEHICLE_WUMPA_DISPENSE_4_MAX) {
         SpawnJetpackCollectedWumpa(x, y, 4);
         gJetpackQueuedWumpa -= 4;
     } else {
@@ -173,13 +173,13 @@ void JetpackPlayer::StateBoost()
  * 0xE100. */
 void JetpackPlayer::StateFall()
 {
-    s32 v = gJetpackPlayerVelY + 9;
+    s32 v = gJetpackPlayerVelY + JETPACK_PLAYER_FALL_GRAVITY;
     s32 sign;
 
     gJetpackPlayerVelY = v;
     MAKE_ABS_BRANCHLESS(v, sign);
-    if (v > 0x140)
-        gJetpackPlayerVelY = Q8(1.25);
+    if (v > JETPACK_PLAYER_MAX_FALL_SPEED)
+        gJetpackPlayerVelY = JETPACK_PLAYER_MAX_FALL_SPEED;
 
     if (gJetpackFadeStarted == 0 && y > Q8(112.5)) {
         FadeBrightness(0, 2, 1);

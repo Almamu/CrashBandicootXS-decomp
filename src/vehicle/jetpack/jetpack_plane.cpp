@@ -42,7 +42,7 @@ void JetpackPlane::Update()
 
         if (cd == 0) {
             ActorSelf *player = gActorList;
-            s32 angle = (player->z - (z - 10)) / -0x1AA;
+            s32 angle = (player->z - (z - JETPACK_PLANE_GUN_OFFSET_Z)) / -0x1AA;
 
             if (angle > 0 && depth <= INT_TO_Q8(140) - 1) {
                 s32 scale = 0x1000 / angle;
@@ -58,7 +58,7 @@ void JetpackPlane::Update()
                 s32 absDy = (dy ^ signDy) - signDy;
 
                 if (absDx + absDy <= 0x5FF) {
-                    SpawnJetpackCannonball(x, y, z - 10, dx, dy);
+                    SpawnJetpackCannonball(x, y, z - JETPACK_PLANE_GUN_OFFSET_Z, dx, dy);
                     if (++shotCount == 3) {
                         shotCount = cd;
                         cooldown = 0x3C;
@@ -92,7 +92,7 @@ void JetpackPlane::Update()
 void JetpackPlane::Aim(s32 target)
 {
     if (target < 0) {
-        if (velZ <= 0x955) {
+        if (velZ <= JETPACK_PLANE_SLOW_HOP_SPEED) {
             SetState(JETPACK_PLANE_STATE_FOLLOW, 3);
         } else {
             accX = 0;
@@ -104,7 +104,7 @@ void JetpackPlane::Aim(s32 target)
         s32 scale2;
 
         velZ = gJetpackPlaneHopSpeeds[GetActorSpawnKindIndex(target)];
-        steps = ((GetActorSpawnZ(target) - z) << 8) / velZ >> 4;
+        steps = Q4_TO_INT(Q8_DIV(GetActorSpawnZ(target) - z, velZ));
         if (steps == 0) {
             steps = 1;
         }
@@ -113,15 +113,15 @@ void JetpackPlane::Aim(s32 target)
          * first). */
         scale = 0x8000 / steps;
         // clang-format off
-        accX = ((((GetActorSpawnX(target) - x) - ((velX * steps) >> 4)) * scale >> 13) *
+        accX = ((((GetActorSpawnX(target) - x) - Q4_TO_INT(velX * steps)) * scale >> 13) *
                 (scale2 = scale * 2)) >> 13;
-        accY = ((((GetActorSpawnY(target) - y) - ((velY * steps) >> 4)) * scale >> 13) *
+        accY = ((((GetActorSpawnY(target) - y) - Q4_TO_INT(velY * steps)) * scale >> 13) *
                 scale2) >> 13;
         // clang-format on
         next = GetActorSpawnNextTarget(target);
     }
 
-    if (velZ <= 0x955) {
+    if (velZ <= JETPACK_PLANE_SLOW_HOP_SPEED) {
         animIndex = 3;
         animTimer = anims[3].duration;
         animDone = 0;
@@ -173,21 +173,21 @@ JetpackPlane::JetpackPlane(const struct anim_table_record *rec, s32 x, s32 y, s3
     dying = 0;
     velY = 0;
     velX = 0;
-    velZ = 0x955;
-    if (spawn->target >= 0 &&
-        gJetpackPlaneHopSpeeds[GetActorSpawnKindIndex(spawn->target)] > 0x955) {
+    velZ = JETPACK_PLANE_SLOW_HOP_SPEED;
+    if (spawn->target >= 0 && gJetpackPlaneHopSpeeds[GetActorSpawnKindIndex(spawn->target)] >
+                                  JETPACK_PLANE_SLOW_HOP_SPEED) {
         this->z += -INT_TO_Q8(142);
-        velZ = 0xd55;
+        velZ = JETPACK_PLANE_FAST_START_SPEED;
     }
     Aim(spawn->target);
 }
 
 /* gJetpackPlaneStateFuncs[3], entered by StateKnockedOut: falls, the
- * speed capped at 0x1400. */
+ * speed capped at JETPACK_PLANE_MAX_FALL_SPEED. */
 void JetpackPlane::StateFall()
 {
     velY += accY;
-    LIMIT_MAX(velY, 0x1400);
+    LIMIT_MAX(velY, JETPACK_PLANE_MAX_FALL_SPEED);
 }
 
 /* gJetpackPlaneStateFuncs[2], entered by Damage with the knock-out
@@ -200,7 +200,7 @@ void JetpackPlane::StateKnockedOut()
     if (animDone == 0) {
         return;
     }
-    accY = 0xa0;
+    accY = JETPACK_PLANE_FALL_GRAVITY;
     if (animIndex == 1) {
         idx = 2;
     } else {
@@ -210,14 +210,15 @@ void JetpackPlane::StateKnockedOut()
 }
 
 /* gJetpackPlaneStateFuncs[1], entered by Aim at the end of a slow hop
- * chain: a 16th of the way to the player each frame, so the plane
- * follows it (and fires from pose 3, Update). */
+ * chain: 1/256 of the way to the player each frame (the Q4 speed is the
+ * gap >> JETPACK_PLANE_FOLLOW_SHIFT), so the plane follows it (and fires
+ * from pose 3, Update). */
 void JetpackPlane::StateFollow()
 {
     ActorSelf *player = gActorList;
 
-    velX = (player->x - x) >> 4;
-    velY = (player->y - y) >> 4;
+    velX = (player->x - x) >> JETPACK_PLANE_FOLLOW_SHIFT;
+    velY = (player->y - y) >> JETPACK_PLANE_FOLLOW_SHIFT;
 }
 
 /* gJetpackPlaneStateFuncs[0]: accelerates, and aims the next hop once

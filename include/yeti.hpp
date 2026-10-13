@@ -35,6 +35,14 @@ class AnimPart;
 #define YETI_STATE_CAUGHT 2 // StateCaught: Update, its catch box on the player
 #define YETI_STATE_STOP 3   // StateStop: Stop, the run is over (finish, knocked off, shocked)
 
+/* The yeti's BG2 maps (LoadGraphics, BuildBg2Map; tiles, not fixed
+ * point): YETI_BG2_MAP_TILES a side (the 128x128 affine BG), the
+ * picture's 10x10 tiles numbered in order from YETI_PICTURE_TILE_FIRST
+ * to YETI_PICTURE_TILE_LAST on both axes, the blank tile 0xFF around. */
+#define YETI_BG2_MAP_TILES      16
+#define YETI_PICTURE_TILE_FIRST 3
+#define YETI_PICTURE_TILE_LAST  12
+
 /* A record of Yeti::chargeParams (gYetiChargeParams), picked by
  * Yeti::paramsIndex: how far StateCharge moves the yeti each frame, and
  * StateChase's two rolls (out of 0x100) for starting a charge. */

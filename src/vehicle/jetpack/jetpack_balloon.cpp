@@ -105,13 +105,14 @@ void JetpackBalloon::StatePop()
 }
 
 /* gJetpackBalloonStateFuncs[1], entered by Release: rises ever faster
- * (`velY` falls by 6 a frame, and is at most -0x12C), then the animation
+ * (`velY` falls by JETPACK_BALLOON_RISE_ACCEL a frame, and is at most
+ * -JETPACK_BALLOON_MAX_RISE_SPEED), then the animation
  * step. */
 void JetpackBalloon::StateFloatAway()
 {
     y += velY;
-    velY -= 6;
-    LIMIT_MAX(velY, -0x12C);
+    velY -= JETPACK_BALLOON_RISE_ACCEL;
+    LIMIT_MAX(velY, -JETPACK_BALLOON_MAX_RISE_SPEED);
     Animate();
 }
 

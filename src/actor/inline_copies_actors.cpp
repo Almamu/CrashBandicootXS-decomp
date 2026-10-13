@@ -203,10 +203,11 @@ JetpackCheckpointText::~JetpackCheckpointText()
 {
 }
 
-/* Moves away 170 a frame and deletes itself once its animation is done. */
+/* Moves away JETPACK_EXPLOSION_SPEED_Z a frame and deletes itself once
+ * its animation is done. */
 void JetpackExplosion::Update()
 {
-    z += 170;
+    z += JETPACK_EXPLOSION_SPEED_Z;
 
     if (animDone != 0)
         delete this;
