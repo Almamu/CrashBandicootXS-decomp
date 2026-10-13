@@ -1,4 +1,5 @@
 #include "vehicle.hpp"
+#include "vram_dma_queue.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
 
@@ -40,8 +41,8 @@ void PolarAkuAku::Refresh(u8 lost)
     if (level == MASK_LEVEL_NONE && lost == 0) {
         visible = level;
     } else {
-        QueueVramDmaTransfer((const u8 *)gPolarAkuAkuPalette1 + (level - 1) * PALETTE_SIZE_16,
-                             OBJ_PALETTE(14), PALETTE_SIZE_16, 0x10);
+        VramDmaQueue::Add((const u8 *)gPolarAkuAkuPalette1 + (level - 1) * PALETTE_SIZE_16,
+                          OBJ_PALETTE(14), PALETTE_SIZE_16, 0x10);
         visible = 1;
         SwitchAnim(this, 0);
     }
@@ -66,9 +67,9 @@ void PolarAkuAku::Update()
 {
     if (gPolarAkuAkuInvincibleTimer != 0) {
         if (gPolarAkuAkuInvincibleTimer & 4)
-            QueueVramDmaTransfer(gPolarAkuAkuPalette3, OBJ_PALETTE(14), PALETTE_SIZE_16, 0x10);
+            VramDmaQueue::Add(gPolarAkuAkuPalette3, OBJ_PALETTE(14), PALETTE_SIZE_16, 0x10);
         else
-            QueueVramDmaTransfer(gPolarAkuAkuPalette2, OBJ_PALETTE(14), PALETTE_SIZE_16, 0x10);
+            VramDmaQueue::Add(gPolarAkuAkuPalette2, OBJ_PALETTE(14), PALETTE_SIZE_16, 0x10);
 
         gPolarAkuAkuInvincibleTimer -= 1;
         if (gPolarAkuAkuInvincibleTimer == 0) {

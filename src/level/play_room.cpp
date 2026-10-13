@@ -1,4 +1,5 @@
 #include "display.hpp"
+#include "vram_dma_queue.hpp"
 #include "player.hpp"
 #include "action_ctrl.hpp"
 #include "swim_ctrl.hpp"
@@ -536,7 +537,7 @@ void LevelProgress::UpdateRoomFrame()
         FrameLimiter::WaitForVBlank();
         gOamBuffer->Commit();
         gLevelLayers->CommitScroll();
-        FlushVramDmaQueue();
+        VramDmaQueue::Flush();
     }
 }
 

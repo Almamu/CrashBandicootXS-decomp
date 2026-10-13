@@ -1,4 +1,5 @@
 #include "actor_self.hpp"
+#include "vram_dma_queue.hpp"
 #include "vehicle.hpp"
 #include "actor_palette_cycle.hpp"
 
@@ -41,7 +42,7 @@ void ActorPaletteCycle::Update()
 {
     if (!enabled)
         return;
-    QueueVramDmaTransfer(frames[frame], BG_PALETTE(0), 0x1c0, 0x10);
+    VramDmaQueue::Add(frames[frame], BG_PALETTE(0), 0x1c0, 0x10);
     if (++timer > 0x23) {
         timer = 0;
 

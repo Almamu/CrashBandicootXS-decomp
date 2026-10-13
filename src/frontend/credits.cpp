@@ -1,4 +1,5 @@
 #include "display.hpp"
+#include "vram_dma_queue.hpp"
 #include "sprite_obj.hpp"
 #include "frontend.hpp"
 #include "audio.hpp"
@@ -410,7 +411,7 @@ void Credits::CommitFrame()
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
     gPaletteCache->Upload();
     gOamBuffer->Commit();
-    FlushVramDmaQueue();
+    VramDmaQueue::Flush();
 }
 
 /* Frees the starfield and the logos' tiles. */

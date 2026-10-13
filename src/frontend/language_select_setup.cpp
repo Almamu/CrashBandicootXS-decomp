@@ -1,4 +1,5 @@
 #include "display.hpp"
+#include "vram_dma_queue.hpp"
 #include "sprite_obj.hpp"
 #include "frontend.hpp"
 
@@ -49,7 +50,7 @@ void LanguageSelect::CommitFrame()
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
     gPaletteCache->Upload();
     gOamBuffer->Commit();
-    FlushVramDmaQueue();
+    VramDmaQueue::Flush();
 }
 
 /* The starfield goes with the screen. */

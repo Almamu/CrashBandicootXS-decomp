@@ -3,6 +3,7 @@
  * (old_agbcc). */
 
 #include "display.hpp"
+#include "vram_dma_queue.hpp"
 #include "sprite_obj.hpp"
 
 extern "C" {
@@ -49,13 +50,13 @@ s32 ObjVramCursor::Reserve(s32 size)
     return -1;
 }
 
-/* Queues `size` bytes from `src` for upload (QueueVramDmaTransfer);
+/* Queues `size` bytes from `src` for upload (VramDmaQueue::Add);
  * returns their first tile, -1 when VRAM is full, -2 when the queue
  * is. */
 s32 ObjVramCursor::Upload(const void *src, s32 size)
 {
     if (offset + size <= OBJ_VRAM0_SIZE) {
-        if (QueueVramDmaTransfer(src, OBJ_VRAM0 + offset, (u16)size, 0x20) == 0) {
+        if (VramDmaQueue::Add(src, OBJ_VRAM0 + offset, (u16)size, 0x20) == 0) {
             s32 tile = GetTile();
 
             offset += size;

@@ -1,4 +1,5 @@
 #include "obj_tile_allocator.hpp"
+#include "vram_dma_queue.hpp"
 #include "sprite_obj.hpp"
 #include "sprite_oam_queue.hpp"
 #include "sprite_frame_cache.hpp"
@@ -407,7 +408,7 @@ s32 SpriteFrameCache::LoadTiles(u8 *frame)
         spares = victim;
     }
 
-    QueueVramDmaTransfer(node->frame + 4, node->vramAddr, (u16)byteCount, 0x10);
+    VramDmaQueue::Add(node->frame + 4, node->vramAddr, (u16)byteCount, 0x10);
     return GET_TILE_NUM(node->vramAddr);
 }
 

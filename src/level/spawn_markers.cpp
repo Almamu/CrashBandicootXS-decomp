@@ -1,4 +1,5 @@
 #include "display.hpp"
+#include "vram_dma_queue.hpp"
 #include "spawners.hpp"
 #include "pickups.hpp"
 #include "player.hpp"
@@ -128,7 +129,7 @@ LevelState::LevelState()
     *font = new SmallFont;
     font = &gLargeFont;
     *font = new LargeFont;
-    AllocVramDmaQueue();
+    VramDmaQueue::Init();
     gOamBuffer = new OamBuffer;
     gObjVramCursor = new ObjVramCursor(0);
     gInput = new KeyInput;

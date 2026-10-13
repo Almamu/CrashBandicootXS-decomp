@@ -32,6 +32,7 @@
  * level_select_entry.cpp (see ctrl.hpp). */
 
 #include "sprite_obj.hpp"
+#include "vram_dma_queue.hpp"
 #include "player.hpp"
 #include "font.hpp"
 #include "graphics_package.hpp"
@@ -399,7 +400,7 @@ public:
     /* The per-frame register commit. */
     void CommitDisplay()
     {
-        FlushVramDmaQueue();
+        VramDmaQueue::Flush();
         bg2->Commit();
         scroll++;
         *(vu16 *)REG_ADDR_BG0HOFS = scroll >> 3;

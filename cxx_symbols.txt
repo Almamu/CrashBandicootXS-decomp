@@ -1744,6 +1744,15 @@ CommitBlendRegs__7Display CommitBlendRegs
 _7Display.blendRegs gBlendRegs
 _7Display.dispcnt gDispcnt
 #
+# #915 VramDmaQueue: the VRAM DMA queue as an all-static class
+# (include/vram_dma_queue.hpp, src/gfx/vram_dma_queue.cpp). Its data
+# member keeps the C name: sym_iwram.txt places it.
+Flush__12VramDmaQueue FlushVramDmaQueue
+Add__12VramDmaQueuePCvPvUsUs QueueVramDmaTransfer
+Destroy__12VramDmaQueue FreeVramDmaQueue
+Init__12VramDmaQueue AllocVramDmaQueue
+_12VramDmaQueue.queue gVramDmaQueue
+#
 # #751: LinkSession (include/link_session.hpp, src/link/)
 __11LinkSession InitLinkSession
 _._11LinkSession DestroyLinkSession

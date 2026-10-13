@@ -1,4 +1,5 @@
 #include "bg_layer.hpp"
+#include "vram_dma_queue.hpp"
 
 extern "C" {
 #include "gfx.h"
@@ -107,8 +108,7 @@ void TileSlotPool::Release(u32 tile)
 
 void TileSlotPool::Upload(s32 tileId, s32 slot)
 {
-    QueueVramDmaTransfer((void *)(srcBase + tileId * 64), (void *)(vramBase + slot * 64), 0x40,
-                         0x10);
+    VramDmaQueue::Add((void *)(srcBase + tileId * 64), (void *)(vramBase + slot * 64), 0x40, 0x10);
 }
 
 void TileSlotPool::SetSource(s32 charBase, u32 src)

@@ -1,4 +1,5 @@
 #include "obj_tile_allocator.hpp"
+#include "vram_dma_queue.hpp"
 #include "vehicle.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
@@ -110,7 +111,7 @@ void JetpackPlayer::AnimatePalette()
         frame = __divsi3(gJetpackFlashTimer, 3);
         if (frame > 2)
             frame = 5 - frame;
-        QueueVramDmaTransfer(gJetpackFlashPalettes[frame], OBJ_PALETTE(0), 0x20, 0x10);
+        VramDmaQueue::Add(gJetpackFlashPalettes[frame], OBJ_PALETTE(0), 0x20, 0x10);
     }
 }
 
