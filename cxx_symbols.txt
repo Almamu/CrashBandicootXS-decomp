@@ -2209,6 +2209,23 @@ _18ActorCategoryStats.missedNitros gActorMissedNitros
 _18ActorCategoryStats.checkpointMissedNitros gActorCheckpointMissedNitros
 _18ActorCategoryStats.checkpoint gActorCheckpoint
 #
+# #915 ActorSpawns: the actor category's spawn table as an all-static class
+# (include/actor_spawns.hpp, src/actor/actor_spawn.cpp). Its data members
+# keep the C names, which sym_iwram.txt places.
+GetOffset__11ActorSpawns GetActorSpawnOffset
+Resume__11ActorSpawns ResumeActorSpawns
+Pause__11ActorSpawns PauseActorSpawns
+GetNextTarget__11ActorSpawnsi GetActorSpawnNextTarget
+GetZ__11ActorSpawnsi GetActorSpawnZ
+GetY__11ActorSpawnsi GetActorSpawnY
+GetX__11ActorSpawnsi GetActorSpawnX
+GetKindIndex__11ActorSpawnsi GetActorSpawnKindIndex
+_11ActorSpawns.table gActorSpawnTable
+_11ActorSpawns.index gActorSpawnIndex
+_11ActorSpawns.useBonus gActorSpawnUseBonus
+_11ActorSpawns.paused gActorSpawnsPaused
+_11ActorSpawns.offset gActorSpawnOffset
+#
 # #915 ActorPaletteCycle: the 3D stages' BG palette cycle as an all-static
 # class (include/actor_palette_cycle.hpp, src/actor/actor_palette_cycle.cpp).
 # Its data members keep the C names: sym_iwram.txt places the IWRAM ones,

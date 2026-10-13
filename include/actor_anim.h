@@ -170,7 +170,7 @@ struct category_descriptor {
     // which ActorCategoryStats::IsMaskAssistDue reports true
     s32 maskAssistDeaths;
     // 0x24 - deaths since the checkpoint (ActorCategoryStats::deaths) after which the
-    // spawns use their `bonusKind` (InitActorCategory -> gActorSpawnUseBonus)
+    // spawns use their `bonusKind` (InitActorCategory -> ActorSpawns::useBonus)
     s32 bonusKindDeaths;
     // 0x28 - boss deaths (ActorCategoryStats::bossDeaths) after which the boss is
     // created with `retryBossLevel` instead of `bossLevel`

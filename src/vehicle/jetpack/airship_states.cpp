@@ -2,6 +2,7 @@
 #include "vehicle.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "actor_spawns.hpp"
 
 extern "C" {
 #include <libgcc.h>
@@ -33,7 +34,7 @@ void Airship::StateApproach()
         *vy = 0;
         *vx = 0;
         SetState(AIRSHIP_STATE_FIREBALLS, 0);
-        PauseActorSpawns();
+        ActorSpawns::Pause();
     }
 }
 
@@ -211,7 +212,7 @@ void Airship::StateExplode()
         SPAWN(bx, by);
         SPAWN(bx, by);
     } else if (stateTimer == 0xaa) {
-        ResumeActorSpawns();
+        ActorSpawns::Resume();
         SetState(AIRSHIP_STATE_FALL, 1);
         gAudioContext->PlaySfx(SFX_UNKNOWN_42, 0x100);
         velZ = AIRSHIP_FALL_SPEED_Z;

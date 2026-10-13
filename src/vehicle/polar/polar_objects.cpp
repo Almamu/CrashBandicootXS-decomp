@@ -2,6 +2,7 @@
 #include "audio.hpp"
 #include "level_state.hpp"
 #include "yeti.hpp"
+#include "actor_spawns.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -171,16 +172,16 @@ void PolarPenguin::Aim(s32 target)
         s32 n;
         s32 factor;
 
-        velZ = gPolarPenguinSpeeds[GetActorSpawnKindIndex(target)];
-        n = (GetActorSpawnZ(target) - z) / velZ;
+        velZ = gPolarPenguinSpeeds[ActorSpawns::GetKindIndex(target)];
+        n = (ActorSpawns::GetZ(target) - z) / velZ;
         countdown = n;
         if (n == 0)
             countdown = 1;
 
         factor = 0x1000 / countdown;
-        velX = Q12_MUL(factor, GetActorSpawnX(target) - x);
-        velY = Q12_MUL(factor, GetActorSpawnY(target) - y);
-        nextTarget = GetActorSpawnNextTarget(target);
+        velX = Q12_MUL(factor, ActorSpawns::GetX(target) - x);
+        velY = Q12_MUL(factor, ActorSpawns::GetY(target) - y);
+        nextTarget = ActorSpawns::GetNextTarget(target);
     }
 }
 

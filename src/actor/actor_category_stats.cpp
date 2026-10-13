@@ -1,6 +1,7 @@
 #include "vehicle.hpp"
 #include "actor_palette_cycle.hpp"
 #include "actor_category_stats.hpp"
+#include "actor_spawns.hpp"
 
 extern "C" {
 #include "core.h"
@@ -107,13 +108,13 @@ s32 ActorCategoryStats::GetCheckpoint()
  * caller passes the state only and leaves r1 as it is. docs/headers.md */
 extern void SetCheckpointAtPlayer_1(void *self) asm("SetCheckpointAtPlayer");
 
-/* The checkpoint at course distance `z` (net of `GetActorSpawnOffset`'s
+/* The checkpoint at course distance `z` (net of `ActorSpawns::GetOffset`'s
  * current Q8.8 offset): resets the deaths, moves the level state's
  * checkpoint to the player, and saves the missed nitros and the palette
  * cycle to restore on a retry. */
 void ActorCategoryStats::SetCheckpoint(s32 z)
 {
-    checkpoint = z - GetActorSpawnOffset();
+    checkpoint = z - ActorSpawns::GetOffset();
     deaths = 0;
     bossDeaths = 0;
     SetCheckpointAtPlayer_1(gLevelState);

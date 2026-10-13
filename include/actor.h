@@ -102,16 +102,16 @@ struct actor_spawn {
     //        records and 1, 3, 17, 33, 53, 108, 125, 138, 155, 157, 161
     //        or 191 in others; nothing reads it
     u8 unk_03;
-    s32 x; // 0x04 - Q8.8 after GetActorSpawnX's <<8
-    s32 y; // 0x08 - Q8.8 after GetActorSpawnY's <<8
-    // 0x0C - the course distance at which the spawn is due (GetActorSpawnZ:
+    s32 x; // 0x04 - Q8.8 after ActorSpawns::GetX's <<8
+    s32 y; // 0x08 - Q8.8 after ActorSpawns::GetY's <<8
+    // 0x0C - the course distance at which the spawn is due (ActorSpawns::GetZ:
     //        Q8 after <<8; SelectActorCategory, RunActorCategoryFrame)
     s32 z;
 };
 
 /* One spawn of a spawn table: the spawn record SpawnActor is handed, and
  * the spawn index a jetpack plane or polar penguin homes in on after this
- * one (GetActorSpawnNextTarget; -1: none). vehicle.hpp's struct spawn_arg
+ * one (ActorSpawns::GetNextTarget; -1: none). vehicle.hpp's struct spawn_arg
  * is the same record, as the planes' and the penguins' constructors take
  * it. */
 struct actor_spawn_entry {
@@ -121,12 +121,12 @@ struct actor_spawn_entry {
 COMPILE_TIME_ASSERT(actor_h, sizeof(struct actor_spawn_entry) == 0x14);
 
 /* A stage's actor spawn list (category_descriptor.spawnTable, actor_anim.h;
- * gActorSpawnTable), ordered by depth: the course length (past it
+ * ActorSpawns::table), ordered by depth: the course length (past it
  * RunActorCategoryFrame calls the vtable's reachCourseEnd), the number of
  * spawns, then the spawns. The accessors (actor_spawn.cpp) take a spawn by
  * its index. Every access is `table->entries[i].field`, whose address
  * gcc builds as the ROM does: `entries`' offset and the field's are added
- * to the table pointer, then the index (GetActorSpawnX's
+ * to the table pointer, then the index (ActorSpawns::GetX's
  * `adds r2, #12; adds r2, r2, r1`). */
 struct actor_spawn_table {
     s32 length;                          // 0x00 - the course length, in course distance units
@@ -179,16 +179,9 @@ extern class ActorSelf *CreateActor(u8 kind, s32 x, s32 y, s32 z, struct actor_s
 extern struct ActorSelf *SpawnActor(struct actor_spawn *spawn, u8 useBonus, s32 zOffset);
 extern void ConstructAnimTableState(struct anim_table_record *table, s32 z);
 
-/* src/actor/actor_spawn.cpp */
+/* src/actor/actor_spawn.cpp (the rest is class ActorSpawns,
+ * actor_spawns.hpp) */
 extern s32 GetActorCategoryFrameCount(void);
-extern s32 GetActorSpawnOffset(void);
-extern void ResumeActorSpawns(void);
-extern void PauseActorSpawns(void);
-extern s32 GetActorSpawnNextTarget(s32 idx);
-extern s32 GetActorSpawnZ(s32 idx);
-extern s32 GetActorSpawnY(s32 idx);
-extern s32 GetActorSpawnX(s32 idx);
-extern s32 GetActorSpawnKindIndex(s32 idx);
 
 /* src/actor/actor_category.cpp. C++ only: CanPauseActorCategory returns a
  * `bool`. */
@@ -222,10 +215,6 @@ extern class ActorSelf **gActorDrawList;
 #endif
 extern s32 gActorFarClipDepth;
 extern s32 gActorNearClipDepth;
-extern s32 gActorSpawnIndex;
-extern s32 gActorSpawnOffset;
-extern struct actor_spawn_table *gActorSpawnTable;
-extern u8 gActorSpawnsPaused;
 /* The projection distance (Q8): DrawActor scales x/y by
  * gActorFocalLength / depth, and InitCellAnim starts the cell animation
  * this far from the checkpoint. Set by ActorBg::InitScroll: 47 px in the
@@ -238,9 +227,6 @@ extern s32 gActorFocalLength;
  * / depth (a Q8 depth) is the Q12 scale that Q12_MUL applies to a Q8
  * position, as ActorSelf::Draw's INT_TO_Q12(gActorFocalLength) / depth. */
 #define ACTOR_PROJECTION INT_TO_Q12(ACTOR_FOCAL_LENGTH)
-/* SelectActorCategory's `active` argument (the deaths reached the
- * category's `bonusKindDeaths`): spawns use their record's `bonusKind`. */
-extern u8 gActorSpawnUseBonus;
 
 /* src/iwram/iwram_data.cpp */
 extern void (*gDrawMirroredTilemapFunc)(u8 *pal, s32 lowBlock, s32 w, s32 h);

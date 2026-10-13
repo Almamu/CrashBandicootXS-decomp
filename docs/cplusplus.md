@@ -781,6 +781,8 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/actor/actor_vram_pool.cpp`, `actor_category_init.cpp`, `src/frontend/company_logos.cpp`, `company_logos_ctor.cpp`, `src/vehicle/jetpack/jetpack_player.cpp`, `jetpack_player_update.cpp`, `src/vehicle/polar/polar_player.cpp`, `polar_player_states.cpp` | the callers: `ObjTileAllocator::Alloc(...)` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-obj-tile-allocator-as-an-all-static-class-915) |
 | `src/actor/actor_category_stats.cpp`, `src/iwram/iwram_data.cpp` | `ActorCategoryStats` (new include/actor_category_stats.hpp), an all-static class: its 4 IWRAM globals and gActorCheckpoint are static data members (`deaths` is gActorCategoryDeaths, `bossDeaths`, `missedNitros`, `checkpointMissedNitros`, `checkpoint`), 5 of the object's 6 functions static member functions (`AddMissedNitro`, `GetMissedNitros`, `GetCheckpoint`, `SetCheckpoint`, `IsMaskAssistDue`); actor.h's 5 prototypes and 5 externs go | 5 | (unchanged) | 0 -> 0 | [#915](#the-actor-category-statistics-as-an-all-static-class-915) |
 | `src/actor/actor_category_init.cpp`, `src/level/game_frame.cpp`, `src/vehicle/jetpack/airship.cpp`, `jetpack_player.cpp`, `jetpack_player_update.cpp`, `src/vehicle/polar/polar_course_objects.cpp`, `polar_crate.cpp`, `polar_player.cpp` | the callers: `ActorCategoryStats::SetCheckpoint(z)` & co.; InitActorCategory, a friend, resets the members | 0 | (unchanged) | 0 -> 0 | [#915](#the-actor-category-statistics-as-an-all-static-class-915) |
+| `src/actor/actor_spawn.cpp` | `ActorSpawns` (new include/actor_spawns.hpp), an all-static class: its 5 IWRAM globals are static data members (`table` is gActorSpawnTable, `index`, `useBonus`, `paused`, `offset`), 8 of the object's 9 functions static member functions (`GetOffset`, `Resume`, `Pause`, `GetNextTarget`, `GetZ`, `GetY`, `GetX`, `GetKindIndex`); actor.h's 8 prototypes and 5 externs go | 8 | (unchanged) | 0 -> 0 | [#915](#the-actor-spawn-table-as-an-all-static-class-915) |
+| `src/actor/actor_category_select.cpp`, `actor_category_frame.cpp`, `actor_category_stats.cpp`, `src/bosses/hovercraft.cpp`, `src/vehicle/jetpack/airship_states.cpp`, `jetpack_plane.cpp`, `src/vehicle/polar/polar_objects.cpp` | the callers: `ActorSpawns::GetX(target)`, `ActorSpawns::Pause()` & co.; SelectActorCategory and RunActorCategoryFrame, friends, drive the table | 0 | (unchanged) | 0 -> 0 | [#915](#the-actor-spawn-table-as-an-all-static-class-915) |
 | `src/actor/actor_palette_cycle.cpp`, `src/data/palette_cycle_175760.cpp` | `ActorPaletteCycle` (new include/actor_palette_cycle.hpp), an all-static class: its 6 IWRAM globals and the 3 ROM tables only it reads are static data members (`frame` is gActorPaletteCycleFrame, `frames` gActorPaletteCycleFrames, ...), its 5 functions static member functions (`Restore`, `Save`, `Update`, `Set`, `Enable`); actor.h's 5 prototypes and 9 externs go | 5 | (unchanged) | 0 -> 0 | [#915](#the-actor-palette-cycle-as-an-all-static-class-915) |
 | `src/actor/actor_category_init.cpp`, `actor_category_stats.cpp`, `actor_factory.cpp`, `cell_anim.cpp` | the callers: `ActorPaletteCycle::Update()` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-actor-palette-cycle-as-an-all-static-class-915) |
 | `src/gfx/sprite_frame.cpp`, `src/iwram/sprite_arm.cpp` | `SpriteOamQueue` and `SpriteFrameCache` (new include/sprite_oam_queue.hpp, sprite_frame_cache.hpp), all-static classes: their 4 + 4 IWRAM globals are static data members (`entries` is gSpriteOamQueue, `current` gSpriteFrameCacheCurrent, ...), their 4 + 5 functions static member functions (`Init`, `Add`, `Flush`, `Destroy`; `Init`, `LoadTiles`, `Age`, `Destroy` and the ARM `Lookup`); gfx.h's 8 prototypes and 8 externs and iwram.h's Lookup prototype go | 9 | (unchanged) | 0 -> 0 | [#915](#the-oam-queue-and-the-sprite-frame-cache-as-all-static-classes-915) |
@@ -4801,6 +4803,35 @@ and every object is byte-identical.
   object, reads only the category table: it counts a category's crates
   for the level queries. gActorCategory (0x03001380), the selected
   category, is the driver's.
+
+### The actor spawn table as an all-static class (#915)
+
+The second of [the category driver's](#the-actor-category-statistics-as-an-all-static-class-915)
+three classes. The spawn table (actor_spawn.cpp, ROM
+0x0802A4E0-0x0802A5AC after GetActorCategoryFrameCount) is the
+category's spawn records and how far the category has spawned them: 5
+IWRAM globals (0x03001400, 0x03001404, 0x03001414, 0x0300141C and
+0x03001420, among the driver's) that only the category code reads. They are now `ActorSpawns`
+(include/actor_spawns.hpp), all-static like the statistics, and every
+object is byte-identical.
+
+- **Data.** `table` (gActorSpawnTable), `index` (gActorSpawnIndex),
+  `useBonus` (gActorSpawnUseBonus), `paused` (gActorSpawnsPaused) and
+  `offset` (gActorSpawnOffset) are private static data members.
+  cxx_symbols.txt's `#915 ActorSpawns` block maps them to their C names,
+  which sym_iwram.txt places. GetKindIndex's local `table` had a member's
+  name and is `t` now.
+- **Functions.** 8 public static member functions under their C names:
+  `GetOffset` (the statistics' SetCheckpoint), `Pause` and `Resume` (the
+  airship and the hovercraft hold the spawns during their fights), and
+  the accessors the homing actors fly by: `GetNextTarget`, `GetZ`,
+  `GetY`, `GetX` and `GetKindIndex` (AimJetpackPlane, AimPolarPenguin).
+- **SelectActorCategory** sets the table up and spawns what is in view;
+  **RunActorCategoryFrame** spawns the records that scroll into view, or
+  moves `offset` on while the spawns are paused. Both are friends of the
+  class.
+- **Left outside.** GetActorCategoryFrameCount, the object's first
+  function, reads the driver's frame count (gActorCategoryFrameCount).
 
 ### The OBJ tile allocator as an all-static class (#915)
 

@@ -1,6 +1,7 @@
 #include "vehicle.hpp"
 #include "boss_actors.hpp"
 #include "audio.hpp"
+#include "actor_spawns.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -103,22 +104,22 @@ void JetpackPlane::Aim(s32 target)
         s32 scale;
         s32 scale2;
 
-        velZ = gJetpackPlaneHopSpeeds[GetActorSpawnKindIndex(target)];
-        steps = Q4_TO_INT(Q8_DIV(GetActorSpawnZ(target) - z, velZ));
+        velZ = gJetpackPlaneHopSpeeds[ActorSpawns::GetKindIndex(target)];
+        steps = Q4_TO_INT(Q8_DIV(ActorSpawns::GetZ(target) - z, velZ));
         if (steps == 0) {
             steps = 1;
         }
         /* scale2 is assigned inside the X term: the ROM doubles the scale
-         * after the GetActorSpawnX call (assigned before, the shift comes
+         * after the ActorSpawns::GetX call (assigned before, the shift comes
          * first). */
         scale = 0x8000 / steps;
         // clang-format off
-        accX = ((((GetActorSpawnX(target) - x) - Q4_TO_INT(velX * steps)) * scale >> 13) *
+        accX = ((((ActorSpawns::GetX(target) - x) - Q4_TO_INT(velX * steps)) * scale >> 13) *
                 (scale2 = scale * 2)) >> 13;
-        accY = ((((GetActorSpawnY(target) - y) - Q4_TO_INT(velY * steps)) * scale >> 13) *
+        accY = ((((ActorSpawns::GetY(target) - y) - Q4_TO_INT(velY * steps)) * scale >> 13) *
                 scale2) >> 13;
         // clang-format on
-        next = GetActorSpawnNextTarget(target);
+        next = ActorSpawns::GetNextTarget(target);
     }
 
     if (velZ <= JETPACK_PLANE_SLOW_HOP_SPEED) {
@@ -174,7 +175,7 @@ JetpackPlane::JetpackPlane(const struct anim_table_record *rec, s32 x, s32 y, s3
     velY = 0;
     velX = 0;
     velZ = JETPACK_PLANE_SLOW_HOP_SPEED;
-    if (spawn->target >= 0 && gJetpackPlaneHopSpeeds[GetActorSpawnKindIndex(spawn->target)] >
+    if (spawn->target >= 0 && gJetpackPlaneHopSpeeds[ActorSpawns::GetKindIndex(spawn->target)] >
                                   JETPACK_PLANE_SLOW_HOP_SPEED) {
         this->z += -INT_TO_Q8(142);
         velZ = JETPACK_PLANE_FAST_START_SPEED;
