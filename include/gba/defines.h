@@ -98,8 +98,15 @@ extern uint8_t OAM[OAM_SIZE];
 #define OBJ_VRAM1         &VRAM[0x14000]
 
 #else
+// The GBA's screen. A build can define another size (the Makefile's
+// `screen-check`, #979, docs/screen.md): that build only has to compile;
+// only 240x160 matches.
+#ifndef DISPLAY_WIDTH
 #define DISPLAY_WIDTH  240
+#endif
+#ifndef DISPLAY_HEIGHT
 #define DISPLAY_HEIGHT 160
+#endif
 
 // NOTE(Jace): I tried replacing these altogether,
 //             but that resulted in a nonmatching ROM

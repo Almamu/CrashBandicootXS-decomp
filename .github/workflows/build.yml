@@ -30,6 +30,13 @@ jobs:
         python3 tools/match_idioms.py --check
         python3 tools/match_idioms.py --check-macros
 
+    # Every literal that may come from the 240x160 screen (240, 160, 120,
+    # 80, their Q8 forms, OAM masks, ...) is either spelled with
+    # include/screen.h or classified by tools/magic_screen.py as hardware
+    # or a coincidence (#979, docs/screen.md). A new one fails until it is.
+    - name: Check screen-size literals
+      run: python3 tools/magic_numbers.py --screen --check
+
     # The C style (.clang-format, CONTRIBUTING.md "Code style"), checked on
     # all the C but the data tables (FORMATTED/UNFORMATTED in
     # tools/format.py). The clang-format version is pinned: other versions
@@ -68,6 +75,13 @@ jobs:
 
     - name: Build agbcp, old_agbcp and agbcp_arm_patched
       run: tools/build_agbccpp.sh agbcc-cp .
+
+    # The game code compiled with another screen size (PORTABLE's 426x240,
+    # the Makefile's screen-check, #979): it only has to compile, so a screen
+    # constant stored in a type too narrow for a bigger screen fails it
+    # (docs/screen.md).
+    - name: Compile with another screen size
+      run: make screen-check
 
     - name: Fetch baserom
       if: env.HAS_ROM == 'true'

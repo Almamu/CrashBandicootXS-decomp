@@ -181,6 +181,30 @@ tidy:
 	rm -f $(ROM) $(ELF) $(MAP)
 	rm -r build/*
 
+#### Screen-size compile check (#979) ####
+# `make screen-check` compiles every game object (src/, not the src/data/
+# tables) with another screen size, SCREEN_CHECK_WIDTH x
+# SCREEN_CHECK_HEIGHT (PORTABLE's 426x240 by default), into
+# build/screen-check. Nothing is linked or compared: it only has to
+# compile, with the same warnings as errors, so a screen constant stored
+# in a type or a bitfield too narrow for the bigger size (agbcc's "large
+# integer implicitly truncated") or a compile-time size that stops
+# holding fails it. A literal written where the defines are meant still
+# compiles: tools/magic_numbers.py --screen --check catches those. See
+# docs/screen.md.
+SCREEN_CHECK_WIDTH ?= 426
+SCREEN_CHECK_HEIGHT ?= 240
+
+.PHONY: screen-check screen-check-objs
+screen-check:
+	$(MAKE) OBJ_DIR=build/screen-check SCREEN_CHECK=1 screen-check-objs
+
+ifeq ($(SCREEN_CHECK),1)
+CPPFLAGS += -D DISPLAY_WIDTH=$(SCREEN_CHECK_WIDTH) -D DISPLAY_HEIGHT=$(SCREEN_CHECK_HEIGHT)
+endif
+
+screen-check-objs: $(filter-out $(C_BUILDDIR)/data/%,$(C_OBJS) $(CXX_OBJS))
+
 #### decomp.dev progress report ####
 # See docs/decomp_dev.md. `report` builds one objdiff unit per source
 # file (rather than one merged blob) so decomp.dev can show

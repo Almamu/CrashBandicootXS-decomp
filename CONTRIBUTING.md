@@ -300,6 +300,8 @@ full rules and the history (#574). For new code:
   tools/magic_numbers.py --screen [--show]            # every site, its category and reason
   tools/magic_numbers.py --screen --category screen   # what is left to convert
   tools/magic_numbers.py --screen --report OUT        # Markdown: per kind and directory
+  tools/magic_numbers.py --screen --check             # CI: fails on a literal no rule classifies
+  make screen-check                                   # CI: the game code compiled at 426x240
   ```
 
 - **Simplifications:** `python3 tools/simplify_scan.py` (#846) lists the
