@@ -57,6 +57,9 @@ name in its subsystem's header, spelled with the macros:
 | `LEVEL_SELECT_ZOOM_MIN`, `ZOOM_BG_ZOOM_STEP` | `Q8_FRAC(0, 8)` | `level_select.hpp`: the level-select zooms' smallest scale (1/32) and the picture's zoom a frame |
 | `PLAYER_MAX_FALL_SPEED` | `INT_TO_Q8(6)` | `player.hpp`: the jump and fall records' target |
 | `SWIM_STROKE_SPEED`, `SWIM_SPIN_SPEED` | `Q8(2.75)`, `Q8(3.75)` | `swim_ctrl.hpp`: the diver's stroke and spin, split between X and Y by the direction (3/4, 1/2, 1/4 of it) |
+| `PLAYER_JUMP_SPEED`, `PLAYER_JUMP_HELD_SPEED`, `PLAYER_JUMP_RELEASED_SPEED`, `PLAYER_DOUBLE_JUMP_SPEED`, `PLAYER_BOUNCE_SPEED`, `PLAYER_BOUNCE_HIGH_HELD_SPEED`, `PLAYER_LAUNCH_PAD_SPEED` | `Q8_FRAC(4, 98)` ... `Q8_FRAC(7, 208)` | `player.hpp`: the jumps' start speeds in gCtrlMotionRecords (negated: up), by the motion entry that queues each |
+| `PLAYER_FALL_START_SPEED`, `PLAYER_FALL_ACCEL`, `PLAYER_TORNADO_FALL_ACCEL_*`, `PLAYER_SLIDE_DECEL`, `PLAYER_ICE_STOP_DECEL`, `PLAYER_DOUBLE_JUMP_ACCEL_X` | `Q8_FRAC(0, n)` | `player.hpp`: gCtrlMotionRecords' other tuned starts and steps |
+| `SWIM_RAMP_STEP`, `SWIM_SLOW_RAMP_STEP`, `SWIM_IDLE_BOB_SPEED`, `SWIM_STOP_START_SPEED` | `Q8_FRAC(0, n)` | `swim_ctrl.hpp`: gSwimCtrlMotionRecords' steps and small speeds |
 | `ACTOR_FOCAL_LENGTH`, `ACTOR_FOCAL_LENGTH_POLAR` | `INT_TO_Q8(28)`, `INT_TO_Q8(47)` | `actor.h`: gActorFocalLength, the 3D levels' projection distance (InitActorBgScroll) |
 | `ACTOR_PROJECTION` | `INT_TO_Q12(ACTOR_FOCAL_LENGTH)` | `actor.h`: the Q12 projection's numerator; `ACTOR_PROJECTION / depth` is the Q12 scale of a Q8 position (the jetpack player, the airship, the hovercraft) |
 
@@ -79,9 +82,12 @@ its spelling (`INT_TO_Q8(5)`) or its number.
   where the signedness changes the code.
 - **Whole, short or odd.** `INT_TO_Q8(n)` for a whole number of units,
   `Q8(d)` for a short decimal, `Q8_FRAC(n, f)` where the split between
-  pixels and fraction says something; a designer's decimal tuning value
-  in a table (`{ -1122, PLAYER_GRAVITY, PLAYER_MAX_FALL_SPEED }`, a jump
-  speed in 256ths) keeps its number.
+  pixels and fraction says something. A designer's odd tuning value (a
+  jump speed in 256ths, `-1122`) gets a name from what the code does
+  with it, in its owner's header, spelled with `Q8_FRAC`:
+  `{ -PLAYER_JUMP_SPEED, PLAYER_GRAVITY, PLAYER_MAX_FALL_SPEED }`. A
+  value used in several places shares a name only where it means the
+  same thing.
 - **Not every `0x100` is a pixel.** A byte extraction (`>> 8 & 0xFF`), a
   volume (`0x100`), a palette bank (`<< 12`), an OAM field (`<< 16`), a
   tile index or a count isn't fixed point; `--fixed` classifies those as

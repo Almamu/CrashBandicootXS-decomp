@@ -45,6 +45,24 @@
 #define SWIM_STROKE_SPEED Q8(2.75)
 #define SWIM_SPIN_SPEED   Q8(3.75)
 
+/* gSwimCtrlMotionRecords' tuned values (src/data/motion_records_16b304.cpp,
+ * Q8): SwimCtrl::ApplyMotion, which reads them, is UNUSED, so they are
+ * the records' design, not what the diver does.
+ * - SWIM_RAMP_STEP: the records' usual step, 8/256 px a frame per frame,
+ *   speeding up or slowing down (records 3, 4 and 23-30; record 4 is the
+ *   swim's start, X entry 0xC, which StateIdle queues);
+ * - SWIM_SLOW_RAMP_STEP: a quarter of it, the idle bob's (records 8 and
+ *   9) and the 0.75 px glide's stop (record 2);
+ * - SWIM_IDLE_BOB_SPEED: the idle bob's sink, which StateIdle queues
+ *   after 30 frames (Y entry 1, record 8: up to it) and 60 (Y entry 2,
+ *   record 9: back down from it);
+ * - SWIM_STOP_START_SPEED: the Y half of the stop entries (record 30,
+ *   with X record 24): from 1/256 px a frame down to 0. */
+#define SWIM_RAMP_STEP        Q8_FRAC(0, 8)
+#define SWIM_SLOW_RAMP_STEP   Q8_FRAC(0, 2)
+#define SWIM_IDLE_BOB_SPEED   Q8_FRAC(0, 24)
+#define SWIM_STOP_START_SPEED Q8_FRAC(0, 1)
+
 /* The swim controller (gSwimCtrlVtable; 0x30 bytes): the diving Crash's controller in the room-kind-1
  * (underwater) rooms, where play_room.cpp creates it (`new SwimCtrl`,
  * InitSwimCtrl(OperatorNew(0x30)) in its C). See swim_ctrl.cpp for the

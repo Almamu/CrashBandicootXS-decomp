@@ -65,6 +65,49 @@ extern s32 gAkuAkuFollowFrame;
 #define PLAYER_GRAVITY        Q8_FRAC(0, 51)
 #define PLAYER_MAX_FALL_SPEED INT_TO_Q8(6)
 
+/* The jumps' start speeds (gCtrlMotionRecords' Y records, upward: the
+ * table negates them). A jump (Y entry 7, StateIdle, StateRun; also the
+ * hop StartMaskHitJump makes) takes off at PLAYER_JUMP_SPEED; once the
+ * take-off animation is done, StateJump restarts the rise at
+ * PLAYER_JUMP_HELD_SPEED with A held (entry 9, and entry 0xA for the
+ * flip jump) or PLAYER_JUMP_RELEASED_SPEED without (entry 8). The double
+ * jump (TryDoubleJump, entries 0xC-0xE) starts at
+ * PLAYER_DOUBLE_JUMP_SPEED. Bouncing off a crate (HandleEvent's
+ * EVENT_BOUNCE) starts at PLAYER_BOUNCE_SPEED, or 5 px a frame with A
+ * held; EVENT_BOUNCE_HIGH's is 5 px, or PLAYER_BOUNCE_HIGH_HELD_SPEED
+ * with A held; a launch pad (EVENT_LAUNCH_PAD) throws him up at
+ * PLAYER_LAUNCH_PAD_SPEED either way. */
+#define PLAYER_JUMP_SPEED             Q8_FRAC(4, 98)  // 1122, record 11
+#define PLAYER_JUMP_HELD_SPEED        Q8_FRAC(2, 149) // 661, records 13 and 14
+#define PLAYER_JUMP_RELEASED_SPEED    Q8_FRAC(1, 154) // 410, record 12
+#define PLAYER_DOUBLE_JUMP_SPEED      Q8_FRAC(4, 26)  // 1050, records 16-18
+#define PLAYER_BOUNCE_SPEED           Q8_FRAC(4, 85)  // 1109, record 19
+#define PLAYER_BOUNCE_HIGH_HELD_SPEED Q8_FRAC(5, 231) // 1511, record 22
+#define PLAYER_LAUNCH_PAD_SPEED       Q8_FRAC(7, 208) // 2000, records 23 and 24
+
+/* The other designer-tuned steps of gCtrlMotionRecords (Q8 px a frame
+ * per frame, and px a frame):
+ * - PLAYER_DOUBLE_JUMP_ACCEL_X: the double jumps' X record (8), from 0
+ *   up to 2 px a frame;
+ * - PLAYER_SLIDE_DECEL: the slide's X record (10, X entry 0x1E,
+ *   StateIdle's R), from 5.5 px a frame down to 0;
+ * - PLAYER_FALL_START_SPEED, PLAYER_FALL_ACCEL: walking off the ground
+ *   (Y entry 4, CheckLeftGround and others; record 27) falls from
+ *   PLAYER_FALL_START_SPEED, speeding up by PLAYER_FALL_ACCEL to 5 px a
+ *   frame; the tornado spin's fall (StartTornadoFall, Y entries
+ *   0x18-0x1A, records 29-31) starts from the same speed and speeds up
+ *   the slower the more turns it made (`tornadoTurn` 0-1, 2, 3-4);
+ * - PLAYER_ICE_STOP_DECEL: on ice, with the D-pad released, the slide
+ *   to a stop (record 34, X entry 0x1F, StateIdle). */
+#define PLAYER_DOUBLE_JUMP_ACCEL_X          Q8_FRAC(0, 24)
+#define PLAYER_SLIDE_DECEL                  Q8_FRAC(0, 56)
+#define PLAYER_FALL_START_SPEED             Q8_FRAC(0, 8)
+#define PLAYER_FALL_ACCEL                   Q8_FRAC(0, 56)
+#define PLAYER_TORNADO_FALL_ACCEL_TURNS_0_1 Q8_FRAC(0, 18)
+#define PLAYER_TORNADO_FALL_ACCEL_TURNS_2   Q8_FRAC(0, 14)
+#define PLAYER_TORNADO_FALL_ACCEL_TURNS_3_4 Q8_FRAC(0, 6)
+#define PLAYER_ICE_STOP_DECEL               Q8_FRAC(0, 8)
+
 /* The player controller's and the input controller's motion records
  * (src/data/motion_records_16b304.cpp; `struct speed_ramp`, objects.h). */
 extern const struct speed_ramp gSwimCtrlMotionRecords[31];
