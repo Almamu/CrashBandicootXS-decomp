@@ -377,6 +377,12 @@ CLASSES = [
         r"\by\b|CLAMP_M",
         "a position in the boss arena or the jetpack course",
     ),
+    (
+        "coincidence",
+        r"src/vehicle/jetpack/airship\.cpp",
+        r"screen[XY] [<>]",
+        "the airship's projected position, bounded in the arena (Steer's edge push)",
+    ),
     ("coincidence", r".", r"affine =|Q8_MUL\(scale", "an affine scale"),
     ("coincidence", r".", r"(?i)vol|Sfx|LIMIT_MAX\(d, 0xa0\)", "a sound volume or its fall-off distance"),
     ("coincidence", r".", r"accY|tornadoTurn|y -= 0x100|[xy] [+-]= 0x100", "a speed or an angle"),
