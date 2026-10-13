@@ -2,6 +2,7 @@
 #include "boss_actors.hpp"
 #include "audio.hpp"
 #include "actor_spawns.hpp"
+#include "actor_category.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -73,7 +74,7 @@ void JetpackPlane::Update()
         }
     }
 
-    if (dying == 0 && (u8)IsTouchingPlayer(this)) {
+    if (dying == 0 && (u8)ActorCategory::IsTouchingPlayer(this)) {
         gActorList->AsHpActor()->Damage(6);
         Damage(4);
     }

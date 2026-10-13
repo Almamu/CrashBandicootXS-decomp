@@ -1,5 +1,6 @@
 #include "boss_actors.hpp"
 #include "audio.hpp"
+#include "actor_category.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -63,7 +64,7 @@ void AirshipFireball::StateOrbit()
         SetState(AIRSHIP_FIREBALL_STATE_SPIRAL_IN, 0);
         stateTime = t;
     }
-    if ((u8)IsTouchingPlayer(this)) {
+    if ((u8)ActorCategory::IsTouchingPlayer(this)) {
         gActorList->AsHpActor()->Damage(6);
         palette = 4;
         gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
@@ -108,7 +109,7 @@ void AirshipFireball::StateSpiralIn()
     angle = ((stateTime << 5) >> 4) & 0xff;
     x = cx + Q8_MUL(sine[(angle + 0x40) & 0xff], radius);
     y = cy + Q8_MUL(sine[angle], radius);
-    if ((u8)IsTouchingPlayer(this)) {
+    if ((u8)ActorCategory::IsTouchingPlayer(this)) {
         gActorList->AsHpActor()->Damage(6);
         palette = 4;
         gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);

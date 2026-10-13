@@ -4,6 +4,7 @@
 #include "vehicle.hpp"
 #include "sprite_oam_queue.hpp"
 #include "sprite_frame_cache.hpp"
+#include "actor_category.hpp"
 
 extern "C" {
 #include "core.h"
@@ -25,13 +26,13 @@ extern "C" {
  *
  * The table and the index are loaded into locals first (`arr`, `idx`)
  * and `arr[idx].type` read from them: reading
- * `gActorCategories[gActorCategory]` directly loads the index before
+ * `ActorCategory::descriptors[ActorCategory::current]` directly loads the index before
  * the table. Likewise the final `ConfigureHudParts` call's arguments are
  * broken into their own local variables in the exact order this compiler
  * evaluates them (icon array pointer, then the array base, then the
  * index) to reproduce the ROM's exact register assignment - see
  * docs/matching/archive/issue-48-0x080291a4-actor.md. */
-void SetupActorVramPool(void)
+void ActorCategory::SetupVramPool()
 {
     const struct sprite_bank *entityBank;
     const struct sprite_bank *otherBank;
@@ -50,8 +51,8 @@ void SetupActorVramPool(void)
     /* scoped: its own `arr`/`idx`, as the next block (shared, the registers
      * differ) */
     {
-        const struct category_descriptor *arr = gActorCategories;
-        s32 idx = gActorCategory;
+        const struct category_descriptor *arr = descriptors;
+        s32 idx = current;
 
         if (arr[idx].type == CATEGORY_TYPE_POLAR) {
             anims = entityBank->anims;
@@ -76,8 +77,8 @@ void SetupActorVramPool(void)
     {
         /* `iconArray` is needed: inlined, the instructions are reordered */
         Hud *iconArray = gHud;
-        const struct category_descriptor *arr = gActorCategories;
-        s32 idx = gActorCategory;
+        const struct category_descriptor *arr = descriptors;
+        s32 idx = current;
 
         iconArray->ConfigureParts(arr[idx].type != CATEGORY_TYPE_POLAR);
     }

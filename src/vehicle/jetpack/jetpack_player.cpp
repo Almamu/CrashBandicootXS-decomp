@@ -6,6 +6,7 @@
 #include "cell_anim.hpp"
 #include "fade.hpp"
 #include "actor_category_stats.hpp"
+#include "actor_category.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -192,7 +193,7 @@ void JetpackPlayer::StateFall()
     }
 
     if (y > INT_TO_Q8(225))
-        SetActorCategoryExitStatus(CATEGORY_EXIT_DEATH);
+        ActorCategory::SetExitStatus(CATEGORY_EXIT_DEATH);
 }
 
 /* State 5, the course's end: flies into the screen, the screen fades out
@@ -214,7 +215,7 @@ void JetpackPlayer::StateFinish()
     }
 
     if (depth > INT_TO_Q8(160))
-        SetActorCategoryExitStatus(CATEGORY_EXIT_CLEARED);
+        ActorCategory::SetExitStatus(CATEGORY_EXIT_CLEARED);
 }
 
 /* State 0, flying in: once past y 0x1E00, flying (state 1), with the

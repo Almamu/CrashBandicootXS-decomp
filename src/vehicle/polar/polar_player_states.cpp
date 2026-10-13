@@ -5,6 +5,7 @@
 #include "yeti.hpp"
 #include "cell_anim.hpp"
 #include "fade.hpp"
+#include "actor_category.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -25,7 +26,7 @@ extern "C" {
  * ROM 0x0802BC68-0x0802BFD4. DispenseWumpa is the
  * twin of JetpackPlayer::DispenseWumpa (jetpack_player.cpp) on the polar
  * globals; the three end-of-run states are the course's three exits
- * (SetActorCategoryExitStatus). */
+ * (ActorCategory::SetExitStatus). */
 
 /* Drains the `gPolarQueuedWumpa` reward accumulator QueueWumpa fills:
  * all at once (repeated `CollectWumpa` calls) while
@@ -108,7 +109,7 @@ void PolarPlayer::StateFinishLeap()
     }
 
     if (depth <= INT_TO_Q8(4) - 1)
-        SetActorCategoryExitStatus(CATEGORY_EXIT_CLEARED);
+        ActorCategory::SetExitStatus(CATEGORY_EXIT_CLEARED);
 }
 
 /* State 8, carried off by the yeti: the same flight, and the category
@@ -126,7 +127,7 @@ void PolarPlayer::StateCarriedOff()
     }
 
     if (depth <= INT_TO_Q8(4) - 1)
-        SetActorCategoryExitStatus(CATEGORY_EXIT_BOSS_DEATH);
+        ActorCategory::SetExitStatus(CATEGORY_EXIT_BOSS_DEATH);
 }
 
 /* State 6, knocked off the bear: sinks by 0x100 a frame; the screen
@@ -142,7 +143,7 @@ void PolarPlayer::StateKnockedOff()
     }
 
     if (y < (s32)0xFFFF8E00)
-        SetActorCategoryExitStatus(CATEGORY_EXIT_DEATH);
+        ActorCategory::SetExitStatus(CATEGORY_EXIT_DEATH);
 }
 
 /* State 3, boosted: after 30 frames the steering is back on, and the

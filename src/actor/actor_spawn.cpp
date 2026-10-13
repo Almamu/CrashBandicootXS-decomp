@@ -2,6 +2,7 @@
 #include "vehicle.hpp"
 #include "level_state.hpp"
 #include "actor_spawns.hpp"
+#include "actor_category.hpp"
 
 extern "C" {
 #include "core.h"
@@ -15,15 +16,15 @@ extern "C" {
 
 /* ActorSpawns::table: the category's spawn table (struct
  * actor_spawn_table, actor.h; category_descriptor.spawnTable), set up by
- * SelectActorCategory. The per-spawn accessors below are what the homing
+ * ActorCategory::Select. The per-spawn accessors below are what the homing
  * actors (AimJetpackPlane, AimPolarPenguin) use to fly to a target spawn:
  * its X/Y/Z, its kind (which picks their speed) and its next target. */
 
-/* Trivial getter - the big loading-loop call counter set by
- * InitActorCategory's own loop tail (still raw). */
-s32 GetActorCategoryFrameCount(void)
+/* The frames the category has run since Select (`frameCount`, which
+ * RunFrame counts): the jetpack rings' timing. */
+s32 ActorCategory::GetFrameCount()
 {
-    return gActorCategoryFrameCount;
+    return frameCount;
 }
 
 /* Trivial getter, Q8.8-converted. */

@@ -2,6 +2,7 @@
 #include "airship.hpp"
 #include "hovercraft.hpp"
 #include "vehicle.hpp"
+#include "actor_category.hpp"
 
 extern "C" {
 #include "core.h"
@@ -38,7 +39,7 @@ extern const u16 gHovercraftCategoryPalette[];
 /* One descriptor per actor category 0-6 (type 0: categories 0-2,
  * type 1: 3-5, type 2: 6). data.s used to split this table at
  * 0x08175564 and 0x08175584; nothing referenced those labels. */
-const struct category_descriptor gActorCategories[CATEGORY_COUNT] = {
+const struct category_descriptor ActorCategory::descriptors[CATEGORY_COUNT] = {
     /* CATEGORY_FROSTBITE_CAVERN */ {
         CATEGORY_TYPE_POLAR,
         (void *)gCategoryFamily0CellAnim,
@@ -146,11 +147,11 @@ const struct category_descriptor gActorCategories[CATEGORY_COUNT] = {
     },
 };
 
-/* The three per-type category vtables, `gActorCategoryVtable =
- * &gActorCategoryVtables[type]` in SelectActorCategory
+/* The three per-type category vtables, `ActorCategory::vtable =
+ * &ActorCategory::vtables[type]` in ActorCategory::Select
  * (actor_category_select.cpp): include/actor_anim.h names the slots;
  * the two numbers are the spawn and skip distances. */
-const struct category_vtable gActorCategoryVtables[CATEGORY_TYPE_COUNT] = {
+const struct category_vtable ActorCategory::vtables[CATEGORY_TYPE_COUNT] = {
     /* CATEGORY_TYPE_POLAR */ {
         ConstructAnimTableState,
         SpawnActor,

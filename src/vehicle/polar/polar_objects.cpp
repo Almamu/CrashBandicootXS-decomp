@@ -3,6 +3,7 @@
 #include "level_state.hpp"
 #include "yeti.hpp"
 #include "actor_spawns.hpp"
+#include "actor_category.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -48,19 +49,19 @@ void PolarElectricFence::Update()
             RestartAnim(1);
         }
         box = gPolarElectricFenceWireBox;
-        if ((u8)IsTouchingPlayer(this)) {
+        if ((u8)ActorCategory::IsTouchingPlayer(this)) {
             if ((u8)static_cast<PolarPlayer *>(gActorList)->Shock()) {
                 gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
                 RestartAnim(1);
             }
         } else {
             box = gPolarElectricFenceLeftPostBox;
-            if ((u8)IsTouchingPlayer(this)) {
+            if ((u8)ActorCategory::IsTouchingPlayer(this)) {
                 gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
                 RestartAnim(1);
             }
             box = gPolarElectricFenceRightPostBox;
-            if ((u8)IsTouchingPlayer(this)) {
+            if ((u8)ActorCategory::IsTouchingPlayer(this)) {
                 gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
                 RestartAnim(1);
             }
@@ -82,7 +83,7 @@ PolarElectricFence::PolarElectricFence(const struct anim_table_record *rec, s32 
 /* Hurts the player on touch; it never moves or breaks. */
 void PolarObstacle::Update()
 {
-    if ((u8)IsTouchingPlayer(this))
+    if ((u8)ActorCategory::IsTouchingPlayer(this))
         static_cast<PolarPlayer *>(gActorList)->Hurt();
     ActorSelf::Update();
 }
@@ -99,7 +100,7 @@ void PolarLauncher::Update()
 {
     switch (state) {
     case POLAR_LAUNCHER_STATE_READY:
-        if ((u8)IsTouchingPlayer(this)) {
+        if ((u8)ActorCategory::IsTouchingPlayer(this)) {
             static_cast<PolarPlayer *>(gActorList)->Launch();
             gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
             SetState(POLAR_LAUNCHER_STATE_EXPLODE, 1);
@@ -138,7 +139,7 @@ void PolarPenguin::Update()
         if (--countdown <= 0)
             Aim(nextTarget);
 
-        if ((u8)IsTouchingPlayer(this)) {
+        if ((u8)ActorCategory::IsTouchingPlayer(this)) {
             if ((u8)static_cast<PolarPlayer *>(gActorList)->Hurt()) {
                 velX = x > 0 ? 0x600 : -0x600;
                 velY = -(s32)RandRange(0x300);
@@ -197,7 +198,7 @@ PolarPenguin::PolarPenguin(const struct anim_table_record *rec, s32 x, s32 y, s3
  * (state 2). */
 void PolarIcicle::Update()
 {
-    if ((u8)IsTouchingPlayer(this))
+    if ((u8)ActorCategory::IsTouchingPlayer(this))
         static_cast<PolarPlayer *>(gActorList)->Hurt();
 
     if ((depth > 0x6400 && state == POLAR_ICICLE_STATE_DROP2) ||

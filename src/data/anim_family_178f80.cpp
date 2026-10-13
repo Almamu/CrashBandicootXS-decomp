@@ -64,7 +64,7 @@ extern const struct anim_frame_record gPolarAkuAkuKeyframes[2];
 extern const struct anim_frame_record gPolarCheckpointTextKeyframes[1];
 extern const u32 gPolarCheckpointTextFrames[3];
 
-/* The 256-colour OBJ palette InitActorCategory loads for these
+/* The 256-colour OBJ palette ActorCategory::Init loads for these
  * categories. The second 0x200 bytes are zero; nothing reads them. */
 const u16 gPolarCategoryPalette[0x200] = {
     0x03E0, 0x01DD, 0x00DE, 0x0050, 0x00B7, 0x3461, 0x0005, 0x31DB, 0x18C8, 0x31B1, 0x294C, 0x52D8,

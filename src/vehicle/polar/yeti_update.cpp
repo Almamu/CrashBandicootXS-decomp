@@ -28,7 +28,7 @@ extern "C" {
 
 /* One of two confirmed slots (index 3, dispatched via
  * `stateFuncs[state]`) of the type-0
- * `category_vtable` (`gActorCategoryVtables[0]`, `include/actor_anim.h`)
+ * `category_vtable` (`ActorCategory::vtables[0]`, `include/actor_anim.h`)
  * - `UpdateGameFrame`'s own direct top-level callee for this object, per
  * docs/rom_map.md's "Two new type-0 vtable slots confirmed" section.
  *

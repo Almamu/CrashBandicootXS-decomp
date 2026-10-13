@@ -2,8 +2,8 @@
 #define GUARD_CONSTANTS_CATEGORIES_H
 
 /*
- * Actor categories: the index of gActorCategories, the `catIndex` of a
- * ROOM_KIND_CATEGORY stage and InitActorCategory's argument. Each is the
+ * Actor categories: the index of ActorCategory::descriptors, the `catIndex` of a
+ * ROOM_KIND_CATEGORY stage and ActorCategory::Init's argument. Each is the
  * stage of one level (gLevelTable's room lists): the polar rides of
  * frostbite cavern, snow crash and snow job, the jetpack levels, and
  * n. gin's fight.
@@ -18,7 +18,7 @@
 #define CATEGORY_COUNT 7
 
 /*
- * `struct category_descriptor.type`: the gActorCategoryVtables index,
+ * `struct category_descriptor.type`: the ActorCategory::vtables index,
  * which picks the stage's player and boss.
  */
 #define CATEGORY_TYPE_POLAR 0      /* the polar ride; the yeti (CreateYeti) */
@@ -27,8 +27,8 @@
 #define CATEGORY_TYPE_COUNT 3
 
 /*
- * SetActorCategoryExitStatus values: what RunActorCategoryFrame returns to
- * InitActorCategory's loop at the end of the frame.
+ * ActorCategory::SetExitStatus values: what ActorCategory::RunFrame returns to
+ * ActorCategory::Init's loop at the end of the frame.
  */
 #define CATEGORY_EXIT_NONE 0 /* keep playing */
 /* The stage is finished (PolarPlayerStateFinishLeap,

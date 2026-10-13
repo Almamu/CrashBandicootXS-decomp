@@ -4,6 +4,7 @@
 #include "yeti.hpp"
 #include "collected_spawns.hpp"
 #include "actor_category_stats.hpp"
+#include "actor_category.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -39,7 +40,7 @@ void PolarCrate::Update()
 /* By its record: 1, 3 or 5 wumpas (0x1C-0x1E), or a mask (0x1F). */
 void PolarQuestionCrate::Update()
 {
-    if (animIndex != 0x12 && (u8)IsTouchingPlayer(this)) {
+    if (animIndex != 0x12 && (u8)ActorCategory::IsTouchingPlayer(this)) {
         gLevelState->AddBrokenCrate();
 
         switch (record->index) {
@@ -71,7 +72,7 @@ void PolarQuestionCrate::Update()
 void PolarLifeCrate::Update()
 {
     if (animIndex != 0x12) {
-        if ((u8)IsTouchingPlayer(this)) {
+        if ((u8)ActorCategory::IsTouchingPlayer(this)) {
             gAudioContext->PlaySfx(SFX_EXTRA_LIFE, 0x100);
             gLevelState->AddBrokenCrate();
             static_cast<PolarPlayer *>(gActorList)->GiveLife();
@@ -103,7 +104,7 @@ void PolarNitroCrate::Update()
             delete this;
             return;
         }
-        if ((u8)IsTouchingPlayer(this)) {
+        if ((u8)ActorCategory::IsTouchingPlayer(this)) {
             gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
             gLevelState->AddBrokenCrate();
             static_cast<PolarPlayer *>(gActorList)->Hurt();

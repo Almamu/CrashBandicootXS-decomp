@@ -2,6 +2,7 @@
 #include "audio.hpp"
 #include "level_state.hpp"
 #include "collected_spawns.hpp"
+#include "actor_category.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -67,7 +68,7 @@ void JetpackBalloonCrate::Update()
  * (state 2, animation 1) and pays out; then the crate's update. */
 void JetpackQuestionCrate::Update()
 {
-    if (animIndex == 0 && (u8)IsTouchingPlayer(this)) {
+    if (animIndex == 0 && (u8)ActorCategory::IsTouchingPlayer(this)) {
         SetState(JETPACK_BALLOON_CRATE_STATE_DESTROYED, 1);
         switch (record->index) {
         case JETPACK_KIND_QUESTION_CRATE_WUMPA_1:
@@ -139,7 +140,7 @@ void JetpackQuestionCrate::Damage(s32 amount)
  * animation 1) and heals the player by 0x14; then the crate's update. */
 void JetpackHealthCrate::Update()
 {
-    if (animIndex == 0 && (u8)IsTouchingPlayer(this)) {
+    if (animIndex == 0 && (u8)ActorCategory::IsTouchingPlayer(this)) {
         SetState(JETPACK_BALLOON_CRATE_STATE_DESTROYED, 1);
         gActorList->AsJetpackPlayer()->Heal(0x14);
         gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
@@ -159,7 +160,7 @@ void JetpackHealthCrate::Update()
  * starts the time trial; then the crate's update. */
 void JetpackTimeCrate::Update()
 {
-    if (animIndex == 0 && (u8)IsTouchingPlayer(this)) {
+    if (animIndex == 0 && (u8)ActorCategory::IsTouchingPlayer(this)) {
         SetState(JETPACK_BALLOON_CRATE_STATE_DESTROYED, 1);
         switch (record->index) {
         case JETPACK_KIND_TIME_CRATE_1:
@@ -387,7 +388,7 @@ void JetpackParachuteNitro::Update()
         return;
     }
 
-    if ((u8)IsTouchingPlayer(this)) {
+    if ((u8)ActorCategory::IsTouchingPlayer(this)) {
         gActorList->AsJetpackPlayer()->Damage(0x14);
         gLevelState->AddBrokenCrate();
         gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);

@@ -4,7 +4,7 @@
 /*
  * `struct level_room.kind`: how a room is played. PlayRoom attaches the
  * player controller of kinds 0-2; UpdateGameFrame hands a
- * ROOM_KIND_CATEGORY stage to InitActorCategory instead. Each room places
+ * ROOM_KIND_CATEGORY stage to ActorCategory::Init instead. Each room places
  * the start marker of its kind (docs/levels.md).
  */
 #define ROOM_KIND_ON_FOOT 0    /* action controller (InitActionCtrl) */
@@ -14,9 +14,9 @@
 
 /*
  * How a room ended (#843, docs/flags/room_exit.md): what PlayRoom
- * (RunRoom) and InitActorCategory return to UpdateGameFrame's `status`.
+ * (RunRoom) and ActorCategory::Init return to UpdateGameFrame's `status`.
  * Not the CATEGORY_EXIT_* values (categories.h), which are a category
- * frame's status inside InitActorCategory's loop.
+ * frame's status inside ActorCategory::Init's loop.
  */
 #define ROOM_EXIT_CLEARED 0 /* the room's exit reached (LevelProgress::RequestRoomExit), a category stage finished: the next room */
 #define ROOM_EXIT_RETRY 1   /* the player is gone (died), or the pause menu's restart: back to the checkpoint */

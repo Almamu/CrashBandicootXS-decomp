@@ -3,8 +3,8 @@
 
 /* The actor category's spawn table (src/actor/actor_spawn.cpp, #915): the
  * category's spawn records (struct actor_spawn_table, actor.h), ordered
- * by depth, and how far the category has spawned them. SelectActorCategory
- * sets the table up and spawns what is in view; RunActorCategoryFrame
+ * by depth, and how far the category has spawned them. ActorCategory::Select
+ * sets the table up and spawns what is in view; ActorCategory::RunFrame
  * spawns the records that scroll into view, or, while the spawns are
  * paused (the airship's and the hovercraft's fights), moves `offset` on
  * with the course instead. The accessors are what the homing actors
@@ -25,7 +25,6 @@
 
 extern "C" {
 #include "core.h"
-#include "actor.h" /* the friends below have C linkage */
 }
 
 class ActorSpawns
@@ -41,16 +40,14 @@ public:
     static s32 GetKindIndex(s32 idx);  // GetActorSpawnKindIndex: the kind less 0x20
 
 private:
-    /* SelectActorCategory sets the table up, RunActorCategoryFrame walks it */
-    friend void SelectActorCategory(s32 type, struct actor_spawn_table *table,
-                                    struct anim_table_record *animTable, u8 active, s32 variant,
-                                    s32 checkpoint);
-    friend s32 RunActorCategoryFrame(void);
+    /* ActorCategory::Select sets the table up, ActorCategory::RunFrame
+     * walks it */
+    friend class ActorCategory;
 
     /* IWRAM (sym_iwram.txt) */
     static struct actor_spawn_table *table; // gActorSpawnTable - the category's spawnTable
     static s32 index;                       // gActorSpawnIndex - the next record to spawn
-    /* gActorSpawnUseBonus - SelectActorCategory's `active` argument (the
+    /* gActorSpawnUseBonus - ActorCategory::Select's `active` argument (the
      * deaths reached the category's `bonusKindDeaths`): spawns use their
      * record's `bonusKind` */
     static u8 useBonus;

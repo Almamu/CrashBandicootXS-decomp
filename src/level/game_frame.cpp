@@ -5,6 +5,7 @@
 #include "level_state.hpp"
 #include "menus.hpp"
 #include "actor_category_stats.hpp"
+#include "actor_category.hpp"
 
 extern "C" {
 #include "core.h"
@@ -32,7 +33,7 @@ extern "C" {
  * map screen `RunCredits` on result 2), then the level loop. Each pass
  * restores the per-attempt block from `saveData` (repeating while
  * `RunLevelSelect` asks to), runs the attempt loop (`PlayRoom` or
- * `InitActorCategory` per frame, the two bitmap ping-pongs through
+ * `ActorCategory::Init` per frame, the two bitmap ping-pongs through
  * `gEntityFlags`, the checkpoint/respawn handling), and after the
  * attempt dispatches on the level number (20-24 are the special
  * levels) and records a time-trial best time.
@@ -173,7 +174,7 @@ load:
                 status = room.PlayRoom();
                 break;
             case ROOM_KIND_CATEGORY:
-                status = InitActorCategory(room.cat->param.catIndex);
+                status = ActorCategory::Init(room.cat->param.catIndex);
                 if (status == ROOM_EXIT_CLEARED) {
                     AddPendingSwitchCrates(ActorCategoryStats::GetMissedNitros());
                     SetCheckpointAtPlayer(0);

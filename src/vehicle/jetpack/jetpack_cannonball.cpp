@@ -1,6 +1,7 @@
 #include "vehicle.hpp"
 #include "boss_actors.hpp"
 #include "audio.hpp"
+#include "actor_category.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -21,7 +22,7 @@ void JetpackCannonball::Update()
     x += velX;
     y += velY;
     z += -INT_TO_Q8(1);
-    if ((u8)IsTouchingPlayer(this)) {
+    if ((u8)ActorCategory::IsTouchingPlayer(this)) {
         gActorList->AsHpActor()->Damage(2);
         delete this;
     } else {

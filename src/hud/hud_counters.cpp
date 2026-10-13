@@ -336,7 +336,7 @@ void Hud::UpdateWumpa()
  * already named it this way from the `cmp r1, #0x64` special case
  * below): a 3-digit-or-percent display of the player's HP. UpdateHud
  * only runs it in the jetpack categories (`icon_flag`, set from the
- * category type in SetupActorVramPool), where gActorList's root is the
+ * category type in ActorCategory::SetupVramPool), where gActorList's root is the
  * jetpack player, and it calls that actor's HpActor::GetHp (virtual,
  * slot 6: GetJetpackPlayerHpPercent).
  *

@@ -3,6 +3,7 @@
 #include "audio.hpp"
 #include "level_state.hpp"
 #include "yeti.hpp"
+#include "actor_category.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -21,7 +22,7 @@ extern "C" {
 /* A mask for the player; the yeti breaks it for nothing. */
 void PolarAkuAkuCrate::Update()
 {
-    if (animIndex != 0x12 && (u8)IsTouchingPlayer(this)) {
+    if (animIndex != 0x12 && (u8)ActorCategory::IsTouchingPlayer(this)) {
         gLevelState->AddBrokenCrate();
         static_cast<PolarPlayer *>(gActorList)->GiveMask();
         Break();
@@ -41,7 +42,7 @@ void PolarAkuAkuCrate::Update()
 /* Freezes the clock: 1, 2 or 3 seconds for kinds 5, 6 and 7. */
 void PolarTimeCrate::Update()
 {
-    if (animIndex != 0x12 && (u8)IsTouchingPlayer(this)) {
+    if (animIndex != 0x12 && (u8)ActorCategory::IsTouchingPlayer(this)) {
         gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         gLevelState->AddBrokenCrate();
 
@@ -84,7 +85,7 @@ void PolarNitroCrate::Detonate()
  * pair becomes time crates (kind 7). */
 void PolarFourWumpaCrate::Update()
 {
-    if (animIndex != 0x12 && (u8)IsTouchingPlayer(this)) {
+    if (animIndex != 0x12 && (u8)ActorCategory::IsTouchingPlayer(this)) {
         gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         gLevelState->AddBrokenCrate();
         static_cast<PolarPlayer *>(gActorList)->QueueWumpa(4);
@@ -97,7 +98,7 @@ void PolarFourWumpaCrate::Update()
 /* A wumpa. */
 void PolarBasicCrate::Update()
 {
-    if (animIndex != 0x12 && (u8)IsTouchingPlayer(this)) {
+    if (animIndex != 0x12 && (u8)ActorCategory::IsTouchingPlayer(this)) {
         gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         gLevelState->AddBrokenCrate();
         static_cast<PolarPlayer *>(gActorList)->QueueWumpa(1);

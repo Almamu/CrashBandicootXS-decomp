@@ -11,7 +11,7 @@ extern "C" {
  * ("Category backgrounds").
  */
 
-/* BG0 cell animation B, gActorCategories[3..6].cellAnim
+/* BG0 cell animation B, ActorCategory::descriptors[3..6].cellAnim
  * (cellAnimSize = its size, 0x3E784), played by InitCellAnim/
  * UploadCellAnimFrame (cell_anim.cpp): 38x10 cells, 21 frames. Not a type-0
  * category, so there are no per-cell banks: ResetCellAnimBg maps the cells to
@@ -38,7 +38,7 @@ extern const struct cell_anim_0ff1b0 gCategoryFamily1CellAnim = {
     },
 };
 
-/* Category 3's BG1 picture (gActorCategories[3].bgPicture,
+/* Category 3's BG1 picture (ActorCategory::descriptors[3].bgPicture,
  * loaded by LoadBgPicture in bg_picture.cpp): 38x16 map, 357 tiles. Built from
  * graphics/vehicles/jetpack/skies/rocket_racket.png (palette and map) and
  * 13d934_picture_tiles.png (the tile set, grit's -fx external tileset). */
@@ -68,8 +68,8 @@ extern const struct bg_picture_13d934 gCategory3BgPicture = {
     },
 };
 
-/* Category 3's spawnTable (gActorCategories[3].spawnTable), read by
- * SelectActorCategory (actor_category_select.cpp) and the actor_spawn.cpp
+/* Category 3's spawnTable (ActorCategory::descriptors[3].spawnTable), read by
+ * ActorCategory::Select (actor_category_select.cpp) and the actor_spawn.cpp
  * accessors: the course length, the spawn count, then each spawn's
  * {kinds, x, y, depth} and next target. */
 extern const ACTOR_SPAWN_TABLE(121) gCategory3SpawnTable = {

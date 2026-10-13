@@ -151,8 +151,8 @@ void CellAnim::ResetBg()
     UploadFrame();
 }
 
-/* Empty hook InitActorCategory calls at the end of each attempt (after
- * DestroyAllActors), named after that call site. ActorCategoryEndStub
+/* Empty hook ActorCategory::Init calls at the end of each attempt (after
+ * ActorCategory::DestroyActors), named after that call site. ActorCategoryEndStub
  * (actor_bg.cpp) is its counterpart at the end of the whole category. */
 void ActorCategoryAttemptEndStub(void)
 {
