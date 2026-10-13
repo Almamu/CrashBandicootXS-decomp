@@ -220,7 +220,7 @@ inline void ActorSelf::DrawFrameAt(screen_x_t screenX, screen_y_t screenY, s32 s
     screen_dy_t halfH;
 
     flag = 0;
-    if (scale <= 0xff)
+    if (scale <= INT_TO_Q8(1) - 1)
         flag = 0x200;
 
     if (flag != 0)
@@ -245,7 +245,7 @@ inline void ActorSelf::DrawFrameAt(screen_x_t screenX, screen_y_t screenY, s32 s
     if (screenX + halfW * 2 < 0)
         return;
 
-    if (scale != 0x100)
+    if (scale != INT_TO_Q8(1))
         flag |= 0x100;
 
     {
@@ -308,9 +308,9 @@ static inline void BoxMove(struct anim_box *b, s32 x, s32 y, s32 z)
 static inline struct anim_box WorldBox(ActorSelf *s)
 {
     struct anim_box b = s->box;
-    s32 dx = s->x >> 8;
-    s32 dy = s->y >> 8;
-    s32 dz = s->z >> 8;
+    s32 dx = Q8_TO_INT(s->x);
+    s32 dy = Q8_TO_INT(s->y);
+    s32 dz = Q8_TO_INT(s->z);
 
     b.x += dx;
     b.y += dy;

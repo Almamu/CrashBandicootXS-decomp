@@ -1433,7 +1433,8 @@ void Crate::DropAbove()
         n->fallSpeed = t + d;
         n->f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
         Crates()->LinkActive(n);
-        if (tbl[n->kind] && blastState == CRATE_BLAST_STATE_NONE && n->fallDistance > 0x1600) {
+        if (tbl[n->kind] && blastState == CRATE_BLAST_STATE_NONE &&
+            n->fallDistance > INT_TO_Q8(22)) {
             /* `next` is needed: inlined, the registers differ */
             Crate *next = n->GetAbove();
             /* `prev` is needed: inlined, the code is 7 instructions shorter */

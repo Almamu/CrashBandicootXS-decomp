@@ -303,20 +303,20 @@ void Crate::UpdateFall()
     t = x;
     if (speed < 0) {
         do {
-            acc -= 0x100;
-            remaining += 0x100;
+            acc -= INT_TO_Q8(1);
+            remaining += INT_TO_Q8(1);
             speed++;
         } while (speed != 0);
     } else {
         do {
             if (remaining > 0) {
                 if (gPlayer->ctrlMode == PLAYER_CTRL_MODE_SWIM) {
-                    acc += 0x40;
-                    remaining -= 0x40;
+                    acc += Q8(0.25);
+                    remaining -= Q8(0.25);
                     speed--;
                 } else {
-                    acc += 0x100;
-                    remaining -= 0x100;
+                    acc += INT_TO_Q8(1);
+                    remaining -= INT_TO_Q8(1);
                     speed--;
                 }
             } else {

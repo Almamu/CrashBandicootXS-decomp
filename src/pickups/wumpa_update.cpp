@@ -85,11 +85,11 @@ void Wumpa::PickUp(u8 randomize)
         dy = INT_TO_Q8((rv & 0x1f) + 0x10);
         state = WUMPA_STATE_FLY_OFF;
     } else {
-        dx = dy = 0x1000;
+        dx = dy = INT_TO_Q8(16);
         state = WUMPA_STATE_TO_HUD;
         gHud->ShowWumpa();
     }
-    affine = 0xa0;
+    affine = Q8(0.625);
     ClampFrame(this);
 
     u8 one = 1; // materialized before the field's address
@@ -101,15 +101,16 @@ void Wumpa::PickUp(u8 randomize)
 
     newX = INT_TO_Q8(outX);
     x = newX;
-    velX = -FixedDiv(newX - dx, 0x1400);
+    velX = -FixedDiv(newX - dx, INT_TO_Q8(20));
     newY = INT_TO_Q8(outY);
     y = newY;
-    velY = -FixedDiv(newY - dy, 0x1400);
+    velY = -FixedDiv(newY - dy, INT_TO_Q8(20));
 }
 
-/* State 1 flies to the HUD (while `affine` grows by 4 up to 0x100) and,
- * there, collects the wumpa; state 2 flies off the screen (`affine` down
- * by 4 below 0x40, or up by 12 past 0x1B0) and is gone. State 3 pays out:
+/* State 1 flies to the HUD (while `affine`, the Q8 scale, grows by 4 up
+ * to 1.0) and, there, collects the wumpa; state 2 flies off the screen
+ * (`affine` down by 4 below 0.25, or up by 12 past 0x1B0) and is gone.
+ * State 3 pays out:
  * every 11 frames it drops a wumpa flying to the HUD, 10 in all, staying
  * at the player, then it is gone. On the spot, it bobs or hops. */
 void Wumpa::Update()
@@ -118,7 +119,7 @@ void Wumpa::Update()
         Fly();
         if (affine != 0) {
             affine += 4;
-            if (Affine(this) > 0x100)
+            if (Affine(this) > INT_TO_Q8(1))
                 affine = 0;
         }
         if (Q8_TO_INT(x) <= 0x10 && Q8_TO_INT(y) <= 0x10) {
@@ -135,7 +136,7 @@ void Wumpa::Update()
             s32 t = affine - 4;
 
             affine = t;
-            if (t < 0x40)
+            if (t < Q8(0.25))
                 fire = 1;
         } else {
             affine += 0xc;
@@ -171,7 +172,7 @@ void Wumpa::Update()
         if (mode == PICKUP_MODE_BOB) {
             s32 sn = gSineTable[(counter & 0x7f) * 2];
 
-            sn = FixedMul(sn, 0x280);
+            sn = FixedMul(sn, Q8(2.5));
             y = anchor.y + sn;
         } else {
             UpdateHop();
@@ -182,8 +183,8 @@ void Wumpa::Update()
         Player *player = gPlayer;
         s32 px = player->x;
         s32 py = player->y;
-        s32 nx = px - 0x400;
-        s32 ny = py - 0xe00;
+        s32 nx = px - INT_TO_Q8(4);
+        s32 ny = py - INT_TO_Q8(14);
 
         x = nx;
         y = ny;

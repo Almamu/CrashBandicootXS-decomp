@@ -192,9 +192,9 @@ void PlatformMover::Update(MovingSprite *part)
          * rotation onto the ROM's r5 for the -0x300 and r2 for the 0x300
          * (`part->y += 0x300` took r1). */
         if (now == 0)
-            part->SetPos(part->x, part->y - 0x300);
+            part->SetPos(part->x, part->y - INT_TO_Q8(3));
         else
-            part->SetPos(part->x, part->y + 0x300);
+            part->SetPos(part->x, part->y + INT_TO_Q8(3));
     } else if (k == PLATFORM_TYPE_ROCK && part->frame <= 1 && !active) {
         HoldFirstFrame(part);
     } else if (k == PLATFORM_TYPE_FLIP && part->frame <= 1 && gRoomFrameCount < time) {
