@@ -152,11 +152,14 @@ extern "C" void OpenLanguageSelect(void);
 
 /* One star: a 24.8 fixed-point position and its per-frame step. */
 struct StarParticle {
-    s32 x;
-    s32 y;
-    s32 dx;
-    s32 dy;
+    screen_x_q8_t x;
+    screen_y_q8_t y;
+    screen_dx_q8_t dx;
+    screen_dy_q8_t dy;
 };
+
+/* The starfield's 4bpp frame: the whole screen, in bytes (0x4B00). */
+#define STARFIELD_FRAME_SIZE (DISPLAY_WIDTH * DISPLAY_HEIGHT / 2)
 
 /* The starfield the language select, the credits and the company logos
  * draw behind their text (starfield.cpp). */
@@ -169,14 +172,14 @@ public:
     s32 count;               // 0x0C - stars alive
     u16 *tileBuffer;         // 0x10 - the 4bpp screen buffer
 
-    Starfield();                           // InitStarfield
-    ~Starfield();                          // DestroyStarfield
-    void Draw();                           // DrawStarfield
-    void SpawnStar(s32 idx);               // SpawnStar
-    void PlotPixel(u32 x, s32 y, s32 val); // PlotStarfieldPixel (unused)
-    void Plot(u32 x, s32 y, s32 val);      // inline: Draw's, PlotPixel's body
-    void Update();                         // UpdateStarfield
-    void WaitForButton();                  // StarfieldWaitForButton
+    Starfield();                                          // InitStarfield
+    ~Starfield();                                         // DestroyStarfield
+    void Draw();                                          // DrawStarfield
+    void SpawnStar(s32 idx);                              // SpawnStar
+    void PlotPixel(screen_ux_t x, screen_y_t y, s32 val); // PlotStarfieldPixel (unused)
+    void Plot(screen_ux_t x, screen_y_t y, s32 val);      // inline: Draw's, PlotPixel's body
+    void Update();                                        // UpdateStarfield
+    void WaitForButton();                                 // StarfieldWaitForButton
 };
 
 COMPILE_TIME_ASSERT(frontend_hpp, sizeof(Starfield) == 0x14);

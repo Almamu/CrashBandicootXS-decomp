@@ -57,7 +57,7 @@ void LevelSelect::Confirm()
 
     gAudioContext->PlaySfx(SFX_LEVEL_SELECT_CONFIRM, 0x100);
     items[index]->SetSelected(0);
-    panel->Move(0x78, 0x35);
+    panel->Move(DISPLAY_CENTER_X, DISPLAY_ART_Y + 0x35);
     panel->Hide();
     WaitCursor();
     while (!bg2->IsShown()) {

@@ -54,6 +54,11 @@
 #define DISPLAY_ART_X      ((DISPLAY_WIDTH - DISPLAY_ART_WIDTH) / 2)
 #define DISPLAY_ART_Y      ((DISPLAY_HEIGHT - DISPLAY_ART_HEIGHT) / 2)
 
+/* The centre of that art, in the art's own coordinates (120, 80): the
+ * point an affine full-screen picture (a zoom) is scaled around. */
+#define DISPLAY_ART_CENTER_X (DISPLAY_ART_WIDTH / 2)
+#define DISPLAY_ART_CENTER_Y (DISPLAY_ART_HEIGHT / 2)
+
 /* Screen-coordinate types: what a value that holds a screen position, a
  * screen-space offset or a size derived from the screen is stored in.
  * Each is the type the ROM uses for it, so the matching build is

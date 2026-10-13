@@ -35,7 +35,7 @@ LevelSelectCursor::LevelSelectCursor()
     p->StartAnim(0);
     part->palette = part->GetAnimPaletteSlot();
     gPaletteCache->Lock(part->bank->anims[part->tag].paletteId);
-    SetPos(0x78, 0x35);
+    SetPos(DISPLAY_CENTER_X, DISPLAY_ART_Y + 0x35);
     oam.y = line.y0 - 0x20;
     oam.affineMode = OAM_AFFINE_MODE_AFFINE;
     oam.objMode = OAM_OBJ_MODE_NORMAL;
@@ -180,11 +180,11 @@ void LevelSelectCursor::Park()
 {
     struct vec2 pos;
 
-    if (Q8_TO_INT(part->x) <= 0x78)
+    if (Q8_TO_INT(part->x) <= DISPLAY_CENTER_X)
         pos.x = 0x14;
     else
-        pos.x = 0xDC;
-    pos.y = 0x88;
+        pos.x = DISPLAY_RIGHT(0x14);
+    pos.y = DISPLAY_BOTTOM(0x18);
     MoveToNow(&pos);
     timer = 0;
 }
@@ -212,7 +212,7 @@ u8 LevelSelectCursor::HasArrived()
 
 /* Starts a glide to (x, y). The zoom step is derived from half the
  * distance along the major axis. */
-void LevelSelectCursor::Move(s32 x, s32 y)
+void LevelSelectCursor::Move(screen_x_t x, screen_y_t y)
 {
     line.x1 = x;
     line.y1 = y;
@@ -238,7 +238,7 @@ void LevelSelectCursor::MoveTo(struct vec2 *pos)
 }
 
 /* Places the cursor at (x, y) at once. */
-void LevelSelectCursor::SetPos(s32 x, s32 y)
+void LevelSelectCursor::SetPos(screen_x_t x, screen_y_t y)
 {
     line.x0 = x;
     line.y0 = y;

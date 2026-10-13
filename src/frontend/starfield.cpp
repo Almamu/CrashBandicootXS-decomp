@@ -12,9 +12,10 @@ extern "C" {
 
 /* The starfield (Starfield, #664 part 10c, include/frontend.hpp): a BG0
  * "raw bitmap" behind the language select's, the credits' and the
- * company logos' text. The whole 240x160 screen is one run of 8x8 tiles
- * on BG0 (tile index == screen position, palette bank 15), and a 4bpp
- * shadow buffer (`tileBuffer`, 240*160/2 = 0x4B00 bytes) is drawn into
+ * company logos' text. The whole screen is one run of 8x8 tiles on BG0
+ * (tile index == screen position, palette bank 15), and a 4bpp shadow
+ * buffer (`tileBuffer`, STARFIELD_FRAME_SIZE = 240*160/2 = 0x4B00 bytes
+ * on the GBA) is drawn into
  * with nibble writes each frame, then DMA'd into the tile VRAM.
  *
  * Up to 128 stars start at the screen centre with a random direction and
@@ -27,15 +28,17 @@ extern "C" {
 /* Writes the 4-bit nibble `val` into `tileBuffer` at pixel (x, y), doing
  * nothing off screen. The x test is unsigned (`bhi`), its shift signed
  * (`asrs`). Draw has it inline twice; PlotPixel (unused) out of line. */
-inline void Starfield::Plot(u32 x, s32 y, s32 val)
+inline void Starfield::Plot(screen_ux_t x, screen_y_t y, s32 val)
 {
-    if (x <= 0xef && y >= 0 && y <= 0x9f) {
+    if (x <= DISPLAY_WIDTH - 1 && y >= 0 && y <= DISPLAY_HEIGHT - 1) {
         s32 addr = ((s32)x >> 3) << 6;
         s32 blockY = y >> 3;
         s32 shift;
         u16 *entry;
 
-        addr += ((blockY << 4) - blockY) << 7;
+        /* A row of tiles, 64 pixels each: gcc strength-reduces it to the
+         * ROM's `((blockY << 4) - blockY) << 7` (30 tiles). */
+        addr += blockY * DISPLAY_WIDTH_TILES * 64;
         addr += (x & 7);
         addr += (y & 7) << 3;
         entry = &tileBuffer[addr >> 2];
@@ -101,7 +104,7 @@ Starfield::Starfield()
         gradCount--;
     } while (gradCount >= 0);
 
-    /* Lays out BG0's whole 240x160 (30x20 tiles) screen as one sequential
+    /* Lays out BG0's whole screen (30x20 tiles on the GBA) as one sequential
      * run of tile indices (palette bank 15): tile index N at screen
      * position N, so `tileBuffer` lines up 1:1 with the tile VRAM. */
     tileIdx = 0;
@@ -111,7 +114,7 @@ Starfield::Starfield()
         /* `nextRow` is needed: inlined, the instructions differ */
         s32 nextRow = row + 1;
         u16 *rowPtr = (u16 *)((row << 6) + mapVramBase);
-        s32 col = 0x1d;
+        s32 col = DISPLAY_WIDTH_TILES - 1;
 
         do {
             *rowPtr = tileIdx | 0xF000;
@@ -120,24 +123,24 @@ Starfield::Starfield()
             col--;
         } while (col >= 0);
         row = nextRow;
-    } while (row <= 0x13);
+    } while (row <= DISPLAY_HEIGHT_TILES - 1);
 
-    /* Zero-fills the 19200-byte tile VRAM (a fixed-source 16-bit fill
-     * from one stack halfword). */
+    /* Zero-fills the tile VRAM (19200 bytes on the GBA; a fixed-source
+     * 16-bit fill from one stack halfword). */
     dmaFillSrc16 = 0;
-    DmaFill16From(3, &dmaFillSrc16, tileBase, 0x4B00);
+    DmaFill16From(3, &dmaFillSrc16, tileBase, STARFIELD_FRAME_SIZE);
 
     REG_BLDCNT = 0;
     CommitDispcnt();
 
     count = 0;
 
-    tileBuffer = new u16[0x4B00 / 2];
+    tileBuffer = new u16[STARFIELD_FRAME_SIZE / 2];
 
     /* Zero-fills the new `tileBuffer` (a fixed-source 32-bit fill from
      * one stack word). */
     dmaFillSrc32 = 0;
-    DmaFill32From(3, dma2Src, tileBuffer, 0x4B00);
+    DmaFill32From(3, dma2Src, tileBuffer, STARFIELD_FRAME_SIZE);
 }
 
 /* Every frame: commits last frame's `tileBuffer` to the tile VRAM (DMA3,
@@ -145,7 +148,7 @@ Starfield::Starfield()
  * trail (nibble 1 at the old position, nibble 2 at the new one; the
  * nibble address is PlotPixel's, inlined twice), moving the star in
  * between and respawning it (SpawnStar) once it leaves the 24.8
- * fixed-point `[0, 0xEFFF]` x `[0, 0x9FFF]` (240x160 pixel) box. The x
+ * fixed-point screen box (`[0, 0xEFFF]` x `[0, 0x9FFF]` on the GBA). The x
  * bounds tests are unsigned (the ROM's `bhi`). */
 void Starfield::Draw()
 {
@@ -153,8 +156,8 @@ void Starfield::Draw()
     s32 i;
     s32 n;
 
-    DmaCopy32(3, tileBuffer, tileVramBase, 0x4B00);
-    DmaFill32(3, 0, tileBuffer, 0x4B00);
+    DmaCopy32(3, tileBuffer, tileVramBase, STARFIELD_FRAME_SIZE);
+    DmaFill32(3, 0, tileBuffer, STARFIELD_FRAME_SIZE);
 
     slot = particles;
     i = 0;
@@ -163,14 +166,16 @@ void Starfield::Draw()
         do {
             Plot(Q8_TO_INT(slot->x), Q8_TO_INT(slot->y), 1);
 
-            s32 newX, newY;
+            screen_x_q8_t newX;
+            screen_y_q8_t newY;
 
             newX = slot->x + slot->dx;
             slot->x = newX;
             newY = slot->y + slot->dy;
             slot->y = newY;
 
-            if ((u32)newX > 0xEFFF || newY < 0 || newY > 0x9FFF) {
+            if ((u32)newX > INT_TO_Q8(DISPLAY_WIDTH) - 1 || newY < 0 ||
+                newY > INT_TO_Q8(DISPLAY_HEIGHT) - 1) {
                 SpawnStar(i);
             }
             Plot(Q8_TO_INT(slot->x), Q8_TO_INT(slot->y), 2);
@@ -196,8 +201,8 @@ void Starfield::SpawnStar(s32 idx)
     }
 
     slot = &particles[idx];
-    slot->x = 0x7800;
-    slot->y = 0x5000;
+    slot->x = INT_TO_Q8(DISPLAY_CENTER_X);
+    slot->y = INT_TO_Q8(DISPLAY_CENTER_Y);
 
     angle = RandRange(0x100);
     speed = RandRange(0x200) + 0x100;
@@ -212,7 +217,7 @@ void Starfield::SpawnStar(s32 idx)
 /* Plot, out of line.
  * UNUSED - no caller anywhere in the ROM (no Thumb `bl` to it and no
  * pointer to it in baserom.gba). */
-void Starfield::PlotPixel(u32 x, s32 y, s32 val)
+void Starfield::PlotPixel(screen_ux_t x, screen_y_t y, s32 val)
 {
     Plot(x, y, val);
 }
