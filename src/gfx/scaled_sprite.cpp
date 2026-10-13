@@ -131,7 +131,7 @@ void ScaledSprite::SetPriority(u32 priority)
 
 /* UNUSED (see SetScaledSpriteColor). Sets the sprite box's position
  * (`x`/`y`, +0x00/+0x04). */
-void ScaledSprite::SetPos(u32 x, u32 y)
+void ScaledSprite::SetPos(screen_ux_t x, screen_uy_t y)
 {
     this->x = x;
     this->y = y;

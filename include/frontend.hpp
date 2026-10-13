@@ -45,9 +45,13 @@ extern "C" {
  * Q16.16 positions, two Q24.8 velocities and the five per-frame deltas
  * added to them while the hold lasts. */
 struct delta_record {
-    s16 hold;   /* 0x00 - countdown reload value */
-    u16 dPosA;  /* 0x02 - Q16.16 position (<<16) */
-    u16 dPosB;  /* 0x04 - Q16.16 position (<<16) */
+    s16 hold;  /* 0x00 - countdown reload value */
+    u16 dPosA; /* 0x02 - Q16.16 position (<<16) */
+    u16 dPosB; /* 0x04 - Q16.16 position (<<16) */
+    /* dPosA/dPosB are a screen x and y, kept narrow (#979): ROM data, read
+     * with `ldrh` and shifted into the high halfword of posA/posB, so a
+     * negative one is stored as a u16 (65535 for -1). They hold any
+     * position of a screen up to 32767 pixels. */
     u16 dPosC;  /* 0x06 - Q16.16 position (<<16) */
     s16 dVelA;  /* 0x08 - Q24.8 velocity (<<8) */
     s16 dVelB;  /* 0x0a - Q24.8 velocity (<<8) */
@@ -281,6 +285,8 @@ COMPILE_TIME_ASSERT(frontend_hpp, sizeof(ContinuePrompt) == 0x24);
  * `countdown` runs it adds the five deltas each frame, and when it runs
  * out it loads the next step from `record`. */
 struct LogoPiece {
+    /* posA/posB are the piece's screen x and y in Q16.16: their integer
+     * halves (`h.i`) are s16s, the ROM's halfword reads (#979). */
     u8 active;     // 0x00
     s32 countdown; // 0x04 - frames left in this step
     union {
@@ -309,6 +315,11 @@ struct LogoPiece {
 };
 
 COMPILE_TIME_ASSERT(frontend_hpp, sizeof(LogoPiece) == 0x34);
+
+/* The centre of the title logo's BG2 picture (gTitleScreenBg: 16x16
+ * tiles of the affine map, 128x128 pixels), in its own coordinates: the
+ * point TitleScreen::Draw puts at the logo's screen position. */
+#define TITLE_LOGO_BG_CENTER (16 * 8 / 2)
 
 /* The title screen (InitTitleScreen, RunTitleScreen and
  * DestroyTitleScreen, from game_frame.cpp; 0x220 bytes): the CRASH

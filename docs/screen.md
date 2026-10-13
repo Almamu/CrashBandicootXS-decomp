@@ -69,6 +69,32 @@ Retype one struct or function family at a time and rebuild the whole ROM:
 a type reaches every reader, and a different type changes the extension
 instructions and register allocation (#855).
 
+### The narrow ones that stay
+
+A survey of the `u8`/`s8`/`s16`/`u16` fields, parameters and locals in
+the drawing code (src/frontend, src/menus, src/save, src/text, src/hud,
+src/gfx, src/cutscene, the sprite classes) finds these screen values
+narrower than `s32`. Each keeps its type, because the ROM reads or
+writes it with a byte or halfword access, and says so where it is
+declared:
+
+| Where | Type | Why it stays |
+|---|---|---|
+| `struct delta_record`'s `dPosA`/`dPosB` (frontend.hpp): the logo pieces' x and y | `u16` | ROM data read with `ldrh` and shifted into posA/posB's high halfword; a negative position is stored as a `u16` (`(u16)(DISPLAY_ART_Y - 1)`) |
+| `LogoPiece`'s `posA.h.i`/`posB.h.i` (frontend.hpp) | `s16` | the integer half of a Q16.16 screen position, read as a halfword |
+| `Font::DrawGlyph`'s read of `posY` (font_glyph.cpp) | `u8` | OAM's 8-bit Y, see "Platform-layer limits" |
+| `union oam_shadow_entry`'s `attr0.y`, `struct oam_attrs`' `x:9`/`y:8` (gfx.h) | OAM fields | the hardware's format: `OAM_X`/`OAM_Y` |
+| `struct bg_affine_src`'s `scrX`/`scrY` (agb_syscall.h), ZoomBg's affine centre | `s16` | the BIOS BgAffineSet call's format |
+
+Not screen values, so not retyped: the sprite banks' piece offsets
+(`s16`, the asset format), the hit boxes' offsets, and the `u16 x, y` of
+the spawn functions (`Sprite::Create`, `Spawn*`), which are level
+positions from the room records. Everything else that holds a screen
+value in that code is an `s32`/`u32` and takes a `screen_*_t` type
+(Font, the HUD, the culling draws, the starfield, the credits, ZoomBg,
+the level select's slide and icon offsets, `Sprite::DrawWithOffset`,
+`ScaledSprite`).
+
 ## The inventory: `tools/magic_numbers.py --screen`
 
 `tools/magic_screen.py` scans the game code (src/ without src/data/, and

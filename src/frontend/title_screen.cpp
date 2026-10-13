@@ -340,7 +340,7 @@ void TitleScreen::DrawLogoPieces()
             s32 x = Q16_TO_INT(slot->posA.q) + *tbl++;
             s32 y = Q16_TO_INT(slot->posB.q) + *tbl++;
 
-            if (y <= 0x8b) {
+            if (y <= DISPLAY_ART_Y + 0x8b) {
                 oamC.x = x;
                 oamC.y = y;
                 if (slot->active)
@@ -372,8 +372,8 @@ void TitleScreen::DrawLogoPieces()
             }
         }
         bgScale = 0x1000000 / rec->velA;
-        bgX = bgScale * Q16_TO_INT(-a) + 0x4000;
-        bgY = Q16_TO_INT(-b) * bgScale + 0x4000;
+        bgX = bgScale * Q16_TO_INT(-a) + INT_TO_Q8(TITLE_LOGO_BG_CENTER);
+        bgY = Q16_TO_INT(-b) * bgScale + INT_TO_Q8(TITLE_LOGO_BG_CENTER);
     }
 }
 
