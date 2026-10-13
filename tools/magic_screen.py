@@ -390,7 +390,7 @@ CLASSES = [
     (
         "coincidence",
         r".",
-        r"\bhp\b|0x64, 0x78|SetCellAnimSpeed|SetAttackCycle",
+        r"\bhp\b|0x64, 0x78|SetCellAnimSpeed|CellAnim::SetSpeed|SetAttackCycle",
         "a game value (health, a cycle, an orbit radius)",
     ),
     ("coincidence", r".", r"SpawnTurboRunPower", "a world position (a spawn point)"),
