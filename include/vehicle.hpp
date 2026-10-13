@@ -139,6 +139,27 @@ extern s32 gPolarPlayerVelY;
 #define POLAR_MAX_FALL_SPEED Q8(7.5)
 #define POLAR_JUMP_CUT_SPEED INT_TO_Q8(4)
 #define POLAR_GROUND_Y       INT_TO_Q8(40)
+
+/* Off the bear, the player's flights speed up (down) by
+ * POLAR_PLAYER_AIR_GRAVITY a frame: dropping onto it (StateMount), the
+ * leap over the finish line (StateFinishLeap) and being carried off by
+ * the yeti (StateCarriedOff); the last two also move him into the
+ * screen by POLAR_LEAP_SPEED_Z a frame. Steering (Update, the D-pad
+ * sideways) moves him by POLAR_STEER_START_SPEED a frame for the first
+ * 13 frames, POLAR_STEER_SPEED after. */
+#define POLAR_PLAYER_AIR_GRAVITY Q8_FRAC(0, 0x2d)
+#define POLAR_LEAP_SPEED_Z       Q8_FRAC(0, 0x3c)
+#define POLAR_STEER_START_SPEED  Q8_FRAC(2, 0xcd)
+#define POLAR_STEER_SPEED        Q8(3.5)
+
+/* The jetpack and polar players' DispenseWumpa: the collected wumpas
+ * queued (gJetpackQueuedWumpa, gPolarQueuedWumpa; counts, not fixed
+ * point) are paid out one at a time up to VEHICLE_WUMPA_DISPENSE_1_MAX
+ * queued, two at a time up to VEHICLE_WUMPA_DISPENSE_2_MAX, four up to
+ * VEHICLE_WUMPA_DISPENSE_4_MAX and eight above. */
+#define VEHICLE_WUMPA_DISPENSE_1_MAX 9
+#define VEHICLE_WUMPA_DISPENSE_2_MAX 0x13
+#define VEHICLE_WUMPA_DISPENSE_4_MAX 0x27
 extern s32 gPolarQueuedWumpa;
 extern u8 gPolarSteerEnabled;
 extern s32 gPolarSteerTime;
@@ -483,6 +504,9 @@ public:
  * the yeti. */
 #define POLAR_PENGUIN_STATE_FLY 0          // flies from spawn to spawn
 #define POLAR_PENGUIN_STATE_KNOCKED_AWAY 1 // flies off, harmless
+/* Aim with no target left: the penguin drifts on at this Z speed (Q8, the
+ * middle of gPolarPenguinSpeeds). */
+#define POLAR_PENGUIN_DRIFT_SPEED_Z Q8_FRAC(0, 0x62)
 class PolarPenguin : public ActorSelf
 {
 public:
@@ -596,6 +620,17 @@ public:
 #define JETPACK_PLAYER_STATE_BOOST 6      // StateBoost: through a ring (PassRing)
 #define JETPACK_PLAYER_STATE_RESUME 7     // StateResume: from a checkpoint (the constructor)
 
+/* The jetpack player's tuning (Q8, docs/fixed_point.md): shot down
+ * (StateFall), gJetpackPlayerVelY grows by JETPACK_PLAYER_FALL_GRAVITY a
+ * frame up to JETPACK_PLAYER_MAX_FALL_SPEED; after a barrel roll's
+ * burst (StateRollLeft/Right), gJetpackPlayerVelX recovers toward 0 by
+ * JETPACK_ROLL_RECOVER_STEP a frame; his shots (StateFly) start
+ * JETPACK_PLAYER_SHOT_OFFSET_Z in front of him. */
+#define JETPACK_PLAYER_FALL_GRAVITY   Q8_FRAC(0, 9)
+#define JETPACK_PLAYER_MAX_FALL_SPEED Q8(1.25)
+#define JETPACK_ROLL_RECOVER_STEP     Q8_FRAC(0, 0x2d)
+#define JETPACK_PLAYER_SHOT_OFFSET_Z  Q8_FRAC(0, 10)
+
 class JetpackPlayer : public HpActor
 {
 public:
@@ -657,6 +692,9 @@ public:
     virtual u8 IsUnshootable();       // 5 IsJetpackCheckpointTextUnshootable
 };
 
+/* An explosion: it moves away (into the screen) by
+ * JETPACK_EXPLOSION_SPEED_Z a frame (Q8) while it plays. */
+#define JETPACK_EXPLOSION_SPEED_Z Q8_FRAC(0, 170)
 class JetpackExplosion : public HpActor
 {
 public:
@@ -696,6 +734,26 @@ COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackShot) == 0x60);
 #define JETPACK_PLANE_STATE_FOLLOW 1      // StateFollow: eases to the player (Aim, after a slow hop chain)
 #define JETPACK_PLANE_STATE_KNOCKED_OUT 2 // StateKnockedOut: shot down (Damage)
 #define JETPACK_PLANE_STATE_FALL 3        // StateFall: out of the sky, gone below 0xE100
+
+/* The plane's velocities and accelerations are Q4 of its Q8 position
+ * (`x += Q4_TO_INT(velX)`: 4096ths of a pixel). gJetpackPlaneHopSpeeds'
+ * hop speeds are twelfths of a pixel a frame (16/12 down to 1/12): a
+ * plane flies its hops at JETPACK_PLANE_SLOW_HOP_SPEED (7/12 px a frame)
+ * or slower ends its chain following the player (Aim); one whose first
+ * hop is faster starts 142 px further back, at
+ * JETPACK_PLANE_FAST_START_SPEED (10/12). Shot down, it falls speeding
+ * up by JETPACK_PLANE_FALL_GRAVITY (10/256 px a frame per frame) up to
+ * JETPACK_PLANE_MAX_FALL_SPEED (1.25 px a frame). Its cannonballs start
+ * JETPACK_PLANE_GUN_OFFSET_Z (Q8) in front of it. Following the player
+ * (StateFollow), its Q4 speed is the Q8 gap to him `>>
+ * JETPACK_PLANE_FOLLOW_SHIFT`: it closes 1/256 of the gap a frame (a
+ * gain, not a format). */
+#define JETPACK_PLANE_SLOW_HOP_SPEED   (INT_TO_Q4(INT_TO_Q8(7)) / 12)
+#define JETPACK_PLANE_FAST_START_SPEED (INT_TO_Q4(INT_TO_Q8(10)) / 12)
+#define JETPACK_PLANE_FALL_GRAVITY     INT_TO_Q4(Q8_FRAC(0, 10))
+#define JETPACK_PLANE_MAX_FALL_SPEED   INT_TO_Q4(Q8(1.25))
+#define JETPACK_PLANE_GUN_OFFSET_Z     Q8_FRAC(0, 10)
+#define JETPACK_PLANE_FOLLOW_SHIFT     4
 class JetpackPlane : public HpActor
 {
 public:
@@ -744,6 +802,8 @@ COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackPlane) == 0x80);
 #define JETPACK_BOMBER_STATE_CIRCLE 4           // StateCircle
 #define JETPACK_BOMBER_STATE_DROP 5             // StateDrop
 #define JETPACK_BOMBER_STATE_DYING 6            // StateDying: touched or shot down
+/* StateDrop: the bomber comes at the player by this much a frame (Q8). */
+#define JETPACK_BOMBER_DROP_SPEED_Z Q8_FRAC(0, 0x88)
 class JetpackBomber : public HpActor
 {
 public:
@@ -799,6 +859,14 @@ class JetpackBalloonCrate;
 #define JETPACK_BALLOON_STATE_ATTACHED 0   // StateAttached: the crate moves it
 #define JETPACK_BALLOON_STATE_FLOAT_AWAY 1 // StateFloatAway: released, gone above -0xE100
 #define JETPACK_BALLOON_STATE_POP 2        // StatePop: shot; gone when the animation is done
+
+/* Released (StateFloatAway), the balloon rises speeding up by
+ * JETPACK_BALLOON_RISE_ACCEL a frame up to JETPACK_BALLOON_MAX_RISE_SPEED
+ * (velY negated: up). A crate hangs JETPACK_BALLOON_HANG_HEIGHT below
+ * the balloon it spawns (JetpackBalloonCrate::Hang). Q8. */
+#define JETPACK_BALLOON_RISE_ACCEL     Q8_FRAC(0, 6)
+#define JETPACK_BALLOON_MAX_RISE_SPEED Q8_FRAC(1, 0x2c)
+#define JETPACK_BALLOON_HANG_HEIGHT    Q8_FRAC(61, 0xb6)
 
 /* The balloon a crate hangs from (gJetpackBalloonVtable,
  * src/vehicle/jetpack/jetpack_balloon.cpp): the crate moves it (Move) until it is

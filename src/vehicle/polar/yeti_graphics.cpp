@@ -78,12 +78,14 @@ static inline void FillDotPattern(u8 *dst, u8 seed)
 {
     s32 y, x;
 
-    for (y = 0; y < 16; y++) {
-        for (x = 0; x < 16; x++) {
-            if ((u32)(x - 3) > 9 || y <= 2 || y > 12)
-                dst[y * 16 + x] = 0xff;
+    for (y = 0; y < YETI_BG2_MAP_TILES; y++) {
+        for (x = 0; x < YETI_BG2_MAP_TILES; x++) {
+            if ((u32)(x - YETI_PICTURE_TILE_FIRST) >
+                    YETI_PICTURE_TILE_LAST - YETI_PICTURE_TILE_FIRST ||
+                y <= YETI_PICTURE_TILE_FIRST - 1 || y > YETI_PICTURE_TILE_LAST)
+                dst[y * YETI_BG2_MAP_TILES + x] = 0xff;
             else
-                dst[y * 16 + x] = seed++;
+                dst[y * YETI_BG2_MAP_TILES + x] = seed++;
         }
     }
 }

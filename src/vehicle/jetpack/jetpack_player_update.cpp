@@ -274,7 +274,8 @@ void JetpackPlayer::StateFly()
             gAudioContext->PlayAmbientSfx(SFX_JETPACK_SHOOT, 1000, 0xa0, true);
             sx = x + INT_TO_Q8(18);
             sy = y - INT_TO_Q8(24);
-            SpawnJetpackShot(sx, sy, z + 10, Q12_MUL(sx, 0x199), Q12_MUL(sy, 0x199));
+            SpawnJetpackShot(sx, sy, z + JETPACK_PLAYER_SHOT_OFFSET_Z, Q12_MUL(sx, 0x199),
+                             Q12_MUL(sy, 0x199));
         }
     }
 }
@@ -289,8 +290,8 @@ void JetpackPlayer::StateRollLeft()
         gJetpackPlayerVelX += -INT_TO_Q8(1);
         LIMIT_MIN(gJetpackPlayerVelX, -INT_TO_Q8(5));
     } else {
-        gJetpackPlayerVelX += 0x2d;
-        if (ABS_BRANCHLESS(gJetpackPlayerVelX) <= 0x2d)
+        gJetpackPlayerVelX += JETPACK_ROLL_RECOVER_STEP;
+        if (ABS_BRANCHLESS(gJetpackPlayerVelX) <= JETPACK_ROLL_RECOVER_STEP)
             gJetpackPlayerVelX = 0;
     }
     if (stateTime > 0x21) {
@@ -319,8 +320,8 @@ void JetpackPlayer::StateRollRight()
         gJetpackPlayerVelX += INT_TO_Q8(1);
         LIMIT_MAX(gJetpackPlayerVelX, INT_TO_Q8(5));
     } else {
-        gJetpackPlayerVelX -= 0x2d;
-        if (ABS_BRANCHLESS(gJetpackPlayerVelX) <= 0x2d)
+        gJetpackPlayerVelX -= JETPACK_ROLL_RECOVER_STEP;
+        if (ABS_BRANCHLESS(gJetpackPlayerVelX) <= JETPACK_ROLL_RECOVER_STEP)
             gJetpackPlayerVelX = 0;
     }
     if (stateTime > 0x21) {

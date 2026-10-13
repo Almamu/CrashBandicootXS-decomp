@@ -61,18 +61,18 @@ void PolarPlayer::Update()
 
         if (keys.held & DPAD_LEFT) {
             if (gPolarSteerTime++ > 12)
-                x += -Q8(3.5);
+                x += -POLAR_STEER_SPEED;
             else
-                x += -0x2cd;
+                x += -POLAR_STEER_START_SPEED;
             LIMIT_MIN(x, -INT_TO_Q8(50));
         } else {
             u16 right = keys.held & DPAD_RIGHT;
 
             if (right) {
                 if (gPolarSteerTime++ > 12)
-                    x += Q8(3.5);
+                    x += POLAR_STEER_SPEED;
                 else
-                    x += 0x2cd;
+                    x += POLAR_STEER_START_SPEED;
                 LIMIT_MAX(x, INT_TO_Q8(50));
             } else {
                 gPolarSteerTime = right;
@@ -240,7 +240,7 @@ void PolarPlayer::StateMount()
     s32 ny = y + gPolarPlayerVelY;
 
     y = ny;
-    gPolarPlayerVelY += 0x2d;
+    gPolarPlayerVelY += POLAR_PLAYER_AIR_GRAVITY;
     if (ny > POLAR_GROUND_Y) {
         gAudioContext->PlaySfx(SFX_POLAR_MOUNT, 0x100);
         y = POLAR_GROUND_Y;

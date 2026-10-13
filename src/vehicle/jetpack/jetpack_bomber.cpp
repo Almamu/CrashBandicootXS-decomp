@@ -89,7 +89,7 @@ void JetpackBomber::StateDying()
 /* gJetpackBomberStateFuncs[5]: comes at the player faster. */
 void JetpackBomber::StateDrop()
 {
-    z -= 0x88;
+    z -= JETPACK_BOMBER_DROP_SPEED_Z;
 }
 
 /* gJetpackBomberStateFuncs[4]: circles its home point (radius 60) while
