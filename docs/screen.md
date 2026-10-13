@@ -138,6 +138,17 @@ The table lists the ones found by hand; the list below has the rest.
    relative to it.
 6. **Sprite count.** `OAM_ENTRY_COUNT` (128, more under `EXTENDED_OAM`)
    sizes the OAM shadow buffer.
-7. **A compile check.** A build with another `DISPLAY_WIDTH` and
-   `DISPLAY_HEIGHT` must still compile (see the Makefile's
-   `screen-check`, when it lands).
+7. **A compile check.** `make screen-check` compiles every game object
+   (src/, not the src/data/ tables) with another screen size,
+   `SCREEN_CHECK_WIDTH` x `SCREEN_CHECK_HEIGHT` (PORTABLE's 426x240 by
+   default; `make screen-check SCREEN_CHECK_WIDTH=256
+   SCREEN_CHECK_HEIGHT=192` for another), into build/screen-check, with
+   the usual warnings as errors. Nothing is linked or compared. gba/
+   defines.h takes `DISPLAY_WIDTH`/`DISPLAY_HEIGHT` from the command line
+   when they are defined there. It catches a screen constant stored in a
+   type or bitfield too narrow for the bigger size (agbcc's "large integer
+   implicitly truncated") and compile-time sizes that stop holding; a
+   narrow variable compared with a bigger constant isn't warned about.
+   A literal written where the defines are meant still compiles, so CI
+   also runs `tools/magic_numbers.py --screen --check`, which fails on a
+   screen-size literal that no rule classifies.

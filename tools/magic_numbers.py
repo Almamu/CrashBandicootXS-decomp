@@ -112,7 +112,7 @@ forms, 240x160 frame sizes, the screen in tiles, OAM X/Y masks, OBJ
 wraps, the OAM entry count, scanline counts), each classified as
 derived from the screen, fixed by the hardware or a coincidence:
   tools/magic_numbers.py --screen [--show] [--json] [--report [OUT]]
-      [--category C ...] [--path P ...]
+      [--category C ...] [--path P ...] [--check]
 """
 
 import argparse
@@ -1672,6 +1672,7 @@ def main():
     g.add_argument("--kind", action="append", metavar="K", help="--casts: only casts of kind K (repeatable)")
     g = ap.add_argument_group("--screen (#979, see tools/magic_screen.py)")
     g.add_argument("--screen", action="store_true", help="screen-size literals, classified (--category screen ...)")
+    g.add_argument("--check", action="store_true", help="--screen: fail if a literal has no classification rule")
     args = ap.parse_args()
 
     if args.screen:

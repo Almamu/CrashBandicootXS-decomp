@@ -54,6 +54,8 @@ Usage:
   tools/magic_numbers.py --screen --path P         only files under P
   tools/magic_numbers.py --screen --category C     only category C
                                                    (repeatable)
+  tools/magic_numbers.py --screen --check          fail if a site has no rule
+                                                   (CI: a new screen literal)
 """
 
 import collections
@@ -415,6 +417,19 @@ def report(sites, out):
 
 def run(args):
     sites = scan(args.path)
+    if getattr(args, "check", False):
+        new = [s for s in sites if s.category == "unclassified"]
+        for s in new:
+            print(f"{s.file}:{s.line}: {s.kind} {s.literal}: not classified\n    {s.source}")
+        if new:
+            print(
+                f"{len(new)} screen-size literal(s) with no rule: spell them with include/screen.h, "
+                "or add a CLASSES rule (tools/magic_screen.py) saying why they stay (docs/screen.md)",
+                file=sys.stderr,
+            )
+            return 1
+        print(f"ok: {len(sites)} screen-size literals, all classified")
+        return 0
     if getattr(args, "category", None):
         sites = [s for s in sites if s.category in args.category]
     if args.json:
@@ -448,4 +463,5 @@ if __name__ == "__main__":
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--path", action="append")
     ap.add_argument("--category", action="append", choices=CATEGORIES)
+    ap.add_argument("--check", action="store_true")
     sys.exit(run(ap.parse_args()))
