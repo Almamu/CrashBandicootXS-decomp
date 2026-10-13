@@ -1,5 +1,6 @@
 #include "vehicle.hpp"
 #include "actor_palette_cycle.hpp"
+#include "actor_category_stats.hpp"
 
 extern "C" {
 #include "core.h"
@@ -87,45 +88,44 @@ s32 CountCategoryCrates(s32 categoryIdx)
     return count;
 }
 
-
-void AddActorMissedNitro(void)
+void ActorCategoryStats::AddMissedNitro()
 {
-    gActorMissedNitros++;
+    missedNitros++;
 }
 
-s32 GetActorMissedNitros(void)
+s32 ActorCategoryStats::GetMissedNitros()
 {
-    return gActorMissedNitros;
+    return missedNitros;
 }
 
-s32 GetActorCheckpoint(void)
+s32 ActorCategoryStats::GetCheckpoint()
 {
-    return gActorCheckpoint;
+    return checkpoint;
 }
 
 /* codegen: LevelState::SetCheckpointAtPlayer takes a flag (level_state.hpp); this
  * caller passes the state only and leaves r1 as it is. docs/headers.md */
 extern void SetCheckpointAtPlayer_1(void *self) asm("SetCheckpointAtPlayer");
 
-/* Re-bases the category's secondary tick counter from `z` (net of
- * `GetActorSpawnOffset`'s current Q8.8 offset), resets the active-instance
- * counters, and re-syncs the frame-tick snapshot for a freshly
- * (re)selected category. */
-void SetActorCheckpoint(s32 z)
+/* The checkpoint at course distance `z` (net of `GetActorSpawnOffset`'s
+ * current Q8.8 offset): resets the deaths, moves the level state's
+ * checkpoint to the player, and saves the missed nitros and the palette
+ * cycle to restore on a retry. */
+void ActorCategoryStats::SetCheckpoint(s32 z)
 {
-    gActorCheckpoint = z - GetActorSpawnOffset();
-    gActorCategoryDeaths = 0;
-    gActorCategoryBossDeaths = 0;
+    checkpoint = z - GetActorSpawnOffset();
+    deaths = 0;
+    bossDeaths = 0;
     SetCheckpointAtPlayer_1(gLevelState);
-    gActorCheckpointMissedNitros = gActorMissedNitros;
+    checkpointMissedNitros = missedNitros;
     ActorPaletteCycle::Save();
 }
 
-/* True once the running active-instance count reaches the current
+/* True once the deaths since the checkpoint reach the current
  * category's `maskAssistDeaths` threshold. The ROM compares signed
  * (`blt`), so the threshold is an `s32` (actor_anim.h), as
  * LevelState's and level_info's are. */
-bool IsActorMaskAssistDue(void)
+bool ActorCategoryStats::IsMaskAssistDue()
 {
-    return gActorCategoryDeaths >= gActorCategories[gActorCategory].maskAssistDeaths;
+    return deaths >= gActorCategories[gActorCategory].maskAssistDeaths;
 }

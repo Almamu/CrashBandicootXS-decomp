@@ -779,6 +779,8 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/vehicle/jetpack/jetpack_shot.cpp`, `jetpack_spawn.cpp`, `src/hud/hud_counters.cpp` | the callers: `Airship::IsTouching(this)`, `Airship::Damage(2)`, `Airship::Spawn(...)`, `Airship::GetHpPercent()` | 0 | (unchanged) | 0 -> 0 | [#772](#the-airship-as-an-all-static-class-772) |
 | `src/gfx/sprite_frame.cpp` | `ObjTileAllocator` (new include/obj_tile_allocator.hpp), an all-static class: its 5 IWRAM globals are static data members (`pool` is gVramTileBlockPool, `list`, `rover`, `spares`, `index`), its 6 functions static member functions (`Init`, `Alloc`, `Free`, `Destroy`, the UNUSED `Walk` and `GetFreeBytes`); gfx.h's 6 prototypes and 5 externs go | 6 | (unchanged) | 0 -> 0 | [#915](#the-obj-tile-allocator-as-an-all-static-class-915) |
 | `src/actor/actor_vram_pool.cpp`, `actor_category_init.cpp`, `src/frontend/company_logos.cpp`, `company_logos_ctor.cpp`, `src/vehicle/jetpack/jetpack_player.cpp`, `jetpack_player_update.cpp`, `src/vehicle/polar/polar_player.cpp`, `polar_player_states.cpp` | the callers: `ObjTileAllocator::Alloc(...)` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-obj-tile-allocator-as-an-all-static-class-915) |
+| `src/actor/actor_category_stats.cpp`, `src/iwram/iwram_data.cpp` | `ActorCategoryStats` (new include/actor_category_stats.hpp), an all-static class: its 4 IWRAM globals and gActorCheckpoint are static data members (`deaths` is gActorCategoryDeaths, `bossDeaths`, `missedNitros`, `checkpointMissedNitros`, `checkpoint`), 5 of the object's 6 functions static member functions (`AddMissedNitro`, `GetMissedNitros`, `GetCheckpoint`, `SetCheckpoint`, `IsMaskAssistDue`); actor.h's 5 prototypes and 5 externs go | 5 | (unchanged) | 0 -> 0 | [#915](#the-actor-category-statistics-as-an-all-static-class-915) |
+| `src/actor/actor_category_init.cpp`, `src/level/game_frame.cpp`, `src/vehicle/jetpack/airship.cpp`, `jetpack_player.cpp`, `jetpack_player_update.cpp`, `src/vehicle/polar/polar_course_objects.cpp`, `polar_crate.cpp`, `polar_player.cpp` | the callers: `ActorCategoryStats::SetCheckpoint(z)` & co.; InitActorCategory, a friend, resets the members | 0 | (unchanged) | 0 -> 0 | [#915](#the-actor-category-statistics-as-an-all-static-class-915) |
 | `src/actor/actor_palette_cycle.cpp`, `src/data/palette_cycle_175760.cpp` | `ActorPaletteCycle` (new include/actor_palette_cycle.hpp), an all-static class: its 6 IWRAM globals and the 3 ROM tables only it reads are static data members (`frame` is gActorPaletteCycleFrame, `frames` gActorPaletteCycleFrames, ...), its 5 functions static member functions (`Restore`, `Save`, `Update`, `Set`, `Enable`); actor.h's 5 prototypes and 9 externs go | 5 | (unchanged) | 0 -> 0 | [#915](#the-actor-palette-cycle-as-an-all-static-class-915) |
 | `src/actor/actor_category_init.cpp`, `actor_category_stats.cpp`, `actor_factory.cpp`, `cell_anim.cpp` | the callers: `ActorPaletteCycle::Update()` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-actor-palette-cycle-as-an-all-static-class-915) |
 | `src/gfx/sprite_frame.cpp`, `src/iwram/sprite_arm.cpp` | `SpriteOamQueue` and `SpriteFrameCache` (new include/sprite_oam_queue.hpp, sprite_frame_cache.hpp), all-static classes: their 4 + 4 IWRAM globals are static data members (`entries` is gSpriteOamQueue, `current` gSpriteFrameCacheCurrent, ...), their 4 + 5 functions static member functions (`Init`, `Add`, `Flush`, `Destroy`; `Init`, `LoadTiles`, `Age`, `Destroy` and the ARM `Lookup`); gfx.h's 8 prototypes and 8 externs and iwram.h's Lookup prototype go | 9 | (unchanged) | 0 -> 0 | [#915](#the-oam-queue-and-the-sprite-frame-cache-as-all-static-classes-915) |
@@ -4764,6 +4766,41 @@ byte-identical.
 - **Left outside.** `SpawnAirshipFireball` (jetpack_spawn.cpp) is the
   jetpack spawners', and `AirshipFireball` a class of its own
   (boss_actors.hpp); they call no airship member.
+
+### The actor category statistics as an all-static class (#915)
+
+The actor category driver (the inventory's medium family, 25 functions
+over IWRAM 0x03001380-0x03001393 and 0x03001400-0x03001427) becomes
+three classes: these statistics, the spawn table and the driver itself.
+The statistics (actor_category_stats.cpp, ROM 0x08029720-0x080297C8
+after CountCategoryCrates) are the deaths since the checkpoint, the
+nitro crates the player has missed and the checkpoint's course distance:
+4 IWRAM globals (0x03001384-0x03001393) and gActorCheckpoint
+(iwram_data.cpp), which only the category code reads. They are now
+`ActorCategoryStats` (include/actor_category_stats.hpp), all-static
+like [the collected spawns](#the-collected-spawns-as-an-all-static-class-915),
+and every object is byte-identical.
+
+- **Data.** `deaths` (gActorCategoryDeaths), `bossDeaths`
+  (gActorCategoryBossDeaths), `missedNitros` (gActorMissedNitros),
+  `checkpointMissedNitros` (gActorCheckpointMissedNitros) and
+  `checkpoint` (gActorCheckpoint) are private static data members.
+  cxx_symbols.txt's `#915 ActorCategoryStats` block maps them to their C
+  names. sym_iwram.txt places the four counters; `checkpoint` is an
+  initialised IWRAM global, so iwram_data.cpp defines it in its place
+  (`s32 ActorCategoryStats::checkpoint = 0;`).
+- **Functions.** 5 public static member functions under their C names:
+  `AddMissedNitro` (the polar nitro crates), `GetMissedNitros` (the
+  room's pending switch crates, game_frame.cpp), `GetCheckpoint` (the
+  airship, the polar checkpoint), `SetCheckpoint` (the checkpoint crates)
+  and `IsMaskAssistDue` (the players).
+- **InitActorCategory** resets all five, rewinds `missedNitros` to
+  `checkpointMissedNitros` on every attempt and counts the deaths through
+  pointers to `deaths` and `bossDeaths`. It is a friend of the class.
+- **Left outside.** CountCategoryCrates, the first function of the
+  object, reads only the category table: it counts a category's crates
+  for the level queries. gActorCategory (0x03001380), the selected
+  category, is the driver's.
 
 ### The OBJ tile allocator as an all-static class (#915)
 

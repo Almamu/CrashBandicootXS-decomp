@@ -7,6 +7,7 @@
 #include "cell_anim.hpp"
 #include "actor_bg.hpp"
 #include "sprite_oam_queue.hpp"
+#include "actor_category_stats.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -91,7 +92,7 @@ void PolarPlayer::Update()
         s32 tier = gLevelState->maskLevel;
 
         gPolarAkuAku = SpawnPolarAkuAku(x, y, z, tier);
-        if (IsActorMaskAssistDue())
+        if (ActorCategoryStats::IsMaskAssistDue())
             gPolarAkuAku->AddMask();
     }
 }

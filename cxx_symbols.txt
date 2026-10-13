@@ -2194,6 +2194,21 @@ Clear__15CollectedSpawns ClearCollectedSpawns
 _15CollectedSpawns.spawns gCollectedSpawns
 _15CollectedSpawns.count gCollectedSpawnCount
 #
+# #915 ActorCategoryStats: the actor category's deaths, missed nitros and
+# checkpoint as an all-static class (include/actor_category_stats.hpp,
+# src/actor/actor_category_stats.cpp). Its data members keep the C names:
+# sym_iwram.txt places the counters, iwram_data.cpp defines checkpoint.
+AddMissedNitro__18ActorCategoryStats AddActorMissedNitro
+GetMissedNitros__18ActorCategoryStats GetActorMissedNitros
+GetCheckpoint__18ActorCategoryStats GetActorCheckpoint
+SetCheckpoint__18ActorCategoryStatsi SetActorCheckpoint
+IsMaskAssistDue__18ActorCategoryStats IsActorMaskAssistDue
+_18ActorCategoryStats.deaths gActorCategoryDeaths
+_18ActorCategoryStats.bossDeaths gActorCategoryBossDeaths
+_18ActorCategoryStats.missedNitros gActorMissedNitros
+_18ActorCategoryStats.checkpointMissedNitros gActorCheckpointMissedNitros
+_18ActorCategoryStats.checkpoint gActorCheckpoint
+#
 # #915 ActorPaletteCycle: the 3D stages' BG palette cycle as an all-static
 # class (include/actor_palette_cycle.hpp, src/actor/actor_palette_cycle.cpp).
 # Its data members keep the C names: sym_iwram.txt places the IWRAM ones,

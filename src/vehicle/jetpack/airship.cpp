@@ -2,6 +2,7 @@
 #include "vram_dma_queue.hpp"
 #include "cell_anim.hpp"
 #include "actor_bg.hpp"
+#include "actor_category_stats.hpp"
 
 extern "C" {
 #include <libgcc.h>
@@ -125,7 +126,7 @@ dy_done:
 void Airship::Create(s32 lvl)
 {
     level = lvl;
-    if (GetActorCheckpoint() == 0)
+    if (ActorCategoryStats::GetCheckpoint() == 0)
         checkpointCount = 0;
     mapCols = BOSS_PICTURE_SIZE(picture)->cols;
     mapRows = BOSS_PICTURE_SIZE(picture)->rows;

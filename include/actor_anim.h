@@ -166,13 +166,13 @@ struct category_descriptor {
     // (gCategoryFamily0AnimTable or gCategoryFamily1AnimTable)
     struct anim_table_record *anim_table;
     const u8 *sprite_sheet; // 0x1C - this category family's LZ77-compressed sprite sheet
-    // 0x20 - deaths since the checkpoint (gActorCategoryDeaths) after which
-    // IsActorMaskAssistDue reports true
+    // 0x20 - deaths since the checkpoint (ActorCategoryStats::deaths) after
+    // which ActorCategoryStats::IsMaskAssistDue reports true
     s32 maskAssistDeaths;
-    // 0x24 - deaths since the checkpoint (gActorCategoryDeaths) after which the
+    // 0x24 - deaths since the checkpoint (ActorCategoryStats::deaths) after which the
     // spawns use their `bonusKind` (InitActorCategory -> gActorSpawnUseBonus)
     s32 bonusKindDeaths;
-    // 0x28 - boss deaths (gActorCategoryBossDeaths) after which the boss is
+    // 0x28 - boss deaths (ActorCategoryStats::bossDeaths) after which the boss is
     // created with `retryBossLevel` instead of `bossLevel`
     s32 retryBossDeaths;
     // 0x2C - the argument InitActorCategory passes to the boss's constructor

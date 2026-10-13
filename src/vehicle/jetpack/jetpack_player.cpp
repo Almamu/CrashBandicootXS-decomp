@@ -5,6 +5,7 @@
 #include "level_state.hpp"
 #include "cell_anim.hpp"
 #include "fade.hpp"
+#include "actor_category_stats.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -93,7 +94,7 @@ s32 JetpackPlayer::GetHp()
 /* Sets the actors' checkpoint 0x7800 past the player. */
 void JetpackPlayer::SetCheckpoint()
 {
-    SetActorCheckpoint(z + INT_TO_Q8(120));
+    ActorCategoryStats::SetCheckpoint(z + INT_TO_Q8(120));
 }
 
 s32 JetpackPlayer::IsPauseLocked()
