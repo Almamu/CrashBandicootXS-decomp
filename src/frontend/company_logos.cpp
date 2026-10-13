@@ -107,8 +107,8 @@ void CompanyLogos::Run()
         q = 0x1000000 / scale;
 
         /* `x`, `y` are needed: inlined, the instructions differ */
-        s32 x = -(q * 120) + 0x7800;
-        s32 y = -(q * 80) + 0x5000;
+        s32 x = -(q * DISPLAY_CENTER_X) + INT_TO_Q8(DISPLAY_ART_CENTER_X);
+        s32 y = -(q * DISPLAY_CENTER_Y) + INT_TO_Q8(DISPLAY_ART_CENTER_Y);
         REG_BG2X = x;
         REG_BG2Y = y;
         REG_BG2PA = q;
@@ -641,8 +641,9 @@ void LogoActor::Draw()
      * `rec`'s, as in the ROM. */
     {
         u32 w, h;
-        s32 halfW, halfH;
-        s32 sx, sy;
+        screen_dx_t halfW, halfH;
+        screen_x_t sx;
+        screen_y_t sy;
         s32 depth;
         s32 f;
 
@@ -653,8 +654,8 @@ void LogoActor::Draw()
         depth = z;
         scale = Q8_DIV(depth, record->baseDepth);
         f = 0x100000 / depth;
-        sy = Q8_TO_INT(Q12_MUL(y, f) + 0x5000);
-        sx = Q8_TO_INT(Q12_MUL(x, f) + 0x7800);
+        sy = Q8_TO_INT(Q12_MUL(y, f) + INT_TO_Q8(DISPLAY_CENTER_Y));
+        sx = Q8_TO_INT(Q12_MUL(x, f) + INT_TO_Q8(DISPLAY_CENTER_X));
         attr1 = 0x100;
         if (scale <= 0xff) {
             attr1 |= 0x200;
@@ -663,10 +664,11 @@ void LogoActor::Draw()
         }
         sx -= halfW;
         sy -= halfH;
-        if (sy <= 0x9f && sy + halfH * 2 >= 0 && sx <= 0xef && sx + halfW * 2 >= 0) {
+        if (sy <= DISPLAY_HEIGHT - 1 && sy + halfH * 2 >= 0 && sx <= DISPLAY_WIDTH - 1 &&
+            sx + halfW * 2 >= 0) {
             u32 attr = rec->attr << 16;
 
-            attr1 |= (sy & 0xff) | ((sx & 0x1ff) << 16) | attr | GetSpriteShapeSizeBits(frame);
+            attr1 |= OAM_Y(sy) | (OAM_X(sx) << 16) | attr | GetSpriteShapeSizeBits(frame);
             if (frame != gLogoActorLastFrame) {
                 gLogoActorTileBuffer ^= 1;
                 gUnpackRleSpriteFrameFunc((u16 *)gLogoActorTiles[gLogoActorTileBuffer],

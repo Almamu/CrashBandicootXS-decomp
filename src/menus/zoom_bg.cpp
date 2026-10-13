@@ -35,14 +35,14 @@ static inline void SetPalette(Sprite *s, s32 pal)
 /* BG2's constructor: the BGCNT fields (priority 1, 256 colours), a cleared
  * screen block with an 8x4 block of tile entries at its top left, and four
  * corner sprites (animation bank 50 of the level graphics, mirrored
- * per corner) positioned around (x, y) = (0x78, 0x35) by
+ * per corner) positioned around (x, y) = (DISPLAY_CENTER_X, 0x35) by
  * gZoomBgSlotOffsets. */
 ZoomBg::ZoomBg(s32 charBlock, s32 screenBlock)
 {
     s32 i;
 
-    x = 0x78;
-    y = 0x35;
+    x = DISPLAY_CENTER_X;
+    y = DISPLAY_ART_Y + 0x35;
     bgcnt.raw = 0;
     bgcnt.bits.priority = 1;
     this->charBlock = charBlock;

@@ -212,8 +212,8 @@ public:
     s32 scale;       // 0x14 - zoom, 0x100 = 1:1, 8 = smallest
     s32 charBlock;   // 0x18
     s32 screenBlock; // 0x1C
-    s32 x;           // 0x20 - screen centre
-    s32 y;           // 0x24
+    screen_x_t x;    // 0x20 - screen centre
+    screen_y_t y;    // 0x24
     s32 dx;          // 0x28 - wobble offset
     s32 dy;          // 0x2C
     u32 phase;       // 0x30 - wobble phase, 0-0xFF
@@ -304,10 +304,10 @@ public:
     void Park();
     void Glide();
     u8 HasArrived();
-    void Move(s32 x, s32 y);       // MoveLevelSelectCursor
-    void MoveTo(struct vec2 *pos); // UNUSED (Park has it inlined)
-    void SetPos(s32 x, s32 y);     // SetLevelSelectCursorPos
-    void ResetIdleTimer();         // ResetLevelSelectCursorIdleTimer
+    void Move(screen_x_t x, screen_y_t y);   // MoveLevelSelectCursor
+    void MoveTo(struct vec2 *pos);           // UNUSED (Park has it inlined)
+    void SetPos(screen_x_t x, screen_y_t y); // SetLevelSelectCursorPos
+    void ResetIdleTimer();                   // ResetLevelSelectCursorIdleTimer
 
     /* ResetIdleTimer's and MoveTo's bodies, which other methods inline. */
     void ResetIdleTimerNow()

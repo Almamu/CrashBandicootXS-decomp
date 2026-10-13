@@ -18,6 +18,7 @@ consistently (#979). `core.h` includes `screen.h`.
 | `ACTIVE_AREA_WIDTH`, `ACTIVE_AREA_HEIGHT` | 440, 280 | the activation window: the screen plus `ACTIVE_AREA_MARGIN_X/Y` (100, 60) on each side |
 | `DISPLAY_ART_WIDTH`, `DISPLAY_ART_HEIGHT` | 240, 160 | the fixed size of the full-screen art |
 | `DISPLAY_ART_X`, `DISPLAY_ART_Y` | 0, 0 | where that art's top-left corner goes: centred on a bigger screen |
+| `DISPLAY_ART_CENTER_X`, `DISPLAY_ART_CENTER_Y` | 120, 80 | the art's centre in its own coordinates: what an affine picture is scaled around |
 
 `gba/defines.h` has the hardware's side, next to `OAM_ENTRY_COUNT`:
 

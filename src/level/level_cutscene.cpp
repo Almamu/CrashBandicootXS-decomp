@@ -116,7 +116,7 @@ void LevelState::PlayCutscene(s32 idx)
     u16 mode;
     u16 *dispcnt;
 
-    SetBoxPos(&f.box, 7, 0x7E);
+    SetBoxPos(&f.box, DISPLAY_ART_X + 7, DISPLAY_ART_Y + 0x7E);
     SetBoxSize(&f.box, 0xE4, 0x1E);
     dispcnt = &gDispcnt.raw;
     zero = 0;
@@ -134,8 +134,10 @@ void LevelState::PlayCutscene(s32 idx)
     REG_BG2PB = zero;
     REG_BG2PC = zero;
     REG_BG2PD = 0x100;
-    REG_BG2X = zero;
-    REG_BG2Y = zero;
+    /* The picture's top-left corner at the art origin (DISPLAY_ART_X/Y,
+     * 0 on the GBA): the reference point is minus it, in Q8. */
+    REG_BG2X = zero - INT_TO_Q8(DISPLAY_ART_X);
+    REG_BG2Y = zero - INT_TO_Q8(DISPLAY_ART_Y);
     gPaletteCache->FreeUnlockedSlots();
     gSmallFont->SetTileBase(0x200);
     gSmallFont->ResetPalette();

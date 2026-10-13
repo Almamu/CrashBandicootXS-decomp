@@ -64,10 +64,12 @@ void ShowBitmapScreen(void *asset, void *palette)
     rawA = FixedInverse16(0x100);
     zero = 0;
     shiftedD = FixedInverse16(0x100) << 16;
-    xLow = 0x7788 - (s16)rawA * 120;
-    yLow = 0x4FB0;
+    /* The picture's centre (0x7788 = 120 * 0xFF in Q8, the ROM's
+     * constant) less the scaled screen centre. */
+    xLow = DISPLAY_ART_CENTER_X * 0xFF - (s16)rawA * DISPLAY_CENTER_X;
+    yLow = DISPLAY_ART_CENTER_Y * 0xFF;
     rawD = (u16)((u32)shiftedD >> 16);
-    yLow -= (s16)(shiftedD >> 16) * 80;
+    yLow -= (s16)(shiftedD >> 16) * DISPLAY_CENTER_Y;
 
     REG_BG2PA = rawA;
     REG_BG2PB = zero;
