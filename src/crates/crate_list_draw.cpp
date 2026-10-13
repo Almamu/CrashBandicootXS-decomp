@@ -38,7 +38,7 @@ void CrateList::Draw()
     lo = cam->x;
     lo >>= 8;
     LIMIT_MIN(lo, 0);
-    i = lo + 2;
+    i = lo + CRATE_GRID_SPAN;
     do {
         /* Column 255's head, computed in the loop: the loop optimizer
          * hoists it after the address of `heads`, as in the ROM, and keeps

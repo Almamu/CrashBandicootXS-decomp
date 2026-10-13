@@ -59,6 +59,31 @@
 #define DISPLAY_ART_CENTER_X (DISPLAY_ART_WIDTH / 2)
 #define DISPLAY_ART_CENTER_Y (DISPLAY_ART_HEIGHT / 2)
 
+/* Platform-layer limits: hardware sizes the game's code is written
+ * against, which a bigger screen outgrows. They stay as they are (they
+ * are the GBA's formats); a port replaces what uses them in its platform
+ * layer (docs/screen.md, "Platform-layer limits").
+ *
+ * - BG_SCREEN_BLOCK_TILES: a text BG's screen block is 32x32 map entries,
+ *   256x256 pixels; the map wraps at it. The level BGs (BgLayer keeps a
+ *   32x32 window of the level map in one block, wrapping modulo 32) and
+ *   the cell-anim maps (FillTileMap: a 64-wide map is two blocks side by
+ *   side) are written for it. A screen wider or taller than 256 - 8
+ *   pixels needs a bigger BG map.
+ * - BG_STREAM_RING_COLS x BG_STREAM_RING_ROWS: BgStreamer's ring of
+ *   decoded map entries, 64x32 (512x256 pixels, 0x1000 bytes): 4x4
+ *   chunks of 16x8 tiles (128x64 pixels), which the level BGs copy from.
+ *   It holds the four chunks from the one at the layer's scroll position,
+ *   so the screen fits while DISPLAY_WIDTH <= 512 - 127 and
+ *   DISPLAY_HEIGHT <= 256 - 63 (240x160 does; 426x240 doesn't).
+ *
+ * Two more are spelled where the code is: OAM's 9-bit X and 8-bit Y
+ * (OAM_X/OAM_Y, gba/defines.h) and Font::DrawGlyph's byte read of the
+ * font cursor's Y (font_glyph.cpp), which truncates it to OAM's 8 bits. */
+#define BG_SCREEN_BLOCK_TILES 32
+#define BG_STREAM_RING_COLS   64
+#define BG_STREAM_RING_ROWS   32
+
 /* Screen-coordinate types: what a value that holds a screen position, a
  * screen-space offset or a size derived from the screen is stored in.
  * Each is the type the ROM uses for it, so the matching build is

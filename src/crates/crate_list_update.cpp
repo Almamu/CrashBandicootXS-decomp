@@ -214,7 +214,7 @@ void CrateList::Update()
     lo = cam->x;
     lo >>= 8;
     LIMIT_MIN(lo, 0);
-    i = lo + 2;
+    i = lo + CRATE_GRID_SPAN;
     do {
         /* As in Draw: computed in the loop, it is hoisted after `heads`, as
          * in the ROM; it is column 255's head in the append below too. */

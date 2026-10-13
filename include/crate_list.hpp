@@ -28,6 +28,21 @@ extern "C" {
 
 struct CrateGridLink;
 
+/* The grid's columns are 256 pixels wide: a crate's column is its x's
+ * high halfword (`x >> 16` in Q8), the camera's its pixel x `>> 8`. */
+#define CRATE_GRID_COLUMN_WIDTH 256
+
+/* How many columns right of the camera's the passes visit (#979): enough
+ * for the widest window they test, the activation window (screen.h),
+ * whose right edge is DISPLAY_WIDTH + ACTIVE_AREA_MARGIN_X pixels right
+ * of the camera, from anywhere in the camera's column: (255 + 340) / 256
+ * = 2 on the GBA, 3 for a 426-pixel screen. The ROM's loops count down
+ * from `lo + 2` to `lo`, the camera's column; the window's left margin,
+ * which can reach into column `lo - 1`, isn't visited: the ROM's own
+ * shape, kept. */
+#define CRATE_GRID_SPAN \
+    ((CRATE_GRID_COLUMN_WIDTH - 1 + DISPLAY_WIDTH + ACTIVE_AREA_MARGIN_X) / CRATE_GRID_COLUMN_WIDTH)
+
 /* One node of the grid (0x14 bytes): a listed sprite, the next node in
  * its column, and the free-list entry it was taken from. A sprite that is
  * always active (flags bit 4) is also filed in column 255 under a second
@@ -80,8 +95,8 @@ ASSERT_VIEW_FIELD(crate_list_hpp, CrateGridNode, CrateGridNodeInit, mark);
  * columns, each a singly linked list from `heads[i]` to `tails[i]`: a
  * sprite is filed in the column of its x (`x >> 16`, 256 pixels wide),
  * and an always-active one in column 255 too. The passes (Update, Draw,
- * CollidePlayer, Collide) visit the camera's column and the two to its
- * right, then column 255. */
+ * CollidePlayer, Collide) visit the camera's column and the
+ * CRATE_GRID_SPAN (two) to its right, then column 255. */
 class CrateList
 {
 public:

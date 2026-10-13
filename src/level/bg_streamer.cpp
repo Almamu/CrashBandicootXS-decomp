@@ -190,8 +190,8 @@ u16 *BgStreamer::GetColumn(s32 x, s32 y, s32 *rowOut)
     col += shifted;
     shifted = subY * 8;
     row += shifted;
-    col &= 0x3f;
-    row &= 0x1f;
+    col &= BG_STREAM_RING_COLS - 1;
+    row &= BG_STREAM_RING_ROWS - 1;
     base = ring;
     ret = &base[col];
     *rowOut = row;
@@ -215,10 +215,10 @@ u16 *BgStreamer::GetRow(s32 x, s32 y, s32 *colOut)
     col += shifted;
     shifted = subY * 8;
     row += shifted;
-    col &= 0x3f;
-    row &= 0x1f;
+    col &= BG_STREAM_RING_COLS - 1;
+    row &= BG_STREAM_RING_ROWS - 1;
     base = ring;
-    ret = &base[row * 0x40];
+    ret = &base[row * BG_STREAM_RING_COLS];
     *colOut = col;
     return ret;
 }
@@ -238,8 +238,8 @@ u16 BgStreamer::GetCell(s32 x, s32 y)
     col += shifted;
     shifted = subY * 8;
     row += shifted;
-    col &= 0x3f;
-    row &= 0x1f;
+    col &= BG_STREAM_RING_COLS - 1;
+    row &= BG_STREAM_RING_ROWS - 1;
     base = ring;
     idx = row << 6;
     idx += col;
