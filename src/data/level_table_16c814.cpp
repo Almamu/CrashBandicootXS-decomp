@@ -59,7 +59,7 @@ const u16 gThemePaletteCycle5[5] = { 0x97, 0xb4, 0xf7, 0xf8, 0xff };
  * The music cue of each level theme (`struct level_info.theme`), read by
  * PlayRoomMusic (room_select.cpp).
  */
-const u8 gThemeMusicCues[11] = {
+const u8 gThemeMusicCues[THEME_COUNT] = {
     SONG_ARCTIC,    SONG_JUNGLE, SONG_SEWERS, SONG_UNDERWATER, SONG_ROCKET_CRASH, SONG_FUTURE,
     SONG_DINGODILE, SONG_N_GIN,  SONG_TINY,   SONG_NEO_CORTEX, SONG_NEO_CORTEX,
 };

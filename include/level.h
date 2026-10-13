@@ -20,6 +20,7 @@
 #include "constants/level_flags.h"
 #include "constants/mask_level.h"
 #include "level_data.h"
+#include "constants/themes.h"
 #include "constants/bosses.h"
 #include "bg_scroll_layer.h"
 #include "constants/entities.h"
@@ -274,7 +275,7 @@ extern const struct terrain_type gTerrainTypes[51];
 extern const struct level_info gLevelTable[LEVEL_COUNT];
 
 /* The level themes' music cues and palette cycles (src/data/level_table_16c814.cpp) */
-extern const u8 gThemeMusicCues[11];
+extern const u8 gThemeMusicCues[THEME_COUNT];
 extern const u16 gThemePaletteCycle1A[9];
 extern const u16 gThemePaletteCycle1B[9];
 extern const u16 gThemePaletteCycle2[5];

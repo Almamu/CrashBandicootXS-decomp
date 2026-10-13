@@ -23,7 +23,7 @@ const struct vec2 gLevelSelectTimePos = { DISPLAY_ART_X + 166, DISPLAY_ART_Y + 3
 const struct vec2 gLevelSelectNextWorldArrowPos = { DISPLAY_ART_X + 201, DISPLAY_ART_Y + 70 };
 const struct vec2 gLevelSelectPrevWorldArrowPos = { DISPLAY_ART_X + 201, DISPLAY_ART_Y + 87 };
 
-const struct vec2 gLevelSelectEntryPositions[6] = {
+const struct vec2 gLevelSelectEntryPositions[LEVEL_SELECT_ENTRIES] = {
     { DISPLAY_ART_X + 30, DISPLAY_ART_Y + 120 },
     { DISPLAY_ART_X + 70, DISPLAY_ART_Y + 132 },
     { DISPLAY_ART_X + 120, DISPLAY_ART_Y + 136 },
@@ -31,7 +31,7 @@ const struct vec2 gLevelSelectEntryPositions[6] = {
     { DISPLAY_ART_X + 210, DISPLAY_ART_Y + 120 },
     { 0, 0 }, /* the sixth entry, hidden until the five levels are cleared */
 };
-const struct vec2 gLevelSelectEntryPositionsAllCleared[6] = {
+const struct vec2 gLevelSelectEntryPositionsAllCleared[LEVEL_SELECT_ENTRIES] = {
     { DISPLAY_ART_X + 26, DISPLAY_ART_Y + 118 },
     { DISPLAY_ART_X + 58, DISPLAY_ART_Y + 130 },
     { DISPLAY_ART_X + 99, DISPLAY_ART_Y + 136 },
@@ -39,13 +39,13 @@ const struct vec2 gLevelSelectEntryPositionsAllCleared[6] = {
     { DISPLAY_ART_X + 182, DISPLAY_ART_Y + 130 },
     { DISPLAY_ART_X + 214, DISPLAY_ART_Y + 118 },
 };
-const u32 gLevelSelectWorldEntryBoxAnims[4] = {
+const u32 gLevelSelectWorldEntryBoxAnims[WORLD_COUNT] = {
     0,
     1,
     2,
     3,
 };
-const u32 gLevelSelectWorldAnims[4] = {
+const u32 gLevelSelectWorldAnims[WORLD_COUNT] = {
     9,
     8,
     6,

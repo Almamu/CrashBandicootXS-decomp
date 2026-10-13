@@ -14,6 +14,7 @@
 #include "core.h"
 #include "irq.h"
 #include "memory.h"
+#include "constants/levels.h"
 
 /* src/iwram/iwram_data.cpp */
 extern u32 gVBlankCounter;
@@ -23,12 +24,12 @@ extern s32 gLanguage;
 /* One UI string table per language (src/data/ui_text_172cd4.c). */
 extern const u8 *const *gUiTextTables[6];
 /* The tables gUiTextTables points at (src/data/ui_text_172cd4.c). */
-extern const u8 *const gUiTextEnglish[70];
-extern const u8 *const gUiTextFrench[70];
-extern const u8 *const gUiTextGerman[70];
-extern const u8 *const gUiTextSpanish[70];
-extern const u8 *const gUiTextItalian[70];
-extern const u8 *const gUiTextDutch[70];
+extern const u8 *const gUiTextEnglish[UI_TEXT_COUNT];
+extern const u8 *const gUiTextFrench[UI_TEXT_COUNT];
+extern const u8 *const gUiTextGerman[UI_TEXT_COUNT];
+extern const u8 *const gUiTextSpanish[UI_TEXT_COUNT];
+extern const u8 *const gUiTextItalian[UI_TEXT_COUNT];
+extern const u8 *const gUiTextDutch[UI_TEXT_COUNT];
 
 /* sym_iwram.txt: WaitForVBlank's frame limit (SetFrameLimit). */
 extern u32 gFrameLimitTarget;

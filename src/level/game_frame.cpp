@@ -100,7 +100,7 @@ load:
     restore:
         s32 level = room.level;
 
-        LIMIT_MAX(level, LEVEL_NEO_CORTEX);
+        LIMIT_MAX(level, LEVEL_LAST_ON_GRID);
         room.level = level;
         quit = RunLevelSelect(&room.level);
         MemCopy32(&progress, &saveData, sizeof(GameProgress));

@@ -79,8 +79,11 @@ derived from those again.
                                               ENEMY_KIND_*) from entity_types.json
     tools/levels.py constants crates OUT      constants/crates.h (CRATE_KIND_*)
                                               from crate_kinds.json
-    tools/levels.py constants levels OUT      constants/levels.h (LEVEL_*) from
-                                              levels.json's "levels" list
+    tools/levels.py constants levels OUT      constants/levels.h (LEVEL_*, and the
+                                              counts the code takes from the
+                                              levels) from levels.json's "levels"
+    tools/levels.py constants themes OUT      constants/themes.h (THEME_*) from
+                                              levels.json's "themes"
 
 The entity types are named in data/levels/entity_types.json (one record
 per gEntitySpawnFuncs slot) and room.json gives a placed entity's type by
@@ -1488,7 +1491,8 @@ def room_record(rom, a, symbol):
 
 
 # The level fields levels.py extract keeps from the hand-written levels.json
-# (the names); it writes the others from the ROM ("boss" must agree).
+# (the names); it writes the others from the ROM ("boss" must agree). It
+# keeps the hand-written "themes" (each theme's constant and name) too.
 LEVEL_KEYS_KEPT = ["constant", "name", "world"]
 
 
@@ -1557,6 +1561,8 @@ def write_levels_json(levels):
                          else dump(x))
         if k == "levels":
             return block(v, ind, lambda _, lv, i2: block(lv, i2, lambda __, y, ___: dump(y)))
+        if k == "themes":
+            return block(v, ind, lambda _, t, __: dump(t))
         return dump(v)
 
     LEVELS_JSON.write_text(block(levels, 0, top) + "\n")
@@ -1569,7 +1575,8 @@ def extract(rom_path):
     assert len(rooms) == 41, len(rooms)
     # the level names aren't extracted: the hand-written ones name the
     # folders (LEVEL_KEYS_KEPT)
-    level_list = read_json(LEVELS_JSON)["levels"]
+    kept = read_json(LEVELS_JSON)
+    level_list = kept["levels"]
     folders = room_folders(rom, level_list)
     assert sorted(folders) == sorted(records), "rooms in no level's room list"
     LEVELS_DIR.mkdir(parents=True, exist_ok=True)
@@ -1735,7 +1742,9 @@ def extract(rom_path):
     level_info, table, arrays, stages = level_table_from_rom(rom, level_list, folders)
     levels = {"rooms": names, "regions": regions,
               "assets": {"name": aname, "rooms": [n for _, n in sorted(assets)]}, "table": table,
-              "levels": level_info}
+              "levels": level_info, "themes": kept.get("themes")}
+    # the derived counts (constants/levels.h, themes.h) are the ROM's
+    check_rom_counts(levels)
     write_levels_json(levels)
     # the generator's layout must be the ROM's: its objects back to back
     # in ROM order
@@ -1818,6 +1827,119 @@ def define_lines(rows):
     return out
 
 
+# The ROM's counts, which `extract` checks the rules of level_counts give
+# with the extracted levels: the level table's 25 entries (gLevelTable to
+# gLevelRoomLists), the level select's 4 pages of 5 levels and a boss
+# (LevelSelect::items[6], `world <= 2`), the `i < 20` loops and the
+# pause menu's totals (20 crystals, 28 gems, 20 relics) of
+# GameProgress, GetCompletionPercent's divisor 72 and the 70 strings of
+# each gUiText table (ui_text_172cd4.c). And the 11 level themes
+# (gThemeMusicCues), of which ZoomBg's "no picture" 11 is one past the last.
+ROM_COUNTS = {
+    "LEVEL_COUNT": 25, "WORLD_COUNT": 4, "LEVELS_PER_WORLD": 5, "LEVEL_NUMBERED_COUNT": 20,
+    "LEVEL_LAST_NUMBERED": "LEVEL_FINAL_COUNTDOWN", "LEVEL_FIRST_BOSS": "LEVEL_DINGODILE",
+    "LEVEL_LAST_ON_GRID": "LEVEL_NEO_CORTEX", "LEVEL_FINALE": "LEVEL_MEGA_MIX", "LEVEL_SELECT_ENTRIES": 6,
+    "CRYSTAL_TOTAL": 20, "GEM_TOTAL": 28, "RELIC_TOTAL": 20, "COMPLETION_TOTAL": 72, "UI_TEXT_COUNT": 70,
+    "THEME_COUNT": 11,
+}
+# The UI text tables' strings in the ROM (ids 0-69): level names are 1-25.
+UI_TEXT_ROM_COUNT = 70
+# The coloured gems (PROGRESS_FLAG_*_GEM) and the powers, which the
+# completion percentage counts: four each.
+COLOURED_GEMS = 4
+POWERS = 4
+# The save record holds four slots of a GameProgress (4 + 4 bytes a level)
+# and 8 bytes more in 0x1F4 bytes (save_data.hpp): 28 levels at most.
+SAVE_SLOTS_SIZE = 0x1F4
+
+
+def level_counts(data):
+    """The counts the code takes from the levels (constants/levels.h). The
+    levels are in the order the code's arithmetic needs: the numbered
+    levels world by world, LEVELS_PER_WORLD in each, then one boss per
+    world in world order (`"boss": true` with a "world"), then the levels
+    off the level select's grid (`"boss": true`, no "world"), mega-mix
+    first. Each count is a rule, not a field, so it follows the data."""
+    levels = data["levels"]
+
+    def fail(msg):
+        sys.exit("%s: %s" % (LEVELS_JSON, msg))
+
+    numbered = [lv for lv in levels if not lv.get("boss")]
+    bosses = [lv for lv in levels if lv.get("boss") and lv.get("world") is not None]
+    off_grid = [lv for lv in levels if lv.get("boss") and lv.get("world") is None]
+    if levels != numbered + bosses + off_grid:
+        fail("the levels go numbered levels first, then the bosses (\"boss\": true and a \"world\"), then the "
+             "levels off the level select's grid (\"boss\": true, no \"world\"): the code finds them by id")
+    if not numbered or not bosses or not off_grid:
+        fail("a numbered level, a boss and a level off the grid (mega-mix) are needed")
+    worlds = sorted({lv["world"] for lv in numbered})
+    if worlds != list(range(len(worlds))):
+        fail("the numbered levels' worlds are 0 to %d" % (len(worlds) - 1))
+    per_world = [sum(1 for lv in numbered if lv["world"] == w) for w in worlds]
+    if len(set(per_world)) != 1:
+        fail("every world has the same number of numbered levels (the level select's world * "
+             "LEVELS_PER_WORLD + index); they have %s" % per_world)
+    if [lv["world"] for lv in numbered] != sorted(lv["world"] for lv in numbered):
+        fail("the numbered levels go world by world")
+    if [lv["world"] for lv in bosses] != worlds:
+        fail("each world has one boss, in world order (LEVEL_FIRST_BOSS + world)")
+    gem_levels = numbered + off_grid[:1]  # what GameProgress::CountGems counts
+    gem_paths = 0
+    for lv in gem_levels:
+        for r in [e for e in lv["rooms"] if isinstance(e, str)] + [lv[k] for k in ("bonus", "gem_path") if lv.get(k)]:
+            room = read_json(LEVELS_DIR / r / "room.json")
+            gem_paths += sum(1 for e in room["entities"] if e["type"] in ("GEM_PATH_GEM", 8))
+    c = {
+        "LEVEL_COUNT": len(levels),
+        "WORLD_COUNT": len(worlds),
+        "LEVELS_PER_WORLD": per_world[0],
+        "LEVEL_NUMBERED_COUNT": len(numbered),
+        "LEVEL_LAST_NUMBERED": numbered[-1]["constant"],
+        "LEVEL_FIRST_BOSS": bosses[0]["constant"],
+        "LEVEL_LAST_ON_GRID": bosses[-1]["constant"],
+        "LEVEL_FINALE": off_grid[0]["constant"],
+        "LEVEL_SELECT_ENTRIES": per_world[0] + 1,
+        "CRYSTAL_TOTAL": len(numbered),
+        # a crate gem per numbered level (bosses have none: RunRoom skips
+        # CheckAllCratesBroken), the gem-path gems of the levels CountGems
+        # counts, and the coloured gems
+        "GEM_TOTAL": len(numbered) + gem_paths + COLOURED_GEMS,
+        "RELIC_TOTAL": len(numbered),
+        "UI_TEXT_COUNT": max([UI_TEXT_ROM_COUNT] + [lv["name_text"] + 1 for lv in levels]),
+    }
+    c["COMPLETION_TOTAL"] = c["CRYSTAL_TOTAL"] + c["GEM_TOTAL"] + c["RELIC_TOTAL"] + POWERS
+    for k in ("CRYSTAL_TOTAL", "GEM_TOTAL", "RELIC_TOTAL"):
+        if c[k] > 99:
+            fail("%s is %d: the pause menu prints it in two digits (PauseMenu's u8 [3] buffers)" % (k, c[k]))
+    if 4 * (4 + 4 * len(levels) + 8) > SAVE_SLOTS_SIZE:
+        fail("%d levels: the save record's four slots hold %d at most (save_data.hpp)"
+             % (len(levels), (SAVE_SLOTS_SIZE // 4 - 12) // 4))
+    return c
+
+
+def level_themes(data):
+    """levels.json's "themes" (their constants and names), in theme order;
+    every level's "theme" is one of them."""
+    themes = data.get("themes")
+    if not themes:
+        sys.exit("%s: no \"themes\" (each level theme's constant and name)" % LEVELS_JSON)
+    for lv in data["levels"]:
+        if not 0 <= lv["theme"] < len(themes):
+            sys.exit("%s: %s's theme %d isn't one of the %d \"themes\"" % (LEVELS_JSON, lv["constant"],
+                                                                         lv["theme"], len(themes)))
+    return themes
+
+
+def check_rom_counts(data):
+    """extract: the counts' rules give the ROM's numbers with the ROM's levels."""
+    c = level_counts(data)
+    c["THEME_COUNT"] = len(level_themes(data))
+    for k, v in ROM_COUNTS.items():
+        assert c[k] == v, "%s: the rule gives %s, the ROM has %s" % (k, c[k], v)
+    assert c["LEVEL_COUNT"] == (LEVEL_ROOM_LISTS - LEVEL_TABLE) // LEVEL_INFO_SIZE
+
+
 def constants_h(which):
     if which == "entities":
         src, guard = ENTITY_TYPES_JSON, "GUARD_CONSTANTS_ENTITIES_H"
@@ -1858,14 +1980,9 @@ def constants_h(which):
         body = define_lines(rows)
     elif which == "levels":
         src, guard = LEVELS_JSON, "GUARD_CONSTANTS_LEVELS_H"
-        levels = read_json(src)["levels"]
-        numbered = [lv for lv in levels if not lv.get("boss")]
-        bosses = [lv for lv in levels if lv.get("boss")]
-        per_world = {}
-        for lv in numbered:
-            per_world[lv["world"]] = per_world.get(lv["world"], 0) + 1
-        assert len(set(per_world.values())) == 1, per_world
-        assert levels.index(numbered[-1]) + 1 == levels.index(bosses[0]), src
+        data = read_json(src)
+        levels = data["levels"]
+        c = level_counts(data)
         doc = """/*
  * Level ids: the index of gLevelTable, gLevelRoomLists and
  * level_state.levelFlags, and the value of level_state.level. Each is
@@ -1873,14 +1990,47 @@ def constants_h(which):
  * numbered levels come first, LEVELS_PER_WORLD per world (the level
  * select's `world * LEVELS_PER_WORLD + index`, the pause menu's
  * "level N" label), then the boss levels: one per world
- * (`LEVEL_FIRST_BOSS + world`) and mega-mix.
+ * (`LEVEL_FIRST_BOSS + world`), then the levels off the level select's
+ * grid, mega-mix (LEVEL_FINALE) first.
+ *
+ * The counts below are derived from the levels too (tools/levels.py,
+ * level_counts); with the ROM's levels each is the ROM's number, which
+ * `levels.py extract` checks (ROM_COUNTS).
  */"""
         rows = [(lv["constant"], "%d" % i, lv["name"]) for i, lv in enumerate(levels)]
         rows.append(("LEVEL_COUNT", "%d" % len(levels), "the length of gLevelTable"))
         body = define_lines(rows) + [""] + define_lines([
-            ("LEVELS_PER_WORLD", "%d" % next(iter(per_world.values())), None),
-            ("LEVEL_LAST_NUMBERED", numbered[-1]["constant"], None),
-            ("LEVEL_FIRST_BOSS", bosses[0]["constant"], None),
+            ("WORLD_COUNT", "%d" % c["WORLD_COUNT"], "the level select's pages"),
+            ("LEVELS_PER_WORLD", "%d" % c["LEVELS_PER_WORLD"], "the numbered levels of a page"),
+            ("LEVEL_NUMBERED_COUNT", "%d" % c["LEVEL_NUMBERED_COUNT"], "WORLD_COUNT * LEVELS_PER_WORLD"),
+            ("LEVEL_LAST_NUMBERED", c["LEVEL_LAST_NUMBERED"], None),
+            ("LEVEL_FIRST_BOSS", c["LEVEL_FIRST_BOSS"], "the first page's boss"),
+            ("LEVEL_LAST_ON_GRID", c["LEVEL_LAST_ON_GRID"], "the last page's boss"),
+            ("LEVEL_FINALE", c["LEVEL_FINALE"], "the first level off the grid"),
+            ("LEVEL_SELECT_ENTRIES", "%d" % c["LEVEL_SELECT_ENTRIES"], "a page's levels and its boss"),
+        ]) + ["", "/* The pause menu's totals and the completion percentage's divisor. */"] + define_lines([
+            ("CRYSTAL_TOTAL", "%d" % c["CRYSTAL_TOTAL"], "a crystal per numbered level"),
+            ("GEM_TOTAL", "%d" % c["GEM_TOTAL"], "crate gems, gem-path gems and the 4 coloured gems"),
+            ("RELIC_TOTAL", "%d" % c["RELIC_TOTAL"], "a relic per numbered level"),
+            ("COMPLETION_TOTAL", "%d" % c["COMPLETION_TOTAL"], "the three totals and the 4 powers"),
+        ]) + ["", "/* The length of the UI text tables (gUiTextEnglish, ...): the ROM's 70 strings,",
+              " * or more when a level's name_text is past them. */"] + define_lines([
+            ("UI_TEXT_COUNT", "%d" % c["UI_TEXT_COUNT"], None),
+        ])
+    elif which == "themes":
+        src, guard = LEVELS_JSON, "GUARD_CONSTANTS_THEMES_H"
+        data = read_json(src)
+        themes = level_themes(data)
+        doc = """/*
+ * Level themes: `struct level_info.theme`, the index of gThemeMusicCues
+ * (PlayRoomMusic) and of the level select's pictures (ZoomBg::SetPicture),
+ * and the case of RunRoom's colour cycles. Named in levels.json's
+ * "themes".
+ */"""
+        rows = [(t["constant"], "%d" % i, t["name"]) for i, t in enumerate(themes)]
+        rows.append(("THEME_COUNT", "%d" % len(themes), "the length of gThemeMusicCues"))
+        body = define_lines(rows) + [""] + define_lines([
+            ("ZOOM_BG_NO_PICTURE", "THEME_COUNT", "ZoomBg::image when no picture is wanted"),
         ])
     else:
         sys.exit("unknown constants %s" % which)
@@ -1932,7 +2082,7 @@ def main():
     elif cmd == "render":
         render(args[1], args[2], args[3], build_dir)
     elif cmd == "constants":
-        Path(args[2]).write_text(constants_h(args[1]))
+        write_if_changed(args[2], constants_h(args[1]).encode())
     else:
         sys.exit("unknown command %s" % cmd)
 

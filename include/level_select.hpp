@@ -215,7 +215,7 @@ class ZoomBg
 public:
     u8 unk_00[0x0C];
     s32 state;       // 0x0C - see Update
-    s32 image;       // 0x10 - gLevelSelectPictures index, 11 = none
+    s32 image;       // 0x10 - gLevelSelectPictures index (a theme), ZOOM_BG_NO_PICTURE = none
     s32 scale;       // 0x14 - zoom (Q8): INT_TO_Q8(1) = 1:1, LEVEL_SELECT_ZOOM_MIN = smallest
     s32 charBlock;   // 0x18
     s32 screenBlock; // 0x1C
@@ -329,40 +329,43 @@ public:
 
 COMPILE_TIME_ASSERT(level_select_hpp, sizeof(LevelSelectCursor) == 0x54);
 
-/* The level-select screen (RunLevelSelect): five levels per page (a
- * world), each level's fixed record (name text, three time-trial
- * thresholds) in gLevelTable and its saved record in the save block. The
- * screen keeps shadow copies of BLDCNT/BLDALPHA/BLDY/DISPCNT and commits
- * them with the scroll registers every frame (CommitDisplay). */
+/* The level-select screen (RunLevelSelect): LEVELS_PER_WORLD levels and
+ * the world's boss per page (a world; LEVEL_SELECT_ENTRIES, 5 + 1 with
+ * the ROM's levels), each level's fixed record (name text, three
+ * time-trial thresholds) in gLevelTable and its saved record in the
+ * save block. The screen keeps shadow copies of BLDCNT/BLDALPHA/BLDY/
+ * DISPCNT and commits them with the scroll registers every frame
+ * (CommitDisplay). */
 class LevelSelect
 {
 public:
     u8 result;                    // 0x00 - returned by RunLevelSelect
     s32 lastIndex;                // 0x04 - last valid `index` on this page
-    s32 index;                    // 0x08 - cursor, 0-5
+    s32 index;                    // 0x08 - cursor, 0 to LEVEL_SELECT_ENTRIES - 1
     s32 world;                    // 0x0C - page
     s32 levelId;                  // 0x10 - gLevelTable index
     const u8 *nameText;           // 0x14 - the level name's text
     const struct vec2 *positions; // 0x18 - cursor position per index
     LevelSelectPageBg *bg1;       // 0x1C - BG1, the page strip
     ZoomBg *bg2;                  // 0x20 - BG2, the level picture
-    LevelSelectEntry *items[6];   // 0x24
-    LevelSelectCursor *panel;     // 0x3C - the cursor
-    UiSprite *sprites[10];        // 0x40
-    u8 timeText[9];               // 0x68 - best time
-    u8 recordText[9];             // 0x71 - next threshold to beat
-    u32 scroll;                   // 0x7C - BG0 auto-scroll counter
-    screen_dx_t panelSlideX;      // 0x80 - x offset of the record panel
-    screen_dy_t clearedIconY;     // 0x84 - sprite 2's y offset (0 or 0x1C), see LoadRecord
-    screen_dy_t flag1IconY;       // 0x88 - sprite 3's
-    screen_dy_t gemIconY;         // 0x8C - sprite 4's (the `rank` gem icon)
-    screen_dy_t trialIconY;       // 0x90 - sprite 5's (time-trial icons)
-    screen_dy_t trialIcon2Y;      // 0x94 - sprite 6's
-    s32 rank;                     // 0x98 - LoadRecord's classification, 5 = none
-    GameProgress *save;           // 0x9C - PackSaveData's save block
-    union blend blend;            // 0xA0 - REG_BLDCNT + REG_BLDALPHA
-    struct bldy bldy;             // 0xA4 - REG_BLDY
-    union dispcnt dispcnt;        // 0xA8 - REG_DISPCNT (gfx.h)
+    // 0x24 - the page's levels, then its boss
+    LevelSelectEntry *items[LEVEL_SELECT_ENTRIES];
+    LevelSelectCursor *panel; // 0x3C - the cursor
+    UiSprite *sprites[10];    // 0x40
+    u8 timeText[9];           // 0x68 - best time
+    u8 recordText[9];         // 0x71 - next threshold to beat
+    u32 scroll;               // 0x7C - BG0 auto-scroll counter
+    screen_dx_t panelSlideX;  // 0x80 - x offset of the record panel
+    screen_dy_t clearedIconY; // 0x84 - sprite 2's y offset (0 or 0x1C), see LoadRecord
+    screen_dy_t flag1IconY;   // 0x88 - sprite 3's
+    screen_dy_t gemIconY;     // 0x8C - sprite 4's (the `rank` gem icon)
+    screen_dy_t trialIconY;   // 0x90 - sprite 5's (time-trial icons)
+    screen_dy_t trialIcon2Y;  // 0x94 - sprite 6's
+    s32 rank;                 // 0x98 - LoadRecord's classification, 5 = none
+    GameProgress *save;       // 0x9C - PackSaveData's save block
+    union blend blend;        // 0xA0 - REG_BLDCNT + REG_BLDALPHA
+    struct bldy bldy;         // 0xA4 - REG_BLDY
+    union dispcnt dispcnt;    // 0xA8 - REG_DISPCNT (gfx.h)
 
     LevelSelect(s32 level); // InitLevelSelect
     ~LevelSelect();         // DestroyLevelSelect
@@ -424,7 +427,7 @@ public:
     {
         s32 i;
 
-        for (i = 0; i <= 5; i++)
+        for (i = 0; i < LEVEL_SELECT_ENTRIES; i++)
             items[i]->SetLevel(world, i);
     }
 
@@ -440,20 +443,20 @@ public:
         {
             s32 j;
 
-            for (j = 0; j <= 4; j++) {
-                s32 k = world * 5 + j;
+            for (j = 0; j < LEVELS_PER_WORLD; j++) {
+                s32 k = world * LEVELS_PER_WORLD + j;
 
                 n += save->levels[k].b.cleared;
             }
         }
-        if (n == 5) {
+        if (n == LEVELS_PER_WORLD) {
             positions = gLevelSelectEntryPositionsAllCleared;
             lastIndex = n;
         } else {
             positions = gLevelSelectEntryPositions;
-            lastIndex = 4;
+            lastIndex = LEVELS_PER_WORLD - 1;
         }
-        for (i = 0; i <= 5; i++)
+        for (i = 0; i < LEVEL_SELECT_ENTRIES; i++)
             items[i]->SetPos(&positions[i]);
     }
 
@@ -461,11 +464,12 @@ public:
     {
         s32 i;
 
-        for (i = 0; i <= 5; i++)
+        for (i = 0; i < LEVEL_SELECT_ENTRIES; i++)
             items[i]->SetBox(gLevelSelectWorldEntryBoxAnims[world]);
     }
 };
 
-COMPILE_TIME_ASSERT(level_select_hpp, sizeof(LevelSelect) == 0xAC);
+/* 0xAC with the ROM's levels: `items` has LEVEL_SELECT_ENTRIES entries. */
+COMPILE_TIME_ASSERT(level_select_hpp, sizeof(LevelSelect) == 0x94 + 4 * LEVEL_SELECT_ENTRIES);
 
 #endif /* !GUARD_LEVEL_SELECT_HPP */

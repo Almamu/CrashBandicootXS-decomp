@@ -7,14 +7,18 @@
  * replaces a const array initialised from a string literal by that
  * literal wherever the array decays to a pointer, so the arrays would
  * point at new copies of the strings. C's default_conversion leaves
- * arrays alone. The file includes nothing; system.h declares the six
- * arrays for the C++ code. See docs/data.md, "Text tables in C".
+ * arrays alone. The file includes only constants/levels.h, for the
+ * arrays' length UI_TEXT_COUNT (70, from levels.json's name texts);
+ * system.h declares the six arrays for the C++ code. See docs/data.md,
+ * "Text tables in C".
  */
+
+#include "constants/levels.h"
 
 typedef unsigned char u8;
 
 /* The game's own text (menus, level names, popups, credits labels) in
- * the six languages: per language an array of 70 strings, which
+ * the six languages: per language an array of UI_TEXT_COUNT (70) strings, which
  * GetUiText (`text id -> string`) reads through the IWRAM table
  * gUiTextTables (src/iwram/iwram_data.cpp), indexed by the language
  * setting gLanguage. Each language's new strings come before its
@@ -92,7 +96,7 @@ const u8 gUiTextEnglish67[] = "hold L for a burst of speed.";
 const u8 gUiTextEnglish68[] = "bonus";
 const u8 gUiTextEnglish69[] = "pause";
 
-const u8 *const gUiTextEnglish[70] = {
+const u8 *const gUiTextEnglish[UI_TEXT_COUNT] = {
     gUiTextEnglish00,
     gUiTextEnglish01,
     gUiTextEnglish02,
@@ -228,7 +232,7 @@ const u8 gUiTextFrench65[] = "sauter plus haut: en l'air, appuyer sur A";
 const u8 gUiTextFrench66[] = "tourbillonner longtemps + flotter: appuyer plusieurs fois sur B";
 const u8 gUiTextFrench67[] = "acc\351l\351ration: maintenir L enfonc\351";
 
-const u8 *const gUiTextFrench[70] = {
+const u8 *const gUiTextFrench[UI_TEXT_COUNT] = {
     gUiTextFrench00,
     gUiTextFrench01,
     gUiTextFrench02,
@@ -362,7 +366,7 @@ const u8 gUiTextGerman65[] = "h\366her springen: in der luft A dr\374cken";
 const u8 gUiTextGerman66[] = "schneller drehen und zeitweilig gleiten: B wiederholt dr\374cken";
 const u8 gUiTextGerman67[] = "geschwindigkeitsschub: L gedr\374ckt halten";
 
-const u8 *const gUiTextGerman[70] = {
+const u8 *const gUiTextGerman[UI_TEXT_COUNT] = {
     gUiTextEnglish00,
     gUiTextGerman01,
     gUiTextGerman02,
@@ -497,7 +501,7 @@ const u8 gUiTextSpanish65[] = "pulsa A en el aire para saltar m\341s alto";
 const u8 gUiTextSpanish66[] = "pulsa varias veces B para girar m\341s y flotar temporalmente";
 const u8 gUiTextSpanish67[] = "mant\351n pulsado L para lograr un impulso turbo";
 
-const u8 *const gUiTextSpanish[70] = {
+const u8 *const gUiTextSpanish[UI_TEXT_COUNT] = {
     gUiTextSpanish00,
     gUiTextSpanish01,
     gUiTextSpanish02,
@@ -633,7 +637,7 @@ const u8 gUiTextItalian65[] = "premi A in volo per saltare pi\371 in alto";
 const u8 gUiTextItalian66[] = "premi B ripetutamente per girare pi\371 a lungo e fluttuare";
 const u8 gUiTextItalian67[] = "tieni premuto L per una rapida accelerata";
 
-const u8 *const gUiTextItalian[70] = {
+const u8 *const gUiTextItalian[UI_TEXT_COUNT] = {
     gUiTextItalian00,
     gUiTextItalian01,
     gUiTextItalian02,
@@ -759,7 +763,7 @@ const u8 gUiTextDutch65[] = "druk in de lucht op A voor een hogere sprong";
 const u8 gUiTextDutch66[] = "druk herhaaldelijk op B voor langer draaien en tijdelijk zweven";
 const u8 gUiTextDutch67[] = "houd L ingedrukt voor snelheidsinjectie";
 
-const u8 *const gUiTextDutch[70] = {
+const u8 *const gUiTextDutch[UI_TEXT_COUNT] = {
     gUiTextEnglish00,
     gUiTextEnglish01,
     gUiTextDutch02,

@@ -565,7 +565,7 @@ void SaveMenu::DeleteInput(u32 keys)
  * `cursor` between 0/1. */
 void SaveMenu::ConfirmDeleteInput(u32 keys)
 {
-    u8 buf[0x70];
+    u8 buf[sizeof(struct save_slot)];
 
     if (keys & A_BUTTON) {
         goto confirm;
