@@ -579,7 +579,7 @@ void TitleScreen::DrawMenuItem(const u8 *text, s32 item)
     }
     x = (DISPLAY_WIDTH - font->MeasureText(text)) >> 1;
     m = font;
-    m->SetPos(x, item * 10 + 0x80);
+    m->SetPos(x, item * 10 + (DISPLAY_ART_Y + 0x80));
     m->DrawText(text);
 }
 

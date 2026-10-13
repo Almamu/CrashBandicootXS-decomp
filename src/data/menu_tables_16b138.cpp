@@ -48,13 +48,15 @@ const s32 gPauseMenuPageTitles[5] = {
 
 /* Icon positions and frame indices of the menu screens in
  * pause_menu_pages_init.cpp (InitPauseCrystalsPage, InitPausePowersPage, InitPauseGemsPage, InitPauseRelicsPage,
- * InitPauseTimeTrialPage), pause_menu_pages_draw.cpp and pause_menu_collectibles.cpp. */
-const struct vec2 gPauseCrystalIconPos = { 212, 112 };
+ * InitPauseTimeTrialPage), pause_menu_pages_draw.cpp and pause_menu_collectibles.cpp. The
+ * positions are on the pause menu's 240x160 art, from its origin
+ * DISPLAY_ART_X/Y (screen.h, docs/screen.md). */
+const struct vec2 gPauseCrystalIconPos = { DISPLAY_ART_X + 212, DISPLAY_ART_Y + 112 };
 const struct vec2 gPausePowerIconPos[4] = {
-    { 180, 96 },
-    { 212, 96 },
-    { 180, 128 },
-    { 212, 128 },
+    { DISPLAY_ART_X + 180, DISPLAY_ART_Y + 96 },
+    { DISPLAY_ART_X + 212, DISPLAY_ART_Y + 96 },
+    { DISPLAY_ART_X + 180, DISPLAY_ART_Y + 128 },
+    { DISPLAY_ART_X + 212, DISPLAY_ART_Y + 128 },
 };
 
 const s32 gPausePowerIconFrames[4] = {
@@ -62,11 +64,11 @@ const s32 gPausePowerIconFrames[4] = {
 };
 
 const struct vec2 gPauseGemIconPos[5] = {
-    { 200, 90 },
-    { 168, 110 },
-    { 184, 110 },
-    { 200, 110 },
-    { 216, 110 },
+    { DISPLAY_ART_X + 200, DISPLAY_ART_Y + 90 },
+    { DISPLAY_ART_X + 168, DISPLAY_ART_Y + 110 },
+    { DISPLAY_ART_X + 184, DISPLAY_ART_Y + 110 },
+    { DISPLAY_ART_X + 200, DISPLAY_ART_Y + 110 },
+    { DISPLAY_ART_X + 216, DISPLAY_ART_Y + 110 },
 };
 
 const s32 gPauseGemIconFrames[5] = {
@@ -74,13 +76,13 @@ const s32 gPauseGemIconFrames[5] = {
 };
 
 const struct vec2 gPauseRelicIconPos[3] = {
-    { 172, 100 },
-    { 194, 100 },
-    { 216, 100 },
+    { DISPLAY_ART_X + 172, DISPLAY_ART_Y + 100 },
+    { DISPLAY_ART_X + 194, DISPLAY_ART_Y + 100 },
+    { DISPLAY_ART_X + 216, DISPLAY_ART_Y + 100 },
 };
 
 const s32 gPauseRelicIconFrames[3] = {
     1, 2, 0,
 };
 
-const struct vec2 gPauseTimeTrialIconPos = { 196, 120 };
+const struct vec2 gPauseTimeTrialIconPos = { DISPLAY_ART_X + 196, DISPLAY_ART_Y + 120 };

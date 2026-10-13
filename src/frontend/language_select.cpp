@@ -98,7 +98,7 @@ void LanguageSelect::Draw()
 
     gOamBuffer->Reset();
     gObjVramCursor->Rewind();
-    y = 0x32;
+    y = DISPLAY_ART_Y + 0x32;
     for (i = 0; i <= 5; i++) {
         const u8 *glyph;
         screen_x_t x;

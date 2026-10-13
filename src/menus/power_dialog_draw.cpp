@@ -29,15 +29,15 @@ void PowerDialog::Draw()
     icon->DrawWithOffset(0, 0);
     w = gLargeFont->MeasureText(titleText);
     x = (u32)(DISPLAY_WIDTH - w) >> 1;
-    gLargeFont->SetPos(x, 0x2d);
+    gLargeFont->SetPos(x, DISPLAY_ART_Y + 0x2d);
     gLargeFont->DrawText(titleText);
-    SetAabbPos(&box, 0x10, 0x6a);
+    SetAabbPos(&box, DISPLAY_ART_X + 0x10, DISPLAY_ART_Y + 0x6a);
     SetAabbSize(&box, 0xd0, 0x35);
     DrawWrappedTextInBox(descText, gSmallFont, &box, WRAPPED_TEXT_MODE_BUFFERED);
     n = GetUiText(0x2e);
     w = gSmallFont->MeasureText(n);
     x = (u32)(DISPLAY_WIDTH - w) >> 1;
-    gSmallFont->SetPos(x, 0x90);
+    gSmallFont->SetPos(x, DISPLAY_ART_Y + 0x90);
     gSmallFont->DrawText(n);
     gOamBuffer->HideUnused();
 }

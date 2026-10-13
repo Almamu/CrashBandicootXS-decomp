@@ -45,7 +45,7 @@ void PauseMenu::DrawPowersPage()
         /* `width` is needed: inlined, the instructions differ */
         u32 width = gSmallFont->MeasureText(label);
 
-        gSmallFont->SetPos(0xc2 - (width >> 1), 0x64);
+        gSmallFont->SetPos(DISPLAY_ART_X + 0xc2 - (width >> 1), DISPLAY_ART_Y + 0x64);
         gSmallFont->DrawText(label);
     }
 }
@@ -70,7 +70,7 @@ void PauseMenu::DrawGemsPage()
 
     gSmallFont->SetPos(gPauseGemIconPos[0].x - 0x14, gPauseGemIconPos[0].y - 4);
     gSmallFont->DrawText(clearGemCount);
-    gSmallFont->SetPos(0xb4, 0x80);
+    gSmallFont->SetPos(DISPLAY_ART_X + 0xb4, DISPLAY_ART_Y + 0x80);
     DrawFraction(gemCount, gemTotal);
 }
 
@@ -89,6 +89,6 @@ void PauseMenu::DrawRelicsPage()
     gSmallFont->DrawText(goldCount);
     gSmallFont->SetPos(gPauseRelicIconPos[0].x - 4, gPauseRelicIconPos[0].y + 0xe);
     gSmallFont->DrawText(platinumCount);
-    gSmallFont->SetPos(0xb4, 0x80);
+    gSmallFont->SetPos(DISPLAY_ART_X + 0xb4, DISPLAY_ART_Y + 0x80);
     DrawFraction(relicCount, relicTotal);
 }

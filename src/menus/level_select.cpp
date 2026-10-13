@@ -230,7 +230,7 @@ void LevelSelect::Update()
     if (bg2->IsShown() && items[index]->IsSelected()) {
         screen_ux_t x = (u32)(DISPLAY_WIDTH - gLargeFont->MeasureText(nameText)) >> 1;
 
-        gLargeFont->SetPos(x, -panelSlideX + 2);
+        gLargeFont->SetPos(x, -panelSlideX + (DISPLAY_ART_Y + 2));
         gLargeFont->DrawText(nameText);
         if (index <= 4)
             DrawRecord();
@@ -243,7 +243,7 @@ void LevelSelect::Update()
             const u8 *text = GetUiText(0x2F);
             screen_ux_t x = (u32)(DISPLAY_WIDTH - gSmallFont->MeasureText(text)) >> 1;
 
-            gSmallFont->SetPos(x, 0x96);
+            gSmallFont->SetPos(x, DISPLAY_ART_Y + 0x96);
             gSmallFont->SetPalette(0xF);
             gSmallFont->DrawText(text);
             UpdatePageArrows();
