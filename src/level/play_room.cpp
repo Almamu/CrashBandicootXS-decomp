@@ -349,21 +349,21 @@ s32 LevelProgress::RunRoom()
     gLevelState->SetCrateAssistDeaths(gLevelTable[level].crateAssistDeaths);
 
     switch (gLevelTable[level].theme) {
-    case 2:
+    case THEME_SEWER:
         gPaletteCycles->Clear();
         FX_CYCLE(gThemePaletteCycle2, 6, 5, 1);
         break;
-    case 1:
-    case 6:
+    case THEME_JUNGLE:
+    case THEME_TINY:
         gPaletteCycles->Clear();
         FX_CYCLE(gThemePaletteCycle1A, 0x10, 9, 0);
         FX_CYCLE(gThemePaletteCycle1B, 0x14, 9, 0);
         break;
-    case 3:
+    case THEME_UNDERWATER:
         gPaletteCycles->Clear();
         FX_CYCLE(gThemePaletteCycle3, 0xA, 0x10, 0);
         break;
-    case 5:
+    case THEME_SPACE:
         gPaletteCycles->Clear();
         FX_CYCLE(gThemePaletteCycle5, 0x14, 5, 0);
         break;

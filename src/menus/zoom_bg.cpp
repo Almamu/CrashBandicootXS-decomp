@@ -16,6 +16,7 @@
 extern "C" {
 #include <agb_syscall.h>
 #include "math_util.h"
+#include "constants/themes.h"
 }
 
 /* Setters as the original's inline member functions: storing a parameter
@@ -67,7 +68,7 @@ ZoomBg::ZoomBg(s32 charBlock, s32 screenBlock)
         }
         dst += 8;
     }
-    image = 0xB;
+    image = ZOOM_BG_NO_PICTURE;
     state = ZOOM_BG_STATE_WAIT;
     scale = LEVEL_SELECT_ZOOM_MIN;
     dx = dy = phase = 0;
@@ -135,7 +136,7 @@ void ZoomBg::Update()
         dy = Q8_MUL(SIN_Q8(phase << 1), 4);
         break;
     case ZOOM_BG_STATE_WAIT:
-        if (image == 11)
+        if (image == ZOOM_BG_NO_PICTURE)
             break;
         gAudioContext->PlaySfx(SFX_ZOOM_BG_IN, 0x100);
         LoadTaggedAsset(gLevelSelectPictures[image].palette, buf);
@@ -243,7 +244,7 @@ void ZoomBg::ClearPicture()
 {
     gAudioContext->PlaySfx(SFX_ZOOM_BG_OUT, 0x100);
     state = ZOOM_BG_STATE_ZOOM_OUT;
-    image = 11;
+    image = ZOOM_BG_NO_PICTURE;
 }
 
 /* Requests picture `image`, taken once the zoom-out finishes. */

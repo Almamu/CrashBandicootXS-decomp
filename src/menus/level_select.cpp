@@ -123,7 +123,7 @@ LevelSelect::LevelSelect(s32 level)
         index = __modsi3(level, LEVELS_PER_WORLD);
     } else {
         world = level - LEVEL_FIRST_BOSS;
-        index = 5;
+        index = LEVELS_PER_WORLD;
     }
     nameText = 0;
     save = gLevelState->PackSaveData();
@@ -137,7 +137,7 @@ LevelSelect::LevelSelect(s32 level)
 
     s32 j;
 
-    for (j = 0; j < 6; j++)
+    for (j = 0; j < LEVEL_SELECT_ENTRIES; j++)
         items[j] = new LevelSelectEntry;
     LoadEntries();
     PlaceEntries();
@@ -211,7 +211,7 @@ LevelSelect::~LevelSelect()
         delete sprites[i];
     delete panel;
     delete bg2;
-    for (i = 0; i < 6; i++)
+    for (i = 0; i < LEVEL_SELECT_ENTRIES; i++)
         delete items[i];
     delete bg1;
 }
@@ -233,7 +233,7 @@ void LevelSelect::Update()
 
         gLargeFont->SetPos(x, -panelSlideX + (DISPLAY_ART_Y + 2));
         gLargeFont->DrawText(nameText);
-        if (index <= 4)
+        if (index < LEVELS_PER_WORLD)
             DrawRecord();
     }
     bg1->SetOffsets();
@@ -268,7 +268,7 @@ void LevelSelect::UpdatePageArrows()
 {
     sprites[8]->palette = sprites[8]->GetAnimPaletteSlot();
     sprites[9]->palette = sprites[9]->GetAnimPaletteSlot();
-    if (world <= 2) {
+    if (world < WORLD_COUNT - 1) {
         if (IsNextWorldOpen())
             ShowFrame(sprites[8], 0);
         else
@@ -353,7 +353,7 @@ void LevelSelect::Draw()
             nameText = GetUiText(info->nameText);
         }
         panelSlideX = 0;
-        if (index <= 4) {
+        if (index < LEVELS_PER_WORLD) {
             LoadRecord();
             gPaletteCache->FreeUnlockedSlots();
             ReloadPalette();
@@ -362,7 +362,7 @@ void LevelSelect::Draw()
     }
     it = items;
     sp = sprites;
-    for (i = 5; i >= 0; i--)
+    for (i = LEVEL_SELECT_ENTRIES - 1; i >= 0; i--)
         (*it++)->Draw();
     bg2->Update();
 

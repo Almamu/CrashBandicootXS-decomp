@@ -265,11 +265,18 @@ public:
     BossCtrl *boss;
 };
 
-COMPILE_TIME_ASSERT(level_state_hpp, offsetof(LevelState, unk_68) == 0x068);
-COMPILE_TIME_ASSERT(level_state_hpp, offsetof(LevelState, room) == 0x0C4);
-COMPILE_TIME_ASSERT(level_state_hpp, offsetof(LevelState, checkpointData) == 0x0E4);
-COMPILE_TIME_ASSERT(level_state_hpp, offsetof(LevelState, saveData) == 0x14C);
-COMPILE_TIME_ASSERT(level_state_hpp, offsetof(LevelState, savedBitmap) == 0x1B4);
-COMPILE_TIME_ASSERT(level_state_hpp, sizeof(LevelState) == 0x1CC);
+/* The offsets with the ROM's 25 levels, when each of the three
+ * GameProgress blocks is 0x68 bytes; a block grows 4 bytes a level
+ * (LEVEL_COUNT). */
+#define LEVEL_STATE_GROWTH (sizeof(GameProgress) - 0x68)
+COMPILE_TIME_ASSERT(level_state_hpp, offsetof(LevelState, unk_68) == 0x068 + LEVEL_STATE_GROWTH);
+COMPILE_TIME_ASSERT(level_state_hpp, offsetof(LevelState, room) == 0x0C4 + LEVEL_STATE_GROWTH);
+COMPILE_TIME_ASSERT(level_state_hpp,
+                    offsetof(LevelState, checkpointData) == 0x0E4 + LEVEL_STATE_GROWTH);
+COMPILE_TIME_ASSERT(level_state_hpp,
+                    offsetof(LevelState, saveData) == 0x14C + 2 * LEVEL_STATE_GROWTH);
+COMPILE_TIME_ASSERT(level_state_hpp,
+                    offsetof(LevelState, savedBitmap) == 0x1B4 + 3 * LEVEL_STATE_GROWTH);
+COMPILE_TIME_ASSERT(level_state_hpp, sizeof(LevelState) == 0x1CC + 3 * LEVEL_STATE_GROWTH);
 
 #endif /* !GUARD_LEVEL_STATE_HPP */

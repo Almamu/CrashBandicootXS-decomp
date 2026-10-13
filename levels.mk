@@ -135,7 +135,7 @@ $(C_BUILDDIR)/data/level_appended.o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)
 # GENERATED_HEADERS, and makes every C object wait for the whole list.
 GENERATED_INCLUDE_DIR := build/include
 GENERATED_HEADERS := $(GENERATED_INCLUDE_DIR)/constants/entities.h $(GENERATED_INCLUDE_DIR)/constants/crates.h \
-	$(GENERATED_INCLUDE_DIR)/constants/levels.h
+	$(GENERATED_INCLUDE_DIR)/constants/levels.h $(GENERATED_INCLUDE_DIR)/constants/themes.h
 CPPFLAGS += -iquote $(GENERATED_INCLUDE_DIR)
 
 $(GENERATED_INCLUDE_DIR)/constants/entities.h: data/levels/entity_types.json tools/levels.py
@@ -146,6 +146,17 @@ $(GENERATED_INCLUDE_DIR)/constants/crates.h: data/levels/crate_kinds.json tools/
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py constants crates $@
 
-$(GENERATED_INCLUDE_DIR)/constants/levels.h: data/levels/levels.json tools/levels.py
+# The level ids and the counts the code takes from the levels (GEM_TOTAL
+# counts the gem-path gems the rooms place), and the theme ids. levels.h is
+# written only if it changed, behind a stamp, so an entity edit in a
+# room.json doesn't rebuild every object.
+$(GENERATED_INCLUDE_DIR)/constants/levels.h.stamp: data/levels/levels.json $(LEVEL_ROOM_JSONS) tools/levels.py
 	@mkdir -p $(dir $@)
-	python3 tools/levels.py constants levels $@
+	python3 tools/levels.py constants levels $(GENERATED_INCLUDE_DIR)/constants/levels.h
+	@touch $@
+$(GENERATED_INCLUDE_DIR)/constants/levels.h: $(GENERATED_INCLUDE_DIR)/constants/levels.h.stamp
+	@test -f $@ || python3 tools/levels.py constants levels $@
+
+$(GENERATED_INCLUDE_DIR)/constants/themes.h: data/levels/levels.json tools/levels.py
+	@mkdir -p $(dir $@)
+	python3 tools/levels.py constants themes $@

@@ -29,7 +29,7 @@ static inline void SetMirrorFromRecord(MovingSprite *part, u16 index)
  * the kind-4 platform is bank 39's glowing exit pad.
  *
  * Three-way spawner. Outside the gem path and the bonus round, in the
- * first room of a level of theme 0, a 0x64x0x64 entity of kind 0x12 in
+ * first room of a level of THEME_SNOW, a 0x64x0x64 entity of kind 0x12 in
  * the update-only list. Otherwise, unless the player is in another
  * control mode (a vehicle), the exit pad (a kind-4 platform) and the
  * crate gem's position just above-left of it; in a vehicle a 0x28x0x28
@@ -47,7 +47,8 @@ static inline void SetMirrorFromRecord(MovingSprite *part, u16 index)
 void SpawnRoomExit(u32 id, u16 x, u16 y, u16 param)
 {
     if (!gLevelState->IsInGemPath() && !gLevelState->IsInBonusRound() &&
-        !gLevelState->GetRoomIndex() && gLevelTable[gLevelState->GetCurrentLevel()].theme == 0) {
+        !gLevelState->GetRoomIndex() &&
+        gLevelTable[gLevelState->GetCurrentLevel()].theme == THEME_SNOW) {
         Entity *part = Entity::Create(id, x, y, param);
 
         part->SetSize(0x64, 0x64);

@@ -648,7 +648,7 @@ void SaveMenu::Draw()
 
 void SaveMenu::DeleteSlot(s32 row)
 {
-    u8 buf[0x70];
+    u8 buf[sizeof(struct save_slot)];
 
     cartSave->ReadSlot(row, buf);
     cartSave->EraseSlot(row);

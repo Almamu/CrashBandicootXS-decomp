@@ -467,5 +467,18 @@
       "crate_assist_deaths": 7,
       "rooms": ["mega_mix/main"]
     }
+  ],
+  "themes": [
+    {"constant": "THEME_SNOW", "name": "snow"},
+    {"constant": "THEME_JUNGLE", "name": "jungle"},
+    {"constant": "THEME_SEWER", "name": "sewer"},
+    {"constant": "THEME_UNDERWATER", "name": "underwater"},
+    {"constant": "THEME_SKY", "name": "sky"},
+    {"constant": "THEME_SPACE", "name": "space"},
+    {"constant": "THEME_TINY", "name": "tiny"},
+    {"constant": "THEME_DINGODILE", "name": "dingodile"},
+    {"constant": "THEME_N_GIN", "name": "n. gin"},
+    {"constant": "THEME_NEO_CORTEX", "name": "neo cortex"},
+    {"constant": "THEME_MEGA_MIX", "name": "mega-mix"}
   ]
 }

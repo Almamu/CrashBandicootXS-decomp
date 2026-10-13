@@ -22,8 +22,8 @@ static inline void SetIconPos(Sprite *s, const struct vec2 *p)
     SetEntityPixelPos(s, p->x, p->y);
 }
 
-/* The crystals page: the crystal icon, the crystals found and the 20 to
- * find. */
+/* The crystals page: the crystal icon, the crystals found and the
+ * CRYSTAL_TOTAL to find. */
 void PauseMenu::InitCrystalsPage()
 {
     crystalIcon = new UiSprite;
@@ -31,7 +31,7 @@ void PauseMenu::InitCrystalsPage()
     SetIconPos(crystalIcon, &gPauseCrystalIconPos);
     crystalIcon->palette = crystalIcon->GetAnimPaletteSlot();
     FormatDecimal(progress->CountCrystals(), crystalCount);
-    FormatDecimal(0x14, crystalTotal);
+    FormatDecimal(CRYSTAL_TOTAL, crystalTotal);
 }
 
 /* The powers page: the four powers' icons. `icons[i] = icon = new
@@ -53,7 +53,7 @@ void PauseMenu::InitPowersPage()
 }
 
 /* The gems page: the five gems' icons at half size, the clear gems and
- * colored gems found, and the 28 to find. */
+ * colored gems found, and the GEM_TOTAL to find. */
 void PauseMenu::InitGemsPage()
 {
     s32 i;
@@ -76,11 +76,11 @@ void PauseMenu::InitGemsPage()
     b = progress->CountGems();
     FormatDecimal(a, clearGemCount);
     FormatDecimal(b, gemCount);
-    FormatDecimal(0x1c, gemTotal);
+    FormatDecimal(GEM_TOTAL, gemTotal);
 }
 
 /* The relics page: the three relics' icons at half size, the sapphire,
- * gold and platinum relics won, their total and the 20 to win. */
+ * gold and platinum relics won, their total and the RELIC_TOTAL to win. */
 void PauseMenu::InitRelicsPage()
 {
     s32 i;
@@ -100,7 +100,7 @@ void PauseMenu::InitRelicsPage()
     FormatDecimal(progress->CountGoldRelics(), goldCount);
     FormatDecimal(progress->CountPlatinumRelics(), platinumCount);
     FormatDecimal(progress->CountRelics(), relicCount);
-    FormatDecimal(0x14, relicTotal);
+    FormatDecimal(RELIC_TOTAL, relicTotal);
 }
 
 /* The time trial page (docs/rom_map.md's overlay_ui "Correction"

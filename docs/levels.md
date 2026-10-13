@@ -303,10 +303,13 @@ rooms`), not from the folders on disk.
   rooms in ROM order, and the rooms' assets in ROM order; the ROM layout
   of the level table (`"table"`); and the levels in id order
   (`"levels"`): each one's `LEVEL_*` name, name and world, from which
-  `tools/levels.py constants levels` generates `constants/levels.h`, its
-  `gLevelTable` fields and the rooms it plays (see "The level table").
-  `extract` keeps the names and the worlds, which don't come from the
-  ROM, and writes the rest.
+  `tools/levels.py constants levels` generates `constants/levels.h` (the
+  ids and the counts, see "The counts the code takes from the levels"),
+  its `gLevelTable` fields and the rooms it plays (see "The level
+  table"); and the level themes (`"themes"`: each one's `THEME_*` name
+  and name, for `constants/themes.h`). `extract` keeps the names, the
+  worlds and the themes, which don't come from the ROM, and writes the
+  rest.
 - `entity_types.json`: the name of each entity type (see "Entity
   types"); `crate_kinds.json`: the name of each crate kind (`crate.kind`).
 - one folder per room, `<level>/<slot>/` (see "Room folders" below).
@@ -360,9 +363,11 @@ room's generated parameter struct).
 - `tools/levels.py table levels|records build/.../data/levels/level_table_16c814[_rooms].inc`:
   the level table, `#include`d by `src/data/level_table_16c814.cpp` (see
   "The level table");
-- `tools/levels.py constants entities|crates build/include/constants/<name>.h`:
+- `tools/levels.py constants entities|crates|levels|themes build/include/constants/<name>.h`:
   the constants headers named in this data, `constants/entities.h`
-  (`ENTITY_*`, `ENEMY_KIND_*`) and `constants/crates.h` (`CRATE_KIND_*`).
+  (`ENTITY_*`, `ENEMY_KIND_*`), `constants/crates.h` (`CRATE_KIND_*`),
+  `constants/levels.h` (`LEVEL_*` and the counts) and
+  `constants/themes.h` (`THEME_*`), each written only if it changed.
   `build/include` is on the include path and every C object waits for
   them, so code includes them like the hand-written ones. To rename a
   type or a kind, edit the JSON, not the header.
@@ -610,6 +615,42 @@ can shift ([shifting.md](./shifting.md), #967): every address it stores
 is a relocation, so #966 can grow `gLevelTable`, `gLevelRoomLists` and
 the other per-level tables in place, and what is linked after them
 moves.
+
+### The counts the code takes from the levels
+
+The code never spells a level count as a number: it uses the macros of
+`constants/levels.h` and `constants/themes.h`, which `tools/levels.py
+constants levels|themes` derives from `levels.json` (#966). Each one is
+a rule over the data, so a new level changes the code's numbers with
+it; with the ROM's levels each rule gives the ROM's number, and
+`levels.py extract` checks that it does (`ROM_COUNTS`).
+
+| macro | ROM | rule | used by |
+|---|---|---|---|
+| `LEVEL_COUNT` | 25 | the levels | `gLevelTable`, `GameProgress::levels`, the save slots |
+| `WORLD_COUNT` | 4 | the numbered levels' worlds | the level select's pages (`UpdatePageArrows`), its per-world tables |
+| `LEVELS_PER_WORLD` | 5 | numbered levels per world (all the same) | the level select's `world * LEVELS_PER_WORLD + index` |
+| `LEVEL_NUMBERED_COUNT` | 20 | the numbered levels | the relic, gem and crystal counts (`GameProgress`) |
+| `LEVEL_LAST_NUMBERED`, `LEVEL_FIRST_BOSS` | 19, 20 | the last numbered level, the first boss | the level select, the pause menu |
+| `LEVEL_LAST_ON_GRID` | `LEVEL_NEO_CORTEX` | the last boss | `UpdateGameFrame`'s level-select cap |
+| `LEVEL_FINALE` | `LEVEL_MEGA_MIX` | the first level off the grid | `CountGems`, `CountClearGems` |
+| `LEVEL_SELECT_ENTRIES` | 6 | `LEVELS_PER_WORLD` + the boss | `LevelSelect::items`, the entry positions |
+| `CRYSTAL_TOTAL`, `RELIC_TOTAL` | 20 | the numbered levels | the pause menu |
+| `GEM_TOTAL` | 28 | a crate gem per numbered level, the `GEM_PATH_GEM` entities in the rooms of the numbered levels and the finale, and the 4 coloured gems | the pause menu |
+| `COMPLETION_TOTAL` | 72 | the three totals and the 4 powers | `GetCompletionPercent` |
+| `UI_TEXT_COUNT` | 70 | 70, or one past the highest `"name_text"` | the `gUiText*` tables |
+| `THEME_COUNT` | 11 | `"themes"` | `gThemeMusicCues` |
+| `ZOOM_BG_NO_PICTURE` | 11 | `THEME_COUNT` | `ZoomBg::image` |
+
+The rules need the levels in the order the code finds them by id: the
+numbered levels world by world, the same number in every world; then
+one boss per world (`"boss": true` and its `"world"`), in world order;
+then the levels off the level select's grid (`"boss": true`, no
+`"world"`), mega-mix first. `levels.py` stops with a message when the
+data breaks that, when a total needs three digits (the pause menu prints
+two), or past 28 levels (the save record's four slots fill its 512
+bytes, `save_data.hpp`). `levels.json`'s `"themes"` names each theme
+(`THEME_*`); a level's `"theme"` is its number.
 
 ### Adding a room
 

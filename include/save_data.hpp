@@ -41,8 +41,9 @@ struct save_slot {
     u16 sfxVolume;         /* 0x6a */
     u16 musicVolume;       /* 0x6c */
 };
-COMPILE_TIME_ASSERT(save_data_hpp, offsetof(struct save_slot, level) == 0x68);
-COMPILE_TIME_ASSERT(save_data_hpp, sizeof(struct save_slot) == 0x70);
+/* 0x68 and 0x70 with the ROM's 25 levels (GameProgress's size). */
+COMPILE_TIME_ASSERT(save_data_hpp, offsetof(struct save_slot, level) == sizeof(GameProgress));
+COMPILE_TIME_ASSERT(save_data_hpp, sizeof(struct save_slot) == sizeof(GameProgress) + 8);
 
 /* The 0x200-byte save data, as stored in the cartridge EEPROM
  * (Read/Write, and Load/Store with retries and
@@ -62,7 +63,9 @@ public:
     /* 0x000 - read and written through their offsets (ReadSlot,
      * WriteSlot: `row * 0x70 + this`) */
     struct save_slot slots[4];
-    u8 unused_1c0[0x34];
+    /* 0x1c0 with the ROM's 25 levels: the unused rest up to `slotEmpty`,
+     * 0x34 bytes (4 or more: tools/levels.py stops past 28 levels) */
+    u8 unused_1c0[0x1f4 - 4 * sizeof(struct save_slot)];
     u8 slotEmpty[4];  // 0x1f4 - IsSlotEmpty; EraseSlot sets it
     u8 magic;         // 0x1f8 - 'C' (0x43) after Reset
     u8 versionNibble; // 0x1f9 - 0x12 after Reset; GetGameId reads its high nibble

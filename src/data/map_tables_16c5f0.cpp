@@ -23,7 +23,7 @@ const struct vec2 gZoomBgSlotOffsets[4] = {
 const u32 gLevelSelectEntryBoxAnims[5] = {
     0, 1, 4, 3, 2,
 };
-const u32 gLevelSelectEntryWorldAnims[4] = {
+const u32 gLevelSelectEntryWorldAnims[WORLD_COUNT] = {
     2, 3, 1, 4,
 };
 const u32 gLevelSelectCursorAnims[4] = {

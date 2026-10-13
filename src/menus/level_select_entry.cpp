@@ -52,12 +52,12 @@ void LevelSelectEntry::SetSelected(u8 value)
     selected = value;
 }
 
-/* Slot 2: entry `index` of world `world`. Indices 0-4 are levels (icon
- * frame = level id); anything past that is the world's extra entry (level
- * id 0x14 + world, its own icon animation). */
+/* Slot 2: entry `index` of world `world`. Indices 0 to LEVELS_PER_WORLD - 1
+ * are levels (icon frame = level id); anything past that is the world's
+ * boss (level id LEVEL_FIRST_BOSS + world, its own icon animation). */
 void LevelSelectEntry::SetLevel(s32 world, s32 index)
 {
-    if (index <= 4) {
+    if (index < LEVELS_PER_WORLD) {
         id = world * LEVELS_PER_WORLD + index;
         ShowFrame(icon, id);
     } else {
