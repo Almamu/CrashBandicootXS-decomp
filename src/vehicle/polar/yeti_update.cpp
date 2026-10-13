@@ -1,6 +1,7 @@
 #include "vehicle.hpp"
 #include "yeti.hpp"
 #include "cell_anim.hpp"
+#include "actor_bg.hpp"
 
 extern "C" {
 #include "core.h"
@@ -107,7 +108,7 @@ void Yeti::Update()
             bg2Page);
         bg2PageFlip = 1;
     }
-    SetActorBgLayerDepth(distance);
+    ActorBg::SetLayerDepth(distance);
     UpdatePalette();
     f.a = catchBox;
     BoxMove(&f.a, Q8_TO_INT(x), 0, Q8_TO_INT(position));
@@ -187,8 +188,8 @@ void Yeti::UpdatePalette()
  * two screen-base words according to `gYetiBg2Page`, clears `C1`
  * and toggles `C0`. Then derives a zoom factor from `gYetiDistance`
  * (`/0x5500`), writes `REG_BG2X` (`0x04000028`) from
- * `gYetiX` and `GetActorBgCenterX()`, `REG_BG2Y` (`0x0400002C`)
- * from `GetActorBgCenterY()`, and the `PA`/`PB`/`PC`/`PD` matrix at
+ * `gYetiX` and `ActorBg::GetCenterX()`, `REG_BG2Y` (`0x0400002C`)
+ * from `ActorBg::GetCenterY()`, and the `PA`/`PB`/`PC`/`PD` matrix at
  * `0x04000020` as `scale, 0, 0, scale`.
  *
  * Matches under old_agbcc. */
@@ -207,11 +208,11 @@ void Yeti::UpdateBg2()
         bg2Page ^= 1;
     }
     scale = Q8_DIV(distance, 0x5500);
-    base = GetActorBgCenterX();
+    base = ActorBg::GetCenterX();
     /* `t` is needed: inlined, the code is 8 instructions longer */
     t = Q8_DIV(x * 47, distance) + base;
     *(vs32 *)REG_ADDR_BG2X = 0x4000 - Q8_MUL(t, scale);
-    *(vs32 *)REG_ADDR_BG2Y = 0x4400 - Q8_MUL(GetActorBgCenterY(), scale);
+    *(vs32 *)REG_ADDR_BG2Y = 0x4400 - Q8_MUL(ActorBg::GetCenterY(), scale);
 
     vu16 *pa = (vu16 *)REG_ADDR_BG2PA;
 

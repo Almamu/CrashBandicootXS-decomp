@@ -2,6 +2,7 @@
 #include "yeti.hpp"
 #include "vehicle.hpp"
 #include "cell_anim.hpp"
+#include "actor_bg.hpp"
 
 extern "C" {
 #include "core.h"
@@ -34,7 +35,7 @@ void Yeti::Destroy()
  * `SetActorAnim`) into `gYeti`, resets the position-tracking
  * pair (`gYetiX` to 0, `gYetiDistance` to `0xA000`,
  * `gYetiPosition` derived the same way `YetiStateChase`/`YetiStateCharge` do),
- * primes `SetActorBgLayerDepth`, clears `gYetiState`, and finally calls
+ * primes `ActorBg::SetLayerDepth`, clears `gYetiState`, and finally calls
  * `LoadYetiGraphics` (the object's own initial VRAM-pattern/DMA setup,
  * parked separately - see docs/matching/archive/issue-54-actor-d3a8.md). */
 void Yeti::Create(s32 level)
@@ -45,7 +46,7 @@ void Yeti::Create(s32 level)
     x = 0;
     distance = INT_TO_Q8(160);
     position = INT_TO_Q8(CellAnim::GetDistance()) - distance;
-    SetActorBgLayerDepth(distance);
+    ActorBg::SetLayerDepth(distance);
 
     state = YETI_STATE_CHASE;
     LoadGraphics();

@@ -6,6 +6,7 @@
 #include "menus.hpp"
 #include "vehicle.hpp"
 #include "cell_anim.hpp"
+#include "actor_bg.hpp"
 
 extern "C" {
 #include "core.h"
@@ -112,7 +113,7 @@ s32 InitActorCategory(s32 category)
     SetupActorVramPool();
     ClearCollectedSpawns();
     EnableActorPaletteCycle(CUR_CATEGORY.type == CATEGORY_TYPE_POLAR);
-    InitActorBgScroll(CUR_CATEGORY.type);
+    ActorBg::InitScroll(CUR_CATEGORY.type);
 
     do {
         activeCount = &gActorCategoryDeaths;
@@ -148,7 +149,7 @@ s32 InitActorCategory(s32 category)
             gHud->Update();
             FlushSpriteFrameOamQueue();
             WaitForVBlank();
-            CommitActorBgScroll();
+            ActorBg::CommitScroll();
             gOamBuffer->Commit();
             FlushVramDmaQueue();
             CellAnim::FlipPage();

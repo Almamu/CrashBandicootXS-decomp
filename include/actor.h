@@ -164,16 +164,8 @@ extern void UpdateActorPaletteCycle(void);
 extern void SetActorPaletteCycle(s32 idx);
 extern void EnableActorPaletteCycle(u8 flag);
 
-/* src/actor/actor_bg.cpp */
-extern void InitActorBgScroll(s32 type);
-extern void UpdateActorBgScroll(s32 x, s32 y);
-extern void ShakeActorBg(s32 shake);
-extern void SetActorBgLayerDepth(s32 depth);
-extern s32 GetActorBgLayerDepth(void);
+/* src/actor/actor_bg.cpp (the rest is class ActorBg, actor_bg.hpp) */
 extern void ActorCategoryEndStub(void);
-extern void CommitActorBgScroll(void);
-extern s32 GetActorBgCenterY(void);
-extern s32 GetActorBgCenterX(void);
 
 /* src/actor/actor_category_frame.cpp */
 extern s32 RunActorCategoryFrame(void);
@@ -236,18 +228,6 @@ extern void ActorCategoryAttemptEndStub(void);
 
 /* The actor zone's globals (sym_iwram.txt). */
 extern struct anim_table_record *gActorAnimTable;
-extern s32 gActorBg0VOffset;
-extern s32 gActorBgHeight;
-extern s32 gActorBgScrollEaseShift;
-extern s32 gActorBgScrollMaxX;
-extern s32 gActorBgScrollMaxY;
-extern s32 gActorBgScrollType;
-extern s32 gActorBgScrollX;
-extern s32 gActorBgScrollY;
-/* gActorBgShake: a Y bias UpdateActorBgScroll subtracts from the BG
- * scroll (ShakeActorBg sets it, CommitActorBgScroll clears it). */
-extern s32 gActorBgShake;
-extern s32 gActorBgWidth;
 extern s32 gActorCategory;
 extern s32 gActorCategoryDeaths;
 extern s32 gActorCategoryExitStatus;
@@ -282,7 +262,7 @@ extern s32 gSavedActorPaletteCycleTarget;
 extern s32 gActorCategoryBossDeaths;
 /* The projection distance (Q8): DrawActor scales x/y by
  * gActorFocalLength / depth, and InitCellAnim starts the cell animation
- * this far from the checkpoint. Set by InitActorBgScroll: 47 px in the
+ * this far from the checkpoint. Set by ActorBg::InitScroll: 47 px in the
  * polar levels, 28 px in the others. */
 extern s32 gActorFocalLength;
 #define ACTOR_FOCAL_LENGTH_POLAR INT_TO_Q8(47)
@@ -292,15 +272,6 @@ extern s32 gActorFocalLength;
  * / depth (a Q8 depth) is the Q12 scale that Q12_MUL applies to a Q8
  * position, as ActorSelf::Draw's INT_TO_Q12(gActorFocalLength) / depth. */
 #define ACTOR_PROJECTION INT_TO_Q12(ACTOR_FOCAL_LENGTH)
-/* The depth of the BG2 boss layer (the yeti, airship or hovercraft):
- * actors deeper than it get OBJ priority 2 and draw behind it (bit 15 of
- * their sortKey). InitActorBgScroll resets it to gActorFarClipDepth; the
- * bosses set it to their own distance (SetActorBgLayerDepth). */
-extern s32 gActorBgLayerDepth;
-/* UpdateActorBgScroll's input ranges: an input of +-range scrolls the BG
- * to either end of [0, gActorBgScrollMaxX/Y]. Set by InitActorBgScroll. */
-extern s32 gActorBgScrollRangeX;
-extern s32 gActorBgScrollRangeY;
 /* SelectActorCategory's `active` argument (the deaths reached the
  * category's `bonusKindDeaths`): spawns use their record's `bonusKind`. */
 extern u8 gActorSpawnUseBonus;

@@ -2,6 +2,7 @@
 #include "hovercraft.hpp"
 #include "audio.hpp"
 #include "vehicle.hpp"
+#include "actor_bg.hpp"
 
 extern "C" {
 #include "actor.h"
@@ -129,7 +130,7 @@ HovercraftCannon::HovercraftCannon(const struct anim_table_record *rec, s32 x, s
 /* Shakes the BG, and deletes the cannon once its animation is done. */
 void HovercraftCannon::StateDestroyed()
 {
-    ShakeActorBg(INT_TO_Q8(4));
+    ActorBg::Shake(INT_TO_Q8(4));
 
     if (animDone != 0)
         delete this;

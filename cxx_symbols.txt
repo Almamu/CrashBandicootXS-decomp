@@ -2023,6 +2023,31 @@ _8CellAnim.hasBanks gCellAnimHasBanks
 _8CellAnim.page gCellAnimPage
 _8CellAnim.uploaded gCellAnimUploaded
 _8CellAnim.frameStep gCellAnimFrameStep
+#
+# #915 ActorBg: the 3D stages' BG scroll as an all-static class
+# (include/actor_bg.hpp, src/actor/actor_bg.cpp). Its data members keep
+# the C names: sym_iwram.txt places them.
+InitScroll__7ActorBgi InitActorBgScroll
+UpdateScroll__7ActorBgii UpdateActorBgScroll
+Shake__7ActorBgi ShakeActorBg
+SetLayerDepth__7ActorBgi SetActorBgLayerDepth
+GetLayerDepth__7ActorBg GetActorBgLayerDepth
+CommitScroll__7ActorBg CommitActorBgScroll
+GetCenterY__7ActorBg GetActorBgCenterY
+GetCenterX__7ActorBg GetActorBgCenterX
+_7ActorBg.scrollY gActorBgScrollY
+_7ActorBg.scrollX gActorBgScrollX
+_7ActorBg.shake gActorBgShake
+_7ActorBg.layerDepth gActorBgLayerDepth
+_7ActorBg.scrollType gActorBgScrollType
+_7ActorBg.easeShift gActorBgScrollEaseShift
+_7ActorBg.rangeX gActorBgScrollRangeX
+_7ActorBg.rangeY gActorBgScrollRangeY
+_7ActorBg.maxX gActorBgScrollMaxX
+_7ActorBg.maxY gActorBgScrollMaxY
+_7ActorBg.bg0VOffset gActorBg0VOffset
+_7ActorBg.width gActorBgWidth
+_7ActorBg.height gActorBgHeight
 # #772 Airship (the all-static class, include/airship.hpp; src/vehicle/jetpack/airship*.cpp)
 Create__7Airshipi CreateAirship
 Update__7Airship UpdateAirship

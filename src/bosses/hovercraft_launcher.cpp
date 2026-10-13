@@ -2,6 +2,7 @@
 #include "hovercraft.hpp"
 #include "audio.hpp"
 #include "vehicle.hpp"
+#include "actor_bg.hpp"
 
 extern "C" {
 #include "util.h"
@@ -141,7 +142,7 @@ HovercraftLauncher::HovercraftLauncher(const struct anim_table_record *rec, s32 
 /* Shakes the BG, and deletes the launcher once its animation is done. */
 void HovercraftLauncher::StateDestroyed()
 {
-    ShakeActorBg(INT_TO_Q8(4));
+    ActorBg::Shake(INT_TO_Q8(4));
 
     if (animDone != 0)
         delete this;

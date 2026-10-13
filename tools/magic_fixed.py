@@ -371,7 +371,7 @@ class FixedScan(mb.BitScan):
     # Calls that take a position or a speed in Q8 (outside the 2D layouts,
     # where SetPos/Move take pixels): a whole literal argument is one.
     POS_CALL = re.compile(
-        r"\b(SetPos|SetDest|PlaceAt|SetVel\w*|SetSpeed\w*|Spawn\w*|Create\w*|MoveTo|SetOffset|ShakeActorBg)\s*\("
+        r"\b(SetPos|SetDest|PlaceAt|SetVel\w*|SetSpeed\w*|Spawn\w*|Create\w*|MoveTo|SetOffset|ShakeActorBg|ActorBg::Shake)\s*\("
     )
 
     def scan_args(self):

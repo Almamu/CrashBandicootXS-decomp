@@ -3,6 +3,7 @@
 #include "audio.hpp"
 #include "level_state.hpp"
 #include "cell_anim.hpp"
+#include "actor_bg.hpp"
 
 extern "C" {
 #include <libgcc.h>
@@ -349,7 +350,7 @@ void Hovercraft::Spawn(s32 kind, s32 sx, s32 sy, s32 sz)
     scale = __divsi3(ACTOR_PROJECTION, distance);
     screenX = Q12_MUL(x, scale);
     screenY = Q12_MUL(scale, y);
-    SetActorBgLayerDepth(distance);
+    ActorBg::SetLayerDepth(distance);
 
     AnimPart *self = anim;
     s32 t = Q8_TO_INT(self->animTime);
@@ -389,7 +390,7 @@ void Hovercraft::Update(void)
         scale = __divsi3(ACTOR_PROJECTION, distance);
         screenX = Q12_MUL(x, scale);
         screenY = Q12_MUL(scale, y);
-        SetActorBgLayerDepth(distance);
+        ActorBg::SetLayerDepth(distance);
 
         AnimPart *cur = anim;
         s32 t = Q8_TO_INT(cur->animTime);
@@ -426,8 +427,8 @@ void Hovercraft::UpdateBg2(void)
     /* `distance << 8`: Q8_DIV(distance, INT_TO_Q8(60))'s numerator, as
      * an explicit __divsi3 call (see Spawn) */
     scale = __divsi3(distance << 8, INT_TO_Q8(60));
-    dy = screenX + GetActorBgCenterX();
-    dx = screenY + GetActorBgCenterY();
+    dy = screenX + ActorBg::GetCenterX();
+    dx = screenY + ActorBg::GetCenterY();
 
     REG_BG2X = INT_TO_Q8(128) - Q8_MUL(dy, scale);
     REG_BG2Y = INT_TO_Q8(128) - Q8_MUL(dx, scale);

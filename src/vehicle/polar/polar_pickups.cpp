@@ -2,6 +2,7 @@
 #include "vehicle.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "actor_bg.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -68,8 +69,8 @@ PolarCollectedWumpa::PolarCollectedWumpa(const struct anim_table_record *rec, s3
     s32 steps;
 
     this->count = count;
-    this->y += GetActorBgCenterY();
-    nx = this->x + GetActorBgCenterX();
+    this->y += ActorBg::GetCenterY();
+    nx = this->x + ActorBg::GetCenterX();
     this->x = nx;
     dist = ABS_BRANCHLESS(nx - 0x1000);
     ny = this->y;

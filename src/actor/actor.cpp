@@ -2,6 +2,7 @@
 #include "actor_self.hpp"
 #include "vehicle.hpp"
 #include "cell_anim.hpp"
+#include "actor_bg.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -32,7 +33,7 @@ static inline void RefreshDepth(ActorSelf *self)
     value |= ((ABS_BRANCHLESS(self->y) + ABS_BRANCHLESS(self->x)) >> 0xb) & 0x7f;
     self->sortKey = value;
 
-    if (self->depth > GetActorBgLayerDepth())
+    if (self->depth > ActorBg::GetLayerDepth())
         self->sortKey |= SORT_KEY_FLAG_BEHIND_BG;
 }
 
@@ -109,7 +110,7 @@ void ActorSelf::Draw()
     /* scoped: its own `off`/`t`, as the next block (shared, the code is 2
      * instructions longer) */
     {
-        s32 off = GetActorBgCenterY();
+        s32 off = ActorBg::GetCenterY();
         s32 t = y;
 
         screenY = t * proj;
@@ -119,7 +120,7 @@ void ActorSelf::Draw()
     }
     /* scoped, as the block above */
     {
-        s32 off = GetActorBgCenterX();
+        s32 off = ActorBg::GetCenterX();
         s32 t = x;
 
         t = t * proj;
