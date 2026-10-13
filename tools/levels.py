@@ -82,6 +82,9 @@ derived from those again.
                                               levels) from levels.json's "levels"
     tools/levels.py constants themes OUT      constants/themes.h (THEME_*) from
                                               levels.json's "themes"
+    tools/levels.py constants save OUT        constants/save_version.h: the save
+                                              data's version and checksum seed,
+                                              from a CRC-32 of the level data
 
 The entity types are named in data/levels/entity_types.json (one record
 per gEntitySpawnFuncs slot) and room.json gives a placed entity's type by
@@ -1703,6 +1706,9 @@ def extract(rom_path):
     # the derived counts (constants/levels.h, themes.h) are the ROM's
     check_rom_counts(levels)
     write_levels_json(levels)
+    # the save version's CRC (constants/save_version.h) is the ROM's
+    assert level_data_crc(levels) == ROM_LEVEL_DATA_CRC, \
+        "the level data's CRC-32 is %#010x, not ROM_LEVEL_DATA_CRC" % level_data_crc(levels)
     # the generator's layout must be the ROM's: its objects back to back
     # in ROM order
     addr = {"gLevelRoom%02d" % k: a for k, a in enumerate(records)}
@@ -1897,6 +1903,45 @@ def check_rom_counts(data):
     assert c["LEVEL_COUNT"] == (LEVEL_ROOM_LISTS - LEVEL_TABLE) // LEVEL_INFO_SIZE
 
 
+# The save data's compatibility (save_data.hpp): a save made with other level
+# data than the build's must not load. The level data's CRC-32
+# (level_data_crc) picks the save record's version byte and the start
+# value of its checksum; with the ROM's level data (ROM_LEVEL_DATA_CRC,
+# which extract checks) they are the ROM's, 0x12 and 0.
+ROM_LEVEL_DATA_CRC = 0x7ED35075
+# versionNibble: the high nibble is the game (1, Crash XS; the link cable's
+# Crash 2/3 bonus reads it, SaveMenu::LinkInput), the low nibble the ROM's 2.
+SAVE_GAME_ID = 1
+ROM_SAVE_VERSION = 0x12
+
+
+def level_data_crc(levels):
+    """The CRC-32 of the level data a save depends on: the canonical JSON
+    (sorted keys, no spaces, UTF-8) of levels.json's "levels" and of each
+    room's room.json, in "rooms" order. The ROM layout residuals
+    ("regions", "assets", "table") and the pictures don't count: they
+    don't change what a save's records mean."""
+    def canon(v):
+        return json.dumps(v, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
+
+    crc = zlib.crc32(canon(levels["levels"]))
+    for r in levels["rooms"]:
+        crc = zlib.crc32(canon([r, read_json(LEVELS_DIR / r / "room.json")]), crc)
+    return crc
+
+
+def save_version(crc):
+    """(versionNibble, checksum seed) for level data of CRC-32 `crc`: the
+    ROM's with the ROM's data. Otherwise the high nibble stays the game's
+    and the low one is one of the other 15, picked by the CRC, and the
+    seed is the CRC xor the ROM's: never 0, so a save of the ROM's (or of
+    any other level data with another CRC) fails the checksum."""
+    if crc == ROM_LEVEL_DATA_CRC:
+        return ROM_SAVE_VERSION, 0
+    others = [n for n in range(16) if n != ROM_SAVE_VERSION & 0xF]
+    return SAVE_GAME_ID << 4 | others[crc % len(others)], crc ^ ROM_LEVEL_DATA_CRC
+
+
 def constants_h(which):
     if which == "entities":
         src, guard = ENTITY_TYPES_JSON, "GUARD_CONSTANTS_ENTITIES_H"
@@ -1988,6 +2033,23 @@ def constants_h(which):
         rows.append(("THEME_COUNT", "%d" % len(themes), "the length of gThemeMusicCues"))
         body = define_lines(rows) + [""] + define_lines([
             ("ZOOM_BG_NO_PICTURE", "THEME_COUNT", "ZoomBg::image when no picture is wanted"),
+        ])
+    elif which == "save":
+        src, guard = LEVELS_JSON, "GUARD_CONSTANTS_SAVE_VERSION_H"
+        crc = level_data_crc(read_json(src))
+        version, seed = save_version(crc)
+        doc = """/*
+ * The save data's version and checksum seed (SaveData, save_data.hpp),
+ * from the CRC-32 of the level data (tools/levels.py, level_data_crc):
+ * a save made with other levels than the build's doesn't load. With the
+ * ROM's level data they are the ROM's: version 0x12 and seed 0. Else
+ * the version's low nibble is another one picked by the CRC (the high
+ * one stays Crash XS's game id), and the seed is the CRC xor the ROM's,
+ * never 0, so the checksum of a save of other level data fails.
+ */"""
+        body = ["/* the level data's CRC-32: 0x%08X (the ROM's: 0x%08X) */" % (crc, ROM_LEVEL_DATA_CRC)] + define_lines([
+            ("SAVE_VERSION", "0x%02X" % version, "versionNibble"),
+            ("SAVE_CHECKSUM_SEED", "0x%08X" % seed if seed else "0", "the checksum's start value"),
         ])
     else:
         sys.exit("unknown constants %s" % which)

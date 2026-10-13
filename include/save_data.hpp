@@ -28,6 +28,7 @@
 
 extern "C" {
 #include "core.h"
+#include "constants/save_version.h"
 }
 
 /* One 0x70-byte save slot, as SaveData::ReadSlot/WriteSlot copy it:
@@ -50,9 +51,12 @@ COMPILE_TIME_ASSERT(save_data_hpp, sizeof(struct save_slot) == sizeof(GameProgre
  * validation): four 0x70-byte save slots (ReadSlot/WriteSlot/EraseSlot;
  * each holds the 0x68-byte progress block of the level state, the level,
  * and the sound and music volumes - see SaveMenu::SaveToSlot), a
- * per-slot "empty" flag, two marker bytes ('C' and 0x12), a flag byte
- * and an additive word-sum checksum over the first 0x1fc bytes
- * (UpdateChecksum/CheckChecksum). The save menu (gSaveMenu,
+ * per-slot "empty" flag, two marker bytes ('C' and SAVE_VERSION), a flag
+ * byte and an additive word-sum checksum over the first 0x1fc bytes,
+ * from SAVE_CHECKSUM_SEED (UpdateChecksum/CheckChecksum). The version and
+ * the seed come from the level data (constants/save_version.h, 0x12 and
+ * 0 with the ROM's levels; docs/levels.md, "Save compatibility"), so a
+ * save made with other levels doesn't load. The save menu (gSaveMenu,
  * save_menu.hpp) holds two: the cartridge's (`cartSave`) and the one
  * received over the link cable (`linkSave`). Formerly `struct
  * settings_sync_record`. See
@@ -68,18 +72,18 @@ public:
     u8 unused_1c0[0x1f4 - 4 * sizeof(struct save_slot)];
     u8 slotEmpty[4];  // 0x1f4 - IsSlotEmpty; EraseSlot sets it
     u8 magic;         // 0x1f8 - 'C' (0x43) after Reset
-    u8 versionNibble; // 0x1f9 - 0x12 after Reset; GetGameId reads its high nibble
+    u8 versionNibble; // 0x1f9 - SAVE_VERSION after Reset; GetGameId reads its high nibble
     u8 flags;         // 0x1fa - bitmask, TestFlags/ClearFlags/SetFlags
     u8 field_1fb;     // 0x1fb - zeroed by Reset, otherwise untouched
     u32 checksum;     // 0x1fc - UpdateChecksum/CheckChecksum
 
     /* The checksum test, which Validate inlines and CheckChecksum is
      * the out-of-line copy of: the additive word sum of the first 0x1fc
-     * bytes (127 words) against `checksum`. */
+     * bytes (127 words), from SAVE_CHECKSUM_SEED, against `checksum`. */
     u32 ChecksumOk()
     {
         u32 *p = (u32 *)this;
-        u32 sum = 0;
+        u32 sum = SAVE_CHECKSUM_SEED;
         s32 i;
         u32 result;
 
@@ -99,7 +103,7 @@ public:
     void StampHeader()
     {
         magic = 0x43;
-        versionNibble = 0x12;
+        versionNibble = SAVE_VERSION;
         flags = 0;
         field_1fb = 0;
     }

@@ -812,6 +812,54 @@ are C arrays linked back to back, so an asset or a room that changes size
 moves everything after it (and the ROM no longer matches). The room records point at each room's palette and descriptor
 by symbol, so they follow the room data wherever it is linked.
 
+## Save compatibility
+
+A save's records mean something only with the levels it was made with:
+`GameProgress::levels` is one word per level id, and the save slots grow
+with the level count. So the save data is made incompatible between
+builds of different level data, with no code of its own: the build
+derives two constants from the level data, `constants/save_version.h`
+(`tools/levels.py constants save`), and the save code uses them where
+the ROM had numbers.
+
+- **The CRC.** `level_data_crc` is the CRC-32 of the canonical JSON
+  (sorted keys, no spaces, UTF-8) of `levels.json`'s `"levels"`, then
+  of each room's `[folder, room.json]` in `"rooms"` order. The ROM layout
+  residuals (`"regions"`, `"assets"`, `"table"`), the pictures and the
+  collision images don't count: a picture edit keeps the saves. With the
+  ROM's data it is `ROM_LEVEL_DATA_CRC` (0x7ED35075), which `levels.py
+  extract` checks.
+- **`SAVE_VERSION`**, the record's version byte (`versionNibble`, 0x1F9).
+  Its high nibble is the game, 1 for Crash XS: over the link cable,
+  `SaveMenu::LinkInput` reads it to tell a Crash XS save from the Crash 2
+  and Crash 3 ones that give the link bonus, so it stays 1. The ROM's low
+  nibble is 2. With other level data the low nibble is one of the other
+  15 values, the (CRC mod 15)th. `SaveData::Load` returns 1 for a record of
+  another version, and `SaveMenu::LoadData` then resets the cartridge
+  save.
+- **`SAVE_CHECKSUM_SEED`**, the start value of the record's additive
+  checksum (`UpdateChecksum`, `ChecksumOk`): 0 in the ROM, the CRC xor
+  `ROM_LEVEL_DATA_CRC` otherwise, which is never 0. A record made with a
+  different seed fails the checksum by the difference of the two seeds:
+  `Load` returns 3 (reset), and a record received over the link cable
+  gets "connection failed".
+
+With the ROM's level data both constants are the ROM's numbers and the
+ROM matches. With any other data:
+
+| save made with | loads? |
+|---|---|
+| the same level data | yes |
+| the ROM's levels (an original cartridge, or `baserom.gba`'s `.sav`) | no, always: the version's low nibble is never 2 and the seed is never 0 |
+| other level data | no, unless the two CRC-32s are equal: about 1 in 2^32 for unrelated data, and never for data that differs in one span of 32 bits or less (CRC-32 detects every such burst). Since the version nibble is taken from the CRC, it adds nothing to that |
+
+The version nibble alone would only give 15 values, a 1-in-15 chance
+that two modified builds accept each other's saves; the seed is what
+makes it 32 bits. It costs the link bonus: a modified build checks the
+Crash 2/3 records against its own seed, so their checksum fails
+("connection failed"), and they will likely refuse its records for the
+same reason. The original data keeps the bonus.
+
 ## Numbers
 
 41 rooms, 172 layers, 16,323 unique chunks (2.09 M cells; the full
