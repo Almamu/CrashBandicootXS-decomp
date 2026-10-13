@@ -31,6 +31,23 @@ extern "C" {
 #define AIRSHIP_FIREBALL_STATE_ORBIT 0     // StateOrbit
 #define AIRSHIP_FIREBALL_STATE_SPIRAL_IN 1 // StateSpiralIn
 #define AIRSHIP_FIREBALL_STATE_EXPLODE 2   // StateExplode: gone when the animation is done
+
+/* The fireball's flight (Q8, docs/fixed_point.md): it starts at
+ * AIRSHIP_FIREBALL_LAUNCH_SPEED_Z (the constructor), and its Z speed
+ * drops by AIRSHIP_FIREBALL_DRAG_Z a frame down to
+ * AIRSHIP_FIREBALL_MIN_SPEED_Z. Its orbit's radius grows by
+ * AIRSHIP_FIREBALL_RADIUS_STEP a frame up to AIRSHIP_FIREBALL_ORBIT_RADIUS
+ * (StateOrbit), then shrinks by it to 0 (StateSpiralIn); its centre
+ * eases toward the player by a 32nd of the gap a frame while it orbits
+ * (`gap >> AIRSHIP_FIREBALL_ORBIT_EASE_SHIFT`), a 16th while it spirals
+ * in (AIRSHIP_FIREBALL_SPIRAL_EASE_SHIFT): fractions, not formats. */
+#define AIRSHIP_FIREBALL_LAUNCH_SPEED_Z    Q8_FRAC(0, 0x95)
+#define AIRSHIP_FIREBALL_DRAG_Z            Q8_FRAC(0, 5)
+#define AIRSHIP_FIREBALL_MIN_SPEED_Z       Q8_FRAC(0, 0x14)
+#define AIRSHIP_FIREBALL_RADIUS_STEP       INT_TO_Q8(1)
+#define AIRSHIP_FIREBALL_ORBIT_RADIUS      INT_TO_Q8(42)
+#define AIRSHIP_FIREBALL_ORBIT_EASE_SHIFT  5
+#define AIRSHIP_FIREBALL_SPIRAL_EASE_SHIFT 4
 class AirshipFireball : public HpActor
 {
 public:
@@ -76,6 +93,13 @@ COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(AirshipFireball) == 0x6C);
 /* HovercraftFireball's `state`: the stateFuncs index. */
 #define HOVERCRAFT_FIREBALL_STATE_FLY 0     // StateFly
 #define HOVERCRAFT_FIREBALL_STATE_EXPLODE 1 // StateExplode: gone when the animation is done
+
+/* Its Z speed (Q8): the airship fireball's, from
+ * HOVERCRAFT_FIREBALL_LAUNCH_SPEED_Z down by HOVERCRAFT_FIREBALL_DRAG_Z a
+ * frame to HOVERCRAFT_FIREBALL_MIN_SPEED_Z (StateFly). */
+#define HOVERCRAFT_FIREBALL_LAUNCH_SPEED_Z Q8_FRAC(0, 0x95)
+#define HOVERCRAFT_FIREBALL_DRAG_Z         Q8_FRAC(0, 5)
+#define HOVERCRAFT_FIREBALL_MIN_SPEED_Z    Q8_FRAC(0, 0x14)
 class HovercraftFireball : public HpActor
 {
 public:

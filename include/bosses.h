@@ -125,6 +125,37 @@ extern const struct speed_ramp gMegaMixMotionRecords[4];
 extern const u8 gTinyHopTargets[77];
 extern const u8 gTinyRoundAnchors[3];
 
+/* The bosses' speed-ramp tuning values (`struct speed_ramp`, Q8 px a
+ * frame and px a frame per frame, docs/fixed_point.md):
+ * - Mega-Mix (gMegaMixMotionRecords, MegaMixCtrl::Update): it runs after
+ *   the player at up to MEGA_MIX_RUN_SPEED (record 1), at up to
+ *   MEGA_MIX_CATCH_UP_SPEED while off screen (record 2), and, turned back
+ *   (X-mirrored) after a player who got behind it, from
+ *   MEGA_MIX_RUN_SPEED up to MEGA_MIX_TURN_BACK_SPEED (record 3);
+ * - Dingodile (gDingodileMotionRecords, DingodileCtrl::StartMotion): his
+ *   walk (entry 1: walk, walk back, retreat) speeds up by
+ *   DINGODILE_WALK_ACCEL to DINGODILE_WALK_SPEED; a hit (entry 2) throws
+ *   him back at DINGODILE_HIT_RECOIL_SPEED, slowing by
+ *   DINGODILE_HIT_RECOIL_DECEL to a stop;
+ * - his rocket (gDingodileRocketRiseMotion) rises speeding up by
+ *   DINGODILE_ROCKET_RISE_ACCEL, and the stalactite it drops
+ *   (gDingodileStalactiteFallMotion[0]) falls speeding up by
+ *   DINGODILE_STALACTITE_FALL_ACCEL. UpdateDingodileProjectile reads only
+ *   that first record: the third's start and step,
+ *   DINGODILE_STALACTITE_UNK_START (up) and DINGODILE_STALACTITE_UNK_STEP,
+ *   are never read. */
+#define MEGA_MIX_RUN_SPEED              Q8_FRAC(1, 194)
+#define MEGA_MIX_CATCH_UP_SPEED         Q8_FRAC(2, 108)
+#define MEGA_MIX_TURN_BACK_SPEED        Q8_FRAC(2, 238)
+#define DINGODILE_WALK_ACCEL            Q8_FRAC(0, 180)
+#define DINGODILE_WALK_SPEED            Q8_FRAC(1, 44)
+#define DINGODILE_HIT_RECOIL_SPEED      Q8_FRAC(1, 144)
+#define DINGODILE_HIT_RECOIL_DECEL      Q8_FRAC(0, 30)
+#define DINGODILE_ROCKET_RISE_ACCEL     Q8_FRAC(0, 7)
+#define DINGODILE_STALACTITE_FALL_ACCEL Q8_FRAC(0, 4)
+#define DINGODILE_STALACTITE_UNK_START  Q8_FRAC(2, 88)
+#define DINGODILE_STALACTITE_UNK_STEP   Q8_FRAC(0, 10)
+
 /* src/iwram/iwram_data.cpp */
 extern u16 *gFlashBgPalette;
 extern u16 *gFlashObjPalette;

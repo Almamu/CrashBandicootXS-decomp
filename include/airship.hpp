@@ -39,6 +39,42 @@ extern "C" {
 #define AIRSHIP_STATE_EXPLODE 4   // StateExplode: no hit points left (Damage)
 #define AIRSHIP_STATE_FALL 5      // StateFall: the explosion's end (stateTimer 0xAA)
 
+/* Airship::velZ, the Z speed (Q8 px a frame, docs/fixed_point.md):
+ * Spawn's for the approach; the fireballs state ramps it by
+ * AIRSHIP_SPEED_Z_STEP a frame to about AIRSHIP_FIREBALLS_SPEED_Z, the
+ * cannon state up to just past AIRSHIP_CANNON_SPEED_Z; Damage sets
+ * AIRSHIP_EXPLODE_SPEED_Z for the explosion, StateExplode
+ * AIRSHIP_FALL_SPEED_Z for the fall. */
+#define AIRSHIP_APPROACH_SPEED_Z  Q8_FRAC(0, 0x66)
+#define AIRSHIP_SPEED_Z_STEP      Q8_FRAC(0, 1)
+#define AIRSHIP_FIREBALLS_SPEED_Z Q8_FRAC(0, 0x98)
+#define AIRSHIP_CANNON_SPEED_Z    Q8_FRAC(0, 0xb2)
+#define AIRSHIP_EXPLODE_SPEED_Z   Q8_FRAC(0, 0xaa)
+#define AIRSHIP_FALL_SPEED_Z      Q8_FRAC(0, 0x9d)
+
+/* The fall (StateFall): velY grows by AIRSHIP_FALL_GRAVITY a frame up to
+ * AIRSHIP_MAX_FALL_SPEED. */
+#define AIRSHIP_FALL_GRAVITY   Q8_FRAC(0, 7)
+#define AIRSHIP_MAX_FALL_SPEED Q8(1.25)
+
+/* Steer: within 45 px of the player, the X and Y speeds change by
+ * AIRSHIP_STEER_ACCEL_X/Y a frame toward him; near the screen's edges
+ * they are pushed back by AIRSHIP_EDGE_PUSH_X/Y; then they are clamped
+ * to AIRSHIP_MAX_SPEED_X/Y either way. */
+#define AIRSHIP_STEER_ACCEL_X Q8_FRAC(0, 3)
+#define AIRSHIP_STEER_ACCEL_Y Q8_FRAC(0, 2)
+#define AIRSHIP_EDGE_PUSH_X   Q8_FRAC(0, 6)
+#define AIRSHIP_EDGE_PUSH_Y   Q8_FRAC(0, 3)
+#define AIRSHIP_MAX_SPEED_X   Q8(1.5)
+#define AIRSHIP_MAX_SPEED_Y   INT_TO_Q8(1)
+
+/* Where the fireballs (StateFireballs) and the cannonballs (StateCannon)
+ * start, and the cannon aims from: (x - AIRSHIP_GUN_OFFSET_X,
+ * y + AIRSHIP_GUN_OFFSET_Y, z - AIRSHIP_GUN_OFFSET_Z), Q8. */
+#define AIRSHIP_GUN_OFFSET_X Q8_FRAC(12, 0xdb)
+#define AIRSHIP_GUN_OFFSET_Y Q8_FRAC(81, 0x6d)
+#define AIRSHIP_GUN_OFFSET_Z Q8_FRAC(0, 10)
+
 class Airship
 {
 public:

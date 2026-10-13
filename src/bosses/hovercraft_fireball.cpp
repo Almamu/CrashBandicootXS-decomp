@@ -53,7 +53,7 @@ HovercraftFireball::HovercraftFireball(const struct anim_table_record *rec, s32 
     centerX = x;
     centerY = y;
     radius = 0;
-    velZ = 0x95;
+    velZ = HOVERCRAFT_FIREBALL_LAUNCH_SPEED_Z;
     exploding = 0;
 }
 
@@ -71,10 +71,10 @@ void HovercraftFireball::StateFly()
 
     sum += delta;
     z = sum;
-    delta -= 5;
+    delta -= HOVERCRAFT_FIREBALL_DRAG_Z;
     velZ = delta;
-    if (delta <= 0x13)
-        velZ = 0x14;
+    if (delta <= HOVERCRAFT_FIREBALL_MIN_SPEED_Z - 1)
+        velZ = HOVERCRAFT_FIREBALL_MIN_SPEED_Z;
 
     if ((u8)IsTouchingPlayer(this)) {
         gActorList->AsHpActor()->Damage(6);

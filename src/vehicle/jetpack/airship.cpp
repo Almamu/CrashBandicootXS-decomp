@@ -48,12 +48,12 @@ void Airship::Steer()
     /* `px` is needed: inlined, the instructions are reordered */
     px = pl->x;
     /* `cx` is needed: inlined, the code is 1 instruction longer */
-    cx = screenX - 0x1200;
+    cx = screenX - INT_TO_Q8(18);
     dx = px - cx - (box.x + box.w / 2);
     /* `py` is needed: inlined, the code is 2 instructions longer */
     py = pl->y;
     /* `cy` is needed: inlined, the code is 3 instructions longer */
-    cy = screenY + 0x1800;
+    cy = screenY + INT_TO_Q8(24);
     dy = py - cy - (box.y + box.h / 2);
 
     if (ABS_BRANCHLESS(dx) <= INT_TO_Q8(45) - 1) {
@@ -65,9 +65,9 @@ void Airship::Steer()
             velX = vx;
             if (s == 0)
                 goto dx_done;
-            t = vx - 3;
+            t = vx - AIRSHIP_STEER_ACCEL_X;
         } else
-            t = vx + 3;
+            t = vx + AIRSHIP_STEER_ACCEL_X;
         velX = t;
     }
 dx_done:
@@ -78,38 +78,38 @@ dx_done:
             v = velY;
             if ((dy >> 10) == 0)
                 goto dy_done;
-            velY = v - 2;
+            velY = v - AIRSHIP_STEER_ACCEL_Y;
         } else {
             v = velY;
-            velY = v + 2;
+            velY = v + AIRSHIP_STEER_ACCEL_Y;
         }
     }
 dy_done:
 
-    if (screenX <= 0x1400)
-        velX += 6;
-    if (screenX > 0x4FFF)
-        velX -= 6;
-    if (screenY <= -0x2D00)
-        velY += 3;
-    if (screenY > 0x13FF)
-        velY -= 3;
+    if (screenX <= INT_TO_Q8(20))
+        velX += AIRSHIP_EDGE_PUSH_X;
+    if (screenX > INT_TO_Q8(80) - 1)
+        velX -= AIRSHIP_EDGE_PUSH_X;
+    if (screenY <= -INT_TO_Q8(45))
+        velY += AIRSHIP_EDGE_PUSH_Y;
+    if (screenY > INT_TO_Q8(20) - 1)
+        velY -= AIRSHIP_EDGE_PUSH_Y;
 
     s32 *p = &velX;
     s32 v = *p;
 
-    LIMIT_MAX(v, 0x180);
+    LIMIT_MAX(v, AIRSHIP_MAX_SPEED_X);
     *p = v;
-    LIMIT_MIN(v, -0x180);
+    LIMIT_MIN(v, -AIRSHIP_MAX_SPEED_X);
     velX = v;
     /* scoped: its own `p`/`v` (shared, the code is 4 instructions shorter) */
     {
         s32 *p = &velY;
         s32 v = *p;
 
-        LIMIT_MAX(v, 0x100);
+        LIMIT_MAX(v, AIRSHIP_MAX_SPEED_Y);
         *p = v;
-        LIMIT_MIN(v, -0x100);
+        LIMIT_MIN(v, -AIRSHIP_MAX_SPEED_Y);
         velY = v;
     }
 }
@@ -158,11 +158,11 @@ void Airship::Spawn(s32 kind, s32 sx, s32 sy, s32 sz)
     s32 scale;
     AnimPart *self;
 
-    velZ = 0x66;
+    velZ = AIRSHIP_APPROACH_SPEED_Z;
     SetState(AIRSHIP_STATE_APPROACH, 0);
     x = sx * 5;
     y = sy * 2;
-    z = sz + 0xA000;
+    z = sz + INT_TO_Q8(160);
     /* `a - -b` rather than `a + b`: the latter lets fold reassociate the
      * constant table base out of `&table[kind]`, while the ROM adds the
      * level offset to the finished record address. */
@@ -257,7 +257,9 @@ void Airship::UpdateBg2()
         bg2Page ^= 1;
     }
 
-    s32 scale = __divsi3(distance << 8, 0x3c00);
+    /* `distance << 8`: Q8_DIV(distance, INT_TO_Q8(60))'s numerator, as
+     * an explicit __divsi3 call (see Spawn) */
+    s32 scale = __divsi3(distance << 8, INT_TO_Q8(60));
     /* `dy` is needed: inlined, the code is 1 instruction longer */
     s32 dy = screenX + GetActorBgCenterX();
     /* `dx` is needed: inlined, the code is 2 instructions longer */

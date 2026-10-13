@@ -41,6 +41,30 @@ extern "C" {
 #define HOVERCRAFT_PHASE_FIRST_LEG 0 // FALL_BACK: the leg count's start
 #define HOVERCRAFT_PHASE_LAST_LEG 3  // FALL_BACK: the last sweeping leg; past it, back to X 0
 
+/* Hovercraft::velZ, the Z speed (Q8 px a frame, docs/fixed_point.md):
+ * Spawn's, for the approach; then each state ramps it by
+ * HOVERCRAFT_SPEED_Z_STEP a frame toward its own: steering (CLOSE_IN's
+ * phase 0) to about HOVERCRAFT_STEER_SPEED_Z, sweeping or circling to
+ * HOVERCRAFT_SWEEP_SPEED_Z or HOVERCRAFT_CIRCLE_SPEED_Z (which StateFallBack
+ * also starts them at), falling back to HOVERCRAFT_FALL_BACK_SPEED_Z (from
+ * it: StateCloseIn sets it) for the legs, then pulling away at about
+ * HOVERCRAFT_PULL_AWAY_SPEED_Z; sinking (StateFall) to
+ * HOVERCRAFT_SINK_SPEED_Z. */
+#define HOVERCRAFT_APPROACH_SPEED_Z  Q8_FRAC(0, 0x66)
+#define HOVERCRAFT_SPEED_Z_STEP      Q8_FRAC(0, 1)
+#define HOVERCRAFT_STEER_SPEED_Z     Q8_FRAC(0, 0x98)
+#define HOVERCRAFT_SWEEP_SPEED_Z     Q8(0.25)
+#define HOVERCRAFT_CIRCLE_SPEED_Z    Q8_FRAC(0, 0x6a)
+#define HOVERCRAFT_FALL_BACK_SPEED_Z Q8_FRAC(0, 0xae)
+#define HOVERCRAFT_PULL_AWAY_SPEED_Z Q8_FRAC(1, 0xd4)
+#define HOVERCRAFT_SINK_SPEED_Z      Q8_FRAC(0, 0x99)
+
+/* Steering (CLOSE_IN's phase 0), the hovercraft's X and Y speed change
+ * by 1/4096 of its offset from the player a frame (`offset >>
+ * HOVERCRAFT_STEER_SHIFT`, a Q8 offset to a Q8 speed: a gain, not a
+ * format). */
+#define HOVERCRAFT_STEER_SHIFT 12
+
 class Hovercraft
 {
 public:

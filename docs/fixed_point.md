@@ -62,6 +62,10 @@ name in its subsystem's header, spelled with the macros:
 | `SWIM_RAMP_STEP`, `SWIM_SLOW_RAMP_STEP`, `SWIM_IDLE_BOB_SPEED`, `SWIM_STOP_START_SPEED` | `Q8_FRAC(0, n)` | `swim_ctrl.hpp`: gSwimCtrlMotionRecords' steps and small speeds |
 | `ACTOR_FOCAL_LENGTH`, `ACTOR_FOCAL_LENGTH_POLAR` | `INT_TO_Q8(28)`, `INT_TO_Q8(47)` | `actor.h`: gActorFocalLength, the 3D levels' projection distance (InitActorBgScroll) |
 | `ACTOR_PROJECTION` | `INT_TO_Q12(ACTOR_FOCAL_LENGTH)` | `actor.h`: the Q12 projection's numerator; `ACTOR_PROJECTION / depth` is the Q12 scale of a Q8 position (the jetpack player, the airship, the hovercraft) |
+| `MEGA_MIX_*_SPEED`, `DINGODILE_WALK_*`, `DINGODILE_HIT_RECOIL_*`, `DINGODILE_ROCKET_RISE_ACCEL`, `DINGODILE_STALACTITE_*` | `Q8_FRAC(n, f)` | `bosses.h`: the bosses' speed-ramp records (gMegaMixMotionRecords, gDingodileMotionRecords, the rocket's and the stalactite's) |
+| `HOVERCRAFT_*_SPEED_Z`, `HOVERCRAFT_SPEED_Z_STEP`; `AIRSHIP_*_SPEED_Z`, `AIRSHIP_SPEED_Z_STEP` | `Q8_FRAC(0, f)` | `hovercraft.hpp`, `airship.hpp`: each state's Z speed, which the state ramps toward a 256th a frame |
+| `AIRSHIP_STEER_ACCEL_X/Y`, `AIRSHIP_EDGE_PUSH_X/Y`, `AIRSHIP_MAX_SPEED_X/Y`, `AIRSHIP_FALL_GRAVITY`, `AIRSHIP_GUN_OFFSET_X/Y/Z` | `Q8_FRAC(n, f)` | `airship.hpp`: Steer's pull, edge push and limits, the fall, and where its fireballs and cannonballs start |
+| `AIRSHIP_FIREBALL_*`, `HOVERCRAFT_FIREBALL_*` | `Q8_FRAC(0, f)` | `boss_actors.hpp`: the fireballs' launch speed, drag and minimum speed, the orbit's radius |
 
 `--fixed` counts a `#define` in include/ whose value is spelled with a
 fixed-point macro as spelled. A value with no evidence for a name keeps
