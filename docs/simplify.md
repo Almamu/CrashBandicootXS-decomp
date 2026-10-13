@@ -186,7 +186,8 @@ What the first dry run over the whole tree showed, per kind:
   itself, so `--try` still flattens four of them, byte-identical: revert those.
 
 Also left alone: the original-source asm (DivMod, GaxHuffUnComp), the
-codegen views and link_session_reset's `(players - 1)[i + 1]` (#908).
+codegen views and link_session_reset's `(players - 1)[i + 1]`, until #908
+found the plain `(players + i)->id`.
 DrawVvLogoPieces' `buf = scratch` fill argument was left too, until #920
 found a plain `DmaFill32` with `buf` set after it.
 

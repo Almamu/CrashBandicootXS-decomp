@@ -37,8 +37,9 @@ ROM loads it into r4 directly. Every other site is the same.
 
 ResetState wrote the players' ids through
 `((LinkPlayer *)((u8 *)this + 8))[i + 1]`, players[i] indexed from the
-record before it. It is now `(players - 1)[i + 1]`, the same address
-without the cast and the same code. A `Player(i)` accessor
-(`&players[i]` or the same expression) changes the register allocation,
-as plain `players[i]` does, so the index stays written out, with a
-comment in link_session_reset.cpp.
+record before it, then (#855) `(players - 1)[i + 1]`, the same address
+without the cast. Since #908 it is `(players + i)->id`, the same code:
+`players[i].id` expands with `self + 0xd0` as a term of its own, which
+loop hoists out of the outer loop, and a `Player(i)` accessor or a
+record pointer local is its own pseudo. The comment in
+link_session_reset.cpp has the shapes tried.
