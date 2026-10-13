@@ -11,6 +11,7 @@
 #include "frame_limiter.hpp"
 #include "sprite_oam_queue.hpp"
 #include "sprite_frame_cache.hpp"
+#include "collected_spawns.hpp"
 
 extern "C" {
 #include "core.h"
@@ -115,7 +116,7 @@ s32 InitActorCategory(s32 category)
     SetCheckpointAtPlayer_1(gLevelState);
     DecompressCategorySpriteSheet(CUR_CATEGORY.sprite_sheet);
     SetupActorVramPool();
-    ClearCollectedSpawns();
+    CollectedSpawns::Clear();
     ActorPaletteCycle::Enable(CUR_CATEGORY.type == CATEGORY_TYPE_POLAR);
     ActorBg::InitScroll(CUR_CATEGORY.type);
 

@@ -1,6 +1,7 @@
 #include "vehicle.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "collected_spawns.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -83,7 +84,7 @@ void JetpackQuestionCrate::Update()
             break;
         case JETPACK_KIND_QUESTION_CRATE_LIFE:
             gAudioContext->PlaySfx(SFX_EXTRA_LIFE, 0x100);
-            MarkSpawnCollected(spawn);
+            CollectedSpawns::Add(spawn);
             gLevelState->AddLife();
             break;
         }
@@ -122,7 +123,7 @@ void JetpackQuestionCrate::Damage(s32 amount)
         break;
     case JETPACK_KIND_QUESTION_CRATE_LIFE:
         gAudioContext->PlaySfx(SFX_EXTRA_LIFE, 0x100);
-        MarkSpawnCollected(spawn);
+        CollectedSpawns::Add(spawn);
         gLevelState->AddLife();
         break;
     }

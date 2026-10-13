@@ -425,7 +425,7 @@ public:
 };
 
 /* An extra life; remembers the spawn record that built it, for
- * MarkSpawnCollected. */
+ * CollectedSpawns::Add. */
 class PolarLifeCrate : public PolarCrate
 {
 public:
@@ -983,7 +983,7 @@ public:
 class JetpackQuestionCrate : public JetpackBalloonCrate
 {
 public:
-    struct actor_spawn *spawn; // 0x70 - the level spawn record, for MarkSpawnCollected
+    struct actor_spawn *spawn; // 0x70 - the level spawn record, for CollectedSpawns::Add
 
     // CreateJetpackQuestionCrate
     JetpackQuestionCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z,
