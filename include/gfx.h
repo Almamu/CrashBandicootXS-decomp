@@ -26,7 +26,6 @@
 
 struct aabb;
 struct dma_queue;
-struct queued_oam_entry;
 struct rle_frame;
 struct sprite_bank_table;
 
@@ -199,13 +198,11 @@ struct brightness_fade {
 #define FADE_FLAG_WHITE 1    /* fade through white (BLDCNT lighten), not black (darken) */
 #define FADE_FLAG_IN    0x80 /* count BLDY down from 0x10 (fade in), not up from 0 */
 
-/* One node of the sprite frame cache (sprite_frame.cpp, sprite_arm.cpp): the
- * frame record and the OBJ VRAM its pixel data was DMA'd into. Nodes live
- * in a fixed pool (`gSpriteFrameCacheSpares`, seeded by
- * InitSpriteFrameCache) and move between two ring lists as they age:
- * `gSpriteFrameCacheCurrent` (this frame's in-use entries, newest at the
- * head) and `gSpriteFrameCachePrevious` (last frame's entries, oldest at
- * the tail) - see AgeSpriteFrameCache/LoadSpriteFrameTiles. */
+/* One node of the sprite frame cache (SpriteFrameCache,
+ * sprite_frame_cache.hpp): the frame record and the OBJ VRAM its pixel
+ * data was DMA'd into. Nodes live in a fixed pool (`pool`, its unused ones
+ * on the `spares` stack) and move between the two ring lists `current`
+ * and `previous` as they age. */
 struct sprite_frame_cache_node {
     struct sprite_frame_cache_node *next; // 0x00
     struct sprite_frame_cache_node *prev; // 0x04
@@ -236,16 +233,10 @@ extern void WorldToScreen(void *unused, s32 x, s32 y, s32 *outX, s32 *outY);
 extern void WorldPosToScreen(s32 *pos, s32 *outX, s32 *outY);
 extern void nullsub_12(void);
 
-/* src/gfx/sprite_frame.cpp (the OBJ tile allocator: obj_tile_allocator.hpp) */
-extern void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority);
-extern void FreeSpriteFrameOamQueue(void);
-extern void FlushSpriteFrameOamQueue(void);
-extern void InitSpriteFrameOamQueue(void);
-extern s32 LoadSpriteFrameTiles(u8 *frame);
+/* src/gfx/sprite_frame.cpp (the OBJ tile allocator, the OAM queue and the
+ * frame cache: obj_tile_allocator.hpp, sprite_oam_queue.hpp,
+ * sprite_frame_cache.hpp) */
 extern void SetupSpriteFrameOam(u8 *frame, u32 attr01, u32 attr2, s32 priority);
-extern void FreeSpriteFrameCache(void);
-extern void AgeSpriteFrameCache(void);
-extern void InitSpriteFrameCache(void);
 extern u32 GetSpriteShapeSizeBits(u8 *frame);
 extern void FreeCategorySpriteSheet(void);
 extern void DecompressCategorySpriteSheet(const void *sheet);
@@ -271,7 +262,7 @@ extern struct brightness_fade gBrightnessFade;
 extern s32 gBrightnessFadeStep;
 extern s32 gBrightnessFadeTimer;
 /* The ARM sprite frame routines' hooks (iwram.h). The frame cache's
- * optional frame-source override, called by LoadSpriteFrameTiles
+ * lookup (SpriteFrameCache::Lookup), called by SpriteFrameCache::LoadTiles
  * through `_call_via_r1`, and the RLE frame unpacker. */
 extern s32 (*gLookupSpriteFrameCacheFunc)(u8 *frame);
 extern void (*gUnpackRleSpriteFrameFunc)(u16 *dst, struct rle_frame *frame);
@@ -290,19 +281,5 @@ extern u16 gPaletteFadeBuffer[512];
 
 /* sym_iwram.txt: the VRAM DMA queue (vram_dma_queue.cpp) */
 extern struct dma_queue gVramDmaQueue;
-
-/* sym_iwram.txt: the overflow OAM queue (sprite_frame.cpp) */
-extern struct queued_oam_entry *gSpriteOamQueue; /* queued OAM entries, OAM_ENTRY_COUNT max */
-/* queued affine (x,y) pairs, packed one s16 each into a u32, deduped */
-extern s32 *gSpriteAffineQueue;
-extern s32 gSpriteOamQueueCount;    /* gSpriteOamQueue count */
-extern s32 gSpriteAffineQueueCount; /* gSpriteAffineQueue count */
-
-/* sym_iwram.txt: the sprite frame cache (sprite_frame.cpp, sprite_arm.cpp) */
-extern struct sprite_frame_cache_node gSpriteFrameCacheCurrent; /* "this frame" MRU list sentinel */
-/* "last frame" eviction list sentinel */
-extern struct sprite_frame_cache_node gSpriteFrameCachePrevious;
-extern struct sprite_frame_cache_node *gSpriteFrameCacheSpares; /* spare-record stack head */
-extern struct sprite_frame_cache_node *gSpriteFrameCachePool;   /* pool base */
 
 #endif /* __GFX_H__ */

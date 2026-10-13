@@ -9,6 +9,8 @@
 #include "cell_anim.hpp"
 #include "actor_bg.hpp"
 #include "frame_limiter.hpp"
+#include "sprite_oam_queue.hpp"
+#include "sprite_frame_cache.hpp"
 
 extern "C" {
 #include "core.h"
@@ -79,8 +81,8 @@ static inline s32 RunCategoryPauseMenu(void)
     s32 result;
 
     DmaCopy16(3, OBJ_PLTT, buf, OBJ_PLTT_SIZE);
-    FreeSpriteFrameCache();
-    FreeSpriteFrameOamQueue();
+    SpriteFrameCache::Destroy();
+    SpriteOamQueue::Destroy();
     ObjTileAllocator::Destroy();
     result = RunPauseMenu();
     SetupActorVramPool();
@@ -149,14 +151,14 @@ s32 InitActorCategory(s32 category)
             gOamBuffer->Rewind();
             gHud->UpdateSlides();
             gHud->Update();
-            FlushSpriteFrameOamQueue();
+            SpriteOamQueue::Flush();
             FrameLimiter::WaitForVBlank();
             ActorBg::CommitScroll();
             gOamBuffer->Commit();
             FlushVramDmaQueue();
             CellAnim::FlipPage();
             UpdateActorCategoryBg2();
-            AgeSpriteFrameCache();
+            SpriteFrameCache::Age();
 
             if (status != CATEGORY_EXIT_NONE) {
                 if (status == CATEGORY_EXIT_CLEARED) {
@@ -207,8 +209,8 @@ s32 InitActorCategory(s32 category)
     } while (ret == ROOM_EXIT_RETRY && gLevelState->GetLives() >= 0 && PAUSED == 0);
 
     ActorCategoryEndStub();
-    FreeSpriteFrameCache();
-    FreeSpriteFrameOamQueue();
+    SpriteFrameCache::Destroy();
+    SpriteOamQueue::Destroy();
     ObjTileAllocator::Destroy();
     FreeCategorySpriteSheet();
     REG_DISPCNT = DISPCNT_MODE_1 | DISPCNT_OBJ_1D_MAP;

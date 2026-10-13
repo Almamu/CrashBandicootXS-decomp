@@ -5,6 +5,7 @@
 #include "level_state.hpp"
 #include "cell_anim.hpp"
 #include "actor_bg.hpp"
+#include "sprite_oam_queue.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -170,7 +171,7 @@ void JetpackPlayer::Draw()
         /* computed first, into r0 */
         u32 tile = GET_TILE_NUM(gJetpackPlayerTiles[gJetpackPlayerTileBuffer]);
 
-        QueueSpriteFrameOam(attr1, (palette << 12) | tile, scale);
+        SpriteOamQueue::Add(attr1, (palette << 12) | tile, scale);
     }
 }
 

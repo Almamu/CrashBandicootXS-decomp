@@ -5,7 +5,7 @@
  * allocator of OBJ tile VRAM, from `base` to the end of OBJ_VRAM0. It
  * keeps its blocks in a separate pool of `struct vram_tile_block` records
  * (sprite_frame.cpp), and a per-tile index back to them. The sprite frame
- * cache (LoadSpriteFrameTiles), the company logos and the 3D players
+ * cache (SpriteFrameCache::LoadTiles), the company logos and the 3D players
  * allocate from it.
  *
  * An all-static class, like the yeti and the airship (docs/cplusplus.md,

@@ -1,4 +1,5 @@
 #include "actor_self.hpp"
+#include "sprite_frame_cache.hpp"
 
 extern "C" {
 #include "core.h"
@@ -18,7 +19,7 @@ extern "C" {
  * -minterwork-return-lr and -mstrict-cross-jump (docs/cplusplus.md, "The
  * IWRAM ARM code"). UnpackNibbleTiles, DrawMirroredTilemap and
  * UnpackRleSpriteFrame come out the same without the options.
- * LookupSpriteFrameCache needs the first: the ROM's ARM gcc pops its
+ * SpriteFrameCache::Lookup needs the first: the ROM's ARM gcc pops its
  * returns into lr, where stock agbcc_arm pops into ip.
  * HeapSortActorsByKey needs the second: the ROM's ARM gcc doesn't
  * cross-jump its two identical loop tests. See their comments and
@@ -213,7 +214,7 @@ static inline s32 ObjTileIndex(u32 vramAddr)
     return vramAddr >> 5;
 }
 
-/* gLookupSpriteFrameCacheFunc(frame), LoadSpriteFrameTiles's override hook (see
+/* gLookupSpriteFrameCacheFunc(frame), SpriteFrameCache::LoadTiles's override hook (see
  * sprite_frame.cpp): returns the OBJ tile index of `frame` if it is
  * already in VRAM, or -1. Hits in this frame's list are returned as they
  * are; a hit in last frame's list is moved to the head of this frame's
@@ -226,24 +227,22 @@ static inline s32 ObjTileIndex(u32 vramAddr)
  * sprite_arm.o is built with agbcp_arm_patched's -minterwork-return-lr,
  * which pops into lr instead (Makefile PATCHED_ARM_OBJS; see
  * docs/matching/iwram-image.md, fifth and seventh passes). */
-s32 LookupSpriteFrameCache(u8 *frame)
+s32 SpriteFrameCache::Lookup(u8 *frame)
 {
     struct sprite_frame_cache_node *node;
 
-    for (node = gSpriteFrameCacheCurrent.next; node != &gSpriteFrameCacheCurrent;
-         node = node->next) {
+    for (node = current.next; node != &current; node = node->next) {
         if (node->frame == frame)
             return ObjTileIndex((u32)node->vramAddr);
     }
-    for (node = gSpriteFrameCachePrevious.next; node != &gSpriteFrameCachePrevious;
-         node = node->next) {
+    for (node = previous.next; node != &previous; node = node->next) {
         if (node->frame == frame) {
             node->prev->next = node->next;
             node->next->prev = node->prev;
-            node->prev = &gSpriteFrameCacheCurrent;
-            node->next = gSpriteFrameCacheCurrent.next;
-            gSpriteFrameCacheCurrent.next->prev = node;
-            gSpriteFrameCacheCurrent.next = node;
+            node->prev = &current;
+            node->next = current.next;
+            current.next->prev = node;
+            current.next = node;
             return ObjTileIndex((u32)node->vramAddr);
         }
     }

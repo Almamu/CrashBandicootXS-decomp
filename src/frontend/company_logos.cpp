@@ -6,6 +6,8 @@
 #include "graphics_package.hpp"
 #include "display.hpp"
 #include "frame_limiter.hpp"
+#include "sprite_oam_queue.hpp"
+#include "sprite_frame_cache.hpp"
 
 extern "C" {
 #include "gba/io_reg.h"
@@ -57,8 +59,8 @@ void CompanyLogos::Run()
     s32 scale;
 
     ObjTileAllocator::Init(OBJ_VRAM0);
-    InitSpriteFrameOamQueue();
-    InitSpriteFrameCache();
+    SpriteOamQueue::Init();
+    SpriteFrameCache::Init();
     part = new LogoActor(&gLogoActorAnim);
     DmaCopy16(3, gPolarCategoryPalette, OBJ_PLTT, OBJ_PLTT_SIZE);
     LoadVvLogoGraphics();
@@ -140,7 +142,7 @@ void CompanyLogos::Run()
         part->Update();
         part->Draw();
         gOamBuffer->Rewind();
-        FlushSpriteFrameOamQueue();
+        SpriteOamQueue::Flush();
         UpdateVvLogoPieces();
         DrawVvLogoPieces();
         bg->Update();
@@ -167,14 +169,14 @@ void CompanyLogos::Run()
         }
         gOamBuffer->Commit();
         FlushVramDmaQueue();
-        AgeSpriteFrameCache();
+        SpriteFrameCache::Age();
     }
     delete part;
     delete bg;
     delete[] scratch;
     delete[] frames;
-    FreeSpriteFrameCache();
-    FreeSpriteFrameOamQueue();
+    SpriteFrameCache::Destroy();
+    SpriteOamQueue::Destroy();
     ObjTileAllocator::Destroy();
     FreeCategorySpriteSheet();
 }
@@ -621,7 +623,7 @@ void LogoActor::Update()
  * its depth (an affine sprite scaled by depth / the record's baseDepth,
  * double-size when nearer than that), clips it against the screen and, when the frame changed since
  * the last draw, unpacks the new one into the other of the two VRAM tile
- * blocks before queuing the OAM entry (QueueSpriteFrameOam). */
+ * blocks before queuing the OAM entry (SpriteOamQueue::Add). */
 void LogoActor::Draw()
 {
     s32 scale;
@@ -686,7 +688,7 @@ void LogoActor::Draw()
              * a local, ORed into the palette. */
             u32 tile = GET_TILE_NUM(gLogoActorTiles[gLogoActorTileBuffer]);
 
-            QueueSpriteFrameOam(attr1, (palette << 12) | tile, scale);
+            SpriteOamQueue::Add(attr1, (palette << 12) | tile, scale);
         }
     }
 }

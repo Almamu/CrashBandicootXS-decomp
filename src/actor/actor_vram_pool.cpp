@@ -2,6 +2,8 @@
 #include "sprite_obj.hpp"
 #include "hud.hpp"
 #include "vehicle.hpp"
+#include "sprite_oam_queue.hpp"
+#include "sprite_frame_cache.hpp"
 
 extern "C" {
 #include "core.h"
@@ -37,8 +39,8 @@ void SetupActorVramPool(void)
     const struct sprite_anim *anims;
 
     ObjTileAllocator::Init(OBJ_VRAM0 + 0x1400);
-    InitSpriteFrameOamQueue();
-    InitSpriteFrameCache();
+    SpriteOamQueue::Init();
+    SpriteFrameCache::Init();
 
     entityBank = gSpriteBankSet->Bank(35);
     otherBank = entityBank + 12;
