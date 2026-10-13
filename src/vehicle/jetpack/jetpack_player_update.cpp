@@ -2,6 +2,7 @@
 #include "boss_actors.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "cell_anim.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -43,9 +44,9 @@ JetpackPlayer::JetpackPlayer(const struct anim_table_record *rec, s32 z)
     if (this->z != 0) {
         gJetpackPlayerVelY = 0;
         SetState(JETPACK_PLAYER_STATE_RESUME, 0);
-        SetCellAnimSpeed(0x28);
+        CellAnim::SetSpeed(0x28);
     } else {
-        SetCellAnimSpeed(0x1e);
+        CellAnim::SetSpeed(0x1e);
         gJetpackPlayerVelY = Q8(1.5);
     }
     gJetpackInputEnabled = 0;
@@ -99,7 +100,7 @@ void JetpackPlayer::Update()
     }
     if (gJetpackPlayerHalted == 0) {
         depth = INT_TO_Q8(28);
-        z = INT_TO_Q8(GetCellAnimDistance()) + depth;
+        z = INT_TO_Q8(CellAnim::GetDistance()) + depth;
     }
 
     sortKey = ((depth >> 1) & 0x7f80) | (((ABS_BRANCHLESS(y) + ABS_BRANCHLESS(x)) >> 11) & 0x7f);
@@ -189,7 +190,7 @@ void JetpackPlayer::Damage(s32 dmg)
         gJetpackInputEnabled = 0;
         gJetpackPauseLocked = 1;
         gJetpackPlayerInactive = 1;
-        SetCellAnimSpeed(0x1e);
+        CellAnim::SetSpeed(0x1e);
         gJetpackPlayerVelY = 0;
         CLAMP_SPEED(gJetpackPlayerVelX);
         gJetpackPlayerVelX /= 2;
@@ -353,7 +354,7 @@ void JetpackPlayer::FinishRun()
         gJetpackInputEnabled = zero;
         gJetpackPlayerHalted = 1;
         gJetpackPlayerInactive = 1;
-        SetCellAnimSpeed(0x3c);
+        CellAnim::SetSpeed(0x3c);
         gJetpackPlayerVelY = zero;
         gJetpackPlayerVelX = zero;
         SetState(JETPACK_PLAYER_STATE_FINISH, 4);
@@ -389,7 +390,7 @@ void JetpackPlayer::PassRing(s32 x, s32 y)
     this->y = y;
 
     if (this->state != JETPACK_PLAYER_STATE_BOOST)
-        SetCellAnimSpeed(0x50);
+        CellAnim::SetSpeed(0x50);
     this->state = JETPACK_PLAYER_STATE_BOOST;
 
     /* Both addresses first, as the ROM loads them (stored in place,

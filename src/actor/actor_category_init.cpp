@@ -4,6 +4,7 @@
 #include "key_input.hpp"
 #include "menus.hpp"
 #include "vehicle.hpp"
+#include "cell_anim.hpp"
 
 extern "C" {
 #include "core.h"
@@ -82,7 +83,7 @@ static inline s32 RunCategoryPauseMenu(void)
     FadeBrightness(0x80, 1, 1);
     DmaCopy16(3, buf, OBJ_PLTT, OBJ_PLTT_SIZE);
     mem_free(buf);
-    ResetCellAnimBg();
+    CellAnim::ResetBg();
     if (CUR_CATEGORY.bgPicture != NULL)
         LoadBgPicture(CUR_CATEGORY.bgPicture);
     ReloadActorCategoryGraphics();
@@ -123,8 +124,8 @@ s32 InitActorCategory(s32 category)
             variant = CUR_CATEGORY.bossLevel;
         DmaFill16(3, 0, PLTT, PLTT_SIZE);
         FadeBrightness(0x80, 2, 1);
-        InitCellAnim(CUR_CATEGORY.type, CUR_CATEGORY.cellAnim, CUR_CATEGORY.cellAnimSize,
-                     gActorCheckpoint);
+        CellAnim::Init(CUR_CATEGORY.type, CUR_CATEGORY.cellAnim, CUR_CATEGORY.cellAnimSize,
+                       gActorCheckpoint);
         if (CUR_CATEGORY.bgPicture != NULL)
             LoadBgPicture(CUR_CATEGORY.bgPicture);
         RestoreActorPaletteCycle();
@@ -136,7 +137,7 @@ s32 InitActorCategory(s32 category)
         state = &gLevelState;
         for (;;) {
             gInput->Update();
-            AdvanceCellAnim();
+            CellAnim::Advance();
             status = RunActorCategoryFrame();
             if ((*state)->timeTrial != 0)
                 (*state)->TickLevelClock();
@@ -149,7 +150,7 @@ s32 InitActorCategory(s32 category)
             CommitActorBgScroll();
             gOamBuffer->Commit();
             FlushVramDmaQueue();
-            FlipCellAnimPage();
+            CellAnim::FlipPage();
             UpdateActorCategoryBg2();
             AgeSpriteFrameCache();
 

@@ -1,5 +1,6 @@
 #include "actor_self.hpp"
 #include "vehicle.hpp"
+#include "cell_anim.hpp"
 
 extern "C" {
 #include "core.h"
@@ -78,11 +79,11 @@ s32 RunActorCategoryFrame(void)
     if (gActorCategoryVtable->updateBoss != NULL)
         gActorCategoryVtable->updateBoss();
     gActorCategoryExitStatus = CATEGORY_EXIT_NONE;
-    scroll = GetCellAnimDistance();
+    scroll = CellAnim::GetDistance();
     if (scroll - gActorSpawnOffset > gActorSpawnTable->length)
         gActorCategoryVtable->reachCourseEnd();
     if (gActorSpawnsPaused != 0) {
-        gActorSpawnOffset += GetCellAnimFrameStep();
+        gActorSpawnOffset += CellAnim::GetFrameStep();
     } else {
         while (SPAWN_DUE()) {
             gActorCategoryVtable->spawn(&gActorSpawnTable->entries[gActorSpawnIndex].spawn,

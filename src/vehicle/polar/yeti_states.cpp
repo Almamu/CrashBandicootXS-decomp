@@ -2,6 +2,7 @@
 #include "audio.hpp"
 #include "yeti.hpp"
 #include "vehicle.hpp"
+#include "cell_anim.hpp"
 
 extern "C" {
 #include "core.h"
@@ -26,7 +27,7 @@ extern "C" {
  * docs/matching/archive/issue-54-actor-d3a8.md). */
 
 /* Re-derives `gYetiPosition`/`gYetiDistance` (a small per-frame ease
- * toward a `GetCellAnimDistance()`-driven target, with a `+0x99` nudge on the
+ * toward a `CellAnim::GetDistance()`-driven target, with a `+0x99` nudge on the
  * "already settled" branch), clamps `gYetiDistance` to `0xA000`, then - only
  * while `gYetiDistance <= 0x4FFF` - fires a tier-keyed cue off the object's
  * own `+8`-field-derived "tier": tiers `0xc`/`0x1c` call the
@@ -34,22 +35,22 @@ extern "C" {
  * byte flag passed via the stack) followed by `ShakeActorBg(0x200)`;
  * tiers `0xd`/`0x1d` call `ShakeActorBg(0x100)` alone. Finally, while the
  * object's `+0x12` done flag is set, runs a two-stage
- * `GetCellAnimSpeed()`/`RandRange()`-gated check against
+ * `CellAnim::GetSpeed()`/`RandRange()`-gated check against
  * `chargeParams[paramsIndex]`'s `fastChance`/`slowChance` rolls to
  * decide whether to fire the kind-1/anim-reset transition (plus a sound
  * cue while `gYetiDistance <= 0x7800`). */
 void Yeti::StateChase()
 {
-    if (GetCellAnimSpeed() == 0x24) {
-        position = INT_TO_Q8(GetCellAnimDistance()) - distance;
+    if (CellAnim::GetSpeed() == 0x24) {
+        position = INT_TO_Q8(CellAnim::GetDistance()) - distance;
     } else {
         position += 0x99;
-        distance = INT_TO_Q8(GetCellAnimDistance()) - position;
+        distance = INT_TO_Q8(CellAnim::GetDistance()) - position;
     }
 
     if (distance > INT_TO_Q8(160)) {
         distance = INT_TO_Q8(160);
-        position = INT_TO_Q8(GetCellAnimDistance()) - distance;
+        position = INT_TO_Q8(CellAnim::GetDistance()) - distance;
     }
 
     s32 tier = Q8_TO_INT(anim->animTime);
@@ -71,11 +72,12 @@ void Yeti::StateChase()
             goto do_transition;
         }
 
-        if (GetCellAnimSpeed() > 0x24 && RandRange(0x100) < chargeParams[paramsIndex].fastChance) {
+        if (CellAnim::GetSpeed() > 0x24 &&
+            RandRange(0x100) < chargeParams[paramsIndex].fastChance) {
             goto do_transition;
         }
 
-        if (GetCellAnimSpeed() > 0x24) {
+        if (CellAnim::GetSpeed() > 0x24) {
             goto end_transition;
         }
         if (RandRange(0x100) >= chargeParams[paramsIndex].slowChance) {
@@ -105,11 +107,11 @@ void Yeti::StateChase()
 void Yeti::StateCharge()
 {
     position += chargeParams[paramsIndex].step;
-    distance = INT_TO_Q8(GetCellAnimDistance()) - position;
+    distance = INT_TO_Q8(CellAnim::GetDistance()) - position;
 
     if (distance > INT_TO_Q8(160)) {
         distance = INT_TO_Q8(160);
-        position = INT_TO_Q8(GetCellAnimDistance()) - distance;
+        position = INT_TO_Q8(CellAnim::GetDistance()) - distance;
     }
 
     s32 tier = Q8_TO_INT(anim->animTime);

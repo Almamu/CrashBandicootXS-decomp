@@ -1,6 +1,7 @@
 #define ACTOR_SELF_DESTRUCTOR_OUT_OF_LINE
 #include "actor_self.hpp"
 #include "vehicle.hpp"
+#include "cell_anim.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -23,7 +24,7 @@ extern "C" {
  * Update expand it; UpdateDepth is its out-of-line copy. */
 static inline void RefreshDepth(ActorSelf *self)
 {
-    s32 d = self->z - INT_TO_Q8(GetCellAnimDistance());
+    s32 d = self->z - INT_TO_Q8(CellAnim::GetDistance());
     s32 value;
 
     self->depth = ABS_BRANCHLESS(d);

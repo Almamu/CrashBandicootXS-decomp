@@ -758,6 +758,8 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/bosses/hovercraft.cpp`, `src/data/singleton_kind_17c460.c`, `boss_pictures_167ad4.c` | the five ROM tables only the hovercraft reads are `Hovercraft`'s static data members (`attacks` is gHovercraftAttacks, `box`, `keyframes`, `palette`, `picture`), still defined in their C data files; bosses.h's five externs go | 0 | (unchanged) | 0 -> 0 | [#772](#the-hovercraft-as-an-all-static-class-772) |
 | `src/vehicle/polar/yeti.cpp`, `yeti_graphics.cpp`, `yeti_states.cpp`, `yeti_update.cpp`, `src/vehicle/jetpack/jetpack_spawn.cpp`, `src/data/actor_state_fn_17a840.cpp` (was .c) | `Yeti` (new include/yeti.hpp), an all-static class: its 8 IWRAM globals and 7 ROM tables are static data members (`anim` is gYeti, `x` gYetiX, `stateFuncs` gYetiStateFuncs, ...), its 13 functions static member functions (`Create`, `Update`, `UpdateBg2`, `Destroy`, `LoadGraphics`, `Stop`, `IsTouching`, the four states incl. jetpack_spawn.cpp's `StateStop`, `UpdatePalette`, `BuildBg2Map`); vehicle.h's 13 prototypes and 15 externs go (5 C-only prototypes stay for the category table) | 13 | (unchanged) | 0 -> 0 | [#772](#the-yeti-as-an-all-static-class-772) |
 | `src/vehicle/polar/polar_player.cpp`, `polar_player_states.cpp`, `polar_crate.cpp`, `polar_crates.cpp`, `polar_objects.cpp`, `polar_course_objects.cpp` | the callers: `Yeti::Stop()`, `Yeti::IsTouching(this)` | 0 | (unchanged) | 0 -> 0 | [#772](#the-yeti-as-an-all-static-class-772) |
+| `src/actor/cell_anim.cpp` | `CellAnim` (new include/cell_anim.hpp), an all-static class: its 13 IWRAM globals are static data members (`data` is gCellAnim, `cols` gCellAnimCols, ...), its 11 functions static member functions (`Init`, `ResetBg`, `UploadFrame`, `Advance`, `FlipPage`, the getters, `SetSpeed`, the UNUSED `FillTilemap`); actor.h's 11 prototypes and 13 externs go | 11 | (unchanged) | 0 -> 0 | [#915](#the-cell-animation-as-an-all-static-class-915) |
+| `src/actor/actor.cpp`, `actor_category_frame.cpp`, `actor_category_init.cpp`, `actor_category_select.cpp`, `bg_picture.cpp`, `src/bosses/hovercraft.cpp`, `src/vehicle/jetpack/airship.cpp`, `jetpack_player.cpp`, `jetpack_player_update.cpp`, `src/vehicle/polar/polar_player.cpp`, `polar_player_states.cpp`, `yeti.cpp`, `yeti_states.cpp`, `yeti_update.cpp` | the callers: `CellAnim::GetDistance()`, `CellAnim::SetSpeed(...)` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-cell-animation-as-an-all-static-class-915) |
 | `src/vehicle/jetpack/airship.cpp`, `airship_states.cpp`, `airship_graphics.cpp`, `airship_map.cpp`, `airship_touch.cpp`, `src/data/actor_state_17c3fc.cpp` (was .c) | `Airship` (new include/airship.hpp), an all-static class: its 25 IWRAM globals are static data members (`x` is gAirshipX, `anim` gAirship, ...), its 21 functions static member functions (`Create`, `Spawn`, `Update`, `UpdateBg2`, `LoadGraphics`, `Destroy`, `Damage`, `IsTouching`, `GetHpPercent`, `Steer`, `DrawMap`, `ConvertTiles`, the six states, ...), gAirshipStateFuncs is `Airship::stateFuncs` and the six tables only it reads (gAirshipAttacks, gAirshipBox, ...) are static data members too; boss_actors.hpp's inline SetAirshipState is the private inline member `SetState`; bosses.h's 20 prototypes are down to 5 C-only ones (the category table's), its 32 externs and vehicle.h's nullsub_30 go | 21 | (unchanged) | 0 -> 0 | [#772](#the-airship-as-an-all-static-class-772) |
 | `src/vehicle/jetpack/jetpack_shot.cpp`, `jetpack_spawn.cpp`, `src/hud/hud_counters.cpp` | the callers: `Airship::IsTouching(this)`, `Airship::Damage(2)`, `Airship::Spawn(...)`, `Airship::GetHpPercent()` | 0 | (unchanged) | 0 -> 0 | [#772](#the-airship-as-an-all-static-class-772) |
 
@@ -4422,6 +4424,38 @@ data objects included.
   (LoadGraphics's inlined copy of the map loop) stays a file-local helper,
   and gYetiRleFrames (the frames' pixels, rle_sprites_0c2758.c) a C
   global that only frame_table_17a880.c names.
+
+### The cell animation as an all-static class (#915)
+
+#915 groups the free functions that work on one subsystem's globals
+into classes. The 3D stages' BG0 cell animation (cell_anim.cpp, ROM
+0x080297C8-0x08029C30) was 11 free functions over 13 IWRAM globals
+(0x03001394-0x030013BF) that no other object reads. It is now `CellAnim`
+(include/cell_anim.hpp), all-static on the yeti's grounds: the ROM loads
+each variable's own address, even for the adjacent bytes gCellAnimPage
+and gCellAnimUploaded in FlipCellAnimPage. Every object is byte-identical.
+
+- **Data.** The variables are private static data members, only declared:
+  `data` (gCellAnim, the cell record), `cols`, `rows`, `tileBytes`,
+  `frameSize`, `distance`, `length`, `time`, `speed`, `hasBanks`, `page`,
+  `uploaded`, `frameStep`. cxx_symbols.txt's `#915 CellAnim` block maps
+  them to their C names, which sym_iwram.txt places. A local and a
+  parameter had a member's name and were renamed: Init's
+  `frameSize` pointer is `pFrameSize`, SetSpeed's argument `value`, and
+  FillTilemap's `page` argument `screen`.
+- **Functions.** All 11 are static member functions under their C names
+  (`Advance__8CellAnim AdvanceCellAnim`, ...). Public: `Init` and `ResetBg`
+  (InitActorCategory), `Advance` and `FlipPage` (the category loop),
+  `GetDistance` (the actors' depth, the players, the bosses),
+  `GetFrameStep`, `GetFreeTile` (bg_picture.cpp), and `GetSpeed`/`SetSpeed`
+  (the players and the yeti). Private: `UploadFrame` and the UNUSED
+  `FillTilemap`.
+- **Left outside.** `ActorCategoryAttemptEndStub`, a category-table stub
+  that sits between ResetCellAnimBg and GetCellAnimFreeTile in the ROM, stays a
+  free function in cell_anim.cpp, as do the `static inline FillTileMap`
+  helper that ResetBg inlines twice and gActorFocalLength, the actors'
+  projection distance that Init reads. The function pointer it calls
+  through (gDrawMirroredTilemapFunc, iwram_data.cpp) is a global as well.
 
 ### The airship as an all-static class (#772)
 

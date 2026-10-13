@@ -1,6 +1,7 @@
 #include "actor_self.hpp"
 #include "yeti.hpp"
 #include "vehicle.hpp"
+#include "cell_anim.hpp"
 
 extern "C" {
 #include "core.h"
@@ -43,7 +44,7 @@ void Yeti::Create(s32 level)
 
     x = 0;
     distance = INT_TO_Q8(160);
-    position = INT_TO_Q8(GetCellAnimDistance()) - distance;
+    position = INT_TO_Q8(CellAnim::GetDistance()) - distance;
     SetActorBgLayerDepth(distance);
 
     state = YETI_STATE_CHASE;

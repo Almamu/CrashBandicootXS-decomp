@@ -48,7 +48,7 @@ class AnimPart;
  * StateChase's two rolls (out of 0x100) for starting a charge. */
 struct YetiCharge {
     s32 step;       // 0x00 - StateCharge adds it to position (Q8)
-    s32 fastChance; // 0x04 - the roll while GetCellAnimSpeed() > 0x24
+    s32 fastChance; // 0x04 - the roll while CellAnim::GetSpeed() > 0x24
     s32 slowChance; // 0x08 - the roll otherwise
 };
 

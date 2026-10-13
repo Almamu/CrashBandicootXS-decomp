@@ -2,6 +2,7 @@
 #include "audio.hpp"
 #include "level_state.hpp"
 #include "yeti.hpp"
+#include "cell_anim.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -17,7 +18,7 @@ extern "C" {
  * 0x0802B364-0x0802BC68, between actor_factory.cpp and
  * polar_player_states.cpp. The player rides the polar bear: the d-pad
  * steers, A jumps and B dashes, and the bear's speed is the cell
- * animation's (SetCellAnimSpeed). Its state lives in the gPolar* globals.
+ * animation's (CellAnim::SetSpeed). Its state lives in the gPolar* globals.
  *
  * Built with old_agbcp, as the C was with old_agbcc. See
  * docs/matching/archive/issue-50-actor-bc68.md and
@@ -33,7 +34,7 @@ void PolarPlayer::Update()
     DispenseWumpa();
     if (gPolarFinishTimer != 0 && --gPolarFinishTimer == 0) {
         gPolarPlayerHalted = 1;
-        SetCellAnimSpeed(0);
+        CellAnim::SetSpeed(0);
         SetState(POLAR_PLAYER_STATE_FINISH, 10);
     }
     if (gPolarInvulnTimer != 0 && --gPolarInvulnTimer != 0 && gPolarPlayerInactive == 0 &&
@@ -43,7 +44,7 @@ void PolarPlayer::Update()
         visible = 1;
     if (gPolarPlayerHalted == 0) {
         depth = INT_TO_Q8(47);
-        z = INT_TO_Q8(GetCellAnimDistance()) - depth;
+        z = INT_TO_Q8(CellAnim::GetDistance()) - depth;
     }
 
     sortKey = ((depth >> 1) & 0x7f80) | (((ABS_BRANCHLESS(y) + ABS_BRANCHLESS(x)) >> 11) & 0x7f);
@@ -175,7 +176,7 @@ s32 PolarPlayer::Hurt()
             gLevelState->LoseLife();
         gPolarSteerEnabled = 0;
         gPolarPlayerInactive = 1;
-        SetCellAnimSpeed(0);
+        CellAnim::SetSpeed(0);
         Yeti::Stop();
     } else {
         *timer = 0x4b;
@@ -201,7 +202,7 @@ s32 PolarPlayer::Shock()
         gAudioContext->PlaySfx(SFX_ELECTRIC_SHOCK, 0x100);
         gPolarSteerEnabled = 0;
         gPolarPlayerInactive = 1;
-        SetCellAnimSpeed(0);
+        CellAnim::SetSpeed(0);
         Yeti::Stop();
     } else {
         *timer = 0x4b;
@@ -248,7 +249,7 @@ void PolarPlayer::StateMount()
         gPolarPlayerInactive = 0;
         delete gRiderlessPolar;
         gRiderlessPolar = 0;
-        SetCellAnimSpeed(0x19);
+        CellAnim::SetSpeed(0x19);
     }
 }
 
@@ -259,7 +260,7 @@ void PolarPlayer::StateMount()
 void PolarPlayer::StateRun()
 {
     if (animDone != 0) {
-        SetCellAnimSpeed(0x24);
+        CellAnim::SetSpeed(0x24);
         if (animIndex != 0)
             RestartAnim(0);
         else if (RandRange(3) == 0)
@@ -280,7 +281,7 @@ void PolarPlayer::StateRun()
         bit = keys &= bit;
         if (bit) {
             SetState(POLAR_PLAYER_STATE_DASH, 2);
-            SetCellAnimSpeed(0x38);
+            CellAnim::SetSpeed(0x38);
         }
     }
 }
@@ -299,7 +300,7 @@ void PolarPlayer::StateJump()
     if (y > POLAR_GROUND_Y) {
         y = POLAR_GROUND_Y;
         SetState(POLAR_PLAYER_STATE_RUN, 4);
-        SetCellAnimSpeed(0x24);
+        CellAnim::SetSpeed(0x24);
     }
 }
 
@@ -309,7 +310,7 @@ void PolarPlayer::StateDash()
 {
     if ((u16)(gKeys.all & B_BUTTON) == 0) {
         SetState(POLAR_PLAYER_STATE_RUN, 0);
-        SetCellAnimSpeed(0x24);
+        CellAnim::SetSpeed(0x24);
     }
 
     if (gKeys.half.pressed & A_BUTTON) {

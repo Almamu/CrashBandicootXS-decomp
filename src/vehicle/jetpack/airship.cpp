@@ -1,4 +1,5 @@
 #include "airship.hpp"
+#include "cell_anim.hpp"
 
 extern "C" {
 #include <libgcc.h>
@@ -142,7 +143,7 @@ void Airship::Create(s32 lvl)
  * argument) and copies several of its fields into
  * `gAirshipFireTimer`/`gAirshipHp`, resets the DMA-refresh/
  * palette-strip counters, recomputes the BG2 zoom scale/offset via
- * `GetCellAnimDistance`/`__divsi3`/`SetActorBgLayerDepth`, blits the airship's
+ * `CellAnim::GetDistance`/`__divsi3`/`SetActorBgLayerDepth`, blits the airship's
  * current frame via `DrawAirshipMap`, sets DISPCNT's bit10,
  * recomputes the BG2 affine matrix (`UpdateAirshipBg2`), and finally queues
  * a palette-strip DMA transfer (`QueueVramDmaTransfer`).
@@ -173,7 +174,7 @@ void Airship::Spawn(s32 kind, s32 sx, s32 sy, s32 sz)
     volleyCount = 0;
     bg2PageFlip = 1;
     bg2Page = 0;
-    distance = z - INT_TO_Q8(GetCellAnimDistance());
+    distance = z - INT_TO_Q8(CellAnim::GetDistance());
     scale = __divsi3(ACTOR_PROJECTION, distance);
     screenX = Q12_MUL(x, scale);
     screenY = Q12_MUL(scale, y);
@@ -217,7 +218,7 @@ void Airship::Update()
             ANIM_REWIND(self->animTime, self->anims[self->animIndex]);
             self->animDone = 1;
         }
-        distance = z - INT_TO_Q8(GetCellAnimDistance());
+        distance = z - INT_TO_Q8(CellAnim::GetDistance());
         scale = __divsi3(ACTOR_PROJECTION, distance);
         screenX = Q12_MUL(x, scale);
         screenY = Q12_MUL(scale, y);

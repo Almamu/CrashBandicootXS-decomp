@@ -2,6 +2,7 @@
 #include "vehicle.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "cell_anim.hpp"
 
 extern "C" {
 #include <libgcc.h>
@@ -344,7 +345,7 @@ void Hovercraft::Spawn(s32 kind, s32 sx, s32 sy, s32 sz)
     partsLeft = 4;
     hitFlashTimer = 0;
     hitFlashOn = 0;
-    distance = z - INT_TO_Q8(GetCellAnimDistance());
+    distance = z - INT_TO_Q8(CellAnim::GetDistance());
     scale = __divsi3(ACTOR_PROJECTION, distance);
     screenX = Q12_MUL(x, scale);
     screenY = Q12_MUL(scale, y);
@@ -384,7 +385,7 @@ void Hovercraft::Update(void)
             ANIM_REWIND(self->animTime, self->anims[self->animIndex]);
             self->animDone = 1;
         }
-        distance = z - INT_TO_Q8(GetCellAnimDistance());
+        distance = z - INT_TO_Q8(CellAnim::GetDistance());
         scale = __divsi3(ACTOR_PROJECTION, distance);
         screenX = Q12_MUL(x, scale);
         screenY = Q12_MUL(scale, y);
