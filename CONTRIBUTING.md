@@ -442,9 +442,8 @@ has the list and the rules. In short:
 - Use a helper instead of writing the operation out, and instead of a
   new file-local macro. If two files need the same local macro, move it
   into the header that owns its type (`CLEAR_OAM` is in
-  `frontend.hpp`, `ENTITY_MARK_GONE` in `entity_bits.h`, `DMA3` in
-  `gba/dma_macros.h`, ...). Two different macros shouldn't share a name
-  either: rename one.
+  `frontend.hpp`, `ENTITY_MARK_GONE` in `entity_bits.h`, ...). Two
+  different macros shouldn't share a name either: rename one.
 - **A helper must expand to exactly the expression it replaces** (the
   same operand order, casts, signedness, and ternary-versus-`if` form),
   so a conversion never changes a byte. Check the object after each

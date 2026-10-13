@@ -1,17 +1,6 @@
 #ifndef GUARD_GBA_DMA_MACROS_H
 #define GUARD_GBA_DMA_MACROS_H
 
-/* SAD/DAD/CNT as a struct, for code that sets up a DMA channel field
- * by field rather than through the DmaSet()-style macros below. */
-struct dma_regs {
-    vu32 src;
-    vu32 dst;
-    vu32 cnt;
-};
-
-/* Channel 3's registers as a `struct dma_regs`. */
-#define DMA3 (*(struct dma_regs *)REG_ADDR_DMA3SAD)
-
 #define DmaSet(dmaNum, src, dest, control)        \
 {                                                 \
     vu32 *dmaRegs = (vu32 *)REG_ADDR_DMA##dmaNum##SAD; \
