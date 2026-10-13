@@ -11,16 +11,13 @@
 # - the C definitions of the two room-data regions (each room's palette
 #   read from its layer pictures, which must all carry the same one), which
 #   src/data/level_rooms_*.cpp #include, and of their rooms' assets, which
-#   src/data/level_assets_64f830.cpp #includes;
-# - the level data that isn't the ROM's: the rooms in no region of
-#   levels.json, their assets and the tile sets only they use, which
-#   src/data/level_appended.cpp #includes and ldscript.txt links after the
-#   IWRAM image (docs/levels.md, "Adding a room").
+#   src/data/level_assets_64f830.cpp #includes. The level data that isn't
+#   the ROM's goes with them, in place (docs/levels.md, "Adding a room"):
+#   the rooms in no region of levels.json and the tile sets only they use
+#   after the last region's rooms, their assets after the ROM's.
 LEVELS_BUILDDIR := $(OBJ_DIR)/data/levels
 LEVEL_ROOMS := $(shell python3 tools/levels.py rooms)
 LEVEL_PACKED_ROOMS := $(shell python3 tools/levels.py rooms --packed)
-LEVEL_NEW_ROOMS := $(shell python3 tools/levels.py rooms --new)
-LEVEL_ROM_ROOMS := $(filter-out $(LEVEL_NEW_ROOMS),$(LEVEL_ROOMS))
 LEVEL_ROOM_JSONS := $(foreach room,$(LEVEL_ROOMS),data/levels/$(room)/room.json)
 # The rooms' layer pictures, which also carry each room's palette.
 LEVEL_BG_PNGS := $(foreach room,$(LEVEL_ROOMS),$(wildcard data/levels/$(room)/bg?.png))
@@ -78,8 +75,12 @@ $(LEVELS_BUILDDIR)/%/asset.bin.inc: $(LEVELS_BUILDDIR)/%/asset.bin tools/bin2c.p
 
 # The room data takes the layers' asset offsets and chunk grids from the
 # asset.layout.json `levels.py asset` writes next to each asset.bin.
+# The last region also defines the new rooms and the new tile sets (a BG0
+# one sized by its built tiles).
 $(LEVELS_BUILDDIR)/level_rooms_%.inc: data/levels/levels.json $(LEVEL_ROOM_JSONS) $(LEVEL_BG_PNGS) \
-		$(foreach room,$(LEVEL_ROM_ROOMS),$(LEVELS_BUILDDIR)/$(room)/asset.bin) data/levels/entity_types.json $(LEVEL_TOOLS)
+		$(foreach room,$(LEVEL_ROOMS),$(LEVELS_BUILDDIR)/$(room)/asset.bin) \
+		$(foreach t,$(LEVEL_NEW_TILESETS_8BPP),$(LEVELS_BUILDDIR)/tilesets/$(t).bin) \
+		data/levels/entity_types.json $(LEVEL_TOOLS)
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py c level_rooms_$* $@ --build $(LEVELS_BUILDDIR)
 
@@ -92,7 +93,10 @@ $(LEVELS_BUILDDIR)/level_assets_64f830.inc: data/levels/levels.json $(LEVEL_ROOM
 
 $(foreach r,$(LEVEL_REGIONS),$(eval $(C_BUILDDIR)/data/$(r).o: $(LEVELS_BUILDDIR)/$(r).inc))
 $(foreach r,$(LEVEL_REGIONS),$(eval $(C_BUILDDIR)/data/$(r).o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)))
-$(C_BUILDDIR)/data/level_assets_64f830.o: $(LEVELS_BUILDDIR)/level_assets_64f830.inc $(call level_asset_incs,$(LEVEL_ROM_ROOMS))
+$(C_BUILDDIR)/data/$(lastword $(LEVEL_REGIONS)).o: \
+	$(foreach t,$(LEVEL_NEW_TILESETS_8BPP),$(LEVELS_BUILDDIR)/tilesets/$(t).bin.inc) \
+	$(foreach t,$(LEVEL_NEW_TILESETS_4BPP),$(LEVELS_BUILDDIR)/tilesets/$(t).bin.lz.inc)
+$(C_BUILDDIR)/data/level_assets_64f830.o: $(LEVELS_BUILDDIR)/level_assets_64f830.inc $(call level_asset_incs,$(LEVEL_ROOMS))
 $(C_BUILDDIR)/data/level_assets_64f830.o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)
 
 # The level table (docs/levels.md, "The level table"), which
@@ -111,21 +115,6 @@ $(LEVELS_BUILDDIR)/level_table_16c814_rooms.inc: $(LEVEL_TABLE_DEPS)
 $(C_BUILDDIR)/data/level_table_16c814.o: $(LEVELS_BUILDDIR)/level_table_16c814.inc \
 	$(LEVELS_BUILDDIR)/level_table_16c814_rooms.inc
 $(C_BUILDDIR)/data/level_table_16c814.o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)
-
-# The level data that isn't the ROM's (src/data/level_appended.cpp): the
-# new tile sets, the new rooms' data, the level table's new records and
-# room lists, and the new rooms' assets. With the original data it is
-# empty.
-$(LEVELS_BUILDDIR)/level_appended.inc: data/levels/levels.json $(LEVEL_ROOM_JSONS) $(LEVEL_BG_PNGS) \
-		$(foreach room,$(LEVEL_NEW_ROOMS),$(LEVELS_BUILDDIR)/$(room)/asset.bin) \
-		$(foreach t,$(LEVEL_NEW_TILESETS_8BPP),$(LEVELS_BUILDDIR)/tilesets/$(t).bin) \
-		data/levels/entity_types.json include/constants/categories.h $(LEVEL_TOOLS)
-	@mkdir -p $(dir $@)
-	python3 tools/levels.py appended $@ --build $(LEVELS_BUILDDIR)
-$(C_BUILDDIR)/data/level_appended.o: $(LEVELS_BUILDDIR)/level_appended.inc $(call level_asset_incs,$(LEVEL_NEW_ROOMS)) \
-	$(foreach t,$(LEVEL_NEW_TILESETS_8BPP),$(LEVELS_BUILDDIR)/tilesets/$(t).bin.inc) \
-	$(foreach t,$(LEVEL_NEW_TILESETS_4BPP),$(LEVELS_BUILDDIR)/tilesets/$(t).bin.lz.inc)
-$(C_BUILDDIR)/data/level_appended.o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)
 
 # The constants headers named in the level data (#655): the entity types
 # (data/levels/entity_types.json), the crate kinds (crate_kinds.json) and

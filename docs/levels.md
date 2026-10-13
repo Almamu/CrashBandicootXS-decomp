@@ -410,8 +410,7 @@ sets, so the ROM still matches.
 **Editing.** Open the PNG in an editor that keeps indexed images and
 their palette as they are (Aseprite, GIMP in indexed mode, ...). Paint
 freely: a block that isn't a tile of the layer's set yet becomes a new
-tile at the end of the set (for the ROM's rooms; see "Adding a room" for
-new ones). Mind that:
+tile at the end of the set. Mind that:
 
 - on BG1-3, all 64 pixels of a block must come from one bank. To move a
   cell to another bank, shift all of its indices, the transparent ones
@@ -441,8 +440,6 @@ block is.
 
 These are errors, and each message names the PNG, the cell and its pixels:
 
-- in a new room, a block that isn't a tile of a set of the ROM's rooms
-  (see "Adding a room");
 - a BG1-3 block that mixes palette banks (`... mixes palette banks 2,
   3: a BG1-3 cell draws all 64 pixels from one bank`);
 - an image that isn't the layer's size (`... 2040x320 pixels, expected
@@ -585,31 +582,26 @@ order:
 `extract` checks that this gives the ROM's objects back to back at their
 ROM addresses, and `make compare` that it gives the ROM's bytes.
 
-**New data never moves the ROM's table.** The generator only changes
-the table in place, and puts what is new after the IWRAM image, in
-`src/data/level_appended.cpp`:
+**New data goes in place.** The table is generated from the levels as
+they are now, in the layout above:
 
-- a field of a level or of a room's record is changed in place;
-- a level whose `"rooms"` isn't its `"table"` array any more gets a new
-  array, `gLevelNNNewRooms`, in `level_appended.cpp`; its
-  `gLevelRoomLists` entry's `count` and `rooms` point at it. The ROM's
-  array stays where it was, unused;
-- a new room's record goes into `level_appended.cpp`, and the arrays and
-  the `extra1`/`extra2` pointers that name it are pointers like any
+- a field of a level or of a room's record changes in place;
+- a level plays the rooms of its `"rooms"`: its `gLevelNNRooms` holds
+  them, whatever the ROM's array held, and grows or shrinks in place;
+- a new room's record is one more record (an extra room's with the extra
+  rooms, a played room's where an array first plays it), and the arrays
+  and the `extra1`/`extra2` pointers that name it are pointers like any
   other;
+- a new level (one `"table"` doesn't list) adds an entry to `gLevelTable`
+  and `gLevelRoomLists`, and its array comes after the ROM's. Its id is
+  its place in `"levels"`, which the code's arithmetic needs in a set
+  order (see "The counts the code takes from the levels");
 - a stage is one of the ROM's seven `gLevelStageN`: a stage of a new
   actor category is #966.
 
-The limit is the number of levels. `gLevelTable` and `gLevelRoomLists`
-have one entry per level, and the code indexes other tables by level id
-(`LEVEL_COUNT`, the save data, the level select's grid), so a 26th level
-would grow tables in the middle of the ROM. The generator stops with an
-error naming the level (`... isn't one of the ROM's levels: gLevelTable
-has room for the ROM's 25 levels only (new levels are #966)`). The ROM
-can shift ([shifting.md](./shifting.md), #967): every address it stores
-is a relocation, so #966 can grow `gLevelTable`, `gLevelRoomLists` and
-the other per-level tables in place, and what is linked after them
-moves.
+Whatever grows moves the ROM data linked after it, which is safe: every
+address the ROM stores is a relocation ([shifting.md](./shifting.md),
+#967).
 
 ### Adding a room
 
@@ -634,34 +626,34 @@ The ROM's rooms are those its `"regions"` list; a room in no region is a
    as the level's `"bonus"` or `"gem_path"` room.
 5. **Run `make`.**
 
-The build then puts the room's data, its asset, its record and the
-level's new room array into `src/data/level_appended.cpp` (`levels.py
-appended`), which `ldscript.txt` links after the IWRAM image. That is
-where the ROM's 0xFF fill starts, so the ROM's own data doesn't move;
-past the fill's 106,548 bytes, `rom_fill`'s `ALIGN(0x800000)` grows the
-ROM to the next 8 MB. With the original data the section is empty, so
-the ROM still matches. In the ROM's table only the pointers change
-(see "The level table").
+The build generates the new room with the ROM's, in place: its data
+after the rooms of the last region (`level_rooms_2b91d0.cpp`), its asset
+after the ROM's assets (`level_assets_64f830.cpp`), its record and the
+level's array in the level table. With the original data there is no new
+room, so the ROM still matches. Everything linked after a grown table
+moves ([shifting.md](./shifting.md)); past the end of the ROM's 0xFF
+fill, `rom_fill`'s `ALIGN(0x800000)` grows the ROM to the next 8 MB.
 
-The steps above, with jungle jam playing the copy first and shipwrecked
-taking it as its bonus room, give an 8 MB ROM whose first 0x7E5FCC
-bytes differ from `baserom.gba` in three words only:
-`gLevelRoomLists[LEVEL_JUNGLE_JAM]`'s `count` (1 to 2) and `rooms` (to
-`gLevel00NewRooms`), and `gLevelRoomLists[LEVEL_SHIPWRECKED]`'s
-`extra1` (0 to `gLevelRoom41`). The new data fills 0x087E5FCC to
-0x087EB0A8. In mGBA, a new game loads `gLevelRoom41` where the
-original loads `gLevelRoom17`, with the room's palette.
+The steps above, with jungle jam playing the copy first, shipwrecked
+taking it as its bonus room and one new 8x8 block painted into the
+copy's `bg0.png`, still give an 8 MB ROM. `gLevelRoom41` and the grown
+`gLevel00Rooms` add 0x18 bytes to the level table and the new tile 0x40
+bytes to `gSnowBg0Tiles`; the room's data (0x9C0 bytes) follows the last
+region's rooms and its LZ77-packed asset (0x4709 bytes) the ROM's
+assets. The ROM data after each moves, which the relocations
+`make shiftcheck` checks keep working. In mGBA, a new game's jungle jam loads `gLevelRoom41`
+where the original loads `gLevelRoom17` (`tools/boottest.py`).
 
-The room's layers may name a set of the ROM's rooms, but then only use
-tiles that set already has (a new tile there would move later ROM
-data): a block that isn't one fails the build. To draw new tiles, name a
-new set (`"tileset": "gMyBg0Tiles"`): a set no ROM room uses is made from
-its rooms' pictures alone, in first-use order, and goes with the new
-rooms after the IWRAM image.
+A room's layers may name any tile set. A block that isn't a tile of the
+set yet becomes a new one at the end of the set, after the tiles of the
+ROM's rooms, so the ROM's rooms keep their cells. To draw on a set of
+their own, name a new set (`"tileset": "gMyBg0Tiles"`): a set no ROM room
+uses is made from its rooms' pictures alone, in first-use order, and
+goes after the last region's rooms, before the new rooms.
 
 Editing the ROM's own rooms changes their data in place, which moves
-the ROM data after it; that is safe ([shifting.md](./shifting.md)). New
-levels, themes and actor categories are #966.
+the ROM data after it; that is safe ([shifting.md](./shifting.md)).
+New themes and actor categories are #966.
 
 ### Collision layers
 

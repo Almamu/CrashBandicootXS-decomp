@@ -732,11 +732,10 @@ see [levels.md, "Collision layers"](./levels.md#collision-layers)). The build
 | `build/.../data/levels/tilesets/<set>.bin` | a BG tile set, made from its rooms' pictures (`levels.py tileset`) | `level_tilesets_*.cpp`, `level_bg_tiles_63d4c0.cpp` |
 | `build/.../data/levels/<room>/asset.bin.inc` | the room's tilemaps, re-encoded into the ROM's chunk streams, as `tools/bin2c.py` bytes | `level_assets_64f830.inc` (7 raw assets) |
 | `build/.../data/levels/<room>/asset.bin.lz.inc` | the same, gbagfx LZ77, `tools/bin2c.py --lz` bytes | `level_assets_64f830.inc` (34 packed assets, formerly `graphics/tileset1/27`-`60`) |
-| `build/.../data/levels/level_assets_64f830.inc` | the 41 `gRoomNNAsset` definitions, in `levels.json`'s `"assets"` (ROM) order | `#include`d by `src/data/level_assets_64f830.cpp` |
-| `build/.../data/levels/level_rooms_<addr>.inc` | all rooms of a region | `#include`d by `src/data/level_rooms_<addr>.c` |
+| `build/.../data/levels/level_assets_64f830.inc` | the 41 `gRoomNNAsset` definitions, in `levels.json`'s `"assets"` (ROM) order, then the new rooms' | `#include`d by `src/data/level_assets_64f830.cpp` |
+| `build/.../data/levels/level_rooms_<addr>.inc` | all rooms of a region; the last region (`2b91d0`) then has the new tile sets and the new rooms | `#include`d by `src/data/level_rooms_<addr>.c` |
 | `build/.../data/levels/level_table_16c814.inc` | `gLevelTable` and `gLevelRoomLists`, from `levels.json`'s `"levels"` (`levels.py table levels`) | `#include`d by `src/data/level_table_16c814.cpp` |
 | `build/.../data/levels/level_table_16c814_rooms.inc` | the room records and the played-room arrays, from room.json's `"record"` and `levels.json`'s `"table"` and `"levels"` (`levels.py table records`) | the same, after `gThemeMusicCues` |
-| `build/.../data/levels/level_appended.inc` | the data that isn't the ROM's: new tile sets, new rooms with their records and assets, new played-room arrays (`levels.py appended`); empty with the original data | `#include`d by `src/data/level_appended.cpp` |
 
 Every pointer in the room data is a symbol reference (the room's own
 objects, the tile sets, the assets), and everything the ROM derives
@@ -771,10 +770,10 @@ its `gLevelTable` fields and the rooms it plays, `{"stage": "<NAME>"}`
 for a stage) and `"table"` (the ROM's played-room arrays in ROM order,
 written by `levels.py extract`, which fixes the definition order), and
 each room's `"record"` (its symbol, `"kind"` and `"blend"`). What is new
-(a new room's record, a level's changed room array) is generated into
-`level_appended.inc` after the IWRAM image, and the ROM's entries are
-repointed in place. [levels.md, "The level table"](./levels.md#the-level-table)
-has the field-by-field sources and the limits.
+(a new level, a new room's record, a level's changed room array) is
+generated in place with the rest, and the ROM data after it moves
+([shifting.md](./shifting.md)). [levels.md, "The level
+table"](./levels.md#the-level-table) has the field-by-field sources.
 
 ### Cutscenes
 
