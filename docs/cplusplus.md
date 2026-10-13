@@ -707,6 +707,8 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/system/irq.cpp` (again), `src/iwram/iwram_data.cpp` | `FrameLimiter` (new include/frame_limiter.hpp), an all-static class: the frame-limit globals are static data members (`enabled` is gFrameLimitEnabled, `target`, `interval`), WaitForVBlank and the UNUSED SetFrameLimit/DisableFrameLimit static member functions (`WaitForVBlank`, `Set`, `Disable`); system.h's 3 prototypes and 3 externs go; 24 files and level_select.hpp call `FrameLimiter::WaitForVBlank()` | 3 | (unchanged) | 0 -> 0 | [#915](#the-frame-limiter-as-an-all-static-class-915) |
 | `src/gfx/fade.cpp`, `fade_to_black.cpp`, `src/iwram/iwram_data.cpp` | `BrightnessFade` and `PaletteFade` (new include/fade.hpp), all-static classes: the brightness fade's 3 IWRAM globals and the palette fade's 2 buffers are static data members (`state` is gBrightnessFade, `step`, `timer`; `backup` is gPaletteBackup, `buffer`), their 3 + 2 functions static member functions (`Step`, `Start`, `IsActive`; `Darken`, `FadeToBlack`); gfx.h's 5 prototypes and 5 externs go | 5 | (unchanged) | 0 -> 0 | [#915](#the-brightness-and-palette-fades-as-all-static-classes-915) |
 | `src/actor/actor_category_init.cpp`, `src/cutscene/slideshow.cpp`, `slideshow_display.cpp`, `src/frontend/language_select_setup.cpp`, `src/level/play_room.cpp`, `src/save/save_menu_input.cpp`, `src/vehicle/jetpack/jetpack_player.cpp`, `src/vehicle/polar/polar_player_states.cpp` | the callers: `BrightnessFade::Start(...)`, `BrightnessFade::IsActive()`, `PaletteFade::FadeToBlack()` | 0 | (unchanged) | 0 -> 0 | [#915](#the-brightness-and-palette-fades-as-all-static-classes-915) |
+| `src/level/spawn_markers.cpp`, `src/enemies/enemy_ctrl.cpp` | the entity spawner singleton as static members of `EntitySpawner` (include/spawners.hpp): CreateEntitySpawner, DestroyEntitySpawner and LaunchHarmfulEffectPart are `Create`, `Destroy` and `LaunchHarmfulEffectPart`; level.h's 2 prototypes and enemy_ctrl.hpp's `extern "C"` one go | 3 | (unchanged) | 0 -> 0 | [#915](#the-entity-spawner-singleton-as-static-members-of-entityspawner-915) |
+| `src/level/play_room.cpp`, `src/enemies/enemy_ctrl_update.cpp`, `enemy_shooter.cpp` | the callers: `EntitySpawner::Create()`, `EntitySpawner::Destroy()`, `EntitySpawner::LaunchHarmfulEffectPart(...)` | 0 | (unchanged) | 0 -> 0 | [#915](#the-entity-spawner-singleton-as-static-members-of-entityspawner-915) |
 | `src/text/text_box.cpp` | `GetWordLength`, `DrawWrappedTextInBox` (C linkage; takes a `Font *`, `self->SetMargin`, `HeightToLines`) | 0 + 2 | agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/aabb.cpp` (since #767: `CommitBlendRegs` at the end of gfx/display.cpp, `IwramFree`/`IwramAlloc` in system/iwram_alloc.cpp) | `CommitBlendRegs`, `AabbOverlapsInclusiveX`, `AabbOverlaps`, `IwramFree`, `IwramAlloc` (C linkage) | 0 + 5 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/fixed_math.cpp`, `line.cpp`, `line_step.cpp`, `number_format.cpp`, `printf.cpp`, `rand.cpp`, `string.cpp`, `time_format.cpp` | the fixed-point helpers, the Bresenham line, `itoa`, `sprintf`/`vsprintf`/`FindSubstring` (string.cpp since #767), `rand`/`srand`/`RandRange`, the string functions, `FormatCentiseconds` (C linkage) | 0 + 24 | agbcp | 2 pins, 5 asm, 2 asm labels -> the same | all-C++: gfx, system, util, text |
@@ -3922,6 +3924,34 @@ No other object reads their globals, and every object is byte-identical.
 - **ROM order.** The classes interleave: fade.cpp is Step, Start, Darken,
   and fade_to_black.cpp is FadeToBlack, IsActive. The files keep that
   order; each function is a member of the class whose data it uses.
+
+### The entity spawner singleton as static members of EntitySpawner (#915)
+
+PlayRoom builds the entity spawner when the room starts and deletes it
+when it ends: CreateEntitySpawner (`new EntitySpawner` into
+gEntitySpawner, over gEntitySpawnFuncs) and DestroyEntitySpawner
+(`delete gEntitySpawner`), at the end of spawn_markers.cpp.
+LaunchHarmfulEffectPart (enemy_ctrl.cpp) is the spawner's
+LaunchEffectPart through gEntitySpawner, with the new part made
+harmful: the enemies' floating popup and the shooters' shots. None of
+the three takes a spawner. They are now public static members of
+`EntitySpawner` (include/spawners.hpp), and every object is
+byte-identical.
+
+- **Functions.** `Create` (CreateEntitySpawner), `Destroy`
+  (DestroyEntitySpawner) and `LaunchHarmfulEffectPart`. cxx_symbols.txt's
+  `#915 EntitySpawner` block maps them to their C names. Static: as
+  methods they would take gEntitySpawner in r0 at every call, and
+  LaunchHarmfulEffectPart's six arguments would move up one register.
+- **Callers.** PlayRoom calls `EntitySpawner::Create()` and
+  `EntitySpawner::Destroy()`, the enemies
+  `EntitySpawner::LaunchHarmfulEffectPart(...)`. level.h's 2 prototypes
+  and enemy_ctrl.hpp's `extern "C"` one go.
+- **Why gEntitySpawner stays a global.** Unlike gSaveMenu's, its readers
+  are everywhere: the crates, the player's controllers, the enemies, the
+  gems and the wumpa all call `gEntitySpawner->SpawnEffectPart(...)`,
+  `DropWumpa(...)` & co. (12 objects). It stays in globals.h, like
+  gCrateList and the other singletons' pointers.
 
 ### The link, save and IWRAM data
 
