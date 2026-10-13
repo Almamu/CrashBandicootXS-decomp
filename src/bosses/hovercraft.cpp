@@ -4,6 +4,7 @@
 #include "level_state.hpp"
 #include "cell_anim.hpp"
 #include "actor_bg.hpp"
+#include "actor_spawns.hpp"
 
 extern "C" {
 #include <libgcc.h>
@@ -240,7 +241,7 @@ void Hovercraft::StateFallBack(void)
 
 /* State 5: the hovercraft, out of weapons, sinks: the Z speed ramps
  * toward 0x99 and Y bounces, and once it is under (Y 75 px) the level
- * goes on (ResumeActorSpawns, FinishJetpackRun). Once it is closer than
+ * goes on (ActorSpawns::Resume, FinishJetpackRun). Once it is closer than
  * 21 px, BG2 goes off for good (gHovercraftGone). */
 void Hovercraft::StateFall(void)
 {
@@ -263,7 +264,7 @@ void Hovercraft::StateFall(void)
         y += velY;
 
         if (y > INT_TO_Q8(75)) {
-            ResumeActorSpawns();
+            ActorSpawns::Resume();
             gActorList->AsJetpackPlayer()->FinishRun();
         }
     }
@@ -360,7 +361,7 @@ void Hovercraft::Spawn(s32 kind, s32 sx, s32 sy, s32 sz)
     SpawnHovercraftLauncher(x + INT_TO_Q8(30), y - INT_TO_Q8(48), z - INT_TO_Q8(1));
     SpawnHovercraftSideGun(x - INT_TO_Q8(65), y + INT_TO_Q8(10), z - 1, 1);
     SpawnHovercraftSideGun(x + INT_TO_Q8(132), y + INT_TO_Q8(10), z - 1, 0);
-    PauseActorSpawns();
+    ActorSpawns::Pause();
 }
 
 /* The hovercraft's frame (UpdateAirship's twin): RunHovercraftState, and

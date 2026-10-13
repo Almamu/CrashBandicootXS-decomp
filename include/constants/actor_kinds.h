@@ -15,7 +15,7 @@
  */
 
 /* Both families' path points start here: no actor, a point a homing actor
- * (the polar penguin, the jetpack plane) flies to; GetActorSpawnKindIndex
+ * (the polar penguin, the jetpack plane) flies to; ActorSpawns::GetKindIndex
  * returns the kind less this, the index into the speed tables. */
 #define ACTOR_KIND_PATH_POINT 0x20
 

@@ -1,6 +1,7 @@
 #include "actor_self.hpp"
 #include "vehicle.hpp"
 #include "cell_anim.hpp"
+#include "actor_spawns.hpp"
 
 extern "C" {
 #include "core.h"
@@ -63,11 +64,11 @@ s32 JetpackIsTouchingPlayer(ActorSelf *self)
  * functions (their block notes stop the copy), hence the macro. */
 
 /* "The next spawn's depth has scrolled into view": its `spawn.z` plus
- * gActorSpawnOffset is at most the scroll plus vtable slot 7 (read as a
+ * ActorSpawns::offset is at most the scroll plus vtable slot 7 (read as a
  * value), bounded by the table's spawn count. */
-#define SPAWN_DUE()                                                            \
-    (gActorSpawnIndex < gActorSpawnTable->count                                \
-     && gActorSpawnTable->entries[gActorSpawnIndex].spawn.z + gActorSpawnOffset \
+#define SPAWN_DUE()                                                                   \
+    (ActorSpawns::index < ActorSpawns::table->count                                   \
+     && ActorSpawns::table->entries[ActorSpawns::index].spawn.z + ActorSpawns::offset \
             <= scroll + gActorCategoryVtable->spawnDistance)
 
 s32 RunActorCategoryFrame(void)
@@ -80,15 +81,15 @@ s32 RunActorCategoryFrame(void)
         gActorCategoryVtable->updateBoss();
     gActorCategoryExitStatus = CATEGORY_EXIT_NONE;
     scroll = CellAnim::GetDistance();
-    if (scroll - gActorSpawnOffset > gActorSpawnTable->length)
+    if (scroll - ActorSpawns::offset > ActorSpawns::table->length)
         gActorCategoryVtable->reachCourseEnd();
-    if (gActorSpawnsPaused != 0) {
-        gActorSpawnOffset += CellAnim::GetFrameStep();
+    if (ActorSpawns::paused != 0) {
+        ActorSpawns::offset += CellAnim::GetFrameStep();
     } else {
         while (SPAWN_DUE()) {
-            gActorCategoryVtable->spawn(&gActorSpawnTable->entries[gActorSpawnIndex].spawn,
-                                        gActorSpawnUseBonus, INT_TO_Q8(gActorSpawnOffset));
-            gActorSpawnIndex++;
+            gActorCategoryVtable->spawn(&ActorSpawns::table->entries[ActorSpawns::index].spawn,
+                                        ActorSpawns::useBonus, INT_TO_Q8(ActorSpawns::offset));
+            ActorSpawns::index++;
         }
     }
 
