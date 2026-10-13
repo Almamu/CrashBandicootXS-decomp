@@ -105,11 +105,11 @@ s32 Crate::CollideWithPlayer(u32 idx, s32 testX, s32 testY)
         s32 dx = x - testX;
 
         MAKE_ABS(dx);
-        if (dx <= 0x3FFF) {
+        if (dx <= INT_TO_Q8(64) - 1) {
             s32 dy = y - testY;
 
             MAKE_ABS(dy);
-            if (dy <= 0x3FFF && kind != CRATE_KIND_OUTLINE)
+            if (dy <= INT_TO_Q8(64) - 1 && kind != CRATE_KIND_OUTLINE)
                 QueuePlayerCollision(idx);
         }
     }

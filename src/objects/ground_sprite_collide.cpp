@@ -99,11 +99,11 @@ s32 GroundSprite::ProbeTerrainAxes()
             if (xm == 0)
                 goto y_probe;
             if (xm == PART_DIR_LEFT)
-                x += (s32)0xFFFFFF00;
+                x += -INT_TO_Q8(1);
             else
-                x += 0x100;
+                x += INT_TO_Q8(1);
         } else {
-            y += 0x100;
+            y += INT_TO_Q8(1);
             hit = ProbeFloor(quad, &unused);
         }
     }
@@ -191,7 +191,7 @@ u8 GroundSprite::ProbeFloor(const struct hitbox_quad *quad, u8 *outFlag)
         y = origY & 0xFFFFFF00;
         grounded = (f.bytes.flags2 >> ENTITY_BIT2_GROUNDED) & 1;
         if (!grounded)
-            y -= 0x100;
+            y -= INT_TO_Q8(1);
         f.b.grounded = 1;
         return hit;
     }

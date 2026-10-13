@@ -21,11 +21,11 @@ s32 Platform::CheckPlayerContact()
 
             d -= p->x;
             MAKE_ABS(d);
-            if (d <= 0x7FFF) {
+            if (d <= INT_TO_Q8(128) - 1) {
                 d = y;
                 d -= p->y;
                 MAKE_ABS(d);
-                if (d <= 0x7FFF)
+                if (d <= INT_TO_Q8(128) - 1)
                     ResolveCollision(state);
             }
         }

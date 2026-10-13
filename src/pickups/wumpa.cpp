@@ -34,7 +34,7 @@ void Wumpa::SendToHud()
     gAudioContext->PlaySfx(SFX_WUMPA, 0x100);
     state = WUMPA_STATE_TO_HUD;
     x -= INT_TO_Q8(mode);
-    affine = 0xa0;
+    affine = Q8(0.625);
     ClampFrame(this);
     screenSpace = 1;
 
@@ -42,10 +42,10 @@ void Wumpa::SendToHud()
 
     newX = INT_TO_Q8(outX);
     x = newX;
-    velX = -FixedDiv(Offset(newX, 0x1000), 0x1400);
+    velX = -FixedDiv(Offset(newX, INT_TO_Q8(16)), INT_TO_Q8(20));
     newY = INT_TO_Q8(outY);
     y = newY;
-    velY = -FixedDiv(Offset(newY, 0x1000), 0x1400);
+    velY = -FixedDiv(Offset(newY, INT_TO_Q8(16)), INT_TO_Q8(20));
     gHud->ShowWumpa();
 }
 
@@ -65,7 +65,7 @@ void Wumpa::UpdateHop()
     s32 sn;
 
     sn = gSineTable[phase * 4];
-    y = anchor.y - FixedMul(sn, 0x3000);
+    y = anchor.y - FixedMul(sn, INT_TO_Q8(48));
     sn = gSineTable[phase * 2];
     sn = FixedMul(sn, widths.a[mode - 1]);
     if (mode == PICKUP_MODE_HOP_LEFT)

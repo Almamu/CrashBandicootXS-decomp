@@ -1,6 +1,7 @@
 extern "C" {
 #include "core.h"
 #include "objects.h"
+#include "math_util.h"
 }
 
 /*
@@ -12,6 +13,6 @@ extern "C" {
  * (entry_set_16c418.cpp). */
 const struct speed_ramp gPlatformMoverMotionRecords[3] = {
     { 0, 0, 0 },
-    { 0, 8, 256 },
-    { 0, 40, 1024 },
+    { 0, 8, INT_TO_Q8(1) },
+    { 0, 40, INT_TO_Q8(4) },
 };

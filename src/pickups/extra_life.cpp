@@ -54,7 +54,7 @@ void ExtraLife::PickUp(u8 randomize)
     s32 newX, newY;
 
     gAudioContext->PlaySfx(SFX_EXTRA_LIFE, 0x100);
-    affine = 0xa0;
+    affine = Q8(0.625);
 
     if (randomize) {
         u32 rv = rand();
@@ -72,8 +72,8 @@ void ExtraLife::PickUp(u8 randomize)
         dy = INT_TO_Q8((rv & 0x1f) + 0x10);
         state = EXTRA_LIFE_STATE_FLY_OFF;
     } else {
-        dx = 0xb400;
-        dy = 0xc00;
+        dx = INT_TO_Q8(180);
+        dy = INT_TO_Q8(12);
         state = EXTRA_LIFE_STATE_TO_HUD;
         gHud->ShowLives();
     }
@@ -87,10 +87,10 @@ void ExtraLife::PickUp(u8 randomize)
 
     newX = INT_TO_Q8(outX);
     x = newX;
-    velX = -FixedDiv(newX - dx, 0x1400);
+    velX = -FixedDiv(newX - dx, INT_TO_Q8(20));
     newY = INT_TO_Q8(outY);
     y = newY;
-    velY = -FixedDiv(newY - dy, 0x1400);
+    velY = -FixedDiv(newY - dy, INT_TO_Q8(20));
 }
 
 /* State 1 flies to the HUD and, there (within 0xB4 by 0xC pixels of the
@@ -123,7 +123,7 @@ void ExtraLife::Update()
             s32 t = affine - 4;
 
             affine = t;
-            if (t < 0x40)
+            if (t < Q8(0.25))
                 fire = 1;
         } else {
             affine += 0xc;
@@ -143,7 +143,7 @@ void ExtraLife::Update()
         if (mode == PICKUP_MODE_BOB) {
             s32 sn = gSineTable[(counter & 0x7f) * 2];
 
-            sn = FixedMul(sn, 0x280);
+            sn = FixedMul(sn, Q8(2.5));
             y = anchor.y + sn;
         } else {
             UpdateHop();
@@ -184,10 +184,10 @@ void ExtraLife::SendToHud()
 
     newX = INT_TO_Q8(outX);
     x = newX;
-    velX = -FixedDiv(newX - 0xb400, 0x1400);
+    velX = -FixedDiv(newX - INT_TO_Q8(180), INT_TO_Q8(20));
     newY = INT_TO_Q8(outY);
     y = newY;
-    velY = -FixedDiv(newY - 0xc00, 0x1400);
+    velY = -FixedDiv(newY - INT_TO_Q8(12), INT_TO_Q8(20));
     gHud->ShowLives();
 }
 
@@ -200,7 +200,7 @@ void ExtraLife::UpdateHop()
     s32 sn;
 
     sn = gSineTable[phase * 4];
-    y = anchor.y - FixedMul(sn, 0x800);
+    y = anchor.y - FixedMul(sn, INT_TO_Q8(8));
     sn = gSineTable[phase * 2];
     sn = FixedMul(sn, widths.a[mode - 1]);
     if (mode == PICKUP_MODE_HOP_LEFT)
