@@ -90,7 +90,7 @@ void EnemyCtrl::Update(MovingSprite *)
                 if (target->IsOnScreen() == 0) {
                     MovingSprite *t;
 
-                    SetPos(target, baseX, baseY - 0x6400);
+                    SetPos(target, baseX, baseY - INT_TO_Q8(100));
                     SetMotionX(0);
                     t = target;
                     SetVelY(t, 0x80, 0, 0x80);
@@ -108,18 +108,18 @@ void EnemyCtrl::Update(MovingSprite *)
             MovingSprite *t = target;
             s32 y = t->y;
 
-            if (y > INT_TO_Q8(gLevelLayers->layer0->heightPx) - 0x1E00) {
+            if (y > INT_TO_Q8(gLevelLayers->layer0->heightPx) - INT_TO_Q8(30)) {
                 t->f.b.collides = 0;
 
                 MovingSprite *t2 = target;
 
                 y = t2->y;
-                if (y > INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x1E00)
+                if (y > INT_TO_Q8(gLevelLayers->layer0->heightPx) + INT_TO_Q8(30))
                     MarkGone(t2);
             } else if (t->hitAxes == PART_DIR_DOWN) {
                 SetVelY(t, 0, 0, 0);
             } else {
-                SetVelY(t, 0x400, 0, 0x400);
+                SetVelY(t, INT_TO_Q8(4), 0, INT_TO_Q8(4));
             }
         }
         break;
@@ -305,9 +305,9 @@ void EnemyCtrl::HandleEvent(s32, s32 event, s32)
             target->f.b.collides = 0;
             t = target;
             if ((a = t->x) > gPlayer->x)
-                SetVelX(t, 0x1000, 0, 0x1800);
+                SetVelX(t, INT_TO_Q8(16), 0, INT_TO_Q8(24));
             else
-                SetVelX(t, -0x1000, 0, -0x1800);
+                SetVelX(t, -INT_TO_Q8(16), 0, -INT_TO_Q8(24));
             v = (RandRange(3) << 9) - 0x200;
 
             MovingSprite *t2 = target;

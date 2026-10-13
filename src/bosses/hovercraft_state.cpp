@@ -101,7 +101,7 @@ void Hovercraft::StateApproach(void)
 {
     z += velZ;
 
-    if (distance <= 0x81FF) {
+    if (distance <= INT_TO_Q8(130) - 1) {
         s32 *vx = &velX;
         s32 *vy = &velY;
 

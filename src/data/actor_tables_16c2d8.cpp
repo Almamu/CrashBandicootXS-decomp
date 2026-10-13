@@ -1,6 +1,7 @@
 extern "C" {
 #include "core.h"
 #include "bosses.h"
+#include "math_util.h"
 }
 
 /*
@@ -12,9 +13,9 @@ extern "C" {
  * (mega_mix.cpp) look up by type id. */
 const struct speed_ramp gMegaMixMotionRecords[4] = {
     { 0, 0, 0 },
-    { 0, 32, 450 },
-    { 0, 32, 620 },
-    { 450, 32, 750 },
+    { 0, Q8(0.125), 450 },
+    { 0, Q8(0.125), 620 },
+    { 450, Q8(0.125), 750 },
 };
 
 /* UpdateTiny / SetTinyState (tiny.cpp): a value per round. */
@@ -54,19 +55,19 @@ const u8 gCortexTargetBlinkStopTimes[3] = {
 
 /* UpdateDingodile (dingodile.cpp): the X positions (Q8) at which
  * Dingodile, walking left (`facing`) or right, stops (state 5, motion 0)
- * if the player is within 0x1FFF ahead; the Hurt tables replace the
+ * if the player is less than 32 px ahead; the Hurt tables replace the
  * others once he has been hit. */
 const s32 gDingodileStopXLeft[4] = {
-    0xF000, 0xA000, 0x4B00, 0x0,
+    INT_TO_Q8(240), INT_TO_Q8(160), INT_TO_Q8(75), 0,
 };
 const s32 gDingodileStopXLeftHurt[6] = {
-    0x10400, 0xD200, 0xA000, 0x6E00, 0x4B00, 0x0,
+    INT_TO_Q8(260), INT_TO_Q8(210), INT_TO_Q8(160), INT_TO_Q8(110), INT_TO_Q8(75), 0,
 };
 const s32 gDingodileStopXRight[4] = {
-    0x4B00, 0xA000, 0xF000, 0x40000,
+    INT_TO_Q8(75), INT_TO_Q8(160), INT_TO_Q8(240), INT_TO_Q8(1024),
 };
 const s32 gDingodileStopXRightHurt[6] = {
-    0x4B00, 0x6E00, 0xA000, 0xD200, 0xFA00, 0x40000,
+    INT_TO_Q8(75), INT_TO_Q8(110), INT_TO_Q8(160), INT_TO_Q8(210), INT_TO_Q8(250), INT_TO_Q8(1024),
 };
 
 /* Motion records (`struct speed_ramp`, objects.h): UpdateDingodileShark
@@ -76,7 +77,7 @@ const struct speed_ramp gDingodileMotionRecords[4] = {
     { 0, 0, 0 },
     { 0, 180, 300 },
     { -400, 30, 0 },
-    { 0, 288, 288 },
+    { 0, Q8(1.125), Q8(1.125) },
 };
 
 /* The Y motion records (StartCtrlTargetMotionY, {speed, accel, limit})
@@ -85,10 +86,10 @@ const struct speed_ramp gDingodileMotionRecords[4] = {
  * stalactite's fall (state 5). Only the first three words of the second
  * table are read. */
 const struct speed_ramp gDingodileRocketRiseMotion = {
-    0, 7, -1024,
+    0, 7, -INT_TO_Q8(4),
 };
 const struct speed_ramp gDingodileStalactiteFallMotion[3] = {
-    { 0, 4, 736 },
-    { -1024, 64, 1024 },
+    { 0, 4, Q8(2.875) },
+    { -INT_TO_Q8(4), Q8(0.25), INT_TO_Q8(4) },
     { -600, 10, 0 },
 };

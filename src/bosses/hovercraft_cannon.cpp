@@ -27,9 +27,9 @@ void HovercraftCannon::StateFire()
     s32 slot;
     s32 next;
 
-    x = Hovercraft::GetX() + 0x2000;
-    y = Hovercraft::GetY() + 0x3000;
-    z = Hovercraft::GetZ() - 0x100;
+    x = Hovercraft::GetX() + INT_TO_Q8(32);
+    y = Hovercraft::GetY() + INT_TO_Q8(48);
+    z = Hovercraft::GetZ() - INT_TO_Q8(1);
 
     slot = cooldown;
     if (slot == 0) {
@@ -76,7 +76,7 @@ void HovercraftCannon::StateFire()
         cooldown = next;
     }
 
-    if (depth > 0x4B00)
+    if (depth > INT_TO_Q8(75))
         SetState(HOVERCRAFT_CANNON_STATE_WAIT, 0);
 }
 
@@ -129,7 +129,7 @@ HovercraftCannon::HovercraftCannon(const struct anim_table_record *rec, s32 x, s
 /* Shakes the BG, and deletes the cannon once its animation is done. */
 void HovercraftCannon::StateDestroyed()
 {
-    ShakeActorBg(0x400);
+    ShakeActorBg(INT_TO_Q8(4));
 
     if (animDone != 0)
         delete this;
@@ -140,11 +140,11 @@ void HovercraftCannon::StateDestroyed()
  * state 1 with animation 1. */
 void HovercraftCannon::StateWait()
 {
-    x = Hovercraft::GetX() + 0x2000;
-    y = Hovercraft::GetY() + 0x3000;
-    z = Hovercraft::GetZ() - 0x100;
+    x = Hovercraft::GetX() + INT_TO_Q8(32);
+    y = Hovercraft::GetY() + INT_TO_Q8(48);
+    z = Hovercraft::GetZ() - INT_TO_Q8(1);
 
-    if (depth <= 0x4AFF) {
+    if (depth <= INT_TO_Q8(75) - 1) {
         cooldown = Hovercraft::GetAttack()->timing[1].delay;
         count = 0;
         SetState(HOVERCRAFT_CANNON_STATE_FIRE, 1);

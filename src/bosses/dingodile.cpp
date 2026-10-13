@@ -78,16 +78,16 @@ s32 DingodileCtrl::GetHits()
 /* Close enough to the player (on the side he is facing) to react. */
 static inline void Approach(DingodileCtrl *self, MovingSprite *part, s32 d)
 {
-    if (d <= 0x1FFF)
+    if (d <= INT_TO_Q8(32) - 1)
         self->SetState(part, DINGODILE_STATE_FIRE);
 }
 
 static inline s32 AtLevelEdge(Sprite::MirrorBits *f, s32 x)
 {
     if (f->flipX < 0)
-        return x <= 0x2000;
+        return x <= INT_TO_Q8(32);
     else
-        return x >= LevelRight() - 0x2000;
+        return x >= LevelRight() - INT_TO_Q8(32);
 }
 
 void DingodileCtrl::Update(MovingSprite *part)
@@ -101,14 +101,14 @@ void DingodileCtrl::Update(MovingSprite *part)
         s32 y = part->y;
         MovingSprite *p = shield;
 
-        p->x = x + 0x600;
+        p->x = x + INT_TO_Q8(6);
         p->y = y;
     } else {
         s32 x = part->x;
         s32 y = part->y;
         MovingSprite *p = shield;
 
-        p->x = x - 0x600;
+        p->x = x - INT_TO_Q8(6);
         p->y = y;
     }
     GetSpriteBodyBox(&hurt, part);
@@ -292,9 +292,9 @@ void DingodileCtrl::Update(MovingSprite *part)
         break;
     case DINGODILE_STATE_RETREAT:
         {
-            s32 lim = 0x4000;
+            s32 lim = INT_TO_Q8(64);
             if (counter > 0)
-                lim = 0x2000;
+                lim = INT_TO_Q8(32);
             if (part->mirrorBits.flipX < 0) {
                 if (part->x > lim)
                     break;
@@ -311,7 +311,7 @@ void DingodileCtrl::Update(MovingSprite *part)
         {
             s32 y = part->y;
 
-            if (y >= LevelBottom() + 0x2000) {
+            if (y >= LevelBottom() + INT_TO_Q8(32)) {
                 StartMotion(part, 0);
                 if (gLevelState->HasSuperBodySlam())
                     RequestRoomExit();
@@ -587,7 +587,7 @@ void DingodileProjectileCtrl::Update(MovingSprite *part)
         SetMode(DINGODILE_PROJECTILE_STATE_RISE);
         break;
     case DINGODILE_PROJECTILE_STATE_RISE:
-        if (part->y <= 0x800) {
+        if (part->y <= INT_TO_Q8(8)) {
             part->speedY = 0;
             part->rampY.start = 0;
             part->rampY.step = 0;
@@ -609,7 +609,7 @@ void DingodileProjectileCtrl::Update(MovingSprite *part)
             /* `y` is needed: inlined, the instructions are reordered */
             s32 y = part->y;
 
-            if (y >= LevelBottom() - 0x2000) {
+            if (y >= LevelBottom() - INT_TO_Q8(32)) {
                 SetMode(DINGODILE_PROJECTILE_STATE_BREAK);
                 SetTargetAnim(part, 8);
                 gAudioContext->PlaySfx(SFX_UNKNOWN_39, 0x100);
@@ -674,13 +674,13 @@ void DingodileSharkCtrl::Update(MovingSprite *part)
         break;
     case DINGODILE_SHARK_STATE_UNK1:
         if (part->mirrorBits.flipX < 0) {
-            if (part->x + 0x2800 <= 0)
+            if (part->x + INT_TO_Q8(40) <= 0)
                 part->MarkGone();
         } else {
             /* `x` is needed: inlined, the code is 9 instructions shorter */
             s32 x = part->x;
 
-            if (x >= LevelRight() + 0x2800)
+            if (x >= LevelRight() + INT_TO_Q8(40))
                 part->MarkGone();
         }
         break;

@@ -117,7 +117,7 @@ void MegaMixCtrl::Update(MovingSprite *part)
             }
             /* read into a local first: in place, gcc loads it after the sum */
             px = gPlayer->x;
-            if (px > part->x + 0xA00) {
+            if (px > part->x + INT_TO_Q8(10)) {
                 u8 f = part->mirror;
 
                 if ((s8)(f << 3) < 0) {
@@ -131,8 +131,8 @@ void MegaMixCtrl::Update(MovingSprite *part)
 
             Player *pl = gPlayer;
 
-            if (ABS_BRANCHLESS(pl->x - part->x) <= 0x27FF &&
-                ABS_BRANCHLESS(pl->y - part->y) <= 0x31FF) {
+            if (ABS_BRANCHLESS(pl->x - part->x) <= INT_TO_Q8(40) - 1 &&
+                ABS_BRANCHLESS(pl->y - part->y) <= INT_TO_Q8(50) - 1) {
                 SetMotionXFromSet(part, 0);
                 SetMode(MEGA_MIX_STATE_GRAB);
                 SetTargetAnim(part, 1);
@@ -184,8 +184,8 @@ void MegaMixCtrl::Update(MovingSprite *part)
              * `dead` read's 0x104 below in r3 (#662 round 5): written as
              * a `goto` into state 0's copy it lands in r1, an r3 pin
              * until round 4. */
-            if (ABS_BRANCHLESS(pl->x - part->x) <= 0x27FF &&
-                ABS_BRANCHLESS(pl->y - part->y) <= 0x31FF)
+            if (ABS_BRANCHLESS(pl->x - part->x) <= INT_TO_Q8(40) - 1 &&
+                ABS_BRANCHLESS(pl->y - part->y) <= INT_TO_Q8(50) - 1)
                 pl->HandleEvent(0, EVENT_HIT, 0);
             else
                 Run(this, part);
