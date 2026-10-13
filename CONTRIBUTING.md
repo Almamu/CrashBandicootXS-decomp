@@ -287,6 +287,21 @@ full rules and the history (#574). For new code:
 
   Retype one field or signature at a time and rebuild the whole ROM: a
   type reaches every reader. A cast the match needs stays, with a comment.
+- **Screen size:** `python3 tools/magic_numbers.py --screen` (#979) lists
+  the literals that may come from the 240x160 screen (240/160, 239/159,
+  120/80, their Q8 forms, frame sizes, the screen in tiles, OAM masks and
+  wraps) and classifies each as derived from the screen (spell it with
+  `include/screen.h`: `DISPLAY_CENTER_X`, `CAMERA_MAX_X(w)`, ...), fixed
+  by the hardware or a coincidence. Screen positions and sizes use
+  `screen.h`'s types (`screen_x_t`, ...). See
+  [docs/screen.md](docs/screen.md):
+
+  ```
+  tools/magic_numbers.py --screen [--show]            # every site, its category and reason
+  tools/magic_numbers.py --screen --category screen   # what is left to convert
+  tools/magic_numbers.py --screen --report OUT        # Markdown: per kind and directory
+  ```
+
 - **Simplifications:** `python3 tools/simplify_scan.py` (#846) lists the
   bare blocks, single-use locals and copies, nested ifs and duplicate
   cases left in src/, and `--try` applies them one at a time, keeping

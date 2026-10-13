@@ -39,6 +39,19 @@
 #define OBJ_VRAM0_SIZE  0x8000
 #define OBJ_VRAM1_SIZE  0x4000
 #define OAM_ENTRY_COUNT 128
+
+// A screen coordinate written into an OAM entry: attribute 1's 9-bit X
+// and attribute 0's 8-bit Y (#979). The game code never truncates a
+// screen coordinate itself; where the ROM masks one before packing it
+// into the attributes, the mask is spelled with these, so a platform
+// layer with wider OAM fields (PORTABLE) makes them no-ops.
+#if PORTABLE
+#define OAM_X(x) (x)
+#define OAM_Y(y) (y)
+#else
+#define OAM_X(x) ((x) & 0x1FF)
+#define OAM_Y(y) ((y) & 0xFF)
+#endif
 #if PORTABLE
 // NOTE: Used in gba/types.h, so they have to be defined before the #include
 #define DISPLAY_WIDTH  426

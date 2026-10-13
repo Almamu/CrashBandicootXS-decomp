@@ -2,6 +2,7 @@
 #define __CORE_H__
 
 #include "gba/gba.h"
+#include "screen.h"
 
 /* Set to 1 (via `make NON_MATCHING=1`) to compile in-progress C
  * reconstructions that aren't byte-matching yet, guarded with

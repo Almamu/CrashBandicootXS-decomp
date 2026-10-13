@@ -105,6 +105,14 @@ and each cast's kind (scalar, ptrint, pointer, derived, byteoff, same),
 ranked by cast uses x consistency:
   tools/magic_numbers.py --casts [--json] [--report [OUT]] [--path P ...]
       [--field REGEX] [--kind K ...] [--samples N]
+
+--screen is another (#979, tools/magic_screen.py): the literals that may
+come from the 240x160 screen (240/160, 239/159, 120/80 and their Q8
+forms, 240x160 frame sizes, the screen in tiles, OAM X/Y masks, OBJ
+wraps, the OAM entry count, scanline counts), each classified as
+derived from the screen, fixed by the hardware or a coincidence:
+  tools/magic_numbers.py --screen [--show] [--json] [--report [OUT]]
+      [--category C ...] [--path P ...]
 """
 
 import argparse
@@ -1651,7 +1659,7 @@ def main():
         "--category",
         action="append",
         metavar="C",
-        help="only category C: alloc, copy, stride, offset, hwaddr, hw (repeatable)",
+        help="only category C: --sizes: alloc, copy, stride, offset, hwaddr, hw; --screen: screen, hardware, coincidence, unclassified (repeatable)",
     )
     g.add_argument("--db", metavar="FILE", help="type database JSON: read if it exists, else written")
     g.add_argument("--rebuild", action="store_true", help="recompile even if --db exists")
@@ -1662,7 +1670,17 @@ def main():
     g = ap.add_argument_group("--casts (#855, see tools/magic_casts.py)")
     g.add_argument("--casts", action="store_true", help="the casts, per thing cast, ranked by uses x consistency")
     g.add_argument("--kind", action="append", metavar="K", help="--casts: only casts of kind K (repeatable)")
+    g = ap.add_argument_group("--screen (#979, see tools/magic_screen.py)")
+    g.add_argument("--screen", action="store_true", help="screen-size literals, classified (--category screen ...)")
     args = ap.parse_args()
+
+    if args.screen:
+        import magic_screen
+
+        for c in args.category or ():
+            if c not in magic_screen.CATEGORIES:
+                ap.error(f"unknown category {c!r} (one of {', '.join(magic_screen.CATEGORIES)})")
+        return magic_screen.run(args)
 
     if args.casts:
         import magic_casts
