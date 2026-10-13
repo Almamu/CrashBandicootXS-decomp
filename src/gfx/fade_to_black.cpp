@@ -1,4 +1,5 @@
 #include "frame_limiter.hpp"
+#include "fade.hpp"
 
 extern "C" {
 #include "core.h"
@@ -13,9 +14,9 @@ extern "C" {
  * parked functions interleave with the matched ones - see
  * docs/matching.md for the full split. */
 
-/* Backs the real palette (`PLTT`) up into `gPaletteBackup`,
+/* Backs the real palette (`PLTT`) up into `backup`,
  * then, for each factor 0/2/4/.../16, blends it toward black via the
- * already-matched `DarkenPalette` into `gPaletteFadeBuffer` and DMAs
+ * already-matched `Darken` into `buffer` and DMAs
  * that result into the real palette, waiting one VBlank between each
  * step - a textbook fade-to-black animation. Once fully faded, sets
  * up the hardware blend registers (`REG_BLDCNT`/`REG_BLDY`) and
@@ -24,24 +25,25 @@ extern "C" {
  * Was NAKED asm, then C with pins and instruction asm (see
  * docs/matching/archive/naked-sub_80014a4-matched.md); the plain
  * DmaCopy16 calls match (#662). */
-void FadePaletteToBlack(void)
+void PaletteFade::FadeToBlack()
 {
     s32 factor;
 
-    DmaCopy16(3, PLTT, gPaletteBackup, PLTT_SIZE);
+    DmaCopy16(3, PLTT, backup, PLTT_SIZE);
     for (factor = 0; factor <= 0x10; factor += 2) {
-        DarkenPalette(factor);
+        Darken(factor);
         FrameLimiter::WaitForVBlank();
-        DmaCopy16(3, gPaletteFadeBuffer, PLTT, PLTT_SIZE);
+        DmaCopy16(3, buffer, PLTT, PLTT_SIZE);
     }
     REG_BLDCNT = BLDCNT_TGT1_ALL | BLDCNT_EFFECT_DARKEN;
     REG_BLDY = 0x10;
-    DmaCopy16(3, gPaletteBackup, PLTT, PLTT_SIZE);
+    DmaCopy16(3, backup, PLTT, PLTT_SIZE);
 }
 
-/* `gBrightnessFade.period != -1`: the "idle" sentinel (gfx.h). */
+/* `state.period != -1`: the "idle" sentinel (gfx.h). Between
+ * PaletteFade's functions in the ROM, but BrightnessFade's. */
 
-bool IsBrightnessFadeActive(void)
+bool BrightnessFade::IsActive()
 {
-    return gBrightnessFade.period != -1;
+    return state.period != -1;
 }

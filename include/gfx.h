@@ -187,14 +187,15 @@ struct blend_regs {
     u8 bldy;           // 0x04
 };
 
-/* The brightness fade state (fade.cpp), set up by FadeBrightness. */
+/* The brightness fade state (BrightnessFade::state, fade.hpp), set up by
+ * BrightnessFade::Start. */
 struct brightness_fade {
-    s32 period; /* frames per step of StepBrightnessFade; -1 when idle (IsBrightnessFadeActive) */
-    s32 callbackId; /* StepBrightnessFade's VBlank callback (AddVBlankCallback) */
-    u8 flags;       /* FadeBrightness's flags (FADE_FLAG_*) */
+    s32 period;     /* frames per step of BrightnessFade::Step; -1 when idle (IsActive) */
+    s32 callbackId; /* Step's VBlank callback (Irq::AddVBlankCallback) */
+    u8 flags;       /* Start's flags (FADE_FLAG_*) */
 };
 
-/* FadeBrightness's flags. */
+/* BrightnessFade::Start's flags. */
 #define FADE_FLAG_WHITE 1    /* fade through white (BLDCNT lighten), not black (darken) */
 #define FADE_FLAG_IN    0x80 /* count BLDY down from 0x10 (fade in), not up from 0 */
 
@@ -213,14 +214,8 @@ struct sprite_frame_cache_node {
 /* src/gfx/bitmap_screen.cpp */
 extern void ShowBitmapScreen(void *asset, void *palette);
 
-/* src/gfx/fade.cpp */
-extern void StepBrightnessFade(void);
-extern void FadeBrightness(u8 flags, s32 frameDelay, u8 sync);
-extern void DarkenPalette(s32 factor);
-
-/* src/gfx/fade_to_black.cpp */
-extern void FadePaletteToBlack(void);
-extern bool IsBrightnessFadeActive(void);
+/* src/gfx/fade.cpp, fade_to_black.cpp: the classes BrightnessFade and
+ * PaletteFade (fade.hpp) */
 
 /* src/objects/entity.cpp: the world-to-screen helpers between Entity's methods */
 extern void WorldToScreen(void *unused, s32 x, s32 y, s32 *outX, s32 *outY);
@@ -250,9 +245,6 @@ extern class PaletteCycles *gPaletteCycles;
 #endif
 
 /* src/iwram/iwram_data.cpp */
-extern struct brightness_fade gBrightnessFade;
-extern s32 gBrightnessFadeStep;
-extern s32 gBrightnessFadeTimer;
 /* The ARM sprite frame routines' hooks (iwram.h). The frame cache's
  * lookup (SpriteFrameCache::Lookup), called through the pointer by
  * SpriteFrameCache::LoadTiles, and the RLE frame unpacker. */
@@ -267,8 +259,6 @@ extern const u8 gObjPieceWidths[12];
 extern const s32 gObjSizeHeights[12];
 extern const s32 gObjSizeWidths[12];
 
-/* sym_iwram.txt: the palette fade buffers (fade.cpp, fade_to_black.cpp) */
-extern u16 gPaletteBackup[512];
-extern u16 gPaletteFadeBuffer[512];
+/* sym_iwram.txt: the palette fade buffers are PaletteFade's (fade.hpp) */
 
 #endif /* __GFX_H__ */

@@ -1,5 +1,6 @@
 #include "cutscene.hpp"
 #include "audio.hpp"
+#include "fade.hpp"
 
 extern "C" {
 #include "core.h"
@@ -45,7 +46,7 @@ void Slideshow::EndSlide(s32 idx)
     s32 v = slides[idx]->fadeAfter;
 
     if (v != -1) {
-        FadeBrightness((u8)v, 1, 0);
+        BrightnessFade::Start((u8)v, 1, 0);
     }
 
     const struct cutscene_slide *item = slides[idx];

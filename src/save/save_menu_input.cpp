@@ -4,6 +4,7 @@
 #include "link_session.hpp"
 #include "key_input.hpp"
 #include "frame_limiter.hpp"
+#include "fade.hpp"
 
 extern "C" {
 #include "core.h"
@@ -104,7 +105,7 @@ SaveMenu::SaveMenu()
     LinkSession **sessionAddr = &gLinkSession;
 
     *sessionAddr = new LinkSession;
-    FadeBrightness(0x80, 1, 0);
+    BrightnessFade::Start(0x80, 1, 0);
     gameLoaded = 0;
 }
 

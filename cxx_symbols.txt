@@ -1699,6 +1699,22 @@ Set__12FrameLimiterUi SetFrameLimit
 _12FrameLimiter.enabled gFrameLimitEnabled
 _12FrameLimiter.target gFrameLimitTarget
 _12FrameLimiter.interval gFrameLimitInterval
+#
+# #915 BrightnessFade and PaletteFade: the brightness fade and the palette
+# fade to black as all-static classes (include/fade.hpp, src/gfx/fade.cpp,
+# src/gfx/fade_to_black.cpp). Their data members keep the C names:
+# iwram_data.cpp defines BrightnessFade's, sym_iwram.txt places
+# PaletteFade's.
+Step__14BrightnessFade StepBrightnessFade
+Start__14BrightnessFadeUciUc FadeBrightness
+IsActive__14BrightnessFade IsBrightnessFadeActive
+_14BrightnessFade.state gBrightnessFade
+_14BrightnessFade.step gBrightnessFadeStep
+_14BrightnessFade.timer gBrightnessFadeTimer
+Darken__11PaletteFadei DarkenPalette
+FadeToBlack__11PaletteFade FadePaletteToBlack
+_11PaletteFade.backup gPaletteBackup
+_11PaletteFade.buffer gPaletteFadeBuffer
 # #752: the tile-slot pool and the tile cache (TileSlotPool, TileCache, include/bg_layer.hpp)
 Reset__12TileSlotPool ResetTileSlotPool
 Acquire__12TileSlotPoolUs AcquireTileSlot

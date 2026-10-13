@@ -4,6 +4,7 @@
 #include "level_state.hpp"
 #include "yeti.hpp"
 #include "cell_anim.hpp"
+#include "fade.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -101,7 +102,7 @@ void PolarPlayer::StateFinishLeap()
     depth = INT_TO_Q8(CellAnim::GetDistance()) - z;
 
     if (gPolarFadeStarted == 0 && depth <= INT_TO_Q8(23) - 1) {
-        FadeBrightness(0, 2, 1);
+        BrightnessFade::Start(0, 2, 1);
         gPolarPauseLocked = 1;
         gPolarFadeStarted = 1;
     }
@@ -120,7 +121,7 @@ void PolarPlayer::StateCarriedOff()
     depth = INT_TO_Q8(CellAnim::GetDistance()) - z;
 
     if (gPolarFadeStarted == 0 && depth <= INT_TO_Q8(23) - 1) {
-        FadeBrightness(0, 2, 1);
+        BrightnessFade::Start(0, 2, 1);
         gPolarFadeStarted = 1;
     }
 
@@ -136,7 +137,7 @@ void PolarPlayer::StateKnockedOff()
     y += -INT_TO_Q8(1);
 
     if (gPolarFadeStarted == 0 && y < (s32)0xFFFFC000) {
-        FadeBrightness(0, 2, 1);
+        BrightnessFade::Start(0, 2, 1);
         gPolarFadeStarted = 1;
     }
 

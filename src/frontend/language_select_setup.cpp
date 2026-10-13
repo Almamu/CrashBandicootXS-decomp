@@ -2,6 +2,7 @@
 #include "vram_dma_queue.hpp"
 #include "sprite_obj.hpp"
 #include "frontend.hpp"
+#include "fade.hpp"
 
 extern "C" {
 #include "gba/dma_macros.h"
@@ -67,7 +68,7 @@ LanguageSelect::LanguageSelect()
     InitGraphics();
     LoadBg();
     starfield = new Starfield;
-    FadeBrightness(FADE_FLAG_IN, 1, 0);
+    BrightnessFade::Start(FADE_FLAG_IN, 1, 0);
     Display::SetObjMapping1D();
     Display::ShowObj();
     Display::SetMode(DISPCNT_MODE_1);
@@ -77,7 +78,7 @@ LanguageSelect::LanguageSelect()
 /* gLanguageSelect's lifetime, around MainLoop's LanguageSelect::Run. */
 void LanguageSelect::Close()
 {
-    FadeBrightness(0, 1, 0);
+    BrightnessFade::Start(0, 1, 0);
     delete gLanguageSelect;
     gLanguageSelect = 0;
     gPaletteCache->FreeUnlockedSlots();

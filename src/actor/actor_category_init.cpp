@@ -10,6 +10,7 @@
 #include "cell_anim.hpp"
 #include "actor_bg.hpp"
 #include "frame_limiter.hpp"
+#include "fade.hpp"
 #include "sprite_oam_queue.hpp"
 #include "sprite_frame_cache.hpp"
 #include "category_sprite_sheet.hpp"
@@ -89,7 +90,7 @@ static inline s32 RunCategoryPauseMenu(void)
     ObjTileAllocator::Destroy();
     result = RunPauseMenu();
     SetupActorVramPool();
-    FadeBrightness(0x80, 1, 1);
+    BrightnessFade::Start(0x80, 1, 1);
     DmaCopy16(3, buf, OBJ_PLTT, OBJ_PLTT_SIZE);
     mem_free(buf);
     CellAnim::ResetBg();
@@ -132,7 +133,7 @@ s32 InitActorCategory(s32 category)
         else
             variant = CUR_CATEGORY.bossLevel;
         DmaFill16(3, 0, PLTT, PLTT_SIZE);
-        FadeBrightness(0x80, 2, 1);
+        BrightnessFade::Start(0x80, 2, 1);
         CellAnim::Init(CUR_CATEGORY.type, CUR_CATEGORY.cellAnim, CUR_CATEGORY.cellAnimSize,
                        gActorCheckpoint);
         if (CUR_CATEGORY.bgPicture != NULL)
@@ -183,7 +184,7 @@ s32 InitActorCategory(s32 category)
                 }
             } else {
                 open = 0;
-                if (IsBrightnessFadeActive() == 0 && ((gKeys.all >> 16) & START_BUTTON))
+                if (BrightnessFade::IsActive() == 0 && ((gKeys.all >> 16) & START_BUTTON))
                     open = -CanPauseActorCategory() < 0;
                 if (open) {
                     result = RunCategoryPauseMenu();

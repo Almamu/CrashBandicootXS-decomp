@@ -4,6 +4,7 @@
 #include "audio.hpp"
 #include "level_state.hpp"
 #include "cell_anim.hpp"
+#include "fade.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -185,7 +186,7 @@ void JetpackPlayer::StateFall()
         gJetpackPlayerVelY = JETPACK_PLAYER_MAX_FALL_SPEED;
 
     if (gJetpackFadeStarted == 0 && y > Q8(112.5)) {
-        FadeBrightness(0, 2, 1);
+        BrightnessFade::Start(0, 2, 1);
         gJetpackFadeStarted = 1;
     }
 
@@ -206,7 +207,7 @@ void JetpackPlayer::StateFinish()
     depth = v;
 
     if (gJetpackFadeStarted == 0 && v > 0x8200) {
-        FadeBrightness(0, 2, 1);
+        BrightnessFade::Start(0, 2, 1);
         gJetpackFadeStarted = 1;
         gJetpackPauseLocked = 1;
     }

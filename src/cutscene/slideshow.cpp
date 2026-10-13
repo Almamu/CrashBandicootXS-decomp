@@ -2,6 +2,7 @@
 #include "cutscene.hpp"
 #include "audio.hpp"
 #include "frame_limiter.hpp"
+#include "fade.hpp"
 
 extern "C" {
 #include "core.h"
@@ -32,9 +33,9 @@ void Slideshow::BeginSlide(s32 idx)
     if (gAudioContext->GetCurrentSong() == (item = self->slides[idx])->cue) {
         if (item->sfx != SFX_NONE)
             gAudioContext->PlaySfx(item->sfx, 0x100);
-        FadeBrightness(self->slides[idx]->fade | -0x80, 1, 0);
+        BrightnessFade::Start(self->slides[idx]->fade | -0x80, 1, 0);
     } else {
-        FadeBrightness(item->fade | -0x80, 1, 0);
+        BrightnessFade::Start(item->fade | -0x80, 1, 0);
         if (self->slides[idx]->sfx != SFX_NONE) {
             while (gAudioContext->GetCurrentSong() != self->slides[idx]->cue)
                 ;
@@ -78,7 +79,7 @@ void Slideshow::Run()
         s32 v = self->slides[i]->fadeAfter;
 
         if (v != -1) {
-            FadeBrightness((u8)v, 1, 0);
+            BrightnessFade::Start((u8)v, 1, 0);
         }
 
         const struct cutscene_slide *item2 = self->slides[i];

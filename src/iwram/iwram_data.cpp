@@ -7,6 +7,7 @@
 #include "player.hpp"
 #include "vehicle.hpp"
 #include "frame_limiter.hpp"
+#include "fade.hpp"
 #include "sprite_frame_cache.hpp"
 #include "collected_spawns.hpp"
 
@@ -60,11 +61,11 @@ union key_state gKeys = { { 0, 0 } };
 /* rand.cpp's seed. */
 u32 gRandSeed = 1;
 
-/* fade.cpp's brightness fade state. */
-struct brightness_fade gBrightnessFade = { -1, -1, 0 };
+/* fade.cpp's brightness fade state (BrightnessFade, fade.hpp). */
+struct brightness_fade BrightnessFade::state = { -1, -1, 0 };
 
-s32 gBrightnessFadeStep = 0;
-s32 gBrightnessFadeTimer = 0;
+s32 BrightnessFade::step = 0;
+s32 BrightnessFade::timer = 0;
 u32 gSfxVoiceToggle = 0;
 
 /* Link cable (src/link/*.c, src/save/*.c): gLinkSession is the
