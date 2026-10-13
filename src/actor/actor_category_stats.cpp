@@ -1,4 +1,5 @@
 #include "vehicle.hpp"
+#include "actor_palette_cycle.hpp"
 
 extern "C" {
 #include "core.h"
@@ -117,7 +118,7 @@ void SetActorCheckpoint(s32 z)
     gActorCategoryBossDeaths = 0;
     SetCheckpointAtPlayer_1(gLevelState);
     gActorCheckpointMissedNitros = gActorMissedNitros;
-    SaveActorPaletteCycle();
+    ActorPaletteCycle::Save();
 }
 
 /* True once the running active-instance count reaches the current

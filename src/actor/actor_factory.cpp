@@ -1,5 +1,6 @@
 #include "vehicle.hpp"
 #include "level_state.hpp"
+#include "actor_palette_cycle.hpp"
 
 extern "C" {
 #include "core.h"
@@ -26,7 +27,7 @@ extern "C" {
  * - CreateActor is the per-kind `new`: the crates', the wumpa's and the
  *   riderless polar's constructors are inline (vehicle.hpp), the others'
  *   out of line (src/vehicle/polar/polar_*.cpp); kinds 36-39 only select a
- *   palette-cycle preset (SetActorPaletteCycle).
+ *   palette-cycle preset (ActorPaletteCycle::Set).
  * - CreatePolarCheckpointText, SpawnPolarCollectedWumpa and
  *   SpawnPolarAkuAku build three fixed records (40, 11, 27).
  *
@@ -104,7 +105,7 @@ ActorSelf *CreateActor(u8 kind, s32 x, s32 y, s32 z, struct actor_spawn *spawn)
     case POLAR_KIND_PALETTE_CYCLE_1:
     case POLAR_KIND_PALETTE_CYCLE_2:
     case POLAR_KIND_PALETTE_CYCLE_3:
-        SetActorPaletteCycle(kind - POLAR_KIND_PALETTE_CYCLE_0);
+        ActorPaletteCycle::Set(kind - POLAR_KIND_PALETTE_CYCLE_0);
         break;
     }
     return 0;

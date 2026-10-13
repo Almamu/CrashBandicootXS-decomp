@@ -1,7 +1,4 @@
-extern "C" {
-#include "core.h"
-#include "actor.h"
-}
+#include "actor_palette_cycle.hpp"
 
 /*
  * ROM 0x08175760-0x08178F80. Linked in ROM order between data/data.s
@@ -9,10 +6,11 @@ extern "C" {
  */
 
 /* The BG palette-cycle animation: 32 frames of BG palettes 0-13
- * (0x1C0 bytes each). While it's armed, UpdateActorPaletteCycle (actor.c)
- * DMAs frame gActorPaletteCycleFrame to BG palette RAM every call and every
- * 0x24 calls steps that cursor towards the bound gActorPaletteCycleTarget. */
-const u16 gActorPaletteCycleFrames[32][14 * 16] = {
+ * (0x1C0 bytes each): ActorPaletteCycle::frames (include/actor_palette_cycle.hpp).
+ * While it's armed, ActorPaletteCycle::Update DMAs the cursor's frame to BG
+ * palette RAM every call and every 0x24 calls steps that cursor towards
+ * its bound. */
+const u16 ActorPaletteCycle::frames[32][14 * 16] = {
     { /* 0 */
         0x03E4, 0x739C, 0x6B7B, 0x6759, 0x6318, 0x5EF7, 0x5EF5, 0x56B5, 0x56B3, 0x5294, 0x5293, 0x4E72, 0x4A51, 0x4631, 0x4210, 0x462F,
         0x03E4, 0x7FFF, 0x7FFE, 0x7BDE, 0x7FFD, 0x7BDE, 0x7BDC, 0x77BC, 0x739B, 0x7379, 0x6B58, 0x6737, 0x6712, 0x5AAE, 0x5269, 0x4A24,
@@ -527,8 +525,8 @@ const u16 gActorPaletteCycleFrames[32][14 * 16] = {
     },
 };
 
-/* The cursor start and bound SetActorPaletteCycle (actor.c) seeds for each
+/* The cursor start and bound ActorPaletteCycle::Set seeds for each
  * cycle: 0->15, 15->0, 16->31 and 31->16 (the first or second half of
  * the frames, forwards or backwards). */
-const s32 gActorPaletteCycleStartFrames[4] = { 0, 15, 16, 31 };
-const s32 gActorPaletteCycleTargetFrames[4] = { 15, 0, 31, 16 };
+const s32 ActorPaletteCycle::startFrames[4] = { 0, 15, 16, 31 };
+const s32 ActorPaletteCycle::targetFrames[4] = { 15, 0, 31, 16 };

@@ -157,13 +157,6 @@ extern bool IsSpawnCollected(struct actor_spawn *spawn);
 extern void MarkSpawnCollected(struct actor_spawn *spawn);
 extern void ClearCollectedSpawns(void);
 
-/* src/actor/actor_palette_cycle.cpp */
-extern void RestoreActorPaletteCycle(void);
-extern void SaveActorPaletteCycle(void);
-extern void UpdateActorPaletteCycle(void);
-extern void SetActorPaletteCycle(s32 idx);
-extern void EnableActorPaletteCycle(u8 flag);
-
 /* src/actor/actor_bg.cpp (the rest is class ActorBg, actor_bg.hpp) */
 extern void ActorCategoryEndStub(void);
 
@@ -244,18 +237,12 @@ extern s32 gActorFarClipDepth;
  * for the bookkeeping the gActorSpawnTable accessors use. */
 extern s32 gActorMissedNitros;
 extern s32 gActorNearClipDepth;
-extern u8 gActorPaletteCycleEnabled;
-extern s32 gActorPaletteCycleFrame;
-extern s32 gActorPaletteCycleTarget;
-extern s32 gActorPaletteCycleTimer;
 extern s32 gActorSpawnIndex;
 extern s32 gActorSpawnOffset;
 extern struct actor_spawn_table *gActorSpawnTable;
 extern u8 gActorSpawnsPaused;
 extern void *gCategorySpriteSheet; /* the decompressed category sprite sheet */
 extern struct actor_spawn *gCollectedSpawns[];
-extern s32 gSavedActorPaletteCycleFrame;
-extern s32 gSavedActorPaletteCycleTarget;
 /* The deaths since the checkpoint that count towards the category's
  * `retryBossDeaths` (InitActorCategory): being carried off by the yeti
  * (exit status 2) in a type-0 category, any death in the others. */
@@ -283,10 +270,5 @@ extern void (*gDrawMirroredTilemapFunc)(u8 *pal, s32 lowBlock, s32 w, s32 h);
 #ifdef __cplusplus
 extern void (*gHeapSortActorsByKeyFunc)(s32 n, class ActorSelf **list);
 #endif
-
-/* src/data/palette_cycle_175760.cpp */
-extern const u16 gActorPaletteCycleFrames[32][14 * 16];
-extern const s32 gActorPaletteCycleStartFrames[4];
-extern const s32 gActorPaletteCycleTargetFrames[4];
 
 #endif /* !__ACTOR_H__ */

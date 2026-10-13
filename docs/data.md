@@ -265,7 +265,7 @@ The first batch (all pointer tables, all byte-exact):
 | `ui_text_172cd4.c` | `0x08172CD4` | the game's UI text in six languages (see "UI text") |
 | `hud_fonts_174be0.cpp` | `0x08174BE0` | the HUD digit slots and the two HUD fonts' character lists and glyph metrics |
 | `actor_category_175558.cpp` | `0x08175558` | 7 `struct category_descriptor`, 3 `struct category_vtable` |
-| `palette_cycle_175760.cpp` | `0x08175760` | the 32-frame BG palette cycle and its 4 cursor start/bound pairs |
+| `palette_cycle_175760.cpp` | `0x08175760` | the 32-frame BG palette cycle and its 4 cursor start/bound pairs (`ActorPaletteCycle::frames`, `startFrames`, `targetFrames`, docs/cplusplus.md) |
 | `anim_family_178f80.cpp` | `0x08178F80` | categories 0-2: OBJ palette, animation table `gCategoryFamily0AnimTable`, keyframe and frame arrays (see "Category families") |
 | `actor_pmf_17a6b8.cpp` | `0x0817A6B8` | 1 actor PMF table, in C++ (`PolarPlayer::stateFuncs`, docs/cplusplus.md) |
 | `actor_tables_17a728.cpp` | `0x0817A728` | 5 small palettes, 4 `struct anim_box`, 6 threshold records |

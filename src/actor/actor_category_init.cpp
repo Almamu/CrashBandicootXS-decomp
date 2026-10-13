@@ -1,4 +1,5 @@
 #include "obj_tile_allocator.hpp"
+#include "actor_palette_cycle.hpp"
 #include "sprite_obj.hpp"
 #include "hud.hpp"
 #include "level_state.hpp"
@@ -112,7 +113,7 @@ s32 InitActorCategory(s32 category)
     DecompressCategorySpriteSheet(CUR_CATEGORY.sprite_sheet);
     SetupActorVramPool();
     ClearCollectedSpawns();
-    EnableActorPaletteCycle(CUR_CATEGORY.type == CATEGORY_TYPE_POLAR);
+    ActorPaletteCycle::Enable(CUR_CATEGORY.type == CATEGORY_TYPE_POLAR);
     ActorBg::InitScroll(CUR_CATEGORY.type);
 
     do {
@@ -130,7 +131,7 @@ s32 InitActorCategory(s32 category)
                        gActorCheckpoint);
         if (CUR_CATEGORY.bgPicture != NULL)
             LoadBgPicture(CUR_CATEGORY.bgPicture);
-        RestoreActorPaletteCycle();
+        ActorPaletteCycle::Restore();
         SelectActorCategory(CUR_CATEGORY.type, CUR_CATEGORY.spawnTable, CUR_CATEGORY.anim_table,
                             *activeCount >= CUR_CATEGORY.bonusKindDeaths, variant,
                             gActorCheckpoint);
