@@ -19,7 +19,7 @@ extern "C" {
 }
 
 /* codegen: LevelState::SetCheckpointAtPlayer takes a flag (level_state.hpp); this
- * caller passes the state only and leaves r1 as it is. docs/headers_plan.md */
+ * caller passes the state only and leaves r1 as it is. docs/headers.md */
 extern void SetCheckpointAtPlayer_1(void *self) asm("SetCheckpointAtPlayer");
 
 /*

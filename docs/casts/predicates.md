@@ -3,7 +3,7 @@
 Many of the game's yes/no functions were declared returning `s32`, and
 every caller cast the result: `if ((u8)gLevelState->HasTurboRun())`. That
 came from the C headers, whose callers declared a `u8` return the
-definitions didn't have (docs/headers_plan.md, "Callers"). On this
+definitions didn't have (#574's header pass). On this
 compiler the caller extends a narrow return value itself (`lsl`/`lsr #24`,
 or `lsl #24` and a `cmp` for a test). So a `bool` (one byte in g++ 2.9)
 or a `u8` return gives the callers the same code as the cast of an `s32`,

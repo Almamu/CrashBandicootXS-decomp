@@ -63,7 +63,7 @@ third-party and SDK code linked into the ROM (the GAX2 sound engine,
 Nintendo's AgbEeprom library, libgcc, the BIOS SWI wrappers) is under
 `lib/` (see [docs/libraries.md](./docs/libraries.md)). Declarations live
 in `include/` and in each library's `include/` (see
-[docs/headers_plan.md](./docs/headers_plan.md)).
+[docs/headers.md](./docs/headers.md)).
 
 ## Building
 
@@ -165,7 +165,7 @@ reason, that's a completely reasonable position - just know it going in.
 - [docs/data.md](./docs/data.md) - how ROM data tables became C `const` arrays in `src/data/`, linked in ROM order, and the asset pipeline
 - [docs/libraries.md](./docs/libraries.md) - the third-party/SDK libraries under `lib/` (GAX2, AgbEeprom, libgcc, libagbsyscall): layout, headers, flags
 - [docs/cplusplus.md](./docs/cplusplus.md) - the game is g++ 2.x C++: what the ROM shows, the agbcp/old_agbcp C++ compilers, and building objects from C++ source (`src/*/*.cpp`, `CXX_OBJS`)
-- [docs/headers_plan.md](./docs/headers_plan.md) - where declarations live, and the codegen exceptions
+- [docs/headers.md](./docs/headers.md) - where declarations live, and the codegen exceptions
 - [docs/audio.md](./docs/audio.md) - how the Shin'en GAX2 sound engine's data is laid out and rebuilt
 - [docs/graphics.md](./docs/graphics.md) - how graphics were extracted, and notes on the sprite/actor system
 - [docs/levels.md](./docs/levels.md) - the level data: rooms, layers, chunk streams, entities

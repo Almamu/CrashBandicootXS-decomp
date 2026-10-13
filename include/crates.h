@@ -9,7 +9,7 @@
  * Declarations here are the functions' real prototypes, copied from
  * their definitions. A .c file that needs a different local declaration
  * for codegen keeps it as an asm-label alias with a `codegen:` comment
- * (docs/headers_plan.md).
+ * (docs/headers.md).
  *
  * The crate list (`CrateList`, include/crate_list.hpp) is set up by
  * InitCrateList (src/crates/crate_list_update.cpp). */

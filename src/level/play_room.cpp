@@ -308,7 +308,7 @@ struct fx_direction {
 } __attribute__((packed));
 
 /* codegen: AddPaletteCycle takes a u8 `direction` (gfx.h); passed as a
- * u8 it is stored to the stack slot as a word. docs/headers_plan.md */
+ * u8 it is stored to the stack slot as a word. docs/headers.md */
 extern void AddPaletteCycle_fx(PaletteCycles *self, u16 *targets, const u16 *lists, s32 rate,
                                s32 count, struct fx_direction direction) asm("AddPaletteCycle");
 

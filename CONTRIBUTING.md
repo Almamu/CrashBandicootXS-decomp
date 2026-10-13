@@ -196,8 +196,8 @@ PR.
 
 Every function and global is declared once, in a header, with the type
 of its definition. `.c` files include headers; they don't declare
-things themselves. [docs/headers_plan.md](docs/headers_plan.md) has the
-full rules and the history (#574). For new code:
+things themselves. [docs/headers.md](docs/headers.md) has the
+full rules (#574). For new code:
 
 - **Which header:** a function or global goes in the header of the
   subsystem that owns it - `include/<subsystem>.h` or `.hpp`, named after
@@ -219,13 +219,13 @@ full rules and the history (#574). For new code:
   ```c
   /* codegen: RandRange is u16, but this file was matched against an s32
    * return; the u16 prototype changes the stack slots in InitTitleScreen.
-   * docs/headers_plan.md */
+   * docs/headers.md */
   extern s32 RandRange_s32(s32 max) asm("RandRange");
   ```
 
   The call still links to `RandRange`, and the file can include the
   header. Add the alias to the "Codegen exceptions" table in
-  docs/headers_plan.md.
+  [docs/headers.md](docs/headers.md#codegen-exceptions).
 - **What stays local:** `_call_via_r0`..`_call_via_r7` (each call site
   declares the shape it calls through) and references from one
   `src/data/` table to another.

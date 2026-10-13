@@ -1,7 +1,7 @@
 #ifndef GUARD_GLOBALS_H
 #define GUARD_GLOBALS_H
 
-/* The globals that three or more subsystems use (docs/headers_plan.md,
+/* The globals that three or more subsystems use (docs/headers.md,
  * "Who owns a symbol", rule 3): the sym_iwram.txt singletons the game
  * builds at boot or per level (the audio context, the input object, the
  * OAM shadow buffer, the palette cache, ...), the key state and frame
@@ -10,7 +10,7 @@
  * Each global has the type of its definition or, for the linker-script
  * symbols, the type of the object stored there. A .c file that needs a
  * different type for codegen keeps it as an asm-label alias with a
- * `codegen:` comment (docs/headers_plan.md). */
+ * `codegen:` comment (docs/headers.md). */
 
 #include "core.h"
 

@@ -13,8 +13,7 @@
  *
  * The local copies (`part_aabb` in box_part.h, `hop_box`, `gfx_box`,
  * `box`, `ab_box`, `fx_box`, `hit_box` and eight `struct aabb`s with
- * `field_0`..`field_c` or x/y/w/h) were merged here (docs/headers_plan.md,
- * batch 4). */
+ * `field_0`..`field_c` or x/y/w/h) were merged here (#574). */
 struct aabb {
     s32 x;
     s32 y;

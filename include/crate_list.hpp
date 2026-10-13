@@ -72,7 +72,7 @@ COMPILE_TIME_ASSERT(crate_list_hpp, sizeof(CrateGridLink) == 8);
  * zeroes the nodes through (CrateList::InitView): through the real
  * `CrateGridNode *` fields, gcc takes the zeroing stores as possible writes
  * to the list's `nodes` and reloads it (docs/casts/crate_grid.md,
- * docs/headers_plan.md "Codegen findings"). Formerly crates.h's
+ * docs/headers.md "Codegen exceptions"). Formerly crates.h's
  * `struct pool_init_node`. */
 struct CrateGridNodeInit {
     void *data;

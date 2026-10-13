@@ -131,7 +131,7 @@ incomplete pass and should be finished before moving on.
      for this reason, leave a one-line comment saying so (pointing at
      this doc) instead of leaving it unexplained.
    - **Declarations go in headers, not in the `.c` file** (#574,
-     [docs/headers_plan.md](./headers_plan.md)). Include the header that
+     [docs/headers.md](./headers.md)). Include the header that
      declares what the function calls or reads, and declare the
      function itself in its subsystem's header (`include/<subsystem>.h`;
      `include/globals.h` for a global three or more subsystems use;
@@ -141,8 +141,8 @@ incomplete pass and should be finished before moving on.
      declares the shape it calls with) and references from one
      `src/data/` table to another. If the file only matches with another
      type for a symbol, keep an asm-label alias with a comment, and add
-     it to the plan's "Codegen exceptions" table:
-     `/* codegen: ... docs/headers_plan.md */ extern s32 RandRange_s32(s32 max) asm("RandRange");`.
+     it to [docs/headers.md's "Codegen exceptions"](./headers.md#codegen-exceptions) table:
+     `/* codegen: ... docs/headers.md */ extern s32 RandRange_s32(s32 max) asm("RandRange");`.
      The Makefile tracks header dependencies, so a plain `make` after a
      header edit rebuilds the objects that include it; step 6's clean
      build is still the check before a PR. agbcc's compile errors
