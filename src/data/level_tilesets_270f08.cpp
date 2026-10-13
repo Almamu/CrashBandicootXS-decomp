@@ -10,17 +10,19 @@ extern "C" {
  */
 
 /* Tile set 4: 2619 tiles, 7 rooms. */
-extern const TAGGED_RAW_ASSET(0x28EC0) gSewerBg0Tiles = {
-    TAGGED_RAW_HEADER(0x28EC0),
+#include "tilesets/gSewerBg0Tiles.h"
+extern const TAGGED_RAW_ASSET(TILES_SIZE_gSewerBg0Tiles) gSewerBg0Tiles = {
+    TAGGED_RAW_HEADER(TILES_SIZE_gSewerBg0Tiles),
     {
-#include "level_tilesets/tileset4_270f08.img.bin.inc"
+#include "tilesets/gSewerBg0Tiles.bin.inc"
     },
 };
 
 /* Tile set 5: 2000 tiles, 9 rooms. */
-extern const TAGGED_RAW_ASSET(0x1F400) gSpaceBg0Tiles = {
-    TAGGED_RAW_HEADER(0x1F400),
+#include "tilesets/gSpaceBg0Tiles.h"
+extern const TAGGED_RAW_ASSET(TILES_SIZE_gSpaceBg0Tiles) gSpaceBg0Tiles = {
+    TAGGED_RAW_HEADER(TILES_SIZE_gSpaceBg0Tiles),
     {
-#include "level_tilesets/tileset5_299dcc.img.bin.inc"
+#include "tilesets/gSpaceBg0Tiles.bin.inc"
     },
 };

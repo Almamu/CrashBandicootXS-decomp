@@ -1,0 +1,10 @@
+{
+  "gJungleBg0Tiles": ["temple_of_boom/main", "jungle_jam/main", "down_the_hole/main", "jungle_jam/bonus", "temple_of_boom/bonus", "down_the_hole/bonus", "ruined/main", "tiny/main"],
+  "gSnowBg0Tiles": ["frostbite_cavern/part1", "frostbite_cavern/part2", "snow_crash/part1", "snow_crash/part2", "snow_job/part1", "snow_job/part2"],
+  "gSewerBg0Tiles": ["just_in_slime/main", "just_hangin/main", "drip_drip_drip/main"],
+  "gSpaceBg0Tiles": ["ace_of_space/main", "final_countdown/main", "mega_mix/main", "neo_cortex/main", "star_to_finish/main"],
+  "gSnowBgTiles": ["frostbite_cavern/bonus", "frostbite_cavern/part1", "frostbite_cavern/part2", "snow_crash/part1", "snow_crash/part2", "snow_job/part1"],
+  "gTempleBgTiles": ["temple_of_boom/main", "down_the_hole/main"],
+  "gSewerBgTiles": ["just_in_slime/main"],
+  "gSpaceBgTiles": ["ace_of_space/main"]
+}

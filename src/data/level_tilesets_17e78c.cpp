@@ -23,32 +23,36 @@ const u16 gLanguageSelectPalette3[16] = {
  * Level BG tile sets: tag-0x00 raw tagged assets of 8bpp tiles (64 bytes
  * each). A room's struct level_layer_desc (BgLayer::Load, bg_layer.cpp)
  * points at one through `tileData`; the pooled layer 0 (tile_slot_pool.cpp,
- * SetTileSlotPoolSource) reads the tiles at `tileData + 4`. The tile bytes come from
- * graphics/level_tilesets/tilesetN_<addr>.png via graphics.mk
- * (grit -gt -gB8 -p!, then tools/bin2c.py); tools/tile_pools.py extracted
- * the PNGs, with the palette of the first room that uses each set.
+ * SetTileSlotPoolSource) reads the tiles at `tileData + 4`. The tiles
+ * aren't a source: tools/levels.py tileset generates each set from the
+ * pictures of the room layers that name it (docs/levels.md, "Tile
+ * sets"), with its size in tilesets/<set>.h, and tools/bin2c.py writes the
+ * bytes (levels.mk).
  */
 
 /* Tile set 1: 6638 tiles, used by 10 rooms' layer descriptors. */
-extern const TAGGED_RAW_ASSET(0x67B80) gJungleBg0Tiles = {
-    TAGGED_RAW_HEADER(0x67B80),
+#include "tilesets/gJungleBg0Tiles.h"
+extern const TAGGED_RAW_ASSET(TILES_SIZE_gJungleBg0Tiles) gJungleBg0Tiles = {
+    TAGGED_RAW_HEADER(TILES_SIZE_gJungleBg0Tiles),
     {
-#include "level_tilesets/tileset1_17e7ac.img.bin.inc"
+#include "tilesets/gJungleBg0Tiles.bin.inc"
     },
 };
 
 /* Tile set 2: 1707 tiles, 10 rooms. */
-extern const TAGGED_RAW_ASSET(0x1AAC0) gSnowBg0Tiles = {
-    TAGGED_RAW_HEADER(0x1AAC0),
+#include "tilesets/gSnowBg0Tiles.h"
+extern const TAGGED_RAW_ASSET(TILES_SIZE_gSnowBg0Tiles) gSnowBg0Tiles = {
+    TAGGED_RAW_HEADER(TILES_SIZE_gSnowBg0Tiles),
     {
-#include "level_tilesets/tileset2_1e6330.img.bin.inc"
+#include "tilesets/gSnowBg0Tiles.bin.inc"
     },
 };
 
 /* Tile set 3: 4769 tiles, 5 rooms. */
-extern const TAGGED_RAW_ASSET(0x4A840) gUnderwaterBg0Tiles = {
-    TAGGED_RAW_HEADER(0x4A840),
+#include "tilesets/gUnderwaterBg0Tiles.h"
+extern const TAGGED_RAW_ASSET(TILES_SIZE_gUnderwaterBg0Tiles) gUnderwaterBg0Tiles = {
+    TAGGED_RAW_HEADER(TILES_SIZE_gUnderwaterBg0Tiles),
     {
-#include "level_tilesets/tileset3_200df4.img.bin.inc"
+#include "tilesets/gUnderwaterBg0Tiles.bin.inc"
     },
 };

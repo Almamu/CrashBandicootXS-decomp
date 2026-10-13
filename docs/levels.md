@@ -72,10 +72,10 @@ The source of a BG layer and its streamer (`BgLayerBase::SetSource`,
 | 0x1E | `u16`, 2 in every layer |
 
 A layer is a grid of **chunks** of 16x8 cells (128x64 pixels). BG1-3 use
-the six 4bpp LZ77 tile sets of `graphics/level_bg_tiles/`, BG0 uses one of
-the five 8bpp tag-0x00 tile sets (`graphics/level_tilesets/`). Each set
-belongs to one level theme, which names it (`tools/levels.py`'s
-`TILESET_SYMBOLS`):
+one of six 4bpp LZ77 tile sets, BG0 one of five 8bpp tag-0x00 tile sets.
+No set is a source: the build makes each one from the pictures of the
+layers that use it (see "Tile sets" below). Each set belongs to one level
+theme, which names it (`tools/levels.py`'s `TILESET_SYMBOLS`):
 
 | Theme | Levels | BG0 | BG1-3 |
 |---|---|---|---|
@@ -327,18 +327,20 @@ rooms`), not from the folders on disk.
   `gridHeight * 64` pixels, coloured by the legend below (see "Collision
   layers").
 
-Everything else is derived again: the cells (from the pictures), the
-chunk set and grid,
+Everything else is derived again: the BG tile sets and the cells (from
+the pictures, see "Tile sets"), the chunk set and grid,
 the asset and the layers' `assetOffset`s, the entity groups, the counts,
 the parameter offsets (`LEVEL_PARAM_OFFSET`, an `offsetof` into the
 room's generated parameter struct).
 
 `levels.mk` runs:
 
-- `tools/levels.py from-png data/levels/<room> <layer> build/.../data/levels/<room>/<layer>.map.bin`
-  per BG layer: the picture's cells (little-endian `u16`, row-major), and
-  a `.d` file naming the layer's tile set PNG, so an edited tile set
-  decodes only the layers drawn with it;
+- `tools/levels.py tileset <set> --build build/.../data/levels` per BG
+  tile set (`tilesets.mk`, which `levels.py tilesets-mk` writes): the
+  set's tiles (`tilesets/<set>.bin`, its size in `tilesets/<set>.h`, a
+  viewing picture `tilesets/<set>.png`) and the cells of every layer that
+  uses it (`<room>/<layer>.map.bin`, little-endian `u16`, row-major),
+  each written only if it changed (see "Tile sets");
 - `tools/levels.py asset data/levels/<room> build/.../data/levels/<room>/asset.bin --build build/.../data/levels`
   per room, from those cells and `collision.png`; it also writes
   `asset.layout.json`, the layers' asset offsets and chunk grids, which
@@ -378,9 +380,8 @@ The largest is room 27's BG0, 10240 x 1600 pixels.
 
 **Drawing.** The pixels are palette indices:
 
-- BG0's tile sets are 8bpp (`graphics/level_tilesets/`), so a pixel is
-  the tile's own colour index.
-- BG1-3's tile sets are 4bpp (`graphics/level_bg_tiles/`), and a cell
+- BG0's tile sets are 8bpp, so a pixel is the tile's own colour index.
+- BG1-3's tile sets are 4bpp, and a cell
   picks one 16-colour bank (cell bits 12-15). A pixel is
   `bank * 16 + p`, `p` the tile's 4-bit pixel, for all 64 pixels of the
   cell. That includes the transparent ones (`p = 0`), which are index
@@ -390,41 +391,30 @@ The largest is room 27's BG0, 10240 x 1600 pixels.
   of the room palette. That colour is never drawn in game; the layers
   behind show through there.
 
-**Reading a picture back** (`from-png`, `read_layer_png`). Each 8x8 block
-is looked up among the tile set's tiles under the four flips: none, h,
-v, hv. For BG1-3, the block's bank is the high nibble of its pixels, and
-the low nibbles are matched against the tiles. Several tiles, or
-several flips of one tile, can draw the same block (a blank tile, a
-symmetric one, a duplicate in the set). The cell is then the **lowest
-tile index**, and for that tile the first flip in the order **none, h,
-v, hv**. That rule gives back every one of the ROM's 4,356,096 BG cells
-(131 layers), so the ROM still matches. The lookup is a table from block
-to cell, built once per tile set, so all 131 layers decode in about 2
-seconds.
+**Reading a picture back** (`levels.py tileset`). The pictures are read
+together with the tile set they name, which they make (see "Tile sets"):
+each 8x8 block becomes the tile it is under one of the four flips, or a
+new tile if no tile is it yet. For BG1-3, the block's bank is the high
+nibble of its pixels, and the low nibbles are the tile. That gives back
+every one of the ROM's 4,356,096 BG cells (131 layers) and its 11 tile
+sets, so the ROM still matches.
 
 **Editing.** Open the PNG in an editor that keeps indexed images and
 their palette as they are (Aseprite, GIMP in indexed mode, ...). Paint
-whole 8x8 blocks on the 8-pixel grid, copied from elsewhere in the layer
-or from the tile set, so that each block is a tile of the layer's set
-under some flip:
+freely: a block that isn't a tile of the layer's set yet becomes a new
+tile at the end of the set (for the ROM's rooms; see "Adding a room" for
+new ones). Mind that:
 
-- Only tiles that are already in the tile set can be used. A new tile
-  means editing the tile set PNG (`graphics/level_tilesets/` for BG0,
-  `graphics/level_bg_tiles/` for BG1-3, see
-  [graphics.md, "Level BG tile sets"](./graphics.md#level-bg-tile-sets))
-  first.
-- On BG1-3, all 64 pixels of a block must come from one bank. To move a
+- on BG1-3, all 64 pixels of a block must come from one bank. To move a
   cell to another bank, shift all of its indices, the transparent ones
-  too, by a multiple of 16.
-- Don't let the editor reduce, sort or merge the palette (several
+  too, by a multiple of 16;
+- reusing a block that is already a tile, even flipped, costs nothing; a
+  new tile makes the set bigger, which moves the ROM's later data (the
+  tile limits are 16,384 tiles for BG0, 1,024 for BG1-3), and an early
+  room's new tile renumbers the later rooms' tiles;
+- don't let the editor reduce, sort or merge the palette (several
   entries of a room palette have the same colour): the indices are
   what is read, not the colours. A true-colour image is rejected.
-- A tile set is a dictionary for its layers: changing an existing tile
-  changes how the pictures that use it decode. To change a tile, decode
-  the layers that use it first (`tools/levels.py from-png data/levels/<room>
-  <layer> <layer>.map.bin`), edit the tile set, then draw them again
-  (`tools/levels.py to-png data/levels/<room> <layer> <layer>.map.bin
-  data/levels/<room>/<layer>.png`).
 
 **The room palette.** The pictures carry the room's palette: the build
 reads `gRoomNNPalette` from them (`levels.py c`, `room_palette`), with
@@ -443,9 +433,8 @@ block is.
 
 These are errors, and each message names the PNG, the cell and its pixels:
 
-- a block that isn't a tile of the set under any flip (for BG1-3, in the
-  block's bank: `... cell (12, 3) (pixels 96-103, 24-31) isn't a tile of
-  gTempleBgTiles under any flip (in palette bank 2, indices 32-47)`);
+- in a new room, a block that isn't a tile of a set of the ROM's rooms
+  (see "Adding a room");
 - a BG1-3 block that mixes palette banks (`... mixes palette banks 2,
   3: a BG1-3 cell draws all 64 pixels from one bank`);
 - an image that isn't the layer's size (`... 2040x320 pixels, expected
@@ -453,8 +442,88 @@ These are errors, and each message names the PNG, the cell and its pixels:
 - a palette that isn't 256 entries, or isn't the same as the room's other
   layer pictures' (see "The room palette").
 
-The make rule that failed names the layer too; at most 20 cells are
-listed per layer.
+The make rule that failed names the tile set too; at most 20 cells are
+listed.
+
+### Tile sets
+
+The BG tile sets aren't sources. A room's layer names its set in
+room.json (`"tileset"`), and the build makes each set from the pictures
+of every layer that names it (`tools/levels.py tileset`, run per set by
+`levels.mk`): which rooms share a set follows from the rooms, nothing
+declares it. A set named by BG0 layers is 8bpp, one named by BG1-3 layers
+4bpp. The tiles come in this order:
+
+1. tile 0, the blank tile;
+2. the rooms using the set, one after another: first the ones
+   `data/levels/tileset_order.json` lists for it, then the other rooms of
+   the ROM's regions in `levels.json` order, then the new rooms (see
+   "Adding a room");
+3. in a room, its layers using the set: `bg1`, `bg2`, `bg3`, or `bg0`;
+4. each picture in chunk order: the 16x8-cell chunks row by row, and
+   each chunk's cells row by row. A block that isn't a tile yet under any
+   of the four flips becomes the next tile, in the orientation it is
+   first seen in.
+
+That gives back the ROM's 11 sets byte for byte (21,297 tiles; no tile
+of them is unused, and none is another's flip), and the cells of every
+layer.
+
+The order the ROM's sets were made in doesn't follow `levels.json` for
+8 of the 11 sets, so `tileset_order.json` gives those rooms, by folder,
+32 names in all:
+
+```json
+{
+  "gJungleBg0Tiles": ["temple_of_boom/main", "jungle_jam/main", ...],
+  ...
+}
+```
+
+It lists only what `levels.json` order doesn't give: the rooms up to the
+last one out of that order. `tools/levels.py extract` finds the lists
+from the ROM (each set is a run of whole rooms) and checks that the
+generator then gives back every set and every cell. A new set, or a new
+room of a set, needs no entry.
+
+A set's outputs are written only when they change, and each output
+depends on a stamp rather than on the pictures, so touching a picture
+remakes its set (a few seconds for the biggest) but rebuilds nothing
+else unless a set or a layer's cells really changed. A new tile in an
+early room renumbers the tiles of the rooms after it, which then
+re-encode. The build also writes `tilesets/<set>.png`, a viewing
+picture of the set (16 tiles a row, a BG1-3 tile in the bank it is first
+drawn in, the palette of the set's first room).
+
+### Adding a room
+
+A room is a folder `data/levels/<level>/<slot>/` (room.json, the layer
+pictures and `collision.png`), and `levels.json`'s `"rooms"` lists it.
+The ROM's rooms are those its `"regions"` list; a room in no region is a
+**new room**. The build handles a new room through the same `make`, with
+no setting:
+
+- its data and its asset go into `src/data/level_appended.cpp`
+  (`levels.py appended`), which `ldscript.txt` links after the IWRAM
+  image. That is where the ROM's 0xFF fill starts, so the ROM's own data
+  doesn't move; past the fill's 106,548 bytes, `rom_fill`'s
+  `ALIGN(0x800000)` grows the ROM to the next 8 MB. With the original
+  data the section is empty, so the ROM still matches;
+- its symbols are room.json's (`"symbols"`, the asset's `"symbol"`, each
+  layer's `"grid_symbol"`): give it its own, for example `gRoom41`;
+- its layers may name a set of the ROM's rooms, but then only use tiles
+  that set already has (a new tile there would move later ROM data): a
+  block that isn't one fails the build. To draw new tiles, name a new
+  set (`"tileset": "gMyBg0Tiles"`): a set no ROM room uses is made from
+  its rooms' pictures alone, in first-use order, and goes with the new
+  rooms after the IWRAM image.
+
+The level tables (`gLevelTable`, `gLevelRoomLists`, the `gLevelRoomNN`
+records in `src/data/level_table_16c814.cpp`) are still hand-written C:
+to play a new room, point a room record at its descriptor and palette
+there (#965 is about generating them from `levels.json`; #966 about new
+levels and themes). Editing the ROM's own rooms changes their data in
+place, which can move the ROM data after it (#967).
 
 ### Collision layers
 
