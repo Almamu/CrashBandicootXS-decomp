@@ -19,7 +19,7 @@ extern "C" {
  * `if (MainLoop() != 0)` guard, which this loop never reaches. */
 s32 MainLoop(void)
 {
-    gLevelState = GetLevelState();
+    gLevelState = LevelState::Get();
     gLevelState->PlayBootCutscene();
     gLevelState->ShowCompanyLogos();
     OpenLanguageSelect();

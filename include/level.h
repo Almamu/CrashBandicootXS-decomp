@@ -80,11 +80,6 @@ extern s32 CountRoomCrates(const struct level_room *item);
 
 /* src/level/level_state.cpp (LevelState's methods: level_state.hpp) */
 extern void nullsub_24(void);
-#ifdef __cplusplus
-extern class LevelState *GetLevelState(void);
-#else
-extern struct level_state *GetLevelState(void);
-#endif
 
 /* src/level/room.cpp */
 extern void ResetObjBuffers(void);
@@ -249,11 +244,6 @@ extern const entity_spawn_fn gEntitySpawnFuncs[ENTITY_COUNT];
 /* src/iwram/iwram_data.cpp */
 #ifdef __cplusplus
 extern class LevelLayers *gLevelLayersSingleton;
-#endif
-#ifdef __cplusplus
-extern class LevelState *gLevelStateSingleton;
-#else
-extern struct level_state *gLevelStateSingleton;
 #endif
 
 /* The terrain height tables (src/data/terrain_1725a8.cpp, top-level asm) */

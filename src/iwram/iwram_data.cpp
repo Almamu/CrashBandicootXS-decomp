@@ -89,7 +89,7 @@ s32 gAkuAkuInvincibleFrame = 0;
 s32 gAkuAkuFollowFrame = 0;
 LevelSelect *gLevelSelect = 0;
 u8 gNewWorldOpened = 0;
-LevelState *gLevelStateSingleton = 0;
+LevelState *LevelState::instance = 0;
 u32 gRoomFrameCount = 0;
 u8 LevelProgress::roomExitRequested = 0;
 

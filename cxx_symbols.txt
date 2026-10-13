@@ -2318,6 +2318,12 @@ PlayBootCutscene__10LevelState PlayBootCutscene
 UnpackSaveData__10LevelStatePC12GameProgress UnpackSaveData
 PackSaveData__10LevelState PackSaveData
 #
+# #915 LevelState: the level state singleton as static members of LevelState
+# (include/level_state.hpp, src/level/level_state.cpp). Its data member
+# keeps the C name: iwram_data.cpp defines it.
+Get__10LevelState GetLevelState
+_10LevelState.instance gLevelStateSingleton
+#
 # #759: KeyInput's Update and GetDpadDirection (include/key_input.hpp; src/system/key_input.cpp)
 Update__8KeyInput UpdateKeys
 GetDpadDirection__8KeyInput GetDpadDirection

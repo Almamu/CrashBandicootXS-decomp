@@ -2,7 +2,7 @@
 #define GUARD_LEVEL_STATE_HPP
 
 /* The level state as C++ (#750, docs/cplusplus.md): LevelState, the
- * object gLevelState points at (gLevelStateSingleton; GetLevelState,
+ * object gLevelState points at (LevelState::instance; LevelState::Get,
  * level_state.cpp, makes the one instance), and LevelProgress, its room
  * block. Their functions are methods, mapped to their C names by
  * cxx_symbols.txt: LevelState's in level_state.cpp (the accessors),
@@ -117,8 +117,12 @@ COMPILE_TIME_ASSERT(level_state_hpp, sizeof(LevelProgress) == 0x20);
 class LevelState
 {
 public:
-    LevelState();               // InitLevelState, spawn_markers.cpp
-    ~LevelState();              // DestroyLevelState, level_cutscene.cpp
+    LevelState();  // InitLevelState, spawn_markers.cpp
+    ~LevelState(); // DestroyLevelState, level_cutscene.cpp
+    /* The one instance (#915), made the first time it's needed
+     * (GetLevelState, level_state.cpp; MainLoop keeps it in gLevelState).
+     * Static: it takes no level state. */
+    static LevelState *Get();
     void PlayCutscene(s32 idx); // level_cutscene.cpp
     void UpdateGameFrame();     // game_frame.cpp
     // bonus_round.cpp
@@ -275,6 +279,13 @@ public:
     // 0x1C8 - the boss's controller (SetLevelBoss); GetBossHealth reads its
     // `counter`, the hits taken
     BossCtrl *boss;
+
+private:
+    /* gLevelStateSingleton, Get's instance: an initialised IWRAM global
+     * of its own (iwram_data.cpp; cxx_symbols.txt maps
+     * `_10LevelState.instance` to it), not a field. The destructor clears
+     * it. */
+    static LevelState *instance;
 };
 
 /* The offsets with the ROM's 25 levels, when each of the three

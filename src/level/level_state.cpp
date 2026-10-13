@@ -24,10 +24,11 @@ extern "C" {
 
 /* The level state's accessors and helpers: LevelState's methods
  * (level_state.hpp; #750), under their C names (cxx_symbols.txt), with
- * the free functions nullsub_24 and GetLevelState. C++ since the #664
- * cleanup, for GetLevelState's `new LevelState` and ShowCompanyLogos'
- * `new CompanyLogos`; the methods were C functions taking the level
- * state as `self` until #750, and compile to the same code. Built with
+ * the free function nullsub_24 and the static Get (GetLevelState, #915).
+ * C++ since the #664 cleanup, for GetLevelState's `new LevelState` and
+ * ShowCompanyLogos' `new CompanyLogos`; the methods were C functions
+ * taking the level state as `self` until #750, and compile to the same
+ * code. Built with
  * old_agbcp - see docs/matching/archive/game-loop-old-agbcc.md.
  *
  * StartTimeTrial, first, was time_trial.cpp until #771 (GitHub issue
@@ -1000,19 +1001,19 @@ GameProgress *LevelState::PackSaveData()
     return snap;
 }
 
-/* Makes `gLevelStateSingleton` (a LevelState, level_state.hpp; its
- * constructor is InitLevelState) the first time it's needed, then
- * returns it. Its own
+/* Makes `instance` (gLevelStateSingleton; its constructor is
+ * InitLevelState) the first time it's needed, then returns it (MainLoop
+ * keeps it in gLevelState). Its own
  * file: ROM-adjacent to `PlayRoom` (now matched, `play_room.cpp`)
  * and the still-raw `RunRoom` on both sides
  * (asm/code_3_2_17_236ec.s before it, `PlayRoom`/
  * asm/code_3_2_17_23a1c.s after), so it can't share an object file
  * with either matched neighbor without splitting the ROM-contiguous
  * layout. */
-LevelState *GetLevelState(void)
+LevelState *LevelState::Get()
 {
-    if (gLevelStateSingleton == NULL) {
-        gLevelStateSingleton = new LevelState;
+    if (instance == NULL) {
+        instance = new LevelState;
     }
-    return gLevelStateSingleton;
+    return instance;
 }
