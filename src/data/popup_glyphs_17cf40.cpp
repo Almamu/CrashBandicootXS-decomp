@@ -1,4 +1,5 @@
 #include "frontend.hpp"
+#include "graphics.hpp"
 #include "logo_fly_in.h"
 
 extern "C" {
@@ -19,26 +20,16 @@ extern const struct delta_record gTitleLogoPieceMotion5[];
 extern const struct delta_record gTitleLogoPieceMotion6[];
 extern const struct delta_record gTitleLogoPieceMotion7[];
 extern const struct delta_record gTitleLogoPieceMotion8[];
-extern const u8 gCreditsRedEyeStudiosLogoPalette[];
-extern const u8 gCreditsShinenLogoPalette[];
-extern const u8 gCreditsCosmigoLogoPalette[];
-extern const u8 gCreditsUniversalLogoPalette[];
-extern const u8 gCreditsVvLogoPalette[];
-extern const u8 gCreditsRedEyeStudiosLogoTiles[];
-extern const u8 gCreditsShinenLogoTiles[];
-extern const u8 gCreditsCosmigoLogoTiles[];
-extern const u8 gCreditsUniversalLogoTiles[];
-extern const u8 gCreditsVvLogoTiles[];
 
 /* Five popup glyph sources, each a {w, h, palette, tiles, 0}
  * package (LoadCreditsLogos, credits.cpp, reads them as its
  * `struct popup_glyph_src`). */
 const struct bg_package gCreditsLogos[5] = {
-    { 0x10, 0x4, (void *)gCreditsCosmigoLogoPalette, (void *)gCreditsCosmigoLogoTiles, NULL },
-    { 0x10, 0x9, (void *)gCreditsRedEyeStudiosLogoPalette, (void *)gCreditsRedEyeStudiosLogoTiles, NULL },
-    { 0x10, 0x4, (void *)gCreditsShinenLogoPalette, (void *)gCreditsShinenLogoTiles, NULL },
-    { 0x10, 0xc, (void *)gCreditsUniversalLogoPalette, (void *)gCreditsUniversalLogoTiles, NULL },
-    { 0x1e, 0x8, (void *)gCreditsVvLogoPalette, (void *)gCreditsVvLogoTiles, NULL },
+    { 0x10, 0x4, (void *)CreditsCosmigoLogo::palette, (void *)CreditsCosmigoLogo::tiles, NULL },
+    { 0x10, 0x9, (void *)CreditsRedEyeStudiosLogo::palette, (void *)CreditsRedEyeStudiosLogo::tiles, NULL },
+    { 0x10, 0x4, (void *)CreditsShinenLogo::palette, (void *)CreditsShinenLogo::tiles, NULL },
+    { 0x10, 0xc, (void *)CreditsUniversalLogo::palette, (void *)CreditsUniversalLogo::tiles, NULL },
+    { 0x1e, 0x8, (void *)CreditsVvLogo::palette, (void *)CreditsVvLogo::tiles, NULL },
 };
 
 /* Nine {record, hold} seeds for the countdown slots of

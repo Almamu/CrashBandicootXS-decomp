@@ -1,3 +1,4 @@
+#include "graphics.hpp"
 #include "graphics_package.hpp"
 #include "menus.hpp"
 
@@ -10,15 +11,11 @@ extern "C" {
  * sections by ldscript.txt - see docs/data.md.
  */
 
-extern const u8 gLevelSelectPageBgPalette[];
-extern const u8 gLevelSelectPageBgTiles[];
-extern const u8 gLevelSelectPageBgMap[];
-
 /* BG graphics package loaded by DestroyLevelSelectPageBg (level_select_page_bg.cpp). */
 const struct bg_package gLevelSelectPageBg = {
     0x20,
     0x20,
-    (void *)gLevelSelectPageBgPalette,
-    (void *)gLevelSelectPageBgTiles,
-    (void *)gLevelSelectPageBgMap,
+    (void *)LevelSelectPlatformBg::palette,
+    (void *)LevelSelectPlatformBg::tiles,
+    (void *)LevelSelectPlatformBg::map,
 };

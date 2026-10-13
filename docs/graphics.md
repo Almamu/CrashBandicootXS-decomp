@@ -134,11 +134,12 @@ per asset: its path, what kind of asset it is, its symbol and its ROM
 address, and what extracting it needs (bpp, width, palette, OBJ layout).
 Its header comment in `tools/gfx_manifest.py` describes each kind.
 
-**Nothing in the build reads it.** The ROM's layout comes from
-`ldscript.txt` and the order of the definitions in each `src/data/*.cpp`,
-and every reference is a symbol, so an asset that grows or shrinks just
-moves what follows it. The addresses are kept only so the sources can be
-extracted from `baserom.gba` again:
+**The build reads it only for the graphics classes** (below). The ROM's
+layout comes from `ldscript.txt` and the order of the definitions in each
+`src/data/*.cpp`, and every reference is a symbol, so an asset that grows
+or shrinks just moves what follows it. The addresses are kept so the
+sources can be extracted from `baserom.gba` again, and to put the
+classes' definitions in ROM order:
 
 - `tools/gfx_manifest.py extract [baserom.gba]` writes every source
   under `graphics/` and `data/levels/` from the ROM. Most kinds are
@@ -152,13 +153,69 @@ extracted from `baserom.gba` again:
   pixels and palette, other files byte for byte. On the original data it
   reproduces the whole tree.
 - `tools/gfx_manifest.py check` checks that every file under
-  `graphics/` belongs to an entry and every entry's files exist.
+  `graphics/` belongs to an entry and every entry's files exist, and the
+  graphics classes (below).
 - `tools/gfx_manifest.py table` writes the "Graphics assets" table of
   [data_map.md](./data_map.md) from the manifest: the reverse lookup from
   an address to its source.
 
 A PR that moves a source updates its entry. A new asset that isn't in the
-ROM needs no entry: the build doesn't read the manifest.
+ROM needs no entry, unless it is to be a graphics class.
+
+### Graphics classes
+
+Each graphic is a class whose parts are static const data members
+(docs/cplusplus.md, "The graphics as static classes (#915)"):
+
+```cpp
+class TitleScreenBg
+{
+public:
+    static const u8 palette[]; // gTitleScreenBgPalette - 256 colours, LZ77
+    static const u8 tiles[];   // gTitleScreenBgTiles - 8bpp tiles, LZ77
+    static const u8 map[];     // gTitleScreenBgMap - affine BG map, LZ77
+};
+// const struct bg_package gTitleScreenBg = { 16, 16,
+//     (void *)TitleScreenBg::palette, (void *)TitleScreenBg::tiles, (void *)TitleScreenBg::map };
+```
+
+The manifest decides them:
+
+- **`class`.** An entry with a `class` is one. Its members are named by
+  their role: the entry's own symbol is `tiles` (a `bg_package` or
+  `tiles`) or `bitmap`, its `palette` is `palette` and its `map` is
+  `map`. A palette that OAM picks at run time (`{"obj_palette": n}`)
+  isn't a member. The part's `symbol` stays its C name. `about`, if
+  given, says what the graphic is, for the class's comment.
+- **`objects`.** The top-level list of the `src/data` objects whose
+  graphics are all class members, each `{name, rom, end}`. Every part in
+  an object's ROM range is defined by it, in ROM order.
+
+`tools/gfx_manifest.py` generates everything else:
+
+- `header OUT`: `build/include/graphics.hpp`, the class declarations
+  (graphics.mk, written only if it changed). A file that names a member
+  `#include`s it.
+- `defs OBJECT OUT`: the member definitions of one object, in ROM order
+  (`const u8 TitleScreenBg::palette[] __attribute__((aligned(4))) = {
+  #include "title/logo.gbapal.lz.inc" };`), into
+  `build/.../graphics/<object>.inc`, which `src/data/<object>.cpp`
+  `#include`s.
+- `symbols`: the block of cxx_symbols.txt between the `graphics classes`
+  markers, which maps each member back to its C name
+  (`_13TitleScreenBg.palette gTitleScreenBgPalette`); the C++ objects'
+  `objcopy --redefine-syms` uses it like the rest of the file. `check`
+  fails when it is out of date.
+
+So giving a graphic a `class` (and its object an `objects` range) is
+the whole change: run `gfx_manifest.py symbols` and replace its users'
+C names. The `struct bg_package` records and the other tables that point
+at a graphic stay ROM data in their own files; their initialisers name
+the members.
+
+| object | classes |
+|---|---|
+| `menu_graphics_61badc.cpp` | the menus (`MenuSkyBg`, `PauseMenuBg`, `ContinuePrompt{Smoke,Glow,UkaUka}Bg`), the title (`TitleScreenBg`, `Title{Bandicoot,Crash,Arrow1,Arrow2}Obj`), the logos (`UniversalLogoBg`, `Credits{RedEyeStudios,Shinen,Cosmigo,Universal,Vv}Logo`, `VvLogo{Emblem,Letters,Url}`) and the level-select platform (`LevelSelectPlatformBg`, gLevelSelectPageBg's: `LevelSelectPageBg` is the game's BG1 class) |
 
 ### Palettes
 
