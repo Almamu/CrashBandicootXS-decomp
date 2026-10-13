@@ -145,9 +145,9 @@ void BgLayerBase::SetSource(const struct level_layer_desc *source)
         widthPx = w;
         h <<= 3;
         heightPx = h;
-        w -= 0xf0;
+        w = CAMERA_MAX_X(w);
         maxX = w;
-        h -= 0xa0;
+        h = CAMERA_MAX_Y(h);
         maxY = h;
         scaleX = source->scaleX;
         scaleY = source->scaleY;

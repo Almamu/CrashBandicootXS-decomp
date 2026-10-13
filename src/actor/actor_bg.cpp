@@ -56,10 +56,10 @@ void InitActorBgScroll(s32 type)
     {
         s32 *ecPtr = &gActorBgScrollMaxX;
 
-        v = gActorBgWidth + (s32)0xFFFF1000;
+        v = gActorBgWidth - INT_TO_Q8(DISPLAY_WIDTH);
         *ecPtr = v;
     }
-    gActorBgScrollMaxY = gActorBgHeight + (s32)0xFFFF6000;
+    gActorBgScrollMaxY = gActorBgHeight - INT_TO_Q8(DISPLAY_HEIGHT);
 
     s32 *d0Ptr = &gActorBgScrollX;
 

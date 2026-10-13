@@ -73,8 +73,8 @@ class BgLayerBase
 public:
     s32 x;                // 0x00 - pixels
     s32 y;                // 0x04
-    s32 maxX;             // 0x08 - widthPx - 240, the scroll limit
-    s32 maxY;             // 0x0C - heightPx - 160
+    s32 maxX;             // 0x08 - CAMERA_MAX_X(widthPx), the scroll limit
+    s32 maxY;             // 0x0C - CAMERA_MAX_Y(heightPx)
     s32 widthPx;          // 0x10
     s32 heightPx;         // 0x14
     s32 widthTiles;       // 0x18

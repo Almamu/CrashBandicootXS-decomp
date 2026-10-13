@@ -100,7 +100,7 @@ void BgLayer::ClipRows(s32 lo, s32 hi)
 }
 
 /* Moves the layer (BgLayerBase::Scroll), then works out the tile columns
- * and rows the 240x160 screen covers at the new position, clips the
+ * and rows the screen covers at the new position, clips the
  * resident range to them (ClipRows/ClipColumns, virtual), refreshes the
  * streamer and streams the new range in (GrowColumns/GrowRows). */
 void BgLayer::Scroll(const s32 *delta)
@@ -112,9 +112,9 @@ void BgLayer::Scroll(const s32 *delta)
 
     BgLayerBase::Scroll(delta);
     cLo = x / 8;
-    cHi = (x + 0xef) / 8;
+    cHi = (x + (DISPLAY_WIDTH - 1)) / 8;
     rLo = y / 8;
-    rHi = (y + 0x9f) / 8;
+    rHi = (y + (DISPLAY_HEIGHT - 1)) / 8;
     ClipRows(rLo, rHi);
     ClipColumns(cLo, cHi);
     streamer->Scroll(&x);
@@ -179,17 +179,18 @@ loop:
         goto loop;
 }
 
-/* Recomputes the resident tile ranges from the pixel scroll position (a
- * 240x160 screen spans columns x/8..(x+239)/8 and rows y/8..(y+159)/8),
+/* Recomputes the resident tile ranges from the pixel scroll position (the
+ * screen spans columns x/8..(x+DISPLAY_WIDTH-1)/8 and rows
+ * y/8..(y+DISPLAY_HEIGHT-1)/8),
  * then draws every resident row (DrawRow, virtual). */
 void BgLayer::Redraw()
 {
     s32 r;
 
     colLo = x / 8;
-    colHi = (x + 0xEF) / 8;
+    colHi = (x + (DISPLAY_WIDTH - 1)) / 8;
     rowLo = y / 8;
-    rowHi = (y + 0x9F) / 8;
+    rowHi = (y + (DISPLAY_HEIGHT - 1)) / 8;
     for (r = rowLo; r <= rowHi; r++)
         DrawRow(r);
 }
