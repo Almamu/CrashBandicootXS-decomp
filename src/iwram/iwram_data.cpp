@@ -10,6 +10,7 @@
 #include "fade.hpp"
 #include "sprite_frame_cache.hpp"
 #include "collected_spawns.hpp"
+#include "actor_category_stats.hpp"
 
 extern "C" {
 #include "core.h"
@@ -114,7 +115,7 @@ screen_dy_t gHudSlideOffset = 0;
 /* Hooks into the ARM code (see sprite_arm.cpp). */
 s32 (*gLookupSpriteFrameCacheFunc)(u8 *frame) = SpriteFrameCache::Lookup;
 void (*gUnpackRleSpriteFrameFunc)(u16 *dst, struct rle_frame *frame) = UnpackRleSpriteFrame;
-s32 gActorCheckpoint = 0;
+s32 ActorCategoryStats::checkpoint = 0;
 void (*gDrawMirroredTilemapFunc)(u8 *pal, s32 lowBlock, s32 w, s32 h) = DrawMirroredTilemap;
 void (*gHeapSortActorsByKeyFunc)(s32 n, ActorSelf **list) = HeapSortActorsByKey;
 ActorSelf *gActorList = 0;

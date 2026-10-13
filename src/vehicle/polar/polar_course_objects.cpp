@@ -2,6 +2,7 @@
 #include "audio.hpp"
 #include "level_state.hpp"
 #include "yeti.hpp"
+#include "actor_category_stats.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -78,7 +79,7 @@ void PolarCheckpointCrate::Update()
             RestartAnim(1);
             gAudioContext->PlaySfx(SFX_CHECKPOINT, 0x100);
             gLevelState->AddBrokenCrate();
-            SetActorCheckpoint(z);
+            ActorCategoryStats::SetCheckpoint(z);
             CreatePolarCheckpointText(x, y - INT_TO_Q8(15), z);
         }
 
@@ -101,7 +102,7 @@ void PolarCheckpointCrate::Update()
 PolarCheckpointCrate::PolarCheckpointCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
     : ActorSelf(rec, x, y, z)
 {
-    if (GetActorCheckpoint() == z) {
+    if (ActorCategoryStats::GetCheckpoint() == z) {
         RestartAnim(2);
         gAudioContext->PlaySfx(SFX_CHECKPOINT, 0x100);
     }

@@ -15,6 +15,7 @@
 #include "sprite_frame_cache.hpp"
 #include "category_sprite_sheet.hpp"
 #include "collected_spawns.hpp"
+#include "actor_category_stats.hpp"
 
 extern "C" {
 #include "core.h"
@@ -47,7 +48,7 @@ extern void SetCheckpointAtPlayer_1(void *self) asm("SetCheckpointAtPlayer");
  * Matches under old_agbcc (current agbcc is 3 halfwords off in the
  * option-screen block). What the old NAKED note called "four high-register
  * pins" is loop.c's own invariant hoisting; the shape that reproduces it:
- *  - `activeCount`/`variantCount` point at gActorCategoryDeaths/gActorCategoryBossDeaths
+ *  - `activeCount`/`variantCount` point at ActorCategoryStats::deaths/bossDeaths
  *    and are (re)assigned at the top of the outer loop. They end up
  *    spilled, and every use rematerializes the address, which is what
  *    puts the ROM's reload registers (r3/r7 in the prologue, r5 in the
@@ -111,11 +112,11 @@ s32 InitActorCategory(s32 category)
     s32 result;
     u8 open;
 
-    gActorCheckpointMissedNitros = 0;
+    ActorCategoryStats::checkpointMissedNitros = 0;
     gActorCategory = category;
-    gActorCheckpoint = 0;
-    gActorCategoryDeaths = 0;
-    gActorCategoryBossDeaths = 0;
+    ActorCategoryStats::checkpoint = 0;
+    ActorCategoryStats::deaths = 0;
+    ActorCategoryStats::bossDeaths = 0;
     SetCheckpointAtPlayer_1(gLevelState);
     CategorySpriteSheet::Decompress(CUR_CATEGORY.sprite_sheet);
     SetupActorVramPool();
@@ -124,9 +125,9 @@ s32 InitActorCategory(s32 category)
     ActorBg::InitScroll(CUR_CATEGORY.type);
 
     do {
-        activeCount = &gActorCategoryDeaths;
-        variantCount = &gActorCategoryBossDeaths;
-        gActorMissedNitros = gActorCheckpointMissedNitros;
+        activeCount = &ActorCategoryStats::deaths;
+        variantCount = &ActorCategoryStats::bossDeaths;
+        ActorCategoryStats::missedNitros = ActorCategoryStats::checkpointMissedNitros;
         gLevelState->RestoreCheckpoint();
         if (*variantCount >= CUR_CATEGORY.retryBossDeaths)
             variant = CUR_CATEGORY.retryBossLevel;
@@ -135,13 +136,13 @@ s32 InitActorCategory(s32 category)
         DmaFill16(3, 0, PLTT, PLTT_SIZE);
         BrightnessFade::Start(0x80, 2, 1);
         CellAnim::Init(CUR_CATEGORY.type, CUR_CATEGORY.cellAnim, CUR_CATEGORY.cellAnimSize,
-                       gActorCheckpoint);
+                       ActorCategoryStats::checkpoint);
         if (CUR_CATEGORY.bgPicture != NULL)
             LoadBgPicture(CUR_CATEGORY.bgPicture);
         ActorPaletteCycle::Restore();
         SelectActorCategory(CUR_CATEGORY.type, CUR_CATEGORY.spawnTable, CUR_CATEGORY.anim_table,
                             *activeCount >= CUR_CATEGORY.bonusKindDeaths, variant,
-                            gActorCheckpoint);
+                            ActorCategoryStats::checkpoint);
         DmaCopy16(3, CUR_CATEGORY.palette, OBJ_PLTT, OBJ_PLTT_SIZE);
 
         state = &gLevelState;

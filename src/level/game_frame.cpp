@@ -4,6 +4,7 @@
 #include "audio.hpp"
 #include "level_state.hpp"
 #include "menus.hpp"
+#include "actor_category_stats.hpp"
 
 extern "C" {
 #include "core.h"
@@ -174,7 +175,7 @@ load:
             case ROOM_KIND_CATEGORY:
                 status = InitActorCategory(room.cat->param.catIndex);
                 if (status == ROOM_EXIT_CLEARED) {
-                    AddPendingSwitchCrates(GetActorMissedNitros());
+                    AddPendingSwitchCrates(ActorCategoryStats::GetMissedNitros());
                     SetCheckpointAtPlayer(0);
                 }
                 break;

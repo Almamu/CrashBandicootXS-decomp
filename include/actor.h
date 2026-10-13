@@ -166,13 +166,9 @@ extern void SelectActorCategory(s32 type, struct actor_spawn_table *table,
                                 struct anim_table_record *animTable, u8 active, s32 variant,
                                 s32 checkpoint);
 
-/* src/actor/actor_category_stats.cpp */
+/* src/actor/actor_category_stats.cpp (the rest is class
+ * ActorCategoryStats, actor_category_stats.hpp) */
 extern s32 CountCategoryCrates(s32 categoryIdx);
-extern void AddActorMissedNitro(void);
-extern s32 GetActorMissedNitros(void);
-extern s32 GetActorCheckpoint(void);
-extern void SetActorCheckpoint(s32 z);
-extern bool IsActorMaskAssistDue(void);
 
 /* src/actor/actor_factory.cpp. SpawnActor is also slot 1 of the category
  * vtables (src/data/actor_category_175558.cpp): to C, `struct ActorSelf` is
@@ -217,29 +213,19 @@ extern void ActorCategoryAttemptEndStub(void);
 /* The actor zone's globals (sym_iwram.txt). */
 extern struct anim_table_record *gActorAnimTable;
 extern s32 gActorCategory;
-extern s32 gActorCategoryDeaths;
 extern s32 gActorCategoryExitStatus;
 extern s32 gActorCategoryFrameCount;
 extern const struct category_vtable *gActorCategoryVtable;
-extern s32 gActorCheckpointMissedNitros;
 extern s32 gActorDrawCount;
 #ifdef __cplusplus
 extern class ActorSelf **gActorDrawList;
 #endif
 extern s32 gActorFarClipDepth;
-/* A frame-tick counter, incremented every category-load-loop tick
- * (InitActorCategory) and snapshotted at the top of SelectActorCategory
- * for the bookkeeping the gActorSpawnTable accessors use. */
-extern s32 gActorMissedNitros;
 extern s32 gActorNearClipDepth;
 extern s32 gActorSpawnIndex;
 extern s32 gActorSpawnOffset;
 extern struct actor_spawn_table *gActorSpawnTable;
 extern u8 gActorSpawnsPaused;
-/* The deaths since the checkpoint that count towards the category's
- * `retryBossDeaths` (InitActorCategory): being carried off by the yeti
- * (exit status 2) in a type-0 category, any death in the others. */
-extern s32 gActorCategoryBossDeaths;
 /* The projection distance (Q8): DrawActor scales x/y by
  * gActorFocalLength / depth, and InitCellAnim starts the cell animation
  * this far from the checkpoint. Set by ActorBg::InitScroll: 47 px in the
@@ -257,7 +243,6 @@ extern s32 gActorFocalLength;
 extern u8 gActorSpawnUseBonus;
 
 /* src/iwram/iwram_data.cpp */
-extern s32 gActorCheckpoint;
 extern void (*gDrawMirroredTilemapFunc)(u8 *pal, s32 lowBlock, s32 w, s32 h);
 #ifdef __cplusplus
 extern void (*gHeapSortActorsByKeyFunc)(s32 n, class ActorSelf **list);

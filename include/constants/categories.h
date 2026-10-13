@@ -35,7 +35,7 @@
  * JetpackPlayerStateFinish): leave the loop. */
 #define CATEGORY_EXIT_CLEARED 1
 /* Retry from the checkpoint, counting a death and a boss death
- * (gActorCategoryBossDeaths); a time trial counts neither
+ * (ActorCategoryStats::bossDeaths); a time trial counts neither
  * (PolarPlayerStateCarriedOff). */
 #define CATEGORY_EXIT_BOSS_DEATH 2
 /* Retry from the checkpoint, counting a death, and a boss death too

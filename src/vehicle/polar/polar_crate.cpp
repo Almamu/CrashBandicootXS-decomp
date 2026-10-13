@@ -3,6 +3,7 @@
 #include "level_state.hpp"
 #include "yeti.hpp"
 #include "collected_spawns.hpp"
+#include "actor_category_stats.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -98,7 +99,7 @@ void PolarNitroCrate::Update()
 {
     if (animIndex != 0x12) {
         if (depth > INT_TO_Q8(160)) {
-            AddActorMissedNitro();
+            ActorCategoryStats::AddMissedNitro();
             delete this;
             return;
         }

@@ -6,6 +6,7 @@
 #include "cell_anim.hpp"
 #include "actor_bg.hpp"
 #include "sprite_oam_queue.hpp"
+#include "actor_category_stats.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -36,7 +37,7 @@ extern "C" {
         (v) = (v) < 0 ? -0x240 : ((v) != 0 ? 0x240 : 0);                      \
     else (void)0
 
-/* InitJetpackPlayer: 100 hit points (0x78 when `IsActorMaskAssistDue`
+/* InitJetpackPlayer: 100 hit points (0x78 when `ActorCategoryStats::IsMaskAssistDue`
  * says so), and a reset of all its global state. A nonzero start depth
  * starts it in state 7. */
 JetpackPlayer::JetpackPlayer(const struct anim_table_record *rec, s32 z)
@@ -63,7 +64,7 @@ JetpackPlayer::JetpackPlayer(const struct anim_table_record *rec, s32 z)
     gJetpackRingLastFrame = -0xbe;
     gJetpackRingChain = 0;
     gJetpackPauseLocked = 0;
-    if (IsActorMaskAssistDue())
+    if (ActorCategoryStats::IsMaskAssistDue())
         hp = 0x78;
     gJetpackPlayerMaxHp = hp;
     gJetpackBomberCount = 0;
