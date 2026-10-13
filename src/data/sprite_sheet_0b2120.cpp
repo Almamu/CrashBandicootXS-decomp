@@ -16,7 +16,7 @@ extern "C" {
  * The framed OBJ sprite sheet of actor categories 0-2 (213,064 bytes
  * unpacked): 4bpp frames, each behind a 4-byte header. Built by
  * tools/framed_gfx.py from the per-entity frame PNGs of
- * graphics/unknown/00_0b2120/.
+ * graphics/vehicles/polar/sprite_sheet/.
  */
 extern const u8 gPolarSpriteSheet[] __attribute__((aligned(4))) = {
 #include "vehicles/polar/sprite_sheet.bin.lz.inc"

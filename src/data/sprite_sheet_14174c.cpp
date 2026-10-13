@@ -16,7 +16,7 @@ extern "C" {
  * The framed OBJ sprite sheet of actor categories 3-6 (207,124 bytes
  * unpacked): 4bpp frames, each behind a 4-byte header. Built by
  * tools/framed_gfx.py from the per-entity frame PNGs of
- * graphics/unknown/01_14174c/.
+ * graphics/vehicles/jetpack/sprite_sheet/.
  */
 extern const u8 gJetpackSpriteSheet[] __attribute__((aligned(4))) = {
 #include "vehicles/jetpack/sprite_sheet.bin.lz.inc"

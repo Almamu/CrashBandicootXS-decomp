@@ -316,7 +316,9 @@ $(SPRITE_FRAMES_OUT) &: $(SPRITE_FRAME_SOURCES) tools/sprite_frames.py
 $(C_BUILDDIR)/data/sprite_tiles_2bf120.o $(foreach f,4a5600 4b0ae0 4b414c 4b9d7c,$(C_BUILDDIR)/data/sprite_banks_$(f).o): $(SPRITE_FRAMES_OUT)
 
 # The 125 OBJ palettes (gObjPalettes): one JASC file per paletteId,
-# graphics/sprites/palettes/NNN.pal, back to back in index order.
+# graphics/sprites/palettes/NNN_<owner>.pal (NNN the paletteId, <owner>
+# the first sprite bank whose animations use it, or `unused`), back to
+# back in index order.
 OBJ_PALETTE_PALS := $(sort $(wildcard graphics/sprites/palettes/*.pal))
 $(GRAPHICS_BUILDDIR)/sprites/obj_palettes.bin: $(patsubst graphics/%.pal,$(GRAPHICS_BUILDDIR)/%.gbapal,$(OBJ_PALETTE_PALS))
 	@mkdir -p $(dir $@)

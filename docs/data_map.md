@@ -282,7 +282,7 @@ Walking them:
   `scaleX`, `scaleY`, `cnt`, grid width/height in chunks
   (`+0x16`/`+0x18`), size in tiles (`+0x1A`/`+0x1C`).
 - `tileData` is either one of the built LZ77 tile sets
-  (`graphics/level_bg_tiles/`), or one of **five tag-0x00 raw assets in
+  (made from the rooms' pictures, docs/levels.md "Tile sets"), or one of **five tag-0x00 raw assets in
   this blob**. The pooled layer 0 reads those at `tiles + 4`, 64 bytes
   per tile, i.e. 8bpp (`tile_slot_pool.cpp`, `SetTileSlotPoolSource`).
 - `asset` is either an LZ77 blob between the intro graphics

@@ -623,7 +623,7 @@ C (see "Level data").
 | `level_rooms_24b638.cpp` | room data, 33 rooms | `data/levels/` via `tools/levels.py` (see "Level data") |
 | `level_tilesets_270f08.cpp` | tile sets 4-5 | generated from `data/levels/` |
 | `level_rooms_2b91d0.cpp` | room data, 8 rooms | same |
-| `sprite_tiles_2bf120.cpp` | 56 sprite banks, 125 OBJ palettes | `graphics/sprites/bankNN_<name>/`, `graphics/sprites/palettes/NNN.pal` |
+| `sprite_tiles_2bf120.cpp` | 56 sprite banks, 125 OBJ palettes | `graphics/sprites/bankNN_<name>/`, `graphics/sprites/palettes/NNN_<owner>.pal` |
 
 - **Sprite banks.** The pool at `0x082BF120` has no header. Each of the 56
   banks of `gSpriteBankTable` owns one back-to-back range of it, in
@@ -637,7 +637,8 @@ C (see "Level data").
   (`struct sprite_anim` +0x14): `GetPaletteSlot` copies it into a free
   OBJ palette slot, and the slot goes into the OAM entries that draw the
   animation's frames. Each palette is one JASC file,
-  `graphics/sprites/palettes/NNN.pal`, `NNN` being the `paletteId`;
+  `graphics/sprites/palettes/NNN_<owner>.pal`, `NNN` being the `paletteId`
+  and `<owner>` what uses it (see docs/graphics.md, "OBJ palettes");
   `graphics.mk` builds each with `tools/jasc_pal.py` and concatenates them
   in index order. None has bit 15 set. 98 of them are named by some
   animation; 6, 14, 15, 20, 26, 31, 38-40, 42, 43, 63, 65, 66, 73, 90-94,
