@@ -1,5 +1,6 @@
 {
   "asset": {"symbol": "gRoom35Asset", "packed": true},
+  "record": {"symbol": "gLevelRoom35", "kind": "ON_FOOT", "blend": {"effect": 1, "eva": 4, "evb": 16}},
   "symbols": {"desc": "gRoom35Desc", "palette": "gRoom35Palette", "entities": "gRoom35EntityList", "groups": "gRoom35EntityGroups", "param_offsets": "gRoom35ParamOffsets", "params": "gRoom35Params", "type_counts": "gRoom35TypeCounts", "layers": "gRoom35Layers", "items": "gRoom35Entities", "links": "gRoom35Links"},
   "layers": {
     "bg1": {"map": "bg1.png", "size_chunks": [51, 3], "size_tiles": [810, 22], "tileset": "gSewerBgTiles", "scale": [128, 128], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom35Bg1Grid"},

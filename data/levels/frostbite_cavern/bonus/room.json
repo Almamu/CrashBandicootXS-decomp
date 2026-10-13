@@ -1,5 +1,6 @@
 {
   "asset": {"symbol": "gRoom02Asset", "packed": true},
+  "record": {"symbol": "gLevelRoom02", "kind": "ON_FOOT", "blend": {"effect": 0, "eva": 0, "evb": 0}},
   "symbols": {"desc": "gRoom02Desc", "palette": "gRoom02Palette", "entities": "gRoom02EntityList", "groups": "gRoom02EntityGroups", "param_offsets": "gRoom02ParamOffsets", "params": "gRoom02Params", "type_counts": "gRoom02TypeCounts", "layers": "gRoom02Layers", "items": "gRoom02Entities", "links": "gRoom02Links"},
   "layers": {
     "bg1": {"map": "bg1.png", "size_chunks": [9, 4], "size_tiles": [132, 28], "tileset": "gSnowBgTiles", "scale": [128, 128], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom02Bg1Grid"},

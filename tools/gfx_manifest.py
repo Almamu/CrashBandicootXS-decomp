@@ -408,6 +408,9 @@ def extract_check(rom_path):
         (root / "data/levels").mkdir(parents=True)
         for f in Path("data/levels").glob("*.json"):
             shutil.copy(f, root / "data/levels" / f.name)
+        # the actor categories, which name the level table's stages
+        (root / "include/constants").mkdir(parents=True)
+        shutil.copy("include/constants/categories.h", root / "include/constants")
         (root / "graphics").mkdir()
         shutil.copy(MANIFEST, root / MANIFEST)
         (root / "baserom.gba").symlink_to(rom_path)
