@@ -1,5 +1,6 @@
 #include "actor_self.hpp"
 #include "vehicle.hpp"
+#include "actor_palette_cycle.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -16,45 +17,42 @@ extern "C" {
  * Built with old_agbcp and -fno-implement-inlines, like actor.cpp, where
  * it was until #770. See docs/matching/archive/issue-50-actor-2a69c.md. */
 
-/* Loads the palette cycle's cursor and bound (gActorPaletteCycleFrame/
- * gActorPaletteCycleTarget, see UpdateActorPaletteCycle) from their saved
+/* Loads the palette cycle's cursor and bound (`frame`/`target`, see
+ * Update) from their saved
  * copies and restarts the DMA timer. */
-void RestoreActorPaletteCycle(void)
+void ActorPaletteCycle::Restore()
 {
-    gActorPaletteCycleFrame = gSavedActorPaletteCycleFrame;
-    gActorPaletteCycleTarget = gSavedActorPaletteCycleTarget;
-    gActorPaletteCycleTimer = 0;
+    frame = savedFrame;
+    target = savedTarget;
+    timer = 0;
 }
 
-/* The inverse of RestoreActorPaletteCycle. */
-void SaveActorPaletteCycle(void)
+/* The inverse of Restore. */
+void ActorPaletteCycle::Save()
 {
-    gSavedActorPaletteCycleFrame = gActorPaletteCycleFrame;
-    gSavedActorPaletteCycleTarget = gActorPaletteCycleTarget;
+    savedFrame = frame;
+    savedTarget = target;
 }
 
-/* While gActorPaletteCycleEnabled: DMAs one 0x1c0-byte frame of
- * gActorPaletteCycleFrames (the cursor's) to BG palette RAM, and every
- * 0x24 calls moves the cursor one step toward the bound (holding it
- * there); SaveActorPaletteCycle/SetActorPaletteCycle swap the ends for a
- * ping-pong. */
-void UpdateActorPaletteCycle(void)
+/* While enabled: DMAs one 0x1c0-byte frame of `frames` (the cursor's) to
+ * BG palette RAM, and every 0x24 calls moves the cursor one step toward
+ * the bound (holding it there); Save/Set swap the ends for a ping-pong. */
+void ActorPaletteCycle::Update()
 {
-    if (!gActorPaletteCycleEnabled)
+    if (!enabled)
         return;
-    QueueVramDmaTransfer(gActorPaletteCycleFrames[gActorPaletteCycleFrame], BG_PALETTE(0), 0x1c0,
-                         0x10);
-    if (++gActorPaletteCycleTimer > 0x23) {
-        gActorPaletteCycleTimer = 0;
+    QueueVramDmaTransfer(frames[frame], BG_PALETTE(0), 0x1c0, 0x10);
+    if (++timer > 0x23) {
+        timer = 0;
 
-        s32 *cur = &gActorPaletteCycleFrame;
-        s32 target = gActorPaletteCycleTarget;
+        s32 *cur = &frame;
+        s32 bound = target;
         s32 v = *cur;
         s32 r;
 
-        if (target - v >= 0) {
+        if (bound - v >= 0) {
             r = v;
-            if (target != r)
+            if (bound != r)
                 r++;
         } else {
             r = v - 1;
@@ -64,22 +62,22 @@ void UpdateActorPaletteCycle(void)
 }
 
 /* Seeds the palette cycle's cursor and bound from the per-category tables
- * (gActorPaletteCycleStartFrames/gActorPaletteCycleTargetFrames) and
+ * (startFrames/targetFrames) and
  * restarts the DMA timer. */
-void SetActorPaletteCycle(s32 idx)
+void ActorPaletteCycle::Set(s32 idx)
 {
-    gActorPaletteCycleFrame = gActorPaletteCycleStartFrames[idx];
-    gActorPaletteCycleTarget = gActorPaletteCycleTargetFrames[idx];
-    gActorPaletteCycleTimer = 0;
+    frame = startFrames[idx];
+    target = targetFrames[idx];
+    timer = 0;
 }
 
 /* Turns the palette cycle on or off, resetting the cursor, the bound and
- * the timer, and saves that state (SaveActorPaletteCycle). */
-void EnableActorPaletteCycle(u8 flag)
+ * the timer, and saves that state (Save). */
+void ActorPaletteCycle::Enable(u8 flag)
 {
-    gActorPaletteCycleEnabled = flag;
-    gActorPaletteCycleFrame = 0;
-    gActorPaletteCycleTarget = 0;
-    gActorPaletteCycleTimer = 0;
-    SaveActorPaletteCycle();
+    enabled = flag;
+    frame = 0;
+    target = 0;
+    timer = 0;
+    Save();
 }

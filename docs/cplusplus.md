@@ -768,6 +768,8 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/vehicle/jetpack/jetpack_shot.cpp`, `jetpack_spawn.cpp`, `src/hud/hud_counters.cpp` | the callers: `Airship::IsTouching(this)`, `Airship::Damage(2)`, `Airship::Spawn(...)`, `Airship::GetHpPercent()` | 0 | (unchanged) | 0 -> 0 | [#772](#the-airship-as-an-all-static-class-772) |
 | `src/gfx/sprite_frame.cpp` | `ObjTileAllocator` (new include/obj_tile_allocator.hpp), an all-static class: its 5 IWRAM globals are static data members (`pool` is gVramTileBlockPool, `list`, `rover`, `spares`, `index`), its 6 functions static member functions (`Init`, `Alloc`, `Free`, `Destroy`, the UNUSED `Walk` and `GetFreeBytes`); gfx.h's 6 prototypes and 5 externs go | 6 | (unchanged) | 0 -> 0 | [#915](#the-obj-tile-allocator-as-an-all-static-class-915) |
 | `src/actor/actor_vram_pool.cpp`, `actor_category_init.cpp`, `src/frontend/company_logos.cpp`, `company_logos_ctor.cpp`, `src/vehicle/jetpack/jetpack_player.cpp`, `jetpack_player_update.cpp`, `src/vehicle/polar/polar_player.cpp`, `polar_player_states.cpp` | the callers: `ObjTileAllocator::Alloc(...)` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-obj-tile-allocator-as-an-all-static-class-915) |
+| `src/actor/actor_palette_cycle.cpp`, `src/data/palette_cycle_175760.cpp` | `ActorPaletteCycle` (new include/actor_palette_cycle.hpp), an all-static class: its 6 IWRAM globals and the 3 ROM tables only it reads are static data members (`frame` is gActorPaletteCycleFrame, `frames` gActorPaletteCycleFrames, ...), its 5 functions static member functions (`Restore`, `Save`, `Update`, `Set`, `Enable`); actor.h's 5 prototypes and 9 externs go | 5 | (unchanged) | 0 -> 0 | [#915](#the-actor-palette-cycle-as-an-all-static-class-915) |
+| `src/actor/actor_category_init.cpp`, `actor_category_stats.cpp`, `actor_factory.cpp`, `cell_anim.cpp` | the callers: `ActorPaletteCycle::Update()` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-actor-palette-cycle-as-an-all-static-class-915) |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -4626,6 +4628,29 @@ plain functions, and every object is byte-identical.
   (gSpriteOamQueue*), the sprite frame cache (gSpriteFrameCache*) and the
   category sprite sheet, which have their own IWRAM variables and are
   candidates of their own (#915's inventory).
+
+### The actor palette cycle as an all-static class (#915)
+
+The 3D stages' BG palette cycle (actor_palette_cycle.cpp, ROM
+0x0802AB08-0x0802AC28) was 5 free functions over 6 IWRAM globals
+(0x03001464-0x0300147B) and 3 ROM tables that no other object reads. It
+is now `ActorPaletteCycle` (include/actor_palette_cycle.hpp), all-static
+like [the yeti](#the-yeti-as-an-all-static-class-772), and every object
+is byte-identical.
+
+- **Data.** The IWRAM variables are private static data members, only
+  declared: `enabled`, `frame` (the cursor), `target` (its bound),
+  `timer`, `savedFrame`, `savedTarget`. The ROM tables are private static
+  const members, defined in palette_cycle_175760.cpp as the members, as
+  for the yeti's tables: `frames`, `startFrames`, `targetFrames`.
+  cxx_symbols.txt's `#915 ActorPaletteCycle` block maps them all to their
+  C names; sym_iwram.txt places the IWRAM ones. Update's `target` local
+  had a member's name and is `bound` now.
+- **Functions.** All 5 are public static member functions under their C
+  names (`Update__17ActorPaletteCycle UpdateActorPaletteCycle`, ...):
+  `Enable` and `Restore` (InitActorCategory), `Save` (the checkpoint,
+  actor_category_stats.cpp), `Set` (the polar factory's palette-cycle
+  kinds) and `Update` (CellAnim::Advance).
 
 ### Next batches
 

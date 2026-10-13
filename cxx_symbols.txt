@@ -2117,3 +2117,22 @@ _16ObjTileAllocator.list gVramTileBlockList
 _16ObjTileAllocator.rover gVramTileBlockRover
 _16ObjTileAllocator.spares gVramTileBlockSpares
 _16ObjTileAllocator.index gVramTileBlockIndex
+#
+# #915 ActorPaletteCycle: the 3D stages' BG palette cycle as an all-static
+# class (include/actor_palette_cycle.hpp, src/actor/actor_palette_cycle.cpp).
+# Its data members keep the C names: sym_iwram.txt places the IWRAM ones,
+# src/data/palette_cycle_175760.cpp defines the ROM tables.
+Restore__17ActorPaletteCycle RestoreActorPaletteCycle
+Save__17ActorPaletteCycle SaveActorPaletteCycle
+Update__17ActorPaletteCycle UpdateActorPaletteCycle
+Set__17ActorPaletteCyclei SetActorPaletteCycle
+Enable__17ActorPaletteCycleUc EnableActorPaletteCycle
+_17ActorPaletteCycle.enabled gActorPaletteCycleEnabled
+_17ActorPaletteCycle.savedFrame gSavedActorPaletteCycleFrame
+_17ActorPaletteCycle.savedTarget gSavedActorPaletteCycleTarget
+_17ActorPaletteCycle.frame gActorPaletteCycleFrame
+_17ActorPaletteCycle.target gActorPaletteCycleTarget
+_17ActorPaletteCycle.timer gActorPaletteCycleTimer
+_17ActorPaletteCycle.frames gActorPaletteCycleFrames
+_17ActorPaletteCycle.startFrames gActorPaletteCycleStartFrames
+_17ActorPaletteCycle.targetFrames gActorPaletteCycleTargetFrames

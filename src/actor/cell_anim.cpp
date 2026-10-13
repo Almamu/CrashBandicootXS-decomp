@@ -1,5 +1,6 @@
 #include "vehicle.hpp"
 #include "cell_anim.hpp"
+#include "actor_palette_cycle.hpp"
 
 extern "C" {
 #include "core.h"
@@ -238,7 +239,7 @@ void CellAnim::Advance()
     if (delta != 0) {
         distance += delta;
         UploadFrame();
-        UpdateActorPaletteCycle();
+        ActorPaletteCycle::Update();
     }
 }
 

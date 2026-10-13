@@ -55,7 +55,7 @@
 #define POLAR_KIND_PATH_MEDIUM (ACTOR_KIND_PATH_POINT + 1) /* 0x62 */
 #define POLAR_KIND_PATH_FAST (ACTOR_KIND_PATH_POINT + 2)   /* 0x95 */
 #define POLAR_KIND_QUESTION_CRATE_LIFE 35 /* a "?" crate (its frames) with an extra life */
-#define POLAR_KIND_PALETTE_CYCLE_0 36     /* 36-39: no actor, SetActorPaletteCycle(kind - 36) */
+#define POLAR_KIND_PALETTE_CYCLE_0 36     /* 36-39: no actor, ActorPaletteCycle::Set(kind - 36) */
 #define POLAR_KIND_PALETTE_CYCLE_1 37
 #define POLAR_KIND_PALETTE_CYCLE_2 38
 #define POLAR_KIND_PALETTE_CYCLE_3 39
