@@ -147,9 +147,9 @@ $(GENERATED_INCLUDE_DIR)/constants/crates.h: data/levels/crate_kinds.json tools/
 	python3 tools/levels.py constants crates $@
 
 # The level ids and the counts the code takes from the levels (GEM_TOTAL
-# counts the gem-path gems the rooms place), and the theme ids. levels.h is
-# written only if it changed, behind a stamp, so an entity edit in a
-# room.json doesn't rebuild every object.
+# counts the gem-path gems the rooms place), and the theme ids. Each is
+# written only if it changed, behind a stamp, so an edit that keeps it (an
+# entity in a room.json, a level's times) doesn't rebuild every object.
 $(GENERATED_INCLUDE_DIR)/constants/levels.h.stamp: data/levels/levels.json $(LEVEL_ROOM_JSONS) tools/levels.py
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py constants levels $(GENERATED_INCLUDE_DIR)/constants/levels.h
@@ -157,6 +157,9 @@ $(GENERATED_INCLUDE_DIR)/constants/levels.h.stamp: data/levels/levels.json $(LEV
 $(GENERATED_INCLUDE_DIR)/constants/levels.h: $(GENERATED_INCLUDE_DIR)/constants/levels.h.stamp
 	@test -f $@ || python3 tools/levels.py constants levels $@
 
-$(GENERATED_INCLUDE_DIR)/constants/themes.h: data/levels/levels.json tools/levels.py
+$(GENERATED_INCLUDE_DIR)/constants/themes.h.stamp: data/levels/levels.json tools/levels.py
 	@mkdir -p $(dir $@)
-	python3 tools/levels.py constants themes $@
+	python3 tools/levels.py constants themes $(GENERATED_INCLUDE_DIR)/constants/themes.h
+	@touch $@
+$(GENERATED_INCLUDE_DIR)/constants/themes.h: $(GENERATED_INCLUDE_DIR)/constants/themes.h.stamp
+	@test -f $@ || python3 tools/levels.py constants themes $@
