@@ -68,11 +68,6 @@ struct image_pair {
     const u8 *tiles;
 };
 
-/* The level select (src/iwram/iwram_data.cpp): the screen while
- * RunLevelSelect runs, a LevelSelect (level_select.hpp). */
-extern class LevelSelect *gLevelSelect;
-extern u8 gNewWorldOpened;
-
 /* The level-select tables (src/data/map_tables_16c498.cpp,
  * map_tables_16c5f0.cpp, image_table_16c5a0.cpp, bg_package_16c58c.cpp,
  * data/data.s). */
@@ -129,12 +124,6 @@ extern const u16 gContinuePromptPalette3[17];
 
 /* src/menus/continue_prompt.cpp (frontend.hpp: ContinuePrompt::Run) */
 extern "C" u8 RunContinuePrompt(void);
-
-/* src/menus/level_select.cpp */
-extern "C" s32 RunLevelSelect(s32 *level);
-
-/* src/menus/level_select_pages.cpp */
-extern "C" void SetNewWorldOpened(void);
 
 /* src/menus/pause_menu.cpp (below: PauseMenu::Run) */
 extern "C" s32 RunPauseMenu(void);

@@ -5,6 +5,7 @@
 #include "hud.hpp"
 #include "frontend.hpp"
 #include "menus.hpp"
+#include "level_select.hpp"
 #include "player.hpp"
 #include "vehicle.hpp"
 #include "frame_limiter.hpp"
@@ -87,8 +88,8 @@ const u8 *gCrash3LinkTextPtr = (const u8 *)gCrash3LinkText;
  * following the player (levels 1-2). */
 s32 gAkuAkuInvincibleFrame = 0;
 s32 gAkuAkuFollowFrame = 0;
-LevelSelect *gLevelSelect = 0;
-u8 gNewWorldOpened = 0;
+LevelSelect *LevelSelect::instance = 0;
+u8 LevelSelect::newWorldOpened = 0;
 LevelState *LevelState::instance = 0;
 u32 gRoomFrameCount = 0;
 u8 LevelProgress::roomExitRequested = 0;

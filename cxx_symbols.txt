@@ -1330,6 +1330,16 @@ LoadRecord__11LevelSelect LoadLevelSelectRecord
 Loop__11LevelSelect LevelSelectLoop
 CursorLeft__11LevelSelect LevelSelectCursorLeft
 CursorRight__11LevelSelect LevelSelectCursorRight
+#
+# #915 LevelSelect: the level select singleton as static members of
+# LevelSelect (include/level_select.hpp, src/menus/level_select.cpp,
+# level_select_pages.cpp). Its data members keep the C names: iwram_data.cpp
+# defines them.
+Run__11LevelSelectPi RunLevelSelect
+SetNewWorldOpened__11LevelSelect SetNewWorldOpened
+_11LevelSelect.instance gLevelSelect
+_11LevelSelect.newWorldOpened gNewWorldOpened
+#
 # part 9: the spawners (include/spawners.hpp; src/level/entity_spawner.cpp,
 # spawn_*.cpp, level_state.cpp)
 __13EntitySpawner InitEntitySpawner

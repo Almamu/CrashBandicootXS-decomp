@@ -12,7 +12,7 @@ extern "C" {
  */
 
 /* BG0 graphics package shared by LoadSaveMenuBg (save_menu_draw.cpp),
- * LoadLanguageSelectBg (language_select_setup.cpp), RunLevelSelect
+ * LoadLanguageSelectBg (language_select_setup.cpp), LevelSelect::Run
  * (level_select.cpp) and power_dialog.cpp. */
 const struct bg_package gMenuSkyBg = {
     0x20,
