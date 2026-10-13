@@ -78,22 +78,24 @@ s32 SaveMenu::LinkExchange()
  * non-zero) centered at Y=0x91, both into gSmallFont.
  *
  * Once a NAKED transcription; it matches as plain C under both
- * compilers once the centre X gets its own local (`x = (0xf0 - w) >> 1`),
+ * compilers once the centre X gets its own local (`x = (DISPLAY_WIDTH -
+ * w) >> 1`),
  * which is what puts it in r3 and the Y constant in ip. */
 void SaveMenu::DrawMessageLines(const u8 *label1, const u8 *label2)
 {
-    s32 w, x;
+    screen_w_t w;
+    screen_x_t x;
 
     gSmallFont->SetPalette(0);
     if (label1) {
         w = gSmallFont->MeasureText(label1);
-        x = (0xf0 - w) >> 1;
+        x = (DISPLAY_WIDTH - w) >> 1;
         gSmallFont->SetPos(x, 0x87);
         gSmallFont->DrawText(label1);
     }
     if (label2) {
         w = gSmallFont->MeasureText(label2);
-        x = (0xf0 - w) >> 1;
+        x = (DISPLAY_WIDTH - w) >> 1;
         gSmallFont->SetPos(x, 0x91);
         gSmallFont->DrawText(label2);
     }
@@ -110,7 +112,7 @@ void SaveMenu::DrawCancel(u8 highlight)
         gSmallFont->SetPalette(IsBlinkOn() ? 1 : 2);
     else
         gSmallFont->SetPalette(0);
-    gSmallFont->SetPos((0xf0 - gSmallFont->MeasureText(GetUiText(0x23))) >> 1, 0x87);
+    gSmallFont->SetPos((DISPLAY_WIDTH - gSmallFont->MeasureText(GetUiText(0x23))) >> 1, 0x87);
     gSmallFont->DrawText(GetUiText(0x23));
 }
 
@@ -523,7 +525,7 @@ void SaveMenu::DrawEmptySlotLabel(s32 x, s32 y, u8 highlight)
 void SaveMenu::DrawTitle(s32 labelIndex)
 {
     gLargeFont->SetPalette(0);
-    gLargeFont->SetPos((0xf0 - gLargeFont->MeasureText(GetUiText(labelIndex))) >> 1, 6);
+    gLargeFont->SetPos((DISPLAY_WIDTH - gLargeFont->MeasureText(GetUiText(labelIndex))) >> 1, 6);
     gLargeFont->DrawText(GetUiText(labelIndex));
 }
 

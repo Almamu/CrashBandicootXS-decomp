@@ -93,7 +93,7 @@ void LanguageSelect::Input(u32 flags)
  * docs/matching/archive/gax-toolchain-retry.md. */
 void LanguageSelect::Draw()
 {
-    s32 y;
+    screen_y_t y;
     s32 i;
 
     gOamBuffer->Reset();
@@ -101,13 +101,13 @@ void LanguageSelect::Draw()
     y = 0x32;
     for (i = 0; i <= 5; i++) {
         const u8 *glyph;
-        s32 x;
+        screen_x_t x;
 
         if (i == language)
             gSmallFont->SetPalette(Blink());
         else
             gSmallFont->SetPalette(0);
-        x = (240 - gSmallFont->MeasureText(glyph = gLanguageNames[i])) >> 1;
+        x = (DISPLAY_WIDTH - gSmallFont->MeasureText(glyph = gLanguageNames[i])) >> 1;
         gSmallFont->SetPos(x, y);
         gSmallFont->DrawText(glyph);
         y += 10;

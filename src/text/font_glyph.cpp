@@ -28,7 +28,10 @@ void Font::DrawGlyph(u8 charByte)
 
     SetGlyphX(oam, posX);
 
-    /* `y` is needed: inlined, the code is 2 instructions longer */
+    /* `y` is needed: inlined, the code is 2 instructions longer. The ROM
+     * reads posY's low byte: OAM's 8-bit Y, truncated here by a byte load
+     * that OAM_Y() (a mask) can't spell, so a screen taller than 256
+     * pixels needs this read widened (#979). */
     u8 *y = (u8 *)&posY;
 
     oam->y = glyphRecords[glyph].yOffset + *y;

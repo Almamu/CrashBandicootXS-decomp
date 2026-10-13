@@ -30,9 +30,9 @@ void Font::DrawText(const u8 *str)
  * (MeasureText's fixed-count sibling): newline contributes nothing,
  * space contributes `spaceWidth`, everything else contributes
  * `glyphRecords[charLookup[c]].width`. */
-s32 Font::MeasureChars(const u8 *str, s32 count)
+screen_w_t Font::MeasureChars(const u8 *str, s32 count)
 {
-    s32 total = 0;
+    screen_w_t total = 0;
     s32 i;
 
     for (i = 0; i < count; i++) {

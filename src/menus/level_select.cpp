@@ -228,7 +228,7 @@ void LevelSelect::Update()
     gObjVramCursor->Rewind();
     panel->Draw();
     if (bg2->IsShown() && items[index]->IsSelected()) {
-        u32 x = (u32)(0xF0 - gLargeFont->MeasureText(nameText)) >> 1;
+        screen_ux_t x = (u32)(DISPLAY_WIDTH - gLargeFont->MeasureText(nameText)) >> 1;
 
         gLargeFont->SetPos(x, -panelSlideX + 2);
         gLargeFont->DrawText(nameText);
@@ -241,7 +241,7 @@ void LevelSelect::Update()
     if (bg1->IsSettled()) {
         if (!bg2->IsExiting()) {
             const u8 *text = GetUiText(0x2F);
-            u32 x = (u32)(0xF0 - gSmallFont->MeasureText(text)) >> 1;
+            screen_ux_t x = (u32)(DISPLAY_WIDTH - gSmallFont->MeasureText(text)) >> 1;
 
             gSmallFont->SetPos(x, 0x96);
             gSmallFont->SetPalette(0xF);

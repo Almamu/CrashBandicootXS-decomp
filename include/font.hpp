@@ -43,11 +43,11 @@ public:
     // 0x108 - the OBJ tile base: a glyph's tile is tileBase + glyph * glyphTileStride
     u32 tileBase;
     const struct icon_glyph_metrics *glyphRecords; // 0x10C
-    u32 posX;                                      // 0x110
-    u32 posY;                                      // 0x114
-    u32 marginX;                                   // 0x118 - posX after a newline
-    s32 lineHeight;                                // 0x11C - posY's step on a newline
-    s32 spaceWidth;                                // 0x120 - a space's advance
+    screen_ux_t posX;                              // 0x110 - the cursor, in screen pixels
+    screen_uy_t posY;                              // 0x114
+    screen_ux_t marginX;                           // 0x118 - posX after a newline
+    screen_h_t lineHeight;                         // 0x11C - posY's step on a newline
+    screen_w_t spaceWidth;                         // 0x120 - a space's advance
     s32 glyphTileStride;                           // 0x124
     const void *tiles;                             // 0x128 - the tagged tile asset
     // 0x12C - set by UploadTiles: the tile asset's first word >> 13
@@ -59,16 +59,16 @@ public:
     {
     }
 
-    virtual s32 MeasureText(const u8 *text);            // 2 FontMeasureText
-    virtual s32 MeasureChars(const u8 *str, s32 count); // 3 FontMeasureChars
-    virtual void DrawText(const u8 *str);               // 4 FontDrawText
-    virtual void DrawChars(const u8 *str, s32 count);   // 5 FontDrawChars
-    virtual void DrawGlyph(u8 charByte);                // 6 FontDrawGlyph
-    virtual void PutChar(u32 charByte);                 // 7 FontPutChar
-    virtual void UploadTiles();                         // 8 FontUploadTiles
-    void SetPalette(u8 palette);                        // FontSetPalette
-    void ResetPalette();                                // FontResetPalette
-    s32 TextHeight(const u8 *str);                      // FontTextHeight
+    virtual screen_w_t MeasureText(const u8 *text);            // 2 FontMeasureText
+    virtual screen_w_t MeasureChars(const u8 *str, s32 count); // 3 FontMeasureChars
+    virtual void DrawText(const u8 *str);                      // 4 FontDrawText
+    virtual void DrawChars(const u8 *str, s32 count);          // 5 FontDrawChars
+    virtual void DrawGlyph(u8 charByte);                       // 6 FontDrawGlyph
+    virtual void PutChar(u32 charByte);                        // 7 FontPutChar
+    virtual void UploadTiles();                                // 8 FontUploadTiles
+    void SetPalette(u8 palette);                               // FontSetPalette
+    void ResetPalette();                                       // FontResetPalette
+    s32 TextHeight(const u8 *str);                             // FontTextHeight
 
     /* FontSetTileBase */
     void SetTileBase(u32 base)
@@ -78,38 +78,38 @@ public:
     }
 
     /* FontGetX */
-    u32 GetX()
+    screen_ux_t GetX()
     {
         return posX;
     }
 
     /* FontGetY */
-    u32 GetY()
+    screen_uy_t GetY()
     {
         return posY;
     }
 
     /* FontSetMargin */
-    void SetMargin(u32 x)
+    void SetMargin(screen_ux_t x)
     {
         marginX = x;
     }
 
     /* FontGetMargin */
-    u32 GetMargin()
+    screen_ux_t GetMargin()
     {
         return marginX;
     }
 
     /* FontNewLineAt */
-    void NewLineAt(u32 y)
+    void NewLineAt(screen_uy_t y)
     {
         posX = marginX;
         posY = y;
     }
 
     /* FontSetPos */
-    void SetPos(u32 x, u32 y)
+    void SetPos(screen_ux_t x, screen_uy_t y)
     {
         posX = x;
         posY = y;
@@ -122,7 +122,7 @@ public:
     }
 
     /* The lines of text that fit in `height` pixels (FontHeightToLines). */
-    s32 HeightToLines(s32 height)
+    s32 HeightToLines(screen_h_t height)
     {
         return __udivsi3(height, lineHeight);
     }
