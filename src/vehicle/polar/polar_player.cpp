@@ -5,6 +5,7 @@
 #include "yeti.hpp"
 #include "cell_anim.hpp"
 #include "actor_bg.hpp"
+#include "sprite_oam_queue.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -148,7 +149,7 @@ void PolarPlayer::Draw()
         /* computed first, into r0 */
         u32 tile = GET_TILE_NUM(gPolarPlayerTiles[gPolarPlayerTileBuffer]);
 
-        QueueSpriteFrameOam(attr1, (palette << 12) | tile, scale);
+        SpriteOamQueue::Add(attr1, (palette << 12) | tile, scale);
     }
 }
 

@@ -771,6 +771,8 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/actor/actor_vram_pool.cpp`, `actor_category_init.cpp`, `src/frontend/company_logos.cpp`, `company_logos_ctor.cpp`, `src/vehicle/jetpack/jetpack_player.cpp`, `jetpack_player_update.cpp`, `src/vehicle/polar/polar_player.cpp`, `polar_player_states.cpp` | the callers: `ObjTileAllocator::Alloc(...)` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-obj-tile-allocator-as-an-all-static-class-915) |
 | `src/actor/actor_palette_cycle.cpp`, `src/data/palette_cycle_175760.cpp` | `ActorPaletteCycle` (new include/actor_palette_cycle.hpp), an all-static class: its 6 IWRAM globals and the 3 ROM tables only it reads are static data members (`frame` is gActorPaletteCycleFrame, `frames` gActorPaletteCycleFrames, ...), its 5 functions static member functions (`Restore`, `Save`, `Update`, `Set`, `Enable`); actor.h's 5 prototypes and 9 externs go | 5 | (unchanged) | 0 -> 0 | [#915](#the-actor-palette-cycle-as-an-all-static-class-915) |
 | `src/actor/actor_category_init.cpp`, `actor_category_stats.cpp`, `actor_factory.cpp`, `cell_anim.cpp` | the callers: `ActorPaletteCycle::Update()` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-actor-palette-cycle-as-an-all-static-class-915) |
+| `src/gfx/sprite_frame.cpp`, `src/iwram/sprite_arm.cpp` | `SpriteOamQueue` and `SpriteFrameCache` (new include/sprite_oam_queue.hpp, sprite_frame_cache.hpp), all-static classes: their 4 + 4 IWRAM globals are static data members (`entries` is gSpriteOamQueue, `current` gSpriteFrameCacheCurrent, ...), their 4 + 5 functions static member functions (`Init`, `Add`, `Flush`, `Destroy`; `Init`, `LoadTiles`, `Age`, `Destroy` and the ARM `Lookup`); gfx.h's 8 prototypes and 8 externs and iwram.h's Lookup prototype go | 9 | (unchanged) | 0 -> 0 | [#915](#the-oam-queue-and-the-sprite-frame-cache-as-all-static-classes-915) |
+| `src/actor/actor_category_init.cpp`, `actor_vram_pool.cpp`, `src/frontend/company_logos.cpp`, `src/iwram/iwram_data.cpp`, `src/vehicle/jetpack/jetpack_player_update.cpp`, `src/vehicle/polar/polar_player.cpp` | the callers: `SpriteOamQueue::Flush()`, `SpriteFrameCache::Age()` & co.; gLookupSpriteFrameCacheFunc is `SpriteFrameCache::Lookup` | 0 | (unchanged) | 0 -> 0 | [#915](#the-oam-queue-and-the-sprite-frame-cache-as-all-static-classes-915) |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -4651,9 +4653,9 @@ plain functions, and every object is byte-identical.
   company logos and the 3D players allocate and free tiles; the actor
   VRAM pool and the logos set it up and tear it down.
 - **Left outside.** The rest of sprite_frame.cpp: the overflow OAM queue
-  (gSpriteOamQueue*), the sprite frame cache (gSpriteFrameCache*) and the
-  category sprite sheet, which have their own IWRAM variables and are
-  candidates of their own (#915's inventory).
+  and the sprite frame cache, which have their own IWRAM variables and
+  are [classes of their own](#the-oam-queue-and-the-sprite-frame-cache-as-all-static-classes-915),
+  and the category sprite sheet.
 
 ### The actor palette cycle as an all-static class (#915)
 
@@ -4677,6 +4679,48 @@ is byte-identical.
   `Enable` and `Restore` (InitActorCategory), `Save` (the checkpoint,
   actor_category_stats.cpp), `Set` (the polar factory's palette-cycle
   kinds) and `Update` (CellAnim::Advance).
+
+### The OAM queue and the sprite frame cache as all-static classes (#915)
+
+After the OBJ tile allocator, sprite_frame.cpp has two more families,
+each with its own IWRAM block that no other object reads:
+
+- the overflow OAM queue, ROM 0x08028DD8-0x08028F58, IWRAM
+  0x03001344-0x03001353: the OAM entries and affine scales queued during
+  a frame. It is now `SpriteOamQueue` (include/sprite_oam_queue.hpp).
+- the sprite frame cache, ROM 0x08028F58-0x08029108 (with
+  SetupSpriteFrameOam among it), IWRAM 0x03001354-0x0300137B: the frames
+  whose pixels are in OBJ VRAM. It is now `SpriteFrameCache`
+  (include/sprite_frame_cache.hpp), with the ARM LookupSpriteFrameCache
+  (sprite_arm.cpp) as its `Lookup`.
+
+Both are all-static like
+[the OBJ tile allocator](#the-obj-tile-allocator-as-an-all-static-class-915),
+and every object is byte-identical.
+
+- **Data.** Private static data members, only declared:
+  `SpriteOamQueue`'s `entries` (gSpriteOamQueue), `affineScales`
+  (gSpriteAffineQueue), `count` and `affineCount`; `SpriteFrameCache`'s
+  `current`, `previous` (the two lists' sentinels), `spares` and `pool`.
+  cxx_symbols.txt's `#915 SpriteOamQueue and SpriteFrameCache` block maps
+  them to their C names, which sym_iwram.txt places. `struct
+  queued_oam_entry` stays sprite_frame.cpp's and `struct
+  sprite_frame_cache_node` gfx.h's (the ARM file uses it too); the headers
+  only name them.
+- **Functions.** All are public static member functions under their C
+  names. `SpriteOamQueue`: `Init`, `Add` (QueueSpriteFrameOam, also the
+  logos' and the 3D players' direct queueing), `Flush` and `Destroy`
+  (FreeSpriteFrameOamQueue). `SpriteFrameCache`: `Init`, `LoadTiles`
+  (LoadSpriteFrameTiles), `Age`, `Destroy` (FreeSpriteFrameCache) and
+  `Lookup`. Lookup is ARM code in the IWRAM image (Makefile ARM_OBJS);
+  a static member function compiles like the free function there as well,
+  and cxx_symbols.txt renames it the same way. It is public because
+  iwram_data.cpp takes its address for gLookupSpriteFrameCacheFunc, the
+  hook LoadTiles calls it through.
+- **Left outside.** SetupSpriteFrameOam (it uses both classes) and
+  GetSpriteShapeSizeBits stay free functions, as do the category sprite
+  sheet's FreeCategorySpriteSheet and DecompressCategorySpriteSheet with
+  gCategorySpriteSheet, which anim_part.cpp also reads.
 
 ### Next batches
 

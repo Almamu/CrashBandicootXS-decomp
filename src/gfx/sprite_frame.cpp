@@ -1,5 +1,7 @@
 #include "obj_tile_allocator.hpp"
 #include "sprite_obj.hpp"
+#include "sprite_oam_queue.hpp"
+#include "sprite_frame_cache.hpp"
 
 extern "C" {
 #include "core.h"
@@ -252,21 +254,21 @@ void ObjTileAllocator::Destroy()
  * frame - `attr01` packs real hardware ATTR0 in the low 16 bits and
  * ATTR1 in the high 16 (the same convention `SetupSpriteFrameOam`'s
  * shape/size bits below get OR'd into), `attr2` is the real hardware
- * ATTR2 (tile index/priority/palette). `QueueSpriteFrameOam` appends
- * these; `FlushSpriteFrameOamQueue` commits them into the real
+ * ATTR2 (tile index/priority/palette). `SpriteOamQueue::Add` appends
+ * these; `SpriteOamQueue::Flush` commits them into the real
  * OAM shadow buffer (OamBuffer, sprite_obj.hpp). */
 struct queued_oam_entry {
     u32 attr01;
     u16 attr2;
 };
 
-/* attr01 bits QueueSpriteFrameOam tests. The two negate flags sit in
+/* attr01 bits SpriteOamQueue::Add tests. The two negate flags sit in
  * ATTR1's affine-index field until it is written. */
 #define QUEUED_OAM_AFFINE   0x100      // ATTR0 bit 8: rotation/scaling
 #define QUEUED_OAM_NEGATE_X 0x10000000 // negate the affine x scale
 #define QUEUED_OAM_NEGATE_Y 0x20000000 // negate the affine y scale
 
-/* An affine x/y scale pair as `gSpriteAffineQueue` stores it: x in the
+/* An affine x/y scale pair as `affineScales` stores it: x in the
  * low halfword, y in the high one. The ROM builds it in one register,
  * inserting each half into whatever the register held. */
 union affine_scale {
@@ -278,18 +280,18 @@ union affine_scale {
 };
 
 /* ROM 0x08028DD8 - appends one OAM entry (`attr01`/`attr2`, hardware
- * ATTR0|ATTR1<<16 and ATTR2) to the `gSpriteOamQueue` overflow queue
- * `FlushSpriteFrameOamQueue` later commits. When ATTR0 bit 8 (the
+ * ATTR0|ATTR1<<16 and ATTR2) to the `entries` overflow queue
+ * `SpriteOamQueue::Flush` later commits. When ATTR0 bit 8 (the
  * hardware "affine" flag) is set, first resolves an affine-parameter
  * group: computes a (x,y) scale pair from `priority` (negated per
  * ATTR1 bits 9/10, already packed into `attr01`'s bits 28/29 by the
- * caller), reuses the previous `gSpriteAffineQueue` entry if it's
+ * caller), reuses the previous `affineScales` entry if it's
  * identical (a cheap run-length dedup - adjacent sprites sharing a
  * scale are extremely common), otherwise appends a new one, then
  * writes that entry's index into `attr01` bits 25-29 (ATTR1's real
  * affine-index field) after clearing the two negate-flag bits that
  * used to live there. */
-void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority)
+void SpriteOamQueue::Add(u32 attr01, u16 attr2, s32 priority)
 {
     if (attr01 & QUEUED_OAM_AFFINE) {
         union affine_scale scale;
@@ -298,25 +300,24 @@ void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority)
         scale.xy.y = (attr01 & QUEUED_OAM_NEGATE_Y) ? -priority : priority;
         attr01 &= ~(QUEUED_OAM_NEGATE_X | QUEUED_OAM_NEGATE_Y);
 
-        if (gSpriteAffineQueueCount == 0 ||
-            scale.raw != gSpriteAffineQueue[gSpriteAffineQueueCount - 1]) {
-            gSpriteAffineQueue[gSpriteAffineQueueCount] = scale.raw;
-            gSpriteAffineQueueCount++;
+        if (affineCount == 0 || scale.raw != affineScales[affineCount - 1]) {
+            affineScales[affineCount] = scale.raw;
+            affineCount++;
         }
-        attr01 |= (gSpriteAffineQueueCount - 1) << 25;
+        attr01 |= (affineCount - 1) << 25;
     }
 
-    gSpriteOamQueue[gSpriteOamQueueCount].attr01 = attr01;
-    gSpriteOamQueue[gSpriteOamQueueCount].attr2 = attr2;
-    gSpriteOamQueueCount++;
+    entries[count].attr01 = attr01;
+    entries[count].attr2 = attr2;
+    count++;
 }
 
-/* ROM 0x08028E88 - frees the two EWRAM buffers `InitSpriteFrameOamQueue`
+/* ROM 0x08028E88 - frees the two EWRAM buffers `SpriteOamQueue::Init`
  * allocated. */
-void FreeSpriteFrameOamQueue(void)
+void SpriteOamQueue::Destroy()
 {
-    mem_free(gSpriteAffineQueue);
-    mem_free(gSpriteOamQueue);
+    mem_free(affineScales);
+    mem_free(entries);
 }
 
 /* ROM 0x08028EA8 - commits this frame's overflow OAM queue into the
@@ -326,13 +327,13 @@ void FreeSpriteFrameOamQueue(void)
  * entry repeated (`SetOamAffineScales`, the same "hide unused affine groups"
  * idiom OamBuffer's own comment describes), then
  * resets both overflow counts for the next frame. */
-void FlushSpriteFrameOamQueue(void)
+void SpriteOamQueue::Flush()
 {
-    gOamBuffer->Append(gSpriteOamQueue, gSpriteOamQueueCount);
+    gOamBuffer->Append(entries, count);
     gOamBuffer->HideUnused();
-    gOamBuffer->SetAffineScales((u16 *)gSpriteAffineQueue, gSpriteAffineQueueCount);
-    gSpriteOamQueueCount = 0;
-    gSpriteAffineQueueCount = 0;
+    gOamBuffer->SetAffineScales((u16 *)affineScales, affineCount);
+    count = 0;
+    affineCount = 0;
 }
 
 /* ROM 0x08028EF0 - allocates the two overflow buffers above and DMA3-
@@ -340,13 +341,13 @@ void FlushSpriteFrameOamQueue(void)
  * bit with every other field zeroed) - the same "DMA a single fixed
  * halfword across a whole region" trick `Init` uses,
  * here hiding every hardware sprite as this system's startup state. */
-void InitSpriteFrameOamQueue(void)
+void SpriteOamQueue::Init()
 {
-    gSpriteOamQueue = (struct queued_oam_entry *)mem_alloc(
+    entries = (struct queued_oam_entry *)mem_alloc(
         OAM_ENTRY_COUNT * sizeof(struct queued_oam_entry), MEM_HEAP_EWRAM);
-    gSpriteAffineQueue = (s32 *)mem_alloc(32 * sizeof(s32), MEM_HEAP_EWRAM);
-    gSpriteOamQueueCount = 0;
-    gSpriteAffineQueueCount = 0;
+    affineScales = (s32 *)mem_alloc(32 * sizeof(s32), MEM_HEAP_EWRAM);
+    count = 0;
+    affineCount = 0;
     DmaFill16(3, 0x200, OAM, OAM_ENTRY_COUNT * sizeof(union oam_shadow_entry));
 }
 
@@ -354,11 +355,11 @@ void InitSpriteFrameOamQueue(void)
  * frame record (see docs/graphics.md's `table_B` description) currently
  * resident in VRAM, and `vramAddr` is the `ObjTileAllocator::Alloc` result
  * its pixel data was DMA'd into. Nodes live in a fixed pool
- * (`gSpriteFrameCacheSpares`, seeded by InitSpriteFrameCache) and move
- * between two ring lists as they age: `gSpriteFrameCacheCurrent` (this
- * frame's in-use entries, newest at the head) and `gSpriteFrameCachePrevious`
+ * (`spares`, seeded by SpriteFrameCache::Init) and move
+ * between two ring lists as they age: `current` (this
+ * frame's in-use entries, newest at the head) and `previous`
  * (last frame's entries, oldest at the tail) - see
- * AgeSpriteFrameCache/LoadSpriteFrameTiles. */
+ * SpriteFrameCache::Age/SpriteFrameCache::LoadTiles. */
 #define SPRITE_FRAME_CACHE_POOL_COUNT 128
 
 /* ROM 0x08028F58 - resolves one animation frame's tile data into VRAM,
@@ -368,14 +369,14 @@ void InitSpriteFrameOamQueue(void)
  * convention - see lib/libgcc/lib1funcs.s); if that returns
  * anything other than -1, that's used directly. Otherwise inserts a
  * fresh cache node at the head of the "this frame" MRU list
- * (`gSpriteFrameCacheCurrent`) and tries to `ObjTileAllocator::Alloc` the frame's
+ * (`current`) and tries to `ObjTileAllocator::Alloc` the frame's
  * `w*h*32`-byte payload, evicting the least-recently-used entry from
- * the "last frame" list (`gSpriteFrameCachePrevious`, freeing its VRAM block
+ * the "last frame" list (`previous`, freeing its VRAM block
  * and recycling its node back onto the spare stack) and retrying until
  * an allocation succeeds. The frame's pixel data (skipping its 4-byte
  * `{w,h,0x30,0x00}` header) is then DMA-queued into the allocated
  * block. */
-s32 LoadSpriteFrameTiles(u8 *frame)
+s32 SpriteFrameCache::LoadTiles(u8 *frame)
 {
     struct sprite_frame_cache_node *node;
     s32 byteCount;
@@ -386,24 +387,24 @@ s32 LoadSpriteFrameTiles(u8 *frame)
         return result;
     }
 
-    node = gSpriteFrameCacheSpares;
-    gSpriteFrameCacheSpares = node->next;
+    node = spares;
+    spares = node->next;
     node->frame = frame;
-    node->prev = &gSpriteFrameCacheCurrent;
-    node->next = gSpriteFrameCacheCurrent.next;
-    gSpriteFrameCacheCurrent.next->prev = node;
-    gSpriteFrameCacheCurrent.next = node;
+    node->prev = &current;
+    node->next = current.next;
+    current.next->prev = node;
+    current.next = node;
 
     byteCount = frame[1] * frame[0] * 32;
 
     while ((node->vramAddr = ObjTileAllocator::Alloc(byteCount)) == 0) {
-        struct sprite_frame_cache_node *victim = gSpriteFrameCachePrevious.prev;
+        struct sprite_frame_cache_node *victim = previous.prev;
 
         ObjTileAllocator::Free(victim->vramAddr);
         victim->prev->next = victim->next;
         victim->next->prev = victim->prev;
-        victim->next = gSpriteFrameCacheSpares;
-        gSpriteFrameCacheSpares = victim;
+        victim->next = spares;
+        spares = victim;
     }
 
     QueueVramDmaTransfer(node->frame + 4, node->vramAddr, (u16)byteCount, 0x10);
@@ -415,8 +416,8 @@ s32 LoadSpriteFrameTiles(u8 *frame)
  * `GetSpriteShapeSizeBits` above, inlined here rather than called -
  * see that function's own comment), ORs them into the caller's own
  * `attr01` bits, resolves the frame's VRAM tile index via
- * `LoadSpriteFrameTiles` and ORs that into the caller's `attr2`, then
- * hands both off to `QueueSpriteFrameOam` alongside `priority` (used
+ * `SpriteFrameCache::LoadTiles` and ORs that into the caller's `attr2`, then
+ * hands both off to `SpriteOamQueue::Add` alongside `priority` (used
  * only for the affine-scale path). */
 void SetupSpriteFrameOam(u8 *frame, u32 attr01, u32 attr2, s32 priority)
 {
@@ -453,62 +454,62 @@ void SetupSpriteFrameOam(u8 *frame, u32 attr01, u32 attr2, s32 priority)
     }
     attr01 |= shapeBits;
 
-    packed |= (u16)LoadSpriteFrameTiles(frame);
+    packed |= (u16)SpriteFrameCache::LoadTiles(frame);
 
-    QueueSpriteFrameOam(attr01, packed, priority);
+    SpriteOamQueue::Add(attr01, packed, priority);
 }
 
-/* ROM 0x0802907C - frees the pool `InitSpriteFrameCache` allocated. */
-void FreeSpriteFrameCache(void)
+/* ROM 0x0802907C - frees the pool `SpriteFrameCache::Init` allocated. */
+void SpriteFrameCache::Destroy()
 {
-    mem_free(gSpriteFrameCachePool);
+    mem_free(pool);
 }
 
 /* ROM 0x08029090 - ages the frame cache one generation: splices every
- * node currently in `gSpriteFrameCacheCurrent` (this frame's entries, MRU-
- * first) onto the *front* of `gSpriteFrameCachePrevious` (last frame's
+ * node currently in `current` (this frame's entries, MRU-
+ * first) onto the *front* of `previous` (last frame's
  * entries) as one block, preserving relative order, then empties
- * `gSpriteFrameCacheCurrent`. The freshest entries from the finished
+ * `current`. The freshest entries from the finished
  * generation become the least-likely-to-be-evicted end of the
- * eviction list (LoadSpriteFrameTiles evicts from its tail), while
- * anything already in `gSpriteFrameCachePrevious` before this call gets pushed
+ * eviction list (SpriteFrameCache::LoadTiles evicts from its tail), while
+ * anything already in `previous` before this call gets pushed
  * closer to eviction - a simple two-generation clock cache. */
-void AgeSpriteFrameCache(void)
+void SpriteFrameCache::Age()
 {
     struct sprite_frame_cache_node *head;
 
-    head = gSpriteFrameCacheCurrent.next;
-    if (head == &gSpriteFrameCacheCurrent) {
+    head = current.next;
+    if (head == &current) {
         return;
     }
 
-    head->prev = &gSpriteFrameCachePrevious;
-    gSpriteFrameCacheCurrent.prev->next = gSpriteFrameCachePrevious.next;
-    gSpriteFrameCachePrevious.next->prev = gSpriteFrameCacheCurrent.prev;
-    gSpriteFrameCachePrevious.next = gSpriteFrameCacheCurrent.next;
+    head->prev = &previous;
+    current.prev->next = previous.next;
+    previous.next->prev = current.prev;
+    previous.next = current.next;
 
-    gSpriteFrameCacheCurrent.prev = &gSpriteFrameCacheCurrent;
-    gSpriteFrameCacheCurrent.next = &gSpriteFrameCacheCurrent;
+    current.prev = &current;
+    current.next = &current;
 }
 
 /* ROM 0x080290BC - allocates the 128-record node pool and seeds
- * `gSpriteFrameCacheSpares` with a singly-linked (via `next`) LIFO stack of
+ * `spares` with a singly-linked (via `next`) LIFO stack of
  * all 128 of them, resetting both ring-list sentinels to empty. */
-void InitSpriteFrameCache(void)
+void SpriteFrameCache::Init()
 {
     struct sprite_frame_cache_node *node;
     s32 i;
 
-    gSpriteFrameCachePool = (struct sprite_frame_cache_node *)mem_alloc(
+    pool = (struct sprite_frame_cache_node *)mem_alloc(
         sizeof(struct sprite_frame_cache_node) * SPRITE_FRAME_CACHE_POOL_COUNT, MEM_HEAP_IWRAM);
 
-    gSpriteFrameCacheCurrent.prev = &gSpriteFrameCacheCurrent;
-    gSpriteFrameCacheCurrent.next = &gSpriteFrameCacheCurrent;
-    gSpriteFrameCachePrevious.prev = &gSpriteFrameCachePrevious;
-    gSpriteFrameCachePrevious.next = &gSpriteFrameCachePrevious;
+    current.prev = &current;
+    current.next = &current;
+    previous.prev = &previous;
+    previous.next = &previous;
 
-    gSpriteFrameCacheSpares = gSpriteFrameCachePool;
-    node = gSpriteFrameCachePool;
+    spares = pool;
+    node = pool;
     i = SPRITE_FRAME_CACHE_POOL_COUNT - 2;
     do {
         struct sprite_frame_cache_node *next = node + 1;

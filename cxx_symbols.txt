@@ -2129,6 +2129,29 @@ _16ObjTileAllocator.rover gVramTileBlockRover
 _16ObjTileAllocator.spares gVramTileBlockSpares
 _16ObjTileAllocator.index gVramTileBlockIndex
 #
+# #915 SpriteOamQueue and SpriteFrameCache: the overflow OAM queue and the
+# sprite frame cache as all-static classes (include/sprite_oam_queue.hpp,
+# include/sprite_frame_cache.hpp, src/gfx/sprite_frame.cpp; the cache's
+# Lookup is ARM, src/iwram/sprite_arm.cpp). Their data members keep the C
+# names: sym_iwram.txt places them.
+Add__14SpriteOamQueueUiUsi QueueSpriteFrameOam
+Destroy__14SpriteOamQueue FreeSpriteFrameOamQueue
+Flush__14SpriteOamQueue FlushSpriteFrameOamQueue
+Init__14SpriteOamQueue InitSpriteFrameOamQueue
+_14SpriteOamQueue.entries gSpriteOamQueue
+_14SpriteOamQueue.affineScales gSpriteAffineQueue
+_14SpriteOamQueue.count gSpriteOamQueueCount
+_14SpriteOamQueue.affineCount gSpriteAffineQueueCount
+LoadTiles__16SpriteFrameCachePUc LoadSpriteFrameTiles
+Destroy__16SpriteFrameCache FreeSpriteFrameCache
+Age__16SpriteFrameCache AgeSpriteFrameCache
+Init__16SpriteFrameCache InitSpriteFrameCache
+Lookup__16SpriteFrameCachePUc LookupSpriteFrameCache
+_16SpriteFrameCache.current gSpriteFrameCacheCurrent
+_16SpriteFrameCache.previous gSpriteFrameCachePrevious
+_16SpriteFrameCache.spares gSpriteFrameCacheSpares
+_16SpriteFrameCache.pool gSpriteFrameCachePool
+#
 # #915 ActorPaletteCycle: the 3D stages' BG palette cycle as an all-static
 # class (include/actor_palette_cycle.hpp, src/actor/actor_palette_cycle.cpp).
 # Its data members keep the C names: sym_iwram.txt places the IWRAM ones,

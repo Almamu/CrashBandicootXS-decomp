@@ -37,6 +37,5 @@ extern void DrawMirroredTilemap(u8 *pal, s32 lowBlock, s32 w, s32 h);
 extern void HeapSortActorsByKey(s32 n, class ActorSelf **list);
 #endif
 extern void UnpackRleSpriteFrame(u16 *dst, struct rle_frame *frame);
-extern s32 LookupSpriteFrameCache(u8 *frame);
 
 #endif /* __IWRAM_H__ */
