@@ -196,8 +196,9 @@ tidy:
 
 #### Screen-size compile check (#979) ####
 # `make screen-check` compiles every game object (src/, and of the
-# src/data/ tables those that spell a DISPLAY_ name: the layouts'
-# position tables) with another screen size, SCREEN_CHECK_WIDTH x
+# src/data/ tables those that spell a DISPLAY_ name or a logo fly-in's
+# _FLY_IN: the layouts' position tables, the logo pieces' motions and
+# their seeds) with another screen size, SCREEN_CHECK_WIDTH x
 # SCREEN_CHECK_HEIGHT (PORTABLE's 426x240 by default), into
 # build/screen-check. Nothing is linked or compared: it only has to
 # compile, with the same warnings as errors, so a screen constant stored
@@ -217,7 +218,7 @@ ifeq ($(SCREEN_CHECK),1)
 CPPFLAGS += -D DISPLAY_WIDTH=$(SCREEN_CHECK_WIDTH) -D DISPLAY_HEIGHT=$(SCREEN_CHECK_HEIGHT)
 endif
 
-SCREEN_CHECK_DATA_OBJS := $(patsubst $(C_SUBDIR)/%.cpp,$(C_BUILDDIR)/%.o,$(shell grep -l 'DISPLAY_' $(C_SUBDIR)/data/*.cpp))
+SCREEN_CHECK_DATA_OBJS := $(patsubst $(C_SUBDIR)/%.cpp,$(C_BUILDDIR)/%.o,$(shell grep -lE 'DISPLAY_|_FLY_IN' $(C_SUBDIR)/data/*.cpp))
 
 screen-check-objs: $(filter-out $(C_BUILDDIR)/data/%,$(C_OBJS) $(CXX_OBJS)) $(SCREEN_CHECK_DATA_OBJS)
 

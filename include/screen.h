@@ -61,6 +61,15 @@
 #define DISPLAY_ART_X      ((DISPLAY_WIDTH - DISPLAY_ART_WIDTH) / 2)
 #define DISPLAY_ART_Y      ((DISPLAY_HEIGHT - DISPLAY_ART_HEIGHT) / 2)
 
+/* The screen around that art: the pixels between each of the art's
+ * borders and the screen's edge on that side (0 on the GBA). Something
+ * that comes in from outside the art (the logo pieces' fly-ins,
+ * logo_fly_in.h) crosses one of them first. */
+#define DISPLAY_ART_MARGIN_LEFT   DISPLAY_ART_X
+#define DISPLAY_ART_MARGIN_TOP    DISPLAY_ART_Y
+#define DISPLAY_ART_MARGIN_RIGHT  (DISPLAY_WIDTH - DISPLAY_ART_X - DISPLAY_ART_WIDTH)
+#define DISPLAY_ART_MARGIN_BOTTOM (DISPLAY_HEIGHT - DISPLAY_ART_Y - DISPLAY_ART_HEIGHT)
+
 /* The centre of that art, in the art's own coordinates (120, 80): the
  * point an affine full-screen picture (a zoom) is scaled around. */
 #define DISPLAY_ART_CENTER_X (DISPLAY_ART_WIDTH / 2)

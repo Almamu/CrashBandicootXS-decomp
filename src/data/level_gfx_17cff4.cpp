@@ -1,4 +1,5 @@
 #include "frontend.hpp"
+#include "logo_fly_in.h"
 
 extern "C" {
 #include "core.h"
@@ -70,16 +71,19 @@ const struct bg_package gTitleScreenBg = { 16, 16, (void *)gTitleScreenBgPalette
  * popup_glyphs_17cf40.cpp's gTitleLogoPieceSeeds seeds: each ends with a
  * zero hold. The pieces' x and y are on the 240x160 title art, from its
  * origin DISPLAY_ART_X/Y (screen.h, docs/screen.md); a negative one is a
- * u16 cast of an s16 (the field is a u16, see struct delta_record). */
+ * u16 cast of an s16 (the field is a u16, see struct delta_record).
+ * Pieces 0 and 1 fly in from below the art: their first step starts past
+ * the screen's edge (LOGO_FLY_IN_STEP, logo_fly_in.h), and is the ROM's
+ * on the GBA. */
 extern const struct delta_record gTitleLogoPieceMotion0[4] = {
-    { 11, DISPLAY_ART_X + 152, DISPLAY_ART_Y + 160, 0, 256, 256, -494498, -959208, 0, 0, 0 },
+    LOGO_FLY_IN_STEP(11, DISPLAY_ART_X + 152, DISPLAY_ART_Y + 160, TITLE_LOGO_PIECE0_FLY_IN, TITLE_LOGO_PIECE0_DX, TITLE_LOGO_PIECE0_DY),
     { 19, DISPLAY_ART_X + 69, (u16)(DISPLAY_ART_Y - 1), 0, 256, 256, 0, 0, 0, 0, 0 },
     { 1, DISPLAY_ART_X + 69, (u16)(DISPLAY_ART_Y - 1), 0, 256, 256, 0, 0, 0, 0, 0 },
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
 extern const struct delta_record gTitleLogoPieceMotion1[4] = {
-    { 10, (u16)(DISPLAY_ART_X - 96), DISPLAY_ART_Y + 160, 0, 256, 256, 1153761, -956825, 0, 0, 0 },
+    LOGO_FLY_IN_STEP(10, DISPLAY_ART_X - 96, DISPLAY_ART_Y + 160, TITLE_LOGO_PIECE1_FLY_IN, TITLE_LOGO_PIECE1_DX, TITLE_LOGO_PIECE1_DY),
     { 9, DISPLAY_ART_X + 80, DISPLAY_ART_Y + 14, 0, 256, 256, 0, 0, 0, 0, 0 },
     { 1, DISPLAY_ART_X + 80, DISPLAY_ART_Y + 14, 0, 256, 256, 0, 0, 0, 0, 0 },
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
