@@ -156,17 +156,24 @@ gSfxTable:
 
 .section .rodata.084C0006
 
+@ The two GAX2 blocks are tools/gax_audio.py's assembly: their bytes, with
+@ every pointer (into a block, or to an engine function) a relocation, so
+@ they can move and change size (#967, docs/shifting.md). Each starts
+@ word-aligned (in the ROM, the linker's 2 zero bytes after the sprite
+@ banks, 0x084C0006-0x084C0008).
+	.balign 4, 0
 .global gGaxSfxData
 gGaxSfxData:
-	@ Shin'en GAX2 sound-effect data set: 2 bytes of alignment, 88
-	@ instruments, 87 8-bit samples, the sample table, and the one handler
-	@ type every sound-effect voice uses (its song data points at the
-	@ instrument and sample tables). PlaySfx's instrument ids index it.
+	@ Shin'en GAX2 sound-effect data set: 88 instruments, 87 8-bit
+	@ samples, the sample table, and the one handler type every
+	@ sound-effect voice uses (its song data points at the instrument and
+	@ sample tables). PlaySfx's instrument ids index it.
 	@
 	@ Built from sound/gax_sfx_manifest.json and sound/sfx_samples/*.wav by
 	@ tools/gax_audio.py --sfx; see docs/audio.md.
-	.incbin "build/crashbandicootxs/sound/gax_sfx_data.bin"
+	.include "build/crashbandicootxs/sound/gax_sfx_data.s"
 
+	.balign 4, 0
 .global gGaxMusicData
 gGaxMusicData:
 	@ Starts with GaxSongHeader.sfxTypes (StartSong): 9 pointers to the
@@ -184,15 +191,16 @@ gGaxMusicData:
 	@ unedited sources this rebuilds byte-for-byte identical to the
 	@ original ROM; editing a .xm/.wav changes only the bytes that
 	@ actually need to differ.
-	.incbin "build/crashbandicootxs/sound/gax_audio_data.bin"
+	.include "build/crashbandicootxs/sound/gax_audio_data.s"
 
 .global gGaxDefaultSong
 gGaxDefaultSong:
 	@ The engine's default handler layout (GAX2_init, GAX2_estimate): the
 	@ song struct of a silent one-channel song whose other objects end the
 	@ music block. Built with it by tools/gax_audio.py (manifest
-	@ `default_song`); see docs/audio.md.
-	.incbin "build/crashbandicootxs/sound/gax_default_layout.bin"
+	@ `default_song`); see docs/audio.md. Its pointers are relocations
+	@ against gGaxMusicData, so it must follow the block directly.
+	.include "build/crashbandicootxs/sound/gax_default_layout.s"
 
 @ __clz_tab_divdi3..__clz_tab_udivdi3: lib/libgcc/data/clz_tab_5a4c70.c
 

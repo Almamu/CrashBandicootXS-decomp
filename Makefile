@@ -124,8 +124,9 @@ include levels.mk
 SOUND_SONGS := $(wildcard sound/songs/*.xm)
 SOUND_SAMPLES := $(wildcard sound/samples/*.wav)
 SOUND_SFX_SOURCES := sound/gax_sfx_manifest.json $(wildcard sound/sfx_samples/*.wav)
-SOUND_BUILT := $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/gax_default_layout.bin \
-	$(SOUND_BUILDDIR)/gax_sfx_data.bin $(SOUND_BUILDDIR)/sfx_table.bin
+SOUND_BUILT := $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/gax_audio_data.s \
+	$(SOUND_BUILDDIR)/gax_default_layout.bin $(SOUND_BUILDDIR)/gax_default_layout.s \
+	$(SOUND_BUILDDIR)/gax_sfx_data.bin $(SOUND_BUILDDIR)/gax_sfx_data.s $(SOUND_BUILDDIR)/sfx_table.bin
 
 #### Main Targets ####
 
@@ -135,23 +136,35 @@ all: $(ROM)
 compare: $(ROM)
 	sha1sum -c checksum.sha1
 
-# Every incbin in data/*.s (the sound blocks) needs the corresponding
-# built file to exist first. The graphics and the level assets are C
-# arrays in src/data/ (graphics.mk, levels.mk).
+# The ROM shiftability check (#967, docs/shifting.md): links the ROM again
+# with padding in front of several objects, and fails if anything that
+# should move with its target isn't a relocation. No baserom.gba needed.
+.PHONY: shiftcheck
+shiftcheck: $(OBJS) $(LDSCRIPT)
+	python3 tools/shiftcheck.py --ld '$(LD) $(LDFLAGS)' --ldscript $(LDSCRIPT) --out $(OBJ_DIR)/shiftcheck $(SHIFTCHECK_FLAGS) \
+		-- $(OBJS) tools/agbcc/lib/libgcc.a tools/agbcc/lib/libc.a
+
+# Every incbin and include in data/*.s (the sound blocks) needs the
+# corresponding built file to exist first. Each GAX2 block is a .bin and
+# the .s that data.s includes: its bytes, with the pointers as
+# relocations. The graphics and the level assets are C arrays in
+# src/data/ (graphics.mk, levels.mk).
 $(DATA_ASM_OBJS): $(SOUND_BUILT)
 
-# The music block starts with pointers into the sound-effect set, so it
-# depends on the set's sources too. The same run writes the default song's
-# layout struct (gGaxDefaultSong) and the song offsets the song table
+# The music block starts with pointers into the sound-effect set (to its
+# handler type, at an offset the set's layout gives), so it depends on
+# the set's sources too. The same run writes the default song's layout
+# struct (gGaxDefaultSong) and the song offsets the song table
 # (src/data/song_table_16aa20.cpp) is written with.
-$(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/gax_default_layout.bin $(SOUND_BUILDDIR)/gax_songs.h &: sound/gax_manifest.json $(SOUND_SONGS) $(SOUND_SAMPLES) $(SOUND_SFX_SOURCES) tools/gax_audio.py
+$(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/gax_audio_data.s $(SOUND_BUILDDIR)/gax_default_layout.bin \
+		$(SOUND_BUILDDIR)/gax_default_layout.s $(SOUND_BUILDDIR)/gax_songs.h &: sound/gax_manifest.json $(SOUND_SONGS) $(SOUND_SAMPLES) $(SOUND_SFX_SOURCES) tools/gax_audio.py
 	python3 tools/gax_audio.py $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/gax_default_layout.bin $(SOUND_BUILDDIR)/gax_songs.h
 
 $(C_BUILDDIR)/data/song_table_16aa20.o: CPPFLAGS += -iquote $(SOUND_BUILDDIR)
 $(C_BUILDDIR)/data/song_table_16aa20.o: $(SOUND_BUILDDIR)/gax_songs.h
 
-$(SOUND_BUILDDIR)/gax_sfx_data.bin: $(SOUND_SFX_SOURCES) tools/gax_audio.py
-	python3 tools/gax_audio.py --sfx $@
+$(SOUND_BUILDDIR)/gax_sfx_data.bin $(SOUND_BUILDDIR)/gax_sfx_data.s &: $(SOUND_SFX_SOURCES) tools/gax_audio.py
+	python3 tools/gax_audio.py --sfx $(SOUND_BUILDDIR)/gax_sfx_data.bin
 
 $(SOUND_BUILDDIR)/sfx_table.bin: sound/sfx_table.json tools/sfx_table.py
 	python3 tools/sfx_table.py $@

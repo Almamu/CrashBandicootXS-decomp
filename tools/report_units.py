@@ -756,7 +756,9 @@ def build_target(name, start, end, source=None):
 #
 # Everything from DATA_START to the end of the ROM is linked from the
 # "/* Data */" block of ldscript.txt, in ROM order: the sections of
-# data/data.s (one label per blob, each blob a single `.incbin`)
+# data/data.s (one label per blob, each blob a single `.incbin`, or the
+# `.include` of a GAX2 block's generated assembly, whose pointers are
+# relocations)
 # interleaved with the `.rodata` of the C data objects under src/data/
 # (see docs/data.md). A blob is "matched" when it is built from a source
 # in the repo (graphics compressed from a PNG, the GAX2 audio rebuilt from
@@ -793,15 +795,41 @@ def data_layout():
     return re.findall(rf"{OBJ_ROOT}/(\S+?\.o)\((\S+?)\);", block)
 
 
+def included_size(path):
+    """The size of a GAX2 block's generated assembly (tools/gax_audio.py):
+    its `.incbin` ranges and `.4byte` relocations."""
+    src = ROOT / path
+    if not src.exists():
+        sys.exit(f"{src} missing - build the data assets first (`make report` does)")
+    size = 0
+    for line in src.read_text().splitlines():
+        s = line.split("@", 1)[0].strip()
+        if not s:
+            continue
+        m = re.fullmatch(r'\.incbin\s+"[^"]+"\s*,\s*(\w+)\s*,\s*(\w+)', s)
+        if m:
+            size += int(m.group(2), 0)
+        elif s.startswith(".4byte "):
+            size += 4
+        else:
+            sys.exit(f"{src}: unsupported line for the data report: {s!r}")
+    return size
+
+
 def parse_data_s():
-    """data.s's blobs, grouped by section: {section: [blob, ...]}. Each
-    blob is a dict with the label name, size, the incbin's path/offset/
-    length, and `built` (False when the bytes are copied from
-    baserom.gba). parse_data() fills in the addresses."""
+    """data.s's blobs and section alignments: ({section: [blob, ...]},
+    {section: alignment}). Each blob is a dict with the label name, size,
+    the incbin's (or include's) path/offset/length, `built` (False when
+    the bytes are copied from baserom.gba), `linked` (True for an
+    included block, whose bytes only exist after linking) and `align`
+    (a `.balign` in front of it). parse_data() fills in the addresses."""
     sections = {".rodata": []}
+    aligns = {}
     blobs = sections[".rodata"]
+    sec = ".rodata"
     started = set()
     name = None
+    align = 1
     for lineno, line in enumerate(DATA_S.read_text().splitlines(), 1):
         s = line.split("@", 1)[0].strip()
         if not s or s.startswith(".global"):
@@ -813,9 +841,25 @@ def parse_data_s():
             started.add(sec)
             blobs = sections.setdefault(sec, [])
             continue
+        m = re.fullmatch(r"\.balign\s+(\d+)(?:\s*,\s*0)?", s)
+        if m and name is None:
+            # in front of a section's first blob, the section's alignment
+            if blobs:
+                align = int(m.group(1))
+            else:
+                aligns[sec] = max(aligns.get(sec, 1), int(m.group(1)))
+            continue
         m = re.fullmatch(r"(\w+):", s)
         if m:
             name = m.group(1)
+            continue
+        m = re.fullmatch(r'\.include\s+"([^"]+\.s)"', s)
+        if m and name is not None:
+            path = m.group(1)
+            blobs.append({"name": name, "size": included_size(path), "path": path, "off": None,
+                          "len": None, "built": True, "linked": True, "align": align,
+                          "lineno": lineno})
+            name, align = None, 1
             continue
         m = re.fullmatch(r'\.incbin\s+"([^"]+)"(?:\s*,\s*(\w+)\s*,\s*(\w+))?', s)
         if not m or name is None:
@@ -829,9 +873,10 @@ def parse_data_s():
                 sys.exit(f"{src} missing - build the data assets first (`make report` does)")
             size = src.stat().st_size
         blobs.append({"name": name, "size": size, "path": path, "off": off,
-                      "len": length, "built": path != "baserom.gba", "lineno": lineno})
-        name = None  # one incbin per label - a second one would need a symbol
-    return sections
+                      "len": length, "built": path != "baserom.gba", "align": align,
+                      "lineno": lineno})
+        name, align = None, 1  # one incbin per label - a second one would need a symbol
+    return sections, aligns
 
 
 def c_data_blobs(obj, section):
@@ -879,14 +924,14 @@ def parse_data():
     agree with the computed address, which catches any drift between
     this parser and the real layout (a C table of the wrong size
     included)."""
-    sections = parse_data_s()
+    sections, aligns = parse_data_s()
     blobs = []
     addr = DATA_START
     for obj, section in data_layout():
         if obj == "data/data.o":
             if section not in sections:
                 sys.exit(f"ldscript.txt links data.o({section}), which data/data.s doesn't define")
-            part, align = sections.pop(section), 1
+            part, align = sections.pop(section), aligns.get(section, 1)
         elif obj.startswith("src/data/") or re.match(r"lib/\w+/data/", obj):
             part, align = c_data_blobs(obj, section)
         elif obj.startswith("src/") and section.startswith(".gnu.linkonce.d._vt."):
@@ -899,15 +944,24 @@ def parse_data():
             # The linker's zero fill up to an aligned object: the padding
             # after a src/data object's last LZ77 stream (an aligned(4)
             # array's 0-3 trailing zeros, docs/data.md "LZ77 stream
-            # padding"). It counts toward that blob, as the padding between
-            # two arrays of one object does.
+            # padding"), or the 2 bytes between the sprite banks and the
+            # word-aligned GAX2 sound-effect set. It counts toward that
+            # blob, as the padding between two arrays of one object does.
             prev = blobs[-1] if blobs else None
-            if prev is None or not prev.get("c_source"):
+            if prev is None or not (prev.get("c_source") or prev.get("linked")):
                 sys.exit(f"{obj}({section}) needs {align}-byte alignment but would start at {addr:#x}")
             fill = -addr % align
             prev["size"] += fill
             addr += fill
         for blob in part:
+            fill = -addr % blob.get("align", 1)
+            if fill:
+                # a `.balign` between two blobs of one data.s section
+                if not (blobs[-1].get("c_source") or blobs[-1].get("linked")):
+                    sys.exit(f"{DATA_S}:{blob['lineno']}: {blob['name']} needs alignment "
+                             f"after a blob that can't take the fill")
+                blobs[-1]["size"] += fill
+                addr += fill
             blob["addr"] = addr
             if not blob["built"] and int(blob["off"], 0) != addr - ROM_BASE:
                 sys.exit(f"{DATA_S}:{blob['lineno']}: {blob['name']} is at {addr:#x} "
@@ -960,11 +1014,12 @@ def group_data_blobs(blobs):
 
 
 def incbin_line(blob, from_rom):
-    if blob.get("c_source"):
+    if blob.get("c_source") or blob.get("linked"):
         # A src/data table's bytes only exist after linking (its pointers
-        # are relocations), and `make report` doesn't link. `make compare`
-        # already proves them equal to the ROM's, so the base reuses the
-        # ROM bytes (zero fill when there's no ROM - the target does too).
+        # are relocations), and `make report` doesn't link; so do a GAX2
+        # block's. `make compare` already proves them equal to the ROM's,
+        # so the base reuses the ROM bytes (zero fill when there's no ROM -
+        # the target does too).
         from_rom = BASEROM.exists()
         if not from_rom:
             return f"\t.space {blob['size']:#x}\n"

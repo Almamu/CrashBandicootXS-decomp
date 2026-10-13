@@ -605,10 +605,11 @@ have one entry per level, and the code indexes other tables by level id
 (`LEVEL_COUNT`, the save data, the level select's grid), so a 26th level
 would grow tables in the middle of the ROM. The generator stops with an
 error naming the level (`... isn't one of the ROM's levels: gLevelTable
-has room for the ROM's 25 levels only (new levels are #966)`). #966 has
-to move `gLevelTable` and `gLevelRoomLists` (and the other per-level
-tables) after the IWRAM image, or #967 has to show that the ROM can
-shift.
+has room for the ROM's 25 levels only (new levels are #966)`). The ROM
+can shift ([shifting.md](./shifting.md), #967): every address it stores
+is a relocation, so #966 can grow `gLevelTable`, `gLevelRoomLists` and
+the other per-level tables in place, and what is linked after them
+moves.
 
 ### Adding a room
 
@@ -658,9 +659,9 @@ new set (`"tileset": "gMyBg0Tiles"`): a set no ROM room uses is made from
 its rooms' pictures alone, in first-use order, and goes with the new
 rooms after the IWRAM image.
 
-Editing the ROM's own rooms changes their data in place, which can move
-the ROM data after it (#967). New levels, themes and actor categories
-are #966.
+Editing the ROM's own rooms changes their data in place, which moves
+the ROM data after it; that is safe ([shifting.md](./shifting.md)). New
+levels, themes and actor categories are #966.
 
 ### Collision layers
 

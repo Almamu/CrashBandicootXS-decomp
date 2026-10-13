@@ -328,10 +328,12 @@ backgrounds" below):
 | `rle_sprites_15a050.cpp` | `0x0815A050` | compressed OBJ frame set C |
 
 The GAX2 audio isn't C: `tools/gax_audio.py` builds it from `sound/`
-into two blobs that `data/data.s` incbins from `build/`, the
+into two blocks that `data/data.s` includes from `build/`, the
 sound-effect set (`gGaxSfxData`, `--sfx`: 88 instruments and 87
 samples, `sound/gax_sfx_manifest.json` + `sound/sfx_samples/*.wav`) and
-the music block (`gGaxMusicData`). See docs/audio.md.
+the music block (`gGaxMusicData`). Each is a `.bin` and a `.s` that
+incbins it with the pointers as relocations, so the blocks can move
+(docs/shifting.md). See docs/audio.md.
 
 ### Sprite banks (`gSpriteBankTable`)
 
