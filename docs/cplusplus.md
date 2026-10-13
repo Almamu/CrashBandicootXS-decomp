@@ -696,6 +696,8 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/gfx/bitmap_screen.cpp`, `fade_to_black.cpp` | `ShowBitmapScreen`; `FadePaletteToBlack`, `IsBrightnessFadeActive` (C linkage) | 0 + 3 | agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/gfx/display.cpp`, `fade.cpp` | the DISPCNT helpers (`SetDispcntMode` ... `CommitDispcnt`); `StepBrightnessFade`, `FadeBrightness`, `DarkenPalette` (C linkage) | 0 + 17 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/gfx/display.cpp` (again) | `Display` (new include/display.hpp), an all-static class: the DISPCNT and blend shadows are public static data members (`dispcnt` is gDispcnt, `blendRegs` gBlendRegs), the 15 helpers static member functions (`SetMode`, `ShowBg2`, `CommitDispcnt`, ...); gfx.h's 15 prototypes and 2 externs go; 13 files call `Display::ShowObj()` & co. or set `Display::dispcnt` | 15 | (unchanged) | 0 -> 0 | [#915](#the-display-registers-as-an-all-static-class-915) |
+| `src/gfx/vram_dma_queue.cpp` | `VramDmaQueue` (new include/vram_dma_queue.hpp), an all-static class: gVramDmaQueue is the static data member `queue`, its 4 functions static member functions (`Flush`, `Add`, `Destroy`, `Init`); gfx.h's 4 prototypes and extern go | 4 | (unchanged) | 0 -> 0 | [#915](#the-vram-dma-queue-as-an-all-static-class-915) |
+| `src/actor/actor_category_init.cpp`, `actor_palette_cycle.cpp`, `src/frontend/company_logos.cpp`, `credits.cpp`, `language_select_setup.cpp`, `src/gfx/obj_vram_cursor.cpp`, `sprite_frame.cpp`, `src/level/level_cutscene.cpp`, `play_room.cpp`, `spawn_markers.cpp`, `tile_slot_pool.cpp`, `src/menus/continue_prompt.cpp`, `pause_menu_pages_draw.cpp`, `power_dialog_draw.cpp`, `src/save/save_menu.cpp`, `src/vehicle/jetpack/airship.cpp`, `airship_graphics.cpp`, `jetpack_player.cpp`, `src/vehicle/polar/polar_aku_aku.cpp`, `polar_player.cpp`, `include/level_select.hpp` | the callers: `VramDmaQueue::Add(...)`, `VramDmaQueue::Flush()` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-vram-dma-queue-as-an-all-static-class-915) |
 | `src/gfx/sprite_frame.cpp` | the OBJ tile allocator, the overflow OAM queue and the sprite frame cache (C linkage); FlushSpriteFrameOamQueue calls `gOamBuffer->Append`, `HideUnused`, `SetAffineScales` (sprite_obj.hpp), whose C prototypes go | 0 + 18 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/system/asset.cpp`, `main.cpp`, `main_loop.cpp`, `memory.cpp` | `LoadTaggedAsset`, `LoadBackgroundTileAndPalette`; `AgbMain`; `MainLoop`, `GetUiText`; the heap (`mem_*`, C linkage) | 0 + 12 | agbcp | 1 file-scope asm -> 1 (`mem_walk_heaps`) | all-C++: gfx, system, util, text |
 | `src/system/input.cpp`, `irq.cpp` (the key reading since in `key_input.cpp`, #767) | `WaitForKeyPress`; the IRQ table, the VBlank handler and callbacks, the key reading (C linkage), and `KeyInput`'s constructor (`ClearKeys`, spawners.hpp), whose C prototype goes | 1 + 17 | old_agbcp | 1 pin -> 1 pin | all-C++: gfx, system, util, text |
@@ -4142,6 +4144,37 @@ functions, and every object is byte-identical.
   `Show`/`Hide` bits, `SetObjMapping1D`/`2D` (2D is UNUSED),
   `CommitDispcnt` and `CommitBlendRegs`. gfx.h's 15 prototypes and its two
   externs go.
+
+### The VRAM DMA queue as an all-static class (#915)
+
+The VRAM DMA queue (vram_dma_queue.cpp, ROM 0x08006B1C-0x08006C28) holds
+the transfers to VRAM and palette RAM that a frame queues (sprite frames,
+palette flashes, BG tiles) until the frame loop flushes them. It was 4
+free functions over one IWRAM struct, gVramDmaQueue (0x03001290: the
+EWRAM entry array and the count), which no other object reads. It is now
+`VramDmaQueue` (include/vram_dma_queue.hpp), all-static like
+[the display registers](#the-display-registers-as-an-all-static-class-915),
+and every object is byte-identical.
+
+- **Data.** `queue` (gVramDmaQueue) is a private static data member,
+  only declared; cxx_symbols.txt's `#915 VramDmaQueue` block maps it to
+  its C name, which sym_iwram.txt places. It stays one `struct
+  dma_queue` rather than two members (`entries`, `count`): the ROM
+  addresses both fields off one literal-pool address, and two members
+  would be two symbols in the .map. `struct dma_queue` and `struct
+  dma_queue_entry` stay vram_dma_queue.cpp's; the header only names the
+  first.
+- **Functions.** All 4 are public static member functions under their C
+  names, named like [the OAM queue's](#the-oam-queue-and-the-sprite-frame-cache-as-all-static-classes-915):
+  `Flush` (FlushVramDmaQueue, called by every frame loop), `Add`
+  (QueueVramDmaTransfer: the frame cache, the palette flashes, the tile
+  slots, the logos), `Init` (AllocVramDmaQueue: InitLevelState, in
+  spawn_markers.cpp) and `Destroy` (FreeVramDmaQueue: the UNUSED
+  `LevelState::~LevelState`, in level_cutscene.cpp).
+- **Not methods of `struct dma_queue`.** The functions take no queue
+  argument: they work on the one global, so instance methods would add a
+  `this` in r0 to every call. They are static members, as the inventory
+  proposed.
 
 ### The level state as a class (#750)
 

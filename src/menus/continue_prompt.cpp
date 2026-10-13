@@ -5,6 +5,7 @@
  * old_agbcc. */
 
 #include "sprite_obj.hpp"
+#include "vram_dma_queue.hpp"
 #include "frontend.hpp"
 #include "audio.hpp"
 #include "key_input.hpp"
@@ -235,7 +236,7 @@ void ContinuePrompt::CommitFrame()
 {
     FrameLimiter::WaitForVBlank();
     gOamBuffer->Commit();
-    FlushVramDmaQueue();
+    VramDmaQueue::Flush();
     REG_DISPCNT = dispcnt.raw;
 }
 

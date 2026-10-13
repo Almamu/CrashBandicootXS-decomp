@@ -1,4 +1,5 @@
 #include "obj_tile_allocator.hpp"
+#include "vram_dma_queue.hpp"
 #include "actor_palette_cycle.hpp"
 #include "sprite_obj.hpp"
 #include "hud.hpp"
@@ -157,7 +158,7 @@ s32 InitActorCategory(s32 category)
             FrameLimiter::WaitForVBlank();
             ActorBg::CommitScroll();
             gOamBuffer->Commit();
-            FlushVramDmaQueue();
+            VramDmaQueue::Flush();
             CellAnim::FlipPage();
             UpdateActorCategoryBg2();
             SpriteFrameCache::Age();

@@ -1,4 +1,5 @@
 #include "airship.hpp"
+#include "vram_dma_queue.hpp"
 #include "cell_anim.hpp"
 #include "actor_bg.hpp"
 
@@ -147,7 +148,7 @@ void Airship::Create(s32 lvl)
  * `CellAnim::GetDistance`/`__divsi3`/`ActorBg::SetLayerDepth`, blits the airship's
  * current frame via `DrawAirshipMap`, sets DISPCNT's bit10,
  * recomputes the BG2 affine matrix (`UpdateAirshipBg2`), and finally queues
- * a palette-strip DMA transfer (`QueueVramDmaTransfer`).
+ * a palette-strip DMA transfer (`VramDmaQueue::Add`).
  *
  * Matching notes: the zoom divide is an explicit `__divsi3` call
  * (the ROM reloads `gAirshipDistance` after it, which `/`'s const
@@ -187,7 +188,7 @@ void Airship::Spawn(s32 kind, s32 sx, s32 sy, s32 sz)
     REG_DISPCNT |= DISPCNT_BG2_ON;
     UpdateBg2();
     hitFlashTimer = 0;
-    QueueVramDmaTransfer(hitFlashPalettes, BG_PALETTE(1), PALETTE_SIZE_16, 0x10);
+    VramDmaQueue::Add(hitFlashPalettes, BG_PALETTE(1), PALETTE_SIZE_16, 0x10);
 }
 
 /* The airship's frame: the state function (gAirshipStateFuncs, a plain

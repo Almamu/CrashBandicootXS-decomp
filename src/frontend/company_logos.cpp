@@ -1,4 +1,5 @@
 #include "obj_tile_allocator.hpp"
+#include "vram_dma_queue.hpp"
 #include "sprite_obj.hpp"
 #include "frontend.hpp"
 #include "audio.hpp"
@@ -169,7 +170,7 @@ void CompanyLogos::Run()
             REG_BLDCNT = BLDCNT_TGT1_ALL | BLDCNT_EFFECT_DARKEN;
         }
         gOamBuffer->Commit();
-        FlushVramDmaQueue();
+        VramDmaQueue::Flush();
         SpriteFrameCache::Age();
     }
     delete part;
@@ -474,7 +475,7 @@ void CompanyLogos::DrawVvLogoPieces()
             src += 0xa0;
             buf += 0x100;
         }
-        QueueVramDmaTransfer(scratch, (void *)tilesC, 0x1000, 0x10);
+        VramDmaQueue::Add(scratch, (void *)tilesC, 0x1000, 0x10);
         CLEAR_OAM(&oamC);
         pa = 0x1000000 / slot->velA;
         pd = 0x1000000 / slot->velB;

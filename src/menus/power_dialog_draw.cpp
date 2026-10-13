@@ -1,4 +1,5 @@
 #include "menus.hpp"
+#include "vram_dma_queue.hpp"
 #include "font.hpp"
 #include "frame_limiter.hpp"
 
@@ -54,7 +55,7 @@ void PowerDialog::CommitFrame()
     FrameLimiter::WaitForVBlank();
     gPaletteCache->Upload();
     gOamBuffer->Commit();
-    FlushVramDmaQueue();
+    VramDmaQueue::Flush();
     *(vu16 *)REG_ADDR_BG0HOFS = frame >> 3;
     BACKDROP_COLOR = 0;
     *(vu32 *)REG_ADDR_BLDCNT = blend.raw;

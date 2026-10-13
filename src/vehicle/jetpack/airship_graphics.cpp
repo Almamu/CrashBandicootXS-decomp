@@ -1,4 +1,5 @@
 #include "airship.hpp"
+#include "vram_dma_queue.hpp"
 #include "audio.hpp"
 
 extern "C" {
@@ -328,7 +329,7 @@ void Airship::AnimatePalette()
         v = 5 - v;
     }
 
-    QueueVramDmaTransfer(hitFlashPalettes[v], BG_PALETTE(1), PALETTE_SIZE_16, 0x10);
+    VramDmaQueue::Add(hitFlashPalettes[v], BG_PALETTE(1), PALETTE_SIZE_16, 0x10);
 }
 
 /* The end of the airship's code (#664 part 11f): its HP gauge, its

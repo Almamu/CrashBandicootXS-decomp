@@ -222,12 +222,6 @@ extern void DarkenPalette(s32 factor);
 extern void FadePaletteToBlack(void);
 extern bool IsBrightnessFadeActive(void);
 
-/* src/gfx/vram_dma_queue.cpp */
-extern void FlushVramDmaQueue(void);
-extern s32 QueueVramDmaTransfer(const void *src, void *dest, u16 size, u16 unit);
-extern void FreeVramDmaQueue(void);
-extern s32 AllocVramDmaQueue(void);
-
 /* src/objects/entity.cpp: the world-to-screen helpers between Entity's methods */
 extern void WorldToScreen(void *unused, s32 x, s32 y, s32 *outX, s32 *outY);
 extern void WorldPosToScreen(s32 *pos, s32 *outX, s32 *outY);
@@ -276,8 +270,5 @@ extern const s32 gObjSizeWidths[12];
 /* sym_iwram.txt: the palette fade buffers (fade.cpp, fade_to_black.cpp) */
 extern u16 gPaletteBackup[512];
 extern u16 gPaletteFadeBuffer[512];
-
-/* sym_iwram.txt: the VRAM DMA queue (vram_dma_queue.cpp) */
-extern struct dma_queue gVramDmaQueue;
 
 #endif /* __GFX_H__ */

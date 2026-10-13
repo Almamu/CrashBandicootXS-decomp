@@ -1,4 +1,5 @@
 #include "menus.hpp"
+#include "vram_dma_queue.hpp"
 #include "font.hpp"
 #include "frame_limiter.hpp"
 
@@ -58,7 +59,7 @@ void PauseMenu::CommitFrame()
     FrameLimiter::WaitForVBlank();
     gPaletteCache->Upload();
     gOamBuffer->Commit();
-    FlushVramDmaQueue();
+    VramDmaQueue::Flush();
     BACKDROP_COLOR = 0;
     *(vu32 *)REG_ADDR_BLDCNT = blend.raw;
     *(vu16 *)REG_ADDR_BLDY = bldy.evy;

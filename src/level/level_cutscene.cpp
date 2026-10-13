@@ -1,4 +1,5 @@
 #include "display.hpp"
+#include "vram_dma_queue.hpp"
 #include "level_state.hpp"
 #include "sprite_obj.hpp"
 #include "part_list.hpp"
@@ -53,7 +54,7 @@ extern "C" {
  * their C types, so each `delete` names its class. */
 LevelState::~LevelState()
 {
-    FreeVramDmaQueue();
+    VramDmaQueue::Destroy();
     delete gOamBuffer;
     delete gObjVramCursor;
     if (gInput != NULL) /* KeyInput has no destructor: `delete` alone tests nothing */

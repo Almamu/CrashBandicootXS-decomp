@@ -1,4 +1,5 @@
 #include "obj_tile_allocator.hpp"
+#include "vram_dma_queue.hpp"
 #include "vehicle.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
@@ -172,7 +173,7 @@ s32 PolarPlayer::Hurt()
 
     if (gLevelState->maskLevel == MASK_LEVEL_NONE) {
         gAudioContext->PlaySfx(SFX_PLAYER_HURT, 0x100);
-        QueueVramDmaTransfer(gPolarPlayerShockPalette, OBJ_PALETTE(0), 0x20, 0x10);
+        VramDmaQueue::Add(gPolarPlayerShockPalette, OBJ_PALETTE(0), 0x20, 0x10);
         SetState(POLAR_PLAYER_STATE_KNOCKED_OFF, 5);
         gPolarPauseLocked = 1;
         if (gLevelState->timeTrial == 0)
@@ -331,15 +332,15 @@ void PolarPlayer::StateShocked()
     s32 counter = stateTime;
 
     if (counter > 0x2c) {
-        QueueVramDmaTransfer(gPolarPlayerShockPalette, OBJ_PALETTE(0), 0x20, 0x10);
+        VramDmaQueue::Add(gPolarPlayerShockPalette, OBJ_PALETTE(0), 0x20, 0x10);
         gPolarPauseLocked = 1;
         SetState(POLAR_PLAYER_STATE_KNOCKED_OFF, 5);
         if (gLevelState->timeTrial == 0)
             gLevelState->LoseLife();
     } else if (counter & 4) {
-        QueueVramDmaTransfer(gPolarPlayerShockPalette, OBJ_PALETTE(0), 0x20, 0x10);
+        VramDmaQueue::Add(gPolarPlayerShockPalette, OBJ_PALETTE(0), 0x20, 0x10);
     } else {
-        QueueVramDmaTransfer(gPolarPlayerShockBlinkPalette, OBJ_PALETTE(0), 0x20, 0x10);
+        VramDmaQueue::Add(gPolarPlayerShockBlinkPalette, OBJ_PALETTE(0), 0x20, 0x10);
     }
 }
 

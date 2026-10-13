@@ -1,4 +1,5 @@
 #include "save_menu.hpp"
+#include "vram_dma_queue.hpp"
 #include "audio.hpp"
 
 extern "C" {
@@ -34,7 +35,7 @@ void SaveMenu::CommitFrame()
     REG_BG0HOFS = frame >> 3;
     gPaletteCache->Upload();
     gOamBuffer->Commit();
-    FlushVramDmaQueue();
+    VramDmaQueue::Flush();
 }
 
 /* Deletes the save menu (C linkage, for game_frame.cpp) and frees the
