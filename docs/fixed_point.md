@@ -55,6 +55,8 @@ name in its subsystem's header, spelled with the macros:
 |---|---|---|
 | `PLAYER_GRAVITY` | `Q8_FRAC(0, 51)` | `player.hpp`: the jump records' step, 51/256 px a frame per frame |
 | `LEVEL_SELECT_ZOOM_MIN`, `ZOOM_BG_ZOOM_STEP` | `Q8_FRAC(0, 8)` | `level_select.hpp`: the level-select zooms' smallest scale (1/32) and the picture's zoom a frame |
+| `WUMPA_TO_HUD_GROW_STEP`, `PICKUP_FLY_OFF_*` | `Q8_FRAC(0, 4)`, `Q8_FRAC(0, 0xc)`, `Q8(0.25)`, `Q8(1.6875)` | `pickups.hpp`: the picked-up pickups' scale steps and bounds |
+| `PLATFORM_FALL_ACCEL`, `PLATFORM_SLOW_MOVE_ACCEL`; `LOGO_ACTOR_FLY_OFF_SPEED_Z` | `Q8_FRAC(0, f)` | `objects.h`: gPlatformMoverMotionRecords' steps; `frontend.hpp`: the logos' Crash flying off |
 | `PLAYER_MAX_FALL_SPEED` | `INT_TO_Q8(6)` | `player.hpp`: the jump and fall records' target |
 | `SWIM_STROKE_SPEED`, `SWIM_SPIN_SPEED` | `Q8(2.75)`, `Q8(3.75)` | `swim_ctrl.hpp`: the diver's stroke and spin, split between X and Y by the direction (3/4, 1/2, 1/4 of it) |
 | `ACTOR_FOCAL_LENGTH`, `ACTOR_FOCAL_LENGTH_POLAR` | `INT_TO_Q8(28)`, `INT_TO_Q8(47)` | `actor.h`: gActorFocalLength, the 3D levels' projection distance (InitActorBgScroll) |
@@ -85,7 +87,11 @@ its spelling (`INT_TO_Q8(5)`) or its number.
 - **Not every `0x100` is a pixel.** A byte extraction (`>> 8 & 0xFF`), a
   volume (`0x100`), a palette bank (`<< 12`), an OAM field (`<< 16`), a
   tile index or a count isn't fixed point; `--fixed` classifies those as
-  `integer` or `bitfield`.
+  `integer` or `bitfield`. Nor is every pair of shifts: `(x << 8) >> 8`
+  on a pixel position is a sign extension (`SIGN_EXTEND_24`, core.h). A
+  local whose name says speed but holds whole steps (a Bresenham line's
+  `dx`/`dy`, a crate's fall `speed`) is listed in magic_fixed.py's
+  `INT_LOCALS`, with the reason.
 
 ## The inventory (`--fixed`)
 

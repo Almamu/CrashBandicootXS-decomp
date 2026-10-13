@@ -138,8 +138,8 @@ void WorldToScreen(void *unused, s32 x, s32 y, s32 *outX, s32 *outY)
 {
     BgLayer *layer = gLevelLayers->layer0;
     /* `dx`, `dy` are needed: inlined, the instructions are reordered */
-    s32 dx = (layer->x << 8) >> 8;
-    s32 dy = (layer->y << 8) >> 8;
+    s32 dx = SIGN_EXTEND_24(layer->x);
+    s32 dy = SIGN_EXTEND_24(layer->y);
 
     *outX = x - dx;
     *outY = y - dy;

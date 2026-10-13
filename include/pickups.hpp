@@ -71,6 +71,20 @@ static inline s32 Affine(Sprite *part)
 #define PICKUP_PHASE_NO_PICKUP 0x16
 #define PICKUP_PHASE_LAST 0x1f
 
+/* The picked-up pickups' scale (Sprite's `affine`, Q8: 0x100 is 1:1,
+ * docs/fixed_point.md). A wumpa flying to the HUD grows by
+ * WUMPA_TO_HUD_GROW_STEP a frame up to 1:1. Flying off the screen (the
+ * wumpa's and the extra life's state 2), it shrinks by
+ * PICKUP_FLY_OFF_SHRINK_STEP a frame until it is under
+ * PICKUP_FLY_OFF_MIN_SCALE, or (the other way, `counter` 1) grows by
+ * PICKUP_FLY_OFF_GROW_STEP until it is past PICKUP_FLY_OFF_MAX_SCALE, and
+ * is gone. */
+#define WUMPA_TO_HUD_GROW_STEP     Q8_FRAC(0, 4)
+#define PICKUP_FLY_OFF_SHRINK_STEP Q8_FRAC(0, 4)
+#define PICKUP_FLY_OFF_MIN_SCALE   Q8(0.25)
+#define PICKUP_FLY_OFF_GROW_STEP   Q8_FRAC(0, 0xc)
+#define PICKUP_FLY_OFF_MAX_SCALE   Q8(1.6875)
+
 /* ExtraLife's `state`. */
 #define EXTRA_LIFE_STATE_IDLE 0    // on the spot: bobs or hops, picked up on contact
 #define EXTRA_LIFE_STATE_TO_HUD 1  // flies to the HUD's lives counter, adds a life there

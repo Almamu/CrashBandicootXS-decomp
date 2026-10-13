@@ -600,7 +600,7 @@ void LogoActor::Update()
         }
         break;
     case LOGO_ACTOR_STATE_FLY_OFF:
-        z -= 0xe;
+        z -= LOGO_ACTOR_FLY_OFF_SPEED_Z;
         y -= INT_TO_Q8(1);
         if (time > 0xf)
             state = LOGO_ACTOR_STATE_GONE;

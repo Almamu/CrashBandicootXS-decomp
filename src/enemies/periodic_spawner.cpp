@@ -25,7 +25,7 @@ void PeriodicSpawner::Update()
 
     if ((u32)(selfX - cameraX - 0xa1) <= 0xee &&
         __modsi3(gRoomFrameCount + period - phase, period) == 0)
-        callback(0xFFFF, selfX, y >> 8, 0);
+        callback(0xFFFF, selfX, Q8_TO_INT(y), 0);
 }
 
 /* g++ sets the vtable pointer back to gPeriodicSpawnerVtable and runs

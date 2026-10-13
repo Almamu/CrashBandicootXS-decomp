@@ -13,6 +13,6 @@ extern "C" {
  * (entry_set_16c418.cpp). */
 const struct speed_ramp gPlatformMoverMotionRecords[3] = {
     { 0, 0, 0 },
-    { 0, 8, INT_TO_Q8(1) },
-    { 0, 40, INT_TO_Q8(4) },
+    { 0, PLATFORM_SLOW_MOVE_ACCEL, INT_TO_Q8(1) },
+    { 0, PLATFORM_FALL_ACCEL, INT_TO_Q8(4) },
 };

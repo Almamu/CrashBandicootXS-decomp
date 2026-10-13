@@ -96,6 +96,14 @@ extern const struct speed_ramp gCtrlMotionRecords[44];
  * records (src/data/velocity_16c460.cpp). */
 extern const struct entry_set gPlatformMoverMotionSet;
 extern const struct speed_ramp gPlatformMoverMotionRecords[3];
+/* Their steps (Q8 px a frame per frame, docs/fixed_point.md): a falling
+ * platform (PLATFORM_TYPE_FALLING) drops 60 frames after the player
+ * lands, speeding up by PLATFORM_FALL_ACCEL to 4 px a frame (record 2,
+ * the set's entry 3 in Y, PlatformMover::Update); record 1 (entries 1 in
+ * X and 2 in Y) speeds up by PLATFORM_SLOW_MOVE_ACCEL to 1 px a frame,
+ * but nothing starts those entries. */
+#define PLATFORM_FALL_ACCEL      Q8_FRAC(0, 40)
+#define PLATFORM_SLOW_MOVE_ACCEL Q8_FRAC(0, 8)
 
 /* The empty box GetSpriteFrameBodyBox and friends return for a frame
  * without one (src/data/obj_sizes_16b2e0.cpp). */

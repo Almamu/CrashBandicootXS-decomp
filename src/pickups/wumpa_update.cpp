@@ -107,9 +107,10 @@ void Wumpa::PickUp(u8 randomize)
     velY = -FixedDiv(newY - dy, INT_TO_Q8(20));
 }
 
-/* State 1 flies to the HUD (while `affine`, the Q8 scale, grows by 4 up
- * to 1.0) and, there, collects the wumpa; state 2 flies off the screen
- * (`affine` down by 4 below 0.25, or up by 12 past 0x1B0) and is gone.
+/* State 1 flies to the HUD (while `affine`, the Q8 scale, grows by
+ * WUMPA_TO_HUD_GROW_STEP up to 1.0) and, there, collects the wumpa; state
+ * 2 flies off the screen (`affine` down below PICKUP_FLY_OFF_MIN_SCALE, or
+ * up past PICKUP_FLY_OFF_MAX_SCALE) and is gone.
  * State 3 pays out:
  * every 11 frames it drops a wumpa flying to the HUD, 10 in all, staying
  * at the player, then it is gone. On the spot, it bobs or hops. */
@@ -118,7 +119,7 @@ void Wumpa::Update()
     if (state == WUMPA_STATE_TO_HUD) {
         Fly();
         if (affine != 0) {
-            affine += 4;
+            affine += WUMPA_TO_HUD_GROW_STEP;
             if (Affine(this) > INT_TO_Q8(1))
                 affine = 0;
         }
@@ -133,14 +134,14 @@ void Wumpa::Update()
         Fly();
         fire = 0;
         if (counter == 0) {
-            s32 t = affine - 4;
+            s32 t = affine - PICKUP_FLY_OFF_SHRINK_STEP;
 
             affine = t;
-            if (t < Q8(0.25))
+            if (t < PICKUP_FLY_OFF_MIN_SCALE)
                 fire = 1;
         } else {
-            affine += 0xc;
-            if (Affine(this) > 0x1b0)
+            affine += PICKUP_FLY_OFF_GROW_STEP;
+            if (Affine(this) > PICKUP_FLY_OFF_MAX_SCALE)
                 fire = 1;
         }
         if (fire)
