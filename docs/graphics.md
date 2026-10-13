@@ -127,7 +127,7 @@ PNG's palette *is* the asset. That covers 54 palettes:
   packages in `graphics/menus/`, `graphics/title/`, `graphics/logos/` and
   the level-select page, the credits and VV logo sheets in
   `graphics/logos/`) and of the ten level-select pictures
-  (`graphics/tileset1/*_8bpp_tiles.png`): 16 with 16 colours and 14 with
+  (`graphics/level_select/pictures/`): 16 with 16 colours and 14 with
   256;
 - the 24 cutscene pictures' uncompressed palettes (below).
 
@@ -191,14 +191,15 @@ Before, each was stored as a tile-set PNG plus a raw `.bin` map, or as a
 map misfiled as tiles or as a palette. Now each one is a single indexed
 PNG of the whole picture, drawn with the package's palette, in the
 folder of what it is: `graphics/menus/`, `graphics/title/`,
-`graphics/logos/` (graphics.mk's `BG_PACKAGES` lists them). The build
+`graphics/logos/`, `graphics/level_select/` (graphics.mk's `BG_PACKAGES`
+lists them). The build
 rebuilds both the tile set and the map from that PNG, byte for byte:
 
 | picture | bpp | cells | map |
 |---|---|---|---|
 | `menus/sky` (`gMenuSkyBg`) | 4 | 32x20 | text |
 | `menus/pause` (`gPauseMenuBg`) | 8 | 30x20 | text |
-| `62556c_level_select_page` (`gLevelSelectPageBg`) | 8 | 32x32 | text |
+| `level_select/platform` (`gLevelSelectPageBg`) | 8 | 32x32 | text |
 | `menus/continue_prompt/smoke` (`gContinuePromptSmokeBg`) | 4 | 30x20 | text |
 | `menus/continue_prompt/glow` (`gContinuePromptGlowBg`) | 4 | 30x20 | text |
 | `menus/continue_prompt/uka_uka` (`gContinuePromptUkaUkaBg`) | 8 | 30x20 | text |
@@ -1601,15 +1602,40 @@ No sidecar file is needed. The pictures take 12.3 MB against the
 
 The remaining 4bpp tile PNGs that gbagfx had written as grayscale are
 indexed (`P` mode) PNGs now, with the same indices. grit (`-gt -gB4 -p!`,
-or `-gB8` for the `*_8bpp_tiles.png` level-select pictures) builds the same
-bytes gbagfx did, checked on all 21 sheets (`graphics/fonts/`,
-`graphics/logos/` and `graphics/tileset1/` today):
+or `-gB8` for the level-select pictures) builds the same bytes gbagfx did,
+checked on all 21 sheets (`graphics/fonts/`, `graphics/logos/` and
+`graphics/level_select/` today):
 - the credits and VV logo sheets (`logos/credits/`, `logos/vicarious_visions/`)
   carry their real 16-colour palettes, which the build reads (see
   "Palettes");
 - the two HUD fonts (`fonts/small`, `fonts/large`) and the level-select
-  cursor zoom (`tileset1/00`) carry the palette the game draws them with
+  cursor zoom (`level_select/cursor_zoom`) carry the palette the game draws them with
   by default (OAM picks it at run time). See "Run-time palettes" below.
+
+### Level-select pictures
+
+`graphics/level_select/` holds the level select's graphics:
+`platform.png` (`gLevelSelectPageBg`, a BG package), `cursor_zoom.png`
+(`gLevelSelectCursorZoomTiles`) and the ten round pictures in
+`pictures/`. `ZoomBg::SetPicture` indexes `gLevelSelectPictures[]` by
+`level_info.theme`, so each picture is a theme's, and is named after it:
+
+| theme | levels | picture |
+|---|---|---|
+| 0 | Frostbite Cavern, Snow Crash, Snow Job | `snow.png` |
+| 1 | Jungle Jam, Temple of Boom, Ruined, Down the Hole | `jungle.png` |
+| 2 | Just in Slime, Just Hangin', Drip Drip Drip | `sewer.png` |
+| 3 | Shipwrecked, Shark Attack, Sunken City, Air Supply | `underwater.png` |
+| 4 | Rocket Racket, Blimp Bonanza, No-Fly Zone | `sky.png` |
+| 5 | Ace of Space, Star to Finish, Final Countdown | `space.png` |
+| 6 | Tiny | `tiny.png` |
+| 7 | Dingodile | `dingodile.png` |
+| 8 | N. Gin | `n_gin.png` |
+| 9 | Neo Cortex | `neo_cortex.png` |
+
+Mega Mix (theme 10) has no picture. In the ROM the pictures are stored
+in the order 0, 1, 4, 2, 5, 3, 9, 7, 8, 6, then their palettes in the
+same order (`level_select_graphics_6377c0.cpp`).
 
 ### OBJ sheets
 
@@ -1657,7 +1683,7 @@ Any pixel outside the OBJs must be 0, so drawing there fails the build.
 Three tile sheets have no palette of their own in the ROM:
 `gSmallFontTiles` (`graphics/fonts/small.png`),
 `gLargeFontTiles` (`00_5a551c_tiles.png`) and
-`gLevelSelectCursorZoomTiles` (`graphics/tileset1/00_6377c0_tiles.png`).
+`gLevelSelectCursorZoomTiles` (`graphics/level_select/cursor_zoom.png`).
 The game picks their OBJ palette bank at run time, through the OAM
 entry that draws them: the font glyphs take `oam_scratch.palette`,
 which `Font::SetPalette` sets and `Font::ResetPalette` points back at

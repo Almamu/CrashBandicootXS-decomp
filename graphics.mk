@@ -92,22 +92,23 @@ $(GRAPHICS_BUILDDIR)/cutscenes/%.img.bin: graphics/cutscenes/%.png | $(GRIT)
 $(GRAPHICS_BUILDDIR)/cutscenes/%.pal.inc: $(GRAPHICS_BUILDDIR)/cutscenes/%.gbapal tools/bin2c.py
 	python3 tools/bin2c.py $< $@ --u16
 
-# Tile sheets: grit -gt, 4bpp (TILE_SHEETS_4BPP: the credits logos and the
-# VV emblem), or 8bpp for the tileset1/*_8bpp_tiles.png level-select
-# pictures (graphics/tileset1/: TILE_SHEET_BPP). The fonts and the VV
-# letters and URL are OBJ sheets (below).
+# Tile sheets: grit -gt, 4bpp (TILE_SHEETS_4BPP: the credits logos, the VV
+# emblem and the level-select cursor zoom) or 8bpp (TILE_SHEETS_8BPP: the
+# ten level-select pictures, one per level_info.theme). The fonts and the
+# VV letters and URL are OBJ sheets (below).
 TILE_SHEETS_4BPP := logos/credits/red_eye_studios logos/credits/shinen logos/credits/cosmigo \
-	logos/credits/universal logos/credits/vicarious_visions logos/vicarious_visions/emblem
+	logos/credits/universal logos/credits/vicarious_visions logos/vicarious_visions/emblem \
+	level_select/cursor_zoom
+LEVEL_SELECT_PICTURES := $(addprefix level_select/pictures/,snow jungle sky sewer space underwater \
+	neo_cortex dingodile n_gin tiny)
+TILE_SHEETS_8BPP := $(LEVEL_SELECT_PICTURES)
 define TILE_SHEET_RULE
 $(GRAPHICS_BUILDDIR)/$(1).img.bin: graphics/$(1).png | $(GRIT)
 	@mkdir -p $$(dir $$@)
 	$(GRIT) $$< -gt -gB$(2) -p! -ftb -fh! -o $(GRAPHICS_BUILDDIR)/$(1)
 endef
 $(foreach s,$(TILE_SHEETS_4BPP),$(eval $(call TILE_SHEET_RULE,$(s),4)))
-TILE_SHEET_BPP = $(if $(filter %_8bpp_tiles.png,$<),8,4)
-$(GRAPHICS_BUILDDIR)/tileset1/%_tiles.img.bin: graphics/tileset1/%_tiles.png | $(GRIT)
-	@mkdir -p $(dir $@)
-	$(GRIT) $< -gt -gB$(TILE_SHEET_BPP) -p! -ftb -fh! -o $(@:.img.bin=)
+$(foreach s,$(TILE_SHEETS_8BPP),$(eval $(call TILE_SHEET_RULE,$(s),8)))
 
 # OBJ sheets (docs/graphics.md, "OBJ sheets"): tile sets made of whole
 # OBJs (1D mapping, each OBJ's tiles back to back), drawn with each OBJ
@@ -167,16 +168,15 @@ $(C_BUILDDIR)/data/font_tiles_5a4e70.o: $(GRAPHICS_BUILDDIR)/fonts/small.img.bin
 # The menu, title and credits graphics (0x0861BADC-0x086377C0): the BG
 # packages (below) and the credits and VV logo tile sheets
 # (graphics/logos/), each with the palette of its PNG.
-LOGO_SHEETS := $(TILE_SHEETS_4BPP) logos/vicarious_visions/letters logos/vicarious_visions/url
+LOGO_SHEETS := $(filter logos/%,$(TILE_SHEETS_4BPP)) logos/vicarious_visions/letters logos/vicarious_visions/url
 $(C_BUILDDIR)/data/menu_graphics_61badc.o: \
 	$(foreach s,$(LOGO_SHEETS),$(GRAPHICS_BUILDDIR)/$(s).img.bin.lz.inc $(GRAPHICS_BUILDDIR)/$(s).gbapal.lz.inc)
 
 # The level-select cursor zoom, the ten level-select pictures and their
-# palettes, each the palette of its picture's PNG (graphics/tileset1/,
+# palettes, each the palette of its picture's PNG (graphics/level_select/,
 # 0x086377C0-0x0863D4C0).
-$(C_BUILDDIR)/data/level_select_graphics_6377c0.o: \
-	$(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.img.bin.lz.inc,$(wildcard graphics/tileset1/*_tiles.png)) \
-	$(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.gbapal.lz.inc,$(wildcard graphics/tileset1/*_8bpp_tiles.png))
+$(C_BUILDDIR)/data/level_select_graphics_6377c0.o: $(GRAPHICS_BUILDDIR)/level_select/cursor_zoom.img.bin.lz.inc \
+	$(foreach p,$(LEVEL_SELECT_PICTURES),$(GRAPHICS_BUILDDIR)/$(p).img.bin.lz.inc $(GRAPHICS_BUILDDIR)/$(p).gbapal.lz.inc)
 
 # Actor-category backgrounds (docs/data.md, "Category backgrounds"): the
 # BG0 cell animations and BG1 pictures of graphics/category_bg/. They are
@@ -238,13 +238,14 @@ $(C_BUILDDIR)/data/bg_picture_151ac4.o: $(call catbg_picture_incs,151ac4 155260)
 # The struct bg_package pictures (docs/graphics.md "Menu and title
 # pictures"): the menu backgrounds (graphics/menus/), the title screen's
 # logo and OBJ sprites (graphics/title/), the Universal logo
-# (graphics/logos/) and the level-select page. The tile set and map of
+# (graphics/logos/) and the level-select platform (graphics/level_select/).
+# The tile set and map of
 # each are rebuilt from one PNG of the whole picture. grit reduces the
 # picture to tiles + map, and tools/bg_map.py first-use puts the tiles in
 # the ROM's order (order of first use; grit starts with a forced blank
 # tile). gbagfx compresses, and src/data/menu_graphics_61badc.cpp holds the
 # results. Each package's palette is its PNG's palette.
-BG_PACKAGES := menus/sky menus/pause bg_package/62556c_level_select_page menus/continue_prompt/smoke \
+BG_PACKAGES := menus/sky menus/pause level_select/platform menus/continue_prompt/smoke \
 	menus/continue_prompt/glow menus/continue_prompt/uka_uka logos/universal title/logo \
 	title/bandicoot title/crash title/arrow1 title/arrow2
 $(C_BUILDDIR)/data/menu_graphics_61badc.o: \
@@ -253,7 +254,7 @@ $(C_BUILDDIR)/data/menu_graphics_61badc.o: \
 
 BG_PACKAGE_BPP_menus/sky := 4
 BG_PACKAGE_BPP_menus/pause := 8
-BG_PACKAGE_BPP_bg_package/62556c_level_select_page := 8
+BG_PACKAGE_BPP_level_select/platform := 8
 BG_PACKAGE_BPP_menus/continue_prompt/smoke := 4
 BG_PACKAGE_BPP_menus/continue_prompt/glow := 4
 BG_PACKAGE_BPP_menus/continue_prompt/uka_uka := 8

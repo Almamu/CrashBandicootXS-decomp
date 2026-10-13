@@ -34,10 +34,10 @@ extern const u8 gPauseMenuBgPalette[] __attribute__((aligned(4))) = {
 
 /*
  * Palette of gLevelSelectPageBg, 256 colours: the palette of
- * graphics/bg_package/62556c_level_select_page.png.
+ * graphics/level_select/platform.png.
  */
 extern const u8 gLevelSelectPageBgPalette[] __attribute__((aligned(4))) = {
-#include "bg_package/62556c_level_select_page.gbapal.lz.inc"
+#include "level_select/platform.gbapal.lz.inc"
 };
 
 /*
@@ -130,10 +130,10 @@ extern const u8 gPauseMenuBgTiles[] __attribute__((aligned(4))) = {
 
 /*
  * 8bpp tiles of gLevelSelectPageBg: the level-select platform icon (32x32):
- * graphics/bg_package/62556c_level_select_page.png.
+ * graphics/level_select/platform.png.
  */
 extern const u8 gLevelSelectPageBgTiles[] __attribute__((aligned(4))) = {
-#include "bg_package/62556c_level_select_page.img.bin.lz.inc"
+#include "level_select/platform.img.bin.lz.inc"
 };
 
 /*
@@ -220,9 +220,9 @@ extern const u8 gPauseMenuBgMap[] __attribute__((aligned(4))) = {
 #include "menus/pause.map.bin.lz.inc"
 };
 
-/* Text BG map of gLevelSelectPageBg: graphics/bg_package/62556c_level_select_page.png. */
+/* Text BG map of gLevelSelectPageBg: graphics/level_select/platform.png. */
 extern const u8 gLevelSelectPageBgMap[] __attribute__((aligned(4))) = {
-#include "bg_package/62556c_level_select_page.map.bin.lz.inc"
+#include "level_select/platform.map.bin.lz.inc"
 };
 
 /* Text BG map of gContinuePromptSmokeBg: graphics/menus/continue_prompt/smoke.png. */
