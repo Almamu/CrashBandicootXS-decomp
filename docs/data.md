@@ -717,9 +717,9 @@ arrays aren't aligned by agbcc, so they stay in place.
 
 The rooms' level data and level assets ([levels.md](./levels.md)) are
 built from `data/levels/` by `tools/levels.py`, from editable sources:
-per room a `room.json` (palette, layer settings, entities, parameter
-records, links, symbol names), each BG layer as its whole picture
-(`<layer>.png`, 8bpp indexed with the room palette, decoded back to
+per room a `room.json` (layer settings, entities, parameter records,
+links, symbol names), each BG layer as its whole picture (`<layer>.png`,
+8bpp indexed with the room palette, which the pictures carry, decoded back to
 cells against the layer's tile set, see
 [levels.md, "BG layers"](./levels.md#bg-layers)), and the
 collision layer as an image (`collision.png`, the size of the BG0 picture, one

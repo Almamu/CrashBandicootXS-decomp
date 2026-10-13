@@ -76,6 +76,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import collision_bmp  # noqa: E402
+import jasc_pal  # noqa: E402
 
 ROM_BASE = 0x08000000
 # gLevelRoomLists: per level (levels.json's "levels" order) a struct
@@ -324,6 +325,38 @@ def room_key(room_dir):
     return Path(room_dir).relative_to(LEVELS_DIR).as_posix()
 
 
+def load_room(room_dir):
+    """A room's room.json, with its "name" (its folder, room_key) added."""
+    room = read_json(Path(room_dir) / "room.json")
+    room["name"] = room_key(room_dir)
+    return room
+
+
+def room_palette(room_dir, room):
+    """The room's 256-colour BG palette: the palette of its layer pictures
+    (bg0-bg3.png), read as tools/jasc_pal.py reads a PNG's palette (bit 15
+    in the red value's lowest bit). Every layer picture must carry all 256
+    entries, the same in each."""
+    pal, first = None, None
+    for lname, layer in room_layers(room):
+        if lname == "collision":
+            continue
+        path = Path(room_dir) / layer["map"]
+        p = jasc_pal.read_png(path)
+        if len(p) != 256:
+            sys.exit("%s: a palette of %d colours; a room's layer pictures keep all 256 of the "
+                     "room's palette, unused ones too (docs/levels.md, \"BG layers\")" % (path, len(p)))
+        if pal is None:
+            pal, first = p, path
+        elif p != pal:
+            i = next(k for k in range(256) if p[k] != pal[k])
+            sys.exit("%s: its palette differs from %s's (entry %d is %04X there, %04X here): every "
+                     "layer picture of a room carries the room's palette" % (path, first, i, pal[i], p[i]))
+    if pal is None:
+        sys.exit("%s: no BG layer picture to take the palette from" % room_dir)
+    return pal
+
+
 def entity_type_names():
     """type -> name (None for the unnamed types), from entity_types.json."""
     types = read_json(ENTITY_TYPES_JSON)["types"]
@@ -376,7 +409,7 @@ def room_layers(room):
 def build_asset(room_dir, build_dir=None):
     """The room's level asset (uncompressed) and each layer's offset in it.
     Sections are in slot order: BG1, BG2, BG3, BG0, collision."""
-    room = read_json(Path(room_dir) / "room.json")
+    room = load_room(room_dir)
     asset = bytearray()
     offsets, grids = {}, {}
     for name, layer in room_layers(room):
@@ -433,7 +466,7 @@ def room_c(room_dir, build_dir=None):
     """The room's C definitions. The layers' asset offsets and chunk grids
     come from the asset: built here, or with `build_dir` read from the
     layout `asset` wrote next to it (`<build_dir>/<room>/asset.layout.json`)."""
-    room = read_json(Path(room_dir) / "room.json")
+    room = load_room(room_dir)
     name = room["name"]
     sym = room["symbols"]
     if build_dir is None:
@@ -451,8 +484,7 @@ def room_c(room_dir, build_dir=None):
 
     by_name = {n: t for t, n in enumerate(entity_type_names()) if n}
     types = [entity_type(name, e["type"], by_name) for e in room["entities"]]
-    out.append("/* %s: level_desc %s, %d entities (data/levels/%s) */"
-               % (name, sym["desc"], len(room["entities"]), room_key(room_dir)))
+    out.append("/* data/levels/%s: level_desc %s, %d entities */" % (name, sym["desc"], len(room["entities"])))
     # forward declarations for the pointers to objects defined further down
     out.append("extern const struct level_entity_list %s;" % sym["entities"])
     out.append("extern const struct level_layer_desc %s[];" % sym["layers"])
@@ -461,7 +493,7 @@ def room_c(room_dir, build_dir=None):
 
     # Spawn parameter records.
     recs = room["params"]
-    stype = "level_params_%s" % name
+    stype = "level_params_%s" % sym["desc"][1:].removesuffix("Desc").lower()
     out.append("struct %s\n{" % stype)
     for i, r in enumerate(recs):
         out.append("    u32 r%d[%d];" % (i, len(r)))
@@ -484,10 +516,8 @@ def room_c(room_dir, build_dir=None):
         out.append(c_array(g, "%d", w))
         out.append("};\n")
 
-    # BG palette.
-    pal = [int(c, 16) for c in room["palette"]]
-    if len(pal) != 256:
-        sys.exit("%s: the palette needs 256 colours" % name)
+    # BG palette, from the layer pictures.
+    pal = room_palette(room_dir, room)
     out.append("extern const u16 %s[256] =\n{" % sym["palette"])
     out.append(c_array(pal, "0x%04X", 8))
     out.append("};\n")
@@ -738,16 +768,9 @@ def layer_tiles(lname, layer):
     return LayerTiles.get(layer["tileset"], lname == "bg0")
 
 
-def room_palette_rgb(room):
-    pal = []
-    for c in room["palette"]:
-        v = int(c, 16)
-        pal += [(v & 31) << 3, (v >> 5 & 31) << 3, (v >> 10 & 31) << 3]
-    return pal
-
-
-def write_layer_png(path, room, lname, cells):
-    """A BG layer's cells as its picture (see above), with the room's palette."""
+def write_layer_png(path, room, lname, cells, palette):
+    """A BG layer's cells as its picture (see above), with the room's palette
+    (256 entries, written as tools/jasc_pal.py writes a PNG's palette)."""
     from PIL import Image
 
     layer = room["layers"][lname]
@@ -768,7 +791,7 @@ def write_layer_png(path, room, lname, cells):
             blocks.append(b)
         out += [pack(*row) for row in zip(*blocks)]
     img = Image.frombytes("P", (W * 8, h * CHUNK_H * 8), b"".join(out))
-    img.putpalette(room_palette_rgb(room))
+    img.putpalette([c for v in palette for c in jasc_pal.to_rgb(v)])
     img.save(path, optimize=True)
 
 
@@ -816,14 +839,14 @@ def read_layer_png(path, lname, layer):
 def render(room_dir, lname, out_path):
     """A layer's picture: the BG layer's PNG drawn again from its cells, or
     the collision image."""
-    room = read_json(Path(room_dir) / "room.json")
+    room = load_room(room_dir)
     layer = room["layers"][lname]
     cells = load_map(room_dir, lname, layer)
     if lname == "collision":
         # the collision image itself: the legend's colours, 8x8 pixels per cell
         collision_bmp.write_image(out_path, layer["size_chunks"][0] * CHUNK_W, cells)
         return
-    write_layer_png(out_path, room, lname, cells)
+    write_layer_png(out_path, room, lname, cells, room_palette(room_dir, room))
 
 
 # ---------------------------------------------------------------------------
@@ -955,9 +978,8 @@ def extract(rom_path):
     type_names = entity_type_names()
     names = []
     for idx, (pal, desc) in enumerate(rooms):
-        name = "room%02d_%06x" % (idx, desc - ROM_BASE)
+        name = folder = folders[records[idx]]
         pre = "gRoom%02d" % idx
-        folder = folders[records[idx]]
         names.append(folder)
         room_dir = LEVELS_DIR / folder
         room_dir.mkdir(parents=True, exist_ok=True)
@@ -972,9 +994,8 @@ def extract(rom_path):
         else:
             asset = rom.bytes(asset_addr, RAW_ASSETS[asset_addr])
         ent_list = L[7]
+        palette = [rom.h(pal + 2 * i) for i in range(256)]
         room = {
-            "name": name,
-            "palette": ["%04X" % rom.h(pal + 2 * i) for i in range(256)],
             "asset": {"symbol": pre + "Asset", "packed": bool(packed)},
             "layers": {},
             "entities": [],
@@ -1034,7 +1055,7 @@ def extract(rom_path):
             if lname == "collision":
                 collision_bmp.write_image(room_dir / fname, width, cells)
             else:
-                write_layer_png(room_dir / fname, room, lname, cells)
+                write_layer_png(room_dir / fname, room, lname, cells, palette)
         room["symbols"]["layers"] = pre + "Layers"
         assert sec_starts == sorted(sec_starts) and sec_starts[0] == 0
         # the pad bytes the encoder model can't predict (encoder heap garbage)
@@ -1107,7 +1128,7 @@ def write_room_json(path, room):
         return json.dumps(v, separators=(", ", ": "))
 
     lines = ["{"]
-    keys = ["name", "asset", "symbols", "layers", "palette", "params", "links", "entities"]
+    keys = ["asset", "symbols", "layers", "params", "links", "entities"]
     for i, k in enumerate(keys):
         comma = "," if i + 1 < len(keys) else ""
         v = room[k]
@@ -1117,11 +1138,6 @@ def write_room_json(path, room):
             for j, (ln, lv) in enumerate(items):
                 lines.append('    "%s": %s%s' % (ln, dump(lv), "," if j + 1 < len(items) else ""))
             lines.append("  }" + comma)
-        elif k == "palette":
-            lines.append('  "palette": [')
-            for j in range(0, 256, 16):
-                lines.append("    " + ", ".join('"%s"' % c for c in v[j:j + 16]) + ("," if j + 16 < 256 else ""))
-            lines.append("  ]" + comma)
         elif k in ("params", "links", "entities") and v is not None:
             lines.append('  "%s": [' % k)
             for j, e in enumerate(v):
@@ -1250,13 +1266,14 @@ def main():
         assets_c(args[1])
     elif cmd in ("from-png", "to-png"):
         room_dir, lname = args[1], args[2]
-        room = read_json(Path(room_dir) / "room.json")
+        room = load_room(room_dir)
         layer = room["layers"].get(lname)
         if lname not in ("bg0", "bg1", "bg2", "bg3") or layer is None:
             sys.exit("%s has no BG layer %s" % (room_dir, lname))
         if cmd == "to-png":
             data = Path(args[3]).read_bytes()
-            write_layer_png(args[4], room, lname, list(struct.unpack("<%dH" % (len(data) // 2), data)))
+            write_layer_png(args[4], room, lname, list(struct.unpack("<%dH" % (len(data) // 2), data)),
+                            room_palette(room_dir, room))
             return
         cells = read_layer_png(Path(room_dir) / layer["map"], lname, layer)
         out = Path(args[3])

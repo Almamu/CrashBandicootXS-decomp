@@ -307,8 +307,7 @@ rooms`), not from the folders on disk.
 - `entity_types.json`: the name of each entity type (see "Entity
   types"); `crate_kinds.json`: the name of each crate kind (`crate.kind`).
 - one folder per room, `<level>/<slot>/` (see "Room folders" below).
-- `<level>/<slot>/room.json`: the palette (BGR555), the asset's symbol and
-  whether it is packed, per layer its tile set, scale, `cnt`, size in
+- `<level>/<slot>/room.json`: the asset's symbol and whether it is packed, per layer its tile set, scale, `cnt`, size in
   chunks and tiles and map file, the parameter records (lists of words),
   the links and the entities (in id order; an entity's `type` is its
   name from `entity_types.json`, or a number for an unnamed type), and
@@ -317,7 +316,9 @@ rooms`), not from the folders on disk.
   `gRoom17Palette`, `gRoom17Bg1Grid`, `gRoom17Asset`, ...; the tile sets
   keep their own names).
 - `<level>/<slot>/<layer>.png` (`bg0`-`bg3`): the layer's whole picture,
-  8bpp indexed with the room's palette, 8x8 pixels per cell,
+  8bpp indexed with the room's palette, which it carries: the room's
+  `gRoomNNPalette` is read from these pictures (see "BG layers"). 8x8
+  pixels per cell,
   `gridWidth * 128` by `gridHeight * 64` pixels (see "BG layers"). The
   build decodes it back to the cells above, which aren't ROM bytes
   either: the ROM only has the chunk streams.
@@ -369,7 +370,7 @@ from its cells (for the collision layer, the collision image).
 Each BG layer is `<layer>.png`, its whole picture: the chunk grid, with
 every cell drawn as its tile, flipped as the cell says, 8x8 pixels per
 cell. It is 8bpp indexed, and its palette is the room's 256-colour BG
-palette from `room.json`. Cell `(cx, cy)` is pixels `cx * 8` to
+palette (see "The room palette" below). Cell `(cx, cy)` is pixels `cx * 8` to
 `cx * 8 + 7` across and `cy * 8` to `cy * 8 + 7` down, and the image is
 `gridWidth * 128` by `gridHeight * 64` pixels. BG0's picture is the same
 size as `collision.png` and lines up with it (see "Collision layers").
@@ -425,6 +426,21 @@ under some flip:
   (`tools/levels.py to-png data/levels/<room> <layer> <layer>.map.bin
   data/levels/<room>/<layer>.png`).
 
+**The room palette.** The pictures carry the room's palette: the build
+reads `gRoomNNPalette` from them (`levels.py c`, `room_palette`), with
+`tools/jasc_pal.py`'s rule (a channel's 5-bit value is its 8-bit value /
+8; bit 15 is set when red's lowest bit differs from `c * 255 / 31`'s, see
+[graphics.md, "Palettes"](./graphics.md#palettes)). So every layer
+picture of a room carries the same palette, all 256 entries of it, the
+ones no pixel uses too (they are in the ROM). The build fails on a
+picture whose palette doesn't have 256 entries, and on one whose palette
+differs from the room's other pictures, naming both and the first entry
+that differs. To change a room's colours, change the palette of all of
+its layer pictures the same way. Rooms that share a tile set may use
+different palettes (Jungle BG0 has 3, Temple, Space and Underwater 2):
+the pictures store indices, so the palette never changes which tile a
+block is.
+
 These are errors, and each message names the PNG, the cell and its pixels:
 
 - a block that isn't a tile of the set under any flip (for BG1-3, in the
@@ -433,7 +449,9 @@ These are errors, and each message names the PNG, the cell and its pixels:
 - a BG1-3 block that mixes palette banks (`... mixes palette banks 2,
   3: a BG1-3 cell draws all 64 pixels from one bank`);
 - an image that isn't the layer's size (`... 2040x320 pixels, expected
-  2048x320 (16 x 5 chunks of 128x64 pixels)`), or isn't indexed.
+  2048x320 (16 x 5 chunks of 128x64 pixels)`), or isn't indexed;
+- a palette that isn't 256 entries, or isn't the same as the room's other
+  layer pictures' (see "The room palette").
 
 The make rule that failed names the layer too; at most 20 cells are
 listed per layer.
