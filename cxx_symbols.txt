@@ -1671,6 +1671,23 @@ StopSong__12AudioContext StopSong
 _._12AudioContext DestroyAudioContext
 __12AudioContext InitAudioContext
 DisableVCountIrq__12AudioContext DisableMusicVCountIrq
+# #915 Irq: the interrupt handlers as an all-static class (include/irq.hpp,
+# src/system/irq.cpp). Its data members keep the C names: sym_iwram.txt
+# places them, crt0.s and intr_main.s name gIntrTable.
+ClearHandler__3Irqi IrqClearHandler
+RestoreHandler__3Irqi IrqRestoreHandler
+SetHandler__3IrqiPFv_v IrqSetHandler
+Disable__3Irq IrqDisable
+Setup__3Irq IrqSetup
+EmptyHandler__3Irq IrqEmptyHandler
+EnableVBlankHandler__3Irq EnableVBlankHandler
+DisableVBlankHandler__3Irq DisableVBlankHandler
+RemoveVBlankCallback__3Irqi RemoveVBlankCallback
+AddVBlankCallback__3IrqPFv_v AddVBlankCallback
+VBlankHandler__3Irq VBlankHandler
+_3Irq.table gIntrTable
+_3Irq.prevTable gPrevIntrTable
+_3Irq.vblankCallbacks gVBlankCallbacks
 # #752: the tile-slot pool and the tile cache (TileSlotPool, TileCache, include/bg_layer.hpp)
 Reset__12TileSlotPool ResetTileSlotPool
 Acquire__12TileSlotPoolUs AcquireTileSlot

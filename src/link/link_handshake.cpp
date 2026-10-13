@@ -1,3 +1,4 @@
+#include "irq.hpp"
 #include "link_session.hpp"
 
 extern "C" {
@@ -91,8 +92,8 @@ s32 LinkSession::Stop()
     REG_IE &= ~INTR_FLAG_TIMER3;
     REG_IME = savedIme;
 
-    IrqClearHandler(INTR_INDEX_SERIAL);
-    IrqClearHandler(INTR_INDEX_TIMER3);
+    Irq::ClearHandler(INTR_INDEX_SERIAL);
+    Irq::ClearHandler(INTR_INDEX_TIMER3);
 
     REG_IME = 1;
 

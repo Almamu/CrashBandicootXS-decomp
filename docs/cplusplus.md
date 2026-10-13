@@ -698,6 +698,7 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/gfx/sprite_frame.cpp` | the OBJ tile allocator, the overflow OAM queue and the sprite frame cache (C linkage); FlushSpriteFrameOamQueue calls `gOamBuffer->Append`, `HideUnused`, `SetAffineScales` (sprite_obj.hpp), whose C prototypes go | 0 + 18 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/system/asset.cpp`, `main.cpp`, `main_loop.cpp`, `memory.cpp` | `LoadTaggedAsset`, `LoadBackgroundTileAndPalette`; `AgbMain`; `MainLoop`, `GetUiText`; the heap (`mem_*`, C linkage) | 0 + 12 | agbcp | 1 file-scope asm -> 1 (`mem_walk_heaps`) | all-C++: gfx, system, util, text |
 | `src/system/input.cpp`, `irq.cpp` (the key reading since in `key_input.cpp`, #767) | `WaitForKeyPress`; the IRQ table, the VBlank handler and callbacks, the key reading (C linkage), and `KeyInput`'s constructor (`ClearKeys`, spawners.hpp), whose C prototype goes | 1 + 17 | old_agbcp | 1 pin -> 1 pin | all-C++: gfx, system, util, text |
+| `src/system/irq.cpp` (again) | `Irq` (new include/irq.hpp), an all-static class: the IRQ table, the replaced handlers and the VBlank callbacks are static data members (`table` is gIntrTable, `prevTable`, `vblankCallbacks`), the 11 IRQ and VBlank functions static member functions (`SetHandler`, `ClearHandler`, `RestoreHandler`, `Setup`, `Disable`, `EnableVBlankHandler`, ...); irq.h's 11 prototypes and 3 externs go; the callers (audio.cpp, fade.cpp, main.cpp, the link) call `Irq::SetHandler(...)` & co. | 11 | (unchanged) | 0 -> 0 | [#915](#the-interrupt-handlers-as-an-all-static-class-915) |
 | `src/text/text_box.cpp` | `GetWordLength`, `DrawWrappedTextInBox` (C linkage; takes a `Font *`, `self->SetMargin`, `HeightToLines`) | 0 + 2 | agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/aabb.cpp` (since #767: `CommitBlendRegs` at the end of gfx/display.cpp, `IwramFree`/`IwramAlloc` in system/iwram_alloc.cpp) | `CommitBlendRegs`, `AabbOverlapsInclusiveX`, `AabbOverlaps`, `IwramFree`, `IwramAlloc` (C linkage) | 0 + 5 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/fixed_math.cpp`, `line.cpp`, `line_step.cpp`, `number_format.cpp`, `printf.cpp`, `rand.cpp`, `string.cpp`, `time_format.cpp` | the fixed-point helpers, the Bresenham line, `itoa`, `sprintf`/`vsprintf`/`FindSubstring` (string.cpp since #767), `rand`/`srand`/`RandRange`, the string functions, `FormatCentiseconds` (C linkage) | 0 + 24 | agbcp | 2 pins, 5 asm, 2 asm labels -> the same | all-C++: gfx, system, util, text |
@@ -3782,6 +3783,39 @@ tried as an inline function under agbcp: still a conditional move),
 string's `strcpy`/`strlen` asm labels and memory's hand-written
 `mem_walk_heaps`. `MATCH_HOLD_REG` 87 -> 87 and instruction-emitting
 `asm` 17 -> 17 project-wide (tools/match_idioms.py).
+
+### The interrupt handlers as an all-static class (#915)
+
+#915 groups the free functions that work on one subsystem's globals
+into classes. irq.cpp's interrupt handling (ROM 0x08000544-0x08000760)
+is now `Irq` (include/irq.hpp): the handler table IntrMain dispatches
+through, the handlers that IrqSetHandler replaced, and the VBlank
+handler with its eight callback slots. Their IWRAM globals
+(0x030009E8-0x03000A7F) are read by no other C++ object. The class is
+all-static, like [the yeti](#the-yeti-as-an-all-static-class-772), and
+every object is byte-identical.
+
+- **Data.** `table` (gIntrTable), `prevTable` (gPrevIntrTable) and
+  `vblankCallbacks` (gVBlankCallbacks) are private static data members,
+  only declared. cxx_symbols.txt's `#915 Irq` block maps them to their C
+  names, which sym_iwram.txt places and crt0.s and intr_main.s still name.
+  gIntrTableTimer2, the table's timer-2 slot under its own name, stays a
+  global in irq.h for save_data.cpp's EEPROM timer, as do the types
+  `irq_handler_t` and `struct vblank_callbacks`.
+- **Functions.** All 11 are static member functions under their C names
+  (`SetHandler__3IrqiPFv_v IrqSetHandler`, ...). The handler-table
+  functions drop the `Irq` prefix (`SetHandler`, `ClearHandler`,
+  `RestoreHandler`, `Setup`, `Disable`). The VBlank ones keep their names
+  (`EnableVBlankHandler`, `AddVBlankCallback`, ...). `EmptyHandler`
+  (IrqEmptyHandler) and `VBlankHandler` are private: only the class
+  installs them. The callers are the audio's VCount IRQ, the link's
+  serial and timer-3 handlers, the brightness fade's callback and AgbMain.
+- **Left outside.** WaitForVBlank, SetFrameLimit and DisableFrameLimit,
+  at the end of irq.cpp, stay free functions with gVBlankCounter and the
+  frame-limit globals. They are the frame limiter, a candidate family of
+  their own (#915's inventory), and VBlankHandler still counts the frames
+  in gVBlankCounter for them.
+
 ### The link, save and IWRAM data
 
 The link cable (src/link/), the save data and its link transfer
