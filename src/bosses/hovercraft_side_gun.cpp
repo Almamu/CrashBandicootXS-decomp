@@ -38,10 +38,10 @@ HovercraftSideGun::HovercraftSideGun(const struct anim_table_record *rec, s32 x,
     SetState(HOVERCRAFT_SIDE_GUN_STATE_ALIVE, idx);
     dead = 0;
     if (this->left != 0)
-        offX = -0x4100;
+        offX = -INT_TO_Q8(65);
     else
-        offX = 0x8400;
-    offY = 0xa00;
+        offX = INT_TO_Q8(132);
+    offY = INT_TO_Q8(10);
     offZ = -1;
     visible = 0;
     orbitTimer = Hovercraft::GetAttack()->timing[0].delay;
@@ -86,7 +86,7 @@ static inline void StepSideGun(HovercraftSideGun *self)
     self->y = Hovercraft::GetY() + self->offY;
     self->z = Hovercraft::GetZ() + self->offZ;
 
-    if (self->state == HOVERCRAFT_SIDE_GUN_STATE_ALIVE && self->depth > 0x2800) {
+    if (self->state == HOVERCRAFT_SIDE_GUN_STATE_ALIVE && self->depth > INT_TO_Q8(40)) {
         s32 timer = self->orbitTimer;
         s32 next;
 

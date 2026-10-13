@@ -76,9 +76,9 @@ void CortexBossCtrl::Update(MovingSprite *part)
             s32 y = target->y;
             s32 n;
 
-            if (y <= 0x5000)
+            if (y <= INT_TO_Q8(80))
                 cannon->StartAnim(5);
-            else if (y <= 0x7800)
+            else if (y <= INT_TO_Q8(120))
                 cannon->StartAnim(4);
             else
                 cannon->StartAnim(3);
@@ -108,9 +108,9 @@ void CortexBossCtrl::Update(MovingSprite *part)
     case CORTEX_BOSS_STATE_GONE:
         break;
     case CORTEX_BOSS_STATE_DEFEATED:
-        cannon->y += 0x80;
-        part->y += 0x80;
-        if (part->y >= INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x4000) {
+        cannon->y += Q8(0.5);
+        part->y += Q8(0.5);
+        if (part->y >= INT_TO_Q8(gLevelLayers->layer0->heightPx) + INT_TO_Q8(64)) {
             if (gLevelState->HasTurboRun())
                 RequestRoomExit();
             SetState(part, CORTEX_BOSS_STATE_GONE);
@@ -155,8 +155,8 @@ void CortexBossCtrl::SpawnTarget(MovingSprite *part)
     ctrl->Attach(c);
     x = part->x;
     y = part->y;
-    x += 0x2000;
-    y -= 0x4000;
+    x += INT_TO_Q8(32);
+    y -= INT_TO_Q8(64);
     c->x = x;
     c->y = y;
     c->f.b.active = 1;
@@ -282,7 +282,7 @@ void CortexTargetCtrl::Update(MovingSprite *part)
                 blinking = left;
                 ClampFrame(part, 1);
             }
-            SetDest(part, gPlayer->x, gPlayer->y - 0xA00);
+            SetDest(part, gPlayer->x, gPlayer->y - INT_TO_Q8(10));
 
             /* the round first, then the table's address */
             s32 round = boss->counter;
@@ -330,7 +330,7 @@ void CortexTargetCtrl::SetState(MovingSprite *part, s32 next)
     switch (next) {
     case CORTEX_TARGET_STATE_LEAVE:
         SetDest(part, (u32)INT_TO_Q8(gLevelLayers->layer0->widthPx) >> 1,
-                INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x2000);
+                INT_TO_Q8(gLevelLayers->layer0->heightPx) + INT_TO_Q8(32));
         break;
     case CORTEX_TARGET_STATE_ENTER:
         SetPlatformsKind(0);
@@ -339,7 +339,7 @@ void CortexTargetCtrl::SetState(MovingSprite *part, s32 next)
         dirLeft = next;
         high = next;
         top = 0;
-        SetDest(part, INT_TO_Q8(gLevelLayers->layer0->widthPx) - 0x400, 0x9800);
+        SetDest(part, INT_TO_Q8(gLevelLayers->layer0->widthPx) - INT_TO_Q8(4), INT_TO_Q8(152));
         nextState = CORTEX_TARGET_STATE_HOP;
         break;
     case CORTEX_TARGET_STATE_HOP:
@@ -349,24 +349,24 @@ void CortexTargetCtrl::SetState(MovingSprite *part, s32 next)
             nextState = CORTEX_TARGET_STATE_AIM;
             x = this->x;
             if (dirLeft) {
-                if (x - 0x1800 <= 0x400)
+                if (x - INT_TO_Q8(24) <= INT_TO_Q8(4))
                     dirLeft = 0;
-            } else if (x + 0x1C00 >= INT_TO_Q8(gLevelLayers->layer0->widthPx)) {
+            } else if (x + INT_TO_Q8(28) >= INT_TO_Q8(gLevelLayers->layer0->widthPx)) {
                 nextState = CORTEX_TARGET_STATE_CHASE;
             }
             StepHeight(this, boss->counter);
             if (dirLeft)
-                x -= 0x1800;
+                x -= INT_TO_Q8(24);
             else
-                x += 0x1800;
+                x += INT_TO_Q8(24);
             if (high) {
                 u8 t = top; // loaded before the 0x9800
 
-                y = 0x9800;
+                y = INT_TO_Q8(152);
                 if (t)
-                    y = 0x3E00;
+                    y = INT_TO_Q8(62);
             } else {
-                y = 0x8200;
+                y = INT_TO_Q8(130);
             }
             SetDest(part, x, y);
             break;

@@ -146,14 +146,14 @@ void EnemyCtrl::UpdateTriggerBox()
             SetAnimMode(ENEMY_MODE_STRIKE);
             if (kind == ENEMY_KIND_VULTURE) {
                 MovingSprite *part = target;
-                s32 a = 0x300, b = 0x20, c;
+                s32 a = INT_TO_Q8(3), b = Q8(0.125), c;
 
                 part->speedY = a;
                 part->rampY.start = a;
                 part->rampY.step = b;
                 part->rampY.target = m;
                 /* `c` is needed: inlined, the instructions are reordered */
-                c = -0x200;
+                c = -INT_TO_Q8(2);
                 part->speedX = m;
                 part->rampX.start = m;
                 part->rampX.step = b;
@@ -228,8 +228,8 @@ void EnemyCtrl::SetState(s32 newState)
         {
             MovingSprite *part = target;
 
-            SetVelX(part, -0x180, 0);
-            SetVelY(part, 0x400, 0);
+            SetVelX(part, -Q8(1.5), 0);
+            SetVelY(part, INT_TO_Q8(4), 0);
             part->f.b.collides = 1;
         }
         break;

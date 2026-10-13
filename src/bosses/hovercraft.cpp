@@ -82,7 +82,7 @@ void Hovercraft::RunState(void)
  * phase 0 the hovercraft steers toward the player (gActorList) relative
  * to its box (gHovercraftBox), within fixed bounds; in phase 1 it sweeps
  * from side to side; later phases circle on the sine table with a
- * growing radius. Once close enough (0x27ff), it falls back (state 3). */
+ * growing radius. Once closer than 40 px, it falls back (state 3). */
 void Hovercraft::StateCloseIn(void)
 {
     z += velZ;
@@ -92,9 +92,9 @@ void Hovercraft::StateCloseIn(void)
         else
             velZ = velZ - 1;
     } else if (phase == HOVERCRAFT_PHASE_SWEEP) {
-        if (velZ <= 0x3f)
+        if (velZ <= Q8(0.25) - 1)
             velZ = velZ + 1;
-        else if (velZ > 0x40)
+        else if (velZ > Q8(0.25))
             velZ = velZ - 1;
     } else {
         if (velZ <= 0x69)
@@ -112,44 +112,44 @@ void Hovercraft::StateCloseIn(void)
         pl = gActorList;
         px = pl->x;
         /* `cx` is needed: inlined, the code is 1 instruction shorter */
-        cx = screenX - 0x1200;
+        cx = screenX - INT_TO_Q8(18);
         velX -= (px - cx - (box.x + box.w / 2)) >> 12;
         vx = velX;
         /* `py` is needed: inlined, the code is 2 instructions longer */
         py = pl->y;
         /* `cy` is needed: inlined, the code is 1 instruction longer */
-        cy = screenY + 0x1800;
+        cy = screenY + INT_TO_Q8(24);
         vy = velY - ((py - cy - (box.y + box.h / 2)) >> 12);
         velY = vy;
 
-        LIMIT_MAX(vx, 0x200);
+        LIMIT_MAX(vx, INT_TO_Q8(2));
         velX = vx;
-        LIMIT_MIN(vx, -0x200);
+        LIMIT_MIN(vx, -INT_TO_Q8(2));
         velX = vx;
-        LIMIT_MAX(vy, 0x200);
+        LIMIT_MAX(vy, INT_TO_Q8(2));
         velY = vy;
-        LIMIT_MIN(vy, -0x200);
+        LIMIT_MIN(vy, -INT_TO_Q8(2));
         velY = vy;
 
         if (screenX <= 0)
-            velX = 0x200;
-        if (screenX > 0x63ff)
-            velX = -0x200;
-        if (screenY <= -0x3c00)
-            velY = 0x200;
-        if (screenY > 0x2bff)
-            velY = -0x200;
+            velX = INT_TO_Q8(2);
+        if (screenX > INT_TO_Q8(100) - 1)
+            velX = -INT_TO_Q8(2);
+        if (screenY <= -INT_TO_Q8(60))
+            velY = INT_TO_Q8(2);
+        if (screenY > INT_TO_Q8(44) - 1)
+            velY = -INT_TO_Q8(2);
     } else if (phase == HOVERCRAFT_PHASE_SWEEP) {
         x += velX;
-        if (x > 0xffff && velX > 0)
-            velX = -0x400;
-        else if (x <= -0x10000 && velX < 0)
-            velX = 0x400;
+        if (x > INT_TO_Q8(256) - 1 && velX > 0)
+            velX = -INT_TO_Q8(4);
+        else if (x <= -INT_TO_Q8(256) && velX < 0)
+            velX = INT_TO_Q8(4);
     } else {
         s32 a;
 
-        if ((orbitRadius += 0x180) > 0x8000)
-            orbitRadius = 0x8000;
+        if ((orbitRadius += Q8(1.5)) > INT_TO_Q8(128))
+            orbitRadius = INT_TO_Q8(128);
 
         s32 *px = &x;
         const s16 *tbl = gSineTable;
@@ -159,7 +159,7 @@ void Hovercraft::StateCloseIn(void)
         y = Q8_MUL(tbl[a], orbitRadius);
     }
 
-    if (distance <= 0x27ff) {
+    if (distance <= INT_TO_Q8(40) - 1) {
         fireTimer = attack->timing[1].delay;
         volleyCount = 0;
         EnterState(HOVERCRAFT_STATE_FALL_BACK, 0);
@@ -169,9 +169,9 @@ void Hovercraft::StateCloseIn(void)
 }
 
 /* State 3: falls back. Y settles to 0; for the first legs (phase <= 3)
- * the Z speed ramps toward 0xae and X sweeps between +-0x8000, counting
- * legs; then Z ramps toward 0x1d4 and X back to 0. Once far enough
- * (0x8000), it closes in again (state 2), sweeping (phase 1) while it
+ * the Z speed ramps toward 0xae and X sweeps between +-128 px, counting
+ * legs; then Z ramps toward 0x1d4 and X back to 0. Once farther than
+ * 128 px, it closes in again (state 2), sweeping (phase 1) while it
  * has more than two weapons left, circling (phase 2) after. */
 void Hovercraft::StateFallBack(void)
 {
@@ -182,9 +182,9 @@ void Hovercraft::StateFallBack(void)
     z += velZ;
 
     if (curY > 0)
-        velY = -0x100;
+        velY = -INT_TO_Q8(1);
     else if (curY < 0)
-        velY = 0x100;
+        velY = INT_TO_Q8(1);
     else
         velY = 0;
 
@@ -196,11 +196,11 @@ void Hovercraft::StateFallBack(void)
         else if (v > 0xae)
             velZ = v - 1;
 
-        if (x > 0x7fff && velX > 0) {
-            velX = -0x200;
+        if (x > INT_TO_Q8(128) - 1 && velX > 0) {
+            velX = -INT_TO_Q8(2);
             phase++;
-        } else if (x <= -0x8000 && velX < 0) {
-            velX = 0x200;
+        } else if (x <= -INT_TO_Q8(128) && velX < 0) {
+            velX = INT_TO_Q8(2);
             phase++;
         }
     } else {
@@ -212,14 +212,14 @@ void Hovercraft::StateFallBack(void)
             velZ = v - 1;
 
         if (x > 0)
-            velX = -0x200;
+            velX = -INT_TO_Q8(2);
         else if (x < 0)
-            velX = 0x200;
+            velX = INT_TO_Q8(2);
         else
             velX = 0;
     }
 
-    if (phase > HOVERCRAFT_PHASE_LAST_LEG && distance > 0x8000) {
+    if (phase > HOVERCRAFT_PHASE_LAST_LEG && distance > INT_TO_Q8(128)) {
         frameCount = 0;
         orbitRadius = 0;
         fireTimer = attack->timing[1].delay;
@@ -227,19 +227,19 @@ void Hovercraft::StateFallBack(void)
         EnterState(HOVERCRAFT_STATE_CLOSE_IN, 0);
         if (partsLeft > 2) {
             phase = HOVERCRAFT_PHASE_SWEEP;
-            velZ = 0x40;
+            velZ = Q8(0.25);
         } else {
             phase = HOVERCRAFT_PHASE_CIRCLE;
             velZ = 0x6a;
         }
-        velX = -0xa00;
+        velX = -INT_TO_Q8(10);
     }
 }
 
 /* State 5: the hovercraft, out of weapons, sinks: the Z speed ramps
- * toward 0x99 and Y bounces, and once it is under (Y 0x4b00) the level
- * goes on (ResumeActorSpawns, FinishJetpackRun). Once it is close enough
- * (0x14ff), BG2 goes off for good (gHovercraftGone). */
+ * toward 0x99 and Y bounces, and once it is under (Y 75 px) the level
+ * goes on (ResumeActorSpawns, FinishJetpackRun). Once it is closer than
+ * 21 px, BG2 goes off for good (gHovercraftGone). */
 void Hovercraft::StateFall(void)
 {
     if (gone == 0) {
@@ -252,21 +252,21 @@ void Hovercraft::StateFall(void)
             velZ = v - 1;
 
         d = velY;
-        if (d <= 0xff)
-            velY = d + 0x100;
-        else if (d > 0x100)
-            velY = d - 0x100;
+        if (d <= INT_TO_Q8(1) - 1)
+            velY = d + INT_TO_Q8(1);
+        else if (d > INT_TO_Q8(1))
+            velY = d - INT_TO_Q8(1);
 
         z += velZ;
         y += velY;
 
-        if (y > 0x4b00) {
+        if (y > INT_TO_Q8(75)) {
             ResumeActorSpawns();
             gActorList->AsJetpackPlayer()->FinishRun();
         }
     }
 
-    if (distance <= 0x14ff) {
+    if (distance <= INT_TO_Q8(21) - 1) {
         REG_DISPCNT &= ~DISPCNT_BG2_ON;
         gone = 1;
     }
@@ -354,10 +354,10 @@ void Hovercraft::Spawn(s32 kind, s32 sx, s32 sy, s32 sz)
     s32 t = Q8_TO_INT(self->animTime);
 
     DrawMap((void *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
-    SpawnHovercraftCannon(x + 0x2000, y + 0x3000, z - 0x100);
-    SpawnHovercraftLauncher(x + 0x1e00, y - 0x3000, z - 0x100);
-    SpawnHovercraftSideGun(x - 0x4100, y + 0xa00, z - 1, 1);
-    SpawnHovercraftSideGun(x + 0x8400, y + 0xa00, z - 1, 0);
+    SpawnHovercraftCannon(x + INT_TO_Q8(32), y + INT_TO_Q8(48), z - INT_TO_Q8(1));
+    SpawnHovercraftLauncher(x + INT_TO_Q8(30), y - INT_TO_Q8(48), z - INT_TO_Q8(1));
+    SpawnHovercraftSideGun(x - INT_TO_Q8(65), y + INT_TO_Q8(10), z - 1, 1);
+    SpawnHovercraftSideGun(x + INT_TO_Q8(132), y + INT_TO_Q8(10), z - 1, 0);
     PauseActorSpawns();
 }
 
@@ -422,12 +422,12 @@ void Hovercraft::UpdateBg2(void)
         bg2Page ^= 1;
     }
 
-    scale = __divsi3(distance << 8, 0x3c00);
+    scale = __divsi3(distance << 8, INT_TO_Q8(60));
     dy = screenX + GetActorBgCenterX();
     dx = screenY + GetActorBgCenterY();
 
-    REG_BG2X = 0x8000 - Q8_MUL(dy, scale);
-    REG_BG2Y = 0x8000 - Q8_MUL(dx, scale);
+    REG_BG2X = INT_TO_Q8(128) - Q8_MUL(dy, scale);
+    REG_BG2Y = INT_TO_Q8(128) - Q8_MUL(dx, scale);
     REG_BG2PA = scale;
     REG_BG2PB = 0;
     REG_BG2PC = 0;

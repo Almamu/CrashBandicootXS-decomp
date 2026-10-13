@@ -29,9 +29,9 @@ void HovercraftLauncher::StateLaunch()
     s32 slot;
     s32 next;
 
-    x = Hovercraft::GetX() + 0x1E00;
-    y = Hovercraft::GetY() - 0x3000;
-    z = Hovercraft::GetZ() - 0x100;
+    x = Hovercraft::GetX() + INT_TO_Q8(30);
+    y = Hovercraft::GetY() - INT_TO_Q8(48);
+    z = Hovercraft::GetZ() - INT_TO_Q8(1);
 
     slot = cooldown;
     if (slot == 0) {
@@ -53,7 +53,7 @@ void HovercraftLauncher::StateLaunch()
             s32 signDy = rawDy >> 31;
             s32 absDy = (dy ^ signDy) - signDy;
 
-            if (absDx + absDy <= 0xFFF) {
+            if (absDx + absDy <= INT_TO_Q8(16) - 1) {
                 s32 kind = RandRange(3); // a roll, 0-2: which bomber
                 const struct hovercraft_attack *table;
                 s32 n;
@@ -141,7 +141,7 @@ HovercraftLauncher::HovercraftLauncher(const struct anim_table_record *rec, s32 
 /* Shakes the BG, and deletes the launcher once its animation is done. */
 void HovercraftLauncher::StateDestroyed()
 {
-    ShakeActorBg(0x400);
+    ShakeActorBg(INT_TO_Q8(4));
 
     if (animDone != 0)
         delete this;
@@ -152,13 +152,13 @@ void HovercraftLauncher::StateDestroyed()
  * 0x4AFF), starts launching: state 1 with animation 1. */
 void HovercraftLauncher::StateWait()
 {
-    x = Hovercraft::GetX() + 0x1E00;
-    y = Hovercraft::GetY() - 0x3000;
-    z = Hovercraft::GetZ() - 0x100;
+    x = Hovercraft::GetX() + INT_TO_Q8(30);
+    y = Hovercraft::GetY() - INT_TO_Q8(48);
+    z = Hovercraft::GetZ() - INT_TO_Q8(1);
 
     if (Hovercraft::GetPartsLeft() <= 2 &&
         (Hovercraft::GetState() == HOVERCRAFT_STATE_CLOSE_IN ||
-         (Hovercraft::GetState() == HOVERCRAFT_STATE_FALL_BACK && depth <= 0x4AFF))) {
+         (Hovercraft::GetState() == HOVERCRAFT_STATE_FALL_BACK && depth <= INT_TO_Q8(75) - 1))) {
         cooldown = 0;
         count = 0;
         SetState(HOVERCRAFT_LAUNCHER_STATE_LAUNCH, 1);

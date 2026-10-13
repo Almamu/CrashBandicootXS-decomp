@@ -264,7 +264,7 @@ void TinyCtrl::SetState(MovingSprite *part, s32 next)
             this->x = x;
             if (next == TINY_STATE_DROP_IN || next == TINY_STATE_OFFSCREEN)
                 part->SetPos(x, part->y);
-            this->y = pad->y - 0x2400;
+            this->y = pad->y - INT_TO_Q8(36);
             goto hop;
         }
     case TINY_STATE_HOP_UP:
@@ -281,17 +281,17 @@ void TinyCtrl::SetState(MovingSprite *part, s32 next)
             pad = gTouchableList->items[anchor]->AsMovingSprite();
             ax = pad->x;
             ay = pad->y;
-            y = ay - 0x2400;
+            y = ay - INT_TO_Q8(36);
             this->x = (ax + part->x) >> 1;
             if (y >= part->y)
-                y = part->y - 0x5900;
+                y = part->y - INT_TO_Q8(89);
             else
-                y = ay - 0x7D00;
+                y = ay - INT_TO_Q8(125);
             this->y = y;
             goto hop;
         }
     case TINY_STATE_LEAP_OFF:
-        this->y = -0x3000;
+        this->y = -INT_TO_Q8(48);
         this->x = part->x;
     hop:
         StartHop(part);
@@ -305,8 +305,8 @@ void TinyCtrl::SetState(MovingSprite *part, s32 next)
         if (++counter > 2) {
             s32 x = part->x;
 
-            this->y = part->y - 0x6400;
-            this->x = x + 0x6400;
+            this->y = part->y - INT_TO_Q8(100);
+            this->x = x + INT_TO_Q8(100);
             StartHop(part);
         }
         HitStub(part);
@@ -316,7 +316,7 @@ void TinyCtrl::SetState(MovingSprite *part, s32 next)
         {
             MovingSprite *pad = gTouchableList->items[2]->AsMovingSprite();
             s32 x = pad->x;
-            s32 y = pad->y - 0x1800;
+            s32 y = pad->y - INT_TO_Q8(24);
 
             if (!gLevelState->HasTornadoSpin())
                 SpawnTornadoSpinPower(0xFFFF, Q8_TO_INT(x), Q8_TO_INT(y), 0);
@@ -327,8 +327,8 @@ void TinyCtrl::SetState(MovingSprite *part, s32 next)
             s32 x = part->x;
 
             this->x = x;
-            this->y = INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x4000;
-            this->x = x + 0x6400;
+            this->y = INT_TO_Q8(gLevelLayers->layer0->heightPx) + INT_TO_Q8(64);
+            this->x = x + INT_TO_Q8(100);
             StartHop(part);
             break;
         }
@@ -430,9 +430,9 @@ void StompedHopPadCtrl::Update(MovingSprite *part)
         SetTargetAnim(part, 8);
         break;
     case STOMPED_HOP_PAD_STATE_SINK:
-        y = part->y + 0x400;
+        y = part->y + INT_TO_Q8(4);
         part->SetPos(part->x, y);
-        if (y >= INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x2000)
+        if (y >= INT_TO_Q8(gLevelLayers->layer0->heightPx) + INT_TO_Q8(32))
             state = STOMPED_HOP_PAD_STATE_GONE;
         break;
     case STOMPED_HOP_PAD_STATE_GONE:
