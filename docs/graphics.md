@@ -163,12 +163,12 @@ to-jasc` turns a raw palette back into a `.pal`, and `jasc_pal.py
 gba-to-png` puts a raw palette into an indexed PNG, keeping its pixels.
 
 The 24 cutscene pictures' palettes (uncompressed `u16[256]`) live in the
-pictures too: each `graphics/intro/*_bitmap.png` carries its real
+pictures too: each `graphics/cutscenes/NN_<what>.png` carries its real
 palette, and `tools/jasc_pal.py png-to-gba` reads it back (bit 15
 included) for `tools/bin2c.py --u16`. The palettes still written out in C (room palettes, HUD
 and menu palettes) keep bit 15 as part of their hex values.
 
-The 24 intro/cutscene Mode 4 bitmaps (`graphics/intro/*_bitmap.png`) are
+The 24 cutscene Mode 4 bitmaps (`graphics/cutscenes/NN_<what>.png`) are
 built as C const arrays (`src/data/cutscene_pictures_5a9f70.cpp`, each after
 its palette) instead of `data.s` incbins, like the category backgrounds
 and the raw tile pools. The pipeline is grit (`tools/grit`, pixel layout) ->

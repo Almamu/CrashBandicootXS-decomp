@@ -82,13 +82,14 @@ $(GRAPHICS_BUILDDIR)/%.lz: $(GRAPHICS_BUILDDIR)/% | $(GFX)
 # reproduce the ROM's streams), tools/bin2c.py the initializer bytes that a
 # src/data/*.cpp file #includes.
 
-# Mode 4 bitmaps: linear 8bpp. Their palette is the PNG's own (256
+# The cutscene pictures (graphics/cutscenes/NN_<what>.png, gCutscenePictureNN):
+# Mode 4 bitmaps, linear 8bpp. Their palette is the PNG's own (256
 # colours, the .gbapal rule above), an uncompressed u16 array (bin2c
 # --u16).
-$(GRAPHICS_BUILDDIR)/%_bitmap.img.bin: graphics/%_bitmap.png | $(GRIT)
+$(GRAPHICS_BUILDDIR)/cutscenes/%.img.bin: graphics/cutscenes/%.png | $(GRIT)
 	@mkdir -p $(dir $@)
 	$(GRIT) $< -gb -gB8 -p! -ftb -fh! -o $(@:.img.bin=)
-$(GRAPHICS_BUILDDIR)/%_bitmap.pal.inc: $(GRAPHICS_BUILDDIR)/%_bitmap.gbapal tools/bin2c.py
+$(GRAPHICS_BUILDDIR)/cutscenes/%.pal.inc: $(GRAPHICS_BUILDDIR)/cutscenes/%.gbapal tools/bin2c.py
 	python3 tools/bin2c.py $< $@ --u16
 
 # Tile sheets (graphics/intro/*_tiles.png, graphics/tileset1/*_tiles.png:
@@ -146,7 +147,7 @@ $(GRAPHICS_BUILDDIR)/%.lz.inc: $(GRAPHICS_BUILDDIR)/%.lz tools/bin2c.py
 
 $(C_BUILDDIR)/data/%.o: CPPFLAGS += -iquote $(GRAPHICS_BUILDDIR)
 # The 24 cutscene pictures (palette + Mode 4 bitmap each).
-CUTSCENE_PICTURE_PNGS := $(wildcard graphics/intro/*_bitmap.png)
+CUTSCENE_PICTURE_PNGS := $(wildcard graphics/cutscenes/*.png)
 $(C_BUILDDIR)/data/cutscene_pictures_5a9f70.o: $(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.img.bin.lz.inc,$(CUTSCENE_PICTURE_PNGS)) \
 	$(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.pal.inc,$(CUTSCENE_PICTURE_PNGS))
 

@@ -511,7 +511,7 @@ writes when it has no palette, where index = `max - gray`. grit reads a
 grayscale PNG's gray level as the index, so these come out complemented
 (`0xBF` for `0x40`). Re-saved as indexed PNGs with the same indices, they
 all match. Ideally they'd get their real palettes, which a migration would
-do anyway. Every `_bitmap` PNG, every other `_8bpp_tiles` PNG, and every
+do anyway. Every cutscene PNG, every other `_8bpp_tiles` PNG, and every
 framed sprite-sheet frame is already indexed. Tile order is row-major
 8x8, the same as gbagfx. Flips only matter for maps (see below).
 
@@ -597,7 +597,7 @@ Per asset kind:
 
 | asset | grit flags | then | status |
 |---|---|---|---|
-| Mode 4 bitmap (`*_bitmap.png`, 240x160 8bpp linear) | `-gb -gB8 -p!` | gbagfx LZ77 | used |
+| Mode 4 bitmap (`cutscenes/*.png`, 240x160 8bpp linear) | `-gb -gB8 -p!` | gbagfx LZ77 | used |
 | 8bpp tileset (`*_8bpp_tiles.png`) | `-gt -gB8 -p!` | gbagfx LZ77 | verified, 14/14 |
 | 4bpp tileset (`*_tiles.png`) | `-gt -gB4 -p!` | gbagfx LZ77 | verified 35/35; needs the PNG re-saved as indexed first |
 | 16-colour palette | `-g! -p -pn16` on an indexed PNG carrying it | gbagfx LZ77 | verified |
@@ -769,8 +769,9 @@ are `ARRAY_COUNT()`s.
 
 A picture is a 256-colour palette followed directly by its LZ77 Mode 4
 bitmap: a slide points at the palette and `ShowSlidePicture` reads the bitmap
-at `+0x200`. The bitmaps are the grit-built `graphics/intro/*_bitmap.png`
-(the Mode 4 row of the table above). Each palette (`gCutscenePictureNN`,
+at `+0x200`. The bitmaps are the grit-built `graphics/cutscenes/NN_<what>.png`
+(the Mode 4 row of the table above), NN being the picture's number in
+`gCutscenePictureNN`. Each palette (`gCutscenePictureNN`,
 an uncompressed `u16[256]`) is the PNG's own palette:
 `tools/jasc_pal.py png-to-gba` reads it and `tools/bin2c.py --u16` writes
 the C values. About half of the entries have bit 15 set, which the
@@ -778,6 +779,24 @@ hardware ignores; the PNG keeps it in the red value's lowest bit, as every
 palette kept in a PNG does (docs/graphics.md, "Palettes"). Each palette is
 `aligned(4)`: the 0-3 zero bytes before it in the ROM are the alignment
 after the previous (odd-length) bitmap stream.
+
+One picture is often shown by several cutscenes, so the pictures are
+one flat folder, not one folder per cutscene. Slides 08 and 09 show
+pictures 09 and 08, swapped.
+
+| cutscene | played by | pictures (`graphics/cutscenes/`) |
+|---|---|---|
+| 0 | boot, `PlayBootCutscene` | 23 `legal_notice` |
+| 1 | intro, `PlayIntroCutscene` | 00 `space_station`, 01 `uka_uka_and_cortex`, 02 `cortex`, 01 |
+| 2 | new game, `PlayNewGameCutscene` | 00, 03 `cortex_hologram`, 04 `minimizer_console`, 05 `minimizer_beam`, 06 `earth_shrinking`, 07 `cortex_on_monitors`, 09 `cortex_holding_earth`, 08 `aku_aku_crash_and_coco`, 10 `aku_aku` |
+| 3 | no `PlayCutscene(3)` anywhere | 11 `cortex_on_screen` |
+| 4 | Dingodile beaten | 11 |
+| 5 | N. Gin beaten | 12 `coco_on_screen` |
+| 6 | Tiny beaten | 01, 02 |
+| 7 | no `PlayCutscene(7)` anywhere | 12 |
+| 8 | Neo Cortex beaten at 100% (Mega Mix follows) | 13 `minimizer_overload`, 14 `bosses_shocked`, 15 `monster`, 16 `monster_and_crash` |
+| 9 | Mega Mix beaten | 17 `crash_flying_to_station`, 18 `coco_at_enlarger`, 19 `earth_growing`, 20 `earth_beam_ring`, 21 `station_exploding`, 22 `reversed_beam` |
+| 10 | Neo Cortex beaten below 100% | 13, 17, 18, 19, 20, 10 |
 
 ### Library data
 
