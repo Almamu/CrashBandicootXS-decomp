@@ -1,3 +1,4 @@
+#include "irq.hpp"
 #include "link_session.hpp"
 
 extern "C" {
@@ -31,12 +32,12 @@ s32 LinkSession::Start(u32 flags)
     REG_IE &= ~INTR_FLAG_TIMER3;
     REG_IME = savedIme;
 
-    IrqClearHandler(INTR_INDEX_TIMER3);
-    IrqSetHandler(INTR_INDEX_SERIAL, LinkSerialIntr);
+    Irq::ClearHandler(INTR_INDEX_TIMER3);
+    Irq::SetHandler(INTR_INDEX_SERIAL, LinkSerialIntr);
     REG_IE |= INTR_FLAG_SERIAL;
 
     if (arm3 != 0) {
-        IrqSetHandler(INTR_INDEX_TIMER3, LinkTimer3Intr);
+        Irq::SetHandler(INTR_INDEX_TIMER3, LinkTimer3Intr);
         REG_IE |= INTR_FLAG_TIMER3;
         REG_TM3CNT = 0x00C0BBBC;
     }

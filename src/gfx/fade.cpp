@@ -1,3 +1,5 @@
+#include "irq.hpp"
+
 extern "C" {
 #include "core.h"
 #include "system.h"
@@ -27,7 +29,7 @@ void StepBrightnessFade(void)
             gBrightnessFadeTimer = 0;
             REG_IME = 0;
             gBrightnessFade.period = -1;
-            RemoveVBlankCallback(gBrightnessFade.callbackId);
+            Irq::RemoveVBlankCallback(gBrightnessFade.callbackId);
             REG_IME = 1;
         }
     }
@@ -43,7 +45,7 @@ void StepBrightnessFade(void)
  * rather than a plain comparison (matching the ROM's exact `mvn; neg;
  * orr; cmp` sequence - a direct `!= -1` compiles to a shorter
  * load-constant-and-compare instead). If `sync` is nonzero, registers
- * `StepBrightnessFade` as a periodic callback (via `AddVBlankCallback`) to drive the
+ * `StepBrightnessFade` as a periodic callback (via `Irq::AddVBlankCallback`) to drive the
  * fade one step per call and returns immediately; otherwise it blocks
  * here, looping through all 17 steps itself and busy-waiting
  * `frameDelay` VBlanks between each via `WaitForVBlank`. */
@@ -76,7 +78,7 @@ void FadeBrightness(u8 flags, s32 frameDelay, u8 sync)
         REG_IME = 0;
         gBrightnessFade.flags = flags;
         gBrightnessFade.period = frameDelay;
-        gBrightnessFade.callbackId = AddVBlankCallback(StepBrightnessFade);
+        gBrightnessFade.callbackId = Irq::AddVBlankCallback(StepBrightnessFade);
         REG_IME = 1;
     } else {
         s32 i = 0;

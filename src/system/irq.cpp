@@ -1,3 +1,4 @@
+#include "irq.hpp"
 #include "spawners.hpp"
 #include "audio.hpp"
 
@@ -9,17 +10,17 @@ extern "C" {
 #include "globals.h"
 }
 
-/* Points an IRQ's handler at IrqEmptyHandler (its IE bit is left alone). */
-void IrqClearHandler(s32 interruptIndex)
+/* Points an IRQ's handler at EmptyHandler (its IE bit is left alone). */
+void Irq::ClearHandler(s32 interruptIndex)
 {
-    gIntrTable[interruptIndex] = IrqEmptyHandler;
+    table[interruptIndex] = EmptyHandler;
 }
 
-/* Undoes IrqSetHandler(): reinstalls the handler it replaced (and masks
+/* Undoes SetHandler(): reinstalls the handler it replaced (and masks
  * the IRQ in IE if there was none), then forgets the saved one. */
-void IrqRestoreHandler(s32 interruptIndex)
+void Irq::RestoreHandler(s32 interruptIndex)
 {
-    irq_handler_t tmp = gIntrTable[interruptIndex] = gPrevIntrTable[interruptIndex];
+    irq_handler_t tmp = table[interruptIndex] = prevTable[interruptIndex];
 
     if (tmp == 0) {
         /* `previousIMEvalue` is needed: inlined, the instructions differ */
@@ -29,31 +30,31 @@ void IrqRestoreHandler(s32 interruptIndex)
         REG_IME = previousIMEvalue;       // bring back previous IME status
     }
 
-    gPrevIntrTable[interruptIndex] = IrqEmptyHandler;
+    prevTable[interruptIndex] = EmptyHandler;
 }
 
 /* Installs `fn` as an IRQ's handler, saving the old one for
- * IrqRestoreHandler(), and enables the IRQ in IE. */
-void IrqSetHandler(s32 interruptIndex, irq_handler_t fn)
+ * RestoreHandler(), and enables the IRQ in IE. */
+void Irq::SetHandler(s32 interruptIndex, irq_handler_t fn)
 {
-    gPrevIntrTable[interruptIndex] = gIntrTable[interruptIndex];
-    gIntrTable[interruptIndex] = fn;
+    prevTable[interruptIndex] = table[interruptIndex];
+    table[interruptIndex] = fn;
     REG_IE |= 1 << interruptIndex;
 }
 
 
-void IrqDisable(void)
+void Irq::Disable()
 {
     REG_IME = 0;
 }
 
-u32 IrqSetup(void)
+u32 Irq::Setup()
 {
     /* `intrbuffer` is needed: inlined, the instructions are reordered */
     u32 *intrbuffer = &IntrMain_Buffer;
-    irq_handler_t fn = IrqEmptyHandler;
-    irq_handler_t *dst1 = gPrevIntrTable;
-    irq_handler_t *dst2 = gIntrTable;
+    irq_handler_t fn = EmptyHandler;
+    irq_handler_t *dst1 = prevTable;
+    irq_handler_t *dst2 = table;
     s32 count;
 
     for (count = 0xD; count >= 0; count--) {
@@ -67,17 +68,17 @@ u32 IrqSetup(void)
     return 0;
 }
 
-void IrqEmptyHandler(void)
+void Irq::EmptyHandler()
 {
 }
 
 /* Clears the VBlank callbacks, installs VBlankHandler and enables the
  * VBlank IRQ in DISPSTAT. Called once from AgbMain. */
-void EnableVBlankHandler(void)
+void Irq::EnableVBlankHandler()
 {
     /* `fn` is needed: inlined, the instructions are reordered */
     irq_handler_t fn = VBlankHandler;
-    struct vblank_callbacks *base = &gVBlankCallbacks;
+    struct vblank_callbacks *base = &vblankCallbacks;
     /* `zero` is needed: inlined, the instructions are reordered */
     s32 zero = 0;
     s32 *current = &base->funcs[7];
@@ -86,38 +87,38 @@ void EnableVBlankHandler(void)
         *current-- = zero;
     } while ((s32)current >= (s32)&base->funcs[0]);
 
-    IrqSetHandler(INTR_INDEX_VBLANK, fn);
+    SetHandler(INTR_INDEX_VBLANK, fn);
 
     *(u8 *)REG_ADDR_DISPSTAT |= DISPSTAT_VBLANK_INTR;
 }
 
 /* The inverse of EnableVBlankHandler: disables the VBlank IRQ in
  * DISPSTAT and reinstalls the previous VBlank handler. */
-void DisableVBlankHandler(void)
+void Irq::DisableVBlankHandler()
 {
     /* `tmp` is needed: inlined, the instructions differ */
     u8 tmp = DISPSTAT_VBLANK_INTR;
 
     *(u8 *)REG_ADDR_DISPSTAT &= ~tmp;
 
-    IrqRestoreHandler(INTR_INDEX_VBLANK);
+    RestoreHandler(INTR_INDEX_VBLANK);
 }
 
 /* Frees the callback slot AddVBlankCallback() returned. */
-void RemoveVBlankCallback(s32 index)
+void Irq::RemoveVBlankCallback(s32 index)
 {
-    gVBlankCallbacks.funcs[index] = 0;
+    vblankCallbacks.funcs[index] = 0;
 }
 
 /* Puts `fn` in the first free VBlank callback
  * slot and returns the slot, or -1 if all eight are taken. */
-s32 AddVBlankCallback(void (*fn)(void))
+s32 Irq::AddVBlankCallback(void (*fn)(void))
 {
     s32 index = 0;
 
     while (index <= 7) {
-        if (gVBlankCallbacks.funcs[index] == 0) {
-            gVBlankCallbacks.funcs[index] = (s32)fn;
+        if (vblankCallbacks.funcs[index] == 0) {
+            vblankCallbacks.funcs[index] = (s32)fn;
             return index;
         }
 
@@ -179,7 +180,7 @@ extern "C" void _call_via_r0(void);
 /* The VBlank IRQ handler: calls GAX_irq while gGaxIrqEnabled is set, calls every VBlank callback (through
  * _call_via_r0, with the pointer left in r0 by the test) and counts the
  * frame in gVBlankCounter. */
-void VBlankHandler(void)
+void Irq::VBlankHandler()
 {
     s32 *p;
     s32 i;
@@ -187,7 +188,7 @@ void VBlankHandler(void)
     if (gGaxIrqEnabled != 0) {
         GAX_irq();
     }
-    p = gVBlankCallbacks.funcs;
+    p = vblankCallbacks.funcs;
     i = 7;
     do {
         if (*p != 0) {

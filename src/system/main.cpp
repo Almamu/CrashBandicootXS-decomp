@@ -1,3 +1,5 @@
+#include "irq.hpp"
+
 extern "C" {
 #include "core.h"
 #include "system.h"
@@ -13,17 +15,17 @@ s32 AgbMain(void)
     REG_BLDY = 0x10;
     REG_DISPCNT = DISPCNT_MODE_0;
 
-    if (mem_heap_init(0x400) != 0 || IrqSetup() != 0) {
+    if (mem_heap_init(0x400) != 0 || Irq::Setup() != 0) {
         return -1;
     }
 
-    EnableVBlankHandler();
+    Irq::EnableVBlankHandler();
 
     if (MainLoop() != 0) {
         return -1;
     }
 
-    IrqDisable();
+    Irq::Disable();
     mem_heap_shutdown();
 
     return 0;

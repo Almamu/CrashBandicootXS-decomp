@@ -1,3 +1,4 @@
+#include "irq.hpp"
 #include "audio.hpp"
 
 extern "C" {
@@ -431,7 +432,7 @@ AudioContext::AudioContext()
 }
 
 /* Disables the GBA's V-Count interrupt - a counterpart to
- * `DisableVBlankHandler` (VBlank) in src/system/irq.cpp. `this` is unused;
+ * `Irq::DisableVBlankHandler` (VBlank) in src/system/irq.cpp. `this` is unused;
  * LevelState's destructor calls it on gAudioContext. */
 void AudioContext::DisableVCountIrq()
 {
@@ -439,7 +440,7 @@ void AudioContext::DisableVCountIrq()
     u8 tmp = DISPSTAT_VCOUNT_INTR;
 
     *(u8 *)REG_ADDR_DISPSTAT &= ~tmp;
-    IrqRestoreHandler(INTR_INDEX_VCOUNT);
+    Irq::RestoreHandler(INTR_INDEX_VCOUNT);
 }
 
 /* Installs `MusicVCountIrqHandler` as the VCount-IRQ handler and arms VCount IRQs
@@ -450,7 +451,7 @@ void EnableMusicVCountIrq(void)
 {
     u8 *p;
 
-    IrqSetHandler(INTR_INDEX_VCOUNT, MusicVCountIrqHandler);
+    Irq::SetHandler(INTR_INDEX_VCOUNT, MusicVCountIrqHandler);
     p = (u8 *)REG_ADDR_DISPSTAT;
     p[1] = 0x35;
     *p |= DISPSTAT_VCOUNT_INTR;
