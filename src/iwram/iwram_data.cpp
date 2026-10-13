@@ -6,6 +6,7 @@
 #include "menus.hpp"
 #include "player.hpp"
 #include "vehicle.hpp"
+#include "frame_limiter.hpp"
 
 extern "C" {
 #include "core.h"
@@ -44,9 +45,9 @@ struct mem_heap *mem_ewram_heap_pointer = 0;
 s32 mem_initial_free_bytes = 0;
 
 /* irq.cpp: the frame counter the VBlank handler increments, and the
- * frame-rate limiter's enable flag. */
+ * frame-rate limiter's enable flag (frame_limiter.hpp). */
 u32 gVBlankCounter = 0;
-u8 gFrameLimitEnabled = 0;
+u8 FrameLimiter::enabled = 0;
 /* Set while the music player's per-frame update is installed
  * (audio.cpp). */
 u8 gGaxIrqEnabled = 0;

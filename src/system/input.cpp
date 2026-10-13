@@ -1,4 +1,5 @@
 #include "key_input.hpp"
+#include "frame_limiter.hpp"
 
 extern "C" {
 #include "core.h"
@@ -9,7 +10,7 @@ extern "C" {
 /* Sits between FormatCentiseconds (ROM 0x0800106C, in src/util/time_format.cpp) and
  * LoadTaggedAsset (still raw in asm/code_3_1_5.s). */
 
-/* Polls input (via WaitForVBlank/UpdateKeys, the same VBlank-wait-then-
+/* Polls input (via FrameLimiter::WaitForVBlank/UpdateKeys, the same VBlank-wait-then-
  * update-keys pair used elsewhere) until a button matching `mask`'s bit
  * 0 (confirm) or bit 3 (cancel) is newly pressed, or (if `count != 0`)
  * until `count` polls have elapsed. Returns 0 only if a cancel (bit 3)
@@ -44,7 +45,7 @@ s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask)
 
     if (count != 0) {
         for (i = 0; i < count; i++) {
-            WaitForVBlank();
+            FrameLimiter::WaitForVBlank();
             gInput->Update();
             keys = (u16)mask & gKeys.half.pressed;
             if (checkButtons) {
@@ -58,7 +59,7 @@ s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask)
         }
     } else if (checkButtons) {
         for (;;) {
-            WaitForVBlank();
+            FrameLimiter::WaitForVBlank();
             gInput->Update();
             keys = (u16)mask & gKeys.half.pressed;
             if (keys & A_BUTTON) {

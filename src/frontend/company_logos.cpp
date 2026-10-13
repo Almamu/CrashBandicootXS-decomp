@@ -5,6 +5,7 @@
 #include "key_input.hpp"
 #include "graphics_package.hpp"
 #include "display.hpp"
+#include "frame_limiter.hpp"
 
 extern "C" {
 #include "gba/io_reg.h"
@@ -71,7 +72,7 @@ void CompanyLogos::Run()
         } else {
             *(vu32 *)REG_ADDR_BLDCNT = 0;
         }
-        WaitForVBlank();
+        FrameLimiter::WaitForVBlank();
         bg->Update();
     }
     gAudioContext->PlaySfx(SFX_UNIVERSAL_LOGO_IN, 0x100);
@@ -87,7 +88,7 @@ void CompanyLogos::Run()
         gInput->Update();
         if ((gKeys.half.pressed & (A_BUTTON | START_BUTTON)) && fade > 0x40)
             fade = 0x40;
-        WaitForVBlank();
+        FrameLimiter::WaitForVBlank();
         Display::CommitDispcnt();
         if (fade != -1) {
             if (fade == 0x40)
@@ -143,7 +144,7 @@ void CompanyLogos::Run()
         UpdateVvLogoPieces();
         DrawVvLogoPieces();
         bg->Update();
-        WaitForVBlank();
+        FrameLimiter::WaitForVBlank();
         v = fade;
         if (v > 0x10) {
             s32 n = v - 1;

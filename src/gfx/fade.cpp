@@ -1,4 +1,5 @@
 #include "irq.hpp"
+#include "frame_limiter.hpp"
 
 extern "C" {
 #include "core.h"
@@ -48,7 +49,7 @@ void StepBrightnessFade(void)
  * `StepBrightnessFade` as a periodic callback (via `Irq::AddVBlankCallback`) to drive the
  * fade one step per call and returns immediately; otherwise it blocks
  * here, looping through all 17 steps itself and busy-waiting
- * `frameDelay` VBlanks between each via `WaitForVBlank`. */
+ * `frameDelay` VBlanks between each via `FrameLimiter::WaitForVBlank`. */
 void FadeBrightness(u8 flags, s32 frameDelay, u8 sync)
 {
     s32 notf = ~gBrightnessFade.period;
@@ -91,7 +92,7 @@ void FadeBrightness(u8 flags, s32 frameDelay, u8 sync)
             if (frameDelay > 0) {
                 s32 k = frameDelay;
                 do {
-                    WaitForVBlank();
+                    FrameLimiter::WaitForVBlank();
                     k--;
                 } while (k != 0);
             }

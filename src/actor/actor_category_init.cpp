@@ -8,6 +8,7 @@
 #include "vehicle.hpp"
 #include "cell_anim.hpp"
 #include "actor_bg.hpp"
+#include "frame_limiter.hpp"
 
 extern "C" {
 #include "core.h"
@@ -149,7 +150,7 @@ s32 InitActorCategory(s32 category)
             gHud->UpdateSlides();
             gHud->Update();
             FlushSpriteFrameOamQueue();
-            WaitForVBlank();
+            FrameLimiter::WaitForVBlank();
             ActorBg::CommitScroll();
             gOamBuffer->Commit();
             FlushVramDmaQueue();

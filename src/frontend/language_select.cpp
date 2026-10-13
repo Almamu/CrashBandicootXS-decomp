@@ -2,6 +2,7 @@
 #include "frontend.hpp"
 #include "audio.hpp"
 #include "key_input.hpp"
+#include "frame_limiter.hpp"
 
 extern "C" {
 #include "gba/dma_macros.h"
@@ -33,7 +34,7 @@ s32 LanguageSelect::Run()
     gLanguageSelect->frame = 0;
     gLanguageSelect->done = 0;
     gLanguageSelect->Draw();
-    WaitForVBlank();
+    FrameLimiter::WaitForVBlank();
     gLanguageSelect->CommitFrame();
 
     while (gLanguageSelect->done == 0) {
@@ -44,7 +45,7 @@ s32 LanguageSelect::Run()
         keys = gKeys.half.pressed;
         gLanguageSelect->Input(keys);
         gLanguageSelect->Draw();
-        WaitForVBlank();
+        FrameLimiter::WaitForVBlank();
         gLanguageSelect->CommitFrame();
         gLanguageSelect->starfield->Update();
     }
@@ -142,7 +143,7 @@ void LanguageSelect::InitGraphics()
 
     gOamBuffer->Reset();
     gOamBuffer->HideUnused();
-    WaitForVBlank();
+    FrameLimiter::WaitForVBlank();
     gOamBuffer->Commit();
     gPaletteCache->FreeUnlockedSlots();
     gPaletteCache->ClaimSlot(0);

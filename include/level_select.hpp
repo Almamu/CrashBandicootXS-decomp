@@ -37,6 +37,7 @@
 #include "graphics_package.hpp"
 #include "game_progress.hpp"
 #include "menus.hpp"
+#include "frame_limiter.hpp"
 
 extern "C" {
 #include "core.h"
@@ -415,7 +416,7 @@ public:
     void BeginFrame()
     {
         Update();
-        WaitForVBlank();
+        FrameLimiter::WaitForVBlank();
         gPaletteCache->Upload();
         gOamBuffer->Commit();
         CommitDisplay();

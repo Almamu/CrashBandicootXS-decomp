@@ -18,7 +18,6 @@
 
 /* src/iwram/iwram_data.cpp */
 extern u32 gVBlankCounter;
-extern u8 gFrameLimitEnabled;
 /* The language picked at boot (0-5), set by MainLoop. */
 extern s32 gLanguage;
 /* One UI string table per language (src/data/ui_text_172cd4.c). */
@@ -30,10 +29,6 @@ extern const u8 *const gUiTextGerman[UI_TEXT_COUNT];
 extern const u8 *const gUiTextSpanish[UI_TEXT_COUNT];
 extern const u8 *const gUiTextItalian[UI_TEXT_COUNT];
 extern const u8 *const gUiTextDutch[UI_TEXT_COUNT];
-
-/* sym_iwram.txt: WaitForVBlank's frame limit (SetFrameLimit). */
-extern u32 gFrameLimitTarget;
-extern u32 gFrameLimitInterval;
 
 /* Held d-pad bits (right/left/down/up as bits 3-0) -> direction 0-8
  * (src/data/boss_pictures_167ad4.cpp). */
@@ -55,11 +50,6 @@ extern void *MemCopy32(void *dst, const void *src, u32 byteCount);
 
 /* src/system/input.cpp */
 extern s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask);
-
-/* src/system/irq.cpp */
-extern void WaitForVBlank(void);
-extern void DisableFrameLimit(void);
-extern void SetFrameLimit(u32 interval);
 
 /* src/system/key_input.cpp: KeyInput's constructor (ClearKeys),
  * UpdateKeys and GetDpadDirection are its methods (key_input.hpp). */

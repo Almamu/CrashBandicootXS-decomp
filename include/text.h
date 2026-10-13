@@ -39,7 +39,7 @@ extern s32 GetWordLength(const u8 *s);
 /* DrawWrappedText's `mode` (#843, docs/flags/text.md): when the words
  * reach the screen. */
 #define WRAPPED_TEXT_MODE_BUFFERED 0 // never: the caller commits the OAM buffer
-#define WRAPPED_TEXT_MODE_PER_WORD 1 // after every word (WaitForVBlank, Commit): typed out
+#define WRAPPED_TEXT_MODE_PER_WORD 1 // after every word (FrameLimiter::WaitForVBlank, Commit): typed out
 #define WRAPPED_TEXT_MODE_PER_LINE 2 // after every line wrap
 #ifdef __cplusplus
 extern s32 DrawWrappedTextInBox(const u8 *text, class Font *self, struct aabb *box, s32 mode);

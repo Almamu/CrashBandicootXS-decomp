@@ -3,6 +3,7 @@
 #include "level_state.hpp"
 #include "link_session.hpp"
 #include "key_input.hpp"
+#include "frame_limiter.hpp"
 
 extern "C" {
 #include "core.h"
@@ -62,7 +63,7 @@ u8 RunSaveMenu(u32 state, u32 cursor)
         (*selfAddr)->Input(keys);
     dispatch:
         (*selfAddr)->Draw();
-        WaitForVBlank();
+        FrameLimiter::WaitForVBlank();
         (*selfAddr)->CommitFrame();
         if ((*selfAddr)->done != 0) {
             break;

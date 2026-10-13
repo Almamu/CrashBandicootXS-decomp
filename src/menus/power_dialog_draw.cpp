@@ -1,5 +1,6 @@
 #include "menus.hpp"
 #include "font.hpp"
+#include "frame_limiter.hpp"
 
 extern "C" {
 #include "text.h"
@@ -50,7 +51,7 @@ void PowerDialog::Animate()
 
 void PowerDialog::CommitFrame()
 {
-    WaitForVBlank();
+    FrameLimiter::WaitForVBlank();
     gPaletteCache->Upload();
     gOamBuffer->Commit();
     FlushVramDmaQueue();

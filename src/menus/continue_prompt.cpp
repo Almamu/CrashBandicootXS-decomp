@@ -10,6 +10,7 @@
 #include "key_input.hpp"
 #include "graphics_package.hpp"
 #include "menus.hpp"
+#include "frame_limiter.hpp"
 
 extern "C" {
 #include "gba/io_reg.h"
@@ -110,7 +111,7 @@ void ContinuePrompt::InitGraphics()
 
     gOamBuffer->Reset();
     gOamBuffer->HideUnused();
-    WaitForVBlank();
+    FrameLimiter::WaitForVBlank();
     gOamBuffer->Commit();
 }
 
@@ -232,7 +233,7 @@ s32 ContinuePrompt::Blink(s32 option)
 
 void ContinuePrompt::CommitFrame()
 {
-    WaitForVBlank();
+    FrameLimiter::WaitForVBlank();
     gOamBuffer->Commit();
     FlushVramDmaQueue();
     REG_DISPCNT = dispcnt.raw;

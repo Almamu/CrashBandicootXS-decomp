@@ -2,6 +2,7 @@
 #include "bg_layer.hpp"
 #include "font.hpp"
 #include "cutscene.hpp"
+#include "frame_limiter.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -24,7 +25,7 @@ extern "C" {
  * sets the VRAM-bank toggle to 1, and `InitCutscenePlayer` also clears
  * `pages`/`font`. `RunCutscenePlayer` is `RunSlideshow`'s (slideshow.cpp)
  * loop over the slides, interleaved with an explicit OAM-shadow-buffer
- * flush (`ResetOamBuffer`/`HideUnusedOamEntries`/`WaitForVBlank`/
+ * flush (`ResetOamBuffer`/`HideUnusedOamEntries`/`FrameLimiter::WaitForVBlank`/
  * `CommitOamBuffer` on `gOamBuffer`) and a nested text-paging loop
  * through each slide's `struct cutscene_page`, rendering each string
  * via `DrawWrappedText` (wrapped_text.cpp) with `font` into `box`,
@@ -75,7 +76,7 @@ void CutscenePlayer::Run()
         self->ShowPicture(i);
         (*oamp)->Reset();
         (*oamp)->HideUnused();
-        WaitForVBlank();
+        FrameLimiter::WaitForVBlank();
         (*oamp)->Commit();
         self->BeginSlide(i);
         if (self->pages[i].count == 0) {

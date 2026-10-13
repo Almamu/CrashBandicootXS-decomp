@@ -1,5 +1,6 @@
 #include "sprite_obj.hpp"
 #include "font.hpp"
+#include "frame_limiter.hpp"
 
 extern "C" {
 #include "core.h"
@@ -26,7 +27,7 @@ extern "C" {
  * against a per-line budget (`box->w`). When the running width would
  * overflow, it advances to a new line (PutChar('\n'), then re-draws the
  * just-measured token at the line's start) and optionally flushes
- * (WaitForVBlank then CommitOamBuffer) depending on `mode`
+ * (FrameLimiter::WaitForVBlank then CommitOamBuffer) depending on `mode`
  * (WRAPPED_TEXT_MODE_*: BUFFERED = never flush, and don't reset the OAM
  * buffer either; PER_WORD = flush after every token; PER_LINE = only
  * flush after a line wrap) - and flushes once more after the whole
@@ -92,7 +93,7 @@ s32 DrawWrappedText(const u8 *text, Font *self, struct aabb *box, s32 limit, s32
                 self->DrawChars(token, len);
                 widthAccum = combined;
                 if (mode == WRAPPED_TEXT_MODE_PER_WORD) {
-                    WaitForVBlank();
+                    FrameLimiter::WaitForVBlank();
                     gOamBuffer->Commit();
                 }
                 posAccum += len;
@@ -104,7 +105,7 @@ s32 DrawWrappedText(const u8 *text, Font *self, struct aabb *box, s32 limit, s32
                 self->DrawChars(token, len);
                 widthAccum = charWidth;
                 if (mode == WRAPPED_TEXT_MODE_PER_WORD || mode == WRAPPED_TEXT_MODE_PER_LINE) {
-                    WaitForVBlank();
+                    FrameLimiter::WaitForVBlank();
                     gOamBuffer->Commit();
                 }
                 posAccum += len;
@@ -112,7 +113,7 @@ s32 DrawWrappedText(const u8 *text, Font *self, struct aabb *box, s32 limit, s32
         }
     }
     if (mode != WRAPPED_TEXT_MODE_BUFFERED) {
-        WaitForVBlank();
+        FrameLimiter::WaitForVBlank();
         gOamBuffer->Commit();
     }
     return posAccum;

@@ -2,6 +2,7 @@
 #include "audio.hpp"
 #include "level_state.hpp"
 #include "key_input.hpp"
+#include "frame_limiter.hpp"
 
 extern "C" {
 #include <agb_syscall.h>
@@ -56,7 +57,7 @@ s32 RunLevelSelect(s32 *level)
     s32 heaps = 0xC0000000;
 
     mem_free_bytes(heaps);
-    WaitForVBlank();
+    FrameLimiter::WaitForVBlank();
     BACKDROP_COLOR = 0;
     *(vu16 *)REG_ADDR_DISPCNT = 0;
     gPaletteCache->FreeUnlockedSlots();
@@ -555,7 +556,7 @@ loop:
 end:
     dispcnt.raw = 0;
     dispcnt.bits.objMap1D = 1;
-    WaitForVBlank();
+    FrameLimiter::WaitForVBlank();
     gPaletteCache->Upload();
     gOamBuffer->Commit();
     CommitDisplay();

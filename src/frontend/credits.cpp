@@ -4,6 +4,7 @@
 #include "audio.hpp"
 #include "key_input.hpp"
 #include "menus.hpp"
+#include "frame_limiter.hpp"
 
 extern "C" {
 #include "gba/io_reg.h"
@@ -40,7 +41,7 @@ Credits::Credits()
     starfield = new Starfield;
     gOamBuffer->Reset();
     gOamBuffer->HideUnused();
-    WaitForVBlank();
+    FrameLimiter::WaitForVBlank();
     gOamBuffer->Commit();
     gPaletteCache->FreeUnlockedSlots();
     gSmallFont->ResetPalette();
@@ -88,7 +89,7 @@ void Credits::Loop()
         }
 
         DrawText();
-        WaitForVBlank();
+        FrameLimiter::WaitForVBlank();
         CommitFrame();
         starfield->Update();
     }
@@ -102,7 +103,7 @@ void Credits::Loop()
         }
 
         DrawText();
-        WaitForVBlank();
+        FrameLimiter::WaitForVBlank();
         REG_BLDY = i;
         REG_BLDCNT = BLDCNT_TGT1_ALL | BLDCNT_EFFECT_DARKEN;
         CommitFrame();

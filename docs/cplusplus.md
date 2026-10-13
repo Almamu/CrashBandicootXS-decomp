@@ -700,6 +700,7 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/system/asset.cpp`, `main.cpp`, `main_loop.cpp`, `memory.cpp` | `LoadTaggedAsset`, `LoadBackgroundTileAndPalette`; `AgbMain`; `MainLoop`, `GetUiText`; the heap (`mem_*`, C linkage) | 0 + 12 | agbcp | 1 file-scope asm -> 1 (`mem_walk_heaps`) | all-C++: gfx, system, util, text |
 | `src/system/input.cpp`, `irq.cpp` (the key reading since in `key_input.cpp`, #767) | `WaitForKeyPress`; the IRQ table, the VBlank handler and callbacks, the key reading (C linkage), and `KeyInput`'s constructor (`ClearKeys`, spawners.hpp), whose C prototype goes | 1 + 17 | old_agbcp | 1 pin -> 1 pin | all-C++: gfx, system, util, text |
 | `src/system/irq.cpp` (again) | `Irq` (new include/irq.hpp), an all-static class: the IRQ table, the replaced handlers and the VBlank callbacks are static data members (`table` is gIntrTable, `prevTable`, `vblankCallbacks`), the 11 IRQ and VBlank functions static member functions (`SetHandler`, `ClearHandler`, `RestoreHandler`, `Setup`, `Disable`, `EnableVBlankHandler`, ...); irq.h's 11 prototypes and 3 externs go; the callers (audio.cpp, fade.cpp, main.cpp, the link) call `Irq::SetHandler(...)` & co. | 11 | (unchanged) | 0 -> 0 | [#915](#the-interrupt-handlers-as-an-all-static-class-915) |
+| `src/system/irq.cpp` (again), `src/iwram/iwram_data.cpp` | `FrameLimiter` (new include/frame_limiter.hpp), an all-static class: the frame-limit globals are static data members (`enabled` is gFrameLimitEnabled, `target`, `interval`), WaitForVBlank and the UNUSED SetFrameLimit/DisableFrameLimit static member functions (`WaitForVBlank`, `Set`, `Disable`); system.h's 3 prototypes and 3 externs go; 24 files and level_select.hpp call `FrameLimiter::WaitForVBlank()` | 3 | (unchanged) | 0 -> 0 | [#915](#the-frame-limiter-as-an-all-static-class-915) |
 | `src/text/text_box.cpp` | `GetWordLength`, `DrawWrappedTextInBox` (C linkage; takes a `Font *`, `self->SetMargin`, `HeightToLines`) | 0 + 2 | agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/aabb.cpp` (since #767: `CommitBlendRegs` at the end of gfx/display.cpp, `IwramFree`/`IwramAlloc` in system/iwram_alloc.cpp) | `CommitBlendRegs`, `AabbOverlapsInclusiveX`, `AabbOverlaps`, `IwramFree`, `IwramAlloc` (C linkage) | 0 + 5 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/fixed_math.cpp`, `line.cpp`, `line_step.cpp`, `number_format.cpp`, `printf.cpp`, `rand.cpp`, `string.cpp`, `time_format.cpp` | the fixed-point helpers, the Bresenham line, `itoa`, `sprintf`/`vsprintf`/`FindSubstring` (string.cpp since #767), `rand`/`srand`/`RandRange`, the string functions, `FormatCentiseconds` (C linkage) | 0 + 24 | agbcp | 2 pins, 5 asm, 2 asm labels -> the same | all-C++: gfx, system, util, text |
@@ -3820,10 +3821,35 @@ every object is byte-identical.
   installs them. The callers are the audio's VCount IRQ, the link's
   serial and timer-3 handlers, the brightness fade's callback and AgbMain.
 - **Left outside.** WaitForVBlank, SetFrameLimit and DisableFrameLimit,
-  at the end of irq.cpp, stay free functions with gVBlankCounter and the
-  frame-limit globals. They are the frame limiter, a candidate family of
-  their own (#915's inventory), and VBlankHandler still counts the frames
-  in gVBlankCounter for them.
+  before VBlankHandler in irq.cpp, are [the frame
+  limiter](#the-frame-limiter-as-an-all-static-class-915), a class of
+  their own. gVBlankCounter, which VBlankHandler counts and the limiter
+  reads, stays a global.
+
+### The frame limiter as an all-static class (#915)
+
+Three functions near the end of irq.cpp (ROM 0x080006A8-0x08000720,
+between the VBlank callbacks and VBlankHandler) are the VBlank wait
+every frame loop calls, WaitForVBlank, and the frame limit it can stretch to several
+VBlanks (SetFrameLimit and DisableFrameLimit, both UNUSED). It is now
+`FrameLimiter` (include/frame_limiter.hpp), all-static like
+[the interrupt handlers](#the-interrupt-handlers-as-an-all-static-class-915),
+and every object is byte-identical.
+
+- **Data.** `enabled` (gFrameLimitEnabled), `target` (gFrameLimitTarget)
+  and `interval` (gFrameLimitInterval) are private static data members.
+  cxx_symbols.txt's `#915 FrameLimiter` block maps them to their C names.
+  sym_iwram.txt places `target` and `interval`; `enabled` is an
+  initialised IWRAM global, so iwram_data.cpp defines it in its place
+  (`u8 FrameLimiter::enabled = 0;`), and its `.data` is unchanged.
+  SetFrameLimit's argument had a member's name and is `frameCount` now.
+  gVBlankCounter stays a global: VBlankHandler (Irq) counts it.
+- **Functions.** `WaitForVBlank` keeps its name
+  (`WaitForVBlank__12FrameLimiter WaitForVBlank`); SetFrameLimit and
+  DisableFrameLimit are `Set` and `Disable`. All three are public. The
+  WaitForVBlank callers (24 files and level_select.hpp's inline) call
+  `FrameLimiter::WaitForVBlank()`; system.h's 3 prototypes and 3 externs
+  go.
 
 ### The link, save and IWRAM data
 
