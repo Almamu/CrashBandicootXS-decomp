@@ -306,6 +306,22 @@ full rules and the history (#574). For new code:
   make screen-check                                   # CI: the game code compiled at 426x240
   ```
 
+- **Fixed point:** positions, speeds, accelerations, the speed-ramp
+  tables and affine scales are Q8 (and a few Q4/Q12/Q16). Spell a
+  fixed-point value with `include/math_util.h`: `INT_TO_Q8(2)` for 2 px,
+  `Q8(1.5)` for a short fraction, `Q8_TO_INT(x)` for `x >> 8`, and a
+  named constant for a tuning value (`PLAYER_GRAVITY`). `python3
+  tools/magic_numbers.py --fixed` (#916) lists the literals, shifts and
+  masks on such values, each classified as fixed point (with its format
+  and spelling), a plain integer or a bit field. See
+  [docs/fixed_point.md](docs/fixed_point.md):
+
+  ```
+  tools/magic_numbers.py --fixed --category fixed [--show]  # what is left to spell
+  tools/magic_numbers.py --fixed --report OUT               # Markdown: per format, field and directory
+  tools/magic_numbers.py --fixed --values                   # per field, each raw value: tuning constants to name
+  ```
+
 - **Simplifications:** `python3 tools/simplify_scan.py` (#846) lists the
   bare blocks, single-use locals and copies, nested ifs and duplicate
   cases left in src/, and `--try` applies them one at a time, keeping
