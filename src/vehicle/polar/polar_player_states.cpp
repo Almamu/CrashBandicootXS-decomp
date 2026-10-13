@@ -1,3 +1,4 @@
+#include "obj_tile_allocator.hpp"
 #include "vehicle.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
@@ -323,8 +324,8 @@ PolarPlayer::~PolarPlayer()
         } while (gPolarQueuedWumpa != 0);
     }
 
-    FreeVramTileBlock(gPolarPlayerTiles[0]);
-    FreeVramTileBlock(gPolarPlayerTiles[1]);
+    ObjTileAllocator::Free(gPolarPlayerTiles[0]);
+    ObjTileAllocator::Free(gPolarPlayerTiles[1]);
 }
 
 /* The polar player's state dispatch (#664 part 11a) and

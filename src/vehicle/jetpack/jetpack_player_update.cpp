@@ -1,3 +1,4 @@
+#include "obj_tile_allocator.hpp"
 #include "vehicle.hpp"
 #include "boss_actors.hpp"
 #include "audio.hpp"
@@ -471,9 +472,9 @@ void JetpackPlayer::AllocTiles()
     u8 *f;
 
     f = CurFrame();
-    gJetpackPlayerTiles[0] = AllocVramTileBlock(f[1] * f[0] * 32);
+    gJetpackPlayerTiles[0] = ObjTileAllocator::Alloc(f[1] * f[0] * 32);
     f = CurFrame();
-    gJetpackPlayerTiles[1] = AllocVramTileBlock(f[1] * f[0] * 32);
+    gJetpackPlayerTiles[1] = ObjTileAllocator::Alloc(f[1] * f[0] * 32);
     gJetpackPlayerTileBuffer = 1;
     gJetpackPlayerLastFrame = 0;
 }

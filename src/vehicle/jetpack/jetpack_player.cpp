@@ -1,3 +1,4 @@
+#include "obj_tile_allocator.hpp"
 #include "vehicle.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
@@ -236,8 +237,8 @@ JetpackPlayer::~JetpackPlayer()
         } while (gJetpackQueuedWumpa != 0);
     }
 
-    FreeVramTileBlock(gJetpackPlayerTiles[0]);
-    FreeVramTileBlock(gJetpackPlayerTiles[1]);
+    ObjTileAllocator::Free(gJetpackPlayerTiles[0]);
+    ObjTileAllocator::Free(gJetpackPlayerTiles[1]);
 }
 
 /* The state method for `state`, through the pointer-to-member table

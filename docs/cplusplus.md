@@ -762,6 +762,8 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/actor/actor.cpp`, `actor_category_frame.cpp`, `actor_category_init.cpp`, `actor_category_select.cpp`, `bg_picture.cpp`, `src/bosses/hovercraft.cpp`, `src/vehicle/jetpack/airship.cpp`, `jetpack_player.cpp`, `jetpack_player_update.cpp`, `src/vehicle/polar/polar_player.cpp`, `polar_player_states.cpp`, `yeti.cpp`, `yeti_states.cpp`, `yeti_update.cpp` | the callers: `CellAnim::GetDistance()`, `CellAnim::SetSpeed(...)` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-cell-animation-as-an-all-static-class-915) |
 | `src/vehicle/jetpack/airship.cpp`, `airship_states.cpp`, `airship_graphics.cpp`, `airship_map.cpp`, `airship_touch.cpp`, `src/data/actor_state_17c3fc.cpp` (was .c) | `Airship` (new include/airship.hpp), an all-static class: its 25 IWRAM globals are static data members (`x` is gAirshipX, `anim` gAirship, ...), its 21 functions static member functions (`Create`, `Spawn`, `Update`, `UpdateBg2`, `LoadGraphics`, `Destroy`, `Damage`, `IsTouching`, `GetHpPercent`, `Steer`, `DrawMap`, `ConvertTiles`, the six states, ...), gAirshipStateFuncs is `Airship::stateFuncs` and the six tables only it reads (gAirshipAttacks, gAirshipBox, ...) are static data members too; boss_actors.hpp's inline SetAirshipState is the private inline member `SetState`; bosses.h's 20 prototypes are down to 5 C-only ones (the category table's), its 32 externs and vehicle.h's nullsub_30 go | 21 | (unchanged) | 0 -> 0 | [#772](#the-airship-as-an-all-static-class-772) |
 | `src/vehicle/jetpack/jetpack_shot.cpp`, `jetpack_spawn.cpp`, `src/hud/hud_counters.cpp` | the callers: `Airship::IsTouching(this)`, `Airship::Damage(2)`, `Airship::Spawn(...)`, `Airship::GetHpPercent()` | 0 | (unchanged) | 0 -> 0 | [#772](#the-airship-as-an-all-static-class-772) |
+| `src/gfx/sprite_frame.cpp` | `ObjTileAllocator` (new include/obj_tile_allocator.hpp), an all-static class: its 5 IWRAM globals are static data members (`pool` is gVramTileBlockPool, `list`, `rover`, `spares`, `index`), its 6 functions static member functions (`Init`, `Alloc`, `Free`, `Destroy`, the UNUSED `Walk` and `GetFreeBytes`); gfx.h's 6 prototypes and 5 externs go | 6 | (unchanged) | 0 -> 0 | [#915](#the-obj-tile-allocator-as-an-all-static-class-915) |
+| `src/actor/actor_vram_pool.cpp`, `actor_category_init.cpp`, `src/frontend/company_logos.cpp`, `company_logos_ctor.cpp`, `src/vehicle/jetpack/jetpack_player.cpp`, `jetpack_player_update.cpp`, `src/vehicle/polar/polar_player.cpp`, `polar_player_states.cpp` | the callers: `ObjTileAllocator::Alloc(...)` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-obj-tile-allocator-as-an-all-static-class-915) |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -4506,6 +4508,37 @@ byte-identical.
 - **Left outside.** `SpawnAirshipFireball` (jetpack_spawn.cpp) is the
   jetpack spawners', and `AirshipFireball` a class of its own
   (boss_actors.hpp); they call no airship member.
+
+### The OBJ tile allocator as an all-static class (#915)
+
+#915 groups the free functions that work on one subsystem's globals
+into classes. The OBJ tile VRAM allocator, the first six functions of
+sprite_frame.cpp (ROM 0x08028BA0-0x08028DD8), is `ObjTileAllocator`
+(include/obj_tile_allocator.hpp). Its five IWRAM globals
+(0x03001320-0x03001343) are read by no other object. It is all-static,
+like [the yeti](#the-yeti-as-an-all-static-class-772): static data
+members compile like the globals and static member functions like the
+plain functions, and every object is byte-identical.
+
+- **Data.** The variables are private static data members, only declared:
+  `pool` (gVramTileBlockPool, the block records), `list` (the
+  address-ordered list's sentinel record), `rover` (the next-fit search's
+  start), `spares` (the free records' stack) and `index` (a tile's
+  record). cxx_symbols.txt's `#915 ObjTileAllocator` block maps them to
+  their C names, which sym_iwram.txt places. `struct vram_tile_block`
+  stays sprite_frame.cpp's: the header only names it. Alloc's `rover`
+  local had the member's name and is `start` now.
+- **Functions.** All six are static member functions under their C names
+  (`Alloc__16ObjTileAllocatori AllocVramTileBlock`, ...): `Init`
+  (InitObjTileFreeList), `Alloc`, `Free`, `Destroy` (FreeObjTileFreeList)
+  and the UNUSED `Walk` and `GetFreeBytes`. They are all public: the
+  sprite frame cache (LoadSpriteFrameTiles, in the same file), the
+  company logos and the 3D players allocate and free tiles; the actor
+  VRAM pool and the logos set it up and tear it down.
+- **Left outside.** The rest of sprite_frame.cpp: the overflow OAM queue
+  (gSpriteOamQueue*), the sprite frame cache (gSpriteFrameCache*) and the
+  category sprite sheet, which have their own IWRAM variables and are
+  candidates of their own (#915's inventory).
 
 ### Next batches
 

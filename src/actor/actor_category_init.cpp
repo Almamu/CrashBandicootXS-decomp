@@ -1,3 +1,4 @@
+#include "obj_tile_allocator.hpp"
 #include "sprite_obj.hpp"
 #include "hud.hpp"
 #include "level_state.hpp"
@@ -77,7 +78,7 @@ static inline s32 RunCategoryPauseMenu(void)
     DmaCopy16(3, OBJ_PLTT, buf, OBJ_PLTT_SIZE);
     FreeSpriteFrameCache();
     FreeSpriteFrameOamQueue();
-    FreeObjTileFreeList();
+    ObjTileAllocator::Destroy();
     result = RunPauseMenu();
     SetupActorVramPool();
     FadeBrightness(0x80, 1, 1);
@@ -205,7 +206,7 @@ s32 InitActorCategory(s32 category)
     ActorCategoryEndStub();
     FreeSpriteFrameCache();
     FreeSpriteFrameOamQueue();
-    FreeObjTileFreeList();
+    ObjTileAllocator::Destroy();
     FreeCategorySpriteSheet();
     REG_DISPCNT = DISPCNT_MODE_1 | DISPCNT_OBJ_1D_MAP;
     BACKDROP_COLOR = 0;

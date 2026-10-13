@@ -29,7 +29,6 @@ struct dma_queue;
 struct queued_oam_entry;
 struct rle_frame;
 struct sprite_bank_table;
-struct vram_tile_block;
 
 /* attr0 bits 8-9, the OBJ's affine mode (`affineMode` in the shadow
  * entry and in struct oam_attrs; #843, docs/flags/oam.md): the GBA
@@ -259,13 +258,7 @@ extern void WorldToScreen(void *unused, s32 x, s32 y, s32 *outX, s32 *outY);
 extern void WorldPosToScreen(s32 *pos, s32 *outX, s32 *outY);
 extern void nullsub_12(void);
 
-/* src/gfx/sprite_frame.cpp */
-extern void InitObjTileFreeList(void *base);
-extern void FreeVramTileBlock(void *addr);
-extern void *AllocVramTileBlock(s32 requestedSize);
-extern void WalkVramTileBlocks(void);
-extern s32 GetFreeVramTileBytes(void);
-extern void FreeObjTileFreeList(void);
+/* src/gfx/sprite_frame.cpp (the OBJ tile allocator: obj_tile_allocator.hpp) */
 extern void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority);
 extern void FreeSpriteFrameOamQueue(void);
 extern void FlushSpriteFrameOamQueue(void);
@@ -322,14 +315,6 @@ extern u16 gPaletteFadeBuffer[512];
 
 /* sym_iwram.txt: the VRAM DMA queue (vram_dma_queue.cpp) */
 extern struct dma_queue gVramDmaQueue;
-
-/* sym_iwram.txt: the OBJ tile allocator (sprite_frame.cpp) */
-extern struct vram_tile_block *gVramTileBlockPool;   /* pool base */
-extern struct vram_tile_block gVramTileBlockList;    /* address-sorted free-block list sentinel */
-extern struct vram_tile_block *gVramTileBlockRover;  /* next-fit search cursor ("rover") */
-extern struct vram_tile_block *gVramTileBlockSpares; /* spare-record stack head */
-/* tile-index -> pool-record-index lookup table, TOTAL_OBJ_TILE_COUNT bytes */
-extern u8 *gVramTileBlockIndex;
 
 /* sym_iwram.txt: the overflow OAM queue (sprite_frame.cpp) */
 extern struct queued_oam_entry *gSpriteOamQueue; /* queued OAM entries, OAM_ENTRY_COUNT max */
