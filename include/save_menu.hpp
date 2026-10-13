@@ -2,8 +2,8 @@
 #define GUARD_SAVE_MENU_HPP
 
 /* The save menu as C++ (#664, docs/cplusplus.md, the final cleanup):
- * class SaveMenu, the object OpenSaveMenu allocates (`new SaveMenu`, 0xE4
- * bytes) into gSaveMenu and CloseSaveMenu deletes. Its code is
+ * class SaveMenu, the object SaveMenu::Open allocates (`new SaveMenu`, 0xE4
+ * bytes) into SaveMenu::instance and SaveMenu::Close deletes. Its code is
  * src/save/save_menu.cpp, save_menu_draw.cpp and save_menu_input.cpp
  * (save_menu_draw.cpp has save_menu_ui.cpp since #771); cxx_symbols.txt maps the methods onto their C names
  * (SaveMenuInput, DrawSaveMenu, ...). The save data it holds and the
@@ -12,7 +12,7 @@
  * (link_session.hpp).
  *
  * SaveMenu has no vtable: its destructor is a plain one, called with
- * `__in_chrg` 3 by `delete gSaveMenu`. `#pragma interface`, as in
+ * `__in_chrg` 3 by `delete instance`. `#pragma interface`, as in
  * menus.hpp, keeps g++ from emitting out-of-line copies of the inline
  * helpers. */
 
@@ -60,13 +60,13 @@ class SaveMenu
 public:
     u32 frame;  // 0x00 - frame counter (Input); CommitFrame scrolls BG0 by frame >> 3
     s32 flags;  // 0x04 - a wrapping 0-0xff frame counter; bit 2 is the highlight blink (IsBlinkOn)
-    u8 done;    // 0x08 - set to leave RunSaveMenu's loop
+    u8 done;    // 0x08 - set to leave Run's loop
     u32 state;  // 0x0C - see above
     s32 cursor; // 0x10
     const u8 *messageLine1; // 0x14 - state 4's first text line
     const u8 *messageLine2; // 0x18 - and its second
     union dispcnt dispcnt;  // 0x1C - the REG_DISPCNT shadow (gfx.h)
-    u8 gameLoaded;          // 0x20 - a game was loaded; RunSaveMenu returns it
+    u8 gameLoaded;          // 0x20 - a game was loaded; Run returns it
     u32 pendingSlot;        // 0x24 - the slot the "delete?"/"overwrite?" prompt acts on
     struct settings_row_stats currentStats; // 0x28
     struct settings_row_stats rowStats[4];  // 0x3C
@@ -79,6 +79,16 @@ public:
 
     SaveMenu();  // InitSaveMenu
     ~SaveMenu(); // DestroySaveMenu
+
+    /* The singleton (#915), for UpdateGameFrame: Open builds it into
+     * `instance`, Run runs its loop in state `state` and returns
+     * `gameLoaded`, Close deletes it. Static: they take no menu, and
+     * `instance` is an initialised IWRAM global of its own
+     * (iwram_data.cpp; cxx_symbols.txt maps `_8SaveMenu.instance` to
+     * gSaveMenu). */
+    static void Open();                   // OpenSaveMenu (save_menu.cpp)
+    static u8 Run(u32 state, u32 cursor); // RunSaveMenu (save_menu_input.cpp)
+    static void Close();                  // CloseSaveMenu (save_menu.cpp)
 
     /* src/save/save_menu.cpp */
     void MessageInput(u32 keys); // SaveMenuMessageInput
@@ -135,6 +145,9 @@ public:
     {
         return (flags >> SAVE_MENU_BLINK_BIT) & 1;
     }
+
+private:
+    static SaveMenu *instance; // gSaveMenu: between Open and Close
 };
 
 COMPILE_TIME_ASSERT(save_menu_hpp, sizeof(SaveMenu) == 0xE4);

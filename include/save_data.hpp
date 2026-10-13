@@ -56,7 +56,7 @@ COMPILE_TIME_ASSERT(save_data_hpp, sizeof(struct save_slot) == sizeof(GameProgre
  * from SAVE_CHECKSUM_SEED (UpdateChecksum/CheckChecksum). The version and
  * the seed come from the level data (constants/save_version.h, 0x12 and
  * 0 with the ROM's levels; docs/levels.md, "Save compatibility"), so a
- * save made with other levels doesn't load. The save menu (gSaveMenu,
+ * save made with other levels doesn't load. The save menu (SaveMenu::instance,
  * save_menu.hpp) holds two: the cartridge's (`cartSave`) and the one
  * received over the link cable (`linkSave`). Formerly `struct
  * settings_sync_record`. See

@@ -165,7 +165,7 @@ the names with the header it already includes. A data table in
 | `level_select.hpp` (next to each class) | `ZOOM_BG_STATE_`, `LEVEL_SELECT_CURSOR_STATE_` | the level select's `ZoomBg::state` (the picture's zoom) and `LevelSelectCursor::state` (idle cycle, grow, shrink) ([docs/flags/level_select.md](flags/level_select.md)) |
 | `box_part.h` | `PART_DIR_` | the direction bits: Sprite's `dir`, MovingSprite's `hitAxes` and `hitMask`, EVENT_BUMP's side ([docs/flags/direction.md](flags/direction.md)) |
 | `platform.hpp` (next to Platform) | `PLATFORM_TYPE_`, `PLATFORM_KIND_` | `Platform::type` and `PlatformMover::kind`, what a platform does; Platform::Create's spawn `kind`, the platform's look ([docs/flags/platform.md](flags/platform.md)) |
-| `save.h` (next to RunSaveMenu) | `SAVE_MENU_STATE_` | `SaveMenu::state`, the save menu's screen ([docs/flags/save_menu.md](flags/save_menu.md)) |
+| `save.h` | `SAVE_MENU_STATE_` | `SaveMenu::state`, the save menu's screen ([docs/flags/save_menu.md](flags/save_menu.md)) |
 | `menus.hpp` (next to `struct pause_row`) | `PAUSE_ROW_TYPE_` | `pause_row::type` and RunPauseMenu's result: resume, restart, quit, the volume rows ([docs/flags/pause_menu.md](flags/pause_menu.md)) |
 | `hud.hpp` (next to Hud) | `HUD_SLIDE_STATE_` | the HUD counters' `livesSlide`/`wumpaSlide`/`crateSlide` (hidden, sliding in, held, sliding out) ([docs/flags/hud_slide.md](flags/hud_slide.md)) |
 | `gfx.h` (next to the OAM structs; hardware) | `OAM_OBJ_MODE_` | attr0's `objMode` and Sprite's `gfxMode`: normal, semi-transparent, OBJ window ([docs/flags/oam.md](flags/oam.md)) |

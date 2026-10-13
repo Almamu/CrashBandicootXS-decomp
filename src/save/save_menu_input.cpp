@@ -19,8 +19,8 @@ extern "C" {
 }
 
 /* SaveMenu's run loop, constructor, destructor and input handlers
- * (include/save_menu.hpp, #664's final cleanup), with RunSaveMenu (C
- * linkage); the save transfer's three accessors that started the file
+ * (include/save_menu.hpp, #664's final cleanup), with the static Run
+ * (#915); the save transfer's three accessors that started the file
  * are at the end of save_transfer_state.cpp since #767. The C needed
  * nine register pins in the constructor and destructor and the
  * hand-written slot calls of the slot list's icons; DrawMain was two
@@ -36,15 +36,15 @@ extern "C" {
  * access here rather than `(u8*)&gKeys + 2`, which the
  * compiler folds into the linker-relocated constant instead. */
 
-/* The save menu's modal loop (C linkage, for game_frame.cpp): sets up
- * gSaveMenu's `state`/`cursor`/`flags`/`done`/`gameLoaded`, then
+/* The save menu's modal loop (for game_frame.cpp): sets up
+ * `instance`'s `state`/`cursor`/`flags`/`done`/`gameLoaded`, then
  * repeatedly dispatches input (Input) through the draw state machine
  * (Draw), VBlank-waits and commits the frame (CommitFrame) until `done`
  * (set by one of the state handlers below) requests an exit. Returns
  * `gameLoaded` (a game was loaded). */
-u8 RunSaveMenu(u32 state, u32 cursor)
+u8 SaveMenu::Run(u32 state, u32 cursor)
 {
-    SaveMenu **selfAddr = &gSaveMenu;
+    SaveMenu **selfAddr = &instance;
     SaveMenu *self;
 
     self = *selfAddr;
@@ -70,10 +70,10 @@ u8 RunSaveMenu(u32 state, u32 cursor)
             break;
         }
     }
-    return gSaveMenu->gameLoaded;
+    return instance->gameLoaded;
 }
 
-/* OpenSaveMenu's `new SaveMenu` (InitSaveMenu): `new`s and resets both
+/* Open's `new SaveMenu` (InitSaveMenu): `new`s and resets both
  * saves, sets up the graphics (InitIcons, LoadBg), plays the warp room
  * song, loads the cartridge save (LoadData), summarizes the current game
  * and the cartridge's slots, and builds the link session (gLinkSession,
@@ -109,7 +109,7 @@ SaveMenu::SaveMenu()
     gameLoaded = 0;
 }
 
-/* CloseSaveMenu's `delete gSaveMenu` (DestroySaveMenu): destroys the link
+/* Close's `delete instance` (DestroySaveMenu): destroys the link
  * session (`delete gLinkSession`: a null test and DestroyLinkSession with
  * 3), deletes the two saves and the slot list's 15 icons (through their
  * virtual destructors, slot 10). */

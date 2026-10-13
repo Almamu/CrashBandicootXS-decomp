@@ -2043,6 +2043,13 @@ DrawLoadLink__8SaveMenu DrawSaveMenuLoadLink
 DrawLoad__8SaveMenu DrawSaveMenuLoad
 Draw__8SaveMenu DrawSaveMenu
 DeleteSlot__8SaveMenui DeleteSaveSlot
+# #915 SaveMenu: the save menu singleton as static members of SaveMenu
+# (include/save_menu.hpp, src/save/save_menu.cpp, save_menu_input.cpp). Its
+# data member keeps the C name: iwram_data.cpp defines it.
+Open__8SaveMenu OpenSaveMenu
+Run__8SaveMenuUiUi RunSaveMenu
+Close__8SaveMenu CloseSaveMenu
+_8SaveMenu.instance gSaveMenu
 # The audio context (AudioContext, include/audio.hpp; src/audio/audio.cpp)
 Update__12AudioContext UpdateAudio
 StartSong__12AudioContextUi StartSong

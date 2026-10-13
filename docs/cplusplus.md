@@ -698,6 +698,8 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/gfx/display.cpp` (again) | `Display` (new include/display.hpp), an all-static class: the DISPCNT and blend shadows are public static data members (`dispcnt` is gDispcnt, `blendRegs` gBlendRegs), the 15 helpers static member functions (`SetMode`, `ShowBg2`, `CommitDispcnt`, ...); gfx.h's 15 prototypes and 2 externs go; 13 files call `Display::ShowObj()` & co. or set `Display::dispcnt` | 15 | (unchanged) | 0 -> 0 | [#915](#the-display-registers-as-an-all-static-class-915) |
 | `src/gfx/vram_dma_queue.cpp` | `VramDmaQueue` (new include/vram_dma_queue.hpp), an all-static class: gVramDmaQueue is the static data member `queue`, its 4 functions static member functions (`Flush`, `Add`, `Destroy`, `Init`); gfx.h's 4 prototypes and extern go | 4 | (unchanged) | 0 -> 0 | [#915](#the-vram-dma-queue-as-an-all-static-class-915) |
 | `src/actor/actor_category_init.cpp`, `actor_palette_cycle.cpp`, `src/frontend/company_logos.cpp`, `credits.cpp`, `language_select_setup.cpp`, `src/gfx/obj_vram_cursor.cpp`, `sprite_frame.cpp`, `src/level/level_cutscene.cpp`, `play_room.cpp`, `spawn_markers.cpp`, `tile_slot_pool.cpp`, `src/menus/continue_prompt.cpp`, `pause_menu_pages_draw.cpp`, `power_dialog_draw.cpp`, `src/save/save_menu.cpp`, `src/vehicle/jetpack/airship.cpp`, `airship_graphics.cpp`, `jetpack_player.cpp`, `src/vehicle/polar/polar_aku_aku.cpp`, `polar_player.cpp`, `include/level_select.hpp` | the callers: `VramDmaQueue::Add(...)`, `VramDmaQueue::Flush()` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-vram-dma-queue-as-an-all-static-class-915) |
+| `src/save/save_menu.cpp`, `save_menu_input.cpp`, `src/iwram/iwram_data.cpp` | the save menu singleton as static members of `SaveMenu` (include/save_menu.hpp): gSaveMenu is the private static data member `instance`, OpenSaveMenu/RunSaveMenu/CloseSaveMenu the static member functions `Open`/`Run`/`Close`; save.h's 3 prototypes and extern go | 3 | (unchanged) | 0 -> 0 | [#915](#the-save-menu-singleton-as-static-members-of-savemenu-915) |
+| `src/level/game_frame.cpp` | the caller: `SaveMenu::Open()`, `SaveMenu::Run(...)`, `SaveMenu::Close()` | 0 | (unchanged) | 0 -> 0 | [#915](#the-save-menu-singleton-as-static-members-of-savemenu-915) |
 | `src/gfx/sprite_frame.cpp` | the OBJ tile allocator, the overflow OAM queue and the sprite frame cache (C linkage); FlushSpriteFrameOamQueue calls `gOamBuffer->Append`, `HideUnused`, `SetAffineScales` (sprite_obj.hpp), whose C prototypes go | 0 + 18 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/system/asset.cpp`, `main.cpp`, `main_loop.cpp`, `memory.cpp` | `LoadTaggedAsset`, `LoadBackgroundTileAndPalette`; `AgbMain`; `MainLoop`, `GetUiText`; the heap (`mem_*`, C linkage) | 0 + 12 | agbcp | 1 file-scope asm -> 1 (`mem_walk_heaps`) | all-C++: gfx, system, util, text |
 | `src/system/input.cpp`, `irq.cpp` (the key reading since in `key_input.cpp`, #767) | `WaitForKeyPress`; the IRQ table, the VBlank handler and callbacks, the key reading (C linkage), and `KeyInput`'s constructor (`ClearKeys`, spawners.hpp), whose C prototype goes | 1 + 17 | old_agbcp | 1 pin -> 1 pin | all-C++: gfx, system, util, text |
@@ -4237,6 +4239,31 @@ and every object is byte-identical.
   argument: they work on the one global, so instance methods would add a
   `this` in r0 to every call. They are static members, as the inventory
   proposed.
+
+### The save menu singleton as static members of SaveMenu (#915)
+
+UpdateGameFrame opens the save menu twice (the title screen's "load",
+and on leaving the level select) with the same three calls:
+OpenSaveMenu (save_menu.cpp) builds the menu into gSaveMenu,
+RunSaveMenu (save_menu_input.cpp) runs its loop in the state it is
+given and returns `gameLoaded`, and CloseSaveMenu (save_menu.cpp)
+deletes it. gSaveMenu (an initialised IWRAM global at 0x0300080C,
+iwram_data.cpp) is read by those three only: the menu's
+methods use `this`. The three are now static members of `SaveMenu`
+(include/save_menu.hpp), and every object is byte-identical.
+
+- **Data.** `instance` (gSaveMenu) is a private static data member.
+  iwram_data.cpp defines it in its place
+  (`SaveMenu *SaveMenu::instance = 0;`), like
+  [the room exit flag](#the-room-exit-flag-as-static-members-of-levelprogress-915).
+- **Functions.** `Open` (OpenSaveMenu), `Run` (RunSaveMenu) and `Close`
+  (CloseSaveMenu) are public static member functions. cxx_symbols.txt's
+  `#915 SaveMenu` block maps them and `instance` to their C names.
+  Static: they take no menu, and as methods they would take
+  `gSaveMenu` in r0 at every call.
+- **Callers.** game_frame.cpp calls `SaveMenu::Open()`,
+  `SaveMenu::Run(...)` and `SaveMenu::Close()`. save.h's 3 prototypes and
+  its gSaveMenu extern go; its SAVE_MENU_STATE_* values stay.
 
 ### The level state as a class (#750)
 

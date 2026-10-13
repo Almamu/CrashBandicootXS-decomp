@@ -1,4 +1,5 @@
 #include "hud.hpp"
+#include "save_menu.hpp"
 #include "frontend.hpp"
 #include "spawners.hpp"
 #include "audio.hpp"
@@ -90,9 +91,9 @@ load:
         goto load;
     }
     if (result != 0) {
-        OpenSaveMenu();
-        RunSaveMenu(SAVE_MENU_STATE_LOAD, 0);
-        CloseSaveMenu();
+        SaveMenu::Open();
+        SaveMenu::Run(SAVE_MENU_STATE_LOAD, 0);
+        SaveMenu::Close();
     } else {
         gLevelState->PlayCutscene(2);
     }
@@ -108,9 +109,9 @@ load:
         MemCopy32(&progress, &saveData, sizeof(GameProgress));
         MemCopy32(&checkpointData, &progress, sizeof(GameProgress));
         if (quit) {
-            OpenSaveMenu();
-            quit = RunSaveMenu(SAVE_MENU_STATE_MAIN, 0);
-            CloseSaveMenu();
+            SaveMenu::Open();
+            quit = SaveMenu::Run(SAVE_MENU_STATE_MAIN, 0);
+            SaveMenu::Close();
             if (quit)
                 room.checkpointFlags = 0;
             goto restore;
