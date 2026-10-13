@@ -1,5 +1,6 @@
 #include "level_state.hpp"
 #include "audio.hpp"
+#include "save_menu.hpp"
 #include "cutscene.hpp"
 #include "hud.hpp"
 #include "frontend.hpp"
@@ -75,7 +76,7 @@ u32 gSfxVoiceToggle = 0;
 u8 gLinkSessionReset = 1;
 LinkSession *gLinkSession = 0;
 u8 gEepromNeedsInit = 1;
-SaveMenu *gSaveMenu = 0;
+SaveMenu *SaveMenu::instance = 0;
 /* The two link compatibility messages, stored after the CRC table
  * (src/data/link_crc_16af10.cpp): "crash 1 <-> crash 2", "crash 1 <-> crash 3". */
 const u8 *gCrash2LinkTextPtr = (const u8 *)gCrash2LinkText;

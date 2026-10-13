@@ -27,7 +27,7 @@ void SaveMenu::MessageInput(u32 keys)
 }
 
 /* Writes the DISPCNT shadow and the BG0 scroll (frame >> 3), and flushes
- * the palette cache, the OAM buffer and the VRAM DMA queue: RunSaveMenu's
+ * the palette cache, the OAM buffer and the VRAM DMA queue: Run's
  * once-a-frame commit. */
 void SaveMenu::CommitFrame()
 {
@@ -38,22 +38,22 @@ void SaveMenu::CommitFrame()
     VramDmaQueue::Flush();
 }
 
-/* Deletes the save menu (C linkage, for game_frame.cpp) and frees the
- * palette slots it held. */
-void CloseSaveMenu(void)
+/* Deletes the save menu (for game_frame.cpp) and frees the palette
+ * slots it held. */
+void SaveMenu::Close()
 {
-    delete gSaveMenu;
-    gSaveMenu = 0;
+    delete instance;
+    instance = 0;
     gPaletteCache->FreeUnlockedSlots();
 }
 
-/* Builds the save menu into gSaveMenu (C linkage, for game_frame.cpp);
- * RunSaveMenu runs it. */
-void OpenSaveMenu(void)
+/* Builds the save menu into `instance` (for game_frame.cpp); Run runs
+ * it. */
+void SaveMenu::Open()
 {
     SaveMenu **dest;
 
     gPaletteCache->FreeUnlockedSlots();
-    dest = &gSaveMenu;
+    dest = &instance;
     *dest = new SaveMenu;
 }
