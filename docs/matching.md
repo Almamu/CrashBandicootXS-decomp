@@ -5552,10 +5552,10 @@ anticipation; the actual `CpuSet` definition was still raw here.
   `_call_via_r4`/`_call_via_r5`/`_call_via_r6`/`_call_via_r7`**
   (`lib/libgcc/lib1funcs.s`) - the `bx r0`..`bx sp` "call through
   whatever's already in this register" trampoline table already
-  referenced by name from `src/system/irq.cpp`'s `VBlankHandler`
-  (`_call_via_r0()`, relying on `r0` still holding a function pointer
-  from the preceding `if (*p != 0)` comparison) and several actor and
-  object files. `_call_via_r7` alone covers the `r7`-`sp` entries as one
+  the compiler calls for every indirect call. (The C once named them,
+  e.g. `VBlankHandler`'s `_call_via_r0()` relying on `r0` still holding
+  the pointer from the `if (*p != 0)` test; since #1021 nothing does:
+  that call is `(*p)()` through `irq_handler_t funcs[8]`.) `_call_via_r7` alone covers the `r7`-`sp` entries as one
   function/one label, since nothing in the ROM branches directly into
   those individual offsets.
 - **`_call_via_lr`** - bonus match just past issue #69's own listed range

@@ -81,8 +81,8 @@ void Irq::EnableVBlankHandler()
     irq_handler_t fn = VBlankHandler;
     struct vblank_callbacks *base = &vblankCallbacks;
     /* `zero` is needed: inlined, the instructions are reordered */
-    s32 zero = 0;
-    s32 *current = &base->funcs[7];
+    irq_handler_t zero = 0;
+    irq_handler_t *current = &base->funcs[7];
 
     do {
         *current-- = zero;
@@ -119,7 +119,7 @@ s32 Irq::AddVBlankCallback(void (*fn)(void))
 
     while (index <= 7) {
         if (vblankCallbacks.funcs[index] == 0) {
-            vblankCallbacks.funcs[index] = (s32)fn;
+            vblankCallbacks.funcs[index] = fn;
             return index;
         }
 
@@ -175,14 +175,12 @@ void FrameLimiter::Set(u32 frameCount)
     enabled = 1;
 }
 
-extern "C" void _call_via_r0(void);
-
-/* The VBlank IRQ handler: calls GAX_irq while gGaxIrqEnabled is set, calls every VBlank callback (through
- * _call_via_r0, with the pointer left in r0 by the test) and counts the
- * frame in gVBlankCounter. */
+/* The VBlank IRQ handler: calls GAX_irq while gGaxIrqEnabled is set,
+ * calls every non-zero VBlank callback and counts the frame in
+ * gVBlankCounter. */
 void Irq::VBlankHandler()
 {
-    s32 *p;
+    irq_handler_t *p;
     s32 i;
 
     if (gGaxIrqEnabled != 0) {
@@ -192,7 +190,7 @@ void Irq::VBlankHandler()
     i = 7;
     do {
         if (*p != 0) {
-            _call_via_r0();
+            (*p)();
         }
         p++;
         i--;

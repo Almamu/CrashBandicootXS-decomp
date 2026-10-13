@@ -15,7 +15,7 @@ extern "C" {
  * the 2nd argument (the category's `spawnTable`, a struct
  * actor_spawn_table, actor.h),
  * resets `gActorSpawnIndex`/`gActorSpawnsPaused`/`gActorSpawnOffset` to
- * 0, draws the vtable's slot-0 function pointer via `_call_via_r3`
+ * 0, draws through the vtable's slot-0 function pointer
  * (its 3rd/4th arguments as x/y - the 5th argument, stack-passed, per the ROM's own
  * `ldr r6, [sp, #0x20]`), then runs a two-pass scan over the
  * spawns comparing each one's depth (`spawn.z`) plus `gActorSpawnOffset`'s
@@ -23,9 +23,9 @@ extern "C" {
  * slot, a value): the first pass finds the last
  * entry whose adjusted threshold the vtable slot still exceeds
  * (`gActorSpawnIndex`, an index into the table), the second draws
- * every entry from index 0 up to that point via `_call_via_r3`, mem_
+ * every entry from index 0 up to that point through the same pointer, mem_
  * alloc's a 0xc8-byte scratch buffer (`gActorDrawList`), and fires
- * one more `_call_via_r1` visibility check if the vtable's own +8 slot
+ * one more visibility check through a function pointer if the vtable's own +8 slot
  * is set, before resetting `gActorCategoryFrameCount`'s call counter to 0.
  *
  * The ROM passes a 6th argument: `[sp, #0x1c]` is the 5th (handed to

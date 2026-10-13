@@ -14,7 +14,7 @@ extern "C" {
 /* PauseMenu's time trial and crystals pages, its page title and its
  * frame commit (menus.hpp; C++ since the #664 cleanup). The font draws
  * are Font's virtual MeasureText and DrawText (the C spelled them out as
- * `_call_via_r2` slot calls); see
+ * hand-written method-table slot calls); see
  * docs/matching/archive/issue-4-6-8-naked-retry.md. */
 
 /* The time trial page: the medal, if earned, and the trial's time

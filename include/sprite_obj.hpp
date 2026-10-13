@@ -40,7 +40,6 @@ extern "C" {
 #include "box_part.h"
 #include "gfx_part.h"
 #include "objects.h"
-#include "gobj_1a794.h"
 #include "gfx.h"
 #include "globals.h"
 #include "level.h"

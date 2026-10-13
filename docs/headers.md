@@ -39,10 +39,11 @@ page, with the tools that check it (`tools/extern_audit.py`,
 4. References from one `src/data/` table to another (or to a `data/`
    label) stay in the data files. They are address-only and many are
    generated, so a header adds nothing.
-5. `_call_via_r0`..`_call_via_r7` never go in a header. They are libgcc's
-   register-call thunks, and each call site declares the shape it calls
-   with: the argument and return types of that declaration decide how the
-   call is set up.
+5. `_call_via_r0`..`_call_via_r7` are not declared at all. They are
+   libgcc's register-call thunks, which the compiler calls on its own for
+   an indirect call; the code writes that call as a call through a typed
+   function pointer, a virtual call or a member function call (#1021).
+   Nothing in `src/`, `include/` or `lib/gax/` names them.
 
 Other homes:
 
@@ -104,7 +105,7 @@ doesn't read the C++ files, so their aliases are only in the table below.
 | Kind | Why |
 |---|---|
 | Codegen aliases (`extern T Foo_x(...) asm("Foo");`) | the file needs another type for byte-identical code; each one is in "Codegen exceptions" below |
-| `_call_via_r0`..`_call_via_r7` | rule 5 above |
+| `_call_via_r0`..`_call_via_r7` | none are left (rule 5 above) |
 | Data-to-data references | rule 4 above |
 | Library-internal | a library's own internal symbol, declared inside that library where its original source declares it (libgcc2.c's `__div0` and `__clz_tab`) |
 | Documented | `src/system/asset.cpp`'s one-argument `LZ77UnCompVram`/`RLUnCompVram` (docs/libraries.md); the `DOCUMENTED` set in `tools/extern_audit.py` |

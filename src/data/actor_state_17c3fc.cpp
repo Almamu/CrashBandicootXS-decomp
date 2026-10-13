@@ -9,7 +9,7 @@
  */
 
 /* The airship's state functions (gAirshipStateFuncs), a plain function
- * table of Airship's static members, called through _call_via_r0 as
+ * table of Airship's static members, called through the pointer as
  * `stateFuncs[state]()` by Airship::Update (airship.cpp). */
 void (*const Airship::stateFuncs[6])() = {
     &Airship::StateInactive,

@@ -10,7 +10,7 @@ extern "C" {
  * ldscript.txt - see docs/data.md.
  */
 
-/* {a, b} motion-record index pairs (`struct vec_pair`, gobj_1a794.h):
+/* {a, b} motion-record index pairs:
  * dingodile_create.cpp indexes gDingodileMotionRecords with entries 0-3;
  * entries 4-7 are gPlatformMoverMotionSet's, indexing gPlatformMoverMotionRecords
  * (platform_mover.cpp). */

@@ -1,7 +1,5 @@
 #include "gax_internal.h"
 
-extern void *_call_via_r1(void *arg0, void *fn);
-
 /* The sound-effect voice type's `unknown_fn` (ROM `0x0803A228`): a no-op
  * stub like the other types' `unknown_fn`s. It isn't called by name; its
  * only reference is the voice handler type at the end of the sound-effect
@@ -18,10 +16,10 @@ void GaxFxChannelUnknown(void)
 
 /* The GAX2_SoundHandler mixer type's `init_fn` (ROM `0x0803A22D`, see
  * docs/audio.md) - `self` is the mixer handler. Sets `pos` to 1, then
- * runs every child's `init` callback (`child->type->init`) through the
- * `_call_via_r1` trampoline. The children are the song's channels
- * (`type->childCount`), plus the `extraChildren` sound-effect voices
- * when this is the music player (`curChannelIdx == 0`). */
+ * calls every child's `init` callback (`child->type->init`). The
+ * children are the song's channels (`type->childCount`), plus the
+ * `extraChildren` sound-effect voices when this is the music player
+ * (`curChannelIdx == 0`). */
 void GaxMixerInit(void *self)
 {
     struct GaxMixerHandler *p = self;
@@ -32,7 +30,7 @@ void GaxMixerInit(void *self)
                                                          : p->type->childCount);
          i++) {
         struct GaxHandler *elem = p->children[i];
-        _call_via_r1(elem, elem->type->init);
+        elem->type->init(elem);
     }
 }
 
