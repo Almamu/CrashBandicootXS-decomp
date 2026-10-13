@@ -11,7 +11,11 @@ extern "C" {
  */
 
 /* The HUD digit array's 35 slots (hud_init.cpp,
- * hud_counters.cpp): an animation index and a position per slot. */
+ * hud_counters.cpp): an animation index and a position per slot. The HUD
+ * is drawn over the game's view, so each position is anchored to the
+ * screen edge or the centre it belongs to (DISPLAY_LEFT/RIGHT/TOP/BOTTOM,
+ * DISPLAY_CENTER_X; screen.h, docs/screen.md): a bigger screen keeps the
+ * counters in its corners. */
 const u32 gHudPartAnims[35] = {
     0, 0, 10, 0, 0, 0, 1, 1, 1, 2, 3, 0,
     0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 6, 5,
@@ -19,41 +23,51 @@ const u32 gHudPartAnims[35] = {
 };
 
 const struct vec2 gHudPartPositions[35] = {
-    { 212, 16 },
-    { 227, 16 },
-    { 190, 16 },
-    { 100, 16 },
-    { 115, 16 },
-    { 130, 16 },
-    { 120, 21 },
-    { 128, 21 },
-    { 136, 21 },
-    { 78, 16 },
-    { 112, 21 },
-    { 32, 16 },
-    { 47, 16 },
-    { 11, 16 },
-    { 175, 145 },
-    { 183, 145 },
-    { 189, 145 },
-    { 195, 145 },
-    { 203, 145 },
-    { 209, 145 },
-    { 215, 145 },
-    { 223, 145 },
-    { 21, 20 },
-    { 61, 20 },
-    { 18, 145 },
-    { 42, 145 },
-    { 58, 145 },
-    { 74, 145 },
-    { 90, 145 },
-    { 158, 145 },
-    { 182, 145 },
-    { 198, 145 },
-    { 214, 145 },
-    { 230, 145 },
-    { 120, 140 },
+    /* 0-2: the lives counter (UpdateLives): top right */
+    { DISPLAY_RIGHT(28), DISPLAY_TOP(16) },
+    { DISPLAY_RIGHT(13), DISPLAY_TOP(16) },
+    { DISPLAY_RIGHT(50), DISPLAY_TOP(16) },
+    /* 3-10: the crate counter (UpdateCrates): top centre */
+    { DISPLAY_CENTER_X - 20, DISPLAY_TOP(16) },
+    { DISPLAY_CENTER_X - 5, DISPLAY_TOP(16) },
+    { DISPLAY_CENTER_X + 10, DISPLAY_TOP(16) },
+    { DISPLAY_CENTER_X, DISPLAY_TOP(21) },
+    { DISPLAY_CENTER_X + 8, DISPLAY_TOP(21) },
+    { DISPLAY_CENTER_X + 16, DISPLAY_TOP(21) },
+    { DISPLAY_CENTER_X - 42, DISPLAY_TOP(16) },
+    { DISPLAY_CENTER_X - 8, DISPLAY_TOP(21) },
+    /* 11-13: the wumpa counter (UpdateWumpa): top left */
+    { DISPLAY_LEFT(32), DISPLAY_TOP(16) },
+    { DISPLAY_LEFT(47), DISPLAY_TOP(16) },
+    { DISPLAY_LEFT(11), DISPLAY_TOP(16) },
+    /* 14-21: the clock (UpdateClock): bottom right (the jetpack levels'
+     * Hud() moves it to the top row, DISPLAY_TOP(20), hud_init.cpp) */
+    { DISPLAY_RIGHT(65), DISPLAY_BOTTOM(15) },
+    { DISPLAY_RIGHT(57), DISPLAY_BOTTOM(15) },
+    { DISPLAY_RIGHT(51), DISPLAY_BOTTOM(15) },
+    { DISPLAY_RIGHT(45), DISPLAY_BOTTOM(15) },
+    { DISPLAY_RIGHT(37), DISPLAY_BOTTOM(15) },
+    { DISPLAY_RIGHT(31), DISPLAY_BOTTOM(15) },
+    { DISPLAY_RIGHT(25), DISPLAY_BOTTOM(15) },
+    { DISPLAY_RIGHT(17), DISPLAY_BOTTOM(15) },
+    /* 22-23: the boss icons (UpdateBoss): top left */
+    { DISPLAY_LEFT(21), DISPLAY_TOP(20) },
+    { DISPLAY_LEFT(61), DISPLAY_TOP(20) },
+    /* 24-28: the first percentage counter (UpdatePercentCounters, the
+     * player's): bottom left */
+    { DISPLAY_LEFT(18), DISPLAY_BOTTOM(15) },
+    { DISPLAY_LEFT(42), DISPLAY_BOTTOM(15) },
+    { DISPLAY_LEFT(58), DISPLAY_BOTTOM(15) },
+    { DISPLAY_LEFT(74), DISPLAY_BOTTOM(15) },
+    { DISPLAY_LEFT(90), DISPLAY_BOTTOM(15) },
+    /* 29-33: the second (the airship's): bottom right */
+    { DISPLAY_RIGHT(82), DISPLAY_BOTTOM(15) },
+    { DISPLAY_RIGHT(58), DISPLAY_BOTTOM(15) },
+    { DISPLAY_RIGHT(42), DISPLAY_BOTTOM(15) },
+    { DISPLAY_RIGHT(26), DISPLAY_BOTTOM(15) },
+    { DISPLAY_RIGHT(10), DISPLAY_BOTTOM(15) },
+    /* 34: the bonus round's part (Update): bottom centre */
+    { DISPLAY_CENTER_X, DISPLAY_BOTTOM(20) },
 };
 
 /* The two HUD fonts built by InitSmallFont and InitLargeFont
