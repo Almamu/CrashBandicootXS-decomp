@@ -56,6 +56,8 @@ name in its subsystem's header, spelled with the macros:
 | `LEVEL_SELECT_ZOOM_MIN`, `ZOOM_BG_ZOOM_STEP` | `Q8_FRAC(0, 8)` | `level_select.hpp`: the level-select zooms' smallest scale (1/32) and the picture's zoom a frame |
 | `PLAYER_MAX_FALL_SPEED` | `INT_TO_Q8(6)` | `player.hpp`: the jump and fall records' target |
 | `SWIM_STROKE_SPEED`, `SWIM_SPIN_SPEED` | `Q8(2.75)`, `Q8(3.75)` | `swim_ctrl.hpp`: the diver's stroke and spin, split between X and Y by the direction (3/4, 1/2, 1/4 of it) |
+| `ACTOR_FOCAL_LENGTH`, `ACTOR_FOCAL_LENGTH_POLAR` | `INT_TO_Q8(28)`, `INT_TO_Q8(47)` | `actor.h`: gActorFocalLength, the 3D levels' projection distance (InitActorBgScroll) |
+| `ACTOR_PROJECTION` | `INT_TO_Q12(ACTOR_FOCAL_LENGTH)` | `actor.h`: the Q12 projection's numerator; `ACTOR_PROJECTION / depth` is the Q12 scale of a Q8 position (the jetpack player, the airship, the hovercraft) |
 
 `--fixed` counts a `#define` in include/ whose value is spelled with a
 fixed-point macro as spelled. A value with no evidence for a name keeps

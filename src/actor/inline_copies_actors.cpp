@@ -27,10 +27,10 @@ RiderlessPolar::~RiderlessPolar()
 {
 }
 
-/* Rises 0x180 a frame and deletes itself once its animation is done. */
+/* Rises 1.5 px a frame and deletes itself once its animation is done. */
 void PolarCheckpointText::Update()
 {
-    y += -0x180;
+    y += -Q8(1.5);
 
     if (animDone != 0)
         delete this;
@@ -122,7 +122,7 @@ PolarCheckpointCrate::~PolarCheckpointCrate()
 
 /* The current frame at the fixed screen position (DISPLAY_CENTER_X, 106),
  * culled off
- * screen: ActorSelf::Draw (actor.cpp) at a fixed scale of 0x100, its
+ * screen: ActorSelf::Draw (actor.cpp) at a fixed scale of 1:1, its
  * double-size flag and size tests still written against `scale`. The ROM
  * ORs a zero into the attribute word: the flag folds away in the size
  * tests but not in the OR, where reload rematerializes it as `movs r0,
@@ -132,7 +132,7 @@ void JetpackCheckpointText::Draw()
 {
     screen_x_t x = DISPLAY_CENTER_X;
     screen_y_t y = 106;
-    s32 scale = 0x100;
+    s32 scale = INT_TO_Q8(1);
     u8 *frame;
     u32 flag;
     screen_dx_t halfW;
@@ -140,13 +140,13 @@ void JetpackCheckpointText::Draw()
 
     frame = GetAnimFrameData();
     flag = 0;
-    if (scale <= 0xff)
+    if (scale <= INT_TO_Q8(1) - 1)
         flag = 0x200;
-    if (scale <= 0xff)
+    if (scale <= INT_TO_Q8(1) - 1)
         halfW = frame[0] << 3;
     else
         halfW = frame[0] << 2;
-    if (scale <= 0xff)
+    if (scale <= INT_TO_Q8(1) - 1)
         halfH = frame[1] << 3;
     else
         halfH = frame[1] << 2;

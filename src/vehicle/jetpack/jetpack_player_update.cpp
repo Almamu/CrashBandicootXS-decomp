@@ -142,7 +142,7 @@ void JetpackPlayer::Draw()
         s32 f;
 
         scale = Q8_DIV(d, record->baseDepth);
-        f = 0x1c00000 / d;
+        f = ACTOR_PROJECTION / d;
         sy = Q8_TO_INT(Q12_MUL(y, f) + GetActorBgCenterY());
         sx = Q8_TO_INT(Q12_MUL(x, f) + GetActorBgCenterX());
         attr1 = 0x100;

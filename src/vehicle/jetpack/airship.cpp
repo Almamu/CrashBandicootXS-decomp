@@ -174,7 +174,7 @@ void Airship::Spawn(s32 kind, s32 sx, s32 sy, s32 sz)
     bg2PageFlip = 1;
     bg2Page = 0;
     distance = z - INT_TO_Q8(GetCellAnimDistance());
-    scale = __divsi3(0x1C00000, distance);
+    scale = __divsi3(ACTOR_PROJECTION, distance);
     screenX = Q12_MUL(x, scale);
     screenY = Q12_MUL(scale, y);
     SetActorBgLayerDepth(distance);
@@ -218,7 +218,7 @@ void Airship::Update()
             self->animDone = 1;
         }
         distance = z - INT_TO_Q8(GetCellAnimDistance());
-        scale = __divsi3(0x1C00000, distance);
+        scale = __divsi3(ACTOR_PROJECTION, distance);
         screenX = Q12_MUL(x, scale);
         screenY = Q12_MUL(scale, y);
         SetActorBgLayerDepth(distance);

@@ -306,8 +306,16 @@ extern s32 gSavedActorPaletteCycleTarget;
 extern s32 gActorCategoryBossDeaths;
 /* The projection distance (Q8): DrawActor scales x/y by
  * gActorFocalLength / depth, and InitCellAnim starts the cell animation
- * this far from the checkpoint. Set by InitActorBgScroll. */
+ * this far from the checkpoint. Set by InitActorBgScroll: 47 px in the
+ * polar levels, 28 px in the others. */
 extern s32 gActorFocalLength;
+#define ACTOR_FOCAL_LENGTH_POLAR INT_TO_Q8(47)
+#define ACTOR_FOCAL_LENGTH       INT_TO_Q8(28)
+/* The Q12 projection of the 3D levels with the non-polar focal length
+ * (the jetpack player, the airship and the hovercraft): ACTOR_PROJECTION
+ * / depth (a Q8 depth) is the Q12 scale that Q12_MUL applies to a Q8
+ * position, as ActorSelf::Draw's INT_TO_Q12(gActorFocalLength) / depth. */
+#define ACTOR_PROJECTION INT_TO_Q12(ACTOR_FOCAL_LENGTH)
 /* The depth of the BG2 boss layer (the yeti, airship or hovercraft):
  * actors deeper than it get OBJ priority 2 and draw behind it (bit 15 of
  * their sortKey). InitActorBgScroll resets it to gActorFarClipDepth; the
