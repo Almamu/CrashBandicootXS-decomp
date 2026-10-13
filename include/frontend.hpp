@@ -402,6 +402,9 @@ COMPILE_TIME_ASSERT(frontend_hpp, sizeof(CompanyLogos) == 0x44C);
 #define LOGO_ACTOR_STATE_HIT 2     // sequence 7, frozen at its frame 7 (SFX_PLAYER_HURT)
 #define LOGO_ACTOR_STATE_FLY_OFF 3 // towards the camera and up, for 16 frames
 #define LOGO_ACTOR_STATE_GONE 4    // the end: Draw draws nothing
+/* LOGO_ACTOR_STATE_FLY_OFF: he comes towards the camera by this much a
+ * frame (Q8, z falls), and goes up by a pixel. */
+#define LOGO_ACTOR_FLY_OFF_SPEED_Z Q8_FRAC(0, 0xe)
 class LogoActor : public ActorSelf
 {
 public:

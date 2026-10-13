@@ -123,6 +123,14 @@ GENERIC = re.compile(r"(?:vec2|vec3|aabb|hitbox\w*|oam_attrs|bresenham_line)::")
 BYTE_TYPES = ("u8", "s8", "char", "bool", "bool8")
 # The formats a shift of N bits converts.
 SHIFT_BITS = (4, 8, 12, 16)
+# Locals whose names say speed or position but that the code shows hold
+# whole steps (checked by hand, #916): (local name, function, reason).
+INT_LOCALS = [
+    (re.compile(r"^d[xy]$"), re.compile(r"^FindLineCrossing[XY]Major$"),
+     "a Bresenham line's extent in whole pixels (the major one is the step count)"),
+    (re.compile(r"^speed$"), re.compile(r"^UpdateFall$"),
+     "the crate's fall: the whole-pixel steps it takes this frame (fallSpeed's copy)"),
+]
 # The directories whose positions are screen pixels (2D layouts), unless
 # the code shows they are Q8.
 UI = re.compile(r"src/(menus|save|hud|text|cutscene)/")
@@ -637,6 +645,11 @@ def classify(site, fmts, model_types):
         return "integer", "-", "a value already converted to whole units (Q8_TO_INT, >> 8)"
     if role == "pointer":
         return "integer", "-", "a pointer: its arithmetic steps through memory"
+    lm = re.match(r"local (\w+) \((\w+),", thing or "")
+    if lm:
+        for name_re, func_re, why in INT_LOCALS:
+            if name_re.match(lm.group(1)) and func_re.match(lm.group(2)):
+                return "integer", "-", why
     if kind == "shift":
         n = site["value"]
         if BITS_NAME.search(name or "") or re.search(r"OAM_|attr|palette|<< 16\) >> 16|pieces\[|nibble|tile|REG_", src):

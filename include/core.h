@@ -54,4 +54,9 @@
 #define TEST_BIT_SIGN(x, n) ((u32)((x) << (31 - (n))) >> 31)
 #define TEST_BIT_SIGN_U(x, n) (((u32)(x) << (31 - (n))) >> 31)
 
+/* The low 24 bits of a signed `x` as a signed value, `(x << 8) >> 8`:
+ * the bits shifted up into the sign bit and back down (not fixed point;
+ * WorldToScreen's camera position, in pixels). */
+#define SIGN_EXTEND_24(x) (((x) << 8) >> 8)
+
 #endif /* __CORE_H__ */

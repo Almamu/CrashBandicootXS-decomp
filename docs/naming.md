@@ -270,6 +270,7 @@ the expression out or adding another file-local copy:
 |---|---|---|
 | `core.h` | `ARRAY_COUNT(a)` | element count of an array |
 | `core.h` | `BIT(n)`, `TEST_BIT_SHR(x, n)`, `TEST_BIT_SIGN(x, n)`, `TEST_BIT_SIGN_U(x, n)` | bit `n`'s mask `1 << n`; bit `n` of `x` as 0/1, spelled `(x >> n) & 1`, `(u32)(x << (31 - n)) >> 31` or `((u32)x << (31 - n)) >> 31` (each compiles differently: keep the site's) |
+| `core.h` | `SIGN_EXTEND_24(x)` | the low 24 bits of `x` as a signed value, `(x << 8) >> 8` (not fixed point) |
 | `math_util.h` | `Q8_TO_INT`, `INT_TO_Q8`, `Q12_*`, `Q16_*` | fixed-point conversions (`x >> 8`, `x << 8`, ...) |
 | `math_util.h` | `Q8_TO_INT_INPLACE(x)` | the in-place conversion `x >>= 8` |
 | `math_util.h` | `Q8_MUL(a, b)`, `Q8_DIV(a, b)`, `Q12_MUL(a, b)` | the Q8 product `(a * b) >> 8`, the Q8 quotient `(a << 8) / b` (a ratio or scale), a value times a Q12 scale `(a * b) >> 12` (the screen projections) |

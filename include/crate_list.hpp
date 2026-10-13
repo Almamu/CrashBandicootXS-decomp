@@ -226,7 +226,9 @@ public:
     }
 
     /* The column of `sprite`'s x: its high halfword, read with one
-     * `ldrsh`. */
+     * `ldrsh`. The shift by 16 isn't a Q16 conversion (no Q16_TO_INT):
+     * x is Q8, and its whole pixels divided by CRATE_GRID_COLUMN_WIDTH
+     * (256) fold into one shift. */
     static s32 ColumnOf(Crate *sprite)
     {
         return (s16)(sprite->x >> 16);

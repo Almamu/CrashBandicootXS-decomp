@@ -57,6 +57,8 @@ name in its subsystem's header, spelled with the macros:
 | `JETPACK_*`, `POLAR_*` speeds, gravities and offsets (`JETPACK_PLAYER_FALL_GRAVITY`, `JETPACK_ROLL_RECOVER_STEP`, `POLAR_PLAYER_AIR_GRAVITY`, `POLAR_STEER_START_SPEED`, ...) | `Q8_FRAC(n, f)` | `vehicle.hpp`: the jetpack and polar courses' players and actors |
 | `PLAYER_GRAVITY` | `Q8_FRAC(0, 51)` | `player.hpp`: the jump records' step, 51/256 px a frame per frame |
 | `LEVEL_SELECT_ZOOM_MIN`, `ZOOM_BG_ZOOM_STEP` | `Q8_FRAC(0, 8)` | `level_select.hpp`: the level-select zooms' smallest scale (1/32) and the picture's zoom a frame |
+| `WUMPA_TO_HUD_GROW_STEP`, `PICKUP_FLY_OFF_*` | `Q8_FRAC(0, 4)`, `Q8_FRAC(0, 0xc)`, `Q8(0.25)`, `Q8(1.6875)` | `pickups.hpp`: the picked-up pickups' scale steps and bounds |
+| `PLATFORM_FALL_ACCEL`, `PLATFORM_SLOW_MOVE_ACCEL`; `LOGO_ACTOR_FLY_OFF_SPEED_Z` | `Q8_FRAC(0, f)` | `objects.h`: gPlatformMoverMotionRecords' steps; `frontend.hpp`: the logos' Crash flying off |
 | `PLAYER_MAX_FALL_SPEED` | `INT_TO_Q8(6)` | `player.hpp`: the jump and fall records' target |
 | `SWIM_STROKE_SPEED`, `SWIM_SPIN_SPEED` | `Q8(2.75)`, `Q8(3.75)` | `swim_ctrl.hpp`: the diver's stroke and spin, split between X and Y by the direction (3/4, 1/2, 1/4 of it) |
 | `PLAYER_JUMP_SPEED`, `PLAYER_JUMP_HELD_SPEED`, `PLAYER_JUMP_RELEASED_SPEED`, `PLAYER_DOUBLE_JUMP_SPEED`, `PLAYER_BOUNCE_SPEED`, `PLAYER_BOUNCE_HIGH_HELD_SPEED`, `PLAYER_LAUNCH_PAD_SPEED` | `Q8_FRAC(4, 98)` ... `Q8_FRAC(7, 208)` | `player.hpp`: the jumps' start speeds in gCtrlMotionRecords (negated: up), by the motion entry that queues each |
@@ -97,7 +99,11 @@ its spelling (`INT_TO_Q8(5)`) or its number.
 - **Not every `0x100` is a pixel.** A byte extraction (`>> 8 & 0xFF`), a
   volume (`0x100`), a palette bank (`<< 12`), an OAM field (`<< 16`), a
   tile index or a count isn't fixed point; `--fixed` classifies those as
-  `integer` or `bitfield`.
+  `integer` or `bitfield`. Nor is every pair of shifts: `(x << 8) >> 8`
+  on a pixel position is a sign extension (`SIGN_EXTEND_24`, core.h). A
+  local whose name says speed but holds whole steps (a Bresenham line's
+  `dx`/`dy`, a crate's fall `speed`) is listed in magic_fixed.py's
+  `INT_LOCALS`, with the reason.
 
 ## The inventory (`--fixed`)
 

@@ -120,14 +120,14 @@ void ExtraLife::Update()
         Fly();
         fire = 0;
         if (counter == 0) {
-            s32 t = affine - 4;
+            s32 t = affine - PICKUP_FLY_OFF_SHRINK_STEP;
 
             affine = t;
-            if (t < Q8(0.25))
+            if (t < PICKUP_FLY_OFF_MIN_SCALE)
                 fire = 1;
         } else {
-            affine += 0xc;
-            if (Affine(this) > 0x1b0)
+            affine += PICKUP_FLY_OFF_GROW_STEP;
+            if (Affine(this) > PICKUP_FLY_OFF_MAX_SCALE)
                 fire = 1;
         }
         if (fire)
