@@ -2,6 +2,7 @@
 #include "sprite_obj.hpp"
 #include "sprite_oam_queue.hpp"
 #include "sprite_frame_cache.hpp"
+#include "category_sprite_sheet.hpp"
 
 extern "C" {
 #include "core.h"
@@ -563,11 +564,10 @@ done:
     return result;
 }
 
-/* ROM 0x08029168 - frees the buffer `DecompressCategorySpriteSheet`
- * allocated. */
-void FreeCategorySpriteSheet(void)
+/* ROM 0x08029168 - frees the buffer `Decompress` allocated. */
+void CategorySpriteSheet::Free()
 {
-    mem_free(gCategorySpriteSheet);
+    mem_free(data);
 }
 
 /* ROM 0x0802917C - `InitActorCategory`'s reader for a category
@@ -575,14 +575,14 @@ void FreeCategorySpriteSheet(void)
  * the two giant LZ77 sheets"): allocates a buffer for the declared
  * decompressed size (the tag+size header's top 24 bits) and
  * decompresses into it via the shared `LoadTaggedAsset` dispatcher,
- * stashing the result in `gCategorySpriteSheet` - the same global
- * `GetAnimFrameData` adds to a raw `table_B` pointer for the
+ * stashing the result in `data` - the buffer
+ * `AnimPart::GetAnimFrameData` adds a raw `table_B` offset to for the
  * "decompressed sheet, relative addressing" animation records. */
-void DecompressCategorySpriteSheet(const void *sheet)
+void CategorySpriteSheet::Decompress(const void *sheet)
 {
     u32 size = *(const u32 *)sheet >> 8;
     void *buf = mem_alloc(size, MEM_HEAP_EWRAM);
 
-    gCategorySpriteSheet = buf;
+    data = buf;
     LoadTaggedAsset(sheet, buf);
 }

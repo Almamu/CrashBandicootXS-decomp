@@ -90,7 +90,7 @@ public:
     /* The current frame's entry in frameOffsets (the keyframe's
      * frameIndex plus the whole frames of animTime), as a pointer: what
      * the 3D draws inline (polar_player.cpp, yeti_graphics.cpp). Unlike
-     * GetAnimFrameData, no gCategorySpriteSheet base is added. */
+     * GetAnimFrameData, no category sprite sheet base is added. */
     u8 *CurFrame()
     {
         s32 t = Q8_TO_INT(animTime);

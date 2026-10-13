@@ -233,13 +233,11 @@ extern void WorldToScreen(void *unused, s32 x, s32 y, s32 *outX, s32 *outY);
 extern void WorldPosToScreen(s32 *pos, s32 *outX, s32 *outY);
 extern void nullsub_12(void);
 
-/* src/gfx/sprite_frame.cpp (the OBJ tile allocator, the OAM queue and the
- * frame cache: obj_tile_allocator.hpp, sprite_oam_queue.hpp,
- * sprite_frame_cache.hpp) */
+/* src/gfx/sprite_frame.cpp (the OBJ tile allocator, the OAM queue, the
+ * frame cache and the category sprite sheet: obj_tile_allocator.hpp,
+ * sprite_oam_queue.hpp, sprite_frame_cache.hpp, category_sprite_sheet.hpp) */
 extern void SetupSpriteFrameOam(u8 *frame, u32 attr01, u32 attr2, s32 priority);
 extern u32 GetSpriteShapeSizeBits(u8 *frame);
-extern void FreeCategorySpriteSheet(void);
-extern void DecompressCategorySpriteSheet(const void *sheet);
 
 /* The menus' sky background (src/data/bg_package_16c484.cpp): the language
  * select, level select, power dialog and save menu load it on BG0. Its

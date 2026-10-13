@@ -1,6 +1,7 @@
 #include "actor_self.hpp"
 #include "vehicle.hpp"
 #include "boss_actors.hpp"
+#include "category_sprite_sheet.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -30,12 +31,12 @@ s32 AnimPart::GetAnimFrameAttr()
 
 /* The current frame's graphics: the keyframe's frameIndex plus the
  * animation's frame, indexing frameOffsets (byte offsets into
- * gCategorySpriteSheet). */
+ * the category sprite sheet). */
 u8 *AnimPart::GetAnimFrameData()
 {
     s32 base = GetAnimFrameBaseOffset();
 
-    return (u8 *)gCategorySpriteSheet + frameOffsets[anims[animIndex].frameIndex + base];
+    return (u8 *)CategorySpriteSheet::data + frameOffsets[anims[animIndex].frameIndex + base];
 }
 
 /* Starts keyframe `idx`: its duration, not done, from the start. */

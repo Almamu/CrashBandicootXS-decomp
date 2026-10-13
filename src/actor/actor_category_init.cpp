@@ -11,6 +11,7 @@
 #include "frame_limiter.hpp"
 #include "sprite_oam_queue.hpp"
 #include "sprite_frame_cache.hpp"
+#include "category_sprite_sheet.hpp"
 #include "collected_spawns.hpp"
 
 extern "C" {
@@ -114,7 +115,7 @@ s32 InitActorCategory(s32 category)
     gActorCategoryDeaths = 0;
     gActorCategoryBossDeaths = 0;
     SetCheckpointAtPlayer_1(gLevelState);
-    DecompressCategorySpriteSheet(CUR_CATEGORY.sprite_sheet);
+    CategorySpriteSheet::Decompress(CUR_CATEGORY.sprite_sheet);
     SetupActorVramPool();
     CollectedSpawns::Clear();
     ActorPaletteCycle::Enable(CUR_CATEGORY.type == CATEGORY_TYPE_POLAR);
@@ -213,7 +214,7 @@ s32 InitActorCategory(s32 category)
     SpriteFrameCache::Destroy();
     SpriteOamQueue::Destroy();
     ObjTileAllocator::Destroy();
-    FreeCategorySpriteSheet();
+    CategorySpriteSheet::Free();
     REG_DISPCNT = DISPCNT_MODE_1 | DISPCNT_OBJ_1D_MAP;
     BACKDROP_COLOR = 0;
     return ret;

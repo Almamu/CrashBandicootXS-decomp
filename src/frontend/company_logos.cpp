@@ -8,6 +8,7 @@
 #include "frame_limiter.hpp"
 #include "sprite_oam_queue.hpp"
 #include "sprite_frame_cache.hpp"
+#include "category_sprite_sheet.hpp"
 
 extern "C" {
 #include "gba/io_reg.h"
@@ -178,7 +179,7 @@ void CompanyLogos::Run()
     SpriteFrameCache::Destroy();
     SpriteOamQueue::Destroy();
     ObjTileAllocator::Destroy();
-    FreeCategorySpriteSheet();
+    CategorySpriteSheet::Free();
 }
 
 /* Reserves the three OBJ VRAM tile blocks and loads the VV logo's three

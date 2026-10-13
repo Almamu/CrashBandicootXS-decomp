@@ -236,7 +236,6 @@ extern s32 gActorSpawnIndex;
 extern s32 gActorSpawnOffset;
 extern struct actor_spawn_table *gActorSpawnTable;
 extern u8 gActorSpawnsPaused;
-extern void *gCategorySpriteSheet; /* the decompressed category sprite sheet */
 /* The deaths since the checkpoint that count towards the category's
  * `retryBossDeaths` (InitActorCategory): being carried off by the yeti
  * (exit status 2) in a type-0 category, any death in the others. */
