@@ -53,8 +53,8 @@ struct delta_record {
      * negative one is stored as a u16 (65535 for -1). They hold any
      * position of a screen up to 32767 pixels. */
     u16 dPosC;  /* 0x06 - Q16.16 position (<<16) */
-    s16 dVelA;  /* 0x08 - Q24.8 velocity (<<8) */
-    s16 dVelB;  /* 0x0a - Q24.8 velocity (<<8) */
+    s16 dVelA;  /* 0x08 - x scale, Q8 (<<8 into velA's Q16) */
+    s16 dVelB;  /* 0x0a - y scale, Q8 (<<8 into velB's Q16) */
     s32 deltaA; /* 0x0c - raw delta for dPosA's live field */
     s32 deltaB; /* 0x10 - raw delta for dPosB's live field */
     s32 deltaC; /* 0x14 - raw delta for dPosC's live field */
@@ -304,8 +304,8 @@ struct LogoPiece {
         } h;
     } posB;
     s32 posC;                          // 0x10
-    s32 velA;                          // 0x14 - x scale (Q24.8)
-    s32 velB;                          // 0x18 - y scale (Q24.8)
+    s32 velA;                          // 0x14 - x scale (Q16, INT_TO_Q16(1) = 1:1)
+    s32 velB;                          // 0x18 - y scale (Q16)
     s32 deltaA;                        // 0x1C - added to posA each frame
     s32 deltaB;                        // 0x20 - to posB
     s32 deltaC;                        // 0x24 - to posC

@@ -52,7 +52,7 @@ LevelSelectCursor::LevelSelectCursor()
     oam.palette = part->palette;
     LoadTaggedAsset(gLevelSelectCursorZoomTiles, OBJ_VRAM0 + 0x7800);
     affine.angle = 0;
-    scale = 8;
+    scale = LEVEL_SELECT_ZOOM_MIN;
     state = LEVEL_SELECT_CURSOR_STATE_GROW;
 }
 
@@ -97,19 +97,19 @@ void LevelSelectCursor::Update()
         }
         break;
     case LEVEL_SELECT_CURSOR_STATE_GROW:
-        if (scale <= 0xFF) {
+        if (scale <= INT_TO_Q8(1) - 1) {
             scale += speed;
         } else {
-            scale = 0x100;
+            scale = INT_TO_Q8(1);
             state = LEVEL_SELECT_CURSOR_STATE_IDLE;
             ResetIdleTimer();
         }
         break;
     case LEVEL_SELECT_CURSOR_STATE_SHRINK:
-        if (scale > 8)
+        if (scale > LEVEL_SELECT_ZOOM_MIN)
             scale -= speed;
         else
-            scale = 8;
+            scale = LEVEL_SELECT_ZOOM_MIN;
         break;
     }
 }
@@ -121,7 +121,7 @@ void LevelSelectCursor::Draw()
     SetEntityPixelPos(part, line.x0, line.y0);
     switch (state) {
     case LEVEL_SELECT_CURSOR_STATE_GROW ... LEVEL_SELECT_CURSOR_STATE_SHRINK:
-        if (scale > 8) {
+        if (scale > LEVEL_SELECT_ZOOM_MIN) {
             s32 idx;
 
             oam.x = line.x0 - 0x20;
@@ -147,7 +147,8 @@ void LevelSelectCursor::Draw()
 /* Builds the OBJ affine matrix for the current zoom. */
 void LevelSelectCursor::SetMatrix()
 {
-    u16 s = 0x10000 / scale;
+    /* the OBJ's step: 1 / scale */
+    u16 s = Q8_DIV(INT_TO_Q8(1), scale);
 
     affine.sx = s;
     affine.sy = s;
@@ -170,7 +171,7 @@ u8 LevelSelectCursor::IsGrowing()
 void LevelSelectCursor::Hide()
 {
     state = LEVEL_SELECT_CURSOR_STATE_SHRINK;
-    scale = 0x100;
+    scale = INT_TO_Q8(1);
     Update();
 }
 
@@ -210,8 +211,9 @@ u8 LevelSelectCursor::HasArrived()
     return done;
 }
 
-/* Starts a glide to (x, y). The zoom step is derived from half the
- * distance along the major axis. */
+/* Starts a glide to (x, y). The zoom step covers the zoom's range (from
+ * the smallest to 1:1) in half the distance along the major axis: the
+ * frames the glide takes at two steps a frame. */
 void LevelSelectCursor::Move(screen_x_t x, screen_y_t y)
 {
     line.x1 = x;
@@ -225,7 +227,7 @@ void LevelSelectCursor::Move(screen_x_t x, screen_y_t y)
         else
             d = (line.y1 - line.y0) / 2;
         MAKE_ABS(d);
-        speed = 0xF8 / d;
+        speed = (INT_TO_Q8(1) - LEVEL_SELECT_ZOOM_MIN) / d;
     }
     if (state == LEVEL_SELECT_CURSOR_STATE_IDLE)
         ResetIdleTimerNow();

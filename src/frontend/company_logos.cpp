@@ -73,7 +73,10 @@ void CompanyLogos::Run()
         bg->Update();
     }
     gAudioContext->PlaySfx(SFX_UNIVERSAL_LOGO_IN, 0x100);
-    scale = 0x2000;
+    /* The logo's zoom, Q16 (INT_TO_Q16(1) = 1:1): from 1/8 it grows by
+     * 3/128 a frame to 1:1, then by 3/32 of itself a frame as it fades
+     * out. */
+    scale = INT_TO_Q16(1) / 8;
     fade = -1;
     do {
         s32 v;
@@ -96,15 +99,16 @@ void CompanyLogos::Run()
             fade = v - 1;
         }
         if (fade == -1) {
-            if (scale > 0xffff || (scale += 0x600) > 0xffff) {
-                scale = 0x10000;
+            if (scale > INT_TO_Q16(1) - 1 || (scale += INT_TO_Q16(3) / 128) > INT_TO_Q16(1) - 1) {
+                scale = INT_TO_Q16(1);
                 if (fade == -1)
                     fade = 0xf4;
             }
         } else if (fade <= 0x40) {
-            scale = Q8_MUL(scale, 0x118);
+            scale = Q8_MUL(scale, Q8_FRAC(1, 0x18));
         }
-        q = 0x1000000 / scale;
+        /* the BG's step: 1 / scale, in Q8 */
+        q = Q8_DIV(INT_TO_Q16(1), scale);
 
         /* `x`, `y` are needed: inlined, the instructions differ */
         s32 x = -(q * DISPLAY_CENTER_X) + INT_TO_Q8(DISPLAY_ART_CENTER_X);
@@ -305,9 +309,9 @@ void CompanyLogos::UpdateVvLogoPieces()
                 s32 y;
 
                 allDone = 0;
-                y = slot->posA.q - 0x80000;
+                y = slot->posA.q - INT_TO_Q16(8);
                 slot->posA.q = y;
-                if (y < -0x7f0000)
+                if (y < -INT_TO_Q16(127))
                     slot->active = allDone;
             }
             slot++;
@@ -599,7 +603,7 @@ void LogoActor::Update()
         break;
     case LOGO_ACTOR_STATE_FLY_OFF:
         z -= 0xe;
-        y -= 0x100;
+        y -= INT_TO_Q8(1);
         if (time > 0xf)
             state = LOGO_ACTOR_STATE_GONE;
         break;
@@ -653,11 +657,12 @@ void LogoActor::Draw()
         halfH = h * 4;
         depth = z;
         scale = Q8_DIV(depth, record->baseDepth);
-        f = 0x100000 / depth;
+        /* the Q12 projection, with a focal length of 1 px: 1 / depth */
+        f = INT_TO_Q12(INT_TO_Q8(1)) / depth;
         sy = Q8_TO_INT(Q12_MUL(y, f) + INT_TO_Q8(DISPLAY_CENTER_Y));
         sx = Q8_TO_INT(Q12_MUL(x, f) + INT_TO_Q8(DISPLAY_CENTER_X));
         attr1 = 0x100;
-        if (scale <= 0xff) {
+        if (scale <= INT_TO_Q8(1) - 1) {
             attr1 |= 0x200;
             halfW = w * 8;
             halfH = h * 8;

@@ -145,7 +145,8 @@ LevelSelect::LevelSelect(s32 level)
 
     s32 v;
 
-    for (i = 0, v = 0x80; i < 8; i++) {
+    /* the sprites past the first two at half size */
+    for (i = 0, v = Q8(0.5); i < 8; i++) {
         s = new UiSprite;
         sprites[i] = s;
         s->SetPriority(1);

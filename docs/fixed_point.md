@@ -13,7 +13,7 @@ spell them and the conventions for using them (#916).
 | Q8 | `0x100` | positions (`Entity::x/y`, `ActorSelf::x/y/z`, the camera's `Camera::x/y`), speeds and speed ramps (`MovingSprite::speedX/Y`, `rampX/Y`, the `struct speed_ramp` tables in src/data), accelerations and gravity, scroll steps, affine scales (`0x100` = 1.0, `Sprite::affine`, `ScaledSprite::scaleX/Y`), `animTime` (Q8 frames), the sine table's values (`SIN_Q8`) |
 | Q4 | `0x10` | the jetpack course's planes' velocities: sixteenths of their (Q8) position's unit, `x += Q4_TO_INT(velX)` |
 | Q12 | `0x1000` | the scale factors of the 3D (vehicle) levels' projection and aim vectors (`0x1000 / n`, `Q12_MUL`) |
-| Q16 | `0x10000` | the company logos' pieces (`posA.q`, a Q16 word whose high half is the pixel), FixedMul16/FixedDiv16 |
+| Q16 | `0x10000` | the company logos' pieces (`posA.q`, a Q16 word whose high half is the pixel) and the logos' zooms (`LogoPiece::velA/velB`, the Universal logo's `scale`: `INT_TO_Q16(1)` = 1:1, whose OBJ/BG step is the Q8 `Q8_DIV(INT_TO_Q16(1), scale)`), FixedMul16/FixedDiv16 |
 
 Angles aren't fixed point: they are 256 steps a turn (`& 0xFF`), the
 index into gSineTable, whose values are Q8 (`SIN_Q8(angle)`).
@@ -53,6 +53,7 @@ name in its subsystem's header, spelled with the macros:
 | Name | Value | Header |
 |---|---|---|
 | `PLAYER_GRAVITY` | `Q8_FRAC(0, 51)` | `player.hpp`: the jump records' step, 51/256 px a frame per frame |
+| `LEVEL_SELECT_ZOOM_MIN`, `ZOOM_BG_ZOOM_STEP` | `Q8_FRAC(0, 8)` | `level_select.hpp`: the level-select zooms' smallest scale (1/32) and the picture's zoom a frame |
 | `PLAYER_MAX_FALL_SPEED` | `INT_TO_Q8(6)` | `player.hpp`: the jump and fall records' target |
 | `SWIM_STROKE_SPEED`, `SWIM_SPIN_SPEED` | `Q8(2.75)`, `Q8(3.75)` | `swim_ctrl.hpp`: the diver's stroke and spin, split between X and Y by the direction (3/4, 1/2, 1/4 of it) |
 

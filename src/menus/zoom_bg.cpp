@@ -69,9 +69,10 @@ ZoomBg::ZoomBg(s32 charBlock, s32 screenBlock)
     }
     image = 0xB;
     state = ZOOM_BG_STATE_WAIT;
-    scale = 8;
+    scale = LEVEL_SELECT_ZOOM_MIN;
     dx = dy = phase = 0;
-    affine.texY = affine.texX = 0x2000;
+    /* the centre of the 64x64 picture */
+    affine.texY = affine.texX = INT_TO_Q8(32);
     affine.scrX = x;
     affine.scrY = y;
     affine.angle = 0;
@@ -111,19 +112,19 @@ void ZoomBg::Update()
 
     switch (state) {
     case ZOOM_BG_STATE_ZOOM_IN:
-        if (scale <= 0xFF) {
-            scale += 8;
+        if (scale <= INT_TO_Q8(1) - 1) {
+            scale += ZOOM_BG_ZOOM_STEP;
             break;
         }
-        scale = 0x100;
+        scale = INT_TO_Q8(1);
         state = ZOOM_BG_STATE_SHOWN;
         break;
     case ZOOM_BG_STATE_ZOOM_OUT:
-        if (scale > 8) {
-            scale -= 8;
+        if (scale > LEVEL_SELECT_ZOOM_MIN) {
+            scale -= ZOOM_BG_ZOOM_STEP;
             break;
         }
-        scale = 8;
+        scale = LEVEL_SELECT_ZOOM_MIN;
         state = ZOOM_BG_STATE_WAIT;
         break;
     case ZOOM_BG_STATE_SHOWN:
@@ -143,12 +144,12 @@ void ZoomBg::Update()
         state = ZOOM_BG_STATE_ZOOM_IN;
         break;
     case ZOOM_BG_STATE_EXIT:
-        if (scale > 8) {
-            scale -= 8;
+        if (scale > LEVEL_SELECT_ZOOM_MIN) {
+            scale -= ZOOM_BG_ZOOM_STEP;
             affine.angle += 0x100;
             break;
         }
-        scale = 8;
+        scale = LEVEL_SELECT_ZOOM_MIN;
         state = ZOOM_BG_STATE_GONE;
         break;
     }
@@ -175,7 +176,8 @@ void ZoomBg::Draw()
 
             affine.scrX = x + dx;
             affine.scrY = y + dy;
-            s = 0x10000 / scale;
+            /* the BG's step: 1 / scale */
+            s = Q8_DIV(INT_TO_Q8(1), scale);
             affine.sx = s;
             affine.sy = s;
             break;
