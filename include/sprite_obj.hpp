@@ -466,10 +466,10 @@ static inline PartList *ForegroundList()
 class OamBuffer
 {
 public:
-    s32 count;                          // 0x00
-    s32 base;                           // 0x04
-    s32 matrixCount;                    // 0x08
-    union oam_shadow_entry table[0x80]; // 0x0C
+    s32 count;                                     // 0x00
+    s32 base;                                      // 0x04
+    s32 matrixCount;                               // 0x08
+    union oam_shadow_entry table[OAM_ENTRY_COUNT]; // 0x0C
 
     OamBuffer();                              // InitOamBuffer
     ~OamBuffer();                             // DestroyOamBuffer

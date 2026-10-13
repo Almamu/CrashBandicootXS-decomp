@@ -120,7 +120,8 @@ PolarCheckpointCrate::~PolarCheckpointCrate()
 {
 }
 
-/* The current frame at the fixed screen position (120, 106), culled off
+/* The current frame at the fixed screen position (DISPLAY_CENTER_X, 106),
+ * culled off
  * screen: ActorSelf::Draw (actor.cpp) at a fixed scale of 0x100, its
  * double-size flag and size tests still written against `scale`. The ROM
  * ORs a zero into the attribute word: the flag folds away in the size
@@ -129,13 +130,13 @@ PolarCheckpointCrate::~PolarCheckpointCrate()
  * with a constant-init asm (#662 round 2). */
 void JetpackCheckpointText::Draw()
 {
-    s32 x = 120;
-    s32 y = 106;
+    screen_x_t x = DISPLAY_CENTER_X;
+    screen_y_t y = 106;
     s32 scale = 0x100;
     u8 *frame;
     u32 flag;
-    s32 halfW;
-    s32 halfH;
+    screen_dx_t halfW;
+    screen_dy_t halfH;
 
     frame = GetAnimFrameData();
     flag = 0;
@@ -152,16 +153,16 @@ void JetpackCheckpointText::Draw()
 
     x -= halfW;
     y -= halfH;
-    if (y > 159)
+    if (y > DISPLAY_HEIGHT - 1)
         return;
     if (y + halfH * 2 < 0)
         return;
-    if (x > 239)
+    if (x > DISPLAY_WIDTH - 1)
         return;
     if (x + halfW * 2 < 0)
         return;
 
-    u32 packed = (y & 0xff) | ((x & 0x1ff) << 16) | GetAnimFrameAttr() | flag;
+    u32 packed = OAM_Y(y) | (OAM_X(x) << 16) | GetAnimFrameAttr() | flag;
     u32 pal = palette;
     /* `pre` is needed: inlined, the instructions are reordered */
     u32 pre = pal << 0xc;

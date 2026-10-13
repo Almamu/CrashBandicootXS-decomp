@@ -61,8 +61,8 @@ void CrateList::Collide(struct aabb box, s32 unused, MovingSprite *other)
     screen.y = y;
 
     /* `w`, `h` are needed: inlined, the instructions are reordered */
-    s32 w = INT_TO_Q8(240);
-    s32 h = INT_TO_Q8(160);
+    s32 w = INT_TO_Q8(DISPLAY_WIDTH);
+    s32 h = INT_TO_Q8(DISPLAY_HEIGHT);
     screen.w = w;
     screen.h = h;
     lo = cam->x;

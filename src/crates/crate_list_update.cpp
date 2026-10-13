@@ -200,15 +200,15 @@ void CrateList::Update()
     CrateGridNode **last;
 
     /* `w`, `h` are needed: inlined, the instructions are reordered */
-    s32 w = 0x1b800;
-    s32 h = 0x11800;
+    s32 w = INT_TO_Q8(ACTIVE_AREA_WIDTH);
+    s32 h = INT_TO_Q8(ACTIVE_AREA_HEIGHT);
     region.w = w;
     region.h = h;
     cam = gLevelLayers->layer0;
 
     /* `x`, `y` are needed: inlined, the instructions are reordered */
-    s32 x = INT_TO_Q8(cam->x) - 0x6400;
-    s32 y = INT_TO_Q8(cam->y) - 0x3c00;
+    s32 x = INT_TO_Q8(cam->x) - INT_TO_Q8(ACTIVE_AREA_MARGIN_X);
+    s32 y = INT_TO_Q8(cam->y) - INT_TO_Q8(ACTIVE_AREA_MARGIN_Y);
     region.x = x;
     region.y = y;
     lo = cam->x;
