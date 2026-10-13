@@ -5,7 +5,6 @@
 #include "player.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
-#include "room_exit.hpp"
 
 extern "C" {
 #include "sprite_bank.h"
@@ -126,7 +125,7 @@ void TinyCtrl::Update(MovingSprite *part)
             gAudioContext->PlaySfx(SFX_TINY_LAND, 0x100);
             if (this->state == TINY_STATE_FALL_OUT) {
                 if (gLevelState->HasTornadoSpin())
-                    RoomExit::Request();
+                    LevelProgress::RequestRoomExit();
                 SetState(part, TINY_STATE_GONE);
             } else if (this->state == TINY_STATE_HOP_DOWN) {
                 SetState(part, TINY_STATE_STOMP);

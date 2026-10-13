@@ -2213,10 +2213,10 @@ _17ActorPaletteCycle.frames gActorPaletteCycleFrames
 _17ActorPaletteCycle.startFrames gActorPaletteCycleStartFrames
 _17ActorPaletteCycle.targetFrames gActorPaletteCycleTargetFrames
 #
-# #915 RoomExit: the room exit flag as an all-static class
-# (include/room_exit.hpp, src/level/room.cpp). Its data member keeps the C
-# name: iwram_data.cpp defines it.
-Clear__8RoomExit ClearRoomExit
-Request__8RoomExit RequestRoomExit
-IsRequested__8RoomExit IsRoomExitRequested
-_8RoomExit.requested gRoomExitRequested
+# #915 LevelProgress: the room exit flag as static members of LevelProgress
+# (include/level_state.hpp, src/level/room.cpp). Its data member keeps the
+# C name: iwram_data.cpp defines it.
+ClearRoomExit__13LevelProgress ClearRoomExit
+RequestRoomExit__13LevelProgress RequestRoomExit
+IsRoomExitRequested__13LevelProgress IsRoomExitRequested
+_13LevelProgress.roomExitRequested gRoomExitRequested

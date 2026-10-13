@@ -88,7 +88,7 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(MegaMixCtrl) == 0x24);
 #define TINY_STATE_STOMP_PAD 12     // the round's pad sinks (`stomped`), then HOP_UP
 #define TINY_STATE_OFFSCREEN 13     // three falling leaves, 0x46 frames apart, then DROP_IN
 #define TINY_STATE_DEFEATED 14      // rises; the tornado spin power, then FALL_OUT
-#define TINY_STATE_FALL_OUT 15      // drops out of the level: RoomExit::Request, then GONE
+#define TINY_STATE_FALL_OUT 15      // drops out of the level: LevelProgress::RequestRoomExit, then GONE
 #define TINY_STATE_GONE 16          // the end: nothing runs
 class TinyCtrl : public BossCtrl
 {
@@ -128,7 +128,7 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(TinyCtrl) == 0x4C);
 #define CORTEX_BOSS_STATE_AIM 1      // turns Neo Cortex and the cannon to the target
 #define CORTEX_BOSS_STATE_HIT 2      // a fast shot hit a gem (CortexShotCtrl): the round counted
 #define CORTEX_BOSS_STATE_DEFEATED 3 // the third: the target stops, the power; sinks out of the level
-#define CORTEX_BOSS_STATE_GONE 4     // RoomExit::Request done: nothing runs
+#define CORTEX_BOSS_STATE_GONE 4     // LevelProgress::RequestRoomExit done: nothing runs
 class CortexBossCtrl : public BossCtrl
 {
 public:
@@ -280,7 +280,7 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(UnusedOneShotAnimCtrl) == 0x10);
 #define DINGODILE_STATE_WALK_BACK 14   // walks to the edge without stopping, then TURN
 #define DINGODILE_STATE_SHARK 15       // a shark from behind him, then WALK
 #define DINGODILE_STATE_DEFEATED 16    // the power-up; falls out of the level
-#define DINGODILE_STATE_GONE 17        // fell off: RoomExit::Request done, nothing runs
+#define DINGODILE_STATE_GONE 17        // fell off: LevelProgress::RequestRoomExit done, nothing runs
 /* SpawnShieldOrRocket's `mode` (#843, docs/flags/boss_ctrl.md). */
 #define DINGODILE_SPAWN_MODE_SHIELD 0 // the constructor: the shield (DingodileShieldCtrl), in gTouchableList
 #define DINGODILE_SPAWN_MODE_ROCKET 1 // FIRE/FIRE_TURN: a rocket (DingodileProjectileCtrl), in gCollidableList

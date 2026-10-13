@@ -3,7 +3,6 @@
 #include "bg_layer.hpp"
 #include "level_state.hpp"
 #include "camera.hpp"
-#include "room_exit.hpp"
 
 extern "C" {
 #include "core.h"
@@ -13,20 +12,20 @@ extern "C" {
 #include "globals.h"
 }
 
-/* The room exit flag (RoomExit, room_exit.hpp). */
-void RoomExit::Clear()
+/* The room exit flag (LevelProgress::roomExitRequested). */
+void LevelProgress::ClearRoomExit()
 {
-    requested = 0;
+    roomExitRequested = 0;
 }
 
-void RoomExit::Request()
+void LevelProgress::RequestRoomExit()
 {
-    requested = 1;
+    roomExitRequested = 1;
 }
 
-u8 RoomExit::IsRequested()
+u8 LevelProgress::IsRoomExitRequested()
 {
-    return requested;
+    return roomExitRequested;
 }
 
 /* Level-end teardown: DMA-copies the room's BG palette into BG palette

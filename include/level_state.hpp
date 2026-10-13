@@ -60,6 +60,18 @@ public:
     void SetupRoomBlend();
     s32 RunRoom(); // play_room.cpp
 
+    /* The room exit flag (room.cpp, #915): set when something ends the
+     * room (the exit's zone, a power, a boss falling out, the player's
+     * exit moves); PlayRoom clears it when the room starts, and RunRoom
+     * polls it every frame, then fades out. Static: the flag is an IWRAM
+     * global of its own, not a field (cxx_symbols.txt maps
+     * `_13LevelProgress.roomExitRequested` to gRoomExitRequested, which
+     * iwram_data.cpp defines with the other initialised IWRAM globals). */
+    static void ClearRoomExit();     // ClearRoomExit
+    static void RequestRoomExit();   // RequestRoomExit
+    static u8 IsRoomExitRequested(); // IsRoomExitRequested
+    static u8 roomExitRequested;     // gRoomExitRequested (iwram_data.cpp)
+
     s32 level; // 0x00 (0x0C4) - index into gLevelTable
     // 0x04 (0x0C8) - the current room's index in the level's room list
     // (SelectRoom, NextRoom, GetRoomIndex)

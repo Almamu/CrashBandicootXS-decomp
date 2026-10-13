@@ -4,7 +4,6 @@
 #include "hud.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
-#include "room_exit.hpp"
 
 extern "C" {
 #include "util.h"
@@ -89,7 +88,7 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
         gAudioContext->PlaySfx(SFX_CRYSTAL, 0x100);
         break;
     case EVENT_ROOM_EXIT:
-        RoomExit::Request();
+        LevelProgress::RequestRoomExit();
         gHud->ShowCounters();
         break;
     case EVENT_WARP_EXIT:
@@ -140,7 +139,7 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
     case EVENT_POWER_TORNADO_SPIN:
     case EVENT_POWER_BODY_SLAM:
     case EVENT_POWER_TURBO_RUN:
-        RoomExit::Request();
+        LevelProgress::RequestRoomExit();
         break;
     case EVENT_MASK_GAIN:
         if (gLevelState->maskLevel == MASK_LEVEL_NONE) {

@@ -75,7 +75,7 @@
 // Standing on the exit pad (CreatePlatform kind 4, SpawnRoomExit): freezes a time trial's
 // clock, the warp-out
 #define EVENT_WARP_EXIT 17
-// The room exit's zone (SpawnRoomExit, kind 0x12): RoomExit::Request
+// The room exit's zone (SpawnRoomExit, kind 0x12): LevelProgress::RequestRoomExit
 #define EVENT_ROOM_EXIT 18
 // The player's attacks, its kind while it does them (UpdateActionCtrl):
 // spin (ground, air, tornado, hanging), slide, body slam and super body
@@ -102,7 +102,7 @@
 #define EVENT_GREEN_GEM 32
 #define EVENT_BLUE_GEM 33
 #define EVENT_YELLOW_GEM 34
-// The four powers (spawn_pickups.cpp): each ends the room (RoomExit::Request)
+// The four powers (spawn_pickups.cpp): each ends the room (LevelProgress::RequestRoomExit)
 #define EVENT_POWER_DOUBLE_JUMP 35
 #define EVENT_POWER_TORNADO_SPIN 36
 #define EVENT_POWER_BODY_SLAM 37

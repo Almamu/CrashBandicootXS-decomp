@@ -4,7 +4,6 @@
 #include "audio.hpp"
 #include "level_state.hpp"
 #include "menus.hpp"
-#include "room_exit.hpp"
 
 extern "C" {
 #include "gfx.h"
@@ -29,7 +28,7 @@ extern "C" {
  * `motionX`, which also sets the camera lead's target offset
  * (`cameraLead`, spawned on demand by StateStart). Once the target passes
  * the level's right edge (`gLevelLayers`'s layer 0 width, less 0xA00) the
- * camera lead is marked gone and RoomExit::Request is signalled. It then
+ * camera lead is marked gone and LevelProgress::RequestRoomExit is signalled. It then
  * calls the current state's method through `stateFuncs`
  * (gInputCtrlStateFuncs) and applies the queued motion.
  *
@@ -96,7 +95,7 @@ void InputCtrl::Update(MovingSprite *)
 
             lead->MarkGone();
             cameraLead = 0;
-            RoomExit::Request();
+            LevelProgress::RequestRoomExit();
         }
 
         keys = gKeys.all;
