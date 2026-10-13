@@ -4,6 +4,7 @@
 #include "audio.hpp"
 #include "level_state.hpp"
 #include "key_input.hpp"
+#include "crate.hpp"
 
 extern "C" {
 #include "system.h"
@@ -466,7 +467,7 @@ static inline s32 CollidableCount()
 }
 
 /* The super body slam's landing: breaks the crates within 0x40 px
- * (BreakCratesInArea), then sends event 0x16 (EVENT_ATTACK_SUPER_BODY_SLAM)
+ * (Crate::BreakInArea), then sends event 0x16 (EVENT_ATTACK_SUPER_BODY_SLAM)
  * to each object of gCollidableList with a class id above 4, within 0x40
  * px (Manhattan distance) and 0x11 px vertically, that can be hit
  * (`flags` bit 6). */
@@ -479,7 +480,7 @@ void ActionCtrl::DoSuperBodySlamShockwave()
     s32 py;
     s32 i;
 
-    BreakCratesInArea(Q8_TO_INT(p->x), Q8_TO_INT(p->y), 0x40, 0x12);
+    Crate::BreakInArea(Q8_TO_INT(p->x), Q8_TO_INT(p->y), 0x40, 0x12);
     range = 0x40;
     p = part;
     px = Q8_TO_INT(p->x);

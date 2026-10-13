@@ -781,6 +781,8 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/bosses/cortex.cpp`, `dingodile.cpp`, `tiny.cpp`, `src/level/play_room.cpp`, `src/player/action_ctrl_moves.cpp`, `input_ctrl.cpp`, `player_update.cpp` | the callers: `RoomExit::Request()`, `RoomExit::IsRequested()`, `RoomExit::Clear()` | 0 | (unchanged) | 0 -> 0 | [#915](#the-room-exit-flag-as-static-members-of-levelprogress-915) |
 | `src/level/room.cpp`, `src/iwram/iwram_data.cpp`, level_state.hpp | the room exit flag moves into LevelProgress as static members: `RoomExit::requested` is `LevelProgress::roomExitRequested`, `Clear`/`Request`/`IsRequested` are `ClearRoomExit`/`RequestRoomExit`/`IsRoomExitRequested`; include/room_exit.hpp goes | 3 | (unchanged) | 0 -> 0 | [#915](#the-room-exit-flag-as-static-members-of-levelprogress-915) |
 | `src/bosses/cortex.cpp`, `dingodile.cpp`, `tiny.cpp`, `src/level/play_room.cpp`, `src/player/action_ctrl_moves.cpp`, `input_ctrl.cpp`, `player_update.cpp` | the callers: `LevelProgress::RequestRoomExit()`; PlayRoom and RunRoom call `ClearRoomExit()` and `IsRoomExitRequested()` as members | 0 | (unchanged) | 0 -> 0 | [#915](#the-room-exit-flag-as-static-members-of-levelprogress-915) |
+| `src/crates/crate_switches.cpp`, `crate_time_trial.cpp` | the passes over every crate of the crate list are static members of `Crate` (include/crate.hpp): `UpdateAll` (UpdateCrates), `DetonateNitros` (DetonateNitroCrates), `BreakInArea` (BreakCratesInArea), `ConvertForTimeTrial` (ConvertCratesForTimeTrial); crates.h's 4 prototypes go | 4 | (unchanged) | 0 -> 0 | [#915](#the-crate-passes-as-static-members-of-crate-915) |
+| `src/level/play_room.cpp`, `level_state.cpp`, `src/player/action_ctrl_moves.cpp` | the callers: `Crate::UpdateAll()`, `Crate::ConvertForTimeTrial()`, `Crate::BreakInArea(...)`; ActivateNitroSwitch calls `DetonateNitros()` as a member | 0 | (unchanged) | 0 -> 0 | [#915](#the-crate-passes-as-static-members-of-crate-915) |
 | `src/vehicle/jetpack/airship.cpp`, `airship_states.cpp`, `airship_graphics.cpp`, `airship_map.cpp`, `airship_touch.cpp`, `src/data/actor_state_17c3fc.cpp` (was .c) | `Airship` (new include/airship.hpp), an all-static class: its 25 IWRAM globals are static data members (`x` is gAirshipX, `anim` gAirship, ...), its 21 functions static member functions (`Create`, `Spawn`, `Update`, `UpdateBg2`, `LoadGraphics`, `Destroy`, `Damage`, `IsTouching`, `GetHpPercent`, `Steer`, `DrawMap`, `ConvertTiles`, the six states, ...), gAirshipStateFuncs is `Airship::stateFuncs` and the six tables only it reads (gAirshipAttacks, gAirshipBox, ...) are static data members too; boss_actors.hpp's inline SetAirshipState is the private inline member `SetState`; bosses.h's 20 prototypes are down to 5 C-only ones (the category table's), its 32 externs and vehicle.h's nullsub_30 go | 21 | (unchanged) | 0 -> 0 | [#772](#the-airship-as-an-all-static-class-772) |
 | `src/vehicle/jetpack/jetpack_shot.cpp`, `jetpack_spawn.cpp`, `src/hud/hud_counters.cpp` | the callers: `Airship::IsTouching(this)`, `Airship::Damage(2)`, `Airship::Spawn(...)`, `Airship::GetHpPercent()` | 0 | (unchanged) | 0 -> 0 | [#772](#the-airship-as-an-all-static-class-772) |
 | `src/gfx/sprite_frame.cpp` | `ObjTileAllocator` (new include/obj_tile_allocator.hpp), an all-static class: its 5 IWRAM globals are static data members (`pool` is gVramTileBlockPool, `list`, `rover`, `spares`, `index`), its 6 functions static member functions (`Init`, `Alloc`, `Free`, `Destroy`, the UNUSED `Walk` and `GetFreeBytes`); gfx.h's 6 prototypes and 5 externs go | 6 | (unchanged) | 0 -> 0 | [#915](#the-obj-tile-allocator-as-an-all-static-class-915) |
@@ -4794,6 +4796,36 @@ object is byte-identical.
   block inside LevelState): it is a separate IWRAM global, and the
   functions take no `this`. As instance methods they would take
   `&gLevelState->...` in r0 at every call.
+
+### The crate passes as static members of Crate (#915)
+
+Four functions walk the crate list (gCrateList) and act on each entry
+whose class id is 3, the crates: UpdateCrates (play_room.cpp's frame
+update), DetonateNitroCrates (it, and the nitro switch), BreakCratesInArea
+(the super body slam) and ConvertCratesForTimeTrial (StartTimeTrial).
+They have no state of their own and take no crate. In the ROM they sit
+among Crate's methods, not CrateList's: the first three in
+crate_switches.cpp (0x0800F1B8-0x0800F798, around ActivateNitroSwitch and
+the outline crates), the last in crate_time_trial.cpp, right before
+OpenAkuAku. They are now public static member functions of `Crate`
+(include/crate.hpp), and every object is byte-identical.
+
+- **Names.** `UpdateAll` (UpdateCrates), `DetonateNitros`
+  (DetonateNitroCrates), `BreakInArea` (BreakCratesInArea) and
+  `ConvertForTimeTrial` (ConvertCratesForTimeTrial). cxx_symbols.txt's
+  `#915 Crate` block maps them to their C names. `UpdateAll` isn't
+  `Update`: that is Crate's own virtual slot 3.
+- **Callers.** PlayRoom calls `Crate::UpdateAll()`, StartTimeTrial
+  `Crate::ConvertForTimeTrial()`, the super body slam
+  `Crate::BreakInArea(...)`; ActivateNitroSwitch calls `DetonateNitros()`
+  unqualified. crates.h's 4 prototypes go.
+- **Why not CrateList.** The functions read gCrateList, but they are not
+  the list's operations (CrateList's methods take the list as `this` and
+  sit in crate_list*.cpp): they are what the crates do together, and
+  static members of CrateList would still read the global instance.
+  gCrateList stays a global: the list's other users (the room setup,
+  play_room.cpp, the mega mix boss) read it too.
+
 
 ### The airship as an all-static class (#772)
 

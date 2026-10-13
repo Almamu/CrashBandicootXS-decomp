@@ -12,7 +12,7 @@ extern "C" {
 
 /* In a time trial, each crate of the crate list (class id 3) with a
  * time-trial kind becomes that kind, through SolidifyOutlineCrate. */
-void ConvertCratesForTimeTrial(void)
+void Crate::ConvertForTimeTrial()
 {
     s32 i = 0;
 

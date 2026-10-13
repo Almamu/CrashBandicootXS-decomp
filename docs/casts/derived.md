@@ -27,7 +27,7 @@ ROM loads it into r4 directly. Every other site is the same.
 
 ## Left
 
-- Single casts that don't recur: `(Crate *)e` (ConvertCratesForTimeTrial),
+- Single casts that don't recur: `(Crate *)e` (Crate::ConvertForTimeTrial),
   `(Wumpa *)e` and `(Wumpa *)gTouchableList->items[i]` (StartTimeTrial,
   Crate::BlastNearby), `(Sprite *)e` (AddUpdateOnly).
 - `MovingSprite::mover` as each controller (Player::ResetForRoom,

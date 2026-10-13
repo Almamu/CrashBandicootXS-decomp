@@ -115,7 +115,7 @@ struct crate_placement {
 #define CRATE_PLACEMENT_OPTION_SLOT_TNT     8
 
 /* Crate::trialKind with no time-trial kind (ResetCrate):
- * ConvertCratesForTimeTrial leaves such a crate alone. */
+ * Crate::ConvertForTimeTrial leaves such a crate alone. */
 #define CRATE_TRIAL_KIND_NONE -1
 
 /* A crate (CreateCrate allocates 0x64 bytes): a sprite with the fall
@@ -134,7 +134,7 @@ public:
     union {            // 0x48 - one word, read per kind (placement halfword +8 for outlines):
         s32 solidKind; //   5 (outline): the entity type (ENTITY_*) it turns into
                        //   (SolidifyOutlineCrate); also loaded from `trialKind` by
-                       //   ConvertCratesForTimeTrial
+                       //   ConvertForTimeTrial
         // 3 (iron switch): its outline crates; NULL or PHYS_NO_GROUP: none
         struct crate_group *group;
         s32 bounceTimer; // 12 (bouncy wumpa): -0x2A until the first bounce, then 360
@@ -168,7 +168,7 @@ public:
     s32 trialKind;     // 0x54 - the entity type (ENTITY_*) it becomes in a time trial
                        //        (placement halfword +4, ENTITY_NITRO_SWITCH_CRATE read as
                        //        ENTITY_BASIC_CRATE); CRATE_TRIAL_KIND_NONE: none. See
-                       //        ConvertCratesForTimeTrial
+                       //        ConvertForTimeTrial
     u8 touched;        // 0x58
     u8 groupAllocated; // 0x59 - `group` was allocated (ActivateIronSwitchCrate)
     Crate *above;      // 0x5C - the crate stacked on this one
@@ -254,6 +254,16 @@ public:
     void UpdateTntCountdown();
     void UpdateSlot(); // UpdateSlotCrate
     void UpdateFall(); // UpdateCrateFall
+
+    /* The passes over every crate of the crate list (#915): static, as
+     * they take no crate. They walk gCrateList's slots and act on the
+     * entries whose class id is 3 (the crates), and they sit among
+     * Crate's methods in the ROM (crate_switches.cpp, crate_time_trial.cpp).
+     * cxx_symbols.txt maps them to their C names. */
+    static void UpdateAll();      // UpdateCrates: play_room.cpp, once a frame
+    static void DetonateNitros(); // DetonateNitroCrates
+    static void BreakInArea(s32 x, s32 y, s32 dist, s32 height); // BreakCratesInArea
+    static void ConvertForTimeTrial(); // ConvertCratesForTimeTrial: StartTimeTrial
 
     /* Sets `frame` to `idx`, clamped to the animation's last step. `idx`
      * being a parameter keeps a constant argument in its own register,

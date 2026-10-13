@@ -1514,7 +1514,7 @@ void Crate::Explode(u8 near)
  * up. The crate is then marked as having blasted.
  *
  * The crate list is read through gCrateList's C view here, in
- * UpdateCrates and in BreakCratesInArea: the loop tests through
+ * Crate::UpdateAll and in Crate::BreakInArea: the loop tests through
  * Crates() (an inline call) aren't copied in front of the loops, which
  * changes their layout. */
 void Crate::BlastNearby(s32 dist)

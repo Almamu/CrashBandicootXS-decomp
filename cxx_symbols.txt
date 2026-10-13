@@ -1119,6 +1119,14 @@ BlastNearby__5Cratei BlastNearbyCrates
 ActivateNitroSwitch__5Crate ActivateNitroSwitchCrate
 ActivateIronSwitch__5Crate ActivateIronSwitchCrate
 #
+# #915 Crate: the passes over every crate of the crate list as static
+# members of Crate (include/crate.hpp, src/crates/crate_switches.cpp,
+# crate_time_trial.cpp)
+UpdateAll__5Crate UpdateCrates
+DetonateNitros__5Crate DetonateNitroCrates
+BreakInArea__5Crateiiii BreakCratesInArea
+ConvertForTimeTrial__5Crate ConvertCratesForTimeTrial
+#
 # part 7d: the platforms (include/platform.hpp, src/objects/platform*.cpp)
 _vt.8Platform gPlatformVtable
 __8Platform InitPlatform
