@@ -1,4 +1,5 @@
 #include "cutscene.hpp"
+#include "graphics.hpp"
 
 extern "C" {
 #include "core.h"
@@ -14,13 +15,6 @@ extern "C" {
  * cutscene_pictures_5a9f70.cpp. Linked in ROM order by ldscript.txt.
  */
 
-extern const u16 gCutscenePicture00[], gCutscenePicture01[], gCutscenePicture02[],
-    gCutscenePicture03[], gCutscenePicture04[], gCutscenePicture05[], gCutscenePicture06[],
-    gCutscenePicture07[], gCutscenePicture08[], gCutscenePicture09[], gCutscenePicture10[],
-    gCutscenePicture11[], gCutscenePicture12[], gCutscenePicture13[], gCutscenePicture14[],
-    gCutscenePicture15[], gCutscenePicture16[], gCutscenePicture17[], gCutscenePicture18[],
-    gCutscenePicture19[], gCutscenePicture20[], gCutscenePicture21[], gCutscenePicture22[],
-    gCutscenePicture23[];
 extern const struct cutscene_page gCutscene01French[4];
 extern const struct cutscene_page gCutscene02French[9];
 extern const struct cutscene_page gCutscene03French[1];
@@ -502,74 +496,74 @@ const struct cutscene_page gCutscene00Dutch[1] = {
     { 0, 0 },
 };
 const struct cutscene_slide gCutsceneSlide00 = {
-    gCutscenePicture00, 0, 0, 0, 1, 0, 0, SONG_CUTSCENES_SPOOKY, SFX_SPACE_STATION_AMBIENCE,
+    CutscenePicture00::palette, 0, 0, 0, 1, 0, 0, SONG_CUTSCENES_SPOOKY, SFX_SPACE_STATION_AMBIENCE,
 };
 const struct cutscene_slide gCutsceneSlide01 = {
-    gCutscenePicture01, 0, 0, 0, 1, 0, 0, SONG_CUTSCENES_SPOOKY, SFX_SPACE_STATION_AMBIENCE,
+    CutscenePicture01::palette, 0, 0, 0, 1, 0, 0, SONG_CUTSCENES_SPOOKY, SFX_SPACE_STATION_AMBIENCE,
 };
 const struct cutscene_slide gCutsceneSlide02 = {
-    gCutscenePicture02, 0, 0, 0, 1, 0, 0, SONG_CUTSCENES_SPOOKY, SFX_SPACE_STATION_AMBIENCE,
+    CutscenePicture02::palette, 0, 0, 0, 1, 0, 0, SONG_CUTSCENES_SPOOKY, SFX_SPACE_STATION_AMBIENCE,
 };
 const struct cutscene_slide gCutsceneSlide03 = {
-    gCutscenePicture03, 0, 0, 0, 1, 0, 1, SONG_CUTSCENES_SPOOKY, SFX_SPACE_STATION_AMBIENCE,
+    CutscenePicture03::palette, 0, 0, 0, 1, 0, 1, SONG_CUTSCENES_SPOOKY, SFX_SPACE_STATION_AMBIENCE,
 };
 const struct cutscene_slide gCutsceneSlide04 = {
-    gCutscenePicture04, 140, 0, 0, 1, 0, 0, SONG_CUTSCENES_SPOOKY, SFX_CORTEX_TARGET_BLINK,
+    CutscenePicture04::palette, 140, 0, 0, 1, 0, 0, SONG_CUTSCENES_SPOOKY, SFX_CORTEX_TARGET_BLINK,
 };
 const struct cutscene_slide gCutsceneSlide05 = {
-    gCutscenePicture05, 90, 0, -1, 1, 0, 0, SONG_CUTSCENES_SPOOKY, SFX_MINIMIZER_BEAM,
+    CutscenePicture05::palette, 90, 0, -1, 1, 0, 0, SONG_CUTSCENES_SPOOKY, SFX_MINIMIZER_BEAM,
 };
 const struct cutscene_slide gCutsceneSlide06 = {
-    gCutscenePicture06, 120, 1, 0, 1, 0, 0, SONG_CUTSCENES_SPOOKY, SFX_UNKNOWN_5F,
+    CutscenePicture06::palette, 120, 1, 0, 1, 0, 0, SONG_CUTSCENES_SPOOKY, SFX_UNKNOWN_5F,
 };
 const struct cutscene_slide gCutsceneSlide07 = {
-    gCutscenePicture07, 0, 0, 0, 1, 0, 1, SONG_CUTSCENES_SPOOKY, SFX_UNKNOWN_5B,
+    CutscenePicture07::palette, 0, 0, 0, 1, 0, 1, SONG_CUTSCENES_SPOOKY, SFX_UNKNOWN_5B,
 };
 const struct cutscene_slide gCutsceneSlide08 = {
-    gCutscenePicture09, 0, 0, 0, 1, 0, 1, SONG_CUTSCENES_SPOOKY, SFX_SPACE_STATION_AMBIENCE,
+    CutscenePicture09::palette, 0, 0, 0, 1, 0, 1, SONG_CUTSCENES_SPOOKY, SFX_SPACE_STATION_AMBIENCE,
 };
 const struct cutscene_slide gCutsceneSlide09 = {
-    gCutscenePicture08, 0, 0, 0, 1, 0, 1, SONG_INTRO, SFX_UNKNOWN_60,
+    CutscenePicture08::palette, 0, 0, 0, 1, 0, 1, SONG_INTRO, SFX_UNKNOWN_60,
 };
 const struct cutscene_slide gCutsceneSlide10 = {
-    gCutscenePicture10, 0, 0, 0, 1, 0, 0, SONG_INTRO, SFX_AKU_AKU_GAIN,
+    CutscenePicture10::palette, 0, 0, 0, 1, 0, 0, SONG_INTRO, SFX_AKU_AKU_GAIN,
 };
 const struct cutscene_slide gCutsceneSlide11 = {
-    gCutscenePicture11, 0, 0, 0, 1, 0, 1, SONG_INTRO, SFX_SPACE_STATION_AMBIENCE,
+    CutscenePicture11::palette, 0, 0, 0, 1, 0, 1, SONG_INTRO, SFX_SPACE_STATION_AMBIENCE,
 };
 const struct cutscene_slide gCutsceneSlide12 = {
-    gCutscenePicture12, 0, 0, 0, 1, 0, 0, SONG_INTRO, SFX_HUD_COLLECT,
+    CutscenePicture12::palette, 0, 0, 0, 1, 0, 0, SONG_INTRO, SFX_HUD_COLLECT,
 };
 const struct cutscene_slide gCutsceneSlide13 = {
-    gCutscenePicture13, 0, 0, 0, 1, 0, 0, SONG_CUTSCENES_SPOOKY, SFX_ELECTRIC_SHOCK,
+    CutscenePicture13::palette, 0, 0, 0, 1, 0, 0, SONG_CUTSCENES_SPOOKY, SFX_ELECTRIC_SHOCK,
 };
 const struct cutscene_slide gCutsceneSlide14 = {
-    gCutscenePicture14, 0, 0, 0, 1, 0, 0, SONG_CUTSCENES_SPOOKY, SFX_UNKNOWN_1D,
+    CutscenePicture14::palette, 0, 0, 0, 1, 0, 0, SONG_CUTSCENES_SPOOKY, SFX_UNKNOWN_1D,
 };
 const struct cutscene_slide gCutsceneSlide15 = {
-    gCutscenePicture15, 0, 0, 0, 1, 0, 0, SONG_CUTSCENES_SPOOKY, SFX_UNKNOWN_1D,
+    CutscenePicture15::palette, 0, 0, 0, 1, 0, 0, SONG_CUTSCENES_SPOOKY, SFX_UNKNOWN_1D,
 };
 const struct cutscene_slide gCutsceneSlide16 = {
-    gCutscenePicture16, 0, 0, 0, 1, 0, 0, SONG_CUTSCENES_SPOOKY, SFX_YETI_CHASE,
+    CutscenePicture16::palette, 0, 0, 0, 1, 0, 0, SONG_CUTSCENES_SPOOKY, SFX_YETI_CHASE,
 };
 const struct cutscene_slide gCutsceneSlide17 = {
-    gCutscenePicture17, 90, 0, 0, 1, 0, 0, SONG_INTRO, SFX_UNKNOWN_61,
+    CutscenePicture17::palette, 90, 0, 0, 1, 0, 0, SONG_INTRO, SFX_UNKNOWN_61,
 };
 const struct cutscene_slide gCutsceneSlide18 = {
-    gCutscenePicture18, 0, 0, 0, 1, 0, 0, SONG_INTRO, SFX_AKU_AKU_GAIN,
+    CutscenePicture18::palette, 0, 0, 0, 1, 0, 0, SONG_INTRO, SFX_AKU_AKU_GAIN,
 };
 const struct cutscene_slide gCutsceneSlide19 = {
-    gCutscenePicture19, 120, 0, 0, 1, 0, 0, SONG_INTRO, SFX_UNKNOWN_5F,
+    CutscenePicture19::palette, 120, 0, 0, 1, 0, 0, SONG_INTRO, SFX_UNKNOWN_5F,
 };
 const struct cutscene_slide gCutsceneSlide20 = {
-    gCutscenePicture20, 120, 0, 0, 1, 0, 0, SONG_INTRO, SFX_UNKNOWN_62,
+    CutscenePicture20::palette, 120, 0, 0, 1, 0, 0, SONG_INTRO, SFX_UNKNOWN_62,
 };
 const struct cutscene_slide gCutsceneSlide21 = {
-    gCutscenePicture21, 120, 0, 0, 1, 0, 0, SONG_INTRO, SFX_EXPLOSION,
+    CutscenePicture21::palette, 120, 0, 0, 1, 0, 0, SONG_INTRO, SFX_EXPLOSION,
 };
 const struct cutscene_slide gCutsceneSlide22 = {
-    gCutscenePicture22, 0, 0, 0, 1, 0, 0, SONG_INTRO, SFX_MINIMIZER_BEAM,
+    CutscenePicture22::palette, 0, 0, 0, 1, 0, 0, SONG_INTRO, SFX_MINIMIZER_BEAM,
 };
 const struct cutscene_slide gCutsceneSlide23 = {
-    gCutscenePicture23, 120, 0, 0, 0, 0, 0, SONG_CUTSCENES, SFX_NONE,
+    CutscenePicture23::palette, 120, 0, 0, 0, 0, 0, SONG_CUTSCENES, SFX_NONE,
 };

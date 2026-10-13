@@ -11,6 +11,7 @@
  * GitHub issue #29; split from level_select_widgets.cpp (#767), same flags
  * (old_agbcc). */
 
+#include "graphics.hpp"
 #include "level_select.hpp"
 #include "audio.hpp"
 
@@ -50,7 +51,7 @@ LevelSelectCursor::LevelSelectCursor()
     oam.tileNum = 0x3C0;
     oam.priority = 0;
     oam.palette = part->palette;
-    LoadTaggedAsset(gLevelSelectCursorZoomTiles, OBJ_VRAM0 + 0x7800);
+    LoadTaggedAsset(LevelSelectCursorZoom::tiles, OBJ_VRAM0 + 0x7800);
     affine.angle = 0;
     scale = LEVEL_SELECT_ZOOM_MIN;
     state = LEVEL_SELECT_CURSOR_STATE_GROW;

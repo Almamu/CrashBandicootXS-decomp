@@ -96,7 +96,6 @@ extern const u32 gLevelSelectEntryWorldAnims[WORLD_COUNT];
 extern const u32 gLevelSelectCursorAnims[4];
 extern const struct image_pair gLevelSelectPictures[10];
 extern const struct bg_package gLevelSelectPageBg;
-extern const u8 gLevelSelectCursorZoomTiles[];
 
 /* The pause menu tables (src/data/menu_tables_16b138.cpp,
  * pause_rows_16b298.cpp, bg_package_16b284.cpp). */
