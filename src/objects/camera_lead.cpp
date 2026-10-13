@@ -72,7 +72,7 @@ void CameraLead::Reset()
     /* `px`, `py` are needed: inlined, the instructions are reordered */
     s32 px = p->x;
     s32 py = p->y;
-    s32 off = 0x1E00;
+    s32 off = INT_TO_Q8(30);
 
     x = px + off;
     y = py;
@@ -82,7 +82,7 @@ void CameraLead::Reset()
 }
 
 /* Slot 3: the moving sprite's update, then eases `offset` toward
- * `targetOffset` by 0x200 per frame and follows the player. */
+ * `targetOffset` by 2 px per frame and follows the player. */
 void CameraLead::Update()
 {
     s32 cur, tgt;
@@ -92,13 +92,13 @@ void CameraLead::Update()
     cur = offset;
     tgt = targetOffset;
     if (cur < tgt) {
-        cur += 0x200;
+        cur += INT_TO_Q8(2);
         if (cur > tgt)
             offset = tgt;
         else
             offset = cur;
     } else if (cur > tgt) {
-        cur -= 0x200;
+        cur -= INT_TO_Q8(2);
         if (cur < tgt)
             offset = tgt;
         else
@@ -129,13 +129,13 @@ CameraLead::CameraLead()
 
 /* UNUSED - no caller anywhere in the ROM (checked asm/, data/, src/ and a
  * whole-ROM Thumb-pointer scan). Sets the target offset, clamped to
- * 0xA00-0x3200. */
+ * 10-50 px. */
 void CameraLead::SetOffset(s32 v)
 {
-    if (v > 0x3200)
-        v = 0x3200;
-    else if (v <= 0x9FF)
-        v = 0xA00;
+    if (v > INT_TO_Q8(50))
+        v = INT_TO_Q8(50);
+    else if (v <= INT_TO_Q8(10) - 1)
+        v = INT_TO_Q8(10);
     targetOffset = v;
 }
 

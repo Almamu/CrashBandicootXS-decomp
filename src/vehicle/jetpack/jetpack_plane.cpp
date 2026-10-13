@@ -17,22 +17,23 @@ extern "C" {
  * docs/matching/archive/issue-56-0x0802f0dc-actor.md,
  * issue-57-0x0802fbf0-actor.md and pmf-dispatch-retry.md. */
 
-/* Slot 2: drawn only past a depth; flies by its velocity (Q4) and runs
- * its state. While its low pose (animation 3) plays and the cooldown has
- * run out, it fires a cannonball at the player when the player is close
- * in front (every third shot takes a long cooldown). It and the player
- * damage each other on contact, and it is gone once it has fallen (state
- * 3) past a height; until then ActorSelf's update. */
+/* Slot 2: drawn only past a depth; flies by its velocity (Q4: sixteenths
+ * of its Q8 position's unit) and runs its state. While its low pose
+ * (animation 3) plays and the cooldown has run out, it fires a cannonball
+ * at the player when the player is close in front (every third shot takes
+ * a long cooldown). It and the player damage each other on contact, and
+ * it is gone once it has fallen (state 3) past a height; until then
+ * ActorSelf's update. */
 void JetpackPlane::Update()
 {
-    if (depth > 0x1B00) {
+    if (depth > INT_TO_Q8(27)) {
         visible = 1;
     } else {
         visible = 0;
     }
-    x += velX >> 4;
-    y += velY >> 4;
-    z += velZ >> 4;
+    x += Q4_TO_INT(velX);
+    y += Q4_TO_INT(velY);
+    z += Q4_TO_INT(velZ);
 
     (this->*stateFuncs[state])();
 
@@ -43,7 +44,7 @@ void JetpackPlane::Update()
             ActorSelf *player = gActorList;
             s32 angle = (player->z - (z - 10)) / -0x1AA;
 
-            if (angle > 0 && depth <= 0x8BFF) {
+            if (angle > 0 && depth <= INT_TO_Q8(140) - 1) {
                 s32 scale = 0x1000 / angle;
                 s32 rawDx = (player->x - x) * scale;
                 s32 dx = Q12_TO_INT(rawDx);
@@ -76,7 +77,7 @@ void JetpackPlane::Update()
         Damage(4);
     }
 
-    if (state == JETPACK_PLANE_STATE_FALL && y > 0xE100)
+    if (state == JETPACK_PLANE_STATE_FALL && y > INT_TO_Q8(225))
         delete this;
     else
         ActorSelf::Update();
@@ -175,7 +176,7 @@ JetpackPlane::JetpackPlane(const struct anim_table_record *rec, s32 x, s32 y, s3
     velZ = 0x955;
     if (spawn->target >= 0 &&
         gJetpackPlaneHopSpeeds[GetActorSpawnKindIndex(spawn->target)] > 0x955) {
-        this->z += -0x8e00;
+        this->z += -INT_TO_Q8(142);
         velZ = 0xd55;
     }
     Aim(spawn->target);

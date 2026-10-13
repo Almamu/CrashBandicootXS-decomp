@@ -25,7 +25,7 @@ void Airship::StateApproach()
 {
     z += velZ;
 
-    if (distance <= 0x81FF) {
+    if (distance <= INT_TO_Q8(130) - 1) {
         /* both addresses first, as the ROM loads them */
         s32 *vx = &velX;
         s32 *vy = &velY;
@@ -73,7 +73,7 @@ void Airship::StateFireballs()
         fireTimer--;
     }
     Steer();
-    if (distance <= 0x31FF) {
+    if (distance <= INT_TO_Q8(50) - 1) {
         fireTimer = attack->cannonDelay;
         volleyCount = 0;
         SetState(AIRSHIP_STATE_CANNON, 0);
@@ -125,7 +125,7 @@ void Airship::StateCannon()
             speed = 0x1000 / speed;
             dx = Q12_MUL(pl->x - (x - 0xCDB), speed);
             dy = Q12_MUL(pl->y - (y + 0x516D), speed);
-            if (ABS_BRANCHLESS(dx) + ABS_BRANCHLESS(dy) <= 0x7FF) {
+            if (ABS_BRANCHLESS(dx) + ABS_BRANCHLESS(dy) <= INT_TO_Q8(8) - 1) {
                 SpawnJetpackCannonball(x - 0xCDB, y + 0x516D, z - 10, dx, dy);
                 if (++volleyCount == attack->cannonBurst) {
                     volleyCount = phase;
@@ -139,7 +139,7 @@ void Airship::StateCannon()
         fireTimer = phase - 1;
     }
     Steer();
-    if (distance > 0x4300) {
+    if (distance > INT_TO_Q8(67)) {
         fireTimer = attack->fireballDelay;
         volleyCount = 0;
         SetState(AIRSHIP_STATE_FIREBALLS, 0);
@@ -243,7 +243,7 @@ void Airship::StateFall()
     delta = velY + 7;
     velY = delta;
     if (delta > 0x140) {
-        velY = 0x140;
+        velY = Q8(1.25);
     }
 
     if (total > 0xbb80) {

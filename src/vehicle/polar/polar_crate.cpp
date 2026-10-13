@@ -96,7 +96,7 @@ void PolarLifeCrate::Update()
 void PolarNitroCrate::Update()
 {
     if (animIndex != 0x12) {
-        if (depth > 0xa000) {
+        if (depth > INT_TO_Q8(160)) {
             AddActorMissedNitro();
             delete this;
             return;

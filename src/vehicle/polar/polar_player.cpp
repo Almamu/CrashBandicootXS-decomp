@@ -42,7 +42,7 @@ void PolarPlayer::Update()
     else
         visible = 1;
     if (gPolarPlayerHalted == 0) {
-        depth = 0x2f00;
+        depth = INT_TO_Q8(47);
         z = INT_TO_Q8(GetCellAnimDistance()) - depth;
     }
 
@@ -61,19 +61,19 @@ void PolarPlayer::Update()
 
         if (keys.held & DPAD_LEFT) {
             if (gPolarSteerTime++ > 12)
-                x += -0x380;
+                x += -Q8(3.5);
             else
                 x += -0x2cd;
-            LIMIT_MIN(x, -0x3200);
+            LIMIT_MIN(x, -INT_TO_Q8(50));
         } else {
             u16 right = keys.held & DPAD_RIGHT;
 
             if (right) {
                 if (gPolarSteerTime++ > 12)
-                    x += 0x380;
+                    x += Q8(3.5);
                 else
                     x += 0x2cd;
-                LIMIT_MAX(x, 0x3200);
+                LIMIT_MAX(x, INT_TO_Q8(50));
             } else {
                 gPolarSteerTime = right;
             }
@@ -112,7 +112,7 @@ void PolarPlayer::Draw()
     h = frame[1];
     halfH = h * 4;
     if (depth == record->baseDepth) {
-        scale = 0x100;
+        scale = INT_TO_Q8(1);
         sy = Q8_TO_INT(y + GetActorBgCenterY());
         sx = Q8_TO_INT(x + GetActorBgCenterX());
     } else {
@@ -124,7 +124,7 @@ void PolarPlayer::Draw()
         sy = Q8_TO_INT(Q12_MUL(y, f) + GetActorBgCenterY());
         sx = Q8_TO_INT(Q12_MUL(x, f) + GetActorBgCenterX());
         attr1 = 0x100;
-        if (scale <= 0xff) {
+        if (scale <= INT_TO_Q8(1) - 1) {
             attr1 |= 0x200;
             halfW = w * 8;
             halfH = h * 8;
@@ -227,12 +227,12 @@ void PolarPlayer::AllocTiles()
 
 /* State 0, mounting the bear: a riderless bear (gRiderlessPolar) runs
  * below while the player falls by `gPolarPlayerVelY` (gravity 0x2d); on
- * landing (y 0x2800) the bear goes, and the player rides it (state 9,
+ * landing (POLAR_GROUND_Y) the bear goes, and the player rides it (state 9,
  * anim 9). */
 void PolarPlayer::StateMount()
 {
     if (gRiderlessPolar == 0) {
-        ActorSelf *o = CreateActor(2, x, 0x2800, z, 0);
+        ActorSelf *o = CreateActor(2, x, POLAR_GROUND_Y, z, 0);
 
         gRiderlessPolar = o;
         o->RestartAnim(1);
@@ -241,9 +241,9 @@ void PolarPlayer::StateMount()
 
     y = ny;
     gPolarPlayerVelY += 0x2d;
-    if (ny > 0x2800) {
+    if (ny > POLAR_GROUND_Y) {
         gAudioContext->PlaySfx(SFX_POLAR_MOUNT, 0x100);
-        y = 0x2800;
+        y = POLAR_GROUND_Y;
         SetState(POLAR_PLAYER_STATE_LAND, 9);
         gPolarPlayerInactive = 0;
         delete gRiderlessPolar;
@@ -271,7 +271,7 @@ void PolarPlayer::StateRun()
         if (gKeys.half.pressed & A_BUTTON) {
             SetState(POLAR_PLAYER_STATE_JUMP, 3);
             gAudioContext->PlaySfx(SFX_JUMP, 0x100);
-            gPolarPlayerVelY = 0xFFFFF880;
+            gPolarPlayerVelY = -POLAR_JUMP_SPEED;
         }
         /* The mask as in StateBoost (polar_player_states.cpp). */
         u32 keys = gKeys.all;
@@ -285,18 +285,19 @@ void PolarPlayer::StateRun()
     }
 }
 
-/* State 4, jumping: rises and falls by `gPolarPlayerVelY` (gravity 0x60,
- * to 0x780; releasing A in the first 10 frames cuts the jump short) and
+/* State 4, jumping: rises and falls by `gPolarPlayerVelY` (POLAR_GRAVITY,
+ * to POLAR_MAX_FALL_SPEED; releasing A in the first 10 frames cuts the
+ * jump short, to POLAR_JUMP_CUT_SPEED) and
  * runs again (state 1, anim 4) back on the ground. */
 void PolarPlayer::StateJump()
 {
     y += gPolarPlayerVelY;
-    gPolarPlayerVelY += 0x60;
-    LIMIT_MAX(gPolarPlayerVelY, 0x780);
-    if (stateTime <= 10 && (gKeys.all & A_BUTTON) == 0 && gPolarPlayerVelY < -0x400)
-        gPolarPlayerVelY = -0x400;
-    if (y > 0x2800) {
-        y = 0x2800;
+    gPolarPlayerVelY += POLAR_GRAVITY;
+    LIMIT_MAX(gPolarPlayerVelY, POLAR_MAX_FALL_SPEED);
+    if (stateTime <= 10 && (gKeys.all & A_BUTTON) == 0 && gPolarPlayerVelY < -POLAR_JUMP_CUT_SPEED)
+        gPolarPlayerVelY = -POLAR_JUMP_CUT_SPEED;
+    if (y > POLAR_GROUND_Y) {
+        y = POLAR_GROUND_Y;
         SetState(POLAR_PLAYER_STATE_RUN, 4);
         SetCellAnimSpeed(0x24);
     }
@@ -314,7 +315,7 @@ void PolarPlayer::StateDash()
     if (gKeys.half.pressed & A_BUTTON) {
         SetState(POLAR_PLAYER_STATE_JUMP, 3);
         gAudioContext->PlaySfx(SFX_JUMP, 0x100);
-        gPolarPlayerVelY = 0xFFFFF880;
+        gPolarPlayerVelY = -POLAR_JUMP_SPEED;
     }
 }
 
@@ -344,9 +345,9 @@ void PolarPlayer::StateShocked()
 void PolarPlayer::StateCaught()
 {
     if (animDone) {
-        gPolarPlayerVelY = 0xFFFFF980;
-        if (y > 0x2000)
-            gRiderlessPolar = CreateActor(2, x, 0x2800, z, 0);
+        gPolarPlayerVelY = -Q8(6.5);
+        if (y > INT_TO_Q8(32))
+            gRiderlessPolar = CreateActor(2, x, POLAR_GROUND_Y, z, 0);
         SetState(POLAR_PLAYER_STATE_CARRIED_OFF, 7);
         gPolarPauseLocked = 1;
         if (gLevelState->timeTrial == 0)

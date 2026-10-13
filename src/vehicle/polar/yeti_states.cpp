@@ -47,27 +47,27 @@ void Yeti::StateChase()
         distance = INT_TO_Q8(GetCellAnimDistance()) - position;
     }
 
-    if (distance > 0xa000) {
-        distance = 0xa000;
+    if (distance > INT_TO_Q8(160)) {
+        distance = INT_TO_Q8(160);
         position = INT_TO_Q8(GetCellAnimDistance()) - distance;
     }
 
     s32 tier = Q8_TO_INT(anim->animTime);
 
-    if (distance <= 0x4FFF) {
+    if (distance <= INT_TO_Q8(80) - 1) {
         if (tier == 0xc) {
             gAudioContext->PlayAmbientSfx(SFX_YETI_STOMP_1, 0x3E8, 0x100, true);
-            ShakeActorBg(0x200);
+            ShakeActorBg(INT_TO_Q8(2));
         } else if (tier == 0x1c) {
             gAudioContext->PlayAmbientSfx(SFX_YETI_STOMP_2, 0x3E8, 0x100, true);
-            ShakeActorBg(0x200);
+            ShakeActorBg(INT_TO_Q8(2));
         } else if (tier == 0xd || tier == 0x1d) {
-            ShakeActorBg(0x100);
+            ShakeActorBg(INT_TO_Q8(1));
         }
     }
 
     if (anim->animDone != 0) {
-        if (distance > 0x5A00) {
+        if (distance > INT_TO_Q8(90)) {
             goto do_transition;
         }
 
@@ -86,7 +86,7 @@ void Yeti::StateChase()
         state = YETI_STATE_CHARGE;
         anim->RestartAnim(1);
 
-        if (distance <= 0x7800) {
+        if (distance <= INT_TO_Q8(120)) {
             gAudioContext->PlaySfx(SFX_YETI_CHASE, 0x100);
         }
     end_transition:;
@@ -107,14 +107,14 @@ void Yeti::StateCharge()
     position += chargeParams[paramsIndex].step;
     distance = INT_TO_Q8(GetCellAnimDistance()) - position;
 
-    if (distance > 0xa000) {
-        distance = 0xa000;
+    if (distance > INT_TO_Q8(160)) {
+        distance = INT_TO_Q8(160);
         position = INT_TO_Q8(GetCellAnimDistance()) - distance;
     }
 
     s32 tier = Q8_TO_INT(anim->animTime);
 
-    if (distance <= 0x4FFF) {
+    if (distance <= INT_TO_Q8(80) - 1) {
         /* The two stomp cues share their ShakeActorBg(0x200) (the
          * ROM's one cross-jumped tail). */
         if (tier == 0xb || tier == 0x1b) {
@@ -122,9 +122,9 @@ void Yeti::StateCharge()
                 gAudioContext->PlaySfx(SFX_YETI_STOMP_1, 0x100);
             else
                 gAudioContext->PlaySfx(SFX_YETI_STOMP_2, 0x100);
-            ShakeActorBg(0x200);
+            ShakeActorBg(INT_TO_Q8(2));
         } else if (tier == 0xc || tier == 0x1c) {
-            ShakeActorBg(0x100);
+            ShakeActorBg(INT_TO_Q8(1));
         }
     }
 

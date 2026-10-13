@@ -79,7 +79,7 @@ void PolarCheckpointCrate::Update()
             gAudioContext->PlaySfx(SFX_CHECKPOINT, 0x100);
             gLevelState->AddBrokenCrate();
             SetActorCheckpoint(z);
-            CreatePolarCheckpointText(x, y - 0xF00, z);
+            CreatePolarCheckpointText(x, y - INT_TO_Q8(15), z);
         }
 
         if (animIndex == 0 && Yeti::IsTouching(this)) {

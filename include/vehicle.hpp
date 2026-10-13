@@ -128,6 +128,17 @@ extern u8 *gPolarPlayerLastFrame;  // the frame last uploaded
 extern s32 gPolarPlayerTileBuffer; // which buffer holds the current frame
 extern void *gPolarPlayerTiles[2]; // the two VRAM tile buffers
 extern s32 gPolarPlayerVelY;
+
+/* The polar player's jumps (gPolarPlayerVelY, Q8, docs/fixed_point.md):
+ * a jump, and a launcher, start at -POLAR_JUMP_SPEED (7.5 px a frame
+ * up); the speed grows by POLAR_GRAVITY a frame up to
+ * POLAR_MAX_FALL_SPEED, and releasing A early caps the rise at
+ * POLAR_JUMP_CUT_SPEED. The player runs at POLAR_GROUND_Y (40 px). */
+#define POLAR_JUMP_SPEED     Q8(7.5)
+#define POLAR_GRAVITY        Q8(0.375)
+#define POLAR_MAX_FALL_SPEED Q8(7.5)
+#define POLAR_JUMP_CUT_SPEED INT_TO_Q8(4)
+#define POLAR_GROUND_Y       INT_TO_Q8(40)
 extern s32 gPolarQueuedWumpa;
 extern u8 gPolarSteerEnabled;
 extern s32 gPolarSteerTime;

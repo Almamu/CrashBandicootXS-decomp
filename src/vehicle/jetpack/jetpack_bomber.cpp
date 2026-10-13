@@ -66,7 +66,7 @@ void JetpackBomber::Update()
     if (state == JETPACK_BOMBER_STATE_DYING && animDone != 0) {
         delete this;
     } else {
-        z += 0x60;
+        z += Q8(0.375);
         ActorSelf::Update();
     }
 }
@@ -96,7 +96,7 @@ void JetpackBomber::StateDrop()
  * far, then homes in on the player. */
 void JetpackBomber::StateCircle()
 {
-    if (depth > 0x35ff) {
+    if (depth > INT_TO_Q8(54) - 1) {
         const s16 *sine = gSineTable;
         s32 angle = ((stateTime << 4) >> 4) & 0xff;
 
@@ -110,7 +110,7 @@ void JetpackBomber::StateCircle()
 /* gJetpackBomberStateFuncs[3]: StateCircle's x alone (radius 80, slower). */
 void JetpackBomber::StateSwingHorizontal()
 {
-    if (depth > 0x35ff) {
+    if (depth > INT_TO_Q8(54) - 1) {
         x = homeX + COS_Q8(((stateTime * 10) >> 4) & 0xff) * 80;
     } else {
         Home();
@@ -120,7 +120,7 @@ void JetpackBomber::StateSwingHorizontal()
 /* gJetpackBomberStateFuncs[2]: StateCircle's y alone. */
 void JetpackBomber::StateBobVertical()
 {
-    if (depth > 0x35ff) {
+    if (depth > INT_TO_Q8(54) - 1) {
         y = homeY + SIN_Q8((stateTime << 4) >> 4) * 60;
     } else {
         Home();
@@ -130,7 +130,7 @@ void JetpackBomber::StateBobVertical()
 /* gJetpackBomberStateFuncs[1]: homes in on the player once near. */
 void JetpackBomber::StateHome()
 {
-    if (depth <= 0x35ff) {
+    if (depth <= INT_TO_Q8(54) - 1) {
         Home();
     }
 }
