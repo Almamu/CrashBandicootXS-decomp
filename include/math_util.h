@@ -9,7 +9,8 @@
  * compiles to the same bytes. agbcc (gcc 2.9) is sensitive to things
  * that look equivalent, so:
  *
- * - Nothing here casts. The signedness of a shift comes from its operand:
+ * - Nothing here casts its operand (Q8(d) converts a decimal constant,
+ *   not a value). The signedness of a shift comes from its operand:
  *   Q8_TO_INT of an s32 is an arithmetic shift (`asr`), of a u32 a
  *   logical one (`lsr`), exactly as the spelled-out `>> 8` was. Keep the
  *   operand's own cast inside the argument: `Q8_TO_INT((s16)x)`.
@@ -39,6 +40,30 @@
 #define INT_TO_Q12(x) ((x) << 12)
 #define Q16_TO_INT(x) ((x) >> 16)
 #define INT_TO_Q16(x) ((x) << 16)
+
+/* Q4: sixteenths. The jetpack course's planes keep their velocities in
+ * sixteenths of their (Q8) position's unit: `x += Q4_TO_INT(velX)`. */
+#define Q4_TO_INT(x) ((x) >> 4)
+#define INT_TO_Q4(x) ((x) << 4)
+
+/* Fixed-point constants that aren't a whole number of units (#916,
+ * docs/fixed_point.md). Both are integer constant expressions (agbcc
+ * folds them), so they work in case labels and table initializers and
+ * compile to the same code as the literal they replace.
+ *
+ * - Q8(d): the decimal `d` in Q8. Q8(1.5) is 0x180, Q8(0.25) is 0x40,
+ *   -Q8(2.75) is -0x2C0. `d` must be a multiple of 1/256 so the product
+ *   is exact; use it for the short decimals: multiples of 1/8 (0x20),
+ *   and of 1/16 (0x10) under 1.
+ * - Q8_FRAC(n, f): `n` whole units plus `f` 256ths, for the fractions
+ *   that aren't short decimals. Q8_FRAC(0, 0x33) is 0x33 (the player's
+ *   gravity, 51/256 px per frame per frame). `n` and `f` are
+ *   non-negative and `f` < 0x100; a negative value is -Q8_FRAC(n, f).
+ *
+ * A bound just under a value (`speed <= 0x27F`) is spelled from the
+ * value it is under: `speed <= Q8(2.5) - 1`. */
+#define Q8(d)         ((s32)((d) * 256))
+#define Q8_FRAC(n, f) (((n) << 8) + (f))
 
 /* The compound-assignment spelling of Q8_TO_INT, for the sites that
  * convert a variable in place (`pos.x >>= 8;`). `x = Q8_TO_INT(x)` means
