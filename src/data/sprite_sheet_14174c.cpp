@@ -19,5 +19,5 @@ extern "C" {
  * graphics/unknown/01_14174c/.
  */
 extern const u8 gJetpackSpriteSheet[] __attribute__((aligned(4))) = {
-#include "unknown/01_14174c.bin.lz.inc"
+#include "vehicles/jetpack/sprite_sheet.bin.lz.inc"
 };

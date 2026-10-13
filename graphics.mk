@@ -26,51 +26,53 @@ $(GRAPHICS_BUILDDIR)/%.gbapal: graphics/%.png tools/jasc_pal.py
 	@mkdir -p $(dir $@)
 	python3 tools/jasc_pal.py png-to-gba $< $@ --colors $(if $(filter $*,$(PALETTE_COLORS_16)),16,256)
 
-# Framed OBJ sprite sheet entities: each subdirectory under
-# graphics/unknown/<sheet>/ is one distinct entity (one animation's worth
-# of frame data - see docs/graphics.md, "Re-splitting into one file per
-# entity"), containing one indexed PNG per frame, named so filename sort
-# order matches original ROM frame order, with no sidecar metadata - a
-# frame's own tile dimensions are just its PNG size / 8. gbagfx can't be
-# used directly: each frame has a 4-byte non-pixel header not present in
-# a plain PNG<->4bpp round trip. Explicit (non-pattern) rules, one per
-# entity folder, so editing/adding/removing a frame PNG is tracked like
-# any other prerequisite. The sheet's folders.json lists the entities in
-# the sheet's order (FRAMED_ENTITIES, tools/framed_gfx.py order).
+# The framed OBJ sprite sheets of the polar and jetpack families
+# (graphics/vehicles/<family>/sprite_sheet/): each subdirectory is one
+# distinct entity (one animation's worth of frame data - see
+# docs/graphics.md, "Re-splitting into one file per entity"), containing
+# one indexed PNG per frame, named so filename sort order matches original
+# ROM frame order, with no sidecar metadata - a frame's own tile dimensions
+# are just its PNG size / 8. gbagfx can't be used directly: each frame has
+# a 4-byte non-pixel header not present in a plain PNG<->4bpp round trip.
+# Explicit (non-pattern) rules, one per entity folder, so
+# editing/adding/removing a frame PNG is tracked like any other
+# prerequisite. The sheet's sheet.json lists the entities in the sheet's
+# order (FRAMED_ENTITIES_<family>, tools/framed_gfx.py order).
+FRAMED_SHEETS := polar jetpack
+FRAMED_NAME_polar := POLAR
+FRAMED_NAME_jetpack := JETPACK
+framed_dir = graphics/vehicles/$(1)/sprite_sheet
+$(foreach f,$(FRAMED_SHEETS),$(eval FRAMED_ENTITIES_$(f) := $(shell python3 tools/framed_gfx.py order $(call framed_dir,$(f)))))
+
 define FRAMED_ENTITY_RULE
-$(GRAPHICS_BUILDDIR)/unknown/$(1)/$(2).bin: $$(sort $$(wildcard graphics/unknown/$(1)/$(2)/*.png)) tools/framed_gfx.py
+$(GRAPHICS_BUILDDIR)/vehicles/$(1)/sprite_sheet/$(2).bin: $$(sort $$(wildcard graphics/vehicles/$(1)/sprite_sheet/$(2)/*.png)) tools/framed_gfx.py
 	@mkdir -p $$(dir $$@)
-	python3 tools/framed_gfx.py to-bin-folder graphics/unknown/$(1)/$(2) $$@
+	python3 tools/framed_gfx.py to-bin-folder graphics/vehicles/$(1)/sprite_sheet/$(2) $$@
 endef
 
 # Split multi-record sprite sheets: each ROM asset below was originally one
 # big LZ77 stream, so it must be recompressed as a single unit - every
 # entity's converted bytes get concatenated back in the order of the
-# sheet's folders.json before compression.
-FRAMED_ENTITIES_00_0b2120 := $(shell python3 tools/framed_gfx.py order graphics/unknown/00_0b2120)
-FRAMED_ENTITIES_01_14174c := $(shell python3 tools/framed_gfx.py order graphics/unknown/01_14174c)
+# sheet's sheet.json before compression.
 define FRAMED_SHEET_RULE
-$(GRAPHICS_BUILDDIR)/unknown/$(1).bin: $(foreach e,$(FRAMED_ENTITIES_$(1)),$(GRAPHICS_BUILDDIR)/unknown/$(1)/$(e).bin) graphics/unknown/$(1)/folders.json
+$(GRAPHICS_BUILDDIR)/vehicles/$(1)/sprite_sheet.bin: $(foreach e,$(FRAMED_ENTITIES_$(1)),$(GRAPHICS_BUILDDIR)/vehicles/$(1)/sprite_sheet/$(e).bin) graphics/vehicles/$(1)/sprite_sheet/sheet.json
 	@mkdir -p $$(dir $$@)
 	cat $$(filter %.bin,$$^) > $$@
 endef
 
-$(foreach sheet,00_0b2120 01_14174c,\
-  $(foreach entity,$(FRAMED_ENTITIES_$(sheet)),\
-    $(eval $(call FRAMED_ENTITY_RULE,$(sheet),$(entity)))))
-
-$(eval $(call FRAMED_SHEET_RULE,00_0b2120))
-$(eval $(call FRAMED_SHEET_RULE,01_14174c))
-
-# The byte offset of every frame in a sheet (FRAMED_<SHEET>_<ENTITY>_<NN>),
+# The byte offset of every frame in a sheet (FRAMED_<FAMILY>_<ENTITY>_<NN>),
 # for the category families' pool_offset table_B arrays in src/data/.
 define FRAMED_HEADER_RULE
-$(GRAPHICS_BUILDDIR)/unknown/$(1)_frames.h: $(sort $(wildcard graphics/unknown/$(1)/*/*.png)) graphics/unknown/$(1)/folders.json tools/framed_gfx.py
+$(GRAPHICS_BUILDDIR)/vehicles/$(1)/sprite_sheet_frames.h: $(sort $(wildcard graphics/vehicles/$(1)/sprite_sheet/*/*.png)) graphics/vehicles/$(1)/sprite_sheet/sheet.json tools/framed_gfx.py
 	@mkdir -p $$(dir $$@)
-	python3 tools/framed_gfx.py header graphics/unknown/$(1) $$@
+	python3 tools/framed_gfx.py header graphics/vehicles/$(1)/sprite_sheet $$@ --name $(FRAMED_NAME_$(1))
 endef
-$(eval $(call FRAMED_HEADER_RULE,00_0b2120))
-$(eval $(call FRAMED_HEADER_RULE,01_14174c))
+
+$(foreach sheet,$(FRAMED_SHEETS),\
+  $(foreach entity,$(FRAMED_ENTITIES_$(sheet)),\
+    $(eval $(call FRAMED_ENTITY_RULE,$(sheet),$(entity)))))
+$(foreach sheet,$(FRAMED_SHEETS),$(eval $(call FRAMED_SHEET_RULE,$(sheet))))
+$(foreach sheet,$(FRAMED_SHEETS),$(eval $(call FRAMED_HEADER_RULE,$(sheet))))
 
 # Generic LZ77 compression, used for every asset type above.
 $(GRAPHICS_BUILDDIR)/%.lz: $(GRAPHICS_BUILDDIR)/% | $(GFX)
@@ -159,8 +161,8 @@ $(C_BUILDDIR)/data/cutscene_pictures_5a9f70.o: $(patsubst graphics/%.png,$(GRAPH
 	$(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.pal.inc,$(CUTSCENE_PICTURE_PNGS))
 
 # The two framed OBJ sprite sheets.
-$(C_BUILDDIR)/data/sprite_sheet_0b2120.o: $(GRAPHICS_BUILDDIR)/unknown/00_0b2120.bin.lz.inc
-$(C_BUILDDIR)/data/sprite_sheet_14174c.o: $(GRAPHICS_BUILDDIR)/unknown/01_14174c.bin.lz.inc
+$(C_BUILDDIR)/data/sprite_sheet_0b2120.o: $(GRAPHICS_BUILDDIR)/vehicles/polar/sprite_sheet.bin.lz.inc
+$(C_BUILDDIR)/data/sprite_sheet_14174c.o: $(GRAPHICS_BUILDDIR)/vehicles/jetpack/sprite_sheet.bin.lz.inc
 
 # The two HUD fonts (graphics/fonts/).
 $(C_BUILDDIR)/data/font_tiles_5a4e70.o: $(GRAPHICS_BUILDDIR)/fonts/small.img.bin.lz.inc $(GRAPHICS_BUILDDIR)/fonts/large.img.bin.lz.inc
@@ -369,5 +371,5 @@ rle_sprite_files = $(foreach s,$(1),$(GRAPHICS_BUILDDIR)/$(s).inc $(GRAPHICS_BUI
 $(C_BUILDDIR)/data/rle_sprites_0c2758.o: $(call rle_sprite_files,vehicles/polar/player vehicles/polar/yeti)
 $(C_BUILDDIR)/data/rle_sprites_15a050.o: $(call rle_sprite_files,vehicles/jetpack/player)
 $(C_BUILDDIR)/data/frame_table_17a880.o: $(call rle_sprite_files,vehicles/polar/yeti)
-$(C_BUILDDIR)/data/anim_family_178f80.o: $(call rle_sprite_files,vehicles/polar/player) $(GRAPHICS_BUILDDIR)/unknown/00_0b2120_frames.h
-$(C_BUILDDIR)/data/anim_family_17aa6c.o: $(call rle_sprite_files,vehicles/jetpack/player) $(GRAPHICS_BUILDDIR)/unknown/01_14174c_frames.h
+$(C_BUILDDIR)/data/anim_family_178f80.o: $(call rle_sprite_files,vehicles/polar/player) $(GRAPHICS_BUILDDIR)/vehicles/polar/sprite_sheet_frames.h
+$(C_BUILDDIR)/data/anim_family_17aa6c.o: $(call rle_sprite_files,vehicles/jetpack/player) $(GRAPHICS_BUILDDIR)/vehicles/jetpack/sprite_sheet_frames.h

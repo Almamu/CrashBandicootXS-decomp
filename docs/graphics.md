@@ -1335,14 +1335,19 @@ the folder names are the records' actor kinds
 frames can span several folders - the polar Nitro crate is
 `06_nitro_crate/` then `20_nitro_crate_burst/`, every wooden polar crate
 ends in the shared `19_crate_shards/`, the jetpack rocket is
-`18_rocket/`, `14_explosion/` and `21_rocket_burst/`. The order of the
-`"folders"` list in the sheet's `folders.json` is the sheet's byte order,
-which is also the build's pack order (`tools/framed_gfx.py order`,
-graphics.mk's `FRAMED_ENTITIES_<sheet>`), so the ROM doesn't change. The
-list names each folder without its `NN_` prefix: the prefix no longer
-decides anything (`framed_gfx.py` still accepts it). The
-`FRAMED_<SHEET>_<FOLDER>_<NN>` names in `src/data/anim_family_*.cpp`
-follow the folders' names.
+`18_rocket/`, `14_explosion/` and `21_rocket_burst/`. The sheets are now
+`graphics/vehicles/polar/sprite_sheet/` and
+`graphics/vehicles/jetpack/sprite_sheet/` (mirroring `src/vehicle/`),
+and the folders are just the names (`question_crate/`, `rocket/`): the
+order of the `"folders"` list in the sheet's `sheet.json` is the sheet's
+byte order, which is also the build's pack order (`tools/framed_gfx.py
+order`, graphics.mk's `FRAMED_ENTITIES_<family>`), so the ROM doesn't
+change. The `FRAMED_POLAR_<FOLDER>_<NN>` and `FRAMED_JETPACK_...` names
+in `src/data/anim_family_*.cpp` follow the folders' names.
+
+`tools/dump_entities.py` writes `docs/entities/polar.json` and
+`jetpack.json` (they used to be `entities.json` beside each sheet): the
+records' data, documentation that the build doesn't read.
 
 Each folder's PNGs carry the 16 colours the game draws them with:
 `anim_table_record.palette` (`+0x0C`) is the OBJ palette bank, an index
@@ -1360,14 +1365,14 @@ build reads only the 4-bit indices (`framed_gfx.py to-bin-folder`), so the
 colours never reach the ROM.
 
 A folder that several records draw in different banks takes the first
-record's (in table order); `graphics/unknown/<sheet>/folders.json`, which
+record's (in table order); `graphics/vehicles/<family>/sprite_sheet/sheet.json`, which
 `split_entities.py` writes, lists every folder's records, palette and
 bank, and `other_banks` for these two:
 
 | folder | frames | records (banks) | PNG bank |
 |---|---|---|---|
-| `00_0b2120/19_crate_shards/` | 6 | basic and question crates (1), life and Aku Aku crates (3), checkpoint crate (5) | 1 |
-| `01_14174c/14_explosion/` | 10 | the bombers (2), the rocket (5), the explosion actor (4) | 2 |
+| `polar/sprite_sheet/crate_shards/` | 6 | basic and question crates (1), life and Aku Aku crates (3), checkpoint crate (5) | 1 |
+| `jetpack/sprite_sheet/explosion/` | 10 | the bombers (2), the rocket (5), the explosion actor (4) | 2 |
 
 The balloon names were colour guesses in bank 0: in their banks the
 jetpack balloons are red (record 40, the time crate's), yellow (41, the

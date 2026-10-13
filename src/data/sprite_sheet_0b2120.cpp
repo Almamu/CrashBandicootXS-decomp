@@ -19,5 +19,5 @@ extern "C" {
  * graphics/unknown/00_0b2120/.
  */
 extern const u8 gPolarSpriteSheet[] __attribute__((aligned(4))) = {
-#include "unknown/00_0b2120.bin.lz.inc"
+#include "vehicles/polar/sprite_sheet.bin.lz.inc"
 };

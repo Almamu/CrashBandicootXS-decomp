@@ -419,12 +419,12 @@ two), the animation table (`struct anim_table_record`, `actor_anim.h`,
   (`gPolarPlayerRleFrames + RLE_SPRITES_POLAR_PLAYER_FRAME_nnn`, set C for the
   second family), so it's a `const u8 *const []`. Every other record's
   is `u32` byte offsets into the family's framed sheet
-  (`graphics/unknown/00_0b2120/`, `01_14174c/`, decompressed), written
-  `FRAMED_0B2120_<FOLDER>_<NN>`. `tools/framed_gfx.py header` generates
+  (`graphics/vehicles/polar/sprite_sheet/`, `vehicles/jetpack/sprite_sheet/`, decompressed), written
+  `FRAMED_POLAR_<FOLDER>_<NN>`. `tools/framed_gfx.py header` generates
   those from the sheet's frame PNGs, in the order the sheet is built
   (`graphics.mk`), so a resized frame moves the offsets with it. Every
   offset in the ROM lands on a frame start. A sheet folder is one run of
-  frames used by the same records (`folders.json` beside it lists them
+  frames used by the same records (`sheet.json` beside it lists them
   and the palette bank its PNGs show, docs/graphics.md "The framed
   sheets' folders and colours"), so one array often spans several
   folders: `gPolarNitroCrateFrames` is `NITRO_CRATE` then
@@ -603,7 +603,7 @@ Per asset kind:
 | 16-colour palette | `-g! -p -pn16` on an indexed PNG carrying it | gbagfx LZ77 | verified |
 | 256-colour palette | `-g! -p -pn256` | gbagfx LZ77 | verified; the bit-15 palettes are their PNGs' palettes, read by `tools/jasc_pal.py` |
 | tilemap (+ tileset) from one full image | `-gt -gB4 -m -mRtf -mLf -fx <tileset.png>` | gbagfx LZ77 | map verified; the tileset itself stays a separate PNG |
-| framed OBJ sheets (`graphics/unknown/0*/`) | not migrated: each frame has a 4-byte header grit doesn't know about | `tools/framed_gfx.py` | - |
+| framed OBJ sheets (`graphics/vehicles/*/sprite_sheet/`) | not migrated: each frame has a 4-byte header grit doesn't know about | `tools/framed_gfx.py` | - |
 | raw 4bpp tile pool (`graphics/sprites/`) | `-gt -gB4 -p!` | `tools/bin2c.py --size` | used, 57 PNGs |
 | raw 8bpp tag-0x00 tile set | none: generated from the rooms' pictures (levels.md, "Tile sets") | `tools/bin2c.py`, header in C | used, 5 sets |
 
