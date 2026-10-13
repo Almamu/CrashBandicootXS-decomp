@@ -416,7 +416,7 @@ two), the animation table (`struct anim_table_record`, `actor_anim.h`,
   (`actor_anim.h`: duration, index into table_B, loop threshold and
   base, OAM attribute bits). Nothing stores a count.
 - **table_B**: the frames. Record 0's points at compressed frames
-  (`gPolarPlayerRleFrames + RLE_SPRITES_0C2758_FRAME_nnn`, set C for the
+  (`gPolarPlayerRleFrames + RLE_SPRITES_POLAR_PLAYER_FRAME_nnn`, set C for the
   second family), so it's a `const u8 *const []`. Every other record's
   is `u32` byte offsets into the family's framed sheet
   (`graphics/unknown/00_0b2120/`, `01_14174c/`, decompressed), written
@@ -665,10 +665,16 @@ C (see "Level data").
 
 ### Boss pictures
 
-`gAirshipPicture` (N. Gin's airship, 18x12 cells, 4 frames: the
-propellers turn) and `gHovercraftPicture` (Cortex's hovercraft, 16x10
-cells, 1 frame) were read as "per-level meter grid tables" before; drawn,
-they are the two bosses that fly on an affine BG. Each is `{s16 cols,
+`gAirshipPicture` (the green blimp of the jetpack stages, 18x12 cells,
+4 frames: the propellers turn) and `gHovercraftPicture` (N. Gin's
+hovercraft, 16x10 cells, 1 frame) were read as "per-level meter grid
+tables" before; drawn, they are the two big enemies that fly on an affine
+BG. The airship is a jetpack-stage object (`Airship`,
+`src/vehicle/jetpack/airship*.cpp`, created by `CreateAirship` in
+categories 3-5), and the hovercraft is N. Gin's (`Hovercraft`,
+`src/bosses/hovercraft*.cpp`, category 6, `CATEGORY_TYPE_HOVERCRAFT`),
+the craft of N. Gin's level-select picture; earlier notes called it
+Cortex's. Each is `{s16 cols,
 s16 rows}` and its frames, a frame being a tile count, a `cols * rows`
 map of `u16` tile indices and that many 4bpp tiles. The frames share one
 tile pool: frame 1's indices count on from frame 0's tiles, and so on.
@@ -681,8 +687,9 @@ in `src/data/boss_pictures_167ad4.cpp`.
 
 The maps are exactly what deduplicating the frames in reading order gives
 (the first identical tile, no flips, one pool across the frames). So the
-sources are the whole frames, `graphics/boss_pictures/<addr>_frameN.png`
-(4bpp, the 16 colours of BG palette 1). grit (`-gt -gB4`) turns each into
+sources are the whole frames, `graphics/vehicles/jetpack/airship/frameN.png`
+and `graphics/bosses/hovercraft.png` (4bpp, the 16 colours of BG palette
+1). grit (`-gt -gB4`) turns each into
 tiles in cell order, and `tools/boss_pictures.py pack` deduplicates them
 into the `.inc` with the frames' initializers and a header with the tile
 counts and the size in cells, which the C struct's array sizes use. So a
@@ -912,8 +919,11 @@ points at them by name too.
 ### Category backgrounds
 
 The actor categories (`struct category_descriptor`, `actor_anim.h`) point
-at two kinds of uncompressed background, both now built from
-`graphics/category_bg/` PNGs:
+at two kinds of uncompressed background, both now built from PNGs in
+`graphics/vehicles/`: the polar stages' ice wall
+(`vehicles/polar/ice_wall.png`), the jetpack stages' clouds
+(`vehicles/jetpack/clouds.png`) and the skies of Rocket Racket, Blimp
+Bonanza and No-Fly Zone (`vehicles/jetpack/skies/`):
 
 - **BG0 cell animations** (`cellAnim`, played by `InitCellAnim`/
   `UploadCellAnimFrame`): `struct cell_anim_header` (256-colour palette, `cols`,
@@ -993,7 +1003,9 @@ unpacks a frame into a VRAM tile block. The frame pointer tables
 (`table_B` of animation record 0 of both category families, and
 `gYetiFrames`) point at the frame headers.
 
-Each set is one PNG in `graphics/rle_sprites/`, `<addr>_frames.png`:
+Each set is one PNG: `graphics/vehicles/polar/player.png` (A, the polar
+player), `vehicles/polar/yeti.png` (B, the Yeti) and
+`vehicles/jetpack/player.png` (C, the jetpack player):
 4bpp indexed, one frame per `w*8` x `h*8` block, the frames stacked top to
 bottom, so grit's row-major tile order is the frames back to back. The
 PNG's 16 colours are the ones the game draws the set with: the players'
@@ -1006,13 +1018,14 @@ sets (A and C) use bank 0 of their category's OBJ palette
 
 | step | tool | output |
 |---|---|---|
-| tiles | grit `-gt -gB4 -p! -ftb -fh!` | `<addr>_frames.img.bin` |
-| compression | `tools/rle_sprites.py pack --frame WxH` | `<addr>_frames.inc` (the bytes), `<addr>_frames.h` (`RLE_SPRITES_<ADDR>_SIZE`, `_COUNT`, `_FRAME_nnn` byte offsets) |
+| tiles | grit `-gt -gB4 -p! -ftb -fh!` | `<set>.img.bin` |
+| compression | `tools/rle_sprites.py pack --frame WxH` | `<set>.inc` (the bytes), `<set>.h` (`RLE_SPRITES_<NAME>_SIZE`, `_COUNT`, `_FRAME_nnn` byte offsets; NAME is `POLAR_PLAYER`, `YETI` or `JETPACK_PLAYER`) |
 
 `src/data/rle_sprites_0c2758.cpp` (sets A and B) and `rle_sprites_15a050.cpp`
-(set C) declare `const u8 gStaticData_<addr>[RLE_SPRITES_<ADDR>_SIZE]`
-around the `.inc`. The frame size per set (`RLE_FRAME_<addr>` in
-`graphics.mk`: 8x8, 10x10, 8x8) is the only thing not in the PNG.
+(set C) declare `const u8 gStaticData_<addr>[RLE_SPRITES_<NAME>_SIZE]`
+around the `.inc`. The frame size per set (graphics.mk's
+`RLE_SPRITE_RULE` calls: 8x8, 10x10, 8x8) is the only thing not in the
+PNG.
 
 The compressor uses the ROM encoder's rule, found by comparing: a stretch
 of at least 7 zero halfwords becomes a zero run, a shorter one stays in
@@ -1020,10 +1033,10 @@ the literal run, and the frame's leading zeros are always a zero run. It
 rebuilds all 344 frames byte for byte. An edited frame compresses to a
 different length, which moves every later frame, so pointers into a set
 must use the generated offsets: `frame_table_17a880.cpp` writes
-`gYetiRleFrames + RLE_SPRITES_0DA1D8_FRAME_nnn`, and the other two
+`gYetiRleFrames + RLE_SPRITES_YETI_FRAME_nnn`, and the other two
 frame tables (`gPolarPlayerFrames`, `gJetpackPlayerFrames`, in the
-category family files) use `RLE_SPRITES_0C2758_FRAME_nnn` /
-`RLE_SPRITES_15A050_FRAME_nnn` the same way.
+category family files) use `RLE_SPRITES_POLAR_PLAYER_FRAME_nnn` /
+`RLE_SPRITES_JETPACK_PLAYER_FRAME_nnn` the same way.
 
 `tools/gfx_manifest.py extract` writes the three PNGs from `baserom.gba`
 again (`rle_sprites.render`, which checks that every frame re-encodes to

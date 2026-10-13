@@ -12,7 +12,7 @@ extern "C" {
 
 /* Category 4's BG1 picture (gActorCategories[4].bgPicture,
  * loaded by LoadBgPicture in bg_picture.cpp): 38x16 map, 237 tiles. Built from
- * graphics/category_bg/151ac4_picture.png (palette and map) and
+ * graphics/vehicles/jetpack/skies/blimp_bonanza.png (palette and map) and
  * 151ac4_picture_tiles.png (the tile set, grit's -fx external tileset). */
 struct bg_picture_151ac4 {
     struct bg_picture_header header;
@@ -25,18 +25,18 @@ COMPILE_TIME_ASSERT(bg_picture_151ac4_cpp, sizeof(struct bg_picture_151ac4) == 0
 extern const struct bg_picture_151ac4 gCategory4BgPicture = {
     {
         {
-#include "category_bg/151ac4_picture.pal.inc"
+#include "vehicles/jetpack/skies/blimp_bonanza.pal.inc"
         },
         38, 16, 237,
     },
     {
-#include "category_bg/151ac4_picture_map.inc"
+#include "vehicles/jetpack/skies/blimp_bonanza_map.inc"
     },
     {
-#include "category_bg/151ac4_picture_tiles.img.inc"
+#include "vehicles/jetpack/skies/blimp_bonanza_tiles.img.inc"
     },
     {
-#include "category_bg/151ac4_picture_banks.inc"
+#include "vehicles/jetpack/skies/blimp_bonanza_banks.inc"
     },
 };
 
@@ -285,7 +285,7 @@ extern const ACTOR_SPAWN_TABLE(230) gCategory4SpawnTable = {
 /* The BG1 picture shared by categories 5 and 6
  * (gActorCategories[5..6].bgPicture, loaded by LoadBgPicture
  * in bg_picture.cpp): 38x16 map, 374 tiles. Built from
- * graphics/category_bg/155260_picture.png (palette and map) and
+ * graphics/vehicles/jetpack/skies/no_fly_zone.png (palette and map) and
  * 155260_picture_tiles.png (the tile set, grit's -fx external tileset). */
 struct bg_picture_155260 {
     struct bg_picture_header header;
@@ -298,18 +298,18 @@ COMPILE_TIME_ASSERT(bg_picture_151ac4_cpp, sizeof(struct bg_picture_155260) == 0
 extern const struct bg_picture_155260 gCategory5BgPicture = {
     {
         {
-#include "category_bg/155260_picture.pal.inc"
+#include "vehicles/jetpack/skies/no_fly_zone.pal.inc"
         },
         38, 16, 374,
     },
     {
-#include "category_bg/155260_picture_map.inc"
+#include "vehicles/jetpack/skies/no_fly_zone_map.inc"
     },
     {
-#include "category_bg/155260_picture_tiles.img.inc"
+#include "vehicles/jetpack/skies/no_fly_zone_tiles.img.inc"
     },
     {
-#include "category_bg/155260_picture_banks.inc"
+#include "vehicles/jetpack/skies/no_fly_zone_banks.inc"
     },
 };
 

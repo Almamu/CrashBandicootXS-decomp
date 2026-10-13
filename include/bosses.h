@@ -92,7 +92,7 @@ extern void SpawnAirshipFireball(s32 x, s32 y, s32 z);
 
 /* src/data/boss_pictures_167ad4.cpp: the two boss pictures, a {cols, rows}
  * head, then the frames (docs/data.md "Boss pictures"). Each picture's struct is sized by its generated picture
- * header (build/.../boss_pictures/<addr>.h), so it is only complete in the
+ * header (build/.../vehicles/jetpack/airship.h, bosses/hovercraft.h), so it is only complete in the
  * data file; the code reads the head through BOSS_PICTURE_SIZE, and finds
  * the frames from the palette (gAirshipPalette + 0x204). The airship's
  * tables (gAirshipPalette, gAirshipPicture, gAirshipAttacks,

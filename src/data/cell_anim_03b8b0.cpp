@@ -14,7 +14,7 @@ extern "C" {
  * (cellAnimSize = its size, 0x75B94), played by InitCellAnim/
  * UploadCellAnimFrame (cell_anim.cpp): 19x13 cells, 60 frames. These are type-0
  * categories, so each frame carries its cells' palette banks after the
- * tiles. Built from graphics/category_bg/03b8b0_cell_anim.png, all 60
+ * tiles. Built from graphics/vehicles/polar/ice_wall.png, all 60
  * frames stacked top to bottom (tools/grit_bg.py interleaves grit's tiles
  * and banks per frame). */
 struct cell_anim_03b8b0 {
@@ -29,12 +29,12 @@ COMPILE_TIME_ASSERT(cell_anim_03b8b0_cpp, sizeof(struct cell_anim_03b8b0) == 0x7
 extern const struct cell_anim_03b8b0 gCategoryFamily0CellAnim = {
     {
         {
-#include "category_bg/03b8b0_cell_anim.pal.inc"
+#include "vehicles/polar/ice_wall.pal.inc"
         },
         19, 13,
     },
     {
-#include "category_bg/03b8b0_cell_anim_frames.inc"
+#include "vehicles/polar/ice_wall_frames.inc"
     },
 };
 

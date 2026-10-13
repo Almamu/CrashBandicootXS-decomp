@@ -29,7 +29,7 @@
      "format": "BG0 cell animation: u16 palette[256] (0x200), s16 cols=19 @+0x200, s16 rows=13 @+0x202, then 60 frames x 8028 B (19*13 4bpp tiles = 7904 B + 124 B of per-frame side data handed to the gDrawMirroredTilemapFunc callback, present because type-0 categories set the flag)",
      "effort": "medium",
      "notes": "size 0x204 + 60*8028 = 0x75B94 exactly, matching descriptor field +0x08",
-     "status": "converted: src/data/cell_anim_03b8b0.cpp (graphics/category_bg/03b8b0_cell_anim.png)"
+     "status": "converted: src/data/cell_anim_03b8b0.cpp (graphics/vehicles/polar/ice_wall.png)"
     },
     {
      "address": "0x080B1444",
@@ -97,7 +97,7 @@
      "format": "compressed OBJ frame set A (old 'rotation strip A'): 152 back-to-back frames {w=8,h=8,0x30,0} + u16 zero/literal run stream, decoded by the IWRAM hook gUnpackRleSpriteFrameFunc (0x03000634); addressed by the 152 absolute pointers in table_B gPolarPlayerFrames (categories 0-2, anim record 0, 148 distinct)",
      "effort": "medium",
      "notes": "the frames do not overlap: the old 'sliding window' reading assumed w*h*32 raw bytes per frame",
-     "status": "converted: src/data/rle_sprites_0c2758.cpp (graphics/rle_sprites/0c2758_frames.png, tools/rle_sprites.py)"
+     "status": "converted: src/data/rle_sprites_0c2758.cpp (graphics/vehicles/polar/player.png, tools/rle_sprites.py)"
     },
     {
      "address": "0x080DA1D8",
@@ -105,21 +105,21 @@
      "format": "compressed OBJ frame set B (old 'rotation strip B'): 112 back-to-back frames {w=10,h=10,0x30,0} + run stream, addressed by the 123 pointers in gYetiFrames (table_B of the CreateYeti singleton)",
      "effort": "medium",
      "notes": "the last frame ends exactly at 0x080FF1B0",
-     "status": "converted: src/data/rle_sprites_0c2758.cpp (graphics/rle_sprites/0da1d8_frames.png, tools/rle_sprites.py)"
+     "status": "converted: src/data/rle_sprites_0c2758.cpp (graphics/vehicles/polar/yeti.png, tools/rle_sprites.py)"
     },
     {
      "address": "0x080FF1B0",
      "size": 255876,
      "format": "BG0 cell animation B (categories 3-6, descriptor +0x04/+0x08): palette[256], cols=38, rows=10, 21 frames x 12160 B",
      "effort": "medium",
-     "status": "converted: src/data/cell_anim_0ff1b0.cpp (graphics/category_bg/0ff1b0_cell_anim.png)"
+     "status": "converted: src/data/cell_anim_0ff1b0.cpp (graphics/vehicles/jetpack/clouds.png)"
     },
     {
      "address": "0x0813D934",
      "size": 13464,
      "format": "BG1 picture for category 3 (descriptor +0x0C, LoadBgPicture): palette[256], s16 cols=38, rows=16, u32 tiles=357, u16 map[cols*rows], tiles*32 B 4bpp, palette-bank nibbles",
      "effort": "medium",
-     "status": "converted: src/data/cell_anim_0ff1b0.cpp (graphics/category_bg/13d934_picture*.png)"
+     "status": "converted: src/data/cell_anim_0ff1b0.cpp (graphics/vehicles/jetpack/skies/rocket_racket*.png)"
     },
     {
      "address": "0x08140DCC",
@@ -165,7 +165,7 @@
      "size": 9624,
      "format": "BG1 picture for category 4 (38x16, 237 tiles)",
      "effort": "medium",
-     "status": "converted: src/data/bg_picture_151ac4.cpp (graphics/category_bg/151ac4_picture*.png)"
+     "status": "converted: src/data/bg_picture_151ac4.cpp (graphics/vehicles/jetpack/skies/blimp_bonanza*.png)"
     },
     {
      "address": "0x0815405C",
@@ -182,7 +182,7 @@
      "size": 14008,
      "format": "BG1 picture shared by categories 5 and 6 (38x16, 374 tiles)",
      "effort": "medium",
-     "status": "converted: src/data/bg_picture_151ac4.cpp (graphics/category_bg/155260_picture*.png)"
+     "status": "converted: src/data/bg_picture_151ac4.cpp (graphics/vehicles/jetpack/skies/no_fly_zone*.png)"
     },
     {
      "address": "0x08158918",
@@ -210,7 +210,7 @@
      "format": "compressed OBJ frame set C (old 'rotation strip C'): 80 back-to-back frames {w=8,h=8,0x30,0} + run stream, addressed by table_B gJetpackPlayerFrames (categories 3-6, anim record 0, 80 pointers)",
      "effort": "medium",
      "notes": "the last frame ends exactly at 0x08167AD4",
-     "status": "converted: src/data/rle_sprites_15a050.cpp (graphics/rle_sprites/15a050_frames.png, tools/rle_sprites.py)"
+     "status": "converted: src/data/rle_sprites_15a050.cpp (graphics/vehicles/jetpack/player.png, tools/rle_sprites.py)"
     }
    ],
    "status": "converted (every region)"

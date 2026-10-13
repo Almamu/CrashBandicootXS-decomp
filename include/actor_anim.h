@@ -88,7 +88,7 @@ COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct anim_table_record) == 0x28);
  *     unpacked by the gUnpackRleSpriteFrameFunc IWRAM hook). Used only by record
  *     0 of both animation tables (and the CreateYeti singleton's table):
  *     the frame sets are rle_sprites_0c2758.cpp / rle_sprites_15a050.cpp,
- *     built from graphics/rle_sprites/ (docs/data.md, "Compressed sprite
+ *     built from graphics/vehicles/ (docs/data.md, "Compressed sprite
  *     frames").
  *
  *   - "pool_offset": each entry is a byte offset from the start of the
