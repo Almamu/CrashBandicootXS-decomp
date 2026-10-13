@@ -91,12 +91,17 @@ extern uint8_t OAM[OAM_SIZE];
 // NOTE(Jace): I tried replacing these altogether,
 //             but that resulted in a nonmatching ROM
 //             (see notes above)
-#define SOUND_INFO_PTR (*(struct SoundMixerState **)0x3007FF0)
-#define INTR_CHECK     (*(u16 *)0x3007FF8)
-#define INTR_VECTOR    (*(void **)0x3007FFC)
-
 #define EWRAM_START 0x02000000
 #define IWRAM_START 0x03000000
+
+// The BIOS's words at the top of IWRAM, as offsets from IWRAM_START.
+#define IWRAM_SOUND_INFO_OFFSET  0x7FF0
+#define IWRAM_INTR_CHECK_OFFSET  0x7FF8
+#define IWRAM_INTR_VECTOR_OFFSET 0x7FFC
+
+#define SOUND_INFO_PTR (*(struct SoundMixerState **)(IWRAM_START + IWRAM_SOUND_INFO_OFFSET))
+#define INTR_CHECK     (*(u16 *)(IWRAM_START + IWRAM_INTR_CHECK_OFFSET))
+#define INTR_VECTOR    (*(void **)(IWRAM_START + IWRAM_INTR_VECTOR_OFFSET))
 
 #define PLTT         0x5000000
 #define BG_PLTT      PLTT
