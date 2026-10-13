@@ -699,12 +699,12 @@ tail:
         }
         if (code == 1 || code == 2) {
             PosPtr(&pos)->y -= INT_TO_Q8(dy - 1);
-            PosPtr(&pos)->y &= ~0xff;
+            Q8_FLOOR_INPLACE(PosPtr(&pos)->y);
             SetEntityPos(gPlayer, pos.x, PosPtr(&pos)->y);
             PlayerQueue()->posCommitted = 1;
         } else if (code == 0 || code == 2)
             PosPtr(&pos)->y -= INT_TO_Q8(dy);
-        PosPtr(&pos)->y &= ~0xff;
+        Q8_FLOOR_INPLACE(PosPtr(&pos)->y);
         break;
     case 1:
     case 2:
@@ -1053,7 +1053,7 @@ void Crate::OpenCheckpoint()
     puff = gEntitySpawner->SpawnEffectPart(0x2a, 0, px, py, 0);
     puff->f.b.visible = 0;
     puff->mirrorBits.flipX = 0;
-    PuffSetMotion(puff, -0x180, 8, -0x10);
+    PuffSetMotion(puff, -Q8(1.5), Q8_FRAC(0, 8), -Q8(0.0625));
     StartAnim(0x1b);
     gAudioContext->PlaySfx(SFX_CHECKPOINT, 0x100);
 

@@ -175,7 +175,7 @@ void Platform::ResolveCollision(void *)
             }
             break;
         case PART_DIR_DOWN:
-            PosPtr(&pos)->y = (PosPtr(&pos)->y - INT_TO_Q8(oy - 1)) & ~0xFF;
+            PosPtr(&pos)->y = Q8_FLOOR(PosPtr(&pos)->y - INT_TO_Q8(oy - 1));
             break;
         case PART_DIR_RIGHT:
         case PART_DIR_LEFT:

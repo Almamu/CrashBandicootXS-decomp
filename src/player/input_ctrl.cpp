@@ -90,7 +90,7 @@ void InputCtrl::Update(MovingSprite *)
         /* `x` is needed: inlined, the instructions are reordered */
         s32 x = target->x;
 
-        if (x > INT_TO_Q8(gLevelLayers->layer0->widthPx) - 0xA00) {
+        if (x > INT_TO_Q8(gLevelLayers->layer0->widthPx) - INT_TO_Q8(10)) {
             CameraLead *lead = cameraLead;
 
             lead->MarkGone();
@@ -114,16 +114,16 @@ void InputCtrl::Update(MovingSprite *)
 
         if ((keys & DPAD_LEFT) && flag20) {
             QueueNowX(7);
-            SetLeadSpeed(0x3200);
+            SetLeadSpeed(INT_TO_Q8(50));
             if (++timer > 30) {
                 flag20 = 0;
                 timer = 10;
             }
         } else if (keys & DPAD_RIGHT) {
             QueueNowX(8);
-            SetLeadSpeed(0xA00);
+            SetLeadSpeed(INT_TO_Q8(10));
         } else if (!(keys & DPAD_SIDEWAYS) || ((keys & DPAD_LEFT) && !flag20)) {
-            SetLeadSpeed(0x1E00);
+            SetLeadSpeed(INT_TO_Q8(30));
             QueueNowX(1);
         }
 

@@ -11,7 +11,7 @@ Scans the game code (src/ without src/data/, and include/) for:
   shift    `x >> N`, `x << N`, `x >>= N`, `x <<= N` for N = 4, 8, 12, 16,
            and `x / 256`, `x * 256`: a conversion between formats
   mask     `x & 0xFF` (the fraction) and `x & ~0xFF` / `x & 0xFFFFFF00`
-           (the whole part) on a value
+           (the whole part, Q8_FLOOR) on a value
   spelled  a site that already says what it is: INT_TO_Q8(...),
            Q8_TO_INT(...), Q8(...), Q8_FRAC(...) and the other
            math_util.h helpers, and the named tuning constants (an
@@ -25,7 +25,12 @@ step, target; docs/fixed_point.md), every record's three values
 Each site is put under the value it applies to (the "thing"): the class
 that declares the member and the member path (`Entity::x`,
 `MovingSprite::rampX.step`), or `local <name> (<function>)`, found with
-magic_bits.py's resolver. A thing has a role from its name (ROLES:
+magic_bits.py's resolver. A member of a shared struct (vec2, aabb, ...)
+is put under its variable too (`vec2::y [pos in ProbeFloor]`), so that
+each variable has its own evidence. A literal passed to a function is
+put under the parameter it is passed as (`local x (SetPos, file)` for a
+function defined in C++, `arg SetPos(x)` for one only declared), found
+from the parameter names of the function's definition or declaration. A thing has a role from its name (ROLES:
 position, velocity, acceleration, ramp, camera, affine, angle, subframe)
 and a format from the evidence in the code: a thing that is shifted
 right by 8 (`x >> 8`, `Q8_TO_INT(x)`) or assigned an INT_TO_Q8 is Q8; a
@@ -110,7 +115,9 @@ INT_NAME = re.compile(
     r"(?i)^(?:s[xy]|screen[XY]\w*|px|py|(?:mirror|map|grid|cursor|page|text|menu|icon|glyph|font|digit|slot|sub)\w*|pixel\w*|tile[XY]\w*|col\w*|row\w*|w|h|width|height|\w*Px|\w*Pixels?|\w*Tiles?|mx|my|n|i|j|k|count\w*|\w*Count)$"
 )
 # Shared structs (a point, a box) hold pixels in one place and Q8 in
-# another: their sites are classified by value, not by the evidence.
+# another: their sites are put under their variable (`vec2::y [pos in
+# ProbeFloor]`) and classified by that variable's evidence; a site whose
+# variable isn't known is classified by its value.
 GENERIC = re.compile(r"(?:vec2|vec3|aabb|hitbox\w*|oam_attrs|bresenham_line)::")
 # A byte can't hold a Q8 position or speed: a flag, a count, an index.
 BYTE_TYPES = ("u8", "s8", "char", "bool", "bool8")
@@ -126,6 +133,8 @@ SPELLED = {
     "INT_TO_Q8": "Q8",
     "Q8_TO_INT": "Q8",
     "Q8_TO_INT_INPLACE": "Q8",
+    "Q8_FLOOR": "Q8",
+    "Q8_FLOOR_INPLACE": "Q8",
     "Q8_MUL": "Q8",
     "Q8_DIV": "Q8",
     "Q8": "Q8",
@@ -215,6 +224,9 @@ class FixedScan(mb.BitScan):
             return f"expr {flat[:48]}", None, None
         if re.match(r"Q\d+_TO_INT\(|.*>>\d+\)*$", flat):
             return f"expr {flat[:48]}", "converted", "converted"  # whole units
+        if field and not field.startswith(("local ", "global ")) and self.declares(start, flat):
+            f = self.func_at(start)
+            field = f"local {flat} ({f.fname if f else '?'}, {self.rel})"  # `screen_y_t y = 106;`
         if field and not field.endswith("()"):
             key = field.split(" (")[0].replace("local ", "").replace("global ", "")
             name = last_name(key.replace("::", "."))
@@ -222,6 +234,10 @@ class FixedScan(mb.BitScan):
                 role = role_of(name)
                 if role and role != "angle" and self.decl_type(field, start) in BYTE_TYPES:
                     role = "byte"
+                if role and self.is_pointer(field, start):
+                    role = "pointer"
+                if GENERIC.match(field):
+                    field = f"{field} [{self.instance(flat, start)}]"
                 return field, name, role
         # an expression: the first name in it with a role
         for n in re.findall(r"[A-Za-z_]\w*", re.sub(r"\b(?:s32|u32|s16|u16|s8|u8|int)\b", "", flat)):
@@ -231,6 +247,42 @@ class FixedScan(mb.BitScan):
             if r:
                 return f"expr {flat[:48]}", n, r
         return (field or f"expr {flat[:48]}"), None, None
+
+    def declares(self, start, flat):
+        """Whether the plain name at text[start] is being declared there
+        (`screen_y_t y = 106;`): a type name just before it."""
+        if not re.fullmatch(r"\w+", flat):
+            return False
+        prev = self.text[:start].rstrip()
+        m = re.search(r"(?:^|[;{}(,])\s*(?:(?:const|volatile|static|register|unsigned|signed|struct|class)\s+)*"
+                      r"([A-Za-z_]\w*)\s*\**$", prev)
+        return bool(m) and m.group(1) not in mn.KEYWORDS
+
+    def is_pointer(self, field, at):
+        """Whether a local is declared as a pointer (`s32 *scales`): its
+        arithmetic steps through memory."""
+        if not field.startswith("local "):
+            return False
+        name = field.split()[1]
+        f = self.func_at(at)
+        lo = f.head_start if f else 0
+        decl = re.compile(r"\b(\w+)\s*(\**)\s*\b" + re.escape(name) + r"\s*(?=[=;,)\[])")
+        best = None
+        for m in decl.finditer(self.text, lo, at):
+            if m.group(1) not in mn.KEYWORDS:
+                best = m.group(2)
+        return bool(best)
+
+    def instance(self, flat, at):
+        """The variable a shared struct's member belongs to, and where:
+        `pos` in `PosPtr(&pos)->y`, `pos.y`, `pp->y`."""
+        e = re.sub(r"^\w+\(&?(\w+)\)", r"\1", flat)
+        m = re.match(r"&?(\w+)", e)
+        root = m.group(1) if m else e
+        f = self.func_at(at)
+        if root in self.model.globals or not f:
+            return root
+        return f"{root} in {f.fname or '?'}"
 
     def record(self, kind, op, value, literal, at, thing, name, role, fmt_hint=None, spelled=False):
         f = self.func_at(at)
@@ -315,21 +367,44 @@ class FixedScan(mb.BitScan):
     )
 
     def scan_args(self):
-        if UI.search(self.rel):
-            return
+        """The literals passed to a function. Each one is put under the
+        parameter it is passed as by resolve_args, once every file's
+        definitions are known (Protos)."""
         text = self.text
-        for m in self.POS_CALL.finditer(text):
-            if re.search(r"\b(?:void|s32|u32|static|class)\s+(?:\w+::)?$", text[: m.start()]):
+        self.calls = []
+        for m in mn.CALL_ANY_RE.finditer(text):
+            name = m.group(3)
+            if name in mn.KEYWORDS or name in SPELLED or name in CLAMPS or name.isupper():
+                continue  # a keyword, a helper or a macro
+            if self.call_args(m) is None:
                 continue  # a declaration or a definition
-            for s, a in mn.split_args(text, m.end() - 1):
+            args = mn.split_args(text, text.index("(", m.start()))
+            for i, (s, a) in enumerate(args or ()):
                 lm = re.fullmatch(r"\s*(-?)\s*" + LITERAL + r"\s*", a)
                 if not lm:
                     continue
                 v = mn.parse_value(lm.group(2)) * (-1 if lm.group(1) else 1)
+                if v == 0:
+                    continue
+                s += len(a) - len(a.lstrip())
+                self.calls.append((name, i, len(args), v, lm.group(1) + lm.group(2), s))
+
+    def resolve_args(self, protos):
+        """A literal argument's site, under the parameter's name (a call
+        with no known parameter names falls back to POS_CALL's names)."""
+        for name, i, n, v, lit, s in self.calls:
+            p = protos.param(name, i, n)
+            if p:
+                param, home = p
+                role = role_of(param)
+                if not role:
+                    continue
+                thing = f"local {param} ({name}, {home})" if home else f"arg {name}({param})"
+                self.record("literal", "arg", v, lit, s, thing, param, role)
+            elif self.POS_CALL.match(name + "(") and not UI.search(self.rel):
                 if abs(v) < 0x100 or abs(v) % 0x10:
                     continue  # a kind, an id, a count, a flag
-                self.record("literal", m.group(1) + "()", v, lm.group(1) + lm.group(2), s, f"arg {m.group(1)}()",
-                            m.group(1), "position")
+                self.record("literal", name + "()", v, lit, s, f"arg {name}()", name, "position")
 
     SHIFT = re.compile(r"(>>=|<<=|>>|<<)\s*(\d+)(?![\w.])|(?<![/*])([/*])\s*(256|0x100)(?![\w.])")
 
@@ -379,11 +454,11 @@ class FixedScan(mb.BitScan):
             c = mn.match_close(text, o)
             arg = text[o + 1 : c]
             macro = m.group(1)
-            if macro.endswith("_TO_INT") or macro.endswith("_INPLACE"):
+            if macro.endswith(("_TO_INT", "_INPLACE")) or macro == "Q8_FLOOR":
                 thing, name, role = self.thing_at(o + 1, c)
                 if role:
                     self.evidence.append((thing, SPELLED[macro]))
-                    if macro.endswith("_INPLACE"):
+                    if macro.endswith("_TO_INT_INPLACE"):
                         self.evidence.append((thing, "int"))  # whole units from here on
             else:
                 thing, name, role = self.target_of(m.start(), c + 1)
@@ -443,6 +518,58 @@ class FixedScan(mb.BitScan):
                     self.evidence.append((thing, fmt))
 
 
+CLAMPS = {"LIMIT_MAX", "LIMIT_MIN", "CLAMP_MIN", "CLAMP_MAX", "CLAMP", "MIN", "MAX"}
+
+
+class Protos:
+    """The parameter names of the functions, by name: from their C++
+    definitions (FixedScan's function scopes: the parameter is then a
+    local of a known file, with its own evidence) and from every
+    declaration in src/ and include/ (C prototypes, methods declared in
+    a class). A parameter is known when every definition and declaration
+    with the call's argument count agrees on its name."""
+
+    DECL = re.compile(r"(?:^|[;{}:])\s*(?:(?:extern|static|inline|virtual|const|struct|class|unsigned|signed)\s+)*"
+                      r"[A-Za-z_]\w*\s*[*&\s]\s*\**\s*(?:\w+\s*::\s*)?(~?[A-Za-z_]\w*)\s*\(", re.M)
+
+    def __init__(self):
+        self.defs = collections.defaultdict(list)  # name -> [(file, params)]
+        self.decls = collections.defaultdict(list)  # name -> [params]
+
+    def add_scan(self, s):
+        for f in s.funcs:
+            if f.fname and f.params and all(f.params):
+                self.defs[f.fname].append((s.rel, tuple(f.params)))
+
+    def add_decls(self, path):
+        _, text = mn.read_blanked(path)
+        for m in self.DECL.finditer(text):
+            name = m.group(1)
+            if name in mn.KEYWORDS:
+                continue
+            p = m.end() - 1
+            close = mn.match_close(text, p)
+            if close < 0 or not re.match(r"\s*(?:const\s*)?(?:;|=\s*0\s*;)", text[close + 1 :]):
+                continue  # not a declaration
+            params = []
+            for _, a in mn.split_args(text, p) or []:
+                n = re.search(r"(\w+)\s*(?:\[[^\]]*\]\s*)*$", a.strip())
+                params.append(n.group(1) if n and len(re.findall(r"\w+", a)) > 1 else None)
+            if params and all(params):
+                self.decls[name].append(tuple(params))
+
+    def param(self, name, i, n):
+        """(parameter name, the defining file or None) of argument i of
+        n in a call of `name`, or None when unknown or ambiguous."""
+        defs = [(f, p) for f, p in self.defs.get(name, ()) if len(p) == n]
+        decls = [p for p in self.decls.get(name, ()) if len(p) == n]
+        names = {p[i] for _, p in defs} | {p[i] for p in decls}
+        if len(names) != 1:
+            return None
+        files = {f for f, _ in defs}
+        return names.pop(), (files.pop() if len(files) == 1 else None)
+
+
 def source_files():
     return mb.source_files()
 
@@ -492,8 +619,8 @@ def classify(site, fmts, model_types):
     """(category, format, reason) of a raw site dict."""
     thing, role, name = site["thing"], site["role"], site["name"] or ""
     ev = fmts.get(thing, collections.Counter())
-    if GENERIC.match(thing or ""):
-        ev = collections.Counter()  # a shared struct: its uses differ
+    if GENERIC.match(thing or "") and " [" not in thing:
+        ev = collections.Counter()  # a shared struct, no variable: its uses differ
     qs = {k: v for k, v in ev.items() if k != "int"}
     fmt = max(qs, key=qs.get) if qs else None
     if site["spelled"]:
@@ -508,6 +635,8 @@ def classify(site, fmts, model_types):
         return "integer", "-", "a byte (a flag, a count or an index), not fixed point"
     if role == "converted":
         return "integer", "-", "a value already converted to whole units (Q8_TO_INT, >> 8)"
+    if role == "pointer":
+        return "integer", "-", "a pointer: its arithmetic steps through memory"
     if kind == "shift":
         n = site["value"]
         if BITS_NAME.search(name or "") or re.search(r"OAM_|attr|palette|<< 16\) >> 16|pieces\[|nibble|tile|REG_", src):
@@ -518,6 +647,8 @@ def classify(site, fmts, model_types):
             return "fixed", f"Q{n}", "whole units to fixed point"
         return "fixed", f"Q{n}", f"a {role} converted between whole units and Q{n}"
     if kind == "mask":
+        if not fmt and role != "affine" and UI.search(site["file"]):
+            return "integer", "-", "the low byte of a 2D layout value (screen pixels)"
         if site["value"] == 0xFF:
             return "fixed", fmt or "Q8", "the fraction of a Q8 value"
         return "fixed", fmt or "Q8", "the whole part of a Q8 value (floor)"
@@ -538,6 +669,8 @@ def classify(site, fmts, model_types):
         return "fixed", fmt, f"a {role} (shifted by {fmt[1:]} where it is read)"
     if role == "position" and UI.search(site["file"]):
         return "integer", "-", "a 2D layout position (screen pixels)"
+    if role in ("velocity", "camera") and UI.search(site["file"]):
+        return "integer", "-", "a 2D layout offset or scroll (screen pixels)"
     v = abs(site["value"])
     if role in ("velocity", "acceleration", "ramp", "camera", "subframe", "affine"):
         return "fixed", "Q8", f"a {role} (Q8 by role)"
@@ -557,7 +690,10 @@ def scan(paths=None):
     model.load(files)
     mb.load_unions(files)
     raw, evidence = [], []
+    protos = Protos()
+    scans = []
     for path, rel in source_files():
+        protos.add_decls(path)
         s = FixedScan(path, rel, model)
         if not s.is_cxx:
             continue
@@ -567,8 +703,12 @@ def scan(paths=None):
         s.scan_masks()
         s.scan_spelled()
         s.scan_conversions()
+        protos.add_scan(s)
+        scans.append(s)
+    for s in scans:
+        s.resolve_args(protos)
         evidence += s.evidence
-        if paths and not any(rel == p or rel.startswith(p.rstrip("/") + "/") for p in paths):
+        if paths and not any(s.rel == p or s.rel.startswith(p.rstrip("/") + "/") for p in paths):
             continue
         raw += s.sites
     fmts = collections.defaultdict(collections.Counter)

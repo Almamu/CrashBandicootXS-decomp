@@ -70,6 +70,13 @@
  * the same, but isn't the same tokens. */
 #define Q8_TO_INT_INPLACE(x) ((x) >>= 8)
 
+/* The whole part of a Q8 value, still in Q8: `x` rounded down to a whole
+ * pixel (`x & ~0xFF`; also spelled `x & 0xFFFFFF00`), e.g. a position
+ * snapped onto the floor it was probed against. Q8_FLOOR_INPLACE is the
+ * compound-assignment spelling (`y &= ~0xFF;`). */
+#define Q8_FLOOR(x)         ((x) & ~0xFF)
+#define Q8_FLOOR_INPLACE(x) ((x) &= ~0xFF)
+
 /* The Q8 product of two Q8 values (or a Q8 value and a Q8 scale):
  * multiplies, then drops the extra 8 fraction bits. Overflows for large
  * operands, unlike util/fixed_math.cpp's FixedMul, which shifts first. */

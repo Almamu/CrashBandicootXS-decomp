@@ -32,6 +32,7 @@ assigned a conversion's result (`px = Q8_TO_INT(x)`) holds whole pixels.
 | `Q8_FRAC(n, f)` | `((n) << 8) + (f)` | `n` pixels and `f` 256ths, for the fractions that aren't short decimals: `Q8_FRAC(0, 51)` |
 | `Q8_TO_INT(x)` | `(x) >> 8` | the whole pixels of `x` (an arithmetic shift for a signed `x`: it rounds down) |
 | `Q8_TO_INT_INPLACE(x)` | `(x) >>= 8` | the same, converting a variable in place |
+| `Q8_FLOOR(x)`, `Q8_FLOOR_INPLACE(x)` | `(x) & ~0xFF`, `(x) &= ~0xFF` | `x` rounded down to a whole pixel, still in Q8 (also spelled `x & 0xFFFFFF00`): a position snapped onto the floor it was probed against |
 | `Q8_MUL(a, b)`, `Q8_DIV(a, b)` | `((a) * (b)) >> 8`, `((a) << 8) / (b)` | a Q8 product and quotient |
 | `INT_TO_Q4(n)`, `Q4_TO_INT(x)` | `(n) << 4`, `(x) >> 4` | Q4 |
 | `INT_TO_Q12(n)`, `Q12_TO_INT(x)`, `Q12_MUL(a, b)` | `<< 12`, `>> 12` | Q12 |
@@ -97,7 +98,11 @@ src/data) for literals assigned to, compared with, added to or clamped
 against a value whose name says position, velocity, acceleration, ramp,
 camera, affine, angle or sub-frame time, the shifts by 4, 8, 12 and 16
 and the `& 0xFF` / `& ~0xFF` masks on them, and the sites already
-spelled with a macro. Each site is `fixed` (with its format and
+spelled with a macro. A literal passed to a function counts as the
+parameter it is passed as (`SetLeadSpeed(0x3200)` is `speed`), from the
+parameter names of the function's definition or declarations; a member
+of a shared struct (`struct vec2`, `struct aabb`) counts per variable
+(`vec2::y [pos in ProbeFloor]`), with that variable's evidence. Each site is `fixed` (with its format and
 spelling), `integer` (a pixel, a count, a byte field, a value already
 converted), `bitfield` (OAM, palette, nibble packing) or `spelled`. It
 is a heuristic: check a site before converting it, and rebuild and
