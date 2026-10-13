@@ -35,9 +35,9 @@ void PauseMenu::DrawFraction(const u8 *count, const u8 *total)
 
     Font *d = *pdc;
     /* `x` is needed: inlined, the code is 2 instructions shorter */
-    u32 x = d->posX;
+    screen_ux_t x = d->posX;
     /* `y` is needed: inlined, the instructions are reordered */
-    u32 y = d->posY;
+    screen_uy_t y = d->posY;
 
     /* Assigned here, not at the top: that keeps the
      * &gLargeFont load after the posX/posY loads. */

@@ -567,7 +567,7 @@ void TitleScreen::DrawMenuItem(const u8 *text, s32 item)
 {
     Font *m;
     /* `x` is needed: inlined, the code is 1 instruction shorter */
-    s32 x;
+    screen_x_t x;
 
     if (item == selection) {
         s32 count = blinkCounter + 1;
@@ -577,7 +577,7 @@ void TitleScreen::DrawMenuItem(const u8 *text, s32 item)
     } else {
         font->SetPalette(0xd);
     }
-    x = (0xf0 - font->MeasureText(text)) >> 1;
+    x = (DISPLAY_WIDTH - font->MeasureText(text)) >> 1;
     m = font;
     m->SetPos(x, item * 10 + 0x80);
     m->DrawText(text);

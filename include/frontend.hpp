@@ -197,9 +197,9 @@ COMPILE_TIME_ASSERT(frontend_hpp, sizeof(Starfield) == 0x14);
  * logos, floating up from the bottom (0x18 bytes). */
 struct CreditsPopup {
     CreditsPopup *next; // 0x00
-    s32 x;              // 0x04
-    s32 y;              // 0x08 - counts down while alive
-    s32 height;         // 0x0C - it dies once y + height <= 0
+    screen_x_t x;       // 0x04
+    screen_y_t y;       // 0x08 - counts down while alive
+    screen_h_t height;  // 0x0C - it dies once y + height <= 0
     s32 mode;           // 0x10 - CREDITS_POPUP_MODE_*: a small or large character, a logo
     u8 index;           // 0x14 - the character, or the logo's index
 };

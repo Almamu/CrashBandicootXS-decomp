@@ -194,8 +194,8 @@ void Credits::UpdateText()
     s32 smallHeight;
     /* `largeHeight` is needed: inlined, the code is 3 instructions shorter */
     s32 largeHeight;
-    s32 maxHeight;
-    s32 penX;
+    screen_h_t maxHeight;
+    screen_x_t penX;
     const u8 *p;
 
     link = &popups;
@@ -304,10 +304,10 @@ place:
         do {
             s32 y = n->y;
             /* `top` is needed: inlined, the instructions differ */
-            s32 top = y + 0xa0;
+            s32 top = y + DISPLAY_HEIGHT;
 
             n->y = top + (maxHeight - (y + n->height)) / 2;
-            n->x += (0xf0 - penX) / 2;
+            n->x += (DISPLAY_WIDTH - penX) / 2;
             n = n->next;
         } while (n != 0);
     }

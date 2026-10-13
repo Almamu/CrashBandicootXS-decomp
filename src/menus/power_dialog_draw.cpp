@@ -20,15 +20,15 @@ extern "C" {
 void PowerDialog::Draw()
 {
     struct aabb box;
-    s32 w;
+    screen_w_t w;
     const u8 *n;
-    u32 x;
+    screen_ux_t x;
 
     gOamBuffer->Reset();
     gObjVramCursor->Rewind();
     icon->DrawWithOffset(0, 0);
     w = gLargeFont->MeasureText(titleText);
-    x = (u32)(240 - w) >> 1;
+    x = (u32)(DISPLAY_WIDTH - w) >> 1;
     gLargeFont->SetPos(x, 0x2d);
     gLargeFont->DrawText(titleText);
     SetAabbPos(&box, 0x10, 0x6a);
@@ -36,7 +36,7 @@ void PowerDialog::Draw()
     DrawWrappedTextInBox(descText, gSmallFont, &box, WRAPPED_TEXT_MODE_BUFFERED);
     n = GetUiText(0x2e);
     w = gSmallFont->MeasureText(n);
-    x = (u32)(240 - w) >> 1;
+    x = (u32)(DISPLAY_WIDTH - w) >> 1;
     gSmallFont->SetPos(x, 0x90);
     gSmallFont->DrawText(n);
     gOamBuffer->HideUnused();

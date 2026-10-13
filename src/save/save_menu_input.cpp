@@ -622,7 +622,7 @@ void SaveMenu::ConfirmDeleteInput(u32 keys)
  * argument slot's address, as the ROM does. */
 void SaveMenu::DrawMain()
 {
-    s32 y = 0x64;
+    screen_y_t y = 0x64;
     s32 i;
     struct byte_arg flag;
 
@@ -630,14 +630,14 @@ void SaveMenu::DrawMain()
 
     for (i = 0; i <= 4; i++) {
         s32 label;
-        s32 w;
+        screen_w_t w;
 
         if (i == cursor)
             gSmallFont->SetPalette(GetBlinkPalette());
         else
             gSmallFont->SetPalette(0);
         w = gSmallFont->MeasureText(GetUiText(label = gSaveMenuOptions[i]));
-        gSmallFont->SetPos((0xf0 - w) >> 1, y);
+        gSmallFont->SetPos((DISPLAY_WIDTH - w) >> 1, y);
         gSmallFont->DrawText(GetUiText(label));
         y += 0xa;
     }
