@@ -18,7 +18,7 @@
  * Not the CATEGORY_EXIT_* values (categories.h), which are a category
  * frame's status inside InitActorCategory's loop.
  */
-#define ROOM_EXIT_CLEARED 0 /* the room's exit reached (RequestRoomExit), a category stage finished: the next room */
+#define ROOM_EXIT_CLEARED 0 /* the room's exit reached (RoomExit::Request), a category stage finished: the next room */
 #define ROOM_EXIT_RETRY 1   /* the player is gone (died), or the pause menu's restart: back to the checkpoint */
 #define ROOM_EXIT_QUIT 2    /* the pause menu's quit: back to the level select */
 

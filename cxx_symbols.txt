@@ -2212,3 +2212,11 @@ _17ActorPaletteCycle.timer gActorPaletteCycleTimer
 _17ActorPaletteCycle.frames gActorPaletteCycleFrames
 _17ActorPaletteCycle.startFrames gActorPaletteCycleStartFrames
 _17ActorPaletteCycle.targetFrames gActorPaletteCycleTargetFrames
+#
+# #915 RoomExit: the room exit flag as an all-static class
+# (include/room_exit.hpp, src/level/room.cpp). Its data member keeps the C
+# name: iwram_data.cpp defines it.
+Clear__8RoomExit ClearRoomExit
+Request__8RoomExit RequestRoomExit
+IsRequested__8RoomExit IsRoomExitRequested
+_8RoomExit.requested gRoomExitRequested

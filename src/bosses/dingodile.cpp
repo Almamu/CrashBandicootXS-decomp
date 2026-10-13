@@ -3,6 +3,7 @@
 #include "player.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "room_exit.hpp"
 
 extern "C" {
 #include "match.h"
@@ -31,7 +32,7 @@ extern "C" {
  * either level edge, counts the hits the player lands on him, and spawns
  * helper parts through SpawnShieldOrRocket/SpawnShark; SetState is his
  * "enter state N" transition (animation + follow-up spawns/sounds). The
- * last state signals RequestRoomExit once the part falls off the bottom.
+ * last state signals RoomExit::Request once the part falls off the bottom.
  * His helpers use sprite bank 54: the purple energy ring of anim 3
  * (SpawnShieldOrRocket mode 0, kept 6 px in front of him, alpha-blended
  * and hurting the player on contact), the rocket of anim 7 (mode 1,
@@ -314,7 +315,7 @@ void DingodileCtrl::Update(MovingSprite *part)
             if (y >= LevelBottom() + INT_TO_Q8(32)) {
                 StartMotion(part, 0);
                 if (gLevelState->HasSuperBodySlam())
-                    RequestRoomExit();
+                    RoomExit::Request();
                 SetState(part, DINGODILE_STATE_GONE);
             }
             break;
