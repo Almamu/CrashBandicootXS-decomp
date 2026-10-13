@@ -53,7 +53,9 @@ everything under it not claimed by a longer entry) or its `paths`, its
                   what uses it)
 and, extracted by their own tools, which find them through the ROM's
 tables: sprite_banks (tools/sprite_frames.py extract) and framed_sheet
-(tools/split_entities.py, then tools/dump_entities.py). The level BG tile
+(tools/split_entities.py, then tools/dump_entities.py; a framed_sheet's
+`folder_banks`, {folder: bank}, draws a folder in another of its records'
+banks than the first's). The level BG tile
 sets have no source: the build generates them from the rooms' pictures,
 which tools/levels.py extract writes (docs/levels.md, "Tile sets").
 """
