@@ -35,12 +35,12 @@ extern "C" {
  * speed ramp), and is never let above baseY. Mode 2 goes back to 0 once
  * the animation is done.
  *
- * The spawn is an inline copy of LaunchHarmfulEffectPart (below):
- * passing the arguments through inline parameters is what materializes
- * them in the ROM's order, and the `+0xC` flag writes are bitfield
- * stores (QImode `-0x41`/`-9` masks). */
+ * The spawn is an inline copy of EntitySpawner::LaunchHarmfulEffectPart
+ * (below): passing the arguments through inline parameters is what
+ * materializes them in the ROM's order, and the `+0xC` flag writes are
+ * bitfield stores (QImode `-0x41`/`-9` masks). */
 
-/* LaunchHarmfulEffectPart (below), inlined. */
+/* EntitySpawner::LaunchHarmfulEffectPart (below), inlined. */
 static inline MovingSprite *SpawnPart(s32 a, s32 b, s32 c, s32 d, s32 e, MovingSprite *f)
 {
     MovingSprite *obj = gEntitySpawner->LaunchEffectPart(a, b, c, d, e, f);
@@ -408,7 +408,8 @@ void EnemyCtrl::UpdateOscillateY()
  * swaps the loads and loads the mask positive. LaunchEffectPart reads
  * five arguments after the pool; the sixth, `f`, is only stored to the
  * stack, as in the ROM. */
-MovingSprite *LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e, MovingSprite *src)
+MovingSprite *EntitySpawner::LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e,
+                                                     MovingSprite *src)
 {
     MovingSprite *obj;
     s32 flags;

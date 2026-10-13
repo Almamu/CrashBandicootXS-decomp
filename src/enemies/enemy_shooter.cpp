@@ -1,4 +1,5 @@
 #include "enemy_ctrl.hpp"
+#include "spawners.hpp"
 
 extern "C" {
 #include "match.h"
@@ -53,11 +54,11 @@ void EnemyCtrl::UpdateShooter()
     switch (mode) {
     case ENEMY_MODE_STRIKE:
         if (part->frame == 0xa && part->stepTimer == 0)
-            shot = LaunchHarmfulEffectPart(0xc, 6, 0, -0xa, 0x400, part);
+            shot = EntitySpawner::LaunchHarmfulEffectPart(0xc, 6, 0, -0xa, 0x400, part);
         break;
     case ENEMY_MODE_ATTACK_STRIKE:
         if (part->frame == 8 && part->stepTimer == 0)
-            shot = LaunchHarmfulEffectPart(0xc, 6, 0, 8, 0x400, part);
+            shot = EntitySpawner::LaunchHarmfulEffectPart(0xc, 6, 0, 8, 0x400, part);
         break;
     }
     if (shot != 0)

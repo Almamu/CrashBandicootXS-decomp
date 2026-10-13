@@ -181,9 +181,4 @@ public:
 
 COMPILE_TIME_ASSERT(enemy_ctrl_hpp, sizeof(PeriodicSpawner) == 0x28);
 
-/* src/enemies/enemy_ctrl.cpp: EntitySpawner::LaunchEffectPart from `src`
- * (spawners.hpp), the new part harmful. C linkage, C++ callers only. */
-extern "C" MovingSprite *LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e,
-                                                 MovingSprite *src);
-
 #endif /* !GUARD_ENEMY_CTRL_HPP */

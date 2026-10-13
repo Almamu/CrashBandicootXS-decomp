@@ -191,8 +191,6 @@ extern void SpawnUnderwaterPlayerPosition(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnUnderwaterStartMarker(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnPlayerPosition(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnStartMarkerStub(void);
-extern void DestroyEntitySpawner(void);
-extern void CreateEntitySpawner(void);
 
 /* src/level/spawn_start_marker.cpp */
 extern void SpawnStartMarker(u32 id, u16 x, u16 y, u16 param);

@@ -8,6 +8,7 @@
 #include "bg_layer.hpp"
 #include "level_state.hpp"
 #include "hud.hpp"
+#include "spawners.hpp"
 #include "platform.hpp"
 #include "crate.hpp"
 #include "audio.hpp"
@@ -62,7 +63,7 @@ s32 LevelProgress::PlayRoom()
     s32 mode;
     s32 result;
 
-    CreateEntitySpawner();
+    EntitySpawner::Create();
     ClearRoomExit();
 
     gUpdateOnlyPartList = new PartList(0x20);
@@ -165,7 +166,7 @@ s32 LevelProgress::PlayRoom()
     delete gTouchableList;
     delete gUpdateOnlyPartList;
 
-    DestroyEntitySpawner();
+    EntitySpawner::Destroy();
 
     return result;
 }

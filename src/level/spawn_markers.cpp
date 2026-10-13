@@ -79,13 +79,13 @@ void SpawnStartMarkerStub(void)
 
 /* `delete gEntitySpawner`: the null test, then the destructor
  * (DestroyEntitySpawnerObj) with 3. */
-void DestroyEntitySpawner(void)
+void EntitySpawner::Destroy()
 {
     delete gEntitySpawner;
 }
 
 /* gEntitySpawner, over the 92 spawn functions of gEntitySpawnFuncs. */
-void CreateEntitySpawner(void)
+void EntitySpawner::Create()
 {
     gEntitySpawner = new EntitySpawner;
     gEntitySpawner->SetTable(gEntitySpawnFuncs, ENTITY_COUNT);

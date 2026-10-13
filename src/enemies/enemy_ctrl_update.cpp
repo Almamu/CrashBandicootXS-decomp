@@ -149,7 +149,7 @@ void EnemyCtrl::Update(MovingSprite *)
             MovingSprite *t = target;
 
             if (t->animDone && mode == ENEMY_MODE_ATTACK_START) {
-                MovingSprite *pop = LaunchHarmfulEffectPart(0x1d, 0, 0, 0x2b, 0, t);
+                MovingSprite *pop = EntitySpawner::LaunchHarmfulEffectPart(0x1d, 0, 0, 0x2b, 0, t);
 
                 popup = pop;
                 pop->kind = EVENT_HIT_ELECTRIC;

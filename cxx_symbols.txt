@@ -1334,6 +1334,13 @@ DropWumpa__13EntitySpawnerUiUiUiUib DropWumpa
 DropExtraLife__13EntitySpawnerUiUiUiUib DropExtraLife
 __8KeyInput ClearKeys
 #
+# #915 EntitySpawner: the entity spawner singleton as static members of
+# EntitySpawner (include/spawners.hpp, src/level/spawn_markers.cpp,
+# src/enemies/enemy_ctrl.cpp)
+Create__13EntitySpawner CreateEntitySpawner
+Destroy__13EntitySpawner DestroyEntitySpawner
+LaunchHarmfulEffectPart__13EntitySpawneriiiiiP12MovingSprite LaunchHarmfulEffectPart
+#
 # part 10b: the front end (include/frontend.hpp, include/actor_self.hpp;
 # src/frontend/company_logos.cpp, language_select*.cpp)
 _vt.9ActorSelf gActorVtable

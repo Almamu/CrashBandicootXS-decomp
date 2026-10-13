@@ -56,7 +56,7 @@ extern class SpriteRenderer *gSpriteRenderer;
 #ifdef __cplusplus
 extern class SpriteBankSet *gSpriteBankSet;
 #endif
-/* The entity spawner (CreateEntitySpawner): an EntitySpawner
+/* The entity spawner (EntitySpawner::Create): an EntitySpawner
  * (spawners.hpp). */
 #ifdef __cplusplus
 extern class EntitySpawner *gEntitySpawner;

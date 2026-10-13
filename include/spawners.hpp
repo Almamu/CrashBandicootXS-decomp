@@ -61,6 +61,19 @@ public:
 
     EntitySpawner();  // InitEntitySpawner
     ~EntitySpawner(); // DestroyEntitySpawnerObj
+
+    /* The singleton (#915), static: they take no spawner. PlayRoom
+     * creates gEntitySpawner over gEntitySpawnFuncs when the room starts
+     * and destroys it when it ends (spawn_markers.cpp). gEntitySpawner
+     * stays a global (globals.h): the crates, the player, the enemies
+     * and the pickups all call through it. */
+    static void Create();  // CreateEntitySpawner
+    static void Destroy(); // DestroyEntitySpawner
+    /* LaunchEffectPart through gEntitySpawner, the new part harmful
+     * (bit 2 set, bit 6 cleared): the enemies' floating popup and the
+     * shooters' shots (enemy_ctrl.cpp). */
+    static MovingSprite *LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e,
+                                                 MovingSprite *src);
     /* SpawnEntity: calls the spawn function of the record's type with the
      * record's three other halfwords. */
     void Spawn(u32 id, const struct level_entity *rec);
