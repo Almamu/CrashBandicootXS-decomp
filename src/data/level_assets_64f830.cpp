@@ -1,6 +1,4 @@
-extern "C" {
-#include "gba/types.h"
-}
+#include "rooms.hpp"
 
 /*
  * ROM 0x0864F830-0x087E3BEC: the 41 rooms' level assets (gRoomNNAsset), the

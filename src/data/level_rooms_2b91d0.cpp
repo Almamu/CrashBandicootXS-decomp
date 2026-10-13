@@ -1,3 +1,5 @@
+#include "rooms.hpp"
+
 extern "C" {
 #include "core.h"
 #include "level_data.h"
