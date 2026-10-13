@@ -805,6 +805,8 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/actor/actor_category_init.cpp`, `actor_vram_pool.cpp`, `src/frontend/company_logos.cpp`, `src/iwram/iwram_data.cpp`, `src/vehicle/jetpack/jetpack_player_update.cpp`, `src/vehicle/polar/polar_player.cpp` | the callers: `SpriteOamQueue::Flush()`, `SpriteFrameCache::Age()` & co.; gLookupSpriteFrameCacheFunc is `SpriteFrameCache::Lookup` | 0 | (unchanged) | 0 -> 0 | [#915](#the-oam-queue-and-the-sprite-frame-cache-as-all-static-classes-915) |
 | `src/gfx/sprite_frame.cpp` | `CategorySpriteSheet` (new include/category_sprite_sheet.hpp), an all-static class: gCategorySpriteSheet is the public static data member `data`, its 2 functions static member functions (`Free`, `Decompress`); gfx.h's 2 prototypes and actor.h's extern go | 2 | (unchanged) | 0 -> 0 | [#915](#the-category-sprite-sheet-as-an-all-static-class-915) |
 | `src/actor/actor_category_init.cpp`, `anim_part.cpp`, `src/frontend/company_logos.cpp` | the callers: `CategorySpriteSheet::Decompress(...)`, `CategorySpriteSheet::Free()`; AnimPart::GetAnimFrameData reads `CategorySpriteSheet::data` | 0 | (unchanged) | 0 -> 0 | [#915](#the-category-sprite-sheet-as-an-all-static-class-915) |
+| `src/menus/level_select.cpp`, `level_select_pages.cpp`, `src/iwram/iwram_data.cpp` | the level select singleton as static members of `LevelSelect` (include/level_select.hpp): RunLevelSelect and SetNewWorldOpened are `Run` and `SetNewWorldOpened`, gLevelSelect and gNewWorldOpened the private static data members `instance` and `newWorldOpened`; menus.hpp's 2 `extern "C"` prototypes and 2 externs go | 2 | (unchanged) | 0 -> 0 | [#915](#the-level-select-singleton-as-static-members-of-levelselect-915) |
+| `src/level/game_frame.cpp` | the caller: `LevelSelect::Run(&room.level)`, `LevelSelect::SetNewWorldOpened()` | 0 | (unchanged) | 0 -> 0 | [#915](#the-level-select-singleton-as-static-members-of-levelselect-915) |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -5199,6 +5201,30 @@ and every object is byte-identical.
   the cache: the cache tracks the frames copied to OBJ VRAM, the sheet
   is the EWRAM buffer they are copied from. One small
   class keeps the two separate, as the inventory proposed.
+
+### The level select singleton as static members of LevelSelect (#915)
+
+RunLevelSelect (level_select.cpp) is the whole modal level-select
+screen: UpdateGameFrame calls it, and it builds the screen into
+gLevelSelect, runs its Loop, returns `result` and the chosen level, and
+deletes it. SetNewWorldOpened (level_select_pages.cpp) sets
+gNewWorldOpened when a boss's power opens the next world; the next
+screen's constructor and Loop read it, turn to the new world and clear
+it. The two globals are initialised IWRAM globals (0x03000820 and
+0x03000824, iwram_data.cpp) that only the level select touches. All
+four are now members of `LevelSelect` (include/level_select.hpp), and
+every object is byte-identical.
+
+- **Data.** `instance` (gLevelSelect) and `newWorldOpened`
+  (gNewWorldOpened) are private static data members. iwram_data.cpp
+  defines them in their place (`LevelSelect *LevelSelect::instance = 0;`,
+  `u8 LevelSelect::newWorldOpened = 0;`).
+- **Functions.** `Run` (RunLevelSelect) and `SetNewWorldOpened` are
+  public static member functions: they take no screen. UpdateGameFrame
+  calls `LevelSelect::Run(&room.level)` and, after each of the four
+  bosses, `LevelSelect::SetNewWorldOpened()`.
+- cxx_symbols.txt's `#915 LevelSelect` block maps all four to their C
+  names. menus.hpp's two `extern "C"` prototypes and two externs go.
 
 ### Next batches
 

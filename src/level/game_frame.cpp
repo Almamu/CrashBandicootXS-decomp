@@ -7,6 +7,7 @@
 #include "menus.hpp"
 #include "actor_category_stats.hpp"
 #include "actor_category.hpp"
+#include "level_select.hpp"
 
 extern "C" {
 #include "core.h"
@@ -33,7 +34,7 @@ extern "C" {
  * Shape: a level-load loop (`InitTitleScreen` / `RunTitleScreen`, the
  * map screen `RunCredits` on result 2), then the level loop. Each pass
  * restores the per-attempt block from `saveData` (repeating while
- * `RunLevelSelect` asks to), runs the attempt loop (`PlayRoom` or
+ * `LevelSelect::Run` asks to), runs the attempt loop (`PlayRoom` or
  * `ActorCategory::Init` per frame, the two bitmap ping-pongs through
  * `gEntityFlags`, the checkpoint/respawn handling), and after the
  * attempt dispatches on the level number (20-24 are the special
@@ -105,7 +106,7 @@ load:
 
         LIMIT_MAX(level, LEVEL_LAST_ON_GRID);
         room.level = level;
-        quit = RunLevelSelect(&room.level);
+        quit = LevelSelect::Run(&room.level);
         MemCopy32(&progress, &saveData, sizeof(GameProgress));
         MemCopy32(&checkpointData, &progress, sizeof(GameProgress));
         if (quit) {
@@ -246,7 +247,7 @@ load:
             switch (room.level) {
             case LEVEL_DINGODILE:
                 if (!HasSuperBodySlam()) {
-                    SetNewWorldOpened();
+                    LevelSelect::SetNewWorldOpened();
                     GiveSuperBodySlam();
                     ShowSuperBodySlamDialog();
                     PlayCutscene(4);
@@ -254,7 +255,7 @@ load:
                 break;
             case LEVEL_N_GIN:
                 if (!HasDoubleJump()) {
-                    SetNewWorldOpened();
+                    LevelSelect::SetNewWorldOpened();
                     GiveDoubleJump();
                     ShowDoubleJumpDialog();
                     PlayCutscene(5);
@@ -262,7 +263,7 @@ load:
                 break;
             case LEVEL_TINY:
                 if (!HasTornadoSpin()) {
-                    SetNewWorldOpened();
+                    LevelSelect::SetNewWorldOpened();
                     GiveTornadoSpin();
                     ShowTornadoSpinDialog();
                     PlayCutscene(6);
@@ -270,7 +271,7 @@ load:
                 break;
             case LEVEL_NEO_CORTEX:
                 if (!HasTurboRun()) {
-                    SetNewWorldOpened();
+                    LevelSelect::SetNewWorldOpened();
                     GiveTurboRun();
                     ShowTurboRunDialog();
                 }

@@ -13,7 +13,7 @@ extern "C" {
 }
 
 /* GitHub issue #26: 0x0801B85C-0x0801CEE0 (include/level_select.hpp).
- * LevelSelect: the paged level-select screen. RunLevelSelect is the whole
+ * LevelSelect: the paged level-select screen. LevelSelect::Run is the whole
  * modal screen: it builds the menu, runs it (Loop) and returns the chosen
  * level through `*level`. Five levels per page (`level / 5`, `level % 5`); each
  * level's fixed record (name text, three time-trial thresholds) is
@@ -49,7 +49,7 @@ static inline void LoadMenuPalette(PaletteCache *cache)
     CpuSet(gLevelSelectPalette, cache->slots[15], sizeof(gLevelSelectPalette) / sizeof(u16));
 }
 
-s32 RunLevelSelect(s32 *level)
+s32 LevelSelect::Run(s32 *level)
 {
     LevelSelect *menu;
     /* `result` is needed: inlined, the instructions are reordered */
@@ -77,7 +77,7 @@ s32 RunLevelSelect(s32 *level)
     gObjVramCursor->Mark();
     gAudioContext->PlaySong(SONG_WARP_ROOM);
 
-    LevelSelect **menuAddr = &gLevelSelect;
+    LevelSelect **menuAddr = &instance;
 
     *menuAddr = new LevelSelect(*level);
     *level = (*menuAddr)->Loop();
@@ -186,7 +186,7 @@ LevelSelect::LevelSelect(s32 level)
     SetBankNow(sprites[9], gSpriteBankSet->Bank(52));
     sprites[9]->StartAnim(0);
     SetEntityPixelPos(sprites[9], gLevelSelectPrevWorldArrowPos.x, gLevelSelectPrevWorldArrowPos.y);
-    if (gNewWorldOpened && IsNextWorldOpen()) {
+    if (newWorldOpened && IsNextWorldOpen()) {
         panel->Park();
     } else {
         const struct vec2 *pos = &positions[index];
@@ -516,11 +516,11 @@ s32 LevelSelect::Loop()
     blend.bits.bdSecond = 1;
     blend.bits.eva = 0x10;
     blend.bits.evb = 0x10;
-    if (gNewWorldOpened && IsNextWorldOpen()) {
+    if (newWorldOpened && IsNextWorldOpen()) {
         index = 0;
         NextWorld();
     }
-    gNewWorldOpened = 0;
+    newWorldOpened = 0;
     goto loop;
 
 check_exit:

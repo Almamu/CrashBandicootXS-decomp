@@ -111,9 +111,9 @@ void LevelSelect::Exit()
     result = 1;
 }
 
-void SetNewWorldOpened(void)
+void LevelSelect::SetNewWorldOpened()
 {
-    gNewWorldOpened = 1;
+    newWorldOpened = 1;
 }
 
 /* Whether there is a previous page (`world != 0`, spelled as the ROM's

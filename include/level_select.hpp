@@ -13,7 +13,7 @@
  *   LevelSelectCursor   0x54                          src/menus/level_select_cursor.cpp
  *
  * The sizes are the ROM's (the `new`s in InputCtrl::StateStart,
- * SpawnLaunchPad, RunLevelSelect and InitLevelSelect). Only three have a
+ * SpawnLaunchPad, LevelSelect::Run and InitLevelSelect). Only three have a
  * vtable; the screen's other objects are plain classes with a constructor
  * and a destructor (`delete` calls the destructor with 3, and it frees the
  * object when bit 0 is set).
@@ -331,7 +331,7 @@ public:
 
 COMPILE_TIME_ASSERT(level_select_hpp, sizeof(LevelSelectCursor) == 0x54);
 
-/* The level-select screen (RunLevelSelect): LEVELS_PER_WORLD levels and
+/* The level-select screen (LevelSelect::Run): LEVELS_PER_WORLD levels and
  * the world's boss per page (a world; LEVEL_SELECT_ENTRIES, 5 + 1 with
  * the ROM's levels), each level's fixed record (name text, three
  * time-trial thresholds) in gLevelTable and its saved record in the
@@ -341,7 +341,7 @@ COMPILE_TIME_ASSERT(level_select_hpp, sizeof(LevelSelectCursor) == 0x54);
 class LevelSelect
 {
 public:
-    u8 result;                    // 0x00 - returned by RunLevelSelect
+    u8 result;                    // 0x00 - returned by Run
     s32 lastIndex;                // 0x04 - last valid `index` on this page
     s32 index;                    // 0x08 - cursor, 0 to LEVEL_SELECT_ENTRIES - 1
     s32 world;                    // 0x0C - page
@@ -371,7 +371,17 @@ public:
 
     LevelSelect(s32 level); // InitLevelSelect
     ~LevelSelect();         // DestroyLevelSelect
-    void Update();          // UpdateLevelSelect
+
+    /* The singleton (#915), static: they take no screen. Run
+     * (RunLevelSelect, level_select.cpp) is the whole modal screen, for
+     * UpdateGameFrame: it builds the screen into `instance`, runs its
+     * Loop, returns `result` and the chosen level through `*level`, and
+     * deletes it. SetNewWorldOpened (level_select_pages.cpp) sets
+     * `newWorldOpened` when a boss's power opens the next world: the next
+     * screen then turns to it. */
+    static s32 Run(s32 *level); // RunLevelSelect
+    static void SetNewWorldOpened();
+    void Update(); // UpdateLevelSelect
     void UpdatePageArrows();
     void DrawRecord();
     void DrawTime(u32 time);
@@ -469,6 +479,12 @@ public:
         for (i = 0; i < LEVEL_SELECT_ENTRIES; i++)
             items[i]->SetBox(gLevelSelectWorldEntryBoxAnims[world]);
     }
+
+private:
+    /* Initialised IWRAM globals of their own (iwram_data.cpp;
+     * cxx_symbols.txt maps them to their C names), not fields. */
+    static LevelSelect *instance; // gLevelSelect: the screen while Run runs
+    static u8 newWorldOpened;     // gNewWorldOpened: set by SetNewWorldOpened, cleared by Loop
 };
 
 /* 0xAC with the ROM's levels: `items` has LEVEL_SELECT_ENTRIES entries. */

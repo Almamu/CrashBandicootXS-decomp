@@ -17,7 +17,7 @@ extern "C" {
  * power. This file has Show, the constructor and Loop. */
 
 /* Reserves a font's tiles in OBJ VRAM. The same helper as
- * RunLevelSelect's (level_select.cpp). */
+ * LevelSelect::Run's (level_select.cpp). */
 static inline void IconReserve(Font **m)
 {
     gObjVramCursor->Reserve((*m)->tileCount << 5);
