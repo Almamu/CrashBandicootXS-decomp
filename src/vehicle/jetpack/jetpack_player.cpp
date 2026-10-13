@@ -1,6 +1,7 @@
 #include "vehicle.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
+#include "cell_anim.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -144,7 +145,7 @@ void JetpackPlayer::StateResume()
 {
     if (animDone != 0) {
         SetState(JETPACK_PLAYER_STATE_FLY, 0);
-        SetCellAnimSpeed(0x28);
+        CellAnim::SetSpeed(0x28);
         gJetpackInputEnabled = 1;
         gJetpackPlayerInactive = 0;
     }
@@ -164,7 +165,7 @@ void JetpackPlayer::StateBoost()
     if (stateTime == 0x32) {
         state = JETPACK_PLAYER_STATE_FLY;
         stateTime = 0;
-        SetCellAnimSpeed(0x28);
+        CellAnim::SetSpeed(0x28);
     }
 }
 
@@ -199,7 +200,7 @@ void JetpackPlayer::StateFinish()
 
     z += INT_TO_Q8(2);
 
-    v = z - INT_TO_Q8(GetCellAnimDistance());
+    v = z - INT_TO_Q8(CellAnim::GetDistance());
     depth = v;
 
     if (gJetpackFadeStarted == 0 && v > 0x8200) {
@@ -218,7 +219,7 @@ void JetpackPlayer::StateEnter()
 {
     if (y > INT_TO_Q8(30)) {
         SetState(JETPACK_PLAYER_STATE_FLY, 0);
-        SetCellAnimSpeed(0x28);
+        CellAnim::SetSpeed(0x28);
         gJetpackInputEnabled = 1;
         gJetpackPlayerInactive = 0;
     }

@@ -1,4 +1,5 @@
 #include "actor_self.hpp"
+#include "cell_anim.hpp"
 
 extern "C" {
 #include "core.h"
@@ -31,7 +32,7 @@ extern "C" {
  * vtable slot 2), `[sp, #0x20]` the 6th (`y`).
  *
  * The skip loop's test reads `t->entries[gActorSpawnIndex].spawn.z`, and
- * `base` is declared where GetCellAnimDistance sets it (the spawn loop's
+ * `base` is declared where CellAnim::GetDistance sets it (the spawn loop's
  * test is RunActorCategoryFrame's SPAWN_DUE, actor_category_frame.cpp). Matched in the second
  * near-miss sweep with `&gActorSpawnIndex` (ROM: r7) and `base` (ROM:
  * r8) swapped unless the store went through a local pointer `idx` with
@@ -60,7 +61,7 @@ void SelectActorCategory(s32 type, struct actor_spawn_table *table,
     gActorSpawnsPaused = 0;
     gActorSpawnOffset = 0;
     gActorCategoryVtable->createPlayer(animTable, checkpoint);
-    s32 base = GetCellAnimDistance();
+    s32 base = CellAnim::GetDistance();
 
     t = gActorSpawnTable;
     for (; gActorSpawnIndex < t->count &&

@@ -231,19 +231,8 @@ extern void SetupActorVramPool(void);
 extern void LoadBgPicture(const u8 *pic);
 extern void FillBgPictureMap(const u8 *nib, const u16 *map, s32 cols, s32 rows);
 
-/* src/actor/cell_anim.cpp */
-extern void UploadCellAnimFrame(void);
-extern void InitCellAnim(s32 type, void *cellAnim, u32 animSize, s32 checkpoint);
-extern void ResetCellAnimBg(void);
+/* src/actor/cell_anim.cpp (the rest is class CellAnim, cell_anim.hpp) */
 extern void ActorCategoryAttemptEndStub(void);
-extern s32 GetCellAnimFreeTile(void);
-extern void FlipCellAnimPage(void);
-extern s32 GetCellAnimDistance(void);
-extern void AdvanceCellAnim(void);
-extern s32 GetCellAnimFrameStep(void);
-extern s32 GetCellAnimSpeed(void);
-extern void SetCellAnimSpeed(s32 speed);
-extern void FillCellAnimTilemap(s32 page, s32 w, s32 h);
 
 /* The actor zone's globals (sym_iwram.txt). */
 extern struct anim_table_record *gActorAnimTable;
@@ -284,19 +273,6 @@ extern s32 gActorSpawnOffset;
 extern struct actor_spawn_table *gActorSpawnTable;
 extern u8 gActorSpawnsPaused;
 extern void *gCategorySpriteSheet; /* the decompressed category sprite sheet */
-extern void *gCellAnim;
-extern s32 gCellAnimCols;
-extern s32 gCellAnimDistance;
-extern s32 gCellAnimFrameSize;
-extern s32 gCellAnimFrameStep;
-extern u8 gCellAnimHasBanks;
-extern s32 gCellAnimLength;
-extern u8 gCellAnimPage;
-extern s32 gCellAnimRows;
-extern s32 gCellAnimSpeed;
-extern s32 gCellAnimTileBytes;
-extern s32 gCellAnimTime;
-extern u8 gCellAnimUploaded;
 extern struct actor_spawn *gCollectedSpawns[];
 extern s32 gSavedActorPaletteCycleFrame;
 extern s32 gSavedActorPaletteCycleTarget;

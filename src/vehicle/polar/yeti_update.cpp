@@ -1,5 +1,6 @@
 #include "vehicle.hpp"
 #include "yeti.hpp"
+#include "cell_anim.hpp"
 
 extern "C" {
 #include "core.h"
@@ -66,7 +67,7 @@ extern void _call_via_r2(void *src, s32 lowBlock, void *fn);
  * *is* its own source, not a disassembly artifact. On overlap, arms
  * `gYetiState = 2`, resets the object's kind/anim state to the
  * part table's `+0x18` record, and refreshes the player via
- * `CatchPolarPlayer`/`SetCellAnimSpeed(0)`; skipped once `gPolarPlayerInactive` (an
+ * `CatchPolarPlayer`/`CellAnim::SetSpeed(0)`; skipped once `gPolarPlayerInactive` (an
  * already-consumed one-shot flag elsewhere in this ROM region) is set.
  *
  * The three boxes (static A at sp, the copy B at sp+0xc, the player
@@ -131,7 +132,7 @@ void Yeti::Update()
             g = anim;
             g->RestartAnim(2);
             static_cast<PolarPlayer *>(gActorList)->Catch();
-            SetCellAnimSpeed(0);
+            CellAnim::SetSpeed(0);
         }
     }
 }

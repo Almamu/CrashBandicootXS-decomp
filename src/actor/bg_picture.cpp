@@ -1,4 +1,5 @@
 #include "vehicle.hpp"
+#include "cell_anim.hpp"
 
 extern "C" {
 #include "core.h"
@@ -12,7 +13,7 @@ extern "C" {
  *
  * Two BG1 picture loaders (issue #56) sharing one repack loop: for each
  * of `rows` rows of `cols` map entries, add the tile base
- * (`GetCellAnimFreeTile() - 0x200`) to the entry, OR in a 4-bit palette bank
+ * (`CellAnim::GetFreeTile() - 0x200`) to the entry, OR in a 4-bit palette bank
  * taken alternately from the low and high nibble of the next byte, and
  * store it at `BG_SCREEN_ADDR(26) + row * 0x40` (columns 0x20 and up go
  * to the second screen block, +0x7C0).
@@ -22,7 +23,7 @@ extern "C" {
  *   bg_picture_header`), runs the loop over the map at +0x208 with the
  *   nibbles after the tiles, then enables BG1 (priority 3, char block 1,
  *   screen block 26, 512x256) and DMA3-copies the tiles to VRAM +
- *   GetCellAnimFreeTile() * 32.
+ *   CellAnim::GetFreeTile() * 32.
  * - `FillBgPictureMap(nibbles, map, cols, rows)`: the same loop on explicit
  *   arguments.
  *
@@ -53,7 +54,7 @@ static inline void MapFill(const u8 *nib, const u16 *map, s32 cols, s32 rows)
     s32 c;
 
     dest = (u16 *)BG_SCREEN_ADDR(26);
-    base = GetCellAnimFreeTile() - 0x200;
+    base = CellAnim::GetFreeTile() - 0x200;
     odd = false;
     for (r = 0; r < rows; r++) {
         for (c = 0; c < cols; c++) {
@@ -97,7 +98,7 @@ void LoadBgPicture(const u8 *pic)
     REG_BG1CNT = BGCNT_PRIORITY(3) | BGCNT_CHARBASE(1) | BGCNT_SCREENBASE(26) | BGCNT_TXT512x256;
 
     /* `vd` is needed: inlined, a call moves */
-    void *vd = (void *)(VRAM + GetCellAnimFreeTile() * 32);
+    void *vd = (void *)(VRAM + CellAnim::GetFreeTile() * 32);
 
     DmaCopy16(3, tileData, vd, tiles * 32);
 }
@@ -114,7 +115,7 @@ void FillBgPictureMap(const u8 *nib, const u16 *map, s32 cols, s32 rows)
     s32 c;
 
     dest = (u16 *)BG_SCREEN_ADDR(26);
-    base = GetCellAnimFreeTile() - 0x200;
+    base = CellAnim::GetFreeTile() - 0x200;
     odd = false;
     for (r = 0; r < rows; r++) {
         for (c = 0; c < cols; c++) {

@@ -2,6 +2,7 @@
 #include "audio.hpp"
 #include "level_state.hpp"
 #include "yeti.hpp"
+#include "cell_anim.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -83,7 +84,7 @@ void PolarPlayer::StateRecover()
         gPolarSteerEnabled = 1;
         gPolarPlayerInactive = 0;
         SetState(POLAR_PLAYER_STATE_RUN, 0);
-        SetCellAnimSpeed(0x24);
+        CellAnim::SetSpeed(0x24);
     }
 }
 
@@ -96,7 +97,7 @@ void PolarPlayer::StateFinishLeap()
     y += gPolarPlayerVelY;
     gPolarPlayerVelY += POLAR_PLAYER_AIR_GRAVITY;
     z += POLAR_LEAP_SPEED_Z;
-    depth = INT_TO_Q8(GetCellAnimDistance()) - z;
+    depth = INT_TO_Q8(CellAnim::GetDistance()) - z;
 
     if (gPolarFadeStarted == 0 && depth <= INT_TO_Q8(23) - 1) {
         FadeBrightness(0, 2, 1);
@@ -115,7 +116,7 @@ void PolarPlayer::StateCarriedOff()
     y += gPolarPlayerVelY;
     gPolarPlayerVelY += POLAR_PLAYER_AIR_GRAVITY;
     z += POLAR_LEAP_SPEED_Z;
-    depth = INT_TO_Q8(GetCellAnimDistance()) - z;
+    depth = INT_TO_Q8(CellAnim::GetDistance()) - z;
 
     if (gPolarFadeStarted == 0 && depth <= INT_TO_Q8(23) - 1) {
         FadeBrightness(0, 2, 1);
@@ -158,11 +159,11 @@ void PolarPlayer::StateBoost()
         bit = keys &= bit;
         if ((u16)bit == 0) {
             SetState(POLAR_PLAYER_STATE_RUN, 0);
-            SetCellAnimSpeed(0x24);
+            CellAnim::SetSpeed(0x24);
         } else {
             state = POLAR_PLAYER_STATE_DASH;
             stateTime = 0;
-            SetCellAnimSpeed(0x38);
+            CellAnim::SetSpeed(0x38);
         }
     }
 }
@@ -182,7 +183,7 @@ void PolarPlayer::StateLaunched()
     if (total > POLAR_GROUND_Y) {
         y = POLAR_GROUND_Y;
         gPolarSteerEnabled = 1;
-        SetCellAnimSpeed(0x24);
+        CellAnim::SetSpeed(0x24);
         SetState(POLAR_PLAYER_STATE_RUN, 4);
     }
 }
@@ -208,7 +209,7 @@ void PolarPlayer::StateLand()
     if (animDone != 0) {
         gPolarSteerEnabled = 1;
         SetState(POLAR_PLAYER_STATE_RUN, 0);
-        SetCellAnimSpeed(0x24);
+        CellAnim::SetSpeed(0x24);
     }
 }
 
@@ -222,7 +223,7 @@ void PolarPlayer::FinishRun()
 {
     if (gPolarPlayerInactive == 0) {
         gPolarFinishTimer = 0x16;
-        SetCellAnimSpeed(0x24);
+        CellAnim::SetSpeed(0x24);
         LIMIT_MIN(gPolarPlayerVelY, 0);
         Yeti::Stop();
         gPolarPlayerInactive = 1;
@@ -277,9 +278,9 @@ void PolarPlayer::Boost(s32 x)
         this->x = x;
 
         if (state == POLAR_PLAYER_STATE_DASH)
-            SetCellAnimSpeed(0x5a);
+            CellAnim::SetSpeed(0x5a);
         else if (state == POLAR_PLAYER_STATE_RUN)
-            SetCellAnimSpeed(0x55);
+            CellAnim::SetSpeed(0x55);
 
         state = POLAR_PLAYER_STATE_BOOST;
         stateTime = 0;
@@ -306,7 +307,7 @@ void PolarPlayer::Launch()
             gPolarSteerEnabled = 0;
             SetState(POLAR_PLAYER_STATE_LAUNCHED, 3);
             gPolarPlayerVelY = -POLAR_JUMP_SPEED;
-            SetCellAnimSpeed(0x1c);
+            CellAnim::SetSpeed(0x1c);
         }
     }
 }

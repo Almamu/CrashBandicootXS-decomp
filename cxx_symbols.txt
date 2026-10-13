@@ -1958,6 +1958,34 @@ _4Yeti.catchBox gYetiCatchBox
 _4Yeti.palette gYetiPalette
 _4Yeti.frames gYetiFrames
 _4Yeti.keyframes gYetiKeyframes
+#
+# #915 CellAnim: the 3D stages' BG0 cell animation as an all-static class
+# (include/cell_anim.hpp, src/actor/cell_anim.cpp). Its data members keep
+# the C names: sym_iwram.txt places them.
+UploadFrame__8CellAnim UploadCellAnimFrame
+Init__8CellAnimiPvUii InitCellAnim
+ResetBg__8CellAnim ResetCellAnimBg
+GetFreeTile__8CellAnim GetCellAnimFreeTile
+FlipPage__8CellAnim FlipCellAnimPage
+GetDistance__8CellAnim GetCellAnimDistance
+Advance__8CellAnim AdvanceCellAnim
+GetFrameStep__8CellAnim GetCellAnimFrameStep
+GetSpeed__8CellAnim GetCellAnimSpeed
+SetSpeed__8CellAnimi SetCellAnimSpeed
+FillTilemap__8CellAnimiii FillCellAnimTilemap
+_8CellAnim.data gCellAnim
+_8CellAnim.cols gCellAnimCols
+_8CellAnim.rows gCellAnimRows
+_8CellAnim.tileBytes gCellAnimTileBytes
+_8CellAnim.frameSize gCellAnimFrameSize
+_8CellAnim.distance gCellAnimDistance
+_8CellAnim.length gCellAnimLength
+_8CellAnim.time gCellAnimTime
+_8CellAnim.speed gCellAnimSpeed
+_8CellAnim.hasBanks gCellAnimHasBanks
+_8CellAnim.page gCellAnimPage
+_8CellAnim.uploaded gCellAnimUploaded
+_8CellAnim.frameStep gCellAnimFrameStep
 # #772 Airship (the all-static class, include/airship.hpp; src/vehicle/jetpack/airship*.cpp)
 Create__7Airshipi CreateAirship
 Update__7Airship UpdateAirship
