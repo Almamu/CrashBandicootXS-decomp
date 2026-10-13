@@ -66,19 +66,20 @@ void SpriteRenderer::DrawPieces(Sprite *part, s32 *pos)
         s32 id = info->ids[i] & 0xf;
         s32 w = gObjPieceWidths[id];
         s32 h = gObjPieceHeights[id];
-        s32 x, y;
+        screen_x_t x;
+        screen_y_t y;
         s32 tiles;
 
         if (PART_FLAG_SET(part, 26)) // mirror Y
             y = pos[1] - h - info->offsets[i].y;
         else
             y = pos[1] + info->offsets[i].y;
-        if (y + h > 0 && y <= 0x9f) {
+        if (y + h > 0 && y <= DISPLAY_HEIGHT - 1) {
             if (PART_FLAG_SET(part, 27)) // mirror X
                 x = pos[0] - w - info->offsets[i].x;
             else
                 x = pos[0] + info->offsets[i].x;
-            if (x + w > 0 && x <= 0xef) {
+            if (x + w > 0 && x <= DISPLAY_WIDTH - 1) {
                 oam.y = y;
                 oam.shape = PieceShape73DC(id);
                 oam.x = x;
@@ -192,7 +193,8 @@ void SpriteRenderer::DrawAffinePieces(Sprite *part, s32 *pos)
         s32 ox = info->offsets[i].x;
         s32 oy = info->offsets[i].y;
         s32 tiles = (w >> 3) * (h >> 3);
-        s32 x, y;
+        screen_x_t x;
+        screen_y_t y;
 
         /* Rescaled in place, so w/h and their scaled sizes share r8/sb. */
         w = Q16_TO_INT(INT_TO_Q8(w) * scale);
@@ -201,12 +203,12 @@ void SpriteRenderer::DrawAffinePieces(Sprite *part, s32 *pos)
             y = pos[1] - h - oy;
         else
             y = pos[1] + oy;
-        if (y + h > 0 && y <= 0x9f) {
+        if (y + h > 0 && y <= DISPLAY_HEIGHT - 1) {
             if (PART_FLAG_SET(part, 27)) // mirror X
                 x = pos[0] - w - ox;
             else
                 x = pos[0] + ox;
-            if (x + w > 0 && x <= 0xef) {
+            if (x + w > 0 && x <= DISPLAY_WIDTH - 1) {
                 /* `saved` is needed: inlined, the code is 4 instructions shorter */
                 s32 saved = part->frame;
                 struct piece_info *first;

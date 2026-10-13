@@ -179,7 +179,7 @@ public:
         prev->next = next;
     }
 
-    void DrawFrameAt(s32 screenX, s32 screenY, s32 scale);
+    void DrawFrameAt(screen_x_t screenX, screen_y_t screenY, s32 scale);
 
     /* This actor as one of its subclasses (#855): the actor list's root,
      * gActorList, is the stage's player, and the shot targets are
@@ -211,13 +211,13 @@ inline ActorSelf::~ActorSelf()
  * ranked (an r5 pin until #662 round 5); as this inline's parameters,
  * the screen X and Y are copied in after the projection, which then
  * shares r5 with the screen X as in the ROM. */
-inline void ActorSelf::DrawFrameAt(s32 screenX, s32 screenY, s32 scale)
+inline void ActorSelf::DrawFrameAt(screen_x_t screenX, screen_y_t screenY, s32 scale)
 {
     u8 *frame = GetAnimFrameData();
     u8 *data = frame;
     u32 flag;
-    s32 halfW;
-    s32 halfH;
+    screen_dx_t halfW;
+    screen_dy_t halfH;
 
     flag = 0;
     if (scale <= 0xff)
@@ -236,11 +236,11 @@ inline void ActorSelf::DrawFrameAt(s32 screenX, s32 screenY, s32 scale)
     screenX -= halfW;
     screenY -= halfH;
 
-    if (screenY > 0x9f)
+    if (screenY > DISPLAY_HEIGHT - 1)
         return;
     if (screenY + halfH * 2 < 0)
         return;
-    if (screenX > 0xef)
+    if (screenX > DISPLAY_WIDTH - 1)
         return;
     if (screenX + halfW * 2 < 0)
         return;
@@ -250,7 +250,7 @@ inline void ActorSelf::DrawFrameAt(s32 screenX, s32 screenY, s32 scale)
 
     {
         s32 attr = GetAnimFrameAttr();
-        u32 packed = (screenY & 0xff) | (((u32)screenX & 0x1ff) << 16) | attr | flag;
+        u32 packed = OAM_Y(screenY) | (OAM_X((u32)screenX) << 16) | attr | flag;
         u32 pal = palette;
         u32 pre = pal << 0xc;
         u32 attr2;

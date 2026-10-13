@@ -37,8 +37,8 @@ void PartList::Update()
     s32 zero;
     struct aabb *ps;
 
-    s32 w = INT_TO_Q8(440);
-    s32 h = INT_TO_Q8(280);
+    s32 w = INT_TO_Q8(ACTIVE_AREA_WIDTH);
+    s32 h = INT_TO_Q8(ACTIVE_AREA_HEIGHT);
     f.near.w = w;
     f.near.h = h;
     cam = gLevelLayers->layer0;
@@ -48,8 +48,8 @@ void PartList::Update()
 
     cx = INT_TO_Q8(cam->x);
     zero = 0;
-    cx -= INT_TO_Q8(100);
-    cy = INT_TO_Q8(cam->y) - INT_TO_Q8(60);
+    cx -= INT_TO_Q8(ACTIVE_AREA_MARGIN_X);
+    cy = INT_TO_Q8(cam->y) - INT_TO_Q8(ACTIVE_AREA_MARGIN_Y);
     f.near.x = cx;
     f.near.y = cy;
     /* scoped: its own `cx`/`cy` (shared, the registers differ) */
@@ -62,8 +62,8 @@ void PartList::Update()
     ps = &f.screen;
     /* scoped: its own `w`/`h` (shared, the registers differ) */
     {
-        s32 w = INT_TO_Q8(240);
-        s32 h = INT_TO_Q8(160);
+        s32 w = INT_TO_Q8(DISPLAY_WIDTH);
+        s32 h = INT_TO_Q8(DISPLAY_HEIGHT);
         ps->w = w;
         ps->h = h;
     }
@@ -190,8 +190,8 @@ void PartList::Cull()
     screen.y = cy;
 
     /* `w`, `h` are needed: inlined, the instructions are reordered */
-    s32 w = INT_TO_Q8(240);
-    s32 h = INT_TO_Q8(160);
+    s32 w = INT_TO_Q8(DISPLAY_WIDTH);
+    s32 h = INT_TO_Q8(DISPLAY_HEIGHT);
     screen.w = w;
     screen.h = h;
     visibleCount = 0;

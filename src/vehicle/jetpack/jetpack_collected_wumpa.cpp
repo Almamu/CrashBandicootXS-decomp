@@ -67,12 +67,14 @@ void JetpackCollectedWumpa::Update()
  * its priority nibble, plus 0x800 when the sort key is behind the BG. */
 void JetpackCollectedWumpa::Draw()
 {
-    s32 sx;
-    s32 sy;
+    /* `sx` also holds the palette once the attributes are packed: the
+     * ROM's register */
+    screen_x_t sx;
+    screen_y_t sy;
     u8 *frame;
     u32 scaled;
-    s32 halfW;
-    s32 halfH;
+    screen_dx_t halfW;
+    screen_dy_t halfH;
     u32 attr;
     u32 attr2;
     u16 attr2Out;
@@ -91,17 +93,17 @@ void JetpackCollectedWumpa::Draw()
     halfH = scaled ? frame[1] << 3 : frame[1] << 2;
     sx -= halfW;
     sy -= halfH;
-    if (sy > 0x9f)
+    if (sy > DISPLAY_HEIGHT - 1)
         return;
     if (sy + halfH * 2 < 0)
         return;
-    if (sx > 0xef)
+    if (sx > DISPLAY_WIDTH - 1)
         return;
     if (sx + halfW * 2 < 0)
         return;
 
     scaled |= 0x100;
-    attr = (sy & 0xff) | ((sx & 0x1ff) << 16) | GetAnimFrameAttr() | scaled;
+    attr = OAM_Y(sy) | (OAM_X(sx) << 16) | GetAnimFrameAttr() | scaled;
     sx = palette;
     attr2 = sx << 12;
     if (sortKey & SORT_KEY_FLAG_BEHIND_BG)

@@ -28,15 +28,15 @@ u8 Entity::IsNearCamera()
         struct aabb near;
         BgLayer *layer;
         /* `w`, `h` are needed: inlined, the instructions are reordered */
-        s32 w = INT_TO_Q8(440);
-        s32 h = INT_TO_Q8(280);
+        s32 w = INT_TO_Q8(ACTIVE_AREA_WIDTH);
+        s32 h = INT_TO_Q8(ACTIVE_AREA_HEIGHT);
 
         near.w = w;
         near.h = h;
         layer = gLevelLayers->layer0;
         /* `nx`, `ny` are needed: inlined, the instructions are reordered */
-        s32 nx = INT_TO_Q8(layer->x) - INT_TO_Q8(100);
-        s32 ny = INT_TO_Q8(layer->y) - INT_TO_Q8(60);
+        s32 nx = INT_TO_Q8(layer->x) - INT_TO_Q8(ACTIVE_AREA_MARGIN_X);
+        s32 ny = INT_TO_Q8(layer->y) - INT_TO_Q8(ACTIVE_AREA_MARGIN_Y);
 
         near.x = nx;
         near.y = ny;

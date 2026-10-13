@@ -101,9 +101,9 @@ void ActorSelf::Draw()
     /* `scale` is needed: inlined, the code is 2 instructions longer */
     s32 scale = (dist << 8) / record->baseDepth;
     s32 proj = (gActorFocalLength << 0xc) / dist;
-    s32 screenY;
+    screen_y_t screenY;
     /* `screenX` is needed: inlined, the code is 6 instructions shorter */
-    s32 screenX;
+    screen_x_t screenX;
 
     /* scoped: its own `off`/`t`, as the next block (shared, the code is 2
      * instructions longer) */

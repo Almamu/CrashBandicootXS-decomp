@@ -277,8 +277,8 @@ u8 Sprite::IsOnScreen()
         screen.x = cx;
         screen.y = cy;
         /* `w`, `h` are needed: inlined, the instructions are reordered */
-        w = INT_TO_Q8(0xf0);
-        h = INT_TO_Q8(0xa0);
+        w = INT_TO_Q8(DISPLAY_WIDTH);
+        h = INT_TO_Q8(DISPLAY_HEIGHT);
         screen.w = w;
         screen.h = h;
         result = (u8)OverlapsRect(&screen);

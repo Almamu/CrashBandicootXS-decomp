@@ -102,8 +102,9 @@ void PolarPlayer::Draw()
     s32 attr1 = 0;
     u8 *frame;
     u32 w, h;
-    s32 halfW, halfH;
-    s32 sx, sy;
+    screen_dx_t halfW, halfH;
+    screen_x_t sx;
+    screen_y_t sy;
 
     frame = CurFrame();
     w = frame[0];
@@ -131,8 +132,9 @@ void PolarPlayer::Draw()
     }
     sx -= halfW;
     sy -= halfH;
-    if (sy <= 0x9f && sy + halfH * 2 >= 0 && sx <= 0xef && sx + halfW * 2 >= 0) {
-        attr1 |= (sy & 0xff) | ((sx & 0x1ff) << 16) | CurAttr() | GetSpriteShapeSizeBits(frame);
+    if (sy <= DISPLAY_HEIGHT - 1 && sy + halfH * 2 >= 0 && sx <= DISPLAY_WIDTH - 1 &&
+        sx + halfW * 2 >= 0) {
+        attr1 |= OAM_Y(sy) | (OAM_X(sx) << 16) | CurAttr() | GetSpriteShapeSizeBits(frame);
         if (frame != gPolarPlayerLastFrame) {
             gPolarPlayerTileBuffer ^= 1;
             gUnpackRleSpriteFrameFunc((u16 *)gPolarPlayerTiles[gPolarPlayerTileBuffer],
