@@ -115,7 +115,7 @@ static inline void FillTileMap(s32 page, s32 w, s32 h)
     }
     for (row = 0; row < h; row++) {
         for (col = 0; col < w; col++) {
-            if (col <= 0x1f)
+            if (col <= BG_SCREEN_BLOCK_TILES - 1)
                 base[col] = tile++;
             else
                 base[col + 0x3e0] = tile++;
@@ -297,7 +297,7 @@ void FillCellAnimTilemap(s32 page, s32 w, s32 h)
     }
     for (row = 0; row < h; row++) {
         for (col = 0; col < w; col++) {
-            if (col <= 0x1f)
+            if (col <= BG_SCREEN_BLOCK_TILES - 1)
                 base[col] = tile++;
             else
                 base[col + 0x3e0] = tile++;

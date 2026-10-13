@@ -68,7 +68,7 @@ void CrateList::Collide(struct aabb box, s32 unused, MovingSprite *other)
     lo = cam->x;
     lo >>= 8;
     LIMIT_MIN(lo, 0);
-    i = lo + 2;
+    i = lo + CRATE_GRID_SPAN;
     columns = heads;
     last = &heads[255];
     do {
@@ -135,7 +135,8 @@ void CrateList::CollideWithPlayer(struct aabb box, MovingSprite *part)
 /* The player's pass over the crate grid (#664, part 7f;
  * include/crate_list.hpp). */
 
-/* For the crates in the three grid buckets from the camera's column on
+/* For the crates in the grid buckets from the camera's column to
+ * CRATE_GRID_SPAN right of it
  * (as UpdateCrateList's window): a hovering player (PLAYER_CTRL_MODE_INPUT) breaks the
  * ones it touches (BreakCrateTouchedByPlayer); otherwise each collides
  * with the player (CollideCrateWithPlayer), with the player's action (its
@@ -151,7 +152,7 @@ void CrateList::CollidePlayer(s32 unused)
 
     lo >>= 8;
     LIMIT_MIN(lo, 0);
-    i = lo + 2;
+    i = lo + CRATE_GRID_SPAN;
     p = gPlayer;
     mode = p->ctrlMode;
     if (mode == PLAYER_CTRL_MODE_INPUT) {

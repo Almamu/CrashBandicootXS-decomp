@@ -112,9 +112,8 @@ The table lists the ones found by hand; the list below has the rest.
 
 1. **Buffers and loops sized by the screen.** The starfield's 4bpp frame
    (`tileBuffer`, 240x160/2 bytes) and its 30x20 tile map. The level BGs'
-   32x32 screen blocks and the streamer's 64x32 ring are the hardware's
-   BG map sizes: a port with a screen wider than 256 pixels needs a
-   bigger BG map from its platform layer. The game has no per-scanline
+   32x32 screen blocks and the streamer's 64x32 ring are fixed sizes
+   (see "Platform-layer limits" below). The game has no per-scanline
    (HBlank) table; its only VCOUNT use is the music's interrupt
    (src/audio/, out of scope).
 2. **Coordinate wrapping and culling.** The game culls with explicit
@@ -125,7 +124,10 @@ The table lists the ones found by hand; the list below has the rest.
    (`PartList::Update`) and entities (`Entity::IsNearCamera`) are active
    in a 440x280 window around the camera: the screen plus 100 pixels on
    each side and 60 above and below. The window scales with the screen;
-   the margins stay. Distances measured from the player (the periodic
+   the margins stay. The crate list files its crates in 256-pixel grid
+   columns, and its passes visit the camera's column and the
+   `CRATE_GRID_SPAN` to its right (crate_list.hpp): enough columns for
+   the window's right edge, 2 on the GBA, 3 for a 426-pixel screen. Distances measured from the player (the periodic
    spawner's 0xA1-0x18F, the sound fall-off at 0xA0) are tuning, not
    the screen.
 4. **Camera framing.** The camera centres its target
@@ -152,3 +154,21 @@ The table lists the ones found by hand; the list below has the rest.
    A literal written where the defines are meant still compiles, so CI
    also runs `tools/magic_numbers.py --screen --check`, which fails on a
    screen-size literal that no rule classifies.
+
+## Platform-layer limits
+
+Some sizes the game's code is written against are the GBA's formats,
+not the screen's. They stay as they are; a port with a bigger screen
+replaces what uses them in its platform layer. `screen.h` names them:
+
+| Name | Value | Where | Limit |
+|---|---|---|---|
+| `BG_SCREEN_BLOCK_TILES` | 32 | a text BG's screen block: 32x32 map entries, 256x256 pixels. `BgLayer` (bg_layer.cpp) keeps a 32x32 window of the level map in one, wrapping modulo 32; the cell-anim maps (`FillTileMap`, cell_anim.cpp) put columns past 31 in the next block | the screen and one tile more must fit in 256 pixels each way: a wider or taller screen needs a bigger BG map |
+| `BG_STREAM_RING_COLS` x `BG_STREAM_RING_ROWS` | 64 x 32 | `BgStreamer`'s ring (bg_streamer.cpp): 4x4 chunks of 16x8 tiles (128x64 pixels), the four from the chunk at the layer's scroll position, wrapped with `& (COLS - 1)` / `& (ROWS - 1)` | `DISPLAY_WIDTH` <= 512 - 127 and `DISPLAY_HEIGHT` <= 256 - 63: 240x160 fits, 426x240 doesn't |
+| `OAM_X(x)`, `OAM_Y(y)` (gba/defines.h) | 9 bits, 8 bits | OAM attribute 1's X and attribute 0's Y | no-ops under `PORTABLE`, where the platform library's OAM has wider fields |
+| `Font::DrawGlyph`'s read of `posY` (font_glyph.cpp) | 8 bits | the ROM reads the font cursor's Y with a byte load: OAM's 8-bit Y, truncated by the load itself, which `OAM_Y()` can't spell | a screen taller than 256 pixels needs that read widened to the whole `posY` |
+| Mode 4's second frame (slideshow.cpp) | `VRAM + 0xA000` | the cutscene's double-buffered 240x160 bitmap | the picture is fixed-size art; the frame size is the hardware's |
+
+`make screen-check` compiles at 426x240 regardless: it checks that the
+game code spells its screen values with the defines, not that a bigger
+screen runs on these GBA formats.
