@@ -58,13 +58,12 @@ songs and WAV samples. `baserom.gba` isn't needed to build it.
 `audio/`, `objects/`, `player/`, `crates/`, `enemies/`, `level/`,
 `bosses/`, `actor/`, `vehicle/`, `menus/`, `hud/`, ...), with the ROM
 data tables in `src/data/`, and every file is named after what it holds
-(see [docs/file_layout_plan.md](./docs/file_layout_plan.md)). The
+(see [CONTRIBUTING.md](./CONTRIBUTING.md#source-layout)). The
 third-party and SDK code linked into the ROM (the GAX2 sound engine,
 Nintendo's AgbEeprom library, libgcc, the BIOS SWI wrappers) is under
 `lib/` (see [docs/libraries.md](./docs/libraries.md)). Declarations live
 in `include/` and in each library's `include/` (see
 [docs/headers_plan.md](./docs/headers_plan.md)).
-[docs/status/](./docs/status/) has the per-system breakdown.
 
 ## Building
 
@@ -141,8 +140,8 @@ expected to keep being used that way. A few things follow from that:
   contributors using their own AI tooling - as long as the same
   verification standard is met (the ROM stays byte-identical, and nothing
   is presented as more certain than it is).
-  [docs/matching.md](./docs/matching.md), [docs/matching/](./docs/matching/)
-  and [docs/status/](./docs/status/) exist so an AI agent (or a human)
+  [docs/matching.md](./docs/matching.md) and [docs/matching/](./docs/matching/)
+  exist so an AI agent (or a human)
   picking up a fresh session has enough context to keep going without
   re-deriving everything from scratch.
 - **Semantic naming should stay honest.** A placeholder name
@@ -163,7 +162,6 @@ reason, that's a completely reasonable position - just know it going in.
 - [CONTRIBUTING.md](./CONTRIBUTING.md) - **how to pick up work from the issue tracker, human or agent, and get it to a PR**
 - [docs/workflow.md](./docs/workflow.md) - **the required loop for changing matched code, must be followed for every change**
 - [docs/naming.md](./docs/naming.md) - **the naming convention, and the checklist of what a rename touches**
-- [docs/status/](./docs/status/) - per-system matched/parked function status
 - [docs/data.md](./docs/data.md) - how ROM data tables became C `const` arrays in `src/data/`, linked in ROM order, and the asset pipeline
 - [docs/libraries.md](./docs/libraries.md) - the third-party/SDK libraries under `lib/` (GAX2, AgbEeprom, libgcc, libagbsyscall): layout, headers, flags
 - [docs/cplusplus.md](./docs/cplusplus.md) - the game is g++ 2.x C++: what the ROM shows, the agbcp/old_agbcp C++ compilers, and building objects from C++ source (`src/*/*.cpp`, `CXX_OBJS`)

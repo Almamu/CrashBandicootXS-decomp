@@ -161,7 +161,8 @@ Conflicts by kind (`extern_audit.py` tags each one by what differs):
 | `proto` | 39 | an unprototyped `f()` against a prototype. All 540 unprototyped declarations are in `src/data/` tables that only take the function's address, so they are safe to replace |
 
 The most-declared conflicting symbols are the shared globals that already
-blocked file merges in #575 (`docs/file_layout_plan.md`, "Kept separate"):
+blocked file merges in #575 (its plan's "Kept separate"; the plan,
+`docs/file_layout_plan.md`, was removed in #844):
 
 | Symbol | Files | Variants | Kind |
 |---|---:|---:|---|
@@ -468,7 +469,7 @@ before the files that every subsystem touches.
 10. **`globals.h`:** the 27 shared globals, a few at a time, each after the
     struct merge it needs (`level_state` for `gLevelState`,
     `held_pressed_pair` for `gKeys`, the player/actor structs for
-    `gPlayer`). With this done, most of `docs/file_layout_plan.md`'s
+    `gPlayer`). With this done, most of #575's
     "Kept separate" pairs can become merges. Sub-batches: **9a, the
     input/display/gfx/audio/HUD singletons (done)**, see "Batch 9a"
     below; **9b, the level globals (`gLevelState`, `gLevelLayers`,

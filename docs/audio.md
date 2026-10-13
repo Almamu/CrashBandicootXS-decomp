@@ -310,9 +310,8 @@ picture):
 
 ## Sound effects
 
-Distinct from music: `PlaySfx` (ROM `0x08001854`, see
-[docs/status/audio.md](./status/audio.md) - called ~264 times across
-gameplay code), is the sound-effect trigger:
+Distinct from music: `PlaySfx` (ROM `0x08001854`, called ~264 times
+across gameplay code), is the sound-effect trigger:
 `PlaySfx(context, sfx_id, volume_param)`. It looks up `sfx_id` in a
 99-entry table at ROM `0x0816AA6C` (`sound/sfx_table.json`,
 `struct SfxTableEntry` in `include/audio.hpp`), each entry `{slot_id,

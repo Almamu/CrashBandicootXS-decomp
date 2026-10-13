@@ -36,15 +36,15 @@ a frozen historical record:
 - don't add new ones. A new write-up, for example when #553 closes, goes
   next to the files above, or in the PR description if it is short.
 
-Source comments, `docs/status/` and the Makefile still cite archive
+Source comments and the Makefile still cite archive
 files by path (`docs/matching/archive/<name>.md`) as the evidence for
 a particular workaround or build flag. The file names follow the old
 convention: `issue-<N>-<slug>.md` for a GitHub chunk or parked-function
 issue `<N>`, and `<slug>.md` for passes that weren't tied to one issue.
 Function and file names inside the older files may be the pre-rename
-ones (`sub_XXXX` labels, old `src/` paths);
-[tools/file_layout_plan.tsv](../../tools/file_layout_plan.tsv) maps the
-old file names to the current ones.
+ones (`sub_XXXX` labels, old `src/` paths); `tools/file_layout_plan.tsv`
+at commit `ab4f9c9b` maps the file names from before #575's move to the
+ones after it (#844 removed it).
 
 The older single-file log, [docs/matching.md](../matching.md), was
 frozen when this directory was created. It is a historical record too.

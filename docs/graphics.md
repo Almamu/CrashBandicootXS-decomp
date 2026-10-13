@@ -1267,12 +1267,29 @@ used `table_B` index resolved to either `{asset_file, w_tiles, h_tiles}`
 
 The matching C data layout - `struct category_descriptor`,
 `struct category_vtable`, `struct anim_table_record`,
-`struct keyframe_entry`, `struct actor_frame_pixels` - is written up in
+`struct keyframe_entry` - is written up in
 `include/actor_anim.h`, field-for-field with this section (same offsets,
 same names where a role is known, same honest `unknown_XX` where it
 isn't). It's data-layout only - none of the functions that walk these
 structs have been reversed to C yet - but it compiles clean today
 (verified against `tools/agbcc`) and is ready for whenever that code is.
+
+A `pool_offset` frame (what a `table_B` entry points at, inside the
+family's decompressed sprite sheet) has no struct, since no code names
+it: a 4-byte header, then the pixels, which are DMA'd to VRAM as they
+are (the DMA3 writes in `FlushVramDmaQueue`):
+
+| Offset | Size | Field |
+|---|---|---|
+| 0x00 | u8 | width in tiles: 1, 2, 4 or 8 in every frame |
+| 0x01 | u8 | height in tiles: 1, 2, 4 or 8 |
+| 0x02 | u8 | always 0x10 in both families' sheets |
+| 0x03 | u8 | always 0x00 |
+| 0x04 | width*height*32 bytes | 4bpp tile data |
+
+`graphics/vehicles/<family>/sprite_sheet/<entity>/NN.png` holds one frame
+each; `tools/framed_gfx.py` strips the header when it extracts a frame
+and puts it back when it builds the sheet.
 
 Two heuristics worth knowing if this is regenerated/extended:
 - A record's real `table_B` length (needed to know where its keyframes

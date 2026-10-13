@@ -86,9 +86,8 @@ behavior is worth understanding. What changes is the documentation:
   another function that superseded it), say that too, but don't invent a
   confident reason that isn't actually supported by what's visible in the
   ROM.
-- Still record it as matched (or parked) in `docs/matching.md`/
-  `docs/status/<system>.md` the normal way - being unused isn't a reason to
-  leave it out of the log.
+- Still write it up as matched (or parked) the normal way (docs/workflow.md
+  step 8) - being unused isn't a reason to leave it out of the log.
 - Don't confuse this with a function that merely computes something and
   discards the result (e.g. calling a function purely for a side effect,
   ignoring its return value) - that function still *has* a caller and is
@@ -112,14 +111,13 @@ honest placeholder, since other code and docs will start depending on it.
    `asm("<name>")` label, and every reference: `src/`, `lib/`, `asm/*.s`
    (`bl <name>`/`.4byte <name>`), `ldscript.txt` and `sym_*.txt`.
 3. `docs/matching.md`'s per-function entry.
-4. `docs/status/<system>.md`'s matched-function list.
-5. If the function is covered by `expected/code_3.s` or `expected/legacy.s`
+4. If the function is covered by `expected/code_3.s` or `expected/legacy.s`
    (i.e. it was matched from one of those historical eras), add or update
    its `rename` line in `expected/corrections.txt` to the new name - see
    [`docs/decomp_dev.md`](./decomp_dev.md). A function renamed *after*
    already having a real name (not straight from `sub_XXXXXXXX`) needs its
    correction's target name updated too, not a second entry.
-6. Rebuild: `make compare` must still pass (a rename shouldn't change any
+5. Rebuild: `make compare` must still pass (a rename shouldn't change any
    bytes, but a missed call site breaks the link) and
    `make NON_MATCHING=1 report` should still produce a sane result (see
    `docs/decomp_dev.md` - this is how a missed corrections.txt update

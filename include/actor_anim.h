@@ -94,27 +94,16 @@ COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct anim_table_record) == 0x28);
  *   - "pool_offset": each entry is a byte offset from the start of the
  *     category family's decompressed sprite sheet
  *     (gPolarSpriteSheet for categories 0-2, gJetpackSpriteSheet for
- *     3-6) to a struct actor_frame_pixels. These frames *are* extracted - see
- *     graphics/vehicles/<family>/sprite_sheet/<entity>/NN.png, one file per frame.
+ *     3-6) to a frame: a 4-byte {w_tiles, h_tiles, 0x10, 0} header and
+ *     the 4bpp tiles (docs/graphics.md has the format). These frames *are*
+ *     extracted - see graphics/vehicles/<family>/sprite_sheet/<entity>/NN.png,
+ *     one file per frame.
  *
  * docs/entities/'s "addressing_mode" field records which mode each
  * record uses; "frames" resolves every keyframe-used table_B entry to
  * either {rom_address, w_tiles, h_tiles} or {asset_file, w_tiles, h_tiles}
  * accordingly.
  */
-
-/* One animation frame's raw pixel data, exactly as DMA'd to VRAM with no
- * reformatting (confirmed via the DMA3 register writes in the queued
- * transfer flush routine, FlushVramDmaQueue) - so this is also exactly what
- * graphics/vehicles/<family>/sprite_sheet/<entity>/NN.png round-trips to/from (that
- * tool strips/reinserts this same 4-byte header - see tools/framed_gfx.py). */
-struct actor_frame_pixels {
-    u8 width_tiles;  // 0x00 - always 1, 2, 4, or 8 in every frame observed
-    u8 height_tiles; // 0x01 - always 1, 2, 4, or 8 in every frame observed
-    u8 pad2;         // 0x02 - always 0x10 in both category families' sheets
-    u8 pad3;         // 0x03 - always 0x00
-    u8 tile_data[0]; // 0x04 - width_tiles*height_tiles*32 bytes, standard swizzled 4bpp tile data
-};
 
 /* gActorCategories - 7 entries (categories 0-2 use the family rooted
  * at gCategoryFamily0AnimTable, 3-6 the one at gCategoryFamily1AnimTable). Each

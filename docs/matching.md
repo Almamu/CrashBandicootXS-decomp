@@ -8,8 +8,7 @@ two parallel PRs never have to edit the same file - appending here
 meant every single PR touched this one file's tail, which was the
 single biggest source of merge conflicts between parallel matching
 work. When looking for a specific function's write-up, check both this
-file (older entries) and `docs/matching/` (newer ones) - `docs/status/`
-cross-references point at whichever one actually has it.
+file (older entries) and `docs/matching/` (newer ones).
 
 Byte-exact matching progress for functions across the whole codebase (not
 just graphics) - gotchas, per-function notes, and cleanup-pass history

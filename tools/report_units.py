@@ -46,7 +46,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from chunk_remaining_work import scan_cleanup_candidates  # noqa: E402
+from cleanup_scan import scan_cleanup_candidates  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 BUILD_DIR = ROOT / "build" / "expected" / "units"
@@ -103,7 +103,7 @@ UNITS = [
     (0x08001624, "src/gfx/display.o", "graphics"),  # CommitBlendRegs (moved from aabb.o to display.o's end, #767): BLDCNT/BLDALPHA/BLDY shadow commit; matched. CommitBlendRegs was previously NAKED - closed by emitting the store-and-pointer-increment pair as one inline-asm block (opaque to the peephole pass that otherwise always fuses it into a single stmia writeback), plus the ROM's own shift-based `(x << 27) >> 27` mask idiom instead of a plain `& 0x1f` - see docs/matching/archive/naked-sub_8001624-matched.md
     (0x08001640, "src/util/aabb.o", "graphics"),  # AabbOverlapsInclusiveX/AabbOverlaps (AABB overlap tests, X-edges inclusive vs exclusive - the latter already referenced by name from player_update.c's PlayerTouchesBox); matched
     (0x080016D0, "src/system/iwram_alloc.o", "system"),  # IwramFree/IwramAlloc (mem_free/mem_alloc wrappers), split from aabb.o (#767); matched
-    (0x080016EC, "src/audio/audio.o", "audio"),  # UpdateAudio (per-tick music fade-envelope update)/StartSong (start-song) - first matched code in the GAX2 wrapper layer; see docs/status/audio.md and docs/audio.md
+    (0x080016EC, "src/audio/audio.o", "audio"),  # UpdateAudio (per-tick music fade-envelope update)/StartSong (start-song) - first matched code in the GAX2 wrapper layer; see docs/audio.md
     (0x08001854, "src/audio/audio.o", "audio"),  # PlaySfx - one-shot sfx play; matched as real C in the near-miss polish pass (an empty asm reference to &gSfxVoiceToggle settles global-alloc priority), its raw asm/code_3_1_10.s retired - see docs/matching/archive/near-miss-polish.md
     (0x0800190C, "src/audio/audio.o", "audio"),  # TickAmbientSfx/StopSfx/ResetAmbientSfx/StopAmbientSfx - the ambient/looping-sfx-channel tick update, stop-if-playing scan, reset, and force-expire; matched
     (0x080019F8, "src/audio/audio.o", "audio"),  # PlayAmbientSfx (ambient-sfx-channel play-request driver; matched as plain C, was NAKED - early-ROM NAKED retry, see docs/matching/archive/early-rom-naked-retry.md) plus GetCurrentSong-DisableMusicVCountIrq (17 fns) - the rest of the AudioContext accessor/state-machine cluster (play/pause/stop, both fade-envelope arm/setter pairs, the constructor); matched
@@ -1128,8 +1128,7 @@ def main():
     units = []
 
     # Files with a leftover raw pointer-arithmetic offset cast or raw
-    # hardware address (see chunk_remaining_work.py's scan_cleanup_candidates
-    # / its "Cleanup: raw pointer arithmetic in ..." issues) are matched
+    # hardware address (see tools/cleanup_scan.py) are matched
     # but not yet cleaned up per docs/workflow.md step 7. A matched unit
     # not in this set gets metadata.complete=True; one that is gets
     # False - objdiff/decomp.dev track this as a status independent of
