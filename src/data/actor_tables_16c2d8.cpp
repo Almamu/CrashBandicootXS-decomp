@@ -13,9 +13,9 @@ extern "C" {
  * (mega_mix.cpp) look up by type id. */
 const struct speed_ramp gMegaMixMotionRecords[4] = {
     { 0, 0, 0 },
-    { 0, Q8(0.125), 450 },
-    { 0, Q8(0.125), 620 },
-    { 450, Q8(0.125), 750 },
+    { 0, Q8(0.125), MEGA_MIX_RUN_SPEED },
+    { 0, Q8(0.125), MEGA_MIX_CATCH_UP_SPEED },
+    { MEGA_MIX_RUN_SPEED, Q8(0.125), MEGA_MIX_TURN_BACK_SPEED },
 };
 
 /* UpdateTiny / SetTinyState (tiny.cpp): a value per round. */
@@ -75,8 +75,8 @@ const s32 gDingodileStopXRightHurt[6] = {
  * entries of entry_set_16c418.cpp. */
 const struct speed_ramp gDingodileMotionRecords[4] = {
     { 0, 0, 0 },
-    { 0, 180, 300 },
-    { -400, 30, 0 },
+    { 0, DINGODILE_WALK_ACCEL, DINGODILE_WALK_SPEED },
+    { -DINGODILE_HIT_RECOIL_SPEED, DINGODILE_HIT_RECOIL_DECEL, 0 },
     { 0, Q8(1.125), Q8(1.125) },
 };
 
@@ -86,10 +86,10 @@ const struct speed_ramp gDingodileMotionRecords[4] = {
  * stalactite's fall (state 5). Only the first three words of the second
  * table are read. */
 const struct speed_ramp gDingodileRocketRiseMotion = {
-    0, 7, -INT_TO_Q8(4),
+    0, DINGODILE_ROCKET_RISE_ACCEL, -INT_TO_Q8(4),
 };
 const struct speed_ramp gDingodileStalactiteFallMotion[3] = {
-    { 0, 4, Q8(2.875) },
+    { 0, DINGODILE_STALACTITE_FALL_ACCEL, Q8(2.875) },
     { -INT_TO_Q8(4), Q8(0.25), INT_TO_Q8(4) },
-    { -600, 10, 0 },
+    { -DINGODILE_STALACTITE_UNK_START, DINGODILE_STALACTITE_UNK_STEP, 0 },
 };

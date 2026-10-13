@@ -56,13 +56,14 @@ void Airship::StateFireballs()
     s32 v;
     z += velZ;
     v = velZ;
-    if (v <= 0x98)
-        velZ = v + 1;
+    if (v <= AIRSHIP_FIREBALLS_SPEED_Z)
+        velZ = v + AIRSHIP_SPEED_Z_STEP;
     else
-        velZ = v - 1;
+        velZ = v - AIRSHIP_SPEED_Z_STEP;
 
     if (fireTimer == 0) {
-        SpawnAirshipFireball(x - 0xCDB, y + 0x516D, z - 10);
+        SpawnAirshipFireball(x - AIRSHIP_GUN_OFFSET_X, y + AIRSHIP_GUN_OFFSET_Y,
+                             z - AIRSHIP_GUN_OFFSET_Z);
         if (++volleyCount == attack->fireballBurst) {
             volleyCount = 0;
             fireTimer = attack->fireballBurstDelay;
@@ -113,20 +114,21 @@ void Airship::StateCannon()
 
     z += velZ;
     v = velZ;
-    if (v <= 0xb2)
-        velZ = v + 1;
+    if (v <= AIRSHIP_CANNON_SPEED_Z)
+        velZ = v + AIRSHIP_SPEED_Z_STEP;
 
     phase = fireTimer;
     if (phase == 0) {
         ActorSelf *pl = gActorList;
-        s32 speed = (pl->z - (z - 10)) / -0x1AA;
+        s32 speed = (pl->z - (z - AIRSHIP_GUN_OFFSET_Z)) / -0x1AA;
         if (speed > 0) {
             s32 dx, dy;
             speed = 0x1000 / speed;
-            dx = Q12_MUL(pl->x - (x - 0xCDB), speed);
-            dy = Q12_MUL(pl->y - (y + 0x516D), speed);
+            dx = Q12_MUL(pl->x - (x - AIRSHIP_GUN_OFFSET_X), speed);
+            dy = Q12_MUL(pl->y - (y + AIRSHIP_GUN_OFFSET_Y), speed);
             if (ABS_BRANCHLESS(dx) + ABS_BRANCHLESS(dy) <= INT_TO_Q8(8) - 1) {
-                SpawnJetpackCannonball(x - 0xCDB, y + 0x516D, z - 10, dx, dy);
+                SpawnJetpackCannonball(x - AIRSHIP_GUN_OFFSET_X, y + AIRSHIP_GUN_OFFSET_Y,
+                                       z - AIRSHIP_GUN_OFFSET_Z, dx, dy);
                 if (++volleyCount == attack->cannonBurst) {
                     volleyCount = phase;
                     fireTimer = attack->cannonBurstDelay;
@@ -212,7 +214,7 @@ void Airship::StateExplode()
         ResumeActorSpawns();
         SetState(AIRSHIP_STATE_FALL, 1);
         gAudioContext->PlaySfx(SFX_UNKNOWN_42, 0x100);
-        velZ = 0x9d;
+        velZ = AIRSHIP_FALL_SPEED_Z;
         if (gLevelState->timeTrial == 0 && checkpointCount <= 1) {
             /* `pl` is needed: inlined, the instructions are reordered */
             ActorSelf **pl = &gActorList;
@@ -240,10 +242,10 @@ void Airship::StateFall()
 
     z += velZ;
 
-    delta = velY + 7;
+    delta = velY + AIRSHIP_FALL_GRAVITY;
     velY = delta;
-    if (delta > 0x140) {
-        velY = Q8(1.25);
+    if (delta > AIRSHIP_MAX_FALL_SPEED) {
+        velY = AIRSHIP_MAX_FALL_SPEED;
     }
 
     if (total > 0xbb80) {

@@ -29,11 +29,11 @@ void AirshipFireball::StateOrbit()
     s32 t;
 
     z += velZ;
-    if ((velZ -= 5) <= 0x13) {
-        velZ = 0x14;
+    if ((velZ -= AIRSHIP_FIREBALL_DRAG_Z) <= AIRSHIP_FIREBALL_MIN_SPEED_Z - 1) {
+        velZ = AIRSHIP_FIREBALL_MIN_SPEED_Z;
     }
-    if ((radius += 0x100) > 0x2a00) {
-        radius = 0x2a00;
+    if ((radius += AIRSHIP_FIREBALL_RADIUS_STEP) > AIRSHIP_FIREBALL_ORBIT_RADIUS) {
+        radius = AIRSHIP_FIREBALL_ORBIT_RADIUS;
     }
 
     ActorSelf *player = gActorList;
@@ -45,14 +45,14 @@ void AirshipFireball::StateOrbit()
     cx = centerX;
     /* `tx` is needed: inlined, the code is 1 instruction shorter */
     tx = cx + -INT_TO_Q8(6);
-    cx += (px - tx) >> 5;
+    cx += (px - tx) >> AIRSHIP_FIREBALL_ORBIT_EASE_SHIFT;
     centerX = cx;
     /* `py` is needed: inlined, the instructions are reordered */
     py = player->y;
     cy = centerY;
     /* `ty` is needed: inlined, the code is 1 instruction longer */
     ty = cy + INT_TO_Q8(8);
-    cy += (py - ty) >> 5;
+    cy += (py - ty) >> AIRSHIP_FIREBALL_ORBIT_EASE_SHIFT;
     centerY = cy;
     sine = gSineTable;
     t = stateTime;
@@ -79,10 +79,10 @@ void AirshipFireball::StateSpiralIn()
     s32 angle;
 
     z += velZ;
-    if ((velZ -= 5) <= 0x13) {
-        velZ = 0x14;
+    if ((velZ -= AIRSHIP_FIREBALL_DRAG_Z) <= AIRSHIP_FIREBALL_MIN_SPEED_Z - 1) {
+        velZ = AIRSHIP_FIREBALL_MIN_SPEED_Z;
     }
-    if ((radius += -0x100) < 0) {
+    if ((radius += -AIRSHIP_FIREBALL_RADIUS_STEP) < 0) {
         radius = 0;
     }
 
@@ -95,14 +95,14 @@ void AirshipFireball::StateSpiralIn()
     cx = centerX;
     /* `tx` is needed: inlined, the instructions differ */
     tx = cx + -INT_TO_Q8(6);
-    cx += (px - tx) >> 4;
+    cx += (px - tx) >> AIRSHIP_FIREBALL_SPIRAL_EASE_SHIFT;
     centerX = cx;
     /* `py` is needed: inlined, the instructions are reordered */
     py = player->y;
     cy = centerY;
     /* `ty` is needed: inlined, the code is 1 instruction longer */
     ty = cy + INT_TO_Q8(8);
-    cy += (py - ty) >> 4;
+    cy += (py - ty) >> AIRSHIP_FIREBALL_SPIRAL_EASE_SHIFT;
     centerY = cy;
     sine = gSineTable;
     angle = ((stateTime << 5) >> 4) & 0xff;
@@ -147,7 +147,7 @@ AirshipFireball::AirshipFireball(const struct anim_table_record *rec, s32 x, s32
     centerX = x;
     centerY = y;
     radius = 0;
-    velZ = 0x95;
+    velZ = AIRSHIP_FIREBALL_LAUNCH_SPEED_Z;
     exploding = 0;
 }
 

@@ -87,20 +87,20 @@ void Hovercraft::StateCloseIn(void)
 {
     z += velZ;
     if (phase == HOVERCRAFT_PHASE_STEER) {
-        if (velZ <= 0x98)
-            velZ = velZ + 1;
+        if (velZ <= HOVERCRAFT_STEER_SPEED_Z)
+            velZ = velZ + HOVERCRAFT_SPEED_Z_STEP;
         else
-            velZ = velZ - 1;
+            velZ = velZ - HOVERCRAFT_SPEED_Z_STEP;
     } else if (phase == HOVERCRAFT_PHASE_SWEEP) {
-        if (velZ <= Q8(0.25) - 1)
-            velZ = velZ + 1;
-        else if (velZ > Q8(0.25))
-            velZ = velZ - 1;
+        if (velZ <= HOVERCRAFT_SWEEP_SPEED_Z - 1)
+            velZ = velZ + HOVERCRAFT_SPEED_Z_STEP;
+        else if (velZ > HOVERCRAFT_SWEEP_SPEED_Z)
+            velZ = velZ - HOVERCRAFT_SPEED_Z_STEP;
     } else {
-        if (velZ <= 0x69)
-            velZ = velZ + 1;
-        else if (velZ > 0x6a)
-            velZ = velZ - 1;
+        if (velZ <= HOVERCRAFT_CIRCLE_SPEED_Z - 1)
+            velZ = velZ + HOVERCRAFT_SPEED_Z_STEP;
+        else if (velZ > HOVERCRAFT_CIRCLE_SPEED_Z)
+            velZ = velZ - HOVERCRAFT_SPEED_Z_STEP;
     }
 
     if (phase == HOVERCRAFT_PHASE_STEER) {
@@ -113,13 +113,13 @@ void Hovercraft::StateCloseIn(void)
         px = pl->x;
         /* `cx` is needed: inlined, the code is 1 instruction shorter */
         cx = screenX - INT_TO_Q8(18);
-        velX -= (px - cx - (box.x + box.w / 2)) >> 12;
+        velX -= (px - cx - (box.x + box.w / 2)) >> HOVERCRAFT_STEER_SHIFT;
         vx = velX;
         /* `py` is needed: inlined, the code is 2 instructions longer */
         py = pl->y;
         /* `cy` is needed: inlined, the code is 1 instruction longer */
         cy = screenY + INT_TO_Q8(24);
-        vy = velY - ((py - cy - (box.y + box.h / 2)) >> 12);
+        vy = velY - ((py - cy - (box.y + box.h / 2)) >> HOVERCRAFT_STEER_SHIFT);
         velY = vy;
 
         LIMIT_MAX(vx, INT_TO_Q8(2));
@@ -164,7 +164,7 @@ void Hovercraft::StateCloseIn(void)
         volleyCount = 0;
         EnterState(HOVERCRAFT_STATE_FALL_BACK, 0);
         phase = HOVERCRAFT_PHASE_FIRST_LEG;
-        velZ = 0xae;
+        velZ = HOVERCRAFT_FALL_BACK_SPEED_Z;
     }
 }
 
@@ -191,10 +191,10 @@ void Hovercraft::StateFallBack(void)
     if (phase <= HOVERCRAFT_PHASE_LAST_LEG) {
         s32 v = velZ;
 
-        if (v <= 0xad)
-            velZ = v + 1;
-        else if (v > 0xae)
-            velZ = v - 1;
+        if (v <= HOVERCRAFT_FALL_BACK_SPEED_Z - 1)
+            velZ = v + HOVERCRAFT_SPEED_Z_STEP;
+        else if (v > HOVERCRAFT_FALL_BACK_SPEED_Z)
+            velZ = v - HOVERCRAFT_SPEED_Z_STEP;
 
         if (x > INT_TO_Q8(128) - 1 && velX > 0) {
             velX = -INT_TO_Q8(2);
@@ -206,10 +206,10 @@ void Hovercraft::StateFallBack(void)
     } else {
         s32 v = velZ;
 
-        if (v <= 0x1d4)
-            velZ = v + 1;
+        if (v <= HOVERCRAFT_PULL_AWAY_SPEED_Z)
+            velZ = v + HOVERCRAFT_SPEED_Z_STEP;
         else
-            velZ = v - 1;
+            velZ = v - HOVERCRAFT_SPEED_Z_STEP;
 
         if (x > 0)
             velX = -INT_TO_Q8(2);
@@ -227,10 +227,10 @@ void Hovercraft::StateFallBack(void)
         EnterState(HOVERCRAFT_STATE_CLOSE_IN, 0);
         if (partsLeft > 2) {
             phase = HOVERCRAFT_PHASE_SWEEP;
-            velZ = Q8(0.25);
+            velZ = HOVERCRAFT_SWEEP_SPEED_Z;
         } else {
             phase = HOVERCRAFT_PHASE_CIRCLE;
-            velZ = 0x6a;
+            velZ = HOVERCRAFT_CIRCLE_SPEED_Z;
         }
         velX = -INT_TO_Q8(10);
     }
@@ -246,10 +246,10 @@ void Hovercraft::StateFall(void)
         s32 v = velZ;
         s32 d;
 
-        if (v <= 0x98)
-            velZ = v + 1;
-        else if (v > 0x99)
-            velZ = v - 1;
+        if (v <= HOVERCRAFT_SINK_SPEED_Z - 1)
+            velZ = v + HOVERCRAFT_SPEED_Z_STEP;
+        else if (v > HOVERCRAFT_SINK_SPEED_Z)
+            velZ = v - HOVERCRAFT_SPEED_Z_STEP;
 
         d = velY;
         if (d <= INT_TO_Q8(1) - 1)
@@ -322,7 +322,7 @@ void Hovercraft::Spawn(s32 kind, s32 sx, s32 sy, s32 sz)
 {
     s32 scale;
 
-    velZ = 0x66;
+    velZ = HOVERCRAFT_APPROACH_SPEED_Z;
     EnterState(HOVERCRAFT_STATE_APPROACH, 0);
     x = sx * 5;
     y = sy * 3;
@@ -422,6 +422,8 @@ void Hovercraft::UpdateBg2(void)
         bg2Page ^= 1;
     }
 
+    /* `distance << 8`: Q8_DIV(distance, INT_TO_Q8(60))'s numerator, as
+     * an explicit __divsi3 call (see Spawn) */
     scale = __divsi3(distance << 8, INT_TO_Q8(60));
     dy = screenX + GetActorBgCenterX();
     dx = screenY + GetActorBgCenterY();

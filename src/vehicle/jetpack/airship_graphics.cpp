@@ -33,7 +33,7 @@ void Airship::Damage(s32 delta)
         hp = 0;
         velX = 0;
         velY = 0;
-        velZ = 0xaa;
+        velZ = AIRSHIP_EXPLODE_SPEED_Z;
         SetState(AIRSHIP_STATE_EXPLODE, 1);
     } else {
         gAudioContext->PlaySfx(SFX_AIRSHIP_HIT, 0x100);
