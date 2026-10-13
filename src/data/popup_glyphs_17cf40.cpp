@@ -1,4 +1,5 @@
 #include "frontend.hpp"
+#include "logo_fly_in.h"
 
 extern "C" {
 #include "core.h"
@@ -42,10 +43,12 @@ const struct bg_package gCreditsLogos[5] = {
 
 /* Nine {record, hold} seeds for the countdown slots of
  * title_screen.cpp (RunTitleScreen, ResetTitleLogoPieces): the motion
- * sequences in level_gfx_17cff4.cpp, NULL-terminated. */
+ * sequences in level_gfx_17cff4.cpp, NULL-terminated. Pieces 0 and 1
+ * fly in, and start their motion that many frames earlier on a screen
+ * bigger than the art (logo_fly_in.h): 0 on the GBA. */
 const struct slot_seed gTitleLogoPieceSeeds[10] = {
-    { gTitleLogoPieceMotion0, 0x54 },
-    { gTitleLogoPieceMotion1, 0x5f },
+    { gTitleLogoPieceMotion0, 0x54 - TITLE_LOGO_PIECE0_FLY_IN },
+    { gTitleLogoPieceMotion1, 0x5f - TITLE_LOGO_PIECE1_FLY_IN },
     { gTitleLogoPieceMotion2, 0x3c },
     { gTitleLogoPieceMotion3, 0x30 },
     { gTitleLogoPieceMotion4, 0x24 },

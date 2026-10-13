@@ -1,4 +1,5 @@
 #include "frontend.hpp"
+#include "logo_fly_in.h"
 
 extern "C" {
 #include "core.h"
@@ -21,7 +22,9 @@ const struct bg_package gUniversalLogoBg = { 30, 20, (void *)gUniversalLogoBgPal
  * gVvLogoPieceSeeds seeds: each ends with a zero hold. The pieces' x and
  * y are on the 240x160 logo art, from its origin DISPLAY_ART_X/Y
  * (screen.h, docs/screen.md); the deltas move them between two such
- * points, so they stay as they are. */
+ * points, so they stay as they are. Pieces 1-19 fly in from the right of
+ * the art: their first step starts past the screen's edge
+ * (LOGO_FLY_IN_STEP, logo_fly_in.h), and is the ROM's on the GBA. */
 extern const struct delta_record gVvLogoPieceMotion00[11] = {
     { 79, DISPLAY_ART_X + 120, DISPLAY_ART_Y + 80, 0, 76, 76, 0, 0, 0, 580, 580 },
     { 4, DISPLAY_ART_X + 120, DISPLAY_ART_Y + 80, 0, 256, 256, 0, -819, 0, 3276, 3276 },
@@ -37,7 +40,7 @@ extern const struct delta_record gVvLogoPieceMotion00[11] = {
 };
 
 extern const struct delta_record gVvLogoPieceMotion01[6] = {
-    { 18, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 68, 0, 256, 256, -575260, 0, 0, 0, 0 },
+    LOGO_FLY_IN_STEP(18, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 68, VV_LOGO_PIECE01_FLY_IN, VV_LOGO_PIECE01_DX, 0),
     { 4, DISPLAY_ART_X + 90, DISPLAY_ART_Y + 68, 0, 256, 256, -262144, 0, 0, -8192, 8192 },
     { 4, DISPLAY_ART_X + 74, DISPLAY_ART_Y + 68, 0, 128, 384, 262144, 0, 0, 8192, -8192 },
     { 71, DISPLAY_ART_X + 90, DISPLAY_ART_Y + 68, 0, 256, 256, 0, 0, 0, 0, 0 },
@@ -46,7 +49,7 @@ extern const struct delta_record gVvLogoPieceMotion01[6] = {
 };
 
 extern const struct delta_record gVvLogoPieceMotion02[6] = {
-    { 14, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 68, 0, 256, 256, -711533, 0, 0, 0, 0 },
+    LOGO_FLY_IN_STEP(14, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 68, VV_LOGO_PIECE02_FLY_IN, VV_LOGO_PIECE02_DX, 0),
     { 2, DISPLAY_ART_X + 96, DISPLAY_ART_Y + 68, 0, 256, 256, -262144, 0, 0, -16384, 16384 },
     { 4, DISPLAY_ART_X + 88, DISPLAY_ART_Y + 68, 0, 128, 384, 262144, 0, 0, 8192, -8192 },
     { 71, DISPLAY_ART_X + 104, DISPLAY_ART_Y + 68, 0, 256, 256, 0, 0, 0, 0, 0 },
@@ -55,7 +58,7 @@ extern const struct delta_record gVvLogoPieceMotion02[6] = {
 };
 
 extern const struct delta_record gVvLogoPieceMotion03[6] = {
-    { 12, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 70, 0, 256, 256, -720896, 0, 0, 0, 0 },
+    LOGO_FLY_IN_STEP(12, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 70, VV_LOGO_PIECE03_FLY_IN, VV_LOGO_PIECE03_DX, 0),
     { 4, DISPLAY_ART_X + 116, DISPLAY_ART_Y + 70, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, DISPLAY_ART_X + 116, DISPLAY_ART_Y + 70, 0, 128, 384, 0, 0, 0, 8192, -8192 },
     { 67, DISPLAY_ART_X + 116, DISPLAY_ART_Y + 70, 0, 256, 256, 0, 0, 0, 0, 0 },
@@ -64,7 +67,7 @@ extern const struct delta_record gVvLogoPieceMotion03[6] = {
 };
 
 extern const struct delta_record gVvLogoPieceMotion04[6] = {
-    { 14, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 70, 0, 256, 256, -547693, 0, 0, 0, 0 },
+    LOGO_FLY_IN_STEP(14, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 70, VV_LOGO_PIECE04_FLY_IN, VV_LOGO_PIECE04_DX, 0),
     { 4, DISPLAY_ART_X + 131, DISPLAY_ART_Y + 70, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, DISPLAY_ART_X + 131, DISPLAY_ART_Y + 70, 0, 128, 384, 0, 0, 0, 8192, -8192 },
     { 61, DISPLAY_ART_X + 131, DISPLAY_ART_Y + 70, 0, 256, 256, 0, 0, 0, 0, 0 },
@@ -73,7 +76,7 @@ extern const struct delta_record gVvLogoPieceMotion04[6] = {
 };
 
 extern const struct delta_record gVvLogoPieceMotion05[6] = {
-    { 13, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 69, 0, 256, 256, -514205, 0, 0, 0, 0 },
+    LOGO_FLY_IN_STEP(13, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 69, VV_LOGO_PIECE05_FLY_IN, VV_LOGO_PIECE05_DX, 0),
     { 4, DISPLAY_ART_X + 146, DISPLAY_ART_Y + 69, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, DISPLAY_ART_X + 146, DISPLAY_ART_Y + 69, 0, 128, 384, 0, 0, 0, 8192, -8192 },
     { 56, DISPLAY_ART_X + 146, DISPLAY_ART_Y + 69, 0, 256, 256, 0, 0, 0, 0, 0 },
@@ -82,7 +85,7 @@ extern const struct delta_record gVvLogoPieceMotion05[6] = {
 };
 
 extern const struct delta_record gVvLogoPieceMotion06[6] = {
-    { 13, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 68, 0, 256, 256, -458752, 0, 0, 0, 0 },
+    LOGO_FLY_IN_STEP(13, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 68, VV_LOGO_PIECE06_FLY_IN, VV_LOGO_PIECE06_DX, 0),
     { 4, DISPLAY_ART_X + 157, DISPLAY_ART_Y + 68, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, DISPLAY_ART_X + 157, DISPLAY_ART_Y + 68, 0, 128, 384, 0, 0, 0, 8192, -8192 },
     { 51, DISPLAY_ART_X + 157, DISPLAY_ART_Y + 68, 0, 256, 256, 0, 0, 0, 0, 0 },
@@ -91,7 +94,7 @@ extern const struct delta_record gVvLogoPieceMotion06[6] = {
 };
 
 extern const struct delta_record gVvLogoPieceMotion07[6] = {
-    { 12, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 69, 0, 256, 256, -425984, 0, 0, 0, 0 },
+    LOGO_FLY_IN_STEP(12, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 69, VV_LOGO_PIECE07_FLY_IN, VV_LOGO_PIECE07_DX, 0),
     { 4, DISPLAY_ART_X + 170, DISPLAY_ART_Y + 69, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, DISPLAY_ART_X + 170, DISPLAY_ART_Y + 69, 0, 128, 384, 0, 0, 0, 8192, -8191 },
     { 47, DISPLAY_ART_X + 170, DISPLAY_ART_Y + 69, 0, 256, 256, 0, 0, 0, 0, 0 },
@@ -100,7 +103,7 @@ extern const struct delta_record gVvLogoPieceMotion07[6] = {
 };
 
 extern const struct delta_record gVvLogoPieceMotion08[6] = {
-    { 12, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 69, 0, 256, 256, -338602, 0, 0, 0, 0 },
+    LOGO_FLY_IN_STEP(12, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 69, VV_LOGO_PIECE08_FLY_IN, VV_LOGO_PIECE08_DX, 0),
     { 4, DISPLAY_ART_X + 186, DISPLAY_ART_Y + 69, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, DISPLAY_ART_X + 186, DISPLAY_ART_Y + 69, 0, 128, 384, 0, 0, 0, 8192, -8192 },
     { 42, DISPLAY_ART_X + 186, DISPLAY_ART_Y + 69, 0, 256, 256, 0, 0, 0, 0, 0 },
@@ -109,7 +112,7 @@ extern const struct delta_record gVvLogoPieceMotion08[6] = {
 };
 
 extern const struct delta_record gVvLogoPieceMotion09[6] = {
-    { 11, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 70, 0, 256, 256, -274059, 0, 0, 0, 0 },
+    LOGO_FLY_IN_STEP(11, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 70, VV_LOGO_PIECE09_FLY_IN, VV_LOGO_PIECE09_DX, 0),
     { 4, DISPLAY_ART_X + 202, DISPLAY_ART_Y + 70, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, DISPLAY_ART_X + 202, DISPLAY_ART_Y + 70, 0, 128, 384, 0, 0, 0, 8192, -8192 },
     { 37, DISPLAY_ART_X + 202, DISPLAY_ART_Y + 70, 0, 256, 256, 0, 0, 0, 0, 0 },
@@ -118,7 +121,7 @@ extern const struct delta_record gVvLogoPieceMotion09[6] = {
 };
 
 extern const struct delta_record gVvLogoPieceMotion10[6] = {
-    { 11, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 64, 0, 256, 256, -190650, 0, 0, 0, 0 },
+    LOGO_FLY_IN_STEP(11, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 64, VV_LOGO_PIECE10_FLY_IN, VV_LOGO_PIECE10_DX, 0),
     { 4, DISPLAY_ART_X + 216, DISPLAY_ART_Y + 64, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, DISPLAY_ART_X + 216, DISPLAY_ART_Y + 64, 0, 128, 384, 0, 0, 0, 8192, -8192 },
     { 31, DISPLAY_ART_X + 216, DISPLAY_ART_Y + 64, 0, 256, 256, 0, 0, 0, 0, 0 },
@@ -127,7 +130,7 @@ extern const struct delta_record gVvLogoPieceMotion10[6] = {
 };
 
 extern const struct delta_record gVvLogoPieceMotion11[6] = {
-    { 19, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 92, 0, 256, 256, -517389, 0, 0, 0, 0 },
+    LOGO_FLY_IN_STEP(19, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 92, VV_LOGO_PIECE11_FLY_IN, VV_LOGO_PIECE11_DX, 0),
     { 4, DISPLAY_ART_X + 98, DISPLAY_ART_Y + 92, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, DISPLAY_ART_X + 98, DISPLAY_ART_Y + 92, 0, 128, 384, 0, 0, 0, 8192, -8192 },
     { 22, DISPLAY_ART_X + 98, DISPLAY_ART_Y + 92, 0, 256, 256, 0, 0, 0, 0, 0 },
@@ -136,7 +139,7 @@ extern const struct delta_record gVvLogoPieceMotion11[6] = {
 };
 
 extern const struct delta_record gVvLogoPieceMotion12[6] = {
-    { 18, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 92, 0, 256, 256, -495160, 0, 0, 0, 0 },
+    LOGO_FLY_IN_STEP(18, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 92, VV_LOGO_PIECE12_FLY_IN, VV_LOGO_PIECE12_DX, 0),
     { 4, DISPLAY_ART_X + 112, DISPLAY_ART_Y + 92, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, DISPLAY_ART_X + 112, DISPLAY_ART_Y + 92, 0, 128, 384, 0, 0, 0, 8192, -8192 },
     { 18, DISPLAY_ART_X + 112, DISPLAY_ART_Y + 92, 0, 256, 256, 0, 0, 0, 0, 0 },
@@ -145,14 +148,14 @@ extern const struct delta_record gVvLogoPieceMotion12[6] = {
 };
 
 extern const struct delta_record gVvLogoPieceMotion13[4] = {
-    { 17, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 95, 0, 256, 256, -470317, 0, 0, 0, 0 },
+    LOGO_FLY_IN_STEP(17, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 95, VV_LOGO_PIECE13_FLY_IN, VV_LOGO_PIECE13_DX, 0),
     { 23, DISPLAY_ART_X + 126, DISPLAY_ART_Y + 95, 0, 256, 256, 0, 0, 0, 0, 0 },
     { 1, DISPLAY_ART_X + 126, DISPLAY_ART_Y + 95, 0, 256, 256, 0, 0, 0, 0, 0 },
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
 extern const struct delta_record gVvLogoPieceMotion14[6] = {
-    { 16, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 92, 0, 256, 256, -458752, 0, 0, 0, 0 },
+    LOGO_FLY_IN_STEP(16, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 92, VV_LOGO_PIECE14_FLY_IN, VV_LOGO_PIECE14_DX, 0),
     { 4, DISPLAY_ART_X + 136, DISPLAY_ART_Y + 92, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, DISPLAY_ART_X + 136, DISPLAY_ART_Y + 92, 0, 128, 384, 0, 0, 0, 8192, -8192 },
     { 12, DISPLAY_ART_X + 136, DISPLAY_ART_Y + 92, 0, 256, 256, 0, 0, 0, 0, 0 },
@@ -161,7 +164,7 @@ extern const struct delta_record gVvLogoPieceMotion14[6] = {
 };
 
 extern const struct delta_record gVvLogoPieceMotion15[6] = {
-    { 14, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 95, 0, 256, 256, -458752, 0, 0, 0, 0 },
+    LOGO_FLY_IN_STEP(14, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 95, VV_LOGO_PIECE15_FLY_IN, VV_LOGO_PIECE15_DX, 0),
     { 4, DISPLAY_ART_X + 150, DISPLAY_ART_Y + 95, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, DISPLAY_ART_X + 150, DISPLAY_ART_Y + 95, 0, 128, 384, 0, 0, 0, 8192, -8192 },
     { 10, DISPLAY_ART_X + 150, DISPLAY_ART_Y + 95, 0, 256, 256, 0, 0, 0, 0, 0 },
@@ -170,7 +173,7 @@ extern const struct delta_record gVvLogoPieceMotion15[6] = {
 };
 
 extern const struct delta_record gVvLogoPieceMotion16[6] = {
-    { 12, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 95, 0, 256, 256, -447829, 0, 0, 0, 0 },
+    LOGO_FLY_IN_STEP(12, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 95, VV_LOGO_PIECE16_FLY_IN, VV_LOGO_PIECE16_DX, 0),
     { 4, DISPLAY_ART_X + 166, DISPLAY_ART_Y + 95, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, DISPLAY_ART_X + 166, DISPLAY_ART_Y + 95, 0, 128, 384, 0, 0, 0, 8192, -8192 },
     { 8, DISPLAY_ART_X + 166, DISPLAY_ART_Y + 95, 0, 256, 256, 0, 0, 0, 0, 0 },
@@ -179,7 +182,7 @@ extern const struct delta_record gVvLogoPieceMotion16[6] = {
 };
 
 extern const struct delta_record gVvLogoPieceMotion17[6] = {
-    { 10, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 94, 0, 256, 256, -432537, 0, 0, 0, 0 },
+    LOGO_FLY_IN_STEP(10, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 94, VV_LOGO_PIECE17_FLY_IN, VV_LOGO_PIECE17_DX, 0),
     { 4, DISPLAY_ART_X + 182, DISPLAY_ART_Y + 94, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, DISPLAY_ART_X + 182, DISPLAY_ART_Y + 94, 0, 128, 384, 0, 0, 0, 8192, -8192 },
     { 6, DISPLAY_ART_X + 182, DISPLAY_ART_Y + 94, 0, 256, 256, 0, 0, 0, 0, 0 },
@@ -188,7 +191,7 @@ extern const struct delta_record gVvLogoPieceMotion17[6] = {
 };
 
 extern const struct delta_record gVvLogoPieceMotion18[6] = {
-    { 9, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 91, 0, 256, 256, -364088, 0, 0, 0, 0 },
+    LOGO_FLY_IN_STEP(9, DISPLAY_ART_X + 248, DISPLAY_ART_Y + 91, VV_LOGO_PIECE18_FLY_IN, VV_LOGO_PIECE18_DX, 0),
     { 4, DISPLAY_ART_X + 198, DISPLAY_ART_Y + 91, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, DISPLAY_ART_X + 198, DISPLAY_ART_Y + 91, 0, 128, 384, 0, 0, 0, 8192, -8192 },
     { 4, DISPLAY_ART_X + 198, DISPLAY_ART_Y + 91, 0, 256, 256, 0, 0, 0, 0, 0 },
@@ -197,7 +200,7 @@ extern const struct delta_record gVvLogoPieceMotion18[6] = {
 };
 
 extern const struct delta_record gVvLogoPieceMotion19[4] = {
-    { 8, DISPLAY_ART_X + 240, DISPLAY_ART_Y + 100, 0, 256, 256, -1212416, 0, 0, 0, 0 },
+    LOGO_FLY_IN_STEP(8, DISPLAY_ART_X + 240, DISPLAY_ART_Y + 100, VV_LOGO_PIECE19_FLY_IN, VV_LOGO_PIECE19_DX, 0),
     { 1, DISPLAY_ART_X + 92, DISPLAY_ART_Y + 100, 0, 256, 256, 0, 0, 0, 0, 0 },
     { 1, DISPLAY_ART_X + 92, DISPLAY_ART_Y + 100, 0, 256, 256, 0, 0, 0, 0, 0 },
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },

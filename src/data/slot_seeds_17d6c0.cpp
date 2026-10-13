@@ -1,4 +1,5 @@
 #include "frontend.hpp"
+#include "logo_fly_in.h"
 
 extern "C" {
 #include "core.h"
@@ -38,28 +39,30 @@ extern const u8 gVvLogoUrlTiles[];
 
 /* Twenty {record, hold} seeds read by InitVvLogoPieces
  * (company_logos.cpp): the motion sequences in
- * countdown_17d7a4.cpp, then a {0, 0} terminator. */
+ * countdown_17d7a4.cpp, then a {0, 0} terminator. Pieces 1-19 fly in, and
+ * start their motion that many frames earlier on a screen bigger than
+ * the art (logo_fly_in.h): 0 on the GBA. */
 const struct slot_seed gVvLogoPieceSeeds[21] = {
     { gVvLogoPieceMotion00, 0 },
-    { gVvLogoPieceMotion01, 0x5a },
-    { gVvLogoPieceMotion02, 0x60 },
-    { gVvLogoPieceMotion03, 0x64 },
-    { gVvLogoPieceMotion04, 0x68 },
-    { gVvLogoPieceMotion05, 0x6e },
-    { gVvLogoPieceMotion06, 0x73 },
-    { gVvLogoPieceMotion07, 0x78 },
-    { gVvLogoPieceMotion08, 0x7d },
-    { gVvLogoPieceMotion09, 0x83 },
-    { gVvLogoPieceMotion10, 0x89 },
-    { gVvLogoPieceMotion11, 0x8a },
-    { gVvLogoPieceMotion12, 0x8f },
-    { gVvLogoPieceMotion13, 0x93 },
-    { gVvLogoPieceMotion14, 0x97 },
-    { gVvLogoPieceMotion15, 0x9b },
-    { gVvLogoPieceMotion16, 0x9f },
-    { gVvLogoPieceMotion17, 0xa3 },
-    { gVvLogoPieceMotion18, 0xa6 },
-    { gVvLogoPieceMotion19, 0xb2 },
+    { gVvLogoPieceMotion01, 0x5a - VV_LOGO_PIECE01_FLY_IN },
+    { gVvLogoPieceMotion02, 0x60 - VV_LOGO_PIECE02_FLY_IN },
+    { gVvLogoPieceMotion03, 0x64 - VV_LOGO_PIECE03_FLY_IN },
+    { gVvLogoPieceMotion04, 0x68 - VV_LOGO_PIECE04_FLY_IN },
+    { gVvLogoPieceMotion05, 0x6e - VV_LOGO_PIECE05_FLY_IN },
+    { gVvLogoPieceMotion06, 0x73 - VV_LOGO_PIECE06_FLY_IN },
+    { gVvLogoPieceMotion07, 0x78 - VV_LOGO_PIECE07_FLY_IN },
+    { gVvLogoPieceMotion08, 0x7d - VV_LOGO_PIECE08_FLY_IN },
+    { gVvLogoPieceMotion09, 0x83 - VV_LOGO_PIECE09_FLY_IN },
+    { gVvLogoPieceMotion10, 0x89 - VV_LOGO_PIECE10_FLY_IN },
+    { gVvLogoPieceMotion11, 0x8a - VV_LOGO_PIECE11_FLY_IN },
+    { gVvLogoPieceMotion12, 0x8f - VV_LOGO_PIECE12_FLY_IN },
+    { gVvLogoPieceMotion13, 0x93 - VV_LOGO_PIECE13_FLY_IN },
+    { gVvLogoPieceMotion14, 0x97 - VV_LOGO_PIECE14_FLY_IN },
+    { gVvLogoPieceMotion15, 0x9b - VV_LOGO_PIECE15_FLY_IN },
+    { gVvLogoPieceMotion16, 0x9f - VV_LOGO_PIECE16_FLY_IN },
+    { gVvLogoPieceMotion17, 0xa3 - VV_LOGO_PIECE17_FLY_IN },
+    { gVvLogoPieceMotion18, 0xa6 - VV_LOGO_PIECE18_FLY_IN },
+    { gVvLogoPieceMotion19, 0xb2 - VV_LOGO_PIECE19_FLY_IN },
     { 0, 0 },
 };
 

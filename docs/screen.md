@@ -20,6 +20,7 @@ consistently (#979). `core.h` includes `screen.h`.
 | `DISPLAY_ART_WIDTH`, `DISPLAY_ART_HEIGHT` | 240, 160 | the fixed size of the full-screen art |
 | `DISPLAY_ART_X`, `DISPLAY_ART_Y` | 0, 0 | where that art's top-left corner goes: centred on a bigger screen |
 | `DISPLAY_ART_CENTER_X`, `DISPLAY_ART_CENTER_Y` | 120, 80 | the art's centre in its own coordinates: what an affine picture is scaled around |
+| `DISPLAY_ART_MARGIN_LEFT`, `_TOP`, `_RIGHT`, `_BOTTOM` | 0 | the screen between each of the art's borders and the screen's edge: what a logo piece flies in through (see "The logo fly-ins") |
 
 `gba/defines.h` has the hardware's side, next to `OAM_ENTRY_COUNT`:
 
@@ -72,6 +73,51 @@ the ROM's constant (`DISPLAY_ART_Y + 0x87` is 0x87), so the code and the
 data are unchanged. Keep the ROM's operation order: `item * 10 + 0x80`
 becomes `item * 10 + (DISPLAY_ART_Y + 0x80)`, `0xa0 - w` becomes
 `DISPLAY_ART_X + 0xa0 - w`.
+
+### The logo fly-ins
+
+The title logo's and the Vicarious Visions logo's pieces move through
+`struct delta_record` steps (`gTitleLogoPieceMotionN` in
+level_gfx_17cff4.cpp, `gVvLogoPieceMotionNN` in countdown_17d7a4.cpp).
+A step sets the piece's absolute x and y on the art, then adds its
+deltas (Q16.16 pixels a frame) for its hold - 1 frames; the next step
+sets the position it has reached, so the ROM's deltas are
+`(next x - x) * 0x10000 / hold`. A seed (`gTitleLogoPieceSeeds`,
+`gVvLogoPieceSeeds`) delays each piece's first step.
+
+Only the first step of 21 pieces lies outside the art: the VV logo's
+pieces 1-19 start at x 248 (240 for piece 19), just past its right
+border, and the title logo's piece 0 at y 160 and piece 1 at (-96, 160),
+below and left of it. On the GBA that is just off screen; on a bigger
+screen it is on it. So those steps come from `LOGO_FLY_IN_STEP`
+(include/logo_fly_in.h), which lengthens the step backwards through the
+screen's margin around the art (`DISPLAY_ART_MARGIN_LEFT/TOP/RIGHT/BOTTOM`,
+screen.h):
+
+- `LOGO_FLY_IN_FRAMES(margin, speed)` is the frames the step's own speed
+  takes to cross the margin on the side the piece comes from, rounded up
+  (both margins for the title's piece 1, the longer wins).
+- The step starts that many frames earlier, that far back along its
+  path: as far past the screen's edge as the ROM's start is past the
+  art's border, or up to one frame's move further. Its deltas are the
+  ROM's, so it passes the ROM's start on the ROM's frame and reaches the
+  next step where the ROM does.
+- The piece's seed is that many frames shorter (`0x5a -
+  VV_LOGO_PIECE01_FLY_IN`), so every piece lands on the ROM's frame and
+  the logo keeps its timing.
+
+The tables keep their length, and `UpdateLogoPieces`/`UpdateVvLogoPieces`
+walk them unchanged. The generalisation is constant expressions only:
+plain `make` builds whatever the defines say, and on the GBA every margin
+is 0, so every fly-in is 0 frames and the data is the ROM's. The seeds
+(84 frames at least) bound how long a fly-in can be.
+
+| Size | VV pieces 1-19: start x (frames added) | Title piece 0 | Title piece 1 |
+|---|---|---|---|
+| 240x160 | 248 (240 for 19), +0 | (152, 160), +0 | (-96, 160), +0 |
+| 426x240 | 435-444, +6 to +32 | (268, 244), +3 | (-108, 288), +6 |
+
+(screen coordinates; at 426x240 the art is at (93, 40).)
 
 ## The types
 
@@ -204,8 +250,9 @@ has the rest.
 6. **Sprite count.** `OAM_ENTRY_COUNT` (128, more under `EXTENDED_OAM`)
    sizes the OAM shadow buffer.
 7. **A compile check.** `make screen-check` compiles every game object
-   (src/, and the src/data/ tables that spell a `DISPLAY_` name: the
-   layouts' position tables) with another screen size,
+   (src/, and the src/data/ tables that spell a `DISPLAY_` name or a
+   logo fly-in's `_FLY_IN`: the layouts' position tables, the logo
+   pieces' motions and their seeds) with another screen size,
    `SCREEN_CHECK_WIDTH` x `SCREEN_CHECK_HEIGHT` (PORTABLE's 426x240 by
    default; `make screen-check SCREEN_CHECK_WIDTH=256
    SCREEN_CHECK_HEIGHT=192` for another), into build/screen-check, with
