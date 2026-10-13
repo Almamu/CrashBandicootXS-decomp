@@ -157,10 +157,10 @@
         45
       ],
       "palette": "gAirshipCategoryPalette",
-      "bank": 2,
+      "bank": 4,
       "other_banks": [
-        5,
-        4
+        2,
+        5
       ]
     },
     {

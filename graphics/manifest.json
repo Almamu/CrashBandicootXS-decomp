@@ -6,7 +6,7 @@
     {"path": "vehicles/polar/yeti.png", "kind": "rle_frames", "symbol": "gYetiRleFrames", "rom": "0x080DA1D8", "end": "0x080FF1B0", "palette": {"symbol": "gYetiPalette", "rom": "0x0817AA6C"}},
     {"path": "vehicles/jetpack/clouds.png", "kind": "cell_anim", "symbol": "gCategoryFamily1CellAnim", "rom": "0x080FF1B0", "frames": 21, "banks": false},
     {"paths": ["vehicles/jetpack/skies/rocket_racket.png", "vehicles/jetpack/skies/rocket_racket_tiles.png"], "kind": "bg_picture", "symbol": "gCategory3BgPicture", "rom": "0x0813D934"},
-    {"path": "vehicles/jetpack/sprite_sheet/", "kind": "framed_sheet", "symbol": "gJetpackSpriteSheet", "rom": "0x0814174C"},
+    {"path": "vehicles/jetpack/sprite_sheet/", "kind": "framed_sheet", "symbol": "gJetpackSpriteSheet", "rom": "0x0814174C", "folder_banks": {"explosion": 4}},
     {"paths": ["vehicles/jetpack/skies/blimp_bonanza.png", "vehicles/jetpack/skies/blimp_bonanza_tiles.png"], "kind": "bg_picture", "symbol": "gCategory4BgPicture", "rom": "0x08151AC4"},
     {"paths": ["vehicles/jetpack/skies/no_fly_zone.png", "vehicles/jetpack/skies/no_fly_zone_tiles.png"], "kind": "bg_picture", "symbol": "gCategory5BgPicture", "rom": "0x08155260"},
     {"path": "vehicles/jetpack/player.png", "kind": "rle_frames", "symbol": "gJetpackPlayerRleFrames", "rom": "0x0815A050", "end": "0x08167AD4", "palette": {"symbol": "gAirshipCategoryPalette", "rom": "0x0817AAA4"}},

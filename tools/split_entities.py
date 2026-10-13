@@ -24,7 +24,10 @@
 # only category 6 spawns them) use category 6's gHovercraftCategoryPalette.
 # Only the colours change with the bank: the build reads the 4-bit indices
 # (tools/framed_gfx.py), so the bank chosen never affects the ROM. A folder
-# drawn with several banks lists the others in sheet.json.
+# drawn with several banks lists the others in sheet.json. The sheet's
+# graphics/manifest.json entry can pick another of them for a folder:
+# "folder_banks": {"<folder>": bank} (the jetpack explosion is drawn in the
+# explosion actor's bank 4, not the bomber's 2).
 #
 # Run this BEFORE tools/dump_entities.py (which resolves keyframes to the
 # PNGs present). The pool_offset table_B arrays of src/data/anim_family_*.cpp
@@ -44,6 +47,7 @@ from dump_entities import rd, hx, lz77_decompress  # noqa: E402
 
 FRAMED_GFX = os.path.join(os.path.dirname(__file__), 'framed_gfx.py')
 GRAPHICS_ROOT = os.path.join(os.path.dirname(__file__), '..', 'graphics', 'vehicles')
+MANIFEST = os.path.join(os.path.dirname(__file__), '..', 'graphics', 'manifest.json')
 RECORD_SIZE = 40
 
 PALETTES = {
@@ -96,7 +100,8 @@ JETPACK_NAMES = {
     (24,): ['time_crate_1'],
     (25,): ['time_crate_2'],
     (26,): ['time_crate_3'],
-    # the bomber's, the rocket's and the explosion actor's (banks 2, 5, 4)
+    # the bomber's, the rocket's and the explosion actor's (banks 2, 5, 4);
+    # drawn in 4 (graphics/manifest.json's folder_banks)
     (4, 5, 6, 7, 8, 9, 28, 30, 45): ['explosion'],
     (27,): ['parachute_nitro'],
     (44,): ['collected_wumpa'],
@@ -151,6 +156,16 @@ def read_records(anim_base, slot_count, data_end):
     return records
 
 
+def folder_banks(sheet_rom_addr):
+    """The manifest entry's "folder_banks" for the sheet at sheet_rom_addr:
+    the bank to draw a folder in instead of its first record's."""
+    with open(MANIFEST) as f:
+        for e in json.load(f)['assets']:
+            if e['kind'] == 'framed_sheet' and int(e['rom'], 16) == sheet_rom_addr:
+                return e.get('folder_banks', {})
+    raise SystemExit(f'{MANIFEST}: no framed_sheet entry at {hx(sheet_rom_addr)}')
+
+
 def split_family(sheet_rom_addr, decompressed_size, sheet_dir, anim_table_base,
                  record_slot_count, data_end, names, family_palette, own_palettes=None):
     sheet_buf = lz77_decompress(rd(sheet_rom_addr, decompressed_size * 2))
@@ -180,6 +195,7 @@ def split_family(sheet_rom_addr, decompressed_size, sheet_dir, anim_table_base,
         else:
             os.remove(old)
 
+    chosen = folder_banks(sheet_rom_addr)
     pending = {k: list(v) for k, v in names.items()}
     folders = []
     for n, (_, first, last) in enumerate(runs):
@@ -191,6 +207,10 @@ def split_family(sheet_rom_addr, decompressed_size, sheet_dir, anim_table_base,
         for _, bank, _ in u:
             if bank not in banks:
                 banks.append(bank)
+        if name in chosen:
+            assert chosen[name] in banks, f'{sheet_dir}: {name}/ is never drawn in bank {chosen[name]}'
+            banks.remove(chosen[name])
+            banks.insert(0, chosen.pop(name))
         palette = (own_palettes or {}).get(u[0][0], family_palette)
 
         end = offsets[last + 1] if last + 1 < len(offsets) else decompressed_size
@@ -222,6 +242,7 @@ def split_family(sheet_rom_addr, decompressed_size, sheet_dir, anim_table_base,
 
     left = {k: v for k, v in pending.items() if v}
     assert not left, f'{sheet_dir}: unused names {left}'
+    assert not chosen, f'{sheet_dir}: folder_banks names no folder: {chosen}'
     with open(os.path.join(sheet_dir, 'sheet.json'), 'w') as f:
         json.dump({'sheet_rom_address': hx(sheet_rom_addr), 'folders': folders}, f, indent=2)
         f.write('\n')

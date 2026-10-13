@@ -1423,14 +1423,17 @@ build reads only the 4-bit indices (`framed_gfx.py to-bin-folder`), so the
 colours never reach the ROM.
 
 A folder that several records draw in different banks takes the first
-record's (in table order); `graphics/vehicles/<family>/sprite_sheet/sheet.json`, which
+record's (in table order), unless the sheet's `graphics/manifest.json`
+entry picks another of them in `folder_banks` ({folder: bank}): the
+jetpack explosion is drawn in the explosion actor's bank 4 rather than the
+bomber's 2 (#914). `graphics/vehicles/<family>/sprite_sheet/sheet.json`, which
 `split_entities.py` writes, lists every folder's records, palette and
 bank, and `other_banks` for these two:
 
 | folder | frames | records (banks) | PNG bank |
 |---|---|---|---|
 | `polar/sprite_sheet/crate_shards/` | 6 | basic and question crates (1), life and Aku Aku crates (3), checkpoint crate (5) | 1 |
-| `jetpack/sprite_sheet/explosion/` | 10 | the bombers (2), the rocket (5), the explosion actor (4) | 2 |
+| `jetpack/sprite_sheet/explosion/` | 10 | the bombers (2), the rocket (5), the explosion actor (4) | 4 (`folder_banks`) |
 
 The balloon names were colour guesses in bank 0: in their banks the
 jetpack balloons are red (record 40, the time crate's), yellow (41, the

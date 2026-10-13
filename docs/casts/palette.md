@@ -31,7 +31,14 @@ LoadSlot and GetSlot keep their `dst = slots[0]; ... dst += slot * 16;`
 `dst = slots[slot]` adds the bank's offset first, which changes
 palette_cache.o.
 
-`DMA3.src = (u32)slots` stays: the DMA registers take an address.
+The cache reaches palette RAM through the `Dma*` helpers
+(gba/dma_macros.h): LoadSlot and GetSlot copy a palette into a bank
+with `DmaCopy16(3, src, dst, PALETTE_SIZE_16)`, UploadSlot copies one
+bank, `DmaCopy16(3, slots[slot], OBJ_PLTT + (slot << 5), ...)`, and
+Upload all of them, `DmaCopy16(3, slots, OBJ_PLTT, OBJ_PLTT_SIZE)`.
+`slots` goes in as it is: `DmaSet` converts the addresses to `vu32`
+itself. (Its `DMA3.src = (u32)slots` became these copies in #917, and
+the `DMA3` register view itself went in #998.)
 
 ## Palette RAM: BG_PALETTE(n), OBJ_PALETTE(n), BACKDROP_COLOR
 
