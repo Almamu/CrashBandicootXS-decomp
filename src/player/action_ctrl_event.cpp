@@ -301,7 +301,7 @@ void ActionCtrl::HandleEvent(s32, s32 event, s32 arg)
             p->rampX.start = z;
             p->rampX.step = z;
             p->rampX.target = z;
-            SetSpeedY(part, -0x100, 0, -0x100);
+            SetSpeedY(part, -INT_TO_Q8(1), 0, -INT_TO_Q8(1));
             gCamera->mode = CAMERA_MODE_STILL;
         }
         break;

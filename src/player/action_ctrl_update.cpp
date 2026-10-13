@@ -57,7 +57,7 @@ void ActionCtrl::Update(MovingSprite *)
     /* `y` is needed: inlined, the code is 5 instructions shorter */
     s32 y = p->y;
 
-    if (y > INT_TO_Q8(gLevelLayers->layer0->heightPx) - 0x1400) {
+    if (y > INT_TO_Q8(gLevelLayers->layer0->heightPx) - INT_TO_Q8(20)) {
         p->f.flags &= ~ENTITY_FLAG_COLLIDES;
 
         Player *q = part;
@@ -72,7 +72,7 @@ void ActionCtrl::Update(MovingSprite *)
         /* `y2` is needed: inlined, the instructions are reordered */
         s32 y2 = r->y;
 
-        if (y2 > INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x1400) {
+        if (y2 > INT_TO_Q8(gLevelLayers->layer0->heightPx) + INT_TO_Q8(20)) {
             r->deadline = 0;
             gLevelState->SetMaskLevel(MASK_LEVEL_NONE);
             HandleEvent(0, EVENT_HIT, 0);

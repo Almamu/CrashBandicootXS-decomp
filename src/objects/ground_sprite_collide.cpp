@@ -91,7 +91,7 @@ s32 GroundSprite::ProbeTerrainAxes()
         c = gLevelLayers->ProbeSolidFloor(&pos, &origY);
         unused = 0;
         if (c) {
-            y = origY & 0xFFFFFF00;
+            y = Q8_FLOOR(origY);
             hit = ProbeFloor(quad, &unused);
 
             u32 xm = dir & PART_DIR_X_MASK;
@@ -188,7 +188,7 @@ u8 GroundSprite::ProbeFloor(const struct hitbox_quad *quad, u8 *outFlag)
         pos.x += quad->w >> 1;
     hit = gLevelLayers->ProbeFloor(&pos, &origY);
     if (hit) {
-        y = origY & 0xFFFFFF00;
+        y = Q8_FLOOR(origY);
         grounded = (f.bytes.flags2 >> ENTITY_BIT2_GROUNDED) & 1;
         if (!grounded)
             y -= INT_TO_Q8(1);
@@ -200,7 +200,7 @@ u8 GroundSprite::ProbeFloor(const struct hitbox_quad *quad, u8 *outFlag)
         pos.y++;
         hit = gLevelLayers->ProbeFloor(&pos, &origY);
         if (hit) {
-            y = origY & 0xFFFFFF00;
+            y = Q8_FLOOR(origY);
             f.b.grounded = 1;
             return hit;
         }

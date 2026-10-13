@@ -40,11 +40,11 @@ void PolarCollectedWumpa::Update()
 }
 
 /* At its screen position (x and y are screen coordinates), at scale
- * 0x140: DrawActor's (ActorSelf::Draw) sprite (DrawFrameAt,
+ * 1.25: DrawActor's (ActorSelf::Draw) sprite (DrawFrameAt,
  * actor_self.hpp). */
 void PolarCollectedWumpa::Draw()
 {
-    DrawFrameAt(Q8_TO_INT(x), Q8_TO_INT(y), 0x140);
+    DrawFrameAt(Q8_TO_INT(x), Q8_TO_INT(y), Q8(1.25));
 }
 
 /* Counts in its fruit. */
