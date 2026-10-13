@@ -29,8 +29,6 @@ extern const u8 gSmallFontChars[];
 extern const struct icon_glyph_metrics gSmallFontGlyphs[79];
 extern const u8 gLargeFontChars[];
 extern const struct icon_glyph_metrics gLargeFontGlyphs[75];
-extern const u8 gSmallFontTiles[];
-extern const u8 gLargeFontTiles[];
 
 /* src/text/text_box.cpp and src/text/wrapped_text.cpp (C linkage). Their
  * callers are all C++. */

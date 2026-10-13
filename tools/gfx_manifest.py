@@ -533,14 +533,15 @@ def class_comment(e):
         what = "an OBJ tile map" if "obj_sheet" in e else "an affine BG map" if e["affine"] else "a text BG map"
         kind = "A struct bg_package picture: %dx%d cells, %dbpp, %s" % (e["size"][0], e["size"][1], e["bpp"], what)
     elif e["kind"] == "tiles":
-        kind = "A %dbpp tile sheet%s" % (e["bpp"], " of whole OBJs" if "obj_sheet" in e else "")
+        kind = "A%s %dbpp tile sheet%s" % ("n" if e["bpp"] == 8 else "", e["bpp"], " of whole OBJs" if "obj_sheet" in e else "")
         if "obj_palette" in pal:
             kind += "; OAM picks its palette at run time"
     else:
         kind = "A Mode 4 bitmap right after its palette (a slide points at the palette)"
     text = "graphics/%s.png: %s. %s." % (picture(e), e["about"], kind) if "about" in e else \
         "graphics/%s.png. %s." % (picture(e), kind)
-    return "\n".join(wrap(text + " */", "/*", " *"))
+    lines = wrap(text, "/*", " *", 75)
+    return "\n".join(lines[:-1] + [lines[-1] + " */"])
 
 
 def header():

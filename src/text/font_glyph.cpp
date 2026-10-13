@@ -1,3 +1,4 @@
+#include "graphics.hpp"
 #include "sprite_obj.hpp"
 #include "font.hpp"
 
@@ -51,7 +52,7 @@ SmallFont::SmallFont()
 
     lineHeight = 9;
     spaceWidth = 4;
-    tiles = gSmallFontTiles;
+    tiles = SmallFontSheet::tiles;
     glyphTileStride = 2;
     glyphRecords = gSmallFontGlyphs;
     for (i = 0; i <= 0xff; i++) {
@@ -76,7 +77,7 @@ LargeFont::LargeFont()
     spaceWidth = 6;
     glyphTileStride = 4;
     glyphRecords = gLargeFontGlyphs;
-    tiles = gLargeFontTiles;
+    tiles = LargeFontSheet::tiles;
     oam_scratch.size = 1;
     for (i = 0; i <= 0xff; i++) {
         charLookup[i] = 0;

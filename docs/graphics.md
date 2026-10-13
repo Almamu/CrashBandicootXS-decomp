@@ -216,6 +216,9 @@ the members.
 | object | classes |
 |---|---|
 | `menu_graphics_61badc.cpp` | the menus (`MenuSkyBg`, `PauseMenuBg`, `ContinuePrompt{Smoke,Glow,UkaUka}Bg`), the title (`TitleScreenBg`, `Title{Bandicoot,Crash,Arrow1,Arrow2}Obj`), the logos (`UniversalLogoBg`, `Credits{RedEyeStudios,Shinen,Cosmigo,Universal,Vv}Logo`, `VvLogo{Emblem,Letters,Url}`) and the level-select platform (`LevelSelectPlatformBg`, gLevelSelectPageBg's: `LevelSelectPageBg` is the game's BG1 class) |
+| `font_tiles_5a4e70.cpp` | the HUD fonts: `SmallFontSheet`, `LargeFontSheet` (`SmallFont` and `LargeFont` are the game's font classes) |
+| `cutscene_pictures_5a9f70.cpp` | `CutscenePicture00` to `CutscenePicture23` |
+| `level_select_graphics_6377c0.cpp` | `LevelSelectCursorZoom`, `LevelSelectPicture0` to `LevelSelectPicture9` |
 
 ### Palettes
 
