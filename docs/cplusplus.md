@@ -701,6 +701,8 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/system/input.cpp`, `irq.cpp` (the key reading since in `key_input.cpp`, #767) | `WaitForKeyPress`; the IRQ table, the VBlank handler and callbacks, the key reading (C linkage), and `KeyInput`'s constructor (`ClearKeys`, spawners.hpp), whose C prototype goes | 1 + 17 | old_agbcp | 1 pin -> 1 pin | all-C++: gfx, system, util, text |
 | `src/system/irq.cpp` (again) | `Irq` (new include/irq.hpp), an all-static class: the IRQ table, the replaced handlers and the VBlank callbacks are static data members (`table` is gIntrTable, `prevTable`, `vblankCallbacks`), the 11 IRQ and VBlank functions static member functions (`SetHandler`, `ClearHandler`, `RestoreHandler`, `Setup`, `Disable`, `EnableVBlankHandler`, ...); irq.h's 11 prototypes and 3 externs go; the callers (audio.cpp, fade.cpp, main.cpp, the link) call `Irq::SetHandler(...)` & co. | 11 | (unchanged) | 0 -> 0 | [#915](#the-interrupt-handlers-as-an-all-static-class-915) |
 | `src/system/irq.cpp` (again), `src/iwram/iwram_data.cpp` | `FrameLimiter` (new include/frame_limiter.hpp), an all-static class: the frame-limit globals are static data members (`enabled` is gFrameLimitEnabled, `target`, `interval`), WaitForVBlank and the UNUSED SetFrameLimit/DisableFrameLimit static member functions (`WaitForVBlank`, `Set`, `Disable`); system.h's 3 prototypes and 3 externs go; 24 files and level_select.hpp call `FrameLimiter::WaitForVBlank()` | 3 | (unchanged) | 0 -> 0 | [#915](#the-frame-limiter-as-an-all-static-class-915) |
+| `src/gfx/fade.cpp`, `fade_to_black.cpp`, `src/iwram/iwram_data.cpp` | `BrightnessFade` and `PaletteFade` (new include/fade.hpp), all-static classes: the brightness fade's 3 IWRAM globals and the palette fade's 2 buffers are static data members (`state` is gBrightnessFade, `step`, `timer`; `backup` is gPaletteBackup, `buffer`), their 3 + 2 functions static member functions (`Step`, `Start`, `IsActive`; `Darken`, `FadeToBlack`); gfx.h's 5 prototypes and 5 externs go | 5 | (unchanged) | 0 -> 0 | [#915](#the-brightness-and-palette-fades-as-all-static-classes-915) |
+| `src/actor/actor_category_init.cpp`, `src/cutscene/slideshow.cpp`, `slideshow_display.cpp`, `src/frontend/language_select_setup.cpp`, `src/level/play_room.cpp`, `src/save/save_menu_input.cpp`, `src/vehicle/jetpack/jetpack_player.cpp`, `src/vehicle/polar/polar_player_states.cpp` | the callers: `BrightnessFade::Start(...)`, `BrightnessFade::IsActive()`, `PaletteFade::FadeToBlack()` | 0 | (unchanged) | 0 -> 0 | [#915](#the-brightness-and-palette-fades-as-all-static-classes-915) |
 | `src/text/text_box.cpp` | `GetWordLength`, `DrawWrappedTextInBox` (C linkage; takes a `Font *`, `self->SetMargin`, `HeightToLines`) | 0 + 2 | agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/aabb.cpp` (since #767: `CommitBlendRegs` at the end of gfx/display.cpp, `IwramFree`/`IwramAlloc` in system/iwram_alloc.cpp) | `CommitBlendRegs`, `AabbOverlapsInclusiveX`, `AabbOverlaps`, `IwramFree`, `IwramAlloc` (C linkage) | 0 + 5 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/fixed_math.cpp`, `line.cpp`, `line_step.cpp`, `number_format.cpp`, `printf.cpp`, `rand.cpp`, `string.cpp`, `time_format.cpp` | the fixed-point helpers, the Bresenham line, `itoa`, `sprintf`/`vsprintf`/`FindSubstring` (string.cpp since #767), `rand`/`srand`/`RandRange`, the string functions, `FormatCentiseconds` (C linkage) | 0 + 24 | agbcp | 2 pins, 5 asm, 2 asm labels -> the same | all-C++: gfx, system, util, text |
@@ -3854,6 +3856,48 @@ and every object is byte-identical.
   WaitForVBlank callers (24 files and level_select.hpp's inline) call
   `FrameLimiter::WaitForVBlank()`; system.h's 3 prototypes and 3 externs
   go.
+
+### The brightness and palette fades as all-static classes (#915)
+
+fade.cpp and fade_to_black.cpp (ROM 0x080012AC-0x08001524, right before
+the display registers) are two screen fades, five free functions in all:
+
+- the brightness fade, the hardware one: StepBrightnessFade (0x080012AC),
+  FadeBrightness (0x0800132C) and IsBrightnessFadeActive (0x08001510).
+  It writes 17 steps of REG_BLDY toward white or black, in a loop, or one
+  step a frame from a VBlank callback. Its state is three initialised
+  IWRAM globals: gBrightnessFade (0x030007E8, a `struct
+  brightness_fade`), gBrightnessFadeStep and gBrightnessFadeTimer.
+- the palette fade to black the rooms end with: DarkenPalette
+  (0x080013FC) and FadePaletteToBlack (0x080014A4). It copies palette RAM
+  to gPaletteBackup (IWRAM 0x03000A80), darkens it into
+  gPaletteFadeBuffer (0x03000E80) and DMAs that back, in 9 steps.
+
+The two share no data and no caller, so they are two classes in one
+header, `BrightnessFade` and `PaletteFade` (include/fade.hpp), all-static
+like [the frame limiter](#the-frame-limiter-as-an-all-static-class-915).
+No other object reads their globals, and every object is byte-identical.
+
+- **Data.** Private static data members. `BrightnessFade`'s `state`
+  (gBrightnessFade), `step` and `timer` are initialised IWRAM globals,
+  so iwram_data.cpp defines them in their place (`struct brightness_fade
+  BrightnessFade::state = { -1, -1, 0 };` ...), like the frame limiter's
+  `enabled`. `state` stays one `struct brightness_fade` (gfx.h, with
+  the FADE_FLAG_* flags its callers pass), not three members: it is one
+  symbol in the .map. `PaletteFade`'s `backup` (gPaletteBackup) and
+  `buffer` (gPaletteFadeBuffer) are only declared; sym_iwram.txt places
+  them. cxx_symbols.txt's `#915 BrightnessFade and PaletteFade` block
+  maps all of them to their C names.
+- **Functions.** All are public static member functions under their C
+  names. `BrightnessFade`: `Step` (StepBrightnessFade, the VBlank
+  callback `Start` adds), `Start` (FadeBrightness: the category's
+  fade-ins, the 3D players' leaving states, the slideshows, the
+  language select and the save menu) and `IsActive` (IsBrightnessFadeActive: the
+  category's pause check). `PaletteFade`: `Darken` (DarkenPalette) and
+  `FadeToBlack` (FadePaletteToBlack: LevelProgress::RunRoom).
+- **ROM order.** The classes interleave: fade.cpp is Step, Start, Darken,
+  and fade_to_black.cpp is FadeToBlack, IsActive. The files keep that
+  order; each function is a member of the class whose data it uses.
 
 ### The link, save and IWRAM data
 

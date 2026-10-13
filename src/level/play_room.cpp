@@ -14,6 +14,7 @@
 #include "camera.hpp"
 #include "menus.hpp"
 #include "frame_limiter.hpp"
+#include "fade.hpp"
 
 extern "C" {
 #include "core.h"
@@ -266,7 +267,7 @@ s32 LevelProgress::PlayRoom()
  * (virtual calls), `UpdateCrateList` on
  * `gCrateList`, `UpdateHudSlides`, and a `gLevelState+0x8c`-
  * gated `TickLevelClock` call) before looping back. Once ready, fires the
- * fade (`FadePaletteToBlack`) - the concrete trigger `rom_map.md` originally
+ * fade (`PaletteFade::FadeToBlack`) - the concrete trigger `rom_map.md` originally
  * traced this function down to find.
  *
  * **Post-fade** (`_08023E82` onward, converging at `_08023F92`): sets
@@ -443,7 +444,7 @@ s32 LevelProgress::RunRoom()
         gRoomFrameCount++;
     }
 fade:
-    FadePaletteToBlack();
+    PaletteFade::FadeToBlack();
     if (IsRoomExitRequested()) {
         ret = ROOM_EXIT_CLEARED;
         if (!IsInBonusRoom() && gLevelState->IsInBonusRound()) {
