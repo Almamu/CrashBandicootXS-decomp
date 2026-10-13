@@ -87,9 +87,6 @@ extern struct level_state *GetLevelState(void);
 #endif
 
 /* src/level/room.cpp */
-extern void ClearRoomExit(void);
-extern void RequestRoomExit(void);
-extern u8 IsRoomExitRequested(void);
 extern void ResetObjBuffers(void);
 
 /* src/level/spawn_bosses.cpp */
@@ -260,7 +257,6 @@ extern class LevelState *gLevelStateSingleton;
 #else
 extern struct level_state *gLevelStateSingleton;
 #endif
-extern u8 gRoomExitRequested;
 
 /* The terrain height tables (src/data/terrain_1725a8.cpp, top-level asm) */
 extern u8 gTerrainHeights0[];

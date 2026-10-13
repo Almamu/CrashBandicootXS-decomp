@@ -1,4 +1,5 @@
 #include "level_state.hpp"
+#include "room_exit.hpp"
 #include "audio.hpp"
 #include "cutscene.hpp"
 #include "hud.hpp"
@@ -89,7 +90,7 @@ LevelSelect *gLevelSelect = 0;
 u8 gNewWorldOpened = 0;
 LevelState *gLevelStateSingleton = 0;
 u32 gRoomFrameCount = 0;
-u8 gRoomExitRequested = 0;
+u8 RoomExit::requested = 0;
 
 /* The cutscene text of each language, indexed by gLanguage
  * (src/data/cutscenes_16d1c8.cpp, level_cutscene.cpp). */

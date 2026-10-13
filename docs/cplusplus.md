@@ -771,6 +771,8 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/actor/actor.cpp`, `actor_category_init.cpp`, `src/bosses/hovercraft.cpp`, `hovercraft_cannon.cpp`, `hovercraft_launcher.cpp`, `src/vehicle/jetpack/airship.cpp`, `jetpack_collected_wumpa.cpp`, `jetpack_player_update.cpp`, `src/vehicle/polar/polar_pickups.cpp`, `polar_player.cpp`, `yeti.cpp`, `yeti_states.cpp`, `yeti_update.cpp` | the callers: `ActorBg::GetCenterX()`, `ActorBg::SetLayerDepth(...)` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-actor-bg-scroll-as-an-all-static-class-915) |
 | `src/actor/actor_spawn_collected.cpp`, `src/iwram/iwram_data.cpp` | `CollectedSpawns` (new include/collected_spawns.hpp), an all-static class: gCollectedSpawns and gCollectedSpawnCount are static data members (`spawns`, `count`), its 3 functions static member functions (`Contains`, `Add`, `Clear`); actor.h's 3 prototypes and 2 externs go | 3 | (unchanged) | 0 -> 0 | [#915](#the-collected-spawns-as-an-all-static-class-915) |
 | `src/actor/actor_category_init.cpp`, `actor_factory.cpp`, `src/vehicle/jetpack/jetpack_crates.cpp`, `jetpack_spawn.cpp`, `src/vehicle/polar/polar_crate.cpp` | the callers: `CollectedSpawns::Contains(spawn)` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-collected-spawns-as-an-all-static-class-915) |
+| `src/level/room.cpp`, `src/iwram/iwram_data.cpp` | `RoomExit` (new include/room_exit.hpp), an all-static class: gRoomExitRequested is the static data member `requested`, its 3 functions static member functions (`Clear`, `Request`, `IsRequested`); level.h's 3 prototypes and extern go | 3 | (unchanged) | 0 -> 0 | [#915](#the-room-exit-flag-as-an-all-static-class-915) |
+| `src/bosses/cortex.cpp`, `dingodile.cpp`, `tiny.cpp`, `src/level/play_room.cpp`, `src/player/action_ctrl_moves.cpp`, `input_ctrl.cpp`, `player_update.cpp` | the callers: `RoomExit::Request()`, `RoomExit::IsRequested()`, `RoomExit::Clear()` | 0 | (unchanged) | 0 -> 0 | [#915](#the-room-exit-flag-as-an-all-static-class-915) |
 | `src/vehicle/jetpack/airship.cpp`, `airship_states.cpp`, `airship_graphics.cpp`, `airship_map.cpp`, `airship_touch.cpp`, `src/data/actor_state_17c3fc.cpp` (was .c) | `Airship` (new include/airship.hpp), an all-static class: its 25 IWRAM globals are static data members (`x` is gAirshipX, `anim` gAirship, ...), its 21 functions static member functions (`Create`, `Spawn`, `Update`, `UpdateBg2`, `LoadGraphics`, `Destroy`, `Damage`, `IsTouching`, `GetHpPercent`, `Steer`, `DrawMap`, `ConvertTiles`, the six states, ...), gAirshipStateFuncs is `Airship::stateFuncs` and the six tables only it reads (gAirshipAttacks, gAirshipBox, ...) are static data members too; boss_actors.hpp's inline SetAirshipState is the private inline member `SetState`; bosses.h's 20 prototypes are down to 5 C-only ones (the category table's), its 32 externs and vehicle.h's nullsub_30 go | 21 | (unchanged) | 0 -> 0 | [#772](#the-airship-as-an-all-static-class-772) |
 | `src/vehicle/jetpack/jetpack_shot.cpp`, `jetpack_spawn.cpp`, `src/hud/hud_counters.cpp` | the callers: `Airship::IsTouching(this)`, `Airship::Damage(2)`, `Airship::Spawn(...)`, `Airship::GetHpPercent()` | 0 | (unchanged) | 0 -> 0 | [#772](#the-airship-as-an-all-static-class-772) |
 | `src/gfx/sprite_frame.cpp` | `ObjTileAllocator` (new include/obj_tile_allocator.hpp), an all-static class: its 5 IWRAM globals are static data members (`pool` is gVramTileBlockPool, `list`, `rover`, `spares`, `index`), its 6 functions static member functions (`Init`, `Alloc`, `Free`, `Destroy`, the UNUSED `Walk` and `GetFreeBytes`); gfx.h's 6 prototypes and 5 externs go | 6 | (unchanged) | 0 -> 0 | [#915](#the-obj-tile-allocator-as-an-all-static-class-915) |
@@ -4681,6 +4683,34 @@ and every object is byte-identical.
   names: `Contains` (IsSpawnCollected: the polar and jetpack factories),
   `Add` (MarkSpawnCollected: the polar and jetpack crates) and `Clear`
   (InitActorCategory).
+
+### The room exit flag as an all-static class (#915)
+
+The room exit flag is the head of room.cpp (ROM 0x08024198-0x080241BC):
+ClearRoomExit, RequestRoomExit and IsRoomExitRequested, over one
+initialised IWRAM global, gRoomExitRequested (0x03000830), which no
+other object reads. Whatever ends a room requests it: the exit's zone,
+the powers, the player's exit moves, the bosses falling out.
+LevelProgress::PlayRoom clears it when the room starts; RunRoom polls it
+every frame and then fades out. It is now `RoomExit` (include/room_exit.hpp),
+all-static like
+[the collected spawns](#the-collected-spawns-as-an-all-static-class-915),
+and every object is byte-identical.
+
+- **Data.** `requested` (gRoomExitRequested) is a private static data
+  member. It is an initialised IWRAM global, so iwram_data.cpp defines it
+  in its place (`u8 RoomExit::requested = 0;`). cxx_symbols.txt's `#915
+  RoomExit` block maps it to its C name.
+- **Functions.** `Clear` (ClearRoomExit), `Request` (RequestRoomExit) and
+  `IsRequested` (IsRoomExitRequested) are public static member functions
+  under their C names.
+- **Why not members of LevelState or LevelProgress.** The inventory
+  suggested LevelState's static members as the alternative to a class
+  this small. The flag is not a field of either object: it is a separate
+  IWRAM global, and the functions take no `this`. Static members of
+  LevelProgress (whose RunRoom and ResumeRoomAfterPause surround the
+  three in the ROM) would compile the same; a class of its own keeps the
+  flag's three users in one place, as for the other one-global families.
 
 ### The airship as an all-static class (#772)
 
