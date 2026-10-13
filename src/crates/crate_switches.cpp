@@ -18,8 +18,8 @@ extern "C" {
 #include "sprite_bank.h"
 }
 
-/* The crate list's update pass (UpdateCrates), the nitro detonation, the
- * nitro and iron switches, the outline crates and BreakCratesInArea
+/* The crate list's update pass (Crate::UpdateAll), the nitro detonation,
+ * the nitro and iron switches, the outline crates and Crate::BreakInArea
  * (#664, include/crate.hpp, part 7g), ROM 0x0800F1B8-0x0800F798: the
  * middle of crate_break.cpp's "physics/collision" cluster, split out of
  * it (#768). Built with old_agbcp, as the C was with old_agbcc. */
@@ -35,14 +35,14 @@ static inline void SetPlayerBusy(void)
     p->busy = one;
 }
 
-/* The crate list's update pass (play_room.cpp): DetonateNitroCrates, then
+/* The crate list's update pass (play_room.cpp): DetonateNitros, then
  * each crate of the list is updated, and a crate that is gone is removed
  * and deleted; all of it again while the list keeps changing. */
-void UpdateCrates(void)
+void Crate::UpdateAll()
 {
     s32 i;
 
-    DetonateNitroCrates();
+    DetonateNitros();
     do {
         gCrateListChanged = 0;
         for (i = 0; i < gCrateList->count; i++) {
@@ -62,7 +62,7 @@ void UpdateCrates(void)
 }
 
 /* Every idle nitro crate of the crate list explodes. */
-void DetonateNitroCrates(void)
+void Crate::DetonateNitros()
 {
     s32 i = 0;
 
@@ -105,7 +105,7 @@ void Crate::ActivateNitroSwitch()
         a = &anims[tag];
         slot = gPaletteCache->GetSlot(a->paletteId);
         palette = slot;
-        DetonateNitroCrates();
+        DetonateNitros();
         gHud->ShowCrates();
         gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
         pressed = 1;
@@ -288,7 +288,7 @@ void Crate::SolidifyOutline()
  * of (x, y), and less than `height` pixels above or below it, explodes,
  * if it is explosive, or opens or breaks, if it is breakable (the
  * player's super body slam, action_ctrl_moves.cpp). */
-void BreakCratesInArea(s32 x, s32 y, s32 dist, s32 height)
+void Crate::BreakInArea(s32 x, s32 y, s32 dist, s32 height)
 {
     s32 i = 0;
 

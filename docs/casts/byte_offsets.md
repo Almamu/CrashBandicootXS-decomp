@@ -55,7 +55,7 @@ The 4bpp screen buffer is read and written a halfword at a time by Plot:
   offset, with a comment.
 - crate_break.cpp's HitResponseAt: `t[*row][k]` adds the row to the table
   before it adds `k * 4`. The ROM adds the table last.
-- BlastNearby's and BreakCratesInArea's `*(u8 *)(k + commit)`: the ROM
+- BlastNearby's and Crate::BreakInArea's `*(u8 *)(k + commit)`: the ROM
   adds the kind to the table, `kind + table`; indexing adds the other
   way round. (Their comments say so.)
 - PauseMenu::InitInfo's gLevelTable and InitTimeTrialPage's `progress`

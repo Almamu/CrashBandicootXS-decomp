@@ -348,7 +348,7 @@ s32 LevelProgress::RunRoom()
     if (!gLevelTable[level].isBoss)
         gLevelState->CheckAllCratesBroken();
     if (gLevelState->IsSwitchPressed())
-        UpdateCrates();
+        Crate::UpdateAll();
     gLevelState->SetMaskAssistDeaths(gLevelTable[level].maskAssistDeaths);
     gLevelState->SetCrateAssistDeaths(gLevelTable[level].crateAssistDeaths);
 

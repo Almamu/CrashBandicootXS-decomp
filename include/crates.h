@@ -37,11 +37,6 @@ extern const u8 gAttackKindBreakLimited[8];
 /* Set when the crate list changes (sym_iwram.txt). */
 extern u8 gCrateListChanged;
 
-/* src/crates/crate_switches.cpp */
-extern void UpdateCrates(void);
-extern void DetonateNitroCrates(void);
-extern void BreakCratesInArea(s32 x, s32 y, s32 dist, s32 height);
-
 /* src/crates/crate.cpp */
 extern void ResolvePlayerCollisions(void);
 /* FindLineCrossingYMajor and FindLineCrossingXMajor are C++ functions
@@ -49,8 +44,5 @@ extern void ResolvePlayerCollisions(void);
 
 /* src/crates/crate_reset.cpp */
 extern s32 FindLineCrossing(s32 pos, s32 count, s32 a, s32 b, s32 limit);
-
-/* src/crates/crate_time_trial.cpp */
-extern void ConvertCratesForTimeTrial(void);
 
 #endif /* GUARD_CRATES_H */

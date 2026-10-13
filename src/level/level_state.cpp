@@ -7,6 +7,7 @@
 #include "audio.hpp"
 #include "boss_ctrl.hpp"
 #include "hovercraft.hpp"
+#include "crate.hpp"
 
 extern "C" {
 #include "crates.h"
@@ -37,7 +38,7 @@ extern "C" {
  * Outside the category rooms, the bonus platform and the gem platform
  * switch to their time-trial animations (7 and 0xC; the gem platform's
  * palette reloaded), the crates become their time-trial kinds
- * (ConvertCratesForTimeTrial), and every pickup in the touchable list
+ * (Crate::ConvertForTimeTrial), and every pickup in the touchable list
  * (class 2) is collected if it is on screen, or else gone. */
 void LevelState::StartTimeTrial()
 {
@@ -67,7 +68,7 @@ void LevelState::StartTimeTrial()
                             gemPlatform->tag].paletteId);
         // clang-format on
     }
-    ConvertCratesForTimeTrial();
+    Crate::ConvertForTimeTrial();
 
     i = 0;
     if (i < TouchableList()->count) {
