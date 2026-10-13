@@ -1,3 +1,4 @@
+#include "display.hpp"
 #include "sprite_obj.hpp"
 #include "frontend.hpp"
 #include "audio.hpp"
@@ -63,8 +64,8 @@ Credits::Credits()
     streamBase = gCreditsText;
     stream = gCreditsText;
     lineDelay = 0;
-    gDispcnt.bits.obj = 1;
-    CommitDispcnt();
+    Display::dispcnt.bits.obj = 1;
+    Display::CommitDispcnt();
     frameParity = 0;
     gAudioContext->PlaySong(SONG_CREDITS);
 }
@@ -404,7 +405,7 @@ void Credits::LoadLogos()
 
 void Credits::CommitFrame()
 {
-    CommitDispcnt();
+    Display::CommitDispcnt();
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
     gPaletteCache->Upload();
     gOamBuffer->Commit();

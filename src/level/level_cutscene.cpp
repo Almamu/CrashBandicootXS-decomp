@@ -1,3 +1,4 @@
+#include "display.hpp"
 #include "level_state.hpp"
 #include "sprite_obj.hpp"
 #include "part_list.hpp"
@@ -118,13 +119,13 @@ void LevelState::PlayCutscene(s32 idx)
 
     SetBoxPos(&f.box, DISPLAY_ART_X + 7, DISPLAY_ART_Y + 0x7E);
     SetBoxSize(&f.box, 0xE4, 0x1E);
-    dispcnt = &gDispcnt.raw;
+    dispcnt = &Display::dispcnt.raw;
     zero = 0;
     mode = 0x40;
     *dispcnt = mode;
-    SetDispcntMode(DISPCNT_MODE_4);
-    ShowBg2();
-    ShowObj();
+    Display::SetMode(DISPCNT_MODE_4);
+    Display::ShowBg2();
+    Display::ShowObj();
 
     u16 *src = &f.fill;
 
@@ -167,6 +168,6 @@ void LevelState::PlayCutscene(s32 idx)
     ((CutscenePlayer *)&f.pager)->pages = gCutsceneTexts[gLanguage][idx];
     ((CutscenePlayer *)&f.pager)->Run();
     *dispcnt = mode;
-    CommitDispcnt();
+    Display::CommitDispcnt();
     ((CutscenePlayer *)&f.pager)->~CutscenePlayer();
 }

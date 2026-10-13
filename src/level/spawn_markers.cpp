@@ -1,3 +1,4 @@
+#include "display.hpp"
 #include "spawners.hpp"
 #include "pickups.hpp"
 #include "player.hpp"
@@ -134,11 +135,11 @@ LevelState::LevelState()
     gEntityFlags = new LevelEntityFlags;
     gPaletteCycles = new PaletteCycles;
 
-    u16 *dispcnt = &gDispcnt.raw;
+    u16 *dispcnt = &Display::dispcnt.raw;
     u16 zero = 0;
 
     *dispcnt = zero;
-    SetObjMapping1D();
-    CommitDispcnt();
+    Display::SetObjMapping1D();
+    Display::CommitDispcnt();
     unusedFlags = zero;
 }

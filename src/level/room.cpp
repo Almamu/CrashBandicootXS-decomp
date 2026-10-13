@@ -1,3 +1,4 @@
+#include "display.hpp"
 #include "sprite_obj.hpp"
 #include "bg_layer.hpp"
 #include "level_state.hpp"
@@ -42,10 +43,10 @@ void LevelProgress::ResumeRoomAfterPause()
     gCamera->Snap();
     gLevelLayers->Reset();
     UpdateRoomFrame();
-    SetDispcntMode(DISPCNT_MODE_0);
-    ShowObj();
-    CommitDispcnt();
-    CommitBlendRegs();
+    Display::SetMode(DISPCNT_MODE_0);
+    Display::ShowObj();
+    Display::CommitDispcnt();
+    Display::CommitBlendRegs();
 }
 
 /* Flushes the vram upload cursor (`gObjVramCursor`) and OAM shadow

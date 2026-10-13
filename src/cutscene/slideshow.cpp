@@ -1,3 +1,4 @@
+#include "display.hpp"
 #include "cutscene.hpp"
 #include "audio.hpp"
 
@@ -133,7 +134,7 @@ s32 Slideshow::Skip(s32 startIdx, u8 condFlag)
  * as `ShowSlidePicture`'s cousin in level_query.cpp, but for a different
  * global), DMA3-copies the asset's first half into `BG_PLTT` (a second,
  * independent palette-DMA-plus-DISPCNT-write path alongside the
- * already-documented `CommitDispcnt`/`gDispcnt` one - see
+ * already-documented `Display::CommitDispcnt`/`Display::dispcnt` one - see
  * docs/rom_map.md), and finally commits `gSlideshowDispcnt`'s low
  * halfword straight to `REG_DISPCNT`.
  *

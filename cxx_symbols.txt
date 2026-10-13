@@ -1712,6 +1712,26 @@ SetColor__12ScaledSpritei SetScaledSpriteColor
 SetPriority__12ScaledSpriteUi SetScaledSpritePriority
 SetPos__12ScaledSpriteUiUi SetScaledSpritePos
 ResetAttrs__12ScaledSprite ResetScaledSpriteAttrs
+# #915 Display: the display register shadows as an all-static class
+# (include/display.hpp, src/gfx/display.cpp). Its data members keep the C
+# names: sym_iwram.txt places them.
+SetMode__7Displayi SetDispcntMode
+HideBg3__7Display HideBg3
+HideBg2__7Display HideBg2
+HideBg1__7Display HideBg1
+HideBg0__7Display HideBg0
+HideObj__7Display HideObj
+ShowBg3__7Display ShowBg3
+ShowBg2__7Display ShowBg2
+ShowBg1__7Display ShowBg1
+ShowBg0__7Display ShowBg0
+ShowObj__7Display ShowObj
+SetObjMapping2D__7Display SetObjMapping2D
+SetObjMapping1D__7Display SetObjMapping1D
+CommitDispcnt__7Display CommitDispcnt
+CommitBlendRegs__7Display CommitBlendRegs
+_7Display.blendRegs gBlendRegs
+_7Display.dispcnt gDispcnt
 #
 # #751: LinkSession (include/link_session.hpp, src/link/)
 __11LinkSession InitLinkSession

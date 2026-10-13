@@ -695,6 +695,7 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | globals.h, audio.h, 75 `.cpp` files | `gAudioContext` is an `AudioContext *` to C++; the callers' `PlaySfx(gAudioContext, ...)` & co. are method calls, LevelState's constructor and destructor `new AudioContext` and `delete gAudioContext`; the two `PlayAmbientSfx` callers pass a `bool` (the C's `struct byte_arg`) | 0 | (unchanged) | 0 -> 0 | [audio](#the-audio-context) |
 | `src/gfx/bitmap_screen.cpp`, `fade_to_black.cpp` | `ShowBitmapScreen`; `FadePaletteToBlack`, `IsBrightnessFadeActive` (C linkage) | 0 + 3 | agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/gfx/display.cpp`, `fade.cpp` | the DISPCNT helpers (`SetDispcntMode` ... `CommitDispcnt`); `StepBrightnessFade`, `FadeBrightness`, `DarkenPalette` (C linkage) | 0 + 17 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
+| `src/gfx/display.cpp` (again) | `Display` (new include/display.hpp), an all-static class: the DISPCNT and blend shadows are public static data members (`dispcnt` is gDispcnt, `blendRegs` gBlendRegs), the 15 helpers static member functions (`SetMode`, `ShowBg2`, `CommitDispcnt`, ...); gfx.h's 15 prototypes and 2 externs go; 13 files call `Display::ShowObj()` & co. or set `Display::dispcnt` | 15 | (unchanged) | 0 -> 0 | [#915](#the-display-registers-as-an-all-static-class-915) |
 | `src/gfx/sprite_frame.cpp` | the OBJ tile allocator, the overflow OAM queue and the sprite frame cache (C linkage); FlushSpriteFrameOamQueue calls `gOamBuffer->Append`, `HideUnused`, `SetAffineScales` (sprite_obj.hpp), whose C prototypes go | 0 + 18 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/system/asset.cpp`, `main.cpp`, `main_loop.cpp`, `memory.cpp` | `LoadTaggedAsset`, `LoadBackgroundTileAndPalette`; `AgbMain`; `MainLoop`, `GetUiText`; the heap (`mem_*`, C linkage) | 0 + 12 | agbcp | 1 file-scope asm -> 1 (`mem_walk_heaps`) | all-C++: gfx, system, util, text |
 | `src/system/input.cpp`, `irq.cpp` (the key reading since in `key_input.cpp`, #767) | `WaitForKeyPress`; the IRQ table, the VBlank handler and callbacks, the key reading (C linkage), and `KeyInput`'s constructor (`ClearKeys`, spawners.hpp), whose C prototype goes | 1 + 17 | old_agbcp | 1 pin -> 1 pin | all-C++: gfx, system, util, text |
@@ -4080,6 +4081,31 @@ stay (cxx_symbols.txt's `#752` and `#753` blocks):
 - **ScaledSprite** (graphics_package.hpp, src/gfx/scaled_sprite.cpp since #767; was graphics_package.cpp's
   struct gfx_box_obj): the six sprite-box functions, all UNUSED, are its
   methods; gfx.h's nine prototypes went.
+
+### The display registers as an all-static class (#915)
+
+#915 groups the free functions that work on one subsystem's globals
+into classes. display.cpp (ROM 0x08001524-0x08001640) is the 15 helpers
+of two IWRAM shadows: gBlendRegs (0x03001280) and gDispcnt (0x03001288).
+They are now `Display` (include/display.hpp), all-static like
+[the yeti](#the-yeti-as-an-all-static-class-772): static data members
+compile like the globals and static member functions like the plain
+functions, and every object is byte-identical.
+
+- **Data.** `dispcnt` (gDispcnt) and `blendRegs` (gBlendRegs) are
+  public static data members, only declared, because the frontend and
+  the rooms read and write them directly too. The title screen, the
+  logos, the credits, the starfield, the level cutscene and the start
+  marker set `Display::dispcnt`, and SetupRoomBlend builds
+  `Display::blendRegs`. cxx_symbols.txt's `#915 Display` block maps them
+  to their C names, which sym_iwram.txt places. Their types (`union
+  dispcnt`, `struct blend_regs`) stay in gfx.h, which the menus' and the
+  level select's own DISPCNT copies share.
+- **Functions.** All 15 are static member functions under their C names
+  (`ShowBg2__7Display ShowBg2`, ...): `SetMode` (SetDispcntMode), the
+  `Show`/`Hide` bits, `SetObjMapping1D`/`2D` (2D is UNUSED),
+  `CommitDispcnt` and `CommitBlendRegs`. gfx.h's 15 prototypes and its two
+  externs go.
 
 ### The level state as a class (#750)
 

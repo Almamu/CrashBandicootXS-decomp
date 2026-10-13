@@ -1,3 +1,4 @@
+#include "display.hpp"
 #include "bg_layer.hpp"
 #include "entity_flags.hpp"
 
@@ -70,17 +71,17 @@ void LevelLayers::LoadRoom(const struct level_room *args)
     tiles->SetSource(args->desc->collision);
     maxScrollX = CAMERA_MAX_X(layer0->widthPx);
     maxScrollY = CAMERA_MAX_Y(layer0->heightPx);
-    ShowBg0();
+    Display::ShowBg0();
 
     layers[0]->Load(args->desc->layers[0]);
     if (layers[0]->enabled)
-        ShowBg1();
+        Display::ShowBg1();
     layers[1]->Load(args->desc->layers[1]);
     if (layers[1]->enabled)
-        ShowBg2();
+        Display::ShowBg2();
     layers[2]->Load(args->desc->layers[2]);
     if (layers[2]->enabled)
-        ShowBg3();
+        Display::ShowBg3();
 
     gEntityFlags->SpawnRoomEntities(args->desc->entities, args->desc->links, 0, 0);
 

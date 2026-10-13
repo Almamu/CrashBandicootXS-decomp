@@ -2,6 +2,7 @@
  * include/sprite_obj.hpp). Split from gfx/graphics.cpp (#767), same flags
  * (old_agbcc). */
 
+#include "display.hpp"
 #include "sprite_obj.hpp"
 
 extern "C" {
@@ -71,7 +72,7 @@ ObjVramCursor::~ObjVramCursor()
 
 ObjVramCursor::ObjVramCursor(s32 count)
 {
-    SetObjMapping1D();
+    Display::SetObjMapping1D();
     baseTile = count;
     Reset();
     Reset();
