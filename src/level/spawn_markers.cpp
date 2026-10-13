@@ -91,7 +91,7 @@ void CreateEntitySpawner(void)
     gEntitySpawner->SetTable(gEntitySpawnFuncs, ENTITY_COUNT);
 }
 
-/* The level state's constructor (GetLevelState calls it once, at the top
+/* The level state's constructor (LevelState::Get calls it once, at the top
  * of the game loop): builds the hot IWRAM globals - the audio context
  * (0x2094 bytes of IWRAM), the sprite renderer, the sprite bank set
  * (pointed at gSpriteBankTable), the palette cache (over the table's

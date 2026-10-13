@@ -31,7 +31,7 @@ extern "C" {
  * - DestroyLevelState (UNUSED): LevelState's destructor
  *   (include/level_state.hpp), the counterpart of its constructor
  *   (InitLevelState) - frees every subsystem singleton that constructor
- *   built and clears the context pointer gLevelStateSingleton.
+ *   built and clears the context pointer `instance` (gLevelStateSingleton).
  * - PlayCutscene: plays cutscene `idx` (include/cutscene.hpp): blanks the
  *   palette, resets the BG2 affine transform, then runs a stack-allocated
  *   cutscene player (InitCutscenePlayer/RunCutscenePlayer) over the
@@ -68,7 +68,7 @@ LevelState::~LevelState()
     delete gPaletteCache;
     delete gEntityFlags;
     delete gPaletteCycles;
-    gLevelStateSingleton = 0;
+    instance = 0;
 }
 
 /* Through an inline's parameters both values of a pair are loaded before

@@ -777,6 +777,8 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/actor/actor.cpp`, `actor_category_init.cpp`, `src/bosses/hovercraft.cpp`, `hovercraft_cannon.cpp`, `hovercraft_launcher.cpp`, `src/vehicle/jetpack/airship.cpp`, `jetpack_collected_wumpa.cpp`, `jetpack_player_update.cpp`, `src/vehicle/polar/polar_pickups.cpp`, `polar_player.cpp`, `yeti.cpp`, `yeti_states.cpp`, `yeti_update.cpp` | the callers: `ActorBg::GetCenterX()`, `ActorBg::SetLayerDepth(...)` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-actor-bg-scroll-as-an-all-static-class-915) |
 | `src/actor/actor_spawn_collected.cpp`, `src/iwram/iwram_data.cpp` | `CollectedSpawns` (new include/collected_spawns.hpp), an all-static class: gCollectedSpawns and gCollectedSpawnCount are static data members (`spawns`, `count`), its 3 functions static member functions (`Contains`, `Add`, `Clear`); actor.h's 3 prototypes and 2 externs go | 3 | (unchanged) | 0 -> 0 | [#915](#the-collected-spawns-as-an-all-static-class-915) |
 | `src/actor/actor_category_init.cpp`, `actor_factory.cpp`, `src/vehicle/jetpack/jetpack_crates.cpp`, `jetpack_spawn.cpp`, `src/vehicle/polar/polar_crate.cpp` | the callers: `CollectedSpawns::Contains(spawn)` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-collected-spawns-as-an-all-static-class-915) |
+| `src/level/level_state.cpp`, `level_cutscene.cpp`, `src/iwram/iwram_data.cpp` | the level state singleton: GetLevelState is the static member function `LevelState::Get`, gLevelStateSingleton the private static data member `instance` (include/level_state.hpp); level.h's prototype and extern go | 1 | (unchanged) | 0 -> 0 | [#915](#the-level-state-singleton-as-static-members-of-levelstate-915) |
+| `src/system/main_loop.cpp` | the caller: `gLevelState = LevelState::Get();` | 0 | (unchanged) | 0 -> 0 | [#915](#the-level-state-singleton-as-static-members-of-levelstate-915) |
 | `src/level/room.cpp`, `src/iwram/iwram_data.cpp` | `RoomExit` (new include/room_exit.hpp), an all-static class: gRoomExitRequested is the static data member `requested`, its 3 functions static member functions (`Clear`, `Request`, `IsRequested`); level.h's 3 prototypes and extern go | 3 | (unchanged) | 0 -> 0 | [#915](#the-room-exit-flag-as-static-members-of-levelprogress-915) |
 | `src/bosses/cortex.cpp`, `dingodile.cpp`, `tiny.cpp`, `src/level/play_room.cpp`, `src/player/action_ctrl_moves.cpp`, `input_ctrl.cpp`, `player_update.cpp` | the callers: `RoomExit::Request()`, `RoomExit::IsRequested()`, `RoomExit::Clear()` | 0 | (unchanged) | 0 -> 0 | [#915](#the-room-exit-flag-as-static-members-of-levelprogress-915) |
 | `src/level/room.cpp`, `src/iwram/iwram_data.cpp`, level_state.hpp | the room exit flag moves into LevelProgress as static members: `RoomExit::requested` is `LevelProgress::roomExitRequested`, `Clear`/`Request`/`IsRequested` are `ClearRoomExit`/`RequestRoomExit`/`IsRoomExitRequested`; include/room_exit.hpp goes | 3 | (unchanged) | 0 -> 0 | [#915](#the-room-exit-flag-as-static-members-of-levelprogress-915) |
@@ -4765,6 +4767,28 @@ and every object is byte-identical.
   names: `Contains` (IsSpawnCollected: the polar and jetpack factories),
   `Add` (MarkSpawnCollected: the polar and jetpack crates) and `Clear`
   (InitActorCategory).
+
+### The level state singleton as static members of LevelState (#915)
+
+GetLevelState (the end of level_state.cpp) makes the one LevelState
+the first time it's needed and returns it; MainLoop calls it once and
+keeps the result in gLevelState, which the rest of the game reads. The
+instance is gLevelStateSingleton, an initialised IWRAM global
+(0x03000828, iwram_data.cpp) that only GetLevelState and LevelState's
+destructor (UNUSED) touch. Both are now members of `LevelState`
+(include/level_state.hpp), and every object is byte-identical.
+
+- **Data.** `instance` (gLevelStateSingleton) is a private static data
+  member: static, it adds nothing to LevelState's size.
+  iwram_data.cpp defines it in its place
+  (`LevelState *LevelState::instance = 0;`); the destructor clears it.
+- **Function.** `Get` (GetLevelState) is a public static member
+  function: it takes no level state. MainLoop calls
+  `gLevelState = LevelState::Get();`.
+- cxx_symbols.txt's `#915 LevelState` block maps both to their C names.
+  level.h's prototype and extern (with their old C views) go.
+- **gLevelState stays a global**: it is the pointer the whole game
+  reads, not this group's.
 
 ### The room exit flag as static members of LevelProgress (#915)
 
