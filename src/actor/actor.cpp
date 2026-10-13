@@ -99,8 +99,8 @@ void ActorSelf::Draw()
 {
     s32 dist = depth;
     /* `scale` is needed: inlined, the code is 2 instructions longer */
-    s32 scale = (dist << 8) / record->baseDepth;
-    s32 proj = (gActorFocalLength << 0xc) / dist;
+    s32 scale = Q8_DIV(dist, record->baseDepth);
+    s32 proj = INT_TO_Q12(gActorFocalLength) / dist;
     screen_y_t screenY;
     /* `screenX` is needed: inlined, the code is 6 instructions shorter */
     screen_x_t screenX;
@@ -166,9 +166,9 @@ struct anim_box ActorSelf::GetWorldBox()
 {
     struct anim_box b = box;
     /* `dx`, `dy`, `dz` are needed: inlined, the instructions are reordered */
-    s32 dx = x >> 8;
-    s32 dy = y >> 8;
-    s32 dz = z >> 8;
+    s32 dx = Q8_TO_INT(x);
+    s32 dy = Q8_TO_INT(y);
+    s32 dz = Q8_TO_INT(z);
     struct anim_box *p = &b;
 
     p->x = p->x + dx;

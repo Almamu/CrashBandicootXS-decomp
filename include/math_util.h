@@ -82,7 +82,7 @@
 #define Q8_DIV(a, b) (((a) << 8) / (b))
 
 /* The product of a value and a Q12 scale (`0x1000 / n`,
- * `0x1C00000 / depth`, ...), back in the value's format: the screen
+ * `ACTOR_PROJECTION / depth`, ...), back in the value's format: the screen
  * projections and aim vectors. For a product in one expression; a
  * product stored first and shifted later stays Q12_TO_INT. */
 #define Q12_MUL(a, b) (((a) * (b)) >> 12)

@@ -45,9 +45,9 @@ void ScaledSprite::Fit(s32 width, s32 height)
     oam.tileNum = 0x400 - best / 32;
     scaleX = Q8_DIV(widths[idx], width);
     scaleY = Q8_DIV(heights[idx], height);
-    if (scaleX < 0x100 || scaleY < 0x100)
+    if (scaleX < INT_TO_Q8(1) || scaleY < INT_TO_Q8(1))
         oam.affineMode = OAM_AFFINE_MODE_DOUBLE;
-    else if (scaleX > 0x100 || scaleY > 0x100)
+    else if (scaleX > INT_TO_Q8(1) || scaleY > INT_TO_Q8(1))
         oam.affineMode = OAM_AFFINE_MODE_AFFINE;
     else
         oam.affineMode = OAM_AFFINE_MODE_NORMAL;

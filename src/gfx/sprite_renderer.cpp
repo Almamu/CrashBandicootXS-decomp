@@ -157,10 +157,10 @@ void SpriteRenderer::DrawAffinePieces(Sprite *part, s32 *pos)
     s32 baseX, baseY, halfW, halfH, pullX, pullY;
     s32 i;
 
-    LIMIT_MIN(scale, 0x40);
+    LIMIT_MIN(scale, Q8(0.25));
     pa = FixedInverse16((s16)scale);
     pd = pa;
-    if (scale <= 0x100)
+    if (scale <= INT_TO_Q8(1))
         oam.affineMode = OAM_AFFINE_MODE_AFFINE;
     else
         oam.affineMode = OAM_AFFINE_MODE_DOUBLE;

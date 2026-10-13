@@ -23,21 +23,21 @@ void InitActorBgScroll(s32 type)
     gActorBgScrollType = type;
 
     if (type == CATEGORY_TYPE_POLAR) {
-        gActorNearClipDepth = 0x88 << 5;
-        gActorFarClipDepth = 0xa0 << 8;
-        gActorFocalLength = 0xbc << 6;
-        gActorBgWidth = 0x98 << 9;
-        gActorBgHeight = 0xd0 << 8;
+        gActorNearClipDepth = INT_TO_Q8(17);
+        gActorFarClipDepth = INT_TO_Q8(160);
+        gActorFocalLength = ACTOR_FOCAL_LENGTH_POLAR;
+        gActorBgWidth = INT_TO_Q8(304);
+        gActorBgHeight = INT_TO_Q8(208);
         gActorBgScrollEaseShift = 2;
         gActorBgScrollRangeX = 0x64;
         gActorBgScrollRangeY = 0x51;
         gActorBg0VOffset = type;
     } else {
-        gActorNearClipDepth = 0xd0 << 5;
-        gActorFarClipDepth = 0xaa << 8;
-        gActorFocalLength = 0xe0 << 5;
-        gActorBgWidth = 0x98 << 9;
-        gActorBgHeight = 0xce << 8;
+        gActorNearClipDepth = INT_TO_Q8(26);
+        gActorFarClipDepth = INT_TO_Q8(170);
+        gActorFocalLength = ACTOR_FOCAL_LENGTH;
+        gActorBgWidth = INT_TO_Q8(304);
+        gActorBgHeight = INT_TO_Q8(206);
         gActorBgScrollEaseShift = 3;
         gActorBgScrollRangeX = 3 + 0xfd;
         gActorBgScrollRangeY = 0x96;
