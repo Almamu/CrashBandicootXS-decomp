@@ -517,19 +517,10 @@ SECTIONS
     }
     __iwram_lma = LOADADDR(iwram);
 
-    /* The level data that isn't the ROM's (src/data/level_appended.cpp,
-     * docs/levels.md "Adding a room"): new rooms and their tile sets, after
-     * the IWRAM image, so nothing of the ROM moves. Empty with the original
-     * data. */
-    appended LOADADDR(iwram) + SIZEOF(iwram) : AT(LOADADDR(iwram) + SIZEOF(iwram))
-    {
-        build/crashbandicootxs/src/data/level_appended.o(.rodata);
-    }
-
-    /* Empty cartridge space (0xFF) from the end of the IWRAM image (and of
-     * the appended data) to the end of the ROM: 8 MB, or the next 8 MB
-     * when the appended data runs past it. */
-    rom_fill LOADADDR(iwram) + SIZEOF(iwram) + SIZEOF(appended) : AT(LOADADDR(iwram) + SIZEOF(iwram) + SIZEOF(appended))
+    /* Empty cartridge space (0xFF) from the end of the IWRAM image to the
+     * end of the ROM: 8 MB, or the next 8 MB when the data runs past it
+     * (new level data, docs/levels.md "Adding a room"). */
+    rom_fill LOADADDR(iwram) + SIZEOF(iwram) : AT(LOADADDR(iwram) + SIZEOF(iwram))
     {
         BYTE(0xFF);
         . = ALIGN(0x800000);

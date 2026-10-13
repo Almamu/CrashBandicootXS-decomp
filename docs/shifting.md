@@ -14,10 +14,9 @@ checks it, and `tools/boottest.py` plays shifted ROMs in mGBA.
 
 ## What can and can't move
 
-- **ROM code and data** (`ldscript.txt`'s `ROM` section, the `iwram`
-  image's load address, the `appended` section): anything can grow,
-  shrink or move. crt0 copies the IWRAM image from `__iwram_lma`, a
-  symbol.
+- **ROM code and data** (`ldscript.txt`'s `ROM` section and the `iwram`
+  image's load address): anything can grow, shrink or move. crt0 copies
+  the IWRAM image from `__iwram_lma`, a symbol.
 - **Alignment** comes from the objects themselves (their sections'
   alignment), not from where they used to be. The one place that had a
   pad worked out by hand, the 2 zero bytes in front of the GAX2
