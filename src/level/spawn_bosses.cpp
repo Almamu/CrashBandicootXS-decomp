@@ -25,7 +25,7 @@ static inline void SetMirrorFromRecord(MovingSprite *part, u16 index)
 
 /* Entity type 0x55, the room's exit. Every room but room 16 and the boss
  * rooms places exactly one. The tag-0x12 zone is collision class 0x12,
- * the player event that PlayerHandleEvent answers with RoomExit::Request;
+ * the player event that PlayerHandleEvent answers with LevelProgress::RequestRoomExit;
  * the kind-4 platform is bank 39's glowing exit pad.
  *
  * Three-way spawner. Outside the gem path and the bonus round, in the

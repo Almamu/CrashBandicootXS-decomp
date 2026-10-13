@@ -7,7 +7,6 @@
 #include "crate_list.hpp"
 #include "bg_layer.hpp"
 #include "level_state.hpp"
-#include "room_exit.hpp"
 #include "hud.hpp"
 #include "platform.hpp"
 #include "crate.hpp"
@@ -64,7 +63,7 @@ s32 LevelProgress::PlayRoom()
     s32 result;
 
     CreateEntitySpawner();
-    RoomExit::Clear();
+    ClearRoomExit();
 
     gUpdateOnlyPartList = new PartList(0x20);
     gTouchableList = new PartList(0xc0);
@@ -258,7 +257,7 @@ s32 LevelProgress::PlayRoom()
  * `Display::SetMode(DISPCNT_MODE_0)`/`Display::ShowObj`/`Display::CommitDispcnt`/`Display::CommitBlendRegs` reset
  * quartet, landing at the **wait loop** (`_08023E5A`/`_08023D7C`,
  * `docs/rom_map.md`'s "Traced the fade-to-black's trigger" section):
- * poll `RoomExit::IsRequested` (the `RoomExit::requested` readiness flag,
+ * poll `IsRoomExitRequested` (the `roomExitRequested` readiness flag,
  * `room.cpp`) each iteration; while not ready and the player's
  * `+0xc` bit 0 is clear, run one more "outstanding work" pass
  * (`ResetObjBuffers`/`UpdateRoomFrame`, a `RunPauseMenu` input-driven mini-
@@ -410,7 +409,7 @@ s32 LevelProgress::RunRoom()
     Display::CommitDispcnt();
     Display::CommitBlendRegs();
 
-    while (!RoomExit::IsRequested() && gPlayer->IsGone() == 0) {
+    while (!IsRoomExitRequested() && gPlayer->IsGone() == 0) {
         ResetObjBuffers();
         UpdateRoomFrame();
         gInput->Update();
@@ -447,7 +446,7 @@ s32 LevelProgress::RunRoom()
     }
 fade:
     PaletteFade::FadeToBlack();
-    if (RoomExit::IsRequested()) {
+    if (IsRoomExitRequested()) {
         ret = ROOM_EXIT_CLEARED;
         if (!IsInBonusRoom() && gLevelState->IsInBonusRound()) {
             struct vec2 point;

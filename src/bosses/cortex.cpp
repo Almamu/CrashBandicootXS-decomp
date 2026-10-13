@@ -4,7 +4,6 @@
 #include "player.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
-#include "room_exit.hpp"
 
 extern "C" {
 #include "match.h"
@@ -63,7 +62,7 @@ static inline void ClampFrame(MovingSprite *p, s32 idx)
  * both parts towards the target and sets both parts' frame from the
  * horizontal distance (0-5, scaled by the level width); state 2 counts to
  * 3 before moving on; state 3 sinks everything 0x80 per frame until it
- * leaves the bottom of the level, then signals RoomExit::Request. */
+ * leaves the bottom of the level, then signals LevelProgress::RequestRoomExit. */
 void CortexBossCtrl::Update(MovingSprite *part)
 {
     switch (state) {
@@ -113,7 +112,7 @@ void CortexBossCtrl::Update(MovingSprite *part)
         part->y += Q8(0.5);
         if (part->y >= INT_TO_Q8(gLevelLayers->layer0->heightPx) + INT_TO_Q8(64)) {
             if (gLevelState->HasTurboRun())
-                RoomExit::Request();
+                LevelProgress::RequestRoomExit();
             SetState(part, CORTEX_BOSS_STATE_GONE);
         }
         break;

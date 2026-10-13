@@ -4,7 +4,6 @@
 #include "audio.hpp"
 #include "level_state.hpp"
 #include "key_input.hpp"
-#include "room_exit.hpp"
 
 extern "C" {
 #include "system.h"
@@ -837,7 +836,7 @@ void ActionCtrl::StateWarpOut()
 {
     if (part->animDone != 0) {
         gPlayer->f.flags |= ENTITY_FLAG_COLLIDES;
-        RoomExit::Request();
+        LevelProgress::RequestRoomExit();
     }
 }
 
