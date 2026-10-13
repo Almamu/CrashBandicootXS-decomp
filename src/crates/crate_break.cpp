@@ -991,13 +991,13 @@ void Crate::BounceWumpa()
             s32 px = Q8_TO_INT(x);
             s32 py = Q8_TO_INT(y) - 6;
 
-            gEntitySpawner->DropWumpa(px, py, 0, 0xe, true);
+            EntitySpawner::Get()->DropWumpa(px, py, 0, 0xe, true);
             /* scoped: its own `px`/`py` (shared, the code is 4 instructions longer) */
             {
                 s32 px = Q8_TO_INT(x) + 3;
                 s32 py = Q8_TO_INT(y);
 
-                gEntitySpawner->DropWumpa(px, py, 0, 0, true);
+                EntitySpawner::Get()->DropWumpa(px, py, 0, 0, true);
             }
         }
     } else {
@@ -1050,7 +1050,7 @@ void Crate::OpenCheckpoint()
     s32 px = Q8_TO_INT(x) - 10;
     s32 py = Q8_TO_INT(y);
 
-    puff = gEntitySpawner->SpawnEffectPart(0x2a, 0, px, py, 0);
+    puff = EntitySpawner::Get()->SpawnEffectPart(0x2a, 0, px, py, 0);
     puff->f.b.visible = 0;
     puff->mirrorBits.flipX = 0;
     PuffSetMotion(puff, -Q8(1.5), Q8_FRAC(0, 8), -Q8(0.0625));
@@ -1221,7 +1221,7 @@ void Crate::Break(u32 byBlast)
             s32 px = Q8_TO_INT(x);
             s32 py = Q8_TO_INT(y) + 3;
 
-            gEntitySpawner->DropWumpa(px, py, 0, PICKUP_MODE_HOP_UP, chained);
+            EntitySpawner::Get()->DropWumpa(px, py, 0, PICKUP_MODE_HOP_UP, chained);
         }
         if (flag == 0)
             gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
@@ -1265,7 +1265,7 @@ void Crate::OpenMystery(bool flag)
             s32 px = Q8_TO_INT(x);
             s32 py = Q8_TO_INT(y);
 
-            gEntitySpawner->DropWumpa(px, py, 0, WUMPA_MODE_PAYOUT, false);
+            EntitySpawner::Get()->DropWumpa(px, py, 0, WUMPA_MODE_PAYOUT, false);
         }
         break;
     case 8:
@@ -1280,7 +1280,7 @@ void Crate::OpenMystery(bool flag)
             s32 px = Q8_TO_INT(x);
             s32 py = Q8_TO_INT(y) + 3;
 
-            gEntitySpawner->DropExtraLife(px, py, 0, PICKUP_MODE_HOP_UP, flag);
+            EntitySpawner::Get()->DropExtraLife(px, py, 0, PICKUP_MODE_HOP_UP, flag);
         }
         break;
     case 7:
@@ -1298,35 +1298,35 @@ void Crate::OpenMystery(bool flag)
             s32 px = Q8_TO_INT(x) - 1;
             s32 py = Q8_TO_INT(y) + 3;
 
-            gEntitySpawner->DropWumpa(px, py, 1, PICKUP_MODE_HOP_UP, flag);
+            EntitySpawner::Get()->DropWumpa(px, py, 1, PICKUP_MODE_HOP_UP, flag);
         }
     case 5:
         {
             s32 px = Q8_TO_INT(x) + 1;
             s32 py = Q8_TO_INT(y) + 1;
 
-            gEntitySpawner->DropWumpa(px, py, 0, PICKUP_MODE_HOP_UP, flag);
+            EntitySpawner::Get()->DropWumpa(px, py, 0, PICKUP_MODE_HOP_UP, flag);
         }
     case 4:
         {
             s32 px = Q8_TO_INT(x) - 3;
             s32 py = Q8_TO_INT(y) + 3;
 
-            gEntitySpawner->DropWumpa(px, py, 1, PICKUP_MODE_HOP_LEFT, flag);
+            EntitySpawner::Get()->DropWumpa(px, py, 1, PICKUP_MODE_HOP_LEFT, flag);
         }
     case 3:
         {
             s32 px = Q8_TO_INT(x) + 3;
             s32 py = Q8_TO_INT(y) + 2;
 
-            gEntitySpawner->DropWumpa(px, py, 0, PICKUP_MODE_HOP_LEFT, flag);
+            EntitySpawner::Get()->DropWumpa(px, py, 0, PICKUP_MODE_HOP_LEFT, flag);
         }
     case 2:
         {
             s32 px = Q8_TO_INT(x) + 5;
             s32 py = Q8_TO_INT(y) + 2;
 
-            gEntitySpawner->DropWumpa(px, py, 0, PICKUP_MODE_HOP_RIGHT, flag);
+            EntitySpawner::Get()->DropWumpa(px, py, 0, PICKUP_MODE_HOP_RIGHT, flag);
         }
     case 1:
     default:
@@ -1334,7 +1334,7 @@ void Crate::OpenMystery(bool flag)
             s32 px = Q8_TO_INT(x) - 5;
             s32 py = Q8_TO_INT(y) + 3;
 
-            gEntitySpawner->DropWumpa(px, py, 1, PICKUP_MODE_HOP_RIGHT, flag);
+            EntitySpawner::Get()->DropWumpa(px, py, 1, PICKUP_MODE_HOP_RIGHT, flag);
         }
         break;
     }
@@ -1365,7 +1365,7 @@ void Crate::OpenSlot(bool flag)
         px = Q8_TO_INT(x);
         py = Q8_TO_INT(y) + 3;
 
-        gEntitySpawner->DropExtraLife(px, py, 0, PICKUP_MODE_HOP_UP, flag);
+        EntitySpawner::Get()->DropExtraLife(px, py, 0, PICKUP_MODE_HOP_UP, flag);
         break;
     case 2:
         OpenMystery(flag);

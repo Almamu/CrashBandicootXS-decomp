@@ -267,7 +267,7 @@ void ActionCtrl::StateRun()
         QueueX(alt, 1, 0x1E);
         gPlayer->listCount = alt;
         gPlayer->listCount = alt;
-        obj = gEntitySpawner->LaunchEffectPart(0x29, 1, 0, 0xA, alt, gPlayer);
+        obj = EntitySpawner::Get()->LaunchEffectPart(0x29, 1, 0, 0xA, alt, gPlayer);
         obj->f.b.visible = 0;
         obj->mirrorBits.gfxMode = OAM_OBJ_MODE_SEMI_TRANSPARENT;
     }
@@ -434,7 +434,7 @@ static inline void OrMaskByte(u8 *p, s32 clear, s32 set)
  * are computed before the pool pointer is loaded, as in the ROM. */
 static inline MovingSprite *SpawnSpark(s32 x, s32 y, s32 mirror)
 {
-    return gEntitySpawner->SpawnEffectPart(0x29, 1, x, y, mirror);
+    return EntitySpawner::Get()->SpawnEffectPart(0x29, 1, x, y, mirror);
 }
 
 /* The airborne states (7, 9, 0xB, 0x18, 0x19 and 0x1A share it). B

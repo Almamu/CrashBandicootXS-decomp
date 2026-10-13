@@ -191,7 +191,7 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
                     cx = Q8_TO_INT(c->x);
                     cy = Q8_TO_INT(c->y);
                     m = c->mirrorFlags.mirrorX;
-                    gEntitySpawner->SpawnEffectPart(0x22, 3, cx, cy, m);
+                    EntitySpawner::Get()->SpawnEffectPart(0x22, 3, cx, cy, m);
                 }
             } else {
                 gLevelState->AddDeath();

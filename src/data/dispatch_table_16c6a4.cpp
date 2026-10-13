@@ -13,7 +13,7 @@ extern "C" {
  * "Major correction: there is no second table"): the spawn function of
  * each entity type of the room data (docs/levels.md, "Entities").
  * EntitySpawner::Create (spawn_markers.cpp) hands it to SetEntitySpawnerTable
- * with a count of ENTITY_COUNT, as gEntitySpawner; SpawnEntity calls entry
+ * with a count of ENTITY_COUNT, as EntitySpawner::instance; SpawnEntity calls entry
  * `type` with the entity's id, x, y and param. */
 const entity_spawn_fn gEntitySpawnFuncs[ENTITY_COUNT] = {
     /* ENTITY_START_MARKER */ SpawnStartMarker,
