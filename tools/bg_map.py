@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Post-processing of grit's tile set + map output for the struct
-bg_package pictures of graphics/bg_package/ (the menu and title
+bg_package pictures (graphics.mk's BG_PACKAGES: the menu and title
 backgrounds and the title's OBJ sprites; docs/graphics.md, "Menu and title
 pictures"). grit does the pixel conversion and the tile reduction;
 this only renumbers or picks entries, so every tile and flip still comes

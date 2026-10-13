@@ -930,7 +930,7 @@ def parse_data():
 
 
 def blob_group(blob):
-    """Asset directory a built blob comes from (e.g. graphics/intro), the
+    """Asset directory a built blob comes from (e.g. graphics/cutscenes), the
     source file minus `.c` for a src/data table (each C file is its own
     unit) or minus `.cpp` for a g++-emitted vtable, None for a baserom
     blob."""
