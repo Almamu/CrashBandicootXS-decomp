@@ -3,6 +3,7 @@
 #include "graphics_package.hpp"
 #include "key_input.hpp"
 #include "menus.hpp"
+#include "frame_limiter.hpp"
 
 extern "C" {
 #include "core.h"
@@ -51,7 +52,7 @@ s32 SaveMenu::LinkExchange()
     spinner->SetRecord(cartSave);
     spinner->Reset();
     do {
-        WaitForVBlank();
+        FrameLimiter::WaitForVBlank();
         gInput->Update();
         if ((u16)(gKeys.all & B_BUTTON)) {
             result = 3;
@@ -380,7 +381,7 @@ void SaveMenu::InitIcons()
 
     gOamBuffer->Reset();
     gOamBuffer->HideUnused();
-    WaitForVBlank();
+    FrameLimiter::WaitForVBlank();
     gOamBuffer->Commit();
     gPaletteCache->FreeUnlockedSlots();
     gPaletteCache->ClaimSlot(0);

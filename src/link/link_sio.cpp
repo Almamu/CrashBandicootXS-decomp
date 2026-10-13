@@ -14,7 +14,7 @@ extern "C" {
  * enables it, and - only if `arm3` is set - also installs `LinkTimer3Intr`
  * as the Timer3 IRQ handler, enables it, and arms Timer3 with a fixed
  * reload/control word. Always ends with IME re-enabled. `this` is never
- * read - the ROM genuinely ignores it here, same as `WaitForVBlank` in
+ * read - the ROM genuinely ignores it here, same as `FrameLimiter::WaitForVBlank` in
  * src/system/irq.cpp. */
 s32 LinkSession::Start(u32 flags)
 {

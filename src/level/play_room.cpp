@@ -13,6 +13,7 @@
 #include "key_input.hpp"
 #include "camera.hpp"
 #include "menus.hpp"
+#include "frame_limiter.hpp"
 
 extern "C" {
 #include "core.h"
@@ -282,7 +283,7 @@ s32 LevelProgress::PlayRoom()
  * (`ClearPartList` on `030012E8`/`EC`/`F0`/`F8`/`F4`, `ResetCrateList` on
  * `0300130C`), resets the fade cluster's own bitfield accessors
  * (`Display::HideBg0`/`Display::HideBg1`/`Display::HideBg2`/`Display::HideBg3`/
- * `Display::HideObj`/`WaitForVBlank`/`Display::CommitDispcnt`), and returns whatever
+ * `Display::HideObj`/`FrameLimiter::WaitForVBlank`/`Display::CommitDispcnt`), and returns whatever
  * `sl` was left holding (`1` by default, `2` from the wait-loop's
  * `RunPauseMenu`-driven early exit, or `0` once the post-fade branch
  * was reached) - the value `PlayRoom` itself stashes and returns.
@@ -502,7 +503,7 @@ fade:
     Display::HideBg2();
     Display::HideBg3();
     Display::HideObj();
-    WaitForVBlank();
+    FrameLimiter::WaitForVBlank();
     Display::CommitDispcnt();
     return ret;
 }
@@ -532,7 +533,7 @@ void LevelProgress::UpdateRoomFrame()
         gDecorationList->Draw();
 
         gOamBuffer->HideUnused();
-        WaitForVBlank();
+        FrameLimiter::WaitForVBlank();
         gOamBuffer->Commit();
         gLevelLayers->CommitScroll();
         FlushVramDmaQueue();

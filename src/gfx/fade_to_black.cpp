@@ -1,3 +1,5 @@
+#include "frame_limiter.hpp"
+
 extern "C" {
 #include "core.h"
 #include "system.h"
@@ -29,7 +31,7 @@ void FadePaletteToBlack(void)
     DmaCopy16(3, PLTT, gPaletteBackup, PLTT_SIZE);
     for (factor = 0; factor <= 0x10; factor += 2) {
         DarkenPalette(factor);
-        WaitForVBlank();
+        FrameLimiter::WaitForVBlank();
         DmaCopy16(3, gPaletteFadeBuffer, PLTT, PLTT_SIZE);
     }
     REG_BLDCNT = BLDCNT_TGT1_ALL | BLDCNT_EFFECT_DARKEN;

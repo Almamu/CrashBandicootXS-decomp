@@ -3,6 +3,7 @@
 #include "audio.hpp"
 #include "level_state.hpp"
 #include "key_input.hpp"
+#include "frame_limiter.hpp"
 
 extern "C" {
 #include "system.h"
@@ -46,7 +47,7 @@ s32 PauseMenu::Run()
 
     mem_free_bytes(MEM_HEAP_BOTH);
     gAudioContext->StopAmbientSfx();
-    WaitForVBlank();
+    FrameLimiter::WaitForVBlank();
     BACKDROP_COLOR = 0;
     *(vu16 *)REG_ADDR_DISPCNT = 0;
 

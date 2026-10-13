@@ -1,3 +1,5 @@
+#include "frame_limiter.hpp"
+
 extern "C" {
 #include "core.h"
 #include "system.h"
@@ -48,6 +50,6 @@ void LoadTaggedAsset(const void *asset, void *dest)
 void LoadBackgroundTileAndPalette(const void *asset)
 {
     LoadTaggedAsset((const u8 *)asset + 0x200, (void *)VRAM);
-    WaitForVBlank();
+    FrameLimiter::WaitForVBlank();
     DmaCopy16(3, asset, PLTT, BG_PLTT_SIZE);
 }

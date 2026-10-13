@@ -2,6 +2,7 @@
 #include "font.hpp"
 #include "audio.hpp"
 #include "key_input.hpp"
+#include "frame_limiter.hpp"
 
 extern "C" {
 #include "system.h"
@@ -31,7 +32,7 @@ void PowerDialog::Show(s32 title, s32 desc, s32 type)
     PowerDialog *dialog;
 
     mem_free_bytes(0xC0000000);
-    WaitForVBlank();
+    FrameLimiter::WaitForVBlank();
     BACKDROP_COLOR = 0;
     *(vu16 *)REG_ADDR_DISPCNT = 0;
     gPaletteCache->FreeUnlockedSlots();

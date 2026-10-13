@@ -1,6 +1,7 @@
 #include "level_select.hpp"
 #include "audio.hpp"
 #include "key_input.hpp"
+#include "frame_limiter.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -227,7 +228,7 @@ void LevelSelect::SetEntryBoxes()
  * without the menu's own update. */
 void LevelSelect::CommitFrame()
 {
-    WaitForVBlank();
+    FrameLimiter::WaitForVBlank();
     gPaletteCache->Upload();
     gOamBuffer->Commit();
     CommitDisplay();

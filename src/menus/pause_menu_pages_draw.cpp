@@ -1,5 +1,6 @@
 #include "menus.hpp"
 #include "font.hpp"
+#include "frame_limiter.hpp"
 
 extern "C" {
 #include "core.h"
@@ -54,7 +55,7 @@ void PauseMenu::DrawPageTitle()
  * and DISPCNT shadows. */
 void PauseMenu::CommitFrame()
 {
-    WaitForVBlank();
+    FrameLimiter::WaitForVBlank();
     gPaletteCache->Upload();
     gOamBuffer->Commit();
     FlushVramDmaQueue();

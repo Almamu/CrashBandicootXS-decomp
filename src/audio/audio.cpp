@@ -1,5 +1,6 @@
 #include "irq.hpp"
 #include "audio.hpp"
+#include "frame_limiter.hpp"
 
 extern "C" {
 #include "core.h"
@@ -371,7 +372,7 @@ void AudioContext::PlaySong(u32 id)
 void AudioContext::ResumeSong()
 {
     if (IsPaused()) {
-        WaitForVBlank();
+        FrameLimiter::WaitForVBlank();
         GAX_resume();
         state = AUDIO_STATE_PLAYING;
     }
@@ -382,7 +383,7 @@ void AudioContext::PauseSong()
 {
     if (IsPlaying()) {
         state = AUDIO_STATE_PAUSED;
-        WaitForVBlank();
+        FrameLimiter::WaitForVBlank();
         GAX_play();
         GAX_pause();
     }

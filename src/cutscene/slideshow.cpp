@@ -1,6 +1,7 @@
 #include "display.hpp"
 #include "cutscene.hpp"
 #include "audio.hpp"
+#include "frame_limiter.hpp"
 
 extern "C" {
 #include "core.h"
@@ -173,7 +174,7 @@ void Slideshow::ShowPicture(s32 idx)
 
     *shadow = (mask & byte) | bit4;
 
-    WaitForVBlank();
+    FrameLimiter::WaitForVBlank();
 
     DmaCopy16(3, asset, PLTT, BG_PLTT_SIZE);
     REG_DISPCNT = *(u16 *)&gSlideshowDispcnt;

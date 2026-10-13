@@ -4,6 +4,7 @@
 #include "audio.hpp"
 #include "key_input.hpp"
 #include "graphics_package.hpp"
+#include "frame_limiter.hpp"
 
 extern "C" {
 #include "gba/dma_macros.h"
@@ -42,7 +43,7 @@ TitleScreen::TitleScreen()
     font = gSmallFont;
     gOamBuffer->Reset();
     gOamBuffer->HideUnused();
-    WaitForVBlank();
+    FrameLimiter::WaitForVBlank();
     gOamBuffer->Commit();
 
     *(vu32 *)REG_ADDR_BLDCNT = BLDCNT_TGT1_ALL | BLDCNT_EFFECT_DARKEN;
@@ -496,7 +497,7 @@ s32 TitleScreen::Run()
         UpdateLogoPieces();
         Draw();
         starfield->Update();
-        WaitForVBlank();
+        FrameLimiter::WaitForVBlank();
         *(vu32 *)REG_ADDR_BLDCNT = 0;
         CommitFrame();
     }
@@ -526,13 +527,13 @@ s32 TitleScreen::Run()
             selection++;
             selection = selection % 3;
         }
-        WaitForVBlank();
+        FrameLimiter::WaitForVBlank();
         CommitFrame();
     }
 fadeLoop:
     Draw();
     starfield->Update();
-    WaitForVBlank();
+    FrameLimiter::WaitForVBlank();
     REG_BLDY = fade;
     REG_BLDCNT = BLDCNT_TGT1_ALL | BLDCNT_EFFECT_DARKEN;
     CommitFrame();

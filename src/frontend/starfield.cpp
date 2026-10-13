@@ -1,6 +1,7 @@
 #include "display.hpp"
 #include "frontend.hpp"
 #include "key_input.hpp"
+#include "frame_limiter.hpp"
 
 extern "C" {
 #include "gba/dma_macros.h"
@@ -251,7 +252,7 @@ void Starfield::WaitForButton()
         if (gKeys.half.pressed & (A_BUTTON | START_BUTTON)) {
             break;
         }
-        WaitForVBlank();
+        FrameLimiter::WaitForVBlank();
         Update();
     }
 }

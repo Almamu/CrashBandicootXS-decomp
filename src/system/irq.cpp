@@ -1,4 +1,5 @@
 #include "irq.hpp"
+#include "frame_limiter.hpp"
 #include "spawners.hpp"
 #include "audio.hpp"
 
@@ -129,9 +130,9 @@ s32 Irq::AddVBlankCallback(void (*fn)(void))
 }
 
 /* Waits for the next VBlank (BIOS VBlankIntrWait). With the frame limit
- * on (SetFrameLimit), keeps waiting until gVBlankCounter reaches
- * gFrameLimitTarget, then moves the target on by gFrameLimitInterval. */
-void WaitForVBlank(void)
+ * on (Set), keeps waiting until gVBlankCounter reaches `target`, then
+ * moves the target on by `interval`. */
+void FrameLimiter::WaitForVBlank()
 {
     u32 *p1;
     u32 *p2;
@@ -140,10 +141,10 @@ void WaitForVBlank(void)
     u32 v1;
     u32 v2;
 
-    if (gFrameLimitEnabled != 0) {
+    if (enabled != 0) {
         p1 = &gVBlankCounter;
-        p2 = &gFrameLimitTarget;
-        p3 = &gFrameLimitInterval;
+        p2 = &target;
+        p3 = &interval;
         v1 = *p1;
         v2 = *p2;
         while (v1 < v2) {
@@ -160,19 +161,18 @@ void WaitForVBlank(void)
 /* UNUSED - no caller anywhere in the ROM (checked every asm/*.s,
  * expected/*.s and src/ file for a bl/.4byte reference). Turns
  * WaitForVBlank's frame limit off. */
-void DisableFrameLimit(void)
+void FrameLimiter::Disable()
 {
-    gFrameLimitEnabled = 0;
+    enabled = 0;
 }
 
-/* UNUSED - no caller anywhere in the ROM (checked as for
- * DisableFrameLimit). Makes WaitForVBlank return at most once every
- * `interval` VBlanks. */
-void SetFrameLimit(u32 interval)
+/* UNUSED - no caller anywhere in the ROM (checked as for Disable).
+ * Makes WaitForVBlank return at most once every `frameCount` VBlanks. */
+void FrameLimiter::Set(u32 frameCount)
 {
-    gFrameLimitInterval = interval;
-    gFrameLimitTarget = gVBlankCounter + interval;
-    gFrameLimitEnabled = 1;
+    interval = frameCount;
+    target = gVBlankCounter + frameCount;
+    enabled = 1;
 }
 
 extern "C" void _call_via_r0(void);

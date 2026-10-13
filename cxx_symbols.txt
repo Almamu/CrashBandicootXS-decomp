@@ -1688,6 +1688,17 @@ VBlankHandler__3Irq VBlankHandler
 _3Irq.table gIntrTable
 _3Irq.prevTable gPrevIntrTable
 _3Irq.vblankCallbacks gVBlankCallbacks
+#
+# #915 FrameLimiter: the VBlank wait and its frame limit as an all-static
+# class (include/frame_limiter.hpp, src/system/irq.cpp). Its data members
+# keep the C names: sym_iwram.txt places target and interval,
+# iwram_data.cpp defines enabled.
+WaitForVBlank__12FrameLimiter WaitForVBlank
+Disable__12FrameLimiter DisableFrameLimit
+Set__12FrameLimiterUi SetFrameLimit
+_12FrameLimiter.enabled gFrameLimitEnabled
+_12FrameLimiter.target gFrameLimitTarget
+_12FrameLimiter.interval gFrameLimitInterval
 # #752: the tile-slot pool and the tile cache (TileSlotPool, TileCache, include/bg_layer.hpp)
 Reset__12TileSlotPool ResetTileSlotPool
 Acquire__12TileSlotPoolUs AcquireTileSlot
