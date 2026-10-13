@@ -182,7 +182,7 @@ void Hud::ConfigureParts(u8 iconFlag)
                     const struct vec2 *pos = tbl + i;
 
                     parts[i].x = INT_TO_Q8(pos->x);
-                    parts[i].y = 0x1400;
+                    parts[i].y = INT_TO_Q8(DISPLAY_TOP(20));
                     SetPal(&parts[i], frame);
                     break;
                 }

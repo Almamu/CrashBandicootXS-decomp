@@ -13,7 +13,7 @@ extern "C" {
 
 /* Draws the part, unless it is hidden (`frame` -1), `gHudSlideOffset`
  * lower. */
-void HudPart::Draw(s32 dx, s32 dy)
+void HudPart::Draw(screen_dx_t dx, screen_dy_t dy)
 {
     if (frame != -1)
         DrawWithOffset(dx, dy + gHudSlideOffset);

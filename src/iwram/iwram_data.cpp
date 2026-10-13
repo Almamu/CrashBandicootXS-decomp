@@ -105,7 +105,7 @@ const u8 *const *gUiTextTables[6] = {
 /* The language, 0-5 (English, French, German, Spanish, Italian, Dutch);
  * main_loop.cpp sets it at boot. */
 s32 gLanguage = 3;
-s32 gHudSlideOffset = 0;
+screen_dy_t gHudSlideOffset = 0;
 
 /* Hooks into the ARM code (see sprite_arm.cpp). */
 s32 (*gLookupSpriteFrameCacheFunc)(u8 *frame) = LookupSpriteFrameCache;

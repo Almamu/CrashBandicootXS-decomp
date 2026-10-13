@@ -29,7 +29,7 @@ extern "C" {
  * r7, #0` clamp sequence exactly. The position helper takes the part
  * pointer last so the table symbol is loaded before `parts`. */
 
-static inline void SetPartPos(s32 x, s32 y, HudPart *part)
+static inline void SetPartPos(screen_x_t x, screen_y_t y, HudPart *part)
 {
     part->x = INT_TO_Q8(x);
     part->y = INT_TO_Q8(y);

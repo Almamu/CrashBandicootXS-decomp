@@ -34,8 +34,9 @@ extern "C" {
 }
 
 /* The vertical offset HudPart::Draw adds to every part, set by the
- * counters while they slide (src/iwram/iwram_data.cpp). */
-extern s32 gHudSlideOffset;
+ * counters while they slide (src/iwram/iwram_data.cpp): -40 to 0, from
+ * above the top row into place. */
+extern screen_dy_t gHudSlideOffset;
 
 /* Each of the 35 parts' starting animation and position
  * (src/data/hud_fonts_174be0.cpp). */

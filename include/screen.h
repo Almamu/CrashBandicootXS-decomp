@@ -28,6 +28,13 @@
 #define DISPLAY_RIGHT(w)  (DISPLAY_WIDTH - (w))
 #define DISPLAY_BOTTOM(h) (DISPLAY_HEIGHT - (h))
 
+/* Their left and top counterparts: `x` (`y`) pixels from the left (top)
+ * edge. They are the number itself; a layout anchored to the screen's
+ * corners (the HUD) spells them, so that every coordinate names its
+ * anchor and none is a bare position. */
+#define DISPLAY_LEFT(x) (x)
+#define DISPLAY_TOP(y)  (y)
+
 /* The camera's scroll limits: a room (or a BG) `w` x `h` pixels can
  * scroll to `CAMERA_MAX_X(w)`, `CAMERA_MAX_Y(h)` before its right and
  * bottom edges come into view. */

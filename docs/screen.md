@@ -14,6 +14,7 @@ consistently (#979). `core.h` includes `screen.h`.
 | `DISPLAY_CENTER_X`, `DISPLAY_CENTER_Y` | 120, 80 | half the screen: its centre |
 | `DISPLAY_WIDTH_TILES`, `DISPLAY_HEIGHT_TILES` | 30, 20 | the screen in 8x8 tiles |
 | `DISPLAY_RIGHT(w)`, `DISPLAY_BOTTOM(h)` | `240 - w`, `160 - h` | where something `w` wide (`h` high) touches the right (bottom) edge |
+| `DISPLAY_LEFT(x)`, `DISPLAY_TOP(y)` | `x`, `y` | `x` (`y`) pixels from the left (top) edge: the corner-anchored layouts (the HUD) name their anchor |
 | `CAMERA_MAX_X(w)`, `CAMERA_MAX_Y(h)` | `w - 240`, `h - 160` | the scroll limit of a room or BG `w` x `h` pixels |
 | `ACTIVE_AREA_WIDTH`, `ACTIVE_AREA_HEIGHT` | 440, 280 | the activation window: the screen plus `ACTIVE_AREA_MARGIN_X/Y` (100, 60) on each side |
 | `DISPLAY_ART_WIDTH`, `DISPLAY_ART_HEIGHT` | 240, 160 | the fixed size of the full-screen art |

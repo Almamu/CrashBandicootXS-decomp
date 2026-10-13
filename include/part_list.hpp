@@ -90,9 +90,9 @@ COMPILE_TIME_ASSERT(part_list_hpp, sizeof(PaletteCycles) == 0x48);
 class HudPart : public UiSprite
 {
 public:
-    HudPart();                 // InitHudPart
-    virtual ~HudPart();        // DestroyHudPart
-    void Draw(s32 dx, s32 dy); // DrawHudPart
+    HudPart();                                 // InitHudPart
+    virtual ~HudPart();                        // DestroyHudPart
+    void Draw(screen_dx_t dx, screen_dy_t dy); // DrawHudPart
 };
 
 COMPILE_TIME_ASSERT(part_list_hpp, sizeof(HudPart) == 0x40);
