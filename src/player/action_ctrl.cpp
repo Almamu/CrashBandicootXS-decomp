@@ -11,8 +11,8 @@ extern "C" {
  * #664, docs/cplusplus.md): the empty and forwarding state methods, the
  * mode+animation setter, the target animation override (the skid swap),
  * the constructor and destructor, and the motion queue accessors. The C
- * wrote out the virtual calls (`_call_via_r2`/`_call_via_r3` through the
- * method table); here they are `SetMode(...)` and `SetTargetAnim(...)`.
+ * wrote out the virtual calls (hand-written calls through the
+ * method table's slots); here they are `SetMode(...)` and `SetTargetAnim(...)`.
  * The swim controller's Reset and Restart, which the ROM puts right after
  * them, start swim_ctrl_stroke.cpp. */
 

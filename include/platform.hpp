@@ -13,10 +13,6 @@
 #include "sprite_obj.hpp"
 #include "ctrl.hpp"
 
-extern "C" {
-#include "gobj_1a794.h"
-}
-
 class PlatformMover;
 
 /* Platform::type and PlatformMover::kind (#843, docs/flags/platform.md):

@@ -226,9 +226,10 @@ full rules (#574). For new code:
   The call still links to `RandRange`, and the file can include the
   header. Add the alias to the "Codegen exceptions" table in
   [docs/headers.md](docs/headers.md#codegen-exceptions).
-- **What stays local:** `_call_via_r0`..`_call_via_r7` (each call site
-  declares the shape it calls through) and references from one
-  `src/data/` table to another.
+- **What stays local:** references from one `src/data/` table to
+  another. `_call_via_r0`..`_call_via_r7` are never declared: an
+  indirect call is a call through a typed function pointer, a virtual
+  call or a member function call (docs/headers.md, rule 5).
 - **Header edits rebuild their dependents.** The Makefile tracks header
   dependencies (a `.d` file per object, written by the preprocess
   step), so a plain `make` after editing a header rebuilds every object

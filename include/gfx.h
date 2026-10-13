@@ -262,8 +262,8 @@ extern struct brightness_fade gBrightnessFade;
 extern s32 gBrightnessFadeStep;
 extern s32 gBrightnessFadeTimer;
 /* The ARM sprite frame routines' hooks (iwram.h). The frame cache's
- * lookup (SpriteFrameCache::Lookup), called by SpriteFrameCache::LoadTiles
- * through `_call_via_r1`, and the RLE frame unpacker. */
+ * lookup (SpriteFrameCache::Lookup), called through the pointer by
+ * SpriteFrameCache::LoadTiles, and the RLE frame unpacker. */
 extern s32 (*gLookupSpriteFrameCacheFunc)(u8 *frame);
 extern void (*gUnpackRleSpriteFrameFunc)(u16 *dst, struct rle_frame *frame);
 

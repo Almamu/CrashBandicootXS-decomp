@@ -26,12 +26,6 @@ extern "C" {
  * Built with old_agbcc: `UpdateYetiBg2` only matches under it, and
  * `UpdateYetiPalette` matches under both. */
 
-extern void _call_via_r0(void *fn);
-/* The ROM calls gUnpackNibbleTilesFunc(src, lowBlock) through
- * `_call_via_r2`. Yeti::Update writes that call through the pointer, so
- * nothing here uses this declaration. */
-extern void _call_via_r2(void *src, s32 lowBlock, void *fn);
-
 /* One of two confirmed slots (index 3, dispatched via
  * `stateFuncs[state]`) of the type-0
  * `category_vtable` (`gActorCategoryVtables[0]`, `include/actor_anim.h`)
@@ -46,9 +40,9 @@ extern void _call_via_r2(void *src, s32 lowBlock, void *fn);
  * `GetAnimFrameBaseOffset` against the current part-table record's
  * `+4`/`+6` timing fields, latching the `+0x12` done flag and correcting
  * the accumulator on overrun), fires the current
- * `stateFuncs[state]` vtable slot via
- * `_call_via_r0`, and - only when the accumulator's `>>8` value actually
- * changed this frame - fires a `_call_via_r2` trampoline from the part
+ * `stateFuncs[state]` vtable slot (a call through the function
+ * pointer), and - only when the accumulator's `>>8` value actually
+ * changed this frame - calls gUnpackNibbleTilesFunc on the part
  * table's own `+2`-offset record (latching `gYetiBg2PageFlip`).
  *
  * Finally, while `gYetiState <= 1`, runs a 3-axis AABB overlap

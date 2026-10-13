@@ -12,7 +12,7 @@ typedef void (*irq_handler_t)(void);
 /* The VBlank callback slots: Irq::AddVBlankCallback() fills a free one,
  * Irq::VBlankHandler() calls every non-zero one each VBlank. */
 struct vblank_callbacks {
-    s32 funcs[8];
+    irq_handler_t funcs[8];
 };
 
 /* gIntrTable[INTR_INDEX_TIMER2] under its own sym_iwram.txt name: the

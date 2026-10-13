@@ -19,7 +19,7 @@ extern "C" {
  * destination strategies depending on the `hasBanks`/
  * `page` mode bytes), then arms `uploaded` so a
  * caller can poll for completion. `gDrawMirroredTilemapFunc` is a function
- * pointer (called through `_call_via_r4`).
+ * pointer, called through the pointer with four arguments.
  *
  * The `0x204` header offset is added to the row product before the
  * base pointer, the destination is a ternary, and the callback's first

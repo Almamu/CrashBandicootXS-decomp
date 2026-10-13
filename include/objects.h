@@ -11,7 +11,7 @@
  * as an asm-label alias with a `codegen:` comment.
  *
  * The objects' structs live in their type headers (box_part.h,
- * gfx_part.h, gobj_1a794.h, ...); this header only declares their tags. */
+ * gfx_part.h, ...); this header only declares their tags. */
 
 #include "core.h"
 #include "aabb.h"

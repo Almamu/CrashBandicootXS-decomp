@@ -365,8 +365,8 @@ void SpriteOamQueue::Init()
 /* ROM 0x08028F58 - resolves one animation frame's tile data into VRAM,
  * returning its OBJ tile index (`GET_TILE_NUM`-shaped, ready to OR
  * into an OAM attr2). First tries an optional override hook
- * (`gLookupSpriteFrameCacheFunc`, called through the `_call_via_r1` trampoline
- * convention - see lib/libgcc/lib1funcs.s); if that returns
+ * (a call through the function pointer `gLookupSpriteFrameCacheFunc`,
+ * SpriteFrameCache::Lookup); if that returns
  * anything other than -1, that's used directly. Otherwise inserts a
  * fresh cache node at the head of the "this frame" MRU list
  * (`current`) and tries to `ObjTileAllocator::Alloc` the frame's
@@ -382,7 +382,7 @@ s32 SpriteFrameCache::LoadTiles(u8 *frame)
     s32 byteCount;
     s32 result;
 
-    result = _call_via_r1(frame, gLookupSpriteFrameCacheFunc);
+    result = gLookupSpriteFrameCacheFunc(frame);
     if (result != -1) {
         return result;
     }

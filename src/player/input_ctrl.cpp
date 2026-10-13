@@ -39,8 +39,8 @@ extern "C" {
  * Built by old_agbcp (the Makefile's OLD_AGBCC_OBJS), like the old_agbcc
  * C it replaces; agbcp's code differs (from KillPlayer's bitfield clears
  * on: old_agbcp loads the constant before the `ldrb`).
- * The C wrote out the virtual calls (a vtable-slot macro around
- * `_call_via_r2`/`_call_via_r3`) and the pointer-to-member dispatch (16
+ * The C wrote out the virtual calls (a vtable-slot macro calling
+ * through the slot's function pointer) and the pointer-to-member dispatch (16
  * lines of slot arithmetic); here they are `SetMode(INPUT_CTRL_STATE_DEAD)` and
  * `(this->*stateFuncs[state])()`. The "mark gone" bitmap sequence
  * (MarkEntityGone's, inlined twice) is Entity::MarkGone. */
