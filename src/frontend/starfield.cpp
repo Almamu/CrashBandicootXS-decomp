@@ -1,3 +1,4 @@
+#include "display.hpp"
 #include "frontend.hpp"
 #include "key_input.hpp"
 
@@ -68,10 +69,10 @@ Starfield::Starfield()
 
     particles = new StarParticle[0x80];
 
-    u16 *dispcntShadow = &gDispcnt.raw;
+    u16 *dispcntShadow = &Display::dispcnt.raw;
     zero = 0;
     *dispcntShadow = DISPCNT_OBJ_1D_MAP;
-    SetDispcntMode(DISPCNT_MODE_0);
+    Display::SetMode(DISPCNT_MODE_0);
 
     /* Clears BG0HOFS/BG0VOFS together via one word store. */
     *(vu32 *)REG_ADDR_BG0HOFS = zero;
@@ -84,7 +85,7 @@ Starfield::Starfield()
     tileVramBase = VRAM;
     mapVramBase = BG_SCREEN_ADDR(31);
 
-    ShowBg0();
+    Display::ShowBg0();
 
     /* Clears BG palette entry 0 (the backdrop color). */
     BACKDROP_COLOR = zero;
@@ -131,7 +132,7 @@ Starfield::Starfield()
     DmaFill16From(3, &dmaFillSrc16, tileBase, STARFIELD_FRAME_SIZE);
 
     REG_BLDCNT = 0;
-    CommitDispcnt();
+    Display::CommitDispcnt();
 
     count = 0;
 

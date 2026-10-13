@@ -86,9 +86,9 @@ struct piece_info {
     } u;
 };
 
-/* `gDispcnt`, the REG_DISPCNT shadow `CommitDispcnt` commits, viewed as
- * its bitfields (field stores give the ROM's byte-wide and/or
- * sequences). */
+/* REG_DISPCNT as its bitfields (field stores give the ROM's byte-wide
+ * and/or sequences): Display::dispcnt (gDispcnt, display.hpp), the shadow
+ * that Display::CommitDispcnt commits. */
 struct dispcnt_bits {
     u16 mode:3;
     u16 cgbMode:1;
@@ -116,11 +116,6 @@ union dispcnt {
     u16 raw;
     struct dispcnt_bits bits;
 };
-
-/* The REG_DISPCNT shadow (sym_iwram.txt) that CommitDispcnt commits: its
- * bitfields (the Show/Hide helpers' byte-wide read-modify-writes) or the
- * halfword. */
-extern union dispcnt gDispcnt;
 
 /* One hardware OAM entry as bitfields, as AddOamEntry copies it into the
  * shadow buffer: attributes 0-2, then the affine parameter. The u32
@@ -186,8 +181,8 @@ struct bldy {
     u32 evy:5; // bits 5-31 are unused by the hardware
 };
 
-/* `gBlendRegs`, the blend register shadow SetupRoomBlend builds and
- * CommitBlendRegs (gfx/display.cpp) writes: BLDCNT/BLDALPHA as one word, then
+/* Display::blendRegs (gBlendRegs, display.hpp), the blend register shadow
+ * SetupRoomBlend builds and Display::CommitBlendRegs writes: BLDCNT/BLDALPHA as one word, then
  * the BLDY byte. */
 struct blend_regs {
     union blend blend; // 0x00
@@ -221,23 +216,6 @@ struct sprite_frame_cache_node {
 
 /* src/gfx/bitmap_screen.cpp */
 extern void ShowBitmapScreen(void *asset, void *palette);
-
-/* src/gfx/display.cpp */
-extern void SetDispcntMode(s32 val);
-extern void HideBg3(void);
-extern void HideBg2(void);
-extern void HideBg1(void);
-extern void HideBg0(void);
-extern void HideObj(void);
-extern void ShowBg3(void);
-extern void ShowBg2(void);
-extern void ShowBg1(void);
-extern void ShowBg0(void);
-extern void ShowObj(void);
-extern void SetObjMapping2D(void);
-extern void SetObjMapping1D(void);
-extern void CommitDispcnt(void);
-extern void CommitBlendRegs(void);
 
 /* src/gfx/fade.cpp */
 extern void StepBrightnessFade(void);
@@ -284,9 +262,6 @@ extern void DecompressCategorySpriteSheet(const void *sheet);
  * type is graphics_package.hpp's. */
 struct bg_package;
 extern const struct bg_package gMenuSkyBg;
-
-/* The blend register shadow (sym_iwram.txt). */
-extern struct blend_regs gBlendRegs;
 
 /* The master sprite bank table (src/data/sprite_banks_4a5600.cpp,
  * sprite_bank.h): its palettes seed the palette cache. */

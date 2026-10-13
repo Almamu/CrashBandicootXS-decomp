@@ -3,6 +3,7 @@
 #include "audio.hpp"
 #include "key_input.hpp"
 #include "graphics_package.hpp"
+#include "display.hpp"
 
 extern "C" {
 #include "gba/io_reg.h"
@@ -86,7 +87,7 @@ void CompanyLogos::Run()
         if ((gKeys.half.pressed & (A_BUTTON | START_BUTTON)) && fade > 0x40)
             fade = 0x40;
         WaitForVBlank();
-        CommitDispcnt();
+        Display::CommitDispcnt();
         if (fade != -1) {
             if (fade == 0x40)
                 gAudioContext->PlaySfx(SFX_UNIVERSAL_LOGO_OUT, 0x100);
@@ -121,10 +122,10 @@ void CompanyLogos::Run()
         REG_BG2PC = 0;
         bg->Update();
     } while (fade != 0);
-    gDispcnt.bits.bg2 = 0;
-    gDispcnt.bits.obj = 1;
-    gDispcnt.bits.objMap1D = 1;
-    CommitDispcnt();
+    Display::dispcnt.bits.bg2 = 0;
+    Display::dispcnt.bits.obj = 1;
+    Display::dispcnt.bits.objMap1D = 1;
+    Display::CommitDispcnt();
     *(vu32 *)REG_ADDR_BLDCNT = 0;
     fade = -1;
     timer = -1;
@@ -547,8 +548,8 @@ void CompanyLogos::LoadUniversalLogoBg()
     bg2cnt.bits.priority = 1;
     bg2cnt.bits.size = 1;
     REG_BG2CNT = bg2cnt.raw;
-    gDispcnt.bits.bg2 = 1;
-    gDispcnt.bits.mode = DISPCNT_MODE_1;
+    Display::dispcnt.bits.bg2 = 1;
+    Display::dispcnt.bits.mode = DISPCNT_MODE_1;
     delete[] mapBuf;
 }
 

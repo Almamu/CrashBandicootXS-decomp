@@ -1,3 +1,4 @@
+#include "display.hpp"
 #include "sprite_obj.hpp"
 #include "frontend.hpp"
 
@@ -66,10 +67,10 @@ LanguageSelect::LanguageSelect()
     LoadBg();
     starfield = new Starfield;
     FadeBrightness(FADE_FLAG_IN, 1, 0);
-    SetObjMapping1D();
-    ShowObj();
-    SetDispcntMode(DISPCNT_MODE_1);
-    CommitDispcnt();
+    Display::SetObjMapping1D();
+    Display::ShowObj();
+    Display::SetMode(DISPCNT_MODE_1);
+    Display::CommitDispcnt();
 }
 
 /* gLanguageSelect's lifetime, around MainLoop's LanguageSelect::Run. */

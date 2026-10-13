@@ -1,5 +1,5 @@
 /* The two AABB overlap tests (AabbOverlapsInclusiveX, AabbOverlaps).
- * CommitBlendRegs went to the end of gfx/display.cpp and IwramFree/IwramAlloc
+ * Display::CommitBlendRegs went to the end of gfx/display.cpp and IwramFree/IwramAlloc
  * to system/iwram_alloc.cpp (#767; all old_agbcc). */
 
 extern "C" {

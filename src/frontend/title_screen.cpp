@@ -1,3 +1,4 @@
+#include "display.hpp"
 #include "sprite_obj.hpp"
 #include "frontend.hpp"
 #include "audio.hpp"
@@ -59,10 +60,10 @@ TitleScreen::TitleScreen()
     LoadObjTiles();
     starfield = new Starfield;
 
-    SetObjMapping1D();
-    ShowObj();
-    SetDispcntMode(DISPCNT_MODE_1);
-    CommitDispcnt();
+    Display::SetObjMapping1D();
+    Display::ShowObj();
+    Display::SetMode(DISPCNT_MODE_1);
+    Display::CommitDispcnt();
 
     selection = 0;
     blinkCounter = 0;
@@ -355,7 +356,7 @@ void TitleScreen::DrawLogoPieces()
     if (rec->active) {
         s32 a, b;
 
-        ShowBg2();
+        Display::ShowBg2();
         a = rec->posA.q;
         b = rec->posB.q;
         if (shake != 0) {
@@ -556,7 +557,7 @@ void TitleScreen::CommitFrame()
     REG_BG2PB = 0;
     REG_BG2PC = 0;
     REG_BG2PD = scale;
-    CommitDispcnt();
+    Display::CommitDispcnt();
     gOamBuffer->Commit();
 }
 
@@ -638,8 +639,8 @@ TitleScreen::~TitleScreen()
     s32 zero;
 
     delete starfield;
-    gDispcnt.raw = 0;
-    CommitDispcnt();
+    Display::dispcnt.raw = 0;
+    Display::CommitDispcnt();
     zero = 0;
     pal = BG_PALETTE(0);
     for (i = 0xff; i >= 0; i--)

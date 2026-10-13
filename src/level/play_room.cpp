@@ -1,3 +1,4 @@
+#include "display.hpp"
 #include "player.hpp"
 #include "action_ctrl.hpp"
 #include "swim_ctrl.hpp"
@@ -250,7 +251,7 @@ s32 LevelProgress::PlayRoom()
  * (`CullPartList` on `gForegroundList`, `gTouchableList`,
  * `gCollidableList` and `gDecorationList`), a
  * `UpdateRoomFrame()` VRAM/OAM refresh, and the fade-cluster
- * `SetDispcntMode(DISPCNT_MODE_0)`/`ShowObj`/`CommitDispcnt`/`CommitBlendRegs` reset
+ * `Display::SetMode(DISPCNT_MODE_0)`/`Display::ShowObj`/`Display::CommitDispcnt`/`Display::CommitBlendRegs` reset
  * quartet, landing at the **wait loop** (`_08023E5A`/`_08023D7C`,
  * `docs/rom_map.md`'s "Traced the fade-to-black's trigger" section):
  * poll `IsRoomExitRequested` (the `gRoomExitRequested` readiness flag,
@@ -280,8 +281,8 @@ s32 LevelProgress::PlayRoom()
  * above): flushes all five hot IWRAM widget-manager globals
  * (`ClearPartList` on `030012E8`/`EC`/`F0`/`F8`/`F4`, `ResetCrateList` on
  * `0300130C`), resets the fade cluster's own bitfield accessors
- * (`HideBg0`/`HideBg1`/`HideBg2`/`HideBg3`/
- * `HideObj`/`WaitForVBlank`/`CommitDispcnt`), and returns whatever
+ * (`Display::HideBg0`/`Display::HideBg1`/`Display::HideBg2`/`Display::HideBg3`/
+ * `Display::HideObj`/`WaitForVBlank`/`Display::CommitDispcnt`), and returns whatever
  * `sl` was left holding (`1` by default, `2` from the wait-loop's
  * `RunPauseMenu`-driven early exit, or `0` once the post-fade branch
  * was reached) - the value `PlayRoom` itself stashes and returns.
@@ -399,11 +400,11 @@ s32 LevelProgress::RunRoom()
     gCollidableList->Cull();
     gDecorationList->Cull();
     UpdateRoomFrame();
-    SetDispcntMode(DISPCNT_MODE_0);
-    SetObjMapping1D();
-    ShowObj();
-    CommitDispcnt();
-    CommitBlendRegs();
+    Display::SetMode(DISPCNT_MODE_0);
+    Display::SetObjMapping1D();
+    Display::ShowObj();
+    Display::CommitDispcnt();
+    Display::CommitBlendRegs();
 
     while (!IsRoomExitRequested() && gPlayer->IsGone() == 0) {
         ResetObjBuffers();
@@ -496,13 +497,13 @@ fade:
     gCollidableList->Clear();
     gDecorationList->Clear();
     gForegroundList->Clear();
-    HideBg0();
-    HideBg1();
-    HideBg2();
-    HideBg3();
-    HideObj();
+    Display::HideBg0();
+    Display::HideBg1();
+    Display::HideBg2();
+    Display::HideBg3();
+    Display::HideObj();
     WaitForVBlank();
-    CommitDispcnt();
+    Display::CommitDispcnt();
     return ret;
 }
 
@@ -538,7 +539,7 @@ void LevelProgress::UpdateRoomFrame()
     }
 }
 
-/* Rebuilds the gBlendRegs BLDCNT/BLDALPHA shadow from the current room's
+/* Rebuilds the Display::blendRegs BLDCNT/BLDALPHA shadow from the current room's
  * blend settings (`level_room.param.blend`) and
  * sets gLevelLayers->raiseObjPriority in an underwater room (kind 1). With
  * no blend effect, the shadow gets a fixed 16/16 alpha pattern. The effect
@@ -547,7 +548,7 @@ void LevelProgress::UpdateRoomFrame()
  * ROM. */
 void LevelProgress::SetupRoomBlend()
 {
-    union blend *b = &gBlendRegs.blend;
+    union blend *b = &Display::blendRegs.blend;
 
     b->raw = 0;
     gLevelLayers->raiseObjPriority = 0;
