@@ -228,12 +228,12 @@ void ActionCtrl::StateUnusedHang()
     }
 }
 
-/* Letting go: the player drops 6 px (0x600 in Q8) into the fall
+/* Letting go: the player drops 6 px (INT_TO_Q8(6)) into the fall
  * (animation 0x1B, held on its last frame), Y entry 4.
  *
  * The drop goes through Entity::SetPos with the X passed back unchanged
  * (#662 round 5; an r2 pin and a `MATCH_USE` before). Written as
- * `part->y += 0x600`, reload's 0x600 took r2 where the ROM has r3:
+ * `part->y += INT_TO_Q8(6)`, reload's 0x600 took r2 where the ROM has r3:
  * reload spills the first call-clobbered register with no live pseudo
  * at the add, so r2 had to be live there (rounds 3-4). Through SetPos
  * the X is loaded into r2 before the add and stored back after it;
@@ -247,7 +247,7 @@ void ActionCtrl::ReleaseHang()
     Player *p;
 
     part->hanging = 0;
-    part->SetPos(part->x, part->y + 0x600);
+    part->SetPos(part->x, part->y + INT_TO_Q8(6));
     SetMode(ACTION_STATE_AIRBORNE_FALL);
     SetTargetAnim(part, 0x1B);
     p = part;

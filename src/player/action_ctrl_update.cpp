@@ -193,8 +193,8 @@ u8 ActionCtrl::TryDoubleJump()
     return 0;
 }
 
-/* The airborne states' input: near the top of the jump (falling speed
- * up to 0x27F) the double jump (TryDoubleJump); then, past each jump's
+/* The airborne states' input: near the top of the jump (falling at
+ * under 2.5 px a frame) the double jump (TryDoubleJump); then, past each jump's
  * apex, the fall (state 0x1A, the player's `flags2` bit 0 set); in the
  * air spin, the tornado fall once falling. R near the top starts a body
  * slam (the flip body slam after a flip jump) unless `slamBlocked`. The
@@ -204,7 +204,7 @@ void ActionCtrl::HandleAirInput()
     u8 near = 0;
     u32 in;
 
-    if (part->speedY <= 0x27F) {
+    if (part->speedY <= Q8(2.5) - 1) {
         near = 1;
         if (TryDoubleJump())
             return;
@@ -215,23 +215,23 @@ void ActionCtrl::HandleAirInput()
 
     if (state == ACTION_STATE_AIRBORNE_JUMP) {
         p = part;
-        if (-p->speedY > 0x1BF)
+        if (-p->speedY > Q8(1.75) - 1)
             goto done;
-        if (-p->speedY > 0x17F)
+        if (-p->speedY > Q8(1.5) - 1)
             goto done;
         goto hit;
     } else if (state == ACTION_STATE_AIRBORNE_FLIP_JUMP) {
         p = part;
-        if (-p->speedY > 0x1BF)
+        if (-p->speedY > Q8(1.75) - 1)
             goto done;
-        if (-p->speedY > 0x7F)
+        if (-p->speedY > Q8(0.5) - 1)
             goto done;
         goto hit;
     } else if (state == ACTION_STATE_AIRBORNE_HIGH_JUMP) {
         p = part;
-        if (-p->speedY > 0xFF)
+        if (-p->speedY > INT_TO_Q8(1) - 1)
             goto done;
-        if (-p->speedY > 0x1F)
+        if (-p->speedY > Q8(0.125) - 1)
             goto done;
     hit:
         ActOrFlags0D(p, ENTITY_FLAG2_FLOOR_PROBE);
@@ -242,7 +242,7 @@ void ActionCtrl::HandleAirInput()
 
             p = part;
             speed = p->speedY;
-            if (-speed <= 0x7F)
+            if (-speed <= Q8(0.5) - 1)
                 ActOrFlags0D(p, ENTITY_FLAG2_FLOOR_PROBE);
             if (speed > 0)
                 StartTornadoFall();

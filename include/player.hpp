@@ -57,6 +57,14 @@ extern s32 gLastPlayerVelY;
 extern s32 gAkuAkuInvincibleFrame;
 extern s32 gAkuAkuFollowFrame;
 
+/* The player's vertical motion in the air (gCtrlMotionRecords' jump and
+ * fall records, Q8, docs/fixed_point.md): from the jump's (negative,
+ * upward) start speed, speedY steps by PLAYER_GRAVITY a frame (51/256 px
+ * a frame per frame) until the player falls at PLAYER_MAX_FALL_SPEED
+ * (6 px a frame). */
+#define PLAYER_GRAVITY        Q8_FRAC(0, 51)
+#define PLAYER_MAX_FALL_SPEED INT_TO_Q8(6)
+
 /* The player controller's and the input controller's motion records
  * (src/data/motion_records_16b304.cpp; `struct speed_ramp`, objects.h). */
 extern const struct speed_ramp gSwimCtrlMotionRecords[31];

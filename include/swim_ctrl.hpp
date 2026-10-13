@@ -37,6 +37,14 @@
 #define SWIM_MODE_TURN_LEFT 6       // was facing right
 #define SWIM_MODE_SPIN_TURN_LEFT 7
 
+/* The speeds StartStroke and StartSpin give the diver (Q8 px a frame,
+ * docs/fixed_point.md): a stroke is 2.75 px a frame, split between X
+ * and Y by the direction (`tilt`): all of it on an axis, 3/4 on each
+ * axis of a diagonal, 1/2 and 1/4 between them. A spin is 3.75 px a
+ * frame, 3/4 of it on each axis of a diagonal. */
+#define SWIM_STROKE_SPEED Q8(2.75)
+#define SWIM_SPIN_SPEED   Q8(3.75)
+
 /* The swim controller (gSwimCtrlVtable; 0x30 bytes): the diving Crash's controller in the room-kind-1
  * (underwater) rooms, where play_room.cpp creates it (`new SwimCtrl`,
  * InitSwimCtrl(OperatorNew(0x30)) in its C). See swim_ctrl.cpp for the
