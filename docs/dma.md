@@ -48,8 +48,12 @@ only in the stack slot holding the value:
 - Anything evaluated between two stores goes inside the argument that
   is stored next. `DmaCopy32(3, (const u8 *)asset + 4, dest, (*(const u32
   *)asset >> 8) - 4)` loads the header between `DAD` and `CNT`, as the
-  ROM does. `CompanyLogos::DrawVvLogoPieces` passes `buf = scratch` as
-  the fill's destination.
+  ROM does.
+- A local set from the same expression after the transfer reuses the
+  macro's load. `CompanyLogos::DrawVvLogoPieces` fills `scratch`, then
+  sets `buf = scratch` for its loop, and the ROM's one `scratch` load
+  sits between `SAD` and `DAD` in `buf`'s register. Setting `buf`
+  first moves the load ahead of the `SAD` store.
 - `DmaSet` and the fills expand to a `{ }` block, so an `if`/`else`
   around them needs braces (`FlushVramDmaQueue`).
 

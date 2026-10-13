@@ -355,7 +355,6 @@ static inline void SetAffineZ(OamBuffer *buf, s32 m, u16 pa, u16 pd)
 void CompanyLogos::DrawVvLogoPieces()
 {
     vu16 zero;
-    vu32 zero32;
     struct oam_attrs oamA;
     struct oam_attrs oamB;
     struct oam_attrs oamC;
@@ -441,19 +440,18 @@ void CompanyLogos::DrawVvLogoPieces()
         }
         slot = &slots[0];
         tile = (tilesC - (u32)OBJ_VRAM0) >> 5;
-        /* `scratch` cleared with a 32-bit DMA3 fill from `zero32`, as
-         * CLEAR_OAM does (include/frontend.hpp), and in the loop each row's
-         * two halves copied with DmaCopy16. `buf` is assigned inside the
-         * fill's destination argument: the ROM loads `scratch` between the
-         * SAD and DAD stores, straight into `buf`'s register. Written with
-         * one `dma` pointer for the whole block (the loop's copies through
-         * it), the base and `&frames` swapped r2 and r3, and the loop's
-         * insn count was three short of the ROM's hoisting (#481); this
-         * needed an r2 pin and three empty asm()s. DmaCopy16's own
-         * pointer, set in the loop, gives both. */
-        zero32 = 0;
-        DmaFill32From(3, &zero32, buf = scratch, 0x1000);
+        /* `scratch` cleared with a 32-bit DMA3 fill, and in the loop each
+         * row's two halves copied with DmaCopy16. The fill's `scratch`
+         * load also serves `buf` (the ROM loads it once, between the SAD
+         * and DAD stores, into `buf`'s register). Written with one `dma`
+         * pointer for the whole block (the loop's copies through it), the
+         * base and `&frames` swapped r2 and r3, and the loop's insn count
+         * was three short of the ROM's hoisting (#481); this needed an r2
+         * pin and three empty asm()s. DmaCopy16's own pointer, set in the
+         * loop, gives both. */
+        DmaFill32(3, 0, scratch, 0x1000);
         src = frames + frame * 0xa00;
+        buf = scratch;
         /* `base + row * 0x100 + 0x60` is a giv of the row counter, which
          * check_dbra_loop reverses, so loop.c must reduce it into its own
          * pointer (the ROM's r3). `buf + 0x800` stays unreduced: `buf`
