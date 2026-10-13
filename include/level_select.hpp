@@ -196,6 +196,13 @@ struct ZoomBgCntBits16 {
  * sit on top of it, each showing a random frame for a random time and
  * blinking along with the wobble. */
 
+/* The level-select zooms (ZoomBg's picture, LevelSelectCursor) are Q8
+ * scales, INT_TO_Q8(1) = 1:1 (docs/fixed_point.md). Both start and end
+ * at 1/32 of full size; ZoomBg zooms by 1/32 a frame, the cursor by
+ * the step its glide sets (LevelSelectCursor::Move). */
+#define LEVEL_SELECT_ZOOM_MIN Q8_FRAC(0, 8)  // 1/32: the smallest zoom, not drawn
+#define ZOOM_BG_ZOOM_STEP     Q8_FRAC(0, 8)  // ZoomBg's zoom a frame
+
 /* ZoomBg's `state` (#843, docs/flags/level_select.md): what Update does. */
 #define ZOOM_BG_STATE_ZOOM_IN 0  // zooms in to 1:1, then SHOWN
 #define ZOOM_BG_STATE_ZOOM_OUT 1 // zooms out (ClearPicture), then WAIT
@@ -209,7 +216,7 @@ public:
     u8 unk_00[0x0C];
     s32 state;       // 0x0C - see Update
     s32 image;       // 0x10 - gLevelSelectPictures index, 11 = none
-    s32 scale;       // 0x14 - zoom, 0x100 = 1:1, 8 = smallest
+    s32 scale;       // 0x14 - zoom (Q8): INT_TO_Q8(1) = 1:1, LEVEL_SELECT_ZOOM_MIN = smallest
     s32 charBlock;   // 0x18
     s32 screenBlock; // 0x1C
     screen_x_t x;    // 0x20 - screen centre
@@ -288,8 +295,8 @@ public:
     s32 timer;                    // 0x2C - frames to the next idle cycle
     s32 state;                    // 0x30 - see Update
     struct oam_attrs oam;         // 0x34
-    s32 speed;                    // 0x3C - zoom step (Move)
-    s32 scale;                    // 0x40 - 0x100 = 1:1
+    s32 speed;                    // 0x3C - zoom step (Move), Q8
+    s32 scale;                    // 0x40 - zoom (Q8): INT_TO_Q8(1) = 1:1
     struct obj_affine_src affine; // 0x44 - ObjAffineSet's source
     s16 matrix[4];                // 0x4C - pa, pb, pc, pd
 

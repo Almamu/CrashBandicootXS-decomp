@@ -233,7 +233,7 @@ void TitleScreen::DrawLogoPieces()
     LogoPiece *slot = &pieces[8];
 
     if (slot->active) {
-        u16 scale = 0x1000000 / slot->velA;
+        u16 scale = Q8_DIV(INT_TO_Q16(1), slot->velA);
         SetAffine(gOamBuffer, matrix, scale, 0, 0, scale);
         CLEAR_OAM(&oamA);
         oamA.affineMode = OAM_AFFINE_MODE_DOUBLE;
@@ -281,12 +281,12 @@ void TitleScreen::DrawLogoPieces()
                 if (--*cnt == 0)
                     gAudioContext->PlaySfx(SFX_UNKNOWN_4A, 0x100);
             }
-            d = 0x1000000 / slot->velA;
+            d = Q8_DIV(INT_TO_Q16(1), slot->velA);
             scale = d;
             SetAffine(gOamBuffer, matrix, scale, 0, 0, scale);
             CLEAR_OAM(&oamB);
             off = 0;
-            if (d != 0x100) {
+            if (d != INT_TO_Q8(1)) {
                 off = -32;
                 oamB.affineMode = OAM_AFFINE_MODE_DOUBLE;
             } else {
@@ -371,7 +371,7 @@ void TitleScreen::DrawLogoPieces()
                 b = t + (u16)r;
             }
         }
-        bgScale = 0x1000000 / rec->velA;
+        bgScale = Q8_DIV(INT_TO_Q16(1), rec->velA);
         bgX = bgScale * Q16_TO_INT(-a) + INT_TO_Q8(TITLE_LOGO_BG_CENTER);
         bgY = Q16_TO_INT(-b) * bgScale + INT_TO_Q8(TITLE_LOGO_BG_CENTER);
     }

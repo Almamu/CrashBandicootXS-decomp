@@ -6,6 +6,7 @@ extern "C" {
 #include "memory.h"
 #include "level.h"
 #include "globals.h"
+#include "math_util.h"
 }
 
 /* The pause menu's five info pages (PauseMenu, menus.hpp), built by
@@ -66,7 +67,7 @@ void PauseMenu::InitGemsPage()
         icon->StartAnim(gPauseGemIconFrames[i]);
         SetIconPos(gemIcons[i], &gPauseGemIconPos[i]);
         gemIcons[i]->palette = gemIcons[i]->GetAnimPaletteSlot();
-        gemIcons[i]->affine = 0x80;
+        gemIcons[i]->affine = Q8(0.5);
     }
 
     /* `a` is needed: inlined, the code is 2 instructions shorter */
@@ -92,7 +93,7 @@ void PauseMenu::InitRelicsPage()
         icon->StartAnim(gPauseRelicIconFrames[i]);
         SetIconPos(relicIcons[i], &gPauseRelicIconPos[i]);
         relicIcons[i]->palette = relicIcons[i]->GetAnimPaletteSlot();
-        relicIcons[i]->affine = 0x80;
+        relicIcons[i]->affine = Q8(0.5);
     }
 
     FormatDecimal(progress->CountSapphireRelics(), sapphireCount);
