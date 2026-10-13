@@ -124,7 +124,8 @@ $(C_BUILDDIR)/data/level_table_16c814.o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)
 # GENERATED_HEADERS, and makes every C object wait for the whole list.
 GENERATED_INCLUDE_DIR := build/include
 GENERATED_HEADERS := $(GENERATED_INCLUDE_DIR)/constants/entities.h $(GENERATED_INCLUDE_DIR)/constants/crates.h \
-	$(GENERATED_INCLUDE_DIR)/constants/levels.h $(GENERATED_INCLUDE_DIR)/constants/themes.h
+	$(GENERATED_INCLUDE_DIR)/constants/levels.h $(GENERATED_INCLUDE_DIR)/constants/themes.h \
+	$(GENERATED_INCLUDE_DIR)/constants/save_version.h
 CPPFLAGS += -iquote $(GENERATED_INCLUDE_DIR)
 
 $(GENERATED_INCLUDE_DIR)/constants/entities.h: data/levels/entity_types.json tools/levels.py
@@ -152,3 +153,13 @@ $(GENERATED_INCLUDE_DIR)/constants/themes.h.stamp: data/levels/levels.json tools
 	@touch $@
 $(GENERATED_INCLUDE_DIR)/constants/themes.h: $(GENERATED_INCLUDE_DIR)/constants/themes.h.stamp
 	@test -f $@ || python3 tools/levels.py constants themes $@
+
+# The save data's version and checksum seed, from a CRC-32 of the levels and
+# the rooms' room.json (docs/levels.md, "Save compatibility"). Written only
+# if it changed, behind a stamp: an edit that keeps the CRC rebuilds nothing.
+$(GENERATED_INCLUDE_DIR)/constants/save_version.h.stamp: data/levels/levels.json $(LEVEL_ROOM_JSONS) tools/levels.py
+	@mkdir -p $(dir $@)
+	python3 tools/levels.py constants save $(GENERATED_INCLUDE_DIR)/constants/save_version.h
+	@touch $@
+$(GENERATED_INCLUDE_DIR)/constants/save_version.h: $(GENERATED_INCLUDE_DIR)/constants/save_version.h.stamp
+	@test -f $@ || python3 tools/levels.py constants save $@

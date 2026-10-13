@@ -139,8 +139,10 @@ fail_restore:
  * resume after, matching `src/audio/audio.cpp`'s established
  * `AudioContext` helpers), then validates the loaded record's two
  * marker bytes and checksum. Returns 4 (EEPROM read failed after
- * retries), 2 (bad `magic` marker), 1 (bad `versionNibble`
- * marker), 3 (checksum mismatch) or 0 (fully valid). */
+ * retries), 2 (bad `magic` marker), 1 (`versionNibble` isn't
+ * SAVE_VERSION: a save of another game or of other level data), 3
+ * (checksum mismatch) or 0 (fully valid). SaveMenu::LoadData resets the
+ * record on any failure. */
 s32 SaveData::Load()
 {
     AudioContext *audio;
@@ -174,7 +176,7 @@ s32 SaveData::Load()
     if (magic != 0x43) {
         return 2;
     }
-    if (versionNibble != 0x12) {
+    if (versionNibble != SAVE_VERSION) {
         return 1;
     }
     if (CheckChecksum() == 0) {
@@ -221,7 +223,8 @@ u8 SaveData::CheckChecksum()
 }
 
 /* Recomputes and stores this record's additive word-sum checksum over
- * its first 0x1fc bytes (127 words) into `checksum`. Every function
+ * its first 0x1fc bytes (127 words), from SAVE_CHECKSUM_SEED (0 with the
+ * ROM's levels, constants/save_version.h), into `checksum`. Every function
  * that mutates `flags`/`slotEmpty` calls this afterward to keep the
  * checksum in sync - see src/save/save_data.cpp's header
  * comment, which already anticipated this function (it was matched
@@ -229,7 +232,7 @@ u8 SaveData::CheckChecksum()
 void SaveData::UpdateChecksum()
 {
     u32 *p = (u32 *)this;
-    u32 sum = 0;
+    u32 sum = SAVE_CHECKSUM_SEED;
     s32 i;
 
     for (i = 0x7e; i >= 0; i--) {
