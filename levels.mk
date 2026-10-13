@@ -99,6 +99,18 @@ $(C_BUILDDIR)/data/$(lastword $(LEVEL_REGIONS)).o: \
 $(C_BUILDDIR)/data/level_assets_64f830.o: $(LEVELS_BUILDDIR)/level_assets_64f830.inc $(call level_asset_incs,$(LEVEL_ROOMS))
 $(C_BUILDDIR)/data/level_assets_64f830.o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)
 
+# The room classes (docs/levels.md, "Room classes"): rooms.hpp declares a
+# class per room of levels.json, whose BG palette, chunk grids and level
+# asset the definitions above name as static members. Written only if it
+# changed, behind a stamp, like the constants headers below.
+GENERATED_HEADERS += $(GENERATED_INCLUDE_DIR)/rooms.hpp
+$(GENERATED_INCLUDE_DIR)/rooms.hpp.stamp: data/levels/levels.json $(LEVEL_ROOM_JSONS) tools/levels.py
+	@mkdir -p $(dir $@)
+	python3 tools/levels.py classes $(GENERATED_INCLUDE_DIR)/rooms.hpp
+	@touch $@
+$(GENERATED_INCLUDE_DIR)/rooms.hpp: $(GENERATED_INCLUDE_DIR)/rooms.hpp.stamp
+	@test -f $@ || python3 tools/levels.py classes $@
+
 # The level table (docs/levels.md, "The level table"), which
 # src/data/level_table_16c814.cpp #includes: gLevelTable and
 # gLevelRoomLists (`levels.py table levels`), and the room records and the

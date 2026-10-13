@@ -371,6 +371,44 @@ room's generated parameter struct).
   `build/include` is on the include path and every C object waits for
   them, so code includes them like the hand-written ones. To rename a
   type or a kind, edit the JSON, not the header.
+- `tools/levels.py classes build/include/rooms.hpp`: the room classes
+  (see "Room classes"), written only if it changed.
+
+### Room classes
+
+Each room is a class of the generated `rooms.hpp` (#915), like a graphic
+of graphics/manifest.json (graphics.md, "Graphics classes"). Its graphics
+are static const data members: the BG palette (`palette`), its layers'
+chunk grids (`bg0Grid`, `bg1Grid`, `bg2Grid`, `bg3Grid`,
+`collisionGrid`, those of the layers it has) and its level asset
+(`asset`):
+
+```cpp
+class Room37
+{
+public:
+    static const u16 palette[256];    // gRoom37Palette - the BG palette
+    static const u16 bg1Grid[];       // gRoom37Bg1Grid - bg1's chunk grid
+    ...
+    static const u8 asset[];          // gRoom37Asset - the layers' chunk streams, LZ77
+};
+```
+
+The class is named after the room's `level_desc` symbol, as its
+parameter struct is (`gRoom37Desc`: `Room37`, `struct
+level_params_room37`). The generated definitions name the members
+(`const u16 Room37::palette[256] = ...`, the layer descriptors'
+`Room37::bg1Grid`, the descriptor's `Room37::asset`, the room record's
+`Room37::palette`), and each keeps its room.json symbol as its C name:
+`tools/levels.py symbols` writes cxx_symbols.txt's room classes block
+(`_6Room37.palette gRoom37Palette`), and `tools/gfx_manifest.py check`
+(or `levels.py symbols --check`) fails when it is out of date. A new
+room gets its class with the rest of its data; run `levels.py symbols`
+to give its members their room.json names.
+
+The other room objects (the descriptor, the layer descriptors, the
+entities and their records) stay globals, and so do the BG tile sets,
+which the rooms of a theme share.
 
 A layer edit rebuilds only its room's map, asset and the room data.
 
@@ -660,12 +698,15 @@ The ROM's rooms are those its `"regions"` list; a room in no region is a
    `gRoom41` and `gLevelRoom23` to `gLevelRoom41`:
    `sed -i 's/gRoom23/gRoom41/g; s/gLevelRoom23/gLevelRoom41/g' data/levels/jungle_jam/extra/room.json`.
    Set the record's `"kind"` (`ON_FOOT`, `UNDERWATER` or `HOVER`, which
-   picks the player's controller) and `"blend"`.
+   picks the player's controller) and `"blend"`. The room's class follows
+   its descriptor's symbol (`gRoom41Desc`: `Room41`, see "Room classes").
 3. **List it** at the end of `levels.json`'s `"rooms"`.
 4. **Play it.** Add it to a level in `"levels"`: to `"rooms"`, in play
    order (`["jungle_jam/extra", "jungle_jam/main"]` plays it first), or
    as the level's `"bonus"` or `"gem_path"` room.
-5. **Run `make`.**
+5. **Run `make`.** `tools/levels.py symbols` gives its class's members
+   their room.json names in cxx_symbols.txt (`gfx_manifest.py check`
+   asks for it); the build works without, under their C++ names.
 
 The build generates the new room with the ROM's, in place: its data
 after the rooms of the last region (`level_rooms_2b91d0.cpp`), its asset

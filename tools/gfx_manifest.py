@@ -11,7 +11,8 @@ put a class's members in ROM order.
     tools/gfx_manifest.py check
         Every file under graphics/ belongs to one manifest entry, every
         entry's files exist, every part in an object's range has a class
-        and cxx_symbols.txt's graphics classes block is up to date.
+        and cxx_symbols.txt's graphics and room classes blocks are up to
+        date.
 
     tools/gfx_manifest.py extract [baserom.gba] [--check]
         Writes every source under graphics/ and data/levels/ from the ROM
@@ -74,12 +75,14 @@ which tools/levels.py extract writes (docs/levels.md, "Tile sets").
 An entry with a `class` is a graphic whose parts are the static const data
 members of that class (`TitleScreenBg::palette`), each keeping its C name
 (the part's `symbol`) through cxx_symbols.txt. The members are named by
-their role: the entry's own symbol is `tiles` (bg_package, tiles) or
-`bitmap`, its `palette` is `palette` and its `map` is `map`; a palette
-OAM picks at run time ({"obj_palette": n}) isn't one. The manifest's
-`objects` ({name, rom, end}) are the src/data objects whose graphics are
-all class members: every part in an object's ROM range is defined, in ROM
-order, in the .inc `defs` writes for it.
+their role: the entry's own symbol is `tiles` (bg_package, tiles),
+`bitmap` or `frames` (rle_frames), its `palette` is `palette` and its
+`map` is `map`. A palette OAM picks at run time ({"obj_palette": n})
+isn't one, nor an rle_frames' palette (the category's, defined with
+other data). The manifest's `objects` ({name, rom, end}) are the
+src/data objects whose graphics are all class members: every part in an
+object's ROM range is defined, in ROM order, in the .inc `defs` writes
+for it. The rooms are classes too, of tools/levels.py (rooms.hpp).
 """
 import argparse
 import json
@@ -487,7 +490,7 @@ def class_parts(e):
     cls, kind, stem = e["class"], e["kind"], picture(e)
     pal = e.get("palette", {})
     parts = []
-    if "symbol" in pal:
+    if "symbol" in pal and kind != "rle_frames":
         if kind == "bitmap":
             parts.append(Part(cls, "palette", pal, "u16", stem + ".pal.inc", "%d colours" % pal["colors"],
                               bound=str(pal["colors"])))
@@ -504,6 +507,9 @@ def class_parts(e):
         # no aligned(4): it is right after its word-aligned 512-byte palette
         parts.append(Part(cls, "bitmap", e, "u8", stem + ".img.bin.lz.inc", "Mode 4 bitmap, 240x160 8bpp, LZ77",
                           aligned=False))
+    elif kind == "rle_frames":
+        # its palette, the category's (or Yeti::palette), is defined with other data
+        parts.append(Part(cls, "frames", e, "u8", stem + ".inc", "zero-run-compressed OBJ frames", aligned=False))
     else:
         sys.exit("gfx_manifest: %s: a %s can't have a class" % (e["symbol"], kind))
     return parts
@@ -536,6 +542,8 @@ def class_comment(e):
         kind = "A%s %dbpp tile sheet%s" % ("n" if e["bpp"] == 8 else "", e["bpp"], " of whole OBJs" if "obj_sheet" in e else "")
         if "obj_palette" in pal:
             kind += "; OAM picks its palette at run time"
+    elif e["kind"] == "rle_frames":
+        kind = "A zero-run-compressed OBJ frame set (tools/rle_sprites.py), the frames back to back"
     else:
         kind = "A Mode 4 bitmap right after its palette (a slide points at the palette)"
     text = "graphics/%s.png: %s. %s." % (picture(e), e["about"], kind) if "about" in e else \
@@ -625,6 +633,10 @@ def check_classes():
                 errors.append("%s::%s (%s): in no object's range" % (p.cls, p.member, p.symbol))
     if split_symbols()[1] != symbols_block():
         errors.append("%s: the graphics classes block is out of date (tools/gfx_manifest.py symbols)" % SYMBOLS)
+    # the rooms' classes (tools/levels.py), whose block sits next to it
+    import levels
+    if levels.room_symbols_error():
+        errors.append(levels.room_symbols_error())
     return errors
 
 

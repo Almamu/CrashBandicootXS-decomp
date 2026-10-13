@@ -1,19 +1,15 @@
-extern "C" {
-#include "core.h"
-}
+#include "graphics.hpp"
 
 /*
  * ROM 0x0815A050-0x08167AD4: a zero-run-compressed OBJ frame set (the old
  * "rotation strip C"), same format as rle_sprites_0c2758.cpp. Linked in ROM
  * order between data/data.s sections by ldscript.txt - see docs/data.md
  * ("Compressed sprite frames").
+ *
+ * The set is JetpackPlayerFrameSet::frames of graphics.hpp (categories
+ * 3-6's animation record 0, table_B gJetpackPlayerFrames: 80 frames of 8x8
+ * tiles, graphics/vehicles/jetpack/player.png), defined by
+ * tools/gfx_manifest.py from graphics/manifest.json (docs/graphics.md,
+ * "Graphics classes").
  */
-
-#include "vehicles/jetpack/player.h"
-
-/* Categories 3-6's animation record 0 (table_B gJetpackPlayerFrames):
- * 80 frames of 8x8 tiles (64x64). Built from
- * graphics/vehicles/jetpack/player.png. */
-extern const u8 gJetpackPlayerRleFrames[RLE_SPRITES_JETPACK_PLAYER_SIZE] = {
-#include "vehicles/jetpack/player.inc"
-};
+#include "rle_sprites_15a050.inc"
