@@ -93,6 +93,12 @@ jobs:
       if: env.HAS_ROM == 'true'
       run: make compare
 
+    # The ROM shiftability check (#967, docs/shifting.md): links the ROM
+    # again with padding in front of several objects and fails on anything
+    # that doesn't move with what it points at. It needs no baserom.gba.
+    - name: Check that the ROM can shift
+      run: make shiftcheck
+
     # Progress report for decomp.dev (see docs/decomp_dev.md). Code needs no
     # baserom.gba, since expected/code_3.s (checked into the repo) is the
     # ground truth it diffs against. The data units take their target bytes

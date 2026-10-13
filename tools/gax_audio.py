@@ -17,7 +17,7 @@ sources:
                               edits to change a sound.
 
 It also builds the GAX2 sound-effect set that sits right before the music
-block (`--sfx`, 0x084C0006-0x0855BCB4, see docs/audio.md) from
+block (`--sfx`, see docs/audio.md) from
 
   sound/gax_sfx_manifest.json - its 88 instruments (the same record types as
                               the music's), the handler type's song fields
@@ -27,6 +27,13 @@ block (`--sfx`, 0x084C0006-0x0855BCB4, see docs/audio.md) from
 The music block starts with the 36-byte GaxSongHeader.sfxTypes array
 (StartSong passes gGaxMusicData there): nine pointers to the
 sound-effect set's one handler type, generated from that set's layout.
+
+Each block is written twice: OUTPUT.bin, its bytes with every pointer
+left 0, and OUTPUT.s, which data/data.s includes: the .bin's bytes
+(`.incbin`) with each pointer as a relocation (`.4byte gGaxMusicData +
+0x1234`, `.4byte GaxInfoInit`), so the blocks can sit anywhere in the
+ROM and change size (#967, docs/shifting.md). Each block must start
+word-aligned; data/data.s aligns them.
 
 The block ends with a 20th, silent song: the engine's default handler
 layout (one channel, one empty pattern, no instruments; manifest
@@ -57,26 +64,80 @@ import wave
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SOUND_DIR = os.path.join(ROOT, 'sound')
 
-# GAX2 song data occupies this fixed address range in the ROM; because nothing
-# before it changes size, the block always lands at the same address, so we
-# can bake absolute pointers for it directly instead of doing a relocatable
-# link.
-BASE_ADDR = 0x0855BCB4
+# The labels data/data.s gives the two blocks: every pointer into a block
+# is a relocation against its label.
+MUSIC_SYMBOL = 'gGaxMusicData'
+SFX_SYMBOL = 'gGaxSfxData'
+
+
+class Ptr:
+    """An address the linker fills in: `symbol + off`. The blocks' own
+    addresses are Ptrs into them; arithmetic and ordering work within one
+    block."""
+
+    def __init__(self, symbol, off=0):
+        self.symbol = symbol
+        self.off = off
+
+    def _same(self, other):
+        if not isinstance(other, Ptr) or other.symbol != self.symbol:
+            raise TypeError(f"{self!r} and {other!r} are not in the same block")
+        return other.off
+
+    def __add__(self, n):
+        return Ptr(self.symbol, self.off + n)
+
+    def __sub__(self, other):
+        if isinstance(other, Ptr):
+            return self.off - self._same(other)
+        return Ptr(self.symbol, self.off - other)
+
+    def __lt__(self, other):
+        return self.off < self._same(other)
+
+    def __eq__(self, other):
+        return isinstance(other, Ptr) and (self.symbol, self.off) == (other.symbol, other.off)
+
+    def __hash__(self):
+        return hash((self.symbol, self.off))
+
+    def __repr__(self):
+        return f"{self.symbol} + {self.off:#x}" if self.off else self.symbol
+
+
+class Chunk:
+    """Bytes with relocations: a packed structure whose pointer fields are
+    Ptrs. A pointer's bytes are 0; `relocs` gives (offset, Ptr) for each."""
+
+    def __init__(self, data=b''):
+        self.buf = bytearray(data)
+        self.relocs = []
+
+    def u32(self, v):
+        if isinstance(v, Ptr):
+            self.relocs.append((len(self.buf), v))
+            v = 0
+        self.buf += struct.pack('<I', v)
+        return self
+
+    def raw(self, data):
+        self.buf += data
+        return self
+
+    def key(self):
+        return bytes(self.buf), tuple(self.relocs)
+
 
 # The 3 function pointers (Init/Unknown/Play) in a GAX2_SoundHandler are the
 # engine's own dispatch code, not per-song data - fixed per handler type,
 # identical across every song.
 HANDLER_FUNCS = {
-    'info': (0x080393FD, 0x08039439, 0x0803943D),
-    'mixer': (0x0803A22D, 0x0803A275, 0x0803A325),
-    'channel': (0x08039519, 0x080395A1, 0x080395A5),
-    # the sound-effect voices (GaxFxChannelInit/GaxFxChannelUnknown/GaxFxChannelPlay)
-    'sfx': (0x0803A105, 0x0803A229, 0x0803A159),
+    'info': (Ptr('GaxInfoInit'), Ptr('GaxInfoUnknown'), Ptr('GaxInfoPlay')),
+    'mixer': (Ptr('GaxMixerInit'), Ptr('GaxMixerUnknown'), Ptr('GaxMixerPlay')),
+    'channel': (Ptr('GaxChannelInit'), Ptr('GaxChannelUnknown'), Ptr('GaxChannelPlay')),
+    # the sound-effect voices
+    'sfx': (Ptr('GaxFxChannelInit'), Ptr('GaxFxChannelUnknown'), Ptr('GaxFxChannelPlay')),
 }
-
-# The sound-effect data set sits right before the music block and must end
-# exactly at BASE_ADDR (see build_sfx()).
-SFX_BASE_ADDR = 0x084C0006
 
 
 # ---------------------------------------------------------------------------
@@ -98,8 +159,11 @@ class SoundHandler:
         self.data_ptr = data_ptr
 
     def pack(self):
-        return struct.pack('<7I', self.init_fn, self.unknown_fn, self.play_fn,
-                            self.num_children, self.children_ptr, self.type_flags, self.data_ptr)
+        c = Chunk()
+        for v in (self.init_fn, self.unknown_fn, self.play_fn,
+                  self.num_children, self.children_ptr, self.type_flags, self.data_ptr):
+            c.u32(v)
+        return c
 
 
 class SongInfo:
@@ -118,11 +182,11 @@ class SongInfo:
         self.sample_set_ptr = 0
 
     def pack(self):
-        return struct.pack('<6H3IH2B',
-                            self.num_channels, self.num_rows_per_pattern, self.num_patterns_per_channel,
-                            self.loop_point, self.volume, self.ushort_0a,
-                            self.sequence_data_ptr, self.instrument_set_ptr, self.sample_set_ptr,
-                            self.sample_rate, self.num_fx_channels, self.half_rate_fx)
+        c = Chunk(struct.pack('<6H', self.num_channels, self.num_rows_per_pattern,
+                              self.num_patterns_per_channel, self.loop_point, self.volume,
+                              self.ushort_0a))
+        c.u32(self.sequence_data_ptr).u32(self.instrument_set_ptr).u32(self.sample_set_ptr)
+        return c.raw(struct.pack('<H2B', self.sample_rate, self.num_fx_channels, self.half_rate_fx))
 
 
 class PatternRow:
@@ -336,18 +400,17 @@ class Instrument:
         self.rows_ptr = 0
 
     def pack_header(self):
-        out = bytearray()
-        out.append(self.byte_00)
-        out += bytes(self.sample_indices)
-        out += bytes([self.byte_05, self.byte_06, self.byte_07,
-                      self.vibrato_delay, self.vibrato_depth, self.vibrato_speed, self.byte_0b])
+        out = Chunk()
+        out.raw(bytes([self.byte_00]))
+        out.raw(bytes(self.sample_indices))
+        out.raw(bytes([self.byte_05, self.byte_06, self.byte_07,
+                       self.vibrato_delay, self.vibrato_depth, self.vibrato_speed, self.byte_0b]))
         for s in self.samples:
-            out += s.pack()
-        out += struct.pack('<II', self.envelope_ptr, self.gax2_unknown_ptr)
-        out += bytes([self.row_speed, len(self.rows)])
-        out += struct.pack('<H', self.ushort_12)
-        out += struct.pack('<I', self.rows_ptr)
-        return bytes(out)
+            out.raw(s.pack())
+        out.u32(self.envelope_ptr).u32(self.gax2_unknown_ptr)
+        out.raw(bytes([self.row_speed, len(self.rows)]))
+        out.raw(struct.pack('<H', self.ushort_12))
+        return out.u32(self.rows_ptr)
 
 
 # ---------------------------------------------------------------------------
@@ -548,29 +611,68 @@ def build_pattern_from_xm(xm_rows, used_indices, instruments_by_index, transpose
 # ---------------------------------------------------------------------------
 
 class Allocator:
-    def __init__(self, base_addr, prefix=b''):
-        self.base_addr = base_addr
-        self.buf = bytearray(prefix)
+    """One block, laid out from its label `symbol`: its bytes and the
+    relocations of its pointers, {offset: Ptr}."""
+
+    def __init__(self, symbol, prefix=None):
+        self.symbol = symbol
+        self.buf = bytearray()
+        self.relocs = {}
         self._dedup = {}
+        if prefix is not None:
+            self.alloc(prefix)
 
     def addr_here(self):
-        return self.base_addr + len(self.buf)
+        return Ptr(self.symbol, len(self.buf))
+
+    def u32(self, v):
+        """Appends one word, a pointer or a number."""
+        self.alloc(Chunk().u32(v))
+
+    def align(self, n):
+        """Zero padding up to an n-byte boundary (the block starts aligned)."""
+        self.alloc(bytes(-len(self.buf) % n))
 
     def alloc(self, data, dedup=None):
         """dedup: None for no sharing, True for the allocator-wide (cross-song)
         dedup table, or a caller-supplied dict to scope sharing narrowly
         (e.g. per-song, matching what the original data actually does for
         patterns - see NOTE in link())."""
+        if not isinstance(data, Chunk):
+            data = Chunk(data)
         table = self._dedup if dedup is True else dedup
-        if table is not None:
-            key = bytes(data)
-            if key in table:
-                return table[key]
+        key = data.key()
+        if table is not None and key in table:
+            return table[key]
         addr = self.addr_here()
-        self.buf += data
+        for off, ptr in data.relocs:
+            self.relocs[len(self.buf) + off] = ptr
+        self.buf += data.buf
         if table is not None:
-            table[bytes(data)] = addr
+            table[key] = addr
         return addr
+
+    def write(self, bin_path, asm_path, start=0, end=None):
+        """Writes buf[start:end]: the bytes to bin_path (pointers 0), and
+        to asm_path the assembly that data/data.s includes, the bytes as
+        `.incbin` ranges of bin_path with a `.4byte` relocation per
+        pointer."""
+        end = len(self.buf) if end is None else end
+        with open(bin_path, 'wb') as f:
+            f.write(self.buf[start:end])
+        lines = [f'@ Generated by tools/gax_audio.py: {os.path.basename(bin_path)} with its',
+                 '@ pointers as relocations. Do not edit.']
+        pos = start
+        for off in sorted(o for o in self.relocs if start <= o < end):
+            if off > pos:
+                lines.append(f'\t.incbin "{bin_path}", {pos - start:#x}, {off - pos:#x}')
+            lines.append(f'\t.4byte {self.relocs[off]!r}')
+            pos = off + 4
+        if end > pos:
+            lines.append(f'\t.incbin "{bin_path}", {pos - start:#x}, {end - pos:#x}')
+        with open(asm_path, 'w') as f:
+            f.write('\n'.join(lines) + '\n')
+        return end - start
 
 
 class Channel:
@@ -618,7 +720,7 @@ def link_instruments(alloc, instruments_by_index, samples_by_index, dedup_sample
 
     instrument_set_addr = alloc.addr_here()
     for idx in range(n_instr):
-        alloc.buf += struct.pack('<I', instr_addrs[idx])
+        alloc.u32(instr_addrs[idx])
 
     # Sample data and its pointer table come next (before the songs), matching
     # the original layout - not just instrument data/table, then songs, then
@@ -631,17 +733,18 @@ def link_instruments(alloc, instruments_by_index, samples_by_index, dedup_sample
 
     # zero padding before the sample table, up to a word boundary (2 bytes
     # in the music set, 3 in the sound-effect set)
-    alloc.alloc(bytes(-alloc.addr_here() % 4))
+    alloc.align(4)
 
     sample_table_addr = alloc.addr_here()
     for idx in range(n_samples):
         s = samples_by_index.get(idx)
-        alloc.buf += struct.pack('<II', sample_addrs[idx], len(s) if s else 0)
+        alloc.u32(sample_addrs[idx])
+        alloc.u32(len(s) if s else 0)
     return instrument_set_addr, sample_table_addr
 
 
-def link(instruments_by_index, songs, samples_by_index, base_addr, header_prefix):
-    alloc = Allocator(base_addr, header_prefix)
+def link(instruments_by_index, songs, samples_by_index, header_prefix):
+    alloc = Allocator(MUSIC_SYMBOL, header_prefix)
 
     instrument_set_addr, sample_table_addr = link_instruments(alloc, instruments_by_index, samples_by_index)
 
@@ -736,7 +839,7 @@ def link(instruments_by_index, songs, samples_by_index, base_addr, header_prefix
         song.info_handler.data_ptr = info_data_addr
         info_handler_addr = alloc.alloc(song.info_handler.pack())
 
-        channel_children_addr = alloc.alloc(struct.pack('<I', info_handler_addr))
+        channel_children_addr = alloc.alloc(Chunk().u32(info_handler_addr))
 
         channel_handler_addrs = [None] * len(song.channels)
         for ci in song.channel_order:
@@ -749,38 +852,37 @@ def link(instruments_by_index, songs, samples_by_index, base_addr, header_prefix
 
         children_ptr = alloc.addr_here()
         for a in channel_handler_addrs:
-            alloc.buf += struct.pack('<I', a)
+            alloc.u32(a)
         mixer_data_addr = alloc.alloc(song.mixer_data_bytes)
         song.mixer_handler.data_ptr = mixer_data_addr
         song.mixer_handler.children_ptr = children_ptr
         song.mixer_handler.num_children = len(channel_handler_addrs)
         mixer_handler_addr = alloc.alloc(song.mixer_handler.pack())
 
-        song_bytes = struct.pack('<I', song.num_items)
-        song_bytes += struct.pack('<III', mixer_handler_addr, info_handler_addr, song.unk_ptr)
+        song_bytes = Chunk().u32(song.num_items)
+        song_bytes.u32(mixer_handler_addr).u32(info_handler_addr).u32(song.unk_ptr)
         for a in channel_handler_addrs:
-            song_bytes += struct.pack('<I', a)
+            song_bytes.u32(a)
         song.new_offset = alloc.alloc(song_bytes)
 
-    return bytes(alloc.buf)
+    return alloc
 
 
-def link_sfx(instruments_by_index, samples_by_index, song_info, base_addr):
+def link_sfx(instruments_by_index, samples_by_index, song_info):
     """The sound-effect set: the same instrument/sample pool as the music,
     then the one handler type every sound-effect voice uses. Its type data
     is a song header without patterns (only the volume and the two tables
-    matter), and its one child type is NULL. Returns (bytes, address of the
-    handler type)."""
-    alloc = Allocator(base_addr)
-    alloc.alloc(bytes(-base_addr % 4))  # the set starts word-aligned
+    matter), and its one child type is NULL. Returns (the set's Allocator,
+    address of the handler type)."""
+    alloc = Allocator(SFX_SYMBOL)
     song_info.instrument_set_ptr, song_info.sample_set_ptr = link_instruments(
         alloc, instruments_by_index, samples_by_index, dedup_samples=False)
     info_addr = alloc.alloc(song_info.pack())
-    children_addr = alloc.alloc(struct.pack('<I', 0))
+    children_addr = alloc.alloc(Chunk().u32(0))
     handler = SoundHandler(*HANDLER_FUNCS['sfx'], num_children=1, children_ptr=children_addr,
                            type_flags=0x48, data_ptr=info_addr)
     handler_addr = alloc.alloc(handler.pack())
-    return bytes(alloc.buf), handler_addr
+    return alloc, handler_addr
 
 
 # ---------------------------------------------------------------------------
@@ -809,21 +911,18 @@ def build_sfx(manifest_path, samples_dir):
     """The sound-effect set (sound/gax_sfx_manifest.json, sound/sfx_samples/)
     and the handler-type array the music block starts with.
 
-    Returns (set bytes, sfxTypes bytes). The music block (and the raw data
-    after it) sits at fixed addresses, so the set must keep its size:
-    editing a sample's bytes or an instrument's fields is fine, changing a
-    sample's length is not until the tables that point past it stop being
-    raw (see docs/audio.md)."""
+    Returns (the set's Allocator, the sfxTypes Chunk). Every pointer is a
+    relocation, so the set can change size (a longer sample) and the
+    blocks can move."""
     manifest = json.load(open(manifest_path))
     instruments, samples = load_pool(manifest, samples_dir)
-    blob, handler_addr = link_sfx(instruments, samples, SongInfo(manifest['song_info']), SFX_BASE_ADDR)
-    if SFX_BASE_ADDR + len(blob) != BASE_ADDR:
-        sys.exit(f"{manifest_path}: the sound-effect set ends at {SFX_BASE_ADDR + len(blob):#x}, "
-                 f"but the music block is fixed at {BASE_ADDR:#x}")
+    alloc, handler_addr = link_sfx(instruments, samples, SongInfo(manifest['song_info']))
     # GaxSongHeader.sfxTypes (StartSong): the handler type of each
     # sound-effect voice, all the same one
-    sfx_types = struct.pack('<I', handler_addr) * manifest['voice_types']
-    return blob, sfx_types
+    sfx_types = Chunk()
+    for _ in range(manifest['voice_types']):
+        sfx_types.u32(handler_addr)
+    return alloc, sfx_types
 
 
 def default_song(m):
@@ -856,7 +955,7 @@ def write_header(path, songs_by_key):
            ' * music block gGaxMusicData (gax_audio_data.bin). */',
            '#ifndef GUARD_GAX_SONGS_H', '#define GUARD_GAX_SONGS_H', '']
     for key, song in songs_by_key:
-        out.append(f'#define {c_name(key)} {song.new_offset - BASE_ADDR:#x}')
+        out.append(f'#define {c_name(key)} {song.new_offset.off:#x}')
     out += ['', '#endif', '']
     with open(path, 'w') as f:
         f.write('\n'.join(out))
@@ -941,21 +1040,25 @@ def build(manifest_path, songs_dir, samples_dir, out_path, layout_path=None, hea
     default = default_song(manifest['default_song'])
     _, header_prefix = build_sfx(SFX_MANIFEST, SFX_SAMPLES_DIR)
 
-    blob = link(instruments, songs + [default], samples, BASE_ADDR, header_prefix)
+    alloc = link(instruments, songs + [default], samples, header_prefix)
     # The default song's own song struct is the layout the code references
     # as gGaxDefaultSong: a separate output, so it can have that label.
-    split = default.new_offset - BASE_ADDR
-    blob, layout = blob[:split], blob[split:]
-    with open(out_path, 'wb') as f:
-        f.write(blob)
-    print(f"wrote {out_path}: {len(blob)} bytes")
+    # Its pointers are relocations against gGaxMusicData too, so data/data.s
+    # must put it right after the block.
+    split = default.new_offset.off
+    n = alloc.write(out_path, asm_path(out_path), 0, split)
+    print(f"wrote {out_path}: {n} bytes")
     if layout_path:
-        with open(layout_path, 'wb') as f:
-            f.write(layout)
-        print(f"wrote {layout_path}: {len(layout)} bytes")
+        n = alloc.write(layout_path, asm_path(layout_path), split)
+        print(f"wrote {layout_path}: {n} bytes")
     if header_path:
         write_header(header_path, list(zip(manifest['song_order'], songs)))
         print(f"wrote {header_path}")
+
+
+def asm_path(bin_path):
+    """OUTPUT.s, the assembly written next to OUTPUT.bin."""
+    return os.path.splitext(bin_path)[0] + '.s'
 
 
 SFX_MANIFEST = os.path.join(SOUND_DIR, 'gax_sfx_manifest.json')
@@ -963,10 +1066,9 @@ SFX_SAMPLES_DIR = os.path.join(SOUND_DIR, 'sfx_samples')
 
 if __name__ == '__main__':
     if len(sys.argv) == 3 and sys.argv[1] == '--sfx':
-        blob, _ = build_sfx(SFX_MANIFEST, SFX_SAMPLES_DIR)
-        with open(sys.argv[2], 'wb') as f:
-            f.write(blob)
-        print(f"wrote {sys.argv[2]}: {len(blob)} bytes")
+        alloc, _ = build_sfx(SFX_MANIFEST, SFX_SAMPLES_DIR)
+        n = alloc.write(sys.argv[2], asm_path(sys.argv[2]))
+        print(f"wrote {sys.argv[2]}: {n} bytes")
         sys.exit(0)
     if len(sys.argv) == 3 and sys.argv[1] == '--constants':
         write_constants(os.path.join(SOUND_DIR, 'gax_manifest.json'), sys.argv[2])
@@ -974,6 +1076,7 @@ if __name__ == '__main__':
     if len(sys.argv) not in (2, 4):
         print(f"Usage: {sys.argv[0]} OUTPUT.bin [LAYOUT.bin SONGS.h]  (music block, default layout, song offsets)")
         print(f"       {sys.argv[0]} --sfx OUTPUT.bin                (sound-effect set)")
+        print("       (each OUTPUT.bin comes with OUTPUT.s: its bytes, the pointers as relocations)")
         print(f"       {sys.argv[0]} --constants SONGS.h             (constants/songs.h: the song IDs)")
         sys.exit(1)
     build(

@@ -28,8 +28,9 @@ The engine data is two contiguous blocks, both **built from editable
 sources**, not extracted verbatim from `baserom.gba` (see "Build pipeline"
 below):
 
-- the **sound-effect set** at `0x084C0006` (`gGaxSfxData`, 638,126
-  bytes): its own 88 instruments and 87 samples, and the handler type the
+- the **sound-effect set** at `0x084C0008` (`gGaxSfxData`, 638,124
+  bytes, word-aligned after the sprite banks' end at `0x084C0006`): its
+  own 88 instruments and 87 samples, and the handler type the
   sound-effect voices run (see "Sound effects" below);
 - the **music block** at `0x0855BCB4` (`gGaxMusicData`): the shared
   instrument/sample pool of the music and all 19 songs.
@@ -76,12 +77,16 @@ struct sat right after it as a raw label.
 - `GAX2_SoundHandler` (28 bytes, one of three "types": Info / Mixer /
   Channel): each type has **three fixed function-pointer constants**
   (`init_fn`/`unknown_fn`/`play_fn`) that are always the same for that type,
-  regardless of song:
-  - Info: `0x080393FD`, `0x08039439`, `0x0803943D`
-  - Mixer: `0x0803A22D`, `0x0803A275`, `0x0803A325`
-  - Channel: `0x08039519`, `0x080395A1`, `0x080395A5`
-- `song.unk_ptr` is a fixed constant equal to the address right after the end
-  of the shared sample table, for every song.
+  regardless of song (the built data has them as relocations against
+  the functions' symbols):
+  - Info: `0x080393FD`, `0x08039439`, `0x0803943D` (`GaxInfoInit`,
+    `GaxInfoUnknown`, `GaxInfoPlay`)
+  - Mixer: `0x0803A22D`, `0x0803A275`, `0x0803A325` (`GaxMixerInit`,
+    `GaxMixerUnknown`, `GaxMixerPlay`)
+  - Channel: `0x08039519`, `0x080395A1`, `0x080395A5` (`GaxChannelInit`,
+    `GaxChannelUnknown`, `GaxChannelPlay`)
+- `song.unk_ptr` is the same pointer in every song: the address right
+  after the end of the shared sample table.
 - `SongInfo.half_rate_fx` (byte `0x1b`, `GaxSongData.halfRateFx`; the
   manifest called it `byte_1d`) mixes the sound-effect voices at half the
   mix rate. `GAX2_init` then loads the resampler's third loop (mode 2,
@@ -337,7 +342,7 @@ rename an ID, or to name one, edit the JSON. See
 That note does **not** come from the music's instrument pool: an earlier
 version of this section said there was no separate sound-effect sample
 bank, which is wrong. The sound effects have their own GAX2 data set, the
-block at `0x084C0006` right before the music. The engine path, all in
+block at `0x084C0008` right before the music. The engine path, all in
 matched C:
 
 - `AudioContext::StartSong` (`audio.cpp`) fills the `GaxSongHeader` it hands to
@@ -361,11 +366,11 @@ matched C:
   set's own. So `slot_id` N (1-87) is sound-effect instrument N, and
   instrument N plays sample N.
 
-The set's layout (base `0x084C0006`) is the music block's instrument and
-sample pool with a one-type tail instead of songs:
+The set's layout (base `0x084C0008`; the 2 zero bytes before it are the
+linker's, aligning it) is the music block's instrument and sample pool
+with a one-type tail instead of songs:
 
 ```
-[2-byte zero pad, to a word boundary]
 [instrument data: envelope + 12-byte "unknown" block + rows + header, per instrument, index order]
 [instrument pointer table, 88 entries]
 [sample data, index order, NOT deduplicated (samples 84 and 87 are identical, stored twice)]
@@ -417,11 +422,15 @@ Everything is generated from editable sources, never read from
   address any more: the song table `gSongTable`
   (`src/data/song_table_16aa20.cpp`) is written as `gGaxMusicData +
   GAX_SONG_<NAME>` from the generated `gax_songs.h`, and the default layout
-  is built with the block. So a song can change size. The block itself is
-  linked at the fixed `BASE_ADDR` (its pointers are absolute), which is
-  where the sound-effect set ends, so the sound-effect set must keep its
-  total size (the tool stops with an error otherwise): a sample can be
-  changed but not lengthened, unless another shrinks to match.
+  is built with the block. So a song can change size.
+- Nothing in the blocks is an absolute address either (#967,
+  [shifting.md](./shifting.md)): each block is written as a `.bin` with
+  its pointers left 0 and a `.s`, which `data/data.s` includes, with the
+  `.bin`'s bytes and each pointer as a relocation (`.4byte gGaxMusicData
+  + 0x1234`, `.4byte gGaxSfxData + 0x9bc90`, `.4byte GaxInfoInit`). So
+  the blocks can sit anywhere, and the sound-effect set can change size
+  too (a sample can be lengthened). Each block starts word-aligned
+  (`.balign 4` in data.s), which its own padding assumes.
 - `tools/sfx_table.py` — rebuilds the sound-effect trigger table from
   `sound/sfx_table.json`; `--constants SFX.h` writes its names
   (`constants/sfx.h`).
