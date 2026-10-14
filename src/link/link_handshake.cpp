@@ -7,6 +7,7 @@ extern "C" {
 #include "link.h"
 }
 
+using Engine::Link::LinkSession;
 using Engine::Sys::Irq;
 
 /* The GBA multiplayer link-cable/SIO transport - see docs/rom_map.md's

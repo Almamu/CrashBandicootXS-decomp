@@ -596,6 +596,17 @@ checks the change is only a rename:
   nothing of the game, so it goes with SaveData rather than with the save
   menu. SaveMenu (the menu) is game UI and stays outside. No name hiding:
   no global is named `Save` or like one of the classes.
+- **`Engine::Link`** (`Q36Engine4Link`): `LinkRing`, `LinkPlayer` and
+  `LinkSession` (link_session.hpp), the link-cable session. 8 symbols
+  renamed (LinkSession's methods; LinkRing and LinkPlayer have only
+  inline members), no code change. The packed C views (`nibble_pair`,
+  `link_id_word`) and link.h's C-linkage functions (LinkSetupSio, the
+  serial and timer 3 IRQ handlers, MakeLinkHandshakeId) stay global;
+  link.h forward declares LinkSession for gLinkSession. Boundary calls:
+  none needed: the session only runs the SIO multiplayer handshake and
+  moves bytes through its rings; the save menu and SaveTransfer are its
+  only users. No name hiding: no global is named `Link` (CrateList::Link
+  is a member of a global class).
 
 ## Progress
 

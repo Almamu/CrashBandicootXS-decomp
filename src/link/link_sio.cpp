@@ -8,6 +8,7 @@ extern "C" {
 #include "util.h"
 }
 
+using Engine::Link::LinkSession;
 using Engine::Sys::Irq;
 
 /* "Start" step of the link session - counterpart to `Stop`

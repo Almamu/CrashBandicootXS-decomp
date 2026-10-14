@@ -5,6 +5,9 @@ extern "C" {
 #include "link.h"
 }
 
+using Engine::Link::LinkPlayer;
+using Engine::Link::LinkSession;
+
 /* Link-session reset/init - see docs/rom_map.md's SIO/link-cable
  * section. Sets the link-active flag (`gLinkSessionReset`), resets a
  * handful of session-header fields, seeds a per-session 8-byte

@@ -8,6 +8,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Engine::Link::LinkPlayer;
+using Engine::Link::LinkSession;
 using Engine::Save::SaveTransfer;
 
 /* Drains up to 0x60 bytes per call from `self->cursor` (streaming a

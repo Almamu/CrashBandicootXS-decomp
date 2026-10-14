@@ -24,7 +24,12 @@
  * makes LinkPlayer's (implicit) one non-trivial.
  *
  * `#pragma interface`: no vtable to emit, and no out-of-line copies of
- * the inline methods. */
+ * the inline methods.
+ *
+ * LinkRing, LinkPlayer and LinkSession are in the namespace Engine::Link
+ * (#1033, docs/cplusplus.md "Namespaces"): `Update__Q36Engine4Link11LinkSession`
+ * & co. The packed C views (nibble_pair, link_id_word) and link.h's
+ * C-linkage functions stay global. */
 #pragma interface
 
 extern "C" {
@@ -48,6 +53,11 @@ union link_id_word {
     } __attribute__((packed)) bits;
     u16 raw;
 };
+
+namespace Engine
+{
+namespace Link
+{
 
 /* A 0x90-byte byte ring: the session's outgoing ring at +0x40 and each
  * player record's incoming ring at +0x38 (SaveTransfer::SendChunk and
@@ -202,8 +212,11 @@ public:
     }
 };
 
-COMPILE_TIME_ASSERT(link_session_hpp, sizeof(LinkRing) == 0x90);
-COMPILE_TIME_ASSERT(link_session_hpp, sizeof(LinkPlayer) == 0xc8);
-COMPILE_TIME_ASSERT(link_session_hpp, sizeof(LinkSession) == 0x408);
+} // namespace Link
+} // namespace Engine
+
+COMPILE_TIME_ASSERT(link_session_hpp, sizeof(Engine::Link::LinkRing) == 0x90);
+COMPILE_TIME_ASSERT(link_session_hpp, sizeof(Engine::Link::LinkPlayer) == 0xc8);
+COMPILE_TIME_ASSERT(link_session_hpp, sizeof(Engine::Link::LinkSession) == 0x408);
 
 #endif /* !GUARD_LINK_SESSION_HPP */

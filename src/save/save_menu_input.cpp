@@ -20,6 +20,7 @@ extern "C" {
 
 using Engine::Audio::AudioContext;
 using Engine::Gfx::BrightnessFade;
+using Engine::Link::LinkSession;
 using Engine::Save::SaveData;
 using Engine::Sys::FrameLimiter;
 

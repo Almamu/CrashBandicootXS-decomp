@@ -20,6 +20,7 @@ extern "C" {
 }
 
 using Engine::Gfx::BgSetup;
+using Engine::Link::LinkSession;
 using Engine::Save::SaveData;
 using Engine::Save::SaveTransfer;
 using Engine::Sys::FrameLimiter;

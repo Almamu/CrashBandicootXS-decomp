@@ -11,6 +11,7 @@ extern "C" {
 #include "save.h"
 }
 
+using Engine::Link::LinkSession;
 using Engine::Save::SaveData;
 using Engine::Save::SaveTransfer;
 
