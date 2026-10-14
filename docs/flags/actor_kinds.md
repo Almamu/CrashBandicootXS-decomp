@@ -86,10 +86,11 @@ as the kind it turns into.
 ## The spawn tables
 
 The seven spawn tables (`gCategory0SpawnTable`..`gCategory6SpawnTable`,
+data/levels/spawns/*.json, generated into
 src/game/vehicles/polar/data/polar_cell_anim.cpp, polar_spawn_tables.cpp, jetpack_cell_anim.cpp
-and jetpack_sky_pictures.cpp) spell each spawn's `kind`, `altKind` and
+and jetpack_sky_pictures.cpp; docs/levels.md "Actor categories") spell each spawn's `kind`, `altKind` and
 `bonusKind` with their family's names: `POLAR_KIND_*` in categories 0-2,
-`JETPACK_KIND_*` in 3-6. The polar runs start with a checkpoint crate,
+`JETPACK_KIND_*` in 3-6 (without the prefix in the JSON). The polar runs start with a checkpoint crate,
 the jetpack stages with the stopwatch, the hovercraft's table with the
 hovercraft. A `PLAYER` (0) alternative means nothing spawns there in that mode.
 The 4 bytes after the last spawn (`end` in `ACTOR_SPAWN_TABLE`) stay

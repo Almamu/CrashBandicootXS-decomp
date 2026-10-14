@@ -307,9 +307,12 @@ rooms`), not from the folders on disk.
   ids and the counts, see "The counts the code takes from the levels"),
   its `gLevelTable` fields and the rooms it plays (see "The level
   table"); and the level themes (`"themes"`: each one's `THEME_*` name
-  and name, for `constants/themes.h`). `extract` keeps the names, the
+  and name, for `constants/themes.h`); and the actor categories
+  (`"categories"`, see "Actor categories"). `extract` keeps the names, the
   worlds and the themes, which don't come from the ROM, and writes the
   rest.
+- `spawns/<name>.json`: an actor category's spawn list (see "Actor
+  categories").
 - `entity_types.json`: the name of each entity type (see "Entity
   types"); `crate_kinds.json`: the name of each crate kind (`crate.kind`).
 - one folder per room, `<level>/<slot>/` (see "Room folders" below).
@@ -582,7 +585,7 @@ Where each field comes from:
 | | `kind` | room.json's `"record"` `"kind"`: `ON_FOOT`, `UNDERWATER` or `HOVER` (`ROOM_KIND_*`) |
 | | `unk_0C` | 0 |
 | | `param.blend` | `"record"` `"blend"`: `{"effect", "eva", "evb"}` |
-| `gLevelStageN` (a stage's record) | all | `{"stage": "<NAME>"}`: kind `ROOM_KIND_CATEGORY`, `param.catIndex` = `CATEGORY_<NAME>` (`include/constants/categories.h`), N its value; no palette or descriptor |
+| `gLevelStageN` (a stage's record) | all | `{"stage": "<NAME>"}`: kind `ROOM_KIND_CATEGORY`, `param.catIndex` = `CATEGORY_<NAME>` (`constants/categories.h`, from `"categories"`, see "Actor categories"), N its value; no palette or descriptor |
 
 The record's symbol is room.json's `"record"` `"symbol"`
 (`gLevelRoomNN`). A level looks like this:
@@ -647,8 +650,9 @@ they are now, in the layout above:
   last `ui.*` one in `text/crashxs.pot`, with its translations in the
   five `.po` files ([text.md, "A new level's name"](./text.md#a-new-levels-name)),
   which `make text-check` requires;
-- a stage is one of the ROM's seven `gLevelStageN`: a stage of a new
-  actor category is #966.
+- a stage of a new actor category (see "Actor categories") is one more
+  `gLevelStageN` record, where an array first plays it, like a new
+  room's.
 
 Whatever grows moves the ROM data linked after it, which is safe: every
 address the ROM stores is a relocation ([shifting.md](./shifting.md),
@@ -748,7 +752,8 @@ goes after the last region's rooms, before the new rooms.
 Editing the ROM's own rooms changes their data in place, which moves
 the ROM data after it; that is safe ([shifting.md](./shifting.md)).
 A room of a new theme is a room like any other; the theme is the
-level's (see "Adding a theme"). New actor categories are #966.
+level's (see "Adding a theme"). A new stage is a new actor category (see
+"Actor categories").
 
 ### Collision layers
 
@@ -1253,6 +1258,146 @@ rooms), `{"levels_cleared": true}`, world 0's title and box, and bank
   (the boss entry on the right, `lastIndex` 2). Right ends on it and A
   starts level 26. Opened on Neo Cortex (level 25), the screen is on page
   4, entry 5.
+
+## Actor categories
+
+A stage (`{"stage": "<NAME>"}` in a level's `"rooms"`, a
+`ROOM_KIND_CATEGORY` record) runs an actor category: the vehicle and boss
+stages, which `ActorCategory::Init(catIndex)` plays (#966, phase 7).
+`ActorCategory::descriptors[catIndex]` (`struct category_descriptor`,
+`actor_anim.h`) says what it plays, and it is data: `levels.json`'s
+`"categories"` and a spawn list per category in `data/levels/spawns/`. A
+new category, or a new mix of the existing actor kinds, builds with plain
+`make` and no code change.
+
+**What the code indexes by category.** Only `ActorCategory::descriptors`
+(`CATEGORY_COUNT` entries): `Init`, `ReloadGraphics`, `CountCrates`,
+`IsMaskAssistDue` and the VRAM pool read the current category's
+descriptor, and the stage record's `catIndex` is all `game_frame.cpp` and
+`level_query.cpp` pass on. No code switches on the category or compares
+it with a `CATEGORY_*` constant. What does differ in the code is the
+category's **type**:
+
+| type | `vtables[type]` (the player, the spawner, the boss) | also by type |
+|---|---|---|
+| `POLAR` (0) | `PolarPlayer`, the yeti | the BG palette cycle (`ActorPaletteCycle::Enable`), `ActorBg::InitScroll`'s depths, the cell animation's per-cell banks, 2 palette-cache slots, the HUD without the HP gauge, `CountCrates`' polar crate kinds, a death that isn't a boss death |
+| `JETPACK` (1) | `JetpackPlayer`, the airship | the other side of each of those |
+| `HOVERCRAFT` (2) | `JetpackPlayer`, n. gin's hovercraft | as `JETPACK` |
+
+A new type is new code (a vtable and those tests), so a category is one
+of the three. The level-id switches (`LevelState::GetBossHealth` and
+`GetBossIndex`, the boss HUD; `UpdateGameFrame`'s boss rewards) are the
+boss levels', not the categories': a hovercraft stage in another level
+gets no boss HUD, as a new boss level gets no reward (out of scope).
+
+**`"categories"`**, one per category in `CATEGORY_*` order:
+
+```json
+"categories": [
+  {"constant": "CATEGORY_FROSTBITE_CAVERN", "name": "frostbite cavern", "type": "POLAR", "spawns": "frostbite_cavern", "mask_assist_deaths": 4, "bonus_kind_deaths": 3, "retry_boss_deaths": 2, "boss_level": 1, "retry_boss_level": 0},
+  ...
+  {"constant": "CATEGORY_N_GIN", "name": "n. gin", "type": "HOVERCRAFT", "sky": "no_fly_zone", "spawns": "n_gin", ...}
+]
+```
+
+| key | the descriptor's | what |
+|---|---|---|
+| `"constant"`, `"name"` | (its index) | `CATEGORY_<NAME>` (`constants/categories.h`), which a stage names as `<NAME>` |
+| `"type"` | `type` | `POLAR`, `JETPACK` or `HOVERCRAFT` (`CATEGORY_TYPE_*`) |
+| (the type) | `cellAnim`, `cellAnimSize`, `palette`, `anim_table`, `sprite_sheet` | the type's: polar `gCategoryFamily0CellAnim`, `gPolarCategoryPalette`, `gCategoryFamily0AnimTable`, `gPolarSpriteSheet`; jetpack `gCategoryFamily1CellAnim`, `gAirshipCategoryPalette`, `gCategoryFamily1AnimTable`, `gJetpackSpriteSheet`; hovercraft the jetpack's with `gHovercraftCategoryPalette`. The ROM's categories of a type all have the same ones, and the actor kinds index the type's animation table |
+| `"sky"` (optional) | `bgPicture` | the BG1 picture, one of the jetpack skies: `rocket_racket`, `blimp_bonanza`, `no_fly_zone` (`gCategory3/4/5BgPicture`, `graphics/vehicles/jetpack/skies/`). None for a polar category |
+| `"spawns"` | `spawnTable` | its spawn list, `data/levels/spawns/<spawns>.json` |
+| `"mask_assist_deaths"`, `"bonus_kind_deaths"`, `"retry_boss_deaths"` | the same | deaths before the mask assist, before the spawns' `bonus` kinds, before the boss's retry level |
+| `"boss_level"`, `"retry_boss_level"` | `bossLevel`, `retryBossLevel` | the boss's level: 0-5 for the yeti (`Yeti::chargeParams`), 0-3 for the airship (`Airship::attacks[kind + level]`), 0-1 for the hovercraft (`Hovercraft::attacks`) |
+
+**A spawn list** (`struct actor_spawn_table`, `actor.h`):
+
+```json
+{
+  "symbol": "gCategory1SpawnTable",
+  "family": "POLAR",
+  "length": 4000,
+  "spawns": [
+    {"kind": "CHECKPOINT_CRATE", "x": 0, "y": 54, "z": 18},
+    {"kind": "BASIC_CRATE", "x": 30, "y": 54, "z": 32},
+    ...
+  ]
+}
+```
+
+- `"symbol"`: its C name.
+- `"family"`: `POLAR` or `JETPACK`, whose kind names it uses
+  (`POLAR_KIND_*`, `JETPACK_KIND_*`, `constants/actor_kinds.h`, without
+  the prefix; a number for an unnamed kind). It must be the type's: a
+  polar category's kinds are `POLAR`, a jetpack or hovercraft one's
+  `JETPACK`.
+- `"length"`: the course length (past it `RunFrame` calls the vtable's
+  `reachCourseEnd`).
+- `"spawns"`, in depth order (`"z"`): each its `"kind"`, its `"x"`, `"y"`
+  and `"z"`; `"alt"` (the time-trial kind) and `"bonus"` (the kind after
+  `"bonus_kind_deaths"`) when they aren't `"kind"`; `"unk_03"` when not
+  0 (nothing reads it); `"next"`, the index of the spawn a plane or
+  penguin flies on to, when not -1.
+- `"end"`: the 4 bytes after the last spawn, which nothing reads, when
+  not 0.
+
+`levels.py` stops when a value is out of range, a kind isn't the family's,
+the spawns aren't in depth order, a `"next"` isn't a spawn, or a list has
+a kind only another type spawns: the airships (`AIRSHIP_0`-`2`) need the
+jetpack type's boss (`Airship::Create`), the `HOVERCRAFT` the hovercraft
+type. What a type's spawner makes of each kind is
+`PolarPlayer::CreateActor` and `JetpackPlayer::CreateActor`; a kind
+neither makes spawns nothing.
+
+**What is generated.**
+
+| output | what | used by |
+|---|---|---|
+| `constants/categories.h` (`levels.py constants categories`) | `CATEGORY_*` and `CATEGORY_COUNT`, with the hand-written types and exit statuses (`constants/category_types.h`) | everything that names a category |
+| `actor_categories.inc` (`levels.py categories`) | the spawn lists that aren't the ROM's, then `ActorCategory::descriptors` | `actor_categories.cpp` |
+| `spawns/<symbol>.inc` (`levels.py spawns <symbol>`) | the ROM's spawn list `<symbol>` (`gCategory0SpawnTable`..`gCategory6SpawnTable`), if a category has it | where the ROM has it: `polar_cell_anim.cpp`, `polar_spawn_tables.cpp`, `jetpack_cell_anim.cpp`, `jetpack_sky_pictures.cpp` |
+
+With the ROM's categories every output is the ROM's C, so `make compare`
+gives the ROM's bytes. `levels.py extract` reads the descriptors and the
+seven spawn lists back from the ROM (keeping the constants, names and
+spawn-list names) and checks that each type's graphics are the ROM's.
+The categories aren't part of the save version's CRC: they don't change
+what a save's records mean.
+
+### Adding a category
+
+1. **The spawn list.** A new `data/levels/spawns/<name>.json` with its
+   own `"symbol"`, for example a copy of a ROM list with kinds swapped,
+   spawns added or moved.
+2. **The category.** An entry at the end of `"categories"`: its constant,
+   type, sky, spawn list and numbers.
+3. **Use it.** A level's `"rooms"` entry `{"stage": "<NAME>"}`.
+4. **Run `make`.** `CATEGORY_COUNT` and `descriptors` grow, the new spawn
+   list goes before them, the new stage record goes where a level first
+   plays it, and the ROM data after them moves ([shifting.md](./shifting.md)).
+
+A category of new graphics (its own cell animation, sky, palette or
+sprite sheet) needs those as new graphics and a way for the type to take
+them. That is out of scope: today the type picks them, and the sky is one
+of the three.
+
+Tested in scratch with plain `make` and mGBA, with two new categories:
+`CATEGORY_SNOW_STORM` (polar, snow crash's spawn list with each basic
+crate a life crate, `"boss_level"` 5) played by jungle jam
+(`"rooms": [{"stage": "SNOW_STORM"}]`), and `CATEGORY_SKY_HIGH` (jetpack,
+rocket racket's sky, blimp bonanza's list with each ring a circling
+bomber) played by shipwrecked. Starting jungle jam calls
+`CountCategoryCrates(7)` (36, as snow crash: a life crate is a crate)
+and `InitActorCategory(7)`, and the stage's `CreateActor` makes life
+crates (kind 8) where snow crash has basic ones, with the lives counter
+going up. Starting shipwrecked calls `InitActorCategory(8)`, loads
+`gCategory3BgPicture` (rocket racket's sky) and makes circling bombers
+(kind 8) where blimp bonanza has rings. `levels.py` stops on a polar
+category with a sky, an unknown type or sky, a boss level out of range,
+a jetpack list on a polar category, a hovercraft kind in a jetpack list,
+an airship kind in a hovercraft category, an unknown kind name, spawns
+out of depth order, a bad `"next"`, a duplicate constant and a missing
+spawn list.
 
 ## The save
 

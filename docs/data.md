@@ -1019,7 +1019,8 @@ keep a non-zero colour somewhere. The header fields (`cols`, `rows`,
 `tileCount`) are hand-written in the data files, and each one checks
 its struct's size with `COMPILE_TIME_ASSERT`.
 
-The spawn tables in the same regions are hand-written C:
+The spawn tables in the same regions are generated in place from
+`data/levels/spawns/*.json` (docs/levels.md, "Actor categories"): each
 `ACTOR_SPAWN_TABLE(n)` (`actor.h`) is the course length, the spawn
 count, the `n` spawns (`struct actor_spawn_entry`: the `struct
 actor_spawn` and the next target) and 4 bytes after the last one that

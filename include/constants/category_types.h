@@ -1,25 +1,12 @@
-#ifndef GUARD_CONSTANTS_CATEGORIES_H
-#define GUARD_CONSTANTS_CATEGORIES_H
-
-/*
- * Actor categories: the index of ActorCategory::descriptors, the `catIndex` of a
- * ROOM_KIND_CATEGORY stage and ActorCategory::Init's argument. Each is the
- * stage of one level (gLevelTable's room lists): the polar rides of
- * frostbite cavern, snow crash and snow job, the jetpack levels, and
- * n. gin's fight.
- */
-#define CATEGORY_FROSTBITE_CAVERN 0
-#define CATEGORY_SNOW_CRASH 1
-#define CATEGORY_SNOW_JOB 2
-#define CATEGORY_ROCKET_RACKET 3
-#define CATEGORY_BLIMP_BONANZA 4
-#define CATEGORY_NO_FLY_ZONE 5
-#define CATEGORY_N_GIN 6
-#define CATEGORY_COUNT 7
+#ifndef GUARD_CONSTANTS_CATEGORY_TYPES_H
+#define GUARD_CONSTANTS_CATEGORY_TYPES_H
 
 /*
  * `struct category_descriptor.type`: the ActorCategory::vtables index,
- * which picks the stage's player and boss.
+ * which picks the stage's player and boss. The categories themselves
+ * (CATEGORY_*, CATEGORY_COUNT) are data: constants/categories.h, which
+ * tools/levels.py generates from levels.json's "categories" and which
+ * includes this header (docs/levels.md, "Actor categories").
  */
 #define CATEGORY_TYPE_POLAR 0      /* the polar ride; the yeti (CreateYeti) */
 #define CATEGORY_TYPE_JETPACK 1    /* the jetpack (JetpackPlayer::Create); the airship (CreateAirship) */
@@ -43,4 +30,4 @@
  * (PolarPlayerStateKnockedOff, JetpackPlayerStateFall). */
 #define CATEGORY_EXIT_DEATH 3
 
-#endif /* GUARD_CONSTANTS_CATEGORIES_H */
+#endif /* GUARD_CONSTANTS_CATEGORY_TYPES_H */
