@@ -11,6 +11,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Objects::Stopwatch;
+
 /* The stopwatch, the time trial's pickup (#664, include/pickups.hpp).
  * g++ emits gStopwatchVtable here. The action controller's Reset, which
  * the ROM puts after it, starts action_ctrl_event.cpp. */

@@ -13,6 +13,7 @@ using Game::Bosses::CortexBossCtrl;
 using Game::Bosses::DingodileCtrl;
 using Game::Bosses::MegaMixCtrl;
 using Game::Bosses::TinyCtrl;
+using Game::Objects::Platform;
 
 /* The spawners of the bosses, the room exit and Mega-Mix (#664,
  * include/spawners.hpp), ROM 0x08021280-0x08021748. Built with

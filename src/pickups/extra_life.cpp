@@ -13,6 +13,7 @@ extern "C" {
 }
 
 using Game::Crash::Player;
+using Game::Objects::ExtraLife;
 
 /* The extra life (#664, include/pickups.hpp). An old_agbcp object
  * (OLD_AGBCC_OBJS). The wumpa's CheckPickup, which the ROM puts right

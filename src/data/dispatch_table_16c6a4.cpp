@@ -18,6 +18,11 @@ using Game::Bosses::TinyCtrl;
 using Game::Bosses::CortexBossCtrl;
 using Game::Bosses::DingodileCtrl;
 using Game::Crates::Crate;
+using Game::Objects::Platform;
+using Game::Objects::LaunchPad;
+using Game::Objects::Pickups;
+using Game::Objects::Wumpa;
+using Game::Objects::Stopwatch;
 
 /*
  * ROM 0x0816C6A4-0x0816C814. Linked in ROM order between data/data.s

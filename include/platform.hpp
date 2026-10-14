@@ -10,11 +10,17 @@
  * CortexBossPlatformMover's in cortex.cpp (see ctrl.hpp); cxx_symbols.txt
  * maps the mangled names onto the C names.
  *
- * CortexBossPlatformMover is in the namespace Game::Bosses (#1033,
- * boss_ctrl.hpp); Platform and PlatformMover are global. */
+ * Platform and PlatformMover are in the namespace Game::Objects (#1033,
+ * docs/cplusplus.md "Namespaces"; pickups.hpp), CortexBossPlatformMover
+ * in Game::Bosses (boss_ctrl.hpp). */
 
 #include "sprite_obj.hpp"
 #include "ctrl.hpp"
+
+namespace Game
+{
+namespace Objects
+{
 
 class PlatformMover;
 
@@ -136,6 +142,9 @@ public:
 
 COMPILE_TIME_ASSERT(platform_hpp, sizeof(PlatformMover) == 0x38);
 
+} // namespace Objects
+} // namespace Game
+
 namespace Game
 {
 namespace Bosses
@@ -149,7 +158,7 @@ namespace Bosses
 /* Its `state` (Ctrl::state; #843, docs/flags/boss_ctrl.md). */
 #define CORTEX_BOSS_PLATFORM_STATE_START 0 // the first frame: the animation to frame 0x1A, then RUN
 #define CORTEX_BOSS_PLATFORM_STATE_RUN 1   // runs the animation to frame 0x1A (10 while `kind` is set)
-class CortexBossPlatformMover : public PlatformMover
+class CortexBossPlatformMover : public Game::Objects::PlatformMover
 {
 public:
     CortexBossPlatformMover(); // CreateCortexBossPlatformMover

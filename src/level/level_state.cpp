@@ -26,6 +26,9 @@ using Game::Bosses::BossCtrl;
 using Game::Bosses::Hovercraft;
 using Game::Crash::Player;
 using Game::Crates::Crate;
+using Game::Objects::Pickups;
+using Game::Objects::Platform;
+using Game::Objects::Wumpa;
 
 /* The level state's accessors and helpers: LevelState's methods
  * (level_state.hpp; #750), under their C names (cxx_symbols.txt), with

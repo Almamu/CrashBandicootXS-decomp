@@ -26,6 +26,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Game::Objects::LaunchPad;
+
 /* The factory (the constructor inlined): places the pad at (x, y) pixels
  * with record id `id`, adds it to the collidable list, and starts
  * animation 0 of the set at `**gSpriteBankSet + 0x150`, unmirrored. Called

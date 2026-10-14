@@ -10,6 +10,7 @@ extern "C" {
 }
 
 using Game::Crash::Player;
+using Game::Objects::Platform;
 
 /* Platform::ResolveCollision (#664, include/platform.hpp), ROM
  * 0x0801AB98-0x0801B208: ResolvePlatformCollision, the player-vs-platform

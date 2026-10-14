@@ -796,6 +796,34 @@ checks the change is only a rename:
   src/objects/, but it only queues and resolves the frame's crate
   collisions (`Add(Crate *, ...)`, Resolve hands the nearest one to
   ApplyCrateCollision), so by its dependencies it goes with the crates.
+- **`Game::Objects`** (`Q34Game7Objects`): the level objects. The
+  platforms, `Platform` and its controller `PlatformMover`
+  (platform.hpp); the pickups, `ExtraLife`, `Wumpa`, `Stopwatch` and the
+  all-static `Pickups` (pickups.hpp, the powers', gems', crystal's and
+  decorations' spawners); and `LaunchPad` and `CameraLead`
+  (level_select.hpp). All of src/pickups/, src/objects/'s platform*.cpp,
+  launch_pad.cpp and camera_lead.cpp, with their spawners in src/level/
+  (spawn_objects.cpp, spawn_pickups.cpp, spawn_gems.cpp,
+  spawn_gem_platforms.cpp). 103 symbols renamed, among them 7 vtables
+  (`_vt.Q34Game7Objects5Wumpa`, ...) and LevelState::SetBonusPlatform and
+  SetGemPlatform, which take a `Platform *`; no code change.
+  ldscript.txt's 7 lines that place the vtable sections are updated by
+  hand. `CortexBossPlatformMover` (`Game::Bosses`) derives from
+  `Game::Objects::PlatformMover`; level_state.hpp forward declares
+  Platform in the namespace, and input_ctrl.hpp (the camera lead) and
+  spawners.hpp (EntitySpawner::DropWumpa/DropExtraLife) name the classes
+  qualified. pickups.hpp's inline helpers (ClampFrame, Affine), `struct
+  three_words` and the hop width tables stay global. No name hiding: no
+  global is named `Objects` or like the classes. Boundary calls: the
+  entity bases of src/objects/ (`Entity`, `Sprite`, `UiSprite`,
+  `MovingSprite`, `GroundSprite`, `PartList`) and the controllers' bases
+  (`Ctrl`, `EffectCtrl`) stay global: every family derives from them,
+  `Engine::Gfx`'s SpriteRenderer draws Sprites, and ActorSelf (the 3D
+  actors' base) is global too. `CameraLead` is the camera's follow target
+  that InputCtrl spawns, but it is a moving sprite of src/objects/ and
+  the camera only holds a `Sprite *`, so it is a level object here.
+  `LaunchPad` and `CameraLead` are declared in level_select.hpp, but they
+  are no part of the level-select screen.
 
 ## Progress
 

@@ -8,6 +8,8 @@ extern "C" {
 }
 
 using Game::Bosses::CortexBossPlatformMover;
+using Game::Objects::Platform;
+using Game::Objects::PlatformMover;
 
 /* Platform::Create (#664, include/platform.hpp), ROM 0x0801A878-0x0801AB34:
  * CreatePlatform, the level spawners' constructor (src/level/). */

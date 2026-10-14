@@ -41,17 +41,17 @@ namespace Crash
 class InputCtrl : public Ctrl
 {
 public:
-    Player *target;         // 0x10
-    u8 motionX;             // 0x14 - queued X motion entry (animSet->entries[][0])
-    u8 motionY;             // 0x15 - queued Y motion entry (animSet->entries[][1])
-    u8 dirState;            // 0x16 - the D-pad's last vertical direction: INPUT_CTRL_DIR_STATE_*
-    u8 motionXPending;      // 0x17 - ApplyMotion applies motionX
-    u8 motionYPending;      // 0x18 - ApplyMotion applies motionY
-    u8 motionXKeepSpeed;    // 0x19 - apply with SetTargetMotionX (speed kept), not Start...
-    u8 motionYKeepSpeed;    // 0x1A - the same for Y
-    CameraLead *cameraLead; // 0x1C - spawned by StateStart (level_select.hpp)
-    u8 flag20;              // 0x20 - left can still slow the ride down
-    s32 timer;              // 0x24 - how long left has been held, and the cooldown after
+    Player *target;      // 0x10
+    u8 motionX;          // 0x14 - queued X motion entry (animSet->entries[][0])
+    u8 motionY;          // 0x15 - queued Y motion entry (animSet->entries[][1])
+    u8 dirState;         // 0x16 - the D-pad's last vertical direction: INPUT_CTRL_DIR_STATE_*
+    u8 motionXPending;   // 0x17 - ApplyMotion applies motionX
+    u8 motionYPending;   // 0x18 - ApplyMotion applies motionY
+    u8 motionXKeepSpeed; // 0x19 - apply with SetTargetMotionX (speed kept), not Start...
+    u8 motionYKeepSpeed; // 0x1A - the same for Y
+    Game::Objects::CameraLead *cameraLead; // 0x1C - spawned by StateStart (level_select.hpp)
+    u8 flag20;                             // 0x20 - left can still slow the ride down
+    s32 timer; // 0x24 - how long left has been held, and the cooldown after
 
     /* The state methods, indexed by `state` (gInputCtrlStateFuncs,
      * src/data/player_pmf_16c250.cpp): INPUT_CTRL_STATE_*. */

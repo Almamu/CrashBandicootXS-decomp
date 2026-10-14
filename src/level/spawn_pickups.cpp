@@ -16,6 +16,10 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Objects::Pickups;
+using Game::Objects::Stopwatch;
+using Game::Objects::Wumpa;
+
 /* The pickup spawners: the powers, the stopwatch, the blue gem, the
  * crate gem's marker and the wumpa (#664, include/spawners.hpp), ROM
  * 0x08021D80-0x08022188. The player starts, the entity spawner's calls

@@ -8,6 +8,9 @@ extern "C" {
 #include "level_data.h"
 }
 
+using Game::Objects::ExtraLife;
+using Game::Objects::Wumpa;
+
 /* EntitySpawner (#664, include/spawners.hpp): the dropped extra life
  * (drop_extra_life.cpp until #771), the effect parts, the dropped wumpa
  * and the spawn table. Built with old_agbcp - see

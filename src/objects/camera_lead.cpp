@@ -26,6 +26,7 @@ extern "C" {
 }
 
 using Game::Crash::Player;
+using Game::Objects::CameraLead;
 
 /* The motion axes and the probe's hit axes, through an inline: both
  * values come first, and the second address is the first one's plus
