@@ -121,13 +121,20 @@ $(GENERATED_INCLUDE_DIR)/rooms.hpp: $(GENERATED_INCLUDE_DIR)/rooms.hpp.stamp
 # categories` the CATEGORY_* constants.
 CATEGORY_DEPS := data/levels/levels.json $(wildcard data/levels/spawns/*.json) include/constants/actor_kinds.h \
 	tools/levels.py
-$(LEVELS_BUILDDIR)/actor_categories.inc: $(CATEGORY_DEPS)
+# A category may name its own graphics (docs/levels.md, "Category
+# graphics"): new ones (graphics/manifest.json entries with no ROM address)
+# are defined in actor_categories.inc, whose generator reads their PNGs'
+# sizes and their palettes; their built .inc files
+# (CATEGORY_GRAPHICS_NEW_INCS, graphics_manifest.mk) are #included there.
+$(LEVELS_BUILDDIR)/actor_categories.inc: $(CATEGORY_DEPS) graphics/manifest.json $(CATEGORY_GRAPHICS_NEW) \
+	tools/gfx_manifest.py tools/jasc_pal.py
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py categories $@
 $(LEVELS_BUILDDIR)/spawns/%.inc: $(CATEGORY_DEPS)
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py spawns $* $@
-$(C_BUILDDIR)/engine/actor/data/actor_categories.o: $(LEVELS_BUILDDIR)/actor_categories.inc
+$(C_BUILDDIR)/engine/actor/data/actor_categories.o: $(LEVELS_BUILDDIR)/actor_categories.inc \
+	$(CATEGORY_GRAPHICS_NEW_INCS)
 $(C_BUILDDIR)/game/vehicles/polar/data/polar_cell_anim.o: $(LEVELS_BUILDDIR)/spawns/gCategory0SpawnTable.inc
 $(C_BUILDDIR)/game/vehicles/polar/data/polar_spawn_tables.o: \
 	$(foreach t,gCategory1SpawnTable gCategory2SpawnTable,$(LEVELS_BUILDDIR)/spawns/$(t).inc)

@@ -187,7 +187,7 @@ $(C_BUILDDIR)/engine/text/data/font_tiles.o: $(GRAPHICS_BUILDDIR)/fonts/small.im
 # the tile stream is the frames back to back), plus the 256-colour palette,
 # and, for $(3) = banks, its per-cell palette banks: only the bank bits of
 # that map are used (its tile indices are a reduced set and are ignored).
-# $(2) is the number of cells in a frame.
+# $(2) is the number of frames.
 define CELL_ANIM_RULE
 $(GRAPHICS_BUILDDIR)/$(1).img.bin $(GRAPHICS_BUILDDIR)/$(1).pal.bin &: graphics/$(1).png | $(GRIT)
 	@mkdir -p $$(dir $$@)
@@ -196,12 +196,13 @@ $(GRAPHICS_BUILDDIR)/$(1)_banks.map.bin: graphics/$(1).png | $(GRIT)
 	@mkdir -p $$(dir $$@)
 	$(GRIT) $$< -gt -gB4 -p! -m -mRtp -mLf -ftb -fh! -o $(GRAPHICS_BUILDDIR)/$(1)_banks
 $(GRAPHICS_BUILDDIR)/$(1)_frames.inc: $(GRAPHICS_BUILDDIR)/$(1).img.bin $(if $(3),$(GRAPHICS_BUILDDIR)/$(1)_banks.map.bin) tools/grit_bg.py
-	python3 tools/grit_bg.py frames $$< $$@ --cells $(2) $(if $(3),--banks $(GRAPHICS_BUILDDIR)/$(1)_banks.map.bin)
+	python3 tools/grit_bg.py frames $$< $$@ --frames $(2) $(if $(3),--banks $(GRAPHICS_BUILDDIR)/$(1)_banks.map.bin)
 $(GRAPHICS_BUILDDIR)/$(1).pal.inc: $(GRAPHICS_BUILDDIR)/$(1).pal.bin tools/bin2c.py
 	python3 tools/bin2c.py $$< $$@ --u16
 endef
-$(eval $(call CELL_ANIM_RULE,vehicles/polar/ice_wall,247,banks))
-$(eval $(call CELL_ANIM_RULE,vehicles/jetpack/clouds,380,))
+# The cell animations (CELL_ANIMS) with their frame counts and banks are
+# the manifest's cell_anim entries (graphics_manifest.mk).
+$(foreach a,$(CELL_ANIMS),$(eval $(call CELL_ANIM_RULE,$(a),$(CELL_ANIM_FRAMES_$(a)),$(CELL_ANIM_BANKS_$(a)))))
 
 # BG1 picture: the tile set is its own 8px-wide strip PNG (<picture>_tiles,
 # grit's external tileset, -fx, so the map indices are the ROM's), the
@@ -231,8 +232,17 @@ $(GRAPHICS_BUILDDIR)/$(1).pal.inc: $(GRAPHICS_BUILDDIR)/$(1).pal.bin tools/bin2c
 $(GRAPHICS_BUILDDIR)/$(1)_tiles.img.inc: $(GRAPHICS_BUILDDIR)/$(1)_tiles.img.bin tools/bin2c.py
 	python3 tools/bin2c.py $$< $$@
 endef
-SKIES := $(addprefix vehicles/jetpack/skies/,rocket_racket blimp_bonanza no_fly_zone)
-$(foreach p,$(SKIES),$(eval $(call BG_PICTURE_RULE,$(p))))
+# The BG1 pictures (BG_PICTURES) are the manifest's bg_picture entries.
+$(foreach p,$(BG_PICTURES),$(eval $(call BG_PICTURE_RULE,$(p))))
+
+# A new category's OBJ palette (CATEGORY_PALETTES, the manifest's
+# category_palette entries): a JASC .pal of 256 colours, an uncompressed
+# u16 array (docs/levels.md, "Category graphics").
+define CATEGORY_PALETTE_RULE
+$(GRAPHICS_BUILDDIR)/$(1).gbapal.inc: $(GRAPHICS_BUILDDIR)/$(1).gbapal tools/bin2c.py
+	python3 tools/bin2c.py $$< $$@ --u16
+endef
+$(foreach p,$(CATEGORY_PALETTES),$(eval $(call CATEGORY_PALETTE_RULE,$(p))))
 
 bg_picture_incs = $(foreach p,$(1),$(GRAPHICS_BUILDDIR)/$(p).pal.inc $(GRAPHICS_BUILDDIR)/$(p)_tiles.img.inc \
 	$(GRAPHICS_BUILDDIR)/$(p)_map.inc $(GRAPHICS_BUILDDIR)/$(p)_banks.inc)

@@ -14,9 +14,9 @@ splits and interleaves its output into the ROM's record layout.
         two per byte, low nibble first (what LoadBgPicture ORs back into
         bits 12-15). An odd count is padded with a zero nibble.
 
-    tools/grit_bg.py frames TILES OUT --cells N [--banks MAP]
+    tools/grit_bg.py frames TILES OUT (--cells N | --frames F) [--banks MAP]
         TILES is grit's 4bpp tile output (`-gt -gB4 -ftb`) of a tall strip
-        of animation frames, N tiles each. Writes one `{ { tiles }, },`
+        of animation frames, N tiles each (or F frames of equal size). Writes one `{ { tiles }, },`
         initializer per frame. With --banks, each frame also gets its
         cells' palette banks, packed as for `banks` and padded to
         (N+7)/8*4 bytes, the side-data size InitCellAnim steps over:
@@ -61,6 +61,7 @@ def main():
     ap.add_argument("input")
     ap.add_argument("output")
     ap.add_argument("--cells", type=int)
+    ap.add_argument("--frames", type=int)
     ap.add_argument("--banks", dest="banks_map")
     args = ap.parse_args()
 
@@ -73,9 +74,13 @@ def main():
         entries = read_map(args.input)
         write(args.output, args.input, byte_lines(pack_nibbles(e >> 12 for e in entries)))
     else:
-        if not args.cells:
-            sys.exit("grit_bg: frames needs --cells")
         tiles = open(args.input, "rb").read()
+        if args.frames and not args.cells:
+            if len(tiles) % (32 * args.frames):
+                sys.exit(f"grit_bg: {args.input}: {len(tiles) // 32} tiles is not {args.frames} frames of a size")
+            args.cells = len(tiles) // 32 // args.frames
+        if not args.cells:
+            sys.exit("grit_bg: frames needs --cells or --frames")
         frame_size = args.cells * 32
         if len(tiles) % frame_size:
             sys.exit(f"grit_bg: {args.input}: {len(tiles)} bytes is not a whole number of {args.cells}-tile frames")

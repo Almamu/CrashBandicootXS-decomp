@@ -38,8 +38,8 @@ put a class's members in ROM order.
     tools/gfx_manifest.py make OUT
         graphics.mk's lists that follow the manifest (graphics_manifest.mk):
         the tile sheets by bpp, the BG packages with their bpp, the
-        16-colour PNG palettes, the class objects and each one's
-        prerequisites (the .inc files of its members).
+        16-colour PNG palettes, the category graphics, the class objects
+        and each one's prerequisites (the .inc files of its members).
 
 An entry has its `path` (a file, or a directory ending in `/` that holds
 everything under it not claimed by a longer entry) or its `paths`, its
@@ -66,6 +66,10 @@ everything under it not claimed by a longer entry) or its `paths`, its
                   each frame carries its cells' palette banks
     bg_picture    a category BG1 picture; `paths` are the picture and its
                   tile set strip
+    category_palette
+                  a category's 256-colour OBJ palette, a JASC .pal (`colors`:
+                  256). Only new ones: the ROM's three are C arrays with other
+                  data
     obj_palettes  the OBJ palettes of gObjPalettes, one JASC .pal per
                   paletteId, named by `names` (NNN_<owner>: the paletteId and
                   what uses it)
@@ -95,6 +99,14 @@ that defines it. Its members come after the ROM's in that object, in
 manifest order, so the linker places them and moves what follows
 (docs/shifting.md); the ROM's graphics keep their addresses. extract and
 table leave it out: the ROM has nothing to extract.
+
+A new category graphic (CATEGORY_KINDS: a cell_anim, bg_picture or
+category_palette with no `rom`) is no class and names no object: an actor
+category of levels.json that names it (its "cell_anim", "sky" or
+"palette") has it defined by tools/levels.py categories, before
+ActorCategory::descriptors (docs/levels.md, "Category graphics").
+graphics_manifest.mk gives its build rules (CELL_ANIMS, BG_PICTURES,
+CATEGORY_PALETTES) as for the ROM's.
 """
 import argparse
 import json
@@ -147,6 +159,9 @@ def addr(v):
 # build rules graphics.mk takes from the manifest (graphics_manifest.mk).
 # An OBJ sheet's layout and a cutscene bitmap's slide are code's.
 NEW_KINDS = ("tiles", "bg_package")
+# The kinds a new category graphic can be: an actor category names it, and
+# tools/levels.py categories defines it (no class, no object).
+CATEGORY_KINDS = ("cell_anim", "bg_picture", "category_palette")
 
 
 def is_new(e):
@@ -158,9 +173,11 @@ def new_entry_errors(e, objects):
     """What's wrong with a new graphic's entry, if anything."""
     what = "%s (graphics/%s)" % (e.get("symbol", "?"), ", ".join(entry_paths(e)))
     errors = []
+    if e["kind"] in CATEGORY_KINDS:
+        return category_entry_errors(e, what)
     if e["kind"] not in NEW_KINDS or "obj_sheet" in e:
-        errors.append("%s: has no `rom`, but a new graphic is a %s without `obj_sheet`"
-                      % (what, " or ".join(NEW_KINDS)))
+        errors.append("%s: has no `rom`, but a new graphic is a %s without `obj_sheet`, or a category's %s"
+                      % (what, " or ".join(NEW_KINDS), " or ".join(CATEGORY_KINDS)))
     if "class" not in e:
         errors.append("%s: has no `rom`, so it is a new graphic, which needs a `class`" % what)
     if e.get("object") not in objects:
@@ -175,6 +192,49 @@ def new_entry_errors(e, objects):
     if e["kind"] == "bg_package" and "symbol" not in e.get("map", {}):
         errors.append("%s: a bg_package has a `map` with its `symbol`" % what)
     return errors
+
+
+def category_entry_errors(e, what):
+    """What's wrong with a new category graphic's entry, if anything."""
+    errors = []
+    for k in ("class", "object", "palette", "map"):
+        if k in e:
+            errors.append("%s: a new category graphic has no `%s`: the category that names it has it defined "
+                          "(levels.py categories)" % (what, k))
+    paths = entry_paths(e)
+    if e["kind"] == "cell_anim":
+        if len(paths) != 1 or not paths[0].endswith(".png"):
+            errors.append("%s: a cell_anim is one PNG, its frames stacked top to bottom" % what)
+        if not isinstance(e.get("frames"), int) or e["frames"] < 1 or not isinstance(e.get("banks"), bool):
+            errors.append("%s: a cell_anim has its `frames` (a count) and `banks` (true or false)" % what)
+    elif e["kind"] == "bg_picture":
+        if len(paths) != 2 or not all(p.endswith(".png") for p in paths):
+            errors.append("%s: a bg_picture's `paths` are its picture and its tile set strip, two PNGs" % what)
+    elif len(paths) != 1 or not paths[0].endswith(".pal") or e.get("colors") != 256:
+        errors.append("%s: a category_palette is a JASC .pal of `colors` 256" % what)
+    return errors
+
+
+def category_graphics():
+    """The manifest's category graphics (CATEGORY_KINDS), the ROM's and the
+    new ones: path (the first) -> entry."""
+    return {entry_paths(e)[0]: e for e in load() if e["kind"] in CATEGORY_KINDS}
+
+
+def category_stem(e):
+    """A category graphic's built name: its (first) path without the
+    extension."""
+    return entry_paths(e)[0].rsplit(".", 1)[0]
+
+
+def category_incs(e):
+    """The .inc files a category graphic's definition #includes."""
+    stem = category_stem(e)
+    if e["kind"] == "cell_anim":
+        return [stem + ".pal.inc", stem + "_frames.inc"]
+    if e["kind"] == "bg_picture":
+        return [stem + ".pal.inc", stem + "_map.inc", stem + "_tiles.img.inc", stem + "_banks.inc"]
+    return [stem + ".gbapal.inc"]
 
 
 # ---------------------------------------------------------------------------
@@ -583,7 +643,8 @@ def class_parts(e):
 
 
 def class_entries(entries=None):
-    return [e for e in (entries or load()) if "class" in e]
+    # a new category graphic can't be a class (category_entry_errors says so)
+    return [e for e in (entries or load()) if "class" in e and not (is_new(e) and e["kind"] in CATEGORY_KINDS)]
 
 
 def wrap(text, first, rest, width=78):
@@ -733,7 +794,10 @@ def make_fragment():
     """graphics.mk's lists that follow the manifest: the tile sheets
     (TILE_SHEETS_4BPP, _8BPP: the `tiles` that aren't OBJ sheets), the BG
     packages (BG_PACKAGES, BG_PACKAGE_BPP_<package>, BG_PACKAGES_AFFINE),
-    the PNG palettes of 16 colours (PALETTE_COLORS_16), the class objects
+    the PNG palettes of 16 colours (PALETTE_COLORS_16), the category
+    graphics (CELL_ANIMS, CELL_ANIM_FRAMES_<anim>, CELL_ANIM_BANKS_<anim>,
+    BG_PICTURES, CATEGORY_PALETTES, and the new ones' sources and .inc
+    files, CATEGORY_GRAPHICS_NEW, CATEGORY_GRAPHICS_NEW_INCS), the class objects
     (GRAPHICS_CLASS_OBJECTS) and each object's prerequisites: the .inc
     files its members' definitions #include."""
     entries = load()
@@ -752,6 +816,20 @@ def make_fragment():
     out += ["BG_PACKAGE_BPP_%s := %d" % (s, e["bpp"]) for e, s in packages]
     var("PALETTE_COLORS_16", [s for e, s in stems if e["kind"] in ("tiles", "bg_package")
                               and e.get("palette", {}).get("colors") == 16])
+    # the category graphics (docs/levels.md, "Category graphics"): the cell
+    # animations with their frame counts and whether they carry banks, the
+    # BG1 pictures and the new OBJ palettes, and the new ones' sources and
+    # .inc files, which levels.mk makes actor_categories' prerequisites
+    cells = [e for e in entries if e["kind"] == "cell_anim"]
+    var("CELL_ANIMS", [category_stem(e) for e in cells])
+    for e in cells:
+        out.append("CELL_ANIM_FRAMES_%s := %d" % (category_stem(e), e["frames"]))
+        out.append("CELL_ANIM_BANKS_%s :=%s" % (category_stem(e), " banks" if e["banks"] else ""))
+    var("BG_PICTURES", [category_stem(e) for e in entries if e["kind"] == "bg_picture"])
+    var("CATEGORY_PALETTES", [category_stem(e) for e in entries if e["kind"] == "category_palette"])
+    new = [e for e in entries if e["kind"] in CATEGORY_KINDS and is_new(e)]
+    var("CATEGORY_GRAPHICS_NEW", ["graphics/" + p for e in new for p in entry_paths(e)])
+    var("CATEGORY_GRAPHICS_NEW_INCS", ["$(GRAPHICS_BUILDDIR)/" + i for e in new for i in category_incs(e)])
     objects = [o["name"] for o in load_objects()]
     var("GRAPHICS_CLASS_OBJECTS", objects)
     for name in objects:
