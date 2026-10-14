@@ -24,6 +24,10 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Engine::Sys::Display;
+using Engine::Sys::FrameLimiter;
+using Engine::Sys::VramDmaQueue;
+
 /* Tail of GitHub issue #65's chunk (0x080361B0-0x08037110). The
  * company-logo screen's methods (CompanyLogos, #664 part 10b,
  * include/frontend.hpp): Run, the VV logo's graphics and pieces (the

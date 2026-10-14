@@ -11,6 +11,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Sys::FrameLimiter;
+using Engine::Sys::Irq;
+
 /* Points an IRQ's handler at EmptyHandler (its IE bit is left alone). */
 void Irq::ClearHandler(s32 interruptIndex)
 {

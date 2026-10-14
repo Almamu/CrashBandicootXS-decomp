@@ -11,6 +11,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Sys::VramDmaQueue;
+
 /* Aku Aku (#664 part 11d, include/vehicle.hpp), ROM 0x0802D204-0x0802D59C,
  * between polar_objects.cpp and polar_course_objects.cpp: PolarAkuAku's
  * Refresh, Update and Move, its masks and its constructor, and

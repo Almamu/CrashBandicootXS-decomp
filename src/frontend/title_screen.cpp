@@ -18,6 +18,9 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Engine::Sys::Display;
+using Engine::Sys::FrameLimiter;
+
 /* The title screen (TitleScreen, #664 part 10c-2, include/frontend.hpp):
  * its constructor, graphics loaders and logo pieces' update and draw,
  * then the cheat input, the run loop, the menu and the destructor. The

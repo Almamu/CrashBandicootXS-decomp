@@ -11,11 +11,13 @@
  * IWRAM globals that no other object reads, and static data members
  * compile like those globals, static member functions like plain
  * functions. cxx_symbols.txt (block "#915 FrameLimiter") maps each member
- * to its C name (`_12FrameLimiter.target` is gFrameLimitTarget, ...):
+ * to its C name (`_Q36Engine3Sys12FrameLimiter.target` is gFrameLimitTarget, ...):
  * sym_iwram.txt places `target` and `interval`, iwram_data.cpp defines
  * `enabled` with the other initialised IWRAM globals. The functions keep
- * their C names the same way (`WaitForVBlank__12FrameLimiter` is
+ * their C names the same way (`WaitForVBlank__Q36Engine3Sys12FrameLimiter` is
  * WaitForVBlank).
+ *
+ * In the namespace Engine::Sys (#1033, docs/cplusplus.md "Namespaces").
  *
  * `#pragma interface`: no vtable to emit; it keeps g++ from emitting
  * out-of-line copies of inline methods (docs/cplusplus.md). */
@@ -24,6 +26,11 @@
 extern "C" {
 #include "core.h"
 }
+
+namespace Engine
+{
+namespace Sys
+{
 
 class FrameLimiter
 {
@@ -37,5 +44,8 @@ private:
     static u32 target;   // gFrameLimitTarget - the gVBlankCounter the wait runs to
     static u32 interval; // gFrameLimitInterval - the VBlanks a frame
 };
+
+} // namespace Sys
+} // namespace Engine
 
 #endif // GUARD_FRAME_LIMITER_HPP

@@ -18,6 +18,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Sys::VramDmaQueue;
+
 /* The polar player's virtual methods, the hazards' hits and six of its
  * states (#664 part 11c, include/vehicle.hpp), ROM
  * 0x0802B364-0x0802BC68, between actor_factory.cpp and

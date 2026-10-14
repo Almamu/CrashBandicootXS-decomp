@@ -12,6 +12,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Sys::Display;
+
 /* The room exit flag (LevelProgress::roomExitRequested). */
 void LevelProgress::ClearRoomExit()
 {

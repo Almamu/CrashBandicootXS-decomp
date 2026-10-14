@@ -10,6 +10,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Sys::Display;
+
 /* GitHub issue #43: the level-layers singleton (LevelLayers,
  * include/bg_layer.hpp; `gLevelLayersSingleton`, 0x2C bytes, created on
  * first use by `Get`) - the object `gLevelLayers` also points at: the

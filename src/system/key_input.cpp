@@ -11,6 +11,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Sys::KeyInput;
+
 /* The held d-pad bits as a direction (KEY_DIR_*), through
  * gDpadDirectionTable. */
 u8 KeyInput::GetDpadDirection()

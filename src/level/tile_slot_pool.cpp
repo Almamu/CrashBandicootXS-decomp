@@ -6,6 +6,8 @@ extern "C" {
 #include "memory.h"
 }
 
+using Engine::Sys::VramDmaQueue;
+
 /* GitHub issue #43: the VRAM tile-slot pool that BG layer 0 of the
  * level-layers singleton (`level_layers.cpp`; a PooledBgLayer, whose
  * constructor, destructor and GetPriority were here until #770 and are

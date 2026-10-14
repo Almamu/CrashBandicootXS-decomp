@@ -19,6 +19,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Sys::VramDmaQueue;
+
 /* JetpackPlayer's small methods, five of its states, its destructor and
  * its state dispatch (#664 part 11e, include/vehicle.hpp). See
  * docs/matching/archive/issue-56-0x0802f0dc-actor.md. */

@@ -21,6 +21,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Sys::Display;
+using Engine::Sys::VramDmaQueue;
+
 /* 0x08022354-0x080225A0, formerly asm/code_3_2_17_22354.s: the two
  * functions between issue #33's chunk (spawn_pickups.cpp and
  * spawn_markers.cpp, which ends with the game-context constructor

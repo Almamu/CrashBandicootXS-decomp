@@ -31,6 +31,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Sys::FrameLimiter;
+using Engine::Sys::VramDmaQueue;
+
 /* codegen: LevelState::SetCheckpointAtPlayer takes a flag (level_state.hpp); this
  * caller passes the state only and leaves r1 as it is. docs/headers.md */
 extern void SetCheckpointAtPlayer_1(void *self) asm("SetCheckpointAtPlayer");

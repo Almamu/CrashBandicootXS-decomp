@@ -8,6 +8,8 @@
  * C names. It has no vtable and no destructor: level_cutscene.cpp's
  * `delete gInput` is a plain OperatorDelete call.
  *
+ * In the namespace Engine::Sys (#1033, docs/cplusplus.md "Namespaces").
+ *
  * `#pragma interface`: no vtable to emit; it keeps g++ from emitting
  * out-of-line copies of inline methods (docs/cplusplus.md). */
 #pragma interface
@@ -35,6 +37,11 @@ extern "C" {
 #define KEY_DIR_INDEX_LEFT 4
 #define KEY_DIR_INDEX_RIGHT 8
 
+namespace Engine
+{
+namespace Sys
+{
+
 class KeyInput
 {
 public:
@@ -46,5 +53,8 @@ public:
 };
 
 COMPILE_TIME_ASSERT(key_input_hpp, sizeof(KeyInput) == 4);
+
+} // namespace Sys
+} // namespace Engine
 
 #endif // GUARD_KEY_INPUT_HPP

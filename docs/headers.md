@@ -76,6 +76,18 @@ Other homes:
   use, or fixing the type of the field or local that holds the value, is
   normally byte-neutral; check the object. Don't add a local copy with
   another type, unless it is a codegen exception (below).
+- **A class in its namespace** (#1033, docs/cplusplus.md "Namespaces"):
+  a `.hpp` declares its classes inside their namespace (`namespace
+  Engine { namespace Sys { class Irq ... } }`), and the C declarations it
+  includes stay outside it, global. A header never has `using
+  namespace`: its inline code and its declarations name another
+  namespace's class by its qualified name
+  (`Engine::Sys::VramDmaQueue::Flush()`). The `.cpp` files name it with a
+  `using` declaration after their includes (`using Engine::Sys::Irq;`).
+  A C header that gives a global a C++ class type under `__cplusplus`
+  forward declares the class in its namespace (globals.h's `gInput`, an
+  `Engine::Sys::KeyInput *`). `extern "C"` functions are never in a
+  namespace.
 
 These are the prototype changes that most often change the generated
 code. Rebuild and compare before assuming a change is neutral:

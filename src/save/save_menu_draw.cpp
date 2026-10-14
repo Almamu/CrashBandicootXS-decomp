@@ -19,6 +19,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Engine::Sys::FrameLimiter;
+
 /* SaveMenu's link exchange, slot list drawing, setup helpers and per-state
  * draw routines (include/save_menu.hpp, #664's final cleanup). The second
  * half, from LoadBg on, was save_menu_ui.cpp until #771.

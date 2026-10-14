@@ -15,6 +15,8 @@ extern "C" {
 #include "core.h"
 }
 
+using Engine::Sys::FrameLimiter;
+
 /* The pause menu (PauseMenu, menus.hpp; docs/rom_map.md's "overlay_ui"
  * section). Run runs the whole screen to completion: frees the pending
  * heap bytes, stops the ambient sounds, clears palette color 0 and

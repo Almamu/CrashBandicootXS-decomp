@@ -14,6 +14,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Engine::Sys::VramDmaQueue;
+
 /* A meta-node for a doubly-linked, address-ordered free-block list that
  * tracks allocations inside the OBJ tile VRAM pool (OBJ_VRAM0,
  * OBJ_VRAM0_SIZE bytes) Init sets up. Metadata lives in

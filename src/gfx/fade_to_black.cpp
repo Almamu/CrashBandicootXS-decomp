@@ -7,6 +7,8 @@ extern "C" {
 #include "gfx.h"
 }
 
+using Engine::Sys::FrameLimiter;
+
 /* Sits right after the still-raw remainder of asm/code_3_1_6.s'
  * SIO/link-cable and overlay_ui functions and before the small
  * fade/screen-mode utility cluster this file documents - see

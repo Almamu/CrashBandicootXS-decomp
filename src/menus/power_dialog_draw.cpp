@@ -11,6 +11,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Sys::FrameLimiter;
+using Engine::Sys::VramDmaQueue;
+
 /* Draws the dialog: the power's title centred at row 0x2d (gLargeFont's
  * MeasureText, then DrawText), the description wrapped into its box
  * (DrawWrappedTextInBox) and UI text 0x2e centred at row 0x90

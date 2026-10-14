@@ -8,6 +8,8 @@ extern "C" {
 #include "util.h"
 }
 
+using Engine::Sys::Irq;
+
 /* "Start" step of the link session - counterpart to `Stop`
  * (link_handshake.cpp). UNUSED: Update writes the same steps out. Disables the Serial/Timer3 IRQ lines (same IME-guarded
  * pattern), installs `LinkSerialIntr` as the Serial IRQ handler and

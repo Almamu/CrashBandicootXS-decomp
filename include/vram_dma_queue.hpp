@@ -11,10 +11,12 @@
  * global that no other object reads, and a static data member compiles
  * like that global, static member functions like plain functions. The
  * data member is only declared: cxx_symbols.txt (block "#915
- * VramDmaQueue") maps it to its C name (`_12VramDmaQueue.queue` is
+ * VramDmaQueue") maps it to its C name (`_Q36Engine3Sys12VramDmaQueue.queue` is
  * gVramDmaQueue), whose address is in sym_iwram.txt, and the functions
- * keep their C names the same way (`Flush__12VramDmaQueue` is
+ * keep their C names the same way (`Flush__Q36Engine3Sys12VramDmaQueue` is
  * FlushVramDmaQueue).
+ *
+ * In the namespace Engine::Sys (#1033, docs/cplusplus.md "Namespaces").
  *
  * `#pragma interface`: no vtable to emit; it keeps g++ from emitting
  * out-of-line copies of inline methods (docs/cplusplus.md). */
@@ -25,6 +27,11 @@ extern "C" {
 }
 
 struct dma_queue;
+
+namespace Engine
+{
+namespace Sys
+{
 
 class VramDmaQueue
 {
@@ -41,5 +48,8 @@ private:
      * struct (vram_dma_queue.cpp) */
     static struct dma_queue queue; // gVramDmaQueue
 };
+
+} // namespace Sys
+} // namespace Engine
 
 #endif // GUARD_VRAM_DMA_QUEUE_HPP

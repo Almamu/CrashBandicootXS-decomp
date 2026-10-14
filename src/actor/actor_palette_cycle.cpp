@@ -12,6 +12,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Sys::VramDmaQueue;
+
 /* The actor zone's BG palette cycle (gActorPaletteCycle*): restore,
  * save, the per-frame DMA step, the per-category seed and the switch,
  * ROM 0x0802AB08-0x0802AC28.

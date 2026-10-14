@@ -414,7 +414,7 @@ public:
     /* The per-frame register commit. */
     void CommitDisplay()
     {
-        VramDmaQueue::Flush();
+        Engine::Sys::VramDmaQueue::Flush();
         bg2->Commit();
         scroll++;
         *(vu16 *)REG_ADDR_BG0HOFS = scroll >> 3;
@@ -431,7 +431,7 @@ public:
     void BeginFrame()
     {
         Update();
-        FrameLimiter::WaitForVBlank();
+        Engine::Sys::FrameLimiter::WaitForVBlank();
         gPaletteCache->Upload();
         gOamBuffer->Commit();
         CommitDisplay();

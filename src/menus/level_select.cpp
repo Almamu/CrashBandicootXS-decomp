@@ -12,6 +12,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Engine::Sys::FrameLimiter;
+
 /* GitHub issue #26: 0x0801B85C-0x0801CEE0 (include/level_select.hpp).
  * LevelSelect: the paged level-select screen. LevelSelect::Run is the whole
  * modal screen: it builds the menu, runs it (Loop) and returns the chosen

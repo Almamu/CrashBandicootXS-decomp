@@ -21,6 +21,9 @@ extern "C" {
 #include "system.h"
 }
 
+using Engine::Sys::FrameLimiter;
+using Engine::Sys::VramDmaQueue;
+
 /* The continue prompt's constructor (ContinuePrompt, frontend.hpp;
  * RunContinuePrompt allocates it): three BG buffers (BG0 the smoke, BG1
  * the Uka Uka background, BG2 the glow) and their graphics packages,

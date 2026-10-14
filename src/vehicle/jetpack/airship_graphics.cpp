@@ -10,6 +10,8 @@ extern "C" {
 #include "gfx.h"
 }
 
+using Engine::Sys::VramDmaQueue;
+
 /* The airship's damage, graphics, HP gauge and teardown (#664 parts
  * 11f and 11i, Airship since #772, include/airship.hpp): DamageAirship, its graphics
  * (LoadAirshipGraphics, ConvertAirshipTiles and the flash/palette

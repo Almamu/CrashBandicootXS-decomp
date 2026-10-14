@@ -14,6 +14,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Engine::Sys::KeyInput;
+
 /* GitHub issues #19 (its last raw function, CheckSwimCtrlTurn) and #20
  * (0x08016128-0x08017524): the swim controller, SwimCtrl
  * (include/swim_ctrl.hpp, gSwimCtrlVtable; #664, docs/cplusplus.md).

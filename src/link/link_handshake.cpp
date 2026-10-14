@@ -7,6 +7,8 @@ extern "C" {
 #include "link.h"
 }
 
+using Engine::Sys::Irq;
+
 /* The GBA multiplayer link-cable/SIO transport - see docs/rom_map.md's
  * SIO/link-cable section. `LinkSession::ResetState` resets the session
  * object at `gLinkSession` (class LinkSession, link_session.hpp); its 4

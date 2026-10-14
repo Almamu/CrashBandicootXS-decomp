@@ -13,6 +13,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Engine::Sys::KeyInput;
+
 /* ActionCtrl's CheckLeftGround (include/action_ctrl.hpp; #664,
  * docs/cplusplus.md). Built by old_agbcp (the Makefile's OLD_AGBCC_OBJS):
  * the C, built by agbcc, pinned 3 registers to old_agbcc's code. */

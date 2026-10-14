@@ -7,6 +7,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Sys::FrameLimiter;
+
 /* Sits between FormatCentiseconds (ROM 0x0800106C, in src/util/time_format.cpp) and
  * LoadTaggedAsset (still raw in asm/code_3_1_5.s). */
 

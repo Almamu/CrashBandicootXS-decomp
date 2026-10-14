@@ -734,15 +734,35 @@ class Model:
             parts = line.split()
             if len(parts) != 2 or parts[0].startswith("#"):
                 continue
-            m = re.match(r"^([A-Za-z]\w*?)__C?(\d+)(\w+)$", parts[0])
+            m = re.match(r"^([A-Za-z]\w*?)__C?(\w+)$", parts[0])
             if not m:
                 continue
-            n = int(m.group(2))
-            cls = m.group(3)[:n]
-            if len(cls) < n:
+            cls = mangled_class(m.group(2))
+            if not cls:
                 continue
             self.cxx.append((parts[1], cls, m.group(1)))
             self.methods[cls].add(m.group(1))
+
+
+def mangled_class(text):
+    """The class a g++ 2.9 mangled method's class part (the text after
+    `__`) names, without its namespaces: `3Irq...` is Irq, and so is
+    `Q36Engine3Sys3Irq...` (a class in Engine::Sys, #1033). None if it
+    isn't a class."""
+    m = re.match(r"Q(?:(\d)|_(\d+)_)", text)
+    count = int(m.group(1) or m.group(2)) if m else 1
+    pos = m.end() if m else 0
+    name = None
+    for _ in range(count):
+        n = re.match(r"\d+", text[pos:])
+        if not n:
+            return None
+        pos += n.end()
+        name = text[pos : pos + int(n.group(0))]
+        if len(name) < int(n.group(0)):
+            return None
+        pos += len(name)
+    return name
 
 
 # ---------------------------------------------------------------------------
