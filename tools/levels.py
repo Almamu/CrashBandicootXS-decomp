@@ -1681,6 +1681,20 @@ CATEGORY_TYPE_NAMES = ["POLAR", "JETPACK", "HOVERCRAFT"]  # CATEGORY_TYPE_*, the
 # The BG1 skies (graphics/vehicles/jetpack/skies/<name>.png).
 CATEGORY_SKIES = {"rocket_racket": "gCategory3BgPicture", "blimp_bonanza": "gCategory4BgPicture",
                   "no_fly_zone": "gCategory5BgPicture"}
+# A category's own graphics (docs/levels.md, "Category graphics"): the
+# optional keys naming them, by their path under graphics/, and the
+# manifest kind each must be. "sky" can also be one of CATEGORY_SKIES.
+CATEGORY_GRAPHIC_KEYS = {"cell_anim": "cell_anim", "sky": "bg_picture", "palette": "category_palette"}
+# The geometry the code takes for a type's cell animation, in cells: its
+# ROM animation's (CellAnim::Init reads it from the header, but
+# ActorBg::InitScroll's scroll, the VRAM after the two pages, which the BG1
+# picture's tiles follow, and the screen blocks are laid out for these).
+CELL_ANIM_GEOMETRY = {"POLAR": (19, 13), "JETPACK": (38, 10), "HOVERCRAFT": (38, 10)}
+# A BG1 picture: a 38x16-cell map, like the ROM's skies, and its tiles
+# after the cell animation's two pages (CellAnim::GetFreeTile: cells * 2 +
+# 1 tiles in), up to tile 1023 of the BG1 map's tile base (char block 1,
+# 0x200 tiles in) and below screen block 26 (0x0600D000).
+BG_PICTURE_GEOMETRY = (38, 16)
 # The kinds only one type's spawner can spawn: the airship needs
 # Airship::Create (the jetpack type's boss), the hovercraft is the
 # hovercraft type's boss (JetpackPlayer::SpawnActor, jetpack_spawn.cpp).
@@ -1734,14 +1748,14 @@ def level_categories(data):
         missing = [k for k in CATEGORY_KEYS if k not in c]
         if missing:
             fail("%s has no %s" % (c["constant"], ", ".join('"%s"' % k for k in missing)))
-        unknown = [k for k in c if k not in CATEGORY_KEYS + ["sky"]]
+        unknown = [k for k in c if k not in CATEGORY_KEYS + list(CATEGORY_GRAPHIC_KEYS)]
         if unknown:
             fail("%s: unknown %s" % (c["constant"], ", ".join('"%s"' % k for k in unknown)))
         if c["type"] not in CATEGORY_TYPES:
             fail("%s: \"type\" is one of %s" % (c["constant"], ", ".join(CATEGORY_TYPE_NAMES)))
-        if "sky" in c and (c["type"] == "POLAR" or c["sky"] not in CATEGORY_SKIES):
-            fail("%s: \"sky\" is one of %s, for a jetpack or hovercraft category"
-                 % (c["constant"], ", ".join(CATEGORY_SKIES)))
+        if "sky" in c and c["type"] == "POLAR":
+            fail("%s: a polar category has no \"sky\" (BG1 is the yeti's)" % c["constant"])
+        category_graphics(c)
         for k in CATEGORY_KEYS[4:]:
             if not isinstance(c[k], int) or not 0 <= c[k] < 0x10000:
                 fail("%s: \"%s\" is a number" % (c["constant"], k))
@@ -1765,6 +1779,137 @@ def level_categories(data):
         if clash:
             fail("the spawn lists %s and %s are both %s" % (c["spawns"], clash[0], s))
     return cats
+
+
+_category_gfx = {}
+
+
+def category_graphic_entries():
+    """graphics/manifest.json's category graphics: path -> entry."""
+    if not _category_gfx:
+        import gfx_manifest
+        _category_gfx.update(gfx_manifest.category_graphics())
+    return _category_gfx
+
+
+def png_size(path):
+    from PIL import Image
+
+    with Image.open(path) as img:
+        return img.size
+
+
+def category_graphics(c):
+    """A category's graphics, checked: {"cell_anim", "sky", "palette"} ->
+    (symbol, its manifest entry or None, extra), the type's (or no sky)
+    where it names none. A new graphic (no `rom` in the manifest) must fit
+    the type: a cell animation of the type's geometry and banks, a sky of
+    BG_PICTURE_GEOMETRY whose tiles fit after it, a 256-colour palette."""
+    t = CATEGORY_TYPES[c["type"]]
+
+    def fail(msg):
+        sys.exit("%s: %s: %s (docs/levels.md, \"Category graphics\")" % (LEVELS_JSON, c["constant"], msg))
+
+    entries = category_graphic_entries()
+    out = {"cell_anim": (t["cell_anim"], None, t["cell_anim_size"]), "sky": (None, None, None),
+           "palette": (t["palette"], None, None)}
+    for key, kind in CATEGORY_GRAPHIC_KEYS.items():
+        if key not in c:
+            continue
+        v = c[key]
+        if key == "sky" and v in CATEGORY_SKIES:
+            out["sky"] = (CATEGORY_SKIES[v], None, None)
+            continue
+        e = entries.get(v)
+        if e is None or e["kind"] != kind:
+            fail("\"%s\" %s isn't a %s of graphics/manifest.json (by its path under graphics/)%s"
+                 % (key, json.dumps(v), kind, ", or one of " + ", ".join(CATEGORY_SKIES) if key == "sky" else ""))
+        out[key] = (e["symbol"], e, None)
+    cols, rows = CELL_ANIM_GEOMETRY[c["type"]]
+    sym, e, size = out["cell_anim"]
+    if e is not None:
+        if e["banks"] != (c["type"] == "POLAR"):
+            fail("its cell animation %s %s per-cell palette banks, a %s category's %s"
+                 % (sym, "has" if e["banks"] else "has no", c["type"].lower(), "has" if not e["banks"] else "hasn't"))
+        w, h = png_size(GFX_MANIFEST.parent / e["path"])
+        if (w, h) != (cols * 8, rows * 8 * e["frames"]):
+            fail("its cell animation graphics/%s is %dx%d: %d frames of the %s type's %dx%d cells are %dx%d"
+                 % (e["path"], w, h, e["frames"], c["type"].lower(), cols, rows, cols * 8, rows * 8 * e["frames"]))
+        cells = cols * rows
+        frame = cells * 32 + ((cells + 7) // 8 * 4 if e["banks"] else 0)
+        out["cell_anim"] = (sym, e, {"cols": cols, "rows": rows, "size": 0x204 + frame * e["frames"]})
+    sym, e, _ = out["sky"]
+    if e is not None:
+        w, h = png_size(GFX_MANIFEST.parent / e["paths"][0])
+        tw, th = png_size(GFX_MANIFEST.parent / e["paths"][1])
+        bc, br = BG_PICTURE_GEOMETRY
+        ntiles = th // 8
+        base = cols * rows * 2 + 1
+        if (w, h) != (bc * 8, br * 8) or tw != 8 or th % 8:
+            fail("its sky graphics/%s is %dx%d and its tile set %dx%d: a sky is %dx%d (%dx%d cells), its tile set "
+                 "an 8-pixel-wide strip" % (e["paths"][0], w, h, tw, th, bc * 8, br * 8, bc, br))
+        if base - 0x200 + ntiles > 0x400 or (base + ntiles) * 32 > 0xD000:
+            fail("its sky's %d tiles don't fit after the cell animation (tiles %d-%d; the BG1 map reaches tile "
+                 "%d, screen block 26 tile %d)" % (ntiles, base, base + ntiles - 1, 0x200 + 0x3FF, 0xD000 // 32))
+        out["sky"] = (sym, e, {"cols": bc, "rows": br, "tiles": ntiles})
+    sym, e, _ = out["palette"]
+    if e is not None:
+        import jasc_pal
+        n = len(jasc_pal.read_jasc(GFX_MANIFEST.parent / e["path"]))
+        if n != 256:
+            fail("its palette graphics/%s has %d colours, an OBJ palette 256" % (e["path"], n))
+    return out
+
+
+def new_category_graphics_c(cats):
+    """The definitions of the new graphics (no ROM address) the categories
+    name, in category order, each once."""
+    out, done = [], set()
+    for c in cats:
+        for key, (sym, e, extra) in category_graphics(c).items():
+            if e is None or "rom" in e or sym in done:
+                continue
+            done.add(sym)
+            stem = (e["paths"][0] if "paths" in e else e["path"]).rsplit(".", 1)[0]
+            out.append("")
+            if key == "cell_anim":
+                cells = extra["cols"] * extra["rows"]
+                out += ["/* graphics/%s: %s's BG0 cell animation, %dx%d cells, %d frames%s (new) */"
+                        % (e["path"], c["constant"], extra["cols"], extra["rows"], e["frames"],
+                           ", with its cells' palette banks" if e["banks"] else ""),
+                        "struct category_cell_anim_%s {" % sym, "    struct cell_anim_header header;",
+                        "    struct {", "        u8 tiles[%d * 32];" % cells]
+                if e["banks"]:
+                    out.append("        u8 banks[(%d + 7) / 8 * 4];" % cells)
+                out += ["    } frames[%d];" % e["frames"], "};",
+                        "COMPILE_TIME_ASSERT(%s, sizeof(struct category_cell_anim_%s) == 0x%X);"
+                        % (sym, sym, extra["size"]),
+                        "extern const struct category_cell_anim_%s %s = {" % (sym, sym),
+                        "    {", "        {", "#include \"%s.pal.inc\"" % stem, "        },",
+                        "        %d, %d," % (extra["cols"], extra["rows"]), "    },",
+                        "    {", "#include \"%s_frames.inc\"" % stem, "    },", "};"]
+            elif key == "sky":
+                cells = extra["cols"] * extra["rows"]
+                # the header, the map (a whole number of words), the tiles and
+                # the banks' nibbles, in words (the header's tile count)
+                size = (0x208 + 2 * (cells + (cells & 1)) + 32 * extra["tiles"] + (cells + 1) // 2 + 3) & ~3
+                out += ["/* graphics/%s: %s's BG1 picture, %dx%d cells, %d tiles (new) */"
+                        % (e["paths"][0], c["constant"], extra["cols"], extra["rows"], extra["tiles"]),
+                        "struct category_bg_picture_%s {" % sym, "    struct bg_picture_header header;",
+                        "    u16 map[%d];" % (cells + (cells & 1)), "    u8 tiles[%d * 32];" % extra["tiles"],
+                        "    u8 banks[(%d + 1) / 2];" % cells, "};",
+                        "COMPILE_TIME_ASSERT(%s, sizeof(struct category_bg_picture_%s) == 0x%X);"
+                        % (sym, sym, size),
+                        "extern const struct category_bg_picture_%s %s = {" % (sym, sym),
+                        "    {", "        {", "#include \"%s.pal.inc\"" % stem, "        },",
+                        "        %d, %d, %d," % (extra["cols"], extra["rows"], extra["tiles"]), "    },",
+                        "    {", "#include \"%s_map.inc\"" % stem, "    },",
+                        "    {", "#include \"%s_tiles.img.inc\"" % stem, "    },",
+                        "    {", "#include \"%s_banks.inc\"" % stem, "    },", "};"]
+            else:
+                out += ["/* graphics/%s: %s's OBJ palette, 256 colours (new) */" % (e["path"], c["constant"]),
+                        "extern const u16 %s[256] = {" % sym, "#include \"%s.gbapal.inc\"" % stem, "};"]
+    return out
 
 
 def categories():
@@ -1876,16 +2021,29 @@ def actor_categories_inc(data):
         out += ["", "/* The spawn lists that aren't the ROM's. */"]
         for n in new:
             out += spawn_table_c(n)
+    graphics = new_category_graphics_c(cats)
+    if graphics:
+        out += ["", "/* The new graphics the categories name (graphics/manifest.json entries with no",
+                " * ROM address; docs/levels.md \"Category graphics\"). */"] + graphics
     out += ["", "/* One descriptor per actor category (levels.json's \"categories\"). */",
             "const struct category_descriptor ActorCategory::descriptors[CATEGORY_COUNT] = {"]
     for c in cats:
         t = CATEGORY_TYPES[c["type"]]
+        g = category_graphics(c)
+
+        def ref(key, cast):
+            sym, e, _ = g[key]
+            if sym is None:
+                return "0"
+            return "(%s)&%s" % (cast, sym) if e is not None and "rom" not in e and key != "palette" else \
+                ("(%s)%s" % (cast, sym) if cast == "void *" else sym)
+        cell_size = g["cell_anim"][2]["size"] if g["cell_anim"][1] is not None else t["cell_anim_size"]
         out += ["    /* %s */" % c["constant"], "    {",
                 "        CATEGORY_TYPE_%s," % c["type"],
-                "        (void *)%s," % t["cell_anim"],
-                "        0x%x," % t["cell_anim_size"],
-                "        %s," % (CATEGORY_SKIES[c["sky"]] if "sky" in c else "0"),
-                "        %s," % t["palette"],
+                "        %s," % ref("cell_anim", "void *"),
+                "        0x%x," % cell_size,
+                "        %s," % ref("sky", "const u8 *"),
+                "        %s," % ref("palette", None),
                 "        (struct actor_spawn_table *)%s%s," % ("&" if c["spawns"] in new else "",
                                                                spawn_list(c["spawns"])["symbol"]),
                 "        (struct anim_table_record *)%s," % t["anim_table"],

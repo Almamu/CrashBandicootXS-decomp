@@ -176,7 +176,7 @@ for it, its `palette` or its `map`. It is a graphics class (a `class`), a
 `tiles` sheet or a `bg_package` without `obj_sheet` (gfx_manifest.py's
 `NEW_KINDS`: the kinds whose build rules come from the manifest; an OBJ
 sheet's layout is graphics.mk's), and it names the manifest `objects`
-entry that defines it, `"object"`:
+entry that defines it, `"object"` (or it is a category graphic, below):
 
 ```json
 {"path": "level_select/pictures/lab.png", "kind": "tiles", "symbol": "gLevelSelectPictureLabTiles",
@@ -205,6 +205,19 @@ entry that defines it, `"object"`:
 A new level-select picture is a new graphic of `level_select_graphics`,
 which a theme names as its `"picture"` ([levels.md,
 "Themes"](./levels.md#themes)).
+
+**Category graphics.** A new `cell_anim`, `bg_picture` or
+`category_palette` (`CATEGORY_KINDS`) is no class and names no object:
+an actor category of `levels.json` that names it (its `"cell_anim"`,
+`"sky"` or `"palette"`) has `levels.py categories` define it, before
+`ActorCategory::descriptors` ([levels.md, "Category
+graphics"](./levels.md#category-graphics)). Its entry gives its build
+rules, as for the ROM's: `graphics_manifest.mk` lists the cell animations
+(`CELL_ANIMS`, with their frame counts and banks), the BG1 pictures
+(`BG_PICTURES`) and the OBJ palettes (`CATEGORY_PALETTES`, a JASC `.pal`
+of 256 colours, the only kind with no ROM entry: the ROM's three are C
+arrays). `check` checks it: no `class`, `object`, `palette` or `map`, and
+its kind's files and fields.
 
 ### Graphics classes
 

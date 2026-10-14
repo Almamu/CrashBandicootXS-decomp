@@ -1306,7 +1306,9 @@ scope).
 | `"constant"`, `"name"` | (its index) | `CATEGORY_<NAME>` (`constants/categories.h`), which a stage names as `<NAME>` |
 | `"type"` | `type` | `POLAR`, `JETPACK` or `HOVERCRAFT` (`CATEGORY_TYPE_*`) |
 | (the type) | `cellAnim`, `cellAnimSize`, `palette`, `anim_table`, `sprite_sheet` | the type's: polar `gCategoryFamily0CellAnim`, `gPolarCategoryPalette`, `gCategoryFamily0AnimTable`, `gPolarSpriteSheet`; jetpack `gCategoryFamily1CellAnim`, `gAirshipCategoryPalette`, `gCategoryFamily1AnimTable`, `gJetpackSpriteSheet`; hovercraft the jetpack's with `gHovercraftCategoryPalette`. The ROM's categories of a type all have the same ones, and the actor kinds index the type's animation table |
-| `"sky"` (optional) | `bgPicture` | the BG1 picture, one of the jetpack skies: `rocket_racket`, `blimp_bonanza`, `no_fly_zone` (`gCategory3/4/5BgPicture`, `graphics/vehicles/jetpack/skies/`). None for a polar category |
+| `"cell_anim"` (optional) | `cellAnim`, `cellAnimSize` | the BG0 cell animation instead of the type's: a `cell_anim` of `graphics/manifest.json`, by its path (see "Category graphics") |
+| `"sky"` (optional) | `bgPicture` | the BG1 picture: one of the jetpack skies, `rocket_racket`, `blimp_bonanza`, `no_fly_zone` (`gCategory3/4/5BgPicture`, `graphics/vehicles/jetpack/skies/`), or a `bg_picture` of the manifest by its path (see "Category graphics"). None for a polar category |
+| `"palette"` (optional) | `palette` | the OBJ palette instead of the type's: a `category_palette` of the manifest, by its path (see "Category graphics") |
 | `"spawns"` | `spawnTable` | its spawn list, `data/levels/spawns/<spawns>.json` |
 | `"mask_assist_deaths"`, `"bonus_kind_deaths"`, `"retry_boss_deaths"` | the same | deaths before the mask assist, before the spawns' `bonus` kinds, before the boss's retry level |
 | `"boss_level"`, `"retry_boss_level"` | `bossLevel`, `retryBossLevel` | the boss's level: 0-5 for the yeti (`Yeti::chargeParams`), 0-3 for the airship (`Airship::attacks[kind + level]`), 0-1 for the hovercraft (`Hovercraft::attacks`) |
@@ -1377,10 +1379,9 @@ what a save's records mean.
    list goes before them, the new stage record goes where a level first
    plays it, and the ROM data after them moves ([shifting.md](./shifting.md)).
 
-A category of new graphics (its own cell animation, sky, palette or
-sprite sheet) needs those as new graphics and a way for the type to take
-them. That is out of scope: today the type picks them, and the sky is one
-of the three.
+A category can also have its own cell animation, sky or OBJ palette as
+new graphics (see "Category graphics"). Its sprite sheet and animation
+table stay the type's: the actor kinds index them.
 
 Tested in scratch with plain `make` and mGBA, with two new categories:
 `CATEGORY_SNOW_STORM` (polar, snow crash's spawn list with each basic
@@ -1399,6 +1400,65 @@ a jetpack list on a polar category, a hovercraft kind in a jetpack list,
 an airship kind in a hovercraft category, an unknown kind name, spawns
 out of depth order, a bad `"next"`, a duplicate constant and a missing
 spawn list.
+
+### Category graphics
+
+A category's BG0 cell animation, BG1 sky and OBJ palette are the type's
+unless it names its own (#966): `"cell_anim"`, `"sky"` and `"palette"`
+name an entry of `graphics/manifest.json` by its path under `graphics/`.
+That can be one of the ROM's (`vehicles/jetpack/clouds.png`, a sky) or a
+new graphic, an entry with no ROM address ([graphics.md, "New
+graphics"](./graphics.md#new-graphics)):
+
+```json
+{"paths": ["vehicles/jetpack/skies/sky_red.png", "vehicles/jetpack/skies/sky_red_tiles.png"], "kind": "bg_picture", "symbol": "gSkyRedBgPicture"}
+{"path": "vehicles/polar/ice_wall_red.png", "kind": "cell_anim", "symbol": "gIceWallRedCellAnim", "frames": 60, "banks": true}
+{"path": "vehicles/polar/polar_green.pal", "kind": "category_palette", "symbol": "gPolarGreenCategoryPalette", "colors": 256}
+```
+
+```json
+{"constant": "CATEGORY_SKY_RED", "name": "sky red", "type": "JETPACK", "sky": "vehicles/jetpack/skies/sky_red.png", "spawns": "rocket_racket", ...}
+{"constant": "CATEGORY_POLAR_GREEN", "name": "polar green", "type": "POLAR", "cell_anim": "vehicles/polar/ice_wall_red.png", "palette": "vehicles/polar/polar_green.pal", "spawns": "snow_crash", ...}
+```
+
+| kind | source | what the code takes |
+|---|---|---|
+| `cell_anim` | one PNG, its `"frames"` stacked top to bottom, 8bpp with the 256-colour BG palette, each 8x8 cell in one 16-colour bank (as `ice_wall.png`, `clouds.png`); `"banks"`: whether each frame carries its cells' banks | the type's geometry (`CELL_ANIM_GEOMETRY`: 19x13 cells for a polar category, 38x10 otherwise), and banks for a polar category only (`CellAnim::Init`'s `hasBanks` is the type's). Any number of frames: `cellAnimSize` gives the count. Its palette is the BG palette until something replaces it, as in the ROM: a polar category's palette cycle writes banks 0-13 every frame (`ActorPaletteCycle::Update`), and a sky's palette replaces it (`LoadBgPicture`) |
+| `bg_picture` | the picture and its tile set as an 8-pixel-wide strip (as the skies); its palette is the BG palette, the cell animation's too | a 38x16-cell picture (`BG_PICTURE_GEOMETRY`) whose tiles fit after the cell animation's two pages (`LoadBgPicture` puts them at `CellAnim::GetFreeTile()`, and the BG1 map reaches tile 0x5FF), for a jetpack or hovercraft category |
+| `category_palette` | a JASC `.pal` of 256 colours | the OBJ palette, `DmaCopy`'d to OBJ palette RAM by `ActorCategory::Init`. New only: the ROM's three are C arrays with other data |
+
+`levels.py` stops on any other: a path that isn't such an entry, a
+cell animation of another geometry or with the other banks, a sky of
+another size or too many tiles, a sky on a polar category, a palette of
+another count.
+
+**What is generated.** `actor_categories.inc` defines the new graphics the
+categories name, each once, between the new spawn lists and the
+descriptors: a `struct category_cell_anim_<symbol>` or `struct
+category_bg_picture_<symbol>` sized from the PNGs (with a size assert),
+or a `u16[256]`, each `#include`ing the built `.inc` files. The
+descriptor points at it (`cellAnimSize` its size). `graphics_manifest.mk`
+gives the build rules from the manifest, the ROM's and the new ones
+alike: `CELL_ANIMS` (with `CELL_ANIM_FRAMES_<anim>` and
+`CELL_ANIM_BANKS_<anim>`), `BG_PICTURES` and `CATEGORY_PALETTES`, and the
+new ones' sources and `.inc` files, which `actor_categories.inc` and its
+object depend on. With the ROM's categories nothing is new and every
+output is the ROM's.
+
+Tested in scratch with plain `make` and mGBA: `CATEGORY_SKY_RED` (jetpack,
+rocket racket's spawn list, its sky with red and blue swapped in the
+palette) played by jungle jam, and `CATEGORY_POLAR_GREEN` (polar, snow
+crash's spawn list, the ice wall with each cell's colours reversed in their bank, and
+`gPolarCategoryPalette` with red and green swapped) played by
+shipwrecked. In mGBA, jungle jam's stage (`InitActorCategory(7)`) shows
+rocket racket's sky and clouds in orange where they are blue in rocket
+racket's own stage. Shipwrecked's (`InitActorCategory(8)`) shows Crash,
+the wumpa and the crates green where snow crash's stage shows them in
+their colours. Its ice wall is the new animation, with each cell's
+colours reversed in their bank: the polar palette cycle sets those
+banks' colours, so a polar cell animation shows in its pixels, not its
+palette. The ROM's descriptors are unchanged, and with no new graphic
+nothing new is defined.
 
 ## Boss levels
 
