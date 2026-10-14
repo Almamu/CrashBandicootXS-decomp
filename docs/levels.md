@@ -1285,10 +1285,11 @@ category's **type**:
 | `HOVERCRAFT` (2) | `JetpackPlayer`, n. gin's hovercraft | as `JETPACK` |
 
 A new type is new code (a vtable and those tests), so a category is one
-of the three. The level-id switches (`LevelState::GetBossHealth` and
-`GetBossIndex`, the boss HUD; `UpdateGameFrame`'s boss rewards) are the
-boss levels', not the categories': a hovercraft stage in another level
-gets no boss HUD, as a new boss level gets no reward (out of scope).
+of the three. The boss HUD (`LevelState::GetBossHealth` and
+`GetBossIndex`) is the level's, not the category's: a level that plays a
+hovercraft stage names its boss, `"boss_kind": "N_GIN"` (see "Boss
+levels"). `UpdateGameFrame`'s boss rewards stay the ROM's levels' (out of
+scope).
 
 **`"categories"`**, one per category in `CATEGORY_*` order:
 
@@ -1398,6 +1399,79 @@ a jetpack list on a polar category, a hovercraft kind in a jetpack list,
 an airship kind in a hovercraft category, an unknown kind name, spawns
 out of depth order, a bad `"next"`, a duplicate constant and a missing
 spawn list.
+
+## Boss levels
+
+A level's boss is its `"boss_kind"` in `levels.json` (#966). The boss HUD
+comes from it: `LevelState::GetBossIndex` (the boss's icon, `BOSS_*`,
+`constants/bosses.h`; `BOSS_NONE` without one) and `GetBossHealth` (the
+HUD's health) switch on the level id, and their case labels are generated
+per kind. So a new level with a boss, or a hovercraft stage in another
+level, gets the boss HUD with no code change.
+
+```json
+{"constant": "LEVEL_N_GIN", "name": "n. gin", "world": 1, "boss": true, "boss_kind": "N_GIN", ...}
+```
+
+The kinds are code: each is a boss controller and what the HUD shows of
+it (`BOSS_KINDS`, `tools/levels.py`).
+
+| `"boss_kind"` | the boss | `GetBossIndex` (HUD icon) | `GetBossHealth` | the ROM's level |
+|---|---|---|---|---|
+| `DINGODILE` | a room's `DINGODILE` entity (`DingodileCtrl::Spawn`) | `BOSS_DINGODILE` | `3 - boss->counter` (hits left) | `LEVEL_DINGODILE` |
+| `N_GIN` | a stage of a `HOVERCRAFT` category (n. gin's hovercraft) | `BOSS_N_GIN` | `Hovercraft::GetPartsLeft()` (weapons left, 4) | `LEVEL_N_GIN` |
+| `TINY` | a room's `TINY` entity | `BOSS_TINY` | `3 - boss->counter` | `LEVEL_TINY` |
+| `NEO_CORTEX` | a room's `CORTEX_BOSS` entity | `BOSS_NEO_CORTEX` | `3 - boss->counter` | `LEVEL_NEO_CORTEX` |
+| `MEGA_MIX` | a room's `MEGA_MIX` entity | `BOSS_NONE` (its own case) | 0 | `LEVEL_MEGA_MIX` |
+
+The health is the kind's, not a number in the data: the 2D bosses' three
+hits are their controllers' code (`counter > 2`), and the hovercraft has
+four weapons. A level without `"boss_kind"` has no boss HUD.
+
+**Checks.** `levels.py` stops unless a level's `"boss_kind"` is the boss its
+rooms and stages have: a level whose rooms place a boss entity, or that
+plays a stage of a `HOVERCRAFT` category, must name that kind, a level
+with a `"boss_kind"` must have that boss, and a level has one boss at most
+(`LevelState::boss` is one controller). `"boss_kind"` is independent of
+`"boss"` (the level select's boss entry, `isBoss`).
+
+**What is generated.** `level_bosses.h` (`levels.py bosses`): per kind,
+`LEVEL_BOSS_CASES_<KIND>`, the `case` labels of its levels. The two
+functions keep a block per kind; a kind no level has gets an empty macro,
+and its block is dead code. With the ROM's levels each macro is one
+label, so the functions are the ROM's code (`levels.py extract` checks
+the kept kinds against `ROM_BOSS_KINDS`). The three 2D bosses' health
+blocks stay apart: g++ merges them into the ROM's one, while a single
+block with their labels comes out 4 bytes shorter.
+
+**Not in the data: the rewards.** `UpdateGameFrame`'s switch on the
+cleared level stays the ROM's: the power, its dialog
+(`Show*Dialog`), the cutscene and opening the next world for
+`LEVEL_DINGODILE`, `LEVEL_N_GIN`, `LEVEL_TINY` and `LEVEL_NEO_CORTEX`,
+the credits and the step to mega-mix for Neo Cortex and mega-mix. The
+line is drawn there: the HUD and health are the kind's; what clearing a
+level gives is the level's (#966, out of scope). A new boss level
+therefore gives no power and no cutscene, and, as its `default:` case
+marks only a level of a `ROOM_KIND_CATEGORY` stage cleared
+(`w.cleared`), a new 2D boss level isn't marked cleared either. The
+`BOSS_NEO_CORTEX` tests of the gem spawners (`SpawnRedGem` and friends,
+`platform_create.cpp`) follow the kind, since they ask `GetBossIndex`.
+
+`"boss_kind"` isn't part of the save version's CRC (`level_data_crc`
+leaves it out): it doesn't change what a save's records mean.
+
+Tested in scratch with plain `make` and mGBA, with two new levels off the
+grid after mega-mix: `LEVEL_HOVER_REMATCH` (25), playing
+`{"stage": "N_GIN"}` with `"boss_kind": "N_GIN"`, and
+`LEVEL_DINGO_REMATCH` (26), playing `dingodile/main` with
+`"boss_kind": "DINGODILE"`. `InitHud`'s `GetBossIndex` gives 2
+(`BOSS_N_GIN`) and 3 (`BOSS_DINGODILE`), and the HUD shows the boss's
+icon and health: in level 25 `GetBossHealth` goes 4, 3, ... as the
+jetpack's shots knock the hovercraft's weapons off; in level 26 it is 3,
+and 2 once the controller's hit counter goes up. `levels.py` stops on a
+level that plays the hovercraft stage with no `"boss_kind"`, on
+`"boss_kind": "TINY"` for Dingodile's room, on an unknown kind, and on
+a level with two bosses.
 
 ## The save
 
@@ -1517,8 +1591,9 @@ the save code uses them where the ROM had numbers.
   (sorted keys, no spaces, UTF-8) of `levels.json`'s `"levels"`, then
   of each room's `[folder, room.json]` in `"rooms"` order, then of
   `"extra_progress_flags"` when there are any. The ROM layout
-  residuals (`"regions"`, `"assets"`, `"table"`), the pictures and the
-  collision images don't count: a picture edit keeps the saves. With the
+  residuals (`"regions"`, `"assets"`, `"table"`), the levels'
+  `"boss_kind"` (see "Boss levels"), the pictures and the collision
+  images don't count: a picture edit keeps the saves. With the
   ROM's data it is `ROM_LEVEL_DATA_CRC` (0x7ED35075), which `levels.py
   extract` checks.
 - **`SAVE_VERSION`**, the record's version byte (`versionNibble`, the

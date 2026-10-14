@@ -8,6 +8,7 @@
 #include "game/bosses/boss_ctrl.hpp"
 #include "game/bosses/hovercraft.hpp"
 #include "game/crates/crate.hpp"
+#include "level_bosses.h"
 
 extern "C" {
 #include "game/crates/crates.h"
@@ -684,27 +685,32 @@ bool LevelState::LevelHasGemPathGem(s32 idx)
     return LevelProgress::LevelHasGemPathGemEntity(idx);
 }
 
-/* Dispatches on the "current index" field `room.level` (`+0xc4`): index `0x15` fires
- * the actor-part singleton lifetime counter (`GetHovercraftPartsLeft`,
- * `hovercraft_state.cpp`); indices `0x14`/`0x16`/`0x17` instead compute
- * `3 - boss->counter` (the boss controller `SetLevelBoss` above
- * sets; its counter is the hits taken); anything else returns `0`. */
+/* The boss's health on the HUD (Hud::UpdateBoss), by the level's boss
+ * (`room.level`, levels.json's "boss_kind"; the case labels are
+ * level_bosses.h's, docs/levels.md "Boss levels"): n. gin's hovercraft
+ * counts its parts left (`GetHovercraftPartsLeft`, hovercraft_state.cpp),
+ * a 2D boss `3 - boss->counter` (the controller `SetLevelBoss` above sets;
+ * its counter is the hits taken, and the third one beats it). Any other
+ * level returns 0. The three 2D bosses' blocks stay apart: g++ merges
+ * them into the ROM's one, while one block with all their labels comes
+ * out 4 bytes shorter. */
 s32 LevelState::GetBossHealth()
 {
+    // clang-format off: level_bosses.h's case labels, laid out as case labels
     switch (room.level) {
-    case LEVEL_N_GIN:
+    LEVEL_BOSS_CASES_N_GIN
         return Hovercraft::GetPartsLeft();
-    case LEVEL_DINGODILE:
+    LEVEL_BOSS_CASES_DINGODILE
         {
             BossCtrl *p = boss;
             return 3 - p->counter;
         }
-    case LEVEL_TINY:
+    LEVEL_BOSS_CASES_TINY
         {
             BossCtrl *p = boss;
             return 3 - p->counter;
         }
-    case LEVEL_NEO_CORTEX:
+    LEVEL_BOSS_CASES_NEO_CORTEX
         {
             BossCtrl *p = boss;
             return 3 - p->counter;
@@ -712,12 +718,13 @@ s32 LevelState::GetBossHealth()
     default:
         return 0;
     }
+    // clang-format on
 }
 
-/* Same "current index" field (`room.level`), the level, mapped through a
- * 5-entry table (the boss levels) to the boss's HUD icon animation
- * (`{9, 8, 6, 7}`) minus a shared `BOSS_HUD_ANIM_BASE`, giving BOSS_* -
- * LEVEL_MEGA_MIX and any other level both skip the shared
+/* The level's boss (`room.level`, levels.json's "boss_kind", the case labels
+ * level_bosses.h's), BOSS_*: the boss's HUD icon animation
+ * (`{9, 8, 6, 7}`) minus a shared `BOSS_HUD_ANIM_BASE`. Mega-Mix's level
+ * (LEVEL_BOSS_CASES_MEGA_MIX) and any other level both skip the shared
  * subtraction and return BOSS_NONE directly (the ROM's own `_080233F0`
  * case-4 slot points straight at `_080233F8`'s `bx lr`, bypassing
  * `_080233F6`'s `subs r0,#6` cases 0-3 share - a plain
@@ -727,23 +734,25 @@ s32 LevelState::GetBossIndex()
 {
     s32 result;
 
+    // clang-format off: level_bosses.h's case labels, laid out as case labels
     switch (room.level) {
-    case LEVEL_DINGODILE:
+    LEVEL_BOSS_CASES_DINGODILE
         result = BOSS_HUD_ANIM_BASE + BOSS_DINGODILE;
         break;
-    case LEVEL_N_GIN:
+    LEVEL_BOSS_CASES_N_GIN
         result = BOSS_HUD_ANIM_BASE + BOSS_N_GIN;
         break;
-    case LEVEL_TINY:
+    LEVEL_BOSS_CASES_TINY
         result = BOSS_HUD_ANIM_BASE + BOSS_TINY;
         break;
-    case LEVEL_NEO_CORTEX:
+    LEVEL_BOSS_CASES_NEO_CORTEX
         result = BOSS_HUD_ANIM_BASE + BOSS_NEO_CORTEX;
         break;
-    case LEVEL_MEGA_MIX:
+    LEVEL_BOSS_CASES_MEGA_MIX
     default:
         return BOSS_NONE;
     }
+    // clang-format on
     return result - BOSS_HUD_ANIM_BASE;
 }
 
