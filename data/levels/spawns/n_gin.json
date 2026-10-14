@@ -1,0 +1,8 @@
+{
+  "symbol": "gCategory6SpawnTable",
+  "family": "JETPACK",
+  "length": 712,
+  "spawns": [
+    {"kind": "HOVERCRAFT", "x": 160, "y": 30, "z": 0}
+  ]
+}

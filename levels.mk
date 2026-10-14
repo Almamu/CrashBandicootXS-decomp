@@ -111,18 +111,45 @@ $(GENERATED_INCLUDE_DIR)/rooms.hpp.stamp: data/levels/levels.json $(LEVEL_ROOM_J
 $(GENERATED_INCLUDE_DIR)/rooms.hpp: $(GENERATED_INCLUDE_DIR)/rooms.hpp.stamp
 	@test -f $@ || python3 tools/levels.py classes $@
 
+# The actor categories (docs/levels.md, "Actor categories"): levels.json's
+# "categories" and their spawn lists, data/levels/spawns/*.json (whose kinds
+# are named by constants/actor_kinds.h). `levels.py categories` writes
+# ActorCategory::descriptors (and the spawn lists that aren't the ROM's),
+# which src/engine/actor/data/actor_categories.cpp #includes; `levels.py
+# spawns SYMBOL` the ROM's spawn list SYMBOL, which its C file #includes
+# where the ROM has it (nothing if no category has it); `levels.py constants
+# categories` the CATEGORY_* constants.
+CATEGORY_DEPS := data/levels/levels.json $(wildcard data/levels/spawns/*.json) include/constants/actor_kinds.h \
+	tools/levels.py
+$(LEVELS_BUILDDIR)/actor_categories.inc: $(CATEGORY_DEPS)
+	@mkdir -p $(dir $@)
+	python3 tools/levels.py categories $@
+$(LEVELS_BUILDDIR)/spawns/%.inc: $(CATEGORY_DEPS)
+	@mkdir -p $(dir $@)
+	python3 tools/levels.py spawns $* $@
+$(C_BUILDDIR)/engine/actor/data/actor_categories.o: $(LEVELS_BUILDDIR)/actor_categories.inc
+$(C_BUILDDIR)/game/vehicles/polar/data/polar_cell_anim.o: $(LEVELS_BUILDDIR)/spawns/gCategory0SpawnTable.inc
+$(C_BUILDDIR)/game/vehicles/polar/data/polar_spawn_tables.o: \
+	$(foreach t,gCategory1SpawnTable gCategory2SpawnTable,$(LEVELS_BUILDDIR)/spawns/$(t).inc)
+$(C_BUILDDIR)/game/vehicles/jetpack/data/jetpack_cell_anim.o: $(LEVELS_BUILDDIR)/spawns/gCategory3SpawnTable.inc
+$(C_BUILDDIR)/game/vehicles/jetpack/data/jetpack_sky_pictures.o: \
+	$(foreach t,gCategory4SpawnTable gCategory5SpawnTable gCategory6SpawnTable,$(LEVELS_BUILDDIR)/spawns/$(t).inc)
+$(foreach o,engine/actor/data/actor_categories game/vehicles/polar/data/polar_cell_anim \
+	game/vehicles/polar/data/polar_spawn_tables game/vehicles/jetpack/data/jetpack_cell_anim \
+	game/vehicles/jetpack/data/jetpack_sky_pictures,$(eval $(C_BUILDDIR)/$(o).o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)))
+
 # The level table (docs/levels.md, "The level table"), which
 # src/game/level/data/level_table.cpp #includes: gLevelTable and
 # gLevelRoomLists (`levels.py table levels`), and the room records and the
 # arrays of the rooms each level plays (`levels.py table records`), from
 # levels.json's "levels" and "table" and the rooms' room.json ("record").
-# The stages are named by include/constants/categories.h.
+# The stages are named by levels.json's "categories" (CATEGORY_DEPS below).
 # level_table.inc also has the level themes' tables (docs/levels.md,
 # "Themes"): the colour cycles' lists and gThemeMusicCues, from levels.json's
 # "themes" and "palette_cycles"; a theme's song is one of the songs of
 # sound/gax_manifest.json, its picture one of graphics/manifest.json's.
 THEME_DEPS := data/levels/levels.json sound/gax_manifest.json graphics/manifest.json tools/levels.py
-LEVEL_TABLE_DEPS := data/levels/levels.json $(LEVEL_ROOM_JSONS) include/constants/categories.h tools/levels.py
+LEVEL_TABLE_DEPS := data/levels/levels.json $(LEVEL_ROOM_JSONS) $(CATEGORY_DEPS) tools/levels.py
 $(LEVELS_BUILDDIR)/level_table.inc: $(LEVEL_TABLE_DEPS) $(THEME_DEPS)
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py table levels $@
@@ -176,7 +203,7 @@ $(GENERATED_INCLUDE_DIR)/level_select_worlds.h: $(GENERATED_INCLUDE_DIR)/level_s
 # the Makefile makes every C object wait for the whole list.
 GENERATED_HEADERS += $(GENERATED_INCLUDE_DIR)/constants/entities.h $(GENERATED_INCLUDE_DIR)/constants/crates.h \
 	$(GENERATED_INCLUDE_DIR)/constants/levels.h $(GENERATED_INCLUDE_DIR)/constants/themes.h \
-	$(GENERATED_INCLUDE_DIR)/constants/save.h
+	$(GENERATED_INCLUDE_DIR)/constants/save.h $(GENERATED_INCLUDE_DIR)/constants/categories.h
 
 $(GENERATED_INCLUDE_DIR)/constants/entities.h: data/levels/entity_types.json tools/levels.py
 	@mkdir -p $(dir $@)
@@ -203,6 +230,15 @@ $(GENERATED_INCLUDE_DIR)/constants/themes.h.stamp: $(THEME_DEPS)
 	@touch $@
 $(GENERATED_INCLUDE_DIR)/constants/themes.h: $(GENERATED_INCLUDE_DIR)/constants/themes.h.stamp
 	@test -f $@ || python3 tools/levels.py constants themes $@
+
+# The actor category ids (CATEGORY_*, CATEGORY_COUNT), from levels.json's
+# "categories"; the types and exit statuses are include/constants/category_types.h.
+$(GENERATED_INCLUDE_DIR)/constants/categories.h.stamp: $(CATEGORY_DEPS)
+	@mkdir -p $(dir $@)
+	python3 tools/levels.py constants categories $(GENERATED_INCLUDE_DIR)/constants/categories.h
+	@touch $@
+$(GENERATED_INCLUDE_DIR)/constants/categories.h: $(GENERATED_INCLUDE_DIR)/constants/categories.h.stamp
+	@test -f $@ || python3 tools/levels.py constants categories $@
 
 # The save data's EEPROM and record size, from the level count, and its
 # version and checksum seed, from a CRC-32 of the levels and the rooms'

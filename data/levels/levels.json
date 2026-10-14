@@ -513,5 +513,14 @@
         {"symbol": "gThemePaletteCycle5", "rate": 20, "direction": 0, "entries": [151, 180, 247, 248, 255]}
       ]
     }
+  ],
+  "categories": [
+    {"constant": "CATEGORY_FROSTBITE_CAVERN", "name": "frostbite cavern", "type": "POLAR", "spawns": "frostbite_cavern", "mask_assist_deaths": 4, "bonus_kind_deaths": 3, "retry_boss_deaths": 2, "boss_level": 1, "retry_boss_level": 0},
+    {"constant": "CATEGORY_SNOW_CRASH", "name": "snow crash", "type": "POLAR", "spawns": "snow_crash", "mask_assist_deaths": 4, "bonus_kind_deaths": 3, "retry_boss_deaths": 2, "boss_level": 3, "retry_boss_level": 2},
+    {"constant": "CATEGORY_SNOW_JOB", "name": "snow job", "type": "POLAR", "spawns": "snow_job", "mask_assist_deaths": 4, "bonus_kind_deaths": 3, "retry_boss_deaths": 2, "boss_level": 5, "retry_boss_level": 4},
+    {"constant": "CATEGORY_ROCKET_RACKET", "name": "rocket racket", "type": "JETPACK", "sky": "rocket_racket", "spawns": "rocket_racket", "mask_assist_deaths": 7, "bonus_kind_deaths": 4, "retry_boss_deaths": 6, "boss_level": 0, "retry_boss_level": 3},
+    {"constant": "CATEGORY_BLIMP_BONANZA", "name": "blimp bonanza", "type": "JETPACK", "sky": "blimp_bonanza", "spawns": "blimp_bonanza", "mask_assist_deaths": 7, "bonus_kind_deaths": 4, "retry_boss_deaths": 6, "boss_level": 0, "retry_boss_level": 3},
+    {"constant": "CATEGORY_NO_FLY_ZONE", "name": "no fly zone", "type": "JETPACK", "sky": "no_fly_zone", "spawns": "no_fly_zone", "mask_assist_deaths": 7, "bonus_kind_deaths": 4, "retry_boss_deaths": 6, "boss_level": 0, "retry_boss_level": 3},
+    {"constant": "CATEGORY_N_GIN", "name": "n. gin", "type": "HOVERCRAFT", "sky": "no_fly_zone", "spawns": "n_gin", "mask_assist_deaths": 4, "bonus_kind_deaths": 3, "retry_boss_deaths": 3, "boss_level": 0, "retry_boss_level": 1}
   ]
 }

@@ -82,6 +82,14 @@ derived from those again.
                                               IsNextWorldOpen's cases and the
                                               page macros (partial pages),
                                               from levels.json's "worlds"
+    tools/levels.py spawns SYMBOL OUT         the ROM's spawn list SYMBOL
+                                              (gCategoryNSpawnTable), from its
+                                              category's data/levels/spawns/ file,
+                                              #included where the ROM has it
+    tools/levels.py categories OUT            actor_categories.inc:
+                                              ActorCategory::descriptors, from
+                                              levels.json's "categories", and the
+                                              spawn lists that aren't the ROM's
     tools/levels.py classes OUT               rooms.hpp: every room's class (its BG
                                               palette, chunk grids and level asset
                                               as static members), see "Room
@@ -103,7 +111,10 @@ derived from those again.
     tools/levels.py constants themes OUT      constants/themes.h (THEME_*, the
                                               pictures' count) from levels.json's
                                               "themes"
-    tools/levels.py constants save OUT        constants/save.h: the save's EEPROM
+    tools/levels.py constants categories OUT  constants/categories.h (CATEGORY_*,
+                                              CATEGORY_COUNT) from levels.json's
+                                              "categories"
+    tools/levels.py constants save OUT       constants/save.h: the save's EEPROM
                                               and record size, from the level
                                               count, and its version and checksum
                                               seed, from a CRC-32 of the level data
@@ -1211,7 +1222,6 @@ def new_tilesets_c(levels, build_dir):
 # The record kinds (ROOM_KIND_*, include/constants/rooms.h); a room's
 # "kind" is one of the first three.
 ROOM_KINDS = ["ON_FOOT", "UNDERWATER", "HOVER", "CATEGORY"]
-CATEGORIES_H = Path("include/constants/categories.h")
 # gLevelTable (struct level_info, 0x24 bytes) and the ROM's room table.
 LEVEL_TABLE = 0x0816C86C
 LEVEL_INFO_SIZE = 0x24
@@ -1220,17 +1230,6 @@ LEVEL_ROOM_SIZE = 0x14
 # and "boss" are optional).
 LEVEL_KEYS = ["constant", "name", "name_text", "theme", "times", "mask_assist_deaths", "crate_assist_deaths",
               "rooms"]
-
-
-def categories():
-    """The actor categories (CATEGORY_* of include/constants/categories.h,
-    up to CATEGORY_COUNT): name without the prefix -> number."""
-    out = {}
-    for m in re.finditer(r"^#define CATEGORY_(\w+) (\d+)", CATEGORIES_H.read_text(), re.M):
-        if m.group(1) == "COUNT":
-            break
-        out[m.group(1)] = int(m.group(2))
-    return out
 
 
 def stage_symbol(number):
@@ -1280,8 +1279,8 @@ class LevelTable:
         """A room-list entry's record symbol."""
         if isinstance(e, dict):
             if set(e) != {"stage"} or e["stage"] not in self.cats:
-                sys.exit("%s: %s: %s isn't a room folder or {\"stage\": <a CATEGORY_* name of %s, without "
-                         "the prefix>}" % (LEVELS_JSON, where, json.dumps(e), CATEGORIES_H))
+                sys.exit("%s: %s: %s isn't a room folder or {\"stage\": <a category of \"categories\", its "
+                         "constant without CATEGORY_>}" % (LEVELS_JSON, where, json.dumps(e)))
             return stage_symbol(self.cats[e["stage"]])
         if e not in self.records:
             sys.exit("%s: %s plays %s, which isn't in \"rooms\"" % (LEVELS_JSON, where, e))
@@ -1620,6 +1619,346 @@ def themes_from_rom(rom, kept):
         cycles.append({"name": c["name"], "lists": lists})
     assert a == LEVEL_TABLE, "the colour cycles' lists don't run up to gLevelTable"
     return themes, cycles
+
+
+# ---------------------------------------------------------------------------
+# The actor categories (docs/levels.md, "Actor categories")
+#
+# A stage ({"stage": NAME} in a level's "rooms", a ROOM_KIND_CATEGORY
+# record) runs an actor category: ActorCategory::Init(catIndex) plays
+# ActorCategory::descriptors[catIndex] (struct category_descriptor,
+# actor_anim.h). levels.json's "categories" has one entry per category, in
+# CATEGORY_* order:
+#
+# - "constant", "name": its CATEGORY_* constant (constants/categories.h)
+#   and what it is; a stage names it without the prefix;
+# - "type": POLAR, JETPACK or HOVERCRAFT, the index of
+#   ActorCategory::vtables (the player, the boss, the spawner: code). The
+#   type also picks the BG0 cell animation, the OBJ palette, the
+#   animation table and the sprite sheet (CATEGORY_TYPES: the ROM's
+#   categories of a type all share them);
+# - "sky" (optional): the BG1 picture (bgPicture), one of the jetpack
+#   skies (CATEGORY_SKIES); none for the polar stages;
+# - "spawns": its spawn list, data/levels/spawns/<name>.json;
+# - "mask_assist_deaths", "bonus_kind_deaths", "retry_boss_deaths",
+#   "boss_level", "retry_boss_level": the descriptor's numbers.
+#
+# A spawn list (struct actor_spawn_table, actor.h) is a JSON file:
+# "symbol" (its C name), "family" (POLAR or JETPACK: the kinds' numbering,
+# POLAR_KIND_* or JETPACK_KIND_*, constants/actor_kinds.h; a category's
+# type picks it), the course "length", the "spawns" in depth order (each
+# {"kind", "x", "y", "z"}, plus "alt" and "bonus" when the time-trial and
+# bonus kinds differ from "kind", "unk_03" and "next" when not 0 and -1)
+# and the 4 "end" bytes nothing reads, when not 0. The ROM's seven are
+# generated in place, where their C files #include them (ROM_SPAWN_TABLES);
+# any other is defined with the descriptors (actor_categories.inc). A new
+# category, or a new mix of the type's existing actor kinds, is data:
+# nothing in the code switches on the category (docs/levels.md).
+
+CATEGORY_KEYS = ["constant", "name", "type", "spawns", "mask_assist_deaths", "bonus_kind_deaths",
+                 "retry_boss_deaths", "boss_level", "retry_boss_level"]
+SPAWNS_DIR = LEVELS_DIR / "spawns"
+ACTOR_KINDS_H = Path("include/constants/actor_kinds.h")
+# Per type: the family of its actor kinds, the BG0 cell animation and its
+# size, the OBJ palette, the animation table, the sprite sheet, and the
+# boss levels its boss has (Yeti::chargeParams[6]; Airship::attacks[6],
+# `attacks[kind] + level` with kinds 0-2; Hovercraft::attacks[2]).
+CATEGORY_TYPES = {
+    "POLAR": {"family": "POLAR", "cell_anim": "gCategoryFamily0CellAnim", "cell_anim_size": 0x75B94,
+              "palette": "gPolarCategoryPalette", "anim_table": "gCategoryFamily0AnimTable",
+              "sprite_sheet": "gPolarSpriteSheet", "boss_levels": 6},
+    "JETPACK": {"family": "JETPACK", "cell_anim": "gCategoryFamily1CellAnim", "cell_anim_size": 0x3E784,
+                "palette": "gAirshipCategoryPalette", "anim_table": "gCategoryFamily1AnimTable",
+                "sprite_sheet": "gJetpackSpriteSheet", "boss_levels": 4},
+    "HOVERCRAFT": {"family": "JETPACK", "cell_anim": "gCategoryFamily1CellAnim", "cell_anim_size": 0x3E784,
+                   "palette": "gHovercraftCategoryPalette", "anim_table": "gCategoryFamily1AnimTable",
+                   "sprite_sheet": "gJetpackSpriteSheet", "boss_levels": 2},
+}
+CATEGORY_TYPE_NAMES = ["POLAR", "JETPACK", "HOVERCRAFT"]  # CATEGORY_TYPE_*, the vtables' order
+# The BG1 skies (graphics/vehicles/jetpack/skies/<name>.png).
+CATEGORY_SKIES = {"rocket_racket": "gCategory3BgPicture", "blimp_bonanza": "gCategory4BgPicture",
+                  "no_fly_zone": "gCategory5BgPicture"}
+# The kinds only one type's spawner can spawn: the airship needs
+# Airship::Create (the jetpack type's boss), the hovercraft is the
+# hovercraft type's boss (JetpackPlayer::SpawnActor, jetpack_spawn.cpp).
+TYPE_ONLY_KINDS = {"AIRSHIP_0": "JETPACK", "AIRSHIP_1": "JETPACK", "AIRSHIP_2": "JETPACK",
+                   "HOVERCRAFT": "HOVERCRAFT"}
+# The ROM's spawn lists, in their C files' #include slots, and where they
+# are in the ROM.
+ROM_SPAWN_TABLES = {
+    "gCategory0SpawnTable": 0x080B1444, "gCategory1SpawnTable": 0x080C0C38, "gCategory2SpawnTable": 0x080C19F0,
+    "gCategory3SpawnTable": 0x08140DCC, "gCategory4SpawnTable": 0x0815405C, "gCategory5SpawnTable": 0x08158918,
+    "gCategory6SpawnTable": 0x0815A030,
+}
+# ActorCategory::descriptors (gActorCategories, 0x34 bytes each) and the
+# ROM addresses of what the descriptors name, for extract.
+ACTOR_CATEGORIES = 0x08175558
+CATEGORY_DESCRIPTOR_SIZE = 0x34
+ROM_CATEGORY_SYMBOLS = {
+    0x0803B8B0: "gCategoryFamily0CellAnim", 0x080FF1B0: "gCategoryFamily1CellAnim",
+    0x08178F80: "gPolarCategoryPalette", 0x0817AAA4: "gAirshipCategoryPalette",
+    0x0817AEA4: "gHovercraftCategoryPalette", 0x081796CC: "gCategoryFamily0AnimTable",
+    0x0817B2A4: "gCategoryFamily1AnimTable", 0x080B2120: "gPolarSpriteSheet", 0x0814174C: "gJetpackSpriteSheet",
+    0x0813D934: "gCategory3BgPicture", 0x08151AC4: "gCategory4BgPicture", 0x08155260: "gCategory5BgPicture",
+}
+
+
+def actor_kinds():
+    """{family: {name without the prefix: kind}} of constants/actor_kinds.h."""
+    out = {"POLAR": {}, "JETPACK": {}}
+    for m in re.finditer(r"^#define (POLAR|JETPACK)_KIND_(\w+) (\d+|\(ACTOR_KIND_PATH_POINT \+ (\d+)\))",
+                         ACTOR_KINDS_H.read_text(), re.M):
+        out[m.group(1)][m.group(2)] = 0x20 + int(m.group(4)) if m.group(4) else int(m.group(3))
+    return out
+
+
+def level_categories(data):
+    """levels.json's "categories", checked."""
+    cats = data.get("categories")
+
+    def fail(msg):
+        sys.exit("%s: %s" % (LEVELS_JSON, msg))
+
+    if not isinstance(cats, list) or not cats:
+        fail("\"categories\" lists the actor categories (docs/levels.md, \"Actor categories\")")
+    names = [c.get("constant") for c in cats]
+    if len(set(names)) != len(names) or not all(isinstance(n, str) and re.fullmatch(r"CATEGORY_[A-Z0-9_]+", n)
+                                                and not n.startswith("CATEGORY_TYPE_") and
+                                                not n.startswith("CATEGORY_EXIT_") and n != "CATEGORY_COUNT"
+                                                for n in names):
+        fail("each category has a unique \"constant\", CATEGORY_<NAME> (not a CATEGORY_TYPE_/EXIT_ one)")
+    for c in cats:
+        missing = [k for k in CATEGORY_KEYS if k not in c]
+        if missing:
+            fail("%s has no %s" % (c["constant"], ", ".join('"%s"' % k for k in missing)))
+        unknown = [k for k in c if k not in CATEGORY_KEYS + ["sky"]]
+        if unknown:
+            fail("%s: unknown %s" % (c["constant"], ", ".join('"%s"' % k for k in unknown)))
+        if c["type"] not in CATEGORY_TYPES:
+            fail("%s: \"type\" is one of %s" % (c["constant"], ", ".join(CATEGORY_TYPE_NAMES)))
+        if "sky" in c and (c["type"] == "POLAR" or c["sky"] not in CATEGORY_SKIES):
+            fail("%s: \"sky\" is one of %s, for a jetpack or hovercraft category"
+                 % (c["constant"], ", ".join(CATEGORY_SKIES)))
+        for k in CATEGORY_KEYS[4:]:
+            if not isinstance(c[k], int) or not 0 <= c[k] < 0x10000:
+                fail("%s: \"%s\" is a number" % (c["constant"], k))
+        top = CATEGORY_TYPES[c["type"]]["boss_levels"]
+        for k in ("boss_level", "retry_boss_level"):
+            if c[k] >= top:
+                fail("%s: \"%s\" is 0-%d (the %s boss's levels)" % (c["constant"], k, top - 1, c["type"].lower()))
+        spawns = spawn_list(c["spawns"])
+        if spawns["family"] != CATEGORY_TYPES[c["type"]]["family"]:
+            fail("%s: its spawn list %s has %s kinds, its type %s's are %s"
+                 % (c["constant"], c["spawns"], spawns["family"], c["type"], CATEGORY_TYPES[c["type"]]["family"]))
+        for e in spawns["spawns"]:
+            for k in ("kind", "alt", "bonus"):
+                only = TYPE_ONLY_KINDS.get(e.get(k))
+                if only and only != c["type"]:
+                    fail("%s: its spawn list %s has %s_KIND_%s, which only a %s category spawns"
+                         % (c["constant"], c["spawns"], spawns["family"], e[k], only))
+    symbols = [spawn_list(c["spawns"])["symbol"] for c in cats]
+    for c, s in zip(cats, symbols):
+        clash = [c2["spawns"] for c2, s2 in zip(cats, symbols) if s2 == s and c2["spawns"] != c["spawns"]]
+        if clash:
+            fail("the spawn lists %s and %s are both %s" % (c["spawns"], clash[0], s))
+    return cats
+
+
+def categories():
+    """The actor categories, levels.json's "categories": name without the
+    CATEGORY_ prefix -> number."""
+    return {c["constant"][len("CATEGORY_"):]: i for i, c in enumerate(level_categories(read_json(LEVELS_JSON)))}
+
+
+_spawn_lists = {}
+
+
+def spawn_list(name):
+    """data/levels/spawns/<name>.json, checked."""
+    if name in _spawn_lists:
+        return _spawn_lists[name]
+    path = SPAWNS_DIR / ("%s.json" % name)
+
+    def fail(msg):
+        sys.exit("%s: %s" % (path, msg))
+
+    if not isinstance(name, str) or not path.exists():
+        sys.exit("%s: \"spawns\" %s isn't a spawn list of %s" % (LEVELS_JSON, json.dumps(name), SPAWNS_DIR))
+    s = read_json(path)
+    unknown = [k for k in s if k not in ("symbol", "family", "length", "spawns", "end")]
+    if unknown:
+        fail("unknown %s" % ", ".join('"%s"' % k for k in unknown))
+    if not re.fullmatch(r"g[A-Za-z0-9_]+", s.get("symbol", "")):
+        fail("\"symbol\" is its C name, gSomething")
+    kinds = actor_kinds()
+    if s.get("family") not in kinds:
+        fail("\"family\" is POLAR or JETPACK (the kinds of constants/actor_kinds.h it names)")
+    if not isinstance(s.get("length"), int) or not 0 < s["length"] < 0x80000000:
+        fail("\"length\" is the course length")
+    if not isinstance(s.get("spawns"), list) or not s["spawns"]:
+        fail("\"spawns\" lists the spawns")
+    end = s.get("end", [0, 0, 0, 0])
+    if not (isinstance(end, list) and len(end) == 4 and all(isinstance(b, int) and 0 <= b < 256 for b in end)):
+        fail("\"end\" is the table's 4 last bytes")
+    known = kinds[s["family"]]
+    n = len(s["spawns"])
+    last_z = None
+    for i, e in enumerate(s["spawns"]):
+        bad = [k for k in e if k not in ("kind", "alt", "bonus", "unk_03", "x", "y", "z", "next")]
+        if bad or not all(k in e for k in ("kind", "x", "y", "z")):
+            fail("spawn %d is {\"kind\", \"x\", \"y\", \"z\"}, with optional \"alt\", \"bonus\", \"unk_03\", "
+                 "\"next\"" % i)
+        for k in ("kind", "alt", "bonus"):
+            v = e.get(k, 0)
+            if not (v in known or (isinstance(v, int) and 0 <= v < 256)):
+                fail("spawn %d: \"%s\" %s isn't a %s_KIND_* name or a byte" % (i, k, json.dumps(v), s["family"]))
+        if not (isinstance(e.get("unk_03", 0), int) and 0 <= e.get("unk_03", 0) < 256):
+            fail("spawn %d: \"unk_03\" is a byte" % i)
+        for k in ("x", "y", "z"):
+            if not isinstance(e[k], int) or not -0x80000000 <= e[k] < 0x80000000:
+                fail("spawn %d: \"%s\" is a number" % (i, k))
+        if "next" in e and not (isinstance(e["next"], int) and -1 <= e["next"] < n):
+            fail("spawn %d: \"next\" is a spawn's index, or -1" % i)
+        if last_z is not None and e["z"] < last_z:
+            fail("spawn %d: the spawns go in depth order (\"z\"); %d comes after %d" % (i, e["z"], last_z))
+        last_z = e["z"]
+    _spawn_lists[name] = s
+    return s
+
+
+def kind_c(family, v):
+    return "%s_KIND_%s" % (family, v) if isinstance(v, str) else "%d" % v
+
+
+def spawn_table_c(name):
+    """A spawn list's C definition (ACTOR_SPAWN_TABLE, actor.h)."""
+    s = spawn_list(name)
+    f = s["family"]
+    out = ["/* data/levels/spawns/%s.json */" % name,
+           "extern const ACTOR_SPAWN_TABLE(%d) %s = {" % (len(s["spawns"]), s["symbol"]),
+           "    %d," % s["length"], "    %d," % len(s["spawns"]), "    {"]
+    for e in s["spawns"]:
+        k = e["kind"]
+        out.append("        { { %s, %s, %s, %d, %d, %d, %d }, %d },"
+                   % (kind_c(f, k), kind_c(f, e.get("alt", k)), kind_c(f, e.get("bonus", k)), e.get("unk_03", 0),
+                      e["x"], e["y"], e["z"], e.get("next", -1)))
+    out += ["    },", "    { %s }," % ", ".join("%d" % b for b in s.get("end", [0, 0, 0, 0])), "};"]
+    return out
+
+
+def spawns_inc(slot):
+    """`levels.py spawns SLOT OUT`: what the C file of the ROM's spawn list
+    SLOT (ROM_SPAWN_TABLES) #includes: the spawn list of that symbol, or
+    nothing if no category has it."""
+    if slot not in ROM_SPAWN_TABLES:
+        sys.exit("levels.py spawns: %s isn't one of %s" % (slot, ", ".join(ROM_SPAWN_TABLES)))
+    out = ["/* Generated by tools/levels.py from data/levels/ - do not edit. */"]
+    lists = {spawn_list(c["spawns"])["symbol"]: c["spawns"] for c in level_categories(read_json(LEVELS_JSON))}
+    if slot in lists:
+        out += spawn_table_c(lists[slot])
+    return "\n".join(out) + "\n"
+
+
+def actor_categories_inc(data):
+    """`levels.py categories OUT`: actor_categories.cpp's ActorCategory::
+    descriptors, one per category, and the spawn lists that aren't the
+    ROM's, before them."""
+    cats = level_categories(data)
+    names = list(dict.fromkeys(c["spawns"] for c in cats))
+    rom = [n for n in names if spawn_list(n)["symbol"] in ROM_SPAWN_TABLES]
+    new = [n for n in names if n not in rom]
+    out = ["/* Generated by tools/levels.py from data/levels/levels.json - do not edit. */", ""]
+    out += ["extern const u8 %s[];" % spawn_list(n)["symbol"] for n in rom]
+    if new:
+        out += ["", "/* The spawn lists that aren't the ROM's. */"]
+        for n in new:
+            out += spawn_table_c(n)
+    out += ["", "/* One descriptor per actor category (levels.json's \"categories\"). */",
+            "const struct category_descriptor ActorCategory::descriptors[CATEGORY_COUNT] = {"]
+    for c in cats:
+        t = CATEGORY_TYPES[c["type"]]
+        out += ["    /* %s */" % c["constant"], "    {",
+                "        CATEGORY_TYPE_%s," % c["type"],
+                "        (void *)%s," % t["cell_anim"],
+                "        0x%x," % t["cell_anim_size"],
+                "        %s," % (CATEGORY_SKIES[c["sky"]] if "sky" in c else "0"),
+                "        %s," % t["palette"],
+                "        (struct actor_spawn_table *)%s%s," % ("&" if c["spawns"] in new else "",
+                                                               spawn_list(c["spawns"])["symbol"]),
+                "        (struct anim_table_record *)%s," % t["anim_table"],
+                "        %s," % t["sprite_sheet"]]
+        out += ["        %d," % c[k] for k in CATEGORY_KEYS[4:]]
+        out.append("    },")
+    out += ["};", ""]
+    return "\n".join(out)
+
+
+def spawns_from_rom(rom, a, symbol, family):
+    """extract: a spawn list from the ROM."""
+    # the kinds by name, the first of a value in actor_kinds.h
+    first = {}
+    for k, v in actor_kinds()[family].items():
+        first.setdefault(v, k)
+    length, count = rom.w(a), rom.w(a + 4)
+    spawns = []
+    for i in range(count):
+        e = a + 8 + 0x14 * i
+        kinds = [first.get(rom.b(e + k), rom.b(e + k)) for k in range(3)]
+        sp = {"kind": kinds[0]}
+        if kinds[1] != kinds[0]:
+            sp["alt"] = kinds[1]
+        if kinds[2] != kinds[0]:
+            sp["bonus"] = kinds[2]
+        if rom.b(e + 3):
+            sp["unk_03"] = rom.b(e + 3)
+        sp.update({k: struct.unpack_from("<i", rom.data, e + 4 * n - ROM_BASE)[0]
+                   for n, k in ((1, "x"), (2, "y"), (3, "z"))})
+        nxt = struct.unpack_from("<i", rom.data, e + 0x10 - ROM_BASE)[0]
+        if nxt != -1:
+            sp["next"] = nxt
+        spawns.append(sp)
+    s = {"symbol": symbol, "family": family, "length": length, "spawns": spawns}
+    end = list(rom.bytes(a + 8 + 0x14 * count, 4))
+    if any(end):
+        s["end"] = end
+    return s
+
+
+def write_spawn_list(path, s):
+    """A spawn list's JSON: one spawn per line."""
+    head = ",\n".join('  "%s": %s' % (k, json.dumps(v)) for k, v in s.items() if k != "spawns" and k != "end")
+    body = ",\n".join("    " + json.dumps(e) for e in s["spawns"])
+    text = "{\n" + head + ',\n  "spawns": [\n' + body + "\n  ]"
+    if "end" in s:
+        text += ',\n  "end": ' + json.dumps(s["end"])
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text + "\n}\n")
+
+
+def categories_from_rom(rom, kept):
+    """extract: levels.json's "categories" (the kept constants, names and
+    spawn list names; the rest from ActorCategory::descriptors) and the
+    spawn lists, which it writes."""
+    by_addr = {a: s for s, a in ROM_SPAWN_TABLES.items()}
+    skies = {v: k for k, v in CATEGORY_SKIES.items()}
+    out = []
+    for i, k in enumerate(kept["categories"]):
+        d = ACTOR_CATEGORIES + CATEGORY_DESCRIPTOR_SIZE * i
+        f = [rom.w(d + 4 * n) for n in range(CATEGORY_DESCRIPTOR_SIZE // 4)]
+        t = CATEGORY_TYPE_NAMES[f[0]]
+        want = CATEGORY_TYPES[t]
+        got = [ROM_CATEGORY_SYMBOLS.get(f[n]) for n in (1, 4, 6, 7)]
+        assert got == [want["cell_anim"], want["palette"], want["anim_table"], want["sprite_sheet"]] \
+            and f[2] == want["cell_anim_size"], "%s: the type's graphics aren't the ROM's: %s" % (k["constant"], got)
+        c = {"constant": k["constant"], "name": k["name"], "type": t}
+        if f[3]:
+            c["sky"] = skies[ROM_CATEGORY_SYMBOLS[f[3]]]
+        c["spawns"] = k["spawns"]
+        c.update(zip(CATEGORY_KEYS[4:], f[8:13]))
+        write_spawn_list(SPAWNS_DIR / ("%s.json" % k["spawns"]),
+                         spawns_from_rom(rom, f[5], by_addr[f[5]], want["family"]))
+        out.append(c)
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -2088,7 +2427,7 @@ def level_table_from_rom(rom, level_list, folders):
     """levels.json's "levels" (the kept names, the rest from gLevelTable and
     gLevelRoomLists) and "table" (the ROM's played-room arrays, in ROM
     order)."""
-    cat_names = {n: name for name, n in categories().items()}
+    cat_names = {n: c["constant"][len("CATEGORY_"):] for n, c in enumerate(read_json(LEVELS_JSON)["categories"])}
 
     def entry(r):
         if r in folders:
@@ -2149,7 +2488,7 @@ def write_levels_json(levels):
                          else dump(x))
         if k == "levels":
             return block(v, ind, lambda _, lv, i2: block(lv, i2, lambda __, y, ___: dump(y)))
-        if k in ("themes", "worlds"):
+        if k in ("themes", "worlds", "categories"):
             return block(v, ind, lambda _, t, __: dump(t))
         if k == "palette_cycles":
             return block(v, ind, lambda _, c, i2: block(c, i2, lambda k2, y, i3: block(y, i3, lambda _, z, __: dump(z))
@@ -2335,6 +2674,7 @@ def extract(rom_path):
               "assets": {"name": aname, "rooms": [n for _, n in sorted(assets)]}, "table": table,
               "levels": level_info, "worlds": worlds_from_rom(rom, kept)}
     levels["themes"], levels["palette_cycles"] = themes_from_rom(rom, kept)
+    levels["categories"] = categories_from_rom(rom, kept)
     # the derived counts (constants/levels.h, themes.h) are the ROM's
     check_rom_counts(levels)
     write_levels_json(levels)
@@ -2736,6 +3076,22 @@ def constants_h(which):
               " * (SpawnRoomExit): the themes with \"first_room_exit_zone\". */",
               "#define THEME_FIRST_ROOM_EXIT_ZONE(theme) (%s)"
               % (" || ".join("(theme) == %s" % c for c in exits) or "0")]
+    elif which == "categories":
+        src, guard = LEVELS_JSON, "GUARD_CONSTANTS_CATEGORIES_H"
+        cats = level_categories(read_json(src))
+        doc = """#include "constants/category_types.h"
+
+/*
+ * Actor categories: the index of ActorCategory::descriptors, the `catIndex` of a
+ * ROOM_KIND_CATEGORY stage and ActorCategory::Init's argument, levels.json's
+ * "categories" (docs/levels.md, "Actor categories"). The ROM's are the stages
+ * of its levels: the polar rides of frostbite cavern, snow crash and snow job,
+ * the jetpack levels, and n. gin's fight. The types and the exit statuses are
+ * constants/category_types.h.
+ */"""
+        rows = [(c["constant"], "%d" % i, c["name"]) for i, c in enumerate(cats)]
+        rows.append(("CATEGORY_COUNT", "%d" % len(cats), "the length of ActorCategory::descriptors"))
+        body = define_lines(rows)
     elif which == "save":
         src, guard = LEVELS_JSON, "GUARD_CONSTANTS_SAVE_H"
         data = read_json(src)
@@ -2823,6 +3179,12 @@ def main():
         write_if_changed(args[1], theme_palette_cycles_h(read_json(LEVELS_JSON)).encode())
     elif cmd == "worlds":
         write_if_changed(args[1], level_select_worlds_h(read_json(LEVELS_JSON)).encode())
+    elif cmd == "spawns":
+        Path(args[2]).parent.mkdir(parents=True, exist_ok=True)
+        Path(args[2]).write_text(spawns_inc(args[1]))
+    elif cmd == "categories":
+        Path(args[1]).parent.mkdir(parents=True, exist_ok=True)
+        Path(args[1]).write_text(actor_categories_inc(read_json(LEVELS_JSON)))
     else:
         sys.exit("unknown command %s" % cmd)
 
