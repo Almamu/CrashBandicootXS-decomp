@@ -601,11 +601,11 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/level/entity_spawner.cpp` | `EntitySpawner` (include/spawners.hpp): `SpawnEffectPart`, `LaunchEffectPart`, `DropWumpa`, `Spawn` (SpawnEntity), `SetTable`, constructor, destructor | 7 | old_agbcp | 4 pins, 1 use, 1 keep, 1 asm label, the `attach` slot call -> 0 | 9 |
 | `src/level/entity_spawner.cpp` | `EntitySpawner::DropExtraLife` | 1 | old_agbcp | 0 -> 0 | 9 |
 | `src/level/spawn_gems.cpp` | the crystal and gem spawners (C linkage) | 6 | old_agbcp | 0 -> 0 | 9 |
-| `src/level/spawn_gem_platforms.cpp` | the gem platform spawners (C linkage) | 4 | old_agbcp | 0 -> 0 | 9 |
+| `src/level/spawn_gem_platforms.cpp` | the gem platform spawners (C linkage; `Platform`'s static members since #915) | 4 | old_agbcp | 0 -> 0 | 9 |
 | `src/level/spawn_crates.cpp` | the crate spawners (C linkage; `Crate`'s static members since #915) | 7 | **old_agbcp** (was agbcc) | 16 pins, 3 asm -> 0 | 9 |
 | `src/level/spawn_start_marker.cpp` | `SpawnStartMarker` (C linkage) | 1 | old_agbcp | 17 pins, 2 asm, 1 retyped read, the slot-13 call, gotos -> 0 | 9 |
 | `src/level/spawn_bosses.cpp` | the room exit and the bosses' spawners (C linkage) | 4 | old_agbcp | 4 pins, 1 keep, 3 slot calls -> 4 pins, 1 keep | 9 |
-| `src/level/spawn_objects.cpp` | Mega Mix, the decorations, the platform and crate spawners, the seal spawner (C linkage) | 25 | old_agbcp | the slot call -> 0 | 9 |
+| `src/level/spawn_objects.cpp` | Mega Mix, the decorations, the platform and crate spawners, the seal spawner (C linkage; the platforms', the launch pad's and the seal spawner's static members of their classes since #915) | 25 | old_agbcp | the slot call -> 0 | 9 |
 | `src/level/spawn_pickups.cpp` | the power, stopwatch, blue gem, wumpa and player-start spawners, `CreateEntitySpawner`, `DestroyEntitySpawner`, `InitLevelState` (C linkage), with `KeyInput` (spawners.hpp; its constructor ClearKeys is still C) | 18 | **old_agbcp** (was agbcc) | 38 pins, 10 asm, 5 retyped stores -> 4 pins, 1 asm | 9 |
 | `src/level/level_state.cpp` | `StartTimeTrial` (C linkage) | 1 | old_agbcp | 2 vcall macros, an `ENTITY_SET_GONE_BIT` -> 0 | 9 |
 | globals.h, level.h, level_state.h, level_data.h, crate.hpp, enemy_ctrl.hpp, and 17 `.cpp` files | `gEntitySpawner` is an `EntitySpawner *` to C++, and the effect parts' and dropped pickups' callers call its methods; `CreateMovingSprite` calls are `MovingSprite::Create` | 0 | (unchanged) | 2 asm labels (`DropWumpaFlag`, `DropExtraLifeFlag`), a function-pointer cast -> 0 | 9 |
@@ -720,6 +720,7 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/vehicle/jetpack/jetpack_spawn.cpp` | the jetpack spawners as static members: SpawnJetpackActor, CreateJetpackActor and CreateJetpackPlayer of `JetpackPlayer` (`SpawnActor`, `CreateActor`, `Create`), the 12 fixed-record spawners of the classes they build (`JetpackShot::Spawn`, `JetpackCheckpointText::Create`, `HovercraftCannon::Spawn`, ...); vehicle.hpp's 9 `extern "C"` prototypes and bosses.h's 6 go | 15 | (unchanged) | 0 -> 0 | [#915](#the-jetpack-spawners-as-static-members-915) |
 | `src/data/actor_category_175558.cpp`, `src/bosses/hovercraft.cpp`, `hovercraft_cannon.cpp`, `hovercraft_launcher.cpp`, `hovercraft_side_gun.cpp`, `src/vehicle/jetpack/airship_states.cpp`, `jetpack_crates.cpp`, `jetpack_plane.cpp`, `jetpack_player.cpp`, `jetpack_player_update.cpp` | the callers: the jetpack and hovercraft slots 0 and 1 point at `JetpackPlayer::Create` and `JetpackPlayer::SpawnActor`; `JetpackCannonball::Spawn(...)`, `JetpackPlayer::CreateActor(...)`, `HovercraftSideGun::Spawn(...)` & co.; hovercraft.cpp and airship_states.cpp include boss_actors.hpp | 0 | (unchanged) | 0 -> 0 | [#915](#the-jetpack-spawners-as-static-members-915) |
 | `src/level/spawn_crates.cpp`, `src/data/dispatch_table_16c6a4.cpp` | the crate spawners as static members of `Crate` (include/crate.hpp): SpawnBasicCrate & co. are `SpawnBasic`, `SpawnTnt`, `SpawnTime1`, ... (CRATE_KIND_*'s names); gEntitySpawnFuncs' crate slots name the members; level.h's 19 prototypes go | 19 | (unchanged) | 0 -> 0 | [#915](#the-entity-spawners-as-static-members-915) |
+| `src/level/spawn_gem_platforms.cpp`, `spawn_objects.cpp`, `src/data/dispatch_table_16c6a4.cpp` | the platform spawners as static members of `Platform` (include/platform.hpp, named after PLATFORM_KIND_*: `SpawnGemRed`, ..., `SpawnRock`, `SpawnLarge`), SpawnLaunchPadEntity as `LaunchPad::SpawnEntity` (level_select.hpp) and SpawnSealSpawner as `PeriodicSpawner::Spawn` (enemy_ctrl.hpp); level.h's 12 prototypes go | 12 | (unchanged) | 0 -> 0 | [#915](#the-entity-spawners-as-static-members-915) |
 | `src/text/text_box.cpp` | `GetWordLength`, `DrawWrappedTextInBox` (C linkage; takes a `Font *`, `self->SetMargin`, `HeightToLines`) | 0 + 2 | agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/aabb.cpp` (since #767: `CommitBlendRegs` at the end of gfx/display.cpp, `IwramFree`/`IwramAlloc` in system/iwram_alloc.cpp) | `CommitBlendRegs`, `AabbOverlapsInclusiveX`, `AabbOverlaps`, `IwramFree`, `IwramAlloc` (C linkage) | 0 + 5 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/fixed_math.cpp`, `line.cpp`, `line_step.cpp`, `number_format.cpp`, `printf.cpp`, `rand.cpp`, `string.cpp`, `time_format.cpp` | the fixed-point helpers, the Bresenham line, `itoa`, `sprintf`/`vsprintf`/`FindSubstring` (string.cpp since #767), `rand`/`srand`/`RandRange`, the string functions, `FormatCentiseconds` (C linkage) | 0 + 24 | agbcp | 2 pins, 5 asm, 2 asm labels -> the same | all-C++: gfx, system, util, text |
@@ -5059,6 +5060,23 @@ C name.
   the iron or the nitro switch kind). They are `Crate`'s
   (include/crate.hpp); cxx_symbols.txt's `#915 Crate: the crate spawners`
   block maps them.
+- **Platforms.** The 4 gem platforms (spawn_gem_platforms.cpp) and the 6
+  others (spawn_objects.cpp) create a Platform of one kind (a gem
+  platform without its gem is a hidden marker sprite instead). They are
+  `Platform`'s, named after the PLATFORM_KIND_* they create:
+  `SpawnGemRed`, `SpawnGemYellow`, `SpawnGemGreen`, `SpawnGemBlue`,
+  `SpawnRock`, `SpawnFlip`, `SpawnBonus`, `SpawnMedium`, `SpawnSmall`,
+  `SpawnLarge`.
+- **The launch pad.** SpawnLaunchPadEntity, a tail call to
+  `LaunchPad::Spawn` (SpawnLaunchPad), is `LaunchPad::SpawnEntity`. As an
+  overload of `Spawn` it would be picked by the call inside it (the
+  slot's `u32 id` is a better match than Spawn's `u16`), which would
+  make it call itself.
+- **The seal spawner.** SpawnSealSpawner creates the only
+  PeriodicSpawner the ROM builds (its callback spawns a seal): it is
+  `PeriodicSpawner::Spawn` (enemy_ctrl.hpp).
+- **cxx_symbols.txt.** The `#915 Platform, LaunchPad, PeriodicSpawner`
+  block maps these 12.
 
 ### The crate passes as static members of Crate (#915)
 

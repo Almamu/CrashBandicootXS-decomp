@@ -25,7 +25,7 @@ class PlatformMover;
 #define PLATFORM_TYPE_WARP_GEM_PATH 4 // EVENT_WARP_GEM_PATH, until the gem path is done
 #define PLATFORM_TYPE_FALLING 5       // wobbles once the player lands, falls 60 frames later
 #define PLATFORM_TYPE_FLIP 6          // tips over, and comes back 120 frames later
-// SpawnRockPlatform's: carried like STILL; its mover holds the animation
+// Platform::SpawnRock's: carried like STILL; its mover holds the animation
 // while not `active` and is gone when it ends, but nothing activates it
 #define PLATFORM_TYPE_ROCK 7
 
@@ -33,18 +33,18 @@ class PlatformMover;
  * spawner's look, the platform's animation in sprite bank 0x1D4 (its
  * `tag`). The warp kinds force a PLATFORM_TYPE_*; the others keep the
  * record's type. */
-#define PLATFORM_KIND_LARGE 0           // SpawnLargePlatform
-#define PLATFORM_KIND_SMALL 1           // SpawnSmallPlatform
-#define PLATFORM_KIND_MEDIUM 2          // SpawnMediumPlatform
-#define PLATFORM_KIND_GEM_YELLOW 3      // SpawnYellowGemPlatform: WARP_GEM_PATH
+#define PLATFORM_KIND_LARGE 0           // Platform::SpawnLarge
+#define PLATFORM_KIND_SMALL 1           // Platform::SpawnSmall
+#define PLATFORM_KIND_MEDIUM 2          // Platform::SpawnMedium
+#define PLATFORM_KIND_GEM_YELLOW 3      // Platform::SpawnGemYellow: WARP_GEM_PATH
 #define PLATFORM_KIND_EXIT_PAD 4        // SpawnRoomExit's pad: WARP_EXIT
-#define PLATFORM_KIND_BONUS 5           // SpawnBonusPlatform: WARP_BONUS
-#define PLATFORM_KIND_FLIP 6            // SpawnFlipPlatform: FLIP
-#define PLATFORM_KIND_BONUS_DONE 7      // SpawnBonusPlatform once the round is done or in a time trial
-#define PLATFORM_KIND_ROCK 8            // SpawnRockPlatform: ROCK
-#define PLATFORM_KIND_GEM_BLUE 9        // SpawnBlueGemPlatform: WARP_GEM_PATH
-#define PLATFORM_KIND_GEM_GREEN 0xA     // SpawnGreenGemPlatform: WARP_GEM_PATH
-#define PLATFORM_KIND_GEM_RED 0xB       // SpawnRedGemPlatform: WARP_GEM_PATH
+#define PLATFORM_KIND_BONUS 5           // Platform::SpawnBonus: WARP_BONUS
+#define PLATFORM_KIND_FLIP 6            // Platform::SpawnFlip: FLIP
+#define PLATFORM_KIND_BONUS_DONE 7      // Platform::SpawnBonus after the round, or in a time trial
+#define PLATFORM_KIND_ROCK 8            // Platform::SpawnRock: ROCK
+#define PLATFORM_KIND_GEM_BLUE 9        // Platform::SpawnGemBlue: WARP_GEM_PATH
+#define PLATFORM_KIND_GEM_GREEN 0xA     // Platform::SpawnGemGreen: WARP_GEM_PATH
+#define PLATFORM_KIND_GEM_RED 0xB       // Platform::SpawnGemRed: WARP_GEM_PATH
 #define PLATFORM_KIND_GEM_PATH_DONE 0xC // the gem platforms once the gem path is done or in a time trial
 
 /* A level platform (CreatePlatform allocates 0x80 bytes): a moving sprite
@@ -66,6 +66,22 @@ public:
     virtual s32 GetClassId();                                           // 9 GetPlatformClassId: 4
     virtual ~Platform();                                                // 10 DestroyPlatform
     static Platform *Create(u16 id, u16 x, u16 y, u16 index, s32 kind); // CreatePlatform
+
+    /* gEntitySpawnFuncs' platform slots (#915), named after their kinds
+     * (PLATFORM_KIND_*): the gem platforms (spawn_gem_platforms.cpp; a
+     * hidden marker sprite while the gem is missing) and the others
+     * (spawn_objects.cpp). */
+    static void SpawnGemRed(u32 id, u16 x, u16 y, u16 param);    // SpawnRedGemPlatform
+    static void SpawnGemYellow(u32 id, u16 x, u16 y, u16 param); // SpawnYellowGemPlatform
+    static void SpawnGemGreen(u32 id, u16 x, u16 y, u16 param);  // SpawnGreenGemPlatform
+    static void SpawnGemBlue(u32 id, u16 x, u16 y, u16 param);   // SpawnBlueGemPlatform
+    static void SpawnRock(u32 id, u16 x, u16 y, u16 param);      // SpawnRockPlatform
+    static void SpawnFlip(u32 id, u16 x, u16 y, u16 param);      // SpawnFlipPlatform
+    static void SpawnBonus(u32 id, u16 x, u16 y, u16 param);     // SpawnBonusPlatform
+    static void SpawnMedium(u32 id, u16 x, u16 y, u16 param);    // SpawnMediumPlatform
+    static void SpawnSmall(u32 id, u16 x, u16 y, u16 param);     // SpawnSmallPlatform
+    static void SpawnLarge(u32 id, u16 x, u16 y, u16 param);     // SpawnLargePlatform
+
 
     s32 GetExitMirror();                 // GetPlatformExitMirror
     void SetExitMirror(u8 value);        // SetPlatformExitMirror

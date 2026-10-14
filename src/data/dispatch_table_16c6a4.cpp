@@ -1,4 +1,7 @@
 #include "crate.hpp"
+#include "platform.hpp"
+#include "level_select.hpp"
+#include "enemy_ctrl.hpp"
 
 extern "C" {
 #include "core.h"
@@ -64,7 +67,7 @@ const entity_spawn_fn gEntitySpawnFuncs[ENTITY_COUNT] = {
     /* ENTITY_PATROLLING_JUNGLE_ENEMY */ SpawnPatrollingJungleEnemy,
     /* ENTITY_BLOWGUN_TRIBESMAN */ SpawnBlowgunTribesman,
     /* ENTITY_PENGUIN */ SpawnPenguin,
-    /* ENTITY_SEAL_SPAWNER */ SpawnSealSpawner,
+    /* ENTITY_SEAL_SPAWNER */ PeriodicSpawner::Spawn,
     /* ENTITY_POLAR_BEAR */ SpawnPolarBear,
     /* ENTITY_PUFFERFISH */ SpawnPufferfish,
     /* ENTITY_SHARK */ SpawnShark,
@@ -79,7 +82,7 @@ const entity_spawn_fn gEntitySpawnFuncs[ENTITY_COUNT] = {
     /* ENTITY_SAUCER_LAB_ASSISTANT */ SpawnSaucerLabAssistant,
     /* ENTITY_PISTON_CRUSHER */ SpawnPistonCrusher,
     /* 0x3C */ (entity_spawn_fn)SpawnNoEntity,
-    /* ENTITY_LAUNCH_PAD */ SpawnLaunchPadEntity,
+    /* ENTITY_LAUNCH_PAD */ LaunchPad::SpawnEntity,
     /* 0x3E */ (entity_spawn_fn)SpawnNoEntity,
     /* ENTITY_SAUCER_LAB_ASSISTANT_B */ SpawnSaucerLabAssistant,
     /* ENTITY_FLAMETHROWER_LAB_ASSISTANT */ SpawnFlamethrowerLabAssistant,
@@ -96,17 +99,17 @@ const entity_spawn_fn gEntitySpawnFuncs[ENTITY_COUNT] = {
     /* ENTITY_SEA_MINE */ SpawnSeaMine,
     /* ENTITY_SEA_MINE_B */ SpawnSeaMine,
     /* ENTITY_WOODEN_CRUSHER */ SpawnWoodenCrusher,
-    /* ENTITY_LARGE_PLATFORM */ SpawnLargePlatform,
-    /* ENTITY_SMALL_PLATFORM */ SpawnSmallPlatform,
-    /* ENTITY_MEDIUM_PLATFORM */ SpawnMediumPlatform,
-    /* ENTITY_RED_GEM_PLATFORM */ SpawnRedGemPlatform,
-    /* ENTITY_YELLOW_GEM_PLATFORM */ SpawnYellowGemPlatform,
-    /* ENTITY_GREEN_GEM_PLATFORM */ SpawnGreenGemPlatform,
-    /* ENTITY_BLUE_GEM_PLATFORM */ SpawnBlueGemPlatform,
+    /* ENTITY_LARGE_PLATFORM */ Platform::SpawnLarge,
+    /* ENTITY_SMALL_PLATFORM */ Platform::SpawnSmall,
+    /* ENTITY_MEDIUM_PLATFORM */ Platform::SpawnMedium,
+    /* ENTITY_RED_GEM_PLATFORM */ Platform::SpawnGemRed,
+    /* ENTITY_YELLOW_GEM_PLATFORM */ Platform::SpawnGemYellow,
+    /* ENTITY_GREEN_GEM_PLATFORM */ Platform::SpawnGemGreen,
+    /* ENTITY_BLUE_GEM_PLATFORM */ Platform::SpawnGemBlue,
     /* ENTITY_ROOM_EXIT */ SpawnRoomExit,
-    /* ENTITY_BONUS_PLATFORM */ SpawnBonusPlatform,
-    /* ENTITY_FLIP_PLATFORM */ SpawnFlipPlatform,
-    /* ENTITY_ROCK_PLATFORM */ SpawnRockPlatform,
+    /* ENTITY_BONUS_PLATFORM */ Platform::SpawnBonus,
+    /* ENTITY_FLIP_PLATFORM */ Platform::SpawnFlip,
+    /* ENTITY_ROCK_PLATFORM */ Platform::SpawnRock,
     /* ENTITY_CRATE_GEM_MARKER */ (entity_spawn_fn)SpawnCrateGemMarker,
     /* ENTITY_FLAME */ SpawnFlame,
     /* ENTITY_SEAWEED */ SpawnSeaweed,
