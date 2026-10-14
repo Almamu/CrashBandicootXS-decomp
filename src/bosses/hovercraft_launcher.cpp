@@ -15,6 +15,8 @@ extern "C" {
 using Engine::Actor::ActorBg;
 using Game::Bosses::Hovercraft;
 using Game::Bosses::HovercraftLauncher;
+using Game::Entities::ActorSelf;
+using Game::Entities::HpActor;
 using Game::Vehicles::Jetpack::JetpackPlayer;
 
 /* The hovercraft's launcher (#664 part 11h, include/boss_actors.hpp): the

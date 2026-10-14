@@ -14,6 +14,8 @@ extern "C" {
 
 using Engine::Actor::ActorCategory;
 using Engine::Actor::CollectedSpawns;
+using Game::Entities::ActorSelf;
+using Game::Entities::HpActor;
 using Game::Vehicles::Jetpack::JetpackBalloon;
 using Game::Vehicles::Jetpack::JetpackBalloonCrate;
 using Game::Vehicles::Jetpack::JetpackHealthCrate;

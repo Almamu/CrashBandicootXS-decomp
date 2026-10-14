@@ -34,7 +34,14 @@ extern void DrawMirroredTilemap(u8 *pal, s32 lowBlock, s32 w, s32 h);
 /* The list is ActorSelf's (actor_self.hpp), as actor.h's
  * gHeapSortActorsByKeyFunc; only C++ uses it. */
 #ifdef __cplusplus
-extern void HeapSortActorsByKey(s32 n, class ActorSelf **list);
+namespace Game
+{
+namespace Entities
+{
+class ActorSelf; // in its namespace (docs/cplusplus.md, "Namespaces")
+} // namespace Entities
+} // namespace Game
+extern void HeapSortActorsByKey(s32 n, Game::Entities::ActorSelf **list);
 #endif
 extern void UnpackRleSpriteFrame(u16 *dst, struct rle_frame *frame);
 

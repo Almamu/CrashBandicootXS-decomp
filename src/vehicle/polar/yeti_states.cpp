@@ -16,6 +16,7 @@ extern "C" {
 
 using Engine::Actor::ActorBg;
 using Engine::Gfx::CellAnim;
+using Game::Entities::AnimPart;
 using Game::Vehicles::Polar::Yeti;
 
 /* The `gYeti`-rooted position-tracking object with tier-

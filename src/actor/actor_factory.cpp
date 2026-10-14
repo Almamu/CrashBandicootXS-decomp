@@ -15,6 +15,7 @@ extern "C" {
 
 using Engine::Actor::ActorPaletteCycle;
 using Engine::Actor::CollectedSpawns;
+using Game::Entities::ActorSelf;
 using Game::Vehicles::Polar::PolarAkuAku;
 using Game::Vehicles::Polar::PolarAkuAkuCrate;
 using Game::Vehicles::Polar::PolarBasicCrate;

@@ -11,6 +11,7 @@ extern "C" {
 }
 
 using Engine::Sys::VramDmaQueue;
+using Game::Entities::AnimPart;
 using Game::Vehicles::Jetpack::Airship;
 
 /* The airship's damage, graphics, HP gauge and teardown (#664 parts

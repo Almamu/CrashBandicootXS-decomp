@@ -17,6 +17,8 @@ extern "C" {
 
 using Engine::Actor::ActorCategory;
 using Game::Bosses::HovercraftFireball;
+using Game::Entities::ActorSelf;
+using Game::Entities::HpActor;
 
 /* The hovercraft's fireball (#664 part 11h, include/boss_actors.hpp), ROM
  * 0x08032910-0x08032AF8, between src/vehicle/jetpack/jetpack_collected_wumpa.cpp

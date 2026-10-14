@@ -9,6 +9,8 @@ extern "C" {
 }
 
 using Engine::Actor::ActorCategory;
+using Game::Entities::ActorSelf;
+using Game::Entities::HpActor;
 using Game::Vehicles::Jetpack::AirshipFireball;
 
 /* The airship's fireball (#664 parts 11f and 11i,

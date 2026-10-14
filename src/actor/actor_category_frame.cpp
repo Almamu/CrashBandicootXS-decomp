@@ -17,6 +17,10 @@ extern "C" {
 using Engine::Actor::ActorCategory;
 using Engine::Actor::ActorSpawns;
 using Engine::Gfx::CellAnim;
+using Game::Entities::ActorSelf;
+using Game::Entities::BoxOverlap;
+using Game::Entities::HpActor;
+using Game::Entities::WorldBox;
 using Game::Vehicles::Jetpack::JetpackPlayer;
 using Game::Vehicles::Polar::PolarPlayer;
 

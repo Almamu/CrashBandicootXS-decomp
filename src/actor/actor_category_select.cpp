@@ -13,6 +13,7 @@ extern "C" {
 using Engine::Actor::ActorCategory;
 using Engine::Actor::ActorSpawns;
 using Engine::Gfx::CellAnim;
+using Game::Entities::ActorSelf;
 
 /* Sets up the currently-selected category's runtime state:
  * `ActorCategory::vtable` = `&ActorCategory::vtables[type]` (the category's

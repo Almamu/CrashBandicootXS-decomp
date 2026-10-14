@@ -5,6 +5,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Game::Entities::ActorSelf;
+using Game::Entities::BoxMove;
 using Game::Vehicles::Jetpack::Airship;
 
 /* Same "boss-weapon self" object family as airship_fireball.cpp (see that

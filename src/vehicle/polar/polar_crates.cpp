@@ -13,6 +13,7 @@ extern "C" {
 }
 
 using Engine::Actor::ActorCategory;
+using Game::Entities::ActorSelf;
 using Game::Vehicles::Polar::PolarAkuAkuCrate;
 using Game::Vehicles::Polar::PolarBasicCrate;
 using Game::Vehicles::Polar::PolarCrate;

@@ -14,6 +14,10 @@ extern "C" {
 
 using Engine::Actor::ActorBg;
 using Engine::Gfx::CellAnim;
+using Game::Entities::ActorSelf;
+using Game::Entities::AnimPart;
+using Game::Entities::BoxMove;
+using Game::Entities::BoxOverlap;
 using Game::Vehicles::Polar::PolarPlayer;
 using Game::Vehicles::Polar::Yeti;
 

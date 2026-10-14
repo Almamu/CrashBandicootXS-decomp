@@ -9,6 +9,9 @@ extern "C" {
 #include "system.h"
 }
 
+using Game::Entities::ActorSelf;
+using Game::Entities::BoxMove;
+using Game::Entities::BoxOverlap;
 using Game::Vehicles::Polar::Yeti;
 
 /* Sits right after yeti_states.cpp's `YetiStateCharge` and before

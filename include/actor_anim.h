@@ -184,7 +184,19 @@ struct category_descriptor {
 COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct category_descriptor) == 0x34);
 
 struct actor_spawn; /* actor.h */
-struct ActorSelf;   /* actor_self.hpp's class */
+#ifdef __cplusplus
+/* actor_self.hpp's class, in its namespace (docs/cplusplus.md,
+ * "Namespaces"); C sees an incomplete struct. */
+namespace Game
+{
+namespace Entities
+{
+class ActorSelf;
+} // namespace Entities
+} // namespace Game
+#else
+struct ActorSelf;
+#endif
 
 /* ActorCategory::vtables - 3 entries, type-indexed (see category_descriptor
  * above), not category-indexed: categories that share a type share one.
@@ -199,7 +211,11 @@ struct category_vtable {
     void (*createPlayer)(struct anim_table_record *table, s32 checkpoint);
     /* 0x04 - spawns a level spawn record's object: PolarPlayer::SpawnActor,
      * JetpackPlayer::SpawnActor (ActorCategory::RunFrame, ActorCategory::Select) */
+#ifdef __cplusplus
+    Game::Entities::ActorSelf *(*spawn)(struct actor_spawn *spawn, u8 useBonus, s32 zOffset);
+#else
     struct ActorSelf *(*spawn)(struct actor_spawn *spawn, u8 useBonus, s32 zOffset);
+#endif
     void (*createBoss)(s32 level);  // 0x08 - CreateYeti/CreateAirship/CreateHovercraft
     void (*updateBoss)(void);       // 0x0C - each category frame's start
     void (*updateBossBg2)(void);    // 0x10 - ActorCategory::UpdateBg2
@@ -211,10 +227,15 @@ struct category_vtable {
     /* 0x20 - ActorCategory::Select skips the records whose depth is below
      * this plus the start distance (-0x2F polar, 0x1C jetpack/hovercraft) */
     s32 skipDistance;
-    s32 (*isTouchingPlayer)(struct ActorSelf *self); // 0x24 - ActorCategory::IsTouchingPlayer
-    void (*reachCourseEnd)(void);                    // 0x28 - once the course length is passed
-    void (*reloadPlayerTiles)(void);                 // 0x2C - ActorCategory::ReloadGraphics
-    s32 (*isPauseLocked)(void);                      // 0x30 - ActorCategory::CanPause
+    /* 0x24 - ActorCategory::IsTouchingPlayer */
+#ifdef __cplusplus
+    s32 (*isTouchingPlayer)(Game::Entities::ActorSelf *self);
+#else
+    s32 (*isTouchingPlayer)(struct ActorSelf *self);
+#endif
+    void (*reachCourseEnd)(void);    // 0x28 - once the course length is passed
+    void (*reloadPlayerTiles)(void); // 0x2C - ActorCategory::ReloadGraphics
+    s32 (*isPauseLocked)(void);      // 0x30 - ActorCategory::CanPause
 }; // 0x34
 COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct category_vtable) == 0x34);
 

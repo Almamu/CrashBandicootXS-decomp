@@ -24,6 +24,7 @@ using Engine::Gfx::CellAnim;
 using Engine::Gfx::ObjTileAllocator;
 using Engine::Gfx::SpriteOamQueue;
 using Engine::Sys::VramDmaQueue;
+using Game::Entities::ActorSelf;
 using Game::Vehicles::Polar::PolarAkuAku;
 using Game::Vehicles::Polar::PolarPlayer;
 using Game::Vehicles::Polar::Yeti;

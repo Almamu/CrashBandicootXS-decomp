@@ -10,6 +10,8 @@ extern "C" {
 using Game::Bosses::Hovercraft;
 using Game::Bosses::HovercraftFireball;
 using Game::Bosses::HovercraftSideGun;
+using Game::Entities::ActorSelf;
+using Game::Entities::HpActor;
 
 /* The hovercraft's side guns (#664 part 11h, include/boss_actors.hpp):
  * two HpActors on the hovercraft's sides (`left`, SpawnHovercraft) that

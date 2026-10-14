@@ -15,6 +15,7 @@ extern "C" {
 
 using Engine::Actor::ActorBg;
 using Engine::Actor::ActorCategory;
+using Game::Entities::ActorSelf;
 using Game::Vehicles::Polar::PolarCollectedWumpa;
 using Game::Vehicles::Polar::PolarPlayer;
 using Game::Vehicles::Polar::PolarWumpa;

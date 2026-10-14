@@ -13,6 +13,8 @@ extern "C" {
 
 using Engine::Actor::ActorBg;
 using Engine::Gfx::CellAnim;
+using Game::Entities::ActorSelf;
+using Game::Entities::AnimPart;
 
 /* The 3D actor base class, ActorSelf (#664 part 11a, include/actor_self.hpp):
  * the constructor, Update and Draw, the depth and draw-order key, the

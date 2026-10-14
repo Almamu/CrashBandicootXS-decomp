@@ -8,6 +8,7 @@ extern "C" {
 }
 
 using Engine::Gfx::SpriteFrameCache;
+using Game::Entities::ActorSelf;
 
 /*
  * IWRAM 0x0300024C-0x030007CC (stored in ROM at 0x087E5830): the ARM

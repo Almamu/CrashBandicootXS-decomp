@@ -120,7 +120,7 @@ private:
      * without the timer). SetState is its out-of-line copy. */
     static void EnterState(s32 st, s32 idx)
     {
-        AnimPart *a;
+        Game::Entities::AnimPart *a;
 
         state = st;
         a = anim;
@@ -165,7 +165,7 @@ private:
     static s32 mapCols;                            // gHovercraftMapCols
     static s32 mapRows;                            // gHovercraftMapRows
     static s32 mapTileBase;                        // gHovercraftMapTileBase
-    static AnimPart *anim;                         // gHovercraft
+    static Game::Entities::AnimPart *anim;         // gHovercraft
     static s32 state;                              // gHovercraftState
     static s32 x;                                  // gHovercraftX
     static s32 y;                                  // gHovercraftY

@@ -453,7 +453,7 @@ SECTIONS
         build/crashbandicootxs/src/system/inline_copies_misc.o(.gnu.linkonce.d._vt.Q36Engine4Text9LargeFont); /* gLargeFontVtable */
         build/crashbandicootxs/src/system/inline_copies_misc.o(.gnu.linkonce.d._vt.Q36Engine4Text9SmallFont); /* gSmallFontVtable */
         build/crashbandicootxs/src/text/font.o(.gnu.linkonce.d._vt.Q36Engine4Text4Font); /* gFontVtable */
-        build/crashbandicootxs/src/actor/actor.o(.gnu.linkonce.d._vt.9ActorSelf); /* gActorVtable */
+        build/crashbandicootxs/src/actor/actor.o(.gnu.linkonce.d._vt.Q34Game8Entities9ActorSelf); /* gActorVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar14RiderlessPolar); /* gRiderlessPolarVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar19PolarCheckpointText); /* gPolarCheckpointTextVtable */
         build/crashbandicootxs/src/vehicle/polar/polar_player_states.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar11PolarPlayer); /* gPolarPlayerVtable */

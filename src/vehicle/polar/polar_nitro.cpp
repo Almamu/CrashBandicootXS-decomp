@@ -7,6 +7,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Entities::ActorSelf;
+using Game::Entities::BoxOverlap;
+using Game::Entities::WorldBox;
 using Game::Vehicles::Polar::PolarNitroCrate;
 
 /* A broken nitro's blast (#664 part 11d, include/vehicle.hpp), ROM

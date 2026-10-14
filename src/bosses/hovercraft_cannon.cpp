@@ -14,6 +14,8 @@ using Engine::Actor::ActorBg;
 using Game::Bosses::Hovercraft;
 using Game::Bosses::HovercraftCannon;
 using Game::Bosses::HovercraftCannonFlash;
+using Game::Entities::ActorSelf;
+using Game::Entities::HpActor;
 using Game::Vehicles::Jetpack::JetpackCannonball;
 
 /* The hovercraft's cannon (#664 part 11h, include/boss_actors.hpp): an

@@ -16,6 +16,7 @@ extern "C" {
 
 using Engine::Actor::ActorCategory;
 using Engine::Actor::ActorSpawns;
+using Game::Entities::ActorSelf;
 using Game::Vehicles::Polar::PolarElectricFence;
 using Game::Vehicles::Polar::PolarIcicle;
 using Game::Vehicles::Polar::PolarLauncher;

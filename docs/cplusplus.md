@@ -954,6 +954,33 @@ checks the change is only a rename:
   Ctrl's key method, Ctrl::Update, sits in src/system/bios_util.cpp with
   the BIOS helpers (the ROM's order), which names the class through a
   using declaration.
+  **The 3D actors' bases** follow in a second step: `AnimPart`,
+  `ActorSelf` and `HpActor` (actor_self.hpp), with the actors' box
+  helpers BoxOverlap, BoxMove and WorldBox (the box test on an
+  ActorSelf's `box`, the same header). 25 symbols renamed, among them
+  ActorSelf's vtable (`_vt.Q34Game8Entities9ActorSelf`, gActorVtable),
+  no code change; ldscript.txt's line that places its section is updated
+  by hand. HpActor's own vtable (inline_copies_actors.cpp) has no C
+  name and goes to /DISCARD/ (the ROM has no such table: every subclass
+  has its own), so only its name in the .map changes, with the
+  destructor's that it references. The C headers that name the class (actor.h,
+  actor_anim.h's `struct category_vtable`, whose `spawn` and
+  `isTouchingPlayer` slots take one, globals.h's gActorList, iwram.h's
+  HeapSortActorsByKey) forward declare it in the namespace under
+  `__cplusplus`, where C keeps `struct ActorSelf`: a global
+  `struct ActorSelf` would be a second class to C++, which the using
+  declarations find ambiguous. vehicle.hpp (gRiderlessPolar),
+  actor_category.hpp and yeti.hpp name it qualified or forward declare
+  it in the namespace; vehicle.hpp defines ActorSelf::AsPolarPlayer and
+  AsJetpackPlayer at global scope by their qualified names. 45 .cpp
+  files name the classes and helpers with using declarations. The
+  C-linkage FindShotTarget and HeapSortActorsByKey stay global.
+  Boundary calls: `Engine::Actor`'s category driver (actor_category*.cpp)
+  spawns, updates, draws and sorts `Game::Entities::ActorSelf`s through
+  the category vtables, so that is where Engine::Actor names a game
+  class; the actors' bases know the game too (AsHpActor's shot targets,
+  the casts to the vehicles' players, AsJetpackPlayer and
+  AsPolarPlayer), so they are `Game::`, with the 2D entities.
 
 ### What stays global
 
@@ -971,9 +998,6 @@ a namespace but these, which stay in the global namespace on purpose:
   (ApplyCrateCollision, DestroyPolarCrate, the balloon crates'
   destructors). A namespace doesn't change a C-linkage name, but these
   are declared where C sees them.
-- **The 3D actors' bases** (actor_self.hpp): `ActorSelf`, `AnimPart`,
-  `HpActor`, for now. The entity and controller bases are
-  `Game::Entities`' (above).
 - **The globals** (globals.h, level.h, ...: gPlayer, gLevelState,
   gCrateList, ...) and **the data tables** (src/data/, the ROM tables
   and the C string tables): their C names are what the linker script,

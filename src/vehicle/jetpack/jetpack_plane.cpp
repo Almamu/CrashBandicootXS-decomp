@@ -12,6 +12,8 @@ extern "C" {
 
 using Engine::Actor::ActorCategory;
 using Engine::Actor::ActorSpawns;
+using Game::Entities::ActorSelf;
+using Game::Entities::HpActor;
 using Game::Vehicles::Jetpack::JetpackCannonball;
 using Game::Vehicles::Jetpack::JetpackPlane;
 

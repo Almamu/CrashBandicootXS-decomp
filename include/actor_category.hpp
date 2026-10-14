@@ -34,7 +34,13 @@ extern "C" {
 #include "actor_anim.h"
 }
 
-class ActorSelf;
+namespace Game
+{
+namespace Entities
+{
+class ActorSelf; // actor_self.hpp
+} // namespace Entities
+} // namespace Game
 
 namespace Engine
 {
@@ -52,7 +58,7 @@ public:
      * s32: every caller's `(u8)` is the ROM's truncation, but as a bool,
      * PolarPlayer::IsTouchingPlayer and JetpackPlayer::IsTouchingPlayer
      * (the hooks it calls) get a second return path (#855). */
-    static s32 IsTouchingPlayer(ActorSelf *self);
+    static s32 IsTouchingPlayer(Game::Entities::ActorSelf *self);
 
 private:
     friend class ActorCategoryStats; // IsMaskAssistDue reads the selected descriptor
@@ -71,7 +77,7 @@ private:
 
     /* IWRAM (sym_iwram.txt) */
     static s32 current;                          // gActorCategory - the descriptors index
-    static ActorSelf **drawList;                 // gActorDrawList - 50 entries
+    static Game::Entities::ActorSelf **drawList; // gActorDrawList - 50 entries
     static s32 drawCount;                        // gActorDrawCount
     static s32 exitStatus;                       // gActorCategoryExitStatus - this frame's
     static const struct category_vtable *vtable; // gActorCategoryVtable - the type's

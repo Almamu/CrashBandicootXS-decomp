@@ -25,7 +25,13 @@
  *
  * No `#pragma interface`: g++ emits ActorSelf's vtable (gActorVtable) in
  * actor.cpp and HpActor's in inline_copies_actors.cpp; AnimPart has none (see
- * ctrl.hpp). */
+ * ctrl.hpp).
+ *
+ * The three classes are in the namespace Game::Entities (#1033,
+ * docs/cplusplus.md "Namespaces"), with the entity and controller bases
+ * (sprite_obj.hpp, ctrl.hpp): `_vt.Q34Game8Entities9ActorSelf`. So are
+ * the box helpers below (BoxOverlap, BoxMove, WorldBox), the actors' box
+ * test. The C-linkage FindShotTarget stays global. */
 
 extern "C" {
 #include "core.h"
@@ -42,7 +48,6 @@ extern "C" {
  * priority 2 (attr 2 | 0x800) so it goes behind the BG layer. */
 #define SORT_KEY_FLAG_BEHIND_BG 0x8000
 
-class HpActor;
 namespace Game
 {
 namespace Vehicles
@@ -51,18 +56,16 @@ namespace Jetpack
 {
 class JetpackPlayer; // vehicle.hpp
 } // namespace Jetpack
-} // namespace Vehicles
-} // namespace Game
-namespace Game
-{
-namespace Vehicles
-{
 namespace Polar
 {
 class PolarPlayer; // vehicle.hpp
 } // namespace Polar
 } // namespace Vehicles
-} // namespace Game
+
+namespace Entities
+{
+
+class HpActor;
 
 class AnimPart
 {
@@ -368,8 +371,11 @@ inline HpActor *ActorSelf::AsHpActor()
     return (HpActor *)this;
 }
 
+} // namespace Entities
+} // namespace Game
+
 /* src/actor/actor_category_frame.cpp: the first actor other than `self`
  * a shot hits (JetpackShot::Update). C linkage, C++ callers only. */
-extern "C" HpActor *FindShotTarget(ActorSelf *self);
+extern "C" Game::Entities::HpActor *FindShotTarget(Game::Entities::ActorSelf *self);
 
 #endif /* GUARD_ACTOR_SELF_HPP */
