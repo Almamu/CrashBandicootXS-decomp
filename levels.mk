@@ -162,7 +162,7 @@ $(GENERATED_INCLUDE_DIR)/theme_palette_cycles.h: $(GENERATED_INCLUDE_DIR)/theme_
 # the Makefile makes every C object wait for the whole list.
 GENERATED_HEADERS += $(GENERATED_INCLUDE_DIR)/constants/entities.h $(GENERATED_INCLUDE_DIR)/constants/crates.h \
 	$(GENERATED_INCLUDE_DIR)/constants/levels.h $(GENERATED_INCLUDE_DIR)/constants/themes.h \
-	$(GENERATED_INCLUDE_DIR)/constants/save_version.h
+	$(GENERATED_INCLUDE_DIR)/constants/save.h
 
 $(GENERATED_INCLUDE_DIR)/constants/entities.h: data/levels/entity_types.json tools/levels.py
 	@mkdir -p $(dir $@)
@@ -190,12 +190,13 @@ $(GENERATED_INCLUDE_DIR)/constants/themes.h.stamp: $(THEME_DEPS)
 $(GENERATED_INCLUDE_DIR)/constants/themes.h: $(GENERATED_INCLUDE_DIR)/constants/themes.h.stamp
 	@test -f $@ || python3 tools/levels.py constants themes $@
 
-# The save data's version and checksum seed, from a CRC-32 of the levels and
-# the rooms' room.json (docs/levels.md, "Save compatibility"). Written only
-# if it changed, behind a stamp: an edit that keeps the CRC rebuilds nothing.
-$(GENERATED_INCLUDE_DIR)/constants/save_version.h.stamp: data/levels/levels.json $(LEVEL_ROOM_JSONS) tools/levels.py
+# The save data's EEPROM and record size, from the level count, and its
+# version and checksum seed, from a CRC-32 of the levels and the rooms'
+# room.json (docs/levels.md, "The save"). Written only if it changed, behind
+# a stamp: an edit that keeps them rebuilds nothing.
+$(GENERATED_INCLUDE_DIR)/constants/save.h.stamp: data/levels/levels.json $(LEVEL_ROOM_JSONS) tools/levels.py
 	@mkdir -p $(dir $@)
-	python3 tools/levels.py constants save $(GENERATED_INCLUDE_DIR)/constants/save_version.h
+	python3 tools/levels.py constants save $(GENERATED_INCLUDE_DIR)/constants/save.h
 	@touch $@
-$(GENERATED_INCLUDE_DIR)/constants/save_version.h: $(GENERATED_INCLUDE_DIR)/constants/save_version.h.stamp
+$(GENERATED_INCLUDE_DIR)/constants/save.h: $(GENERATED_INCLUDE_DIR)/constants/save.h.stamp
 	@test -f $@ || python3 tools/levels.py constants save $@

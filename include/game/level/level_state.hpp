@@ -327,7 +327,7 @@ private:
 
 /* The offsets with the ROM's 25 levels, when each of the three
  * GameProgress blocks is 0x68 bytes; a block grows 4 bytes a level
- * (LEVEL_COUNT). */
+ * (LEVEL_COUNT) and by its extra progress flags (PROGRESS_EXTRA_FLAG_BYTES). */
 #define LEVEL_STATE_GROWTH (sizeof(GameProgress) - 0x68)
 COMPILE_TIME_ASSERT(level_state_hpp, offsetof(LevelState, unk_68) == 0x068 + LEVEL_STATE_GROWTH);
 COMPILE_TIME_ASSERT(level_state_hpp, offsetof(LevelState, room) == 0x0C4 + LEVEL_STATE_GROWTH);

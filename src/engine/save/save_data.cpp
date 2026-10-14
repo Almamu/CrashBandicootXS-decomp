@@ -13,12 +13,21 @@ extern "C" {
 using Engine::Audio::AudioContext;
 using Engine::Save::SaveData;
 
-/* Reads the save data: `gEepromConfig->maxCount` 8-byte blocks from
+/* The blocks Read and Write transfer: the whole chip
+ * (`gEepromConfig->maxCount`, the 4 Kbit EEPROM's 0x40) when the save is
+ * the 4 Kbit EEPROM, as in the ROM, else the record's
+ * (SAVE_DATA_SIZE / 8) on the 64 Kbit one, a part of its 0x400. A
+ * constant condition (constants/save.h): only one side is compiled. */
+#define SAVE_EEPROM_BLOCKS                                                                         \
+    (SAVE_EEPROM_TYPE == EEPROM_CHIP_4KBIT ? gEepromConfig->maxCount : SAVE_DATA_SIZE / 8)
+
+/* Reads the save data: SAVE_EEPROM_BLOCKS 8-byte blocks from
  * the EEPROM chip (the SDK's `EEPROMRead`) into a stack
- * buffer sized `len` (always 0x200, `sizeof(struct
- * save_data)`, from every call site), then copies the whole
+ * buffer sized `len` (always `sizeof(SaveData)`, 0x200 in the ROM, from
+ * every call site), then copies the whole
  * buffer into `this`. One-time-inits the EEPROM chip config
- * (`EEPROMConfigure`) and claims hardware timer 2 for the transfer
+ * (`EEPROMConfigure` with SAVE_EEPROM_TYPE, the 4 Kbit chip in the ROM)
+ * and claims hardware timer 2 for the transfer
  * (`SetEepromTimerIntr`, installing its handler straight into the Timer 2
  * slot of the IRQ table, `gIntrTableTimer2`) on the way in. Returns -1 on any block-read failure
  * (buffer left untouched) or 0 on success.
@@ -36,12 +45,12 @@ using Engine::Save::SaveData;
  * are identical). */
 s32 SaveData::Read(s32 len)
 {
-    u8 buf[0x200];
+    u8 buf[sizeof(SaveData)];
     s32 i;
     u8 *p;
 
     if (gEepromNeedsInit) {
-        if ((u16)EEPROMConfigure(4) != 0) {
+        if ((u16)EEPROMConfigure(SAVE_EEPROM_TYPE) != 0) {
             return -1;
         }
         gEepromNeedsInit = 0;
@@ -52,7 +61,7 @@ s32 SaveData::Read(s32 len)
 
     p = buf;
     i = 0;
-    while (i < gEepromConfig->maxCount) {
+    while (i < SAVE_EEPROM_BLOCKS) {
         if ((u16)EEPROMRead(i, (u16 *)p) != 0) {
             goto fail_restore;
         }
@@ -84,19 +93,19 @@ fail_restore:
 /* EEPROM "save" - counterpart to `SaveData::Read`: same one-time
  * chip-config init and timer-2 claim, but copies `this` into a stack
  * buffer *after* the chip-config check (not before, matching the
- * ROM's own instruction order), then writes it out `maxCount` 8-byte
+ * ROM's own instruction order), then writes it out SAVE_EEPROM_BLOCKS 8-byte
  * blocks at a time (the SDK's `EEPROMWrite1_check`). Same -1-on-failure/
  * 0-on-success return and IME-save/IE-clear/IME-restore snippet as
  * `SaveData::Read`, byte-identical as plain C for the same reason (see
  * that function's doc comment). */
 s32 SaveData::Write(s32 len)
 {
-    u8 buf[0x200];
+    u8 buf[sizeof(SaveData)];
     s32 i;
     u8 *p;
 
     if (gEepromNeedsInit) {
-        if ((u16)EEPROMConfigure(4) != 0) {
+        if ((u16)EEPROMConfigure(SAVE_EEPROM_TYPE) != 0) {
             return -1;
         }
         gEepromNeedsInit = 0;
@@ -109,7 +118,7 @@ s32 SaveData::Write(s32 len)
 
     p = buf;
     i = 0;
-    while (i < gEepromConfig->maxCount) {
+    while (i < SAVE_EEPROM_BLOCKS) {
         if ((u16)EEPROMWrite1_check(i, (u16 *)p) != 0) {
             goto fail_restore;
         }
@@ -165,7 +174,7 @@ s32 SaveData::Load()
 
     i = 0;
     do {
-        result = Read(0x200);
+        result = Read(sizeof(SaveData));
         i++;
     } while (i <= 2 && result != 0);
 
@@ -190,7 +199,7 @@ s32 SaveData::Load()
 
 /* Validates the record's checksum (the inline ChecksumOk, which
  * CheckChecksum below is the out-of-line copy of) and, if it fails,
- * repairs the record in place, as Reset does: clears the 0x200 bytes
+ * repairs the record in place, as Reset does: clears the record
  * (DmaClear16), marks every row selected (`SaveData::EraseSlot`),
  * re-stamps the header (StampHeader: the two marker bytes, `flags` and
  * `field_1fb` cleared) and refreshes the checksum
@@ -217,7 +226,7 @@ void SaveData::Validate()
 }
 
 /* Recomputes this record's additive word-sum checksum over its first
- * 0x1fc bytes (127 words) and compares it against the stored
+ * words before `checksum` (127 in the ROM) and compares it against the stored
  * `checksum` field, returning 1 on match. Counterpart to `SaveData::UpdateChecksum`
  * below, which stores instead of comparing. */
 u8 SaveData::CheckChecksum()
@@ -226,8 +235,8 @@ u8 SaveData::CheckChecksum()
 }
 
 /* Recomputes and stores this record's additive word-sum checksum over
- * its first 0x1fc bytes (127 words), from SAVE_CHECKSUM_SEED (0 with the
- * ROM's levels, constants/save_version.h), into `checksum`. Every function
+ * the words before `checksum` (127 in the ROM), from SAVE_CHECKSUM_SEED (0 with
+ * the ROM's levels, constants/save.h), into `checksum`. Every function
  * that mutates `flags`/`slotEmpty` calls this afterward to keep the
  * checksum in sync - see src/engine/save/save_data.cpp's header
  * comment, which already anticipated this function (it was matched
@@ -238,7 +247,7 @@ void SaveData::UpdateChecksum()
     u32 sum = SAVE_CHECKSUM_SEED;
     s32 i;
 
-    for (i = 0x7e; i >= 0; i--) {
+    for (i = SAVE_DATA_SIZE / 4 - 2; i >= 0; i--) {
         sum += *p++;
     }
     checksum = sum;
@@ -276,7 +285,7 @@ s32 SaveData::Store()
 
     i = 0;
     do {
-        result = Write(0x200);
+        result = Write(sizeof(SaveData));
         i++;
     } while (i <= 4 && result != 0);
 
@@ -290,7 +299,7 @@ s32 SaveData::Store()
     return 0;
 }
 
-/* Copies row `row`'s 0x70-byte slot out to `dst`, but only if the row
+/* Copies row `row`'s slot (0x70 bytes in the ROM) out to `dst`, but only if the row
  * hasn't been explicitly selected/edited (`slotEmpty[row] == 0`) -
  * refreshes a caller-side scratch copy with the stored default/synced
  * value while leaving a user-edited row alone. */
@@ -305,7 +314,7 @@ void SaveData::ReadSlot(s32 row, void *dst)
     }
 }
 
-/* Force-writes `src` into row `row`'s 0x70-byte slot, clears the row's
+/* Force-writes `src` into row `row`'s slot, clears the row's
  * `slotEmpty` flag (marking it "not explicitly edited" again), and
  * refreshes the checksum. */
 void SaveData::WriteSlot(s32 row, void *src)
@@ -329,7 +338,7 @@ void SaveData::EraseSlot(s32 row)
     UpdateChecksum();
 }
 
-/* Zeroes the whole 0x200-byte record via a DMA16 fill, marks every row
+/* Zeroes the whole record via a DMA16 fill, marks every row
  * "selected" (SaveData::EraseSlot), stamps the two fixed marker
  * bytes, clears `flags`/`field_1fb`, then refreshes the checksum. */
 void SaveData::Reset()

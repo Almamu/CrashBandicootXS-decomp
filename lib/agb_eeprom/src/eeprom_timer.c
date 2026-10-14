@@ -19,9 +19,9 @@ s32 EEPROMConfigure(u16 type)
     u16 result;
 
     result = 0;
-    if (type == 4) {
+    if (type == EEPROM_CHIP_4KBIT) {
         gEepromConfig = &gEepromConfig512;
-    } else if (type == 0x40) {
+    } else if (type == EEPROM_CHIP_64KBIT) {
         gEepromConfig = &gEepromConfig8k;
     } else {
         gEepromConfig = &gEepromConfig512;

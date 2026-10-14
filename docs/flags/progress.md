@@ -21,6 +21,11 @@ constants/level_flags.h, `LEVEL_FLAG_*`.
 
 LevelState::ClearPowers (UNUSED) clears bits 4-7.
 
+All 8 bits are the ROM's. Level data can add more flags in
+`GameProgress::extraFlags`, after the level words (`levels.json`'s
+`"extra_progress_flags"`, `PROGRESS_EXTRA_BIT_*`; docs/levels.md, "The
+save"). The ROM has none.
+
 ## How the code tests the bits
 
 Each site keeps the spelling the ROM's code needs (docs/naming.md, "Flag

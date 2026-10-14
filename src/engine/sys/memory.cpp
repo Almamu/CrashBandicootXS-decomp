@@ -23,7 +23,8 @@ static inline void mem_heap_init_section(struct mem_heap_header *first, struct m
 }
 
 /* `reservedBytes`: the bytes at the top of IWRAM, below `iwram_end`, that
- * the IWRAM heap leaves out (main passes 0x400). */
+ * the IWRAM heap leaves out: the stack (main passes 0x400 in the ROM,
+ * more when the level data makes the save larger). */
 s32 mem_heap_init(u32 reservedBytes)
 {
     /* `start`, `end` are needed: inlined, the registers differ */
