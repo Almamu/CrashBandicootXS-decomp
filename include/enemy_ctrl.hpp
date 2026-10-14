@@ -142,6 +142,37 @@ public:
     /* src/enemies/enemy_patrol.cpp, src/enemies/enemy_shooter.cpp */
     void UpdatePatrol();
     void UpdateShooter();
+
+    /* The enemy spawners (src/level/spawn_enemies.cpp, #915), under their
+     * C names: each creates an enemy, a MovingSprite moved by a new
+     * EnemyCtrl. gEntitySpawnFuncs' enemy slots, and SpawnSeal (the seal
+     * spawner's callback, PeriodicSpawner::Spawn). */
+    static void SpawnLizard(u32 id, u16 x, u16 y, u16 param);
+    static void SpawnVulture(u32 id, u16 x, u16 y, u16 param);
+    static void SpawnVenusFlytrap(u32 id, u16 x, u16 y, u16 param);
+    static void SpawnPatrollingJungleEnemy(u32 id, u16 x, u16 y, u16 param);
+    static void SpawnBlowgunTribesman(u32 id, u16 x, u16 y, u16 param);
+    static void SpawnPenguin(u32 id, u16 x, u16 y, u16 param);
+    static void SpawnSeal(u32 id, u16 x, u16 y, u16 param);
+    static void SpawnPolarBear(u32 id, u16 x, u16 y, u16 param);
+    static void SpawnPufferfish(u32 id, u16 x, u16 y, u16 param);
+    static void SpawnShark(u32 id, u16 x, u16 y, u16 param);
+    static void SpawnMorayEel(u32 id, u16 x, u16 y, u16 param);
+    static void SpawnElectricEel(u32 id, u16 x, u16 y, u16 param);
+    static void SpawnSquid(u32 id, u16 x, u16 y, u16 param);
+    static void SpawnJellyfish(u32 id, u16 x, u16 y, u16 param);
+    static void SpawnLaserBarrier(u32 id, u16 x, u16 y, u16 param);
+    static void SpawnStationarySpaceEnemy(u32 id, u16 x, u16 y, u16 param);
+    static void SpawnPatrollingSpaceEnemy(u32 id, u16 x, u16 y, u16 param);
+    static void SpawnSaucerLabAssistant(u32 id, u16 x, u16 y, u16 param);
+    static void SpawnPistonCrusher(u32 id, u16 x, u16 y, u16 param);
+    static void SpawnFlamethrowerLabAssistant(u32 id, u16 x, u16 y, u16 param);
+    static void SpawnHomingSewerEnemy(u32 id, u16 x, u16 y, u16 param);
+    static void SpawnPatrollingSewerEnemy(u32 id, u16 x, u16 y, u16 param);
+    static void SpawnRat(u32 id, u16 x, u16 y, u16 param);
+    static void SpawnFrog(u32 id, u16 x, u16 y, u16 param);
+    static void SpawnSeaMine(u32 id, u16 x, u16 y, u16 param);
+    static void SpawnWoodenCrusher(u32 id, u16 x, u16 y, u16 param);
 };
 
 COMPILE_TIME_ASSERT(enemy_ctrl_hpp, sizeof(EnemyCtrl) == 0x8C);
