@@ -18,6 +18,7 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Audio::AudioContext;
 using Engine::Gfx::BrightnessFade;
 using Engine::Sys::FrameLimiter;
 

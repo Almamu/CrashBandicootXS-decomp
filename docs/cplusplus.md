@@ -571,6 +571,18 @@ checks the change is only a rename:
   bookkeeping. `ActorSelf`, the 3D actors' base, isn't in the layout's
   list and stays outside for now. No name hiding: there is no global
   named `Actor` (the namespace) or like one of the classes.
+- **`Engine::Audio`** (`Q36Engine5Audio`): `AudioContext` (audio.hpp),
+  the music and sound-effect front end over GAX2. 25 symbols renamed, no
+  code change. GAX stays a C library in lib/; the C structs the class is
+  built on (`struct audio_context`, `SfxRecord`, `SfxTableEntry`) and
+  audio.cpp's two C-linkage functions (EnableMusicVCountIrq,
+  MusicVCountIrqHandler, the VCOUNT handler it installs) stay global.
+  globals.h forward declares the class for gAudioContext. Boundary calls:
+  none needed: the class only drives GAX2 (songs, sound effects, fades)
+  and reads gRoomFrameCount for the ambient effect's deadline, so it is
+  engine code; the song and effect ids it is given are the game's.
+  No name hiding: the namespace holds only the class, and no global is
+  named `Audio` or `AudioContext`.
 
 ## Progress
 

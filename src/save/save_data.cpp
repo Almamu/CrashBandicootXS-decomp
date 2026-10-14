@@ -10,6 +10,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Audio::AudioContext;
+
 /* Reads the save data: `gEepromConfig->maxCount` 8-byte blocks from
  * the EEPROM chip (the SDK's `EEPROMRead`) into a stack
  * buffer sized `len` (always 0x200, `sizeof(struct

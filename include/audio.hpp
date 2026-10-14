@@ -20,6 +20,11 @@
  *
  * struct audio_context (below) is the field list, the class's base.
  *
+ * In the namespace Engine::Audio (#1033, docs/cplusplus.md "Namespaces"):
+ * the methods are `Update__Q36Engine5Audio12AudioContext` & co. The C
+ * structs (audio_context, SfxRecord, SfxTableEntry) and the two C-linkage
+ * free functions stay global.
+ *
  * `#pragma interface`: no vtable to emit, and no out-of-line copies of
  * the inline methods. */
 #pragma interface
@@ -138,6 +143,11 @@ struct audio_context {
 
 COMPILE_TIME_ASSERT(audio_hpp, sizeof(struct audio_context) == 0x2094);
 
+namespace Engine
+{
+namespace Audio
+{
+
 /* The methods keep their C names (cxx_symbols.txt), except the four whose
  * C name is noted. */
 class AudioContext : public audio_context
@@ -192,6 +202,9 @@ public:
     }
 };
 
-COMPILE_TIME_ASSERT(audio_hpp, sizeof(AudioContext) == 0x2094);
+} // namespace Audio
+} // namespace Engine
+
+COMPILE_TIME_ASSERT(audio_hpp, sizeof(Engine::Audio::AudioContext) == 0x2094);
 
 #endif /* !GUARD_AUDIO_HPP */
