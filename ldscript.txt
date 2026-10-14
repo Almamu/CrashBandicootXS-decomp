@@ -454,28 +454,28 @@ SECTIONS
         build/crashbandicootxs/src/system/inline_copies_misc.o(.gnu.linkonce.d._vt.Q36Engine4Text9SmallFont); /* gSmallFontVtable */
         build/crashbandicootxs/src/text/font.o(.gnu.linkonce.d._vt.Q36Engine4Text4Font); /* gFontVtable */
         build/crashbandicootxs/src/actor/actor.o(.gnu.linkonce.d._vt.9ActorSelf); /* gActorVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.14RiderlessPolar); /* gRiderlessPolarVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.19PolarCheckpointText); /* gPolarCheckpointTextVtable */
-        build/crashbandicootxs/src/vehicle/polar/polar_player_states.o(.gnu.linkonce.d._vt.11PolarPlayer); /* gPolarPlayerVtable */
-        build/crashbandicootxs/src/vehicle/polar/polar_pickups.o(.gnu.linkonce.d._vt.19PolarCollectedWumpa); /* gPolarCollectedWumpaVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.10PolarWumpa); /* gPolarWumpaVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.14PolarTimeCrate); /* gPolarTimeCrateVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.18PolarQuestionCrate); /* gPolarQuestionCrateVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.16PolarAkuAkuCrate); /* gPolarAkuAkuCrateVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.15PolarNitroCrate); /* gPolarNitroCrateVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.14PolarLifeCrate); /* gPolarLifeCrateVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.19PolarFourWumpaCrate); /* gPolarFourWumpaCrateVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.15PolarBasicCrate); /* gPolarBasicCrateVtable */
-        build/crashbandicootxs/src/vehicle/polar/polar_crate.o(.gnu.linkonce.d._vt.10PolarCrate); /* gPolarCrateVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.18PolarElectricFence); /* gPolarElectricFenceVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.13PolarObstacle); /* gPolarObstacleVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.13PolarLauncher); /* gPolarLauncherVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.12PolarPenguin); /* gPolarPenguinVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.11PolarIcicle); /* gPolarIcicleVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.11PolarAkuAku); /* gPolarAkuAkuVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.9PolarGoal); /* gPolarGoalVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.13PolarBoostPad); /* gPolarBoostPadVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.20PolarCheckpointCrate); /* gPolarCheckpointCrateVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar14RiderlessPolar); /* gRiderlessPolarVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar19PolarCheckpointText); /* gPolarCheckpointTextVtable */
+        build/crashbandicootxs/src/vehicle/polar/polar_player_states.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar11PolarPlayer); /* gPolarPlayerVtable */
+        build/crashbandicootxs/src/vehicle/polar/polar_pickups.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar19PolarCollectedWumpa); /* gPolarCollectedWumpaVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar10PolarWumpa); /* gPolarWumpaVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar14PolarTimeCrate); /* gPolarTimeCrateVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar18PolarQuestionCrate); /* gPolarQuestionCrateVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar16PolarAkuAkuCrate); /* gPolarAkuAkuCrateVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar15PolarNitroCrate); /* gPolarNitroCrateVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar14PolarLifeCrate); /* gPolarLifeCrateVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar19PolarFourWumpaCrate); /* gPolarFourWumpaCrateVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar15PolarBasicCrate); /* gPolarBasicCrateVtable */
+        build/crashbandicootxs/src/vehicle/polar/polar_crate.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar10PolarCrate); /* gPolarCrateVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar18PolarElectricFence); /* gPolarElectricFenceVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar13PolarObstacle); /* gPolarObstacleVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar13PolarLauncher); /* gPolarLauncherVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar12PolarPenguin); /* gPolarPenguinVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar11PolarIcicle); /* gPolarIcicleVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar11PolarAkuAku); /* gPolarAkuAkuVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar9PolarGoal); /* gPolarGoalVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar13PolarBoostPad); /* gPolarBoostPadVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar20PolarCheckpointCrate); /* gPolarCheckpointCrateVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.21JetpackCheckpointText); /* gJetpackCheckpointTextVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.16JetpackExplosion); /* gJetpackExplosionVtable */
         build/crashbandicootxs/src/vehicle/jetpack/jetpack_player.o(.gnu.linkonce.d._vt.13JetpackPlayer); /* gJetpackPlayerVtable */

@@ -14,6 +14,7 @@ extern "C" {
 }
 
 using Engine::Actor::ActorCategory;
+using Game::Vehicles::Polar::PolarPlayer;
 
 /* The category hooks that go through the category vtable, the actor
  * teardown and the exit status, ROM 0x0802A5AC-0x0802A69C; split from

@@ -14,6 +14,12 @@ extern "C" {
 
 using Engine::Actor::ActorCategory;
 using Engine::Actor::ActorCategoryStats;
+using Game::Vehicles::Polar::PolarBoostPad;
+using Game::Vehicles::Polar::PolarCheckpointCrate;
+using Game::Vehicles::Polar::PolarCheckpointText;
+using Game::Vehicles::Polar::PolarGoal;
+using Game::Vehicles::Polar::PolarPlayer;
+using Game::Vehicles::Polar::Yeti;
 
 /* The polar course's goal, boost pad and checkpoint crate (#664 part
  * 11d, include/vehicle.hpp), ROM 0x0802D59C-0x0802D7B0, between

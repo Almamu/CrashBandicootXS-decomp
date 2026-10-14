@@ -12,6 +12,7 @@ extern "C" {
 }
 
 using Engine::Sys::VramDmaQueue;
+using Game::Vehicles::Polar::PolarAkuAku;
 
 /* Aku Aku (#664 part 11d, include/vehicle.hpp), ROM 0x0802D204-0x0802D59C,
  * between polar_objects.cpp and polar_course_objects.cpp: PolarAkuAku's

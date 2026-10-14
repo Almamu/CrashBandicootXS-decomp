@@ -6,6 +6,8 @@ extern "C" {
 #include "actor_anim.h"
 }
 
+using Game::Vehicles::Polar::Yeti;
+
 /*
  * ROM 0x0817A850-0x0817A880. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.

@@ -16,6 +16,7 @@ extern "C" {
 
 using Engine::Actor::ActorBg;
 using Engine::Gfx::CellAnim;
+using Game::Vehicles::Polar::Yeti;
 
 /* The `gYeti`-rooted position-tracking object with tier-
  * threshold sound cues, already documented in docs/rom_map.md ("A

@@ -13,6 +13,7 @@ extern "C" {
 
 using Engine::Actor::ActorBg;
 using Engine::Gfx::CellAnim;
+using Game::Vehicles::Polar::Yeti;
 
 /* More of the `gYeti`-rooted object's lifecycle (see
  * polar_aku_aku.cpp's header comment): a state-flag setter, its

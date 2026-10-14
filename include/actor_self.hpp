@@ -44,7 +44,16 @@ extern "C" {
 
 class HpActor;
 class JetpackPlayer; // vehicle.hpp
-class PolarPlayer;   // vehicle.hpp
+namespace Game
+{
+namespace Vehicles
+{
+namespace Polar
+{
+class PolarPlayer; // vehicle.hpp
+} // namespace Polar
+} // namespace Vehicles
+} // namespace Game
 
 class AnimPart
 {
@@ -186,7 +195,7 @@ public:
      * HpActors. Defined after each class (below; vehicle.hpp). */
     inline HpActor *AsHpActor();
     inline JetpackPlayer *AsJetpackPlayer();
-    inline PolarPlayer *AsPolarPlayer();
+    inline Game::Vehicles::Polar::PolarPlayer *AsPolarPlayer();
 };
 
 COMPILE_TIME_ASSERT(actor_self_hpp, sizeof(ActorSelf) == 0x54);

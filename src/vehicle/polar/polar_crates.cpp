@@ -13,6 +13,16 @@ extern "C" {
 }
 
 using Engine::Actor::ActorCategory;
+using Game::Vehicles::Polar::PolarAkuAkuCrate;
+using Game::Vehicles::Polar::PolarBasicCrate;
+using Game::Vehicles::Polar::PolarCrate;
+using Game::Vehicles::Polar::PolarFourWumpaCrate;
+using Game::Vehicles::Polar::PolarLifeCrate;
+using Game::Vehicles::Polar::PolarNitroCrate;
+using Game::Vehicles::Polar::PolarPlayer;
+using Game::Vehicles::Polar::PolarQuestionCrate;
+using Game::Vehicles::Polar::PolarTimeCrate;
+using Game::Vehicles::Polar::Yeti;
 
 /* The polar crate kinds' updates, PolarCrate's constructor and the kinds'
  * out-of-line constructors (#664 part 11d, include/vehicle.hpp), ROM

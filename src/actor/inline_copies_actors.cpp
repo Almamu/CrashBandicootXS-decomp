@@ -14,6 +14,26 @@ using Game::Bosses::HovercraftCannonFlash;
 using Game::Bosses::HovercraftFireball;
 using Game::Bosses::HovercraftLauncher;
 using Game::Bosses::HovercraftSideGun;
+using Game::Vehicles::Polar::PolarAkuAku;
+using Game::Vehicles::Polar::PolarAkuAkuCrate;
+using Game::Vehicles::Polar::PolarBasicCrate;
+using Game::Vehicles::Polar::PolarBoostPad;
+using Game::Vehicles::Polar::PolarCheckpointCrate;
+using Game::Vehicles::Polar::PolarCheckpointText;
+using Game::Vehicles::Polar::PolarCrate;
+using Game::Vehicles::Polar::PolarElectricFence;
+using Game::Vehicles::Polar::PolarFourWumpaCrate;
+using Game::Vehicles::Polar::PolarGoal;
+using Game::Vehicles::Polar::PolarIcicle;
+using Game::Vehicles::Polar::PolarLauncher;
+using Game::Vehicles::Polar::PolarLifeCrate;
+using Game::Vehicles::Polar::PolarNitroCrate;
+using Game::Vehicles::Polar::PolarObstacle;
+using Game::Vehicles::Polar::PolarPenguin;
+using Game::Vehicles::Polar::PolarQuestionCrate;
+using Game::Vehicles::Polar::PolarTimeCrate;
+using Game::Vehicles::Polar::PolarWumpa;
+using Game::Vehicles::Polar::RiderlessPolar;
 
 /* The 3D actors' destructors (vehicle.hpp, boss_actors.hpp), all but the
  * polar player's, the jetpack player's, the balloon crate's and the

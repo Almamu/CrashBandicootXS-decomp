@@ -17,6 +17,7 @@ extern "C" {
 using Engine::Actor::ActorCategory;
 using Engine::Actor::ActorSpawns;
 using Engine::Gfx::CellAnim;
+using Game::Vehicles::Polar::PolarPlayer;
 
 /* ROM 0x0802A018-0x0802A4D4, inside the actor zone that starts at
  * ActorCategory::SetupVramPool (0x080291A4): the category hooks that test an actor

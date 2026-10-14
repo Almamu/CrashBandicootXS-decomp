@@ -9,6 +9,8 @@ extern "C" {
 #include "system.h"
 }
 
+using Game::Vehicles::Polar::Yeti;
+
 /* Sits right after yeti_states.cpp's `YetiStateCharge` and before
  * yeti.cpp's `StopYeti` - the whole contiguous range that used
  * to be `asm/code_3_2_20_28568_c99c_dd9c.s`. Both functions continue the
