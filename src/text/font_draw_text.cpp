@@ -1,5 +1,7 @@
 #include "font.hpp"
 
+using Engine::Text::Font;
+
 /* GitHub issue #46: Font's whole-string draw and fixed-count measure
  * (include/font.hpp). Built with old_agbcp, which MeasureChars needs. */
 

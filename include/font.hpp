@@ -12,7 +12,13 @@
  * one; the destructor is inline), and SmallFont's and LargeFont's in
  * src/system/inline_copies_misc.cpp, which has their destructors. ldscript.txt
  * places them at their ROM addresses (docs/cplusplus.md, "Emitting the
- * vtables"); cxx_symbols.txt maps the mangled names onto the C names. */
+ * vtables"); cxx_symbols.txt maps the mangled names onto the C names.
+ *
+ * The three classes are in the namespace Engine::Text (#1033,
+ * docs/cplusplus.md "Namespaces"): `DrawText__Q36Engine4Text4FontPCUc`,
+ * `_vt.Q36Engine4Text4Font` (in the section
+ * `.gnu.linkonce.d._vt.Q36Engine4Text4Font`, which ldscript.txt names) &
+ * co. text.h's C-linkage wrapped-text functions stay global. */
 
 extern "C" {
 #include "core.h"
@@ -21,6 +27,11 @@ extern "C" {
 #include <agb_syscall.h>
 #include <libgcc.h>
 }
+
+namespace Engine
+{
+namespace Text
+{
 
 /* A bitmap font (0x134 bytes): draws text as one OBJ per glyph through
  * AddOamEntry, with a cursor (posX, posY) that the draw methods advance.
@@ -161,5 +172,8 @@ public:
     LargeFont();          // InitLargeFont
     virtual ~LargeFont(); // 1 DestroyLargeFont
 };
+
+} // namespace Text
+} // namespace Engine
 
 #endif /* !GUARD_FONT_HPP */

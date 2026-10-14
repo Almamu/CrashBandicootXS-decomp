@@ -1,5 +1,7 @@
 #include "font.hpp"
 
+using Engine::Text::Font;
+
 /* GitHub issue #46: Font's DrawChars (include/font.hpp), between
  * font_glyph.cpp and font_draw_text.cpp in the ROM. */
 

@@ -12,6 +12,7 @@ extern "C" {
 }
 
 using Engine::Sys::FrameLimiter;
+using Engine::Text::Font;
 
 /* The power dialog (GitHub issue #8; PowerDialog, menus.hpp): a power's
  * name and description over the scrolling sky, shown by the four

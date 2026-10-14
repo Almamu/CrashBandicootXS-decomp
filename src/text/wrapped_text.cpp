@@ -11,6 +11,7 @@ extern "C" {
 }
 
 using Engine::Sys::FrameLimiter;
+using Engine::Text::Font;
 
 /* Sits right after InitBresenhamLine (ROM 0x08000E6C, in src/util/line.cpp) and
  * before FormatCentiseconds (still raw in asm/code_3_1_3.s). C++ since the

@@ -6,6 +6,9 @@ extern "C" {
 #include "memory.h"
 }
 
+using Engine::Text::LargeFont;
+using Engine::Text::SmallFont;
+
 /* Small methods of unrelated classes collected after libgcc in the ROM
  * (0x0803AFDC-0x0803B058; nothing can move across libgcc): the AABB
  * set-size and set-position primitives, LevelState::GetLives and the two

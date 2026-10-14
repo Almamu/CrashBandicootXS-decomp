@@ -9,6 +9,8 @@ extern "C" {
 #include "sprite_bank.h"
 }
 
+using Engine::Text::Font;
+
 /* GitHub issue #46: Font's MeasureText, UploadTiles and palette setters
  * (include/font.hpp), then the out-of-line copies of its inline methods.
  * MeasureText is the class's key method, its first non-inline virtual

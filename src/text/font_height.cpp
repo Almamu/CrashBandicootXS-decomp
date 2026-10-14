@@ -1,5 +1,7 @@
 #include "font.hpp"
 
+using Engine::Text::Font;
+
 /* GitHub issue #46: Font's TextHeight (include/font.hpp), between
  * font_draw_text.cpp and font.cpp in the ROM. */
 

@@ -1,5 +1,7 @@
 #include "font.hpp"
 
+using Engine::Text::Font;
+
 /* Sits right after LoadBackgroundTileAndPalette (ROM 0x080011C0, in src/system/asset.cpp)
  * and before whatever's still raw in asm/code_3_1_7.s. */
 

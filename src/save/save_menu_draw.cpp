@@ -24,6 +24,7 @@ using Engine::Link::LinkSession;
 using Engine::Save::SaveData;
 using Engine::Save::SaveTransfer;
 using Engine::Sys::FrameLimiter;
+using Engine::Text::Font;
 
 /* SaveMenu's link exchange, slot list drawing, setup helpers and per-state
  * draw routines (include/save_menu.hpp, #664's final cleanup). The second

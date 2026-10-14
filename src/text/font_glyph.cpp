@@ -10,6 +10,9 @@ extern "C" {
 
 using Engine::Gfx::LargeFontSheet;
 using Engine::Gfx::SmallFontSheet;
+using Engine::Text::Font;
+using Engine::Text::LargeFont;
+using Engine::Text::SmallFont;
 
 /* GitHub issue #46: Font's glyph drawer and character dispatcher, and the
  * two fonts' constructors (include/font.hpp). Built with old_agbcp: under

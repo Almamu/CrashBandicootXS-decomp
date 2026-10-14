@@ -28,6 +28,9 @@ using Engine::Gfx::SpriteRenderer;
 using Engine::Sys::Display;
 using Engine::Sys::KeyInput;
 using Engine::Sys::VramDmaQueue;
+using Engine::Text::Font;
+using Engine::Text::LargeFont;
+using Engine::Text::SmallFont;
 
 /* The player positions and start markers (entity types 0x01-0x05), the
  * entity spawner's constructor and destructor calls and InitLevelState
