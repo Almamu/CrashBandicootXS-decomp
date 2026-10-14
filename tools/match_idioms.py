@@ -594,10 +594,10 @@ ORIGINAL_SOURCE = {
     ("lib/gax/src/gax_swi.c", "pin"):
         (2, "GaxHuffUnComp's r7/r8 register variables, Shin'en's: the ROM has "
             "agbcc's r7-pin bug (docs/libraries.md, \"GAX implementation notes\")"),
-    ("src/system/bios_util.cpp", "insn"):
+    ("src/engine/sys/bios_util.cpp", "insn"):
         (1, "DivMod's inline svc #6 with its push {r2}/pop {r2}, which gcc never "
             "emits for a save, so the ROM's source had them in the asm (#662)"),
-    ("src/system/bios_util.cpp", "pin"):
+    ("src/engine/sys/bios_util.cpp", "pin"):
         (2, "DivMod's r0/r1 register variables: the Div SWI's operand binding, "
             "as an inline SWI wrapper is written for gcc (no per-register asm "
             "constraints on ARM), not a register-choice nudge (#662)"),

@@ -1,13 +1,13 @@
 #define ACTOR_SELF_DESTRUCTOR_OUT_OF_LINE
 #include "actor_self.hpp"
 #include "vehicle.hpp"
-#include "cell_anim.hpp"
-#include "actor_bg.hpp"
+#include "engine/gfx/cell_anim.hpp"
+#include "engine/actor/actor_bg.hpp"
 
 extern "C" {
-#include "math_util.h"
-#include "actor.h"
-#include "gfx.h"
+#include "engine/util/math_util.h"
+#include "engine/actor/actor.h"
+#include "engine/gfx/gfx.h"
 #include "globals.h"
 }
 

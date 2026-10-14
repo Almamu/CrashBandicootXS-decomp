@@ -1,14 +1,14 @@
 #include "sprite_obj.hpp"
 #include "frontend.hpp"
-#include "audio.hpp"
-#include "key_input.hpp"
-#include "frame_limiter.hpp"
+#include "engine/audio/audio.hpp"
+#include "engine/sys/key_input.hpp"
+#include "engine/sys/frame_limiter.hpp"
 
 extern "C" {
 #include "gba/dma_macros.h"
-#include "system.h"
-#include "text.h"
-#include "gfx.h"
+#include "engine/sys/system.h"
+#include "engine/text/text.h"
+#include "engine/gfx/gfx.h"
 #include "globals.h"
 }
 

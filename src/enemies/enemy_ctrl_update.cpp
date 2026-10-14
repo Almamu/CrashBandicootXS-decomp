@@ -2,15 +2,15 @@
 #include "enemy_ctrl.hpp"
 #include "spawners.hpp"
 #include "player.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 
 extern "C" {
-#include "util.h"
-#include "memory.h"
+#include "engine/util/util.h"
+#include "engine/sys/memory.h"
 #include "level.h"
 #include "globals.h"
 #include "entity_bits.h"
-#include "math_util.h"
+#include "engine/util/math_util.h"
 }
 
 using Game::Crash::Player;

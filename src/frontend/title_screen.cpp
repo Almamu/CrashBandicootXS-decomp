@@ -1,21 +1,21 @@
-#include "display.hpp"
+#include "engine/sys/display.hpp"
 #include "sprite_obj.hpp"
 #include "frontend.hpp"
-#include "audio.hpp"
-#include "key_input.hpp"
-#include "graphics_package.hpp"
-#include "frame_limiter.hpp"
+#include "engine/audio/audio.hpp"
+#include "engine/sys/key_input.hpp"
+#include "engine/gfx/graphics_package.hpp"
+#include "engine/sys/frame_limiter.hpp"
 
 extern "C" {
 #include "gba/dma_macros.h"
 #include "gba/io_reg.h"
-#include "text.h"
-#include "util.h"
+#include "engine/text/text.h"
+#include "engine/util/util.h"
 #include <libgcc.h>
-#include "system.h"
-#include "gfx.h"
+#include "engine/sys/system.h"
+#include "engine/gfx/gfx.h"
 #include "globals.h"
-#include "math_util.h"
+#include "engine/util/math_util.h"
 }
 
 using Engine::Gfx::OamBuffer;

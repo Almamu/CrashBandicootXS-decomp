@@ -1,7 +1,7 @@
 #include "bg_layer.hpp"
 
 extern "C" {
-#include "math_util.h"
+#include "engine/util/math_util.h"
 #include "globals.h"
 }
 

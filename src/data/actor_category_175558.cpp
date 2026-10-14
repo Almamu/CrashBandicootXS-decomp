@@ -2,12 +2,12 @@
 #include "airship.hpp"
 #include "hovercraft.hpp"
 #include "vehicle.hpp"
-#include "actor_category.hpp"
+#include "engine/actor/actor_category.hpp"
 
 extern "C" {
 #include "core.h"
-#include "actor_anim.h"
-#include "actor.h"
+#include "engine/actor/actor_anim.h"
+#include "engine/actor/actor.h"
 #include "bosses.h"
 }
 
@@ -20,7 +20,7 @@ using Game::Vehicles::Jetpack::Airship;
 
 /*
  * ROM 0x08175558-0x08175760: the actor category descriptors and the
- * per-type category vtables (include/actor_anim.h, docs/graphics.md "An
+ * per-type category vtables (include/engine/actor/actor_anim.h, docs/graphics.md "An
  * actor \"vtable\" system"). Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.
  */
@@ -162,7 +162,7 @@ const struct category_descriptor ActorCategory::descriptors[CATEGORY_COUNT] = {
 
 /* The three per-type category vtables, `ActorCategory::vtable =
  * &ActorCategory::vtables[type]` in ActorCategory::Select
- * (actor_category_select.cpp): include/actor_anim.h names the slots;
+ * (actor_category_select.cpp): include/engine/actor/actor_anim.h names the slots;
  * the two numbers are the spawn and skip distances. */
 const struct category_vtable ActorCategory::vtables[CATEGORY_TYPE_COUNT] = {
     /* CATEGORY_TYPE_POLAR */ {

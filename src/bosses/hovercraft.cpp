@@ -1,20 +1,20 @@
 #include "hovercraft.hpp"
 #include "vehicle.hpp"
 #include "boss_actors.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 #include "level_state.hpp"
-#include "cell_anim.hpp"
-#include "actor_bg.hpp"
-#include "actor_spawns.hpp"
+#include "engine/gfx/cell_anim.hpp"
+#include "engine/actor/actor_bg.hpp"
+#include "engine/actor/actor_spawns.hpp"
 
 extern "C" {
 #include <libgcc.h>
-#include "system.h"
-#include "actor.h"
-#include "gfx.h"
+#include "engine/sys/system.h"
+#include "engine/actor/actor.h"
+#include "engine/gfx/gfx.h"
 #include "level.h"
 #include "globals.h"
-#include "math_util.h"
+#include "engine/util/math_util.h"
 }
 
 using Engine::Actor::ActorBg;

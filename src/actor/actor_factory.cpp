@@ -1,14 +1,14 @@
 #include "vehicle.hpp"
 #include "level_state.hpp"
-#include "actor_palette_cycle.hpp"
-#include "collected_spawns.hpp"
+#include "engine/actor/actor_palette_cycle.hpp"
+#include "engine/actor/collected_spawns.hpp"
 
 extern "C" {
 #include "core.h"
-#include "math_util.h"
-#include "memory.h"
-#include "actor_anim.h"
-#include "actor.h"
+#include "engine/util/math_util.h"
+#include "engine/sys/memory.h"
+#include "engine/actor/actor_anim.h"
+#include "engine/actor/actor.h"
 #include "bosses.h"
 #include "globals.h"
 }
@@ -43,7 +43,7 @@ using Game::Vehicles::Polar::RiderlessPolar;
  *
  * - ConstructAnimTableState (category vtable slot 0, see docs/rom_map.md)
  *   installs the category's animation table (`struct anim_table_record`,
- *   include/actor_anim.h) as gActorAnimTable and builds the player, the
+ *   include/engine/actor/actor_anim.h) as gActorAnimTable and builds the player, the
  *   actor list's root: `new PolarPlayer`, whose constructor
  *   (ConstructActorPart) also resets the polar run's globals.
  * - SpawnActor (vtable slot 1) turns a level spawn record into a

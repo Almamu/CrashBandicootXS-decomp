@@ -1,14 +1,14 @@
 #define POLAR_WUMPA_CONSTRUCTOR_OUT_OF_LINE
 #include "vehicle.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 #include "level_state.hpp"
-#include "actor_bg.hpp"
-#include "actor_category.hpp"
+#include "engine/actor/actor_bg.hpp"
+#include "engine/actor/actor_category.hpp"
 
 extern "C" {
-#include "math_util.h"
-#include "actor.h"
-#include "gfx.h"
+#include "engine/util/math_util.h"
+#include "engine/actor/actor.h"
+#include "engine/gfx/gfx.h"
 #include "level.h"
 #include "globals.h"
 }

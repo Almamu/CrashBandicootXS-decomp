@@ -1,6 +1,6 @@
 #include "player.hpp"
 #include "swim_ctrl.hpp"
-#include "math_util.h"
+#include "engine/util/math_util.h"
 
 extern "C" {
 #include "core.h"

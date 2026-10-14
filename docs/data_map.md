@@ -36,7 +36,7 @@ label, with `regions` sub-lists for the composite blobs.
   the sprite-bank walker (`GetSpriteTileBase`/`GetSpriteFrame`/`sprite_renderer.cpp`),
   the level-descriptor walker (`level_layers.cpp`, `bg_layer.cpp`,
   `tile_cache_cell.cpp`), the category-descriptor fields (`cell_anim.cpp`,
-  `bg_picture.cpp`, `include/actor_anim.h`), and a `LoadTaggedAsset`
+  `bg_picture.cpp`, `include/engine/actor/actor_anim.h`), and a `LoadTaggedAsset`
   header test (tag `0x00`/`0x10`/`0x30`) at every pointer target.
 
 The helper scripts are not in the repo; the algorithms are described
@@ -79,7 +79,7 @@ the appendix.
 | `086C127C`-`086D9CAC` | 100,912 | raw level asset (room `0825E7DC`) | `LoadRoom` -> `SetCollisionSource`/`SetBgStreamerSource` | high | **done** (decoded tilemaps) |
 | `086ECCD2`-`087E3BEC` | 1,011,482 | 2 B pad + 6 raw level assets | same | high | **done** (the pad is gbagfx's padding) |
 | `087E3BEC`-`087E55E4` | 6,648 | 93 gcc 2.x vtables | constructors (`CreateMovingSprite`, ...) | high | easy |
-| `087E55E4`-`087E5FCC` | 2,536 | IWRAM image (ARM code + data, copied by `crt0`) | `crt0.s` | high | **converted** (`asm/intr_main.s`, `src/iwram/`; the code counts as code, 540 B of data) |
+| `087E55E4`-`087E5FCC` | 2,536 | IWRAM image (ARM code + data, copied by `crt0`) | `crt0.s` | high | **converted** (`asm/intr_main.s`, `src/engine/*/*_arm.cpp`, `src/engine/sys/iwram_data.cpp`; the code counts as code, 540 B of data) |
 | `087E5FCC`-`08800000` | 106,548 | `0xFF` fill (not counted as data) | - | high | - |
 
 By category, as a share of the 8,038,172-byte data total:
@@ -140,10 +140,10 @@ By category, as a share of the 8,038,172-byte data total:
 ### `gCategoryFamily0CellAnim` (485,488 B): BG0 cell animation A + category-0 table
 
 Nothing references this label directly. It is reached through the
-category descriptors `gActorCategories[0..2]` (`include/actor_anim.h`):
+category descriptors `gActorCategories[0..2]` (`include/engine/actor/actor_anim.h`):
 `cellAnim = 0x0803B8B0`, `cellAnimSize = 0x75B94`, and
 `sub_effect_table = 0x080B1444` for category 0. `InitActorCategory`
-passes the first two to `InitCellAnim` (`src/actor/cell_anim.cpp`).
+passes the first two to `InitCellAnim` (`src/engine/gfx/cell_anim.cpp`).
 That function reads a "cell record": a 256-colour palette (DMA'd whole to
 `0x05000000` by `ResetCellAnimBg`), `s16` cols and rows at `+0x200`/`+0x202`,
 then frames of `cols*rows*32` bytes of 4bpp tiles. When the category type
@@ -375,7 +375,7 @@ the player.
 **Status: converted** to typed C: `src/data/sprite_banks_4a5600.cpp` (the
 header, the bank table and banks 0-9), `sprite_banks_4b0ae0.cpp` (10-21),
 `sprite_banks_4b414c.cpp` (22-38) and `sprite_banks_4b9d7c.cpp` (39-55),
-with the structs in `include/sprite_bank.h` (`struct sprite_bank_table`,
+with the structs in `include/engine/gfx/sprite_bank.h` (`struct sprite_bank_table`,
 `sprite_bank`, `sprite_anim`, `sprite_frame` and its five box/anchor
 variants). Every pointer is a symbol reference; frame tile offsets and
 the piece arrays are generated from `graphics/sprites/bankNN_<name>/` by
@@ -455,9 +455,9 @@ from here (`__iwram_lma`) to `0x03000000` at boot. **Converted**: the
 image is now built from source and linked to run at `0x03000000`
 (ldscript.txt's `iwram` section, stored in ROM with `AT(...)`):
 `IntrMain`, the hand-written interrupt dispatcher (`asm/intr_main.s`),
-ten ARM routines (`src/iwram/string_arm.cpp`, `src/iwram/sprite_arm.cpp`,
+ten ARM routines (`src/engine/util/string_arm.cpp`, `src/engine/gfx/sprite_arm.cpp`,
 built with agbcp_arm_patched) and the initialised IWRAM globals
-(`src/iwram/iwram_data.cpp`, 540 bytes from `0x030007CC`). The code counts
+(`src/engine/sys/iwram_data.cpp`, 540 bytes from `0x030007CC`). The code counts
 toward code progress, the globals toward data. The `0xFF` fill from
 `0x087E5FCC` is the linker's `rom_fill` section, excluded from data as
 before. See docs/decomp_dev.md's "The IWRAM image" and
@@ -1200,4 +1200,4 @@ vtable shapes).
 | `087E5554` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateHovercraftSideGun` | high | easy |
 | `087E558C` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateHovercraftCannonFlash` | high | easy |
 | `087E55C4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `InitLogoActor`, `DestroyLogoActor` | high | easy |
-| `087E55E4` | 0x1AA1C | IWRAM image (ARM code + initialised data, 0x9E8 B) copied to 0x03000000 by crt0, then 0xFF cartridge fill | `_0800012C` | high | **converted** (`asm/intr_main.s`, `src/iwram/`, ldscript `iwram`/`rom_fill`) |
+| `087E55E4` | 0x1AA1C | IWRAM image (ARM code + initialised data, 0x9E8 B) copied to 0x03000000 by crt0, then 0xFF cartridge fill | `_0800012C` | high | **converted** (`asm/intr_main.s`, `src/engine/*/*_arm.cpp`, `src/engine/sys/iwram_data.cpp`, ldscript `iwram`/`rom_fill`) |

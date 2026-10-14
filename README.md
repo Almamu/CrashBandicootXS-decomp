@@ -20,7 +20,8 @@ songs and WAV samples. `baserom.gba` isn't needed to build it.
 ## Current state
 
 - **Code: all 2062 functions are byte-exact; 2061 are C.** The ARM functions in
-  the IWRAM image (`src/iwram/`) are built with a locally patched ARM
+  the IWRAM image (`src/engine/gfx/sprite_arm.cpp`,
+  `src/engine/util/string_arm.cpp`) are built with a locally patched ARM
   compiler (`agbcp_arm_patched`, see INSTALL.md): the ROM's ARM compiler
   is a later, unreleased build whose return code and jump rules stock
   agbcc_arm can't produce (#553,
@@ -54,11 +55,14 @@ songs and WAV samples. `baserom.gba` isn't needed to build it.
   tracked as `cleanup` issues on GitHub.
 
 
-`src/` has one directory per subsystem (`system/`, `gfx/`, `text/`,
-`audio/`, `objects/`, `player/`, `crates/`, `enemies/`, `level/`,
-`bosses/`, `actor/`, `vehicle/`, `menus/`, `hud/`, ...), with the ROM
-data tables in `src/data/`, and every file is named after what it holds
-(see [CONTRIBUTING.md](./CONTRIBUTING.md#source-layout)). The
+`src/` follows the code's namespaces: the engine in `src/engine/`
+(`sys/`, `gfx/`, `actor/`, `audio/`, `save/`, `link/`, `text/`,
+`util/`) and the game in `src/game/` (`crash/`, `entities/`,
+`enemies/`, `bosses/`, `vehicles/`, `crates/`, `objects/`, `level/`,
+`ui/`), with `include/` mirroring it, and every file is named after what
+it holds, never after its ROM address (see
+[CONTRIBUTING.md](./CONTRIBUTING.md#source-layout) and
+[docs/file_layout.md](./docs/file_layout.md)). The
 third-party and SDK code linked into the ROM (the GAX2 sound engine,
 Nintendo's AgbEeprom library, libgcc, the BIOS SWI wrappers) is under
 `lib/` (see [docs/libraries.md](./docs/libraries.md)). Declarations live
@@ -171,7 +175,8 @@ reason, that's a completely reasonable position - just know it going in.
 - [docs/data.md](./docs/data.md) - how ROM data tables became C `const` arrays in `src/data/`, linked in ROM order, and the asset pipeline
 - [docs/text.md](./docs/text.md) - the game's text as gettext files (`text/`): the keys, the checks and the translators' workflow
 - [docs/libraries.md](./docs/libraries.md) - the third-party/SDK libraries under `lib/` (GAX2, AgbEeprom, libgcc, libagbsyscall): layout, headers, flags
-- [docs/cplusplus.md](./docs/cplusplus.md) - the game is g++ 2.x C++: what the ROM shows, the agbcp/old_agbcp C++ compilers, and building objects from C++ source (`src/*/*.cpp`, `CXX_OBJS`)
+- [docs/cplusplus.md](./docs/cplusplus.md) - the game is g++ 2.x C++: what the ROM shows, the agbcp/old_agbcp C++ compilers, and building objects from C++ source (every `.cpp` under `src/`, `CXX_OBJS`)
+- [docs/file_layout.md](./docs/file_layout.md) - the source tree's layout (by namespace) and the map from the old file names
 - [docs/headers.md](./docs/headers.md) - where declarations live, and the codegen exceptions
 - [docs/audio.md](./docs/audio.md) - how the Shin'en GAX2 sound engine's data is laid out and rebuilt
 - [docs/graphics.md](./docs/graphics.md) - how graphics were extracted, and notes on the sprite/actor system

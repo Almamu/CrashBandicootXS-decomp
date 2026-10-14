@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Write a decomp-permuter target.s from a function's NAKED asm.
 
-    mktarget.py src/iwram/string_arm.c itoa_arm out/target.s
+    mktarget.py src/engine/util/string_arm.c itoa_arm out/target.s
 
 Takes the string literals of the `asm(...)` block between the function's
 `NAKED ... <name>(` line and the next `// clang-format on`, and wraps them

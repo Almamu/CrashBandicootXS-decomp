@@ -2,11 +2,11 @@
 #include "level_state.hpp"
 
 extern "C" {
-#include "util.h"
-#include "memory.h"
+#include "engine/util/util.h"
+#include "engine/sys/memory.h"
 #include "level.h"
 #include "globals.h"
-#include "math_util.h"
+#include "engine/util/math_util.h"
 }
 
 using Game::Entities::Sprite;

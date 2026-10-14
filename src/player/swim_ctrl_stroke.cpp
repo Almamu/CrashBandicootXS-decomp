@@ -1,14 +1,14 @@
 #include "swim_ctrl.hpp"
 #include "spawners.hpp"
 #include "player.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 
 extern "C" {
-#include "util.h"
-#include "system.h"
+#include "engine/util/util.h"
+#include "engine/sys/system.h"
 #include "level.h"
 #include "globals.h"
-#include "math_util.h"
+#include "engine/util/math_util.h"
 }
 
 using Game::Crash::Player;

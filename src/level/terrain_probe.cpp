@@ -2,7 +2,7 @@
 
 extern "C" {
 #include "core.h"
-#include "math_util.h"
+#include "engine/util/math_util.h"
 #include "level.h"
 #include "box_part.h"
 }

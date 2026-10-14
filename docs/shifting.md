@@ -27,7 +27,7 @@ checks it, and `tools/boottest.py` plays shifted ROMs in mGBA.
   it are placed by `sym_iwram.txt` at fixed offsets, starting with
   `gIntrTable` at 0x030009E8, right after the image. crt0 copies
   `gIntrTable - IntrMain_Buffer` bytes. So the image (IntrMain, the ARM
-  routines, `src/iwram/iwram_data.cpp`) can't grow past 0x9E8 bytes
+  routines, `src/engine/sys/iwram_data.cpp`) can't grow past 0x9E8 bytes
   without moving those variables. EWRAM is laid out the same way
   (`sym_ewram.txt`). That is RAM, not ROM: it doesn't limit the ROM's
   data.

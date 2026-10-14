@@ -11,11 +11,11 @@
  * until #767; all old_agbcc (Makefile OLD_AGBCC_OBJS). */
 
 #include "level_select.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 
 extern "C" {
 #include <agb_syscall.h>
-#include "math_util.h"
+#include "engine/util/math_util.h"
 #include "constants/themes.h"
 }
 

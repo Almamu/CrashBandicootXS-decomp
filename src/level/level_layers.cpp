@@ -1,12 +1,12 @@
-#include "display.hpp"
+#include "engine/sys/display.hpp"
 #include "bg_layer.hpp"
 #include "entity_flags.hpp"
 
 extern "C" {
-#include "math_util.h"
+#include "engine/util/math_util.h"
 #include "gba/dma_macros.h"
-#include "system.h"
-#include "gfx.h"
+#include "engine/sys/system.h"
+#include "engine/gfx/gfx.h"
 #include "globals.h"
 }
 

@@ -21,12 +21,14 @@ page, with the tools that check it (`tools/extern_audit.py`,
 ## Who owns a symbol
 
 1. A function or global defined in a source file belongs to the header of
-   that file's subsystem: `include/<subsystem>.h` or `.hpp`, named after
-   its `src/` directory (`crates.h`, `level.h`, `player.hpp`, ...). A
+   that file's subsystem: `include/<area>/<namespace>/<subsystem>.h` or
+   `.hpp`, in the directory that mirrors its `src/` one
+   (`game/crates/crates.h`, `game/level/level.h`,
+   `game/crash/player.hpp`, ...; docs/file_layout.md). A
    class's methods are declared in the class's header. When a function
    sits in a neighbour's file only for ROM order, it goes with its
    subject: `DestroyLargeFont`/`DestroySmallFont` are defined in
-   `src/system/inline_copies_misc.cpp` but declared in `text.h`.
+   `src/engine/util/aabb_setters.cpp` but declared in `text.h`.
 2. A symbol defined only in data (`src/data/`, the generated level and
    graphics sources) or in the linker script (`sym_*.txt`, the IWRAM/EWRAM
    globals) goes in the header of the subsystem that uses it most, unless
@@ -122,7 +124,7 @@ doesn't read the C++ files, so their aliases are only in the table below.
 | `_call_via_r0`..`_call_via_r7` | none are left (rule 5 above) |
 | Data-to-data references | rule 4 above |
 | Library-internal | a library's own internal symbol, declared inside that library where its original source declares it (libgcc2.c's `__div0` and `__clz_tab`) |
-| Documented | `src/system/asset.cpp`'s one-argument `LZ77UnCompVram`/`RLUnCompVram` (docs/libraries.md); the `DOCUMENTED` set in `tools/extern_audit.py` |
+| Documented | `src/engine/gfx/asset.cpp`'s one-argument `LZ77UnCompVram`/`RLUnCompVram` (docs/libraries.md); the `DOCUMENTED` set in `tools/extern_audit.py` |
 
 ## Codegen exceptions
 
@@ -147,10 +149,10 @@ its row when a later change makes the header's type match.
 |---|---|---|---|---|
 | src/frontend/title_screen.cpp | `RandRange` | `s32 RandRange_s32(s32 max)` | `u16 RandRange(s32 max)` (util.h) | with the `u16` return, DrawLogoPieces's two stack slots swap |
 | src/menus/level_select.cpp | `gLevelSelectGemPos`, `gLevelSelectTrialIconPos` | `struct vec2 gLevelSelectGemPos_rw` (and `_rw` for the other) | `const struct vec2` (menus.hpp) | the constructor reads each twice across calls and the ROM loads it again each time; through the `const` object gcc keeps the first loads in registers |
-| src/text/font.cpp | `GetPaletteSlot` | `s32 GetPaletteSlot_s32(u8 *cache, s32 recordId)` | `u8 PaletteCache::GetSlot(s32 id)` (sprite_obj.hpp) | ResetPalette uses the slot as a word; through the `u8` return the shift is `lsl #0x18; lsr #0x14` for the ROM's `lsl #4` |
+| src/engine/text/font.cpp | `GetPaletteSlot` | `s32 GetPaletteSlot_s32(u8 *cache, s32 recordId)` | `u8 PaletteCache::GetSlot(s32 id)` (sprite_obj.hpp) | ResetPalette uses the slot as a word; through the `u8` return the shift is `lsl #0x18; lsr #0x14` for the ROM's `lsl #4` |
 | src/level/play_room.cpp | `AddPaletteCycle` | `void AddPaletteCycle_fx(..., struct fx_direction direction)` | `PaletteCycles::Add(..., struct byte_arg direction)` (part_list.hpp) | RunRoom passes the direction as a one-byte struct stored with `strb`; `fx_direction`'s zero-length pad makes it BLKmode, so the slot address (`add rN, sp, #4`) comes before the constant as in the ROM, where a `byte_arg` or `u8` is built in a register first |
 | src/bosses/dingodile.cpp | `GetSpriteAttackBox` | `struct aabb GetSpriteAttackBox_s(void *part)` | explicit destination (objects.h) | assigned to a box that already holds the body box, the struct return fills a temporary and copies it, as the ROM's frame and its `ldmia`/`stmia` copy do |
-| src/actor/actor_category_init.cpp, src/actor/actor_category_stats.cpp | `SetCheckpointAtPlayer` | `void SetCheckpointAtPlayer_1(void *self)` | `LevelState::SetCheckpointAtPlayer(u8 checkpointFlags)` (level_state.hpp) | these callers pass the state only and leave r1 as it is; the definition stores the flag |
+| src/engine/actor/actor_category_init.cpp, src/engine/actor/actor_category_stats.cpp | `SetCheckpointAtPlayer` | `void SetCheckpointAtPlayer_1(void *self)` | `LevelState::SetCheckpointAtPlayer(u8 checkpointFlags)` (level_state.hpp) | these callers pass the state only and leave r1 as it is; the definition stores the flag |
 
 Not aliases, but kept for the same reason, next to the real declaration
 in the header:
@@ -163,6 +165,6 @@ in the header:
   under its C name, with the three flags as one-byte structs so they are
   stored with `strb`, as CollisionQueue::Resolve does in the ROM.
 
-`src/util/string.cpp`'s `CopyString`/`StringLength` are asm labels too,
+`src/engine/util/string.cpp`'s `CopyString`/`StringLength` are asm labels too,
 but on the definitions (`strcpy`/`strlen` under other C names, to avoid
 gcc's built-in prototypes), not codegen aliases.

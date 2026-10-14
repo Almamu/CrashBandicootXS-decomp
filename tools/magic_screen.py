@@ -152,7 +152,7 @@ ANCHORED = re.compile(r"\bDISPLAY_\w+\s*[-+]\s*$|\bDISPLAY_(?:RIGHT|BOTTOM)\(\s*
 # the screen's (0,0): a layout site. One with a DISPLAY_ name or another
 # position in it (`x`, `pos.x`, `gPauseGemIconPos[0].x`, `label1`) is
 # anchored, or relative to something that is.
-UI = re.compile(r"src/(menus|save|frontend|hud|text)/")
+UI = re.compile(r"src/(menus|save|frontend|hud|engine/save|engine/text)/")
 LAYOUT_CALLS = {
     "SetPos": None,
     "Move": None,
@@ -277,17 +277,17 @@ CLASSES = [
         "OAM attribute width (9-bit X, 8-bit Y): spell with OAM_X()/OAM_Y()",
     ),
     ("hardware", r"include/sprite_obj\.hpp", r"table\[0x80\]", "the OAM entry count: spell with OAM_ENTRY_COUNT"),
-    ("hardware", r"src/gfx/fade\.cpp", r"0x1FF", "the 512 palette entries (BG + OBJ)"),
+    ("hardware", r"src/engine/gfx/fade\.cpp", r"0x1FF", "the 512 palette entries (BG + OBJ)"),
     (
         "hardware",
-        r"src/level/bg_streamer\.cpp|src/actor/cell_anim\.cpp",
+        r"src/level/bg_streamer\.cpp|src/engine/gfx/cell_anim\.cpp",
         r"0x1f",
         "a 32-entry BG screen-block row or column",
     ),
     ("hardware", r"src/cutscene/slideshow\.cpp", r"VRAM \+ 0xA000", "Mode 4's second frame (VRAM + 0xA000)"),
     ("hardware", r"src/menus/level_select_cursor\.cpp", r"OBJ_VRAM0 \+", "an OBJ VRAM offset"),
     ("hardware", r"src/frontend/starfield\.cpp", r"\| 0xF000", "a BG map entry's palette bank (15)"),
-    ("hardware", r"src/iwram/sprite_arm\.cpp", r"0xF0", "a palette nibble"),
+    ("hardware", r"src/engine/gfx/sprite_arm\.cpp", r"0xF0", "a palette nibble"),
     # --- the data tables (src/data) -----------------------------------
     (
         "hardware",
@@ -317,7 +317,7 @@ CLASSES = [
     ("screen", r"src/level/camera\.cpp", r"INT_TO_Q8\((120|80)\)", "the camera's target at the screen centre"),
     ("screen", r"src/level/camera\.cpp", r"0x2800|0x27FF|0x1AA[A9]", "the camera's look-ahead, a sixth of the screen"),
     ("screen", r"src/level/bg_layer_base\.cpp", r"-= 0x(f0|a0)", "a BG's scroll limit (CAMERA_MAX_X/Y)"),
-    ("screen", r"src/actor/actor_bg\.cpp", r"0xFFFF[16]000", "the 3D BG's scroll limit (CAMERA_MAX_X/Y in Q8)"),
+    ("screen", r"src/engine/actor/actor_bg\.cpp", r"0xFFFF[16]000", "the 3D BG's scroll limit (CAMERA_MAX_X/Y in Q8)"),
     ("screen", r"src/level/bg_layer\.cpp", r"0x(ef|EF|9f|9F)\) / 8", "the tile rows and columns the screen spans"),
     (
         "screen",
@@ -353,7 +353,7 @@ CLASSES = [
         r"0x7800|0x5000|\* (120|80)\)",
         "the screen centre (the logos' zoom and fly-in)",
     ),
-    ("screen", r"src/gfx/bitmap_screen\.cpp", r".", "the affine picture's centre (BG2X/BG2Y)"),
+    ("screen", r"src/engine/gfx/bitmap_screen\.cpp", r".", "the affine picture's centre (BG2X/BG2Y)"),
     ("screen", r"src/menus/power_dialog\.cpp", r"<< 7", "the screen centre in Q8 ((240, 160) << 7)"),
     ("screen", r"src/actor/inline_copies_actors\.cpp", r"x = 120", "the screen's centre column"),
     (

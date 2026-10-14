@@ -1,9 +1,9 @@
 #include "bg_layer.hpp"
-#include "vram_dma_queue.hpp"
+#include "engine/sys/vram_dma_queue.hpp"
 
 extern "C" {
-#include "gfx.h"
-#include "memory.h"
+#include "engine/gfx/gfx.h"
+#include "engine/sys/memory.h"
 }
 
 using Engine::Sys::VramDmaQueue;

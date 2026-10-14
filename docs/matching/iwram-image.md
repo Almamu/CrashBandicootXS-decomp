@@ -10,22 +10,22 @@ script and the report. Contents:
 | IWRAM | Name | Source | Status |
 |---|---|---|---|
 | `03000000` | `IntrMain` (alias `IntrMain_Buffer`) | `asm/intr_main.s` | hand-written ARM, `HANDWRITTEN` |
-| `030000D4` | `strlen_arm` | `src/iwram/string_arm.cpp` | matched, UNUSED |
+| `030000D4` | `strlen_arm` | `src/engine/util/string_arm.cpp` | matched, UNUSED |
 | `030000FC` | `strcpy_arm` | same | matched, UNUSED |
 | `03000120` | `strncpy_arm` | same | matched (second pass; plain since the ninth step, `-mno-cond-return`), UNUSED |
 | `0300015C` | `strcat_arm` | same | matched, UNUSED |
 | `03000198` | `itoa_arm` | `asm/itoa_arm.s` | assembly since #662 by owner decision (not gcc output, see "itoa_arm: assembly"), counted as a matched function, UNUSED |
-| `0300024C` | `UnpackNibbleTiles` (`gUnpackNibbleTilesFunc`) | `src/iwram/sprite_arm.cpp` | matched |
+| `0300024C` | `UnpackNibbleTiles` (`gUnpackNibbleTilesFunc`) | `src/engine/gfx/sprite_arm.cpp` | matched |
 | `0300036C` | `DrawMirroredTilemap` (`gDrawMirroredTilemapFunc`) | same | matched |
 | `03000474` | `HeapSortActorsByKey` (`gHeapSortActorsByKeyFunc`) | same | matched (fourth pass; plain since the ninth step, `-mstrict-cross-jump`) |
 | `03000634` | `UnpackRleSpriteFrame` (`gUnpackRleSpriteFrameFunc`) | same | matched |
 | `030006FC` | `LookupSpriteFrameCache` (`gLookupSpriteFrameCacheFunc`) | same | matched (seventh pass, agbcc_arm_patched) |
-| `030007CC`-`030009E8` | initialised globals | `src/iwram/iwram_data.cpp` | typed C++, data |
+| `030007CC`-`030009E8` | initialised globals | `src/engine/sys/iwram_data.cpp` | typed C++, data |
 
 The five string routines have no caller: none of their addresses occurs
 as a word anywhere in the ROM, and Thumb code can only reach ARM code
 through a pointer. They are ARM builds of the Thumb ones in
-`src/util/number_format.cpp` and `src/util/string.cpp`.
+`src/engine/util/number_format.cpp` and `src/engine/util/string.cpp`.
 
 ## Compiler
 
@@ -346,7 +346,7 @@ the first stops the entry test from matching the bottom one, the
 second the reverse. With only the first, the bottom test is
 cross-jumped instead.
 
-The C is in `src/iwram/sprite_arm.cpp`. The `NAKED` transcription and the
+The C is in `src/engine/gfx/sprite_arm.cpp`. The `NAKED` transcription and the
 `NON_MATCHING` draft are gone. Without the barriers the function is
 19 instruction lines off (the two jumps and their shifted offsets).
 

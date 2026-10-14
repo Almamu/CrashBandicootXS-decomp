@@ -2,9 +2,9 @@
 
 ## DrawWrappedText's `mode`, `WRAPPED_TEXT_MODE_*`
 
-DrawWrappedText (src/text/wrapped_text.cpp) and DrawWrappedTextInBox
+DrawWrappedText (src/engine/text/wrapped_text.cpp) and DrawWrappedTextInBox
 (text_box.cpp) take a `mode` that says when the drawn words reach the
-screen. The names are in include/text.h, next to the prototypes.
+screen. The names are in include/engine/text/text.h, next to the prototypes.
 
 | Value | Name | What DrawWrappedText does | Callers |
 |---|---|---|---|

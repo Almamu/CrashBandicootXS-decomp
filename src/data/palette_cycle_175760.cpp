@@ -1,4 +1,4 @@
-#include "actor_palette_cycle.hpp"
+#include "engine/actor/actor_palette_cycle.hpp"
 
 using Engine::Actor::ActorPaletteCycle;
 
@@ -8,7 +8,7 @@ using Engine::Actor::ActorPaletteCycle;
  */
 
 /* The BG palette-cycle animation: 32 frames of BG palettes 0-13
- * (0x1C0 bytes each): ActorPaletteCycle::frames (include/actor_palette_cycle.hpp).
+ * (0x1C0 bytes each): ActorPaletteCycle::frames (include/engine/actor/actor_palette_cycle.hpp).
  * While it's armed, ActorPaletteCycle::Update DMAs the cursor's frame to BG
  * palette RAM every call and every 0x24 calls steps that cursor towards
  * its bound. */

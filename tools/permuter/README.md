@@ -2,9 +2,9 @@
 
 A reusable [decomp-permuter](https://github.com/simonlindholm/decomp-permuter)
 setup for the two `NAKED` functions in the agbcc_arm objects (#553):
-`itoa_arm` (`src/iwram/string_arm.c` then; `asm/itoa_arm.s` now) and
-`LookupSpriteFrameCache` (`src/iwram/sprite_arm.c` then;
-`src/iwram/sprite_arm.cpp` now). The results are in
+`itoa_arm` (`src/engine/util/string_arm.c` then; `asm/itoa_arm.s` now) and
+`LookupSpriteFrameCache` (`src/engine/gfx/sprite_arm.c` then;
+`src/engine/gfx/sprite_arm.cpp` now). The results are in
 `docs/matching/iwram-image.md` ("Sixth pass").
 
 **Both functions match now** (seventh pass, with agbcc_arm_patched), so
@@ -41,7 +41,7 @@ Needs `tools/agbcc` (with `agbcc_arm`), the devshell's
 
 ```sh
 git clone https://github.com/simonlindholm/decomp-permuter /path/to/decomp-permuter
-tools/permuter/setup.sh itoa_arm src/iwram/string_arm.c /path/to/perm/itoa
+tools/permuter/setup.sh itoa_arm src/engine/util/string_arm.c /path/to/perm/itoa
 cd /path/to/decomp-permuter
 timeout -s INT 2700 ./permuter.py /path/to/perm/itoa -j"$(nproc)" \
     --stop-on-zero --better-only > /path/to/perm/itoa.log 2>&1

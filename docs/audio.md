@@ -17,8 +17,8 @@ hand-written ARM mixer/DSP routines in `lib/gax/asm/gax_arm_dsp.s`
 `lib/gax/src/gax_internal.h`. The libgcc 64-bit helpers linked in with it
 (`__divdi3`/`__udivdi3`/`__udivsi3`/`__muldi3`, right before the engine)
 are in `lib/libgcc/`. The game's side of the audio (the `AudioContext`
-manager, the song and sound-effect tables) is in `src/audio/` and
-`include/audio.hpp` and calls the engine through `<gax.h>`. The songs and
+manager, the song and sound-effect tables) is in `src/engine/audio/` and
+`include/engine/audio/audio.hpp` and calls the engine through `<gax.h>`. The songs and
 the sound-effect set below are the game's content in GAX2's format, so
 they stay with the game's assets (`sound/`).
 
@@ -314,7 +314,7 @@ Distinct from music: `PlaySfx` (ROM `0x08001854`, called ~264 times
 across gameplay code), is the sound-effect trigger:
 `PlaySfx(context, sfx_id, volume_param)`. It looks up `sfx_id` in a
 99-entry table at ROM `0x0816AA6C` (`sound/sfx_table.json`,
-`struct SfxTableEntry` in `include/audio.hpp`), each entry `{slot_id,
+`struct SfxTableEntry` in `include/engine/audio/audio.hpp`), each entry `{slot_id,
 chan_arg, volume}` (volume as 8.8 fixed point; the JSON still calls the
 middle field `pitch_offset`) - the matching pass corrected the middle
 field's guessed name from "pitch_offset" to `chan_arg`: `PlaySfx` passes

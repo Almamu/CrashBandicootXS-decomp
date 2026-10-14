@@ -1,5 +1,5 @@
 @ itoa_arm: the IWRAM image's ARM itoa (runs at 0x03000198, stored in
-@ ROM at 0x087E577C), linked right after src/iwram/string_arm.o's four
+@ ROM at 0x087E577C), linked right after src/engine/util/string_arm.o's four
 @ string helpers. UNUSED: no caller anywhere in the ROM (see
 @ string_arm.cpp's file comment).
 @

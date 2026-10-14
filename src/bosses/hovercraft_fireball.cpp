@@ -1,18 +1,18 @@
 #include "boss_actors.hpp"
 #include "vehicle.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 #include "level_state.hpp"
-#include "actor_category.hpp"
+#include "engine/actor/actor_category.hpp"
 
 extern "C" {
 #include "match.h"
 #include <libgcc.h>
-#include "system.h"
-#include "actor.h"
-#include "gfx.h"
+#include "engine/sys/system.h"
+#include "engine/actor/actor.h"
+#include "engine/gfx/gfx.h"
 #include "level.h"
 #include "globals.h"
-#include "math_util.h"
+#include "engine/util/math_util.h"
 }
 
 using Engine::Actor::ActorCategory;

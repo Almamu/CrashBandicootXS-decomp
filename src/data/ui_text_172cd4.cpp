@@ -1,6 +1,6 @@
 extern "C" {
 #include "core.h"
-#include "system.h"
+#include "engine/sys/system.h"
 }
 
 /*
@@ -11,7 +11,7 @@ extern "C" {
  * Per language (English, French, German, Spanish, Italian, Dutch) the
  * strings it adds, then its array of UI_TEXT_COUNT strings, which
  * GetUiText (`text id -> string`) reads through the IWRAM table
- * gUiTextTables (src/iwram/iwram_data.cpp), indexed by the language
+ * gUiTextTables (src/engine/sys/iwram_data.cpp), indexed by the language
  * setting gLanguage. A string several languages or ids share (the level
  * names, mostly) is stored once, under its first use. system.h declares
  * the six arrays.

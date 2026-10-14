@@ -4,9 +4,9 @@
 
 extern "C" {
 #include "core.h"
-#include "math_util.h"
-#include "actor_anim.h"
-#include "system.h"
+#include "engine/util/math_util.h"
+#include "engine/actor/actor_anim.h"
+#include "engine/sys/system.h"
 }
 
 using Game::Entities::ActorSelf;

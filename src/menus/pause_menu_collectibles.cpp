@@ -1,10 +1,10 @@
 #include "menus.hpp"
-#include "font.hpp"
+#include "engine/text/font.hpp"
 
 extern "C" {
 #include "core.h"
-#include "text.h"
-#include "system.h"
+#include "engine/text/text.h"
+#include "engine/sys/system.h"
 }
 
 using Game::Ui::PauseMenu;

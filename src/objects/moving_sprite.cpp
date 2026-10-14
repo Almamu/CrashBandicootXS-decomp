@@ -5,8 +5,8 @@
 
 extern "C" {
 #include "constants/events.h"
-#include "math_util.h"
-#include "memory.h"
+#include "engine/util/math_util.h"
+#include "engine/sys/memory.h"
 }
 
 using Game::Crash::Player;

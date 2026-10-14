@@ -2,7 +2,7 @@
 
 This is the GAX2 "sound effect" trigger table (originally at ROM address
 0x0816AA6C): 99 fixed-size entries, one per sound effect ID. PlaySfx
-(src/audio/audio.c, called ~264 times from all over the game's logic - jumping,
+(src/engine/audio/audio.c, called ~264 times from all over the game's logic - jumping,
 menus, hits, pickups, etc.) looks up the SFX ID in this table and uses it to
 steal a mixing voice and play a note from the GAX2 sound-effect data set
 (sound/gax_sfx_manifest.json, sound/sfx_samples/ - not the music's pool; see

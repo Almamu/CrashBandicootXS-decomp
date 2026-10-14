@@ -27,7 +27,7 @@ agbcc like the rest of this zone (`actor.c`/
 ## The pieces
 
 **`gActorAnimTable`** is the category's animation table, a pointer to
-`struct anim_table_record` (`include/actor_anim.h`, 0x28 bytes). This pass
+`struct anim_table_record` (`include/engine/actor/actor_anim.h`, 0x28 bytes). This pass
 named the record's tail. `InitActorPart` copies +0x14..+0x20 into the
 object at +0x38 (`vector_14`), and the factory adds +0x20/+0x24 to the
 spawn position (`spawnX`/`spawnY`). The data dump says these are 0 in

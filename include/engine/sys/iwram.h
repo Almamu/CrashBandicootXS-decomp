@@ -1,0 +1,48 @@
+#ifndef __IWRAM_H__
+#define __IWRAM_H__
+
+/* The ARM routines of the IWRAM image (src/engine/gfx/sprite_arm.cpp,
+ * src/engine/util/string_arm.cpp), with the prototypes of their definitions
+ * (docs/headers.md). The Thumb code doesn't call them directly: it
+ * goes through the hooks in src/engine/sys/iwram_data.cpp, declared with their
+ * users (gfx.h, actor.h, vehicle.hpp). */
+
+#include "core.h"
+
+/* A zero-run-compressed OBJ frame (docs/data.md "Compressed sprite
+ * frames"): the size in tiles, then u16 counts alternating between a run
+ * of zero halfwords and a run of literal halfwords that follow it. */
+struct rle_frame {
+    u8 w;
+    u8 h;
+    u8 unk_2; // 0x30 in every frame; nothing reads it
+    u16 data[0];
+};
+
+/* src/engine/util/string_arm.cpp (UNUSED, see the file comment) */
+extern s32 strlen_arm(u8 *s);
+extern void strcpy_arm(u8 *dst, u8 *src);
+extern void strncpy_arm(u8 *dst, u8 *src, s32 n);
+extern void strcat_arm(u8 *dst, u8 *src);
+
+/* asm/itoa_arm.s (UNUSED, see string_arm.cpp's file comment) */
+extern s32 itoa_arm(s32 value, u8 *buf, s32 base);
+
+/* src/engine/gfx/sprite_arm.cpp */
+extern void UnpackNibbleTiles(u16 *src, s32 lowBlock);
+extern void DrawMirroredTilemap(u8 *pal, s32 lowBlock, s32 w, s32 h);
+/* The list is ActorSelf's (actor_self.hpp), as actor.h's
+ * gHeapSortActorsByKeyFunc; only C++ uses it. */
+#ifdef __cplusplus
+namespace Game
+{
+namespace Entities
+{
+class ActorSelf; // in its namespace (docs/cplusplus.md, "Namespaces")
+} // namespace Entities
+} // namespace Game
+extern void HeapSortActorsByKey(s32 n, Game::Entities::ActorSelf **list);
+#endif
+extern void UnpackRleSpriteFrame(u16 *dst, struct rle_frame *frame);
+
+#endif /* __IWRAM_H__ */

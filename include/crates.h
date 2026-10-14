@@ -15,9 +15,9 @@
  * InitCrateList (src/crates/crate_list_update.cpp). */
 
 #include "core.h"
-#include "math_util.h"
-#include "aabb.h"
-#include "gfx.h"
+#include "engine/util/math_util.h"
+#include "engine/util/aabb.h"
+#include "engine/gfx/gfx.h"
 #include "objects.h"
 #include "byte_arg.h"
 #include "constants/attack_kinds.h"
@@ -40,7 +40,7 @@ extern u8 gCrateListChanged;
 /* src/crates/crate.cpp */
 extern void ResolvePlayerCollisions(void);
 /* FindLineCrossingYMajor and FindLineCrossingXMajor are C++ functions
- * in Engine::Util (include/crate_line_step.hpp, via crate.hpp). */
+ * in Engine::Util (include/engine/util/line_steppers.hpp, via crate.hpp). */
 
 /* src/crates/crate_reset.cpp */
 extern s32 FindLineCrossing(s32 pos, s32 count, s32 a, s32 b, s32 limit);

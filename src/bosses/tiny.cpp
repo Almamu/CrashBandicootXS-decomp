@@ -4,18 +4,18 @@
 #include "ctrl.hpp"
 #include "sprite_obj.hpp"
 #include "player.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 #include "level_state.hpp"
 
 extern "C" {
-#include "sprite_bank.h"
-#include "util.h"
-#include "memory.h"
+#include "engine/gfx/sprite_bank.h"
+#include "engine/util/util.h"
+#include "engine/sys/memory.h"
 #include "level.h"
 #include "box_part.h"
-#include "gfx_part.h"
+#include "engine/gfx/sprite_piece_flags.h"
 #include "globals.h"
-#include "math_util.h"
+#include "engine/util/math_util.h"
 }
 
 using Game::Bosses::OneShotAnimCtrl;

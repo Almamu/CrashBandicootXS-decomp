@@ -1,15 +1,15 @@
 #include "level_select.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 #include "level_state.hpp"
-#include "key_input.hpp"
-#include "frame_limiter.hpp"
+#include "engine/sys/key_input.hpp"
+#include "engine/sys/frame_limiter.hpp"
 
 extern "C" {
 #include <agb_syscall.h>
 #include <libgcc.h>
-#include "text.h"
+#include "engine/text/text.h"
 #include "level.h"
-#include "math_util.h"
+#include "engine/util/math_util.h"
 }
 
 using Engine::Gfx::BgSetup;

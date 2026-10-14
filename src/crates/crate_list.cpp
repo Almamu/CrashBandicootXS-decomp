@@ -2,7 +2,7 @@
 
 extern "C" {
 #include <agb_syscall.h>
-#include "memory.h"
+#include "engine/sys/memory.h"
 }
 
 using Game::Crates::Crate;

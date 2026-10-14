@@ -7,11 +7,11 @@
  * level_select_widgets.cpp (#767), same flags (old_agbcc). */
 
 #include "level_select.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 
 extern "C" {
 #include <agb_syscall.h>
-#include "math_util.h"
+#include "engine/util/math_util.h"
 }
 
 using Game::Entities::UiSprite;

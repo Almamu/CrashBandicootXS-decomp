@@ -1,13 +1,13 @@
 #include "menus.hpp"
-#include "font.hpp"
+#include "engine/text/font.hpp"
 
 extern "C" {
 #include "core.h"
-#include "system.h"
-#include "text.h"
-#include "util.h"
+#include "engine/sys/system.h"
+#include "engine/text/text.h"
+#include "engine/util/util.h"
 #include <libgcc.h>
-#include "gfx.h"
+#include "engine/gfx/gfx.h"
 #include "globals.h"
 }
 

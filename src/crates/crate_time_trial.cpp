@@ -1,7 +1,7 @@
 #include "crate_list.hpp"
 #include "crate.hpp"
 #include "player.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 
 extern "C" {
 #include "globals.h"

@@ -4,10 +4,10 @@
 #include "player.hpp"
 
 extern "C" {
-#include "math_util.h"
-#include "util.h"
-#include "gfx.h"
-#include "memory.h"
+#include "engine/util/math_util.h"
+#include "engine/util/util.h"
+#include "engine/gfx/gfx.h"
+#include "engine/sys/memory.h"
 #include "level.h"
 #include "globals.h"
 }

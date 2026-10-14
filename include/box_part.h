@@ -1,8 +1,8 @@
 #ifndef GUARD_BOX_PART_H
 #define GUARD_BOX_PART_H
 
-#include "aabb.h"
-#include "gfx.h"
+#include "engine/util/aabb.h"
+#include "engine/gfx/gfx.h"
 
 /* The sprite objects' flag and direction bits, as the C++ code tests
  * them through the bytes (entity.hpp's `union EntityFlags` and Sprite's

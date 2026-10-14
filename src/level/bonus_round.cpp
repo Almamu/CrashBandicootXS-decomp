@@ -4,11 +4,11 @@
 
 extern "C" {
 #include "core.h"
-#include "math_util.h"
-#include "actor.h"
+#include "engine/util/math_util.h"
+#include "engine/actor/actor.h"
 #include <agb_syscall.h>
-#include "system.h"
-#include "gfx.h"
+#include "engine/sys/system.h"
+#include "engine/gfx/gfx.h"
 #include "level.h"
 #include "globals.h"
 }

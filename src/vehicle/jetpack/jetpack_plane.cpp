@@ -1,12 +1,12 @@
 #include "vehicle.hpp"
 #include "boss_actors.hpp"
-#include "audio.hpp"
-#include "actor_spawns.hpp"
-#include "actor_category.hpp"
+#include "engine/audio/audio.hpp"
+#include "engine/actor/actor_spawns.hpp"
+#include "engine/actor/actor_category.hpp"
 
 extern "C" {
-#include "math_util.h"
-#include "actor.h"
+#include "engine/util/math_util.h"
+#include "engine/actor/actor.h"
 #include "globals.h"
 }
 

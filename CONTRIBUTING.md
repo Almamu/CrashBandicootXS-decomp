@@ -83,8 +83,8 @@ matched code - read it before starting.** In short:
 
   ```
   tools/match_prune.py src/                 # dry run: per-file tried/removable/kept and a summary
-  tools/match_prune.py -v src/util/aabb.cpp   # also each kept site and why (doesn't compile / object differs)
-  tools/match_prune.py --write src/gfx/     # apply the removals, verified once more as written
+  tools/match_prune.py -v src/engine/util/aabb.cpp   # also each kept site and why (doesn't compile / object differs)
+  tools/match_prune.py --write src/engine/gfx/     # apply the removals, verified once more as written
   tools/match_prune.py --list src/          # the sites, without building
   ```
 
@@ -127,42 +127,53 @@ matched code - read it before starting.** In short:
 
 ### Source layout
 
-`src/` has one directory per subsystem (#575 set it up; `vehicle/` has
-`polar/` and `jetpack/` below it since #769):
+The tree follows the namespaces of the code (#1033,
+[docs/cplusplus.md](docs/cplusplus.md) "Namespaces"; #1071 moved the files
+there): the reusable engine under `engine/`, the Crash-specific game under
+`game/`, one directory per namespace, and `include/` mirrors `src/`.
+[docs/file_layout.md](docs/file_layout.md) has the full map from the old
+paths and the decisions behind it.
 
-| Directory | What goes there |
-|---|---|
-| `system/` | Boot, `AgbMain`, the heap, IRQ setup, input, asset loading, `MainLoop` |
-| `util/` | Fixed-point math, number/time formatting, `printf`, the libc-style string functions, `rand`, Bresenham lines, AABB helpers |
-| `text/` | Fonts, word-wrapped text and text boxes |
-| `gfx/` | Fades, display control, palette cycles, the OAM buffer and VRAM/palette caches, sprite-piece drawing, graphics packages, the sprite-frame VRAM pool, the bitmap screen |
-| `audio/` | The game's audio layer over GAX2 (GAX2 itself is `lib/gax/`) |
-| `link/` | The link-cable SIO session |
-| `save/` | EEPROM save data, save transfer over link, the save menu |
-| `objects/` | The side-view object framework: sprite objects, part lists, moving and ground sprites, the `Ctrl` base, effect controller, collision queue, platforms, contact probes |
-| `player/` | The player object, the action controller (the moveset's states), the swim and input controllers |
-| `enemies/` | The enemy controller and its behaviours |
-| `crates/` | The crate list and grid, crate behaviours, slot crates |
-| `pickups/` | Wumpa, extra lives, the stopwatch |
-| `bosses/` | Mega Mix, Tiny, Cortex, Dingodile, the hovercraft |
-| `level/` | Level state and game context, rooms, the `Spawn*` entity spawners, BG layers, terrain and collision, the camera |
-| `cutscene/` | The slideshow and cutscene player |
-| `hud/` | The HUD |
-| `menus/` | Pause menu, power dialog, level select, continue prompt |
-| `frontend/` | Title screen, company logos, language select, starfield, credits |
-| `actor/` | The actor-category engine behind the polar and jetpack levels: category init, select and frame, cell-animated BGs, the actor base and factory, BG pictures |
-| `vehicle/` | The polar (riding) and jetpack levels: their players, objects and crates; the yeti chase is in `polar/`, N. Gin's airship in `jetpack/` |
-| `iwram/` | The IWRAM image: its ARM code and data |
-| `data/` | ROM data tables |
+| Directory (`src/` and `include/`) | Namespace | What goes there |
+|---|---|---|
+| `engine/sys/` | `Engine::Sys` | Boot (`AgbMain`), the heap and IWRAM allocator, `operator new`, IRQs and the frame limiter, the key input, the display registers, the VRAM DMA queue, the BIOS helpers, the IWRAM image's data |
+| `engine/gfx/` | `Engine::Gfx` | Asset loading, fades, palettes and palette cycles, the OAM buffer, the OBJ VRAM and tile allocators, the sprite frame cache and renderer, sprite banks, graphics packages, the cell animation, the bitmap screen, the ARM sprite routines |
+| `engine/actor/` | `Engine::Actor` | The actor category driver behind the polar and jetpack levels: category init, select and frame, its spawns, BG scroll, palette cycle and BG pictures |
+| `engine/audio/` | `Engine::Audio` | The game's audio layer over GAX2 (GAX2 itself is `lib/gax/`) |
+| `engine/save/` | `Engine::Save` | The EEPROM save data and its link transfer |
+| `engine/link/` | `Engine::Link` | The link-cable SIO session |
+| `engine/text/` | `Engine::Text` | Fonts, word-wrapped text and text boxes |
+| `engine/util/` | `Engine::Util` | Fixed-point math, number/time formatting, `printf`, the string functions, `rand`, Bresenham lines, AABB helpers |
+| `game/crash/` | `Game::Crash` | The player, the action controller (the moveset's states), the swim and input controllers |
+| `game/entities/` | `Game::Entities` | The entity and sprite object bases, part lists, moving and ground sprites, the `Ctrl` base, the effect controller, the 3D actors' base (`ActorSelf`, `AnimPart`) |
+| `game/enemies/` | `Game::Enemies` | The enemy controllers and the enemy spawners |
+| `game/bosses/` | `Game::Bosses` | Mega Mix, Tiny, Cortex, Dingodile, the hovercraft, the boss spawners |
+| `game/vehicles/` | `Game::Vehicles` | What the polar and jetpack levels share (the category hooks, the 3D actors' destructors); `polar/` (the polar player, its course, the yeti) and `jetpack/` (the jetpack player, its enemies and crates, N. Gin's airship) below it |
+| `game/crates/` | `Game::Crates` | The crate, the crate list and grid, the collision queue, the crate spawners |
+| `game/objects/` | `Game::Objects` | Platforms, the launch pad, the camera lead, the pickups (wumpa, extra life, stopwatch), their spawners |
+| `game/level/` | `Game::Level` | The level state and progress, `MainLoop`, rooms, BG layers, terrain and collision, the camera, the entity flags and spawner |
+| `game/ui/` | `Game::Ui` | The HUD, the pause menu and power dialog, the level select, the continue prompt, the save menu, the front end (title, logos, language select, credits), the cutscenes |
+| `<dir>/data/` | | The ROM data tables of that directory's code |
 
-`actor/` and `objects/` are separate on purpose: `actor` is this
-project's name for the pseudo-3D category engine (`struct actor_self`,
-`InitActorPart`, `gActorCategory`), `objects` the side-view object
-framework of the platforming levels.
+`include/` keeps at its root only the headers every part of the program
+shares: `core.h`, `globals.h`, `match.h`, `byte_arg.h`, `screen.h`,
+`gba/` and `constants/`. Every other header is in the directory of what
+it declares, and is included by its path from `include/`:
+`#include "engine/gfx/cell_anim.hpp"`, `#include "game/crash/player.hpp"`.
+
+A file goes in the directory of the namespace of what it defines (a
+class's methods go with the class, wherever its users are; the spawners
+go with the classes they create). A file with only C-linkage functions,
+globals or data goes with its users. A file that defines classes of
+several namespaces goes with the namespace most of them are in, or the
+enclosing one (`game/vehicles/` for polar and jetpack).
 
 File names:
 
-- **Code:** `src/<subsystem>/<subject>[_<role>].cpp`, lowercase
+- **No addresses in file names.** The ROM order is `ldscript.txt`'s, and
+  each file's header comment gives its ROM range: a name says what the
+  file holds.
+- **Code:** `src/<area>/<namespace>/<subject>[_<role>].cpp`, lowercase
   snake_case. The subject is the class or feature, spelled as its
   functions spell it (`CrateList*` is `crate_list`, `PauseMenu*` is
   `pause_menu`). Add a role suffix taken from the file's own functions
@@ -171,10 +182,11 @@ File names:
 - **Mixed files** are named after the subject with the most functions;
   the header comment lists the rest. Each file opens with one line
   saying what it holds.
-- **Data tables** are `src/data/<content>_<romaddr>.cpp`: each is one
-  ROM range, and the address tells apart files with the same content
-  name. The three text tables `#include` what `tools/text.py` generates
-  from `text/` ([docs/text.md](docs/text.md)).
+- **Data tables** are `src/<area>/<namespace>/data/<content>.cpp`, named
+  after what they hold. Several tables of one kind are named after their
+  owner (`polar_player_state_table.cpp`, `jetpack_player_state_table.cpp`),
+  not their address. The text tables `#include` what `tools/text.py`
+  generates from `text/` ([docs/text.md](docs/text.md)).
 
 ### Verification
 
@@ -314,7 +326,7 @@ full rules (#574). For new code:
   tools/magic_numbers.py --sizes --db /tmp/sizes.json [--show]       # by directory, with counts
   tools/magic_numbers.py --sizes --db /tmp/sizes.json --json         # for agents: expr, suggestions, confidence
   tools/magic_numbers.py --sizes --db /tmp/sizes.json --report OUT   # Markdown counts and samples
-  tools/magic_numbers.py --sizes --category stride --min-confidence medium --path src/link
+  tools/magic_numbers.py --sizes --category stride --min-confidence medium --path src/engine/link
   ```
 
   A suggestion keeps the value, not always the type (`sizeof` is
@@ -362,7 +374,7 @@ full rules (#574). For new code:
 
 - **Fixed point:** positions, speeds, accelerations, the speed-ramp
   tables and affine scales are Q8 (and a few Q4/Q12/Q16). Spell a
-  fixed-point value with `include/math_util.h`: `INT_TO_Q8(2)` for 2 px,
+  fixed-point value with `include/engine/util/math_util.h`: `INT_TO_Q8(2)` for 2 px,
   `Q8(1.5)` for a short fraction, `Q8_TO_INT(x)` for `x >> 8`, and a
   named constant for a tuning value (`PLAYER_GRAVITY`). `python3
   tools/magic_numbers.py --fixed` (#916) lists the literals, shifts and
@@ -486,7 +498,7 @@ change in.
 
 Common operations have shared `#define` helpers (#667): fixed-point
 conversions, min/max/abs/clamp and the sine lookups in
-`include/math_util.h` (`Q8_TO_INT(x)`, `INT_TO_Q8(x)`, `Q8_MUL(a, b)`,
+`include/engine/util/math_util.h` (`Q8_TO_INT(x)`, `INT_TO_Q8(x)`, `Q8_MUL(a, b)`,
 `Q8_DIV(a, b)`, `Q12_MUL(a, b)`, `MIN`, `CLAMP_MIN`, `ABS_BRANCHLESS`,
 `CLAMP_INDEX`, `ANIM_REWIND`, `SIN_Q8`, ...), the entity "gone" bitmap set in
 `include/entity_bits.h` (`ENTITY_MARK_GONE`, `ENTITY_SET_GONE_BIT`) and

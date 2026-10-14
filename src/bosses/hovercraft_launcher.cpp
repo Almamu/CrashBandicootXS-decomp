@@ -1,14 +1,14 @@
 #include "boss_actors.hpp"
 #include "hovercraft.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 #include "vehicle.hpp"
-#include "actor_bg.hpp"
+#include "engine/actor/actor_bg.hpp"
 
 extern "C" {
-#include "util.h"
-#include "actor.h"
+#include "engine/util/util.h"
+#include "engine/actor/actor.h"
 #include "globals.h"
-#include "math_util.h"
+#include "engine/util/math_util.h"
 #include "constants/actor_kinds.h"
 }
 

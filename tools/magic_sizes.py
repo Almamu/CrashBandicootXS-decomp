@@ -67,7 +67,7 @@ Usage:
   tools/magic_numbers.py --sizes --show             ... with the source line
   tools/magic_numbers.py --sizes --category C       only C (alloc, copy, ...)
   tools/magic_numbers.py --sizes --min-confidence high
-  tools/magic_numbers.py --sizes --path src/link    only files under a path
+  tools/magic_numbers.py --sizes --path src/engine/link    only files under a path
   tools/magic_numbers.py --sizes --json             machine-readable, for agents
   tools/magic_numbers.py --sizes --report [OUT]     Markdown counts + samples
   tools/magic_numbers.py --sizes --db /tmp/sizes.json ...
@@ -91,7 +91,7 @@ import magic_numbers as mn  # noqa: E402
 
 ROOT = mn.ROOT
 GBA_HEADERS = [os.path.join(ROOT, "include", "gba", f) for f in ("defines.h", "io_reg.h", "dma_macros.h")]
-MEMORY_HEADER = os.path.join(ROOT, "include", "memory.h")
+MEMORY_HEADER = os.path.join(ROOT, "include", "engine", "sys", "memory.h")
 DB_VERSION = 1
 
 CATEGORIES = collections.OrderedDict(
@@ -653,7 +653,7 @@ def pointee(types, tree, src):
 
 
 # ---------------------------------------------------------------------------
-# Named constants (include/gba/*.h, include/memory.h)
+# Named constants (include/gba/*.h, include/engine/sys/memory.h)
 
 
 def load_defines(paths):

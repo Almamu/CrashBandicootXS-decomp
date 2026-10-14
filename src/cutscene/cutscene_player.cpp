@@ -1,15 +1,15 @@
 #include "sprite_obj.hpp"
 #include "bg_layer.hpp"
-#include "font.hpp"
+#include "engine/text/font.hpp"
 #include "cutscene.hpp"
-#include "frame_limiter.hpp"
+#include "engine/sys/frame_limiter.hpp"
 
 extern "C" {
-#include "math_util.h"
-#include "text.h"
+#include "engine/util/math_util.h"
+#include "engine/text/text.h"
 #include <libgcc.h>
-#include "system.h"
-#include "gfx.h"
+#include "engine/sys/system.h"
+#include "engine/gfx/gfx.h"
 #include "globals.h"
 }
 

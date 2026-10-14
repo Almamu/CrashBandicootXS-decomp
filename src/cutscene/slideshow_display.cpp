@@ -1,11 +1,11 @@
 #include "cutscene.hpp"
-#include "audio.hpp"
-#include "fade.hpp"
+#include "engine/audio/audio.hpp"
+#include "engine/gfx/fade.hpp"
 
 extern "C" {
 #include "core.h"
-#include "gfx.h"
-#include "memory.h"
+#include "engine/gfx/gfx.h"
+#include "engine/sys/memory.h"
 #include "globals.h"
 }
 

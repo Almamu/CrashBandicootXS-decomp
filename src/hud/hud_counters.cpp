@@ -8,7 +8,7 @@ extern "C" {
 #include <libgcc.h>
 #include "level.h"
 #include "globals.h"
-#include "util.h"
+#include "engine/util/util.h"
 #include "bosses.h"
 }
 

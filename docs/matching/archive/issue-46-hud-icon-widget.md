@@ -18,12 +18,12 @@ object family:
   (see `include/hud.h`) - unrelated to everything else in this chunk,
   just adjacent in ROM.
 - **Everything else** (`FontDrawGlyph` through `FontSetTileBase`) operates on
-  `struct bitmap_font` (`include/bitmap_font.h`), an object
-  `src/menus/power_dialog_draw.c`/`src/text/wrapped_text.c` had already
+  `struct bitmap_font` (`include/engine/text/bitmap_font.h`), an object
+  `src/menus/power_dialog_draw.c`/`src/engine/text/wrapped_text.c` had already
   partially characterized (an OAM icon positioner with `posX`/`posY`/
   `record` fields) but left most of its leading `unused_00`/`unused_10c`/
   `unused_118` byte ranges opaque. This chunk's functions read and write
-  those ranges directly, so `include/bitmap_font.h` now documents the
+  those ranges directly, so `include/engine/text/bitmap_font.h` now documents the
   real shape:
   - `oam_scratch[8]` (was `unused_00`'s first 8 bytes) - a 6-byte
     OAM-shaped draw-request scratch buffer `FontDrawGlyph` rebuilds fresh
@@ -37,7 +37,7 @@ object family:
     12 bytes/entry, indexed by `charLookup`.
   - `field_118`/`field_11c`/`spaceWidth`/`field_124`/`field_128` (was
     `unused_118`) - left margin X, line height (confirmed against
-    `src/text/text_box.cpp`'s existing `DrawWrappedTextInBox`, which already used
+    `src/engine/text/text_box.cpp`'s existing `DrawWrappedTextInBox`, which already used
     this same field as a divisor), space-character advance width, a
     per-glyph OAM-attribute stride, and a pointer to the widget's own
     upload asset table respectively.
@@ -57,11 +57,11 @@ object family:
 
 `src/hud/hud_slide.c` (appended): `SetHudCrateTotal`, `IncHudCrateTotal`.
 `src/hud/hud_slide.c`: `DestroyHud`.
-`src/text/font_draw_chars.c`: `FontDrawChars`.
-`src/text/font_height.c`: `FontTextHeight`.
-`src/text/font.c`: `FontUploadTiles`, `FontSetPalette`,
+`src/engine/text/font_draw_chars.c`: `FontDrawChars`.
+`src/engine/text/font_height.c`: `FontTextHeight`.
+`src/engine/text/font.c`: `FontUploadTiles`, `FontSetPalette`,
 `FontResetPalette`.
-`src/text/font.c`: `FontHeightToLines`, `FontGetTileCount`,
+`src/engine/text/font.c`: `FontHeightToLines`, `FontGetTileCount`,
 `FontSetPos`, `FontNewLineAt`, `FontGetMargin`, `FontSetMargin`,
 `FontGetY`, `FontGetX`, `FontSetTileBase`.
 
@@ -78,17 +78,17 @@ topology confirmed against the ROM disassembly) but don't yet produce
 byte-identical output from `tools/agbcc`. Real bytes live in four raw
 fragments, each guarded `.if NON_MATCHING == 0`, with `#if NON_MATCHING`
 C reconstructions in four matching files (then `hud_icon_widget_*.c`, now
-`src/text/font_glyph.c`, `font_draw_text.c`, `font_measure.c` and `font.c`):
+`src/engine/text/font_glyph.c`, `font_draw_text.c`, `font_measure.c` and `font.c`):
 
 - **`asm/code_3_2_20_85c4.s`** (`FontDrawGlyph`, `InitSmallFont`,
   `InitLargeFont`, `FontPutChar`) - reconstructions in
-  `src/text/font_glyph.c`.
+  `src/engine/text/font_glyph.c`.
 - **`asm/code_3_2_20_8890.s`** (`FontDrawText`, `FontMeasureChars`) -
-  reconstructions in `src/text/font_draw_text.c`.
+  reconstructions in `src/engine/text/font_draw_text.c`.
 - **`asm/code_3_2_20_8994.s`** (`FontMeasureText`) - reconstruction in
   `src/text/font_measure.c`.
 - **`asm/code_3_2_20_8a78.s`** (`InitFont`) - reconstruction in
-  `src/text/font.c`.
+  `src/engine/text/font.c`.
 
 Two distinct residual gaps, both already-known classes of gcc-2.9
 difficulty in this codebase:
@@ -166,7 +166,7 @@ difficulty in this codebase:
 ## Cross-references
 
 - `docs/status/hud.md` - matched/parked lists updated.
-- `include/bitmap_font.h` - `struct bitmap_font`'s `unused_00`/
+- `include/engine/text/bitmap_font.h` - `struct bitmap_font`'s `unused_00`/
   `unused_10c`/`unused_118` byte ranges filled in with real named
   fields, and the new `struct icon_glyph_metrics` type added.
 - `src/frontend/language_select_setup.c` - `InitLanguageSelectGraphics`'s own comment
@@ -184,7 +184,7 @@ parked, working the remaining GitHub issue #46 scope.
 
 ### Matched (3 of 8) - full clean `make compare` passing
 
-- **`FontPutChar`** (`src/text/font_glyph.c`, now split
+- **`FontPutChar`** (`src/engine/text/font_glyph.c`, now split
   out of the still-parked `FontDrawGlyph`/`InitSmallFont`/
   `InitLargeFont` at the end of the same file - `#if NON_MATCHING`
   now only wraps those three). The documented `if`/`else if`/`else`
@@ -198,7 +198,7 @@ parked, working the remaining GitHub issue #46 scope.
   taking `charByte` as a raw `u32` (sidestepping the byte-promotion
   invariant that forces the early widen) and writing the three-
   instruction prologue as one literal `asm volatile` block.
-- **`FontDrawText`** (`src/text/font_draw_text.c`, split out of
+- **`FontDrawText`** (`src/engine/text/font_draw_text.c`, split out of
   the still-parked `FontMeasureChars` at the top of the same file). Same
   `goto`-based block-order fix as `FontPutChar`, plus explicit register
   pins for `self`/`str`/the cached `&posX` (`r4`/`r5`/`r6`) - `&posY`
@@ -207,7 +207,7 @@ parked, working the remaining GitHub issue #46 scope.
   bytes short of a 4-byte boundary; this compiler's own padding `nop`
   isn't the ROM's zero-fill) - fixed with the standard
   `asm(".align 2, 0")` following statement.
-- **`InitFont`** (`src/text/font.c`) - no
+- **`InitFont`** (`src/engine/text/font.c`) - no
   charLookup-building loop like its `InitSmallFont`/`B` siblings,
   so once the shared preamble's inline-asm address anchors were right,
   this one reached a full match with nothing left over. The file no
@@ -329,7 +329,7 @@ workarounds around a confirmed compiler bug, this pass transcribed all
 five directly as `NAKED` asm functions instead - the same technique this
 project already uses elsewhere for this exact class of problem
 (`lib/libgcc/lib1funcs.s`'s `__div0`, `lib/gax/src/gax_swi.c`'s
-`GaxHuffUnComp`, `src/link/link_handshake.c`'s `MakeLinkHandshakeId`/`UpdateLinkSession`).
+`GaxHuffUnComp`, `src/engine/link/link_handshake.c`'s `MakeLinkHandshakeId`/`UpdateLinkSession`).
 A NAKED function has no compiler-generated prologue/epilogue or
 register allocation at all, so the r7 bug (and any other codegen
 mismatch) is moot - the instructions are typed in verbatim, checked
@@ -344,11 +344,11 @@ are now gone entirely, and the ldscript entries removed with them:
 
 - `asm/code_3_2_20_85c4.s` deleted; `FontDrawGlyph`, `InitSmallFont`,
   `InitLargeFont` now live as `NAKED` functions in
-  `src/text/font_glyph.c`, ahead of the already-matched
+  `src/engine/text/font_glyph.c`, ahead of the already-matched
   plain-C `FontPutChar`. No `#if NON_MATCHING` guard anywhere in the
   file any more.
 - `asm/code_3_2_20_8890.s` deleted; `FontMeasureChars` now lives as a
-  `NAKED` function in `src/text/font_draw_text.c`, after the
+  `NAKED` function in `src/engine/text/font_draw_text.c`, after the
   already-matched plain-C `FontDrawText`.
 - `asm/code_3_2_20_8994.s` deleted; `FontMeasureText` now lives as a
   `NAKED` function, alone, in `src/text/font_measure.c`.

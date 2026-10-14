@@ -21,7 +21,7 @@
 
 extern "C" {
 #include "core.h"
-#include "aabb.h"
+#include "engine/util/aabb.h"
 #include "crates.h"
 #include "globals.h"
 #include "match.h"

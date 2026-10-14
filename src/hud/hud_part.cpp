@@ -7,7 +7,7 @@
 #include "hud.hpp"
 
 extern "C" {
-#include "memory.h"
+#include "engine/sys/memory.h"
 #include "globals.h"
 }
 

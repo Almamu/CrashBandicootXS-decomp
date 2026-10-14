@@ -32,7 +32,7 @@
 
 extern "C" {
 #include "core.h"
-#include "actor.h"
+#include "engine/actor/actor.h"
 }
 
 /* Every function the vehicle levels define with C linkage (or a C name,
@@ -172,7 +172,7 @@ extern const struct anim_box gPolarNitroCrateBox;
 extern const u16 gPolarPlayerShockBlinkPalette[16];
 extern const u16 gPolarPlayerShockPalette[16];
 
-/* src/iwram/iwram_data.cpp */
+/* src/engine/sys/iwram_data.cpp */
 extern s32 gPolarPenguinSpeeds[3];
 extern s32 gJetpackPlaneHopSpeeds[6];
 extern void (*gUnpackNibbleTilesFunc)(u16 *src, s32 lowBlock);

@@ -1,13 +1,13 @@
 #include "airship.hpp"
-#include "vram_dma_queue.hpp"
-#include "audio.hpp"
+#include "engine/sys/vram_dma_queue.hpp"
+#include "engine/audio/audio.hpp"
 
 extern "C" {
 #include "globals.h"
-#include "math_util.h"
+#include "engine/util/math_util.h"
 #include <libgcc.h>
-#include "actor.h"
-#include "gfx.h"
+#include "engine/actor/actor.h"
+#include "engine/gfx/gfx.h"
 }
 
 using Engine::Sys::VramDmaQueue;

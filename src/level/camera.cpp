@@ -5,8 +5,8 @@
 
 extern "C" {
 #include "core.h"
-#include "math_util.h"
-#include "memory.h"
+#include "engine/util/math_util.h"
+#include "engine/sys/memory.h"
 #include "level.h"
 #include "globals.h"
 }
@@ -19,7 +19,7 @@ using Game::Level::Camera;
  * saw `PlayRoom`'s tail flush via `SnapCamera`), class Camera
  * (include/camera.hpp, #761). The global
  * `operator new` & co. that follow it in ROM are in
- * src/system/operator_new.cpp (here until #770).
+ * src/engine/sys/operator_new.cpp (here until #770).
  *
  * The camera holds a Q8 position (`x`/`y`), a Q8 look-ahead offset
  * (`vx`/`vy`), the followed object (`target`) and a `mode`. Every

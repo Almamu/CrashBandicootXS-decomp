@@ -3,14 +3,14 @@
 
 extern "C" {
 #include "core.h"
-#include "actor_anim.h"
+#include "engine/actor/actor_anim.h"
 }
 
 /*
  * ROM 0x08178F80-0x0817A6B8: the data of actor categories 0-2 (the family
  * whose frames are the gPolarSpriteSheet sheet): their OBJ palette,
  * the 41-record animation table gCategoryFamily0AnimTable
- * (include/actor_anim.h) and the keyframe (table_A) and frame (table_B)
+ * (include/engine/actor/actor_anim.h) and the keyframe (table_A) and frame (table_B)
  * arrays its records point at. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md, "Category families".
  *

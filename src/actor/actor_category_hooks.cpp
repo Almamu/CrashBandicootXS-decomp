@@ -1,13 +1,13 @@
 #include "actor_self.hpp"
 #include "vehicle.hpp"
-#include "actor_category.hpp"
+#include "engine/actor/actor_category.hpp"
 
 extern "C" {
-#include "math_util.h"
+#include "engine/util/math_util.h"
 #include "match.h"
 #include <libgcc.h>
-#include "actor.h"
-#include "gfx.h"
+#include "engine/actor/actor.h"
+#include "engine/gfx/gfx.h"
 #include "globals.h"
 }
 

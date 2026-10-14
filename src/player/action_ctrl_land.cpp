@@ -1,9 +1,9 @@
 #include "action_ctrl.hpp"
 #include "sprite_obj.hpp"
-#include "key_input.hpp"
+#include "engine/sys/key_input.hpp"
 
 extern "C" {
-#include "system.h"
+#include "engine/sys/system.h"
 #include "globals.h"
 }
 

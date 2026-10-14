@@ -2,8 +2,8 @@
 
 extern "C" {
 #include "globals.h"
-#include "math_util.h"
-#include "actor.h"
+#include "engine/util/math_util.h"
+#include "engine/actor/actor.h"
 }
 
 using Game::Crash::Player;

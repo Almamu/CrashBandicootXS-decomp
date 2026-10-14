@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Audit struct and class layouts from the compiler's own debug info (#656).
 
-Every game translation unit (src/*/*.c and src/*/*.cpp, plus
-src/*/*/*.cpp) is compiled again with -g, by the Makefile's own rules,
+Every game translation unit (every .c and .cpp under src/, at any
+depth) is compiled again with -g, by the Makefile's own rules,
 into a temporary directory: the same compiler (agbcc, old_agbcc,
 agbcc_arm(_patched), agbcp, old_agbcp) and the same per-object flags as
 the ROM build (OLD_AGBCC_OBJS, CXX_OBJS, NO_IMPLEMENT_INLINES_OBJS, the
@@ -76,7 +76,7 @@ Subcommands:
   show NAME           one layout, flattened.
 
 A NAME is a struct/class name (`Entity`), optionally with a file suffix to
-pick one definition (`actor@include/actor.h`, `actor@actor.h`), or a full
+pick one definition (`actor@include/engine/actor/actor.h`, `actor@actor.h`), or a full
 key (`cutscene_player@include/cutscene.h#2`). An ambiguous NAME lists the
 candidates. A file shown as `src/data/x.c?` is a guess: an object with no
 code has no line-number file table, so a layout only such objects define

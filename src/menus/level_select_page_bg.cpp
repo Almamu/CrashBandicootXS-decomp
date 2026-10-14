@@ -4,10 +4,10 @@
  * level_select_pages.cpp (#767), same flags (old_agbcc). */
 
 #include "level_select.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 
 extern "C" {
-#include "math_util.h"
+#include "engine/util/math_util.h"
 }
 
 using Game::Ui::LevelSelectPageBg;

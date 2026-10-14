@@ -1,12 +1,12 @@
 extern "C" {
 #include "gba/types.h"
-#include "sprite_bank.h"
+#include "engine/gfx/sprite_bank.h"
 }
 #include "sprites/sprite_frames.h"
 
 /*
  * ROM 0x084b9d7c-0x084c0006: sprite banks 39-55 of the sprite-bank
- * animation system (gSpriteBankTable, include/sprite_bank.h). Linked in
+ * animation system (gSpriteBankTable, include/engine/gfx/sprite_bank.h). Linked in
  * ROM order between data/data.s sections by ldscript.txt - see
  * docs/data.md and docs/data_map.md ("gSpriteBankTable").
  *

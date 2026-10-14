@@ -7,7 +7,7 @@ drafts that are the same size as the ROM.
 |---|---|---|---|---|
 | `SpawnRoomEntities` | `src/level/room_entities.c` | #40 | 704 bytes | matched, old_agbcc (object added to `OLD_AGBCC_OBJS`) |
 | `UpdateWumpa` | `src/pickups/wumpa_update.c` | #15 | 500 bytes | still NAKED; draft size-exact, 21 halfwords off (was 84 bytes too long) |
-| `HandleLinkSerial` | `src/link/link_handshake.c` | #4 | 1488 bytes | still NAKED; first draft, size-exact, 514 halfwords off |
+| `HandleLinkSerial` | `src/engine/link/link_handshake.c` | #4 | 1488 bytes | still NAKED; first draft, size-exact, 514 halfwords off |
 
 All three are measured under old_agbcc. `wumpa_update.o` and
 `link_handshake.o` were already on `OLD_AGBCC_OBJS`.

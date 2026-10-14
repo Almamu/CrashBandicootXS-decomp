@@ -2,19 +2,19 @@
 #include "boss_ctrl.hpp"
 #include "pickups.hpp"
 #include "player.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 #include "level_state.hpp"
 
 extern "C" {
 #include "match.h"
-#include "sprite_bank.h"
-#include "util.h"
-#include "memory.h"
+#include "engine/gfx/sprite_bank.h"
+#include "engine/util/util.h"
+#include "engine/sys/memory.h"
 #include "crates.h"
 #include "level.h"
 #include "globals.h"
 #include "entity_bits.h"
-#include "math_util.h"
+#include "engine/util/math_util.h"
 }
 
 using Game::Bosses::DingodileCtrl;

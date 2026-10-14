@@ -1,13 +1,13 @@
 #include "vehicle.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 #include "level_state.hpp"
 #include "yeti.hpp"
-#include "actor_category_stats.hpp"
-#include "actor_category.hpp"
+#include "engine/actor/actor_category_stats.hpp"
+#include "engine/actor/actor_category.hpp"
 
 extern "C" {
-#include "math_util.h"
-#include "actor.h"
+#include "engine/util/math_util.h"
+#include "engine/actor/actor.h"
 #include "level.h"
 #include "globals.h"
 }

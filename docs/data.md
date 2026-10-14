@@ -73,8 +73,8 @@ An input-section name in the linker script matches exactly, so
 `data.o(.rodata)` never pulls in `.rodata.0816C090`. The first section is
 plain `.rodata` (from `0x0803B8B0`). This scales to any number of C
 objects, generated ones included: each one is one more line pair.
-`src/data/*.cpp` is already covered by the Makefile's `src/*/*.cpp`
-wildcard (built by agbcp like the other C++ objects); nothing else needs
+`src/data/*.cpp` is already covered by the Makefile's `find src -name '*.cpp'`
+(built by agbcp like the other C++ objects); nothing else needs
 registering. Everything the linker script doesn't name is discarded
 (`/DISCARD/`), so a data file's empty `.text` is harmless.
 
@@ -362,7 +362,7 @@ incbins it with the pointers as relocations, so the blocks can move
 
 The sprite-bank animation system (`0x084A5600`-`0x084C0006`, 2,429
 frames in 56 banks) is typed C in four files, with the structs in
-`include/sprite_bank.h`. It was extracted once by `tools/sprite_banks.py`,
+`include/engine/gfx/sprite_bank.h`. It was extracted once by `tools/sprite_banks.py`,
 which walks the tables the way the matched readers do and asserts the
 layout (every object where agbcc will put it, only zero padding between);
 the C is the source from then on.
@@ -672,7 +672,7 @@ C (see "Level data").
   49-53 by banks 32, 39, 43 and 53). This used to be
   `tile_pool_4a4660.png`, read as "125 fixed OBJ tiles".
 - **Level tile sets.** These are tag-0x00 raw tagged assets: a
-  `{size << 8}` word, then 8bpp tiles. `include/tagged_asset.h` gives each
+  `{size << 8}` word, then 8bpp tiles. `include/engine/gfx/tagged_asset.h` gives each
   one a sized struct (`TAGGED_RAW_ASSET(n)`, `TAGGED_RAW_HEADER(n)`) whose
   `data` member `#include`s the tiles, its size being
   `TILES_SIZE_<set>` from the generated `tilesets/<set>.h`. The tiles
@@ -731,7 +731,7 @@ address: the pairs in `motion_records_16b304.cpp` (`gActionCtrlMotionEntries`,
 `gSwimCtrlMotionEntries`), which `entry_set_16b92c.cpp` now points at by
 name, the level animation rows `gSwimCtrlModeLevelAnims` that
 `action_table_16bf20.cpp` points at, and the two link-cable names
-`gCrash2LinkText`/`0816B124` that the IWRAM data points at (`src/iwram/iwram_data.cpp`). A few
+`gCrash2LinkText`/`0816B124` that the IWRAM data points at (`src/engine/sys/iwram_data.cpp`). A few
 byte tables sit at odd addresses (`gTinyHopTargets`); brace-list `u8`
 arrays aren't aligned by agbcc, so they stay in place.
 
@@ -813,7 +813,7 @@ effect), shown with the page of text at the same index of the current
 language's `struct cutscene_page` array. The six language tables
 (`gCutsceneTextEnglish` is English, then French, German, Spanish,
 Italian and Dutch) are listed by `gCutsceneTexts`, a pointer table in
-the IWRAM image (`src/iwram/iwram_data.cpp`). The text is strings (Latin-1, all lower case),
+the IWRAM image (`src/engine/sys/iwram_data.cpp`). The text is strings (Latin-1, all lower case),
 each page's strings in a `const u8 *const []`, and page and slide counts
 are `ARRAY_COUNT()`s. The template's keys are `cutscene<NN>.page<P>.<I>`
 ([text.md](./text.md)).
@@ -926,7 +926,7 @@ table: they aren't objects, so the report doesn't count them.
 
 Then `src/data/ui_text_172cd4.cpp`: the game's own text (menus, level
 names, popups) in six languages, 70 strings each. `GetUiText` looks a
-text id up in `gUiTextTables[language]` (`src/iwram/iwram_data.cpp`),
+text id up in `gUiTextTables[language]` (`src/engine/sys/iwram_data.cpp`),
 which now points at `gUiTextEnglish`...`gUiTextDutch` by name. Each
 language's new strings sit before its array, and strings several
 languages share (mostly the level names) are stored once. Every string
@@ -1042,7 +1042,7 @@ u16 zeros;         // ...
 ```
 
 The IWRAM routine `0x03000634` (`UnpackRleSpriteFrame` in
-`src/iwram/sprite_arm.cpp`, the `gUnpackRleSpriteFrameFunc` hook, called by
+`src/engine/gfx/sprite_arm.cpp`, the `gUnpackRleSpriteFrameFunc` hook, called by
 `polar_player.cpp`, `jetpack_player_update.cpp` and `company_logos.cpp`)
 unpacks a frame into a VRAM tile block. The frame pointer tables
 (`table_B` of animation record 0 of both category families, and

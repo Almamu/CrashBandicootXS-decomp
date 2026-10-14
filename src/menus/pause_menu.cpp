@@ -1,15 +1,15 @@
 #include "menus.hpp"
-#include "font.hpp"
-#include "audio.hpp"
+#include "engine/text/font.hpp"
+#include "engine/audio/audio.hpp"
 #include "level_state.hpp"
-#include "key_input.hpp"
-#include "frame_limiter.hpp"
+#include "engine/sys/key_input.hpp"
+#include "engine/sys/frame_limiter.hpp"
 
 extern "C" {
-#include "system.h"
+#include "engine/sys/system.h"
 #include <agb_syscall.h>
-#include "text.h"
-#include "util.h"
+#include "engine/text/text.h"
+#include "engine/util/util.h"
 #include "level.h"
 #include "globals.h"
 #include "core.h"

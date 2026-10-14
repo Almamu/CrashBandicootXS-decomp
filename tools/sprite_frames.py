@@ -16,7 +16,7 @@ bank, graphics/sprites/bankNN_<name>/:
     "pieces": [["WxH", x, y], ...]   each piece's size in pixels and its
                        offset from the sprite's position, in piece order
     "layout": n        the frame's layout type (the high nibble of its first
-                       piece byte, include/sprite_bank.h); it says which
+                       piece byte, include/engine/gfx/sprite_bank.h); it says which
                        struct the frame is in the C
     "tiles":           where the frame's tile run starts in the pool:
         "own"              at the end of the tiles placed so far (new tiles)
@@ -69,7 +69,7 @@ SHAPES = [(8, 8), (16, 16), (32, 32), (64, 64), (16, 8), (32, 8), (32, 16), (64,
           (8, 16), (8, 32), (16, 32), (32, 64)]
 SHAPE_NAMES = {f"{w}x{h}": i for i, (w, h) in enumerate(SHAPES)}
 
-# layout type -> the frame's struct (include/sprite_bank.h)
+# layout type -> the frame's struct (include/engine/gfx/sprite_bank.h)
 LAYOUT_STRUCTS = {
     0: "sprite_frame_3box_anchor",
     1: "sprite_frame",

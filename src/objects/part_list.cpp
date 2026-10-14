@@ -4,7 +4,7 @@
 extern "C" {
 #include <agb_syscall.h>
 #include "crates.h"
-#include "memory.h"
+#include "engine/sys/memory.h"
 }
 
 using Game::Entities::PartList;

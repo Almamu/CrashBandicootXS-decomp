@@ -1,15 +1,15 @@
 #include "airship.hpp"
-#include "vram_dma_queue.hpp"
-#include "cell_anim.hpp"
-#include "actor_bg.hpp"
-#include "actor_category_stats.hpp"
+#include "engine/sys/vram_dma_queue.hpp"
+#include "engine/gfx/cell_anim.hpp"
+#include "engine/actor/actor_bg.hpp"
+#include "engine/actor/actor_category_stats.hpp"
 
 extern "C" {
 #include <libgcc.h>
-#include "actor.h"
-#include "gfx.h"
+#include "engine/actor/actor.h"
+#include "engine/gfx/gfx.h"
 #include "globals.h"
-#include "math_util.h"
+#include "engine/util/math_util.h"
 }
 
 using Engine::Actor::ActorBg;

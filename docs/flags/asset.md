@@ -1,10 +1,10 @@
 # A tagged asset's type (#843)
 
-LoadTaggedAsset (src/system/asset.cpp) loads a BG palette, tile set or
+LoadTaggedAsset (src/engine/gfx/asset.cpp) loads a BG palette, tile set or
 map that starts with the GBA BIOS's decompression header: bits 0-3
 reserved, bits 4-7 the compression type, bits 8-31 the size. It switches
 on bits 4-7, `(header << 24) >> 28`. The names, `ASSET_TYPE_*`, are in
-include/system.h, next to the prototype.
+include/engine/sys/system.h, next to the prototype.
 
 | Value | Name | LoadTaggedAsset |
 |---|---|---|

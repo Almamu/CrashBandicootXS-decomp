@@ -9,7 +9,7 @@
  * spawn_markers.cpp (the constructor, InitLevelState), level_cutscene.cpp
  * (the destructor, DestroyLevelState, UNUSED: the game never leaves
  * MainLoop; PlayCutscene), game_frame.cpp (UpdateGameFrame),
- * bonus_round.cpp, level_state.cpp and inline_copies_misc.cpp (GetLives);
+ * bonus_round.cpp, level_state.cpp and aabb_setters.cpp (GetLives);
  * LevelProgress's in level_query.cpp, room_select.cpp, play_room.cpp
  * and room.cpp. The progress blocks are GameProgress (game_progress.hpp),
  * which the save slots and the menus share.
@@ -165,7 +165,7 @@ public:
     void EndBonusRound(u8 cleared);
     void SetCheckpointAtPlayer(u8 checkpointFlags);
     void StartTimeTrial(); // level_state.cpp
-    s32 GetLives();        // inline_copies_misc.cpp
+    s32 GetLives();        // aabb_setters.cpp
 
     // level_state.cpp
     void FreezeLevelClock(s32 secs);

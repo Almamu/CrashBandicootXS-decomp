@@ -19,7 +19,7 @@ of this chunk hit.
   field getters.
 - `GetActorCategoryFrameCount`-`UpdateActorCategoryBg2`/`SetActorCategoryExitStatus` (`actor_spawn.c`) - the
   `gActorSpawnTable` `sub_effect_table` record accessor family
-  (`struct sub_effect_record`, see `include/actor_anim.h`), a
+  (`struct sub_effect_record`, see `include/engine/actor/actor_anim.h`), a
   circular-list marker-drawing pass (`DestroyAllActors`), and several
   trivial wrappers/setters.
 

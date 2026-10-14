@@ -43,7 +43,7 @@ Contents:
 | `__pure_virtual` ("pure virtual method called") | none | no pure virtual slot is ever emitted |
 | exception tables, `__throw`, `__eh_*`, `terminate` | none | built with `-fno-exceptions` (or no `throw`) |
 | static constructor lists (`__CTOR_LIST__`, `.ctors`, a `__main` call) | none: crt0 calls `AgbMain` directly, and `AgbMain` calls no `__main` | no global object has a constructor |
-| `operator new`/`delete`/`new[]`/`delete[]` | `OperatorNew` & co. in `src/system/operator_new.cpp` | the game's own replacements: see below |
+| `operator new`/`delete`/`new[]`/`delete[]` | `OperatorNew` & co. in `src/engine/sys/operator_new.cpp` | the game's own replacements: see below |
 
 **The operators.** In g++ 2.x the global `operator new(size_t)` has the
 assembler name `__builtin_new`, and `new[]`, `delete` and `delete[]` are
@@ -215,7 +215,7 @@ gEffectCtrlVtable; ...; return self;`.
 result, with no null check: `InitEffectCtrl(OperatorNew(0x10))`.
 `new X[n]` calls `__builtin_vec_new(n * size + 4)`, stores `n` in the
 first word and constructs each element after it: the
-`NEW_ARRAY_COUNT`/`NEW_ARRAY_BLOCK` cookie (include/memory.h).
+`NEW_ARRAY_COUNT`/`NEW_ARRAY_BLOCK` cookie (include/engine/sys/memory.h).
 
 **Destructors.** `X::~X(int __in_chrg)` runs the body, stores X's vtable
 pointer again, and calls the base destructor with the same flags; the
@@ -376,7 +376,7 @@ actually rewrites, plus those 45 files' quirks if they are converted.
 
 ## How a C++ object is built
 
-The Makefile's `CXX_OBJS` are the `src/*/*.cpp` files:
+The Makefile's `CXX_OBJS` are the `.cpp` files under `src/`, at any depth:
 
 ```
 $(CPP) -x c++ $(CPPFLAGS) $< | $(CXX1) -quiet $(CC1FLAGS) -o foo.s   # agbcp or old_agbcp
@@ -537,7 +537,7 @@ checks the change is only a rename:
   doesn't list, reads only the keys (gKeys, REG_KEYINPUT) and knows
   nothing of the game, so it is engine, next to the IRQs ("input" in
   `Game::Crash` is the player's InputCtrl). Display and VramDmaQueue
-  live in src/gfx/ but are listed under `Engine::Sys`. The BIOS helpers
+  live in src/engine/gfx/ but are listed under `Engine::Sys`. The BIOS helpers
   (DivMod, MemCopy32) are C-linkage functions of system.h and stay
   global; bios_util.cpp's other function, `Ctrl::Update`, is the
   controllers' base, game code. No name hiding: Engine::Sys holds only
@@ -632,20 +632,20 @@ checks the change is only a rename:
   OAM buffer. No name hiding: no global is named `Text` or like one of
   the classes.
 - **`Engine::Util`** (`Q26Engine4Util`): the two free C++ functions
-  FindLineCrossingYMajor and FindLineCrossingXMajor (crate_line_step.hpp),
+  FindLineCrossingYMajor and FindLineCrossingXMajor (line_steppers.hpp),
   the single-octant Bresenham steppers. 2 symbols renamed
   (`FindLineCrossingYMajor__Fiiiiii` is now
   `FindLineCrossingYMajor__Q26Engine4Utiliiiiii`: a namespace function
   has no `F`), no code change. crate_reset.cpp's FindLineCrossing, which
   inlines them, names them with using declarations. The helpers of
-  src/util/ (fixed-point math, AABBs, the Bresenham line, rand, the
+  src/engine/util/ (fixed-point math, AABBs, the Bresenham line, rand, the
   string and number formatting) all have C linkage (util.h, included in
   `extern "C"`), so they stay global, and the namespace holds only these
   two. Boundary calls: the steppers live with the crates (crate.hpp
   inlines them for FindLineCrossing, crate.cpp has their out-of-line
   copies), but they are pure arithmetic, with no dependency on the
   crates, the level or the player, so by their dependencies they are
-  engine helpers, next to src/util/'s StepBresenhamLine. No name hiding:
+  engine helpers, next to src/engine/util/'s StepBresenhamLine. No name hiding:
   no global is named `Util` or like the two functions.
 - **`Game::Crash`** (`Q34Game5Crash`): `Player` (player.hpp) and its
   controllers `ActionCtrl` (action_ctrl.hpp, with its three inline
@@ -951,7 +951,7 @@ checks the change is only a rename:
   (sprite_obj.hpp, sprite_renderer.cpp), so that is where Engine::Gfx
   depends on a game class; splitting the drawn part (bank, tag, frame,
   the mirror and affine bits) from the game rules is left for later.
-  Ctrl's key method, Ctrl::Update, sits in src/system/bios_util.cpp with
+  Ctrl's key method, Ctrl::Update, sits in src/engine/sys/bios_util.cpp with
   the BIOS helpers (the ROM's order), which names the class through a
   using declaration.
   **The 3D actors' bases** follow in a second step: `AnimPart`,
@@ -990,7 +990,7 @@ a namespace but these, which stay in the global namespace on purpose:
 - **The C-linkage functions** (`extern "C"`): what asm, the IWRAM ARM
   code, GAX, the linker script or a C caller reaches by its plain name,
   and the C headers' prototypes. Among them: the BIOS helpers (system.h:
-  DivMod, MemCopy32), src/util/'s helpers (util.h), link.h's SIO and
+  DivMod, MemCopy32), src/engine/util/'s helpers (util.h), link.h's SIO and
   timer handlers, audio.cpp's VCOUNT handler, the wrapped-text functions
   (text.h), the menus' and front end's entry points (RunPauseMenu,
   RunCredits, ...), crates.h's ResolvePlayerCollisions and
@@ -1057,7 +1057,7 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | Object | Classes (include/ctrl.hpp unless noted) | Functions | Compiler | Workarounds: C -> C++ | Part |
 | include/objects.h, player.h, crates.h, gfx.h, bosses.h, pickups.h, frontend.h, actor.h, vehicle.h, system.h | the 391 C prototypes of C++ methods with no C caller go, with the C views only a class's size check used (struct ctrl, boss_ctrl, mega_mix_ctrl, part_ctrl and ctrl_anchor, periodic_spawner, spawner, actor_orbit, cannon_flash, actor_hp, jetpack_ring, orbit_part and orbit_part.h); the classes check the ROM sizes | 0 | (unchanged) | 0 -> 0 | cleanup |
 | actor_self.h, box_part.h, match.h | `ACTOR_SET_STATE`, `CALL_HIT`, `MATCH_USE_VOLATILE`, `MATCH_CONST_VOLATILE` (no user left) go | 0 | (unchanged) | 0 -> 0 | cleanup |
-| actor_self.hpp, `src/actor/actor_category_frame.cpp`, `src/vehicle/polar/polar_nitro.cpp` | `BoxOverlap` and `WorldBox`, the two files' identical inlines, are actor_self.hpp's | 0 | (unchanged) | 0 -> 0 | cleanup |
+| actor_self.hpp, `src/engine/actor/actor_category_frame.cpp`, `src/vehicle/polar/polar_nitro.cpp` | `BoxOverlap` and `WorldBox`, the two files' identical inlines, are actor_self.hpp's | 0 | (unchanged) | 0 -> 0 | cleanup |
 | sprite_obj.hpp, actor_self.hpp, crate.hpp, level_select.hpp and 34 source files | the shared inline helpers (#764): `Sprite::SetTag`, `StartAnim`, the inline `SetFlipX`/`SetFlipY`, `AnimPart::CurFrame`/`CurAttr`, the pointer `BoxOverlap` and `BoxMove`; 33 file-local copies (and `Crate::SetTag`, level_select.hpp's `StartAnim`) go | 0 | (unchanged) | 0 -> 0 | cleanup |
 | `src/actor/actor.cpp`, `actor_spawn.cpp`, `src/bosses/hovercraft.cpp`, `airship_states.cpp` | the category hooks call `JetpackPlayer`'s and `PolarPlayer`'s `AllocTiles`, `FinishRun`, `IsPauseLocked`, `SetCheckpoint` directly; their C prototypes go (`CatchPolarPlayer` stays, for yeti_update.c) | 0 | (unchanged) | 0 -> 0 | cleanup |
 | `src/menus/pause_menu_draw.cpp` | `PauseMenu::Animate`, `Draw`, `DrawRows` (menus.hpp) | 3 | agbcp | 2 pins, 2 holds, 3 uses (`MATCH_USE` x2, `MATCH_USE2`), 14 slot calls -> 2 pins, 2 holds, 3 uses | cleanup |
@@ -1068,7 +1068,7 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/menus/pause_menu_powers.cpp` (`pause_menu_collectibles.cpp` since #771) | `PauseMenu::DrawPowersPage` | 1 | **old_agbcp** (was agbcc) | 12 pins, 2 slot calls -> 0 | cleanup |
 | `src/menus/pause_menu_widgets.cpp` | `PauseMenu::DrawFraction`, `VolumeDown`, `VolumeUp`, `CursorDown`, `CursorUp`, `FormatVolume` (`FormatVolumePercent`, its unused first argument is `this`), with `FormatDecimal` (C linkage) | 6 + 1 | agbcp | 1 pin, 3 slot calls -> 1 pin (`FormatDecimal`'s) | cleanup |
 | `src/menus/power_dialog_loop.cpp` (the end of `power_dialog.cpp` since #771) | `PowerDialog::Loop` | 1 | old_agbcp | 0 -> 0 | cleanup |
-| `src/text/wrapped_text.cpp` | `DrawWrappedText` (C linkage) | 0 + 1 | old_agbcp | 1 pin, 1 hold, 2 uses, 5 slot calls -> the same pin, hold and uses | cleanup |
+| `src/engine/text/wrapped_text.cpp` | `DrawWrappedText` (C linkage) | 0 + 1 | old_agbcp | 1 pin, 1 hold, 2 uses, 5 slot calls -> the same pin, hold and uses | cleanup |
 | `src/save/save_menu.cpp` | `SaveMenu` (include/save_menu.hpp): `MessageInput`, `CommitFrame`; with `CloseSaveMenu` (`delete gSaveMenu`), `OpenSaveMenu` (`new SaveMenu`) (C linkage) | 2 + 2 | agbcp | 0 -> 0; the destructor's direct `(.., 3)` call -> `delete` | cleanup |
 | `src/save/save_menu_draw.cpp` | `SaveMenu::LinkExchange` (`new`/`delete` of the save transfer), `DrawMessageLines`, `DrawCancel`, `DrawYesNoPrompt`, `DrawSlotStats`, `DrawSlots`, `InitIcons` (`new UiSprite`) | 7 | old_agbcp (old_agbcc C already) | 3 pins, 1 hold, 1 use, 3 barriers -> 3 pins, 1 hold, 1 use; the font record-slot calls (`ICON_TEXT_CALL`, `_call_via_r1`), `OperatorNew`/`OperatorDelete` -> virtual calls, `new`/`delete` | cleanup |
 | `src/save/save_menu_input.cpp` | `SaveMenu`'s constructor (`InitSaveMenu`), destructor (`DestroySaveMenu`), `Input`, the state handlers, `SaveToSlot`, `DrawMain`; with the save transfer's accessors (in `save_transfer_state.cpp` since #767) and `RunSaveMenu` (C linkage) | 13 + 4 | agbcp (both match) | 16 pins, 4 asm (2 of them DrawMain's ROM transcription, 1 `.pool`) -> 0; 6 `PART_METHOD` slot calls -> `delete`/`Update()` | cleanup |
@@ -1079,9 +1079,9 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/hud/hud_lives.cpp` (in `hud_counters.cpp` since #771) | `Hud::UpdateLives` | 1 | **old_agbcp** (was agbcc) | 34 pins, 5 `asm`, 1 volatile hold -> 0 | cleanup |
 | `src/hud/hud_counters.cpp` | `Hud::UpdateCrates`, `UpdateWumpa`, `UpdatePercentCounters` | 3 | old_agbcp | 0 -> 0; the `getHp` slot call is `HpActor::GetHp` | cleanup |
 | `src/hud/hud_slide.cpp` | `Hud`'s slides (`UpdateSlides`, the four `Show*`, `StepSlide`), `SetCrateTotal`, `IncCrateTotal`, destructor (`DestroyHud`: `delete[] parts`) | 9 | agbcp | 0 -> 0; the slot-10 destructor loop and `OperatorDeleteArray` go | cleanup |
-| `src/gfx/sprite_renderer.cpp` | `SpriteRenderer::DrawPieces` (`DrawSpritePieces`, sprite_obj.hpp) | 1 | old_agbcp | 0 -> 0; the slot-11 call is `Sprite::GetPriority`, the `struct oam_part` view goes | cleanup |
-| `src/gfx/sprite_renderer.cpp` | `SpriteRenderer::DrawAffinePieces` (`DrawAffineSpritePieces`) | 1 | old_agbcp | 1 use -> 1 use; the slot-11 call is `Sprite::GetPriority`, the `struct affine_part` view goes | cleanup |
-| `src/gfx/graphics_package.cpp` (the sprite box in `scaled_sprite.cpp` since #767) | `LoadGraphicsPackage`, the BG setup and sprite-box functions (C linkage) | 0 + 8 | old_agbcp | 0 -> 0; `OperatorNewArray`/`OperatorDeleteArray` -> `new u16[]`/`delete[]` | cleanup |
+| `src/engine/gfx/sprite_renderer.cpp` | `SpriteRenderer::DrawPieces` (`DrawSpritePieces`, sprite_obj.hpp) | 1 | old_agbcp | 0 -> 0; the slot-11 call is `Sprite::GetPriority`, the `struct oam_part` view goes | cleanup |
+| `src/engine/gfx/sprite_renderer.cpp` | `SpriteRenderer::DrawAffinePieces` (`DrawAffineSpritePieces`) | 1 | old_agbcp | 1 use -> 1 use; the slot-11 call is `Sprite::GetPriority`, the `struct affine_part` view goes | cleanup |
+| `src/engine/gfx/graphics_package.cpp` (the sprite box in `scaled_sprite.cpp` since #767) | `LoadGraphicsPackage`, the BG setup and sprite-box functions (C linkage) | 0 + 8 | old_agbcp | 0 -> 0; `OperatorNewArray`/`OperatorDeleteArray` -> `new u16[]`/`delete[]` | cleanup |
 | globals.h, hud.h, part_list.hpp, objects.h, gfx.h, extra_life.cpp, wumpa_update.cpp, crate_break.cpp, player_event.cpp, sprite.cpp, sprite_anim.cpp | `gHud` is a `Hud *` to C++; the C++ callers' `ShowHud*(gHud)` are methods, the pieces' callers `SpriteRenderer` methods; struct hud_digit_part, hud_anim_record/data, HUD_CLAMP_FRAME and 15 dead prototypes go | 0 | (unchanged) | 0 -> 0 | cleanup |
 | `src/level/tile_cache.cpp` | `TileCache` (include/bg_layer.hpp; derives from level.h's struct tile_cache): constructor, destructor; with `GetTerrainType` (C linkage) | 2 + 1 | old_agbcp (old_agbcc C already) | 0 -> 0 |  cleanup |
 | `src/level/level_layers.cpp` (again) | `LevelLayers`: `new TileCache`, `delete tiles` (`InitTileCache(operator new(0x1064))`, `DestroyTileCache(tiles, 3)` before) | 0 | old_agbcp | 0 -> 0 | cleanup |
@@ -1139,7 +1139,7 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/objects/part_list_cull.cpp` | `PartList::Cull`, `Clear`, `CollideClass` | 3 | **old_agbcp** (was agbcc) | 25 pins -> 0 | 7c |
 | `src/objects/part_collide.cpp` | `PartList::CollideWithObject` | 1 | old_agbcp | 0 -> 0 | 7c |
 | `src/objects/collision_queue.cpp` | `CollisionQueue` (include/part_list.hpp) | 4 | agbcp | 1 pin, 1 const (`STACK_ARG_U8_ADDR`) -> 0 | 7c |
-| `src/gfx/palette_cycle.cpp` (`HudPart` in `src/hud/hud_part.cpp` since #767) | `PaletteCycles`, `HudPart` (include/part_list.hpp) | 8 | **old_agbcp** (was agbcc) | 11 pins, 9 asm -> 0 | 7c |
+| `src/engine/gfx/palette_cycle.cpp` (`HudPart` in `src/hud/hud_part.cpp` since #767) | `PaletteCycles`, `HudPart` (include/part_list.hpp) | 8 | **old_agbcp** (was agbcc) | 11 pins, 9 asm -> 0 | 7c |
 | `src/crates/crate.cpp` | `Crate` (include/crate.hpp): `IsInsideRect`, the stack links, `GetClassId`, constructor, destructor; with `ResolvePlayerCollisions` and the line steppers' out-of-line copies | 8 + 3 | **old_agbcp** (was agbcc) | 13 pins, 3 asm -> 0 | 7e |
 | `src/crates/crate_create.cpp` | `Crate::Create` | 1 | old_agbcp | 3 uses, 1 const -> 1 const | 7e |
 | `src/crates/crate_draw.cpp` | `Crate::Draw` | 1 | **old_agbcp** (was agbcc) | 7 pins, 1 asm -> 0 | 7e |
@@ -1232,9 +1232,9 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/vehicle/jetpack/airship_map.cpp` | `DrawAirshipMap` (C linkage) | 0 + 1 | old_agbcp (old_agbcc C already) | 0 -> 0 | 11i |
 | `src/vehicle/jetpack/airship_touch.cpp` | `IsTouchingAirship` (C linkage) | 0 + 1 | old_agbcp (old_agbcc C already) | 0 -> 0 | 11i |
 | `src/actor/actor_factory.cpp` | `PolarPlayer`'s constructor (`ConstructActorPart`, include/vehicle.hpp), with `CreateActor`, `SpawnActor`, `ConstructAnimTableState`, `CreatePolarCheckpointText`, `SpawnPolarCollectedWumpa`, `SpawnPolarAkuAku` (C linkage; static members since #915): the polar actors' `new`s, the crates', wumpa's, riderless polar's and checkpoint banner's constructors inline | 1 + 6 | agbcp | 0 -> 0; 3 macros of hand-written `new`s (allocation, base constructor, vtable store), the `REC_AT` index cast and `AllocActor` go | 11b |
-| `src/actor/actor_spawn.cpp` | the category hooks and spawn accessors (C linkage): `DestroyAllActors` (`delete`), `CanPauseActorCategory`, ... | 0 + 16 | agbcp | 3 pins, 3 `asm` -> 1 pin | 11b |
-| `src/actor/actor_category_frame.cpp` | `RunActorCategoryFrame` (the `Update`/`Draw` virtual calls), `FindShotTarget` (`IsUnshootable`), `PolarIsTouchingPlayer`, `JetpackIsTouchingPlayer` (C linkage; since #915 the last two are static members of `PolarPlayer` and `JetpackPlayer`) | 0 + 4 | old_agbcp | 0 -> 0; the slot-offset structs, the explicit `MemCopy32` self-copies and the frame struct go | 11b |
-| `src/actor/actor_category_select.cpp` | `SelectActorCategory` (C linkage) | 0 + 1 | agbcp | 1 use -> 1 use | 11b |
+| `src/engine/actor/actor_spawn.cpp` | the category hooks and spawn accessors (C linkage): `DestroyAllActors` (`delete`), `CanPauseActorCategory`, ... | 0 + 16 | agbcp | 3 pins, 3 `asm` -> 1 pin | 11b |
+| `src/engine/actor/actor_category_frame.cpp` | `RunActorCategoryFrame` (the `Update`/`Draw` virtual calls), `FindShotTarget` (`IsUnshootable`), `PolarIsTouchingPlayer`, `JetpackIsTouchingPlayer` (C linkage; since #915 the last two are static members of `PolarPlayer` and `JetpackPlayer`) | 0 + 4 | old_agbcp | 0 -> 0; the slot-offset structs, the explicit `MemCopy32` self-copies and the frame struct go | 11b |
+| `src/engine/actor/actor_category_select.cpp` | `SelectActorCategory` (C linkage) | 0 + 1 | agbcp | 1 use -> 1 use | 11b |
 | `src/actor/inline_copies_actors.cpp` (again) | `PolarCrate`'s destructor is inline (vehicle.hpp); `DestroyPolarCrate` is its out-of-line copy, with C linkage | 0 + 1 | old_agbcp | 0 -> 0 | 11b |
 | `src/vehicle/jetpack/jetpack_spawn.cpp` | `JetpackPlayer` (include/vehicle.hpp): constructor (`InitJetpackPlayer`), `Update`, `Draw`, `Damage`, `SteerY`, `SteerX`, `StateFly`, `StateRollLeft`, `StateRollRight` (at the start of jetpack_player_update.cpp since #769); the jetpack spawners, `CreateJetpackActor`, `YetiStateStop` (C linkage; the spawners static members since #915): `new JetpackPlayer`, `new JetpackShot`, `new AirshipFireball`, the checkpoint banner's and explosion's inline constructors | 9 + 16 | old_agbcp | 4 pins, 2 retyped stores, 1 retyped read, `ACTOR_PMF_CALL`, 10 `ACTOR_SET_STATE`s -> 0 | 11e |
 | `src/vehicle/jetpack/jetpack_player.cpp` | `JetpackPlayer`'s `DispenseWumpa`, `CountBomber`, `GetHp` (`GetJetpackPlayerHpPercent`), `SetCheckpoint`, `IsPauseLocked`, `AnimatePalette`, `Heal`, `QueueWumpa`, `StateResume`, `StateBoost`, `StateFall`, `StateFinish`, `StateEnter`, destructor, `RunState`; with `IsJetpackPlayerInactive` (C linkage) | 15 + 1 | agbcp | 15 pins, 6 retyped stores, 3 retyped reads, `ACTOR_PMF_CALL`, the hand-written destructor -> 0 | 11e |
@@ -1265,7 +1265,7 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/vehicle/jetpack/jetpack_crates.cpp`, `jetpack_rocket.cpp` (split off in #769) | `JetpackBalloonCrate` (include/vehicle.hpp): `Update`, `Damage`, `Break`, `IsUnshootable`, the destructor, the out-of-line constructor (`InitJetpackBalloonCrate`, unused), `ClearBalloon`, `RunState` (unused), 3 states; `JetpackHealthCrate`, `JetpackTimeCrate`, `JetpackQuestionCrate`: constructors (`CreateJetpack*Crate`), `Update`, `Damage`; `JetpackParachuteNitro`, `JetpackRocket`: constructors, `Update`, `Damage`, `IsUnshootable`, `JetpackRocket::Launch`; `JetpackRing::Update` (jetpack_rocket.cpp from `JetpackRocket::Update` on) | 30 | agbcp (both match) | 62 pins, 3 `asm`, a file-scope `asm` literal pool, 30 retyped stores, 19 retyped reads, 2 `ACTOR_PMF_CALL`s, 2 `ACTOR_VCALL`s, 5 hand-written slot calls, the `goto` dispatch chains, a `__divsi3` call -> 0 | 11g |
 | `src/data/actor_pmf_17c42c.cpp` | `JetpackBalloonCrate::stateFuncs` (gJetpackBalloonCrateStateFuncs) | data | agbcp | the `ACTOR_PMF` records -> 0 | 11g |
 | `src/vehicle/jetpack/jetpack_spawn.cpp` (again) | the crates', the parachute nitro's and the rocket's spawners: `new` | 0 + 1 | old_agbcp | 6 C-constructor calls on `AllocActor` (and `AllocActor`) -> 0 | 11g |
-| `src/system/bios_util.cpp` | `Ctrl::Update` (`UpdateCtrl`), with `DivMod` and `MemCopy32` (C linkage) | 1 + 2 | agbcp | 3 pins, 1 asm -> the same (`DivMod`'s SVC) | step 10b |
+| `src/engine/sys/bios_util.cpp` | `Ctrl::Update` (`UpdateCtrl`), with `DivMod` and `MemCopy32` (C linkage) | 1 + 2 | agbcp | 3 pins, 1 asm -> the same (`DivMod`'s SVC) | step 10b |
 | `src/cutscene/cutscene_player.cpp` | `BgStreamer` and `BgLayerBase`'s constructor, destructor and scroll steps (include/bg_layer.hpp), with the cutscene player's 4 functions (C linkage) | 21 + 4 | old_agbcp | 0 -> 0; 4 vtable stores, 4 slot calls -> 0 | step 10b |
 | `src/level/bg_layer_base.cpp` | `BgLayerBase`'s `Scroll`, `Reset`, `SetSource` and accessors, with the terrain tile cache's lookups (C linkage) | 10 + 5 | old_agbcp | 1 use -> 1 use | step 10b |
 | `src/level/bg_layer.cpp` | `BgLayer`'s constructor, `GrowRows`, `GrowColumns`, `ClipColumns`, `ClipRows` | 5 | **old_agbcp** (was agbcc) | 9 pins, 6 asm, a file-scope asm pool -> 0 | step 10b |
@@ -1273,36 +1273,36 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/level/pooled_bg_layer.cpp` | `PooledBgLayer`'s overrides, `ReleaseColumn`, `ReleaseRow` (split from bg_layer.c), with `nullsub_26` | 9 + 1 | old_agbcp | 0 -> 0 | step 10b |
 | `src/level/tile_slot_pool.cpp` | `PooledBgLayer`'s constructor, destructor, `GetPriority`, with the tile-slot pool (C linkage) | 3 + 5 | **old_agbcp** (was agbcc) | 4 pins, 3 asm -> 2 pins, 1 asm | step 10b |
 | `src/level/level_layers.cpp` | `LevelLayers` (bg_layer.hpp), with `sub_80269DC`, `sub_80269F8`, `sub_8026A14` (C linkage) | 8 + 3 | agbcp | 0 -> 0; 6 slot calls -> 0 | step 10b |
-| `src/text/font.cpp` | `Font` (include/font.hpp): `MeasureText` (font_measure.c), `UploadTiles`, `SetPalette`, `ResetPalette`, and the out-of-line copies of its inline constructor, accessors and destructor | 15 | old_agbcp (font.c was agbcc) | 5 pins, 2 keeps, 2 asm, 1 asm label -> 1 asm label | step 10b |
-| `src/text/font_glyph.cpp` | `Font::DrawGlyph`, `PutChar`; `SmallFont`'s and `LargeFont`'s constructors | 4 | old_agbcp | 8 pins, 3 asm, gotos -> 0 | step 10b |
-| `src/text/font_draw_text.cpp` | `Font::DrawText`, `MeasureChars` | 2 | old_agbcp | 3 pins, gotos -> 0 | step 10b |
-| `src/text/font_draw_chars.cpp` | `Font::DrawChars` | 1 | agbcp | 0 -> 0 | step 10b |
-| `src/text/font_height.cpp` | `Font::TextHeight` | 1 | agbcp | 0 -> 0 | step 10b |
-| `src/system/inline_copies_misc.cpp` | `LargeFont`'s and `SmallFont`'s destructors, with `SetAabbSize`, `SetAabbPos`, `GetLives` (C linkage) | 2 + 3 | agbcp | 4 asm -> 0 | step 10b |
+| `src/engine/text/font.cpp` | `Font` (include/engine/text/font.hpp): `MeasureText` (font_measure.c), `UploadTiles`, `SetPalette`, `ResetPalette`, and the out-of-line copies of its inline constructor, accessors and destructor | 15 | old_agbcp (font.c was agbcc) | 5 pins, 2 keeps, 2 asm, 1 asm label -> 1 asm label | step 10b |
+| `src/engine/text/font_glyph.cpp` | `Font::DrawGlyph`, `PutChar`; `SmallFont`'s and `LargeFont`'s constructors | 4 | old_agbcp | 8 pins, 3 asm, gotos -> 0 | step 10b |
+| `src/engine/text/font_draw_text.cpp` | `Font::DrawText`, `MeasureChars` | 2 | old_agbcp | 3 pins, gotos -> 0 | step 10b |
+| `src/engine/text/font_draw_chars.cpp` | `Font::DrawChars` | 1 | agbcp | 0 -> 0 | step 10b |
+| `src/engine/text/font_height.cpp` | `Font::TextHeight` | 1 | agbcp | 0 -> 0 | step 10b |
+| `src/engine/util/aabb_setters.cpp` | `LargeFont`'s and `SmallFont`'s destructors, with `SetAabbSize`, `SetAabbPos`, `GetLives` (C linkage) | 2 + 3 | agbcp | 4 asm -> 0 | step 10b |
 | text.h, cutscene.h, frontend.hpp, level_select.hpp, and 11 `.cpp` files | `gSmallFont`/`gLargeFont` are `Font *`s to C++; the fonts' callers make virtual calls and use the inline accessors | 0 | (unchanged) | 31 spelled-out slot calls -> 0 | step 10b |
-| `src/audio/audio.cpp` | `AudioContext` (new include/audio.hpp; derives from audio.h's struct audio_context): its 22 methods, constructor (`InitAudioContext`), destructor (`DestroyAudioContext`), `DisableVCountIrq`; with `EnableMusicVCountIrq`, `MusicVCountIrqHandler` (C linkage) | 25 + 2 | old_agbcp (old_agbcc C already) | 2 pins, 1 use, 1 volatile cast -> 1 volatile cast | [audio](#the-audio-context) |
+| `src/engine/audio/audio.cpp` | `AudioContext` (new include/engine/audio/audio.hpp; derives from audio.h's struct audio_context): its 22 methods, constructor (`InitAudioContext`), destructor (`DestroyAudioContext`), `DisableVCountIrq`; with `EnableMusicVCountIrq`, `MusicVCountIrqHandler` (C linkage) | 25 + 2 | old_agbcp (old_agbcc C already) | 2 pins, 1 use, 1 volatile cast -> 1 volatile cast | [audio](#the-audio-context) |
 | globals.h, audio.h, 75 `.cpp` files | `gAudioContext` is an `AudioContext *` to C++; the callers' `PlaySfx(gAudioContext, ...)` & co. are method calls, LevelState's constructor and destructor `new AudioContext` and `delete gAudioContext`; the two `PlayAmbientSfx` callers pass a `bool` (the C's `struct byte_arg`) | 0 | (unchanged) | 0 -> 0 | [audio](#the-audio-context) |
-| `src/gfx/bitmap_screen.cpp`, `fade_to_black.cpp` | `ShowBitmapScreen`; `FadePaletteToBlack`, `IsBrightnessFadeActive` (C linkage) | 0 + 3 | agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
-| `src/gfx/display.cpp`, `fade.cpp` | the DISPCNT helpers (`SetDispcntMode` ... `CommitDispcnt`); `StepBrightnessFade`, `FadeBrightness`, `DarkenPalette` (C linkage) | 0 + 17 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
-| `src/gfx/display.cpp` (again) | `Display` (new include/display.hpp), an all-static class: the DISPCNT and blend shadows are public static data members (`dispcnt` is gDispcnt, `blendRegs` gBlendRegs), the 15 helpers static member functions (`SetMode`, `ShowBg2`, `CommitDispcnt`, ...); gfx.h's 15 prototypes and 2 externs go; 13 files call `Display::ShowObj()` & co. or set `Display::dispcnt` | 15 | (unchanged) | 0 -> 0 | [#915](#the-display-registers-as-an-all-static-class-915) |
-| `src/gfx/vram_dma_queue.cpp` | `VramDmaQueue` (new include/vram_dma_queue.hpp), an all-static class: gVramDmaQueue is the static data member `queue`, its 4 functions static member functions (`Flush`, `Add`, `Destroy`, `Init`); gfx.h's 4 prototypes and extern go | 4 | (unchanged) | 0 -> 0 | [#915](#the-vram-dma-queue-as-an-all-static-class-915) |
-| `src/actor/actor_category_init.cpp`, `actor_palette_cycle.cpp`, `src/frontend/company_logos.cpp`, `credits.cpp`, `language_select_setup.cpp`, `src/gfx/obj_vram_cursor.cpp`, `sprite_frame.cpp`, `src/level/level_cutscene.cpp`, `play_room.cpp`, `spawn_markers.cpp`, `tile_slot_pool.cpp`, `src/menus/continue_prompt.cpp`, `pause_menu_pages_draw.cpp`, `power_dialog_draw.cpp`, `src/save/save_menu.cpp`, `src/vehicle/jetpack/airship.cpp`, `airship_graphics.cpp`, `jetpack_player.cpp`, `src/vehicle/polar/polar_aku_aku.cpp`, `polar_player.cpp`, `include/level_select.hpp` | the callers: `VramDmaQueue::Add(...)`, `VramDmaQueue::Flush()` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-vram-dma-queue-as-an-all-static-class-915) |
-| `src/save/save_menu.cpp`, `save_menu_input.cpp`, `src/iwram/iwram_data.cpp` | the save menu singleton as static members of `SaveMenu` (include/save_menu.hpp): gSaveMenu is the private static data member `instance`, OpenSaveMenu/RunSaveMenu/CloseSaveMenu the static member functions `Open`/`Run`/`Close`; save.h's 3 prototypes and extern go | 3 | (unchanged) | 0 -> 0 | [#915](#the-save-menu-singleton-as-static-members-of-savemenu-915) |
+| `src/engine/gfx/bitmap_screen.cpp`, `fade_to_black.cpp` | `ShowBitmapScreen`; `FadePaletteToBlack`, `IsBrightnessFadeActive` (C linkage) | 0 + 3 | agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
+| `src/engine/sys/display.cpp`, `fade.cpp` | the DISPCNT helpers (`SetDispcntMode` ... `CommitDispcnt`); `StepBrightnessFade`, `FadeBrightness`, `DarkenPalette` (C linkage) | 0 + 17 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
+| `src/engine/sys/display.cpp` (again) | `Display` (new include/engine/sys/display.hpp), an all-static class: the DISPCNT and blend shadows are public static data members (`dispcnt` is gDispcnt, `blendRegs` gBlendRegs), the 15 helpers static member functions (`SetMode`, `ShowBg2`, `CommitDispcnt`, ...); gfx.h's 15 prototypes and 2 externs go; 13 files call `Display::ShowObj()` & co. or set `Display::dispcnt` | 15 | (unchanged) | 0 -> 0 | [#915](#the-display-registers-as-an-all-static-class-915) |
+| `src/engine/sys/vram_dma_queue.cpp` | `VramDmaQueue` (new include/engine/sys/vram_dma_queue.hpp), an all-static class: gVramDmaQueue is the static data member `queue`, its 4 functions static member functions (`Flush`, `Add`, `Destroy`, `Init`); gfx.h's 4 prototypes and extern go | 4 | (unchanged) | 0 -> 0 | [#915](#the-vram-dma-queue-as-an-all-static-class-915) |
+| `src/engine/actor/actor_category_init.cpp`, `actor_palette_cycle.cpp`, `src/frontend/company_logos.cpp`, `credits.cpp`, `language_select_setup.cpp`, `src/engine/gfx/obj_vram_cursor.cpp`, `sprite_frame.cpp`, `src/level/level_cutscene.cpp`, `play_room.cpp`, `spawn_markers.cpp`, `tile_slot_pool.cpp`, `src/menus/continue_prompt.cpp`, `pause_menu_pages_draw.cpp`, `power_dialog_draw.cpp`, `src/save/save_menu.cpp`, `src/vehicle/jetpack/airship.cpp`, `airship_graphics.cpp`, `jetpack_player.cpp`, `src/vehicle/polar/polar_aku_aku.cpp`, `polar_player.cpp`, `include/level_select.hpp` | the callers: `VramDmaQueue::Add(...)`, `VramDmaQueue::Flush()` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-vram-dma-queue-as-an-all-static-class-915) |
+| `src/save/save_menu.cpp`, `save_menu_input.cpp`, `src/engine/sys/iwram_data.cpp` | the save menu singleton as static members of `SaveMenu` (include/save_menu.hpp): gSaveMenu is the private static data member `instance`, OpenSaveMenu/RunSaveMenu/CloseSaveMenu the static member functions `Open`/`Run`/`Close`; save.h's 3 prototypes and extern go | 3 | (unchanged) | 0 -> 0 | [#915](#the-save-menu-singleton-as-static-members-of-savemenu-915) |
 | `src/level/game_frame.cpp` | the caller: `SaveMenu::Open()`, `SaveMenu::Run(...)`, `SaveMenu::Close()` | 0 | (unchanged) | 0 -> 0 | [#915](#the-save-menu-singleton-as-static-members-of-savemenu-915) |
-| `src/gfx/sprite_frame.cpp` | the OBJ tile allocator, the overflow OAM queue and the sprite frame cache (C linkage); FlushSpriteFrameOamQueue calls `gOamBuffer->Append`, `HideUnused`, `SetAffineScales` (sprite_obj.hpp), whose C prototypes go | 0 + 18 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
-| `src/system/asset.cpp`, `main.cpp`, `main_loop.cpp`, `memory.cpp` | `LoadTaggedAsset`, `LoadBackgroundTileAndPalette`; `AgbMain`; `MainLoop`, `GetUiText`; the heap (`mem_*`, C linkage) | 0 + 12 | agbcp | 1 file-scope asm -> 1 (`mem_walk_heaps`) | all-C++: gfx, system, util, text |
-| `src/system/input.cpp`, `irq.cpp` (the key reading since in `key_input.cpp`, #767) | `WaitForKeyPress`; the IRQ table, the VBlank handler and callbacks, the key reading (C linkage), and `KeyInput`'s constructor (`ClearKeys`, spawners.hpp), whose C prototype goes | 1 + 17 | old_agbcp | 1 pin -> 1 pin | all-C++: gfx, system, util, text |
-| `src/system/irq.cpp` (again) | `Irq` (new include/irq.hpp), an all-static class: the IRQ table, the replaced handlers and the VBlank callbacks are static data members (`table` is gIntrTable, `prevTable`, `vblankCallbacks`), the 11 IRQ and VBlank functions static member functions (`SetHandler`, `ClearHandler`, `RestoreHandler`, `Setup`, `Disable`, `EnableVBlankHandler`, ...); irq.h's 11 prototypes and 3 externs go; the callers (audio.cpp, fade.cpp, main.cpp, the link) call `Irq::SetHandler(...)` & co. | 11 | (unchanged) | 0 -> 0 | [#915](#the-interrupt-handlers-as-an-all-static-class-915) |
-| `src/system/irq.cpp` (again), `src/iwram/iwram_data.cpp` | `FrameLimiter` (new include/frame_limiter.hpp), an all-static class: the frame-limit globals are static data members (`enabled` is gFrameLimitEnabled, `target`, `interval`), WaitForVBlank and the UNUSED SetFrameLimit/DisableFrameLimit static member functions (`WaitForVBlank`, `Set`, `Disable`); system.h's 3 prototypes and 3 externs go; 24 files and level_select.hpp call `FrameLimiter::WaitForVBlank()` | 3 | (unchanged) | 0 -> 0 | [#915](#the-frame-limiter-as-an-all-static-class-915) |
-| `src/gfx/fade.cpp`, `fade_to_black.cpp`, `src/iwram/iwram_data.cpp` | `BrightnessFade` and `PaletteFade` (new include/fade.hpp), all-static classes: the brightness fade's 3 IWRAM globals and the palette fade's 2 buffers are static data members (`state` is gBrightnessFade, `step`, `timer`; `backup` is gPaletteBackup, `buffer`), their 3 + 2 functions static member functions (`Step`, `Start`, `IsActive`; `Darken`, `FadeToBlack`); gfx.h's 5 prototypes and 5 externs go | 5 | (unchanged) | 0 -> 0 | [#915](#the-brightness-and-palette-fades-as-all-static-classes-915) |
-| `src/actor/actor_category_init.cpp`, `src/cutscene/slideshow.cpp`, `slideshow_display.cpp`, `src/frontend/language_select_setup.cpp`, `src/level/play_room.cpp`, `src/save/save_menu_input.cpp`, `src/vehicle/jetpack/jetpack_player.cpp`, `src/vehicle/polar/polar_player_states.cpp` | the callers: `BrightnessFade::Start(...)`, `BrightnessFade::IsActive()`, `PaletteFade::FadeToBlack()` | 0 | (unchanged) | 0 -> 0 | [#915](#the-brightness-and-palette-fades-as-all-static-classes-915) |
+| `src/engine/gfx/sprite_frame.cpp` | the OBJ tile allocator, the overflow OAM queue and the sprite frame cache (C linkage); FlushSpriteFrameOamQueue calls `gOamBuffer->Append`, `HideUnused`, `SetAffineScales` (sprite_obj.hpp), whose C prototypes go | 0 + 18 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
+| `src/engine/gfx/asset.cpp`, `main.cpp`, `main_loop.cpp`, `memory.cpp` | `LoadTaggedAsset`, `LoadBackgroundTileAndPalette`; `AgbMain`; `MainLoop`, `GetUiText`; the heap (`mem_*`, C linkage) | 0 + 12 | agbcp | 1 file-scope asm -> 1 (`mem_walk_heaps`) | all-C++: gfx, system, util, text |
+| `src/engine/sys/input.cpp`, `irq.cpp` (the key reading since in `key_input.cpp`, #767) | `WaitForKeyPress`; the IRQ table, the VBlank handler and callbacks, the key reading (C linkage), and `KeyInput`'s constructor (`ClearKeys`, spawners.hpp), whose C prototype goes | 1 + 17 | old_agbcp | 1 pin -> 1 pin | all-C++: gfx, system, util, text |
+| `src/engine/sys/irq.cpp` (again) | `Irq` (new include/engine/sys/irq.hpp), an all-static class: the IRQ table, the replaced handlers and the VBlank callbacks are static data members (`table` is gIntrTable, `prevTable`, `vblankCallbacks`), the 11 IRQ and VBlank functions static member functions (`SetHandler`, `ClearHandler`, `RestoreHandler`, `Setup`, `Disable`, `EnableVBlankHandler`, ...); irq.h's 11 prototypes and 3 externs go; the callers (audio.cpp, fade.cpp, main.cpp, the link) call `Irq::SetHandler(...)` & co. | 11 | (unchanged) | 0 -> 0 | [#915](#the-interrupt-handlers-as-an-all-static-class-915) |
+| `src/engine/sys/irq.cpp` (again), `src/engine/sys/iwram_data.cpp` | `FrameLimiter` (new include/engine/sys/frame_limiter.hpp), an all-static class: the frame-limit globals are static data members (`enabled` is gFrameLimitEnabled, `target`, `interval`), WaitForVBlank and the UNUSED SetFrameLimit/DisableFrameLimit static member functions (`WaitForVBlank`, `Set`, `Disable`); system.h's 3 prototypes and 3 externs go; 24 files and level_select.hpp call `FrameLimiter::WaitForVBlank()` | 3 | (unchanged) | 0 -> 0 | [#915](#the-frame-limiter-as-an-all-static-class-915) |
+| `src/engine/gfx/fade.cpp`, `fade_to_black.cpp`, `src/engine/sys/iwram_data.cpp` | `BrightnessFade` and `PaletteFade` (new include/engine/gfx/fade.hpp), all-static classes: the brightness fade's 3 IWRAM globals and the palette fade's 2 buffers are static data members (`state` is gBrightnessFade, `step`, `timer`; `backup` is gPaletteBackup, `buffer`), their 3 + 2 functions static member functions (`Step`, `Start`, `IsActive`; `Darken`, `FadeToBlack`); gfx.h's 5 prototypes and 5 externs go | 5 | (unchanged) | 0 -> 0 | [#915](#the-brightness-and-palette-fades-as-all-static-classes-915) |
+| `src/engine/actor/actor_category_init.cpp`, `src/cutscene/slideshow.cpp`, `slideshow_display.cpp`, `src/frontend/language_select_setup.cpp`, `src/level/play_room.cpp`, `src/save/save_menu_input.cpp`, `src/vehicle/jetpack/jetpack_player.cpp`, `src/vehicle/polar/polar_player_states.cpp` | the callers: `BrightnessFade::Start(...)`, `BrightnessFade::IsActive()`, `PaletteFade::FadeToBlack()` | 0 | (unchanged) | 0 -> 0 | [#915](#the-brightness-and-palette-fades-as-all-static-classes-915) |
 | `src/level/spawn_markers.cpp`, `src/enemies/enemy_ctrl.cpp` | the entity spawner singleton as static members of `EntitySpawner` (include/spawners.hpp): CreateEntitySpawner, DestroyEntitySpawner and LaunchHarmfulEffectPart are `Create`, `Destroy` and `LaunchHarmfulEffectPart`; level.h's 2 prototypes and enemy_ctrl.hpp's `extern "C"` one go | 3 | (unchanged) | 0 -> 0 | [#915](#the-entity-spawner-singleton-as-static-members-of-entityspawner-915) |
 | `src/level/play_room.cpp`, `src/enemies/enemy_ctrl_update.cpp`, `enemy_shooter.cpp` | the callers: `EntitySpawner::Create()`, `EntitySpawner::Destroy()`, `EntitySpawner::LaunchHarmfulEffectPart(...)` | 0 | (unchanged) | 0 -> 0 | [#915](#the-entity-spawner-singleton-as-static-members-of-entityspawner-915) |
 | `src/level/spawn_markers.cpp`, `src/enemies/enemy_ctrl.cpp` | gEntitySpawner is the private static data member `EntitySpawner::instance`, read through the inline `EntitySpawner::Get()`; globals.h's extern goes | 0 | (unchanged) | 0 -> 0 | [#915](#the-entity-spawner-singleton-as-static-members-of-entityspawner-915) |
 | `src/crates/crate_break.cpp`, `crate_fields.cpp`, `src/enemies/enemy_ctrl.cpp`, `enemy_ctrl_update.cpp`, `src/level/room_entities.cpp`, `spawn_gems.cpp`, `src/objects/sprite.cpp`, `src/pickups/wumpa_update.cpp`, `src/player/action_ctrl_states.cpp`, `player_update.cpp`, `swim_ctrl_stroke.cpp` | the readers: `EntitySpawner::Get()->SpawnEffectPart(...)`, `DropWumpa(...)` & co. (24 sites) | 0 | (unchanged) | 0 -> 0 | [#915](#the-entity-spawner-singleton-as-static-members-of-entityspawner-915) |
 | `src/level/level_query.cpp` | the level queries as static members of `LevelProgress` (include/level_state.hpp): CountLevelCrates, CountRoomCrates, LevelHasEntityType (private) and the five `LevelHas*GemEntity` wrappers, under their C names; level.h's 8 prototypes go | 8 | (unchanged) | 0 -> 0 | [#915](#the-level-queries-as-static-members-of-levelprogress-915) |
 | `src/level/game_frame.cpp`, `level_state.cpp` | the callers: `LevelProgress::CountLevelCrates(...)`, `LevelProgress::CountRoomCrates(...)`, `LevelProgress::LevelHasRedGemEntity(...)` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-level-queries-as-static-members-of-levelprogress-915) |
-| `src/actor/actor_category_frame.cpp`, `actor_category_hooks.cpp`, `actor_category.cpp` | the category hooks as static members of `PolarPlayer` and `JetpackPlayer` (include/vehicle.hpp): `IsTouchingPlayer`, `ReachCourseEnd`, `ReloadPlayerTiles` and `IsPlayerPauseLocked` (Polar/JetpackIsPauseLocked); vehicle.hpp's 8 `extern "C"` prototypes go | 8 | (unchanged) | 0 -> 0 | [#915](#the-category-hooks-as-static-members-of-polarplayer-and-jetpackplayer-915) |
+| `src/engine/actor/actor_category_frame.cpp`, `actor_category_hooks.cpp`, `actor_category.cpp` | the category hooks as static members of `PolarPlayer` and `JetpackPlayer` (include/vehicle.hpp): `IsTouchingPlayer`, `ReachCourseEnd`, `ReloadPlayerTiles` and `IsPlayerPauseLocked` (Polar/JetpackIsPauseLocked); vehicle.hpp's 8 `extern "C"` prototypes go | 8 | (unchanged) | 0 -> 0 | [#915](#the-category-hooks-as-static-members-of-polarplayer-and-jetpackplayer-915) |
 | `src/data/actor_category_175558.cpp` | ActorCategory::vtables' slots 9-12 point at the members: `PolarPlayer::IsTouchingPlayer`, `JetpackPlayer::IsPlayerPauseLocked` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-category-hooks-as-static-members-of-polarplayer-and-jetpackplayer-915) |
 | `src/actor/actor_factory.cpp` | the polar factory as static members: ConstructAnimTableState, SpawnActor and CreateActor of `PolarPlayer` (`Create`, `SpawnActor`, `CreateActor`), CreatePolarCheckpointText, SpawnPolarCollectedWumpa and SpawnPolarAkuAku of the classes they build (`PolarCheckpointText::Create`, `PolarCollectedWumpa::Spawn`, `PolarAkuAku::Spawn`); actor.h's 3 and vehicle.hpp's 3 prototypes go | 6 | (unchanged) | 0 -> 0 | [#915](#the-polar-factory-as-static-members-915) |
 | `src/data/actor_category_175558.cpp`, `src/vehicle/polar/polar_course_objects.cpp`, `polar_player.cpp`, `polar_player_states.cpp` | the callers: the polar slots 0 and 1 point at `PolarPlayer::Create` and `PolarPlayer::SpawnActor`; `PolarCheckpointText::Create(...)`, `PolarAkuAku::Spawn(...)`, `PolarCollectedWumpa::Spawn(...)`; PolarPlayer's methods call `CreateActor` as a member | 0 | (unchanged) | 0 -> 0 | [#915](#the-polar-factory-as-static-members-915) |
@@ -1313,15 +1313,15 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/level/spawn_enemies.cpp`, `spawn_objects.cpp`, `src/data/dispatch_table_16c6a4.cpp` | the enemy spawners as static members of `EnemyCtrl` (include/enemy_ctrl.hpp) under their C names (`EnemyCtrl::SpawnLizard`, ...); the seal spawner's callback is `EnemyCtrl::SpawnSeal`; the file-local inline `SetKind` is `SetPartKind` (EnemyCtrl::SetKind would hide it); level.h's 26 prototypes go | 26 | (unchanged) | 0 -> 0 | [#915](#the-entity-spawners-as-static-members-915) |
 | `src/level/spawn_bosses.cpp`, `spawn_pickups.cpp`, `src/data/dispatch_table_16c6a4.cpp` | the boss spawners as static members of their controllers (include/boss_ctrl.hpp: `DingodileCtrl::Spawn`, `TinyCtrl::Spawn`, `CortexBossCtrl::Spawn`, `MegaMixCtrl::Spawn`), SpawnStopwatch and SpawnWumpa as `Stopwatch::Spawn` and `Wumpa::Spawn` (pickups.hpp); level.h's 6 prototypes go. The spawners with no class of their own stay free | 6 | (unchanged) | 0 -> 0 | [#915](#the-entity-spawners-as-static-members-915) |
 | `src/level/spawn_pickups.cpp`, `spawn_gems.cpp`, `spawn_objects.cpp`, `src/data/dispatch_table_16c6a4.cpp`, `src/level/level_state.cpp`, `src/bosses/cortex.cpp`, `tiny.cpp`, `dingodile.cpp` | the 14 spawners of the pickups that are a plain Sprite of a bank, and of the decorations, as static members of the all-static class `Pickups` (include/pickups.hpp: `SpawnPowerBodySlam`, `SpawnPowerTornadoSpin`, `SpawnPowerDoubleJump`, `SpawnPowerTurboRun`, `SpawnBlueGem`, `SpawnCrystal`, `SpawnCrateGem`, `SpawnGemPathGem`, `SpawnRedGem`, `SpawnGreenGem`, `SpawnYellowGem`, `SpawnSeaweed`, `SpawnSeaweedNoAnimReset`, `SpawnFlame`); level.h's 14 prototypes go | 14 | (unchanged) | 0 -> 0 | [#915](#the-entity-spawners-as-static-members-915) |
-| `src/text/text_box.cpp` | `GetWordLength`, `DrawWrappedTextInBox` (C linkage; takes a `Font *`, `self->SetMargin`, `HeightToLines`) | 0 + 2 | agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
-| `src/util/aabb.cpp` (since #767: `CommitBlendRegs` at the end of gfx/display.cpp, `IwramFree`/`IwramAlloc` in system/iwram_alloc.cpp) | `CommitBlendRegs`, `AabbOverlapsInclusiveX`, `AabbOverlaps`, `IwramFree`, `IwramAlloc` (C linkage) | 0 + 5 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
-| `src/util/fixed_math.cpp`, `line.cpp`, `line_step.cpp`, `number_format.cpp`, `printf.cpp`, `rand.cpp`, `string.cpp`, `time_format.cpp` | the fixed-point helpers, the Bresenham line, `itoa`, `sprintf`/`vsprintf`/`FindSubstring` (string.cpp since #767), `rand`/`srand`/`RandRange`, the string functions, `FormatCentiseconds` (C linkage) | 0 + 24 | agbcp | 2 pins, 5 asm, 2 asm labels -> the same | all-C++: gfx, system, util, text |
-| `src/actor/actor_bg.cpp` | none (C linkage): the category BG scroll and shake | 0 + 7 | agbcp | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
-| `src/actor/actor_category_init.cpp` | none (C linkage): `InitActorCategory`, with the pause round trip as an inline function | 0 + 1 | old_agbcp (old_agbcc C already) | 1 asm label -> 1 asm label; the Hud, OamBuffer and ObjVramCursor calls are methods | [everywhere](#c-everywhere-actor-vehicle-level) |
-| `src/actor/actor_category_stats.cpp` | none (C linkage) | 0 + 4 | agbcp | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
-| `src/actor/actor_vram_pool.cpp` | none (C linkage): `SetupActorVramPool` calls PaletteCache's and Hud's methods | 0 + 1 | agbcp | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
-| `src/actor/bg_picture.cpp` | none (C linkage) | 0 + 2 | old_agbcp (old_agbcc C already) | 2 uses -> 2 uses | [everywhere](#c-everywhere-actor-vehicle-level) |
-| `src/actor/cell_anim.cpp` | none (C linkage) | 0 + 16 | agbcp | 1 asm label -> 1 asm label | [everywhere](#c-everywhere-actor-vehicle-level) |
+| `src/engine/text/text_box.cpp` | `GetWordLength`, `DrawWrappedTextInBox` (C linkage; takes a `Font *`, `self->SetMargin`, `HeightToLines`) | 0 + 2 | agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
+| `src/engine/util/aabb.cpp` (since #767: `CommitBlendRegs` at the end of gfx/display.cpp, `IwramFree`/`IwramAlloc` in system/iwram_alloc.cpp) | `CommitBlendRegs`, `AabbOverlapsInclusiveX`, `AabbOverlaps`, `IwramFree`, `IwramAlloc` (C linkage) | 0 + 5 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
+| `src/engine/util/fixed_math.cpp`, `line.cpp`, `line_step.cpp`, `number_format.cpp`, `printf.cpp`, `rand.cpp`, `string.cpp`, `time_format.cpp` | the fixed-point helpers, the Bresenham line, `itoa`, `sprintf`/`vsprintf`/`FindSubstring` (string.cpp since #767), `rand`/`srand`/`RandRange`, the string functions, `FormatCentiseconds` (C linkage) | 0 + 24 | agbcp | 2 pins, 5 asm, 2 asm labels -> the same | all-C++: gfx, system, util, text |
+| `src/engine/actor/actor_bg.cpp` | none (C linkage): the category BG scroll and shake | 0 + 7 | agbcp | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
+| `src/engine/actor/actor_category_init.cpp` | none (C linkage): `InitActorCategory`, with the pause round trip as an inline function | 0 + 1 | old_agbcp (old_agbcc C already) | 1 asm label -> 1 asm label; the Hud, OamBuffer and ObjVramCursor calls are methods | [everywhere](#c-everywhere-actor-vehicle-level) |
+| `src/engine/actor/actor_category_stats.cpp` | none (C linkage) | 0 + 4 | agbcp | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
+| `src/engine/actor/actor_vram_pool.cpp` | none (C linkage): `SetupActorVramPool` calls PaletteCache's and Hud's methods | 0 + 1 | agbcp | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
+| `src/engine/actor/bg_picture.cpp` | none (C linkage) | 0 + 2 | old_agbcp (old_agbcc C already) | 2 uses -> 2 uses | [everywhere](#c-everywhere-actor-vehicle-level) |
+| `src/engine/gfx/cell_anim.cpp` | none (C linkage) | 0 + 16 | agbcp | 1 asm label -> 1 asm label | [everywhere](#c-everywhere-actor-vehicle-level) |
 | `src/vehicle/polar/yeti.cpp` | none (C linkage): `CreateYeti` is `new AnimPart`, `DestroyYeti` `delete gYeti` | 0 + 5 | agbcp | 0 -> 0; the hand-written IWRAM allocation and `SetActorAnim` call go | [everywhere](#c-everywhere-actor-vehicle-level) |
 | `src/vehicle/polar/yeti_graphics.cpp` | none (C linkage) | 0 + 2 | old_agbcp (old_agbcc C already) | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
 | `src/vehicle/polar/yeti_states.cpp` | none (C linkage): AudioContext's `PlaySfx`/`PlayAmbientSfx`, `AnimPart::RestartAnim` | 0 + 2 | agbcp | 1 barrier, 1 asm label -> 1 barrier | [everywhere](#c-everywhere-actor-vehicle-level) |
@@ -1333,20 +1333,20 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/level/terrain.cpp` | none (C linkage) | 0 + 5 | agbcp | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
 | `src/level/terrain_probe.cpp` | none (C linkage) | 0 + 1 | agbcp | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
 | `src/level/terrain_probe_axes.cpp` | none (C linkage) | 0 + 2 | old_agbcp (old_agbcc C already) | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
-| `src/link/link_handshake.cpp`, `link_session.cpp`, `link_session_reset.cpp`, `link_sio.cpp` | none: free functions over `struct link_session`, C linkage | 2 + 2 + 1 + 7 | old_agbcp (the first three, old_agbcc C already; link_session_reset.o keeps `-fno-rerun-loop-opt`), agbcp | 0 -> 0 | all-C++: link, save, iwram |
-| `src/save/save_data.cpp`, `save_transfer.cpp`, `save_transfer_poll.cpp` (`save_transfer_state.cpp` since #767) | none: free functions, C linkage; LoadSaveData and StoreSaveData call `AudioContext`'s `IsPlaying`, `GetCurrentSong`, `StopSong`, `PlaySong` | 15 + 3 + 1 | old_agbcp, old_agbcp, agbcp | 1 instruction asm (PollSaveTransfer, with its pin) -> 0, with `volatile` on `struct link_session`'s `playerId` | all-C++: link, save, iwram |
-| `src/iwram/iwram_data.cpp` | the IWRAM image's initialised globals; `gSaveMenu`, `gLevelSelect`, `gLevelLayersSingleton`, `gActorList`, `gLanguageSelect` and `gHeapSortActorsByKeyFunc` defined with their C++ types | 0 | agbcp | 0 -> 0 | all-C++: link, save, iwram |
-| `src/iwram/string_arm.cpp`, `sprite_arm.cpp` | none: the IWRAM image's ARM routines, C linkage; HeapSortActorsByKey takes `ActorSelf **` | 5 + 5 | agbcp_arm_patched (new; agbcc_arm_patched C) | 0 -> 0 | all-C++: link, save, iwram |
+| `src/engine/link/link_handshake.cpp`, `link_session.cpp`, `link_session_reset.cpp`, `link_sio.cpp` | none: free functions over `struct link_session`, C linkage | 2 + 2 + 1 + 7 | old_agbcp (the first three, old_agbcc C already; link_session_reset.o keeps `-fno-rerun-loop-opt`), agbcp | 0 -> 0 | all-C++: link, save, iwram |
+| `src/engine/save/save_data.cpp`, `save_transfer.cpp`, `save_transfer_poll.cpp` (`save_transfer_state.cpp` since #767) | none: free functions, C linkage; LoadSaveData and StoreSaveData call `AudioContext`'s `IsPlaying`, `GetCurrentSong`, `StopSong`, `PlaySong` | 15 + 3 + 1 | old_agbcp, old_agbcp, agbcp | 1 instruction asm (PollSaveTransfer, with its pin) -> 0, with `volatile` on `struct link_session`'s `playerId` | all-C++: link, save, iwram |
+| `src/engine/sys/iwram_data.cpp` | the IWRAM image's initialised globals; `gSaveMenu`, `gLevelSelect`, `gLevelLayersSingleton`, `gActorList`, `gLanguageSelect` and `gHeapSortActorsByKeyFunc` defined with their C++ types | 0 | agbcp | 0 -> 0 | all-C++: link, save, iwram |
+| `src/engine/util/string_arm.cpp`, `sprite_arm.cpp` | none: the IWRAM image's ARM routines, C linkage; HeapSortActorsByKey takes `ActorSelf **` | 5 + 5 | agbcp_arm_patched (new; agbcc_arm_patched C) | 0 -> 0 | all-C++: link, save, iwram |
 | `src/level/tile_slot_pool.cpp` (again) | `TileSlotPool` (include/bg_layer.hpp; was the file-local struct tile_slot_pool): `Reset`, `Acquire`, `Release`, `Upload`, `SetSource` (the C names stay), its five `static inline` helpers private inline methods | 5 | old_agbcp | 0 -> 0 | [#752](#the-tile-slot-pool-the-tile-cache-and-the-bg-setup-752-753) |
 | `src/level/bg_layer_base.cpp`, `collision_map.cpp`, `tile_cache.cpp` (again; since #770 all in `tile_cache.cpp` and `tile_cache_cell.cpp`) | `TileCache` (include/bg_layer.hpp; level.h's struct tile_cache's fields move into it): `GetChunk` (GetCollisionChunk), `GetTerrainHeights`, `GetSolidTerrainHeights`, `GetSolidTerrainModeValue`, `DecodeChunk` (DecodeCollisionChunk); `GetCell` (GetCollisionCell), `SetSource` (SetCollisionSource); `GetTerrainType`; the two files' `GetCell` inline is the private `CellAt` | 5 + 2 + 1 | old_agbcp, agbcp, old_agbcp | 1 use -> 1 use (DecodeChunk's `MATCH_USE(n)`) | [#752](#the-tile-slot-pool-the-tile-cache-and-the-bg-setup-752-753) |
 | `src/level/pooled_bg_layer.cpp`, `level_layers.cpp`, `terrain.cpp`, `terrain_probe_axes.cpp` (again) | callers: `pool->Acquire(...)`, `tiles->SetSource(...)`, `tiles->GetTerrainType(...)` & co.; level.h's struct level_layers holds a `TileCache *` for C++ | 0 | (unchanged) | 0 -> 0 | [#752](#the-tile-slot-pool-the-tile-cache-and-the-bg-setup-752-753) |
-| `src/gfx/graphics_package.cpp` (again) | `BgSetup` (new include/graphics_package.hpp; was graphics_package.h's struct bg_setup): constructor (InitBgSetup), `Load` (LoadGraphicsPackage), `GetControl` (GetBgSetupControl); `ScaledSprite` (was the file-local struct gfx_box_obj; all UNUSED): `Fit`, `Draw`, `SetColor`, `SetPriority`, `SetPos`, `ResetAttrs` | 3 + 6 | old_agbcp | 0 -> 0 | [#753](#the-tile-slot-pool-the-tile-cache-and-the-bg-setup-752-753) |
+| `src/engine/gfx/graphics_package.cpp` (again) | `BgSetup` (new include/engine/gfx/graphics_package.hpp; was graphics_package.h's struct bg_setup): constructor (InitBgSetup), `Load` (LoadGraphicsPackage), `GetControl` (GetBgSetupControl); `ScaledSprite` (was the file-local struct gfx_box_obj; all UNUSED): `Fit`, `Draw`, `SetColor`, `SetPriority`, `SetPos`, `ResetAttrs` | 3 + 6 | old_agbcp | 0 -> 0 | [#753](#the-tile-slot-pool-the-tile-cache-and-the-bg-setup-752-753) |
 | `src/menus/pause_menu.cpp`, `power_dialog.cpp`, `level_select_pages.cpp`, `level_select.cpp`, `continue_prompt_init.cpp`, `src/save/save_menu_ui.cpp` (in `continue_prompt.cpp` and `save_menu_draw.cpp` since #771), `src/frontend/language_select_setup.cpp` (again) | callers: `BgSetup` members built in the mem-initializer list, stack ones declared at their construction, `new BgSetup(...)`; `bg.Load(...)`, `bg.GetControl()` | 0 | (unchanged) | 0 -> 0 | [#753](#the-tile-slot-pool-the-tile-cache-and-the-bg-setup-752-753) |
-| `src/link/link_sio.cpp`, `link_handshake.cpp`, `link_session.cpp`, `link_session_reset.cpp` (again) | `LinkSession` (new include/link_session.hpp, with `LinkRing` and `LinkPlayer`): constructor (`InitLinkSession`: `new LinkSession`), destructor (`DestroyLinkSession`: `delete gLinkSession`), `Start` (UNUSED), `Reset`, `Stop`, `Update`, `HandleSerial`, `ResetState`; LinkSetupSio (UNUSED), MakeLinkHandshakeId and the two IRQ handlers keep C linkage | 8 | (unchanged) | 3 keeps, 1 `MATCH_KEEP_EXPR`, 14 uses, 1 const, 1 barrier -> the same (tools/match_prune.py: none removable); the constructor's ring loop and the destructor's empty players loop are g++'s | [#751](#the-link-session-the-save-data-and-the-save-transfer) |
-| `src/save/save_data.cpp`, `save_transfer.cpp`, `save_transfer_poll.cpp` (`save_transfer_state.cpp` since #767), `save_menu_input.cpp` (again) | `SaveData` and `SaveTransfer` (new include/save_data.hpp): `SaveData`'s `Load`, `Validate` (UNUSED), `CheckChecksum` (the out-of-line copy of the inline `ChecksumOk` that `Validate` expands), `UpdateChecksum`, `GetGameId`, `Store`, the slot and flag accessors, `SetFlags`; `SaveTransfer`'s `SendChunk`, `ReceiveChunk`, `Poll`, `SetRecord`, `GetData`, `Reset`; ReadSaveData and WriteSaveData (a `void *` buffer) keep C linkage | 14 + 6 | (unchanged) | 4 pins, 1 use, 1 empty-template asm -> the same | [#751](#the-link-session-the-save-data-and-the-save-transfer) |
-| `src/save/save_menu.cpp`, `save_menu_draw.cpp`, `save_menu_input.cpp`, `save_menu_ui.cpp` (in `save_menu_draw.cpp` since #771), `src/iwram/iwram_data.cpp` | the callers: SaveMenu's `cartSave`/`linkSave` are `SaveData *` (`new SaveData`; `P9save_data` -> `P8SaveData` in cxx_symbols.txt), the link exchange `new`s a `SaveTransfer`, `gLinkSession` is a `LinkSession *` (link.h) | 0 | (unchanged) | 0 -> 0 | [#751](#the-link-session-the-save-data-and-the-save-transfer) |
+| `src/engine/link/link_sio.cpp`, `link_handshake.cpp`, `link_session.cpp`, `link_session_reset.cpp` (again) | `LinkSession` (new include/engine/link/link_session.hpp, with `LinkRing` and `LinkPlayer`): constructor (`InitLinkSession`: `new LinkSession`), destructor (`DestroyLinkSession`: `delete gLinkSession`), `Start` (UNUSED), `Reset`, `Stop`, `Update`, `HandleSerial`, `ResetState`; LinkSetupSio (UNUSED), MakeLinkHandshakeId and the two IRQ handlers keep C linkage | 8 | (unchanged) | 3 keeps, 1 `MATCH_KEEP_EXPR`, 14 uses, 1 const, 1 barrier -> the same (tools/match_prune.py: none removable); the constructor's ring loop and the destructor's empty players loop are g++'s | [#751](#the-link-session-the-save-data-and-the-save-transfer) |
+| `src/engine/save/save_data.cpp`, `save_transfer.cpp`, `save_transfer_poll.cpp` (`save_transfer_state.cpp` since #767), `save_menu_input.cpp` (again) | `SaveData` and `SaveTransfer` (new include/engine/save/save_data.hpp): `SaveData`'s `Load`, `Validate` (UNUSED), `CheckChecksum` (the out-of-line copy of the inline `ChecksumOk` that `Validate` expands), `UpdateChecksum`, `GetGameId`, `Store`, the slot and flag accessors, `SetFlags`; `SaveTransfer`'s `SendChunk`, `ReceiveChunk`, `Poll`, `SetRecord`, `GetData`, `Reset`; ReadSaveData and WriteSaveData (a `void *` buffer) keep C linkage | 14 + 6 | (unchanged) | 4 pins, 1 use, 1 empty-template asm -> the same | [#751](#the-link-session-the-save-data-and-the-save-transfer) |
+| `src/save/save_menu.cpp`, `save_menu_draw.cpp`, `save_menu_input.cpp`, `save_menu_ui.cpp` (in `save_menu_draw.cpp` since #771), `src/engine/sys/iwram_data.cpp` | the callers: SaveMenu's `cartSave`/`linkSave` are `SaveData *` (`new SaveData`; `P9save_data` -> `P8SaveData` in cxx_symbols.txt), the link exchange `new`s a `SaveTransfer`, `gLinkSession` is a `LinkSession *` (link.h) | 0 | (unchanged) | 0 -> 0 | [#751](#the-link-session-the-save-data-and-the-save-transfer) |
 | `src/level/level_state.cpp` (again) | `LevelState` (include/level_state.hpp, now the whole class: level_state.h's struct level_state and struct level_progress went): its 85 accessors and helpers as methods; `nullsub_24` and `GetLevelState` stay free (no `self`) | 85 + 2 | old_agbcp | 1 pin -> 0 (SetCheckpoint's r2 hold: an inline `CopyBitmapSpan` loads the CpuSet control word at each call) | [#750](#the-level-state-as-a-class-750) |
-| `src/level/game_frame.cpp`, `bonus_round.cpp`, `level_state.cpp`, `level_cutscene.cpp`, `src/system/inline_copies_misc.cpp` | `LevelState::UpdateGameFrame`, `EndBonusRound`, `SetCheckpointAtPlayer`, `StartTimeTrial`, `PlayCutscene`, `GetLives` | 6 | (unchanged) | 1 pin -> 0 (SetCheckpointAtPlayer's, as SetCheckpoint's) | [#750](#the-level-state-as-a-class-750) |
+| `src/level/game_frame.cpp`, `bonus_round.cpp`, `level_state.cpp`, `level_cutscene.cpp`, `src/engine/util/aabb_setters.cpp` | `LevelState::UpdateGameFrame`, `EndBonusRound`, `SetCheckpointAtPlayer`, `StartTimeTrial`, `PlayCutscene`, `GetLives` | 6 | (unchanged) | 1 pin -> 0 (SetCheckpointAtPlayer's, as SetCheckpoint's) | [#750](#the-level-state-as-a-class-750) |
 | `src/level/level_query.cpp`, `play_room.cpp`, `room.cpp` | `LevelProgress` (the room block, `LevelState::room`): `IsInGemPathRoom`, `IsInBonusRoom`, `PlayRoomMusic`, `NextRoom`, `EnterGemPathRoom`, `EnterBonusRoom`, `SelectRoom`, `PlayRoom`, `RunRoom`, `ResumeRoomAfterPause`, `UpdateRoomFrame`, `SetupRoomBlend` | 12 | (unchanged) | 0 -> 0 | [#750](#the-level-state-as-a-class-750) |
 | globals.h, level.h, util.h, level_data.h, 62 `.cpp` files (61 callers and iwram_data.cpp) | `gLevelState`, `gLevelStateSingleton` and `gGameFrameLevelState` are `LevelState *`s to C++; every `Foo(gLevelState, ...)` is `gLevelState->Foo(...)`, `Foo(&self->room)` `room.Foo()`; the 103 C prototypes went | 0 | (unchanged) | 0 -> 0 | [#750](#the-level-state-as-a-class-750) |
 | include/player.h, actor_self.h, bitmap_font.h, bg_scroll_layer.h, level.h, objects.h, globals.h, hud.h, gfx.h, menus.h, frontend.h, save_menu.h, crates.h | the C views go (#754): `struct player`, `actor_self`, `bitmap_font`, `bg_scroll_layer`, `level_layers`, `collision_queue`, `sprite_bank_set`, `camera_target` and the tags `hud_counter`, `actor`, `crate`, `oam_shadow_buffer`, `palette_cache`, `vram_upload_cursor`, `entity_spawner`, `level_menu`, `language_select`, `credits_screen`, `save_menu` (and the C arms of the globals' declarations), with their ASSERT_VIEW_FIELD checks and their dead C prototypes | 0 | (unchanged) | 0 -> 0 | [views](#the-c-views-go-754) |
@@ -1354,7 +1354,7 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/level/camera.cpp`, `play_room.cpp`, `src/menus/level_select.cpp` | the camera follows a `Sprite *` (`Pos()`, `dir`, `mirror`; `Pos()` moved up from MovingSprite) | 0 | (unchanged) | 0 -> 0 | [views](#the-c-views-go-754) |
 | `src/level/terrain.cpp`, `terrain_probe.cpp`, `terrain_probe_axes.cpp` | ProbeTerrainX/Y take a `LevelLayers *`, and the terrain lookups cast `self` to one | 0 | (unchanged) | 0 -> 0 | [views](#the-c-views-go-754) |
 | include/crate_list.hpp | crates.h's codegen view `struct pool_init_node` (and `struct pool_link`) is `CrateGridNodeInit`, next to `ResetGrid`, its user | 0 | (unchanged) | 0 -> 0 | [views](#the-c-views-go-754) |
-| `src/system/key_input.cpp` (again) | `KeyInput` (new include/key_input.hpp, moved from spawners.hpp): `Update` (UpdateKeys), `GetDpadDirection`; system.h's two C prototypes go | 2 | old_agbcp | 0 -> 0 | [#759, #761](#the-key-input-and-the-camera-759-761) |
+| `src/engine/sys/key_input.cpp` (again) | `KeyInput` (new include/engine/sys/key_input.hpp, moved from spawners.hpp): `Update` (UpdateKeys), `GetDpadDirection`; system.h's two C prototypes go | 2 | old_agbcp | 0 -> 0 | [#759, #761](#the-key-input-and-the-camera-759-761) |
 | globals.h, 23 `.cpp` files | `gInput` is a `KeyInput *` to C++; `UpdateKeys(gInput)` is `gInput->Update()`, `GetDpadDirection(pad)` `pad->GetDpadDirection()`, the `void *pad = gInput` copies `KeyInput *`s, `delete (KeyInput *)gInput` `delete gInput` | 0 | (unchanged) | 0 -> 0 | [#759, #761](#the-key-input-and-the-camera-759-761) |
 | `src/level/camera.cpp` (again) | `Camera` (new include/camera.hpp; level.h's struct camera): `StepDirectional`, `StepFacing`, `Snap`, `Update` (the C names stay) | 4 | agbcp | 0 -> 0 | [#759, #761](#the-key-input-and-the-camera-759-761) |
 | globals.h, level.h, `play_room.cpp`, `room.cpp`, `action_ctrl_event.cpp`, `camera_lead.cpp` | `gCamera` is a `Camera *` to C++; PlayRoom's `operator new(0x18)` and `operator delete(gCamera)` are `new Camera` and `delete gCamera`; `SnapCamera(gCamera)` is `gCamera->Snap()`, `UpdateCamera(gCamera)` `gCamera->Update()`; level.h's four C prototypes go | 0 | (unchanged) | 0 -> 0 | [#759, #761](#the-key-input-and-the-camera-759-761) |
@@ -1362,10 +1362,10 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/objects/moving_sprite_probe.cpp`, `ground_sprite_collide.cpp`, `src/player/player_anim_room.cpp`, `player_collide.cpp` | callers: `gLevelLayers->Probe(...)` & co.; level.h's 8 probe prototypes went | 0 | (unchanged) | 0 -> 0 | [#760, #762](#the-terrain-probes-and-the-entity-flags-760-762) |
 | `src/level/entity_flags.cpp`, `room_entities.cpp`, `entity_bitmap.cpp` (again) | `LevelEntityFlags` moves to new include/entity_flags.hpp and is the whole class (level.h's struct entity_flags went); `SpawnRoomEntities` is its method; `Bitmap` (new, all UNUSED): constructor (InitBitmap), `Set`, `ClearBit`, `Clear` | 1 + 4 | (unchanged) | 0 -> 0 | [#760, #762](#the-terrain-probes-and-the-entity-flags-760-762) |
 | globals.h, level_state.hpp, entity.hpp, entity_bits.h, `src/crates/crate_create.cpp`, `crate_break.cpp`, `crate_fields.cpp`, `crate_switches.cpp`, `src/level/level_query.cpp`, `level_layers.cpp`, `game_frame.cpp`, `level_cutscene.cpp`, `bonus_round.cpp`, `level_state.cpp` | `gEntityFlags` is a `LevelEntityFlags *` (C++ only); `IsEntityIdActivated(gEntityFlags, ...)` & co. are `gEntityFlags->IsActivated(...)`, `delete (LevelEntityFlags *)gEntityFlags` is `delete gEntityFlags`; level.h's 10 prototypes went | 0 | (unchanged) | 0 -> 0 | [#760, #762](#the-terrain-probes-and-the-entity-flags-760-762) |
-| `src/save/save_data.cpp` (again) | `SaveData::Read` (ReadSaveData) and `Write` (WriteSaveData): methods, `Load`/`Store` call `Read(0x200)`/`Write(0x200)`; save.h's prototypes go | 2 | (unchanged) | 0 -> 0 | [#763](#small-method-moves-and-retypes-763) |
+| `src/engine/save/save_data.cpp` (again) | `SaveData::Read` (ReadSaveData) and `Write` (WriteSaveData): methods, `Load`/`Store` call `Read(0x200)`/`Write(0x200)`; save.h's prototypes go | 2 | (unchanged) | 0 -> 0 | [#763](#small-method-moves-and-retypes-763) |
 | `src/bosses/tiny.cpp` (again) | `TinyCtrl::HitStub` (TinyHitStub), the empty hook `SetState` calls; bosses.h's prototype goes | 1 | (unchanged) | 0 -> 0 | [#763](#small-method-moves-and-retypes-763) |
 | player.h, actor.h, vehicle.h, bosses.h, vehicle.hpp, `src/level/play_room.cpp`, the IsTouching* and spawn-list files | `gSwimCtrl` is a `SwimCtrl *`; `IsTouchingPlayer`, `PolarIsTouchingPlayer`, `JetpackIsTouchingPlayer`, `IsTouchingAirship` take an `ActorSelf *`; `IsSpawnCollected`, `MarkSpawnCollected`, `gCollectedSpawns`, `CreateActor`, `CreateJetpackActor` and the two life crates' `spawn` an `actor_spawn *` | 0 | (unchanged) | 0 -> 0 | [#763](#small-method-moves-and-retypes-763) |
-| actor_anim.h, `src/data/actor_category_175558.c`, `src/actor/actor_category.cpp`, `actor_category_frame.cpp`, `actor_category_hooks.cpp`, `actor_category_select.cpp` | `struct category_vtable`'s `fn[13]` is 11 typed function pointers and two `s32`s (`spawnDistance`, `skipDistance`); the 8 slot casts at the call sites and the table's 27 go; the four player hooks take no argument, CreateYeti an `s32`, SpawnJetpackActor and CreateJetpackActor return an `ActorSelf *`, SelectActorCategory takes an `anim_table_record *` | 0 | (unchanged) | 0 -> 0 (CanPauseActorCategory keeps one cast, to `bool (*)(void)`) | [#765](#the-category-table-765) |
+| actor_anim.h, `src/data/actor_category_175558.c`, `src/engine/actor/actor_category.cpp`, `actor_category_frame.cpp`, `actor_category_hooks.cpp`, `actor_category_select.cpp` | `struct category_vtable`'s `fn[13]` is 11 typed function pointers and two `s32`s (`spawnDistance`, `skipDistance`); the 8 slot casts at the call sites and the table's 27 go; the four player hooks take no argument, CreateYeti an `s32`, SpawnJetpackActor and CreateJetpackActor return an `ActorSelf *`, SelectActorCategory takes an `anim_table_record *` | 0 | (unchanged) | 0 -> 0 (CanPauseActorCategory keeps one cast, to `bool (*)(void)`) | [#765](#the-category-table-765) |
 | `src/save/game_progress.cpp` (again) | `GameProgress` (new include/game_progress.hpp; was level_state.h's struct game_progress): `GetLives` (GetProgressLives), `CountPlatinumRelics`, `CountGoldRelics`, `CountSapphireRelics`, `CountRelics`, `CountGems`, `CountClearGems`, `CountCrystals`, `GetCompletionPercent`, all `const`; menus.h's 9 prototypes go | 9 | (unchanged) | 0 -> 0 | [#766](#the-progress-block-as-a-class-766) |
 | level_state.hpp, save_data.hpp, menus.hpp, level_select.hpp, save_menu.hpp, `src/level/game_frame.cpp`, `src/menus/pause_menu_info.cpp`, `pause_menu_pages_init.cpp`, `src/save/save_menu_draw.cpp`, `save_menu_input.cpp`, `src/level/bonus_round.cpp`, `level_state.cpp` | the callers: `progress->CountGems()` & co.; LevelState's `progress`, `checkpointData` and `saveData`, the save slot's `progress` (`struct save_slot`, now save_data.hpp's), PauseMenu's and LevelSelect's pointers and `PackSaveData`/`UnpackSaveData`/`SummarizeProgress` are `GameProgress` | 0 | (unchanged) | 0 -> 0 | [#766](#the-progress-block-as-a-class-766) |
 | `src/bosses/hovercraft.cpp`, `hovercraft_state.cpp`, `src/data/actor_state_17c4c8.cpp` | `Hovercraft` (new include/hovercraft.hpp), an all-static class: its 31 IWRAM globals are static data members (`x` is gHovercraftX, `anim` gHovercraft, ...), its 30 functions static member functions (`Create`, `Spawn`, `Update`, `UpdateBg2`, `LoadGraphics`, `Destroy`, the getters `GetX`/`GetY`/`GetZ`/`GetState`/`GetLevel`/`GetAttack`/`GetPartsLeft`, `StartHitFlash`, `LosePart`, the six states, ...), gHovercraftStateFuncs is `Hovercraft::stateFuncs`; boss_actors.hpp's two inline helpers are its private inline members; bosses.h's 30 prototypes and 32 externs go (5 C-only prototypes stay for the category table) | 30 | (unchanged) | 0 -> 0 | [#772](#the-hovercraft-as-an-all-static-class-772) |
@@ -1376,40 +1376,40 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/data/menu_graphics_61badc.cpp` (definitions generated since) | the menu, title and logo graphics (0x0861BADC-0x086377C0) as static classes of the generated build/include/graphics.hpp: each of the 20 graphics is a class (`MenuSkyBg`, `TitleScreenBg`, `CreditsShinenLogo`, `VvLogoUrl`, ...) whose palette, tiles and map are static const data members (`TitleScreenBg::palette`, `::tiles`, `::map`), defined in ROM order by `gfx_manifest.py defs`; cxx_symbols.txt's generated block maps the 52 members to their C names | 0 | (unchanged) | 0 -> 0 | [#915](#the-graphics-as-static-classes-915) |
 | `src/data/bg_package_16b284.cpp`, `bg_package_16c484.cpp`, `bg_package_16c58c.cpp`, `bg_package_17c594.cpp`, `countdown_17d7a4.cpp`, `level_gfx_17cff4.cpp`, `popup_glyphs_17cf40.cpp`, `slot_seeds_17d6c0.cpp` | the records: the `struct bg_package` pictures and the credits and VV logo tables point at the members (`(void *)TitleScreenBg::palette`); their 52 `extern const u8` declarations go | 0 | (unchanged) | 0 -> 0 | [#915](#the-graphics-as-static-classes-915) |
 | `src/data/font_tiles_5a4e70.cpp`, `cutscene_pictures_5a9f70.cpp`, `level_select_graphics_6377c0.cpp` (definitions generated since) | the fonts, the cutscene pictures and the level-select graphics as static classes: `SmallFontSheet`, `LargeFontSheet` (`tiles`; `SmallFont` and `LargeFont` are the game's font classes), `CutscenePicture00`-`23` (`palette`, `bitmap`), `LevelSelectCursorZoom` (`tiles`), `LevelSelectPicture0`-`9` (`palette`, `tiles`); 70 members | 0 | (unchanged) | 0 -> 0 | [#915](#the-graphics-as-static-classes-915) |
-| `src/data/cutscene_slides_16e064.cpp`, `image_table_16c5a0.cpp`, `src/text/font_glyph.cpp`, `src/menus/level_select_cursor.cpp`, include/text.h, include/menus.hpp | the users: the slides point at `CutscenePictureNN::palette`, gLevelSelectPictures at the pictures' members, the fonts' constructors and LevelSelectCursor read `SmallFontSheet::tiles`, `LargeFontSheet::tiles` and `LevelSelectCursorZoom::tiles`; 24 + 20 declarations and text.h's and menus.hpp's 3 externs go | 0 | (unchanged) | 0 -> 0 | [#915](#the-graphics-as-static-classes-915) |
+| `src/data/cutscene_slides_16e064.cpp`, `image_table_16c5a0.cpp`, `src/engine/text/font_glyph.cpp`, `src/menus/level_select_cursor.cpp`, include/engine/text/text.h, include/menus.hpp | the users: the slides point at `CutscenePictureNN::palette`, gLevelSelectPictures at the pictures' members, the fonts' constructors and LevelSelectCursor read `SmallFontSheet::tiles`, `LargeFontSheet::tiles` and `LevelSelectCursorZoom::tiles`; 24 + 20 declarations and text.h's and menus.hpp's 3 externs go | 0 | (unchanged) | 0 -> 0 | [#915](#the-graphics-as-static-classes-915) |
 | `src/data/rle_sprites_0c2758.cpp`, `rle_sprites_15a050.cpp` (definitions generated since), `anim_family_178f80.cpp`, `anim_family_17aa6c.cpp`, `frame_table_17a880.cpp` | the vehicles' zero-run-compressed frame sets as static classes: `PolarPlayerFrameSet`, `YetiFrameSet`, `JetpackPlayerFrameSet`, each a `frames` member (gPolarPlayerRleFrames, ...); the frame pointer tables (gPolarPlayerFrames, `Yeti::frames`, gJetpackPlayerFrames) point into them | 0 | (unchanged) | 0 -> 0 | [#915](#the-graphics-as-static-classes-915) |
 | `src/data/level_rooms_24b638.cpp`, `level_rooms_2b91d0.cpp`, `level_assets_64f830.cpp`, `level_table_16c814.cpp` (their definitions generated by tools/levels.py) | the rooms as static classes of the generated build/include/rooms.hpp: `Room00` to `Room40`, each its BG `palette`, its layers' chunk grids (`bg0Grid`-`bg3Grid`, `collisionGrid`) and its level `asset`; 254 members, cxx_symbols.txt's room classes block (`levels.py symbols`) | 0 | (unchanged) | 0 -> 0 | [#915](#the-graphics-as-static-classes-915) |
-| `src/actor/cell_anim.cpp` | `CellAnim` (new include/cell_anim.hpp), an all-static class: its 13 IWRAM globals are static data members (`data` is gCellAnim, `cols` gCellAnimCols, ...), its 11 functions static member functions (`Init`, `ResetBg`, `UploadFrame`, `Advance`, `FlipPage`, the getters, `SetSpeed`, the UNUSED `FillTilemap`); actor.h's 11 prototypes and 13 externs go | 11 | (unchanged) | 0 -> 0 | [#915](#the-cell-animation-as-an-all-static-class-915) |
+| `src/engine/gfx/cell_anim.cpp` | `CellAnim` (new include/engine/gfx/cell_anim.hpp), an all-static class: its 13 IWRAM globals are static data members (`data` is gCellAnim, `cols` gCellAnimCols, ...), its 11 functions static member functions (`Init`, `ResetBg`, `UploadFrame`, `Advance`, `FlipPage`, the getters, `SetSpeed`, the UNUSED `FillTilemap`); actor.h's 11 prototypes and 13 externs go | 11 | (unchanged) | 0 -> 0 | [#915](#the-cell-animation-as-an-all-static-class-915) |
 | `src/actor/actor.cpp`, `actor_category_frame.cpp`, `actor_category_init.cpp`, `actor_category_select.cpp`, `bg_picture.cpp`, `src/bosses/hovercraft.cpp`, `src/vehicle/jetpack/airship.cpp`, `jetpack_player.cpp`, `jetpack_player_update.cpp`, `src/vehicle/polar/polar_player.cpp`, `polar_player_states.cpp`, `yeti.cpp`, `yeti_states.cpp`, `yeti_update.cpp` | the callers: `CellAnim::GetDistance()`, `CellAnim::SetSpeed(...)` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-cell-animation-as-an-all-static-class-915) |
-| `src/actor/actor_bg.cpp` | `ActorBg` (new include/actor_bg.hpp), an all-static class: its 13 IWRAM globals are static data members (`scrollX` is gActorBgScrollX, `layerDepth` gActorBgLayerDepth, ...), its 8 functions static member functions (`InitScroll`, `UpdateScroll`, `CommitScroll`, `Shake`, `Set`/`GetLayerDepth`, `GetCenterX`/`Y`); actor.h's 8 prototypes and 13 externs go | 8 | (unchanged) | 0 -> 0 | [#915](#the-actor-bg-scroll-as-an-all-static-class-915) |
+| `src/engine/actor/actor_bg.cpp` | `ActorBg` (new include/engine/actor/actor_bg.hpp), an all-static class: its 13 IWRAM globals are static data members (`scrollX` is gActorBgScrollX, `layerDepth` gActorBgLayerDepth, ...), its 8 functions static member functions (`InitScroll`, `UpdateScroll`, `CommitScroll`, `Shake`, `Set`/`GetLayerDepth`, `GetCenterX`/`Y`); actor.h's 8 prototypes and 13 externs go | 8 | (unchanged) | 0 -> 0 | [#915](#the-actor-bg-scroll-as-an-all-static-class-915) |
 | `src/actor/actor.cpp`, `actor_category_init.cpp`, `src/bosses/hovercraft.cpp`, `hovercraft_cannon.cpp`, `hovercraft_launcher.cpp`, `src/vehicle/jetpack/airship.cpp`, `jetpack_collected_wumpa.cpp`, `jetpack_player_update.cpp`, `src/vehicle/polar/polar_pickups.cpp`, `polar_player.cpp`, `yeti.cpp`, `yeti_states.cpp`, `yeti_update.cpp` | the callers: `ActorBg::GetCenterX()`, `ActorBg::SetLayerDepth(...)` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-actor-bg-scroll-as-an-all-static-class-915) |
-| `src/actor/actor_spawn_collected.cpp`, `src/iwram/iwram_data.cpp` | `CollectedSpawns` (new include/collected_spawns.hpp), an all-static class: gCollectedSpawns and gCollectedSpawnCount are static data members (`spawns`, `count`), its 3 functions static member functions (`Contains`, `Add`, `Clear`); actor.h's 3 prototypes and 2 externs go | 3 | (unchanged) | 0 -> 0 | [#915](#the-collected-spawns-as-an-all-static-class-915) |
-| `src/actor/actor_category_init.cpp`, `actor_factory.cpp`, `src/vehicle/jetpack/jetpack_crates.cpp`, `jetpack_spawn.cpp`, `src/vehicle/polar/polar_crate.cpp` | the callers: `CollectedSpawns::Contains(spawn)` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-collected-spawns-as-an-all-static-class-915) |
-| `src/level/level_state.cpp`, `level_cutscene.cpp`, `src/iwram/iwram_data.cpp` | the level state singleton: GetLevelState is the static member function `LevelState::Get`, gLevelStateSingleton the private static data member `instance` (include/level_state.hpp); level.h's prototype and extern go | 1 | (unchanged) | 0 -> 0 | [#915](#the-level-state-singleton-as-static-members-of-levelstate-915) |
+| `src/engine/actor/actor_spawn_collected.cpp`, `src/engine/sys/iwram_data.cpp` | `CollectedSpawns` (new include/engine/actor/collected_spawns.hpp), an all-static class: gCollectedSpawns and gCollectedSpawnCount are static data members (`spawns`, `count`), its 3 functions static member functions (`Contains`, `Add`, `Clear`); actor.h's 3 prototypes and 2 externs go | 3 | (unchanged) | 0 -> 0 | [#915](#the-collected-spawns-as-an-all-static-class-915) |
+| `src/engine/actor/actor_category_init.cpp`, `actor_factory.cpp`, `src/vehicle/jetpack/jetpack_crates.cpp`, `jetpack_spawn.cpp`, `src/vehicle/polar/polar_crate.cpp` | the callers: `CollectedSpawns::Contains(spawn)` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-collected-spawns-as-an-all-static-class-915) |
+| `src/level/level_state.cpp`, `level_cutscene.cpp`, `src/engine/sys/iwram_data.cpp` | the level state singleton: GetLevelState is the static member function `LevelState::Get`, gLevelStateSingleton the private static data member `instance` (include/level_state.hpp); level.h's prototype and extern go | 1 | (unchanged) | 0 -> 0 | [#915](#the-level-state-singleton-as-static-members-of-levelstate-915) |
 | `src/system/main_loop.cpp` | the caller: `gLevelState = LevelState::Get();` | 0 | (unchanged) | 0 -> 0 | [#915](#the-level-state-singleton-as-static-members-of-levelstate-915) |
-| `src/level/room.cpp`, `src/iwram/iwram_data.cpp` | `RoomExit` (new include/room_exit.hpp), an all-static class: gRoomExitRequested is the static data member `requested`, its 3 functions static member functions (`Clear`, `Request`, `IsRequested`); level.h's 3 prototypes and extern go | 3 | (unchanged) | 0 -> 0 | [#915](#the-room-exit-flag-as-static-members-of-levelprogress-915) |
+| `src/level/room.cpp`, `src/engine/sys/iwram_data.cpp` | `RoomExit` (new include/room_exit.hpp), an all-static class: gRoomExitRequested is the static data member `requested`, its 3 functions static member functions (`Clear`, `Request`, `IsRequested`); level.h's 3 prototypes and extern go | 3 | (unchanged) | 0 -> 0 | [#915](#the-room-exit-flag-as-static-members-of-levelprogress-915) |
 | `src/bosses/cortex.cpp`, `dingodile.cpp`, `tiny.cpp`, `src/level/play_room.cpp`, `src/player/action_ctrl_moves.cpp`, `input_ctrl.cpp`, `player_update.cpp` | the callers: `RoomExit::Request()`, `RoomExit::IsRequested()`, `RoomExit::Clear()` | 0 | (unchanged) | 0 -> 0 | [#915](#the-room-exit-flag-as-static-members-of-levelprogress-915) |
-| `src/level/room.cpp`, `src/iwram/iwram_data.cpp`, level_state.hpp | the room exit flag moves into LevelProgress as static members: `RoomExit::requested` is `LevelProgress::roomExitRequested`, `Clear`/`Request`/`IsRequested` are `ClearRoomExit`/`RequestRoomExit`/`IsRoomExitRequested`; include/room_exit.hpp goes | 3 | (unchanged) | 0 -> 0 | [#915](#the-room-exit-flag-as-static-members-of-levelprogress-915) |
+| `src/level/room.cpp`, `src/engine/sys/iwram_data.cpp`, level_state.hpp | the room exit flag moves into LevelProgress as static members: `RoomExit::requested` is `LevelProgress::roomExitRequested`, `Clear`/`Request`/`IsRequested` are `ClearRoomExit`/`RequestRoomExit`/`IsRoomExitRequested`; include/room_exit.hpp goes | 3 | (unchanged) | 0 -> 0 | [#915](#the-room-exit-flag-as-static-members-of-levelprogress-915) |
 | `src/bosses/cortex.cpp`, `dingodile.cpp`, `tiny.cpp`, `src/level/play_room.cpp`, `src/player/action_ctrl_moves.cpp`, `input_ctrl.cpp`, `player_update.cpp` | the callers: `LevelProgress::RequestRoomExit()`; PlayRoom and RunRoom call `ClearRoomExit()` and `IsRoomExitRequested()` as members | 0 | (unchanged) | 0 -> 0 | [#915](#the-room-exit-flag-as-static-members-of-levelprogress-915) |
 | `src/crates/crate_switches.cpp`, `crate_time_trial.cpp` | the passes over every crate of the crate list are static members of `Crate` (include/crate.hpp): `UpdateAll` (UpdateCrates), `DetonateNitros` (DetonateNitroCrates), `BreakInArea` (BreakCratesInArea), `ConvertForTimeTrial` (ConvertCratesForTimeTrial); crates.h's 4 prototypes go | 4 | (unchanged) | 0 -> 0 | [#915](#the-crate-passes-as-static-members-of-crate-915) |
 | `src/level/play_room.cpp`, `level_state.cpp`, `src/player/action_ctrl_moves.cpp` | the callers: `Crate::UpdateAll()`, `Crate::ConvertForTimeTrial()`, `Crate::BreakInArea(...)`; ActivateNitroSwitch calls `DetonateNitros()` as a member | 0 | (unchanged) | 0 -> 0 | [#915](#the-crate-passes-as-static-members-of-crate-915) |
 | `src/vehicle/jetpack/airship.cpp`, `airship_states.cpp`, `airship_graphics.cpp`, `airship_map.cpp`, `airship_touch.cpp`, `src/data/actor_state_17c3fc.cpp` (was .c) | `Airship` (new include/airship.hpp), an all-static class: its 25 IWRAM globals are static data members (`x` is gAirshipX, `anim` gAirship, ...), its 21 functions static member functions (`Create`, `Spawn`, `Update`, `UpdateBg2`, `LoadGraphics`, `Destroy`, `Damage`, `IsTouching`, `GetHpPercent`, `Steer`, `DrawMap`, `ConvertTiles`, the six states, ...), gAirshipStateFuncs is `Airship::stateFuncs` and the six tables only it reads (gAirshipAttacks, gAirshipBox, ...) are static data members too; boss_actors.hpp's inline SetAirshipState is the private inline member `SetState`; bosses.h's 20 prototypes are down to 5 C-only ones (the category table's), its 32 externs and vehicle.h's nullsub_30 go | 21 | (unchanged) | 0 -> 0 | [#772](#the-airship-as-an-all-static-class-772) |
 | `src/vehicle/jetpack/jetpack_shot.cpp`, `jetpack_spawn.cpp`, `src/hud/hud_counters.cpp` | the callers: `Airship::IsTouching(this)`, `Airship::Damage(2)`, `Airship::Spawn(...)`, `Airship::GetHpPercent()` | 0 | (unchanged) | 0 -> 0 | [#772](#the-airship-as-an-all-static-class-772) |
-| `src/gfx/sprite_frame.cpp` | `ObjTileAllocator` (new include/obj_tile_allocator.hpp), an all-static class: its 5 IWRAM globals are static data members (`pool` is gVramTileBlockPool, `list`, `rover`, `spares`, `index`), its 6 functions static member functions (`Init`, `Alloc`, `Free`, `Destroy`, the UNUSED `Walk` and `GetFreeBytes`); gfx.h's 6 prototypes and 5 externs go | 6 | (unchanged) | 0 -> 0 | [#915](#the-obj-tile-allocator-as-an-all-static-class-915) |
-| `src/actor/actor_vram_pool.cpp`, `actor_category_init.cpp`, `src/frontend/company_logos.cpp`, `company_logos_ctor.cpp`, `src/vehicle/jetpack/jetpack_player.cpp`, `jetpack_player_update.cpp`, `src/vehicle/polar/polar_player.cpp`, `polar_player_states.cpp` | the callers: `ObjTileAllocator::Alloc(...)` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-obj-tile-allocator-as-an-all-static-class-915) |
-| `src/actor/actor_category_stats.cpp`, `src/iwram/iwram_data.cpp` | `ActorCategoryStats` (new include/actor_category_stats.hpp), an all-static class: its 4 IWRAM globals and gActorCheckpoint are static data members (`deaths` is gActorCategoryDeaths, `bossDeaths`, `missedNitros`, `checkpointMissedNitros`, `checkpoint`), 5 of the object's 6 functions static member functions (`AddMissedNitro`, `GetMissedNitros`, `GetCheckpoint`, `SetCheckpoint`, `IsMaskAssistDue`); actor.h's 5 prototypes and 5 externs go | 5 | (unchanged) | 0 -> 0 | [#915](#the-actor-category-statistics-as-an-all-static-class-915) |
-| `src/actor/actor_category_init.cpp`, `src/level/game_frame.cpp`, `src/vehicle/jetpack/airship.cpp`, `jetpack_player.cpp`, `jetpack_player_update.cpp`, `src/vehicle/polar/polar_course_objects.cpp`, `polar_crate.cpp`, `polar_player.cpp` | the callers: `ActorCategoryStats::SetCheckpoint(z)` & co.; InitActorCategory, a friend, resets the members | 0 | (unchanged) | 0 -> 0 | [#915](#the-actor-category-statistics-as-an-all-static-class-915) |
-| `src/actor/actor_spawn.cpp` | `ActorSpawns` (new include/actor_spawns.hpp), an all-static class: its 5 IWRAM globals are static data members (`table` is gActorSpawnTable, `index`, `useBonus`, `paused`, `offset`), 8 of the object's 9 functions static member functions (`GetOffset`, `Resume`, `Pause`, `GetNextTarget`, `GetZ`, `GetY`, `GetX`, `GetKindIndex`); actor.h's 8 prototypes and 5 externs go | 8 | (unchanged) | 0 -> 0 | [#915](#the-actor-spawn-table-as-an-all-static-class-915) |
-| `src/actor/actor_category_select.cpp`, `actor_category_frame.cpp`, `actor_category_stats.cpp`, `src/bosses/hovercraft.cpp`, `src/vehicle/jetpack/airship_states.cpp`, `jetpack_plane.cpp`, `src/vehicle/polar/polar_objects.cpp` | the callers: `ActorSpawns::GetX(target)`, `ActorSpawns::Pause()` & co.; SelectActorCategory and RunActorCategoryFrame, friends, drive the table | 0 | (unchanged) | 0 -> 0 | [#915](#the-actor-spawn-table-as-an-all-static-class-915) |
-| `src/actor/actor_vram_pool.cpp`, `actor_category_init.cpp`, `actor_category_stats.cpp`, `actor_category_select.cpp`, `actor_category_frame.cpp`, `actor_spawn.cpp`, `actor_category.cpp`, `actor_category_hooks.cpp`, `src/data/actor_category_175558.cpp` | `ActorCategory` (new include/actor_category.hpp), an all-static class: its 6 IWRAM globals are static data members (`current` is gActorCategory, `drawList`, `drawCount`, `exitStatus`, `vtable`, `frameCount`), gActorCategories and gActorCategoryVtables are `descriptors` and `vtables`, its 12 functions static member functions (`SetupVramPool`, `Init`, `CountCrates`, `Select`, `RunFrame`, `GetFrameCount`, `CanPause`, `ReloadGraphics`, `DestroyActors`, `UpdateBg2`, `SetExitStatus`, `IsTouchingPlayer`), Init's inline pause menu the private inline member `OpenPauseMenu`; actor.h's 12 prototypes and 6 externs and actor_anim.h's 2 table externs go; ActorCategoryStats and ActorSpawns befriend `ActorCategory` instead of the free functions | 12 | (unchanged) | 0 -> 0 | [#915](#the-actor-category-driver-as-an-all-static-class-915) |
+| `src/engine/gfx/sprite_frame.cpp` | `ObjTileAllocator` (new include/engine/gfx/obj_tile_allocator.hpp), an all-static class: its 5 IWRAM globals are static data members (`pool` is gVramTileBlockPool, `list`, `rover`, `spares`, `index`), its 6 functions static member functions (`Init`, `Alloc`, `Free`, `Destroy`, the UNUSED `Walk` and `GetFreeBytes`); gfx.h's 6 prototypes and 5 externs go | 6 | (unchanged) | 0 -> 0 | [#915](#the-obj-tile-allocator-as-an-all-static-class-915) |
+| `src/engine/actor/actor_vram_pool.cpp`, `actor_category_init.cpp`, `src/frontend/company_logos.cpp`, `company_logos_ctor.cpp`, `src/vehicle/jetpack/jetpack_player.cpp`, `jetpack_player_update.cpp`, `src/vehicle/polar/polar_player.cpp`, `polar_player_states.cpp` | the callers: `ObjTileAllocator::Alloc(...)` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-obj-tile-allocator-as-an-all-static-class-915) |
+| `src/engine/actor/actor_category_stats.cpp`, `src/engine/sys/iwram_data.cpp` | `ActorCategoryStats` (new include/engine/actor/actor_category_stats.hpp), an all-static class: its 4 IWRAM globals and gActorCheckpoint are static data members (`deaths` is gActorCategoryDeaths, `bossDeaths`, `missedNitros`, `checkpointMissedNitros`, `checkpoint`), 5 of the object's 6 functions static member functions (`AddMissedNitro`, `GetMissedNitros`, `GetCheckpoint`, `SetCheckpoint`, `IsMaskAssistDue`); actor.h's 5 prototypes and 5 externs go | 5 | (unchanged) | 0 -> 0 | [#915](#the-actor-category-statistics-as-an-all-static-class-915) |
+| `src/engine/actor/actor_category_init.cpp`, `src/level/game_frame.cpp`, `src/vehicle/jetpack/airship.cpp`, `jetpack_player.cpp`, `jetpack_player_update.cpp`, `src/vehicle/polar/polar_course_objects.cpp`, `polar_crate.cpp`, `polar_player.cpp` | the callers: `ActorCategoryStats::SetCheckpoint(z)` & co.; InitActorCategory, a friend, resets the members | 0 | (unchanged) | 0 -> 0 | [#915](#the-actor-category-statistics-as-an-all-static-class-915) |
+| `src/engine/actor/actor_spawn.cpp` | `ActorSpawns` (new include/engine/actor/actor_spawns.hpp), an all-static class: its 5 IWRAM globals are static data members (`table` is gActorSpawnTable, `index`, `useBonus`, `paused`, `offset`), 8 of the object's 9 functions static member functions (`GetOffset`, `Resume`, `Pause`, `GetNextTarget`, `GetZ`, `GetY`, `GetX`, `GetKindIndex`); actor.h's 8 prototypes and 5 externs go | 8 | (unchanged) | 0 -> 0 | [#915](#the-actor-spawn-table-as-an-all-static-class-915) |
+| `src/engine/actor/actor_category_select.cpp`, `actor_category_frame.cpp`, `actor_category_stats.cpp`, `src/bosses/hovercraft.cpp`, `src/vehicle/jetpack/airship_states.cpp`, `jetpack_plane.cpp`, `src/vehicle/polar/polar_objects.cpp` | the callers: `ActorSpawns::GetX(target)`, `ActorSpawns::Pause()` & co.; SelectActorCategory and RunActorCategoryFrame, friends, drive the table | 0 | (unchanged) | 0 -> 0 | [#915](#the-actor-spawn-table-as-an-all-static-class-915) |
+| `src/engine/actor/actor_vram_pool.cpp`, `actor_category_init.cpp`, `actor_category_stats.cpp`, `actor_category_select.cpp`, `actor_category_frame.cpp`, `actor_spawn.cpp`, `actor_category.cpp`, `actor_category_hooks.cpp`, `src/data/actor_category_175558.cpp` | `ActorCategory` (new include/engine/actor/actor_category.hpp), an all-static class: its 6 IWRAM globals are static data members (`current` is gActorCategory, `drawList`, `drawCount`, `exitStatus`, `vtable`, `frameCount`), gActorCategories and gActorCategoryVtables are `descriptors` and `vtables`, its 12 functions static member functions (`SetupVramPool`, `Init`, `CountCrates`, `Select`, `RunFrame`, `GetFrameCount`, `CanPause`, `ReloadGraphics`, `DestroyActors`, `UpdateBg2`, `SetExitStatus`, `IsTouchingPlayer`), Init's inline pause menu the private inline member `OpenPauseMenu`; actor.h's 12 prototypes and 6 externs and actor_anim.h's 2 table externs go; ActorCategoryStats and ActorSpawns befriend `ActorCategory` instead of the free functions | 12 | (unchanged) | 0 -> 0 | [#915](#the-actor-category-driver-as-an-all-static-class-915) |
 | `src/level/game_frame.cpp`, `level_query.cpp`, `src/bosses/hovercraft_fireball.cpp`, `src/vehicle/jetpack/airship_fireball.cpp`, `jetpack_bomber.cpp`, `jetpack_cannonball.cpp`, `jetpack_crates.cpp`, `jetpack_plane.cpp`, `jetpack_player.cpp`, `jetpack_player_update.cpp`, `jetpack_rocket.cpp`, `src/vehicle/polar/polar_course_objects.cpp`, `polar_crate.cpp`, `polar_crates.cpp`, `polar_objects.cpp`, `polar_pickups.cpp`, `polar_player_states.cpp` | the callers: `ActorCategory::Init(...)`, `ActorCategory::IsTouchingPlayer(this)`, `ActorCategory::SetExitStatus(...)` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-actor-category-driver-as-an-all-static-class-915) |
-| `src/actor/actor_palette_cycle.cpp`, `src/data/palette_cycle_175760.cpp` | `ActorPaletteCycle` (new include/actor_palette_cycle.hpp), an all-static class: its 6 IWRAM globals and the 3 ROM tables only it reads are static data members (`frame` is gActorPaletteCycleFrame, `frames` gActorPaletteCycleFrames, ...), its 5 functions static member functions (`Restore`, `Save`, `Update`, `Set`, `Enable`); actor.h's 5 prototypes and 9 externs go | 5 | (unchanged) | 0 -> 0 | [#915](#the-actor-palette-cycle-as-an-all-static-class-915) |
-| `src/actor/actor_category_init.cpp`, `actor_category_stats.cpp`, `actor_factory.cpp`, `cell_anim.cpp` | the callers: `ActorPaletteCycle::Update()` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-actor-palette-cycle-as-an-all-static-class-915) |
-| `src/gfx/sprite_frame.cpp`, `src/iwram/sprite_arm.cpp` | `SpriteOamQueue` and `SpriteFrameCache` (new include/sprite_oam_queue.hpp, sprite_frame_cache.hpp), all-static classes: their 4 + 4 IWRAM globals are static data members (`entries` is gSpriteOamQueue, `current` gSpriteFrameCacheCurrent, ...), their 4 + 5 functions static member functions (`Init`, `Add`, `Flush`, `Destroy`; `Init`, `LoadTiles`, `Age`, `Destroy` and the ARM `Lookup`); gfx.h's 8 prototypes and 8 externs and iwram.h's Lookup prototype go | 9 | (unchanged) | 0 -> 0 | [#915](#the-oam-queue-and-the-sprite-frame-cache-as-all-static-classes-915) |
-| `src/actor/actor_category_init.cpp`, `actor_vram_pool.cpp`, `src/frontend/company_logos.cpp`, `src/iwram/iwram_data.cpp`, `src/vehicle/jetpack/jetpack_player_update.cpp`, `src/vehicle/polar/polar_player.cpp` | the callers: `SpriteOamQueue::Flush()`, `SpriteFrameCache::Age()` & co.; gLookupSpriteFrameCacheFunc is `SpriteFrameCache::Lookup` | 0 | (unchanged) | 0 -> 0 | [#915](#the-oam-queue-and-the-sprite-frame-cache-as-all-static-classes-915) |
-| `src/gfx/sprite_frame.cpp` | `CategorySpriteSheet` (new include/category_sprite_sheet.hpp), an all-static class: gCategorySpriteSheet is the public static data member `data`, its 2 functions static member functions (`Free`, `Decompress`); gfx.h's 2 prototypes and actor.h's extern go | 2 | (unchanged) | 0 -> 0 | [#915](#the-category-sprite-sheet-as-an-all-static-class-915) |
-| `src/actor/actor_category_init.cpp`, `anim_part.cpp`, `src/frontend/company_logos.cpp` | the callers: `CategorySpriteSheet::Decompress(...)`, `CategorySpriteSheet::Free()`; AnimPart::GetAnimFrameData reads `CategorySpriteSheet::data` | 0 | (unchanged) | 0 -> 0 | [#915](#the-category-sprite-sheet-as-an-all-static-class-915) |
-| `src/menus/level_select.cpp`, `level_select_pages.cpp`, `src/iwram/iwram_data.cpp` | the level select singleton as static members of `LevelSelect` (include/level_select.hpp): RunLevelSelect and SetNewWorldOpened are `Run` and `SetNewWorldOpened`, gLevelSelect and gNewWorldOpened the private static data members `instance` and `newWorldOpened`; menus.hpp's 2 `extern "C"` prototypes and 2 externs go | 2 | (unchanged) | 0 -> 0 | [#915](#the-level-select-singleton-as-static-members-of-levelselect-915) |
+| `src/engine/actor/actor_palette_cycle.cpp`, `src/data/palette_cycle_175760.cpp` | `ActorPaletteCycle` (new include/engine/actor/actor_palette_cycle.hpp), an all-static class: its 6 IWRAM globals and the 3 ROM tables only it reads are static data members (`frame` is gActorPaletteCycleFrame, `frames` gActorPaletteCycleFrames, ...), its 5 functions static member functions (`Restore`, `Save`, `Update`, `Set`, `Enable`); actor.h's 5 prototypes and 9 externs go | 5 | (unchanged) | 0 -> 0 | [#915](#the-actor-palette-cycle-as-an-all-static-class-915) |
+| `src/engine/actor/actor_category_init.cpp`, `actor_category_stats.cpp`, `actor_factory.cpp`, `cell_anim.cpp` | the callers: `ActorPaletteCycle::Update()` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-actor-palette-cycle-as-an-all-static-class-915) |
+| `src/engine/gfx/sprite_frame.cpp`, `src/engine/gfx/sprite_arm.cpp` | `SpriteOamQueue` and `SpriteFrameCache` (new include/engine/gfx/sprite_oam_queue.hpp, sprite_frame_cache.hpp), all-static classes: their 4 + 4 IWRAM globals are static data members (`entries` is gSpriteOamQueue, `current` gSpriteFrameCacheCurrent, ...), their 4 + 5 functions static member functions (`Init`, `Add`, `Flush`, `Destroy`; `Init`, `LoadTiles`, `Age`, `Destroy` and the ARM `Lookup`); gfx.h's 8 prototypes and 8 externs and iwram.h's Lookup prototype go | 9 | (unchanged) | 0 -> 0 | [#915](#the-oam-queue-and-the-sprite-frame-cache-as-all-static-classes-915) |
+| `src/engine/actor/actor_category_init.cpp`, `actor_vram_pool.cpp`, `src/frontend/company_logos.cpp`, `src/engine/sys/iwram_data.cpp`, `src/vehicle/jetpack/jetpack_player_update.cpp`, `src/vehicle/polar/polar_player.cpp` | the callers: `SpriteOamQueue::Flush()`, `SpriteFrameCache::Age()` & co.; gLookupSpriteFrameCacheFunc is `SpriteFrameCache::Lookup` | 0 | (unchanged) | 0 -> 0 | [#915](#the-oam-queue-and-the-sprite-frame-cache-as-all-static-classes-915) |
+| `src/engine/gfx/sprite_frame.cpp` | `CategorySpriteSheet` (new include/engine/gfx/category_sprite_sheet.hpp), an all-static class: gCategorySpriteSheet is the public static data member `data`, its 2 functions static member functions (`Free`, `Decompress`); gfx.h's 2 prototypes and actor.h's extern go | 2 | (unchanged) | 0 -> 0 | [#915](#the-category-sprite-sheet-as-an-all-static-class-915) |
+| `src/engine/actor/actor_category_init.cpp`, `anim_part.cpp`, `src/frontend/company_logos.cpp` | the callers: `CategorySpriteSheet::Decompress(...)`, `CategorySpriteSheet::Free()`; AnimPart::GetAnimFrameData reads `CategorySpriteSheet::data` | 0 | (unchanged) | 0 -> 0 | [#915](#the-category-sprite-sheet-as-an-all-static-class-915) |
+| `src/menus/level_select.cpp`, `level_select_pages.cpp`, `src/engine/sys/iwram_data.cpp` | the level select singleton as static members of `LevelSelect` (include/level_select.hpp): RunLevelSelect and SetNewWorldOpened are `Run` and `SetNewWorldOpened`, gLevelSelect and gNewWorldOpened the private static data members `instance` and `newWorldOpened`; menus.hpp's 2 `extern "C"` prototypes and 2 externs go | 2 | (unchanged) | 0 -> 0 | [#915](#the-level-select-singleton-as-static-members-of-levelselect-915) |
 | `src/level/game_frame.cpp` | the caller: `LevelSelect::Run(&room.level)`, `LevelSelect::SetNewWorldOpened()` | 0 | (unchanged) | 0 -> 0 | [#915](#the-level-select-singleton-as-static-members-of-levelselect-915) |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
@@ -1723,7 +1723,7 @@ What made the C++ match:
   later in the class isn't compiled yet when an earlier one's body is, so
   it can't be inlined there.
 - **Struct arguments.** A struct passed by value is copied by g++ with
-  `memcpy`, which in this ROM is `MemCopy32` (src/system/bios_util.cpp; GAX has
+  `memcpy`, which in this ROM is `MemCopy32` (src/engine/sys/bios_util.cpp; GAX has
   `.set memcpy, MemCopy32`), so cxx_symbols.txt maps `memcpy` to it. That
   is `CollidePartList`'s "copy the box into a shared temporary" before each
   call: `CollideWithPlayer(box, part)`, with no `MemCopy32` in the source.
@@ -1789,7 +1789,7 @@ What made the C++ match:
   including the first octant's own copy of the return, which the plain
   four-case C got merged into the others' by the cross-jump: the C's
   `goto`, 10 pins and 5 `asm` statements go. The two are in
-  include/crate_line_step.hpp, a header fragment: crate.hpp includes it
+  include/engine/util/line_steppers.hpp, a header fragment: crate.hpp includes it
   with `CRATE_LINE_STEP` `inline`, crate.cpp at its end with it empty.
 - **A `bool` stack argument is stored with `strb`.** `OpenLifeCrate`
   passes `DropExtraLife`'s sixth argument (on the stack) as a byte; a `u8`
@@ -2459,7 +2459,7 @@ agbcc to old_agbcc's constant-before-`ldrb` order) and move to
 - **`InitLevelState`** (spawn_pickups.cpp; spawn_markers.cpp since #770) builds the C++ classes with
   `new`: `SpriteRenderer`, `SpriteBankSet`, `PaletteCache`, `OamBuffer`,
   `ObjVramCursor(0)`, `PaletteCycles`, and the key input, `KeyInput`
-  (spawners.hpp), whose constructor is ClearKeys (src/system/irq.c, now key_input.cpp, still
+  (spawners.hpp), whose constructor is ClearKeys (src/engine/sys/irq.c, now key_input.cpp, still
   C, `void *ClearKeys(void *self)`, which returns `this` in r0). The C's six `bl`
   asm statements with the pointer pinned to r0 go: a constructor returns
   `this`. The globals keep their C types (the C files use them), so the
@@ -2623,7 +2623,7 @@ three objects were old_agbcc C already and match under old_agbcp.
 - **`InputCtrl`** holds a `CameraLead *`: `new CameraLead`,
   `CollidableList()->Add(cameraLead)`, `cameraLead->Reset()`, and
   `MarkGone()` for its two `ENTITY_MARK_GONE`s.
-- **The fonts were still C** (C++ since step 10b; src/text/, `struct bitmap_font`): their
+- **The fonts were still C** (C++ since step 10b; src/engine/text/, `struct bitmap_font`): their
   virtual calls stayed spelled out through the record's slots.
 
 What made the C++ match:
@@ -2715,7 +2715,7 @@ the new include/actor_self.hpp. Project-wide: `MATCH_HOLD_REG` 1252 ->
   declaration, as `gPlayer`'s). frontend.h keeps the C prototypes (the C
   names), for the vtable data and the C callers (main_loop.c,
   level_state.c, title_screen.c).
-- **The fonts were still C** (C++ since step 10b; src/text/): `DrawLanguageSelect`'s virtual
+- **The fonts were still C** (C++ since step 10b; src/engine/text/): `DrawLanguageSelect`'s virtual
   calls stayed spelled out through the record's slots.
 
 What made the C++ match:
@@ -2773,7 +2773,7 @@ Project-wide: `MATCH_HOLD_REG` 1249 -> 1230, instruction-emitting `asm`
   callers (game_frame.c, continue_prompt.c, title_screen*.c). Part 10d
   converted the continue prompt's C files, and `struct continue_prompt`
   went.
-- **The fonts were still C** (C++ since step 10b; src/text/): the font calls stayed spelled out
+- **The fonts were still C** (C++ since step 10b; src/engine/text/): the font calls stayed spelled out
   through the record's slots.
 
 What made the C++ match:
@@ -2847,7 +2847,7 @@ workaround.
   file, vtable or C++ file uses (the level select's, the camera lead's,
   the continue prompt's, and the new classes'). 54 are left: the vtables'
   slots, the C callers' and the free functions.
-- **The fonts were still C** (C++ since step 10b; src/text/): the font calls stayed spelled out.
+- **The fonts were still C** (C++ since step 10b; src/engine/text/): the font calls stayed spelled out.
 
 What made the C++ match:
 
@@ -2932,7 +2932,7 @@ Makefile's `NO_STRENGTH_REDUCE_OBJS` with it.
   starfield's seven, the title screen's but the three game_frame.c calls,
   `CompanyLogos`'s but `RunCompanyLogos` (level_state.c), and
   `InitLogoActor`, `DrawVvLogoPieces` and `LoadUniversalLogoBg`.
-- **The fonts were still C** (C++ since step 10b; src/text/): the font calls stayed spelled out
+- **The fonts were still C** (C++ since step 10b; src/engine/text/): the font calls stayed spelled out
   (`ICON_TEXT_CALL`, `SetFontTileBase`).
 
 What made the C++ match:
@@ -3582,7 +3582,7 @@ both).
 
 - **The crate kinds' constructors are inline and out of line** from one
   source: include/polar_crate_ctors.hpp, a header fragment with no include
-  guard (part 7e's crate_line_step.hpp). vehicle.hpp includes it with
+  guard (part 7e's line_steppers.hpp). vehicle.hpp includes it with
   `POLAR_CRATE_CTOR` `inline` (CreateActor expands them, part 11b), and
   polar_crates.cpp, which defines `POLAR_CRATE_CONSTRUCTORS_OUT_OF_LINE`,
   includes it at its end with the macro empty, for the ROM's
@@ -3768,7 +3768,7 @@ data.
 | `src/bosses/dingodile.cpp` | 4 | `DingodileSharkCtrl`, `DingodileProjectileCtrl`, `DingodileShieldCtrl`, `DingodileCtrl` |
 | `src/vehicle/jetpack/jetpack_crates.cpp` | 4 | `JetpackBalloonCrate` and its three kinds |
 | `src/menus/level_select.cpp` (since #767 one each in `src/objects/camera_lead.cpp` and `launch_pad.cpp`) | 2 | `CameraLead`, `LaunchPad` |
-| `src/cutscene/cutscene_player.cpp`, `src/system/inline_copies_misc.cpp` (step 10b) | 2 each | `BgStreamer`, `BgLayerBase`; `LargeFont`, `SmallFont` |
+| `src/cutscene/cutscene_player.cpp`, `src/engine/util/aabb_setters.cpp` (step 10b) | 2 each | `BgStreamer`, `BgLayerBase`; `LargeFont`, `SmallFont` |
 | 34 others (4 of them since step 10b; enemy_ctrl.cpp's and wumpa.cpp's second tables are their own objects' since #768) | 1 each | `Entity` (graphics), `Sprite`, `UiSprite`, `MovingSprite`, `GroundSprite`, `Player`, `EnemyCtrl`, `PeriodicSpawner`, `KnockedEnemyCtrl`, `EffectCtrl`, `Crate`, `ExtraLife`, `Wumpa`, `Stopwatch`, `ActionCtrl`, `SwimCtrl`, `InputCtrl`, `BossCtrl`, `MegaMixCtrl`, `Platform`, `PlatformMover`, `LevelSelectEntry`, `HudPart`, `ActorSelf` (gActorVtable), `PolarPlayer`, `PolarCollectedWumpa` (vehicle/polar/polar_pickups.cpp), `PolarCrate` (vehicle/polar/polar_crate.cpp), `JetpackPlayer`, `JetpackCollectedWumpa` (vehicle/jetpack/jetpack_collected_wumpa.cpp), `LogoActor`; `Ctrl` (system/bios_util.cpp), `BgLayer` (level/bg_layer.cpp), `PooledBgLayer` (level/tile_slot_pool.cpp), `Font` (text/font.cpp) |
 
 **Still C after step 10** (src/data/entity_vtables_7e3bec.c), 8 tables
@@ -3821,7 +3821,7 @@ through). The report stays 2059/2059 functions and 100% data.
   bg_scroll_layer stays the C view of a layer (the C++ files that read
   `gLevelLayers->layer0` keep it too); `struct bg_streamer`,
   `struct pooled_layer` and the method-table structs went.
-- **The fonts** (include/font.hpp): `Font` (gFontVtable) and its
+- **The fonts** (include/engine/text/font.hpp): `Font` (gFontVtable) and its
   `SmallFont` and `LargeFont` (their own vtables: they override only the
   destructor). bitmap_font.h's struct bitmap_font stays the C view, for
   the C files (the text box only, since [the final
@@ -3867,7 +3867,7 @@ order), and it says which functions were inline and where a file ended:
 
 | Object | Classes | Compiler | Workarounds: C -> C++ |
 |---|---|---|---|
-| `src/system/bios_util.cpp` | `Ctrl::Update` (ctrl.hpp), with `DivMod` and `MemCopy32` (C linkage) | agbcp | 3 pins, 1 asm (DivMod's SVC) -> the same |
+| `src/engine/sys/bios_util.cpp` | `Ctrl::Update` (ctrl.hpp), with `DivMod` and `MemCopy32` (C linkage) | agbcp | 3 pins, 1 asm (DivMod's SVC) -> the same |
 | `src/cutscene/cutscene_player.cpp` | `BgStreamer`, `BgLayerBase`'s constructor, destructor, `ClampScrollStep`, `ClampScrollMax`, `ScaleScroll`, `StepScroll`, with the cutscene player's 4 functions (C linkage) | old_agbcp | 0 -> 0; 4 vtable stores, 4 slot calls -> 0 |
 | `src/level/bg_layer_base.cpp` | `BgLayerBase`'s `Scroll`, `Reset`, `SetSource` and accessors, with the terrain tile cache's lookups (C linkage) | old_agbcp | 1 use -> 1 use (`DecodeCollisionChunk`'s: without it r3/r4 swap) |
 | `src/level/bg_layer.cpp` | `BgLayer`'s constructor, `GrowRows`, `GrowColumns`, `ClipColumns`, `ClipRows` | **old_agbcp** (was agbcc) | 9 pins, 6 asm, a file-scope asm pool -> 0; 5 slot calls -> 0 |
@@ -3875,12 +3875,12 @@ order), and it says which functions were inline and where a file ended:
 | `src/level/pooled_bg_layer.cpp` (new) | `PooledBgLayer`'s overrides, `ReleaseColumn`, `ReleaseRow`, with `nullsub_26` | old_agbcp | 0 -> 0 |
 | `src/level/tile_slot_pool.cpp` | `PooledBgLayer`'s constructor, destructor, `GetPriority`, with the tile-slot pool (C linkage) | **old_agbcp** (was agbcc) | 4 pins, 3 asm, 3 vtable stores -> 2 pins, 1 asm (`AcquireTileSlot`'s residency test: the ROM loads 0x200 before the entry and loads the entry again; neither a plain test nor an inline with the constant as a parameter does). #662 step 2: the plain `pool->slotForTile[id] != TILE_SLOT_NONE` test matches now; the asm and both pins went |
 | `src/level/level_layers.cpp` | `LevelLayers` | agbcp | 0 -> 0; 6 slot calls (the layers' `delete`s, `Scroll`s and `Reset`s) -> 0 |
-| `src/text/font.cpp` (font_measure.c and font.c) | `Font`'s `MeasureText`, `UploadTiles`, `SetPalette`, `ResetPalette`, and the copies of its inline methods | old_agbcp (font.c was agbcc) | 5 pins, 2 keeps, 2 asm, 1 asm label, 2 slot calls, 2 vtable stores -> the asm label (`GetPaletteSlot`'s `s32` return) |
-| `src/text/font_glyph.cpp` | `Font::DrawGlyph`, `PutChar`; `SmallFont`'s and `LargeFont`'s constructors | old_agbcp | 8 pins, 3 asm, gotos, 2 slot calls, 3 vtable stores -> 0 (`PutChar` is a `switch`, as `MeasureText` is) |
-| `src/text/font_draw_text.cpp` | `Font::DrawText`, `MeasureChars` | old_agbcp | 3 pins, gotos, 2 slot calls -> 0 (a `switch`) |
-| `src/text/font_draw_chars.cpp` | `Font::DrawChars` | agbcp | 0 -> 0; 2 slot calls -> 0 |
-| `src/text/font_height.cpp` | `Font::TextHeight` | agbcp | 0 -> 0 |
-| `src/system/inline_copies_misc.cpp` | `LargeFont`'s and `SmallFont`'s destructors, with `SetAabbSize`, `SetAabbPos`, `GetLives` (C linkage) | agbcp | 4 asm, 4 vtable stores -> 0 |
+| `src/engine/text/font.cpp` (font_measure.c and font.c) | `Font`'s `MeasureText`, `UploadTiles`, `SetPalette`, `ResetPalette`, and the copies of its inline methods | old_agbcp (font.c was agbcc) | 5 pins, 2 keeps, 2 asm, 1 asm label, 2 slot calls, 2 vtable stores -> the asm label (`GetPaletteSlot`'s `s32` return) |
+| `src/engine/text/font_glyph.cpp` | `Font::DrawGlyph`, `PutChar`; `SmallFont`'s and `LargeFont`'s constructors | old_agbcp | 8 pins, 3 asm, gotos, 2 slot calls, 3 vtable stores -> 0 (`PutChar` is a `switch`, as `MeasureText` is) |
+| `src/engine/text/font_draw_text.cpp` | `Font::DrawText`, `MeasureChars` | old_agbcp | 3 pins, gotos, 2 slot calls -> 0 (a `switch`) |
+| `src/engine/text/font_draw_chars.cpp` | `Font::DrawChars` | agbcp | 0 -> 0; 2 slot calls -> 0 |
+| `src/engine/text/font_height.cpp` | `Font::TextHeight` | agbcp | 0 -> 0 |
+| `src/engine/util/aabb_setters.cpp` | `LargeFont`'s and `SmallFont`'s destructors, with `SetAabbSize`, `SetAabbPos`, `GetLives` (C linkage) | agbcp | 4 asm, 4 vtable stores -> 0 |
 | the font callers: credits.cpp, language_select.cpp, title_screen.cpp, title_screen_init.cpp (in title_screen.cpp since #771), continue_prompt.cpp, level_select.cpp, pause_menu.cpp, power_dialog.cpp, power_dialog_draw.cpp, cutscene_player.cpp, spawn_pickups.cpp | virtual calls and the inline accessors for the fonts' record-slot calls (`ICON_TEXT_CALL`, `_call_via_rN`) and their own copies of the accessors (`SetFontPos`, `SetFontTileBase`, `mgr_12c`, ...); `new SmallFont`/`new LargeFont` | (unchanged) | 0 -> 0; 31 spelled-out slot calls (`ICON_TEXT_CALL`s, `_call_via_rN`s and the helpers') -> 0 |
 
 **In numbers** (project-wide, `tools/match_idioms.py`): `MATCH_HOLD_REG`
@@ -3967,7 +3967,7 @@ section had.
 **The pause menu, the power dialog and DrawWrappedText (cleanup A).** The
 last C files of PauseMenu and PowerDialog (menus.hpp) are their methods
 now, so both classes are all C++, and DrawWrappedText (the font
-callers' last C file in src/text/) is C++ with C linkage. The 32 font
+callers' last C file in src/engine/text/) is C++ with C linkage. The 32 font
 slot calls (`_call_via_r2`/`_call_via_r3` through `struct icon_record`)
 are Font's virtual `MeasureText`, `DrawText`, `DrawChars`, `MeasureChars`,
 `DrawGlyph` and `PutChar`, and the files' calls into each other method
@@ -4005,7 +4005,7 @@ without) and r1 hold (48 lines without), FormatDecimal's r5 pin (a
 plain copy of `value` since #662 step 2; the two holds' `MATCH_HOLD`s
 went there too).
 
-Left C: src/text/text_box.c (GetWordLength, DrawWrappedTextInBox: no C++
+Left C: src/engine/text/text_box.c (GetWordLength, DrawWrappedTextInBox: no C++
 trait; the box wrapper only reads two font fields).
 
 **The save menu (cleanup B).** The save menu is class SaveMenu (include/save_menu.hpp, `#pragma
@@ -4325,8 +4325,8 @@ the retyped code compiled to the same bytes with the pins as they were.
 
 ### The audio context
 
-src/audio/audio.c, listed above as C-like, was C++: the music and
-sound-effect front end is class AudioContext (include/audio.hpp, no
+src/engine/audio/audio.c, listed above as C-like, was C++: the music and
+sound-effect front end is class AudioContext (include/engine/audio/audio.hpp, no
 vtable, `#pragma interface`), and audio.cpp is its methods. The survey
 missed it because a class with no vtable has no vptr store, so its
 constructor and destructor don't look like ones. The traits:
@@ -4386,8 +4386,8 @@ trait, and they stay C for now.
 
 ### The last C files: gfx, system, util, text
 
-The 21 C-like game files of src/gfx/, src/system/, src/text/ and
-src/util/ are C++ now (98 functions; the "What stays C" list of [the
+The 21 C-like game files of src/engine/gfx/, src/system/, src/engine/text/ and
+src/engine/util/ are C++ now (98 functions; the "What stays C" list of [the
 final cleanup](#the-final-cleanup) predates this): bitmap_screen,
 display, fade, fade_to_black, sprite_frame; asset, input, irq, main,
 main_loop, memory; text_box; aabb, fixed_math, line, line_step,
@@ -4438,7 +4438,7 @@ string's `strcpy`/`strlen` asm labels and memory's hand-written
 
 #915 groups the free functions that work on one subsystem's globals
 into classes. irq.cpp's interrupt handling (ROM 0x08000544-0x08000760)
-is now `Irq` (include/irq.hpp): the handler table IntrMain dispatches
+is now `Irq` (include/engine/sys/irq.hpp): the handler table IntrMain dispatches
 through, the handlers that IrqSetHandler replaced, and the VBlank
 handler with its eight callback slots. Their IWRAM globals
 (0x030009E8-0x03000A7F) are read by no other C++ object. The class is
@@ -4472,7 +4472,7 @@ Three functions near the end of irq.cpp (ROM 0x080006A8-0x08000720,
 between the VBlank callbacks and VBlankHandler) are the VBlank wait
 every frame loop calls, WaitForVBlank, and the frame limit it can stretch to several
 VBlanks (SetFrameLimit and DisableFrameLimit, both UNUSED). It is now
-`FrameLimiter` (include/frame_limiter.hpp), all-static like
+`FrameLimiter` (include/engine/sys/frame_limiter.hpp), all-static like
 [the interrupt handlers](#the-interrupt-handlers-as-an-all-static-class-915),
 and every object is byte-identical.
 
@@ -4508,7 +4508,7 @@ the display registers) are two screen fades, five free functions in all:
   gPaletteFadeBuffer (0x03000E80) and DMAs that back, in 9 steps.
 
 The two share no data and no caller, so they are two classes in one
-header, `BrightnessFade` and `PaletteFade` (include/fade.hpp), all-static
+header, `BrightnessFade` and `PaletteFade` (include/engine/gfx/fade.hpp), all-static
 like [the frame limiter](#the-frame-limiter-as-an-all-static-class-915).
 No other object reads their globals, and every object is byte-identical.
 
@@ -4566,7 +4566,7 @@ static data member `instance`, and every object is byte-identical.
 
 ### The link, save and IWRAM data
 
-The link cable (src/link/), the save data and its link transfer
+The link cable (src/engine/link/), the save data and its link transfer
 (save_data, save_transfer, save_transfer_poll - save_transfer_state since #767) and the IWRAM image's
 initialised globals (iwram_data) are C++ source now. Each file is the C
 with its C headers wrapped in `extern "C" { }`, so the functions keep
@@ -4626,7 +4626,7 @@ per-object flags apply to the `.o`, whatever its source.
 classes (and two helpers), with every object byte-identical and every
 function keeping its C name through cxx_symbols.txt:
 
-- **LinkSession** (include/link_session.hpp) is the link session, with
+- **LinkSession** (include/engine/link/link_session.hpp) is the link session, with
   the layouts of `struct link_session`, `link_player` and `link_ring`
   moved into it, `LinkPlayer` and `LinkRing` (link_session.h keeps the
   packed bit views and a `struct link_session` tag). The constructor
@@ -4648,7 +4648,7 @@ function keeping its C name through cxx_symbols.txt:
   read `this` (their callers pass the session); LinkSetupSio (no
   argument) and MakeLinkHandshakeId (it takes the id bytes) stay free
   functions, as do the IRQ handlers the IRQ table points at.
-- **SaveData** and **SaveTransfer** (include/save_data.hpp) have no
+- **SaveData** and **SaveTransfer** (include/engine/save/save_data.hpp) have no
   constructor, destructor or vtable: the save menu's `new save_data` and
   `delete linkSave` are POD allocations already, and stay so. The
   checksum loop ValidateSaveData expanded inline (a `static inline` copy
@@ -4675,7 +4675,7 @@ ReceiveSaveTransferChunk's two pins and its empty-template asm.
 
 ### The IWRAM ARM code
 
-The IWRAM image's ARM routines (src/iwram/string_arm.cpp,
+The IWRAM image's ARM routines (src/engine/util/string_arm.cpp,
 sprite_arm.cpp; nine of them, since itoa_arm is assembly, #662) are C++
 too, built with **agbcp_arm_patched**:
 notyourav/agbcc's `cp` branch also has an ARM tree, `g++_arm`, which
@@ -4811,7 +4811,7 @@ stay (cxx_symbols.txt's `#752` and `#753` blocks):
   struct level_layers (the probes' C view) holds a `class TileCache *`
   for C++ (C sees an opaque `struct tile_cache *`). The `GetCell` inline
   both files had is one private `CellAt`.
-- **BgSetup** (new include/graphics_package.hpp; graphics_package.h's
+- **BgSetup** (new include/engine/gfx/graphics_package.hpp; graphics_package.h's
   struct bg_setup goes, no C file read it): `InitBgSetup` is its
   constructor. A member (the pause menu's, the power dialog's, the level
   select page strip's `bg`, all at offset 0 and set first) is built in the
@@ -4821,7 +4821,7 @@ stay (cxx_symbols.txt's `#752` and `#753` blocks):
   compiles to the same OperatorNew and constructor call with no null test.
   `LoadGraphicsPackage` and `GetBgSetupControl` are `Load` and
   `GetControl`.
-- **ScaledSprite** (graphics_package.hpp, src/gfx/scaled_sprite.cpp since #767; was graphics_package.cpp's
+- **ScaledSprite** (graphics_package.hpp, src/engine/gfx/scaled_sprite.cpp since #767; was graphics_package.cpp's
   struct gfx_box_obj): the six sprite-box functions, all UNUSED, are its
   methods; gfx.h's nine prototypes went.
 
@@ -4830,7 +4830,7 @@ stay (cxx_symbols.txt's `#752` and `#753` blocks):
 #915 groups the free functions that work on one subsystem's globals
 into classes. display.cpp (ROM 0x08001524-0x08001640) is the 15 helpers
 of two IWRAM shadows: gBlendRegs (0x03001280) and gDispcnt (0x03001288).
-They are now `Display` (include/display.hpp), all-static like
+They are now `Display` (include/engine/sys/display.hpp), all-static like
 [the yeti](#the-yeti-as-an-all-static-class-772): static data members
 compile like the globals and static member functions like the plain
 functions, and every object is byte-identical.
@@ -4857,7 +4857,7 @@ the transfers to VRAM and palette RAM that a frame queues (sprite frames,
 palette flashes, BG tiles) until the frame loop flushes them. It was 4
 free functions over one IWRAM struct, gVramDmaQueue (0x03001290: the
 EWRAM entry array and the count), which no other object reads. It is now
-`VramDmaQueue` (include/vram_dma_queue.hpp), all-static like
+`VramDmaQueue` (include/engine/sys/vram_dma_queue.hpp), all-static like
 [the display registers](#the-display-registers-as-an-all-static-class-915),
 and every object is byte-identical.
 
@@ -5029,7 +5029,7 @@ argument, so `this` arrives in r0 where the C's parameter did; every
 object is byte-identical to origin/main's and every method keeps its C
 name (cxx_symbols.txt).
 
-- **KeyInput** (include/key_input.hpp, moved out of spawners.hpp): the
+- **KeyInput** (include/engine/sys/key_input.hpp, moved out of spawners.hpp): the
   input object gInput, built by `new KeyInput` (ClearKeys) in
   spawn_markers.cpp. UpdateKeys and GetDpadDirection took it as an unused
   `void *input` and read gKeys; they are the non-static methods `Update`
@@ -5360,7 +5360,7 @@ addresses).
 into classes. The 3D stages' BG0 cell animation (cell_anim.cpp, ROM
 0x080297C8-0x08029C30) was 11 free functions over 13 IWRAM globals
 (0x03001394-0x030013BF) that no other object reads. It is now `CellAnim`
-(include/cell_anim.hpp), all-static on the yeti's grounds: the ROM loads
+(include/engine/gfx/cell_anim.hpp), all-static on the yeti's grounds: the ROM loads
 each variable's own address, even for the adjacent bytes gCellAnimPage
 and gCellAnimUploaded in FlipCellAnimPage. Every object is byte-identical.
 
@@ -5390,7 +5390,7 @@ and gCellAnimUploaded in FlipCellAnimPage. Every object is byte-identical.
 
 The 3D stages' BG scroll (actor_bg.cpp, ROM 0x08029C30-0x08029ED0) was 8
 free functions over 13 IWRAM globals (0x030013CC-0x030013FF) that no
-other object reads. It is now `ActorBg` (include/actor_bg.hpp),
+other object reads. It is now `ActorBg` (include/engine/actor/actor_bg.hpp),
 all-static like [the cell animation](#the-cell-animation-as-an-all-static-class-915),
 and every object is byte-identical.
 
@@ -5419,7 +5419,7 @@ broken, so that the factories skip them when the category restarts from
 a checkpoint. It was 3 free functions over gCollectedSpawns (IWRAM
 0x03001428) and gCollectedSpawnCount (iwram_data.cpp), which no other
 object reads. It is now `CollectedSpawns`
-(include/collected_spawns.hpp), all-static like
+(include/engine/actor/collected_spawns.hpp), all-static like
 [the actor BG scroll](#the-actor-bg-scroll-as-an-all-static-class-915),
 and every object is byte-identical.
 
@@ -5817,7 +5817,7 @@ after CountCategoryCrates) are the deaths since the checkpoint, the
 nitro crates the player has missed and the checkpoint's course distance:
 4 IWRAM globals (0x03001384-0x03001393) and gActorCheckpoint
 (iwram_data.cpp), which only the category code reads. They are now
-`ActorCategoryStats` (include/actor_category_stats.hpp), all-static
+`ActorCategoryStats` (include/engine/actor/actor_category_stats.hpp), all-static
 like [the collected spawns](#the-collected-spawns-as-an-all-static-class-915),
 and every object is byte-identical.
 
@@ -5852,7 +5852,7 @@ three classes. The spawn table (actor_spawn.cpp, ROM
 category's spawn records and how far the category has spawned them: 5
 IWRAM globals (0x03001400, 0x03001404, 0x03001414, 0x0300141C and
 0x03001420, among the driver's) that only the category code reads. They are now `ActorSpawns`
-(include/actor_spawns.hpp), all-static like the statistics, and every
+(include/engine/actor/actor_spawns.hpp), all-static like the statistics, and every
 object is byte-identical.
 
 - **Data.** `table` (gActorSpawnTable), `index` (gActorSpawnIndex),
@@ -5887,7 +5887,7 @@ the statistics, the cell animation, the BG scroll and the spawn table
 (ROM 0x080291A4-0x0802A700), and work on 6 IWRAM globals (0x03001380,
 0x03001408-0x03001413, 0x03001418 and 0x03001424) and the two category
 tables, which only the category code reads. They are now `ActorCategory`
-(include/actor_category.hpp), all-static like the other two, and every
+(include/engine/actor/actor_category.hpp), all-static like the other two, and every
 object is byte-identical.
 
 - **Data.** `current` (gActorCategory), `drawList` (gActorDrawList),
@@ -5928,7 +5928,7 @@ object is byte-identical.
 #915 groups the free functions that work on one subsystem's globals
 into classes. The OBJ tile VRAM allocator, the first six functions of
 sprite_frame.cpp (ROM 0x08028BA0-0x08028DD8), is `ObjTileAllocator`
-(include/obj_tile_allocator.hpp). Its five IWRAM globals
+(include/engine/gfx/obj_tile_allocator.hpp). Its five IWRAM globals
 (0x03001320-0x03001343) are read by no other object. It is all-static,
 like [the yeti](#the-yeti-as-an-all-static-class-772): static data
 members compile like the globals and static member functions like the
@@ -5959,7 +5959,7 @@ plain functions, and every object is byte-identical.
 The 3D stages' BG palette cycle (actor_palette_cycle.cpp, ROM
 0x0802AB08-0x0802AC28) was 5 free functions over 6 IWRAM globals
 (0x03001464-0x0300147B) and 3 ROM tables that no other object reads. It
-is now `ActorPaletteCycle` (include/actor_palette_cycle.hpp), all-static
+is now `ActorPaletteCycle` (include/engine/actor/actor_palette_cycle.hpp), all-static
 like [the yeti](#the-yeti-as-an-all-static-class-772), and every object
 is byte-identical.
 
@@ -5984,11 +5984,11 @@ each with its own IWRAM block that no other object reads:
 
 - the overflow OAM queue, ROM 0x08028DD8-0x08028F58, IWRAM
   0x03001344-0x03001353: the OAM entries and affine scales queued during
-  a frame. It is now `SpriteOamQueue` (include/sprite_oam_queue.hpp).
+  a frame. It is now `SpriteOamQueue` (include/engine/gfx/sprite_oam_queue.hpp).
 - the sprite frame cache, ROM 0x08028F58-0x08029108 (with
   SetupSpriteFrameOam among it), IWRAM 0x03001354-0x0300137B: the frames
   whose pixels are in OBJ VRAM. It is now `SpriteFrameCache`
-  (include/sprite_frame_cache.hpp), with the ARM LookupSpriteFrameCache
+  (include/engine/gfx/sprite_frame_cache.hpp), with the ARM LookupSpriteFrameCache
   (sprite_arm.cpp) as its `Lookup`.
 
 Both are all-static like
@@ -6027,7 +6027,7 @@ global they share, gCategorySpriteSheet (0x0300137C, right after the
 frame cache's block). It is the category's sprite sheet, decompressed
 into an EWRAM buffer; the animation records' frame offsets are relative
 to it. It is now `CategorySpriteSheet`
-(include/category_sprite_sheet.hpp), all-static like
+(include/engine/gfx/category_sprite_sheet.hpp), all-static like
 [the sprite frame cache](#the-oam-queue-and-the-sprite-frame-cache-as-all-static-classes-915),
 and every object is byte-identical.
 
@@ -6426,7 +6426,7 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   out-of-line copies at the end of crate.o. With `#pragma interface` no
   copy is emitted, and a definition at the top of crate.cpp would come
   first in its `.text`; a header fragment with no include guard
-  (crate_line_step.hpp), `inline` through crate.hpp and plain at the end
+  (line_steppers.hpp), `inline` through crate.hpp and plain at the end
   of crate.cpp, gives both from one source (part 7e).
 - **An inline body the ROM also has out of line:** where one function
   is inlined into another and also exists on its own, make the body an

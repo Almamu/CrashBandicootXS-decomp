@@ -21,13 +21,13 @@ behavior. This pass worked those three:
 - **`InitTitleScreen`**: the per-level setup entry point (`UpdateGameFrame`,
   `asm/code_3_2_17_225a0.s`, calls it with a freshly-allocated 0x220-byte
   scratch object). Stashes `gSmallFont` (the `struct bitmap_font *`
-  already established by GitHub issue #46's chunk, `include/bitmap_font.h`)
+  already established by GitHub issue #46's chunk, `include/engine/text/bitmap_font.h`)
   into the scratch object's `+0xc` field; resets the OAM shadow buffer
   (`gOamBuffer`, `struct oam_shadow_buffer *`) via
   `ResetOamBuffer`/`HideUnusedOamEntries`/`WaitForVBlank`/`CommitOamBuffer`; clears
   `REG_BLDCNT`/`REG_BLDALPHA` (one 32-bit store), sets `REG_BLDY` to
   `0x10`, and clears `REG_DISPCNT`; calls `FontSetPalette` (the icon-manager
-  accessor from issue #46, `src/text/font.c`) with `0xe`;
+  accessor from issue #46, `src/engine/text/font.c`) with `0xe`;
   sets the icon manager's `field_108` to `0x200` and fires its
   `record->slots[6]` trampoline via `_call_via_r1` (the same
   `(u8 *)obj + slot->offset, slot->ptr` pattern already established
@@ -40,10 +40,10 @@ behavior. This pass worked those three:
   `self->field_10 = InitStarfield(OperatorNew(0x14))`) into the scratch
   object's `+0x208` field; runs a fixed fade/audio-reset sequence
   (`SetObjMapping1D`/`ShowObj`/`SetDispcntMode(1)`/`CommitDispcnt` - the same
-  quartet already matched in `src/gfx/display.cpp`); zeroes
+  quartet already matched in `src/engine/sys/display.cpp`); zeroes
   the scratch object's first two words; and starts song `0xb` via
   `StartSong(gAudioContext, 0xb)` (`gAudioContext` is the
-  `struct AudioContext *` from `include/audio.h`/`src/audio/audio.c`).
+  `struct AudioContext *` from `include/audio.h`/`src/engine/audio/audio.c`).
   Returns the same scratch object pointer it was given.
 
   The 0x220-byte scratch object stays a raw `u32 *` rather than a named

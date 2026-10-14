@@ -7,7 +7,7 @@ extern "C" {
 #include <libgcc.h>
 #include "level.h"
 #include "globals.h"
-#include "math_util.h"
+#include "engine/util/math_util.h"
 }
 
 using Game::Enemies::KnockedEnemyCtrl;

@@ -1,17 +1,17 @@
 #include "swim_ctrl.hpp"
 #include "sprite_obj.hpp"
 #include "player.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 #include "level_state.hpp"
-#include "key_input.hpp"
+#include "engine/sys/key_input.hpp"
 
 extern "C" {
-#include "system.h"
-#include "gfx.h"
+#include "engine/sys/system.h"
+#include "engine/gfx/gfx.h"
 #include "level.h"
 #include "globals.h"
 #include "entity_bits.h"
-#include "math_util.h"
+#include "engine/util/math_util.h"
 }
 
 using Engine::Sys::KeyInput;

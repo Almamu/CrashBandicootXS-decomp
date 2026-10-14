@@ -2,7 +2,7 @@
 
 extern "C" {
 #include "core.h"
-#include "memory.h"
+#include "engine/sys/memory.h"
 #include "level.h"
 #include "globals.h"
 }

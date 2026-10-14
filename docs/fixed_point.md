@@ -23,7 +23,7 @@ code: a field that is shifted right by 8 where it is read
 (`Q8_TO_INT(p->x)`) or assigned an `INT_TO_Q8(...)` is Q8; a local
 assigned a conversion's result (`px = Q8_TO_INT(x)`) holds whole pixels.
 
-## The macros (`include/math_util.h`)
+## The macros (`include/engine/util/math_util.h`)
 
 | Macro | Expands to | Use |
 |---|---|---|

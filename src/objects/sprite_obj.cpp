@@ -3,19 +3,19 @@
 #include "bg_layer.hpp"
 #include "sprite_obj.hpp"
 #include "player.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 #include "level_state.hpp"
 
 extern "C" {
-#include "math_util.h"
+#include "engine/util/math_util.h"
 #include "match.h"
-#include "util.h"
-#include "gfx.h"
-#include "memory.h"
+#include "engine/util/util.h"
+#include "engine/gfx/gfx.h"
+#include "engine/sys/memory.h"
 #include "level.h"
 #include "globals.h"
 #include <agb_syscall.h>
-#include "system.h"
+#include "engine/sys/system.h"
 }
 
 using Game::Entities::Entity;

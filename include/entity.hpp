@@ -24,10 +24,10 @@
 
 extern "C" {
 #include "core.h"
-#include "math_util.h"
-#include "aabb.h"
-#include "hitbox_quad.h"
-#include "actor.h"
+#include "engine/util/math_util.h"
+#include "engine/util/aabb.h"
+#include "engine/gfx/hitbox_quad.h"
+#include "engine/actor/actor.h"
 #include "entity_bits.h"
 }
 

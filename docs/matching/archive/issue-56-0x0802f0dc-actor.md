@@ -254,7 +254,7 @@ are named by the lower 5 hex digits of their first function's address
   local-copy barriers, splitting into helper calls) reached this exact
   allocation without either losing the ROM's registers or
   reintroducing the r7 hazard.
-- **`LoadBgPicture`**/**`FillBgPictureMap`** (`src/actor/bg_picture.c`)
+- **`LoadBgPicture`**/**`FillBgPictureMap`** (`src/engine/actor/bg_picture.c`)
   - a pair of ~130-170-instruction VRAM tile-remap loops (4-bit
   palette-index repacking into a `0x0600D000`-based tile buffer via
   raw `REG_DMA3SAD`/`DAD`/`CNT` pokes at `0x040000D4`), each with three

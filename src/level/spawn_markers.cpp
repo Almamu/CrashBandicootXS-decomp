@@ -1,19 +1,19 @@
-#include "display.hpp"
-#include "vram_dma_queue.hpp"
+#include "engine/sys/display.hpp"
+#include "engine/sys/vram_dma_queue.hpp"
 #include "spawners.hpp"
 #include "pickups.hpp"
 #include "player.hpp"
 #include "part_list.hpp"
-#include "font.hpp"
+#include "engine/text/font.hpp"
 #include "level_state.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 
 extern "C" {
-#include "util.h"
-#include "text.h"
-#include "gfx.h"
-#include "memory.h"
-#include "system.h"
+#include "engine/util/util.h"
+#include "engine/text/text.h"
+#include "engine/gfx/gfx.h"
+#include "engine/sys/memory.h"
+#include "engine/sys/system.h"
 #include "level.h"
 #include "globals.h"
 }
@@ -120,7 +120,7 @@ void EntitySpawner::Create()
  * keep their C types (the C files use them), so the new objects of the
  * C++ classes are stored through their C views (the fonts are `Font *`s
  * to C++, text.h). The audio context is `new AudioContext` (its own
- * operator new, IwramAlloc: include/audio.hpp). */
+ * operator new, IwramAlloc: include/engine/audio/audio.hpp). */
 LevelState::LevelState()
 {
     AudioContext **audio = &gAudioContext;

@@ -1,10 +1,10 @@
 #include "vehicle.hpp"
 #include "boss_actors.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 
 extern "C" {
-#include "math_util.h"
-#include "actor.h"
+#include "engine/util/math_util.h"
+#include "engine/actor/actor.h"
 #include "globals.h"
 }
 

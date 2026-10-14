@@ -1,5 +1,5 @@
 #include "graphics.hpp"
-#include "graphics_package.hpp"
+#include "engine/gfx/graphics_package.hpp"
 #include "menus.hpp"
 
 extern "C" {

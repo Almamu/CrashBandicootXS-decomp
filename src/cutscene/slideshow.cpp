@@ -1,14 +1,14 @@
-#include "display.hpp"
+#include "engine/sys/display.hpp"
 #include "cutscene.hpp"
-#include "audio.hpp"
-#include "frame_limiter.hpp"
-#include "fade.hpp"
+#include "engine/audio/audio.hpp"
+#include "engine/sys/frame_limiter.hpp"
+#include "engine/gfx/fade.hpp"
 
 extern "C" {
 #include "core.h"
 #include "gba/dma_macros.h"
-#include "system.h"
-#include "gfx.h"
+#include "engine/sys/system.h"
+#include "engine/gfx/gfx.h"
 #include "globals.h"
 }
 

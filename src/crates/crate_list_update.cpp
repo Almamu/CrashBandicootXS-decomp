@@ -3,8 +3,8 @@
 
 extern "C" {
 #include "crates.h"
-#include "memory.h"
-#include "math_util.h"
+#include "engine/sys/memory.h"
+#include "engine/util/math_util.h"
 #include "globals.h"
 #include "level.h"
 }

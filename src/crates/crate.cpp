@@ -1,11 +1,11 @@
 /* The line steppers are out of line here, at the end of the file
- * (crate_line_step.hpp). */
+ * (line_steppers.hpp). */
 #define CRATE_LINE_STEP
 #include "crate.hpp"
 #include "player.hpp"
 
 extern "C" {
-#include "memory.h"
+#include "engine/sys/memory.h"
 #include "objects.h"
 #include "globals.h"
 }
@@ -15,7 +15,7 @@ using Game::Crates::Crate;
 /* The crate's overlap test, stack links, constructor and destructor
  * (#664, include/crate.hpp), with the player's collision pass, and the
  * out-of-line copies of the line steppers (FindLineCrossingYMajor,
- * FindLineCrossingXMajor; no caller), from crate_line_step.hpp. */
+ * FindLineCrossingXMajor; no caller), from line_steppers.hpp. */
 
 /* Whether the crate's box (its hitbox record's size around its position)
  * lies strictly inside `box`. Always true while the crate is falling or
@@ -103,5 +103,5 @@ Crate::Crate()
     Reset();
 }
 
-#include "crate_line_step.hpp"
+#include "engine/util/line_steppers.hpp"
 #include "player.hpp"

@@ -60,8 +60,8 @@ A third form, an edit-list spec, lists edits instead of slots (the edit-list
 workflow; the spec is exec'd from the current directory, so it may load
 and extend another spec):
 
-    src    = "src/iwram/string_arm.cpp"   # the source file
-    obj    = "src/iwram/string_arm"       # its object, under build/crashbandicootxs/
+    src    = "src/engine/util/string_arm.cpp"   # the source file
+    obj    = "src/engine/util/string_arm" # its object, under build/crashbandicootxs/
     func   = "strncpy_arm"                # the symbol scored
     extra  = ["strlen_arm", ...]          # optional: other symbols that must stay
     base   = [(old, new), ...]            # takes the workarounds out

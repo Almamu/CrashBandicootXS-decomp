@@ -86,8 +86,8 @@ the sources, and nothing is written when interrupted before the end.
 
 Usage:
   tools/match_prune.py src/                   dry run, per-file report and summary
-  tools/match_prune.py -v src/util/aabb.cpp     also list the sites kept, and why
-  tools/match_prune.py --write src/gfx/       apply the removals
+  tools/match_prune.py -v src/engine/util/aabb.cpp     also list the sites kept, and why
+  tools/match_prune.py --write src/engine/gfx/       apply the removals
   tools/match_prune.py --list src/            list the sites without building
   tools/match_prune.py --kinds MATCH_BARRIER,MATCH_USE src/
   tools/match_prune.py --json out.json src/   also write the results as JSON
@@ -1253,7 +1253,7 @@ def collect(paths):
         if not rel.endswith((".c", ".cpp")):
             print("skipping %s: only .c/.cpp translation units are tried" % rel, file=sys.stderr)
             continue
-        if not (re.fullmatch(r"src/[^/]+/[^/]+\.(?:c|cpp)", rel)
+        if not (re.fullmatch(r"src/(?:[^/]+/)+[^/]+\.(?:c|cpp)", rel)
                 or re.fullmatch(r"lib/[^/]+/(?:src|data)/[^/]+\.c", rel)):
             print("skipping %s: not an object the Makefile builds" % rel, file=sys.stderr)
             continue

@@ -180,7 +180,7 @@ sequencing gcc 2.9 never reproduced) never responded to further plain-C
 restructuring, so all four were converted to `NAKED` and their ROM
 disassembly transcribed instruction-for-instruction - the same escape
 hatch this project already established for `MakeLinkHandshakeId`/`ResetLinkSessionState`
-(`src/link/link_handshake.c`, see
+(`src/engine/link/link_handshake.c`, see
 `docs/matching/archive/issue-4-sio-settings-sync.md`'s "The general strategy
 for the rest" section). All four share the exact same shape (confirmed
 by the transcription itself matching one-for-one once the twin family
