@@ -583,6 +583,19 @@ checks the change is only a rename:
   engine code; the song and effect ids it is given are the game's.
   No name hiding: the namespace holds only the class, and no global is
   named `Audio` or `AudioContext`.
+- **`Engine::Save`** (`Q36Engine4Save`): `SaveData` and `SaveTransfer`
+  (save_data.hpp). 25 symbols renamed (with the three SaveMenu methods
+  that take a `SaveData *`), no code change. save_menu.hpp names the class
+  `Engine::Save::SaveData`. Boundary calls: `SaveData` is the EEPROM
+  access (Read/Write through the AgbEeprom SDK, Load/Store with retries,
+  the checksum, the header and flag bytes, the slot copies), so it is
+  engine code, while the slot's layout (`struct save_slot`: GameProgress,
+  the level, the volumes) is the game's and stays outside with
+  GameProgress (Crash's levels, relics and gems: `Game::`). `SaveTransfer`
+  streams a SaveData's bytes through the link session's rings and knows
+  nothing of the game, so it goes with SaveData rather than with the save
+  menu. SaveMenu (the menu) is game UI and stays outside. No name hiding:
+  no global is named `Save` or like one of the classes.
 
 ## Progress
 

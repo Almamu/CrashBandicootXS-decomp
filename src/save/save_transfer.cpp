@@ -8,6 +8,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Engine::Save::SaveTransfer;
+
 /* Drains up to 0x60 bytes per call from `self->cursor` (streaming a
  * save_data out of `self->tmpl`) into the SIO session's
  * outgoing ring (LinkRing::Push), once the previous batch has been

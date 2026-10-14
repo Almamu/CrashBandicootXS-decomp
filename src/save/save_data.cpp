@@ -11,6 +11,7 @@ extern "C" {
 }
 
 using Engine::Audio::AudioContext;
+using Engine::Save::SaveData;
 
 /* Reads the save data: `gEepromConfig->maxCount` 8-byte blocks from
  * the EEPROM chip (the SDK's `EEPROMRead`) into a stack

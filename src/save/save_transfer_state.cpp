@@ -11,6 +11,9 @@ extern "C" {
 #include "save.h"
 }
 
+using Engine::Save::SaveData;
+using Engine::Save::SaveTransfer;
+
 /* Polls the SIO-handshake spinner's transfer state once per frame: if
  * the session (*gLinkSession, byte +7 = "connected") isn't
  * connected, just tracks completion/reset of `self` and returns

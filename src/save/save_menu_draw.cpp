@@ -20,6 +20,8 @@ extern "C" {
 }
 
 using Engine::Gfx::BgSetup;
+using Engine::Save::SaveData;
+using Engine::Save::SaveTransfer;
 using Engine::Sys::FrameLimiter;
 
 /* SaveMenu's link exchange, slot list drawing, setup helpers and per-state
