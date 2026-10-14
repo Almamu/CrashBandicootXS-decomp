@@ -153,10 +153,11 @@ $(GENERATED_INCLUDE_DIR)/theme_palette_cycles.h.stamp: $(THEME_DEPS)
 $(GENERATED_INCLUDE_DIR)/theme_palette_cycles.h: $(GENERATED_INCLUDE_DIR)/theme_palette_cycles.h.stamp
 	@test -f $@ || python3 tools/levels.py palette-cycles $@
 
-# The level select's per-world tables and IsNextWorldOpen's cases
-# (level_select_worlds.h, `levels.py worlds`, docs/levels.md "Level-select
-# pages"), from levels.json's "worlds"; it checks that bank 51 has a number
-# icon for every numbered level. Written only if it changed, behind a stamp.
+# The level select's per-world tables, IsNextWorldOpen's cases and the page
+# macros (level_select_worlds.h, `levels.py worlds`, docs/levels.md
+# "Level-select pages" and "Partial pages"), from levels.json's "worlds" and
+# the levels; it checks that bank 51 has a number icon for every numbered
+# level. Written only if it changed, behind a stamp.
 GENERATED_HEADERS += $(GENERATED_INCLUDE_DIR)/level_select_worlds.h
 $(GENERATED_INCLUDE_DIR)/level_select_worlds.h.stamp: data/levels/levels.json $(LEVEL_ROOM_JSONS) \
 	graphics/sprites/bank51_level_select_icons/bank.json tools/levels.py

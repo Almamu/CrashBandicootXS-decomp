@@ -55,3 +55,8 @@ const u16 gLevelSelectPalette[16] = {
     0x0000, 0x0000, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0x0000, 0xFFFF,
     0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
 };
+
+/* A partial page's tables (level_select_worlds.h, docs/levels.md "Partial
+ * pages"): each world's first level, level count and boss, and the layouts
+ * for fewer entries. Nothing with the ROM's pages, which are all full. */
+LEVEL_SELECT_PAGE_TABLES
