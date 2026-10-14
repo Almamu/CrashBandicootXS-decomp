@@ -55,16 +55,20 @@ void LevelSelectEntry::SetSelected(u8 value)
     selected = value;
 }
 
-/* Slot 2: entry `index` of world `world`. Indices 0 to LEVELS_PER_WORLD - 1
- * are levels (icon frame = level id); anything past that is the world's
- * boss (level id LEVEL_FIRST_BOSS + world, its own icon animation). */
+/* Slot 2: entry `index` of world `world`. The world's numbered levels
+ * come first (icon frame = level id); anything past them is the world's
+ * boss (its own icon animation), level_select_worlds.h's macros: with the
+ * ROM's pages, indices 0 to LEVELS_PER_WORLD - 1 are levels
+ * `world * LEVELS_PER_WORLD + index` and the boss is LEVEL_FIRST_BOSS +
+ * world. On a partial page the entries past the shown ones aren't drawn
+ * (LevelSelect::lastIndex). */
 void LevelSelectEntry::SetLevel(s32 world, s32 index)
 {
-    if (index < LEVELS_PER_WORLD) {
-        id = world * LEVELS_PER_WORLD + index;
+    if (index < LEVEL_SELECT_WORLD_LEVELS(world)) {
+        id = LEVEL_SELECT_WORLD_FIRST(world) + index;
         ShowFrame(icon, id);
     } else {
-        id = world + LEVEL_FIRST_BOSS;
+        id = LEVEL_SELECT_WORLD_BOSS(world);
         icon->StartAnim(gLevelSelectEntryWorldAnims[world]);
     }
 }

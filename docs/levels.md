@@ -667,12 +667,12 @@ it; with the ROM's levels each rule gives the ROM's number, and
 |---|---|---|---|
 | `LEVEL_COUNT` | 25 | the levels | `gLevelTable`, `GameProgress::levels`, the save slots |
 | `WORLD_COUNT` | 4 | the numbered levels' worlds | the level select's pages (`UpdatePageArrows`), its per-world tables (`"worlds"`, see "Level-select pages") |
-| `LEVELS_PER_WORLD` | 5 | numbered levels per world (all the same) | the level select's `world * LEVELS_PER_WORLD + index` |
+| `LEVELS_PER_WORLD` | 5 | the most numbered levels a world has: 5, the page's layout (1 to 5 per world, see "Partial pages") | the level select's `world * LEVELS_PER_WORLD + index` (with full pages) |
 | `LEVEL_NUMBERED_COUNT` | 20 | the numbered levels | the relic, gem and crystal counts (`GameProgress`) |
 | `LEVEL_LAST_NUMBERED`, `LEVEL_FIRST_BOSS` | 19, 20 | the last numbered level, the first boss | the level select, the pause menu |
 | `LEVEL_LAST_ON_GRID` | `LEVEL_NEO_CORTEX` | the last boss | `UpdateGameFrame`'s level-select cap |
 | `LEVEL_FINALE` | `LEVEL_MEGA_MIX` | the first level off the grid | `CountGems`, `CountClearGems`, `UpdateGameFrame`'s step from Neo Cortex to mega-mix |
-| `LEVEL_SELECT_ENTRIES` | 6 | `LEVELS_PER_WORLD` + the boss | `LevelSelect::items`, the entry positions |
+| `LEVEL_SELECT_ENTRIES` | 6 | `LEVELS_PER_WORLD` + the boss: a full page | `LevelSelect::items`, the entry positions |
 | `CRYSTAL_TOTAL`, `RELIC_TOTAL` | 20 | the numbered levels | the pause menu |
 | `GEM_TOTAL` | 28 | a crate gem per numbered level, the `GEM_PATH_GEM` entities in the rooms of the numbered levels and the finale, and the 4 coloured gems | the pause menu |
 | `COMPLETION_TOTAL` | 72 | the three totals and the 4 powers | `GetCompletionPercent` |
@@ -682,9 +682,9 @@ it; with the ROM's levels each rule gives the ROM's number, and
 | `LEVEL_SELECT_PICTURE_COUNT` | 10 | up to the last theme with a `"picture"` | `gLevelSelectPictures` |
 
 The rules need the levels in the order the code finds them by id: the
-numbered levels world by world, the same number in every world; then
-one boss per world (`"boss": true` and its `"world"`), in world order;
-then the levels off the level select's grid (`"boss": true`, no
+numbered levels world by world, 1 to 5 in each and 5 in the largest;
+then the bosses (`"boss": true` and a `"world"`), at most one per world,
+in world order; then the levels off the level select's grid (`"boss": true`, no
 `"world"`), mega-mix first. `levels.py` stops with a message when the
 data breaks that, when a total needs three digits (the pause menu prints
 two), or past 60 levels (the 64 Kbit save's largest record; see "The
@@ -1036,7 +1036,7 @@ new world (a page) is added (#966, phase 4).
 `level_select_pages.cpp`) shows one world at a time: its
 `LEVELS_PER_WORLD` numbered levels (`world * LEVELS_PER_WORLD + index`)
 and its boss (`LEVEL_FIRST_BOSS + world`), `LEVEL_SELECT_ENTRIES`
-entries. Up turns to the next page (`NextWorld`), Down to the previous
+entries; or fewer, on a partial page (see "Partial pages"). Up turns to the next page (`NextWorld`), Down to the previous
 one (`PrevWorld`); the platform (BG1, `LevelSelectPageBg`) turns 0x100
 pixels a page and wraps, so it has no page count. Left and Right move
 the cursor on the page. The level select opens on the page of the last
@@ -1047,7 +1047,7 @@ level played (`room.level`, capped at `LEVEL_LAST_ON_GRID`).
 | what | opens when | where |
 |---|---|---|
 | a world's numbered levels | always, once the world is open | `PlaceItems` |
-| a world's boss (the sixth entry) | all `LEVELS_PER_WORLD` levels of the world are cleared (`levels[k].cleared`); the entries then take `gLevelSelectEntryPositionsAllCleared` | `PlaceItems` |
+| a world's boss (the sixth entry) | all `LEVELS_PER_WORLD` levels of the world are cleared (`levels[k].cleared`); the entries then take `gLevelSelectEntryPositionsAllCleared`. On a partial page, the entry after its levels, once they are all cleared, if the world has a boss | `PlaceItems` |
 | world 1, 2, 3 | the power of the boss before: Super Body Slam (Dingodile), Double Jump (N. Gin), Tornado Spin (Tiny), `PROGRESS_BIT_*` of `save->flags` | `IsNextWorldOpen`'s `switch (world)`, cases 0-2 |
 | (no world after the last) | `UpdatePageArrows` draws no next arrow on page `WORLD_COUNT - 1`; `IsNextWorldOpen` returns 0 there (no case) | |
 | mega-mix (`LEVEL_FINALE`, off the grid) | beating Neo Cortex at over 99% completion: `UpdateGameFrame` plays it straight after | `game_frame.cpp` |
@@ -1107,16 +1107,17 @@ there are fewer steps than numbered levels.
 ### Adding a world
 
 1. **The levels.** `LEVELS_PER_WORLD` numbered levels with the new
-   `"world"`, after the last world's numbered levels, and its boss
-   (`"boss": true` and the `"world"`) after the last boss, before
-   mega-mix (see "The counts the code takes from the levels"), each
+   `"world"` (or 1 to 4, a partial page, see below), after the last
+   world's numbered levels, and its boss (`"boss": true` and the
+   `"world"`; or none) after the last boss, before mega-mix (see "The counts the code takes from the levels"), each
    with its name ([text.md, "A new level's name"](./text.md#a-new-levels-name)).
    The level ids after them move, which only changes the generated
    constants. More than 28 levels take the 64 Kbit save ("The save").
 2. **The world.** An entry at the end of `"worlds"`: the page title,
-   box and boss icon (the ROM's animations: new art is new frames of
-   banks 47, 49 or 51, which their C would have to take, like bank 51's
-   animation 0 below), and `"opened_by"`.
+   box and boss icon (the boss icon only for a world with a boss; the
+   ROM's animations: new art is new frames of banks 47, 49 or 51, which
+   their C would have to take, like bank 51's animation 0 below), and
+   `"opened_by"`.
 3. **The number icons.** For each numbered level past the 20th, a new
    frame of bank 51 and a step of its animation 0 (graphics.md, "New
    frames").
@@ -1160,6 +1161,98 @@ boxes, the icons 21-25 and no next arrow. With its levels cleared the
 boss entry (Dingodile's head) appears, and A on "21" starts level 20
 (crash cove, jungle jam's first room). `levels.py worlds` stops with a
 missing world, a bad rule, a rule on world 0 and too few number icons.
+
+### Partial pages
+
+A world can have fewer than `LEVELS_PER_WORLD` numbered levels (1 to 4)
+or no boss (#966, phase 6), so the level count needn't be a multiple of
+six: 27 levels are the ROM's 25 and a world of 2 levels with no boss,
+which still fits the 4 Kbit save. The world's levels and boss are where
+"The counts the code takes from the levels" puts them: its numbered
+levels after the world before's, its boss (if any) in world order among
+the bosses.
+
+**The code.** The ROM finds a page's levels by arithmetic, and
+`level_select_worlds.h` spells each piece of it as a macro, which the
+level select uses instead:
+
+| macro | full pages (the ROM's code) | a partial page |
+|---|---|---|
+| `LEVEL_SELECT_WORLD_FIRST(world)` | `world * LEVELS_PER_WORLD` | `gLevelSelectWorldFirstLevels[world]` |
+| `LEVEL_SELECT_WORLD_LEVELS(world)` | `LEVELS_PER_WORLD` | `gLevelSelectWorldLevelCounts[world]` |
+| `LEVEL_SELECT_WORLD_BOSS(world)` | `world + LEVEL_FIRST_BOSS` | `gLevelSelectWorldBosses[world]` (`LEVEL_SELECT_NO_BOSS`, 0xFF, for none) |
+| `LEVEL_SELECT_BOSS_SHOWN(world, cleared)` | `cleared == LEVELS_PER_WORLD` | all the world's levels cleared, and it has a boss |
+| `LEVEL_SELECT_WORLD_OF_LEVEL(level)`, `LEVEL_SELECT_INDEX_OF_LEVEL(level, world)` | `level / 5`, `level % 5` (`__divsi3`, `__modsi3`) | `gLevelSelectLevelWorlds[level]`, `level` - the world's first |
+| `LEVEL_SELECT_WORLD_OF_BOSS(level)` | `level - LEVEL_FIRST_BOSS` | `gLevelSelectLevelWorlds[level]` |
+| `LEVEL_SELECT_POSITIONS(world)`, `_ALL_CLEARED(world)` | `gLevelSelectEntryPositions`, `gLevelSelectEntryPositionsAllCleared` | `gLevelSelectWorldEntryPositions[world]`, `...AllCleared[world]` |
+
+`tools/levels.py worlds` writes the left column when every page is full
+(every world has `LEVELS_PER_WORLD` levels and a boss), as with the ROM's
+levels, so the code is the ROM's, byte for byte; and the right column
+otherwise. `LEVEL_SELECT_PAGE_TABLES`, which `level_select_layout.cpp`
+expands after `gLevelSelectPalette`, defines the tables: nothing with
+full pages, and with a partial page the per-world first levels, counts
+and bosses, `gLevelSelectLevelWorlds` (the world of each level on the
+grid, `LEVEL_SELECT_GRID_LEVELS`), the layouts the pages need and the two
+per-world layout pointers. No `#if`: the generator writes one or the
+other, like `THEME_FIRST_ROOM_EXIT_ZONE`.
+
+**What the level select does with it.**
+
+- The cursor: `lastIndex` is the page's last shown entry, its levels'
+  count - 1, or the count once the boss entry shows. `CursorLeft` and
+  `CursorRight` stop at 0 and `lastIndex` (the error sound past them),
+  `RefreshPage` clamps the cursor to it after a page turn, and `Update`
+  draws (`Animate`) only the entries up to it, so the empty slots never
+  show and the cursor never lands on one.
+- The entries: `SetLevel` gives entry `index` the world's level
+  `first + index` while `index` is below the count, and the boss past it.
+  The level's record panel (`LoadRecord`, `DrawRecord`) shows for the
+  numbered entries, `index` below the count.
+- The layouts: a page of 5 levels takes the ROM's two
+  (`gLevelSelectEntryPositions`, its sixth slot hidden, and
+  `gLevelSelectEntryPositionsAllCleared`, 6 entries). A page of `k` < 5
+  entries shown takes `gLevelSelectEntryPositions<k>`: `k` entries 50
+  pixels apart, centred on the ROM's arc (x 120, y 136 in the middle and
+  16 higher 90 pixels out, the ROM's ends), then `{0, 0}` up to
+  `LEVEL_SELECT_ENTRIES`. A page of 2 levels has 2 entries, then 3 with
+  its boss.
+- The boss entry shows once all the world's levels are cleared, if it
+  has a boss (`PlaceItems`). A world with no boss never shows one.
+- The `{"levels_cleared": true}` rule (`IsWorldCleared`) checks the
+  world's own levels, so the world after a partial one opens when the
+  partial one's levels are cleared.
+- The level select opens on the page of the level played: its world and
+  entry from `gLevelSelectLevelWorlds` (a boss is the entry after its
+  world's levels).
+- The completion percentage, the pause menu's totals and the save count
+  the levels, not the pages (`LEVEL_NUMBERED_COUNT`, `COMPLETION_TOTAL`),
+  so they need nothing more.
+
+`levels.py` stops when a world has no numbered level or more than 5,
+when no world has 5 (the ROM's layouts are a full page's), when the
+bosses aren't in world order or a world has two, and when a world with a
+boss has no `"boss_icon"` (a world with none may leave it out).
+
+Tested in scratch with plain `make` and mGBA, with a fifth world of two
+numbered levels ("crash cove" and "boulder bay", ids 20-21, world 0's
+rooms), `{"levels_cleared": true}`, world 0's title and box, and bank
+51's frames 24-25 ("21", "22"):
+
+- with no boss, 27 levels on the 4 Kbit save. With the powers and
+  worlds 0-2 cleared poked into the save block, Up stays on page 4 (the
+  error sound) until world 3's levels are cleared, then turns to page 5:
+  the two entries "21" and "22" centred on the arc, `lastIndex` 1, no
+  next arrow. Right moves to "22" and then plays the error sound, as
+  does Up. With both levels cleared the page still has 2 entries (no
+  boss entry), and A on "22" starts level 21. Opened on level 21 (the
+  level select's `*level` set to 21), it shows page 5 with the cursor
+  on "22";
+- with a boss ("dingo rematch", Dingodile's room, after Neo Cortex), 28
+  levels: the page has 2 entries, then, once both levels are cleared, 3
+  (the boss entry on the right, `lastIndex` 2). Right ends on it and A
+  starts level 26. Opened on Neo Cortex (level 25), the screen is on page
+  4, entry 5.
 
 ## The save
 

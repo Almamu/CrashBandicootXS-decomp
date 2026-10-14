@@ -78,9 +78,10 @@ derived from those again.
     tools/levels.py palette-cycles OUT        theme_palette_cycles.h: RunRoom's
                                               colour-cycle cases per theme
     tools/levels.py worlds OUT                level_select_worlds.h: the level
-                                              select's per-world tables and
-                                              IsNextWorldOpen's cases, from
-                                              levels.json's "worlds"
+                                              select's per-world tables,
+                                              IsNextWorldOpen's cases and the
+                                              page macros (partial pages),
+                                              from levels.json's "worlds"
     tools/levels.py classes OUT               rooms.hpp: every room's class (its BG
                                               palette, chunk grids and level asset
                                               as static members), see "Room
@@ -1678,14 +1679,17 @@ def level_select_worlds(data):
     if not isinstance(worlds, list) or len(worlds) != c["WORLD_COUNT"]:
         fail("\"worlds\" has one entry per world of the levels (%d): each world's page title, entry box and "
              "boss icon, and the rule that opens it" % c["WORLD_COUNT"])
+    pages = world_pages(data)
     for w, e in enumerate(worlds):
-        missing = [k for k in WORLD_KEYS if k not in e]
+        missing = [k for k in WORLD_KEYS if k not in e and not (k == "boss_icon" and pages[w]["boss"] is None)]
         if missing:
             fail("world %d has no %s" % (w, ", ".join('"%s"' % k for k in missing)))
         unknown = [k for k in e if k not in WORLD_KEYS + ["opened_by"]]
         if unknown:
             fail("world %d: unknown %s" % (w, ", ".join('"%s"' % k for k in unknown)))
         for k in WORLD_KEYS:
+            if k not in e:
+                continue
             if not isinstance(e[k], int) or not 0 <= e[k] < WORLD_KEY_LIMITS[k]:
                 fail("world %d: \"%s\" is 0-%d" % (w, k, WORLD_KEY_LIMITS[k] - 1))
         rule = e.get("opened_by")
@@ -1703,6 +1707,127 @@ def level_select_worlds(data):
              "(docs/graphics.md, \"New frames\")" % (c["LEVEL_NUMBERED_COUNT"], LEVEL_ICONS_BANK.parent, icons,
                                                      icons + 1, c["LEVEL_NUMBERED_COUNT"]))
     return worlds
+
+
+# A partial page (#966): a world with fewer than LEVELS_PER_WORLD numbered
+# levels, or no boss. The ROM's pages are all full, and the code finds a
+# page's levels by arithmetic: `world * LEVELS_PER_WORLD + index`, the boss
+# `LEVEL_FIRST_BOSS + world`, the boss entry once LEVELS_PER_WORLD levels
+# are cleared, the two ROM layouts. level_select_worlds.h spells each of
+# those as a macro (LEVEL_SELECT_WORLD_FIRST, ...): with full pages only,
+# the ROM's arithmetic, so the code is the ROM's; with a partial page, a
+# lookup in the per-world tables LEVEL_SELECT_PAGE_TABLES defines
+# (level_select_layout.cpp), whose layouts put the page's entries on the
+# ROM's arc. No `#if`: the generator writes one or the other.
+PAGE_ARC_X, PAGE_ARC_Y, PAGE_ARC_STEP = 120, 136, 50   # the arc's middle and an entry's spacing
+PAGE_ARC_DROP, PAGE_ARC_HALF = 16, 90                  # y 16 higher 90 px off the middle (the ROM's ends)
+LEVEL_SELECT_NO_BOSS = 0xFF                             # gLevelSelectWorldBosses of a world with none
+
+
+def world_pages(data):
+    """Per world: its first numbered level's id, its numbered levels' count
+    and its boss's id (None for none)."""
+    levels = data["levels"]
+    pages = []
+    for w in range(level_counts(data)["WORLD_COUNT"]):
+        ids = [i for i, lv in enumerate(levels) if not lv.get("boss") and lv["world"] == w]
+        boss = [i for i, lv in enumerate(levels) if lv.get("boss") and lv.get("world") == w]
+        pages.append({"first": ids[0], "count": len(ids), "boss": boss[0] if boss else None})
+    return pages
+
+
+def pages_full(data):
+    """Whether every page is full (LEVELS_PER_WORLD levels and a boss), as
+    the ROM's: the code then finds the pages' levels by its arithmetic."""
+    return all(p["count"] == PAGE_LEVELS and p["boss"] is not None for p in world_pages(data))
+
+
+def page_layout(k):
+    """A page's entry positions on the menu art for `k` entries, k < 5 (5
+    and 6 are the ROM's tables): evenly spaced on the ROM's arc."""
+    out = []
+    for i in range(k):
+        dx = PAGE_ARC_STEP * (2 * i - (k - 1)) // 2
+        out.append((PAGE_ARC_X + dx, PAGE_ARC_Y - (PAGE_ARC_DROP * dx * dx + PAGE_ARC_HALF ** 2 // 2)
+                    // PAGE_ARC_HALF ** 2))
+    return out
+
+
+def layout_symbol(k):
+    """The positions table for `k` entries shown."""
+    return {PAGE_LEVELS: "gLevelSelectEntryPositions",
+            PAGE_LEVELS + 1: "gLevelSelectEntryPositionsAllCleared"}.get(k, "gLevelSelectEntryPositions%d" % k)
+
+
+def level_select_pages_h(data):
+    """level_select_worlds.h's page macros: the ROM's arithmetic with full
+    pages, else lookups in the tables of LEVEL_SELECT_PAGE_TABLES."""
+    c = level_counts(data)
+    head = ["", "/*",
+            " * A page's levels (docs/levels.md \"Partial pages\"): world `world`'s first numbered",
+            " * level, its count, its boss, whether the boss entry shows with `cleared` levels",
+            " * cleared, the world and the entry of a level, and the entries' positions before",
+            " * and after the boss entry shows.%s" % (" Every page is full, so these are the ROM's"
+                                                     " arithmetic." if pages_full(data) else ""),
+            " */"]
+    if pages_full(data):
+        return head + [
+            "#define LEVEL_SELECT_WORLD_FIRST(world) ((world) * LEVELS_PER_WORLD)",
+            "#define LEVEL_SELECT_WORLD_LEVELS(world) LEVELS_PER_WORLD",
+            "#define LEVEL_SELECT_WORLD_BOSS(world) ((world) + LEVEL_FIRST_BOSS)",
+            "#define LEVEL_SELECT_BOSS_SHOWN(world, cleared) ((cleared) == LEVELS_PER_WORLD)",
+            "#define LEVEL_SELECT_WORLD_OF_LEVEL(level) __divsi3(level, LEVELS_PER_WORLD)",
+            "#define LEVEL_SELECT_INDEX_OF_LEVEL(level, world) __modsi3(level, LEVELS_PER_WORLD)",
+            "#define LEVEL_SELECT_WORLD_OF_BOSS(level) ((level) - LEVEL_FIRST_BOSS)",
+            "#define LEVEL_SELECT_POSITIONS(world) gLevelSelectEntryPositions",
+            "#define LEVEL_SELECT_POSITIONS_ALL_CLEARED(world) gLevelSelectEntryPositionsAllCleared",
+            "", "/* No tables: the pages are the ROM's. */",
+            "#define LEVEL_SELECT_PAGE_TABLES"]
+    pages = world_pages(data)
+    grid = c["LEVEL_COUNT"] - sum(1 for lv in data["levels"] if lv.get("boss") and lv.get("world") is None)
+    level_worlds = [lv["world"] for lv in data["levels"][:grid]]
+    shown = sorted({p["count"] for p in pages} | {p["count"] + 1 for p in pages if p["boss"] is not None})
+    new_layouts = [k for k in shown if k < PAGE_LEVELS]
+
+    def u8s(values):
+        return ", ".join("%d" % v for v in values)
+
+    tables = ["const u8 gLevelSelectWorldFirstLevels[WORLD_COUNT] = { %s };" % u8s(p["first"] for p in pages),
+              "const u8 gLevelSelectWorldLevelCounts[WORLD_COUNT] = { %s };" % u8s(p["count"] for p in pages),
+              "const u8 gLevelSelectWorldBosses[WORLD_COUNT] = { %s };"
+              % ", ".join("%d" % p["boss"] if p["boss"] is not None else "LEVEL_SELECT_NO_BOSS" for p in pages),
+              "const u8 gLevelSelectLevelWorlds[LEVEL_SELECT_GRID_LEVELS] = { %s };" % u8s(level_worlds)]
+    for k in new_layouts:
+        pos = ["{ DISPLAY_ART_X + %d, DISPLAY_ART_Y + %d }" % xy for xy in page_layout(k)]
+        pos += ["{ 0, 0 }"] * (c["LEVEL_SELECT_ENTRIES"] - k)
+        tables.append("const struct vec2 %s[LEVEL_SELECT_ENTRIES] = { %s };" % (layout_symbol(k), ", ".join(pos)))
+    tables.append("const struct vec2 *const gLevelSelectWorldEntryPositions[WORLD_COUNT] = { %s };"
+                  % ", ".join(layout_symbol(p["count"]) for p in pages))
+    tables.append("const struct vec2 *const gLevelSelectWorldEntryPositionsAllCleared[WORLD_COUNT] = { %s };"
+                  % ", ".join(layout_symbol(p["count"] + (p["boss"] is not None)) for p in pages))
+    decls = ["extern " + t.split(" = ")[0] + ";" for t in tables]
+    width = max(len(t) for t in tables)
+    return head + [
+        "#define LEVEL_SELECT_WORLD_FIRST(world) gLevelSelectWorldFirstLevels[world]",
+        "#define LEVEL_SELECT_WORLD_LEVELS(world) gLevelSelectWorldLevelCounts[world]",
+        "#define LEVEL_SELECT_WORLD_BOSS(world) gLevelSelectWorldBosses[world]",
+        "#define LEVEL_SELECT_BOSS_SHOWN(world, cleared) \\",
+        "    ((cleared) == gLevelSelectWorldLevelCounts[world] && gLevelSelectWorldBosses[world] != LEVEL_SELECT_NO_BOSS)",
+        "#define LEVEL_SELECT_WORLD_OF_LEVEL(level) gLevelSelectLevelWorlds[level]",
+        "#define LEVEL_SELECT_INDEX_OF_LEVEL(level, world) ((level) - gLevelSelectWorldFirstLevels[world])",
+        "#define LEVEL_SELECT_WORLD_OF_BOSS(level) gLevelSelectLevelWorlds[level]",
+        "#define LEVEL_SELECT_POSITIONS(world) gLevelSelectWorldEntryPositions[world]",
+        "#define LEVEL_SELECT_POSITIONS_ALL_CLEARED(world) gLevelSelectWorldEntryPositionsAllCleared[world]",
+        "", "#define LEVEL_SELECT_NO_BOSS 0x%02X /* gLevelSelectWorldBosses: the world has none */"
+        % LEVEL_SELECT_NO_BOSS,
+        "#define LEVEL_SELECT_GRID_LEVELS %d /* the levels on the grid: the numbered levels and the bosses */"
+        % grid,
+        "", "/* The page tables (level_select_layout.cpp defines them): per world its first",
+        " * level, its count, its boss, the world of each level on the grid, and the",
+        " * entries' positions (the ROM's two layouts for 5 and 6 entries, the arc's",
+        " * spacing for fewer). */"] + decls + [
+        "", "#define LEVEL_SELECT_PAGE_TABLES \\"] + [
+        "    " + (t.ljust(width) + " \\" if i + 1 < len(tables) else t) for i, t in enumerate(tables)]
 
 
 def level_select_worlds_h(data):
@@ -1723,7 +1848,7 @@ def level_select_worlds_h(data):
     for name, k in (("LEVEL_SELECT_WORLD_ANIMS", "page_title"),
                     ("LEVEL_SELECT_WORLD_ENTRY_BOX_ANIMS", "entry_box"),
                     ("LEVEL_SELECT_ENTRY_WORLD_ANIMS", "boss_icon")):
-        out.append("#define %s %s" % (name, ", ".join("%d" % e[k] for e in worlds)))
+        out.append("#define %s %s" % (name, ", ".join("%d" % e.get(k, 0) for e in worlds)))
     lines = []
     for w, e in enumerate(worlds[1:], 1):
         rule = e["opened_by"]
@@ -1736,6 +1861,7 @@ def level_select_worlds_h(data):
     width = max(len(s) for s in lines) if lines else 0
     out += ["", "#define LEVEL_SELECT_NEXT_WORLD_CASES%s" % (" \\" if lines else "")]
     out += ["    " + (s.ljust(width) + " \\" if k + 1 < len(lines) else s) for k, s in enumerate(lines)]
+    out += level_select_pages_h(data)
     out += ["", "#endif /* GUARD_LEVEL_SELECT_WORLDS_H */", ""]
     return "\n".join(out)
 
@@ -2335,13 +2461,22 @@ SAVE_64KBIT_MAX_SIZE = 0x400
 EEPROM_4KBIT, EEPROM_64KBIT = 4, 0x40  # EEPROMConfigure's chip codes
 
 
+# A level-select page holds up to 5 numbered levels and a boss (the ROM's
+# gLevelSelectEntryPositions, 5 levels and a hidden sixth slot, and
+# gLevelSelectEntryPositionsAllCleared, 6): LEVELS_PER_WORLD, the most a
+# world has.
+PAGE_LEVELS = 5
+
+
 def level_counts(data):
     """The counts the code takes from the levels (constants/levels.h). The
     levels are in the order the code's arithmetic needs: the numbered
-    levels world by world, LEVELS_PER_WORLD in each, then one boss per
-    world in world order (`"boss": true` with a "world"), then the levels
-    off the level select's grid (`"boss": true`, no "world"), mega-mix
-    first. Each count is a rule, not a field, so it follows the data."""
+    levels world by world, 1 to LEVELS_PER_WORLD in each, then the bosses,
+    at most one per world, in world order (`"boss": true` with a "world"),
+    then the levels off the level select's grid (`"boss": true`, no
+    "world"), mega-mix first. Each count is a rule, not a field, so it
+    follows the data. A world with fewer levels or no boss is a partial
+    page (level_select_pages)."""
     levels = data["levels"]
 
     def fail(msg):
@@ -2359,13 +2494,16 @@ def level_counts(data):
     if worlds != list(range(len(worlds))):
         fail("the numbered levels' worlds are 0 to %d" % (len(worlds) - 1))
     per_world = [sum(1 for lv in numbered if lv["world"] == w) for w in worlds]
-    if len(set(per_world)) != 1:
-        fail("every world has the same number of numbered levels (the level select's world * "
-             "LEVELS_PER_WORLD + index); they have %s" % per_world)
+    if max(per_world) != PAGE_LEVELS or min(per_world) < 1:
+        fail("a world has 1 to %d numbered levels, and the largest %d (the level select's page holds %d "
+             "levels and a boss, gLevelSelectEntryPositions); they have %s" % (PAGE_LEVELS, PAGE_LEVELS,
+                                                                             PAGE_LEVELS, per_world))
     if [lv["world"] for lv in numbered] != sorted(lv["world"] for lv in numbered):
         fail("the numbered levels go world by world")
-    if [lv["world"] for lv in bosses] != worlds:
-        fail("each world has one boss, in world order (LEVEL_FIRST_BOSS + world)")
+    boss_worlds = [lv["world"] for lv in bosses]
+    if boss_worlds != sorted(set(boss_worlds)) or not set(boss_worlds) <= set(worlds):
+        fail("a world has one boss at most, the bosses in world order, each of a world of the numbered "
+             "levels: their worlds are %s" % boss_worlds)
     gem_levels = numbered + off_grid[:1]  # what GameProgress::CountGems counts
     gem_paths = 0
     for lv in gem_levels:
@@ -2375,13 +2513,13 @@ def level_counts(data):
     c = {
         "LEVEL_COUNT": len(levels),
         "WORLD_COUNT": len(worlds),
-        "LEVELS_PER_WORLD": per_world[0],
+        "LEVELS_PER_WORLD": max(per_world),
         "LEVEL_NUMBERED_COUNT": len(numbered),
         "LEVEL_LAST_NUMBERED": numbered[-1]["constant"],
         "LEVEL_FIRST_BOSS": bosses[0]["constant"],
         "LEVEL_LAST_ON_GRID": bosses[-1]["constant"],
         "LEVEL_FINALE": off_grid[0]["constant"],
-        "LEVEL_SELECT_ENTRIES": per_world[0] + 1,
+        "LEVEL_SELECT_ENTRIES": PAGE_LEVELS + 1,
         "CRYSTAL_TOTAL": len(numbered),
         # a crate gem per numbered level (bosses have none: RunRoom skips
         # CheckAllCratesBroken), the gem-path gems of the levels CountGems
@@ -2541,11 +2679,11 @@ def constants_h(which):
  * Level ids: the index of gLevelTable, gLevelRoomLists and
  * level_state.levelFlags, and the value of level_state.level. Each is
  * named after the level's name text (gLevelTable's nameText). The
- * numbered levels come first, LEVELS_PER_WORLD per world (the level
- * select's `world * LEVELS_PER_WORLD + index`, the pause menu's
- * "level N" label), then the boss levels: one per world
- * (`LEVEL_FIRST_BOSS + world`), then the levels off the level select's
- * grid, mega-mix (LEVEL_FINALE) first.
+ * numbered levels come first, world by world, up to LEVELS_PER_WORLD
+ * per world (the level select's LEVEL_SELECT_WORLD_FIRST(world) + index,
+ * level_select_worlds.h; the pause menu's "level N" label), then the
+ * boss levels, at most one per world, in world order, then the levels
+ * off the level select's grid, mega-mix (LEVEL_FINALE) first.
  *
  * The counts below are derived from the levels too (tools/levels.py,
  * level_counts); with the ROM's levels each is the ROM's number, which
@@ -2555,13 +2693,13 @@ def constants_h(which):
         rows.append(("LEVEL_COUNT", "%d" % len(levels), "the length of gLevelTable"))
         body = define_lines(rows) + [""] + define_lines([
             ("WORLD_COUNT", "%d" % c["WORLD_COUNT"], "the level select's pages"),
-            ("LEVELS_PER_WORLD", "%d" % c["LEVELS_PER_WORLD"], "the numbered levels of a page"),
-            ("LEVEL_NUMBERED_COUNT", "%d" % c["LEVEL_NUMBERED_COUNT"], "WORLD_COUNT * LEVELS_PER_WORLD"),
+            ("LEVELS_PER_WORLD", "%d" % c["LEVELS_PER_WORLD"], "the most numbered levels of a page"),
+            ("LEVEL_NUMBERED_COUNT", "%d" % c["LEVEL_NUMBERED_COUNT"], "the worlds' numbered levels"),
             ("LEVEL_LAST_NUMBERED", c["LEVEL_LAST_NUMBERED"], None),
             ("LEVEL_FIRST_BOSS", c["LEVEL_FIRST_BOSS"], "the first page's boss"),
             ("LEVEL_LAST_ON_GRID", c["LEVEL_LAST_ON_GRID"], "the last page's boss"),
             ("LEVEL_FINALE", c["LEVEL_FINALE"], "the first level off the grid"),
-            ("LEVEL_SELECT_ENTRIES", "%d" % c["LEVEL_SELECT_ENTRIES"], "a page's levels and its boss"),
+            ("LEVEL_SELECT_ENTRIES", "%d" % c["LEVEL_SELECT_ENTRIES"], "a full page's levels and its boss"),
         ]) + ["", "/* The pause menu's totals and the completion percentage's divisor. */"] + define_lines([
             ("CRYSTAL_TOTAL", "%d" % c["CRYSTAL_TOTAL"], "a crystal per numbered level"),
             ("GEM_TOTAL", "%d" % c["GEM_TOTAL"], "crate gems, gem-path gems and the 4 coloured gems"),

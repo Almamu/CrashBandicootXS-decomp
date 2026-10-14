@@ -44,6 +44,7 @@
 #include "game/level/game_progress.hpp"
 #include "game/ui/menus.hpp"
 #include "engine/sys/frame_limiter.hpp"
+#include "level_select_worlds.h"
 
 extern "C" {
 #include "core.h"
@@ -369,9 +370,9 @@ public:
 
 COMPILE_TIME_ASSERT(level_select_hpp, sizeof(LevelSelectCursor) == 0x54);
 
-/* The level-select screen (LevelSelect::Run): LEVELS_PER_WORLD levels and
- * the world's boss per page (a world; LEVEL_SELECT_ENTRIES, 5 + 1 with
- * the ROM's levels), each level's fixed record (name text, three
+/* The level-select screen (LevelSelect::Run): a world's numbered levels
+ * (LEVELS_PER_WORLD at most) and its boss per page (a world;
+ * LEVEL_SELECT_ENTRIES, 5 + 1 with the ROM's levels), each level's fixed record (name text, three
  * time-trial thresholds) in gLevelTable and its saved record in the
  * save block. The screen keeps shadow copies of BLDCNT/BLDALPHA/BLDY/
  * DISPCNT and commits them with the scroll registers every frame
@@ -381,7 +382,7 @@ class LevelSelect
 public:
     u8 result;                    // 0x00 - returned by Run
     s32 lastIndex;                // 0x04 - last valid `index` on this page
-    s32 index;                    // 0x08 - cursor, 0 to LEVEL_SELECT_ENTRIES - 1
+    s32 index;                    // 0x08 - cursor, 0 to lastIndex
     s32 world;                    // 0x0C - page
     s32 levelId;                  // 0x10 - gLevelTable index
     const u8 *nameText;           // 0x14 - the level name's text
@@ -481,10 +482,15 @@ public:
             items[i]->SetLevel(world, i);
     }
 
-    /* Picks the cursor layout (six slots once all five levels of the page
-     * are cleared) and places every entry. A counter separate from `i`,
-     * and the index taken into a local before the lookup: both are what
-     * the ROM's register use and address order need. */
+    /* Picks the cursor layout (one slot more, the boss's, once all the
+     * page's levels are cleared) and places every entry. The page's
+     * levels, count, boss and layouts are level_select_worlds.h's macros:
+     * the ROM's five levels and a boss (`world * LEVELS_PER_WORLD + j`,
+     * the two ROM layouts) unless a page is partial (docs/levels.md,
+     * "Partial pages"). The entries past `lastIndex` aren't drawn. A
+     * counter separate from `i`, and the index taken into a local before
+     * the lookup: both are what the ROM's register use and address order
+     * need. */
     void PlaceItems()
     {
         s32 n = 0;
@@ -493,18 +499,18 @@ public:
         {
             s32 j;
 
-            for (j = 0; j < LEVELS_PER_WORLD; j++) {
-                s32 k = world * LEVELS_PER_WORLD + j;
+            for (j = 0; j < LEVEL_SELECT_WORLD_LEVELS(world); j++) {
+                s32 k = LEVEL_SELECT_WORLD_FIRST(world) + j;
 
                 n += save->levels[k].b.cleared;
             }
         }
-        if (n == LEVELS_PER_WORLD) {
-            positions = gLevelSelectEntryPositionsAllCleared;
+        if (LEVEL_SELECT_BOSS_SHOWN(world, n)) {
+            positions = LEVEL_SELECT_POSITIONS_ALL_CLEARED(world);
             lastIndex = n;
         } else {
-            positions = gLevelSelectEntryPositions;
-            lastIndex = LEVELS_PER_WORLD - 1;
+            positions = LEVEL_SELECT_POSITIONS(world);
+            lastIndex = LEVEL_SELECT_WORLD_LEVELS(world) - 1;
         }
         for (i = 0; i < LEVEL_SELECT_ENTRIES; i++)
             items[i]->SetPos(&positions[i]);
@@ -518,8 +524,8 @@ public:
     {
         s32 j;
 
-        for (j = 0; j < LEVELS_PER_WORLD; j++) {
-            if (!save->levels[w * LEVELS_PER_WORLD + j].b.cleared)
+        for (j = 0; j < LEVEL_SELECT_WORLD_LEVELS(w); j++) {
+            if (!save->levels[LEVEL_SELECT_WORLD_FIRST(w) + j].b.cleared)
                 return 0;
         }
         return 1;
