@@ -469,16 +469,43 @@
     }
   ],
   "themes": [
-    {"constant": "THEME_SNOW", "name": "snow"},
-    {"constant": "THEME_JUNGLE", "name": "jungle"},
-    {"constant": "THEME_SEWER", "name": "sewer"},
-    {"constant": "THEME_UNDERWATER", "name": "underwater"},
-    {"constant": "THEME_SKY", "name": "sky"},
-    {"constant": "THEME_SPACE", "name": "space"},
-    {"constant": "THEME_TINY", "name": "tiny"},
-    {"constant": "THEME_DINGODILE", "name": "dingodile"},
-    {"constant": "THEME_N_GIN", "name": "n. gin"},
-    {"constant": "THEME_NEO_CORTEX", "name": "neo cortex"},
-    {"constant": "THEME_MEGA_MIX", "name": "mega-mix"}
+    {"constant": "THEME_SNOW", "name": "snow", "song": "arctic", "picture": "level_select/pictures/snow.png", "first_room_exit_zone": true},
+    {"constant": "THEME_JUNGLE", "name": "jungle", "song": "jungle", "picture": "level_select/pictures/jungle.png", "palette_cycle": "jungle"},
+    {"constant": "THEME_SEWER", "name": "sewer", "song": "sewers", "picture": "level_select/pictures/sewer.png", "palette_cycle": "sewer"},
+    {"constant": "THEME_UNDERWATER", "name": "underwater", "song": "underwater", "picture": "level_select/pictures/underwater.png", "palette_cycle": "underwater"},
+    {"constant": "THEME_SKY", "name": "sky", "song": "rocket_crash", "picture": "level_select/pictures/sky.png"},
+    {"constant": "THEME_SPACE", "name": "space", "song": "future", "picture": "level_select/pictures/space.png", "palette_cycle": "space"},
+    {"constant": "THEME_TINY", "name": "tiny", "song": "dingodile", "picture": "level_select/pictures/tiny.png", "palette_cycle": "jungle"},
+    {"constant": "THEME_DINGODILE", "name": "dingodile", "song": "n_gin", "picture": "level_select/pictures/dingodile.png"},
+    {"constant": "THEME_N_GIN", "name": "n. gin", "song": "tiny", "picture": "level_select/pictures/n_gin.png"},
+    {"constant": "THEME_NEO_CORTEX", "name": "neo cortex", "song": "neo_cortex", "picture": "level_select/pictures/neo_cortex.png"},
+    {"constant": "THEME_MEGA_MIX", "name": "mega-mix", "song": "neo_cortex"}
+  ],
+  "palette_cycles": [
+    {
+      "name": "sewer",
+      "lists": [
+        {"symbol": "gThemePaletteCycle2", "rate": 6, "direction": 1, "entries": [177, 178, 179, 180, 181]}
+      ]
+    },
+    {
+      "name": "jungle",
+      "lists": [
+        {"symbol": "gThemePaletteCycle1A", "rate": 16, "direction": 0, "entries": [57, 58, 61, 62, 117, 130, 188, 234, 252]},
+        {"symbol": "gThemePaletteCycle1B", "rate": 20, "direction": 0, "entries": [81, 82, 102, 103, 104, 105, 106, 107, 241]}
+      ]
+    },
+    {
+      "name": "underwater",
+      "lists": [
+        {"symbol": "gThemePaletteCycle3", "rate": 10, "direction": 0, "entries": [32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47]}
+      ]
+    },
+    {
+      "name": "space",
+      "lists": [
+        {"symbol": "gThemePaletteCycle5", "rate": 20, "direction": 0, "entries": [151, 180, 247, 248, 255]}
+      ]
+    }
   ]
 }

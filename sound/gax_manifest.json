@@ -13526,27 +13526,27 @@
  "song_table": [
   {
    "song": "jungle",
-   "comment": "level theme (gThemeMusicCues)"
+   "comment": "level music (levels.json \"themes\", gThemeMusicCues): the jungle theme's"
   },
   {
    "song": "underwater",
-   "comment": "level theme"
+   "comment": "level music: the underwater theme's"
   },
   {
    "song": "arctic",
-   "comment": "level theme"
+   "comment": "level music: the snow theme's"
   },
   {
    "song": "sewers",
-   "comment": "level theme"
+   "comment": "level music: the sewer theme's"
   },
   {
    "song": "future",
-   "comment": "level theme"
+   "comment": "level music: the space theme's"
   },
   {
    "song": "rocket_crash",
-   "comment": "level theme"
+   "comment": "level music: the sky theme's"
   },
   {
    "song": "bonus_round",
@@ -13554,19 +13554,19 @@
   },
   {
    "song": "dingodile",
-   "comment": "boss theme"
+   "comment": "level music: tiny's level (THEME_TINY) plays this song, titled dingodile in the ROM (docs/levels.md, \"Themes\")"
   },
   {
    "song": "n_gin",
-   "comment": "boss theme"
+   "comment": "level music: dingodile's level (THEME_DINGODILE) plays this song, titled n gin"
   },
   {
    "song": "tiny",
-   "comment": "boss theme"
+   "comment": "level music: n. gin's level (THEME_N_GIN) plays this song, titled tiny"
   },
   {
    "song": "neo_cortex",
-   "comment": "boss theme"
+   "comment": "level music: neo cortex's level and mega-mix"
   },
   {
    "song": "main_menu_europe",

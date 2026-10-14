@@ -1760,6 +1760,11 @@ Mega Mix (theme 10) has no picture. In the ROM the pictures are stored
 in the order 0, 1, 4, 2, 5, 3, 9, 7, 8, 6, then their palettes in the
 same order (`level_select_graphics.cpp`).
 
+Which picture a theme shows is its `"picture"` in
+`data/levels/levels.json`'s `"themes"` (a path above), and
+`gLevelSelectPictures` is generated from it ([levels.md,
+"Themes"](./levels.md#themes)), so a new theme can show any of them.
+
 ### OBJ sheets
 
 Some tile sets are made of whole OBJs: with 1D OBJ mapping, a W x H OBJ is
