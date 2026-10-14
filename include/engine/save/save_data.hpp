@@ -2,8 +2,9 @@
 #define GUARD_SAVE_DATA_HPP
 
 /* The save data and its link transfer as C++ (#751, docs/cplusplus.md,
- * "The link session, the save data and the save transfer"): class SaveData, the 0x200-byte
- * record stored in the cartridge EEPROM, and class SaveTransfer, the
+ * "The link session, the save data and the save transfer"): class SaveData, the
+ * record stored in the cartridge EEPROM (0x200 bytes, the whole 4 Kbit
+ * EEPROM, in the ROM), and class SaveTransfer, the
  * envelope that sends one over the link cable and receives the other
  * console's. The save menu holds two SaveDatas (`new SaveData`, the
  * cartridge's and the received one) and makes a SaveTransfer for each
@@ -33,10 +34,10 @@
 
 extern "C" {
 #include "core.h"
-#include "constants/save_version.h"
+#include "constants/save.h"
 }
 
-/* One 0x70-byte save slot, as SaveData::ReadSlot/WriteSlot copy it:
+/* One save slot (0x70 bytes in the ROM), as SaveData::ReadSlot/WriteSlot copy it:
  * the level state's packed progress block (GameProgress;
  * PackSaveData/UnpackSaveData), then the current level and the sound
  * and music volumes (SaveMenu::SaveToSlot builds one,
@@ -58,17 +59,20 @@ namespace Engine
 namespace Save
 {
 
-/* The 0x200-byte save data, as stored in the cartridge EEPROM
- * (Read/Write, and Load/Store with retries and
- * validation): four 0x70-byte save slots (ReadSlot/WriteSlot/EraseSlot;
- * each holds the 0x68-byte progress block of the level state, the level,
- * and the sound and music volumes - see SaveMenu::SaveToSlot), a
- * per-slot "empty" flag, two marker bytes ('C' and SAVE_VERSION), a flag
- * byte and an additive word-sum checksum over the first 0x1fc bytes,
- * from SAVE_CHECKSUM_SEED (UpdateChecksum/CheckChecksum). The version and
- * the seed come from the level data (constants/save_version.h, 0x12 and
- * 0 with the ROM's levels; docs/levels.md, "Save compatibility"), so a
- * save made with other levels doesn't load. The save menu (SaveMenu::instance,
+/* The save data, as stored in the cartridge EEPROM (Read/Write, and
+ * Load/Store with retries and validation): SAVE_DATA_SIZE bytes, 0x200 in
+ * the ROM. Four save slots (0x70 bytes in the ROM; ReadSlot/WriteSlot/
+ * EraseSlot; each holds the progress block of the level state, the level,
+ * and the sound and music volumes - see SaveMenu::SaveToSlot), then a
+ * 12-byte trailer: a per-slot "empty" flag, two marker bytes ('C' and
+ * SAVE_VERSION), a flag byte and an additive word-sum checksum over the
+ * bytes before it, from SAVE_CHECKSUM_SEED (UpdateChecksum/CheckChecksum).
+ * All of it comes from the level data (constants/save.h; docs/levels.md,
+ * "The save"): the record is the whole 4 Kbit EEPROM while the four slots
+ * fit (the ROM's 25 levels, up to 28), else a record of the slots' size
+ * on the 64 Kbit EEPROM (SAVE_EEPROM_TYPE). The version and the seed are
+ * 0x12 and 0 with the ROM's levels, so a save made with other levels
+ * doesn't load. The save menu (SaveMenu::instance,
  * save_menu.hpp) holds two: the cartridge's (`cartSave`) and the one
  * received over the link cable (`linkSave`). Formerly `struct
  * settings_sync_record`. See
@@ -80,8 +84,10 @@ public:
      * WriteSlot: `row * 0x70 + this`) */
     struct save_slot slots[4];
     /* 0x1c0 with the ROM's 25 levels: the unused rest up to `slotEmpty`,
-     * 0x34 bytes (4 or more: tools/levels.py stops past 28 levels) */
-    u8 unused_1c0[0x1f4 - 4 * sizeof(struct save_slot)];
+     * 0x34 bytes in the ROM (tools/levels.py's save_layout sizes the
+     * record so that it is 0-0x34 bytes) */
+    u8 unused_1c0[SAVE_DATA_SIZE - 0xc - 4 * sizeof(struct save_slot)];
+    /* the trailer, the last 12 bytes (the offsets are the ROM's) */
     u8 slotEmpty[4];  // 0x1f4 - IsSlotEmpty; EraseSlot sets it
     u8 magic;         // 0x1f8 - 'C' (0x43) after Reset
     u8 versionNibble; // 0x1f9 - SAVE_VERSION after Reset; GetGameId reads its high nibble
@@ -90,8 +96,9 @@ public:
     u32 checksum;     // 0x1fc - UpdateChecksum/CheckChecksum
 
     /* The checksum test, which Validate inlines and CheckChecksum is
-     * the out-of-line copy of: the additive word sum of the first 0x1fc
-     * bytes (127 words), from SAVE_CHECKSUM_SEED, against `checksum`. */
+     * the out-of-line copy of: the additive word sum of the words before
+     * `checksum` (127 in the ROM), from SAVE_CHECKSUM_SEED, against
+     * `checksum`. */
     u32 ChecksumOk()
     {
         u32 *p = (u32 *)this;
@@ -99,7 +106,7 @@ public:
         s32 i;
         u32 result;
 
-        for (i = 0x7e; i >= 0; i--) {
+        for (i = SAVE_DATA_SIZE / 4 - 2; i >= 0; i--) {
             sum += *p++;
         }
 
@@ -142,7 +149,21 @@ public:
 } // namespace Save
 } // namespace Engine
 
-COMPILE_TIME_ASSERT(save_data_hpp, sizeof(Engine::Save::SaveData) == 0x200);
+COMPILE_TIME_ASSERT(save_data_hpp, sizeof(Engine::Save::SaveData) == SAVE_DATA_SIZE);
+COMPILE_TIME_ASSERT(save_data_hpp, SAVE_DATA_SIZE % 8 == 0);
+
+/* The record the link cable carries (SaveTransfer::data): 0x200 bytes,
+ * the ROM's SaveData, which Crash 2 and 3 send too. A larger record (the
+ * 64 Kbit save's) doesn't go whole: a receiver that takes 0x200 bytes (the
+ * ROM, Crash 2/3) would write the rest past its buffer. Only its first
+ * 0x200 bytes go, so neither side's checksum holds ("connection failed";
+ * docs/levels.md, "The save"). */
+#define SAVE_LINK_SIZE 0x200
+
+/* The stack the save needs past the ROM's, which main's mem_heap_init
+ * reserve adds: Read and Write's record buffer, and SaveMenu::SaveToSlot's
+ * two slots below which Store runs. 0 in the ROM. */
+#define SAVE_STACK_GROWTH (SAVE_DATA_SIZE - 0x200 + 2 * (sizeof(struct save_slot) - 0x70))
 
 namespace Engine
 {
@@ -167,8 +188,8 @@ public:
     SaveData *tmpl;    // 0x008 - the record SetRecord copies in
     /* 0x00c - read cursor into `tmpl` while draining `remaining` */
     u8 *cursor;
-    u8 data[sizeof(SaveData)]; // 0x010 - the received record's raw bytes
-    u8 *writePtr;              // 0x210 - write cursor into `data`
+    u8 data[SAVE_LINK_SIZE]; // 0x010 - the received record's raw bytes
+    u8 *writePtr;            // 0x210 - write cursor into `data`
     /* 0x214 - set 1 once `remaining` fully drains (send complete) */
     u32 sendDone;
     /* 0x218 - set 1 once `totalReceived` reaches sizeof(data) (receive complete) */

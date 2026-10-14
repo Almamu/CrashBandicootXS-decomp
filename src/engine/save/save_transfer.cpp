@@ -65,7 +65,7 @@ void SaveTransfer::ReceiveChunk(s32 playerIndex)
         s->players[playerIndex].ring.Pop(writePtr, n);
         writePtr += n;
         totalReceived += n;
-    } else if (totalReceived == 0x200) {
+    } else if (totalReceived == sizeof(data)) {
         receiveDone = 1;
     }
 }

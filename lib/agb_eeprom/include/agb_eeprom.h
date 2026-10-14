@@ -11,8 +11,9 @@
  * zeldaret/tmc's src/eeprom.c (EEPROM_V124) and pokeemerald's agb_flash.
  *
  * Usage, as the game's save code does it: pick the chip with
- * EEPROMConfigure(4) once, install the watchdog handler that
- * SetEepromTimerIntr() returns in the timer's IRQ slot, then read or
+ * EEPROMConfigure once (4 in the ROM; the game's level data can pick the
+ * 64 Kbit chip, docs/levels.md "The save"), install the watchdog handler
+ * that SetEepromTimerIntr() returns in the timer's IRQ slot, then read or
  * write 8-byte blocks 0..gEepromConfig->maxCount-1. */
 
 /* The SDK's EEPROMConfig. */
@@ -25,6 +26,10 @@ struct EepromConfig {
 
 /* The active chip's config (EEPROMConfigure). */
 extern const struct EepromConfig *gEepromConfig;
+
+/* EEPROMConfigure's size codes. */
+#define EEPROM_CHIP_4KBIT 4     /* 512 bytes, 0x40 blocks, 6-bit addresses */
+#define EEPROM_CHIP_64KBIT 0x40 /* 8 KB, 0x400 blocks, 14-bit addresses */
 
 /* Selects the chip by size code: 4 = 4 Kbit (512 bytes), 0x40 = 64 Kbit
  * (8 KB). Anything else selects the 512-byte chip and returns 1. */

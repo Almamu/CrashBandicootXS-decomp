@@ -687,8 +687,11 @@ one boss per world (`"boss": true` and its `"world"`), in world order;
 then the levels off the level select's grid (`"boss": true`, no
 `"world"`), mega-mix first. `levels.py` stops with a message when the
 data breaks that, when a total needs three digits (the pause menu prints
-two), or past 28 levels (the save record's four slots fill its 512
-bytes, `save_data.hpp`). `levels.json`'s `"themes"` names each theme
+two), or past 60 levels (the 64 Kbit save's largest record; see "The
+save"). Past 28 levels the build takes the 64 Kbit EEPROM by itself.
+`PROGRESS_EXTRA_FLAG_BYTES` (0 in the ROM) is the length of
+`GameProgress::extraFlags`, from `"extra_progress_flags"` (see "The
+save"). `levels.json`'s `"themes"` names each theme
 (`THEME_*`); a level's `"theme"` is its number (see "Themes").
 
 ### Adding a room
@@ -1024,24 +1027,130 @@ naming them. In mGBA the level select's zoom picture for jungle jam is the
 new one: BG2's character block holds `lab.png`'s tiles byte for byte, and
 the BG palette its colours.
 
-## Save compatibility
+## The save
+
+The cartridge save is one record, `SaveData` (`save_data.hpp`): four
+slots, then a 12-byte trailer. A slot (`struct save_slot`) is a
+`GameProgress` (the halfword of lives, mask and wumpa, the progress
+flags byte, a word per level, then the extra progress flags) and 8 bytes
+more (the level and the two volumes). The trailer is the slots' empty
+flags, the `'C'` marker, the version byte, two flag bytes and the
+checksum, the additive sum of the words before it.
+
+Everything about the record's size comes from the level data:
+`tools/levels.py constants save` writes `constants/save.h`, and the code
+uses its constants where the ROM had numbers. There is no `#if`: with
+the ROM's levels every constant is the ROM's number and the ROM matches.
+
+| | ROM (25 levels) | 4 Kbit (up to 28 levels) | 64 Kbit (29 to 60 levels) |
+|---|---|---|---|
+| `SAVE_EEPROM_TYPE` (`EEPROMConfigure`'s chip) | `EEPROM_CHIP_4KBIT` (4) | `EEPROM_CHIP_4KBIT` | `EEPROM_CHIP_64KBIT` (0x40) |
+| `SAVE_DATA_SIZE` (the record) | 0x200 | 0x200, the whole chip | the four slots and the trailer, rounded up to the EEPROM's 8-byte blocks: 0x230 for 31 levels |
+| a slot | 0x70 | 4 bytes more a level | 4 bytes more a level, and `PROGRESS_EXTRA_FLAG_BYTES` |
+| the slots | 0x000-0x1BF | 0x000-0x1EF at most | 0x000 to the trailer |
+| unused | 0x1C0-0x1F3 (0x34 bytes) | 0-0x34 bytes | 0-7 bytes |
+| the trailer | 0x1F4-0x1FF | 0x1F4-0x1FF | the record's last 12 bytes |
+| EEPROM blocks read and written | 0x40 (`gEepromConfig->maxCount`, the chip) | the same | `SAVE_DATA_SIZE / 8` of the chip's 0x400 |
+
+The record keeps its order (slots, unused, trailer), and only grows:
+`slotEmpty`, `magic`, `versionNibble`, `flags` and `checksum` stay the
+last 12 bytes, and `ChecksumOk`/`UpdateChecksum` sum
+`SAVE_DATA_SIZE / 4 - 1` words. The save menu keeps its four slots:
+`SaveMenu::DrawSlots` draws four fixed rows, so a larger save holds
+longer slots, not more of them.
+
+### The EEPROM
+
+The AgbEeprom library (`lib/agb_eeprom`, EEPROM_V122) already knows both
+chips, and nothing in it changes. `EEPROMConfigure(4)` picks
+`gEepromConfig512` (0x40 blocks, 6 address bits) and `EEPROMConfigure(0x40)`
+`gEepromConfig8k` (0x400 blocks, 14 address bits); a read sends
+`addrBitCount + 3` bits and a write `addrBitCount + 0x43`.
+`SaveData::Read` and `Write` call `EEPROMConfigure(SAVE_EEPROM_TYPE)`
+and transfer `SAVE_EEPROM_BLOCKS` blocks: `gEepromConfig->maxCount` when
+the save is the 4 Kbit chip, which is the ROM's code, else the record's
+`SAVE_DATA_SIZE / 8`. That is a constant condition, so the compiler keeps
+only one side. The 64 Kbit save doesn't use the whole chip: the record is
+copied through a stack buffer (below), and 0x400 block writes would take
+some seconds.
+
+The ROM's `"EEPROM_V122"` string is the same for both chips. Emulators
+and flash carts tell the size from the accesses. mGBA starts at 4 Kbit
+and turns the save into 8 KB on the first access past 0x200 bytes; other
+tools count the bits of a request (17 or 81 for 64 Kbit). A 64 Kbit build
+does both: 14-bit addresses, and blocks past 0x40.
+
+### The stack
+
+`SaveData::Read` and `Write` copy the record through a stack buffer the
+record's size (`u8 buf[sizeof(SaveData)]`), and `SaveMenu::SaveToSlot`
+holds two slots on the stack above `Store`. The stack is the top of
+IWRAM above the IWRAM heap: `mem_heap_init(0x400)` in the ROM. The ROM's
+deepest save (`SaveToSlot`, `Store`, `Write`, `EEPROMWrite1_check`,
+`EEPROMWrite`) already runs about 0x6C bytes past those 0x400, into the
+top of the IWRAM heap, which is free in the save menu (measured in mGBA:
+the IWRAM heap's last used block ends at 0x03003B08 there). So main
+reserves `SAVE_STACK_GROWTH` bytes more, the record's and the two slots'
+growth (0 in the ROM, 0x78 for 31 levels with one extra flag word), and
+a larger save goes no further into the heap than the ROM's.
+`SAVE_64KBIT_MAX_SIZE`, 0x400 bytes, keeps that small: at 60 levels the
+IWRAM heap loses 0x318 bytes, and it had at least 13,668 bytes free while
+the ROM's levels played in mGBA.
+
+### The link cable
+
+`SaveMenu::LinkExchange` sends the cartridge's record and receives the
+other console's (`SaveTransfer`), for "load from link" and for the Crash
+2/3 bonus. The ROM sends and expects 0x200 bytes, and so do Crash 2 and
+3: a receiver counts the bytes in until it has exactly 0x200, so a longer
+record would be written past its buffer. So the link record stays
+`SAVE_LINK_SIZE`, 0x200 bytes, in every build: a 64 Kbit build sends its
+record's first 0x200 bytes, and copies the 0x200 it receives over the
+start of `linkSave` (which `BeginLinkTransfer` has just reset). The
+other console finds no trailer where it looks, and the 64 Kbit build
+checks the received slots against its own blank trailer, so both show
+"connection failed". (The one exception is a peer record whose first
+0x200 bytes sum to 0, an empty one: it checks out with the blank trailer,
+whose four slots are all empty, so nothing can be loaded.) A 64 Kbit
+build can't load slots over the link cable, even from the same build,
+but it can't break the other console either. A 4 Kbit modified build
+sends whole records, which its own build can load.
+
+### Extra progress flags
+
+`GameProgress::flags`' 8 bits are all used (the 4 coloured gems and the 4
+powers). `levels.json`'s optional `"extra_progress_flags"` lists more:
+
+```json
+"extra_progress_flags": [{"name": "WORLD_5_SEEN", "comment": "what sets it"}]
+```
+
+Each is `PROGRESS_EXTRA_BIT_<name>` (`constants/levels.h`), bit N % 8 of
+`GameProgress::extraFlags[N / 8]`, after the level words. The array is
+a word per 32 flags (`PROGRESS_EXTRA_FLAG_BYTES`, 0 and no bytes in the
+ROM), so it is saved with the rest of the block and grows the slots like
+a level: the 4 Kbit save holds 27 levels and up to 32 extra flags. The
+flags are part of the save version's CRC.
+
+### Compatibility
 
 A save's records mean something only with the levels it was made with:
 `GameProgress::levels` is one word per level id, and the save slots grow
 with the level count. So the save data is made incompatible between
 builds of different level data, with no code of its own: the build
-derives two constants from the level data, `constants/save_version.h`
-(`tools/levels.py constants save`), and the save code uses them where
-the ROM had numbers.
+derives two constants from the level data, in `constants/save.h`, and
+the save code uses them where the ROM had numbers.
 
 - **The CRC.** `level_data_crc` is the CRC-32 of the canonical JSON
   (sorted keys, no spaces, UTF-8) of `levels.json`'s `"levels"`, then
-  of each room's `[folder, room.json]` in `"rooms"` order. The ROM layout
+  of each room's `[folder, room.json]` in `"rooms"` order, then of
+  `"extra_progress_flags"` when there are any. The ROM layout
   residuals (`"regions"`, `"assets"`, `"table"`), the pictures and the
   collision images don't count: a picture edit keeps the saves. With the
   ROM's data it is `ROM_LEVEL_DATA_CRC` (0x7ED35075), which `levels.py
   extract` checks.
-- **`SAVE_VERSION`**, the record's version byte (`versionNibble`, 0x1F9).
+- **`SAVE_VERSION`**, the record's version byte (`versionNibble`, the
+  trailer's second byte: 0x1F9 in the 4 Kbit record).
   Its high nibble is the game, 1 for Crash XS: over the link cable,
   `SaveMenu::LinkInput` reads it to tell a Crash XS save from the Crash 2
   and Crash 3 ones that give the link bonus, so it stays 1. The ROM's low
@@ -1064,6 +1173,7 @@ ROM matches. With any other data:
 | the same level data | yes |
 | the ROM's levels (an original cartridge, or `baserom.gba`'s `.sav`) | no, always: the version's low nibble is never 2 and the seed is never 0 |
 | other level data | no, unless the two CRC-32s are equal: about 1 in 2^32 for unrelated data, and never for data that differs in one span of 32 bits or less (CRC-32 detects every such burst). Since the version nibble is taken from the CRC, it adds nothing to that |
+| a save of the other size (a 4 Kbit save in a 64 Kbit build, or the reverse) | no: the size follows from the level data, so the CRCs differ (the row above). The trailer isn't even where the other build reads it: a 64 Kbit build reads its `magic` past a 4 Kbit save's 0x200 bytes, and a 4 Kbit build reads a 64 Kbit save's slot data at 0x1F8 |
 
 The version nibble alone would only give 15 values, a 1-in-15 chance
 that two modified builds accept each other's saves; the seed is what

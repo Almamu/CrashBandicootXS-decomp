@@ -103,6 +103,11 @@ public:
     // LEVEL_FLAG_* (crystal, the two clear gems, best time); five per
     // level-select page
     union level_record levels[LEVEL_COUNT];
+    // after the levels - the progress flags past `flags`' 8, levels.json's
+    // "extra_progress_flags" (PROGRESS_EXTRA_BIT_*, constants/levels.h: bit
+    // N is bit N % 8 of byte N / 8), a word per 32; none in the ROM. They
+    // are saved with the rest of the block (docs/levels.md, "The save")
+    u8 extraFlags[PROGRESS_EXTRA_FLAG_BYTES];
 
     /* src/game/level/game_progress.cpp */
     s32 GetLives() const;             // GetProgressLives
@@ -119,7 +124,8 @@ public:
 COMPILE_TIME_ASSERT(game_progress_hpp, offsetof(GameProgress, flags) == 0x02);
 COMPILE_TIME_ASSERT(game_progress_hpp, offsetof(GameProgress, levels) == 0x04);
 /* 0x68 with the ROM's 25 levels. */
-COMPILE_TIME_ASSERT(game_progress_hpp, sizeof(GameProgress) == 4 + 4 * LEVEL_COUNT);
+COMPILE_TIME_ASSERT(game_progress_hpp,
+                    sizeof(GameProgress) == 4 + 4 * LEVEL_COUNT + PROGRESS_EXTRA_FLAG_BYTES);
 
 } // namespace Level
 } // namespace Game

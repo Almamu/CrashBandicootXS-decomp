@@ -98,9 +98,10 @@ derived from those again.
     tools/levels.py constants themes OUT      constants/themes.h (THEME_*, the
                                               pictures' count) from levels.json's
                                               "themes"
-    tools/levels.py constants save OUT        constants/save_version.h: the save
-                                              data's version and checksum seed,
-                                              from a CRC-32 of the level data
+    tools/levels.py constants save OUT        constants/save.h: the save's EEPROM
+                                              and record size, from the level
+                                              count, and its version and checksum
+                                              seed, from a CRC-32 of the level data
 
 The entity types are named in data/levels/entity_types.json (one record
 per gEntitySpawnFuncs slot) and room.json gives a placed entity's type by
@@ -2073,7 +2074,7 @@ def extract(rom_path):
     # the derived counts (constants/levels.h, themes.h) are the ROM's
     check_rom_counts(levels)
     write_levels_json(levels)
-    # the save version's CRC (constants/save_version.h) is the ROM's
+    # the save version's CRC (constants/save.h) is the ROM's
     assert level_data_crc(levels) == ROM_LEVEL_DATA_CRC, \
         "the level data's CRC-32 is %#010x, not ROM_LEVEL_DATA_CRC" % level_data_crc(levels)
     # the generator's layout must be the ROM's: its objects back to back
@@ -2179,9 +2180,21 @@ UI_TEXT_ROM_COUNT = 70
 # completion percentage counts: four each.
 COLOURED_GEMS = 4
 POWERS = 4
-# The save record holds four slots of a GameProgress (4 + 4 bytes a level)
-# and 8 bytes more in 0x1F4 bytes (save_data.hpp): 28 levels at most.
-SAVE_SLOTS_SIZE = 0x1F4
+# The save record (SaveData, save_data.hpp; docs/levels.md, "The save"):
+# four slots, each a GameProgress (4 bytes, 4 a level, then the extra
+# progress flags) and 8 bytes more (the level and the two volumes), then a
+# 12-byte trailer (the slots' empty flags, the two markers, the flag bytes
+# and the checksum). The ROM's is the whole 4 Kbit EEPROM, 0x200 bytes,
+# which holds 28 levels. Past that the build takes the 64 Kbit EEPROM and
+# the record grows to the slots' size, in the EEPROM's 8-byte blocks, up
+# to SAVE_64KBIT_MAX_SIZE: SaveData::Read and Write copy the record
+# through a stack buffer, and main's stack reserve grows with it.
+SAVE_SLOTS = 4
+SAVE_SLOT_TAIL = 8
+SAVE_TRAILER = 12
+SAVE_4KBIT_SIZE = 0x200
+SAVE_64KBIT_MAX_SIZE = 0x400
+EEPROM_4KBIT, EEPROM_64KBIT = 4, 0x40  # EEPROMConfigure's chip codes
 
 
 def level_counts(data):
@@ -2243,10 +2256,48 @@ def level_counts(data):
     for k in ("CRYSTAL_TOTAL", "GEM_TOTAL", "RELIC_TOTAL"):
         if c[k] > 99:
             fail("%s is %d: the pause menu prints it in two digits (PauseMenu's u8 [3] buffers)" % (k, c[k]))
-    if 4 * (4 + 4 * len(levels) + 8) > SAVE_SLOTS_SIZE:
-        fail("%d levels: the save record's four slots hold %d at most (save_data.hpp)"
-             % (len(levels), (SAVE_SLOTS_SIZE // 4 - 12) // 4))
+    c["PROGRESS_EXTRA_FLAG_BYTES"] = progress_extra_flag_bytes(data)
+    save_layout(data)  # stops past what the 64 Kbit save holds
     return c
+
+
+def extra_progress_flags(data):
+    """levels.json's "extra_progress_flags": the progress flags past the
+    ROM's 8 (GameProgress::flags), each a bit of GameProgress::extraFlags
+    in list order. None in the ROM."""
+    flags = data.get("extra_progress_flags", [])
+    names = [f["name"] for f in flags]
+    if len(set(names)) != len(names) or not all(re.fullmatch(r"[A-Z][A-Z0-9_]*", n) for n in names):
+        sys.exit("%s: \"extra_progress_flags\" names are unique, in upper case: %s" % (LEVELS_JSON, names))
+    return flags
+
+
+def progress_extra_flag_bytes(data):
+    """GameProgress::extraFlags' length: a word per 32 extra flags (the
+    block stays a whole number of words, which MemCopy32 copies)."""
+    return 4 * ((len(extra_progress_flags(data)) + 31) // 32)
+
+
+def save_layout(data):
+    """The save record's layout for the level data: (EEPROMConfigure's
+    chip code, the record's size, a slot's size). The 4 Kbit EEPROM's
+    0x200 bytes while the four slots fit (28 levels with no extra progress
+    flags), else the 64 Kbit EEPROM and a record of the slots' size in
+    8-byte blocks; stops past SAVE_64KBIT_MAX_SIZE."""
+    levels = len(data["levels"])
+    slot = 4 + 4 * levels + progress_extra_flag_bytes(data) + SAVE_SLOT_TAIL
+    need = SAVE_SLOTS * slot + SAVE_TRAILER
+    if need <= SAVE_4KBIT_SIZE:
+        return EEPROM_4KBIT, SAVE_4KBIT_SIZE, slot
+    size = (need + 7) & ~7
+    if size > SAVE_64KBIT_MAX_SIZE:
+        most = ((SAVE_64KBIT_MAX_SIZE - SAVE_TRAILER) // SAVE_SLOTS - SAVE_SLOT_TAIL - 4
+                - progress_extra_flag_bytes(data)) // 4
+        sys.exit("%s: %d levels: the save record would be %#x bytes, past the 64 Kbit save's %#x "
+                 "(%d levels at most%s; docs/levels.md, \"The save\")"
+                 % (LEVELS_JSON, levels, size, SAVE_64KBIT_MAX_SIZE, most,
+                    " with these extra progress flags" if extra_progress_flags(data) else ""))
+    return EEPROM_64KBIT, size, slot
 
 
 def check_rom_counts(data):
@@ -2256,6 +2307,8 @@ def check_rom_counts(data):
     c["LEVEL_SELECT_PICTURE_COUNT"] = level_select_picture_count(data["themes"])
     for k, v in ROM_COUNTS.items():
         assert c[k] == v, "%s: the rule gives %s, the ROM has %s" % (k, c[k], v)
+    assert c["PROGRESS_EXTRA_FLAG_BYTES"] == 0
+    assert save_layout(data) == (EEPROM_4KBIT, SAVE_4KBIT_SIZE, 0x70), "the save isn't the ROM's"
     assert c["LEVEL_COUNT"] == (LEVEL_ROOM_LISTS - LEVEL_TABLE) // LEVEL_INFO_SIZE
 
 
@@ -2274,15 +2327,18 @@ ROM_SAVE_VERSION = 0x12
 def level_data_crc(levels):
     """The CRC-32 of the level data a save depends on: the canonical JSON
     (sorted keys, no spaces, UTF-8) of levels.json's "levels" and of each
-    room's room.json, in "rooms" order. The ROM layout residuals
-    ("regions", "assets", "table") and the pictures don't count: they
-    don't change what a save's records mean."""
+    room's room.json, in "rooms" order, then of "extra_progress_flags"
+    if there are any. The ROM layout residuals ("regions", "assets",
+    "table") and the pictures don't count: they don't change what a save's
+    records mean."""
     def canon(v):
         return json.dumps(v, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
 
     crc = zlib.crc32(canon(levels["levels"]))
     for r in levels["rooms"]:
         crc = zlib.crc32(canon([r, read_json(LEVELS_DIR / r / "room.json")]), crc)
+    if extra_progress_flags(levels):
+        crc = zlib.crc32(canon(extra_progress_flags(levels)), crc)
     return crc
 
 
@@ -2374,7 +2430,12 @@ def constants_h(which):
         ]) + ["", "/* The length of the UI text tables (gUiTextEnglish, ...): the ROM's 70 strings,",
               " * or more when a level's name_text is past them. */"] + define_lines([
             ("UI_TEXT_COUNT", "%d" % c["UI_TEXT_COUNT"], None),
-        ])
+        ]) + ["", "/* The progress flags past the ROM's 8 (levels.json's \"extra_progress_flags\"):",
+              " * bit N is bit N % 8 of GameProgress::extraFlags[N / 8], a word per 32 of them",
+              " * (none in the ROM). */"] + define_lines([
+            ("PROGRESS_EXTRA_FLAG_BYTES", "%d" % c["PROGRESS_EXTRA_FLAG_BYTES"], "GameProgress::extraFlags"),
+        ] + [("PROGRESS_EXTRA_BIT_" + f["name"], "%d" % i, f.get("comment"))
+             for i, f in enumerate(extra_progress_flags(data))])
     elif which == "themes":
         src, guard = LEVELS_JSON, "GUARD_CONSTANTS_THEMES_H"
         data = read_json(src)
@@ -2398,19 +2459,32 @@ def constants_h(which):
               "#define THEME_FIRST_ROOM_EXIT_ZONE(theme) (%s)"
               % (" || ".join("(theme) == %s" % c for c in exits) or "0")]
     elif which == "save":
-        src, guard = LEVELS_JSON, "GUARD_CONSTANTS_SAVE_VERSION_H"
-        crc = level_data_crc(read_json(src))
+        src, guard = LEVELS_JSON, "GUARD_CONSTANTS_SAVE_H"
+        data = read_json(src)
+        crc = level_data_crc(data)
         version, seed = save_version(crc)
+        chip, size, _ = save_layout(data)
         doc = """/*
- * The save data's version and checksum seed (SaveData, save_data.hpp),
- * from the CRC-32 of the level data (tools/levels.py, level_data_crc):
- * a save made with other levels than the build's doesn't load. With the
- * ROM's level data they are the ROM's: version 0x12 and seed 0. Else
- * the version's low nibble is another one picked by the CRC (the high
- * one stays Crash XS's game id), and the seed is the CRC xor the ROM's,
- * never 0, so the checksum of a save of other level data fails.
+ * The save data (SaveData, save_data.hpp; docs/levels.md, "The save"),
+ * from the level data.
+ *
+ * The EEPROM and the record's size (tools/levels.py, save_layout): the
+ * ROM's 4 Kbit EEPROM, whose 0x200 bytes are the record, while its four
+ * slots fit; else the 64 Kbit EEPROM, with a record of the slots' size.
+ *
+ * The version and the checksum seed, from the CRC-32 of the level data
+ * (level_data_crc): a save made with other levels than the build's
+ * doesn't load. With the ROM's level data they are the ROM's: version
+ * 0x12 and seed 0. Else the version's low nibble is another one picked
+ * by the CRC (the high one stays Crash XS's game id), and the seed is
+ * the CRC xor the ROM's, never 0, so the checksum of a save of other
+ * level data fails.
  */"""
-        body = ["/* the level data's CRC-32: 0x%08X (the ROM's: 0x%08X) */" % (crc, ROM_LEVEL_DATA_CRC)] + define_lines([
+        body = define_lines([
+            ("SAVE_EEPROM_TYPE", {EEPROM_4KBIT: "EEPROM_CHIP_4KBIT", EEPROM_64KBIT: "EEPROM_CHIP_64KBIT"}[chip],
+             "EEPROMConfigure's chip (<agb_eeprom.h>)"),
+            ("SAVE_DATA_SIZE", "0x%03X" % size, "sizeof(SaveData), a multiple of the EEPROM's 8-byte blocks"),
+        ]) + ["", "/* the level data's CRC-32: 0x%08X (the ROM's: 0x%08X) */" % (crc, ROM_LEVEL_DATA_CRC)] + define_lines([
             ("SAVE_VERSION", "0x%02X" % version, "versionNibble"),
             ("SAVE_CHECKSUM_SEED", "0x%08X" % seed if seed else "0", "the checksum's start value"),
         ])

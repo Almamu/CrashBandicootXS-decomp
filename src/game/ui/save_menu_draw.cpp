@@ -80,7 +80,7 @@ s32 SaveMenu::LinkExchange()
         /* `data` is needed: inlined, the code is 1 instruction longer */
         s32 data = (s32)spinner->GetData();
 
-        MemCopy32(linkSave, (void *)data, sizeof(SaveData));
+        MemCopy32(linkSave, (void *)data, SAVE_LINK_SIZE);
     }
     delete spinner;
     return result;

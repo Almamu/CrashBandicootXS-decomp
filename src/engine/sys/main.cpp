@@ -1,3 +1,4 @@
+#include "engine/save/save_data.hpp"
 #include "engine/sys/irq.hpp"
 
 extern "C" {
@@ -17,7 +18,9 @@ s32 AgbMain(void)
     REG_BLDY = 0x10;
     REG_DISPCNT = DISPCNT_MODE_0;
 
-    if (mem_heap_init(0x400) != 0 || Irq::Setup() != 0) {
+    // the stack at the top of IWRAM, above the IWRAM heap: the ROM's 0x400
+    // bytes, and what a larger save needs (SAVE_STACK_GROWTH, 0 in the ROM)
+    if (mem_heap_init(0x400 + SAVE_STACK_GROWTH) != 0 || Irq::Setup() != 0) {
         return -1;
     }
 
