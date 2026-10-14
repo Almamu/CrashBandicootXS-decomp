@@ -1,6 +1,7 @@
 #include "platform.hpp"
 #include "player.hpp"
 
+using Game::Entities::Sprite;
 using Game::Objects::Platform;
 
 /* The rest of Platform's methods (#664, include/platform.hpp), ROM

@@ -20,10 +20,13 @@ extern "C" {
 #include "math_util.h"
 }
 
-class Sprite;
-
 namespace Game
 {
+namespace Entities
+{
+class Sprite; // sprite_obj.hpp
+} // namespace Entities
+
 namespace Level
 {
 
@@ -53,8 +56,9 @@ public:
     s32 y;             // 0x04 - Q8
     screen_dx_q8_t vx; // 0x08 - Q8 look-ahead
     screen_dy_q8_t vy; // 0x0C - Q8 look-ahead
-    Sprite *target;    // 0x10 - gPlayer, or the level select's camera lead (CameraLead)
-    s32 mode;          // 0x14 - CAMERA_MODE_*
+    Game::Entities::Sprite
+        *target; // 0x10 - gPlayer, or the level select's camera lead (CameraLead)
+    s32 mode;    // 0x14 - CAMERA_MODE_*
 
     void StepDirectional(); // StepCameraDirectional
     void StepFacing();      // StepCameraFacing

@@ -82,7 +82,9 @@ Other homes:
   includes stay outside it, global. A header never has `using
   namespace`: its inline code and its declarations name another
   namespace's class by its qualified name
-  (`Engine::Sys::VramDmaQueue::Flush()`). The `.cpp` files name it with a
+  (`Engine::Sys::VramDmaQueue::Flush()`, and a base class: `class
+  EnemyCtrl : public Game::Entities::Ctrl`, even inside `namespace
+  Game`). The `.cpp` files name it with a
   `using` declaration after their includes (`using Engine::Sys::Irq;`).
   A C header that gives a global a C++ class type under `__cplusplus`
   forward declares the class in its namespace (globals.h's `gInput`, an

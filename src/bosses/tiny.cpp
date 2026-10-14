@@ -23,6 +23,9 @@ using Game::Bosses::StompedHopPadCtrl;
 using Game::Bosses::TinyCtrl;
 using Game::Bosses::UnusedOneShotAnimCtrl;
 using Game::Crash::Player;
+using Game::Entities::CollidableList;
+using Game::Entities::Ctrl;
+using Game::Entities::MovingSprite;
 using Game::Level::LevelProgress;
 using Game::Objects::Pickups;
 

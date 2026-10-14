@@ -13,6 +13,11 @@ using Game::Bosses::CortexBossCtrl;
 using Game::Bosses::DingodileCtrl;
 using Game::Bosses::MegaMixCtrl;
 using Game::Bosses::TinyCtrl;
+using Game::Entities::AddUpdateOnly;
+using Game::Entities::CollidableList;
+using Game::Entities::Entity;
+using Game::Entities::ForegroundList;
+using Game::Entities::MovingSprite;
 using Game::Objects::Platform;
 
 /* The spawners of the bosses, the room exit and Mega-Mix (#664,

@@ -235,9 +235,11 @@ compiles to exactly the code `ACTOR_PMF_CALL` spells out
 
 **Names.** The ROM has no symbols, so mangling doesn't matter, but the
 build links C++ objects with C ones. g++ 2.9 mangles a method as
-`Method__<len>Class<args>` (`Update__10EffectCtrlP12MovingSprite`), a
-constructor as `__<len>Class`, a destructor as `_._<len>Class` and a
-vtable as `_vt.<len>Class`. See [How a C++ object is built](#how-a-c-object-is-built).
+`Method__<len>Class<args>` (`Update__10EffectCtrlP12MovingSprite`, as
+it was before the namespaces), a constructor as `__<len>Class`, a
+destructor as `_._<len>Class` and a vtable as `_vt.<len>Class`; a class
+in a namespace is a `Q` name instead ([Namespaces](#namespaces-1033)).
+See [How a C++ object is built](#how-a-c-object-is-built).
 
 ## Experiments
 
@@ -413,9 +415,10 @@ $(OBJCOPY) --redefine-syms=cxx_symbols.txt foo.o
   Headers with no polymorphic class (crate_list.hpp, menus.hpp,
   spawners.hpp) keep the pragma.
 - **Names.** `cxx_symbols.txt` maps each mangled name the C++ objects
-  define or use to its C name (`Update__10EffectCtrlP12MovingSprite
-  UpdateEffectCtrl`, `_vt.10EffectCtrl gEffectCtrlVtable`, `__4Ctrl
-  InitCtrl`). objcopy renames them after assembling, so the vtable data,
+  define or use to its C name
+  (`Update__Q34Game8Entities10EffectCtrlPQ34Game8Entities12MovingSprite
+  UpdateEffectCtrl`, `_vt.Q34Game8Entities10EffectCtrl gEffectCtrlVtable`,
+  `__Q34Game8Entities4Ctrl InitCtrl`). objcopy renames them after assembling, so the vtable data,
   the C callers, the linker script and the objdiff report see the C names.
   A missing or stale entry fails the link (the C side's reference stays
   undefined).
@@ -452,6 +455,7 @@ Crash-specific game code is explicit (it also helps the portable port,
 | `Game::Objects` | platforms, pickups |
 | `Game::Level` | level progress, rooms, level data |
 | `Game::Ui` | hud, menus, frontend (title, logos), cutscenes |
+| `Game::Entities` | the entity and controller bases (Entity, the sprites, PartList, Ctrl, EffectCtrl) and the 3D actors' (ActorSelf, AnimPart, HpActor) |
 
 A class on the boundary goes by what it depends on: code that knows
 about Crash's levels, entities or rules is `Game::`, generic code is
@@ -897,11 +901,64 @@ checks the change is only a rename:
   actor (an ActorSelf), but only the company logos screen uses it, so it
   goes with the front end; `Starfield` is drawn behind the language
   select, the credits and the company logos, all front end.
+- **`Game::Entities`** (`Q34Game8Entities`; the owner's call, after the
+  layout was done): the bases the other families derive from, which
+  #1051-#1067 had left global. The entity and sprite classes `Entity`
+  (entity.hpp), `Sprite`, `UiSprite`, `MovingSprite`, `GroundSprite` and
+  `PartList` (sprite_obj.hpp), and the controllers' bases `Ctrl` and
+  `EffectCtrl` (ctrl.hpp). 278 symbols renamed, among them the 7 vtables
+  (`_vt.Q34Game8Entities6Entity`, ...) and every method of another class
+  that takes one of them (`Update__Q34Game7Enemies9EnemyCtrlPQ34Game8Entities12MovingSprite`);
+  no code change. ldscript.txt's 7 lines that place the vtable sections
+  are updated by hand, and so is tools/shiftcheck.py's `vtables` shift
+  point (`entity.o(.gnu.linkonce.d._vt.Q34Game8Entities6Entity)`).
+  **How the other namespaces name them:** the headers always write the
+  qualified name, `class EnemyCtrl : public Game::Entities::Ctrl`,
+  `virtual void Update(Game::Entities::MovingSprite *part)`, even inside
+  `namespace Game` where `Entities::Ctrl` would do: that is how the
+  headers already name the other namespaces' classes
+  (`Game::Enemies::EnemyCtrl`, `Game::Objects::PlatformMover`), and it
+  greps the same everywhere. The .cpp files use using declarations (70
+  files). camera.hpp, globals.h (gTouchableList, gCollidableList,
+  gForegroundList) and level.h (gDecorationList, gUpdateOnlyPartList)
+  forward declare the classes in the namespace (`extern class PartList *`
+  would declare another, global class). **The inline helpers:** the part
+  list accessors TouchableList, CollidableList, ForegroundList
+  (sprite_obj.hpp) and DecorationList (spawners.hpp), spawners.hpp's
+  AddUpdateOnly (an Entity onto the update-only list) and pickups.hpp's
+  ClampFrame and Affine (a Sprite's first frame and affine flag; the
+  pickups and the crate spawners use them) move into Game::Entities with
+  the classes they work on; menus.hpp's SetIconBank and level_select.hpp's
+  SetBankNow and ShowFrame, which only the menus and the level select
+  call, move into `Game::Ui`, their callers' namespace. They are moved,
+  not changed: an inline helper removed or rewritten shifts the local
+  label numbers of the files that include its header. What stays global:
+  entity.hpp's C-linkage SetEntityPixelPos and SetEntityPos, the C
+  structs the classes hold (`union EntityFlags`, `struct speed_ramp`,
+  `struct hitbox_quad`, ...), and the inline helpers that don't work on
+  these classes (crate_list.hpp's RoomCrates, spawners.hpp's EntityParams,
+  a level data reader). cortex.cpp's and swim_ctrl.cpp's file-local
+  `ClampFrame(part, frame)` overloads stay file-local. Name hiding: no
+  class, function, global or macro is named `Entities` (only longer names
+  such as SpawnRoomEntities), the namespace holds only the classes and
+  the helpers, and no global is named like one of them. **Boundary
+  calls:** these classes know the game: the player contact
+  (MovingSprite::TouchPlayer, Entity::CheckPlayerContact), the level's
+  entity flags (Entity::MarkGone), the terrain probes and the cast to
+  `Game::Crash::Player` (MovingSprite::AsPlayer), so they are `Game::`,
+  not `Engine::`. The engine names them across the boundary:
+  `Engine::Gfx`'s SpriteRenderer draws a `Game::Entities::Sprite`
+  (sprite_obj.hpp, sprite_renderer.cpp), so that is where Engine::Gfx
+  depends on a game class; splitting the drawn part (bank, tag, frame,
+  the mirror and affine bits) from the game rules is left for later.
+  Ctrl's key method, Ctrl::Update, sits in src/system/bios_util.cpp with
+  the BIOS helpers (the ROM's order), which names the class through a
+  using declaration.
 
 ### What stays global
 
-With `Game::Ui`, every class of the game code is in a namespace but
-these, which stay in the global namespace on purpose:
+With `Game::Ui` and `Game::Entities`, every class of the game code is in
+a namespace but these, which stay in the global namespace on purpose:
 
 - **The C-linkage functions** (`extern "C"`): what asm, the IWRAM ARM
   code, GAX, the linker script or a C caller reaches by its plain name,
@@ -914,18 +971,9 @@ these, which stay in the global namespace on purpose:
   (ApplyCrateCollision, DestroyPolarCrate, the balloon crates'
   destructors). A namespace doesn't change a C-linkage name, but these
   are declared where C sees them.
-- **The entity bases** (entity.hpp, sprite_obj.hpp, actor_self.hpp):
-  `Entity`, `Sprite`, `UiSprite`, `MovingSprite`, `GroundSprite`,
-  `PartList`, and the 3D actors' `ActorSelf`, `AnimPart`, `HpActor`.
-  Every family, in every namespace, derives from them, and
-  `Engine::Gfx`'s SpriteRenderer and `Engine::Actor`'s category driver
-  use them. Putting them in `Game::` would make the engine depend on the
-  game, and in `Engine::` would need the entity classes split from their
-  game rules (the player contact, the terrain probes), so they are the
-  shared base below both.
-- **The controllers' bases** (ctrl.hpp): `Ctrl` and `EffectCtrl`. The
-  player's, the enemies', the bosses' and the objects' controllers all
-  derive from them.
+- **The 3D actors' bases** (actor_self.hpp): `ActorSelf`, `AnimPart`,
+  `HpActor`, for now. The entity and controller bases are
+  `Game::Entities`' (above).
 - **The globals** (globals.h, level.h, ...: gPlayer, gLevelState,
   gCrateList, ...) and **the data tables** (src/data/, the ROM tables
   and the C string tables): their C names are what the linker script,
@@ -936,10 +984,11 @@ these, which stay in the global namespace on purpose:
   member functions (CrateGridNode, YetiCharge, LogoPiece, ...). No
   mangled name or only a parameter type names them, and C views share
   some.
-- **The header-only inline helpers** that read a global as its class
-  (RoomCrates, TouchableList, CollidableList, ForegroundList,
-  DecorationList) or work on a base class (ClampFrame, Affine,
-  SetIconBank, ShowFrame, ...), and the defines.
+- **The header-only inline helpers** that don't work on the entity
+  bases: crate_list.hpp's RoomCrates (gCrateList as `Game::Crates`'
+  CrateList) and spawners.hpp's EntityParams (a level data reader), and
+  the defines. The ones that work on the entity bases are
+  `Game::Entities`' or `Game::Ui`'s (above).
 - **lib/**: GAX, the AgbEeprom SDK and libgcc stay C libraries.
 
 ## Progress

@@ -18,6 +18,9 @@ extern "C" {
 #include "system.h"
 }
 
+using Game::Entities::Entity;
+using Game::Entities::Sprite;
+
 /* Sprite's methods (#664, include/sprite_obj.hpp): the virtual ones, the
  * constructor and destructor, and the accessors of its animation and
  * flags; and the three hitbox edge helpers the terrain probes use. */

@@ -14,6 +14,7 @@ extern "C" {
 
 using Game::Crash::Player;
 using Game::Crates::CrateList;
+using Game::Entities::MovingSprite;
 using Game::Level::BgLayer;
 
 /* CrateList::Collide and CollideWithPlayer (#664, part 7f;

@@ -11,6 +11,7 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Entities::Sprite;
 using Game::Level::Camera;
 
 /* GitHub issue #44: the `gCamera` camera-follow block (the

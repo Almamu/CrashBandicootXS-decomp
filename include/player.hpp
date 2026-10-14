@@ -178,7 +178,7 @@ namespace Crash
  * 0x350-byte block in its C). Its controller, `mover`, is the room kind's:
  * the action, swim, input or boss controller (`ctrlMode`). Slots 2, 5-9
  * and 11 are the base classes'. */
-class Player : public GroundSprite
+class Player : public Game::Entities::GroundSprite
 {
 public:
     // 0x80 - set while a triggered crate animation runs (the crate's state bit 7),
@@ -198,12 +198,12 @@ public:
     u8 countdown;
     u8 bounce; // 0x92 - stepped on a crate bounce (crate_break.cpp), cleared by the controller
     u8 unk_93;
-    u8 listCount;                 // 0x94 - entries in `list`
-    Game::Crates::Crate *list[5]; // 0x98 - the recently touched crates
-    Sprite *carried;              // 0xAC - the platform or crate the player stands on
-    Sprite *child;                // 0xB0 - Aku Aku, drawn with the player (Draw)
-    s32 maskTrailIdx;             // 0xB4 - the newest entry of `maskTrail`
-    struct vec2 maskTrail[8];     // 0xB8 - the recent positions, which Aku Aku follows
+    u8 listCount;                    // 0x94 - entries in `list`
+    Game::Crates::Crate *list[5];    // 0x98 - the recently touched crates
+    Game::Entities::Sprite *carried; // 0xAC - the platform or crate the player stands on
+    Game::Entities::Sprite *child;   // 0xB0 - Aku Aku, drawn with the player (Draw)
+    s32 maskTrailIdx;                // 0xB4 - the newest entry of `maskTrail`
+    struct vec2 maskTrail[8];        // 0xB8 - the recent positions, which Aku Aku follows
     u8 unk_F8[8];
     // 0x100 - standing on terrain kind 5 (CheckPlayerContact): the player keeps
     //         sliding and skids (ActionCtrl::SetTargetAnim)
@@ -252,8 +252,8 @@ public:
     void SetInvulnerable(s32 value);
     void SetControlMode(u8 value);
     u8 GetControlMode();
-    Sprite *GetStandingOn();
-    void SetStandingOn(Sprite *part);
+    Game::Entities::Sprite *GetStandingOn();
+    void SetStandingOn(Game::Entities::Sprite *part);
     void SetBusy(u8 value);
     u8 IsBusy();
     void ClearListCount();
@@ -334,7 +334,7 @@ COMPILE_TIME_ASSERT(player_hpp, sizeof(Player) == 0x350);
 } // namespace Crash
 } // namespace Game
 
-inline Game::Crash::Player *MovingSprite::AsPlayer()
+inline Game::Crash::Player *Game::Entities::MovingSprite::AsPlayer()
 {
     return (Game::Crash::Player *)this;
 }

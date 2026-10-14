@@ -5,6 +5,9 @@ extern "C" {
 #include "util.h"
 }
 
+using Game::Entities::Ctrl;
+using Game::Entities::MovingSprite;
+
 /* MovingSprite's events, contact test and accessors (#664,
  * include/sprite_obj.hpp). */
 

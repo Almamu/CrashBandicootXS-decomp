@@ -38,6 +38,11 @@ static inline const struct entity_params *EntityParams(u16 index)
     return (const struct entity_params *)(lvl->params + lvl->paramOffsets[index]);
 }
 
+namespace Game
+{
+namespace Entities
+{
+
 /* The level's other part lists (level.h), as the class, as
  * TouchableList() and the others are (sprite_obj.hpp). */
 static inline PartList *DecorationList()
@@ -53,8 +58,8 @@ static inline void AddUpdateOnly(Entity *e)
     (gUpdateOnlyPartList)->Add((Sprite *)e);
 }
 
-namespace Game
-{
+} // namespace Entities
+
 namespace Level
 {
 
@@ -81,19 +86,19 @@ public:
     /* LaunchEffectPart through `instance`, the new part harmful
      * (bit 2 set, bit 6 cleared): the enemies' floating popup and the
      * shooters' shots (enemy_ctrl.cpp). */
-    static MovingSprite *LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e,
-                                                 MovingSprite *src);
+    static Game::Entities::MovingSprite *LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e,
+                                                                 Game::Entities::MovingSprite *src);
     /* SpawnEntity: calls the spawn function of the record's type with the
      * record's three other halfwords. */
     void Spawn(u32 id, const struct level_entity *rec);
     void SetTable(const entity_spawn_fn *table, s32 n); // SetEntitySpawnerTable
     /* An effect part (a MovingSprite with an EffectCtrl) at (x, y),
      * clamped into the level, animation `anim` of the sprite banks. */
-    MovingSprite *SpawnEffectPart(s32 anim, s32 tag, s32 x, s32 y, s32 mirror);
+    Game::Entities::MovingSprite *SpawnEffectPart(s32 anim, s32 tag, s32 x, s32 y, s32 mirror);
     /* An effect part beside `src`, `margin` pixels clear of it, moving
      * away at `speed`. */
-    MovingSprite *LaunchEffectPart(s32 anim, s32 tag, s32 margin, s32 z, s32 speed,
-                                   MovingSprite *src);
+    Game::Entities::MovingSprite *LaunchEffectPart(s32 anim, s32 tag, s32 margin, s32 z, s32 speed,
+                                                   Game::Entities::MovingSprite *src);
     /* A dropped wumpa and extra life (entity_spawner.cpp); `toHud`
      * flies it to the HUD. */
     Game::Objects::Wumpa *DropWumpa(u32 x, u32 y, u32 p3, u32 p4, bool toHud);

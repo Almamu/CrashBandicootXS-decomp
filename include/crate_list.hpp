@@ -121,14 +121,16 @@ public:
     void Reset();            // ResetCrateList
     void Update();           // UpdateCrateList
     void Draw();             // DrawCrateList
-    void Collide(struct aabb box, s32 unused, MovingSprite *other); // CollideCrateGrid
-    void CollideWithPlayer(struct aabb box, MovingSprite *part); // CollideCrateGridPartWithPlayer
-    void CollideWithObject(struct aabb box, MovingSprite *part,
-                           MovingSprite *other); // CollideCrateGridPartWithObject
-    void CollidePlayer(s32 unused);              // CollidePlayerWithCrates
-    void Remove(Crate *sprite);                  // RemoveCrateFromList
-    void RemoveAt(s32 index);                    // RemoveCrateListAt
-    void Add(Crate *sprite);                     // AddCrateToList
+    void Collide(struct aabb box, s32 unused,
+                 Game::Entities::MovingSprite *other); // CollideCrateGrid
+    void CollideWithPlayer(struct aabb box,
+                           Game::Entities::MovingSprite *part); // CollideCrateGridPartWithPlayer
+    void CollideWithObject(struct aabb box, Game::Entities::MovingSprite *part,
+                           Game::Entities::MovingSprite *other); // CollideCrateGridPartWithObject
+    void CollidePlayer(s32 unused);                              // CollidePlayerWithCrates
+    void Remove(Crate *sprite);                                  // RemoveCrateFromList
+    void RemoveAt(s32 index);                                    // RemoveCrateListAt
+    void Add(Crate *sprite);                                     // AddCrateToList
     CrateGridNode *AddNode(Crate *sprite, s32 column, CrateGridNode *link); // AddCrateGridNode
     void Link(Crate *sprite);                                               // LinkCrateInGrid
     void LinkActive(Crate *sprite); // LinkCrateToActiveBucket

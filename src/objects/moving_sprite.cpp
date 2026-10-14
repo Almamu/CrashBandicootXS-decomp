@@ -10,6 +10,8 @@ extern "C" {
 }
 
 using Game::Crash::Player;
+using Game::Entities::MovingSprite;
+using Game::Entities::Sprite;
 
 /* MovingSprite's contact with the player (#664, include/sprite_obj.hpp). */
 

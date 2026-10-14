@@ -6,6 +6,9 @@ extern "C" {
 #include "level.h"
 }
 
+using Game::Entities::GroundSprite;
+using Game::Entities::MovingSprite;
+
 /* GroundSprite's terrain collision (#664, include/sprite_obj.hpp): the
  * floor and wall probes that keep a ground sprite on the terrain. */
 

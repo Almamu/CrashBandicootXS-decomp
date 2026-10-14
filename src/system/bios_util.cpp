@@ -7,6 +7,9 @@ extern "C" {
 #include "system.h"
 }
 
+using Game::Entities::Ctrl;
+using Game::Entities::MovingSprite;
+
 /* Sits right after the permanent hand-written `start`/`init_vector`
  * boot stub in asm/crt0.s (never decompiled - it's the CPU-mode/stack
  * setup and BIOS RegisterRamReset call every GBA ROM needs before

@@ -20,6 +20,7 @@ extern "C" {
 
 using Game::Crash::Player;
 using Game::Crates::Crate;
+using Game::Entities::Entity;
 
 /* The crate list's update pass (Crate::UpdateAll), the nitro detonation,
  * the nitro and iron switches, the outline crates and Crate::BreakInArea

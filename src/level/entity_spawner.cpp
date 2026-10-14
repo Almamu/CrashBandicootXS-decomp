@@ -8,6 +8,9 @@ extern "C" {
 #include "level_data.h"
 }
 
+using Game::Entities::CollidableList;
+using Game::Entities::EffectCtrl;
+using Game::Entities::MovingSprite;
 using Game::Level::BgLayer;
 using Game::Level::EntitySpawner;
 using Game::Objects::ExtraLife;

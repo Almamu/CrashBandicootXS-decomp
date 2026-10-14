@@ -1,6 +1,9 @@
 #include "ctrl.hpp"
 #include "sprite_obj.hpp"
 
+using Game::Entities::EffectCtrl;
+using Game::Entities::MovingSprite;
+
 /* The effect controller, ROM 0x0800CBF4-0x0800CD00: the first object
  * built as C++ (#664, docs/cplusplus.md). It's old_agbcp's: the file is
  * in the Makefile's OLD_AGBCC_OBJS (the constant-before-`ldrb` flag ORs

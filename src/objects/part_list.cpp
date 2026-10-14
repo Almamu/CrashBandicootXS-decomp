@@ -7,6 +7,9 @@ extern "C" {
 #include "memory.h"
 }
 
+using Game::Entities::PartList;
+using Game::Entities::Sprite;
+
 /* The part list's own methods (#664, part 7c; include/part_list.hpp).
  * The crate list's constructor, which the ROM puts right after them,
  * starts src/crates/crate_list_update.cpp. */

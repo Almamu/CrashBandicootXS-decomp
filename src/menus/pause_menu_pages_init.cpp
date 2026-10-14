@@ -9,6 +9,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Game::Entities::Sprite;
+using Game::Entities::UiSprite;
 using Game::Level::GameProgress;
 using Game::Ui::PauseMenu;
 

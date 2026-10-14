@@ -16,6 +16,7 @@ using Engine::Gfx::BgSetup;
 using Engine::Gfx::PaletteCache;
 using Engine::Sys::FrameLimiter;
 using Engine::Text::Font;
+using Game::Entities::UiSprite;
 using Game::Ui::LevelSelect;
 using Game::Ui::LevelSelectCursor;
 using Game::Ui::LevelSelectEntry;

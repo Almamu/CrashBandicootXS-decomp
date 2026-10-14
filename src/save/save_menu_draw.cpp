@@ -25,6 +25,8 @@ using Engine::Save::SaveData;
 using Engine::Save::SaveTransfer;
 using Engine::Sys::FrameLimiter;
 using Engine::Text::Font;
+using Game::Entities::Sprite;
+using Game::Entities::UiSprite;
 using Game::Level::GameProgress;
 using Game::Ui::SaveMenu;
 

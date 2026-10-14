@@ -45,6 +45,7 @@ using Game::Crash::Player;
 using Game::Crash::SwimCtrl;
 using Game::Crates::Crate;
 using Game::Crates::CrateList;
+using Game::Entities::PartList;
 using Game::Level::Camera;
 using Game::Level::EntitySpawner;
 using Game::Level::LevelLayers;

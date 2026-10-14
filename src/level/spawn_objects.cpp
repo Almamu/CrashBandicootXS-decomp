@@ -12,6 +12,9 @@ extern "C" {
 
 using Game::Enemies::EnemyCtrl;
 using Game::Enemies::PeriodicSpawner;
+using Game::Entities::AddUpdateOnly;
+using Game::Entities::DecorationList;
+using Game::Entities::Sprite;
 using Game::Objects::LaunchPad;
 using Game::Objects::Pickups;
 using Game::Objects::Platform;

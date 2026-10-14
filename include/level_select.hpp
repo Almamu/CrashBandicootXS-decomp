@@ -28,8 +28,9 @@
  * #754); cxx_symbols.txt maps the methods to their C names.
  *
  * The level select's five classes are in the namespace Game::Ui (#1033,
- * docs/cplusplus.md "Namespaces"), the camera lead and the launch pad in
- * Game::Objects (pickups.hpp).
+ * docs/cplusplus.md "Namespaces"), with the sprite helpers SetBankNow
+ * and ShowFrame (only the level select's code uses them), the camera
+ * lead and the launch pad in Game::Objects (pickups.hpp).
  *
  * No `#pragma interface`: g++ emits the vtables, CameraLead's in
  * camera_lead.cpp, LaunchPad's in launch_pad.cpp, LevelSelectEntry's in
@@ -56,12 +57,17 @@ extern "C" {
 #include "globals.h"
 }
 
+namespace Game
+{
+namespace Ui
+{
+
 /* Sets the sprite's bank. `bank` is in Sprite's one-member union (sprite_obj.hpp),
  * and gcc gives every access to a union member alias set 0, so a
  * store to it would make gcc reload everything after it (the ROM's class
  * had a plain member). Through a pointer to the member, the store has the
  * pointer's own alias set. */
-static inline void SetBankNow(Sprite *p, const struct sprite_bank *bank)
+static inline void SetBankNow(Game::Entities::Sprite *p, const struct sprite_bank *bank)
 {
     const struct sprite_bank **field = &p->bank;
 
@@ -69,13 +75,16 @@ static inline void SetBankNow(Sprite *p, const struct sprite_bank *bank)
 }
 
 /* Shows step `frame` of the animation, clamped to its last one. */
-static inline void ShowFrame(Sprite *p, s32 frame)
+static inline void ShowFrame(Game::Entities::Sprite *p, s32 frame)
 {
     s32 n = p->bank->anims[p->tag].frameCount;
 
     CLAMP_INDEX(frame, n);
     p->frame = frame;
 }
+
+} // namespace Ui
+} // namespace Game
 
 namespace Game
 {
@@ -86,7 +95,7 @@ namespace Objects
  * controller spawns (InputCtrl::StateStart). It trails the player at a
  * horizontal offset that eases 2 px per frame toward a clamped target, and
  * is gCamera's follow target while it is alive. */
-class CameraLead : public MovingSprite
+class CameraLead : public Game::Entities::MovingSprite
 {
 public:
     s32 targetOffset; // 0x78 - Q8 x offset from the player, 0xA00-0x3200
@@ -107,7 +116,7 @@ COMPILE_TIME_ASSERT(level_select_hpp, sizeof(CameraLead) == 0x80);
  * (sprite bank 28). When the player touches it (slot 14), it sends the
  * player event EVENT_LAUNCH_PAD, which makes the action controller launch
  * Crash upward in an air spin with a full tornado charge. */
-class LaunchPad : public MovingSprite
+class LaunchPad : public Game::Entities::MovingSprite
 {
 public:
     LaunchPad();                // InitLaunchPad (UNUSED: Spawn has it inlined)
@@ -148,10 +157,10 @@ namespace Ui
 class LevelSelectEntry
 {
 public:
-    s32 id;          // 0x00 - the level id (GetLevel)
-    u8 selected;     // 0x04
-    UiSprite *icon;  // 0x08
-    UiSprite *frame; // 0x0C
+    s32 id;                          // 0x00 - the level id (GetLevel)
+    u8 selected;                     // 0x04
+    Game::Entities::UiSprite *icon;  // 0x08
+    Game::Entities::UiSprite *frame; // 0x0C
     // 0x10: the vtable pointer
 
     LevelSelectEntry();                          // CreateLevelSelectEntry
@@ -199,9 +208,9 @@ COMPILE_TIME_ASSERT(level_select_hpp, sizeof(LevelSelectPageBg) == 0x28);
 /* One twinkle sprite at the picture's corners (ZoomBg::RandomizeTwinkle,
  * TickTwinkle). */
 struct Twinkle {
-    s32 timer;      // 0x00 - frames until a new frame is picked
-    s32 blink;      // 0x04 - blink window, counts down with timer
-    UiSprite *part; // 0x08
+    s32 timer;                      // 0x00 - frames until a new frame is picked
+    s32 blink;                      // 0x04 - blink window, counts down with timer
+    Game::Entities::UiSprite *part; // 0x08
 };
 
 /* REG_BG2CNT's layout in halfword bitfields (ZoomBg::GetControl's side). */
@@ -321,15 +330,15 @@ COMPILE_TIME_ASSERT(level_select_hpp, sizeof(ZoomBg) == 0x8C);
 class LevelSelectCursor
 {
 public:
-    struct bresenham_line line;   // 0x00 - (x0, y0) is the position
-    UiSprite *part;               // 0x28
-    s32 timer;                    // 0x2C - frames to the next idle cycle
-    s32 state;                    // 0x30 - see Update
-    struct oam_attrs oam;         // 0x34
-    s32 speed;                    // 0x3C - zoom step (Move), Q8
-    s32 scale;                    // 0x40 - zoom (Q8): INT_TO_Q8(1) = 1:1
-    struct obj_affine_src affine; // 0x44 - ObjAffineSet's source
-    s16 matrix[4];                // 0x4C - pa, pb, pc, pd
+    struct bresenham_line line;     // 0x00 - (x0, y0) is the position
+    Game::Entities::UiSprite *part; // 0x28
+    s32 timer;                      // 0x2C - frames to the next idle cycle
+    s32 state;                      // 0x30 - see Update
+    struct oam_attrs oam;           // 0x34
+    s32 speed;                      // 0x3C - zoom step (Move), Q8
+    s32 scale;                      // 0x40 - zoom (Q8): INT_TO_Q8(1) = 1:1
+    struct obj_affine_src affine;   // 0x44 - ObjAffineSet's source
+    s16 matrix[4];                  // 0x4C - pa, pb, pc, pd
 
     LevelSelectCursor();  // CreateLevelSelectCursor
     ~LevelSelectCursor(); // DestroyLevelSelectCursor
@@ -381,22 +390,22 @@ public:
     ZoomBg *bg2;                  // 0x20 - BG2, the level picture
     // 0x24 - the page's levels, then its boss
     LevelSelectEntry *items[LEVEL_SELECT_ENTRIES];
-    LevelSelectCursor *panel;        // 0x3C - the cursor
-    UiSprite *sprites[10];           // 0x40
-    u8 timeText[9];                  // 0x68 - best time
-    u8 recordText[9];                // 0x71 - next threshold to beat
-    u32 scroll;                      // 0x7C - BG0 auto-scroll counter
-    screen_dx_t panelSlideX;         // 0x80 - x offset of the record panel
-    screen_dy_t clearedIconY;        // 0x84 - sprite 2's y offset (0 or 0x1C), see LoadRecord
-    screen_dy_t flag1IconY;          // 0x88 - sprite 3's
-    screen_dy_t gemIconY;            // 0x8C - sprite 4's (the `rank` gem icon)
-    screen_dy_t trialIconY;          // 0x90 - sprite 5's (time-trial icons)
-    screen_dy_t trialIcon2Y;         // 0x94 - sprite 6's
-    s32 rank;                        // 0x98 - LoadRecord's classification, 5 = none
-    Game::Level::GameProgress *save; // 0x9C - PackSaveData's save block
-    union blend blend;               // 0xA0 - REG_BLDCNT + REG_BLDALPHA
-    struct bldy bldy;                // 0xA4 - REG_BLDY
-    union dispcnt dispcnt;           // 0xA8 - REG_DISPCNT (gfx.h)
+    LevelSelectCursor *panel;              // 0x3C - the cursor
+    Game::Entities::UiSprite *sprites[10]; // 0x40
+    u8 timeText[9];                        // 0x68 - best time
+    u8 recordText[9];                      // 0x71 - next threshold to beat
+    u32 scroll;                            // 0x7C - BG0 auto-scroll counter
+    screen_dx_t panelSlideX;               // 0x80 - x offset of the record panel
+    screen_dy_t clearedIconY;              // 0x84 - sprite 2's y offset (0 or 0x1C), see LoadRecord
+    screen_dy_t flag1IconY;                // 0x88 - sprite 3's
+    screen_dy_t gemIconY;                  // 0x8C - sprite 4's (the `rank` gem icon)
+    screen_dy_t trialIconY;                // 0x90 - sprite 5's (time-trial icons)
+    screen_dy_t trialIcon2Y;               // 0x94 - sprite 6's
+    s32 rank;                              // 0x98 - LoadRecord's classification, 5 = none
+    Game::Level::GameProgress *save;       // 0x9C - PackSaveData's save block
+    union blend blend;                     // 0xA0 - REG_BLDCNT + REG_BLDALPHA
+    struct bldy bldy;                      // 0xA4 - REG_BLDY
+    union dispcnt dispcnt;                 // 0xA8 - REG_DISPCNT (gfx.h)
 
     LevelSelect(s32 level); // InitLevelSelect
     ~LevelSelect();         // DestroyLevelSelect

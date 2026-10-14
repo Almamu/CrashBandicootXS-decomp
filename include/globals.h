@@ -119,6 +119,10 @@ extern u8 gJetpackPlayerInactive;
 /* In their namespace (docs/cplusplus.md, "Namespaces"). */
 namespace Game
 {
+namespace Entities
+{
+class PartList;
+} // namespace Entities
 namespace Level
 {
 class LevelEntityFlags;
@@ -140,15 +144,15 @@ extern Game::Level::Camera *gCamera;
 /* What the player's body touches (CollidePlayerWithObjects runs
  * CollidePartsOfClass on it): the pickups, gems, crystals, platforms and
  * Tiny's hop pads. */
-extern class PartList *gTouchableList;
+extern Game::Entities::PartList *gTouchableList;
 /* What the player's attack box hits (PartList::Collide), such as the
  * enemies and bosses. */
-extern class PartList *gCollidableList;
+extern Game::Entities::PartList *gCollidableList;
 /* Updated before the player and drawn first, so in front of everything
  * (the lowest OAM entries); the player never collides with it: the Cortex
  * boss and its cannon and shots, and wumpa flying to the HUD (CreateWumpa
  * with `special`). */
-extern class PartList *gForegroundList;
+extern Game::Entities::PartList *gForegroundList;
 extern Game::Level::LevelLayers *gLevelLayers;
 /* In its namespace (docs/cplusplus.md, "Namespaces"). */
 namespace Game

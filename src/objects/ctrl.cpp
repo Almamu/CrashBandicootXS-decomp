@@ -5,6 +5,9 @@ extern "C" {
 #include "util.h"
 }
 
+using Game::Entities::Ctrl;
+using Game::Entities::MovingSprite;
+
 /* The controllers' base class, Ctrl (gCtrlVtable's own methods), ROM
  * 0x0800B698-0x0800B8DC (#664, docs/cplusplus.md). It's old_agbcp's: the
  * file is in the Makefile's OLD_AGBCC_OBJS (SetTargetAnim's `movs r0, #9;

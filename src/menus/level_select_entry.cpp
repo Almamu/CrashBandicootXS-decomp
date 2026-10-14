@@ -14,6 +14,7 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Game::Entities::UiSprite;
 using Game::Ui::LevelSelectEntry;
 
 u8 LevelSelectEntry::IsSelected()

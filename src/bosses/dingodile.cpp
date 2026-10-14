@@ -21,6 +21,11 @@ using Game::Bosses::DingodileCtrl;
 using Game::Bosses::DingodileProjectileCtrl;
 using Game::Bosses::DingodileSharkCtrl;
 using Game::Bosses::DingodileShieldCtrl;
+using Game::Entities::CollidableList;
+using Game::Entities::Ctrl;
+using Game::Entities::MovingSprite;
+using Game::Entities::Sprite;
+using Game::Entities::TouchableList;
 using Game::Level::LevelProgress;
 using Game::Objects::Pickups;
 

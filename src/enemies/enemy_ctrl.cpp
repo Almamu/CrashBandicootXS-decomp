@@ -14,6 +14,8 @@ extern "C" {
 
 using Game::Crash::Player;
 using Game::Enemies::EnemyCtrl;
+using Game::Entities::Ctrl;
+using Game::Entities::MovingSprite;
 using Game::Level::EntitySpawner;
 
 /* GitHub issue #9/#10: EnemyCtrl's attack updaters and state setter

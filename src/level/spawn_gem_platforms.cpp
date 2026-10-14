@@ -6,6 +6,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Entities::Sprite;
+using Game::Entities::TouchableList;
 using Game::Objects::Platform;
 
 /* 0x08020E84-0x08021280 (GitHub issue #31): four of the entity spawners

@@ -8,6 +8,10 @@ extern "C" {
 }
 
 using Game::Enemies::EnemyCtrl;
+using Game::Entities::CollidableList;
+using Game::Entities::GroundSprite;
+using Game::Entities::MovingSprite;
+using Game::Entities::Sprite;
 
 /* The enemy spawners (#664, include/spawners.hpp), ROM
  * 0x0801EF0C-0x08020E84; read as "two-line text popup" spawners at

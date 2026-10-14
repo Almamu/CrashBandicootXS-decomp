@@ -12,7 +12,7 @@
  *
  * The three classes are in the namespace Game::Enemies (#1033,
  * docs/cplusplus.md "Namespaces"):
- * `Update__Q34Game7Enemies9EnemyCtrlP12MovingSprite`,
+ * `Update__Q34Game7Enemies9EnemyCtrlPQ34Game8Entities12MovingSprite`,
  * `_vt.Q34Game7Enemies9EnemyCtrl` (in the section
  * `.gnu.linkonce.d._vt.Q34Game7Enemies9EnemyCtrl`, which ldscript.txt
  * names) & co. enemies.h's C declarations stay global. */
@@ -78,7 +78,7 @@ namespace Game
 namespace Enemies
 {
 
-class EnemyCtrl : public Ctrl
+class EnemyCtrl : public Game::Entities::Ctrl
 {
 public:
     s32 rangeX[2]; // 0x10 - homing bounds
@@ -101,26 +101,26 @@ public:
     s32 shotPeriod;  // 0x48 - UpdateShooter fires every shotPeriod
     s32 shotPhase;   // 0x4C   frames, offset by shotPhase
     u8 unk_50[8];
-    s32 speed;            // 0x58 - homing
-    s32 accel;            // 0x5C
-    s32 baseX;            // 0x60 - oscillator base / last target x
-    s32 baseY;            // 0x64 - oscillator base / last target y
-    s32 mode;             // 0x68 - see SetAnimMode
-    s32 kind;             // 0x6C - the enemy kind (its sprite bank)
-    MovingSprite *target; // 0x70 - the steered part (Attach)
-    s32 state;            // 0x74 - Update's state (SetState)
-    s32 modeB;            // 0x78 - see SetMotionX
-    s32 modeA;            // 0x7C - see SetMotionY
-    s32 counter;          // 0x80
-    const s32 *anims;     // 0x84 - per-mode argument of SetTargetAnim: anim mode ->
-                          //        bank anim (gEnemyDefaultAnimMap..., SetModeTable)
-    MovingSprite *popup;  // 0x88 - floating popup spawned in state 18
+    s32 speed;                            // 0x58 - homing
+    s32 accel;                            // 0x5C
+    s32 baseX;                            // 0x60 - oscillator base / last target x
+    s32 baseY;                            // 0x64 - oscillator base / last target y
+    s32 mode;                             // 0x68 - see SetAnimMode
+    s32 kind;                             // 0x6C - the enemy kind (its sprite bank)
+    Game::Entities::MovingSprite *target; // 0x70 - the steered part (Attach)
+    s32 state;                            // 0x74 - Update's state (SetState)
+    s32 modeB;                            // 0x78 - see SetMotionX
+    s32 modeA;                            // 0x7C - see SetMotionY
+    s32 counter;                          // 0x80
+    const s32 *anims;                     // 0x84 - per-mode argument of SetTargetAnim: anim mode ->
+    //        bank anim (gEnemyDefaultAnimMap..., SetModeTable)
+    Game::Entities::MovingSprite *popup; // 0x88 - floating popup spawned in state 18
 
-    EnemyCtrl();                                            // CreateEnemyCtrl
-    virtual void Update(MovingSprite *part);                // UpdateEnemyCtrl
-    virtual void HandleEvent(s32 from, s32 event, s32 arg); // HitEnemy
-    virtual void Attach(MovingSprite *part);                // AttachEnemyCtrl
-    virtual ~EnemyCtrl();                                   // DestroyEnemyCtrl
+    EnemyCtrl();                                             // CreateEnemyCtrl
+    virtual void Update(Game::Entities::MovingSprite *part); // UpdateEnemyCtrl
+    virtual void HandleEvent(s32 from, s32 event, s32 arg);  // HitEnemy
+    virtual void Attach(Game::Entities::MovingSprite *part); // AttachEnemyCtrl
+    virtual ~EnemyCtrl();                                    // DestroyEnemyCtrl
 
     /* src/enemies/enemy_ctrl.cpp */
     void SetMotionY(s32 mode);
@@ -193,13 +193,13 @@ COMPILE_TIME_ASSERT(enemy_ctrl_hpp, sizeof(EnemyCtrl) == 0x8C);
  * src/enemies/knocked_enemy_ctrl.cpp): HitEnemy
  * hands a spun or slid enemy's part to one, and it marks the part gone
  * once it has left the screen. */
-class KnockedEnemyCtrl : public Ctrl
+class KnockedEnemyCtrl : public Game::Entities::Ctrl
 {
 public:
-    KnockedEnemyCtrl();                      // CreateKnockedEnemyCtrl
-    virtual void Update(MovingSprite *part); // UpdateKnockedEnemyCtrl
-    virtual ~KnockedEnemyCtrl();             // DestroyKnockedEnemyCtrl
-    void Reset();                            // ResetKnockedEnemyCtrl
+    KnockedEnemyCtrl();                                      // CreateKnockedEnemyCtrl
+    virtual void Update(Game::Entities::MovingSprite *part); // UpdateKnockedEnemyCtrl
+    virtual ~KnockedEnemyCtrl();                             // DestroyKnockedEnemyCtrl
+    void Reset();                                            // ResetKnockedEnemyCtrl
 };
 
 COMPILE_TIME_ASSERT(enemy_ctrl_hpp, sizeof(KnockedEnemyCtrl) == 0x10);
@@ -208,7 +208,7 @@ COMPILE_TIME_ASSERT(enemy_ctrl_hpp, sizeof(KnockedEnemyCtrl) == 0x10);
  * src/enemies/periodic_spawner.cpp): calls `callback` at its own position
  * once every `period` frames while near the camera. PeriodicSpawner::Spawn
  * (src/level/spawn_objects.cpp) makes one with SpawnSeal. */
-class PeriodicSpawner : public Entity
+class PeriodicSpawner : public Game::Entities::Entity
 {
 public:
     void (*callback)(u32 id, u16 x, u16 y, u16 param); // 0x1C

@@ -13,6 +13,7 @@ extern "C" {
 
 using Engine::Gfx::OamBuffer;
 using Engine::Gfx::SpriteRenderer;
+using Game::Entities::Sprite;
 
 /* The sprite renderer (gSpriteRenderer; SpriteRenderer, include/sprite_obj.hpp):
  * DrawPieces, DrawAffinePieces, DrawAt, Draw and the empty constructor and
