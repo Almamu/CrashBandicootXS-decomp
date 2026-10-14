@@ -7,6 +7,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Objects::Pickups;
+
 /* 0x0801EA5C-0x0801EF0C (GitHub issue #30), formerly
  * asm/code_3_2_17_1e990.s: six spawners, five of them entity spawners of
  * gEntitySpawnFuncs (types 0x07, 0x08, 0x0A-0x0C) and SpawnCrateGem, which

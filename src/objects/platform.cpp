@@ -1,6 +1,8 @@
 #include "platform.hpp"
 #include "player.hpp"
 
+using Game::Objects::Platform;
+
 /* The rest of Platform's methods (#664, include/platform.hpp), ROM
  * 0x0801B208-0x0801B304. PlatformMover follows in platform_mover.cpp.
  *

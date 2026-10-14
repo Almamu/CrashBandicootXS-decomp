@@ -11,6 +11,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Objects::Wumpa;
+
 /* The wumpa's flight to the HUD, payout start and hop, and its small
  * methods (#664, include/pickups.hpp). The stopwatch follows in
  * stopwatch.cpp. The first three were the end

@@ -33,7 +33,13 @@ class BossCtrl; // boss_ctrl.hpp
 } // namespace Bosses
 } // namespace Game
 class LevelEntityFlags;
+namespace Game
+{
+namespace Objects
+{
 class Platform; // platform.hpp
+} // namespace Objects
+} // namespace Game
 
 /*
  * The room block of the level state (`room`, +0x0C4), whose methods are
@@ -158,7 +164,7 @@ public:
     void TickLevelClock();
     void AddBrokenCrate();
     void PressSwitchCrate();
-    Platform *GetBonusPlatform();
+    Game::Objects::Platform *GetBonusPlatform();
     void SetCrateAssistDeaths(s32 value);
     void SetMaskAssistDeaths(s32 value);
     void SetUnusedAssistDeaths(s32 value);
@@ -227,8 +233,8 @@ public:
     void CollectWumpa();
     void AddLife();
     void CheckAllCratesBroken();
-    void SetGemPlatform(Platform *value);
-    void SetBonusPlatform(Platform *value);
+    void SetGemPlatform(Game::Objects::Platform *value);
+    void SetBonusPlatform(Game::Objects::Platform *value);
     void SetCrateGemPos(s32 *point);
     void RequestGemPath();
     void RequestBonusRound();
@@ -292,9 +298,10 @@ public:
     // updated when one is won, packed for the save menus (PackSaveData)
     GameProgress saveData;
     LevelEntityFlags
-        *savedBitmap;        // 0x1B4 - gEntityFlags, while a bonus round or gem path has its own
-    Platform *bonusPlatform; // 0x1B8 - the bonus-round platform object (SetBonusPlatform)
-    Platform *gemPlatform;   // 0x1BC - the gem-path platform object (SetGemPlatform)
+        *savedBitmap; // 0x1B4 - gEntityFlags, while a bonus round or gem path has its own
+    Game::Objects::Platform
+        *bonusPlatform; // 0x1B8 - the bonus-round platform object (SetBonusPlatform)
+    Game::Objects::Platform *gemPlatform; // 0x1BC - the gem-path platform object (SetGemPlatform)
     // 0x1C0 - where the crate gem appears (SetCrateGemPos); low halves go to SpawnCrateGem
     s32 crateGemX;
     s32 crateGemY; // 0x1C4

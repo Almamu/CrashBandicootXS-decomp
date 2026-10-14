@@ -418,9 +418,9 @@ SECTIONS
         build/crashbandicootxs/src/enemies/knocked_enemy_ctrl.o(.gnu.linkonce.d._vt.Q34Game7Enemies16KnockedEnemyCtrl); /* gKnockedEnemyCtrlVtable */
         build/crashbandicootxs/src/objects/effect_ctrl.o(.gnu.linkonce.d._vt.10EffectCtrl); /* gEffectCtrlVtable */
         build/crashbandicootxs/src/crates/crate_update.o(.gnu.linkonce.d._vt.Q34Game6Crates5Crate); /* gCrateVtable */
-        build/crashbandicootxs/src/pickups/extra_life.o(.gnu.linkonce.d._vt.9ExtraLife); /* gExtraLifeVtable */
-        build/crashbandicootxs/src/pickups/wumpa.o(.gnu.linkonce.d._vt.5Wumpa); /* gWumpaVtable */
-        build/crashbandicootxs/src/pickups/stopwatch.o(.gnu.linkonce.d._vt.9Stopwatch); /* gStopwatchVtable */
+        build/crashbandicootxs/src/pickups/extra_life.o(.gnu.linkonce.d._vt.Q34Game7Objects9ExtraLife); /* gExtraLifeVtable */
+        build/crashbandicootxs/src/pickups/wumpa.o(.gnu.linkonce.d._vt.Q34Game7Objects5Wumpa); /* gWumpaVtable */
+        build/crashbandicootxs/src/pickups/stopwatch.o(.gnu.linkonce.d._vt.Q34Game7Objects9Stopwatch); /* gStopwatchVtable */
         build/crashbandicootxs/src/player/action_ctrl_update.o(.gnu.linkonce.d._vt.Q34Game5Crash10ActionCtrl); /* gActionCtrlVtable */
         build/crashbandicootxs/src/player/swim_ctrl.o(.gnu.linkonce.d._vt.Q34Game5Crash8SwimCtrl); /* gSwimCtrlVtable */
         build/crashbandicootxs/src/player/input_ctrl.o(.gnu.linkonce.d._vt.Q34Game5Crash9InputCtrl); /* gInputCtrlVtable */
@@ -440,10 +440,10 @@ SECTIONS
         build/crashbandicootxs/src/bosses/dingodile.o(.gnu.linkonce.d._vt.Q34Game6Bosses23DingodileProjectileCtrl); /* gDingodileProjectileVtable */
         build/crashbandicootxs/src/bosses/dingodile.o(.gnu.linkonce.d._vt.Q34Game6Bosses19DingodileShieldCtrl); /* gDingodileShieldVtable */
         build/crashbandicootxs/src/bosses/dingodile.o(.gnu.linkonce.d._vt.Q34Game6Bosses13DingodileCtrl); /* gDingodileVtable */
-        build/crashbandicootxs/src/objects/platform_contact.o(.gnu.linkonce.d._vt.8Platform); /* gPlatformVtable */
-        build/crashbandicootxs/src/objects/platform_mover.o(.gnu.linkonce.d._vt.13PlatformMover); /* gPlatformMoverVtable */
-        build/crashbandicootxs/src/objects/camera_lead.o(.gnu.linkonce.d._vt.10CameraLead); /* gCameraLeadVtable */
-        build/crashbandicootxs/src/objects/launch_pad.o(.gnu.linkonce.d._vt.9LaunchPad); /* gLaunchPadVtable */
+        build/crashbandicootxs/src/objects/platform_contact.o(.gnu.linkonce.d._vt.Q34Game7Objects8Platform); /* gPlatformVtable */
+        build/crashbandicootxs/src/objects/platform_mover.o(.gnu.linkonce.d._vt.Q34Game7Objects13PlatformMover); /* gPlatformMoverVtable */
+        build/crashbandicootxs/src/objects/camera_lead.o(.gnu.linkonce.d._vt.Q34Game7Objects10CameraLead); /* gCameraLeadVtable */
+        build/crashbandicootxs/src/objects/launch_pad.o(.gnu.linkonce.d._vt.Q34Game7Objects9LaunchPad); /* gLaunchPadVtable */
         build/crashbandicootxs/src/menus/level_select_entry.o(.gnu.linkonce.d._vt.16LevelSelectEntry); /* gLevelSelectEntryVtable */
         build/crashbandicootxs/src/level/bg_streamer.o(.gnu.linkonce.d._vt.10BgStreamer); /* gBgStreamerVtable */
         build/crashbandicootxs/src/level/bg_layer_base.o(.gnu.linkonce.d._vt.11BgLayerBase); /* gBgLayerBaseVtable */

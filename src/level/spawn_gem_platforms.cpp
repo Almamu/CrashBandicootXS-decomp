@@ -6,6 +6,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Objects::Platform;
+
 /* 0x08020E84-0x08021280 (GitHub issue #31): four of the entity spawners
  * of gEntitySpawnFuncs (entity types 0x51-0x54; docs/rom_map.md called
  * them "trigger effect type N" functions) - the same family as

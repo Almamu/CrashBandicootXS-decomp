@@ -15,6 +15,7 @@ extern "C" {
 
 using Game::Crash::InputCtrl;
 using Game::Crash::Player;
+using Game::Objects::CameraLead;
 
 /* GitHub issue #21: 0x08017524-0x08017A44, the whole tail of the former
  * asm/code_3_2_17_16048.s.

@@ -91,8 +91,8 @@ public:
                                    MovingSprite *src);
     /* A dropped wumpa and extra life (entity_spawner.cpp); `toHud`
      * flies it to the HUD. */
-    Wumpa *DropWumpa(u32 x, u32 y, u32 p3, u32 p4, bool toHud);
-    ExtraLife *DropExtraLife(u32 x, u32 y, u32 p3, u32 p5, bool toHud);
+    Game::Objects::Wumpa *DropWumpa(u32 x, u32 y, u32 p3, u32 p4, bool toHud);
+    Game::Objects::ExtraLife *DropExtraLife(u32 x, u32 y, u32 p3, u32 p5, bool toHud);
 
 private:
     /* gEntitySpawner, the one spawner: an IWRAM global at 0x30012E4

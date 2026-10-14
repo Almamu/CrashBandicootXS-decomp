@@ -12,6 +12,9 @@ extern "C" {
 
 using Game::Enemies::EnemyCtrl;
 using Game::Enemies::PeriodicSpawner;
+using Game::Objects::LaunchPad;
+using Game::Objects::Pickups;
+using Game::Objects::Platform;
 
 /* The decoration, platform and seal-spawner spawners, between the
  * bosses' and the crates' (ROM 0x08021748-0x08021A4C; #664,

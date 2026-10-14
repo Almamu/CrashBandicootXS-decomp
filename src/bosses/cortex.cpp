@@ -25,6 +25,8 @@ using Game::Bosses::CortexCannonCtrl;
 using Game::Bosses::CortexShotCtrl;
 using Game::Bosses::CortexTargetCtrl;
 using Game::Crash::Player;
+using Game::Objects::Pickups;
+using Game::Objects::PlatformMover;
 
 /* The Neo Cortex fight (GitHub issues #23 and #24), ROM
  * 0x08018A30-0x080197F4, formerly asm/code_3_2_17_188d0.s and the head of

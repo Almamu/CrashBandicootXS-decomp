@@ -18,7 +18,14 @@
  * (src/level/, include/spawners.hpp) are C++ since part 9.
  *
  * No `#pragma interface`: g++ emits the vtables in extra_life.cpp,
- * wumpa.cpp and stopwatch.cpp (see ctrl.hpp). */
+ * wumpa.cpp and stopwatch.cpp (see ctrl.hpp).
+ *
+ * The pickups (ExtraLife, Wumpa, Stopwatch and the all-static Pickups)
+ * are in the namespace Game::Objects (#1033, docs/cplusplus.md
+ * "Namespaces"), with the platforms (platform.hpp), the launch pad and
+ * the camera lead (level_select.hpp): `_vt.Q34Game7Objects5Wumpa`. The
+ * inline helpers ClampFrame and Affine, `struct three_words` and the
+ * hop width tables stay global. */
 
 #include "sprite_obj.hpp"
 
@@ -89,6 +96,11 @@ static inline s32 Affine(Sprite *part)
 #define EXTRA_LIFE_STATE_IDLE 0    // on the spot: bobs or hops, picked up on contact
 #define EXTRA_LIFE_STATE_TO_HUD 1  // flies to the HUD's lives counter, adds a life there
 #define EXTRA_LIFE_STATE_FLY_OFF 2 // flies off the screen (`counter`: which way), gone
+
+namespace Game
+{
+namespace Objects
+{
 
 /* The extra life (gExtraLifeVtable). It bobs on the spot (`counter`
  * steps a sine) or hops (`mode` 1-3, `phase` steps the hop: UpdateHop)
@@ -251,7 +263,7 @@ COMPILE_TIME_ASSERT(pickups_hpp, sizeof(Stopwatch) == 0x40);
  * UNUSED SpawnSeaweedNoAnimReset are gEntitySpawnFuncs slots, under the
  * slot's signature; the bosses call the powers too. cxx_symbols.txt
  * (block "#915 Pickups") maps each member to its C name
- * (`SpawnBlueGem__7PickupsUiUsUsUs` is SpawnBlueGem, ...). */
+ * (`SpawnBlueGem__Q34Game7Objects7PickupsUiUsUsUs` is SpawnBlueGem, ...). */
 class Pickups
 {
 public:
@@ -276,5 +288,8 @@ public:
     static void SpawnSeaweedNoAnimReset(u32 id, u16 x, u16 y, u16 param); // SpawnSeaweedNoAnimReset
     static void SpawnFlame(u32 id, u16 x, u16 y, u16 param);              // SpawnFlame
 };
+
+} // namespace Objects
+} // namespace Game
 
 #endif /* !GUARD_PICKUPS_HPP */

@@ -73,6 +73,11 @@ static inline void ShowFrame(Sprite *p, s32 frame)
     p->frame = frame;
 }
 
+namespace Game
+{
+namespace Objects
+{
+
 /* The camera lead (gCameraLeadVtable): the moving sprite the input
  * controller spawns (InputCtrl::StateStart). It trails the player at a
  * horizontal offset that eases 2 px per frame toward a clamped target, and
@@ -123,6 +128,9 @@ public:
 };
 
 COMPILE_TIME_ASSERT(level_select_hpp, sizeof(LaunchPad) == 0x78);
+
+} // namespace Objects
+} // namespace Game
 
 /* One level's entry on the level-select page (gLevelSelectEntryVtable):
  * `icon` shows the level's picture (or, past index 4, a per-world

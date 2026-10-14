@@ -20,6 +20,7 @@ extern "C" {
 using Game::Crash::Player;
 using Game::Crates::CollisionQueue;
 using Game::Crates::Crate;
+using Game::Objects::Wumpa;
 
 /* The crate's hits, breaks and explosions (#664, include/crate.hpp,
  * part 7g): the player's hit on a crate (QueuePlayerCollision, resolved

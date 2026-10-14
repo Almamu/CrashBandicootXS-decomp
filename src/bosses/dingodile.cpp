@@ -21,6 +21,7 @@ using Game::Bosses::DingodileCtrl;
 using Game::Bosses::DingodileProjectileCtrl;
 using Game::Bosses::DingodileSharkCtrl;
 using Game::Bosses::DingodileShieldCtrl;
+using Game::Objects::Pickups;
 
 /* Dingodile's fight (GitHub issue #24), ROM 0x080197F4-0x0801A794,
  * formerly asm/code_3_2_17_188d0_1967c.s. Built with old_agbcp (Makefile
