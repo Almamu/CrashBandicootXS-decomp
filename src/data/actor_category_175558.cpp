@@ -55,7 +55,8 @@ const struct category_descriptor ActorCategory::descriptors[CATEGORY_COUNT] = {
         1,
         0,
     },
-    /* CATEGORY_SNOW_CRASH */ {
+    /* CATEGORY_SNOW_CRASH */
+    {
         CATEGORY_TYPE_POLAR,
         (void *)gCategoryFamily0CellAnim,
         0x75b94,
@@ -70,7 +71,8 @@ const struct category_descriptor ActorCategory::descriptors[CATEGORY_COUNT] = {
         3,
         2,
     },
-    /* CATEGORY_SNOW_JOB */ {
+    /* CATEGORY_SNOW_JOB */
+    {
         CATEGORY_TYPE_POLAR,
         (void *)gCategoryFamily0CellAnim,
         0x75b94,
@@ -85,7 +87,8 @@ const struct category_descriptor ActorCategory::descriptors[CATEGORY_COUNT] = {
         5,
         4,
     },
-    /* CATEGORY_ROCKET_RACKET */ {
+    /* CATEGORY_ROCKET_RACKET */
+    {
         CATEGORY_TYPE_JETPACK,
         (void *)gCategoryFamily1CellAnim,
         0x3e784,
@@ -100,7 +103,8 @@ const struct category_descriptor ActorCategory::descriptors[CATEGORY_COUNT] = {
         0,
         3,
     },
-    /* CATEGORY_BLIMP_BONANZA */ {
+    /* CATEGORY_BLIMP_BONANZA */
+    {
         CATEGORY_TYPE_JETPACK,
         (void *)gCategoryFamily1CellAnim,
         0x3e784,
@@ -115,7 +119,8 @@ const struct category_descriptor ActorCategory::descriptors[CATEGORY_COUNT] = {
         0,
         3,
     },
-    /* CATEGORY_NO_FLY_ZONE */ {
+    /* CATEGORY_NO_FLY_ZONE */
+    {
         CATEGORY_TYPE_JETPACK,
         (void *)gCategoryFamily1CellAnim,
         0x3e784,
@@ -130,7 +135,8 @@ const struct category_descriptor ActorCategory::descriptors[CATEGORY_COUNT] = {
         0,
         3,
     },
-    /* CATEGORY_N_GIN */ {
+    /* CATEGORY_N_GIN */
+    {
         CATEGORY_TYPE_HOVERCRAFT,
         (void *)gCategoryFamily1CellAnim,
         0x3e784,
@@ -153,8 +159,8 @@ const struct category_descriptor ActorCategory::descriptors[CATEGORY_COUNT] = {
  * the two numbers are the spawn and skip distances. */
 const struct category_vtable ActorCategory::vtables[CATEGORY_TYPE_COUNT] = {
     /* CATEGORY_TYPE_POLAR */ {
-        ConstructAnimTableState,
-        SpawnActor,
+        PolarPlayer::Create,
+        PolarPlayer::SpawnActor,
         Yeti::Create,
         Yeti::Update,
         Yeti::UpdateBg2,
@@ -167,7 +173,8 @@ const struct category_vtable ActorCategory::vtables[CATEGORY_TYPE_COUNT] = {
         PolarPlayer::ReloadPlayerTiles,
         PolarPlayer::IsPlayerPauseLocked,
     },
-    /* CATEGORY_TYPE_JETPACK */ {
+    /* CATEGORY_TYPE_JETPACK */
+    {
         CreateJetpackPlayer,
         SpawnJetpackActor,
         Airship::Create,
@@ -182,7 +189,8 @@ const struct category_vtable ActorCategory::vtables[CATEGORY_TYPE_COUNT] = {
         JetpackPlayer::ReloadPlayerTiles,
         JetpackPlayer::IsPlayerPauseLocked,
     },
-    /* CATEGORY_TYPE_HOVERCRAFT */ {
+    /* CATEGORY_TYPE_HOVERCRAFT */
+    {
         CreateJetpackPlayer,
         SpawnJetpackActor,
         Hovercraft::Create,

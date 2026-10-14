@@ -67,7 +67,7 @@ s32 ActorSpawns::GetX(s32 idx)
     return INT_TO_Q8(table->entries[idx].spawn.x);
 }
 
-/* Spawn `idx`'s kind as SpawnActor picks it (`kind`, `altKind` in a time
+/* Spawn `idx`'s kind as PolarPlayer::SpawnActor picks it (`kind`, `altKind` in a time
  * trial (gLevelState+0x8c), `bonusKind` while `useBonus` is set),
  * less 0x20: the index into the homing actors' speed tables
  * (iwram_data.cpp) - see docs/rom_map.md's "sub_802A5xx siblings" entry.

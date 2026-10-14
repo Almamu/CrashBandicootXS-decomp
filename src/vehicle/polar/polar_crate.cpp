@@ -67,7 +67,7 @@ void PolarQuestionCrate::Update()
     PolarCrate::Update();
 }
 
-/* An extra life, once: the spawn is marked collected (CreateActor builds
+/* An extra life, once: the spawn is marked collected (PolarPlayer::CreateActor builds
  * a question crate in its place from then on). */
 void PolarLifeCrate::Update()
 {

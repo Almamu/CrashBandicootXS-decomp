@@ -7,7 +7,7 @@
  * actor.h) and the index into the category family's animation table
  * (`gActorAnimTable` / `gJetpackAnimTable`), whose records hold the same
  * number in `index`. Each family has its own numbering: POLAR_KIND_* for
- * family 0 (categories 0-2, the polar runs, CreateActor and
+ * family 0 (categories 0-2, the polar runs, PolarPlayer::CreateActor and
  * gCategoryFamily0AnimTable) and JETPACK_KIND_* for family 1 (categories
  * 3-6, the jetpack and boss stages, CreateJetpackActor and
  * gCategoryFamily1AnimTable). The names come from each kind's
@@ -30,7 +30,7 @@
 #define POLAR_KIND_LIFE_CRATE 8
 #define POLAR_KIND_AKU_AKU_CRATE 9
 #define POLAR_KIND_FOUR_WUMPA_CRATE 10 /* looks like a basic crate, gives 4 wumpa */
-#define POLAR_KIND_WUMPA 11            /* also the collected wumpa (SpawnPolarCollectedWumpa) */
+#define POLAR_KIND_WUMPA 11            /* also the collected wumpa (PolarCollectedWumpa::Spawn) */
 #define POLAR_KIND_BOOST_PAD 12
 #define POLAR_KIND_OBSTACLE 13
 #define POLAR_KIND_OBSTACLE_2 14 /* the obstacle's second part, spawned with it */
@@ -60,7 +60,7 @@
 #define POLAR_KIND_PALETTE_CYCLE_2 38
 #define POLAR_KIND_PALETTE_CYCLE_3 39
 #define POLAR_KIND_CHECKPOINT_TEXT 40
-#define POLAR_KIND_UNK62 62 /* SpawnActor skips it; no record, never in the data */
+#define POLAR_KIND_UNK62 62 /* PolarPlayer::SpawnActor skips it; no record, never in the data */
 
 #define JETPACK_KIND_PLAYER 0 /* record 0, the player; as a spawn kind, nothing */
 #define JETPACK_KIND_PLANE 1

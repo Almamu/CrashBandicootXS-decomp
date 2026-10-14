@@ -91,7 +91,7 @@ void PolarPlayer::Update()
         /* `tier` is needed: inlined, the instructions are reordered */
         s32 tier = gLevelState->maskLevel;
 
-        gPolarAkuAku = SpawnPolarAkuAku(x, y, z, tier);
+        gPolarAkuAku = PolarAkuAku::Spawn(x, y, z, tier);
         if (ActorCategoryStats::IsMaskAssistDue())
             gPolarAkuAku->AddMask();
     }

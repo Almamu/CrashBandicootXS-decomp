@@ -56,7 +56,7 @@ s32 JetpackPlayer::IsTouchingPlayer(ActorSelf *self)
 
 /* The category's frame: the category vtable's slot 3 (the frame's
  * start) and slot 10 once the course length is passed (the course end),
- * the spawns that have scrolled into view (slot 1, SpawnActor for the
+ * the spawns that have scrolled into view (slot 1, PolarPlayer::SpawnActor for the
  * polar levels), then every actor's Update, and the visible ones' Draw in
  * draw-order (gHeapSortActorsByKeyFunc on their `sortKey`).
  *

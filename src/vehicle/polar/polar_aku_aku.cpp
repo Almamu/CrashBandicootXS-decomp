@@ -175,7 +175,7 @@ s32 PolarAkuAku::AddMask()
     return level;
 }
 
-/* Behind the player (SpawnPolarAkuAku, actor_factory.cpp: at its
+/* Behind the player (Spawn, actor_factory.cpp: at its
  * position), with the mask level `level`. */
 PolarAkuAku::PolarAkuAku(const struct anim_table_record *rec, s32 x, s32 y, s32 z, s32 level)
     : ActorSelf(rec, x - INT_TO_Q8(16), y - INT_TO_Q8(30), z - INT_TO_Q8(2))
