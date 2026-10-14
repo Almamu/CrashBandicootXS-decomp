@@ -1,4 +1,5 @@
 #include "game/ui/menus.hpp"
+#include "level_select_worlds.h"
 
 extern "C" {
 #include "core.h"
@@ -39,18 +40,11 @@ const struct vec2 gLevelSelectEntryPositionsAllCleared[LEVEL_SELECT_ENTRIES] = {
     { DISPLAY_ART_X + 182, DISPLAY_ART_Y + 130 },
     { DISPLAY_ART_X + 214, DISPLAY_ART_Y + 118 },
 };
-const u32 gLevelSelectWorldEntryBoxAnims[WORLD_COUNT] = {
-    0,
-    1,
-    2,
-    3,
-};
-const u32 gLevelSelectWorldAnims[WORLD_COUNT] = {
-    9,
-    8,
-    6,
-    7,
-};
+/* Per world (a page): the entries' box and the page title's animation,
+ * from levels.json's "worlds" (level_select_worlds.h, docs/levels.md
+ * "Level-select pages"). */
+const u32 gLevelSelectWorldEntryBoxAnims[WORLD_COUNT] = { LEVEL_SELECT_WORLD_ENTRY_BOX_ANIMS };
+const u32 gLevelSelectWorldAnims[WORLD_COUNT] = { LEVEL_SELECT_WORLD_ANIMS };
 const u32 gLevelSelectRankAnims[5] = {
     1, 3, 2, 4, 0,
 };

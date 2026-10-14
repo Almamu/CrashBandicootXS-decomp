@@ -510,6 +510,21 @@ public:
             items[i]->SetPos(&positions[i]);
     }
 
+    /* Whether every numbered level of world `w` is cleared: the rule
+     * {"levels_cleared": true} of levels.json's "worlds" opens the world
+     * after it with (IsNextWorldOpen, level_select_worlds.h). The ROM's
+     * worlds don't use it, so the ROM has no copy. */
+    u8 IsWorldCleared(s32 w)
+    {
+        s32 j;
+
+        for (j = 0; j < LEVELS_PER_WORLD; j++) {
+            if (!save->levels[w * LEVELS_PER_WORLD + j].b.cleared)
+                return 0;
+        }
+        return 1;
+    }
+
     void SkinItems()
     {
         s32 i;

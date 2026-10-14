@@ -77,6 +77,10 @@ derived from those again.
                                               level_select_picture_table.cpp
     tools/levels.py palette-cycles OUT        theme_palette_cycles.h: RunRoom's
                                               colour-cycle cases per theme
+    tools/levels.py worlds OUT                level_select_worlds.h: the level
+                                              select's per-world tables and
+                                              IsNextWorldOpen's cases, from
+                                              levels.json's "worlds"
     tools/levels.py classes OUT               rooms.hpp: every room's class (its BG
                                               palette, chunk grids and level asset
                                               as static members), see "Room
@@ -1617,6 +1621,140 @@ def themes_from_rom(rom, kept):
     return themes, cycles
 
 
+# ---------------------------------------------------------------------------
+# The level select's worlds (docs/levels.md, "Level-select pages")
+#
+# A world is a page of the level select: its numbered levels (the levels
+# with that "world"), then its boss. levels.json's "worlds" has one entry
+# per world, in world order, with what its page shows and what opens it:
+#
+# - "page_title": the page title sprite's animation (bank 47),
+#   gLevelSelectWorldAnims;
+# - "entry_box": the entries' box colour, an index of
+#   gLevelSelectEntryBoxAnims (bank 49), gLevelSelectWorldEntryBoxAnims;
+# - "boss_icon": the boss entry's icon animation (bank 51),
+#   gLevelSelectEntryWorldAnims;
+# - "opened_by" (every world but the first): what opens the page, the
+#   case of LevelSelect::IsNextWorldOpen for the world before it:
+#   {"power": NAME}, a power of GameProgress::flags (PROGRESS_BIT_<NAME>),
+#   or {"levels_cleared": true}, every numbered level of the world before
+#   cleared (LevelSelect::IsWorldCleared).
+#
+# The ROM's worlds 1-3 open with the power of the boss before them. With
+# the ROM's worlds the three tables and IsNextWorldOpen's cases are the
+# ROM's; `extract` reads the tables back from the ROM and keeps the rules,
+# which are code.
+
+WORLD_KEYS = ["page_title", "entry_box", "boss_icon"]
+WORLD_OPEN_POWERS = ["TURBO_RUN", "SUPER_BODY_SLAM", "TORNADO_SPIN", "DOUBLE_JUMP"]
+# The ROM's per-world tables (WORLD_COUNT u32s each).
+LEVEL_SELECT_WORLD_ANIMS = 0x0816C548
+LEVEL_SELECT_WORLD_ENTRY_BOX_ANIMS = 0x0816C538
+LEVEL_SELECT_ENTRY_WORLD_ANIMS = 0x0816C624
+# IsNextWorldOpen's cases in the ROM: worlds 1-3 open with the power of
+# the boss before them.
+ROM_WORLD_RULES = [None, {"power": "SUPER_BODY_SLAM"}, {"power": "DOUBLE_JUMP"}, {"power": "TORNADO_SPIN"}]
+# What the values can name: bank 47's 13 animations, the 5 entries of
+# gLevelSelectEntryBoxAnims and bank 51's 5 animations (src/engine/gfx/
+# data/sprite_banks_39_55.cpp, src/game/ui/data/level_select_anims.cpp).
+WORLD_KEY_LIMITS = {"page_title": 13, "entry_box": 5, "boss_icon": 5}
+# A numbered level's entry shows step `level id` of bank 51's animation 0
+# (LevelSelectEntry::SetLevel): the ROM's 20 number icons, then the steps
+# its bank.json's "new_steps" adds (docs/graphics.md, "New frames").
+LEVEL_ICONS_BANK = Path("graphics/sprites/bank51_level_select_icons/bank.json")
+LEVEL_ICONS_ROM_STEPS = 20
+
+
+def level_select_worlds(data):
+    """levels.json's "worlds", checked: one per world of the levels, each
+    with its page's animations and, past the first, the rule that opens it;
+    and a number icon for every numbered level."""
+    worlds = data.get("worlds")
+    c = level_counts(data)
+
+    def fail(msg):
+        sys.exit("%s: %s" % (LEVELS_JSON, msg))
+
+    if not isinstance(worlds, list) or len(worlds) != c["WORLD_COUNT"]:
+        fail("\"worlds\" has one entry per world of the levels (%d): each world's page title, entry box and "
+             "boss icon, and the rule that opens it" % c["WORLD_COUNT"])
+    for w, e in enumerate(worlds):
+        missing = [k for k in WORLD_KEYS if k not in e]
+        if missing:
+            fail("world %d has no %s" % (w, ", ".join('"%s"' % k for k in missing)))
+        unknown = [k for k in e if k not in WORLD_KEYS + ["opened_by"]]
+        if unknown:
+            fail("world %d: unknown %s" % (w, ", ".join('"%s"' % k for k in unknown)))
+        for k in WORLD_KEYS:
+            if not isinstance(e[k], int) or not 0 <= e[k] < WORLD_KEY_LIMITS[k]:
+                fail("world %d: \"%s\" is 0-%d" % (w, k, WORLD_KEY_LIMITS[k] - 1))
+        rule = e.get("opened_by")
+        if w == 0:
+            if rule is not None:
+                fail("world 0 is open from the start: it has no \"opened_by\"")
+        elif rule == {"levels_cleared": True}:
+            pass
+        elif not (isinstance(rule, dict) and list(rule) == ["power"] and rule["power"] in WORLD_OPEN_POWERS):
+            fail("world %d: \"opened_by\" is {\"power\": one of %s} or {\"levels_cleared\": true}"
+                 % (w, ", ".join(WORLD_OPEN_POWERS)))
+    icons = LEVEL_ICONS_ROM_STEPS + len(read_json(LEVEL_ICONS_BANK).get("new_steps", {}).get("0", []))
+    if c["LEVEL_NUMBERED_COUNT"] > icons:
+        fail("%d numbered levels, but %s's animation 0 has %d number icons: levels %d-%d need new frames "
+             "(docs/graphics.md, \"New frames\")" % (c["LEVEL_NUMBERED_COUNT"], LEVEL_ICONS_BANK.parent, icons,
+                                                     icons + 1, c["LEVEL_NUMBERED_COUNT"]))
+    return worlds
+
+
+def level_select_worlds_h(data):
+    """level_select_worlds.h: the per-world tables' initializers and
+    IsNextWorldOpen's cases (LEVEL_SELECT_NEXT_WORLD_CASES), one per world
+    after the first, under the case of the world before it."""
+    worlds = level_select_worlds(data)
+    out = ["/* Generated by tools/levels.py from data/levels/levels.json. Do not edit. */",
+           "#ifndef GUARD_LEVEL_SELECT_WORLDS_H", "#define GUARD_LEVEL_SELECT_WORLDS_H", "",
+           "/*",
+           " * The level select's worlds (levels.json's \"worlds\", docs/levels.md \"Level-select",
+           " * pages\"): per world, the page title's animation (bank 47, gLevelSelectWorldAnims),",
+           " * the entries' box (gLevelSelectWorldEntryBoxAnims) and the boss icon's animation",
+           " * (bank 51, gLevelSelectEntryWorldAnims), src/game/ui/data/level_select_layout.cpp and",
+           " * level_select_anims.cpp; and LevelSelect::IsNextWorldOpen's cases",
+           " * (level_select_pages.cpp): on page `world`, whether page `world + 1` is open.",
+           " */", ""]
+    for name, k in (("LEVEL_SELECT_WORLD_ANIMS", "page_title"),
+                    ("LEVEL_SELECT_WORLD_ENTRY_BOX_ANIMS", "entry_box"),
+                    ("LEVEL_SELECT_ENTRY_WORLD_ANIMS", "boss_icon")):
+        out.append("#define %s %s" % (name, ", ".join("%d" % e[k] for e in worlds)))
+    lines = []
+    for w, e in enumerate(worlds[1:], 1):
+        rule = e["opened_by"]
+        lines.append("case %d:" % (w - 1))
+        if "power" in rule:
+            lines.append("    r = TEST_BIT_SHR(save->flags, PROGRESS_BIT_%s);" % rule["power"])
+        else:
+            lines.append("    r = IsWorldCleared(%d);" % (w - 1))
+        lines.append("    break;")
+    width = max(len(s) for s in lines) if lines else 0
+    out += ["", "#define LEVEL_SELECT_NEXT_WORLD_CASES%s" % (" \\" if lines else "")]
+    out += ["    " + (s.ljust(width) + " \\" if k + 1 < len(lines) else s) for k, s in enumerate(lines)]
+    out += ["", "#endif /* GUARD_LEVEL_SELECT_WORLDS_H */", ""]
+    return "\n".join(out)
+
+
+def worlds_from_rom(rom, kept):
+    """extract: levels.json's "worlds". The rules that open them are code
+    (IsNextWorldOpen) and are kept; the page title, box and boss icon come
+    from the ROM's tables."""
+    worlds = []
+    for w, k in enumerate(kept["worlds"]):
+        e = {"page_title": rom.w(LEVEL_SELECT_WORLD_ANIMS + 4 * w),
+             "entry_box": rom.w(LEVEL_SELECT_WORLD_ENTRY_BOX_ANIMS + 4 * w),
+             "boss_icon": rom.w(LEVEL_SELECT_ENTRY_WORLD_ANIMS + 4 * w)}
+        if "opened_by" in k:
+            e["opened_by"] = k["opened_by"]
+        worlds.append(e)
+    return worlds
+
+
 def tileset_order_lists(sets, levels):
     """For extract: each tile set's room order, the shortest list of rooms
     that, put before the set's other rooms (in levels.json order), gives
@@ -1885,7 +2023,7 @@ def write_levels_json(levels):
                          else dump(x))
         if k == "levels":
             return block(v, ind, lambda _, lv, i2: block(lv, i2, lambda __, y, ___: dump(y)))
-        if k == "themes":
+        if k in ("themes", "worlds"):
             return block(v, ind, lambda _, t, __: dump(t))
         if k == "palette_cycles":
             return block(v, ind, lambda _, c, i2: block(c, i2, lambda k2, y, i3: block(y, i3, lambda _, z, __: dump(z))
@@ -2069,7 +2207,7 @@ def extract(rom_path):
     level_info, table, arrays, stages = level_table_from_rom(rom, level_list, folders)
     levels = {"rooms": names, "regions": regions,
               "assets": {"name": aname, "rooms": [n for _, n in sorted(assets)]}, "table": table,
-              "levels": level_info}
+              "levels": level_info, "worlds": worlds_from_rom(rom, kept)}
     levels["themes"], levels["palette_cycles"] = themes_from_rom(rom, kept)
     # the derived counts (constants/levels.h, themes.h) are the ROM's
     check_rom_counts(levels)
@@ -2308,6 +2446,8 @@ def check_rom_counts(data):
     for k, v in ROM_COUNTS.items():
         assert c[k] == v, "%s: the rule gives %s, the ROM has %s" % (k, c[k], v)
     assert c["PROGRESS_EXTRA_FLAG_BYTES"] == 0
+    assert [w.get("opened_by") for w in level_select_worlds(data)] == ROM_WORLD_RULES, \
+        "the worlds' rules aren't the ROM's"
     assert save_layout(data) == (EEPROM_4KBIT, SAVE_4KBIT_SIZE, 0x70), "the save isn't the ROM's"
     assert c["LEVEL_COUNT"] == (LEVEL_ROOM_LISTS - LEVEL_TABLE) // LEVEL_INFO_SIZE
 
@@ -2543,6 +2683,8 @@ def main():
         write_if_changed(args[2], constants_h(args[1]).encode())
     elif cmd == "palette-cycles":
         write_if_changed(args[1], theme_palette_cycles_h(read_json(LEVELS_JSON)).encode())
+    elif cmd == "worlds":
+        write_if_changed(args[1], level_select_worlds_h(read_json(LEVELS_JSON)).encode())
     else:
         sys.exit("unknown command %s" % cmd)
 

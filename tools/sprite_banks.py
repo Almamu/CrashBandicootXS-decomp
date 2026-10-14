@@ -37,7 +37,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from sprite_frames import BANK_NAMES, Rom  # noqa: E402
+from sprite_frames import BANK_NAMES, NEW_FRAME_HOOKS, Rom  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 TABLE = 0x084A5600
@@ -60,6 +60,17 @@ LAYOUTS = {
     5: ("sprite_frame_1box", 1, False),
     6: ("sprite_frame_1box_anchor", 1, True),
 }
+
+
+def frames_bound(i, n):
+    """The bound of bank i's frame table: its n frames, and for a bank of
+    NEW_FRAME_HOOKS the new frames sprite_frames.py pack adds."""
+    return f"{n} + SPRITE_BANK{i:02}_NEW_FRAME_COUNT" if i in NEW_FRAME_HOOKS else f"{n}"
+
+
+def seq_bound(i, k, n):
+    """The bound of animation k's sequence of bank i: likewise its new steps."""
+    return f"{n} + SPRITE_BANK{i:02}_ANIM{k:02}_NEW_STEP_COUNT" if k in NEW_FRAME_HOOKS.get(i, []) else f"{n}"
 
 
 def frame_size(layout):
@@ -145,22 +156,30 @@ def emit_bank(rom, i, em, out, decls):
         assert all(v < nframes for v in values)
         an.append(dict(seq=seq, count=count, values=values, boxes=(box(rom, a + 4), box(rom, a + 12)),
                        palette_id=palette_id, duration=duration, flags=flags,
-                       name=f"{B}Anim{k:02}Seq"))
+                       name=f"{B}Anim{k:02}Seq", bound=seq_bound(i, k, count)))
     assert len({x["seq"] for x in an}) == nanims
 
     d = f"bank{i:02}_{BANK_NAMES[i]}"
     out.append(f"/* {'-' * 70} */")
-    out.append(f"/* Bank {i}: {nanims} animation{'s' if nanims != 1 else ''}, {nframes} frames,"
-               f" graphics/sprites/{d}/. */")
+    head = (f"/* Bank {i}: {nanims} animation{'s' if nanims != 1 else ''}, {nframes} frames,"
+            f" graphics/sprites/{d}/.")
+    if i in NEW_FRAME_HOOKS:
+        which = " and ".join(str(k) for k in NEW_FRAME_HOOKS[i])
+        out.append(head)
+        out.append(f" * The frame table and animation {which}'s sequence end with the new frames and")
+        out.append(" * steps of bank.json (\"boxes\", \"new_steps\"; tools/sprite_frames.py,")
+        out.append(" * NEW_FRAME_HOOKS; docs/graphics.md \"New frames\"), none in the ROM. */")
+    else:
+        out.append(head + " */")
     out.append("")
 
     # Forward declarations (everything below is referenced before it is
     # defined, the ROM's order). The frames and their piece arrays are
     # declared in sprites/sprite_frames.h.
     decls.append(f"extern const struct sprite_anim {B}Anims[{nanims}];")
-    decls.append(f"extern const struct sprite_frame *const {B}Frames[{nframes}];")
+    decls.append(f"extern const struct sprite_frame *const {B}Frames[{frames_bound(i, nframes)}];")
     for x in sorted(an, key=lambda x: x["seq"]):
-        out.append(f"extern const u16 {x['name']}[{x['count']}];")
+        out.append(f"extern const u16 {x['name']}[{x['bound']}];")
     out.append("")
 
     em.place(anims, 0x1C * nanims, 4)
@@ -184,18 +203,23 @@ def emit_bank(rom, i, em, out, decls):
 
     for x in sorted(an, key=lambda x: x["seq"]):
         em.place(x["seq"], 2 * x["count"], 2)
-        out.append(f"const u16 {x['name']}[{x['count']}] = {{")
+        out.append(f"const u16 {x['name']}[{x['bound']}] = {{")
         vals = [str(v) for v in x["values"]]
-        for j in range(0, len(vals), 16):
-            out.append("    " + ", ".join(vals[j:j + 16]) + ",")
+        rows = ["    " + ", ".join(vals[j:j + 16]) + "," for j in range(0, len(vals), 16)]
+        if x["bound"] != str(x["count"]):
+            # the new steps (sprite_frames.py's _NEW_STEPS)
+            rows[-1] += " " + x["bound"].split(" + ")[1].replace("_NEW_STEP_COUNT", "_NEW_STEPS")
+        out += rows
         out.append("};")
     out.append("")
 
     em.place(frames, 4 * nframes, 4)
-    out.append(f"{ext}const struct sprite_frame *const {B}Frames[{nframes}] = {{")
+    out.append(f"{ext}const struct sprite_frame *const {B}Frames[{frames_bound(i, nframes)}] = {{")
     for f in fr:
         ref = f"&{f['name']}" if f["layout"] == 1 else f"&{f['name']}.frame"
         out.append(f"    {ref},")
+    if i in NEW_FRAME_HOOKS:
+        out.append(f"    SPRITE_BANK{i:02}_NEW_FRAMES")
     out.append("};")
     out.append("")
 
@@ -296,7 +320,7 @@ def main():
                     b = f"gSpriteBank{i:02}"
                     _, _, nanims, ptrs = read_bank(rom, i)
                     out.append(f"extern const struct sprite_anim {b}Anims[{nanims}];")
-                    out.append(f"extern const struct sprite_frame *const {b}Frames[{len(ptrs)}];")
+                    out.append(f"extern const struct sprite_frame *const {b}Frames[{frames_bound(i, len(ptrs))}];")
             out.extend(decls)
             out.append("")
             out.append("/* The root of the system: InitLevelState (spawn_markers.cpp) points")

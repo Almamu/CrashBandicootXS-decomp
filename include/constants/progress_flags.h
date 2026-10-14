@@ -18,7 +18,9 @@
  *   shows them and GetCompletionPercent counts them. The boss that gives
  *   a power also opens the next level-select page
  *   (LevelSelect::IsNextWorldOpen): page 1's next with the super body
- *   slam, page 2's with the double jump, page 3's with the tornado spin.
+ *   slam, page 2's with the double jump, page 3's with the tornado spin
+ *   (levels.json's "worlds" "opened_by", docs/levels.md "Level-select
+ *   pages").
  *
  * `PROGRESS_BIT_*` is the bit's number, for the code that shifts it out
  * (`TEST_BIT_SHR`, `TEST_BIT_SIGN`, core.h), `PROGRESS_FLAG_*` its mask.

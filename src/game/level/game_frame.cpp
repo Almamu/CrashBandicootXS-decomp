@@ -288,7 +288,10 @@ load:
                 }
                 if (progress.GetCompletionPercent() > 99) {
                     PlayCutscene(8);
-                    room.level++;
+                    /* on to mega-mix: the level after Neo Cortex in the
+                     * ROM (an `add #1`), after the bosses of the worlds
+                     * levels.json adds past Neo Cortex's otherwise */
+                    room.level += LEVEL_FINALE - LEVEL_NEO_CORTEX;
                     room.roomIndex = 0;
                     goto start;
                 }

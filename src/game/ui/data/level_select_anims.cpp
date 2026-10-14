@@ -1,4 +1,5 @@
 #include "game/ui/menus.hpp"
+#include "level_select_worlds.h"
 
 extern "C" {
 #include "core.h"
@@ -23,9 +24,8 @@ const struct vec2 gZoomBgSlotOffsets[4] = {
 const u32 gLevelSelectEntryBoxAnims[5] = {
     0, 1, 4, 3, 2,
 };
-const u32 gLevelSelectEntryWorldAnims[WORLD_COUNT] = {
-    2, 3, 1, 4,
-};
+/* per world, from levels.json's "worlds" (level_select_worlds.h) */
+const u32 gLevelSelectEntryWorldAnims[WORLD_COUNT] = { LEVEL_SELECT_ENTRY_WORLD_ANIMS };
 const u32 gLevelSelectCursorAnims[4] = {
     0, 1, 2, 3,
 };

@@ -110,7 +110,7 @@ extern const struct sprite_frame *const gSpriteBank49Frames[2];
 extern const struct sprite_anim gSpriteBank50Anims[1];
 extern const struct sprite_frame *const gSpriteBank50Frames[8];
 extern const struct sprite_anim gSpriteBank51Anims[5];
-extern const struct sprite_frame *const gSpriteBank51Frames[24];
+extern const struct sprite_frame *const gSpriteBank51Frames[24 + SPRITE_BANK51_NEW_FRAME_COUNT];
 extern const struct sprite_anim gSpriteBank52Anims[2];
 extern const struct sprite_frame *const gSpriteBank52Frames[4];
 extern const struct sprite_anim gSpriteBank53Anims[19];

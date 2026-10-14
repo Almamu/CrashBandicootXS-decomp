@@ -1,4 +1,5 @@
 #include "game/ui/level_select.hpp"
+#include "level_select_worlds.h"
 #include "engine/audio/audio.hpp"
 #include "engine/sys/key_input.hpp"
 #include "engine/sys/frame_limiter.hpp"
@@ -128,22 +129,19 @@ u8 LevelSelect::HasPrevWorld()
     return (-w | w) >> 31;
 }
 
-/* Whether the next page has been opened: the power its boss gives
- * (PROGRESS_FLAG_*, constants/progress_flags.h). */
+/* Whether the next page has been opened: a case per world after the
+ * first, under the case of the world before it, from levels.json's
+ * "worlds" "opened_by" (level_select_worlds.h, docs/levels.md
+ * "Level-select pages"). The ROM's worlds 1-3 open with the power the
+ * boss before them gives (PROGRESS_BIT_*, constants/progress_flags.h):
+ * the super body slam, the double jump and the tornado spin. The last
+ * page has no case: 0. */
 u8 LevelSelect::IsNextWorldOpen()
 {
     u8 r = 0;
 
     switch (world) {
-    case 0:
-        r = TEST_BIT_SHR(save->flags, PROGRESS_BIT_SUPER_BODY_SLAM);
-        break;
-    case 1:
-        r = TEST_BIT_SHR(save->flags, PROGRESS_BIT_DOUBLE_JUMP);
-        break;
-    case 2:
-        r = TEST_BIT_SHR(save->flags, PROGRESS_BIT_TORNADO_SPIN);
-        break;
+        LEVEL_SELECT_NEXT_WORLD_CASES
     }
     return r;
 }
