@@ -646,27 +646,27 @@ void LevelState::SetCurrentLevel(s32 value)
  * "flag index" wrappers, `level_query.cpp`). */
 bool LevelState::LevelHasYellowGem(s32 idx)
 {
-    return LevelHasYellowGemEntity(idx);
+    return LevelProgress::LevelHasYellowGemEntity(idx);
 }
 
 bool LevelState::LevelHasBlueGem(s32 idx)
 {
-    return LevelHasBlueGemEntity(idx);
+    return LevelProgress::LevelHasBlueGemEntity(idx);
 }
 
 bool LevelState::LevelHasGreenGem(s32 idx)
 {
-    return LevelHasGreenGemEntity(idx);
+    return LevelProgress::LevelHasGreenGemEntity(idx);
 }
 
 bool LevelState::LevelHasRedGem(s32 idx)
 {
-    return LevelHasRedGemEntity(idx);
+    return LevelProgress::LevelHasRedGemEntity(idx);
 }
 
 bool LevelState::LevelHasGemPathGem(s32 idx)
 {
-    return LevelHasGemPathGemEntity(idx);
+    return LevelProgress::LevelHasGemPathGemEntity(idx);
 }
 
 /* Dispatches on the "current index" field `room.level` (`+0xc4`): index `0x15` fires

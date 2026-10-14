@@ -498,7 +498,7 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/level/level_layers.cpp` (again) | `LevelLayers`: `new TileCache`, `delete tiles` (`InitTileCache(operator new(0x1064))`, `DestroyTileCache(tiles, 3)` before) | 0 | old_agbcp | 0 -> 0 | cleanup |
 | `src/level/entity_flags.cpp` | `LevelEntityFlags` (include/spawners.hpp; derives from struct entity_flags; `EntityFlags` is taken by entity.hpp's union): `CountCrateEntities`, the bitmap accessors, constructor, destructor | 9 | **old_agbcp** (was agbcc) | 8 pins, 2 asm -> 6 pins, 1 asm (`SetEntityIdActivated`'s `ip`/`r2` block: no plain form found under either compiler) | cleanup |
 | `src/level/spawn_pickups.cpp` (again) | `LevelState`'s constructor (InitLevelState, include/level_state.hpp; C linkage before); `new LevelEntityFlags` | 0 | old_agbcp | 0 -> 0 | cleanup |
-| `src/level/level_query.cpp` | `UnusedLevelObject` (file-local): the unused destructor and empty constructor (`DestroyUnusedLevelObject`, `InitUnusedLevelObject`); the medal tallies and room selection (C linkage) | 2 + 15 | agbcp | 0 -> 0 | cleanup |
+| `src/level/level_query.cpp` | `UnusedLevelObject` (file-local): the unused destructor and empty constructor (`DestroyUnusedLevelObject`, `InitUnusedLevelObject`); the medal tallies and room selection (C linkage; since #915 the level queries are static members of `LevelProgress`) | 2 + 15 | agbcp | 0 -> 0 | cleanup |
 | `src/cutscene/slideshow.cpp` | `Slideshow` (new include/cutscene.hpp): `BeginSlide`, `Run` (UNUSED), `Skip`, `ShowPicture` | 4 | old_agbcp (old_agbcc C already) | 7 pins, 1 asm, 1 memory barrier -> 0 | cleanup |
 | `src/cutscene/slideshow_display.cpp` | `Slideshow`'s `EndSlide`, destructor, `Reset`; with `SetSlideshowDispcnt` (C linkage) | 3 + 1 | agbcp | 1 pin -> 0 | cleanup |
 | `src/cutscene/cutscene_player.cpp` (again) | `Slideshow`'s constructor; `CutscenePlayer` (cutscene.hpp): constructor, `Run`, destructor (all C linkage before) | 4 | old_agbcp | 0 -> 0 | cleanup |
@@ -711,6 +711,8 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/level/play_room.cpp`, `src/enemies/enemy_ctrl_update.cpp`, `enemy_shooter.cpp` | the callers: `EntitySpawner::Create()`, `EntitySpawner::Destroy()`, `EntitySpawner::LaunchHarmfulEffectPart(...)` | 0 | (unchanged) | 0 -> 0 | [#915](#the-entity-spawner-singleton-as-static-members-of-entityspawner-915) |
 | `src/level/spawn_markers.cpp`, `src/enemies/enemy_ctrl.cpp` | gEntitySpawner is the private static data member `EntitySpawner::instance`, read through the inline `EntitySpawner::Get()`; globals.h's extern goes | 0 | (unchanged) | 0 -> 0 | [#915](#the-entity-spawner-singleton-as-static-members-of-entityspawner-915) |
 | `src/crates/crate_break.cpp`, `crate_fields.cpp`, `src/enemies/enemy_ctrl.cpp`, `enemy_ctrl_update.cpp`, `src/level/room_entities.cpp`, `spawn_gems.cpp`, `src/objects/sprite.cpp`, `src/pickups/wumpa_update.cpp`, `src/player/action_ctrl_states.cpp`, `player_update.cpp`, `swim_ctrl_stroke.cpp` | the readers: `EntitySpawner::Get()->SpawnEffectPart(...)`, `DropWumpa(...)` & co. (24 sites) | 0 | (unchanged) | 0 -> 0 | [#915](#the-entity-spawner-singleton-as-static-members-of-entityspawner-915) |
+| `src/level/level_query.cpp` | the level queries as static members of `LevelProgress` (include/level_state.hpp): CountLevelCrates, CountRoomCrates, LevelHasEntityType (private) and the five `LevelHas*GemEntity` wrappers, under their C names; level.h's 8 prototypes go | 8 | (unchanged) | 0 -> 0 | [#915](#the-level-queries-as-static-members-of-levelprogress-915) |
+| `src/level/game_frame.cpp`, `level_state.cpp` | the callers: `LevelProgress::CountLevelCrates(...)`, `LevelProgress::CountRoomCrates(...)`, `LevelProgress::LevelHasRedGemEntity(...)` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-level-queries-as-static-members-of-levelprogress-915) |
 | `src/text/text_box.cpp` | `GetWordLength`, `DrawWrappedTextInBox` (C linkage; takes a `Font *`, `self->SetMargin`, `HeightToLines`) | 0 + 2 | agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/aabb.cpp` (since #767: `CommitBlendRegs` at the end of gfx/display.cpp, `IwramFree`/`IwramAlloc` in system/iwram_alloc.cpp) | `CommitBlendRegs`, `AabbOverlapsInclusiveX`, `AabbOverlaps`, `IwramFree`, `IwramAlloc` (C linkage) | 0 + 5 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/fixed_math.cpp`, `line.cpp`, `line_step.cpp`, `number_format.cpp`, `printf.cpp`, `rand.cpp`, `string.cpp`, `time_format.cpp` | the fixed-point helpers, the Bresenham line, `itoa`, `sprintf`/`vsprintf`/`FindSubstring` (string.cpp since #767), `rand`/`srand`/`RandRange`, the string functions, `FormatCentiseconds` (C linkage) | 0 + 24 | agbcp | 2 pins, 5 asm, 2 asm labels -> the same | all-C++: gfx, system, util, text |
@@ -4884,6 +4886,38 @@ object is byte-identical.
   block inside LevelState): it is a separate IWRAM global, and the
   functions take no `this`. As instance methods they would take
   `&gLevelState->...` in r0 at every call.
+
+### The level queries as static members of LevelProgress (#915)
+
+level_query.cpp (ROM 0x08024278-0x08024498) answers questions about a
+level of gLevelTable: CountLevelCrates sums the crates of all its rooms,
+CountRoomCrates those of one room, LevelHasEntityType tells whether any
+of its rooms has an entity of a type, and the five `LevelHas*GemEntity`
+wrappers ask it about each gem. UpdateGameFrame counts the crates when a
+level or a category room starts, and LevelState's `LevelHas*Gem`
+accessors (the level select's gem icons) call the wrappers. They are now
+static members of `LevelProgress` (include/level_state.hpp), and every
+object is byte-identical.
+
+- **Why LevelProgress.** The ROM interleaves them with LevelProgress's
+  own code: LevelHasEntityType, then its methods IsInGemPathRoom and
+  IsInBonusRoom, then the wrappers and CountRoomCrates; its room
+  selection (room_select.cpp) follows. A class of their own (a
+  `LevelTable`) would have no data: gLevelTable is a ROM table the whole
+  game reads (the level select, the save, the room selection), not
+  theirs.
+- **Why static.** They take a level index (or a room), not the room
+  block, and read no field of it. As methods they would take
+  `&gLevelState->room` in r0 and move their arguments up one register.
+- **Functions.** `CountLevelCrates`, `CountRoomCrates` and the five
+  wrappers are public static members under their C names;
+  `LevelHasEntityType`, which only the wrappers call, is private.
+  cxx_symbols.txt's `#915 LevelProgress: the level queries` block maps
+  them to their C names. level.h's 8 prototypes go.
+- **Callers.** UpdateGameFrame (a LevelState method) calls
+  `LevelProgress::CountLevelCrates(room.level)` and
+  `LevelProgress::CountRoomCrates(room.cat)`; LevelState's
+  `LevelHasRedGem` & co. call `LevelProgress::LevelHasRedGemEntity(idx)`.
 
 ### The crate passes as static members of Crate (#915)
 

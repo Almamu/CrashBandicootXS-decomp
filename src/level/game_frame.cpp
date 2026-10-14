@@ -124,7 +124,7 @@ load:
         room.checkpointCrateCount = 0;
         room.checkpointFlags = 0;
         status = ROOM_EXIT_RETRY;
-        crateTotal = CountLevelCrates(room.level);
+        crateTotal = LevelProgress::CountLevelCrates(room.level);
         gHud = new Hud;
         gHud->SetCrateTotal(crateTotal);
         ClearBonusRoundDone();
@@ -152,12 +152,12 @@ load:
                     lives = 0;
                     ResetCrateCount();
                     room.EnterBonusRoom();
-                    gHud->SetCrateTotal(CountRoomCrates(room.cat));
+                    gHud->SetCrateTotal(LevelProgress::CountRoomCrates(room.cat));
                 } else {
                     savedCrateCount = GetCrateCount();
                     ResetCrateCount();
                     room.EnterGemPathRoom();
-                    gHud->SetCrateTotal(CountRoomCrates(room.cat));
+                    gHud->SetCrateTotal(LevelProgress::CountRoomCrates(room.cat));
                 }
                 ArmStartSpawn();
             } else if (!room.SelectRoom()) {
