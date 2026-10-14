@@ -73,7 +73,7 @@ void PolarPlayer::DispenseWumpa()
     gAudioContext->PlaySfx(SFX_WUMPA, 0x100);
 }
 
-/* The pause menu is locked (PolarIsPauseLocked, actor_category.cpp). */
+/* The pause menu is locked (IsPlayerPauseLocked, actor_category.cpp). */
 s32 PolarPlayer::IsPauseLocked()
 {
     return gPolarPauseLocked;
@@ -219,7 +219,7 @@ void PolarPlayer::StateLand()
 /* The methods the other polar actors call on PolarPlayer (gActorList)
  * and its destructor, ROM 0x0802BFD4-0x0802C208. */
 
-/* The course's end (PolarReachCourseEnd, actor_category_hooks.cpp): once, the finish
+/* The course's end (ReachCourseEnd, actor_category_hooks.cpp): once, the finish
  * countdown (state 10 when it runs out, Update), the yeti stops, and the
  * player is inactive with the steering off. */
 void PolarPlayer::FinishRun()

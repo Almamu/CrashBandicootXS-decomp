@@ -43,8 +43,8 @@ public:
     static void SetExitStatus(s32 status); // SetActorCategoryExitStatus: CATEGORY_EXIT_*
     /* IsTouchingPlayer: the vtable's slot 9 on `self`. A yes/no that stays
      * s32: every caller's `(u8)` is the ROM's truncation, but as a bool,
-     * PolarIsTouchingPlayer and JetpackIsTouchingPlayer (the hooks it
-     * calls) get a second return path (#855). */
+     * PolarPlayer::IsTouchingPlayer and JetpackPlayer::IsTouchingPlayer
+     * (the hooks it calls) get a second return path (#855). */
     static s32 IsTouchingPlayer(ActorSelf *self);
 
 private:

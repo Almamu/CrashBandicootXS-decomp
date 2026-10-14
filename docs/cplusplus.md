@@ -644,7 +644,7 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/vehicle/jetpack/airship_touch.cpp` | `IsTouchingAirship` (C linkage) | 0 + 1 | old_agbcp (old_agbcc C already) | 0 -> 0 | 11i |
 | `src/actor/actor_factory.cpp` | `PolarPlayer`'s constructor (`ConstructActorPart`, include/vehicle.hpp), with `CreateActor`, `SpawnActor`, `ConstructAnimTableState`, `CreatePolarCheckpointText`, `SpawnPolarCollectedWumpa`, `SpawnPolarAkuAku` (C linkage): the polar actors' `new`s, the crates', wumpa's, riderless polar's and checkpoint banner's constructors inline | 1 + 6 | agbcp | 0 -> 0; 3 macros of hand-written `new`s (allocation, base constructor, vtable store), the `REC_AT` index cast and `AllocActor` go | 11b |
 | `src/actor/actor_spawn.cpp` | the category hooks and spawn accessors (C linkage): `DestroyAllActors` (`delete`), `CanPauseActorCategory`, ... | 0 + 16 | agbcp | 3 pins, 3 `asm` -> 1 pin | 11b |
-| `src/actor/actor_category_frame.cpp` | `RunActorCategoryFrame` (the `Update`/`Draw` virtual calls), `FindShotTarget` (`IsUnshootable`), `PolarIsTouchingPlayer`, `JetpackIsTouchingPlayer` (C linkage) | 0 + 4 | old_agbcp | 0 -> 0; the slot-offset structs, the explicit `MemCopy32` self-copies and the frame struct go | 11b |
+| `src/actor/actor_category_frame.cpp` | `RunActorCategoryFrame` (the `Update`/`Draw` virtual calls), `FindShotTarget` (`IsUnshootable`), `PolarIsTouchingPlayer`, `JetpackIsTouchingPlayer` (C linkage; since #915 the last two are static members of `PolarPlayer` and `JetpackPlayer`) | 0 + 4 | old_agbcp | 0 -> 0; the slot-offset structs, the explicit `MemCopy32` self-copies and the frame struct go | 11b |
 | `src/actor/actor_category_select.cpp` | `SelectActorCategory` (C linkage) | 0 + 1 | agbcp | 1 use -> 1 use | 11b |
 | `src/actor/inline_copies_actors.cpp` (again) | `PolarCrate`'s destructor is inline (vehicle.hpp); `DestroyPolarCrate` is its out-of-line copy, with C linkage | 0 + 1 | old_agbcp | 0 -> 0 | 11b |
 | `src/vehicle/jetpack/jetpack_spawn.cpp` | `JetpackPlayer` (include/vehicle.hpp): constructor (`InitJetpackPlayer`), `Update`, `Draw`, `Damage`, `SteerY`, `SteerX`, `StateFly`, `StateRollLeft`, `StateRollRight` (at the start of jetpack_player_update.cpp since #769); the jetpack spawners, `CreateJetpackActor`, `YetiStateStop` (C linkage): `new JetpackPlayer`, `new JetpackShot`, `new AirshipFireball`, the checkpoint banner's and explosion's inline constructors | 9 + 16 | old_agbcp | 4 pins, 2 retyped stores, 1 retyped read, `ACTOR_PMF_CALL`, 10 `ACTOR_SET_STATE`s -> 0 | 11e |
@@ -713,6 +713,8 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/crates/crate_break.cpp`, `crate_fields.cpp`, `src/enemies/enemy_ctrl.cpp`, `enemy_ctrl_update.cpp`, `src/level/room_entities.cpp`, `spawn_gems.cpp`, `src/objects/sprite.cpp`, `src/pickups/wumpa_update.cpp`, `src/player/action_ctrl_states.cpp`, `player_update.cpp`, `swim_ctrl_stroke.cpp` | the readers: `EntitySpawner::Get()->SpawnEffectPart(...)`, `DropWumpa(...)` & co. (24 sites) | 0 | (unchanged) | 0 -> 0 | [#915](#the-entity-spawner-singleton-as-static-members-of-entityspawner-915) |
 | `src/level/level_query.cpp` | the level queries as static members of `LevelProgress` (include/level_state.hpp): CountLevelCrates, CountRoomCrates, LevelHasEntityType (private) and the five `LevelHas*GemEntity` wrappers, under their C names; level.h's 8 prototypes go | 8 | (unchanged) | 0 -> 0 | [#915](#the-level-queries-as-static-members-of-levelprogress-915) |
 | `src/level/game_frame.cpp`, `level_state.cpp` | the callers: `LevelProgress::CountLevelCrates(...)`, `LevelProgress::CountRoomCrates(...)`, `LevelProgress::LevelHasRedGemEntity(...)` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-level-queries-as-static-members-of-levelprogress-915) |
+| `src/actor/actor_category_frame.cpp`, `actor_category_hooks.cpp`, `actor_category.cpp` | the category hooks as static members of `PolarPlayer` and `JetpackPlayer` (include/vehicle.hpp): `IsTouchingPlayer`, `ReachCourseEnd`, `ReloadPlayerTiles` and `IsPlayerPauseLocked` (Polar/JetpackIsPauseLocked); vehicle.hpp's 8 `extern "C"` prototypes go | 8 | (unchanged) | 0 -> 0 | [#915](#the-category-hooks-as-static-members-of-polarplayer-and-jetpackplayer-915) |
+| `src/data/actor_category_175558.cpp` | ActorCategory::vtables' slots 9-12 point at the members: `PolarPlayer::IsTouchingPlayer`, `JetpackPlayer::IsPlayerPauseLocked` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-category-hooks-as-static-members-of-polarplayer-and-jetpackplayer-915) |
 | `src/text/text_box.cpp` | `GetWordLength`, `DrawWrappedTextInBox` (C linkage; takes a `Font *`, `self->SetMargin`, `HeightToLines`) | 0 + 2 | agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/aabb.cpp` (since #767: `CommitBlendRegs` at the end of gfx/display.cpp, `IwramFree`/`IwramAlloc` in system/iwram_alloc.cpp) | `CommitBlendRegs`, `AabbOverlapsInclusiveX`, `AabbOverlaps`, `IwramFree`, `IwramAlloc` (C linkage) | 0 + 5 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/fixed_math.cpp`, `line.cpp`, `line_step.cpp`, `number_format.cpp`, `printf.cpp`, `rand.cpp`, `string.cpp`, `time_format.cpp` | the fixed-point helpers, the Bresenham line, `itoa`, `sprintf`/`vsprintf`/`FindSubstring` (string.cpp since #767), `rand`/`srand`/`RandRange`, the string functions, `FormatCentiseconds` (C linkage) | 0 + 24 | agbcp | 2 pins, 5 asm, 2 asm labels -> the same | all-C++: gfx, system, util, text |
@@ -4919,6 +4921,39 @@ object is byte-identical.
   `LevelProgress::CountRoomCrates(room.cat)`; LevelState's
   `LevelHasRedGem` & co. call `LevelProgress::LevelHasRedGemEntity(idx)`.
 
+### The category hooks as static members of PolarPlayer and JetpackPlayer (#915)
+
+Slots 9-12 of ActorCategory::vtables are the player's hooks: the
+contact test (IsTouchingPlayer, through `ActorCategory::IsTouchingPlayer`),
+the course's end (ReachCourseEnd, RunFrame), the tile reload
+(ReloadPlayerTiles, ReloadGraphics) and the pause lock (IsPauseLocked,
+CanPause). Each category type has its own four: the polar ones and the
+jetpack ones, which the hovercraft shares. Each one works on the
+player, the actor list's root (`gActorList->AsPolarPlayer()->FinishRun()`
+& co.), so they are static members of `PolarPlayer` and `JetpackPlayer`
+(include/vehicle.hpp), and every object is byte-identical.
+
+- **Why static.** The slots take no player (the contact test takes the
+  other actor), and the hooks find it in gActorList. As methods they
+  would need `this` in r0, and the slot's caller has none to pass.
+- **Where they stay.** Their code is in the actor zone, between
+  ActorCategory's members, so they stay in its objects, for ROM order:
+  the contact tests in actor_category_frame.cpp, ReachCourseEnd and
+  ReloadPlayerTiles in actor_category_hooks.cpp, the pause locks in
+  actor_category.cpp. A class's members may be defined in any object.
+- **Names.** `IsTouchingPlayer`, `ReachCourseEnd` and `ReloadPlayerTiles`
+  are the slots' names. The pause lock is `IsPlayerPauseLocked`: the
+  method it forwards to is already named `IsPauseLocked`
+  (IsPolarPauseLocked, IsJetpackPauseLocked), and a static member can't
+  overload a method with the same parameters. No member hides a name its
+  body calls: the contact test's callers call
+  `ActorCategory::IsTouchingPlayer(this)`, qualified.
+- **cxx_symbols.txt.** The `#915 PolarPlayer, JetpackPlayer: the
+  category hooks` block maps the 8 members to their C names
+  (PolarIsTouchingPlayer, JetpackReachCourseEnd, ...). vehicle.hpp's 8
+  `extern "C"` prototypes go; actor_category_175558.cpp's table points
+  at the members.
+
 ### The crate passes as static members of Crate (#915)
 
 Four functions walk the crate list (gCrateList) and act on each entry
@@ -5109,9 +5144,11 @@ object is byte-identical.
   (IsMaskAssistDue reads `descriptors[current]`); ActorSpawns befriends
   `ActorCategory` (Select and RunFrame drive the table).
 - **Left outside.** The category-table stubs (ActorCategoryEndStub,
-  ActorCategoryAttemptEndStub), the player hooks between the members
-  (PolarIsTouchingPlayer, JetpackIsPauseLocked, JetpackReloadPlayerTiles,
-  ...: the vtables' slots) and FindShotTarget stay free functions.
+  ActorCategoryAttemptEndStub) and FindShotTarget stay free functions.
+  The player hooks between the members (PolarIsTouchingPlayer,
+  JetpackIsPauseLocked, JetpackReloadPlayerTiles, ...: the vtables'
+  slots) are the players': since #915 they are
+  [static members of PolarPlayer and JetpackPlayer](#the-category-hooks-as-static-members-of-polarplayer-and-jetpackplayer-915).
 
 ### The OBJ tile allocator as an all-static class (#915)
 
