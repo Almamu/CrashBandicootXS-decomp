@@ -1,5 +1,6 @@
 #include "bg_layer.hpp"
 #include "boss_ctrl.hpp"
+#include "pickups.hpp"
 #include "platform.hpp"
 #include "player.hpp"
 #include "audio.hpp"
@@ -617,7 +618,7 @@ void CortexBossCtrl::SetState(MovingSprite *, s32 next)
     if (next == CORTEX_BOSS_STATE_DEFEATED) {
         target->mover->SetMode(CORTEX_TARGET_STATE_STOP);
         if (!gLevelState->HasTurboRun())
-            SpawnBodySlamPower(0xFFFF, 0x8C, 0x98, 0);
+            Pickups::SpawnPowerBodySlam(0xFFFF, 0x8C, 0x98, 0);
     }
     SetMode(next);
 }

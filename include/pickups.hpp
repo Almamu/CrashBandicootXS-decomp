@@ -237,4 +237,44 @@ public:
 
 COMPILE_TIME_ASSERT(pickups_hpp, sizeof(Stopwatch) == 0x40);
 
+/* The spawners of the pickups that are a plain Sprite of a bank (#915,
+ * docs/cplusplus.md, "The entity spawners as static members"): the four
+ * powers, the gems and the crystal. Each one builds a Sprite (or, for a
+ * gem on Neo Cortex's level, hands over to SpawnCortexBossGem) and adds
+ * it to a part list. None of them has a class of its own, and Sprite, the
+ * general sprite object, isn't theirs, so they are the static members of
+ * this all-static class. The seaweed and the flame are decorations
+ * (gDecorationList) rather than pickups; they are built the same way and
+ * are here too, as decided on #915.
+ *
+ * All but SpawnCrateGem (LevelState's crate gem, level_state.cpp) and the
+ * UNUSED SpawnSeaweedNoAnimReset are gEntitySpawnFuncs slots, under the
+ * slot's signature; the bosses call the powers too. cxx_symbols.txt
+ * (block "#915 Pickups") maps each member to its C name
+ * (`SpawnBlueGem__7PickupsUiUsUsUs` is SpawnBlueGem, ...). */
+class Pickups
+{
+public:
+    /* spawn_pickups.cpp: the four powers (bank 38), then the blue gem */
+    static void SpawnPowerBodySlam(u32 id, u16 x, u16 y, u16 param);    // SpawnBodySlamPower
+    static void SpawnPowerTornadoSpin(u32 id, u16 x, u16 y, u16 param); // SpawnTornadoSpinPower
+    static void SpawnPowerDoubleJump(u32 id, u16 x, u16 y, u16 param);  // SpawnDoubleJumpPower
+    static void SpawnPowerTurboRun(u32 id, u16 x, u16 y, u16 param);    // SpawnTurboRunPower
+    static void SpawnBlueGem(u32 id, u16 x, u16 y, u16 param);          // SpawnBlueGem
+
+    /* spawn_gems.cpp: each unless its "collected" bit is set */
+    static void SpawnCrystal(u32 id, u16 x, u16 y, u16 param);    // SpawnCrystal
+    static void SpawnCrateGem(u32 id, u16 x, u16 y, u16 param);   // SpawnCrateGem
+    static void SpawnGemPathGem(u32 id, u16 x, u16 y, u16 param); // SpawnGemPathGem
+    static void SpawnRedGem(u32 id, u16 x, u16 y, u16 param);     // SpawnRedGem
+    static void SpawnGreenGem(u32 id, u16 x, u16 y, u16 param);   // SpawnGreenGem
+    static void SpawnYellowGem(u32 id, u16 x, u16 y, u16 param);  // SpawnYellowGem
+
+    /* spawn_objects.cpp: the decorations */
+    static void SpawnSeaweed(u32 id, u16 x, u16 y, u16 param); // SpawnSeaweed
+    /* UNUSED - no caller anywhere in the ROM. */
+    static void SpawnSeaweedNoAnimReset(u32 id, u16 x, u16 y, u16 param); // SpawnSeaweedNoAnimReset
+    static void SpawnFlame(u32 id, u16 x, u16 y, u16 param);              // SpawnFlame
+};
+
 #endif /* !GUARD_PICKUPS_HPP */

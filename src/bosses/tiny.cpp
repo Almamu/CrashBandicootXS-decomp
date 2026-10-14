@@ -1,5 +1,6 @@
 #include "bg_layer.hpp"
 #include "boss_ctrl.hpp"
+#include "pickups.hpp"
 #include "ctrl.hpp"
 #include "sprite_obj.hpp"
 #include "player.hpp"
@@ -319,7 +320,7 @@ void TinyCtrl::SetState(MovingSprite *part, s32 next)
             s32 y = pad->y - INT_TO_Q8(24);
 
             if (!gLevelState->HasTornadoSpin())
-                SpawnTornadoSpinPower(0xFFFF, Q8_TO_INT(x), Q8_TO_INT(y), 0);
+                Pickups::SpawnPowerTornadoSpin(0xFFFF, Q8_TO_INT(x), Q8_TO_INT(y), 0);
             break;
         }
     case TINY_STATE_FALL_OUT:

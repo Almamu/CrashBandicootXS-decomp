@@ -232,7 +232,7 @@ void LevelState::AddBrokenCrate()
              * first, CheckAllCratesBroken's order. */
             u16 b = crateGemX;
             u16 c = crateGemY;
-            SpawnCrateGem(0xffff, b, c, 0);
+            Pickups::SpawnCrateGem(0xffff, b, c, 0);
         }
     }
 
@@ -266,7 +266,7 @@ void LevelState::PressSwitchCrate()
             /* `b`, `c` are needed: inlined, the code is 2 instructions shorter */
             u16 b = crateGemX;
             u16 c = crateGemY;
-            SpawnCrateGem(0xffff, b, c, 0);
+            Pickups::SpawnCrateGem(0xffff, b, c, 0);
         }
     }
 }
@@ -815,7 +815,7 @@ void LevelState::CheckAllCratesBroken()
             mask |= *flags;
             *flags = mask;
         } else {
-            SpawnCrateGem(0xffff, crateGemX, crateGemY, 0);
+            Pickups::SpawnCrateGem(0xffff, crateGemX, crateGemY, 0);
         }
     }
 }

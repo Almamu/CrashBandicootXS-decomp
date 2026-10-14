@@ -21,8 +21,11 @@ extern "C" {
  * 0x08021D80-0x08022188. The player starts, the entity spawner's calls
  * and InitLevelState follow in spawn_markers.cpp. Built with
  * old_agbcp. Since #915 the stopwatch's and the wumpa's are static
- * members of their classes (Stopwatch::Spawn, Wumpa::Spawn); the others
- * build a plain Sprite (or none) and stay free. */
+ * members of their classes (Stopwatch::Spawn, Wumpa::Spawn), and the
+ * powers' and the blue gem's, which build a plain Sprite, are Pickups'
+ * (Pickups::SpawnPowerBodySlam, ..., include/pickups.hpp). The crate
+ * gem's marker (no sprite) and the UNUSED CreateTouchableSprite stay
+ * free. */
 
 /* A sprite of bank `bank` (an index into the sprite bank table),
  * animation `tag`, kind `kind`, in the touchable list. The callers pass
@@ -48,7 +51,7 @@ static inline Sprite *SpawnTouchable(u32 id, u16 x, u16 y, u16 param, s32 bank, 
  * InitPowerDialog's dialog box uses): body slam (tag 1, kind 0x25),
  * tornado spin (0, 0x24), double jump (2, 0x23) and turbo run (3,
  * 0x26). */
-void SpawnBodySlamPower(u32 id, u16 x, u16 y, u16 param)
+void Pickups::SpawnPowerBodySlam(u32 id, u16 x, u16 y, u16 param)
 {
     u8 tag = 1;
     u8 kind = EVENT_POWER_BODY_SLAM;
@@ -56,7 +59,7 @@ void SpawnBodySlamPower(u32 id, u16 x, u16 y, u16 param)
     SpawnTouchable(id, x, y, param, 38, tag, kind);
 }
 
-void SpawnTornadoSpinPower(u32 id, u16 x, u16 y, u16 param)
+void Pickups::SpawnPowerTornadoSpin(u32 id, u16 x, u16 y, u16 param)
 {
     /* `tag` is needed: inlined, the instructions differ */
     u8 tag = 0;
@@ -64,12 +67,12 @@ void SpawnTornadoSpinPower(u32 id, u16 x, u16 y, u16 param)
     SpawnTouchable(id, x, y, param, 38, tag, EVENT_POWER_TORNADO_SPIN);
 }
 
-void SpawnDoubleJumpPower(u32 id, u16 x, u16 y, u16 param)
+void Pickups::SpawnPowerDoubleJump(u32 id, u16 x, u16 y, u16 param)
 {
     SpawnTouchable(id, x, y, param, 38, 2, EVENT_POWER_DOUBLE_JUMP);
 }
 
-void SpawnTurboRunPower(u32 id, u16 x, u16 y, u16 param)
+void Pickups::SpawnPowerTurboRun(u32 id, u16 x, u16 y, u16 param)
 {
     SpawnTouchable(id, x, y, param, 38, 3, EVENT_POWER_TURBO_RUN);
 }
@@ -92,7 +95,7 @@ void Stopwatch::Spawn(u32 id, u16 x, u16 y, u16 param)
 
 /* The blue gem (bank record 32, `+0x180`, tag 4, kind 0x21), unless
  * collected (bit 3 of the level state's gem flags). */
-void SpawnBlueGem(u32 id, u16 x, u16 y, u16 param)
+void Pickups::SpawnBlueGem(u32 id, u16 x, u16 y, u16 param)
 {
     if (gLevelState->progress.flags & PROGRESS_FLAG_BLUE_GEM)
         return;

@@ -29,13 +29,14 @@ extern "C" {
  * were plain C with no pins, and are plain C++ now (the current agbcc
  * misses all six - likely also what parked the spawn_gem_platforms.cpp
  * siblings, issue #31). See docs/matching/archive/issue-30-graphics-loading.md,
- * "Tenth pass". */
+ * "Tenth pass". Since #915 all six are static members of Pickups
+ * (Pickups::SpawnCrystal, ..., include/pickups.hpp). */
 
 /* The `tag`/`type` locals are not just naming: the ROM loads both
  * constants into callee-saved registers before the Sprite::Create call and
  * stores them from there afterwards, which is how this compiler treats a
  * variable set before the call (a literal would be loaded at the store). */
-void SpawnCrystal(u32 id, u16 x, u16 y, u16 param)
+void Pickups::SpawnCrystal(u32 id, u16 x, u16 y, u16 param)
 {
     s32 bit = gLevelState->GetCurrentLevelFlags()->flags & LEVEL_FLAG_CRYSTAL;
 
@@ -54,7 +55,7 @@ void SpawnCrystal(u32 id, u16 x, u16 y, u16 param)
     }
 }
 
-void SpawnCrateGem(u32 id, u16 x, u16 y, u16 param)
+void Pickups::SpawnCrateGem(u32 id, u16 x, u16 y, u16 param)
 {
     u8 bit = gLevelState->GetCurrentLevelFlags()->flags & LEVEL_FLAG_CRATE_GEM;
 
@@ -79,7 +80,7 @@ void SpawnCrateGem(u32 id, u16 x, u16 y, u16 param)
     }
 }
 
-void SpawnGemPathGem(u32 id, u16 x, u16 y, u16 param)
+void Pickups::SpawnGemPathGem(u32 id, u16 x, u16 y, u16 param)
 {
     if ((gLevelState->GetCurrentLevelFlags()->flags & LEVEL_FLAG_GEM_PATH_GEM) == 0) {
         /* `tag`, `type` are needed: inlined, the code is 4 instructions shorter */
@@ -98,7 +99,7 @@ void SpawnGemPathGem(u32 id, u16 x, u16 y, u16 param)
     }
 }
 
-void SpawnRedGem(u32 id, u16 x, u16 y, u16 param)
+void Pickups::SpawnRedGem(u32 id, u16 x, u16 y, u16 param)
 {
     if (gLevelState->GetBossIndex() != BOSS_NEO_CORTEX) {
         if ((gLevelState->progress.flags & PROGRESS_FLAG_RED_GEM) == 0) {
@@ -121,7 +122,7 @@ void SpawnRedGem(u32 id, u16 x, u16 y, u16 param)
     }
 }
 
-void SpawnGreenGem(u32 id, u16 x, u16 y, u16 param)
+void Pickups::SpawnGreenGem(u32 id, u16 x, u16 y, u16 param)
 {
     if (gLevelState->GetBossIndex() != BOSS_NEO_CORTEX) {
         if ((gLevelState->progress.flags & PROGRESS_FLAG_GREEN_GEM) == 0) {
@@ -144,7 +145,7 @@ void SpawnGreenGem(u32 id, u16 x, u16 y, u16 param)
     }
 }
 
-void SpawnYellowGem(u32 id, u16 x, u16 y, u16 param)
+void Pickups::SpawnYellowGem(u32 id, u16 x, u16 y, u16 param)
 {
     if (gLevelState->GetBossIndex() != BOSS_NEO_CORTEX) {
         u8 bit = gLevelState->progress.flags & PROGRESS_FLAG_YELLOW_GEM;

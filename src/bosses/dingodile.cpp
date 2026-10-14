@@ -1,5 +1,6 @@
 #include "bg_layer.hpp"
 #include "boss_ctrl.hpp"
+#include "pickups.hpp"
 #include "player.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
@@ -332,7 +333,7 @@ void DingodileCtrl::SetState(MovingSprite *part, s32 next)
     switch (next) {
     case DINGODILE_STATE_DEFEATED:
         if (!gLevelState->HasSuperBodySlam())
-            SpawnTurboRunPower(0xFFFF, 0xA0, 0xA9, 0);
+            Pickups::SpawnPowerTurboRun(0xFFFF, 0xA0, 0xA9, 0);
         StartMotion(part, 3);
         break;
     case DINGODILE_STATE_RETREAT:

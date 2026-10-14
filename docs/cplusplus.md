@@ -600,13 +600,13 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | globals.h, action_obj.h, the controller headers (action_ctrl.hpp, input_ctrl.hpp, swim_ctrl.hpp), sprite_obj.hpp, and 43 `.cpp` files | `gPlayer` and the controllers' player pointers are `Player *`s; `PlayerSprite()`, `ActionCtrl::Sprite()` and the `(GroundSprite *)` casts go | 0 | (unchanged) | 4 hand-written vcalls, the flags2 offset macro -> 0 | 8 |
 | `src/level/entity_spawner.cpp` | `EntitySpawner` (include/spawners.hpp): `SpawnEffectPart`, `LaunchEffectPart`, `DropWumpa`, `Spawn` (SpawnEntity), `SetTable`, constructor, destructor | 7 | old_agbcp | 4 pins, 1 use, 1 keep, 1 asm label, the `attach` slot call -> 0 | 9 |
 | `src/level/entity_spawner.cpp` | `EntitySpawner::DropExtraLife` | 1 | old_agbcp | 0 -> 0 | 9 |
-| `src/level/spawn_gems.cpp` | the crystal and gem spawners (C linkage) | 6 | old_agbcp | 0 -> 0 | 9 |
+| `src/level/spawn_gems.cpp` | the crystal and gem spawners (C linkage; static members of Pickups since #915) | 6 | old_agbcp | 0 -> 0 | 9 |
 | `src/level/spawn_gem_platforms.cpp` | the gem platform spawners (C linkage; `Platform`'s static members since #915) | 4 | old_agbcp | 0 -> 0 | 9 |
 | `src/level/spawn_crates.cpp` | the crate spawners (C linkage; `Crate`'s static members since #915) | 7 | **old_agbcp** (was agbcc) | 16 pins, 3 asm -> 0 | 9 |
 | `src/level/spawn_start_marker.cpp` | `SpawnStartMarker` (C linkage) | 1 | old_agbcp | 17 pins, 2 asm, 1 retyped read, the slot-13 call, gotos -> 0 | 9 |
 | `src/level/spawn_bosses.cpp` | the room exit and the bosses' spawners (C linkage; the bosses' static members of their controllers since #915) | 4 | old_agbcp | 4 pins, 1 keep, 3 slot calls -> 4 pins, 1 keep | 9 |
-| `src/level/spawn_objects.cpp` | Mega Mix, the decorations, the platform and crate spawners, the seal spawner (C linkage; the platforms', the launch pad's and the seal spawner's static members of their classes since #915) | 25 | old_agbcp | the slot call -> 0 | 9 |
-| `src/level/spawn_pickups.cpp` | the power, stopwatch, blue gem, wumpa and player-start spawners, `CreateEntitySpawner`, `DestroyEntitySpawner`, `InitLevelState` (C linkage), with `KeyInput` (spawners.hpp; its constructor ClearKeys is still C) | 18 | **old_agbcp** (was agbcc) | 38 pins, 10 asm, 5 retyped stores -> 4 pins, 1 asm | 9 |
+| `src/level/spawn_objects.cpp` | Mega Mix, the decorations, the platform and crate spawners, the seal spawner (C linkage; the platforms', the launch pad's and the seal spawner's static members of their classes, the decorations' of Pickups, since #915) | 25 | old_agbcp | the slot call -> 0 | 9 |
+| `src/level/spawn_pickups.cpp` | the power, stopwatch, blue gem, wumpa and player-start spawners, `CreateEntitySpawner`, `DestroyEntitySpawner`, `InitLevelState` (C linkage; the powers' and the blue gem's static members of Pickups since #915), with `KeyInput` (spawners.hpp; its constructor ClearKeys is still C) | 18 | **old_agbcp** (was agbcc) | 38 pins, 10 asm, 5 retyped stores -> 4 pins, 1 asm | 9 |
 | `src/level/level_state.cpp` | `StartTimeTrial` (C linkage) | 1 | old_agbcp | 2 vcall macros, an `ENTITY_SET_GONE_BIT` -> 0 | 9 |
 | globals.h, level.h, level_state.h, level_data.h, crate.hpp, enemy_ctrl.hpp, and 17 `.cpp` files | `gEntitySpawner` is an `EntitySpawner *` to C++, and the effect parts' and dropped pickups' callers call its methods; `CreateMovingSprite` calls are `MovingSprite::Create` | 0 | (unchanged) | 2 asm labels (`DropWumpaFlag`, `DropExtraLifeFlag`), a function-pointer cast -> 0 | 9 |
 | `src/menus/level_select.cpp` (`CameraLead` and `LaunchPad` in `objects/camera_lead.cpp` and `launch_pad.cpp` since #767) | `CameraLead`, `LaunchPad`, and `LevelSelect`'s constructor, destructor, update, draw, record and loop (include/level_select.hpp), with `RunLevelSelect` (C linkage) | 24 + 1 | old_agbcp | 31 pins, 2 keeps, 2 asm, 2 asm labels, 1 volatile read, the byte views of DISPCNT, BLDY and the save record, the `Opaque` and `ItemAt` helpers, gotos, 7 hand-written vcalls -> 3 pins, 1 keep, 2 asm labels | 10 |
@@ -723,6 +723,7 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/level/spawn_gem_platforms.cpp`, `spawn_objects.cpp`, `src/data/dispatch_table_16c6a4.cpp` | the platform spawners as static members of `Platform` (include/platform.hpp, named after PLATFORM_KIND_*: `SpawnGemRed`, ..., `SpawnRock`, `SpawnLarge`), SpawnLaunchPadEntity as `LaunchPad::SpawnEntity` (level_select.hpp) and SpawnSealSpawner as `PeriodicSpawner::Spawn` (enemy_ctrl.hpp); level.h's 12 prototypes go | 12 | (unchanged) | 0 -> 0 | [#915](#the-entity-spawners-as-static-members-915) |
 | `src/level/spawn_enemies.cpp`, `spawn_objects.cpp`, `src/data/dispatch_table_16c6a4.cpp` | the enemy spawners as static members of `EnemyCtrl` (include/enemy_ctrl.hpp) under their C names (`EnemyCtrl::SpawnLizard`, ...); the seal spawner's callback is `EnemyCtrl::SpawnSeal`; the file-local inline `SetKind` is `SetPartKind` (EnemyCtrl::SetKind would hide it); level.h's 26 prototypes go | 26 | (unchanged) | 0 -> 0 | [#915](#the-entity-spawners-as-static-members-915) |
 | `src/level/spawn_bosses.cpp`, `spawn_pickups.cpp`, `src/data/dispatch_table_16c6a4.cpp` | the boss spawners as static members of their controllers (include/boss_ctrl.hpp: `DingodileCtrl::Spawn`, `TinyCtrl::Spawn`, `CortexBossCtrl::Spawn`, `MegaMixCtrl::Spawn`), SpawnStopwatch and SpawnWumpa as `Stopwatch::Spawn` and `Wumpa::Spawn` (pickups.hpp); level.h's 6 prototypes go. The spawners with no class of their own stay free | 6 | (unchanged) | 0 -> 0 | [#915](#the-entity-spawners-as-static-members-915) |
+| `src/level/spawn_pickups.cpp`, `spawn_gems.cpp`, `spawn_objects.cpp`, `src/data/dispatch_table_16c6a4.cpp`, `src/level/level_state.cpp`, `src/bosses/cortex.cpp`, `tiny.cpp`, `dingodile.cpp` | the 14 spawners of the pickups that are a plain Sprite of a bank, and of the decorations, as static members of the all-static class `Pickups` (include/pickups.hpp: `SpawnPowerBodySlam`, `SpawnPowerTornadoSpin`, `SpawnPowerDoubleJump`, `SpawnPowerTurboRun`, `SpawnBlueGem`, `SpawnCrystal`, `SpawnCrateGem`, `SpawnGemPathGem`, `SpawnRedGem`, `SpawnGreenGem`, `SpawnYellowGem`, `SpawnSeaweed`, `SpawnSeaweedNoAnimReset`, `SpawnFlame`); level.h's 14 prototypes go | 14 | (unchanged) | 0 -> 0 | [#915](#the-entity-spawners-as-static-members-915) |
 | `src/text/text_box.cpp` | `GetWordLength`, `DrawWrappedTextInBox` (C linkage; takes a `Font *`, `self->SetMargin`, `HeightToLines`) | 0 + 2 | agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/aabb.cpp` (since #767: `CommitBlendRegs` at the end of gfx/display.cpp, `IwramFree`/`IwramAlloc` in system/iwram_alloc.cpp) | `CommitBlendRegs`, `AabbOverlapsInclusiveX`, `AabbOverlaps`, `IwramFree`, `IwramAlloc` (C linkage) | 0 + 5 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/fixed_math.cpp`, `line.cpp`, `line_step.cpp`, `number_format.cpp`, `printf.cpp`, `rand.cpp`, `string.cpp`, `time_format.cpp` | the fixed-point helpers, the Bresenham line, `itoa`, `sprintf`/`vsprintf`/`FindSubstring` (string.cpp since #767), `rand`/`srand`/`RandRange`, the string functions, `FormatCentiseconds` (C linkage) | 0 + 24 | agbcp | 2 pins, 5 asm, 2 asm labels -> the same | all-C++: gfx, system, util, text |
@@ -5103,7 +5104,28 @@ C name.
   (include/pickups.hpp).
 - **cxx_symbols.txt.** The `#915 the boss and pickup spawners` block maps
   these 6.
-- **Left free, on purpose (25).** The spawners with no class of their
+- **The plain-Sprite pickups.** The 14 spawners that build a plain
+  `Sprite` of a bank (Sprite is the general sprite object, not theirs)
+  are static members of a small all-static class, `Pickups`
+  (include/pickups.hpp), so that Sprite doesn't get 14 level-specific
+  members:
+  - the four powers, `Pickups::SpawnPowerBodySlam`,
+    `SpawnPowerTornadoSpin`, `SpawnPowerDoubleJump`, `SpawnPowerTurboRun`,
+    and `SpawnBlueGem` (spawn_pickups.cpp); the bosses call the powers
+    (cortex.cpp, tiny.cpp, dingodile.cpp);
+  - `SpawnCrystal`, `SpawnCrateGem`, `SpawnGemPathGem`, `SpawnRedGem`,
+    `SpawnGreenGem`, `SpawnYellowGem` (spawn_gems.cpp); LevelState calls
+    `SpawnCrateGem` (level_state.cpp);
+  - the decorations `SpawnSeaweed`, `SpawnFlame` and the UNUSED
+    `SpawnSeaweedNoAnimReset` (spawn_objects.cpp). They aren't pickups
+    (they go to gDecorationList), but are built the same way and are
+    `Pickups`' too, as decided; the class comment says so.
+  - **Name hiding.** None of the members calls a function of its own
+    name: the red, green and yellow gems' SpawnCortexBossGem and the
+    file's SpawnTouchable aren't members.
+  - cxx_symbols.txt's `#915 Pickups` block maps the 14 to their C
+    names; level.h's 14 prototypes go.
+- **Left free, on purpose (11).** The spawners with no class of their
   own:
   - the player starts (SpawnStartMarker, spawn_start_marker.cpp; the
     four other start markers and player positions and
@@ -5111,12 +5133,6 @@ C name.
     start, and create nothing;
   - the room exit (SpawnRoomExit): a bare Entity, or a Platform, by
     the level;
-  - the pickups that are a plain `Sprite` of a bank (the four powers,
-    SpawnBlueGem in spawn_pickups.cpp; SpawnCrystal, SpawnCrateGem,
-    SpawnGemPathGem and the red, green and yellow gems in spawn_gems.cpp)
-    and the decorations (SpawnSeaweed, SpawnFlame, the UNUSED
-    SpawnSeaweedNoAnimReset in spawn_objects.cpp). Sprite is the
-    general sprite object, not theirs;
   - SpawnCrateGemMarker, which only records a position;
     CreateTouchableSprite (UNUSED, not a slot); and SpawnNoEntity, the
     empty slot.

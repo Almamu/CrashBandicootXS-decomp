@@ -77,27 +77,16 @@ extern void ResetObjBuffers(void);
 /* src/level/spawn_bosses.cpp */
 extern void SpawnRoomExit(u32 id, u16 x, u16 y, u16 param);
 
-/* src/level/spawn_gems.cpp */
-extern void SpawnCrystal(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnCrateGem(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnGemPathGem(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnRedGem(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnGreenGem(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnYellowGem(u32 id, u16 x, u16 y, u16 param);
+/* src/level/spawn_gems.cpp: the gems and the crystal are static members
+ * of Pickups (include/pickups.hpp, #915) */
 
-/* src/level/spawn_objects.cpp (the platforms', the launch pad's and the
- * seal spawner's slots are their classes' static members, #915) */
-extern void SpawnSeaweed(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnSeaweedNoAnimReset(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnFlame(u32 id, u16 x, u16 y, u16 param);
+/* src/level/spawn_objects.cpp (the decorations', the platforms', the
+ * launch pad's and the seal spawner's slots are static members of
+ * Pickups and of the classes they create, #915) */
 extern void SpawnNoEntity(void);
 
-/* src/level/spawn_pickups.cpp */
-extern void SpawnBodySlamPower(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnTornadoSpinPower(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnDoubleJumpPower(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnTurboRunPower(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnBlueGem(u32 id, u16 x, u16 y, u16 param);
+/* src/level/spawn_pickups.cpp (the powers and the blue gem are static
+ * members of Pickups, #915) */
 extern void SpawnCrateGemMarker(u32 id, u16 x, u16 y, u16 param);
 extern void *CreateTouchableSprite(u32 index, u32 tag, u32 field0A, u32 cx, u16 cy, u16 cw, u16 ch);
 
