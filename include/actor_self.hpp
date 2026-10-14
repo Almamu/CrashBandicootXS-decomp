@@ -35,10 +35,10 @@
 
 extern "C" {
 #include "core.h"
-#include "math_util.h"
-#include "memory.h"
-#include "actor_anim.h"
-#include "gfx.h"
+#include "engine/util/math_util.h"
+#include "engine/sys/memory.h"
+#include "engine/actor/actor_anim.h"
+#include "engine/gfx/gfx.h"
 }
 
 /* ActorSelf::sortKey's bits. The low 15 bits are the draw-order key
@@ -374,7 +374,7 @@ inline HpActor *ActorSelf::AsHpActor()
 } // namespace Entities
 } // namespace Game
 
-/* src/actor/actor_category_frame.cpp: the first actor other than `self`
+/* src/engine/actor/actor_category_frame.cpp: the first actor other than `self`
  * a shot hits (JetpackShot::Update). C linkage, C++ callers only. */
 extern "C" Game::Entities::HpActor *FindShotTarget(Game::Entities::ActorSelf *self);
 

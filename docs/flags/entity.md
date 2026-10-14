@@ -1,7 +1,7 @@
 # `Entity::f`: the entity flags (#843)
 
 Every entity (`class Entity`, include/entity.hpp) has two flag bytes at
-+0x0C and +0x0D, `union EntityFlags f` (include/actor.h). The code reaches
++0x0C and +0x0D, `union EntityFlags f` (include/engine/actor/actor.h). The code reaches
 them in three ways:
 
 - `f.b.<bit>`: the bitfields, one per bit;

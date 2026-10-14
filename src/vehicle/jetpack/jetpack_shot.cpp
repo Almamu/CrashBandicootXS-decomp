@@ -2,7 +2,7 @@
 #include "airship.hpp"
 
 extern "C" {
-#include "actor.h"
+#include "engine/actor/actor.h"
 #include "bosses.h"
 }
 

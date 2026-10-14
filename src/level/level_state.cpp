@@ -4,22 +4,22 @@
 #include "hud.hpp"
 #include "frontend.hpp"
 #include "player.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 #include "boss_ctrl.hpp"
 #include "hovercraft.hpp"
 #include "crate.hpp"
 
 extern "C" {
 #include "crates.h"
-#include "gfx.h"
+#include "engine/gfx/gfx.h"
 #include "level.h"
 #include "globals.h"
 #include "core.h"
-#include "actor.h"
+#include "engine/actor/actor.h"
 #include <agb_syscall.h>
-#include "system.h"
+#include "engine/sys/system.h"
 #include "bosses.h"
-#include "sprite_bank.h"
+#include "engine/gfx/sprite_bank.h"
 }
 
 using Game::Bosses::BossCtrl;

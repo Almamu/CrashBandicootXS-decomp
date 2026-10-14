@@ -17,7 +17,7 @@
  * (docs/headers.md). */
 
 #include "core.h"
-#include "actor.h"
+#include "engine/actor/actor.h"
 #include "objects.h"
 
 /* The airship's attack parameters, one per kind and level
@@ -142,7 +142,7 @@ extern const u8 gTinyRoundAnchors[3];
 #define DINGODILE_STALACTITE_UNK_START  Q8_FRAC(2, 88)
 #define DINGODILE_STALACTITE_UNK_STEP   Q8_FRAC(0, 10)
 
-/* src/iwram/iwram_data.cpp */
+/* src/engine/sys/iwram_data.cpp */
 extern u16 *gFlashBgPalette;
 extern u16 *gFlashObjPalette;
 

@@ -4,9 +4,9 @@
 
 extern "C" {
 #include "level.h"
-#include "sprite_bank.h"
+#include "engine/gfx/sprite_bank.h"
 #include "globals.h"
-#include "math_util.h"
+#include "engine/util/math_util.h"
 }
 
 using Game::Crash::Player;

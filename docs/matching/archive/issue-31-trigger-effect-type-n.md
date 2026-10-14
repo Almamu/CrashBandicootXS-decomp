@@ -352,7 +352,7 @@ tell, the same one that closed the neighbouring spawners
 Under old_agbcc the pinned drafts that were kept under `#if NON_MATCHING`
 were further off, not closer, so they were thrown away. The file was
 rewritten as the obvious C. It follows `spawn_gems.c`'s
-conventions: `struct gfx_part` from `include/gfx_part.h`, and a `u8 tag`
+conventions: `struct gfx_part` from `include/engine/gfx/sprite_piece_flags.h`, and a `u8 tag`
 local set before the `CreateSpriteObj` call.
 
 Only one thing needed care. The sound arm is two separate `CreatePlatform`

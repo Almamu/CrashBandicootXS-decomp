@@ -1,12 +1,12 @@
 #include "menus.hpp"
-#include "font.hpp"
-#include "audio.hpp"
-#include "key_input.hpp"
-#include "frame_limiter.hpp"
+#include "engine/text/font.hpp"
+#include "engine/audio/audio.hpp"
+#include "engine/sys/key_input.hpp"
+#include "engine/sys/frame_limiter.hpp"
 
 extern "C" {
-#include "system.h"
-#include "text.h"
+#include "engine/sys/system.h"
+#include "engine/text/text.h"
 #include "globals.h"
 #include "core.h"
 }

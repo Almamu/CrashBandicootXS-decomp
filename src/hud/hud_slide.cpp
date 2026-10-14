@@ -188,7 +188,7 @@ void Hud::IncCrateTotal()
 
 /* Sits right after hud_slide.cpp's blink-timer trio (ROM 0x08028568) and
  * before FontDrawGlyph/InitSmallFont/InitLargeFont/FontPutChar
- * (src/text/font_glyph.cpp) - see GitHub issue #46. */
+ * (src/engine/text/font_glyph.cpp) - see GitHub issue #46. */
 
 /* DestroyHud: deletes the parts (each one's virtual destructor, slot 10
  * of gHudPartVtable, from the last to the first, then the array with its

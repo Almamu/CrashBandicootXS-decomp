@@ -13,16 +13,16 @@
  * old_agbcc, and -fno-implement-inlines (NO_IMPLEMENT_INLINES_OBJS). */
 
 #include "level_select.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 #include "level_state.hpp"
 #include "camera.hpp"
 
 extern "C" {
 #include <agb_syscall.h>
 #include <libgcc.h>
-#include "text.h"
+#include "engine/text/text.h"
 #include "level.h"
-#include "math_util.h"
+#include "engine/util/math_util.h"
 }
 
 using Game::Crash::Player;

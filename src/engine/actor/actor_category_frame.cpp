@@ -1,0 +1,144 @@
+#include "actor_self.hpp"
+#include "vehicle.hpp"
+#include "engine/gfx/cell_anim.hpp"
+#include "engine/actor/actor_spawns.hpp"
+#include "engine/actor/actor_category.hpp"
+
+extern "C" {
+#include "core.h"
+#include "engine/util/math_util.h"
+#include "engine/actor/actor_anim.h"
+#include "engine/sys/system.h"
+#include "engine/actor/actor.h"
+#include "bosses.h"
+#include "globals.h"
+}
+
+using Engine::Actor::ActorCategory;
+using Engine::Actor::ActorSpawns;
+using Engine::Gfx::CellAnim;
+using Game::Entities::ActorSelf;
+using Game::Entities::BoxOverlap;
+using Game::Entities::HpActor;
+using Game::Entities::WorldBox;
+using Game::Vehicles::Jetpack::JetpackPlayer;
+using Game::Vehicles::Polar::PolarPlayer;
+
+/* ROM 0x0802A018-0x0802A4D4, inside the actor zone that starts at
+ * ActorCategory::SetupVramPool (0x080291A4): the category hooks that test an actor
+ * against the player (PolarIsTouchingPlayer, JetpackIsTouchingPlayer:
+ * PolarPlayer's and JetpackPlayer's static IsTouchingPlayer since #915),
+ * the category's frame (ActorCategory::RunFrame) and the jetpack shot's
+ * target search (FindShotTarget). C++ since #664 part 11b
+ * (docs/cplusplus.md); an old_agbcc object (current agbcc schedules the
+ * `asr`s differently).
+ *
+ * All three tests are the same 3-axis (Z, Y, X) box overlap, as in
+ * UpdateYeti, IsTouchingYeti, DetonateNearbyPolarNitros and
+ * IsTouchingAirship: each actor's box (`box`, +0x38) moved to its
+ * position in whole units, the two compared: actor_self.hpp's
+ * BoxOverlap of two WorldBoxes. */
+
+static inline u8 ActorsOverlap(ActorSelf *pl, ActorSelf *self)
+{
+    return BoxOverlap(WorldBox(pl), WorldBox(self));
+}
+
+s32 PolarPlayer::IsTouchingPlayer(ActorSelf *self)
+{
+    /* `plAddr` is needed: inlined, the instructions are reordered */
+    ActorSelf **plAddr = &gActorList;
+
+    if (gPolarPlayerInactive != 0)
+        return 0;
+    return ActorsOverlap(*plAddr, self);
+}
+
+s32 JetpackPlayer::IsTouchingPlayer(ActorSelf *self)
+{
+    /* `plAddr` is needed: inlined, the instructions are reordered */
+    ActorSelf **plAddr = &gActorList;
+
+    if (gJetpackPlayerInactive != 0)
+        return 0;
+    return ActorsOverlap(*plAddr, self);
+}
+
+/* The category's frame: the category vtable's slot 3 (the frame's
+ * start) and slot 10 once the course length is passed (the course end),
+ * the spawns that have scrolled into view (slot 1, PolarPlayer::SpawnActor for the
+ * polar levels), then every actor's Update, and the visible ones' Draw in
+ * draw-order (gHeapSortActorsByKeyFunc on their `sortKey`).
+ *
+ * The spawn loop is a plain `while` whose exit test gcc copies ahead of
+ * the loop (jump.c's duplicate_loop_exit_test), so the loop body starts at
+ * a label and re-reads every global. The test must stay free of inline
+ * functions (their block notes stop the copy), hence the macro. */
+
+/* "The next spawn's depth has scrolled into view": its `spawn.z` plus
+ * ActorSpawns::offset is at most the scroll plus vtable slot 7 (read as a
+ * value), bounded by the table's spawn count. */
+#define SPAWN_DUE()                                                                   \
+    (ActorSpawns::index < ActorSpawns::table->count                                   \
+     && ActorSpawns::table->entries[ActorSpawns::index].spawn.z + ActorSpawns::offset \
+            <= scroll + vtable->spawnDistance)
+
+s32 ActorCategory::RunFrame()
+{
+    s32 scroll;
+    ActorSelf *n;
+    s32 i;
+
+    if (vtable->updateBoss != NULL)
+        vtable->updateBoss();
+    exitStatus = CATEGORY_EXIT_NONE;
+    scroll = CellAnim::GetDistance();
+    if (scroll - ActorSpawns::offset > ActorSpawns::table->length)
+        vtable->reachCourseEnd();
+    if (ActorSpawns::paused != 0) {
+        ActorSpawns::offset += CellAnim::GetFrameStep();
+    } else {
+        while (SPAWN_DUE()) {
+            vtable->spawn(&ActorSpawns::table->entries[ActorSpawns::index].spawn,
+                          ActorSpawns::useBonus, INT_TO_Q8(ActorSpawns::offset));
+            ActorSpawns::index++;
+        }
+    }
+
+    n = gActorList;
+    do {
+        /* `next` is needed: inlined, the code is 1 instruction shorter */
+        ActorSelf *next = n->next;
+
+        n->Update();
+        n = next;
+    } while (n != gActorList);
+
+    drawCount = 0;
+    n = gActorList;
+    do {
+        if (n->visible != 0)
+            drawList[drawCount++] = n;
+        n = n->next;
+    } while (n != gActorList);
+    gHeapSortActorsByKeyFunc(drawCount, drawList);
+
+    for (i = 0; i < drawCount; i++)
+        drawList[i]->Draw();
+    frameCount++;
+    return exitStatus;
+}
+
+/* The first actor other than `self` that can be shot (slot 5 returns 0;
+ * the ROM tests its low byte) and whose box overlaps `self`'s, or 0. */
+HpActor *FindShotTarget(ActorSelf *self)
+{
+    HpActor *n = gActorList->next->AsHpActor();
+
+    do {
+        if (n != self && n->IsUnshootable() == 0 && ActorsOverlap(self, n))
+            return n;
+        n = n->next->AsHpActor();
+    } while (n != gActorList);
+    return 0;
+}

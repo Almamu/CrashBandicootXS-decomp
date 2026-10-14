@@ -49,8 +49,8 @@ ROM_BASE = 0x08000000
 # reference it. The odd sizes check that nothing assumes an alignment the
 # linker doesn't give it.
 SHIFTS = [
-    ("code", "src/system/bios_util.o(.text)", 0x100),
-    ("code_odd", "src/audio/audio.o(.text)", 0x2),
+    ("code", "src/engine/sys/bios_util.o(.text)", 0x100),
+    ("code_odd", "src/engine/audio/audio.o(.text)", 0x2),
     ("data", "data/data.o(.rodata);", 0x100),
     ("rooms", "src/data/level_rooms_24b638.o(.rodata)", 0x1004),
     ("sprite_banks", "src/data/sprite_banks_4a5600.o(.rodata)", 0x100),

@@ -53,8 +53,8 @@ not attempted this pass; see "Left raw" below.
 
 ## Matched (4 functions, full clean `make compare` passing)
 
-- **`GetBgSetupControl`** (`src/gfx/graphics_package.c`)
-- **`SetScaledSpriteColor`** (`src/gfx/graphics_package.c`) - the DMA3
+- **`GetBgSetupControl`** (`src/engine/gfx/graphics_package.c`)
+- **`SetScaledSpriteColor`** (`src/engine/gfx/graphics_package.c`) - the DMA3
   tile-fill. Getting this one byte-exact needed two real fixes beyond
   the arithmetic itself: the DAD constant (`0x06017800`) has to be
   loaded into its own local *before* the stack scratch halfword's
@@ -69,7 +69,7 @@ not attempted this pass; see "Left raw" below.
   compare` caught it - see `docs/workflow.md`'s standing warning about
   isolated compiles not being proof.
 - **`SetScaledSpritePos`**, **`ResetScaledSpriteAttrs`**
-  (`src/gfx/graphics_package.c`) - the last function in this
+  (`src/engine/gfx/graphics_package.c`) - the last function in this
   object needed an explicit trailing `asm(".align 2, 0")` to zero-pad
   the 2-byte gap up to `SpawnStartMarker`'s 4-aligned start, instead of this
   compiler's default Thumb NOP-fill (`0x46C0`) for an implicit end-of-
@@ -91,7 +91,7 @@ are visible in `SetScaledSpriteColor`/`ResetScaledSpriteAttrs`'s final C.
 
 ## Parked (`NON_MATCHING`) - 2 functions
 
-- **`InitBgSetup`** (`src/gfx/graphics_package.c`, real bytes
+- **`InitBgSetup`** (`src/engine/gfx/graphics_package.c`, real bytes
   in `asm/code_3_2_17_1e644.s` under `.if NON_MATCHING == 0`): every
   instruction's operation matches the ROM and every technique above was
   tried (explicit local copies for each mask, matching statement order,
@@ -99,7 +99,7 @@ are visible in `SetScaledSpriteColor`/`ResetScaledSpriteAttrs`'s final C.
   register copies away, and pushes/pops one extra callee-saved register
   (`r7`) in every phrasing tried that got the copies back. Parked rather
   than keep guessing.
-- **`SetScaledSpritePriority`** (`src/gfx/graphics_package.c`, real bytes
+- **`SetScaledSpritePriority`** (`src/engine/gfx/graphics_package.c`, real bytes
   in `asm/code_3_2_17_1e950.s` under `.if NON_MATCHING == 0`): matches
   in full shape except one instruction - the ROM reloads the `-0xd` mask
   constant fresh (`movs r2,#0xd; rsbs r2,r2,#0`), while this compiler
@@ -142,7 +142,7 @@ never responded to further plain-C restructuring, so both were
 converted to `NAKED` and their ROM disassembly transcribed
 instruction-for-instruction - the same escape hatch this project
 already established for `MakeLinkHandshakeId`/`ResetLinkSessionState`
-(`src/link/link_handshake.c`, see
+(`src/engine/link/link_handshake.c`, see
 `docs/matching/archive/issue-4-sio-settings-sync.md`'s "The general strategy
 for the rest" section).
 
@@ -225,7 +225,7 @@ wasn't rushed this pass. Left raw for whoever picks this up next.
 
 Picked up the pair the third pass deliberately left alone. Both are now
 real, semantically-confident C in the new
-`src/gfx/graphics_package.c` (real bytes still guarded at
+`src/engine/gfx/graphics_package.c` (real bytes still guarded at
 `asm/code_3_2_17_1e644.s` under `.if NON_MATCHING == 0`).
 
 **`FitScaledSprite`** (`self`, `arg1`, `arg2`) is a best-fit box selector: it
@@ -445,7 +445,7 @@ the second one materialized via the same `mov #N; neg` opaque-asm
 negative-mask idiom `UPDATE_ICON_FRAME_NIBBLE` already uses) matches
 100% on the first isolated-compile attempt. `tools/report_units.py`'s
 entry for `0x0801E950` now points at
-`src/gfx/graphics_package.o`. Verified via `rm -rf build &&
+`src/engine/gfx/graphics_package.o`. Verified via `rm -rf build &&
 make NON_MATCHING=1 report` + `objdiff-cli diff` (100%) and a full
 clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` (`La suma coincide`).
@@ -517,7 +517,7 @@ functions' bytes. `tools/report_units.py`'s single combined entry for
 this pair was split into two: `(0x0801E688, None, ...)` (matching the
 `InitBgSetup`/`SpawnStartMarker` precedent - a NAKED transcription doesn't
 count as "matched" for this project's per-file tracking, even though
-it's byte-correct) and `(0x0801E788, "src/gfx/graphics_package.o", ...)`
+it's byte-correct) and `(0x0801E788, "src/engine/gfx/graphics_package.o", ...)`
 (unchanged treatment, still pointing at the `.c` file's `#if
 NON_MATCHING` reconstruction for its NON_MATCHING=1 diffable
 percentage, the same convention `LoadGraphicsPackage` above uses).
@@ -547,7 +547,7 @@ whole outer loop. This is the exact same "compiler drops a genuinely
 live register from its own auto-generated prologue/epilogue list under
 register pressure" limitation already closed this session for
 `SetupRoomBlend` (`src/level/room_frame.c`, PR #334) and `FitScaledSprite`
-(`src/gfx/graphics_package.c`, PR #336, "Seventh pass"
+(`src/engine/gfx/graphics_package.c`, PR #336, "Seventh pass"
 above), and documented as still-open for `LoadTitleScreenBg`
 (`src/frontend/title_screen_init.c`, issue #65) - given the extensive
 prior iteration already recorded in the third pass's write-up (every
@@ -609,7 +609,7 @@ sidesteps this compiler's addressing-mode-folding pass entirely: there
 is no C-level codegen left to fight, since every instruction is
 written literally with its own explicit register and immediate-offset
 encoding. This is the exact same escape hatch this cluster's sibling
-`FitScaledSprite` (`src/gfx/graphics_package.c`, "Seventh pass"
+`FitScaledSprite` (`src/engine/gfx/graphics_package.c`, "Seventh pass"
 above) was just closed with earlier today, for the same underlying
 `r7`-addressing-mode-folding bug class (just reached via a different
 mechanism there - `r7` never entering the compiler's own synthesized
@@ -717,7 +717,7 @@ The only things the C has to get right:
   SpawnCortexBossGem(...); }` - the other nesting puts the hand-off first.
 
 The part object is `struct gfx_part`, moved out of
-`cortex.c` into the new shared `include/gfx_part.h` (bits 0-3
+`cortex.c` into the new shared `include/engine/gfx/sprite_piece_flags.h` (bits 0-3
 of +0x28 split into two 2-bit fields for `SpawnCrateGem`'s write; nothing
 in `cortex.c` used them, and it still matches).
 

@@ -2,7 +2,7 @@
 #include "player.hpp"
 
 extern "C" {
-#include "util.h"
+#include "engine/util/util.h"
 #include "globals.h"
 }
 

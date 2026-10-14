@@ -41,14 +41,14 @@
 
 extern "C" {
 #include "core.h"
-#include "math_util.h"
-#include "aabb.h"
-#include "hitbox_quad.h"
-#include "sprite_bank.h"
+#include "engine/util/math_util.h"
+#include "engine/util/aabb.h"
+#include "engine/gfx/hitbox_quad.h"
+#include "engine/gfx/sprite_bank.h"
 #include "box_part.h"
-#include "gfx_part.h"
+#include "engine/gfx/sprite_piece_flags.h"
 #include "objects.h"
-#include "gfx.h"
+#include "engine/gfx/gfx.h"
 #include "globals.h"
 #include "level.h"
 }
@@ -479,7 +479,7 @@ namespace Engine
 namespace Gfx
 {
 
-/* The sprite graphics managers (src/gfx/oam_buffer.cpp, obj_vram_cursor.cpp,
+/* The sprite graphics managers (src/engine/gfx/oam_buffer.cpp, obj_vram_cursor.cpp,
  * palette_cache.cpp, sprite_bank_set.cpp, sprite_renderer.cpp), in the
  * namespace Engine::Gfx (#1033, docs/cplusplus.md "Namespaces"). */
 
@@ -604,7 +604,7 @@ COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(SpriteBankSet) == 4);
 
 /* The sprite renderer (gSpriteRenderer, an empty object InitLevelState
  * allocates): draws a sprite's OAM pieces (DrawPieces and
- * DrawAffinePieces, src/gfx/sprite_renderer.cpp). */
+ * DrawAffinePieces, src/engine/gfx/sprite_renderer.cpp). */
 class SpriteRenderer
 {
 public:

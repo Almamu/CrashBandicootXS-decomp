@@ -17,7 +17,7 @@
 
 extern "C" {
 #include "core.h"
-#include "math_util.h"
+#include "engine/util/math_util.h"
 }
 
 namespace Game

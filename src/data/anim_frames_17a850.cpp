@@ -3,7 +3,7 @@
 
 extern "C" {
 #include "core.h"
-#include "actor_anim.h"
+#include "engine/actor/actor_anim.h"
 }
 
 using Game::Vehicles::Polar::Yeti;

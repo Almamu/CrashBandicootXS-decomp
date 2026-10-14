@@ -146,8 +146,8 @@ instructions and register allocation (#855).
 ### The narrow ones that stay
 
 A survey of the `u8`/`s8`/`s16`/`u16` fields, parameters and locals in
-the drawing code (src/frontend, src/menus, src/save, src/text, src/hud,
-src/gfx, src/cutscene, the sprite classes) finds these screen values
+the drawing code (src/frontend, src/menus, src/save, src/engine/text, src/hud,
+src/engine/gfx, src/cutscene, the sprite classes) finds these screen values
 narrower than `s32`. Each keeps its type, because the ROM reads or
 writes it with a byte or halfword access, and says so where it is
 declared:
@@ -201,7 +201,7 @@ column (`tiles`), `& 0x1FF`/`& 0xFF` on a coordinate (`mask`), 512/256
 added to or compared with a coordinate (`wrap`), 128 next to the OAM
 (`oam`) and VCOUNT scanline counts (`scanline`). The `layout` kind is the
 layouts' fixed positions (see "Layouts" above): in the UI code
-(src/menus, src/save, src/frontend, src/hud, src/text), an argument of a
+(src/menus, src/save, src/frontend, src/hud, src/engine/text), an argument of a
 position call (`SetPos`, `Move`, `SetPixelPos`, `SetEntityPixelPos`,
 `SetAabbPos`, the save menu's `SET_ROW_OBJ_POS`/`DRAW_ROW`/`DrawSlotStats`),
 a local `x`/`y` or a sprite's Q8 position that adds a literal to nothing
@@ -224,7 +224,7 @@ has the rest.
    32x32 screen blocks and the streamer's 64x32 ring are fixed sizes
    (see "Platform-layer limits" below). The game has no per-scanline
    (HBlank) table; its only VCOUNT use is the music's interrupt
-   (src/audio/, out of scope).
+   (src/engine/audio/, out of scope).
 2. **Coordinate wrapping and culling.** The game culls with explicit
    on-screen tests (`x <= DISPLAY_WIDTH - 1`, `x + w >= 0`) before it
    writes an OAM entry; nothing relies on the OBJ wrap at 512/256. The

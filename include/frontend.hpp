@@ -30,13 +30,13 @@
  * with one, in company_logos_ctor.cpp (see ctrl.hpp). */
 
 #include "actor_self.hpp"
-#include "font.hpp"
-#include "graphics_package.hpp"
+#include "engine/text/font.hpp"
+#include "engine/gfx/graphics_package.hpp"
 
 extern "C" {
 #include "core.h"
-#include "gfx.h"
-#include "math_util.h"
+#include "engine/gfx/gfx.h"
+#include "engine/util/math_util.h"
 }
 
 /* One step of a logo piece's motion (the gTitleLogoPieceMotionN and
@@ -70,7 +70,7 @@ struct slot_seed {
 };
 
 /* The language select, between OpenLanguageSelect and
- * CloseLanguageSelect (src/iwram/iwram_data.cpp): a LanguageSelect
+ * CloseLanguageSelect (src/engine/sys/iwram_data.cpp): a LanguageSelect
  * (below). */
 namespace Game
 {
@@ -115,7 +115,7 @@ extern const s32 gTitleArrowPieceOffsets[8][2];
 /* The title screen's graphics (src/data/level_gfx_17cff4.cpp): the menu
  * palettes InitTitleScreen DMAs to OBJ palettes 13-15, the BG2 package
  * LoadTitleScreenBg loads and the four OBJ packages LoadTitleScreenObjTiles
- * loads (gTitleObjPackages, src/iwram/iwram_data.cpp). */
+ * loads (gTitleObjPackages, src/engine/sys/iwram_data.cpp). */
 extern const u16 gTitleMenuPalette[16];
 extern const u16 gTitleMenuSelectedPalette[16];
 extern const u16 gTitleMenuBlinkPalette[16];

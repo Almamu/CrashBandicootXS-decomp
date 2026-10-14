@@ -146,7 +146,7 @@ to its pinned register if the ROM's own code did so.
 `SetMaskLevel` (calls `StartSong(gAudioContext, 0x12)` on state
 `3`) needed `extern void StartSong(struct AudioContext *self, u32
 songIndex);`, matching the signature already used in
-`src/audio/audio.c`/
+`src/engine/audio/audio.c`/
 `src/frontend/title_screen_init.c`. Unlike those files, `level_state.c` had
 no prior reference to `struct AudioContext` anywhere at file scope, so
 the tag's first appearance was inside this `extern` declaration's own

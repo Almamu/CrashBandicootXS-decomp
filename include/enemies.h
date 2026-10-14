@@ -16,7 +16,7 @@
  * (spawn_enemies.cpp) are C++ too. */
 
 #include "core.h"
-#include "actor.h"
+#include "engine/actor/actor.h"
 #include "constants/entities.h"
 
 struct entry_set;

@@ -1,8 +1,8 @@
 #include "bg_layer.hpp"
 
 extern "C" {
-#include "math_util.h"
-#include "system.h"
+#include "engine/util/math_util.h"
+#include "engine/sys/system.h"
 }
 
 using Game::Level::BgLayer;

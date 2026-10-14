@@ -1,8 +1,8 @@
 #include "hovercraft.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 
 extern "C" {
-#include "actor.h"
+#include "engine/actor/actor.h"
 #include "globals.h"
 }
 

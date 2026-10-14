@@ -1,9 +1,9 @@
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 #include "level_state.hpp"
 extern "C" {
 #include "core.h"
-#include "actor.h"
-#include "memory.h"
+#include "engine/actor/actor.h"
+#include "engine/sys/memory.h"
 #include "level.h"
 #include "globals.h"
 }

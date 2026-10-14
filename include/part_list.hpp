@@ -8,7 +8,7 @@
  *   PartList        src/objects/part_list.cpp, part_list_collide.cpp
  *                   (the class is in sprite_obj.hpp)
  *   CollisionQueue  src/objects/collision_queue.cpp
- *   PaletteCycles   src/gfx/palette_cycle.cpp
+ *   PaletteCycles   src/engine/gfx/palette_cycle.cpp
  *   HudPart         src/hud/hud_part.cpp (gHudPartVtable)
  *
  * PaletteCycles is in the namespace Engine::Gfx (#1033, docs/cplusplus.md
@@ -34,7 +34,7 @@ class Crate;
 extern "C" {
 #include "core.h"
 #include "objects.h"
-#include "gfx.h"
+#include "engine/gfx/gfx.h"
 }
 
 namespace Game

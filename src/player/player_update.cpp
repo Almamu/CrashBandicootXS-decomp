@@ -2,16 +2,16 @@
 #include "spawners.hpp"
 #include "crate_list.hpp"
 #include "hud.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 #include "level_state.hpp"
 
 extern "C" {
-#include "util.h"
-#include "system.h"
+#include "engine/util/util.h"
+#include "engine/sys/system.h"
 #include "crates.h"
 #include "level.h"
 #include "globals.h"
-#include "math_util.h"
+#include "engine/util/math_util.h"
 #include "objects.h"
 }
 

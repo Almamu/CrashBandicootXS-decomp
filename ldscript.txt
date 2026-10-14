@@ -20,37 +20,37 @@ SECTIONS
 	ALIGN(4)
 	{
         build/crashbandicootxs/asm/crt0.o(.text);
-        build/crashbandicootxs/src/system/bios_util.o(.text);
-        build/crashbandicootxs/src/system/main.o(.text);
-        build/crashbandicootxs/src/system/memory.o(.text);
-        build/crashbandicootxs/src/system/irq.o(.text);
-        build/crashbandicootxs/src/system/key_input.o(.text);
-        build/crashbandicootxs/src/gfx/bitmap_screen.o(.text);
-        build/crashbandicootxs/src/util/fixed_math.o(.text);
-        build/crashbandicootxs/src/util/number_format.o(.text);
-        build/crashbandicootxs/src/util/printf.o(.text);
-        build/crashbandicootxs/src/util/string.o(.text);
-        build/crashbandicootxs/src/util/rand.o(.text);
-        build/crashbandicootxs/src/util/line.o(.text);
-        build/crashbandicootxs/src/text/wrapped_text.o(.text);
-        build/crashbandicootxs/src/util/time_format.o(.text);
-        build/crashbandicootxs/src/system/input.o(.text);
-        build/crashbandicootxs/src/system/asset.o(.text);
-        build/crashbandicootxs/src/text/text_box.o(.text);
-        build/crashbandicootxs/src/util/line_step.o(.text);
-        build/crashbandicootxs/src/gfx/fade.o(.text);
-        build/crashbandicootxs/src/gfx/fade_to_black.o(.text);
-        build/crashbandicootxs/src/gfx/display.o(.text);
-        build/crashbandicootxs/src/util/aabb.o(.text);
-        build/crashbandicootxs/src/system/iwram_alloc.o(.text);
-        build/crashbandicootxs/src/audio/audio.o(.text);
-        build/crashbandicootxs/src/link/link_handshake.o(.text);
-        build/crashbandicootxs/src/link/link_session_reset.o(.text);
-        build/crashbandicootxs/src/link/link_session.o(.text);
-        build/crashbandicootxs/src/link/link_sio.o(.text);
-        build/crashbandicootxs/src/save/save_data.o(.text);
-        build/crashbandicootxs/src/save/save_transfer.o(.text);
-        build/crashbandicootxs/src/save/save_transfer_state.o(.text);
+        build/crashbandicootxs/src/engine/sys/bios_util.o(.text);
+        build/crashbandicootxs/src/engine/sys/main.o(.text);
+        build/crashbandicootxs/src/engine/sys/memory.o(.text);
+        build/crashbandicootxs/src/engine/sys/irq.o(.text);
+        build/crashbandicootxs/src/engine/sys/key_input.o(.text);
+        build/crashbandicootxs/src/engine/gfx/bitmap_screen.o(.text);
+        build/crashbandicootxs/src/engine/util/fixed_math.o(.text);
+        build/crashbandicootxs/src/engine/util/number_format.o(.text);
+        build/crashbandicootxs/src/engine/util/printf.o(.text);
+        build/crashbandicootxs/src/engine/util/string.o(.text);
+        build/crashbandicootxs/src/engine/util/rand.o(.text);
+        build/crashbandicootxs/src/engine/util/line.o(.text);
+        build/crashbandicootxs/src/engine/text/wrapped_text.o(.text);
+        build/crashbandicootxs/src/engine/util/time_format.o(.text);
+        build/crashbandicootxs/src/engine/sys/input.o(.text);
+        build/crashbandicootxs/src/engine/gfx/asset.o(.text);
+        build/crashbandicootxs/src/engine/text/text_box.o(.text);
+        build/crashbandicootxs/src/engine/util/line_step.o(.text);
+        build/crashbandicootxs/src/engine/gfx/fade.o(.text);
+        build/crashbandicootxs/src/engine/gfx/fade_to_black.o(.text);
+        build/crashbandicootxs/src/engine/sys/display.o(.text);
+        build/crashbandicootxs/src/engine/util/aabb.o(.text);
+        build/crashbandicootxs/src/engine/sys/iwram_alloc.o(.text);
+        build/crashbandicootxs/src/engine/audio/audio.o(.text);
+        build/crashbandicootxs/src/engine/link/link_handshake.o(.text);
+        build/crashbandicootxs/src/engine/link/link_session_reset.o(.text);
+        build/crashbandicootxs/src/engine/link/link_session.o(.text);
+        build/crashbandicootxs/src/engine/link/link_sio.o(.text);
+        build/crashbandicootxs/src/engine/save/save_data.o(.text);
+        build/crashbandicootxs/src/engine/save/save_transfer.o(.text);
+        build/crashbandicootxs/src/engine/save/save_transfer_state.o(.text);
         build/crashbandicootxs/src/save/save_menu_input.o(.text);
         build/crashbandicootxs/src/save/save_menu_draw.o(.text);
         build/crashbandicootxs/src/save/save_menu.o(.text);
@@ -64,13 +64,13 @@ SECTIONS
         build/crashbandicootxs/src/menus/power_dialog.o(.text);
         build/crashbandicootxs/src/menus/power_dialog_draw.o(.text);
         build/crashbandicootxs/src/save/game_progress.o(.text);
-        build/crashbandicootxs/src/gfx/oam_buffer.o(.text);
-        build/crashbandicootxs/src/gfx/vram_dma_queue.o(.text);
-        build/crashbandicootxs/src/gfx/obj_vram_cursor.o(.text);
-        build/crashbandicootxs/src/gfx/palette_cache.o(.text);
-        build/crashbandicootxs/src/gfx/sprite_bank_set.o(.text);
+        build/crashbandicootxs/src/engine/gfx/oam_buffer.o(.text);
+        build/crashbandicootxs/src/engine/sys/vram_dma_queue.o(.text);
+        build/crashbandicootxs/src/engine/gfx/obj_vram_cursor.o(.text);
+        build/crashbandicootxs/src/engine/gfx/palette_cache.o(.text);
+        build/crashbandicootxs/src/engine/gfx/sprite_bank_set.o(.text);
         build/crashbandicootxs/src/objects/entity.o(.text);
-        build/crashbandicootxs/src/gfx/sprite_renderer.o(.text);
+        build/crashbandicootxs/src/engine/gfx/sprite_renderer.o(.text);
         build/crashbandicootxs/src/objects/sprite.o(.text);
         build/crashbandicootxs/src/objects/sprite_obj.o(.text);
         build/crashbandicootxs/src/objects/ui_sprite.o(.text);
@@ -146,8 +146,8 @@ SECTIONS
         build/crashbandicootxs/src/menus/zoom_bg.o(.text);
         build/crashbandicootxs/src/menus/level_select_entry.o(.text);
         build/crashbandicootxs/src/menus/level_select_cursor.o(.text);
-        build/crashbandicootxs/src/gfx/graphics_package.o(.text);
-        build/crashbandicootxs/src/gfx/scaled_sprite.o(.text);
+        build/crashbandicootxs/src/engine/gfx/graphics_package.o(.text);
+        build/crashbandicootxs/src/engine/gfx/scaled_sprite.o(.text);
         build/crashbandicootxs/src/level/spawn_start_marker.o(.text);
         build/crashbandicootxs/src/level/spawn_gems.o(.text);
         build/crashbandicootxs/src/level/spawn_enemies.o(.text);
@@ -184,33 +184,33 @@ SECTIONS
         build/crashbandicootxs/src/level/terrain_probe_axes.o(.text);
         build/crashbandicootxs/src/level/terrain.o(.text);
         build/crashbandicootxs/src/level/camera.o(.text);
-        build/crashbandicootxs/src/system/operator_new.o(.text);
+        build/crashbandicootxs/src/engine/sys/operator_new.o(.text);
         build/crashbandicootxs/src/system/main_loop.o(.text);
-        build/crashbandicootxs/src/gfx/palette_cycle.o(.text);
+        build/crashbandicootxs/src/engine/gfx/palette_cycle.o(.text);
         build/crashbandicootxs/src/hud/hud_part.o(.text);
         build/crashbandicootxs/src/hud/hud_init.o(.text);
         build/crashbandicootxs/src/hud/hud.o(.text);
         build/crashbandicootxs/src/hud/hud_counters.o(.text);
         build/crashbandicootxs/src/hud/hud_slide.o(.text);
-        build/crashbandicootxs/src/text/font_glyph.o(.text);
-        build/crashbandicootxs/src/text/font_draw_chars.o(.text);
-        build/crashbandicootxs/src/text/font_draw_text.o(.text);
-        build/crashbandicootxs/src/text/font_height.o(.text);
-        build/crashbandicootxs/src/text/font.o(.text);
-        build/crashbandicootxs/src/gfx/sprite_frame.o(.text);
-        build/crashbandicootxs/src/actor/actor_vram_pool.o(.text);
-        build/crashbandicootxs/src/actor/actor_category_init.o(.text);
-        build/crashbandicootxs/src/actor/actor_category_stats.o(.text);
-        build/crashbandicootxs/src/actor/cell_anim.o(.text);
-        build/crashbandicootxs/src/actor/actor_bg.o(.text);
-        build/crashbandicootxs/src/actor/actor_category_select.o(.text);
-        build/crashbandicootxs/src/actor/actor_category_frame.o(.text);
-        build/crashbandicootxs/src/actor/actor_spawn.o(.text);
-        build/crashbandicootxs/src/actor/actor_category.o(.text);
+        build/crashbandicootxs/src/engine/text/font_glyph.o(.text);
+        build/crashbandicootxs/src/engine/text/font_draw_chars.o(.text);
+        build/crashbandicootxs/src/engine/text/font_draw_text.o(.text);
+        build/crashbandicootxs/src/engine/text/font_height.o(.text);
+        build/crashbandicootxs/src/engine/text/font.o(.text);
+        build/crashbandicootxs/src/engine/gfx/sprite_frame.o(.text);
+        build/crashbandicootxs/src/engine/actor/actor_vram_pool.o(.text);
+        build/crashbandicootxs/src/engine/actor/actor_category_init.o(.text);
+        build/crashbandicootxs/src/engine/actor/actor_category_stats.o(.text);
+        build/crashbandicootxs/src/engine/gfx/cell_anim.o(.text);
+        build/crashbandicootxs/src/engine/actor/actor_bg.o(.text);
+        build/crashbandicootxs/src/engine/actor/actor_category_select.o(.text);
+        build/crashbandicootxs/src/engine/actor/actor_category_frame.o(.text);
+        build/crashbandicootxs/src/engine/actor/actor_spawn.o(.text);
+        build/crashbandicootxs/src/engine/actor/actor_category.o(.text);
         build/crashbandicootxs/src/actor/actor_category_hooks.o(.text);
         build/crashbandicootxs/src/actor/actor.o(.text);
-        build/crashbandicootxs/src/actor/actor_spawn_collected.o(.text);
-        build/crashbandicootxs/src/actor/actor_palette_cycle.o(.text);
+        build/crashbandicootxs/src/engine/actor/actor_spawn_collected.o(.text);
+        build/crashbandicootxs/src/engine/actor/actor_palette_cycle.o(.text);
         build/crashbandicootxs/src/actor/actor_factory.o(.text);
         build/crashbandicootxs/src/vehicle/polar/polar_player.o(.text);
         build/crashbandicootxs/src/vehicle/polar/polar_player_states.o(.text);
@@ -228,7 +228,7 @@ SECTIONS
         build/crashbandicootxs/src/vehicle/jetpack/jetpack_spawn.o(.text);
         build/crashbandicootxs/src/vehicle/jetpack/jetpack_player_update.o(.text);
         build/crashbandicootxs/src/vehicle/jetpack/jetpack_player.o(.text);
-        build/crashbandicootxs/src/actor/bg_picture.o(.text);
+        build/crashbandicootxs/src/engine/actor/bg_picture.o(.text);
         build/crashbandicootxs/src/vehicle/jetpack/jetpack_shot.o(.text);
         build/crashbandicootxs/src/vehicle/jetpack/jetpack_plane.o(.text);
         build/crashbandicootxs/src/vehicle/jetpack/jetpack_bomber.o(.text);
@@ -306,7 +306,7 @@ SECTIONS
         build/crashbandicootxs/lib/libgcc/_dvmd_tls.o(.text);
         build/crashbandicootxs/lib/libgcc/_modsi3.o(.text);
         build/crashbandicootxs/lib/libgcc/_umodsi3.o(.text);
-        build/crashbandicootxs/src/system/inline_copies_misc.o(.text);
+        build/crashbandicootxs/src/engine/util/aabb_setters.o(.text);
         build/crashbandicootxs/src/actor/anim_part.o(.text);
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.text);
 
@@ -412,7 +412,7 @@ SECTIONS
         build/crashbandicootxs/src/objects/moving_sprite_collide.o(.gnu.linkonce.d._vt.Q34Game8Entities12MovingSprite); /* gMovingSpriteVtable */
         build/crashbandicootxs/src/objects/ground_sprite_collide.o(.gnu.linkonce.d._vt.Q34Game8Entities12GroundSprite); /* gGroundSpriteVtable */
         build/crashbandicootxs/src/player/player_collide.o(.gnu.linkonce.d._vt.Q34Game5Crash6Player); /* gPlayerVtable */
-        build/crashbandicootxs/src/system/bios_util.o(.gnu.linkonce.d._vt.Q34Game8Entities4Ctrl); /* gCtrlVtable */
+        build/crashbandicootxs/src/engine/sys/bios_util.o(.gnu.linkonce.d._vt.Q34Game8Entities4Ctrl); /* gCtrlVtable */
         build/crashbandicootxs/src/enemies/enemy_ctrl_update.o(.gnu.linkonce.d._vt.Q34Game7Enemies9EnemyCtrl); /* gEnemyCtrlVtable */
         build/crashbandicootxs/src/enemies/periodic_spawner.o(.gnu.linkonce.d._vt.Q34Game7Enemies15PeriodicSpawner); /* gPeriodicSpawnerVtable */
         build/crashbandicootxs/src/enemies/knocked_enemy_ctrl.o(.gnu.linkonce.d._vt.Q34Game7Enemies16KnockedEnemyCtrl); /* gKnockedEnemyCtrlVtable */
@@ -450,9 +450,9 @@ SECTIONS
         build/crashbandicootxs/src/level/bg_layer.o(.gnu.linkonce.d._vt.Q34Game5Level7BgLayer); /* gBgLayerVtable */
         build/crashbandicootxs/src/level/pooled_bg_layer.o(.gnu.linkonce.d._vt.Q34Game5Level13PooledBgLayer); /* gPooledBgLayerVtable */
         build/crashbandicootxs/src/hud/hud_part.o(.gnu.linkonce.d._vt.Q34Game2Ui7HudPart); /* gHudPartVtable */
-        build/crashbandicootxs/src/system/inline_copies_misc.o(.gnu.linkonce.d._vt.Q36Engine4Text9LargeFont); /* gLargeFontVtable */
-        build/crashbandicootxs/src/system/inline_copies_misc.o(.gnu.linkonce.d._vt.Q36Engine4Text9SmallFont); /* gSmallFontVtable */
-        build/crashbandicootxs/src/text/font.o(.gnu.linkonce.d._vt.Q36Engine4Text4Font); /* gFontVtable */
+        build/crashbandicootxs/src/engine/util/aabb_setters.o(.gnu.linkonce.d._vt.Q36Engine4Text9LargeFont); /* gLargeFontVtable */
+        build/crashbandicootxs/src/engine/util/aabb_setters.o(.gnu.linkonce.d._vt.Q36Engine4Text9SmallFont); /* gSmallFontVtable */
+        build/crashbandicootxs/src/engine/text/font.o(.gnu.linkonce.d._vt.Q36Engine4Text4Font); /* gFontVtable */
         build/crashbandicootxs/src/actor/actor.o(.gnu.linkonce.d._vt.Q34Game8Entities9ActorSelf); /* gActorVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar14RiderlessPolar); /* gRiderlessPolarVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar19PolarCheckpointText); /* gPolarCheckpointTextVtable */
@@ -510,10 +510,10 @@ SECTIONS
     iwram 0x03000000 : AT(LOADADDR(ROM) + SIZEOF(ROM))
     {
         build/crashbandicootxs/asm/intr_main.o(.text);
-        build/crashbandicootxs/src/iwram/string_arm.o(.text);
+        build/crashbandicootxs/src/engine/util/string_arm.o(.text);
         build/crashbandicootxs/asm/itoa_arm.o(.text);
-        build/crashbandicootxs/src/iwram/sprite_arm.o(.text);
-        build/crashbandicootxs/src/iwram/iwram_data.o(.data);
+        build/crashbandicootxs/src/engine/gfx/sprite_arm.o(.text);
+        build/crashbandicootxs/src/engine/sys/iwram_data.o(.data);
     }
     __iwram_lma = LOADADDR(iwram);
 

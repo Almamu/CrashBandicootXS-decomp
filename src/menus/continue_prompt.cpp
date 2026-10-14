@@ -5,20 +5,20 @@
  * old_agbcc. */
 
 #include "sprite_obj.hpp"
-#include "vram_dma_queue.hpp"
+#include "engine/sys/vram_dma_queue.hpp"
 #include "frontend.hpp"
-#include "audio.hpp"
-#include "key_input.hpp"
-#include "graphics_package.hpp"
+#include "engine/audio/audio.hpp"
+#include "engine/sys/key_input.hpp"
+#include "engine/gfx/graphics_package.hpp"
 #include "menus.hpp"
-#include "frame_limiter.hpp"
+#include "engine/sys/frame_limiter.hpp"
 
 extern "C" {
 #include "gba/io_reg.h"
-#include "memory.h"
+#include "engine/sys/memory.h"
 #include "globals.h"
-#include "text.h"
-#include "system.h"
+#include "engine/text/text.h"
+#include "engine/sys/system.h"
 }
 
 using Engine::Gfx::BgSetup;

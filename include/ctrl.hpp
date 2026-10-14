@@ -8,7 +8,7 @@
  * that defines its first non-inline virtual method (its key method),
  * and ldscript.txt places it at its ROM address (docs/cplusplus.md,
  * "Emitting the vtables"). Ctrl's own, gCtrlVtable, is emitted in
- * src/system/bios_util.cpp, which has its key method, Update (UpdateCtrl).
+ * src/engine/sys/bios_util.cpp, which has its key method, Update (UpdateCtrl).
  * cxx_symbols.txt maps the mangled vtable, method, constructor and
  * destructor names onto their C names.
  *

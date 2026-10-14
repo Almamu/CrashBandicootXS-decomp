@@ -156,7 +156,7 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
 
 - **`UpdateYeti`** (`asm/code_3_2_20_28568_c99c_d7b0.s`) - one of two
   confirmed slots (index 3) of the type-0 `category_vtable`
-  (`gActorCategoryVtables[0]`, `include/actor_anim.h`); also runs a full
+  (`gActorCategoryVtables[0]`, `include/engine/actor/actor_anim.h`); also runs a full
   3-axis AABB overlap test against the player (`gActorList`)
   before calling `MemCopy32`, one of `UpdateGameFrame`'s own direct
   top-level callees (see `docs/rom_map.md`'s "Two new type-0 vtable
@@ -267,7 +267,7 @@ records involved. Reading both functions' disassembly side by side
 resolved it: both use the exact same 6-halfword layout,
 `{s16 x, y, z, sizeX, sizeY, sizeZ}`, compared axis-by-axis in Z/Y/X
 order (matching the ROM's own instruction order, not storage order) -
-the same shape as `struct aabb` (`src/util/aabb.cpp`) generalized
+the same shape as `struct aabb` (`src/engine/util/aabb.cpp`) generalized
 from 2 axes to 3, just never previously named because it hadn't been
 read carefully enough end to end. `UpdateYeti`'s "static" box A is
 `gYetiCatchBox`, and `IsTouchingYeti`'s is `gYetiBox` -

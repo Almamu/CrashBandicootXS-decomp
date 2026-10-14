@@ -30,14 +30,14 @@
 #pragma interface
 
 #include "sprite_obj.hpp"
-#include "graphics_package.hpp"
+#include "engine/gfx/graphics_package.hpp"
 #include "game_progress.hpp"
 
 extern "C" {
 #include "core.h"
-#include "aabb.h"
-#include "gfx.h"
-#include "sprite_bank.h"
+#include "engine/util/aabb.h"
+#include "engine/gfx/gfx.h"
+#include "engine/gfx/sprite_bank.h"
 #include "objects.h"
 #include "constants/levels.h"
 }

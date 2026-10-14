@@ -1,14 +1,14 @@
 #include "menus.hpp"
-#include "vram_dma_queue.hpp"
-#include "font.hpp"
-#include "frame_limiter.hpp"
+#include "engine/sys/vram_dma_queue.hpp"
+#include "engine/text/font.hpp"
+#include "engine/sys/frame_limiter.hpp"
 
 extern "C" {
 #include "core.h"
 #include "gba/defines.h"
-#include "text.h"
-#include "system.h"
-#include "gfx.h"
+#include "engine/text/text.h"
+#include "engine/sys/system.h"
+#include "engine/gfx/gfx.h"
 #include "globals.h"
 }
 

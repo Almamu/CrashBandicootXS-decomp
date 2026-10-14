@@ -4,7 +4,7 @@
 
 extern "C" {
 #include "core.h"
-#include "actor_anim.h"
+#include "engine/actor/actor_anim.h"
 }
 
 /*
@@ -12,7 +12,7 @@ extern "C" {
  * UpdateYeti actor, then the data of actor categories 3-6 (the family
  * whose frames are the gJetpackSpriteSheet sheet): their two OBJ
  * palettes, the 47-record animation table gCategoryFamily1AnimTable
- * (include/actor_anim.h) and its keyframe (table_A) and frame (table_B)
+ * (include/engine/actor/actor_anim.h) and its keyframe (table_A) and frame (table_B)
  * arrays. Linked in ROM order between data/data.s sections by
  * ldscript.txt - see docs/data.md, "Category families".
  *

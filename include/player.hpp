@@ -24,8 +24,8 @@
 
 extern "C" {
 #include "core.h"
-#include "actor.h"
-#include "aabb.h"
+#include "engine/actor/actor.h"
+#include "engine/util/aabb.h"
 #include "objects.h"
 #include "constants/action_states.h"
 #include "constants/attack_kinds.h"
@@ -60,7 +60,7 @@ extern const struct speed_table gSwimCtrlTurnSpeeds;
  * gLastSpriteVelY is the moving sprites'). Nothing reads it. */
 extern s32 gLastPlayerVelY;
 
-/* Aku Aku's orbit frame counters (DrawPlayer, src/iwram/iwram_data.cpp). */
+/* Aku Aku's orbit frame counters (DrawPlayer, src/engine/sys/iwram_data.cpp). */
 extern s32 gAkuAkuInvincibleFrame;
 extern s32 gAkuAkuFollowFrame;
 

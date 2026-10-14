@@ -244,7 +244,7 @@ these 4, plus `EEPROMCompare`/`EEPROMWrite1_check` matched in the prior pass),
 The same pass also closed out three more parked functions that hit an
 identical class of gap, documented in their own issues:
 
-- **`__divsi3`/`__modsi3`/`__umodsi3`** (`src/util/
+- **`__divsi3`/`__modsi3`/`__umodsi3`** (`src/engine/util/
   lib1funcs.s`, GitHub issue #70) - the signed-division/signed-
   modulo/unsigned-modulo trio `docs/matching.md`'s issue #70 entry
   parked on real per-path prologue/epilogue shrink-wrapping (plus a

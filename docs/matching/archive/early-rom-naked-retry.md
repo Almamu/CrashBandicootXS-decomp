@@ -9,7 +9,7 @@ function that had no draft now has one.
 
 | Function | File | Compiler | What it took |
 |---|---|---|---|
-| `PlayAmbientSfx` | `src/audio/audio.c` | both | Written fresh as C, it matched on the first compile. The fifth argument is a one-byte struct passed by value, which gives the `add rX, sp, #0x14; ldrb` read. The volume is read as `gSfxTable[id].baseVolume`. The old note said the ROM "recomputes" this address where C would CSE it. In fact `base + 8 + offset` is simply how gcc computes a non-zero field offset, so there was no CSE gap. |
+| `PlayAmbientSfx` | `src/engine/audio/audio.c` | both | Written fresh as C, it matched on the first compile. The fifth argument is a one-byte struct passed by value, which gives the `add rX, sp, #0x14; ldrb` read. The volume is read as `gSfxTable[id].baseVolume`. The old note said the ROM "recomputes" this address where C would CSE it. In fact `base + 8 + offset` is simply how gcc computes a non-zero field offset, so there was no CSE gap. |
 | `DrawYesNoPrompt` | `src/save/save_menu_draw.c` (old_agbcc object) | both | The r8/sb swap is a global-alloc priority tie. The 0x87 constant ranks 8/112 = 0.0714 and the 0x130 offset ranks 14/200 = 0.070, so the constant gets r8 first. `y` is now pinned to r9. It is set inside a block, after `x = 0xa0 - w` and after the manager pointer is loaded into a local, which keeps the ROM's `ldr r4, [r7]` ahead of `mov sb, r2`. The unpinned allocator then gives 0x130 r8. |
 
 A pre-existing `initialization makes pointer from integer` warning in

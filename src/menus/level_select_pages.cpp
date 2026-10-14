@@ -1,10 +1,10 @@
 #include "level_select.hpp"
-#include "audio.hpp"
-#include "key_input.hpp"
-#include "frame_limiter.hpp"
+#include "engine/audio/audio.hpp"
+#include "engine/sys/key_input.hpp"
+#include "engine/sys/frame_limiter.hpp"
 
 extern "C" {
-#include "math_util.h"
+#include "engine/util/math_util.h"
 }
 
 using Engine::Sys::FrameLimiter;

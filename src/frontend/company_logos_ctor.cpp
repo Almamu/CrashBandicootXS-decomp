@@ -1,13 +1,13 @@
-#include "obj_tile_allocator.hpp"
+#include "engine/gfx/obj_tile_allocator.hpp"
 #include "sprite_obj.hpp"
 #include "frontend.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 
 extern "C" {
 #include "gba/dma_macros.h"
-#include "system.h"
-#include "text.h"
-#include "gfx.h"
+#include "engine/sys/system.h"
+#include "engine/text/text.h"
+#include "engine/gfx/gfx.h"
 #include "globals.h"
 }
 
@@ -24,7 +24,7 @@ using Game::Ui::LogoActor;
  * -fno-implement-inlines (the Makefile's NO_IMPLEMENT_INLINES_OBJS), so
  * that g++ emits none of LogoActor's inline methods here. */
 
-/* Loads a "tagged" asset (see LoadTaggedAsset, src/system/asset.cpp)
+/* Loads a "tagged" asset (see LoadTaggedAsset, src/engine/gfx/asset.cpp)
  * into a freshly allocated buffer, then DMAs it to `dest`. A method of
  * the logo screen (LoadVvLogoGraphics's), which it doesn't use. */
 void CompanyLogos::LoadAssetBuffered(const void *asset, void *dest)

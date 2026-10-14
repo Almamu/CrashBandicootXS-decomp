@@ -3,9 +3,9 @@
 #include "player.hpp"
 
 extern "C" {
-#include "math_util.h"
+#include "engine/util/math_util.h"
 #include "crates.h"
-#include "memory.h"
+#include "engine/sys/memory.h"
 #include "globals.h"
 }
 

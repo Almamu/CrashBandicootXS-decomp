@@ -452,7 +452,7 @@ extern const u32 gGaxArmResampleMixEndTest[];
  * song header names none. */
 extern struct GaxHandlerLayout gGaxDefaultSong;
 
-/* src/iwram/iwram_data.cpp: the halt screen's font, Huffman-compressed
+/* src/engine/sys/iwram_data.cpp: the halt screen's font, Huffman-compressed
  * (GaxFatalError decompresses it with GaxHuffUnComp). */
 extern u32 gGaxHaltFont[70];
 

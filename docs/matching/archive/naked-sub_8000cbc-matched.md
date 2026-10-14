@@ -1,6 +1,6 @@
 # `FindSubstring` converted from NAKED transcription to real matched C
 
-`FindSubstring` (`src/util/printf.cpp`) had been parked as a
+`FindSubstring` (`src/engine/util/printf.cpp`) had been parked as a
 byte-correct NAKED asm transcription since an early pass - see
 [naked-transcription-parked-functions.md](./naked-transcription-parked-functions.md)
 for the original parking rationale. It's now genuinely matched as real
@@ -129,6 +129,6 @@ Full clean `rm -rf build && make NON_MATCHING=1 report`, `objdiff-cli
 report generate` (no symbol-pairing errors), then full clean `rm -rf
 build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map &&
 make compare` - `crashbandicootxs.gba: La suma coincide`. `FindSubstring`
-is folded into the same `src/util/printf.o` unit as the
+is folded into the same `src/engine/util/printf.o` unit as the
 already-matched `vsprintf`/`sprintf` in `tools/report_units.py`,
 since it's the same object file.

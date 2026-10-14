@@ -37,22 +37,22 @@
  * level_select_entry.cpp (see ctrl.hpp). */
 
 #include "sprite_obj.hpp"
-#include "vram_dma_queue.hpp"
+#include "engine/sys/vram_dma_queue.hpp"
 #include "player.hpp"
-#include "font.hpp"
-#include "graphics_package.hpp"
+#include "engine/text/font.hpp"
+#include "engine/gfx/graphics_package.hpp"
 #include "game_progress.hpp"
 #include "menus.hpp"
-#include "frame_limiter.hpp"
+#include "engine/sys/frame_limiter.hpp"
 
 extern "C" {
 #include "core.h"
 #include <agb_syscall.h>
-#include "gfx.h"
-#include "line_util.h"
-#include "sprite_bank.h"
-#include "util.h"
-#include "system.h"
+#include "engine/gfx/gfx.h"
+#include "engine/util/line_util.h"
+#include "engine/gfx/sprite_bank.h"
+#include "engine/util/util.h"
+#include "engine/sys/system.h"
 #include "objects.h"
 #include "globals.h"
 }

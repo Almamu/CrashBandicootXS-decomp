@@ -3,9 +3,9 @@
 #include "boss_actors.hpp"
 
 extern "C" {
-#include "math_util.h"
-#include "actor.h"
-#include "gfx.h"
+#include "engine/util/math_util.h"
+#include "engine/actor/actor.h"
+#include "engine/gfx/gfx.h"
 #include "globals.h"
 }
 

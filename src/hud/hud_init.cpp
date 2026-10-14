@@ -3,8 +3,8 @@
 
 extern "C" {
 #include "core.h"
-#include "gfx.h"
-#include "memory.h"
+#include "engine/gfx/gfx.h"
+#include "engine/sys/memory.h"
 #include "level.h"
 #include "globals.h"
 }

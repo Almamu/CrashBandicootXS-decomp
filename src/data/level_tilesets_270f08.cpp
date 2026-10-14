@@ -1,5 +1,5 @@
 extern "C" {
-#include "tagged_asset.h"
+#include "engine/gfx/tagged_asset.h"
 }
 
 /*

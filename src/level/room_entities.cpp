@@ -4,10 +4,10 @@
 
 extern "C" {
 #include "core.h"
-#include "math_util.h"
+#include "engine/util/math_util.h"
 #include <agb_syscall.h>
 #include "crates.h"
-#include "gfx.h"
+#include "engine/gfx/gfx.h"
 #include "level.h"
 #include "globals.h"
 }

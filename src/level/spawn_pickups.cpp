@@ -2,16 +2,16 @@
 #include "pickups.hpp"
 #include "player.hpp"
 #include "part_list.hpp"
-#include "font.hpp"
+#include "engine/text/font.hpp"
 #include "level_state.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 
 extern "C" {
-#include "util.h"
-#include "text.h"
-#include "gfx.h"
-#include "memory.h"
-#include "system.h"
+#include "engine/util/util.h"
+#include "engine/text/text.h"
+#include "engine/gfx/gfx.h"
+#include "engine/sys/memory.h"
+#include "engine/sys/system.h"
 #include "level.h"
 #include "globals.h"
 }

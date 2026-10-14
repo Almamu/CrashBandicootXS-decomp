@@ -1,9 +1,9 @@
 #include "graphics.hpp"
-#include "graphics_package.hpp"
+#include "engine/gfx/graphics_package.hpp"
 
 extern "C" {
 #include "core.h"
-#include "gfx.h"
+#include "engine/gfx/gfx.h"
 }
 
 using Engine::Gfx::MenuSkyBg;

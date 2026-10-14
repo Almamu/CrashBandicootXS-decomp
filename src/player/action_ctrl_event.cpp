@@ -1,18 +1,18 @@
 #include "action_ctrl.hpp"
 #include "sprite_obj.hpp"
 #include "player.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 #include "level_state.hpp"
-#include "key_input.hpp"
+#include "engine/sys/key_input.hpp"
 #include "camera.hpp"
 
 extern "C" {
-#include "gfx.h"
+#include "engine/gfx/gfx.h"
 #include "level.h"
-#include "sprite_bank.h"
+#include "engine/gfx/sprite_bank.h"
 #include "globals.h"
-#include "math_util.h"
-#include "system.h"
+#include "engine/util/math_util.h"
+#include "engine/sys/system.h"
 }
 
 using Game::Crash::ActionCtrl;

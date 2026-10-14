@@ -3,10 +3,10 @@
 #include "player.hpp"
 
 extern "C" {
-#include "aabb.h"
+#include "engine/util/aabb.h"
 #include "crates.h"
 #include "globals.h"
-#include "math_util.h"
+#include "engine/util/math_util.h"
 }
 
 using Game::Bosses::MegaMixCtrl;

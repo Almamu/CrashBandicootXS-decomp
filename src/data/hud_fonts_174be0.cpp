@@ -2,7 +2,7 @@
 
 extern "C" {
 #include "core.h"
-#include "text.h"
+#include "engine/text/text.h"
 }
 
 /*

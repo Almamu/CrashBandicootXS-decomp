@@ -1,0 +1,194 @@
+#ifndef GUARD_SAVE_DATA_HPP
+#define GUARD_SAVE_DATA_HPP
+
+/* The save data and its link transfer as C++ (#751, docs/cplusplus.md,
+ * "The link session, the save data and the save transfer"): class SaveData, the 0x200-byte
+ * record stored in the cartridge EEPROM, and class SaveTransfer, the
+ * envelope that sends one over the link cable and receives the other
+ * console's. The save menu holds two SaveDatas (`new SaveData`, the
+ * cartridge's and the received one) and makes a SaveTransfer for each
+ * link exchange (SaveMenu::LinkExchange); cxx_symbols.txt maps the
+ * methods onto their C names.
+ *
+ *   src/engine/save/save_data.cpp           SaveData
+ *   src/engine/save/save_transfer.cpp       SaveTransfer's SendChunk and
+ *                                    ReceiveChunk
+ *   src/engine/save/save_transfer_state.cpp SaveTransfer's Poll, SetRecord,
+ *                                    GetData, Reset
+ *
+ * Neither has a vtable, a constructor or a destructor: `new` and
+ * `delete` of them are plain OperatorNew and OperatorDelete calls, as
+ * the ROM has them (no null test before the delete).
+ *
+ * Both are in the namespace Engine::Save (#1033, docs/cplusplus.md
+ * "Namespaces"): `Read__Q36Engine4Save8SaveDatai` & co. The slot's
+ * layout, struct save_slot and the GameProgress it holds, is the game's
+ * and stays outside.
+ *
+ * `#pragma interface`: no vtable to emit, and no out-of-line copies of
+ * the inline methods. */
+#pragma interface
+
+#include "game_progress.hpp"
+
+extern "C" {
+#include "core.h"
+#include "constants/save_version.h"
+}
+
+/* One 0x70-byte save slot, as SaveData::ReadSlot/WriteSlot copy it:
+ * the level state's packed progress block (GameProgress;
+ * PackSaveData/UnpackSaveData), then the current level and the sound
+ * and music volumes (SaveMenu::SaveToSlot builds one,
+ * SaveMenu::LoadInput restores one). */
+struct save_slot {
+    Game::Level::GameProgress progress; /* 0x00 */
+    u8 level;                           /* 0x68 */
+    u16 sfxVolume;                      /* 0x6a */
+    u16 musicVolume;                    /* 0x6c */
+};
+/* 0x68 and 0x70 with the ROM's 25 levels (GameProgress's size). */
+COMPILE_TIME_ASSERT(save_data_hpp,
+                    offsetof(struct save_slot, level) == sizeof(Game::Level::GameProgress));
+COMPILE_TIME_ASSERT(save_data_hpp,
+                    sizeof(struct save_slot) == sizeof(Game::Level::GameProgress) + 8);
+
+namespace Engine
+{
+namespace Save
+{
+
+/* The 0x200-byte save data, as stored in the cartridge EEPROM
+ * (Read/Write, and Load/Store with retries and
+ * validation): four 0x70-byte save slots (ReadSlot/WriteSlot/EraseSlot;
+ * each holds the 0x68-byte progress block of the level state, the level,
+ * and the sound and music volumes - see SaveMenu::SaveToSlot), a
+ * per-slot "empty" flag, two marker bytes ('C' and SAVE_VERSION), a flag
+ * byte and an additive word-sum checksum over the first 0x1fc bytes,
+ * from SAVE_CHECKSUM_SEED (UpdateChecksum/CheckChecksum). The version and
+ * the seed come from the level data (constants/save_version.h, 0x12 and
+ * 0 with the ROM's levels; docs/levels.md, "Save compatibility"), so a
+ * save made with other levels doesn't load. The save menu (SaveMenu::instance,
+ * save_menu.hpp) holds two: the cartridge's (`cartSave`) and the one
+ * received over the link cable (`linkSave`). Formerly `struct
+ * settings_sync_record`. See
+ * docs/matching/archive/issue-5-overlay-ui-sync.md. */
+class SaveData
+{
+public:
+    /* 0x000 - read and written through their offsets (ReadSlot,
+     * WriteSlot: `row * 0x70 + this`) */
+    struct save_slot slots[4];
+    /* 0x1c0 with the ROM's 25 levels: the unused rest up to `slotEmpty`,
+     * 0x34 bytes (4 or more: tools/levels.py stops past 28 levels) */
+    u8 unused_1c0[0x1f4 - 4 * sizeof(struct save_slot)];
+    u8 slotEmpty[4];  // 0x1f4 - IsSlotEmpty; EraseSlot sets it
+    u8 magic;         // 0x1f8 - 'C' (0x43) after Reset
+    u8 versionNibble; // 0x1f9 - SAVE_VERSION after Reset; GetGameId reads its high nibble
+    u8 flags;         // 0x1fa - bitmask, TestFlags/ClearFlags/SetFlags
+    u8 field_1fb;     // 0x1fb - zeroed by Reset, otherwise untouched
+    u32 checksum;     // 0x1fc - UpdateChecksum/CheckChecksum
+
+    /* The checksum test, which Validate inlines and CheckChecksum is
+     * the out-of-line copy of: the additive word sum of the first 0x1fc
+     * bytes (127 words), from SAVE_CHECKSUM_SEED, against `checksum`. */
+    u32 ChecksumOk()
+    {
+        u32 *p = (u32 *)this;
+        u32 sum = SAVE_CHECKSUM_SEED;
+        s32 i;
+        u32 result;
+
+        for (i = 0x7e; i >= 0; i--) {
+            sum += *p++;
+        }
+
+        result = 0;
+        if (sum == checksum) {
+            result = 1;
+        }
+        return result;
+    }
+
+    /* The blank record's header: the two markers and both flag bytes
+     * clear (Validate, Reset). */
+    void StampHeader()
+    {
+        magic = 0x43;
+        versionNibble = SAVE_VERSION;
+        flags = 0;
+        field_1fb = 0;
+    }
+
+    /* src/engine/save/save_data.cpp */
+    s32 Read(s32 len);                  // ReadSaveData
+    s32 Write(s32 len);                 // WriteSaveData
+    s32 Load();                         // LoadSaveData
+    void Validate();                    // ValidateSaveData (UNUSED)
+    u8 CheckChecksum();                 // CheckSaveChecksum
+    void UpdateChecksum();              // UpdateSaveChecksum
+    u32 GetGameId();                    // GetSaveGameId
+    s32 Store();                        // StoreSaveData
+    void ReadSlot(s32 row, void *dst);  // ReadSaveSlot
+    void WriteSlot(s32 row, void *src); // WriteSaveSlot
+    void EraseSlot(s32 row);            // EraseSaveSlot
+    void Reset();                       // ResetSaveData
+    u8 IsSlotEmpty(s32 row);            // IsSaveSlotEmpty
+    bool TestFlags(u8 mask);            // TestSaveFlags
+    void ClearFlags(u8 mask);           // ClearSaveFlags
+    void SetFlags(u8 mask);             // SetSaveFlags
+};
+
+} // namespace Save
+} // namespace Engine
+
+COMPILE_TIME_ASSERT(save_data_hpp, sizeof(Engine::Save::SaveData) == 0x200);
+
+namespace Engine
+{
+namespace Save
+{
+
+/* A transient SIO send/receive envelope wrapping a SaveData copy - made
+ * for each "connecting..." spinner-dialog session (SaveMenu::
+ * LinkExchange, src/save/save_menu_draw.cpp) and deleted with it.
+ * `tmpl`/`cursor` stream a SaveData's bytes out to the link session's
+ * outgoing ring (SendChunk); `data` receives the other side's copy of the
+ * same shape from that player's incoming ring (ReceiveChunk), with
+ * `writePtr` as the fill cursor. See
+ * docs/matching/archive/issue-5-overlay-ui-sync.md for the protocol.
+ * Formerly `struct settings_sync_pump`. */
+class SaveTransfer
+{
+public:
+    /* 0x000 - bytes left to send out of `tmpl`, reset to sizeof(data) */
+    u32 remaining;
+    u32 totalReceived; // 0x004 - running total of bytes received into `data`
+    SaveData *tmpl;    // 0x008 - the record SetRecord copies in
+    /* 0x00c - read cursor into `tmpl` while draining `remaining` */
+    u8 *cursor;
+    u8 data[sizeof(SaveData)]; // 0x010 - the received record's raw bytes
+    u8 *writePtr;              // 0x210 - write cursor into `data`
+    /* 0x214 - set 1 once `remaining` fully drains (send complete) */
+    u32 sendDone;
+    /* 0x218 - set 1 once `totalReceived` reaches sizeof(data) (receive complete) */
+    u32 receiveDone;
+    u32 settleTimer; // 0x21c - elapsed-poll counter, Poll
+
+    /* src/engine/save/save_transfer.cpp */
+    void SendChunk();                   // SendSaveTransferChunk
+    void ReceiveChunk(s32 playerIndex); // ReceiveSaveTransferChunk
+
+    /* src/engine/save/save_transfer_state.cpp */
+    s32 Poll();                       // PollSaveTransfer
+    void SetRecord(SaveData *record); // SetSaveTransferRecord
+    void *GetData();                  // GetSaveTransferData
+    void Reset();                     // ResetSaveTransfer
+};
+
+} // namespace Save
+} // namespace Engine
+
+COMPILE_TIME_ASSERT(save_data_hpp, sizeof(Engine::Save::SaveTransfer) == 0x220);
+
+#endif /* !GUARD_SAVE_DATA_HPP */

@@ -53,7 +53,7 @@ converted to a `NAKED` function whose body is a single `asm()` block
 transcribing the real ROM disassembly instruction-for-instruction, the
 same technique already used for `CheckSpritePickup`
 (`naked-sub_8007dbc.md`) and several functions in
-`src/link/link_handshake.c`/`lib/gax/src/gax_swi.c`. Since this is a
+`src/engine/link/link_handshake.c`/`lib/gax/src/gax_swi.c`. Since this is a
 literal byte-for-byte transcription rather than a derived
 reconstruction, it reproduces the ROM's own register choices, operand
 order, and padding directly and needs no register-allocation coaxing

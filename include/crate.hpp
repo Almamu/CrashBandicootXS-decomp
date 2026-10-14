@@ -20,7 +20,7 @@
 #include "sprite_obj.hpp"
 
 extern "C" {
-#include "math_util.h"
+#include "engine/util/math_util.h"
 #include "constants/crates.h"
 #include "crates.h"
 }
@@ -322,12 +322,12 @@ public:
 } // namespace Crates
 } // namespace Game
 
-/* The line steppers (crate_line_step.hpp), inline: FindLineCrossing
+/* The line steppers (line_steppers.hpp), inline: FindLineCrossing
  * (crate_reset.cpp) inlines them. crate.cpp, which has their out-of-line
  * copies, defines CRATE_LINE_STEP itself and includes them at its end. */
 #ifndef CRATE_LINE_STEP
 #define CRATE_LINE_STEP inline
-#include "crate_line_step.hpp"
+#include "engine/util/line_steppers.hpp"
 #endif
 
 /* codegen: Crate::ApplyCollision under its C name (cxx_symbols.txt), as

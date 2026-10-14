@@ -324,7 +324,7 @@
     "GetDpadDirection"
    ],
    "consumer_files": [
-    "system/key_input.cpp"
+    "engine/sys/key_input.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 2,
@@ -401,7 +401,7 @@
     "StartSong"
    ],
    "consumer_files": [
-    "audio/audio.cpp"
+    "engine/audio/audio.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 19,
@@ -427,8 +427,8 @@
     "HandleLinkSerial"
    ],
    "consumer_files": [
-    "link/link_handshake.cpp",
-    "link/link_session.cpp"
+    "engine/link/link_handshake.cpp",
+    "engine/link/link_session.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -882,7 +882,7 @@
     "DrawAffineSpritePieces"
    ],
    "consumer_files": [
-    "gfx/sprite_renderer.cpp"
+    "engine/gfx/sprite_renderer.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -904,7 +904,7 @@
     "DrawAffineSpritePieces"
    ],
    "consumer_files": [
-    "gfx/sprite_renderer.cpp"
+    "engine/gfx/sprite_renderer.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2770,7 +2770,7 @@
     "DrawScaledSprite"
    ],
    "consumer_files": [
-    "gfx/scaled_sprite.cpp"
+    "engine/gfx/scaled_sprite.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2795,7 +2795,7 @@
     "DrawScaledSprite"
    ],
    "consumer_files": [
-    "gfx/scaled_sprite.cpp"
+    "engine/gfx/scaled_sprite.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3230,7 +3230,7 @@
     "InitSmallFont"
    ],
    "consumer_files": [
-    "text/font_glyph.cpp"
+    "engine/text/font_glyph.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3251,7 +3251,7 @@
     "InitSmallFont"
    ],
    "consumer_files": [
-    "text/font_glyph.cpp"
+    "engine/text/font_glyph.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3272,7 +3272,7 @@
     "InitLargeFont"
    ],
    "consumer_files": [
-    "text/font_glyph.cpp"
+    "engine/text/font_glyph.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3293,7 +3293,7 @@
     "InitLargeFont"
    ],
    "consumer_files": [
-    "text/font_glyph.cpp"
+    "engine/text/font_glyph.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3317,9 +3317,9 @@
     "IsActorMaskAssistDue"
    ],
    "consumer_files": [
-    "actor/actor_category_stats.cpp",
-    "actor/actor_category_init.cpp",
-    "actor/actor_vram_pool.cpp"
+    "engine/actor/actor_category_stats.cpp",
+    "engine/actor/actor_category_init.cpp",
+    "engine/actor/actor_vram_pool.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -3343,7 +3343,7 @@
     "InitActorCategory"
    ],
    "consumer_files": [
-    "actor/actor_category_init.cpp"
+    "engine/actor/actor_category_init.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 4,
@@ -3361,7 +3361,7 @@
     "InitActorCategory"
    ],
    "consumer_files": [
-    "actor/actor_category_init.cpp"
+    "engine/actor/actor_category_init.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 34,
@@ -3379,7 +3379,7 @@
     "SelectActorCategory"
    ],
    "consumer_files": [
-    "actor/actor_category_select.c"
+    "engine/actor/actor_category_select.c"
    ],
    "ptr_words_code": 33,
    "ptr_words_data": 0,
@@ -3403,7 +3403,7 @@
     "UpdateActorPaletteCycle"
    ],
    "consumer_files": [
-    "actor/actor_palette_cycle.cpp"
+    "engine/actor/actor_palette_cycle.cpp"
    ],
    "ptr_words_code": 16,
    "ptr_words_data": 19,
@@ -3425,7 +3425,7 @@
     "SetActorPaletteCycle"
    ],
    "consumer_files": [
-    "actor/actor_palette_cycle.cpp"
+    "engine/actor/actor_palette_cycle.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3449,7 +3449,7 @@
     "SetActorPaletteCycle"
    ],
    "consumer_files": [
-    "actor/actor_palette_cycle.cpp"
+    "engine/actor/actor_palette_cycle.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3484,7 +3484,7 @@
    "format": "categories 0-2 family data: 16-colour palettes, keyframe tables (table_A), anim table gCategoryFamily0AnimTable (41 x 0x28) and table_B arrays (absolute ROM pointers or sheet offsets)",
    "effort": "medium",
    "confidence": "high",
-   "notes": "Layout already documented in include/actor_anim.h and docs/entities/polar.json; split into typed tables.",
+   "notes": "Layout already documented in include/engine/actor/actor_anim.h and docs/entities/polar.json; split into typed tables.",
    "status": "converted: src/data/anim_family_178f80.cpp"
   },
   {
@@ -5083,7 +5083,7 @@
    "format": "composite: sprite-bank (animation) table + GAX2 sound-effect bank",
    "effort": "medium",
    "confidence": "high",
-   "notes": "Part 1 (to 0x084C0006) is the sprite-bank animation system: a 16-byte header, 56 bank records, and per-bank animation/frame/piece records, now typed C (include/sprite_bank.h). Part 2 (from 0x084C0006) is the GAX2 sound-effect data set (instruments, 8-bit PCM samples, sample table, SFX voice handler type), now built by tools/gax_audio.py --sfx.",
+   "notes": "Part 1 (to 0x084C0006) is the sprite-bank animation system: a 16-byte header, 56 bank records, and per-bank animation/frame/piece records, now typed C (include/engine/gfx/sprite_bank.h). Part 2 (from 0x084C0006) is the GAX2 sound-effect data set (instruments, 8-bit PCM samples, sample table, SFX voice handler type), now built by tools/gax_audio.py --sfx.",
    "consumers_indirect": [
     "RunPauseMenu",
     "InitLevelState",
@@ -8258,8 +8258,8 @@
     "DestroyLargeFont"
    ],
    "consumer_files": [
-    "system/inline_copies_misc.cpp",
-    "text/font_glyph.cpp"
+    "engine/util/aabb_setters.cpp",
+    "engine/text/font_glyph.cpp"
    ],
    "ptr_words_code": 8,
    "ptr_words_data": 0,
@@ -8284,8 +8284,8 @@
     "DestroySmallFont"
    ],
    "consumer_files": [
-    "system/inline_copies_misc.cpp",
-    "text/font_glyph.cpp"
+    "engine/util/aabb_setters.cpp",
+    "engine/text/font_glyph.cpp"
    ],
    "ptr_words_code": 8,
    "ptr_words_data": 0,
@@ -8314,9 +8314,9 @@
     "DestroySmallFont"
    ],
    "consumer_files": [
-    "system/inline_copies_misc.cpp",
-    "text/font.cpp",
-    "text/font_glyph.cpp"
+    "engine/util/aabb_setters.cpp",
+    "engine/text/font.cpp",
+    "engine/text/font_glyph.cpp"
    ],
    "ptr_words_code": 8,
    "ptr_words_data": 0,

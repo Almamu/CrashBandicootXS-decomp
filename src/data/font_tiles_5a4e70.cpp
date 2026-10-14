@@ -2,7 +2,7 @@
 
 /*
  * ROM 0x085A4E70-0x085A6100: the glyph tiles of the two HUD fonts
- * (src/text/font_glyph.cpp), one OBJ per glyph (docs/graphics.md, "OBJ
+ * (src/engine/text/font_glyph.cpp), one OBJ per glyph (docs/graphics.md, "OBJ
  * sheets"). OAM picks their palette at run time; the PNGs carry the default
  * one, sprite bank 35's (docs/graphics.md, "Run-time palettes").
  * Each font's tiles are a class of graphics.hpp (SmallFontSheet::tiles,

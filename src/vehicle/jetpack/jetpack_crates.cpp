@@ -1,13 +1,13 @@
 #include "vehicle.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 #include "level_state.hpp"
-#include "collected_spawns.hpp"
-#include "actor_category.hpp"
+#include "engine/actor/collected_spawns.hpp"
+#include "engine/actor/actor_category.hpp"
 
 extern "C" {
-#include "math_util.h"
-#include "util.h"
-#include "actor.h"
+#include "engine/util/math_util.h"
+#include "engine/util/util.h"
+#include "engine/actor/actor.h"
 #include "level.h"
 #include "globals.h"
 }

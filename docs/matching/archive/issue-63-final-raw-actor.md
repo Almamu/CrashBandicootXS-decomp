@@ -123,7 +123,7 @@ The other setup half, called from `InitContinuePrompt`: flushes/double-flushes
 the shared VRAM upload cursor (`gObjVramCursor`, `struct
 vram_upload_cursor`), hooks `self->icons` up to the global text icon
 manager (`gSmallFont`, `struct bitmap_font` - already fully
-described in `include/bitmap_font.h`), fires its 7th (index 6) OAM
+described in `include/engine/text/bitmap_font.h`), fires its 7th (index 6) OAM
 trampoline slot via `_call_via_r1` (the same `icon_slot` shape
 `CollideWumpa`/`wumpa.c` already established), clears
 `icons->field_118` and re-derives the cursor's limit from

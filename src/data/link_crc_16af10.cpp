@@ -1,6 +1,6 @@
 extern "C" {
 #include "core.h"
-#include "link.h"
+#include "engine/link/link.h"
 }
 
 /*
@@ -48,6 +48,6 @@ const u16 gCrc16Table[256] = {
 };
 
 /* The two link-cable pairing names. The IWRAM data points at them
- * (gCrash2LinkTextPtr/gCrash3LinkTextPtr, src/iwram/iwram_data.cpp). */
+ * (gCrash2LinkTextPtr/gCrash3LinkTextPtr, src/engine/sys/iwram_data.cpp). */
 const char gCrash2LinkText[] = "crash 1 <-> crash 2";
 const char gCrash3LinkText[] = "crash 1 <-> crash 3";

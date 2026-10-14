@@ -7,7 +7,7 @@ This is a one-time extraction: the C it writes is
 the editable source, and the build compiles it like any other data file.
 Rerunning it overwrites those files with the ROM's tables.
 
-The layout, from the matched readers (include/sprite_bank.h):
+The layout, from the matched readers (include/engine/gfx/sprite_bank.h):
 
     header (struct sprite_bank_table)
     struct sprite_bank[56]
@@ -236,7 +236,7 @@ def emit_bank(rom, i, em, out, decls):
 FILE_COMMENT = """\
 /*
  * ROM {start:#010x}-{end:#010x}: sprite banks {first}-{last} of the sprite-bank
- * animation system (gSpriteBankTable, include/sprite_bank.h). Linked in
+ * animation system (gSpriteBankTable, include/engine/gfx/sprite_bank.h). Linked in
  * ROM order between data/data.s sections by ldscript.txt - see
  * docs/data.md and docs/data_map.md ("gSpriteBankTable").
  *
@@ -280,7 +280,7 @@ def main():
 
         out.append('extern "C" {')
         out.append('#include "gba/types.h"')
-        out.append('#include "sprite_bank.h"')
+        out.append('#include "engine/gfx/sprite_bank.h"')
         if lo == 0:
             out.append('#include "globals.h"')
         out.append("}")

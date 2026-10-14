@@ -576,6 +576,8 @@ class Layout:
 
 def subsystem_of(path):
     parts = path.split('/')
+    if parts[0] == 'src' and len(parts) > 3 and parts[1] in ('engine', 'game'):
+        return parts[1] + '/' + parts[2]
     if parts[0] == 'src' and len(parts) > 2:
         return parts[1]
     if parts[0] == 'lib' and len(parts) > 2:
@@ -701,8 +703,8 @@ def scan_asm_defs():
 # "What stays local"). Anything else is "remaining" work for a header.
 DOCUMENTED = {
     # the one-argument SWI wrappers asset.cpp calls (docs/libraries.md)
-    ('src/system/asset.cpp', 'LZ77UnCompVram'),
-    ('src/system/asset.cpp', 'RLUnCompVram'),
+    ('src/engine/gfx/asset.cpp', 'LZ77UnCompVram'),
+    ('src/engine/gfx/asset.cpp', 'RLUnCompVram'),
 }
 
 

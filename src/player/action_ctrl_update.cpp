@@ -2,15 +2,15 @@
 #include "action_ctrl.hpp"
 #include "sprite_obj.hpp"
 #include "player.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 #include "level_state.hpp"
-#include "key_input.hpp"
+#include "engine/sys/key_input.hpp"
 
 extern "C" {
-#include "system.h"
+#include "engine/sys/system.h"
 #include "level.h"
 #include "globals.h"
-#include "math_util.h"
+#include "engine/util/math_util.h"
 }
 
 using Game::Crash::ActionCtrl;

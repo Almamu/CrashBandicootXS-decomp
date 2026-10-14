@@ -3,7 +3,7 @@
 
 extern "C" {
 #include "core.h"
-#include "system.h"
+#include "engine/sys/system.h"
 #include "level.h"
 #include "globals.h"
 }
@@ -11,10 +11,10 @@ extern "C" {
 using Game::Level::LevelState;
 
 /* The game's top-level loop (called once from `AgbMain`, see
- * src/system/main.cpp): sets up the central per-level state object
+ * src/engine/sys/main.cpp): sets up the central per-level state object
  * (`gLevelState`, see docs/rom_map.md's "hud"/"game_loop"
  * investigations for what its fields mean), the boot language menu
- * (`OpenLanguageSelect`/`RunLanguageSelect`/`CloseLanguageSelect`, src/audio/
+ * (`OpenLanguageSelect`/`RunLanguageSelect`/`CloseLanguageSelect`, src/engine/audio/
  * language_select*.c), then runs `UpdateGameFrame` forever, freeing
  * scratch memory before and after each frame. Never actually returns -
  * the `s32` return type only exists to match `AgbMain`'s

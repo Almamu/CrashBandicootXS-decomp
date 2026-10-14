@@ -11,7 +11,7 @@ extern "C" {
  * sections by ldscript.txt - see docs/data.md.
  */
 
-#include "actor_anim.h"
+#include "engine/actor/actor_anim.h"
 
 using Engine::Gfx::TitleBandicootObj;
 using Engine::Gfx::TitleCrashObj;
@@ -48,7 +48,7 @@ const u16 gTitleMenuBlinkPalette[16] = {
 };
 
 /* The four OBJ sprites LoadTitleScreenObjTiles (title_screen.cpp) uploads,
- * through the IWRAM table gTitleObjPackages (src/iwram/iwram_data.cpp),
+ * through the IWRAM table gTitleObjPackages (src/engine/sys/iwram_data.cpp),
  * which lists them in the order 0817D0A8, 0817D0D0, 0817D0BC, 0817D094. */
 const struct bg_package gTitleBandicootObj = { 4, 6, (void *)TitleBandicootObj::palette, (void *)TitleBandicootObj::tiles, (void *)TitleBandicootObj::map };
 const struct bg_package gTitleCrashObj = { 8, 40, (void *)TitleCrashObj::palette, (void *)TitleCrashObj::tiles, (void *)TitleCrashObj::map };

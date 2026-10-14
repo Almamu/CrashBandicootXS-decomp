@@ -1,0 +1,175 @@
+#include "level_state.hpp"
+#include "engine/audio/audio.hpp"
+#include "save_menu.hpp"
+#include "cutscene.hpp"
+#include "hud.hpp"
+#include "frontend.hpp"
+#include "menus.hpp"
+#include "level_select.hpp"
+#include "player.hpp"
+#include "vehicle.hpp"
+#include "engine/sys/frame_limiter.hpp"
+#include "engine/gfx/fade.hpp"
+#include "engine/gfx/sprite_frame_cache.hpp"
+#include "engine/actor/collected_spawns.hpp"
+#include "engine/actor/actor_category_stats.hpp"
+
+extern "C" {
+#include "core.h"
+#include "engine/sys/system.h"
+#include "engine/link/link.h"
+#include "engine/save/save.h"
+#include "engine/util/util.h"
+#include "engine/actor/actor.h"
+#include "bosses.h"
+#include "engine/gfx/gfx.h"
+#include "engine/sys/iwram.h"
+#include "level.h"
+#include "globals.h"
+}
+
+using Engine::Actor::ActorCategoryStats;
+using Engine::Actor::CollectedSpawns;
+using Engine::Gfx::BrightnessFade;
+using Engine::Gfx::SpriteFrameCache;
+using Engine::Link::LinkSession;
+using Engine::Sys::FrameLimiter;
+using Game::Entities::ActorSelf;
+using Game::Level::LevelLayers;
+using Game::Level::LevelProgress;
+using Game::Level::LevelState;
+using Game::Ui::LanguageSelect;
+using Game::Ui::LevelSelect;
+using Game::Ui::SaveMenu;
+
+/*
+ * IWRAM 0x030007CC-0x030009E8 (stored in ROM at 0x087E5DB0-0x087E5FCC):
+ * the initialised IWRAM globals, the end of the IWRAM image crt0 copies
+ * to 0x03000000 at boot. The image is IntrMain (asm/intr_main.s), the ARM
+ * code (src/engine/util/string_arm.cpp, src/engine/gfx/sprite_arm.cpp) and this file's
+ * .data, linked to run at 0x03000000 and stored after the vtables in ROM
+ * (the `iwram` section in ldscript.txt, docs/decomp_dev.md). Everything
+ * after 0x030009E8 is uninitialised (sym_iwram.txt).
+ *
+ * The globals are in address order, each defined with an initialiser
+ * (zero ones too) so agbcp puts them all in .data, in this order. The
+ * types are the plainest ones the users agree on; where users declare
+ * different local structs, see the comment.
+ */
+
+
+/* src/engine/sys/memory.cpp's heaps, and their free space right after
+ * mem_heap_init (checked by mem_heap_shutdown). */
+struct mem_heap *mem_iwram_heap_pointer = 0;
+struct mem_heap *mem_ewram_heap_pointer = 0;
+s32 mem_initial_free_bytes = 0;
+
+/* irq.cpp: the frame counter the VBlank handler increments, and the
+ * frame-rate limiter's enable flag (frame_limiter.hpp). */
+u32 gVBlankCounter = 0;
+u8 FrameLimiter::enabled = 0;
+/* Set while the music player's per-frame update is installed
+ * (audio.cpp). */
+u8 gGaxIrqEnabled = 0;
+
+/* Held keys and newly pressed keys (key_input.cpp's UpdateKeys). */
+union key_state gKeys = { { 0, 0 } };
+
+/* rand.cpp's seed. */
+u32 gRandSeed = 1;
+
+/* fade.cpp's brightness fade state (BrightnessFade, fade.hpp). */
+struct brightness_fade BrightnessFade::state = { -1, -1, 0 };
+
+s32 BrightnessFade::step = 0;
+s32 BrightnessFade::timer = 0;
+u32 gSfxVoiceToggle = 0;
+
+/* Link cable (src/engine/link/*.cpp, src/engine/save/*.cpp): gLinkSession is the
+ * session object the link IRQ handlers work on. gEepromNeedsInit is the
+ * save code's (save_data.cpp): set until its first EEPROMConfigure. */
+u8 gLinkSessionReset = 1;
+LinkSession *gLinkSession = 0;
+u8 gEepromNeedsInit = 1;
+SaveMenu *SaveMenu::instance = 0;
+/* The two link compatibility messages, stored after the CRC table
+ * (src/data/link_crc_16af10.cpp): "crash 1 <-> crash 2", "crash 1 <-> crash 3". */
+const u8 *gCrash2LinkTextPtr = (const u8 *)gCrash2LinkText;
+const u8 *gCrash3LinkTextPtr = (const u8 *)gCrash3LinkText;
+
+/* The Aku Aku mask's animation frame (player_update.cpp): re-rolled every
+ * 8 frames while invincible (mask level 3), random-walked in 0-3 while
+ * following the player (levels 1-2). */
+s32 gAkuAkuInvincibleFrame = 0;
+s32 gAkuAkuFollowFrame = 0;
+LevelSelect *LevelSelect::instance = 0;
+u8 LevelSelect::newWorldOpened = 0;
+LevelState *LevelState::instance = 0;
+u32 gRoomFrameCount = 0;
+u8 LevelProgress::roomExitRequested = 0;
+
+/* The cutscene text of each language, indexed by gLanguage
+ * (src/data/cutscenes_16d1c8.cpp, level_cutscene.cpp). */
+const struct cutscene_page *const *gCutsceneTexts[6] = {
+    gCutsceneTextEnglish, gCutsceneTextFrench,  gCutsceneTextGerman,
+    gCutsceneTextSpanish, gCutsceneTextItalian, gCutsceneTextDutch,
+};
+
+LevelLayers *gLevelLayersSingleton = 0;
+
+/* Per-language string tables (main_loop.cpp indexes them by
+ * gLanguage), src/data/ui_text_172cd4.cpp. */
+const u8 *const *gUiTextTables[6] = {
+    gUiTextEnglish, gUiTextFrench, gUiTextGerman, gUiTextSpanish, gUiTextItalian, gUiTextDutch,
+};
+
+/* The language, 0-5 (English, French, German, Spanish, Italian, Dutch);
+ * main_loop.cpp sets it at boot. */
+s32 gLanguage = 3;
+screen_dy_t gHudSlideOffset = 0;
+
+/* Hooks into the ARM code (see sprite_arm.cpp). */
+s32 (*gLookupSpriteFrameCacheFunc)(u8 *frame) = SpriteFrameCache::Lookup;
+void (*gUnpackRleSpriteFrameFunc)(u16 *dst, struct rle_frame *frame) = UnpackRleSpriteFrame;
+s32 ActorCategoryStats::checkpoint = 0;
+void (*gDrawMirroredTilemapFunc)(u8 *pal, s32 lowBlock, s32 w, s32 h) = DrawMirroredTilemap;
+void (*gHeapSortActorsByKeyFunc)(s32 n, ActorSelf **list) = HeapSortActorsByKey;
+ActorSelf *gActorList = 0;
+s32 CollectedSpawns::count = 0;
+/* The polar penguin's Z speed toward a path point, indexed by the
+ * point's spawn kind minus 0x20 (ActorSpawns::GetKindIndex; AimPolarPenguin). */
+s32 gPolarPenguinSpeeds[3] = { 0x40, 0x62, 0x95 };
+void (*gUnpackNibbleTilesFunc)(u16 *src, s32 lowBlock) = UnpackNibbleTiles;
+/* The jetpack plane's hop speed toward a path point, indexed by the
+ * point's spawn kind minus 0x20 (ActorSpawns::GetKindIndex; AimJetpackPlane). */
+s32 gJetpackPlaneHopSpeeds[6] = { 0x1555, 0x1155, 0xD55, 0x955, 0x555, 0x155 };
+
+/* Palette RAM addresses (hovercraft.cpp, hovercraft_state.cpp). */
+u16 *gFlashBgPalette = BG_PALETTE(1);
+u16 *gFlashObjPalette = OBJ_PALETTE(10);
+
+/* title_screen.cpp: the four OBJ sprite packages of
+ * src/data/level_gfx_17cff4.cpp. */
+const void *gTitleObjPackages[4] = {
+    &gTitleCrashObj,
+    &gTitleArrow2Obj,
+    &gTitleArrow1Obj,
+    &gTitleBandicootObj,
+};
+
+LanguageSelect *gLanguageSelect = 0;
+
+/* GAX2's fatal-error screen font (gax_fatal_error.c), Huffman-compressed
+ * for the BIOS HuffUnComp: 8-bit symbols, 0x4A0 bytes (37 4bpp tiles)
+ * once unpacked. */
+u32 gGaxHaltFont[70] = {
+    0x0004A028, 0x80008011, 0x01804010, 0x42804011, 0x804080FF, 0x00000002, 0x00000000, 0x00000000,
+    0xC0000000, 0x0000F600, 0x34D0D835, 0x0D66C01B, 0x0CE9262A, 0x5E48CE04, 0x30421086, 0x7033A422,
+    0xE7216601, 0x9D2119C4, 0x919C072E, 0x7E9D660E, 0x382CC421, 0x67124670, 0x2E721674, 0x923382CC,
+    0x10E438E3, 0x80CE9246, 0x74923381, 0x9D248CC1, 0x0E600CE9, 0x2492CC49, 0x2059D249, 0x6749259C,
+    0x0CE92108, 0x48CE0B3A, 0x4924924B, 0x382CC421, 0x67421660, 0x2CC42167, 0x42100674, 0x90AC4923,
+    0x30124925, 0x98924901, 0x9C842108, 0x67010842, 0x49233824, 0x9D45CA27, 0x48108421, 0x08598092,
+    0xF8A92492, 0x48125E54, 0x98924901, 0x9D249249, 0x23382CE9, 0x24B3A108, 0x033A4924, 0xA939902C,
+    0xE924B3A7, 0x492033A4, 0x83389233, 0x82CC2108, 0x42101249, 0x249248CE, 0x09249249, 0x1F901249,
+    0x52A54A8F, 0xC1248FC8, 0x7E924092, 0x491F9084, 0x059C721C, 0x842CE000,
+};

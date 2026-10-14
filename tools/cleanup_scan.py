@@ -251,8 +251,11 @@ def scan_file_cleanup_sites(path):
 
 
 def subsystem_of(rel_path):
-    """src/<subsystem>/... -> <subsystem>; lib/<name>/... -> lib/<name>."""
+    """src/engine|game/<ns>/... -> engine|game/<ns>; src/<subsystem>/... ->
+    <subsystem>; lib/<name>/... -> lib/<name>."""
     parts = Path(rel_path).parts
+    if len(parts) >= 4 and parts[0] == "src" and parts[1] in ("engine", "game"):
+        return f"{parts[1]}/{parts[2]}"
     if len(parts) >= 3 and parts[0] == "src":
         return parts[1]
     if len(parts) >= 3 and parts[0] == "lib":

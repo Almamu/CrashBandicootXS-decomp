@@ -1,10 +1,10 @@
 #include "menus.hpp"
-#include "font.hpp"
-#include "audio.hpp"
+#include "engine/text/font.hpp"
+#include "engine/audio/audio.hpp"
 
 extern "C" {
 #include "core.h"
-#include "text.h"
+#include "engine/text/text.h"
 #include <libgcc.h>
 #include "globals.h"
 }

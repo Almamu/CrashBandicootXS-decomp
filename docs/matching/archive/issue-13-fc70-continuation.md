@@ -17,7 +17,7 @@ second pass against those five.
   (`DropExtraLife`, itself still parked as of entity_spawner.c) three tiles
   below `self`'s own position, tagged with the caller's own byte
   argument. `self` here is a `struct actor *` - `self->x`/`self->y`/
-  `self->field_08` (include/actor.h) match the record's `+0`/`+4`/`+8`
+  `self->field_08` (include/engine/actor/actor.h) match the record's `+0`/`+4`/`+8`
   fields exactly, and `field_08`'s own doc comment already calls out
   its use "as a 32-bit-word bitmap index", confirmed here by the
   `IsEntityIdActivated`/`SetEntityIdActivated` calls. Two gotchas:

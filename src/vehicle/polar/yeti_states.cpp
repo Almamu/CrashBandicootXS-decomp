@@ -1,16 +1,16 @@
 #include "actor_self.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 #include "yeti.hpp"
 #include "vehicle.hpp"
-#include "cell_anim.hpp"
-#include "actor_bg.hpp"
+#include "engine/gfx/cell_anim.hpp"
+#include "engine/actor/actor_bg.hpp"
 
 extern "C" {
 #include "core.h"
-#include "math_util.h"
-#include "memory.h"
-#include "util.h"
-#include "actor.h"
+#include "engine/util/math_util.h"
+#include "engine/sys/memory.h"
+#include "engine/util/util.h"
+#include "engine/actor/actor.h"
 #include "globals.h"
 }
 

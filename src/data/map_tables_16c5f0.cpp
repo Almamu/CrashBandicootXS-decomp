@@ -2,7 +2,7 @@
 
 extern "C" {
 #include "core.h"
-#include "gfx.h"
+#include "engine/gfx/gfx.h"
 }
 
 /*

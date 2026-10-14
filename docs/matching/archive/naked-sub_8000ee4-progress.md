@@ -1,6 +1,6 @@
 # `DrawWrappedText` progress: 99.89% instruction match, still NAKED
 
-`DrawWrappedText` (`src/text/wrapped_text.c`, a text-layout/word-wrap
+`DrawWrappedText` (`src/engine/text/wrapped_text.c`, a text-layout/word-wrap
 renderer) is still a byte-correct NAKED asm transcription for the
 default build - see
 [naked-transcription-parked-functions.md](./naked-transcription-parked-functions.md)
@@ -349,4 +349,4 @@ session's `#if NON_MATCHING`-only change.
 
 ## Later pass (strag3): matched
 
-`DrawWrappedText` is now real C in `src/text/wrapped_text.c`, built with old_agbcc (the object is on `OLD_AGBCC_OBJS`). A plain rewrite replaced the pinned draft above. It uses a `while` loop, a `switch` for the escapes, inline `set_pos`/`pos_x`/`pos_y` helpers, one extra-reference nudge on `len` and one r1 hold. See [strag3-naked-retry.md](strag3-naked-retry.md).
+`DrawWrappedText` is now real C in `src/engine/text/wrapped_text.c`, built with old_agbcc (the object is on `OLD_AGBCC_OBJS`). A plain rewrite replaced the pinned draft above. It uses a `while` loop, a `switch` for the escapes, inline `set_pos`/`pos_x`/`pos_y` helpers, one extra-reference nudge on `len` and one r1 hold. See [strag3-naked-retry.md](strag3-naked-retry.md).

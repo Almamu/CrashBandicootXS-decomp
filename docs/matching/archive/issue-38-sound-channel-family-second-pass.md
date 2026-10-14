@@ -86,7 +86,7 @@ one:
    a genuinely written-and-read - r7 to the function's own push/pop list.
    This is the same confirmed, extensively-precedented toolchain gap
    documented at length for `StartTimeTrial` (`src/level/time_trial.c`)
-   and `LoadGraphicsPackage` (`src/gfx/graphics_package.c`,
+   and `LoadGraphicsPackage` (`src/engine/gfx/graphics_package.c`,
    itself still `NON_MATCHING` for exactly this reason despite a fully
    pinned `register u16 *src asm("r7")` used throughout the function) -
    and every other `asm("r7")` call-out project-wide (`grep -rn

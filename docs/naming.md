@@ -22,7 +22,7 @@ function, match *that* name's casing over generic PascalCase rules.
 ## Exception: snake_case for the memory allocator
 
 `mem_alloc`/`mem_free`/`mem_heap_init`/`mem_collect`/`mem_free_bytes` (and
-their `static` helpers) in `src/system/memory.cpp` intentionally use
+their `static` helpers) in `src/engine/sys/memory.cpp` intentionally use
 snake_case, matching the `malloc`/`free`-style C standard library
 convention they mirror. This is a **deliberate exception for this specific
 subsystem**, not a general "system-level code can be snake_case" rule -
@@ -288,7 +288,7 @@ header that owns their type:
 | Header | Helpers | What |
 |---|---|---|
 | `aabb.h` | `AabbX`/`AabbY`/`AabbW`/`AabbH(&box)` | a box's field, read at its stack offset (the "box isn't empty" width test; was the volatile `AABB_VALID` until #662 round 4) |
-| `gfx_part.h` | `PART_FLAG_SET(part, shift)` | a +0x28 flag bit tested as a sign test |
+| `sprite_piece_flags.h` | `PART_FLAG_SET(part, shift)` | a +0x28 flag bit tested as a sign test |
 | `frontend.hpp` | `CLEAR_OAM(oam)` | the logo screens' one-entry OAM clear |
 | `swim_ctrl.hpp` | `CTRL_KEEP` | SetSwimCtrlState's "keep the current timer" value |
 

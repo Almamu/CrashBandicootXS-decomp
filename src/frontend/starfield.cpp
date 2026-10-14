@@ -1,15 +1,15 @@
-#include "display.hpp"
+#include "engine/sys/display.hpp"
 #include "frontend.hpp"
-#include "key_input.hpp"
-#include "frame_limiter.hpp"
+#include "engine/sys/key_input.hpp"
+#include "engine/sys/frame_limiter.hpp"
 
 extern "C" {
 #include "gba/dma_macros.h"
-#include "util.h"
-#include "system.h"
-#include "gfx.h"
+#include "engine/util/util.h"
+#include "engine/sys/system.h"
+#include "engine/gfx/gfx.h"
 #include "globals.h"
-#include "math_util.h"
+#include "engine/util/math_util.h"
 }
 
 using Engine::Sys::Display;

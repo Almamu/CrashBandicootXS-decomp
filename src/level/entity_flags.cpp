@@ -2,8 +2,8 @@
 
 extern "C" {
 #include "core.h"
-#include "math_util.h"
-#include "memory.h"
+#include "engine/util/math_util.h"
+#include "engine/sys/memory.h"
 #include "level.h"
 }
 

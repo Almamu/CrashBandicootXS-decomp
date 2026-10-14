@@ -1,11 +1,11 @@
 #include "menus.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 #include "level_state.hpp"
 
 extern "C" {
 #include "core.h"
-#include "system.h"
-#include "gfx.h"
+#include "engine/sys/system.h"
+#include "engine/gfx/gfx.h"
 #include "level.h"
 #include "globals.h"
 }

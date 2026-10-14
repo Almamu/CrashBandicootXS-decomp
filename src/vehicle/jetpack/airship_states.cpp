@@ -1,16 +1,16 @@
 #include "airship.hpp"
 #include "vehicle.hpp"
 #include "boss_actors.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 #include "level_state.hpp"
-#include "actor_spawns.hpp"
+#include "engine/actor/actor_spawns.hpp"
 
 extern "C" {
 #include <libgcc.h>
-#include "actor.h"
+#include "engine/actor/actor.h"
 #include "globals.h"
-#include "math_util.h"
-#include "util.h"
+#include "engine/util/math_util.h"
+#include "engine/util/util.h"
 }
 
 using Engine::Actor::ActorSpawns;

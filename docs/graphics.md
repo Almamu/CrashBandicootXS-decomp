@@ -4,7 +4,7 @@ How graphics assets were located and extracted from the ROM, and ongoing
 notes on the sprite/actor rendering system. For byte-exact matching
 decompilation notes (workflow, register-allocation gotchas, per-function
 parked/matched log across the whole codebase, including the
-graphics-adjacent functions in `src/gfx/` (`oam_buffer.cpp`, `vram_dma_queue.cpp`,
+graphics-adjacent functions in `src/engine/gfx/` (`oam_buffer.cpp`, `vram_dma_queue.cpp`,
 `obj_vram_cursor.cpp`, `palette_cache.cpp`, `sprite_bank_set.cpp`; `src/gfx/graphics.c`
 until #767, which also moved some to `src/objects/entity.cpp` and
 `src/save/game_progress.cpp`), `src/menus/power_dialog_draw.cpp` and
@@ -570,7 +570,7 @@ the three menu-text palettes on OBJ banks 13-15), and `RunTitleScreen`
 is its menu loop ("new game" / "load game" / "credits"). The notes below
 are kept as written, with the functions' current names.
 
-Traced from the other direction as planned: `AgbMain` (`src/system/main.cpp`) calls
+Traced from the other direction as planned: `AgbMain` (`src/engine/sys/main.cpp`) calls
 `MainLoop`, which contains the game's true main loop (an unconditional
 `b` back to itself, calling `UpdateGameFrame` every iteration - this never
 returns during normal play, which is why `AgbMain`'s post-loop cleanup
@@ -1338,7 +1338,7 @@ used `table_B` index resolved to either `{asset_file, w_tiles, h_tiles}`
 The matching C data layout - `struct category_descriptor`,
 `struct category_vtable`, `struct anim_table_record`,
 `struct keyframe_entry` - is written up in
-`include/actor_anim.h`, field-for-field with this section (same offsets,
+`include/engine/actor/actor_anim.h`, field-for-field with this section (same offsets,
 same names where a role is known, same honest `unknown_XX` where it
 isn't). It's data-layout only - none of the functions that walk these
 structs have been reversed to C yet - but it compiles clean today
@@ -1576,7 +1576,7 @@ Each bank is a directory, `graphics/sprites/bankNN_<name>/`, with:
   - `layout` is the frame's layout type, the high nibble of its first
     piece byte. It says which boxes and anchor follow the frame header in
     the C, so it must match the frame's struct type there
-    (`include/sprite_bank.h`). The generated header declares each frame
+    (`include/engine/gfx/sprite_bank.h`). The generated header declares each frame
     with the struct of its layout, so a mismatch doesn't compile (except
     for 2 against 5, which have the same struct).
   - `tiles` says where the frame's tile run starts. `"own"` means new
@@ -1810,7 +1810,7 @@ Three tile sheets have no palette of their own in the ROM:
 The game picks their OBJ palette bank at run time, through the OAM
 entry that draws them: the font glyphs take `oam_scratch.palette`,
 which `Font::SetPalette` sets and `Font::ResetPalette` points back at
-the palette-cache slot of sprite bank 35's palette (`src/text/font.cpp`),
+the palette-cache slot of sprite bank 35's palette (`src/engine/text/font.cpp`),
 and the cursor zoom takes the palette of the cursor's sprite part
 (`oam.palette = part->palette`, `src/menus/level_select_cursor.cpp`).
 So no ROM palette is tied to them.

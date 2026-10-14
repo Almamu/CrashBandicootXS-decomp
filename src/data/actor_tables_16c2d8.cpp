@@ -1,7 +1,7 @@
 extern "C" {
 #include "core.h"
 #include "bosses.h"
-#include "math_util.h"
+#include "engine/util/math_util.h"
 }
 
 /*

@@ -29,12 +29,12 @@
 
 extern "C" {
 #include "core.h"
-#include "math_util.h"
-#include "aabb.h"
+#include "engine/util/math_util.h"
+#include "engine/util/aabb.h"
 }
 
 /* The vertical offset HudPart::Draw adds to every part, set by the
- * counters while they slide (src/iwram/iwram_data.cpp): -40 to 0, from
+ * counters while they slide (src/engine/sys/iwram_data.cpp): -40 to 0, from
  * above the top row into place. */
 extern screen_dy_t gHudSlideOffset;
 

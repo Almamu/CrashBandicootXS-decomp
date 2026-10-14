@@ -1,13 +1,13 @@
 #include "save_menu.hpp"
-#include "vram_dma_queue.hpp"
-#include "audio.hpp"
+#include "engine/sys/vram_dma_queue.hpp"
+#include "engine/audio/audio.hpp"
 
 extern "C" {
 #include "core.h"
 #include "gba/io_reg.h"
-#include "save.h"
-#include "gfx.h"
-#include "memory.h"
+#include "engine/save/save.h"
+#include "engine/gfx/gfx.h"
+#include "engine/sys/memory.h"
 #include "globals.h"
 }
 

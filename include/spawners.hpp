@@ -19,7 +19,7 @@
 #include "entity_flags.hpp"
 #include "sprite_obj.hpp"
 #include "pickups.hpp"
-#include "key_input.hpp"
+#include "engine/sys/key_input.hpp"
 
 extern "C" {
 #include "level.h"

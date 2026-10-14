@@ -3,8 +3,8 @@
 #include "level_state.hpp"
 
 extern "C" {
-#include "gfx.h"
-#include "util.h"
+#include "engine/gfx/gfx.h"
+#include "engine/util/util.h"
 #include "crates.h"
 #include "level.h"
 }

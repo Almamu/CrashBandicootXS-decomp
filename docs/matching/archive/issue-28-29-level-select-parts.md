@@ -54,7 +54,7 @@ screen in `level_select.c` (issue #26):
   `SetLevelSelectEntrySelected`) and `SetLevelSelectEntryBox`, which sets the box animation.
 - **`struct cursor_panel`** (`level_menu.panel`, 0x54 bytes): the
   cursor. Its first member is a `struct bresenham_line`
-  (`include/line_util.h`), and `GlideLevelSelectCursor` takes two steps along it per
+  (`include/engine/util/line_util.h`), and `GlideLevelSelectCursor` takes two steps along it per
   frame toward the target `MoveLevelSelectCursor` sets. `MoveLevelSelectCursor` also derives
   the zoom speed from half the major-axis distance. `UpdateLevelSelectCursor` runs an
   idle animation cycle (`gLevelSelectCursorAnims`) at random intervals

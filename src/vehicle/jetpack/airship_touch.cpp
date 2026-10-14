@@ -1,8 +1,8 @@
 #include "airship.hpp"
 
 extern "C" {
-#include "system.h"
-#include "math_util.h"
+#include "engine/sys/system.h"
+#include "engine/util/math_util.h"
 }
 
 using Game::Entities::ActorSelf;

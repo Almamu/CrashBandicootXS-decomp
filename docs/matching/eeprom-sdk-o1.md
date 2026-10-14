@@ -163,7 +163,7 @@ is built with the setting it was compiled with.
   old `continue` chain.
 
 The functions keep the project's `s32` return types, which the callers
-in `src/save/save_data.cpp` and the siblings in
+in `src/engine/save/save_data.cpp` and the siblings in
 `eeprom_read_write.c` declare; the SDK returns `u16`, and the code is the
 same either way because every result is a `u16` local.
 
@@ -187,7 +187,7 @@ Searched for, and nothing else found:
 - **Game code that looks like library code.** `irq.c` (IRQ table
   setup, VBlank handler, key reading), `memory.c` (heap), `rand.c`,
   `number_format.c`/`string.c`/`printf.c` (`itoa`, `strcat` etc. on `u8 *`),
-  `bios_util.cpp` and the link-cable/SIO files (`src/link/*.c`, a custom
+  `bios_util.cpp` and the link-cable/SIO files (`src/engine/link/*.c`, a custom
   CRC-16 handshake) sit in the game's own address range with the
   game's own data structures, and none follows an SDK source. As a
   check, the pinned `irq.c` functions `DisableVBlankHandler`, `UpdateKeys`

@@ -1,13 +1,13 @@
-#include "display.hpp"
-#include "vram_dma_queue.hpp"
+#include "engine/sys/display.hpp"
+#include "engine/sys/vram_dma_queue.hpp"
 #include "sprite_obj.hpp"
 #include "frontend.hpp"
-#include "fade.hpp"
+#include "engine/gfx/fade.hpp"
 
 extern "C" {
 #include "gba/dma_macros.h"
-#include "system.h"
-#include "gfx.h"
+#include "engine/sys/system.h"
+#include "engine/gfx/gfx.h"
 #include "globals.h"
 }
 

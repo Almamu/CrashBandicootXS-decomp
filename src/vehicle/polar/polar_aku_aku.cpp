@@ -1,12 +1,12 @@
 #include "vehicle.hpp"
-#include "vram_dma_queue.hpp"
-#include "audio.hpp"
+#include "engine/sys/vram_dma_queue.hpp"
+#include "engine/audio/audio.hpp"
 #include "level_state.hpp"
 
 extern "C" {
-#include "math_util.h"
-#include "actor.h"
-#include "gfx.h"
+#include "engine/util/math_util.h"
+#include "engine/actor/actor.h"
+#include "engine/gfx/gfx.h"
 #include "level.h"
 #include "globals.h"
 }

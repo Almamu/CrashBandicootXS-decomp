@@ -44,7 +44,7 @@ Game code includes a library's public header and nothing else from it:
 
 - `<gax.h>`: `GAX2_new`/`GAX2_estimate`/`GAX2_init`/`GAX2_jingle`,
   `GAX_irq`/`GAX_play`, the music and sound-effect calls, and
-  `struct GaxSongHeader` (GAX2's parameter block). `include/audio.hpp` (the
+  `struct GaxSongHeader` (GAX2's parameter block). `include/engine/audio/audio.hpp` (the
   game's audio manager) includes it. The engine's internal structures
   (player state, handler types, channel state, and Shin'en's inline asm
   `GAX_DMA_WAIT`/`GAX_CALL_ARM`) are in `lib/gax/src/gax_internal.h`.
@@ -52,7 +52,7 @@ Game code includes a library's public header and nothing else from it:
   `EEPROMWrite`, `EEPROMCompare`, `EEPROMWrite1_check`, `struct
   EepromConfig` and `gEepromConfig`. The timer state and helpers are in
   `lib/agb_eeprom/src/agb_eeprom_internal.h`.
-- `<agb_syscall.h>`: the SWI wrappers. `src/system/asset.cpp` keeps its
+- `<agb_syscall.h>`: the SWI wrappers. `src/engine/gfx/asset.cpp` keeps its
   own one-argument `LZ77UnCompVram`/`RLUnCompVram` declarations: its
   callers leave the destination in r1 from their own argument, and the
   two-argument call compiles differently.
@@ -167,13 +167,13 @@ No library object uses old_agbcc, agbcp_arm_patched or
   `gGaxDefaultSong`, the engine's default handler layout: it sits at the
   end of the music block and `tools/gax_audio.py` builds it with the songs
   (docs/audio.md).
-- **The game-side audio code**: the audio manager (`src/audio/audio.cpp`), the song
+- **The game-side audio code**: the audio manager (`src/engine/audio/audio.cpp`), the song
   table (`src/data/song_table_16aa20.cpp`) and the sound-effect table
   (`sound/sfx_table.json`). They call GAX2 through `<gax.h>`.
 - **GAX2's IWRAM variables**: `gGaxIrqEnabled` is the game's flag (its
   VBlank handler calls `GAX_irq` while it is set). `gGaxHaltFont`, the
   fatal-error screen's font, is GAX2 data, but it sits in the middle of
-  the IWRAM image's initialised data (`src/iwram/iwram_data.cpp`, one
+  the IWRAM image's initialised data (`src/engine/sys/iwram_data.cpp`, one
   object), so it stays there.
 - **crt0 and IntrMain** (`asm/crt0.s`, `asm/intr_main.s`) stay in `asm/`.
   They derive from the AGB SDK's crt0 template, but they are this game's

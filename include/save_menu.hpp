@@ -19,13 +19,13 @@
 #pragma interface
 
 #include "sprite_obj.hpp"
-#include "font.hpp"
-#include "save_data.hpp"
+#include "engine/text/font.hpp"
+#include "engine/save/save_data.hpp"
 
 extern "C" {
 #include "core.h"
 #include "byte_arg.h"
-#include "save.h"
+#include "engine/save/save.h"
 }
 
 /* A save slot's summary: five totals counted from the slot's 0x70 bytes

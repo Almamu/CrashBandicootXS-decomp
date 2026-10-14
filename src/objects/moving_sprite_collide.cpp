@@ -2,7 +2,7 @@
 #include "ctrl.hpp"
 
 extern "C" {
-#include "util.h"
+#include "engine/util/util.h"
 }
 
 using Game::Entities::Ctrl;

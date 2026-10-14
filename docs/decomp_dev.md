@@ -257,14 +257,14 @@ still starts at `0x03000000` and overlaps `iwram`; ld allows that for a
 NOLOAD section). The image holds, in order:
 
 - `asm/intr_main.s`: `IntrMain`, hand-written ARM - `HANDWRITTEN`.
-- `src/iwram/string_arm.cpp`, `asm/itoa_arm.s` and
-  `src/iwram/sprite_arm.cpp`: compiled ARM C++, except `itoa_arm`, which
+- `src/engine/util/string_arm.cpp`, `asm/itoa_arm.s` and
+  `src/engine/gfx/sprite_arm.cpp`: compiled ARM C++, except `itoa_arm`, which
   is assembly (not gcc's code, see above; its own report unit). The C++ is built with `tools/agbcc/bin/agbcp_arm_patched` (the `ARM_OBJS` in
   the Makefile: `-O2 -fomit-frame-pointer -mthumb-interwork` plus the
   patch's options each object needs; agbcp_arm_patched is notyourav/agbcc's ARM C++ compiler
   with `tools/agbcc_patches/agbcc_arm_prologue_return.patch`, built by
   `tools/build_agbccpp.sh`). Their `.text` goes into `iwram`.
-- `src/iwram/iwram_data.cpp`: the initialised globals from `0x030007CC`,
+- `src/engine/sys/iwram_data.cpp`: the initialised globals from `0x030007CC`,
   its `.data`.
 
 **Code units.** The report can't slice these from `expected/code_3.s`:
@@ -378,7 +378,7 @@ since both patterns will likely recur:
   caller anywhere in the matched source: two near-identical
   `mem_i/ewram_heap_pointer`-chasing loops, most likely an
   identical-code-folding artifact from agbcc's optimizer rather than
-  anything reachable from a real call site. `src/system/memory.cpp` already
+  anything reachable from a real call site. `src/engine/sys/memory.cpp` already
   had this embedded as a raw `.byte` blob (`// this is ugly AF`) from
   whoever matched `mem_collect` originally, precisely because leaving it
   out breaks the ROM's byte layout - it's now written as real, labelled

@@ -2,7 +2,7 @@
 #define GUARD_LOGO_FLY_IN_H
 
 #include "screen.h"
-#include "math_util.h"
+#include "engine/util/math_util.h"
 
 /* The logo pieces' fly-ins (#979, docs/screen.md, "The logo fly-ins").
  *

@@ -21,7 +21,7 @@ closed 12 of the 19.
   `InitSaveMenuIcons` draft at the end of the file is 5 halfwords off under
   old_agbcc and 23 under agbcc. The ROM loads that function's nibble
   mask before the byte it combines with, which is old_agbcc's tell.
-- `src/link/link_handshake.c` is on `OLD_AGBCC_OBJS` for the same
+- `src/engine/link/link_handshake.c` is on `OLD_AGBCC_OBJS` for the same
   reason. Its one matched function, `LinkStop`, compiles the same
   under both. The `MakeLinkHandshakeId` and `ResetLinkSessionState` drafts are closer
   under old_agbcc, and the ROM's `MakeLinkHandshakeId` has the

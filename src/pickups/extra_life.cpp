@@ -1,13 +1,13 @@
 #include "pickups.hpp"
 #include "player.hpp"
 #include "hud.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 #include "level_state.hpp"
 
 extern "C" {
-#include "math_util.h"
-#include "util.h"
-#include "gfx.h"
+#include "engine/util/math_util.h"
+#include "engine/util/util.h"
+#include "engine/gfx/gfx.h"
 #include "level.h"
 #include "globals.h"
 }

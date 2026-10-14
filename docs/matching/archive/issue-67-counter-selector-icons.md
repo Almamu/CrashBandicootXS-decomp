@@ -24,7 +24,7 @@ looked up from `gLanguageNames[i]` - positioned via
 the same `(240-w)>>1` idiom `DrawPowerDialog`/`src/menus/power_dialog_draw.c`
 uses) and a Y that steps by `0xa` per slot from a `0x32` base, reading
 and writing `gSmallFont->record->slots[0]`/`slots[2]` (see
-`include/bitmap_font.h`) as its OAM-slot-record pair - the exact same
+`include/engine/text/bitmap_font.h`) as its OAM-slot-record pair - the exact same
 shape `DrawPowerDialog` uses on the same two globals.
 
 `InitLanguageSelectGraphics` resets several OAM-manager globals

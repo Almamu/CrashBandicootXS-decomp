@@ -1,7 +1,7 @@
 #include "action_ctrl.hpp"
 #include "sprite_obj.hpp"
 #include "player.hpp"
-#include "audio.hpp"
+#include "engine/audio/audio.hpp"
 
 extern "C" {
 #include "globals.h"

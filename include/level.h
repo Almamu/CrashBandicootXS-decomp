@@ -16,7 +16,7 @@
  * declares those by tag. */
 
 #include "core.h"
-#include "aabb.h"
+#include "engine/util/aabb.h"
 #include "constants/level_flags.h"
 #include "constants/mask_level.h"
 #include "level_data.h"
@@ -169,7 +169,7 @@ typedef void (*entity_spawn_fn)(u32 id, u16 x, u16 y, u16 param);
  * the few with other parameters are cast. */
 extern const entity_spawn_fn gEntitySpawnFuncs[ENTITY_COUNT];
 
-/* src/iwram/iwram_data.cpp */
+/* src/engine/sys/iwram_data.cpp */
 #ifdef __cplusplus
 extern Game::Level::LevelLayers *gLevelLayersSingleton;
 #endif

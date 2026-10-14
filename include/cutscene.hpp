@@ -20,7 +20,7 @@
 
 extern "C" {
 #include "core.h"
-#include "aabb.h"
+#include "engine/util/aabb.h"
 }
 
 /* One slide. */
@@ -57,7 +57,7 @@ struct cutscene_page {
 extern const struct cutscene_slides gCutscenes[11];
 
 /* Every cutscene's pages, per language (gLanguage), each indexed like
- * gCutscenes. Defined in src/iwram/iwram_data.cpp. */
+ * gCutscenes. Defined in src/engine/sys/iwram_data.cpp. */
 extern const struct cutscene_page *const *gCutsceneTexts[6];
 /* The tables gCutsceneTexts points at (src/data/cutscenes_16d1c8.cpp). */
 extern const struct cutscene_page *const gCutsceneTextEnglish[11];
@@ -118,7 +118,7 @@ class CutscenePlayer : public Slideshow
 {
 public:
     const struct cutscene_page *pages; // 0x10 - one per slide
-    Engine::Text::Font *font;          // 0x14 (include/font.hpp)
+    Engine::Text::Font *font;          // 0x14 (include/engine/text/font.hpp)
     struct aabb box;                   // 0x18 - the text rectangle
 
     CutscenePlayer();  // InitCutscenePlayer

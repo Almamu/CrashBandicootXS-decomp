@@ -63,14 +63,15 @@ GRAPHICS_BUILDDIR = $(OBJ_DIR)/graphics
 
 $(shell mkdir -p $(C_BUILDDIR) $(ASM_BUILDDIR) $(DATA_ASM_BUILDDIR) $(SOUND_BUILDDIR) $(GRAPHICS_BUILDDIR))
 
-C_SRCS := $(wildcard $(C_SUBDIR)/*/*.c $(C_SUBDIR)/*/*/*.c)
+C_SRCS := $(shell find $(C_SUBDIR) -name '*.c' | sort)
 C_ASMS := $(patsubst $(C_SUBDIR)/%.c,$(C_BUILDDIR)/%.s,$(C_SRCS))
 C_OBJS := $(patsubst $(C_SUBDIR)/%.c,$(C_BUILDDIR)/%.o,$(C_SRCS))
 
-# The game objects written as C++ (#664, docs/cplusplus.md): src/*/*.cpp
-# and src/*/*/*.cpp (src/vehicle/polar/, src/vehicle/jetpack/), built by
-# agbcp/old_agbcp (see "C++ objects" below).
-CXX_SRCS := $(wildcard $(C_SUBDIR)/*/*.cpp $(C_SUBDIR)/*/*/*.cpp)
+# The game objects written as C++ (#664, docs/cplusplus.md): every .cpp
+# under src/, at any depth (src/engine/<ns>/, src/game/<ns>/,
+# src/game/vehicles/polar/, the data/ subdirectories; docs/file_layout.md),
+# built by agbcp/old_agbcp (see "C++ objects" below).
+CXX_SRCS := $(shell find $(C_SUBDIR) -name '*.cpp' | sort)
 CXX_ASMS := $(patsubst $(C_SUBDIR)/%.cpp,$(C_BUILDDIR)/%.s,$(CXX_SRCS))
 CXX_OBJS := $(patsubst $(C_SUBDIR)/%.cpp,$(C_BUILDDIR)/%.o,$(CXX_SRCS))
 
@@ -264,23 +265,23 @@ $(ELF): $(OBJS) $(LDSCRIPT)
 OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/objects/sprite_obj.o \
                   $(C_BUILDDIR)/save/game_progress.o \
-                  $(C_BUILDDIR)/gfx/oam_buffer.o \
-                  $(C_BUILDDIR)/gfx/vram_dma_queue.o \
-                  $(C_BUILDDIR)/gfx/obj_vram_cursor.o \
-                  $(C_BUILDDIR)/gfx/palette_cache.o \
-                  $(C_BUILDDIR)/gfx/sprite_bank_set.o \
+                  $(C_BUILDDIR)/engine/gfx/oam_buffer.o \
+                  $(C_BUILDDIR)/engine/sys/vram_dma_queue.o \
+                  $(C_BUILDDIR)/engine/gfx/obj_vram_cursor.o \
+                  $(C_BUILDDIR)/engine/gfx/palette_cache.o \
+                  $(C_BUILDDIR)/engine/gfx/sprite_bank_set.o \
                   $(C_BUILDDIR)/objects/entity.o \
-                  $(C_BUILDDIR)/gfx/sprite_renderer.o \
-                  $(C_BUILDDIR)/gfx/display.o \
-                  $(C_BUILDDIR)/gfx/fade.o \
-                  $(C_BUILDDIR)/gfx/sprite_frame.o \
-                  $(C_BUILDDIR)/text/wrapped_text.o \
-                  $(C_BUILDDIR)/actor/actor_category_init.o \
-                  $(C_BUILDDIR)/actor/actor_category_frame.o \
+                  $(C_BUILDDIR)/engine/gfx/sprite_renderer.o \
+                  $(C_BUILDDIR)/engine/sys/display.o \
+                  $(C_BUILDDIR)/engine/gfx/fade.o \
+                  $(C_BUILDDIR)/engine/gfx/sprite_frame.o \
+                  $(C_BUILDDIR)/engine/text/wrapped_text.o \
+                  $(C_BUILDDIR)/engine/actor/actor_category_init.o \
+                  $(C_BUILDDIR)/engine/actor/actor_category_frame.o \
                   $(C_BUILDDIR)/actor/actor_category_hooks.o \
                   $(C_BUILDDIR)/actor/actor.o \
-                  $(C_BUILDDIR)/actor/actor_spawn_collected.o \
-                  $(C_BUILDDIR)/actor/actor_palette_cycle.o \
+                  $(C_BUILDDIR)/engine/actor/actor_spawn_collected.o \
+                  $(C_BUILDDIR)/engine/actor/actor_palette_cycle.o \
                   $(C_BUILDDIR)/actor/anim_part.o \
                   $(C_BUILDDIR)/actor/inline_copies_actors.o \
                   $(C_BUILDDIR)/enemies/enemy_patrol.o \
@@ -310,7 +311,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/vehicle/jetpack/airship_touch.o \
                   $(C_BUILDDIR)/bosses/mega_mix_update.o \
                   $(C_BUILDDIR)/player/action_ctrl_moves.o \
-                  $(C_BUILDDIR)/actor/bg_picture.o \
+                  $(C_BUILDDIR)/engine/actor/bg_picture.o \
                   $(C_BUILDDIR)/objects/ui_sprite.o \
                   $(C_BUILDDIR)/vehicle/polar/yeti_update.o \
                   $(C_BUILDDIR)/vehicle/polar/yeti_graphics.o \
@@ -318,7 +319,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/player/player_reset.o \
                   $(C_BUILDDIR)/player/player_update.o \
                   $(C_BUILDDIR)/objects/part_list_collide.o \
-                  $(C_BUILDDIR)/gfx/palette_cycle.o \
+                  $(C_BUILDDIR)/engine/gfx/palette_cycle.o \
                   $(C_BUILDDIR)/hud/hud_part.o \
                   $(C_BUILDDIR)/player/action_ctrl_event.o \
                   $(C_BUILDDIR)/player/action_ctrl_update.o \
@@ -351,16 +352,16 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/frontend/company_logos.o \
                   $(C_BUILDDIR)/frontend/language_select_setup.o \
                   $(C_BUILDDIR)/frontend/starfield.o \
-                  $(C_BUILDDIR)/gfx/graphics_package.o \
-                  $(C_BUILDDIR)/gfx/scaled_sprite.o \
+                  $(C_BUILDDIR)/engine/gfx/graphics_package.o \
+                  $(C_BUILDDIR)/engine/gfx/scaled_sprite.o \
                   $(C_BUILDDIR)/hud/hud_init.o \
-                  $(C_BUILDDIR)/text/font_glyph.o \
-                  $(C_BUILDDIR)/text/font_draw_text.o \
-                  $(C_BUILDDIR)/text/font.o \
+                  $(C_BUILDDIR)/engine/text/font_glyph.o \
+                  $(C_BUILDDIR)/engine/text/font_draw_text.o \
+                  $(C_BUILDDIR)/engine/text/font.o \
                   $(C_BUILDDIR)/hud/hud_counters.o \
                   $(C_BUILDDIR)/save/save_menu_draw.o \
-                  $(C_BUILDDIR)/save/save_data.o \
-                  $(C_BUILDDIR)/save/save_transfer.o \
+                  $(C_BUILDDIR)/engine/save/save_data.o \
+                  $(C_BUILDDIR)/engine/save/save_transfer.o \
                   $(C_BUILDDIR)/menus/pause_menu_collectibles.o \
                   $(C_BUILDDIR)/menus/pause_menu_pages_init.o \
                   $(C_BUILDDIR)/menus/power_dialog.o \
@@ -401,9 +402,9 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/level/spawn_crates.o \
                   $(C_BUILDDIR)/level/spawn_pickups.o \
                   $(C_BUILDDIR)/level/spawn_markers.o \
-                  $(C_BUILDDIR)/link/link_handshake.o \
-                  $(C_BUILDDIR)/link/link_session_reset.o \
-                  $(C_BUILDDIR)/link/link_session.o
+                  $(C_BUILDDIR)/engine/link/link_handshake.o \
+                  $(C_BUILDDIR)/engine/link/link_session_reset.o \
+                  $(C_BUILDDIR)/engine/link/link_session.o
 # #662 step 3: system/util/audio objects whose workarounds (pins, copy
 # asms) aren't needed under old_agbcc. Evidence: each object stays
 # byte-identical with plain C - input.o's `keys = mask & pressed`
@@ -414,12 +415,12 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
 # rest of the old aabb.o, stay old_agbcc), audio.o's VCount DISPSTAT updates
 # (audio.cpp since, built by old_agbcp: agbcp gives the same AudioContext
 # methods but loads DISPSTAT's byte before the mask).
-OLD_AGBCC_OBJS += $(C_BUILDDIR)/system/input.o \
-                  $(C_BUILDDIR)/system/irq.o \
-                  $(C_BUILDDIR)/system/key_input.o \
-                  $(C_BUILDDIR)/util/aabb.o \
-                  $(C_BUILDDIR)/system/iwram_alloc.o \
-                  $(C_BUILDDIR)/audio/audio.o
+OLD_AGBCC_OBJS += $(C_BUILDDIR)/engine/sys/input.o \
+                  $(C_BUILDDIR)/engine/sys/irq.o \
+                  $(C_BUILDDIR)/engine/sys/key_input.o \
+                  $(C_BUILDDIR)/engine/util/aabb.o \
+                  $(C_BUILDDIR)/engine/sys/iwram_alloc.o \
+                  $(C_BUILDDIR)/engine/audio/audio.o
 $(OLD_AGBCC_OBJS): CC1FLAGS := $(filter-out -fprologue-bugfix,$(CC1FLAGS))
 
 # C++ objects (#664, docs/cplusplus.md). The game is g++ 2.x C++; these
@@ -449,8 +450,8 @@ $(filter $(OLD_AGBCC_OBJS),$(CXX_OBJS)): CXX1 := $(CXX1_OLD)
 # DestroyEntity last).
 NO_IMPLEMENT_INLINES_OBJS := $(C_BUILDDIR)/actor/actor.o \
                              $(C_BUILDDIR)/actor/actor_category_hooks.o \
-                             $(C_BUILDDIR)/actor/actor_palette_cycle.o \
-                             $(C_BUILDDIR)/actor/actor_spawn_collected.o \
+                             $(C_BUILDDIR)/engine/actor/actor_palette_cycle.o \
+                             $(C_BUILDDIR)/engine/actor/actor_spawn_collected.o \
                              $(C_BUILDDIR)/actor/anim_part.o \
                              $(C_BUILDDIR)/actor/inline_copies_actors.o \
                              $(C_BUILDDIR)/bosses/dingodile.o \
@@ -484,7 +485,7 @@ $(NO_IMPLEMENT_INLINES_OBJS): CC1FLAGS += -fno-implement-inlines
 # why ResetLinkSessionState was split out of link_handshake.cpp. See
 # docs/matching/archive/last-ten-naked-retry.md and
 # docs/matching/archive/last-eleven-naked-retry.md.
-NO_RERUN_LOOP_OPT_OBJS := $(C_BUILDDIR)/link/link_session_reset.o
+NO_RERUN_LOOP_OPT_OBJS := $(C_BUILDDIR)/engine/link/link_session_reset.o
 $(NO_RERUN_LOOP_OPT_OBJS): CC1FLAGS += -fno-rerun-loop-opt
 
 # Objects built with -fno-cse-skip-blocks (cse doesn't carry its table
@@ -563,12 +564,12 @@ $(NO_INTERWORK_OBJS): CC1FLAGS := $(filter-out -mthumb-interwork,$(CC1FLAGS))
 #   (-mstrict-cross-jump). Its other three functions come out the same
 #   with or without these, and need scheduling, so it keeps it.
 CXX1_ARM := tools/agbcc/bin/agbcp_arm_patched
-ARM_OBJS := $(C_BUILDDIR)/iwram/string_arm.o \
-            $(C_BUILDDIR)/iwram/sprite_arm.o
+ARM_OBJS := $(C_BUILDDIR)/engine/util/string_arm.o \
+            $(C_BUILDDIR)/engine/gfx/sprite_arm.o
 $(ARM_OBJS): CXX1 := $(CXX1_ARM)
 $(ARM_OBJS): CC1FLAGS := -mthumb-interwork $(WARNFLAGS) -O2 -fomit-frame-pointer -fno-rtti -fno-exceptions
-$(C_BUILDDIR)/iwram/string_arm.o: CC1FLAGS += -mno-cond-return
-$(C_BUILDDIR)/iwram/sprite_arm.o: CC1FLAGS += -minterwork-return-lr -mstrict-cross-jump
+$(C_BUILDDIR)/engine/util/string_arm.o: CC1FLAGS += -mno-cond-return
+$(C_BUILDDIR)/engine/gfx/sprite_arm.o: CC1FLAGS += -minterwork-return-lr -mstrict-cross-jump
 
 # Objects whose "might be used uninitialized" warning is expected and left
 # enabled on purpose (#662, owner decision): it is printed on every build,

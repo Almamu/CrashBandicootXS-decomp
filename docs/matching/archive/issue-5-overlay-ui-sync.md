@@ -76,7 +76,7 @@ branch and call is semantically confirmed, real bytes stay in the
 `#if NON_MATCHING`:
 
 - **`ClearSaveFlags`** (`asm/code_3_1_10_3_2d0c.s`, C in
-  `src/save/save_data.c`) - the bitmask-clear accessor. The
+  `src/engine/save/save_data.c`) - the bitmask-clear accessor. The
   ROM keeps a redundant copy of the bit-cleared result through a
   second register (load -> `bics` -> copy -> store) that no variation
   tried here (separate result variable, register pins on the
@@ -87,7 +87,7 @@ branch and call is semantically confirmed, real bytes stay in the
   `register ... asm("r3")`/`asm("r1")` pins - only the AND-NOT shape
   resists.
 - **`SendSaveTransferChunk`**, **`ReceiveSaveTransferChunk`**, **`PollSaveTransfer`**
-  (`asm/code_3_1_10_3_2d44.s`, C in `src/save/save_transfer.c`)
+  (`asm/code_3_1_10_3_2d44.s`, C in `src/engine/save/save_transfer.c`)
   - the SIO send/receive pump trio. Every technique this project
   documents was tried (down-counting `for`/`do-while` loops matching
   the ROM's `n != -1` sentinel idiom, swapping the wrap/non-wrap
@@ -118,11 +118,11 @@ branch and call is semantically confirmed, real bytes stay in the
 
 - `ResetSaveData`, `IsSaveSlotEmpty`, `TestSaveFlags` - record init (DMA16
   zero-fill + marker stamp + checksum refresh) and two flag-test
-  accessors (`src/save/save_data.c`).
+  accessors (`src/engine/save/save_data.c`).
 - `SetSaveFlags` - the bitmask-set accessor, needed an explicit
   `asm(".align 2, 0")` after it: GAS's default Thumb padding filler is
   the `mov r8, r8` NOP (`0x46c0`), but the ROM pads this function's
-  tail with a zero halfword instead (`src/save/save_transfer.c`).
+  tail with a zero halfword instead (`src/engine/save/save_transfer.c`).
 - `SetSaveTransferRecord`, `GetSaveTransferData`, `ResetSaveTransfer` - the pump's
   template-attach/data-pointer/reset accessors.
 - `RunSaveMenu` - the spinner dialog's blocking modal input loop.
@@ -280,7 +280,7 @@ technique gets around.
   contiguous ROM region" rule from `docs/workflow.md`.
 
 - **`SendSaveTransferChunk`/`ReceiveSaveTransferChunk`** (SIO pump TX/RX drain-fill,
-  `src/save/save_transfer.c`) - still parked. Both need `r7` as
+  `src/engine/save/save_transfer.c`) - still parked. Both need `r7` as
   a genuinely allocated scratch register (matching the ROM's own
   `sendLen`/sentinel usage there), and this exact agbcc build *never*
   includes `r7` in a function's automatic callee-save push/pop,
@@ -318,7 +318,7 @@ byte-verified" section, and the smaller worked examples in
 `lib/libgcc/lib1funcs.s`'s `__div0` and `lib/gax/src/gax_swi.c`'s
 `GaxHuffUnComp`). Both functions were already fully understood
 semantically - the parked C reconstruction that used to sit in
-`src/save/save_transfer.c` (now replaced) and the walkthrough
+`src/engine/save/save_transfer.c` (now replaced) and the walkthrough
 above are that derivation - so this was a pure transcription pass, not
 a fresh reverse-engineering one.
 
@@ -343,7 +343,7 @@ merging them into one, matching the ROM's own pool placement byte for
 byte.
 
 Verified via the standard loop: an isolated compile+assemble of
-`src/save/save_transfer.c` was first disassembled and eyeballed
+`src/engine/save/save_transfer.c` was first disassembled and eyeballed
 instruction-by-instruction against the original ROM disassembly (still
 just a diagnostic, per `docs/workflow.md` step 3 - not proof), then the
 whole `asm/code_3_1_10_3_2d44.s` file (which held nothing but these two

@@ -5,7 +5,7 @@ This pass retried the two drafts left by
 
 | Function | File | Before | Now | Compiler |
 |---|---|---|---|---|
-| `ResetLinkSessionState` (#4) | `src/link/link_session_reset.c` | 51 | match | old_agbcc + `-fno-rerun-loop-opt` |
+| `ResetLinkSessionState` (#4) | `src/engine/link/link_session_reset.c` | 51 | match | old_agbcc + `-fno-rerun-loop-opt` |
 | `SpawnFlamethrowerLabAssistant` (#31) | `src/level/spawn_enemies.c` | 4 | match | old_agbcc |
 
 ## `ResetLinkSessionState`: closed

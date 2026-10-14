@@ -2,7 +2,7 @@
 #include "sprite_obj.hpp"
 
 extern "C" {
-#include "math_util.h"
+#include "engine/util/math_util.h"
 #include "level.h"
 }
 

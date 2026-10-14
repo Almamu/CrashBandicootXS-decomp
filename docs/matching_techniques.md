@@ -555,7 +555,7 @@ gcc 2.9:
 
 Cases: [near-miss-polish-3.md](./matching/archive/near-miss-polish-3.md)
 (constant-init), [sp-box-retry.md](./matching/archive/sp-box-retry.md)
-(`"+r"` vs `"=r"/"0"`), `src/actor/actor_category_select.cpp` (use).
+(`"+r"` vs `"=r"/"0"`), `src/engine/actor/actor_category_select.cpp` (use).
 `EndSpin`'s `MATCH_CONST` opaque copy went in #662 round 4 (a `u16`
 mask: thumb's movhi takes only 0-255, so reload builds the constant and
 copies it, the ROM's copy).
@@ -669,7 +669,7 @@ address when it can
 5 asm statements emit real instructions (from 253 when the #576 survey
 counted them). None is a workaround (`itoa_arm`'s `swi` went with it
 into `asm/itoa_arm.s`, #662). `DivMod`'s `svc` call
-(`src/system/bios_util.cpp`), with its `push {r2}`/`pop {r2}` and its
+(`src/engine/sys/bios_util.cpp`), with its `push {r2}`/`pop {r2}` and its
 r0/r1 register variables, is the SWI wrapper as its source wrote it, the
 same classification as `GaxHuffUnComp`'s (`ORIGINAL_SOURCE`, #662). Four
 are GAX2's own
@@ -1089,7 +1089,7 @@ Round 2 in bosses/, enemies/ and actor/ (C++):
   the 0x104 reload; the unused saved registers of `UpdateBob` and
   `UpdateOscillateY`.
 
-**Round 3, lib/gax, src/iwram, src/util.** 15 functions -> 14:
+**Round 3, lib/gax, src/iwram, src/engine/util.** 15 functions -> 14:
 
 - **One result variable that the test also uses.** `FindSubstring`'s
   four opaque lowercase blocks become an inline `ToLower` that computes
@@ -1294,7 +1294,7 @@ from the `-da` dumps first:
   for `DrawWrappedText`'s r1 hold (under `-fno-rerun-loop-opt` the
   hold-free code is two reload registers off, nothing else).
 
-**Round 4, src/player, src/level and src/text (C++).** 9 functions -> 5,
+**Round 4, src/player, src/level and src/engine/text (C++).** 9 functions -> 5,
 from the passes' source (an instrumented private old_agbcp printed
 local-alloc's quantity order):
 

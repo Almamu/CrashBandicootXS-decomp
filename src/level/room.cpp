@@ -1,4 +1,4 @@
-#include "display.hpp"
+#include "engine/sys/display.hpp"
 #include "sprite_obj.hpp"
 #include "bg_layer.hpp"
 #include "level_state.hpp"
@@ -6,8 +6,8 @@
 
 extern "C" {
 #include "core.h"
-#include "util.h"
-#include "gfx.h"
+#include "engine/util/util.h"
+#include "engine/gfx/gfx.h"
 #include "level.h"
 #include "globals.h"
 }

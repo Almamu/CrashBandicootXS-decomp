@@ -216,7 +216,7 @@ choice) responded to further plain-C restructuring, so each was
 converted to `NAKED` and its ROM disassembly transcribed
 instruction-for-instruction - the same escape hatch this project
 already established for `MakeLinkHandshakeId`/`ResetLinkSessionState`
-(`src/link/link_handshake.c`, see
+(`src/engine/link/link_handshake.c`, see
 `docs/matching/archive/issue-4-sio-settings-sync.md`'s "The general strategy
 for the rest" section). `StartActionCtrlTornadoSpin`, `EndActionCtrlSpin` and `SteerActionCtrlSpin`
 became this project's first NAKED transcriptions with real branch
