@@ -8,6 +8,9 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Engine::Link::LinkPlayer;
+using Engine::Link::LinkRing;
+using Engine::Link::LinkSession;
 using Engine::Sys::Irq;
 
 /* The link-cable session's per-frame handshake driver and SIO data pump

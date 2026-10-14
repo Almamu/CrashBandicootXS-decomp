@@ -2196,14 +2196,14 @@ Init__Q36Engine3Sys12VramDmaQueue AllocVramDmaQueue
 _Q36Engine3Sys12VramDmaQueue.queue gVramDmaQueue
 #
 # #751: LinkSession (include/link_session.hpp, src/link/)
-__11LinkSession InitLinkSession
-_._11LinkSession DestroyLinkSession
-Start__11LinkSessionUi LinkStart
-Reset__11LinkSession ResetLinkSession
-Stop__11LinkSession LinkStop
-Update__11LinkSession UpdateLinkSession
-HandleSerial__11LinkSessionPUs HandleLinkSerial
-ResetState__11LinkSession ResetLinkSessionState
+__Q36Engine4Link11LinkSession InitLinkSession
+_._Q36Engine4Link11LinkSession DestroyLinkSession
+Start__Q36Engine4Link11LinkSessionUi LinkStart
+Reset__Q36Engine4Link11LinkSession ResetLinkSession
+Stop__Q36Engine4Link11LinkSession LinkStop
+Update__Q36Engine4Link11LinkSession UpdateLinkSession
+HandleSerial__Q36Engine4Link11LinkSessionPUs HandleLinkSerial
+ResetState__Q36Engine4Link11LinkSession ResetLinkSessionState
 # #751: SaveData and SaveTransfer (include/save_data.hpp, src/save/)
 Read__Q36Engine4Save8SaveDatai ReadSaveData
 Write__Q36Engine4Save8SaveDatai WriteSaveData

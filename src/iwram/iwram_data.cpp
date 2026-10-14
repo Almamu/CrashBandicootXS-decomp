@@ -32,6 +32,7 @@ using Engine::Actor::ActorCategoryStats;
 using Engine::Actor::CollectedSpawns;
 using Engine::Gfx::BrightnessFade;
 using Engine::Gfx::SpriteFrameCache;
+using Engine::Link::LinkSession;
 using Engine::Sys::FrameLimiter;
 
 /*

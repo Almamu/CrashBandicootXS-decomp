@@ -19,7 +19,15 @@
  * src/iwram/iwram_data.cpp. The C++ files see it as its class,
  * LinkSession (link_session.hpp); C sees a tag. */
 #ifdef __cplusplus
-extern class LinkSession *gLinkSession;
+/* In its namespace (link_session.hpp; docs/cplusplus.md, "Namespaces"). */
+namespace Engine
+{
+namespace Link
+{
+class LinkSession;
+} // namespace Link
+} // namespace Engine
+extern Engine::Link::LinkSession *gLinkSession;
 #else
 extern struct link_session *gLinkSession;
 #endif
