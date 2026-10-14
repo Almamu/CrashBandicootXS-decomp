@@ -622,6 +622,22 @@ checks the change is only a rename:
   needed: the fonts only draw glyphs from their tile sheets through the
   OAM buffer. No name hiding: no global is named `Text` or like one of
   the classes.
+- **`Engine::Util`** (`Q26Engine4Util`): the two free C++ functions
+  FindLineCrossingYMajor and FindLineCrossingXMajor (crate_line_step.hpp),
+  the single-octant Bresenham steppers. 2 symbols renamed
+  (`FindLineCrossingYMajor__Fiiiiii` is now
+  `FindLineCrossingYMajor__Q26Engine4Utiliiiiii`: a namespace function
+  has no `F`), no code change. crate_reset.cpp's FindLineCrossing, which
+  inlines them, names them with using declarations. The helpers of
+  src/util/ (fixed-point math, AABBs, the Bresenham line, rand, the
+  string and number formatting) all have C linkage (util.h, included in
+  `extern "C"`), so they stay global, and the namespace holds only these
+  two. Boundary calls: the steppers live with the crates (crate.hpp
+  inlines them for FindLineCrossing, crate.cpp has their out-of-line
+  copies), but they are pure arithmetic, with no dependency on the
+  crates, the level or the player, so by their dependencies they are
+  engine helpers, next to src/util/'s StepBresenhamLine. No name hiding:
+  no global is named `Util` or like the two functions.
 
 ## Progress
 

@@ -5,6 +5,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Util::FindLineCrossingXMajor;
+using Engine::Util::FindLineCrossingYMajor;
+
 /* The general line stepper and Crate::Reset (#664, include/crate.hpp). */
 
 /* A Bresenham line from (pos, count) to (a, b), from the end with the

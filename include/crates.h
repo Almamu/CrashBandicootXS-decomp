@@ -40,7 +40,7 @@ extern u8 gCrateListChanged;
 /* src/crates/crate.cpp */
 extern void ResolvePlayerCollisions(void);
 /* FindLineCrossingYMajor and FindLineCrossingXMajor are C++ functions
- * (include/crate.hpp). */
+ * in Engine::Util (include/crate_line_step.hpp, via crate.hpp). */
 
 /* src/crates/crate_reset.cpp */
 extern s32 FindLineCrossing(s32 pos, s32 count, s32 a, s32 b, s32 limit);
