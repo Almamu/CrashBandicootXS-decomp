@@ -12,9 +12,9 @@ progress".
 A converted table is a `const` object in a `src/data/*.cpp` file, written
 in C++ like the rest of the game code (#844; the tables were C files until
 then), with a real element type (from a shared header when the consuming
-code has one) and real symbol references for every pointer. The
-exception is the string tables, which stay C (see "Text tables in C"
-below). The linker
+code has one) and real symbol references for every pointer. The string
+tables are generated from gettext files instead (see "Text tables"
+below and [text.md](./text.md)). The linker
 script places the file's `.rodata` at the table's ROM address, between the
 raw parts of `data/data.s`. A library's own tables (GAX2's, AgbEeprom's,
 libgcc's `__clz_tab`) follow the same convention in C under
@@ -152,31 +152,54 @@ they became C++, #844):
   (`(void (*)(void))0xffffffef` for the non-code slots of
   `struct category_vtable`).
 
-### Text tables in C
+### Text tables
 
-The string tables are C: `cutscene_text_16d4d8.c` and
-`cutscene_text_16e8a4.c` (the cutscenes' pages) and `ui_text_172cd4.c`
-(the UI text). They are the only C files left in `src/`. Each is a run
-of `const u8 s[] = "..."` arrays with, after them, the arrays of pointers
-that list them, which C++ can't write: g++ 2.9's `decay_conversion`
-(`cp/typeck.c`) replaces a `const` variable by its initializer wherever
-it decays to a pointer, unless the initializer is a brace list, and it
-doesn't except arrays. A string array named in another table's
-initializer then becomes a pointer to a new copy of the literal, so the
-table points at a duplicate string (`.LC0: .ascii "..."`, `.word .LC0`)
-instead of the array. `&s[0]` and `s + 0` are folded the same way, at
-any optimization level. C's `default_conversion` (`c-typeck.c`) does the
-same only under `-O` and never for an array, so agbcc keeps the
-references.
+The string tables, `cutscene_text_16d4d8.cpp` and
+`cutscene_text_16e8a4.cpp` (the cutscenes' pages) and
+`ui_text_172cd4.cpp` (the UI text), are generated: each `#include`s the
+`.inc` that `tools/text.py` writes into `build/crashbandicootxs/text/`
+from `text/crashxs.pot` and the languages' `.po` files (#1070, see
+[text.md](./text.md) for the files and the translators' workflow). Each
+is a run of `extern const u8 s[] = "..."` arrays with, after them, the
+arrays of pointers that list them, every pointer spelled
+`(const u8 *)&s`.
 
-The C files include nothing: a local `typedef unsigned char u8;`, the
-strings, their pointer arrays and `extern` declarations for strings
-another of the files defines. The C++ code that uses them declares
-them itself: `system.h` the UI text's six arrays, and the cutscene
-files (`cutscenes_16d1c8.cpp`, `cutscene_slides_16e064.cpp`) the page
-arrays their `struct cutscene_page` tables point at. A table that has
-strings and other data is split at the ROM boundary between them: the
-cutscenes are four files in ROM order.
+The cast is what lets C++ write these tables: g++ 2.9's
+`decay_conversion` (`cp/typeck.c`) replaces a `const` variable by its
+initializer wherever it decays to a pointer, unless the initializer is a
+brace list, and it doesn't except arrays. A string array named in another
+table's initializer (`{ s }`) then becomes a pointer to a new copy of the
+literal, so the table points at a duplicate string (`.LC0: .ascii
+"..."`, `.word .LC0`) instead of the array. `&s[0]`, `s + 0`, `+s` and
+`*&s` are folded the same way, at any optimization level, and a static
+class member or a namespace doesn't help. `&s` is the array's address,
+which isn't a decay, and the cast gives it the element type; the object
+comes out byte for byte what agbcc made of the C files these tables
+were until #1070. Nobody edits the generated files, so the cast at every
+entry costs nothing (#844 turned down the same cast for hand-written
+tables).
+
+The generator stores each distinct string once, under its first use:
+the languages in `gLanguage`'s order (English, French, German, Spanish,
+Italian, Dutch), within a language the UI text ids in order or the
+cutscene pages in ROM order (the template's order). A later use, in the
+same language or another one, points at the stored string. That is the
+ROM's own rule: it has no repeat stored twice, and the foreign cutscenes
+reuse two English strings (cutscene 8 page 1, cutscene 9 page 5). The
+UI and the cutscenes are stored apart (no string is in both). A string
+is named after its first use (`gUiTextEnglish00`, `gUiTextFrench31`,
+`gCutscene01EnglishPage3_0Text`), so the symbols, their order and the
+`.map` are the C files' ones.
+
+The pointer arrays are defined `extern` (a namespace-scope `const` has
+internal linkage in C++, see above), and so is every string, which keeps
+the C files' global symbols. `system.h` declares the UI text's six arrays
+with `UI_TEXT_COUNT`, so a template with another number of `ui.*` entries
+stops the build. The cutscene files (`cutscenes_16d1c8.cpp`,
+`cutscene_slides_16e064.cpp`) declare the page arrays their `struct
+cutscene_page` tables point at. A table that has strings and other data
+is split at the ROM boundary between them: the cutscenes are four files
+in ROM order.
 
 ### Pitfalls
 
@@ -258,11 +281,11 @@ The first batch (all pointer tables, all byte-exact):
 | `dispatch_table_16c6a4.cpp` | `0x0816C6A4` | the unified 92-slot function-pointer dispatch array |
 | `level_table_16c814.cpp` | `0x0816C814` | the level table (25 `struct level_info`), the levels' room lists and 48 room records, generated from `data/levels/` (`levels.py table`); the theme music cues and 5 colour-cycle lists by hand (see "Level data") |
 | `cutscenes_16d1c8.cpp` | `0x0816D1C8` | the 11 cutscenes' language tables and slide lists, the English pages (see "Cutscenes") |
-| `cutscene_text_16d4d8.c` | `0x0816D4D8` | the cutscenes' English text, in C (see "Text tables in C") |
+| `cutscene_text_16d4d8.cpp` | `0x0816D4D8` | the cutscenes' English text, generated from `text/` (see "Text tables") |
 | `cutscene_slides_16e064.cpp` | `0x0816E064` | the other five languages' pages, the 24 slides |
-| `cutscene_text_16e8a4.c` | `0x0816E8A4` | the French, German, Spanish, Italian and Dutch text, in C |
+| `cutscene_text_16e8a4.cpp` | `0x0816E8A4` | the French, German, Spanish, Italian and Dutch text, generated from `text/` |
 | `terrain_1725a8.cpp` | `0x081725A8` | the 51 terrain types of the collision maps |
-| `ui_text_172cd4.c` | `0x08172CD4` | the game's UI text in six languages (see "UI text") |
+| `ui_text_172cd4.cpp` | `0x08172CD4` | the game's UI text in six languages, generated from `text/` (see "Terrain types and UI text") |
 | `hud_fonts_174be0.cpp` | `0x08174BE0` | the HUD digit slots and the two HUD fonts' character lists and glyph metrics |
 | `actor_category_175558.cpp` | `0x08175558` | 7 `struct category_descriptor`, 3 `struct category_vtable` |
 | `palette_cycle_175760.cpp` | `0x08175760` | the 32-frame BG palette cycle and its 4 cursor start/bound pairs (`ActorPaletteCycle::frames`, `startFrames`, `targetFrames`, docs/cplusplus.md) |
@@ -778,10 +801,10 @@ table"](./levels.md#the-level-table) has the field-by-field sources.
 ### Cutscenes
 
 The 11 cutscenes (the intro, the story scenes between worlds, the
-endings) are `src/data/cutscenes_16d1c8.cpp`, `cutscene_text_16d4d8.c`,
-`cutscene_slides_16e064.cpp` and `cutscene_text_16e8a4.c`
+endings) are `src/data/cutscenes_16d1c8.cpp`, `cutscene_text_16d4d8.cpp`,
+`cutscene_slides_16e064.cpp` and `cutscene_text_16e8a4.cpp`
 (`0x0816D1C8`-`0x081725A8` in that order, types in `include/cutscene.hpp`;
-the text is C, see "Text tables in C") and
+the text is generated from `text/`, see "Text tables") and
 `src/data/cutscene_pictures_5a9f70.cpp`
 (`0x085A9F70`-`0x0861BADC`). `PlayCutscene` plays cutscene `idx`: the
 slides of `gCutscenes[idx]` (`struct cutscene_slides`), each a
@@ -790,9 +813,10 @@ effect), shown with the page of text at the same index of the current
 language's `struct cutscene_page` array. The six language tables
 (`gCutsceneTextEnglish` is English, then French, German, Spanish,
 Italian and Dutch) are listed by `gCutsceneTexts`, a pointer table in
-the IWRAM image (`src/iwram/iwram_data.cpp`). The text is plain C strings (Latin-1, all lower case),
+the IWRAM image (`src/iwram/iwram_data.cpp`). The text is strings (Latin-1, all lower case),
 each page's strings in a `const u8 *const []`, and page and slide counts
-are `ARRAY_COUNT()`s.
+are `ARRAY_COUNT()`s. The template's keys are `cutscene<NN>.page<P>.<I>`
+([text.md](./text.md)).
 
 A picture is a 256-colour palette followed directly by its LZ77 Mode 4
 bitmap: a slide points at the palette and `ShowSlidePicture` reads the bitmap
@@ -900,7 +924,7 @@ record. Those stay as symbols (the code uses them), defined with
 `asm(".set ...")` in the C file as names for addresses inside the
 table: they aren't objects, so the report doesn't count them.
 
-Then `src/data/ui_text_172cd4.c`: the game's own text (menus, level
+Then `src/data/ui_text_172cd4.cpp`: the game's own text (menus, level
 names, popups) in six languages, 70 strings each. `GetUiText` looks a
 text id up in `gUiTextTables[language]` (`src/iwram/iwram_data.cpp`),
 which now points at `gUiTextEnglish`...`gUiTextDutch` by name. Each
@@ -908,9 +932,10 @@ language's new strings sit before its array, and strings several
 languages share (mostly the level names) are stored once. Every string
 in the region is referenced, and every pointer lands on a string start.
 Strings are named after the first language and index that use them
-(`gUiTextEnglish00` is "level"). They're plain C strings (Latin-1, octal
-escapes), and agbcc's 4-byte alignment of string arrays gives the ROM's
-zero padding.
+(`gUiTextEnglish00` is "level"). The table is generated from `text/`
+(see "Text tables" and [text.md](./text.md)): the template's `ui.*`
+entries in text id order. The compiler's 4-byte alignment of string
+arrays gives the ROM's zero padding.
 
 ### Credits
 

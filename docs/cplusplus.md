@@ -1000,7 +1000,7 @@ a namespace but these, which stay in the global namespace on purpose:
   are declared where C sees them.
 - **The globals** (globals.h, level.h, ...: gPlayer, gLevelState,
   gCrateList, ...) and **the data tables** (src/data/, the ROM tables
-  and the C string tables): their C names are what the linker script,
+  and the generated string tables): their C names are what the linker script,
   sym_iwram.txt and the C files use. Static data members of the
   namespaced classes are mapped to their C names by cxx_symbols.txt.
 - **The records**: the C structs (`struct level_save`,

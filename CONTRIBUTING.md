@@ -113,8 +113,9 @@ matched code - read it before starting.** In short:
   its mangled names in `cxx_symbols.txt`; see
   [docs/cplusplus.md](docs/cplusplus.md) ("Namespaces").
 - **Data and assets** are rebuilt from source by the Makefile (see
-  [README.md](README.md#data-and-assets)): edit the PNG, the level JSON or
-  the table in `src/data/`, never anything under `build/`.
+  [README.md](README.md#data-and-assets)): edit the PNG, the level JSON,
+  the `.po` file or the table in `src/data/`, never anything under
+  `build/`.
 - **Frozen files:** `expected/` (the progress report's targets, see
   [expected/README.md](expected/README.md)) and
   the old matching logs ([docs/matching.md](docs/matching.md) and
@@ -170,9 +171,10 @@ File names:
 - **Mixed files** are named after the subject with the most functions;
   the header comment lists the rest. Each file opens with one line
   saying what it holds.
-- **Data tables** are `src/data/<content>_<romaddr>.cpp` (three text
-  tables are still `.c`): each is one ROM range, and the address tells
-  apart files with the same content name.
+- **Data tables** are `src/data/<content>_<romaddr>.cpp`: each is one
+  ROM range, and the address tells apart files with the same content
+  name. The three text tables `#include` what `tools/text.py` generates
+  from `text/` ([docs/text.md](docs/text.md)).
 
 ### Verification
 
@@ -188,7 +190,8 @@ rm -rf build objdiff.json && make NON_MATCHING=1 report && objdiff-cli report ge
 `origin/main` to find the one that changed, rather than guessing. The report must still show 2062/2062 functions and 100%
 data. The Makefile tracks header
 dependencies, so a plain `make` is fine while you work, but the PR check
-is always from clean.
+is always from clean. A change under `text/` also needs `make text-check`
+([docs/text.md](docs/text.md)).
 
 If your change touches what a `docs/` page says, update it in the same
 PR.

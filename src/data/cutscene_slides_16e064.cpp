@@ -36,7 +36,7 @@ using Engine::Gfx::CutscenePicture23;
  * ROM 0x0816E064-0x0816E8A4: the cutscenes' French, German, Spanish,
  * Italian and Dutch pages (`struct cutscene_page` arrays, listed by the
  * language tables in cutscenes_16d1c8.cpp) and the 24 slides. The pages'
- * strings are in cutscene_text_16e8a4.c, the pictures in
+ * strings are in cutscene_text_16e8a4.cpp, the pictures in
  * cutscene_pictures_5a9f70.cpp. Linked in ROM order by ldscript.txt.
  */
 

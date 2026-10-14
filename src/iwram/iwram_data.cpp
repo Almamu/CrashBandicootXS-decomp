@@ -118,7 +118,7 @@ const struct cutscene_page *const *gCutsceneTexts[6] = {
 LevelLayers *gLevelLayersSingleton = 0;
 
 /* Per-language string tables (main_loop.cpp indexes them by
- * gLanguage), src/data/ui_text_172cd4.c. */
+ * gLanguage), src/data/ui_text_172cd4.cpp. */
 const u8 *const *gUiTextTables[6] = {
     gUiTextEnglish, gUiTextFrench, gUiTextGerman, gUiTextSpanish, gUiTextItalian, gUiTextDutch,
 };

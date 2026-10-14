@@ -115,7 +115,13 @@ generated file is checked in.
   `tools/gax_audio.py` rebuilds the GAX2 music and sound-effect data, and
   `tools/sfx_table.py` the sound-effect table. See
   [docs/audio.md](./docs/audio.md).
-- **Tables** are C `const` arrays in `src/data/`, placed at their ROM
+- **Text** (`text/`: the gettext template `crashxs.pot` and a `.po` per
+  language): msgfmt compiles each language and `tools/text.py` writes the
+  UI and cutscene string tables from them. The rules are in `text.mk`;
+  `make text-check` runs the translation checks and `make text-update`
+  merges a template change into the `.po` files. See
+  [docs/text.md](./docs/text.md).
+- **Tables** are C++ `const` arrays in `src/data/`, placed at their ROM
   addresses by `ldscript.txt`. See [docs/data.md](./docs/data.md).
 
 `expected/` holds frozen copies of the original disassembly: the target
@@ -163,6 +169,7 @@ reason, that's a completely reasonable position - just know it going in.
 - [docs/workflow.md](./docs/workflow.md) - **the required loop for changing matched code, must be followed for every change**
 - [docs/naming.md](./docs/naming.md) - **the naming convention, and the checklist of what a rename touches**
 - [docs/data.md](./docs/data.md) - how ROM data tables became C `const` arrays in `src/data/`, linked in ROM order, and the asset pipeline
+- [docs/text.md](./docs/text.md) - the game's text as gettext files (`text/`): the keys, the checks and the translators' workflow
 - [docs/libraries.md](./docs/libraries.md) - the third-party/SDK libraries under `lib/` (GAX2, AgbEeprom, libgcc, libagbsyscall): layout, headers, flags
 - [docs/cplusplus.md](./docs/cplusplus.md) - the game is g++ 2.x C++: what the ROM shows, the agbcp/old_agbcp C++ compilers, and building objects from C++ source (`src/*/*.cpp`, `CXX_OBJS`)
 - [docs/headers.md](./docs/headers.md) - where declarations live, and the codegen exceptions

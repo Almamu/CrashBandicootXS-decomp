@@ -508,7 +508,7 @@ Notable mid-size tables:
 - `081725C4` (0x261C): terrain shape records (36 B, heights 0-7, `0xFF`
   empty) for the collision streamer, then the game's UI text in six
   languages. **Converted** (`src/data/terrain_1725a8.cpp`,
-  `src/data/ui_text_172cd4.c`).
+  `src/data/ui_text_172cd4.cpp`).
 - `0817C5D0` (0x96C): popup/credits text opcode stream (`"\x03developed by\n\n\x01..."`).
   **Converted** (`src/data/credits_17c5d0.cpp`).
 - `0816AF10`: the CRC-16/CCITT table (poly `0x1021`) for link-cable packets.
@@ -913,7 +913,7 @@ vtable shapes).
 | `081725AC` (`gTerrainHeights0`) | 0x8 | name for heights[0] of terrain type 0 (an `asm` `.set` alias into gTerrainTypes). **Converted** (`src/data/terrain_1725a8.cpp`) | `GetTerrainHeights`, `GetSolidTerrainHeights` | medium | done |
 | `081725B4` (`gTerrainHeights1`) | 0x8 | name for heights[1] of terrain type 0 (alias). **Converted** (`src/data/terrain_1725a8.cpp`) | `GetSolidTerrainHeights` | medium | done |
 | `081725BC` (`gTerrainHeights2`) | 0x8 | name for heights[2] of terrain type 0 (alias). **Converted** (`src/data/terrain_1725a8.cpp`) | `GetSolidTerrainHeights` | medium | done |
-| `081725C4` (`gTerrainHeights3`) | 0x261C | heights[3] of terrain type 0 (alias); the old label ran on through the terrain table and then the game's UI text: 367 strings and the six 70-entry language tables `gUiTextEnglish`...`gUiTextDutch` (`src/data/ui_text_172cd4.c`). **Converted** (`src/data/terrain_1725a8.cpp, src/data/ui_text_172cd4.c`) | `GetSolidTerrainHeights` | medium | done |
+| `081725C4` (`gTerrainHeights3`) | 0x261C | heights[3] of terrain type 0 (alias); the old label ran on through the terrain table and then the game's UI text: 367 strings and the six 70-entry language tables `gUiTextEnglish`...`gUiTextDutch` (`src/data/ui_text_172cd4.cpp`). **Converted** (`src/data/terrain_1725a8.cpp, src/data/ui_text_172cd4.cpp`) | `GetSolidTerrainHeights` | medium | done |
 | `08174BE0` | 0x8C | table of u32 (`u32` x 35). **Converted** (`src/data/hud_fonts_174be0.cpp`) | `InitHud`, `ConfigureHudParts` | high | done |
 | `08174C6C` | 0x118 | table of struct hud_pos. **Converted** (`src/data/hud_fonts_174be0.cpp`) | `InitHud`, `ConfigureHudParts`, `UpdateHudBoss` +2 | high | done |
 | `08174D84` | 0x50 | HUD font A's characters in glyph order (a string, Latin-1). **Converted** (`src/data/hud_fonts_174be0.cpp`) | `InitSmallFont` | medium | done |
