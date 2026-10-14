@@ -405,7 +405,7 @@ CLASSES = [(c, re.compile(p), re.compile(l), r) for c, p, l, r in CLASSES]
 LAYOUT_CLASSES = [
     (
         "screen",
-        r"src/game/ui/|src/data/hud_fonts_174be0\.cpp",
+        r"src/game/ui/hud|src/data/hud_fonts_174be0\.cpp",
         r".",
         "a HUD position: anchor to the screen's edges or centre (DISPLAY_RIGHT/BOTTOM, DISPLAY_CENTER_X)",
     ),
