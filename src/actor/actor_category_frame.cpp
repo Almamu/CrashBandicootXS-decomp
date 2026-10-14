@@ -17,6 +17,7 @@ extern "C" {
 using Engine::Actor::ActorCategory;
 using Engine::Actor::ActorSpawns;
 using Engine::Gfx::CellAnim;
+using Game::Vehicles::Jetpack::JetpackPlayer;
 using Game::Vehicles::Polar::PolarPlayer;
 
 /* ROM 0x0802A018-0x0802A4D4, inside the actor zone that starts at

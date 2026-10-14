@@ -14,6 +14,7 @@ using Engine::Actor::ActorBg;
 using Game::Bosses::Hovercraft;
 using Game::Bosses::HovercraftCannon;
 using Game::Bosses::HovercraftCannonFlash;
+using Game::Vehicles::Jetpack::JetpackCannonball;
 
 /* The hovercraft's cannon (#664 part 11h, include/boss_actors.hpp): an
  * HpActor that rides on the hovercraft and fires cannonballs at the

@@ -8,6 +8,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Vehicles::Jetpack::JetpackBalloon;
+using Game::Vehicles::Jetpack::JetpackBalloonCrate;
+
 /* 0x080317E0-0x08031A6C (#664 part 11f): the balloon the jetpack
  * levels' crates hang from, JetpackBalloon (include/vehicle.hpp). See
  * docs/matching/archive/issue-59-0x08031784-actor.md. */

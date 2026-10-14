@@ -14,6 +14,7 @@ extern "C" {
 }
 
 using Engine::Actor::ActorCategory;
+using Game::Vehicles::Jetpack::JetpackPlayer;
 using Game::Vehicles::Polar::PolarPlayer;
 
 /* The category hooks that go through the category vtable, the actor

@@ -1,5 +1,7 @@
 #include "vehicle.hpp"
 
+using Game::Vehicles::Jetpack::JetpackBalloonCrate;
+
 /*
  * ROM 0x0817C42C-0x0817C444, split from actor_state_17c3fc.cpp (#664 part
  * 11f). Linked in ROM order between data/data.s sections by ldscript.txt

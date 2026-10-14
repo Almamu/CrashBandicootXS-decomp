@@ -27,6 +27,8 @@ using Engine::Actor::ActorCategoryStats;
 using Engine::Gfx::CellAnim;
 using Engine::Gfx::ObjTileAllocator;
 using Engine::Gfx::SpriteOamQueue;
+using Game::Vehicles::Jetpack::JetpackPlayer;
+using Game::Vehicles::Jetpack::JetpackShot;
 
 /* JetpackPlayer's constructor, virtual methods, steering, first three
  * states, course end, ring pass and VRAM tile buffers (#664 part 11e,

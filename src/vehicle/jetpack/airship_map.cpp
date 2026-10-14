@@ -1,5 +1,7 @@
 #include "airship.hpp"
 
+using Game::Vehicles::Jetpack::Airship;
+
 /* Same boss-weapon "self" object family as airship_fireball.cpp/
  * airship_states.cpp - see airship_fireball.cpp's header comment and
  * docs/matching/archive/issue-58-0x08030334-actor.md.

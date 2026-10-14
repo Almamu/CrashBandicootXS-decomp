@@ -35,6 +35,8 @@ using Game::Bosses::Hovercraft;
 #include "bosses.h"
 #include "globals.h"
 
+using Game::Vehicles::Jetpack::Airship;
+
 /* N. Gin's airship (Airship::palette, include/airship.hpp): its palette,
  * 16 colours that LoadAirshipGraphics (airship_graphics.cpp) DMAs to BG
  * palette 1 (the rest is zero). */

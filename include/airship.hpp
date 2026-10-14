@@ -10,19 +10,23 @@
  * plain functions).
  *
  * The data members are only declared: cxx_symbols.txt (block "#772
- * Airship") maps each mangled name to its C name (`_7Airship.state` to
- * gAirshipState, ...), whose address is in sym_iwram.txt; the functions
- * keep their C names the same way (`Update__7Airship` is UpdateAirship).
+ * Airship") maps each mangled name to its C name
+ * (`_Q44Game8Vehicles7Jetpack7Airship.state` to gAirshipState, ...), whose
+ * address is in sym_iwram.txt; the functions keep their C names the same
+ * way (`Update__Q44Game8Vehicles7Jetpack7Airship` is UpdateAirship).
  * The picture's animation is a bare AnimPart (`anim`, gAirship; `new
  * AnimPart` in Create); its fireballs are AirshipFireball
  * (boss_actors.hpp).
  *
  * The ROM tables only it reads are static data members too, defined in
  * their src/data/*.cpp files (`const struct airship_attack
- * Airship::attacks[6] = ...`): `_7Airship.attacks` is renamed to
- * gAirshipAttacks. The actor category table
+ * Airship::attacks[6] = ...`): `_Q44Game8Vehicles7Jetpack7Airship.attacks`
+ * is renamed to gAirshipAttacks. The actor category table
  * (src/data/actor_category_175558.cpp) points at Create, Update,
- * UpdateBg2, Destroy and LoadGraphics. */
+ * UpdateBg2, Destroy and LoadGraphics.
+ *
+ * Airship is in the namespace Game::Vehicles::Jetpack (#1033,
+ * vehicle.hpp), with its fireball. */
 
 #include "actor_self.hpp"
 
@@ -74,6 +78,13 @@ extern "C" {
 #define AIRSHIP_GUN_OFFSET_X Q8_FRAC(12, 0xdb)
 #define AIRSHIP_GUN_OFFSET_Y Q8_FRAC(81, 0x6d)
 #define AIRSHIP_GUN_OFFSET_Z Q8_FRAC(0, 10)
+
+namespace Game
+{
+namespace Vehicles
+{
+namespace Jetpack
+{
 
 class Airship
 {
@@ -160,5 +171,9 @@ private:
     static const u16 palette[256];               // gAirshipPalette (boss_pictures_167ad4.cpp)
     static const struct airship_picture picture; // gAirshipPicture
 };
+
+} // namespace Jetpack
+} // namespace Vehicles
+} // namespace Game
 
 #endif /* !GUARD_AIRSHIP_HPP */

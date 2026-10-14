@@ -1,5 +1,7 @@
 #include "vehicle.hpp"
 
+using Game::Vehicles::Jetpack::JetpackPlayer;
+
 /*
  * ROM 0x0817C1C0-0x0817C200. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.

@@ -5,6 +5,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Game::Vehicles::Jetpack::Airship;
+
 /* Same "boss-weapon self" object family as airship_fireball.cpp (see that
  * file's header comment and docs/matching/archive/issue-58-0x08030334-actor.md),
  * and the same 12-byte `{s16 x, y, z, sizeX, sizeY, sizeZ}` AABB-overlap

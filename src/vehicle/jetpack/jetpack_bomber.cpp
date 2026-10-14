@@ -10,6 +10,7 @@ extern "C" {
 }
 
 using Engine::Actor::ActorCategory;
+using Game::Vehicles::Jetpack::JetpackBomber;
 
 /* The jetpack bomber (#664 part 11f, include/vehicle.hpp), ROM
  * 0x0802FF08-0x08030298, between jetpack_plane.cpp and

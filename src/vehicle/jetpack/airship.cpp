@@ -16,6 +16,7 @@ using Engine::Actor::ActorBg;
 using Engine::Actor::ActorCategoryStats;
 using Engine::Gfx::CellAnim;
 using Engine::Sys::VramDmaQueue;
+using Game::Vehicles::Jetpack::Airship;
 
 /* N. Gin's airship (#664 part 11i), the all-static class Airship
  * (#772, include/airship.hpp): a bare AnimPart, `anim` (gAirship), and

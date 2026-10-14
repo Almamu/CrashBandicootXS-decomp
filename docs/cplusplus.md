@@ -748,6 +748,28 @@ checks the change is only a rename:
   yeti chases the polar player and is the polar actor category's "boss"
   slot, but the layout puts it here (`Polar::`, Yeti), and only the polar
   levels use it.
+- **`Game::Vehicles::Jetpack`** (`Q44Game8Vehicles7Jetpack`): the
+  jetpack levels' classes of vehicle.hpp (`JetpackPlayer`,
+  `JetpackCheckpointText`, `JetpackExplosion`, `JetpackShot`,
+  `JetpackPlane`, `JetpackBomber`, `JetpackCannonball`, `JetpackBalloon`,
+  `JetpackBalloonCrate` and its three kinds `JetpackHealthCrate`,
+  `JetpackTimeCrate`, `JetpackQuestionCrate`, `JetpackParachuteNitro`,
+  `JetpackRocket`, `JetpackRing`, `JetpackCollectedWumpa`), the
+  all-static `Airship` (airship.hpp) and its `AirshipFireball`
+  (boss_actors.hpp). All of src/vehicle/jetpack/, with the JetpackPlayer
+  hooks of the actor category driver. 221 symbols renamed, among them 17
+  vtables, no code change; ldscript.txt's 17 lines that place the vtable
+  sections are updated by hand. As for Polar, vehicle.hpp closes and
+  reopens the namespace around ActorSelf::AsJetpackPlayer's inline
+  definition, and actor_self.hpp forward declares JetpackPlayer in it.
+  The balloon crate kinds' C-linkage destructors, the gJetpack* globals
+  and the data tables stay global. airship.hpp's comments quote the new
+  names. No name hiding: no global is named `Jetpack` or like one of the
+  classes. Boundary calls: the layout puts the airship here (`Jetpack::`,
+  Airship), with its fireball, which boss_actors.hpp declares next to the
+  hovercraft's weapons; the hovercraft (`Game::Bosses`) and the HUD's
+  airship meter (hud_counters.cpp, `Airship::GetHpPercent`) reach these
+  classes through using declarations.
 
 ## Progress
 

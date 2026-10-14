@@ -12,6 +12,9 @@ extern "C" {
 }
 
 using Engine::Actor::ActorCategory;
+using Game::Vehicles::Jetpack::JetpackPlayer;
+using Game::Vehicles::Jetpack::JetpackRing;
+using Game::Vehicles::Jetpack::JetpackRocket;
 
 /* 0x08032480-0x080326E4 (#664 part 11g, include/vehicle.hpp), between
  * jetpack_crates.cpp and jetpack_collected_wumpa.cpp:

@@ -12,6 +12,8 @@ extern "C" {
 #include "bosses.h"
 }
 
+using Game::Vehicles::Jetpack::Airship;
+
 /* The HUD's stat widgets, the callees of Hud::Update (hud.cpp): UpdateBoss,
  * UpdateClock, UpdateLives, UpdateCrates, UpdateWumpa and
  * UpdatePercentCounters (include/hud.hpp). The first three were

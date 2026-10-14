@@ -12,6 +12,7 @@ extern "C" {
 }
 
 using Engine::Actor::ActorCategory;
+using Game::Vehicles::Jetpack::JetpackPlayer;
 using Game::Vehicles::Polar::PolarPlayer;
 
 /* The vehicle levels' category hooks before ActorSelf in the ROM

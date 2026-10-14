@@ -48,8 +48,10 @@ extern "C" {
  * `Q44Game8Vehicles5Polar`: `Update__Q44Game8Vehicles5Polar11PolarPlayer`,
  * `_vt.Q44Game8Vehicles5Polar11PolarPlayer` (in the section
  * `.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar11PolarPlayer`, which
- * ldscript.txt names) & co. The C-linkage functions, the globals, the
- * data tables and `struct spawn_arg` stay global. */
+ * ldscript.txt names) & co. The jetpack levels' classes are in
+ * Game::Vehicles::Jetpack the same way (`Q44Game8Vehicles7Jetpack`). The
+ * C-linkage functions, the globals, the data tables and `struct
+ * spawn_arg` stay global. */
 
 /* src/actor/inline_copies_actors.cpp: the C-linkage copies of the balloon crate
  * kinds' implicit destructors (below), which the g++-emitted
@@ -644,6 +646,13 @@ public:
 } // namespace Vehicles
 } // namespace Game
 
+namespace Game
+{
+namespace Vehicles
+{
+namespace Jetpack
+{
+
 /* The jetpack levels (7 vtable slots: HpActor's; the balloon crates
  * add an 8th). */
 
@@ -732,10 +741,21 @@ public:
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackPlayer) == 0x58);
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackPlayer) == 0x58);
 
-inline JetpackPlayer *ActorSelf::AsJetpackPlayer()
+} // namespace Jetpack
+} // namespace Vehicles
+} // namespace Game
+
+inline Game::Vehicles::Jetpack::JetpackPlayer *ActorSelf::AsJetpackPlayer()
 {
-    return (JetpackPlayer *)this;
+    return (Game::Vehicles::Jetpack::JetpackPlayer *)this;
 }
+
+namespace Game
+{
+namespace Vehicles
+{
+namespace Jetpack
+{
 
 /* The checkpoint banner, drawn at a fixed screen position. */
 class JetpackCheckpointText : public HpActor
@@ -1148,5 +1168,9 @@ public:
 };
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackCollectedWumpa) == 0x64);
+
+} // namespace Jetpack
+} // namespace Vehicles
+} // namespace Game
 
 #endif /* GUARD_VEHICLE_HPP */
