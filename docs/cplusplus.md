@@ -666,6 +666,25 @@ checks the change is only a rename:
   namespace holds only classes and the three inline helpers, and no
   global is named like them; the only global named `Player` was the
   class itself.
+- **`Game::Enemies`** (`Q34Game7Enemies`): `EnemyCtrl`,
+  `KnockedEnemyCtrl` and `PeriodicSpawner` (enemy_ctrl.hpp): all of
+  src/enemies/, with EnemyCtrl's 26 static spawners (src/level/
+  spawn_enemies.cpp, SpawnSeal included) and PeriodicSpawner::Spawn
+  (spawn_objects.cpp). 69 symbols renamed, among them the three vtables
+  (`_vt.Q34Game7Enemies9EnemyCtrl`, ...), no code change; ldscript.txt's
+  three lines that place their sections are updated by hand. The entity
+  spawn table (dispatch_table_16c6a4.cpp) names the spawners through
+  using declarations, and boss_ctrl.hpp's `DingodileSharkCtrl` derives
+  from `Game::Enemies::EnemyCtrl`. enemies.h's C-linkage functions
+  (GetSfxVolumeAt, ...) stay global. No name hiding: no global is named
+  `Enemies` or like the classes, and the player class is `Player` here
+  too (the namespace is `Game::Crash`). Boundary calls: the spawners live in
+  src/level/ but are EnemyCtrl's static members, so they move with the
+  class; `PeriodicSpawner` is a generic timer entity, but the ROM builds
+  it only for the seals (its one Spawn, with EnemyCtrl::SpawnSeal) and
+  it lives in src/enemies/, so it is the enemies'. The shark of
+  Dingodile's fight (`DingodileSharkCtrl`) is a boss controller and stays
+  with the bosses.
 
 ## Progress
 

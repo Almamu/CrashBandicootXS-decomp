@@ -10,6 +10,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Game::Enemies::PeriodicSpawner;
+
 /* PeriodicSpawner, the periodic trigger entity (include/enemy_ctrl.hpp),
  * ROM 0x0800CACC-0x0800CB64. g++ emits gPeriodicSpawnerVtable here. An
  * old_agbcp object (OLD_AGBCC_OBJS). */

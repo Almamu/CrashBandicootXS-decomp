@@ -11,6 +11,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Enemies::EnemyCtrl;
+using Game::Enemies::PeriodicSpawner;
+
 /*
  * ROM 0x0816C6A4-0x0816C814. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.

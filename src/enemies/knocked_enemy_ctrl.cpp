@@ -10,6 +10,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Game::Enemies::KnockedEnemyCtrl;
+
 /* KnockedEnemyCtrl, the knocked enemy's controller (include/enemy_ctrl.hpp),
  * ROM 0x0800CB64-0x0800CBF4. g++ emits gKnockedEnemyCtrlVtable here. An
  * old_agbcp object (OLD_AGBCC_OBJS). */

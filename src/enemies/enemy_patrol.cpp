@@ -4,6 +4,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Game::Enemies::EnemyCtrl;
+
 /* GitHub issue #9/#10: EnemyCtrl's patrol (include/enemy_ctrl.hpp),
  * called from Update's states 2, 13, 15 and 18
  * (docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md).

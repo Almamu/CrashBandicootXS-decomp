@@ -385,7 +385,7 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(DingodileProjectileCtrl) == 0x20);
  * another value. */
 #define DINGODILE_SHARK_STATE_START 0 // sets the motion across the level (record 3) every frame
 #define DINGODILE_SHARK_STATE_UNK1 1  // gone once past the level's edge; nothing enters it
-class DingodileSharkCtrl : public EnemyCtrl
+class DingodileSharkCtrl : public Game::Enemies::EnemyCtrl
 {
 public:
     DingodileSharkCtrl(); // CreateDingodileSharkCtrl

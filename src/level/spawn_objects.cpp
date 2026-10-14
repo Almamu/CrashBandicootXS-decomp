@@ -10,6 +10,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Enemies::EnemyCtrl;
+using Game::Enemies::PeriodicSpawner;
+
 /* The decoration, platform and seal-spawner spawners, between the
  * bosses' and the crates' (ROM 0x08021748-0x08021A4C; #664,
  * include/spawners.hpp). Built with old_agbcp. Since #915 the platforms',
