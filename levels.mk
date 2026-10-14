@@ -180,6 +180,20 @@ $(GENERATED_INCLUDE_DIR)/theme_palette_cycles.h.stamp: $(THEME_DEPS)
 $(GENERATED_INCLUDE_DIR)/theme_palette_cycles.h: $(GENERATED_INCLUDE_DIR)/theme_palette_cycles.h.stamp
 	@test -f $@ || python3 tools/levels.py palette-cycles $@
 
+# The boss levels' case labels per boss kind (level_bosses.h, `levels.py
+# bosses`, docs/levels.md "Boss levels"), for LevelState::GetBossIndex and
+# GetBossHealth, from levels.json's "boss_kind"; it checks each against the
+# bosses the level's rooms place and the types of the stages it plays.
+# Written only if it changed, behind a stamp.
+GENERATED_HEADERS += $(GENERATED_INCLUDE_DIR)/level_bosses.h
+$(GENERATED_INCLUDE_DIR)/level_bosses.h.stamp: data/levels/levels.json $(LEVEL_ROOM_JSONS) $(CATEGORY_DEPS) \
+	data/levels/entity_types.json tools/levels.py
+	@mkdir -p $(dir $@)
+	python3 tools/levels.py bosses $(GENERATED_INCLUDE_DIR)/level_bosses.h
+	@touch $@
+$(GENERATED_INCLUDE_DIR)/level_bosses.h: $(GENERATED_INCLUDE_DIR)/level_bosses.h.stamp
+	@test -f $@ || python3 tools/levels.py bosses $@
+
 # The level select's per-world tables, IsNextWorldOpen's cases and the page
 # macros (level_select_worlds.h, `levels.py worlds`, docs/levels.md
 # "Level-select pages" and "Partial pages"), from levels.json's "worlds" and

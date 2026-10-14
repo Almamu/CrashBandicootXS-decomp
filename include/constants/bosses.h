@@ -2,9 +2,10 @@
 #define GUARD_CONSTANTS_BOSSES_H
 
 /*
- * GetBossIndex: the boss of the current level (one per world's boss
- * level, LEVEL_DINGODILE..LEVEL_NEO_CORTEX), or BOSS_NONE. The HUD shows
- * the boss's icon, animation BOSS_HUD_ANIM_BASE + boss (InitHud).
+ * GetBossIndex: the boss of the current level (levels.json's "boss_kind",
+ * level_bosses.h; the ROM's are the world bosses LEVEL_DINGODILE..
+ * LEVEL_NEO_CORTEX), or BOSS_NONE. The HUD shows the boss's icon,
+ * animation BOSS_HUD_ANIM_BASE + boss (InitHud).
  * SpawnRedGem and friends hand over to SpawnCortexBossGem in
  * BOSS_NEO_CORTEX's level.
  */
