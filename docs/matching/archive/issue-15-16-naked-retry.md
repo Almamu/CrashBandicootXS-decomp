@@ -24,7 +24,7 @@ under both).
   state/counter/mode/phase bytes, orbit anchor). The x/y head and the
   anchor are both `struct orbit_vec`, so the spawners' paired
   `ldr; ldr; str; str` anchor copy is a struct copy (`ORBIT_POS`).
-- `include/action_obj.h` gained named fields only: `act.anims`
+- `include/game/crash/action_input.h` gained named fields only: `act.anims`
   (+0x04), the method slots `m10`/`m28`..`m48`, `act_part` fields
   (`rampXStart`/`rampXStep`/`rampXTarget`/`speedX`/`deadline`/`bumped`/`listCount`/
   `slippery`/`pushLeft`/`pushRight`) and `act_anim_bank.unk_0A`.

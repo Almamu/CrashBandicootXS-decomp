@@ -262,15 +262,15 @@ $(ELF): $(OBJS) $(LDSCRIPT)
 # docs/matching/archive/issue-24-boss-actor.md. All of them are C++ now,
 # built by old_agbcp (see "C++ objects" below), which, like old_agbcc,
 # has no -fprologue-bugfix option.
-OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
-                  $(C_BUILDDIR)/objects/sprite_obj.o \
-                  $(C_BUILDDIR)/save/game_progress.o \
+OLD_AGBCC_OBJS := $(C_BUILDDIR)/game/entities/sprite.o \
+                  $(C_BUILDDIR)/game/entities/sprite_obj.o \
+                  $(C_BUILDDIR)/game/level/game_progress.o \
                   $(C_BUILDDIR)/engine/gfx/oam_buffer.o \
                   $(C_BUILDDIR)/engine/sys/vram_dma_queue.o \
                   $(C_BUILDDIR)/engine/gfx/obj_vram_cursor.o \
                   $(C_BUILDDIR)/engine/gfx/palette_cache.o \
                   $(C_BUILDDIR)/engine/gfx/sprite_bank_set.o \
-                  $(C_BUILDDIR)/objects/entity.o \
+                  $(C_BUILDDIR)/game/entities/entity.o \
                   $(C_BUILDDIR)/engine/gfx/sprite_renderer.o \
                   $(C_BUILDDIR)/engine/sys/display.o \
                   $(C_BUILDDIR)/engine/gfx/fade.o \
@@ -278,130 +278,130 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/engine/text/wrapped_text.o \
                   $(C_BUILDDIR)/engine/actor/actor_category_init.o \
                   $(C_BUILDDIR)/engine/actor/actor_category_frame.o \
-                  $(C_BUILDDIR)/actor/actor_category_hooks.o \
-                  $(C_BUILDDIR)/actor/actor.o \
+                  $(C_BUILDDIR)/game/vehicles/actor_category_hooks.o \
+                  $(C_BUILDDIR)/game/entities/actor_self.o \
                   $(C_BUILDDIR)/engine/actor/actor_spawn_collected.o \
                   $(C_BUILDDIR)/engine/actor/actor_palette_cycle.o \
-                  $(C_BUILDDIR)/actor/anim_part.o \
-                  $(C_BUILDDIR)/actor/inline_copies_actors.o \
-                  $(C_BUILDDIR)/enemies/enemy_patrol.o \
-                  $(C_BUILDDIR)/enemies/enemy_ctrl_update.o \
-                  $(C_BUILDDIR)/objects/ground_sprite_collide.o \
-                  $(C_BUILDDIR)/objects/moving_sprite.o \
-                  $(C_BUILDDIR)/objects/moving_sprite_collide.o \
-                  $(C_BUILDDIR)/objects/ground_sprite.o \
-                  $(C_BUILDDIR)/crates/crate_list_update.o \
-                  $(C_BUILDDIR)/crates/crate_list_collide.o \
-                  $(C_BUILDDIR)/crates/crate_list.o \
-                  $(C_BUILDDIR)/objects/ctrl.o \
-                  $(C_BUILDDIR)/bosses/tiny.o \
-                  $(C_BUILDDIR)/enemies/enemy_ctrl.o \
-                  $(C_BUILDDIR)/enemies/periodic_spawner.o \
-                  $(C_BUILDDIR)/enemies/knocked_enemy_ctrl.o \
-                  $(C_BUILDDIR)/objects/effect_ctrl.o \
-                  $(C_BUILDDIR)/vehicle/polar/polar_player.o \
-                  $(C_BUILDDIR)/vehicle/jetpack/jetpack_spawn.o \
-                  $(C_BUILDDIR)/vehicle/jetpack/jetpack_player_update.o \
-                  $(C_BUILDDIR)/vehicle/jetpack/jetpack_collected_wumpa.o \
-                  $(C_BUILDDIR)/bosses/hovercraft_fireball.o \
-                  $(C_BUILDDIR)/bosses/hovercraft.o \
-                  $(C_BUILDDIR)/frontend/credits.o \
-                  $(C_BUILDDIR)/vehicle/polar/polar_nitro.o \
-                  $(C_BUILDDIR)/vehicle/jetpack/airship_map.o \
-                  $(C_BUILDDIR)/vehicle/jetpack/airship_touch.o \
-                  $(C_BUILDDIR)/bosses/mega_mix_update.o \
-                  $(C_BUILDDIR)/player/action_ctrl_moves.o \
+                  $(C_BUILDDIR)/game/entities/anim_part.o \
+                  $(C_BUILDDIR)/game/vehicles/actor_destructors.o \
+                  $(C_BUILDDIR)/game/enemies/enemy_patrol.o \
+                  $(C_BUILDDIR)/game/enemies/enemy_ctrl_update.o \
+                  $(C_BUILDDIR)/game/entities/ground_sprite_collide.o \
+                  $(C_BUILDDIR)/game/entities/moving_sprite.o \
+                  $(C_BUILDDIR)/game/entities/moving_sprite_collide.o \
+                  $(C_BUILDDIR)/game/entities/ground_sprite.o \
+                  $(C_BUILDDIR)/game/crates/crate_list_update.o \
+                  $(C_BUILDDIR)/game/crates/crate_list_collide.o \
+                  $(C_BUILDDIR)/game/crates/crate_list.o \
+                  $(C_BUILDDIR)/game/entities/ctrl.o \
+                  $(C_BUILDDIR)/game/bosses/tiny.o \
+                  $(C_BUILDDIR)/game/enemies/enemy_ctrl.o \
+                  $(C_BUILDDIR)/game/enemies/periodic_spawner.o \
+                  $(C_BUILDDIR)/game/enemies/knocked_enemy_ctrl.o \
+                  $(C_BUILDDIR)/game/entities/effect_ctrl.o \
+                  $(C_BUILDDIR)/game/vehicles/polar/polar_player.o \
+                  $(C_BUILDDIR)/game/vehicles/jetpack/jetpack_spawn.o \
+                  $(C_BUILDDIR)/game/vehicles/jetpack/jetpack_player_update.o \
+                  $(C_BUILDDIR)/game/vehicles/jetpack/jetpack_collected_wumpa.o \
+                  $(C_BUILDDIR)/game/bosses/hovercraft_fireball.o \
+                  $(C_BUILDDIR)/game/bosses/hovercraft.o \
+                  $(C_BUILDDIR)/game/ui/credits.o \
+                  $(C_BUILDDIR)/game/vehicles/polar/polar_nitro.o \
+                  $(C_BUILDDIR)/game/vehicles/jetpack/airship_map.o \
+                  $(C_BUILDDIR)/game/vehicles/jetpack/airship_touch.o \
+                  $(C_BUILDDIR)/game/bosses/mega_mix_update.o \
+                  $(C_BUILDDIR)/game/crash/action_ctrl_moves.o \
                   $(C_BUILDDIR)/engine/actor/bg_picture.o \
-                  $(C_BUILDDIR)/objects/ui_sprite.o \
-                  $(C_BUILDDIR)/vehicle/polar/yeti_update.o \
-                  $(C_BUILDDIR)/vehicle/polar/yeti_graphics.o \
-                  $(C_BUILDDIR)/player/player_collide.o \
-                  $(C_BUILDDIR)/player/player_reset.o \
-                  $(C_BUILDDIR)/player/player_update.o \
-                  $(C_BUILDDIR)/objects/part_list_collide.o \
+                  $(C_BUILDDIR)/game/entities/ui_sprite.o \
+                  $(C_BUILDDIR)/game/vehicles/polar/yeti_update.o \
+                  $(C_BUILDDIR)/game/vehicles/polar/yeti_graphics.o \
+                  $(C_BUILDDIR)/game/crash/player_collide.o \
+                  $(C_BUILDDIR)/game/crash/player_reset.o \
+                  $(C_BUILDDIR)/game/crash/player_update.o \
+                  $(C_BUILDDIR)/game/entities/part_list_collide.o \
                   $(C_BUILDDIR)/engine/gfx/palette_cycle.o \
-                  $(C_BUILDDIR)/hud/hud_part.o \
-                  $(C_BUILDDIR)/player/action_ctrl_event.o \
-                  $(C_BUILDDIR)/player/action_ctrl_update.o \
-                  $(C_BUILDDIR)/player/swim_ctrl_stroke.o \
-                  $(C_BUILDDIR)/menus/continue_prompt.o \
-                  $(C_BUILDDIR)/player/action_ctrl_states.o \
-                  $(C_BUILDDIR)/player/swim_ctrl.o \
-                  $(C_BUILDDIR)/player/input_ctrl.o \
-                  $(C_BUILDDIR)/bosses/cortex.o \
-                  $(C_BUILDDIR)/bosses/dingodile.o \
-                  $(C_BUILDDIR)/objects/platform_create.o \
-                  $(C_BUILDDIR)/objects/platform_collide.o \
-                  $(C_BUILDDIR)/objects/platform_contact.o \
-                  $(C_BUILDDIR)/objects/platform.o \
-                  $(C_BUILDDIR)/objects/platform_mover.o \
-                  $(C_BUILDDIR)/objects/camera_lead.o \
-                  $(C_BUILDDIR)/objects/launch_pad.o \
-                  $(C_BUILDDIR)/menus/level_select.o \
-                  $(C_BUILDDIR)/menus/level_select_pages.o \
-                  $(C_BUILDDIR)/menus/level_select_page_bg.o \
-                  $(C_BUILDDIR)/menus/zoom_bg.o \
-                  $(C_BUILDDIR)/menus/level_select_entry.o \
-                  $(C_BUILDDIR)/menus/level_select_cursor.o \
-                  $(C_BUILDDIR)/level/spawn_start_marker.o \
-                  $(C_BUILDDIR)/level/spawn_gems.o \
-                  $(C_BUILDDIR)/level/spawn_enemies.o \
-                  $(C_BUILDDIR)/level/spawn_bosses.o \
-                  $(C_BUILDDIR)/level/spawn_objects.o \
-                  $(C_BUILDDIR)/frontend/title_screen.o \
-                  $(C_BUILDDIR)/frontend/company_logos.o \
-                  $(C_BUILDDIR)/frontend/language_select_setup.o \
-                  $(C_BUILDDIR)/frontend/starfield.o \
+                  $(C_BUILDDIR)/game/ui/hud_part.o \
+                  $(C_BUILDDIR)/game/crash/action_ctrl_event.o \
+                  $(C_BUILDDIR)/game/crash/action_ctrl_update.o \
+                  $(C_BUILDDIR)/game/crash/swim_ctrl_stroke.o \
+                  $(C_BUILDDIR)/game/ui/continue_prompt.o \
+                  $(C_BUILDDIR)/game/crash/action_ctrl_states.o \
+                  $(C_BUILDDIR)/game/crash/swim_ctrl.o \
+                  $(C_BUILDDIR)/game/crash/input_ctrl.o \
+                  $(C_BUILDDIR)/game/bosses/cortex.o \
+                  $(C_BUILDDIR)/game/bosses/dingodile.o \
+                  $(C_BUILDDIR)/game/objects/platform_create.o \
+                  $(C_BUILDDIR)/game/objects/platform_collide.o \
+                  $(C_BUILDDIR)/game/objects/platform_contact.o \
+                  $(C_BUILDDIR)/game/objects/platform.o \
+                  $(C_BUILDDIR)/game/objects/platform_mover.o \
+                  $(C_BUILDDIR)/game/objects/camera_lead.o \
+                  $(C_BUILDDIR)/game/objects/launch_pad.o \
+                  $(C_BUILDDIR)/game/ui/level_select.o \
+                  $(C_BUILDDIR)/game/ui/level_select_pages.o \
+                  $(C_BUILDDIR)/game/ui/level_select_page_bg.o \
+                  $(C_BUILDDIR)/game/ui/zoom_bg.o \
+                  $(C_BUILDDIR)/game/ui/level_select_entry.o \
+                  $(C_BUILDDIR)/game/ui/level_select_cursor.o \
+                  $(C_BUILDDIR)/game/level/spawn_start_marker.o \
+                  $(C_BUILDDIR)/game/objects/spawn_gems.o \
+                  $(C_BUILDDIR)/game/enemies/spawn_enemies.o \
+                  $(C_BUILDDIR)/game/bosses/spawn_bosses.o \
+                  $(C_BUILDDIR)/game/objects/spawn_objects.o \
+                  $(C_BUILDDIR)/game/ui/title_screen.o \
+                  $(C_BUILDDIR)/game/ui/company_logos.o \
+                  $(C_BUILDDIR)/game/ui/language_select_setup.o \
+                  $(C_BUILDDIR)/game/ui/starfield.o \
                   $(C_BUILDDIR)/engine/gfx/graphics_package.o \
                   $(C_BUILDDIR)/engine/gfx/scaled_sprite.o \
-                  $(C_BUILDDIR)/hud/hud_init.o \
+                  $(C_BUILDDIR)/game/ui/hud_init.o \
                   $(C_BUILDDIR)/engine/text/font_glyph.o \
                   $(C_BUILDDIR)/engine/text/font_draw_text.o \
                   $(C_BUILDDIR)/engine/text/font.o \
-                  $(C_BUILDDIR)/hud/hud_counters.o \
-                  $(C_BUILDDIR)/save/save_menu_draw.o \
+                  $(C_BUILDDIR)/game/ui/hud_counters.o \
+                  $(C_BUILDDIR)/game/ui/save_menu_draw.o \
                   $(C_BUILDDIR)/engine/save/save_data.o \
                   $(C_BUILDDIR)/engine/save/save_transfer.o \
-                  $(C_BUILDDIR)/menus/pause_menu_collectibles.o \
-                  $(C_BUILDDIR)/menus/pause_menu_pages_init.o \
-                  $(C_BUILDDIR)/menus/power_dialog.o \
-                  $(C_BUILDDIR)/menus/power_dialog_draw.o \
-                  $(C_BUILDDIR)/menus/pause_menu.o \
-                  $(C_BUILDDIR)/level/spawn_gem_platforms.o \
-                  $(C_BUILDDIR)/level/entity_spawner.o \
-                  $(C_BUILDDIR)/level/bg_layer.o \
-                  $(C_BUILDDIR)/level/pooled_bg_layer.o \
-                  $(C_BUILDDIR)/level/tile_slot_pool.o \
-                  $(C_BUILDDIR)/level/bg_layer_base.o \
-                  $(C_BUILDDIR)/crates/crate_create.o \
-                  $(C_BUILDDIR)/cutscene/slideshow.o \
-                  $(C_BUILDDIR)/level/tile_cache.o \
-                  $(C_BUILDDIR)/level/entity_flags.o \
-                  $(C_BUILDDIR)/level/room_entities.o \
-                  $(C_BUILDDIR)/crates/crate_hit.o \
-                  $(C_BUILDDIR)/level/terrain_probe_axes.o \
-                  $(C_BUILDDIR)/crates/crate_break.o \
-                  $(C_BUILDDIR)/crates/crate_switches.o \
-                  $(C_BUILDDIR)/crates/crate_states.o \
-                  $(C_BUILDDIR)/crates/crate_update.o \
-                  $(C_BUILDDIR)/crates/crate_fields.o \
-                  $(C_BUILDDIR)/crates/crate.o \
-                  $(C_BUILDDIR)/crates/crate_reset.o \
-                  $(C_BUILDDIR)/crates/crate_time_trial.o \
-                  $(C_BUILDDIR)/pickups/wumpa_update.o \
-                  $(C_BUILDDIR)/pickups/extra_life.o \
-                  $(C_BUILDDIR)/pickups/wumpa.o \
-                  $(C_BUILDDIR)/pickups/stopwatch.o \
-                  $(C_BUILDDIR)/level/game_frame.o \
-                  $(C_BUILDDIR)/cutscene/cutscene_player.o \
-                  $(C_BUILDDIR)/level/bg_streamer.o \
-                  $(C_BUILDDIR)/level/play_room.o \
-                  $(C_BUILDDIR)/level/level_state.o \
-                  $(C_BUILDDIR)/level/level_query.o \
-                  $(C_BUILDDIR)/level/room_select.o \
-                  $(C_BUILDDIR)/level/spawn_crates.o \
-                  $(C_BUILDDIR)/level/spawn_pickups.o \
-                  $(C_BUILDDIR)/level/spawn_markers.o \
+                  $(C_BUILDDIR)/game/ui/pause_menu_collectibles.o \
+                  $(C_BUILDDIR)/game/ui/pause_menu_pages_init.o \
+                  $(C_BUILDDIR)/game/ui/power_dialog.o \
+                  $(C_BUILDDIR)/game/ui/power_dialog_draw.o \
+                  $(C_BUILDDIR)/game/ui/pause_menu.o \
+                  $(C_BUILDDIR)/game/objects/spawn_gem_platforms.o \
+                  $(C_BUILDDIR)/game/level/entity_spawner.o \
+                  $(C_BUILDDIR)/game/level/bg_layer.o \
+                  $(C_BUILDDIR)/game/level/pooled_bg_layer.o \
+                  $(C_BUILDDIR)/game/level/tile_slot_pool.o \
+                  $(C_BUILDDIR)/game/level/bg_layer_base.o \
+                  $(C_BUILDDIR)/game/crates/crate_create.o \
+                  $(C_BUILDDIR)/game/ui/slideshow.o \
+                  $(C_BUILDDIR)/game/level/tile_cache.o \
+                  $(C_BUILDDIR)/game/level/entity_flags.o \
+                  $(C_BUILDDIR)/game/level/room_entities.o \
+                  $(C_BUILDDIR)/game/crates/crate_hit.o \
+                  $(C_BUILDDIR)/game/level/terrain_probe_axes.o \
+                  $(C_BUILDDIR)/game/crates/crate_break.o \
+                  $(C_BUILDDIR)/game/crates/crate_switches.o \
+                  $(C_BUILDDIR)/game/crates/crate_states.o \
+                  $(C_BUILDDIR)/game/crates/crate_update.o \
+                  $(C_BUILDDIR)/game/crates/crate_fields.o \
+                  $(C_BUILDDIR)/game/crates/crate.o \
+                  $(C_BUILDDIR)/game/crates/crate_reset.o \
+                  $(C_BUILDDIR)/game/crates/crate_time_trial.o \
+                  $(C_BUILDDIR)/game/objects/wumpa_update.o \
+                  $(C_BUILDDIR)/game/objects/extra_life.o \
+                  $(C_BUILDDIR)/game/objects/wumpa.o \
+                  $(C_BUILDDIR)/game/objects/stopwatch.o \
+                  $(C_BUILDDIR)/game/level/game_frame.o \
+                  $(C_BUILDDIR)/game/ui/cutscene_player.o \
+                  $(C_BUILDDIR)/game/level/bg_streamer.o \
+                  $(C_BUILDDIR)/game/level/play_room.o \
+                  $(C_BUILDDIR)/game/level/level_state.o \
+                  $(C_BUILDDIR)/game/level/level_query.o \
+                  $(C_BUILDDIR)/game/level/room_select.o \
+                  $(C_BUILDDIR)/game/crates/spawn_crates.o \
+                  $(C_BUILDDIR)/game/objects/spawn_pickups.o \
+                  $(C_BUILDDIR)/game/level/spawn_markers.o \
                   $(C_BUILDDIR)/engine/link/link_handshake.o \
                   $(C_BUILDDIR)/engine/link/link_session_reset.o \
                   $(C_BUILDDIR)/engine/link/link_session.o
@@ -448,33 +448,33 @@ $(filter $(OLD_AGBCC_OBJS),$(CXX_OBJS)): CXX1 := $(CXX1_OLD)
 # keeps `#pragma interface`. entity.o (graphics.o until #767) is the one
 # key-method object the ROM has the copies in (Entity's inline methods,
 # DestroyEntity last).
-NO_IMPLEMENT_INLINES_OBJS := $(C_BUILDDIR)/actor/actor.o \
-                             $(C_BUILDDIR)/actor/actor_category_hooks.o \
+NO_IMPLEMENT_INLINES_OBJS := $(C_BUILDDIR)/game/entities/actor_self.o \
+                             $(C_BUILDDIR)/game/vehicles/actor_category_hooks.o \
                              $(C_BUILDDIR)/engine/actor/actor_palette_cycle.o \
                              $(C_BUILDDIR)/engine/actor/actor_spawn_collected.o \
-                             $(C_BUILDDIR)/actor/anim_part.o \
-                             $(C_BUILDDIR)/actor/inline_copies_actors.o \
-                             $(C_BUILDDIR)/bosses/dingodile.o \
-                             $(C_BUILDDIR)/crates/crate_update.o \
-                             $(C_BUILDDIR)/frontend/company_logos_ctor.o \
-                             $(C_BUILDDIR)/frontend/language_select.o \
-                             $(C_BUILDDIR)/menus/level_select.o \
-                             $(C_BUILDDIR)/objects/camera_lead.o \
-                             $(C_BUILDDIR)/objects/ground_sprite_collide.o \
-                             $(C_BUILDDIR)/objects/launch_pad.o \
-                             $(C_BUILDDIR)/objects/moving_sprite_collide.o \
-                             $(C_BUILDDIR)/objects/platform_contact.o \
-                             $(C_BUILDDIR)/objects/sprite.o \
-                             $(C_BUILDDIR)/pickups/extra_life.o \
-                             $(C_BUILDDIR)/pickups/wumpa.o \
-                             $(C_BUILDDIR)/pickups/stopwatch.o \
-                             $(C_BUILDDIR)/player/action_ctrl_update.o \
-                             $(C_BUILDDIR)/player/input_ctrl.o \
-                             $(C_BUILDDIR)/player/player_collide.o \
-                             $(C_BUILDDIR)/vehicle/jetpack/jetpack_crates.o \
-                             $(C_BUILDDIR)/vehicle/jetpack/jetpack_rocket.o \
-                             $(C_BUILDDIR)/vehicle/polar/polar_crate.o \
-                             $(C_BUILDDIR)/vehicle/polar/polar_pickups.o
+                             $(C_BUILDDIR)/game/entities/anim_part.o \
+                             $(C_BUILDDIR)/game/vehicles/actor_destructors.o \
+                             $(C_BUILDDIR)/game/bosses/dingodile.o \
+                             $(C_BUILDDIR)/game/crates/crate_update.o \
+                             $(C_BUILDDIR)/game/ui/company_logos_ctor.o \
+                             $(C_BUILDDIR)/game/ui/language_select.o \
+                             $(C_BUILDDIR)/game/ui/level_select.o \
+                             $(C_BUILDDIR)/game/objects/camera_lead.o \
+                             $(C_BUILDDIR)/game/entities/ground_sprite_collide.o \
+                             $(C_BUILDDIR)/game/objects/launch_pad.o \
+                             $(C_BUILDDIR)/game/entities/moving_sprite_collide.o \
+                             $(C_BUILDDIR)/game/objects/platform_contact.o \
+                             $(C_BUILDDIR)/game/entities/sprite.o \
+                             $(C_BUILDDIR)/game/objects/extra_life.o \
+                             $(C_BUILDDIR)/game/objects/wumpa.o \
+                             $(C_BUILDDIR)/game/objects/stopwatch.o \
+                             $(C_BUILDDIR)/game/crash/action_ctrl_update.o \
+                             $(C_BUILDDIR)/game/crash/input_ctrl.o \
+                             $(C_BUILDDIR)/game/crash/player_collide.o \
+                             $(C_BUILDDIR)/game/vehicles/jetpack/jetpack_crates.o \
+                             $(C_BUILDDIR)/game/vehicles/jetpack/jetpack_rocket.o \
+                             $(C_BUILDDIR)/game/vehicles/polar/polar_crate.o \
+                             $(C_BUILDDIR)/game/vehicles/polar/polar_pickups.o
 $(NO_IMPLEMENT_INLINES_OBJS): CC1FLAGS += -fno-implement-inlines
 
 # Objects built with -fno-rerun-loop-opt (one loop-optimizer pass).
@@ -496,7 +496,7 @@ $(NO_RERUN_LOOP_OPT_OBJS): CC1FLAGS += -fno-rerun-loop-opt
 # Update compile the same either way. SendToHud, which needs skip-blocks
 # (its two 1s share r4 around ClampFrame's `if`), StartPayout and UpdateHop
 # went to the start of wumpa.cpp, the next object in the ROM (#662 round 3).
-NO_CSE_SKIP_BLOCKS_OBJS := $(C_BUILDDIR)/pickups/wumpa_update.o
+NO_CSE_SKIP_BLOCKS_OBJS := $(C_BUILDDIR)/game/objects/wumpa_update.o
 $(NO_CSE_SKIP_BLOCKS_OBJS): CC1FLAGS += -fno-cse-skip-blocks
 
 # Objects built with -O1 instead of -O2: the whole of lib/agb_eeprom's

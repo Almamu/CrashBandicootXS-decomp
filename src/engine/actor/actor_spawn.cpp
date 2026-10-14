@@ -1,6 +1,6 @@
-#include "actor_self.hpp"
-#include "vehicle.hpp"
-#include "level_state.hpp"
+#include "game/entities/actor_self.hpp"
+#include "game/vehicles/vehicle.hpp"
+#include "game/level/level_state.hpp"
 #include "engine/actor/actor_spawns.hpp"
 #include "engine/actor/actor_category.hpp"
 
@@ -10,7 +10,7 @@ extern "C" {
 #include "engine/sys/memory.h"
 #include "engine/actor/actor_anim.h"
 #include "engine/actor/actor.h"
-#include "bosses.h"
+#include "game/bosses/bosses.h"
 #include "globals.h"
 }
 

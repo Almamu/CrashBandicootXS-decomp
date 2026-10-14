@@ -23,7 +23,7 @@ types, both now named and documented in `include/settings_sync.h`:
 - **`struct settings_sync_pump`** (0x220 bytes) - a transient SIO
   send/receive envelope wrapping a `save_data` copy.
   Allocated per "connecting..." spinner-dialog session
-  (`LinkExchangeSaveData`, `src/save/save_menu_draw.c`, parked) via
+  (`LinkExchangeSaveData`, `src/game/ui/save_menu_draw.c`, parked) via
   `SetSaveTransferRecord`/`ResetSaveTransfer` and torn down with it.
   `tmpl`/`cursor` stream a record's bytes out to the SIO session's
   ring buffer (`SendSaveTransferChunk`); `data`/`writePtr` receive the remote
@@ -53,7 +53,7 @@ settling at 0.
 `InitSaveMenu` (constructor) and `DestroySaveMenu` (destructor) turned out
 to double as the constructor/destructor for **both** the composite
 pause/options screen *and* the "connecting..." spinner dialog
-(`OpenSaveMenu`/`CloseSaveMenu`, `src/save/save_menu.c`,
+(`OpenSaveMenu`/`CloseSaveMenu`, `src/game/ui/save_menu.c`,
 already matched) - both allocate a `struct save_menu`
 (0xe4 bytes) and build the exact same `field_8c`/`field_90` pair, and
 `RunSaveMenu`'s blocking modal input loop (used only by the spinner
@@ -68,8 +68,8 @@ picked up two more named fields from this chunk: `field_20` (a
 
 All six hit the same unresolved gcc-2.9 scratch-register
 nondeterminism this project has documented at length already
-(`DrawPowerDialog`/`src/menus/power_dialog_draw.c`,
-`DrawSaveMenuTitle`/`src/save/save_menu_draw.c`) - every load/store,
+(`DrawPowerDialog`/`src/game/ui/power_dialog_draw.c`,
+`DrawSaveMenuTitle`/`src/game/ui/save_menu_draw.c`) - every load/store,
 branch and call is semantically confirmed, real bytes stay in the
 `asm/code_3_1_10_3_*.s` fragments listed below wrapped
 `.if NON_MATCHING == 0`, C reconstructions stay in-tree under
@@ -98,15 +98,15 @@ branch and call is semantically confirmed, real bytes stay in the
   but never byte-for-byte content; `ReceiveSaveTransferChunk`/`PollSaveTransfer` didn't
   converge on size either.
 - **`SaveGameToSlot`** (`asm/code_3_1_10_3_3698.s`, C in
-  `src/save/save_menu_input.c`) - the shared "commit or refresh
+  `src/game/ui/save_menu_input.c`) - the shared "commit or refresh
   row" step nine of this chunk's input handlers call into. The
   `handleAddr`-cached-pointer pattern that fixed the same class of gap
   in `InitSaveMenu`/`DestroySaveMenu`/`SaveMenuInput` below got this one to
   the ROM's exact byte size too, but not exact content.
 - **`DrawSaveMenuMain`** (`asm/code_3_1_10_3_3a60.s`, C in
-  `src/save/save_menu_input.c`) - the state-select label list
+  `src/game/ui/save_menu_input.c`) - the state-select label list
   draw. Same measure-then-draw icon shape as `DrawSaveMenuTitle`
-  (`src/save/save_menu_draw.c`, already parked) - a cached
+  (`src/game/ui/save_menu_draw.c`, already parked) - a cached
   `&gSmallFont` address pin (the same technique that worked for
   the constructor/destructor/dispatcher below) collided with a
   compiler-hoisted constant landing in the same register as the

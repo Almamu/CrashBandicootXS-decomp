@@ -38,7 +38,7 @@ pass's scope, so left completely untouched.
 
 ## Matched (24 functions, full clean `make compare` passing)
 
-`src/level/level_state.c` (`SetGemPlatform`-`PackSaveData`, 15 fns):
+`src/game/level/level_state.c` (`SetGemPlatform`-`PackSaveData`, 15 fns):
 `SetGemPlatform`/`SetBonusPlatform` (camera-position field setters),
 `SetCrateGemPos` (two-word position setter), `RequestGemPath`/`RequestBonusRound`
 (busy-flag setters gated on `IsInGemPath`/`IsInBonusRound`),
@@ -53,13 +53,13 @@ unpacker, refreshing its own snapshot first), `PackSaveData` (its
 packer inverse - see the update below, added after this doc's original
 pass).
 
-`src/level/level_state.c`: `GetLevelState` (lazy-allocates and returns
+`src/game/level/level_state.c`: `GetLevelState` (lazy-allocates and returns
 `gLevelStateSingleton`) - its own file since the still-raw
 `PlayRoom`/`RunRoom` pair sits on both sides of it in ROM order.
 
 `src/level/room_frame.c`: `UpdateRoomFrame` (the DMA3/VRAM refresh pass).
 
-`src/level/room.c` (`ClearRoomExit`-`ResetObjBuffers`, 5 fns):
+`src/game/level/room.c` (`ClearRoomExit`-`ResetObjBuffers`, 5 fns):
 `ClearRoomExit`/`RequestRoomExit`/`IsRoomExitRequested` (a boolean flag
 clear/set/get trio on `gRoomExitRequested`), `ResumeRoomAfterPause` (level-end
 teardown: DMA-copies the level's first palette word into `PLTT`,
@@ -108,7 +108,7 @@ vram-upload-cursor/OAM-shadow flush tail both `UpdateRoomFrame` and
   allocated block's pointer in r0 *across* the `bl InitCompanyLogos` call and
   only moves it to a callee-saved register afterward - only possible
   because `InitCompanyLogos` (now matched separately, in
-  `src/frontend/language_select.c`) was compiled in the same translation
+  `src/game/ui/language_select.c`) was compiled in the same translation
   unit as this function originally, so the compiler could prove it
   doesn't touch r0. Split across files, an ordinary C call must
   conservatively assume r0-r3 are clobbered and moves the pointer to
@@ -276,7 +276,7 @@ instructions rebuilding the `gBlendRegs` `REG_BLDCNT`/
 register-by-register as the original parked note described. What
 closed it was the same "one continuous opaque `asm volatile` island"
 technique `AllocVramTileBlock` (`src/engine/gfx/sprite_frame.cpp`)
-and `UpdateActorPaletteCycle` (`src/actor/actor.c`) established: instead
+and `UpdateActorPaletteCycle` (`src/game/entities/actor_self.c`) established: instead
 of fighting this compiler's natural register allocation instruction by
 instruction, the whole sequence (both the `if`- and `else`-branch
 bodies) is transcribed directly from the ROM disassembly as one literal
@@ -296,8 +296,8 @@ compiler silently dropped it from both the push and pop list
 (confirmed with a minimal isolated-compile repro:
 `push {r4, r5, r6, lr}` / `pop {r4, r5, r6}`, r7 missing from both).
 This is the same "gcc-2.9 r7-pin bug" already documented project-wide
-(`src/menus/power_dialog_draw.c`'s `DrawPowerDialog`,
-`src/level/spawn_bosses.c`'s `SpawnRoomExit`, among
+(`src/game/ui/power_dialog_draw.c`'s `DrawPowerDialog`,
+`src/game/bosses/spawn_bosses.c`'s `SpawnRoomExit`, among
 others) - an explicit `register T x asm("r7")` pin doesn't reliably
 survive here either. The fix was the same project-wide escape hatch
 those functions already use: mark the function `NAKED` and write the

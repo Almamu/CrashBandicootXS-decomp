@@ -8,7 +8,7 @@ claimed `settings_menu13.c`/`14.c` first, before this PR merged -
 resolved as a rename on merge to avoid an add/add filename collision.
 The whole five-file family was renumbered together (not just the two
 that literally collided) to keep it visually contiguous. (#575 has
-since given all of them descriptive names in `src/menus/`; see
+since given all of them descriptive names in `src/game/ui/`; see
 `tools/file_layout_plan.tsv` for the mapping. The rest of this note
 uses the new names.)
 
@@ -17,7 +17,7 @@ screen's top-level constructor/driver pair, its per-row list renderer
 and draw step, its five icon-row-group draw handlers, and the results
 sub-region constructor. All 12 live in what was `asm/code_3_1_10_7.s`
 (0x08004D74-0x08005A78, contiguous up to the already-matched
-`InitPauseCrystalsPage` in `src/menus/pause_menu_pages_init.c`) plus the single
+`InitPauseCrystalsPage` in `src/game/ui/pause_menu_pages_init.c`) plus the single
 isolated `DrawPauseFraction` (0x08005E5C-0x08005EF4, between
 `pause_menu_pages_init.o` and `pause_menu_widgets.o`).
 
@@ -68,7 +68,7 @@ some byte offsets by coincidence, per that header's own comment.
   screen owns (`field_c0`, `field_bc`, `iconsB0[3]`, `icons9c[5]`,
   `icons8c[4]`, `field_88`, in that order) via the same "re-probe an
   actor's own category-table slot 0x50/0x54" shape `DestroyPowerDialog`
-  (`src/menus/power_dialog_draw.c`) already established, then frees `self`
+  (`src/game/ui/power_dialog_draw.c`) already established, then frees `self`
   if bit 0 of `flags` is set.
 - **`AnimatePauseMenu`** - the icon-group reveal/cycle animation
   (`field_24`/`field_28` cycle through hiding one icon group per call,
@@ -84,7 +84,7 @@ some byte offsets by coincidence, per that header's own comment.
   then builds the five icon-widget sub-groups in order (delegating to
   `InitPauseCrystalsPage`/`AE8`/`B80`/`C58`/`D44`).
 
-New files: `src/menus/pause_menu.c` (`InitPauseMenu`,
+New files: `src/game/ui/pause_menu.c` (`InitPauseMenu`,
 `DestroyPauseMenu`, plus the parked functions below), `pause_menu_draw.c`
 (`AnimatePauseMenu`), `pause_menu_powers.c` (`DrawPausePowersPage`), `pause_menu_info.c`
 (`InitPauseMenuInfo`).
@@ -160,9 +160,9 @@ matched functions above and `docs/rom_map.md`'s `overlay_ui`
 investigation; none were guessed. Real bytes stay in the asm fragments
 below (each wrapped `.if NON_MATCHING == 0`); the NON_MATCHING C
 reconstructions live alongside the matched functions in
-`src/menus/pause_menu.c` (`RunPauseMenu`, `PauseMenuLoop`,
+`src/game/ui/pause_menu.c` (`RunPauseMenu`, `PauseMenuLoop`,
 `DrawPauseMenu`, `DrawPauseMenuRows`, `DrawPauseGemsPage`, `DrawPauseRelicsPage`) and
-`src/menus/pause_menu_widgets.c` (`DrawPauseFraction`).
+`src/game/ui/pause_menu_widgets.c` (`DrawPauseFraction`).
 
 - **`RunPauseMenu`** (`asm/code_3_1_10_7.s`) - the composite screen's
   top-level orchestrator: frees pending heap bytes, resets the audio
@@ -233,7 +233,7 @@ See `docs/status/overlay_ui.md` for the updated matched/parked lists.
 Closed out every function this issue still had parked
 (`RunPauseMenu`/`PauseMenuLoop`/`DrawPauseMenu`/`DrawPauseMenuRows`/`DrawPauseGemsPage`/
 `DrawPauseRelicsPage`/`DrawPauseFraction`) plus the four already-cross-referenced
-siblings in `src/menus/pause_menu_pages_init.c`
+siblings in `src/game/ui/pause_menu_pages_init.c`
 (`InitPausePowersPage`/`InitPauseGemsPage`/`InitPauseRelicsPage`/`InitPauseTimeTrialPage`) that hit the
 same difficulty class - all 11 now byte-exact matched, confirmed by a
 full clean `make compare` (`La suma coincide`).
@@ -324,8 +324,8 @@ The 12-function 0x08004D74-0x08005E5C sub-range this write-up focuses
 on is now fully matched (the 5 from the first pass plus all 7 parked
 ones from this pass). GitHub issue #7 itself tracks a wider 25-function
 range (`0x08004CB4`-`0x080060AC`) that also includes `InitPausePowersPage`/
-`InitPauseGemsPage`/`InitPauseRelicsPage`/`InitPauseTimeTrialPage` (`src/menus/
-pause_menu_pages_init.c`) and `PauseMenuVolumeDown`/`PauseMenuVolumeUp` (`src/menus/
+`InitPauseGemsPage`/`InitPauseRelicsPage`/`InitPauseTimeTrialPage` (`src/game/ui/
+pause_menu_pages_init.c`) and `PauseMenuVolumeDown`/`PauseMenuVolumeUp` (`src/game/ui/
 pause_menu_widgets.c`) - four settings-row icon-widget constructors and a
 per-row percentage inc/dec pair that were already checked off as
 "parked" on that issue's own checklist, and this same session's pass

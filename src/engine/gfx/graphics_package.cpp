@@ -1,4 +1,4 @@
-#include "sprite_obj.hpp"
+#include "game/entities/sprite_obj.hpp"
 #include "engine/gfx/graphics_package.hpp"
 extern "C" {
 #include "core.h"

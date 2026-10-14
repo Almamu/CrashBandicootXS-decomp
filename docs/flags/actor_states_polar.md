@@ -6,7 +6,7 @@ ActorSelf's constructor sets 0, and `SetState(st, idx)` sets it, zeroes
 left a number: it is the record's sequence index). Some code stores
 `state` directly, as the ROM does. The names sit next to each class:
 `POLAR_PLAYER_STATE_*`, `POLAR_AKU_AKU_STATE_*`, `POLAR_LAUNCHER_STATE_*`,
-`POLAR_PENGUIN_STATE_*` and `POLAR_ICICLE_STATE_*` in include/vehicle.hpp,
+`POLAR_PENGUIN_STATE_*` and `POLAR_ICICLE_STATE_*` in include/game/vehicles/vehicle.hpp,
 `LOGO_ACTOR_STATE_*` in include/frontend.hpp. The jetpack and hovercraft
 actors are a later PR.
 

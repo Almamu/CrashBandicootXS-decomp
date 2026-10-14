@@ -1,0 +1,543 @@
+#include "game/level/bg_layer.hpp"
+#include "game/bosses/boss_ctrl.hpp"
+#include "game/objects/pickups.hpp"
+#include "game/entities/ctrl.hpp"
+#include "game/entities/sprite_obj.hpp"
+#include "game/crash/player.hpp"
+#include "engine/audio/audio.hpp"
+#include "game/level/level_state.hpp"
+
+extern "C" {
+#include "engine/gfx/sprite_bank.h"
+#include "engine/util/util.h"
+#include "engine/sys/memory.h"
+#include "game/level/level.h"
+#include "game/entities/sprite_flags.h"
+#include "engine/gfx/sprite_piece_flags.h"
+#include "globals.h"
+#include "engine/util/math_util.h"
+}
+
+using Game::Bosses::OneShotAnimCtrl;
+using Game::Bosses::StompedHopPadCtrl;
+using Game::Bosses::TinyCtrl;
+using Game::Bosses::UnusedOneShotAnimCtrl;
+using Game::Crash::Player;
+using Game::Entities::CollidableList;
+using Game::Entities::Ctrl;
+using Game::Entities::MovingSprite;
+using Game::Level::LevelProgress;
+using Game::Objects::Pickups;
+
+/* Tiny's fight (GitHub issues #22 and #23), ROM 0x08018008-0x08018A30,
+ * built with old_agbcp (Makefile OLD_AGBCC_OBJS), like cortex.cpp right
+ * after it. Until #769 it was three files: tiny_update.cpp, tiny_hop_pad.cpp
+ * and the head of cortex.cpp; each class's methods end with its
+ * destructor and constructor, so the controllers' boundaries put these
+ * functions in one original unit.
+ *
+ * - TinyCtrl's (include/game/bosses/boss_ctrl.hpp, gTinyVtable) per-frame Update and
+ *   "enter state" SetState (issue #22, ROM 0x08018008-0x080187FC, formerly
+ *   asm/code_3_2_17_18008.s; details in
+ *   docs/matching/archive/issue-22-0x08018008-hopper.md): Tiny hops his
+ *   `part` along parabolic arcs (the 257-entry i*i>>8 table `squares`)
+ *   between gTouchableList's anchors, stomping them. PickHopTarget picks
+ *   the next anchor from a per-round table, SpawnFallingLeaves spawns a
+ *   falling hazard.
+ * - Two controllers (include/game/entities/ctrl.hpp, issue #22, ROM
+ *   0x080187FC-0x08018884): the stomped hop pad's, and OneShotAnimCtrl's
+ *   Update.
+ * - The one-shot animation controllers' constructors and destructors,
+ *   Tiny's HitStub (TinyHitStub) and StartHop, destructor and constructor (issue
+ *   #23, docs/matching/archive/issue-23-graphics.md).
+ *
+ * UNUSED - no caller anywhere in the ROM (checked the asm/ and expected/
+ * sources, every .c file under src/, and every word-aligned Thumb pointer
+ * in baserom.gba): UnusedOneShotAnimCtrl's constructor
+ * (CreateUnusedOneShotAnimCtrl). Matched anyway. */
+
+/* The player's HandleEvent (Player, include/game/crash/player.hpp). */
+static inline void HitPlayer(Player *pl)
+{
+    pl->HandleEvent(0, EVENT_HIT, 0);
+}
+
+/* `*flags &= mask` with an s32 mask: in place, g++ folds `~4` to the byte
+ * constant 0xFB, where the ROM has -5 (`movs #5; negs`). */
+static inline void ClearFlags(u8 *flags, s32 mask)
+{
+    *flags &= mask;
+}
+
+void TinyCtrl::Update(MovingSprite *part)
+{
+    struct aabb a;
+    struct aabb b;
+    s32 state;
+    s32 one;
+
+    if (stomped != -1) {
+        /* The cast, not AsMovingSprite(): through the inline, the item is
+         * loaded into r0 and copied to r4 (#855). */
+        MovingSprite *pad = (MovingSprite *)gTouchableList->items[stomped];
+        Ctrl *ctrl;
+
+        delete pad->mover;
+        ctrl = new StompedHopPadCtrl;
+        pad->mover = ctrl;
+        ctrl->Attach(pad);
+        stomped = -1;
+        gAudioContext->PlaySfx(SFX_UNKNOWN_39, 0x100);
+    }
+
+    if (this->state == TINY_STATE_REST) {
+        GetSpriteAttackBox(&a, gPlayer);
+        GetSpriteBodyBox(&b, part);
+        if (a.w != 0 && AabbW(&b) && AabbOverlaps(&b, &a) && gPlayer->kind == EVENT_ATTACK_SPIN)
+            SetState(part, TINY_STATE_HIT);
+    } else if (gPlayer->dead == 0) {
+        GetSpriteBodyBox(&a, gPlayer);
+        if (a.w == 0) {
+            GetSpriteAttackBox(&b, gPlayer);
+            a = b;
+        }
+        GetSpriteAttackBox(&b, part);
+        if (AabbW(&b) && a.w != 0 && AabbOverlaps(&b, &a))
+            HitPlayer(gPlayer);
+    }
+
+    state = this->state;
+    switch (state) {
+    case TINY_STATE_START:
+        ClearFlags(&part->f.flags, ~ENTITY_FLAG_CONTACT);
+        /* a named `one`: written as three plain `= 1`/`= 0` stores, the
+         * 0 is materialized first (it is CSE'd from the dead `& 0` of
+         * the byte store's expansion) */
+        one = 1;
+
+        part->kind = one;
+        anchor = one;
+        count = 0;
+        SetState(part, TINY_STATE_HOP_DOWN);
+        break;
+    case TINY_STATE_HOP_DOWN:
+    case TINY_STATE_HOP_DOWN_REST:
+    case TINY_STATE_DROP_IN:
+    case TINY_STATE_FALL_OUT:
+        {
+            s32 steps = --this->steps;
+            s32 x = dx * steps / total + this->x;
+            s32 t = Q8_DIV(steps, total);
+            s32 y = Q8_MUL(0x100 - squares[0x100 - t], dy) + this->y;
+
+            part->x = x;
+            part->y = y;
+            if (steps != 0)
+                break;
+            gAudioContext->PlaySfx(SFX_TINY_LAND, 0x100);
+            if (this->state == TINY_STATE_FALL_OUT) {
+                if (gLevelState->HasTornadoSpin())
+                    LevelProgress::RequestRoomExit();
+                SetState(part, TINY_STATE_GONE);
+            } else if (this->state == TINY_STATE_HOP_DOWN) {
+                SetState(part, TINY_STATE_STOMP);
+            } else if (this->state == TINY_STATE_DROP_IN) {
+                count = steps;
+                SetTargetAnim(part, 3);
+                nextState = TINY_STATE_STOMP_PAD;
+                SetState(part, TINY_STATE_ANIM);
+            } else {
+                gAudioContext->PlaySfx(SFX_UNKNOWN_3D, 0x100);
+                SetState(part, TINY_STATE_REST);
+            }
+            break;
+        }
+    case TINY_STATE_HOP_UP:
+    case TINY_STATE_HOP_UP_REST:
+    case TINY_STATE_LEAP_OFF:
+    case TINY_STATE_DEFEATED:
+        {
+            s32 steps = --this->steps;
+            s32 x = dx * steps / total + this->x;
+            s32 t = Q8_DIV(steps, total);
+            s32 y = Q8_MUL(squares[t], dy) + this->y;
+
+            part->x = x;
+            part->y = y;
+            if (steps != 0)
+                break;
+            if (this->state == TINY_STATE_DEFEATED)
+                SetState(part, TINY_STATE_FALL_OUT);
+            else if (this->state == TINY_STATE_HOP_UP)
+                SetState(part, TINY_STATE_HOP_DOWN);
+            else if (this->state == TINY_STATE_HOP_UP_REST)
+                SetState(part, TINY_STATE_HOP_DOWN_REST);
+            else
+                SetState(part, TINY_STATE_OFFSCREEN);
+            break;
+        }
+    case TINY_STATE_OFFSCREEN:
+        /* Here `nextState` is a frame countdown, not a state: the leaves
+         * fall 0x46 frames apart. */
+        if (nextState == 0) {
+            s32 timer = --this->timer;
+
+            if (timer == 0) {
+                SetState(part, TINY_STATE_DROP_IN);
+            } else {
+                nextState = 0x46;
+                SpawnFallingLeaves(part, timer);
+            }
+        }
+        nextState--;
+        break;
+    case TINY_STATE_STOMP:
+        if (part->animDone) {
+            if (++count > 3) {
+                count = 0;
+                SetState(part, TINY_STATE_HOP_UP_REST);
+            } else {
+                SetState(part, TINY_STATE_HOP_UP);
+            }
+        }
+        break;
+    case TINY_STATE_REST:
+        if (timer != 0) {
+            timer--;
+            break;
+        }
+        timer--;
+        SetTargetAnim(part, 0);
+        nextState = TINY_STATE_HOP_UP;
+        SetState(part, TINY_STATE_ANIM);
+        break;
+    case TINY_STATE_ANIM:
+        if (part->animDone)
+            SetState(part, nextState);
+    case TINY_STATE_WAIT:
+        if (--timer == 0)
+            SetState(part, nextState);
+        break;
+    case TINY_STATE_STOMP_PAD:
+        stomped = gTinyRoundAnchors[counter - 1];
+        SetState(part, TINY_STATE_HOP_UP);
+        break;
+    case TINY_STATE_HIT:
+        if (counter > 2)
+            SetState(part, TINY_STATE_DEFEATED);
+        if (part->animDone) {
+            SetState(part, TINY_STATE_LEAP_OFF);
+            gAudioContext->PlaySfx(SFX_JUMP, 0x100);
+        }
+        break;
+    }
+}
+
+/* Sets the frame, clamped to the current animation's frame count. */
+static inline void SetFrame(MovingSprite *part, s32 frame)
+{
+    const struct sprite_bank *bank = part->bank;
+    s32 count = bank->anims[part->tag].frameCount;
+
+    CLAMP_INDEX(frame, count);
+    part->frame = frame;
+}
+
+void TinyCtrl::SetState(MovingSprite *part, s32 next)
+{
+    switch (next) {
+    case TINY_STATE_OFFSCREEN:
+        nextState = 0; // OFFSCREEN's leaf countdown, not a state
+        timer = 4;
+    case TINY_STATE_DROP_IN:
+        anchor = gTinyRoundAnchors[counter - 1];
+    case TINY_STATE_HOP_DOWN:
+    case TINY_STATE_HOP_DOWN_REST:
+        {
+            /* Rounds 11 and 13 also move Tiny onto the pad's x, through
+             * Entity::SetPos with the y unchanged, as EnemyCtrl's motion
+             * updaters do (enemy_ctrl.cpp, #662 round 5). The y load is
+             * a value held in r0 while `pad` is live, which keeps `pad`
+             * off r0, its preference (#662 round 4: set_preference from
+             * `ldr pad, [addr]`), and puts it in the ROM's r2 and `x`
+             * in r1; after reload, reload_cse_regs deletes the y store as
+             * a no-op and flow2 its load. Written as `part->x = x`,
+             * `pad` takes r0 (pins on `pad` and `x` until round 4). */
+            MovingSprite *pad;
+            s32 x;
+
+            if (next == TINY_STATE_HOP_DOWN)
+                SetTargetAnim(part, 2);
+            else
+                SetTargetAnim(part, 1);
+            SetFrame(part, 4);
+            pad = gTouchableList->items[anchor]->AsMovingSprite();
+            x = pad->x;
+            this->x = x;
+            if (next == TINY_STATE_DROP_IN || next == TINY_STATE_OFFSCREEN)
+                part->SetPos(x, part->y);
+            this->y = pad->y - INT_TO_Q8(36);
+            goto hop;
+        }
+    case TINY_STATE_HOP_UP:
+    case TINY_STATE_HOP_UP_REST:
+        {
+            MovingSprite *pad;
+            /* `ax` is needed: inlined, the instructions are reordered */
+            s32 ax;
+            s32 ay;
+            s32 y;
+
+            anchor = PickHopTarget();
+            SetTargetAnim(part, 4);
+            pad = gTouchableList->items[anchor]->AsMovingSprite();
+            ax = pad->x;
+            ay = pad->y;
+            y = ay - INT_TO_Q8(36);
+            this->x = (ax + part->x) >> 1;
+            if (y >= part->y)
+                y = part->y - INT_TO_Q8(89);
+            else
+                y = ay - INT_TO_Q8(125);
+            this->y = y;
+            goto hop;
+        }
+    case TINY_STATE_LEAP_OFF:
+        this->y = -INT_TO_Q8(48);
+        this->x = part->x;
+    hop:
+        StartHop(part);
+        break;
+    case TINY_STATE_REST:
+        SetTargetAnim(part, 6);
+        timer = 0xB4;
+        break;
+    case TINY_STATE_HIT:
+        gAudioContext->PlaySfx(SFX_BOSS_HIT, 0x100);
+        if (++counter > 2) {
+            s32 x = part->x;
+
+            this->y = part->y - INT_TO_Q8(100);
+            this->x = x + INT_TO_Q8(100);
+            StartHop(part);
+        }
+        HitStub(part);
+        SetTargetAnim(part, 7);
+        break;
+    case TINY_STATE_DEFEATED:
+        {
+            MovingSprite *pad = gTouchableList->items[2]->AsMovingSprite();
+            s32 x = pad->x;
+            s32 y = pad->y - INT_TO_Q8(24);
+
+            if (!gLevelState->HasTornadoSpin())
+                Pickups::SpawnPowerTornadoSpin(0xFFFF, Q8_TO_INT(x), Q8_TO_INT(y), 0);
+            break;
+        }
+    case TINY_STATE_FALL_OUT:
+        {
+            s32 x = part->x;
+
+            this->x = x;
+            this->y = INT_TO_Q8(gLevelLayers->layer0->heightPx) + INT_TO_Q8(64);
+            this->x = x + INT_TO_Q8(100);
+            StartHop(part);
+            break;
+        }
+    }
+    SetMode(next);
+}
+
+/* Picks the hop target: the anchor nearest the player selects a column
+ * of this round's/current anchor's gTinyHopTargets row. */
+s32 TinyCtrl::PickHopTarget()
+{
+    s32 nearest = 0;
+    s32 best = 0xFFFFFF;
+    s32 i;
+
+    for (i = 0; i < gTouchableList->count; i++) {
+        MovingSprite *pad = gTouchableList->items[i]->AsMovingSprite();
+        s32 px = gPlayer->x;
+        s32 py = gPlayer->y;
+        s32 ax = pad->x;
+        s32 ay = pad->y;
+        s32 d = ABS_BRANCHLESS(ax - px) + ABS_BRANCHLESS(ay - py);
+
+        if (d < best) {
+            best = d;
+            nearest = i;
+        }
+    }
+    return gTinyHopTargets[anchor * 5 + nearest + counter * 25];
+}
+
+/* Spawns a falling hazard (a gCollidableList part driven by a
+ * OneShotAnimCtrl) at the `n`th third of the way from `part` towards
+ * the player. */
+void TinyCtrl::SpawnFallingLeaves(MovingSprite *part, s32 n)
+{
+    MovingSprite *p = MovingSprite::Create(0xFFFF, 0, 0, 0);
+    Ctrl *ctrl;
+    /* `x` is needed: inlined, the code is 2 instructions longer */
+    s32 x;
+
+    p->bank = gSpriteBankSet->Bank(55);
+    p->StartAnim(5);
+    ctrl = new OneShotAnimCtrl;
+    p->palette = p->GetAnimPaletteSlot();
+    p->mover = ctrl;
+    ctrl->Attach(p);
+    p->f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
+    CollidableList()->Add(p);
+
+    /* the ROM materializes 0x80 before storing the 0s */
+    s32 k = 0x80;
+
+    p->speedY = 0;
+    p->rampY.start = 0;
+    p->rampY.step = k;
+    p->rampY.target = k;
+
+    s32 x0 = part->x;
+    /* `y` is needed: inlined, the instructions are reordered */
+    s32 y;
+
+    x = x0 + (gPlayer->x - x0) * (n - 1) / 3;
+    y = INT_TO_Q8(gLevelLayers->layer0->y);
+    p->x = x;
+    p->y = y;
+    p->kind = EVENT_HIT;
+
+    /* two masks, not folded to ~0x44; the -5 is derived from the 1 */
+    s32 m = ~ENTITY_FLAG_CONTACT;
+
+    m &= p->f.flags;
+    m &= ~ENTITY_FLAG_VULNERABLE;
+    p->f.flags = m;
+    gAudioContext->PlaySfx(SFX_UNKNOWN_13, 0x100);
+}
+
+/* State 0 plays animation 8 and moves to state 1. State 1 sinks the pad
+ * 4 pixels a frame until it is 32 pixels below layer 0's bottom edge,
+ * then moves to state 2, where it stays.
+ *
+ * The sinking step sets the position through Entity::SetPos with the
+ * x unchanged, as EnemyCtrl's motion updaters do (enemy_ctrl.cpp,
+ * #662 round 5). The x load is `part`'s fifth reference, which ranks
+ * it above `this` in global-alloc (#662 rounds 3-4: `this` 6
+ * references over 30 insns, 0.40, `part` 4 over 21, 0.38; the counts
+ * are flow's, taken before the x store and load go), so they get the
+ * ROM's r2 and r3; after reload, reload_cse_regs deletes the x store
+ * as a no-op and flow2 its load. Written as `part->y = y`, `this`
+ * takes r2 and `part` r4 (a pin on `part` until round 4; the
+ * permuter's zero scores used a redundant copy of `part`). */
+void StompedHopPadCtrl::Update(MovingSprite *part)
+{
+    s32 y;
+
+    switch (state) {
+    case STOMPED_HOP_PAD_STATE_START:
+        state = STOMPED_HOP_PAD_STATE_SINK;
+        SetTargetAnim(part, 8);
+        break;
+    case STOMPED_HOP_PAD_STATE_SINK:
+        y = part->y + INT_TO_Q8(4);
+        part->SetPos(part->x, y);
+        if (y >= INT_TO_Q8(gLevelLayers->layer0->heightPx) + INT_TO_Q8(32))
+            state = STOMPED_HOP_PAD_STATE_GONE;
+        break;
+    case STOMPED_HOP_PAD_STATE_GONE:
+        break;
+    }
+}
+
+StompedHopPadCtrl::~StompedHopPadCtrl()
+{
+}
+
+StompedHopPadCtrl::StompedHopPadCtrl()
+{
+}
+
+/* Marks the sprite object gone once its animation has played through. */
+void OneShotAnimCtrl::Update(MovingSprite *part)
+{
+    if (part->animDone)
+        part->MarkGone();
+}
+
+OneShotAnimCtrl::OneShotAnimCtrl()
+{
+}
+
+OneShotAnimCtrl::~OneShotAnimCtrl()
+{
+}
+
+/* Marks the sprite object gone once its animation has played through,
+ * as OneShotAnimCtrl::Update above does. */
+void UnusedOneShotAnimCtrl::Update(MovingSprite *part)
+{
+    if (part->animDone)
+        part->MarkGone();
+}
+
+/* UNUSED - see the top of the file. */
+UnusedOneShotAnimCtrl::UnusedOneShotAnimCtrl()
+{
+}
+
+UnusedOneShotAnimCtrl::~UnusedOneShotAnimCtrl()
+{
+}
+
+/* Empty hook for Tiny taking a hit. TinyCtrl::SetState's case 9
+ * (above; Update enters it when the player's attack box hits
+ * Tiny, and it plays SFX_BOSS_HIT and counts the hit) calls it directly,
+ * between the hop set-up and the anim-7 call, with the same part argument
+ * as StartHop below. It is in no method table, so nothing shows what the
+ * hook was meant to do. */
+void TinyCtrl::HitStub(MovingSprite *part)
+{
+}
+
+/* Starts a hop from (x, y) to the part's position, facing it. The ROM
+ * clears and sets the mirror bit in two steps (`& -0x11`, then `| 0x10`),
+ * through the byte; a bitfield store of 1 is one `orr`. */
+void TinyCtrl::StartHop(MovingSprite *part)
+{
+    /* `px` is needed: inlined, the code is 1 instruction longer */
+    s32 px = part->x;
+
+    if (x <= px) {
+        u8 *p = &part->mirror;
+        s32 m = -0x11;
+
+        m &= *p;
+        m |= 0x10;
+        *p = m;
+    } else {
+        part->mirrorFlags.mirrorX = 0;
+    }
+    steps = 0x1A;
+    total = 0x1A;
+    dy = part->y - y;
+    dx = part->x - x;
+}
+
+TinyCtrl::~TinyCtrl()
+{
+    delete[] squares;
+}
+
+/* The hop's squares table: i * i >> 8 for i = 0..0x100. */
+TinyCtrl::TinyCtrl()
+{
+    s32 i;
+
+    stomped = -1;
+    squares = new s16[0x101];
+    for (i = 0; i <= 0x100; i++)
+        squares[i] = Q8_MUL(i, i);
+}

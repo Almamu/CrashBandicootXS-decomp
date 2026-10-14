@@ -15,7 +15,7 @@
 
 /* The link session the link IRQ handlers and the save transfer work on:
  * made by SaveMenu's constructor (`new LinkSession`), deleted by its
- * destructor (src/save/save_menu_input.cpp). Defined in
+ * destructor (src/game/ui/save_menu_input.cpp). Defined in
  * src/engine/sys/iwram_data.cpp. The C++ files see it as its class,
  * LinkSession (link_session.hpp); C sees a tag. */
 #ifdef __cplusplus
@@ -33,7 +33,7 @@ extern struct link_session *gLinkSession;
 #endif
 
 /* Set by LinkSession::ResetState, cleared by LinkExchangeSaveData
- * (src/save/save_menu_draw.cpp). Defined in src/engine/sys/iwram_data.cpp. */
+ * (src/game/ui/save_menu_draw.cpp). Defined in src/engine/sys/iwram_data.cpp. */
 extern u8 gLinkSessionReset;
 
 /* The CRC-16 table MakeLinkHandshakeId and LinkSession::HandleSerial hash with

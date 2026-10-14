@@ -9,7 +9,7 @@ Update or RunState calls as `(this->*stateFuncs[state])()`, so `state`
 is the table index and each name is its method's.
 
 The names sit next to each class: the jetpack actors' in
-include/vehicle.hpp, the airship's and hovercraft's parts in
+include/game/vehicles/vehicle.hpp, the airship's and hovercraft's parts in
 include/boss_actors.hpp. The polar run's actors are in
 [actor_states_polar.md](actor_states_polar.md). The airship and the
 hovercraft themselves (the all-static `Airship` and `Hovercraft`) aren't

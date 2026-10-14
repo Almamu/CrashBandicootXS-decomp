@@ -1,0 +1,142 @@
+#include "game/ui/menus.hpp"
+#include "engine/text/font.hpp"
+#include "engine/audio/audio.hpp"
+#include "engine/sys/key_input.hpp"
+#include "engine/sys/frame_limiter.hpp"
+
+extern "C" {
+#include "engine/sys/system.h"
+#include "engine/text/text.h"
+#include "globals.h"
+#include "core.h"
+}
+
+using Engine::Sys::FrameLimiter;
+using Engine::Text::Font;
+using Game::Entities::UiSprite;
+using Game::Ui::PowerDialog;
+
+/* The power dialog (GitHub issue #8; PowerDialog, menus.hpp): a power's
+ * name and description over the scrolling sky, shown by the four
+ * Show*Dialog wrappers (power_dialog_draw.cpp) when a boss gives Crash a
+ * power. This file has Show, the constructor and Loop. */
+
+/* Reserves a font's tiles in OBJ VRAM. The same helper as
+ * LevelSelect::Run's (level_select.cpp). */
+static inline void IconReserve(Font **m)
+{
+    gObjVramCursor->Reserve((*m)->tileCount << 5);
+}
+
+/* Runs the dialog to completion: resets the display, the palette cache
+ * and both fonts, builds the dialog with the two texts, runs it (fade in,
+ * wait for START, fade out) and deletes it. Once a NAKED transcription;
+ * see docs/matching/archive/issue-4-6-8-naked-retry.md. */
+void PowerDialog::Show(s32 title, s32 desc, s32 type)
+{
+    PowerDialog *dialog;
+
+    mem_free_bytes(0xC0000000);
+    FrameLimiter::WaitForVBlank();
+    BACKDROP_COLOR = 0;
+    *(vu16 *)REG_ADDR_DISPCNT = 0;
+    gPaletteCache->FreeUnlockedSlots();
+    gSmallFont->ResetPalette();
+    gLargeFont->ResetPalette();
+    gObjVramCursor->baseTile = 0;
+    gObjVramCursor->Reset();
+    gObjVramCursor->Reset();
+    gSmallFont->SetTileBase(0);
+    IconReserve(&gSmallFont);
+
+    /* `v` is needed: inlined, the code is 1 instruction longer */
+    u32 v = gSmallFont->tileCount;
+
+    gLargeFont->SetTileBase(v);
+    IconReserve(&gLargeFont);
+    gObjVramCursor->Mark();
+    dialog = new PowerDialog(GetUiText(title), GetUiText(desc), type);
+    dialog->Loop();
+    delete dialog;
+    gPaletteCache->FreeUnlockedSlots();
+    mem_free_bytes(0xC0000000);
+}
+
+/* The constructor: alpha blending at full fade (BLDY 16, so Loop fades
+ * it in), BG0 and the OBJs on, the two texts, the sky background, and the
+ * power's icon (animation `type` of sprite bank 0x1C8) at the screen's
+ * centre,
+ * then BG0's registers and the intro song. */
+PowerDialog::PowerDialog(const u8 *titleText, const u8 *descText, s32 type) : bg(0, 0x1f, 0, 3)
+{
+    blend.raw = 0;
+    blend.bits.effect = 3;
+    blend.bits.bdFirst = 1;
+    blend.bits.bg0First = 1;
+    blend.bits.bg1First = 1;
+    blend.bits.bg2First = 1;
+    blend.bits.bg3First = 1;
+    blend.bits.objFirst = 1;
+    bldy.evy = 16;
+    *(vu32 *)REG_ADDR_BLDCNT = blend.raw;
+    *(vu16 *)REG_ADDR_BLDY = bldy.evy;
+    dispcnt.raw = 0;
+    dispcnt.bits.objMap1D = 1;
+    dispcnt.bits.mode = DISPCNT_MODE_0;
+    dispcnt.bits.bg0 = 1;
+    dispcnt.bits.obj = 1;
+    this->titleText = titleText;
+    this->descText = descText;
+    bg.Load(&gMenuSkyBg);
+    frame = 0;
+
+    UiSprite *s = new UiSprite;
+
+    icon = s;
+    SetIconBank(s, 38);
+    s->tag = type;
+    s->ResetFrameTimer();
+    s->ResetFrameIndex();
+    s->SetAnimDone(0);
+    icon->x = INT_TO_Q8(DISPLAY_CENTER_X);
+    icon->y = INT_TO_Q8(DISPLAY_CENTER_Y);
+    icon->palette = icon->GetAnimPaletteSlot();
+    REG_BG0CNT = bg.GetControl();
+    *(vu32 *)REG_ADDR_BG0HOFS = 0;
+    gAudioContext->PlaySong(SONG_INTRO);
+}
+
+/* PowerDialog::Loop (C++ since the #664 cleanup; power_dialog_loop.cpp
+ * until #771), the power
+ * dialog's fade and confirm loop: steps BLDY's level down to 0 (drawing,
+ * committing and animating every step), redraws every frame until START
+ * is newly pressed, steps the level back up to 0x10, and finally sets
+ * REG_DISPCNT's shadow to 0x40 and commits it.
+ *
+ * Built with old_agbcp (Makefile OLD_AGBCC_OBJS; old_agbcc as C): it
+ * loads the 0x1f mask before the byte it tests, the old compiler's
+ * tell. */
+void PowerDialog::Loop()
+{
+    while (bldy.evy != 0) {
+        bldy.evy--;
+        Draw();
+        CommitFrame();
+        Animate();
+    }
+    do {
+        Draw();
+        CommitFrame();
+        Animate();
+        gInput->Update();
+    } while (!(gKeys.half.pressed & START_BUTTON));
+    while (bldy.evy != 0x10) {
+        bldy.evy++;
+        Draw();
+        CommitFrame();
+        Animate();
+    }
+    dispcnt.raw = 0;
+    dispcnt.bits.objMap1D = 1;
+    CommitFrame();
+}

@@ -71,7 +71,7 @@ Transcribed straight from the confirmed-correct ROM disassembly instead.
 Full clean `make compare` (`La suma coincide`) confirms the NAKED
 transcription byte-exact.
 
-## `SpawnRoomEntities` - NAKED transcription, `src/level/room_entities.c`
+## `SpawnRoomEntities` - NAKED transcription, `src/game/level/room_entities.c`
 
 Follow-up pass on the entry directly above: the full instruction-level
 trace was finished this time (every field, offset, branch and call
@@ -176,17 +176,17 @@ unmodified.
 Full clean `make compare` (`La suma coincide`) confirms the NAKED
 transcription byte-exact. `CountCrateEntities`, which used to share
 `asm/code_3_2_17_255d4.s` with `SpawnRoomEntities`, was unaffected by this
-pass and stayed parked `NON_MATCHING` in `src/level/entity_flags.c` at
+pass and stayed parked `NON_MATCHING` in `src/game/level/entity_flags.c` at
 the time - it has since been matched as real C (the whole raw file is
 now gone) - see
 [docs/matching/archive/issue-41-game-loop-25894.md](issue-41-game-loop-25894.md).
 
-## `UpdateGameFrame` - NAKED transcription, `src/level/game_frame.c`
+## `UpdateGameFrame` - NAKED transcription, `src/game/level/game_frame.c`
 
 Picked up the last big raw piece of the `UpdateGameFrame`-`MainLoop`
 cluster: `UpdateGameFrame` itself (ROM `0x080225A0`-`0x08022BF0`, ~730
 instructions), called once a frame from `MainLoop`
-(`src/system/main_loop.cpp`) with `self` = `gLevelState` - the same
+(`src/game/level/main_loop.cpp`) with `self` = `gLevelState` - the same
 per-level state object `EndBonusRound`/`SetCheckpointAtPlayer` (`bonus_round.c`) and
 the `self+0x80`-`0xc4`/`+2` accessor family (`level_state.c`) already
 operate on. `docs/matching.md`'s original entry for this chunk (search
@@ -312,7 +312,7 @@ converted to this project's suffix-less-Thumb-mnemonic convention and
 every named label renumbered to GNU local numeric labels, with no
 semantic changes. Full clean `make compare` (`La suma coincide`)
 confirms the transcription byte-exact; `make NON_MATCHING=1 report`
-compiles the new `src/level/game_frame.c` warning-free.
+compiles the new `src/game/level/game_frame.c` warning-free.
 
 ## Later pass: `SpawnRoomEntities` is real C
 

@@ -7,7 +7,7 @@ NAKED) and `DispensePolarWumpa`-`PolarPlayerStateBoost` in `polar_player_states.
 ([issue-50-actor-bc68.md](./issue-50-actor-bc68.md)). This pass did the
 first seven functions, the whole of what was left in
 `asm/code_3_2_20_8b7c_ac28.s`. They are now real C in
-`src/actor/actor_factory.c`, and the raw file is retired.
+`src/game/vehicles/polar/polar_actor_factory.c`, and the raw file is retired.
 
 | function | what it is |
 |---|---|

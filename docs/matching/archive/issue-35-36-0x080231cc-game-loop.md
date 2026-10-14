@@ -6,9 +6,9 @@ Both issues cover one contiguous, un-split raw block (formerly
 was already matched in an earlier pass), issue #36 lists
 `ClearTimeTrial`-`CheckAllCratesBroken` (all 25). Together they're exactly this
 file's 49 functions, `0x080231CC`-`0x08023488` (`CheckAllCratesBroken` itself
-ends at `0x080234E8`, where `src/level/level_state.o` picks up).
+ends at `0x080234E8`, where `src/game/level/level_state.o` picks up).
 
-The block sits immediately after `src/level/level_state.c`'s own
+The block sits immediately after `src/game/level/level_state.c`'s own
 existing functions (`FreezeLevelClock`-`HasTurboRun`) in ROM, with no gap -
 `ldscript.txt` already links `level_state.o` directly before what was
 `asm/code_3_2_17_231cc.o`. All 49 functions turned out to be a direct

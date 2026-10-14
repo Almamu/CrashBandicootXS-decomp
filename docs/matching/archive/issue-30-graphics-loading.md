@@ -385,7 +385,7 @@ the ROM disassembly instead - confirmed byte-identical against the ROM
 bytes (compared via `arm-none-eabi-objdump` on both the isolated
 compile and the raw ROM disassembly reassembled standalone) before
 integrating. Cut out of `asm/code_3_2_17_1e990.s` (was the first
-function in that file) into the new `src/level/spawn_start_marker.c`,
+function in that file) into the new `src/game/level/spawn_start_marker.c`,
 with `ldscript.txt` updated to place the new object immediately before
 the now-trimmed raw file (which starts at `SpawnCrystal` instead).
 
@@ -666,7 +666,7 @@ crashbandicootxs.map && make compare` (`La suma coincide`).
 
 The last raw stretch of this issue, `asm/code_3_2_17_1e990.s`
 (`0x0801EA5C`-`0x0801EF0C`, six functions), is now real C in
-`src/level/spawn_gems.c`, and the raw file is retired.
+`src/game/objects/spawn_gems.c`, and the raw file is retired.
 
 These are the "trigger effect type N" spawners the fifth pass flagged
 as likely to hit the same register-rotation gap that parked

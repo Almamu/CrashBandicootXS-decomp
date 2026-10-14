@@ -6,9 +6,9 @@ closed and one draft got much closer.
 
 | Function | File | Before | Now | Status |
 |---|---|---|---|---|
-| `DrawPauseFraction` (#7) | `src/menus/pause_menu_widgets.c` | 14 | match (both compilers) | **Closed** |
+| `DrawPauseFraction` (#7) | `src/game/ui/pause_menu_widgets.c` | 14 | match (both compilers) | **Closed** |
 | `ResetLinkSessionState` (#4) | `src/engine/link/link_session_reset.c` (split) | 136 | 51 (same size, old_agbcc + `-fno-rerun-loop-opt`) | Draft updated |
-| `SpawnFlamethrowerLabAssistant` (#31) | `src/level/spawn_enemies.c` | 4 | 4 | Note added |
+| `SpawnFlamethrowerLabAssistant` (#31) | `src/game/enemies/spawn_enemies.c` | 4 | 4 | Note added |
 
 ## `DrawPauseFraction`: closed
 

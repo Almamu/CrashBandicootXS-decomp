@@ -1,6 +1,6 @@
 #include "engine/gfx/obj_tile_allocator.hpp"
 #include "engine/sys/vram_dma_queue.hpp"
-#include "sprite_obj.hpp"
+#include "game/entities/sprite_obj.hpp"
 #include "engine/gfx/sprite_oam_queue.hpp"
 #include "engine/gfx/sprite_frame_cache.hpp"
 #include "engine/gfx/category_sprite_sheet.hpp"

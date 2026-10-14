@@ -1,0 +1,266 @@
+/* LevelSelectCursor (include/game/ui/level_select.hpp), the level-select screen's
+ * cursor (`LevelSelect::panel`). It glides between entries along a
+ * Bresenham line (two steps per frame), plays an idle animation cycle at
+ * random intervals, and grows in (state 4) / shrinks away (state 5) as an
+ * affine OBJ drawn straight into the OAM shadow buffer.
+ *
+ * UNUSED - no `bl`/`.4byte` reference in asm/, data/ or src/, and no
+ * Thumb pointer anywhere in the ROM: IsHidden, IsGrowing and MoveTo (Park
+ * has it inlined). Matched anyway.
+ *
+ * GitHub issue #29; split from level_select_widgets.cpp (#767), same flags
+ * (old_agbcc). */
+
+#include "graphics.hpp"
+#include "game/ui/level_select.hpp"
+#include "engine/audio/audio.hpp"
+
+extern "C" {
+#include <agb_syscall.h>
+#include "engine/util/math_util.h"
+}
+
+using Engine::Gfx::LevelSelectCursorZoom;
+using Engine::Gfx::OamBuffer;
+using Game::Entities::UiSprite;
+using Game::Ui::LevelSelectCursor;
+
+/* One affine parameter; OBJ matrix `m` is entries 4m..4m+3. An inline so
+ * that the value is loaded before the address is computed. */
+static inline void SetAffineParam(OamBuffer *buf, s32 n, u16 v)
+{
+    buf->table[n].attr[3] = v;
+}
+
+LevelSelectCursor::LevelSelectCursor()
+{
+    UiSprite *p = new UiSprite;
+
+    part = p;
+    p->bank = gSpriteBankSet->Bank(48);
+    p->StartAnim(0);
+    part->palette = part->GetAnimPaletteSlot();
+    gPaletteCache->Lock(part->bank->anims[part->tag].paletteId);
+    SetPos(DISPLAY_CENTER_X, DISPLAY_ART_Y + 0x35);
+    oam.y = line.y0 - 0x20;
+    oam.affineMode = OAM_AFFINE_MODE_AFFINE;
+    oam.objMode = OAM_OBJ_MODE_NORMAL;
+    oam.mosaic = 0;
+    oam.bpp = 0;
+    oam.shape = 0;
+    oam.x = line.x0 - 0x20;
+    oam.matrixLo = 0;
+    oam.matrixBit3 = 0;
+    oam.matrixBit4 = 0;
+    oam.size = 3;
+    oam.tileNum = 0x3C0;
+    oam.priority = 0;
+    oam.palette = part->palette;
+    LoadTaggedAsset(LevelSelectCursorZoom::tiles, OBJ_VRAM0 + 0x7800);
+    affine.angle = 0;
+    scale = LEVEL_SELECT_ZOOM_MIN;
+    state = LEVEL_SELECT_CURSOR_STATE_GROW;
+}
+
+/* Per-frame update. Steps the glide; states 0-3 are the idle animation
+ * cycle (0 waits for `timer`, then plays gLevelSelectCursorAnims[1..3] and
+ * back to [0]), 4 grows the cursor to 1:1, 5 shrinks it away. */
+void LevelSelectCursor::Update()
+{
+    Glide();
+    switch (state) {
+    case LEVEL_SELECT_CURSOR_STATE_IDLE:
+        part->AdvanceAnim();
+        if (timer != 0) {
+            timer--;
+            break;
+        }
+        if (part->frame == 0) {
+            state = LEVEL_SELECT_CURSOR_STATE_CYCLE1;
+            part->StartAnim(gLevelSelectCursorAnims[1]);
+        }
+        break;
+    case LEVEL_SELECT_CURSOR_STATE_CYCLE1:
+        part->AdvanceAnim();
+        if (part->animDone) {
+            state = LEVEL_SELECT_CURSOR_STATE_CYCLE2;
+            part->StartAnim(gLevelSelectCursorAnims[2]);
+        }
+        break;
+    case LEVEL_SELECT_CURSOR_STATE_CYCLE2:
+        part->AdvanceAnim();
+        if (part->animDone) {
+            state = LEVEL_SELECT_CURSOR_STATE_CYCLE3;
+            part->StartAnim(gLevelSelectCursorAnims[3]);
+        }
+        break;
+    case LEVEL_SELECT_CURSOR_STATE_CYCLE3:
+        part->AdvanceAnim();
+        if (part->animDone) {
+            state = LEVEL_SELECT_CURSOR_STATE_IDLE;
+            part->StartAnim(gLevelSelectCursorAnims[0]);
+            ResetIdleTimer();
+        }
+        break;
+    case LEVEL_SELECT_CURSOR_STATE_GROW:
+        if (scale <= INT_TO_Q8(1) - 1) {
+            scale += speed;
+        } else {
+            scale = INT_TO_Q8(1);
+            state = LEVEL_SELECT_CURSOR_STATE_IDLE;
+            ResetIdleTimer();
+        }
+        break;
+    case LEVEL_SELECT_CURSOR_STATE_SHRINK:
+        if (scale > LEVEL_SELECT_ZOOM_MIN)
+            scale -= speed;
+        else
+            scale = LEVEL_SELECT_ZOOM_MIN;
+        break;
+    }
+}
+
+/* Draw step. While growing/shrinking the cursor is drawn by hand as an
+ * affine OBJ with its own matrix; otherwise the sprite part draws it. */
+void LevelSelectCursor::Draw()
+{
+    SetEntityPixelPos(part, line.x0, line.y0);
+    switch (state) {
+    case LEVEL_SELECT_CURSOR_STATE_GROW ... LEVEL_SELECT_CURSOR_STATE_SHRINK:
+        if (scale > LEVEL_SELECT_ZOOM_MIN) {
+            s32 idx;
+
+            oam.x = line.x0 - 0x20;
+            oam.y = line.y0 - 0x20;
+            idx = gOamBuffer->matrixCount++;
+            oam.matrixLo = idx;
+            oam.matrixBit3 = (idx >> 3) & 1;
+            oam.matrixBit4 = (idx >> 4) & 1;
+            SetMatrix();
+            SetAffineParam(gOamBuffer, idx * 4 + 0, matrix[0]);
+            SetAffineParam(gOamBuffer, idx * 4 + 1, matrix[1]);
+            SetAffineParam(gOamBuffer, idx * 4 + 2, matrix[2]);
+            SetAffineParam(gOamBuffer, idx * 4 + 3, matrix[3]);
+            gOamBuffer->Add(&oam);
+        }
+        break;
+    default:
+        part->DrawWithOffset(0, 0);
+        break;
+    }
+}
+
+/* Builds the OBJ affine matrix for the current zoom. */
+void LevelSelectCursor::SetMatrix()
+{
+    /* the OBJ's step: 1 / scale */
+    u16 s = Q8_DIV(INT_TO_Q8(1), scale);
+
+    affine.sx = s;
+    affine.sy = s;
+    ObjAffineSet(&affine, matrix, 1, 2);
+}
+
+/* UNUSED. Shrunk away (state 5). */
+u8 LevelSelectCursor::IsHidden()
+{
+    return state == LEVEL_SELECT_CURSOR_STATE_SHRINK;
+}
+
+/* UNUSED. Growing (state 4). */
+u8 LevelSelectCursor::IsGrowing()
+{
+    return state == LEVEL_SELECT_CURSOR_STATE_GROW;
+}
+
+/* Starts the shrink-away. */
+void LevelSelectCursor::Hide()
+{
+    state = LEVEL_SELECT_CURSOR_STATE_SHRINK;
+    scale = INT_TO_Q8(1);
+    Update();
+}
+
+/* Parks the cursor at the bottom-left or bottom-right corner, whichever
+ * side of the screen it is on (page turn). */
+void LevelSelectCursor::Park()
+{
+    struct vec2 pos;
+
+    if (Q8_TO_INT(part->x) <= DISPLAY_CENTER_X)
+        pos.x = 0x14;
+    else
+        pos.x = DISPLAY_RIGHT(0x14);
+    pos.y = DISPLAY_BOTTOM(0x18);
+    MoveToNow(&pos);
+    timer = 0;
+}
+
+/* Glide: two Bresenham steps per frame towards (x1, y1). */
+void LevelSelectCursor::Glide()
+{
+    s32 i;
+
+    for (i = 1; i >= 0; i--) {
+        if (line.x0 != line.x1 || line.y0 != line.y1)
+            StepBresenhamLine(&line);
+    }
+}
+
+/* Arrived at the glide target. */
+u8 LevelSelectCursor::HasArrived()
+{
+    u8 done = FALSE;
+
+    if (line.x0 == line.x1 && line.y0 == line.y1)
+        done = TRUE;
+    return done;
+}
+
+/* Starts a glide to (x, y). The zoom step covers the zoom's range (from
+ * the smallest to 1:1) in half the distance along the major axis: the
+ * frames the glide takes at two steps a frame. */
+void LevelSelectCursor::Move(screen_x_t x, screen_y_t y)
+{
+    line.x1 = x;
+    line.y1 = y;
+    if (line.x0 != x || line.y0 != y) {
+        s32 d;
+
+        InitBresenhamLine(&line);
+        if (line.flag)
+            d = (line.x1 - line.x0) / 2;
+        else
+            d = (line.y1 - line.y0) / 2;
+        MAKE_ABS(d);
+        speed = (INT_TO_Q8(1) - LEVEL_SELECT_ZOOM_MIN) / d;
+    }
+    if (state == LEVEL_SELECT_CURSOR_STATE_IDLE)
+        ResetIdleTimerNow();
+}
+
+/* UNUSED (inlined into Park). */
+void LevelSelectCursor::MoveTo(struct vec2 *pos)
+{
+    MoveToNow(pos);
+}
+
+/* Places the cursor at (x, y) at once. */
+void LevelSelectCursor::SetPos(screen_x_t x, screen_y_t y)
+{
+    line.x0 = x;
+    line.y0 = y;
+    SetEntityPixelPos(part, x, y);
+}
+
+void LevelSelectCursor::ResetIdleTimer()
+{
+    ResetIdleTimerNow();
+}
+
+/* Destructor (`LevelSelect::panel`). */
+LevelSelectCursor::~LevelSelectCursor()
+{
+    gPaletteCache->Unlock(part->bank->anims[part->tag].paletteId);
+    delete part;
+}

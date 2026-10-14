@@ -1,4 +1,4 @@
-#include "vehicle.hpp"
+#include "game/vehicles/vehicle.hpp"
 
 extern "C" {
 #include "core.h"

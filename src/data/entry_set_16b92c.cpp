@@ -1,8 +1,8 @@
-#include "player.hpp"
+#include "game/crash/player.hpp"
 
 extern "C" {
 #include "core.h"
-#include "objects.h"
+#include "game/entities/objects.h"
 }
 
 /*

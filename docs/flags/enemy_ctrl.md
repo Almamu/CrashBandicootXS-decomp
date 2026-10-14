@@ -1,6 +1,6 @@
 # `EnemyCtrl::state` and `mode`: the enemy controller (#843)
 
-The enemy controller (`class EnemyCtrl`, include/enemy_ctrl.hpp) has two
+The enemy controller (`class EnemyCtrl`, include/game/enemies/enemy_ctrl.hpp) has two
 small-number fields:
 
 - `state` (+0x74) picks what Update does each frame. A spawner sets it

@@ -1,6 +1,6 @@
 # `SaveMenu::state` and the blink bit (#843)
 
-The save menu (`class SaveMenu`, include/save_menu.hpp) has two fields
+The save menu (`class SaveMenu`, include/game/ui/save_menu.hpp) has two fields
 named here.
 
 ## `state` (+0x0C)

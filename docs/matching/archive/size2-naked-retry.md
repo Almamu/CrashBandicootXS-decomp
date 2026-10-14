@@ -5,9 +5,9 @@ This pass took three drafts whose size was nearly right:
 
 | Function | File | Start | Result |
 |---|---|---|---|
-| `LoadCreditsLogos` (#64) | `src/frontend/credits.c` (already old_agbcc) | 114 hw, 420 vs 416 B | **Closed**, real C, old_agbcc |
-| `CreateCrate` (#13) | `src/crates/crate_create.c` | 471 hw, 1388 vs 1396 B | **Closed**, real C, old_agbcc (`crate_create.o` joined `OLD_AGBCC_OBJS`; it is the only function in the file) |
-| `ResolvePlatformCollision` (#25) | `src/objects/platform_collide.c` | 565 hw, 1640 vs 1648 B | Not closed, draft unchanged, note updated |
+| `LoadCreditsLogos` (#64) | `src/game/ui/credits.c` (already old_agbcc) | 114 hw, 420 vs 416 B | **Closed**, real C, old_agbcc |
+| `CreateCrate` (#13) | `src/game/crates/crate_create.c` | 471 hw, 1388 vs 1396 B | **Closed**, real C, old_agbcc (`crate_create.o` joined `OLD_AGBCC_OBJS`; it is the only function in the file) |
+| `ResolvePlatformCollision` (#25) | `src/game/objects/platform_collide.c` | 565 hw, 1640 vs 1648 B | Not closed, draft unchanged, note updated |
 
 ## LoadCreditsLogos: GCSE hashes non-volatile asm
 

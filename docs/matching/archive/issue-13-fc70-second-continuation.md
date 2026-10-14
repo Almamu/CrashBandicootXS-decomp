@@ -47,7 +47,7 @@ matches both.
     without that, this compiler reused r4 in place for the `self[0x38]
     != 0` check just above it, corrupting the address this block
     reads/writes).
-- **`IsCrateInsideRect`** (`src/crates/crate.c`, prepended ahead of the
+- **`IsCrateInsideRect`** (`src/game/crates/crate.c`, prepended ahead of the
   already-matched `ResolvePlayerCollisions` run - it's immediately ROM-adjacent, so
   it joins that file rather than getting its own) - an AABB-overlap
   test between `self`'s own table-driven half-width/half-height box
@@ -115,7 +115,7 @@ matches both.
   `0x0800FF0C` (still raw, trimmed `asm/code_3_2_17_e560_ff0c.o`),
   `0x08010480` (new `src/crates/crate_draw.o`), `0x080104E4` (still
   raw, new `asm/code_3_2_17_e560_104e4.o`), and `0x08010674` (now the
-  start address of `src/crates/crate.o`, moved from its old
+  start address of `src/game/crates/crate.o`, moved from its old
   `0x080106DC`).
 - `ldscript.txt` - `crate_draw.o` and `code_3_2_17_e560_104e4.o`
   inserted between the trimmed `code_3_2_17_e560_ff0c.o` and

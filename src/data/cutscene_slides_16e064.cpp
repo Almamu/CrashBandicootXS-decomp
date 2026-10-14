@@ -1,4 +1,4 @@
-#include "cutscene.hpp"
+#include "game/ui/cutscene.hpp"
 #include "graphics.hpp"
 
 extern "C" {

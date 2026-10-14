@@ -1,6 +1,6 @@
 #include "graphics.hpp"
 #include "engine/gfx/graphics_package.hpp"
-#include "menus.hpp"
+#include "game/ui/menus.hpp"
 
 extern "C" {
 #include "core.h"

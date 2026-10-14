@@ -1,6 +1,6 @@
 # InputCtrl: `state` and `dirState` (#843)
 
-InputCtrl (include/input_ctrl.hpp) is the player's controller in the hover
+InputCtrl (include/game/crash/input_ctrl.hpp) is the player's controller in the hover
 room (`ROOM_KIND_HOVER`, `PLAYER_CTRL_MODE_INPUT`). The names sit next to
 the class.
 

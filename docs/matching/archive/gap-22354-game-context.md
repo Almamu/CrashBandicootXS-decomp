@@ -4,7 +4,7 @@ These are the two functions between issue #33's chunk
 (`spawn_pickups.c`, which ends with the game-context
 constructor `InitLevelState`) and `UpdateGameFrame` (`game_frame.c`). No
 issue covered them. Both are now real C in
-`src/level/level_cutscene.c`, and `asm/code_3_2_17_22354.s` is
+`src/game/level/level_cutscene.c`, and `asm/code_3_2_17_22354.s` is
 retired. Both match under either compiler. The file is built with the
 current agbcc like its neighbours.
 

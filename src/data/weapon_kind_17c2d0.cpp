@@ -1,9 +1,9 @@
-#include "airship.hpp"
+#include "game/vehicles/jetpack/airship.hpp"
 
 extern "C" {
 #include "core.h"
 #include "engine/actor/actor_anim.h"
-#include "bosses.h"
+#include "game/bosses/bosses.h"
 }
 
 using Game::Vehicles::Jetpack::Airship;
@@ -13,7 +13,7 @@ using Game::Vehicles::Jetpack::Airship;
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* Airship::attacks (include/airship.hpp): the airship's attack
+/* Airship::attacks (include/game/vehicles/jetpack/airship.hpp): the airship's attack
  * parameters (struct airship_attack, bosses.h).
  * SpawnAirship picks one by gAirshipLevel. */
 const struct airship_attack Airship::attacks[6] = {

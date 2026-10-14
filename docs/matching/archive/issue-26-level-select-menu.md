@@ -1,7 +1,7 @@
 # Issue #26: 0x0801B85C-0x0801CEE0 (level-select screen and two small classes)
 
 All 25 functions of the former `asm/code_3_2_17_188d0_1b85c.s` now live in
-`src/menus/level_select.c` (the `.s` file is retired). **22 are
+`src/game/ui/level_select.c` (the `.s` file is retired). **22 are
 plain C; 3 (`InitLevelSelect`, `LoadLevelSelectRecord`, `LevelSelectLoop`) are NAKED
 transcriptions** with their C reconstructions kept under
 `#if NON_MATCHING`. Verified with a full clean

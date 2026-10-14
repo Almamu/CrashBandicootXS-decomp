@@ -147,21 +147,21 @@ its row when a later change makes the header's type match.
 
 | File | Symbol | Local form | Header form | Why |
 |---|---|---|---|---|
-| src/frontend/title_screen.cpp | `RandRange` | `s32 RandRange_s32(s32 max)` | `u16 RandRange(s32 max)` (util.h) | with the `u16` return, DrawLogoPieces's two stack slots swap |
-| src/menus/level_select.cpp | `gLevelSelectGemPos`, `gLevelSelectTrialIconPos` | `struct vec2 gLevelSelectGemPos_rw` (and `_rw` for the other) | `const struct vec2` (menus.hpp) | the constructor reads each twice across calls and the ROM loads it again each time; through the `const` object gcc keeps the first loads in registers |
+| src/game/ui/title_screen.cpp | `RandRange` | `s32 RandRange_s32(s32 max)` | `u16 RandRange(s32 max)` (util.h) | with the `u16` return, DrawLogoPieces's two stack slots swap |
+| src/game/ui/level_select.cpp | `gLevelSelectGemPos`, `gLevelSelectTrialIconPos` | `struct vec2 gLevelSelectGemPos_rw` (and `_rw` for the other) | `const struct vec2` (menus.hpp) | the constructor reads each twice across calls and the ROM loads it again each time; through the `const` object gcc keeps the first loads in registers |
 | src/engine/text/font.cpp | `GetPaletteSlot` | `s32 GetPaletteSlot_s32(u8 *cache, s32 recordId)` | `u8 PaletteCache::GetSlot(s32 id)` (sprite_obj.hpp) | ResetPalette uses the slot as a word; through the `u8` return the shift is `lsl #0x18; lsr #0x14` for the ROM's `lsl #4` |
-| src/level/play_room.cpp | `AddPaletteCycle` | `void AddPaletteCycle_fx(..., struct fx_direction direction)` | `PaletteCycles::Add(..., struct byte_arg direction)` (part_list.hpp) | RunRoom passes the direction as a one-byte struct stored with `strb`; `fx_direction`'s zero-length pad makes it BLKmode, so the slot address (`add rN, sp, #4`) comes before the constant as in the ROM, where a `byte_arg` or `u8` is built in a register first |
-| src/bosses/dingodile.cpp | `GetSpriteAttackBox` | `struct aabb GetSpriteAttackBox_s(void *part)` | explicit destination (objects.h) | assigned to a box that already holds the body box, the struct return fills a temporary and copies it, as the ROM's frame and its `ldmia`/`stmia` copy do |
+| src/game/level/play_room.cpp | `AddPaletteCycle` | `void AddPaletteCycle_fx(..., struct fx_direction direction)` | `PaletteCycles::Add(..., struct byte_arg direction)` (part_list.hpp) | RunRoom passes the direction as a one-byte struct stored with `strb`; `fx_direction`'s zero-length pad makes it BLKmode, so the slot address (`add rN, sp, #4`) comes before the constant as in the ROM, where a `byte_arg` or `u8` is built in a register first |
+| src/game/bosses/dingodile.cpp | `GetSpriteAttackBox` | `struct aabb GetSpriteAttackBox_s(void *part)` | explicit destination (objects.h) | assigned to a box that already holds the body box, the struct return fills a temporary and copies it, as the ROM's frame and its `ldmia`/`stmia` copy do |
 | src/engine/actor/actor_category_init.cpp, src/engine/actor/actor_category_stats.cpp | `SetCheckpointAtPlayer` | `void SetCheckpointAtPlayer_1(void *self)` | `LevelState::SetCheckpointAtPlayer(u8 checkpointFlags)` (level_state.hpp) | these callers pass the state only and leave r1 as it is; the definition stores the flag |
 
 Not aliases, but kept for the same reason, next to the real declaration
 in the header:
 
-- `include/crate_list.hpp`'s `struct CrateGridNodeInit`, an untyped view
+- `include/game/crates/crate_list.hpp`'s `struct CrateGridNodeInit`, an untyped view
   of the grid nodes that ResetGrid zeroes them through: through the real
   `CrateGridNode *` fields gcc takes the zeroing stores as possible writes
   to the list's `nodes` and reloads it (docs/casts/crate_grid.md).
-- `include/crate.hpp`'s `ApplyCrateCollision`, `Crate::ApplyCollision`
+- `include/game/crates/crate.hpp`'s `ApplyCrateCollision`, `Crate::ApplyCollision`
   under its C name, with the three flags as one-byte structs so they are
   stored with `strb`, as CollisionQueue::Resolve does in the ROM.
 

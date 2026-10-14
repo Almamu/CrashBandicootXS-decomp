@@ -1,4 +1,4 @@
-#include "frontend.hpp"
+#include "game/ui/frontend.hpp"
 
 extern "C" {
 #include "engine/gfx/tagged_asset.h"

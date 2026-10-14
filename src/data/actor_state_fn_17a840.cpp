@@ -1,4 +1,4 @@
-#include "yeti.hpp"
+#include "game/vehicles/polar/yeti.hpp"
 
 using Game::Vehicles::Polar::Yeti;
 

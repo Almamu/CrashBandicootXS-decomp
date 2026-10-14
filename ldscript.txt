@@ -51,147 +51,147 @@ SECTIONS
         build/crashbandicootxs/src/engine/save/save_data.o(.text);
         build/crashbandicootxs/src/engine/save/save_transfer.o(.text);
         build/crashbandicootxs/src/engine/save/save_transfer_state.o(.text);
-        build/crashbandicootxs/src/save/save_menu_input.o(.text);
-        build/crashbandicootxs/src/save/save_menu_draw.o(.text);
-        build/crashbandicootxs/src/save/save_menu.o(.text);
-        build/crashbandicootxs/src/menus/pause_menu.o(.text);
-        build/crashbandicootxs/src/menus/pause_menu_draw.o(.text);
-        build/crashbandicootxs/src/menus/pause_menu_collectibles.o(.text);
-        build/crashbandicootxs/src/menus/pause_menu_info.o(.text);
-        build/crashbandicootxs/src/menus/pause_menu_pages_init.o(.text);
-        build/crashbandicootxs/src/menus/pause_menu_widgets.o(.text);
-        build/crashbandicootxs/src/menus/pause_menu_pages_draw.o(.text);
-        build/crashbandicootxs/src/menus/power_dialog.o(.text);
-        build/crashbandicootxs/src/menus/power_dialog_draw.o(.text);
-        build/crashbandicootxs/src/save/game_progress.o(.text);
+        build/crashbandicootxs/src/game/ui/save_menu_input.o(.text);
+        build/crashbandicootxs/src/game/ui/save_menu_draw.o(.text);
+        build/crashbandicootxs/src/game/ui/save_menu.o(.text);
+        build/crashbandicootxs/src/game/ui/pause_menu.o(.text);
+        build/crashbandicootxs/src/game/ui/pause_menu_draw.o(.text);
+        build/crashbandicootxs/src/game/ui/pause_menu_collectibles.o(.text);
+        build/crashbandicootxs/src/game/ui/pause_menu_info.o(.text);
+        build/crashbandicootxs/src/game/ui/pause_menu_pages_init.o(.text);
+        build/crashbandicootxs/src/game/ui/pause_menu_widgets.o(.text);
+        build/crashbandicootxs/src/game/ui/pause_menu_pages_draw.o(.text);
+        build/crashbandicootxs/src/game/ui/power_dialog.o(.text);
+        build/crashbandicootxs/src/game/ui/power_dialog_draw.o(.text);
+        build/crashbandicootxs/src/game/level/game_progress.o(.text);
         build/crashbandicootxs/src/engine/gfx/oam_buffer.o(.text);
         build/crashbandicootxs/src/engine/sys/vram_dma_queue.o(.text);
         build/crashbandicootxs/src/engine/gfx/obj_vram_cursor.o(.text);
         build/crashbandicootxs/src/engine/gfx/palette_cache.o(.text);
         build/crashbandicootxs/src/engine/gfx/sprite_bank_set.o(.text);
-        build/crashbandicootxs/src/objects/entity.o(.text);
+        build/crashbandicootxs/src/game/entities/entity.o(.text);
         build/crashbandicootxs/src/engine/gfx/sprite_renderer.o(.text);
-        build/crashbandicootxs/src/objects/sprite.o(.text);
-        build/crashbandicootxs/src/objects/sprite_obj.o(.text);
-        build/crashbandicootxs/src/objects/ui_sprite.o(.text);
-        build/crashbandicootxs/src/objects/part_list_collide.o(.text);
-        build/crashbandicootxs/src/objects/part_list.o(.text);
-        build/crashbandicootxs/src/crates/crate_list_update.o(.text);
-        build/crashbandicootxs/src/crates/crate_list_draw.o(.text);
-        build/crashbandicootxs/src/crates/crate_list_collide.o(.text);
-        build/crashbandicootxs/src/crates/crate_list_reset.o(.text);
-        build/crashbandicootxs/src/crates/crate_list.o(.text);
-        build/crashbandicootxs/src/objects/moving_sprite_probe.o(.text);
-        build/crashbandicootxs/src/objects/moving_sprite.o(.text);
-        build/crashbandicootxs/src/objects/moving_sprite_collide.o(.text);
-        build/crashbandicootxs/src/objects/ground_sprite_collide.o(.text);
-        build/crashbandicootxs/src/objects/ground_sprite.o(.text);
-        build/crashbandicootxs/src/player/player_reset.o(.text);
-        build/crashbandicootxs/src/player/player_collide.o(.text);
-        build/crashbandicootxs/src/player/player_anim_room.o(.text);
-        build/crashbandicootxs/src/player/player_update.o(.text);
-        build/crashbandicootxs/src/player/player.o(.text);
-        build/crashbandicootxs/src/objects/ctrl.o(.text);
-        build/crashbandicootxs/src/enemies/enemy_ctrl_update.o(.text);
-        build/crashbandicootxs/src/enemies/enemy_shooter.o(.text);
-        build/crashbandicootxs/src/enemies/enemy_patrol.o(.text);
-        build/crashbandicootxs/src/enemies/enemy_motion.o(.text);
-        build/crashbandicootxs/src/enemies/enemy_ctrl.o(.text);
-        build/crashbandicootxs/src/enemies/periodic_spawner.o(.text);
-        build/crashbandicootxs/src/enemies/knocked_enemy_ctrl.o(.text);
-        build/crashbandicootxs/src/objects/effect_ctrl.o(.text);
-        build/crashbandicootxs/src/crates/crate_hit.o(.text);
-        build/crashbandicootxs/src/crates/crate_break.o(.text);
-        build/crashbandicootxs/src/crates/crate_switches.o(.text);
-        build/crashbandicootxs/src/crates/crate_states.o(.text);
-        build/crashbandicootxs/src/crates/crate_reset.o(.text);
-        build/crashbandicootxs/src/crates/crate_create.o(.text);
-        build/crashbandicootxs/src/crates/crate_update.o(.text);
-        build/crashbandicootxs/src/crates/crate.o(.text);
-        build/crashbandicootxs/src/crates/crate_time_trial.o(.text);
-        build/crashbandicootxs/src/crates/crate_fields.o(.text);
-        build/crashbandicootxs/src/objects/collision_queue.o(.text);
-        build/crashbandicootxs/src/pickups/extra_life.o(.text);
-        build/crashbandicootxs/src/pickups/wumpa_update.o(.text);
-        build/crashbandicootxs/src/pickups/wumpa.o(.text);
-        build/crashbandicootxs/src/pickups/stopwatch.o(.text);
-        build/crashbandicootxs/src/player/action_ctrl_event.o(.text);
-        build/crashbandicootxs/src/player/action_ctrl_update.o(.text);
-        build/crashbandicootxs/src/player/action_ctrl_states.o(.text);
-        build/crashbandicootxs/src/player/action_ctrl_land.o(.text);
-        build/crashbandicootxs/src/player/action_ctrl_moves.o(.text);
-        build/crashbandicootxs/src/player/action_ctrl.o(.text);
-        build/crashbandicootxs/src/player/swim_ctrl_stroke.o(.text);
-        build/crashbandicootxs/src/player/swim_ctrl_drift.o(.text);
-        build/crashbandicootxs/src/player/swim_ctrl.o(.text);
-        build/crashbandicootxs/src/player/input_ctrl.o(.text);
-        build/crashbandicootxs/src/player/input_ctrl_queue.o(.text);
-        build/crashbandicootxs/src/bosses/boss_ctrl.o(.text);
-        build/crashbandicootxs/src/bosses/mega_mix_update.o(.text);
-        build/crashbandicootxs/src/bosses/mega_mix.o(.text);
-        build/crashbandicootxs/src/bosses/tiny.o(.text);
-        build/crashbandicootxs/src/bosses/cortex.o(.text);
-        build/crashbandicootxs/src/bosses/dingodile.o(.text);
-        build/crashbandicootxs/src/bosses/dingodile_create.o(.text);
-        build/crashbandicootxs/src/objects/platform_create.o(.text);
-        build/crashbandicootxs/src/objects/platform_contact.o(.text);
-        build/crashbandicootxs/src/objects/platform_collide.o(.text);
-        build/crashbandicootxs/src/objects/platform.o(.text);
-        build/crashbandicootxs/src/objects/platform_mover.o(.text);
-        build/crashbandicootxs/src/objects/camera_lead.o(.text);
-        build/crashbandicootxs/src/objects/launch_pad.o(.text);
-        build/crashbandicootxs/src/menus/level_select.o(.text);
-        build/crashbandicootxs/src/menus/level_select_pages.o(.text);
-        build/crashbandicootxs/src/menus/level_select_page_bg.o(.text);
-        build/crashbandicootxs/src/menus/zoom_bg.o(.text);
-        build/crashbandicootxs/src/menus/level_select_entry.o(.text);
-        build/crashbandicootxs/src/menus/level_select_cursor.o(.text);
+        build/crashbandicootxs/src/game/entities/sprite.o(.text);
+        build/crashbandicootxs/src/game/entities/sprite_obj.o(.text);
+        build/crashbandicootxs/src/game/entities/ui_sprite.o(.text);
+        build/crashbandicootxs/src/game/entities/part_list_collide.o(.text);
+        build/crashbandicootxs/src/game/entities/part_list.o(.text);
+        build/crashbandicootxs/src/game/crates/crate_list_update.o(.text);
+        build/crashbandicootxs/src/game/crates/crate_list_draw.o(.text);
+        build/crashbandicootxs/src/game/crates/crate_list_collide.o(.text);
+        build/crashbandicootxs/src/game/crates/crate_list_reset.o(.text);
+        build/crashbandicootxs/src/game/crates/crate_list.o(.text);
+        build/crashbandicootxs/src/game/entities/moving_sprite_probe.o(.text);
+        build/crashbandicootxs/src/game/entities/moving_sprite.o(.text);
+        build/crashbandicootxs/src/game/entities/moving_sprite_collide.o(.text);
+        build/crashbandicootxs/src/game/entities/ground_sprite_collide.o(.text);
+        build/crashbandicootxs/src/game/entities/ground_sprite.o(.text);
+        build/crashbandicootxs/src/game/crash/player_reset.o(.text);
+        build/crashbandicootxs/src/game/crash/player_collide.o(.text);
+        build/crashbandicootxs/src/game/crash/player_anim_room.o(.text);
+        build/crashbandicootxs/src/game/crash/player_update.o(.text);
+        build/crashbandicootxs/src/game/crash/player.o(.text);
+        build/crashbandicootxs/src/game/entities/ctrl.o(.text);
+        build/crashbandicootxs/src/game/enemies/enemy_ctrl_update.o(.text);
+        build/crashbandicootxs/src/game/enemies/enemy_shooter.o(.text);
+        build/crashbandicootxs/src/game/enemies/enemy_patrol.o(.text);
+        build/crashbandicootxs/src/game/enemies/enemy_motion.o(.text);
+        build/crashbandicootxs/src/game/enemies/enemy_ctrl.o(.text);
+        build/crashbandicootxs/src/game/enemies/periodic_spawner.o(.text);
+        build/crashbandicootxs/src/game/enemies/knocked_enemy_ctrl.o(.text);
+        build/crashbandicootxs/src/game/entities/effect_ctrl.o(.text);
+        build/crashbandicootxs/src/game/crates/crate_hit.o(.text);
+        build/crashbandicootxs/src/game/crates/crate_break.o(.text);
+        build/crashbandicootxs/src/game/crates/crate_switches.o(.text);
+        build/crashbandicootxs/src/game/crates/crate_states.o(.text);
+        build/crashbandicootxs/src/game/crates/crate_reset.o(.text);
+        build/crashbandicootxs/src/game/crates/crate_create.o(.text);
+        build/crashbandicootxs/src/game/crates/crate_update.o(.text);
+        build/crashbandicootxs/src/game/crates/crate.o(.text);
+        build/crashbandicootxs/src/game/crates/crate_time_trial.o(.text);
+        build/crashbandicootxs/src/game/crates/crate_fields.o(.text);
+        build/crashbandicootxs/src/game/crates/collision_queue.o(.text);
+        build/crashbandicootxs/src/game/objects/extra_life.o(.text);
+        build/crashbandicootxs/src/game/objects/wumpa_update.o(.text);
+        build/crashbandicootxs/src/game/objects/wumpa.o(.text);
+        build/crashbandicootxs/src/game/objects/stopwatch.o(.text);
+        build/crashbandicootxs/src/game/crash/action_ctrl_event.o(.text);
+        build/crashbandicootxs/src/game/crash/action_ctrl_update.o(.text);
+        build/crashbandicootxs/src/game/crash/action_ctrl_states.o(.text);
+        build/crashbandicootxs/src/game/crash/action_ctrl_land.o(.text);
+        build/crashbandicootxs/src/game/crash/action_ctrl_moves.o(.text);
+        build/crashbandicootxs/src/game/crash/action_ctrl.o(.text);
+        build/crashbandicootxs/src/game/crash/swim_ctrl_stroke.o(.text);
+        build/crashbandicootxs/src/game/crash/swim_ctrl_drift.o(.text);
+        build/crashbandicootxs/src/game/crash/swim_ctrl.o(.text);
+        build/crashbandicootxs/src/game/crash/input_ctrl.o(.text);
+        build/crashbandicootxs/src/game/crash/input_ctrl_queue.o(.text);
+        build/crashbandicootxs/src/game/bosses/boss_ctrl.o(.text);
+        build/crashbandicootxs/src/game/bosses/mega_mix_update.o(.text);
+        build/crashbandicootxs/src/game/bosses/mega_mix.o(.text);
+        build/crashbandicootxs/src/game/bosses/tiny.o(.text);
+        build/crashbandicootxs/src/game/bosses/cortex.o(.text);
+        build/crashbandicootxs/src/game/bosses/dingodile.o(.text);
+        build/crashbandicootxs/src/game/bosses/dingodile_create.o(.text);
+        build/crashbandicootxs/src/game/objects/platform_create.o(.text);
+        build/crashbandicootxs/src/game/objects/platform_contact.o(.text);
+        build/crashbandicootxs/src/game/objects/platform_collide.o(.text);
+        build/crashbandicootxs/src/game/objects/platform.o(.text);
+        build/crashbandicootxs/src/game/objects/platform_mover.o(.text);
+        build/crashbandicootxs/src/game/objects/camera_lead.o(.text);
+        build/crashbandicootxs/src/game/objects/launch_pad.o(.text);
+        build/crashbandicootxs/src/game/ui/level_select.o(.text);
+        build/crashbandicootxs/src/game/ui/level_select_pages.o(.text);
+        build/crashbandicootxs/src/game/ui/level_select_page_bg.o(.text);
+        build/crashbandicootxs/src/game/ui/zoom_bg.o(.text);
+        build/crashbandicootxs/src/game/ui/level_select_entry.o(.text);
+        build/crashbandicootxs/src/game/ui/level_select_cursor.o(.text);
         build/crashbandicootxs/src/engine/gfx/graphics_package.o(.text);
         build/crashbandicootxs/src/engine/gfx/scaled_sprite.o(.text);
-        build/crashbandicootxs/src/level/spawn_start_marker.o(.text);
-        build/crashbandicootxs/src/level/spawn_gems.o(.text);
-        build/crashbandicootxs/src/level/spawn_enemies.o(.text);
-        build/crashbandicootxs/src/level/spawn_gem_platforms.o(.text);
-        build/crashbandicootxs/src/level/spawn_bosses.o(.text);
-        build/crashbandicootxs/src/level/spawn_objects.o(.text);
-        build/crashbandicootxs/src/level/spawn_crates.o(.text);
-        build/crashbandicootxs/src/level/spawn_pickups.o(.text);
-        build/crashbandicootxs/src/level/spawn_markers.o(.text);
-        build/crashbandicootxs/src/level/level_cutscene.o(.text);
-        build/crashbandicootxs/src/level/game_frame.o(.text);
-        build/crashbandicootxs/src/level/bonus_round.o(.text);
-        build/crashbandicootxs/src/level/level_state.o(.text);
-        build/crashbandicootxs/src/level/play_room.o(.text);
-        build/crashbandicootxs/src/level/room.o(.text);
-        build/crashbandicootxs/src/level/level_query.o(.text);
-        build/crashbandicootxs/src/level/room_select.o(.text);
-        build/crashbandicootxs/src/cutscene/slideshow.o(.text);
-        build/crashbandicootxs/src/cutscene/slideshow_display.o(.text);
-        build/crashbandicootxs/src/cutscene/cutscene_player.o(.text);
-        build/crashbandicootxs/src/level/bg_streamer.o(.text);
-        build/crashbandicootxs/src/level/bg_layer_base.o(.text);
-        build/crashbandicootxs/src/level/tile_cache.o(.text);
-        build/crashbandicootxs/src/level/tile_cache_cell.o(.text);
-        build/crashbandicootxs/src/level/entity_bitmap.o(.text);
-        build/crashbandicootxs/src/level/room_entities.o(.text);
-        build/crashbandicootxs/src/level/entity_flags.o(.text);
-        build/crashbandicootxs/src/level/entity_spawner.o(.text);
-        build/crashbandicootxs/src/level/bg_layer.o(.text);
-        build/crashbandicootxs/src/level/pooled_bg_layer.o(.text);
-        build/crashbandicootxs/src/level/tile_slot_pool.o(.text);
-        build/crashbandicootxs/src/level/terrain_probe.o(.text);
-        build/crashbandicootxs/src/level/level_layers.o(.text);
-        build/crashbandicootxs/src/level/terrain_probe_axes.o(.text);
-        build/crashbandicootxs/src/level/terrain.o(.text);
-        build/crashbandicootxs/src/level/camera.o(.text);
+        build/crashbandicootxs/src/game/level/spawn_start_marker.o(.text);
+        build/crashbandicootxs/src/game/objects/spawn_gems.o(.text);
+        build/crashbandicootxs/src/game/enemies/spawn_enemies.o(.text);
+        build/crashbandicootxs/src/game/objects/spawn_gem_platforms.o(.text);
+        build/crashbandicootxs/src/game/bosses/spawn_bosses.o(.text);
+        build/crashbandicootxs/src/game/objects/spawn_objects.o(.text);
+        build/crashbandicootxs/src/game/crates/spawn_crates.o(.text);
+        build/crashbandicootxs/src/game/objects/spawn_pickups.o(.text);
+        build/crashbandicootxs/src/game/level/spawn_markers.o(.text);
+        build/crashbandicootxs/src/game/level/level_cutscene.o(.text);
+        build/crashbandicootxs/src/game/level/game_frame.o(.text);
+        build/crashbandicootxs/src/game/level/bonus_round.o(.text);
+        build/crashbandicootxs/src/game/level/level_state.o(.text);
+        build/crashbandicootxs/src/game/level/play_room.o(.text);
+        build/crashbandicootxs/src/game/level/room.o(.text);
+        build/crashbandicootxs/src/game/level/level_query.o(.text);
+        build/crashbandicootxs/src/game/level/room_select.o(.text);
+        build/crashbandicootxs/src/game/ui/slideshow.o(.text);
+        build/crashbandicootxs/src/game/ui/slideshow_display.o(.text);
+        build/crashbandicootxs/src/game/ui/cutscene_player.o(.text);
+        build/crashbandicootxs/src/game/level/bg_streamer.o(.text);
+        build/crashbandicootxs/src/game/level/bg_layer_base.o(.text);
+        build/crashbandicootxs/src/game/level/tile_cache.o(.text);
+        build/crashbandicootxs/src/game/level/tile_cache_cell.o(.text);
+        build/crashbandicootxs/src/game/level/entity_bitmap.o(.text);
+        build/crashbandicootxs/src/game/level/room_entities.o(.text);
+        build/crashbandicootxs/src/game/level/entity_flags.o(.text);
+        build/crashbandicootxs/src/game/level/entity_spawner.o(.text);
+        build/crashbandicootxs/src/game/level/bg_layer.o(.text);
+        build/crashbandicootxs/src/game/level/pooled_bg_layer.o(.text);
+        build/crashbandicootxs/src/game/level/tile_slot_pool.o(.text);
+        build/crashbandicootxs/src/game/level/terrain_probe.o(.text);
+        build/crashbandicootxs/src/game/level/level_layers.o(.text);
+        build/crashbandicootxs/src/game/level/terrain_probe_axes.o(.text);
+        build/crashbandicootxs/src/game/level/terrain.o(.text);
+        build/crashbandicootxs/src/game/level/camera.o(.text);
         build/crashbandicootxs/src/engine/sys/operator_new.o(.text);
-        build/crashbandicootxs/src/system/main_loop.o(.text);
+        build/crashbandicootxs/src/game/level/main_loop.o(.text);
         build/crashbandicootxs/src/engine/gfx/palette_cycle.o(.text);
-        build/crashbandicootxs/src/hud/hud_part.o(.text);
-        build/crashbandicootxs/src/hud/hud_init.o(.text);
-        build/crashbandicootxs/src/hud/hud.o(.text);
-        build/crashbandicootxs/src/hud/hud_counters.o(.text);
-        build/crashbandicootxs/src/hud/hud_slide.o(.text);
+        build/crashbandicootxs/src/game/ui/hud_part.o(.text);
+        build/crashbandicootxs/src/game/ui/hud_init.o(.text);
+        build/crashbandicootxs/src/game/ui/hud.o(.text);
+        build/crashbandicootxs/src/game/ui/hud_counters.o(.text);
+        build/crashbandicootxs/src/game/ui/hud_slide.o(.text);
         build/crashbandicootxs/src/engine/text/font_glyph.o(.text);
         build/crashbandicootxs/src/engine/text/font_draw_chars.o(.text);
         build/crashbandicootxs/src/engine/text/font_draw_text.o(.text);
@@ -207,57 +207,57 @@ SECTIONS
         build/crashbandicootxs/src/engine/actor/actor_category_frame.o(.text);
         build/crashbandicootxs/src/engine/actor/actor_spawn.o(.text);
         build/crashbandicootxs/src/engine/actor/actor_category.o(.text);
-        build/crashbandicootxs/src/actor/actor_category_hooks.o(.text);
-        build/crashbandicootxs/src/actor/actor.o(.text);
+        build/crashbandicootxs/src/game/vehicles/actor_category_hooks.o(.text);
+        build/crashbandicootxs/src/game/entities/actor_self.o(.text);
         build/crashbandicootxs/src/engine/actor/actor_spawn_collected.o(.text);
         build/crashbandicootxs/src/engine/actor/actor_palette_cycle.o(.text);
-        build/crashbandicootxs/src/actor/actor_factory.o(.text);
-        build/crashbandicootxs/src/vehicle/polar/polar_player.o(.text);
-        build/crashbandicootxs/src/vehicle/polar/polar_player_states.o(.text);
-        build/crashbandicootxs/src/vehicle/polar/polar_pickups.o(.text);
-        build/crashbandicootxs/src/vehicle/polar/polar_crate.o(.text);
-        build/crashbandicootxs/src/vehicle/polar/polar_nitro.o(.text);
-        build/crashbandicootxs/src/vehicle/polar/polar_crates.o(.text);
-        build/crashbandicootxs/src/vehicle/polar/polar_objects.o(.text);
-        build/crashbandicootxs/src/vehicle/polar/polar_aku_aku.o(.text);
-        build/crashbandicootxs/src/vehicle/polar/polar_course_objects.o(.text);
-        build/crashbandicootxs/src/vehicle/polar/yeti_update.o(.text);
-        build/crashbandicootxs/src/vehicle/polar/yeti_states.o(.text);
-        build/crashbandicootxs/src/vehicle/polar/yeti_graphics.o(.text);
-        build/crashbandicootxs/src/vehicle/polar/yeti.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack/jetpack_spawn.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack/jetpack_player_update.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack/jetpack_player.o(.text);
+        build/crashbandicootxs/src/game/vehicles/polar/polar_actor_factory.o(.text);
+        build/crashbandicootxs/src/game/vehicles/polar/polar_player.o(.text);
+        build/crashbandicootxs/src/game/vehicles/polar/polar_player_states.o(.text);
+        build/crashbandicootxs/src/game/vehicles/polar/polar_pickups.o(.text);
+        build/crashbandicootxs/src/game/vehicles/polar/polar_crate.o(.text);
+        build/crashbandicootxs/src/game/vehicles/polar/polar_nitro.o(.text);
+        build/crashbandicootxs/src/game/vehicles/polar/polar_crates.o(.text);
+        build/crashbandicootxs/src/game/vehicles/polar/polar_objects.o(.text);
+        build/crashbandicootxs/src/game/vehicles/polar/polar_aku_aku.o(.text);
+        build/crashbandicootxs/src/game/vehicles/polar/polar_course_objects.o(.text);
+        build/crashbandicootxs/src/game/vehicles/polar/yeti_update.o(.text);
+        build/crashbandicootxs/src/game/vehicles/polar/yeti_states.o(.text);
+        build/crashbandicootxs/src/game/vehicles/polar/yeti_graphics.o(.text);
+        build/crashbandicootxs/src/game/vehicles/polar/yeti.o(.text);
+        build/crashbandicootxs/src/game/vehicles/jetpack/jetpack_spawn.o(.text);
+        build/crashbandicootxs/src/game/vehicles/jetpack/jetpack_player_update.o(.text);
+        build/crashbandicootxs/src/game/vehicles/jetpack/jetpack_player.o(.text);
         build/crashbandicootxs/src/engine/actor/bg_picture.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack/jetpack_shot.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack/jetpack_plane.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack/jetpack_bomber.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack/jetpack_cannonball.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack/airship_fireball.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack/airship_states.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack/airship_map.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack/airship.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack/airship_touch.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack/airship_graphics.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack/jetpack_balloon.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack/jetpack_crates.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack/jetpack_rocket.o(.text);
-        build/crashbandicootxs/src/vehicle/jetpack/jetpack_collected_wumpa.o(.text);
-        build/crashbandicootxs/src/bosses/hovercraft_fireball.o(.text);
-        build/crashbandicootxs/src/bosses/hovercraft.o(.text);
-        build/crashbandicootxs/src/bosses/hovercraft_state.o(.text);
-        build/crashbandicootxs/src/bosses/hovercraft_cannon.o(.text);
-        build/crashbandicootxs/src/bosses/hovercraft_launcher.o(.text);
-        build/crashbandicootxs/src/bosses/hovercraft_side_gun.o(.text);
-        build/crashbandicootxs/src/bosses/hovercraft_cannon_flash.o(.text);
-        build/crashbandicootxs/src/frontend/starfield.o(.text);
-        build/crashbandicootxs/src/menus/continue_prompt.o(.text);
-        build/crashbandicootxs/src/frontend/credits.o(.text);
-        build/crashbandicootxs/src/frontend/title_screen.o(.text);
-        build/crashbandicootxs/src/frontend/company_logos.o(.text);
-        build/crashbandicootxs/src/frontend/company_logos_ctor.o(.text);
-        build/crashbandicootxs/src/frontend/language_select.o(.text);
-        build/crashbandicootxs/src/frontend/language_select_setup.o(.text);
+        build/crashbandicootxs/src/game/vehicles/jetpack/jetpack_shot.o(.text);
+        build/crashbandicootxs/src/game/vehicles/jetpack/jetpack_plane.o(.text);
+        build/crashbandicootxs/src/game/vehicles/jetpack/jetpack_bomber.o(.text);
+        build/crashbandicootxs/src/game/vehicles/jetpack/jetpack_cannonball.o(.text);
+        build/crashbandicootxs/src/game/vehicles/jetpack/airship_fireball.o(.text);
+        build/crashbandicootxs/src/game/vehicles/jetpack/airship_states.o(.text);
+        build/crashbandicootxs/src/game/vehicles/jetpack/airship_map.o(.text);
+        build/crashbandicootxs/src/game/vehicles/jetpack/airship.o(.text);
+        build/crashbandicootxs/src/game/vehicles/jetpack/airship_touch.o(.text);
+        build/crashbandicootxs/src/game/vehicles/jetpack/airship_graphics.o(.text);
+        build/crashbandicootxs/src/game/vehicles/jetpack/jetpack_balloon.o(.text);
+        build/crashbandicootxs/src/game/vehicles/jetpack/jetpack_crates.o(.text);
+        build/crashbandicootxs/src/game/vehicles/jetpack/jetpack_rocket.o(.text);
+        build/crashbandicootxs/src/game/vehicles/jetpack/jetpack_collected_wumpa.o(.text);
+        build/crashbandicootxs/src/game/bosses/hovercraft_fireball.o(.text);
+        build/crashbandicootxs/src/game/bosses/hovercraft.o(.text);
+        build/crashbandicootxs/src/game/bosses/hovercraft_state.o(.text);
+        build/crashbandicootxs/src/game/bosses/hovercraft_cannon.o(.text);
+        build/crashbandicootxs/src/game/bosses/hovercraft_launcher.o(.text);
+        build/crashbandicootxs/src/game/bosses/hovercraft_side_gun.o(.text);
+        build/crashbandicootxs/src/game/bosses/hovercraft_cannon_flash.o(.text);
+        build/crashbandicootxs/src/game/ui/starfield.o(.text);
+        build/crashbandicootxs/src/game/ui/continue_prompt.o(.text);
+        build/crashbandicootxs/src/game/ui/credits.o(.text);
+        build/crashbandicootxs/src/game/ui/title_screen.o(.text);
+        build/crashbandicootxs/src/game/ui/company_logos.o(.text);
+        build/crashbandicootxs/src/game/ui/company_logos_ctor.o(.text);
+        build/crashbandicootxs/src/game/ui/language_select.o(.text);
+        build/crashbandicootxs/src/game/ui/language_select_setup.o(.text);
         build/crashbandicootxs/lib/libgcc/_divdi3.o(.text);
         build/crashbandicootxs/lib/libgcc/_udivdi3.o(.text);
         build/crashbandicootxs/lib/libgcc/_udivsi3.o(.text);
@@ -307,8 +307,8 @@ SECTIONS
         build/crashbandicootxs/lib/libgcc/_modsi3.o(.text);
         build/crashbandicootxs/lib/libgcc/_umodsi3.o(.text);
         build/crashbandicootxs/src/engine/util/aabb_setters.o(.text);
-        build/crashbandicootxs/src/actor/anim_part.o(.text);
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.text);
+        build/crashbandicootxs/src/game/entities/anim_part.o(.text);
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.text);
 
         /* Data */
         build/crashbandicootxs/data/data.o(.rodata);
@@ -406,99 +406,99 @@ SECTIONS
          * ROM order: g++ emits each as its class's
          * .gnu.linkonce.d._vt.<class> section in its key-method object.
          * See docs/cplusplus.md, "Emitting the vtables". */
-        build/crashbandicootxs/src/objects/entity.o(.gnu.linkonce.d._vt.Q34Game8Entities6Entity); /* gEntityVtable */
-        build/crashbandicootxs/src/objects/sprite.o(.gnu.linkonce.d._vt.Q34Game8Entities6Sprite); /* gSpriteObjVtable */
-        build/crashbandicootxs/src/objects/ui_sprite.o(.gnu.linkonce.d._vt.Q34Game8Entities8UiSprite); /* gUiSpriteObjVtable */
-        build/crashbandicootxs/src/objects/moving_sprite_collide.o(.gnu.linkonce.d._vt.Q34Game8Entities12MovingSprite); /* gMovingSpriteVtable */
-        build/crashbandicootxs/src/objects/ground_sprite_collide.o(.gnu.linkonce.d._vt.Q34Game8Entities12GroundSprite); /* gGroundSpriteVtable */
-        build/crashbandicootxs/src/player/player_collide.o(.gnu.linkonce.d._vt.Q34Game5Crash6Player); /* gPlayerVtable */
+        build/crashbandicootxs/src/game/entities/entity.o(.gnu.linkonce.d._vt.Q34Game8Entities6Entity); /* gEntityVtable */
+        build/crashbandicootxs/src/game/entities/sprite.o(.gnu.linkonce.d._vt.Q34Game8Entities6Sprite); /* gSpriteObjVtable */
+        build/crashbandicootxs/src/game/entities/ui_sprite.o(.gnu.linkonce.d._vt.Q34Game8Entities8UiSprite); /* gUiSpriteObjVtable */
+        build/crashbandicootxs/src/game/entities/moving_sprite_collide.o(.gnu.linkonce.d._vt.Q34Game8Entities12MovingSprite); /* gMovingSpriteVtable */
+        build/crashbandicootxs/src/game/entities/ground_sprite_collide.o(.gnu.linkonce.d._vt.Q34Game8Entities12GroundSprite); /* gGroundSpriteVtable */
+        build/crashbandicootxs/src/game/crash/player_collide.o(.gnu.linkonce.d._vt.Q34Game5Crash6Player); /* gPlayerVtable */
         build/crashbandicootxs/src/engine/sys/bios_util.o(.gnu.linkonce.d._vt.Q34Game8Entities4Ctrl); /* gCtrlVtable */
-        build/crashbandicootxs/src/enemies/enemy_ctrl_update.o(.gnu.linkonce.d._vt.Q34Game7Enemies9EnemyCtrl); /* gEnemyCtrlVtable */
-        build/crashbandicootxs/src/enemies/periodic_spawner.o(.gnu.linkonce.d._vt.Q34Game7Enemies15PeriodicSpawner); /* gPeriodicSpawnerVtable */
-        build/crashbandicootxs/src/enemies/knocked_enemy_ctrl.o(.gnu.linkonce.d._vt.Q34Game7Enemies16KnockedEnemyCtrl); /* gKnockedEnemyCtrlVtable */
-        build/crashbandicootxs/src/objects/effect_ctrl.o(.gnu.linkonce.d._vt.Q34Game8Entities10EffectCtrl); /* gEffectCtrlVtable */
-        build/crashbandicootxs/src/crates/crate_update.o(.gnu.linkonce.d._vt.Q34Game6Crates5Crate); /* gCrateVtable */
-        build/crashbandicootxs/src/pickups/extra_life.o(.gnu.linkonce.d._vt.Q34Game7Objects9ExtraLife); /* gExtraLifeVtable */
-        build/crashbandicootxs/src/pickups/wumpa.o(.gnu.linkonce.d._vt.Q34Game7Objects5Wumpa); /* gWumpaVtable */
-        build/crashbandicootxs/src/pickups/stopwatch.o(.gnu.linkonce.d._vt.Q34Game7Objects9Stopwatch); /* gStopwatchVtable */
-        build/crashbandicootxs/src/player/action_ctrl_update.o(.gnu.linkonce.d._vt.Q34Game5Crash10ActionCtrl); /* gActionCtrlVtable */
-        build/crashbandicootxs/src/player/swim_ctrl.o(.gnu.linkonce.d._vt.Q34Game5Crash8SwimCtrl); /* gSwimCtrlVtable */
-        build/crashbandicootxs/src/player/input_ctrl.o(.gnu.linkonce.d._vt.Q34Game5Crash9InputCtrl); /* gInputCtrlVtable */
-        build/crashbandicootxs/src/bosses/boss_ctrl.o(.gnu.linkonce.d._vt.Q34Game6Bosses8BossCtrl); /* gBossCtrlVtable */
-        build/crashbandicootxs/src/bosses/mega_mix_update.o(.gnu.linkonce.d._vt.Q34Game6Bosses11MegaMixCtrl); /* gMegaMixCtrlVtable */
-        build/crashbandicootxs/src/bosses/tiny.o(.gnu.linkonce.d._vt.Q34Game6Bosses17StompedHopPadCtrl); /* gStompedHopPadVtable */
-        build/crashbandicootxs/src/bosses/tiny.o(.gnu.linkonce.d._vt.Q34Game6Bosses15OneShotAnimCtrl); /* gOneShotAnimCtrlVtable */
-        build/crashbandicootxs/src/bosses/tiny.o(.gnu.linkonce.d._vt.Q34Game6Bosses21UnusedOneShotAnimCtrl); /* gUnusedOneShotAnimCtrlVtable */
-        build/crashbandicootxs/src/bosses/tiny.o(.gnu.linkonce.d._vt.Q34Game6Bosses8TinyCtrl); /* gTinyVtable */
-        build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.Q34Game6Bosses17CortexBossGemCtrl); /* gCortexBossGemVtable */
-        build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.Q34Game6Bosses23CortexBossPlatformMover); /* gCortexBossPlatformMoverVtable */
-        build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.Q34Game6Bosses14CortexShotCtrl); /* gCortexShotVtable */
-        build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.Q34Game6Bosses16CortexTargetCtrl); /* gCortexTargetVtable */
-        build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.Q34Game6Bosses16CortexCannonCtrl); /* gCortexCannonVtable */
-        build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.Q34Game6Bosses14CortexBossCtrl); /* gCortexBossVtable */
-        build/crashbandicootxs/src/bosses/dingodile.o(.gnu.linkonce.d._vt.Q34Game6Bosses18DingodileSharkCtrl); /* gDingodileSharkVtable */
-        build/crashbandicootxs/src/bosses/dingodile.o(.gnu.linkonce.d._vt.Q34Game6Bosses23DingodileProjectileCtrl); /* gDingodileProjectileVtable */
-        build/crashbandicootxs/src/bosses/dingodile.o(.gnu.linkonce.d._vt.Q34Game6Bosses19DingodileShieldCtrl); /* gDingodileShieldVtable */
-        build/crashbandicootxs/src/bosses/dingodile.o(.gnu.linkonce.d._vt.Q34Game6Bosses13DingodileCtrl); /* gDingodileVtable */
-        build/crashbandicootxs/src/objects/platform_contact.o(.gnu.linkonce.d._vt.Q34Game7Objects8Platform); /* gPlatformVtable */
-        build/crashbandicootxs/src/objects/platform_mover.o(.gnu.linkonce.d._vt.Q34Game7Objects13PlatformMover); /* gPlatformMoverVtable */
-        build/crashbandicootxs/src/objects/camera_lead.o(.gnu.linkonce.d._vt.Q34Game7Objects10CameraLead); /* gCameraLeadVtable */
-        build/crashbandicootxs/src/objects/launch_pad.o(.gnu.linkonce.d._vt.Q34Game7Objects9LaunchPad); /* gLaunchPadVtable */
-        build/crashbandicootxs/src/menus/level_select_entry.o(.gnu.linkonce.d._vt.Q34Game2Ui16LevelSelectEntry); /* gLevelSelectEntryVtable */
-        build/crashbandicootxs/src/level/bg_streamer.o(.gnu.linkonce.d._vt.Q34Game5Level10BgStreamer); /* gBgStreamerVtable */
-        build/crashbandicootxs/src/level/bg_layer_base.o(.gnu.linkonce.d._vt.Q34Game5Level11BgLayerBase); /* gBgLayerBaseVtable */
-        build/crashbandicootxs/src/level/bg_layer.o(.gnu.linkonce.d._vt.Q34Game5Level7BgLayer); /* gBgLayerVtable */
-        build/crashbandicootxs/src/level/pooled_bg_layer.o(.gnu.linkonce.d._vt.Q34Game5Level13PooledBgLayer); /* gPooledBgLayerVtable */
-        build/crashbandicootxs/src/hud/hud_part.o(.gnu.linkonce.d._vt.Q34Game2Ui7HudPart); /* gHudPartVtable */
+        build/crashbandicootxs/src/game/enemies/enemy_ctrl_update.o(.gnu.linkonce.d._vt.Q34Game7Enemies9EnemyCtrl); /* gEnemyCtrlVtable */
+        build/crashbandicootxs/src/game/enemies/periodic_spawner.o(.gnu.linkonce.d._vt.Q34Game7Enemies15PeriodicSpawner); /* gPeriodicSpawnerVtable */
+        build/crashbandicootxs/src/game/enemies/knocked_enemy_ctrl.o(.gnu.linkonce.d._vt.Q34Game7Enemies16KnockedEnemyCtrl); /* gKnockedEnemyCtrlVtable */
+        build/crashbandicootxs/src/game/entities/effect_ctrl.o(.gnu.linkonce.d._vt.Q34Game8Entities10EffectCtrl); /* gEffectCtrlVtable */
+        build/crashbandicootxs/src/game/crates/crate_update.o(.gnu.linkonce.d._vt.Q34Game6Crates5Crate); /* gCrateVtable */
+        build/crashbandicootxs/src/game/objects/extra_life.o(.gnu.linkonce.d._vt.Q34Game7Objects9ExtraLife); /* gExtraLifeVtable */
+        build/crashbandicootxs/src/game/objects/wumpa.o(.gnu.linkonce.d._vt.Q34Game7Objects5Wumpa); /* gWumpaVtable */
+        build/crashbandicootxs/src/game/objects/stopwatch.o(.gnu.linkonce.d._vt.Q34Game7Objects9Stopwatch); /* gStopwatchVtable */
+        build/crashbandicootxs/src/game/crash/action_ctrl_update.o(.gnu.linkonce.d._vt.Q34Game5Crash10ActionCtrl); /* gActionCtrlVtable */
+        build/crashbandicootxs/src/game/crash/swim_ctrl.o(.gnu.linkonce.d._vt.Q34Game5Crash8SwimCtrl); /* gSwimCtrlVtable */
+        build/crashbandicootxs/src/game/crash/input_ctrl.o(.gnu.linkonce.d._vt.Q34Game5Crash9InputCtrl); /* gInputCtrlVtable */
+        build/crashbandicootxs/src/game/bosses/boss_ctrl.o(.gnu.linkonce.d._vt.Q34Game6Bosses8BossCtrl); /* gBossCtrlVtable */
+        build/crashbandicootxs/src/game/bosses/mega_mix_update.o(.gnu.linkonce.d._vt.Q34Game6Bosses11MegaMixCtrl); /* gMegaMixCtrlVtable */
+        build/crashbandicootxs/src/game/bosses/tiny.o(.gnu.linkonce.d._vt.Q34Game6Bosses17StompedHopPadCtrl); /* gStompedHopPadVtable */
+        build/crashbandicootxs/src/game/bosses/tiny.o(.gnu.linkonce.d._vt.Q34Game6Bosses15OneShotAnimCtrl); /* gOneShotAnimCtrlVtable */
+        build/crashbandicootxs/src/game/bosses/tiny.o(.gnu.linkonce.d._vt.Q34Game6Bosses21UnusedOneShotAnimCtrl); /* gUnusedOneShotAnimCtrlVtable */
+        build/crashbandicootxs/src/game/bosses/tiny.o(.gnu.linkonce.d._vt.Q34Game6Bosses8TinyCtrl); /* gTinyVtable */
+        build/crashbandicootxs/src/game/bosses/cortex.o(.gnu.linkonce.d._vt.Q34Game6Bosses17CortexBossGemCtrl); /* gCortexBossGemVtable */
+        build/crashbandicootxs/src/game/bosses/cortex.o(.gnu.linkonce.d._vt.Q34Game6Bosses23CortexBossPlatformMover); /* gCortexBossPlatformMoverVtable */
+        build/crashbandicootxs/src/game/bosses/cortex.o(.gnu.linkonce.d._vt.Q34Game6Bosses14CortexShotCtrl); /* gCortexShotVtable */
+        build/crashbandicootxs/src/game/bosses/cortex.o(.gnu.linkonce.d._vt.Q34Game6Bosses16CortexTargetCtrl); /* gCortexTargetVtable */
+        build/crashbandicootxs/src/game/bosses/cortex.o(.gnu.linkonce.d._vt.Q34Game6Bosses16CortexCannonCtrl); /* gCortexCannonVtable */
+        build/crashbandicootxs/src/game/bosses/cortex.o(.gnu.linkonce.d._vt.Q34Game6Bosses14CortexBossCtrl); /* gCortexBossVtable */
+        build/crashbandicootxs/src/game/bosses/dingodile.o(.gnu.linkonce.d._vt.Q34Game6Bosses18DingodileSharkCtrl); /* gDingodileSharkVtable */
+        build/crashbandicootxs/src/game/bosses/dingodile.o(.gnu.linkonce.d._vt.Q34Game6Bosses23DingodileProjectileCtrl); /* gDingodileProjectileVtable */
+        build/crashbandicootxs/src/game/bosses/dingodile.o(.gnu.linkonce.d._vt.Q34Game6Bosses19DingodileShieldCtrl); /* gDingodileShieldVtable */
+        build/crashbandicootxs/src/game/bosses/dingodile.o(.gnu.linkonce.d._vt.Q34Game6Bosses13DingodileCtrl); /* gDingodileVtable */
+        build/crashbandicootxs/src/game/objects/platform_contact.o(.gnu.linkonce.d._vt.Q34Game7Objects8Platform); /* gPlatformVtable */
+        build/crashbandicootxs/src/game/objects/platform_mover.o(.gnu.linkonce.d._vt.Q34Game7Objects13PlatformMover); /* gPlatformMoverVtable */
+        build/crashbandicootxs/src/game/objects/camera_lead.o(.gnu.linkonce.d._vt.Q34Game7Objects10CameraLead); /* gCameraLeadVtable */
+        build/crashbandicootxs/src/game/objects/launch_pad.o(.gnu.linkonce.d._vt.Q34Game7Objects9LaunchPad); /* gLaunchPadVtable */
+        build/crashbandicootxs/src/game/ui/level_select_entry.o(.gnu.linkonce.d._vt.Q34Game2Ui16LevelSelectEntry); /* gLevelSelectEntryVtable */
+        build/crashbandicootxs/src/game/level/bg_streamer.o(.gnu.linkonce.d._vt.Q34Game5Level10BgStreamer); /* gBgStreamerVtable */
+        build/crashbandicootxs/src/game/level/bg_layer_base.o(.gnu.linkonce.d._vt.Q34Game5Level11BgLayerBase); /* gBgLayerBaseVtable */
+        build/crashbandicootxs/src/game/level/bg_layer.o(.gnu.linkonce.d._vt.Q34Game5Level7BgLayer); /* gBgLayerVtable */
+        build/crashbandicootxs/src/game/level/pooled_bg_layer.o(.gnu.linkonce.d._vt.Q34Game5Level13PooledBgLayer); /* gPooledBgLayerVtable */
+        build/crashbandicootxs/src/game/ui/hud_part.o(.gnu.linkonce.d._vt.Q34Game2Ui7HudPart); /* gHudPartVtable */
         build/crashbandicootxs/src/engine/util/aabb_setters.o(.gnu.linkonce.d._vt.Q36Engine4Text9LargeFont); /* gLargeFontVtable */
         build/crashbandicootxs/src/engine/util/aabb_setters.o(.gnu.linkonce.d._vt.Q36Engine4Text9SmallFont); /* gSmallFontVtable */
         build/crashbandicootxs/src/engine/text/font.o(.gnu.linkonce.d._vt.Q36Engine4Text4Font); /* gFontVtable */
-        build/crashbandicootxs/src/actor/actor.o(.gnu.linkonce.d._vt.Q34Game8Entities9ActorSelf); /* gActorVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar14RiderlessPolar); /* gRiderlessPolarVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar19PolarCheckpointText); /* gPolarCheckpointTextVtable */
-        build/crashbandicootxs/src/vehicle/polar/polar_player_states.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar11PolarPlayer); /* gPolarPlayerVtable */
-        build/crashbandicootxs/src/vehicle/polar/polar_pickups.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar19PolarCollectedWumpa); /* gPolarCollectedWumpaVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar10PolarWumpa); /* gPolarWumpaVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar14PolarTimeCrate); /* gPolarTimeCrateVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar18PolarQuestionCrate); /* gPolarQuestionCrateVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar16PolarAkuAkuCrate); /* gPolarAkuAkuCrateVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar15PolarNitroCrate); /* gPolarNitroCrateVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar14PolarLifeCrate); /* gPolarLifeCrateVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar19PolarFourWumpaCrate); /* gPolarFourWumpaCrateVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar15PolarBasicCrate); /* gPolarBasicCrateVtable */
-        build/crashbandicootxs/src/vehicle/polar/polar_crate.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar10PolarCrate); /* gPolarCrateVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar18PolarElectricFence); /* gPolarElectricFenceVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar13PolarObstacle); /* gPolarObstacleVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar13PolarLauncher); /* gPolarLauncherVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar12PolarPenguin); /* gPolarPenguinVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar11PolarIcicle); /* gPolarIcicleVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar11PolarAkuAku); /* gPolarAkuAkuVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar9PolarGoal); /* gPolarGoalVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar13PolarBoostPad); /* gPolarBoostPadVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar20PolarCheckpointCrate); /* gPolarCheckpointCrateVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack21JetpackCheckpointText); /* gJetpackCheckpointTextVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack16JetpackExplosion); /* gJetpackExplosionVtable */
-        build/crashbandicootxs/src/vehicle/jetpack/jetpack_player.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack13JetpackPlayer); /* gJetpackPlayerVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack11JetpackShot); /* gJetpackShotVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack12JetpackPlane); /* gJetpackPlaneVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack13JetpackBomber); /* gJetpackBomberVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack17JetpackCannonball); /* gJetpackCannonballVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack15AirshipFireball); /* gAirshipFireballVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack14JetpackBalloon); /* gJetpackBalloonVtable */
-        build/crashbandicootxs/src/vehicle/jetpack/jetpack_crates.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack18JetpackHealthCrate); /* gJetpackHealthCrateVtable */
-        build/crashbandicootxs/src/vehicle/jetpack/jetpack_crates.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack16JetpackTimeCrate); /* gJetpackTimeCrateVtable */
-        build/crashbandicootxs/src/vehicle/jetpack/jetpack_crates.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack20JetpackQuestionCrate); /* gJetpackQuestionCrateVtable */
-        build/crashbandicootxs/src/vehicle/jetpack/jetpack_crates.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack19JetpackBalloonCrate); /* gJetpackBalloonCrateVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack21JetpackParachuteNitro); /* gJetpackParachuteNitroVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack13JetpackRocket); /* gJetpackRocketVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack11JetpackRing); /* gJetpackRingVtable */
-        build/crashbandicootxs/src/vehicle/jetpack/jetpack_collected_wumpa.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack21JetpackCollectedWumpa); /* gJetpackCollectedWumpaVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q34Game6Bosses18HovercraftFireball); /* gHovercraftFireballVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q34Game6Bosses16HovercraftCannon); /* gHovercraftCannonVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q34Game6Bosses18HovercraftLauncher); /* gHovercraftLauncherVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q34Game6Bosses17HovercraftSideGun); /* gHovercraftSideGunVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q34Game6Bosses21HovercraftCannonFlash); /* gHovercraftCannonFlashVtable */
-        build/crashbandicootxs/src/frontend/company_logos_ctor.o(.gnu.linkonce.d._vt.Q34Game2Ui9LogoActor); /* gLogoActorVtable */
+        build/crashbandicootxs/src/game/entities/actor_self.o(.gnu.linkonce.d._vt.Q34Game8Entities9ActorSelf); /* gActorVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar14RiderlessPolar); /* gRiderlessPolarVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar19PolarCheckpointText); /* gPolarCheckpointTextVtable */
+        build/crashbandicootxs/src/game/vehicles/polar/polar_player_states.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar11PolarPlayer); /* gPolarPlayerVtable */
+        build/crashbandicootxs/src/game/vehicles/polar/polar_pickups.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar19PolarCollectedWumpa); /* gPolarCollectedWumpaVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar10PolarWumpa); /* gPolarWumpaVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar14PolarTimeCrate); /* gPolarTimeCrateVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar18PolarQuestionCrate); /* gPolarQuestionCrateVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar16PolarAkuAkuCrate); /* gPolarAkuAkuCrateVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar15PolarNitroCrate); /* gPolarNitroCrateVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar14PolarLifeCrate); /* gPolarLifeCrateVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar19PolarFourWumpaCrate); /* gPolarFourWumpaCrateVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar15PolarBasicCrate); /* gPolarBasicCrateVtable */
+        build/crashbandicootxs/src/game/vehicles/polar/polar_crate.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar10PolarCrate); /* gPolarCrateVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar18PolarElectricFence); /* gPolarElectricFenceVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar13PolarObstacle); /* gPolarObstacleVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar13PolarLauncher); /* gPolarLauncherVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar12PolarPenguin); /* gPolarPenguinVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar11PolarIcicle); /* gPolarIcicleVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar11PolarAkuAku); /* gPolarAkuAkuVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar9PolarGoal); /* gPolarGoalVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar13PolarBoostPad); /* gPolarBoostPadVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar20PolarCheckpointCrate); /* gPolarCheckpointCrateVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack21JetpackCheckpointText); /* gJetpackCheckpointTextVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack16JetpackExplosion); /* gJetpackExplosionVtable */
+        build/crashbandicootxs/src/game/vehicles/jetpack/jetpack_player.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack13JetpackPlayer); /* gJetpackPlayerVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack11JetpackShot); /* gJetpackShotVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack12JetpackPlane); /* gJetpackPlaneVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack13JetpackBomber); /* gJetpackBomberVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack17JetpackCannonball); /* gJetpackCannonballVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack15AirshipFireball); /* gAirshipFireballVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack14JetpackBalloon); /* gJetpackBalloonVtable */
+        build/crashbandicootxs/src/game/vehicles/jetpack/jetpack_crates.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack18JetpackHealthCrate); /* gJetpackHealthCrateVtable */
+        build/crashbandicootxs/src/game/vehicles/jetpack/jetpack_crates.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack16JetpackTimeCrate); /* gJetpackTimeCrateVtable */
+        build/crashbandicootxs/src/game/vehicles/jetpack/jetpack_crates.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack20JetpackQuestionCrate); /* gJetpackQuestionCrateVtable */
+        build/crashbandicootxs/src/game/vehicles/jetpack/jetpack_crates.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack19JetpackBalloonCrate); /* gJetpackBalloonCrateVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack21JetpackParachuteNitro); /* gJetpackParachuteNitroVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack13JetpackRocket); /* gJetpackRocketVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack11JetpackRing); /* gJetpackRingVtable */
+        build/crashbandicootxs/src/game/vehicles/jetpack/jetpack_collected_wumpa.o(.gnu.linkonce.d._vt.Q44Game8Vehicles7Jetpack21JetpackCollectedWumpa); /* gJetpackCollectedWumpaVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q34Game6Bosses18HovercraftFireball); /* gHovercraftFireballVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q34Game6Bosses16HovercraftCannon); /* gHovercraftCannonVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q34Game6Bosses18HovercraftLauncher); /* gHovercraftLauncherVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q34Game6Bosses17HovercraftSideGun); /* gHovercraftSideGunVtable */
+        build/crashbandicootxs/src/game/vehicles/actor_destructors.o(.gnu.linkonce.d._vt.Q34Game6Bosses21HovercraftCannonFlash); /* gHovercraftCannonFlashVtable */
+        build/crashbandicootxs/src/game/ui/company_logos_ctor.o(.gnu.linkonce.d._vt.Q34Game2Ui9LogoActor); /* gLogoActorVtable */
 
 	} = 0
 

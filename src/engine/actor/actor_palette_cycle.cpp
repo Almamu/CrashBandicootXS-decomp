@@ -1,6 +1,6 @@
-#include "actor_self.hpp"
+#include "game/entities/actor_self.hpp"
 #include "engine/sys/vram_dma_queue.hpp"
-#include "vehicle.hpp"
+#include "game/vehicles/vehicle.hpp"
 #include "engine/actor/actor_palette_cycle.hpp"
 
 extern "C" {
@@ -18,7 +18,7 @@ using Engine::Sys::VramDmaQueue;
 /* The actor zone's BG palette cycle (gActorPaletteCycle*): restore,
  * save, the per-frame DMA step, the per-category seed and the switch,
  * ROM 0x0802AB08-0x0802AC28.
- * Built with old_agbcp and -fno-implement-inlines, like actor.cpp, where
+ * Built with old_agbcp and -fno-implement-inlines, like actor_self.cpp (actor.cpp then), where
  * it was until #770. See docs/matching/archive/issue-50-actor-2a69c.md. */
 
 /* Loads the palette cycle's cursor and bound (`frame`/`target`, see

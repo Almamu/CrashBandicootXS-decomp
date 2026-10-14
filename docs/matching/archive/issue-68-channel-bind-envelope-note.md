@@ -106,7 +106,7 @@ file boundaries.
 A later pass closed `GaxChannelSetInstrument` (`lib/gax/src/gax_channel_bind_instrument.c`)
 using the same "`self` lives in `ip` for the whole function, never spilled
 to a callee-saved register" idiom already established for `SetEntityIdActivated`
-(`src/level/entity_flags.c`, see
+(`src/game/level/entity_flags.c`, see
 [naked-sub_80259d4-matched.md](./naked-sub_80259d4-matched.md)):
 
 ```c

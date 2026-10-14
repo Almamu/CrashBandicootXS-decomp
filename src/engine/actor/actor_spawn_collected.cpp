@@ -1,5 +1,5 @@
-#include "actor_self.hpp"
-#include "vehicle.hpp"
+#include "game/entities/actor_self.hpp"
+#include "game/vehicles/vehicle.hpp"
 #include "engine/actor/collected_spawns.hpp"
 
 extern "C" {
@@ -15,7 +15,7 @@ using Engine::Actor::CollectedSpawns;
 
 /* The collected-spawn list (CollectedSpawns, at most 15 spawns): the
  * test, the append and the reset, ROM 0x0802AA80-0x0802AB08.
- * Built with old_agbcp and -fno-implement-inlines, like actor.cpp, where
+ * Built with old_agbcp and -fno-implement-inlines, like actor_self.cpp (actor.cpp then), where
  * it was until #770. See docs/matching/archive/issue-50-actor-2a69c.md. */
 
 /* Whether `spawn` is among the first `count` of `spawns`. */

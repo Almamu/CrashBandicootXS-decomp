@@ -18,7 +18,7 @@ The rewrites come in one of two forms.
 
 A spec is a Python file defining:
 
-    SOURCE   = "src/bosses/hovercraft.cpp"   # the file the function is in
+    SOURCE   = "src/game/bosses/hovercraft.cpp"   # the file the function is in
     SYMBOL   = "ConvertHovercraftTiles"      # its symbol in the object
     TARGET   = "p8r/target/hovercraft.o"     # an object with the ROM's code
     REGION   = '''...'''                     # exact text of SOURCE to replace

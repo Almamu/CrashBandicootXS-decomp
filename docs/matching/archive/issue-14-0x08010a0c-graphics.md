@@ -58,7 +58,7 @@ covering:
 
 ## Follow-up: `ResolveCollisionCandidates` - now matched (NAKED transcription)
 
-`ResolveCollisionCandidates` (`src/objects/collision_queue.c`) - the chunk's last and
+`ResolveCollisionCandidates` (`src/game/crates/collision_queue.c`) - the chunk's last and
 largest function (488 bytes), and the one `ResolvePlayerCollisions`
 (crate.c) already calls by name - was originally parked here
 under `NON_MATCHING`. A later pass in the same session that closed
@@ -112,17 +112,17 @@ zero-fill gap before `AddCollisionCandidate` (the assembler's default `nop`
 fill pattern otherwise mismatches the ROM's zero halfword there - see
 `matching_decomp_alignment_fix`). Verified via isolated
 `arm-none-eabi-as` assembly against the ROM's raw bytes first, then
-folded into `src/objects/collision_queue.c`/`.o` and confirmed with a full
+folded into `src/game/crates/collision_queue.c`/`.o` and confirmed with a full
 clean `make compare` (`crashbandicootxs.gba: La suma coincide`). The
 old `asm/code_3_2_17_e560_10b6c.s` fragment (which held only this one
 function) is removed entirely, `ldscript.txt`'s now-redundant
 `code_3_2_17_e560_10b6c.o` entry is dropped, and
 `tools/report_units.py`'s `0x08010B6C` unit now points at
-`src/objects/collision_queue.o` instead of `None`.
+`src/game/crates/collision_queue.o` instead of `None`.
 
 ## Follow-up: GitHub issue #9's `ResetPlayer` - now matched
 
-`ResetPlayer` (`src/player/player_reset.c`) was previously parked
+`ResetPlayer` (`src/game/crash/player_reset.c`) was previously parked
 (see this same repo's `issue-9-0x08007634-actor.md` for its original
 write-up) on exactly the same shape of gap `ResolveCollisionCandidates` above hit -
 the ROM building several field addresses as a running pointer
@@ -212,7 +212,7 @@ section entry for `ResetPlayer` is removed accordingly.
 - `tools/report_units.py` - `UNITS` list split for
   `0x08010A0C`-`0x08010D54`, recategorized `graphics` -> `game_loop`;
   `0x0800A734` merged into the existing `player_reset.o` unit;
-  `0x08010B6C` now points at `src/objects/collision_queue.o` instead of
+  `0x08010B6C` now points at `src/game/crates/collision_queue.o` instead of
   `None`.
 - `ldscript.txt` - the now-redundant
   `build/crashbandicootxs/asm/code_3_2_17_e560_10b6c.o(.text);` line

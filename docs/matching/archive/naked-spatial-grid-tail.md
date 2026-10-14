@@ -122,7 +122,7 @@ these three raw bodies required splitting that one file into four:
 - `asm/code_3_2_13.s` (trimmed to just `InitCrateList`'s guard)
 - new `src/crates/crate_grid_unlink.c` (`UnlinkCrateFromGrid`)
 - `asm/code_3_2_13_9150.s` (`LinkCrateToActiveBucket`'s guard)
-- new `src/crates/crate_list_update.c` (`UpdateCrateList`)
+- new `src/game/crates/crate_list_update.c` (`UpdateCrateList`)
 - `asm/code_3_2_13_944c.s` (`DrawCrateList`/`CollideCrateGrid`/`CollideCrateGridPartWithPlayer`'s
   guards)
 - new `src/crates/crate_player_collide.c` (`CollidePlayerWithCrates`)

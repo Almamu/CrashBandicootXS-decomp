@@ -51,7 +51,7 @@ owning record's pool index for `FreeVramTileBlock`.
   instructions literally, with real `.L`-prefixed named labels (the same
   "opaque asm reaching a named landing point defined by a later, ordinary
   C statement's own `asm volatile(".Lname:")` marker" idiom
-  `UpdateActorPaletteCycle` in `src/actor/actor.c` established) standing in
+  `UpdateActorPaletteCycle` in `src/game/entities/actor_self.c` established) standing in
   for the two ROM-shared merge points a plain C `if`/`return` can't be
   aimed at a chosen physical address: the "not found" early return, and
   the free-list-split/no-split rejoin. The same asm island also had to

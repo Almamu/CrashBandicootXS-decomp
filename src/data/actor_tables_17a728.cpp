@@ -1,5 +1,5 @@
-#include "yeti.hpp"
-#include "vehicle.hpp"
+#include "game/vehicles/polar/yeti.hpp"
+#include "game/vehicles/vehicle.hpp"
 
 extern "C" {
 #include "core.h"
@@ -52,7 +52,7 @@ const u16 gPolarAkuAkuPalette3[16] = {
     0x4E73, 0x6739, 0x56B5, 0x6F7B, 0x4631, 0x6F7B, 0x6739, 0x0000,
 };
 
-/* Yeti::chargeParams (include/yeti.hpp): the records Yeti::StateChase and
+/* Yeti::chargeParams (include/game/vehicles/polar/yeti.hpp): the records Yeti::StateChase and
  * Yeti::StateCharge (yeti_states.cpp) index by
  * gYetiParamsIndex: StateCharge's step, then StateChase's two rolls (out
  * of 0x100) for starting a charge (struct YetiCharge). */

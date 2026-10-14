@@ -27,13 +27,13 @@ descriptive names; see `tools/file_layout_plan.tsv` for the mapping.)
 
 ## Matched
 
-- `src/player/input_ctrl_queue.c` (new file, ROM 0x08017A44-0x08017AAC):
+- `src/game/crash/input_ctrl_queue.c` (new file, ROM 0x08017A44-0x08017AAC):
   `IsInputCtrlMotionXPending`-`GetCtrlTarget` (9 functions) - trivial `self+0x14`/
   `self+0x17`/`self+0x18` byte/word accessors, plus the
   `DestroyBossCtrl`/`CreateBossCtrl` table-pointer-reset pair (same
   `gBossCtrlVtable`/`DestroyCtrl`/`InitCtrl` double-set pattern
   seen throughout this object family).
-- `src/bosses/mega_mix.c` (new file, ROM 0x08017ECC-0x08017FE8,
+- `src/game/bosses/mega_mix.c` (new file, ROM 0x08017ECC-0x08017FE8,
   non-adjacent to `input_ctrl_queue.c` since the raw `UpdateMegaMix` sits
   between them): `SetMegaMixMotionYFromSet`, `SetMegaMixMotionXFromSet`, `StartMegaMixMotionYFromSet`,
   `StartMegaMixMotionXFromSet`, `ResetMegaMixCtrl`, `DestroyMegaMixCtrl`, `CreateMegaMixCtrl` - a

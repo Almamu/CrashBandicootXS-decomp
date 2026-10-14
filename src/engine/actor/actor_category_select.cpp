@@ -1,4 +1,4 @@
-#include "actor_self.hpp"
+#include "game/entities/actor_self.hpp"
 #include "engine/gfx/cell_anim.hpp"
 #include "engine/actor/actor_spawns.hpp"
 #include "engine/actor/actor_category.hpp"

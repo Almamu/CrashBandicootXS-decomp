@@ -57,7 +57,7 @@ extern s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask);
 /* src/engine/sys/main.cpp */
 extern s32 AgbMain(void);
 
-/* src/system/main_loop.cpp. GetUiText returns UI string `index` in the
+/* src/game/level/main_loop.cpp. GetUiText returns UI string `index` in the
  * current language (docs/casts/text.md). */
 extern s32 MainLoop(void);
 extern const u8 *GetUiText(s32 index);

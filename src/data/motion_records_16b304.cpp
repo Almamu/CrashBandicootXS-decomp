@@ -1,10 +1,10 @@
-#include "player.hpp"
-#include "swim_ctrl.hpp"
+#include "game/crash/player.hpp"
+#include "game/crash/swim_ctrl.hpp"
 #include "engine/util/math_util.h"
 
 extern "C" {
 #include "core.h"
-#include "objects.h"
+#include "game/entities/objects.h"
 }
 
 /*

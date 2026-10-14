@@ -3,7 +3,7 @@
 
 Scans the C sources under src/ and include/ (not the data tables in
 src/data/) for the expression shapes that the shared helpers in
-include/engine/util/math_util.h and include/entity_bits.h can name, and for the
+include/engine/util/math_util.h and include/game/level/entity_bits.h can name, and for the
 file-local helper macros that several files define for themselves.
 Comments and strings are blanked out first, and #define bodies aren't
 use sites (they're listed by --macros instead). It doesn't run the

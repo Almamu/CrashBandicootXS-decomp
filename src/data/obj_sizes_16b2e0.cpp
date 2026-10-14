@@ -1,7 +1,7 @@
 extern "C" {
 #include "core.h"
 #include "engine/gfx/sprite_bank.h"
-#include "objects.h"
+#include "game/entities/objects.h"
 #include "engine/gfx/gfx.h"
 }
 

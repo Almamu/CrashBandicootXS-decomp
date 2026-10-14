@@ -9,9 +9,9 @@ now match as real C:
 | Function | File | Issue | Compiler | Was | Now |
 |---|---|---|---|---|---|
 | `PlayerAnimWouldTouchCrate` | `src/crates/crate_touch.c` | #11 | old_agbcc | 42 | match |
-| `BreakCrateTouchedByPlayer` | `src/crates/crate_hit.c` | #12 | old_agbcc | 151 | match |
-| `QueueCratePlayerCollision` | `src/crates/crate_break.c` | #12 | old_agbcc | 968 | 938, still NAKED |
-| `ApplyCrateCollision` | `src/crates/crate_break.c` | #12 | old_agbcc | 49 | 49, still NAKED |
+| `BreakCrateTouchedByPlayer` | `src/game/crates/crate_hit.c` | #12 | old_agbcc | 151 | match |
+| `QueueCratePlayerCollision` | `src/game/crates/crate_break.c` | #12 | old_agbcc | 968 | 938, still NAKED |
+| `ApplyCrateCollision` | `src/game/crates/crate_break.c` | #12 | old_agbcc | 49 | 49, still NAKED |
 
 Each of `crate_touch.o` and `crate_hit.o` holds only its one
 function, and both joined `OLD_AGBCC_OBJS`. Under current agbcc the

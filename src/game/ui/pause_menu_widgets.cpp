@@ -1,0 +1,203 @@
+#include "game/ui/menus.hpp"
+#include "engine/text/font.hpp"
+#include "engine/audio/audio.hpp"
+
+extern "C" {
+#include "core.h"
+#include "engine/text/text.h"
+#include <libgcc.h>
+#include "globals.h"
+}
+
+using Engine::Text::Font;
+using Game::Ui::PauseMenu;
+
+/* PauseMenu's fraction readout, volume and cursor steps (menus.hpp; C++
+ * since the #664 cleanup), with FormatDecimal (C linkage). */
+
+/* Draws a "count/total" readout: `count` at gSmallFont's position, a
+ * large `/` (gLargeFont, moved to 2 pixels left of that position), then
+ * `total` with gSmallFont moved to 5 left of and 8 below the large
+ * font's position. `this` is unused.
+ *
+ * Matched in the last-ten pass (docs/matching/archive/last-ten-naked-retry.md).
+ * The ROM's r7 is never a pseudo's register here (the function is one
+ * basic block, and local-alloc never uses the frame pointer): it is
+ * reload's register for the 0x110 posX offset. Every posX/posY access is
+ * a plain field access, so each offset reaches reload as a constant: the
+ * second half's 0x110 goes to r6 (reload_cse copies it from r7) and
+ * 0x114 to r7 (move2add's `adds r7, #4`). The second half's reads go
+ * through the inline getters and its new position is passed straight to
+ * the inline setter, which puts both loads ahead of the `*pdc` load. */
+void PauseMenu::DrawFraction(const u8 *count, const u8 *total)
+{
+    Font **pdc = &gSmallFont;
+    Font **pe0;
+
+    (*pdc)->DrawText(count);
+
+    Font *d = *pdc;
+    /* `x` is needed: inlined, the code is 2 instructions shorter */
+    screen_ux_t x = d->posX;
+    /* `y` is needed: inlined, the instructions are reordered */
+    screen_uy_t y = d->posY;
+
+    /* Assigned here, not at the top: that keeps the
+     * &gLargeFont load after the posX/posY loads. */
+    pe0 = &gLargeFont;
+    (*pe0)->SetPos(x - 2, y);
+    (*pe0)->DrawGlyph('/');
+
+    Font *e = *pe0;
+
+    (*pdc)->SetPos(e->GetX() - 5, e->GetY() + 8);
+    (*pdc)->DrawText(total);
+}
+
+/* Writes " <NN%>" into `buf`: the digits of `value` land at `buf + 2`
+ * via FormatDecimal, which returns how many it wrote. */
+static inline void FormatPercent(u8 *buf, s32 value)
+{
+    s32 len;
+
+    buf[0] = ' ';
+    buf[1] = '<';
+    len = FormatDecimal(value, &buf[2]);
+    buf[len + 2] = '%';
+    buf[len + 3] = '>';
+    buf[len + 4] = '\0';
+}
+
+/* On the music row (PAUSE_ROW_TYPE_MUSIC) or the sound row (PAUSE_ROW_TYPE_SOUND), turns that volume
+ * down one 5% step, unless it is 0: the new " <NN%>" text, and the
+ * volume `((v << 8) + 1) / 20` set on the audio context. The sound row
+ * also plays a cue. */
+void PauseMenu::VolumeDown()
+{
+    s32 count;
+
+    switch (rows[cursor].type) {
+    case PAUSE_ROW_TYPE_MUSIC:
+        count = musicVolume;
+        if (count != 0) {
+            count--;
+            musicVolume = count;
+            FormatPercent(musicVolumeText, count * 5);
+            gAudioContext->SetMusicVolume(((musicVolume << 8) + 1) / 20);
+        }
+        break;
+    case PAUSE_ROW_TYPE_SOUND:
+        count = soundVolume;
+        if (count != 0) {
+            count--;
+            soundVolume = count;
+            FormatPercent(soundVolumeText, count * 5);
+            gAudioContext->SetSfxVolume(((soundVolume << 8) + 1) / 20);
+            gAudioContext->PlaySfx(SFX_HUD_COLLECT, 0x100);
+        }
+        break;
+    }
+}
+
+/* VolumeDown's counterpart: one step up, up to 20 (100%). */
+void PauseMenu::VolumeUp()
+{
+    s32 count;
+
+    switch (rows[cursor].type) {
+    case PAUSE_ROW_TYPE_MUSIC:
+        count = musicVolume;
+        if (count <= 0x13) {
+            count++;
+            musicVolume = count;
+            FormatPercent(musicVolumeText, count * 5);
+            gAudioContext->SetMusicVolume(((musicVolume << 8) + 1) / 20);
+        }
+        break;
+    case PAUSE_ROW_TYPE_SOUND:
+        count = soundVolume;
+        if (count <= 0x13) {
+            count++;
+            soundVolume = count;
+            FormatPercent(soundVolumeText, count * 5);
+            gAudioContext->SetSfxVolume(((soundVolume << 8) + 1) / 20);
+            gAudioContext->PlaySfx(SFX_HUD_COLLECT, 0x100);
+        }
+        break;
+    }
+}
+
+/* Moves the cursor down one row, wrapping at the row count. */
+void PauseMenu::CursorDown()
+{
+    cursor = cursor + 1;
+    cursor = __modsi3(cursor, rowCount);
+}
+
+/* Moves the cursor up one row, wrapping to the last row. */
+s32 PauseMenu::CursorUp()
+{
+    s32 v = cursor;
+    if (v == 0) {
+        v = rowCount;
+    }
+    v -= 1;
+    cursor = v;
+    return v;
+}
+
+/* Decimal `itoa`: writes `value`'s decimal digits (unsigned, most
+ * significant first) to `dest`, NUL-terminated, and returns the digit
+ * count. Shared by every number label of the pause menu, the level
+ * select and the HUD. Builds the digits least-significant first into a
+ * small stack buffer via the div/mod library primitives
+ * (`lib/libgcc/lib1funcs.s`), then reverses them into `dest`.
+ *
+ * `val`, a local copy of the `value` parameter (rather than using
+ * `value` directly), reproduces the ROM's parameter-home order: with
+ * `value` itself, this compiler copies argument registers to their home
+ * pseudo-regs in ascending source-register order (r0 before r1), but
+ * the ROM copies r1 (`dest` -> r7) first, r0 (`value` -> r5) second -
+ * the copy defers the r0 move until just before the loop that needs
+ * it. */
+s32 FormatDecimal(s32 value, u8 *dest)
+{
+    s32 val = value;
+    u8 buf[0xc];
+    s32 count;
+    s32 i;
+
+    count = 0;
+    do {
+        u8 *p = &buf[count];
+        *p = (u8)__modsi3(val, 10) + '0';
+        val = __divsi3(val, 10);
+        count++;
+    } while (val != 0);
+
+    i = 0;
+    do {
+        count--;
+        dest[count] = buf[i];
+        i++;
+    } while (count != 0);
+    dest[i] = 0;
+
+    return i;
+}
+
+/* Formats " <NN%>" (the digits of `volume * 5`) into `out`. `this` is
+ * unused (the ROM's first instruction discards r0). */
+void PauseMenu::FormatVolume(s32 volume, u8 *out)
+{
+    /* `value` is needed: inlined, the instructions are reordered */
+    s32 value = volume * 5;
+    s32 count;
+
+    out[0] = ' ';
+    out[1] = '<';
+    count = FormatDecimal(value, out + 2);
+    out[count + 2] = '%';
+    out[count + 3] = '>';
+    out[count + 4] = 0;
+}

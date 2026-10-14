@@ -1,6 +1,6 @@
 extern "C" {
 #include "core.h"
-#include "objects.h"
+#include "game/entities/objects.h"
 #include "engine/util/math_util.h"
 }
 

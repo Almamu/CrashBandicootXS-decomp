@@ -1,10 +1,10 @@
 /* The OBJ VRAM upload cursor (ObjVramCursor, gObjVramCursor;
- * include/sprite_obj.hpp). Split from gfx/graphics.cpp (#767), same flags
+ * include/game/entities/sprite_obj.hpp). Split from gfx/graphics.cpp (#767), same flags
  * (old_agbcc). */
 
 #include "engine/sys/display.hpp"
 #include "engine/sys/vram_dma_queue.hpp"
-#include "sprite_obj.hpp"
+#include "game/entities/sprite_obj.hpp"
 
 extern "C" {
 #include "core.h"

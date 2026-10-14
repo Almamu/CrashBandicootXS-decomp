@@ -66,10 +66,10 @@ function at the very end:
 
 ## Matched (24 functions, full clean `make compare` passing)
 
-`src/level/spawn_crates.c` (`SpawnNitroSwitchCrate`-`SpawnCheckpointCrate`, 6
+`src/game/crates/spawn_crates.c` (`SpawnNitroSwitchCrate`-`SpawnCheckpointCrate`, 6
 fns): the `CreateCrate` trampoline family, types `1`-`7`.
 
-`src/level/spawn_pickups.c` (`SpawnBodySlamPower`-`InitLevelState`,
+`src/game/objects/spawn_pickups.c` (`SpawnBodySlamPower`-`InitLevelState`,
 18 fns): the `gSpriteBankTable` spawner family, `SpawnCrateGemMarker`,
 `SpawnWumpa`, both `nullsub`s, the `SpawnStartMarker` trampolines, the
 `gPlayer` position writers, the descriptor pair, and
@@ -152,7 +152,7 @@ fns): the `CreateCrate` trampoline family, types `1`-`7`.
 
 ## Parked (`NON_MATCHING`) - 1 function
 
-- **`SpawnBasicCrate`** (`src/level/spawn_crates.c`, real bytes
+- **`SpawnBasicCrate`** (`src/game/crates/spawn_crates.c`, real bytes
   in `asm/code_3_2_17_21d04.s`) - every field/mask/branch is confirmed
   correct and the bit-test/mask-write tail matches the ROM
   byte-for-byte, but the middle "resolve the per-record flags byte"
@@ -215,14 +215,14 @@ to r0 and the reloaded flags byte to r1/r3 respectively, matching which
 one the ROM computes first) closed the remaining two 2-byte ordering
 diffs. Now genuine matched C, not `NAKED` - `tools/report_units.py`'s
 entry for `0x08021D04` now points at
-`src/level/spawn_crates.o` instead of `base_object=None`.
+`src/game/crates/spawn_crates.o` instead of `base_object=None`.
 Full clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` - `crashbandicootxs.gba: La suma
 coincide`.
 
 This doesn't yet extend to `SpawnStartMarker`'s own copy of this same
 `gEntityFlags -> *rec -> {+8, +0xc}` resolution shape
-(`src/level/spawn_start_marker.c`, issue #30) - that function's
+(`src/game/level/spawn_start_marker.c`, issue #30) - that function's
 residual is a different register-choice/mask-derivation gap (`byte` in
 r0, a `movs r0,#1`/`subs r0,#0x12` mask derivation rather than a
 negative-immediate one), not the copy-elimination gap closed here -

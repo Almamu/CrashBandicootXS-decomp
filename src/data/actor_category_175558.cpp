@@ -1,14 +1,14 @@
-#include "yeti.hpp"
-#include "airship.hpp"
-#include "hovercraft.hpp"
-#include "vehicle.hpp"
+#include "game/vehicles/polar/yeti.hpp"
+#include "game/vehicles/jetpack/airship.hpp"
+#include "game/bosses/hovercraft.hpp"
+#include "game/vehicles/vehicle.hpp"
 #include "engine/actor/actor_category.hpp"
 
 extern "C" {
 #include "core.h"
 #include "engine/actor/actor_anim.h"
 #include "engine/actor/actor.h"
-#include "bosses.h"
+#include "game/bosses/bosses.h"
 }
 
 using Engine::Actor::ActorCategory;

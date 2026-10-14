@@ -1,7 +1,7 @@
 # Issue #23: 0x080188D0-0x0801967C (25 functions)
 
 All 25 functions of the former `asm/code_3_2_17_188d0.s` now live in
-`src/bosses/cortex.c` (file retired; `ldscript.txt` links
+`src/game/bosses/cortex.c` (file retired; `ldscript.txt` links
 `cortex.o` in its place). **All 25 are real C**, 0 NAKED, 0
 left raw. Full clean `make compare` passes; `make NON_MATCHING=1 report`
 builds with no warnings for this file.

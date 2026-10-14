@@ -142,7 +142,7 @@ case, this was recognized immediately and NAKED-transcribed rather than
 re-attempted from scratch.
 
 Transcribed mechanically from `asm/code_3_2_17_17ab0.s` (now retired -
-its one function moved to the new `src/bosses/mega_mix_update.c`),
+its one function moved to the new `src/game/bosses/mega_mix_update.c`),
 keeping the ROM's own `_0XXXXXXX` hex-address labels verbatim as plain,
 file-local asm symbols (safe since each is a unique ROM address) - the
 same approach `action_ctrl_event.c`'s `ActionCtrlHandleEvent`, `action_ctrl_run_jump.c`'s

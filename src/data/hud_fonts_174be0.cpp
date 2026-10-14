@@ -1,4 +1,4 @@
-#include "hud.hpp"
+#include "game/ui/hud.hpp"
 
 extern "C" {
 #include "core.h"

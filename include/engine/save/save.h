@@ -38,7 +38,7 @@ extern const u16 gSaveMenuPalette3[16];
  * include/engine/save/save_data.hpp: classes SaveData and SaveTransfer) have no C
  * caller and no C prototype. */
 
-/* The save menu (C++, include/save_menu.hpp: class SaveMenu; the methods,
+/* The save menu (C++, include/game/ui/save_menu.hpp: class SaveMenu; the methods,
  * SaveMenu::Open, Run and Close among them, have no C caller and no C
  * prototype). */
 

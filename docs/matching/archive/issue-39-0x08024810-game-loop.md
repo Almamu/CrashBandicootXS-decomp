@@ -220,7 +220,7 @@ Confirmed via a full clean `rm -rf build && make NON_MATCHING=1 report`
 crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
 compare` (`crashbandicootxs.gba: La suma coincide`).
 `asm/code_3_2_17_24810.s` is now fully retired - all 25 functions moved
-to the new `src/cutscene/cutscene_player.c`, and `ldscript.txt`'s entry for it
+to the new `src/game/ui/cutscene_player.c`, and `ldscript.txt`'s entry for it
 now points there directly.
 
 ## Cross-references

@@ -3,7 +3,7 @@
 
 /* A helper of the sprite pieces' draw loops (DrawPieces and
  * DrawAffinePieces, src/engine/gfx/sprite_renderer.cpp). The C view this header was named after,
- * `struct gfx_part` (a moving sprite, as include/sprite_obj.hpp's
+ * `struct gfx_part` (a moving sprite, as include/game/entities/sprite_obj.hpp's
  * MovingSprite has it) and its `struct anim_bank`/`anim_record` records,
  * went with their last users, and its `struct gfx_vec` is aabb.h's
  * `struct vec2` (#656). */

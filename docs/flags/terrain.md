@@ -1,7 +1,7 @@
 # The terrain types, collision modes and open bits (#843)
 
-The level collision map (TileCache, include/bg_layer.hpp) has one 16-bit
-cell per 8x8 tile. The names are in include/level.h, next to
+The level collision map (TileCache, include/game/level/bg_layer.hpp) has one 16-bit
+cell per 8x8 tile. The names are in include/game/level/level.h, next to
 `struct terrain_type`.
 
 ## The cell's terrain type (bits 0-7)
@@ -20,7 +20,7 @@ Bits 8-11 are the flag nibble the lookups hand back in `flagsOut`
 GetSolidTerrainHeights' and GetSolidTerrainModeValue's `mode`, and
 LevelLayers::ProbeX's and ProbeY's `submode`, is the direction the probe
 moves in; it indexes `modeValue[]` and `heights[]` (gTerrainHeights0-3).
-LevelLayers::Probe picks it from its PART_DIR_* direction (box_part.h):
+LevelLayers::Probe picks it from its PART_DIR_* direction (sprite_flags.h):
 
 | Probe's `mode` | Resolver | `TERRAIN_MODE_*` | On a hit | Short-circuit |
 |---|---|---|---|---|

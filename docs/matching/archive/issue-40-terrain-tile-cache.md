@@ -49,10 +49,10 @@ issue is where they got turned into (attempted) byte-exact C.
 
 ## Matched (20 functions, full clean `make compare` passing)
 
-`src/level/bg_layer_base.c`: `ScrollBgLayerBase`, `ResetBgLayerBase`, `SetBgLayerSource`,
+`src/game/level/bg_layer_base.c`: `ScrollBgLayerBase`, `ResetBgLayerBase`, `SetBgLayerSource`,
 `IsBgLayerEnabled`, `GetBgLayerY`, `GetBgLayerX`, `GetBgLayerHeightTiles`,
 `GetBgLayerWidthTiles`, `GetBgLayerHeight`, `GetBgLayerWidth`.
-`src/level/tile_cache.c`: `DestroyTileCache`, `InitTileCache`.
+`src/game/level/tile_cache.c`: `DestroyTileCache`, `InitTileCache`.
 `src/level/collision_map.c`: `GetCollisionCell`, `SetCollisionSource`, `SetBitmapBit`,
 `ClearBitmapBit`, `ClearBitmap`, `InitBitmap`.
 
@@ -148,7 +148,7 @@ issue is where they got turned into (attempted) byte-exact C.
   `GetSolidTerrainHeights`/`GetSolidTerrainModeValue` were closed, so once this one closed too
   the file's contents were empty and it (plus its `ldscript.txt` entry)
   were removed rather than kept as a zero-function husk.
-- **`GetTerrainType`** (`src/level/tile_cache.c`) - the last of
+- **`GetTerrainType`** (`src/game/level/tile_cache.c`) - the last of
   `GetCollisionChunk`'s `(x, y)`-tile-lookup consumers: returns the raw
   decoded halfword directly (no bounds check, no terrain-table lookup),
   while also writing the cell's top nibble out through `hiOut`. Same

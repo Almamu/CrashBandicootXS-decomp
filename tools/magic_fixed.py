@@ -133,7 +133,7 @@ INT_LOCALS = [
 ]
 # The directories whose positions are screen pixels (2D layouts), unless
 # the code shows they are Q8.
-UI = re.compile(r"src/(menus|save|hud|cutscene|engine/save|engine/text)/")
+UI = re.compile(r"src/(game/ui|engine/save|engine/text)/|src/game/level/game_progress\.")
 
 # The spelled forms: math_util.h's fixed-point helpers (and the named
 # constants, CONSTANTS, loaded from include/).

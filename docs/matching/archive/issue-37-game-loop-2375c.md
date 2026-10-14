@@ -5,7 +5,7 @@ left this pair (`asm/code_3_2_17_2375c.s`, ROM `0x0802375C`-`0x08024007`)
 completely untouched as "not yet confidently understood branch-by-branch."
 This pass picks the smaller of the two back up.
 
-## `PlayRoom` - matched (`src/level/play_room.c`)
+## `PlayRoom` - matched (`src/game/level/play_room.c`)
 
 A level-start dispatcher, called once from `UpdateGameFrame` when the
 level object's own `+0xdc->+8` state field is `2`

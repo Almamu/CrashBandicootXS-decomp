@@ -24,7 +24,7 @@ different systems by content, not by address contiguity:
 
 `asm/code_3_2_17_e560.s` is truncated to end right before `DrawWumpa`
 (0x080119A8, unchanged start address). The 15 matched functions move to
-a new `src/graphics/actor_part39.c`, now `src/pickups/wumpa.c` (numbered
+a new `src/graphics/actor_part39.c`, now `src/game/objects/wumpa.c` (numbered
 `39` - the next free number after `actor_part38d.c`, this repo's highest
 existing `actor_part*.c` at the time this chunk was picked up). A new
 `asm/code_3_2_17_11bd4.s` picks up the unexamined remainder starting at

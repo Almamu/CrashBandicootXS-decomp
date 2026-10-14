@@ -21,7 +21,7 @@ traced here." `docs/matching/archive/issue-9-0x08007634-actor.md` (line ~206)
 had also already flagged both functions as built on `OffsetToHitboxEdge`/
 `ProbeTerrain`/`ProbeSolidFloorHeight`/`ProbeFloorHeight` - two of those four
 (`OffsetToHitboxEdge`, `ProbeTerrain`) are already matched this session
-(`src/objects/sprite_obj.c`, `src/level/terrain_probe.c`), leaving
+(`src/game/entities/sprite_obj.c`, `src/game/level/terrain_probe.c`), leaving
 only `ProbeSolidFloorHeight`/`ProbeFloorHeight` genuinely unexamined.
 
 ## Reading the real bytes
@@ -214,7 +214,7 @@ resolve correctly once linked.
 
 ## Build layout
 
-New object `src/objects/ground_sprite_collide.c` holds both functions,
+New object `src/game/entities/ground_sprite_collide.c` holds both functions,
 inserted in `ldscript.txt` exactly where `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor`'s
 real bytes used to sit: between the trimmed `asm/code_3_2_11.o` (now
 ending right after `CollideGroundSprite`'s own trailing `bx r1`) and the
@@ -342,7 +342,7 @@ bx r1
 ```
 
 There's a third callee alongside the two flagged in the task ticket:
-`CollideMovingSprite` (already matched, `src/objects/moving_sprite_collide.c`) - a
+`CollideMovingSprite` (already matched, `src/game/entities/moving_sprite_collide.c`) - a
 fire-and-forget `self->table+0x70/0x74` trampoline call, its always-`0`
 return discarded. It sits between the `ProbeGroundSpriteTerrain` call and the
 `self+0x68` bit-3 recheck, with no other effect on this function's
@@ -491,7 +491,7 @@ coincide` (checksum matches).
 
 ### Build layout
 
-`CollideGroundSprite` was added directly to `src/objects/ground_sprite_collide.c`
+`CollideGroundSprite` was added directly to `src/game/entities/ground_sprite_collide.c`
 (prepended before `ProbeGroundSpriteTerrain`), the same translation unit as the
 NAKED `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor` - the same "NAKED function sharing a
 file with matched ones" precedent already established for `AdvanceSpriteAnim`/
@@ -503,13 +503,13 @@ in link order, with no raw `.s` gap between `moving_sprite_collide.o` and
 
 ### Cross-references (follow-up)
 
-- `docs/status/actor.md` - new `src/objects/ground_sprite_collide.c` bullet
+- `docs/status/actor.md` - new `src/game/entities/ground_sprite_collide.c` bullet
   in "Matched" for `CollideGroundSprite`; the stale "Left raw" entry for it
   removed; the `ground_sprite.c` bullet's "large raw span" note
   corrected (that span was never fully raw - `UpdateGroundSprite`/
   `AnchorGroundSpriteHitbox` were already matched in `ground_sprite_update.c`).
 - `tools/report_units.py` - the `0x0800A0FC` unit's `base_object`
-  changed from `None` to `"src/objects/ground_sprite_collide.o"` (matched);
+  changed from `None` to `"src/game/entities/ground_sprite_collide.o"` (matched);
   the `0x0800A178` unit's comment updated to note it now shares that
   object with the matched `CollideGroundSprite`.
 - `ldscript.txt` - `asm/code_3_2_11.o` line removed.
@@ -644,7 +644,7 @@ is byte-identical with no exceptions.
 
 ### Build layout (second follow-up)
 
-New object `src/level/terrain.c` holds all four functions
+New object `src/game/level/terrain.c` holds all four functions
 (`ProbeFloorHeight`, `ProbeSolidFloorHeight`, `sub_8026C80`, `sub_8026C8C`), following
 the `terrain_probe.c`/`terrain.c` naming precedent already established
 for this exact ROM neighborhood (both matched in the same immediate
@@ -659,13 +659,13 @@ exactly where these four functions' real bytes already sat.
 
 - `docs/status/game_loop.md` - new bullet in "Matched" for
   `ProbeFloorHeight`/`ProbeSolidFloorHeight`/`sub_8026C80`/`sub_8026C8C`
-  (`src/level/terrain.c`).
+  (`src/game/level/terrain.c`).
 - `tools/report_units.py` - new unit at `0x08026BF8`
-  (`"src/level/terrain.o"`, category `game_loop`); the `0x0800A178`
+  (`"src/game/level/terrain.o"`, category `game_loop`); the `0x0800A178`
   unit's comment updated to note all four of `OffsetToHitboxEdge`/
   `ProbeTerrain`/`ProbeSolidFloorHeight`/`ProbeFloorHeight` are now matched, not just
   the first two.
-- `ldscript.txt` - `build/crashbandicootxs/src/level/terrain.o(.text);`
+- `ldscript.txt` - `build/crashbandicootxs/src/game/level/terrain.o(.text);`
   line added, between `terrain.o` and `code_3_2_17_26bf8.o`.
 
 ## Later pass (issue #9 NAKED retry)

@@ -48,7 +48,7 @@ family already covered at length by
 
 ## Parked (`NON_MATCHING`, not yet byte-exact) - 1 function
 
-- **`CollidePlayer`** (`src/player/player_collide.c`) - a per-frame
+- **`CollidePlayer`** (`src/game/crash/player_collide.c`) - a per-frame
   "reentrancy guard"-shaped wrapper (only runs while `self+0xc` bit 7
   is set): fires `self->table+0x70`'s trampoline via `_call_via_r1`
   (matched), then calls `CollideGroundSprite` (still raw, its own return value
@@ -347,7 +347,7 @@ s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
 ```
 
 It's a thin wrapper around the already-matched terrain-tile-cache
-lookup `GetTerrainType` (`src/level/tile_cache.c`, GitHub issue #40):
+lookup `GetTerrainType` (`src/game/level/tile_cache.c`, GitHub issue #40):
 `arg0+0x20` is `gLevelLayers`'s own tile-cache-pointer field (the
 same global whose `+0x29`/`+0x2a` fields this doc's own leading block
 already established), `x`/`y` get divided by 8 and clamped to a
@@ -389,7 +389,7 @@ in the ROM, unlike `ProbeTerrain`'s own end-of-function padding quirk.
 `asm/code_3_2_17_266bc.s` is trimmed to end right after `ProbeTerrainX`'s
 own trailing `.align 2, 0` (685 lines, matching the same "everything
 before, everything after" split `ProbeTerrain` itself used to get
-carved out of this same file). `src/level/terrain.c` (new file)
+carved out of this same file). `src/game/level/terrain.c` (new file)
 holds the matched `GetTerrainFlagsAt`. The remainder - `ProbeFloorHeight` onward,
 still raw/unexamined this session (including `StepCameraDirectional`,
 `StepCameraFacing`, `SnapCamera`, `UpdateCamera` and others referencing
@@ -399,7 +399,7 @@ two in `ldscript.txt`:
 
 ```
 asm/code_3_2_17_266bc.o(.text);
-src/level/terrain.o(.text);
+src/game/level/terrain.o(.text);
 asm/code_3_2_17_26bf8.o(.text);
 ```
 

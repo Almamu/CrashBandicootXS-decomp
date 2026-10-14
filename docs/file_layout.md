@@ -225,7 +225,7 @@ include/{core.h,globals.h,match.h,byte_arg.h,screen.h,gba/,constants/}
 | `include/line_util.h` | `include/engine/util/line_util.h` |
 | `include/crate_line_step.hpp` | `include/engine/util/line_steppers.hpp` |
 
-### The game sources and headers (planned)
+### The game sources and headers (moved)
 
 
 **Game::Crash**

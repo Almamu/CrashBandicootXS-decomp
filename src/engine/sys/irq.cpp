@@ -1,6 +1,6 @@
 #include "engine/sys/irq.hpp"
 #include "engine/sys/frame_limiter.hpp"
-#include "spawners.hpp"
+#include "game/level/spawners.hpp"
 #include "engine/audio/audio.hpp"
 
 extern "C" {

@@ -163,7 +163,7 @@ the names with the header it already includes. A data table in
 | `rooms.h` | `ROOM_KIND_` | `struct level_room.kind` (on foot, underwater, hover, category stage) |
 | `rooms.h` | `ROOM_EXIT_` | how a room ended: PlayRoom's and InitActorCategory's result, UpdateGameFrame's `status` (cleared, retry, quit) ([docs/flags/room_exit.md](flags/room_exit.md)) |
 | `level_select.hpp` (next to each class) | `ZOOM_BG_STATE_`, `LEVEL_SELECT_CURSOR_STATE_` | the level select's `ZoomBg::state` (the picture's zoom) and `LevelSelectCursor::state` (idle cycle, grow, shrink) ([docs/flags/level_select.md](flags/level_select.md)) |
-| `box_part.h` | `PART_DIR_` | the direction bits: Sprite's `dir`, MovingSprite's `hitAxes` and `hitMask`, EVENT_BUMP's side ([docs/flags/direction.md](flags/direction.md)) |
+| `sprite_flags.h` | `PART_DIR_` | the direction bits: Sprite's `dir`, MovingSprite's `hitAxes` and `hitMask`, EVENT_BUMP's side ([docs/flags/direction.md](flags/direction.md)) |
 | `platform.hpp` (next to Platform) | `PLATFORM_TYPE_`, `PLATFORM_KIND_` | `Platform::type` and `PlatformMover::kind`, what a platform does; Platform::Create's spawn `kind`, the platform's look ([docs/flags/platform.md](flags/platform.md)) |
 | `save.h` | `SAVE_MENU_STATE_` | `SaveMenu::state`, the save menu's screen ([docs/flags/save_menu.md](flags/save_menu.md)) |
 | `menus.hpp` (next to `struct pause_row`) | `PAUSE_ROW_TYPE_` | `pause_row::type` and RunPauseMenu's result: resume, restart, quit, the volume rows ([docs/flags/pause_menu.md](flags/pause_menu.md)) |

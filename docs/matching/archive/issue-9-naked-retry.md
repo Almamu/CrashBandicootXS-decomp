@@ -1,7 +1,7 @@
 # Issue #9: NAKED retry (0x08007634-0x0800B3F0)
 
 This pass retried the 21 NAKED functions in issue #9's range
-(then `src/graphics/`, now `src/objects/` and `src/player/`: the early
+(then `src/graphics/`, now `src/objects/` and `src/game/crash/`: the early
 actor/collision core). 11 are now real C.
 
 ## The main finding: this code was built with old_agbcc
@@ -33,7 +33,7 @@ were really caused by building with the wrong compiler.
 | `CollidePlayerWithCrates` | crate_player_collide.c | old_agbcc; plain C, camera x read before the `>> 8` |
 | `PlayerHasRoomForAnim` | player_anim_room.c | guarded do-while list walk (the "per-iteration literal reload"); position read as a struct copy; `rec += 4` as its own statement (the ROM's `adds r1, #4; adds r4, r1, #0`) |
 
-The shared layout of these objects is in the new `include/box_part.h`:
+The shared layout of these objects is in the new `include/game/entities/sprite_flags.h`:
 `struct box_part` (the collision/animation view of a part object),
 `struct keyframe`, `struct part_box`, `struct part_aabb`,
 `struct part_list`, and the `PART_METHOD` method-table accessor.

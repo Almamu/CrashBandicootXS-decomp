@@ -14,10 +14,10 @@ screen. The names are in include/engine/text/text.h, next to the prototypes.
 
 ## The credits, `CREDITS_OP_*` and `CREDITS_POPUP_MODE_*`
 
-Credits::UpdateText (src/frontend/credits.cpp) reads gCreditsText
+Credits::UpdateText (src/game/ui/credits.cpp) reads gCreditsText
 (src/data/credits_17c5d0.cpp) a line at a time. Three bytes are opcodes;
 the data spells them with its own string macros. The names are in
-include/frontend.hpp, before `struct CreditsPopup`.
+include/game/ui/frontend.hpp, before `struct CreditsPopup`.
 
 | Byte | Name | Data macro | Meaning |
 |---|---|---|---|

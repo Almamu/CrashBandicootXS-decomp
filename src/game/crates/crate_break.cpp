@@ -1,0 +1,1584 @@
+#include "game/crates/crate.hpp"
+#include "game/level/spawners.hpp"
+#include "game/crates/crate_list.hpp"
+#include "game/entities/part_list.hpp"
+#include "game/objects/pickups.hpp"
+#include "game/crash/player.hpp"
+#include "game/ui/hud.hpp"
+#include "engine/audio/audio.hpp"
+#include "game/level/level_state.hpp"
+
+extern "C" {
+#include "engine/util/util.h"
+#include "engine/sys/memory.h"
+#include "game/level/level.h"
+#include "globals.h"
+#include "game/level/entity_bits.h"
+#include "engine/gfx/sprite_bank.h"
+}
+
+using Game::Crash::Player;
+using Game::Crates::CollisionQueue;
+using Game::Crates::Crate;
+using Game::Entities::MovingSprite;
+using Game::Level::EntitySpawner;
+using Game::Level::LevelEntityFlags;
+using Game::Objects::Wumpa;
+
+/* The crate's hits, breaks and explosions (#664, include/game/crates/crate.hpp,
+ * part 7g): the player's hit on a crate (QueuePlayerCollision, resolved
+ * later by ApplyCollision), what each kind of crate does when it breaks
+ * or is set off, the explosions' blasts and the falls of the crates above
+ * a broken one. ROM 0x0800D18C-0x0800F1B8 (crate_switches.cpp and
+ * crate_states.cpp have the rest of the cluster, to 0x0800FDC8),
+ * the issue #12/#13 "physics/collision" cluster
+ * (docs/matching/archive/issue-12-physics-collision.md). Built with
+ * old_agbcp, as the C was with old_agbcc.
+ *
+ * The small inline helpers below each place a load or a computation
+ * where the ROM has it (an inline's arguments are computed before its
+ * body); the comment on each says which. The C idioms kept from the C,
+ * each tried as plain C++ first: constants in locals (`u8 one = 1`, `u8
+ * e = CRATE_KIND_TNT`, ...) and local copies (`u16 eid = id`, a `struct
+ * player **` to gPlayer), which give the ROM's register choices and
+ * reloads, and a few gotos for its block order. */
+
+/* The player's collision queue as its class. */
+static inline CollisionQueue *PlayerQueue()
+{
+    return (CollisionQueue *)&gPlayer->collisionQueue;
+}
+
+/* Returns its argument. Writing a position's y through it (instead of a
+ * `pp` pointer local) lets gcse make the ROM's pointer copy: the store goes
+ * through `add r0, sp, #N` and the copy (`adds r2, r0, #0`) is used after. */
+static inline struct vec2 *PosPtr(struct vec2 *p)
+{
+    return p;
+}
+
+/* The response code for an object kind (used in `case 8`). As an inline,
+ * `tgt->kind` is loaded before the table address, as in the ROM. */
+static inline s32 HitResponse(s32 row, s32 k)
+{
+    return gCrateHitResponse[row][k];
+}
+
+/* The response code at the first lookup. There the ROM loads the table
+ * address first, then `&obj->kind`, then adds `row * 28 + k * 4` to the
+ * table: the table is an argument (all inline arguments are expanded
+ * before the body), and the offset sum is written in that order. The
+ * byte-offset cast stays: `t[*row][k]` adds the row to the table before
+ * it adds `k * 4`. */
+static inline s32 HitResponseAt(const s32 (*t)[7], u8 *row, s32 k)
+{
+    return *(const s32 *)((const u8 *)t + (*row * 28 + k * 4));
+}
+
+/* The player's `ctrlMode` as an int, for the first test in RingPush.
+ * Written in place, both tests are the same expression and cse's jump
+ * following sends a failed first test straight past the second one; the
+ * ROM re-tests (its `bne` goes to the second load). */
+static inline s32 PlayerCtrlMode(void)
+{
+    return gPlayer->ctrlMode;
+}
+
+/* The ring count as an int. The first `!= 0` test then loads it with the
+ * same zero-extending load as the loop test, and cse reuses the value for
+ * the loop's entry test. Written in place, shorten_compare narrows the test
+ * to a QImode load and the loop test reloads it. */
+static inline s32 PlayerRingCount(void)
+{
+    return gPlayer->listCount;
+}
+
+/* How far two boxes overlap on one axis: `a + b - c`. Written in place,
+ * the loads come out in another order. */
+static inline s32 Span(s32 a, s32 b, s32 c)
+{
+    return a + b - c;
+}
+
+/* Adds `bit` to the player's hit mask. As an inline, a constant bit is
+ * loaded before the player. */
+static inline void AddPlayerHit(Player *p, u32 bit)
+{
+    p->hitMask |= bit;
+}
+
+/* Whether the player is still invulnerable (its `deadline` is ahead).
+ * Written in place, the tests around it are laid out differently. */
+static inline s32 PlayerInvulnerable(void)
+{
+    return gPlayer->deadline > gRoomFrameCount;
+}
+
+/* Pushes `obj` onto the player's 5-slot ring of touched crates. */
+static inline void RingPush(Crate *obj)
+{
+    if (PlayerCtrlMode() == PLAYER_CTRL_MODE_ACTION && gPlayer->listCount <= 4)
+        gPlayer->list[gPlayer->listCount] = obj;
+    if (gPlayer->ctrlMode == PLAYER_CTRL_MODE_ACTION)
+        gPlayer->listCount++;
+}
+
+/* GetSpriteFrameThirdBox inlined: the player's current hitbox quad. */
+static inline const struct hitbox_quad *PlayerThirdBox(void)
+{
+    const struct sprite_frame_3box *info = (const struct sprite_frame_3box *)gPlayer->GetFrame();
+
+    switch (info->frame.pieces[0] >> 4) {
+    case 0:
+        return &info->box[2];
+    case 1:
+    case 2:
+    case 3:
+        return &gEmptySpriteBox;
+    case 4:
+        return &info->box[2];
+    case 5:
+    case 6:
+        return &gEmptySpriteBox;
+    default:
+        return &gEmptySpriteBox;
+    }
+}
+
+/* The player's `busy` latch set: the player is loaded before the 1, as
+ * in SetCrateBusy. */
+static inline void SetPlayerBusy(void)
+{
+    Player *p = gPlayer;
+    u8 one = 1;
+
+    p->busy = one;
+}
+
+/* The player (in action state `idx`) against this crate. Its attack kind
+ * (gActionCtrlStateAttackKinds; invincible with the top mask level) and
+ * the crate's kind give the response (gCrateHitResponse).
+ *
+ * First, if the player's attack box (its frame's third box) overlaps the
+ * crate, the hit is resolved at once: a switch is activated, a crate is
+ * marked busy, broken (with the one above it, if the player's box still
+ * reaches it) or set off, a checkpoint opened. A crate whose stack the
+ * player already touched (the player's ring of five) gives no response,
+ * and a crate broken in a stack bumps the player back and goes into the
+ * ring.
+ *
+ * Otherwise the player's body box is tested against the crate (grown by
+ * the crates of its stack): a falling crate crushes or pushes the player;
+ * else the side the player came from (`edge`: 1/2 the sides, 4 below, 8
+ * on top, from the player's previous position, with FindLineCrossing for
+ * a diagonal approach) and how deep it is in decide where the player is
+ * put back and which crate of the stack the hit goes to. The result is
+ * queued on the player's collision queue, for ApplyCollision. Underwater
+ * (PLAYER_CTRL_MODE_SWIM), a TNT crate the player touches is lit.
+ *
+ * The shapes the ROM needs are in the comments below; the C was matched
+ * over three passes (docs/matching/archive/huge-naked-retry-3.md). The
+ * boxes are filled and mirrored through SetAabb and FlipAabbX/FlipAabbY,
+ * as in crate_hit.cpp's PlayerAnimWouldTouch (see there): each builder
+ * call then forms its own `add r0, sp, #N`, as in the ROM. The locals
+ * are declared in the ROM's stack order (they were one frame struct,
+ * whose `&f.b` arguments needed six BOX_ADDRs until #662 round 4). */
+void Crate::QueuePlayerCollision(s32 idx)
+{
+    struct aabb box;
+    struct aabb prev;
+    struct aabb pbox;
+    u8 found;
+    struct vec2 p1;
+    struct vec2 p2;
+    struct vec2 p3;
+    struct vec2 pos;
+    s32 px;
+    s32 py;
+    s32 side;
+    s32 attack;
+    s32 edge;
+    s32 dirX;
+    s32 dirY;
+    s32 f21;
+    s32 hit;
+    s32 f20;
+    Crate *obj;
+    Crate *tgt;
+    s32 code;
+    s32 dx;
+    s32 dy;
+    s32 n;
+    s32 r; /* shared by both slope checks, so both get r2 as in the ROM */
+    const struct hitbox_quad *q;
+    struct vec2 *pp;
+    const struct hitbox_quad *hb;
+    struct aabb *bb;
+    /* &state, kept for the `case 1`/`case 2` test. Declared last, it
+     * is the last user variable on the stack, so it takes the slot right
+     * after them (0x94) and the `attack * 4` gcse temp gets 0x98, as in the
+     * ROM. Left to gcse, both are temps, numbered in expression-hash order
+     * (`attack * 4` first), and the slots come out swapped. */
+    u8 *st;
+
+    const struct hitbox_quad *pb = &bank->anims[tag].box[0];
+    s32 offX;
+    s32 offY;
+    u8 w;
+    u8 h;
+    /* `bnc` is needed: inlined, the instructions differ */
+    s32 bnc;
+
+    px = Q8_TO_INT(x);
+    py = Q8_TO_INT(y);
+    offX = pb->offX;
+    offY = pb->offY;
+    w = pb->w;
+    h = pb->h;
+    SetAabb(&box, offX + px, offY + py, w, h);
+    if (mirrorBits.flipX < 0)
+        FlipAabbX(&box, px);
+    if (mirrorBits.flipY < 0)
+        FlipAabbY(&box, py);
+    px = Q8_TO_INT(gPlayer->x);
+    py = Q8_TO_INT(gPlayer->y);
+    if (gLevelState->maskLevel == MASK_LEVEL_INVINCIBLE)
+        attack = ATTACK_KIND_INVINCIBLE;
+    else {
+        attack = gActionCtrlStateAttackKinds[idx];
+        if (kind == CRATE_KIND_REINFORCED && attack == ATTACK_KIND_BODY_SLAM &&
+            gPlayer->dir == PART_DIR_UP)
+            attack = ATTACK_KIND_JUMP;
+    }
+
+    /* The state is loaded and masked before `st` is set, so `st` is a
+     * copy of the load's address register, stored before the compare
+     * (`ldrb; ands; str r1, [sp, #0x94]; cmp`). */
+    s32 s = state & CRATE_STATE_MASK;
+
+    st = &state;
+    if (s == 1)
+        goto tail;
+    if (fallDistance != 0)
+        goto tail;
+
+    s32 empty;
+
+    hb = PlayerThirdBox();
+    empty = 0;
+    /* nested: as one `&&` test, the code is 4 instructions shorter */
+    if (hb->w == 0)
+        if (hb->h == 0)
+            empty = 1;
+    if (empty)
+        goto tail;
+    /* scoped: its own `offX`/`offY`/`w`/`h` (shared, the code is 2 instructions shorter) */
+    {
+        s32 offX;
+        s32 offY;
+        u8 w;
+        u8 h;
+
+        offX = hb->offX;
+        offY = hb->offY;
+        w = hb->w;
+        h = hb->h;
+        SetAabb(&pbox, offX + px, offY + py, w, h);
+        if (gPlayer->mirrorBits.flipX < 0)
+            FlipAabbX(&pbox, px);
+        if (gPlayer->mirrorBits.flipY < 0)
+            FlipAabbY(&pbox, py);
+    }
+    bb = &pbox;
+    if (!AabbOverlaps(&box, bb))
+        goto tail;
+    found = 0;
+    if (attack <= ATTACK_KIND_SPIN)
+        obj = ResolveStackHit(bb, &found);
+    else
+        obj = this;
+    code = HitResponseAt(gCrateHitResponse, &obj->kind, attack);
+    bnc = gPlayer->bounce;
+
+    if (bnc > 4)
+        code = 0;
+    if (found != 0 && PlayerRingCount() != 0) {
+        s32 i;
+
+        for (i = 0; i < gPlayer->listCount; i++) {
+            Crate *e;
+
+            if (gPlayer->ctrlMode == PLAYER_CTRL_MODE_ACTION && (i <= 4 || i < gPlayer->listCount))
+                e = gPlayer->list[i];
+            else
+                e = 0;
+            if (e != 0) {
+                Crate *h = e->GetBelow();
+
+                if (h != 0) {
+                    while (h->GetBelow() != 0)
+                        h = h->GetBelow();
+                } else
+                    h = e;
+                for (; h != 0; h = h->GetAbove()) {
+                    if (this == h) {
+                        code = 0;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    n = 0;
+    switch (code) {
+    case 0:
+    case 1:
+        if (obj->kind == CRATE_KIND_NITRO_SWITCH)
+            obj->ActivateNitroSwitch();
+        else if (obj->kind == CRATE_KIND_IRON_SWITCH)
+            obj->ActivateIronSwitch();
+        break;
+    case 2:
+        obj->state |= CRATE_STATE_BUSY;
+        SetPlayerBusy();
+        break;
+    case 3:
+        obj->BreakInStack(0, 0, 0);
+        if (gPlayer->listCount == 0) {
+            const struct sprite_anim *a = &gPlayer->bank->anims[gPlayer->tag];
+
+            if (attack != ATTACK_KIND_SLIDE && PlayerHitboxOverlapsAt(&a->box[0], &box, px, py)) {
+                Crate *e = obj->GetAbove();
+
+                if (e != 0 && (e->state & CRATE_STATE_MASK) != 1) {
+                    s32 c2 = gCrateHitResponse[e->kind][attack];
+
+                    if (c2 == 3)
+                        e->BreakInStack(0, 0, 0);
+                    else if (c2 == 2) {
+                        e->state |= CRATE_STATE_BUSY;
+                        SetPlayerBusy();
+                    } else if (c2 == 4)
+                        e->Explode(1);
+                }
+            } else if (gPlayer->dir != 0)
+                n += 2;
+        }
+        if (found == 0)
+            return;
+        if (Q8_TO_INT(gPlayer->x) < Q8_TO_INT(x)) {
+            if (attack != ATTACK_KIND_SLIDE || obj->GetAbove() != 0) {
+                gPlayer->HandleEvent(0, EVENT_BUMP, PART_DIR_RIGHT);
+                AddPlayerHit(gPlayer, PART_DIR_RIGHT);
+            }
+        } else if (attack != ATTACK_KIND_SLIDE || obj->GetAbove() != 0) {
+            gPlayer->HandleEvent(0, EVENT_BUMP, PART_DIR_LEFT);
+            AddPlayerHit(gPlayer, PART_DIR_LEFT);
+        }
+        RingPush(obj);
+        if (gPlayer->bounce == 0)
+            gPlayer->bounce = 1;
+        for (; n != 0; n--)
+            RingPush(0);
+        return;
+    case 4:
+        if ((obj->state & CRATE_STATE_MASK) == 0)
+            obj->Explode(1);
+        return;
+    case 5:
+        obj->OpenCheckpoint();
+        return;
+    }
+tail:
+    if (attack == ATTACK_KIND_BODY_SLAM) {
+        if (gPlayer->dir == PART_DIR_UP)
+            attack = ATTACK_KIND_JUMP;
+    } else if (attack == ATTACK_KIND_SLIDE)
+        attack = ATTACK_KIND_TOUCH;
+    if (touched != 0) {
+        touched = 0;
+        if (fallDistance == 0)
+            return;
+    }
+
+    /* Through a pointer local: the block copy then takes a copy of it
+     * (`add r2, sp, #0x2c; adds r1, r2, #0`), as in the ROM. */
+    struct aabb *pc = &prev;
+
+    *pc = box;
+    if (attack != ATTACK_KIND_INVINCIBLE)
+        MarkStackTouched(&box);
+    /* scoped: its own `offX`/`offY`/`w`/`h` (shared, the registers differ) */
+    {
+        s32 offX;
+        s32 offY;
+        u8 w;
+        u8 h;
+
+        q = &gPlayer->bank->anims[gPlayer->tag].box[0];
+        offX = q->offX;
+        offY = q->offY;
+        w = q->w;
+        h = q->h;
+        SetAabb(&pbox, offX + px, offY + py, w, h);
+        if (gPlayer->mirrorBits.flipX < 0)
+            FlipAabbX(&pbox, px);
+        if (gPlayer->mirrorBits.flipY < 0)
+            FlipAabbY(&pbox, py);
+    }
+    bb = &pbox;
+    if (!AabbOverlapsInclusiveX(&box, bb))
+        return;
+    edge = 0;
+    f21 = 0;
+    if (pbox.y < box.y)
+        f21 = 1;
+    if (fallDistance != 0) {
+        if (!AabbOverlapsInclusiveX(&prev, &pbox))
+            return;
+        if (gCrateKindUnbreakable[kind] != 0) {
+            /* `side` is dead in this path, but the ROM keeps a reload of
+             * px (`ldr r1, [sp, #0x70]`) right after the call: a leftover
+             * of its compare, deleted after reload. `side` being the
+             * function's (the other path uses it) keeps the compare that
+             * long; a block-local one is deleted before reload. */
+            s32 prevX = gPlayer->GetPrevX();
+
+            side = 2;
+            if (px > prevX)
+                side = 1;
+            if (Q8_TO_INT(gPlayer->x) < Q8_TO_INT(x)) {
+                dirX = PART_DIR_RIGHT;
+                dx = Span(pbox.x, pbox.w, prev.x) + 1;
+            } else {
+                dirX = PART_DIR_LEFT;
+                dx = Span(prev.x, prev.w, pbox.x) + 1;
+            }
+            if (Q8_TO_INT(gPlayer->y) > Q8_TO_INT(y)) {
+                dirY = PART_DIR_UP;
+                dy = Span(prev.y, prev.h, pbox.y);
+            } else {
+                dirY = PART_DIR_DOWN;
+                dy = Span(pbox.y, pbox.h, prev.y);
+            }
+            if (dx > 5 && f21 == 0) {
+                if ((gLevelState->maskLevel == MASK_LEVEL_NONE &&
+                     ((gPlayer->f.flags >> ENTITY_BIT_VULNERABLE) & 1) && !PlayerInvulnerable()) ||
+                    kind != CRATE_KIND_REINFORCED) {
+                    gPlayer->f.flags |= ENTITY_FLAG_VULNERABLE;
+                    gLevelState->SetMaskLevel(MASK_LEVEL_NONE);
+                    gPlayer->HandleEvent(0, EVENT_HIT_CRUSH, 0);
+                } else {
+                    BreakInStack(0, 0, 0);
+                    gPlayer->HandleEvent(0, EVENT_HIT, 0);
+                }
+                return;
+            } else if (dx > 6 && dy > 1 && f21 != 0) {
+                s32 py2;
+
+                p1.x = gPlayer->x;
+                py2 = gPlayer->y;
+                pp = &p1;
+                pp->y = py2 - INT_TO_Q8(dy - 1);
+                gPlayer->speedY = 0;
+                SetEntityPos(gPlayer, p1.x, pp->y);
+                PlayerQueue()->posCommitted = 1;
+                gPlayer->hitMask |= dirY;
+                return;
+            } else if (dx <= 6 && dy > 2) {
+                s32 py2;
+
+                p2.x = gPlayer->x;
+                py2 = gPlayer->y;
+                PosPtr(&p2)->y = py2;
+                if (dirX == PART_DIR_LEFT)
+                    p2.x = INT_TO_Q8(dx) + p2.x;
+                else if (dirX == PART_DIR_RIGHT)
+                    p2.x -= INT_TO_Q8(dx);
+                SetEntityPos(gPlayer, p2.x, PosPtr(&p2)->y);
+                PlayerQueue()->posCommitted = 1;
+                gPlayer->HandleEvent(0, EVENT_BUMP, dirX);
+                gPlayer->hitMask |= dirX;
+                return;
+            } else {
+                s32 py2;
+
+                if (gPlayer->ctrlMode != PLAYER_CTRL_MODE_SWIM)
+                    return;
+                p3.x = gPlayer->x;
+                py2 = gPlayer->y;
+                PosPtr(&p3)->y = py2;
+                pp = &p3; /* shared with the p1 arm, where it gets r2 */
+                if (dirY == PART_DIR_UP)
+                    pp->y = INT_TO_Q8(dy) + pp->y;
+                /* `dirX`, not `dirY`, in the ROM: dirX is never
+                 * PART_DIR_DOWN, so the push down is dead code. */
+                else if (dirX == PART_DIR_DOWN)
+                    pp->y -= INT_TO_Q8(dy);
+                SetEntityPos(gPlayer, p3.x, pp->y);
+                PlayerQueue()->posCommitted = 1;
+                gPlayer->HandleEvent(0, EVENT_BUMP, dirY);
+                gPlayer->hitMask |= dirY;
+                return;
+            }
+        } else {
+            Crate *e;
+
+            /* A `for` with the first call on `this`: its copy is
+             * cross-jumped into the loop's call, so the ROM enters with
+             * `mov r0, sl`. */
+            for (e = GetBelow(); e != 0; e = e->GetBelow()) {
+                if (gCrateKindUnbreakable[e->kind] != 0 && (e->state & CRATE_STATE_MASK) == 0)
+                    return;
+            }
+            code = gCrateHitResponse[kind][5];
+            dx = 0;
+            dy = 0;
+            dirX = 0;
+            dirY = 0;
+        }
+    } else {
+        s32 ax;
+        s32 ay;
+
+        ax = gPlayer->GetPrevX();
+        ay = gPlayer->GetPrevY();
+        side = 2;
+        if (px > ax)
+            side = 1;
+        if (Q8_TO_INT(gPlayer->x) < Q8_TO_INT(x)) {
+            dirX = 1;
+            dx = Span(pbox.x, pbox.w, box.x) + 1;
+        } else {
+            dirX = 2;
+            dx = Span(box.x, box.w, pbox.x) + 1;
+        }
+        if (Q8_TO_INT(gPlayer->y) > Q8_TO_INT(y)) {
+            dirY = 4;
+            dy = Span(box.y, box.h, pbox.y);
+        } else {
+            dirY = 8;
+            dy = Span(pbox.y, pbox.h, box.y);
+        }
+        if (ay == py) {
+            if (ax == px) {
+                /* `else edge = dirX` after the other arm (not a `goto
+                 * edge_x`): cross-jumping later merges it into edge_x, but
+                 * its reload of dirX (r0) still advances reload's
+                 * round-robin, so the next arm reloads dy into r1 as the
+                 * ROM does. */
+                if (dy <= 2) {
+                    edge = 4;
+                    if (f21 != 0)
+                        edge = 8;
+                } else
+                    edge = dirX;
+            }
+            /* `else edge = dirX` (not a `goto edge_x`): its reload of dirX
+             * gets r6, so cross-jumping sends this arm to the r6 copy of
+             * `edge = dirX` (the one the first slope check ends in), as the
+             * ROM's branch does. */
+            else if (dy <= 2 && (dx > 3 || !gPlayer->HasRampYTarget())) {
+                edge = 4;
+                if (f21 != 0)
+                    edge = 8;
+            } else
+                edge = dirX;
+        } else if (ax == px) {
+            edge = dirY;
+            if (dy > 2) {
+                edge = dirX;
+                if (dy <= 7 && dx > 3)
+                    edge = dirY;
+            }
+        } else if (ay <= py && f21 != 0) {
+            ay += q->offY + q->h;
+            /* An `if`/`else edge = dirX` (not a `goto edge_x`): the `else`
+             * is the last code of this arm in the RTL. Its reload of dirX
+             * takes r0 and moves reload's round-robin on, so the second
+             * slope check's `ay += q->offY` loads into r1 with r0 as the
+             * scratch, as in the ROM. Cross-jumping then merges the `else`
+             * into edge_x, which also reloads dirX into r0. */
+            if (ay <= box.y + box.h) {
+                edge = 0;
+                if (side == 1) {
+                    if (pbox.x + pbox.w >= box.x && dx > 4)
+                        edge = 8;
+                } else if (pbox.x <= box.x + box.w && dx > 4)
+                    edge = 8;
+                if (edge == 0) {
+                    py += q->offY + q->h;
+                    /* The call is in each arm (cross-jumping merges the
+                     * tails): the stack argument is stored before the join
+                     * and px is passed from the register it was just
+                     * computed in, as in the ROM. */
+                    if (dirX == 1) {
+                        ax += q->offX + q->w;
+                        px = pbox.x + pbox.w;
+                        r = FindLineCrossing(ax, ay, px, py, box.x);
+                    } else {
+                        ax += q->offX;
+                        px = pbox.x;
+                        r = FindLineCrossing(ax, ay, px, py, box.x + box.w);
+                    }
+                    if ((r < 0 && f21 != 0 && dx > 4) || (r > 0 && r <= box.y))
+                        edge = 8;
+                    else
+                        edge = dirX;
+                }
+            } else
+                edge = dirX;
+        } else {
+            ay += q->offY;
+            if (ay < box.y)
+                goto edge_x;
+            edge = 0;
+            if (side == 1) {
+                if (pbox.x + pbox.w >= box.x && dx > 5)
+                    edge = 4;
+            } else if (pbox.x <= box.x + box.w && dx > 5)
+                edge = 4;
+            if (edge == 0) {
+                py += q->offY;
+                if (dirX == 1) {
+                    ax += q->offX + q->w;
+                    px = pbox.x + pbox.w;
+                    r = FindLineCrossing(ax, ay, px, py, box.x);
+                } else {
+                    ax += q->offX;
+                    px = pbox.x;
+                    r = FindLineCrossing(ax, ay, px, py, box.x + box.w);
+                }
+                if (gPlayer->ctrlMode == PLAYER_CTRL_MODE_SWIM)
+                    r += 2;
+                if ((r < 0 && f21 == 0 && dx > 5) || (r > 0 && r >= box.y + box.h))
+                    edge = 4;
+                else
+                    edge = dirX;
+            }
+        }
+        goto edge_done;
+    edge_x:
+        edge = dirX;
+    edge_done:
+        code = 0;
+    }
+
+    s32 py2;
+
+    pos.x = gPlayer->x;
+    py2 = gPlayer->y;
+    PosPtr(&pos)->y = py2;
+    LIMIT_MIN(dx, 0);
+    LIMIT_MIN(dy, 0);
+    hit = 0;
+    f20 = gAttackKindBreakLimited[attack];
+    tgt = this;
+    switch (edge) {
+    case 0:
+    case 3:
+    case 5:
+    case 6:
+    case 7:
+        break;
+    case 4:
+        tgt = GetBottom();
+        code = gCrateHitResponse[tgt->kind][attack];
+        if (tgt->kind == CRATE_KIND_ARROW && attack == ATTACK_KIND_JUMP)
+            code = 3;
+        if (attack <= ATTACK_KIND_SLIDE || attack == ATTACK_KIND_INVINCIBLE ||
+            (attack == ATTACK_KIND_SPIN && code <= 2)) {
+            gPlayer->HandleEvent(0, EVENT_BUMP, PART_DIR_UP);
+            AddPlayerHit(gPlayer, PART_DIR_UP);
+            if (gPlayer->hitAxes != PART_DIR_DOWN)
+                PosPtr(&pos)->y = INT_TO_Q8(dy) + PosPtr(&pos)->y;
+        }
+        break;
+    case 8:
+        tgt = GetTop();
+        code = HitResponse(tgt->kind, attack);
+        if (attack == ATTACK_KIND_SPIN && tgt->kind != CRATE_KIND_NITRO &&
+            gPlayer->listCount != 0) {
+            gPlayer->speedY = 0;
+            gPlayer->rampY.start = 0;
+            gPlayer->rampY.step = 0;
+            gPlayer->rampY.target = 0;
+            code = 1;
+        }
+        if (code == 1 || code == 2) {
+            PosPtr(&pos)->y -= INT_TO_Q8(dy - 1);
+            Q8_FLOOR_INPLACE(PosPtr(&pos)->y);
+            SetEntityPos(gPlayer, pos.x, PosPtr(&pos)->y);
+            PlayerQueue()->posCommitted = 1;
+        } else if (code == 0 || code == 2)
+            PosPtr(&pos)->y -= INT_TO_Q8(dy);
+        Q8_FLOOR_INPLACE(PosPtr(&pos)->y);
+        break;
+    case 1:
+    case 2:
+        hit = dirX;
+        if (!AabbOverlapsInclusiveX(&prev, &pbox)) {
+            code = 0;
+            ClearStackTouched();
+            hit = 0;
+        } else {
+            if ((*st & CRATE_STATE_MASK) == 0) {
+                if (hit == 2)
+                    pos.x += INT_TO_Q8(dx);
+                else if (hit == 1)
+                    pos.x -= INT_TO_Q8(dx);
+            }
+            if (attack > ATTACK_KIND_JUMP) {
+                code = gCrateHitResponse[kind][attack];
+                if (attack == ATTACK_KIND_SPIN && code == 2)
+                    code = 0;
+                if (attack == ATTACK_KIND_BODY_SLAM && code == 3)
+                    pos.x = gPlayer->x;
+            } else if (dy <= 4 && dx > 3 && f21 != 0) {
+                code = gCrateHitResponse[kind][attack];
+                if (code > 1)
+                    code = 0;
+            } else if (gCrateHitResponse[kind][attack] == 4) {
+                pos.x = gPlayer->x;
+                code = gCrateHitResponse[kind][attack];
+            }
+        }
+        if (code != 1 && hit != 0) {
+            s32 ok = 1;
+            Crate *next = GetAbove();
+            Crate *prev = GetBelow();
+            s32 vy = Q8_TO_INT(gPlayer->speedY);
+
+            if (dirY == 8 && next == 0 && (vy >= dy - 1 || dy <= 2))
+                ok = 0;
+            else if (dirY == 4 && prev == 0 && (vy >= dy - 1 || dy <= 2))
+                ok = 0;
+            if (ok) {
+                SetEntityPos(gPlayer, pos.x, PosPtr(&pos)->y);
+                PlayerQueue()->posCommitted = 1;
+            }
+        }
+        break;
+    }
+    if (gPlayer->ctrlMode == PLAYER_CTRL_MODE_SWIM && kind == CRATE_KIND_TNT && code <= 1 &&
+        AabbOverlapsInclusiveX(&prev, &pbox) == 1)
+        tgt->LightTnt();
+    PlayerQueue()->Add(tgt, attack, code, edge, dy, pos, hit, (struct byte_arg){ f20 },
+                       (struct byte_arg){ f21 });
+}
+
+/* A queued hit resolved (ResolveCollisionCandidates, collision_queue.cpp):
+ * `attack` and `code` as QueuePlayerCollision found them, the side `edge`,
+ * its `depth`, the player's corrected position `pos` and the bump `hit`.
+ * `limited` is gAttackKindBreakLimited's flag for the attack, `above` that
+ * the player was above the crate, `forced` that another hit was resolved
+ * before this one. A jump on a crate bounces the player (higher on an
+ * arrow crate), a reinforced crate only turns busy; then by `code`: a
+ * landing on top carries the player; a switch is activated; a TNT crate
+ * lit, a bouncy wumpa crate bounced, or the crate marked busy; the crate
+ * broken in its stack (a slot crate on its TNT face turns into TNT
+ * first); set off; or a checkpoint opened. Unless the hit returned early,
+ * the player is moved to `pos` (if nothing else committed its position
+ * this frame) and bumped. */
+void Crate::ApplyCollision(s32 attack, s32 code, s32 edge, s32 depth, struct vec2 pos, s32 hit,
+                           bool limited, bool above, bool forcedIn)
+{
+    bool forced;
+
+    if ((state & CRATE_STATE_MASK) != 0)
+        goto commit;
+    if (gPlayer->ctrlMode == PLAYER_CTRL_MODE_SWIM && code > 2) {
+        pos.x = gPlayer->x;
+        pos.y = gPlayer->y;
+    }
+    if ((u32)(code - 2) <= 1 || code == 5) {
+        u8 k = kind;
+        /* `d` is needed: inlined, the code is 2 instructions longer */
+        s32 d = gPlayer->dir;
+
+        if ((d & 4) == 0) {
+            if (k != CRATE_KIND_REINFORCED) {
+                if (attack == ATTACK_KIND_JUMP) {
+                    if (k == CRATE_KIND_ARROW || k == CRATE_KIND_IRON_ARROW) {
+                        gAudioContext->PlaySfx(SFX_ARROW_CRATE_BOUNCE, 0x100);
+                        gPlayer->HandleEvent(0, EVENT_BOUNCE_HIGH, 8);
+                    } else
+                        gPlayer->HandleEvent(0, EVENT_BOUNCE, 8);
+                    gPlayer->speedY = 0;
+                    gPlayer->rampY.start = 0;
+                    gPlayer->rampY.step = 0;
+                    gPlayer->rampY.target = 0;
+                } else if ((u32)(attack - ATTACK_KIND_BODY_SLAM) <= 1 &&
+                           k == CRATE_KIND_IRON_ARROW) {
+                    gAudioContext->PlaySfx(SFX_ARROW_CRATE_BOUNCE, 0x100);
+                    gPlayer->HandleEvent(0, EVENT_BOUNCE_HIGH, 8);
+                    gPlayer->speedY = 0;
+                    gPlayer->rampY.start = 0;
+                    gPlayer->rampY.step = 0;
+                    gPlayer->rampY.target = 0;
+                }
+            } else if (code == 2) {
+                state |= CRATE_STATE_BUSY;
+                SetPlayerBusy();
+                code = 1;
+            }
+        }
+    }
+    if (code == 3 && kind == CRATE_KIND_SLOT && (slotState & CRATE_SLOT_PHASE_MASK) == 3) {
+        u8 e = CRATE_KIND_TNT;
+
+        kind = e;
+        blastState = CRATE_BLAST_STATE_NONE;
+        code = gCrateHitResponse[kind][attack];
+    }
+    forced = forcedIn;
+    if (code == 1 && attack == ATTACK_KIND_SPIN && gPlayer->bounce == 1 &&
+        !(gPlayer->dir & PART_DIR_Y_MASK)) {
+        code = gCrateHitResponse[kind][attack];
+        gPlayer->bounce = 2;
+        gPlayer->bounce++;
+        gPlayer->bounce++;
+        gPlayer->bounce++;
+        forced = true;
+    }
+    switch (code) {
+    case 0:
+    case 1:
+        if (!(gPlayer->dir & PART_DIR_UP) && above) {
+            if ((edge == 8 && depth <= 1) || (depth <= 1 && code == 1) ||
+                (depth <= 7 && code == 1 && edge == 8)) {
+                gPlayer->carried = this;
+
+                /* `m` is needed: inlined, the instructions are reordered */
+                u8 m = PART_DIR_DOWN;
+
+                gPlayer->hitAxes = m;
+
+                struct vec2 *pp = &pos;
+                /* `py` is needed: inlined, the instructions are reordered */
+                s32 py = gPlayer->y;
+
+                pp->y = py - INT_TO_Q8(depth - 1);
+                hit = 0;
+                pp->x = gPlayer->x;
+            }
+        }
+        if (code != 1)
+            goto commit;
+        if ((u32)(edge - 1) <= 1 && attack <= ATTACK_KIND_TOUCH) {
+            hit = 0;
+            pos.x = gPlayer->x;
+        }
+        if (kind == CRATE_KIND_NITRO_SWITCH)
+            ActivateNitroSwitch();
+        else if (kind == CRATE_KIND_IRON_SWITCH)
+            ActivateIronSwitch();
+        goto commit;
+    case 2:
+        if (kind == CRATE_KIND_TNT)
+            LightTnt();
+        else if (kind == CRATE_KIND_BOUNCY_WUMPA)
+            BounceWumpa();
+        else {
+            state |= CRATE_STATE_BUSY;
+            SetPlayerBusy();
+        }
+        goto commit;
+    case 3:
+        if ((u32)(attack - ATTACK_KIND_BODY_SLAM) <= 1)
+            BreakInStack(0, 0, 0);
+        else if (fallDistance != 0)
+            BreakInStack(0, 0, 4);
+        else if (attack == ATTACK_KIND_JUMP)
+            BreakInStack(0, limited, edge);
+        else {
+            Player **pp = &gPlayer;
+
+            if ((*pp)->listCount != 0 && !forced)
+                return;
+            if (edge == 8 || edge == 4) {
+                BreakInStack(0, 0, edge);
+                if ((*pp)->ctrlMode == PLAYER_CTRL_MODE_ACTION && (*pp)->listCount <= 4)
+                    (*pp)->list[(*pp)->listCount] = this;
+                if (gPlayer->ctrlMode == PLAYER_CTRL_MODE_ACTION)
+                    gPlayer->listCount++;
+            }
+        }
+        return;
+    case 4:
+        if ((state & CRATE_STATE_MASK) == 0)
+            Explode(1);
+        return;
+    case 5:
+        OpenCheckpoint();
+        return;
+    }
+commit:
+    Player *p = gPlayer;
+    /* `q` is needed: inlined, the instructions differ */
+    CollisionQueue *q = &p->collisionQueue;
+
+    if (q->posCommitted == 0)
+        SetEntityPos(p, pos.x, pos.y);
+    if (hit != 0) {
+        gPlayer->HandleEvent(0, EVENT_BUMP, hit);
+        gPlayer->hitMask |= hit;
+    }
+}
+
+/* Clears the touched flag of every idle crate (state 0) in the stack,
+ * above and then below this one. */
+void Crate::ClearStackTouched()
+{
+    Crate *cur;
+
+    for (cur = GetAbove(); cur != 0; cur = cur->GetAbove())
+        if ((cur->state & CRATE_STATE_MASK) == 0)
+            cur->touched = 0;
+    for (cur = GetBelow(); cur != 0; cur = cur->GetBelow())
+        if ((cur->state & CRATE_STATE_MASK) == 0)
+            cur->touched = 0;
+}
+
+/* Sets the touched flag of every idle crate (state 0) in the stack. The
+ * player's box `box` grows by its original height for each one, and
+ * moves up by it for each crate above. */
+void Crate::MarkStackTouched(struct aabb *box)
+{
+    s32 step = box->h;
+    Crate *cur;
+
+    cur = GetAbove();
+    if (cur != 0) {
+        u8 one = 1;
+        do {
+            if ((cur->state & CRATE_STATE_MASK) == 0) {
+                cur->touched = one;
+                box->y -= step;
+                box->h += step;
+            }
+            cur = cur->GetAbove();
+        } while (cur != 0);
+    }
+    cur = GetBelow();
+    if (cur != 0) {
+        u8 one = 1;
+        do {
+            if ((cur->state & CRATE_STATE_MASK) == 0) {
+                cur->touched = one;
+                box->h += step;
+            }
+            cur = cur->GetBelow();
+        } while (cur != 0);
+    }
+}
+
+/* The bouncy wumpa crate: the first bounce arms its 360-frame timer.
+ * While it runs, each bounce (until the fifth, which breaks it) plays the
+ * bounce animation and drops two wumpa fruit; once it has run out, a hit
+ * breaks the crate. */
+void Crate::BounceWumpa()
+{
+    if (bounceTimer == -0x2a) {
+        bounceTimer = 0x168;
+        paramB = 0;
+    }
+    if (bounceTimer > 0) {
+        if (paramA == 0) {
+            if (++paramB > 4) {
+                BreakInStack(0, 0, 0);
+            } else {
+                state |= CRATE_STATE_BUSY;
+                SetPlayerBusy();
+                timer = 6;
+                paramA = 1;
+            }
+            /* Both fly to the HUD: SendToHud reads the mode (0xE, 0) as a
+             * pixel offset to the left, not a PICKUP_MODE_*. */
+
+            s32 px = Q8_TO_INT(x);
+            s32 py = Q8_TO_INT(y) - 6;
+
+            EntitySpawner::Get()->DropWumpa(px, py, 0, 0xe, true);
+            /* scoped: its own `px`/`py` (shared, the code is 4 instructions longer) */
+            {
+                s32 px = Q8_TO_INT(x) + 3;
+                s32 py = Q8_TO_INT(y);
+
+                EntitySpawner::Get()->DropWumpa(px, py, 0, 0, true);
+            }
+        }
+    } else {
+        BreakInStack(0, 0, 0);
+    }
+}
+
+/* The TNT crate lit: its 3-second countdown starts (kind TNT_LIT_3,
+ * animation 0x14), with its palette and the tick sound. */
+void Crate::LightTnt()
+{
+    const struct sprite_anim *anims;
+    /* `a` is needed: inlined, the instructions are reordered */
+    const struct sprite_anim *a;
+    /* `slot` is needed: inlined, the code is 2 instructions shorter */
+    u32 slot;
+
+    kind = CRATE_KIND_TNT_LIT_3;
+    StartAnim(0x14);
+    f.b.active = 1;
+    RoomCrates()->LinkActive(this);
+    anims = bank->anims;
+    a = &anims[tag];
+    slot = gPaletteCache->GetSlot(a->paletteId);
+    palette = slot;
+    gAudioContext->PlaySfx(SFX_TNT_TICK, 0x100);
+    timer = 0x3c;
+}
+
+/* MovingSprite::StartMotionY inlined: the Y speed `vel` and its ramp. As
+ * an inline, `vel` is in a register before the stores; written in place,
+ * the stores come out in another order. */
+static inline void PuffSetMotion(MovingSprite *puff, s32 vel, s32 step, s32 target)
+{
+    puff->speedY = vel;
+    puff->rampY.start = vel;
+    puff->rampY.step = step;
+    puff->rampY.target = target;
+}
+
+/* The checkpoint crate: a puff of smoke rises from it, it plays its open
+ * animation and sound, its entity is marked activated, it counts as
+ * broken, and the checkpoint moves to the player. */
+void Crate::OpenCheckpoint()
+{
+    MovingSprite *puff;
+    u8 one;
+
+    /* `px`, `py` are needed: inlined, the instructions are reordered */
+    s32 px = Q8_TO_INT(x) - 10;
+    s32 py = Q8_TO_INT(y);
+
+    puff = EntitySpawner::Get()->SpawnEffectPart(0x2a, 0, px, py, 0);
+    puff->f.b.visible = 0;
+    puff->mirrorBits.flipX = 0;
+    PuffSetMotion(puff, -Q8(1.5), Q8_FRAC(0, 8), -Q8(0.0625));
+    StartAnim(0x1b);
+    gAudioContext->PlaySfx(SFX_CHECKPOINT, 0x100);
+
+    u16 eid = id;
+
+    if (eid != 0xffff)
+        gEntityFlags->SetActivated(eid);
+    if (gCrateKindCounted[kind])
+        gLevelState->AddBrokenCrate();
+    gLevelState->SetCheckpointAtPlayer(paramA != 0);
+    state &= CRATE_STATE_MASK;
+    gPlayer->busy = 0;
+    one = 1;
+    state = (state & CRATE_STATE_BUSY) | one;
+}
+
+/* Breaks the crate at the end of the stack in direction `dir` (4: down,
+ * 8: up) that isn't committed yet, or this one for any other `dir`. With
+ * `once`, only the first break of the player's countdown goes ahead.
+ *
+ * The walk is written as the ROM's goto loops: the natural `for`
+ * loops get rotated and their exit blocks laid out differently. */
+void Crate::BreakInStack(u8 flag, bool once, u32 dir)
+{
+    Crate *p;
+    Crate *q;
+
+    if (once) {
+        if (gPlayer->countdown != 0)
+            return;
+        gPlayer->countdown = 1;
+        gPlayer->countdown++;
+    }
+    if (dir == 4) {
+        p = GetBelow();
+        if (p == 0 || (p->state & CRATE_STATE_MASK) == 1)
+            goto none;
+    prev:
+        q = p->GetBelow();
+        if (q == 0 || (q->state & CRATE_STATE_MASK) == 1)
+            goto last;
+        p = q;
+        goto prev;
+    }
+    if (dir != 8)
+        goto other;
+    p = GetAbove();
+    if (p != 0 && (p->state & CRATE_STATE_MASK) != 1)
+        goto next;
+none:
+    q = this;
+    goto found;
+last:
+    q = p;
+    goto found;
+next:
+    q = p->GetAbove();
+    if (q == 0 || (q->state & CRATE_STATE_MASK) == 1)
+        goto last;
+    p = q;
+    goto next;
+found:
+    if (gCrateKindUnbreakable[q->kind] == 0)
+        q->Break(flag);
+    return;
+other:
+    Break(flag);
+}
+
+/* Breaks the crate (unless it is committed already): its break animation
+ * and palette, the broken crate count, its entity's gone bit, the crates
+ * above it falling, and then what its kind does. `byBlast` set: broken by a
+ * blast, so a crate's contents aren't given out. `chained`: another crate
+ * stands on it (the drop's flag).
+ *
+ * The constant 1 of the state store is a local `one` that the bitmap
+ * shift reuses (the ROM's r8), and the switch cases are in the ROM's
+ * block order with an explicit empty case 22. */
+void Crate::Break(u32 byBlast)
+{
+    u8 flag = byBlast;
+    bool chained;
+    u8 one;
+
+    if ((state & CRATE_STATE_MASK) == 1)
+        return;
+    chained = 0;
+    if (GetAbove() != 0 && flag == 0)
+        chained = 1;
+    f.b.active = 1;
+    RoomCrates()->LinkActive(this);
+    state &= CRATE_STATE_MASK;
+    gPlayer->busy = 0;
+    one = 1;
+    state = (state & CRATE_STATE_BUSY) | one;
+    StartAnim(0x1d);
+
+    const struct sprite_anim *anims = bank->anims;
+    const struct sprite_anim *a = &anims[tag];
+    /* `slot` is needed: inlined, the code is 2 instructions shorter */
+    u32 slot = gPaletteCache->GetSlot(a->paletteId);
+
+    palette = slot;
+    ClampFrame(3);
+    if (gCrateKindCounted[kind])
+        gLevelState->AddBrokenCrate();
+    /* ENTITY_SET_GONE_BIT_OF(id, one) (entity_bits.h) in a plain
+     * block: the macro's do/while(0) changes this object. */
+    {
+        s32 eid = id;
+        /* `base` is needed: inlined, the instructions are reordered */
+        LevelEntityFlags *base = gEntityFlags;
+        s32 word = eid / 32;
+
+        base->bits0Copy[word] |= one << (eid - word * 32);
+    }
+    DropAbove();
+    switch (kind) {
+    case CRATE_KIND_AKU_AKU:
+        if (flag == 0)
+            OpenAkuAku();
+        break;
+    case CRATE_KIND_LIFE:
+        if (flag == 0)
+            OpenLife(chained);
+        break;
+    case CRATE_KIND_IRON_SWITCH:
+        ActivateIronSwitch();
+        break;
+    case CRATE_KIND_NITRO_SWITCH:
+        ActivateNitroSwitch();
+        break;
+    case CRATE_KIND_MYSTERY:
+        if (flag == 0)
+            OpenMystery(chained);
+        break;
+    case CRATE_KIND_ARROW:
+    case CRATE_KIND_BOUNCY_WUMPA:
+    case CRATE_KIND_REINFORCED:
+        gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
+        break;
+    case CRATE_KIND_NITRO:
+    case CRATE_KIND_TNT:
+    case CRATE_KIND_TNT_LIT_1:
+    case CRATE_KIND_TNT_LIT_2:
+    case CRATE_KIND_TNT_LIT_3:
+        Explode(0);
+        break;
+    case CRATE_KIND_SLOT:
+        if (flag == 0)
+            OpenSlot(chained);
+        break;
+    case CRATE_KIND_TIME_1:
+        gLevelState->FreezeLevelClock(1);
+        break;
+    case CRATE_KIND_TIME_2:
+        gLevelState->FreezeLevelClock(2);
+        break;
+    case CRATE_KIND_TIME_3:
+        gLevelState->FreezeLevelClock(3);
+        break;
+    case CRATE_KIND_BASIC:
+        {
+            /* `px`, `py` are needed: inlined, the instructions are reordered */
+            s32 px = Q8_TO_INT(x);
+            s32 py = Q8_TO_INT(y) + 3;
+
+            EntitySpawner::Get()->DropWumpa(px, py, 0, PICKUP_MODE_HOP_UP, chained);
+        }
+        if (flag == 0)
+            gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
+        break;
+    case 22:
+        break;
+    }
+}
+
+/* PlaySfx(gAudioContext, sfx, 0x100). As an inline, the sound's id is
+ * loaded before the volume. */
+static inline void Sfx(s32 sfx)
+{
+    gAudioContext->PlaySfx(sfx, 0x100);
+}
+
+/* The "?" crate: its contents (paramB; 9: picked at random) - wumpa
+ * fruit (1-6, more for the higher values, each case falling into the
+ * next), an Aku Aku mask (7), an extra life (8) or a single wumpa (10).
+ * Cases 7 and 8 are OpenAkuAku and OpenLife inlined. */
+void Crate::OpenMystery(bool flag)
+{
+    u16 eid;
+
+    gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
+    if (paramB == 9) {
+        u8 r = rand() >> 8;
+
+        if (r <= 0x56)
+            paramB = 1;
+        else if (r <= 0xd3)
+            paramB = 4;
+        else if (r <= 0xec)
+            paramB = 7;
+        else
+            paramB = 8;
+    }
+    switch (paramB) {
+    case 10:
+        {
+            s32 px = Q8_TO_INT(x);
+            s32 py = Q8_TO_INT(y);
+
+            EntitySpawner::Get()->DropWumpa(px, py, 0, WUMPA_MODE_PAYOUT, false);
+        }
+        break;
+    case 8:
+        Sfx(SFX_CRATE_BREAK);
+        eid = id;
+
+        if (eid != 0xffff && gEntityFlags->IsActivated(eid) == 0)
+            gEntityFlags->SetActivated(id);
+        /* scoped: case 10 has a `px`/`py` too, and the next case labels
+         * would cross these */
+        {
+            s32 px = Q8_TO_INT(x);
+            s32 py = Q8_TO_INT(y) + 3;
+
+            EntitySpawner::Get()->DropExtraLife(px, py, 0, PICKUP_MODE_HOP_UP, flag);
+        }
+        break;
+    case 7:
+        {
+            Player *p = gPlayer;
+
+            if (p->f.flags >> ENTITY_BIT_COLLIDES) {
+                p->HandleEvent(0, EVENT_MASK_GAIN, 0);
+                Sfx(SFX_AKU_AKU_GAIN);
+            }
+        }
+        break;
+    case 6:
+        {
+            s32 px = Q8_TO_INT(x) - 1;
+            s32 py = Q8_TO_INT(y) + 3;
+
+            EntitySpawner::Get()->DropWumpa(px, py, 1, PICKUP_MODE_HOP_UP, flag);
+        }
+    case 5:
+        {
+            s32 px = Q8_TO_INT(x) + 1;
+            s32 py = Q8_TO_INT(y) + 1;
+
+            EntitySpawner::Get()->DropWumpa(px, py, 0, PICKUP_MODE_HOP_UP, flag);
+        }
+    case 4:
+        {
+            s32 px = Q8_TO_INT(x) - 3;
+            s32 py = Q8_TO_INT(y) + 3;
+
+            EntitySpawner::Get()->DropWumpa(px, py, 1, PICKUP_MODE_HOP_LEFT, flag);
+        }
+    case 3:
+        {
+            s32 px = Q8_TO_INT(x) + 3;
+            s32 py = Q8_TO_INT(y) + 2;
+
+            EntitySpawner::Get()->DropWumpa(px, py, 0, PICKUP_MODE_HOP_LEFT, flag);
+        }
+    case 2:
+        {
+            s32 px = Q8_TO_INT(x) + 5;
+            s32 py = Q8_TO_INT(y) + 2;
+
+            EntitySpawner::Get()->DropWumpa(px, py, 0, PICKUP_MODE_HOP_RIGHT, flag);
+        }
+    case 1:
+    default:
+        {
+            s32 px = Q8_TO_INT(x) - 5;
+            s32 py = Q8_TO_INT(y) + 3;
+
+            EntitySpawner::Get()->DropWumpa(px, py, 1, PICKUP_MODE_HOP_RIGHT, flag);
+        }
+        break;
+    }
+}
+
+/* The slot crate, by the face it stopped on: nothing (0), an extra life
+ * (1), a "?" crate's contents (2) or an explosion (3).
+ *
+ * The empty `case 0` gives the ROM's `==1`/`<=1`/`==2`/`==3` compare
+ * order. */
+void Crate::OpenSlot(bool flag)
+{
+    u16 eid;
+    /* `px`, `py` are needed: inlined, the instructions are reordered */
+    s32 px;
+    s32 py;
+
+    gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
+    switch (slotState & CRATE_SLOT_PHASE_MASK) {
+    case 0:
+        break;
+    case 1:
+        gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
+        eid = id;
+
+        if (eid != 0xffff && gEntityFlags->IsActivated(eid) == 0)
+            gEntityFlags->SetActivated(id);
+        px = Q8_TO_INT(x);
+        py = Q8_TO_INT(y) + 3;
+
+        EntitySpawner::Get()->DropExtraLife(px, py, 0, PICKUP_MODE_HOP_UP, flag);
+        break;
+    case 2:
+        OpenMystery(flag);
+        break;
+    case 3:
+        state &= CRATE_STATE_BUSY;
+        Explode(1);
+        break;
+    }
+}
+
+/* The crates stacked on this one start to fall: each one's target is the
+ * one below's (this crate's own target, or its position), and its speed
+ * steps down by 2 (4 when this crate is falling itself). An explosive
+ * crate that falls more than 0x16 pixels explodes when it lands, unless
+ * it is the top of the stack (a nitro crate there still does, if it is
+ * idle).
+ *
+ * Matching notes: the gCrateKindExplosive pointer is a local set before
+ * the loop (only then does the ROM's reload-register choice come out),
+ * the bank is loaded into a local before the animation's offset is
+ * computed, `spread` is built in two steps, the
+ * step delta is widened into its own int before the add, and
+ * `n->fallTargetY` is written in both arms of an if/else. */
+void Crate::DropAbove()
+{
+    s8 delta = -2;
+    const struct sprite_bank *b = bank;
+    /* `a` is needed: inlined, the instructions are reordered */
+    const struct sprite_anim *a = &b->anims[tag];
+    s32 base = INT_TO_Q8(a->box[0].h + 1);
+    Crate *n = GetAbove();
+    s32 spread;
+    s32 carry;
+    const u8 *tbl = gCrateKindExplosive;
+
+    if (fallDistance != 0)
+        delta = -4;
+    if (n == 0 || this == 0)
+        return;
+    if (fallDistance != 0)
+        n->fallTargetY = fallTargetY;
+    else
+        n->fallTargetY = y;
+    spread = n->fallTargetY;
+    spread -= n->y;
+    LIMIT_MIN(spread, 0);
+    carry = 0;
+    while (n != 0) {
+        s32 t;
+
+        if (n->fallDistance != 0) {
+            n->fallDistance = spread + carry;
+            n->fallTargetY = n->fallTargetY + carry;
+        } else {
+            n->fallDistance = spread;
+            n->fallTargetY = n->y + base;
+        }
+        t = n->fallSpeed;
+        LIMIT_MAX(t, 0);
+
+        /* `d` is needed: inlined, the registers differ */
+        s32 d = delta;
+
+        n->fallSpeed = t + d;
+        n->f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
+        RoomCrates()->LinkActive(n);
+        if (tbl[n->kind] && blastState == CRATE_BLAST_STATE_NONE &&
+            n->fallDistance > INT_TO_Q8(22)) {
+            /* `next` is needed: inlined, the registers differ */
+            Crate *next = n->GetAbove();
+            /* `prev` is needed: inlined, the code is 7 instructions shorter */
+            Crate *prev = n->GetBelow();
+
+            if (next == 0 && prev != 0) {
+                if (n->kind != CRATE_KIND_NITRO)
+                    goto advance;
+                if (n->state & CRATE_STATE_MASK)
+                    goto advance;
+            }
+            n->timer = 0;
+            n->blastState = CRATE_BLAST_STATE_ARMED;
+        }
+    advance:
+        n = n->GetAbove();
+        if (carry == 0)
+            carry = base;
+    }
+}
+
+/* An explosive crate explodes (unless it is committed already): its
+ * explosion animation (a nitro crate's is tag 1), the broken crate count,
+ * its entity's gone bit, the sound, and the crates above it falling. A
+ * vulnerable player within 0x1D pixels on both axes, or anywhere when
+ * `near` is set, is hit by it (EVENT_HIT_EXPLOSION). A TNT crate is left
+ * as TNT_LIT_1. */
+void Crate::Explode(u8 near)
+{
+    u8 one;
+
+    if ((state & CRATE_STATE_MASK) == 1)
+        return;
+
+    timer = 0;
+    state &= CRATE_STATE_MASK;
+    gPlayer->busy = 0;
+    f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
+    RoomCrates()->LinkActive(this);
+    one = 1;
+    state = (state & CRATE_STATE_BUSY) | one;
+    if (kind == CRATE_KIND_NITRO) {
+        tag = one;
+        ResetFrameTimer();
+        ResetFrameIndex();
+        SetAnimDone(0);
+    } else
+        StartAnim(0x21);
+    if (gCrateKindCounted[kind])
+        gLevelState->AddBrokenCrate();
+    ENTITY_SET_GONE_BIT(id);
+    gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
+    DropAbove();
+
+    if ((gPlayer->f.flags >> ENTITY_BIT_VULNERABLE) & 1 && !PlayerInvulnerable()) {
+        s32 t1 = Q8_TO_INT(gPlayer->x) - Q8_TO_INT(x);
+
+        if (ABS_BRANCHLESS(t1) <= 0x1d) {
+            s32 t2 = Q8_TO_INT(gPlayer->y) - Q8_TO_INT(y);
+
+            if (ABS_BRANCHLESS(t2) <= 0x1d)
+                goto call;
+        }
+        if (near) {
+        call:
+            gPlayer->HandleEvent(0, EVENT_HIT_EXPLOSION, 0);
+        }
+    }
+    if (kind != CRATE_KIND_NITRO)
+        kind = CRATE_KIND_TNT_LIT_1;
+}
+
+/* The blast of an exploding crate (FinishBrokenCrate, at steps 3 and 6
+ * of the explosion): every idle crate within `dist` pixels (|dx| + |dy|)
+ * explodes, if it is explosive, breaks, if it is breakable, or is
+ * activated, if it is a switch; every wumpa fruit within `dist` is picked
+ * up. The crate is then marked as having blasted.
+ *
+ * The crate list is read through gCrateList's C view here, in
+ * Crate::UpdateAll and in Crate::BreakInArea: the loop tests through
+ * RoomCrates() (an inline call) aren't copied in front of the loops, which
+ * changes their layout. */
+void Crate::BlastNearby(s32 dist)
+{
+    s32 i = 0;
+
+    if (i < gCrateList->count) {
+        /* gCrateKindExplosive as an integer: `kind + table` is the ROM's
+         * operand order; indexing it (or `kind + pointer`) adds the other
+         * way round. */
+        u32 commit = (u32)gCrateKindExplosive;
+
+        do {
+            Crate *o = gCrateList->slots[i];
+
+            if (o->GetClassId() == 3) {
+                s32 t1 = Q8_TO_INT(o->x) - Q8_TO_INT(x);
+                s32 dx = ABS_BRANCHLESS(t1);
+                s32 t2 = Q8_TO_INT(o->y) - Q8_TO_INT(y);
+                s32 dy = ABS_BRANCHLESS(t2);
+
+                if (dx + dy <= dist && (o->state & CRATE_STATE_MASK) == 0) {
+                    u32 k = o->kind;
+
+                    if (*(u8 *)(k + commit))
+                        o->Explode(0);
+                    else if (gCrateKindBreakable[k])
+                        o->BreakInStack(1, 0, 0);
+                    else if (k == CRATE_KIND_IRON_SWITCH)
+                        o->ActivateIronSwitch();
+                    else if (k == CRATE_KIND_NITRO_SWITCH)
+                        o->ActivateNitroSwitch();
+                }
+            }
+            i++;
+        } while (i < gCrateList->count);
+    }
+
+    i = 0;
+    if (i < gTouchableList->count) {
+        do {
+            Wumpa *o = (Wumpa *)gTouchableList->items[i];
+
+            if (o->GetClassId() == 2) {
+                s32 t1 = Q8_TO_INT(o->x) - Q8_TO_INT(x);
+                s32 dx = ABS_BRANCHLESS(t1);
+                s32 t2 = Q8_TO_INT(o->y) - Q8_TO_INT(y);
+                s32 dy = ABS_BRANCHLESS(t2);
+
+                if (dx + dy <= dist) {
+                    o->PickUp(1);
+                    o->f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
+                }
+            }
+            i++;
+        } while (i < gTouchableList->count);
+    }
+    blastState = CRATE_BLAST_STATE_BLASTED;
+}

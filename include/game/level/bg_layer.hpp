@@ -1,0 +1,405 @@
+#ifndef GUARD_BG_LAYER_HPP
+#define GUARD_BG_LAYER_HPP
+
+/* The level's background layers as C++ (#664, docs/cplusplus.md, step
+ * 10b): the tile-map streamer, the BG layer classes behind
+ * gBgStreamerVtable, gBgLayerBaseVtable, gBgLayerVtable and
+ * gPooledBgLayerVtable, and the level-layers singleton that owns them.
+ *
+ * No `#pragma interface`: g++ emits each vtable in the object that
+ * defines the class's key method, its destructor (BgStreamer's in
+ * src/game/level/bg_streamer.cpp, BgLayerBase's in src/game/level/bg_layer_base.cpp,
+ * PooledBgLayer's in src/game/level/pooled_bg_layer.cpp; BgLayer's is inline,
+ * so its key method is Reset, in src/game/level/bg_layer.cpp),
+ * and ldscript.txt places them at their ROM addresses (docs/cplusplus.md,
+ * "Emitting the vtables"). cxx_symbols.txt maps the mangled names onto
+ * the C names. The classes have no C view (bg_scroll_layer.h's `struct
+ * bg_scroll_layer` and level.h's `struct level_layers` went in #754);
+ * bg_scroll_layer.h keeps the BGnCNT shadow. */
+
+extern "C" {
+#include "core.h"
+#include "game/level/bg_scroll_layer.h"
+#include "game/level/level_data.h"
+#include "game/level/level.h"
+}
+
+namespace Game
+{
+namespace Level
+{
+
+/* The tile-map ring buffer of a BG layer (BgLayerBase::streamer, 0x24
+ * bytes): a circular 4x4-block (64 halfword columns x 32 rows, 0x1000
+ * bytes) window of the layer's decoded chunks, around the camera's
+ * 128x64-pixel chunk (`tileX`, `tileY`). `subX`/`subY` are the ring's
+ * block (mod 4) at the window's left and top edges. Scroll streams in
+ * the chunk row or column the camera has just reached, Fill seeds the
+ * whole window. Its code is in src/game/level/bg_streamer.cpp. */
+class BgStreamer
+{
+public:
+    const struct level_layer_desc *source; // 0x00
+    const u16 *records;                    // 0x04 - the chunk decoder's record table
+    u16 *ring;                             // 0x08 - 64x32 cells, 0x1000 bytes
+    s32 tileX;                             // 0x0C - the window's chunk column
+    s32 tileY;                             // 0x10 - and row
+    u8 subX;                               // 0x14
+    u8 subY;                               // 0x15
+    s32 widthTiles;                        // 0x18 - the source's widthTiles
+    s32 heightTiles;                       // 0x1C
+    // 0x20: the vtable pointer, gBgStreamerVtable
+
+    BgStreamer();                                    // InitBgStreamer
+    virtual ~BgStreamer();                           // 1 DestroyBgStreamer
+    void DecodeChunk(s32 recordId, u16 *dest);       // DecodeLayerChunk
+    void Scroll(const s32 *worldpos);                // ScrollBgStreamer
+    u16 *GetColumn(s32 x, s32 y, s32 *rowOut);       // GetBgStreamerColumn
+    u16 *GetRow(s32 x, s32 y, s32 *colOut);          // GetBgStreamerRow
+    u16 GetCell(s32 x, s32 y);                       // GetBgStreamerCell
+    void StreamRow(s32 row);                         // StreamBgRow
+    void StreamColumn(s32 col);                      // StreamBgColumn
+    void Fill(const s32 *pos);                       // FillBgStreamer
+    void SetSource(const struct level_layer_desc *); // SetBgStreamerSource
+    s32 GetHeight();                                 // GetBgStreamerHeight
+    s32 GetWidth();                                  // GetBgStreamerWidth
+    void SetSize(const s32 *size);                   // SetBgStreamerSizeVec
+    void SetSize(s32 x, s32 y);                      // SetBgStreamerSize
+};
+
+COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(BgStreamer) == 0x24);
+
+/* A scrolling layer's position and size (0x34 bytes): the base of
+ * BgLayer. Its methods are in src/game/level/bg_layer_base.cpp. Scroll scales
+ * a move by the layer's parallax factors and steps the position by it,
+ * ClampScrollStep (virtual) limiting each axis's step. */
+class BgLayerBase
+{
+public:
+    s32 x;                // 0x00 - pixels
+    s32 y;                // 0x04
+    s32 maxX;             // 0x08 - CAMERA_MAX_X(widthPx), the scroll limit
+    s32 maxY;             // 0x0C - CAMERA_MAX_Y(heightPx)
+    s32 widthPx;          // 0x10
+    s32 heightPx;         // 0x14
+    s32 widthTiles;       // 0x18
+    s32 heightTiles;      // 0x1C
+    s32 scaleX;           // 0x20 - Q8 parallax factor
+    s32 scaleY;           // 0x24
+    u8 enabled;           // 0x28
+    BgStreamer *streamer; // 0x2C
+    // 0x30: the vtable pointer, gBgLayerBaseVtable or a subclass's
+
+    BgLayerBase(s32 unused);                               // InitBgLayerBase
+    virtual ~BgLayerBase();                                // 1 DestroyBgLayerBase
+    virtual void Reset(const s32 *pos);                    // 2 ResetBgLayerBase
+    virtual void Scroll(const s32 *delta);                 // 3 ScrollBgLayerBase
+    virtual s32 ClampScrollStep(s32 step);                 // 4 ClampBgLayerScrollStep
+    void ClampScrollMax(s32 *pos);                         // ClampBgLayerScrollMax
+    void ScaleScroll(s32 *vec);                            // ScaleBgLayerScroll
+    void StepScroll(const s32 *target);                    // StepBgLayerScroll
+    void SetSource(const struct level_layer_desc *source); // SetBgLayerSource
+    u8 IsEnabled();                                        // IsBgLayerEnabled
+    s32 GetY();                                            // GetBgLayerY
+    s32 GetX();                                            // GetBgLayerX
+    s32 GetHeightTiles();                                  // GetBgLayerHeightTiles
+    s32 GetWidthTiles();                                   // GetBgLayerWidthTiles
+    s32 GetHeight();                                       // GetBgLayerHeight
+    s32 GetWidth();                                        // GetBgLayerWidth
+};
+
+COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(BgLayerBase) == 0x34);
+
+/* A hardware BG layer (0x5C bytes; level_layers' BG1-3): keeps a 32x32
+ * window of the level's tile map resident in its BG screen block, rows
+ * rowLo..rowHi and columns colLo..colHi, drawing and clipping one row or
+ * column at a time as the window moves. Screen entries wrap modulo 32 on
+ * both axes. Its methods are in src/game/level/bg_layer.cpp.
+ *
+ * The destructor and the small accessors are inline: the subclasses and
+ * the methods expand them, and bg_layer.cpp, which has the class's key
+ * method (Reset, its first non-inline virtual one) and so its vtable,
+ * also gets an out-of-line copy of each at its end, in the reverse of
+ * their declaration order, as the ROM has them (GetBgLayerScreenIndex ...
+ * DestroyBgLayer). Nothing calls those copies. GetScreenIndex is declared
+ * after the two wraps it calls, or g++ would call them out of line. */
+class BgLayer : public BgLayerBase
+{
+public:
+    union bg_cnt cnt;     // 0x34 - BGnCNT shadow
+    vu16 *cntReg;         // 0x38 - &REG_BGnCNT
+    s32 rowLo;            // 0x3C
+    s32 rowHi;            // 0x40
+    s32 colLo;            // 0x44
+    s32 colHi;            // 0x48
+    u16 *screen;          // 0x4C - BG screen block (32x32 entries)
+    const void *tileData; // 0x50 - tagged asset for the char block
+    u16 hofs;             // 0x54
+    u16 vofs;             // 0x56
+    vu32 *ofsReg;         // 0x58 - &REG_BGnHOFS (written with VOFS as one word)
+
+    BgLayer(s32 bgIndex); // InitBgLayer
+
+    /* 1 DestroyBgLayer: stores gBgLayerVtable and chains to ~BgLayerBase. */
+    virtual ~BgLayer()
+    {
+    }
+
+    virtual void Reset(const s32 *pos);             // 2 ResetBgLayer
+    virtual void Scroll(const s32 *delta);          // 3 ScrollBgLayer
+    virtual void LoadTiles();                       // 5 LoadBgLayerTiles
+    virtual void DrawRow(s32 row);                  // 6 DrawBgLayerRow
+    virtual void DrawColumn(s32 col);               // 7 DrawBgLayerColumn
+    virtual void ClipColumns(s32 lo, s32 hi);       // 8 ClipBgLayerColumns
+    virtual void ClipRows(s32 lo, s32 hi);          // 9 ClipBgLayerRows
+    void GrowRows(s32 lo, s32 hi);                  // GrowBgLayerRows
+    void GrowColumns(s32 lo, s32 hi);               // GrowBgLayerColumns
+    void CommitScroll();                            // CommitBgLayerScroll
+    void Redraw();                                  // RedrawBgLayer
+    void Load(const struct level_layer_desc *desc); // LoadBgLayer
+
+    /* Writes the BGnCNT shadow to the hardware register (WriteBgLayerCntReg). */
+    void WriteCntReg()
+    {
+        *cntReg = cnt.raw;
+    }
+
+    /* Writes the HOFS/VOFS pair as one word (WriteBgLayerOffsetRegs). */
+    void WriteOffsetRegs()
+    {
+        *ofsReg = *(u32 *)&hofs;
+    }
+
+    /* The BGnCNT shadow's fields (SetBgLayerCharBase ... SetBgLayerScreenBase). */
+    void SetCharBase(u32 charBase)
+    {
+        cnt.bits.charBase = charBase;
+    }
+
+    u32 GetCharBase()
+    {
+        return cnt.bits.charBase;
+    }
+
+    void SetColors256(u32 colors256)
+    {
+        cnt.bits.colors256 = colors256;
+    }
+
+    void SetPriority(u32 priority)
+    {
+        cnt.bits.priority = priority;
+    }
+
+    void SetScreenBase(u32 screenBase)
+    {
+        cnt.bits.screenBase = screenBase;
+    }
+
+    /* A map row's and column's screen row and column: 32x32 wrap
+     * (WrapBgLayerRow, WrapBgLayerColumn; the two are byte-identical, and
+     * which is which is assumed from GetScreenIndex's (col, row) order). */
+    s32 WrapRow(s32 row)
+    {
+        return row % 32;
+    }
+
+    s32 WrapColumn(s32 col)
+    {
+        return col % 32;
+    }
+
+    /* Screen-block entry index of map (col, row) (GetBgLayerScreenIndex). */
+    s32 GetScreenIndex(s32 col, s32 row)
+    {
+        return WrapRow(row) * 32 + WrapColumn(col);
+    }
+};
+
+COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(BgLayer) == 0x5C);
+
+#define TILE_SLOT_NONE 0x200
+
+/* Layer 0's VRAM tile-slot pool (PooledBgLayer::pool, 0x480C bytes;
+ * src/game/level/tile_slot_pool.cpp): up to 0x2000 source tiles mapped onto
+ * 0x200 reference-counted VRAM tile slots. PooledBgLayer's constructor
+ * allocates it (`new TileSlotPool`, no constructor) and Reset empties it.
+ * It has no vtable. */
+class TileSlotPool
+{
+public:
+    u32 vramBase;            // 0x0000
+    u32 srcBase;             // 0x0004
+    u16 refCount[0x200];     // 0x0008
+    u16 slotForTile[0x2000]; // 0x0408 - TILE_SLOT_NONE when not resident
+    u16 freeSlots[0x200];    // 0x4408
+    s32 freeTop;             // 0x4808
+
+    void Reset();                          // ResetTileSlotPool
+    u16 Acquire(u16 tile);                 // AcquireTileSlot
+    void Release(u32 tile);                // ReleaseTileSlot
+    void Upload(s32 tileId, s32 slot);     // UploadTileSlot
+    void SetSource(s32 charBase, u32 src); // SetTileSlotPoolSource
+
+private:
+    /* The free-stack push and the slot-table accessors: as inline
+     * functions they make the ROM recompute `this + 0x4808`/`this +
+     * 0x408` instead of reusing one address register (code written in
+     * place CSEs them). */
+    void PushFreeSlot(s32 slot)
+    {
+        freeSlots[--freeTop] = slot;
+    }
+
+    void ClearSlot(s32 id)
+    {
+        slotForTile[id] = TILE_SLOT_NONE;
+    }
+
+    u16 PopFreeSlot()
+    {
+        return freeSlots[freeTop++];
+    }
+
+    void SetSlot(s32 id, u16 slot)
+    {
+        slotForTile[id] = slot;
+    }
+
+    u16 GetSlot(s32 id)
+    {
+        return slotForTile[id];
+    }
+};
+
+COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(TileSlotPool) == 0x480C);
+
+/* BG layer 0 (0x60 bytes): a BgLayer whose tiles go through a VRAM tile
+ * slot pool (TileSlotPool, src/game/level/tile_slot_pool.cpp) instead
+ * of the layer's own character block, releasing the tiles of the rows and
+ * columns that scroll out. Its methods are in
+ * src/game/level/pooled_bg_layer.cpp. */
+class PooledBgLayer : public BgLayer
+{
+public:
+    TileSlotPool *pool; // 0x5C
+
+    PooledBgLayer(s32 bgIndex);               // InitPooledBgLayer
+    virtual ~PooledBgLayer();                 // 1 DestroyPooledBgLayer
+    virtual void Reset(const s32 *pos);       // 2 ResetPooledBgLayer
+    virtual s32 ClampScrollStep(s32 step);    // 4 ClampPooledBgLayerScrollStep
+    virtual void LoadTiles();                 // 5 LoadPooledBgLayerTiles
+    virtual void DrawRow(s32 row);            // 6 DrawPooledBgLayerRow
+    virtual void DrawColumn(s32 col);         // 7 DrawPooledBgLayerColumn
+    virtual void ClipColumns(s32 lo, s32 hi); // 8 ClipPooledBgLayerColumns
+    virtual void ClipRows(s32 lo, s32 hi);    // 9 ClipPooledBgLayerRows
+    void ReleaseColumn(s32 col);              // ReleasePooledBgLayerColumn
+    void ReleaseRow(s32 row);                 // ReleasePooledBgLayerRow
+    u32 GetPriority();                        // GetPooledBgLayerPriority
+};
+
+COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(PooledBgLayer) == 0x60);
+
+/* The collision tile cache (LevelLayers' `tiles`, 0x1064 bytes): a 16-slot decode/LRU cache of
+ * the room's collision tile records (docs/rom_map.md's "Collision/terrain-map
+ * streamer"). `id[N]` holds the record ID currently decoded into the
+ * matching 256-byte `buf[N]` slot; `nextSlot` is the ring-buffer eviction
+ * cursor GetChunk advances every time it decodes a new record (evicting
+ * slot `(nextSlot - 1) & 0xf`, the slot filled just before the cursor).
+ * `source` is the level_layer_desc SetSource was given, read as a pointer
+ * to the record grid. It has no vtable. Its methods are in
+ * src/game/level/tile_cache.cpp (GetChunk, the terrain lookups, DecodeChunk,
+ * the constructor, destructor and GetTerrainType) and
+ * src/game/level/tile_cache_cell.cpp (GetCell, SetSource). */
+class TileCache
+{
+public:
+    const struct level_layer_desc *source; // 0x000
+    void *decodeBase;  // 0x004 - gLevelLayers->asset + source->assetOffset; DecodeChunk's table
+    s32 widthPx;       // 0x008 - widthTiles << 3; nothing reads it
+    s32 heightPx;      // 0x00C - heightTiles << 3; nothing reads it
+    s32 widthTiles;    // 0x010 - source->widthTiles (ProbeTerrainY's right edge)
+    s32 heightTiles;   // 0x014 - source->heightTiles (ProbeTerrainX's bottom edge)
+    s32 width;         // 0x018 - tiles, source->gridWidth
+    s32 height;        // 0x01C - tiles, source->gridHeight; nothing reads it
+    u8 buf[16][0x100]; // 0x020 - 16 decoded 256-byte chunks
+    s32 id[16];        // 0x1020 - the record IDs resident in `buf`
+    s32 nextSlot;      // 0x1060
+
+    TileCache();                           // InitTileCache
+    ~TileCache();                          // DestroyTileCache
+    void *GetChunk(s32 recordId);          // GetCollisionChunk
+    void *GetTerrainHeights(s32 x, s32 y); // GetTerrainHeights
+    void *GetSolidTerrainHeights(s32 x, s32 y, s32 mode, u8 *flagsOut);
+    s8 GetSolidTerrainModeValue(s32 x, s32 y, s32 mode, u8 *flagsOut);
+    void DecodeChunk(s32 recordId, void *dest); // DecodeCollisionChunk
+    u16 GetTerrainType(s32 x, s32 y, u8 *flagsOut, s32 *hiOut);
+    u16 GetCell(s32 x, s32 y);                             // GetCollisionCell
+    void SetSource(const struct level_layer_desc *source); // SetCollisionSource
+
+private:
+    /* The decoded cell at pixel (x, y): 16x8-pixel tiles, one 256-byte
+     * cache slot per tile record. Inlined into the terrain lookups. */
+    u16 CellAt(s32 x, s32 y)
+    {
+        s32 tileX = x >> 4;
+        s32 tileY = y >> 3;
+        u16 *cell = (u16 *)GetChunk(source->chunkGrid[tileY * width + tileX]);
+        return cell[(y & 7) * 16 + (x & 0xf)];
+    }
+};
+
+COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(TileCache) == 0x1064);
+
+/* The level-layers singleton (gLevelLayersSingleton, gLevelLayers;
+ * src/game/level/level_layers.cpp): BG layer 0, the three other BG layers, the
+ * collision tile cache and the level asset.
+ * It has no vtable. */
+class LevelLayers
+{
+public:
+    s32 maxScrollX;        // 0x00 - pixels
+    s32 maxScrollY;        // 0x04
+    s32 scrollX;           // 0x08 - pixels
+    s32 scrollY;           // 0x0C
+    PooledBgLayer *layer0; // 0x10
+    BgLayer *layers[3];    // 0x14
+    TileCache *tiles;      // 0x20 - 0x1064 bytes
+    void *asset;           // 0x24 - the loaded level asset
+    u8 assetOwned;         // 0x28
+    // 0x29 - the terrain kind the last probe hit, recorded while `probeFlag` is set
+    //        (ProbeTerrainX/Y)
+    u8 kind;
+    u8 probeFlag; // 0x2A - CollidePlayer sets it around its ground probe
+    // 0x2B - set when the room's blend mode is 1 (SetupRoomBlend): sprites then
+    //        take layer 0's priority minus one (GetSpriteObjPriority)
+    u8 raiseObjPriority;
+
+    LevelLayers();                                     // InitLevelLayers
+    ~LevelLayers();                                    // DestroyLevelLayers
+    static LevelLayers *Get();                         // GetLevelLayers
+    void LoadRoom(const struct level_room *args);      // LoadRoom
+    void SetScroll(s32 x, s32 y);                      // SetLevelScroll
+    void CommitScroll();                               // CommitLevelScroll
+    void Scroll();                                     // ScrollLevelLayers
+    void Reset();                                      // ResetLevelLayers
+    s32 sub_80269DC(s32 cond1, s32 *cond2, s32 cond3); // UNUSED
+    s32 sub_80269F8(s32 cond1, s32 *cond2, s32 cond3); // UNUSED
+
+    /* The terrain probes (#760; terrain_probe.cpp, terrain_probe_axes.cpp,
+     * terrain.cpp): every caller passes gLevelLayers. */
+    bool Probe(s32 mode, struct vec2 *pos, s32 span, s32 *outValue);     // ProbeTerrain
+    bool ProbeY(struct vec2 *pos, s32 span, s32 *outValue, s32 submode); // ProbeTerrainY
+    bool ProbeX(struct vec2 *pos, s32 span, s32 *outValue, s32 submode); // ProbeTerrainX
+    s32 GetTerrainFlags(s32 x, s32 y);                                   // GetTerrainFlagsAt
+    s32 ProbeFloor(struct vec2 *pos, s32 *outValue);                     // ProbeFloorHeight
+    s32 ProbeSolidFloor(struct vec2 *pos, s32 *outValue);                // ProbeSolidFloorHeight
+    s32 sub_8026C80(s32 cond, volatile s32 *ptr);                        // UNUSED
+};
+
+COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(LevelLayers) == 0x2C);
+
+} // namespace Level
+} // namespace Game
+
+#endif /* !GUARD_BG_LAYER_HPP */

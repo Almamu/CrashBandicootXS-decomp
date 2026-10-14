@@ -1,6 +1,6 @@
 # An explosive crate's blast state (#843)
 
-`Crate::blastState` (+0x48, include/crate.hpp) is the explosive kinds'
+`Crate::blastState` (+0x48, include/game/crates/crate.hpp) is the explosive kinds'
 view of the per-kind word (the TNT and nitro crates, `gCrateKindExplosive`).
 The names, `CRATE_BLAST_STATE_*`, sit next to the slot crate's
 `CRATE_SLOT_*` in crate.hpp.

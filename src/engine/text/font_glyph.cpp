@@ -1,5 +1,5 @@
 #include "graphics.hpp"
-#include "sprite_obj.hpp"
+#include "game/entities/sprite_obj.hpp"
 #include "engine/text/font.hpp"
 
 extern "C" {

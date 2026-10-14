@@ -2,7 +2,7 @@
 
 `Player::ctrlMode` (+0x88) says which controller drives the player, so
 which kind of room it is in. The names, `PLAYER_CTRL_MODE_*`, sit in
-include/player.hpp next to the class.
+include/game/crash/player.hpp next to the class.
 
 ## Evidence
 

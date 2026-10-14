@@ -1,13 +1,13 @@
-#include "crate.hpp"
-#include "platform.hpp"
-#include "level_select.hpp"
-#include "enemy_ctrl.hpp"
-#include "boss_ctrl.hpp"
-#include "pickups.hpp"
+#include "game/crates/crate.hpp"
+#include "game/objects/platform.hpp"
+#include "game/ui/level_select.hpp"
+#include "game/enemies/enemy_ctrl.hpp"
+#include "game/bosses/boss_ctrl.hpp"
+#include "game/objects/pickups.hpp"
 
 extern "C" {
 #include "core.h"
-#include "level.h"
+#include "game/level/level.h"
 #include "globals.h"
 }
 

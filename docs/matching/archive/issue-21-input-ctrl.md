@@ -1,7 +1,7 @@
 # Issue #21: 0x08017524-0x08017A44, graphics - a D-pad-driven actor-part controller
 
 All 25 functions are byte-exact matched as plain C in the new
-`src/player/input_ctrl.c` (named by address, following
+`src/game/crash/input_ctrl.c` (named by address, following
 `action_ctrl_run_jump.c`'s precedent, since what this object controls in-game
 isn't established). It replaces the tail of `asm/code_3_2_17_16048.s`,
 which now ends at `SetPlayerCtrlMotionXPending` (the rest of that file is issue #20).

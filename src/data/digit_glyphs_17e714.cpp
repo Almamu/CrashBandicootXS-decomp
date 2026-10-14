@@ -1,4 +1,4 @@
-#include "frontend.hpp"
+#include "game/ui/frontend.hpp"
 
 extern "C" {
 #include "core.h"
