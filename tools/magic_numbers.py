@@ -237,25 +237,25 @@ FIELDS = [
 
 # C only: the C code's field spellings. `->state` is a common field
 # name, so only the player's action controller's is counted (the swim
-# and input controllers in src/player/ have their own states). Its
+# and input controllers in src/game/crash/ have their own states). Its
 # set-mode method is vtable slot 0x20 (`m20`, `mgr[4]`).
 C_FIELDS = [
     (
         "action_state",
         r"(?:->|\.)(?:state|prevState)\s*(?:==|!=)\s*(?P<v>" + LIT + r")\b",
-        os.path.join("src", "player", "action_ctrl"),
+        os.path.join("src", "game", "crash", "action_ctrl"),
         None,
     ),
     (
         "action_state",
         r"(?:\bACT_V?CALL1\s*\(\s*\w+\s*,\s*m20\s*,|\bm20\.thisOffset\s*,|\bmgr\[4\]\.delta\s*,)"
         r"\s*(?:\(void \*\))?(?P<v>" + LIT + r")\b",
-        os.path.join("src", "player", ""),
+        os.path.join("src", "game", "crash", ""),
         None,
     ),
-    # level topic: room kinds (src/level/'s only ->kind tests) and the
+    # level topic: room kinds (src/game/level/'s only ->kind tests) and the
     # level id. Before "kind".
-    ("level", r"->kind\s*(?:==|!=)\s*(?P<v>" + LIT + r")\b", os.path.join("src", "level", ""), ("ROOM_KIND_",)),
+    ("level", r"->kind\s*(?:==|!=)\s*(?P<v>" + LIT + r")\b", os.path.join("src", "game", "level", ""), ("ROOM_KIND_",)),
     ("level", r"\bself->level\s*" + CMP + r"\s*(?P<v>" + LIT + r")\b", None, ("LEVEL_",)),
     ("kind", r"(?:->|\.)kind\s*(?:==|!=)\s*(?P<v>" + LIT + r")\b", None, None),
 ]

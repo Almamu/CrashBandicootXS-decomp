@@ -1,0 +1,73 @@
+#include "game/objects/platform.hpp"
+#include "game/crash/player.hpp"
+
+using Game::Entities::Sprite;
+using Game::Objects::Platform;
+
+/* The rest of Platform's methods (#664, include/game/objects/platform.hpp), ROM
+ * 0x0801B208-0x0801B304. PlatformMover follows in platform_mover.cpp.
+ *
+ * UNUSED - no caller anywhere in the ROM: the out-of-line constructor
+ * InitPlatform (CreatePlatform inlines it). */
+
+/* While near the camera, steps the animation; then the velocity, and the
+ * mover. A flip platform that has tipped over (PLATFORM_TYPE_FLIP past
+ * frame 0x12) drops the player. */
+void Platform::Update()
+{
+    if (IsNearCamera()) {
+        AdvanceAnim();
+        ApplyVelocity();
+        if (type == PLATFORM_TYPE_FLIP && frame > 0x12) {
+            Sprite **c = &gPlayer->carried;
+
+            if (*c == this)
+                *c = 0;
+        }
+        if (mover)
+            mover->Update(this);
+    } else {
+        ApplyVelocity();
+        if (mover)
+            mover->Update(this);
+    }
+}
+
+/* The bonus platform's exit facing (flags2 bit 4), set by CreatePlatform
+ * from bit 0 of its entity's parameter flags (SetExitMirror). RunRoom
+ * passes it to SetCheckpoint as the checkpoint flags, so the player comes
+ * back from the bonus round on the platform X-mirrored when it is set. */
+s32 Platform::GetExitMirror()
+{
+    return (f.bytes.flags2 >> ENTITY_BIT2_EXIT_MIRROR) & 1;
+}
+
+/* Sets the exit facing GetExitMirror reads (CreatePlatform, type 3: the
+ * active bonus platform). */
+void Platform::SetExitMirror(u8 value)
+{
+    /* `mirror` is needed: inlined, the code is 1 instruction shorter */
+    s32 mirror = value;
+
+    f.b.exitMirror = mirror;
+}
+
+s32 Platform::GetClassId()
+{
+    return 4;
+}
+
+Platform::~Platform()
+{
+}
+
+/* Clears `vulnerable`, as the constructor does. */
+void Platform::ClearVulnerable()
+{
+    f.b.vulnerable = 0;
+}
+
+Platform::Platform()
+{
+    ClearVulnerable();
+}

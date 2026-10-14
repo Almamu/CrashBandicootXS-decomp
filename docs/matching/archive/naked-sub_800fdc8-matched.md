@@ -1,6 +1,6 @@
 # `FindLineCrossing` converted from NAKED transcription to real matched C
 
-`FindLineCrossing` (`src/crates/crate_reset.c`, the full 4-octant
+`FindLineCrossing` (`src/game/crates/crate_reset.c`, the full 4-octant
 Bresenham-line-style line-stepper `FindLineCrossingYMajor`/`FindLineCrossingXMajor`
 (crate.c) are fixed single-octant variants of) had been parked
 as a byte-correct NAKED asm transcription - see
@@ -168,4 +168,4 @@ warnings or errors for `crate_reset.c`. Full clean `rm -rf build
 crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
 compare` - `crashbandicootxs.gba: La suma coincide`.
 `tools/report_units.py`'s `0x0800FDC8` entry now points at
-`src/crates/crate_reset.o` instead of `None`.
+`src/game/crates/crate_reset.o` instead of `None`.

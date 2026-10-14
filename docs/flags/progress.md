@@ -1,7 +1,7 @@
 # `GameProgress::flags`: gems and powers (#843)
 
 The progress block's byte at +0x02 (`class GameProgress`,
-include/game_progress.hpp). The level state holds it as `progress.flags`, and
+include/game/level/game_progress.hpp). The level state holds it as `progress.flags`, and
 its snapshots, the save slots and the block PackSaveData returns to the menus
 hold copies of it. The names are `PROGRESS_FLAG_*` (the masks) and
 `PROGRESS_BIT_*` (the bit numbers) in include/constants/progress_flags.h.

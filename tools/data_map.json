@@ -224,7 +224,7 @@
     "ConvertAirshipTiles"
    ],
    "consumer_files": [
-    "vehicle/jetpack/airship_graphics.cpp"
+    "game/vehicles/jetpack/airship_graphics.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -250,7 +250,7 @@
     "CreateAirship"
    ],
    "consumer_files": [
-    "vehicle/jetpack/airship.c"
+    "game/vehicles/jetpack/airship.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -277,7 +277,7 @@
     "ConvertHovercraftTiles"
    ],
    "consumer_files": [
-    "bosses/hovercraft.c"
+    "game/bosses/hovercraft.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -302,7 +302,7 @@
     "CreateHovercraft"
    ],
    "consumer_files": [
-    "bosses/hovercraft.c"
+    "game/bosses/hovercraft.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -363,19 +363,19 @@
     "SpawnStar"
    ],
    "consumer_files": [
-    "player/player_update.cpp",
-    "enemies/enemy_ctrl.cpp",
-    "pickups/extra_life.cpp",
-    "pickups/wumpa_update.cpp",
-    "pickups/wumpa.cpp",
-    "menus/zoom_bg.cpp",
-    "vehicle/polar/polar_aku_aku.cpp",
-    "vehicle/jetpack/jetpack_bomber.cpp",
-    "vehicle/jetpack/airship_fireball.cpp",
-    "vehicle/jetpack/jetpack_crates.cpp",
-    "vehicle/jetpack/jetpack_rocket.cpp",
-    "bosses/hovercraft.cpp",
-    "frontend/starfield.cpp"
+    "game/crash/player_update.cpp",
+    "game/enemies/enemy_ctrl.cpp",
+    "game/objects/extra_life.cpp",
+    "game/objects/wumpa_update.cpp",
+    "game/objects/wumpa.cpp",
+    "game/ui/zoom_bg.cpp",
+    "game/vehicles/polar/polar_aku_aku.cpp",
+    "game/vehicles/jetpack/jetpack_bomber.cpp",
+    "game/vehicles/jetpack/airship_fireball.cpp",
+    "game/vehicles/jetpack/jetpack_crates.cpp",
+    "game/vehicles/jetpack/jetpack_rocket.cpp",
+    "game/bosses/hovercraft.cpp",
+    "game/ui/starfield.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -453,7 +453,7 @@
     "DrawYesNoPrompt"
    ],
    "consumer_files": [
-    "save/save_menu_draw.cpp"
+    "game/ui/save_menu_draw.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -474,7 +474,7 @@
     "InitSaveMenuIcons"
    ],
    "consumer_files": [
-    "save/save_menu_draw.cpp"
+    "game/ui/save_menu_draw.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -498,7 +498,7 @@
     "InitSaveMenuIcons"
    ],
    "consumer_files": [
-    "save/save_menu_draw.cpp"
+    "game/ui/save_menu_draw.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 2,
@@ -522,7 +522,7 @@
     "InitSaveMenuIcons"
    ],
    "consumer_files": [
-    "save/save_menu_draw.cpp"
+    "game/ui/save_menu_draw.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -546,7 +546,7 @@
     "InitSaveMenuIcons"
    ],
    "consumer_files": [
-    "save/save_menu_draw.cpp"
+    "game/ui/save_menu_draw.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -570,7 +570,7 @@
     "DrawSaveMenuMain"
    ],
    "consumer_files": [
-    "save/save_menu_input.cpp"
+    "game/ui/save_menu_input.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -594,7 +594,7 @@
     "DrawPauseMenuPageTitle"
    ],
    "consumer_files": [
-    "menus/pause_menu_pages_draw.cpp"
+    "game/ui/pause_menu_pages_draw.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -619,8 +619,8 @@
     "DrawPauseCrystalsPage"
    ],
    "consumer_files": [
-    "menus/pause_menu_pages_draw.cpp",
-    "menus/pause_menu_pages_init.cpp"
+    "game/ui/pause_menu_pages_draw.cpp",
+    "game/ui/pause_menu_pages_init.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -644,7 +644,7 @@
     "InitPausePowersPage"
    ],
    "consumer_files": [
-    "menus/pause_menu_pages_init.cpp"
+    "game/ui/pause_menu_pages_init.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -668,7 +668,7 @@
     "InitPausePowersPage"
    ],
    "consumer_files": [
-    "menus/pause_menu_pages_init.cpp"
+    "game/ui/pause_menu_pages_init.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -693,8 +693,8 @@
     "InitPauseGemsPage"
    ],
    "consumer_files": [
-    "menus/pause_menu_collectibles.cpp",
-    "menus/pause_menu_pages_init.cpp"
+    "game/ui/pause_menu_collectibles.cpp",
+    "game/ui/pause_menu_pages_init.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -718,7 +718,7 @@
     "InitPauseGemsPage"
    ],
    "consumer_files": [
-    "menus/pause_menu_pages_init.cpp"
+    "game/ui/pause_menu_pages_init.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -743,8 +743,8 @@
     "InitPauseRelicsPage"
    ],
    "consumer_files": [
-    "menus/pause_menu_collectibles.cpp",
-    "menus/pause_menu_pages_init.cpp"
+    "game/ui/pause_menu_collectibles.cpp",
+    "game/ui/pause_menu_pages_init.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -769,7 +769,7 @@
     "InitPauseTimeTrialPage"
    ],
    "consumer_files": [
-    "menus/pause_menu_pages_init.cpp"
+    "game/ui/pause_menu_pages_init.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -794,8 +794,8 @@
     "DrawPauseTimeTrialPage"
    ],
    "consumer_files": [
-    "menus/pause_menu_pages_draw.cpp",
-    "menus/pause_menu_pages_init.cpp"
+    "game/ui/pause_menu_pages_draw.cpp",
+    "game/ui/pause_menu_pages_init.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -819,7 +819,7 @@
     "InitPauseMenu"
    ],
    "consumer_files": [
-    "menus/pause_menu.cpp"
+    "game/ui/pause_menu.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 3,
@@ -839,7 +839,7 @@
     "InitPauseMenu"
    ],
    "consumer_files": [
-    "menus/pause_menu.cpp"
+    "game/ui/pause_menu.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -860,7 +860,7 @@
     "RunPauseMenu"
    ],
    "consumer_files": [
-    "menus/pause_menu.cpp"
+    "game/ui/pause_menu.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -930,9 +930,9 @@
     "GetSpriteFrameBodyBox"
    ],
    "consumer_files": [
-    "objects/sprite.cpp",
-    "objects/sprite_obj.cpp",
-    "crates/crate_break.c"
+    "game/entities/sprite.cpp",
+    "game/entities/sprite_obj.cpp",
+    "game/crates/crate_break.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -956,10 +956,10 @@
     "ActionCtrlStateHangMove"
    ],
    "consumer_files": [
-    "objects/sprite_obj.cpp",
-    "player/player_collide.c",
-    "player/action_ctrl_event.cpp",
-    "player/action_ctrl_moves.cpp"
+    "game/entities/sprite_obj.cpp",
+    "game/crash/player_collide.c",
+    "game/crash/action_ctrl_event.cpp",
+    "game/crash/action_ctrl_moves.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -982,8 +982,8 @@
     "ApplyActionCtrlMotion"
    ],
    "consumer_files": [
-    "objects/ctrl.cpp",
-    "player/action_ctrl_states.cpp"
+    "game/entities/ctrl.cpp",
+    "game/crash/action_ctrl_states.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1010,7 +1010,7 @@
     "StartSwimCtrlMotionXFromSet"
    ],
    "consumer_files": [
-    "player/swim_ctrl.cpp"
+    "game/crash/swim_ctrl.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1034,7 +1034,7 @@
     "ApplyInputCtrlMotion"
    ],
    "consumer_files": [
-    "player/input_ctrl.cpp"
+    "game/crash/input_ctrl.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1055,7 +1055,7 @@
     "PlayRoom"
    ],
    "consumer_files": [
-    "level/play_room.cpp"
+    "game/level/play_room.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -1075,7 +1075,7 @@
     "PlayRoom"
    ],
    "consumer_files": [
-    "level/play_room.cpp"
+    "game/level/play_room.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -1095,7 +1095,7 @@
     "PlayRoom"
    ],
    "consumer_files": [
-    "level/play_room.cpp"
+    "game/level/play_room.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -1140,7 +1140,7 @@
     "SpawnWoodenCrusher"
    ],
    "consumer_files": [
-    "level/spawn_enemies.c"
+    "game/enemies/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1161,7 +1161,7 @@
     "SpawnPenguin"
    ],
    "consumer_files": [
-    "level/spawn_enemies.c"
+    "game/enemies/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1185,7 +1185,7 @@
     "SpawnPufferfish"
    ],
    "consumer_files": [
-    "level/spawn_enemies.c"
+    "game/enemies/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1209,7 +1209,7 @@
     "SpawnBlowgunTribesman"
    ],
    "consumer_files": [
-    "level/spawn_enemies.c"
+    "game/enemies/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1233,7 +1233,7 @@
     "SpawnVenusFlytrap"
    ],
    "consumer_files": [
-    "level/spawn_enemies.c"
+    "game/enemies/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1254,7 +1254,7 @@
     "SpawnVulture"
    ],
    "consumer_files": [
-    "level/spawn_enemies.c"
+    "game/enemies/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1275,7 +1275,7 @@
     "SpawnShark"
    ],
    "consumer_files": [
-    "level/spawn_enemies.c"
+    "game/enemies/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1296,7 +1296,7 @@
     "SpawnSquid"
    ],
    "consumer_files": [
-    "level/spawn_enemies.c"
+    "game/enemies/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1317,7 +1317,7 @@
     "SpawnElectricEel"
    ],
    "consumer_files": [
-    "level/spawn_enemies.c"
+    "game/enemies/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1338,7 +1338,7 @@
     "SpawnFlamethrowerLabAssistant"
    ],
    "consumer_files": [
-    "level/spawn_enemies.c"
+    "game/enemies/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1362,7 +1362,7 @@
     "SpawnStationarySpaceEnemy"
    ],
    "consumer_files": [
-    "level/spawn_enemies.c"
+    "game/enemies/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1383,7 +1383,7 @@
     "SpawnPatrollingSpaceEnemy"
    ],
    "consumer_files": [
-    "level/spawn_enemies.c"
+    "game/enemies/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1408,7 +1408,7 @@
     "SpawnFrog"
    ],
    "consumer_files": [
-    "level/spawn_enemies.c"
+    "game/enemies/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1430,7 +1430,7 @@
     "SpawnWoodenCrusher"
    ],
    "consumer_files": [
-    "level/spawn_enemies.c"
+    "game/enemies/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1451,7 +1451,7 @@
     "SpawnSaucerLabAssistant"
    ],
    "consumer_files": [
-    "level/spawn_enemies.c"
+    "game/enemies/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1475,7 +1475,7 @@
     "ResetEnemyCtrl"
    ],
    "consumer_files": [
-    "enemies/enemy_ctrl.cpp"
+    "game/enemies/enemy_ctrl.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -1497,8 +1497,8 @@
     "CreateCrate"
    ],
    "consumer_files": [
-    "crates/crate_states.cpp",
-    "crates/crate_create.cpp"
+    "game/crates/crate_states.cpp",
+    "game/crates/crate_create.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1521,7 +1521,7 @@
     "ExplodeCrate"
    ],
    "consumer_files": [
-    "crates/crate_break.c"
+    "game/crates/crate_break.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1544,9 +1544,9 @@
     "IsCrateKindBreakable"
    ],
    "consumer_files": [
-    "crates/crate_break.cpp",
-    "crates/crate_switches.cpp",
-    "crates/crate_fields.cpp"
+    "game/crates/crate_break.cpp",
+    "game/crates/crate_switches.cpp",
+    "game/crates/crate_fields.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1572,10 +1572,10 @@
     "UpdateCrateFall"
    ],
    "consumer_files": [
-    "crates/crate_hit.cpp",
-    "crates/crate_break.cpp",
-    "crates/crate_switches.cpp",
-    "crates/crate_states.cpp"
+    "game/crates/crate_hit.cpp",
+    "game/crates/crate_break.cpp",
+    "game/crates/crate_switches.cpp",
+    "game/crates/crate_states.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1597,7 +1597,7 @@
     "BreakCrateInStack"
    ],
    "consumer_files": [
-    "crates/crate_break.c"
+    "game/crates/crate_break.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1618,7 +1618,7 @@
     "QueueCratePlayerCollision"
    ],
    "consumer_files": [
-    "crates/crate_break.c"
+    "game/crates/crate_break.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1643,7 +1643,7 @@
     "ApplyCrateCollision"
    ],
    "consumer_files": [
-    "crates/crate_break.c"
+    "game/crates/crate_break.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1667,7 +1667,7 @@
     "QueueCratePlayerCollision"
    ],
    "consumer_files": [
-    "crates/crate_break.c"
+    "game/crates/crate_break.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1688,7 +1688,7 @@
     "UpdateExtraLifeHop"
    ],
    "consumer_files": [
-    "pickups/extra_life.cpp"
+    "game/objects/extra_life.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1712,7 +1712,7 @@
     "UpdateWumpaHop"
    ],
    "consumer_files": [
-    "pickups/wumpa.cpp"
+    "game/objects/wumpa.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1736,7 +1736,7 @@
     "UpdateActionCtrl"
    ],
    "consumer_files": [
-    "player/action_ctrl_update.cpp"
+    "game/crash/action_ctrl_update.cpp"
    ],
    "ptr_words_code": 42,
    "ptr_words_data": 0,
@@ -1764,7 +1764,7 @@
     "ApplySwimCtrlTilt"
    ],
    "consumer_files": [
-    "player/swim_ctrl.cpp"
+    "game/crash/swim_ctrl.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 8,
@@ -1787,7 +1787,7 @@
     "StartSwimCtrlStroke"
    ],
    "consumer_files": [
-    "player/swim_ctrl_stroke.cpp"
+    "game/crash/swim_ctrl_stroke.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1811,7 +1811,7 @@
     "UpdateSwimCtrl"
    ],
    "consumer_files": [
-    "player/swim_ctrl.cpp"
+    "game/crash/swim_ctrl.cpp"
    ],
    "ptr_words_code": 8,
    "ptr_words_data": 0,
@@ -1835,7 +1835,7 @@
     "UpdateInputCtrl"
    ],
    "consumer_files": [
-    "player/input_ctrl.cpp"
+    "game/crash/input_ctrl.cpp"
    ],
    "ptr_words_code": 4,
    "ptr_words_data": 0,
@@ -1858,7 +1858,7 @@
     "ResetMegaMixCtrl"
    ],
    "consumer_files": [
-    "bosses/mega_mix.cpp"
+    "game/bosses/mega_mix.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -1881,7 +1881,7 @@
     "StartMegaMixMotionXFromSet"
    ],
    "consumer_files": [
-    "bosses/mega_mix.cpp"
+    "game/bosses/mega_mix.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1903,7 +1903,7 @@
     "SetTinyState"
    ],
    "consumer_files": [
-    "bosses/tiny.cpp"
+    "game/bosses/tiny.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1924,7 +1924,7 @@
     "PickTinyHopTarget"
    ],
    "consumer_files": [
-    "bosses/tiny.cpp"
+    "game/bosses/tiny.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1945,7 +1945,7 @@
     "SetCortexTargetDest"
    ],
    "consumer_files": [
-    "bosses/cortex.cpp"
+    "game/bosses/cortex.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1966,7 +1966,7 @@
     "UpdateCortexTarget"
    ],
    "consumer_files": [
-    "bosses/cortex.cpp"
+    "game/bosses/cortex.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1987,7 +1987,7 @@
     "UpdateCortexTarget"
    ],
    "consumer_files": [
-    "bosses/cortex.cpp"
+    "game/bosses/cortex.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2008,7 +2008,7 @@
     "UpdateCortexTarget"
    ],
    "consumer_files": [
-    "bosses/cortex.cpp"
+    "game/bosses/cortex.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2029,7 +2029,7 @@
     "UpdateDingodile"
    ],
    "consumer_files": [
-    "bosses/dingodile.cpp"
+    "game/bosses/dingodile.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2053,7 +2053,7 @@
     "UpdateDingodile"
    ],
    "consumer_files": [
-    "bosses/dingodile.cpp"
+    "game/bosses/dingodile.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2077,7 +2077,7 @@
     "UpdateDingodile"
    ],
    "consumer_files": [
-    "bosses/dingodile.cpp"
+    "game/bosses/dingodile.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2101,7 +2101,7 @@
     "UpdateDingodile"
    ],
    "consumer_files": [
-    "bosses/dingodile.cpp"
+    "game/bosses/dingodile.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2126,8 +2126,8 @@
     "StartDingodileMotion"
    ],
    "consumer_files": [
-    "bosses/dingodile.cpp",
-    "bosses/dingodile_create.cpp"
+    "game/bosses/dingodile.cpp",
+    "game/bosses/dingodile_create.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2152,7 +2152,7 @@
     "UpdateDingodileProjectile"
    ],
    "consumer_files": [
-    "bosses/dingodile.cpp"
+    "game/bosses/dingodile.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2173,7 +2173,7 @@
     "UpdateDingodileProjectile"
    ],
    "consumer_files": [
-    "bosses/dingodile.cpp"
+    "game/bosses/dingodile.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2194,7 +2194,7 @@
     "StartDingodileMotion"
    ],
    "consumer_files": [
-    "bosses/dingodile_create.cpp"
+    "game/bosses/dingodile_create.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2217,7 +2217,7 @@
     "CreatePlatformMover"
    ],
    "consumer_files": [
-    "objects/platform_mover.cpp"
+    "game/objects/platform_mover.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -2241,7 +2241,7 @@
     "StartPlatformMoverMotionXFromSet"
    ],
    "consumer_files": [
-    "objects/platform_mover.cpp"
+    "game/objects/platform_mover.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2268,10 +2268,10 @@
     "LoadLanguageSelectBg"
    ],
    "consumer_files": [
-    "frontend/language_select_setup.cpp",
-    "menus/level_select.c",
-    "menus/power_dialog.cpp",
-    "save/save_menu_draw.cpp"
+    "game/ui/language_select_setup.cpp",
+    "game/ui/level_select.c",
+    "game/ui/power_dialog.cpp",
+    "game/ui/save_menu_draw.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 3,
@@ -2291,7 +2291,7 @@
     "InitLevelSelect"
    ],
    "consumer_files": [
-    "menus/level_select.c"
+    "game/ui/level_select.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2315,7 +2315,7 @@
     "InitLevelSelect"
    ],
    "consumer_files": [
-    "menus/level_select.c"
+    "game/ui/level_select.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2339,7 +2339,7 @@
     "InitLevelSelect"
    ],
    "consumer_files": [
-    "menus/level_select.c"
+    "game/ui/level_select.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2363,7 +2363,7 @@
     "InitLevelSelect"
    ],
    "consumer_files": [
-    "menus/level_select.c"
+    "game/ui/level_select.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2387,7 +2387,7 @@
     "InitLevelSelect"
    ],
    "consumer_files": [
-    "menus/level_select.c"
+    "game/ui/level_select.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2412,7 +2412,7 @@
     "DrawLevelSelectTime"
    ],
    "consumer_files": [
-    "menus/level_select.c"
+    "game/ui/level_select.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2436,7 +2436,7 @@
     "InitLevelSelect"
    ],
    "consumer_files": [
-    "menus/level_select.c"
+    "game/ui/level_select.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2460,7 +2460,7 @@
     "InitLevelSelect"
    ],
    "consumer_files": [
-    "menus/level_select.c"
+    "game/ui/level_select.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2485,7 +2485,7 @@
     "PlaceLevelSelectEntries"
    ],
    "consumer_files": [
-    "menus/level_select_pages.c"
+    "game/ui/level_select_pages.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2510,7 +2510,7 @@
     "PlaceLevelSelectEntries"
    ],
    "consumer_files": [
-    "menus/level_select_pages.c"
+    "game/ui/level_select_pages.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2535,7 +2535,7 @@
     "SetLevelSelectEntryBoxes"
    ],
    "consumer_files": [
-    "menus/level_select_pages.c"
+    "game/ui/level_select_pages.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2560,8 +2560,8 @@
     "RefreshLevelSelectPage"
    ],
    "consumer_files": [
-    "menus/level_select.c",
-    "menus/level_select_pages.c"
+    "game/ui/level_select.c",
+    "game/ui/level_select_pages.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2585,7 +2585,7 @@
     "LoadLevelSelectRecord"
    ],
    "consumer_files": [
-    "menus/level_select.c"
+    "game/ui/level_select.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2609,7 +2609,7 @@
     "RunLevelSelect"
    ],
    "consumer_files": [
-    "menus/level_select.c"
+    "game/ui/level_select.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2630,7 +2630,7 @@
     "CreateLevelSelectPageBg"
    ],
    "consumer_files": [
-    "menus/level_select_page_bg.cpp"
+    "game/ui/level_select_page_bg.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 3,
@@ -2650,7 +2650,7 @@
     "UpdateZoomBg"
    ],
    "consumer_files": [
-    "menus/zoom_bg.cpp"
+    "game/ui/zoom_bg.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 20,
@@ -2673,7 +2673,7 @@
     "InitZoomBg"
    ],
    "consumer_files": [
-    "menus/zoom_bg.cpp"
+    "game/ui/zoom_bg.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2697,7 +2697,7 @@
     "SetLevelSelectEntryBox"
    ],
    "consumer_files": [
-    "menus/level_select_entry.cpp"
+    "game/ui/level_select_entry.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2721,7 +2721,7 @@
     "SetLevelSelectEntryLevel"
    ],
    "consumer_files": [
-    "menus/level_select_entry.cpp"
+    "game/ui/level_select_entry.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2745,7 +2745,7 @@
     "UpdateLevelSelectCursor"
    ],
    "consumer_files": [
-    "menus/level_select_cursor.cpp"
+    "game/ui/level_select_cursor.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2819,7 +2819,7 @@
     "CreateEntitySpawner"
    ],
    "consumer_files": [
-    "level/spawn_markers.cpp"
+    "game/level/spawn_markers.cpp"
    ],
    "ptr_words_code": 92,
    "ptr_words_data": 0,
@@ -2843,7 +2843,7 @@
     "RunRoom"
    ],
    "consumer_files": [
-    "level/play_room.cpp"
+    "game/level/play_room.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2867,7 +2867,7 @@
     "RunRoom"
    ],
    "consumer_files": [
-    "level/play_room.cpp"
+    "game/level/play_room.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2891,7 +2891,7 @@
     "RunRoom"
    ],
    "consumer_files": [
-    "level/play_room.cpp"
+    "game/level/play_room.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2915,7 +2915,7 @@
     "RunRoom"
    ],
    "consumer_files": [
-    "level/play_room.cpp"
+    "game/level/play_room.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2939,7 +2939,7 @@
     "RunRoom"
    ],
    "consumer_files": [
-    "level/play_room.cpp"
+    "game/level/play_room.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2982,14 +2982,14 @@
     "SelectRoom"
    ],
    "consumer_files": [
-    "menus/level_select.c",
-    "level/spawn_bosses.cpp",
-    "menus/power_dialog_draw.cpp",
-    "menus/pause_menu_info.cpp",
-    "menus/pause_menu_pages_init.cpp",
-    "level/level_query.cpp",
-    "level/room_select.cpp",
-    "level/play_room.cpp"
+    "game/ui/level_select.c",
+    "game/bosses/spawn_bosses.cpp",
+    "game/ui/power_dialog_draw.cpp",
+    "game/ui/pause_menu_info.cpp",
+    "game/ui/pause_menu_pages_init.cpp",
+    "game/level/level_query.cpp",
+    "game/level/room_select.cpp",
+    "game/level/play_room.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 67,
@@ -3008,7 +3008,7 @@
    "format": "level table: 25 x 0x24 struct level_info (name text id, theme, 3 time-trial thresholds, 2 words for SetMaskAssistDeaths/SetCrateAssistDeaths, a flag, room list), then 25 x 0x10 struct level_room_list {count, rooms**, extra1, extra2}",
    "effort": "medium",
    "confidence": "high",
-   "notes": "The first word (1) is record 0's name text id, not a header. The five local struct views in src are listed on struct level_info (include/level_data.h).",
+   "notes": "The first word (1) is record 0's name text id, not a header. The five local struct views in src are listed on struct level_info (include/game/level/level_data.h).",
    "status": "converted: src/data/level_table_16c814.cpp"
   },
   {
@@ -3019,7 +3019,7 @@
     "PlayRoomMusic"
    ],
    "consumer_files": [
-    "level/room_select.cpp"
+    "game/level/room_select.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 125,
@@ -3041,7 +3041,7 @@
     "PlayCutscene"
    ],
    "consumer_files": [
-    "level/level_cutscene.cpp"
+    "game/level/level_cutscene.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 444,
@@ -3066,7 +3066,7 @@
     "GetSolidTerrainModeValue"
    ],
    "consumer_files": [
-    "level/tile_cache.cpp"
+    "game/level/tile_cache.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3091,7 +3091,7 @@
     "GetSolidTerrainHeights"
    ],
    "consumer_files": [
-    "level/tile_cache.cpp"
+    "game/level/tile_cache.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3112,7 +3112,7 @@
     "GetSolidTerrainHeights"
    ],
    "consumer_files": [
-    "level/tile_cache.cpp"
+    "game/level/tile_cache.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3133,7 +3133,7 @@
     "GetSolidTerrainHeights"
    ],
    "consumer_files": [
-    "level/tile_cache.cpp"
+    "game/level/tile_cache.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3154,7 +3154,7 @@
     "GetSolidTerrainHeights"
    ],
    "consumer_files": [
-    "level/tile_cache.cpp"
+    "game/level/tile_cache.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 420,
@@ -3177,7 +3177,7 @@
     "ConfigureHudParts"
    ],
    "consumer_files": [
-    "hud/hud_init.cpp"
+    "game/ui/hud_init.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3205,8 +3205,8 @@
     "UpdateHudPercentCounters"
    ],
    "consumer_files": [
-    "hud/hud_init.cpp",
-    "hud/hud_counters.cpp"
+    "game/ui/hud_init.cpp",
+    "game/ui/hud_counters.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3473,7 +3473,7 @@
     "RunCompanyLogos"
    ],
    "consumer_files": [
-    "frontend/company_logos.cpp"
+    "game/ui/company_logos.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 234,
@@ -3496,8 +3496,8 @@
     "RunPolarPlayerState"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_player.c",
-    "vehicle/polar/polar_player_states.cpp"
+    "game/vehicles/polar/polar_player.c",
+    "game/vehicles/polar/polar_player_states.cpp"
    ],
    "ptr_words_code": 14,
    "ptr_words_data": 0,
@@ -3523,7 +3523,7 @@
     "PolarPlayerStateShocked"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_player.c"
+    "game/vehicles/polar/polar_player.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3547,7 +3547,7 @@
     "PolarPlayerStateShocked"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_player.c"
+    "game/vehicles/polar/polar_player.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3571,7 +3571,7 @@
     "UpdatePolarNitroCrate"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_crate.cpp"
+    "game/vehicles/polar/polar_crate.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3592,7 +3592,7 @@
     "UpdatePolarElectricFence"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_objects.c"
+    "game/vehicles/polar/polar_objects.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3613,7 +3613,7 @@
     "UpdatePolarElectricFence"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_objects.c"
+    "game/vehicles/polar/polar_objects.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3634,7 +3634,7 @@
     "UpdatePolarElectricFence"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_objects.c"
+    "game/vehicles/polar/polar_objects.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3655,7 +3655,7 @@
     "RefreshPolarAkuAku"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_aku_aku.cpp"
+    "game/vehicles/polar/polar_aku_aku.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3679,7 +3679,7 @@
     "UpdatePolarAkuAku"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_aku_aku.cpp"
+    "game/vehicles/polar/polar_aku_aku.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3703,7 +3703,7 @@
     "UpdatePolarAkuAku"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_aku_aku.cpp"
+    "game/vehicles/polar/polar_aku_aku.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3728,7 +3728,7 @@
     "YetiStateCharge"
    ],
    "consumer_files": [
-    "vehicle/polar/yeti_states.cpp"
+    "game/vehicles/polar/yeti_states.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3749,7 +3749,7 @@
     "UpdateYeti"
    ],
    "consumer_files": [
-    "vehicle/polar/yeti_update.cpp"
+    "game/vehicles/polar/yeti_update.cpp"
    ],
    "ptr_words_code": 4,
    "ptr_words_data": 0,
@@ -3773,7 +3773,7 @@
     "CreateYeti"
    ],
    "consumer_files": [
-    "vehicle/polar/yeti.cpp"
+    "game/vehicles/polar/yeti.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3794,7 +3794,7 @@
     "CreateYeti"
    ],
    "consumer_files": [
-    "vehicle/polar/yeti.cpp"
+    "game/vehicles/polar/yeti.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 123,
@@ -3818,7 +3818,7 @@
     "UpdateYetiPalette"
    ],
    "consumer_files": [
-    "vehicle/polar/yeti_update.cpp"
+    "game/vehicles/polar/yeti_update.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3842,7 +3842,7 @@
     "IsTouchingYeti"
    ],
    "consumer_files": [
-    "vehicle/polar/yeti_graphics.cpp"
+    "game/vehicles/polar/yeti_graphics.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3863,7 +3863,7 @@
     "UpdateYeti"
    ],
    "consumer_files": [
-    "vehicle/polar/yeti_update.cpp"
+    "game/vehicles/polar/yeti_update.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 191,
@@ -3886,8 +3886,8 @@
     "RunJetpackPlayerState"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_player_update.cpp",
-    "vehicle/jetpack/jetpack_player.c"
+    "game/vehicles/jetpack/jetpack_player_update.cpp",
+    "game/vehicles/jetpack/jetpack_player.c"
    ],
    "ptr_words_code": 8,
    "ptr_words_data": 0,
@@ -3911,7 +3911,7 @@
     "AnimateJetpackPlayerPalette"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_player.c"
+    "game/vehicles/jetpack/jetpack_player.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3936,7 +3936,7 @@
     "RunJetpackPlaneState"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_plane.c"
+    "game/vehicles/jetpack/jetpack_plane.c"
    ],
    "ptr_words_code": 4,
    "ptr_words_data": 0,
@@ -3961,7 +3961,7 @@
     "RunJetpackBomberState"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_bomber.cpp"
+    "game/vehicles/jetpack/jetpack_bomber.cpp"
    ],
    "ptr_words_code": 7,
    "ptr_words_data": 0,
@@ -3986,7 +3986,7 @@
     "RunAirshipFireballState"
    ],
    "consumer_files": [
-    "vehicle/jetpack/airship_fireball.c"
+    "game/vehicles/jetpack/airship_fireball.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -4010,7 +4010,7 @@
     "SpawnAirship"
    ],
    "consumer_files": [
-    "vehicle/jetpack/airship.c"
+    "game/vehicles/jetpack/airship.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4035,8 +4035,8 @@
     "AnimateAirshipPalette"
    ],
    "consumer_files": [
-    "vehicle/jetpack/airship.c",
-    "vehicle/jetpack/airship_graphics.c"
+    "game/vehicles/jetpack/airship.c",
+    "game/vehicles/jetpack/airship_graphics.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4062,9 +4062,9 @@
     "IsTouchingAirship"
    ],
    "consumer_files": [
-    "vehicle/jetpack/airship_states.cpp",
-    "vehicle/jetpack/airship.c",
-    "vehicle/jetpack/airship_touch.c"
+    "game/vehicles/jetpack/airship_states.cpp",
+    "game/vehicles/jetpack/airship.c",
+    "game/vehicles/jetpack/airship_touch.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4089,7 +4089,7 @@
     "CreateAirship"
    ],
    "consumer_files": [
-    "vehicle/jetpack/airship.c"
+    "game/vehicles/jetpack/airship.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4113,7 +4113,7 @@
     "UpdateAirship"
    ],
    "consumer_files": [
-    "vehicle/jetpack/airship.c"
+    "game/vehicles/jetpack/airship.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -4137,7 +4137,7 @@
     "RunJetpackBalloonState"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_balloon.c"
+    "game/vehicles/jetpack/jetpack_balloon.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -4162,7 +4162,7 @@
     "RunJetpackBalloonCrateState"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_crates.c"
+    "game/vehicles/jetpack/jetpack_crates.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -4186,7 +4186,7 @@
     "UpdateJetpackRocket"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_rocket.cpp"
+    "game/vehicles/jetpack/jetpack_rocket.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4208,7 +4208,7 @@
     "RunHovercraftFireballState"
    ],
    "consumer_files": [
-    "bosses/hovercraft_fireball.cpp"
+    "game/bosses/hovercraft_fireball.cpp"
    ],
    "ptr_words_code": 2,
    "ptr_words_data": 0,
@@ -4232,7 +4232,7 @@
     "SpawnHovercraft"
    ],
    "consumer_files": [
-    "bosses/hovercraft.c"
+    "game/bosses/hovercraft.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4256,7 +4256,7 @@
     "HovercraftStateCloseIn"
    ],
    "consumer_files": [
-    "bosses/hovercraft.c"
+    "game/bosses/hovercraft.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4280,7 +4280,7 @@
     "CreateHovercraft"
    ],
    "consumer_files": [
-    "bosses/hovercraft.c"
+    "game/bosses/hovercraft.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4301,7 +4301,7 @@
     "RunHovercraftState"
    ],
    "consumer_files": [
-    "bosses/hovercraft.c"
+    "game/bosses/hovercraft.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -4326,7 +4326,7 @@
     "RunHovercraftCannonState"
    ],
    "consumer_files": [
-    "bosses/hovercraft_cannon.c"
+    "game/bosses/hovercraft_cannon.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -4351,7 +4351,7 @@
     "RunHovercraftLauncherState"
    ],
    "consumer_files": [
-    "bosses/hovercraft_launcher.c"
+    "game/bosses/hovercraft_launcher.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -4375,7 +4375,7 @@
     "DrawContinuePrompt"
    ],
    "consumer_files": [
-    "menus/continue_prompt.cpp"
+    "game/ui/continue_prompt.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4396,7 +4396,7 @@
     "InitContinuePromptGraphics"
    ],
    "consumer_files": [
-    "menus/continue_prompt.cpp"
+    "game/ui/continue_prompt.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -4420,7 +4420,7 @@
     "InitContinuePromptGraphics"
    ],
    "consumer_files": [
-    "menus/continue_prompt.cpp"
+    "game/ui/continue_prompt.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 2,
@@ -4444,7 +4444,7 @@
     "InitContinuePromptGraphics"
    ],
    "consumer_files": [
-    "menus/continue_prompt.cpp"
+    "game/ui/continue_prompt.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4468,7 +4468,7 @@
     "InitContinuePromptGraphics"
    ],
    "consumer_files": [
-    "menus/continue_prompt.cpp"
+    "game/ui/continue_prompt.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4492,7 +4492,7 @@
     "InitContinuePrompt"
    ],
    "consumer_files": [
-    "menus/continue_prompt.cpp"
+    "game/ui/continue_prompt.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 3,
@@ -4512,7 +4512,7 @@
     "InitContinuePrompt"
    ],
    "consumer_files": [
-    "menus/continue_prompt.cpp"
+    "game/ui/continue_prompt.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 3,
@@ -4532,7 +4532,7 @@
     "InitContinuePrompt"
    ],
    "consumer_files": [
-    "menus/continue_prompt.cpp"
+    "game/ui/continue_prompt.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 3,
@@ -4552,7 +4552,7 @@
     "InitCredits"
    ],
    "consumer_files": [
-    "frontend/credits.cpp"
+    "game/ui/credits.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4574,7 +4574,7 @@
     "UpdateCreditsText"
    ],
    "consumer_files": [
-    "frontend/credits.cpp"
+    "game/ui/credits.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4595,7 +4595,7 @@
     "LoadCreditsLogos"
    ],
    "consumer_files": [
-    "frontend/credits.cpp"
+    "game/ui/credits.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 10,
@@ -4619,7 +4619,7 @@
     "ResetTitleLogoPieces"
    ],
    "consumer_files": [
-    "frontend/title_screen.cpp"
+    "game/ui/title_screen.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 9,
@@ -4639,7 +4639,7 @@
     "DrawTitleLogoPieces"
    ],
    "consumer_files": [
-    "frontend/title_screen.cpp"
+    "game/ui/title_screen.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4663,7 +4663,7 @@
     "InitTitleScreen"
    ],
    "consumer_files": [
-    "frontend/title_screen.cpp"
+    "game/ui/title_screen.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -4684,7 +4684,7 @@
     "InitTitleScreen"
    ],
    "consumer_files": [
-    "frontend/title_screen.cpp"
+    "game/ui/title_screen.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -4708,7 +4708,7 @@
     "InitTitleScreen"
    ],
    "consumer_files": [
-    "frontend/title_screen.cpp"
+    "game/ui/title_screen.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 12,
@@ -4729,7 +4729,7 @@
     "LoadTitleScreenBg"
    ],
    "consumer_files": [
-    "frontend/title_screen.cpp"
+    "game/ui/title_screen.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 3,
@@ -4754,7 +4754,7 @@
     "RunCompanyLogos"
    ],
    "consumer_files": [
-    "frontend/company_logos.cpp"
+    "game/ui/company_logos.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 2,
@@ -4775,7 +4775,7 @@
     "InitVvLogoPieces"
    ],
    "consumer_files": [
-    "frontend/company_logos.cpp"
+    "game/ui/company_logos.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 20,
@@ -4795,7 +4795,7 @@
     "LoadVvLogoGraphics"
    ],
    "consumer_files": [
-    "frontend/company_logos.cpp"
+    "game/ui/company_logos.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 2,
@@ -4815,7 +4815,7 @@
     "LoadVvLogoGraphics"
    ],
    "consumer_files": [
-    "frontend/company_logos.cpp"
+    "game/ui/company_logos.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 2,
@@ -4835,7 +4835,7 @@
     "LoadVvLogoGraphics"
    ],
    "consumer_files": [
-    "frontend/company_logos.cpp"
+    "game/ui/company_logos.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 2,
@@ -4855,7 +4855,7 @@
     "LoadUniversalLogoBg"
    ],
    "consumer_files": [
-    "frontend/company_logos.cpp"
+    "game/ui/company_logos.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 3,
@@ -4877,7 +4877,7 @@
     "DrawLanguageSelect"
    ],
    "consumer_files": [
-    "frontend/language_select.cpp"
+    "game/ui/language_select.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 6,
@@ -4900,7 +4900,7 @@
     "InitLanguageSelectGraphics"
    ],
    "consumer_files": [
-    "frontend/language_select.cpp"
+    "game/ui/language_select.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -4924,7 +4924,7 @@
     "InitLanguageSelectGraphics"
    ],
    "consumer_files": [
-    "frontend/language_select.cpp"
+    "game/ui/language_select.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -4948,7 +4948,7 @@
     "InitLanguageSelectGraphics"
    ],
    "consumer_files": [
-    "frontend/language_select.cpp"
+    "game/ui/language_select.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4972,7 +4972,7 @@
     "InitLanguageSelectGraphics"
    ],
    "consumer_files": [
-    "frontend/language_select.cpp"
+    "game/ui/language_select.cpp"
    ],
    "ptr_words_code": 67,
    "ptr_words_data": 1875,
@@ -5025,7 +5025,7 @@
      "size": 153808,
      "format": "per-room level data block 1 (33 rooms): per room the entity parameter records + offsets, u16 chunk grids, the 256-colour BG palette, per-type entity counts, entity links, level_desc (0x30), the entity list header, level_layer_desc (0x20 each), entity groups, entities",
      "effort": "hard",
-     "notes": "fully typed: include/level_data.h, docs/levels.md",
+     "notes": "fully typed: include/game/level/level_data.h, docs/levels.md",
      "status": "converted: src/data/level_rooms_24b638.cpp (generated by tools/levels.py from data/levels/)"
     },
     {
@@ -5071,8 +5071,8 @@
     "InitLevelState"
    ],
    "consumer_files": [
-    "level/spawn_markers.cpp",
-    "menus/pause_menu.cpp"
+    "game/level/spawn_markers.cpp",
+    "game/ui/pause_menu.cpp"
    ],
    "ptr_words_code": 220,
    "ptr_words_data": 9413,
@@ -7140,9 +7140,9 @@
     "DestroyPeriodicSpawner"
    ],
    "consumer_files": [
-    "objects/entity.cpp",
-    "objects/sprite_obj.cpp",
-    "enemies/periodic_spawner.cpp"
+    "game/entities/entity.cpp",
+    "game/entities/sprite_obj.cpp",
+    "game/enemies/periodic_spawner.cpp"
    ],
    "ptr_words_code": 10,
    "ptr_words_data": 0,
@@ -7167,7 +7167,7 @@
     "InitSpriteObj"
    ],
    "consumer_files": [
-    "objects/sprite_obj.cpp"
+    "game/entities/sprite_obj.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7192,7 +7192,7 @@
     "InitUiSpriteObj"
    ],
    "consumer_files": [
-    "objects/ui_sprite.cpp"
+    "game/entities/ui_sprite.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7218,7 +7218,7 @@
     "InitMovingSprite"
    ],
    "consumer_files": [
-    "objects/moving_sprite.cpp"
+    "game/entities/moving_sprite.cpp"
    ],
    "ptr_words_code": 14,
    "ptr_words_data": 0,
@@ -7244,7 +7244,7 @@
     "InitGroundSprite"
    ],
    "consumer_files": [
-    "objects/ground_sprite.cpp"
+    "game/entities/ground_sprite.cpp"
    ],
    "ptr_words_code": 14,
    "ptr_words_data": 0,
@@ -7269,8 +7269,8 @@
     "InitPlayer"
    ],
    "consumer_files": [
-    "player/player_update.c",
-    "player/player.cpp"
+    "game/crash/player_update.c",
+    "game/crash/player.cpp"
    ],
    "ptr_words_code": 14,
    "ptr_words_data": 0,
@@ -7295,7 +7295,7 @@
     "InitCtrl"
    ],
    "consumer_files": [
-    "objects/ctrl.cpp"
+    "game/entities/ctrl.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7320,7 +7320,7 @@
     "CreateEnemyCtrl"
    ],
    "consumer_files": [
-    "enemies/enemy_ctrl.cpp"
+    "game/enemies/enemy_ctrl.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7344,7 +7344,7 @@
     "CreatePeriodicSpawner"
    ],
    "consumer_files": [
-    "enemies/periodic_spawner.cpp"
+    "game/enemies/periodic_spawner.cpp"
    ],
    "ptr_words_code": 10,
    "ptr_words_data": 0,
@@ -7369,7 +7369,7 @@
     "CreateKnockedEnemyCtrl"
    ],
    "consumer_files": [
-    "enemies/knocked_enemy_ctrl.cpp"
+    "game/enemies/knocked_enemy_ctrl.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7394,7 +7394,7 @@
     "InitEffectCtrl"
    ],
    "consumer_files": [
-    "objects/effect_ctrl.cpp"
+    "game/entities/effect_ctrl.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7420,8 +7420,8 @@
     "InitCrate"
    ],
    "consumer_files": [
-    "crates/crate.cpp",
-    "crates/crate_create.cpp"
+    "game/crates/crate.cpp",
+    "game/crates/crate_create.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7448,7 +7448,7 @@
     "InitExtraLife"
    ],
    "consumer_files": [
-    "pickups/extra_life.cpp"
+    "game/objects/extra_life.cpp"
    ],
    "ptr_words_code": 13,
    "ptr_words_data": 0,
@@ -7474,8 +7474,8 @@
     "InitWumpa"
    ],
    "consumer_files": [
-    "pickups/wumpa.cpp",
-    "pickups/wumpa_update.cpp"
+    "game/objects/wumpa.cpp",
+    "game/objects/wumpa_update.cpp"
    ],
    "ptr_words_code": 13,
    "ptr_words_data": 0,
@@ -7501,7 +7501,7 @@
     "InitStopwatch"
    ],
    "consumer_files": [
-    "pickups/stopwatch.cpp"
+    "game/objects/stopwatch.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7526,7 +7526,7 @@
     "InitActionCtrl"
    ],
    "consumer_files": [
-    "player/action_ctrl.cpp"
+    "game/crash/action_ctrl.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7551,7 +7551,7 @@
     "InitSwimCtrl"
    ],
    "consumer_files": [
-    "player/swim_ctrl.cpp"
+    "game/crash/swim_ctrl.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7576,7 +7576,7 @@
     "CreateInputCtrl"
    ],
    "consumer_files": [
-    "player/input_ctrl.cpp"
+    "game/crash/input_ctrl.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7601,7 +7601,7 @@
     "CreateBossCtrl"
    ],
    "consumer_files": [
-    "bosses/boss_ctrl.cpp"
+    "game/bosses/boss_ctrl.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7626,7 +7626,7 @@
     "CreateMegaMixCtrl"
    ],
    "consumer_files": [
-    "bosses/mega_mix.cpp"
+    "game/bosses/mega_mix.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7651,7 +7651,7 @@
     "CreateStompedHopPadCtrl"
    ],
    "consumer_files": [
-    "bosses/tiny.cpp"
+    "game/bosses/tiny.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7676,7 +7676,7 @@
     "DestroyOneShotAnimCtrl"
    ],
    "consumer_files": [
-    "bosses/tiny.cpp"
+    "game/bosses/tiny.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7701,7 +7701,7 @@
     "DestroyUnusedOneShotAnimCtrl"
    ],
    "consumer_files": [
-    "bosses/tiny.cpp"
+    "game/bosses/tiny.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7726,7 +7726,7 @@
     "CreateTiny"
    ],
    "consumer_files": [
-    "bosses/tiny.cpp"
+    "game/bosses/tiny.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7751,7 +7751,7 @@
     "CreateCortexBossGemCtrl"
    ],
    "consumer_files": [
-    "bosses/cortex.cpp"
+    "game/bosses/cortex.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7776,7 +7776,7 @@
     "CreateCortexBossPlatformMover"
    ],
    "consumer_files": [
-    "bosses/cortex.cpp"
+    "game/bosses/cortex.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7801,7 +7801,7 @@
     "CreateCortexShotCtrl"
    ],
    "consumer_files": [
-    "bosses/cortex.cpp"
+    "game/bosses/cortex.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7826,7 +7826,7 @@
     "CreateCortexTargetCtrl"
    ],
    "consumer_files": [
-    "bosses/cortex.cpp"
+    "game/bosses/cortex.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7851,7 +7851,7 @@
     "CreateCortexCannonCtrl"
    ],
    "consumer_files": [
-    "bosses/cortex.cpp"
+    "game/bosses/cortex.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7876,7 +7876,7 @@
     "CreateCortexBoss"
    ],
    "consumer_files": [
-    "bosses/cortex.cpp"
+    "game/bosses/cortex.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7901,7 +7901,7 @@
     "DestroyDingodileSharkCtrl"
    ],
    "consumer_files": [
-    "bosses/dingodile.cpp"
+    "game/bosses/dingodile.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7927,7 +7927,7 @@
     "CreateDingodileProjectileCtrl"
    ],
    "consumer_files": [
-    "bosses/dingodile.cpp"
+    "game/bosses/dingodile.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7952,8 +7952,8 @@
     "CreateDingodileShieldCtrl"
    ],
    "consumer_files": [
-    "bosses/dingodile.cpp",
-    "bosses/dingodile_create.cpp"
+    "game/bosses/dingodile.cpp",
+    "game/bosses/dingodile_create.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7978,7 +7978,7 @@
     "CreateDingodile"
    ],
    "consumer_files": [
-    "bosses/dingodile_create.cpp"
+    "game/bosses/dingodile_create.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -8004,8 +8004,8 @@
     "InitPlatform"
    ],
    "consumer_files": [
-    "objects/platform_create.cpp",
-    "objects/platform.cpp"
+    "game/objects/platform_create.cpp",
+    "game/objects/platform.cpp"
    ],
    "ptr_words_code": 14,
    "ptr_words_data": 0,
@@ -8030,7 +8030,7 @@
     "CreatePlatformMover"
    ],
    "consumer_files": [
-    "objects/platform_mover.cpp"
+    "game/objects/platform_mover.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -8055,7 +8055,7 @@
     "CreateCameraLead"
    ],
    "consumer_files": [
-    "menus/level_select.c"
+    "game/ui/level_select.c"
    ],
    "ptr_words_code": 14,
    "ptr_words_data": 0,
@@ -8081,7 +8081,7 @@
     "InitLaunchPad"
    ],
    "consumer_files": [
-    "menus/level_select.c"
+    "game/ui/level_select.c"
    ],
    "ptr_words_code": 14,
    "ptr_words_data": 0,
@@ -8106,7 +8106,7 @@
     "CreateLevelSelectEntry"
    ],
    "consumer_files": [
-    "menus/level_select_entry.cpp"
+    "game/ui/level_select_entry.cpp"
    ],
    "ptr_words_code": 5,
    "ptr_words_data": 0,
@@ -8131,7 +8131,7 @@
     "InitBgStreamer"
    ],
    "consumer_files": [
-    "level/bg_streamer.cpp"
+    "game/level/bg_streamer.cpp"
    ],
    "ptr_words_code": 1,
    "ptr_words_data": 0,
@@ -8156,7 +8156,7 @@
     "InitBgLayerBase"
    ],
    "consumer_files": [
-    "level/bg_layer_base.cpp"
+    "game/level/bg_layer_base.cpp"
    ],
    "ptr_words_code": 4,
    "ptr_words_data": 0,
@@ -8182,8 +8182,8 @@
     "DestroyPooledBgLayer"
    ],
    "consumer_files": [
-    "level/bg_layer.cpp",
-    "level/pooled_bg_layer.cpp"
+    "game/level/bg_layer.cpp",
+    "game/level/pooled_bg_layer.cpp"
    ],
    "ptr_words_code": 9,
    "ptr_words_data": 0,
@@ -8208,7 +8208,7 @@
     "InitPooledBgLayer"
    ],
    "consumer_files": [
-    "level/pooled_bg_layer.cpp"
+    "game/level/pooled_bg_layer.cpp"
    ],
    "ptr_words_code": 9,
    "ptr_words_data": 0,
@@ -8233,7 +8233,7 @@
     "InitHudPart"
    ],
    "consumer_files": [
-    "hud/hud_part.cpp"
+    "game/ui/hud_part.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -8383,14 +8383,14 @@
     "DestroyHovercraftCannonFlash"
    ],
    "consumer_files": [
-    "frontend/company_logos_ctor.cpp",
-    "actor/inline_copies_actors.cpp",
-    "vehicle/jetpack/jetpack_crates.c",
-    "vehicle/jetpack/jetpack_collected_wumpa.cpp",
-    "vehicle/polar/polar_player_states.cpp",
-    "vehicle/polar/polar_pickups.c",
-    "vehicle/jetpack/jetpack_player.c",
-    "actor/actor.cpp"
+    "game/ui/company_logos_ctor.cpp",
+    "game/vehicles/actor_destructors.cpp",
+    "game/vehicles/jetpack/jetpack_crates.c",
+    "game/vehicles/jetpack/jetpack_collected_wumpa.cpp",
+    "game/vehicles/polar/polar_player_states.cpp",
+    "game/vehicles/polar/polar_pickups.c",
+    "game/vehicles/jetpack/jetpack_player.c",
+    "game/entities/actor_self.cpp"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8414,7 +8414,7 @@
     "CreateActor"
    ],
    "consumer_files": [
-    "actor/actor_factory.c"
+    "game/vehicles/polar/polar_actor_factory.cpp"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8438,7 +8438,7 @@
     "CreatePolarCheckpointText"
    ],
    "consumer_files": [
-    "actor/actor_factory.c"
+    "game/vehicles/polar/polar_actor_factory.cpp"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8463,8 +8463,8 @@
     "DestroyPolarPlayer"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_player_states.cpp",
-    "actor/actor_factory.c"
+    "game/vehicles/polar/polar_player_states.cpp",
+    "game/vehicles/polar/polar_actor_factory.cpp"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8489,7 +8489,7 @@
     "CreatePolarCollectedWumpa"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_pickups.c"
+    "game/vehicles/polar/polar_pickups.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8514,8 +8514,8 @@
     "CreatePolarWumpa"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_pickups.c",
-    "actor/actor_factory.c"
+    "game/vehicles/polar/polar_pickups.c",
+    "game/vehicles/polar/polar_actor_factory.cpp"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8540,8 +8540,8 @@
     "CreatePolarTimeCrate"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_crates.c",
-    "actor/actor_factory.c"
+    "game/vehicles/polar/polar_crates.c",
+    "game/vehicles/polar/polar_actor_factory.cpp"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8566,8 +8566,8 @@
     "CreatePolarQuestionCrate"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_crates.c",
-    "actor/actor_factory.c"
+    "game/vehicles/polar/polar_crates.c",
+    "game/vehicles/polar/polar_actor_factory.cpp"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8592,8 +8592,8 @@
     "CreatePolarAkuAkuCrate"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_crates.c",
-    "actor/actor_factory.c"
+    "game/vehicles/polar/polar_crates.c",
+    "game/vehicles/polar/polar_actor_factory.cpp"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8618,8 +8618,8 @@
     "CreatePolarNitroCrate"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_crates.c",
-    "actor/actor_factory.c"
+    "game/vehicles/polar/polar_crates.c",
+    "game/vehicles/polar/polar_actor_factory.cpp"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8644,8 +8644,8 @@
     "CreatePolarLifeCrate"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_crates.c",
-    "actor/actor_factory.c"
+    "game/vehicles/polar/polar_crates.c",
+    "game/vehicles/polar/polar_actor_factory.cpp"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8670,8 +8670,8 @@
     "CreatePolarFourWumpaCrate"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_crates.c",
-    "actor/actor_factory.c"
+    "game/vehicles/polar/polar_crates.c",
+    "game/vehicles/polar/polar_actor_factory.cpp"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8696,8 +8696,8 @@
     "CreatePolarBasicCrate"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_crates.c",
-    "actor/actor_factory.c"
+    "game/vehicles/polar/polar_crates.c",
+    "game/vehicles/polar/polar_actor_factory.cpp"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8721,7 +8721,7 @@
     "InitPolarCrate"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_crates.c"
+    "game/vehicles/polar/polar_crates.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8745,7 +8745,7 @@
     "CreatePolarElectricFence"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_objects.c"
+    "game/vehicles/polar/polar_objects.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8769,7 +8769,7 @@
     "CreatePolarObstacle"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_objects.c"
+    "game/vehicles/polar/polar_objects.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8793,7 +8793,7 @@
     "CreatePolarLauncher"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_objects.c"
+    "game/vehicles/polar/polar_objects.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8817,7 +8817,7 @@
     "CreatePolarPenguin"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_objects.c"
+    "game/vehicles/polar/polar_objects.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8841,7 +8841,7 @@
     "CreatePolarIcicle"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_objects.c"
+    "game/vehicles/polar/polar_objects.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8865,7 +8865,7 @@
     "CreatePolarAkuAku"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_aku_aku.c"
+    "game/vehicles/polar/polar_aku_aku.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8889,7 +8889,7 @@
     "CreatePolarGoal"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_course_objects.cpp"
+    "game/vehicles/polar/polar_course_objects.cpp"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8913,7 +8913,7 @@
     "CreatePolarBoostPad"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_course_objects.cpp"
+    "game/vehicles/polar/polar_course_objects.cpp"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8937,7 +8937,7 @@
     "CreatePolarCheckpointCrate"
    ],
    "consumer_files": [
-    "vehicle/polar/polar_course_objects.cpp"
+    "game/vehicles/polar/polar_course_objects.cpp"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8961,7 +8961,7 @@
     "CreateJetpackCheckpointText"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_spawn.c"
+    "game/vehicles/jetpack/jetpack_spawn.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -8985,7 +8985,7 @@
     "CreateJetpackExplosion"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_spawn.c"
+    "game/vehicles/jetpack/jetpack_spawn.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9010,8 +9010,8 @@
     "DestroyJetpackPlayer"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_player_update.cpp",
-    "vehicle/jetpack/jetpack_player.c"
+    "game/vehicles/jetpack/jetpack_player_update.cpp",
+    "game/vehicles/jetpack/jetpack_player.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9035,7 +9035,7 @@
     "CreateJetpackShot"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_shot.c"
+    "game/vehicles/jetpack/jetpack_shot.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9059,7 +9059,7 @@
     "CreateJetpackPlane"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_plane.c"
+    "game/vehicles/jetpack/jetpack_plane.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9083,7 +9083,7 @@
     "CreateJetpackBomber"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_bomber.cpp"
+    "game/vehicles/jetpack/jetpack_bomber.cpp"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9107,7 +9107,7 @@
     "CreateJetpackCannonball"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_cannonball.cpp"
+    "game/vehicles/jetpack/jetpack_cannonball.cpp"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9131,7 +9131,7 @@
     "CreateAirshipFireball"
    ],
    "consumer_files": [
-    "vehicle/jetpack/airship_fireball.c"
+    "game/vehicles/jetpack/airship_fireball.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9155,7 +9155,7 @@
     "CreateJetpackBalloon"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_balloon.c"
+    "game/vehicles/jetpack/jetpack_balloon.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9179,7 +9179,7 @@
     "CreateJetpackHealthCrate"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_crates.c"
+    "game/vehicles/jetpack/jetpack_crates.c"
    ],
    "ptr_words_code": 7,
    "ptr_words_data": 0,
@@ -9203,7 +9203,7 @@
     "CreateJetpackTimeCrate"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_crates.c"
+    "game/vehicles/jetpack/jetpack_crates.c"
    ],
    "ptr_words_code": 7,
    "ptr_words_data": 0,
@@ -9227,7 +9227,7 @@
     "CreateJetpackQuestionCrate"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_crates.c"
+    "game/vehicles/jetpack/jetpack_crates.c"
    ],
    "ptr_words_code": 7,
    "ptr_words_data": 0,
@@ -9254,7 +9254,7 @@
     "InitJetpackBalloonCrate"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_crates.c"
+    "game/vehicles/jetpack/jetpack_crates.c"
    ],
    "ptr_words_code": 7,
    "ptr_words_data": 0,
@@ -9278,7 +9278,7 @@
     "CreateJetpackParachuteNitro"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_crates.c"
+    "game/vehicles/jetpack/jetpack_crates.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9302,7 +9302,7 @@
     "CreateJetpackRocket"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_rocket.cpp"
+    "game/vehicles/jetpack/jetpack_rocket.cpp"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9326,7 +9326,7 @@
     "CreateJetpackRing"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_collected_wumpa.cpp"
+    "game/vehicles/jetpack/jetpack_collected_wumpa.cpp"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9351,7 +9351,7 @@
     "CreateJetpackCollectedWumpa"
    ],
    "consumer_files": [
-    "vehicle/jetpack/jetpack_collected_wumpa.cpp"
+    "game/vehicles/jetpack/jetpack_collected_wumpa.cpp"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9375,7 +9375,7 @@
     "CreateHovercraftFireball"
    ],
    "consumer_files": [
-    "bosses/hovercraft_fireball.cpp"
+    "game/bosses/hovercraft_fireball.cpp"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9399,7 +9399,7 @@
     "CreateHovercraftCannon"
    ],
    "consumer_files": [
-    "bosses/hovercraft_cannon.c"
+    "game/bosses/hovercraft_cannon.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9423,7 +9423,7 @@
     "CreateHovercraftLauncher"
    ],
    "consumer_files": [
-    "bosses/hovercraft_launcher.c"
+    "game/bosses/hovercraft_launcher.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9447,7 +9447,7 @@
     "CreateHovercraftSideGun"
    ],
    "consumer_files": [
-    "bosses/hovercraft_side_gun.c"
+    "game/bosses/hovercraft_side_gun.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9471,7 +9471,7 @@
     "CreateHovercraftCannonFlash"
    ],
    "consumer_files": [
-    "bosses/hovercraft_cannon_flash.c"
+    "game/bosses/hovercraft_cannon_flash.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9496,8 +9496,8 @@
     "DestroyLogoActor"
    ],
    "consumer_files": [
-    "frontend/company_logos_ctor.cpp",
-    "frontend/company_logos.cpp"
+    "game/ui/company_logos_ctor.cpp",
+    "game/ui/company_logos.cpp"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,

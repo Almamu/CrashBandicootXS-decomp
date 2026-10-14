@@ -99,7 +99,7 @@ across the *entire* address range rather than one clump.
 Spot-checked two of the small chains (`DestroyCtrl`, `DestroySpriteObj`) and
 found the *same* code shape in both: set one field of a passed-in struct
 to a ROM data pointer, then conditionally call `OperatorDelete` (matched,
-`src/menus/power_dialog_draw.c`/`graphics.c`) based on a bit in the second
+`src/game/ui/power_dialog_draw.c`/`graphics.c`) based on a bit in the second
 argument. Both point at a data symbol from the same family -
 `gCtrlVtable`/`gEntityVtable` - which turns out to be
 **93 distinct, individually-labeled, variable-sized entries** in
@@ -450,7 +450,7 @@ one sample read.
 | `0x080354E0`-`0x08035780`ish | ~0.7 KB | graphics loading | high | `InitTitleScreen`, `LoadTitleScreenBg`, `LoadTitleScreenObjTiles` |
 | `0x08037110`-~`0x0803A950` | ~14 KB | audio (GAX2) | medium, **narrowed this pass** | see "Narrowing the GAX2 boundary" below |
 | `0x0803A950`-`0x0803B058` | ~1.5 KB | `system` (asset loading) | high | `LZ77UnCompVram`/`RLUnCompVram`, confirmed called from the already-matched `src/engine/gfx/asset.cpp` |
-| `0x0803B058`-`0x0803B060` | 8 B | `graphics` | **matched** | `src/actor/anim_part.cpp` |
+| `0x0803B058`-`0x0803B060` | 8 B | `graphics` | **matched** | `src/game/entities/anim_part.cpp` |
 | `0x0803B060`-`0x0803B8B0` | ~2.1 KB | actor system | medium | `GetAnimFrameData`, 43 other still-unnamed neighbors in `code_3_3.s` |
 
 ## Two big unnamed systems
@@ -837,7 +837,7 @@ but backed by a RAM table rather than a `gStaticData_` ROM one.
 **`SpawnHovercraft`** is the clearest of the three: writes directly into
 `gHovercraftX`/`B8`/`BC` - the exact family `HovercraftStateCloseIn` used two
 rounds ago - and calls **`GetAnimFrameBaseOffset`** (already matched,
-`src/actor/inline_copies_actors.cpp`). This is **hard confirmation that
+`src/game/vehicles/actor_destructors.cpp`). This is **hard confirmation that
 `gUnknown_030015xx` is a real, animation-system-wired object**, not
 just a coincidentally-similar camera computation - `SpawnHovercraft` reads
 as its constructor/init step (packs scaled position args into the
@@ -1496,7 +1496,7 @@ consistent with the earlier "homing/seek-toward-point" reading.
 ### Issue #59 Phase 2 second half closes the singleton's camera-follow RAM family, and corrects a floor/ceiling misreading
 
 `docs/matching/archive/issue-60-61-gap-31a6c-part2.md` matched/NAKED all 30
-functions from `0x080326E4` to `0x08033804` (`src/bosses/hovercraft.c`).
+functions from `0x080326E4` to `0x08033804` (`src/game/bosses/hovercraft.c`).
 Two things worth recording here rather than only in that writeup:
 
 - **This pass's "second RAM-struct family" guess above turned out not
@@ -3342,7 +3342,7 @@ pause-menu screens sharing one constructor toolkit**:
   alpha-ish counter `0x1f`→`0`, VBlank-waits for a button press, ramps
   back `0`→`0x10`) - a complete modal-dialog lifecycle. (`DrawPowerDialog`,
   one of `PowerDialogLoop`'s callees, is already partially matched as
-  `src/menus/power_dialog_draw.c`, parked under `#if NON_MATCHING` per an asm
+  `src/game/ui/power_dialog_draw.c`, parked under `#if NON_MATCHING` per an asm
   comment right after it - a useful cross-reference for whoever
   continues this thread.)
 - **`InitPauseMenu`, `InitPowerDialog`, `InitPauseTimeTrialPage` are all instances of
@@ -3398,7 +3398,7 @@ screen plus a separate one-shot achievement-notification sequence.**
   other sits in a different, level-init-adjacent context (near
   `SetupActorVramPool`), not fully characterized.
 - **`ShowPowerDialog` has no `bl` caller in raw asm - it's called from
-  already-matched C code**, `src/menus/power_dialog_draw.c`. Four tiny
+  already-matched C code**, `src/game/ui/power_dialog_draw.c`. Four tiny
   wrappers there (`ShowTurboRunDialog`...`ShowSuperBodySlamDialog`) each call it with a fixed
   `(label1, label2, type)` triple, matching `InitPowerDialog`'s dialog-box
   shape exactly. These four wrappers are called from `UpdateGameFrame`'s

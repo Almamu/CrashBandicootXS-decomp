@@ -2,7 +2,7 @@
  * its OAM writer and the template accessors. Split from
  * gfx/graphics_package.cpp (#767), same flags (old_agbcc). */
 
-#include "sprite_obj.hpp"
+#include "game/entities/sprite_obj.hpp"
 #include "engine/gfx/graphics_package.hpp"
 extern "C" {
 #include "core.h"

@@ -1,6 +1,6 @@
 #include "graphics.hpp"
-#include "yeti.hpp"
-#include "vehicle.hpp"
+#include "game/vehicles/polar/yeti.hpp"
+#include "game/vehicles/vehicle.hpp"
 
 extern "C" {
 #include "core.h"
@@ -73,7 +73,7 @@ extern const u32 gJetpackExplosionFrames[10];
 extern const struct anim_frame_record gJetpackCheckpointTextKeyframes[1];
 extern const u32 gJetpackCheckpointTextFrames[3];
 
-/* Yeti::palette (include/yeti.hpp): the 16-colour gradient
+/* Yeti::palette (include/game/vehicles/polar/yeti.hpp): the 16-colour gradient
  * Yeti::UpdatePalette (yeti_update.cpp) DMAs to OBJ
  * palette 15, or fades towards. */
 const u16 Yeti::palette[16] = {

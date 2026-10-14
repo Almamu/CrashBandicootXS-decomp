@@ -1,0 +1,260 @@
+#include "game/objects/pickups.hpp"
+#include "game/level/spawners.hpp"
+#include "game/crash/player.hpp"
+#include "game/ui/hud.hpp"
+#include "engine/audio/audio.hpp"
+#include "game/level/level_state.hpp"
+
+extern "C" {
+#include "engine/util/math_util.h"
+#include "engine/util/util.h"
+#include "engine/gfx/gfx.h"
+#include "game/level/level.h"
+#include "globals.h"
+}
+
+using Game::Crash::Player;
+using Game::Entities::Affine;
+using Game::Entities::ClampFrame;
+using Game::Entities::ForegroundList;
+using Game::Entities::Sprite;
+using Game::Entities::TouchableList;
+using Game::Level::EntitySpawner;
+using Game::Objects::Wumpa;
+
+/* The wumpa's pick-up check, pick-up, update and spawn (#664,
+ * include/game/objects/pickups.hpp). An old_agbcp object (OLD_AGBCC_OBJS), built with
+ * -fno-cse-skip-blocks (NO_CSE_SKIP_BLOCKS_OBJS). */
+
+/* As ExtraLife::CheckPickup, but a player in the spin attack (kind 0x13)
+ * is tested with the attack box, and picks the wumpa up to fly off the
+ * screen, with the hit sound; otherwise it flies to the HUD. */
+void Wumpa::CheckPickup()
+{
+    if (mode != PICKUP_MODE_BOB && phase <= PICKUP_PHASE_NO_PICKUP &&
+        gPlayer->ctrlMode != PLAYER_CTRL_MODE_INPUT)
+        return;
+
+    u32 flags = f.flags << 24;
+    /* `contact` is needed: inlined, the code is 2 instructions longer */
+    s32 contact;
+
+    if ((flags >> (24 + ENTITY_BIT_TOUCHED)) & 1)
+        return;
+    contact = (flags >> (24 + ENTITY_BIT_CONTACT)) & 1;
+    if (!contact)
+        return;
+    struct aabb box = GetAnimHitbox();
+    Player *player = gPlayer;
+
+    if (player->kind == EVENT_ATTACK_SPIN) {
+        struct aabb playerBox = player->GetAttackBox();
+
+        if (AabbOverlaps(&playerBox, &box)) {
+            f.b.bit3 = 1;
+            PickUp(1);
+            gAudioContext->PlaySfx(SFX_WUMPA_HIT, 0x80);
+        }
+    } else {
+        struct aabb playerBox = player->GetAnimHitbox();
+
+        if (AabbOverlaps(&playerBox, &box)) {
+            f.b.bit3 = 1;
+            PickUp(0);
+        }
+    }
+}
+
+/* Collected: plays the wumpa sound and flies off, either to the HUD's
+ * wumpa counter (`randomize` 0: state 1, and shows the counter) or to a
+ * random point off the screen (state 2; `counter` says which way). The
+ * position becomes a screen position, and the step covers the distance
+ * to the target in 20 frames. Called by crate_break.cpp and level_state.cpp
+ * with `randomize` 1, by CheckPickup with either. */
+void Wumpa::PickUp(u8 randomize)
+{
+    s32 dx, dy;
+    s32 outX, outY;
+    s32 newX, newY;
+
+    gAudioContext->PlaySfx(SFX_WUMPA, 0x100);
+    if (randomize) {
+        u32 rv = rand();
+        u8 lowbit = rv & 1;
+
+        counter = lowbit;
+        if (lowbit) {
+            if (rv & 2)
+                dx = INT_TO_Q8((rv & 0x3f) + 5);
+            else
+                dx = INT_TO_Q8(0xeb - (rv & 0x3f));
+        } else {
+            dx = INT_TO_Q8((rv & 0x7f) + 0x24);
+        }
+        dy = INT_TO_Q8((rv & 0x1f) + 0x10);
+        state = WUMPA_STATE_FLY_OFF;
+    } else {
+        dx = dy = INT_TO_Q8(16);
+        state = WUMPA_STATE_TO_HUD;
+        gHud->ShowWumpa();
+    }
+    affine = Q8(0.625);
+    ClampFrame(this);
+
+    u8 one = 1; // materialized before the field's address
+
+    screenSpace = one;
+    f.b.active = 1;
+
+    WorldToScreen(this, Q8_TO_INT(x), Q8_TO_INT(y), &outX, &outY);
+
+    newX = INT_TO_Q8(outX);
+    x = newX;
+    velX = -FixedDiv(newX - dx, INT_TO_Q8(20));
+    newY = INT_TO_Q8(outY);
+    y = newY;
+    velY = -FixedDiv(newY - dy, INT_TO_Q8(20));
+}
+
+/* State 1 flies to the HUD (while `affine`, the Q8 scale, grows by
+ * WUMPA_TO_HUD_GROW_STEP up to 1.0) and, there, collects the wumpa; state
+ * 2 flies off the screen (`affine` down below PICKUP_FLY_OFF_MIN_SCALE, or
+ * up past PICKUP_FLY_OFF_MAX_SCALE) and is gone.
+ * State 3 pays out:
+ * every 11 frames it drops a wumpa flying to the HUD, 10 in all, staying
+ * at the player, then it is gone. On the spot, it bobs or hops. */
+void Wumpa::Update()
+{
+    if (state == WUMPA_STATE_TO_HUD) {
+        Fly();
+        if (affine != 0) {
+            affine += WUMPA_TO_HUD_GROW_STEP;
+            if (Affine(this) > INT_TO_Q8(1))
+                affine = 0;
+        }
+        if (Q8_TO_INT(x) <= 0x10 && Q8_TO_INT(y) <= 0x10) {
+            gAudioContext->PlaySfx(SFX_HUD_COLLECT, 0x100);
+            gLevelState->CollectWumpa();
+            MarkGone();
+        }
+    } else if (state == WUMPA_STATE_FLY_OFF) {
+        s32 fire;
+
+        Fly();
+        fire = 0;
+        if (counter == 0) {
+            s32 t = affine - PICKUP_FLY_OFF_SHRINK_STEP;
+
+            affine = t;
+            if (t < PICKUP_FLY_OFF_MIN_SCALE)
+                fire = 1;
+        } else {
+            affine += PICKUP_FLY_OFF_GROW_STEP;
+            if (Affine(this) > PICKUP_FLY_OFF_MAX_SCALE)
+                fire = 1;
+        }
+        if (fire)
+            MarkGone();
+    } else if (state == WUMPA_STATE_PAYOUT) {
+        if (++counter > 10) {
+            counter = 0;
+            s32 px = Q8_TO_INT(x);
+            s32 py = Q8_TO_INT(y);
+
+            /* To the HUD: SendToHud reads the mode, 0, as a pixel offset. */
+            EntitySpawner::Get()->DropWumpa(px, py, 0, 0, true);
+            /* The byte's zero-extension spelled out: `++phase > 9` gives an
+             * `and` with a 0xFF hoisted to the top of the function. */
+            u32 dropped = phase + 1;
+
+            phase = dropped;
+            if ((dropped << 24) >> 24 > 9)
+                MarkGone();
+        }
+    } else {
+        if (mode == PICKUP_MODE_BOB)
+            counter++;
+        else if (++phase > PICKUP_PHASE_LAST)
+            mode = PICKUP_MODE_BOB;
+    }
+
+    if (state == WUMPA_STATE_IDLE) {
+        if (mode == PICKUP_MODE_BOB) {
+            s32 sn = gSineTable[(counter & 0x7f) * 2];
+
+            sn = FixedMul(sn, Q8(2.5));
+            y = anchor.y + sn;
+        } else {
+            UpdateHop();
+        }
+    } else if (state == WUMPA_STATE_PAYOUT) {
+        /* Both coordinates loaded and offset (`nx`, `ny`) before the
+         * stores, as in the ROM. */
+        Player *player = gPlayer;
+        s32 px = player->x;
+        s32 py = player->y;
+        s32 nx = px - INT_TO_Q8(4);
+        s32 ny = py - INT_TO_Q8(14);
+
+        x = nx;
+        y = ny;
+    }
+    Sprite::Update();
+}
+
+/* The wumpa spawner (Wumpa::Spawn, spawn_pickups.cpp; DropWumpa): a wumpa at
+ * pixel (x, y), at home there, in the foreground list if `special` is
+ * 0xFFFF and the touchable list otherwise, with animation 1 of the sprite
+ * bank 35.
+ *
+ * `mode` is a 0 set before the first call: CSE loses it at the list
+ * `if`/`else` join, so the ROM's dead `cmp r7, #0xff` (SetHop's payout
+ * test) stays. `phase` is a 0 the ROM compares with the frame count
+ * (`cmp r6, r0`) and stores at +0x4B, while `counter` gets a fresh 0:
+ * this object is built without cse's skip-blocks (Makefile), so cse
+ * forgets `phase`'s value at the frame clamp's join instead of carrying
+ * it around the clamp and sharing the 0 with `counter` (the C, and
+ * #662 rounds 1-2, hid it with MATCH_KEEP). The tag's 1 is materialized
+ * before its address,
+ * and `phase`'s 0 between the two (the `one` and `tag` locals). The palette
+ * slot goes through an `s32` for the ROM's zero-extension of the `u8`. */
+Wumpa *Wumpa::Create(u16 id, u16 x, u16 y, u16 special)
+{
+    u8 mode = PICKUP_MODE_BOB;
+    u8 phase;
+    Wumpa *self = new Wumpa(id, x, y);
+
+    if (special == 0xffff)
+        ForegroundList()->Add(self);
+    else
+        TouchableList()->Add(self);
+    self->bank = gSpriteBankSet->Bank(35);
+
+    u8 one = 1;
+    u8 *tag = &self->tag;
+
+    phase = 0;
+    *tag = one;
+    self->ResetFrameTimer();
+    self->ResetFrameIndex();
+    self->SetAnimDone(0);
+
+    s32 frame = 0;
+    s32 count = self->bank->anims[self->tag].frameCount;
+
+    if (phase >= count)
+        frame = count - 1;
+    self->frame = frame;
+    self->mirrorBits.flipX = 0;
+    self->mirrorBits.flipY = 0;
+    self->counter = 0;
+    self->mode = mode;
+    self->phase = phase;
+    if (mode == WUMPA_MODE_PAYOUT)
+        self->StartPayout();
+
+    s32 slot = gPaletteCache->GetSlot(self->bank->anims->paletteId);
+
+    self->palette = slot;
+    return self;
+}

@@ -1,6 +1,6 @@
 extern "C" {
 #include "core.h"
-#include "level.h"
+#include "game/level/level.h"
 }
 
 /*

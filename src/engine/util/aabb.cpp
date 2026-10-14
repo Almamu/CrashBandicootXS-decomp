@@ -6,7 +6,7 @@ extern "C" {
 #include "core.h"
 #include "engine/sys/memory.h"
 #include "engine/util/util.h"
-#include "level.h"
+#include "game/level/level.h"
 #include "engine/gfx/gfx.h"
 }
 

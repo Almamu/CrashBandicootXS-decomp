@@ -42,7 +42,7 @@ done:
  * sets `self`'s margin to `box->x`, computes a line-count limit as
  * `box->h / self->lineHeight` (Font::HeightToLines), then
  * forwards to DrawWrappedText with that limit and returns its result
- * (unused by the one call site matched so far, in `src/menus/power_dialog_draw.cpp`'s
+ * (unused by the one call site matched so far, in `src/game/ui/power_dialog_draw.cpp`'s
  * still-parked `DrawPowerDialog`, but the ROM does actually propagate it -
  * confirmed by the epilogue needing r1, not r0, to restore the return
  * address, since r0 holds the forwarded value at that point). */

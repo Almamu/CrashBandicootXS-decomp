@@ -7,7 +7,7 @@ pass closed `0x08031784`-`0x08031A6C`. That Phase 2 gap
 was split in half for parallel work: a sibling pass covers the first 30
 functions (`UpdateJetpackBalloonCrate`-`UpdateJetpackRing`, `src/vehicle/jetpack_crates.c`);
 this pass covers the last 30 (`CreateJetpackRing`-`nullsub_35`, new file
-`src/bosses/hovercraft.c`).
+`src/game/bosses/hovercraft.c`).
 
 ## What this pass closed: 16 matched, 14 NAKED, 0 left raw
 

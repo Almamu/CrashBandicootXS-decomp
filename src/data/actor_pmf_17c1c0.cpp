@@ -1,4 +1,4 @@
-#include "vehicle.hpp"
+#include "game/vehicles/vehicle.hpp"
 
 using Game::Vehicles::Jetpack::JetpackPlayer;
 

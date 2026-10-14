@@ -1,8 +1,8 @@
 /* The OBJ palette cache (PaletteCache, gPaletteCache;
- * include/sprite_obj.hpp). Split from gfx/graphics.cpp (#767), same flags
+ * include/game/entities/sprite_obj.hpp). Split from gfx/graphics.cpp (#767), same flags
  * (old_agbcc). */
 
-#include "sprite_obj.hpp"
+#include "game/entities/sprite_obj.hpp"
 
 extern "C" {
 #include "core.h"

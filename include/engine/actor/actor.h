@@ -4,7 +4,7 @@
 /* Two things share this header (docs/headers.md):
  *
  * - the entity's flags (`union EntityFlags`), class Entity's
- *   (include/entity.hpp);
+ *   (include/game/entities/entity.hpp);
  * - the actor subsystem (src/engine/actor/): every function it defines, and the
  *   globals and data tables its files use. The prototypes are copied from
  *   the definitions. A .c file that needs a different local declaration
@@ -92,7 +92,7 @@ struct actor_spawn_table;
 /* A level spawn record as PolarPlayer::SpawnActor and
  * JetpackPlayer::SpawnActor (vehicle.hpp) take it: the actor kinds, then
  * the position in tile units (<< 8 to Q8) and the depth. It is an entry
- * of a spawn table (struct actor_spawn_table below; actor_factory.cpp's
+ * of a spawn table (struct actor_spawn_table below; polar_actor_factory.cpp's
  * and jetpack_spawn.cpp's copies were merged here, #656). */
 struct actor_spawn {
     u8 kind;      // 0x00 - the normal kind

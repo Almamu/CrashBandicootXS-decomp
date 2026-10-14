@@ -1,5 +1,5 @@
-#include "boss_actors.hpp"
-#include "hovercraft.hpp"
+#include "game/bosses/boss_actors.hpp"
+#include "game/bosses/hovercraft.hpp"
 
 using Game::Bosses::Hovercraft;
 using Game::Bosses::HovercraftCannon;

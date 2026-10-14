@@ -217,7 +217,7 @@ extern void ShowBitmapScreen(void *asset, void *palette);
 /* src/engine/gfx/fade.cpp, fade_to_black.cpp: the classes BrightnessFade and
  * PaletteFade (fade.hpp) */
 
-/* src/objects/entity.cpp: the world-to-screen helpers between Entity's methods */
+/* src/game/entities/entity.cpp: the world-to-screen helpers between Entity's methods */
 extern void WorldToScreen(void *unused, s32 x, s32 y, s32 *outX, s32 *outY);
 extern void WorldPosToScreen(s32 *pos, s32 *outX, s32 *outY);
 extern void nullsub_12(void);

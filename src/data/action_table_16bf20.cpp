@@ -1,4 +1,4 @@
-#include "action_ctrl.hpp"
+#include "game/crash/action_ctrl.hpp"
 
 using Game::Crash::ActionCtrl;
 

@@ -1,6 +1,6 @@
 # `Camera::mode` (#843)
 
-`mode` (+0x14 of gCamera, include/camera.hpp) picks how Camera::Update
+`mode` (+0x14 of gCamera, include/game/level/camera.hpp) picks how Camera::Update
 moves the look-ahead (`vx`, `vy`) before it eases the position a quarter
 of the way to the target plus the look-ahead and publishes the scroll.
 The names sit next to the class.

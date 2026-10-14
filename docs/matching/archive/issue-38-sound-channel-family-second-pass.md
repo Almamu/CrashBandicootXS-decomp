@@ -3,7 +3,7 @@
 
 A further pass over the two functions
 [docs/matching/archive/issue-38-sound-channel-family.md](./issue-38-sound-channel-family.md)
-left as `NON_MATCHING` C reconstructions in `src/cutscene/slideshow.c` -
+left as `NON_MATCHING` C reconstructions in `src/game/ui/slideshow.c` -
 `BeginSlide` and `ShowSlidePicture`. Both had a single documented residual
 gap each; this pass found the actual fix for `ShowSlidePicture` (now real,
 matched C) and, while chasing `BeginSlide`'s documented gap, found the
@@ -106,8 +106,8 @@ in `docs/status/game_loop.md` and `tools/report_units.py`, and this pass
 doesn't claim it toward closing issue #38.
 
 `BeginSlide`/`RunSlideshow`/`SkipSlides`/`ShowSlidePicture` are now all one
-contiguous span in `src/cutscene/slideshow.c`'s own object
-(`src/cutscene/slideshow.o`), so the two single-function raw asm files
+contiguous span in `src/game/ui/slideshow.c`'s own object
+(`src/game/ui/slideshow.o`), so the two single-function raw asm files
 that used to flank the matched middle (`asm/code_3_2_17_24590.s`,
 `asm/code_3_2_17_24708.s`) are deleted and `ldscript.txt`/
 `tools/report_units.py` updated to match - the same "widen the unit,

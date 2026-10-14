@@ -1,7 +1,7 @@
 # `LinkCrateToActiveBucket` converted from `NON_MATCHING` to real matched C
 
 `LinkCrateToActiveBucket` (now `src/crates/crate_grid_link.c`, previously an
-`#if NON_MATCHING` block inside `src/objects/part_list.c`) had been
+`#if NON_MATCHING` block inside `src/game/entities/part_list.c`) had been
 parked as "extremely close" since an earlier pass - see `docs/matching.md`,
 "Parked, not matched: `LinkCrateToActiveBucket`". It's now genuinely matched as real
 decompiled C.
@@ -156,7 +156,7 @@ crashbandicootxs.gba crashbandicootxs.map && make compare` -
 ## File/link-order change
 
 `LinkCrateToActiveBucket` moves from an `#if NON_MATCHING` block inside
-`src/objects/part_list.c` (whose real bytes, while parked, lived in
+`src/game/entities/part_list.c` (whose real bytes, while parked, lived in
 the standalone `asm/code_3_2_13_9150.s`, guarded by `.if NON_MATCHING ==
 0`) into its own new `src/crates/crate_grid_link.c` - its real ROM
 address isn't adjacent to `part_list.c`'s own matched functions

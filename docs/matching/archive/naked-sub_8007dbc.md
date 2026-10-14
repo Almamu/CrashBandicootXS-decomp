@@ -1,6 +1,6 @@
 # `CheckSpritePickup`: matched via NAKED asm transcription
 
-`CheckSpritePickup` (ROM `0x08007DBC`, `src/objects/sprite.c`) is the
+`CheckSpritePickup` (ROM `0x08007DBC`, `src/game/entities/sprite.c`) is the
 `part`-vs-player collision handler documented at length in
 `docs/matching.md`'s "Parked, not matched: `CheckSpritePickup`" entry: two
 `part->flags` bit tests gate an AABB collision test against the player

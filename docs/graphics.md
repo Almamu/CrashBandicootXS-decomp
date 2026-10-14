@@ -6,9 +6,9 @@ decompilation notes (workflow, register-allocation gotchas, per-function
 parked/matched log across the whole codebase, including the
 graphics-adjacent functions in `src/engine/gfx/` (`oam_buffer.cpp`, `vram_dma_queue.cpp`,
 `obj_vram_cursor.cpp`, `palette_cache.cpp`, `sprite_bank_set.cpp`; `src/gfx/graphics.c`
-until #767, which also moved some to `src/objects/entity.cpp` and
-`src/save/game_progress.cpp`), `src/menus/power_dialog_draw.cpp` and
-`src/actor/inline_copies_actors.cpp`, see [matching.md](./matching.md) instead.
+until #767, which also moved some to `src/game/entities/entity.cpp` and
+`src/game/level/game_progress.cpp`), `src/game/ui/power_dialog_draw.cpp` and
+`src/game/vehicles/actor_destructors.cpp`, see [matching.md](./matching.md) instead.
 
 ## The `graphics/` tree
 
@@ -33,7 +33,7 @@ index the C or the build uses.
 | `vehicles/jetpack/` | the jetpack stages: the framed sprite sheet, the player, the BG0 clouds, the three skies (`skies/`) and the airship (`airship/frameN.png`) | `gJetpackSpriteSheet`, `gJetpackPlayerRleFrames`, `gCategoryFamily1CellAnim`, `gCategory3-5BgPicture`, `gAirshipPicture` | `sprite_sheet_14174c.cpp`, `rle_sprites_15a050.cpp`, `cell_anim_0ff1b0.cpp`, `bg_picture_151ac4.cpp`, `boss_pictures_167ad4.cpp` |
 | `bosses/` | N. Gin's hovercraft, `hovercraft.png` | `gHovercraftPicture` | `boss_pictures_167ad4.cpp` |
 
-`vehicles/` mirrors `src/vehicle/`: everything a polar or jetpack stage
+`vehicles/` mirrors `src/game/vehicles/`: everything a polar or jetpack stage
 draws is in one place. The rooms' graphics aren't here: each room's BG
 layers are pictures under `data/levels/<level>/<slot>/`, and the BG tile
 sets are made from them ([levels.md](./levels.md), "Tile sets"). The
@@ -1465,7 +1465,7 @@ frames can span several folders - the polar Nitro crate is
 ends in the shared `19_crate_shards/`, the jetpack rocket is
 `18_rocket/`, `14_explosion/` and `21_rocket_burst/`. The sheets are now
 `graphics/vehicles/polar/sprite_sheet/` and
-`graphics/vehicles/jetpack/sprite_sheet/` (mirroring `src/vehicle/`),
+`graphics/vehicles/jetpack/sprite_sheet/` (mirroring `src/game/vehicles/`),
 and the folders are just the names (`question_crate/`, `rocket/`): the
 order of the `"folders"` list in the sheet's `sheet.json` is the sheet's
 byte order, which is also the build's pack order (`tools/framed_gfx.py
@@ -1812,7 +1812,7 @@ entry that draws them: the font glyphs take `oam_scratch.palette`,
 which `Font::SetPalette` sets and `Font::ResetPalette` points back at
 the palette-cache slot of sprite bank 35's palette (`src/engine/text/font.cpp`),
 and the cursor zoom takes the palette of the cursor's sprite part
-(`oam.palette = part->palette`, `src/menus/level_select_cursor.cpp`).
+(`oam.palette = part->palette`, `src/game/ui/level_select_cursor.cpp`).
 So no ROM palette is tied to them.
 
 Their PNGs carry the palette the game uses by default, taken from

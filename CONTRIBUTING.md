@@ -300,7 +300,7 @@ full rules (#574). For new code:
 
   ```
   tools/magic_numbers.py --min-confidence high [--show]   # the sites to name, `-> NAME` when one exists
-  tools/magic_numbers.py --json --path src/bosses         # for agents: value, names, confidence, why
+  tools/magic_numbers.py --json --path src/game/bosses         # for agents: value, names, confidence, why
   tools/magic_numbers.py --report OUT                     # Markdown counts per topic and directory, samples
   tools/magic_numbers.py --topic event --fix              # high-confidence sites with exactly one name
   ```
@@ -347,7 +347,7 @@ full rules (#574). For new code:
   ```
   tools/magic_numbers.py --casts [--samples N]           # per thing, ranked, with its sites
   tools/magic_numbers.py --casts --report OUT            # Markdown: counts, candidates, per kind
-  tools/magic_numbers.py --casts --json --path src/menus # for agents: every cast
+  tools/magic_numbers.py --casts --json --path src/game/ui # for agents: every cast
   tools/magic_numbers.py --casts --kind byteoff          # one kind (repeatable)
   ```
 
@@ -501,7 +501,7 @@ conversions, min/max/abs/clamp and the sine lookups in
 `include/engine/util/math_util.h` (`Q8_TO_INT(x)`, `INT_TO_Q8(x)`, `Q8_MUL(a, b)`,
 `Q8_DIV(a, b)`, `Q12_MUL(a, b)`, `MIN`, `CLAMP_MIN`, `ABS_BRANCHLESS`,
 `CLAMP_INDEX`, `ANIM_REWIND`, `SIN_Q8`, ...), the entity "gone" bitmap set in
-`include/entity_bits.h` (`ENTITY_MARK_GONE`, `ENTITY_SET_GONE_BIT`) and
+`include/game/level/entity_bits.h` (`ENTITY_MARK_GONE`, `ENTITY_SET_GONE_BIT`) and
 `ARRAY_COUNT` in `core.h`. [docs/naming.md](docs/naming.md#helper-macros)
 has the list and the rules. In short:
 

@@ -63,7 +63,7 @@ already gave - see "Left untouched" below.
 
 ## Matched - 3 functions
 
-- **`ResetPlayerForRoom`** (`src/player/player_reset.c`, right after the
+- **`ResetPlayerForRoom`** (`src/game/crash/player_reset.c`, right after the
   still-parked `ResetPlayer` in the same file): dispatches a sub-state
   byte (`self+0x88`) to one of three teardown helpers
   (`RestartActionCtrl`/`RestartPlayerCtrl`/`RestartInputCtrl`), each called with the
@@ -87,7 +87,7 @@ already gave - see "Left untouched" below.
   collapsed the branch polarity to `bne`-skip and let the compiler's CSE
   drop the redundant copy entirely (see "Real gotchas" below for the
   general form of this pin-scope lesson).
-- **`ApplyPlayerVelocity`** (`src/player/player_update.c`) - a per-frame
+- **`ApplyPlayerVelocity`** (`src/game/crash/player_update.c`) - a per-frame
   velocity integrator. Moves `self+0x60`/`self+0x64` (current X/Y
   velocity) toward `self+0x50`/`self+0x5c` (target X/Y velocity) by up
   to `self+0x4c`/`self+0x58` (X/Y acceleration step) each call,
@@ -152,7 +152,7 @@ this file's original writing - see the update note on the entry below.
 - **`ResetPlayer`** - **UPDATE: matched in a later session, see
   `docs/matching/archive/issue-14-0x08010a0c-graphics.md`'s "Follow-up"
   section** for the techniques that closed the gap described below.
-  (`src/player/player_reset.c`; real bytes were in
+  (`src/game/crash/player_reset.c`; real bytes were in
   `asm/code_3_2_16_a734.s`, now removed) - a part-object velocity/state
   reset that
   additionally hooks up a child object at `self+0xb0` (calls

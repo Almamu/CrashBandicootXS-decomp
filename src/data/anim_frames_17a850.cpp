@@ -1,5 +1,5 @@
-#include "yeti.hpp"
-#include "vehicle.hpp"
+#include "game/vehicles/polar/yeti.hpp"
+#include "game/vehicles/vehicle.hpp"
 
 extern "C" {
 #include "core.h"
@@ -13,7 +13,7 @@ using Game::Vehicles::Polar::Yeti;
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* Yeti::keyframes (include/yeti.hpp): the keyframes of the yeti (yeti.cpp,
+/* Yeti::keyframes (include/game/vehicles/polar/yeti.hpp): the keyframes of the yeti (yeti.cpp,
  * of compressed frame set B), with frame_table_17a880.cpp's
  * gYetiFrames as their frame table. */
 const struct anim_frame_record Yeti::keyframes[4] = {

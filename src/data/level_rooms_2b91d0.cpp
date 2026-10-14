@@ -2,7 +2,7 @@
 
 extern "C" {
 #include "core.h"
-#include "level_data.h"
+#include "game/level/level_data.h"
 }
 
 /*

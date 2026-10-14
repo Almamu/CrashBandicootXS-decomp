@@ -6,7 +6,7 @@ right at the boundary between the 40.4 KB actor-per-type-behavior zone
 (`docs/rom_map.md`'s `0x0802B348`-`0x080354E0` entry) and the GAX2 audio
 range (which starts at `0x08037110`, confirmed both by `docs/rom_map.md`
 and by this chunk's own object-file neighbor in `ldscript.txt`:
-`src/frontend/language_select.o` picks up immediately after this chunk's
+`src/game/ui/language_select.o` picks up immediately after this chunk's
 last function). This is the write-up for the work done against that
 list.
 
@@ -36,7 +36,7 @@ behavior. This pass worked those three:
   at `0x050003A0`/`_C0`/`_E0`; calls `LoadTitleScreenBg`/
   `LoadTitleScreenObjTiles`; allocates and constructs a 0x14-byte object via
   `InitStarfield(OperatorNew(0x14))` (the exact same allocate-then-construct
-  pairing already confirmed in `src/frontend/language_select_setup.c`'s
+  pairing already confirmed in `src/game/ui/language_select_setup.c`'s
   `self->field_10 = InitStarfield(OperatorNew(0x14))`) into the scratch
   object's `+0x208` field; runs a fixed fade/audio-reset sequence
   (`SetObjMapping1D`/`ShowObj`/`SetDispcntMode(1)`/`CommitDispcnt` - the same

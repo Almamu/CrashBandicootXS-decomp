@@ -7,7 +7,7 @@
 Follow-up to the third pass recorded in
 [issue-31-graphics-loading.md](./issue-31-graphics-loading.md) ("the
 'trigger effect type N' twin family matched via NAKED transcription"),
-which converted all four `src/level/spawn_gem_platforms.c` functions to
+which converted all four `src/game/objects/spawn_gem_platforms.c` functions to
 `NAKED` after concluding plain-C restructuring couldn't reproduce two
 register-allocation spots. This pass revisits `SpawnRedGemPlatform` with
 techniques established by *later* passes in this same document (the
@@ -343,7 +343,7 @@ already been flagged as unreproduced before this pass even started.
 
 ## Old-compiler pass: all four matched as plain C
 
-All four functions are now plain C in `src/level/spawn_gem_platforms.c`,
+All four functions are now plain C in `src/game/objects/spawn_gem_platforms.c`,
 with no register pins, inline asm or `goto`s. The object is on the
 Makefile's `OLD_AGBCC_OBJS` list. The earlier passes above all used the
 current agbcc. The ROM's `mov rA, #mask` before `ldrb rB` is old_agbcc's

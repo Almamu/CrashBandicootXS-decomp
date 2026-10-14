@@ -1,4 +1,4 @@
-#include "vehicle.hpp"
+#include "game/vehicles/vehicle.hpp"
 #include "engine/actor/actor_bg.hpp"
 
 extern "C" {
@@ -7,7 +7,7 @@ extern "C" {
 #include "gba/io_reg.h"
 #include <libgcc.h>
 #include "engine/actor/actor.h"
-#include "bosses.h"
+#include "game/bosses/bosses.h"
 }
 
 using Engine::Actor::ActorBg;

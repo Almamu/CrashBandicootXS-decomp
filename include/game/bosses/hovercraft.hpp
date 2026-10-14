@@ -1,0 +1,212 @@
+#ifndef GUARD_HOVERCRAFT_HPP
+#define GUARD_HOVERCRAFT_HPP
+
+/* The hovercraft boss (#772, docs/cplusplus.md "The hovercraft as an
+ * all-static class"): src/game/bosses/hovercraft.cpp and hovercraft_state.cpp. A class
+ * whose members are all `static`: the ROM loads a separate address for
+ * each of its variables, so they were separate globals, not one object's
+ * fields, and static data members compile exactly like them (and static
+ * member functions like plain functions). The data members are only
+ * declared: cxx_symbols.txt (block "#772 Hovercraft") maps each mangled
+ * name to its C name, whose address is in sym_iwram.txt; the functions
+ * keep their C names the same way. Its weapons (include/game/bosses/boss_actors.hpp)
+ * read it through the public getters.
+ *
+ * The ROM tables only it reads are static data members too, defined in
+ * their src/data/*.cpp files (`const u16 Hovercraft::palette[256] = ...`):
+ * `_Q34Game6Bosses10Hovercraft.palette` is renamed to gHovercraftPalette.
+ * The actor category table (src/data/actor_category_175558.cpp) points at
+ * Create, Update, UpdateBg2, Destroy and LoadGraphics.
+ *
+ * It is in the namespace Game::Bosses (#1033, boss_ctrl.hpp), with its
+ * weapons. */
+
+#include "game/entities/actor_self.hpp"
+
+extern "C" {
+#include "game/bosses/bosses.h"
+}
+
+/* Hovercraft::state (#843, docs/flags/boss_states_vehicle.md): the
+ * stateFuncs index, named after its method; the airship's states. */
+#define HOVERCRAFT_STATE_INACTIVE 0  // StateInactive: Create's, until Spawn
+#define HOVERCRAFT_STATE_APPROACH 1  // StateApproach: Spawn starts the fight
+#define HOVERCRAFT_STATE_CLOSE_IN 2  // StateCloseIn: close enough (0x81FF), or fallen back far enough
+#define HOVERCRAFT_STATE_FALL_BACK 3 // StateFallBack: closed in (0x27FF)
+#define HOVERCRAFT_STATE_EXPLODE 4   // StateExplodeStub: empty, and nothing enters it
+#define HOVERCRAFT_STATE_FALL 5      // StateFall: the last weapon lost (LosePart)
+
+/* Hovercraft::phase: in CLOSE_IN, how it moves; in FALL_BACK, the
+ * side-to-side legs it has swept, counted up from 0. */
+#define HOVERCRAFT_PHASE_STEER 0     // CLOSE_IN: steers toward the player (Spawn's)
+#define HOVERCRAFT_PHASE_SWEEP 1     // CLOSE_IN: sweeps from side to side (more than two weapons left)
+#define HOVERCRAFT_PHASE_CIRCLE 2    // CLOSE_IN: circles with a growing radius (two or fewer)
+#define HOVERCRAFT_PHASE_FIRST_LEG 0 // FALL_BACK: the leg count's start
+#define HOVERCRAFT_PHASE_LAST_LEG 3  // FALL_BACK: the last sweeping leg; past it, back to X 0
+
+/* Hovercraft::velZ, the Z speed (Q8 px a frame, docs/fixed_point.md):
+ * Spawn's, for the approach; then each state ramps it by
+ * HOVERCRAFT_SPEED_Z_STEP a frame toward its own: steering (CLOSE_IN's
+ * phase 0) to about HOVERCRAFT_STEER_SPEED_Z, sweeping or circling to
+ * HOVERCRAFT_SWEEP_SPEED_Z or HOVERCRAFT_CIRCLE_SPEED_Z (which StateFallBack
+ * also starts them at), falling back to HOVERCRAFT_FALL_BACK_SPEED_Z (from
+ * it: StateCloseIn sets it) for the legs, then pulling away at about
+ * HOVERCRAFT_PULL_AWAY_SPEED_Z; sinking (StateFall) to
+ * HOVERCRAFT_SINK_SPEED_Z. */
+#define HOVERCRAFT_APPROACH_SPEED_Z  Q8_FRAC(0, 0x66)
+#define HOVERCRAFT_SPEED_Z_STEP      Q8_FRAC(0, 1)
+#define HOVERCRAFT_STEER_SPEED_Z     Q8_FRAC(0, 0x98)
+#define HOVERCRAFT_SWEEP_SPEED_Z     Q8(0.25)
+#define HOVERCRAFT_CIRCLE_SPEED_Z    Q8_FRAC(0, 0x6a)
+#define HOVERCRAFT_FALL_BACK_SPEED_Z Q8_FRAC(0, 0xae)
+#define HOVERCRAFT_PULL_AWAY_SPEED_Z Q8_FRAC(1, 0xd4)
+#define HOVERCRAFT_SINK_SPEED_Z      Q8_FRAC(0, 0x99)
+
+/* Steering (CLOSE_IN's phase 0), the hovercraft's X and Y speed change
+ * by 1/4096 of its offset from the player a frame (`offset >>
+ * HOVERCRAFT_STEER_SHIFT`, a Q8 offset to a Q8 speed: a gain, not a
+ * format). */
+#define HOVERCRAFT_STEER_SHIFT 12
+
+namespace Game
+{
+namespace Bosses
+{
+
+class Hovercraft
+{
+public:
+    static void Create(s32 lvl);                         // CreateHovercraft
+    static void Spawn(s32 kind, s32 sx, s32 sy, s32 sz); // SpawnHovercraft
+    static void Update();                                // UpdateHovercraft
+    static void UpdateBg2();                             // UpdateHovercraftBg2
+    static void LoadGraphics();                          // LoadHovercraftGraphics
+    static void Destroy();                               // DestroyHovercraft
+
+    /* What its weapons and the level state read and do. */
+    static void StartHitFlash();                        // StartHovercraftHitFlash
+    static s32 GetPartsLeft();                          // GetHovercraftPartsLeft
+    static void LosePart();                             // LoseHovercraftPart
+    static const struct hovercraft_attack *GetAttack(); // GetHovercraftAttack
+    static s32 GetState();                              // GetHovercraftState
+    static s32 GetLevel();                              // GetHovercraftLevel
+    static s32 GetZ();                                  // GetHovercraftZ
+    static s32 GetY();                                  // GetHovercraftY
+    static s32 GetX();                                  // GetHovercraftX
+
+private:
+    static void UpdateHitFlash();          // UpdateHovercraftHitFlash
+    static void RunState();                // RunHovercraftState
+    static void DrawMap(void *tileRow);    // DrawHovercraftMap
+    static void ConvertTiles();            // ConvertHovercraftTiles
+    static void SetFlashColor(u8 flag);    // SetHovercraftFlashColor
+    static void SetState(s32 st, s32 idx); // SetHovercraftState
+
+    /* The states, indexed by `state` (stateFuncs). */
+    static void StateInactive();    // HovercraftStateInactive
+    static void StateApproach();    // HovercraftStateApproach
+    static void StateCloseIn();     // HovercraftStateCloseIn
+    static void StateFallBack();    // HovercraftStateFallBack
+    static void StateExplodeStub(); // HovercraftStateExplodeStub
+    static void StateFall();        // HovercraftStateFall
+
+    /* UNUSED, after Destroy (hovercraft.cpp) */
+    static void nullsub_34();
+    static s32 sub_80337FC();
+    static void nullsub_35();
+
+    /* EnterState: state `st` and animation `idx`, keeping the current
+     * frame unless it is past the new animation's end (Airship::SetState
+     * without the timer). SetState is its out-of-line copy. */
+    static void EnterState(s32 st, s32 idx)
+    {
+        Game::Entities::AnimPart *a;
+
+        state = st;
+        a = anim;
+        a->animIndex = idx;
+        a->animTimer = a->anims[idx].duration;
+        a->animDone = 0;
+        if (a->GetAnimFrameBaseOffset() >= a->anims[a->animIndex].loopThreshold)
+            a->animTime = 0;
+    }
+
+    /* ApplyFlashColor: colour 15 of the hovercraft's BG and OBJ palettes
+     * (gFlashBgPalette, gFlashObjPalette) white when `flag` is set, or
+     * else the colour saved the first time. SetFlashColor is its
+     * out-of-line copy; RunState inlines it twice. Each branch stores
+     * both palettes: that gives the ROM's white loaded into r2 and copied
+     * to r1, which a colour local assigned in the branches and stored
+     * once after them only got with an r1 pin (#662 round 2). */
+    static void ApplyFlashColor(u8 flag)
+    {
+        if (flashColorSaved == 0) {
+            flashSavedColor = gFlashBgPalette[15];
+            flashColorSaved = 1;
+        }
+        if (flag != 0) {
+            gFlashBgPalette[15] = RGB_WHITE;
+            gFlashObjPalette[15] = RGB_WHITE;
+        } else {
+            gFlashBgPalette[15] = flashSavedColor;
+            gFlashObjPalette[15] = flashSavedColor;
+        }
+    }
+
+    /* The state functions (gHovercraftStateFuncs,
+     * src/data/actor_state_17c4c8.cpp), a plain function table. */
+    static void (*const stateFuncs[6])();
+
+    /* IWRAM 0x1590-0x1600, in address order (sym_iwram.txt) */
+    static u16 flashSavedColor;                    // gHovercraftFlashSavedColor
+    static s32 flashColorSaved;                    // gHovercraftFlashColorSaved
+    static s32 bg2Page;                            // gHovercraftBg2Page
+    static u8 bg2PageFlip;                         // gHovercraftBg2PageFlip
+    static s32 mapCols;                            // gHovercraftMapCols
+    static s32 mapRows;                            // gHovercraftMapRows
+    static s32 mapTileBase;                        // gHovercraftMapTileBase
+    static Game::Entities::AnimPart *anim;         // gHovercraft
+    static s32 state;                              // gHovercraftState
+    static s32 x;                                  // gHovercraftX
+    static s32 y;                                  // gHovercraftY
+    static s32 z;                                  // gHovercraftZ
+    static s32 screenX;                            // gHovercraftScreenX
+    static s32 screenY;                            // gHovercraftScreenY
+    static s32 distance;                           // gHovercraftDistance
+    static s32 velX;                               // gHovercraftVelX
+    static s32 velY;                               // gHovercraftVelY
+    static s32 velZ;                               // gHovercraftVelZ
+    static s32 level;                              // gHovercraftLevel
+    static const struct hovercraft_attack *attack; // gHovercraftAttack
+    /* The twins of the airship's gAirshipHp/gAirshipFireTimer/
+     * gAirshipVolleyCount (same place in the same IWRAM layout, set the
+     * same way by Spawn and the states), but nothing reads them: the
+     * hovercraft's parts keep their own hit points and spawn timers. */
+    static s32 hp;            // gHovercraftHp
+    static s32 fireTimer;     // gHovercraftFireTimer
+    static s32 volleyCount;   // gHovercraftVolleyCount
+    static s32 phase;         // gHovercraftPhase
+    static s32 orbitRadius;   // gHovercraftOrbitRadius
+    static s32 frameCount;    // gHovercraftFrameCount
+    static s32 partsLeft;     // gHovercraftPartsLeft
+    static s16 hitFlashTimer; // gHovercraftHitFlashTimer
+    static u8 hitFlashOn;     // gHovercraftHitFlashOn
+    static u8 gone;           // gHovercraftGone
+    /* The picture's row addresses, as the AnimPart's u32 frame offsets
+     * (ConvertTiles fills them; a u32 store may alias its heights[]). */
+    static u32 mapFrames[]; // gHovercraftMapFrames
+
+    /* The ROM tables (src/data): attacks, box and keyframes are in
+     * singleton_kind_17c460.cpp, palette and picture in
+     * boss_pictures_167ad4.cpp. */
+    static const struct hovercraft_attack attacks[2];   // gHovercraftAttacks
+    static const struct anim_box box;                   // gHovercraftBox
+    static const struct anim_frame_record keyframes[1]; // gHovercraftKeyframes
+    static const u16 palette[256];                      // gHovercraftPalette
+    static const struct hovercraft_picture picture;     // gHovercraftPicture
+};
+
+} // namespace Bosses
+} // namespace Game
+
+#endif // GUARD_HOVERCRAFT_HPP

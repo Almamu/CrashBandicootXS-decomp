@@ -23,7 +23,7 @@ libgcc's `__clz_tab`) follow the same convention in C under
 - **One file per contiguous run of converted tables.** Name it
   `<what>_<ROM offset>.cpp`, the offset in lowercase hex without the
   `0x08` (`action_table_16bf20.cpp` is at `0x0816BF20`), the way
-  `src/player/swim_ctrl.cpp` is named. Two files can sit next to
+  `src/game/crash/swim_ctrl.cpp` is named. Two files can sit next to
   each other when their tables are unrelated (`bg_package_16c58c.cpp`,
   then `image_table_16c5a0.cpp`).
 - **Symbol names don't change.** The code references
@@ -694,7 +694,7 @@ tables" before; drawn, they are the two big enemies that fly on an affine
 BG. The airship is a jetpack-stage object (`Airship`,
 `src/vehicle/jetpack/airship*.cpp`, created by `CreateAirship` in
 categories 3-5), and the hovercraft is N. Gin's (`Hovercraft`,
-`src/bosses/hovercraft*.cpp`, category 6, `CATEGORY_TYPE_HOVERCRAFT`),
+`src/game/bosses/hovercraft*.cpp`, category 6, `CATEGORY_TYPE_HOVERCRAFT`),
 the craft of N. Gin's level-select picture; earlier notes called it
 Cortex's. Each is `{s16 cols,
 s16 rows}` and its frames, a frame being a tile count, a `cols * rows`
@@ -763,7 +763,7 @@ see [levels.md, "Collision layers"](./levels.md#collision-layers)). The build
 Every pointer in the room data is a symbol reference (the room's own
 objects, the tile sets, the assets), and everything the ROM derives
 (chunk grids and sets, asset offsets, entity groups and counts, parameter
-offsets) is computed from the sources again. `include/level_data.h` has
+offsets) is computed from the sources again. `include/game/level/level_data.h` has
 the types.
 
 The records that point at the rooms are generated too, into
@@ -803,7 +803,7 @@ table"](./levels.md#the-level-table) has the field-by-field sources.
 The 11 cutscenes (the intro, the story scenes between worlds, the
 endings) are `src/data/cutscenes_16d1c8.cpp`, `cutscene_text_16d4d8.cpp`,
 `cutscene_slides_16e064.cpp` and `cutscene_text_16e8a4.cpp`
-(`0x0816D1C8`-`0x081725A8` in that order, types in `include/cutscene.hpp`;
+(`0x0816D1C8`-`0x081725A8` in that order, types in `include/game/ui/cutscene.hpp`;
 the text is generated from `text/`, see "Text tables") and
 `src/data/cutscene_pictures_5a9f70.cpp`
 (`0x085A9F70`-`0x0861BADC`). `PlayCutscene` plays cutscene `idx`: the

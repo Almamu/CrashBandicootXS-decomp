@@ -1,4 +1,4 @@
-#include "actor_self.hpp"
+#include "game/entities/actor_self.hpp"
 #include "engine/gfx/sprite_frame_cache.hpp"
 
 extern "C" {

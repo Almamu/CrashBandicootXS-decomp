@@ -1,7 +1,7 @@
 # `0x080372BC` - counter widget icon draw loop / tile-cache init (issue #67)
 
-`DrawLanguageSelect`/`InitLanguageSelectGraphics` (`src/frontend/language_select.c`) are
-the small on-screen "counter" widget's (`src/frontend/language_select.c`,
+`DrawLanguageSelect`/`InitLanguageSelectGraphics` (`src/game/ui/language_select.c`) are
+the small on-screen "counter" widget's (`src/game/ui/language_select.c`,
 `RunLanguageSelect`'s loop) per-frame icon draw pass and its one-time tile-cache
 init helper. Both are fully understood - previously left raw
 (`docs/status/audio.md`: "hit the same many-register gcc-2.9
@@ -21,7 +21,7 @@ widget's free-running frame counter) when the loop index equals
 that slot's own fixed digit glyph - one of six `struct bitmap_font *`
 looked up from `gLanguageNames[i]` - positioned via
 `_call_via_r2` at a fixed X (centered from the rendered pixel width,
-the same `(240-w)>>1` idiom `DrawPowerDialog`/`src/menus/power_dialog_draw.c`
+the same `(240-w)>>1` idiom `DrawPowerDialog`/`src/game/ui/power_dialog_draw.c`
 uses) and a Y that steps by `0xa` per slot from a `0x32` base, reading
 and writing `gSmallFont->record->slots[0]`/`slots[2]` (see
 `include/engine/text/bitmap_font.h`) as its OAM-slot-record pair - the exact same
@@ -49,10 +49,10 @@ centering-math rewritten several ways - but every attempt fell to the
 same many-register gcc-2.9 allocation ceiling already documented at
 length for two other functions in this codebase:
 
-- `DrawPowerDialog` (`src/menus/power_dialog_draw.c`) - the near-identical
+- `DrawPowerDialog` (`src/game/ui/power_dialog_draw.c`) - the near-identical
   two-icon centering/draw loop this pair's `DrawLanguageSelect` extends to
   six slots, itself parked NAKED for exactly this reason.
-- `ShowPowerDialog` (`src/menus/power_dialog.c`) - already NAKED,
+- `ShowPowerDialog` (`src/game/ui/power_dialog.c`) - already NAKED,
   and its tail is *this same* `_call_via_r1`/`ReserveObjVram`/
   constant-reuse idiom `InitLanguageSelectGraphics`'s tail uses, hitting the identical
   register-choreography wall around the cached
@@ -74,7 +74,7 @@ eventually parked.
 
 ## Verification
 
-Every instruction in `src/frontend/language_select.c`'s two `NAKED`
+Every instruction in `src/game/ui/language_select.c`'s two `NAKED`
 bodies is transcribed directly from the ROM's own disassembly
 (`asm/code_3_2_20a.s`, now removed) and checked against it - the only
 edits versus the raw dump are stripping the flag-setting `S` suffix

@@ -2,7 +2,7 @@
 
 A scoping investigation of the actor zone found this whole 1804-byte
 gap - the remainder of `asm/code_3_2_20_28568_c99c_cc9c.s`, right after
-issue #53's own matched batch (`CreatePolarBasicCrate`, `src/vehicle/
+issue #53's own matched batch (`CreatePolarBasicCrate`, `src/game/vehicles/
 polar_crates.c`) and right before issue #54's chunk (`MovePolarAkuAku`,
 `src/vehicle/polar_objects.c`) - still completely raw.
 `docs/matching/archive/issue-53-actor-c7a8.md`'s "What's left" section had

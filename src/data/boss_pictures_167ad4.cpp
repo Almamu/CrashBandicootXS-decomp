@@ -1,5 +1,5 @@
-#include "airship.hpp"
-#include "hovercraft.hpp"
+#include "game/vehicles/jetpack/airship.hpp"
+#include "game/bosses/hovercraft.hpp"
 
 extern "C" {
 #include "core.h"
@@ -32,12 +32,12 @@ using Game::Bosses::Hovercraft;
 
 #include "vehicles/jetpack/airship.h"
 #include "bosses/hovercraft.h"
-#include "bosses.h"
+#include "game/bosses/bosses.h"
 #include "globals.h"
 
 using Game::Vehicles::Jetpack::Airship;
 
-/* N. Gin's airship (Airship::palette, include/airship.hpp): its palette,
+/* N. Gin's airship (Airship::palette, include/game/vehicles/jetpack/airship.hpp): its palette,
  * 16 colours that LoadAirshipGraphics (airship_graphics.cpp) DMAs to BG
  * palette 1 (the rest is zero). */
 const u16 Airship::palette[256] = {
@@ -62,7 +62,7 @@ const struct airship_picture Airship::picture = {
 #include "vehicles/jetpack/airship.inc"
 };
 
-/* N. Gin's hovercraft (Hovercraft::palette, include/hovercraft.hpp): its
+/* N. Gin's hovercraft (Hovercraft::palette, include/game/bosses/hovercraft.hpp): its
  * palette. LoadHovercraftGraphics (hovercraft.cpp) DMAs the first 16 colours
  * to BG palette 1 and UpdateHovercraftHitFlash restores them from here; the
  * other 240 entries are the 0x03E0 filler colour. */
@@ -121,7 +121,7 @@ const u8 gDpadDirectionTable[16] = {
 
 /* The sine table: 256 steps of a full turn, scaled by 0x100. Read by
  * about twenty actor and game-loop functions (the pickups' `phase`,
- * include/pickups.hpp, indexes it). */
+ * include/game/objects/pickups.hpp, indexes it). */
 const s16 gSineTable[256] = {
     0, 6, 12, 18, 25, 31, 37, 43, 49, 56, 62, 68, 74, 80, 86, 92,
     97, 103, 109, 115, 120, 126, 131, 136, 142, 147, 152, 157, 162, 167, 171, 176,

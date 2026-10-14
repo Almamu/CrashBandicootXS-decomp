@@ -40,7 +40,7 @@ The rooms are numbered here in the order of their records
 offset (`jungle_jam/main` is the room whose `level_desc` is at
 `0x0825E7DC`).
 
-The types are in [`include/level_data.h`](../include/level_data.h). Each
+The types are in [`include/game/level/level_data.h`](../include/level_data.h). Each
 struct names the code's own local views of the same record.
 
 ### `struct level_desc` (0x30)
@@ -59,7 +59,7 @@ struct names the code's own local views of the same record.
 ### `struct level_layer_desc` (0x20)
 
 The source of a BG layer and its streamer (`BgLayerBase::SetSource`,
-`BgStreamer`, include/bg_layer.hpp) and the terrain cache's `source`.
+`BgStreamer`, include/game/level/bg_layer.hpp) and the terrain cache's `source`.
 
 | Offset | Field |
 |---|---|

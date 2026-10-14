@@ -2,8 +2,8 @@
 
 extern "C" {
 #include "core.h"
-#include "level_data.h"
-#include "level.h"
+#include "game/level/level_data.h"
+#include "game/level/level.h"
 #include "constants/songs.h"
 }
 

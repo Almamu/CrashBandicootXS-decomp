@@ -6,10 +6,10 @@ None of them needs a register pin.
 
 | Function | File | Size | Before | Result |
 |---|---|---|---|---|
-| `DropWumpa` | `src/level/entity_spawner.c` | 132 B | 5 hw (note) | **Closed** |
-| `LaunchEffectPart` | `src/level/entity_spawner.c` | 160 B | 61 hw (note), no draft | **Closed** |
-| `DecodeLayerChunk` | `src/cutscene/cutscene_player.c` | 320 B | 13 hw (note), no draft | **Closed** |
-| `RunCutscenePlayer` | `src/cutscene/cutscene_player.c` | 284 B | 77 hw (note), no draft | **Closed** |
+| `DropWumpa` | `src/game/level/entity_spawner.c` | 132 B | 5 hw (note) | **Closed** |
+| `LaunchEffectPart` | `src/game/level/entity_spawner.c` | 160 B | 61 hw (note), no draft | **Closed** |
+| `DecodeLayerChunk` | `src/game/ui/cutscene_player.c` | 320 B | 13 hw (note), no draft | **Closed** |
+| `RunCutscenePlayer` | `src/game/ui/cutscene_player.c` | 284 B | 77 hw (note), no draft | **Closed** |
 | `DrawSpritePieces` | `src/gfx/sprite_pieces.c` (new, split from `graphics.c`) | 600 B | draft removed long ago | **Closed** |
 
 `entity_spawner.c` and `cutscene_player.c` were already on `OLD_AGBCC_OBJS`.

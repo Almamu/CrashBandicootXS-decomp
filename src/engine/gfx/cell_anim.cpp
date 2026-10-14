@@ -1,4 +1,4 @@
-#include "vehicle.hpp"
+#include "game/vehicles/vehicle.hpp"
 #include "engine/gfx/cell_anim.hpp"
 #include "engine/actor/actor_palette_cycle.hpp"
 
@@ -9,8 +9,8 @@ extern "C" {
 #include "gba/io_reg.h"
 #include <libgcc.h>
 #include "engine/actor/actor.h"
-#include "bosses.h"
-#include "level.h"
+#include "game/bosses/bosses.h"
+#include "game/level/level.h"
 #include "globals.h"
 }
 

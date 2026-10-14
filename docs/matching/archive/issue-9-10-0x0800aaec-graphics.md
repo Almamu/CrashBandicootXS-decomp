@@ -15,7 +15,7 @@ see below) and closed both functions.
 
 ## Semantics
 
-### `PlayerHasRoomForAnim(void *self, s32 x)` - `src/player/player_anim_room.c`
+### `PlayerHasRoomForAnim(void *self, s32 x)` - `src/game/crash/player_anim_room.c`
 
 The input-action-check function the 42-slot `gActionCtrlStateTable`
 action-dispatch table's own entries (`ActionCtrlStateSlide` etc.) call for
@@ -38,7 +38,7 @@ their action codes `0xB`/`0x10` (`docs/rom_map.md` line 1713).
    `0` immediately.
 2. **Loop**: otherwise walks `gCrateList` (a `struct actor_list
    { s32 count; s32 unused_4; void **items; }`, the exact layout
-   `src/crates/crate_time_trial.c`'s `ConvertCratesForTimeTrial` already established) -
+   `src/game/crates/crate_time_trial.c`'s `ConvertCratesForTimeTrial` already established) -
    for each `entry = items[i]`, tests `entry`'s own `+0x18`-table
    `+0x48` trampoline via `_call_via_r1(entry + *(s16*)(table+0x48),
    *(void**)(table+0x48+4))` (matched elsewhere). On state `3`, calls

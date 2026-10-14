@@ -2,7 +2,7 @@
 
 A scoping investigation of the actor zone found this 2308-byte range -
 the tail of `asm/code_3_2_20_8b7c_ac28.s` right before its own already-
-matched literal tail (`DispensePolarWumpa` onward, `src/vehicle/
+matched literal tail (`DispensePolarWumpa` onward, `src/game/vehicles/
 polar_player_states.c`, `docs/matching/archive/issue-50-actor-bc68.md`) - still
 completely raw. `tools/report_units.py`'s `(0x0802AC28, None, "actor")`
 entry covers the still-raw `CreateActor`-`SpawnActor` run before this

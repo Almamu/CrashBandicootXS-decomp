@@ -1,11 +1,11 @@
-#include "vehicle.hpp"
+#include "game/vehicles/vehicle.hpp"
 #include "engine/gfx/cell_anim.hpp"
 
 extern "C" {
 #include "core.h"
 #include "engine/actor/actor_anim.h"
 #include "engine/actor/actor.h"
-#include "bosses.h"
+#include "game/bosses/bosses.h"
 }
 
 using Engine::Gfx::CellAnim;

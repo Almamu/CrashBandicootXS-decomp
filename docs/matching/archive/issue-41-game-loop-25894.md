@@ -196,7 +196,7 @@ progress on two of them without reaching a byte-exact match on either
   and still gets folded via a cheaper `subs`/`adds` off the
   previously-loaded constant.
 
-See each function's own updated doc comment (`src/level/entity_flags.c`,
+See each function's own updated doc comment (`src/game/level/entity_flags.c`,
 `src/level/bg_layer_init.c`) for the full before/after detail.
 
 ## Update: all eight remaining parked functions converted to byte-exact NAKED transcriptions
@@ -228,7 +228,7 @@ C has no way to work around on this toolchain:
   in `r7` across every intervening call the way the ROM keeps it there,
   and an explicit `register T x asm("r7")` pin never makes it into this
   compiler's own `push`/`pop` list (the same confirmed bug documented on
-  `src/menus/power_dialog_draw.c`/`src/objects/sprite.c` and elsewhere
+  `src/game/ui/power_dialog_draw.c`/`src/game/entities/sprite.c` and elsewhere
   project-wide); separately, the trailing `(*bf & -0x10) | (result &
   0xf)` bitfield combine - even with the established negative-literal
   register-pin idiom (`ClearPowers`/`LoadLanguageSelectBg`) - gets
@@ -376,7 +376,7 @@ the ROM's raw fragment (previously `asm/code_3_2_17_255d4.s`), and full
 clean `rm -rf build && make NON_MATCHING=1 report` +
 `objdiff-cli report generate` confirm 100.0% fuzzy match for
 `CountCrateEntities` and the whole `game_loop12` unit (now part of `entity_flags.c`). `CountCrateEntities` is folded
-into `src/level/entity_flags.o` in `tools/report_units.py` (it's the
+into `src/game/level/entity_flags.o` in `tools/report_units.py` (it's the
 first function in that unit now, immediately ahead of `SetEntityIdGone`).
 `asm/code_3_2_17_255d4.s` - which held only `CountCrateEntities` by this
 point - is deleted, with its `ldscript.txt` line dropped (the linker
@@ -395,5 +395,5 @@ been closed (see their own linked write-ups above).
 
 ## Later pass (strag1)
 
-`LaunchEffectPart` and `DropWumpa` (`src/level/entity_spawner.c`) are now real
+`LaunchEffectPart` and `DropWumpa` (`src/game/level/entity_spawner.c`) are now real
 C (old_agbcc). See [strag1-naked-retry.md](strag1-naked-retry.md).

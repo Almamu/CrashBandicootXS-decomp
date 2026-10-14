@@ -1,7 +1,7 @@
 # Issue #20: 0x08016128-0x08017524 (graphics), plus issue #19's `CheckPlayerCtrlTurn`
 
 All 26 functions of the former `asm/code_3_2_17_16048.s` are byte-exact
-real C in the new `src/player/swim_ctrl.c`: `CheckPlayerCtrlTurn` (the
+real C in the new `src/game/crash/swim_ctrl.c`: `CheckPlayerCtrlTurn` (the
 last raw function of issue #19, see
 [issue-19-0x08015840-actor.md](./issue-19-0x08015840-actor.md)) and the 25
 functions of issue #20. No NAKED, no `NON_MATCHING`. The only register

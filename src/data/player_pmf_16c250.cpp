@@ -1,8 +1,8 @@
-#include "swim_ctrl.hpp"
-#include "input_ctrl.hpp"
+#include "game/crash/swim_ctrl.hpp"
+#include "game/crash/input_ctrl.hpp"
 
 extern "C" {
-#include "bosses.h"
+#include "game/bosses/bosses.h"
 }
 
 using Game::Crash::InputCtrl;

@@ -1,6 +1,6 @@
-#include "frontend.hpp"
+#include "game/ui/frontend.hpp"
 #include "graphics.hpp"
-#include "logo_fly_in.h"
+#include "game/ui/logo_fly_in.h"
 
 extern "C" {
 #include "core.h"

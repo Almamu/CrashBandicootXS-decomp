@@ -1,6 +1,6 @@
 #include "graphics.hpp"
-#include "yeti.hpp"
-#include "vehicle.hpp"
+#include "game/vehicles/polar/yeti.hpp"
+#include "game/vehicles/vehicle.hpp"
 
 extern "C" {
 #include "core.h"
@@ -16,7 +16,7 @@ extern "C" {
 using Engine::Gfx::YetiFrameSet;
 using Game::Vehicles::Polar::Yeti;
 
-/* Yeti::frames (include/yeti.hpp): the yeti animation's frame table (its
+/* Yeti::frames (include/game/vehicles/polar/yeti.hpp): the yeti animation's frame table (its
  * `frameOffsets`, set up by CreateYeti in yeti.cpp next to the
  * gYetiKeyframes animation records): 123 pointers to compressed
  * frames of YetiFrameSet::frames (rle_sprites_0c2758.cpp). The offsets come

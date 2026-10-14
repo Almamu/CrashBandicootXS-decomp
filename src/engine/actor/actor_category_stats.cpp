@@ -1,4 +1,4 @@
-#include "vehicle.hpp"
+#include "game/vehicles/vehicle.hpp"
 #include "engine/actor/actor_palette_cycle.hpp"
 #include "engine/actor/actor_category_stats.hpp"
 #include "engine/actor/actor_spawns.hpp"
@@ -8,8 +8,8 @@ extern "C" {
 #include "core.h"
 #include "engine/actor/actor_anim.h"
 #include "engine/actor/actor.h"
-#include "bosses.h"
-#include "level.h"
+#include "game/bosses/bosses.h"
+#include "game/level/level.h"
 #include "globals.h"
 }
 

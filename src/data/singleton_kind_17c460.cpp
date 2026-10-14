@@ -1,9 +1,9 @@
-#include "hovercraft.hpp"
+#include "game/bosses/hovercraft.hpp"
 
 extern "C" {
 #include "core.h"
 #include "engine/actor/actor_anim.h"
-#include "bosses.h"
+#include "game/bosses/bosses.h"
 }
 
 using Game::Bosses::Hovercraft;
@@ -13,7 +13,7 @@ using Game::Bosses::Hovercraft;
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* Hovercraft::attacks (include/hovercraft.hpp): the hovercraft's attack
+/* Hovercraft::attacks (include/game/bosses/hovercraft.hpp): the hovercraft's attack
  * parameters (struct hovercraft_attack, bosses.h). SpawnHovercraft picks
  * one by gHovercraftLevel. */
 const struct hovercraft_attack Hovercraft::attacks[2] = {

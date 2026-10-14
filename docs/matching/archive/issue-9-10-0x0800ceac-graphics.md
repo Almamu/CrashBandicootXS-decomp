@@ -96,7 +96,7 @@ the caller pre-loads with its own current edge-code value.
 Body:
 1. `next = GetCrateAbove(self)` ("get next"), `prev = GetCrateBelow(self)`
    ("get prev") - the established doubly-linked neighbor-list accessor
-   pair (`src/crates/crate_break.c`'s own header comment; also used by
+   pair (`src/game/crates/crate_break.c`'s own header comment; also used by
    `QueueCratePlayerCollision` itself and `ClearCrateStackTouched`/`MarkCrateStackTouched`).
 2. If **both** are `NULL`: return `self` unchanged, no other side
    effect - `self` is isolated in the list.
@@ -135,7 +135,7 @@ action-dispatch gate), these two have no caller outside the subsystem.
 
 Neither was attempted as a plain-C reconstruction. Both are the same
 single-inlined-AABB-build primitive `GetSpriteHitbox`
-(`src/objects/sprite.c`) already documents as resistant to gcc
+(`src/game/entities/sprite.c`) already documents as resistant to gcc
 2.9's register allocation *even in its simplest, unbranched, single-call
 form* ("about 10 of ~73 instructions... which anonymous scratch
 register" gaps) - a shape this project has now independently hit and
@@ -179,12 +179,12 @@ since it never touches the player global). These resolve correctly once
 linked, the same pattern every prior NAKED closure in this neighborhood
 has shown.
 
-New file `src/crates/crate_hit.c` (both functions - they're
+New file `src/game/crates/crate_hit.c` (both functions - they're
 ROM-contiguous with each other, `0x0800CEAC`-`0x0800D040`, so one file
 per `docs/workflow.md`'s "one `.c` file per contiguous ROM region"
 rule), inserted in `ldscript.txt` exactly where `asm/code_3_2_17_ceac.o`
 used to sit (between `src/crates/crate_touch.o` and
-`src/crates/crate_hit.o`). `asm/code_3_2_17_ceac.s` deleted (fully
+`src/game/crates/crate_hit.o`). `asm/code_3_2_17_ceac.s` deleted (fully
 consumed, nothing else was in it).
 
 ## Full-ROM verification
@@ -217,7 +217,7 @@ coincide` (checksum matches).
 - `docs/status/game_loop.md` - `PlayerHitboxOverlapsAt`/`ResolveStackCrateHit` added to the
   "Parked - NAKED transcription" list.
 - `tools/report_units.py` - the `0x0800CEAC` unit now points at
-  `src/crates/crate_hit.o`, category `game_loop` (was `None`/
+  `src/game/crates/crate_hit.o`, category `game_loop` (was `None`/
   `graphics`).
 - `docs/rom_map.md` - new "Follow-up: `ResolveStackCrateHit`'s partial note
   confirmed, `PlayerHitboxOverlapsAt` found and both closed" section, appended

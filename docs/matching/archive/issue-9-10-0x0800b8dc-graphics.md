@@ -343,13 +343,13 @@ coincide`).
 
 `asm/code_3_2_17.s` (which held this whole cluster, `UpdateEnemyCtrl`
 through `InitEffectCtrl`) is removed entirely. `UpdateEnemyCtrl`/`HitEnemy`
-now live in the new `src/enemies/enemy_ctrl_update.c`; the unchanged
+now live in the new `src/game/enemies/enemy_ctrl_update.c`; the unchanged
 remainder (`UpdateEnemyShooter` onward - the cluster's other ~41 functions,
 still fully raw and unexamined) moved to the new
 `asm/code_3_2_17_bfa8.s`. `ldscript.txt` now reads:
 
 ```
-build/crashbandicootxs/src/enemies/enemy_ctrl_update.o(.text);
+build/crashbandicootxs/src/game/enemies/enemy_ctrl_update.o(.text);
 build/crashbandicootxs/asm/code_3_2_17_bfa8.o(.text);
 build/crashbandicootxs/src/crates/crate_touch.o(.text);
 ```
@@ -394,7 +394,7 @@ trigger" primitive.** The delegate differs per function:
 
 - **`SetEnemyMotionY(self, mode)`**: `self->0x7c = mode;` then calls the
   *already-matched* `StartCtrlTargetMotionYFromSet(self, self->0x70 /* owner */, mode)`
-  (`src/objects/ctrl.c`). `StartCtrlTargetMotionYFromSet` itself: looks up an
+  (`src/game/entities/ctrl.c`). `StartCtrlTargetMotionYFromSet` itself: looks up an
   8-byte record at `(*(self+4))[mode]`, reads that record's **second**
   word (`+4`) as a type index into the shared, 12-byte-stride
   `gCtrlMotionRecords` table, then reads `self->0xc`'s "anchor"
@@ -455,7 +455,7 @@ trigger" primitive.** The delegate differs per function:
 All three matched as real C on the first structured attempt (raw
 pointer-arithmetic casts, matching the established convention of the
 immediately-neighboring already-matched `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet` in
-`src/objects/ctrl.c` - no named structs committed yet, same
+`src/game/entities/ctrl.c` - no named structs committed yet, same
 reasoning as the Phase 1 pass: several of the object's fields are still
 not fully reconciled across all its callers). `SetEnemyMotionY`/
 `SetEnemyMotionX` compiled byte-exact immediately. `SetEnemyAnimMode` needed one
@@ -485,7 +485,7 @@ coincide`).
 
 ### Build layout
 
-The three functions now live in the new `src/enemies/enemy_ctrl.c`.
+The three functions now live in the new `src/game/enemies/enemy_ctrl.c`.
 `asm/code_3_2_17_bfa8.s` is trimmed to end right before `SetEnemyMotionY`
 (unchanged otherwise - still holds `UpdateEnemyShooter` through `SetEnemyRangeX`,
 raw); the remainder from `UpdateEnemyOscillateX` onward (`UpdateEnemyBob` through
@@ -494,9 +494,9 @@ new `asm/code_3_2_17_c8f8.s`. `ldscript.txt` now reads, in this
 stretch:
 
 ```
-build/crashbandicootxs/src/enemies/enemy_ctrl_update.o(.text);
+build/crashbandicootxs/src/game/enemies/enemy_ctrl_update.o(.text);
 build/crashbandicootxs/asm/code_3_2_17_bfa8.o(.text);
-build/crashbandicootxs/src/enemies/enemy_ctrl.o(.text);
+build/crashbandicootxs/src/game/enemies/enemy_ctrl.o(.text);
 build/crashbandicootxs/asm/code_3_2_17_c8f8.o(.text);
 build/crashbandicootxs/src/crates/crate_touch.o(.text);
 ```
@@ -689,9 +689,9 @@ the same wall four times.
 
 ### Build layout
 
-The four functions now live in three new files: `src/enemies/
-enemy_motion.c` (`UpdateEnemyPatrol`), `src/enemies/enemy_motion.c`
-(`UpdateEnemyHop`), and `src/enemies/enemy_ctrl.c` (`UpdateEnemyAttackCycle` +
+The four functions now live in three new files: `src/game/enemies/
+enemy_motion.c` (`UpdateEnemyPatrol`), `src/game/enemies/enemy_motion.c`
+(`UpdateEnemyHop`), and `src/game/enemies/enemy_ctrl.c` (`UpdateEnemyAttackCycle` +
 `UpdateEnemyTriggerBox`, contiguous in ROM with no gap). The single raw
 `asm/code_3_2_17_bfa8.s` (which held `UpdateEnemyShooter` through
 `SetEnemyRangeX`) is split into four pieces around the newly-matched
@@ -713,8 +713,8 @@ another parallel session was assigned (`UpdateEnemyPatrol`/`UpdateEnemyAttackCyc
 
 **Closed, real C**: `LaunchHarmfulEffectPart` (the floating-popup spawner, state
 18's `LaunchHarmfulEffectPart(0x1D, 0, 0, 0x2B, 0, owner)` callee - a thin
-`LaunchEffectPart` wrapper, `src/enemies/enemy_ctrl.c`) and `CreateKnockedEnemyCtrl`
-(`src/enemies/enemy_ctrl.c`, see below).
+`LaunchEffectPart` wrapper, `src/game/enemies/enemy_ctrl.c`) and `CreateKnockedEnemyCtrl`
+(`src/game/enemies/enemy_ctrl.c`, see below).
 
 **Closed, NAKED**: `UpdateEnemyHomingX`/`UpdateEnemyHomingY` (`enemy_motion.c`),
 `UpdateEnemyFlipCycle` (`enemy_motion.c`), `UpdateEnemyOscillateX`/`UpdateEnemyBob`/
@@ -751,7 +751,7 @@ tempted to re-attempt them:
 - **`UpdateEnemyFlipCycle`**: an isolated attempt reproduced the entire
   dispatch/switch structure exactly, and even reproduced the
   established `(s32)(x << 27) < 0` mirror-flag-bit-test idiom
-  (`src/objects/ctrl.c`) correctly for both of this
+  (`src/game/entities/ctrl.c`) correctly for both of this
   function's own bit-toggle sites - but could not reproduce the ROM's
   own instruction *sequencing* for folding the toggled bit back into
   the byte (compute 0/1 flag via the shift-test, shift it into bit
@@ -828,11 +828,11 @@ resistant. Good next targets given `SetEnemyMotionY`/`SetEnemyMotionX`/
 `UpdateEnemyPatrol` (still raw, `UpdateEnemyPatrol` is one of the other parallel
 session's four `self+0x68` targets). The removed
 `UpdateEnemyHomingX`/`UpdateEnemyHomingY` now live in the new
-`src/enemies/enemy_motion.c`. `UpdateEnemyHop` (untouched, another
+`src/game/enemies/enemy_motion.c`. `UpdateEnemyHop` (untouched, another
 `self+0x68` target) was carved into its own new `asm/code_3_2_17_c244.s`
 so it wouldn't need to move again once its own session closes it. The
 removed `UpdateEnemyFlipCycle` now lives in the new
-`src/enemies/enemy_motion.c`. `UpdateEnemyAttackCycle` onward (through
+`src/game/enemies/enemy_motion.c`. `UpdateEnemyAttackCycle` onward (through
 `SetEnemyRangeX` - `UpdateEnemyAttackCycle`/`UpdateEnemyTriggerBox` untouched `self+0x68`
 targets, plus `SetEnemyState`/`SetEnemyRangeXSpeed`/`SetEnemyRangeYSpeed`/`SetEnemyRangeX`,
 none of this pass's or the parallel session's concern) moved to the new
@@ -840,25 +840,25 @@ none of this pass's or the parallel session's concern) moved to the new
 
 Likewise, `asm/code_3_2_17_c8f8.s` is fully consumed: the removed
 `UpdateEnemyOscillateX`/`UpdateEnemyBob`/`UpdateEnemyOscillateY`/`LaunchHarmfulEffectPart` now live in the
-new `src/enemies/enemy_ctrl.c`; the untouched, still-raw
+new `src/game/enemies/enemy_ctrl.c`; the untouched, still-raw
 `AttachEnemyCtrl`-`DestroyKnockedEnemyCtrl` remainder moved to the new
 `asm/code_3_2_17_ca04.s`; the removed `CreateKnockedEnemyCtrl` now lives in the
-new `src/enemies/enemy_ctrl.c`; the untouched, still-raw
+new `src/game/enemies/enemy_ctrl.c`; the untouched, still-raw
 `UpdateEffectCtrl` onward (through `InitEffectCtrl`) moved to the new
 `asm/code_3_2_17_cbf4.s`.
 
 `ldscript.txt` now reads, in this stretch:
 
 ```
-build/crashbandicootxs/src/enemies/enemy_ctrl_update.o(.text);
+build/crashbandicootxs/src/game/enemies/enemy_ctrl_update.o(.text);
 build/crashbandicootxs/asm/code_3_2_17_bfa8.o(.text);
-build/crashbandicootxs/src/enemies/enemy_motion.o(.text);
+build/crashbandicootxs/src/game/enemies/enemy_motion.o(.text);
 build/crashbandicootxs/asm/code_3_2_17_c18c.o(.text);
-build/crashbandicootxs/src/enemies/enemy_motion.o(.text);
+build/crashbandicootxs/src/game/enemies/enemy_motion.o(.text);
 build/crashbandicootxs/asm/code_3_2_17_c314.o(.text);
-build/crashbandicootxs/src/enemies/enemy_ctrl.o(.text);
+build/crashbandicootxs/src/game/enemies/enemy_ctrl.o(.text);
 build/crashbandicootxs/asm/code_3_2_17_c6a8.o(.text);
-build/crashbandicootxs/src/enemies/enemy_ctrl.o(.text);
+build/crashbandicootxs/src/game/enemies/enemy_ctrl.o(.text);
 build/crashbandicootxs/asm/code_3_2_17_c8f8.o(.text);
 ```
 
@@ -884,12 +884,12 @@ dialog dispatcher plus three small `self+0x70`-relative accessor
 triples) round out the rest of this now much-smaller raw remainder
 between `UpdateEnemyShooter` and `SetEnemyMotionY`.
 build/crashbandicootxs/asm/code_3_2_17_c244.o(.text);
-build/crashbandicootxs/src/enemies/enemy_motion.o(.text);
+build/crashbandicootxs/src/game/enemies/enemy_motion.o(.text);
 build/crashbandicootxs/asm/code_3_2_17_c40c.o(.text);
-build/crashbandicootxs/src/enemies/enemy_ctrl.o(.text);
-build/crashbandicootxs/src/enemies/enemy_ctrl.o(.text);
+build/crashbandicootxs/src/game/enemies/enemy_ctrl.o(.text);
+build/crashbandicootxs/src/game/enemies/enemy_ctrl.o(.text);
 build/crashbandicootxs/asm/code_3_2_17_ca04.o(.text);
-build/crashbandicootxs/src/enemies/enemy_ctrl.o(.text);
+build/crashbandicootxs/src/game/enemies/enemy_ctrl.o(.text);
 build/crashbandicootxs/asm/code_3_2_17_cbf4.o(.text);
 build/crashbandicootxs/src/crates/crate_touch.o(.text);
 ```
@@ -1212,10 +1212,10 @@ compare` (`crashbandicootxs.gba: La suma coincide`).
 
 ### Build layout
 
-All five functions now live in the new `src/objects/effect_ctrl.c`.
+All five functions now live in the new `src/game/entities/effect_ctrl.c`.
 `asm/code_3_2_17_cbf4.s` is now empty and deleted; `ldscript.txt`'s
 `build/crashbandicootxs/asm/code_3_2_17_cbf4.o(.text);` line is replaced
-with `build/crashbandicootxs/src/objects/effect_ctrl.o(.text);`,
+with `build/crashbandicootxs/src/game/entities/effect_ctrl.o(.text);`,
 sitting between `enemy_ctrl.o` and `crate_touch.o` exactly as the
 removed asm block did. `tools/report_units.py`'s
 `(0x0800CBF4, None, "graphics")` placeholder is replaced with a matched
@@ -1314,8 +1314,8 @@ coincide`).
 
 This was the last function in `asm/code_3_2_17_bfa8.s` - the file is
 now empty and has been deleted, with its `ldscript.txt` entry replaced
-by `build/crashbandicootxs/src/enemies/enemy_shooter.o(.text);`
-(new file, `src/enemies/enemy_shooter.c`).
+by `build/crashbandicootxs/src/game/enemies/enemy_shooter.o(.text);`
+(new file, `src/game/enemies/enemy_shooter.c`).
 
 ## Closing the small gap: `asm/code_3_2_17_ca04.s` (19 functions)
 
@@ -1484,11 +1484,11 @@ coincide`).
 
 ### Build layout
 
-All 19 functions now live in the new `src/enemies/enemy_ctrl.c`.
+All 19 functions now live in the new `src/game/enemies/enemy_ctrl.c`.
 `asm/code_3_2_17_ca04.s` is fully consumed and deleted;
 `ldscript.txt`'s `build/crashbandicootxs/asm/code_3_2_17_ca04.o(.text);`
 line is replaced with
-`build/crashbandicootxs/src/enemies/enemy_ctrl.o(.text);` in
+`build/crashbandicootxs/src/game/enemies/enemy_ctrl.o(.text);` in
 place. `tools/report_units.py`'s `(0x0800CA04, None, "graphics")`
 placeholder is replaced with a matched entry for `enemy_ctrl.o`.
 

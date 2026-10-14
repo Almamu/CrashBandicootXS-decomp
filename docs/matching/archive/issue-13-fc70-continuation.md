@@ -39,7 +39,7 @@ second pass against those five.
     purely to make this compiler reserve the same 8-byte outgoing-
     argument stack slot pair the ROM's own `sub sp, #8`/`add sp, #8`
     frame does.
-- **`DestroyCrate`/`InitCrate`** (`src/crates/crate.c`, new
+- **`DestroyCrate`/`InitCrate`** (`src/game/crates/crate.c`, new
   file) - a part-object table-set/tail-call-`DestroySpriteObj` helper (same
   shape as `DestroyWumpa`, `wumpa.c`) that additionally frees
   `self+0x48` (unless it's the sentinel `-1` or already `NULL`) and
@@ -49,7 +49,7 @@ second pass against those five.
   via `ResetCrate` (`crate_reset.c`). Both take/return `struct actor *`
   (matching `DestroySpriteObj`/`InitSpriteObj`'s own already-matched
   prototypes in `sprite_obj.c`).
-- **`FindLineCrossingYMajor`/`FindLineCrossingXMajor`** (`src/crates/crate.c`) - two
+- **`FindLineCrossingYMajor`/`FindLineCrossingXMajor`** (`src/game/crates/crate.c`) - two
   fixed single-octant variants of the Bresenham-line-style stepper
   `FindLineCrossing` (below) implements in full - each walks a fixed number
   of steps along one axis (the 3rd/4th parameters, doubled into the
@@ -93,7 +93,7 @@ second pass against those five.
 
 ## Parked (NAKED transcription) - 4 functions
 
-- **`UpdateCrateFall`** (`src/crates/crate_break.c`, new file) - a
+- **`UpdateCrateFall`** (`src/game/crates/crate_break.c`, new file) - a
   per-frame position-wrap advance keeping `sb`/`r8` live as two extra
   callee-saved accumulators throughout - the same "two extra
   high-register accumulators live throughout" gap already parked (and
@@ -103,7 +103,7 @@ second pass against those five.
   bytes (not 4-aligned), and the ROM pads the 2-byte gap before
   `FindLineCrossing` with a zero halfword rather than the assembler's
   default `nop` (`matching_decomp_alignment_fix`).
-- **`FindLineCrossing`** (`src/crates/crate_reset.c`, new file) - the full
+- **`FindLineCrossing`** (`src/game/crates/crate_reset.c`, new file) - the full
   4-octant Bresenham-line-style line-stepper `FindLineCrossingYMajor`/
   `FindLineCrossingXMajor` above are fixed single-octant variants of. Every
   branch/field/octant-selection is understood and was written as plain
@@ -195,7 +195,7 @@ instruction sequences by content regardless of source position, but
 never unifies an inline-asm block with a compiler-generated one. This
 entry is left as-is above (a frozen historical record of why the
 function was originally parked); `tools/report_units.py`'s
-`0x0800FDC8` entry now points at `src/crates/crate_reset.o` instead of
+`0x0800FDC8` entry now points at `src/game/crates/crate_reset.o` instead of
 `None`, and `docs/status/game_loop.md`'s parked-list entry for it was
 removed in favor of a matched-list entry.
 
@@ -279,7 +279,7 @@ transcribed byte-exact instead - every instruction checked directly
 against the ROM's raw bytes, confirmed via a full clean
 `make NON_MATCHING=1 report` (no warnings) and `make compare`
 ("La suma coincide") from scratch. Lives in new file
-`src/objects/collision_queue.c` (the next free `game_loopNN` slot in this
+`src/game/crates/collision_queue.c` (the next free `game_loopNN` slot in this
 file family; it sits between the still-differently-addressed
 `crate_draw.o` and `crate.o` in ROM order, so - like
 `DrawCrate` before it - it needs its own file rather than joining

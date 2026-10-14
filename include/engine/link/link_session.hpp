@@ -4,7 +4,7 @@
 /* The link-cable session as C++ (#751, docs/cplusplus.md, "The link
  * session, the save data and the save transfer"): class LinkSession, the
  * object the save menu's constructor
- * makes with `new LinkSession` (src/save/save_menu_input.cpp) into
+ * makes with `new LinkSession` (src/game/ui/save_menu_input.cpp) into
  * gLinkSession (link.h declares it as a `LinkSession *` to C++) and its
  * destructor deletes. Its code is src/engine/link/: link_sio.cpp (Start, Reset,
  * the constructor and destructor), link_handshake.cpp (Stop),

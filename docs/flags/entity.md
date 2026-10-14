@@ -1,6 +1,6 @@
 # `Entity::f`: the entity flags (#843)
 
-Every entity (`class Entity`, include/entity.hpp) has two flag bytes at
+Every entity (`class Entity`, include/game/entities/entity.hpp) has two flag bytes at
 +0x0C and +0x0D, `union EntityFlags f` (include/engine/actor/actor.h). The code reaches
 them in three ways:
 
@@ -10,7 +10,7 @@ them in three ways:
 
 The names for whole-byte access sit next to the union. `ENTITY_BIT_*` and
 `ENTITY_BIT2_*` are the bit numbers in each byte; `ENTITY_FLAG_*` and
-`ENTITY_FLAG2_*` are the masks. They replace box_part.h's `PART_FLAG_GONE`
+`ENTITY_FLAG2_*` are the masks. They replace sprite_flags.h's `PART_FLAG_GONE`
 and `PART_FLAG_TOUCHED`.
 
 ## +0x0C, `f.flags`

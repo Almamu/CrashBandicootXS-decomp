@@ -2,7 +2,7 @@
 
 | Function | File | Issue | Before | After |
 |---|---|---|---|---|
-| `QueueCratePlayerCollision` | `src/crates/crate_break.c` | #12 | 33 hw, size-exact, NAKED | real C, matches |
+| `QueueCratePlayerCollision` | `src/game/crates/crate_break.c` | #12 | 33 hw, size-exact, NAKED | real C, matches |
 
 The function now builds under old_agbcc (`crate_break.o` was already on
 `OLD_AGBCC_OBJS`). The NAKED copy and the `#if NON_MATCHING` split are

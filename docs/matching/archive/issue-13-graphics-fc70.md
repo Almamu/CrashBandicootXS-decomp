@@ -26,7 +26,7 @@ too, continuing issue #12's precedent.
 
 ## Matched (11 of 25 functions)
 
-- **`ResetCrate`** (`src/crates/crate_reset.c`) - resets `self`'s
+- **`ResetCrate`** (`src/game/crates/crate_reset.c`) - resets `self`'s
   collision-response state: sets flags `+0xc` bits 2/6, clears the low
   7 bits of `+0x4d` while also clearing the global
   `gPlayer+0x80` "hit" latch, zeroes the timer/list-link
@@ -49,7 +49,7 @@ too, continuing issue #12's precedent.
   inline-asm block.
 - **`ResolvePlayerCollisions`**/**`GetCrateBelow`**/**`GetCrateAbove`**/
   **`SetCrateBelow`**/**`SetCrateAbove`**/**`GetCrateClassId`**
-  (`src/crates/crate.c`) - the viewport collision-box refresh
+  (`src/game/crates/crate.c`) - the viewport collision-box refresh
   (`ResolveCollisionCandidates` on `gPlayer+0x108`, then a saturating-at-
   zero `+0x92` hit counter), and the neighbor-list "get prev"/"get
   next"/"set prev"/"set next" accessor quartet (`self+0x60`/`+0x5c`)
@@ -60,7 +60,7 @@ too, continuing issue #12's precedent.
   gotchas beyond `ResolvePlayerCollisions` needing its second `gPlayer`
   dereference kept as a separate local (not reusing the first) to get
   the post-call reload the ROM does.
-- **`ConvertCratesForTimeTrial`**/**`OpenAkuAkuCrate`** (`src/crates/crate_time_trial.c`) -
+- **`ConvertCratesForTimeTrial`**/**`OpenAkuAkuCrate`** (`src/game/crates/crate_time_trial.c`) -
   a state-3-countdown-expiry sweep over the `gCrateList` object
   list (same list/table layout `UpdateCrates`/`DetonateNitroCrates` elsewhere in
   this still-raw region read), and a viewport `+0x18`-table trampoline-

@@ -1,13 +1,13 @@
 # Huge NAKED retry: `QueueCratePlayerCollision`
 
-`QueueCratePlayerCollision` (issue #12, `src/crates/crate_break.c`) is the largest
+`QueueCratePlayerCollision` (issue #12, `src/game/crates/crate_break.c`) is the largest
 NAKED function in the project, at 3840 bytes. Before this pass it had no
 C draft. It still does not match, but it now has a draft that is the
 ROM's exact size.
 
 | Function | File | Issue | Size | Result |
 |---|---|---|---|---|
-| `QueueCratePlayerCollision` | `src/crates/crate_break.c` | #12 | 3840 bytes | still NAKED; first draft, size-exact under old_agbcc, 968 halfwords off |
+| `QueueCratePlayerCollision` | `src/game/crates/crate_break.c` | #12 | 3840 bytes | still NAKED; first draft, size-exact under old_agbcc, 968 halfwords off |
 
 Under the current agbcc the draft is 1629 halfwords off and 8 bytes
 long. The ROM loads masks before `ldrb` (`movs r0, #0x7f; ldrb r2, [r1];

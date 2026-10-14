@@ -15,11 +15,11 @@ The range is split by address into five objects so that
 
 | file | functions | state |
 |---|---|---|
-| `src/bosses/dingodile_create.c` | `CreateDingodileShieldCtrl`-`SetDingodileNextState` (6) | matched |
-| `src/objects/platform_create.c` | `CreatePlatform` | matched (old_agbcc) |
-| `src/objects/platform_contact.c` | `CheckPlatformContact` | matched |
-| `src/objects/platform_collide.c` | `ResolvePlatformCollision` | NAKED (C under NON_MATCHING) |
-| `src/objects/platform.c` | `UpdatePlatform`-`ClearPlatformMoverActive` (16) | matched |
+| `src/game/bosses/dingodile_create.c` | `CreateDingodileShieldCtrl`-`SetDingodileNextState` (6) | matched |
+| `src/game/objects/platform_create.c` | `CreatePlatform` | matched (old_agbcc) |
+| `src/game/objects/platform_contact.c` | `CheckPlatformContact` | matched |
+| `src/game/objects/platform_collide.c` | `ResolvePlatformCollision` | NAKED (C under NON_MATCHING) |
+| `src/game/objects/platform.c` | `UpdatePlatform`-`ClearPlatformMoverActive` (16) | matched |
 
 Shared structs, externs and the virtual-call macros live in
 `include/gobj_1a794.h`.

@@ -1,7 +1,7 @@
 # Issue #27: 0x0801CEE0-0x0801DA38, graphics - level-select page turns and background layers
 
 All 25 functions of the former `asm/code_3_2_17_188d0_1cee0.s` are now
-plain C in `src/menus/level_select_pages.c`. The `.s` file is deleted.
+plain C in `src/game/ui/level_select_pages.c`. The `.s` file is deleted.
 There are no NAKED or `NON_MATCHING` functions. The shared structs are in
 the new `include/level_menu.h`. Verified with a clean
 `make NON_MATCHING=1 report` and a clean `make compare`

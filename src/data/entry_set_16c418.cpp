@@ -1,7 +1,7 @@
 extern "C" {
 #include "core.h"
-#include "objects.h"
-#include "bosses.h"
+#include "game/entities/objects.h"
+#include "game/bosses/bosses.h"
 }
 
 /*

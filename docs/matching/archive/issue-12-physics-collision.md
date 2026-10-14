@@ -51,7 +51,7 @@ entity's own behavior.
   under `NON_MATCHING`) is a **self-vs-player AABB overlap check** that
   reuses the exact same `+0x20`-pointer-to-table/`+0x2d`-tag/28-byte-
   stride hitbox-record convention `GetSpriteBounds`/`GetSpriteHitbox` in
-  `src/objects/sprite.c` already established (just with the
+  `src/game/entities/sprite.c` already established (just with the
   `{s16 xOff, s16 yOff, u8 w, u8 h}` quad at record `+4`/`+6`/`+8`/`+9`
   instead of `+0xc`/`+0xe`/`+0x10`/`+0x11` - the same "differently laid
   out" variance those two functions' own doc comments already flag).
@@ -83,9 +83,9 @@ All three are fully understood (semantics, field offsets, every branch
 and call confirmed against the ROM disassembly) but don't yet produce
 byte-identical output from `tools/agbcc`.
 
-- **`BreakCrateTouchedByPlayer`** (`src/crates/crate_hit.c`; real bytes in
+- **`BreakCrateTouchedByPlayer`** (`src/game/crates/crate_hit.c`; real bytes in
   `asm/code_3_2_17_d040.s`) - this is the *same* AABB-build primitive
-  `GetSpriteHitbox` (`src/objects/sprite.c`) is already parked for,
+  `GetSpriteHitbox` (`src/game/entities/sprite.c`) is already parked for,
   just inlined twice in a row (once for `self`, once for the player)
   instead of called as a subroutine, plus an overlap-dispatch tail.
   `GetSpriteHitbox`'s own doc comment documents this shape resisting
@@ -104,7 +104,7 @@ byte-identical output from `tools/agbcc`.
   registers (`r8`/`r9`/`sl`) instead of the ROM's two, and/or moves
   `self` itself out of `r6` into `r8`. Parked rather than keep chasing
   individual register letters.
-- **`ClearCrateStackTouched`/`MarkCrateStackTouched`** (`src/crates/crate_break.c`; real
+- **`ClearCrateStackTouched`/`MarkCrateStackTouched`** (`src/game/crates/crate_break.c`; real
   bytes in `asm/code_3_2_17_e494.s`) - every operation, operand and
   branch matches the ROM one-for-one, including gcc naturally finding
   the same "reuse the just-computed `ands` result register as the
@@ -204,7 +204,7 @@ this gotcha instead.
 Since both `asm/code_3_2_17_d040.s` and `asm/code_3_2_17_e494.s` held
 nothing but their one/two guarded functions, both files are now empty
 and were deleted, with their `ldscript.txt` lines dropped (their
-`.c` files - `src/crates/crate_hit.c`/`src/crates/crate_break.c` -
+`.c` files - `src/game/crates/crate_hit.c`/`src/game/crates/crate_break.c` -
 were already correctly positioned in `ldscript.txt` from the original
 parked pass, so no other `ldscript.txt` changes were needed for these
 two).
@@ -221,7 +221,7 @@ dispatcher-first/parallel-leaves approach already used to close the
 transcription**, confirmed by a full clean `make compare`
 ("La suma coincide"). Real bytes formerly in `asm/code_3_2_17_d18c.s`
 (now deleted, fully consumed - both functions folded into the new
-`src/crates/crate_break.c`, inserted in `ldscript.txt` between
+`src/game/crates/crate_break.c`, inserted in `ldscript.txt` between
 `crate_hit.o` and `crate_break.o`, exactly where the raw file used to
 sit).
 
@@ -402,7 +402,7 @@ hint: the lower-address group of direct dispatch targets
 own transitive callees, everything up to but not including
 `ExplodeCrate` (a sibling parallel pass's own territory, covering
 `ExplodeCrate`-`UpdateSlotCrate`). All 8 verified byte-exact by a full clean
-`make compare` ("La suma coincide"). New file `src/crates/crate_break.c`,
+`make compare` ("La suma coincide"). New file `src/game/crates/crate_break.c`,
 inserted in `ldscript.txt` between `crate_break.o` and (the now-trimmed)
 `code_3_2_17_e560.o`. `asm/code_3_2_17_e560.s` trimmed to begin at
 `ExplodeCrate` (its own header directives kept, since the sibling pass
@@ -621,7 +621,7 @@ AABB-build register shape, or plain high-register (`r8`/`sb`/`sl`)
 cross-block reuse under `-O2` this compiler's allocator doesn't
 reproduce - and given this batch's size (12 functions, ~1730 lines of
 disassembly), transcription was the reliable path to a byte-exact result
-for all of them at once. New file `src/crates/crate_break.c`; real bytes
+for all of them at once. New file `src/game/crates/crate_break.c`; real bytes
 formerly the tail of `asm/code_3_2_17_e560.s` (from `ExplodeCrate`
 onward - that file now ends right after `DropCratesAbove`, the sibling
 pass's own territory).
@@ -833,10 +833,10 @@ compilers. The object layout is named in `include/crate.h`
   higher-address-half (`ExplodeCrate`-`UpdateSlotCrate`) closures.
 - `tools/report_units.py` - `UNITS` list split/recategorized for
   `0x0800D040`-`0x0800FC70`, Phase 1's entry updated to point at the
-  new `src/crates/crate_break.o`, and Phase 2's `0x0800E560` entry
+  new `src/game/crates/crate_break.o`, and Phase 2's `0x0800E560` entry
   split in two at `0x0800EEF0` to point the lower half at the new
-  `src/crates/crate_break.o` and the higher half at the new
-  `src/crates/crate_break.o`.
+  `src/game/crates/crate_break.o` and the higher half at the new
+  `src/game/crates/crate_break.o`.
 - `docs/rom_map.md` - "Confirmed: a shared physics/collision
   subsystem, entered from multiple different entity types" and the
   preceding "Cross-checked the `UpdateGameFrame`-`MainLoop` cluster"

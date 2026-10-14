@@ -1,6 +1,6 @@
 # `SetEntityIdActivated` converted from NAKED transcription to real matched C
 
-`SetEntityIdActivated` (`src/level/entity_flags.c`, sets a bit in both the
+`SetEntityIdActivated` (`src/game/level/entity_flags.c`, sets a bit in both the
 `self+0x208` and `self+0x308` bit-grids at once) had been parked as a
 byte-correct NAKED asm transcription - see
 [issue-41-game-loop-25894.md](./issue-41-game-loop-25894.md) for the
@@ -116,6 +116,6 @@ diff` against `build/expected/units/game_loop13_target.o` for
 symbol-pairing errors). Full clean `rm -rf build crashbandicootxs.elf
 crashbandicootxs.gba crashbandicootxs.map && make compare` -
 `crashbandicootxs.gba: La suma coincide`. `SetEntityIdActivated` is folded into
-the same `src/level/entity_flags.o` unit as the already-matched
+the same `src/game/level/entity_flags.o` unit as the already-matched
 `MarkEntityIdActivated`/`SetEntityFlagsPos`/`DestroyEntityFlags`/`InitEntityFlags` in
 `tools/report_units.py`, since it's the same object file.

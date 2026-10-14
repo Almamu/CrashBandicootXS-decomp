@@ -57,7 +57,7 @@ doesn't depend on that kind of luck.)
 
 `asm/code_3.s` (122256 lines) is now split into `asm/code_3_1.s`,
 `asm/code_3_2.s`, and `asm/code_3_3.s` around where `src/gfx/graphics.c`'s
-and `src/actor/inline_copies_actors.cpp`'s functions used to live - expect more such splits
+and `src/game/vehicles/actor_destructors.cpp`'s functions used to live - expect more such splits
 as more functions get matched out of it over time. **One `.c` file per
 contiguous ROM region, not one per "topic":** `GetAnimFrameBaseOffset`
 (ROM `0x0803B058`) is nowhere near `QueueVramDmaTransfer`/
@@ -65,11 +65,11 @@ contiguous ROM region, not one per "topic":** `GetAnimFrameBaseOffset`
 of the same animation-frame system - since one object file's `.text` can
 only be placed as a single contiguous block by `ldscript.txt`, a function
 whose real address isn't adjacent to an existing matched file's functions
-needs its own new `.c` file (here, `src/actor/inline_copies_actors.cpp`), not just an
+needs its own new `.c` file (here, `src/game/vehicles/actor_destructors.cpp`), not just an
 addition to the existing one - adding it to the wrong file would silently
 move it to the wrong ROM address.
 
-Third matched function: `GetAnimFrameBaseOffset` in `src/actor/anim_part.cpp` -
+Third matched function: `GetAnimFrameBaseOffset` in `src/game/entities/anim_part.cpp` -
 trivial (a single field read + arithmetic shift), included here mainly to
 confirm the "new `.c` file, non-adjacent region" workflow above works.
 
@@ -327,7 +327,7 @@ loop pointer) came first - fixed by writing the `zero = 0;` assignment as
 its own earlier statement, ahead of the entry-pointer setup.
 
 Fifteenth matched function: `CountCrystals` (ROM `0x0800695C`) - and the
-**first one requiring a new mid-file split**, in `src/menus/power_dialog_draw.c`.
+**first one requiring a new mid-file split**, in `src/game/ui/power_dialog_draw.c`.
 Counts how many of 20 fixed-stride (4-byte) records have bit 0 of the
 byte at `+4` set - almost certainly counting how many of a fixed set of
 "slots" (particles? actors?) are currently active, unrelated to the OAM
@@ -350,7 +350,7 @@ compare` failed the full-ROM checksum, and the reason was exactly the
 matched functions: pulling `CountCrystals` into `graphics.c` while
 `GetCompletionPercent` stayed asm would have collapsed the 108-byte gap between
 them, shifting everything after downstream. Fixed by giving
-`CountCrystals` **its own file** (`src/menus/power_dialog_draw.c`) and splitting
+`CountCrystals` **its own file** (`src/game/ui/power_dialog_draw.c`) and splitting
 `GetCompletionPercent` out into its own asm file (`asm/code_3_1_697c.o`, needs the
 usual `.include "asm/macros.inc"` / `.syntax unified` / `.arm` header a
 plain `sed`-extracted fragment doesn't have), landing them in the
@@ -404,7 +404,7 @@ deleted the split file and removed its `ldscript.txt` line. `power_dialog_draw.c
 followed by `GetCompletionPercent`'s ROM address, not `graphics.c`'s.
 
 Seventeenth matched function: `CountClearGems` (ROM `0x08006920`,
-immediately before `CountCrystals` - joined `src/menus/power_dialog_draw.c` above it, no
+immediately before `CountCrystals` - joined `src/game/ui/power_dialog_draw.c` above it, no
 new split). A near-twin of `CountCrystals`: same 20-record, 4-byte-stride
 loop shape, but sums **bits 1 and 2** (not bit 0) of the byte at each
 record's `+4`, plus the same two bits from one more byte at `arg0+0x64`
@@ -416,7 +416,7 @@ reordering two preheader statements (`total = 0;` before `p = arg0;`,
 matching the ROM's `movs r4,#0` before `adds r2,r5,#0`).
 
 Eighteenth matched function: `CountGems` (ROM `0x080068CC`,
-immediately before `CountClearGems` - joined `src/menus/power_dialog_draw.c` above it, no
+immediately before `CountClearGems` - joined `src/game/ui/power_dialog_draw.c` above it, no
 new split, and it's one of the five callees `GetCompletionPercent` left
 unidentified). Combines everything the previous two entries found: the
 same 20-record-plus-one-extra bit-summing shape as `CountClearGems`
@@ -442,7 +442,7 @@ move whenever the ROM's own accumulator changes registers partway
 through a chain of additions with no persisting need for the old one.
 
 Nineteenth matched function: `CountRelics` (ROM `0x080068A8`, immediately
-before `CountGems` - joined `src/menus/power_dialog_draw.c` above it, no new split).
+before `CountGems` - joined `src/game/ui/power_dialog_draw.c` above it, no new split).
 The simplest of this whole cluster: sums three of `GetCompletionPercent`'s five
 callees directly - `CountSapphireRelics + CountGoldRelics + CountPlatinumRelics` - no bit
 tests, no halving. Matched byte-exact on the first try, no register pins
@@ -452,7 +452,7 @@ each called by *two* different matched functions (`GetCompletionPercent` and
 next, since it would immediately pay off three call sites at once.
 
 Twentieth matched function: `CountSapphireRelics` (ROM `0x08006864`, immediately
-before `CountRelics` - joined `src/menus/power_dialog_draw.c` above it, no new split).
+before `CountRelics` - joined `src/game/ui/power_dialog_draw.c` above it, no new split).
 Another 20-record loop, this time a genuine **range check** rather than
 a bit test: for each record, take the halfword at `+4`, shift right by
 3, and - if nonzero - count it only if it falls in `(gLevelTable[i].min, gLevelTable[i].max]`,
@@ -485,7 +485,7 @@ freshly-loaded value and its transformed result in different registers.
 
 Twenty-first and twenty-second matched functions: `CountGoldRelics` and
 `CountPlatinumRelics` (ROM `0x08006820` and `0x080067EC`, immediately before
-`CountSapphireRelics` - joined `src/menus/power_dialog_draw.c` above it, no new split). Two
+`CountSapphireRelics` - joined `src/game/ui/power_dialog_draw.c` above it, no new split). Two
 more members of the same `gLevelTable` range-check family:
 `CountGoldRelics` is `CountSapphireRelics` with different field offsets (`+0xC`/
 `+0x10` instead of `+8`/`+0xC` - same anti-CSE inline-asm technique
@@ -510,7 +510,7 @@ compile/link time.
 Twenty-third through twenty-seventh matched functions: `ShowTurboRunDialog`,
 `ShowTornadoSpinDialog`, `ShowDoubleJumpDialog`, `ShowSuperBodySlamDialog`, `GetProgressLives` (ROM
 `0x080067A4`-`0x080067EC`, immediately before `CountPlatinumRelics` - joined
-`src/menus/power_dialog_draw.c` above it, no new split). A family of four trivial
+`src/game/ui/power_dialog_draw.c` above it, no new split). A family of four trivial
 wrappers, each just `ShowPowerDialog(constA, constB, constC)` with different
 constants (likely per-difficulty or per-mode config calls into whatever
 `ShowPowerDialog` sets up), plus one unrelated one-liner extracting the low 7
@@ -523,7 +523,7 @@ ROM's shift-based extraction (also 2 instructions) - the same idiom
 identified back at `CountCrystals`.
 
 Twenty-eighth matched function: `DestroyPowerDialog` (ROM `0x08006770`,
-immediately before `ShowTurboRunDialog` - joined `src/menus/power_dialog_draw.c` above it, no
+immediately before `ShowTurboRunDialog` - joined `src/game/ui/power_dialog_draw.c` above it, no
 new split). Two unrelated pieces in one function: if `arg0->+0x18` is
 non-NULL, reads a signed 16-bit offset and a pointer out of a nested
 struct (`arg0->+0x18->+0x18`, offset `+0x50`/`+0x54`) and calls
@@ -538,7 +538,7 @@ named locals, which changed the evaluation order to match the ROM's
 trailing pointer field - not both reads up front).
 
 Twenty-ninth matched function: `CommitPowerDialogFrame` (ROM `0x08006714`,
-immediately before `DestroyPowerDialog` - joined `src/menus/power_dialog_draw.c` above it, no
+immediately before `DestroyPowerDialog` - joined `src/game/ui/power_dialog_draw.c` above it, no
 new split). A scene/frame setup routine: calls `WaitForVBlank(arg0)`, then
 `UploadPaletteCache`/`CommitOamBuffer` on two globals (`gPaletteCache`,
 `gOamBuffer` - the second call is our own already-matched
@@ -557,7 +557,7 @@ naturally from gcc just evaluating a sequence of plain absolute-address
 volatile pointer dereferences in program order.
 
 Thirtieth matched function: `AnimatePowerDialog` (ROM `0x08006700`, immediately
-before `CommitPowerDialogFrame` - joined `src/menus/power_dialog_draw.c` above it, no new split).
+before `CommitPowerDialogFrame` - joined `src/game/ui/power_dialog_draw.c` above it, no new split).
 Trivial: increments `arg0->field_1c`, then calls `AdvanceSpriteAnim(arg0->field_18)`
 - the same `field_18`/`field_1c` field names as `DestroyPowerDialog`, reinforcing
 that these functions likely all operate on the same "actor" or "entity"
@@ -582,7 +582,7 @@ power_dialog` (shared with `AnimatePowerDialog`/`CommitPowerDialogFrame`/
 `DestroyPowerDialog`) with `field_10`/`field_14` for `self`'s shape rather than
 defining a second struct for the same object.
 
-**Build toggle**: this function's C definition in `src/menus/power_dialog_draw.c` is
+**Build toggle**: this function's C definition in `src/game/ui/power_dialog_draw.c` is
 wrapped in `#if NON_MATCHING`, and the corresponding raw bytes in
 `asm/code_3_1.s` are wrapped in `.if NON_MATCHING == 0` / `.endif`, so
 exactly one definition of `DrawPowerDialog` is ever assembled. Default builds
@@ -1214,7 +1214,7 @@ Struct `wrapped_text_box` (the 3rd parameter) has only `field_0`/
 per-line pixel-width budget) named by use; the render-target object
 itself (2nd parameter) isn't given a named struct at all - just raw
 `u8 *self + offset` arithmetic throughout, matching the style already
-established in `DestroyPowerDialog` (`src/menus/power_dialog_draw.c`) for the exact same
+established in `DestroyPowerDialog` (`src/game/ui/power_dialog_draw.c`) for the exact same
 "record is an array of 8-byte `{s16, pad, void *}` entries, 0x10 bytes
 apart" shape - `self->0x130` holds a pointer to that array, and the
 function reads 3 different entries from it (`+0x18`/`+0x28`/`+0x38`)
@@ -1426,7 +1426,7 @@ struct into the render-target object's own `field_118`, computes a
 line-count limit (`params->field_c / self->field_11c`), then forwards
 to `DrawWrappedText` with that limit and **returns its result** - genuinely
 `s32`, not `void`, even though the one call site matched so far
-(`DrawPowerDialog` in `src/menus/power_dialog_draw.c`, still parked) ignores it. Caught
+(`DrawPowerDialog` in `src/game/ui/power_dialog_draw.c`, still parked) ignores it. Caught
 via the epilogue: an initial `void`-returning version compiled the
 final "restore LR and branch" step through `r0` (`pop {r0}; bx r0`),
 one register off from the ROM's `pop {r1}; bx r1` - changing the return
@@ -1533,7 +1533,7 @@ scratch-test comparisons up to the very last iteration.
 ### Cleanup pass over everything matched so far
 
 After the run of matches above, a pass over `src/gfx/graphics.c`,
-`src/menus/power_dialog_draw.c` and `src/actor/inline_copies_actors.cpp` to tighten up readability
+`src/game/ui/power_dialog_draw.c` and `src/game/vehicles/actor_destructors.cpp` to tighten up readability
 without touching generated code (`make compare` re-checked after every
 edit below):
 
@@ -1606,7 +1606,7 @@ previous cleanup, again re-checking both `make compare` and
     both `src/engine/util/line.cpp` and `src/engine/util/line_step.cpp` purely because the
     two functions that share it link far apart) moved to a new
     `include/engine/util/line_util.h`, included by both.
-  - `struct bitmap_font`/`struct icon_record` (`src/menus/power_dialog_draw.c`,
+  - `struct bitmap_font`/`struct icon_record` (`src/game/ui/power_dialog_draw.c`,
     previously with `field_10`/`field_14`/`field_20`/`field_24` named
     directly on `icon_record`) moved to a new `include/engine/text/bitmap_font.h`
     and `icon_record` was reshaped into `struct icon_slot { s16 offset;
@@ -2148,7 +2148,7 @@ and confidently understood before writing any C for it - a guessed
 reconstruction risks leaving wrong documentation behind, which is
 worse than leaving it unclaimed. Revisit with a dedicated session.
 
-**`DrawSpriteAt`** (new file `src/objects/sprite.c` - its real ROM
+**`DrawSpriteAt`** (new file `src/game/entities/sprite.c` - its real ROM
 address, `0x08007A48`, sits right after the still-unclaimed
 `DrawSpritePieces`/`DrawAffineSpritePieces` pair, so it isn't adjacent to any of
 `graphics.c`'s matched functions; `asm/code_3_2.s` was split at this
@@ -2194,7 +2194,7 @@ register even though `part` is dead right after, while plain C let
 the allocator overwrite `part`'s own register in place instead.
 
 **Parked, not matched: `GetSpriteBounds`** (ROM `0x08007B00`, right after
-`ResetSpriteObj`, in `src/objects/sprite.c`): builds an AABB for
+`ResetSpriteObj`, in `src/game/entities/sprite.c`): builds an AABB for
 `part`'s current animation keyframe, via the shared `SetAabbPos`
 (set-position)/`SetAabbSize` (set-size) primitive already seen
 elsewhere. The keyframe table pointer lives at `part+0x20`, indexed by
@@ -2275,10 +2275,10 @@ addressing-mode folding, emitting an extra `add`/`mov r0,#0` pair
 instead - strictly worse). Kept in-tree as a `#if NON_MATCHING` C
 reconstruction alongside the byte-exact NAKED `#else` branch (default
 builds unaffected) rather than left only in git history, given how
-close it is - see `src/objects/sprite.c` for the full writeup.
+close it is - see `src/game/entities/sprite.c` for the full writeup.
 
 **Parked, not matched: `GetSpriteHitbox`** (ROM `0x08007B98`, right after
-`GetSpriteBounds`, in `src/objects/sprite.c`): the same AABB-for-
+`GetSpriteBounds`, in `src/game/entities/sprite.c`): the same AABB-for-
 keyframe shape as `GetSpriteBounds` above, for a second, differently-laid-
 out keyframe table - `offX`/`offY`/`w`/`h` sit at `rec+4`/`+6`/`+8`/
 `+9` here rather than `rec+0xc`/`+0xe`/`+0x10`/`+0x11`, reusing the
@@ -2342,7 +2342,7 @@ helped one spot and broke another already-matching one. Parked as
 same call as `GetSpriteBounds` and the other parked functions above.
 
 **`GetSpriteAttackBox`** (ROM `0x08007C30`, right after `GetSpriteHitbox`, in the
-new `src/objects/sprite.c`): a third AABB-for-keyframe builder -
+new `src/game/entities/sprite.c`): a third AABB-for-keyframe builder -
 same `SetAabbPos`/`SetAabbSize`-based shape as `GetSpriteBounds`/
 `GetSpriteHitbox`, but this time the 6-byte `{s16 x, s16 y, u8 w, u8 h}`
 record is chosen by a `switch` on `(*(GetSpriteFrame(part)+4))>>4` (0-6,
@@ -2401,7 +2401,7 @@ shifting everything downstream. Fixed by splitting `asm/code_3_2_2.s`
 itself a second time, at the `GetSpriteBodyBox` boundary right after
 `GetSpriteHitbox`'s NON_MATCHING guard: `asm/code_3_2_2.s` now ends there,
 a new `asm/code_3_2_3.s` picks up the (unchanged) remainder starting
-at `GetSpriteBodyBox`, and the new `src/objects/sprite.c` (holding
+at `GetSpriteBodyBox`, and the new `src/game/entities/sprite.c` (holding
 just `GetSpriteAttackBox`) is inserted between them in `ldscript.txt` - the
 same "split file, new file for the non-adjacent function" pattern used
 for `DrawSpriteAt`/`sprite.c` itself, just one level deeper. (The
@@ -2504,7 +2504,7 @@ warning applies here too, just with a harder failure. Parked as
 as `GetSpriteBounds`/`GetSpriteHitbox` above.
 
 **`IsSpriteObjOnScreen`** (ROM `0x08007F78`, right after `CheckSpritePickup`, new
-`src/objects/sprite.c`): a visibility/on-screen check, the same
+`src/game/entities/sprite.c`): a visibility/on-screen check, the same
 shape as `IsEntityNearCamera` in `graphics.c` - `part+0x25 == 1` is a fast
 "always visible" override; otherwise `part+0xd` bit 2 gates a call to
 `_call_via_r2` with a 4-word "region" built from
@@ -2554,7 +2554,7 @@ downstream. Fixed the same way: split `asm/code_3_2_3.s` again, this
 time at the `SpriteObjOverlapsRect` boundary right after `CheckSpritePickup`'s guard,
 into `asm/code_3_2_3.s` (now just the parked `CheckSpritePickup`) and a new
 `asm/code_3_2_4.s` (the unchanged remainder), with the new
-`src/objects/sprite.c` (holding just `IsSpriteObjOnScreen`) inserted
+`src/game/entities/sprite.c` (holding just `IsSpriteObjOnScreen`) inserted
 between them in `ldscript.txt`.
 
 **`UpdateHudLives`** (ROM `0x08027838`, 262 bytes, contributed via PR #1 by
@@ -2637,7 +2637,7 @@ toolchain now have three known-different failure shapes - avoid them
 entirely and let the allocator find r7 on its own wherever possible.
 
 Also needed a trailing `asm(".align 2, 0");` after this function - it
-is the last one in `src/objects/sprite.c`, and without it the
+is the last one in `src/game/entities/sprite.c`, and without it the
 2-byte gap gcc leaves between this object's end and the next linked
 object filled with a real `nop` encoding (`0x46c0`) instead of the
 ROM's zero bytes (the raw `.s` file's original `.align 2, 0` directive
@@ -2691,7 +2691,7 @@ chase this - same call as `GetSpriteBounds`/`GetSpriteHitbox`/`CheckSpritePickup
 above.
 
 **`SpriteHitboxOverlaps`** (ROM `0x080080C0`, right after `AdvanceSpriteAnim`, new
-`src/objects/sprite_obj.c`): builds `part`'s AABB (the same
+`src/game/entities/sprite_obj.c`): builds `part`'s AABB (the same
 keyframe-table shape/record layout as `GetSpriteHitbox` -
 `{s16 offX, s16 offY, u8 w, u8 h}` at `rec+4`/`+6`/`+8`/`+9` - but
 inlined directly here rather than calling it, since this function
@@ -2724,13 +2724,13 @@ needed for this, gcc emits it automatically once enough values need
 protecting past the calls.
 
 Needed a trailing `asm(".align 2, 0");` since it's the only function
-in `src/objects/sprite_obj.c` - same established alignment gotcha as
+in `src/game/entities/sprite_obj.c` - same established alignment gotcha as
 `SpriteObjOverlapsRect` above. Not ROM-adjacent to `sprite.c` either (the
 parked `AdvanceSpriteAnim` sits raw between them, in `asm/code_3_2_4.s`), so
 needed the same file-split treatment: `asm/code_3_2_4.s` split again
 at the `GetSpriteAnimPaletteSlot` boundary right after `AdvanceSpriteAnim`'s guard, into
 `asm/code_3_2_4.s` (now just the parked `AdvanceSpriteAnim`) and a new
-`asm/code_3_2_5.s`, with the new `src/objects/sprite_obj.c`
+`asm/code_3_2_5.s`, with the new `src/game/entities/sprite_obj.c`
 (holding just `SpriteHitboxOverlaps`) inserted between them in `ldscript.txt`.
 
 **`GetSpriteAnimPaletteSlot`** (ROM `0x0800815C`, right after `SpriteHitboxOverlaps`, same
@@ -2890,7 +2890,7 @@ plus `arm-none-eabi-as` assemble against the ROM's raw bytes at
 `0x08008278`, then via full clean `make compare`.
 
 **`IsSpriteObjInsideRect`** (ROM `0x08008304`, right after `OffsetToHitboxEdgeStart`, new
-`src/objects/sprite_obj.c`): `part+0x25 == 1` is the same fast
+`src/game/entities/sprite_obj.c`): `part+0x25 == 1` is the same fast
 override seen in `IsSpriteObjOnScreen`/`SpriteObjOverlapsRect`; otherwise defers entirely
 to `IsEntityInsideRect` (already matched in `graphics.c`), forwarding a `box`
 argument straight through untouched. Matched on the second attempt: the
@@ -2908,7 +2908,7 @@ differences. Same file-split treatment as the previous non-adjacent
 functions in this cluster: `asm/code_3_2_5.s` split at the
 `IsSpriteObjNearCamera` boundary into itself (now just the three parked
 functions) and a new `asm/code_3_2_6.s`, with the new
-`src/objects/sprite_obj.c` inserted between them in `ldscript.txt`.
+`src/game/entities/sprite_obj.c` inserted between them in `ldscript.txt`.
 
 **`IsSpriteObjNearCamera`** (ROM `0x08008328`, right after `IsSpriteObjInsideRect`, same
 file): the same `part+0x25 == 1` fast-override shape, deferring to
@@ -2977,7 +2977,7 @@ padding). Confirmed byte-identical via isolated compile plus
 `0x080083B8`, then via full clean `make compare`.
 
 **`GetSpriteObjPriority`** (ROM `0x08008408`, right after `GetSpriteFrame`, new
-`src/objects/sprite_obj.c`): the same `gLevelLayers` sub-object
+`src/game/entities/sprite_obj.c`): the same `gLevelLayers` sub-object
 convention used throughout this ROM region (`IsSpriteObjOnScreen`/
 `IsEntityNearCamera`) - if `gLevelLayers+0x2b` is nonzero, returns the
 sub-object's `+0x34` byte's low 2 bits minus 1; otherwise returns
@@ -2991,7 +2991,7 @@ parked `GetSpriteFrame` sits raw between them), so it needed the same
 file-split treatment used throughout this cluster: `asm/code_3_2_6.s`
 split at the `CreateSpriteObj` boundary into itself (now just the parked
 `GetSpriteFrame`) and the new `asm/code_3_2_7.s`, with the new
-`src/objects/sprite_obj.c` inserted between them in `ldscript.txt`.
+`src/game/entities/sprite_obj.c` inserted between them in `ldscript.txt`.
 
 **`CreateSpriteObj`** (ROM `0x08008434`, right after `GetSpriteObjPriority`, same
 file): a `struct actor`-shaped object constructor - allocates via
@@ -3252,7 +3252,7 @@ get/set pair, no other logic. Both matched on the first attempt.
 `ResetSpriteFrameTimer`/`SetSpriteAnimIndex`/`SetSpriteAnim`/`IncSpriteFrameIndex`/`IncSpriteFrameTimer`/
 `SetSpriteMoveAxes`/`GetSpriteMoveAxes`/`GetSpriteFrameIndex`/`GetSpriteFrameTimer`/`GetSpriteAnim`/
 `GetSpriteGfxMode`** (ROM `0x0800878C`-`0x08008824`, new
-`src/objects/sprite_obj.cpp`): two
+`src/game/entities/sprite_obj.cpp`): two
 more `GetSpriteAnimPaletteId`-style keyframe-record byte lookups (`+0x16` frame
 count, `+0x15` duration) plus a run of plain `part+0x24`/`+0x28`/
 `+0x2d`/`+0x30`/`+0x34` field get/set/reset/increment accessors (the
@@ -3276,7 +3276,7 @@ anything appended past the guard in `sprite_obj.c` was landing
 with the usual file split: `asm/code_3_2_7.s` split again at the
 `SetSpriteGfxMode` boundary into itself (now holding just the parked
 `IsSpriteAnimLooping`) and a new `asm/code_3_2_8.s`, with a new
-`src/objects/sprite_obj.cpp` holding this whole batch inserted between
+`src/game/entities/sprite_obj.cpp` holding this whole batch inserted between
 them in `ldscript.txt`.
 
 **Parked, not matched: `IsSpriteAnimLooping`** (ROM `0x08008770`, right after
@@ -3322,7 +3322,7 @@ it explicitly. Confirmed byte-identical via isolated compile plus
 raw bytes at `0x08008770`, then via full clean `make compare`.
 
 **`SetSpriteGfxMode`** (ROM `0x08008830`, right after `GetSpriteGfxMode`, new
-`src/objects/sprite_obj.cpp`): sets `part+0x28`'s low 2 bits to
+`src/game/entities/sprite_obj.cpp`): sets `part+0x28`'s low 2 bits to
 `value & 3`. Same accumulator-register pattern and `+r`-on-the-other-
 operand fix as `SetSpritePalette` above (mask `-4` computed via a fresh
 `movs`+`negs`, not relative to the leftover `3` register value).
@@ -3478,7 +3478,7 @@ explicitly restructuring the loop as a `while` with a `count` local
 mirroring the ROM's cached-register reuse was tried and **regressed**
 the `i`-onto-`r7` fix (raised pressure too far, pushed `i` back onto
 `r8`/`r9`), so it was reverted. The `#if NON_MATCHING` branch in
-`src/objects/sprite_obj.cpp` now carries this improved-but-still-
+`src/game/entities/sprite_obj.cpp` now carries this improved-but-still-
 imperfect reconstruction (default builds still use the byte-exact
 NAKED transcription) - see the file for the full technique writeup.
 Given the size of the remaining gap (roughly 15-20 residual
@@ -3577,7 +3577,7 @@ plain unpinned local pointer, and reading the fields into named
 temporaries before the call) reproduced; gcc's own internal scheduling
 insisted on either the hoist-to-`r7` or the `r2`-collision shuffle
 every time. The `#if NON_MATCHING` branch in
-`src/objects/sprite_obj.cpp` now carries this improved-but-still-
+`src/game/entities/sprite_obj.cpp` now carries this improved-but-still-
 imperfect reconstruction (default builds still use the byte-exact
 NAKED transcription).
 
@@ -3640,7 +3640,7 @@ C has no way to express directly.
 
 **`CullPartList`** (ROM `0x08008C80`, right after the raw, unclaimed
 `CollidePartWithPlayer`... no wait, right after the *parked* `CollidePartWithPlayer`, new
-`src/objects/part_list_collide.cpp`): the same "extended screen box" filter
+`src/game/entities/part_list_collide.cpp`): the same "extended screen box" filter
 shape as `UpdatePartList`'s own `boxB` pass - the plain 240x160 GBA
 screen region, in Q8, at the `gLevelLayers` sub-object's own
 position - iterating `manager`'s array (`manager+0xc` base,
@@ -3691,7 +3691,7 @@ another mismatch the isolated test missed and only the full clean
 build caught. Matched after fixing it.
 
 **Parked, not matched: `CollidePartWithObject`** (ROM `0x08008D80`, right after
-`CollidePartsOfClass`, same file - `src/objects/sprite_obj.cpp`, since its
+`CollidePartsOfClass`, same file - `src/game/entities/sprite_obj.cpp`, since its
 real ROM address sits between the parked `CollidePartWithPlayer` and the raw,
 unclaimed `DrawPartList`). `CollidePartWithPlayer`'s sibling: resolves the same
 collision-hit logic when the "compare viewport" doesn't match the
@@ -3780,7 +3780,7 @@ All six were verified both in isolation and via a full recompile of
 aren't sufficient proof.
 
 **Parked, not matched: `InitCrateList`** (ROM `0x08008F20`, right after
-`InitPartList`, `src/objects/part_list.c`): initializes a
+`InitPartList`, `src/game/entities/part_list.c`): initializes a
 fixed-slot object-pool manager struct - `+0x0` active count (0),
 `+0x4` capacity, `+0x8` a `count`-pointer array (zeroed), `+0xc` a
 `count`-entry array of 0x14-byte nodes, `+0x10`..`+0x40F` and
@@ -3811,7 +3811,7 @@ two-phase search whose higher-level "why" isn't recoverable without
 more context. Left raw rather than guess.
 
 **Parked, not matched: `LinkCrateToActiveBucket`** (ROM `0x08009150`, right after
-the raw `UnlinkCrateFromGrid`, `src/objects/part_list.c`): searches every
+the raw `UnlinkCrateFromGrid`, `src/game/entities/part_list.c`): searches every
 bucket (254 down to 0, i.e. every bucket except the special "large
 object" bucket 255) of `manager`'s spatial hash grid for a node whose
 data pointer equals `obj`. On the first match: if the object's `+0xc`
@@ -3850,7 +3850,7 @@ list-management logic whose higher-level purpose isn't recoverable
 without more context. Left raw rather than guess.
 
 **Matched: `DrawCrateList`** (ROM `0x0800944C`, right after the raw
-`UpdateCrateList`, now `src/crates/crate_list_update.cpp` - moved out of
+`UpdateCrateList`, now `src/game/crates/crate_list_update.cpp` - moved out of
 `part_list.c`, since its real ROM address isn't adjacent to that
 file's own matched functions, per docs/workflow.md step 4's "needs its
 own new .c file" case): the same "extended screen box" filter shape as
@@ -3905,7 +3905,7 @@ section-end padding artifact from testing the function in isolation,
 outside the function's own `.size` boundary) plus a full clean `make
 compare` (`crashbandicootxs.gba: La suma coincide`).
 
-Moved into its own new translation unit, `src/crates/crate_list_update.cpp`
+Moved into its own new translation unit, `src/game/crates/crate_list_update.cpp`
 (also hoisting `struct pool_manager`'s definition there, mirroring the
 copy `crate_list.c` and `part_list.c` each keep - it was named
 `actor_part11g.c` rather than the more obvious `actor_part11f.c`, since
@@ -3919,7 +3919,7 @@ new `crate_list_link_active.o` (#771: now part of `crate_list_update.o`) entry i
 `crate_list_collide.o` (`CollideCrateGrid`'s own new home), preserving ROM order.
 
 **Parked, not matched: `CollideCrateGrid`** (ROM `0x08009528`, right after
-the now-matched `DrawCrateList`, `src/objects/part_list.c`): the same
+the now-matched `DrawCrateList`, `src/game/entities/part_list.c`): the same
 "extended screen box" grid-iteration shape as `DrawCrateList`, but
 dispatching each hit to `CollideCrateGridPartWithPlayer` (when the box's "compare
 viewport" argument equals `gPlayer`, the player) or
@@ -3958,10 +3958,10 @@ was hand-transcribed as literal Thumb asm instead of staying an
 unclosable `#if NON_MATCHING` C draft: the ROM's own ldr/str/lsl/asr
 sequence, one-to-one, both grid passes byte-identical to each other.
 Moved out of `part_list.c` into its own new translation unit,
-`src/crates/crate_list_collide.cpp` (its real ROM address isn't adjacent to
+`src/game/crates/crate_list_collide.cpp` (its real ROM address isn't adjacent to
 that file's other functions - it sits between `DrawCrateList`, still raw
 asm in `asm/code_3_2_13_944c.s`, and `CollideCrateGridPartWithPlayer`,
-`src/crates/crate_list_collide.cpp` - per docs/workflow.md step 4's "needs
+`src/game/crates/crate_list_collide.cpp` - per docs/workflow.md step 4's "needs
 its own new .c file" case). Its raw `.if NON_MATCHING == 0` guard block
 was removed from `asm/code_3_2_13_944c.s` (which still carries
 `DrawCrateList`'s own guard, untouched); `ldscript.txt` got a new
@@ -3976,7 +3976,7 @@ decompiled C does, so `CollideCrateGrid` stays filed as parked (now "parked,
 NAKED" rather than "parked, NON_MATCHING").
 
 **Parked, not matched: `CollideCrateGridPartWithPlayer`** (ROM `0x080096C0`, right after
-the parked `CollideCrateGrid`, `src/objects/part_list.c`): `CollidePartWithPlayer`'s
+the parked `CollideCrateGrid`, `src/game/entities/part_list.c`): `CollidePartWithPlayer`'s
 twin, confirmed by reading its disassembly directly against
 `CollidePartWithPlayer`'s own - byte-identical collision-hit resolution logic
 (mode dispatch via `gLevelState`, AABB push-out via
@@ -3998,7 +3998,7 @@ name differ), `CollideCrateGridPartWithPlayer` was hand-transcribed as literal T
 instead of staying an unclosable `#if NON_MATCHING` C draft, the same
 technique already used for `CollidePartWithPlayer`, `CollidePartWithObject`, and
 `CollideCrateGridPartWithObject`. Moved out of `part_list.c` into its own new
-translation unit, `src/crates/crate_list_collide.cpp` (its real ROM
+translation unit, `src/game/crates/crate_list_collide.cpp` (its real ROM
 address isn't adjacent to that file's other functions - it sits
 between `CollideCrateGrid`, still raw asm in `asm/code_3_2_13_944c.s`, and
 `CollidePlayerWithCrates`, `crate_list_collide.cpp` - per docs/workflow.md step 4's
@@ -4024,7 +4024,7 @@ higher-level purpose isn't recoverable without more context. Left raw
 rather than guess.
 
 **Parked, not matched: `ResetCrateList`** (ROM `0x08009914`, right after
-the raw `CollidePlayerWithCrates`, `src/objects/part_list.c`):
+the raw `CollidePlayerWithCrates`, `src/game/entities/part_list.c`):
 resets a pool manager to empty. First tears down every active object
 in `slotArray[0..activeCount)` - firing each one's `table+0x50/0x54`
 trampoline via `_call_via_r2` with constant arg `3` if non-`NULL`, then
@@ -4125,7 +4125,7 @@ itself (a physics/collision step-probe calling still-unexamined
 this remains a separate raw span for now.
 
 **Parked, not matched: `CollideCrateGridPartWithObject`** (ROM `0x080099F0`, right after
-the raw `UnlinkCrateFromGrid`-`ResetCrateList` span, `src/crates/crate_list.c`):
+the raw `UnlinkCrateFromGrid`-`ResetCrateList` span, `src/game/crates/crate_list.c`):
 byte-identical in shape to the already-parked `CollidePartWithObject` - the same
 `boxH` stack-layout gap applies. See "Parked, not matched:
 `CollidePartWithObject`" above for the full writeup; this is its twin.
@@ -4135,9 +4135,9 @@ computed delta was already confirmed correct (the ROM instruction
 stream turned out byte-identical to `CollidePartWithObject`'s, down to the label
 offsets - only the branch target label and the compiled symbol name
 differ), `CollideCrateGridPartWithObject` was hand-transcribed as literal Thumb asm in
-`src/crates/crate_list.c` instead of staying an unclosable
+`src/game/crates/crate_list.c` instead of staying an unclosable
 `#if NON_MATCHING` C draft, the same technique already used for
-`CollidePartWithObject` (`src/objects/part_list_collide.cpp`). Its raw `.if
+`CollidePartWithObject` (`src/game/entities/part_list_collide.cpp`). Its raw `.if
 NON_MATCHING == 0` guard block was removed from
 `asm/code_3_2_13_9914.s` (which still carries `ResetCrateList`'s own
 still-parked guard, untouched); `crate_list.o` already linked right
@@ -4196,7 +4196,7 @@ each one only surfacing via the full integrated rebuild - the
 isolated per-function compile looked correct both times.
 
 **Parked, not matched: `ResolvePlayerContact`** (ROM `0x08009D5C`, right after
-`CheckPlayerContact`, `src/objects/moving_sprite.cpp`): fires a
+`CheckPlayerContact`, `src/game/entities/moving_sprite.cpp`): fires a
 `part->table+0x68`-driven trampoline (the established "dead read"
 idiom) based on `gLevelState`'s mode: mode 0 fires it on the
 player with `(0, part->field_0A, 0)`; modes 1-2 fire it on the player
@@ -4234,7 +4234,7 @@ functions (`DestroySpriteObj`, `UpdateSpriteObj`) already matched earlier this
 session.
 
 **Parked, not matched: `ApplySpriteVelocity`** (ROM `0x08009DF4`, right after
-the raw AI/collision cluster, new `src/objects/moving_sprite.c`): a
+the raw AI/collision cluster, new `src/game/entities/moving_sprite.c`): a
 velocity/position integrator. For each axis (X: `self+0x60` velocity,
 `self+0x50` max, `self+0x4c` accel; Y: `self+0x64`/`self+0x5c`/
 `self+0x58`), steps the velocity toward its max by the accel amount,
@@ -5058,7 +5058,7 @@ four new small files (non-contiguous, since several functions in
 between resist matching or aren't understood well enough yet, per the
 project's "one `.c` file per contiguous ROM region" rule):
 
-- **`src/frontend/language_select.c`** (`LoadTaggedAssetBuffered`, `InitCompanyLogos`,
+- **`src/game/ui/language_select.c`** (`LoadTaggedAssetBuffered`, `InitCompanyLogos`,
   `DestroyCompanyLogos`, `DestroyLogoActor`, `RunLanguageSelect`, `LanguageSelectInput`) - reads
   like game/HUD-side code that merely *calls into* audio (`PlaySfx`)
   rather than GAX2 engine internals: a small on-screen 0-5 "counter"
@@ -5107,7 +5107,7 @@ project's "one `.c` file per contiguous ROM region" rule):
     call via a `goto`, matching the ROM's own tail-sharing rather than
     duplicating the call in an `if`/`else if`.
 
-- **`src/frontend/language_select_setup.c`** (`LoadLanguageSelectBg`,
+- **`src/game/ui/language_select_setup.c`** (`LoadLanguageSelectBg`,
   `LanguageSelectBlink`, `CommitLanguageSelectFrame`, `DestroyLanguageSelect`, `InitLanguageSelect`,
   `CloseLanguageSelect`, `OpenLanguageSelect`) - the widget's graphics/BG setup,
   draw-flush, and init/teardown pair. Non-adjacent to the file above
@@ -5173,7 +5173,7 @@ project's "one `.c` file per contiguous ROM region" rule):
 loop and its supporting tile-cache-init/field-copy helper - but they
 hit the exact same many-register (`r8`/`r9`/`sl`) gcc-2.9 allocation
 difficulty already documented for `DrawPowerDialog` in
-`src/menus/power_dialog_draw.c`, no matter how the source was rephrased);
+`src/game/ui/power_dialog_draw.c`, no matter how the source was rephrased);
 `__divdi3`/`__udivdi3`/`__udivsi3`/`__muldi3`/`GaxZeroFill`
 (generic 64-bit software division/multiply helpers interleaved in the
 GAX2 range, per `docs/audio.md`'s existing false-positive notes);
@@ -5197,7 +5197,7 @@ parked (`NON_MATCHING`, semantics/field offsets confirmed, one specific
 register-allocation gap each), and 2 (`UpdateGameFrame` itself and
 `StartTimeTrial`) were left fully raw.
 
-**Matched (`src/level/level_state.c`, 20 functions):**
+**Matched (`src/game/level/level_state.c`, 20 functions):**
 
 - **`FreezeLevelClock`/`TickLevelClock`**: record 47's periodic-trigger
   setter/decrementer (see `docs/rom_map.md`, "An achievement/unlock-
@@ -5297,7 +5297,7 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
 
 **Parked (`NON_MATCHING`, real bytes in `asm/code_3_2_17_22bf0.s`):**
 
-- **`EndBonusRound`/`SetCheckpointAtPlayer`** (`src/level/bonus_round.c`): the
+- **`EndBonusRound`/`SetCheckpointAtPlayer`** (`src/game/level/bonus_round.c`): the
   level-start/checkpoint-restore progress-total updater and its
   "refresh cached frame count / snapshot `self`'s first `0x68` bytes"
   helper (called recursively by `EndBonusRound` itself, and again from
@@ -5333,7 +5333,7 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
   reconstruction with confidence in one session - a natural next
   chunk for whoever picks this up.
   *Later pass (big NAKED retry):* now real C under old_agbcc in
-  `src/level/game_frame.c`. See
+  `src/game/level/game_frame.c`. See
   [docs/matching/archive/big-naked-retry.md](matching/archive/big-naked-retry.md).
 - **`StartTimeTrial`** (`asm/code_3_2_17_22d50.s`, ROM `0x08022D50`-
   `0x08022EA8`) - a level-start/reset routine: clears `self+0x8c`/
@@ -5367,7 +5367,7 @@ count was 24. Matched 14, left 10 untouched in the raw `.s` files (with
 reasons below) rather than force low-confidence reconstructions of the
 chunk's biggest, least-understood cluster in one pass.
 
-**Matched, new `src/system/main_loop.cpp`:**
+**Matched, new `src/game/level/main_loop.cpp`:**
 
 - **`MainLoop`** (ROM `0x08026EEC`): the game's actual top-level loop,
   called once from `AgbMain` (`src/engine/sys/main.cpp`). Sets up the central
@@ -5375,7 +5375,7 @@ chunk's biggest, least-understood cluster in one pass.
   `PlayBootCutscene`/`ShowCompanyLogos`/`PlayIntroCutscene` - none of those four are
   understood beyond "state setup", left as opaque `extern` calls), the
   on-screen counter widget (`OpenLanguageSelect`/`RunLanguageSelect`/`CloseLanguageSelect`,
-  already-matched in `src/frontend/language_select*.c`), then loops
+  already-matched in `src/game/ui/language_select*.c`), then loops
   `UpdateGameFrame` forever, freeing scratch memory (`MEM_HEAP_BOTH`)
   before and after each frame. Never actually returns - the `s32`
   return type only exists to satisfy `AgbMain`'s
@@ -5436,11 +5436,11 @@ first" convention) - `hud_digit_part.table` is the one new field this
 pass added, splitting it out of what was previously an opaque
 `unknown_00[0x20]` blob.
 
-**Matched, new `src/hud/hud_slide.c`** (`UpdateHudSlides`-
+**Matched, new `src/game/ui/hud_slide.c`** (`UpdateHudSlides`-
 `StepHudSlide`, contiguous):
 
 A 3-slot icon "blink" animation timer on the `gHud`
-object (already referenced as `void *` from `src/level/bonus_round.c`/
+object (already referenced as `void *` from `src/game/level/bonus_round.c`/
 `level_state.c` - kept the same untyped convention here rather than
 naming a struct, since the object extends past this file's own fields,
 to at least `+0x28` per `SetHudCrateTotal`). Each slot is a `{state, timer}`
@@ -5634,7 +5634,7 @@ every function in this cluster; none of the three objects (self,
 table, part) has its full shape pinned down yet, so every access stays
 a raw offset with a doc comment rather than a guessed struct.
 
-Matched (`src/player/action_ctrl_states.c`/`action_ctrl_land.c`):
+Matched (`src/game/crash/action_ctrl_states.c`/`action_ctrl_land.c`):
 `ActionCtrlStateStandUp`, `ActionCtrlStateCrawlStart`, `ActionCtrlStateCrawlStandUp`, `ActionCtrlStateBodySlamLand`.
 
 - The `part+0xd` bit-clear idiom (`& -2`/`& -3`, shared by
@@ -5875,14 +5875,14 @@ screen with (per that section) four numeric-slider rows drawn via a
 shared icon-manager centered-label toolkit (the same
 `gSmallFont`/`gLargeFont` structs and `_call_via_r2`/
 `GetUiText` calls `DrawPowerDialog`, already parked in
-`src/menus/power_dialog_draw.c`, uses for its flanking-icon draw). 16 of the
+`src/game/ui/power_dialog_draw.c`, uses for its flanking-icon draw). 16 of the
 25 functions matched; the rest hit that exact same class of gcc-2.9
 register-allocation difficulty `DrawPowerDialog` already hit, or (two of
 them) weren't understood confidently enough to force a reconstruction.
 
 **Matched** (`src/save/save_menu_ui.c`, in `save_menu_draw.cpp` since #771):
 `LoadSaveMenuBg` (BG-load helper - literally the same shape as
-`LoadLanguageSelectBg` in `src/frontend/language_select_setup.c`, just at
+`LoadLanguageSelectBg` in `src/game/ui/language_select_setup.c`, just at
 different field offsets and with an extra `field_0 = 0`),
 `RefreshSaveSlotSummaries`/`SummarizeProgress` (per-row stats gatherer/aggregator, sharing
 a five-function battery: `CountClearGems`/`CountRelics`/`GetProgressLives`/
@@ -5909,7 +5909,7 @@ established alignment-padding gotcha - gcc's own padding NOP encodes as
 
 **Parked** (`.if NON_MATCHING == 0` across `asm/code_3_1_10_3.s`/
 `asm/code_3_1_10_4.s`/`asm/code_3_1_10_5.s`, `#if NON_MATCHING` C
-reconstructions in `src/save/save_menu_draw.c`) - `LinkExchangeSaveData`,
+reconstructions in `src/game/ui/save_menu_draw.c`) - `LinkExchangeSaveData`,
 `DrawSaveMenuMessageLines`, `DrawSaveMenuCancel`, `DrawYesNoPrompt`, `DrawSaveSlots`,
 `DrawEmptySlotLabel`, `DrawSaveMenuTitle`:
 
@@ -5978,7 +5978,7 @@ reconstructions in `src/save/save_menu_draw.c`) - `LinkExchangeSaveData`,
 and `DrawYesNoPrompt`, appended to the end of `asm/code_3_1_10_3.s` (kept
 in its original ROM position rather than moved, exactly like
 `DrawPowerDialog`) rather than getting cut out - since every function in
-`src/save/save_menu_draw.c` is `#if NON_MATCHING`-guarded, that file
+`src/game/ui/save_menu_draw.c` is `#if NON_MATCHING`-guarded, that file
 compiles to nothing in a default build and its ldscript slot is simply
 empty. `asm/code_3_1_10_4.s` (new: `DrawYesNoPrompt` through `InitSaveMenuIcons`)
 and `asm/code_3_1_10_5.s` (new: `DrawEmptySlotLabel`/`DrawSaveMenuTitle`) hold the
@@ -6319,7 +6319,7 @@ documents).
 **Real fixes found along the way**, all kept in the parked C since
 they're genuinely correct, not guesses:
 - `id` (`arg0` then, read at the time as the spawn position's x; it is
-  the entity id, include/level.h's `entity_spawn_fn`) has to stay `u32` in the
+  the entity id, include/game/level/level.h's `entity_spawn_fn`) has to stay `u32` in the
   signature, not `u16` like the other three - the ROM never truncates
   it at function entry, only at each of its two call sites (`CreatePlatform`/
   `CreateSpriteObj`), which only happens when the *caller's* declared
@@ -6352,7 +6352,7 @@ they're genuinely correct, not guesses:
   field type, is what makes the idiom reproduce.
 
 **Parked (`NON_MATCHING`, 4): `SpawnRedGemPlatform`/`SpawnYellowGemPlatform`/
-`SpawnGreenGemPlatform`/`SpawnBlueGemPlatform`** (`src/level/spawn_gem_platforms.c`, real
+`SpawnGreenGemPlatform`/`SpawnBlueGemPlatform`** (`src/game/objects/spawn_gem_platforms.c`, real
 bytes staying in place in `asm/code_3_2_17_14674.s` under a new `.if
 NON_MATCHING == 0` guard - no file split needed since all four
 functions are parked together as one contiguous block, not mixed with
@@ -6406,7 +6406,7 @@ parked, 12 left untouched - see below for the split.
 
 **Matched (7):**
 
-- **`SaveMenuMessageInput`** (`src/save/save_menu.c`) - the composite
+- **`SaveMenuMessageInput`** (`src/game/ui/save_menu.c`) - the composite
   screen's confirm/cancel handler: on flags bit 0 or bit 3, plays the
   standard confirm SFX cue and resets `state`/`field_10`. Needed the
   ROM's exact two-branch `if (flags&1) goto confirm; else if
@@ -6414,12 +6414,12 @@ parked, 12 left untouched - see below for the split.
   condition lets gcc fold the mask into one `and #9` test, which
   doesn't keep the constant `1` live in a register the way the ROM's
   two-step `ands`/`ands` does for the later `str` of `field_10`.
-- **`CommitSaveMenuFrame`** (`src/save/save_menu.c`) - restores
+- **`CommitSaveMenuFrame`** (`src/game/ui/save_menu.c`) - restores
   `REG_DISPCNT`/`REG_BG0HOFS` from two newly-named `save_menu`
   fields (`field_1c`/`field_0`) and re-flushes the VRAM/OAM commit
   queues. Extended `save_menu.h`'s `unused_00`/`unused_1c`
   padding into named fields for these two, per docs/workflow.md step 7.
-- **`CloseSaveMenu`/`OpenSaveMenu`** (`src/save/save_menu.c`) - a
+- **`CloseSaveMenu`/`OpenSaveMenu`** (`src/game/ui/save_menu.c`) - a
   teardown/construct pair for the "connecting..." SIO-handshake spinner
   object (`gSaveMenu`) LinkExchangeSaveData (save_menu_ui.c) already
   documents allocating from. `OpenSaveMenu` needed its destination
@@ -6428,7 +6428,7 @@ parked, 12 left untouched - see below for the split.
   sitting between the `FreeUnlockedPaletteSlots` and `OperatorNew` calls) rather than
   let via a single chained expression, which put gcc's address
   computation after both calls instead.
-- **`InitPauseCrystalsPage`** (`src/menus/pause_menu_pages_init.c`) - the first of five
+- **`InitPauseCrystalsPage`** (`src/game/ui/pause_menu_pages_init.c`) - the first of five
   settings-row icon-widget constructors on the composite screen's
   "results" sub-region (new locally-scoped `struct pause_menu`/
   `struct settings_icon_actor` - see their header comments for why they
@@ -6444,7 +6444,7 @@ parked, 12 left untouched - see below for the split.
   propagation otherwise collapses the ROM's `movs r1,#0x10`/`rsbs
   r1,r1,#0` into a single `sub` relative to the just-used `0xf` mask,
   which the ROM never does.
-- **`PauseMenuCursorDown`/`PauseMenuCursorUp`** (`src/menus/pause_menu_widgets.c`) - a
+- **`PauseMenuCursorDown`/`PauseMenuCursorUp`** (`src/game/ui/pause_menu_widgets.c`) - a
   small wrap-increment/decrement counter pair on a settings-row
   sub-widget (new minimal `struct row_counter_widget`, deliberately not
   asserted identical to `pause_menu` despite the call graph
@@ -6454,7 +6454,7 @@ parked, 12 left untouched - see below for the split.
 **Parked (`NON_MATCHING`, 6):**
 
 - **`InitPausePowersPage`/`InitPauseGemsPage`/`InitPauseRelicsPage`/`InitPauseTimeTrialPage`**
-  (`src/menus/pause_menu_pages_init.c`) - the remaining four icon-widget
+  (`src/game/ui/pause_menu_pages_init.c`) - the remaining four icon-widget
   constructors (4/5/3-element arrays plus the medal/rank-award single
   icon). Semantics fully understood and cross-checked against
   docs/rom_map.md's medal/rank writeup; each one's `field_29` tail
@@ -6466,7 +6466,7 @@ parked, 12 left untouched - see below for the split.
   closing it would need the same heavy per-call-site
   `SUB_8006600_*`-style macros across four near-identical functions,
   more than this pass had budget for.
-- **`PauseMenuVolumeDown`/`PauseMenuVolumeUp`** (`src/menus/pause_menu_widgets.c`, a
+- **`PauseMenuVolumeDown`/`PauseMenuVolumeUp`** (`src/game/ui/pause_menu_widgets.c`, a
   second minimal `struct pause_screen_row_counts` view of the same
   object) - a matched inc/dec pair for a per-row percentage counter,
   formatting a `" <NN%>"`-shaped scratch string and pushing it through
@@ -6495,15 +6495,15 @@ than this session's budget covered. Left for a follow-up pass; issue #7
 stays open.
 
 **File structure:** `asm/code_3_1_10_6.s` split into
-`src/save/save_menu.c` (`SaveMenuMessageInput`-`OpenSaveMenu`, matched),
+`src/game/ui/save_menu.c` (`SaveMenuMessageInput`-`OpenSaveMenu`, matched),
 the new raw `asm/code_3_1_10_7.s` (`RunPauseMenu`-`InitPauseMenuInfo`, left
-untouched), `src/menus/pause_menu_pages_init.c` (`InitPauseCrystalsPage` matched,
+untouched), `src/game/ui/pause_menu_pages_init.c` (`InitPauseCrystalsPage` matched,
 `InitPausePowersPage`-`InitPauseTimeTrialPage` parked), the new raw `asm/code_3_1_10_8.s`
 (those same four functions' real bytes, each wrapped
 `.if NON_MATCHING == 0`), the new raw `asm/code_3_1_10_9.s`
-(`DrawPauseFraction`, left untouched), `src/menus/pause_menu_widgets.c`
+(`DrawPauseFraction`, left untouched), `src/game/ui/pause_menu_widgets.c`
 (`PauseMenuVolumeDown`/`PauseMenuVolumeUp`, parked), the new raw
-`asm/code_3_1_10_10.s` (their real bytes, wrapped), `src/menus/pause_menu_widgets.c`
+`asm/code_3_1_10_10.s` (their real bytes, wrapped), `src/game/ui/pause_menu_widgets.c`
 (`PauseMenuCursorDown`/`PauseMenuCursorUp`, matched), and finally the new raw
 `asm/code_3_1_10_11.s` (the original file's unchanged remainder, from
 `FormatDecimal` on, including its pre-existing parked `DrawPowerDialog` guard)

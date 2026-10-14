@@ -1,4 +1,4 @@
-#include "boss_actors.hpp"
+#include "game/bosses/boss_actors.hpp"
 
 using Game::Bosses::HovercraftFireball;
 

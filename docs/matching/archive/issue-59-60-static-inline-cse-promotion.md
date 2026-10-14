@@ -3,7 +3,7 @@
 Three external-contributor PRs (#412-#416) demonstrated a technique this
 project hadn't used before: wrapping a small, repeated field-address
 computation in a `static inline` helper function instead of writing it
-inline, e.g. `src/level/tile_slot_pool.c`'s `PushFreeSlot`/`GetTileSlot`/
+inline, e.g. `src/game/level/tile_slot_pool.c`'s `PushFreeSlot`/`GetTileSlot`/
 `SetTileSlot`:
 
 ```c
@@ -106,7 +106,7 @@ NON_MATCHING=1 report` (no warnings), `rm -rf build crashbandicootxs.elf
 crashbandicootxs.gba crashbandicootxs.map && make compare` ->
 `crashbandicootxs.gba: OK`.
 
-## Closed: `RunHovercraftState` (`src/bosses/hovercraft.c`)
+## Closed: `RunHovercraftState` (`src/game/bosses/hovercraft.c`)
 
 Lower initial confidence (flagged as "fully inlines `SetHovercraftFlashColor`'s own
 P1/P2 speed-toggle shape twice... the same cross-jump-merging register-

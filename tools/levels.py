@@ -7,7 +7,7 @@ See docs/levels.md for the format. In short, a room is
   the pooled BG0 and the collision layer), the level asset, the entity list
   and the entity links;
 - per layer a `struct level_layer_desc` (the BG layers' source,
-  include/bg_layer.hpp) and a grid of 16x8-cell chunk ids;
+  include/game/level/bg_layer.hpp) and a grid of 16x8-cell chunk ids;
 - the level asset: per layer a table of chunk offsets and one RLE/delta
   token stream per chunk (decoded by DecodeLayerChunk/DecodeCollisionChunk). 34 rooms
   keep it LZ77-packed next to the intro graphics, 7 keep it raw;

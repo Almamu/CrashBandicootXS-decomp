@@ -8,7 +8,7 @@ extern "C" {
  * OperatorNewArray, OperatorDelete and OperatorNew, cxx_symbols.txt):
  * EWRAM allocations through mem_alloc/mem_free, replacing libgcc's
  * (docs/cplusplus.md). ROM 0x08026EB4-0x08026EEC, right after the camera
- * (src/level/camera.cpp, where they were until #770; GitHub issue #44). */
+ * (src/game/level/camera.cpp, where they were until #770; GitHub issue #44). */
 
 void operator delete[](void *ptr)
 {

@@ -152,7 +152,7 @@ ANCHORED = re.compile(r"\bDISPLAY_\w+\s*[-+]\s*$|\bDISPLAY_(?:RIGHT|BOTTOM)\(\s*
 # the screen's (0,0): a layout site. One with a DISPLAY_ name or another
 # position in it (`x`, `pos.x`, `gPauseGemIconPos[0].x`, `label1`) is
 # anchored, or relative to something that is.
-UI = re.compile(r"src/(menus|save|frontend|hud|engine/save|engine/text)/")
+UI = re.compile(r"src/(game/ui|engine/save|engine/text)/|src/game/level/game_progress\.")
 LAYOUT_CALLS = {
     "SetPos": None,
     "Move": None,
@@ -262,9 +262,9 @@ def layout_sites(rel, line):
 # the site's source line (comments blanked). First match wins.
 CLASSES = [
     # --- coincidences that a broader rule below would take -------------
-    ("coincidence", r"src/menus/level_select_pages\.cpp", r"GetScroll", "the page-turn progress (0x100 = a page)"),
-    ("coincidence", r"src/menus/level_select_entry\.cpp", r"phase", "a bob phase (a byte)"),
-    ("coincidence", r"src/objects/ground_sprite_collide\.cpp", r".", "a collision probe step"),
+    ("coincidence", r"src/game/ui/level_select_pages\.cpp", r"GetScroll", "the page-turn progress (0x100 = a page)"),
+    ("coincidence", r"src/game/ui/level_select_entry\.cpp", r"phase", "a bob phase (a byte)"),
+    ("coincidence", r"src/game/entities/ground_sprite_collide\.cpp", r".", "a collision probe step"),
     ("coincidence", r".", r"COS_Q8\(.*\* 80", "an orbit radius"),
     # --- hardware: the GBA's own formats and sizes --------------------
     ("hardware", r"include/gba/defines\.h", r"DISPLAY_(WIDTH|HEIGHT)", "the screen size itself (gba/defines.h)"),
@@ -276,17 +276,17 @@ CLASSES = [
         r"\b(?:s?[xy]|screen[XY])\s*&\s*0x1?ff\b",
         "OAM attribute width (9-bit X, 8-bit Y): spell with OAM_X()/OAM_Y()",
     ),
-    ("hardware", r"include/sprite_obj\.hpp", r"table\[0x80\]", "the OAM entry count: spell with OAM_ENTRY_COUNT"),
+    ("hardware", r"include/game/entities/sprite_obj\.hpp", r"table\[0x80\]", "the OAM entry count: spell with OAM_ENTRY_COUNT"),
     ("hardware", r"src/engine/gfx/fade\.cpp", r"0x1FF", "the 512 palette entries (BG + OBJ)"),
     (
         "hardware",
-        r"src/level/bg_streamer\.cpp|src/engine/gfx/cell_anim\.cpp",
+        r"src/game/level/bg_streamer\.cpp|src/engine/gfx/cell_anim\.cpp",
         r"0x1f",
         "a 32-entry BG screen-block row or column",
     ),
-    ("hardware", r"src/cutscene/slideshow\.cpp", r"VRAM \+ 0xA000", "Mode 4's second frame (VRAM + 0xA000)"),
-    ("hardware", r"src/menus/level_select_cursor\.cpp", r"OBJ_VRAM0 \+", "an OBJ VRAM offset"),
-    ("hardware", r"src/frontend/starfield\.cpp", r"\| 0xF000", "a BG map entry's palette bank (15)"),
+    ("hardware", r"src/game/ui/slideshow\.cpp", r"VRAM \+ 0xA000", "Mode 4's second frame (VRAM + 0xA000)"),
+    ("hardware", r"src/game/ui/level_select_cursor\.cpp", r"OBJ_VRAM0 \+", "an OBJ VRAM offset"),
+    ("hardware", r"src/game/ui/starfield\.cpp", r"\| 0xF000", "a BG map entry's palette bank (15)"),
     ("hardware", r"src/engine/gfx/sprite_arm\.cpp", r"0xF0", "a palette nibble"),
     # --- the data tables (src/data) -----------------------------------
     (
@@ -314,20 +314,20 @@ CLASSES = [
     ("coincidence", r"src/data/sprite_banks_", r".", "sprite bank data (frame numbers, boxes, palettes)"),
     ("coincidence", r"src/data/cutscene_slides_16e064\.cpp", r".", "a slide's duration (frames)"),
     # --- screen: derived from the screen size -------------------------
-    ("screen", r"src/level/camera\.cpp", r"INT_TO_Q8\((120|80)\)", "the camera's target at the screen centre"),
-    ("screen", r"src/level/camera\.cpp", r"0x2800|0x27FF|0x1AA[A9]", "the camera's look-ahead, a sixth of the screen"),
-    ("screen", r"src/level/bg_layer_base\.cpp", r"-= 0x(f0|a0)", "a BG's scroll limit (CAMERA_MAX_X/Y)"),
+    ("screen", r"src/game/level/camera\.cpp", r"INT_TO_Q8\((120|80)\)", "the camera's target at the screen centre"),
+    ("screen", r"src/game/level/camera\.cpp", r"0x2800|0x27FF|0x1AA[A9]", "the camera's look-ahead, a sixth of the screen"),
+    ("screen", r"src/game/level/bg_layer_base\.cpp", r"-= 0x(f0|a0)", "a BG's scroll limit (CAMERA_MAX_X/Y)"),
     ("screen", r"src/engine/actor/actor_bg\.cpp", r"0xFFFF[16]000", "the 3D BG's scroll limit (CAMERA_MAX_X/Y in Q8)"),
-    ("screen", r"src/level/bg_layer\.cpp", r"0x(ef|EF|9f|9F)\) / 8", "the tile rows and columns the screen spans"),
+    ("screen", r"src/game/level/bg_layer\.cpp", r"0x(ef|EF|9f|9F)\) / 8", "the tile rows and columns the screen spans"),
     (
         "screen",
-        r"src/crates/|src/objects/",
+        r"src/game/(crates|entities|objects)/",
         r"INT_TO_Q8\((240|160|0xf0|0xa0)\)",
         "the visible area as a Q8 rectangle (culling)",
     ),
     (
         "screen",
-        r"src/crates/crate_list_update\.cpp|src/objects/(part_list_collide|entity)\.cpp",
+        r"src/game/crates/crate_list_update\.cpp|src/game/entities/(part_list_collide|entity)\.cpp",
         r"0x1b800|0x11800|INT_TO_Q8\((440|280)\)",
         "the activation window: the screen plus a 100x60 margin",
     ),
@@ -338,27 +338,27 @@ CLASSES = [
         "an on-screen test against the last row or column",
     ),
     ("screen", r".", r"MeasureText|penX|\(u32\)\(240 - w\)|\(0xf0 - w\)", "text centred on the screen"),
-    ("screen", r"src/frontend/credits\.cpp", r"y \+ 0xa0", "a popup's start, just below the screen"),
-    ("screen", r"src/frontend/starfield\.cpp", r"0x4B00", "a 240x160 4bpp frame (buffer and DMA size)"),
-    ("screen", r"src/frontend/starfield\.cpp", r"0x1d|0x13", "the screen in tiles (the BG0 map's last column and row)"),
+    ("screen", r"src/game/ui/credits\.cpp", r"y \+ 0xa0", "a popup's start, just below the screen"),
+    ("screen", r"src/game/ui/starfield\.cpp", r"0x4B00", "a 240x160 4bpp frame (buffer and DMA size)"),
+    ("screen", r"src/game/ui/starfield\.cpp", r"0x1d|0x13", "the screen in tiles (the BG0 map's last column and row)"),
     (
         "screen",
-        r"src/frontend/starfield\.cpp",
+        r"src/game/ui/starfield\.cpp",
         r"0x7800|0x5000|0xEFFF|0x9FFF",
         "the screen centre and size in Q8 (the stars' box)",
     ),
     (
         "screen",
-        r"src/frontend/company_logos\.cpp",
+        r"src/game/ui/company_logos\.cpp",
         r"0x7800|0x5000|\* (120|80)\)",
         "the screen centre (the logos' zoom and fly-in)",
     ),
     ("screen", r"src/engine/gfx/bitmap_screen\.cpp", r".", "the affine picture's centre (BG2X/BG2Y)"),
-    ("screen", r"src/menus/power_dialog\.cpp", r"<< 7", "the screen centre in Q8 ((240, 160) << 7)"),
-    ("screen", r"src/actor/inline_copies_actors\.cpp", r"x = 120", "the screen's centre column"),
+    ("screen", r"src/game/ui/power_dialog\.cpp", r"<< 7", "the screen centre in Q8 ((240, 160) << 7)"),
+    ("screen", r"src/game/vehicles/actor_destructors\.cpp", r"x = 120", "the screen's centre column"),
     (
         "screen",
-        r"src/menus/level_select_cursor\.cpp|src/menus/level_select_pages\.cpp|src/menus/zoom_bg\.cpp",
+        r"src/game/ui/level_select_cursor\.cpp|src/game/ui/level_select_pages\.cpp|src/game/ui/zoom_bg\.cpp",
         r"0x78",
         "the screen's centre column (the level select's zoom)",
     ),
@@ -373,13 +373,13 @@ CLASSES = [
     ),
     (
         "coincidence",
-        r"src/bosses/(cortex|hovercraft)\.cpp|src/vehicle/jetpack/jetpack_player_update\.cpp",
+        r"src/game/bosses/(cortex|hovercraft)\.cpp|src/game/vehicles/jetpack/jetpack_player_update\.cpp",
         r"\by\b|CLAMP_M",
         "a position in the boss arena or the jetpack course",
     ),
     (
         "coincidence",
-        r"src/vehicle/jetpack/airship\.cpp",
+        r"src/game/vehicles/jetpack/airship\.cpp",
         r"screen[XY] [<>]",
         "the airship's projected position, bounded in the arena (Steer's edge push)",
     ),
@@ -405,7 +405,7 @@ CLASSES = [(c, re.compile(p), re.compile(l), r) for c, p, l, r in CLASSES]
 LAYOUT_CLASSES = [
     (
         "screen",
-        r"src/hud/|src/data/hud_fonts_174be0\.cpp",
+        r"src/game/ui/hud|src/data/hud_fonts_174be0\.cpp",
         r".",
         "a HUD position: anchor to the screen's edges or centre (DISPLAY_RIGHT/BOTTOM, DISPLAY_CENTER_X)",
     ),

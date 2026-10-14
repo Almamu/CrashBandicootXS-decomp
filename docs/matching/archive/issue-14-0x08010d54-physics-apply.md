@@ -15,13 +15,13 @@ already used for the `UpdateEnemyCtrl` (issue #9/#10) and `QueueCratePlayerColli
 
 `docs/rom_map.md` (around its "Confirmed: a shared physics/collision
 subsystem" section) already read `QueueCratePlayerCollision`'s own tail (matched as
-NAKED transcription in `src/crates/crate_break.c`, see
+NAKED transcription in `src/game/crates/crate_break.c`, see
 [docs/matching/archive/issue-12-physics-collision.md](issue-12-physics-collision.md))
 and confirmed it hands off to `AddCollisionCandidate` with "~8 packed arguments"
 as "the actual apply/commit step" - the very last call
 `QueueCratePlayerCollision`'s own three-jump-table dispatch makes before returning.
 `ResolveCollisionCandidates` (matched earlier this session as a NAKED transcription in
-`src/objects/collision_queue.c`, GitHub issue #14) went further: its own doc
+`src/game/crates/collision_queue.c`, GitHub issue #14) went further: its own doc
 comment already calls `AddCollisionCandidate` its **"mirror-image"** function -
 `ResolveCollisionCandidates` *reads* the exact record shape `AddCollisionCandidate` *writes*.
 That doc comment (`collision_queue.c`) documents the record layout in
@@ -116,7 +116,7 @@ The chunk's first two remaining functions (right after `AddCollisionCandidate`,
 the codebase, and both operate on this exact same `self+0x108` queue on
 *arbitrary* entities (not just the player):
 
-- `src/player/player_update.c`: `extern void DestroyCollisionQueue(void *arg0,
+- `src/game/crash/player_update.c`: `extern void DestroyCollisionQueue(void *arg0,
   s32 arg1);`, called as `DestroyCollisionQueue(self + 0x108, 2)`.
 - `src/player/player_init.c`: `extern void ResetCollisionQueue(void *arg0);`,
   called as `ResetCollisionQueue(self + 0x108)`, documented there as "clears its
@@ -162,7 +162,7 @@ calls nothing and references no globals), then the authoritative full
 clean `make NON_MATCHING=1 report` (no warnings) followed by
 `make compare`, which passed outright ("La suma coincide").
 
-New file `src/objects/collision_queue.c`, inserted in `ldscript.txt` between
+New file `src/game/crates/collision_queue.c`, inserted in `ldscript.txt` between
 `collision_queue.o` and the now-trimmed `asm/code_3_2_17_e560_10d54.o`
 (which now begins at `DestroyCollisionQueue`). `tools/report_units.py`'s old
 `0x08010D54` entry is split in two: `0x08010D54` now points at
@@ -291,12 +291,12 @@ Phase 1's own pass (see above). Reading the raw bytes confirmed:
   `u8 unk4[4]`).
 
 Both matched as plain, unremarkable real C on the first isolated
-compile pass (no register pinning needed). New object `src/objects/collision_queue.o`'s
+compile pass (no register pinning needed). New object `src/game/crates/collision_queue.o`'s
 own `.text` grows to include these two (contiguous, no gap, since they
 immediately follow `AddCollisionCandidate` in the ROM); `asm/code_3_2_17_e560_10d54.s`
 trimmed further to begin at `CheckExtraLifePickup`.
 
-### `UpdateExtraLifeHop`-`CheckWumpaPickup` - new `src/pickups/extra_life.c` (11 functions)
+### `UpdateExtraLifeHop`-`CheckWumpaPickup` - new `src/game/objects/extra_life.c` (11 functions)
 
 Zero prior cross-references (per Phase 1's own table). Reading all 11
 functions' raw bytes at once (as planned) revealed a shared struct
@@ -375,7 +375,7 @@ opaque-materialization toolbox:
 (its own tail, `PickUpWumpa`-`UpdateWumpaHop`, split off into the new
 `asm/code_3_2_17_e560_11448.s` since it's no longer address-adjacent to
 the file's own remaining front half once the middle was carved out).
-New object `src/pickups/extra_life.o` inserted between the two in
+New object `src/game/objects/extra_life.o` inserted between the two in
 `ldscript.txt`. Categorized `actor` in `tools/report_units.py` (not
 `game_loop`): this is per-entity behavior state on the "part" object
 family, not the shared physics/collision-queue infrastructure
@@ -390,7 +390,7 @@ the `QueueCratePlayerCollision`/`ApplyCrateCollision` dispatch chain.
 - `tools/report_units.py` - the `0x08010D54` entry's comment extended;
   the old `0x08010E14` raw entry split into `0x08010E34` (still raw),
   `0x08011248` (`extra_life.o`, matched), and `0x08011448` (still raw).
-- `src/player/player_update.c` / `src/player/player_init.c` - the
+- `src/game/crash/player_update.c` / `src/player/player_init.c` - the
   external call-site confirmation for `DestroyCollisionQueue`/`ResetCollisionQueue`
   already used in Phase 1, re-verified against the actual instruction
   bytes this pass.
@@ -630,11 +630,11 @@ drafted-but-unwired (`CheckExtraLifePickup`, `PickUpExtraLife`, `UpdateExtraLife
 had deliberately left untouched since it sits physically between
 `UpdateExtraLife` and `SendExtraLifeToHud` and its own filename-collision
 avoidance convention hadn't reserved a slot for it) are now all matched,
-in a new file `src/pickups/extra_life.c` (the next available
+in a new file `src/game/objects/extra_life.c` (the next available
 `game_loopNN.c` slot after this session's `50`-`53`). **This closes the
 entire `0x08010D54` physics/collision-apply chunk (GitHub issue
 #12/#14): every function between `AddCollisionCandidate` and the already-matched
-`src/pickups/wumpa.c` (`DrawWumpa`) is now matched.**
+`src/game/objects/wumpa.c` (`DrawWumpa`) is now matched.**
 `asm/code_3_2_17_e560_10d54.s` is fully consumed and removed from the
 tree; its `ldscript.txt` line is replaced by `extra_life.o` (inserted
 between `collision_queue.o` and `extra_life.o`, its own correct ROM-order
@@ -811,7 +811,7 @@ followed by `make compare` ("La suma coincide"):
   `collision_queue.o` and `extra_life.o`).
 - `src/level/drop_extra_life.c` - the `CreateExtraLife`/`SendExtraLifeToHud` extern
   declarations and call-site context used to confirm both signatures.
-- `src/pickups/extra_life.c`/`wumpa_update.c` - the sibling functions
+- `src/game/objects/extra_life.c`/`wumpa_update.c` - the sibling functions
   (`CheckWumpaPickup`, `PickUpWumpa`/`UpdateWumpa`/`SendWumpaToHud`) whose
   already-documented gate/tail/register-hazard shapes this pass reused
   or explicitly confirmed did *not* apply.

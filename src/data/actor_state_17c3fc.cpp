@@ -1,4 +1,4 @@
-#include "airship.hpp"
+#include "game/vehicles/jetpack/airship.hpp"
 
 using Game::Vehicles::Jetpack::Airship;
 

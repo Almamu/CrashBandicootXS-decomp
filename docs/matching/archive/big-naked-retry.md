@@ -4,8 +4,8 @@ This pass took on two of the largest parked NAKED functions. One closed.
 
 | Function | File | Size | Result |
 |---|---|---|---|
-| `UpdateGameFrame` (#34) | `src/level/game_frame.c` | ~730 insns | matched, old_agbcc |
-| `DrawVvLogoPieces` (#65) | `src/frontend/title_screen.c` | 1160 bytes | still NAKED, draft 329 halfwords off |
+| `UpdateGameFrame` (#34) | `src/game/level/game_frame.c` | ~730 insns | matched, old_agbcc |
+| `DrawVvLogoPieces` (#65) | `src/game/ui/title_screen.c` | 1160 bytes | still NAKED, draft 329 halfwords off |
 
 ## `UpdateGameFrame` (never attempted before, now real C)
 

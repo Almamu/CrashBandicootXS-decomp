@@ -278,10 +278,10 @@ coincide` (checksum matches).
 - `src/player/player_flags.c` - the `self+0x8c`
   `IsTimerArmed`/`SetTimer` convention and the mirror-flag-bit
   convention, both reused here.
-- `src/frontend/starfield.c` - `gSineTable`'s own
+- `src/game/ui/starfield.c` - `gSineTable`'s own
   `extern s16 [];` declaration and confirmed 256-entry sine-table
   shape.
-- `src/objects/sprite.c` - `DrawSprite`'s own matched definition
+- `src/game/entities/sprite.c` - `DrawSprite`'s own matched definition
   (confirms it's an OAM-queue/draw call, not a hitbox operation).
 
 ## Later pass (issue #9 NAKED retry)

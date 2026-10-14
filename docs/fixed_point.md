@@ -111,7 +111,7 @@ its spelling (`INT_TO_Q8(5)`) or its number.
 tools/magic_numbers.py --fixed --category fixed [--show]  # the raw fixed-point sites, with a spelling
 tools/magic_numbers.py --fixed --report OUT               # per kind, format, role, directory and field
 tools/magic_numbers.py --fixed --values                   # per field, each raw value and its count
-tools/magic_numbers.py --fixed --json --path src/bosses   # for agents
+tools/magic_numbers.py --fixed --json --path src/game/bosses   # for agents
 ```
 
 It scans src/ and include/ (and the `struct speed_ramp` tables of

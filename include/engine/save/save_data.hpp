@@ -29,7 +29,7 @@
  * the inline methods. */
 #pragma interface
 
-#include "game_progress.hpp"
+#include "game/level/game_progress.hpp"
 
 extern "C" {
 #include "core.h"
@@ -151,7 +151,7 @@ namespace Save
 
 /* A transient SIO send/receive envelope wrapping a SaveData copy - made
  * for each "connecting..." spinner-dialog session (SaveMenu::
- * LinkExchange, src/save/save_menu_draw.cpp) and deleted with it.
+ * LinkExchange, src/game/ui/save_menu_draw.cpp) and deleted with it.
  * `tmpl`/`cursor` stream a SaveData's bytes out to the link session's
  * outgoing ring (SendChunk); `data` receives the other side's copy of the
  * same shape from that player's incoming ring (ReceiveChunk), with
