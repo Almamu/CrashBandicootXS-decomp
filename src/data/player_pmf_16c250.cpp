@@ -5,6 +5,9 @@ extern "C" {
 #include "bosses.h"
 }
 
+using Game::Crash::InputCtrl;
+using Game::Crash::SwimCtrl;
+
 /*
  * ROM 0x0816C250-0x0816C2D8: two per-state member-function-pointer
  * tables of the player-controller objects, then an entry set. Linked in

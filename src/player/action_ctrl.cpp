@@ -7,6 +7,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Crash::ActionCtrl;
+using Game::Crash::Player;
+
 /* ActionCtrl's small methods (include/action_ctrl.hpp, gActionCtrlVtable;
  * #664, docs/cplusplus.md): the empty and forwarding state methods, the
  * mode+animation setter, the target animation override (the skid swap),

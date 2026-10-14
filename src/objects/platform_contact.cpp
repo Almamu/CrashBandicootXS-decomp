@@ -1,6 +1,8 @@
 #include "platform.hpp"
 #include "player.hpp"
 
+using Game::Crash::Player;
+
 /* Platform::CheckPlayerContact (#664, include/platform.hpp), ROM
  * 0x0801AB34-0x0801AB98: CheckPlatformContact, gPlatformVtable's slot 1. */
 

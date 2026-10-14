@@ -5,7 +5,10 @@
  * src/player/input_ctrl.cpp and input_ctrl_queue.cpp.
  *
  * No `#pragma interface`: g++ emits its vtable, gInputCtrlVtable, in
- * input_ctrl.cpp (see ctrl.hpp). */
+ * input_ctrl.cpp (see ctrl.hpp).
+ *
+ * In the namespace Game::Crash (#1033, player.hpp):
+ * `_vt.Q34Game5Crash9InputCtrl` & co. */
 
 #include "ctrl.hpp"
 #include "player.hpp"
@@ -22,6 +25,11 @@
 #define INPUT_CTRL_DIR_STATE_NONE 0 // neither up nor down: Y entry 0
 #define INPUT_CTRL_DIR_STATE_UP 1   // up: Y entry 3
 #define INPUT_CTRL_DIR_STATE_DOWN 2 // down: Y entry 5
+
+namespace Game
+{
+namespace Crash
+{
 
 /* The input controller (gInputCtrlVtable; 0x28 bytes):
  * the player's controller in room kind 2 (play_room.cpp creates it), where
@@ -95,5 +103,8 @@ public:
 };
 
 COMPILE_TIME_ASSERT(input_ctrl_hpp, sizeof(InputCtrl) == 0x28);
+
+} // namespace Crash
+} // namespace Game
 
 #endif /* !GUARD_INPUT_CTRL_HPP */

@@ -15,6 +15,8 @@ extern "C" {
 #include "objects.h"
 }
 
+using Game::Crash::Player;
+
 /* The player's (Player, include/player.hpp) object pass, event handler and
  * draw method. Built by old_agbcp (Makefile OLD_AGBCC_OBJS). */
 

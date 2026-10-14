@@ -18,6 +18,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Game::Crash::Player;
+
 /* Tiny's fight (GitHub issues #22 and #23), ROM 0x08018008-0x08018A30,
  * built with old_agbcp (Makefile OLD_AGBCC_OBJS), like cortex.cpp right
  * after it. Until #769 it was three files: tiny_update.cpp, tiny_hop_pad.cpp

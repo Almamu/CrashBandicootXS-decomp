@@ -18,6 +18,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Game::Crash::Player;
+
 /* The Neo Cortex fight (GitHub issues #23 and #24), ROM
  * 0x08018A30-0x080197F4, formerly asm/code_3_2_17_188d0.s and the head of
  * asm/code_3_2_17_188d0_1967c.s (details in

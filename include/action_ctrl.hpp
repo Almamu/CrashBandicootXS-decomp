@@ -9,7 +9,10 @@
  * table data.
  *
  * No `#pragma interface`: g++ emits its vtable, gActionCtrlVtable, in
- * action_ctrl_update.cpp (see ctrl.hpp). */
+ * action_ctrl_update.cpp (see ctrl.hpp).
+ *
+ * In the namespace Game::Crash (#1033, player.hpp), with its inline
+ * helpers below: `_vt.Q34Game5Crash10ActionCtrl` & co. */
 
 #include "ctrl.hpp"
 #include "player.hpp"
@@ -18,6 +21,11 @@
 extern "C" {
 #include "action_obj.h"
 }
+
+namespace Game
+{
+namespace Crash
+{
 
 /* The action controller (gActionCtrlVtable; 0x38 bytes, as PlayRoom's
  * `InitActionCtrl(OperatorNew(0x38))` allocates). Each frame Update runs
@@ -287,5 +295,8 @@ static inline void ActOrFlags0D(Player *part, s32 bits)
 
     *flags2 |= bits;
 }
+
+} // namespace Crash
+} // namespace Game
 
 #endif /* !GUARD_ACTION_CTRL_HPP */

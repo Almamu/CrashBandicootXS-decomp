@@ -22,6 +22,8 @@ extern "C" {
 #include "sprite_bank.h"
 }
 
+using Game::Crash::Player;
+
 /* The level state's accessors and helpers: LevelState's methods
  * (level_state.hpp; #750), under their C names (cxx_symbols.txt), with
  * the free function nullsub_24 and the static Get (GetLevelState, #915).

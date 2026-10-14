@@ -15,6 +15,8 @@ extern "C" {
 }
 
 using Engine::Sys::KeyInput;
+using Game::Crash::Player;
+using Game::Crash::SwimCtrl;
 
 /* GitHub issues #19 (its last raw function, CheckSwimCtrlTurn) and #20
  * (0x08016128-0x08017524): the swim controller, SwimCtrl

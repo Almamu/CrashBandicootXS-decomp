@@ -47,7 +47,13 @@ extern "C" {
 
 class Ctrl;
 class MovingSprite;
+namespace Game
+{
+namespace Crash
+{
 class Player; // player.hpp
+} // namespace Crash
+} // namespace Game
 
 /* The sprite object (src/objects/sprite_obj.cpp, sprite.cpp,
  * sprite_obj.cpp; gSpriteObjVtable): an entity with a sprite bank
@@ -304,7 +310,7 @@ public:
     /* This sprite as the player (#855): a controller's owner
      * (ActionCtrl::Attach and the others). Defined after Player
      * (player.hpp). */
-    inline Player *AsPlayer();
+    inline Game::Crash::Player *AsPlayer();
 
     /* The previous position as a vector, as Sprite's Pos(): a copy of
      * it is a block copy (both loads, then both stores). */

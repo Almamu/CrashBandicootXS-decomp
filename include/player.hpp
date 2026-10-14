@@ -9,7 +9,14 @@
  * here too.
  *
  * No `#pragma interface`: g++ emits the vtable in player_collide.cpp (see
- * ctrl.hpp). */
+ * ctrl.hpp).
+ *
+ * Player is in the namespace Game::Crash (#1033, docs/cplusplus.md
+ * "Namespaces"), with the controllers of action_ctrl.hpp, swim_ctrl.hpp
+ * and input_ctrl.hpp: `Update__Q34Game5Crash6Player`,
+ * `_vt.Q34Game5Crash6Player` (in the section
+ * `.gnu.linkonce.d._vt.Q34Game5Crash6Player`, which ldscript.txt names)
+ * & co. The C structs and the data stay global. */
 
 #include "ctrl.hpp"
 #include "sprite_obj.hpp"
@@ -121,8 +128,15 @@ extern const struct entry_set gSwimCtrlMotionSet;
 extern const struct entry_set gInputCtrlMotionSet;
 
 /* The player's controller (sym_iwram.txt), built by PlayRoom
- * (swim_ctrl.hpp's class). */
-extern class SwimCtrl *gSwimCtrl;
+ * (swim_ctrl.hpp's class, declared in its namespace). */
+namespace Game
+{
+namespace Crash
+{
+class SwimCtrl;
+} // namespace Crash
+} // namespace Game
+extern Game::Crash::SwimCtrl *gSwimCtrl;
 
 /* Player::dir, hitAxes and hitMask hold box_part.h's direction bits
  * (PART_DIR_*): the motion direction, ApplyPlayerVelocity; the camera
@@ -146,6 +160,11 @@ class Crate;
 // An empty case in ResetForRoom; nothing sets it.
 #define PLAYER_CTRL_MODE_UNK2 2
 #define PLAYER_CTRL_MODE_INPUT 3 // InputCtrl, the hover levels (ROOM_KIND_HOVER)
+
+namespace Game
+{
+namespace Crash
+{
 
 /* The player (gPlayer): a ground sprite with the player's own fields after
  * it. PlayRoom builds it (`new Player(0xFFFF, 0, 0, 0)`, InitPlayer on a
@@ -305,9 +324,12 @@ public:
 
 COMPILE_TIME_ASSERT(player_hpp, sizeof(Player) == 0x350);
 
-inline Player *MovingSprite::AsPlayer()
+} // namespace Crash
+} // namespace Game
+
+inline Game::Crash::Player *MovingSprite::AsPlayer()
 {
-    return (Player *)this;
+    return (Game::Crash::Player *)this;
 }
 
 #endif /* !GUARD_PLAYER_HPP */

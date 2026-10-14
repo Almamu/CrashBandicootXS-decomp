@@ -6,6 +6,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Crash::Player;
+
 /* Crate::PlayerAnimWouldTouch (#664, include/crate.hpp). */
 
 /* Whether the player's box for animation `action` would touch the crate

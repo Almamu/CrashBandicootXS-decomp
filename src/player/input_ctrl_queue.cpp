@@ -1,5 +1,7 @@
 #include "input_ctrl.hpp"
 
+using Game::Crash::InputCtrl;
+
 /* GitHub issue #22, ROM 0x08017A44-0x08017A70 (include/input_ctrl.hpp):
  * InputCtrl's IsMotionXPending .. QueueMotionX finish the input
  * controller's accessor run that ends input_ctrl.cpp

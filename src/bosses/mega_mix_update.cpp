@@ -9,6 +9,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Game::Crash::Player;
+
 /* MegaMixCtrl::Update (UpdateMegaMix): the update of Mega-Mix, the boss
  * that entity type 0x49 spawns (MegaMixCtrl::Spawn, sprite bank 30). Only room
  * 37 places one, at its left end among 34 nitro and 21 TNT crates; room

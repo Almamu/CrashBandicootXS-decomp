@@ -39,6 +39,10 @@ using Engine::Gfx::PaletteFade;
 using Engine::Sys::Display;
 using Engine::Sys::FrameLimiter;
 using Engine::Sys::VramDmaQueue;
+using Game::Crash::ActionCtrl;
+using Game::Crash::InputCtrl;
+using Game::Crash::Player;
+using Game::Crash::SwimCtrl;
 
 /* The room loop: LevelProgress::PlayRoom, the level-start dispatcher,
  * RunRoom, the room's lifecycle state machine it runs, and the

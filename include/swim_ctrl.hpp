@@ -5,7 +5,10 @@
  * src/player/swim_ctrl.cpp, swim_ctrl_drift.cpp and swim_ctrl_stroke.cpp.
  *
  * No `#pragma interface`: g++ emits its vtable, gSwimCtrlVtable, in
- * swim_ctrl.cpp (see ctrl.hpp). */
+ * swim_ctrl.cpp (see ctrl.hpp).
+ *
+ * In the namespace Game::Crash (#1033, player.hpp):
+ * `_vt.Q34Game5Crash8SwimCtrl` & co. */
 
 #include "ctrl.hpp"
 #include "player.hpp"
@@ -62,6 +65,11 @@
 #define SWIM_SLOW_RAMP_STEP   Q8_FRAC(0, 2)
 #define SWIM_IDLE_BOB_SPEED   Q8_FRAC(0, 24)
 #define SWIM_STOP_START_SPEED Q8_FRAC(0, 1)
+
+namespace Game
+{
+namespace Crash
+{
 
 /* The swim controller (gSwimCtrlVtable; 0x30 bytes): the diving Crash's controller in the room-kind-1
  * (underwater) rooms, where play_room.cpp creates it (`new SwimCtrl`,
@@ -144,5 +152,8 @@ public:
 };
 
 COMPILE_TIME_ASSERT(swim_ctrl_hpp, sizeof(SwimCtrl) == 0x30);
+
+} // namespace Crash
+} // namespace Game
 
 #endif /* !GUARD_SWIM_CTRL_HPP */

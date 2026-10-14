@@ -7,6 +7,11 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Crash::ActionCtrl;
+using Game::Crash::InputCtrl;
+using Game::Crash::Player;
+using Game::Crash::SwimCtrl;
+
 /* The player's resets (Player, include/player.hpp). */
 
 /* The player's state for a new life: GroundSprite::Reset's fields, the

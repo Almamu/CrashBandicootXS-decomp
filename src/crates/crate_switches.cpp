@@ -18,6 +18,8 @@ extern "C" {
 #include "sprite_bank.h"
 }
 
+using Game::Crash::Player;
+
 /* The crate list's update pass (Crate::UpdateAll), the nitro detonation,
  * the nitro and iron switches, the outline crates and Crate::BreakInArea
  * (#664, include/crate.hpp, part 7g), ROM 0x0800F1B8-0x0800F798: the

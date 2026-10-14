@@ -13,6 +13,9 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Game::Crash::ActionCtrl;
+using Game::Crash::Player;
+
 /* ActionCtrl's Update, and its double jump and in-air input helpers
  * (include/action_ctrl.hpp; #664, docs/cplusplus.md). Built by old_agbcp
  * (the Makefile's OLD_AGBCC_OBJS), like the old_agbcc C it replaces. The
