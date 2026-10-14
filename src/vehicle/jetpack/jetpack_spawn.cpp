@@ -25,6 +25,24 @@ using Game::Bosses::HovercraftCannonFlash;
 using Game::Bosses::HovercraftFireball;
 using Game::Bosses::HovercraftLauncher;
 using Game::Bosses::HovercraftSideGun;
+using Game::Vehicles::Jetpack::Airship;
+using Game::Vehicles::Jetpack::AirshipFireball;
+using Game::Vehicles::Jetpack::JetpackBalloon;
+using Game::Vehicles::Jetpack::JetpackBalloonCrate;
+using Game::Vehicles::Jetpack::JetpackBomber;
+using Game::Vehicles::Jetpack::JetpackCannonball;
+using Game::Vehicles::Jetpack::JetpackCheckpointText;
+using Game::Vehicles::Jetpack::JetpackCollectedWumpa;
+using Game::Vehicles::Jetpack::JetpackExplosion;
+using Game::Vehicles::Jetpack::JetpackHealthCrate;
+using Game::Vehicles::Jetpack::JetpackParachuteNitro;
+using Game::Vehicles::Jetpack::JetpackPlane;
+using Game::Vehicles::Jetpack::JetpackPlayer;
+using Game::Vehicles::Jetpack::JetpackQuestionCrate;
+using Game::Vehicles::Jetpack::JetpackRing;
+using Game::Vehicles::Jetpack::JetpackRocket;
+using Game::Vehicles::Jetpack::JetpackShot;
+using Game::Vehicles::Jetpack::JetpackTimeCrate;
 using Game::Vehicles::Polar::Yeti;
 
 /* The jetpack levels' spawners (#664 part 11e, include/vehicle.hpp), ROM

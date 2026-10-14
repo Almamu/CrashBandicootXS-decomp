@@ -15,6 +15,8 @@ using Engine::Actor::ActorCategory;
 using Game::Bosses::Hovercraft;
 using Game::Vehicles::Polar::PolarPlayer;
 using Game::Vehicles::Polar::Yeti;
+using Game::Vehicles::Jetpack::JetpackPlayer;
+using Game::Vehicles::Jetpack::Airship;
 
 /*
  * ROM 0x08175558-0x08175760: the actor category descriptors and the

@@ -1,5 +1,7 @@
 #include "boss_actors.hpp"
 
+using Game::Vehicles::Jetpack::AirshipFireball;
+
 /*
  * ROM 0x0817C2B8-0x0817C2D0, split from actor_pmf_17c260.cpp (#664 part
  * 11i). Linked in ROM order between data/data.s sections by ldscript.txt

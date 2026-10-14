@@ -15,15 +15,24 @@
  * No `#pragma interface`: g++ emits the vtables in inline_copies_actors.cpp, where
  * their destructors are (see ctrl.hpp).
  *
- * The hovercraft's weapons are in the namespace Game::Bosses (#1033,
- * boss_ctrl.hpp), with the hovercraft: `_vt.Q34Game6Bosses16HovercraftCannon`
- * & co. */
+ * The airship's fireball is in the namespace Game::Vehicles::Jetpack, with
+ * the airship (#1033, vehicle.hpp):
+ * `_vt.Q44Game8Vehicles7Jetpack15AirshipFireball`. The hovercraft's
+ * weapons are in the namespace Game::Bosses (#1033, boss_ctrl.hpp), with
+ * the hovercraft: `_vt.Q34Game6Bosses16HovercraftCannon` & co. */
 
 #include "actor_self.hpp"
 
 extern "C" {
 #include "bosses.h"
 }
+
+namespace Game
+{
+namespace Vehicles
+{
+namespace Jetpack
+{
 
 /* The airship's fireball (gAirshipFireballVtable,
  * src/vehicle/jetpack/airship_fireball.cpp): it flies around the
@@ -83,6 +92,10 @@ public:
 
 COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(AirshipFireball) == 0x6C);
 COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(AirshipFireball) == 0x6C);
+
+} // namespace Jetpack
+} // namespace Vehicles
+} // namespace Game
 
 /* The airship itself is the all-static class Airship (airship.hpp, #772). */
 

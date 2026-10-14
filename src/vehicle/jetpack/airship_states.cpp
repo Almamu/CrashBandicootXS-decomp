@@ -14,6 +14,12 @@ extern "C" {
 }
 
 using Engine::Actor::ActorSpawns;
+using Game::Vehicles::Jetpack::Airship;
+using Game::Vehicles::Jetpack::AirshipFireball;
+using Game::Vehicles::Jetpack::JetpackCannonball;
+using Game::Vehicles::Jetpack::JetpackCheckpointText;
+using Game::Vehicles::Jetpack::JetpackExplosion;
+using Game::Vehicles::Jetpack::JetpackPlayer;
 
 /* The airship's states (#664 part 11i, Airship's since #772,
  * include/airship.hpp):

@@ -14,6 +14,12 @@ extern "C" {
 
 using Engine::Actor::ActorCategory;
 using Engine::Actor::CollectedSpawns;
+using Game::Vehicles::Jetpack::JetpackBalloon;
+using Game::Vehicles::Jetpack::JetpackBalloonCrate;
+using Game::Vehicles::Jetpack::JetpackHealthCrate;
+using Game::Vehicles::Jetpack::JetpackParachuteNitro;
+using Game::Vehicles::Jetpack::JetpackQuestionCrate;
+using Game::Vehicles::Jetpack::JetpackTimeCrate;
 
 /* 0x08031A6C-0x08032480 (#664 part 11g): the jetpack levels' crates and
  * the parachute nitro (include/vehicle.hpp):

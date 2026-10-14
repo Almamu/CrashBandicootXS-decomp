@@ -1,5 +1,7 @@
 #include "airship.hpp"
 
+using Game::Vehicles::Jetpack::Airship;
+
 /*
  * ROM 0x0817C3FC-0x0817C414. The two pointer-to-member tables that
  * followed, the balloon's and the balloon crate's, are split into

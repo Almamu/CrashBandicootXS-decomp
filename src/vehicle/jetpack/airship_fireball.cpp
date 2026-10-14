@@ -9,6 +9,7 @@ extern "C" {
 }
 
 using Engine::Actor::ActorCategory;
+using Game::Vehicles::Jetpack::AirshipFireball;
 
 /* The airship's fireball (#664 parts 11f and 11i,
  * include/boss_actors.hpp), ROM 0x08030334-0x080306AC: an HpActor that

@@ -1,5 +1,8 @@
 #include "vehicle.hpp"
 
+using Game::Vehicles::Jetpack::JetpackBomber;
+using Game::Vehicles::Jetpack::JetpackPlane;
+
 /*
  * ROM 0x0817C260-0x0817C2B8: two pointer-to-member tables (#664 part
  * 11f); the third, the airship fireball's, follows in

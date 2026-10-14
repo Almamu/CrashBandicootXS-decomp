@@ -25,6 +25,8 @@ using Engine::Gfx::BrightnessFade;
 using Engine::Gfx::CellAnim;
 using Engine::Gfx::ObjTileAllocator;
 using Engine::Sys::VramDmaQueue;
+using Game::Vehicles::Jetpack::JetpackCollectedWumpa;
+using Game::Vehicles::Jetpack::JetpackPlayer;
 
 /* JetpackPlayer's small methods, five of its states, its destructor and
  * its state dispatch (#664 part 11e, include/vehicle.hpp). See

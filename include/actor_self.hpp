@@ -43,7 +43,16 @@ extern "C" {
 #define SORT_KEY_FLAG_BEHIND_BG 0x8000
 
 class HpActor;
+namespace Game
+{
+namespace Vehicles
+{
+namespace Jetpack
+{
 class JetpackPlayer; // vehicle.hpp
+} // namespace Jetpack
+} // namespace Vehicles
+} // namespace Game
 namespace Game
 {
 namespace Vehicles
@@ -194,7 +203,7 @@ public:
      * gActorList, is the stage's player, and the shot targets are
      * HpActors. Defined after each class (below; vehicle.hpp). */
     inline HpActor *AsHpActor();
-    inline JetpackPlayer *AsJetpackPlayer();
+    inline Game::Vehicles::Jetpack::JetpackPlayer *AsJetpackPlayer();
     inline Game::Vehicles::Polar::PolarPlayer *AsPolarPlayer();
 };
 

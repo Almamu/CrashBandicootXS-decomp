@@ -6,6 +6,8 @@ extern "C" {
 #include "bosses.h"
 }
 
+using Game::Vehicles::Jetpack::Airship;
+
 /*
  * ROM 0x0817C2D0-0x0817C3FC. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.

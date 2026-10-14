@@ -6,6 +6,9 @@ extern "C" {
 #include "bosses.h"
 }
 
+using Game::Vehicles::Jetpack::Airship;
+using Game::Vehicles::Jetpack::JetpackShot;
+
 /* The jetpack player's shot, JetpackShot (#664 part 11e,
  * include/vehicle.hpp). See
  * docs/matching/archive/issue-56-0x0802f0dc-actor.md. */

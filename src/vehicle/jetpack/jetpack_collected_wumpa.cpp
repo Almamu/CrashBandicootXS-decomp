@@ -16,6 +16,8 @@ extern "C" {
 }
 
 using Engine::Actor::ActorBg;
+using Game::Vehicles::Jetpack::JetpackCollectedWumpa;
+using Game::Vehicles::Jetpack::JetpackRing;
 
 /* The jetpack ring's constructor and IsUnshootable and the collected
  * wumpa (#664 part 11h, include/vehicle.hpp), ROM 0x080326E4-0x08032910,
