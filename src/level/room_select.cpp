@@ -8,6 +8,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Level::LevelProgress;
+
 /* The room cursor of the level state's room block (LevelProgress,
  * include/level_state.hpp): the room's music, the next room, the gem
  * path and bonus rooms and SelectRoom. ROM 0x08024498-0x08024590, the end

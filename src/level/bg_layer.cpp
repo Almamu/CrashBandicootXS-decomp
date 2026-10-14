@@ -5,6 +5,9 @@ extern "C" {
 #include "system.h"
 }
 
+using Game::Level::BgLayer;
+using Game::Level::BgLayerBase;
+
 /* GitHub issue #42: BgLayer's own methods (include/bg_layer.hpp,
  * gBgLayerVtable): first the constructor and the grow/clip methods
  * (bg_layer_init.cpp until #771), then the rest. Reset is the class's

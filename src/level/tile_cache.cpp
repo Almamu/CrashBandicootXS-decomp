@@ -7,6 +7,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Level::TileCache;
+
 /* The collision tile cache (TileCache, include/bg_layer.hpp), ROM
  * 0x08024F24-0x080254C0: its chunk cache and terrain lookups (in
  * bg_layer_base.cpp until #770; free functions taking a `struct

@@ -11,6 +11,7 @@ extern "C" {
 
 using Game::Crates::Crate;
 using Game::Crates::CrateList;
+using Game::Level::BgLayer;
 
 /* CrateList's constructor and Unlink (#664, part 7f;
  * include/crate_list.hpp). An old_agbcp object (OLD_AGBCC_OBJS). */

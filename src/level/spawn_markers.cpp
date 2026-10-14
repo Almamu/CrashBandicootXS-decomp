@@ -31,6 +31,9 @@ using Engine::Sys::VramDmaQueue;
 using Engine::Text::Font;
 using Engine::Text::LargeFont;
 using Engine::Text::SmallFont;
+using Game::Level::EntitySpawner;
+using Game::Level::LevelEntityFlags;
+using Game::Level::LevelState;
 
 /* The player positions and start markers (entity types 0x01-0x05), the
  * entity spawner's constructor and destructor calls and InitLevelState

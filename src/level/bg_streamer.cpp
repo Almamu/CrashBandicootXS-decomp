@@ -12,6 +12,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Level::BgStreamer;
+
 /* GitHub issue #39: 0x08024960-0x08024D74 (game_loop), split from
  * src/cutscene/cutscene_player.cpp (#770). docs/rom_map.md's "A new
  * find: a custom RLE/delta token-stream decoder" and its two follow-up

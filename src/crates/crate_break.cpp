@@ -20,6 +20,8 @@ extern "C" {
 using Game::Crash::Player;
 using Game::Crates::CollisionQueue;
 using Game::Crates::Crate;
+using Game::Level::EntitySpawner;
+using Game::Level::LevelEntityFlags;
 using Game::Objects::Wumpa;
 
 /* The crate's hits, breaks and explosions (#664, include/crate.hpp,

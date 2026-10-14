@@ -8,6 +8,7 @@ extern "C" {
 }
 
 using Game::Enemies::EnemyCtrl;
+using Game::Level::EntitySpawner;
 
 /* GitHub issue #9/#10: EnemyCtrl's shooter (include/enemy_ctrl.hpp),
  * called only from Update's state 16, after UpdateAttackCycle

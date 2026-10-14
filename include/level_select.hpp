@@ -364,22 +364,22 @@ public:
     ZoomBg *bg2;                  // 0x20 - BG2, the level picture
     // 0x24 - the page's levels, then its boss
     LevelSelectEntry *items[LEVEL_SELECT_ENTRIES];
-    LevelSelectCursor *panel; // 0x3C - the cursor
-    UiSprite *sprites[10];    // 0x40
-    u8 timeText[9];           // 0x68 - best time
-    u8 recordText[9];         // 0x71 - next threshold to beat
-    u32 scroll;               // 0x7C - BG0 auto-scroll counter
-    screen_dx_t panelSlideX;  // 0x80 - x offset of the record panel
-    screen_dy_t clearedIconY; // 0x84 - sprite 2's y offset (0 or 0x1C), see LoadRecord
-    screen_dy_t flag1IconY;   // 0x88 - sprite 3's
-    screen_dy_t gemIconY;     // 0x8C - sprite 4's (the `rank` gem icon)
-    screen_dy_t trialIconY;   // 0x90 - sprite 5's (time-trial icons)
-    screen_dy_t trialIcon2Y;  // 0x94 - sprite 6's
-    s32 rank;                 // 0x98 - LoadRecord's classification, 5 = none
-    GameProgress *save;       // 0x9C - PackSaveData's save block
-    union blend blend;        // 0xA0 - REG_BLDCNT + REG_BLDALPHA
-    struct bldy bldy;         // 0xA4 - REG_BLDY
-    union dispcnt dispcnt;    // 0xA8 - REG_DISPCNT (gfx.h)
+    LevelSelectCursor *panel;        // 0x3C - the cursor
+    UiSprite *sprites[10];           // 0x40
+    u8 timeText[9];                  // 0x68 - best time
+    u8 recordText[9];                // 0x71 - next threshold to beat
+    u32 scroll;                      // 0x7C - BG0 auto-scroll counter
+    screen_dx_t panelSlideX;         // 0x80 - x offset of the record panel
+    screen_dy_t clearedIconY;        // 0x84 - sprite 2's y offset (0 or 0x1C), see LoadRecord
+    screen_dy_t flag1IconY;          // 0x88 - sprite 3's
+    screen_dy_t gemIconY;            // 0x8C - sprite 4's (the `rank` gem icon)
+    screen_dy_t trialIconY;          // 0x90 - sprite 5's (time-trial icons)
+    screen_dy_t trialIcon2Y;         // 0x94 - sprite 6's
+    s32 rank;                        // 0x98 - LoadRecord's classification, 5 = none
+    Game::Level::GameProgress *save; // 0x9C - PackSaveData's save block
+    union blend blend;               // 0xA0 - REG_BLDCNT + REG_BLDALPHA
+    struct bldy bldy;                // 0xA4 - REG_BLDY
+    union dispcnt dispcnt;           // 0xA8 - REG_DISPCNT (gfx.h)
 
     LevelSelect(s32 level); // InitLevelSelect
     ~LevelSelect();         // DestroyLevelSelect

@@ -5,6 +5,8 @@ extern "C" {
 #include <agb_syscall.h>
 }
 
+using Game::Level::Bitmap;
+
 /* A 32-word (1024-bit) bitmap's helpers, ROM 0x08025554-0x080255D4:
  * set, clear, clear all and the constructor-like InitBitmap. Nothing
  * calls them; LevelEntityFlags::SetGone (entity_flags.cpp) uses the same

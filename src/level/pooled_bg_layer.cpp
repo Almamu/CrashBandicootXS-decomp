@@ -6,6 +6,10 @@ extern "C" {
 #include "memory.h"
 }
 
+using Game::Level::BgLayer;
+using Game::Level::PooledBgLayer;
+using Game::Level::TileSlotPool;
+
 /* GitHub issue #42: the overrides of BgLayer's tile-slot-pooled subclass
  * used for BG layer 0 (PooledBgLayer, include/bg_layer.hpp), then (GitHub
  * issue #43) its destructor, constructor and GetPriority, which were in

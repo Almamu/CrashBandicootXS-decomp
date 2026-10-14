@@ -824,6 +824,44 @@ checks the change is only a rename:
   the camera only holds a `Sprite *`, so it is a level object here.
   `LaunchPad` and `CameraLead` are declared in level_select.hpp, but they
   are no part of the level-select screen.
+- **`Game::Level`** (`Q34Game5Level`): the level state and progress,
+  `LevelState` and `LevelProgress` (level_state.hpp) and `GameProgress`
+  (game_progress.hpp); the BG layers, `BgStreamer`, `BgLayerBase`,
+  `BgLayer`, `TileSlotPool`, `PooledBgLayer`, `TileCache` and
+  `LevelLayers` (bg_layer.hpp); the `Camera` (camera.hpp); the entity
+  flags, `LevelEntityFlags` and `Bitmap` (entity_flags.hpp); the
+  `EntitySpawner` (spawners.hpp); level_query.cpp's `UnusedLevelObject`;
+  and the 41 generated room classes `Room00`-`Room40` (build/include/
+  rooms.hpp: tools/levels.py's `NAMESPACE` puts the declarations in the
+  namespace, qualifies the definitions and references it writes, `const
+  u16 Game::Level::Room37::palette[256]`, and its cxx_symbols.txt block,
+  `_Q34Game5Level6Room37.palette`). The classes of src/level/ (the
+  other namespaces' spawners stay with their classes), with
+  src/save/game_progress.cpp. 518 symbols
+  renamed (254 of them the rooms' members), among them 4 vtables
+  (`_vt.Q34Game5Level7BgLayer`, ...) and SaveMenu::SummarizeProgress,
+  which takes a `GameProgress *`; no code change. ldscript.txt's 4 lines
+  that place the vtable sections are updated by hand. globals.h (gEntityFlags,
+  gLevelState, gCamera, gLevelLayers) and level.h (gGameFrameLevelState,
+  gLevelLayersSingleton) forward declare the classes in the namespace,
+  under `__cplusplus` (C still sees `struct level_state`); entity_bits.h's
+  ENTITY_SET_GONE_BIT_OF, Entity::MarkGone and the save and menu headers
+  (save_data.hpp's `struct save_slot`, save_menu.hpp, menus.hpp,
+  level_select.hpp) name them qualified. The records (`level_save`,
+  `level_record`, ..., level_data.h's descriptors), level.h's C
+  declarations and spawners.hpp's inline helpers (EntityParams,
+  DecorationList, AddUpdateOnly) stay global. No name hiding: no global
+  is named `Level` or like the classes. Boundary calls: the BG layers
+  stream the rooms' chunk grids and tile sets and know the level data's
+  formats (level_data.h), so they are the level's, not `Engine::Gfx`'s;
+  `GameProgress` is the save slot's progress block, but it is Crash's
+  levels, relics and gems (the layout's "level progress"), so it is here
+  rather than in `Engine::Save` with SaveData; `Bitmap` (UNUSED) sits with
+  the entity flags it was written for; the camera follows the player
+  within the room's bounds, so it is level code (its follow target,
+  CameraLead, is `Game::Objects`'). The spawners in src/level/ that are
+  static members of other classes (EnemyCtrl's, Crate's, Platform's,
+  Pickups', the bosses') stay with their classes.
 
 ## Progress
 

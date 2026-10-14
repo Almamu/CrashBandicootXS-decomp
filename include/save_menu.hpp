@@ -122,21 +122,21 @@ public:
     void RefreshSlotSummaries(Engine::Save::SaveData *handle); // RefreshSaveSlotSummaries
     void LoadData();                                           // LoadSaveMenuData
     void SummarizeProgress(struct settings_row_stats *dest,
-                           const GameProgress *src);     // SummarizeProgress
-    void DrawEmptySlotLabel(s32 x, s32 y, u8 highlight); // DrawEmptySlotLabel
-    void DrawTitle(s32 labelIndex);                      // DrawSaveMenuTitle
-    s32 GetBlinkPalette();                               // GetSaveMenuBlinkPalette
-    void EndLinkTransfer();                              // EndLinkSaveTransfer
-    void BeginLinkTransfer();                            // BeginLinkSaveTransfer
-    void DrawConfirmDelete();                            // DrawSaveMenuConfirmDelete
-    void DrawDelete();                                   // DrawSaveMenuDelete
-    void DrawOverwrite();                                // DrawSaveMenuOverwrite
-    void DrawSave();                                     // DrawSaveMenuSave
-    void DrawMessage();                                  // DrawSaveMenuMessage
-    void DrawLoadLink();                                 // DrawSaveMenuLoadLink
-    void DrawLoad();                                     // DrawSaveMenuLoad
-    void Draw();                                         // DrawSaveMenu
-    void DeleteSlot(s32 row);                            // DeleteSaveSlot
+                           const Game::Level::GameProgress *src); // SummarizeProgress
+    void DrawEmptySlotLabel(s32 x, s32 y, u8 highlight);          // DrawEmptySlotLabel
+    void DrawTitle(s32 labelIndex);                               // DrawSaveMenuTitle
+    s32 GetBlinkPalette();                                        // GetSaveMenuBlinkPalette
+    void EndLinkTransfer();                                       // EndLinkSaveTransfer
+    void BeginLinkTransfer();                                     // BeginLinkSaveTransfer
+    void DrawConfirmDelete();                                     // DrawSaveMenuConfirmDelete
+    void DrawDelete();                                            // DrawSaveMenuDelete
+    void DrawOverwrite();                                         // DrawSaveMenuOverwrite
+    void DrawSave();                                              // DrawSaveMenuSave
+    void DrawMessage();                                           // DrawSaveMenuMessage
+    void DrawLoadLink();                                          // DrawSaveMenuLoadLink
+    void DrawLoad();                                              // DrawSaveMenuLoad
+    void Draw();                                                  // DrawSaveMenu
+    void DeleteSlot(s32 row);                                     // DeleteSaveSlot
 
     /* The highlight's blink (#843): bit SAVE_MENU_BLINK_BIT of the frame
      * counter `flags`, on for 4 frames in 8. Spelled `(x >> n) & 1`, as

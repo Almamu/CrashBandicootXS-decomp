@@ -7,6 +7,7 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Level::EntitySpawner;
 using Game::Objects::Pickups;
 
 /* 0x0801EA5C-0x0801EF0C (GitHub issue #30), formerly

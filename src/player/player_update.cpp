@@ -17,6 +17,9 @@ extern "C" {
 
 using Game::Crash::Player;
 using Game::Crates::CollisionQueue;
+using Game::Level::EntitySpawner;
+using Game::Level::LevelProgress;
+using Game::Level::LevelState;
 
 /* The player's (Player, include/player.hpp) object pass, event handler and
  * draw method. Built by old_agbcp (Makefile OLD_AGBCC_OBJS). */

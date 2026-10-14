@@ -7,6 +7,8 @@ extern "C" {
 #include "level.h"
 }
 
+using Game::Level::LevelEntityFlags;
+
 /* The room's entity flags (LevelEntityFlags, include/entity_flags.hpp;
  * gEntityFlags): the "gone" and "activated" bitmaps by entity id, and the
  * crate count of a room's entity list. C++ since the #664 cleanup, built

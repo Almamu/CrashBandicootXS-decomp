@@ -7,6 +7,7 @@ extern "C" {
 }
 
 using Engine::Sys::VramDmaQueue;
+using Game::Level::TileSlotPool;
 
 /* GitHub issue #43: the VRAM tile-slot pool that BG layer 0 of the
  * level-layers singleton (`level_layers.cpp`; a PooledBgLayer, whose

@@ -44,6 +44,7 @@ using Engine::Gfx::SpriteFrameCache;
 using Engine::Gfx::SpriteOamQueue;
 using Engine::Sys::FrameLimiter;
 using Engine::Sys::VramDmaQueue;
+using Game::Level::LevelState;
 
 /* codegen: LevelState::SetCheckpointAtPlayer takes a flag (level_state.hpp); this
  * caller passes the state only and leaves r1 as it is. docs/headers.md */

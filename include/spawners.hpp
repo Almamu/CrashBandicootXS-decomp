@@ -53,6 +53,11 @@ static inline void AddUpdateOnly(Entity *e)
     (gUpdateOnlyPartList)->Add((Sprite *)e);
 }
 
+namespace Game
+{
+namespace Level
+{
+
 class EntitySpawner
 {
 public:
@@ -102,5 +107,8 @@ private:
 };
 
 COMPILE_TIME_ASSERT(spawners_hpp, sizeof(EntitySpawner) == 8);
+
+} // namespace Level
+} // namespace Game
 
 #endif /* !GUARD_SPAWNERS_HPP */

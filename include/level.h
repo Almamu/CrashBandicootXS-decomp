@@ -113,7 +113,16 @@ extern class PartList *gDecorationList;
 /* UpdateGameFrame's level state, stored once when the game starts and never
  * read. */
 #ifdef __cplusplus
-extern class LevelState *gGameFrameLevelState;
+/* In their namespace (docs/cplusplus.md, "Namespaces"). */
+namespace Game
+{
+namespace Level
+{
+class LevelState;
+class LevelLayers;
+} // namespace Level
+} // namespace Game
+extern Game::Level::LevelState *gGameFrameLevelState;
 #else
 extern struct level_state *gGameFrameLevelState;
 #endif
@@ -154,7 +163,7 @@ extern const entity_spawn_fn gEntitySpawnFuncs[ENTITY_COUNT];
 
 /* src/iwram/iwram_data.cpp */
 #ifdef __cplusplus
-extern class LevelLayers *gLevelLayersSingleton;
+extern Game::Level::LevelLayers *gLevelLayersSingleton;
 #endif
 
 /* The terrain height tables (src/data/terrain_1725a8.cpp, top-level asm) */

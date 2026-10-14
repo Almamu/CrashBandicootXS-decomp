@@ -10,6 +10,11 @@ extern "C" {
 #include "level_data.h"
 }
 
+namespace Game
+{
+namespace Level
+{
+
 /* The entity flags (`gEntityFlags`, 0x408 bytes; src/level/entity_flags.cpp,
  * room_entities.cpp): the room's entity list and two pairs of bitmaps,
  * one bit per entity id. SpawnRoomEntities skips the entities set in
@@ -65,5 +70,8 @@ public:
 };
 
 COMPILE_TIME_ASSERT(entity_flags_hpp, sizeof(Bitmap) == 0x80);
+
+} // namespace Level
+} // namespace Game
 
 #endif /* !GUARD_ENTITY_FLAGS_HPP */

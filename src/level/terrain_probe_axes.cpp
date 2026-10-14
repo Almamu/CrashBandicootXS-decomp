@@ -6,6 +6,8 @@ extern "C" {
 #include "level.h"
 }
 
+using Game::Level::LevelLayers;
+
 /* GitHub issues #9/#10/#41's remaining piece of `ProbeTerrain`'s own
  * "umbrella 5-mode dispatcher" cluster (`terrain_probe.cpp`,
  * docs/matching/archive/issue-9-10-41-0x08026628-game-loop.md): that pass fully

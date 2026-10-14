@@ -24,6 +24,11 @@ extern "C" {
 #include "level.h"
 }
 
+namespace Game
+{
+namespace Level
+{
+
 /* The tile-map ring buffer of a BG layer (BgLayerBase::streamer, 0x24
  * bytes): a circular 4x4-block (64 halfword columns x 32 rows, 0x1000
  * bytes) window of the layer's decoded chunks, around the camera's
@@ -393,5 +398,8 @@ public:
 };
 
 COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(LevelLayers) == 0x2C);
+
+} // namespace Level
+} // namespace Game
 
 #endif /* !GUARD_BG_LAYER_HPP */

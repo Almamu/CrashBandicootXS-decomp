@@ -8,6 +8,8 @@ extern "C" {
 #include "level_data.h"
 }
 
+using Game::Level::BgLayer;
+using Game::Level::EntitySpawner;
 using Game::Objects::ExtraLife;
 using Game::Objects::Wumpa;
 

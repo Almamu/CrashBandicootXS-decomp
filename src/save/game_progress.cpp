@@ -14,6 +14,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Level::GameProgress;
+
 /* gLevelTable's time-trial thresholds (`level_info.times`, level.h):
  * CountSapphireRelics/CountGoldRelics/CountPlatinumRelics each count how
  * many of the numbered levels' records (LEVEL_NUMBERED_COUNT, 20 with

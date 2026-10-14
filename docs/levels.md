@@ -396,12 +396,15 @@ public:
 
 The class is named after the room's `level_desc` symbol, as its
 parameter struct is (`gRoom37Desc`: `Room37`, `struct
-level_params_room37`). The generated definitions name the members
-(`const u16 Room37::palette[256] = ...`, the layer descriptors'
-`Room37::bg1Grid`, the descriptor's `Room37::asset`, the room record's
-`Room37::palette`), and each keeps its room.json symbol as its C name:
-`tools/levels.py symbols` writes cxx_symbols.txt's room classes block
-(`_6Room37.palette gRoom37Palette`), and `tools/gfx_manifest.py check`
+level_params_room37`). The classes are in the namespace `Game::Level`
+(levels.py's `NAMESPACE`, #1033, docs/cplusplus.md "Namespaces"). The
+generated definitions name the members qualified (`const u16
+Game::Level::Room37::palette[256] = ...`, the layer descriptors'
+`Game::Level::Room37::bg1Grid`, the descriptor's
+`Game::Level::Room37::asset`, the room record's
+`Game::Level::Room37::palette`), and each keeps its room.json symbol as
+its C name: `tools/levels.py symbols` writes cxx_symbols.txt's room
+classes block (`_Q34Game5Level6Room37.palette gRoom37Palette`), and `tools/gfx_manifest.py check`
 (or `levels.py symbols --check`) fails when it is out of date. A new
 room gets its class with the rest of its data; run `levels.py symbols`
 to give its members their room.json names.

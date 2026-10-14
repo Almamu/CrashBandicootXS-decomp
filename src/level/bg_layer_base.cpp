@@ -5,6 +5,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Level::BgLayerBase;
+using Game::Level::BgStreamer;
+
 /* Built with old_agbcp - see docs/matching/archive/game-loop-old-agbcc.md. */
 
 /* BgLayerBase (include/bg_layer.hpp), ROM 0x08024D74-0x08024F24: its

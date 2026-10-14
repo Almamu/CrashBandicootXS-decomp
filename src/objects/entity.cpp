@@ -18,6 +18,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Level::BgLayer;
+
 /* Unless always active, whether its IsInsideRect a box around the camera
  * (layer 0's position less 100/60 px, 440x280, in Q8). */
 u8 Entity::IsNearCamera()

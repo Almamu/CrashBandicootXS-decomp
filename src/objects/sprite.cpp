@@ -12,6 +12,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Level::BgLayer;
+using Game::Level::EntitySpawner;
+
 /* The first of Sprite's methods (#664, include/sprite_obj.hpp). An
  * old_agbcp object (OLD_AGBCC_OBJS); the sprite renderer before them is
  * gfx/sprite_renderer.cpp. */

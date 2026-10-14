@@ -14,6 +14,7 @@ extern "C" {
 }
 
 using Game::Crash::Player;
+using Game::Level::EntitySpawner;
 using Game::Objects::Wumpa;
 
 /* The wumpa's pick-up check, pick-up, update and spawn (#664,

@@ -177,7 +177,7 @@ public:
         f.b.gone = 1;
         if (id != ENTITY_ID_NONE) {
             s32 i = id;
-            LevelEntityFlags *flags = gEntityFlags;
+            Game::Level::LevelEntityFlags *flags = gEntityFlags;
             s32 word = i / 32;
 
             flags->bits0Copy[word] |= 1 << (i - word * 32);

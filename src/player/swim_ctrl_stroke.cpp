@@ -13,6 +13,7 @@ extern "C" {
 
 using Game::Crash::Player;
 using Game::Crash::SwimCtrl;
+using Game::Level::EntitySpawner;
 
 /* The swim controller's (SwimCtrl, include/swim_ctrl.hpp) Reset and
  * Restart, then its three jump-table dispatchers. Reset and Restart were

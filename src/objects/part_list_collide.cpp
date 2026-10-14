@@ -15,6 +15,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Level::BgLayer;
+
 /* The part list's per-frame passes (#664, part 7c; include/part_list.hpp):
  * Update, Collide and CollideWithPlayer, then Cull, Clear and
  * CollideClass, and CollideWithObject. An old_agbcp object

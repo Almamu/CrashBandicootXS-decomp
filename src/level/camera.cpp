@@ -11,6 +11,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Level::Camera;
+
 /* GitHub issue #44: the `gCamera` camera-follow block (the
  * "generic 0x18-byte block" docs/matching/archive/issue-37-game-loop-2375c.md
  * saw `PlayRoom`'s tail flush via `SnapCamera`), class Camera

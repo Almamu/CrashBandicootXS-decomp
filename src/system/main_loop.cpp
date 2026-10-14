@@ -8,6 +8,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Level::LevelState;
+
 /* The game's top-level loop (called once from `AgbMain`, see
  * src/system/main.cpp): sets up the central per-level state object
  * (`gLevelState`, see docs/rom_map.md's "hud"/"game_loop"
