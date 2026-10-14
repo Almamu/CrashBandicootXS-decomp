@@ -7,6 +7,8 @@ extern "C" {
 #include "system.h"
 }
 
+using Game::Ui::PauseMenu;
+
 /* PauseMenu's collectible pages (menus.hpp; C++ since the #664 cleanup):
  * DrawPowersPage, DrawGemsPage and DrawRelicsPage, between Draw's helpers
  * (pause_menu_draw.cpp) and InitInfo (pause_menu_info.cpp) in the ROM.

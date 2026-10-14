@@ -862,6 +862,85 @@ checks the change is only a rename:
   CameraLead, is `Game::Objects`'). The spawners in src/level/ that are
   static members of other classes (EnemyCtrl's, Crate's, Platform's,
   Pickups', the bosses') stay with their classes.
+- **`Game::Ui`** (`Q34Game2Ui`): the HUD, `Hud` (hud.hpp) and `HudPart`
+  (part_list.hpp); the menus, `PauseMenu` and `PowerDialog` (menus.hpp),
+  and the level select, `LevelSelect`, `LevelSelectEntry`,
+  `LevelSelectPageBg`, `ZoomBg` and `LevelSelectCursor`
+  (level_select.hpp); the front end, `Starfield`, `Credits`,
+  `ContinuePrompt`, `TitleScreen`, `CompanyLogos`, `LogoActor` and
+  `LanguageSelect` (frontend.hpp); the cutscenes, `Slideshow` and
+  `CutscenePlayer` (cutscene.hpp); and the save menu, `SaveMenu`
+  (save_menu.hpp). All of src/hud/, src/menus/, src/frontend/,
+  src/cutscene/ and src/save/'s save_menu*.cpp. 253 symbols renamed,
+  among them 3 vtables (`_vt.Q34Game2Ui7HudPart`, LevelSelectEntry's,
+  LogoActor's); no code change. ldscript.txt's 3 lines that place the
+  vtable sections are updated by hand. globals.h (gHud) and frontend.hpp
+  (gLanguageSelect) forward declare the classes in the namespace;
+  hud.hpp's HUDPART_CLAMP_FRAME names `Game::Ui::HudPart`. The headers
+  close and reopen the namespace around the records and globals between
+  the classes. What stays global: the C-linkage entry points the frame
+  loop, the rooms and the 3D actors call (RunPauseMenu,
+  RunContinuePrompt, RunCredits, RunLanguageSelect, Open/
+  CloseLanguageSelect, the four Show*Dialog, FormatDecimal,
+  SetSlideshowDispcnt), the records (`pause_row`, `image_pair`,
+  `cutscene_slide`, `settings_row_stats`, `delta_record`, `slot_seed`,
+  `StarParticle`, `CreditsPopup`, `CreditsLogo`, `LogoPiece`,
+  ZoomBg's `ZoomBgCntBits16`), the menus' ROM tables and globals, and
+  the inline helpers (SetIconBank, SetBankNow, ShowFrame). `UiSprite`,
+  the HUD's and the menus' sprite, is an entity base (sprite_obj.hpp)
+  and stays global with them. No name hiding: no global is named `Ui` or
+  like the classes, and the namespace holds only classes, so the
+  C-linkage Run* functions the classes call keep their meaning.
+  Boundary calls: the layout's "hud, menus, frontend (title, logos),
+  cutscenes"; the save menu is the save screen's UI (its EEPROM access
+  is `Engine::Save`'s SaveData), so it is here; `LogoActor` is a 3D
+  actor (an ActorSelf), but only the company logos screen uses it, so it
+  goes with the front end; `Starfield` is drawn behind the language
+  select, the credits and the company logos, all front end.
+
+### What stays global
+
+With `Game::Ui`, every class of the game code is in a namespace but
+these, which stay in the global namespace on purpose:
+
+- **The C-linkage functions** (`extern "C"`): what asm, the IWRAM ARM
+  code, GAX, the linker script or a C caller reaches by its plain name,
+  and the C headers' prototypes. Among them: the BIOS helpers (system.h:
+  DivMod, MemCopy32), src/util/'s helpers (util.h), link.h's SIO and
+  timer handlers, audio.cpp's VCOUNT handler, the wrapped-text functions
+  (text.h), the menus' and front end's entry points (RunPauseMenu,
+  RunCredits, ...), crates.h's ResolvePlayerCollisions and
+  FindLineCrossing, and the asm-label aliases of members
+  (ApplyCrateCollision, DestroyPolarCrate, the balloon crates'
+  destructors). A namespace doesn't change a C-linkage name, but these
+  are declared where C sees them.
+- **The entity bases** (entity.hpp, sprite_obj.hpp, actor_self.hpp):
+  `Entity`, `Sprite`, `UiSprite`, `MovingSprite`, `GroundSprite`,
+  `PartList`, and the 3D actors' `ActorSelf`, `AnimPart`, `HpActor`.
+  Every family, in every namespace, derives from them, and
+  `Engine::Gfx`'s SpriteRenderer and `Engine::Actor`'s category driver
+  use them. Putting them in `Game::` would make the engine depend on the
+  game, and in `Engine::` would need the entity classes split from their
+  game rules (the player contact, the terrain probes), so they are the
+  shared base below both.
+- **The controllers' bases** (ctrl.hpp): `Ctrl` and `EffectCtrl`. The
+  player's, the enemies', the bosses' and the objects' controllers all
+  derive from them.
+- **The globals** (globals.h, level.h, ...: gPlayer, gLevelState,
+  gCrateList, ...) and **the data tables** (src/data/, the ROM tables
+  and the C string tables): their C names are what the linker script,
+  sym_iwram.txt and the C files use. Static data members of the
+  namespaced classes are mapped to their C names by cxx_symbols.txt.
+- **The records**: the C structs (`struct level_save`,
+  `struct crate_placement`, ...) and the plain C++ records with no
+  member functions (CrateGridNode, YetiCharge, LogoPiece, ...). No
+  mangled name or only a parameter type names them, and C views share
+  some.
+- **The header-only inline helpers** that read a global as its class
+  (RoomCrates, TouchableList, CollidableList, ForegroundList,
+  DecorationList) or work on a base class (ClampFrame, Affine,
+  SetIconBank, ShowFrame, ...), and the defines.
+- **lib/**: GAX, the AgbEeprom SDK and libgcc stay C libraries.
 
 ## Progress
 

@@ -16,6 +16,11 @@ using Engine::Gfx::BgSetup;
 using Engine::Gfx::PaletteCache;
 using Engine::Sys::FrameLimiter;
 using Engine::Text::Font;
+using Game::Ui::LevelSelect;
+using Game::Ui::LevelSelectCursor;
+using Game::Ui::LevelSelectEntry;
+using Game::Ui::LevelSelectPageBg;
+using Game::Ui::ZoomBg;
 
 /* GitHub issue #26: 0x0801B85C-0x0801CEE0 (include/level_select.hpp).
  * LevelSelect: the paged level-select screen. LevelSelect::Run is the whole

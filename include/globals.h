@@ -95,7 +95,15 @@ extern Engine::Sys::KeyInput *gInput;
 /* The HUD (game_frame.cpp builds it): a Hud (hud.hpp). No C file uses
  * it. */
 #ifdef __cplusplus
-extern class Hud *gHud;
+/* In its namespace (docs/cplusplus.md, "Namespaces"). */
+namespace Game
+{
+namespace Ui
+{
+class Hud;
+} // namespace Ui
+} // namespace Game
+extern Game::Ui::Hud *gHud;
 #endif
 extern u8 gJetpackPlayerInactive;
 

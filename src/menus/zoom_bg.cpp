@@ -19,6 +19,8 @@ extern "C" {
 #include "constants/themes.h"
 }
 
+using Game::Ui::ZoomBg;
+
 /* Setters as the original's inline member functions: storing a parameter
  * (rather than a literal) into the bitfield keeps the ROM's full
  * clear-then-or sequence, and lets the loop hoist the `1` for SetMode

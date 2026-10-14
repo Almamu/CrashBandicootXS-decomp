@@ -37,6 +37,9 @@ using Engine::Sys::FrameLimiter;
 using Game::Level::LevelLayers;
 using Game::Level::LevelProgress;
 using Game::Level::LevelState;
+using Game::Ui::LanguageSelect;
+using Game::Ui::LevelSelect;
+using Game::Ui::SaveMenu;
 
 /*
  * IWRAM 0x030007CC-0x030009E8 (stored in ROM at 0x087E5DB0-0x087E5FCC):

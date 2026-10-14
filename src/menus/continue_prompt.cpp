@@ -25,6 +25,7 @@ using Engine::Gfx::BgSetup;
 using Engine::Gfx::PaletteCache;
 using Engine::Sys::FrameLimiter;
 using Engine::Sys::VramDmaQueue;
+using Game::Ui::ContinuePrompt;
 
 /* The continue prompt's constructor (ContinuePrompt, frontend.hpp;
  * RunContinuePrompt allocates it): three BG buffers (BG0 the smoke, BG1

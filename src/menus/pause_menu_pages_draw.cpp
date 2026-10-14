@@ -14,6 +14,7 @@ extern "C" {
 
 using Engine::Sys::FrameLimiter;
 using Engine::Sys::VramDmaQueue;
+using Game::Ui::PauseMenu;
 
 /* PauseMenu's time trial and crystals pages, its page title and its
  * frame commit (menus.hpp; C++ since the #664 cleanup). The font draws

@@ -9,6 +9,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Ui::Hud;
+using Game::Ui::HudPart;
+
 /* Hud's constructor and ConfigureParts (#664 cleanup, include/hud.hpp).
  * Built with old_agbcp, as the C was with old_agbcc - see
  * docs/matching/archive/game-loop-old-agbcc.md. */

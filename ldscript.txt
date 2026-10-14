@@ -444,12 +444,12 @@ SECTIONS
         build/crashbandicootxs/src/objects/platform_mover.o(.gnu.linkonce.d._vt.Q34Game7Objects13PlatformMover); /* gPlatformMoverVtable */
         build/crashbandicootxs/src/objects/camera_lead.o(.gnu.linkonce.d._vt.Q34Game7Objects10CameraLead); /* gCameraLeadVtable */
         build/crashbandicootxs/src/objects/launch_pad.o(.gnu.linkonce.d._vt.Q34Game7Objects9LaunchPad); /* gLaunchPadVtable */
-        build/crashbandicootxs/src/menus/level_select_entry.o(.gnu.linkonce.d._vt.16LevelSelectEntry); /* gLevelSelectEntryVtable */
+        build/crashbandicootxs/src/menus/level_select_entry.o(.gnu.linkonce.d._vt.Q34Game2Ui16LevelSelectEntry); /* gLevelSelectEntryVtable */
         build/crashbandicootxs/src/level/bg_streamer.o(.gnu.linkonce.d._vt.Q34Game5Level10BgStreamer); /* gBgStreamerVtable */
         build/crashbandicootxs/src/level/bg_layer_base.o(.gnu.linkonce.d._vt.Q34Game5Level11BgLayerBase); /* gBgLayerBaseVtable */
         build/crashbandicootxs/src/level/bg_layer.o(.gnu.linkonce.d._vt.Q34Game5Level7BgLayer); /* gBgLayerVtable */
         build/crashbandicootxs/src/level/pooled_bg_layer.o(.gnu.linkonce.d._vt.Q34Game5Level13PooledBgLayer); /* gPooledBgLayerVtable */
-        build/crashbandicootxs/src/hud/hud_part.o(.gnu.linkonce.d._vt.7HudPart); /* gHudPartVtable */
+        build/crashbandicootxs/src/hud/hud_part.o(.gnu.linkonce.d._vt.Q34Game2Ui7HudPart); /* gHudPartVtable */
         build/crashbandicootxs/src/system/inline_copies_misc.o(.gnu.linkonce.d._vt.Q36Engine4Text9LargeFont); /* gLargeFontVtable */
         build/crashbandicootxs/src/system/inline_copies_misc.o(.gnu.linkonce.d._vt.Q36Engine4Text9SmallFont); /* gSmallFontVtable */
         build/crashbandicootxs/src/text/font.o(.gnu.linkonce.d._vt.Q36Engine4Text4Font); /* gFontVtable */
@@ -498,7 +498,7 @@ SECTIONS
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q34Game6Bosses18HovercraftLauncher); /* gHovercraftLauncherVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q34Game6Bosses17HovercraftSideGun); /* gHovercraftSideGunVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q34Game6Bosses21HovercraftCannonFlash); /* gHovercraftCannonFlashVtable */
-        build/crashbandicootxs/src/frontend/company_logos_ctor.o(.gnu.linkonce.d._vt.9LogoActor); /* gLogoActorVtable */
+        build/crashbandicootxs/src/frontend/company_logos_ctor.o(.gnu.linkonce.d._vt.Q34Game2Ui9LogoActor); /* gLogoActorVtable */
 
 	} = 0
 

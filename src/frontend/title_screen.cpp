@@ -22,6 +22,8 @@ using Engine::Gfx::OamBuffer;
 using Engine::Sys::Display;
 using Engine::Sys::FrameLimiter;
 using Engine::Text::Font;
+using Game::Ui::Starfield;
+using Game::Ui::TitleScreen;
 
 /* The title screen (TitleScreen, #664 part 10c-2, include/frontend.hpp):
  * its constructor, graphics loaders and logo pieces' update and draw,

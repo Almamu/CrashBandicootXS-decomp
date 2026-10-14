@@ -12,6 +12,8 @@ extern "C" {
 }
 
 using Engine::Gfx::ObjTileAllocator;
+using Game::Ui::CompanyLogos;
+using Game::Ui::LogoActor;
 
 /* The last of the company-logo screen's methods (CompanyLogos, #664 part
  * 10b, include/frontend.hpp: LoadAssetBuffered, the constructor and the

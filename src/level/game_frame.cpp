@@ -29,6 +29,10 @@ using Game::Level::GameProgress;
 using Game::Level::LevelEntityFlags;
 using Game::Level::LevelProgress;
 using Game::Level::LevelState;
+using Game::Ui::Hud;
+using Game::Ui::LevelSelect;
+using Game::Ui::SaveMenu;
+using Game::Ui::TitleScreen;
 
 /* UpdateGameFrame - the main per-frame game-loop driver at the head of
  * the UpdateGameFrame-MainLoop cluster (GitHub issue #34,

@@ -16,6 +16,8 @@ extern "C" {
 using Engine::Gfx::OamBuffer;
 using Engine::Sys::FrameLimiter;
 using Engine::Text::Font;
+using Game::Ui::CutscenePlayer;
+using Game::Ui::Slideshow;
 
 /* GitHub issue #39: 0x08024810-0x08024960 (game_loop) - the start of
  * the remainder of the UpdateGameFrame-MainLoop cluster after the

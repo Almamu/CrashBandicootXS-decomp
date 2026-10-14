@@ -13,6 +13,7 @@ extern "C" {
 
 using Engine::Sys::FrameLimiter;
 using Engine::Sys::VramDmaQueue;
+using Game::Ui::PowerDialog;
 
 /* Draws the dialog: the power's title centred at row 0x2d (gLargeFont's
  * MeasureText, then DrawText), the description wrapped into its box

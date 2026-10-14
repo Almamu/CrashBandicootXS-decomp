@@ -72,7 +72,14 @@ struct slot_seed {
 /* The language select, between OpenLanguageSelect and
  * CloseLanguageSelect (src/iwram/iwram_data.cpp): a LanguageSelect
  * (below). */
-extern class LanguageSelect *gLanguageSelect;
+namespace Game
+{
+namespace Ui
+{
+class LanguageSelect;
+} // namespace Ui
+} // namespace Game
+extern Game::Ui::LanguageSelect *gLanguageSelect;
 
 /* The six language names (src/data/digit_glyphs_17e714.cpp) and the four
  * palettes InitLanguageSelectGraphics copies (palettes_17e72c.cpp,
@@ -165,6 +172,11 @@ struct StarParticle {
 /* The starfield's 4bpp frame: the whole screen, in bytes (0x4B00). */
 #define STARFIELD_FRAME_SIZE (DISPLAY_WIDTH * DISPLAY_HEIGHT / 2)
 
+namespace Game
+{
+namespace Ui
+{
+
 /* The starfield the language select, the credits and the company logos
  * draw behind their text (starfield.cpp). */
 class Starfield
@@ -187,6 +199,9 @@ public:
 };
 
 COMPILE_TIME_ASSERT(frontend_hpp, sizeof(Starfield) == 0x14);
+
+} // namespace Ui
+} // namespace Game
 
 /* The credits stream's opcodes (gCreditsText, credits_17c5d0.cpp spells
  * them as CREDITS_PICTURE_n / CREDITS_SMALL / CREDITS_LARGE strings;
@@ -220,6 +235,11 @@ struct CreditsLogo {
     s32 palette; // 0x10 - its palette-cache slot
     u8 *tiles;   // 0x14 - its 4bpp tiles, OAM-cell ordered
 };
+
+namespace Game
+{
+namespace Ui
+{
 
 /* The credits screen (RunCredits, run from the title menu and after the
  * ending, game_frame.cpp; 0x98 bytes): a starfield, with the credits text
@@ -279,6 +299,9 @@ public:
 
 COMPILE_TIME_ASSERT(frontend_hpp, sizeof(ContinuePrompt) == 0x24);
 
+} // namespace Ui
+} // namespace Game
+
 /* One logo piece (0x34 bytes): the title screen has nine, the company
  * logos twenty (the Vicarious Visions logo's). It moves through its
  * motion (struct delta_record, above) a step at a time: while
@@ -320,6 +343,11 @@ COMPILE_TIME_ASSERT(frontend_hpp, sizeof(LogoPiece) == 0x34);
  * tiles of the affine map, 128x128 pixels), in its own coordinates: the
  * point TitleScreen::Draw puts at the logo's screen position. */
 #define TITLE_LOGO_BG_CENTER (16 * 8 / 2)
+
+namespace Game
+{
+namespace Ui
+{
 
 /* The title screen (InitTitleScreen, RunTitleScreen and
  * DestroyTitleScreen, from game_frame.cpp; 0x220 bytes): the CRASH
@@ -455,5 +483,8 @@ public:
 };
 
 COMPILE_TIME_ASSERT(frontend_hpp, sizeof(LanguageSelect) == 0x14);
+
+} // namespace Ui
+} // namespace Game
 
 #endif /* GUARD_FRONTEND_HPP */

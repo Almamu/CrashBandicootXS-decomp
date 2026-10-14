@@ -27,6 +27,10 @@
  * They have no C views (the opaque `struct level_menu` tag went in
  * #754); cxx_symbols.txt maps the methods to their C names.
  *
+ * The level select's five classes are in the namespace Game::Ui (#1033,
+ * docs/cplusplus.md "Namespaces"), the camera lead and the launch pad in
+ * Game::Objects (pickups.hpp).
+ *
  * No `#pragma interface`: g++ emits the vtables, CameraLead's in
  * camera_lead.cpp, LaunchPad's in launch_pad.cpp, LevelSelectEntry's in
  * level_select_entry.cpp (see ctrl.hpp). */
@@ -132,6 +136,11 @@ COMPILE_TIME_ASSERT(level_select_hpp, sizeof(LaunchPad) == 0x78);
 } // namespace Objects
 } // namespace Game
 
+namespace Game
+{
+namespace Ui
+{
+
 /* One level's entry on the level-select page (gLevelSelectEntryVtable):
  * `icon` shows the level's picture (or, past index 4, a per-world
  * animation), `frame` the box around it. The vtable pointer follows the
@@ -184,6 +193,9 @@ public:
 
 COMPILE_TIME_ASSERT(level_select_hpp, sizeof(LevelSelectPageBg) == 0x28);
 
+} // namespace Ui
+} // namespace Game
+
 /* One twinkle sprite at the picture's corners (ZoomBg::RandomizeTwinkle,
  * TickTwinkle). */
 struct Twinkle {
@@ -216,6 +228,11 @@ struct ZoomBgCntBits16 {
  * the step its glide sets (LevelSelectCursor::Move). */
 #define LEVEL_SELECT_ZOOM_MIN Q8_FRAC(0, 8)  // 1/32: the smallest zoom, not drawn
 #define ZOOM_BG_ZOOM_STEP     Q8_FRAC(0, 8)  // ZoomBg's zoom a frame
+
+namespace Game
+{
+namespace Ui
+{
 
 /* ZoomBg's `state` (#843, docs/flags/level_select.md): what Update does. */
 #define ZOOM_BG_STATE_ZOOM_IN 0  // zooms in to 1:1, then SHOWN
@@ -501,5 +518,8 @@ private:
 
 /* 0xAC with the ROM's levels: `items` has LEVEL_SELECT_ENTRIES entries. */
 COMPILE_TIME_ASSERT(level_select_hpp, sizeof(LevelSelect) == 0x94 + 4 * LEVEL_SELECT_ENTRIES);
+
+} // namespace Ui
+} // namespace Game
 
 #endif /* !GUARD_LEVEL_SELECT_HPP */

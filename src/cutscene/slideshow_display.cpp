@@ -10,6 +10,7 @@ extern "C" {
 }
 
 using Engine::Gfx::BrightnessFade;
+using Game::Ui::Slideshow;
 
 /* GitHub issue #38: 0x0802425C-0x08024810 (game_loop), continued from
  * level_query.cpp - see level_query.cpp's header comment and
