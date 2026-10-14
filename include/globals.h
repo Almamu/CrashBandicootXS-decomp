@@ -26,6 +26,10 @@ namespace Sys
 {
 class KeyInput;
 } // namespace Sys
+namespace Audio
+{
+class AudioContext;
+} // namespace Audio
 namespace Gfx
 {
 class OamBuffer;
@@ -65,7 +69,7 @@ extern Engine::Gfx::PaletteCache *gPaletteCache;
 #endif
 /* class AudioContext (audio.hpp) to the C++ files. */
 #ifdef __cplusplus
-extern class AudioContext *gAudioContext;
+extern Engine::Audio::AudioContext *gAudioContext;
 #endif
 /* An empty 4-byte object (DrawSprite ignores it): class SpriteRenderer
  * (sprite_obj.hpp) to the C++ files. */

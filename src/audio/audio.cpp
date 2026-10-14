@@ -10,6 +10,7 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Audio::AudioContext;
 using Engine::Sys::FrameLimiter;
 using Engine::Sys::Irq;
 
