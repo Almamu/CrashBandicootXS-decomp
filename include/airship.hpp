@@ -85,7 +85,7 @@ public:
     static void Destroy();       // DestroyAirship
     static void LoadGraphics();  // LoadAirshipGraphics
 
-    static void Spawn(s32 kind, s32 sx, s32 sy, s32 sz); // SpawnAirship (SpawnJetpackActor)
+    static void Spawn(s32 kind, s32 sx, s32 sy, s32 sz); // SpawnAirship (JetpackPlayer::SpawnActor)
     static void Damage(s32 delta);                       // DamageAirship (JetpackShot)
     static u8 IsTouching(ActorSelf *self);               // IsTouchingAirship (JetpackShot)
     static s32 GetHpPercent();                           // GetAirshipHpPercent (the HUD)

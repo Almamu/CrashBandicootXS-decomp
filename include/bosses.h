@@ -72,20 +72,6 @@ struct entry_set;
 #define CORTEX_BOSS_GEM_KIND_YELLOW 2 // SpawnYellowGem: animation 0, shrinks with 0xD
 extern void SpawnCortexBossGem(u32 id, u16 x, u16 y, u16 param, s32 kind);
 
-/* src/vehicle/jetpack/jetpack_spawn.cpp */
-extern void SpawnHovercraftCannonFlash(s32 a, s32 b, s32 c);
-/* `left` is the side gun's `bool` (HovercraftSideGun's constructor); only
- * C++ calls it. */
-#ifdef __cplusplus
-extern void SpawnHovercraftSideGun(s32 a, s32 b, s32 c, bool left);
-#else
-extern void SpawnHovercraftSideGun(s32 a, s32 b, s32 c, u8 left);
-#endif
-extern void SpawnHovercraftLauncher(s32 a, s32 b, s32 c);
-extern void SpawnHovercraftCannon(s32 a, s32 b, s32 c);
-extern void SpawnHovercraftFireball(s32 x, s32 y, s32 z);
-extern void SpawnAirshipFireball(s32 x, s32 y, s32 z);
-
 /* The bosses' globals (sym_iwram.txt): the airship's and the
  * hovercraft's variables are Airship's and Hovercraft's static members
  * (include/airship.hpp, include/hovercraft.hpp; #772). */

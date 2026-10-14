@@ -195,10 +195,10 @@ struct ActorSelf;   /* actor_self.hpp's class */
  * rest are the player's and the spawner's. */
 struct category_vtable {
     /* 0x00 - builds the player: PolarPlayer::Create (polar),
-     * CreateJetpackPlayer (jetpack, hovercraft) */
+     * JetpackPlayer::Create (jetpack, hovercraft) */
     void (*createPlayer)(struct anim_table_record *table, s32 checkpoint);
     /* 0x04 - spawns a level spawn record's object: PolarPlayer::SpawnActor,
-     * SpawnJetpackActor (ActorCategory::RunFrame, ActorCategory::Select) */
+     * JetpackPlayer::SpawnActor (ActorCategory::RunFrame, ActorCategory::Select) */
     struct ActorSelf *(*spawn)(struct actor_spawn *spawn, u8 useBonus, s32 zOffset);
     void (*createBoss)(s32 level);  // 0x08 - CreateYeti/CreateAirship/CreateHovercraft
     void (*updateBoss)(void);       // 0x0C - each category frame's start

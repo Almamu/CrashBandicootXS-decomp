@@ -2744,3 +2744,24 @@ Spawn__19PolarCollectedWumpaiii SpawnPolarCollectedWumpa
 Spawn__11PolarAkuAkuiiii SpawnPolarAkuAku
 Create__11PolarPlayerP17anim_table_recordi ConstructAnimTableState
 SpawnActor__11PolarPlayerP11actor_spawnUci SpawnActor
+#
+# #915 the jetpack spawners as static members (include/vehicle.hpp,
+# boss_actors.hpp; src/vehicle/jetpack/jetpack_spawn.cpp): JetpackPlayer's
+# SpawnActor, CreateActor and Create (the jetpack and hovercraft
+# categories' slots 1 and 0, the per-kind `new`), and the `new` helpers of
+# the classes they build.
+SpawnActor__13JetpackPlayerP11actor_spawnUci SpawnJetpackActor
+CreateActor__13JetpackPlayerUciiiP11actor_spawn CreateJetpackActor
+Create__21JetpackCheckpointText CreateJetpackCheckpointText
+Create__16JetpackExplosioniii CreateJetpackExplosion
+Spawn__21JetpackCollectedWumpaiii SpawnJetpackCollectedWumpa
+Spawn__14JetpackBalloonUciiiP19JetpackBalloonCrate SpawnJetpackBalloon
+Spawn__21HovercraftCannonFlashiii SpawnHovercraftCannonFlash
+Spawn__17HovercraftSideGuniiib SpawnHovercraftSideGun
+Spawn__18HovercraftLauncheriii SpawnHovercraftLauncher
+Spawn__16HovercraftCannoniii SpawnHovercraftCannon
+Spawn__18HovercraftFireballiii SpawnHovercraftFireball
+Spawn__15AirshipFireballiii SpawnAirshipFireball
+Spawn__17JetpackCannonballiiiii SpawnJetpackCannonball
+Spawn__11JetpackShotiiiii SpawnJetpackShot
+Create__13JetpackPlayerP17anim_table_recordi CreateJetpackPlayer

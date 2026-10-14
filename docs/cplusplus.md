@@ -647,7 +647,7 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/actor/actor_category_frame.cpp` | `RunActorCategoryFrame` (the `Update`/`Draw` virtual calls), `FindShotTarget` (`IsUnshootable`), `PolarIsTouchingPlayer`, `JetpackIsTouchingPlayer` (C linkage; since #915 the last two are static members of `PolarPlayer` and `JetpackPlayer`) | 0 + 4 | old_agbcp | 0 -> 0; the slot-offset structs, the explicit `MemCopy32` self-copies and the frame struct go | 11b |
 | `src/actor/actor_category_select.cpp` | `SelectActorCategory` (C linkage) | 0 + 1 | agbcp | 1 use -> 1 use | 11b |
 | `src/actor/inline_copies_actors.cpp` (again) | `PolarCrate`'s destructor is inline (vehicle.hpp); `DestroyPolarCrate` is its out-of-line copy, with C linkage | 0 + 1 | old_agbcp | 0 -> 0 | 11b |
-| `src/vehicle/jetpack/jetpack_spawn.cpp` | `JetpackPlayer` (include/vehicle.hpp): constructor (`InitJetpackPlayer`), `Update`, `Draw`, `Damage`, `SteerY`, `SteerX`, `StateFly`, `StateRollLeft`, `StateRollRight` (at the start of jetpack_player_update.cpp since #769); the jetpack spawners, `CreateJetpackActor`, `YetiStateStop` (C linkage): `new JetpackPlayer`, `new JetpackShot`, `new AirshipFireball`, the checkpoint banner's and explosion's inline constructors | 9 + 16 | old_agbcp | 4 pins, 2 retyped stores, 1 retyped read, `ACTOR_PMF_CALL`, 10 `ACTOR_SET_STATE`s -> 0 | 11e |
+| `src/vehicle/jetpack/jetpack_spawn.cpp` | `JetpackPlayer` (include/vehicle.hpp): constructor (`InitJetpackPlayer`), `Update`, `Draw`, `Damage`, `SteerY`, `SteerX`, `StateFly`, `StateRollLeft`, `StateRollRight` (at the start of jetpack_player_update.cpp since #769); the jetpack spawners, `CreateJetpackActor`, `YetiStateStop` (C linkage; the spawners static members since #915): `new JetpackPlayer`, `new JetpackShot`, `new AirshipFireball`, the checkpoint banner's and explosion's inline constructors | 9 + 16 | old_agbcp | 4 pins, 2 retyped stores, 1 retyped read, `ACTOR_PMF_CALL`, 10 `ACTOR_SET_STATE`s -> 0 | 11e |
 | `src/vehicle/jetpack/jetpack_player.cpp` | `JetpackPlayer`'s `DispenseWumpa`, `CountBomber`, `GetHp` (`GetJetpackPlayerHpPercent`), `SetCheckpoint`, `IsPauseLocked`, `AnimatePalette`, `Heal`, `QueueWumpa`, `StateResume`, `StateBoost`, `StateFall`, `StateFinish`, `StateEnter`, destructor, `RunState`; with `IsJetpackPlayerInactive` (C linkage) | 15 + 1 | agbcp | 15 pins, 6 retyped stores, 3 retyped reads, `ACTOR_PMF_CALL`, the hand-written destructor -> 0 | 11e |
 | `src/vehicle/jetpack/jetpack_player_update.cpp` | `JetpackPlayer::FinishRun`, `PassRing`, `AllocTiles` | 3 | **old_agbcp** (was agbcc) | 32 pins, 4 `asm`, 4 retyped stores -> 0 | 11e |
 | `src/vehicle/jetpack/jetpack_shot.cpp` | `JetpackShot` (include/vehicle.hpp): `Update`, constructor (`CreateJetpackShot`), `IsUnshootable` | 3 | agbcp | 1 pin, 2 `asm`, 3 slot calls and gotos -> 0 | 11e |
@@ -717,6 +717,8 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/data/actor_category_175558.cpp` | ActorCategory::vtables' slots 9-12 point at the members: `PolarPlayer::IsTouchingPlayer`, `JetpackPlayer::IsPlayerPauseLocked` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-category-hooks-as-static-members-of-polarplayer-and-jetpackplayer-915) |
 | `src/actor/actor_factory.cpp` | the polar factory as static members: ConstructAnimTableState, SpawnActor and CreateActor of `PolarPlayer` (`Create`, `SpawnActor`, `CreateActor`), CreatePolarCheckpointText, SpawnPolarCollectedWumpa and SpawnPolarAkuAku of the classes they build (`PolarCheckpointText::Create`, `PolarCollectedWumpa::Spawn`, `PolarAkuAku::Spawn`); actor.h's 3 and vehicle.hpp's 3 prototypes go | 6 | (unchanged) | 0 -> 0 | [#915](#the-polar-factory-as-static-members-915) |
 | `src/data/actor_category_175558.cpp`, `src/vehicle/polar/polar_course_objects.cpp`, `polar_player.cpp`, `polar_player_states.cpp` | the callers: the polar slots 0 and 1 point at `PolarPlayer::Create` and `PolarPlayer::SpawnActor`; `PolarCheckpointText::Create(...)`, `PolarAkuAku::Spawn(...)`, `PolarCollectedWumpa::Spawn(...)`; PolarPlayer's methods call `CreateActor` as a member | 0 | (unchanged) | 0 -> 0 | [#915](#the-polar-factory-as-static-members-915) |
+| `src/vehicle/jetpack/jetpack_spawn.cpp` | the jetpack spawners as static members: SpawnJetpackActor, CreateJetpackActor and CreateJetpackPlayer of `JetpackPlayer` (`SpawnActor`, `CreateActor`, `Create`), the 12 fixed-record spawners of the classes they build (`JetpackShot::Spawn`, `JetpackCheckpointText::Create`, `HovercraftCannon::Spawn`, ...); vehicle.hpp's 9 `extern "C"` prototypes and bosses.h's 6 go | 15 | (unchanged) | 0 -> 0 | [#915](#the-jetpack-spawners-as-static-members-915) |
+| `src/data/actor_category_175558.cpp`, `src/bosses/hovercraft.cpp`, `hovercraft_cannon.cpp`, `hovercraft_launcher.cpp`, `hovercraft_side_gun.cpp`, `src/vehicle/jetpack/airship_states.cpp`, `jetpack_crates.cpp`, `jetpack_plane.cpp`, `jetpack_player.cpp`, `jetpack_player_update.cpp` | the callers: the jetpack and hovercraft slots 0 and 1 point at `JetpackPlayer::Create` and `JetpackPlayer::SpawnActor`; `JetpackCannonball::Spawn(...)`, `JetpackPlayer::CreateActor(...)`, `HovercraftSideGun::Spawn(...)` & co.; hovercraft.cpp and airship_states.cpp include boss_actors.hpp | 0 | (unchanged) | 0 -> 0 | [#915](#the-jetpack-spawners-as-static-members-915) |
 | `src/text/text_box.cpp` | `GetWordLength`, `DrawWrappedTextInBox` (C linkage; takes a `Font *`, `self->SetMargin`, `HeightToLines`) | 0 + 2 | agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/aabb.cpp` (since #767: `CommitBlendRegs` at the end of gfx/display.cpp, `IwramFree`/`IwramAlloc` in system/iwram_alloc.cpp) | `CommitBlendRegs`, `AabbOverlapsInclusiveX`, `AabbOverlaps`, `IwramFree`, `IwramAlloc` (C linkage) | 0 + 5 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/fixed_math.cpp`, `line.cpp`, `line_step.cpp`, `number_format.cpp`, `printf.cpp`, `rand.cpp`, `string.cpp`, `time_format.cpp` | the fixed-point helpers, the Bresenham line, `itoa`, `sprintf`/`vsprintf`/`FindSubstring` (string.cpp since #767), `rand`/`srand`/`RandRange`, the string functions, `FormatCentiseconds` (C linkage) | 0 + 24 | agbcp | 2 pins, 5 asm, 2 asm labels -> the same | all-C++: gfx, system, util, text |
@@ -4988,6 +4990,55 @@ byte-identical:
   ones go; the polar vtable (actor_category_175558.cpp) points at
   `PolarPlayer::Create` and `PolarPlayer::SpawnActor`.
 
+### The jetpack spawners as static members (#915)
+
+jetpack_spawn.cpp (ROM 0x0802E0A4-0x0802E740, after the yeti's
+`Yeti::StateStop`) is the jetpack and hovercraft categories' factory,
+[the polar factory](#the-polar-factory-as-static-members-915)'s twin:
+SpawnJetpackActor and CreateJetpackPlayer are their vtables' slots 1 and
+0, CreateJetpackActor the per-kind `new`, and 12 small spawners each
+`new` one fixed record of gJetpackAnimTable (most also play a sound).
+They take no object, so they are static members, and the object
+(old_agbcp, `-fno-implement-inlines`, unchanged) is byte-identical:
+
+| C name | member |
+|---|---|
+| SpawnJetpackActor | `JetpackPlayer::SpawnActor` |
+| CreateJetpackActor | `JetpackPlayer::CreateActor` |
+| CreateJetpackPlayer | `JetpackPlayer::Create` |
+| CreateJetpackCheckpointText | `JetpackCheckpointText::Create` |
+| CreateJetpackExplosion | `JetpackExplosion::Create` |
+| SpawnJetpackCollectedWumpa | `JetpackCollectedWumpa::Spawn` |
+| SpawnJetpackBalloon | `JetpackBalloon::Spawn` |
+| SpawnJetpackCannonball | `JetpackCannonball::Spawn` |
+| SpawnJetpackShot | `JetpackShot::Spawn` |
+| SpawnAirshipFireball | `AirshipFireball::Spawn` |
+| SpawnHovercraftFireball | `HovercraftFireball::Spawn` |
+| SpawnHovercraftCannon | `HovercraftCannon::Spawn` |
+| SpawnHovercraftLauncher | `HovercraftLauncher::Spawn` |
+| SpawnHovercraftSideGun | `HovercraftSideGun::Spawn` |
+| SpawnHovercraftCannonFlash | `HovercraftCannonFlash::Spawn` |
+
+- **Why JetpackPlayer for the per-kind factory.** As for the polar
+  factory: CreateJetpackActor builds 8 classes, none of them its own,
+  and SpawnActor and CreateActor go with the categories' other hooks,
+  which are JetpackPlayer's. The hovercraft's launcher calls
+  `JetpackPlayer::CreateActor(JETPACK_KIND_BOMBER_HOME, ...)` for its
+  bombers.
+- **Names.** `Create`/`Spawn` keep each C name's verb. Airship and
+  Hovercraft already have a static `Spawn` (SpawnAirship,
+  SpawnHovercraft); they are other classes, and every caller qualifies
+  the name, so nothing is hidden. SpawnActor calls `CreateActor`
+  unqualified: the member, the same function.
+- **Includes.** hovercraft.cpp and airship_states.cpp include
+  boss_actors.hpp for the boss actors' classes; bosses.h declared their
+  spawners before.
+- **cxx_symbols.txt.** The `#915 the jetpack spawners` block maps the 15
+  members to their C names. vehicle.hpp's 9 `extern "C"` prototypes and
+  bosses.h's 6 go; the jetpack and hovercraft vtables
+  (actor_category_175558.cpp) point at `JetpackPlayer::Create` and
+  `JetpackPlayer::SpawnActor`.
+
 ### The crate passes as static members of Crate (#915)
 
 Four functions walk the crate list (gCrateList) and act on each entry
@@ -5066,7 +5117,8 @@ byte-identical.
   bosses.h's six externs go.
 - **Left outside.** `SpawnAirshipFireball` (jetpack_spawn.cpp) is the
   jetpack spawners', and `AirshipFireball` a class of its own
-  (boss_actors.hpp); they call no airship member.
+  (boss_actors.hpp); they call no airship member. Since #915 it is
+  [`AirshipFireball::Spawn`](#the-jetpack-spawners-as-static-members-915).
 
 ### The actor category statistics as an all-static class (#915)
 

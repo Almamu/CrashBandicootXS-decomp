@@ -1,5 +1,6 @@
 #include "hovercraft.hpp"
 #include "vehicle.hpp"
+#include "boss_actors.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
 #include "cell_anim.hpp"
@@ -357,10 +358,10 @@ void Hovercraft::Spawn(s32 kind, s32 sx, s32 sy, s32 sz)
     s32 t = Q8_TO_INT(self->animTime);
 
     DrawMap((void *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
-    SpawnHovercraftCannon(x + INT_TO_Q8(32), y + INT_TO_Q8(48), z - INT_TO_Q8(1));
-    SpawnHovercraftLauncher(x + INT_TO_Q8(30), y - INT_TO_Q8(48), z - INT_TO_Q8(1));
-    SpawnHovercraftSideGun(x - INT_TO_Q8(65), y + INT_TO_Q8(10), z - 1, 1);
-    SpawnHovercraftSideGun(x + INT_TO_Q8(132), y + INT_TO_Q8(10), z - 1, 0);
+    HovercraftCannon::Spawn(x + INT_TO_Q8(32), y + INT_TO_Q8(48), z - INT_TO_Q8(1));
+    HovercraftLauncher::Spawn(x + INT_TO_Q8(30), y - INT_TO_Q8(48), z - INT_TO_Q8(1));
+    HovercraftSideGun::Spawn(x - INT_TO_Q8(65), y + INT_TO_Q8(10), z - 1, 1);
+    HovercraftSideGun::Spawn(x + INT_TO_Q8(132), y + INT_TO_Q8(10), z - 1, 0);
     ActorSpawns::Pause();
 }
 

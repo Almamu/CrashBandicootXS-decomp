@@ -73,6 +73,8 @@ public:
 
     typedef void (AirshipFireball::*StateFunc)();
     static const StateFunc stateFuncs[3];
+
+    static void Spawn(s32 x, s32 y, s32 z); // SpawnAirshipFireball
 };
 
 COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(AirshipFireball) == 0x6C);
@@ -87,7 +89,7 @@ COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(AirshipFireball) == 0x6C);
  * (Hovercraft::LosePart) as they are shot down. */
 
 /* The hovercraft's fireball (gHovercraftFireballVtable, hovercraft_fireball.cpp;
- * the airship fireball's layout): the side guns fire it (SpawnHovercraftFireball). It sets the
+ * the airship fireball's layout): the side guns fire it (HovercraftFireball::Spawn). It sets the
  * orbit fields up as the airship's does, but never reads them: it flies
  * straight on at `velZ`. */
 /* HovercraftFireball's `state`: the stateFuncs index. */
@@ -124,6 +126,8 @@ public:
 
     typedef void (HovercraftFireball::*StateFunc)();
     static const StateFunc stateFuncs[2];
+
+    static void Spawn(s32 x, s32 y, s32 z); // SpawnHovercraftFireball
 };
 
 COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftFireball) == 0x6C);
@@ -161,6 +165,8 @@ public:
 
     typedef void (HovercraftCannon::*StateFunc)();
     static const StateFunc stateFuncs[3];
+
+    static void Spawn(s32 x, s32 y, s32 z); // SpawnHovercraftCannon
 };
 
 COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftCannon) == 0x70);
@@ -168,7 +174,7 @@ COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftCannon) == 0x70);
 
 /* The launcher (gHovercraftLauncherVtable, hovercraft_launcher.cpp; the
  * same layout as the cannon): it launches planes,
- * bombers and balloons (CreateJetpackActor kinds 5, 6 and 8) once the
+ * bombers and balloons (JetpackPlayer::CreateActor kinds 5, 6 and 8) once the
  * hovercraft has lost two parts. */
 /* HovercraftLauncher's `state`: the stateFuncs index. */
 #define HOVERCRAFT_LAUNCHER_STATE_WAIT 0      // StateWait
@@ -200,6 +206,8 @@ public:
 
     typedef void (HovercraftLauncher::*StateFunc)();
     static const StateFunc stateFuncs[3];
+
+    static void Spawn(s32 x, s32 y, s32 z); // SpawnHovercraftLauncher
 };
 
 COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftLauncher) == 0x70);
@@ -229,6 +237,8 @@ public:
     virtual u8 IsUnshootable();      // 5 IsHovercraftSideGunUnshootable
 
     void RunState(); // RunHovercraftSideGunState (UNUSED)
+
+    static void Spawn(s32 x, s32 y, s32 z, bool left); // SpawnHovercraftSideGun
 };
 
 COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftSideGun) == 0x70);
@@ -249,6 +259,8 @@ public:
     virtual u8 IsUnshootable();       // 5 IsHovercraftCannonFlashUnshootable
 
     s32 RunState(); // RunHovercraftCannonFlashState (UNUSED)
+
+    static void Spawn(s32 x, s32 y, s32 z); // SpawnHovercraftCannonFlash
 };
 
 COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftCannonFlash) == 0x5C);

@@ -11,7 +11,7 @@ extern "C" {
 /* The airship's fireball (#664 parts 11f and 11i,
  * include/boss_actors.hpp), ROM 0x08030334-0x080306AC: an HpActor that
  * the airship fires in volleys (AirshipStateFireballs,
- * SpawnAirshipFireball). It circles the point it was spawned at, then
+ * AirshipFireball::Spawn). It circles the point it was spawned at, then
  * spirals in on it (StateOrbit, StateSpiralIn), and explodes when shot
  * down. See docs/matching/archive/issue-57-0x0802fbf0-actor.md and
  * issue-58-0x08030334-actor.md. */
