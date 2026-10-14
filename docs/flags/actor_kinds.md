@@ -7,7 +7,7 @@ animation table, and that record's `index` holds the same number. The two
 families number their kinds separately. The names are in
 include/constants/actor_kinds.h, which actor_anim.h includes. They come
 from the constructor each factory calls and from the record's frames
-(src/data/anim_family_*.cpp).
+(src/game/vehicles/*/data/*_anim_family.cpp).
 
 ## Family 0: the polar runs (categories 0-2), `POLAR_KIND_*`
 
@@ -86,8 +86,8 @@ as the kind it turns into.
 ## The spawn tables
 
 The seven spawn tables (`gCategory0SpawnTable`..`gCategory6SpawnTable`,
-src/data/cell_anim_03b8b0.cpp, sub_effect_0c0c38.cpp, cell_anim_0ff1b0.cpp
-and bg_picture_151ac4.cpp) spell each spawn's `kind`, `altKind` and
+src/game/vehicles/polar/data/polar_cell_anim.cpp, polar_spawn_tables.cpp, jetpack_cell_anim.cpp
+and jetpack_sky_pictures.cpp) spell each spawn's `kind`, `altKind` and
 `bonusKind` with their family's names: `POLAR_KIND_*` in categories 0-2,
 `JETPACK_KIND_*` in 3-6. The polar runs start with a checkpoint crate,
 the jetpack stages with the stopwatch, the hovercraft's table with the

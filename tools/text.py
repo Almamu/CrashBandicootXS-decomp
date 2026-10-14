@@ -8,9 +8,9 @@ compiles each .po with msgfmt and generates the C++ of the three string
 tables from the template and the .mo files.
 
     tools/text.py cpp TABLE OUT [--mo DIR]
-        Writes the C++ definitions of TABLE (ui_text_172cd4,
-        cutscene_text_16d4d8 or cutscene_text_16e8a4), which
-        src/data/TABLE.cpp #includes, reading each language's text from
+        Writes the C++ definitions of TABLE (ui_text,
+        cutscene_text_english or cutscene_text_translations), which
+        src/.../data/TABLE.cpp #includes, reading each language's text from
         DIR/<lang>.mo with the stdlib gettext module (pgettext).
 
     tools/text.py check
@@ -27,12 +27,12 @@ tables from the template and the .mo files.
 
 The tables (docs/data.md, "Text tables"):
 
-- ui_text_172cd4: per language (English, French, German, Spanish,
+- ui_text: per language (English, French, German, Spanish,
   Italian, Dutch) the strings it adds, then its `gUiText<Lang>` array of
   UI_TEXT_COUNT pointers, which GetUiText indexes by text id. The
   template's `ui.*` entries are in text id order.
-- cutscene_text_16d4d8: the English cutscene pages, each page's strings
-  then its `gCutscene<NN>EnglishPage<P>` array; cutscene_text_16e8a4 the
+- cutscene_text_english: the English cutscene pages, each page's strings
+  then its `gCutscene<NN>EnglishPage<P>` array; cutscene_text_translations the
   other five languages' pages the same way. The template's
   `cutscene<NN>.page<P>.<I>` entries are in ROM order.
 
@@ -60,7 +60,7 @@ import textwrap
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 TEXT_DIR = os.path.join(ROOT, "text")
 POT = os.path.join(TEXT_DIR, "crashxs.pot")
-FONTS_SRC = os.path.join(ROOT, "src", "data", "hud_fonts_174be0.cpp")
+FONTS_SRC = os.path.join(ROOT, "src", "game", "ui", "data", "hud_font_tables.cpp")
 LEVELS_JSON = os.path.join(ROOT, "data", "levels", "levels.json")
 GRAPHICS_MANIFEST = os.path.join(ROOT, "graphics", "manifest.json")
 
@@ -69,7 +69,7 @@ LANGUAGES = [("en", "English"), ("fr", "French"), ("de", "German"), ("es", "Span
              ("nl", "Dutch")]
 TRANSLATIONS = [code for code, _ in LANGUAGES[1:]]
 
-TABLES = ["ui_text_172cd4", "cutscene_text_16d4d8", "cutscene_text_16e8a4"]
+TABLES = ["ui_text", "cutscene_text_english", "cutscene_text_translations"]
 
 # The text's encoding: Latin-1, and the font's 0x9C is "œ", Windows-1252's
 # code for it. A character the encoding lacks is an error; one the font
@@ -189,7 +189,7 @@ def read_glyph_widths(src, name):
 
 class Font:
     """One of the HUD fonts: its characters (gSmallFontChars or
-    gLargeFontChars, src/data/hud_fonts_174be0.cpp) and their widths."""
+    gLargeFontChars, src/game/ui/data/hud_font_tables.cpp) and their widths."""
 
     def __init__(self, src, chars, glyphs, space):
         self.chars = read_c_string(src, chars)
@@ -408,12 +408,12 @@ def cutscene_tables(pages, tr, small, large):
 def generate(table, mo_dir):
     small, large = fonts()
     ui, pages = read_template()
-    if table == "ui_text_172cd4":
+    if table == "ui_text":
         check_level_names(ui)
         return ui_table(ui, load_translations(mo_dir), small, large)
-    if table == "cutscene_text_16d4d8":
+    if table == "cutscene_text_english":
         return cutscene_tables(pages, None, small, large)[0]
-    if table == "cutscene_text_16e8a4":
+    if table == "cutscene_text_translations":
         return cutscene_tables(pages, load_translations(mo_dir), small, large)[1]
     fail("no table " + table)
 
@@ -721,7 +721,7 @@ def main():
     p.add_argument("--check", action="store_true")
     args = ap.parse_args()
     if args.cmd == "cpp":
-        if args.table != "cutscene_text_16d4d8" and not args.mo:
+        if args.table != "cutscene_text_english" and not args.mo:
             fail("cpp %s needs --mo" % args.table)
         write_lines(args.out, generate(args.table, args.mo))
     elif args.cmd == "check":

@@ -19,10 +19,10 @@
  * (boss_actors.hpp).
  *
  * The ROM tables only it reads are static data members too, defined in
- * their src/data/*.cpp files (`const struct airship_attack
+ * their src/.../data/*.cpp files (`const struct airship_attack
  * Airship::attacks[6] = ...`): `_Q44Game8Vehicles7Jetpack7Airship.attacks`
  * is renamed to gAirshipAttacks. The actor category table
- * (src/data/actor_category_175558.cpp) points at Create, Update,
+ * (src/engine/actor/data/actor_categories.cpp) points at Create, Update,
  * UpdateBg2, Destroy and LoadGraphics.
  *
  * Airship is in the namespace Game::Vehicles::Jetpack (#1033,
@@ -162,14 +162,14 @@ private:
      * (ConvertTiles fills them; a u32 store may alias its heights[]). */
     static u32 mapFrames[]; // gAirshipMapFrames
 
-    /* The ROM tables (src/data) */
-    static void (*const stateFuncs[6])();          // gAirshipStateFuncs (actor_state_17c3fc.cpp)
-    static const struct airship_attack attacks[6]; // gAirshipAttacks (weapon_kind_17c2d0.cpp)
+    /* The ROM tables (src/.../data) */
+    static void (*const stateFuncs[6])();          // gAirshipStateFuncs (airship_state_table.cpp)
+    static const struct airship_attack attacks[6]; // gAirshipAttacks (airship_attacks.cpp)
     static const u16 hitFlashPalettes[3][16];      // gAirshipHitFlashPalettes
     static const struct anim_box box;              // gAirshipBox
     static const struct anim_frame_record keyframes[2]; // gAirshipKeyframes
-    static const u16 palette[256];               // gAirshipPalette (boss_pictures_167ad4.cpp)
-    static const struct airship_picture picture; // gAirshipPicture
+    static const u16 palette[256];                      // gAirshipPalette (boss_pictures.cpp)
+    static const struct airship_picture picture;        // gAirshipPicture
 };
 
 } // namespace Jetpack

@@ -20,9 +20,9 @@
 extern u32 gVBlankCounter;
 /* The language picked at boot (0-5), set by MainLoop. */
 extern s32 gLanguage;
-/* One UI string table per language (src/data/ui_text_172cd4.cpp). */
+/* One UI string table per language (src/game/ui/data/ui_text.cpp). */
 extern const u8 *const *gUiTextTables[6];
-/* The tables gUiTextTables points at (src/data/ui_text_172cd4.cpp). */
+/* The tables gUiTextTables points at (src/game/ui/data/ui_text.cpp). */
 extern const u8 *const gUiTextEnglish[UI_TEXT_COUNT];
 extern const u8 *const gUiTextFrench[UI_TEXT_COUNT];
 extern const u8 *const gUiTextGerman[UI_TEXT_COUNT];
@@ -31,7 +31,7 @@ extern const u8 *const gUiTextItalian[UI_TEXT_COUNT];
 extern const u8 *const gUiTextDutch[UI_TEXT_COUNT];
 
 /* Held d-pad bits (right/left/down/up as bits 3-0) -> direction 0-8
- * (src/data/boss_pictures_167ad4.cpp). */
+ * (src/game/bosses/data/boss_pictures.cpp). */
 extern const u8 gDpadDirectionTable[16];
 
 /* src/engine/gfx/asset.cpp */

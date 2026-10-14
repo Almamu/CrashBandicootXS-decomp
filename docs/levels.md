@@ -7,9 +7,9 @@ its tile graphics is built from [`data/levels/`](../data/levels) by
 - the room data proper, 178,208 bytes in two ROM regions
   (`0x0824B638`-`0x08270F08`, 33 rooms, and `0x082B91D0`-`0x082BF120`,
   8 rooms): descriptors, chunk grids, palettes and entity lists, as typed
-  C in `src/data/level_rooms_24b638.cpp` and `src/data/level_rooms_2b91d0.cpp`;
+  C in `src/game/level/data/level_rooms_main_bonus.cpp` and `src/game/level/data/level_rooms_bosses_gem_paths.cpp`;
 - the 41 level assets (the per-layer tilemaps, compressed), `gRoomNNAsset`
-  in `src/data/level_assets_64f830.cpp`: 7 raw ones at `0x086C127C` and
+  in `src/game/level/data/level_assets.cpp`: 7 raw ones at `0x086C127C` and
   `0x086ECCD4`-`0x087BC13C` (1,112,392 bytes), and 34 LZ77-packed ones
   between the intro graphics (`0x0864F830`-`0x086EC63C`, formerly the
   "unidentified" `graphics/tileset1/27`-`60` `.bin` files).
@@ -23,7 +23,7 @@ The level table `gLevelTable` (`struct level_info`, one per
 level) gives each level a room list: the rooms played in order and up
 to two extra rooms, each a `struct level_room` record
 `{const u16 *palette; const struct level_desc *desc; s32 kind; ...}`
-(0x14 bytes). All of it is in `src/data/level_table_16c814.cpp`, generated
+(0x14 bytes). All of it is in `src/game/level/data/level_table.cpp`, generated
 from `levels.json` and the rooms' `room.json` (see "The level table"), with
 one record per room (`gLevelRoom00`..`gLevelRoom40`) plus seven records
 of kind 3 for the stages played in an actor category, which have no
@@ -355,13 +355,13 @@ room's generated parameter struct).
   the room data takes. gbagfx compresses the 34 packed assets, and
   `tools/bin2c.py` turns each asset into C initializer bytes
   (`asset.bin.inc`, or `asset.bin.lz.inc` trimmed to the LZ77 stream);
-- `tools/levels.py assets build/.../data/levels/level_assets_64f830.inc`:
+- `tools/levels.py assets build/.../data/levels/level_assets.inc`:
   the 41 asset definitions, in the ROM order of `levels.json`'s
-  `"assets"` list, `#include`d by `src/data/level_assets_64f830.cpp`;
+  `"assets"` list, `#include`d by `src/game/level/data/level_assets.cpp`;
 - `tools/levels.py c <region> build/.../data/levels/<region>.inc --build build/.../data/levels`
-  per region, `#include`d by the two `src/data/level_rooms_*.cpp` files;
-- `tools/levels.py table levels|records build/.../data/levels/level_table_16c814[_rooms].inc`:
-  the level table, `#include`d by `src/data/level_table_16c814.cpp` (see
+  per region, `#include`d by the two `src/*/data/level_rooms_*.cpp` files;
+- `tools/levels.py table levels|records build/.../data/levels/level_table[_rooms].inc`:
+  the level table, `#include`d by `src/game/level/data/level_table.cpp` (see
   "The level table");
 - `tools/levels.py constants entities|crates|levels|themes build/include/constants/<name>.h`:
   the constants headers named in this data, `constants/entities.h`
@@ -548,11 +548,11 @@ drawn in, the palette of the set's first room).
 
 ### The level table
 
-The level table is generated, like the room data. `src/data/level_table_16c814.cpp`
+The level table is generated, like the room data. `src/game/level/data/level_table.cpp`
 `#include`s two files that `tools/levels.py table` writes into
 `build/.../data/levels/`:
 
-- `level_table_16c814.inc` (`table levels`): `gLevelTable` and
+- `level_table.inc` (`table levels`): `gLevelTable` and
   `gLevelRoomLists`, one entry per level of `levels.json`'s `"levels"`,
   in id order;
 - `level_table_16c814_rooms.inc` (`table records`): the room records
@@ -715,8 +715,8 @@ The ROM's rooms are those its `"regions"` list; a room in no region is a
    asks for it); the build works without, under their C++ names.
 
 The build generates the new room with the ROM's, in place: its data
-after the rooms of the last region (`level_rooms_2b91d0.cpp`), its asset
-after the ROM's assets (`level_assets_64f830.cpp`), its record and the
+after the rooms of the last region (`level_rooms_bosses_gem_paths.cpp`), its asset
+after the ROM's assets (`level_assets.cpp`), its record and the
 level's array in the level table. With the original data there is no new
 room, so the ROM still matches. Everything linked after a grown table
 moves ([shifting.md](./shifting.md)); past the end of the ROM's 0xFF

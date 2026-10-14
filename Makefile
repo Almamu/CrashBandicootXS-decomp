@@ -75,6 +75,14 @@ CXX_SRCS := $(shell find $(C_SUBDIR) -name '*.cpp' | sort)
 CXX_ASMS := $(patsubst $(C_SUBDIR)/%.cpp,$(C_BUILDDIR)/%.s,$(CXX_SRCS))
 CXX_OBJS := $(patsubst $(C_SUBDIR)/%.cpp,$(C_BUILDDIR)/%.o,$(CXX_SRCS))
 
+# The ROM data tables: the .cpp files of the data/ subdirectories, next to
+# the code that uses them (src/<area>/<namespace>/data/, docs/file_layout.md).
+# Each table's name is unique: $(call data_obj,NAME) is the object of
+# NAME.cpp, wherever it is.
+DATA_SRCS := $(foreach f,$(CXX_SRCS),$(if $(findstring /data/,$(f)),$(f)))
+DATA_OBJS := $(patsubst $(C_SUBDIR)/%.cpp,$(C_BUILDDIR)/%.o,$(DATA_SRCS))
+data_obj = $(filter %/$(1).o,$(DATA_OBJS))
+
 ASM_SRCS := $(wildcard $(ASM_SUBDIR)/*.s)
 ASM_OBJS := $(patsubst $(ASM_SUBDIR)/%.s,$(ASM_BUILDDIR)/%.o,$(ASM_SRCS))
 
@@ -155,20 +163,20 @@ shiftcheck: $(OBJS) $(LDSCRIPT)
 # corresponding built file to exist first. Each GAX2 block is a .bin and
 # the .s that data.s includes: its bytes, with the pointers as
 # relocations. The graphics and the level assets are C arrays in
-# src/data/ (graphics.mk, levels.mk).
+# the data/ directories (graphics.mk, levels.mk).
 $(DATA_ASM_OBJS): $(SOUND_BUILT)
 
 # The music block starts with pointers into the sound-effect set (to its
 # handler type, at an offset the set's layout gives), so it depends on
 # the set's sources too. The same run writes the default song's layout
 # struct (gGaxDefaultSong) and the song offsets the song table
-# (src/data/song_table_16aa20.cpp) is written with.
+# (src/engine/audio/data/song_table.cpp) is written with.
 $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/gax_audio_data.s $(SOUND_BUILDDIR)/gax_default_layout.bin \
 		$(SOUND_BUILDDIR)/gax_default_layout.s $(SOUND_BUILDDIR)/gax_songs.h &: sound/gax_manifest.json $(SOUND_SONGS) $(SOUND_SAMPLES) $(SOUND_SFX_SOURCES) tools/gax_audio.py
 	python3 tools/gax_audio.py $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/gax_default_layout.bin $(SOUND_BUILDDIR)/gax_songs.h
 
-$(C_BUILDDIR)/data/song_table_16aa20.o: CPPFLAGS += -iquote $(SOUND_BUILDDIR)
-$(C_BUILDDIR)/data/song_table_16aa20.o: $(SOUND_BUILDDIR)/gax_songs.h
+$(C_BUILDDIR)/engine/audio/data/song_table.o: CPPFLAGS += -iquote $(SOUND_BUILDDIR)
+$(C_BUILDDIR)/engine/audio/data/song_table.o: $(SOUND_BUILDDIR)/gax_songs.h
 
 $(SOUND_BUILDDIR)/gax_sfx_data.bin $(SOUND_BUILDDIR)/gax_sfx_data.s &: $(SOUND_SFX_SOURCES) tools/gax_audio.py
 	python3 tools/gax_audio.py --sfx $(SOUND_BUILDDIR)/gax_sfx_data.bin
@@ -203,7 +211,7 @@ tidy:
 
 #### Screen-size compile check (#979) ####
 # `make screen-check` compiles every game object (src/, and of the
-# src/data/ tables those that spell a DISPLAY_ name or a logo fly-in's
+# data tables those that spell a DISPLAY_ name or a logo fly-in's
 # _FLY_IN: the layouts' position tables, the logo pieces' motions and
 # their seeds) with another screen size, SCREEN_CHECK_WIDTH x
 # SCREEN_CHECK_HEIGHT (PORTABLE's 426x240 by default), into
@@ -225,9 +233,9 @@ ifeq ($(SCREEN_CHECK),1)
 CPPFLAGS += -D DISPLAY_WIDTH=$(SCREEN_CHECK_WIDTH) -D DISPLAY_HEIGHT=$(SCREEN_CHECK_HEIGHT)
 endif
 
-SCREEN_CHECK_DATA_OBJS := $(patsubst $(C_SUBDIR)/%.cpp,$(C_BUILDDIR)/%.o,$(shell grep -lE 'DISPLAY_|_FLY_IN' $(C_SUBDIR)/data/*.cpp))
+SCREEN_CHECK_DATA_OBJS := $(patsubst $(C_SUBDIR)/%.cpp,$(C_BUILDDIR)/%.o,$(shell grep -lE 'DISPLAY_|_FLY_IN' $(DATA_SRCS)))
 
-screen-check-objs: $(filter-out $(C_BUILDDIR)/data/%,$(C_OBJS) $(CXX_OBJS)) $(SCREEN_CHECK_DATA_OBJS)
+screen-check-objs: $(filter-out $(DATA_OBJS),$(C_OBJS) $(CXX_OBJS)) $(SCREEN_CHECK_DATA_OBJS)
 
 #### decomp.dev progress report ####
 # See docs/decomp_dev.md. `report` builds one objdiff unit per source
@@ -517,7 +525,7 @@ $(NO_CSE_SKIP_BLOCKS_OBJS): CC1FLAGS += -fno-cse-skip-blocks
 # EEPROMRead/EEPROMWrite. Every object matches as a whole with the flag.
 # EEPROM_V122 is the ROM's only SDK version tag, and no other compiled
 # code was found to be SDK C. The library's data object
-# (lib/agb_eeprom/data/eeprom_5a9eec.o) keeps the default flags. See
+# (lib/agb_eeprom/data/eeprom_data.o) keeps the default flags. See
 # docs/matching/eeprom-sdk-o1.md.
 O1_OBJS := $(LIB_BUILDDIR)/agb_eeprom/src/eeprom_timer.o \
            $(LIB_BUILDDIR)/agb_eeprom/src/eeprom_timer_stop.o \

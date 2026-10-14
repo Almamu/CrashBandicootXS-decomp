@@ -9,9 +9,9 @@
  * display setup). Neither class has a vtable, and neither has a C view
  * (the C `struct cutscene_player` went in #754).
  *
- * The cutscenes themselves are data (src/data/cutscenes_16d1c8.cpp,
- * cutscene_slides_16e064.cpp): the slide and page tables below. The
- * cutscene text is C (src/data/cutscene_text_*.c) and includes nothing.
+ * The cutscenes themselves are data (src/game/ui/data/cutscenes.cpp,
+ * cutscene_slides.cpp): the slide and page tables below. The
+ * cutscene text is C (src/game/ui/data/cutscene_text_*.cpp) and includes nothing.
  *
  * `#pragma interface`: no class here has a vtable, so there is none to
  * emit; the pragma keeps g++ from emitting out-of-line copies of inline
@@ -53,13 +53,13 @@ struct cutscene_page {
 };
 
 /* The cutscenes, one {slides, count} header each
- * (src/data/cutscenes_16d1c8.cpp). */
+ * (src/game/ui/data/cutscenes.cpp). */
 extern const struct cutscene_slides gCutscenes[11];
 
 /* Every cutscene's pages, per language (gLanguage), each indexed like
  * gCutscenes. Defined in src/engine/sys/iwram_data.cpp. */
 extern const struct cutscene_page *const *gCutsceneTexts[6];
-/* The tables gCutsceneTexts points at (src/data/cutscenes_16d1c8.cpp). */
+/* The tables gCutsceneTexts points at (src/game/ui/data/cutscenes.cpp). */
 extern const struct cutscene_page *const gCutsceneTextEnglish[11];
 extern const struct cutscene_page *const gCutsceneTextFrench[11];
 extern const struct cutscene_page *const gCutsceneTextGerman[11];

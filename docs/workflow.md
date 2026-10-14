@@ -139,7 +139,7 @@ incomplete pass and should be finished before moving on.
      definition's prototype. Don't add `extern`s to the `.c` file. The
      two exceptions that stay local are `_call_via_rN` (each call site
      declares the shape it calls with) and references from one
-     `src/data/` table to another. If the file only matches with another
+     `src/*/data/` table to another. If the file only matches with another
      type for a symbol, keep an asm-label alias with a comment, and add
      it to [docs/headers.md's "Codegen exceptions"](./headers.md#codegen-exceptions) table:
      `/* codegen: ... docs/headers.md */ extern s32 RandRange_s32(s32 max) asm("RandRange");`.

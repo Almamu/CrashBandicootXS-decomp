@@ -2,7 +2,7 @@
 """`tools/magic_numbers.py --screen`: the literals that may come from the
 screen size (#979).
 
-Scans the game code and its data tables (src/, src/data/ included, and
+Scans the game code and its data tables (src/, src/.../data/ included, and
 include/; comments and strings blanked) for the literals a 240x160
 screen leaves behind, and puts each one under a kind:
 
@@ -29,7 +29,7 @@ screen leaves behind, and puts each one under a kind:
   scanline  227 / 228 (`0xE3` / `0xE4`) and 68 on a VCOUNT line
   layout    a fixed position in a 2D layout (LAYOUTS: a SetPos/Move
             call, an icon or text box placement, a position table in
-            src/data): an argument that adds a literal to nothing but
+            src/.../data): an argument that adds a literal to nothing but
             measured sizes and counters, so it is measured from the
             screen's (0,0) instead of from an anchor (the art's origin
             DISPLAY_ART_X/Y, or an edge: DISPLAY_RIGHT/BOTTOM)
@@ -145,7 +145,7 @@ ANCHORED = re.compile(r"\bDISPLAY_\w+\s*[-+]\s*$|\bDISPLAY_(?:RIGHT|BOTTOM)\(\s*
 # position call (LAYOUT_CALLS: the call's name and which of its arguments
 # are the x and y, None for all), a local row or column initialized to a
 # literal (LAYOUT_LOCAL) or a sprite's Q8 position set to one
-# (LAYOUT_Q8), and on a `{ x, y }` line of a position table in src/data
+# (LAYOUT_Q8), and on a `{ x, y }` line of a position table in src/.../data
 # (LAYOUT_TABLES), each such argument is a position. One that adds a
 # literal to nothing but measured sizes, counters and slide offsets
 # (LAYOUT_FREE: `0x87`, `0xa0 - w`, `item * 10 + 0x80`) is measured from
@@ -166,11 +166,11 @@ LAYOUT_CALLS = {
 LAYOUT_CALL = re.compile(r"\b(" + "|".join(LAYOUT_CALLS) + r")\(")
 LAYOUT_LOCAL = re.compile(r"^\s*(?:screen_\w+ |s32 |u32 )?([xy]) = ([^;]*);")
 LAYOUT_Q8 = re.compile(r"(?:->|\.)[xy] = (INT_TO_Q8\(-?(?:0x[0-9a-fA-F]+|\d+)\)|0x[0-9a-fA-F]+00);")
-LAYOUT_TABLES = re.compile(r"src/data/(map_tables_16c498|menu_tables_16b138|hud_fonts_174be0)\.cpp")
+LAYOUT_TABLES = re.compile(r"src/(?:[a-z_]+/)+data/(level_select_layout|menu_tables|hud_font_tables)\.cpp")
 LAYOUT_PAIR = re.compile(r"\{ *(-?\d+), *(-?\d+) *\}")
 # The logo pieces' motions (struct delta_record, frontend.hpp): a hold,
 # then the piece's x and y on the logo art.
-LAYOUT_MOTIONS = re.compile(r"src/data/(countdown_17d7a4|level_gfx_17cff4)\.cpp")
+LAYOUT_MOTIONS = re.compile(r"src/(?:[a-z_]+/)+data/(universal_vv_logo_motions|title_screen_gfx)\.cpp")
 LAYOUT_MOTION = re.compile(r"^\s*\{ *\d+, *(\d+), *(\d+), ")
 LAYOUT_FREE = {
     "w",
@@ -288,31 +288,31 @@ CLASSES = [
     ("hardware", r"src/game/ui/level_select_cursor\.cpp", r"OBJ_VRAM0 \+", "an OBJ VRAM offset"),
     ("hardware", r"src/game/ui/starfield\.cpp", r"\| 0xF000", "a BG map entry's palette bank (15)"),
     ("hardware", r"src/engine/gfx/sprite_arm\.cpp", r"0xF0", "a palette nibble"),
-    # --- the data tables (src/data) -----------------------------------
+    # --- the data tables (src/.../data) -----------------------------------
     (
         "hardware",
-        r"src/data/(countdown_17d7a4|popup_glyphs_17cf40)\.cpp",
+        r"src/(?:[a-z_]+/)+data/(universal_vv_logo_motions|credits_title_logos)\.cpp",
         r"bg_package|\{ 0x1e, 0x8,",
         "a picture's own size in tiles (fixed art, like DISPLAY_ART_WIDTH)",
     ),
     (
         "screen",
-        r"src/data/(countdown_17d7a4|level_gfx_17cff4)\.cpp",
+        r"src/(?:[a-z_]+/)+data/(universal_vv_logo_motions|title_screen_gfx)\.cpp",
         r"^\s*\{ \d+, \d+, \d+, ",
         "a logo piece's position on the 240x160 logo art (DISPLAY_ART_X/Y)",
     ),
-    ("coincidence", r"src/data/actor_tables_16c2d8\.cpp", r".", "a position in the boss arena (Dingodile's stops, Q8)"),
-    ("coincidence", r"src/data/palette_cycle_175760\.cpp", r".", "a colour (BGR555)"),
-    ("coincidence", r"src/data/", r"^\s*(0x[0-9A-F]{4}, ){4}", "a colour (BGR555)"),
-    ("coincidence", r"src/data/anim_family_", r"\{ -?\d+, -?\d+, -?\d+, \d+, \d+, \d+ \}", "a hit box (offset and size)"),
-    ("coincidence", r"src/data/", r"(JETPACK|POLAR)_KIND_", "a 3D course's spawn record (offset, angle, distance)"),
-    ("coincidence", r"src/data/boss_pictures_167ad4\.cpp", r".", "the sine table"),
-    ("coincidence", r"src/data/cell_anim_03b8b0\.cpp", r"tiles\[", "a picture's frame in tiles"),
-    ("coincidence", r"src/data/motion_records_16b304\.cpp", r".", "a motion record's speeds"),
-    ("coincidence", r"src/data/(singleton|weapon)_kind_", r".", "a boss's attack parameters (frames, counts)"),
-    ("coincidence", r"src/data/slot_seeds_17d6c0\.cpp", r".", "a logo piece's first hold (frames)"),
-    ("coincidence", r"src/data/sprite_banks_", r".", "sprite bank data (frame numbers, boxes, palettes)"),
-    ("coincidence", r"src/data/cutscene_slides_16e064\.cpp", r".", "a slide's duration (frames)"),
+    ("coincidence", r"src/game/bosses/data/boss_motion_tables\.cpp", r".", "a position in the boss arena (Dingodile's stops, Q8)"),
+    ("coincidence", r"src/engine/actor/data/actor_palette_cycle_frames\.cpp", r".", "a colour (BGR555)"),
+    ("coincidence", r"src/(?:[a-z_]+/)+data/", r"^\s*(0x[0-9A-F]{4}, ){4}", "a colour (BGR555)"),
+    ("coincidence", r"src/(?:[a-z_]+/)+data/(polar|jetpack)_anim_family", r"\{ -?\d+, -?\d+, -?\d+, \d+, \d+, \d+ \}", "a hit box (offset and size)"),
+    ("coincidence", r"src/(?:[a-z_]+/)+data/", r"(JETPACK|POLAR)_KIND_", "a 3D course's spawn record (offset, angle, distance)"),
+    ("coincidence", r"src/game/bosses/data/boss_pictures\.cpp", r".", "the sine table"),
+    ("coincidence", r"src/game/vehicles/polar/data/polar_cell_anim\.cpp", r"tiles\[", "a picture's frame in tiles"),
+    ("coincidence", r"src/game/crash/data/motion_records\.cpp", r".", "a motion record's speeds"),
+    ("coincidence", r"src/(?:[a-z_]+/)+data/(hovercraft|airship)_attacks", r".", "a boss's attack parameters (frames, counts)"),
+    ("coincidence", r"src/game/ui/data/vv_logo\.cpp", r".", "a logo piece's first hold (frames)"),
+    ("coincidence", r"src/(?:[a-z_]+/)+data/sprite_banks_", r".", "sprite bank data (frame numbers, boxes, palettes)"),
+    ("coincidence", r"src/game/ui/data/cutscene_slides\.cpp", r".", "a slide's duration (frames)"),
     # --- screen: derived from the screen size -------------------------
     ("screen", r"src/game/level/camera\.cpp", r"INT_TO_Q8\((120|80)\)", "the camera's target at the screen centre"),
     ("screen", r"src/game/level/camera\.cpp", r"0x2800|0x27FF|0x1AA[A9]", "the camera's look-ahead, a sixth of the screen"),
@@ -405,13 +405,13 @@ CLASSES = [(c, re.compile(p), re.compile(l), r) for c, p, l, r in CLASSES]
 LAYOUT_CLASSES = [
     (
         "screen",
-        r"src/game/ui/hud|src/data/hud_fonts_174be0\.cpp",
+        r"src/game/ui/hud|src/game/ui/data/hud_font_tables\.cpp",
         r".",
         "a HUD position: anchor to the screen's edges or centre (DISPLAY_RIGHT/BOTTOM, DISPLAY_CENTER_X)",
     ),
     (
         "screen",
-        r"src/data/(countdown_17d7a4|level_gfx_17cff4)\.cpp",
+        r"src/(?:[a-z_]+/)+data/(universal_vv_logo_motions|title_screen_gfx)\.cpp",
         r".",
         "a logo piece's position on the 240x160 logo art (DISPLAY_ART_X/Y)",
     ),

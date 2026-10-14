@@ -2,7 +2,7 @@
 """`tools/magic_numbers.py --bits`: flag bits, masks and raw state values
 still written as numbers, grouped by field (#843).
 
-Scans the game code (src/ without src/data/, and include/) for:
+Scans the game code (src/ without src/.../data/, and include/) for:
 
   shr      single-bit tests `(x >> n) & 1`;
   lsl31    single-bit extractions `((u32)x << m) >> 31` (bit 31 - m of
@@ -309,11 +309,11 @@ class BitScan(mn.FileScan):
 
 
 def source_files():
-    """The game's sources: src/ without src/data/, and include/."""
+    """The game's sources: src/ without src/.../data/, and include/."""
     out = []
     for path in mn.source_files():
         rel = os.path.relpath(path, ROOT)
-        if rel.startswith(os.path.join("src", "data")):
+        if "data" in rel.split(os.sep)[1:-1]:
             continue
         if not rel.endswith(mn.CXX_EXTS + mn.C_EXTS):
             continue

@@ -27,7 +27,7 @@ HpActor's declaration.
 
 With `index` a `u8`, the three bytes after it are the compiler's padding
 before the `table_A` pointer at 0x04. The ROM tables
-(anim_family_178f80.cpp, anim_family_17aa6c.cpp, level_gfx_17cff4.cpp's
+(polar_anim_family.cpp, jetpack_anim_family.cpp, title_screen_gfx.cpp's
 gLogoActorAnim) keep their positional initializers. Every index is below
 256 and its upper bytes were 0, so the data objects are the same.
 

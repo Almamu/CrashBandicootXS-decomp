@@ -44,7 +44,7 @@
   ],
   "regions": [
     {
-      "name": "level_rooms_24b638",
+      "name": "level_rooms_main_bonus",
       "rooms": [
         "air_supply/main",
         "down_the_hole/main",
@@ -82,7 +82,7 @@
       ]
     },
     {
-      "name": "level_rooms_2b91d0",
+      "name": "level_rooms_bosses_gem_paths",
       "rooms": [
         "mega_mix/main",
         "tiny/main",
@@ -96,7 +96,7 @@
     }
   ],
   "assets": {
-    "name": "level_assets_64f830",
+    "name": "level_assets",
     "rooms": [
       "jungle_jam/bonus",
       "temple_of_boom/bonus",

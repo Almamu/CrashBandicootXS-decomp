@@ -14,7 +14,7 @@ until #767, which also moved some to `src/game/entities/entity.cpp` and
 
 `graphics/` holds only editable sources, grouped by what the game does
 with them. Every asset is built back into the ROM's bytes by
-`graphics.mk` (see "Build pipeline"), into C arrays that `src/data/*.cpp`
+`graphics.mk` (see "Build pipeline"), into C arrays that `src/*/data/*.cpp`
 `#include`s. File names carry no ROM addresses: `graphics/manifest.json`
 records them (see "The manifest"), and data_map.md's "Graphics assets"
 table lists them by address. A numeric prefix is kept only where it is an
@@ -22,16 +22,16 @@ index the C or the build uses.
 
 | folder | what | symbols | built by |
 |---|---|---|---|
-| `cutscenes/` | the 24 cutscene pictures, `NN_<what>.png` (NN = the picture's number); Mode 4, palette in the PNG | `gCutscenePictureNN`, `...NNBitmap` | `cutscene_pictures_5a9f70.cpp` |
-| `fonts/` | the HUD fonts, `small.png`, `large.png` (OBJ sheets, run-time palette) | `gSmallFontTiles`, `gLargeFontTiles` | `font_tiles_5a4e70.cpp` |
-| `logos/` | the Universal logo (`universal.png`, a BG package, + `universal_high.json`), the VV logo screen (`vicarious_visions/emblem`, `letters`, `url`) and the credits logos (`credits/`) | `gUniversalLogoBg`, `gVvLogo*`, `gCredits*Logo*` | `menu_graphics_61badc.cpp` |
-| `title/` | the title screen: `logo.png` (affine BG package) and the OBJ packages `crash`, `bandicoot`, `arrow1`, `arrow2` | `gTitleScreenBg`, `gTitle*Obj` | `menu_graphics_61badc.cpp` |
-| `menus/` | the menu sky, the pause screen and the continue prompt's three layers (`continue_prompt/`), BG packages | `gMenuSkyBg`, `gPauseMenuBg`, `gContinuePrompt*Bg` | `menu_graphics_61badc.cpp` |
-| `level_select/` | the platform (a BG package), the cursor zoom and the ten theme pictures (`pictures/<theme>.png`) | `gLevelSelectPageBg`, `gLevelSelectCursorZoomTiles`, `gLevelSelectPictureN*` | `menu_graphics_61badc.cpp`, `level_select_graphics_6377c0.cpp` |
-| `sprites/` | the 56 sprite banks (`bankNN_<name>/fKKK.png`, `bank.json`) and the 125 OBJ palettes (`palettes/NNN_<owner>.pal`) | `gSpriteBankTable`, `gSpriteBankNN*`, `gObjPalettes` | `sprite_tiles_2bf120.cpp`, `sprite_banks_*.cpp` |
-| `vehicles/polar/` | the polar stages: the framed sprite sheet (`sprite_sheet/<kind>/NN.png`, `sheet.json`), the player and the Yeti (zero-run frame sets), the BG0 ice wall | `gPolarSpriteSheet`, `gPolarPlayerRleFrames`, `gYetiRleFrames`, `gCategoryFamily0CellAnim` | `sprite_sheet_0b2120.cpp`, `rle_sprites_0c2758.cpp`, `cell_anim_03b8b0.cpp` |
-| `vehicles/jetpack/` | the jetpack stages: the framed sprite sheet, the player, the BG0 clouds, the three skies (`skies/`) and the airship (`airship/frameN.png`) | `gJetpackSpriteSheet`, `gJetpackPlayerRleFrames`, `gCategoryFamily1CellAnim`, `gCategory3-5BgPicture`, `gAirshipPicture` | `sprite_sheet_14174c.cpp`, `rle_sprites_15a050.cpp`, `cell_anim_0ff1b0.cpp`, `bg_picture_151ac4.cpp`, `boss_pictures_167ad4.cpp` |
-| `bosses/` | N. Gin's hovercraft, `hovercraft.png` | `gHovercraftPicture` | `boss_pictures_167ad4.cpp` |
+| `cutscenes/` | the 24 cutscene pictures, `NN_<what>.png` (NN = the picture's number); Mode 4, palette in the PNG | `gCutscenePictureNN`, `...NNBitmap` | `cutscene_pictures.cpp` |
+| `fonts/` | the HUD fonts, `small.png`, `large.png` (OBJ sheets, run-time palette) | `gSmallFontTiles`, `gLargeFontTiles` | `font_tiles.cpp` |
+| `logos/` | the Universal logo (`universal.png`, a BG package, + `universal_high.json`), the VV logo screen (`vicarious_visions/emblem`, `letters`, `url`) and the credits logos (`credits/`) | `gUniversalLogoBg`, `gVvLogo*`, `gCredits*Logo*` | `menu_graphics.cpp` |
+| `title/` | the title screen: `logo.png` (affine BG package) and the OBJ packages `crash`, `bandicoot`, `arrow1`, `arrow2` | `gTitleScreenBg`, `gTitle*Obj` | `menu_graphics.cpp` |
+| `menus/` | the menu sky, the pause screen and the continue prompt's three layers (`continue_prompt/`), BG packages | `gMenuSkyBg`, `gPauseMenuBg`, `gContinuePrompt*Bg` | `menu_graphics.cpp` |
+| `level_select/` | the platform (a BG package), the cursor zoom and the ten theme pictures (`pictures/<theme>.png`) | `gLevelSelectPageBg`, `gLevelSelectCursorZoomTiles`, `gLevelSelectPictureN*` | `menu_graphics.cpp`, `level_select_graphics.cpp` |
+| `sprites/` | the 56 sprite banks (`bankNN_<name>/fKKK.png`, `bank.json`) and the 125 OBJ palettes (`palettes/NNN_<owner>.pal`) | `gSpriteBankTable`, `gSpriteBankNN*`, `gObjPalettes` | `sprite_tiles.cpp`, `sprite_banks_*.cpp` |
+| `vehicles/polar/` | the polar stages: the framed sprite sheet (`sprite_sheet/<kind>/NN.png`, `sheet.json`), the player and the Yeti (zero-run frame sets), the BG0 ice wall | `gPolarSpriteSheet`, `gPolarPlayerRleFrames`, `gYetiRleFrames`, `gCategoryFamily0CellAnim` | `polar_sprite_sheet.cpp`, `polar_rle_sprites.cpp`, `polar_cell_anim.cpp` |
+| `vehicles/jetpack/` | the jetpack stages: the framed sprite sheet, the player, the BG0 clouds, the three skies (`skies/`) and the airship (`airship/frameN.png`) | `gJetpackSpriteSheet`, `gJetpackPlayerRleFrames`, `gCategoryFamily1CellAnim`, `gCategory3-5BgPicture`, `gAirshipPicture` | `jetpack_sprite_sheet.cpp`, `jetpack_rle_sprites.cpp`, `jetpack_cell_anim.cpp`, `jetpack_sky_pictures.cpp`, `boss_pictures.cpp` |
+| `bosses/` | N. Gin's hovercraft, `hovercraft.png` | `gHovercraftPicture` | `boss_pictures.cpp` |
 
 `vehicles/` mirrors `src/game/vehicles/`: everything a polar or jetpack stage
 draws is in one place. The rooms' graphics aren't here: each room's BG
@@ -110,17 +110,17 @@ products. grit (`tools/grit`) does the pixel layout of every PNG, and
 `tools/jasc_pal.py` the palettes. `tools/gbagfx` (vendored from the sibling
 `sa2` decompilation, same Dimps-engine lineage) does the LZ77 compression.
 `tools/bin2c.py` writes the result as C initializer bytes that a
-`src/data/*.cpp` definition `#include`s, so every graphics asset is a C
+`src/*/data/*.cpp` definition `#include`s, so every graphics asset is a C
 array (`data/data.s` incbins no graphics).
 
 | ROM | object | contents |
 |---|---|---|
-| `080B2120`, `0814174C` | `sprite_sheet_0b2120.cpp`, `sprite_sheet_14174c.cpp` | the two framed OBJ sprite sheets (`graphics/unknown/`, `tools/framed_gfx.py`) |
-| `085A4E70` | `font_tiles_5a4e70.cpp` | the two HUD fonts |
-| `085A9F70` | `cutscene_pictures_5a9f70.cpp` | the 24 cutscene pictures |
-| `0861BADC` | `menu_graphics_61badc.cpp` | menu/title palettes, the `bg_package` pictures, the credits and VV logos |
-| `086377C0` | `level_select_graphics_6377c0.cpp` | the level-select cursor zoom, pictures and their palettes |
-| `0863D4C0` | `level_bg_tiles_63d4c0.cpp` | the six level BG1-3 tile sets |
+| `080B2120`, `0814174C` | `polar_sprite_sheet.cpp`, `jetpack_sprite_sheet.cpp` | the two framed OBJ sprite sheets (`graphics/unknown/`, `tools/framed_gfx.py`) |
+| `085A4E70` | `font_tiles.cpp` | the two HUD fonts |
+| `085A9F70` | `cutscene_pictures.cpp` | the 24 cutscene pictures |
+| `0861BADC` | `menu_graphics.cpp` | menu/title palettes, the `bg_package` pictures, the credits and VV logos |
+| `086377C0` | `level_select_graphics.cpp` | the level-select cursor zoom, pictures and their palettes |
+| `0863D4C0` | `level_bg_tiles.cpp` | the six level BG1-3 tile sets |
 
 The LZ77 ones are `u8` arrays trimmed to the stream (`bin2c.py --lz`). All
 but the cutscene bitmaps start on a word boundary in the ROM and are
@@ -136,7 +136,7 @@ Its header comment in `tools/gfx_manifest.py` describes each kind.
 
 **The build reads it only for the graphics classes** (below). The ROM's
 layout comes from `ldscript.txt` and the order of the definitions in each
-`src/data/*.cpp`, and every reference is a symbol, so an asset that grows
+`src/*/data/*.cpp`, and every reference is a symbol, so an asset that grows
 or shrinks just moves what follows it. The addresses are kept so the
 sources can be extracted from `baserom.gba` again, and to put the
 classes' definitions in ROM order:
@@ -189,7 +189,7 @@ The manifest decides them:
   category's, defined with other data). The other kinds can't have a
   class (docs/cplusplus.md says why). The part's `symbol` stays its C name. `about`, if
   given, says what the graphic is, for the class's comment.
-- **`objects`.** The top-level list of the `src/data` objects whose
+- **`objects`.** The top-level list of the `src/*/data` objects whose
   graphics are all class members, each `{name, rom, end}`. Every part in
   an object's ROM range is defined by it, in ROM order.
 
@@ -203,7 +203,7 @@ The manifest decides them:
 - `defs OBJECT OUT`: the member definitions of one object, in ROM order
   (`const u8 Engine::Gfx::TitleScreenBg::palette[] __attribute__((aligned(4))) = {
   #include "title/logo.gbapal.lz.inc" };`), into
-  `build/.../graphics/<object>.inc`, which `src/data/<object>.cpp`
+  `build/.../graphics/<object>.inc`, which `src/*/data/<object>.cpp`
   `#include`s.
 - `symbols`: the block of cxx_symbols.txt between the `graphics classes`
   markers, which maps each member back to its C name
@@ -219,11 +219,11 @@ the members.
 
 | object | classes |
 |---|---|
-| `menu_graphics_61badc.cpp` | the menus (`MenuSkyBg`, `PauseMenuBg`, `ContinuePrompt{Smoke,Glow,UkaUka}Bg`), the title (`TitleScreenBg`, `Title{Bandicoot,Crash,Arrow1,Arrow2}Obj`), the logos (`UniversalLogoBg`, `Credits{RedEyeStudios,Shinen,Cosmigo,Universal,Vv}Logo`, `VvLogo{Emblem,Letters,Url}`) and the level-select platform (`LevelSelectPlatformBg`, gLevelSelectPageBg's: `LevelSelectPageBg` is the game's BG1 class) |
-| `font_tiles_5a4e70.cpp` | the HUD fonts: `SmallFontSheet`, `LargeFontSheet` (`SmallFont` and `LargeFont` are the game's font classes) |
-| `cutscene_pictures_5a9f70.cpp` | `CutscenePicture00` to `CutscenePicture23` |
-| `level_select_graphics_6377c0.cpp` | `LevelSelectCursorZoom`, `LevelSelectPicture0` to `LevelSelectPicture9` |
-| `rle_sprites_0c2758.cpp`, `rle_sprites_15a050.cpp` | the vehicles' frame sets: `PolarPlayerFrameSet`, `YetiFrameSet`, `JetpackPlayerFrameSet` (`frames`) |
+| `menu_graphics.cpp` | the menus (`MenuSkyBg`, `PauseMenuBg`, `ContinuePrompt{Smoke,Glow,UkaUka}Bg`), the title (`TitleScreenBg`, `Title{Bandicoot,Crash,Arrow1,Arrow2}Obj`), the logos (`UniversalLogoBg`, `Credits{RedEyeStudios,Shinen,Cosmigo,Universal,Vv}Logo`, `VvLogo{Emblem,Letters,Url}`) and the level-select platform (`LevelSelectPlatformBg`, gLevelSelectPageBg's: `LevelSelectPageBg` is the game's BG1 class) |
+| `font_tiles.cpp` | the HUD fonts: `SmallFontSheet`, `LargeFontSheet` (`SmallFont` and `LargeFont` are the game's font classes) |
+| `cutscene_pictures.cpp` | `CutscenePicture00` to `CutscenePicture23` |
+| `level_select_graphics.cpp` | `LevelSelectCursorZoom`, `LevelSelectPicture0` to `LevelSelectPicture9` |
+| `polar_rle_sprites.cpp`, `jetpack_rle_sprites.cpp` | the vehicles' frame sets: `PolarPlayerFrameSet`, `YetiFrameSet`, `JetpackPlayerFrameSet` (`frames`) |
 
 The rooms are classes too, generated by `tools/levels.py` from
 `data/levels/` (levels.md, "Room classes"): `Room37::palette`,
@@ -282,7 +282,7 @@ included) for `tools/bin2c.py --u16`. The room palettes live in the room's layer
 and menu palettes) keep bit 15 as part of their hex values.
 
 The 24 cutscene Mode 4 bitmaps (`graphics/cutscenes/NN_<what>.png`) are
-built as C const arrays (`src/data/cutscene_pictures_5a9f70.cpp`, each after
+built as C const arrays (`src/game/ui/data/cutscene_pictures.cpp`, each after
 its palette) instead of `data.s` incbins, like the category backgrounds
 and the raw tile pools. The pipeline is grit (`tools/grit`, pixel layout) ->
 gbagfx (LZ77) -> `tools/bin2c.py --lz`. grit's layout and palettes are
@@ -348,7 +348,7 @@ How the build does it (`graphics.mk`):
    doesn't use. On three pictures (sky, pause menu, smoke) that drops
    grit's blank. On the others it changes nothing.
 3. **gbagfx compresses the result** (LZ77), and `tools/bin2c.py --lz`
-   writes it as the C bytes of `src/data/menu_graphics_61badc.cpp`.
+   writes it as the C bytes of `src/game/ui/data/menu_graphics.cpp`.
 
 The universal logo (`gUniversalLogoBg`, the Universal Interactive logo
 before the title) used to be built as a 4bpp text BG, which drew it as
@@ -1188,7 +1188,7 @@ automatically) before the existing generic `.bin.lz` compression rule
 runs - `Makefile`'s `GRAPHICS_BUILT` listed the two composite `.bin.lz`
 targets explicitly since the flat `graphics/*/*.bin`/`*.png` wildcards
 don't reach 3 directory levels deep (today `graphics.mk` makes
-`src/data/sprite_sheet_0b2120.o`/`sprite_sheet_14174c.o` depend on them). Verified byte-exact via a full clean
+`src/game/vehicles/polar/data/polar_sprite_sheet.o`/`jetpack_sprite_sheet.o` depend on them). Verified byte-exact via a full clean
 `make compare` (including rebuilding `gbagfx`) after the change.
 
 Not done: further breaking down the two `unidentified*.png` catch-all
@@ -1471,7 +1471,7 @@ order of the `"folders"` list in the sheet's `sheet.json` is the sheet's
 byte order, which is also the build's pack order (`tools/framed_gfx.py
 order`, graphics.mk's `FRAMED_ENTITIES_<family>`), so the ROM doesn't
 change. The `FRAMED_POLAR_<FOLDER>_<NN>` and `FRAMED_JETPACK_...` names
-in `src/data/anim_family_*.cpp` follow the folders' names.
+in `src/game/vehicles/*/data/*_anim_family.cpp` follow the folders' names.
 
 `tools/dump_entities.py` writes `docs/entities/polar.json` and
 `jetpack.json` (they used to be `entities.json` beside each sheet): the
@@ -1617,9 +1617,9 @@ the size of every bank before it). It reads the PNG indices (the palette
 is ignored), cuts each piece's rectangle into tiles, and places the runs
 frame by frame. It writes:
 - `bankNN_tiles.inc`, the bytes of `gSpriteBankNNTiles`
-  (`src/data/sprite_tiles_2bf120.cpp`);
+  (`src/engine/gfx/data/sprite_tiles.cpp`);
 - `bankNN_pieces.inc`, the frames' `...Pos` and `...Pieces` arrays, which
-  `src/data/sprite_banks_*.cpp` include where the ROM has them;
+  `src/*/data/sprite_banks_*.cpp` include where the ROM has them;
 - `sprite_frames.h`, with `SPRITE_TILES_BANKnn` (the bank's offset in the
   pool), `SPRITE_TILES_BANKnn_SIZE`, `SPRITE_TILES_BANKnn_FRAMEkkk` (the
   frame's tile offset, used by the frame headers in the C), and the
@@ -1758,7 +1758,7 @@ checked on all 21 sheets (`graphics/fonts/`, `graphics/logos/` and
 
 Mega Mix (theme 10) has no picture. In the ROM the pictures are stored
 in the order 0, 1, 4, 2, 5, 3, 9, 7, 8, 6, then their palettes in the
-same order (`level_select_graphics_6377c0.cpp`).
+same order (`level_select_graphics.cpp`).
 
 ### OBJ sheets
 

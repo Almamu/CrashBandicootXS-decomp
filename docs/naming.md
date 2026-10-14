@@ -131,7 +131,7 @@ subsystem header that owns the type or the function includes it
 (`audio.hpp` includes `constants/sfx.h` and `constants/songs.h`,
 `level.h` includes `constants/level_flags.h`), so a source file gets
 the names with the header it already includes. A data table in
-`src/data/` may include a constants header directly.
+`src/*/data/` may include a constants header directly.
 
 | Header | Prefix | What |
 |---|---|---|

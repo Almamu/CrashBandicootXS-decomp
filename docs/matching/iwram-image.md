@@ -883,7 +883,7 @@ patch, unused by the build.
 `gIntrTable`, with an initialiser each so agbcp puts them all in
 `.data` in definition order (checked with `nm`). The hook pointers now
 point at the ARM functions by name, the cutscene language table
-`gCutsceneTexts` at `src/data/cutscenes_16d1c8.c`'s six tables, and
+`gCutsceneTexts` at `src/game/ui/data/cutscenes.c`'s six tables, and
 the pointers into still-raw blobs (`gCrc16Table`,
 `gTerrainHeights3`, `gTitleMenuBlinkPalette`) are the blob plus an
 offset. `gGaxHaltFont` is GAX2's Huffman-compressed fatal-error

@@ -5,7 +5,7 @@
  * gPlayerVtable, whose code is src/game/crash/player_*.cpp. It has no C view
  * (the C `struct player` went with its last C reader, #754).
  * cxx_symbols.txt maps the methods to the C names. The controllers' record
- * types and tables (src/data defines them) and the player's IWRAM data are
+ * types and tables (src/.../data defines them) and the player's IWRAM data are
  * here too.
  *
  * No `#pragma interface`: g++ emits the vtable in player_collide.cpp (see
@@ -46,11 +46,11 @@ struct level_anim {
 };
 
 /* The attack kind of each action controller state (QueueCratePlayerCollision,
- * src/data/object_tables_16bb6c.cpp). */
+ * src/game/crates/data/crate_tables.cpp). */
 extern const s32 gActionCtrlStateAttackKinds[ACTION_STATE_COUNT];
 
 /* The swim controller's animations: one row of 13 tilt levels per mode
- * (src/data/speed_table_16c090.cpp, action_table_16bf20.cpp), and the
+ * (src/game/crash/data/swim_speeds.cpp, action_ctrl_state_table.cpp), and the
  * stroke speeds. */
 extern const struct level_anim gSwimCtrlModeLevelAnims[8][13];
 extern const struct level_anim *const gSwimCtrlModeAnimRows[8];
@@ -116,13 +116,13 @@ extern s32 gAkuAkuFollowFrame;
 #define PLAYER_ICE_STOP_DECEL               Q8_FRAC(0, 8)
 
 /* The player controller's and the input controller's motion records
- * (src/data/motion_records_16b304.cpp; `struct speed_ramp`, objects.h). */
+ * (src/game/crash/data/motion_records.cpp; `struct speed_ramp`, objects.h). */
 extern const struct speed_ramp gSwimCtrlMotionRecords[31];
 extern const struct speed_ramp gInputCtrlMotionRecords[9];
 
 /* The entry sets PlayRoom gives the action, player and input controllers
- * through SetCtrlAnimSet (src/data/entry_set_16b92c.cpp,
- * src/data/entry_set_16b93c.cpp). */
+ * through SetCtrlAnimSet (src/game/crash/data/action_swim_motion_sets.cpp,
+ * src/game/crash/data/input_ctrl_motion_set.cpp). */
 extern const struct entry_set gActionCtrlMotionSet;
 extern const struct entry_set gSwimCtrlMotionSet;
 extern const struct entry_set gInputCtrlMotionSet;

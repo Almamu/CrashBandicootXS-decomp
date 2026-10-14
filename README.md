@@ -32,7 +32,7 @@ songs and WAV samples. `baserom.gba` isn't needed to build it.
   assembly (crt0, IntrMain, libgcc's lib1funcs, the BIOS SWI wrappers,
   GAX2's ARM DSP routines) isn't counted.
 - **Data: 100%.** Every ROM table is a typed C `const` array in
-  `src/data/` (a library's own tables are in `lib/<name>/data/`), and
+  `src/*/data/` (a library's own tables are in `lib/<name>/data/`), and
   every asset is rebuilt from a source file (see "Data and assets"
   below).
 - **Done:** the cleanup pass (raw pointer arithmetic and hardware
@@ -105,7 +105,7 @@ generated file is checked in.
   `level_select/`, `sprites/`, `vehicles/`, `bosses/`): `tools/grit` lays
   out bitmaps, tilesets and tilemaps, `tools/gbagfx` does the LZ77
   compression, and `tools/bin2c.py` turns the result into the bytes a
-  `src/data/*.cpp` file `#include`s. The rules are in `graphics.mk`.
+  `src/*/data/*.cpp` file `#include`s. The rules are in `graphics.mk`.
   `graphics/manifest.json` records where the ROM has each asset, for
   `tools/gfx_manifest.py extract`. See [docs/graphics.md](./docs/graphics.md)
   and [docs/data.md](./docs/data.md), "Resources (grit-style)".
@@ -125,7 +125,7 @@ generated file is checked in.
   `make text-check` runs the translation checks and `make text-update`
   merges a template change into the `.po` files. See
   [docs/text.md](./docs/text.md).
-- **Tables** are C++ `const` arrays in `src/data/`, placed at their ROM
+- **Tables** are C++ `const` arrays in `src/*/data/`, placed at their ROM
   addresses by `ldscript.txt`. See [docs/data.md](./docs/data.md).
 
 `expected/` holds frozen copies of the original disassembly: the target
@@ -172,7 +172,7 @@ reason, that's a completely reasonable position - just know it going in.
 - [CONTRIBUTING.md](./CONTRIBUTING.md) - **how to pick up work from the issue tracker, human or agent, and get it to a PR**
 - [docs/workflow.md](./docs/workflow.md) - **the required loop for changing matched code, must be followed for every change**
 - [docs/naming.md](./docs/naming.md) - **the naming convention, and the checklist of what a rename touches**
-- [docs/data.md](./docs/data.md) - how ROM data tables became C `const` arrays in `src/data/`, linked in ROM order, and the asset pipeline
+- [docs/data.md](./docs/data.md) - how ROM data tables became C `const` arrays in `src/*/data/`, linked in ROM order, and the asset pipeline
 - [docs/text.md](./docs/text.md) - the game's text as gettext files (`text/`): the keys, the checks and the translators' workflow
 - [docs/libraries.md](./docs/libraries.md) - the third-party/SDK libraries under `lib/` (GAX2, AgbEeprom, libgcc, libagbsyscall): layout, headers, flags
 - [docs/cplusplus.md](./docs/cplusplus.md) - the game is g++ 2.x C++: what the ROM shows, the agbcp/old_agbcp C++ compilers, and building objects from C++ source (every `.cpp` under `src/`, `CXX_OBJS`)

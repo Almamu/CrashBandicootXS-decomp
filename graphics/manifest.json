@@ -73,11 +73,11 @@
     {"path": "level_select/pictures/tiny.png", "kind": "tiles", "symbol": "gLevelSelectPicture6Tiles", "class": "LevelSelectPicture6", "about": "level-select picture 6, theme 6's (Tiny), gLevelSelectPictures[6]", "rom": "0x0863C5E4", "bpp": 8, "width": 8, "palette": {"symbol": "gLevelSelectPicture6Palette", "rom": "0x0863D43C", "colors": 256, "lz77": true}}
   ],
   "objects": [
-    {"name": "rle_sprites_0c2758", "rom": "0x080C2758", "end": "0x080FF1B0"},
-    {"name": "rle_sprites_15a050", "rom": "0x0815A050", "end": "0x08167AD4"},
-    {"name": "font_tiles_5a4e70", "rom": "0x085A4E70", "end": "0x085A6100"},
-    {"name": "cutscene_pictures_5a9f70", "rom": "0x085A9F70", "end": "0x0861BADC"},
-    {"name": "menu_graphics_61badc", "rom": "0x0861BADC", "end": "0x086377C0"},
-    {"name": "level_select_graphics_6377c0", "rom": "0x086377C0", "end": "0x0863D4C0"}
+    {"name": "polar_rle_sprites", "rom": "0x080C2758", "end": "0x080FF1B0"},
+    {"name": "jetpack_rle_sprites", "rom": "0x0815A050", "end": "0x08167AD4"},
+    {"name": "font_tiles", "rom": "0x085A4E70", "end": "0x085A6100"},
+    {"name": "cutscene_pictures", "rom": "0x085A9F70", "end": "0x0861BADC"},
+    {"name": "menu_graphics", "rom": "0x0861BADC", "end": "0x086377C0"},
+    {"name": "level_select_graphics", "rom": "0x086377C0", "end": "0x0863D4C0"}
   ]
 }

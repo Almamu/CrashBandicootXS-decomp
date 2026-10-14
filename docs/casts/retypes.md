@@ -19,4 +19,4 @@ keeps its `(s32)`: it says that the negation is a signed one.
 | field | was | is | casts | the ROM |
 |---|---|---|---:|---|
 | `AnimPart::animTimer` (actor_self.hpp, 0x10) | `u16` | `s16` | 12 `(s16)` | every reader adds it to `animTime` with `ldrsh`. The writers copy `anims[i].duration` with `strh`, the same for either type. |
-| `bg_package::width`, `height` (graphics_package.hpp) | `u32` | `s32` | 11 `(s32)` | the loops compare them with `blt`/`bge`/`ble` (signed). TitleScreen's `count = height * width` and BgSetup::Load's `src += width` are the same code for either type. The package tables in src/data are unchanged. |
+| `bg_package::width`, `height` (graphics_package.hpp) | `u32` | `s32` | 11 `(s32)` | the loops compare them with `blt`/`bge`/`ble` (signed). TitleScreen's `count = height * width` and BgSetup::Load's `src += width` are the same code for either type. The package tables in src/*/data are unchanged. |

@@ -418,7 +418,7 @@ extern u8 GaxMixerPlay(struct GaxMixerView *self, u32 *buf, u32 arg2);
 
 /* ---- The engine's data ---- */
 
-/* lib/gax/data/gax_tables_5a6100.c */
+/* lib/gax/data/gax_tables.c */
 /* "GAX Sound Engine 2.01D ..." (GAX2_init checks "GAX") */
 extern const char *const gGaxVersionStringPtr;
 extern const struct RateEntry gGaxMixRates[12];

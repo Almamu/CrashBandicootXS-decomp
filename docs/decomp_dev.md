@@ -281,7 +281,7 @@ functions count toward the code totals like any other.
 
 **Data unit.** `iwram_data.cpp`'s `.data` is the last data unit
 (`IWRAM_DATA` in the script, at ROM `IWRAM_LMA + 0x7CC`, target bytes
-from the ROM like any `src/data` table). The image's code bytes are not
+from the ROM like any `src/*/data` table). The image's code bytes are not
 data any more, so `total_data` dropped by `0x7CC`.
 
 ## Byte-exact functions must score exactly 100%
@@ -403,7 +403,7 @@ never change any code measure.
 decomps. A byte of ROM data is *matched* when the build produces it from a
 source in the repo: a PNG/`.pal`/`.bin` under `graphics/` compressed by
 gbagfx, the GAX2 audio rebuilt from `sound/` by `tools/gax_audio.py`, the
-sfx table built from `sound/sfx_table.json`, a C table in `src/data/`
+sfx table built from `sound/sfx_table.json`, a C table in `src/*/data/`
 (see [data.md](./data.md)), and so on. It is *unmatched*
 while `data/data.s` still copies it with `.incbin "baserom.gba", ...`.
 Both kinds come out byte-identical in the ROM, and `make compare` checks
@@ -412,7 +412,7 @@ that, so matching bytes can't be the test. The source is what decides.
 **Scope.** Everything after the code, from `0x0803B8B0` to the end of the
 ROM (`0x08800000`), is linked from the `/* Data */` block of
 `ldscript.txt`: the sections of `data/data.s` (one label per blob and one
-`.incbin` per label) interleaved with the `.rodata` of the `src/data/*.c`
+`.incbin` per label) interleaved with the `.rodata` of the `src/*/data/*.c`
 tables, in ROM order, then the IWRAM image (`0x087E55E4`-`0x087E5FCC`,
 see "The IWRAM image": only its initialised data, `0x087E5DB0` on, is
 data; the rest is code). The last 106,548 bytes, from `0x087E5FCC` on
@@ -425,7 +425,7 @@ really starts there. Smaller all-`0x00` runs inside still-baserom blobs
 (151 runs of 256+ bytes, 64,716 bytes in total, the largest 2,664 bytes,
 nearly all inside the big `gLanguageSelectPalette3`/`gSpriteBankTable`
 blobs) still count as data: they sit inside real data, and there are no
-other `0xFF` runs. Apart from `src/data/`, no C file puts data in the
+other `0xFF` runs. Apart from `src/*/data/`, no C file puts data in the
 ROM: agbcc emits no `.rodata`/`.data` for the code files, and
 `ldscript.txt` only places their `.text`, discarding everything else.
 Jump tables and literal pools inside code are counted as code.
@@ -434,7 +434,7 @@ Jump tables and literal pools inside code are counted as code.
 
 1. It walks the `/* Data */` block of `ldscript.txt` (`data_layout()`)
    and turns each piece into blobs (label, address, size, source): a
-   `data/data.s` section into one blob per label, a `src/data/*.o` object
+   `data/data.s` section into one blob per label, a `src/*/data/*.o` object
    into one blob per global object symbol in its `.rodata` (a blob runs to
    the next symbol, read with `objdump` from the object `make report` has
    just built). Addresses are computed by adding blob sizes from
@@ -445,11 +445,11 @@ Jump tables and literal pools inside code are counted as code.
    also catches a C table of the wrong size. So does a `data.s` section
    the linker script doesn't place, or a C object that would start
    misaligned. The one gap allowed is the linker's zero fill in front of
-   an aligned `src/data` object when a `src/data` blob comes before it
+   an aligned `src/*/data` object when a `src/*/data` blob comes before it
    (the word alignment after an LZ77 stream, data.md "LZ77 stream
    padding"): it counts toward that blob.
 2. It groups adjacent blobs into units: each run of blobs built from the
-   same asset directory (`data_sound_XXXXXXXX`), each `src/data` file
+   same asset directory (`data_sound_XXXXXXXX`), each `src/*/data` file
    (`data_src_data_<file>_XXXXXXXX`), each `lib/*/data` file and each run
    of baserom blobs (`data_raw_XXXXXXXX`). That currently comes to 140
    units.
@@ -457,7 +457,7 @@ Jump tables and literal pools inside code are counted as code.
    global, `.type %object`, `.size`d symbol in `.rodata`, its bytes taken
    from `baserom.gba`. A built unit also gets a **base** object with the
    same symbols, whose bytes come from the same `.incbin` of the built file
-   that `data/data.s` uses. A `src/data` table's bytes only exist after
+   that `data/data.s` uses. A `src/*/data` table's bytes only exist after
    linking (its pointers are relocations) and `make report` doesn't link,
    so its base takes the ROM's bytes too: `make compare` is what proves
    the C produces them. A baserom unit gets **no base**, like the
@@ -479,7 +479,7 @@ in a PR) drops to 0%. objdiff compares the actual bytes, so that shows up.
 **Moving a blob from baserom to built** needs nothing in the report
 script. Replace its `.incbin "baserom.gba", ...` in `data/data.s` with the
 built file, keeping the label, and the next `make report` counts it. The
-same goes for a table moved into `src/data/` (the steps are in
+same goes for a table moved into `src/*/data/` (the steps are in
 [data.md](./data.md)): once `ldscript.txt` places the object, the report
 picks it up.
 
@@ -487,15 +487,15 @@ picks it up.
 sound files, though not on `data.o`, which would need `baserom.gba`. Target
 objects need `baserom.gba`. Without it (fork-PR CI), baserom units are
 zero-filled to the right size and built units use their own bytes as the
-target (a `src/data` unit is zero-filled on both sides). That keeps the
+target (a `src/*/data` unit is zero-filled on both sides). That keeps the
 totals correct but doesn't verify the assets, which
 only matters for fork PRs: `main`'s run has the ROM, and `make compare`
 checks every byte anyway.
 
-As of the first `src/data` conversion: 1,650,143 of 8,038,172 bytes
+As of the first `src/*/data` conversion: 1,650,143 of 8,038,172 bytes
 matched (20.53%). That is the two LZ77 blobs in `graphics/unknown/`, the
 intro and tileset1 graphics, the GAX2 audio data, the sfx table, and
-9,716 bytes of pointer tables in `src/data/` (up from 1,640,427, 20.41%).
+9,716 bytes of pointer tables in `src/*/data/` (up from 1,640,427, 20.41%).
 [`docs/data_map.md`](./data_map.md) triages the remaining raw blobs and
 suggests an order for converting them.
 

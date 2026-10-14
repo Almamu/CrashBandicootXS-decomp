@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Turns grit's binary output for the actor-category backgrounds (the BG0
 cell animations and the BG1 pictures, see docs/data.md "Category
-backgrounds") into C initializer bodies that a src/data/*.c file
+backgrounds") into C initializer bodies that a src/.../data/*.c file
 `#include`s. grit does every pixel, palette and map conversion; this only
 splits and interleaves its output into the ROM's record layout.
 

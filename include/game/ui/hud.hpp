@@ -39,7 +39,7 @@ extern "C" {
 extern screen_dy_t gHudSlideOffset;
 
 /* Each of the 35 parts' starting animation and position
- * (src/data/hud_fonts_174be0.cpp). */
+ * (src/game/ui/data/hud_font_tables.cpp). */
 extern const u32 gHudPartAnims[35];
 extern const struct vec2 gHudPartPositions[35];
 

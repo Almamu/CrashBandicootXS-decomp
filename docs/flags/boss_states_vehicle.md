@@ -3,8 +3,8 @@
 `Airship`, `Hovercraft` and `Yeti` are all-static classes (their members
 were separate IWRAM globals: docs/cplusplus.md), not ActorSelf objects.
 Each has a `state` that indexes its plain `stateFuncs` table
-(src/data/actor_state_17c3fc.cpp, actor_state_17c4c8.cpp,
-actor_state_fn_17a840.cpp), which Update (the hovercraft: RunState)
+(src/game/vehicles/jetpack/data/airship_state_table.cpp, hovercraft_state_tables.cpp,
+yeti_state_table.cpp), which Update (the hovercraft: RunState)
 calls as `stateFuncs[state]()`. So each name is its method's. The names
 sit next to each class: `AIRSHIP_STATE_*` in include/game/vehicles/jetpack/airship.hpp,
 `HOVERCRAFT_STATE_*` and `HOVERCRAFT_PHASE_*` in include/game/bosses/hovercraft.hpp,

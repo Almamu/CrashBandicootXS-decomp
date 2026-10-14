@@ -10,8 +10,8 @@
 #   LZ77-packed by gbagfx, as C initializer bytes (tools/bin2c.py);
 # - the C definitions of the two room-data regions (each room's palette
 #   read from its layer pictures, which must all carry the same one), which
-#   src/data/level_rooms_*.cpp #include, and of their rooms' assets, which
-#   src/data/level_assets_64f830.cpp #includes. The level data that isn't
+#   src/game/level/data/level_rooms_*.cpp #include, and of their rooms' assets, which
+#   src/game/level/data/level_assets.cpp #includes. The level data that isn't
 #   the ROM's goes with them, in place (docs/levels.md, "Adding a room"):
 #   the rooms in no region of levels.json and the tile sets only they use
 #   after the last region's rooms, their assets after the ROM's.
@@ -21,7 +21,7 @@ LEVEL_PACKED_ROOMS := $(shell python3 tools/levels.py rooms --packed)
 LEVEL_ROOM_JSONS := $(foreach room,$(LEVEL_ROOMS),data/levels/$(room)/room.json)
 # The rooms' layer pictures, which also carry each room's palette.
 LEVEL_BG_PNGS := $(foreach room,$(LEVEL_ROOMS),$(wildcard data/levels/$(room)/bg?.png))
-LEVEL_REGIONS := level_rooms_24b638 level_rooms_2b91d0
+LEVEL_REGIONS := level_rooms_main_bonus level_rooms_bosses_gem_paths
 
 LEVEL_TOOLS := tools/levels.py tools/collision_bmp.py data/levels/collision_legend.json
 # A room's BG layers (bg0-3) and their cells.
@@ -45,15 +45,15 @@ include $(LEVELS_BUILDDIR)/tilesets.mk
 $(LEVELS_BUILDDIR)/tilesets/%.bin.inc: $(LEVELS_BUILDDIR)/tilesets/%.bin tools/bin2c.py
 	python3 tools/bin2c.py $< $@
 
-# The ROM's tile sets, defined by hand in src/data/ (the BG0 ones raw 8bpp
+# The ROM's tile sets, defined by hand in src/game/level/data/ (the BG0 ones raw 8bpp
 # tagged assets, sized by tilesets/<set>.h; the BG1-3 ones LZ77 4bpp).
 LEVEL_TILESET_DEFS = $(foreach t,$(1),$(LEVELS_BUILDDIR)/tilesets/$(t).bin.inc $(LEVELS_BUILDDIR)/tilesets/$(t).h)
-$(C_BUILDDIR)/data/level_tilesets_17e78c.o: $(call LEVEL_TILESET_DEFS,gJungleBg0Tiles gSnowBg0Tiles gUnderwaterBg0Tiles)
-$(C_BUILDDIR)/data/level_tilesets_270f08.o: $(call LEVEL_TILESET_DEFS,gSewerBg0Tiles gSpaceBg0Tiles)
-$(C_BUILDDIR)/data/level_bg_tiles_63d4c0.o: $(foreach t,gSnowBgTiles gJungleBgTiles gTempleBgTiles gSewerBgTiles \
+$(C_BUILDDIR)/game/level/data/level_tilesets_jungle_snow_underwater.o: $(call LEVEL_TILESET_DEFS,gJungleBg0Tiles gSnowBg0Tiles gUnderwaterBg0Tiles)
+$(C_BUILDDIR)/game/level/data/level_tilesets_sewer_space.o: $(call LEVEL_TILESET_DEFS,gSewerBg0Tiles gSpaceBg0Tiles)
+$(C_BUILDDIR)/game/level/data/level_bg_tiles.o: $(foreach t,gSnowBgTiles gJungleBgTiles gTempleBgTiles gSewerBgTiles \
 	gSpaceBgTiles gUnderwaterBgTiles,$(LEVELS_BUILDDIR)/tilesets/$(t).bin.lz.inc)
-$(foreach o,level_tilesets_17e78c level_tilesets_270f08 level_bg_tiles_63d4c0,\
-	$(eval $(C_BUILDDIR)/data/$(o).o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)))
+$(foreach o,level_tilesets_jungle_snow_underwater level_tilesets_sewer_space level_bg_tiles,\
+	$(eval $(call data_obj,$(o)): CPPFLAGS += -iquote $(LEVELS_BUILDDIR)))
 
 define LEVEL_ASSET_RULE
 $(LEVELS_BUILDDIR)/$(1)/asset.bin: data/levels/$(1)/room.json $(call level_bg_maps,$(1)) \
@@ -87,17 +87,17 @@ $(LEVELS_BUILDDIR)/level_rooms_%.inc: data/levels/levels.json $(LEVEL_ROOM_JSONS
 level_asset_incs = $(foreach room,$(filter-out $(LEVEL_PACKED_ROOMS),$(1)),$(LEVELS_BUILDDIR)/$(room)/asset.bin.inc) \
 	$(foreach room,$(filter $(LEVEL_PACKED_ROOMS),$(1)),$(LEVELS_BUILDDIR)/$(room)/asset.bin.lz.inc)
 
-$(LEVELS_BUILDDIR)/level_assets_64f830.inc: data/levels/levels.json $(LEVEL_ROOM_JSONS) tools/levels.py
+$(LEVELS_BUILDDIR)/level_assets.inc: data/levels/levels.json $(LEVEL_ROOM_JSONS) tools/levels.py
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py assets $@
 
-$(foreach r,$(LEVEL_REGIONS),$(eval $(C_BUILDDIR)/data/$(r).o: $(LEVELS_BUILDDIR)/$(r).inc))
-$(foreach r,$(LEVEL_REGIONS),$(eval $(C_BUILDDIR)/data/$(r).o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)))
-$(C_BUILDDIR)/data/$(lastword $(LEVEL_REGIONS)).o: \
+$(foreach r,$(LEVEL_REGIONS),$(eval $(call data_obj,$(r)): $(LEVELS_BUILDDIR)/$(r).inc))
+$(foreach r,$(LEVEL_REGIONS),$(eval $(call data_obj,$(r)): CPPFLAGS += -iquote $(LEVELS_BUILDDIR)))
+$(call data_obj,$(lastword $(LEVEL_REGIONS))): \
 	$(foreach t,$(LEVEL_NEW_TILESETS_8BPP),$(LEVELS_BUILDDIR)/tilesets/$(t).bin.inc) \
 	$(foreach t,$(LEVEL_NEW_TILESETS_4BPP),$(LEVELS_BUILDDIR)/tilesets/$(t).bin.lz.inc)
-$(C_BUILDDIR)/data/level_assets_64f830.o: $(LEVELS_BUILDDIR)/level_assets_64f830.inc $(call level_asset_incs,$(LEVEL_ROOMS))
-$(C_BUILDDIR)/data/level_assets_64f830.o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)
+$(C_BUILDDIR)/game/level/data/level_assets.o: $(LEVELS_BUILDDIR)/level_assets.inc $(call level_asset_incs,$(LEVEL_ROOMS))
+$(C_BUILDDIR)/game/level/data/level_assets.o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)
 
 # The room classes (docs/levels.md, "Room classes"): rooms.hpp declares a
 # class per room of levels.json, whose BG palette, chunk grids and level
@@ -112,21 +112,21 @@ $(GENERATED_INCLUDE_DIR)/rooms.hpp: $(GENERATED_INCLUDE_DIR)/rooms.hpp.stamp
 	@test -f $@ || python3 tools/levels.py classes $@
 
 # The level table (docs/levels.md, "The level table"), which
-# src/data/level_table_16c814.cpp #includes: gLevelTable and
+# src/game/level/data/level_table.cpp #includes: gLevelTable and
 # gLevelRoomLists (`levels.py table levels`), and the room records and the
 # arrays of the rooms each level plays (`levels.py table records`), from
 # levels.json's "levels" and "table" and the rooms' room.json ("record").
 # The stages are named by include/constants/categories.h.
 LEVEL_TABLE_DEPS := data/levels/levels.json $(LEVEL_ROOM_JSONS) include/constants/categories.h tools/levels.py
-$(LEVELS_BUILDDIR)/level_table_16c814.inc: $(LEVEL_TABLE_DEPS)
+$(LEVELS_BUILDDIR)/level_table.inc: $(LEVEL_TABLE_DEPS)
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py table levels $@
 $(LEVELS_BUILDDIR)/level_table_16c814_rooms.inc: $(LEVEL_TABLE_DEPS)
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py table records $@
-$(C_BUILDDIR)/data/level_table_16c814.o: $(LEVELS_BUILDDIR)/level_table_16c814.inc \
+$(C_BUILDDIR)/game/level/data/level_table.o: $(LEVELS_BUILDDIR)/level_table.inc \
 	$(LEVELS_BUILDDIR)/level_table_16c814_rooms.inc
-$(C_BUILDDIR)/data/level_table_16c814.o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)
+$(C_BUILDDIR)/game/level/data/level_table.o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)
 
 # The constants headers named in the level data (#655): the entity types
 # (data/levels/entity_types.json), the crate kinds (crate_kinds.json) and

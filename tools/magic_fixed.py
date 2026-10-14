@@ -2,7 +2,7 @@
 """`tools/magic_numbers.py --fixed`: the literals and shifts on values that
 hold fixed-point quantities (#916, docs/fixed_point.md).
 
-Scans the game code (src/ without src/data/, and include/) for:
+Scans the game code (src/ without src/.../data/, and include/) for:
 
   literal  an integer literal assigned to, compared with, added to or
            subtracted from a value (`velX = 0x200`, `y >= 0x800`,
@@ -18,7 +18,7 @@ Scans the game code (src/ without src/data/, and include/) for:
            object-like #define in include/ whose value is spelled with
            one of them: PLAYER_GRAVITY, ...)
 
-and, in the speed-ramp tables of src/data (`struct speed_ramp`: start,
+and, in the speed-ramp tables of src/.../data (`struct speed_ramp`: start,
 step, target; docs/fixed_point.md), every record's three values
 (kind `table`).
 
@@ -583,11 +583,11 @@ def source_files():
 
 
 def scan_tables():
-    """Every `struct speed_ramp` record in src/data: start, step, target."""
+    """Every `struct speed_ramp` record in src/.../data: start, step, target."""
     out = []
     for path in mn.source_files():
         rel = os.path.relpath(path, ROOT)
-        if not rel.startswith(os.path.join("src", "data")):
+        if "data" not in rel.split(os.sep)[1:-1] or not rel.startswith("src"):
             continue
         raw = open(path, encoding="utf-8", errors="replace").read()
         text = mn.strip_comments(raw)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Turns a binary file into the body of a C array initializer (comma-
-separated hex bytes), for a src/data/*.c file to `#include` inside its own
+separated hex bytes), for a src/.../data/*.c file to `#include` inside its own
 `const u8 gFoo[] = { ... };`. The declaration (name, type, comment) stays in
 the hand-written .c file; only the bytes are generated.
 

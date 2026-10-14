@@ -52,11 +52,11 @@ SHIFTS = [
     ("code", "src/engine/sys/bios_util.o(.text)", 0x100),
     ("code_odd", "src/engine/audio/audio.o(.text)", 0x2),
     ("data", "data/data.o(.rodata);", 0x100),
-    ("rooms", "src/data/level_rooms_24b638.o(.rodata)", 0x1004),
-    ("sprite_banks", "src/data/sprite_banks_4a5600.o(.rodata)", 0x100),
+    ("rooms", "src/game/level/data/level_rooms_main_bonus.o(.rodata)", 0x1004),
+    ("sprite_banks", "src/engine/gfx/data/sprite_banks_00_09.o(.rodata)", 0x100),
     ("sound", "data/data.o(.rodata.084C0006)", 0x1),
     ("sound_even", "data/data.o(.rodata.084C0006)", 0x2),
-    ("level_assets", "src/data/level_assets_64f830.o(.rodata)", 0x100),
+    ("level_assets", "src/game/level/data/level_assets.o(.rodata)", 0x100),
     ("vtables", "entity.o(.gnu.linkonce.d._vt.Q34Game8Entities6Entity)", 0x3),
 ]
 
@@ -71,11 +71,11 @@ KNOWN_DATA = {
         0x2F670: 0x0801071D, 0x3E884: 0x08000621, 0x4BE44: 0x08000519, 0x7A2D8: 0x08170C0C,
     },
     # cutscene pictures' pixels
-    ("src/data/cutscene_pictures_5a9f70.o", ".rodata"): {0x15988: 0x08000130, 0x5C244: 0x08000120},
+    ("src/game/ui/data/cutscene_pictures.o", ".rodata"): {0x15988: 0x08000130, 0x5C244: 0x08000120},
     # the title screen's BG tiles
-    ("src/data/menu_graphics_61badc.o", ".rodata"): {0x13444: 0x0800013C},
+    ("src/game/ui/data/menu_graphics.o", ".rodata"): {0x13444: 0x0800013C},
     # gRoom24Asset's LZ77 stream
-    ("src/data/level_assets_64f830.o", ".rodata"): {0x35EDC: 0x084B414C},
+    ("src/game/level/data/level_assets.o", ".rodata"): {0x35EDC: 0x084B414C},
 }
 
 R_ARM_ABS32 = 2

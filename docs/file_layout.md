@@ -66,7 +66,18 @@ include/{core.h,globals.h,match.h,byte_arg.h,screen.h,gba/,constants/}
   `Engine::Util`) is `line_steppers.hpp`. No file was merged or split.
 - **The data tables are named after their content and owner**, in the
   `data/` subdirectory of their owner's directory; a table that serves
-  several owners goes with the first one its header comment names.
+  several owners goes with the first one its header comment names. Their
+  names are unique, so the Makefile finds a table's object by its name
+  (`$(call data_obj,NAME)`; `DATA_OBJS` are all of them, which get the
+  generated directories' `-iquote`s), and the names the generators use
+  follow the tables': the generated `.inc` files (`ui_text.inc`,
+  `level_rooms_main_bonus.inc`, `level_table.inc`, ...), levels.json's
+  regions and assets (ROM layout only: the save version's level-data CRC
+  doesn't read them) and graphics/manifest.json's objects. A tag or a
+  local struct named after the old file (`COMPILE_TIME_ASSERT`'s first
+  argument, `struct cell_anim_0ff1b0`) is renamed with it.
+- **lib/ keeps its layout**: only its three address-named data files lose
+  the address (`eeprom_data.c`, `gax_tables.c`, `clz_tab.c`).
 - **The docs' paths were updated**, the matching archive's too, so its
   links point at the new files (a `.c` path of the C era is mapped like
   the `.cpp` it became). A path to a file that was already gone before the
@@ -508,7 +519,7 @@ include/{core.h,globals.h,match.h,byte_arg.h,screen.h,gba/,constants/}
 | `include/cutscene.hpp` | `include/game/ui/cutscene.hpp` |
 | `include/logo_fly_in.h` | `include/game/ui/logo_fly_in.h` |
 
-### The data tables and lib/'s data files (planned)
+### The data tables and lib/'s data files (moved)
 
 
 **Engine data**

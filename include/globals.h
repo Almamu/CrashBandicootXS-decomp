@@ -186,7 +186,7 @@ class Player;
 extern Game::Crash::Player *gPlayer;
 #endif
 
-/* src/data/boss_pictures_167ad4.cpp: a full turn in 256 steps, scaled by 0x100. */
+/* src/game/bosses/data/boss_pictures.cpp: a full turn in 256 steps, scaled by 0x100. */
 extern const s16 gSineTable[256];
 
 #endif /* GUARD_GLOBALS_H */

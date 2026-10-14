@@ -12,7 +12,7 @@ The whole engine (mixer, timer IRQ handler, replay logic) is matched C in
 `0x08037F3C`-`0x0803A944`) with Shin'en's own inline asm, and the
 hand-written ARM mixer/DSP routines in `lib/gax/asm/gax_arm_dsp.s`
 (docs/libraries.md, "GAX implementation notes"), its strings and tables in
-`lib/gax/data/gax_tables_5a6100.c`, the public API in `<gax.h>`
+`lib/gax/data/gax_tables.c`, the public API in `<gax.h>`
 (`lib/gax/include/gax.h`) and the internal structures in
 `lib/gax/src/gax_internal.h`. The libgcc 64-bit helpers linked in with it
 (`__divdi3`/`__udivdi3`/`__udivsi3`/`__muldi3`, right before the engine)
@@ -419,7 +419,7 @@ Everything is generated from editable sources, never read from
   actually need to differ.
 - Nothing outside the audio build points into the music block by a fixed
   address any more: the song table `gSongTable`
-  (`src/data/song_table_16aa20.cpp`) is written as `gGaxMusicData +
+  (`src/engine/audio/data/song_table.cpp`) is written as `gGaxMusicData +
   GAX_SONG_<NAME>` from the generated `gax_songs.h`, and the default layout
   is built with the block. So a song can change size.
 - Nothing in the blocks is an absolute address either (#967,

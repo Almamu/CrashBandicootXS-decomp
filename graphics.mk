@@ -3,7 +3,7 @@
 # corresponding built file under $(GRAPHICS_BUILDDIR), mirroring the
 # subdirectory layout, so graphics/ only ever holds editable sources.
 # Every asset ends up as C initializer bytes (tools/bin2c.py) that a
-# src/data/*.cpp definition #includes (docs/data.md, "Resources");
+# data table's definition #includes (docs/data.md, "Resources");
 # data/data.s incbins no graphics.
 
 # Palettes -> raw GBA .gbapal. Read as gbagfx reads them, plus the ROM's
@@ -61,7 +61,8 @@ $(GRAPHICS_BUILDDIR)/vehicles/$(1)/sprite_sheet.bin: $(foreach e,$(FRAMED_ENTITI
 endef
 
 # The byte offset of every frame in a sheet (FRAMED_<FAMILY>_<ENTITY>_<NN>),
-# for the category families' pool_offset table_B arrays in src/data/.
+# for the category families' pool_offset table_B arrays (polar_anim_family.cpp,
+# jetpack_anim_family.cpp).
 define FRAMED_HEADER_RULE
 $(GRAPHICS_BUILDDIR)/vehicles/$(1)/sprite_sheet_frames.h: $(sort $(wildcard graphics/vehicles/$(1)/sprite_sheet/*/*.png)) graphics/vehicles/$(1)/sprite_sheet/sheet.json tools/framed_gfx.py
 	@mkdir -p $$(dir $$@)
@@ -82,7 +83,7 @@ $(GRAPHICS_BUILDDIR)/%.lz: $(GRAPHICS_BUILDDIR)/% | $(GFX)
 # PNG -> C const array (grit), see docs/graphics.md. grit does the pixel
 # layout, gbagfx the byte-exact LZ77 (grit's own -gzl compressor does not
 # reproduce the ROM's streams), tools/bin2c.py the initializer bytes that a
-# src/data/*.cpp file #includes.
+# data table's file #includes.
 
 # The cutscene pictures (graphics/cutscenes/NN_<what>.png, gCutscenePictureNN):
 # Mode 4 bitmaps, linear 8bpp. Their palette is the PNG's own (256
@@ -154,30 +155,30 @@ $(foreach s,$(OBJ_SHEET_PACKAGES),$(eval $(call OBJ_SHEET_PACKAGE_RULE,$(s))))
 $(GRAPHICS_BUILDDIR)/%.lz.inc: $(GRAPHICS_BUILDDIR)/%.lz tools/bin2c.py
 	python3 tools/bin2c.py $< $@ --lz
 
-$(C_BUILDDIR)/data/%.o: CPPFLAGS += -iquote $(GRAPHICS_BUILDDIR)
+$(DATA_OBJS): CPPFLAGS += -iquote $(GRAPHICS_BUILDDIR)
 # The 24 cutscene pictures (palette + Mode 4 bitmap each).
 CUTSCENE_PICTURE_PNGS := $(wildcard graphics/cutscenes/*.png)
-$(C_BUILDDIR)/data/cutscene_pictures_5a9f70.o: $(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.img.bin.lz.inc,$(CUTSCENE_PICTURE_PNGS)) \
+$(C_BUILDDIR)/game/ui/data/cutscene_pictures.o: $(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.img.bin.lz.inc,$(CUTSCENE_PICTURE_PNGS)) \
 	$(patsubst graphics/%.png,$(GRAPHICS_BUILDDIR)/%.pal.inc,$(CUTSCENE_PICTURE_PNGS))
 
 # The two framed OBJ sprite sheets.
-$(C_BUILDDIR)/data/sprite_sheet_0b2120.o: $(GRAPHICS_BUILDDIR)/vehicles/polar/sprite_sheet.bin.lz.inc
-$(C_BUILDDIR)/data/sprite_sheet_14174c.o: $(GRAPHICS_BUILDDIR)/vehicles/jetpack/sprite_sheet.bin.lz.inc
+$(C_BUILDDIR)/game/vehicles/polar/data/polar_sprite_sheet.o: $(GRAPHICS_BUILDDIR)/vehicles/polar/sprite_sheet.bin.lz.inc
+$(C_BUILDDIR)/game/vehicles/jetpack/data/jetpack_sprite_sheet.o: $(GRAPHICS_BUILDDIR)/vehicles/jetpack/sprite_sheet.bin.lz.inc
 
 # The two HUD fonts (graphics/fonts/).
-$(C_BUILDDIR)/data/font_tiles_5a4e70.o: $(GRAPHICS_BUILDDIR)/fonts/small.img.bin.lz.inc $(GRAPHICS_BUILDDIR)/fonts/large.img.bin.lz.inc
+$(C_BUILDDIR)/engine/text/data/font_tiles.o: $(GRAPHICS_BUILDDIR)/fonts/small.img.bin.lz.inc $(GRAPHICS_BUILDDIR)/fonts/large.img.bin.lz.inc
 
 # The menu, title and credits graphics (0x0861BADC-0x086377C0): the BG
 # packages (below) and the credits and VV logo tile sheets
 # (graphics/logos/), each with the palette of its PNG.
 LOGO_SHEETS := $(filter logos/%,$(TILE_SHEETS_4BPP)) logos/vicarious_visions/letters logos/vicarious_visions/url
-$(C_BUILDDIR)/data/menu_graphics_61badc.o: \
+$(C_BUILDDIR)/game/ui/data/menu_graphics.o: \
 	$(foreach s,$(LOGO_SHEETS),$(GRAPHICS_BUILDDIR)/$(s).img.bin.lz.inc $(GRAPHICS_BUILDDIR)/$(s).gbapal.lz.inc)
 
 # The level-select cursor zoom, the ten level-select pictures and their
 # palettes, each the palette of its picture's PNG (graphics/level_select/,
 # 0x086377C0-0x0863D4C0).
-$(C_BUILDDIR)/data/level_select_graphics_6377c0.o: $(GRAPHICS_BUILDDIR)/level_select/cursor_zoom.img.bin.lz.inc \
+$(C_BUILDDIR)/game/ui/data/level_select_graphics.o: $(GRAPHICS_BUILDDIR)/level_select/cursor_zoom.img.bin.lz.inc \
 	$(foreach p,$(LEVEL_SELECT_PICTURES),$(GRAPHICS_BUILDDIR)/$(p).img.bin.lz.inc $(GRAPHICS_BUILDDIR)/$(p).gbapal.lz.inc)
 
 # Actor-category backgrounds (docs/data.md, "Category backgrounds"): the
@@ -242,11 +243,11 @@ $(foreach p,$(SKIES),$(eval $(call BG_PICTURE_RULE,$(p))))
 
 bg_picture_incs = $(foreach p,$(1),$(GRAPHICS_BUILDDIR)/$(p).pal.inc $(GRAPHICS_BUILDDIR)/$(p)_tiles.img.inc \
 	$(GRAPHICS_BUILDDIR)/$(p)_map.inc $(GRAPHICS_BUILDDIR)/$(p)_banks.inc)
-$(C_BUILDDIR)/data/cell_anim_03b8b0.o: $(GRAPHICS_BUILDDIR)/vehicles/polar/ice_wall.pal.inc \
+$(C_BUILDDIR)/game/vehicles/polar/data/polar_cell_anim.o: $(GRAPHICS_BUILDDIR)/vehicles/polar/ice_wall.pal.inc \
 	$(GRAPHICS_BUILDDIR)/vehicles/polar/ice_wall_frames.inc
-$(C_BUILDDIR)/data/cell_anim_0ff1b0.o: $(GRAPHICS_BUILDDIR)/vehicles/jetpack/clouds.pal.inc \
+$(C_BUILDDIR)/game/vehicles/jetpack/data/jetpack_cell_anim.o: $(GRAPHICS_BUILDDIR)/vehicles/jetpack/clouds.pal.inc \
 	$(GRAPHICS_BUILDDIR)/vehicles/jetpack/clouds_frames.inc $(call bg_picture_incs,vehicles/jetpack/skies/rocket_racket)
-$(C_BUILDDIR)/data/bg_picture_151ac4.o: $(call bg_picture_incs,vehicles/jetpack/skies/blimp_bonanza vehicles/jetpack/skies/no_fly_zone)
+$(C_BUILDDIR)/game/vehicles/jetpack/data/jetpack_sky_pictures.o: $(call bg_picture_incs,vehicles/jetpack/skies/blimp_bonanza vehicles/jetpack/skies/no_fly_zone)
 
 # The struct bg_package pictures (docs/graphics.md "Menu and title
 # pictures"): the menu backgrounds (graphics/menus/), the title screen's
@@ -256,12 +257,12 @@ $(C_BUILDDIR)/data/bg_picture_151ac4.o: $(call bg_picture_incs,vehicles/jetpack/
 # each are rebuilt from one PNG of the whole picture. grit reduces the
 # picture to tiles + map, and tools/bg_map.py first-use puts the tiles in
 # the ROM's order (order of first use; grit starts with a forced blank
-# tile). gbagfx compresses, and src/data/menu_graphics_61badc.cpp holds the
+# tile). gbagfx compresses, and src/game/ui/data/menu_graphics.cpp holds the
 # results. Each package's palette is its PNG's palette.
 BG_PACKAGES := menus/sky menus/pause level_select/platform menus/continue_prompt/smoke \
 	menus/continue_prompt/glow menus/continue_prompt/uka_uka logos/universal title/logo \
 	title/bandicoot title/crash title/arrow1 title/arrow2
-$(C_BUILDDIR)/data/menu_graphics_61badc.o: \
+$(C_BUILDDIR)/game/ui/data/menu_graphics.o: \
 	$(foreach p,$(BG_PACKAGES),$(GRAPHICS_BUILDDIR)/$(p).img.bin.lz.inc $(GRAPHICS_BUILDDIR)/$(p).map.bin.lz.inc \
 	$(GRAPHICS_BUILDDIR)/$(p).gbapal.lz.inc)
 
@@ -313,7 +314,7 @@ SPRITE_FRAMES_OUT := $(SPRITE_FRAMES_DIR)/sprite_frames.h \
 $(SPRITE_FRAMES_OUT) &: $(SPRITE_FRAME_SOURCES) tools/sprite_frames.py
 	python3 tools/sprite_frames.py pack $(SPRITE_FRAMES_DIR)
 
-$(C_BUILDDIR)/data/sprite_tiles_2bf120.o $(foreach f,4a5600 4b0ae0 4b414c 4b9d7c,$(C_BUILDDIR)/data/sprite_banks_$(f).o): $(SPRITE_FRAMES_OUT)
+$(C_BUILDDIR)/engine/gfx/data/sprite_tiles.o $(foreach f,00_09 10_21 22_38 39_55,$(call data_obj,sprite_banks_$(f))): $(SPRITE_FRAMES_OUT)
 
 # The 125 OBJ palettes (gObjPalettes): one JASC file per paletteId,
 # graphics/sprites/palettes/NNN_<owner>.pal (NNN the paletteId, <owner>
@@ -325,7 +326,7 @@ $(GRAPHICS_BUILDDIR)/sprites/obj_palettes.bin: $(patsubst graphics/%.pal,$(GRAPH
 	cat $^ > $@
 $(GRAPHICS_BUILDDIR)/sprites/obj_palettes.bin.inc: $(GRAPHICS_BUILDDIR)/sprites/obj_palettes.bin tools/bin2c.py
 	python3 tools/bin2c.py $< $@
-$(C_BUILDDIR)/data/sprite_tiles_2bf120.o: $(GRAPHICS_BUILDDIR)/sprites/obj_palettes.bin.inc
+$(C_BUILDDIR)/engine/gfx/data/sprite_tiles.o: $(GRAPHICS_BUILDDIR)/sprites/obj_palettes.bin.inc
 
 # The two boss pictures (docs/data.md "Boss pictures"): the airship
 # (graphics/vehicles/jetpack/airship/frameN.png, 4 frames) and N. Gin's
@@ -348,7 +349,7 @@ endef
 $(eval $(call BOSS_PICTURE_RULE,vehicles/jetpack/airship,$(AIRSHIP_FRAMES),AIRSHIP_PICTURE,18))
 $(eval $(call BOSS_PICTURE_RULE,bosses/hovercraft,bosses/hovercraft,HOVERCRAFT_PICTURE,16))
 
-$(C_BUILDDIR)/data/boss_pictures_167ad4.o: $(foreach p,vehicles/jetpack/airship bosses/hovercraft,$(GRAPHICS_BUILDDIR)/$(p).inc $(GRAPHICS_BUILDDIR)/$(p).h)
+$(C_BUILDDIR)/game/bosses/data/boss_pictures.o: $(foreach p,vehicles/jetpack/airship bosses/hovercraft,$(GRAPHICS_BUILDDIR)/$(p).inc $(GRAPHICS_BUILDDIR)/$(p).h)
 # Zero-run-compressed OBJ frame sets (the old "rotation strips", see
 # docs/data.md "Compressed sprite frames"): one PNG per set, the frames
 # stacked top to bottom: the polar player and the Yeti
@@ -370,11 +371,11 @@ $(eval $(call RLE_SPRITE_RULE,vehicles/polar/yeti,10x10,YETI))
 $(eval $(call RLE_SPRITE_RULE,vehicles/jetpack/player,8x8,JETPACK_PLAYER))
 
 rle_sprite_files = $(foreach s,$(1),$(GRAPHICS_BUILDDIR)/$(s).inc $(GRAPHICS_BUILDDIR)/$(s).h)
-$(C_BUILDDIR)/data/rle_sprites_0c2758.o: $(call rle_sprite_files,vehicles/polar/player vehicles/polar/yeti)
-$(C_BUILDDIR)/data/rle_sprites_15a050.o: $(call rle_sprite_files,vehicles/jetpack/player)
-$(C_BUILDDIR)/data/frame_table_17a880.o: $(call rle_sprite_files,vehicles/polar/yeti)
-$(C_BUILDDIR)/data/anim_family_178f80.o: $(call rle_sprite_files,vehicles/polar/player) $(GRAPHICS_BUILDDIR)/vehicles/polar/sprite_sheet_frames.h
-$(C_BUILDDIR)/data/anim_family_17aa6c.o: $(call rle_sprite_files,vehicles/jetpack/player) $(GRAPHICS_BUILDDIR)/vehicles/jetpack/sprite_sheet_frames.h
+$(C_BUILDDIR)/game/vehicles/polar/data/polar_rle_sprites.o: $(call rle_sprite_files,vehicles/polar/player vehicles/polar/yeti)
+$(C_BUILDDIR)/game/vehicles/jetpack/data/jetpack_rle_sprites.o: $(call rle_sprite_files,vehicles/jetpack/player)
+$(C_BUILDDIR)/game/vehicles/polar/data/yeti_frames.o: $(call rle_sprite_files,vehicles/polar/yeti)
+$(C_BUILDDIR)/game/vehicles/polar/data/polar_anim_family.o: $(call rle_sprite_files,vehicles/polar/player) $(GRAPHICS_BUILDDIR)/vehicles/polar/sprite_sheet_frames.h
+$(C_BUILDDIR)/game/vehicles/jetpack/data/jetpack_anim_family.o: $(call rle_sprite_files,vehicles/jetpack/player) $(GRAPHICS_BUILDDIR)/vehicles/jetpack/sprite_sheet_frames.h
 
 # The graphics classes (docs/graphics.md, "Graphics classes"): a graphic of
 # graphics/manifest.json with a `class` is that class, its parts static const
@@ -395,6 +396,6 @@ GRAPHICS_CLASS_OBJECTS := $(shell python3 tools/gfx_manifest.py objects)
 define GRAPHICS_DEFS_RULE
 $(GRAPHICS_BUILDDIR)/$(1).inc: graphics/manifest.json tools/gfx_manifest.py
 	python3 tools/gfx_manifest.py defs $(1) $$@
-$(C_BUILDDIR)/data/$(1).o: $(GRAPHICS_BUILDDIR)/$(1).inc
+$(call data_obj,$(1)): $(GRAPHICS_BUILDDIR)/$(1).inc
 endef
 $(foreach o,$(GRAPHICS_CLASS_OBJECTS),$(eval $(call GRAPHICS_DEFS_RULE,$(o))))

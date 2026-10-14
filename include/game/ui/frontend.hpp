@@ -81,9 +81,9 @@ class LanguageSelect;
 } // namespace Game
 extern Game::Ui::LanguageSelect *gLanguageSelect;
 
-/* The six language names (src/data/digit_glyphs_17e714.cpp) and the four
- * palettes InitLanguageSelectGraphics copies (palettes_17e72c.cpp,
- * level_tilesets_17e78c.cpp). */
+/* The six language names (src/game/ui/data/language_names.cpp) and the four
+ * palettes InitLanguageSelectGraphics copies (language_select_palettes.cpp,
+ * level_tilesets_jungle_snow_underwater.cpp). */
 extern const u8 *const gLanguageNames[6];
 extern const u16 gLanguageSelectPalette0[16];
 extern const u16 gLanguageSelectPalette1[16];
@@ -91,7 +91,7 @@ extern const u16 gLanguageSelectPalette2[16];
 extern const u16 gLanguageSelectPalette3[16];
 
 /* The company logo actor (InitLogoActor): its animation record
- * (src/data/level_gfx_17cff4.cpp, an anim_table_record) and the two VRAM
+ * (src/game/ui/data/title_screen_gfx.cpp, an anim_table_record) and the two VRAM
  * tile blocks DrawLogoActor
  * double-buffers its frames in (IWRAM, sym_iwram.txt). */
 extern const struct anim_table_record gLogoActorAnim; /* actor_anim.h */
@@ -100,19 +100,19 @@ extern s32 gLogoActorTileBuffer;  /* the block on screen, 0 or 1 */
 extern void *gLogoActorLastFrame; /* the frame last unpacked */
 
 /* The animation family RunCompanyLogos loads the logo actor's palette
- * from, and gLogoActorAnim its frames (src/data/anim_family_178f80.cpp). */
+ * from, and gLogoActorAnim its frames (src/game/vehicles/polar/data/polar_anim_family.cpp). */
 extern const u16 gPolarCategoryPalette[0x200];
 
-/* The logo pieces' seed tables (src/data/popup_glyphs_17cf40.cpp,
- * slot_seeds_17d6c0.cpp), NULL-terminated. */
+/* The logo pieces' seed tables (src/game/ui/data/credits_title_logos.cpp,
+ * vv_logo.cpp), NULL-terminated. */
 extern const struct slot_seed gTitleLogoPieceSeeds[10];
 extern const struct slot_seed gVvLogoPieceSeeds[21];
 
 /* The {x, y} offsets of the eight OAM pieces DrawTitleLogoPieces draws
- * around each of its two slots (src/data/level_gfx_17cff4.cpp). */
+ * around each of its two slots (src/game/ui/data/title_screen_gfx.cpp). */
 extern const s32 gTitleArrowPieceOffsets[8][2];
 
-/* The title screen's graphics (src/data/level_gfx_17cff4.cpp): the menu
+/* The title screen's graphics (src/game/ui/data/title_screen_gfx.cpp): the menu
  * palettes InitTitleScreen DMAs to OBJ palettes 13-15, the BG2 package
  * LoadTitleScreenBg loads and the four OBJ packages LoadTitleScreenObjTiles
  * loads (gTitleObjPackages, src/engine/sys/iwram_data.cpp). */
@@ -121,20 +121,20 @@ extern const u16 gTitleMenuSelectedPalette[16];
 extern const u16 gTitleMenuBlinkPalette[16];
 extern const struct bg_package gTitleScreenBg;
 extern const void *gTitleObjPackages[4];
-/* The four packages gTitleObjPackages points at (src/data/level_gfx_17cff4.cpp). */
+/* The four packages gTitleObjPackages points at (src/game/ui/data/title_screen_gfx.cpp). */
 extern const struct bg_package gTitleCrashObj;
 extern const struct bg_package gTitleArrow2Obj;
 extern const struct bg_package gTitleArrow1Obj;
 extern const struct bg_package gTitleBandicootObj;
 
-/* The company logos' graphics (src/data/slot_seeds_17d6c0.cpp,
- * countdown_17d7a4.cpp). */
+/* The company logos' graphics (src/game/ui/data/vv_logo.cpp,
+ * universal_vv_logo_motions.cpp). */
 extern const struct bg_package gVvLogoEmblemObj;
 extern const struct bg_package gVvLogoLettersObj;
 extern const struct bg_package gVvLogoUrlObj;
 extern const struct bg_package gUniversalLogoBg;
 
-/* The credits (src/data/credits_17c5d0.cpp, popup_glyphs_17cf40.cpp). */
+/* The credits (src/game/ui/data/credits_text.cpp, credits_title_logos.cpp). */
 extern const u8 gCreditsText[];
 extern const u8 gCreditsEmptyText[4];
 extern const struct bg_package gCreditsLogos[5];
@@ -203,7 +203,7 @@ COMPILE_TIME_ASSERT(frontend_hpp, sizeof(Starfield) == 0x14);
 } // namespace Ui
 } // namespace Game
 
-/* The credits stream's opcodes (gCreditsText, credits_17c5d0.cpp spells
+/* The credits stream's opcodes (gCreditsText, credits_text.cpp spells
  * them as CREDITS_PICTURE_n / CREDITS_SMALL / CREDITS_LARGE strings;
  * #843, docs/flags/text.md). */
 #define CREDITS_OP_PICTURE 1 // the next byte is a logo's index

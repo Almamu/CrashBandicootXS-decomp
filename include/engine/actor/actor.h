@@ -98,7 +98,7 @@ struct actor_spawn {
     u8 kind;      // 0x00 - the normal kind
     u8 altKind;   // 0x01 - in time trial mode
     u8 bonusKind; // 0x02 - when the bonus kinds are on (`useBonus`, `alt`)
-    // 0x03 - not padding: the spawn tables (src/data/) hold 0 in most
+    // 0x03 - not padding: the spawn tables (src/.../data/) hold 0 in most
     //        records and 1, 3, 17, 33, 53, 108, 125, 138, 155, 157, 161
     //        or 191 in others; nothing reads it
     u8 unk_03;
@@ -134,7 +134,7 @@ struct actor_spawn_table {
     struct actor_spawn_entry entries[0]; // 0x08
 };
 
-/* A whole spawn table as the ROM stores it (src/data/): `n` spawns, then 4
+/* A whole spawn table as the ROM stores it (src/.../data/): `n` spawns, then 4
  * bytes that no spawn reads (zero in three of the seven tables). */
 #define ACTOR_SPAWN_TABLE(n) \
     struct { s32 length; s32 count; struct actor_spawn_entry entries[n]; u8 end[4]; }

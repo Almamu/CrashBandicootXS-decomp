@@ -54,7 +54,7 @@ public:
     s32 timer; // 0x24 - how long left has been held, and the cooldown after
 
     /* The state methods, indexed by `state` (gInputCtrlStateFuncs,
-     * src/data/player_pmf_16c250.cpp): INPUT_CTRL_STATE_*. */
+     * src/game/crash/data/swim_input_ctrl_state_tables.cpp): INPUT_CTRL_STATE_*. */
     typedef void (InputCtrl::*StateFunc)();
     static const StateFunc stateFuncs[4];
 

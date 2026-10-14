@@ -228,13 +228,13 @@ extern void nullsub_12(void);
 extern void SetupSpriteFrameOam(u8 *frame, u32 attr01, u32 attr2, s32 priority);
 extern u32 GetSpriteShapeSizeBits(u8 *frame);
 
-/* The menus' sky background (src/data/bg_package_16c484.cpp): the language
+/* The menus' sky background (src/game/ui/data/menu_sky_bg.cpp): the language
  * select, level select, power dialog and save menu load it on BG0. Its
  * type is graphics_package.hpp's. */
 struct bg_package;
 extern const struct bg_package gMenuSkyBg;
 
-/* The master sprite bank table (src/data/sprite_banks_4a5600.cpp,
+/* The master sprite bank table (src/engine/gfx/data/sprite_banks_00_09.cpp,
  * sprite_bank.h): its palettes seed the palette cache. */
 extern const struct sprite_bank_table gSpriteBankTable;
 
@@ -259,8 +259,8 @@ extern s32 (*gLookupSpriteFrameCacheFunc)(u8 *frame);
 extern void (*gUnpackRleSpriteFrameFunc)(u16 *dst, struct rle_frame *frame);
 
 /* The OBJ shape/size index as width and height in pixels: as bytes for
- * DrawSpritePieces/DrawAffineSpritePieces (src/data/obj_sizes_16b2e0.cpp),
- * as s32s for FitScaledSprite/DrawScaledSprite (src/data/map_tables_16c5f0.cpp). */
+ * DrawSpritePieces/DrawAffineSpritePieces (src/engine/gfx/data/obj_piece_sizes.cpp),
+ * as s32s for FitScaledSprite/DrawScaledSprite (src/game/ui/data/level_select_anims.cpp). */
 extern const u8 gObjPieceHeights[12];
 extern const u8 gObjPieceWidths[12];
 extern const s32 gObjSizeHeights[12];

@@ -20,7 +20,7 @@
  * frontend.hpp.
  *
  * Below the includes are the menus' records and tables (the level
- * select's, the pause menu's and the continue prompt's, which src/data
+ * select's, the pause menu's and the continue prompt's, which src/.../data
  * defines), the data the C++ shares with them, and the menus' entry
  * points.
  *
@@ -68,8 +68,8 @@ struct image_pair {
     const u8 *tiles;
 };
 
-/* The level-select tables (src/data/map_tables_16c498.cpp,
- * map_tables_16c5f0.cpp, image_table_16c5a0.cpp, bg_package_16c58c.cpp,
+/* The level-select tables (src/game/ui/data/level_select_layout.cpp,
+ * level_select_anims.cpp, level_select_picture_table.cpp, level_select_page_bg_package.cpp,
  * data/data.s). */
 extern const struct vec2 gLevelSelectWorldPos;
 extern const struct vec2 gLevelSelectCrashIconPos;
@@ -92,8 +92,8 @@ extern const u32 gLevelSelectCursorAnims[4];
 extern const struct image_pair gLevelSelectPictures[10];
 extern const struct bg_package gLevelSelectPageBg;
 
-/* The pause menu tables (src/data/menu_tables_16b138.cpp,
- * pause_rows_16b298.cpp, bg_package_16b284.cpp). */
+/* The pause menu tables (src/game/ui/data/menu_tables.cpp,
+ * pause_menu_rows.cpp, pause_menu_bg.cpp). */
 extern const s32 gPauseMenuPageTitles[5];
 extern const struct vec2 gPauseCrystalIconPos;
 extern const struct vec2 gPausePowerIconPos[4];
@@ -107,8 +107,8 @@ extern const struct pause_row gPauseMenuRows[5];
 extern const u16 gPauseMenuPalette[16];
 extern const struct bg_package gPauseMenuBg;
 
-/* The continue prompt's graphics (src/data/bg_package_17c594.cpp,
- * hud_palettes_17c510.cpp). */
+/* The continue prompt's graphics (src/game/ui/data/continue_prompt_bgs.cpp,
+ * continue_prompt_palettes.cpp). */
 extern const struct bg_package gContinuePromptSmokeBg;
 extern const struct bg_package gContinuePromptGlowBg;
 extern const struct bg_package gContinuePromptUkaUkaBg;

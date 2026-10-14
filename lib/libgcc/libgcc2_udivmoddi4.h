@@ -4,7 +4,7 @@
  * libgcc2.c compiles this into each of the `__divdi3`/`__udivdi3`
  * objects (-DL_divdi3/-DL_udivdi3) separately, each with its own static
  * `__clz_tab`, so the includer defines UDIVMODDI4 (the function's name)
- * and CLZ_TAB (that object's table, data/clz_tab_5a4c70.c) first.
+ * and CLZ_TAB (that object's table, data/clz_tab.c) first.
  * Passing the table as a parameter instead doesn't reproduce the ROM:
  * the address gets hoisted into a register for the whole function. */
 static inline UDItype UDIVMODDI4(UDItype n, UDItype d, UDItype *rp)

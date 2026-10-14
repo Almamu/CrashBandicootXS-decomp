@@ -11,7 +11,7 @@
  * timeout flag) roles. */
 
 /* The two chip configs EEPROMConfigure picks from
- * (data/eeprom_5a9eec.c). */
+ * (data/eeprom_data.c). */
 extern const struct EepromConfig gEepromConfig512; /* 512-byte (4 Kbit) chip */
 extern const struct EepromConfig gEepromConfig8k;  /* 8-KB (64 Kbit) chip */
 

@@ -4,7 +4,7 @@
 #include "gba/types.h"
 
 /* Nintendo's AgbEeprom SDK library, version EEPROM_V122 (the ROM's
- * "EEPROM_V122" string, data/eeprom_5a9eec.c): serial EEPROM save-chip
+ * "EEPROM_V122" string, data/eeprom_data.c): serial EEPROM save-chip
  * access through DMA3, with a hardware timer as the write watchdog.
  * The library's code is at 0x0803A968-0x0803AD7C and was compiled at
  * -O1 (docs/matching/eeprom-sdk-o1.md). Names and shapes follow

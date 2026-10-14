@@ -66,7 +66,7 @@ The keys:
 ## The text
 
 The game draws the text with its two HUD fonts, whose characters are
-`gSmallFontChars` and `gLargeFontChars` (src/data/hud_fonts_174be0.cpp,
+`gSmallFontChars` and `gLargeFontChars` (src/game/ui/data/hud_font_tables.cpp,
 the glyphs are graphics/fonts/): the 26 lower case letters, the digits,
 `- + ! : , ? . ' %` and `< >` (the small font only), the accented letters
 `ä à á â ë è é ê ï ì í î ö ò ó ô ü ù ú û ñ ß ç ¿ ¡ ´ œ`, and `A`, `B`,
@@ -125,8 +125,8 @@ it into `msgstr`.
 A new UI string is a new `ui.*` entry after the last one, and its text
 id is its position (for a level's name, set the level's `name_text` in
 levels.json to it, see docs/levels.md). A new cutscene string needs a
-page that the cutscene tables (`cutscenes_16d1c8.cpp`,
-`cutscene_slides_16e064.cpp`) point at with that many strings.
+page that the cutscene tables (`cutscenes.cpp`,
+`cutscene_slides.cpp`) point at with that many strings.
 
 ## How the tables are built
 
@@ -137,7 +137,7 @@ page that the cutscene tables (`cutscenes_16d1c8.cpp`,
   English) and each language's `.mo` with Python's gettext module
   (`pgettext`, the key being the context), and writes
   `build/crashbandicootxs/text/<table>.inc`, which
-  `src/data/<table>.cpp` includes. It stops on a key a `.mo` lacks.
+  `src/*/data/<table>.cpp` includes. It stops on a key a `.mo` lacks.
 - The tables store each distinct string once, at its first use, in the
   order docs/data.md, "Text tables", gives, as the ROM does.
 
