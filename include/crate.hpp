@@ -182,6 +182,29 @@ public:
     virtual ~Crate();                                              // 10 DestroyCrate
     static Crate *Create(u16 id, u16 x, u16 y, u16 slot, u8 type); // CreateCrate
 
+    /* gEntitySpawnFuncs' crate slots (spawn_crates.cpp, #915): each
+     * creates its kind (CRATE_KIND_*). */
+    static void SpawnBasic(u32 id, u16 x, u16 y, u16 param);       // SpawnBasicCrate
+    static void SpawnCheckpoint(u32 id, u16 x, u16 y, u16 param);  // SpawnCheckpointCrate
+    static void SpawnAkuAku(u32 id, u16 x, u16 y, u16 param);      // SpawnAkuAkuCrate
+    static void SpawnIronSwitch(u32 id, u16 x, u16 y, u16 param);  // SpawnIronSwitchCrate
+    static void SpawnArrow(u32 id, u16 x, u16 y, u16 param);       // SpawnArrowCrate
+    static void SpawnOutline(u32 id, u16 x, u16 y, u16 param);     // SpawnOutlineCrate
+    static void SpawnNitroSwitch(u32 id, u16 x, u16 y, u16 param); // SpawnNitroSwitchCrate
+    static void SpawnIron(u32 id, u16 x, u16 y, u16 param);        // SpawnIronCrate
+    static void SpawnIronArrow(u32 id, u16 x, u16 y, u16 param);   // SpawnIronArrowCrate
+    static void SpawnLife(u32 id, u16 x, u16 y, u16 param);        // SpawnLifeCrate
+    static void SpawnNitro(u32 id, u16 x, u16 y, u16 param);       // SpawnNitroCrate
+    static void SpawnMystery(u32 id, u16 x, u16 y, u16 param);     // SpawnMysteryCrate
+    static void SpawnBouncyWumpa(u32 id, u16 x, u16 y, u16 param); // SpawnBouncyWumpaCrate
+    static void SpawnReinforced(u32 id, u16 x, u16 y, u16 param);  // SpawnReinforcedCrate
+    static void SpawnTnt(u32 id, u16 x, u16 y, u16 param);         // SpawnTntCrate
+    static void SpawnSlot(u32 id, u16 x, u16 y, u16 param);        // SpawnSlotCrate
+    static void SpawnTime1(u32 id, u16 x, u16 y, u16 param);       // SpawnTimeCrate1
+    static void SpawnTime2(u32 id, u16 x, u16 y, u16 param);       // SpawnTimeCrate2
+    static void SpawnTime3(u32 id, u16 x, u16 y, u16 param);       // SpawnTimeCrate3
+
+
     void Reset(); // ResetCrate
     Crate *GetBelow();
     Crate *GetAbove();

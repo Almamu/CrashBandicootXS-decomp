@@ -81,27 +81,6 @@ extern void SpawnTiny(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnCortexBoss(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnMegaMix(u32 id, u16 x, u16 y, u16 param);
 
-/* src/level/spawn_crates.cpp */
-extern void SpawnTimeCrate3(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnTimeCrate2(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnTimeCrate1(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnSlotCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnTntCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnReinforcedCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnBouncyWumpaCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnMysteryCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnNitroCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnLifeCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnIronArrowCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnIronCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnNitroSwitchCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnOutlineCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnArrowCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnIronSwitchCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnAkuAkuCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnCheckpointCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnBasicCrate(u32 id, u16 x, u16 y, u16 param);
-
 /* src/level/spawn_enemies.cpp */
 extern void SpawnLizard(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnVulture(u32 id, u16 x, u16 y, u16 param);

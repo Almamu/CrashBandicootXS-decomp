@@ -602,7 +602,7 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/level/entity_spawner.cpp` | `EntitySpawner::DropExtraLife` | 1 | old_agbcp | 0 -> 0 | 9 |
 | `src/level/spawn_gems.cpp` | the crystal and gem spawners (C linkage) | 6 | old_agbcp | 0 -> 0 | 9 |
 | `src/level/spawn_gem_platforms.cpp` | the gem platform spawners (C linkage) | 4 | old_agbcp | 0 -> 0 | 9 |
-| `src/level/spawn_crates.cpp` | the crate spawners (C linkage) | 7 | **old_agbcp** (was agbcc) | 16 pins, 3 asm -> 0 | 9 |
+| `src/level/spawn_crates.cpp` | the crate spawners (C linkage; `Crate`'s static members since #915) | 7 | **old_agbcp** (was agbcc) | 16 pins, 3 asm -> 0 | 9 |
 | `src/level/spawn_start_marker.cpp` | `SpawnStartMarker` (C linkage) | 1 | old_agbcp | 17 pins, 2 asm, 1 retyped read, the slot-13 call, gotos -> 0 | 9 |
 | `src/level/spawn_bosses.cpp` | the room exit and the bosses' spawners (C linkage) | 4 | old_agbcp | 4 pins, 1 keep, 3 slot calls -> 4 pins, 1 keep | 9 |
 | `src/level/spawn_objects.cpp` | Mega Mix, the decorations, the platform and crate spawners, the seal spawner (C linkage) | 25 | old_agbcp | the slot call -> 0 | 9 |
@@ -719,6 +719,7 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/data/actor_category_175558.cpp`, `src/vehicle/polar/polar_course_objects.cpp`, `polar_player.cpp`, `polar_player_states.cpp` | the callers: the polar slots 0 and 1 point at `PolarPlayer::Create` and `PolarPlayer::SpawnActor`; `PolarCheckpointText::Create(...)`, `PolarAkuAku::Spawn(...)`, `PolarCollectedWumpa::Spawn(...)`; PolarPlayer's methods call `CreateActor` as a member | 0 | (unchanged) | 0 -> 0 | [#915](#the-polar-factory-as-static-members-915) |
 | `src/vehicle/jetpack/jetpack_spawn.cpp` | the jetpack spawners as static members: SpawnJetpackActor, CreateJetpackActor and CreateJetpackPlayer of `JetpackPlayer` (`SpawnActor`, `CreateActor`, `Create`), the 12 fixed-record spawners of the classes they build (`JetpackShot::Spawn`, `JetpackCheckpointText::Create`, `HovercraftCannon::Spawn`, ...); vehicle.hpp's 9 `extern "C"` prototypes and bosses.h's 6 go | 15 | (unchanged) | 0 -> 0 | [#915](#the-jetpack-spawners-as-static-members-915) |
 | `src/data/actor_category_175558.cpp`, `src/bosses/hovercraft.cpp`, `hovercraft_cannon.cpp`, `hovercraft_launcher.cpp`, `hovercraft_side_gun.cpp`, `src/vehicle/jetpack/airship_states.cpp`, `jetpack_crates.cpp`, `jetpack_plane.cpp`, `jetpack_player.cpp`, `jetpack_player_update.cpp` | the callers: the jetpack and hovercraft slots 0 and 1 point at `JetpackPlayer::Create` and `JetpackPlayer::SpawnActor`; `JetpackCannonball::Spawn(...)`, `JetpackPlayer::CreateActor(...)`, `HovercraftSideGun::Spawn(...)` & co.; hovercraft.cpp and airship_states.cpp include boss_actors.hpp | 0 | (unchanged) | 0 -> 0 | [#915](#the-jetpack-spawners-as-static-members-915) |
+| `src/level/spawn_crates.cpp`, `src/data/dispatch_table_16c6a4.cpp` | the crate spawners as static members of `Crate` (include/crate.hpp): SpawnBasicCrate & co. are `SpawnBasic`, `SpawnTnt`, `SpawnTime1`, ... (CRATE_KIND_*'s names); gEntitySpawnFuncs' crate slots name the members; level.h's 19 prototypes go | 19 | (unchanged) | 0 -> 0 | [#915](#the-entity-spawners-as-static-members-915) |
 | `src/text/text_box.cpp` | `GetWordLength`, `DrawWrappedTextInBox` (C linkage; takes a `Font *`, `self->SetMargin`, `HeightToLines`) | 0 + 2 | agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/aabb.cpp` (since #767: `CommitBlendRegs` at the end of gfx/display.cpp, `IwramFree`/`IwramAlloc` in system/iwram_alloc.cpp) | `CommitBlendRegs`, `AabbOverlapsInclusiveX`, `AabbOverlaps`, `IwramFree`, `IwramAlloc` (C linkage) | 0 + 5 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/fixed_math.cpp`, `line.cpp`, `line_step.cpp`, `number_format.cpp`, `printf.cpp`, `rand.cpp`, `string.cpp`, `time_format.cpp` | the fixed-point helpers, the Bresenham line, `itoa`, `sprintf`/`vsprintf`/`FindSubstring` (string.cpp since #767), `rand`/`srand`/`RandRange`, the string functions, `FormatCentiseconds` (C linkage) | 0 + 24 | agbcp | 2 pins, 5 asm, 2 asm labels -> the same | all-C++: gfx, system, util, text |
@@ -5038,6 +5039,26 @@ They take no object, so they are static members, and the object
   bosses.h's 6 go; the jetpack and hovercraft vtables
   (actor_category_175558.cpp) point at `JetpackPlayer::Create` and
   `JetpackPlayer::SpawnActor`.
+
+### The entity spawners as static members (#915)
+
+gEntitySpawnFuncs (src/data/dispatch_table_16c6a4.cpp) holds the spawn
+function of each entity type of the room data, `(u32 id, u16 x, u16 y,
+u16 param)`; SpawnEntity calls slot `type`. The spawners
+(src/level/spawn_*.cpp) take no object, so each one that creates an
+object of its own class is a static member of that class, under the
+slot's signature, and every object is byte-identical. The table's
+initialisers name the members, and cxx_symbols.txt maps each one to its
+C name.
+
+- **Names.** Where one class has several slots, each member is named
+  after what it spawns: the crates are `Crate::SpawnBasic`,
+  `Crate::SpawnTnt`, ... (the CRATE_KIND_* names).
+- **Crates.** spawn_crates.cpp's 19 spawners create a Crate of one kind
+  each (Crate::Create, the kind as a constant; SpawnNitroSwitchCrate picks
+  the iron or the nitro switch kind). They are `Crate`'s
+  (include/crate.hpp); cxx_symbols.txt's `#915 Crate: the crate spawners`
+  block maps them.
 
 ### The crate passes as static members of Crate (#915)
 
