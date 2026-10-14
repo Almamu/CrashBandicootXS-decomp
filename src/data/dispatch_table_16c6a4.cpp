@@ -13,6 +13,10 @@ extern "C" {
 
 using Game::Enemies::EnemyCtrl;
 using Game::Enemies::PeriodicSpawner;
+using Game::Bosses::MegaMixCtrl;
+using Game::Bosses::TinyCtrl;
+using Game::Bosses::CortexBossCtrl;
+using Game::Bosses::DingodileCtrl;
 
 /*
  * ROM 0x0816C6A4-0x0816C814. Linked in ROM order between data/data.s

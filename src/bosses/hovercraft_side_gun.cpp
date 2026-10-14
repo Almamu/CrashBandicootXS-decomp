@@ -7,6 +7,10 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Bosses::Hovercraft;
+using Game::Bosses::HovercraftFireball;
+using Game::Bosses::HovercraftSideGun;
+
 /* The hovercraft's side guns (#664 part 11h, include/boss_actors.hpp):
  * two HpActors on the hovercraft's sides (`left`, SpawnHovercraft) that
  * fire fireballs in bursts. See

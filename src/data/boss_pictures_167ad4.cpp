@@ -6,6 +6,8 @@ extern "C" {
 #include "system.h"
 }
 
+using Game::Bosses::Hovercraft;
+
 /*
  * ROM 0x08167AD4-0x0816AA20. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.

@@ -9,6 +9,12 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Bosses::HovercraftCannon;
+using Game::Bosses::HovercraftCannonFlash;
+using Game::Bosses::HovercraftFireball;
+using Game::Bosses::HovercraftLauncher;
+using Game::Bosses::HovercraftSideGun;
+
 /* The 3D actors' destructors (vehicle.hpp, boss_actors.hpp), all but the
  * polar player's, the jetpack player's, the balloon crate's and the
  * polar collected wumpa's, in the ROM's order, with a few small methods

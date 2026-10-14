@@ -22,6 +22,8 @@ extern "C" {
 #include "sprite_bank.h"
 }
 
+using Game::Bosses::BossCtrl;
+using Game::Bosses::Hovercraft;
 using Game::Crash::Player;
 
 /* The level state's accessors and helpers: LevelState's methods

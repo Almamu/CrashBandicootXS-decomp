@@ -9,6 +9,7 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Game::Bosses::MegaMixCtrl;
 using Game::Crash::Player;
 
 /* MegaMixCtrl::Update (UpdateMegaMix): the update of Mega-Mix, the boss

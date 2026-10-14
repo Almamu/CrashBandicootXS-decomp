@@ -9,6 +9,11 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Bosses::CortexBossCtrl;
+using Game::Bosses::DingodileCtrl;
+using Game::Bosses::MegaMixCtrl;
+using Game::Bosses::TinyCtrl;
+
 /* The spawners of the bosses, the room exit and Mega-Mix (#664,
  * include/spawners.hpp), ROM 0x08021280-0x08021748. Built with
  * old_agbcp. Since #915 the bosses' and Mega Mix's are static members of

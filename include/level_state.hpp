@@ -25,7 +25,13 @@ extern "C" {
 #include "core.h"
 }
 
-class BossCtrl;
+namespace Game
+{
+namespace Bosses
+{
+class BossCtrl; // boss_ctrl.hpp
+} // namespace Bosses
+} // namespace Game
 class LevelEntityFlags;
 class Platform; // platform.hpp
 
@@ -203,7 +209,7 @@ public:
     u8 GetSpawnAtStart();
     void ClearSpawnAtStart();
     void ArmStartSpawn();
-    void SetLevelBoss(BossCtrl *value);
+    void SetLevelBoss(Game::Bosses::BossCtrl *value);
     s32 GetRoomIndex();
     s32 GetCurrentLevel();
     void SetCurrentLevel(s32 value);
@@ -294,7 +300,7 @@ public:
     s32 crateGemY; // 0x1C4
     // 0x1C8 - the boss's controller (SetLevelBoss); GetBossHealth reads its
     // `counter`, the hits taken
-    BossCtrl *boss;
+    Game::Bosses::BossCtrl *boss;
 
 private:
     /* gLevelStateSingleton, Get's instance: an initialised IWRAM global

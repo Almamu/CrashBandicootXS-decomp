@@ -10,7 +10,11 @@
  * "Emitting the vtables"). Ctrl's own, gCtrlVtable, is emitted in
  * src/system/bios_util.cpp, which has its key method, Update (UpdateCtrl).
  * cxx_symbols.txt maps the mangled vtable, method, constructor and
- * destructor names onto their C names. */
+ * destructor names onto their C names.
+ *
+ * Ctrl and EffectCtrl are global; Tiny's StompedHopPadCtrl and
+ * OneShotAnimCtrl are in the namespace Game::Bosses (#1033,
+ * boss_ctrl.hpp). */
 
 extern "C" {
 #include "core.h"
@@ -72,6 +76,11 @@ public:
 
 COMPILE_TIME_ASSERT(ctrl_hpp, sizeof(EffectCtrl) == 0x10);
 
+namespace Game
+{
+namespace Bosses
+{
+
 /* The Tiny boss's stomped hop pad's controller
  * (src/bosses/tiny.cpp, gStompedHopPadVtable): `state` 0 plays
  * animation 8, 1 sinks the pad, 2 is done. */
@@ -101,5 +110,8 @@ public:
 };
 
 COMPILE_TIME_ASSERT(ctrl_hpp, sizeof(OneShotAnimCtrl) == 0x10);
+
+} // namespace Bosses
+} // namespace Game
 
 #endif /* !GUARD_CTRL_HPP */

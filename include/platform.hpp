@@ -8,7 +8,10 @@
  * No `#pragma interface`: g++ emits the vtables, PlatformMover's in
  * platform_mover.cpp, Platform's in platform_contact.cpp and
  * CortexBossPlatformMover's in cortex.cpp (see ctrl.hpp); cxx_symbols.txt
- * maps the mangled names onto the C names. */
+ * maps the mangled names onto the C names.
+ *
+ * CortexBossPlatformMover is in the namespace Game::Bosses (#1033,
+ * boss_ctrl.hpp); Platform and PlatformMover are global. */
 
 #include "sprite_obj.hpp"
 #include "ctrl.hpp"
@@ -133,6 +136,11 @@ public:
 
 COMPILE_TIME_ASSERT(platform_hpp, sizeof(PlatformMover) == 0x38);
 
+namespace Game
+{
+namespace Bosses
+{
+
 /* The Neo Cortex fight's platforms' controller
  * (gCortexBossPlatformMoverVtable; src/bosses/cortex.cpp): a still type-6
  * PlatformMover whose Update runs the platform's animation to frame 0x1A,
@@ -150,5 +158,8 @@ public:
 };
 
 COMPILE_TIME_ASSERT(platform_hpp, sizeof(CortexBossPlatformMover) == 0x38);
+
+} // namespace Bosses
+} // namespace Game
 
 #endif /* !GUARD_PLATFORM_HPP */

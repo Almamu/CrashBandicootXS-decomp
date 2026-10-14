@@ -1,6 +1,9 @@
 #include "boss_actors.hpp"
 #include "hovercraft.hpp"
 
+using Game::Bosses::Hovercraft;
+using Game::Bosses::HovercraftCannonFlash;
+
 /* The cannon's muzzle flash (#664 part 11h, include/boss_actors.hpp): an
  * HpActor the cannon spawns with each shot (HovercraftCannonFlash::Spawn).
  * It stays in front of the cannon until its animation has played once,

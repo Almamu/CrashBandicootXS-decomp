@@ -6,11 +6,24 @@
  *
  * No `#pragma interface`: g++ emits their vtables, each in its key-method
  * object (see ctrl.hpp); cxx_symbols.txt maps their mangled names onto
- * the C names. */
+ * the C names.
+ *
+ * The classes are in the namespace Game::Bosses (#1033, docs/cplusplus.md
+ * "Namespaces"), with ctrl.hpp's two Tiny controllers, platform.hpp's
+ * CortexBossPlatformMover and the hovercraft (hovercraft.hpp,
+ * boss_actors.hpp): `Update__Q34Game6Bosses8TinyCtrlP12MovingSprite`,
+ * `_vt.Q34Game6Bosses8BossCtrl` (in the section
+ * `.gnu.linkonce.d._vt.Q34Game6Bosses8BossCtrl`, which ldscript.txt
+ * names) & co. bosses.h's C structs and declarations stay global. */
 
 #include "ctrl.hpp"
 #include "sprite_obj.hpp"
 #include "enemy_ctrl.hpp"
+
+namespace Game
+{
+namespace Bosses
+{
 
 /* The boss controller (gBossCtrlVtable, src/bosses/boss_ctrl.cpp):
  * the base class of the bosses'
@@ -394,5 +407,8 @@ public:
 };
 
 COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(DingodileSharkCtrl) == 0x8C);
+
+} // namespace Bosses
+} // namespace Game
 
 #endif /* !GUARD_BOSS_CTRL_HPP */

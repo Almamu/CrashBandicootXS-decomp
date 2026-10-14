@@ -685,6 +685,38 @@ checks the change is only a rename:
   it lives in src/enemies/, so it is the enemies'. The shark of
   Dingodile's fight (`DingodileSharkCtrl`) is a boss controller and stays
   with the bosses.
+- **`Game::Bosses`** (`Q34Game6Bosses`): the boss controllers of
+  boss_ctrl.hpp (`BossCtrl`, `MegaMixCtrl`, `TinyCtrl`, the Neo Cortex
+  fight's `CortexBossCtrl`, `CortexCannonCtrl`, `CortexTargetCtrl`,
+  `CortexShotCtrl`, `CortexBossGemCtrl`, `UnusedOneShotAnimCtrl`, and
+  Dingodile's `DingodileCtrl`, `DingodileShieldCtrl`,
+  `DingodileProjectileCtrl`, `DingodileSharkCtrl`), Tiny's
+  `StompedHopPadCtrl` and `OneShotAnimCtrl` (ctrl.hpp), the Cortex
+  fight's `CortexBossPlatformMover` (platform.hpp), and N. Gin's
+  hovercraft: the all-static `Hovercraft` (hovercraft.hpp) and its
+  weapons `HovercraftFireball`, `HovercraftCannon`, `HovercraftLauncher`,
+  `HovercraftSideGun`, `HovercraftCannonFlash` (boss_actors.hpp). All of
+  src/bosses/, with the bosses' Spawn (src/level/spawn_bosses.cpp) and the
+  weapons' (src/vehicle/jetpack/jetpack_spawn.cpp). 214 symbols renamed,
+  among them 21 vtables, and LevelState::SetLevelBoss, which takes a
+  `BossCtrl *`; no code change. ldscript.txt's 21 lines that place the
+  vtable sections are updated by hand. level_state.hpp forward declares
+  BossCtrl in the namespace for `LevelState::boss`. The bosses' ROM tables
+  (`Hovercraft::palette`, `picture`, `attacks`, ..., in src/data) are
+  defined through using declarations. bosses.h's C structs
+  (`hovercraft_attack`, ...) and C declarations stay global. No name
+  hiding: no global is named `Bosses` or like the classes, and
+  MegaMixCtrl::Update names the player plain `Player` (the namespace is
+  `Game::Crash`). Boundary calls:
+  ctrl.hpp's `Ctrl` and `EffectCtrl` stay global (every controller's
+  base, and the effect parts'); the two Tiny controllers are declared in
+  ctrl.hpp but are Tiny's (tiny.cpp), and the platform mover subclass is
+  the Cortex fight's (cortex.cpp), so they are bosses. The hovercraft is
+  fought with the jetpack (its actor category runs JetpackPlayer and its
+  weapons' Spawn sit in jetpack_spawn.cpp), but it is N. Gin's boss fight
+  and lives in src/bosses/, so it is `Game::Bosses`, not
+  `Game::Vehicles::Jetpack`; the airship's fireball (boss_actors.hpp's
+  `AirshipFireball`) goes with the airship to `Game::Vehicles`.
 
 ## Progress
 
