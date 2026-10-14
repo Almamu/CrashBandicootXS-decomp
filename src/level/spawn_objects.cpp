@@ -15,13 +15,14 @@ extern "C" {
  * include/spawners.hpp). Built with old_agbcp. Since #915 the platforms',
  * the launch pad's and the seal spawner's are static members of the
  * classes they create (Platform::SpawnRock, LaunchPad::SpawnEntity,
- * PeriodicSpawner::Spawn, ...); the decorations (plain Sprites) and the
- * empty slot stay free. */
+ * PeriodicSpawner::Spawn, ...), and the decorations' (plain Sprites)
+ * are Pickups' (Pickups::SpawnSeaweed, ..., include/pickups.hpp); the
+ * empty slot stays free. */
 
 /* Builds a sprite on sprite bank 45, resets
  * its OAM state and frame nibble, clears flags bits 7 and 2 and
  * registers it with gDecorationList's manager. */
-void SpawnSeaweed(u32 id, u16 x, u16 y, u16 param)
+void Pickups::SpawnSeaweed(u32 id, u16 x, u16 y, u16 param)
 {
     Sprite *part = Sprite::Create(id, x, y, param);
 
@@ -36,7 +37,7 @@ void SpawnSeaweed(u32 id, u16 x, u16 y, u16 param)
 
 /* UNUSED - no caller anywhere in the ROM (checked src/, asm/ and the spawn
  * table). SpawnSeaweed without the animation reset. */
-void SpawnSeaweedNoAnimReset(u32 id, u16 x, u16 y, u16 param)
+void Pickups::SpawnSeaweedNoAnimReset(u32 id, u16 x, u16 y, u16 param)
 {
     Sprite *part = Sprite::Create(id, x, y, param);
 
@@ -51,7 +52,7 @@ void SpawnSeaweedNoAnimReset(u32 id, u16 x, u16 y, u16 param)
 /* Builds a sprite on sprite bank 44, resets
  * its OAM state and frame nibble, clears flags bits 7 and 2 and
  * registers it with gDecorationList's manager. */
-void SpawnFlame(u32 id, u16 x, u16 y, u16 param)
+void Pickups::SpawnFlame(u32 id, u16 x, u16 y, u16 param)
 {
     Sprite *part = Sprite::Create(id, x, y, param);
 

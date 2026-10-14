@@ -2841,3 +2841,22 @@ Spawn__14CortexBossCtrlUiUsUsUs SpawnCortexBoss
 Spawn__11MegaMixCtrlUiUsUsUs SpawnMegaMix
 Spawn__9StopwatchUiUsUsUs SpawnStopwatch
 Spawn__5WumpaUiUsUsUs SpawnWumpa
+#
+# #915 Pickups: the spawners of the pickups that are a plain Sprite of a
+# bank, and of the decorations, as an all-static class
+# (include/pickups.hpp; src/level/spawn_pickups.cpp, spawn_gems.cpp,
+# spawn_objects.cpp).
+SpawnPowerBodySlam__7PickupsUiUsUsUs SpawnBodySlamPower
+SpawnPowerTornadoSpin__7PickupsUiUsUsUs SpawnTornadoSpinPower
+SpawnPowerDoubleJump__7PickupsUiUsUsUs SpawnDoubleJumpPower
+SpawnPowerTurboRun__7PickupsUiUsUsUs SpawnTurboRunPower
+SpawnBlueGem__7PickupsUiUsUsUs SpawnBlueGem
+SpawnCrystal__7PickupsUiUsUsUs SpawnCrystal
+SpawnCrateGem__7PickupsUiUsUsUs SpawnCrateGem
+SpawnGemPathGem__7PickupsUiUsUsUs SpawnGemPathGem
+SpawnRedGem__7PickupsUiUsUsUs SpawnRedGem
+SpawnGreenGem__7PickupsUiUsUsUs SpawnGreenGem
+SpawnYellowGem__7PickupsUiUsUsUs SpawnYellowGem
+SpawnSeaweed__7PickupsUiUsUsUs SpawnSeaweed
+SpawnSeaweedNoAnimReset__7PickupsUiUsUsUs SpawnSeaweedNoAnimReset
+SpawnFlame__7PickupsUiUsUsUs SpawnFlame
