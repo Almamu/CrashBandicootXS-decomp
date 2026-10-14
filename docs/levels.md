@@ -1027,6 +1027,62 @@ naming them. In mGBA the level select's zoom picture for jungle jam is the
 new one: BG2's character block holds `lab.png`'s tiles byte for byte, and
 the BG palette its colours.
 
+## Level-select pages
+
+How the ROM's level select pages through the worlds and opens them. This
+is the ground for #966's phase 4 (pages for new levels), whose design is
+open (#966, the phase 4 draft PR).
+
+**A page is a world.** `LevelSelect` (`level_select.cpp`,
+`level_select_pages.cpp`) shows one world at a time: its
+`LEVELS_PER_WORLD` numbered levels (`world * LEVELS_PER_WORLD + index`)
+and its boss (`LEVEL_FIRST_BOSS + world`), `LEVEL_SELECT_ENTRIES`
+entries. Up turns to the next page (`NextWorld`), Down to the previous
+one (`PrevWorld`); the platform (BG1, `LevelSelectPageBg`) turns 0x100
+pixels a page and wraps, so it has no page count. Left and Right move
+the cursor on the page. The level select opens on the page of the last
+level played (`room.level`, capped at `LEVEL_LAST_ON_GRID`).
+
+**What opens what.**
+
+| what | opens when | where |
+|---|---|---|
+| a world's numbered levels | always, once the world is open | `PlaceItems` |
+| a world's boss (the sixth entry) | all `LEVELS_PER_WORLD` levels of the world are cleared (`levels[k].cleared`); the entries then take `gLevelSelectEntryPositionsAllCleared` | `PlaceItems` |
+| world 1, 2, 3 | the power of the boss before: Super Body Slam (Dingodile), Double Jump (N. Gin), Tornado Spin (Tiny), `PROGRESS_BIT_*` of `save->flags` | `IsNextWorldOpen`'s `switch (world)`, cases 0-2 |
+| (no world after the last) | `UpdatePageArrows` draws no next arrow on page `WORLD_COUNT - 1`; `IsNextWorldOpen` returns 0 there (no case) | |
+| mega-mix (`LEVEL_FINALE`, off the grid) | beating Neo Cortex at over 99% completion: `UpdateGameFrame` plays it straight after (`room.level++`) | `game_frame.cpp` |
+
+Beating a boss for the first time gives its power and calls
+`LevelSelect::SetNewWorldOpened`: the next level select turns to the
+new page by itself (`Loop`). Neo Cortex's power (Turbo Run) opens no
+page. The eight bits of `save->flags` (`GameProgress` byte 2) are all
+used: the four coloured gems and the four powers. Byte 3 is padding before
+`levels` (saved with the record), and bits 16-31 of each level's word are
+unused. A boss's level word gets no `cleared` bit: `UpdateGameFrame`'s
+boss cases give the power instead.
+
+**What a page shows, per world** (each table has `WORLD_COUNT` entries):
+
+| table | what | ROM |
+|---|---|---|
+| `gLevelSelectWorldAnims` | the page title sprite's animation (bank 47) | 9, 8, 6, 7 |
+| `gLevelSelectWorldEntryBoxAnims` | the entries' box colour, an index of `gLevelSelectEntryBoxAnims` (bank 49; five, one unused) | 0, 1, 2, 3 |
+| `gLevelSelectEntryWorldAnims` | the boss entry's icon animation (bank 51) | 2, 3, 1, 4 |
+
+A numbered level's entry shows frame `level id` of bank 51
+(`LevelSelectEntry::SetLevel`): the bank's frames 0-19 are the numbers
+1-20, and frames 20-23 the four bosses' heads.
+
+**What a new page would need.** A world is `LEVELS_PER_WORLD` numbered
+levels and a boss, so a fifth world is six levels: 31 with the ROM's,
+past the 28 the save record holds (see "The counts the code takes from
+the levels"), which `levels.py` refuses. Then: a rule that opens it
+(there is no free bit in `save->flags`), an entry in each per-world
+table above, number icons for its levels (bank 51's frames 20-23 are the
+bosses', where levels 21-25 would look), and the boss and level ids
+after it move (`LEVEL_FIRST_BOSS` becomes 25).
+
 ## The save
 
 The cartridge save is one record, `SaveData` (`save_data.hpp`): four
