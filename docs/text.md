@@ -54,10 +54,11 @@ The keys:
   of them. The level names are `ui.level.<level>`, the level's constant
   in levels.json (`LEVEL_JUNGLE_JAM` is `ui.level.jungle_jam`), and a
   level's `name_text` is its entry's text id: tools/text.py stops if it
-  isn't a `ui.level.*` entry, which catches an entry inserted in the
-  middle. There are `UI_TEXT_COUNT` of them (levels.py's
-  `constants/levels.h`), and the build stops if the template has
-  another number.
+  isn't the level's own `ui.level.<level>` entry (which catches an entry
+  inserted in the middle, and a level pointing at another level's name)
+  and if a `ui.level.*` entry is no level's name. There are
+  `UI_TEXT_COUNT` of them (levels.py's `constants/levels.h`), and the
+  build stops if the template has another number.
 - `cutscene<NN>.page<P>.<I>`: string `I` of page `P` of cutscene `NN`, the
   page that shows with slide `P` of the cutscene. A page's strings show
   one after the other. A page used twice (cutscene 10's page 2 is
@@ -124,9 +125,52 @@ it into `msgstr`.
 
 A new UI string is a new `ui.*` entry after the last one, and its text
 id is its position (for a level's name, set the level's `name_text` in
-levels.json to it, see docs/levels.md). A new cutscene string needs a
-page that the cutscene tables (`cutscenes.cpp`,
+levels.json to it, see "A new level's name" below). A new cutscene
+string needs a page that the cutscene tables (`cutscenes.cpp`,
 `cutscene_slides.cpp`) point at with that many strings.
+
+### A new level's name
+
+A level's name is data in the six languages (#966):
+
+1. **The template.** Add the entry after the last `ui.*` one (before the
+   first `cutscene*` entry) of `text/crashxs.pot`, keyed
+   `ui.level.<level>` after the level's constant (`LEVEL_LAB`:
+   `ui.level.lab`), with its comment:
+
+   ```po
+   #. Text id 70 (0x46). A level's name (LEVEL_LAB): the level select's title
+   #. (large font) and the pause menu's info page.
+   msgctxt "ui.level.lab"
+   msgid "the lab"
+   msgstr ""
+   ```
+
+   Its text id is its position: 70 for the first one after the ROM's
+   70 strings.
+2. **The languages.** `make text-update` brings it into the five `.po`
+   files untranslated. Fill in each `msgstr` (the English again where the
+   game keeps it). `make text-check` fails until all five have it: an
+   untranslated entry fails `msgfmt --check --statistics`'s count, a
+   missing one `msgcmp`.
+3. **The level.** Set its `name_text` in levels.json to the text id.
+4. **Run `make`.** `UI_TEXT_COUNT` grows to one past the highest
+   `name_text`, the `gUiText*` tables get the name in each language and
+   the level select and the pause menu show it.
+
+The name is drawn in both fonts, so each language's text must be in
+both (the font check above). Appending moves no other text id: the
+code's `GetUiText(0x1b)` and the other menu ids (26-69) keep their
+strings. Only an entry inserted before them would shift them, and the
+level-name check stops the build then.
+
+Tested in scratch with a 26th level, `LEVEL_LAB` ("the lab", "le labo",
+"das labor", "el laboratorio", "il laboratorio", "het lab", text id 70).
+`make text-check` passes with the six names and fails with German's
+`msgstr` emptied or its entry removed. Plain `make` builds it
+(`UI_TEXT_COUNT` 71, `gUiText*70` in each table), and a second `make`
+does nothing. In mGBA, the level's pause menu shows its name in English,
+French and German.
 
 ## How the tables are built
 
