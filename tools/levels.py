@@ -1594,7 +1594,7 @@ def themes_from_rom(rom, kept):
     entries come from the ROM."""
     songs = song_names()
     by_rom = {(int(e["palette"]["rom"], 16), int(e["rom"], 16)): path
-              for path, e in level_select_picture_classes().items()}
+              for path, e in level_select_picture_classes().items() if "rom" in e}
     themes = []
     for i, k in enumerate(kept["themes"]):
         t = {"constant": k["constant"], "name": k["name"], "song": songs[rom.b(THEME_MUSIC_CUES + i)]}
