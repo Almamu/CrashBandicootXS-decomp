@@ -69,7 +69,7 @@ void SpawnPlayerPosition(u32 id, u16 x, u16 y, u16 param)
 
 /* UNUSED - no caller anywhere in the ROM (checked src/, asm/ and the spawn
  * table). The spawners in this stretch of ROM run in descending type order
- * (SpawnWumpa 0x06, SpawnHoverPlayerPosition 0x05 ... SpawnPlayerPosition
+ * (Wumpa::Spawn 0x06, SpawnHoverPlayerPosition 0x05 ... SpawnPlayerPosition
  * 0x01), so this empty stub sits where type 0x00's spawner would; the
  * table's type 0x00 is SpawnStartMarker (spawn_start_marker.cpp, 0x0801E990)
  * instead. */

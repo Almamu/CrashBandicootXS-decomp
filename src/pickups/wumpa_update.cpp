@@ -193,7 +193,7 @@ void Wumpa::Update()
     Sprite::Update();
 }
 
-/* The wumpa spawner (SpawnWumpa, spawn_pickups.cpp; DropWumpa): a wumpa at
+/* The wumpa spawner (Wumpa::Spawn, spawn_pickups.cpp; DropWumpa): a wumpa at
  * pixel (x, y), at home there, in the foreground list if `special` is
  * 0xFFFF and the touchable list otherwise, with animation 1 of the sprite
  * bank 35.

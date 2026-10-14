@@ -11,7 +11,10 @@ extern "C" {
 
 /* The spawners of the bosses, the room exit and Mega-Mix (#664,
  * include/spawners.hpp), ROM 0x08021280-0x08021748. Built with
- * old_agbcp. */
+ * old_agbcp. Since #915 the bosses' and Mega Mix's are static members of
+ * their controllers' classes (DingodileCtrl::Spawn, TinyCtrl::Spawn,
+ * CortexBossCtrl::Spawn, MegaMixCtrl::Spawn; include/boss_ctrl.hpp); the
+ * room exit, a bare Entity or a Platform by the level, stays free. */
 
 /* The part's X and Y mirror bits from its parameter record's flags (bit
  * 1 clear: X mirrored; bit 2: Y mirrored). */
@@ -72,7 +75,7 @@ void SpawnRoomExit(u32 id, u16 x, u16 y, u16 param)
 /* Dingodile: his part (bank 0x288), always active, kind 1, mirrored by
  * his record, in the collidable list, and his controller
  * (DingodileCtrl, from his position), the level's boss. */
-void SpawnDingodile(u32 id, u16 x, u16 y, u16 param)
+void DingodileCtrl::Spawn(u32 id, u16 x, u16 y, u16 param)
 {
     MovingSprite *part = MovingSprite::Create(id, x, y, param);
     DingodileCtrl *hdr;
@@ -91,7 +94,7 @@ void SpawnDingodile(u32 id, u16 x, u16 y, u16 param)
 
 /* Tiny: his part (bank 0x294) and controller (TinyCtrl), mirrored by
  * his record, always active, in the collidable list; the level's boss. */
-void SpawnTiny(u32 id, u16 x, u16 y, u16 param)
+void TinyCtrl::Spawn(u32 id, u16 x, u16 y, u16 param)
 {
     MovingSprite *part = MovingSprite::Create(id, x, y, param);
     TinyCtrl *hdr;
@@ -110,7 +113,7 @@ void SpawnTiny(u32 id, u16 x, u16 y, u16 param)
 /* Neo Cortex: his part (bank 0x27C, animation 1) and controller
  * (CortexBossCtrl), mirrored by his record, always active, in the
  * foreground list and not animating; the level's boss. */
-void SpawnCortexBoss(u32 id, u16 x, u16 y, u16 param)
+void CortexBossCtrl::Spawn(u32 id, u16 x, u16 y, u16 param)
 {
     MovingSprite *part = MovingSprite::Create(id, x, y, param);
     CortexBossCtrl *hdr;
@@ -140,7 +143,7 @@ static inline void SetPalette(MovingSprite *part, s32 slot)
  * animation, not mirrored, driven by a MegaMixCtrl; kind 1, not
  * colliding, out of contact, invulnerable and always active, in the
  * collidable list. */
-void SpawnMegaMix(u32 id, u16 x, u16 y, u16 param)
+void MegaMixCtrl::Spawn(u32 id, u16 x, u16 y, u16 param)
 {
     MovingSprite *part = MovingSprite::Create(id, x, y, param);
     MegaMixCtrl *hdr;

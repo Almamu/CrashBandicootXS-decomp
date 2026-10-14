@@ -2,6 +2,8 @@
 #include "platform.hpp"
 #include "level_select.hpp"
 #include "enemy_ctrl.hpp"
+#include "boss_ctrl.hpp"
+#include "pickups.hpp"
 
 extern "C" {
 #include "core.h"
@@ -27,7 +29,7 @@ const entity_spawn_fn gEntitySpawnFuncs[ENTITY_COUNT] = {
     /* ENTITY_UNDERWATER_PLAYER_POSITION */ SpawnUnderwaterPlayerPosition,
     /* ENTITY_HOVER_START_MARKER */ SpawnHoverStartMarker,
     /* ENTITY_HOVER_PLAYER_POSITION */ (entity_spawn_fn)SpawnHoverPlayerPosition,
-    /* ENTITY_WUMPA */ SpawnWumpa,
+    /* ENTITY_WUMPA */ Wumpa::Spawn,
     /* ENTITY_CRYSTAL */ SpawnCrystal,
     /* ENTITY_GEM_PATH_GEM */ SpawnGemPathGem,
     /* ENTITY_BLUE_GEM */ SpawnBlueGem,
@@ -37,7 +39,7 @@ const entity_spawn_fn gEntitySpawnFuncs[ENTITY_COUNT] = {
     /* 0x0D */ (entity_spawn_fn)SpawnNoEntity,
     /* 0x0E */ (entity_spawn_fn)SpawnNoEntity,
     /* 0x0F */ (entity_spawn_fn)SpawnNoEntity,
-    /* ENTITY_STOPWATCH */ SpawnStopwatch,
+    /* ENTITY_STOPWATCH */ Stopwatch::Spawn,
     /* 0x11 */ (entity_spawn_fn)SpawnNoEntity,
     /* ENTITY_TURBO_RUN_POWER */ SpawnTurboRunPower,
     /* ENTITY_DOUBLE_JUMP_POWER */ SpawnDoubleJumpPower,
@@ -90,11 +92,11 @@ const entity_spawn_fn gEntitySpawnFuncs[ENTITY_COUNT] = {
     /* ENTITY_PATROLLING_SEWER_ENEMY */ EnemyCtrl::SpawnPatrollingSewerEnemy,
     /* ENTITY_RAT */ EnemyCtrl::SpawnRat,
     /* ENTITY_FROG */ EnemyCtrl::SpawnFrog,
-    /* ENTITY_DINGODILE */ SpawnDingodile,
+    /* ENTITY_DINGODILE */ DingodileCtrl::Spawn,
     /* 0x46 */ (entity_spawn_fn)SpawnNoEntity,
-    /* ENTITY_TINY */ SpawnTiny,
-    /* ENTITY_CORTEX_BOSS */ SpawnCortexBoss,
-    /* ENTITY_MEGA_MIX */ SpawnMegaMix,
+    /* ENTITY_TINY */ TinyCtrl::Spawn,
+    /* ENTITY_CORTEX_BOSS */ CortexBossCtrl::Spawn,
+    /* ENTITY_MEGA_MIX */ MegaMixCtrl::Spawn,
     /* ENTITY_TORNADO_SPIN_POWER */ SpawnTornadoSpinPower,
     /* ENTITY_SEA_MINE */ EnemyCtrl::SpawnSeaMine,
     /* ENTITY_SEA_MINE_B */ EnemyCtrl::SpawnSeaMine,

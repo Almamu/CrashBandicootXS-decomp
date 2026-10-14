@@ -604,7 +604,7 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/level/spawn_gem_platforms.cpp` | the gem platform spawners (C linkage; `Platform`'s static members since #915) | 4 | old_agbcp | 0 -> 0 | 9 |
 | `src/level/spawn_crates.cpp` | the crate spawners (C linkage; `Crate`'s static members since #915) | 7 | **old_agbcp** (was agbcc) | 16 pins, 3 asm -> 0 | 9 |
 | `src/level/spawn_start_marker.cpp` | `SpawnStartMarker` (C linkage) | 1 | old_agbcp | 17 pins, 2 asm, 1 retyped read, the slot-13 call, gotos -> 0 | 9 |
-| `src/level/spawn_bosses.cpp` | the room exit and the bosses' spawners (C linkage) | 4 | old_agbcp | 4 pins, 1 keep, 3 slot calls -> 4 pins, 1 keep | 9 |
+| `src/level/spawn_bosses.cpp` | the room exit and the bosses' spawners (C linkage; the bosses' static members of their controllers since #915) | 4 | old_agbcp | 4 pins, 1 keep, 3 slot calls -> 4 pins, 1 keep | 9 |
 | `src/level/spawn_objects.cpp` | Mega Mix, the decorations, the platform and crate spawners, the seal spawner (C linkage; the platforms', the launch pad's and the seal spawner's static members of their classes since #915) | 25 | old_agbcp | the slot call -> 0 | 9 |
 | `src/level/spawn_pickups.cpp` | the power, stopwatch, blue gem, wumpa and player-start spawners, `CreateEntitySpawner`, `DestroyEntitySpawner`, `InitLevelState` (C linkage), with `KeyInput` (spawners.hpp; its constructor ClearKeys is still C) | 18 | **old_agbcp** (was agbcc) | 38 pins, 10 asm, 5 retyped stores -> 4 pins, 1 asm | 9 |
 | `src/level/level_state.cpp` | `StartTimeTrial` (C linkage) | 1 | old_agbcp | 2 vcall macros, an `ENTITY_SET_GONE_BIT` -> 0 | 9 |
@@ -722,6 +722,7 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/level/spawn_crates.cpp`, `src/data/dispatch_table_16c6a4.cpp` | the crate spawners as static members of `Crate` (include/crate.hpp): SpawnBasicCrate & co. are `SpawnBasic`, `SpawnTnt`, `SpawnTime1`, ... (CRATE_KIND_*'s names); gEntitySpawnFuncs' crate slots name the members; level.h's 19 prototypes go | 19 | (unchanged) | 0 -> 0 | [#915](#the-entity-spawners-as-static-members-915) |
 | `src/level/spawn_gem_platforms.cpp`, `spawn_objects.cpp`, `src/data/dispatch_table_16c6a4.cpp` | the platform spawners as static members of `Platform` (include/platform.hpp, named after PLATFORM_KIND_*: `SpawnGemRed`, ..., `SpawnRock`, `SpawnLarge`), SpawnLaunchPadEntity as `LaunchPad::SpawnEntity` (level_select.hpp) and SpawnSealSpawner as `PeriodicSpawner::Spawn` (enemy_ctrl.hpp); level.h's 12 prototypes go | 12 | (unchanged) | 0 -> 0 | [#915](#the-entity-spawners-as-static-members-915) |
 | `src/level/spawn_enemies.cpp`, `spawn_objects.cpp`, `src/data/dispatch_table_16c6a4.cpp` | the enemy spawners as static members of `EnemyCtrl` (include/enemy_ctrl.hpp) under their C names (`EnemyCtrl::SpawnLizard`, ...); the seal spawner's callback is `EnemyCtrl::SpawnSeal`; the file-local inline `SetKind` is `SetPartKind` (EnemyCtrl::SetKind would hide it); level.h's 26 prototypes go | 26 | (unchanged) | 0 -> 0 | [#915](#the-entity-spawners-as-static-members-915) |
+| `src/level/spawn_bosses.cpp`, `spawn_pickups.cpp`, `src/data/dispatch_table_16c6a4.cpp` | the boss spawners as static members of their controllers (include/boss_ctrl.hpp: `DingodileCtrl::Spawn`, `TinyCtrl::Spawn`, `CortexBossCtrl::Spawn`, `MegaMixCtrl::Spawn`), SpawnStopwatch and SpawnWumpa as `Stopwatch::Spawn` and `Wumpa::Spawn` (pickups.hpp); level.h's 6 prototypes go. The spawners with no class of their own stay free | 6 | (unchanged) | 0 -> 0 | [#915](#the-entity-spawners-as-static-members-915) |
 | `src/text/text_box.cpp` | `GetWordLength`, `DrawWrappedTextInBox` (C linkage; takes a `Font *`, `self->SetMargin`, `HeightToLines`) | 0 + 2 | agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/aabb.cpp` (since #767: `CommitBlendRegs` at the end of gfx/display.cpp, `IwramFree`/`IwramAlloc` in system/iwram_alloc.cpp) | `CommitBlendRegs`, `AabbOverlapsInclusiveX`, `AabbOverlaps`, `IwramFree`, `IwramAlloc` (C linkage) | 0 + 5 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/fixed_math.cpp`, `line.cpp`, `line_step.cpp`, `number_format.cpp`, `printf.cpp`, `rand.cpp`, `string.cpp`, `time_format.cpp` | the fixed-point helpers, the Bresenham line, `itoa`, `sprintf`/`vsprintf`/`FindSubstring` (string.cpp since #767), `rand`/`srand`/`RandRange`, the string functions, `FormatCentiseconds` (C linkage) | 0 + 24 | agbcp | 2 pins, 5 asm, 2 asm labels -> the same | all-C++: gfx, system, util, text |
@@ -5092,6 +5093,33 @@ C name.
     and Dingodile isn't an EnemyCtrl, so its calls still find it.
   - cxx_symbols.txt's `#915 EnemyCtrl: the enemy spawners` block maps
     them.
+- **Bosses.** Dingodile, Tiny, Neo Cortex and Mega Mix
+  (spawn_bosses.cpp) are a MovingSprite moved by a new boss controller,
+  their class: `DingodileCtrl::Spawn`, `TinyCtrl::Spawn`,
+  `CortexBossCtrl::Spawn`, `MegaMixCtrl::Spawn` (include/boss_ctrl.hpp).
+- **Pickups.** SpawnStopwatch and SpawnWumpa call `Stopwatch::Create`
+  and `Wumpa::Create` (unless the crystal isn't saved, or in a time
+  trial): they are `Stopwatch::Spawn` and `Wumpa::Spawn`
+  (include/pickups.hpp).
+- **cxx_symbols.txt.** The `#915 the boss and pickup spawners` block maps
+  these 6.
+- **Left free, on purpose (25).** The spawners with no class of their
+  own:
+  - the player starts (SpawnStartMarker, spawn_start_marker.cpp; the
+    four other start markers and player positions and
+    SpawnStartMarkerStub, spawn_markers.cpp): they set the player's
+    start, and create nothing;
+  - the room exit (SpawnRoomExit): a bare Entity, or a Platform, by
+    the level;
+  - the pickups that are a plain `Sprite` of a bank (the four powers,
+    SpawnBlueGem in spawn_pickups.cpp; SpawnCrystal, SpawnCrateGem,
+    SpawnGemPathGem and the red, green and yellow gems in spawn_gems.cpp)
+    and the decorations (SpawnSeaweed, SpawnFlame, the UNUSED
+    SpawnSeaweedNoAnimReset in spawn_objects.cpp). Sprite is the
+    general sprite object, not theirs;
+  - SpawnCrateGemMarker, which only records a position;
+    CreateTouchableSprite (UNUSED, not a slot); and SpawnNoEntity, the
+    empty slot.
 
 ### The crate passes as static members of Crate (#915)
 

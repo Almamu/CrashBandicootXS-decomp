@@ -2832,3 +2832,12 @@ SpawnRat__9EnemyCtrlUiUsUsUs SpawnRat
 SpawnFrog__9EnemyCtrlUiUsUsUs SpawnFrog
 SpawnSeaMine__9EnemyCtrlUiUsUsUs SpawnSeaMine
 SpawnWoodenCrusher__9EnemyCtrlUiUsUsUs SpawnWoodenCrusher
+#
+# #915 the boss and pickup spawners as static members (include/boss_ctrl.hpp,
+# pickups.hpp; src/level/spawn_bosses.cpp, spawn_pickups.cpp).
+Spawn__13DingodileCtrlUiUsUsUs SpawnDingodile
+Spawn__8TinyCtrlUiUsUsUs SpawnTiny
+Spawn__14CortexBossCtrlUiUsUsUs SpawnCortexBoss
+Spawn__11MegaMixCtrlUiUsUsUs SpawnMegaMix
+Spawn__9StopwatchUiUsUsUs SpawnStopwatch
+Spawn__5WumpaUiUsUsUs SpawnWumpa

@@ -60,6 +60,10 @@ public:
     void SetMotionYFromSet(MovingSprite *part, s32 index);
     void SetMotionXFromSet(MovingSprite *part, s32 index);
     void Reset();
+
+    /* Its entity type's gEntitySpawnFuncs slot (spawn_bosses.cpp, #915):
+     * the boss's MovingSprite, moved by a new MegaMixCtrl. */
+    static void Spawn(u32 id, u16 x, u16 y, u16 param); // SpawnMegaMix
 };
 
 COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(MegaMixCtrl) == 0x24);
@@ -114,6 +118,10 @@ public:
     void SpawnFallingLeaves(MovingSprite *part, s32 n);
     void HitStub(MovingSprite *part);  // TinyHitStub (empty)
     void StartHop(MovingSprite *part); // StartTinyHop
+
+    /* Its entity type's gEntitySpawnFuncs slot (spawn_bosses.cpp, #915):
+     * the boss's MovingSprite, moved by a new TinyCtrl. */
+    static void Spawn(u32 id, u16 x, u16 y, u16 param); // SpawnTiny
 };
 
 COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(TinyCtrl) == 0x4C);
@@ -141,6 +149,10 @@ public:
     void SetState(MovingSprite *part, s32 next);
     void SpawnCannon(MovingSprite *part); // SpawnCortexCannon
     void SpawnTarget(MovingSprite *part); // SpawnCortexTarget
+
+    /* Its entity type's gEntitySpawnFuncs slot (spawn_bosses.cpp, #915):
+     * the boss's MovingSprite, moved by a new CortexBossCtrl. */
+    static void Spawn(u32 id, u16 x, u16 y, u16 param); // SpawnCortexBoss
 };
 
 COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexBossCtrl) == 0x24);
@@ -303,6 +315,10 @@ public:
     void StartMotion(MovingSprite *part, s32 index);
     void SetStep(s32 value);
     void SetNextState(s32 value);
+
+    /* Its entity type's gEntitySpawnFuncs slot (spawn_bosses.cpp, #915):
+     * the boss's MovingSprite, moved by a new DingodileCtrl. */
+    static void Spawn(u32 id, u16 x, u16 y, u16 param); // SpawnDingodile
 };
 
 COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(DingodileCtrl) == 0x30);

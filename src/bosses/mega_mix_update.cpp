@@ -10,7 +10,7 @@ extern "C" {
 }
 
 /* MegaMixCtrl::Update (UpdateMegaMix): the update of Mega-Mix, the boss
- * that entity type 0x49 spawns (SpawnMegaMix, sprite bank 30). Only room
+ * that entity type 0x49 spawns (MegaMixCtrl::Spawn, sprite bank 30). Only room
  * 37 places one, at its left end among 34 nitro and 21 TNT crates; room
  * 37 is the only room of level 24, the last of the five one-room boss
  * levels (rooms 37-40, each placing a single boss spawner: Mega-Mix,
