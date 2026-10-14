@@ -13,6 +13,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::ActorBg;
+using Engine::Actor::ActorCategory;
+
 /* The polar wumpas (#664 part 11d, include/vehicle.hpp), ROM
  * 0x0802C270-0x0802C4C8, between polar_player_states.cpp and
  * polar_crate.cpp: the collected wumpa (PolarCollectedWumpa) and the

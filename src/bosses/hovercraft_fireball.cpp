@@ -15,6 +15,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Engine::Actor::ActorCategory;
+
 /* The hovercraft's fireball (#664 part 11h, include/boss_actors.hpp), ROM
  * 0x08032910-0x08032AF8, between src/vehicle/jetpack/jetpack_collected_wumpa.cpp
  * and hovercraft.cpp. In hovercraft.cpp until #769; built with old_agbcp,

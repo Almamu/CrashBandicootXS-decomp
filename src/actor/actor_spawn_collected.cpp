@@ -11,6 +11,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::CollectedSpawns;
+
 /* The collected-spawn list (CollectedSpawns, at most 15 spawns): the
  * test, the append and the reset, ROM 0x0802AA80-0x0802AB08.
  * Built with old_agbcp and -fno-implement-inlines, like actor.cpp, where

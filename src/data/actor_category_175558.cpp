@@ -11,6 +11,8 @@ extern "C" {
 #include "bosses.h"
 }
 
+using Engine::Actor::ActorCategory;
+
 /*
  * ROM 0x08175558-0x08175760: the actor category descriptors and the
  * per-type category vtables (include/actor_anim.h, docs/graphics.md "An

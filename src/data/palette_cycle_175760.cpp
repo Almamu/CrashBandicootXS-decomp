@@ -1,5 +1,7 @@
 #include "actor_palette_cycle.hpp"
 
+using Engine::Actor::ActorPaletteCycle;
+
 /*
  * ROM 0x08175760-0x08178F80. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.

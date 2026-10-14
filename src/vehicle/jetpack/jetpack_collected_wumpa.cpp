@@ -15,6 +15,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Engine::Actor::ActorBg;
+
 /* The jetpack ring's constructor and IsUnshootable and the collected
  * wumpa (#664 part 11h, include/vehicle.hpp), ROM 0x080326E4-0x08032910,
  * between jetpack_rocket.cpp and src/bosses/hovercraft_fireball.cpp. The

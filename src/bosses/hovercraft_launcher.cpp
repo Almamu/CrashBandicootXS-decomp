@@ -12,6 +12,8 @@ extern "C" {
 #include "constants/actor_kinds.h"
 }
 
+using Engine::Actor::ActorBg;
+
 /* The hovercraft's launcher (#664 part 11h, include/boss_actors.hpp): the
  * cannon's sibling, an HpActor on the hovercraft that launches planes,
  * bombers and balloons once the hovercraft has lost two parts. See

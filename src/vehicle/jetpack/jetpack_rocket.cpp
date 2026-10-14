@@ -11,6 +11,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::ActorCategory;
+
 /* 0x08032480-0x080326E4 (#664 part 11g, include/vehicle.hpp), between
  * jetpack_crates.cpp and jetpack_collected_wumpa.cpp:
  *

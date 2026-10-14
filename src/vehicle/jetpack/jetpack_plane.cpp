@@ -10,6 +10,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::ActorCategory;
+using Engine::Actor::ActorSpawns;
+
 /* The jetpack plane (#664 part 11f, include/vehicle.hpp), ROM
  * 0x0802FA38-0x0802FF08, between jetpack_shot.cpp and jetpack_bomber.cpp:
  * JetpackPlane (gJetpackPlaneVtable), one of the jetpack levels'

@@ -13,6 +13,8 @@ extern "C" {
 #include "util.h"
 }
 
+using Engine::Actor::ActorSpawns;
+
 /* The airship's states (#664 part 11i, Airship's since #772,
  * include/airship.hpp):
  * gAirshipStateFuncs[1-5], the attack states, the explosion and the

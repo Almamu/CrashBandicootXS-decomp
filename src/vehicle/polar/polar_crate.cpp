@@ -14,6 +14,10 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::ActorCategory;
+using Engine::Actor::ActorCategoryStats;
+using Engine::Actor::CollectedSpawns;
+
 /* The polar crates' shared update (#664 part 11d, include/vehicle.hpp),
  * ROM 0x0802C4C8-0x0802C7A8, between polar_pickups.cpp and
  * polar_nitro.cpp: PolarCrate's Update (its key method, so

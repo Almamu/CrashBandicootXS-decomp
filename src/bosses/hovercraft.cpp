@@ -17,6 +17,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Engine::Actor::ActorBg;
+using Engine::Actor::ActorSpawns;
 using Engine::Gfx::CellAnim;
 
 /* The hovercraft boss (#664 part 11h), ROM 0x08032AF8-0x08033804, between

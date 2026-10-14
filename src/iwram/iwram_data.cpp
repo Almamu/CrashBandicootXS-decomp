@@ -28,6 +28,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::ActorCategoryStats;
+using Engine::Actor::CollectedSpawns;
 using Engine::Gfx::BrightnessFade;
 using Engine::Gfx::SpriteFrameCache;
 using Engine::Sys::FrameLimiter;

@@ -558,6 +558,19 @@ checks the change is only a rename:
   them here, as data members with no code. part_list.hpp's other classes
   (`CollisionQueue`, `HudPart`) are game code and stay outside. No name
   hiding: no global is named like a class of the namespace.
+- **`Engine::Actor`** (`Q36Engine5Actor`): `ActorCategory` (actor_category.hpp),
+  `ActorSpawns`, `ActorCategoryStats`, `ActorBg`, `ActorPaletteCycle` and
+  `CollectedSpawns` (their headers). 83 symbols renamed, no code change.
+  Their friend declarations of each other stay inside the namespace; the
+  C structs they take (`struct actor_spawn`, `struct category_vtable`,
+  ...) and `ActorSelf` stay global. Boundary calls: the layout puts all
+  six here. The driver (actor_category*.cpp) still reaches into game code
+  (the vehicle factories and hooks through the category vtables, the
+  level state, the pause menu and the HUD): that is the category's
+  table-driven glue, and the classes themselves hold only generic actor
+  bookkeeping. `ActorSelf`, the 3D actors' base, isn't in the layout's
+  list and stays outside for now. No name hiding: there is no global
+  named `Actor` (the namespace) or like one of the classes.
 
 ## Progress
 

@@ -15,11 +15,13 @@
  * static data members compile like those globals, static member
  * functions like plain functions. cxx_symbols.txt (block "#915
  * ActorCategoryStats") maps each member to its C name
- * (`_18ActorCategoryStats.deaths` is gActorCategoryDeaths, ...):
+ * (`_Q36Engine5Actor18ActorCategoryStats.deaths` is gActorCategoryDeaths, ...):
  * sym_iwram.txt places the counters, iwram_data.cpp defines `checkpoint`
  * with the other initialised IWRAM globals. The functions keep their C
- * names the same way (`AddMissedNitro__18ActorCategoryStats` is
+ * names the same way (`AddMissedNitro__Q36Engine5Actor18ActorCategoryStats` is
  * AddActorMissedNitro).
+ *
+ * In the namespace Engine::Actor (#1033, docs/cplusplus.md "Namespaces").
  *
  * `#pragma interface`: no vtable to emit; it keeps g++ from emitting
  * out-of-line copies of inline methods (docs/cplusplus.md). */
@@ -28,6 +30,11 @@
 extern "C" {
 #include "core.h"
 }
+
+namespace Engine
+{
+namespace Actor
+{
 
 class ActorCategoryStats
 {
@@ -53,5 +60,8 @@ private:
     static s32 checkpointMissedNitros; // gActorCheckpointMissedNitros - at the checkpoint
     static s32 checkpoint;             // gActorCheckpoint (iwram_data.cpp) - the course distance
 };
+
+} // namespace Actor
+} // namespace Engine
 
 #endif // GUARD_ACTOR_CATEGORY_STATS_HPP

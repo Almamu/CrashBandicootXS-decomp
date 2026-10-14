@@ -31,6 +31,11 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::ActorBg;
+using Engine::Actor::ActorCategory;
+using Engine::Actor::ActorCategoryStats;
+using Engine::Actor::ActorPaletteCycle;
+using Engine::Actor::CollectedSpawns;
 using Engine::Gfx::BrightnessFade;
 using Engine::Gfx::CategorySpriteSheet;
 using Engine::Gfx::CellAnim;

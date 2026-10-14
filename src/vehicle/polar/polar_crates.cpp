@@ -12,6 +12,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::ActorCategory;
+
 /* The polar crate kinds' updates, PolarCrate's constructor and the kinds'
  * out-of-line constructors (#664 part 11d, include/vehicle.hpp), ROM
  * 0x0802CA60-0x0802CC9C, between polar_nitro.cpp and polar_objects.cpp.

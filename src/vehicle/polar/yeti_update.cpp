@@ -12,6 +12,7 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::ActorBg;
 using Engine::Gfx::CellAnim;
 
 /* Sits right after polar_course_objects.cpp's `CreatePolarCheckpointCrate` and before

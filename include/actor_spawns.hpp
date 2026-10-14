@@ -15,9 +15,11 @@
  * separate IWRAM globals that only the category code reads, and static
  * data members compile like those globals, static member functions like
  * plain functions. cxx_symbols.txt (block "#915 ActorSpawns") maps each
- * member to its C name (`_11ActorSpawns.table` is gActorSpawnTable, ...),
+ * member to its C name (`_Q36Engine5Actor11ActorSpawns.table` is gActorSpawnTable, ...),
  * which sym_iwram.txt places. The functions keep their C names the same
- * way (`GetX__11ActorSpawnsi` is GetActorSpawnX).
+ * way (`GetX__Q36Engine5Actor11ActorSpawnsi` is GetActorSpawnX).
+ *
+ * In the namespace Engine::Actor (#1033, docs/cplusplus.md "Namespaces").
  *
  * `#pragma interface`: no vtable to emit; it keeps g++ from emitting
  * out-of-line copies of inline methods (docs/cplusplus.md). */
@@ -26,6 +28,11 @@
 extern "C" {
 #include "core.h"
 }
+
+namespace Engine
+{
+namespace Actor
+{
 
 class ActorSpawns
 {
@@ -56,5 +63,8 @@ private:
      * added to the records' depths (whole units) */
     static s32 offset;
 };
+
+} // namespace Actor
+} // namespace Engine
 
 #endif // GUARD_ACTOR_SPAWNS_HPP

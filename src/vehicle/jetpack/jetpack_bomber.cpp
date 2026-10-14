@@ -9,6 +9,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::ActorCategory;
+
 /* The jetpack bomber (#664 part 11f, include/vehicle.hpp), ROM
  * 0x0802FF08-0x08030298, between jetpack_plane.cpp and
  * jetpack_cannonball.cpp: JetpackBomber (gJetpackBomberVtable), 2 hit

@@ -14,6 +14,7 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::ActorPaletteCycle;
 using Engine::Gfx::CellAnim;
 
 /* Kicks off a DMA copy of `tileBytes` bytes from the current

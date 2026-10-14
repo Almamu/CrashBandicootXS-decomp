@@ -18,6 +18,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::ActorBg;
+using Engine::Actor::ActorCategoryStats;
 using Engine::Gfx::CellAnim;
 using Engine::Gfx::ObjTileAllocator;
 using Engine::Gfx::SpriteOamQueue;

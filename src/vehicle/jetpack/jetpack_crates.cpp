@@ -12,6 +12,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::ActorCategory;
+using Engine::Actor::CollectedSpawns;
+
 /* 0x08031A6C-0x08032480 (#664 part 11g): the jetpack levels' crates and
  * the parachute nitro (include/vehicle.hpp):
  *

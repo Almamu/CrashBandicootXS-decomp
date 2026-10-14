@@ -12,6 +12,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Engine::Actor::ActorBg;
+using Engine::Actor::ActorCategoryStats;
 using Engine::Gfx::CellAnim;
 using Engine::Sys::VramDmaQueue;
 
