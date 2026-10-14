@@ -134,7 +134,14 @@ per asset: its path, what kind of asset it is, its symbol and its ROM
 address, and what extracting it needs (bpp, width, palette, OBJ layout).
 Its header comment in `tools/gfx_manifest.py` describes each kind.
 
-**The build reads it only for the graphics classes** (below). The ROM's
+**The build reads it for the graphics classes** (below) **and for the
+build rules' lists**: `tools/gfx_manifest.py make` writes
+`build/.../graphics/graphics_manifest.mk`, which `graphics.mk` includes,
+from the entries: the tile sheets by bpp (`TILE_SHEETS_4BPP`, `_8BPP`, the
+`tiles` that aren't OBJ sheets), the BG packages and their bpp
+(`BG_PACKAGES`, `BG_PACKAGE_BPP_<package>`, `BG_PACKAGES_AFFINE`), the
+16-colour PNG palettes (`PALETTE_COLORS_16`), the class objects and each
+object's prerequisites (the `.inc` files of its members). The ROM's
 layout comes from `ldscript.txt` and the order of the definitions in each
 `src/*/data/*.cpp`, and every reference is a symbol, so an asset that grows
 or shrinks just moves what follows it. The addresses are kept so the
@@ -160,7 +167,44 @@ classes' definitions in ROM order:
   an address to its source.
 
 A PR that moves a source updates its entry. A new asset that isn't in the
-ROM needs no entry, unless it is to be a graphics class.
+ROM needs no entry, unless it is to be a graphics class (below).
+
+### New graphics
+
+A graphic the ROM doesn't have is an entry with **no `rom`**: no address
+for it, its `palette` or its `map`. It is a graphics class (a `class`), a
+`tiles` sheet or a `bg_package` without `obj_sheet` (gfx_manifest.py's
+`NEW_KINDS`: the kinds whose build rules come from the manifest; an OBJ
+sheet's layout is graphics.mk's), and it names the manifest `objects`
+entry that defines it, `"object"`:
+
+```json
+{"path": "level_select/pictures/lab.png", "kind": "tiles", "symbol": "gLevelSelectPictureLabTiles",
+ "class": "LevelSelectPictureLab", "about": "the lab theme's level-select picture",
+ "object": "level_select_graphics", "bpp": 8, "width": 8,
+ "palette": {"symbol": "gLevelSelectPictureLabPalette", "colors": 256, "lz77": true}}
+```
+
+- **Where it goes.** Its members are defined in that object after the
+  ROM's, in manifest order (`gfx_manifest.py defs`), so the linker
+  places them and the ROM data after the object moves
+  ([shifting.md](./shifting.md)). The ROM's graphics keep their
+  addresses and bytes.
+- **What builds it.** Its entry: `graphics_manifest.mk` puts it in the
+  lists above, so its PNG gets the rules of its kind and bpp, and its
+  object depends on its bytes. Its palette has the `colors` of its
+  entry (16 or 256), like the ROM's.
+- **Its name.** Run `tools/gfx_manifest.py symbols`, as for any class:
+  cxx_symbols.txt maps its members to their C names (`check` asks for it).
+- **What leaves it out.** `extract` (the ROM has nothing to extract),
+  `extract --check` (its files aren't the ROM's) and `table`
+  (data_map.md's table is by ROM address). `check` checks it: a class, a
+  kind of `NEW_KINDS`, an `object` of the manifest's, and no `rom` in its
+  parts.
+
+A new level-select picture is a new graphic of `level_select_graphics`,
+which a theme names as its `"picture"` ([levels.md,
+"Themes"](./levels.md#themes)).
 
 ### Graphics classes
 
@@ -1764,6 +1808,11 @@ Which picture a theme shows is its `"picture"` in
 `data/levels/levels.json`'s `"themes"` (a path above), and
 `gLevelSelectPictures` is generated from it ([levels.md,
 "Themes"](./levels.md#themes)), so a new theme can show any of them.
+
+A new picture is a PNG in `pictures/` (64x64, 8bpp indexed, 256 colours)
+and a manifest entry with no `rom` and `"object":
+"level_select_graphics"` (see "New graphics"). Its tiles and palette come
+after the ROM's ten pictures' palettes in `level_select_graphics.cpp`.
 
 ### OBJ sheets
 

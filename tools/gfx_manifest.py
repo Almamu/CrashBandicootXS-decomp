@@ -29,12 +29,17 @@ put a class's members in ROM order.
     tools/gfx_manifest.py header OUT
     tools/gfx_manifest.py defs OBJECT OUT
     tools/gfx_manifest.py symbols
-    tools/gfx_manifest.py objects
         The graphics classes (docs/graphics.md, "Graphics classes"): the
         header declaring them (graphics.hpp), the definitions of one
-        object's members in ROM order (the .inc its src/.../data/OBJECT.cpp
-        #includes), cxx_symbols.txt's block mapping each member to its C
-        name, and the objects that have definitions.
+        object's members in ROM order, then its new graphics' (the .inc its
+        src/.../data/OBJECT.cpp #includes), and cxx_symbols.txt's block
+        mapping each member to its C name.
+
+    tools/gfx_manifest.py make OUT
+        graphics.mk's lists that follow the manifest (graphics_manifest.mk):
+        the tile sheets by bpp, the BG packages with their bpp, the
+        16-colour PNG palettes, the class objects and each one's
+        prerequisites (the .inc files of its members).
 
 An entry has its `path` (a file, or a directory ending in `/` that holds
 everything under it not claimed by a longer entry) or its `paths`, its
@@ -83,6 +88,13 @@ other data). The manifest's `objects` ({name, rom, end}) are the
 src/.../data objects whose graphics are all class members: every part in an
 object's ROM range is defined, in ROM order, in the .inc `defs` writes
 for it. The rooms are classes too, of tools/levels.py (rooms.hpp).
+
+A new graphic, one the ROM doesn't have, is an entry with no `rom` (nor
+its `palette` or `map`): a class, of one of NEW_KINDS, with the `object`
+that defines it. Its members come after the ROM's in that object, in
+manifest order, so the linker places them and moves what follows
+(docs/shifting.md); the ROM's graphics keep their addresses. extract and
+table leave it out: the ROM has nothing to extract.
 """
 import argparse
 import json
@@ -131,6 +143,40 @@ def addr(v):
     return int(v, 16)
 
 
+# The kinds a new graphic (an entry with no `rom`) can be: those whose
+# build rules graphics.mk takes from the manifest (graphics_manifest.mk).
+# An OBJ sheet's layout and a cutscene bitmap's slide are code's.
+NEW_KINDS = ("tiles", "bg_package")
+
+
+def is_new(e):
+    """A graphic the ROM doesn't have: no `rom` address."""
+    return "rom" not in e
+
+
+def new_entry_errors(e, objects):
+    """What's wrong with a new graphic's entry, if anything."""
+    what = "%s (graphics/%s)" % (e.get("symbol", "?"), ", ".join(entry_paths(e)))
+    errors = []
+    if e["kind"] not in NEW_KINDS or "obj_sheet" in e:
+        errors.append("%s: has no `rom`, but a new graphic is a %s without `obj_sheet`"
+                      % (what, " or ".join(NEW_KINDS)))
+    if "class" not in e:
+        errors.append("%s: has no `rom`, so it is a new graphic, which needs a `class`" % what)
+    if e.get("object") not in objects:
+        errors.append("%s: a new graphic names the `object` that defines it, one of the manifest's `objects` (%s)"
+                      % (what, ", ".join(objects)))
+    for k in ("palette", "map"):
+        sub = e.get(k, {})
+        if "rom" in sub:
+            errors.append("%s: a new graphic, but its %s has a `rom`" % (what, k))
+        if k == "palette" and "symbol" in sub and "colors" not in sub:
+            errors.append("%s: its palette has no `colors`" % what)
+    if e["kind"] == "bg_package" and "symbol" not in e.get("map", {}):
+        errors.append("%s: a bg_package has a `map` with its `symbol`" % what)
+    return errors
+
+
 # ---------------------------------------------------------------------------
 # check
 
@@ -159,9 +205,16 @@ def check(root=Path(".")):
         for p in entry_paths(e):
             if not (gfx / p).exists():
                 errors.append("%s: graphics/%s doesn't exist" % (e["symbol"], p))
-    roms = [addr(e["rom"]) for e in entries]
+    roms = [addr(e["rom"]) for e in entries if not is_new(e)]
     if roms != sorted(roms):
         errors.append("the manifest isn't sorted by ROM address")
+    objects = [o["name"] for o in load_objects()]
+    for e in entries:
+        if is_new(e):
+            errors += new_entry_errors(e, objects)
+        elif "object" in e:
+            errors.append("%s: has a `rom`, so its object is the one whose range holds it, not `object`"
+                          % e["symbol"])
     return errors + check_classes()
 
 
@@ -395,13 +448,15 @@ def extract(rom_path, root):
     by_symbol = {e["symbol"]: e for e in entries}
     rom = Rom(rom_path)
     for e in entries:
+        if is_new(e):
+            continue
         if e["kind"] in EXTRACT:
             EXTRACT[e["kind"]](rom, e, root / "graphics", by_symbol)
         elif e["kind"] not in FAMILY_TOOLS:
             sys.exit("gfx_manifest: %s: unknown kind %s" % (e["symbol"], e["kind"]))
     done = []
     for kind, cmds in FAMILY_TOOLS.items():
-        if any(e["kind"] == kind for e in entries):
+        if any(e["kind"] == kind and not is_new(e) for e in entries):
             for cmd in cmds:
                 if cmd not in done:
                     run_tool(root, rom_path, cmd)
@@ -450,7 +505,9 @@ def extract_check(rom_path):
         (root / "baserom.gba").symlink_to(rom_path)
         extract("baserom.gba", root)
         errors = check()
-        errors += compare(root / "graphics", Path("graphics"))
+        # the new graphics aren't the ROM's
+        new = [p for e in load() if is_new(e) for p in entry_paths(e)]
+        errors += compare(root / "graphics", Path("graphics"), skip=new)
         errors += compare(root / "data/levels", Path("data/levels"))
         errors += compare(root / "docs/entities", Path("docs/entities"))
     return errors
@@ -470,10 +527,12 @@ NAMESPACE = ("Engine", "Gfx")
 class Part:
     """A class member: `member` of `cls`, C name `symbol` at `rom`, a
     `ctype` array of `bound` entries (empty: sized by its initializer),
-    initialised by the bytes `inc` (graphics.mk), described by `what`."""
+    initialised by the bytes `inc` (graphics.mk), described by `what`. A new
+    graphic's parts have no `rom` (None)."""
 
     def __init__(self, cls, member, sub, ctype, inc, what, bound="", aligned=True):
-        self.cls, self.member, self.symbol, self.rom = cls, member, sub["symbol"], addr(sub["rom"])
+        self.cls, self.member, self.symbol = cls, member, sub["symbol"]
+        self.rom = addr(sub["rom"]) if "rom" in sub else None
         self.ctype, self.inc, self.what, self.bound, self.aligned = ctype, inc, what, bound, aligned
 
     def mangled(self):
@@ -585,19 +644,23 @@ def header():
 
 
 def object_parts(name):
-    """The members defined by the object `name`, in ROM order."""
+    """The members defined by the object `name`: the ROM's in its range, in
+    ROM order, then the new graphics' that name it, in manifest order."""
     objs = {o["name"]: o for o in load_objects()}
     if name not in objs:
         sys.exit("gfx_manifest: no object %s in the manifest" % name)
     lo, hi = addr(objs[name]["rom"]), addr(objs[name]["end"])
-    parts = [p for e in class_entries() for p in class_parts(e) if lo <= p.rom < hi]
-    return sorted(parts, key=lambda p: p.rom)
+    entries = class_entries()
+    parts = [p for e in entries if not is_new(e) for p in class_parts(e) if lo <= p.rom < hi]
+    new = [p for e in entries if is_new(e) and e.get("object") == name for p in class_parts(e)]
+    return sorted(parts, key=lambda p: p.rom) + new
 
 
 def defs(name):
     out = ["/* %s */" % GENERATED]
     for p in object_parts(name):
-        out += ["", "/* 0x%08X: %s::%s (%s), %s */" % (p.rom, p.cls, p.member, p.symbol, p.what), p.definition()[:-1]]
+        where = "0x%08X" % p.rom if p.rom is not None else "new, not in the ROM"
+        out += ["", "/* %s: %s::%s (%s), %s */" % (where, p.cls, p.member, p.symbol, p.what), p.definition()[:-1]]
     return "\n".join(out) + "\n"
 
 
@@ -634,6 +697,10 @@ def check_classes():
         lo, hi = addr(o["rom"]), addr(o["end"])
         for e in load():
             subs = [e] + [e[k] for k in ("palette", "map") if "symbol" in e.get(k, {})]
+            if is_new(e):
+                if e.get("object") == o["name"] and "class" in e:
+                    in_objects.update(s["symbol"] for s in subs)
+                continue
             for s in subs:
                 if lo <= addr(s["rom"]) < hi:
                     if "class" not in e:
@@ -660,11 +727,50 @@ def write_if_changed(path, text):
 
 
 # ---------------------------------------------------------------------------
+# graphics_manifest.mk
+
+def make_fragment():
+    """graphics.mk's lists that follow the manifest: the tile sheets
+    (TILE_SHEETS_4BPP, _8BPP: the `tiles` that aren't OBJ sheets), the BG
+    packages (BG_PACKAGES, BG_PACKAGE_BPP_<package>, BG_PACKAGES_AFFINE),
+    the PNG palettes of 16 colours (PALETTE_COLORS_16), the class objects
+    (GRAPHICS_CLASS_OBJECTS) and each object's prerequisites: the .inc
+    files its members' definitions #include."""
+    entries = load()
+    out = ["# Generated by tools/gfx_manifest.py make from graphics/manifest.json - do not edit.", ""]
+
+    def var(name, items):
+        out.append("%s := %s" % (name, " ".join(items)))
+
+    stems = [(e, picture(e)) for e in entries if any(p.endswith(".png") for p in entry_paths(e))]
+    for bpp in (4, 8):
+        var("TILE_SHEETS_%dBPP" % bpp, [s for e, s in stems if e["kind"] == "tiles" and "obj_sheet" not in e
+                                        and e["bpp"] == bpp])
+    packages = [(e, s) for e, s in stems if e["kind"] == "bg_package"]
+    var("BG_PACKAGES", [s for e, s in packages])
+    var("BG_PACKAGES_AFFINE", [s for e, s in packages if e["affine"]])
+    out += ["BG_PACKAGE_BPP_%s := %d" % (s, e["bpp"]) for e, s in packages]
+    var("PALETTE_COLORS_16", [s for e, s in stems if e["kind"] in ("tiles", "bg_package")
+                              and e.get("palette", {}).get("colors") == 16])
+    objects = [o["name"] for o in load_objects()]
+    var("GRAPHICS_CLASS_OBJECTS", objects)
+    for name in objects:
+        incs = []
+        for p in object_parts(name):
+            if p.inc not in incs:
+                incs.append(p.inc)
+        out.append("$(call data_obj,%s): %s" % (name, " ".join("$(GRAPHICS_BUILDDIR)/" + i for i in incs)))
+    return "\n".join(out) + "\n"
+
+
+# ---------------------------------------------------------------------------
 # table
 
 def table():
     rows = ["| ROM | symbol | kind | source (graphics/) |", "|---|---|---|---|"]
     for e in load():
+        if is_new(e):
+            continue
         paths = entry_paths(e)
         src = ", ".join("`%s`" % p for p in paths[:2]) + (" ... (%d files)" % len(paths) if len(paths) > 2 else "")
         rows.append("| `%s` | `%s` | %s | %s |" % (e["rom"][2:], e["symbol"], e["kind"], src))
@@ -695,18 +801,20 @@ def main():
     p.add_argument("object")
     p.add_argument("out")
     sub.add_parser("symbols")
-    sub.add_parser("objects")
+    p = sub.add_parser("make")
+    p.add_argument("out")
     args = ap.parse_args()
-    if args.mode in ("header", "defs", "symbols", "objects"):
+    if args.mode in ("header", "defs", "symbols", "make"):
         if args.mode == "header":
             write_if_changed(args.out, header())
+        elif args.mode == "make":
+            Path(args.out).parent.mkdir(parents=True, exist_ok=True)
+            Path(args.out).write_text(make_fragment())
         elif args.mode == "defs":
             Path(args.out).parent.mkdir(parents=True, exist_ok=True)
             Path(args.out).write_text(defs(args.object))
-        elif args.mode == "symbols":
-            write_symbols()
         else:
-            print(" ".join(o["name"] for o in load_objects()))
+            write_symbols()
         return
     if args.mode == "check":
         errors = check()

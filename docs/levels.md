@@ -917,7 +917,9 @@ A theme has:
   (`SONG_<NAME>`, `constants/songs.h`);
 - `"picture"` (optional): a level-select picture, by its path under
   `graphics/` (`level_select/pictures/*.png`, an entry of
-  `graphics/manifest.json` with a graphics class). A theme with none
+  `graphics/manifest.json` with a graphics class: one of the ROM's ten, or
+  a new one, an entry with no ROM address, [graphics.md, "New
+  graphics"](./graphics.md#new-graphics)). A theme with none
   behaves like mega-mix's: it has no entry of `gLevelSelectPictures`
   (before the last theme with a picture, an empty `{0, 0}` one), so its
   levels can't be on the level select's grid. `levels.py` stops when a
@@ -985,7 +987,9 @@ its number.
    "picture": "level_select/pictures/space.png", "palette_cycle": "lab"}`.
    It picks one of the songs (new music is out of scope) and one of the
    level-select pictures, or none (then its levels must be off the grid,
-   like mega-mix).
+   like mega-mix). A picture of its own is a new PNG in
+   `graphics/level_select/pictures/` with a manifest entry without a ROM
+   address ([graphics.md, "New graphics"](./graphics.md#new-graphics)).
 2. **Give it a colour cycle**, an existing one by name, or a new one at
    the end of `"palette_cycles"`: `{"name": "lab", "lists": [{"symbol":
    "gThemePaletteCycleLab", "rate": 8, "direction": 1, "entries": [16, 17,
@@ -1008,6 +1012,16 @@ list `gThemePaletteCycleLab` (8 bytes) comes before `gLevelTable`, and
 RunRoom's literal pool names it. A second `make` does nothing. In mGBA
 (`tools/boottest.py`, a `level25` script) the level loads
 `gLevelRoom17` and plays song 15 (`SONG_INTRO`), the theme's.
+
+A theme with a picture of its own, tested in scratch the same way:
+`lab.png`, snow's picture mirrored with its red and blue swapped, a
+manifest entry with no ROM address (`LevelSelectPictureLab`, object
+`level_select_graphics`), a 12th theme showing it and jungle jam given
+that theme. Plain `make` builds it: the picture's palette and tiles
+follow the ROM's pictures, and `gLevelSelectPictures` gets a 12th pair
+naming them. In mGBA the level select's zoom picture for jungle jam is the
+new one: BG2's character block holds `lab.png`'s tiles byte for byte, and
+the BG palette its colours.
 
 ## Save compatibility
 
