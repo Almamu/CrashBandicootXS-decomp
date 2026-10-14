@@ -1466,12 +1466,15 @@ grid after mega-mix: `LEVEL_HOVER_REMATCH` (25), playing
 `LEVEL_DINGO_REMATCH` (26), playing `dingodile/main` with
 `"boss_kind": "DINGODILE"`. `InitHud`'s `GetBossIndex` gives 2
 (`BOSS_N_GIN`) and 3 (`BOSS_DINGODILE`), and the HUD shows the boss's
-icon and health: in level 25 `GetBossHealth` goes 4, 3, ... as the
-jetpack's shots knock the hovercraft's weapons off; in level 26 it is 3,
-and 2 once the controller's hit counter goes up. `levels.py` stops on a
-level that plays the hovercraft stage with no `"boss_kind"`, on
-`"boss_kind": "TINY"` for Dingodile's room, on an unknown kind, and on
-a level with two bosses.
+icon and health. In level 25, played with the jetpack firing and
+sweeping, `GetBossHealth` goes from 4 to 3 when a shot knocks one of the
+hovercraft's weapons off, and the gauge drops a pip. In level 26 it is
+3, and 2 (one pip less) once the boss controller's hit counter is
+raised by hand, as a hit does. `levels.py` stops on a level that plays
+the hovercraft stage with no `"boss_kind"`, on a level that places a
+boss with none, on `"boss_kind": "TINY"` for Dingodile's room, on a
+kind for a level with no such boss, on an unknown kind, and on a level
+with two bosses.
 
 ## The save
 
