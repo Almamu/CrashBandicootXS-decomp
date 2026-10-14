@@ -18,10 +18,12 @@
  * plain functions. Its statistics (ActorCategoryStats) and its spawn
  * table (ActorSpawns) are classes of their own. cxx_symbols.txt (block
  * "#915 ActorCategory") maps each member to its C name
- * (`_13ActorCategory.current` is gActorCategory, ...): sym_iwram.txt
+ * (`_Q36Engine5Actor13ActorCategory.current` is gActorCategory, ...): sym_iwram.txt
  * places the IWRAM ones, src/data/actor_category_175558.cpp defines the
  * ROM tables. The functions keep their C names the same way
- * (`Init__13ActorCategoryi` is InitActorCategory).
+ * (`Init__Q36Engine5Actor13ActorCategoryi` is InitActorCategory).
+ *
+ * In the namespace Engine::Actor (#1033, docs/cplusplus.md "Namespaces").
  *
  * `#pragma interface`: no vtable to emit; it keeps g++ from emitting
  * out-of-line copies of inline methods (docs/cplusplus.md). */
@@ -33,6 +35,11 @@ extern "C" {
 }
 
 class ActorSelf;
+
+namespace Engine
+{
+namespace Actor
+{
 
 class ActorCategory
 {
@@ -74,5 +81,8 @@ private:
     static const struct category_descriptor descriptors[CATEGORY_COUNT]; // gActorCategories
     static const struct category_vtable vtables[CATEGORY_TYPE_COUNT];    // gActorCategoryVtables
 };
+
+} // namespace Actor
+} // namespace Engine
 
 #endif // GUARD_ACTOR_CATEGORY_HPP

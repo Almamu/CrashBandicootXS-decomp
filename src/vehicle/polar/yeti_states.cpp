@@ -14,6 +14,7 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::ActorBg;
 using Engine::Gfx::CellAnim;
 
 /* The `gYeti`-rooted position-tracking object with tier-

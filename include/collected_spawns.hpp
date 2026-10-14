@@ -11,10 +11,12 @@
  * separate IWRAM globals that no other object reads, and static data
  * members compile like those globals, static member functions like plain
  * functions. cxx_symbols.txt (block "#915 CollectedSpawns") maps each
- * member to its C name (`_15CollectedSpawns.spawns` is gCollectedSpawns,
+ * member to its C name (`_Q36Engine5Actor15CollectedSpawns.spawns` is gCollectedSpawns,
  * ...): sym_iwram.txt places `spawns`, iwram_data.cpp defines `count` with
  * the other initialised IWRAM globals. The functions keep their C names
- * the same way (`Clear__15CollectedSpawns` is ClearCollectedSpawns).
+ * the same way (`Clear__Q36Engine5Actor15CollectedSpawns` is ClearCollectedSpawns).
+ *
+ * In the namespace Engine::Actor (#1033, docs/cplusplus.md "Namespaces").
  *
  * `#pragma interface`: no vtable to emit; it keeps g++ from emitting
  * out-of-line copies of inline methods (docs/cplusplus.md). */
@@ -25,6 +27,11 @@ extern "C" {
 }
 
 struct actor_spawn;
+
+namespace Engine
+{
+namespace Actor
+{
 
 class CollectedSpawns
 {
@@ -37,5 +44,8 @@ private:
     static struct actor_spawn *spawns[]; // gCollectedSpawns - 15 at most
     static s32 count;                    // gCollectedSpawnCount (iwram_data.cpp)
 };
+
+} // namespace Actor
+} // namespace Engine
 
 #endif // GUARD_COLLECTED_SPAWNS_HPP

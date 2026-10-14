@@ -13,6 +13,11 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::ActorCategory;
+using Engine::Actor::ActorCategoryStats;
+using Engine::Actor::ActorPaletteCycle;
+using Engine::Actor::ActorSpawns;
+
 /* Counts how many of category `categoryIdx`'s spawns (its
  * category_descriptor.spawnTable, struct actor_spawn_table in actor.h)
  * have a `kind` in one of two fixed sets - a different set depending on

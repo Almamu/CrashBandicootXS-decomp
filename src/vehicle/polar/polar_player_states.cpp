@@ -15,6 +15,7 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::ActorCategory;
 using Engine::Gfx::BrightnessFade;
 using Engine::Gfx::CellAnim;
 using Engine::Gfx::ObjTileAllocator;

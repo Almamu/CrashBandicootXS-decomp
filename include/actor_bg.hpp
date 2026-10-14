@@ -11,9 +11,11 @@
  * reads, and static data members compile like those globals, static
  * member functions like plain functions. The data members are only
  * declared: cxx_symbols.txt (block "#915 ActorBg") maps each one to its C
- * name (`_7ActorBg.scrollX` is gActorBgScrollX, ...), whose address is in
+ * name (`_Q36Engine5Actor7ActorBg.scrollX` is gActorBgScrollX, ...), whose address is in
  * sym_iwram.txt, and the functions keep their C names the same way
- * (`Shake__7ActorBgi` is ShakeActorBg).
+ * (`Shake__Q36Engine5Actor7ActorBgi` is ShakeActorBg).
+ *
+ * In the namespace Engine::Actor (#1033, docs/cplusplus.md "Namespaces").
  *
  * `#pragma interface`: no vtable to emit; it keeps g++ from emitting
  * out-of-line copies of inline methods (docs/cplusplus.md). */
@@ -22,6 +24,11 @@
 extern "C" {
 #include "core.h"
 }
+
+namespace Engine
+{
+namespace Actor
+{
 
 class ActorBg
 {
@@ -57,5 +64,8 @@ private:
     static s32 width;      // gActorBgWidth
     static s32 height;     // gActorBgHeight
 };
+
+} // namespace Actor
+} // namespace Engine
 
 #endif // GUARD_ACTOR_BG_HPP

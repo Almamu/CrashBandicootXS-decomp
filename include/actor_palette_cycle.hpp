@@ -12,11 +12,13 @@
  * reads, and static data members compile like those globals, static
  * member functions like plain functions. The data members are only
  * declared: cxx_symbols.txt (block "#915 ActorPaletteCycle") maps each
- * one to its C name (`_17ActorPaletteCycle.frame` is
+ * one to its C name (`_Q36Engine5Actor17ActorPaletteCycle.frame` is
  * gActorPaletteCycleFrame, ...), whose address is in sym_iwram.txt; the
  * ROM tables are defined in src/data/palette_cycle_175760.cpp. The
- * functions keep their C names the same way (`Update__17ActorPaletteCycle`
+ * functions keep their C names the same way (`Update__Q36Engine5Actor17ActorPaletteCycle`
  * is UpdateActorPaletteCycle).
+ *
+ * In the namespace Engine::Actor (#1033, docs/cplusplus.md "Namespaces").
  *
  * `#pragma interface`: no vtable to emit; it keeps g++ from emitting
  * out-of-line copies of inline methods (docs/cplusplus.md). */
@@ -25,6 +27,11 @@
 extern "C" {
 #include "core.h"
 }
+
+namespace Engine
+{
+namespace Actor
+{
 
 class ActorPaletteCycle
 {
@@ -49,5 +56,8 @@ private:
     static const s32 startFrames[4];      // gActorPaletteCycleStartFrames
     static const s32 targetFrames[4];     // gActorPaletteCycleTargetFrames
 };
+
+} // namespace Actor
+} // namespace Engine
 
 #endif // GUARD_ACTOR_PALETTE_CYCLE_HPP

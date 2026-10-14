@@ -10,6 +10,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::ActorCategory;
+
 /* GitHub issue #38: 0x0802425C-0x08024810 (game_loop). Continues the
  * medal-results tally chain documented in docs/rom_map.md ("A per-level
  * completion-time cascade, and a medal-table tally chain") - see

@@ -8,6 +8,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::ActorCategory;
+
 /* The airship's fireball (#664 parts 11f and 11i,
  * include/boss_actors.hpp), ROM 0x08030334-0x080306AC: an HpActor that
  * the airship fires in volleys (AirshipStateFireballs,

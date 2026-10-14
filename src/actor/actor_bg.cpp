@@ -10,6 +10,8 @@ extern "C" {
 #include "bosses.h"
 }
 
+using Engine::Actor::ActorBg;
+
 /* The actor zone's BG0/BG1 scroll (InitScroll/UpdateScroll,
  * at the end of cell_anim.cpp until #770) and BG2 boss layer (the
  * shake, the layer depth, the scroll commit and its centre). */

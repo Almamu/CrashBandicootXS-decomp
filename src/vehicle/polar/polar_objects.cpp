@@ -14,6 +14,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::ActorCategory;
+using Engine::Actor::ActorSpawns;
+
 /* The polar course's hazards (#664 part 11d, include/vehicle.hpp), ROM
  * 0x0802CC9C-0x0802D204, between polar_crates.cpp and polar_aku_aku.cpp:
  * the electric fence, the obstacle, the launcher, the penguin and the

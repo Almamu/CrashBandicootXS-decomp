@@ -16,6 +16,7 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::ActorCategory;
 using Engine::Gfx::ObjTileAllocator;
 using Engine::Gfx::PaletteCache;
 using Engine::Gfx::SpriteFrameCache;

@@ -11,6 +11,7 @@ extern "C" {
 #include "actor.h"
 }
 
+using Engine::Actor::ActorBg;
 using Engine::Gfx::CellAnim;
 
 /* More of the `gYeti`-rooted object's lifecycle (see

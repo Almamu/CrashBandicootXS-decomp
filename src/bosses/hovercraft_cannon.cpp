@@ -10,6 +10,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Engine::Actor::ActorBg;
+
 /* The hovercraft's cannon (#664 part 11h, include/boss_actors.hpp): an
  * HpActor that rides on the hovercraft and fires cannonballs at the
  * player. See docs/matching/archive/issue-62-0x08033804-actor.md. */

@@ -14,6 +14,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::ActorCategory;
+using Engine::Actor::ActorSpawns;
+
 /* ActorSpawns::table: the category's spawn table (struct
  * actor_spawn_table, actor.h; category_descriptor.spawnTable), set up by
  * ActorCategory::Select. The per-spawn accessors below are what the homing

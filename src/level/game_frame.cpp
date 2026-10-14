@@ -23,6 +23,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::ActorCategory;
+using Engine::Actor::ActorCategoryStats;
+
 /* UpdateGameFrame - the main per-frame game-loop driver at the head of
  * the UpdateGameFrame-MainLoop cluster (GitHub issue #34,
  * docs/matching.md). Called once per frame from `MainLoop`

@@ -11,6 +11,7 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::ActorBg;
 using Engine::Gfx::CellAnim;
 
 /* The 3D actor base class, ActorSelf (#664 part 11a, include/actor_self.hpp):

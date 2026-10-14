@@ -14,6 +14,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::ActorCategory;
+using Engine::Actor::ActorSpawns;
 using Engine::Gfx::CellAnim;
 
 /* ROM 0x0802A018-0x0802A4D4, inside the actor zone that starts at

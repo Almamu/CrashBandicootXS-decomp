@@ -10,6 +10,8 @@ extern "C" {
 #include "actor.h"
 }
 
+using Engine::Actor::ActorCategory;
+using Engine::Actor::ActorSpawns;
 using Engine::Gfx::CellAnim;
 
 /* Sets up the currently-selected category's runtime state:

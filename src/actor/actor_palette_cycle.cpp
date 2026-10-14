@@ -12,6 +12,7 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::ActorPaletteCycle;
 using Engine::Sys::VramDmaQueue;
 
 /* The actor zone's BG palette cycle (gActorPaletteCycle*): restore,

@@ -13,6 +13,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::ActorCategory;
+
 /* The category hooks that go through the category vtable, the actor
  * teardown and the exit status, ROM 0x0802A5AC-0x0802A69C; split from
  * actor_spawn.cpp (#770).

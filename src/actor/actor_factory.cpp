@@ -13,6 +13,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::ActorPaletteCycle;
+using Engine::Actor::CollectedSpawns;
+
 /* 0x0802AC28-0x0802B364 (GitHub issue #51): the polar levels' actor
  * factory, category type 0's hooks.
  *

@@ -11,6 +11,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::ActorCategory;
+
 /* The vehicle levels' category hooks before ActorSelf in the ROM
  * (0x0802A69C-0x0802A700): JetpackReloadPlayerTiles-PolarReachCourseEnd
  * (JetpackPlayer's and PolarPlayer's static ReloadPlayerTiles and

@@ -18,6 +18,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::CollectedSpawns;
+
 /* The jetpack levels' spawners (#664 part 11e, include/vehicle.hpp), ROM
  * 0x0802E0A4-0x0802E740, between yeti.cpp and jetpack_player_update.cpp:
  * the level's spawn dispatcher `CreateJetpackActor` (a 31-case `switch`

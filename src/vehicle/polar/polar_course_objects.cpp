@@ -12,6 +12,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Actor::ActorCategory;
+using Engine::Actor::ActorCategoryStats;
+
 /* The polar course's goal, boost pad and checkpoint crate (#664 part
  * 11d, include/vehicle.hpp), ROM 0x0802D59C-0x0802D7B0, between
  * polar_aku_aku.cpp and yeti_update.cpp: each one's Update and
