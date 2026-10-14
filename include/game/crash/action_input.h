@@ -6,7 +6,7 @@
  * the player's flags2 is in action_ctrl.hpp. The controller has no C view:
  * `struct act` went with its last C user (ResetActionCtrl, part 7h of
  * #664), and its C prototypes with the state table's conversion to C++
- * (src/data/action_table_16bf20.cpp, #656). */
+ * (src/game/crash/data/action_ctrl_state_table.cpp, #656). */
 
 
 /* gKeys is the input word: low half held, high half newly

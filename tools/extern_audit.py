@@ -709,7 +709,8 @@ DOCUMENTED = {
 
 
 def is_data_path(p):
-    return (p.startswith(('src/data/', 'build/', 'data/'))
+    return (p.startswith(('build/', 'data/'))
+            or (p.startswith('src/') and '/data/' in p)
             or re.match(r'lib/[^/]+/data/', p) is not None)
 
 
@@ -763,7 +764,7 @@ def main():
         for name in fs.asm_defs:
             defined[name].append(p + ' (asm)')
 
-    # generated C fragments (levels, graphics, sound) included by src/data/*.c
+    # generated C fragments (levels, graphics, sound) included by the data tables
     gen_root = os.path.join('build', 'crashbandicootxs')
     for sub in ('data', 'graphics', 'sound'):
         for p in sorted(glob.glob(os.path.join(gen_root, sub, '**', '*'), recursive=True)):

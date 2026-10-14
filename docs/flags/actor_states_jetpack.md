@@ -4,7 +4,7 @@
 ActorSelf's constructor sets 0, and `SetState(st, idx)` sets it, zeroes
 `stateTime` and restarts animation sequence `idx` (the second argument,
 left a number). Almost all of these actors have a `stateFuncs` table of
-state methods (src/data/actor_pmf_*.cpp, actor_state_17c4c8.cpp) that
+state methods (src/game/vehicles/jetpack/data/*_state_table(s).cpp, hovercraft_state_tables.cpp) that
 Update or RunState calls as `(this->*stateFuncs[state])()`, so `state`
 is the table index and each name is its method's.
 

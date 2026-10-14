@@ -1,7 +1,7 @@
 # The pause menu's row types (#843)
 
 `struct pause_row.type` (menus.hpp): what a row of the pause menu does.
-`gPauseMenuRows` (src/data/pause_rows_16b298.cpp) has five rows;
+`gPauseMenuRows` (src/game/ui/data/pause_menu_rows.cpp) has five rows;
 PauseMenu's constructor shows the fifth only in a time trial
 (`rowCount` 5, else 4). PauseMenu::Loop returns the type of the row A
 confirms, or `PAUSE_ROW_TYPE_RESUME` on START, and RunPauseMenu passes it

@@ -16,7 +16,7 @@ extern "C" {
  * package descriptor, read by `LoadGraphicsPackage`
  * (src/engine/gfx/graphics_package.cpp) and the level/obj loaders
  * (`LoadTitleScreenBg`/`LoadTitleScreenObjTiles`, src/game/ui/title_screen.cpp).
- * The src/data tables define the packages. */
+ * The src/.../data tables define the packages. */
 struct bg_package {
     s32 width;
     s32 height;

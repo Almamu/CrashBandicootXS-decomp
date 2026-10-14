@@ -93,7 +93,7 @@ LinkSession *gLinkSession = 0;
 u8 gEepromNeedsInit = 1;
 SaveMenu *SaveMenu::instance = 0;
 /* The two link compatibility messages, stored after the CRC table
- * (src/data/link_crc_16af10.cpp): "crash 1 <-> crash 2", "crash 1 <-> crash 3". */
+ * (src/engine/link/data/link_crc_table.cpp): "crash 1 <-> crash 2", "crash 1 <-> crash 3". */
 const u8 *gCrash2LinkTextPtr = (const u8 *)gCrash2LinkText;
 const u8 *gCrash3LinkTextPtr = (const u8 *)gCrash3LinkText;
 
@@ -109,7 +109,7 @@ u32 gRoomFrameCount = 0;
 u8 LevelProgress::roomExitRequested = 0;
 
 /* The cutscene text of each language, indexed by gLanguage
- * (src/data/cutscenes_16d1c8.cpp, level_cutscene.cpp). */
+ * (src/game/ui/data/cutscenes.cpp, level_cutscene.cpp). */
 const struct cutscene_page *const *gCutsceneTexts[6] = {
     gCutsceneTextEnglish, gCutsceneTextFrench,  gCutsceneTextGerman,
     gCutsceneTextSpanish, gCutsceneTextItalian, gCutsceneTextDutch,
@@ -118,7 +118,7 @@ const struct cutscene_page *const *gCutsceneTexts[6] = {
 LevelLayers *gLevelLayersSingleton = 0;
 
 /* Per-language string tables (main_loop.cpp indexes them by
- * gLanguage), src/data/ui_text_172cd4.cpp. */
+ * gLanguage), src/game/ui/data/ui_text.cpp. */
 const u8 *const *gUiTextTables[6] = {
     gUiTextEnglish, gUiTextFrench, gUiTextGerman, gUiTextSpanish, gUiTextItalian, gUiTextDutch,
 };
@@ -149,7 +149,7 @@ u16 *gFlashBgPalette = BG_PALETTE(1);
 u16 *gFlashObjPalette = OBJ_PALETTE(10);
 
 /* title_screen.cpp: the four OBJ sprite packages of
- * src/data/level_gfx_17cff4.cpp. */
+ * src/game/ui/data/title_screen_gfx.cpp. */
 const void *gTitleObjPackages[4] = {
     &gTitleCrashObj,
     &gTitleArrow2Obj,

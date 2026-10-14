@@ -759,10 +759,10 @@ def build_target(name, start, end, source=None):
 # data/data.s (one label per blob, each blob a single `.incbin`, or the
 # `.include` of a GAX2 block's generated assembly, whose pointers are
 # relocations)
-# interleaved with the `.rodata` of the C data objects under src/data/
+# interleaved with the `.rodata` of the C data objects under src/.../data/
 # (see docs/data.md). A blob is "matched" when it is built from a source
 # in the repo (graphics compressed from a PNG, the GAX2 audio rebuilt from
-# .xm/.wav, the sfx table from JSON, a src/data C table, ...) and
+# .xm/.wav, the sfx table from JSON, a src/.../data C table, ...) and
 # "unmatched" while it's still `.incbin "baserom.gba"`. Both give identical
 # bytes, so an honest data measure can't come from diffing bytes alone:
 # baserom-copied blobs get a target symbol but no base symbol, exactly like
@@ -790,7 +790,7 @@ IWRAM_DATA = ("src/engine/sys/iwram_data.o", ".data", IWRAM_LMA + IWRAM_UNITS[-1
 def data_layout():
     """(object, section) pairs of ldscript.txt's "/* Data */" block, in
     link (= ROM) order, e.g. ("data/data.o", ".rodata.0816C090") or
-    ("src/data/action_table_16bf20.o", ".rodata")."""
+    ("src/game/crash/data/action_ctrl_state_table.o", ".rodata")."""
     block = LDSCRIPT.read_text().split("/* Data */", 1)[1].split("}", 1)[0]
     return re.findall(rf"{OBJ_ROOT}/(\S+?\.o)\((\S+?)\);", block)
 
@@ -880,7 +880,7 @@ def parse_data_s():
 
 
 def c_data_blobs(obj, section):
-    """One blob per global object symbol in `section` of a src/data C
+    """One blob per global object symbol in `section` of a src/.../data C
     object (or a C++ object's g++-emitted vtable, whose symbol is weak),
     in address order, plus the section's alignment. A blob runs to the
     next symbol (or the section's end), so alignment padding between two
@@ -919,7 +919,7 @@ def c_data_blobs(obj, section):
 
 def parse_data():
     """Returns one dict per data blob, in ROM order, with its address:
-    data.s's sections and the src/data C objects' tables, laid out the
+    data.s's sections and the src/.../data C objects' tables, laid out the
     way ldscript.txt links them. A baserom blob's own incbin offset must
     agree with the computed address, which catches any drift between
     this parser and the real layout (a C table of the wrong size
@@ -932,7 +932,7 @@ def parse_data():
             if section not in sections:
                 sys.exit(f"ldscript.txt links data.o({section}), which data/data.s doesn't define")
             part, align = sections.pop(section), aligns.get(section, 1)
-        elif obj.startswith("src/data/") or re.match(r"lib/\w+/data/", obj):
+        elif (obj.startswith("src/") and "/data/" in obj) or re.match(r"lib/\w+/data/", obj):
             part, align = c_data_blobs(obj, section)
         elif obj.startswith("src/") and section.startswith(".gnu.linkonce.d._vt."):
             # a vtable g++ emitted in its class's key-method object
@@ -942,7 +942,7 @@ def parse_data():
             sys.exit(f"ldscript.txt: unexpected object {obj} in the data block")
         if addr % align:
             # The linker's zero fill up to an aligned object: the padding
-            # after a src/data object's last LZ77 stream (an aligned(4)
+            # after a src/.../data object's last LZ77 stream (an aligned(4)
             # array's 0-3 trailing zeros, docs/data.md "LZ77 stream
             # padding"), or the 2 bytes between the sprite banks and the
             # word-aligned GAX2 sound-effect set. It counts toward that
@@ -985,7 +985,7 @@ def parse_data():
 
 def blob_group(blob):
     """Asset directory a built blob comes from (e.g. graphics/cutscenes), the
-    source file minus `.c` for a src/data table (each C file is its own
+    source file minus `.c` for a src/.../data table (each C file is its own
     unit) or minus `.cpp` for a g++-emitted vtable, None for a baserom
     blob."""
     if not blob["built"]:
@@ -1015,7 +1015,7 @@ def group_data_blobs(blobs):
 
 def incbin_line(blob, from_rom):
     if blob.get("c_source") or blob.get("linked"):
-        # A src/data table's bytes only exist after linking (its pointers
+        # A src/.../data table's bytes only exist after linking (its pointers
         # are relocations), and `make report` doesn't link; so do a GAX2
         # block's. `make compare` already proves them equal to the ROM's,
         # so the base reuses the ROM bytes (zero fill when there's no ROM -
@@ -1071,7 +1071,7 @@ def trim_rom_filler(blobs, have_rom):
 
 
 def data_units():
-    """objdiff units for the data (data/data.s and src/data - see the
+    """objdiff units for the data (data/data.s and src/.../data - see the
     comment above DATA_S)."""
     DATA_BUILD_DIR.mkdir(parents=True, exist_ok=True)
     have_rom = BASEROM.exists()

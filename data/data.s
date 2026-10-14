@@ -1,24 +1,24 @@
 .section .rodata
 
-@ gCategoryFamily0CellAnim..gCategory0SpawnTable: src/data/cell_anim_03b8b0.cpp
+@ gCategoryFamily0CellAnim..gCategory0SpawnTable: src/game/vehicles/polar/data/polar_cell_anim.cpp
 
-@ gPolarSpriteSheet: src/data/sprite_sheet_0b2120.cpp
+@ gPolarSpriteSheet: src/game/vehicles/polar/data/polar_sprite_sheet.cpp
 
-@ gCategory1SpawnTable..gCategory2SpawnTable: src/data/sub_effect_0c0c38.cpp
+@ gCategory1SpawnTable..gCategory2SpawnTable: src/game/vehicles/polar/data/polar_spawn_tables.cpp
 
-@ gPolarPlayerRleFrames..gYetiRleFrames: src/data/rle_sprites_0c2758.cpp
+@ gPolarPlayerRleFrames..gYetiRleFrames: src/game/vehicles/polar/data/polar_rle_sprites.cpp
 
-@ gCategoryFamily1CellAnim..gCategory3SpawnTable: src/data/cell_anim_0ff1b0.cpp
+@ gCategoryFamily1CellAnim..gCategory3SpawnTable: src/game/vehicles/jetpack/data/jetpack_cell_anim.cpp
 
-@ gJetpackSpriteSheet: src/data/sprite_sheet_14174c.cpp
+@ gJetpackSpriteSheet: src/game/vehicles/jetpack/data/jetpack_sprite_sheet.cpp
 
-@ gCategory4BgPicture..gCategory6SpawnTable: src/data/bg_picture_151ac4.cpp
+@ gCategory4BgPicture..gCategory6SpawnTable: src/game/vehicles/jetpack/data/jetpack_sky_pictures.cpp
 
-@ gJetpackPlayerRleFrames: src/data/rle_sprites_15a050.cpp
+@ gJetpackPlayerRleFrames: src/game/vehicles/jetpack/data/jetpack_rle_sprites.cpp
 
-@ gAirshipPalette..gSineTable: src/data/boss_pictures_167ad4.cpp
+@ gAirshipPalette..gSineTable: src/game/bosses/data/boss_pictures.cpp
 
-@ gSongTable: src/data/song_table_16aa20.cpp
+@ gSongTable: src/engine/audio/data/song_table.cpp
 
 .section .rodata.0816AA6C
 
@@ -32,127 +32,127 @@ gSfxTable:
 	@ Built from sound/sfx_table.json by tools/sfx_table.py.
 	.incbin "build/crashbandicootxs/sound/sfx_table.bin"
 
-@ gCrc16Table..gCrash3LinkText: src/data/link_crc_16af10.cpp
+@ gCrc16Table..gCrash3LinkText: src/engine/link/data/link_crc_table.cpp
 
-@ gMenuCursorText..gPauseTimeTrialIconPos: src/data/menu_tables_16b138.cpp
+@ gMenuCursorText..gPauseTimeTrialIconPos: src/game/ui/data/menu_tables.cpp
 
-@ gPauseMenuBg: src/data/bg_package_16b284.cpp
+@ gPauseMenuBg: src/game/ui/data/pause_menu_bg.cpp
 
-@ gPauseMenuRows..gPauseMenuPalette: src/data/pause_rows_16b298.cpp
+@ gPauseMenuRows..gPauseMenuPalette: src/game/ui/data/pause_menu_rows.cpp
 
-@ gObjPieceWidths..gEmptySpritePoint: src/data/obj_sizes_16b2e0.cpp
+@ gObjPieceWidths..gEmptySpritePoint: src/engine/gfx/data/obj_piece_sizes.cpp
 
-@ gCtrlMotionRecords..gInputCtrlMotionRecords: src/data/motion_records_16b304.cpp
+@ gCtrlMotionRecords..gInputCtrlMotionRecords: src/game/crash/data/motion_records.cpp
 
-@ gActionCtrlMotionSet..gSwimCtrlMotionSet: src/data/entry_set_16b92c.cpp
+@ gActionCtrlMotionSet..gSwimCtrlMotionSet: src/game/crash/data/action_swim_motion_sets.cpp
 
-@ gInputCtrlMotionSet..gInputCtrlMotionEntries: src/data/entry_set_16b93c.cpp
+@ gInputCtrlMotionSet..gInputCtrlMotionEntries: src/game/crash/data/input_ctrl_motion_set.cpp
 
-@ gEnemyDefaultAnimMap..gSaucerLabAssistantAnimMap: src/data/popup_tables_16b98c.cpp
+@ gEnemyDefaultAnimMap..gSaucerLabAssistantAnimMap: src/game/enemies/data/enemy_anim_maps.cpp
 
-@ gEnemyCtrlMotionSet..gWumpaHopWidths: src/data/object_tables_16bb6c.cpp
+@ gEnemyCtrlMotionSet..gWumpaHopWidths: src/game/crates/data/crate_tables.cpp
 
-@ gActionCtrlStateTable..gSwimCtrlModeAnimRows: src/data/action_table_16bf20.cpp
+@ gActionCtrlStateTable..gSwimCtrlModeAnimRows: src/game/crash/data/action_ctrl_state_table.cpp
 
-@ gSwimCtrlTurnSpeeds..gSwimCtrlModeLevelAnims: src/data/speed_table_16c090.cpp
+@ gSwimCtrlTurnSpeeds..gSwimCtrlModeLevelAnims: src/game/crash/data/swim_speeds.cpp
 
-@ gSwimCtrlStateFuncs..gMegaMixMotionSet: src/data/player_pmf_16c250.cpp
+@ gSwimCtrlStateFuncs..gMegaMixMotionSet: src/game/crash/data/swim_input_ctrl_state_tables.cpp
 
-@ gMegaMixMotionRecords..gDingodileStalactiteFallMotion: src/data/actor_tables_16c2d8.cpp
+@ gMegaMixMotionRecords..gDingodileStalactiteFallMotion: src/game/bosses/data/boss_motion_tables.cpp
 
-@ gDingodileMotionEntries..gPlatformMoverMotionSet: src/data/entry_set_16c418.cpp
+@ gDingodileMotionEntries..gPlatformMoverMotionSet: src/game/bosses/data/dingodile_motion_entries.cpp
 
-@ gPlatformMoverMotionRecords: src/data/velocity_16c460.cpp
+@ gPlatformMoverMotionRecords: src/game/objects/data/platform_mover_motion.cpp
 
-@ gMenuSkyBg: src/data/bg_package_16c484.cpp
+@ gMenuSkyBg: src/game/ui/data/menu_sky_bg.cpp
 
-@ gLevelSelectWorldPos..gLevelSelectPalette: src/data/map_tables_16c498.cpp
+@ gLevelSelectWorldPos..gLevelSelectPalette: src/game/ui/data/level_select_layout.cpp
 
-@ gLevelSelectPageBg: src/data/bg_package_16c58c.cpp
+@ gLevelSelectPageBg: src/game/ui/data/level_select_page_bg_package.cpp
 
-@ gZoomBgSlotOffsets..gObjSizeHeights: src/data/map_tables_16c5f0.cpp
+@ gZoomBgSlotOffsets..gObjSizeHeights: src/game/ui/data/level_select_anims.cpp
 
-@ gEntitySpawnFuncs: src/data/dispatch_table_16c6a4.cpp
+@ gEntitySpawnFuncs: src/game/level/data/entity_spawn_funcs.cpp
 
-@ gThemePaletteCycle2..gThemeMusicCues: src/data/level_table_16c814.cpp
+@ gThemePaletteCycle2..gThemeMusicCues: src/game/level/data/level_table.cpp
 
-@ gCutsceneTextEnglish..gCutscene10DutchPage5: src/data/cutscenes_16d1c8.cpp, cutscene_text_16d4d8.c, cutscene_slides_16e064.cpp, cutscene_text_16e8a4.c
+@ gCutsceneTextEnglish..gCutscene10DutchPage5: src/game/ui/data/cutscenes.cpp, cutscene_text_english.c, cutscene_slides.cpp, cutscene_text_translations.c
 
-@ gTerrainTypes..0x08172CD4 (terrain types): src/data/terrain_1725a8.cpp
+@ gTerrainTypes..0x08172CD4 (terrain types): src/game/level/data/terrain_types.cpp
 
-@ 0x08172CD4..0x08174BE0 (the UI text of six languages): src/data/ui_text_172cd4.c
+@ 0x08172CD4..0x08174BE0 (the UI text of six languages): src/game/ui/data/ui_text.c
 
-@ gHudPartAnims..gLargeFontGlyphs: src/data/hud_fonts_174be0.cpp
+@ gHudPartAnims..gLargeFontGlyphs: src/game/ui/data/hud_font_tables.cpp
 
-@ gActorCategories..gActorCategoryVtables: src/data/actor_category_175558.cpp
+@ gActorCategories..gActorCategoryVtables: src/engine/actor/data/actor_categories.cpp
 
-@ gActorPaletteCycleFrames..gActorPaletteCycleTargetFrames: src/data/palette_cycle_175760.cpp
+@ gActorPaletteCycleFrames..gActorPaletteCycleTargetFrames: src/engine/actor/data/actor_palette_cycle_frames.cpp
 
-@ gPolarCategoryPalette..0x0817A6B8 (categories 0-2 family data): src/data/anim_family_178f80.cpp
+@ gPolarCategoryPalette..0x0817A6B8 (categories 0-2 family data): src/game/vehicles/polar/data/polar_anim_family.cpp
 
-@ gPolarPlayerStateFuncs: src/data/actor_pmf_17a6b8.cpp
+@ gPolarPlayerStateFuncs: src/game/vehicles/polar/data/polar_player_state_table.cpp
 
-@ gPolarPlayerShockPalette..gYetiChargeParams: src/data/actor_tables_17a728.cpp
+@ gPolarPlayerShockPalette..gYetiChargeParams: src/game/vehicles/polar/data/polar_palettes_boxes.cpp
 
-@ gYetiStateFuncs: src/data/actor_state_fn_17a840.cpp
+@ gYetiStateFuncs: src/game/vehicles/polar/data/yeti_state_table.cpp
 
-@ gYetiKeyframes: src/data/anim_frames_17a850.cpp
+@ gYetiKeyframes: src/game/vehicles/polar/data/yeti_keyframes.cpp
 
-@ gYetiFrames: src/data/frame_table_17a880.cpp
+@ gYetiFrames: src/game/vehicles/polar/data/yeti_frames.cpp
 
-@ gYetiPalette..0x0817C1C0 (categories 3-6 family data): src/data/anim_family_17aa6c.cpp
+@ gYetiPalette..0x0817C1C0 (categories 3-6 family data): src/game/vehicles/jetpack/data/jetpack_anim_family.cpp
 
-@ gJetpackPlayerStateFuncs: src/data/actor_pmf_17c1c0.cpp
+@ gJetpackPlayerStateFuncs: src/game/vehicles/jetpack/data/jetpack_player_state_table.cpp
 
-@ gJetpackFlashPalettes: src/data/palette_strip_17c200.cpp
+@ gJetpackFlashPalettes: src/game/vehicles/jetpack/data/jetpack_flash_palettes.cpp
 
-@ gJetpackPlaneStateFuncs..gJetpackBomberStateFuncs: src/data/actor_pmf_17c260.cpp
+@ gJetpackPlaneStateFuncs..gJetpackBomberStateFuncs: src/game/vehicles/jetpack/data/jetpack_plane_bomber_state_tables.cpp
 
-@ gAirshipFireballStateFuncs: src/data/actor_pmf_17c2b8.cpp
+@ gAirshipFireballStateFuncs: src/game/vehicles/jetpack/data/airship_fireball_state_table.cpp
 
-@ gAirshipAttacks..gAirshipKeyframes: src/data/weapon_kind_17c2d0.cpp
+@ gAirshipAttacks..gAirshipKeyframes: src/game/vehicles/jetpack/data/airship_attacks.cpp
 
-@ gAirshipStateFuncs: src/data/actor_state_17c3fc.cpp
+@ gAirshipStateFuncs: src/game/vehicles/jetpack/data/airship_state_table.cpp
 
-@ gJetpackBalloonStateFuncs: src/data/actor_pmf_17c414.cpp
+@ gJetpackBalloonStateFuncs: src/game/vehicles/jetpack/data/jetpack_balloon_state_table.cpp
 
-@ gJetpackBalloonCrateStateFuncs: src/data/actor_pmf_17c42c.cpp
+@ gJetpackBalloonCrateStateFuncs: src/game/vehicles/jetpack/data/jetpack_balloon_crate_state_table.cpp
 
-@ gJetpackRocketBox: src/data/actor_box_17c444.cpp
+@ gJetpackRocketBox: src/game/vehicles/jetpack/data/jetpack_rocket_box.cpp
 
-@ gHovercraftFireballStateFuncs: src/data/actor_pmf_17c450.cpp
+@ gHovercraftFireballStateFuncs: src/game/bosses/data/hovercraft_fireball_state_table.cpp
 
-@ gHovercraftAttacks..gHovercraftKeyframes: src/data/singleton_kind_17c460.cpp
+@ gHovercraftAttacks..gHovercraftKeyframes: src/game/bosses/data/hovercraft_attacks.cpp
 
-@ gHovercraftStateFuncs..gHovercraftLauncherStateFuncs: src/data/actor_state_17c4c8.cpp
+@ gHovercraftStateFuncs..gHovercraftLauncherStateFuncs: src/game/bosses/data/hovercraft_state_tables.cpp
 
-@ gContinuePromptCursorText..gContinuePromptPalette3: src/data/hud_palettes_17c510.cpp
+@ gContinuePromptCursorText..gContinuePromptPalette3: src/game/ui/data/continue_prompt_palettes.cpp
 
-@ gContinuePromptSmokeBg..gContinuePromptUkaUkaBg: src/data/bg_package_17c594.cpp
+@ gContinuePromptSmokeBg..gContinuePromptUkaUkaBg: src/game/ui/data/continue_prompt_bgs.cpp
 
-@ gCreditsText..gCreditsEmptyText: src/data/credits_17c5d0.cpp
+@ gCreditsText..gCreditsEmptyText: src/game/ui/data/credits_text.cpp
 
-@ gCreditsLogos..gTitleLogoPieceSeeds: src/data/popup_glyphs_17cf40.cpp
+@ gCreditsLogos..gTitleLogoPieceSeeds: src/game/ui/data/credits_title_logos.cpp
 
-@ gTitleArrowPieceOffsets..gLogoActorAnim: src/data/level_gfx_17cff4.cpp
+@ gTitleArrowPieceOffsets..gLogoActorAnim: src/game/ui/data/title_screen_gfx.cpp
 
-@ gVvLogoPieceSeeds..gVvLogoUrlObj: src/data/slot_seeds_17d6c0.cpp
+@ gVvLogoPieceSeeds..gVvLogoUrlObj: src/game/ui/data/vv_logo.cpp
 
-@ gUniversalLogoBg..0x0817E714: src/data/countdown_17d7a4.cpp
+@ gUniversalLogoBg..0x0817E714: src/game/ui/data/universal_vv_logo_motions.cpp
 
-@ gLanguageNames: src/data/digit_glyphs_17e714.cpp
+@ gLanguageNames: src/game/ui/data/language_names.cpp
 
-@ gLanguageSelectPalette0..gLanguageSelectPalette2: src/data/palettes_17e72c.cpp
+@ gLanguageSelectPalette0..gLanguageSelectPalette2: src/game/ui/data/language_select_palettes.cpp
 
-@ gLanguageSelectPalette3..gUnderwaterBg0Tiles: src/data/level_tilesets_17e78c.cpp
+@ gLanguageSelectPalette3..gUnderwaterBg0Tiles: src/game/level/data/level_tilesets_jungle_snow_underwater.cpp
 
-@ 0x0824B638..0x08270F08 (33 rooms' level data): src/data/level_rooms_24b638.cpp
-@ gSewerBg0Tiles..gSpaceBg0Tiles: src/data/level_tilesets_270f08.cpp
-@ 0x082B91D0..0x082BF120 (8 rooms' level data): src/data/level_rooms_2b91d0.cpp
-@ gSpriteBank00Tiles..gObjPalettes: src/data/sprite_tiles_2bf120.cpp
+@ 0x0824B638..0x08270F08 (33 rooms' level data): src/game/level/data/level_rooms_main_bonus.cpp
+@ gSewerBg0Tiles..gSpaceBg0Tiles: src/game/level/data/level_tilesets_sewer_space.cpp
+@ 0x082B91D0..0x082BF120 (8 rooms' level data): src/game/level/data/level_rooms_bosses_gem_paths.cpp
+@ gSpriteBank00Tiles..gObjPalettes: src/engine/gfx/data/sprite_tiles.cpp
 
-@ gSpriteBankTable..gSpriteBank55: src/data/sprite_banks_4a5600.cpp,
-@ sprite_banks_4b0ae0.cpp, sprite_banks_4b414c.cpp, sprite_banks_4b9d7c.cpp
+@ gSpriteBankTable..gSpriteBank55: src/engine/gfx/data/sprite_banks_00_09.cpp,
+@ sprite_banks_10_21.cpp, sprite_banks_22_38.cpp, sprite_banks_39_55.cpp
 
 .section .rodata.084C0006
 
@@ -202,23 +202,23 @@ gGaxDefaultSong:
 	@ against gGaxMusicData, so it must follow the block directly.
 	.include "build/crashbandicootxs/sound/gax_default_layout.s"
 
-@ __clz_tab_divdi3..__clz_tab_udivdi3: lib/libgcc/data/clz_tab_5a4c70.c
+@ __clz_tab_divdi3..__clz_tab_udivdi3: lib/libgcc/data/clz_tab.c
 
-@ gSmallFontTiles..gLargeFontTiles: src/data/font_tiles_5a4e70.cpp
+@ gSmallFontTiles..gLargeFontTiles: src/engine/text/data/font_tiles.cpp
 
-@ 0x085A6100..gGaxVibratoTable (GAX2 strings and tables): lib/gax/data/gax_tables_5a6100.c
+@ 0x085A6100..gGaxVibratoTable (GAX2 strings and tables): lib/gax/data/gax_tables.c
 
-@ 0x085A9EEC..0x085A9F70 (EEPROM library data): lib/agb_eeprom/data/eeprom_5a9eec.c
+@ 0x085A9EEC..0x085A9F70 (EEPROM library data): lib/agb_eeprom/data/eeprom_data.c
 
-@ 0x085A9F70..0x0861BADC (the 24 cutscene pictures): src/data/cutscene_pictures_5a9f70.cpp
+@ 0x085A9F70..0x0861BADC (the 24 cutscene pictures): src/game/ui/data/cutscene_pictures.cpp
 
-@ gMenuSkyBgPalette..gVvLogoUrlTiles: src/data/menu_graphics_61badc.cpp
+@ gMenuSkyBgPalette..gVvLogoUrlTiles: src/game/ui/data/menu_graphics.cpp
 
-@ gLevelSelectCursorZoomTiles..gLevelSelectPicture6Palette: src/data/level_select_graphics_6377c0.cpp
+@ gLevelSelectCursorZoomTiles..gLevelSelectPicture6Palette: src/game/ui/data/level_select_graphics.cpp
 
-@ gSnowBgTiles..gUnderwaterBgTiles: src/data/level_bg_tiles_63d4c0.cpp
+@ gSnowBgTiles..gUnderwaterBgTiles: src/game/level/data/level_bg_tiles.cpp
 
-@ gRoom00Asset..gRoom33Asset (the 41 level assets): src/data/level_assets_64f830.cpp
+@ gRoom00Asset..gRoom33Asset (the 41 level assets): src/game/level/data/level_assets.cpp
 
 @ gEntityVtable..gLogoActorVtable: the C++ classes' vtables, each object's
 @ .gnu.linkonce.d._vt.* section placed by ldscript.txt

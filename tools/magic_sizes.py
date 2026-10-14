@@ -2,7 +2,7 @@
 """`tools/magic_numbers.py --sizes`: raw sizes, strides, offsets and
 hardware values that have a `sizeof`, a member or a named constant (#820).
 
-Scans the game code under src/ (not src/data/, not lib/) for integer
+Scans the game code under src/ (not src/.../data/, not lib/) for integer
 literals in six kinds of places:
 
   alloc    the size argument of mem_alloc, IwramAlloc, OperatorNew,
@@ -353,7 +353,7 @@ class Types:
         if self._sizes is None:
             self._sizes = collections.defaultdict(list)
             for k, r in self.rec.items():
-                if r["anon"] or r["file"] in (None, "<internal>") or r["file"].startswith("src/data/") \
+                if r["anon"] or r["file"] in (None, "<internal>") or (r["file"].startswith("src/") and "/data/" in r["file"]) \
                         or r["name"].startswith("__") or r["size"] < 4:
                     continue
                 if not any(self.rec[x]["name"] == r["name"] for x in self._sizes[r["size"]]):
@@ -1633,7 +1633,7 @@ def source_files(paths):
     for dirpath, dirnames, filenames in os.walk(os.path.join(ROOT, "src")):
         dirnames.sort()
         rel_dir = os.path.relpath(dirpath, ROOT)
-        if rel_dir == os.path.join("src", "data") or rel_dir.startswith(os.path.join("src", "data", "")):
+        if "data" in rel_dir.split(os.sep)[1:]:
             dirnames[:] = []
             continue
         for f in sorted(filenames):

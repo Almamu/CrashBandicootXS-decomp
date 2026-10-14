@@ -7,9 +7,9 @@ holds only the game.
 
 | Library | What it is | ROM code | Data |
 |---|---|---|---|
-| [`lib/gax/`](../lib/gax) | Shin'en's GAX Sound Engine 2.01D | `0x08037F3C`-`0x0803A944` | `lib/gax/data/gax_tables_5a6100.c` |
-| [`lib/agb_eeprom/`](../lib/agb_eeprom) | Nintendo's AgbEeprom SDK library, `EEPROM_V122` | `0x0803A968`-`0x0803AD78` | `lib/agb_eeprom/data/eeprom_5a9eec.c` |
-| [`lib/libgcc/`](../lib/libgcc) | gcc 2.9's libgcc: libgcc2.c's 64-bit helpers and lib1funcs.asm's routines | `0x08037648`-`0x08037F3C`, `0x0803AD78`-`0x0803AFDC` | `lib/libgcc/data/clz_tab_5a4c70.c` |
+| [`lib/gax/`](../lib/gax) | Shin'en's GAX Sound Engine 2.01D | `0x08037F3C`-`0x0803A944` | `lib/gax/data/gax_tables.c` |
+| [`lib/agb_eeprom/`](../lib/agb_eeprom) | Nintendo's AgbEeprom SDK library, `EEPROM_V122` | `0x0803A968`-`0x0803AD78` | `lib/agb_eeprom/data/eeprom_data.c` |
+| [`lib/libgcc/`](../lib/libgcc) | gcc 2.9's libgcc: libgcc2.c's 64-bit helpers and lib1funcs.asm's routines | `0x08037648`-`0x08037F3C`, `0x0803AD78`-`0x0803AFDC` | `lib/libgcc/data/clz_tab.c` |
 | [`lib/libagbsyscall/`](../lib/libagbsyscall) | the BIOS SWI wrappers | `0x0803A944`-`0x0803A968` | - |
 
 ## Layout
@@ -168,7 +168,7 @@ No library object uses old_agbcc, agbcp_arm_patched or
   end of the music block and `tools/gax_audio.py` builds it with the songs
   (docs/audio.md).
 - **The game-side audio code**: the audio manager (`src/engine/audio/audio.cpp`), the song
-  table (`src/data/song_table_16aa20.cpp`) and the sound-effect table
+  table (`src/engine/audio/data/song_table.cpp`) and the sound-effect table
   (`sound/sfx_table.json`). They call GAX2 through `<gax.h>`.
 - **GAX2's IWRAM variables**: `gGaxIrqEnabled` is the game's flag (its
   VBlank handler calls `GAX_irq` while it is set). `gGaxHaltFont`, the

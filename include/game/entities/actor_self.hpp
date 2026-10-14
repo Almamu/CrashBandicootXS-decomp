@@ -17,7 +17,7 @@
  * in frontend.hpp). They have no C view (the C `struct actor_self` went
  * with its last C reader, #754); the plain records they use (struct
  * anim_frame_record, struct anim_box) are actor_anim.h's, which the
- * src/data tables define.
+ * src/.../data tables define.
  *
  * The actors live in IWRAM's heap (mem_alloc's MEM_HEAP_IWRAM flag),
  * which is AnimPart's own operator new and delete: the ROM's destructors

@@ -5,7 +5,7 @@
  * progress block as a class"): class GameProgress, until #766
  * level_state.h's struct game_progress. Its count functions are const
  * methods (src/game/level/game_progress.cpp) under their C names
- * (cxx_symbols.txt). No C file reads the layout (src/data/ and lib/ never
+ * (cxx_symbols.txt). No C file reads the layout (src/.../data/ and lib/ never
  * name it), so the fields are the class's.
  *
  * No vtable, constructor or destructor: the level state, its snapshots

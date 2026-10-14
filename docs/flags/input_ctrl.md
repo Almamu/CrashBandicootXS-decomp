@@ -7,7 +7,7 @@ the class.
 ## `state` (`INPUT_CTRL_STATE_*`)
 
 `state` is Ctrl's (+0x08) and indexes `stateFuncs`
-(gInputCtrlStateFuncs, src/data/player_pmf_16c250.cpp). Update calls the
+(gInputCtrlStateFuncs, src/game/crash/data/swim_input_ctrl_state_tables.cpp). Update calls the
 state's method every frame, after the D-pad steering, which it skips when
 the player is dead.
 

@@ -8,7 +8,7 @@
 #include "constants/entity_params.h"
 
 /*
- * The rooms' level data (docs/levels.md), as src/data/level_rooms_*.c
+ * The rooms' level data (docs/levels.md), as src/.../data/level_rooms_*.c
  * define it. tools/levels.py generates those definitions from the
  * editable sources in data/levels/. The code reads the same records
  * through its own local views, named on each struct below.
@@ -177,7 +177,7 @@ struct level_desc {
 };
 
 /*
- * One room record of the level table (src/data/level_table_16c814.cpp):
+ * One room record of the level table (src/game/level/data/level_table.cpp):
  * the record RunRoom hands to LoadRoom, and the current room
  * (`LevelProgress::cat`, `LevelState::room.cat`). It merges level_layers.cpp's
  * `struct level_load_args` (batch 8b), level_query.cpp's `MedalListItem`

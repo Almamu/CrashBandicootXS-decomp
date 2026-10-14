@@ -25,7 +25,7 @@
 #include "constants/entities.h"
 
 
-/* The crate tables, indexed by crate kind (src/data/object_tables_16bb6c.cpp). */
+/* The crate tables, indexed by crate kind (src/game/crates/data/crate_tables.cpp). */
 extern const u8 gSlotCrateTimers[4];
 extern const u8 gCrateKindCounted[CRATE_KIND_COUNT];
 extern const u8 gCrateKindBreakable[CRATE_KIND_COUNT];

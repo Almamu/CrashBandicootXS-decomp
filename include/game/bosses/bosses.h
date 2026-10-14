@@ -21,7 +21,7 @@
 #include "game/entities/objects.h"
 
 /* The airship's attack parameters, one per kind and level
- * (gAirshipAttacks, src/data/weapon_kind_17c2d0.cpp). SpawnAirship points
+ * (gAirshipAttacks, src/game/vehicles/jetpack/data/airship_attacks.cpp). SpawnAirship points
  * gAirshipAttack at one. AirshipStateFireballs fires a fireball every
  * `fireballDelay` frames, resting `fireballBurstDelay` frames after each
  * `fireballBurst`-th; AirshipStateCannon does the same with cannonballs
@@ -47,7 +47,7 @@ struct spawn_timing {
 };
 
 /* The hovercraft's attack parameters, one per kind and level
- * (Hovercraft::attacks, src/data/singleton_kind_17c460.cpp). SpawnHovercraft
+ * (Hovercraft::attacks, src/game/bosses/data/hovercraft_attacks.cpp). SpawnHovercraft
  * points gHovercraftAttack at one, and GetHovercraftAttack returns it. */
 struct hovercraft_attack {
     s32 hp;                        // 0x00 - copied to gHovercraftHp, which nothing reads
@@ -76,7 +76,7 @@ extern void SpawnCortexBossGem(u32 id, u16 x, u16 y, u16 param, s32 kind);
  * hovercraft's variables are Airship's and Hovercraft's static members
  * (include/game/vehicles/jetpack/airship.hpp, include/game/bosses/hovercraft.hpp; #772). */
 
-/* src/data/boss_pictures_167ad4.cpp: the two boss pictures, a {cols, rows}
+/* src/game/bosses/data/boss_pictures.cpp: the two boss pictures, a {cols, rows}
  * head, then the frames (docs/data.md "Boss pictures"). Each picture's struct is sized by its generated picture
  * header (build/.../vehicles/jetpack/airship.h, bosses/hovercraft.h), so it is only complete in the
  * data file; the code reads the head through BOSS_PICTURE_SIZE, and finds
@@ -95,7 +95,7 @@ struct airship_picture;    /* 4 frames */
 struct hovercraft_picture; /* 1 frame */
 #define BOSS_PICTURE_SIZE(picture) ((const struct boss_picture_size *)&(picture))
 
-/* src/data/actor_tables_16c2d8.cpp */
+/* src/game/bosses/data/boss_motion_tables.cpp */
 extern const u8 gCortexTargetBlinkStartTimes[3];
 extern const u8 gCortexTargetBlinkStopTimes[3];
 extern const u8 gCortexTargetChaseSteps[3];
@@ -146,10 +146,10 @@ extern const u8 gTinyRoundAnchors[3];
 extern u16 *gFlashBgPalette;
 extern u16 *gFlashObjPalette;
 
-/* src/data/player_pmf_16c250.cpp */
+/* src/game/crash/data/swim_input_ctrl_state_tables.cpp */
 extern const struct entry_set gMegaMixMotionSet;
 
-/* The {a, b} motion record index pairs (src/data/entry_set_16c418.cpp):
+/* The {a, b} motion record index pairs (src/game/bosses/data/dingodile_motion_entries.cpp):
  * CreateDingodile and friends index gDingodileMotionRecords with entries
  * 0-3; 4-7 are gPlatformMoverMotionSet's (objects.h). */
 extern const u32 gDingodileMotionEntries[8][2];

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Extracts the sprite-bank animation tables (gSpriteBankTable,
-0x084A5600-0x084C0006) from baserom.gba as typed C, the src/data/
+0x084A5600-0x084C0006) from baserom.gba as typed C, the src/.../data/
 sprite_banks_*.cpp files (see docs/data.md and docs/data_map.md).
 
 This is a one-time extraction: the C it writes is
@@ -248,7 +248,7 @@ FILE_COMMENT = """\
  * (a PNG per frame and bank.json, see docs/graphics.md "Sprite banks"):
  * tools/sprite_frames.py generates the piece arrays (sprites/bankNN_pieces.inc),
  * and sprites/sprite_frames.h declares the frames and gives each one's
- * offset in the sprite tile pool (src/data/sprite_tiles_2bf120.cpp),
+ * offset in the sprite tile pool (src/engine/gfx/data/sprite_tiles.cpp),
  * SPRITE_TILES_BANKnn_FRAMEkkk. A frame's struct type has to match its
  * "layout" in bank.json.
  */
@@ -266,7 +266,7 @@ def main():
     for fi, (lo, hi) in enumerate(FILES):
         start = TABLE if lo == 0 else starts[lo]
         end = starts[hi + 1] if hi + 1 < nbanks else END
-        name = f"sprite_banks_{start & 0xFFFFFF:06x}.cpp"
+        name = f"sprite_banks_{lo:02}_{hi:02}.cpp"
         out, decls = [], []
         body = []
         if lo == 0:
@@ -288,7 +288,7 @@ def main():
         out.append("")
         out.append(FILE_COMMENT.format(start=start, end=end, first=lo, last=hi))
         if lo == 0:
-            out.append("extern const u8 gSpriteBank00Tiles[];  /* sprite_tiles_2bf120.cpp, bank 0's tiles */")
+            out.append("extern const u8 gSpriteBank00Tiles[];  /* sprite_tiles.cpp, bank 0's tiles */")
             out.append("extern const u8 gObjPalettes[0xfa0];")
             out.append("extern const struct sprite_bank gSpriteBanks[56];")
             for i in range(nbanks):
@@ -321,8 +321,8 @@ def main():
         out.extend(body)
         while out and out[-1] == "":
             out.pop()
-        (ROOT / "src" / "data" / name).write_text("\n".join(out) + "\n")
-        print(f"wrote src/data/{name}: {start:#x}-{end:#x}")
+        (ROOT / "src" / "engine" / "gfx" / "data" / name).write_text("\n".join(out) + "\n")
+        print(f"wrote src/engine/gfx/data/{name}: {start:#x}-{end:#x}")
     assert em.pos == END
 
 

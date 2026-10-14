@@ -55,7 +55,7 @@ Subcommands:
                       them, agree on the name or point at (or hold)
                       structs or functions the same way. A view of a base
                       class is reported once, not again for each class
-                      derived from it. Pairs of src/data/ layouts (one
+                      derived from it. Pairs of src/.../data/ layouts (one
                       struct per data table, such as the level rooms'
                       parameter blocks) are left out unless --data.
                       NAMEs restrict the report to pairs with one of them.
@@ -78,7 +78,7 @@ Subcommands:
 A NAME is a struct/class name (`Entity`), optionally with a file suffix to
 pick one definition (`actor@include/engine/actor/actor.h`, `actor@actor.h`), or a full
 key (`cutscene_player@include/cutscene.h#2`). An ambiguous NAME lists the
-candidates. A file shown as `src/data/x.c?` is a guess: an object with no
+candidates. A file shown as `src/.../data/x.c?` is a guess: an object with no
 code has no line-number file table, so a layout only such objects define
 is attributed to the first of them.
 
@@ -133,7 +133,11 @@ AGGREGATE_TAGS = {
 # spells a g++ pointer to member function as a struct.
 LOOSE = ('array', 'pmf')
 
-DATA_DIR = 'src/data/'
+DATA_DIR = 'src/'  # with '/data/' in the path: is_data_file()
+
+
+def is_data_file(f):
+    return f.startswith(DATA_DIR) and '/data/' in f
 
 PAD_RE = re.compile(r'^(unk|pad|filler|unused|reserved|gap|field_|_+\d|_+$)', re.I)
 
@@ -715,7 +719,7 @@ def find_views(L, min_match, only=None, data=False):
     A ~ B is dropped when every match is a field B gets from one embedded
     struct or base class C and A ~ C is reported itself (A ~ Sprite, not
     A ~ each class derived from Sprite), and the same the other way round.
-    Pairs of src/data/ layouts (one struct per data table instance, like
+    Pairs of src/.../data/ layouts (one struct per data table instance, like
     the level_params_roomNN) are left out unless data is set.
     """
     index = collections.defaultdict(list)
@@ -755,8 +759,8 @@ def find_views(L, min_match, only=None, data=False):
         via_a = frozenset.intersection(*(a['owners'] for a, b in matches)) - {ka}
         if any((kb, c) in found or (c, kb) in found for c in via_a):
             continue
-        if not data and L.rec[ka]['file'].startswith(DATA_DIR) \
-                and L.rec[kb]['file'].startswith(DATA_DIR):
+        if not data and is_data_file(L.rec[ka]['file']) \
+                and is_data_file(L.rec[kb]['file']):
             continue
         if only and ka not in only and kb not in only:
             continue
@@ -948,7 +952,7 @@ def main():
     p.add_argument('names', nargs='*', help='only pairs involving these')
     p.add_argument('--min', type=int, default=4, help='matching fields needed (default 4)')
     p.add_argument('--data', action='store_true',
-                   help='also pair src/data/ layouts with each other')
+                   help='also pair src/.../data/ layouts with each other')
     p.add_argument('-v', '--verbose', action='store_true',
                    help='also list the fields the other layout leaves as padding')
     p.set_defaults(func=cmd_views)
@@ -966,7 +970,7 @@ def main():
     p.add_argument('names', nargs='*', help='only the families of these')
     p.add_argument('--min', type=int, default=4, help='matching fields needed (default 4)')
     p.add_argument('--data', action='store_true',
-                   help='also pair src/data/ layouts with each other')
+                   help='also pair src/.../data/ layouts with each other')
     p.set_defaults(func=cmd_names)
 
     p = sub.add_parser('show', help='one layout, flattened')

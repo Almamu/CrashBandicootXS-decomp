@@ -34,7 +34,7 @@ and relocations stay byte-identical. Otherwise it is reverted.
 ## The tool: `tools/simplify_scan.py`
 
 The tool parses every `src/**/*.cpp` (not `lib/`, which is original
-source, and not the C files in `src/data/`) and finds seven kinds of
+source, and not the C files in `src/*/data/`) and finds seven kinds of
 candidate:
 
 | kind | what |

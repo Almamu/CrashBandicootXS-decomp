@@ -11,7 +11,7 @@ and then it has a short comment.
 ## The inventory: `tools/magic_numbers.py --casts`
 
 [tools/magic_casts.py](../tools/magic_casts.py) lists the C-style casts in
-the game code (src/ without src/data/, and include/), grouped by the thing
+the game code (src/ without src/*/data/, and include/), grouped by the thing
 being cast:
 
 - a **field**: `Sprite::x`, the class that declares the member and the

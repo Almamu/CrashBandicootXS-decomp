@@ -100,14 +100,14 @@ extern void OffsetFromHitboxEdge(struct vec2 *dest, s32 kind, const struct hitbo
 extern void OffsetToHitboxEdge(struct vec2 *dest, s32 kind, const struct hitbox_quad *rec);
 extern void OffsetToHitboxEdgeStart(struct vec2 *dest, s32 kind, const struct hitbox_quad *rec);
 
-/* The controllers' motion records (src/data/motion_records_16b304.cpp),
+/* The controllers' motion records (src/game/crash/data/motion_records.cpp),
  * read by StartCtrlTargetMotionYFromSet/StartCtrlTargetMotionXFromSet and
  * ApplyActionCtrlMotion. player.hpp has the player's two tables. */
 extern const struct speed_ramp gCtrlMotionRecords[44];
 
-/* The platform mover's entry set (src/data/entry_set_16c418.cpp), whose
+/* The platform mover's entry set (src/game/bosses/data/dingodile_motion_entries.cpp), whose
  * entries are gDingodileMotionEntries[4..7] (bosses.h), and its motion
- * records (src/data/velocity_16c460.cpp). */
+ * records (src/game/objects/data/platform_mover_motion.cpp). */
 extern const struct entry_set gPlatformMoverMotionSet;
 extern const struct speed_ramp gPlatformMoverMotionRecords[3];
 /* Their steps (Q8 px a frame per frame, docs/fixed_point.md): a falling
@@ -120,7 +120,7 @@ extern const struct speed_ramp gPlatformMoverMotionRecords[3];
 #define PLATFORM_SLOW_MOVE_ACCEL Q8_FRAC(0, 8)
 
 /* The empty box GetSpriteFrameBodyBox and friends return for a frame
- * without one (src/data/obj_sizes_16b2e0.cpp). */
+ * without one (src/engine/gfx/data/obj_piece_sizes.cpp). */
 extern const struct hitbox_quad gEmptySpriteBox;
 /* The anchor point GetSpriteFrameAnchor returns for a frame without one
  * (same file): {0, 0}. */

@@ -23,7 +23,7 @@ now `chargeParams[paramsIndex].fastChance`, `.slowChance` and `.step`,
 and StateCharge's `s32 *c8 = &position` local is gone. gcc gives the
 same address arithmetic for the field reads. The static member's mangled
 name has no type in it (`_4Yeti.chargeParams`), so cxx_symbols.txt is
-unchanged, and the table in actor_tables_17a728.cpp is the same data.
+unchanged, and the table in polar_palettes_boxes.cpp is the same data.
 
 ## Font::oam_scratch
 

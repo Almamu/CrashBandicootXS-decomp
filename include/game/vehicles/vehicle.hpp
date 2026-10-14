@@ -6,7 +6,7 @@
  * C++ objects needed then: the destructors that src/game/vehicles/actor_destructors.cpp
  * has (the ROM keeps them there, with a few small methods), and the polar
  * player's state dispatch and table (src/game/vehicles/polar/polar_player_states.cpp,
- * src/data/actor_pmf_17a6b8.cpp). Part 11b added the polar actors' fields
+ * src/game/vehicles/polar/data/polar_player_state_table.cpp). Part 11b added the polar actors' fields
  * and the constructors src/game/vehicles/polar/polar_actor_factory.cpp uses. Their other
  * methods, and the jetpack actors' fields past HpActor's, are still C
  * (src/game/vehicles/); cxx_symbols.txt maps the C++ names to the C
@@ -155,13 +155,13 @@ extern Game::Entities::ActorSelf *gRiderlessPolar;
 /* The yeti's (gYeti, gYetiX, ...) are Yeti's static data members
  * (include/game/vehicles/polar/yeti.hpp). */
 
-/* src/data/palette_strip_17c200.cpp */
+/* src/game/vehicles/jetpack/data/jetpack_flash_palettes.cpp */
 extern const u16 gJetpackFlashPalettes[3][16];
 
-/* src/data/actor_box_17c444.cpp */
+/* src/game/vehicles/jetpack/data/jetpack_rocket_box.cpp */
 extern const struct anim_box gJetpackRocketBox;
 
-/* src/data/actor_tables_17a728.cpp */
+/* src/game/vehicles/polar/data/polar_palettes_boxes.cpp */
 extern const u16 gPolarAkuAkuPalette1[16];
 extern const u16 gPolarAkuAkuPalette2[16];
 extern const u16 gPolarAkuAkuPalette3[16];

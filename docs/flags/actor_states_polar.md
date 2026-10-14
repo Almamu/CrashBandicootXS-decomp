@@ -12,7 +12,7 @@ actors are a later PR.
 
 ## PolarPlayer
 
-`state` indexes `stateFuncs` (src/data/actor_pmf_17a6b8.cpp), and
+`state` indexes `stateFuncs` (src/game/vehicles/polar/data/polar_player_state_table.cpp), and
 PolarPlayer::Update calls `(this->*stateFuncs[state])()`, so each name is
 its method's.
 

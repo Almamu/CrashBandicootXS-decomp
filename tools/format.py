@@ -57,7 +57,7 @@ FORMATTED = [
 # layout is their documentation. clang-format would pack them into columns
 # (fnmatch patterns, skipped while walking a directory).
 UNFORMATTED = [
-    "src/data",
+    "src/*/data",
     "lib/*/data",
 ]
 

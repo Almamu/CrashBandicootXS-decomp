@@ -1,7 +1,7 @@
 # g++ 2.x mangled name -> the C name the rest of the build uses (#664).
 # The Makefile renames these in every C++ object (CXX_OBJS) with
 # `objcopy --redefine-syms` after assembling it: definitions get the
-# names the C callers (and the C vtables left in src/data) use, the
+# names the C callers (and the C vtables left in src/*/data) use, the
 # vtables g++ emits get their C table names (ldscript.txt places them),
 # and references get the C names of the functions and vtables they
 # point at. See docs/cplusplus.md.
@@ -1457,7 +1457,7 @@ UpdateVvLogoPieces__Q34Game2Ui12CompanyLogos UpdateVvLogoPieces
 # part 11a: the 3D actors' base classes and their subclasses' destructors
 # (include/game/entities/actor_self.hpp, vehicle.hpp, boss_actors.hpp; src/game/entities/actor_self.cpp,
 # actor_destructors.cpp), and the polar player's state dispatch and table
-# (src/game/vehicles/polar/polar_player_states.cpp, src/data/actor_pmf_17a6b8.cpp)
+# (src/game/vehicles/polar/polar_player_states.cpp, src/game/vehicles/polar/data/polar_player_state_table.cpp)
 GetAnimFrameBaseOffset__Q34Game8Entities8AnimPart GetAnimFrameBaseOffset
 GetAnimFrameAttr__Q34Game8Entities8AnimPart GetAnimFrameAttr
 GetAnimFrameData__Q34Game8Entities8AnimPart GetAnimFrameData
@@ -1535,7 +1535,7 @@ StateFinishLeap__Q44Game8Vehicles5Polar11PolarPlayer PolarPlayerStateFinishLeap
 StateShocked__Q44Game8Vehicles5Polar11PolarPlayer PolarPlayerStateShocked
 StateRecover__Q44Game8Vehicles5Polar11PolarPlayer PolarPlayerStateRecover
 # part 11i: the airship's fireball (include/game/bosses/boss_actors.hpp;
-# src/game/vehicles/jetpack/airship_fireball.cpp, src/data/actor_pmf_17c2b8.cpp)
+# src/game/vehicles/jetpack/airship_fireball.cpp, src/game/vehicles/jetpack/data/airship_fireball_state_table.cpp)
 _vt.Q44Game8Vehicles7Jetpack15AirshipFireball gAirshipFireballVtable
 __Q44Game8Vehicles7Jetpack15AirshipFireballPC17anim_table_recordiii CreateAirshipFireball
 Update__Q44Game8Vehicles7Jetpack15AirshipFireball UpdateAirshipFireball
@@ -1577,7 +1577,7 @@ __Q44Game8Vehicles5Polar20PolarCheckpointCratePC17anim_table_recordiii CreatePol
 #
 # part 11e: the jetpack player, its shot and the jetpack spawners
 # (include/game/vehicles/vehicle.hpp; src/game/vehicles/jetpack/jetpack_spawn.cpp, jetpack_player.cpp,
-# jetpack_player_update.cpp, jetpack_shot.cpp, src/data/actor_pmf_17c1c0.cpp)
+# jetpack_player_update.cpp, jetpack_shot.cpp, src/game/vehicles/jetpack/data/jetpack_player_state_table.cpp)
 _vt.Q44Game8Vehicles7Jetpack13JetpackPlayer gJetpackPlayerVtable
 _vt.Q44Game8Vehicles7Jetpack11JetpackShot gJetpackShotVtable
 _vt.Q44Game8Vehicles7Jetpack21JetpackCheckpointText gJetpackCheckpointTextVtable
@@ -1632,8 +1632,8 @@ GiveMask__Q44Game8Vehicles5Polar11PolarPlayer GivePolarPlayerMask
 Launch__Q44Game8Vehicles5Polar11PolarPlayer LaunchPolarPlayer
 # part 11f: the planes, bombers, cannonballs and balloons (include/game/vehicles/vehicle.hpp;
 # src/game/vehicles/jetpack/jetpack_plane.cpp, jetpack_bomber.cpp, jetpack_cannonball.cpp,
-# jetpack_balloon.cpp, src/data/actor_pmf_17c260.cpp,
-# actor_pmf_17c414.cpp)
+# jetpack_balloon.cpp, src/game/vehicles/jetpack/data/jetpack_plane_bomber_state_tables.cpp,
+# jetpack_balloon_state_table.cpp)
 _vt.Q44Game8Vehicles7Jetpack12JetpackPlane gJetpackPlaneVtable
 _vt.Q44Game8Vehicles7Jetpack13JetpackBomber gJetpackBomberVtable
 _vt.Q44Game8Vehicles7Jetpack17JetpackCannonball gJetpackCannonballVtable
@@ -1682,7 +1682,7 @@ StatePop__Q44Game8Vehicles7Jetpack14JetpackBalloon JetpackBalloonStatePop
 # part 11h: the hovercraft's weapons, the jetpack ring and collected wumpa
 # (include/game/bosses/boss_actors.hpp, vehicle.hpp; src/game/bosses/hovercraft*.cpp,
 # src/game/vehicles/jetpack/jetpack_collected_wumpa.cpp,
-# src/data/actor_pmf_17c450.cpp, actor_state_17c4c8.cpp)
+# src/game/bosses/data/hovercraft_fireball_state_table.cpp, hovercraft_state_tables.cpp)
 _vt.Q34Game6Bosses21HovercraftCannonFlash gHovercraftCannonFlashVtable
 __Q34Game6Bosses21HovercraftCannonFlashPC17anim_table_recordiii CreateHovercraftCannonFlash
 Update__Q34Game6Bosses21HovercraftCannonFlash UpdateHovercraftCannonFlash
@@ -1788,7 +1788,7 @@ _vt.Q44Game8Vehicles5Polar20PolarCheckpointCrate gPolarCheckpointCrateVtable
 #
 # part 11g: the balloon crates, the parachute nitro, the rocket and the
 # ring's Update (include/game/vehicles/vehicle.hpp; src/game/vehicles/jetpack/jetpack_crates.cpp,
-# jetpack_rocket.cpp, src/data/actor_pmf_17c42c.cpp)
+# jetpack_rocket.cpp, src/game/vehicles/jetpack/data/jetpack_balloon_crate_state_table.cpp)
 _vt.Q44Game8Vehicles7Jetpack19JetpackBalloonCrate gJetpackBalloonCrateVtable
 __Q44Game8Vehicles7Jetpack19JetpackBalloonCratePC17anim_table_recordiiiUc InitJetpackBalloonCrate
 Update__Q44Game8Vehicles7Jetpack19JetpackBalloonCrate UpdateJetpackBalloonCrate
@@ -2362,7 +2362,7 @@ GetCompletionPercent__CQ34Game5Level12GameProgress GetCompletionPercent
 # #772 Hovercraft: the hovercraft as an all-static class (include/game/bosses/hovercraft.hpp;
 # src/game/bosses/hovercraft.cpp, hovercraft_state.cpp). The data members are
 # only declared: the IWRAM ones get their addresses from sym_iwram.txt, the
-# ROM tables are defined in src/data under their C names.
+# ROM tables are defined in src/*/data under their C names.
 _Q34Game6Bosses10Hovercraft.flashSavedColor gHovercraftFlashSavedColor
 _Q34Game6Bosses10Hovercraft.flashColorSaved gHovercraftFlashColorSaved
 _Q34Game6Bosses10Hovercraft.bg2Page gHovercraftBg2Page
@@ -2434,7 +2434,7 @@ StateExplodeStub__Q34Game6Bosses10Hovercraft HovercraftStateExplodeStub
 # #772 Yeti: the yeti as an all-static class (include/game/vehicles/polar/yeti.hpp, src/vehicle/polar/yeti*.cpp,
 # StateStop in src/game/vehicles/jetpack/jetpack_spawn.cpp). Its data members keep
 # the C names: sym_iwram.txt places the IWRAM ones, the ROM tables are
-# defined in src/data under them (stateFuncs in actor_state_fn_17a840.cpp).
+# defined in src/*/data under them (stateFuncs in yeti_state_table.cpp).
 Create__Q44Game8Vehicles5Polar4Yetii CreateYeti
 Update__Q44Game8Vehicles5Polar4Yeti UpdateYeti
 UpdateBg2__Q44Game8Vehicles5Polar4Yeti UpdateYetiBg2
@@ -2664,7 +2664,7 @@ _Q36Engine5Actor11ActorSpawns.offset gActorSpawnOffset
 # actor_category_select.cpp, actor_category_frame.cpp, actor_spawn.cpp,
 # actor_category.cpp, actor_category_hooks.cpp). Its data members keep the
 # C names: sym_iwram.txt places the IWRAM ones,
-# src/data/actor_category_175558.cpp defines the ROM tables.
+# src/engine/actor/data/actor_categories.cpp defines the ROM tables.
 SetupVramPool__Q36Engine5Actor13ActorCategory SetupActorVramPool
 Init__Q36Engine5Actor13ActorCategoryi InitActorCategory
 CountCrates__Q36Engine5Actor13ActorCategoryi CountCategoryCrates
@@ -2689,7 +2689,7 @@ _Q36Engine5Actor13ActorCategory.vtables gActorCategoryVtables
 # #915 ActorPaletteCycle: the 3D stages' BG palette cycle as an all-static
 # class (include/engine/actor/actor_palette_cycle.hpp, src/engine/actor/actor_palette_cycle.cpp).
 # Its data members keep the C names: sym_iwram.txt places the IWRAM ones,
-# src/data/palette_cycle_175760.cpp defines the ROM tables.
+# src/engine/actor/data/actor_palette_cycle_frames.cpp defines the ROM tables.
 Restore__Q36Engine5Actor17ActorPaletteCycle RestoreActorPaletteCycle
 Save__Q36Engine5Actor17ActorPaletteCycle SaveActorPaletteCycle
 Update__Q36Engine5Actor17ActorPaletteCycle UpdateActorPaletteCycle

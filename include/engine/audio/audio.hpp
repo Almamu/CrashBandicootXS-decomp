@@ -54,7 +54,7 @@ struct SfxTableEntry {
 extern struct SfxTableEntry gSfxTable[99];
 
 /* The GAX2 music block (data/data.s, built by tools/gax_audio.py) and
- * the song table pointing into it (src/data/song_table_16aa20.cpp). */
+ * the song table pointing into it (src/engine/audio/data/song_table.cpp). */
 extern const u8 gGaxMusicData[];
 extern const void *const gSongTable[SONG_COUNT];
 

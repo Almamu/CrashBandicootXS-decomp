@@ -35,7 +35,7 @@ extern "C" {
 }
 
 /* The x offset scale of each hop mode (1-3) of UpdateExtraLifeHop and
- * UpdateWumpaHop (src/data/object_tables_16bb6c.cpp), a struct:
+ * UpdateWumpaHop (src/game/crates/data/crate_tables.cpp), a struct:
  * ExtraLife::UpdateHop and Wumpa::UpdateHop copy the table onto the
  * stack in one go. */
 struct three_words {

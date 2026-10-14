@@ -2,7 +2,7 @@
 """Find the common operations that are written out by hand (#667).
 
 Scans the C sources under src/ and include/ (not the data tables in
-src/data/) for the expression shapes that the shared helpers in
+the data/ directories) for the expression shapes that the shared helpers in
 include/engine/util/math_util.h and include/game/level/entity_bits.h can name, and for the
 file-local helper macros that several files define for themselves.
 Comments and strings are blanked out first, and #define bodies aren't
@@ -44,7 +44,7 @@ from magic_numbers import blank_directives, line_of, strip_comments  # noqa: E40
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCAN_DIRS = ("src", "include")
-SKIP_DIRS = (os.path.join("src", "data"),)
+SKIP_DIRS = ()  # the data/ directories, below
 
 # An operand: an identifier, a field chain or a parenthesized group with
 # no nested parentheses. Good enough for a survey.
@@ -113,7 +113,8 @@ def scan_dirs():
     for top in SCAN_DIRS:
         for dirpath, dirnames, filenames in os.walk(os.path.join(ROOT, top)):
             rel_dir = os.path.relpath(dirpath, ROOT)
-            if any(rel_dir == d or rel_dir.startswith(d + os.sep) for d in SKIP_DIRS):
+            if any(rel_dir == d or rel_dir.startswith(d + os.sep) for d in SKIP_DIRS) \
+                    or "data" in rel_dir.split(os.sep):
                 dirnames[:] = []
                 continue
             dirnames.sort()

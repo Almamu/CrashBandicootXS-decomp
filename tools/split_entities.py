@@ -30,7 +30,7 @@
 # explosion actor's bank 4, not the bomber's 2).
 #
 # Run this BEFORE tools/dump_entities.py (which resolves keyframes to the
-# PNGs present). The pool_offset table_B arrays of src/data/anim_family_*.cpp
+# PNGs present). The pool_offset table_B arrays of src/game/vehicles/*/data/*_anim_family.cpp
 # name frames by folder (FRAMED_<SHEET>_<NAME>_<NN>), so renaming a folder
 # means renaming its uses there.
 
@@ -137,7 +137,7 @@ def sheet_frames(buf):
 def read_records(anim_base, slot_count, data_end):
     """(slot, table_B address, palette bank, [frame offsets]) of every record
     whose table_B holds sheet offsets. A table_B array runs to the next
-    array (or the table) any record points at, as src/data/ cuts them."""
+    array (or the table) any record points at, as src/.../data/ cuts them."""
     raw = []
     starts = {anim_base, anim_base + slot_count * RECORD_SIZE, data_end}
     for slot in range(slot_count):

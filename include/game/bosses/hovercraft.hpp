@@ -13,9 +13,9 @@
  * read it through the public getters.
  *
  * The ROM tables only it reads are static data members too, defined in
- * their src/data/*.cpp files (`const u16 Hovercraft::palette[256] = ...`):
+ * their src/.../data/*.cpp files (`const u16 Hovercraft::palette[256] = ...`):
  * `_Q34Game6Bosses10Hovercraft.palette` is renamed to gHovercraftPalette.
- * The actor category table (src/data/actor_category_175558.cpp) points at
+ * The actor category table (src/engine/actor/data/actor_categories.cpp) points at
  * Create, Update, UpdateBg2, Destroy and LoadGraphics.
  *
  * It is in the namespace Game::Bosses (#1033, boss_ctrl.hpp), with its
@@ -154,7 +154,7 @@ private:
     }
 
     /* The state functions (gHovercraftStateFuncs,
-     * src/data/actor_state_17c4c8.cpp), a plain function table. */
+     * src/game/bosses/data/hovercraft_state_tables.cpp), a plain function table. */
     static void (*const stateFuncs[6])();
 
     /* IWRAM 0x1590-0x1600, in address order (sym_iwram.txt) */
@@ -196,9 +196,9 @@ private:
      * (ConvertTiles fills them; a u32 store may alias its heights[]). */
     static u32 mapFrames[]; // gHovercraftMapFrames
 
-    /* The ROM tables (src/data): attacks, box and keyframes are in
-     * singleton_kind_17c460.cpp, palette and picture in
-     * boss_pictures_167ad4.cpp. */
+    /* The ROM tables (src/.../data): attacks, box and keyframes are in
+     * hovercraft_attacks.cpp, palette and picture in
+     * boss_pictures.cpp. */
     static const struct hovercraft_attack attacks[2];   // gHovercraftAttacks
     static const struct anim_box box;                   // gHovercraftBox
     static const struct anim_frame_record keyframes[1]; // gHovercraftKeyframes

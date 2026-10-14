@@ -10,7 +10,7 @@ spell them and the conventions for using them (#916).
 
 | Format | One unit | Where |
 |---|---|---|
-| Q8 | `0x100` | positions (`Entity::x/y`, `ActorSelf::x/y/z`, the camera's `Camera::x/y`), speeds and speed ramps (`MovingSprite::speedX/Y`, `rampX/Y`, the `struct speed_ramp` tables in src/data), accelerations and gravity, scroll steps, affine scales (`0x100` = 1.0, `Sprite::affine`, `ScaledSprite::scaleX/Y`), `animTime` (Q8 frames), the sine table's values (`SIN_Q8`) |
+| Q8 | `0x100` | positions (`Entity::x/y`, `ActorSelf::x/y/z`, the camera's `Camera::x/y`), speeds and speed ramps (`MovingSprite::speedX/Y`, `rampX/Y`, the `struct speed_ramp` tables in src/*/data), accelerations and gravity, scroll steps, affine scales (`0x100` = 1.0, `Sprite::affine`, `ScaledSprite::scaleX/Y`), `animTime` (Q8 frames), the sine table's values (`SIN_Q8`) |
 | Q4 | `0x10` | the jetpack course's planes' velocities: sixteenths of their (Q8) position's unit, `x += Q4_TO_INT(velX)` |
 | Q12 | `0x1000` | the scale factors of the 3D (vehicle) levels' projection and aim vectors (`0x1000 / n`, `Q12_MUL`) |
 | Q16 | `0x10000` | the company logos' pieces (`posA.q`, a Q16 word whose high half is the pixel) and the logos' zooms (`LogoPiece::velA/velB`, the Universal logo's `scale`: `INT_TO_Q16(1)` = 1:1, whose OBJ/BG step is the Q8 `Q8_DIV(INT_TO_Q16(1), scale)`), FixedMul16/FixedDiv16 |
@@ -40,7 +40,7 @@ assigned a conversion's result (`px = Q8_TO_INT(x)`) holds whole pixels.
 
 `Q8(d)` and `Q8_FRAC(n, f)` are integer constant expressions: agbcc
 folds the cast of the floating constant, so they work in `case` labels
-and in the initializers of src/data's tables, and a converted site
+and in the initializers of src/*/data's tables, and a converted site
 compiles to the same code as the literal it replaces. `Q8(d)` needs a
 `d` that is a multiple of 1/256 (the product is exact); it is for the
 short decimals (multiples of 1/8, and of 1/16 under 1). Both take
@@ -115,7 +115,7 @@ tools/magic_numbers.py --fixed --json --path src/game/bosses   # for agents
 ```
 
 It scans src/ and include/ (and the `struct speed_ramp` tables of
-src/data) for literals assigned to, compared with, added to or clamped
+src/*/data) for literals assigned to, compared with, added to or clamped
 against a value whose name says position, velocity, acceleration, ramp,
 camera, affine, angle or sub-frame time, the shifts by 4, 8, 12 and 16
 and the `& 0xFF` / `& ~0xFF` masks on them, and the sites already

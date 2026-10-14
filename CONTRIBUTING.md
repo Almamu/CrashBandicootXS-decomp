@@ -114,7 +114,7 @@ matched code - read it before starting.** In short:
   [docs/cplusplus.md](docs/cplusplus.md) ("Namespaces").
 - **Data and assets** are rebuilt from source by the Makefile (see
   [README.md](README.md#data-and-assets)): edit the PNG, the level JSON,
-  the `.po` file or the table in `src/data/`, never anything under
+  the `.po` file or the table in `src/*/data/`, never anything under
   `build/`.
 - **Frozen files:** `expected/` (the progress report's targets, see
   [expected/README.md](expected/README.md)) and
@@ -242,7 +242,7 @@ full rules (#574). For new code:
   The call still links to `RandRange`, and the file can include the
   header. Add the alias to the "Codegen exceptions" table in
   [docs/headers.md](docs/headers.md#codegen-exceptions).
-- **What stays local:** references from one `src/data/` table to
+- **What stays local:** references from one `src/*/data/` table to
   another. `_call_via_r0`..`_call_via_r7` are never declared: an
   indirect call is a call through a typed function pointer, a virtual
   call or a member function call (docs/headers.md, rule 5).
@@ -309,7 +309,7 @@ full rules (#574). For new code:
   keeps its number (docs/naming.md): rebuild and compare after `--fix`.
 - **Raw sizes, strides, offsets and hardware values:**
   `python3 tools/magic_numbers.py --sizes` (#820) lists the literals in
-  src/ (not src/data/) that have a `sizeof`, a member or a named
+  src/ (not src/*/data/) that have a `sizeof`, a member or a named
   constant: allocation sizes and heap flags (`alloc`), copy and fill
   lengths (`copy`), index strides (`stride`), byte offsets into a struct
   (`offset`), VRAM/palette/OAM/I/O addresses (`hwaddr`) and register
@@ -336,7 +336,7 @@ full rules (#574). For new code:
   `PALETTE_SIZE_16`, `BG_SCREEN_SIZE`, `BG_CHAR_SIZE`); add it to
   include/gba/defines.h with the first use.
 - **Casts:** `python3 tools/magic_numbers.py --casts` (#855) lists the
-  casts in src/ (not src/data/) and include/, grouped by the thing cast (a
+  casts in src/ (not src/*/data/) and include/, grouped by the thing cast (a
   field, a local or parameter, a global, a function's result, an address,
   an address macro), with its declared type, how many of its reads are
   cast and each cast's kind (`scalar`, `ptrint`, `pointer`, `derived`,
@@ -356,7 +356,7 @@ full rules (#574). For new code:
 - **Screen size:** `python3 tools/magic_numbers.py --screen` (#979) lists
   the literals that may come from the 240x160 screen (240/160, 239/159,
   120/80, their Q8 forms, frame sizes, the screen in tiles, OAM masks and
-  wraps, and the layouts' fixed positions, src/data's tables included)
+  wraps, and the layouts' fixed positions, src/*/data's tables included)
   and classifies each as derived from the screen (spell it with
   `include/screen.h`: `DISPLAY_CENTER_X`, `CAMERA_MAX_X(w)`, a layout from
   `DISPLAY_ART_X/Y` or the screen's edges, ...), fixed by the hardware or
@@ -412,10 +412,10 @@ full rules (#574). For new code:
     bank, gfx.h's `union dispcnt` every DISPCNT copy).
   - **C++:** a derived class inherits its base (`class Player : public
     GroundSprite`); it doesn't redeclare the base's fields.
-  - **No C views of classes:** every game file is C++, and src/data/ and
+  - **No C views of classes:** every game file is C++, and src/*/data/ and
     lib/ never read an object's fields, so a class has no C struct
     mirroring it (#754). Where a C header needs a pointer to a class (a
-    record src/data/ fills, a prototype a C vtable names), it names the
+    record src/*/data/ fills, a prototype a C vtable names), it names the
     class's own tag, `struct Crate *` (objects.h's `struct
     collision_candidate`): incomplete to C, the class to C++.
   - **Codegen views** (a second type for the same bytes that a function
@@ -557,7 +557,7 @@ operand layout stay as written. Do the same by hand for anything else
 whose layout is the point, such as a table aligned in columns.
 
 All the C is formatted (`src/`, `include/` and `lib/`) except the data:
-`src/data` and `lib/*/data` (`UNFORMATTED` in `tools/format.py`). Those
+`src/*/data` and `lib/*/data` (`UNFORMATTED` in `tools/format.py`). Those
 files are ROM-order tables emitted by the extraction tools, laid out one
 entry per line with row labels; that layout is their documentation, and
 clang-format would pack the entries into columns and split the labels

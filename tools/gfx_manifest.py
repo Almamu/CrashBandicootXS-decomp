@@ -4,7 +4,7 @@ where baserom.gba has it (docs/graphics.md, "The manifest").
 
 The build reads the manifest only for the graphics classes (below): the
 ROM's layout comes from ldscript.txt and the order of the definitions in
-each src/data/*.cpp, and every reference is a symbol. The ROM addresses
+each src/.../data/*.cpp, and every reference is a symbol. The ROM addresses
 are kept so the sources can be extracted from baserom.gba again, and to
 put a class's members in ROM order.
 
@@ -32,7 +32,7 @@ put a class's members in ROM order.
     tools/gfx_manifest.py objects
         The graphics classes (docs/graphics.md, "Graphics classes"): the
         header declaring them (graphics.hpp), the definitions of one
-        object's members in ROM order (the .inc its src/data/OBJECT.cpp
+        object's members in ROM order (the .inc its src/.../data/OBJECT.cpp
         #includes), cxx_symbols.txt's block mapping each member to its C
         name, and the objects that have definitions.
 
@@ -80,7 +80,7 @@ their role: the entry's own symbol is `tiles` (bg_package, tiles),
 `map` is `map`. A palette OAM picks at run time ({"obj_palette": n})
 isn't one, nor an rle_frames' palette (the category's, defined with
 other data). The manifest's `objects` ({name, rom, end}) are the
-src/data objects whose graphics are all class members: every part in an
+src/.../data objects whose graphics are all class members: every part in an
 object's ROM range is defined, in ROM order, in the .inc `defs` writes
 for it. The rooms are classes too, of tools/levels.py (rooms.hpp).
 """
@@ -561,7 +561,7 @@ def header():
     out = ["/* %s */" % GENERATED, "",
            "/* The graphics classes (docs/graphics.md, \"Graphics classes\"): one",
            " * class per graphic of graphics/manifest.json that has a `class`, its",
-           " * parts static const data members. Each is defined in the src/data",
+           " * parts static const data members. Each is defined in the src/.../data",
            " * object of its ROM range (gfx_manifest.py defs) and keeps its C name",
            " * through cxx_symbols.txt. They are in the namespace %s (#1033," % "::".join(NAMESPACE),
            " * docs/cplusplus.md \"Namespaces\"). */",

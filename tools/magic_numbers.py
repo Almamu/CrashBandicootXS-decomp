@@ -44,7 +44,7 @@ parameters of a ruled method's definition. A function that passes a
 parameter straight on as a ruled argument gets the rule for that
 parameter (crate_break.cpp's `Sfx(id)`, ActionCtrl::SetModeAnimNow), so
 its callers are checked too. The C rules (C_FIELDS, the vtable-slot
-macros) are kept for the C files (src/data/, lib/).
+macros) are kept for the C files (src/.../data/, lib/).
 
 Each hit has a confidence:
   high    the receiver's (or the field's owner's) class is known and its

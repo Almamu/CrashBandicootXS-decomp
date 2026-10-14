@@ -29,7 +29,7 @@ page, with the tools that check it (`tools/extern_audit.py`,
    sits in a neighbour's file only for ROM order, it goes with its
    subject: `DestroyLargeFont`/`DestroySmallFont` are defined in
    `src/engine/util/aabb_setters.cpp` but declared in `text.h`.
-2. A symbol defined only in data (`src/data/`, the generated level and
+2. A symbol defined only in data (`src/*/data/`, the generated level and
    graphics sources) or in the linker script (`sym_*.txt`, the IWRAM/EWRAM
    globals) goes in the header of the subsystem that uses it most, unless
    the subsystem it belongs to is clearer: `gSmallFont`/`gLargeFont` are
@@ -38,7 +38,7 @@ page, with the tools that check it (`tools/extern_audit.py`,
 3. A data or linker-script symbol that **three or more subsystems** use
    goes in `include/globals.h` (`gPlayer`, `gLevelState`, `gKeys`,
    `gAudioContext`, ...).
-4. References from one `src/data/` table to another (or to a `data/`
+4. References from one `src/*/data/` table to another (or to a `data/`
    label) stay in the data files. They are address-only and many are
    generated, so a header adds nothing.
 5. `_call_via_r0`..`_call_via_r7` are not declared at all. They are
@@ -60,7 +60,7 @@ Other homes:
 - A struct that one file uses, and that no header needs, stays in that
   file. A struct defined twice (in two files, or in a file and a header)
   is a copy: merge it into one definition.
-- `src/data/` has no header of its own: data is declared where it is
+- `src/*/data/` has no header of its own: data is declared where it is
   used. A data file includes the header that declares its tables, so the
   compiler checks the definition against the declaration.
 

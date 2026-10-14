@@ -3,7 +3,7 @@
 
 /* The link-cable subsystem (src/engine/link/): the SIO session object, its IRQ
  * handlers and the handshake. The session layouts are C++, in
- * link_session.hpp; C (src/data/link_crc_16af10.cpp) needs only the tables
+ * link_session.hpp; C (src/engine/link/data/link_crc_table.cpp) needs only the tables
  * and the C-linkage functions below.
  *
  * Declarations here are the functions' real prototypes, copied from
@@ -37,10 +37,10 @@ extern struct link_session *gLinkSession;
 extern u8 gLinkSessionReset;
 
 /* The CRC-16 table MakeLinkHandshakeId and LinkSession::HandleSerial hash with
- * (src/data/link_crc_16af10.cpp). */
+ * (src/engine/link/data/link_crc_table.cpp). */
 extern const u16 gCrc16Table[256];
 
-/* The link-up texts (src/data/link_crc_16af10.cpp), pointed at by save.h's
+/* The link-up texts (src/engine/link/data/link_crc_table.cpp), pointed at by save.h's
  * gCrash2LinkTextPtr/gCrash3LinkTextPtr. */
 extern const char gCrash2LinkText[];
 extern const char gCrash3LinkText[];

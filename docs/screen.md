@@ -66,7 +66,7 @@ is measured from an anchor, never from the screen's (0,0):
   `-panelSlideX + ...`) take their anchor from the position they are
   measured from, and stay as they are.
 
-The position tables in src/data (`gLevelSelect*Pos`, `gPause*IconPos`,
+The position tables in src/*/data (`gLevelSelect*Pos`, `gPause*IconPos`,
 `gHudPartPositions`, the logo pieces' motions) are anchored the same
 way, in their initializers. On the GBA every anchor is 0 or folds into
 the ROM's constant (`DISPLAY_ART_Y + 0x87` is 0x87), so the code and the
@@ -78,7 +78,7 @@ becomes `item * 10 + (DISPLAY_ART_Y + 0x80)`, `0xa0 - w` becomes
 
 The title logo's and the Vicarious Visions logo's pieces move through
 `struct delta_record` steps (`gTitleLogoPieceMotionN` in
-level_gfx_17cff4.cpp, `gVvLogoPieceMotionNN` in countdown_17d7a4.cpp).
+title_screen_gfx.cpp, `gVvLogoPieceMotionNN` in universal_vv_logo_motions.cpp).
 A step sets the piece's absolute x and y on the art, then adds its
 deltas (Q16.16 pixels a frame) for its hold - 1 frames; the next step
 sets the position it has reached, so the ROM's deltas are
@@ -172,7 +172,7 @@ the level select's slide and icon offsets, `Sprite::DrawWithOffset`,
 ## The inventory: `tools/magic_numbers.py --screen`
 
 `tools/magic_screen.py` scans the game code and its data tables (src/,
-src/data/ included, and include/; comments and strings blanked) for the
+src/*/data/ included, and include/; comments and strings blanked) for the
 literals a 240x160 screen leaves behind and classifies each one with a
 hand-made table (`CLASSES`, and `LAYOUT_CLASSES` for the layouts):
 
@@ -205,7 +205,7 @@ layouts' fixed positions (see "Layouts" above): in the UI code
 position call (`SetPos`, `Move`, `SetPixelPos`, `SetEntityPixelPos`,
 `SetAabbPos`, the save menu's `SET_ROW_OBJ_POS`/`DRAW_ROW`/`DrawSlotStats`),
 a local `x`/`y` or a sprite's Q8 position that adds a literal to nothing
-but measured sizes and counters; in src/data, the `{ x, y }` entries of
+but measured sizes and counters; in src/*/data, the `{ x, y }` entries of
 the position tables and the logo pieces' motions. A converted site isn't a
 literal any more, and a literal added to a screen.h anchor
 (`DISPLAY_ART_Y + 0x87`, `DISPLAY_RIGHT(0x14)`) is an offset from it, so
@@ -250,7 +250,7 @@ has the rest.
 6. **Sprite count.** `OAM_ENTRY_COUNT` (128, more under `EXTENDED_OAM`)
    sizes the OAM shadow buffer.
 7. **A compile check.** `make screen-check` compiles every game object
-   (src/, and the src/data/ tables that spell a `DISPLAY_` name or a
+   (src/, and the src/*/data/ tables that spell a `DISPLAY_` name or a
    logo fly-in's `_FLY_IN`: the layouts' position tables, the logo
    pieces' motions and their seeds) with another screen size,
    `SCREEN_CHECK_WIDTH` x `SCREEN_CHECK_HEIGHT` (PORTABLE's 426x240 by
