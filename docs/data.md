@@ -276,10 +276,10 @@ The first batch (all pointer tables, all byte-exact):
 | `menu_sky_bg.cpp` | `0x0816C484` | 1 `struct bg_package` |
 | `level_select_layout.cpp` | `0x0816C498` | level-select positions, animation ids, a palette half |
 | `level_select_page_bg_package.cpp` | `0x0816C58C` | 1 `struct bg_package` |
-| `level_select_picture_table.cpp` | `0x0816C5A0` | 10 `{palette, tiles}` asset pairs |
+| `level_select_picture_table.cpp` | `0x0816C5A0` | 10 `{palette, tiles}` asset pairs, a level-select picture per theme, generated from `levels.json`'s `"themes"` (`levels.py table pictures`) |
 | `level_select_anims.cpp` | `0x0816C5F0` | level-select offsets, animation ids, OBJ sizes |
 | `entity_spawn_funcs.cpp` | `0x0816C6A4` | the unified 92-slot function-pointer dispatch array |
-| `level_table.cpp` | `0x0816C814` | the level table (25 `struct level_info`), the levels' room lists and 48 room records, generated from `data/levels/` (`levels.py table`); the theme music cues and 5 colour-cycle lists by hand (see "Level data") |
+| `level_table.cpp` | `0x0816C814` | the level table (25 `struct level_info`), the levels' room lists and 48 room records, the theme music cues and 5 colour-cycle lists, all generated from `data/levels/` (`levels.py table`, see "Level data") |
 | `cutscenes.cpp` | `0x0816D1C8` | the 11 cutscenes' language tables and slide lists, the English pages (see "Cutscenes") |
 | `cutscene_text_english.cpp` | `0x0816D4D8` | the cutscenes' English text, generated from `text/` (see "Text tables") |
 | `cutscene_slides.cpp` | `0x0816E064` | the other five languages' pages, the 24 slides |
@@ -757,8 +757,10 @@ see [levels.md, "Collision layers"](./levels.md#collision-layers)). The build
 | `build/.../data/levels/<room>/asset.bin.lz.inc` | the same, gbagfx LZ77, `tools/bin2c.py --lz` bytes | `level_assets.inc` (34 packed assets, formerly `graphics/tileset1/27`-`60`) |
 | `build/.../data/levels/level_assets.inc` | the 41 `gRoomNNAsset` definitions, in `levels.json`'s `"assets"` (ROM) order, then the new rooms' | `#include`d by `src/game/level/data/level_assets.cpp` |
 | `build/.../data/levels/level_rooms_<region>.inc` | all rooms of a region; the last region (`bosses_gem_paths`) then has the new tile sets and the new rooms | `#include`d by `src/game/level/data/level_rooms_<region>.cpp` |
-| `build/.../data/levels/level_table.inc` | `gLevelTable` and `gLevelRoomLists`, from `levels.json`'s `"levels"` (`levels.py table levels`) | `#include`d by `src/game/level/data/level_table.cpp` |
-| `build/.../data/levels/level_table_16c814_rooms.inc` | the room records and the played-room arrays, from room.json's `"record"` and `levels.json`'s `"table"` and `"levels"` (`levels.py table records`) | the same, after `gThemeMusicCues` |
+| `build/.../data/levels/level_table.inc` | the colour cycles' lists, `gLevelTable`, `gLevelRoomLists` and `gThemeMusicCues`, from `levels.json`'s `"levels"`, `"themes"` and `"palette_cycles"` (`levels.py table levels`) | `#include`d by `src/game/level/data/level_table.cpp` |
+| `build/.../data/levels/level_table_16c814_rooms.inc` | the room records and the played-room arrays, from room.json's `"record"` and `levels.json`'s `"table"` and `"levels"` (`levels.py table records`) | the same, after it |
+| `build/.../data/levels/level_select_pictures.inc` | `gLevelSelectPictures`, from `levels.json`'s `"themes"` (`levels.py table pictures`) | `#include`d by `src/game/ui/data/level_select_picture_table.cpp` |
+| `build/include/theme_palette_cycles.h` | RunRoom's colour-cycle cases per theme and the lists' declarations, from `levels.json`'s `"themes"` and `"palette_cycles"` (`levels.py palette-cycles`) | `play_room.cpp`, `level_table.cpp` |
 
 Every pointer in the room data is a symbol reference (the room's own
 objects, the tile sets, the assets), and everything the ROM derives
@@ -780,10 +782,11 @@ code still reads these tables through its own local views
 (`MedalTableEntry`, `threshold_table_entry`, `gl_level_entry`, ...); the
 header comment of each struct lists them.
 
-**The generated level table.** The .cpp keeps what belongs to the level
-themes by hand (the colour-cycle lists and `gThemeMusicCues`, which the
-code indexes by theme) and `#include`s the two generated files around
-`gThemeMusicCues`, so the definitions stay in ROM order. The generator
+**The generated level table.** The .cpp only `#include`s the two
+generated files, which hold its definitions in ROM order: the level
+themes' tables (the colour-cycle lists and `gThemeMusicCues`, from
+`levels.json`'s `"themes"` and `"palette_cycles"`, [levels.md,
+"Themes"](./levels.md#themes)) around the level table. The generator
 follows the conventions of the other generated data: every object is
 `extern const` with a positional initializer (no designated initializers),
 every pointer is a symbol (`&gLevelRoomLists[LEVEL_SNOW_CRASH]`,

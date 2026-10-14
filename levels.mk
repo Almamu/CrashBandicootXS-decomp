@@ -117,8 +117,13 @@ $(GENERATED_INCLUDE_DIR)/rooms.hpp: $(GENERATED_INCLUDE_DIR)/rooms.hpp.stamp
 # arrays of the rooms each level plays (`levels.py table records`), from
 # levels.json's "levels" and "table" and the rooms' room.json ("record").
 # The stages are named by include/constants/categories.h.
+# level_table.inc also has the level themes' tables (docs/levels.md,
+# "Themes"): the colour cycles' lists and gThemeMusicCues, from levels.json's
+# "themes" and "palette_cycles"; a theme's song is one of the songs of
+# sound/gax_manifest.json, its picture one of graphics/manifest.json's.
+THEME_DEPS := data/levels/levels.json sound/gax_manifest.json graphics/manifest.json tools/levels.py
 LEVEL_TABLE_DEPS := data/levels/levels.json $(LEVEL_ROOM_JSONS) include/constants/categories.h tools/levels.py
-$(LEVELS_BUILDDIR)/level_table.inc: $(LEVEL_TABLE_DEPS)
+$(LEVELS_BUILDDIR)/level_table.inc: $(LEVEL_TABLE_DEPS) $(THEME_DEPS)
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py table levels $@
 $(LEVELS_BUILDDIR)/level_table_16c814_rooms.inc: $(LEVEL_TABLE_DEPS)
@@ -127,6 +132,26 @@ $(LEVELS_BUILDDIR)/level_table_16c814_rooms.inc: $(LEVEL_TABLE_DEPS)
 $(C_BUILDDIR)/game/level/data/level_table.o: $(LEVELS_BUILDDIR)/level_table.inc \
 	$(LEVELS_BUILDDIR)/level_table_16c814_rooms.inc
 $(C_BUILDDIR)/game/level/data/level_table.o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)
+
+# The level select's pictures, one per theme (gLevelSelectPictures,
+# `levels.py table pictures`), which
+# src/game/ui/data/level_select_picture_table.cpp #includes.
+$(LEVELS_BUILDDIR)/level_select_pictures.inc: $(THEME_DEPS)
+	@mkdir -p $(dir $@)
+	python3 tools/levels.py table pictures $@
+$(call data_obj,level_select_picture_table): $(LEVELS_BUILDDIR)/level_select_pictures.inc
+$(call data_obj,level_select_picture_table): CPPFLAGS += -iquote $(LEVELS_BUILDDIR)
+
+# RunRoom's colour-cycle cases per theme and the cycles' lists
+# (theme_palette_cycles.h, `levels.py palette-cycles`), written only if it
+# changed, behind a stamp.
+GENERATED_HEADERS += $(GENERATED_INCLUDE_DIR)/theme_palette_cycles.h
+$(GENERATED_INCLUDE_DIR)/theme_palette_cycles.h.stamp: $(THEME_DEPS)
+	@mkdir -p $(dir $@)
+	python3 tools/levels.py palette-cycles $(GENERATED_INCLUDE_DIR)/theme_palette_cycles.h
+	@touch $@
+$(GENERATED_INCLUDE_DIR)/theme_palette_cycles.h: $(GENERATED_INCLUDE_DIR)/theme_palette_cycles.h.stamp
+	@test -f $@ || python3 tools/levels.py palette-cycles $@
 
 # The constants headers named in the level data (#655): the entity types
 # (data/levels/entity_types.json), the crate kinds (crate_kinds.json) and
@@ -158,7 +183,7 @@ $(GENERATED_INCLUDE_DIR)/constants/levels.h.stamp: data/levels/levels.json $(LEV
 $(GENERATED_INCLUDE_DIR)/constants/levels.h: $(GENERATED_INCLUDE_DIR)/constants/levels.h.stamp
 	@test -f $@ || python3 tools/levels.py constants levels $@
 
-$(GENERATED_INCLUDE_DIR)/constants/themes.h.stamp: data/levels/levels.json tools/levels.py
+$(GENERATED_INCLUDE_DIR)/constants/themes.h.stamp: $(THEME_DEPS)
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py constants themes $(GENERATED_INCLUDE_DIR)/constants/themes.h
 	@touch $@

@@ -31,6 +31,7 @@ extern "C" {
 #include "engine/util/util.h"
 #include "engine/sys/system.h"
 #include "engine/gfx/sprite_bank.h"
+#include "theme_palette_cycles.h"
 }
 
 using Engine::Gfx::PaletteCache;
@@ -372,25 +373,12 @@ s32 LevelProgress::RunRoom()
     gLevelState->SetMaskAssistDeaths(gLevelTable[level].maskAssistDeaths);
     gLevelState->SetCrateAssistDeaths(gLevelTable[level].crateAssistDeaths);
 
+    /* The theme's colour cycle: a case per cycle of levels.json's
+     * "palette_cycles", labelled with the themes that pick it
+     * (theme_palette_cycles.h). The ROM's are sewer; jungle and tiny;
+     * underwater; space. */
     switch (gLevelTable[level].theme) {
-    case THEME_SEWER:
-        gPaletteCycles->Clear();
-        FX_CYCLE(gThemePaletteCycle2, 6, 5, 1);
-        break;
-    case THEME_JUNGLE:
-    case THEME_TINY:
-        gPaletteCycles->Clear();
-        FX_CYCLE(gThemePaletteCycle1A, 0x10, 9, 0);
-        FX_CYCLE(gThemePaletteCycle1B, 0x14, 9, 0);
-        break;
-    case THEME_UNDERWATER:
-        gPaletteCycles->Clear();
-        FX_CYCLE(gThemePaletteCycle3, 0xA, 0x10, 0);
-        break;
-    case THEME_SPACE:
-        gPaletteCycles->Clear();
-        FX_CYCLE(gThemePaletteCycle5, 0x14, 5, 0);
-        break;
+        THEME_PALETTE_CYCLE_CASES
     default:
         gPaletteCycles->active = 0;
         break;

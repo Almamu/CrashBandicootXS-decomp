@@ -554,16 +554,16 @@ The level table is generated, like the room data. `src/game/level/data/level_tab
 
 - `level_table.inc` (`table levels`): `gLevelTable` and
   `gLevelRoomLists`, one entry per level of `levels.json`'s `"levels"`,
-  in id order;
+  in id order, between two tables of the level themes: the colour
+  cycles' lists before them and `gThemeMusicCues` after (see
+  "Themes");
 - `level_table_16c814_rooms.inc` (`table records`): the room records
   (`struct level_room`) and the arrays of the rooms each level plays
   (`gLevelNNRooms`, NN the level id).
 
-The colour-cycle lists and `gThemeMusicCues` stay hand-written in the
-.cpp, between the two `#include`s. They belong to the level themes, not
-to the levels: `RunRoom` picks a cycle with a `switch` on the theme, and
-`PlayRoomMusic` and the level select index their tables by it. New themes
-are #966.
+The theme tables belong to the level themes, not to the levels: they
+come from `levels.json`'s `"themes"` and `"palette_cycles"`, see
+"Themes".
 
 Where each field comes from:
 
@@ -616,8 +616,9 @@ is the residual that puts the table back in the ROM's order, as
 `"regions"` does for the room data. The objects are defined in this
 order:
 
-1. `gLevelTable`, then `gLevelRoomLists`, in level id order;
-2. (`gThemeMusicCues`, by hand);
+1. the colour cycles' lists, in `"palette_cycles"` order, then
+   `gLevelTable` and `gLevelRoomLists`, in level id order;
+2. `gThemeMusicCues`, in theme order;
 3. the records of the extra rooms: the rooms of the ROM's regions that no
    `"table"` array plays, in `"rooms"` order;
 4. the arrays, in `"table"` order (`gLevel24Rooms`, mega-mix's, comes
@@ -677,6 +678,7 @@ it; with the ROM's levels each rule gives the ROM's number, and
 | `UI_TEXT_COUNT` | 70 | 70, or one past the highest `"name_text"` | the `gUiText*` tables |
 | `THEME_COUNT` | 11 | `"themes"` | `gThemeMusicCues` |
 | `ZOOM_BG_NO_PICTURE` | 11 | `THEME_COUNT` | `ZoomBg::image` |
+| `LEVEL_SELECT_PICTURE_COUNT` | 10 | up to the last theme with a `"picture"` | `gLevelSelectPictures` |
 
 The rules need the levels in the order the code finds them by id: the
 numbered levels world by world, the same number in every world; then
@@ -686,7 +688,7 @@ then the levels off the level select's grid (`"boss": true`, no
 data breaks that, when a total needs three digits (the pause menu prints
 two), or past 28 levels (the save record's four slots fill its 512
 bytes, `save_data.hpp`). `levels.json`'s `"themes"` names each theme
-(`THEME_*`); a level's `"theme"` is its number.
+(`THEME_*`); a level's `"theme"` is its number (see "Themes").
 
 ### Adding a room
 
@@ -741,7 +743,8 @@ goes after the last region's rooms, before the new rooms.
 
 Editing the ROM's own rooms changes their data in place, which moves
 the ROM data after it; that is safe ([shifting.md](./shifting.md)).
-New themes and actor categories are #966.
+A room of a new theme is a room like any other; the theme is the
+level's (see "Adding a theme"). New actor categories are #966.
 
 ### Collision layers
 
@@ -858,6 +861,153 @@ tile sets without the matching palette. The assets and the room data
 are C arrays linked back to back, so an asset or a room that changes size
 moves everything after it (and the ROM no longer matches). The room records point at each room's palette and descriptor
 by symbol, so they follow the room data wherever it is linked.
+
+## Themes
+
+A level's `"theme"` (`struct level_info.theme`) picks everything the
+game does by theme: its music, its level-select picture, the colour
+cycle that runs on its BG palette and how its first room exits. All of
+it is data, `levels.json`'s `"themes"` (one per theme, in theme order)
+and `"palette_cycles"`, and a plain `make` builds whatever is there; with
+the ROM's themes everything comes out as the ROM's, which `make compare`
+checks. `tools/levels.py extract` reads the songs, the pictures and the
+cycles' palette entries back from the ROM and keeps the rest: the
+names, and what is code in the ROM (which cycle a theme picks and the
+cycles' rates and directions, RunRoom's; the exit zone, SpawnRoomExit's).
+
+### What the game picks by theme
+
+| what | where | from |
+|---|---|---|
+| the music | `gThemeMusicCues[theme]`, a song id, in `PlayRoomMusic` (unless the bonus round's or the invincibility drums play) | the theme's `"song"` |
+| the level-select picture | `gLevelSelectPictures[theme]`, the `{palette, tiles}` pair `ZoomBg::SetPicture` loads for the level under the cursor | the theme's `"picture"` |
+| the colour cycle | `RunRoom`'s `switch` on the theme at a level's start: `AddPaletteCycle` on the BG palette with each of the cycle's lists, or `gPaletteCycles->active = 0` | the theme's `"palette_cycle"`, one of `"palette_cycles"` |
+| the first room's exit | `SpawnRoomExit`: in a level's first room a plain 0x64 x 0x64 exit zone instead of the exit pad (the snow levels', whose first room leads into the polar ride) | the theme's `"first_room_exit_zone"` |
+| the count | `THEME_COUNT` (`gThemeMusicCues`' length), `ZOOM_BG_NO_PICTURE`, `LEVEL_SELECT_PICTURE_COUNT` | the themes |
+
+That is every use of the theme in the code (`level_info.theme` is read
+by these four functions and the level select, which passes it to
+`ZoomBg::SetPicture`).
+
+### The data
+
+```json
+"themes": [
+  {"constant": "THEME_SNOW", "name": "snow", "song": "arctic", "picture": "level_select/pictures/snow.png", "first_room_exit_zone": true},
+  {"constant": "THEME_JUNGLE", "name": "jungle", "song": "jungle", "picture": "level_select/pictures/jungle.png", "palette_cycle": "jungle"},
+  ...
+  {"constant": "THEME_MEGA_MIX", "name": "mega-mix", "song": "neo_cortex"}
+],
+"palette_cycles": [
+  {
+    "name": "sewer",
+    "lists": [
+      {"symbol": "gThemePaletteCycle2", "rate": 6, "direction": 1, "entries": [177, 178, 179, 180, 181]}
+    ]
+  },
+  ...
+]
+```
+
+A theme has:
+
+- `"constant"` and `"name"`: its `THEME_*` constant (`constants/themes.h`)
+  and what it is;
+- `"song"`: a song of `sound/gax_manifest.json`'s `song_table`, by name
+  (`SONG_<NAME>`, `constants/songs.h`);
+- `"picture"` (optional): a level-select picture, by its path under
+  `graphics/` (`level_select/pictures/*.png`, an entry of
+  `graphics/manifest.json` with a graphics class). A theme with none
+  behaves like mega-mix's: it has no entry of `gLevelSelectPictures`
+  (before the last theme with a picture, an empty `{0, 0}` one), so its
+  levels can't be on the level select's grid. `levels.py` stops when a
+  level with a `"world"` has such a theme: `ZoomBg::SetPicture` would load
+  whatever follows the table;
+- `"palette_cycle"` (optional): the name of one of `"palette_cycles"`. A
+  theme with none stops the cycles (RunRoom's `default`);
+- `"first_room_exit_zone"` (optional, `true`): the exit zone above.
+
+A cycle of `"palette_cycles"` has a `"name"` and its `"lists"`, each a
+`u16` array of the BG palette entries it cycles (`"symbol"` and
+`"entries"`) with the `AddPaletteCycle` `"rate"` (frames per step) and
+`"direction"` (0 or 1). The cycles are in ROM order, which is also the
+order of RunRoom's cases.
+
+### What is generated
+
+| output | what | used by |
+|---|---|---|
+| `level_table.inc` (`levels.py table levels`) | the cycles' lists, before `gLevelTable`, and `gThemeMusicCues[THEME_COUNT]`, after `gLevelRoomLists` | `level_table.cpp` |
+| `level_select_pictures.inc` (`levels.py table pictures`) | `gLevelSelectPictures[LEVEL_SELECT_PICTURE_COUNT]`, the pictures' graphics class members (`Engine::Gfx::LevelSelectPicture0::palette`, ...) | `level_select_picture_table.cpp` |
+| `theme_palette_cycles.h` (`levels.py palette-cycles`) | the lists' declarations and `THEME_PALETTE_CYCLE_CASES`: per cycle a case labelled with the themes that pick it, `gPaletteCycles->Clear()` and a `FX_CYCLE(list, rate, count, direction)` per list | `RunRoom` (`play_room.cpp`) |
+| `constants/themes.h` (`levels.py constants themes`) | `THEME_*`, `THEME_COUNT`, `ZOOM_BG_NO_PICTURE`, `LEVEL_SELECT_PICTURE_COUNT` and `THEME_FIRST_ROOM_EXIT_ZONE(theme)`, the test of the themes with `"first_room_exit_zone"` | everything that names a theme |
+
+With the ROM's themes RunRoom's cases are the ROM's (sewer; jungle and
+tiny; underwater; space; then the default), and `THEME_FIRST_ROOM_EXIT_ZONE(theme)`
+is `((theme) == THEME_SNOW)`: the same code. No `#if`: a different set of
+themes changes the tables and the cases with it.
+
+### The boss themes' music
+
+The ROM's `gThemeMusicCues` is `02 00 03 01 05 04 07 08 09 0A 0A`. Each
+song's name is the title the ROM stores with it, right after its
+patterns (`"tiny" © Manfred Linzner` at `0x0859D74A`, before the song at
+`0x0859DB2C`, `gSongTable[9]`; `"dingodile"` at `0x0859E76A` before
+`0x0859EBB0`, `gSongTable[7]`; `"n gin"` at `0x0859EFA1` before
+`0x0859F394`, `gSongTable[8]`). The themes are named after their levels
+and pictures: theme 6 is `LEVEL_TINY`'s (its picture is Tiny's arena),
+7 `LEVEL_DINGODILE`'s (Dingodile in his bubble), 8 `LEVEL_N_GIN`'s (his
+airship). So:
+
+| theme | level | plays | its title |
+|---|---|---|---|
+| 6, `THEME_TINY` | Tiny | song 7, `SONG_DINGODILE` | `dingodile` |
+| 7, `THEME_DINGODILE` | Dingodile | song 8, `SONG_N_GIN` | `n gin` |
+| 8, `THEME_N_GIN` | N. Gin | song 9, `SONG_TINY` | `tiny` |
+
+Each of the three bosses plays the song titled for another one. Both
+names are right: the songs keep the ROM's titles and the themes their
+levels', and `levels.json` says which song each theme plays
+(`THEME_TINY`'s `"song"` is `"dingodile"`). It looks like a slip in the
+original: the song table and the boss levels (20, 21, 22) are in Crash
+XS's boss order, Dingodile, N. Gin, Tiny, while themes 6-8 are in Crash
+3's, Tiny, Dingodile, N. Gin, and the cue table maps them by position
+(theme 6 + k to song 7 + k). The ROM can't say which song was written
+for which boss, only which one plays.
+
+### Adding a theme
+
+A new theme is data: add it to the end of `"themes"` and give levels
+its number.
+
+1. **Add the theme** at the end of `"themes"` (its number is its place):
+   `{"constant": "THEME_LAB", "name": "lab", "song": "intro",
+   "picture": "level_select/pictures/space.png", "palette_cycle": "lab"}`.
+   It picks one of the songs (new music is out of scope) and one of the
+   level-select pictures, or none (then its levels must be off the grid,
+   like mega-mix).
+2. **Give it a colour cycle**, an existing one by name, or a new one at
+   the end of `"palette_cycles"`: `{"name": "lab", "lists": [{"symbol":
+   "gThemePaletteCycleLab", "rate": 8, "direction": 1, "entries": [16, 17,
+   18, 19]}]}`. Or none.
+3. **Use it**: a level's `"theme"` is its number (`11` for the 12th).
+4. **Run `make`.** The theme tables grow to the new count, RunRoom gets
+   the new case and everything linked after them moves
+   ([shifting.md](./shifting.md)).
+
+A theme doesn't change the save data's meaning, so it isn't part of the
+save version's CRC; the level that uses it is.
+
+Tested in scratch with plain `make`: the theme above (the intro's song,
+space's picture, a new cycle of 4 entries) and a 26th level using it
+(`LEVEL_LAB`, a boss off the grid, playing `jungle_jam/main`). The ROM
+stays 8 MB; `THEME_COUNT` and `LEVEL_SELECT_PICTURE_COUNT` are 12;
+`gThemeMusicCues` is 0xC bytes and `gLevelSelectPictures` 0x60 (12
+pairs, mega-mix's `{0, 0}` and the new theme's space picture); the new
+list `gThemePaletteCycleLab` (8 bytes) comes before `gLevelTable`, and
+RunRoom's literal pool names it. A second `make` does nothing. In mGBA
+(`tools/boottest.py`, a `level25` script) the level loads
+`gLevelRoom17` and plays song 15 (`SONG_INTRO`), the theme's.
 
 ## Save compatibility
 

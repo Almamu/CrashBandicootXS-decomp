@@ -40,6 +40,7 @@ extern "C" {
 #include "engine/gfx/sprite_bank.h"
 #include "game/entities/objects.h"
 #include "constants/levels.h"
+#include "constants/themes.h"
 }
 
 /* One row of the pause menu (gPauseMenuRows, PauseMenu::rows): a
@@ -89,7 +90,7 @@ extern const struct vec2 gZoomBgSlotOffsets[4];
 extern const u32 gLevelSelectEntryBoxAnims[5];
 extern const u32 gLevelSelectEntryWorldAnims[WORLD_COUNT];
 extern const u32 gLevelSelectCursorAnims[4];
-extern const struct image_pair gLevelSelectPictures[10];
+extern const struct image_pair gLevelSelectPictures[LEVEL_SELECT_PICTURE_COUNT];
 extern const struct bg_package gLevelSelectPageBg;
 
 /* The pause menu tables (src/game/ui/data/menu_tables.cpp,

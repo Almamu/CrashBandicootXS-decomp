@@ -186,12 +186,9 @@ extern const struct terrain_type gTerrainTypes[51];
 /* The level table (src/game/level/data/level_table.cpp, level_data.h). */
 extern const struct level_info gLevelTable[LEVEL_COUNT];
 
-/* The level themes' music cues and palette cycles (src/game/level/data/level_table.cpp) */
+/* The level themes' music cues (src/game/level/data/level_table.cpp, generated from
+ * levels.json's "themes"; their colour cycles' lists are declared by the
+ * generated theme_palette_cycles.h) */
 extern const u8 gThemeMusicCues[THEME_COUNT];
-extern const u16 gThemePaletteCycle1A[9];
-extern const u16 gThemePaletteCycle1B[9];
-extern const u16 gThemePaletteCycle2[5];
-extern const u16 gThemePaletteCycle3[16];
-extern const u16 gThemePaletteCycle5[5];
 
 #endif /* __LEVEL_H__ */
