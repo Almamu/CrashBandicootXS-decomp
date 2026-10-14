@@ -11,6 +11,8 @@ extern "C" {
 #include "core.h"
 }
 
+using Engine::Sys::FrameLimiter;
+
 /* The power dialog (GitHub issue #8; PowerDialog, menus.hpp): a power's
  * name and description over the scrolling sky, shown by the four
  * Show*Dialog wrappers (power_dialog_draw.cpp) when a boss gives Crash a

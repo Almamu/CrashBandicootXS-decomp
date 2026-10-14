@@ -66,7 +66,14 @@ extern class OamBuffer *gOamBuffer;
  * (key_input.hpp), whose methods use gKeys, not the object. No C file
  * uses it. */
 #ifdef __cplusplus
-extern class KeyInput *gInput;
+namespace Engine
+{
+namespace Sys
+{
+class KeyInput;
+} // namespace Sys
+} // namespace Engine
+extern Engine::Sys::KeyInput *gInput;
 #endif
 /* The HUD (game_frame.cpp builds it): a Hud (hud.hpp). No C file uses
  * it. */

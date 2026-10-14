@@ -8,6 +8,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Engine::Sys::Irq;
+
 /* The link-cable session's per-frame handshake driver and SIO data pump
  * (split from link_handshake.cpp so LinkSession::ResetState can sit in its own object;
  * see link_session_reset.cpp). */

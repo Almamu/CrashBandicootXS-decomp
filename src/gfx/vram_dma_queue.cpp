@@ -12,6 +12,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Sys::VramDmaQueue;
+
 struct dma_queue_entry {
     void *dest;
     const void *src;

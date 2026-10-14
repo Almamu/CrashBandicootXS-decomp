@@ -12,6 +12,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Sys::FrameLimiter;
+
 /* GitHub issue #38: 0x08024590-0x08024783 (game_loop), the sound-channel-
  * handle helper family - see docs/matching/archive/issue-38-medal-results-tally.md
  * and docs/matching/archive/issue-38-sound-channel-family.md. All four functions

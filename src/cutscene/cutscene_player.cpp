@@ -13,6 +13,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Sys::FrameLimiter;
+
 /* GitHub issue #39: 0x08024810-0x08024960 (game_loop) - the start of
  * the remainder of the UpdateGameFrame-MainLoop cluster after the
  * sound-channel-handle family (slideshow.cpp/slideshow_display.cpp); the

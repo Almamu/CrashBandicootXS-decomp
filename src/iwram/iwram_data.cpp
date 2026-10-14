@@ -28,6 +28,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Sys::FrameLimiter;
+
 /*
  * IWRAM 0x030007CC-0x030009E8 (stored in ROM at 0x087E5DB0-0x087E5FCC):
  * the initialised IWRAM globals, the end of the IWRAM image crt0 copies

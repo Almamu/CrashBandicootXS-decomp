@@ -5,6 +5,8 @@ extern "C" {
 #include "system.h"
 }
 
+using Engine::Sys::Irq;
+
 
 s32 AgbMain(void)
 {

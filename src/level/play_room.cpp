@@ -33,6 +33,10 @@ extern "C" {
 #include "sprite_bank.h"
 }
 
+using Engine::Sys::Display;
+using Engine::Sys::FrameLimiter;
+using Engine::Sys::VramDmaQueue;
+
 /* The room loop: LevelProgress::PlayRoom, the level-start dispatcher,
  * RunRoom, the room's lifecycle state machine it runs, and the
  * per-frame refresh UpdateRoomFrame and SetupRoomBlend RunRoom calls

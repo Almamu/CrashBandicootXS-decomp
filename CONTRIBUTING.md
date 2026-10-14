@@ -109,8 +109,9 @@ matched code - read it before starting.** In short:
   `tools/report_units.py` too.
 - **C++:** the game was C++. An object rewritten as C++ is a
   `src/<dir>/<name>.cpp` (the Makefile's `CXX_OBJS`), its classes go in
-  a `.hpp` header, and its mangled names in `cxx_symbols.txt`; see
-  [docs/cplusplus.md](docs/cplusplus.md).
+  a `.hpp` header, in their namespace (`Engine::Sys`, ..., #1033), and
+  its mangled names in `cxx_symbols.txt`; see
+  [docs/cplusplus.md](docs/cplusplus.md) ("Namespaces").
 - **Data and assets** are rebuilt from source by the Makefile (see
   [README.md](README.md#data-and-assets)): edit the PNG, the level JSON or
   the table in `src/data/`, never anything under `build/`.

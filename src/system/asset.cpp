@@ -5,6 +5,8 @@ extern "C" {
 #include "system.h"
 }
 
+using Engine::Sys::FrameLimiter;
+
 /* Sits right after the still-parked WaitForKeyPress (asm/code_3_1_5.s) and
  * before whatever's still raw in asm/code_3_1_6.s. */
 

@@ -7,6 +7,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Sys::KeyInput;
+
 /* Three of ActionCtrl's state methods, the landings (include/
  * action_ctrl.hpp; #664, docs/cplusplus.md). */
 

@@ -6,6 +6,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Sys::Display;
+
 /* Continuation of the fade_to_black.cpp cluster - see docs/matching.md
  * for why this cluster needed splitting into this many pieces.
  * `dispcnt` is a 2-byte packed mode/flags shadow copy of

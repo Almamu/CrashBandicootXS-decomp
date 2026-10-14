@@ -13,10 +13,12 @@
  * reads, and static data members compile like those globals, static
  * member functions like plain functions. The data members are only
  * declared: cxx_symbols.txt (block "#915 Irq") maps each one to its C
- * name (`_3Irq.table` is gIntrTable, ...), whose address is in
+ * name (`_Q36Engine3Sys3Irq.table` is gIntrTable, ...), whose address is in
  * sym_iwram.txt and which crt0.s and intr_main.s use, and the functions
- * keep their C names the same way (`SetHandler__3IrqiPFv_v` is
+ * keep their C names the same way (`SetHandler__Q36Engine3Sys3IrqiPFv_v` is
  * IrqSetHandler).
+ *
+ * In the namespace Engine::Sys (#1033, docs/cplusplus.md "Namespaces").
  *
  * `#pragma interface`: no vtable to emit; it keeps g++ from emitting
  * out-of-line copies of inline methods (docs/cplusplus.md). */
@@ -26,6 +28,11 @@ extern "C" {
 #include "core.h"
 #include "irq.h"
 }
+
+namespace Engine
+{
+namespace Sys
+{
 
 class Irq
 {
@@ -49,5 +56,8 @@ private:
     static irq_handler_t prevTable[14];             // gPrevIntrTable - what SetHandler replaced
     static struct vblank_callbacks vblankCallbacks; // gVBlankCallbacks
 };
+
+} // namespace Sys
+} // namespace Engine
 
 #endif // GUARD_IRQ_HPP

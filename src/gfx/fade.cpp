@@ -8,6 +8,9 @@ extern "C" {
 #include "gfx.h"
 }
 
+using Engine::Sys::FrameLimiter;
+using Engine::Sys::Irq;
+
 /* Sits right after StepBresenhamLine (ROM 0x08001254, in src/util/line_step.cpp)
  * and before whatever's still raw in asm/code_3_1_7.s. */
 

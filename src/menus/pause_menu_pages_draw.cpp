@@ -12,6 +12,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Sys::FrameLimiter;
+using Engine::Sys::VramDmaQueue;
+
 /* PauseMenu's time trial and crystals pages, its page title and its
  * frame commit (menus.hpp; C++ since the #664 cleanup). The font draws
  * are Font's virtual MeasureText and DrawText (the C spelled them out as

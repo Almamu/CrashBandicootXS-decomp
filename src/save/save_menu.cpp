@@ -11,6 +11,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Sys::VramDmaQueue;
+
 /* State 4's input handler (a message): A or START (`keys`: the newly
  * pressed keys) plays the "confirm" cue and goes back to the main
  * options, on "load link game". */

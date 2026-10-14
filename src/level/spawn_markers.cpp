@@ -18,6 +18,10 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Sys::Display;
+using Engine::Sys::KeyInput;
+using Engine::Sys::VramDmaQueue;
+
 /* The player positions and start markers (entity types 0x01-0x05), the
  * entity spawner's constructor and destructor calls and InitLevelState
  * (#664, include/spawners.hpp), ROM 0x08022188-0x08022354; split from

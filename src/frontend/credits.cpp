@@ -18,6 +18,10 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Engine::Sys::Display;
+using Engine::Sys::FrameLimiter;
+using Engine::Sys::VramDmaQueue;
+
 /* GitHub issue #64 (0x08034AA4-0x080354E0, 13 functions), C++ since
  * #664 part 10c (include/frontend.hpp): the credits screen (Credits). The
  * file started with the last five methods of the continue prompt

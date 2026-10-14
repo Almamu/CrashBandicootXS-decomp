@@ -7,6 +7,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Engine::Sys::FrameLimiter;
+
 /* GitHub issue #27: 0x0801CEE0-0x0801DA38. The rest of the level-select
  * screen (LevelSelect, level_select.cpp; #664, include/level_select.hpp),
  * LevelSelect::TurnPage-ReloadPalette: the page-turn animation (TurnPage,

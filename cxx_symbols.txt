@@ -8,7 +8,9 @@
 #
 # g++ 2.9 mangling: `Method__<len>Class<args>` for a method,
 # `__<len>Class` for a constructor, `_._<len>Class` for a destructor,
-# `_vt.<len>Class` for a vtable.
+# `_vt.<len>Class` for a vtable. A class in a namespace is
+# `Q<parts><len>Ns...<len>Class` (`Setup__Q36Engine3Sys3Irq`, #1033);
+# tools/cxx_rename.py updates this file when a class moves.
 #
 # The global operators (g++ 2.x's assembler names; the game's own
 # replacements, `operator new` & co., are in src/level/camera.cpp)
@@ -1350,7 +1352,7 @@ SpawnEffectPart__13EntitySpawneriiiii SpawnEffectPart
 LaunchEffectPart__13EntitySpawneriiiiiP12MovingSprite LaunchEffectPart
 DropWumpa__13EntitySpawnerUiUiUiUib DropWumpa
 DropExtraLife__13EntitySpawnerUiUiUiUib DropExtraLife
-__8KeyInput ClearKeys
+__Q36Engine3Sys8KeyInput ClearKeys
 #
 # #915 EntitySpawner: the entity spawner singleton as static members of
 # EntitySpawner (include/spawners.hpp, src/level/spawn_markers.cpp,
@@ -2098,31 +2100,31 @@ DisableVCountIrq__12AudioContext DisableMusicVCountIrq
 # #915 Irq: the interrupt handlers as an all-static class (include/irq.hpp,
 # src/system/irq.cpp). Its data members keep the C names: sym_iwram.txt
 # places them, crt0.s and intr_main.s name gIntrTable.
-ClearHandler__3Irqi IrqClearHandler
-RestoreHandler__3Irqi IrqRestoreHandler
-SetHandler__3IrqiPFv_v IrqSetHandler
-Disable__3Irq IrqDisable
-Setup__3Irq IrqSetup
-EmptyHandler__3Irq IrqEmptyHandler
-EnableVBlankHandler__3Irq EnableVBlankHandler
-DisableVBlankHandler__3Irq DisableVBlankHandler
-RemoveVBlankCallback__3Irqi RemoveVBlankCallback
-AddVBlankCallback__3IrqPFv_v AddVBlankCallback
-VBlankHandler__3Irq VBlankHandler
-_3Irq.table gIntrTable
-_3Irq.prevTable gPrevIntrTable
-_3Irq.vblankCallbacks gVBlankCallbacks
+ClearHandler__Q36Engine3Sys3Irqi IrqClearHandler
+RestoreHandler__Q36Engine3Sys3Irqi IrqRestoreHandler
+SetHandler__Q36Engine3Sys3IrqiPFv_v IrqSetHandler
+Disable__Q36Engine3Sys3Irq IrqDisable
+Setup__Q36Engine3Sys3Irq IrqSetup
+EmptyHandler__Q36Engine3Sys3Irq IrqEmptyHandler
+EnableVBlankHandler__Q36Engine3Sys3Irq EnableVBlankHandler
+DisableVBlankHandler__Q36Engine3Sys3Irq DisableVBlankHandler
+RemoveVBlankCallback__Q36Engine3Sys3Irqi RemoveVBlankCallback
+AddVBlankCallback__Q36Engine3Sys3IrqPFv_v AddVBlankCallback
+VBlankHandler__Q36Engine3Sys3Irq VBlankHandler
+_Q36Engine3Sys3Irq.table gIntrTable
+_Q36Engine3Sys3Irq.prevTable gPrevIntrTable
+_Q36Engine3Sys3Irq.vblankCallbacks gVBlankCallbacks
 #
 # #915 FrameLimiter: the VBlank wait and its frame limit as an all-static
 # class (include/frame_limiter.hpp, src/system/irq.cpp). Its data members
 # keep the C names: sym_iwram.txt places target and interval,
 # iwram_data.cpp defines enabled.
-WaitForVBlank__12FrameLimiter WaitForVBlank
-Disable__12FrameLimiter DisableFrameLimit
-Set__12FrameLimiterUi SetFrameLimit
-_12FrameLimiter.enabled gFrameLimitEnabled
-_12FrameLimiter.target gFrameLimitTarget
-_12FrameLimiter.interval gFrameLimitInterval
+WaitForVBlank__Q36Engine3Sys12FrameLimiter WaitForVBlank
+Disable__Q36Engine3Sys12FrameLimiter DisableFrameLimit
+Set__Q36Engine3Sys12FrameLimiterUi SetFrameLimit
+_Q36Engine3Sys12FrameLimiter.enabled gFrameLimitEnabled
+_Q36Engine3Sys12FrameLimiter.target gFrameLimitTarget
+_Q36Engine3Sys12FrameLimiter.interval gFrameLimitInterval
 #
 # #915 BrightnessFade and PaletteFade: the brightness fade and the palette
 # fade to black as all-static classes (include/fade.hpp, src/gfx/fade.cpp,
@@ -2166,32 +2168,32 @@ ResetAttrs__12ScaledSprite ResetScaledSpriteAttrs
 # #915 Display: the display register shadows as an all-static class
 # (include/display.hpp, src/gfx/display.cpp). Its data members keep the C
 # names: sym_iwram.txt places them.
-SetMode__7Displayi SetDispcntMode
-HideBg3__7Display HideBg3
-HideBg2__7Display HideBg2
-HideBg1__7Display HideBg1
-HideBg0__7Display HideBg0
-HideObj__7Display HideObj
-ShowBg3__7Display ShowBg3
-ShowBg2__7Display ShowBg2
-ShowBg1__7Display ShowBg1
-ShowBg0__7Display ShowBg0
-ShowObj__7Display ShowObj
-SetObjMapping2D__7Display SetObjMapping2D
-SetObjMapping1D__7Display SetObjMapping1D
-CommitDispcnt__7Display CommitDispcnt
-CommitBlendRegs__7Display CommitBlendRegs
-_7Display.blendRegs gBlendRegs
-_7Display.dispcnt gDispcnt
+SetMode__Q36Engine3Sys7Displayi SetDispcntMode
+HideBg3__Q36Engine3Sys7Display HideBg3
+HideBg2__Q36Engine3Sys7Display HideBg2
+HideBg1__Q36Engine3Sys7Display HideBg1
+HideBg0__Q36Engine3Sys7Display HideBg0
+HideObj__Q36Engine3Sys7Display HideObj
+ShowBg3__Q36Engine3Sys7Display ShowBg3
+ShowBg2__Q36Engine3Sys7Display ShowBg2
+ShowBg1__Q36Engine3Sys7Display ShowBg1
+ShowBg0__Q36Engine3Sys7Display ShowBg0
+ShowObj__Q36Engine3Sys7Display ShowObj
+SetObjMapping2D__Q36Engine3Sys7Display SetObjMapping2D
+SetObjMapping1D__Q36Engine3Sys7Display SetObjMapping1D
+CommitDispcnt__Q36Engine3Sys7Display CommitDispcnt
+CommitBlendRegs__Q36Engine3Sys7Display CommitBlendRegs
+_Q36Engine3Sys7Display.blendRegs gBlendRegs
+_Q36Engine3Sys7Display.dispcnt gDispcnt
 #
 # #915 VramDmaQueue: the VRAM DMA queue as an all-static class
 # (include/vram_dma_queue.hpp, src/gfx/vram_dma_queue.cpp). Its data
 # member keeps the C name: sym_iwram.txt places it.
-Flush__12VramDmaQueue FlushVramDmaQueue
-Add__12VramDmaQueuePCvPvUsUs QueueVramDmaTransfer
-Destroy__12VramDmaQueue FreeVramDmaQueue
-Init__12VramDmaQueue AllocVramDmaQueue
-_12VramDmaQueue.queue gVramDmaQueue
+Flush__Q36Engine3Sys12VramDmaQueue FlushVramDmaQueue
+Add__Q36Engine3Sys12VramDmaQueuePCvPvUsUs QueueVramDmaTransfer
+Destroy__Q36Engine3Sys12VramDmaQueue FreeVramDmaQueue
+Init__Q36Engine3Sys12VramDmaQueue AllocVramDmaQueue
+_Q36Engine3Sys12VramDmaQueue.queue gVramDmaQueue
 #
 # #751: LinkSession (include/link_session.hpp, src/link/)
 __11LinkSession InitLinkSession
@@ -2337,8 +2339,8 @@ Get__10LevelState GetLevelState
 _10LevelState.instance gLevelStateSingleton
 #
 # #759: KeyInput's Update and GetDpadDirection (include/key_input.hpp; src/system/key_input.cpp)
-Update__8KeyInput UpdateKeys
-GetDpadDirection__8KeyInput GetDpadDirection
+Update__Q36Engine3Sys8KeyInput UpdateKeys
+GetDpadDirection__Q36Engine3Sys8KeyInput GetDpadDirection
 #
 # #761: the camera (include/camera.hpp; src/level/camera.cpp)
 StepDirectional__6Camera StepCameraDirectional

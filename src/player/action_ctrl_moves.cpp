@@ -17,6 +17,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Engine::Sys::KeyInput;
+
 /* ActionCtrl's state methods for leaving the ground, dying, warping in
  * and hanging, the super body slam's shockwave and the tornado spin's
  * turns (include/action_ctrl.hpp; #664, docs/cplusplus.md). Built by

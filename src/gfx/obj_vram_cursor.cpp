@@ -12,6 +12,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Sys::Display;
+using Engine::Sys::VramDmaQueue;
+
 void ObjVramCursor::Rewind()
 {
     offset = mark;

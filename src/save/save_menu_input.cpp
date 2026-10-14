@@ -18,6 +18,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Sys::FrameLimiter;
+
 /* SaveMenu's run loop, constructor, destructor and input handlers
  * (include/save_menu.hpp, #664's final cleanup), with the static Run
  * (#915); the save transfer's three accessors that started the file

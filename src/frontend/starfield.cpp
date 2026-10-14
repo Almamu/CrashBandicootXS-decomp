@@ -12,6 +12,9 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Engine::Sys::Display;
+using Engine::Sys::FrameLimiter;
+
 /* The starfield (Starfield, #664 part 10c, include/frontend.hpp): a BG0
  * "raw bitmap" behind the language select's, the credits' and the
  * company logos' text. The whole screen is one run of 8x8 tiles on BG0

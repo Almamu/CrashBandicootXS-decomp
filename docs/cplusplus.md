@@ -26,9 +26,10 @@ Contents:
 4. [g++ 2.9's C++ ABI, as the ROM has it](#g-29s-c-abi-as-the-rom-has-it)
 5. [Experiments](#experiments)
 6. [How a C++ object is built](#how-a-c-object-is-built)
-7. [Progress](#progress)
-8. [Recommendation and plan](#recommendation-and-plan)
-9. [Dead ends and gotchas](#dead-ends-and-gotchas)
+7. [Namespaces](#namespaces-1033)
+8. [Progress](#progress)
+9. [Recommendation and plan](#recommendation-and-plan)
+10. [Dead ends and gotchas](#dead-ends-and-gotchas)
 
 ## What the ROM shows
 
@@ -425,6 +426,113 @@ asm labels (`void Update(MovingSprite *) asm("UpdateEffectCtrl");`) work for
 methods and constructors, but not for destructors: g++ 2.9 then fails to
 find the destructor (`no matching function for call to B::__dt`). That,
 and the vtable names, is why the build renames with objcopy instead.
+
+## Namespaces (#1033)
+
+The classes are put into namespaces, so each part of the engine is easy
+to identify and the boundary between the reusable engine and the
+Crash-specific game code is explicit (it also helps the portable port,
+#979). The layout is the owner's choice:
+
+| Namespace | What goes in it |
+|---|---|
+| `Engine::Sys` | irq, display, frame limiter, DMA/VRAM DMA queue, BIOS helpers, key input |
+| `Engine::Gfx` | cell anim, OAM queue, sprite frame cache, tile allocator, fades, palettes, the graphics classes |
+| `Engine::Audio` | the game-side sound wrapper (GAX itself stays a C library in `lib/`) |
+| `Engine::Save` | the EEPROM access (the save record's layout may belong to `Game::`) |
+| `Engine::Link` | link cable |
+| `Engine::Actor` | the actor category driver, ActorSpawns, ActorCategoryStats, ActorBg, ActorPaletteCycle, CollectedSpawns |
+| `Engine::Text` | fonts, wrapped text |
+| `Engine::Util` | helpers |
+| `Game::Player` | player, input, action ctrl |
+| `Game::Enemies` | |
+| `Game::Bosses` | |
+| `Game::Vehicles` | `Jetpack::`, `Polar::` (Yeti, Airship, ...) |
+| `Game::Crates` | |
+| `Game::Objects` | platforms, pickups |
+| `Game::Level` | level progress, rooms, level data |
+| `Game::Ui` | hud, menus, frontend (title, logos), cutscenes |
+
+A class on the boundary goes by what it depends on: code that knows
+about Crash's levels, entities or rules is `Game::`, generic code is
+`Engine::`. Each PR records the classes it decided that way
+([Progress](#namespace-progress)).
+
+**What g++ 2.9 makes of it.** Only the symbol names change; the code is
+the same, so the ROM stays byte-identical. A class in a namespace is a
+`Q` (qualified) name in its members' mangled names, one length-prefixed
+part per scope:
+
+| Source | Mangled name |
+|---|---|
+| `Engine::Sys::Irq::Setup()` (static) | `Setup__Q36Engine3Sys3Irq` |
+| its static data member `table` | `_Q36Engine3Sys3Irq.table` |
+| `Engine::Sys::KeyInput::KeyInput()` | `__Q36Engine3Sys8KeyInput` |
+| a parameter of that class (`S::F(Engine::Sys::KeyInput *)`) | `F__1SPQ36Engine3Sys8KeyInput` |
+| a free function in a namespace (`Tick()` in `Actor`) | `Tick__5Actorv` |
+
+More than nine parts would be `Q_<n>_`. A vtable is `_vt.Q36Engine3Gfx...`
+(its section `.gnu.linkonce.d._vt.Q...`, which ldscript.txt names).
+cxx_symbols.txt maps the new names to the same C names, so the .map,
+the report and the C callers don't change. tools/magic_numbers.py reads
+a `Q` name as its last part, the class (`mangled_class`).
+
+**Moving a class.** `tools/cxx_rename.py` updates cxx_symbols.txt and
+checks the change is only a rename:
+
+1. Build the tree before the change and `tools/cxx_rename.py snapshot
+   DIR` (it saves build/crashbandicootxs/src's .s files).
+2. Move the class: wrap its declaration in its header in `namespace
+   Engine { namespace Sys { ... } }` (g++ 2.9 has no `namespace A::B`),
+   and fix its users (below). `make`: every object compiles, the link
+   fails on the new names.
+3. `tools/cxx_rename.py apply DIR`: each .s must be its snapshot with
+   only names changed, each old name always becoming the same new one,
+   and it rewrites cxx_symbols.txt's first column. Any other difference is
+   a code generation change: it says where and changes nothing.
+4. Clean `make compare`, and compare the .map with the one from before.
+
+**Rules.**
+
+- **`extern "C"` stays global.** The functions called from asm, the
+  IWRAM ARM code, GAX or the linker script, and the C-linkage functions
+  of the C headers (DivMod and MemCopy32, the BIOS helpers, are
+  system.h's), keep their names and their scope.
+- **The .cpp files name a class with a `using` declaration**
+  (`using Engine::Sys::Irq;` after the includes), or its qualified name;
+  then the definitions (`void Irq::Setup()`) and the calls
+  (`Irq::Setup()`) read as before. Never `using namespace` in a header:
+  a header's inline code and declarations use the qualified name
+  (`Engine::Sys::VramDmaQueue::Flush()` in level_select.hpp).
+- **A C header's C++ declaration** of a namespaced class
+  (globals.h's `gInput` is an `Engine::Sys::KeyInput *`) forward
+  declares it inside its namespace, under `__cplusplus`: an `extern class
+  KeyInput *` would declare another, global class.
+- **Name hiding.** Inside a namespace, a member named like a global hides
+  it: a namespace function `RunPauseMenu` calling the global
+  `RunPauseMenu` calls itself (the same trap as a class member, hit twice
+  in #915: RunPauseMenu, LaunchPad::Spawn). Qualify the global (`::Name`)
+  or rename. The same goes for an elaborated type in a namespaced class
+  (`struct dma_queue queue;`): the C struct must be declared before it,
+  or the class gets a new `Engine::Sys::dma_queue`, which cxx_rename.py
+  shows as a renamed parameter type.
+- **Generated code** (tools/levels.py, tools/gfx_manifest.py) emits its
+  classes and their cxx_symbols.txt names in their namespace.
+
+### Namespace progress
+
+- **`Engine::Sys`** (`Q36Engine3Sys`): `Irq` (irq.hpp), `FrameLimiter`
+  (frame_limiter.hpp), `Display` (display.hpp), `VramDmaQueue`
+  (vram_dma_queue.hpp) and `KeyInput` (key_input.hpp). 45 symbols
+  renamed, no code change. Boundary calls: `KeyInput`, which the layout
+  doesn't list, reads only the keys (gKeys, REG_KEYINPUT) and knows
+  nothing of the game, so it is engine, next to the IRQs ("input" in
+  `Game::Player` is the player's InputCtrl). Display and VramDmaQueue
+  live in src/gfx/ but are listed under `Engine::Sys`. The BIOS helpers
+  (DivMod, MemCopy32) are C-linkage functions of system.h and stay
+  global; bios_util.cpp's other function, `Ctrl::Update`, is the
+  controllers' base, game code. No name hiding: Engine::Sys holds only
+  these five classes.
 
 ## Progress
 

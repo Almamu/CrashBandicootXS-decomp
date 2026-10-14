@@ -12,6 +12,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Engine::Sys::VramDmaQueue;
+
 /* N. Gin's airship (#664 part 11i), the all-static class Airship
  * (#772, include/airship.hpp): a bare AnimPart, `anim` (gAirship), and
  * static data members under their C names (gAirshipX, ...). See

@@ -10,6 +10,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Sys::FrameLimiter;
+using Engine::Sys::Irq;
+
 /* The Shin'en GAX2 wrapper layer (the engine itself is lib/gax, see
  * docs/audio.md): class AudioContext (include/audio.hpp), the music and
  * sound-effect front end `*gAudioContext` is (docs/rom_map.md's "Found
