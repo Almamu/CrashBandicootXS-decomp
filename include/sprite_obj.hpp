@@ -443,7 +443,7 @@ public:
 
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(PartList) == 0x14);
 
-/* The room's part lists (globals.h), as Crates() is the crate list
+/* The room's part lists (globals.h), as RoomCrates() is the crate list
  * (crate_list.hpp). */
 static inline PartList *TouchableList()
 {

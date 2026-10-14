@@ -7,6 +7,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Crates::Crate;
+
 /* The crate spawners (#664, include/spawners.hpp), ROM
  * 0x08021A4C-0x08021D80: gEntitySpawnFuncs' crate slots, Crate's static
  * Spawn* members since #915 (include/crate.hpp; SpawnTimeCrate3 is

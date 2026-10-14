@@ -43,6 +43,8 @@ using Game::Crash::ActionCtrl;
 using Game::Crash::InputCtrl;
 using Game::Crash::Player;
 using Game::Crash::SwimCtrl;
+using Game::Crates::Crate;
+using Game::Crates::CrateList;
 
 /* The room loop: LevelProgress::PlayRoom, the level-start dispatcher,
  * RunRoom, the room's lifecycle state machine it runs, and the

@@ -150,7 +150,14 @@ extern Game::Crash::SwimCtrl *gSwimCtrl;
  * SwimCtrl (swim_ctrl.hpp), the input controller InputCtrl
  * (input_ctrl.hpp) and the boss controllers (boss_ctrl.hpp). */
 
-class Crate;
+namespace Game
+{
+namespace Crates
+{
+class Crate;          // crate.hpp, part_list.hpp
+class CollisionQueue; // crate.hpp, part_list.hpp
+} // namespace Crates
+} // namespace Game
 
 /* `ctrlMode` (#843, docs/flags/player_ctrl_mode.md): which controller
  * the player has, from the room kind. PlayRoom builds the controller and
@@ -191,12 +198,12 @@ public:
     u8 countdown;
     u8 bounce; // 0x92 - stepped on a crate bounce (crate_break.cpp), cleared by the controller
     u8 unk_93;
-    u8 listCount;             // 0x94 - entries in `list`
-    Crate *list[5];           // 0x98 - the recently touched crates
-    Sprite *carried;          // 0xAC - the platform or crate the player stands on
-    Sprite *child;            // 0xB0 - Aku Aku, drawn with the player (Draw)
-    s32 maskTrailIdx;         // 0xB4 - the newest entry of `maskTrail`
-    struct vec2 maskTrail[8]; // 0xB8 - the recent positions, which Aku Aku follows
+    u8 listCount;                 // 0x94 - entries in `list`
+    Game::Crates::Crate *list[5]; // 0x98 - the recently touched crates
+    Sprite *carried;              // 0xAC - the platform or crate the player stands on
+    Sprite *child;                // 0xB0 - Aku Aku, drawn with the player (Draw)
+    s32 maskTrailIdx;             // 0xB4 - the newest entry of `maskTrail`
+    struct vec2 maskTrail[8];     // 0xB8 - the recent positions, which Aku Aku follows
     u8 unk_F8[8];
     // 0x100 - standing on terrain kind 5 (CheckPlayerContact): the player keeps
     //         sliding and skids (ActionCtrl::SetTargetAnim)
@@ -208,7 +215,7 @@ public:
     u8 pushRight; // 0x103 - nonzero: moves the standing player 1 px right per frame
     u8 dead;      // 0x104 - the player died; blocks pause and further hits
     u8 cleared;   // 0x105 - TouchPlayer's latch
-    CollisionQueue collisionQueue; // 0x108 - the crate collisions of the frame
+    Game::Crates::CollisionQueue collisionQueue; // 0x108 - the crate collisions of the frame
 
     Player(u16 id, u16 px, u16 py, u16 unused);             // InitPlayer
     virtual s32 CheckPlayerContact();                       // 1 CollidePlayer
@@ -230,7 +237,7 @@ public:
     /* The accessors (src/player/player.cpp; their C names, cxx_symbols.txt,
      * are GetPlayerCollisionQueue, ClearPlayerDead, ...). Most are
      * UNUSED (see there). */
-    CollisionQueue *GetCollisionQueue();
+    Game::Crates::CollisionQueue *GetCollisionQueue();
     void ClearDead();
     void SetDead();
     u8 IsDead();
@@ -268,8 +275,8 @@ public:
     void SetHanging(u8 value);
     u8 IsSlippery();
     void SetSlippery(u8 value);
-    Crate *GetListEntry(s32 idx);
-    void StoreListEntry(Crate *crate);
+    Game::Crates::Crate *GetListEntry(s32 idx);
+    void StoreListEntry(Game::Crates::Crate *crate);
 
     /* Stores to the player's bytes through inline methods: as an inline
      * parameter, the value is materialized before the field's address,

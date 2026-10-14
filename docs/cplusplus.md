@@ -770,6 +770,32 @@ checks the change is only a rename:
   hovercraft's weapons; the hovercraft (`Game::Bosses`) and the HUD's
   airship meter (hud_counters.cpp, `Airship::GetHpPercent`) reach these
   classes through using declarations.
+- **`Game::Crates`** (`Q34Game6Crates`): `Crate` (crate.hpp), `CrateList`
+  (crate_list.hpp) and the player's `CollisionQueue` (part_list.hpp): all
+  of src/crates/, with the crates' Spawn* (src/level/spawn_crates.cpp)
+  and src/objects/collision_queue.cpp. 115 symbols renamed, among them
+  the vtable `_vt.Q34Game6Crates5Crate` and Player::StoreListEntry, which
+  takes a `Crate *`; no code change. ldscript.txt's line that places the
+  vtable section is updated by hand. Forward declarations in the
+  namespace: crate.hpp (for `struct crate_group`'s items), part_list.hpp,
+  player.hpp (the player's crate list and collision queue), globals.h
+  (gCrateList) and objects.h (`struct collision_candidate`'s `neighbor`,
+  under `__cplusplus`). The records (`crate_group`, `crate_placement`,
+  `collision_candidate`, the grid's CrateGridNode, CrateGridLink and
+  CrateGridNodeInit), crates.h's C declarations (ResolvePlayerCollisions,
+  FindLineCrossing, the kind tables) and the C-linkage ApplyCrateCollision
+  stay global. **Name hiding:** crate_list.hpp's accessor `Crates()`
+  (gCrateList as the class) is named like the namespace: called from
+  inside any `Game::` namespace (the crates' own methods, the player's),
+  it would find the namespace `Game::Crates`. It is renamed
+  `RoomCrates()`, still a global inline function: reading gCrateList
+  instead changes the loop layout of the crate walks (part 7f), and
+  removing the function shifts the local label numbers of every file that
+  includes crate_list.hpp. No global is named like the three classes.
+  Boundary calls: `CollisionQueue` is the player's member and lives in
+  src/objects/, but it only queues and resolves the frame's crate
+  collisions (`Add(Crate *, ...)`, Resolve hands the nearest one to
+  ApplyCrateCollision), so by its dependencies it goes with the crates.
 
 ## Progress
 
@@ -1777,7 +1803,7 @@ unused `Collide` and its two helpers take `MovingSprite`s, as PartList's do).
 The slot calls are virtual calls: `OverlapsRect`/`Draw` (Draw),
 `IsInsideRect`/`Update`/`delete` (Update, Reset), `GetClassId` (Collide). The
 grid's column is `ColumnOf(sprite)`, the high halfword of `x` (one `ldrsh`).
-`Crates()` is `gCrateList` as the class (crate_create.cpp's `Crates()->Add(this)`).
+`RoomCrates()` is `gCrateList` as the class (crate_create.cpp's `RoomCrates()->Add(this)`).
 
 What made the C++ match:
 
@@ -1829,7 +1855,7 @@ needed.
   `PhysSetTag`/`PhysSetFrame` are `SetTag`/`ClampFrame`, `PHYS_GONE` with
   its bit is `MarkGone()`, `AddCollisionCandidate` is
   `CollisionQueue::Add`, `LinkCrateToActiveBucket` and `RemoveCrateListAt`
-  are `Crates()->LinkActive(this)` and `Crates()->RemoveAt(i)` (part 7f),
+  are `RoomCrates()->LinkActive(this)` and `RoomCrates()->RemoveAt(i)` (part 7f),
   and `PickUpWumpa` is `Wumpa::PickUp` (part 7h). With crate_break.c gone, crate.h's `struct
   crate_vtable`, the `PHYS_*` call macros, `PhysSetTag`/`PhysSetFrame`
   and the bit and slot-state views (`struct phys_flag_bits`, `struct
@@ -1882,10 +1908,10 @@ written in place, and each placed a load or a register as the ROM has it.
 `BlastNearbyCrates`/`BreakCratesInArea` their `kind + table` integer
 sums (indexing adds the other way round). Those two and `UpdateCrates`
 walk the crate list through `gCrateList`'s C view (`activeCount`,
-`slotArray`): through `Crates()`, an inline call, their loop tests aren't
+`slotArray`): through `RoomCrates()`, an inline call, their loop tests aren't
 copied in front of the loops (see the gotchas), which changes the
 layout. `DetonateNitroCrates` and `ActivateIronSwitchCrate` use
-`Crates()->count` and `slots`.
+`RoomCrates()->count` and `slots`.
 
 Part 7d in numbers: the platforms, `Platform` (a 0x80-byte `MovingSprite`,
 gPlatformVtable) and its controller `PlatformMover` (a 0x38-byte `Ctrl`,
@@ -2053,7 +2079,7 @@ too: only mangled names changed, each mapped to the same C name.
   its nodes to `MovingSprite`, as the ROM's copy of `PartList::Collide` does.
 - **The C++ callers of the part lists** use the class: `TouchableList()`,
   `CollidableList()` and `ForegroundList()` (sprite_obj.hpp, like
-  `Crates()`) replace the `((PartList *)gTouchableList)` casts and the C
+  `RoomCrates()`) replace the `((PartList *)gTouchableList)` casts and the C
   `AddToPartList(gCollidableList, p)` calls of cortex.cpp, dingodile.cpp,
   tiny.cpp, platform_create.cpp and the pickups. `InputCtrl::StateStart`
   kept `AddToPartList` for the camera lead, then a C struct, until part 10

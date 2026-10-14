@@ -10,6 +10,7 @@ extern "C" {
 }
 
 using Game::Crash::Player;
+using Game::Crates::Crate;
 
 /* Player::HasRoomForAnim (include/player.hpp; PlayerHasRoomForAnim): the
  * action controller's states ask it before an animation with a taller box
@@ -56,13 +57,13 @@ u8 Player::HasRoomForAnim(s32 anim)
         return 0;
 
     i = 0;
-    if (i < Crates()->count)
+    if (i < RoomCrates()->count)
         do {
-            Crate *c = Crates()->slots[i];
+            Crate *c = RoomCrates()->slots[i];
 
             if (c->GetClassId() == 3 && c->PlayerAnimWouldTouch(anim) == 1)
                 return 0;
             i++;
-        } while (i < Crates()->count);
+        } while (i < RoomCrates()->count);
     return 1;
 }

@@ -7,6 +7,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Crates::Crate;
+
 /* The time trial's crate conversion (#664, include/crate.hpp). The Aku
  * Aku crate, which the ROM puts right after it, starts crate_fields.cpp. */
 

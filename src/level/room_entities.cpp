@@ -12,6 +12,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Crates::Crate;
+
 /* GitHub issue #34/#40/#41, `UpdateGameFrame`-`MainLoop` cluster: the
  * second of the two raw functions `docs/matching/issue-34-game-loop-
  * 8022d50-80255d4.md` left for a follow-up pass (the first,

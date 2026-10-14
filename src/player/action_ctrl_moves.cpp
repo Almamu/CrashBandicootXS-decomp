@@ -20,6 +20,7 @@ extern "C" {
 using Engine::Sys::KeyInput;
 using Game::Crash::ActionCtrl;
 using Game::Crash::Player;
+using Game::Crates::Crate;
 
 /* ActionCtrl's state methods for leaving the ground, dying, warping in
  * and hanging, the super body slam's shockwave and the tornado spin's

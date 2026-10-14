@@ -7,6 +7,7 @@ extern "C" {
 }
 
 using Game::Crash::Player;
+using Game::Crates::Crate;
 
 /* Crate::PlayerAnimWouldTouch (#664, include/crate.hpp). */
 

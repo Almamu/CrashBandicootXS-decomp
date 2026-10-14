@@ -18,6 +18,8 @@ extern "C" {
 }
 
 using Game::Crash::Player;
+using Game::Crates::CollisionQueue;
+using Game::Crates::Crate;
 
 /* The crate's hits, breaks and explosions (#664, include/crate.hpp,
  * part 7g): the player's hit on a crate (QueuePlayerCollision, resolved
@@ -1020,7 +1022,7 @@ void Crate::LightTnt()
     kind = CRATE_KIND_TNT_LIT_3;
     StartAnim(0x14);
     f.b.active = 1;
-    Crates()->LinkActive(this);
+    RoomCrates()->LinkActive(this);
     anims = bank->anims;
     a = &anims[tag];
     slot = gPaletteCache->GetSlot(a->paletteId);
@@ -1146,7 +1148,7 @@ void Crate::Break(u32 byBlast)
     if (GetAbove() != 0 && flag == 0)
         chained = 1;
     f.b.active = 1;
-    Crates()->LinkActive(this);
+    RoomCrates()->LinkActive(this);
     state &= CRATE_STATE_MASK;
     gPlayer->busy = 0;
     one = 1;
@@ -1434,7 +1436,7 @@ void Crate::DropAbove()
 
         n->fallSpeed = t + d;
         n->f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
-        Crates()->LinkActive(n);
+        RoomCrates()->LinkActive(n);
         if (tbl[n->kind] && blastState == CRATE_BLAST_STATE_NONE &&
             n->fallDistance > INT_TO_Q8(22)) {
             /* `next` is needed: inlined, the registers differ */
@@ -1475,7 +1477,7 @@ void Crate::Explode(u8 near)
     state &= CRATE_STATE_MASK;
     gPlayer->busy = 0;
     f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
-    Crates()->LinkActive(this);
+    RoomCrates()->LinkActive(this);
     one = 1;
     state = (state & CRATE_STATE_BUSY) | one;
     if (kind == CRATE_KIND_NITRO) {
@@ -1517,7 +1519,7 @@ void Crate::Explode(u8 near)
  *
  * The crate list is read through gCrateList's C view here, in
  * Crate::UpdateAll and in Crate::BreakInArea: the loop tests through
- * Crates() (an inline call) aren't copied in front of the loops, which
+ * RoomCrates() (an inline call) aren't copied in front of the loops, which
  * changes their layout. */
 void Crate::BlastNearby(s32 dist)
 {

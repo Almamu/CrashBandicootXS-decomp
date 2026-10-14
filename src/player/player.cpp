@@ -7,6 +7,8 @@ extern "C" {
 }
 
 using Game::Crash::Player;
+using Game::Crates::CollisionQueue;
+using Game::Crates::Crate;
 
 /* The player's constructor (Player, include/player.hpp; InitPlayer).
  * g++ constructs the ground sprite (InitGroundSprite), stores the vtable

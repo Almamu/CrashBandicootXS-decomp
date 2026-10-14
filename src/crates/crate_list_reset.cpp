@@ -1,5 +1,7 @@
 #include "crate_list.hpp"
 
+using Game::Crates::CrateList;
+
 /* CrateList::Reset (#664, part 7f; include/crate_list.hpp). In its own
  * file for ROM order: 0x08009914, between CollidePlayer
  * (crate_list_collide.cpp) and crate_list.cpp's functions. */

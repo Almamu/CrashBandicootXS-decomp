@@ -21,6 +21,16 @@
 struct vec2;
 struct hitbox_quad;
 struct sprite_point;
+#ifdef __cplusplus
+/* In its namespace (docs/cplusplus.md, "Namespaces"). */
+namespace Game
+{
+namespace Crates
+{
+class Crate;
+} // namespace Crates
+} // namespace Game
+#endif
 
 /*
  * One queued collision of the player with a crate, 0x24 bytes:
@@ -33,15 +43,19 @@ struct sprite_point;
  * batch 9e).
  */
 struct collision_candidate {
+#ifdef __cplusplus
+    Game::Crates::Crate *neighbor; // 0x00 - the crate (crate.hpp)
+#else
     struct Crate *neighbor; // 0x00 - the crate (class Crate, crate.hpp)
-    struct vec2 pos;        // 0x04
-    s32 kind;               // 0x0C - ATTACK_KIND_* (constants/attack_kinds.h)
-    s32 code;               // 0x10
-    s32 edge;               // 0x14
-    s32 depth;              // 0x18
-    s32 hit;                // 0x1C
-    struct byte_arg p20;    // 0x20 - passed on the stack as a byte (`strb`)
-    struct byte_arg p21;    // 0x21
+#endif
+    struct vec2 pos;     // 0x04
+    s32 kind;            // 0x0C - ATTACK_KIND_* (constants/attack_kinds.h)
+    s32 code;            // 0x10
+    s32 edge;            // 0x14
+    s32 depth;           // 0x18
+    s32 hit;             // 0x1C
+    struct byte_arg p20; // 0x20 - passed on the stack as a byte (`strb`)
+    struct byte_arg p21; // 0x21
 };
 
 /* An entry set: the {a, b} index pairs into a motion record table (two
