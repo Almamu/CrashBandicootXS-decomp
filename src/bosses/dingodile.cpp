@@ -21,6 +21,7 @@ using Game::Bosses::DingodileCtrl;
 using Game::Bosses::DingodileProjectileCtrl;
 using Game::Bosses::DingodileSharkCtrl;
 using Game::Bosses::DingodileShieldCtrl;
+using Game::Level::LevelProgress;
 using Game::Objects::Pickups;
 
 /* Dingodile's fight (GitHub issue #24), ROM 0x080197F4-0x0801A794,

@@ -42,14 +42,16 @@ extern "C" {
  * and music volumes (SaveMenu::SaveToSlot builds one,
  * SaveMenu::LoadInput restores one). */
 struct save_slot {
-    GameProgress progress; /* 0x00 */
-    u8 level;              /* 0x68 */
-    u16 sfxVolume;         /* 0x6a */
-    u16 musicVolume;       /* 0x6c */
+    Game::Level::GameProgress progress; /* 0x00 */
+    u8 level;                           /* 0x68 */
+    u16 sfxVolume;                      /* 0x6a */
+    u16 musicVolume;                    /* 0x6c */
 };
 /* 0x68 and 0x70 with the ROM's 25 levels (GameProgress's size). */
-COMPILE_TIME_ASSERT(save_data_hpp, offsetof(struct save_slot, level) == sizeof(GameProgress));
-COMPILE_TIME_ASSERT(save_data_hpp, sizeof(struct save_slot) == sizeof(GameProgress) + 8);
+COMPILE_TIME_ASSERT(save_data_hpp,
+                    offsetof(struct save_slot, level) == sizeof(Game::Level::GameProgress));
+COMPILE_TIME_ASSERT(save_data_hpp,
+                    sizeof(struct save_slot) == sizeof(Game::Level::GameProgress) + 8);
 
 namespace Engine
 {

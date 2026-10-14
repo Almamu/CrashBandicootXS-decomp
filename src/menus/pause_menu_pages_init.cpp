@@ -9,6 +9,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Game::Level::GameProgress;
+
 /* The pause menu's five info pages (PauseMenu, menus.hpp), built by
  * InitInfo (pause_menu_info.cpp): each page's icons, and its numbers as
  * text for the drawing code. Built with old_agbcc, now old_agbcp

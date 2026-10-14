@@ -22,6 +22,11 @@ extern "C" {
 
 class Sprite;
 
+namespace Game
+{
+namespace Level
+{
+
 /* Camera's `mode` (#843, docs/flags/camera.md): how Update eases the
  * look-ahead. `new Camera` leaves it unset; RunRoom sets FACING. */
 #define CAMERA_MODE_FACING 1      // StepFacing: ahead of the target's facing (on foot, the hover ride)
@@ -58,5 +63,8 @@ public:
 };
 
 COMPILE_TIME_ASSERT(camera_hpp, sizeof(Camera) == 0x18);
+
+} // namespace Level
+} // namespace Game
 
 #endif // GUARD_CAMERA_HPP

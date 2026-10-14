@@ -45,6 +45,11 @@ using Game::Crash::Player;
 using Game::Crash::SwimCtrl;
 using Game::Crates::Crate;
 using Game::Crates::CrateList;
+using Game::Level::Camera;
+using Game::Level::EntitySpawner;
+using Game::Level::LevelLayers;
+using Game::Level::LevelProgress;
+using Game::Level::LevelState;
 
 /* The room loop: LevelProgress::PlayRoom, the level-start dispatcher,
  * RunRoom, the room's lifecycle state machine it runs, and the

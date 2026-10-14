@@ -23,6 +23,7 @@ using Game::Bosses::StompedHopPadCtrl;
 using Game::Bosses::TinyCtrl;
 using Game::Bosses::UnusedOneShotAnimCtrl;
 using Game::Crash::Player;
+using Game::Level::LevelProgress;
 using Game::Objects::Pickups;
 
 /* Tiny's fight (GitHub issues #22 and #23), ROM 0x08018008-0x08018A30,

@@ -70,6 +70,11 @@ union level_record {
 
 COMPILE_TIME_ASSERT(game_progress_hpp, sizeof(union level_record) == 4);
 
+namespace Game
+{
+namespace Level
+{
+
 /*
  * The progress block: the head of the level state (`progress`), its
  * snapshots `checkpointData` (the last checkpoint) and `saveData` (the
@@ -115,5 +120,8 @@ COMPILE_TIME_ASSERT(game_progress_hpp, offsetof(GameProgress, flags) == 0x02);
 COMPILE_TIME_ASSERT(game_progress_hpp, offsetof(GameProgress, levels) == 0x04);
 /* 0x68 with the ROM's 25 levels. */
 COMPILE_TIME_ASSERT(game_progress_hpp, sizeof(GameProgress) == 4 + 4 * LEVEL_COUNT);
+
+} // namespace Level
+} // namespace Game
 
 #endif /* !GUARD_GAME_PROGRESS_HPP */

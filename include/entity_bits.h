@@ -43,7 +43,7 @@
 #define ENTITY_SET_GONE_BIT_OF(idExpr, bit)                                    \
     do {                                                                       \
         s32 _id = (idExpr);                                                    \
-        LevelEntityFlags *_base = gEntityFlags;                                \
+        Game::Level::LevelEntityFlags *_base = gEntityFlags;                   \
         s32 _word = _id / 32;                                                  \
         s32 _off = _word * 4;                                                  \
         u32 *_slot = _base->bits0Copy;                                         \

@@ -16,6 +16,7 @@ extern "C" {
 using Game::Crash::Player;
 using Game::Enemies::EnemyCtrl;
 using Game::Enemies::KnockedEnemyCtrl;
+using Game::Level::EntitySpawner;
 
 /* EnemyCtrl's Update (UpdateEnemyCtrl, gEnemyCtrlVtable slot 1) and
  * HandleEvent (HitEnemy, slot 2), include/enemy_ctrl.hpp. They sit next

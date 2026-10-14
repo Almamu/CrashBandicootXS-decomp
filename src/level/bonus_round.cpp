@@ -14,6 +14,9 @@ extern "C" {
 }
 
 using Game::Crash::Player;
+using Game::Level::GameProgress;
+using Game::Level::LevelEntityFlags;
+using Game::Level::LevelState;
 
 /* Called at level start/checkpoint-restore: `cleared` (UpdateGameFrame
  * passes whether the bonus room's exit status is ROOM_EXIT_CLEARED)

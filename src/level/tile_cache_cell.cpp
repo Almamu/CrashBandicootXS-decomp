@@ -7,6 +7,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Level::TileCache;
+
 /* The collision tile cache's cell lookup and source (TileCache,
  * include/bg_layer.hpp), ROM 0x080254C0-0x08025554; the rest of the class
  * is in tile_cache.cpp, built with old_agbcp (this file is agbcp). This

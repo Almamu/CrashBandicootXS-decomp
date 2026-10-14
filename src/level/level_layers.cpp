@@ -11,6 +11,10 @@ extern "C" {
 }
 
 using Engine::Sys::Display;
+using Game::Level::BgLayer;
+using Game::Level::LevelLayers;
+using Game::Level::PooledBgLayer;
+using Game::Level::TileCache;
 
 /* GitHub issue #43: the level-layers singleton (LevelLayers,
  * include/bg_layer.hpp; `gLevelLayersSingleton`, 0x2C bytes, created on

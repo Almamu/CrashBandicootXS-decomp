@@ -8,6 +8,7 @@ extern "C" {
 
 using Engine::Text::LargeFont;
 using Engine::Text::SmallFont;
+using Game::Level::LevelState;
 
 /* Small methods of unrelated classes collected after libgcc in the ROM
  * (0x0803AFDC-0x0803B058; nothing can move across libgcc): the AABB

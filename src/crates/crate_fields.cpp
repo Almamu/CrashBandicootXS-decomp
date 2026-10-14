@@ -10,6 +10,7 @@ extern "C" {
 
 using Game::Crash::Player;
 using Game::Crates::Crate;
+using Game::Level::EntitySpawner;
 
 /* The Aku Aku and life crates, and the crate's stack walks and player
  * collision (#664, include/crate.hpp). */

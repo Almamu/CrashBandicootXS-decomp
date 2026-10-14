@@ -11,6 +11,7 @@ extern "C" {
 }
 
 using Engine::Actor::ActorCategory;
+using Game::Level::LevelProgress;
 
 /* GitHub issue #38: 0x0802425C-0x08024810 (game_loop). Continues the
  * medal-results tally chain documented in docs/rom_map.md ("A per-level
@@ -37,13 +38,23 @@ using Engine::Actor::ActorCategory;
  * class with no fields and
  * no vtable that nothing creates. C++ since the #664 cleanup; the rest of
  * the file is LevelProgress's: the level queries are its static members
- * (#915), IsInGemPathRoom and IsInBonusRoom its methods. */
+ * (#915), IsInGemPathRoom and IsInBonusRoom its methods. In the
+ * namespace Game::Level, with LevelProgress (#1033). */
+namespace Game
+{
+namespace Level
+{
 class UnusedLevelObject
 {
 public:
     UnusedLevelObject();  // InitUnusedLevelObject
     ~UnusedLevelObject(); // DestroyUnusedLevelObject
 };
+
+} // namespace Level
+} // namespace Game
+
+using Game::Level::UnusedLevelObject;
 
 UnusedLevelObject::~UnusedLevelObject()
 {

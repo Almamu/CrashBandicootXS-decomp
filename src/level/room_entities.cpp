@@ -13,6 +13,8 @@ extern "C" {
 }
 
 using Game::Crates::Crate;
+using Game::Level::EntitySpawner;
+using Game::Level::LevelEntityFlags;
 
 /* GitHub issue #34/#40/#41, `UpdateGameFrame`-`MainLoop` cluster: the
  * second of the two raw functions `docs/matching/issue-34-game-loop-

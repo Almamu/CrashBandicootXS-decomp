@@ -108,16 +108,27 @@ extern u8 gJetpackPlayerInactive;
  * sprite_obj.hpp) and the crate list (CrateList, crate_list.hpp) have no
  * C view and no C user: only the C++ files see them. */
 #ifdef __cplusplus
-extern class LevelEntityFlags *gEntityFlags; /* entity_flags.hpp */
+/* In their namespace (docs/cplusplus.md, "Namespaces"). */
+namespace Game
+{
+namespace Level
+{
+class LevelEntityFlags;
+class LevelState;
+class Camera;
+class LevelLayers;
+} // namespace Level
+} // namespace Game
+extern Game::Level::LevelEntityFlags *gEntityFlags; /* entity_flags.hpp */
 #endif
 #ifdef __cplusplus
-extern class LevelState *gLevelState;
+extern Game::Level::LevelState *gLevelState;
 #else
 extern struct level_state *gLevelState;
 #endif
 #ifdef __cplusplus
 /* The camera (PlayRoom builds it): a Camera (camera.hpp). */
-extern class Camera *gCamera;
+extern Game::Level::Camera *gCamera;
 /* What the player's body touches (CollidePlayerWithObjects runs
  * CollidePartsOfClass on it): the pickups, gems, crystals, platforms and
  * Tiny's hop pads. */
@@ -130,7 +141,7 @@ extern class PartList *gCollidableList;
  * boss and its cannon and shots, and wumpa flying to the HUD (CreateWumpa
  * with `special`). */
 extern class PartList *gForegroundList;
-extern class LevelLayers *gLevelLayers;
+extern Game::Level::LevelLayers *gLevelLayers;
 /* In its namespace (docs/cplusplus.md, "Namespaces"). */
 namespace Game
 {

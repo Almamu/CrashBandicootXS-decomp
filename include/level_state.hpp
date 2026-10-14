@@ -16,7 +16,9 @@
  *
  * `#pragma interface`: no class here has a vtable, so there is none to
  * emit; the pragma keeps g++ from emitting out-of-line copies of inline
- * methods (docs/cplusplus.md, "Emitting the vtables"). */
+ * methods (docs/cplusplus.md, "Emitting the vtables").
+ *
+ * In the namespace Game::Level (#1033, docs/cplusplus.md "Namespaces"). */
 #pragma interface
 
 #include "game_progress.hpp"
@@ -32,7 +34,6 @@ namespace Bosses
 class BossCtrl; // boss_ctrl.hpp
 } // namespace Bosses
 } // namespace Game
-class LevelEntityFlags;
 namespace Game
 {
 namespace Objects
@@ -40,6 +41,13 @@ namespace Objects
 class Platform; // platform.hpp
 } // namespace Objects
 } // namespace Game
+
+namespace Game
+{
+namespace Level
+{
+
+class LevelEntityFlags; // entity_flags.hpp
 
 /*
  * The room block of the level state (`room`, +0x0C4), whose methods are
@@ -312,7 +320,7 @@ public:
 private:
     /* gLevelStateSingleton, Get's instance: an initialised IWRAM global
      * of its own (iwram_data.cpp; cxx_symbols.txt maps
-     * `_10LevelState.instance` to it), not a field. The destructor clears
+     * `_Q34Game5Level10LevelState.instance` to it), not a field. The destructor clears
      * it. */
     static LevelState *instance;
 };
@@ -330,5 +338,8 @@ COMPILE_TIME_ASSERT(level_state_hpp,
 COMPILE_TIME_ASSERT(level_state_hpp,
                     offsetof(LevelState, savedBitmap) == 0x1B4 + 3 * LEVEL_STATE_GROWTH);
 COMPILE_TIME_ASSERT(level_state_hpp, sizeof(LevelState) == 0x1CC + 3 * LEVEL_STATE_GROWTH);
+
+} // namespace Level
+} // namespace Game
 
 #endif /* !GUARD_LEVEL_STATE_HPP */

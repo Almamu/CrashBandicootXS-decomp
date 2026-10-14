@@ -34,6 +34,9 @@ using Engine::Gfx::BrightnessFade;
 using Engine::Gfx::SpriteFrameCache;
 using Engine::Link::LinkSession;
 using Engine::Sys::FrameLimiter;
+using Game::Level::LevelLayers;
+using Game::Level::LevelProgress;
+using Game::Level::LevelState;
 
 /*
  * IWRAM 0x030007CC-0x030009E8 (stored in ROM at 0x087E5DB0-0x087E5FCC):

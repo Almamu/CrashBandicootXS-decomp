@@ -6,6 +6,8 @@ extern "C" {
 #include "level.h"
 }
 
+using Game::Level::LevelLayers;
+
 /* GitHub issues #9/#10/#41's shared cross-reference: `CollidePlayer`
  * (`src/player/player_collide.c`, still `NON_MATCHING`/parked) flags
  * this as "still raw, only its return code's meaning as an opaque

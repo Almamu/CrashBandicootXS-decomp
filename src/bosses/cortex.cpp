@@ -25,6 +25,7 @@ using Game::Bosses::CortexCannonCtrl;
 using Game::Bosses::CortexShotCtrl;
 using Game::Bosses::CortexTargetCtrl;
 using Game::Crash::Player;
+using Game::Level::LevelProgress;
 using Game::Objects::Pickups;
 using Game::Objects::PlatformMover;
 

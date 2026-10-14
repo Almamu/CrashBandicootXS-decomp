@@ -13,6 +13,7 @@ extern "C" {
 }
 
 using Engine::Sys::Display;
+using Game::Level::LevelProgress;
 
 /* The room exit flag (LevelProgress::roomExitRequested). */
 void LevelProgress::ClearRoomExit()

@@ -23,6 +23,8 @@ using Engine::Gfx::BrightnessFade;
 using Engine::Link::LinkSession;
 using Engine::Save::SaveData;
 using Engine::Sys::FrameLimiter;
+using Game::Level::GameProgress;
+using Game::Level::LevelState;
 
 /* SaveMenu's run loop, constructor, destructor and input handlers
  * (include/save_menu.hpp, #664's final cleanup), with the static Run

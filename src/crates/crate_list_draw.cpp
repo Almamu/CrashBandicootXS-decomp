@@ -8,6 +8,7 @@ extern "C" {
 }
 
 using Game::Crates::CrateList;
+using Game::Level::BgLayer;
 
 /* CrateList::Draw (#664, part 7f; include/crate_list.hpp). */
 

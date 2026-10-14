@@ -7,6 +7,8 @@ extern "C" {
 #include "box_part.h"
 }
 
+using Game::Level::LevelLayers;
+
 /* GitHub issues #9/#10/#41's shared cross-reference: `ProbeHitboxEdgeTerrain`'s
  * physics/collision step-probe (`src/objects/moving_sprite_probe.cpp`, see
  * `docs/matching/archive/naked-spatial-grid-tail.md`) and `PlayerHasRoomForAnim`'s
