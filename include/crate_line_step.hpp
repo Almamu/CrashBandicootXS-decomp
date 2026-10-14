@@ -3,7 +3,16 @@
  * (CRATE_LINE_STEP `inline`), which FindLineCrossing (crate_reset.cpp)
  * inlines, one per octant; crate.cpp includes them at its end with
  * CRATE_LINE_STEP empty, for the ROM's out-of-line copies (which have no
- * caller). */
+ * caller).
+ *
+ * They are generic Bresenham steppers, with no dependency on the crates,
+ * so they are in the namespace Engine::Util (#1033, docs/cplusplus.md
+ * "Namespaces"): `FindLineCrossingYMajor__Q26Engine4Utiliiiiii` & co. */
+
+namespace Engine
+{
+namespace Util
+{
 
 /* A Bresenham line step with y the major axis: walks `dy` steps,
  * counting `count`; each time the error term is not negative, `y` steps
@@ -58,3 +67,6 @@ CRATE_LINE_STEP s32 FindLineCrossingXMajor(s32 y, s32 count, s32 dx, s32 dy, s32
     }
     return -1;
 }
+
+} // namespace Util
+} // namespace Engine
