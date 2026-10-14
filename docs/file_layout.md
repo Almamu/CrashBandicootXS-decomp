@@ -51,8 +51,10 @@ include/{core.h,globals.h,match.h,byte_arg.h,screen.h,gba/,constants/}
   '*.cpp'`); the object of `src/X.cpp` is still
   `build/crashbandicootxs/src/X.o`, and the per-object lists
   (`OLD_AGBCC_OBJS`, `NO_IMPLEMENT_INLINES_OBJS`, `ARM_OBJS`, ...) name
-  the new paths. After pulling the move, run `make tidy` (or delete
-  `build/`) once: the old objects' `.d` files name headers that are gone.
+  the new paths. An existing build keeps working after the move: the
+  `.d` files' headers are phony targets (`-MP`), so a header that moved
+  away doesn't stop make, and the old objects are simply no longer
+  linked (`make tidy` clears them).
 - **The report units keep their structure**: `tools/report_units.py`'s
   table names the new object paths, so a unit's name follows its file.
 - **Vague names were renamed after their contents** as they moved:
