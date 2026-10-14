@@ -10,6 +10,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Crates::Crate;
+
 /* The crate's overlap test, stack links, constructor and destructor
  * (#664, include/crate.hpp), with the player's collision pass, and the
  * out-of-line copies of the line steppers (FindLineCrossingYMajor,

@@ -19,6 +19,7 @@ extern "C" {
 }
 
 using Game::Crash::Player;
+using Game::Crates::Crate;
 
 /* The crate's per-state ticks (#664, include/crate.hpp, part 7g): a
  * breaking crate's (FinishBroken), the TNT countdown, the slot crate's and

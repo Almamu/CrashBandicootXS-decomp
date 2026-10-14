@@ -417,7 +417,7 @@ SECTIONS
         build/crashbandicootxs/src/enemies/periodic_spawner.o(.gnu.linkonce.d._vt.Q34Game7Enemies15PeriodicSpawner); /* gPeriodicSpawnerVtable */
         build/crashbandicootxs/src/enemies/knocked_enemy_ctrl.o(.gnu.linkonce.d._vt.Q34Game7Enemies16KnockedEnemyCtrl); /* gKnockedEnemyCtrlVtable */
         build/crashbandicootxs/src/objects/effect_ctrl.o(.gnu.linkonce.d._vt.10EffectCtrl); /* gEffectCtrlVtable */
-        build/crashbandicootxs/src/crates/crate_update.o(.gnu.linkonce.d._vt.5Crate); /* gCrateVtable */
+        build/crashbandicootxs/src/crates/crate_update.o(.gnu.linkonce.d._vt.Q34Game6Crates5Crate); /* gCrateVtable */
         build/crashbandicootxs/src/pickups/extra_life.o(.gnu.linkonce.d._vt.9ExtraLife); /* gExtraLifeVtable */
         build/crashbandicootxs/src/pickups/wumpa.o(.gnu.linkonce.d._vt.5Wumpa); /* gWumpaVtable */
         build/crashbandicootxs/src/pickups/stopwatch.o(.gnu.linkonce.d._vt.9Stopwatch); /* gStopwatchVtable */

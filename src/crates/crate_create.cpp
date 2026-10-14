@@ -9,6 +9,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Crates::Crate;
+
 /* Crate::Create (#664, include/crate.hpp): CreateCrate, the constructor
  * the level spawners call with each crate kind
  * (src/level/spawn_crates.cpp). */
@@ -230,7 +232,7 @@ Crate *Crate::Create(u16 id, u16 x, u16 y, u16 slot, u8 type)
     self->kind = type;
     if (type == CRATE_KIND_OUTLINE && gEntityFlags->IsActivated(id))
         self->SolidifyOutline();
-    Crates()->Add(self);
+    RoomCrates()->Add(self);
     return self;
 }
 

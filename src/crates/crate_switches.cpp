@@ -19,6 +19,7 @@ extern "C" {
 }
 
 using Game::Crash::Player;
+using Game::Crates::Crate;
 
 /* The crate list's update pass (Crate::UpdateAll), the nitro detonation,
  * the nitro and iron switches, the outline crates and Crate::BreakInArea
@@ -52,7 +53,7 @@ void Crate::UpdateAll()
 
             if (o->GetClassId() == 3) {
                 if (o->IsGone()) {
-                    Crates()->RemoveAt(i);
+                    RoomCrates()->RemoveAt(i);
                     delete o;
                     i--;
                 } else {
@@ -68,9 +69,9 @@ void Crate::DetonateNitros()
 {
     s32 i = 0;
 
-    if (i < Crates()->count) {
+    if (i < RoomCrates()->count) {
         do {
-            Crate *o = Crates()->slots[i];
+            Crate *o = RoomCrates()->slots[i];
 
             /* nested: as one `&&` test, the code is 5 instructions shorter */
             if (o->GetClassId() == 3 && o->kind == CRATE_KIND_NITRO) {
@@ -78,7 +79,7 @@ void Crate::DetonateNitros()
                     o->Explode(0);
             }
             i++;
-        } while (i < Crates()->count);
+        } while (i < RoomCrates()->count);
     }
 }
 
@@ -132,7 +133,7 @@ void Crate::ActivateIronSwitch()
         return;
 
     f.flags |= ENTITY_FLAG_ALWAYS_ACTIVE;
-    Crates()->LinkActive(this);
+    RoomCrates()->LinkActive(this);
     state |= CRATE_STATE_BUSY;
     SetPlayerBusy();
     StartAnim(0x22);
@@ -147,9 +148,9 @@ void Crate::ActivateIronSwitch()
     gEntityFlags->MarkActivated(id);
 
     i = 0;
-    if (i < Crates()->count) {
+    if (i < RoomCrates()->count) {
         do {
-            Crate *o = Crates()->slots[i];
+            Crate *o = RoomCrates()->slots[i];
 
             /* nested: as one `&&` test, the code is 3 instructions shorter */
             if (o->GetClassId() == 3 && (o->state & CRATE_STATE_MASK) == 0) {
@@ -161,7 +162,7 @@ void Crate::ActivateIronSwitch()
                 }
             }
             i++;
-        } while (i < Crates()->count);
+        } while (i < RoomCrates()->count);
     }
 
     if (n != 0) {

@@ -8,7 +8,9 @@
  *
  * The classes have no C view (crates.h's `struct pool_init_node`, a
  * codegen view of the nodes, is CrateGridNodeInit below since #754).
- * cxx_symbols.txt maps the methods to their C names.
+ * cxx_symbols.txt maps the methods to their C names. CrateList is in the
+ * namespace Game::Crates (#1033, crate.hpp); the grid records
+ * (CrateGridNode, CrateGridLink, CrateGridNodeInit) stay global.
  *
  * `#pragma interface`: no class here has a vtable, so there is none to emit;
  * the pragma keeps g++ from emitting out-of-line copies of the inline
@@ -50,12 +52,12 @@ struct CrateGridLink;
  * mark the nodes they have handled in the columns, so that the pass over
  * column 255 skips them. */
 struct CrateGridNode {
-    Crate *data;         // 0x00
-    CrateGridNode *next; // 0x04
-    CrateGridLink *wrap; // 0x08
-    CrateGridNode *link; // 0x0C - the sprite's other node (column 255's, or its column's)
-    u8 mark;             // 0x10 - handled by Update
-    u8 mark2;            // 0x11 - handled by Draw
+    Game::Crates::Crate *data; // 0x00
+    CrateGridNode *next;       // 0x04
+    CrateGridLink *wrap;       // 0x08
+    CrateGridNode *link;       // 0x0C - the sprite's other node (column 255's, or its column's)
+    u8 mark;                   // 0x10 - handled by Update
+    u8 mark2;                  // 0x11 - handled by Draw
 };
 
 COMPILE_TIME_ASSERT(crate_list_hpp, sizeof(CrateGridNode) == 0x14);
@@ -87,6 +89,11 @@ ASSERT_VIEW_FIELD(crate_list_hpp, CrateGridNode, CrateGridNodeInit, next);
 ASSERT_VIEW_FIELD(crate_list_hpp, CrateGridNode, CrateGridNodeInit, wrap);
 ASSERT_VIEW_FIELD(crate_list_hpp, CrateGridNode, CrateGridNodeInit, link);
 ASSERT_VIEW_FIELD(crate_list_hpp, CrateGridNode, CrateGridNodeInit, mark);
+
+namespace Game
+{
+namespace Crates
+{
 
 /* The crate list (`gCrateList`, play_room.cpp allocates 0x818 bytes for
  * 0xC0 crates): `slots` holds the listed sprites (`count` of them, up to
@@ -237,8 +244,15 @@ public:
 
 COMPILE_TIME_ASSERT(crate_list_hpp, sizeof(CrateList) == 0x818);
 
-/* gCrateList (globals.h) as the class. */
-static inline CrateList *Crates()
+} // namespace Crates
+} // namespace Game
+
+/* gCrateList (globals.h) as the class. It was `Crates()`, which inside a
+ * Game:: namespace would find the namespace Game::Crates. Still an inline
+ * function: calling it, not reading gCrateList, is what keeps the loop
+ * tests of the crate walks where the ROM has them (docs/cplusplus.md,
+ * part 7f). */
+static inline Game::Crates::CrateList *RoomCrates()
 {
     return gCrateList;
 }

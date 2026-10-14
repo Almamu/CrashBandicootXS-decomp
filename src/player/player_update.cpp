@@ -16,6 +16,7 @@ extern "C" {
 }
 
 using Game::Crash::Player;
+using Game::Crates::CollisionQueue;
 
 /* The player's (Player, include/player.hpp) object pass, event handler and
  * draw method. Built by old_agbcp (Makefile OLD_AGBCC_OBJS). */
@@ -44,7 +45,7 @@ void Player::TouchPlayer()
 
         q->count = latch;
         q->posCommitted = latch;
-        Crates()->CollidePlayer(3);
+        RoomCrates()->CollidePlayer(3);
         TouchableList()->CollideClass(4);
         ResolvePlayerCollisions();
     }

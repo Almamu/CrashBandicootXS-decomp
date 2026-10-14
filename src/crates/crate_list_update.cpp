@@ -9,6 +9,9 @@ extern "C" {
 #include "level.h"
 }
 
+using Game::Crates::Crate;
+using Game::Crates::CrateList;
+
 /* CrateList's constructor and Unlink (#664, part 7f;
  * include/crate_list.hpp). An old_agbcp object (OLD_AGBCC_OBJS). */
 

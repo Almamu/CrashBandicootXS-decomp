@@ -7,6 +7,7 @@ extern "C" {
 
 using Engine::Util::FindLineCrossingXMajor;
 using Engine::Util::FindLineCrossingYMajor;
+using Game::Crates::Crate;
 
 /* The general line stepper and Crate::Reset (#664, include/crate.hpp). */
 

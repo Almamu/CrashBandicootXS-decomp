@@ -7,6 +7,8 @@ extern "C" {
 #include "level.h"
 }
 
+using Game::Crates::CrateList;
+
 /* CrateList::Draw (#664, part 7f; include/crate_list.hpp). */
 
 /* Draws the listed sprites on screen (the 240x160 GBA screen, in Q8, at

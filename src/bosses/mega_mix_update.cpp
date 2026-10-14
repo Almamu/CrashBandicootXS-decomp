@@ -11,6 +11,7 @@ extern "C" {
 
 using Game::Bosses::MegaMixCtrl;
 using Game::Crash::Player;
+using Game::Crates::Crate;
 
 /* MegaMixCtrl::Update (UpdateMegaMix): the update of Mega-Mix, the boss
  * that entity type 0x49 spawns (MegaMixCtrl::Spawn, sprite bank 30). Only room

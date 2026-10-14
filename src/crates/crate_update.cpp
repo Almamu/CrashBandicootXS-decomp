@@ -5,6 +5,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Crates::Crate;
+
 /* Crate::Update (#664, include/crate.hpp). */
 
 /* The per-frame tick. While `timer` runs, it counts down, and on each

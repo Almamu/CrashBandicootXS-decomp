@@ -9,7 +9,13 @@
  * class; see docs/matching/archive/issue-12-physics-collision.md.
  *
  * No `#pragma interface`: g++ emits the vtable in crate_update.cpp (see
- * ctrl.hpp); cxx_symbols.txt maps the mangled names onto the C names. */
+ * ctrl.hpp); cxx_symbols.txt maps the mangled names onto the C names.
+ *
+ * Crate is in the namespace Game::Crates (#1033, docs/cplusplus.md
+ * "Namespaces"), with the crate list (crate_list.hpp) and the player's
+ * collision queue (part_list.hpp): `_vt.Q34Game6Crates5Crate`. The
+ * records (`struct crate_group`, `struct crate_placement`) and the
+ * C-linkage ApplyCrateCollision stay global. */
 
 #include "sprite_obj.hpp"
 
@@ -19,11 +25,19 @@ extern "C" {
 #include "crates.h"
 }
 
+namespace Game
+{
+namespace Crates
+{
+class Crate;
+} // namespace Crates
+} // namespace Game
+
 /* A group of objects that trigger together (ActivateIronSwitchCrate
  * builds it): an iron switch crate's outline crates. */
 struct crate_group {
     s32 count;
-    class Crate *items[0];
+    Game::Crates::Crate *items[0];
 };
 
 #define PHYS_NO_GROUP ((struct crate_group *)-1)
@@ -117,6 +131,11 @@ struct crate_placement {
 /* Crate::trialKind with no time-trial kind (ResetCrate):
  * Crate::ConvertForTimeTrial leaves such a crate alone. */
 #define CRATE_TRIAL_KIND_NONE -1
+
+namespace Game
+{
+namespace Crates
+{
 
 /* A crate (CreateCrate allocates 0x64 bytes): a sprite with the fall
  * state, the per-kind parameters and the stack links. `kind` is the crate
@@ -300,6 +319,9 @@ public:
     }
 };
 
+} // namespace Crates
+} // namespace Game
+
 /* The line steppers (crate_line_step.hpp), inline: FindLineCrossing
  * (crate_reset.cpp) inlines them. crate.cpp, which has their out-of-line
  * copies, defines CRATE_LINE_STEP itself and includes them at its end. */
@@ -312,10 +334,10 @@ public:
  * CollisionQueue::Resolve (collision_queue.cpp) calls it: the three bool
  * flags passed as one-byte structs, which go to their stack slots with
  * `strb`, as in the ROM (a bool argument is stored as a word). */
-extern "C" void ApplyCrateCollision(Crate *self, s32 kind, s32 code, s32 edge, s32 depth,
-                                    struct vec2 pos, s32 hit, struct byte_arg p20,
+extern "C" void ApplyCrateCollision(Game::Crates::Crate *self, s32 kind, s32 code, s32 edge,
+                                    s32 depth, struct vec2 pos, s32 hit, struct byte_arg p20,
                                     struct byte_arg p21, struct byte_arg pforced);
 
-COMPILE_TIME_ASSERT(crate_hpp, sizeof(Crate) == 0x64);
+COMPILE_TIME_ASSERT(crate_hpp, sizeof(Game::Crates::Crate) == 0x64);
 
 #endif /* !GUARD_CRATE_HPP */

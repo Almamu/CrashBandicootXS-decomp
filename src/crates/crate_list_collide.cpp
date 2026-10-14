@@ -13,6 +13,7 @@ extern "C" {
 }
 
 using Game::Crash::Player;
+using Game::Crates::CrateList;
 
 /* CrateList::Collide and CollideWithPlayer (#664, part 7f;
  * include/crate_list.hpp), PartList's Collide and CollideWithPlayer

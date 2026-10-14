@@ -131,7 +131,15 @@ extern class PartList *gCollidableList;
  * with `special`). */
 extern class PartList *gForegroundList;
 extern class LevelLayers *gLevelLayers;
-extern class CrateList *gCrateList;
+/* In its namespace (docs/cplusplus.md, "Namespaces"). */
+namespace Game
+{
+namespace Crates
+{
+class CrateList;
+} // namespace Crates
+} // namespace Game
+extern Game::Crates::CrateList *gCrateList;
 #endif
 
 /* sym_iwram.txt: the player object, built by PlayRoom: a Player
