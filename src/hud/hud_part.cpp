@@ -11,6 +11,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Ui::HudPart;
+
 /* Draws the part, unless it is hidden (`frame` -1), `gHudSlideOffset`
  * lower. */
 void HudPart::Draw(screen_dx_t dx, screen_dy_t dy)

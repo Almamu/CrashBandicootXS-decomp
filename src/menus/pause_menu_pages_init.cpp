@@ -10,6 +10,7 @@ extern "C" {
 }
 
 using Game::Level::GameProgress;
+using Game::Ui::PauseMenu;
 
 /* The pause menu's five info pages (PauseMenu, menus.hpp), built by
  * InitInfo (pause_menu_info.cpp): each page's icons, and its numbers as

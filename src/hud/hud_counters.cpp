@@ -12,6 +12,8 @@ extern "C" {
 #include "bosses.h"
 }
 
+using Game::Ui::Hud;
+using Game::Ui::HudPart;
 using Game::Vehicles::Jetpack::Airship;
 
 /* The HUD's stat widgets, the callees of Hud::Update (hud.cpp): UpdateBoss,

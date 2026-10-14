@@ -11,6 +11,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Ui::PauseMenu;
+
 /* PauseMenu's Animate, Draw and DrawRows (menus.hpp; C++ since the #664
  * cleanup), between Loop (pause_menu.cpp) and DrawPowersPage
  * (pause_menu_collectibles.cpp) in the ROM. See

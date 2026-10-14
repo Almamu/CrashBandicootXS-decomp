@@ -10,6 +10,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Ui::PauseMenu;
+
 /* PauseMenu::InitInfo (menus.hpp; C++ since the #664 cleanup), the pause
  * menu's info constructor: the current level's name and number (" N"
  * for the numbered levels, none past them), the completion percentage,

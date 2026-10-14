@@ -83,6 +83,11 @@ class Font;
 } // namespace Text
 } // namespace Engine
 
+namespace Game
+{
+namespace Ui
+{
+
 /* A list of slides (pictures with a song, a fade and a sound effect), shown
  * one after the other. The constructor (InitSlideshow) calls Reset; only
  * the cutscene player is ever made, and RunSlideshow, the text-less loop,
@@ -122,5 +127,8 @@ public:
 };
 
 COMPILE_TIME_ASSERT(cutscene_hpp, sizeof(CutscenePlayer) == 0x28);
+
+} // namespace Ui
+} // namespace Game
 
 #endif /* !GUARD_CUTSCENE_HPP */

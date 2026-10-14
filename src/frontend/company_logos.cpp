@@ -32,6 +32,9 @@ using Engine::Gfx::SpriteOamQueue;
 using Engine::Sys::Display;
 using Engine::Sys::FrameLimiter;
 using Engine::Sys::VramDmaQueue;
+using Game::Ui::CompanyLogos;
+using Game::Ui::LogoActor;
+using Game::Ui::Starfield;
 
 /* Tail of GitHub issue #65's chunk (0x080361B0-0x08037110). The
  * company-logo screen's methods (CompanyLogos, #664 part 10b,

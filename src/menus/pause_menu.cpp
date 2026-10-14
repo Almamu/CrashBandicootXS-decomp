@@ -17,6 +17,7 @@ extern "C" {
 
 using Engine::Gfx::PaletteCache;
 using Engine::Sys::FrameLimiter;
+using Game::Ui::PauseMenu;
 
 /* The pause menu (PauseMenu, menus.hpp; docs/rom_map.md's "overlay_ui"
  * section). Run runs the whole screen to completion: frees the pending

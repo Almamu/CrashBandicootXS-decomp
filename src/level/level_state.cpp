@@ -33,6 +33,7 @@ using Game::Level::LevelState;
 using Game::Objects::Pickups;
 using Game::Objects::Platform;
 using Game::Objects::Wumpa;
+using Game::Ui::CompanyLogos;
 
 /* The level state's accessors and helpers: LevelState's methods
  * (level_state.hpp; #750), under their C names (cxx_symbols.txt), with

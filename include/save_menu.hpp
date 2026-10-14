@@ -47,6 +47,11 @@ COMPILE_TIME_ASSERT(save_menu_hpp, sizeof(struct settings_row_stats) == 0x14);
  * (SaveMenu::IsBlinkOn). */
 #define SAVE_MENU_BLINK_BIT 2
 
+namespace Game
+{
+namespace Ui
+{
+
 /* The save menu: its main options are "load game", "load link game",
  * "save game", "delete game" and "exit" (gSaveMenuOptions). `state`
  * selects the input handler (Input) and the draw routine (Draw):
@@ -84,8 +89,8 @@ public:
      * `instance`, Run runs its loop in state `state` and returns
      * `gameLoaded`, Close deletes it. Static: they take no menu, and
      * `instance` is an initialised IWRAM global of its own
-     * (iwram_data.cpp; cxx_symbols.txt maps `_8SaveMenu.instance` to
-     * gSaveMenu). */
+     * (iwram_data.cpp; cxx_symbols.txt maps
+     * `_Q34Game2Ui8SaveMenu.instance` to gSaveMenu). */
     static void Open();                   // OpenSaveMenu (save_menu.cpp)
     static u8 Run(u32 state, u32 cursor); // RunSaveMenu (save_menu_input.cpp)
     static void Close();                  // CloseSaveMenu (save_menu.cpp)
@@ -151,5 +156,8 @@ private:
 };
 
 COMPILE_TIME_ASSERT(save_menu_hpp, sizeof(SaveMenu) == 0xE4);
+
+} // namespace Ui
+} // namespace Game
 
 #endif /* !GUARD_SAVE_MENU_HPP */

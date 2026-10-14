@@ -6,6 +6,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Ui::Hud;
+
 /* Hud's (#664 cleanup, include/hud.hpp) slide-in timers for the lives,
  * wumpa and crate counters, the crate total's setters and the
  * destructor. Each counter has a

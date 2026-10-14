@@ -57,7 +57,7 @@ extern const struct vec2 gHudPartPositions[35];
  * value, which is what gives old_agbcp's clamp sequence. */
 #define HUDPART_CLAMP_FRAME(part, index, step)                                 \
     {                                                                          \
-        HudPart *_p = (part);                                                  \
+        Game::Ui::HudPart *_p = (part);                                        \
         s32 _f = (step);                                                       \
         s32 _n = _p->bank->anims[index].frameCount;                            \
         CLAMP_INDEX(_f, _n);                                                   \
@@ -72,6 +72,11 @@ extern const struct vec2 gHudPartPositions[35];
 #define HUD_SLIDE_STATE_IN     1 // the timer counts up to 0x14: sliding down into view
 #define HUD_SLIDE_STATE_HELD   2 // shown; the timer counts down from StepSlide's threshold (0x78)
 #define HUD_SLIDE_STATE_OUT    3 // the timer counts down from 0x14: sliding back up
+
+namespace Game
+{
+namespace Ui
+{
 
 /* The HUD object (`gHud`, 0x68 bytes). The lives, wumpa and crate
  * counters each have a {slide state, slide timer} pair, stepped by
@@ -131,5 +136,8 @@ public:
 };
 
 COMPILE_TIME_ASSERT(hud_hpp, sizeof(Hud) == 0x68);
+
+} // namespace Ui
+} // namespace Game
 
 #endif /* !GUARD_HUD_HPP */

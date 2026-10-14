@@ -15,6 +15,8 @@ using Engine::Gfx::BgSetup;
 using Engine::Gfx::BrightnessFade;
 using Engine::Sys::Display;
 using Engine::Sys::VramDmaQueue;
+using Game::Ui::LanguageSelect;
+using Game::Ui::Starfield;
 
 /* The rest of LanguageSelect's methods (#664, part 10b,
  * include/frontend.hpp; language_select.cpp has the others).

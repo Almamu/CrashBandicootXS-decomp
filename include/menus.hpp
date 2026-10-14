@@ -150,6 +150,11 @@ static inline void SetIconBank(Sprite *p, s32 index)
     *field = gSpriteBankSet->Bank(index);
 }
 
+namespace Game
+{
+namespace Ui
+{
+
 /* The pause menu (RunPauseMenu, called from the rooms and the 3D actors'
  * pause button): the rows on the left (gPauseMenuRows: resume, music,
  * sound, warp room, restart trial), and on the right five info pages that
@@ -254,5 +259,8 @@ public:
 };
 
 COMPILE_TIME_ASSERT(menus_hpp, sizeof(PowerDialog) == 0x2C);
+
+} // namespace Ui
+} // namespace Game
 
 #endif /* GUARD_MENUS_HPP */

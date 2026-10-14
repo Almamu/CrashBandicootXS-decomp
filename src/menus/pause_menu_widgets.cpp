@@ -10,6 +10,7 @@ extern "C" {
 }
 
 using Engine::Text::Font;
+using Game::Ui::PauseMenu;
 
 /* PauseMenu's fraction readout, volume and cursor steps (menus.hpp; C++
  * since the #664 cleanup), with FormatDecimal (C linkage). */

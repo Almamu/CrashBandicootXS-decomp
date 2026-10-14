@@ -10,6 +10,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Game::Ui::LevelSelectPageBg;
+
 s32 LevelSelectPageBg::GetScroll()
 {
     return scroll;

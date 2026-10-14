@@ -7,6 +7,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Ui::Hud;
+
 /* The HUD stat-widget family's dispatcher - see docs/rom_map.md's "full
  * HUD stat-widget family" section. Hud::Update (UpdateHud)
  * calls the other widgets on the same HUD (UpdateLives is in

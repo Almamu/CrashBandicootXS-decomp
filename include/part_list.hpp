@@ -13,9 +13,9 @@
  *
  * PaletteCycles is in the namespace Engine::Gfx (#1033, docs/cplusplus.md
  * "Namespaces"), CollisionQueue in Game::Crates (the crates' collisions,
- * crate.hpp); the others are game code. cxx_symbols.txt maps the
- * methods to their C names. The HUD that owns the
- * HudParts is hud.hpp's Hud.
+ * crate.hpp) and HudPart in Game::Ui (hud.hpp); PartList is global.
+ * cxx_symbols.txt maps the methods to their C names. The HUD that owns
+ * the HudParts is hud.hpp's Hud.
  *
  * No `#pragma interface`: g++ emits HudPart's vtable in
  * hud_part.cpp (see ctrl.hpp). */
@@ -111,6 +111,11 @@ COMPILE_TIME_ASSERT(part_list_hpp, sizeof(PaletteCycles) == 0x48);
 } // namespace Gfx
 } // namespace Engine
 
+namespace Game
+{
+namespace Ui
+{
+
 /* One HUD digit or icon (gHudPartVtable, 0x40 bytes): a UiSprite whose `frame` is -1 while it is hidden. */
 class HudPart : public UiSprite
 {
@@ -121,5 +126,8 @@ public:
 };
 
 COMPILE_TIME_ASSERT(part_list_hpp, sizeof(HudPart) == 0x40);
+
+} // namespace Ui
+} // namespace Game
 
 #endif /* !GUARD_PART_LIST_HPP */

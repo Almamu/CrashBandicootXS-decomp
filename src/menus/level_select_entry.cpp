@@ -14,6 +14,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Game::Ui::LevelSelectEntry;
+
 u8 LevelSelectEntry::IsSelected()
 {
     return selected;

@@ -21,6 +21,7 @@ using Engine::Gfx::ObjTileAllocator;
 using Engine::Gfx::PaletteCache;
 using Engine::Gfx::SpriteFrameCache;
 using Engine::Gfx::SpriteOamQueue;
+using Game::Ui::Hud;
 
 /* Pins the current category's tile-cache slots that every actor part
  * shares - the type-0 sprite family gets 2 slots (7/0xf), the type-1/2

@@ -22,6 +22,7 @@ extern "C" {
 
 using Engine::Gfx::LevelSelectCursorZoom;
 using Engine::Gfx::OamBuffer;
+using Game::Ui::LevelSelectCursor;
 
 /* One affine parameter; OBJ matrix `m` is entries 4m..4m+3. An inline so
  * that the value is loaded before the address is computed. */

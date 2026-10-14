@@ -14,6 +14,7 @@ extern "C" {
 
 using Engine::Gfx::BrightnessFade;
 using Engine::Sys::FrameLimiter;
+using Game::Ui::Slideshow;
 
 /* GitHub issue #38: 0x08024590-0x08024783 (game_loop), the sound-channel-
  * handle helper family - see docs/matching/archive/issue-38-medal-results-tally.md

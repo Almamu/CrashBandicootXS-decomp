@@ -14,6 +14,7 @@ extern "C" {
 
 using Engine::Sys::Display;
 using Engine::Sys::FrameLimiter;
+using Game::Ui::Starfield;
 
 /* The starfield (Starfield, #664 part 10c, include/frontend.hpp): a BG0
  * "raw bitmap" behind the language select's, the credits' and the
