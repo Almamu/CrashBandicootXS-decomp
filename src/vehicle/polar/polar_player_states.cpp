@@ -57,16 +57,16 @@ void PolarPlayer::DispenseWumpa()
     gPolarWumpaDispenseTimer = 0xf;
 
     if (acc <= VEHICLE_WUMPA_DISPENSE_1_MAX) {
-        SpawnPolarCollectedWumpa(x, y, 1);
+        PolarCollectedWumpa::Spawn(x, y, 1);
         gPolarQueuedWumpa -= 1;
     } else if (acc <= VEHICLE_WUMPA_DISPENSE_2_MAX) {
-        SpawnPolarCollectedWumpa(x, y, 2);
+        PolarCollectedWumpa::Spawn(x, y, 2);
         gPolarQueuedWumpa -= 2;
     } else if (acc <= VEHICLE_WUMPA_DISPENSE_4_MAX) {
-        SpawnPolarCollectedWumpa(x, y, 4);
+        PolarCollectedWumpa::Spawn(x, y, 4);
         gPolarQueuedWumpa -= 4;
     } else {
-        SpawnPolarCollectedWumpa(x, y, 8);
+        PolarCollectedWumpa::Spawn(x, y, 8);
         gPolarQueuedWumpa -= 8;
     }
 

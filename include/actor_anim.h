@@ -67,8 +67,8 @@ struct anim_table_record {
     // 0x14 - copied into the runtime per-part instance
     // at +0x38 by InitActorPart; zero in some records
     struct anim_box box_14;
-    s32 spawnX; // 0x20 - added to the spawn X by CreateActor (the per-kind actor factory)
-    s32 spawnY; // 0x24 - added to the spawn Y by CreateActor
+    s32 spawnX; // 0x20 - added to the spawn X by PolarPlayer::CreateActor (the factory)
+    s32 spawnY; // 0x24 - added to the spawn Y by PolarPlayer::CreateActor
 }; // 0x28
 COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct anim_table_record) == 0x28);
 
@@ -194,10 +194,10 @@ struct ActorSelf;   /* actor_self.hpp's class */
  * the one interface the yeti, the airship and the hovercraft share; the
  * rest are the player's and the spawner's. */
 struct category_vtable {
-    /* 0x00 - builds the player: ConstructAnimTableState (polar),
+    /* 0x00 - builds the player: PolarPlayer::Create (polar),
      * CreateJetpackPlayer (jetpack, hovercraft) */
     void (*createPlayer)(struct anim_table_record *table, s32 checkpoint);
-    /* 0x04 - spawns a level spawn record's object: SpawnActor,
+    /* 0x04 - spawns a level spawn record's object: PolarPlayer::SpawnActor,
      * SpawnJetpackActor (ActorCategory::RunFrame, ActorCategory::Select) */
     struct ActorSelf *(*spawn)(struct actor_spawn *spawn, u8 useBonus, s32 zOffset);
     void (*createBoss)(s32 level);  // 0x08 - CreateYeti/CreateAirship/CreateHovercraft

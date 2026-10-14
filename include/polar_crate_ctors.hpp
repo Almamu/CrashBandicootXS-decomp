@@ -1,6 +1,6 @@
 /* The polar crate kinds' constructors, for include/vehicle.hpp, with no
  * include guard: vehicle.hpp includes them as inline functions
- * (POLAR_CRATE_CTOR `inline`), which CreateActor (actor_factory.cpp)
+ * (POLAR_CRATE_CTOR `inline`), which PolarPlayer::CreateActor (actor_factory.cpp)
  * expands; polar_crates.cpp includes them at its end with
  * POLAR_CRATE_CTOR empty, for the ROM's out-of-line copies
  * (CreatePolarTimeCrate, ...; none has a caller). Each is PolarCrate's

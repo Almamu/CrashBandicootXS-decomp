@@ -89,7 +89,7 @@ struct anim_table_record;
 struct category_vtable;
 struct actor_spawn_table;
 
-/* A level spawn record as SpawnActor and SpawnJetpackActor (vehicle.hpp)
+/* A level spawn record as PolarPlayer::SpawnActor and SpawnJetpackActor (vehicle.hpp)
  * take it: the actor kinds, then the position in tile units (<< 8 to Q8)
  * and the depth. It is an entry of a spawn table (struct
  * actor_spawn_table below; actor_factory.cpp's and jetpack_spawn.cpp's
@@ -109,7 +109,7 @@ struct actor_spawn {
     s32 z;
 };
 
-/* One spawn of a spawn table: the spawn record SpawnActor is handed, and
+/* One spawn of a spawn table: the spawn record PolarPlayer::SpawnActor is handed, and
  * the spawn index a jetpack plane or polar penguin homes in on after this
  * one (ActorSpawns::GetNextTarget; -1: none). vehicle.hpp's struct spawn_arg
  * is the same record, as the planes' and the penguins' constructors take
@@ -148,15 +148,6 @@ struct ActorSelf;
 
 /* src/actor/actor_bg.cpp (the rest is class ActorBg, actor_bg.hpp) */
 extern void ActorCategoryEndStub(void);
-
-/* src/actor/actor_factory.cpp. SpawnActor is also slot 1 of the category
- * vtables (src/data/actor_category_175558.cpp): to C, `struct ActorSelf` is
- * the class's tag, with no fields. */
-#ifdef __cplusplus
-extern class ActorSelf *CreateActor(u8 kind, s32 x, s32 y, s32 z, struct actor_spawn *spawn);
-#endif
-extern struct ActorSelf *SpawnActor(struct actor_spawn *spawn, u8 useBonus, s32 zOffset);
-extern void ConstructAnimTableState(struct anim_table_record *table, s32 z);
 
 /* src/actor/bg_picture.cpp */
 extern void LoadBgPicture(const u8 *pic);

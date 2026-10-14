@@ -76,7 +76,7 @@ void PolarNitroCrate::Detonate()
     }
 }
 
-/* The CreateActor kind-10 crate: a plain wooden crate worth 4 wumpa
+/* The PolarPlayer::CreateActor kind-10 crate: a plain wooden crate worth 4 wumpa
  * (PolarBasicCrate gives 1). Its animation record,
  * gCategoryFamily0AnimTable[10], is kind 1's with only the index changed
  * (gPolarBasicCrateKeyframes/Frames, palette 1), so in game it looks just

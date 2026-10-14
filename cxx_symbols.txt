@@ -2733,3 +2733,14 @@ ReachCourseEnd__13JetpackPlayer JetpackReachCourseEnd
 ReachCourseEnd__11PolarPlayer PolarReachCourseEnd
 IsPlayerPauseLocked__13JetpackPlayer JetpackIsPauseLocked
 IsPlayerPauseLocked__11PolarPlayer PolarIsPauseLocked
+#
+# #915 the polar factory as static members (include/vehicle.hpp,
+# src/actor/actor_factory.cpp): PolarPlayer's Create, SpawnActor and
+# CreateActor (the category's slots 0 and 1, the per-kind `new`), and the
+# `new` helpers of the classes they build.
+CreateActor__11PolarPlayerUciiiP11actor_spawn CreateActor
+Create__19PolarCheckpointTextiii CreatePolarCheckpointText
+Spawn__19PolarCollectedWumpaiii SpawnPolarCollectedWumpa
+Spawn__11PolarAkuAkuiiii SpawnPolarAkuAku
+Create__11PolarPlayerP17anim_table_recordi ConstructAnimTableState
+SpawnActor__11PolarPlayerP11actor_spawnUci SpawnActor

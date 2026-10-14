@@ -77,7 +77,7 @@ public:
     u8 *GetAnimFrameData();       // GetAnimFrameData
     void SetAnim(s32 idx);        // SetActorAnim
 
-    /* SetAnim's body, inline (CreateActor's obstacles and goal, the polar
+    /* SetAnim's body, inline (PolarPlayer::CreateActor's obstacles and goal, the polar
      * player's constructor). */
     void RestartAnim(s32 idx)
     {

@@ -642,7 +642,7 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/vehicle/jetpack/airship_graphics.cpp` | `LoadAirshipGraphics` (C linkage) | 0 + 1 | agbcp | 0 -> 0 | 11i |
 | `src/vehicle/jetpack/airship_map.cpp` | `DrawAirshipMap` (C linkage) | 0 + 1 | old_agbcp (old_agbcc C already) | 0 -> 0 | 11i |
 | `src/vehicle/jetpack/airship_touch.cpp` | `IsTouchingAirship` (C linkage) | 0 + 1 | old_agbcp (old_agbcc C already) | 0 -> 0 | 11i |
-| `src/actor/actor_factory.cpp` | `PolarPlayer`'s constructor (`ConstructActorPart`, include/vehicle.hpp), with `CreateActor`, `SpawnActor`, `ConstructAnimTableState`, `CreatePolarCheckpointText`, `SpawnPolarCollectedWumpa`, `SpawnPolarAkuAku` (C linkage): the polar actors' `new`s, the crates', wumpa's, riderless polar's and checkpoint banner's constructors inline | 1 + 6 | agbcp | 0 -> 0; 3 macros of hand-written `new`s (allocation, base constructor, vtable store), the `REC_AT` index cast and `AllocActor` go | 11b |
+| `src/actor/actor_factory.cpp` | `PolarPlayer`'s constructor (`ConstructActorPart`, include/vehicle.hpp), with `CreateActor`, `SpawnActor`, `ConstructAnimTableState`, `CreatePolarCheckpointText`, `SpawnPolarCollectedWumpa`, `SpawnPolarAkuAku` (C linkage; static members since #915): the polar actors' `new`s, the crates', wumpa's, riderless polar's and checkpoint banner's constructors inline | 1 + 6 | agbcp | 0 -> 0; 3 macros of hand-written `new`s (allocation, base constructor, vtable store), the `REC_AT` index cast and `AllocActor` go | 11b |
 | `src/actor/actor_spawn.cpp` | the category hooks and spawn accessors (C linkage): `DestroyAllActors` (`delete`), `CanPauseActorCategory`, ... | 0 + 16 | agbcp | 3 pins, 3 `asm` -> 1 pin | 11b |
 | `src/actor/actor_category_frame.cpp` | `RunActorCategoryFrame` (the `Update`/`Draw` virtual calls), `FindShotTarget` (`IsUnshootable`), `PolarIsTouchingPlayer`, `JetpackIsTouchingPlayer` (C linkage; since #915 the last two are static members of `PolarPlayer` and `JetpackPlayer`) | 0 + 4 | old_agbcp | 0 -> 0; the slot-offset structs, the explicit `MemCopy32` self-copies and the frame struct go | 11b |
 | `src/actor/actor_category_select.cpp` | `SelectActorCategory` (C linkage) | 0 + 1 | agbcp | 1 use -> 1 use | 11b |
@@ -715,6 +715,8 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/level/game_frame.cpp`, `level_state.cpp` | the callers: `LevelProgress::CountLevelCrates(...)`, `LevelProgress::CountRoomCrates(...)`, `LevelProgress::LevelHasRedGemEntity(...)` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-level-queries-as-static-members-of-levelprogress-915) |
 | `src/actor/actor_category_frame.cpp`, `actor_category_hooks.cpp`, `actor_category.cpp` | the category hooks as static members of `PolarPlayer` and `JetpackPlayer` (include/vehicle.hpp): `IsTouchingPlayer`, `ReachCourseEnd`, `ReloadPlayerTiles` and `IsPlayerPauseLocked` (Polar/JetpackIsPauseLocked); vehicle.hpp's 8 `extern "C"` prototypes go | 8 | (unchanged) | 0 -> 0 | [#915](#the-category-hooks-as-static-members-of-polarplayer-and-jetpackplayer-915) |
 | `src/data/actor_category_175558.cpp` | ActorCategory::vtables' slots 9-12 point at the members: `PolarPlayer::IsTouchingPlayer`, `JetpackPlayer::IsPlayerPauseLocked` & co. | 0 | (unchanged) | 0 -> 0 | [#915](#the-category-hooks-as-static-members-of-polarplayer-and-jetpackplayer-915) |
+| `src/actor/actor_factory.cpp` | the polar factory as static members: ConstructAnimTableState, SpawnActor and CreateActor of `PolarPlayer` (`Create`, `SpawnActor`, `CreateActor`), CreatePolarCheckpointText, SpawnPolarCollectedWumpa and SpawnPolarAkuAku of the classes they build (`PolarCheckpointText::Create`, `PolarCollectedWumpa::Spawn`, `PolarAkuAku::Spawn`); actor.h's 3 and vehicle.hpp's 3 prototypes go | 6 | (unchanged) | 0 -> 0 | [#915](#the-polar-factory-as-static-members-915) |
+| `src/data/actor_category_175558.cpp`, `src/vehicle/polar/polar_course_objects.cpp`, `polar_player.cpp`, `polar_player_states.cpp` | the callers: the polar slots 0 and 1 point at `PolarPlayer::Create` and `PolarPlayer::SpawnActor`; `PolarCheckpointText::Create(...)`, `PolarAkuAku::Spawn(...)`, `PolarCollectedWumpa::Spawn(...)`; PolarPlayer's methods call `CreateActor` as a member | 0 | (unchanged) | 0 -> 0 | [#915](#the-polar-factory-as-static-members-915) |
 | `src/text/text_box.cpp` | `GetWordLength`, `DrawWrappedTextInBox` (C linkage; takes a `Font *`, `self->SetMargin`, `HeightToLines`) | 0 + 2 | agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/aabb.cpp` (since #767: `CommitBlendRegs` at the end of gfx/display.cpp, `IwramFree`/`IwramAlloc` in system/iwram_alloc.cpp) | `CommitBlendRegs`, `AabbOverlapsInclusiveX`, `AabbOverlaps`, `IwramFree`, `IwramAlloc` (C linkage) | 0 + 5 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/fixed_math.cpp`, `line.cpp`, `line_step.cpp`, `number_format.cpp`, `printf.cpp`, `rand.cpp`, `string.cpp`, `time_format.cpp` | the fixed-point helpers, the Bresenham line, `itoa`, `sprintf`/`vsprintf`/`FindSubstring` (string.cpp since #767), `rand`/`srand`/`RandRange`, the string functions, `FormatCentiseconds` (C linkage) | 0 + 24 | agbcp | 2 pins, 5 asm, 2 asm labels -> the same | all-C++: gfx, system, util, text |
@@ -4953,6 +4955,38 @@ player, the actor list's root (`gActorList->AsPolarPlayer()->FinishRun()`
   (PolarIsTouchingPlayer, JetpackReachCourseEnd, ...). vehicle.hpp's 8
   `extern "C"` prototypes go; actor_category_175558.cpp's table points
   at the members.
+
+### The polar factory as static members (#915)
+
+actor_factory.cpp (ROM 0x0802AC28-0x0802B364) is the polar category's
+factory: ConstructAnimTableState and SpawnActor are its vtable's slots 0
+and 1 (build the player; turn a spawn record into an actor), CreateActor
+the per-kind `new`, and three helpers each `new` one fixed record. They
+take no object, so they are static members, and every object is
+byte-identical:
+
+| C name | member | why there |
+|---|---|---|
+| ConstructAnimTableState | `PolarPlayer::Create` | builds the player (`new PolarPlayer`) |
+| SpawnActor | `PolarPlayer::SpawnActor` | the polar category's spawner, next to Create |
+| CreateActor | `PolarPlayer::CreateActor` | builds every course object; the player's states call it for the riderless polar |
+| CreatePolarCheckpointText | `PolarCheckpointText::Create` | `new PolarCheckpointText` |
+| SpawnPolarCollectedWumpa | `PolarCollectedWumpa::Spawn` | `new PolarCollectedWumpa` |
+| SpawnPolarAkuAku | `PolarAkuAku::Spawn` | `new PolarAkuAku` |
+
+- **Why PolarPlayer for the per-kind factory.** CreateActor builds 17
+  classes, none of them its own, and SpawnActor and CreateActor are the
+  category's (slots 0 and 1 with Create). PolarPlayer is the polar
+  category's class, the one its other hooks are members of
+  ([the category hooks](#the-category-hooks-as-static-members-of-polarplayer-and-jetpackplayer-915)).
+- **Names.** `Create`/`Spawn` keep each C name's verb. PolarPlayer's
+  methods call `CreateActor` unqualified: it is now the member, the same
+  function. None of the six names hides one the bodies call.
+- **cxx_symbols.txt.** The `#915 the polar factory` block maps the 6
+  members to their C names. actor.h's 3 prototypes (CreateActor,
+  SpawnActor, ConstructAnimTableState) and vehicle.hpp's 3 `extern "C"`
+  ones go; the polar vtable (actor_category_175558.cpp) points at
+  `PolarPlayer::Create` and `PolarPlayer::SpawnActor`.
 
 ### The crate passes as static members of Crate (#915)
 

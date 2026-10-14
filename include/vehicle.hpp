@@ -50,11 +50,6 @@ extern "C" void DestroyJetpackHealthCrate(void *self, u32 flags);
 extern "C" void DestroyJetpackTimeCrate(void *self, u32 flags);
 extern "C" void DestroyJetpackQuestionCrate(void *self, u32 flags);
 
-/* src/actor/actor_factory.cpp */
-extern "C" void CreatePolarCheckpointText(s32 x, s32 y, s32 z);
-extern "C" void SpawnPolarCollectedWumpa(s32 x, s32 y, s32 z);
-extern "C" class PolarAkuAku *SpawnPolarAkuAku(s32 x, s32 y, s32 z, s32 level);
-
 /* src/vehicle/jetpack/jetpack_crates.cpp: JetpackBalloonCrate's destructor
  * (below), for inline_copies_actors.cpp's kinds' destructors */
 extern "C" void DestroyJetpackBalloonCrate(void *self, s32 flags);
@@ -183,7 +178,7 @@ extern void (*gUnpackNibbleTilesFunc)(u16 *src, s32 lowBlock);
 
 /* The spawn argument of CreateJetpackPlane and PolarPenguin's
  * constructor (below): the level spawn record CreateJetpackActor and
- * CreateActor were handed (SpawnJetpackActor, SpawnActor), and the word
+ * PolarPlayer::CreateActor were handed (SpawnJetpackActor, PolarPlayer::SpawnActor), and the word
  * after it, its next target: a struct actor_spawn_entry (actor.h) of the
  * spawn table. */
 struct spawn_arg {
@@ -193,7 +188,7 @@ struct spawn_arg {
 };
 
 /* The polar bear levels (4 vtable slots: ActorSelf's). The
- * constructors CreateActor and the other factories in
+ * constructors PolarPlayer::CreateActor and the other factories in
  * src/actor/actor_factory.cpp use are inline where the ROM expands them
  * there (the crates' and the wumpa's also have an out-of-line copy,
  * Create*, in src/vehicle/), the others out of line. */
@@ -211,7 +206,7 @@ public:
 /* The polar run's player (gPolarPlayerVtable; src/vehicle/polar/polar_player.cpp
  * and polar_player_states.cpp): it rides the polar bear, steered left and
  * right, and jumps; the rest of its state is in the gPolar* globals
- * (above), as the ROM has it. ConstructAnimTableState
+ * (above), as the ROM has it. Create (ConstructAnimTableState)
  * (actor_factory.cpp) makes it gActorList, the actor list's root. The
  * other actors call its methods on `static_cast<PolarPlayer *>(gActorList)`,
  * as do its static category hooks (IsTouchingPlayer & co., in the actor
@@ -285,6 +280,15 @@ public:
     static void ReachCourseEnd();                 // PolarReachCourseEnd
     static void ReloadPlayerTiles();              // PolarReloadPlayerTiles
     static s32 IsPlayerPauseLocked();             // PolarIsPauseLocked
+
+    /* The polar category's factory (actor_factory.cpp, #915): Create and
+     * SpawnActor are the category's slots 0 and 1, CreateActor the
+     * per-kind `new`. */
+    static void Create(struct anim_table_record *table, s32 z); // ConstructAnimTableState
+    static ActorSelf *SpawnActor(struct actor_spawn *spawn, u8 useBonus,
+                                 s32 zOffset); // SpawnActor
+    static ActorSelf *CreateActor(u8 kind, s32 x, s32 y, s32 z,
+                                  struct actor_spawn *spawn); // CreateActor
 };
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(PolarPlayer) == sizeof(ActorSelf));
@@ -303,6 +307,8 @@ public:
     }
     virtual ~PolarCheckpointText(); // 1 DestroyPolarCheckpointText
     virtual void Update();          // 2 UpdatePolarCheckpointText
+
+    static void Create(s32 x, s32 y, s32 z); // CreatePolarCheckpointText
 };
 
 /* The wumpa fruit flying to the HUD (gPolarCollectedWumpaVtable;
@@ -320,6 +326,8 @@ public:
     virtual ~PolarCollectedWumpa(); // 1 DestroyPolarCollectedWumpa
     virtual void Update();          // 2 UpdatePolarCollectedWumpa
     virtual void Draw();            // 3 DrawPolarCollectedWumpa
+
+    static void Spawn(s32 x, s32 y, s32 count); // SpawnPolarCollectedWumpa
 };
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(PolarCollectedWumpa) == 0x60);
@@ -328,7 +336,7 @@ COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(PolarCollectedWumpa) == 0x60);
 class PolarWumpa : public ActorSelf
 {
 public:
-    /* Inline (CreateActor expands it); polar_pickups.cpp, which defines
+    /* Inline (PolarPlayer::CreateActor expands it); polar_pickups.cpp, which defines
      * POLAR_WUMPA_CONSTRUCTOR_OUT_OF_LINE, has the ROM's out-of-line copy
      * (CreatePolarWumpa, no caller). */
     PolarWumpa(const struct anim_table_record *rec, s32 x, s32 y, s32 z);
@@ -373,7 +381,7 @@ inline PolarCrate::~PolarCrate()
 }
 
 /* The crate kinds (polar_crates.cpp and polar_crate.cpp). Their
- * constructors are inline (CreateActor expands them) and also out of line
+ * constructors are inline (PolarPlayer::CreateActor expands them) and also out of line
  * at the end of polar_crates.cpp (CreatePolarTimeCrate, ...), from one
  * source, polar_crate_ctors.hpp. */
 
@@ -476,7 +484,7 @@ public:
     virtual void Update();         // 2 UpdatePolarElectricFence
 };
 
-/* A rock in the way (two parts, CreateActor kinds 13 and 14). */
+/* A rock in the way (two parts, PolarPlayer::CreateActor kinds 13 and 14). */
 class PolarObstacle : public ActorSelf
 {
 public:
@@ -540,7 +548,7 @@ public:
     virtual void Update();  // 2 UpdatePolarIcicle
 };
 
-/* Aku Aku following the player (gPolarAkuAku; SpawnPolarAkuAku): its look
+/* Aku Aku following the player (gPolarAkuAku; Spawn, actor_factory.cpp): its look
  * is the mask level (gLevelState->maskLevel), state 1 is invincible
  * (gPolarAkuAkuInvincibleTimer), state 2 a lost mask. */
 #define POLAR_AKU_AKU_STATE_FOLLOW 0     // hovers round behind the player
@@ -554,6 +562,8 @@ public:
     virtual ~PolarAkuAku(); // 1 DestroyPolarAkuAku
     virtual void Update();  // 2 UpdatePolarAkuAku
 
+    static PolarAkuAku *Spawn(s32 x, s32 y, s32 z, s32 level); // SpawnPolarAkuAku
+
     void Refresh(u8 lost);          // RefreshPolarAkuAku
     void Move(s32 x, s32 y, s32 z); // MovePolarAkuAku
     void ClearMask();               // ClearPolarAkuAkuMask
@@ -562,7 +572,7 @@ public:
     void SetMask(s32 level);        // SetPolarMaskLevel
 };
 
-/* The finish line (two parts, CreateActor kinds 25 and 26), shown after
+/* The finish line (two parts, PolarPlayer::CreateActor kinds 25 and 26), shown after
  * 5 frames. */
 class PolarGoal : public ActorSelf
 {

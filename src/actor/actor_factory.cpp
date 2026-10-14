@@ -32,13 +32,18 @@ extern "C" {
  * - CreatePolarCheckpointText, SpawnPolarCollectedWumpa and
  *   SpawnPolarAkuAku build three fixed records (40, 11, 27).
  *
+ * Since #915 they are static members: ConstructAnimTableState, SpawnActor
+ * and CreateActor of PolarPlayer (Create, SpawnActor, CreateActor), the
+ * other three of the class each builds (PolarCheckpointText::Create,
+ * PolarCollectedWumpa::Spawn, PolarAkuAku::Spawn).
+ *
  * `new` is AnimPart's operator new (mem_alloc into the IWRAM heap,
  * inline), then the constructor with the arguments evaluated after the
  * allocation: the record's address is computed after mem_alloc returns,
  * as in the ROM. A few constructors take the record's `spawnX` for x
  * where the others take the moved x. */
 
-ActorSelf *CreateActor(u8 kind, s32 x, s32 y, s32 z, struct actor_spawn *spawn)
+ActorSelf *PolarPlayer::CreateActor(u8 kind, s32 x, s32 y, s32 z, struct actor_spawn *spawn)
 {
     x += gActorAnimTable[kind].spawnX;
     y += gActorAnimTable[kind].spawnY;
@@ -112,29 +117,29 @@ ActorSelf *CreateActor(u8 kind, s32 x, s32 y, s32 z, struct actor_spawn *spawn)
     return 0;
 }
 
-void CreatePolarCheckpointText(s32 x, s32 y, s32 z)
+void PolarCheckpointText::Create(s32 x, s32 y, s32 z)
 {
     new PolarCheckpointText(&gActorAnimTable[POLAR_KIND_CHECKPOINT_TEXT], x, y, z);
 }
 
-void SpawnPolarCollectedWumpa(s32 x, s32 y, s32 count)
+void PolarCollectedWumpa::Spawn(s32 x, s32 y, s32 count)
 {
     new PolarCollectedWumpa(&gActorAnimTable[POLAR_KIND_WUMPA], x, y, count);
 }
 
-PolarAkuAku *SpawnPolarAkuAku(s32 x, s32 y, s32 z, s32 level)
+PolarAkuAku *PolarAkuAku::Spawn(s32 x, s32 y, s32 z, s32 level)
 {
     return new PolarAkuAku(&gActorAnimTable[POLAR_KIND_AKU_AKU], x, y, z, level);
 }
 
-void ConstructAnimTableState(struct anim_table_record *table, s32 z)
+void PolarPlayer::Create(struct anim_table_record *table, s32 z)
 {
     gActorAnimTable = table;
     gActorList = 0;
     gActorList = new PolarPlayer(gActorAnimTable, z);
 }
 
-ActorSelf *SpawnActor(struct actor_spawn *spawn, u8 useBonus, s32 zOffset)
+ActorSelf *PolarPlayer::SpawnActor(struct actor_spawn *spawn, u8 useBonus, s32 zOffset)
 {
     u8 kind = spawn->kind;
 
