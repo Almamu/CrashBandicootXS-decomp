@@ -17,6 +17,12 @@ extern "C" {
 using Engine::Actor::ActorCategory;
 using Engine::Actor::ActorCategoryStats;
 using Engine::Actor::CollectedSpawns;
+using Game::Vehicles::Polar::PolarCrate;
+using Game::Vehicles::Polar::PolarLifeCrate;
+using Game::Vehicles::Polar::PolarNitroCrate;
+using Game::Vehicles::Polar::PolarPlayer;
+using Game::Vehicles::Polar::PolarQuestionCrate;
+using Game::Vehicles::Polar::Yeti;
 
 /* The polar crates' shared update (#664 part 11d, include/vehicle.hpp),
  * ROM 0x0802C4C8-0x0802C7A8, between polar_pickups.cpp and

@@ -717,6 +717,37 @@ checks the change is only a rename:
   and lives in src/bosses/, so it is `Game::Bosses`, not
   `Game::Vehicles::Jetpack`; the airship's fireball (boss_actors.hpp's
   `AirshipFireball`) goes with the airship to `Game::Vehicles`.
+- **`Game::Vehicles::Polar`** (`Q44Game8Vehicles5Polar`, a third
+  namespace level: the layout's `Game::Vehicles` with `Jetpack::` and
+  `Polar::` inside, so `Game::Vehicles::Polar::PolarPlayer`, mangled
+  `Update__Q44Game8Vehicles5Polar11PolarPlayer`; cxx_rename.py and
+  magic_numbers.py's `mangled_class` read `Q4` names as they read `Q3`
+  ones). The polar levels' classes of vehicle.hpp: `PolarPlayer`,
+  `RiderlessPolar`, `PolarCheckpointText`, `PolarCollectedWumpa`,
+  `PolarWumpa`, `PolarCrate` and its seven kinds (`PolarTimeCrate`, ...,
+  `PolarBasicCrate`, with polar_crate_ctors.hpp's constructors),
+  `PolarElectricFence`, `PolarObstacle`, `PolarLauncher`, `PolarPenguin`,
+  `PolarIcicle`, `PolarAkuAku`, `PolarGoal`, `PolarBoostPad` and
+  `PolarCheckpointCrate`, and the all-static `Yeti` (yeti.hpp). All of
+  src/vehicle/polar/, with the PolarPlayer hooks of the actor category
+  driver and the factories of actor_factory.cpp. 162 symbols renamed,
+  among them 22 vtables, no code change; ldscript.txt's 22 lines that place
+  the vtable sections are updated by hand. The class names keep their
+  `Polar` prefix (renaming them is a separate change). vehicle.hpp closes
+  and reopens the namespace around the two global declarations among
+  the classes: ActorSelf::AsPolarPlayer's inline definition and the
+  C-linkage DestroyPolarCrate, which take the qualified name;
+  actor_self.hpp (AsPolarPlayer) and vehicle.hpp (gPolarAkuAku) forward
+  declare the classes in the namespace. polar_crates.cpp includes
+  polar_crate_ctors.hpp at file scope for the out-of-line constructors,
+  through using declarations. The C-linkage functions, the gPolar*
+  globals, the data tables, `struct spawn_arg` and yeti.hpp's
+  `YetiCharge` (a record type no mangled name takes) stay global. No name
+  hiding: no global is named `Vehicles` or `Polar` or like one of the
+  classes, and no polar code names the player class. Boundary calls: the
+  yeti chases the polar player and is the polar actor category's "boss"
+  slot, but the layout puts it here (`Polar::`, Yeti), and only the polar
+  levels use it.
 
 ## Progress
 

@@ -24,6 +24,9 @@ using Engine::Gfx::CellAnim;
 using Engine::Gfx::ObjTileAllocator;
 using Engine::Gfx::SpriteOamQueue;
 using Engine::Sys::VramDmaQueue;
+using Game::Vehicles::Polar::PolarAkuAku;
+using Game::Vehicles::Polar::PolarPlayer;
+using Game::Vehicles::Polar::Yeti;
 
 /* The polar player's virtual methods, the hazards' hits and six of its
  * states (#664 part 11c, include/vehicle.hpp), ROM

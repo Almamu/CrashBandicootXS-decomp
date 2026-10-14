@@ -16,6 +16,10 @@
  * (src/data/actor_category_175558.cpp) points at Create, Update,
  * UpdateBg2, Destroy and LoadGraphics.
  *
+ * Yeti is in the namespace Game::Vehicles::Polar (#1033, vehicle.hpp):
+ * `_Q44Game8Vehicles5Polar4Yeti.chargeParams` & co. Its record type
+ * YetiCharge, which no mangled name takes, stays global.
+ *
  * `#pragma interface`: no vtable to emit; it keeps g++ from emitting
  * out-of-line copies of inline methods (docs/cplusplus.md). */
 #pragma interface
@@ -51,6 +55,13 @@ struct YetiCharge {
     s32 fastChance; // 0x04 - the roll while CellAnim::GetSpeed() > 0x24
     s32 slowChance; // 0x08 - the roll otherwise
 };
+
+namespace Game
+{
+namespace Vehicles
+{
+namespace Polar
+{
 
 class Yeti
 {
@@ -92,5 +103,9 @@ private:
     static const u8 *const frames[123];                 // gYetiFrames
     static const struct anim_frame_record keyframes[4]; // gYetiKeyframes
 };
+
+} // namespace Polar
+} // namespace Vehicles
+} // namespace Game
 
 #endif // GUARD_YETI_HPP

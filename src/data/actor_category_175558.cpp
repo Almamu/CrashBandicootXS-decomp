@@ -13,6 +13,8 @@ extern "C" {
 
 using Engine::Actor::ActorCategory;
 using Game::Bosses::Hovercraft;
+using Game::Vehicles::Polar::PolarPlayer;
+using Game::Vehicles::Polar::Yeti;
 
 /*
  * ROM 0x08175558-0x08175760: the actor category descriptors and the

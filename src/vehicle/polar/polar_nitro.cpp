@@ -7,6 +7,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Vehicles::Polar::PolarNitroCrate;
+
 /* A broken nitro's blast (#664 part 11d, include/vehicle.hpp), ROM
  * 0x0802C9A8-0x0802CA60, between polar_crate.cpp and polar_crates.cpp.
  * An old_agbcc object (current agbcc schedules the box moves' `asr`s

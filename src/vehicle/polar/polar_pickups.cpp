@@ -15,6 +15,9 @@ extern "C" {
 
 using Engine::Actor::ActorBg;
 using Engine::Actor::ActorCategory;
+using Game::Vehicles::Polar::PolarCollectedWumpa;
+using Game::Vehicles::Polar::PolarPlayer;
+using Game::Vehicles::Polar::PolarWumpa;
 
 /* The polar wumpas (#664 part 11d, include/vehicle.hpp), ROM
  * 0x0802C270-0x0802C4C8, between polar_player_states.cpp and

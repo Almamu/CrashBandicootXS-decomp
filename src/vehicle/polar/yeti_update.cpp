@@ -14,6 +14,8 @@ extern "C" {
 
 using Engine::Actor::ActorBg;
 using Engine::Gfx::CellAnim;
+using Game::Vehicles::Polar::PolarPlayer;
+using Game::Vehicles::Polar::Yeti;
 
 /* Sits right after polar_course_objects.cpp's `CreatePolarCheckpointCrate` and before
  * yeti_states.cpp's `YetiStateChase`/`YetiStateCharge` - the whole contiguous

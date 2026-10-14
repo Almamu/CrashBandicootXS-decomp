@@ -41,7 +41,15 @@ extern "C" {
  * inline_copies_actors.cpp, ...), plus their globals and data tables.
  * The per-category hooks (actor_category_hooks.cpp,
  * actor_category_frame.cpp, actor_category.cpp) are static members of
- * PolarPlayer and JetpackPlayer (#915). */
+ * PolarPlayer and JetpackPlayer (#915).
+ *
+ * The polar levels' classes are in the namespace Game::Vehicles::Polar
+ * (#1033, docs/cplusplus.md "Namespaces"), mangled as
+ * `Q44Game8Vehicles5Polar`: `Update__Q44Game8Vehicles5Polar11PolarPlayer`,
+ * `_vt.Q44Game8Vehicles5Polar11PolarPlayer` (in the section
+ * `.gnu.linkonce.d._vt.Q44Game8Vehicles5Polar11PolarPlayer`, which
+ * ldscript.txt names) & co. The C-linkage functions, the globals, the
+ * data tables and `struct spawn_arg` stay global. */
 
 /* src/actor/inline_copies_actors.cpp: the C-linkage copies of the balloon crate
  * kinds' implicit destructors (below), which the g++-emitted
@@ -83,7 +91,17 @@ extern s32 gJetpackRingLastFrame;
 extern s32 gJetpackShotCooldown;
 extern s32 gJetpackWumpaDispenseTimer;
 /* The polar actors the player keeps. */
-extern class PolarAkuAku *gPolarAkuAku;
+namespace Game
+{
+namespace Vehicles
+{
+namespace Polar
+{
+class PolarAkuAku;
+} // namespace Polar
+} // namespace Vehicles
+} // namespace Game
+extern Game::Vehicles::Polar::PolarAkuAku *gPolarAkuAku;
 extern s32 gPolarAkuAkuInvincibleTimer;
 extern u8 gPolarFadeStarted;
 extern s32 gPolarFinishTimer;
@@ -171,6 +189,13 @@ struct spawn_arg {
     s32 target;               // 0x10 - the first hop target index (AimJetpackPlane,
                               //        PolarPenguin::Aim)
 };
+
+namespace Game
+{
+namespace Vehicles
+{
+namespace Polar
+{
 
 /* The polar bear levels (4 vtable slots: ActorSelf's). The
  * constructors PolarPlayer::CreateActor and the other factories in
@@ -278,10 +303,21 @@ public:
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(PolarPlayer) == sizeof(ActorSelf));
 
-inline PolarPlayer *ActorSelf::AsPolarPlayer()
+} // namespace Polar
+} // namespace Vehicles
+} // namespace Game
+
+inline Game::Vehicles::Polar::PolarPlayer *ActorSelf::AsPolarPlayer()
 {
-    return (PolarPlayer *)this;
+    return (Game::Vehicles::Polar::PolarPlayer *)this;
 }
+
+namespace Game
+{
+namespace Vehicles
+{
+namespace Polar
+{
 
 class PolarCheckpointText : public ActorSelf
 {
@@ -357,9 +393,20 @@ public:
     }
 };
 
+} // namespace Polar
+} // namespace Vehicles
+} // namespace Game
+
 /* src/actor/inline_copies_actors.cpp: the C-linkage copy of PolarCrate's inline
  * destructor, which the g++-emitted vtables point at (cxx_symbols.txt). */
-extern "C" void DestroyPolarCrate(PolarCrate *self, u32 flags);
+extern "C" void DestroyPolarCrate(Game::Vehicles::Polar::PolarCrate *self, u32 flags);
+
+namespace Game
+{
+namespace Vehicles
+{
+namespace Polar
+{
 
 inline PolarCrate::~PolarCrate()
 {
@@ -592,6 +639,10 @@ public:
     virtual ~PolarCheckpointCrate(); // 1 DestroyPolarCheckpointCrate
     virtual void Update();           // 2 UpdatePolarCheckpointCrate
 };
+
+} // namespace Polar
+} // namespace Vehicles
+} // namespace Game
 
 /* The jetpack levels (7 vtable slots: HpActor's; the balloon crates
  * add an 8th). */
