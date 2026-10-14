@@ -348,7 +348,7 @@ void JetpackPlayer::StateRollRight()
         SetState(JETPACK_PLAYER_STATE_FLY, 0);
 }
 
-/* The course's end (the category's hook, JetpackReachCourseEnd): unless
+/* The course's end (the category's hook, ReachCourseEnd): unless
  * the player is already inactive, it stops, loses the input and enters
  * state 5 (animation 4), with a cue; in a time trial the clock freezes. */
 void JetpackPlayer::FinishRun()

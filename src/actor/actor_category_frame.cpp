@@ -16,7 +16,8 @@ extern "C" {
 
 /* ROM 0x0802A018-0x0802A4D4, inside the actor zone that starts at
  * ActorCategory::SetupVramPool (0x080291A4): the category hooks that test an actor
- * against the player (PolarIsTouchingPlayer, JetpackIsTouchingPlayer),
+ * against the player (PolarIsTouchingPlayer, JetpackIsTouchingPlayer:
+ * PolarPlayer's and JetpackPlayer's static IsTouchingPlayer since #915),
  * the category's frame (ActorCategory::RunFrame) and the jetpack shot's
  * target search (FindShotTarget). C++ since #664 part 11b
  * (docs/cplusplus.md); an old_agbcc object (current agbcc schedules the
@@ -33,7 +34,7 @@ static inline u8 ActorsOverlap(ActorSelf *pl, ActorSelf *self)
     return BoxOverlap(WorldBox(pl), WorldBox(self));
 }
 
-s32 PolarIsTouchingPlayer(ActorSelf *self)
+s32 PolarPlayer::IsTouchingPlayer(ActorSelf *self)
 {
     /* `plAddr` is needed: inlined, the instructions are reordered */
     ActorSelf **plAddr = &gActorList;
@@ -43,7 +44,7 @@ s32 PolarIsTouchingPlayer(ActorSelf *self)
     return ActorsOverlap(*plAddr, self);
 }
 
-s32 JetpackIsTouchingPlayer(ActorSelf *self)
+s32 JetpackPlayer::IsTouchingPlayer(ActorSelf *self)
 {
     /* `plAddr` is needed: inlined, the instructions are reordered */
     ActorSelf **plAddr = &gActorList;

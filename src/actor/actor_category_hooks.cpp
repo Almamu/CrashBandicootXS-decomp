@@ -13,29 +13,30 @@ extern "C" {
 
 /* The vehicle levels' category hooks before ActorSelf in the ROM
  * (0x0802A69C-0x0802A700): JetpackReloadPlayerTiles-PolarReachCourseEnd
- * and ActorCategory::IsTouchingPlayer.
+ * (JetpackPlayer's and PolarPlayer's static ReloadPlayerTiles and
+ * ReachCourseEnd since #915) and ActorCategory::IsTouchingPlayer.
  * Built with old_agbcp and -fno-implement-inlines, like actor.cpp, where
  * it was until #770. See docs/matching/archive/issue-50-actor-2a69c.md. */
 
 /* The vehicle levels' category hooks (ActorCategory::vtables' slots):
  * each calls its method on the player
  * (gActorList, the list's root). */
-void JetpackReloadPlayerTiles(void)
+void JetpackPlayer::ReloadPlayerTiles()
 {
     gActorList->AsJetpackPlayer()->AllocTiles();
 }
 
-void PolarReloadPlayerTiles(void)
+void PolarPlayer::ReloadPlayerTiles()
 {
     gActorList->AsPolarPlayer()->AllocTiles();
 }
 
-void JetpackReachCourseEnd(void)
+void JetpackPlayer::ReachCourseEnd()
 {
     gActorList->AsJetpackPlayer()->FinishRun();
 }
 
-void PolarReachCourseEnd(void)
+void PolarPlayer::ReachCourseEnd()
 {
     gActorList->AsPolarPlayer()->FinishRun();
 }

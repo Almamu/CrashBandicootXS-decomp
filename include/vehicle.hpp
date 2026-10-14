@@ -38,15 +38,10 @@ extern "C" {
 /* Every function the vehicle levels define with C linkage (or a C name,
  * cxx_symbols.txt) is declared here, including those the file layout put
  * in actor or bosses files for ROM order (the teardown functions in
- * inline_copies_actors.cpp, the per-category hooks in
- * actor_category_hooks.cpp, actor_category_frame.cpp and
- * actor_category.cpp, ...), plus their globals and data tables. */
-
-/* src/actor/actor_category_hooks.cpp */
-extern "C" void JetpackReloadPlayerTiles(void);
-extern "C" void PolarReloadPlayerTiles(void);
-extern "C" void JetpackReachCourseEnd(void);
-extern "C" void PolarReachCourseEnd(void);
+ * inline_copies_actors.cpp, ...), plus their globals and data tables.
+ * The per-category hooks (actor_category_hooks.cpp,
+ * actor_category_frame.cpp, actor_category.cpp) are static members of
+ * PolarPlayer and JetpackPlayer (#915). */
 
 /* src/actor/inline_copies_actors.cpp: the C-linkage copies of the balloon crate
  * kinds' implicit destructors (below), which the g++-emitted
@@ -55,18 +50,10 @@ extern "C" void DestroyJetpackHealthCrate(void *self, u32 flags);
 extern "C" void DestroyJetpackTimeCrate(void *self, u32 flags);
 extern "C" void DestroyJetpackQuestionCrate(void *self, u32 flags);
 
-/* src/actor/actor_category_frame.cpp */
-extern "C" s32 PolarIsTouchingPlayer(struct ActorSelf *self);
-extern "C" s32 JetpackIsTouchingPlayer(struct ActorSelf *self);
-
 /* src/actor/actor_factory.cpp */
 extern "C" void CreatePolarCheckpointText(s32 x, s32 y, s32 z);
 extern "C" void SpawnPolarCollectedWumpa(s32 x, s32 y, s32 z);
 extern "C" class PolarAkuAku *SpawnPolarAkuAku(s32 x, s32 y, s32 z, s32 level);
-
-/* src/actor/actor_category.cpp */
-extern "C" s32 JetpackIsPauseLocked(void);
-extern "C" s32 PolarIsPauseLocked(void);
 
 /* src/vehicle/jetpack/jetpack_crates.cpp: JetpackBalloonCrate's destructor
  * (below), for inline_copies_actors.cpp's kinds' destructors */
@@ -227,8 +214,9 @@ public:
  * (above), as the ROM has it. ConstructAnimTableState
  * (actor_factory.cpp) makes it gActorList, the actor list's root. The
  * other actors call its methods on `static_cast<PolarPlayer *>(gActorList)`,
- * as do the actor zone's C-linkage category hooks
- * (actor_category_hooks.cpp, actor_category.cpp) and UpdateYeti (yeti_update.cpp). */
+ * as do its static category hooks (IsTouchingPlayer & co., in the actor
+ * zone: actor_category_frame.cpp, actor_category_hooks.cpp,
+ * actor_category.cpp) and UpdateYeti (yeti_update.cpp). */
 
 /* PolarPlayer's `state` (#843, docs/flags/actor_states_polar.md): the
  * stateFuncs index, named after its method. */
@@ -287,6 +275,16 @@ public:
 
     typedef void (PolarPlayer::*StateFunc)();
     static const StateFunc stateFuncs[14];
+
+    /* The polar category's hooks (ActorCategory::vtables' slots 9-12,
+     * #915): static, each runs on the player, gActorList. Their code is
+     * in the actor zone, for ROM order: IsTouchingPlayer in
+     * actor_category_frame.cpp, ReachCourseEnd and ReloadPlayerTiles in
+     * actor_category_hooks.cpp, IsPlayerPauseLocked in actor_category.cpp. */
+    static s32 IsTouchingPlayer(ActorSelf *self); // PolarIsTouchingPlayer
+    static void ReachCourseEnd();                 // PolarReachCourseEnd
+    static void ReloadPlayerTiles();              // PolarReloadPlayerTiles
+    static s32 IsPlayerPauseLocked();             // PolarIsPauseLocked
 };
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(PolarPlayer) == sizeof(ActorSelf));
@@ -667,6 +665,14 @@ public:
 
     typedef void (JetpackPlayer::*StateFunc)();
     static const StateFunc stateFuncs[8];
+
+    /* The jetpack and hovercraft categories' hooks (ActorCategory::vtables'
+     * slots 9-12, #915): static, each runs on the player, gActorList; their
+     * code is in the actor zone, next to PolarPlayer's (above). */
+    static s32 IsTouchingPlayer(ActorSelf *self); // JetpackIsTouchingPlayer
+    static void ReachCourseEnd();                 // JetpackReachCourseEnd
+    static void ReloadPlayerTiles();              // JetpackReloadPlayerTiles
+    static s32 IsPlayerPauseLocked();             // JetpackIsPauseLocked
 };
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackPlayer) == 0x58);
