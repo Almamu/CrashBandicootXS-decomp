@@ -257,7 +257,7 @@ void JetpackPlayer::SteerX()
 }
 
 /* State 1, flying: steering, then R/L enter the roll states 2/3 and A
- * fires a shot (sfx 0x24, `SpawnJetpackShot`) when the cooldown allows. */
+ * fires a shot (sfx 0x24, `JetpackShot::Spawn`) when the cooldown allows. */
 void JetpackPlayer::StateFly()
 {
     SteerY();
@@ -280,8 +280,8 @@ void JetpackPlayer::StateFly()
             gAudioContext->PlayAmbientSfx(SFX_JETPACK_SHOOT, 1000, 0xa0, true);
             sx = x + INT_TO_Q8(18);
             sy = y - INT_TO_Q8(24);
-            SpawnJetpackShot(sx, sy, z + JETPACK_PLAYER_SHOT_OFFSET_Z, Q12_MUL(sx, 0x199),
-                             Q12_MUL(sy, 0x199));
+            JetpackShot::Spawn(sx, sy, z + JETPACK_PLAYER_SHOT_OFFSET_Z, Q12_MUL(sx, 0x199),
+                               Q12_MUL(sy, 0x199));
         }
     }
 }

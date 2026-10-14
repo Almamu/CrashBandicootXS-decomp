@@ -1,5 +1,6 @@
 #include "airship.hpp"
 #include "vehicle.hpp"
+#include "boss_actors.hpp"
 #include "audio.hpp"
 #include "level_state.hpp"
 #include "actor_spawns.hpp"
@@ -42,7 +43,7 @@ void Airship::StateApproach()
  * `gAirshipZ` by its per-frame delta the same way, but also
  * ramps `gAirshipVelZ` itself toward a fixed target (`0x98`,
  * +-1/frame). Drives a small phase counter (`gAirshipFireTimer`) that,
- * on its "armed" phase (0), spawns an effect via `SpawnAirshipFireball` centered
+ * on its "armed" phase (0), spawns an effect via `AirshipFireball::Spawn` centered
  * on a fixed camera offset and advances a per-effect counter
  * (`gAirshipVolleyCount`) through a small weapon-kind table
  * (`gAirshipAttack`)'s thresholds, otherwise just decrements the
@@ -63,8 +64,8 @@ void Airship::StateFireballs()
         velZ = v - AIRSHIP_SPEED_Z_STEP;
 
     if (fireTimer == 0) {
-        SpawnAirshipFireball(x - AIRSHIP_GUN_OFFSET_X, y + AIRSHIP_GUN_OFFSET_Y,
-                             z - AIRSHIP_GUN_OFFSET_Z);
+        AirshipFireball::Spawn(x - AIRSHIP_GUN_OFFSET_X, y + AIRSHIP_GUN_OFFSET_Y,
+                               z - AIRSHIP_GUN_OFFSET_Z);
         if (++volleyCount == attack->fireballBurst) {
             volleyCount = 0;
             fireTimer = attack->fireballBurstDelay;
@@ -93,8 +94,8 @@ void Airship::StateFireballs()
  * computes a signed Manhattan-style distance in X/Y (`+0x1c`/`+0x20`
  * against `gAirshipX`/`gAirshipY`, scaled by the speed
  * term, `abs`-combined) and, while under a `0x7FF` threshold, spawns an
- * effect via `SpawnJetpackCannonball` (the 5-argument, velocity-carrying sibling of `AirshipStateFireballs`'s
- * `SpawnAirshipFireball`) and advances the same `gAirshipVolleyCount` counter
+ * effect via `JetpackCannonball::Spawn` (the 5-argument, velocity-carrying sibling of `AirshipStateFireballs`'s
+ * `AirshipFireball::Spawn`) and advances the same `gAirshipVolleyCount` counter
  * through the weapon table's next threshold slot (`+0x14`/`+0x18`/
  * `+0x10`). Otherwise the phase just decrements. Always re-runs
  * `SteerAirship` and, past a higher position ceiling (`0x4300`),
@@ -128,8 +129,8 @@ void Airship::StateCannon()
             dx = Q12_MUL(pl->x - (x - AIRSHIP_GUN_OFFSET_X), speed);
             dy = Q12_MUL(pl->y - (y + AIRSHIP_GUN_OFFSET_Y), speed);
             if (ABS_BRANCHLESS(dx) + ABS_BRANCHLESS(dy) <= INT_TO_Q8(8) - 1) {
-                SpawnJetpackCannonball(x - AIRSHIP_GUN_OFFSET_X, y + AIRSHIP_GUN_OFFSET_Y,
-                                       z - AIRSHIP_GUN_OFFSET_Z, dx, dy);
+                JetpackCannonball::Spawn(x - AIRSHIP_GUN_OFFSET_X, y + AIRSHIP_GUN_OFFSET_Y,
+                                         z - AIRSHIP_GUN_OFFSET_Z, dx, dy);
                 if (++volleyCount == attack->cannonBurst) {
                     volleyCount = phase;
                     fireTimer = attack->cannonBurstDelay;
@@ -159,13 +160,13 @@ void Airship::StateCannon()
  * counter, the same one `LoadAirshipGraphics`'s palette fade reads) through
  * five weapon-kind cases (0xa/0x32/0x50/0x6e/0xaa), each clearing one
  * BG palette bank-1 slot then spawning 1-3 sub-projectiles via
- * `RandRange` (a per-axis jitter/randomizer) and `CreateJetpackExplosion` (the
+ * `RandRange` (a per-axis jitter/randomizer) and `JetpackExplosion::Create` (the
  * actual spawn call, `(x, y, z)`); the 0xaa case instead
  * enters state 5 (falling) with animation 1,
  * plays a sound, and - gated by a lock byte
  * (`gLevelState+0x8c`) and a spawn-budget counter
  * (`gAirshipCheckpointCount`) - spawns a homing/seek effect via
- * `SetJetpackCheckpoint`/`CreateJetpackCheckpointText`.
+ * `SetJetpackCheckpoint`/`JetpackCheckpointText::Create`.
  *
  * Matching notes: the box table is `const` (so its jitter ranges stay
  * CSE'd in registers across the spawn calls), the palette base pointer
@@ -176,7 +177,7 @@ void Airship::StateCannon()
  * before the last lock check, as the ROM loads that address early. */
 
 /* One sub-projectile, jittered around (x, y) by the box's own +-range. */
-#define SPAWN(bx, by) CreateJetpackExplosion((bx) + RandRange(INT_TO_Q8(box.w)), \
+#define SPAWN(bx, by) JetpackExplosion::Create((bx) + RandRange(INT_TO_Q8(box.w)), \
                                 (by) + RandRange(INT_TO_Q8(box.h)), \
                                 z - 0x100)
 
@@ -221,7 +222,7 @@ void Airship::StateExplode()
             ActorSelf **pl = &gActorList;
             if (gJetpackPlayerInactive == 0) {
                 ((JetpackPlayer *)*pl)->SetCheckpoint();
-                CreateJetpackCheckpointText();
+                JetpackCheckpointText::Create();
                 checkpointCount++;
             }
         }

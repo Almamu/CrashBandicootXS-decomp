@@ -54,8 +54,8 @@ void HovercraftCannon::StateFire()
                 const struct hovercraft_attack *table;
                 s32 n;
 
-                SpawnJetpackCannonball(x, y, z, dx, dy);
-                SpawnHovercraftCannonFlash(x, y, z);
+                JetpackCannonball::Spawn(x, y, z, dx, dy);
+                HovercraftCannonFlash::Spawn(x, y, z);
 
                 n = count + 1;
                 count = n;

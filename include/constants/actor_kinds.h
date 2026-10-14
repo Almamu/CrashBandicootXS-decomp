@@ -9,7 +9,7 @@
  * number in `index`. Each family has its own numbering: POLAR_KIND_* for
  * family 0 (categories 0-2, the polar runs, PolarPlayer::CreateActor and
  * gCategoryFamily0AnimTable) and JETPACK_KIND_* for family 1 (categories
- * 3-6, the jetpack and boss stages, CreateJetpackActor and
+ * 3-6, the jetpack and boss stages, JetpackPlayer::CreateActor and
  * gCategoryFamily1AnimTable). The names come from each kind's
  * constructor and its record's frames.
  */
@@ -109,6 +109,6 @@
 #define JETPACK_KIND_COLLECTED_WUMPA 44
 #define JETPACK_KIND_EXPLOSION 45
 #define JETPACK_KIND_CHECKPOINT_TEXT 46
-#define JETPACK_KIND_UNK62 62 /* SpawnJetpackActor skips it; no record, never in the data */
+#define JETPACK_KIND_UNK62 62 /* JetpackPlayer::SpawnActor skips it; no record, never in the data */
 
 #endif /* GUARD_CONSTANTS_ACTOR_KINDS_H */

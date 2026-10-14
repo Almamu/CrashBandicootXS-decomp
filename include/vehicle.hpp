@@ -57,21 +57,6 @@ extern "C" void DestroyJetpackBalloonCrate(void *self, s32 flags);
 /* src/vehicle/jetpack/jetpack_player.cpp: a C-linkage getter */
 extern "C" u8 IsJetpackPlayerInactive(void);
 
-/* src/vehicle/jetpack/jetpack_spawn.cpp: the spawners (C linkage) */
-extern "C" struct ActorSelf *SpawnJetpackActor(struct actor_spawn *rec, u8 alt, s32 dz);
-extern "C" struct ActorSelf *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z,
-                                                struct actor_spawn *spawn);
-extern "C" void CreateJetpackCheckpointText(void);
-extern "C" void CreateJetpackExplosion(s32 x, s32 y, s32 z);
-extern "C" void SpawnJetpackCollectedWumpa(s32 a, s32 b, s32 c);
-class JetpackBalloon;
-class JetpackBalloonCrate;
-extern "C" JetpackBalloon *SpawnJetpackBalloon(u8 kind, s32 a, s32 b, s32 c,
-                                               JetpackBalloonCrate *crate);
-extern "C" void SpawnJetpackCannonball(s32 a, s32 b, s32 c, s32 d, s32 e);
-extern "C" void SpawnJetpackShot(s32 a, s32 b, s32 c, s32 d, s32 e);
-extern "C" void CreateJetpackPlayer(struct anim_table_record *table, s32 z);
-
 /* src/vehicle/polar/polar_aku_aku.cpp and polar_player_states.cpp: the
  * C-linkage functions. */
 extern "C" s32 GetPolarMaskLevel(void);
@@ -177,10 +162,10 @@ extern void (*gUnpackNibbleTilesFunc)(u16 *src, s32 lowBlock);
  * static data members (include/yeti.hpp). */
 
 /* The spawn argument of CreateJetpackPlane and PolarPenguin's
- * constructor (below): the level spawn record CreateJetpackActor and
- * PolarPlayer::CreateActor were handed (SpawnJetpackActor, PolarPlayer::SpawnActor), and the word
- * after it, its next target: a struct actor_spawn_entry (actor.h) of the
- * spawn table. */
+ * constructor (below): the level spawn record JetpackPlayer::CreateActor
+ * and PolarPlayer::CreateActor were handed (by the two SpawnActors), and
+ * the word after it, its next target: a struct actor_spawn_entry
+ * (actor.h) of the spawn table. */
 struct spawn_arg {
     struct actor_spawn spawn; // 0x00 (actor.h)
     s32 target;               // 0x10 - the first hop target index (AimJetpackPlane,
@@ -613,9 +598,9 @@ public:
 
 /* The jetpack player (gJetpackPlayerVtable;
  * src/vehicle/jetpack/jetpack_player_update.cpp and jetpack_player.cpp;
- * jetpack_spawn.cpp's CreateJetpackPlayer): its hit points are HpActor's,
+ * jetpack_spawn.cpp's JetpackPlayer::Create): its hit points are HpActor's,
  * shown as a percentage (GetHp); the rest of its state is in the
- * gJetpack* globals (above), as the ROM has it. CreateJetpackPlayer
+ * gJetpack* globals (above), as the ROM has it. JetpackPlayer::Create
  * makes it gActorList, the actor list's root. */
 /* JetpackPlayer's `state` (#843, docs/flags/actor_states_jetpack.md): the
  * stateFuncs index, named after its method. */
@@ -683,6 +668,14 @@ public:
     static void ReachCourseEnd();                 // JetpackReachCourseEnd
     static void ReloadPlayerTiles();              // JetpackReloadPlayerTiles
     static s32 IsPlayerPauseLocked();             // JetpackIsPauseLocked
+
+    /* The jetpack and hovercraft categories' factory (jetpack_spawn.cpp,
+     * #915): Create and SpawnActor are the categories' slots 0 and 1,
+     * CreateActor the per-kind `new`. */
+    static void Create(struct anim_table_record *table, s32 z);            // CreateJetpackPlayer
+    static ActorSelf *SpawnActor(struct actor_spawn *rec, u8 alt, s32 dz); // SpawnJetpackActor
+    static ActorSelf *CreateActor(u8 kind, s32 x, s32 y, s32 z,
+                                  struct actor_spawn *spawn); // CreateJetpackActor
 };
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackPlayer) == 0x58);
@@ -697,7 +690,7 @@ inline JetpackPlayer *ActorSelf::AsJetpackPlayer()
 class JetpackCheckpointText : public HpActor
 {
 public:
-    /* Inline: CreateJetpackCheckpointText expands it. */
+    /* Inline: JetpackCheckpointText::Create expands it. */
     JetpackCheckpointText(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
         : HpActor(rec, x, y, z, 1)
     {
@@ -706,6 +699,8 @@ public:
     virtual void Update();            // 2 UpdateJetpackCheckpointText
     virtual void Draw();              // 3 DrawJetpackCheckpointText
     virtual u8 IsUnshootable();       // 5 IsJetpackCheckpointTextUnshootable
+
+    static void Create(); // CreateJetpackCheckpointText
 };
 
 /* An explosion: it moves away (into the screen) by
@@ -714,7 +709,7 @@ public:
 class JetpackExplosion : public HpActor
 {
 public:
-    /* Inline: CreateJetpackExplosion expands it. */
+    /* Inline: JetpackExplosion::Create expands it. */
     JetpackExplosion(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
         : HpActor(rec, x, y, z, 1)
     {
@@ -722,6 +717,8 @@ public:
     virtual ~JetpackExplosion(); // 1 DestroyJetpackExplosion
     virtual void Update();       // 2 UpdateJetpackExplosion
     virtual u8 IsUnshootable();  // 5 IsJetpackExplosionUnshootable
+
+    static void Create(s32 x, s32 y, s32 z); // CreateJetpackExplosion
 };
 
 /* The jetpack player's shot (src/vehicle/jetpack/jetpack_shot.cpp): it flies by
@@ -737,6 +734,8 @@ public:
     virtual ~JetpackShot();     // 1 DestroyJetpackShot
     virtual void Update();      // 2 UpdateJetpackShot
     virtual u8 IsUnshootable(); // 5 IsJetpackShotUnshootable
+
+    static void Spawn(s32 x, s32 y, s32 z, s32 velX, s32 velY); // SpawnJetpackShot
 };
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackShot) == 0x60);
@@ -865,6 +864,8 @@ public:
     virtual ~JetpackCannonball(); // 1 DestroyJetpackCannonball
     virtual void Update();        // 2 UpdateJetpackCannonball
     virtual u8 IsUnshootable();   // 5 IsJetpackCannonballUnshootable
+
+    static void Spawn(s32 x, s32 y, s32 z, s32 velX, s32 velY); // SpawnJetpackCannonball
 };
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackCannonball) == 0x60);
@@ -915,13 +916,16 @@ public:
 
     typedef void (JetpackBalloon::*StateFunc)();
     static const StateFunc stateFuncs[3];
+
+    static JetpackBalloon *Spawn(u8 kind, s32 x, s32 y, s32 z,
+                                 JetpackBalloonCrate *crate); // SpawnJetpackBalloon
 };
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackBalloon) == 0x64);
 
 /* The crates hanging from balloons (gJetpackBalloonCrateVtable,
  * src/vehicle/jetpack/jetpack_crates.cpp): each hangs from a balloon of its own
- * (SpawnJetpackBalloon), swaying around its spawn point, until the
+ * (JetpackBalloon::Spawn), swaying around its spawn point, until the
  * balloon is shot (Break: it falls) or the crate is (Damage: it breaks
  * and lets the balloon go). The three kinds built on it pay out when
  * broken or touched; their destructors are g++'s implicit ones
@@ -1088,6 +1092,8 @@ public:
     virtual void Update();            // 2 UpdateJetpackCollectedWumpa
     virtual void Draw();              // 3 DrawJetpackCollectedWumpa
     virtual u8 IsUnshootable();       // 5 IsJetpackCollectedWumpaUnshootable
+
+    static void Spawn(s32 x, s32 y, s32 reward); // SpawnJetpackCollectedWumpa
 };
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackCollectedWumpa) == 0x64);

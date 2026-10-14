@@ -93,7 +93,7 @@ static inline void StepSideGun(HovercraftSideGun *self)
         if (timer == 0) {
             s32 n;
 
-            SpawnHovercraftFireball(self->x, self->y, self->z);
+            HovercraftFireball::Spawn(self->x, self->y, self->z);
             n = self->lap + 1;
             self->lap = n;
 

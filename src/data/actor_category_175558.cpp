@@ -175,8 +175,8 @@ const struct category_vtable ActorCategory::vtables[CATEGORY_TYPE_COUNT] = {
     },
     /* CATEGORY_TYPE_JETPACK */
     {
-        CreateJetpackPlayer,
-        SpawnJetpackActor,
+        JetpackPlayer::Create,
+        JetpackPlayer::SpawnActor,
         Airship::Create,
         Airship::Update,
         Airship::UpdateBg2,
@@ -191,8 +191,8 @@ const struct category_vtable ActorCategory::vtables[CATEGORY_TYPE_COUNT] = {
     },
     /* CATEGORY_TYPE_HOVERCRAFT */
     {
-        CreateJetpackPlayer,
-        SpawnJetpackActor,
+        JetpackPlayer::Create,
+        JetpackPlayer::SpawnActor,
         Hovercraft::Create,
         Hovercraft::Update,
         Hovercraft::UpdateBg2,

@@ -89,11 +89,11 @@ struct anim_table_record;
 struct category_vtable;
 struct actor_spawn_table;
 
-/* A level spawn record as PolarPlayer::SpawnActor and SpawnJetpackActor (vehicle.hpp)
- * take it: the actor kinds, then the position in tile units (<< 8 to Q8)
- * and the depth. It is an entry of a spawn table (struct
- * actor_spawn_table below; actor_factory.cpp's and jetpack_spawn.cpp's
- * copies were merged here, #656). */
+/* A level spawn record as PolarPlayer::SpawnActor and
+ * JetpackPlayer::SpawnActor (vehicle.hpp) take it: the actor kinds, then
+ * the position in tile units (<< 8 to Q8) and the depth. It is an entry
+ * of a spawn table (struct actor_spawn_table below; actor_factory.cpp's
+ * and jetpack_spawn.cpp's copies were merged here, #656). */
 struct actor_spawn {
     u8 kind;      // 0x00 - the normal kind
     u8 altKind;   // 0x01 - in time trial mode

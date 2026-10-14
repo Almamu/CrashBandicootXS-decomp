@@ -60,7 +60,7 @@ void JetpackPlane::Update()
                 s32 absDy = (dy ^ signDy) - signDy;
 
                 if (absDx + absDy <= 0x5FF) {
-                    SpawnJetpackCannonball(x, y, z - JETPACK_PLANE_GUN_OFFSET_Z, dx, dy);
+                    JetpackCannonball::Spawn(x, y, z - JETPACK_PLANE_GUN_OFFSET_Z, dx, dy);
                     if (++shotCount == 3) {
                         shotCount = cd;
                         cooldown = 0x3C;

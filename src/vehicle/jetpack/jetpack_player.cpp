@@ -52,16 +52,16 @@ void JetpackPlayer::DispenseWumpa()
     gJetpackWumpaDispenseTimer = 0xf;
 
     if (acc <= VEHICLE_WUMPA_DISPENSE_1_MAX) {
-        SpawnJetpackCollectedWumpa(x, y, 1);
+        JetpackCollectedWumpa::Spawn(x, y, 1);
         gJetpackQueuedWumpa -= 1;
     } else if (acc <= VEHICLE_WUMPA_DISPENSE_2_MAX) {
-        SpawnJetpackCollectedWumpa(x, y, 2);
+        JetpackCollectedWumpa::Spawn(x, y, 2);
         gJetpackQueuedWumpa -= 2;
     } else if (acc <= VEHICLE_WUMPA_DISPENSE_4_MAX) {
-        SpawnJetpackCollectedWumpa(x, y, 4);
+        JetpackCollectedWumpa::Spawn(x, y, 4);
         gJetpackQueuedWumpa -= 4;
     } else {
-        SpawnJetpackCollectedWumpa(x, y, 8);
+        JetpackCollectedWumpa::Spawn(x, y, 8);
         gJetpackQueuedWumpa -= 8;
     }
 

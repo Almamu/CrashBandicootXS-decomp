@@ -22,7 +22,7 @@
  * which picks the stage's player and boss.
  */
 #define CATEGORY_TYPE_POLAR 0      /* the polar ride; the yeti (CreateYeti) */
-#define CATEGORY_TYPE_JETPACK 1    /* the jetpack (CreateJetpackPlayer); the airship (CreateAirship) */
+#define CATEGORY_TYPE_JETPACK 1    /* the jetpack (JetpackPlayer::Create); the airship (CreateAirship) */
 #define CATEGORY_TYPE_HOVERCRAFT 2 /* the jetpack; n. gin's hovercraft (CreateHovercraft) */
 #define CATEGORY_TYPE_COUNT 3
 
