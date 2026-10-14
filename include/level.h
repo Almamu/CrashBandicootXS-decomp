@@ -81,27 +81,6 @@ extern void SpawnTiny(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnCortexBoss(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnMegaMix(u32 id, u16 x, u16 y, u16 param);
 
-/* src/level/spawn_crates.cpp */
-extern void SpawnTimeCrate3(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnTimeCrate2(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnTimeCrate1(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnSlotCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnTntCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnReinforcedCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnBouncyWumpaCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnMysteryCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnNitroCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnLifeCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnIronArrowCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnIronCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnNitroSwitchCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnOutlineCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnArrowCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnIronSwitchCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnAkuAkuCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnCheckpointCrate(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnBasicCrate(u32 id, u16 x, u16 y, u16 param);
-
 /* src/level/spawn_enemies.cpp */
 extern void SpawnLizard(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnVulture(u32 id, u16 x, u16 y, u16 param);
@@ -130,12 +109,6 @@ extern void SpawnFrog(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnSeaMine(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnWoodenCrusher(u32 id, u16 x, u16 y, u16 param);
 
-/* src/level/spawn_gem_platforms.cpp */
-extern void SpawnRedGemPlatform(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnYellowGemPlatform(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnGreenGemPlatform(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnBlueGemPlatform(u32 id, u16 x, u16 y, u16 param);
-
 /* src/level/spawn_gems.cpp */
 extern void SpawnCrystal(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnCrateGem(u32 id, u16 x, u16 y, u16 param);
@@ -144,19 +117,12 @@ extern void SpawnRedGem(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnGreenGem(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnYellowGem(u32 id, u16 x, u16 y, u16 param);
 
-/* src/level/spawn_objects.cpp */
+/* src/level/spawn_objects.cpp (the platforms', the launch pad's and the
+ * seal spawner's slots are their classes' static members, #915) */
 extern void SpawnSeaweed(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnSeaweedNoAnimReset(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnFlame(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnRockPlatform(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnFlipPlatform(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnBonusPlatform(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnMediumPlatform(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnSmallPlatform(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnLargePlatform(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnLaunchPadEntity(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnNoEntity(void);
-extern void SpawnSealSpawner(u32 id, u16 x, u16 y, u16 param);
 
 /* src/level/spawn_pickups.cpp */
 extern void SpawnBodySlamPower(u32 id, u16 x, u16 y, u16 param);
@@ -198,7 +164,7 @@ extern struct level_state *gGameFrameLevelState;
 #endif
 /* Updated and cleared, but never culled or drawn: the invisible objects,
  * the entity type 0x55 room-exit zones (spawn_bosses.cpp) and
- * SpawnSealSpawner's spawner. */
+ * PeriodicSpawner::Spawn's spawner. */
 #ifdef __cplusplus
 extern class PartList *gUpdateOnlyPartList;
 #endif

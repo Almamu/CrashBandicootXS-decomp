@@ -12,7 +12,11 @@ extern "C" {
 
 /* The decoration, platform and seal-spawner spawners, between the
  * bosses' and the crates' (ROM 0x08021748-0x08021A4C; #664,
- * include/spawners.hpp). Built with old_agbcp. */
+ * include/spawners.hpp). Built with old_agbcp. Since #915 the platforms',
+ * the launch pad's and the seal spawner's are static members of the
+ * classes they create (Platform::SpawnRock, LaunchPad::SpawnEntity,
+ * PeriodicSpawner::Spawn, ...); the decorations (plain Sprites) and the
+ * empty slot stay free. */
 
 /* Builds a sprite on sprite bank 45, resets
  * its OAM state and frame nibble, clears flags bits 7 and 2 and
@@ -62,7 +66,7 @@ void SpawnFlame(u32 id, u16 x, u16 y, u16 param)
 
 /* Plain `CreatePlatform` trampoline (docs/rom_map.md; same callee as
  * spawn_gem_platforms.cpp's twin family), kind PLATFORM_KIND_ROCK. */
-void SpawnRockPlatform(u32 id, u16 x, u16 y, u16 param)
+void Platform::SpawnRock(u32 id, u16 x, u16 y, u16 param)
 {
     Platform::Create(id, x, y, param, PLATFORM_KIND_ROCK);
 }
@@ -72,7 +76,7 @@ void SpawnRockPlatform(u32 id, u16 x, u16 y, u16 param)
  * (UpdatePlatformMover kind 6) brings it back 120 frames after the
  * animation ends. In the Neo Cortex fight the mover is
  * CreateCortexBossPlatformMover. */
-void SpawnFlipPlatform(u32 id, u16 x, u16 y, u16 param)
+void Platform::SpawnFlip(u32 id, u16 x, u16 y, u16 param)
 {
     Platform::Create(id, x, y, param, PLATFORM_KIND_FLIP);
 }
@@ -80,7 +84,7 @@ void SpawnFlipPlatform(u32 id, u16 x, u16 y, u16 param)
 /* Spawns a PLATFORM_KIND_BONUS_DONE platform if gLevelState->IsBonusRoundDone()
  * is set or gLevelState+0x8C is nonzero, else PLATFORM_KIND_BONUS, and hands the
  * result to SetBonusPlatform. */
-void SpawnBonusPlatform(u32 id, u16 x, u16 y, u16 param)
+void Platform::SpawnBonus(u32 id, u16 x, u16 y, u16 param)
 {
     Platform *result;
 
@@ -92,26 +96,26 @@ void SpawnBonusPlatform(u32 id, u16 x, u16 y, u16 param)
 }
 
 /* Plain `CreatePlatform` trampoline, kind PLATFORM_KIND_MEDIUM. */
-void SpawnMediumPlatform(u32 id, u16 x, u16 y, u16 param)
+void Platform::SpawnMedium(u32 id, u16 x, u16 y, u16 param)
 {
     Platform::Create(id, x, y, param, PLATFORM_KIND_MEDIUM);
 }
 
 /* Plain `CreatePlatform` trampoline, kind PLATFORM_KIND_SMALL. */
-void SpawnSmallPlatform(u32 id, u16 x, u16 y, u16 param)
+void Platform::SpawnSmall(u32 id, u16 x, u16 y, u16 param)
 {
     Platform::Create(id, x, y, param, PLATFORM_KIND_SMALL);
 }
 
 /* Plain `CreatePlatform` trampoline, kind PLATFORM_KIND_LARGE. */
-void SpawnLargePlatform(u32 id, u16 x, u16 y, u16 param)
+void Platform::SpawnLarge(u32 id, u16 x, u16 y, u16 param)
 {
     Platform::Create(id, x, y, param, PLATFORM_KIND_LARGE);
 }
 
 /* Plain tail-call trampoline to LaunchPad::Spawn (SpawnLaunchPad,
  * level_select.cpp). */
-void SpawnLaunchPadEntity(u32 id, u16 x, u16 y, u16 param)
+void LaunchPad::SpawnEntity(u32 id, u16 x, u16 y, u16 param)
 {
     LaunchPad::Spawn(id, x, y, param);
 }
@@ -124,7 +128,7 @@ void SpawnNoEntity(void)
 
 /* A PeriodicSpawner (0x28 bytes) that spawns a seal (SpawnSeal) every 0x78
  * frames at (x, y), always active, in the update-only list. */
-void SpawnSealSpawner(u32 id, u16 x, u16 y, u16 param)
+void PeriodicSpawner::Spawn(u32 id, u16 x, u16 y, u16 param)
 {
     PeriodicSpawner *obj;
     /* `zero` is needed: inlined, the instructions are reordered */

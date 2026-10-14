@@ -20,11 +20,13 @@ extern "C" {
  * built through the ResetSpriteFrameTimer/ResetSpriteFrameIndex/SetSpriteAnimDone OAM trio, and
  * registered with the gTouchableList manager.
  *
- *   function                bit  kind (PLATFORM_KIND_*)  tag
- *   SpawnRedGemPlatform      1    0xB GEM_RED            7
- *   SpawnYellowGemPlatform   2    0x3 GEM_YELLOW         5
- *   SpawnGreenGemPlatform    4    0xA GEM_GREEN          6
- *   SpawnBlueGemPlatform     8    0x9 GEM_BLUE           8
+ *   function (C name)                                bit  kind (PLATFORM_KIND_*)  tag
+ *   Platform::SpawnGemRed (SpawnRedGemPlatform)       1    0xB GEM_RED            7
+ *   Platform::SpawnGemYellow (SpawnYellowGemPlatform) 2    0x3 GEM_YELLOW         5
+ *   Platform::SpawnGemGreen (SpawnGreenGemPlatform)   4    0xA GEM_GREEN          6
+ *   Platform::SpawnGemBlue (SpawnBlueGemPlatform)     8    0x9 GEM_BLUE           8
+ *
+ * They are Platform's static members since #915 (include/platform.hpp).
  *
  * C++ since #664 part 9 (include/spawners.hpp), built with old_agbcp
  * (Makefile OLD_AGBCC_OBJS): the ROM materializes the bit mask before
@@ -41,7 +43,7 @@ extern "C" {
 /* The `tag` locals are set before the Sprite::Create call on purpose: the
  * ROM loads the constant into a callee-saved register up front and
  * stores it from there afterwards. */
-void SpawnRedGemPlatform(u32 id, u16 x, u16 y, u16 param)
+void Platform::SpawnGemRed(u32 id, u16 x, u16 y, u16 param)
 {
     u8 bit = gLevelState->progress.flags & PROGRESS_FLAG_RED_GEM;
 
@@ -69,7 +71,7 @@ void SpawnRedGemPlatform(u32 id, u16 x, u16 y, u16 param)
     }
 }
 
-void SpawnYellowGemPlatform(u32 id, u16 x, u16 y, u16 param)
+void Platform::SpawnGemYellow(u32 id, u16 x, u16 y, u16 param)
 {
     u8 bit = gLevelState->progress.flags & PROGRESS_FLAG_YELLOW_GEM;
 
@@ -98,7 +100,7 @@ void SpawnYellowGemPlatform(u32 id, u16 x, u16 y, u16 param)
     }
 }
 
-void SpawnGreenGemPlatform(u32 id, u16 x, u16 y, u16 param)
+void Platform::SpawnGemGreen(u32 id, u16 x, u16 y, u16 param)
 {
     u8 bit = gLevelState->progress.flags & PROGRESS_FLAG_GREEN_GEM;
 
@@ -129,7 +131,7 @@ void SpawnGreenGemPlatform(u32 id, u16 x, u16 y, u16 param)
 
 /* Mask and tag are the same constant here, so the ROM keeps one copy of
  * it in a callee-saved register for both uses. */
-void SpawnBlueGemPlatform(u32 id, u16 x, u16 y, u16 param)
+void Platform::SpawnGemBlue(u32 id, u16 x, u16 y, u16 param)
 {
     u8 bit = gLevelState->progress.flags & PROGRESS_FLAG_BLUE_GEM;
 

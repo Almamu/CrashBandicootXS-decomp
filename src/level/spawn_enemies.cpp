@@ -246,7 +246,7 @@ void SpawnPenguin(u32 id, u16 x, u16 y, u16 param)
 
 /* A ground sprite on bank 17, animation 0 (set before the second attach),
  * always active; state 5, and SFX_SEAL_SPAWN. The seal spawner
- * (SpawnSealSpawner, a PeriodicSpawner) calls it. */
+ * (PeriodicSpawner::Spawn, a PeriodicSpawner) calls it. */
 void SpawnSeal(u32 id, u16 x, u16 y, u16 param)
 {
     GroundSprite *part = GroundSprite::Create(id, x, y, param);

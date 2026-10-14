@@ -21,7 +21,7 @@
  * The camera lead and the launch pad are the two moving sprites in this
  * family: the first is spawned by the input controller (InputCtrl, the
  * player's controller in the hover-vehicle rooms), the second by the level
- * spawners (spawn_objects.c's SpawnLaunchPadEntity). The screen's sprites
+ * spawners (spawn_objects.c's LaunchPad::SpawnEntity). The screen's sprites
  * are UiSprites.
  *
  * They have no C views (the opaque `struct level_menu` tag went in
@@ -115,6 +115,10 @@ public:
         y = INT_TO_Q8(py);
     }
     static LaunchPad *Spawn(u16 id, u16 x, u16 y, u16 unused); // SpawnLaunchPad
+    /* Entity type ENTITY_LAUNCH_PAD's slot (spawn_objects.cpp, #915): a
+     * tail call to Spawn. Not an overload of it: the slot's `u32 id` would
+     * make the call inside pick this one. */
+    static void SpawnEntity(u32 id, u16 x, u16 y, u16 param); // SpawnLaunchPadEntity
     void ClearVulnerable(); // ClearLaunchPadVulnerable: Sprite's, again
 };
 

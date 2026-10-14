@@ -30,7 +30,7 @@ extern "C" {
 /* The parameter record of the room's entity `index` (level_data.h's
  * struct entity_params: the flags, then the per-type words). Through an
  * inline, the record's address gets a register copy of its own, as in
- * the ROM (SpawnBasicCrate, SpawnStartMarker). */
+ * the ROM (Crate::SpawnBasic, SpawnStartMarker). */
 static inline const struct entity_params *EntityParams(u16 index)
 {
     const struct level_entity_list *lvl = gEntityFlags->list;

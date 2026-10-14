@@ -9,7 +9,7 @@
  *
  * - Bits 0-3, the coloured gems: Player::HandleEvent sets them on
  *   EVENT_RED_GEM, EVENT_YELLOW_GEM, EVENT_GREEN_GEM and EVENT_BLUE_GEM;
- *   the gem spawners (SpawnRedGem, SpawnRedGemPlatform, ...) test their
+ *   the gem spawners (SpawnRedGem, Platform::SpawnGemRed, ...) test their
  *   own; CountGems counts them; the pause menu's gems page and the level
  *   select's gem icon show them.
  * - Bits 4-7, the powers: LevelState::GiveTurboRun, GiveSuperBodySlam,

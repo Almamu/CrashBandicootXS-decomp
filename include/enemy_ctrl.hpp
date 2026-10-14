@@ -163,7 +163,7 @@ COMPILE_TIME_ASSERT(enemy_ctrl_hpp, sizeof(KnockedEnemyCtrl) == 0x10);
 
 /* A periodic trigger entity (gPeriodicSpawnerVtable, 0x28 bytes;
  * src/enemies/periodic_spawner.cpp): calls `callback` at its own position
- * once every `period` frames while near the camera. SpawnSealSpawner
+ * once every `period` frames while near the camera. PeriodicSpawner::Spawn
  * (src/level/spawn_objects.cpp) makes one with SpawnSeal. */
 class PeriodicSpawner : public Entity
 {
@@ -177,6 +177,10 @@ public:
     virtual ~PeriodicSpawner(); // DestroyPeriodicSpawner
     void SetPeriod(s32 period, s32 phase);
     void SetCallback(void (*callback)(u32 id, u16 x, u16 y, u16 param));
+
+    /* The seal spawner, entity type ENTITY_SEAL_SPAWNER's slot
+     * (spawn_objects.cpp, #915): the only PeriodicSpawner the ROM builds. */
+    static void Spawn(u32 id, u16 x, u16 y, u16 param); // SpawnSealSpawner
 };
 
 COMPILE_TIME_ASSERT(enemy_ctrl_hpp, sizeof(PeriodicSpawner) == 0x28);

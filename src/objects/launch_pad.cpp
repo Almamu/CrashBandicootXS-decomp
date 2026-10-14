@@ -29,7 +29,7 @@ extern "C" {
 /* The factory (the constructor inlined): places the pad at (x, y) pixels
  * with record id `id`, adds it to the collidable list, and starts
  * animation 0 of the set at `**gSpriteBankSet + 0x150`, unmirrored. Called
- * from the level spawners (spawn_objects.c's SpawnLaunchPadEntity). */
+ * from the level spawners (spawn_objects.c's LaunchPad::SpawnEntity). */
 LaunchPad *LaunchPad::Spawn(u16 id, u16 x, u16 y, u16 unused)
 {
     LaunchPad *obj = new LaunchPad(id, x, y);

@@ -47,7 +47,7 @@ void PeriodicSpawner::SetPeriod(s32 newPeriod, s32 newPhase)
     phase = newPhase;
 }
 
-/* The function Update calls; SpawnSealSpawner (spawn_objects.cpp) stores
+/* The function Update calls; PeriodicSpawner::Spawn (spawn_objects.cpp) stores
  * `callback` directly.
  * UNUSED - no caller anywhere in the ROM (checked every src/ and lib/ .c
  * file and every word-aligned Thumb pointer in baserom.gba). */
