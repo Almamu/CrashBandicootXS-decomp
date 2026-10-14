@@ -34,7 +34,8 @@ extern "C" {
  * (InitUnusedLevelObject, which returns `this` by leaving r0 alone) of a
  * class with no fields and
  * no vtable that nothing creates. C++ since the #664 cleanup; the rest of
- * the file has C linkage. */
+ * the file is LevelProgress's: the level queries are its static members
+ * (#915), IsInGemPathRoom and IsInBonusRoom its methods. */
 class UnusedLevelObject
 {
 public:
@@ -63,7 +64,7 @@ UnusedLevelObject::UnusedLevelObject()
  * (rather than an if/else-if chain) - only that shape reproduces the
  * ROM's exact "test all three conditions inline, jump out to
  * out-of-line handler blocks" layout for this compiler. */
-s32 CountLevelCrates(s32 idx)
+s32 LevelProgress::CountLevelCrates(s32 idx)
 {
     s32 total = 0;
     const struct level_room_list *list = gLevelTable[idx].rooms;
@@ -147,7 +148,7 @@ s32 CountLevelCrates(s32 idx)
  *
  * `flagIdx` stays in `ip`/r12 for the whole function, as in the ROM,
  * with no pin (old_agbcp; agbcp needs pins for the table reads). */
-bool LevelHasEntityType(s32 idx, s32 flagIdx)
+bool LevelProgress::LevelHasEntityType(s32 idx, s32 flagIdx)
 {
     s32 result = 0;
     const struct level_room_list *list = gLevelTable[idx].rooms;
@@ -209,27 +210,27 @@ bool LevelProgress::IsInBonusRoom()
  * the medal "flag index" constant baked in (0xc, 9, 0xb, 0xa, 8 -
  * plausibly per-medal-type slot indices into the halfword table
  * LevelHasEntityType reads). */
-bool LevelHasYellowGemEntity(s32 idx)
+bool LevelProgress::LevelHasYellowGemEntity(s32 idx)
 {
     return LevelHasEntityType(idx, ENTITY_YELLOW_GEM);
 }
 
-bool LevelHasBlueGemEntity(s32 idx)
+bool LevelProgress::LevelHasBlueGemEntity(s32 idx)
 {
     return LevelHasEntityType(idx, ENTITY_BLUE_GEM);
 }
 
-bool LevelHasGreenGemEntity(s32 idx)
+bool LevelProgress::LevelHasGreenGemEntity(s32 idx)
 {
     return LevelHasEntityType(idx, ENTITY_GREEN_GEM);
 }
 
-bool LevelHasRedGemEntity(s32 idx)
+bool LevelProgress::LevelHasRedGemEntity(s32 idx)
 {
     return LevelHasEntityType(idx, ENTITY_RED_GEM);
 }
 
-bool LevelHasGemPathGemEntity(s32 idx)
+bool LevelProgress::LevelHasGemPathGemEntity(s32 idx)
 {
     return LevelHasEntityType(idx, ENTITY_GEM_PATH_GEM);
 }
@@ -238,7 +239,7 @@ bool LevelHasGemPathGemEntity(s32 idx)
  * dispatch body, taking the item pointer directly instead of resolving
  * it from the medal table - see CountLevelCrates's comment for the shared
  * semantics. */
-s32 CountRoomCrates(const struct level_room *item)
+s32 LevelProgress::CountRoomCrates(const struct level_room *item)
 {
     s32 v = 0;
 

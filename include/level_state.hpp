@@ -48,6 +48,18 @@ public:
     // level_query.cpp
     bool IsInGemPathRoom();
     bool IsInBonusRoom();
+
+    /* The level queries (level_query.cpp, #915): static, they take a
+     * level index into gLevelTable (or a room), not the room block; their
+     * code surrounds IsInGemPathRoom and IsInBonusRoom in the ROM. */
+    static s32 CountLevelCrates(s32 idx);                      // CountLevelCrates
+    static bool LevelHasYellowGemEntity(s32 idx);              // LevelHasYellowGemEntity
+    static bool LevelHasBlueGemEntity(s32 idx);                // LevelHasBlueGemEntity
+    static bool LevelHasGreenGemEntity(s32 idx);               // LevelHasGreenGemEntity
+    static bool LevelHasRedGemEntity(s32 idx);                 // LevelHasRedGemEntity
+    static bool LevelHasGemPathGemEntity(s32 idx);             // LevelHasGemPathGemEntity
+    static s32 CountRoomCrates(const struct level_room *item); // CountRoomCrates
+
     // room_select.cpp
     void PlayRoomMusic();
     bool NextRoom();
@@ -72,6 +84,10 @@ public:
     static u8 IsRoomExitRequested(); // IsRoomExitRequested
     static u8 roomExitRequested;     // gRoomExitRequested (iwram_data.cpp)
 
+private:
+    static bool LevelHasEntityType(s32 idx, s32 flagIdx); // LevelHasEntityType: the wrappers'
+
+public:
     s32 level; // 0x00 (0x0C4) - index into gLevelTable
     // 0x04 (0x0C8) - the current room's index in the level's room list
     // (SelectRoom, NextRoom, GetRoomIndex)
