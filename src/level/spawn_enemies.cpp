@@ -7,6 +7,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Enemies::EnemyCtrl;
+
 /* The enemy spawners (#664, include/spawners.hpp), ROM
  * 0x0801EF0C-0x08020E84; read as "two-line text popup" spawners at
  * first. Each builds a moving sprite, attaches a new EnemyCtrl to it

@@ -6,6 +6,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Enemies::EnemyCtrl;
+
 /* EnemyCtrl's motion updaters (include/enemy_ctrl.hpp), from the
  * 0x0800B8DC-0x0800D040 cluster
  * (docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md).

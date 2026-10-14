@@ -8,7 +8,14 @@
  * No `#pragma interface`: g++ emits their vtables (EnemyCtrl's in
  * enemy_ctrl_update.cpp, the others in periodic_spawner.cpp and
  * knocked_enemy_ctrl.cpp; see ctrl.hpp);
- * cxx_symbols.txt maps their mangled names onto the C names. */
+ * cxx_symbols.txt maps their mangled names onto the C names.
+ *
+ * The three classes are in the namespace Game::Enemies (#1033,
+ * docs/cplusplus.md "Namespaces"):
+ * `Update__Q34Game7Enemies9EnemyCtrlP12MovingSprite`,
+ * `_vt.Q34Game7Enemies9EnemyCtrl` (in the section
+ * `.gnu.linkonce.d._vt.Q34Game7Enemies9EnemyCtrl`, which ldscript.txt
+ * names) & co. enemies.h's C declarations stay global. */
 
 #include "ctrl.hpp"
 #include "sprite_obj.hpp"
@@ -65,6 +72,11 @@ extern "C" {
 /* An `anims` entry for a mode the enemy has no animation for:
  * UpdateAttackCycle skips the start and end modes it is in. */
 #define ENEMY_ANIM_NONE 8
+
+namespace Game
+{
+namespace Enemies
+{
 
 class EnemyCtrl : public Ctrl
 {
@@ -215,5 +227,8 @@ public:
 };
 
 COMPILE_TIME_ASSERT(enemy_ctrl_hpp, sizeof(PeriodicSpawner) == 0x28);
+
+} // namespace Enemies
+} // namespace Game
 
 #endif /* !GUARD_ENEMY_CTRL_HPP */

@@ -7,6 +7,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Enemies::EnemyCtrl;
+
 /* GitHub issue #9/#10: EnemyCtrl's shooter (include/enemy_ctrl.hpp),
  * called only from Update's state 16, after UpdateAttackCycle
  * (docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md).
