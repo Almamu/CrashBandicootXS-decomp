@@ -393,7 +393,7 @@ CLASSES = [
         r"\bhp\b|0x64, 0x78|SetCellAnimSpeed|CellAnim::SetSpeed|SetAttackCycle",
         "a game value (health, a cycle, an orbit radius)",
     ),
-    ("coincidence", r".", r"SpawnTurboRunPower", "a world position (a spawn point)"),
+    ("coincidence", r".", r"SpawnPowerTurboRun", "a world position (a spawn point)"),
 ]
 CLASSES = [(c, re.compile(p), re.compile(l), r) for c, p, l, r in CLASSES]
 
