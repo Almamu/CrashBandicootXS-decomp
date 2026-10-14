@@ -9,6 +9,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Text::Font;
+
 /* PauseMenu's fraction readout, volume and cursor steps (menus.hpp; C++
  * since the #664 cleanup), with FormatDecimal (C linkage). */
 

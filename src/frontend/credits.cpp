@@ -22,6 +22,7 @@ using Engine::Gfx::ObjVramCursor;
 using Engine::Sys::Display;
 using Engine::Sys::FrameLimiter;
 using Engine::Sys::VramDmaQueue;
+using Engine::Text::Font;
 
 /* GitHub issue #64 (0x08034AA4-0x080354E0, 13 functions), C++ since
  * #664 part 10c (include/frontend.hpp): the credits screen (Credits). The

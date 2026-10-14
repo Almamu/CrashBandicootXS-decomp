@@ -75,7 +75,13 @@ extern u32 gSlideshowDispcnt;
 /* src/cutscene/slideshow_display.cpp, with C linkage (its C name). */
 extern "C" void SetSlideshowDispcnt(u32 value);
 
+namespace Engine
+{
+namespace Text
+{
 class Font;
+} // namespace Text
+} // namespace Engine
 
 /* A list of slides (pictures with a song, a fade and a sound effect), shown
  * one after the other. The constructor (InitSlideshow) calls Reset; only
@@ -107,7 +113,7 @@ class CutscenePlayer : public Slideshow
 {
 public:
     const struct cutscene_page *pages; // 0x10 - one per slide
-    Font *font;                        // 0x14 (include/font.hpp)
+    Engine::Text::Font *font;          // 0x14 (include/font.hpp)
     struct aabb box;                   // 0x18 - the text rectangle
 
     CutscenePlayer();  // InitCutscenePlayer

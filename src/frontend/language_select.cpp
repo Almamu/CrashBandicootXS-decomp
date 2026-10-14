@@ -15,6 +15,7 @@ extern "C" {
 using Engine::Gfx::ObjVramCursor;
 using Engine::Gfx::PaletteCache;
 using Engine::Sys::FrameLimiter;
+using Engine::Text::Font;
 
 /* The language menu shown at boot (OpenLanguageSelect/RunLanguageSelect/
  * CloseLanguageSelect, called from MainLoop): up/down cycles `language`

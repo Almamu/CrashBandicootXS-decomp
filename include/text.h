@@ -19,8 +19,16 @@
 /* The two font instances, built by InitLevelState (IWRAM, sym_iwram.txt):
  * a SmallFont and a LargeFont (include/font.hpp). No C file uses them. */
 #ifdef __cplusplus
-extern class Font *gSmallFont;
-extern class Font *gLargeFont;
+/* In its namespace (font.hpp; docs/cplusplus.md, "Namespaces"). */
+namespace Engine
+{
+namespace Text
+{
+class Font;
+} // namespace Text
+} // namespace Engine
+extern Engine::Text::Font *gSmallFont;
+extern Engine::Text::Font *gLargeFont;
 #endif
 
 /* The two fonts' character sets and glyph metrics
@@ -40,8 +48,10 @@ extern s32 GetWordLength(const u8 *s);
 #define WRAPPED_TEXT_MODE_PER_WORD 1 // after every word (FrameLimiter::WaitForVBlank, Commit): typed out
 #define WRAPPED_TEXT_MODE_PER_LINE 2 // after every line wrap
 #ifdef __cplusplus
-extern s32 DrawWrappedTextInBox(const u8 *text, class Font *self, struct aabb *box, s32 mode);
-extern s32 DrawWrappedText(const u8 *text, class Font *self, struct aabb *box, s32 limit, s32 mode);
+extern s32 DrawWrappedTextInBox(const u8 *text, Engine::Text::Font *self, struct aabb *box,
+                                s32 mode);
+extern s32 DrawWrappedText(const u8 *text, Engine::Text::Font *self, struct aabb *box, s32 limit,
+                           s32 mode);
 #endif
 
 #endif /* GUARD_TEXT_H */

@@ -607,6 +607,21 @@ checks the change is only a rename:
   moves bytes through its rings; the save menu and SaveTransfer are its
   only users. No name hiding: no global is named `Link` (CrateList::Link
   is a member of a global class).
+- **`Engine::Text`** (`Q36Engine4Text`): `Font`, `SmallFont` and
+  `LargeFont` (font.hpp), the bitmap fonts. 28 symbols renamed, among
+  them the first vtables to move (`_vt.Q36Engine4Text4Font`, ...), no code
+  change. Their sections are renamed too
+  (`.gnu.linkonce.d._vt.Q36Engine4Text4Font`), which cxx_rename.py lists
+  as renames not in cxx_symbols.txt: ldscript.txt's three lines that
+  place them are updated by hand. text.h forward declares Font for
+  gSmallFont and gLargeFont and the two wrapped-text functions; the
+  cutscene player (cutscene.hpp), the continue prompt and the title
+  screen (frontend.hpp) name it `Engine::Text::Font`. The wrapped-text functions
+  (DrawWrappedText, DrawWrappedTextInBox, GetWordLength: text_box.cpp,
+  wrapped_text.cpp) have C linkage and stay global. Boundary calls: none
+  needed: the fonts only draw glyphs from their tile sheets through the
+  OAM buffer. No name hiding: no global is named `Text` or like one of
+  the classes.
 
 ## Progress
 
