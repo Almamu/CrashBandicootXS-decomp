@@ -278,10 +278,18 @@ def read_template():
     return ui, pages
 
 
+def level_key(lv):
+    """A level's name's key: ui.level.<level>, the level's constant without
+    LEVEL_, in lower case (LEVEL_JUNGLE_JAM: ui.level.jungle_jam)."""
+    return "ui.level." + lv["constant"][len("LEVEL_"):].lower()
+
+
 def check_level_names(ui):
-    """Each level's name_text (levels.json) must be a ui.level.* entry:
-    the UI entries' order is their text ids, so an entry inserted in the
-    middle would shift every later id."""
+    """Each level's name_text (levels.json) must be the text id of its own
+    ui.level.<level> entry, and each ui.level.* entry a level's name: the
+    UI entries' order is their text ids, so an entry inserted in the middle
+    would shift every later id, and a level pointing at another level's
+    name, or a name no level uses, is a slip in the data."""
     with open(LEVELS_JSON, encoding="utf-8") as f:
         levels = json.load(f)["levels"]
     for lv in levels:
@@ -289,6 +297,16 @@ def check_level_names(ui):
         if t >= len(ui) or not ui[t]["ctx"].startswith("ui.level."):
             fail("%s: %s's name_text %d is %s, not a ui.level.* entry (the ui.* entries are in text id order)"
                  % (POT, lv["constant"], t, ui[t]["ctx"] if t < len(ui) else "past the last one"))
+        if ui[t]["ctx"] != level_key(lv):
+            ids = [i for i, e in enumerate(ui) if e["ctx"] == level_key(lv)]
+            fail("%s: %s's name_text %d is %s, not its own %s%s" % (
+                POT, lv["constant"], t, ui[t]["ctx"], level_key(lv),
+                " (text id %d)" % ids[0] if ids else ", which the template doesn't have: add it after the last "
+                "ui.* entry"))
+    used = {lv["name_text"] for lv in levels}
+    for i, e in enumerate(ui):
+        if e["ctx"].startswith("ui.level.") and i not in used:
+            fail("%s: %s (text id %d) is no level's name_text" % (POT, e["ctx"], i))
 
 
 def load_translations(mo_dir):
@@ -595,7 +613,7 @@ def extract_entries(rom):
     for i in range(UI_ROM_COUNT):
         if i in level_keys:
             lv = level_keys[i]
-            key = "ui.level." + lv["constant"][len("LEVEL_"):].lower()
+            key = level_key(lv)
             what = "A level's name (%s): the level select's title (large font) and the pause menu's " \
                    "info page." % lv["constant"]
         else:
