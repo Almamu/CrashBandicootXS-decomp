@@ -20,7 +20,9 @@ extern "C" {
  * crate gem's marker and the wumpa (#664, include/spawners.hpp), ROM
  * 0x08021D80-0x08022188. The player starts, the entity spawner's calls
  * and InitLevelState follow in spawn_markers.cpp. Built with
- * old_agbcp. */
+ * old_agbcp. Since #915 the stopwatch's and the wumpa's are static
+ * members of their classes (Stopwatch::Spawn, Wumpa::Spawn); the others
+ * build a plain Sprite (or none) and stay free. */
 
 /* A sprite of bank `bank` (an index into the sprite bank table),
  * animation `tag`, kind `kind`, in the touchable list. The callers pass
@@ -74,7 +76,7 @@ void SpawnTurboRunPower(u32 id, u16 x, u16 y, u16 param)
 
 /* The time trial's stopwatch (bank 36, kind 0x1C, always active),
  * once the level's crystal is saved. */
-void SpawnStopwatch(u32 id, u16 x, u16 y, u16 param)
+void Stopwatch::Spawn(u32 id, u16 x, u16 y, u16 param)
 {
     if (gLevelState->IsCrystalSaved()) {
         Stopwatch *part = Stopwatch::Create(id, x, y, param);
@@ -147,7 +149,7 @@ void *CreateTouchableSprite(u32 index, u32 tag, u32 field0A, u32 cx, u16 cy, u16
 
 /* Spawns a wumpa (`CreateWumpa`, wumpa_update.cpp) with this slot's four
  * arguments, unless `gLevelState+0x8c` (time trial) is set. */
-void SpawnWumpa(u32 id, u16 x, u16 y, u16 param)
+void Wumpa::Spawn(u32 id, u16 x, u16 y, u16 param)
 {
     if (gLevelState->timeTrial == 0)
         Wumpa::Create(id, x, y, param);

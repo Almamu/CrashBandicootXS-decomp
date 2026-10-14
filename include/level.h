@@ -76,10 +76,6 @@ extern void ResetObjBuffers(void);
 
 /* src/level/spawn_bosses.cpp */
 extern void SpawnRoomExit(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnDingodile(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnTiny(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnCortexBoss(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnMegaMix(u32 id, u16 x, u16 y, u16 param);
 
 /* src/level/spawn_gems.cpp */
 extern void SpawnCrystal(u32 id, u16 x, u16 y, u16 param);
@@ -101,11 +97,9 @@ extern void SpawnBodySlamPower(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnTornadoSpinPower(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnDoubleJumpPower(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnTurboRunPower(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnStopwatch(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnBlueGem(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnCrateGemMarker(u32 id, u16 x, u16 y, u16 param);
 extern void *CreateTouchableSprite(u32 index, u32 tag, u32 field0A, u32 cx, u16 cy, u16 cw, u16 ch);
-extern void SpawnWumpa(u32 id, u16 x, u16 y, u16 param);
 
 /* src/level/spawn_markers.cpp */
 extern void SpawnHoverPlayerPosition(void);

@@ -184,14 +184,17 @@ public:
         anchor = Pos();
     }
     static Wumpa *Create(u16 id, u16 x, u16 y, u16 special); // CreateWumpa
-    void PickUp(u8 randomize);                               // PickUpWumpa
-    void SendToHud();                                        // SendWumpaToHud
-    void StartPayout();                                      // StartWumpaPayout
-    void UpdateHop();                                        // UpdateWumpaHop
-    void Reset();                                            // ResetWumpaPickup
-    void SetHome(s32 x, s32 y);                              // SetWumpaPos
-    void SetHop(s32 mode);                                   // SetWumpaHop
-    void SetCounter(u8 value);                               // SetWumpaCounter
+    /* ENTITY_WUMPA's slot (spawn_pickups.cpp, #915): Create, but not in a
+     * time trial. */
+    static void Spawn(u32 id, u16 x, u16 y, u16 param); // SpawnWumpa
+    void PickUp(u8 randomize);                          // PickUpWumpa
+    void SendToHud();                                   // SendWumpaToHud
+    void StartPayout();                                 // StartWumpaPayout
+    void UpdateHop();                                   // UpdateWumpaHop
+    void Reset();                                       // ResetWumpaPickup
+    void SetHome(s32 x, s32 y);                         // SetWumpaPos
+    void SetHop(s32 mode);                              // SetWumpaHop
+    void SetCounter(u8 value);                          // SetWumpaCounter
 
     /* The flight's step, as ExtraLife's. */
     void Fly()
@@ -226,7 +229,10 @@ public:
         y = INT_TO_Q8(py);
     }
     static Stopwatch *Create(u16 id, u16 x, u16 y, u16 unused); // CreateStopwatch
-    void Reset();                                               // ResetStopwatch
+    /* ENTITY_STOPWATCH's slot (spawn_pickups.cpp, #915): Create, once the
+     * level's crystal is saved. */
+    static void Spawn(u32 id, u16 x, u16 y, u16 param); // SpawnStopwatch
+    void Reset();                                       // ResetStopwatch
 };
 
 COMPILE_TIME_ASSERT(pickups_hpp, sizeof(Stopwatch) == 0x40);
