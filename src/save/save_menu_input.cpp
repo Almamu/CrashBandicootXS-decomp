@@ -20,6 +20,7 @@ extern "C" {
 
 using Engine::Audio::AudioContext;
 using Engine::Gfx::BrightnessFade;
+using Engine::Save::SaveData;
 using Engine::Sys::FrameLimiter;
 
 /* SaveMenu's run loop, constructor, destructor and input handlers

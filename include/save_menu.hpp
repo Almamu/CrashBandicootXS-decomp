@@ -70,8 +70,8 @@ public:
     u32 pendingSlot;        // 0x24 - the slot the "delete?"/"overwrite?" prompt acts on
     struct settings_row_stats currentStats; // 0x28
     struct settings_row_stats rowStats[4];  // 0x3C
-    SaveData *cartSave;                     // 0x8C - the cartridge's save data
-    SaveData *linkSave;                     // 0x90 - the save received over the link cable
+    Engine::Save::SaveData *cartSave;       // 0x8C - the cartridge's save data
+    Engine::Save::SaveData *linkSave;       // 0x90 - the save received over the link cable
     u8 unused_94[0xa8 - 0x94];              //
     UiSprite *rowObjA[5];                   // 0xA8 - the slot list's gem icons
     UiSprite *rowObjB[5];                   // 0xBC - its relic icons
@@ -100,27 +100,27 @@ public:
     void DrawCancel(u8 highlight);                             // DrawSaveMenuCancel
     void DrawYesNoPrompt(s32 value);                           // DrawYesNoPrompt
     void DrawSlotStats(s32 label1, s32 label2, s32 rowIdx,
-                       struct byte_arg flag);            // DrawSaveSlotStats
-    void DrawSlots(SaveData *handle, s32 selectedIndex); // DrawSaveSlots
-    void InitIcons();                                    // InitSaveMenuIcons
+                       struct byte_arg flag);                          // DrawSaveSlotStats
+    void DrawSlots(Engine::Save::SaveData *handle, s32 selectedIndex); // DrawSaveSlots
+    void InitIcons();                                                  // InitSaveMenuIcons
 
     /* src/save/save_menu_input.cpp */
-    void Input(u32 keys);                       // SaveMenuInput
-    void MainInput(u32 keys);                   // SaveMenuMainInput
-    void MoveCursor(u32 keys);                  // SaveMenuMoveCursor
-    void LoadInput(u32 keys, SaveData *handle); // SaveMenuLoadInput
-    void LinkInput();                           // SaveMenuLinkInput
-    void SaveToSlot(s32 rowIndex);              // SaveGameToSlot
-    void OverwriteInput(u32 keys);              // SaveMenuOverwriteInput
-    void SaveInput(u32 keys);                   // SaveMenuSaveInput
-    void DeleteInput(u32 keys);                 // SaveMenuDeleteInput
-    void ConfirmDeleteInput(u32 keys);          // SaveMenuConfirmDeleteInput
-    void DrawMain();                            // DrawSaveMenuMain
+    void Input(u32 keys);                                     // SaveMenuInput
+    void MainInput(u32 keys);                                 // SaveMenuMainInput
+    void MoveCursor(u32 keys);                                // SaveMenuMoveCursor
+    void LoadInput(u32 keys, Engine::Save::SaveData *handle); // SaveMenuLoadInput
+    void LinkInput();                                         // SaveMenuLinkInput
+    void SaveToSlot(s32 rowIndex);                            // SaveGameToSlot
+    void OverwriteInput(u32 keys);                            // SaveMenuOverwriteInput
+    void SaveInput(u32 keys);                                 // SaveMenuSaveInput
+    void DeleteInput(u32 keys);                               // SaveMenuDeleteInput
+    void ConfirmDeleteInput(u32 keys);                        // SaveMenuConfirmDeleteInput
+    void DrawMain();                                          // DrawSaveMenuMain
 
     /* src/save/save_menu_draw.cpp (was save_menu_ui.cpp) */
-    void LoadBg();                               // LoadSaveMenuBg
-    void RefreshSlotSummaries(SaveData *handle); // RefreshSaveSlotSummaries
-    void LoadData();                             // LoadSaveMenuData
+    void LoadBg();                                             // LoadSaveMenuBg
+    void RefreshSlotSummaries(Engine::Save::SaveData *handle); // RefreshSaveSlotSummaries
+    void LoadData();                                           // LoadSaveMenuData
     void SummarizeProgress(struct settings_row_stats *dest,
                            const GameProgress *src);     // SummarizeProgress
     void DrawEmptySlotLabel(s32 x, s32 y, u8 highlight); // DrawEmptySlotLabel

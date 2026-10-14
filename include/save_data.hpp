@@ -20,6 +20,11 @@
  * `delete` of them are plain OperatorNew and OperatorDelete calls, as
  * the ROM has them (no null test before the delete).
  *
+ * Both are in the namespace Engine::Save (#1033, docs/cplusplus.md
+ * "Namespaces"): `Read__Q36Engine4Save8SaveDatai` & co. The slot's
+ * layout, struct save_slot and the GameProgress it holds, is the game's
+ * and stays outside.
+ *
  * `#pragma interface`: no vtable to emit, and no out-of-line copies of
  * the inline methods. */
 #pragma interface
@@ -45,6 +50,11 @@ struct save_slot {
 /* 0x68 and 0x70 with the ROM's 25 levels (GameProgress's size). */
 COMPILE_TIME_ASSERT(save_data_hpp, offsetof(struct save_slot, level) == sizeof(GameProgress));
 COMPILE_TIME_ASSERT(save_data_hpp, sizeof(struct save_slot) == sizeof(GameProgress) + 8);
+
+namespace Engine
+{
+namespace Save
+{
 
 /* The 0x200-byte save data, as stored in the cartridge EEPROM
  * (Read/Write, and Load/Store with retries and
@@ -127,7 +137,15 @@ public:
     void SetFlags(u8 mask);             // SetSaveFlags
 };
 
-COMPILE_TIME_ASSERT(save_data_hpp, sizeof(SaveData) == 0x200);
+} // namespace Save
+} // namespace Engine
+
+COMPILE_TIME_ASSERT(save_data_hpp, sizeof(Engine::Save::SaveData) == 0x200);
+
+namespace Engine
+{
+namespace Save
+{
 
 /* A transient SIO send/receive envelope wrapping a SaveData copy - made
  * for each "connecting..." spinner-dialog session (SaveMenu::
@@ -166,6 +184,9 @@ public:
     void Reset();                     // ResetSaveTransfer
 };
 
-COMPILE_TIME_ASSERT(save_data_hpp, sizeof(SaveTransfer) == 0x220);
+} // namespace Save
+} // namespace Engine
+
+COMPILE_TIME_ASSERT(save_data_hpp, sizeof(Engine::Save::SaveTransfer) == 0x220);
 
 #endif /* !GUARD_SAVE_DATA_HPP */
