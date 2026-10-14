@@ -616,7 +616,7 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/frontend/company_logos.cpp` | `CompanyLogos::DrawVvLogoPieces`, `LoadUniversalLogoBg`; `LogoActor`'s constructor, `Update`, `Draw` (include/frontend.hpp; `ActorSelf`, its base, in include/actor_self.hpp) | 5 | old_agbcp | 2 pins, 2 uses, 3 barriers -> 1 pin, 3 barriers | 10b |
 | `src/frontend/language_select.cpp` | `CompanyLogos`'s constructor, destructor, `LoadAssetBuffered`; `LogoActor`'s destructor; `LanguageSelect::Run`, `Input`, `Draw`, `InitGraphics` | 8 | agbcp | 0 -> 0; a goto and the hand-written destructors' vtable stores, unlink and frees go | 10b |
 | `src/frontend/language_select_setup.cpp` | `LanguageSelect`'s constructor, destructor, `LoadBg`, `Blink`, `CommitFrame`, `Open`, `Close` | 7 | **old_agbcp** (was agbcc) | 2 pins, a retyped store and read (the DISPCNT bytes) -> 0 | 10b |
-| `src/level/spawn_enemies.cpp` | the 26 enemy spawners (C linkage): `new EnemyCtrl`, `hdr->Attach(part)` | 26 | old_agbcp | 22 pins, 6 asm, 6 uses, 1 hold, 1 keep, 1 mem use, 1 asm label, 52 `POPUP_ATTACH` slot calls -> 1 pin, 5 uses, 1 hold, 1 keep, 1 mem use (all `SpawnFlamethrowerLabAssistant`'s) | 9b |
+| `src/level/spawn_enemies.cpp` | the 26 enemy spawners (C linkage; `EnemyCtrl`'s static members since #915): `new EnemyCtrl`, `hdr->Attach(part)` | 26 | old_agbcp | 22 pins, 6 asm, 6 uses, 1 hold, 1 keep, 1 mem use, 1 asm label, 52 `POPUP_ATTACH` slot calls -> 1 pin, 5 uses, 1 hold, 1 keep, 1 mem use (all `SpawnFlamethrowerLabAssistant`'s) | 9b |
 | `src/frontend/starfield.cpp` | `Starfield` (include/frontend.hpp) | 7 | **old_agbcp** (was agbcc) | 16 pins, 5 `asm` -> 0 | 10c |
 | `src/frontend/credits.cpp` (the `ContinuePrompt` methods in `src/menus/continue_prompt.cpp` since #767) | `ContinuePrompt`'s `Draw`, `Blink`, `CommitFrame`, destructor, `Run`; `Credits` (include/frontend.hpp) | 13 | old_agbcp | 4 pins, 1 use, 1 volatile keep, 1 barrier, a retyped store -> 1 pin, 1 use, 1 volatile keep, 1 barrier | 10c |
 | `src/menus/pause_menu.cpp` | `PauseMenu::Run`, constructor, destructor (include/menus.hpp) | 3 | **old_agbcp** (was agbcc) | 25 pins, 3 `asm`, 1 `.pool` -> 0 | 10d |
@@ -721,6 +721,7 @@ enemy_attack.cpp into enemy_ctrl.cpp.
 | `src/data/actor_category_175558.cpp`, `src/bosses/hovercraft.cpp`, `hovercraft_cannon.cpp`, `hovercraft_launcher.cpp`, `hovercraft_side_gun.cpp`, `src/vehicle/jetpack/airship_states.cpp`, `jetpack_crates.cpp`, `jetpack_plane.cpp`, `jetpack_player.cpp`, `jetpack_player_update.cpp` | the callers: the jetpack and hovercraft slots 0 and 1 point at `JetpackPlayer::Create` and `JetpackPlayer::SpawnActor`; `JetpackCannonball::Spawn(...)`, `JetpackPlayer::CreateActor(...)`, `HovercraftSideGun::Spawn(...)` & co.; hovercraft.cpp and airship_states.cpp include boss_actors.hpp | 0 | (unchanged) | 0 -> 0 | [#915](#the-jetpack-spawners-as-static-members-915) |
 | `src/level/spawn_crates.cpp`, `src/data/dispatch_table_16c6a4.cpp` | the crate spawners as static members of `Crate` (include/crate.hpp): SpawnBasicCrate & co. are `SpawnBasic`, `SpawnTnt`, `SpawnTime1`, ... (CRATE_KIND_*'s names); gEntitySpawnFuncs' crate slots name the members; level.h's 19 prototypes go | 19 | (unchanged) | 0 -> 0 | [#915](#the-entity-spawners-as-static-members-915) |
 | `src/level/spawn_gem_platforms.cpp`, `spawn_objects.cpp`, `src/data/dispatch_table_16c6a4.cpp` | the platform spawners as static members of `Platform` (include/platform.hpp, named after PLATFORM_KIND_*: `SpawnGemRed`, ..., `SpawnRock`, `SpawnLarge`), SpawnLaunchPadEntity as `LaunchPad::SpawnEntity` (level_select.hpp) and SpawnSealSpawner as `PeriodicSpawner::Spawn` (enemy_ctrl.hpp); level.h's 12 prototypes go | 12 | (unchanged) | 0 -> 0 | [#915](#the-entity-spawners-as-static-members-915) |
+| `src/level/spawn_enemies.cpp`, `spawn_objects.cpp`, `src/data/dispatch_table_16c6a4.cpp` | the enemy spawners as static members of `EnemyCtrl` (include/enemy_ctrl.hpp) under their C names (`EnemyCtrl::SpawnLizard`, ...); the seal spawner's callback is `EnemyCtrl::SpawnSeal`; the file-local inline `SetKind` is `SetPartKind` (EnemyCtrl::SetKind would hide it); level.h's 26 prototypes go | 26 | (unchanged) | 0 -> 0 | [#915](#the-entity-spawners-as-static-members-915) |
 | `src/text/text_box.cpp` | `GetWordLength`, `DrawWrappedTextInBox` (C linkage; takes a `Font *`, `self->SetMargin`, `HeightToLines`) | 0 + 2 | agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/aabb.cpp` (since #767: `CommitBlendRegs` at the end of gfx/display.cpp, `IwramFree`/`IwramAlloc` in system/iwram_alloc.cpp) | `CommitBlendRegs`, `AabbOverlapsInclusiveX`, `AabbOverlaps`, `IwramFree`, `IwramAlloc` (C linkage) | 0 + 5 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/fixed_math.cpp`, `line.cpp`, `line_step.cpp`, `number_format.cpp`, `printf.cpp`, `rand.cpp`, `string.cpp`, `time_format.cpp` | the fixed-point helpers, the Bresenham line, `itoa`, `sprintf`/`vsprintf`/`FindSubstring` (string.cpp since #767), `rand`/`srand`/`RandRange`, the string functions, `FormatCentiseconds` (C linkage) | 0 + 24 | agbcp | 2 pins, 5 asm, 2 asm labels -> the same | all-C++: gfx, system, util, text |
@@ -5077,6 +5078,20 @@ C name.
   `PeriodicSpawner::Spawn` (enemy_ctrl.hpp).
 - **cxx_symbols.txt.** The `#915 Platform, LaunchPad, PeriodicSpawner`
   block maps these 12.
+- **Enemies.** spawn_enemies.cpp's 26 spawners each create an enemy: a
+  MovingSprite (a GroundSprite for the seal) moved by a new EnemyCtrl,
+  the controller that makes it an enemy. They are `EnemyCtrl`'s, under
+  their C names (`EnemyCtrl::SpawnLizard`, ...), since each class has
+  its own kind; 25 are slots (two of them twice: the saucer lab
+  assistant and the sea mine), and SpawnSeal is the seal spawner's
+  callback (`PeriodicSpawner::Spawn` stores `EnemyCtrl::SpawnSeal`).
+  - **Name hiding.** The file's inline `SetKind(part, kind)` helper is
+    now `SetPartKind`: inside the members, `SetKind` names
+    `EnemyCtrl::SetKind`, the controller's method, which would hide it.
+    `DingodileCtrl::SpawnShark` (Dingodile's sharks) is another class's,
+    and Dingodile isn't an EnemyCtrl, so its calls still find it.
+  - cxx_symbols.txt's `#915 EnemyCtrl: the enemy spawners` block maps
+    them.
 
 ### The crate passes as static members of Crate (#915)
 

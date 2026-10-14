@@ -81,34 +81,6 @@ extern void SpawnTiny(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnCortexBoss(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnMegaMix(u32 id, u16 x, u16 y, u16 param);
 
-/* src/level/spawn_enemies.cpp */
-extern void SpawnLizard(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnVulture(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnVenusFlytrap(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnPatrollingJungleEnemy(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnBlowgunTribesman(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnPenguin(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnSeal(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnPolarBear(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnPufferfish(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnShark(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnMorayEel(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnElectricEel(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnSquid(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnJellyfish(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnLaserBarrier(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnStationarySpaceEnemy(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnPatrollingSpaceEnemy(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnSaucerLabAssistant(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnPistonCrusher(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnFlamethrowerLabAssistant(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnHomingSewerEnemy(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnPatrollingSewerEnemy(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnRat(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnFrog(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnSeaMine(u32 id, u16 x, u16 y, u16 param);
-extern void SpawnWoodenCrusher(u32 id, u16 x, u16 y, u16 param);
-
 /* src/level/spawn_gems.cpp */
 extern void SpawnCrystal(u32 id, u16 x, u16 y, u16 param);
 extern void SpawnCrateGem(u32 id, u16 x, u16 y, u16 param);

@@ -136,7 +136,7 @@ void PeriodicSpawner::Spawn(u32 id, u16 x, u16 y, u16 param)
 
     obj = new PeriodicSpawner;
     zero = 0;
-    obj->callback = SpawnSeal;
+    obj->callback = EnemyCtrl::SpawnSeal;
     obj->period = 0x78;
     obj->phase = zero;
     obj->x = INT_TO_Q8(x);
