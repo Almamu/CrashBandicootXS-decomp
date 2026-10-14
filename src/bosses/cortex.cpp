@@ -18,6 +18,12 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Game::Bosses::CortexBossCtrl;
+using Game::Bosses::CortexBossGemCtrl;
+using Game::Bosses::CortexBossPlatformMover;
+using Game::Bosses::CortexCannonCtrl;
+using Game::Bosses::CortexShotCtrl;
+using Game::Bosses::CortexTargetCtrl;
 using Game::Crash::Player;
 
 /* The Neo Cortex fight (GitHub issues #23 and #24), ROM

@@ -13,7 +13,11 @@
  * ones.
  *
  * No `#pragma interface`: g++ emits the vtables in inline_copies_actors.cpp, where
- * their destructors are (see ctrl.hpp). */
+ * their destructors are (see ctrl.hpp).
+ *
+ * The hovercraft's weapons are in the namespace Game::Bosses (#1033,
+ * boss_ctrl.hpp), with the hovercraft: `_vt.Q34Game6Bosses16HovercraftCannon`
+ * & co. */
 
 #include "actor_self.hpp"
 
@@ -81,6 +85,11 @@ COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(AirshipFireball) == 0x6C);
 COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(AirshipFireball) == 0x6C);
 
 /* The airship itself is the all-static class Airship (airship.hpp, #772). */
+
+namespace Game
+{
+namespace Bosses
+{
 
 /* The hovercraft's weapons (#664 part 11h, src/bosses/hovercraft*.cpp).
  * The hovercraft itself is the all-static class Hovercraft
@@ -265,5 +274,8 @@ public:
 
 COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftCannonFlash) == 0x5C);
 COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftCannonFlash) == 0x5C);
+
+} // namespace Bosses
+} // namespace Game
 
 #endif /* GUARD_BOSS_ACTORS_HPP */

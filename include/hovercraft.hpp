@@ -14,9 +14,12 @@
  *
  * The ROM tables only it reads are static data members too, defined in
  * their src/data/*.cpp files (`const u16 Hovercraft::palette[256] = ...`):
- * `_10Hovercraft.palette` is renamed to gHovercraftPalette. The actor
- * category table (src/data/actor_category_175558.cpp) points at Create,
- * Update, UpdateBg2, Destroy and LoadGraphics. */
+ * `_Q34Game6Bosses10Hovercraft.palette` is renamed to gHovercraftPalette.
+ * The actor category table (src/data/actor_category_175558.cpp) points at
+ * Create, Update, UpdateBg2, Destroy and LoadGraphics.
+ *
+ * It is in the namespace Game::Bosses (#1033, boss_ctrl.hpp), with its
+ * weapons. */
 
 #include "actor_self.hpp"
 
@@ -64,6 +67,11 @@ extern "C" {
  * HOVERCRAFT_STEER_SHIFT`, a Q8 offset to a Q8 speed: a gain, not a
  * format). */
 #define HOVERCRAFT_STEER_SHIFT 12
+
+namespace Game
+{
+namespace Bosses
+{
 
 class Hovercraft
 {
@@ -197,5 +205,8 @@ private:
     static const u16 palette[256];                      // gHovercraftPalette
     static const struct hovercraft_picture picture;     // gHovercraftPicture
 };
+
+} // namespace Bosses
+} // namespace Game
 
 #endif // GUARD_HOVERCRAFT_HPP

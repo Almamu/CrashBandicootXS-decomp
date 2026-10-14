@@ -424,22 +424,22 @@ SECTIONS
         build/crashbandicootxs/src/player/action_ctrl_update.o(.gnu.linkonce.d._vt.Q34Game5Crash10ActionCtrl); /* gActionCtrlVtable */
         build/crashbandicootxs/src/player/swim_ctrl.o(.gnu.linkonce.d._vt.Q34Game5Crash8SwimCtrl); /* gSwimCtrlVtable */
         build/crashbandicootxs/src/player/input_ctrl.o(.gnu.linkonce.d._vt.Q34Game5Crash9InputCtrl); /* gInputCtrlVtable */
-        build/crashbandicootxs/src/bosses/boss_ctrl.o(.gnu.linkonce.d._vt.8BossCtrl); /* gBossCtrlVtable */
-        build/crashbandicootxs/src/bosses/mega_mix_update.o(.gnu.linkonce.d._vt.11MegaMixCtrl); /* gMegaMixCtrlVtable */
-        build/crashbandicootxs/src/bosses/tiny.o(.gnu.linkonce.d._vt.17StompedHopPadCtrl); /* gStompedHopPadVtable */
-        build/crashbandicootxs/src/bosses/tiny.o(.gnu.linkonce.d._vt.15OneShotAnimCtrl); /* gOneShotAnimCtrlVtable */
-        build/crashbandicootxs/src/bosses/tiny.o(.gnu.linkonce.d._vt.21UnusedOneShotAnimCtrl); /* gUnusedOneShotAnimCtrlVtable */
-        build/crashbandicootxs/src/bosses/tiny.o(.gnu.linkonce.d._vt.8TinyCtrl); /* gTinyVtable */
-        build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.17CortexBossGemCtrl); /* gCortexBossGemVtable */
-        build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.23CortexBossPlatformMover); /* gCortexBossPlatformMoverVtable */
-        build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.14CortexShotCtrl); /* gCortexShotVtable */
-        build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.16CortexTargetCtrl); /* gCortexTargetVtable */
-        build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.16CortexCannonCtrl); /* gCortexCannonVtable */
-        build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.14CortexBossCtrl); /* gCortexBossVtable */
-        build/crashbandicootxs/src/bosses/dingodile.o(.gnu.linkonce.d._vt.18DingodileSharkCtrl); /* gDingodileSharkVtable */
-        build/crashbandicootxs/src/bosses/dingodile.o(.gnu.linkonce.d._vt.23DingodileProjectileCtrl); /* gDingodileProjectileVtable */
-        build/crashbandicootxs/src/bosses/dingodile.o(.gnu.linkonce.d._vt.19DingodileShieldCtrl); /* gDingodileShieldVtable */
-        build/crashbandicootxs/src/bosses/dingodile.o(.gnu.linkonce.d._vt.13DingodileCtrl); /* gDingodileVtable */
+        build/crashbandicootxs/src/bosses/boss_ctrl.o(.gnu.linkonce.d._vt.Q34Game6Bosses8BossCtrl); /* gBossCtrlVtable */
+        build/crashbandicootxs/src/bosses/mega_mix_update.o(.gnu.linkonce.d._vt.Q34Game6Bosses11MegaMixCtrl); /* gMegaMixCtrlVtable */
+        build/crashbandicootxs/src/bosses/tiny.o(.gnu.linkonce.d._vt.Q34Game6Bosses17StompedHopPadCtrl); /* gStompedHopPadVtable */
+        build/crashbandicootxs/src/bosses/tiny.o(.gnu.linkonce.d._vt.Q34Game6Bosses15OneShotAnimCtrl); /* gOneShotAnimCtrlVtable */
+        build/crashbandicootxs/src/bosses/tiny.o(.gnu.linkonce.d._vt.Q34Game6Bosses21UnusedOneShotAnimCtrl); /* gUnusedOneShotAnimCtrlVtable */
+        build/crashbandicootxs/src/bosses/tiny.o(.gnu.linkonce.d._vt.Q34Game6Bosses8TinyCtrl); /* gTinyVtable */
+        build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.Q34Game6Bosses17CortexBossGemCtrl); /* gCortexBossGemVtable */
+        build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.Q34Game6Bosses23CortexBossPlatformMover); /* gCortexBossPlatformMoverVtable */
+        build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.Q34Game6Bosses14CortexShotCtrl); /* gCortexShotVtable */
+        build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.Q34Game6Bosses16CortexTargetCtrl); /* gCortexTargetVtable */
+        build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.Q34Game6Bosses16CortexCannonCtrl); /* gCortexCannonVtable */
+        build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.Q34Game6Bosses14CortexBossCtrl); /* gCortexBossVtable */
+        build/crashbandicootxs/src/bosses/dingodile.o(.gnu.linkonce.d._vt.Q34Game6Bosses18DingodileSharkCtrl); /* gDingodileSharkVtable */
+        build/crashbandicootxs/src/bosses/dingodile.o(.gnu.linkonce.d._vt.Q34Game6Bosses23DingodileProjectileCtrl); /* gDingodileProjectileVtable */
+        build/crashbandicootxs/src/bosses/dingodile.o(.gnu.linkonce.d._vt.Q34Game6Bosses19DingodileShieldCtrl); /* gDingodileShieldVtable */
+        build/crashbandicootxs/src/bosses/dingodile.o(.gnu.linkonce.d._vt.Q34Game6Bosses13DingodileCtrl); /* gDingodileVtable */
         build/crashbandicootxs/src/objects/platform_contact.o(.gnu.linkonce.d._vt.8Platform); /* gPlatformVtable */
         build/crashbandicootxs/src/objects/platform_mover.o(.gnu.linkonce.d._vt.13PlatformMover); /* gPlatformMoverVtable */
         build/crashbandicootxs/src/objects/camera_lead.o(.gnu.linkonce.d._vt.10CameraLead); /* gCameraLeadVtable */
@@ -493,11 +493,11 @@ SECTIONS
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.13JetpackRocket); /* gJetpackRocketVtable */
         build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.11JetpackRing); /* gJetpackRingVtable */
         build/crashbandicootxs/src/vehicle/jetpack/jetpack_collected_wumpa.o(.gnu.linkonce.d._vt.21JetpackCollectedWumpa); /* gJetpackCollectedWumpaVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.18HovercraftFireball); /* gHovercraftFireballVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.16HovercraftCannon); /* gHovercraftCannonVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.18HovercraftLauncher); /* gHovercraftLauncherVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.17HovercraftSideGun); /* gHovercraftSideGunVtable */
-        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.21HovercraftCannonFlash); /* gHovercraftCannonFlashVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q34Game6Bosses18HovercraftFireball); /* gHovercraftFireballVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q34Game6Bosses16HovercraftCannon); /* gHovercraftCannonVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q34Game6Bosses18HovercraftLauncher); /* gHovercraftLauncherVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q34Game6Bosses17HovercraftSideGun); /* gHovercraftSideGunVtable */
+        build/crashbandicootxs/src/actor/inline_copies_actors.o(.gnu.linkonce.d._vt.Q34Game6Bosses21HovercraftCannonFlash); /* gHovercraftCannonFlashVtable */
         build/crashbandicootxs/src/frontend/company_logos_ctor.o(.gnu.linkonce.d._vt.9LogoActor); /* gLogoActorVtable */
 
 	} = 0

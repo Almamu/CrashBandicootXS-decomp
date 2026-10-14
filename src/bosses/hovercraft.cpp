@@ -20,6 +20,10 @@ extern "C" {
 using Engine::Actor::ActorBg;
 using Engine::Actor::ActorSpawns;
 using Engine::Gfx::CellAnim;
+using Game::Bosses::Hovercraft;
+using Game::Bosses::HovercraftCannon;
+using Game::Bosses::HovercraftLauncher;
+using Game::Bosses::HovercraftSideGun;
 
 /* The hovercraft boss (#664 part 11h), ROM 0x08032AF8-0x08033804, between
  * hovercraft_fireball.cpp and hovercraft_state.cpp: a bare AnimPart

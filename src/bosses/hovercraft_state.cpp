@@ -6,6 +6,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Bosses::Hovercraft;
+
 /* The hovercraft's accessors and state changes (#664 part 11h). The
  * hovercraft is a bare AnimPart (anim, Create) and variables (x, state,
  * ...), like the airship, all static members of Hovercraft

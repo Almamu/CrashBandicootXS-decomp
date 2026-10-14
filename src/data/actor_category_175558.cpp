@@ -12,6 +12,7 @@ extern "C" {
 }
 
 using Engine::Actor::ActorCategory;
+using Game::Bosses::Hovercraft;
 
 /*
  * ROM 0x08175558-0x08175760: the actor category descriptors and the

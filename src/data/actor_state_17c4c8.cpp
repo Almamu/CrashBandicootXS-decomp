@@ -1,6 +1,10 @@
 #include "boss_actors.hpp"
 #include "hovercraft.hpp"
 
+using Game::Bosses::Hovercraft;
+using Game::Bosses::HovercraftCannon;
+using Game::Bosses::HovercraftLauncher;
+
 /*
  * ROM 0x0817C4C8-0x0817C510. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.

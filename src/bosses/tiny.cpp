@@ -18,6 +18,10 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Game::Bosses::OneShotAnimCtrl;
+using Game::Bosses::StompedHopPadCtrl;
+using Game::Bosses::TinyCtrl;
+using Game::Bosses::UnusedOneShotAnimCtrl;
 using Game::Crash::Player;
 
 /* Tiny's fight (GitHub issues #22 and #23), ROM 0x08018008-0x08018A30,
