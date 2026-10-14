@@ -6,6 +6,8 @@ extern "C" {
 #include "bosses.h"
 }
 
+using Game::Entities::ActorSelf;
+using Game::Entities::HpActor;
 using Game::Vehicles::Jetpack::Airship;
 using Game::Vehicles::Jetpack::JetpackShot;
 

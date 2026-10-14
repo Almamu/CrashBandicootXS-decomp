@@ -61,7 +61,7 @@ namespace Jetpack
 #define AIRSHIP_FIREBALL_ORBIT_RADIUS      INT_TO_Q8(42)
 #define AIRSHIP_FIREBALL_ORBIT_EASE_SHIFT  5
 #define AIRSHIP_FIREBALL_SPIRAL_EASE_SHIFT 4
-class AirshipFireball : public HpActor
+class AirshipFireball : public Game::Entities::HpActor
 {
 public:
     s32 centerX;  // 0x58 - the constructor's `x`
@@ -124,7 +124,7 @@ namespace Bosses
 #define HOVERCRAFT_FIREBALL_LAUNCH_SPEED_Z Q8_FRAC(0, 0x95)
 #define HOVERCRAFT_FIREBALL_DRAG_Z         Q8_FRAC(0, 5)
 #define HOVERCRAFT_FIREBALL_MIN_SPEED_Z    Q8_FRAC(0, 0x14)
-class HovercraftFireball : public HpActor
+class HovercraftFireball : public Game::Entities::HpActor
 {
 public:
     s32 centerX;  // 0x58 - the constructor's `x`, never read
@@ -161,7 +161,7 @@ COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftFireball) == 0x6C);
 #define HOVERCRAFT_CANNON_STATE_WAIT 0      // StateWait
 #define HOVERCRAFT_CANNON_STATE_FIRE 1      // StateFire
 #define HOVERCRAFT_CANNON_STATE_DESTROYED 2 // StateDestroyed
-class HovercraftCannon : public HpActor
+class HovercraftCannon : public Game::Entities::HpActor
 {
 public:
     s32 spawnX; // 0x58 - the constructor's `x`, never read
@@ -202,7 +202,7 @@ COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftCannon) == 0x70);
 #define HOVERCRAFT_LAUNCHER_STATE_WAIT 0      // StateWait
 #define HOVERCRAFT_LAUNCHER_STATE_LAUNCH 1    // StateLaunch; it can be hit only now
 #define HOVERCRAFT_LAUNCHER_STATE_DESTROYED 2 // StateDestroyed
-class HovercraftLauncher : public HpActor
+class HovercraftLauncher : public Game::Entities::HpActor
 {
 public:
     s32 spawnX; // 0x58 - the constructor's `x`, never read
@@ -240,7 +240,7 @@ COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftLauncher) == 0x70);
 /* HovercraftSideGun's `state` (it has no state methods). */
 #define HOVERCRAFT_SIDE_GUN_STATE_ALIVE 0     // follows the hovercraft and fires
 #define HOVERCRAFT_SIDE_GUN_STATE_DESTROYED 1 // shot down (Damage)
-class HovercraftSideGun : public HpActor
+class HovercraftSideGun : public Game::Entities::HpActor
 {
 public:
     u8 dead;        // 0x58 - set when shot down, IsUnshootable returns it
@@ -268,7 +268,7 @@ COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftSideGun) == 0x70);
 /* The cannon's muzzle flash (gHovercraftCannonFlashVtable,
  * hovercraft_cannon_flash.cpp): it plays its animation once in front of the cannon, then deletes
  * itself. */
-class HovercraftCannonFlash : public HpActor
+class HovercraftCannonFlash : public Game::Entities::HpActor
 {
 public:
     u8 unshootable; // 0x58 - always set

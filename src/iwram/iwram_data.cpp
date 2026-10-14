@@ -34,6 +34,7 @@ using Engine::Gfx::BrightnessFade;
 using Engine::Gfx::SpriteFrameCache;
 using Engine::Link::LinkSession;
 using Engine::Sys::FrameLimiter;
+using Game::Entities::ActorSelf;
 using Game::Level::LevelLayers;
 using Game::Level::LevelProgress;
 using Game::Level::LevelState;

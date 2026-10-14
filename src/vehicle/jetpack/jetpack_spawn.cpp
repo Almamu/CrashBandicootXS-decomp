@@ -25,6 +25,8 @@ using Game::Bosses::HovercraftCannonFlash;
 using Game::Bosses::HovercraftFireball;
 using Game::Bosses::HovercraftLauncher;
 using Game::Bosses::HovercraftSideGun;
+using Game::Entities::ActorSelf;
+using Game::Entities::AnimPart;
 using Game::Vehicles::Jetpack::Airship;
 using Game::Vehicles::Jetpack::AirshipFireball;
 using Game::Vehicles::Jetpack::JetpackBalloon;

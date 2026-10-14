@@ -32,6 +32,7 @@ using Engine::Gfx::SpriteOamQueue;
 using Engine::Sys::Display;
 using Engine::Sys::FrameLimiter;
 using Engine::Sys::VramDmaQueue;
+using Game::Entities::ActorSelf;
 using Game::Ui::CompanyLogos;
 using Game::Ui::LogoActor;
 using Game::Ui::Starfield;

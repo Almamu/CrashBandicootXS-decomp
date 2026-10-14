@@ -11,6 +11,7 @@ extern "C" {
 }
 
 using Engine::Gfx::CategorySpriteSheet;
+using Game::Entities::AnimPart;
 
 /* AnimPart's methods (#664 part 11a, include/actor_self.hpp): the frame
  * accessors and SetAnim (SetActorAnim). ROM 0x0803B058-0x0803B0C4, the

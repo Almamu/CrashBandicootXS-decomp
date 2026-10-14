@@ -151,7 +151,7 @@ extern s32 gPolarQueuedWumpa;
 extern u8 gPolarSteerEnabled;
 extern s32 gPolarSteerTime;
 extern s32 gPolarWumpaDispenseTimer;
-extern class ActorSelf *gRiderlessPolar;
+extern Game::Entities::ActorSelf *gRiderlessPolar;
 /* The yeti's (gYeti, gYetiX, ...) are Yeti's static data members
  * (include/yeti.hpp). */
 
@@ -205,11 +205,11 @@ namespace Polar
  * there (the crates' and the wumpa's also have an out-of-line copy,
  * Create*, in src/vehicle/), the others out of line. */
 
-class RiderlessPolar : public ActorSelf
+class RiderlessPolar : public Game::Entities::ActorSelf
 {
 public:
     RiderlessPolar(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
-        : ActorSelf(rec, x, y, z)
+        : Game::Entities::ActorSelf(rec, x, y, z)
     {
     }
     virtual ~RiderlessPolar(); // 1 DestroyRiderlessPolar
@@ -242,7 +242,7 @@ public:
 #define POLAR_PLAYER_STATE_SHOCKED 12     // StateShocked: the electric fence (Shock)
 #define POLAR_PLAYER_STATE_RECOVER 13     // StateRecover: nothing enters it
 
-class PolarPlayer : public ActorSelf
+class PolarPlayer : public Game::Entities::ActorSelf
 {
 public:
     PolarPlayer(const struct anim_table_record *rec, s32 z); // ConstructActorPart
@@ -288,28 +288,28 @@ public:
      * in the actor zone, for ROM order: IsTouchingPlayer in
      * actor_category_frame.cpp, ReachCourseEnd and ReloadPlayerTiles in
      * actor_category_hooks.cpp, IsPlayerPauseLocked in actor_category.cpp. */
-    static s32 IsTouchingPlayer(ActorSelf *self); // PolarIsTouchingPlayer
-    static void ReachCourseEnd();                 // PolarReachCourseEnd
-    static void ReloadPlayerTiles();              // PolarReloadPlayerTiles
-    static s32 IsPlayerPauseLocked();             // PolarIsPauseLocked
+    static s32 IsTouchingPlayer(Game::Entities::ActorSelf *self); // PolarIsTouchingPlayer
+    static void ReachCourseEnd();                                 // PolarReachCourseEnd
+    static void ReloadPlayerTiles();                              // PolarReloadPlayerTiles
+    static s32 IsPlayerPauseLocked();                             // PolarIsPauseLocked
 
     /* The polar category's factory (actor_factory.cpp, #915): Create and
      * SpawnActor are the category's slots 0 and 1, CreateActor the
      * per-kind `new`. */
     static void Create(struct anim_table_record *table, s32 z); // ConstructAnimTableState
-    static ActorSelf *SpawnActor(struct actor_spawn *spawn, u8 useBonus,
-                                 s32 zOffset); // SpawnActor
-    static ActorSelf *CreateActor(u8 kind, s32 x, s32 y, s32 z,
-                                  struct actor_spawn *spawn); // CreateActor
+    static Game::Entities::ActorSelf *SpawnActor(struct actor_spawn *spawn, u8 useBonus,
+                                                 s32 zOffset); // SpawnActor
+    static Game::Entities::ActorSelf *CreateActor(u8 kind, s32 x, s32 y, s32 z,
+                                                  struct actor_spawn *spawn); // CreateActor
 };
 
-COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(PolarPlayer) == sizeof(ActorSelf));
+COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(PolarPlayer) == sizeof(Game::Entities::ActorSelf));
 
 } // namespace Polar
 } // namespace Vehicles
 } // namespace Game
 
-inline Game::Vehicles::Polar::PolarPlayer *ActorSelf::AsPolarPlayer()
+inline Game::Vehicles::Polar::PolarPlayer *Game::Entities::ActorSelf::AsPolarPlayer()
 {
     return (Game::Vehicles::Polar::PolarPlayer *)this;
 }
@@ -321,11 +321,11 @@ namespace Vehicles
 namespace Polar
 {
 
-class PolarCheckpointText : public ActorSelf
+class PolarCheckpointText : public Game::Entities::ActorSelf
 {
 public:
     PolarCheckpointText(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
-        : ActorSelf(rec, x, y, z)
+        : Game::Entities::ActorSelf(rec, x, y, z)
     {
     }
     virtual ~PolarCheckpointText(); // 1 DestroyPolarCheckpointText
@@ -337,7 +337,7 @@ public:
 /* The wumpa fruit flying to the HUD (gPolarCollectedWumpaVtable;
  * src/vehicle/polar/polar_pickups.cpp): it flies at a fixed speed to the
  * wumpa counter's corner, and its destructor counts in its fruit. */
-class PolarCollectedWumpa : public ActorSelf
+class PolarCollectedWumpa : public Game::Entities::ActorSelf
 {
 public:
     s32 velX;  // 0x54
@@ -356,7 +356,7 @@ public:
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(PolarCollectedWumpa) == 0x60);
 
 /* A wumpa fruit on the course (gPolarWumpaVtable; polar_pickups.cpp). */
-class PolarWumpa : public ActorSelf
+class PolarWumpa : public Game::Entities::ActorSelf
 {
 public:
     /* Inline (PolarPlayer::CreateActor expands it); polar_pickups.cpp, which defines
@@ -369,7 +369,7 @@ public:
 
 #ifndef POLAR_WUMPA_CONSTRUCTOR_OUT_OF_LINE
 inline PolarWumpa::PolarWumpa(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
-    : ActorSelf(rec, x, y, z)
+    : Game::Entities::ActorSelf(rec, x, y, z)
 {
 }
 #endif
@@ -381,7 +381,7 @@ inline PolarWumpa::PolarWumpa(const struct anim_table_record *rec, s32 x, s32 y,
  * that animation has played. Its destructor is inline, as every crate
  * kind's expands it; inline_copies_actors.cpp has the out-of-line copy
  * (DestroyPolarCrate). */
-class PolarCrate : public ActorSelf
+class PolarCrate : public Game::Entities::ActorSelf
 {
 public:
     PolarCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z); // InitPolarCrate
@@ -509,7 +509,7 @@ public:
 
 /* An electric fence (gPolarElectricFenceVtable): shown once near enough,
  * it shocks the player on its wire and hurts it on its posts. */
-class PolarElectricFence : public ActorSelf
+class PolarElectricFence : public Game::Entities::ActorSelf
 {
 public:
     // CreatePolarElectricFence
@@ -519,7 +519,7 @@ public:
 };
 
 /* A rock in the way (two parts, PolarPlayer::CreateActor kinds 13 and 14). */
-class PolarObstacle : public ActorSelf
+class PolarObstacle : public Game::Entities::ActorSelf
 {
 public:
     // CreatePolarObstacle
@@ -531,7 +531,7 @@ public:
 /* A ramp that launches the player (state 1 once used). */
 #define POLAR_LAUNCHER_STATE_READY 0   // launches the player, or is set off by the yeti
 #define POLAR_LAUNCHER_STATE_EXPLODE 1 // used: deleted when the animation is done
-class PolarLauncher : public ActorSelf
+class PolarLauncher : public Game::Entities::ActorSelf
 {
 public:
     // CreatePolarLauncher
@@ -547,7 +547,7 @@ public:
 /* Aim with no target left: the penguin drifts on at this Z speed (Q8, the
  * middle of gPolarPenguinSpeeds). */
 #define POLAR_PENGUIN_DRIFT_SPEED_Z Q8_FRAC(0, 0x62)
-class PolarPenguin : public ActorSelf
+class PolarPenguin : public Game::Entities::ActorSelf
 {
 public:
     s32 velX;       // 0x54
@@ -573,7 +573,7 @@ COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(PolarPenguin) == 0x68);
 #define POLAR_ICICLE_STATE_DROP1 1   // until depth 0x5A00
 #define POLAR_ICICLE_STATE_DROP2 2   // until depth 0x6400
 #define POLAR_ICICLE_STATE_DROP3 3   // the last step
-class PolarIcicle : public ActorSelf
+class PolarIcicle : public Game::Entities::ActorSelf
 {
 public:
     // CreatePolarIcicle
@@ -588,7 +588,7 @@ public:
 #define POLAR_AKU_AKU_STATE_FOLLOW 0     // hovers round behind the player
 #define POLAR_AKU_AKU_STATE_INVINCIBLE 1 // sits on the player, in front
 #define POLAR_AKU_AKU_STATE_LOSE_MASK 2  // the lost-mask animation, then Refresh
-class PolarAkuAku : public ActorSelf
+class PolarAkuAku : public Game::Entities::ActorSelf
 {
 public:
     // CreatePolarAkuAku
@@ -608,7 +608,7 @@ public:
 
 /* The finish line (two parts, PolarPlayer::CreateActor kinds 25 and 26), shown after
  * 5 frames. */
-class PolarGoal : public ActorSelf
+class PolarGoal : public Game::Entities::ActorSelf
 {
 public:
     // CreatePolarGoal
@@ -618,7 +618,7 @@ public:
 };
 
 /* A boost pad: its look is its side of the course. */
-class PolarBoostPad : public ActorSelf
+class PolarBoostPad : public Game::Entities::ActorSelf
 {
 public:
     u8 once; // 0x54 - the boost's sound was played
@@ -633,7 +633,7 @@ COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(PolarBoostPad) == 0x58);
 
 /* The checkpoint crate: animation 0 whole, 1 opened by the player, 2
  * already the checkpoint, 3 broken by the yeti. */
-class PolarCheckpointCrate : public ActorSelf
+class PolarCheckpointCrate : public Game::Entities::ActorSelf
 {
 public:
     // CreatePolarCheckpointCrate
@@ -684,7 +684,7 @@ namespace Jetpack
 #define JETPACK_ROLL_RECOVER_STEP     Q8_FRAC(0, 0x2d)
 #define JETPACK_PLAYER_SHOT_OFFSET_Z  Q8_FRAC(0, 10)
 
-class JetpackPlayer : public HpActor
+class JetpackPlayer : public Game::Entities::HpActor
 {
 public:
     JetpackPlayer(const struct anim_table_record *rec, s32 z); // InitJetpackPlayer
@@ -724,18 +724,19 @@ public:
     /* The jetpack and hovercraft categories' hooks (ActorCategory::vtables'
      * slots 9-12, #915): static, each runs on the player, gActorList; their
      * code is in the actor zone, next to PolarPlayer's (above). */
-    static s32 IsTouchingPlayer(ActorSelf *self); // JetpackIsTouchingPlayer
-    static void ReachCourseEnd();                 // JetpackReachCourseEnd
-    static void ReloadPlayerTiles();              // JetpackReloadPlayerTiles
-    static s32 IsPlayerPauseLocked();             // JetpackIsPauseLocked
+    static s32 IsTouchingPlayer(Game::Entities::ActorSelf *self); // JetpackIsTouchingPlayer
+    static void ReachCourseEnd();                                 // JetpackReachCourseEnd
+    static void ReloadPlayerTiles();                              // JetpackReloadPlayerTiles
+    static s32 IsPlayerPauseLocked();                             // JetpackIsPauseLocked
 
     /* The jetpack and hovercraft categories' factory (jetpack_spawn.cpp,
      * #915): Create and SpawnActor are the categories' slots 0 and 1,
      * CreateActor the per-kind `new`. */
-    static void Create(struct anim_table_record *table, s32 z);            // CreateJetpackPlayer
-    static ActorSelf *SpawnActor(struct actor_spawn *rec, u8 alt, s32 dz); // SpawnJetpackActor
-    static ActorSelf *CreateActor(u8 kind, s32 x, s32 y, s32 z,
-                                  struct actor_spawn *spawn); // CreateJetpackActor
+    static void Create(struct anim_table_record *table, s32 z); // CreateJetpackPlayer
+    static Game::Entities::ActorSelf *SpawnActor(struct actor_spawn *rec, u8 alt,
+                                                 s32 dz); // SpawnJetpackActor
+    static Game::Entities::ActorSelf *CreateActor(u8 kind, s32 x, s32 y, s32 z,
+                                                  struct actor_spawn *spawn); // CreateJetpackActor
 };
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackPlayer) == 0x58);
@@ -745,7 +746,7 @@ COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackPlayer) == 0x58);
 } // namespace Vehicles
 } // namespace Game
 
-inline Game::Vehicles::Jetpack::JetpackPlayer *ActorSelf::AsJetpackPlayer()
+inline Game::Vehicles::Jetpack::JetpackPlayer *Game::Entities::ActorSelf::AsJetpackPlayer()
 {
     return (Game::Vehicles::Jetpack::JetpackPlayer *)this;
 }
@@ -758,12 +759,12 @@ namespace Jetpack
 {
 
 /* The checkpoint banner, drawn at a fixed screen position. */
-class JetpackCheckpointText : public HpActor
+class JetpackCheckpointText : public Game::Entities::HpActor
 {
 public:
     /* Inline: JetpackCheckpointText::Create expands it. */
     JetpackCheckpointText(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
-        : HpActor(rec, x, y, z, 1)
+        : Game::Entities::HpActor(rec, x, y, z, 1)
     {
     }
     virtual ~JetpackCheckpointText(); // 1 DestroyJetpackCheckpointText
@@ -777,12 +778,12 @@ public:
 /* An explosion: it moves away (into the screen) by
  * JETPACK_EXPLOSION_SPEED_Z a frame (Q8) while it plays. */
 #define JETPACK_EXPLOSION_SPEED_Z Q8_FRAC(0, 170)
-class JetpackExplosion : public HpActor
+class JetpackExplosion : public Game::Entities::HpActor
 {
 public:
     /* Inline: JetpackExplosion::Create expands it. */
     JetpackExplosion(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
-        : HpActor(rec, x, y, z, 1)
+        : Game::Entities::HpActor(rec, x, y, z, 1)
     {
     }
     virtual ~JetpackExplosion(); // 1 DestroyJetpackExplosion
@@ -794,7 +795,7 @@ public:
 
 /* The jetpack player's shot (src/vehicle/jetpack/jetpack_shot.cpp): it flies by
  * its speed, and hits the first shootable actor or the airship. */
-class JetpackShot : public HpActor
+class JetpackShot : public Game::Entities::HpActor
 {
 public:
     s32 velX; // 0x58
@@ -840,7 +841,7 @@ COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackShot) == 0x60);
 #define JETPACK_PLANE_MAX_FALL_SPEED   INT_TO_Q4(Q8(1.25))
 #define JETPACK_PLANE_GUN_OFFSET_Z     Q8_FRAC(0, 10)
 #define JETPACK_PLANE_FOLLOW_SHIFT     4
-class JetpackPlane : public HpActor
+class JetpackPlane : public Game::Entities::HpActor
 {
 public:
     s32 cooldown;  // 0x58 - frames to the next cannonball
@@ -890,7 +891,7 @@ COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackPlane) == 0x80);
 #define JETPACK_BOMBER_STATE_DYING 6            // StateDying: touched or shot down
 /* StateDrop: the bomber comes at the player by this much a frame (Q8). */
 #define JETPACK_BOMBER_DROP_SPEED_Z Q8_FRAC(0, 0x88)
-class JetpackBomber : public HpActor
+class JetpackBomber : public Game::Entities::HpActor
 {
 public:
     s32 homeX;      // 0x58
@@ -924,7 +925,7 @@ COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackBomber) == 0x64);
 
 /* The cannonball the planes and the airship fire
  * (gJetpackCannonballVtable, src/vehicle/jetpack/jetpack_cannonball.cpp). */
-class JetpackCannonball : public HpActor
+class JetpackCannonball : public Game::Entities::HpActor
 {
 public:
     s32 velX; // 0x58
@@ -959,7 +960,7 @@ class JetpackBalloonCrate;
 /* The balloon a crate hangs from (gJetpackBalloonVtable,
  * src/vehicle/jetpack/jetpack_balloon.cpp): the crate moves it (Move) until it is
  * released (Release) and floats away, or is shot and pops. */
-class JetpackBalloon : public HpActor
+class JetpackBalloon : public Game::Entities::HpActor
 {
 public:
     JetpackBalloonCrate *crate; // 0x58 - the crate hanging from it
@@ -1007,7 +1008,7 @@ COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackBalloon) == 0x64);
 #define JETPACK_BALLOON_CRATE_STATE_HANG 0      // StateHang: from its balloon
 #define JETPACK_BALLOON_CRATE_STATE_FALL 1      // StateFall: its balloon popped (Break)
 #define JETPACK_BALLOON_CRATE_STATE_DESTROYED 2 // StateDestroyed: broken, pays out
-class JetpackBalloonCrate : public HpActor
+class JetpackBalloonCrate : public Game::Entities::HpActor
 {
 public:
     JetpackBalloon *balloon; // 0x58 - the balloon it hangs from
@@ -1088,7 +1089,7 @@ COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackQuestionCrate) == 0x74);
 /* A nitro crate on a parachute (gJetpackParachuteNitroVtable,
  * src/vehicle/jetpack/jetpack_crates.cpp): it rises to `limitY`, and explodes on
  * the player or when shot. */
-class JetpackParachuteNitro : public HpActor
+class JetpackParachuteNitro : public Game::Entities::HpActor
 {
 public:
     u8 dead;    // 0x58 - exploded: no longer shootable
@@ -1107,7 +1108,7 @@ COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackParachuteNitro) == 0x60);
 /* A rocket (gJetpackRocketVtable, src/vehicle/jetpack/jetpack_rocket.cpp): it
  * swings around `originX` while it comes down by `stepY` to `limitY`,
  * then explodes (Launch); it hurts the player once on contact. */
-class JetpackRocket : public HpActor
+class JetpackRocket : public Game::Entities::HpActor
 {
 public:
     s32 originX;  // 0x58
@@ -1131,7 +1132,7 @@ COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackRocket) == 0x68);
 /* A jetpack ring (gJetpackRingVtable). Its constructor and slot 5 are in
  * src/vehicle/jetpack/jetpack_collected_wumpa.cpp (part 11h), its Update in
  * jetpack_rocket.cpp (part 11g). */
-class JetpackRing : public HpActor
+class JetpackRing : public Game::Entities::HpActor
 {
 public:
     u8 cued; // 0x58 - set once UpdateJetpackRing has played its cue
@@ -1150,7 +1151,7 @@ COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackRing) == 0x5C);
  * PolarCollectedWumpa's twin): it
  * flies from where it was collected to the HUD's wumpa counter, and its
  * destructor adds the fruit it carries. */
-class JetpackCollectedWumpa : public HpActor
+class JetpackCollectedWumpa : public Game::Entities::HpActor
 {
 public:
     s32 velX;   // 0x58

@@ -98,8 +98,8 @@ public:
 
     static void Spawn(s32 kind, s32 sx, s32 sy, s32 sz); // SpawnAirship (JetpackPlayer::SpawnActor)
     static void Damage(s32 delta);                       // DamageAirship (JetpackShot)
-    static u8 IsTouching(ActorSelf *self);               // IsTouchingAirship (JetpackShot)
-    static s32 GetHpPercent();                           // GetAirshipHpPercent (the HUD)
+    static u8 IsTouching(Game::Entities::ActorSelf *self); // IsTouchingAirship (JetpackShot)
+    static s32 GetHpPercent();                             // GetAirshipHpPercent (the HUD)
 
 private:
     /* The states, indexed by `state` (stateFuncs). */
@@ -121,7 +121,7 @@ private:
      * it is past the new animation's end. */
     static void SetState(s32 st, s32 idx)
     {
-        AnimPart *a;
+        Game::Entities::AnimPart *a;
 
         state = st;
         stateTimer = 0;
@@ -134,24 +134,24 @@ private:
     }
 
     /* IWRAM 0x03001520-0x03001580 (sym_iwram.txt) */
-    static s32 bg2Page;     // gAirshipBg2Page
-    static u8 bg2PageFlip;  // gAirshipBg2PageFlip: "apply now" latch for UpdateBg2
-    static s32 mapCols;     // gAirshipMapCols
-    static s32 mapRows;     // gAirshipMapRows
-    static s32 mapTileBase; // gAirshipMapTileBase
-    static AnimPart *anim;  // gAirship
-    static s32 state;       // gAirshipState
-    static u32 stateTimer;  // gAirshipStateTimer
-    static s32 x;           // gAirshipX
-    static s32 y;           // gAirshipY
-    static s32 z;           // gAirshipZ
-    static s32 screenX;     // gAirshipScreenX
-    static s32 screenY;     // gAirshipScreenY
-    static s32 distance;    // gAirshipDistance
-    static s32 velX;        // gAirshipVelX
-    static s32 velY;        // gAirshipVelY
-    static s32 velZ;        // gAirshipVelZ
-    static s32 level;       // gAirshipLevel: Create's
+    static s32 bg2Page;                    // gAirshipBg2Page
+    static u8 bg2PageFlip;                 // gAirshipBg2PageFlip: "apply now" latch for UpdateBg2
+    static s32 mapCols;                    // gAirshipMapCols
+    static s32 mapRows;                    // gAirshipMapRows
+    static s32 mapTileBase;                // gAirshipMapTileBase
+    static Game::Entities::AnimPart *anim; // gAirship
+    static s32 state;                      // gAirshipState
+    static u32 stateTimer;                 // gAirshipStateTimer
+    static s32 x;                          // gAirshipX
+    static s32 y;                          // gAirshipY
+    static s32 z;                          // gAirshipZ
+    static s32 screenX;                    // gAirshipScreenX
+    static s32 screenY;                    // gAirshipScreenY
+    static s32 distance;                   // gAirshipDistance
+    static s32 velX;                       // gAirshipVelX
+    static s32 velY;                       // gAirshipVelY
+    static s32 velZ;                       // gAirshipVelZ
+    static s32 level;                      // gAirshipLevel: Create's
     static const struct airship_attack *attack; // gAirshipAttack: Spawn's
     static s32 hp;                              // gAirshipHp
     static s32 fireTimer;                       // gAirshipFireTimer

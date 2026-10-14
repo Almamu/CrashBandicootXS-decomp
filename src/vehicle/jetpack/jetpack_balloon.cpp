@@ -8,6 +8,7 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Entities::HpActor;
 using Game::Vehicles::Jetpack::JetpackBalloon;
 using Game::Vehicles::Jetpack::JetpackBalloonCrate;
 

@@ -12,6 +12,7 @@ extern "C" {
 #include "bosses.h"
 }
 
+using Game::Entities::HpActor;
 using Game::Ui::Hud;
 using Game::Ui::HudPart;
 using Game::Vehicles::Jetpack::Airship;

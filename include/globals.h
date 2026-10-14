@@ -61,7 +61,14 @@ extern u32 gRoomFrameCount;
 /* The circular actor list's root (ActorSelf's prev/next, actor_self.hpp).
  * No C file uses it. */
 #ifdef __cplusplus
-extern class ActorSelf *gActorList;
+namespace Game
+{
+namespace Entities
+{
+class ActorSelf;
+} // namespace Entities
+} // namespace Game
+extern Game::Entities::ActorSelf *gActorList;
 #endif
 
 #ifdef __cplusplus

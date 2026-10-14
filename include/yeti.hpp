@@ -29,8 +29,14 @@ extern "C" {
 #include "actor_anim.h"
 }
 
-class ActorSelf;
+namespace Game
+{
+namespace Entities
+{
+class ActorSelf; // actor_self.hpp
 class AnimPart;
+} // namespace Entities
+} // namespace Game
 
 /* Yeti::state (#843, docs/flags/boss_states_vehicle.md): the stateFuncs
  * index, named after its method. */
@@ -66,13 +72,14 @@ namespace Polar
 class Yeti
 {
 public:
-    static void Create(s32 level);         // CreateYeti (category slot 2)
-    static void Update();                  // UpdateYeti (slot 3)
-    static void UpdateBg2();               // UpdateYetiBg2 (slot 4)
-    static void Destroy();                 // DestroyYeti (slot 5)
-    static void LoadGraphics();            // LoadYetiGraphics (slot 6)
-    static void Stop();                    // StopYeti: the polar player's finish
-    static u8 IsTouching(ActorSelf *self); // IsTouchingYeti: the polar objects' test
+    static void Create(s32 level); // CreateYeti (category slot 2)
+    static void Update();          // UpdateYeti (slot 3)
+    static void UpdateBg2();       // UpdateYetiBg2 (slot 4)
+    static void Destroy();         // DestroyYeti (slot 5)
+    static void LoadGraphics();    // LoadYetiGraphics (slot 6)
+    static void Stop();            // StopYeti: the polar player's finish
+    static u8
+    IsTouching(Game::Entities::ActorSelf *self); // IsTouchingYeti: the polar objects' test
 
 private:
     typedef void (*StateFunc)();
@@ -85,14 +92,14 @@ private:
     static void BuildBg2Map(u8 *dst, u8 seed); // BuildYetiBg2Map: UNUSED
 
     /* IWRAM (sym_iwram.txt) */
-    static AnimPart *anim;  // gYeti - the 0x1C-byte animation
-    static u8 bg2Page;      // gYetiBg2Page
-    static u8 bg2PageFlip;  // gYetiBg2PageFlip
-    static s32 x;           // gYetiX - Q8
-    static s32 position;    // gYetiPosition - Q8
-    static s32 distance;    // gYetiDistance - Q8, to the player
-    static s32 state;       // gYetiState - indexes stateFuncs
-    static s32 paramsIndex; // gYetiParamsIndex - indexes chargeParams
+    static Game::Entities::AnimPart *anim; // gYeti - the 0x1C-byte animation
+    static u8 bg2Page;                     // gYetiBg2Page
+    static u8 bg2PageFlip;                 // gYetiBg2PageFlip
+    static s32 x;                          // gYetiX - Q8
+    static s32 position;                   // gYetiPosition - Q8
+    static s32 distance;                   // gYetiDistance - Q8, to the player
+    static s32 state;                      // gYetiState - indexes stateFuncs
+    static s32 paramsIndex;                // gYetiParamsIndex - indexes chargeParams
 
     /* ROM (src/data) */
     static const StateFunc stateFuncs[4];               // gYetiStateFuncs

@@ -17,6 +17,7 @@ extern "C" {
 using Engine::Actor::ActorCategory;
 using Engine::Actor::ActorCategoryStats;
 using Engine::Actor::CollectedSpawns;
+using Game::Entities::ActorSelf;
 using Game::Vehicles::Polar::PolarCrate;
 using Game::Vehicles::Polar::PolarLifeCrate;
 using Game::Vehicles::Polar::PolarNitroCrate;

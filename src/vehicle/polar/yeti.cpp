@@ -13,6 +13,7 @@ extern "C" {
 
 using Engine::Actor::ActorBg;
 using Engine::Gfx::CellAnim;
+using Game::Entities::AnimPart;
 using Game::Vehicles::Polar::Yeti;
 
 /* More of the `gYeti`-rooted object's lifecycle (see

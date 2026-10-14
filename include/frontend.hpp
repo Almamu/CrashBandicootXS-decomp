@@ -433,7 +433,7 @@ COMPILE_TIME_ASSERT(frontend_hpp, sizeof(CompanyLogos) == 0x44C);
 /* LOGO_ACTOR_STATE_FLY_OFF: he comes towards the camera by this much a
  * frame (Q8, z falls), and goes up by a pixel. */
 #define LOGO_ACTOR_FLY_OFF_SPEED_Z Q8_FRAC(0, 0xe)
-class LogoActor : public ActorSelf
+class LogoActor : public Game::Entities::ActorSelf
 {
 public:
     LogoActor(const struct anim_table_record *anim); // InitLogoActor

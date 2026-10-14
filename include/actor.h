@@ -143,8 +143,18 @@ struct actor_spawn_table {
  * its animation, spawning, category frame and backgrounds. */
 
 /* ActorSelf's own tag (actor_self.hpp): an incomplete struct to C, the
- * class to C++. */
+ * class to C++, in its namespace (docs/cplusplus.md, "Namespaces"). */
+#ifdef __cplusplus
+namespace Game
+{
+namespace Entities
+{
+class ActorSelf;
+} // namespace Entities
+} // namespace Game
+#else
 struct ActorSelf;
+#endif
 
 /* src/actor/actor_bg.cpp (the rest is class ActorBg, actor_bg.hpp) */
 extern void ActorCategoryEndStub(void);
@@ -176,7 +186,7 @@ extern s32 gActorFocalLength;
 /* src/iwram/iwram_data.cpp */
 extern void (*gDrawMirroredTilemapFunc)(u8 *pal, s32 lowBlock, s32 w, s32 h);
 #ifdef __cplusplus
-extern void (*gHeapSortActorsByKeyFunc)(s32 n, class ActorSelf **list);
+extern void (*gHeapSortActorsByKeyFunc)(s32 n, Game::Entities::ActorSelf **list);
 #endif
 
 #endif /* !__ACTOR_H__ */

@@ -14,6 +14,7 @@ extern "C" {
 }
 
 using Engine::Actor::ActorCategory;
+using Game::Entities::ActorSelf;
 using Game::Vehicles::Jetpack::JetpackPlayer;
 using Game::Vehicles::Polar::PolarPlayer;
 

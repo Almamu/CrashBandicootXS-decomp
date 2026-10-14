@@ -16,6 +16,7 @@ extern "C" {
 }
 
 using Engine::Actor::ActorBg;
+using Game::Entities::HpActor;
 using Game::Vehicles::Jetpack::JetpackCollectedWumpa;
 using Game::Vehicles::Jetpack::JetpackRing;
 

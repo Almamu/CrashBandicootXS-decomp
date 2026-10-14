@@ -3,6 +3,8 @@
 
 using Game::Bosses::Hovercraft;
 using Game::Bosses::HovercraftCannonFlash;
+using Game::Entities::ActorSelf;
+using Game::Entities::HpActor;
 
 /* The cannon's muzzle flash (#664 part 11h, include/boss_actors.hpp): an
  * HpActor the cannon spawns with each shot (HovercraftCannonFlash::Spawn).

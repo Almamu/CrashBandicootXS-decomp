@@ -14,6 +14,7 @@ extern "C" {
 
 using Engine::Actor::ActorCategory;
 using Engine::Actor::ActorCategoryStats;
+using Game::Entities::ActorSelf;
 using Game::Vehicles::Polar::PolarBoostPad;
 using Game::Vehicles::Polar::PolarCheckpointCrate;
 using Game::Vehicles::Polar::PolarCheckpointText;

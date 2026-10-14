@@ -10,6 +10,8 @@ extern "C" {
 }
 
 using Engine::Actor::ActorCategory;
+using Game::Entities::ActorSelf;
+using Game::Entities::HpActor;
 using Game::Vehicles::Jetpack::JetpackCannonball;
 
 /* The jetpack cannonball (#664 part 11f, include/vehicle.hpp), ROM

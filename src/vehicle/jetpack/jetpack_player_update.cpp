@@ -27,6 +27,7 @@ using Engine::Actor::ActorCategoryStats;
 using Engine::Gfx::CellAnim;
 using Engine::Gfx::ObjTileAllocator;
 using Engine::Gfx::SpriteOamQueue;
+using Game::Entities::HpActor;
 using Game::Vehicles::Jetpack::JetpackPlayer;
 using Game::Vehicles::Jetpack::JetpackShot;
 
