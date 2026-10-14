@@ -1920,7 +1920,7 @@ def define_lines(rows):
 # (LevelSelect::items[6], `world <= 2`), the `i < 20` loops and the
 # pause menu's totals (20 crystals, 28 gems, 20 relics) of
 # GameProgress, GetCompletionPercent's divisor 72 and the 70 strings of
-# each gUiText table (ui_text_172cd4.c). And the 11 level themes
+# each gUiText table (ui_text_172cd4.cpp, text/). And the 11 level themes
 # (gThemeMusicCues), of which ZoomBg's "no picture" 11 is one past the last.
 ROM_COUNTS = {
     "LEVEL_COUNT": 25, "WORLD_COUNT": 4, "LEVELS_PER_WORLD": 5, "LEVEL_NUMBERED_COUNT": 20,

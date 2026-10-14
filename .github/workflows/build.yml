@@ -19,7 +19,7 @@ jobs:
     - uses: actions/checkout@v5
 
     - name: Install dependencies
-      run: sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 update && sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 install -y --no-install-recommends build-essential binutils-arm-none-eabi gcc-arm-none-eabi libpng-dev zlib1g-dev python3-pil
+      run: sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 update && sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 install -y --no-install-recommends build-essential binutils-arm-none-eabi gcc-arm-none-eabi libpng-dev zlib1g-dev python3-pil gettext
 
     # The matching workarounds are spelled with include/match.h's macros
     # (docs/matching_techniques.md). This fails if one is written out by
@@ -36,6 +36,12 @@ jobs:
     # or a coincidence (#979, docs/screen.md). A new one fails until it is.
     - name: Check screen-size literals
       run: python3 tools/magic_numbers.py --screen --check
+
+    # The game's text (text/, docs/text.md): every .po translated and not
+    # fuzzy (msgfmt --check --statistics), with the template's keys and no
+    # other (msgcmp both ways), and every character in the game's font.
+    - name: Check the translations
+      run: make text-check
 
     # The C style (.clang-format, CONTRIBUTING.md "Code style"), checked on
     # all the C but the data tables (FORMATTED/UNFORMATTED in

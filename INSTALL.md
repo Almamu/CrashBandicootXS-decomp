@@ -13,15 +13,18 @@ You'll need to install basic build tools first. These are needed to build the ag
 
 ```sh
 sudo apt update
-sudo apt install build-essential binutils-arm-none-eabi gcc-arm-none-eabi libpng-dev zlib1g-dev python3-pil
+sudo apt install build-essential binutils-arm-none-eabi gcc-arm-none-eabi libpng-dev zlib1g-dev python3-pil gettext
 ```
+
+`gettext` provides msgfmt, which compiles the game's text (`text/*.po`, see
+[docs/text.md](docs/text.md)), and msgcmp/msgmerge for its checks.
 
 ## MacOS
 ### Packages
 You'll need to install basic build tools first. These are needed to build the agbcc toolchain and the final rom.
 ```sh
 xcode-select --install
-brew install arm-none-eabi-binutils arm-none-eabi-gcc arm-none-eabi-gdb libpng zlib
+brew install arm-none-eabi-binutils arm-none-eabi-gcc arm-none-eabi-gdb libpng zlib gettext
 pip3 install Pillow
 ```
 
@@ -31,7 +34,7 @@ Once those packages are installed you'll need to provide agbcc, which is the com
 1. Clone [agbcc](https://github.com/SAT-R/agbcc) into any folder
 2. Build agbcc using the `./build.sh` script.
 3. Install the compiler under the project's directory using the install script `./install.sh path/to/decomp/project`.
-   This installs `tools/agbcc/bin/agbcc`, the C compiler of the data tables (`src/data/*.c`) and the libraries (`lib/`), with the `libgcc.a`/`libc.a` the link uses. The script also installs `old_agbcc` and the ARM-targeting `agbcc_arm`, which the build no longer uses: the game code is C++, built by the compilers of the next step.
+   This installs `tools/agbcc/bin/agbcc`, the C compiler of the libraries (`lib/`), with the `libgcc.a`/`libc.a` the link uses. The script also installs `old_agbcc` and the ARM-targeting `agbcc_arm`, which the build no longer uses: the game code is C++, built by the compilers of the next step.
 4. Build the C++ compilers from the `cp` branch of [notyourav/agbcc](https://github.com/notyourav/agbcc) (the g++ 2.9 front end, decomp.me's "agbccpp"). From the decomp project's directory:
    ```
    git clone -b cp https://github.com/notyourav/agbcc path/to/agbcc-cp

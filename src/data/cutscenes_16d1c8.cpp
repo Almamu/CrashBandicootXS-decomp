@@ -16,12 +16,12 @@ extern "C" {
  * by the language setting gLanguage.
  *
  * In ROM order, in four files: this one (the six language tables, the
- * slide lists, the English pages), cutscene_text_16d4d8.c (the English
+ * slide lists, the English pages), cutscene_text_16d4d8.cpp (the English
  * text), cutscene_slides_16e064.cpp (the other five languages' pages and
- * the slides themselves) and cutscene_text_16e8a4.c (their text). Each
+ * the slides themselves) and cutscene_text_16e8a4.cpp (their text). Each
  * string comes before the array that lists it; a few are shared. The
- * text files are C (see their comment). The pictures are in
- * src/data/cutscene_pictures_5a9f70.cpp.
+ * text files are generated from text/ (docs/text.md). The pictures are
+ * in src/data/cutscene_pictures_5a9f70.cpp.
  *
  * The text is Latin-1, all in lower case. A page with no strings shows
  * the picture only (RunCutscenePlayer).

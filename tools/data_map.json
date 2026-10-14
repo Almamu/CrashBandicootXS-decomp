@@ -3166,7 +3166,7 @@
    "effort": "medium",
    "confidence": "medium",
    "notes": "",
-   "status": "converted: src/data/terrain_1725a8.cpp, src/data/ui_text_172cd4.c"
+   "status": "converted: src/data/terrain_1725a8.cpp, src/data/ui_text_172cd4.cpp"
   },
   {
    "address": "0x08174BE0",

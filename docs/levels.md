@@ -641,7 +641,10 @@ they are now, in the layout above:
 - a new level (one `"table"` doesn't list) adds an entry to `gLevelTable`
   and `gLevelRoomLists`, and its array comes after the ROM's. Its id is
   its place in `"levels"`, which the code's arithmetic needs in a set
-  order (see "The counts the code takes from the levels");
+  order (see "The counts the code takes from the levels"). Its name is
+  the UI string `"name_text"`: a new `ui.level.<level>` entry after the
+  last `ui.*` one in `text/crashxs.pot`, with its translations
+  ([text.md](./text.md));
 - a stage is one of the ROM's seven `gLevelStageN`: a stage of a new
   actor category is #966.
 
