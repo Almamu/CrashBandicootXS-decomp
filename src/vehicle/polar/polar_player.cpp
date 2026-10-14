@@ -18,6 +18,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Gfx::CellAnim;
+using Engine::Gfx::ObjTileAllocator;
+using Engine::Gfx::SpriteOamQueue;
 using Engine::Sys::VramDmaQueue;
 
 /* The polar player's virtual methods, the hazards' hits and six of its

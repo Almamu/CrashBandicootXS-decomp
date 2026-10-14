@@ -3,8 +3,9 @@
 
 /* The BG setup and the sprite box as C++ (#753; src/gfx/graphics_package.cpp
  * and scaled_sprite.cpp), and the graphics package they load.
- * Neither class has a vtable. cxx_symbols.txt maps the methods' mangled names
- * onto their C names. */
+ * Both classes are in the namespace Engine::Gfx (#1033, docs/cplusplus.md
+ * "Namespaces"); the C types stay global. Neither class has a vtable.
+ * cxx_symbols.txt maps the methods' mangled names onto their C names. */
 
 extern "C" {
 #include "core.h"
@@ -40,6 +41,11 @@ union bgcnt {
         u16 size:2;
     } bits;
 };
+
+namespace Engine
+{
+namespace Gfx
+{
 
 /* A BG's setup (0x10 bytes): the char block, screen block and palette bank
  * a graphics package is loaded into, and the BGnCNT value built from them.
@@ -85,5 +91,8 @@ public:
 };
 
 COMPILE_TIME_ASSERT(graphics_package_hpp, sizeof(ScaledSprite) == 0x28);
+
+} // namespace Gfx
+} // namespace Engine
 
 #endif /* !GUARD_GRAPHICS_PACKAGE_HPP */

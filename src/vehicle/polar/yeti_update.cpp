@@ -12,6 +12,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Gfx::CellAnim;
+
 /* Sits right after polar_course_objects.cpp's `CreatePolarCheckpointCrate` and before
  * yeti_states.cpp's `YetiStateChase`/`YetiStateCharge` - the whole contiguous
  * range that used to be `asm/code_3_2_20_28568_c99c_d7b0.s`. All three

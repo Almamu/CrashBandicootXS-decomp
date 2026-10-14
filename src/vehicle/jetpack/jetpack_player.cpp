@@ -19,6 +19,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Gfx::BrightnessFade;
+using Engine::Gfx::CellAnim;
+using Engine::Gfx::ObjTileAllocator;
 using Engine::Sys::VramDmaQueue;
 
 /* JetpackPlayer's small methods, five of its states, its destructor and

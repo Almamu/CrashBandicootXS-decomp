@@ -18,6 +18,7 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Gfx::BrightnessFade;
 using Engine::Sys::FrameLimiter;
 
 /* SaveMenu's run loop, constructor, destructor and input handlers

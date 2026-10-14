@@ -14,6 +14,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Gfx::CellAnim;
+
 /* ROM 0x0802A018-0x0802A4D4, inside the actor zone that starts at
  * ActorCategory::SetupVramPool (0x080291A4): the category hooks that test an actor
  * against the player (PolarIsTouchingPlayer, JetpackIsTouchingPlayer:

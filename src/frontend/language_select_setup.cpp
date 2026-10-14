@@ -11,6 +11,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Gfx::BgSetup;
+using Engine::Gfx::BrightnessFade;
 using Engine::Sys::Display;
 using Engine::Sys::VramDmaQueue;
 

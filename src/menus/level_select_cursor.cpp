@@ -20,6 +20,9 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Engine::Gfx::LevelSelectCursorZoom;
+using Engine::Gfx::OamBuffer;
+
 /* One affine parameter; OBJ matrix `m` is entries 4m..4m+3. An inline so
  * that the value is loaded before the address is computed. */
 static inline void SetAffineParam(OamBuffer *buf, s32 n, u16 v)

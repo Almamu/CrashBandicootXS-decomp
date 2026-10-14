@@ -6,6 +6,10 @@ extern "C" {
 #include "core.h"
 }
 
+using Engine::Gfx::VvLogoEmblem;
+using Engine::Gfx::VvLogoLetters;
+using Engine::Gfx::VvLogoUrl;
+
 /*
  * ROM 0x0817D6C0-0x0817D7A4. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.

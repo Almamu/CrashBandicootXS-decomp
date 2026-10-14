@@ -7,6 +7,31 @@ extern "C" {
 #include "constants/songs.h"
 }
 
+using Engine::Gfx::CutscenePicture00;
+using Engine::Gfx::CutscenePicture01;
+using Engine::Gfx::CutscenePicture02;
+using Engine::Gfx::CutscenePicture03;
+using Engine::Gfx::CutscenePicture04;
+using Engine::Gfx::CutscenePicture05;
+using Engine::Gfx::CutscenePicture06;
+using Engine::Gfx::CutscenePicture07;
+using Engine::Gfx::CutscenePicture08;
+using Engine::Gfx::CutscenePicture09;
+using Engine::Gfx::CutscenePicture10;
+using Engine::Gfx::CutscenePicture11;
+using Engine::Gfx::CutscenePicture12;
+using Engine::Gfx::CutscenePicture13;
+using Engine::Gfx::CutscenePicture14;
+using Engine::Gfx::CutscenePicture15;
+using Engine::Gfx::CutscenePicture16;
+using Engine::Gfx::CutscenePicture17;
+using Engine::Gfx::CutscenePicture18;
+using Engine::Gfx::CutscenePicture19;
+using Engine::Gfx::CutscenePicture20;
+using Engine::Gfx::CutscenePicture21;
+using Engine::Gfx::CutscenePicture22;
+using Engine::Gfx::CutscenePicture23;
+
 /*
  * ROM 0x0816E064-0x0816E8A4: the cutscenes' French, German, Spanish,
  * Italian and Dutch pages (`struct cutscene_page` arrays, listed by the

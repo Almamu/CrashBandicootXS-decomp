@@ -11,6 +11,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Gfx::OamBuffer;
+using Engine::Gfx::SpriteRenderer;
+
 /* The sprite renderer (gSpriteRenderer; SpriteRenderer, include/sprite_obj.hpp):
  * DrawPieces, DrawAffinePieces, DrawAt, Draw and the empty constructor and
  * destructor. An old_agbcp object (OLD_AGBCC_OBJS). */

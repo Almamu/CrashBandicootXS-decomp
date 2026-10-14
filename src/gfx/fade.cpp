@@ -8,6 +8,8 @@ extern "C" {
 #include "gfx.h"
 }
 
+using Engine::Gfx::BrightnessFade;
+using Engine::Gfx::PaletteFade;
 using Engine::Sys::FrameLimiter;
 using Engine::Sys::Irq;
 

@@ -15,6 +15,10 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Gfx::BrightnessFade;
+using Engine::Gfx::CellAnim;
+using Engine::Gfx::ObjTileAllocator;
+
 /* PolarPlayer's states and the methods the other polar actors call on
  * it (#664 part 11c, include/vehicle.hpp), ROM 0x0802BC68-0x0802C270,
  * between polar_player.cpp (old_agbcp) and polar_pickups.cpp. Its

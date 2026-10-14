@@ -21,6 +21,8 @@ extern "C" {
 #include "system.h"
 }
 
+using Engine::Gfx::BgSetup;
+using Engine::Gfx::PaletteCache;
 using Engine::Sys::FrameLimiter;
 using Engine::Sys::VramDmaQueue;
 

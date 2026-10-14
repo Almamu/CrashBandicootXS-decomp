@@ -33,6 +33,9 @@ extern "C" {
 #include "sprite_bank.h"
 }
 
+using Engine::Gfx::PaletteCache;
+using Engine::Gfx::PaletteCycles;
+using Engine::Gfx::PaletteFade;
 using Engine::Sys::Display;
 using Engine::Sys::FrameLimiter;
 using Engine::Sys::VramDmaQueue;

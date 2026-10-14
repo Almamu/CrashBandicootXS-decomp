@@ -13,6 +13,8 @@ extern "C" {
 
 #include "vehicles/polar/yeti.h"
 
+using Engine::Gfx::YetiFrameSet;
+
 /* Yeti::frames (include/yeti.hpp): the yeti animation's frame table (its
  * `frameOffsets`, set up by CreateYeti in yeti.cpp next to the
  * gYetiKeyframes animation records): 123 pointers to compressed

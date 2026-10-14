@@ -4,6 +4,8 @@
 
 #include "sprite_obj.hpp"
 
+using Engine::Gfx::SpriteBankSet;
+
 SpriteBankSet::~SpriteBankSet()
 {
 }

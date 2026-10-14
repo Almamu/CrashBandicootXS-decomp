@@ -12,6 +12,7 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Engine::Gfx::CellAnim;
 using Engine::Sys::VramDmaQueue;
 
 /* N. Gin's airship (#664 part 11i), the all-static class Airship

@@ -16,6 +16,11 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Gfx::ObjTileAllocator;
+using Engine::Gfx::PaletteCache;
+using Engine::Gfx::SpriteFrameCache;
+using Engine::Gfx::SpriteOamQueue;
+
 /* Pins the current category's tile-cache slots that every actor part
  * shares - the type-0 sprite family gets 2 slots (7/0xf), the type-1/2
  * family gets 5 (9/0xc/0xe/0xd/8): the palettes of a few animations of

@@ -195,17 +195,19 @@ The manifest decides them:
 
 `tools/gfx_manifest.py` generates everything else:
 
-- `header OUT`: `build/include/graphics.hpp`, the class declarations
-  (graphics.mk, written only if it changed). A file that names a member
-  `#include`s it.
+- `header OUT`: `build/include/graphics.hpp`, the class declarations,
+  in the namespace `Engine::Gfx` (gfx_manifest.py's `NAMESPACE`, #1033,
+  docs/cplusplus.md "Namespaces"; graphics.mk, written only if it
+  changed). A file that names a member `#include`s it and names the
+  class with a `using` declaration (`using Engine::Gfx::TitleScreenBg;`).
 - `defs OBJECT OUT`: the member definitions of one object, in ROM order
-  (`const u8 TitleScreenBg::palette[] __attribute__((aligned(4))) = {
+  (`const u8 Engine::Gfx::TitleScreenBg::palette[] __attribute__((aligned(4))) = {
   #include "title/logo.gbapal.lz.inc" };`), into
   `build/.../graphics/<object>.inc`, which `src/data/<object>.cpp`
   `#include`s.
 - `symbols`: the block of cxx_symbols.txt between the `graphics classes`
   markers, which maps each member back to its C name
-  (`_13TitleScreenBg.palette gTitleScreenBgPalette`); the C++ objects'
+  (`_Q36Engine3Gfx13TitleScreenBg.palette gTitleScreenBgPalette`); the C++ objects'
   `objcopy --redefine-syms` uses it like the rest of the file. `check`
   fails when it is out of date.
 

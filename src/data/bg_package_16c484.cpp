@@ -6,6 +6,8 @@ extern "C" {
 #include "gfx.h"
 }
 
+using Engine::Gfx::MenuSkyBg;
+
 /*
  * ROM 0x0816C484-0x0816C498. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.

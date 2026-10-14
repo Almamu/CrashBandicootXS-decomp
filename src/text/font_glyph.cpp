@@ -8,6 +8,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Gfx::LargeFontSheet;
+using Engine::Gfx::SmallFontSheet;
+
 /* GitHub issue #46: Font's glyph drawer and character dispatcher, and the
  * two fonts' constructors (include/font.hpp). Built with old_agbcp: under
  * agbcp, DrawGlyph derives its bitfield masks differently. */

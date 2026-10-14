@@ -14,11 +14,13 @@
  * globals that no other object reads, and static data members compile
  * like those globals, static member functions like plain functions.
  * cxx_symbols.txt (block "#915 BrightnessFade and PaletteFade") maps each
- * member to its C name (`_14BrightnessFade.state` is gBrightnessFade,
+ * member to its C name (`_Q36Engine3Gfx14BrightnessFade.state` is gBrightnessFade,
  * ...): sym_iwram.txt places PaletteFade's, iwram_data.cpp defines
  * BrightnessFade's with the other initialised IWRAM globals. The
- * functions keep their C names the same way (`Step__14BrightnessFade` is
+ * functions keep their C names the same way (`Step__Q36Engine3Gfx14BrightnessFade` is
  * StepBrightnessFade).
+ *
+ * In the namespace Engine::Gfx (#1033, docs/cplusplus.md "Namespaces").
  *
  * `#pragma interface`: no vtable to emit; it keeps g++ from emitting
  * out-of-line copies of inline methods (docs/cplusplus.md). */
@@ -29,6 +31,11 @@ extern "C" {
 }
 
 struct brightness_fade; // gfx.h
+
+namespace Engine
+{
+namespace Gfx
+{
 
 class BrightnessFade
 {
@@ -57,5 +64,8 @@ private:
     static u16 backup[512]; // gPaletteBackup - the palette RAM when the fade started
     static u16 buffer[512]; // gPaletteFadeBuffer - the darkened copy DMA'd to palette RAM
 };
+
+} // namespace Gfx
+} // namespace Engine
 
 #endif // GUARD_FADE_HPP

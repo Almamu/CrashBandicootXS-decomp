@@ -6,6 +6,8 @@ extern "C" {
 #include "core.h"
 }
 
+using Engine::Gfx::LevelSelectPlatformBg;
+
 /*
  * ROM 0x0816C58C-0x0816C5A0. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.

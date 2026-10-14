@@ -13,6 +13,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Gfx::OamBuffer;
+using Engine::Gfx::ScaledSprite;
+
 /* GitHub issue #30: the sprite-box fitter and its OAM writer. Built with
  * old_agbcc - see docs/matching/archive/issue-30-old-agbcc.md. */
 

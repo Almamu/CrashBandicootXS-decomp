@@ -533,6 +533,31 @@ checks the change is only a rename:
   global; bios_util.cpp's other function, `Ctrl::Update`, is the
   controllers' base, game code. No name hiding: Engine::Sys holds only
   these five classes.
+- **`Engine::Gfx`** (`Q36Engine3Gfx`): `CellAnim` (cell_anim.hpp),
+  `BrightnessFade` and `PaletteFade` (fade.hpp), `SpriteOamQueue`,
+  `SpriteFrameCache`, `ObjTileAllocator`, `CategorySpriteSheet` (their
+  headers), `BgSetup` and `ScaledSprite` (graphics_package.hpp),
+  `PaletteCycles` (part_list.hpp), `OamBuffer`, `ObjVramCursor`,
+  `PaletteCache`, `SpriteBankSet` and `SpriteRenderer` (the sprite
+  graphics managers at the end of sprite_obj.hpp), and the 60 generated
+  graphics classes (build/include/graphics.hpp: tools/gfx_manifest.py's
+  `NAMESPACE` puts the declarations in the namespace, qualifies the
+  definitions it writes, `const u8 Engine::Gfx::TitleScreenBg::palette[]`,
+  and its cxx_symbols.txt block, `_Q36Engine3Gfx13TitleScreenBg.palette`).
+  246 symbols renamed, no code change. The game headers that hold a
+  `BgSetup` (frontend.hpp, level_select.hpp, menus.hpp) name it
+  `Engine::Gfx::BgSetup`; globals.h and gfx.h forward declare the classes
+  their globals point at (gOamBuffer, gPaletteCache, gPaletteCycles, ...).
+  Boundary calls: `CellAnim` and `CategorySpriteSheet` serve the 3D
+  stages' actor category, but they only animate BG0's cells and hold an
+  LZ77 sheet's EWRAM copy, so they are engine graphics, next to the
+  sprite frame cache. `SpriteRenderer` draws a `Sprite`'s pieces (its
+  only dependency on the entity classes, which aren't in a namespace
+  yet): it turns frames into OAM entries, so it is engine graphics too.
+  The graphics classes are the game's own pictures, but the layout puts
+  them here, as data members with no code. part_list.hpp's other classes
+  (`CollisionQueue`, `HudPart`) are game code and stay outside. No name
+  hiding: no global is named like a class of the namespace.
 
 ## Progress
 

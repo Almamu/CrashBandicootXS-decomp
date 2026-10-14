@@ -17,6 +17,26 @@
 struct level_state;
 struct sprite_bank_table;
 
+#ifdef __cplusplus
+/* The engine classes some of these globals point at, in their namespaces
+ * (docs/cplusplus.md, "Namespaces"). */
+namespace Engine
+{
+namespace Sys
+{
+class KeyInput;
+} // namespace Sys
+namespace Gfx
+{
+class OamBuffer;
+class ObjVramCursor;
+class PaletteCache;
+class SpriteBankSet;
+class SpriteRenderer;
+} // namespace Gfx
+} // namespace Engine
+#endif
+
 /* The input word: the held keys in the low half, the keys newly pressed
  * this frame in the high half (UpdateKeys, key_input.cpp). The action
  * controller's handlers read it whole (`all`); the menus read the
@@ -41,7 +61,7 @@ extern class ActorSelf *gActorList;
 #endif
 
 #ifdef __cplusplus
-extern class PaletteCache *gPaletteCache;
+extern Engine::Gfx::PaletteCache *gPaletteCache;
 #endif
 /* class AudioContext (audio.hpp) to the C++ files. */
 #ifdef __cplusplus
@@ -50,29 +70,22 @@ extern class AudioContext *gAudioContext;
 /* An empty 4-byte object (DrawSprite ignores it): class SpriteRenderer
  * (sprite_obj.hpp) to the C++ files. */
 #ifdef __cplusplus
-extern class SpriteRenderer *gSpriteRenderer;
+extern Engine::Gfx::SpriteRenderer *gSpriteRenderer;
 #endif
 /* The sprite bank set (built by InitLevelState). No C file uses it. */
 #ifdef __cplusplus
-extern class SpriteBankSet *gSpriteBankSet;
+extern Engine::Gfx::SpriteBankSet *gSpriteBankSet;
 #endif
 #ifdef __cplusplus
-extern class ObjVramCursor *gObjVramCursor;
+extern Engine::Gfx::ObjVramCursor *gObjVramCursor;
 #endif
 #ifdef __cplusplus
-extern class OamBuffer *gOamBuffer;
+extern Engine::Gfx::OamBuffer *gOamBuffer;
 #endif
 /* The key input object (new KeyInput, spawn_markers.cpp): a KeyInput
  * (key_input.hpp), whose methods use gKeys, not the object. No C file
  * uses it. */
 #ifdef __cplusplus
-namespace Engine
-{
-namespace Sys
-{
-class KeyInput;
-} // namespace Sys
-} // namespace Engine
 extern Engine::Sys::KeyInput *gInput;
 #endif
 /* The HUD (game_frame.cpp builds it): a Hud (hud.hpp). No C file uses

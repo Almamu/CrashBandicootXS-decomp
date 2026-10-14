@@ -5,6 +5,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Gfx::PaletteCycles;
+
 /* The palette cycles (gPaletteCycles; #664, part 7c; include/part_list.hpp).
  * The HUD part that followed is hud/hud_part.cpp since #767. An old_agbcp object (OLD_AGBCC_OBJS): Tick's
  * index loads take old_agbcp's registers. */

@@ -13,6 +13,12 @@ extern "C" {
 
 #include "actor_anim.h"
 
+using Engine::Gfx::TitleBandicootObj;
+using Engine::Gfx::TitleCrashObj;
+using Engine::Gfx::TitleArrow1Obj;
+using Engine::Gfx::TitleArrow2Obj;
+using Engine::Gfx::TitleScreenBg;
+
 /* DrawTitleLogoPieces (title_screen.cpp): the {x, y} offsets of the
  * eight OAM pieces it draws around each of its two slots. */
 const s32 gTitleArrowPieceOffsets[8][2] = {

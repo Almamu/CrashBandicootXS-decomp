@@ -9,6 +9,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Gfx::BgSetup;
+
 /* C++ since the #664 cleanup: LoadGraphicsPackage's tilemap buffer is a
  * `new u16[]`/`delete[]` (the C called OperatorNewArray and
  * OperatorDeleteArray). The BG setup and the sprite box are classes since
