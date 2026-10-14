@@ -18,6 +18,7 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Engine::Gfx::ObjVramCursor;
 using Engine::Sys::Display;
 using Engine::Sys::FrameLimiter;
 using Engine::Sys::VramDmaQueue;

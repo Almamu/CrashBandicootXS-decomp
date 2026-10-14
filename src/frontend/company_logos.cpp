@@ -24,6 +24,11 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Engine::Gfx::CategorySpriteSheet;
+using Engine::Gfx::OamBuffer;
+using Engine::Gfx::ObjTileAllocator;
+using Engine::Gfx::SpriteFrameCache;
+using Engine::Gfx::SpriteOamQueue;
 using Engine::Sys::Display;
 using Engine::Sys::FrameLimiter;
 using Engine::Sys::VramDmaQueue;

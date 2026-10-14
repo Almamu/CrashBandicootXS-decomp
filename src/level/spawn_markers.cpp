@@ -18,6 +18,12 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Gfx::OamBuffer;
+using Engine::Gfx::ObjVramCursor;
+using Engine::Gfx::PaletteCache;
+using Engine::Gfx::PaletteCycles;
+using Engine::Gfx::SpriteBankSet;
+using Engine::Gfx::SpriteRenderer;
 using Engine::Sys::Display;
 using Engine::Sys::KeyInput;
 using Engine::Sys::VramDmaQueue;

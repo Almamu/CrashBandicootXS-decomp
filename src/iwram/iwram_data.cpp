@@ -28,6 +28,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Gfx::BrightnessFade;
+using Engine::Gfx::SpriteFrameCache;
 using Engine::Sys::FrameLimiter;
 
 /*

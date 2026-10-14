@@ -12,6 +12,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Gfx::ObjVramCursor;
+using Engine::Gfx::PaletteCache;
 using Engine::Sys::FrameLimiter;
 
 /* The language menu shown at boot (OpenLanguageSelect/RunLanguageSelect/

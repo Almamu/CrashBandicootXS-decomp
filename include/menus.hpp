@@ -158,7 +158,7 @@ static inline void SetIconBank(Sprite *p, s32 index)
 class PauseMenu
 {
 public:
-    BgSetup bg;                   // 0x00 - BG0
+    Engine::Gfx::BgSetup bg;      // 0x00 - BG0
     GameProgress *progress;       // 0x10 - PackSaveData(gLevelState)
     const struct pause_row *rows; // 0x14 - gPauseMenuRows
     s32 cursor;                   // 0x18 - the selected row
@@ -235,14 +235,14 @@ COMPILE_TIME_ASSERT(menus_hpp, sizeof(PauseMenu) == 0xD4);
 class PowerDialog
 {
 public:
-    BgSetup bg;            // 0x00 - BG0
-    const u8 *titleText;   // 0x10 - GetUiText's result
-    const u8 *descText;    // 0x14
-    UiSprite *icon;        // 0x18 - the power's icon
-    u32 frame;             // 0x1C - frame counter; BG0HOFS = frame >> 3
-    union blend blend;     // 0x20 - REG_BLDCNT
-    struct bldy bldy;      // 0x24 - REG_BLDY, faded 16 -> 0 -> 16 by Loop
-    union dispcnt dispcnt; // 0x28 - REG_DISPCNT (gfx.h)
+    Engine::Gfx::BgSetup bg; // 0x00 - BG0
+    const u8 *titleText;     // 0x10 - GetUiText's result
+    const u8 *descText;      // 0x14
+    UiSprite *icon;          // 0x18 - the power's icon
+    u32 frame;               // 0x1C - frame counter; BG0HOFS = frame >> 3
+    union blend blend;       // 0x20 - REG_BLDCNT
+    struct bldy bldy;        // 0x24 - REG_BLDY, faded 16 -> 0 -> 16 by Loop
+    union dispcnt dispcnt;   // 0x28 - REG_DISPCNT (gfx.h)
 
     PowerDialog(const u8 *titleText, const u8 *descText, s32 type); // InitPowerDialog
     ~PowerDialog();                                                 // DestroyPowerDialog

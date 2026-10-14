@@ -10,6 +10,8 @@ extern "C" {
 #include "actor.h"
 }
 
+using Engine::Gfx::CellAnim;
+
 /* Sets up the currently-selected category's runtime state:
  * `ActorCategory::vtable` = `&ActorCategory::vtables[type]` (the category's
  * shared vtable, `type` being the first argument), `ActorSpawns::useBonus`

@@ -6,6 +6,10 @@ extern "C" {
 #include "core.h"
 }
 
+using Engine::Gfx::ContinuePromptSmokeBg;
+using Engine::Gfx::ContinuePromptGlowBg;
+using Engine::Gfx::ContinuePromptUkaUkaBg;
+
 /*
  * ROM 0x0817C594-0x0817C5D0: the fade overlay's three BG packages,
  * loaded by InitContinuePrompt (continue_prompt.cpp) into its BG0/BG2/BG1 buffers.

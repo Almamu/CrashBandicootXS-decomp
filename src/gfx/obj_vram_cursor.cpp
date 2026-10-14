@@ -12,6 +12,7 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Gfx::ObjVramCursor;
 using Engine::Sys::Display;
 using Engine::Sys::VramDmaQueue;
 

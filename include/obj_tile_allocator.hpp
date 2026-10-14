@@ -14,10 +14,12 @@
  * reads, and static data members compile like those globals, static
  * member functions like plain functions. The data members are only
  * declared: cxx_symbols.txt (block "#915 ObjTileAllocator") maps each one
- * to its C name (`_16ObjTileAllocator.rover` is gVramTileBlockRover,
+ * to its C name (`_Q36Engine3Gfx16ObjTileAllocator.rover` is gVramTileBlockRover,
  * ...), whose address is in sym_iwram.txt, and the functions keep their
- * C names the same way (`Alloc__16ObjTileAllocatori` is
+ * C names the same way (`Alloc__Q36Engine3Gfx16ObjTileAllocatori` is
  * AllocVramTileBlock).
+ *
+ * In the namespace Engine::Gfx (#1033, docs/cplusplus.md "Namespaces").
  *
  * `#pragma interface`: no vtable to emit; it keeps g++ from emitting
  * out-of-line copies of inline methods (docs/cplusplus.md). */
@@ -28,6 +30,11 @@ extern "C" {
 }
 
 struct vram_tile_block;
+
+namespace Engine
+{
+namespace Gfx
+{
 
 class ObjTileAllocator
 {
@@ -50,5 +57,8 @@ private:
     static struct vram_tile_block *spares; // gVramTileBlockSpares
     static u8 *index;                      // gVramTileBlockIndex
 };
+
+} // namespace Gfx
+} // namespace Engine
 
 #endif // GUARD_OBJ_TILE_ALLOCATOR_HPP

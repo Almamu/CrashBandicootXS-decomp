@@ -9,6 +9,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Gfx::OamBuffer;
+
 /* Writes `n` affine matrices' scales: each matrix's pa/pd from the next
  * two of `scales`, its pb/pc 0. */
 void OamBuffer::SetAffineScales(u16 *scales, s32 n)

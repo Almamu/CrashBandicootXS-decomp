@@ -18,6 +18,7 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Engine::Gfx::OamBuffer;
 using Engine::Sys::Display;
 using Engine::Sys::FrameLimiter;
 

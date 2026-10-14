@@ -7,6 +7,8 @@ extern "C" {
 #include "gfx.h"
 }
 
+using Engine::Gfx::BrightnessFade;
+using Engine::Gfx::PaletteFade;
 using Engine::Sys::FrameLimiter;
 
 /* Sits right after the still-raw remainder of asm/code_3_1_6.s'

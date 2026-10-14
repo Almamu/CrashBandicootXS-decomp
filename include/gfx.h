@@ -241,7 +241,14 @@ extern const struct sprite_bank_table gSpriteBankTable;
 /* The palette cycles (PaletteCycles, part_list.hpp; sym_iwram.txt; NULL
  * outside a level). C++ only: no C file uses them. */
 #ifdef __cplusplus
-extern class PaletteCycles *gPaletteCycles;
+namespace Engine
+{
+namespace Gfx
+{
+class PaletteCycles;
+} // namespace Gfx
+} // namespace Engine
+extern Engine::Gfx::PaletteCycles *gPaletteCycles;
 #endif
 
 /* src/iwram/iwram_data.cpp */

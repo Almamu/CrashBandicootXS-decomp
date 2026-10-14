@@ -11,6 +11,8 @@ extern "C" {
 #include "actor.h"
 }
 
+using Engine::Gfx::CellAnim;
+
 /* More of the `gYeti`-rooted object's lifecycle (see
  * polar_aku_aku.cpp's header comment): a state-flag setter, its
  * destructor, and its constructor. */

@@ -14,6 +14,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Gfx::CellAnim;
+
 /* Kicks off a DMA copy of `tileBytes` bytes from the current
  * "console"/text-plane cursor cell into VRAM (one of three fixed
  * destination strategies depending on the `hasBanks`/

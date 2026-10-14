@@ -156,9 +156,9 @@ COMPILE_TIME_ASSERT(level_select_hpp, sizeof(LevelSelectEntry) == 0x14);
 class LevelSelectPageBg
 {
 public:
-    BgSetup bg; // 0x00 - BG1
-    s32 scroll; // 0x10 - current page scroll, Q8 (0x100 = a page)
-    s32 target; // 0x14 - scroll `scroll` eases toward
+    Engine::Gfx::BgSetup bg; // 0x00 - BG1
+    s32 scroll;              // 0x10 - current page scroll, Q8 (0x100 = a page)
+    s32 target;              // 0x14 - scroll `scroll` eases toward
     u8 unk_18[0x0C];
     u16 hofs; // 0x24 - BG1HOFS (GetOffsets returns hofs|vofs)
     u16 vofs; // 0x26 - BG1VOFS

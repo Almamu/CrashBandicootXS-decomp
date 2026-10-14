@@ -14,10 +14,12 @@
  * other object reads, and static data members compile like those globals,
  * static member functions like plain functions. The data members are only
  * declared: cxx_symbols.txt (block "#915 SpriteFrameCache") maps each one
- * to its C name (`_16SpriteFrameCache.current` is
+ * to its C name (`_Q36Engine3Gfx16SpriteFrameCache.current` is
  * gSpriteFrameCacheCurrent, ...), whose address is in sym_iwram.txt, and
- * the functions keep their C names the same way (`Age__16SpriteFrameCache`
+ * the functions keep their C names the same way (`Age__Q36Engine3Gfx16SpriteFrameCache`
  * is AgeSpriteFrameCache).
+ *
+ * In the namespace Engine::Gfx (#1033, docs/cplusplus.md "Namespaces").
  *
  * `#pragma interface`: no vtable to emit; it keeps g++ from emitting
  * out-of-line copies of inline methods (docs/cplusplus.md). */
@@ -28,6 +30,11 @@ extern "C" {
 }
 
 struct sprite_frame_cache_node;
+
+namespace Engine
+{
+namespace Gfx
+{
 
 class SpriteFrameCache
 {
@@ -49,5 +56,8 @@ private:
     static struct sprite_frame_cache_node *spares;  // gSpriteFrameCacheSpares
     static struct sprite_frame_cache_node *pool;    // gSpriteFrameCachePool
 };
+
+} // namespace Gfx
+} // namespace Engine
 
 #endif // GUARD_SPRITE_FRAME_CACHE_HPP

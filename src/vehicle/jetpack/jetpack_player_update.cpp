@@ -21,6 +21,10 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Gfx::CellAnim;
+using Engine::Gfx::ObjTileAllocator;
+using Engine::Gfx::SpriteOamQueue;
+
 /* JetpackPlayer's constructor, virtual methods, steering, first three
  * states, course end, ring pass and VRAM tile buffers (#664 part 11e,
  * include/vehicle.hpp), ROM 0x0802E740-0x0802F3BC, between

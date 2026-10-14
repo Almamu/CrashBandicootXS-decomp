@@ -15,10 +15,12 @@
  * code is byte-identical to the C.
  *
  * The data members are only declared: cxx_symbols.txt (block "#915
- * CellAnim") maps each one to its C name (`_8CellAnim.cols` is
+ * CellAnim") maps each one to its C name (`_Q36Engine3Gfx8CellAnim.cols` is
  * gCellAnimCols, ...), whose address is in sym_iwram.txt, and the
- * functions keep their C names the same way (`Advance__8CellAnim` is
+ * functions keep their C names the same way (`Advance__Q36Engine3Gfx8CellAnim` is
  * AdvanceCellAnim).
+ *
+ * In the namespace Engine::Gfx (#1033, docs/cplusplus.md "Namespaces").
  *
  * `#pragma interface`: no vtable to emit; it keeps g++ from emitting
  * out-of-line copies of inline methods (docs/cplusplus.md). */
@@ -27,6 +29,11 @@
 extern "C" {
 #include "core.h"
 }
+
+namespace Engine
+{
+namespace Gfx
+{
 
 class CellAnim
 {
@@ -61,5 +68,8 @@ private:
     static u8 uploaded;   // gCellAnimUploaded - a frame was uploaded since FlipPage
     static s32 frameStep; // gCellAnimFrameStep - the whole frames of the last Advance
 };
+
+} // namespace Gfx
+} // namespace Engine
 
 #endif // GUARD_CELL_ANIM_HPP

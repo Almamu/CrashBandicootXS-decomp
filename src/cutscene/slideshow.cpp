@@ -12,6 +12,7 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Gfx::BrightnessFade;
 using Engine::Sys::FrameLimiter;
 
 /* GitHub issue #38: 0x08024590-0x08024783 (game_loop), the sound-channel-

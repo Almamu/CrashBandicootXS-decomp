@@ -10,6 +10,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Gfx::PaletteCache;
+
 /* Loads palette `id` into bank `slot` (DMA into `slots`). The bank's
  * colours are `slots[0]` moved on by `slot` banks, as in GetSlot: the ROM
  * adds `slots`' offset (0x2C) to `this` before the bank's, and

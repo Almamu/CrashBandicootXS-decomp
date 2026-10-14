@@ -11,6 +11,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Gfx::ObjTileAllocator;
+
 /* The last of the company-logo screen's methods (CompanyLogos, #664 part
  * 10b, include/frontend.hpp: LoadAssetBuffered, the constructor and the
  * destructor) and the logo actor's destructor, LogoActor's key method:

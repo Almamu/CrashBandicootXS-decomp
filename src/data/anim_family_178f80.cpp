@@ -25,6 +25,8 @@ extern "C" {
 #include "vehicles/polar/player.h"
 #include "vehicles/polar/sprite_sheet_frames.h"
 
+using Engine::Gfx::PolarPlayerFrameSet;
+
 extern const struct anim_frame_record gPolarPlayerKeyframes[13];
 extern const u8 *const gPolarPlayerFrames[156];
 extern const struct anim_frame_record gRiderlessPolarKeyframes[2];

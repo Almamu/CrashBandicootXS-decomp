@@ -6,6 +6,12 @@ extern "C" {
 #include "core.h"
 }
 
+using Engine::Gfx::CreditsRedEyeStudiosLogo;
+using Engine::Gfx::CreditsShinenLogo;
+using Engine::Gfx::CreditsCosmigoLogo;
+using Engine::Gfx::CreditsUniversalLogo;
+using Engine::Gfx::CreditsVvLogo;
+
 /*
  * ROM 0x0817CF40-0x0817CFF4. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.

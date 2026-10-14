@@ -12,6 +12,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Engine::Gfx::BgSetup;
+using Engine::Gfx::PaletteCache;
 using Engine::Sys::FrameLimiter;
 
 /* GitHub issue #26: 0x0801B85C-0x0801CEE0 (include/level_select.hpp).

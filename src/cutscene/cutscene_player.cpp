@@ -13,6 +13,7 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Gfx::OamBuffer;
 using Engine::Sys::FrameLimiter;
 
 /* GitHub issue #39: 0x08024810-0x08024960 (game_loop) - the start of

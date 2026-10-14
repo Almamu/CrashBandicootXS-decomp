@@ -10,6 +10,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Gfx::CategorySpriteSheet;
+
 /* AnimPart's methods (#664 part 11a, include/actor_self.hpp): the frame
  * accessors and SetAnim (SetActorAnim). ROM 0x0803B058-0x0803B0C4, the
  * first of the ROM-tail functions the polar, jetpack and boss actors'

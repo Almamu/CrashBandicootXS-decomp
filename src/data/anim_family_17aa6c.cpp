@@ -25,6 +25,8 @@ extern "C" {
 #include "vehicles/jetpack/player.h"
 #include "vehicles/jetpack/sprite_sheet_frames.h"
 
+using Engine::Gfx::JetpackPlayerFrameSet;
+
 extern const struct anim_frame_record gJetpackPlayerKeyframes[6];
 extern const u8 *const gJetpackPlayerFrames[90];
 extern const struct anim_frame_record gJetpackShotKeyframes[1];

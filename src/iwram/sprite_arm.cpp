@@ -7,6 +7,8 @@ extern "C" {
 #include "gfx.h"
 }
 
+using Engine::Gfx::SpriteFrameCache;
+
 /*
  * IWRAM 0x0300024C-0x030007CC (stored in ROM at 0x087E5830): the ARM
  * graphics routines of the IWRAM image crt0 copies to 0x03000000 at boot.

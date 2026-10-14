@@ -9,6 +9,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Gfx::BrightnessFade;
+
 /* GitHub issue #38: 0x0802425C-0x08024810 (game_loop), continued from
  * level_query.cpp - see level_query.cpp's header comment and
  * docs/matching/archive/issue-38-medal-results-tally.md for the full write-up.

@@ -12,9 +12,11 @@
  * other object reads, and static data members compile like those globals,
  * static member functions like plain functions. The data members are only
  * declared: cxx_symbols.txt (block "#915 SpriteOamQueue") maps each one to
- * its C name (`_14SpriteOamQueue.entries` is gSpriteOamQueue, ...), whose
+ * its C name (`_Q36Engine3Gfx14SpriteOamQueue.entries` is gSpriteOamQueue, ...), whose
  * address is in sym_iwram.txt, and the functions keep their C names the
- * same way (`Add__14SpriteOamQueueUiUsi` is QueueSpriteFrameOam).
+ * same way (`Add__Q36Engine3Gfx14SpriteOamQueueUiUsi` is QueueSpriteFrameOam).
+ *
+ * In the namespace Engine::Gfx (#1033, docs/cplusplus.md "Namespaces").
  *
  * `#pragma interface`: no vtable to emit; it keeps g++ from emitting
  * out-of-line copies of inline methods (docs/cplusplus.md). */
@@ -25,6 +27,11 @@ extern "C" {
 }
 
 struct queued_oam_entry;
+
+namespace Engine
+{
+namespace Gfx
+{
 
 class SpriteOamQueue
 {
@@ -43,5 +50,8 @@ private:
     static s32 count;                        // gSpriteOamQueueCount
     static s32 affineCount;                  // gSpriteAffineQueueCount
 };
+
+} // namespace Gfx
+} // namespace Engine
 
 #endif // GUARD_SPRITE_OAM_QUEUE_HPP

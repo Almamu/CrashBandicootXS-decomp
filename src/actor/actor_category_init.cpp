@@ -31,6 +31,12 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Gfx::BrightnessFade;
+using Engine::Gfx::CategorySpriteSheet;
+using Engine::Gfx::CellAnim;
+using Engine::Gfx::ObjTileAllocator;
+using Engine::Gfx::SpriteFrameCache;
+using Engine::Gfx::SpriteOamQueue;
 using Engine::Sys::FrameLimiter;
 using Engine::Sys::VramDmaQueue;
 

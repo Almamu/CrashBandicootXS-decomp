@@ -11,6 +11,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Engine::Gfx::CellAnim;
+
 /* The 3D actor base class, ActorSelf (#664 part 11a, include/actor_self.hpp):
  * the constructor, Update and Draw, the depth and draw-order key, the
  * accessors and the destructor (the key method: g++ emits gActorVtable

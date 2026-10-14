@@ -14,6 +14,10 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Engine::Gfx::CategorySpriteSheet;
+using Engine::Gfx::ObjTileAllocator;
+using Engine::Gfx::SpriteFrameCache;
+using Engine::Gfx::SpriteOamQueue;
 using Engine::Sys::VramDmaQueue;
 
 /* A meta-node for a doubly-linked, address-ordered free-block list that

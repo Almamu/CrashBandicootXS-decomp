@@ -454,8 +454,14 @@ static inline PartList *ForegroundList()
     return gForegroundList;
 }
 
+namespace Engine
+{
+namespace Gfx
+{
+
 /* The sprite graphics managers (src/gfx/oam_buffer.cpp, obj_vram_cursor.cpp,
- * palette_cache.cpp, sprite_bank_set.cpp). */
+ * palette_cache.cpp, sprite_bank_set.cpp, sprite_renderer.cpp), in the
+ * namespace Engine::Gfx (#1033, docs/cplusplus.md "Namespaces"). */
 
 /* The OAM shadow buffer (gOamBuffer): a shadow copy of the 128-entry hardware OAM
  * table. `count` entries of it are in use, `base` of them kept from frame
@@ -589,5 +595,8 @@ public:
     void DrawPieces(Sprite *part, s32 *pos);       // DrawSpritePieces
     void DrawAffinePieces(Sprite *part, s32 *pos); // DrawAffineSpritePieces
 };
+
+} // namespace Gfx
+} // namespace Engine
 
 #endif /* !GUARD_SPRITE_OBJ_HPP */

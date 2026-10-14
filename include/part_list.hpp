@@ -11,7 +11,9 @@
  *   PaletteCycles   src/gfx/palette_cycle.cpp
  *   HudPart         src/hud/hud_part.cpp (gHudPartVtable)
  *
- * cxx_symbols.txt maps the methods to their C names. The HUD that owns the
+ * PaletteCycles is in the namespace Engine::Gfx (#1033, docs/cplusplus.md
+ * "Namespaces"), the others are game code. cxx_symbols.txt maps the
+ * methods to their C names. The HUD that owns the
  * HudParts is hud.hpp's Hud.
  *
  * No `#pragma interface`: g++ emits HudPart's vtable in
@@ -52,6 +54,11 @@ public:
 
 COMPILE_TIME_ASSERT(part_list_hpp, sizeof(CollisionQueue) == 0x248);
 
+namespace Engine
+{
+namespace Gfx
+{
+
 /* Up to three palette colour cycles (gPaletteCycles, `new
  * PaletteCycles`, 0x48 bytes). play_room.cpp adds them (Add) with
  * `targets` = BG palette RAM and `lists` = the palette indices to cycle;
@@ -85,6 +92,9 @@ public:
 };
 
 COMPILE_TIME_ASSERT(part_list_hpp, sizeof(PaletteCycles) == 0x48);
+
+} // namespace Gfx
+} // namespace Engine
 
 /* One HUD digit or icon (gHudPartVtable, 0x40 bytes): a UiSprite whose `frame` is -1 while it is hidden. */
 class HudPart : public UiSprite
