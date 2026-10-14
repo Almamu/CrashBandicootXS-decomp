@@ -666,12 +666,12 @@ it; with the ROM's levels each rule gives the ROM's number, and
 | macro | ROM | rule | used by |
 |---|---|---|---|
 | `LEVEL_COUNT` | 25 | the levels | `gLevelTable`, `GameProgress::levels`, the save slots |
-| `WORLD_COUNT` | 4 | the numbered levels' worlds | the level select's pages (`UpdatePageArrows`), its per-world tables |
+| `WORLD_COUNT` | 4 | the numbered levels' worlds | the level select's pages (`UpdatePageArrows`), its per-world tables (`"worlds"`, see "Level-select pages") |
 | `LEVELS_PER_WORLD` | 5 | numbered levels per world (all the same) | the level select's `world * LEVELS_PER_WORLD + index` |
 | `LEVEL_NUMBERED_COUNT` | 20 | the numbered levels | the relic, gem and crystal counts (`GameProgress`) |
 | `LEVEL_LAST_NUMBERED`, `LEVEL_FIRST_BOSS` | 19, 20 | the last numbered level, the first boss | the level select, the pause menu |
 | `LEVEL_LAST_ON_GRID` | `LEVEL_NEO_CORTEX` | the last boss | `UpdateGameFrame`'s level-select cap |
-| `LEVEL_FINALE` | `LEVEL_MEGA_MIX` | the first level off the grid | `CountGems`, `CountClearGems` |
+| `LEVEL_FINALE` | `LEVEL_MEGA_MIX` | the first level off the grid | `CountGems`, `CountClearGems`, `UpdateGameFrame`'s step from Neo Cortex to mega-mix |
 | `LEVEL_SELECT_ENTRIES` | 6 | `LEVELS_PER_WORLD` + the boss | `LevelSelect::items`, the entry positions |
 | `CRYSTAL_TOTAL`, `RELIC_TOTAL` | 20 | the numbered levels | the pause menu |
 | `GEM_TOTAL` | 28 | a crate gem per numbered level, the `GEM_PATH_GEM` entities in the rooms of the numbered levels and the finale, and the 4 coloured gems | the pause menu |
@@ -1026,6 +1026,140 @@ follow the ROM's pictures, and `gLevelSelectPictures` gets a 12th pair
 naming them. In mGBA the level select's zoom picture for jungle jam is the
 new one: BG2's character block holds `lab.png`'s tiles byte for byte, and
 the BG palette its colours.
+
+## Level-select pages
+
+How the level select pages through the worlds and opens them, and how a
+new world (a page) is added (#966, phase 4).
+
+**A page is a world.** `LevelSelect` (`level_select.cpp`,
+`level_select_pages.cpp`) shows one world at a time: its
+`LEVELS_PER_WORLD` numbered levels (`world * LEVELS_PER_WORLD + index`)
+and its boss (`LEVEL_FIRST_BOSS + world`), `LEVEL_SELECT_ENTRIES`
+entries. Up turns to the next page (`NextWorld`), Down to the previous
+one (`PrevWorld`); the platform (BG1, `LevelSelectPageBg`) turns 0x100
+pixels a page and wraps, so it has no page count. Left and Right move
+the cursor on the page. The level select opens on the page of the last
+level played (`room.level`, capped at `LEVEL_LAST_ON_GRID`).
+
+**What opens what.**
+
+| what | opens when | where |
+|---|---|---|
+| a world's numbered levels | always, once the world is open | `PlaceItems` |
+| a world's boss (the sixth entry) | all `LEVELS_PER_WORLD` levels of the world are cleared (`levels[k].cleared`); the entries then take `gLevelSelectEntryPositionsAllCleared` | `PlaceItems` |
+| world 1, 2, 3 | the power of the boss before: Super Body Slam (Dingodile), Double Jump (N. Gin), Tornado Spin (Tiny), `PROGRESS_BIT_*` of `save->flags` | `IsNextWorldOpen`'s `switch (world)`, cases 0-2 |
+| (no world after the last) | `UpdatePageArrows` draws no next arrow on page `WORLD_COUNT - 1`; `IsNextWorldOpen` returns 0 there (no case) | |
+| mega-mix (`LEVEL_FINALE`, off the grid) | beating Neo Cortex at over 99% completion: `UpdateGameFrame` plays it straight after | `game_frame.cpp` |
+
+Beating a boss for the first time gives its power and calls
+`LevelSelect::SetNewWorldOpened`: the next level select turns to the
+new page by itself (`Loop`), if `IsNextWorldOpen` says it is open. Neo
+Cortex's power (Turbo Run) opens no page in the ROM. The eight bits of
+`save->flags` (`GameProgress` byte 2) are all used: the four coloured
+gems and the four powers. A boss's level word gets no `cleared` bit:
+`UpdateGameFrame`'s boss cases give the power instead.
+
+### The worlds
+
+`levels.json`'s `"worlds"` has one entry per world (the worlds of the
+numbered levels, `WORLD_COUNT`), in world order: what its page shows and
+what opens it.
+
+```json
+"worlds": [
+  {"page_title": 9, "entry_box": 0, "boss_icon": 2},
+  {"page_title": 8, "entry_box": 1, "boss_icon": 3, "opened_by": {"power": "SUPER_BODY_SLAM"}},
+  ...
+]
+```
+
+| key | what | the table | ROM |
+|---|---|---|---|
+| `"page_title"` | the page title sprite's animation (bank 47, 0-12) | `gLevelSelectWorldAnims` | 9, 8, 6, 7 |
+| `"entry_box"` | the entries' box colour, an index of `gLevelSelectEntryBoxAnims` (bank 49; 0-4, 4 unused by the ROM) | `gLevelSelectWorldEntryBoxAnims` | 0, 1, 2, 3 |
+| `"boss_icon"` | the boss entry's icon animation (bank 51, 0-4) | `gLevelSelectEntryWorldAnims` | 2, 3, 1, 4 |
+| `"opened_by"` | every world but the first: what opens it, the case of `IsNextWorldOpen` for the world before it. `{"power": NAME}`, a power of `save->flags` (`TURBO_RUN`, `SUPER_BODY_SLAM`, `TORNADO_SPIN` or `DOUBLE_JUMP`, `PROGRESS_BIT_<NAME>`), or `{"levels_cleared": true}`, every numbered level of the world before cleared (`LevelSelect::IsWorldCleared`) | `LEVEL_SELECT_NEXT_WORLD_CASES` | the three powers above |
+
+`tools/levels.py worlds` writes `level_select_worlds.h` (build/include)
+from it: the three tables' initializers (`LEVEL_SELECT_WORLD_ANIMS`,
+`LEVEL_SELECT_WORLD_ENTRY_BOX_ANIMS`, `LEVEL_SELECT_ENTRY_WORLD_ANIMS`,
+which `level_select_layout.cpp` and `level_select_anims.cpp` define the
+tables with) and `IsNextWorldOpen`'s cases
+(`LEVEL_SELECT_NEXT_WORLD_CASES`, like RunRoom's
+`THEME_PALETTE_CYCLE_CASES`). With the ROM's worlds they are the ROM's
+values and its three cases, so the bytes don't change. It stops when
+`"worlds"` doesn't have one entry per world, a value is out of range, a
+rule isn't one of the two, or bank 51 has no number icon for a numbered
+level (below). `levels.py extract` reads the three tables back from the
+ROM and keeps the rules (code, like the colour cycles' rates), and checks
+that they are the ROM's. The worlds aren't part of the save version's
+CRC: they don't change what a save's records mean.
+
+**The number icons.** A numbered level's entry shows step `level id` of
+bank 51's animation 0 (`LevelSelectEntry::SetLevel`). In the ROM its 20
+steps are frames 0-19, the numbers 1-20 (frames 20-23 are the bosses'
+heads, the boss icons' animations 1-4). A level past the 20th needs a
+number: a new frame of bank 51, appended to animation 0 ([graphics.md,
+"New frames"](./graphics.md#new-frames)). `levels.py worlds` stops if
+there are fewer steps than numbered levels.
+
+### Adding a world
+
+1. **The levels.** `LEVELS_PER_WORLD` numbered levels with the new
+   `"world"`, after the last world's numbered levels, and its boss
+   (`"boss": true` and the `"world"`) after the last boss, before
+   mega-mix (see "The counts the code takes from the levels"), each
+   with its name ([text.md, "A new level's name"](./text.md#a-new-levels-name)).
+   The level ids after them move, which only changes the generated
+   constants. More than 28 levels take the 64 Kbit save ("The save").
+2. **The world.** An entry at the end of `"worlds"`: the page title,
+   box and boss icon (the ROM's animations: new art is new frames of
+   banks 47, 49 or 51, which their C would have to take, like bank 51's
+   animation 0 below), and `"opened_by"`.
+3. **The number icons.** For each numbered level past the 20th, a new
+   frame of bank 51 and a step of its animation 0 (graphics.md, "New
+   frames").
+4. **Run `make`.**
+
+**Defaults for a new world** (the owner's decisions on #966, and the
+ROM's behaviour where they say nothing):
+
+- A new world comes after Neo Cortex's page, as post-game content, like
+  mega-mix. The ending is the ROM's: Neo Cortex plays the ending
+  cutscene and the credits, or mega-mix at over 99% (`UpdateGameFrame`
+  goes `LEVEL_FINALE - LEVEL_NEO_CORTEX` levels on: 1 in the ROM, past
+  the new bosses otherwise).
+- A world after Neo Cortex's opens when every numbered level of the
+  world before is cleared (`{"levels_cleared": true}`). There is no free
+  bit in `save->flags` for a new boss's win, and a new boss gives no
+  power (its rewards are out of scope), so the rule the boss entry
+  already uses is the one that needs no new save data. Neo Cortex's
+  first win calls `SetNewWorldOpened` as in the ROM, so if the world
+  after it is open then, the next level select turns to it by itself.
+- Its boss entry appears once its levels are cleared, like the ROM's
+  (`PlaceItems` doesn't change). Beating a new boss takes
+  `UpdateGameFrame`'s default case: no power, dialog or cutscene.
+- The completion percentage counts the new levels' crystals, gems and
+  relics (`COMPLETION_TOTAL`), so mega-mix (over 99%) needs them too.
+- After mega-mix the level select opens on the last page's boss
+  (`LEVEL_LAST_ON_GRID`, as in the ROM, where that is Neo Cortex).
+
+Tested in scratch with a fifth world: five numbered levels (ids 20-24,
+"crash cove" to "slime pit", world 0's rooms), its boss "dingo rematch"
+after Neo Cortex (Dingodile's room), world 0's title, box and boss icon,
+`{"levels_cleared": true}`, and bank 51's frames 24-28 ("21" to "25",
+the "2" of frame 1 and the digits of frames 0-4) as animation 0's steps
+20-24: 31 levels and the 64 Kbit save. Plain `make` builds it and a
+second `make` does nothing. In mGBA, with the four powers and worlds
+0-2's levels cleared poked into the level select's save block, Up turns
+to page 4 (world 3), whose next arrow shows the locked frame; Up again
+plays the error sound and stays. With world 3's levels cleared the arrow
+lights and Up turns to page 5: world 0's title (Dingodile's head), red
+boxes, the icons 21-25 and no next arrow. With its levels cleared the
+boss entry (Dingodile's head) appears, and A on "21" starts level 20
+(crash cove, jungle jam's first room). `levels.py worlds` stops with a
+missing world, a bad rule, a rule on world 0 and too few number icons.
 
 ## The save
 

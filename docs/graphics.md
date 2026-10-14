@@ -1702,6 +1702,40 @@ committed, and checks that the generated arrays sit where the ROM has them.
   frame with a shared run usually needs `"own"` too. Changing `layout`
   means changing the frame's struct type and its boxes in the C.
 
+### New frames
+
+A frame the ROM doesn't have is a new `fKKK.png` and a `bank.json` line
+after the ROM's frames, with its header's boxes, which the C keeps for
+the ROM's frames:
+
+```json
+{"origin": [8, 4], "pieces": [["16x16", -8, -4]], "layout": 2, "tiles": "own", "palettes": [80], "boxes": [[-8, -4, 15, 8]]}
+```
+
+- `boxes` are its header's boxes, `[x, y, w, h]` each, as many as its
+  layout has (one for layouts 2, 5 and 6, two for 3, three for 0 and 4,
+  none for 1), and `anchor`, `[x, y]`, for layouts 0 and 6. The new
+  frames come after all of the ROM's, so the ROM's keep their index.
+- An animation shows it through `"new_steps"`, bank.json's frames
+  appended to an animation's sequence: `"new_steps": {"0": [24, 25]}`.
+
+`tools/sprite_frames.py pack` writes the new frames' tiles after the
+bank's (the later banks and `gObjPalettes` move, like any frame given
+`"own"` tiles), their piece arrays and headers at the end of
+`bankNN_pieces.inc`, and in `sprite_frames.h`
+`SPRITE_BANKnn_NEW_FRAMES` / `_NEW_FRAME_COUNT` and
+`SPRITE_BANKnn_ANIMaa_NEW_STEPS` / `_NEW_STEP_COUNT`, which the bank's C
+puts at the end of its frame table and of the animation's sequence, and
+counts in their bounds. With no new frames they are empty and 0, and the
+ROM's bytes don't change.
+
+Only bank 51's C takes them, and only its animation 0's sequence
+(`NEW_FRAME_HOOKS` in `tools/sprite_frames.py`, which `pack` checks): the
+numbered levels' icons, for the levels past the ROM's 20 ([levels.md,
+"Level-select pages"](./levels.md#level-select-pages)). Another bank or
+animation needs the same macros in its C (`tools/sprite_banks.py` writes
+them for the banks of `NEW_FRAME_HOOKS`) and an entry there.
+
 ### Frames shown with several palettes
 
 The palette comes from the animation, not the frame:

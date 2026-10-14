@@ -1959,9 +1959,12 @@ const struct sprite_frame_1box gSpriteBank50Frame007 = {
 #include "sprites/bank50_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 51: 5 animations, 24 frames, graphics/sprites/bank51_level_select_icons/. */
+/* Bank 51: 5 animations, 24 frames, graphics/sprites/bank51_level_select_icons/.
+ * The frame table and animation 0's sequence end with the new frames and
+ * steps of bank.json ("boxes", "new_steps"; tools/sprite_frames.py,
+ * NEW_FRAME_HOOKS; docs/graphics.md "New frames"), none in the ROM. */
 
-extern const u16 gSpriteBank51Anim00Seq[20];
+extern const u16 gSpriteBank51Anim00Seq[20 + SPRITE_BANK51_ANIM00_NEW_STEP_COUNT];
 extern const u16 gSpriteBank51Anim01Seq[1];
 extern const u16 gSpriteBank51Anim02Seq[1];
 extern const u16 gSpriteBank51Anim03Seq[1];
@@ -2010,9 +2013,9 @@ extern const struct sprite_anim gSpriteBank51Anims[5] = {
     },
 };
 
-const u16 gSpriteBank51Anim00Seq[20] = {
+const u16 gSpriteBank51Anim00Seq[20 + SPRITE_BANK51_ANIM00_NEW_STEP_COUNT] = {
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-    16, 17, 18, 19,
+    16, 17, 18, 19, SPRITE_BANK51_ANIM00_NEW_STEPS
 };
 const u16 gSpriteBank51Anim01Seq[1] = {
     20,
@@ -2027,7 +2030,7 @@ const u16 gSpriteBank51Anim04Seq[1] = {
     23,
 };
 
-extern const struct sprite_frame *const gSpriteBank51Frames[24] = {
+extern const struct sprite_frame *const gSpriteBank51Frames[24 + SPRITE_BANK51_NEW_FRAME_COUNT] = {
     &gSpriteBank51Frame000.frame,
     &gSpriteBank51Frame001.frame,
     &gSpriteBank51Frame002.frame,
@@ -2052,6 +2055,7 @@ extern const struct sprite_frame *const gSpriteBank51Frames[24] = {
     &gSpriteBank51Frame021.frame,
     &gSpriteBank51Frame022.frame,
     &gSpriteBank51Frame023.frame,
+    SPRITE_BANK51_NEW_FRAMES
 };
 
 const struct sprite_frame_1box gSpriteBank51Frame000 = {

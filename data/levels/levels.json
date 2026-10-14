@@ -468,6 +468,12 @@
       "rooms": ["mega_mix/main"]
     }
   ],
+  "worlds": [
+    {"page_title": 9, "entry_box": 0, "boss_icon": 2},
+    {"page_title": 8, "entry_box": 1, "boss_icon": 3, "opened_by": {"power": "SUPER_BODY_SLAM"}},
+    {"page_title": 6, "entry_box": 2, "boss_icon": 1, "opened_by": {"power": "DOUBLE_JUMP"}},
+    {"page_title": 7, "entry_box": 3, "boss_icon": 4, "opened_by": {"power": "TORNADO_SPIN"}}
+  ],
   "themes": [
     {"constant": "THEME_SNOW", "name": "snow", "song": "arctic", "picture": "level_select/pictures/snow.png", "first_room_exit_zone": true},
     {"constant": "THEME_JUNGLE", "name": "jungle", "song": "jungle", "picture": "level_select/pictures/jungle.png", "palette_cycle": "jungle"},

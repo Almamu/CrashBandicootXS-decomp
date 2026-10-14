@@ -26,8 +26,18 @@ bank, graphics/sprites/bankNN_<name>/:
         {"bank": B, "frame": K, "tile": t} the same in an earlier bank
     "palettes": [id, ...]  the paletteIds of the animations that show the
                        frame, in animation order; the PNG uses the first.
+    "boxes": [[x, y, w, h], ...], "anchor": [x, y]
+                       only for a new frame, one the ROM doesn't have: its
+                       header's boxes (as many as its layout has) and
+                       anchor (layouts 0 and 6). pack writes its header.
   A frame with no pieces (3 in the ROM) has no PNG; its C header reuses
   the next frame's arrays with a piece count of 0.
+  And, for a bank whose C takes new frames (NEW_FRAME_HOOKS):
+    "new_steps": {"A": [K, ...]}   frames appended to animation A's
+                       sequence (in the ROM's sequences' place, after them)
+
+  New frames come after the ROM's, so the ROM's keep their index and the
+  ROM's tables keep their bytes (docs/graphics.md, "New frames").
 
     tools/sprite_frames.py extract [baserom.gba]
         Writes graphics/sprites/bankNN_<name>/ from the ROM and checks
@@ -42,7 +52,13 @@ bank, graphics/sprites/bankNN_<name>/:
                                   the pool), SPRITE_TILES_BANKnn_SIZE,
                                   SPRITE_TILES_BANKnn_FRAMEkkk (each frame's
                                   tile offset), and the extern declarations
-                                  of the frames and their piece arrays
+                                  of the frames and their piece arrays; and
+                                  for the banks of NEW_FRAME_HOOKS, their new
+                                  frames and steps (SPRITE_BANKnn_NEW_FRAMES,
+                                  SPRITE_BANKnn_ANIMaa_NEW_STEPS, with their
+                                  _COUNTs), which the bank's C appends to its
+                                  frame table and sequences
+        The new frames' headers go at the end of their bankNN_pieces.inc.
 
 pack cuts each piece's rectangle out of the frame's PNG into tiles and
 places the frames' runs in frame order. Tiles a frame shares with an
@@ -79,6 +95,21 @@ LAYOUT_STRUCTS = {
     5: "sprite_frame_1box",
     6: "sprite_frame_1box_anchor",
 }
+
+# The banks whose C takes new frames (bank.json frames with "boxes"), and
+# the animations whose sequence takes new steps ("new_steps"): bank 51,
+# the level-select icons, and its animation 0, the numbered levels'
+# icons (LevelSelectEntry::SetLevel shows step `level id`), for the levels
+# past the ROM's 20 (docs/levels.md, "Level-select pages"). Its C
+# (sprite_banks_39_55.cpp, and gSpriteBank51Frames' declaration in
+# sprite_banks_00_09.cpp) sizes and ends the frame table and the sequence
+# with the macros pack writes; another bank needs the same before it can
+# take new frames.
+NEW_FRAME_HOOKS = {51: [0]}
+# The boxes of a frame header, by layout (include/engine/gfx/sprite_bank.h),
+# and the layouts with an anchor.
+LAYOUT_BOXES = {0: 3, 1: 0, 2: 1, 3: 2, 4: 3, 5: 1, 6: 1}
+LAYOUT_ANCHORS = (0, 6)
 
 # The banks' names: what their frames show, and the code that uses them
 # (gSpriteBankSet->Bank(n)).
@@ -378,7 +409,38 @@ def read_json(d):
                 fail(f"{path}: frame {k}: layout {e.get('layout')!r}")
             f["layout"] = e["layout"]
             f["origin"] = tuple(e["origin"])
+        if "boxes" in e:
+            if not pieces:
+                fail(f"{path}: frame {k}: a new frame (\"boxes\") has pieces")
+            boxes, layout = e["boxes"], f["layout"]
+            if not isinstance(boxes, list) or len(boxes) != LAYOUT_BOXES[layout] \
+                    or not all(isinstance(b, list) and len(b) == 4 for b in boxes):
+                fail(f"{path}: frame {k}: layout {layout} has {LAYOUT_BOXES[layout]} boxes, [x, y, w, h] each")
+            if (layout in LAYOUT_ANCHORS) != ("anchor" in e):
+                fail(f"{path}: frame {k}: layout {layout} " + ("has" if layout in LAYOUT_ANCHORS else "has no")
+                     + " \"anchor\"")
+            f["new"] = dict(boxes=boxes, anchor=e.get("anchor"))
+        elif out and "new" in out[-1]:
+            fail(f"{path}: frame {k}: the new frames (with \"boxes\") come after the ROM's")
         out.append(f)
+    return out
+
+
+def read_new_steps(d, frames):
+    """bank.json's "new_steps": {animation: [frame, ...]}, checked."""
+    path = d / "bank.json"
+    steps = json.loads(path.read_text()).get("new_steps", {})
+    bank = int(d.name[4:6])
+    hooks = NEW_FRAME_HOOKS.get(bank, [])
+    if any("new" in f for f in frames) and bank not in NEW_FRAME_HOOKS:
+        fail(f"{path}: new frames, but only banks {sorted(NEW_FRAME_HOOKS)}' C takes them (NEW_FRAME_HOOKS)")
+    out = {}
+    for a, ks in steps.items():
+        if not a.isdigit() or int(a) not in hooks:
+            fail(f"{path}: \"new_steps\" of animation {a}, but only animations {hooks}' sequences take them")
+        if not all(isinstance(k, int) and 0 <= k < len(frames) and frames[k]["pieces"] for k in ks):
+            fail(f"{path}: \"new_steps\" of animation {a}: each a frame of the bank with pieces")
+        out[int(a)] = ks
     return out
 
 
@@ -423,7 +485,8 @@ def pack(dirs):
                     target += tile
                 else:
                     fail(f"{where}: runs past the end of bank {b}'s tiles")
-        banks.append((d.name, pool, frames))
+        frames_steps = read_new_steps(d, frames)
+        banks.append((d.name, pool, frames, frames_steps))
     return banks
 
 
@@ -435,13 +498,13 @@ def write_pack(banks, outdir):
          ""]
     base = 0
     starts = []
-    for i, (name, pool, frames) in enumerate(banks):
+    for i, (name, pool, frames, _) in enumerate(banks):
         starts.append(base)
         h.append(f"#define SPRITE_TILES_BANK{i:02} {base:#07x}")
         h.append(f"#define SPRITE_TILES_BANK{i:02}_SIZE {len(pool):#x}")
         base += len(pool)
     h.append("")
-    for i, (name, pool, frames) in enumerate(banks):
+    for i, (name, pool, frames, steps) in enumerate(banks):
         B = f"gSpriteBank{i:02}"
         h.append(f"/* {name} */")
         for k, f in enumerate(frames):
@@ -462,10 +525,35 @@ def write_pack(banks, outdir):
             ids.append(f"const u8 {B}Frame{k:03}Pieces[{n}] = {{ "
                        + ", ".join(f"SPRITE_PIECE({f['layout'] if j == 0 else 0}, {s})"
                                    for j, (s, _, _) in enumerate(f["pieces"])) + " };")
+        heads = []
+        if i in NEW_FRAME_HOOKS:
+            new = [k for k, f in enumerate(frames) if "new" in f]
+            refs = [f"&{B}Frame{k:03}" + ("" if frames[k]["layout"] == 1 else ".frame") for k in new]
+            h.append(f"/* the new frames (bank.json \"boxes\") and the new steps of animations "
+                     f"{', '.join(str(a) for a in NEW_FRAME_HOOKS[i])} (\"new_steps\"), not in the ROM */")
+            h.append(f"#define SPRITE_BANK{i:02}_NEW_FRAME_COUNT {len(new)}")
+            h.append(f"#define SPRITE_BANK{i:02}_NEW_FRAMES {', '.join(refs)}".rstrip())
+            for a in NEW_FRAME_HOOKS[i]:
+                ks = steps.get(a, [])
+                h.append(f"#define SPRITE_BANK{i:02}_ANIM{a:02}_NEW_STEP_COUNT {len(ks)}")
+                h.append(f"#define SPRITE_BANK{i:02}_ANIM{a:02}_NEW_STEPS {', '.join(str(k) for k in ks)}".rstrip())
+            for k in new:
+                f, n = frames[k], f"{B}Frame{k:03}"
+                head = f"SPRITE_FRAME({n}, SPRITE_TILES_BANK{i:02}_FRAME{k:03})"
+                parts = [head] + (["{ " + ", ".join("{ %d, %d, %d, %d }" % tuple(b) for b in f["new"]["boxes"]) + " }"]
+                                  if f["new"]["boxes"] else [])
+                if f["new"]["anchor"] is not None:
+                    parts.append("{ %d, %d }" % tuple(f["new"]["anchor"]))
+                if f["layout"] == 1:
+                    heads.append(f"const struct sprite_frame {n} = {head};")
+                else:
+                    heads.append(f"const struct {LAYOUT_STRUCTS[f['layout']]} {n} = {{ " + ", ".join(parts) + " };")
         h.append("")
         write_text(outdir / f"bank{i:02}_pieces.inc",
                          f"/* Generated by tools/sprite_frames.py pack from graphics/sprites/{name}/bank.json */\n"
-                         + "\n".join(pos) + "\n\n" + "\n".join(ids) + "\n")
+                         + "\n".join(pos) + "\n\n" + "\n".join(ids) + "\n"
+                         + ("\n/* The new frames' headers (bank.json \"boxes\"), not in the ROM. */\n"
+                            + "\n".join(heads) + "\n" if heads else ""))
         lines = ["\t" + ", ".join(f"0x{b:02X}" for b in pool[j:j + 16]) + "," for j in range(0, len(pool), 16)]
         write_text(outdir / f"bank{i:02}_tiles.inc",
                          f"/* Generated by tools/sprite_frames.py pack from graphics/sprites/{name}/: "
@@ -515,10 +603,10 @@ def extract(rom_path):
         write_json(d / "bank.json", bank["frames"])
     # The round trip: packing the files gives the ROM's pool.
     packed = pack(bank_dirs())
-    pool = b"".join(p for _, p, _ in packed)
+    pool = b"".join(p for _, p, _, _ in packed)
     if pool != rom.bytes(TILE_BASE, OBJ_PALETTES - TILE_BASE):
         fail("the packed pool differs from the ROM's")
-    for i, (_, p, frames) in enumerate(packed):
+    for i, (_, p, frames, _) in enumerate(packed):
         assert (ranges[i][1] - ranges[i][0]) == len(p)
         for f, rf in zip(frames, banks[i]["frames"]):
             assert ranges[f["bank"]][0] + f["offset"] == rf["off"]
