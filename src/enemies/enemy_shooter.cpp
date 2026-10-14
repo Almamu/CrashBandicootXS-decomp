@@ -8,6 +8,7 @@ extern "C" {
 }
 
 using Game::Enemies::EnemyCtrl;
+using Game::Entities::MovingSprite;
 using Game::Level::EntitySpawner;
 
 /* GitHub issue #9/#10: EnemyCtrl's shooter (include/enemy_ctrl.hpp),

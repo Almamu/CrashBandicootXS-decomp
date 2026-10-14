@@ -107,8 +107,16 @@ extern s32 sub_8026C8C(void);
 
 /* sym_iwram.txt */
 #ifdef __cplusplus
-/* The decoration parts (PartList, sprite_obj.hpp; C++ only). */
-extern class PartList *gDecorationList;
+/* The decoration parts (PartList, sprite_obj.hpp; C++ only), in its
+ * namespace (docs/cplusplus.md, "Namespaces"). */
+namespace Game
+{
+namespace Entities
+{
+class PartList;
+} // namespace Entities
+} // namespace Game
+extern Game::Entities::PartList *gDecorationList;
 #endif
 /* UpdateGameFrame's level state, stored once when the game starts and never
  * read. */
@@ -130,7 +138,7 @@ extern struct level_state *gGameFrameLevelState;
  * the entity type 0x55 room-exit zones (spawn_bosses.cpp) and
  * PeriodicSpawner::Spawn's spawner. */
 #ifdef __cplusplus
-extern class PartList *gUpdateOnlyPartList;
+extern Game::Entities::PartList *gUpdateOnlyPartList;
 #endif
 
 /* The enemies' anim maps (src/data/popup_tables_16b98c.cpp), stored in their

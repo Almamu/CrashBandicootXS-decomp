@@ -11,7 +11,8 @@
  * The classes are in the namespace Game::Bosses (#1033, docs/cplusplus.md
  * "Namespaces"), with ctrl.hpp's two Tiny controllers, platform.hpp's
  * CortexBossPlatformMover and the hovercraft (hovercraft.hpp,
- * boss_actors.hpp): `Update__Q34Game6Bosses8TinyCtrlP12MovingSprite`,
+ * boss_actors.hpp):
+ * `Update__Q34Game6Bosses8TinyCtrlPQ34Game8Entities12MovingSprite`,
  * `_vt.Q34Game6Bosses8BossCtrl` (in the section
  * `.gnu.linkonce.d._vt.Q34Game6Bosses8BossCtrl`, which ldscript.txt
  * names) & co. bosses.h's C structs and declarations stay global. */
@@ -32,7 +33,7 @@ namespace Bosses
  * and arg; nothing reads them back. The word at 0x10 is the controlled
  * part (GetTarget) or, in the bosses that don't use that, a counter:
  * Tiny's and Neo Cortex's round, Dingodile's hits. */
-class BossCtrl : public Ctrl
+class BossCtrl : public Game::Entities::Ctrl
 {
 public:
     union {
@@ -66,12 +67,12 @@ public:
     u8 latch;  // 0x20
 
     MegaMixCtrl(); // CreateMegaMixCtrl
-    virtual void Update(MovingSprite *part);
+    virtual void Update(Game::Entities::MovingSprite *part);
     virtual ~MegaMixCtrl(); // DestroyMegaMixCtrl
-    virtual void StartTargetMotionXFromSet(MovingSprite *part, s32 index);
-    virtual void StartTargetMotionYFromSet(MovingSprite *part, s32 index);
-    void SetMotionYFromSet(MovingSprite *part, s32 index);
-    void SetMotionXFromSet(MovingSprite *part, s32 index);
+    virtual void StartTargetMotionXFromSet(Game::Entities::MovingSprite *part, s32 index);
+    virtual void StartTargetMotionYFromSet(Game::Entities::MovingSprite *part, s32 index);
+    void SetMotionYFromSet(Game::Entities::MovingSprite *part, s32 index);
+    void SetMotionXFromSet(Game::Entities::MovingSprite *part, s32 index);
     void Reset();
 
     /* Its entity type's gEntitySpawnFuncs slot (spawn_bosses.cpp, #915):
@@ -124,13 +125,13 @@ public:
     s16 *squares;  // 0x48 - i * i >> 8 for i = 0..0x100 (CreateTiny)
 
     TinyCtrl(); // CreateTiny
-    virtual void Update(MovingSprite *part);
+    virtual void Update(Game::Entities::MovingSprite *part);
     virtual ~TinyCtrl(); // DestroyTiny
-    void SetState(MovingSprite *part, s32 next);
+    void SetState(Game::Entities::MovingSprite *part, s32 next);
     s32 PickHopTarget();
-    void SpawnFallingLeaves(MovingSprite *part, s32 n);
-    void HitStub(MovingSprite *part);  // TinyHitStub (empty)
-    void StartHop(MovingSprite *part); // StartTinyHop
+    void SpawnFallingLeaves(Game::Entities::MovingSprite *part, s32 n);
+    void HitStub(Game::Entities::MovingSprite *part);  // TinyHitStub (empty)
+    void StartHop(Game::Entities::MovingSprite *part); // StartTinyHop
 
     /* Its entity type's gEntitySpawnFuncs slot (spawn_bosses.cpp, #915):
      * the boss's MovingSprite, moved by a new TinyCtrl. */
@@ -153,15 +154,15 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(TinyCtrl) == 0x4C);
 class CortexBossCtrl : public BossCtrl
 {
 public:
-    MovingSprite *cannon; // 0x1C - SpawnCannon's part
-    MovingSprite *target; // 0x20 - SpawnTarget's part
+    Game::Entities::MovingSprite *cannon; // 0x1C - SpawnCannon's part
+    Game::Entities::MovingSprite *target; // 0x20 - SpawnTarget's part
 
     CortexBossCtrl(); // CreateCortexBoss
-    virtual void Update(MovingSprite *part);
+    virtual void Update(Game::Entities::MovingSprite *part);
     virtual ~CortexBossCtrl(); // DestroyCortexBoss
-    void SetState(MovingSprite *part, s32 next);
-    void SpawnCannon(MovingSprite *part); // SpawnCortexCannon
-    void SpawnTarget(MovingSprite *part); // SpawnCortexTarget
+    void SetState(Game::Entities::MovingSprite *part, s32 next);
+    void SpawnCannon(Game::Entities::MovingSprite *part); // SpawnCortexCannon
+    void SpawnTarget(Game::Entities::MovingSprite *part); // SpawnCortexTarget
 
     /* Its entity type's gEntitySpawnFuncs slot (spawn_bosses.cpp, #915):
      * the boss's MovingSprite, moved by a new CortexBossCtrl. */
@@ -174,13 +175,13 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexBossCtrl) == 0x24);
  * src/bosses/cortex.cpp): hides its part in state 0. */
 /* CortexCannonCtrl's `state`: only 0, nothing sets another. */
 #define CORTEX_CANNON_STATE_IDLE 0 // contact with the player off
-class CortexCannonCtrl : public Ctrl
+class CortexCannonCtrl : public Game::Entities::Ctrl
 {
 public:
     CortexCannonCtrl(); // CreateCortexCannonCtrl
-    virtual void Update(MovingSprite *part);
+    virtual void Update(Game::Entities::MovingSprite *part);
     virtual ~CortexCannonCtrl(); // DestroyCortexCannonCtrl
-    void SetState(MovingSprite *part, s32 next);
+    void SetState(Game::Entities::MovingSprite *part, s32 next);
 };
 
 COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexCannonCtrl) == 0x10);
@@ -202,7 +203,7 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexCannonCtrl) == 0x10);
 #define CORTEX_TARGET_STATE_LEAVE 8   // aims below the level, then HOP_OFF
 #define CORTEX_TARGET_STATE_STOP 9    // Neo Cortex is beaten (CORTEX_BOSS_STATE_DEFEATED): LEAVE
 #define CORTEX_TARGET_STATE_GONE 10   // the end: nothing runs
-class CortexTargetCtrl : public Ctrl
+class CortexTargetCtrl : public Game::Entities::Ctrl
 {
 public:
     u8 dirLeft;           // 0x10
@@ -221,12 +222,12 @@ public:
     CortexBossCtrl *boss; // 0x3C
 
     CortexTargetCtrl(CortexBossCtrl *boss); // CreateCortexTargetCtrl
-    virtual void Update(MovingSprite *part);
+    virtual void Update(Game::Entities::MovingSprite *part);
     virtual ~CortexTargetCtrl(); // DestroyCortexTargetCtrl
     void SetPlatformsKind(u8 flag);
-    void SetDest(MovingSprite *part, s32 x, s32 y);
-    void SetState(MovingSprite *part, s32 next); // SetCortexTargetState
-    void FireShot(MovingSprite *part, s32 kind); // FireCortexShot
+    void SetDest(Game::Entities::MovingSprite *part, s32 x, s32 y);
+    void SetState(Game::Entities::MovingSprite *part, s32 next); // SetCortexTargetState
+    void FireShot(Game::Entities::MovingSprite *part, s32 kind); // FireCortexShot
 };
 
 COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexTargetCtrl) == 0x40);
@@ -237,14 +238,14 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexTargetCtrl) == 0x40);
 /* FireShot's `kind` (#843, docs/flags/boss_ctrl.md). */
 #define CORTEX_SHOT_KIND_SLOW 0 // CORTEX_TARGET_STATE_FIRE: animation 0xE, SFX_CORTEX_SHOT
 #define CORTEX_SHOT_KIND_FAST 1 // the end of CHASE: animation 0x11, SFX_CORTEX_SHOT_FAST; shrinks gems
-class CortexShotCtrl : public Ctrl
+class CortexShotCtrl : public Game::Entities::Ctrl
 {
 public:
     u8 fast;              // 0x10 - CORTEX_SHOT_KIND_FAST (FireShot)
     CortexBossCtrl *boss; // 0x14
 
     CortexShotCtrl(CortexBossCtrl *boss); // CreateCortexShotCtrl
-    virtual void Update(MovingSprite *part);
+    virtual void Update(Game::Entities::MovingSprite *part);
     virtual ~CortexShotCtrl(); // DestroyCortexShotCtrl
 };
 
@@ -256,13 +257,13 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexShotCtrl) == 0x18);
 /* CortexBossGemCtrl's `state`. */
 #define CORTEX_BOSS_GEM_STATE_WAIT 0   // until a fast shot hits it (the part's `kind`)
 #define CORTEX_BOSS_GEM_STATE_SHRINK 1 // the shrink animation, then gone
-class CortexBossGemCtrl : public Ctrl
+class CortexBossGemCtrl : public Game::Entities::Ctrl
 {
 public:
     s32 kind; // 0x10 - CORTEX_BOSS_GEM_KIND_* (bosses.h)
 
     CortexBossGemCtrl(s32 kind); // CreateCortexBossGemCtrl
-    virtual void Update(MovingSprite *part);
+    virtual void Update(Game::Entities::MovingSprite *part);
     virtual ~CortexBossGemCtrl(); // DestroyCortexBossGemCtrl
 };
 
@@ -270,11 +271,11 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexBossGemCtrl) == 0x14);
 
 /* gUnusedOneShotAnimCtrlVtable's class (src/bosses/tiny.cpp): does what
  * OneShotAnimCtrl does. Its constructor has no caller (UNUSED). */
-class UnusedOneShotAnimCtrl : public Ctrl
+class UnusedOneShotAnimCtrl : public Game::Entities::Ctrl
 {
 public:
     UnusedOneShotAnimCtrl(); // CreateUnusedOneShotAnimCtrl
-    virtual void Update(MovingSprite *part);
+    virtual void Update(Game::Entities::MovingSprite *part);
     virtual ~UnusedOneShotAnimCtrl(); // DestroyUnusedOneShotAnimCtrl
 };
 
@@ -312,20 +313,21 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(UnusedOneShotAnimCtrl) == 0x10);
 class DingodileCtrl : public BossCtrl
 {
 public:
-    s32 step;             // 0x1C - the approach table's index
-    s32 timer;            // 0x20
-    s32 nextState;        // 0x24
-    s32 passes;           // 0x28
-    MovingSprite *shield; // 0x2C - SpawnShieldOrRocket's DINGODILE_SPAWN_MODE_SHIELD part
+    s32 step;      // 0x1C - the approach table's index
+    s32 timer;     // 0x20
+    s32 nextState; // 0x24
+    s32 passes;    // 0x28
+    Game::Entities::MovingSprite
+        *shield; // 0x2C - SpawnShieldOrRocket's DINGODILE_SPAWN_MODE_SHIELD part
 
     DingodileCtrl(u32 x, u32 y); // CreateDingodile
-    virtual void Update(MovingSprite *part);
+    virtual void Update(Game::Entities::MovingSprite *part);
     virtual ~DingodileCtrl(); // DestroyDingodile
     s32 GetHits();
-    void SetState(MovingSprite *part, s32 next);
-    void SpawnShieldOrRocket(s32 mode, u16 x, u16 y, MovingSprite *owner);
+    void SetState(Game::Entities::MovingSprite *part, s32 next);
+    void SpawnShieldOrRocket(s32 mode, u16 x, u16 y, Game::Entities::MovingSprite *owner);
     void SpawnShark(u16 x, u16 y, u8 facing);
-    void StartMotion(MovingSprite *part, s32 index);
+    void StartMotion(Game::Entities::MovingSprite *part, s32 index);
     void SetStep(s32 value);
     void SetNextState(s32 value);
 
@@ -349,12 +351,12 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(DingodileCtrl) == 0x30);
 class DingodileShieldCtrl : public BossCtrl
 {
 public:
-    s32 blinkTimer;      // 0x1C
-    s32 blinksLeft;      // 0x20
-    MovingSprite *owner; // 0x24 - Dingodile's part
+    s32 blinkTimer;                      // 0x1C
+    s32 blinksLeft;                      // 0x20
+    Game::Entities::MovingSprite *owner; // 0x24 - Dingodile's part
 
     DingodileShieldCtrl(); // CreateDingodileShieldCtrl
-    virtual void Update(MovingSprite *part);
+    virtual void Update(Game::Entities::MovingSprite *part);
     virtual ~DingodileShieldCtrl(); // DestroyDingodileShieldCtrl
 };
 
@@ -375,7 +377,7 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(DingodileShieldCtrl) == 0x28);
 class DingodileProjectileCtrl : public BossCtrl
 {
 public:
-    MovingSprite *owner; // 0x1C - Dingodile's part
+    Game::Entities::MovingSprite *owner; // 0x1C - Dingodile's part
 
     DingodileProjectileCtrl(); // CreateDingodileProjectileCtrl
     /* The stalactite's, from its rocket's (SpawnStalactite): inline, as
@@ -384,7 +386,7 @@ public:
     {
         owner = rocket->owner;
     }
-    virtual void Update(MovingSprite *part);
+    virtual void Update(Game::Entities::MovingSprite *part);
     virtual ~DingodileProjectileCtrl(); // DestroyDingodileProjectileCtrl
     void SpawnStalactite(u16 x, u16 y);
 };
@@ -402,7 +404,7 @@ class DingodileSharkCtrl : public Game::Enemies::EnemyCtrl
 {
 public:
     DingodileSharkCtrl(); // CreateDingodileSharkCtrl
-    virtual void Update(MovingSprite *part);
+    virtual void Update(Game::Entities::MovingSprite *part);
     virtual ~DingodileSharkCtrl(); // DestroyDingodileSharkCtrl
 };
 

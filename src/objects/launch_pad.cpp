@@ -26,6 +26,7 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Game::Entities::CollidableList;
 using Game::Objects::LaunchPad;
 
 /* The factory (the constructor inlined): places the pad at (x, y) pixels

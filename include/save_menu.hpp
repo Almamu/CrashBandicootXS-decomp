@@ -78,9 +78,9 @@ public:
     Engine::Save::SaveData *cartSave;       // 0x8C - the cartridge's save data
     Engine::Save::SaveData *linkSave;       // 0x90 - the save received over the link cable
     u8 unused_94[0xa8 - 0x94];              //
-    UiSprite *rowObjA[5];                   // 0xA8 - the slot list's gem icons
-    UiSprite *rowObjB[5];                   // 0xBC - its relic icons
-    UiSprite *rowObjC[5];                   // 0xD0 - its crystal icons
+    Game::Entities::UiSprite *rowObjA[5];   // 0xA8 - the slot list's gem icons
+    Game::Entities::UiSprite *rowObjB[5];   // 0xBC - its relic icons
+    Game::Entities::UiSprite *rowObjC[5];   // 0xD0 - its crystal icons
 
     SaveMenu();  // InitSaveMenu
     ~SaveMenu(); // DestroySaveMenu

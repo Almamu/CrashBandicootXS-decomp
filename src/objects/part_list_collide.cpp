@@ -15,6 +15,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Entities::MovingSprite;
+using Game::Entities::PartList;
+using Game::Entities::Sprite;
 using Game::Level::BgLayer;
 
 /* The part list's per-frame passes (#664, part 7c; include/part_list.hpp):

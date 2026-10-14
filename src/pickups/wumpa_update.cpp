@@ -14,6 +14,11 @@ extern "C" {
 }
 
 using Game::Crash::Player;
+using Game::Entities::Affine;
+using Game::Entities::ClampFrame;
+using Game::Entities::ForegroundList;
+using Game::Entities::Sprite;
+using Game::Entities::TouchableList;
 using Game::Level::EntitySpawner;
 using Game::Objects::Wumpa;
 

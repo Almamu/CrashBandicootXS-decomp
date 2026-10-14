@@ -406,17 +406,17 @@ SECTIONS
          * ROM order: g++ emits each as its class's
          * .gnu.linkonce.d._vt.<class> section in its key-method object.
          * See docs/cplusplus.md, "Emitting the vtables". */
-        build/crashbandicootxs/src/objects/entity.o(.gnu.linkonce.d._vt.6Entity); /* gEntityVtable */
-        build/crashbandicootxs/src/objects/sprite.o(.gnu.linkonce.d._vt.6Sprite); /* gSpriteObjVtable */
-        build/crashbandicootxs/src/objects/ui_sprite.o(.gnu.linkonce.d._vt.8UiSprite); /* gUiSpriteObjVtable */
-        build/crashbandicootxs/src/objects/moving_sprite_collide.o(.gnu.linkonce.d._vt.12MovingSprite); /* gMovingSpriteVtable */
-        build/crashbandicootxs/src/objects/ground_sprite_collide.o(.gnu.linkonce.d._vt.12GroundSprite); /* gGroundSpriteVtable */
+        build/crashbandicootxs/src/objects/entity.o(.gnu.linkonce.d._vt.Q34Game8Entities6Entity); /* gEntityVtable */
+        build/crashbandicootxs/src/objects/sprite.o(.gnu.linkonce.d._vt.Q34Game8Entities6Sprite); /* gSpriteObjVtable */
+        build/crashbandicootxs/src/objects/ui_sprite.o(.gnu.linkonce.d._vt.Q34Game8Entities8UiSprite); /* gUiSpriteObjVtable */
+        build/crashbandicootxs/src/objects/moving_sprite_collide.o(.gnu.linkonce.d._vt.Q34Game8Entities12MovingSprite); /* gMovingSpriteVtable */
+        build/crashbandicootxs/src/objects/ground_sprite_collide.o(.gnu.linkonce.d._vt.Q34Game8Entities12GroundSprite); /* gGroundSpriteVtable */
         build/crashbandicootxs/src/player/player_collide.o(.gnu.linkonce.d._vt.Q34Game5Crash6Player); /* gPlayerVtable */
-        build/crashbandicootxs/src/system/bios_util.o(.gnu.linkonce.d._vt.4Ctrl); /* gCtrlVtable */
+        build/crashbandicootxs/src/system/bios_util.o(.gnu.linkonce.d._vt.Q34Game8Entities4Ctrl); /* gCtrlVtable */
         build/crashbandicootxs/src/enemies/enemy_ctrl_update.o(.gnu.linkonce.d._vt.Q34Game7Enemies9EnemyCtrl); /* gEnemyCtrlVtable */
         build/crashbandicootxs/src/enemies/periodic_spawner.o(.gnu.linkonce.d._vt.Q34Game7Enemies15PeriodicSpawner); /* gPeriodicSpawnerVtable */
         build/crashbandicootxs/src/enemies/knocked_enemy_ctrl.o(.gnu.linkonce.d._vt.Q34Game7Enemies16KnockedEnemyCtrl); /* gKnockedEnemyCtrlVtable */
-        build/crashbandicootxs/src/objects/effect_ctrl.o(.gnu.linkonce.d._vt.10EffectCtrl); /* gEffectCtrlVtable */
+        build/crashbandicootxs/src/objects/effect_ctrl.o(.gnu.linkonce.d._vt.Q34Game8Entities10EffectCtrl); /* gEffectCtrlVtable */
         build/crashbandicootxs/src/crates/crate_update.o(.gnu.linkonce.d._vt.Q34Game6Crates5Crate); /* gCrateVtable */
         build/crashbandicootxs/src/pickups/extra_life.o(.gnu.linkonce.d._vt.Q34Game7Objects9ExtraLife); /* gExtraLifeVtable */
         build/crashbandicootxs/src/pickups/wumpa.o(.gnu.linkonce.d._vt.Q34Game7Objects5Wumpa); /* gWumpaVtable */

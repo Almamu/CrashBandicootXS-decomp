@@ -5,6 +5,11 @@ extern "C" {
 #include "memory.h"
 }
 
+using Game::Entities::Ctrl;
+using Game::Entities::GroundSprite;
+using Game::Entities::MovingSprite;
+using Game::Entities::Sprite;
+
 /* GroundSprite's update (#664, include/sprite_obj.hpp). */
 
 /* Keeps the side of the hitbox the sprite rests on in place when the

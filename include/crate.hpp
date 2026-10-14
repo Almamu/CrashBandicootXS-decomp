@@ -144,7 +144,7 @@ namespace Crates
  * `tag` the animation, `frame` its step (FinishBrokenCrate blasts on the
  * first tick of `stepTimer`), and `animDone` set once it ends (UpdateCrate
  * then resets `frame` and clears the busy bit). */
-class Crate : public Sprite
+class Crate : public Game::Entities::Sprite
 {
 public:
     s32 fallTargetY;   // 0x40 - Q8 y the crate lands at (DropCratesAbove sets it;

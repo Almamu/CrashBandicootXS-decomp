@@ -11,6 +11,7 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Entities::ClampFrame;
 using Game::Objects::Wumpa;
 
 /* The wumpa's flight to the HUD, payout start and hop, and its small

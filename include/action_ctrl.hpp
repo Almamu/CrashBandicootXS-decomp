@@ -33,7 +33,7 @@ namespace Crash
  * ACTION_STATE_* id), then applies the queued motion entries (ApplyMotion):
  * `motionX`/`motionY` name rows of the entry set (`animSet`), applied with
  * the speed kept (SetTargetMotion*) or restarted (StartTargetMotion*). */
-class ActionCtrl : public Ctrl
+class ActionCtrl : public Game::Entities::Ctrl
 {
 public:
     Player *part; // 0x10 - the player (Attach)
@@ -85,13 +85,13 @@ public:
 
     /* gActionCtrlVtable's slots; slots 5-8, 11 and 12 are Ctrl's.
      * HandleEvent is in src/player/action_ctrl_event.cpp. */
-    ActionCtrl();                                            // InitActionCtrl
-    virtual void Update(MovingSprite *unused);               // 1
-    virtual void HandleEvent(s32 from, s32 event, s32 arg);  // 2
-    virtual void Attach(MovingSprite *owner);                // 3
-    virtual void SetMode(s32 mode);                          // 4
-    virtual ~ActionCtrl();                                   // 9 DestroyActionCtrl
-    virtual s32 SetTargetAnim(MovingSprite *part, s32 anim); // 10
+    ActionCtrl();                                                            // InitActionCtrl
+    virtual void Update(Game::Entities::MovingSprite *unused);               // 1
+    virtual void HandleEvent(s32 from, s32 event, s32 arg);                  // 2
+    virtual void Attach(Game::Entities::MovingSprite *owner);                // 3
+    virtual void SetMode(s32 mode);                                          // 4
+    virtual ~ActionCtrl();                                                   // 9 DestroyActionCtrl
+    virtual s32 SetTargetAnim(Game::Entities::MovingSprite *part, s32 anim); // 10
 
     /* The motion queue stores as the methods have them inlined: the
      * values are computed before the three stores. QueueX/QueueY set all

@@ -2,6 +2,8 @@
 #include "player.hpp"
 
 using Game::Crash::Player;
+using Game::Entities::Ctrl;
+using Game::Entities::MovingSprite;
 using Game::Objects::PlatformMover;
 
 /* PlatformMover, the moving platforms' controller (#664,

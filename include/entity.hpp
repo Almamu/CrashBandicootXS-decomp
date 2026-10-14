@@ -14,7 +14,11 @@
  * the out-of-line copies of the inline virtual ones. The vtable it emits
  * is a weak symbol in a `.gnu.linkonce.d` section, which ldscript.txt
  * places at gEntityVtable's ROM address (docs/cplusplus.md, "Emitting
- * the vtables"). */
+ * the vtables").
+ *
+ * The class is in the namespace Game::Entities (#1033, docs/cplusplus.md
+ * "Namespaces"), with the sprite classes: `_vt.Q34Game8Entities6Entity`.
+ * The C-linkage SetEntityPixelPos and SetEntityPos (below) stay global. */
 
 #include "entity_flags.hpp"
 
@@ -28,6 +32,11 @@ extern "C" {
 }
 
 /* union EntityFlags, the flags at +0x0C, is actor.h's. */
+
+namespace Game
+{
+namespace Entities
+{
 
 /* The entity: a position, the spawn's id, a kind, the flags and a size;
  * then the vtable pointer. Each
@@ -227,12 +236,15 @@ public:
 
 COMPILE_TIME_ASSERT(entity_hpp, sizeof(Entity) == 0x1C);
 
+} // namespace Entities
+} // namespace Game
+
 /* entity.cpp's out-of-line copies of SetPixelPos and SetPos (above),
  * under their C names (cxx_symbols.txt). The ROM calls them out of line
  * from other files (the level select's sprites, the HUD, the crates, the
  * rooms...), where a call to the inline method would be inlined, so those
  * files call these. */
-extern "C" void SetEntityPixelPos(Entity *self, s32 x, s32 y);
-extern "C" void SetEntityPos(Entity *self, s32 x, s32 y);
+extern "C" void SetEntityPixelPos(Game::Entities::Entity *self, s32 x, s32 y);
+extern "C" void SetEntityPos(Game::Entities::Entity *self, s32 x, s32 y);
 
 #endif /* !GUARD_ENTITY_HPP */

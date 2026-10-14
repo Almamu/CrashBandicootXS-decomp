@@ -26,6 +26,8 @@ using Game::Bosses::BossCtrl;
 using Game::Bosses::Hovercraft;
 using Game::Crash::Player;
 using Game::Crates::Crate;
+using Game::Entities::Sprite;
+using Game::Entities::TouchableList;
 using Game::Level::GameProgress;
 using Game::Level::LevelEntityFlags;
 using Game::Level::LevelProgress;

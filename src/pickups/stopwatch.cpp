@@ -11,6 +11,7 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Entities::Sprite;
 using Game::Objects::Stopwatch;
 
 /* The stopwatch, the time trial's pickup (#664, include/pickups.hpp).

@@ -63,7 +63,7 @@ class PlatformMover;
  * Neo Cortex fight's are these) and 7 (the rock platform) get a
  * PlatformMover; 2-4 are the warp platforms (the level exit, the bonus
  * round, the gem path). */
-class Platform : public MovingSprite
+class Platform : public Game::Entities::MovingSprite
 {
 public:
     s32 type; // 0x78
@@ -112,7 +112,7 @@ COMPILE_TIME_ASSERT(platform_hpp, sizeof(Platform) == 0x80);
  * platform's type (5, 6 and 7 add timed behaviour, see Update). The Neo
  * Cortex fight's platforms have a subclass (CortexBossPlatformMover,
  * below). */
-class PlatformMover : public Ctrl
+class PlatformMover : public Game::Entities::Ctrl
 {
 public:
     s32 kind;   // 0x10 - the platform type
@@ -128,15 +128,15 @@ public:
     u8 active;  // 0x32 - the player stands on the platform
     u32 time;   // 0x34 - type 6: the frame its animation runs again
 
-    PlatformMover(s32 distX, s32 distY, bool dirX, bool dirY, s32 kind);   // CreatePlatformMover
-    virtual void Update(MovingSprite *part);                               // 1 UpdatePlatformMover
-    virtual ~PlatformMover();                                              // 9 DestroyPlatformMover
-    virtual void StartTargetMotionXFromSet(MovingSprite *part, s32 index); // 11
-    virtual void StartTargetMotionYFromSet(MovingSprite *part, s32 index); // 12
+    PlatformMover(s32 distX, s32 distY, bool dirX, bool dirY, s32 kind); // CreatePlatformMover
+    virtual void Update(Game::Entities::MovingSprite *part);             // 1 UpdatePlatformMover
+    virtual ~PlatformMover();                                            // 9 DestroyPlatformMover
+    virtual void StartTargetMotionXFromSet(Game::Entities::MovingSprite *part, s32 index); // 11
+    virtual void StartTargetMotionYFromSet(Game::Entities::MovingSprite *part, s32 index); // 12
 
-    void MovePlayer(MovingSprite *part); // MovePlayerWithPlatform
-    void SetTargetMotionYFromSet(MovingSprite *part, s32 index);
-    void SetTargetMotionXFromSet(MovingSprite *part, s32 index);
+    void MovePlayer(Game::Entities::MovingSprite *part); // MovePlayerWithPlatform
+    void SetTargetMotionYFromSet(Game::Entities::MovingSprite *part, s32 index);
+    void SetTargetMotionXFromSet(Game::Entities::MovingSprite *part, s32 index);
     void ClearActive();
 };
 
@@ -162,7 +162,7 @@ class CortexBossPlatformMover : public Game::Objects::PlatformMover
 {
 public:
     CortexBossPlatformMover(); // CreateCortexBossPlatformMover
-    virtual void Update(MovingSprite *part);
+    virtual void Update(Game::Entities::MovingSprite *part);
     virtual ~CortexBossPlatformMover(); // DestroyCortexBossPlatformMover
 };
 

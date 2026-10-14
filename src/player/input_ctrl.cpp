@@ -15,6 +15,8 @@ extern "C" {
 
 using Game::Crash::InputCtrl;
 using Game::Crash::Player;
+using Game::Entities::CollidableList;
+using Game::Entities::MovingSprite;
 using Game::Level::LevelProgress;
 using Game::Objects::CameraLead;
 

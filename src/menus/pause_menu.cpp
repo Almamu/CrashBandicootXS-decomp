@@ -17,6 +17,7 @@ extern "C" {
 
 using Engine::Gfx::PaletteCache;
 using Engine::Sys::FrameLimiter;
+using Game::Entities::UiSprite;
 using Game::Ui::PauseMenu;
 
 /* The pause menu (PauseMenu, menus.hpp; docs/rom_map.md's "overlay_ui"

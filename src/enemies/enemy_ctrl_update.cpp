@@ -16,6 +16,7 @@ extern "C" {
 using Game::Crash::Player;
 using Game::Enemies::EnemyCtrl;
 using Game::Enemies::KnockedEnemyCtrl;
+using Game::Entities::MovingSprite;
 using Game::Level::EntitySpawner;
 
 /* EnemyCtrl's Update (UpdateEnemyCtrl, gEnemyCtrlVtable slot 1) and

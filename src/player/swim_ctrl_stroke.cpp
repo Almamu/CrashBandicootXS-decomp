@@ -13,6 +13,7 @@ extern "C" {
 
 using Game::Crash::Player;
 using Game::Crash::SwimCtrl;
+using Game::Entities::MovingSprite;
 using Game::Level::EntitySpawner;
 
 /* The swim controller's (SwimCtrl, include/swim_ctrl.hpp) Reset and

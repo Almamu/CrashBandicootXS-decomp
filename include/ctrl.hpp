@@ -12,15 +12,21 @@
  * cxx_symbols.txt maps the mangled vtable, method, constructor and
  * destructor names onto their C names.
  *
- * Ctrl and EffectCtrl are global; Tiny's StompedHopPadCtrl and
- * OneShotAnimCtrl are in the namespace Game::Bosses (#1033,
- * boss_ctrl.hpp). */
+ * Ctrl and EffectCtrl are in the namespace Game::Entities (#1033,
+ * docs/cplusplus.md "Namespaces"), with the entity classes
+ * (`_vt.Q34Game8Entities4Ctrl`); Tiny's StompedHopPadCtrl and
+ * OneShotAnimCtrl are in the namespace Game::Bosses (boss_ctrl.hpp). */
 
 extern "C" {
 #include "core.h"
 #include "objects.h"
 #include "bosses.h"
 }
+
+namespace Game
+{
+namespace Entities
+{
 
 class MovingSprite;
 
@@ -76,6 +82,9 @@ public:
 
 COMPILE_TIME_ASSERT(ctrl_hpp, sizeof(EffectCtrl) == 0x10);
 
+} // namespace Entities
+} // namespace Game
+
 namespace Game
 {
 namespace Bosses
@@ -88,11 +97,11 @@ namespace Bosses
 #define STOMPED_HOP_PAD_STATE_START 0 // TINY_STATE_STOMP_PAD swapped it in: animation 8, then SINK
 #define STOMPED_HOP_PAD_STATE_SINK 1  // sinks 4 px a frame until below the level, then GONE
 #define STOMPED_HOP_PAD_STATE_GONE 2  // nothing runs
-class StompedHopPadCtrl : public Ctrl
+class StompedHopPadCtrl : public Game::Entities::Ctrl
 {
 public:
     StompedHopPadCtrl(); // CreateStompedHopPadCtrl
-    virtual void Update(MovingSprite *part);
+    virtual void Update(Game::Entities::MovingSprite *part);
     virtual ~StompedHopPadCtrl(); // DestroyStompedHopPadCtrl
 };
 
@@ -101,11 +110,11 @@ COMPILE_TIME_ASSERT(ctrl_hpp, sizeof(StompedHopPadCtrl) == 0x10);
 /* A controller that marks its sprite object gone once the animation has
  * played through (gOneShotAnimCtrlVtable). Its Update is in
  * src/bosses/tiny.cpp, with its constructor and destructor. */
-class OneShotAnimCtrl : public Ctrl
+class OneShotAnimCtrl : public Game::Entities::Ctrl
 {
 public:
     OneShotAnimCtrl();
-    virtual void Update(MovingSprite *part);
+    virtual void Update(Game::Entities::MovingSprite *part);
     virtual ~OneShotAnimCtrl();
 };
 

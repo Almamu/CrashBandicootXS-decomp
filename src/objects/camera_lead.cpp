@@ -26,6 +26,8 @@ extern "C" {
 }
 
 using Game::Crash::Player;
+using Game::Entities::MovingSprite;
+using Game::Entities::Sprite;
 using Game::Objects::CameraLead;
 
 /* The motion axes and the probe's hit axes, through an inline: both

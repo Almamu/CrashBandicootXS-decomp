@@ -9,6 +9,8 @@ extern "C" {
 
 using Game::Crash::ActionCtrl;
 using Game::Crash::Player;
+using Game::Entities::Ctrl;
+using Game::Entities::MovingSprite;
 
 /* ActionCtrl's small methods (include/action_ctrl.hpp, gActionCtrlVtable;
  * #664, docs/cplusplus.md): the empty and forwarding state methods, the

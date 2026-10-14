@@ -6,6 +6,7 @@ extern "C" {
 
 using Game::Bosses::DingodileCtrl;
 using Game::Bosses::DingodileShieldCtrl;
+using Game::Entities::MovingSprite;
 
 /* GitHub issue #25, ROM 0x0801A794-0x0801A878 (see
  * docs/matching/archive/issue-25-level-objects.md): DingodileShieldCtrl's

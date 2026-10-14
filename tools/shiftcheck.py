@@ -57,7 +57,7 @@ SHIFTS = [
     ("sound", "data/data.o(.rodata.084C0006)", 0x1),
     ("sound_even", "data/data.o(.rodata.084C0006)", 0x2),
     ("level_assets", "src/data/level_assets_64f830.o(.rodata)", 0x100),
-    ("vtables", "entity.o(.gnu.linkonce.d._vt.6Entity)", 0x3),
+    ("vtables", "entity.o(.gnu.linkonce.d._vt.Q34Game8Entities6Entity)", 0x3),
 ]
 
 # Words that no relocation covers and that hold a symbol's address by

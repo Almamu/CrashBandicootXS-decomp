@@ -6,6 +6,8 @@ extern "C" {
 #include "level.h"
 }
 
+using Game::Entities::MovingSprite;
+
 /* MovingSprite's step probe (#664, include/sprite_obj.hpp). */
 
 /* Probes the terrain along the edge of the sprite's hitbox `quad` that

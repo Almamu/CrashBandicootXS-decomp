@@ -7,6 +7,7 @@ extern "C" {
 }
 
 using Game::Enemies::EnemyCtrl;
+using Game::Entities::MovingSprite;
 
 /* EnemyCtrl's motion updaters (include/enemy_ctrl.hpp), from the
  * 0x0800B8DC-0x0800D040 cluster

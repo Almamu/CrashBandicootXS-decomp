@@ -12,6 +12,7 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Entities::Sprite;
 using Game::Level::BgLayer;
 using Game::Level::EntitySpawner;
 

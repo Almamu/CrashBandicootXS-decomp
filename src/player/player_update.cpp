@@ -17,6 +17,10 @@ extern "C" {
 
 using Game::Crash::Player;
 using Game::Crates::CollisionQueue;
+using Game::Entities::CollidableList;
+using Game::Entities::GroundSprite;
+using Game::Entities::Sprite;
+using Game::Entities::TouchableList;
 using Game::Level::EntitySpawner;
 using Game::Level::LevelProgress;
 using Game::Level::LevelState;

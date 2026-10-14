@@ -7,6 +7,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Entities::MovingSprite;
+using Game::Entities::Sprite;
+using Game::Entities::TouchableList;
 using Game::Level::EntitySpawner;
 using Game::Objects::Pickups;
 

@@ -11,6 +11,7 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Entities::UiSprite;
 using Game::Ui::PauseMenu;
 
 /* PauseMenu's Animate, Draw and DrawRows (menus.hpp; C++ since the #664

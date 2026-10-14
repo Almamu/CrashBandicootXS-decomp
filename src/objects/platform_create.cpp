@@ -8,6 +8,7 @@ extern "C" {
 }
 
 using Game::Bosses::CortexBossPlatformMover;
+using Game::Entities::TouchableList;
 using Game::Objects::Platform;
 using Game::Objects::PlatformMover;
 

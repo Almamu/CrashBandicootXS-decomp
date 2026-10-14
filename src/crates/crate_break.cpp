@@ -20,6 +20,7 @@ extern "C" {
 using Game::Crash::Player;
 using Game::Crates::CollisionQueue;
 using Game::Crates::Crate;
+using Game::Entities::MovingSprite;
 using Game::Level::EntitySpawner;
 using Game::Level::LevelEntityFlags;
 using Game::Objects::Wumpa;

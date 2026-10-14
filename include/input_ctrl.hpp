@@ -38,7 +38,7 @@ namespace Crash
  * target's motion entries (up/down pick `motionY`, left/right `motionX`
  * and the camera lead's speed), runs the state method (`stateFuncs`) and
  * applies the queued motion (ApplyMotion). */
-class InputCtrl : public Ctrl
+class InputCtrl : public Game::Entities::Ctrl
 {
 public:
     Player *target;      // 0x10
@@ -58,11 +58,11 @@ public:
     typedef void (InputCtrl::*StateFunc)();
     static const StateFunc stateFuncs[4];
 
-    InputCtrl();                                            // CreateInputCtrl
-    virtual void Update(MovingSprite *part);                // 1
-    virtual void HandleEvent(s32 from, s32 event, s32 arg); // 2
-    virtual void Attach(MovingSprite *owner);               // 3
-    virtual ~InputCtrl();                                   // 9 DestroyInputCtrl
+    InputCtrl();                                              // CreateInputCtrl
+    virtual void Update(Game::Entities::MovingSprite *part);  // 1
+    virtual void HandleEvent(s32 from, s32 event, s32 arg);   // 2
+    virtual void Attach(Game::Entities::MovingSprite *owner); // 3
+    virtual ~InputCtrl();                                     // 9 DestroyInputCtrl
     void KillPlayer(s32 anim);
     void StateStart();
     void ApplyMotion();

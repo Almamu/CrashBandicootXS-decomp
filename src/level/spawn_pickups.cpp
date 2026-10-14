@@ -16,6 +16,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Entities::Sprite;
+using Game::Entities::TouchableList;
 using Game::Objects::Pickups;
 using Game::Objects::Stopwatch;
 using Game::Objects::Wumpa;

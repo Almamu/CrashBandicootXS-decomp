@@ -1,6 +1,8 @@
 #include "boss_ctrl.hpp"
 
 using Game::Bosses::MegaMixCtrl;
+using Game::Entities::Ctrl;
+using Game::Entities::MovingSprite;
 
 /* GitHub issue #22, ROM 0x08017ECC-0x08017FE8 - non-adjacent to
  * airship_fireball.c since UpdateMegaMix (mega_mix_update.cpp) sits between

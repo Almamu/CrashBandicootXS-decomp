@@ -18,6 +18,7 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Entities::Entity;
 using Game::Level::BgLayer;
 
 /* Unless always active, whether its IsInsideRect a box around the camera

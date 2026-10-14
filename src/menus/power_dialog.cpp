@@ -13,6 +13,7 @@ extern "C" {
 
 using Engine::Sys::FrameLimiter;
 using Engine::Text::Font;
+using Game::Entities::UiSprite;
 using Game::Ui::PowerDialog;
 
 /* The power dialog (GitHub issue #8; PowerDialog, menus.hpp): a power's

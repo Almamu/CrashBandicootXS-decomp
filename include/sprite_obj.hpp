@@ -17,8 +17,9 @@
  * (InitSpriteObj, DestroySpriteObj, ...); cxx_symbols.txt maps them.
  *
  * A controller (ctrl.hpp and the rest) drives a MovingSprite: its `mover`
- * calls the controller's methods with itself (`P12MovingSprite` in their
- * mangled names, cxx_symbols.txt).
+ * calls the controller's methods with itself
+ * (`PQ34Game8Entities12MovingSprite` in their mangled names,
+ * cxx_symbols.txt).
  *
  * The fields keep their offsets in comments. No C file reads these
  * objects, and they have no C view: level.h's `struct camera_target` (the
@@ -27,7 +28,14 @@
  * No `#pragma interface`: g++ emits the vtables of Sprite (sprite.cpp),
  * UiSprite (ui_sprite.cpp), MovingSprite (moving_sprite_collide.cpp) and
  * GroundSprite (ground_sprite_collide.cpp), their key-method objects (see
- * ctrl.hpp). */
+ * ctrl.hpp).
+ *
+ * Entity (entity.hpp), the sprite classes and PartList are in the
+ * namespace Game::Entities (#1033, docs/cplusplus.md "Namespaces"), with
+ * the controllers' bases (ctrl.hpp) and the part list accessors
+ * (TouchableList and the others, below): `_vt.Q34Game8Entities6Sprite`,
+ * `Update__Q34Game8Entities8PartList`. The sprite graphics managers at
+ * the end of this file are Engine::Gfx's. */
 
 #include "entity.hpp"
 
@@ -45,15 +53,18 @@ extern "C" {
 #include "level.h"
 }
 
-class Ctrl;
-class MovingSprite;
 namespace Game
 {
 namespace Crash
 {
 class Player; // player.hpp
 } // namespace Crash
-} // namespace Game
+
+namespace Entities
+{
+
+class Ctrl;
+class MovingSprite;
 
 /* The sprite object (src/objects/sprite_obj.cpp, sprite.cpp,
  * sprite_obj.cpp; gSpriteObjVtable): an entity with a sprite bank
@@ -460,6 +471,9 @@ static inline PartList *ForegroundList()
     return gForegroundList;
 }
 
+} // namespace Entities
+} // namespace Game
+
 namespace Engine
 {
 namespace Gfx
@@ -596,10 +610,10 @@ class SpriteRenderer
 public:
     SpriteRenderer();  // InitSpriteRenderer
     ~SpriteRenderer(); // DestroySpriteRenderer
-    void DrawAt(Sprite *part, s32 x, s32 y);
-    void Draw(Sprite *part);
-    void DrawPieces(Sprite *part, s32 *pos);       // DrawSpritePieces
-    void DrawAffinePieces(Sprite *part, s32 *pos); // DrawAffineSpritePieces
+    void DrawAt(Game::Entities::Sprite *part, s32 x, s32 y);
+    void Draw(Game::Entities::Sprite *part);
+    void DrawPieces(Game::Entities::Sprite *part, s32 *pos);       // DrawSpritePieces
+    void DrawAffinePieces(Game::Entities::Sprite *part, s32 *pos); // DrawAffineSpritePieces
 };
 
 } // namespace Gfx

@@ -16,6 +16,7 @@ extern "C" {
 using Engine::Sys::KeyInput;
 using Game::Crash::ActionCtrl;
 using Game::Crash::Player;
+using Game::Entities::MovingSprite;
 using Game::Level::EntitySpawner;
 
 /* ActionCtrl's CheckLeftGround (include/action_ctrl.hpp; #664,

@@ -24,8 +24,9 @@
  * are in the namespace Game::Objects (#1033, docs/cplusplus.md
  * "Namespaces"), with the platforms (platform.hpp), the launch pad and
  * the camera lead (level_select.hpp): `_vt.Q34Game7Objects5Wumpa`. The
- * inline helpers ClampFrame and Affine, `struct three_words` and the
- * hop width tables stay global. */
+ * inline helpers ClampFrame and Affine work on any Sprite (the crates
+ * use ClampFrame too), so they are in Game::Entities, with the sprite
+ * classes; `struct three_words` and the hop width tables stay global. */
 
 #include "sprite_obj.hpp"
 
@@ -44,6 +45,11 @@ struct three_words {
 extern const struct three_words gExtraLifeHopWidths;
 extern const struct three_words gWumpaHopWidths;
 
+namespace Game
+{
+namespace Entities
+{
+
 /* Sets `frame` to the animation's first step: 0, or the last one
  * (frameCount - 1) if that is lower. */
 static inline void ClampFrame(Sprite *part)
@@ -61,6 +67,9 @@ static inline s32 Affine(Sprite *part)
 {
     return part->affine;
 }
+
+} // namespace Entities
+} // namespace Game
 
 /* The extra life's and the wumpa's `mode` (#843, docs/flags/pickups.md):
  * how it moves on the spot. A hop's x offset scale is
@@ -107,7 +116,7 @@ namespace Objects
  * until the player touches it (CheckPickup); then it flies off (`state` 1:
  * to the HUD's lives counter, adding a life when it gets there; 2: off
  * the screen), stepping `velX`/`velY` and Sprite's `affine` halfword. */
-class ExtraLife : public Sprite
+class ExtraLife : public Game::Entities::Sprite
 {
 public:
     s32 velX;           // 0x40 - the flight's step (Q8 per frame)
@@ -166,7 +175,7 @@ COMPILE_TIME_ASSERT(pickups_hpp, sizeof(ExtraLife) == 0x54);
 #define WUMPA_STATE_TO_HUD 1  // flies to the HUD's wumpa counter, collected there
 #define WUMPA_STATE_FLY_OFF 2 // flies off the screen (`counter`: which way), gone
 #define WUMPA_STATE_PAYOUT 3  // stays at the player, dropping 10 wumpas to the HUD
-class Wumpa : public Sprite
+class Wumpa : public Game::Entities::Sprite
 {
 public:
     s32 velX;           // 0x40
@@ -224,7 +233,7 @@ COMPILE_TIME_ASSERT(pickups_hpp, sizeof(Wumpa) == 0x54);
 /* The time trial's stopwatch (gStopwatchVtable): a plain sprite, updated
  * while the player is within 0x180 pixels and gone once the player is
  * farther. */
-class Stopwatch : public Sprite
+class Stopwatch : public Game::Entities::Sprite
 {
 public:
     Stopwatch();           // InitStopwatch

@@ -21,6 +21,7 @@ using Engine::Sys::KeyInput;
 using Game::Crash::ActionCtrl;
 using Game::Crash::Player;
 using Game::Crates::Crate;
+using Game::Entities::MovingSprite;
 using Game::Level::LevelProgress;
 
 /* ActionCtrl's state methods for leaving the ground, dying, warping in

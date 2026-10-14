@@ -19,6 +19,8 @@ extern "C" {
 #include "constants/themes.h"
 }
 
+using Game::Entities::Sprite;
+using Game::Entities::UiSprite;
 using Game::Ui::ZoomBg;
 
 /* Setters as the original's inline member functions: storing a parameter

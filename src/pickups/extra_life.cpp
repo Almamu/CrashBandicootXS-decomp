@@ -13,6 +13,10 @@ extern "C" {
 }
 
 using Game::Crash::Player;
+using Game::Entities::Affine;
+using Game::Entities::ClampFrame;
+using Game::Entities::Sprite;
+using Game::Entities::TouchableList;
 using Game::Objects::ExtraLife;
 
 /* The extra life (#664, include/pickups.hpp). An old_agbcp object
