@@ -12,6 +12,8 @@ extern "C" {
 #include "objects.h"
 }
 
+using Game::Crash::Player;
+
 /* CrateList::Collide and CollideWithPlayer (#664, part 7f;
  * include/crate_list.hpp), PartList's Collide and CollideWithPlayer
  * (part_list_collide.cpp) for the grid. An old_agbcp object (OLD_AGBCC_OBJS).

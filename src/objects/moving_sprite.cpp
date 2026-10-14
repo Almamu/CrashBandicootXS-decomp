@@ -9,6 +9,8 @@ extern "C" {
 #include "memory.h"
 }
 
+using Game::Crash::Player;
+
 /* MovingSprite's contact with the player (#664, include/sprite_obj.hpp). */
 
 /* IsPlayerInvulnerable, inlined: the player's invulnerability deadline is

@@ -9,6 +9,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Game::Crash::Player;
+
 /* Player::HasRoomForAnim (include/player.hpp; PlayerHasRoomForAnim): the
  * action controller's states ask it before an animation with a taller box
  * (a stand-up from the crawl, the crouch's jump). */

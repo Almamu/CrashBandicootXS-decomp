@@ -14,6 +14,8 @@ extern "C" {
 }
 
 using Engine::Sys::KeyInput;
+using Game::Crash::ActionCtrl;
+using Game::Crash::Player;
 
 /* ActionCtrl's CheckLeftGround (include/action_ctrl.hpp; #664,
  * docs/cplusplus.md). Built by old_agbcp (the Makefile's OLD_AGBCC_OBJS):

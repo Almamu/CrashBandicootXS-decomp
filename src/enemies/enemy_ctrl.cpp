@@ -12,6 +12,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Game::Crash::Player;
+
 /* GitHub issue #9/#10: EnemyCtrl's attack updaters and state setter
  * (include/enemy_ctrl.hpp), from the 0x0800B8DC-0x0800D040 cluster
  * (docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md). The whole

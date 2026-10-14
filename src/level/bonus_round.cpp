@@ -13,6 +13,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Crash::Player;
+
 /* Called at level start/checkpoint-restore: `cleared` (UpdateGameFrame
  * passes whether the bonus room's exit status is ROOM_EXIT_CLEARED)
  * selects whether to

@@ -9,6 +9,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Game::Crash::Player;
+
 /* Player::CheckPlayerContact (include/player.hpp; CollidePlayer): the
  * player's collision with the objects and the terrain. Built by old_agbcp
  * (the `movs #0x40`/`movs #8` before their `ldrb`). */

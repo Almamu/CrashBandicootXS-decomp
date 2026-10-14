@@ -17,6 +17,8 @@ extern "C" {
 #include "sprite_bank.h"
 }
 
+using Game::Crash::Player;
+
 /* The crate's hits, breaks and explosions (#664, include/crate.hpp,
  * part 7g): the player's hit on a crate (QueuePlayerCollision, resolved
  * later by ApplyCollision), what each kind of crate does when it breaks

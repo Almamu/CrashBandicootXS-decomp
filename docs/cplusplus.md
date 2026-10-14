@@ -444,7 +444,7 @@ Crash-specific game code is explicit (it also helps the portable port,
 | `Engine::Actor` | the actor category driver, ActorSpawns, ActorCategoryStats, ActorBg, ActorPaletteCycle, CollectedSpawns |
 | `Engine::Text` | fonts, wrapped text |
 | `Engine::Util` | helpers |
-| `Game::Player` | player, input, action ctrl |
+| `Game::Crash` | player, input, action ctrl |
 | `Game::Enemies` | |
 | `Game::Bosses` | |
 | `Game::Vehicles` | `Jetpack::`, `Polar::` (Yeti, Airship, ...) |
@@ -516,6 +516,11 @@ checks the change is only a rename:
   (`struct dma_queue queue;`): the C struct must be declared before it,
   or the class gets a new `Engine::Sys::dma_queue`, which cxx_rename.py
   shows as a renamed parameter type.
+- **Never name a namespace after a class it contains.** Inside a sibling
+  namespace, the plain class name would find the namespace (in the
+  enclosing namespace, before the global using declaration), and g++
+  stops with "use of namespace ... as expression". That is why the
+  player's namespace is `Game::Crash`, not `Game::Player`.
 - **Generated code** (tools/levels.py, tools/gfx_manifest.py) emits its
   classes and their cxx_symbols.txt names in their namespace.
 
@@ -527,7 +532,7 @@ checks the change is only a rename:
   renamed, no code change. Boundary calls: `KeyInput`, which the layout
   doesn't list, reads only the keys (gKeys, REG_KEYINPUT) and knows
   nothing of the game, so it is engine, next to the IRQs ("input" in
-  `Game::Player` is the player's InputCtrl). Display and VramDmaQueue
+  `Game::Crash` is the player's InputCtrl). Display and VramDmaQueue
   live in src/gfx/ but are listed under `Engine::Sys`. The BIOS helpers
   (DivMod, MemCopy32) are C-linkage functions of system.h and stay
   global; bios_util.cpp's other function, `Ctrl::Update`, is the
@@ -638,6 +643,29 @@ checks the change is only a rename:
   crates, the level or the player, so by their dependencies they are
   engine helpers, next to src/util/'s StepBresenhamLine. No name hiding:
   no global is named `Util` or like the two functions.
+- **`Game::Crash`** (`Q34Game5Crash`): `Player` (player.hpp) and its
+  controllers `ActionCtrl` (action_ctrl.hpp, with its three inline
+  helpers IsSlippery, ActAndFlags0D and ActOrFlags0D), `SwimCtrl`
+  (swim_ctrl.hpp) and `InputCtrl` (input_ctrl.hpp): all of src/player/.
+  202 symbols renamed, among them the four vtables
+  (`_vt.Q34Game5Crash6Player`, ...), no code change. Their sections are
+  renamed too (`.gnu.linkonce.d._vt.Q34Game5Crash6Player`), so
+  ldscript.txt's four lines that place them are updated by hand.
+  globals.h (gPlayer), player.hpp (gSwimCtrl) and sprite_obj.hpp
+  (MovingSprite::AsPlayer) forward declare the classes in the namespace;
+  39 .cpp files name them with using declarations. The C structs
+  (`speed_table`, `level_anim`), the data tables and the controllers'
+  defines stay global. The layout's name, `Game::Player`, would name the
+  namespace after its class (the rule above), so it is `Game::Crash`,
+  after the player character. Boundary calls: `Ctrl`, the
+  controllers' base (ctrl.hpp), stays global: the enemies', bosses' and
+  objects' controllers derive from it too, so it isn't the player's; nor
+  are ctrl.hpp's EffectCtrl, StompedHopPadCtrl and OneShotAnimCtrl. "Input"
+  in the layout is the player's InputCtrl (the D-pad ride controller);
+  the key reader KeyInput is `Engine::Sys`'s. No name hiding: the
+  namespace holds only classes and the three inline helpers, and no
+  global is named like them; the only global named `Player` was the
+  class itself.
 
 ## Progress
 

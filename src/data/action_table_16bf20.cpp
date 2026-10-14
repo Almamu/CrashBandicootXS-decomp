@@ -1,5 +1,7 @@
 #include "action_ctrl.hpp"
 
+using Game::Crash::ActionCtrl;
+
 /*
  * ROM 0x0816BF20-0x0816C090: the player's per-action dispatch table and
  * the per-mode animation-row table that follows it. Linked in ROM order

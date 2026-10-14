@@ -11,6 +11,9 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Game::Crash::Player;
+using Game::Crash::SwimCtrl;
+
 /* The swim controller's (SwimCtrl, include/swim_ctrl.hpp) Reset and
  * Restart, then its three jump-table dispatchers. Reset and Restart were
  * the end of action_ctrl.cpp (agbcp), which they follow in the ROM, until

@@ -8,6 +8,7 @@ extern "C" {
 }
 
 using Engine::Sys::KeyInput;
+using Game::Crash::ActionCtrl;
 
 /* Three of ActionCtrl's state methods, the landings (include/
  * action_ctrl.hpp; #664, docs/cplusplus.md). */

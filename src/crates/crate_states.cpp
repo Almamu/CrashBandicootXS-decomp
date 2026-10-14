@@ -18,6 +18,8 @@ extern "C" {
 #include "sprite_bank.h"
 }
 
+using Game::Crash::Player;
+
 /* The crate's per-state ticks (#664, include/crate.hpp, part 7g): a
  * breaking crate's (FinishBroken), the TNT countdown, the slot crate's and
  * the fall's, ROM 0x0800F798-0x0800FDC8: the end of crate_break.cpp's

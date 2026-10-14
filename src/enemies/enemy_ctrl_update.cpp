@@ -13,6 +13,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Game::Crash::Player;
+
 /* EnemyCtrl's Update (UpdateEnemyCtrl, gEnemyCtrlVtable slot 1) and
  * HandleEvent (HitEnemy, slot 2), include/enemy_ctrl.hpp. They sit next
  * to each other in the ROM; neither calls the other directly (state 11

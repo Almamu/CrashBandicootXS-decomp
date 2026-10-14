@@ -5,6 +5,9 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Crash::Player;
+using Game::Crash::SwimCtrl;
+
 /* GitHub issue #19: continuation of action_ctrl.cpp's chunk
  * (0x08015840-0x08016128), non-adjacent since
  * `StartStroke`/`StartSpin`/`ApplySwimDrift` (swim_ctrl_stroke.cpp)

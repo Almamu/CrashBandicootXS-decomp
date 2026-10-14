@@ -25,6 +25,8 @@ extern "C" {
 #include "math_util.h"
 }
 
+using Game::Crash::Player;
+
 /* The motion axes and the probe's hit axes, through an inline: both
  * values come first, and the second address is the first one's plus
  * 0x44, as in the ROM. */

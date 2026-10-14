@@ -12,6 +12,8 @@ extern "C" {
 #include "globals.h"
 }
 
+using Game::Crash::Player;
+
 /* The extra life (#664, include/pickups.hpp). An old_agbcp object
  * (OLD_AGBCC_OBJS). The wumpa's CheckPickup, which the ROM puts right
  * after it, starts wumpa_update.cpp. */

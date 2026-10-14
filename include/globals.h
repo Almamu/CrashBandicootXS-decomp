@@ -137,7 +137,15 @@ extern class CrateList *gCrateList;
 /* sym_iwram.txt: the player object, built by PlayRoom: a Player
  * (player.hpp). No C file uses it. */
 #ifdef __cplusplus
-extern class Player *gPlayer;
+/* In its namespace (docs/cplusplus.md, "Namespaces"). */
+namespace Game
+{
+namespace Crash
+{
+class Player;
+} // namespace Crash
+} // namespace Game
+extern Game::Crash::Player *gPlayer;
 #endif
 
 /* src/data/boss_pictures_167ad4.cpp: a full turn in 256 steps, scaled by 0x100. */

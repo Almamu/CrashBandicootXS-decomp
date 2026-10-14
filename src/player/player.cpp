@@ -6,6 +6,8 @@ extern "C" {
 #include "actor.h"
 }
 
+using Game::Crash::Player;
+
 /* The player's constructor (Player, include/player.hpp; InitPlayer).
  * g++ constructs the ground sprite (InitGroundSprite), stores the vtable
  * pointer and constructs the collision queue (ResetCollisionQueue, which

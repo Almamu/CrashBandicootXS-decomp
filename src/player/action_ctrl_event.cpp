@@ -15,6 +15,9 @@ extern "C" {
 #include "system.h"
 }
 
+using Game::Crash::ActionCtrl;
+using Game::Crash::Player;
+
 /* ActionCtrl's Reset and event handler (include/action_ctrl.hpp; #664,
  * docs/cplusplus.md). Built by old_agbcp (the Makefile's OLD_AGBCC_OBJS),
  * like the old_agbcc C it replaces: under agbcc the handler's C was 36
