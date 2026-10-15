@@ -29,7 +29,7 @@ index the C or the build uses.
 | `menus/` | the menu sky, the pause screen and the continue prompt's three layers (`continue_prompt/`), BG packages | `gMenuSkyBg`, `gPauseMenuBg`, `gContinuePrompt*Bg` | `menu_graphics.cpp` |
 | `level_select/` | the platform (a BG package), the cursor zoom and the ten theme pictures (`pictures/<theme>.png`) | `gLevelSelectPageBg`, `gLevelSelectCursorZoomTiles`, `gLevelSelectPictureN*` | `menu_graphics.cpp`, `level_select_graphics.cpp` |
 | `sprites/` | the 56 sprite banks (`bankNN_<name>/fKKK.png`, `bank.json`) and the 125 OBJ palettes (`palettes/NNN_<owner>.pal`) | `gSpriteBankTable`, `gSpriteBankNN*`, `gObjPalettes` | `sprite_tiles.cpp`, `sprite_banks_*.cpp` |
-| `vehicles/polar/` | the polar stages: the framed sprite sheet (`sprite_sheet/<kind>/NN.png`, `sheet.json`), the player and the Yeti (zero-run frame sets), the BG0 ice wall | `gPolarSpriteSheet`, `gPolarPlayerRleFrames`, `gYetiRleFrames`, `gCategoryFamily0CellAnim` | `polar_sprite_sheet.cpp`, `polar_rle_sprites.cpp`, `polar_cell_anim.cpp` |
+| `vehicles/polar/` | the polar stages: the framed sprite sheet (`sprite_sheet/<kind>/NN.png`, `sheet.json`), the player and the Yeti (zero-run frame sets), the BG0 ice wall, the BG palette cycle (`palette_cycle/NN.pal`) | `gPolarSpriteSheet`, `gPolarPlayerRleFrames`, `gYetiRleFrames`, `gCategoryFamily0CellAnim`, `gActorPaletteCycleFrames` | `polar_sprite_sheet.cpp`, `polar_rle_sprites.cpp`, `polar_cell_anim.cpp`, `actor_palette_cycle_frames.cpp` |
 | `vehicles/jetpack/` | the jetpack stages: the framed sprite sheet, the player, the BG0 clouds, the three skies (`skies/`) and the airship (`airship/frameN.png`) | `gJetpackSpriteSheet`, `gJetpackPlayerRleFrames`, `gCategoryFamily1CellAnim`, `gCategory3-5BgPicture`, `gAirshipPicture` | `jetpack_sprite_sheet.cpp`, `jetpack_rle_sprites.cpp`, `jetpack_cell_anim.cpp`, `jetpack_sky_pictures.cpp`, `boss_pictures.cpp` |
 | `bosses/` | N. Gin's hovercraft, `hovercraft.png` | `gHovercraftPicture` | `boss_pictures.cpp` |
 
@@ -216,17 +216,22 @@ after the ROM's 24 pictures, its bitmap right after it, where
 by its path ([data.md, "A new cutscene"](./data.md#a-new-cutscene)).
 
 **Category graphics.** A new `cell_anim`, `bg_picture`,
-`category_palette` or `framed_sheet` (`CATEGORY_KINDS`) is no class and
-names no object: an actor category of `levels.json` that names it (its
-`"cell_anim"`, `"sky"`, `"palette"` or `"sprite_sheet"`) has `levels.py
+`category_palette`, `framed_sheet` or `palette_cycle` (`CATEGORY_KINDS`) is
+no class and names no object: an actor category of `levels.json` that
+names it (its `"cell_anim"`, `"sky"`, `"palette"`, `"sprite_sheet"` or
+`"palette_cycle"`) has `levels.py
 categories` define it, before `ActorCategory::descriptors` ([levels.md,
 "Category graphics"](./levels.md#category-graphics)). Its entry gives its
 build rules, as for the ROM's: `graphics_manifest.mk` lists the cell
 animations (`CELL_ANIMS`, with their frame counts and banks), the BG1
 pictures (`BG_PICTURES`), the OBJ palettes (`CATEGORY_PALETTES`, a JASC
 `.pal` of 256 colours, the only kind with no ROM entry: the ROM's three
-are C arrays) and the framed sprite sheets (`FRAMED_SHEETS`, by their
-directory, with each one's `FRAMED_NAME_<sheet>`, its `"prefix"`). `check`
+are C arrays), the framed sprite sheets (`FRAMED_SHEETS`, by their
+directory, with each one's `FRAMED_NAME_<sheet>`, its `"prefix"`) and
+the polar BG palette cycles (`PALETTE_CYCLES`, with
+`PALETTE_CYCLE_FRAMES_<cycle>`: a directory of 32 JASC `.pal` files of
+224 colours, concatenated and written by `bin2c.py --u16 --rows 224` a
+row per frame; the ROM's is `vehicles/polar/palette_cycle/`). `check`
 checks it: no `class`, `object`, `palette` or `map`, and its kind's files
 and fields.
 

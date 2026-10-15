@@ -1408,9 +1408,10 @@ spawn list.
 
 ### Category graphics
 
-A category's BG0 cell animation, BG1 sky and OBJ palette are the type's
-unless it names its own (#966): `"cell_anim"`, `"sky"` and `"palette"`
-name an entry of `graphics/manifest.json` by its path under `graphics/`.
+A category's BG0 cell animation, BG1 sky, OBJ palette and (polar only)
+BG palette cycle are the type's unless it names its own (#966, #1089):
+`"cell_anim"`, `"sky"`, `"palette"` and `"palette_cycle"` name an entry
+of `graphics/manifest.json` by its path under `graphics/`.
 That can be one of the ROM's (`vehicles/jetpack/clouds.png`, a sky) or a
 new graphic, an entry with no ROM address ([graphics.md, "New
 graphics"](./graphics.md#new-graphics)):
@@ -1419,11 +1420,13 @@ graphics"](./graphics.md#new-graphics)):
 {"paths": ["vehicles/jetpack/skies/sky_red.png", "vehicles/jetpack/skies/sky_red_tiles.png"], "kind": "bg_picture", "symbol": "gSkyRedBgPicture"}
 {"path": "vehicles/polar/ice_wall_red.png", "kind": "cell_anim", "symbol": "gIceWallRedCellAnim", "frames": 60, "banks": true}
 {"path": "vehicles/polar/polar_green.pal", "kind": "category_palette", "symbol": "gPolarGreenCategoryPalette", "colors": 256}
+{"path": "vehicles/polar/palette_cycle_red/", "kind": "palette_cycle", "symbol": "gPaletteCycleRedFrames", "frames": 32}
 ```
 
 ```json
 {"constant": "CATEGORY_SKY_RED", "name": "sky red", "type": "JETPACK", "sky": "vehicles/jetpack/skies/sky_red.png", "spawns": "rocket_racket", ...}
 {"constant": "CATEGORY_POLAR_GREEN", "name": "polar green", "type": "POLAR", "cell_anim": "vehicles/polar/ice_wall_red.png", "palette": "vehicles/polar/polar_green.pal", "spawns": "snow_crash", ...}
+{"constant": "CATEGORY_POLAR_RED", "name": "polar red", "type": "POLAR", "palette_cycle": "vehicles/polar/palette_cycle_red/", "spawns": "snow_crash", ...}
 ```
 
 | kind | source | what the code takes |
@@ -1431,11 +1434,39 @@ graphics"](./graphics.md#new-graphics)):
 | `cell_anim` | one PNG, its `"frames"` stacked top to bottom, 8bpp with the 256-colour BG palette, each 8x8 cell in one 16-colour bank (as `ice_wall.png`, `clouds.png`); `"banks"`: whether each frame carries its cells' banks | the type's geometry (`CELL_ANIM_GEOMETRY`: 19x13 cells for a polar category, 38x10 otherwise), and banks for a polar category only (`CellAnim::Init`'s `hasBanks` is the type's). Any number of frames: `cellAnimSize` gives the count. Its palette is the BG palette until something replaces it, as in the ROM: a polar category's palette cycle writes banks 0-13 every frame (`ActorPaletteCycle::Update`), and a sky's palette replaces it (`LoadBgPicture`) |
 | `bg_picture` | the picture and its tile set as an 8-pixel-wide strip (as the skies); its palette is the BG palette, the cell animation's too | a 38x16-cell picture (`BG_PICTURE_GEOMETRY`) whose tiles fit after the cell animation's two pages (`LoadBgPicture` puts them at `CellAnim::GetFreeTile()`, and the BG1 map reaches tile 0x5FF), for a jetpack or hovercraft category |
 | `category_palette` | a JASC `.pal` of 256 colours | the OBJ palette, `DmaCopy`'d to OBJ palette RAM by `ActorCategory::Init`. New only: the ROM's three are C arrays with other data |
+| `palette_cycle` | a directory of 32 JASC `.pal` files, `00.pal` to `31.pal`, each 224 colours: BG palettes 0-13 (the ROM's is `vehicles/polar/palette_cycle/`, `ActorPaletteCycle::frames`) | a polar category's only: `ActorPaletteCycle::Update` DMAs the cursor's frame to BG palettes 0-13 whenever the cell animation scrolls. 32 frames, as the ROM's: the polar spawn kinds' cycles (`POLAR_KIND_PALETTE_CYCLE_*`, `startFrames`/`targetFrames`) run 0-15 and 16-31, forwards or back |
 
 `levels.py` stops on any other: a path that isn't such an entry, a
 cell animation of another geometry or with the other banks, a sky of
 another size or too many tiles, a sky on a polar category, a palette of
-another count.
+another count, a palette cycle on a jetpack or hovercraft category, a
+palette cycle of another frame count or a frame of another colour count.
+
+**A category's own palette cycle.** `ActorPaletteCycle::Update` takes
+its frames from `ACTOR_PALETTE_CYCLE_FRAMES`
+(`category_palette_cycles.h`, `levels.py category-cycles`). With no
+category naming its own `"palette_cycle"` that is `frames`, the ROM's, so
+the code is the ROM's. Otherwise it is
+`categoryFrames[ActorCategory::current]`: `actor_categories.inc` then
+defines `ActorPaletteCycle::categoryFrames`, each category's frames (its
+own, or the ROM's `frames`), after the descriptors. The descriptors
+don't change (the ROM's have no field for it). The ROM's frames are
+`graphics/vehicles/polar/palette_cycle/` (the manifest's
+`gActorPaletteCycleFrames`, `actor_palette_cycle_frames.cpp` `#include`s
+them), so a recolour of every polar category is an edit of those 32
+files, and one category's a copy of them it names.
+
+Tested in scratch with plain `make` and mGBA: `CATEGORY_POLAR_RED`
+(snow crash's, with `"palette_cycle": "vehicles/polar/palette_cycle_red/"`,
+the ROM's 32 frames with red and blue swapped) played by snow crash's
+level, and `CATEGORY_SNOW_CRASH` by snow job's. 500 and 800 frames after
+the level select, BG palettes 0-13 are the red cycle's frame 0 in the
+first and the ROM's frame 0 in the second, and the ice wall shows gold
+where it is blue. `UpdateActorPaletteCycle` then reads
+`categoryFrames[gActorCategory]`. `levels.py` stops on a cycle on a
+jetpack category, one of 31 frames, one with 256-colour frames and a
+path that isn't a `palette_cycle`; the ROM's cycle named by a polar
+category builds the ROM's code.
 
 **Colours the engine replaces** (#1089). Two things load over a
 category's own cell animation palette. `levels.py categories` (the
@@ -1449,7 +1480,8 @@ a mod can keep the colours on purpose:
   banks 0-13 that differ from the ice wall's, the colours a mod changed
   (the ice wall's own banks 0-13 don't show either: its palette differs
   from every cycle frame). Recolour such an animation through its pixels
-  (each cell's indices in its bank), or through banks 14-15.
+  (each cell's indices in its bank), through banks 14-15, or through
+  the category's own `"palette_cycle"` (above).
 - **A sky.** `LoadBgPicture` (from `ActorCategory::Init`, and again
   after the pause menu) loads the sky's whole 256-colour palette over
   the cell animation's (`CellAnim::ResetBg`). The warning lists the

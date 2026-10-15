@@ -224,6 +224,20 @@ $(GENERATED_INCLUDE_DIR)/level_bosses.h.stamp: data/levels/levels.json $(LEVEL_R
 $(GENERATED_INCLUDE_DIR)/level_bosses.h: $(GENERATED_INCLUDE_DIR)/level_bosses.h.stamp
 	@test -f $@ || python3 tools/levels.py bosses $@
 
+# The BG palette cycle frames ActorPaletteCycle::Update DMAs
+# (category_palette_cycles.h, `levels.py category-cycles`, docs/levels.md
+# "Category graphics"): the ROM's, or each polar category's own "palette_cycle"
+# (a palette_cycle of graphics/manifest.json). Written only if it changed,
+# behind a stamp.
+GENERATED_HEADERS += $(GENERATED_INCLUDE_DIR)/category_palette_cycles.h
+$(GENERATED_INCLUDE_DIR)/category_palette_cycles.h.stamp: $(CATEGORY_DEPS) graphics/manifest.json \
+	$(CATEGORY_GRAPHICS_NEW) tools/gfx_manifest.py tools/jasc_pal.py
+	@mkdir -p $(dir $@)
+	python3 tools/levels.py category-cycles $(GENERATED_INCLUDE_DIR)/category_palette_cycles.h
+	@touch $@
+$(GENERATED_INCLUDE_DIR)/category_palette_cycles.h: $(GENERATED_INCLUDE_DIR)/category_palette_cycles.h.stamp
+	@test -f $@ || python3 tools/levels.py category-cycles $@
+
 # What clearing a level does (level_on_clear.h, `levels.py on-clear`,
 # docs/levels.md "Boss levels"): LevelState::UpdateGameFrame's cases on the
 # cleared level (the powers, cutscenes, the step on to mega-mix and the

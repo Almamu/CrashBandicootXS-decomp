@@ -246,6 +246,22 @@ $(GRAPHICS_BUILDDIR)/$(1).gbapal.inc: $(GRAPHICS_BUILDDIR)/$(1).gbapal tools/bin
 endef
 $(foreach p,$(CATEGORY_PALETTES),$(eval $(call CATEGORY_PALETTE_RULE,$(p))))
 
+# A polar category's BG palette cycle (PALETTE_CYCLES, the manifest's
+# palette_cycle entries, ActorPaletteCycle::frames and a category's own):
+# a directory of 32 JASC .pal files of BG palettes 0-13
+# (PALETTE_CYCLE_FRAMES_<cycle>), back to back, a u16 [32][224] initializer
+# with a row per frame (docs/levels.md, "Category graphics").
+define PALETTE_CYCLE_RULE
+$(GRAPHICS_BUILDDIR)/$(1).bin: $(patsubst graphics/%.pal,$(GRAPHICS_BUILDDIR)/%.gbapal,$(PALETTE_CYCLE_FRAMES_$(1)))
+	@mkdir -p $$(dir $$@)
+	cat $$^ > $$@
+$(GRAPHICS_BUILDDIR)/$(1).bin.inc: $(GRAPHICS_BUILDDIR)/$(1).bin tools/bin2c.py
+	python3 tools/bin2c.py $$< $$@ --u16 --rows 224
+endef
+$(foreach p,$(PALETTE_CYCLES),$(eval $(call PALETTE_CYCLE_RULE,$(p))))
+$(C_BUILDDIR)/engine/actor/data/actor_palette_cycle_frames.o: \
+	$(GRAPHICS_BUILDDIR)/vehicles/polar/palette_cycle.bin.inc
+
 bg_picture_incs = $(foreach p,$(1),$(GRAPHICS_BUILDDIR)/$(p).pal.inc $(GRAPHICS_BUILDDIR)/$(p)_tiles.img.inc \
 	$(GRAPHICS_BUILDDIR)/$(p)_map.inc $(GRAPHICS_BUILDDIR)/$(p)_banks.inc)
 $(C_BUILDDIR)/game/vehicles/polar/data/polar_cell_anim.o: $(GRAPHICS_BUILDDIR)/vehicles/polar/ice_wall.pal.inc \
