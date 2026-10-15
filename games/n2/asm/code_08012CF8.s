@@ -28144,13 +28144,13 @@ InitLevelState: @ 0x08021070
 	lsls r4, r4, #1
 	adds r0, r4, #0
 	bl OperatorNew
-	ldr r1, _080211A8 @ =gUnknown_081DECB4
+	ldr r1, _080211A8 @ =gSmallFontDesc
 	bl __Q36Engine4Text4FontPCQ36Engine4Text9font_desc
 	str r0, [r5]
 	ldr r5, _080211AC @ =gLargeFont
 	adds r0, r4, #0
 	bl OperatorNew
-	ldr r1, _080211B0 @ =gUnknown_081DED20
+	ldr r1, _080211B0 @ =gLargeFontDesc
 	bl __Q36Engine4Text4FontPCQ36Engine4Text9font_desc
 	str r0, [r5]
 	bl AllocVramDmaQueue
@@ -28219,9 +28219,9 @@ _08021198: .4byte gSpriteBankTable
 _0802119C: .4byte gPaletteCache
 _080211A0: .4byte 0x00000914
 _080211A4: .4byte 0x02000E90
-_080211A8: .4byte gUnknown_081DECB4
+_080211A8: .4byte gSmallFontDesc
 _080211AC: .4byte gLargeFont
-_080211B0: .4byte gUnknown_081DED20
+_080211B0: .4byte gLargeFontDesc
 _080211B4: .4byte gOamBuffer
 _080211B8: .4byte 0x0000040C
 _080211BC: .4byte gObjVramCursor
