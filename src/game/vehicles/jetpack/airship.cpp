@@ -179,7 +179,7 @@ void Airship::Spawn(s32 kind, s32 sx, s32 sy, s32 sz)
      * constant table base out of `&table[kind]`, while the ROM adds the
      * level offset to the finished record address. */
     attack = (const struct airship_attack *)(level * (s32)sizeof(struct airship_attack) -
-                                             -(s32)&attacks[kind]);
+                                             -(intptr_t)&attacks[kind]);
     fireTimer = attack->fireballBurstDelay;
     hp = attack->hp;
     volleyCount = 0;
@@ -193,7 +193,7 @@ void Airship::Spawn(s32 kind, s32 sx, s32 sy, s32 sz)
     self = anim;
 
     s32 t = Q8_TO_INT(self->animTime);
-    DrawMap((u16 *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
+    DrawMap((u16 *)self->frameAddrs[self->anims[self->animIndex].frameIndex + t]);
     REG_DISPCNT |= DISPCNT_BG2_ON;
     UpdateBg2();
     hitFlashTimer = 0;
@@ -238,7 +238,7 @@ void Airship::Update()
         AnimPart *cur = anim;
         s32 t = Q8_TO_INT(cur->animTime);
         if (prev != t) {
-            DrawMap((u16 *)cur->frameOffsets[cur->anims[cur->animIndex].frameIndex + t]);
+            DrawMap((u16 *)cur->frameAddrs[cur->anims[cur->animIndex].frameIndex + t]);
             bg2PageFlip = 1;
         }
     }

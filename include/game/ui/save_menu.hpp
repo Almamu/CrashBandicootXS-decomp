@@ -155,7 +155,7 @@ private:
     static SaveMenu *instance; // gSaveMenu: between Open and Close
 };
 
-COMPILE_TIME_ASSERT(save_menu_hpp, sizeof(SaveMenu) == 0xE4);
+LAYOUT_ASSERT(save_menu_hpp, sizeof(SaveMenu) == 0xE4);
 
 } // namespace Ui
 } // namespace Game

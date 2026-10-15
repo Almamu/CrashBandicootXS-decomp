@@ -355,7 +355,7 @@ struct popup_glyph_src {
  * hoisted (50). */
 static inline void CopyPaletteToSlot(u16 (*slots)[16], const u32 &slot, const u16 *s)
 {
-    u16 *d = (u16 *)(slot * TILE_SIZE_4BPP + (u32)slots);
+    u16 *d = (u16 *)(slot * TILE_SIZE_4BPP + (uintptr_t)slots);
     s32 k;
 
     for (k = 15; k >= 0; k--) {

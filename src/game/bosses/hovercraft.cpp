@@ -295,7 +295,7 @@ void Hovercraft::StateFall(void)
 void Hovercraft::DrawMap(void *tileRow)
 {
     u16 *src = (u16 *)tileRow;
-    u8 *row = (u8 *)((bg2Page + 0x18) << 11) + (VRAM + (0x20 - mapCols) / 4 * 2) +
+    u8 *row = (u8 *)(uintptr_t)((bg2Page + 0x18) << 11) + (VRAM + (0x20 - mapCols) / 4 * 2) +
               ((0x20 - mapRows) / 2 * 32 + 2);
     s32 i, j;
 
@@ -345,7 +345,7 @@ void Hovercraft::Spawn(s32 kind, s32 sx, s32 sy, s32 sz)
      * constant table base out of `&table[kind]`, while the ROM adds the
      * level offset to the finished record address. */
     attack = (const struct hovercraft_attack *)(level * (s32)sizeof(struct hovercraft_attack) -
-                                                -(s32)&attacks[kind]);
+                                                -(intptr_t)&attacks[kind]);
     fireTimer = attack->timing[0].burstDelay;
     hp = attack->hp;
     volleyCount = 0;
@@ -367,7 +367,7 @@ void Hovercraft::Spawn(s32 kind, s32 sx, s32 sy, s32 sz)
     AnimPart *self = anim;
     s32 t = Q8_TO_INT(self->animTime);
 
-    DrawMap((void *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
+    DrawMap((void *)self->frameAddrs[self->anims[self->animIndex].frameIndex + t]);
     HovercraftCannon::Spawn(x + INT_TO_Q8(32), y + INT_TO_Q8(48), z - INT_TO_Q8(1));
     HovercraftLauncher::Spawn(x + INT_TO_Q8(30), y - INT_TO_Q8(48), z - INT_TO_Q8(1));
     HovercraftSideGun::Spawn(x - INT_TO_Q8(65), y + INT_TO_Q8(10), z - 1, 1);
@@ -408,7 +408,7 @@ void Hovercraft::Update(void)
         s32 t = Q8_TO_INT(cur->animTime);
 
         if (prev != t) {
-            DrawMap((void *)cur->frameOffsets[cur->anims[cur->animIndex].frameIndex + t]);
+            DrawMap((void *)cur->frameAddrs[cur->anims[cur->animIndex].frameIndex + t]);
             bg2PageFlip = 1;
         }
     }
@@ -458,8 +458,8 @@ void Hovercraft::UpdateBg2(void)
  * local. */
 void Hovercraft::LoadGraphics(void)
 {
-    s32 i;
-    s32 base;
+    intptr_t i;
+    intptr_t base;
     u32 zero;
 
     DmaCopy16(3, palette, BG_PLTT + PALETTE_SIZE_16, PALETTE_SIZE_16);
@@ -478,7 +478,7 @@ void Hovercraft::LoadGraphics(void)
 
         s32 t = Q8_TO_INT(self->animTime);
 
-        DrawMap((void *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
+        DrawMap((void *)self->frameAddrs[self->anims[self->animIndex].frameIndex + t]);
         REG_DISPCNT |= DISPCNT_BG2_ON;
         UpdateBg2();
     }
@@ -523,7 +523,7 @@ void Hovercraft::ConvertTiles(void)
         heights[k] = x;
         sum += x;
         off += 4;
-        mapFrames[k] = (u32)((u8 *)palette + off);
+        mapFrames[k] = (uintptr_t)((u8 *)palette + off);
         off += stride;
         off += heights[k] << 5;
     }

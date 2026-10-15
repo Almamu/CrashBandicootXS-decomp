@@ -143,7 +143,7 @@ struct audio_context {
     u8 gaxWork[0x2000];       // 0x94 - GAX2's work RAM (gax.workBuf)
 };
 
-COMPILE_TIME_ASSERT(audio_hpp, sizeof(struct audio_context) == 0x2094);
+LAYOUT_ASSERT(audio_hpp, sizeof(struct audio_context) == 0x2094);
 
 namespace Engine
 {
@@ -207,6 +207,6 @@ public:
 } // namespace Audio
 } // namespace Engine
 
-COMPILE_TIME_ASSERT(audio_hpp, sizeof(Engine::Audio::AudioContext) == 0x2094);
+LAYOUT_ASSERT(audio_hpp, sizeof(Engine::Audio::AudioContext) == 0x2094);
 
 #endif /* !GUARD_AUDIO_HPP */

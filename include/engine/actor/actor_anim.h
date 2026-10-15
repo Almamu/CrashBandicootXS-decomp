@@ -56,8 +56,10 @@ struct anim_table_record {
      * observed. Read with ldrb; 0x01-0x03 are padding, 0 in every table. */
     u8 index;
     // 0x04 - the clip's keyframes (struct anim_frame_record, above), no count stored
-    struct anim_frame_record *table_A;
-    u32 *table_B; // 0x08 - frame address/offset array, see the comment below
+    const struct anim_frame_record *table_A;
+    // 0x08 - the frame array, of offsets (`const u32[]`) or of pointers
+    // (`const u8 *const[]`): see the comment below
+    const void *table_B;
     // 0x0C - OBJ palette bank; InitActorPart copies it to actor_self.palette (+0x18), which
     // DrawActor puts in OAM attr 2 (<< 12)
     u8 palette;
@@ -70,7 +72,7 @@ struct anim_table_record {
     s32 spawnX; // 0x20 - added to the spawn X by PolarPlayer::CreateActor (the factory)
     s32 spawnY; // 0x24 - added to the spawn Y by PolarPlayer::CreateActor
 }; // 0x28
-COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct anim_table_record) == 0x28);
+LAYOUT_ASSERT(actor_anim_h, sizeof(struct anim_table_record) == 0x28);
 
 /* table_A is an array of struct anim_frame_record (above): one
  * entry per keyframe, {duration, frameIndex (into table_B), loop
@@ -79,11 +81,13 @@ COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct anim_table_record) == 0x28);
  * each clip has. */
 
 /*
- * table_B (see struct anim_table_record above) is an array of raw u32
- * entries, in one of two addressing modes - fixed per record, never
- * mixed within one record:
+ * table_B (see struct anim_table_record above) is an array of one entry
+ * per frame, in one of two addressing modes - fixed per record, never
+ * mixed within one record. AnimPart (actor_self.hpp) reads an offset
+ * table as `u32`s (frameOffsets) and a pointer table as `uintptr_t`s
+ * (frameAddrs), so a pointer table is pointer-sized on any platform:
  *
- *   - "absolute_rom": each entry is a real ROM pointer straight to a
+ *   - "absolute_rom": each entry (`const u8 *const`) is a ROM pointer straight to a
  *     zero-run-compressed frame ({w, h, 0x30, 0} + u16 run stream,
  *     unpacked by the gUnpackRleSpriteFrameFunc IWRAM hook). Used only by record
  *     0 of both animation tables (and the CreateYeti singleton's table):
@@ -181,7 +185,7 @@ struct category_descriptor {
     u32 bossLevel;
     u32 retryBossLevel; // 0x30 - the same, once retryBossDeaths is reached
 }; // 0x34
-COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct category_descriptor) == 0x34);
+LAYOUT_ASSERT(actor_anim_h, sizeof(struct category_descriptor) == 0x34);
 
 struct actor_spawn; /* actor.h */
 #ifdef __cplusplus
@@ -237,7 +241,7 @@ struct category_vtable {
     void (*reloadPlayerTiles)(void); // 0x2C - ActorCategory::ReloadGraphics
     s32 (*isPauseLocked)(void);      // 0x30 - ActorCategory::CanPause
 }; // 0x34
-COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct category_vtable) == 0x34);
+LAYOUT_ASSERT(actor_anim_h, sizeof(struct category_vtable) == 0x34);
 
 /* Both tables are defined in src/engine/actor/data/actor_categories.cpp (7*0x34 =
  * 0x16C bytes of descriptors, then ActorCategory::vtables). The latter

@@ -353,7 +353,7 @@ public:
     static void Spawn(s32 x, s32 y, s32 count); // SpawnPolarCollectedWumpa
 };
 
-COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(PolarCollectedWumpa) == 0x60);
+LAYOUT_ASSERT(vehicle_hpp, sizeof(PolarCollectedWumpa) == 0x60);
 
 /* A wumpa fruit on the course (gPolarWumpaVtable; polar_pickups.cpp). */
 class PolarWumpa : public Game::Entities::ActorSelf
@@ -477,7 +477,7 @@ public:
     virtual void Update();     // 2 UpdatePolarLifeCrate
 };
 
-COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(PolarLifeCrate) == 0x58);
+LAYOUT_ASSERT(vehicle_hpp, sizeof(PolarLifeCrate) == 0x58);
 
 class PolarFourWumpaCrate : public PolarCrate
 {
@@ -564,7 +564,7 @@ public:
     void Aim(s32 target); // AimPolarPenguin
 };
 
-COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(PolarPenguin) == 0x68);
+LAYOUT_ASSERT(vehicle_hpp, sizeof(PolarPenguin) == 0x68);
 
 /* An icicle: its look depends on its record and side, and it falls in
  * steps (state 0-2) as it comes near. Each step is the next animation,
@@ -629,7 +629,7 @@ public:
     virtual void Update();    // 2 UpdatePolarBoostPad
 };
 
-COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(PolarBoostPad) == 0x58);
+LAYOUT_ASSERT(vehicle_hpp, sizeof(PolarBoostPad) == 0x58);
 
 /* The checkpoint crate: animation 0 whole, 1 opened by the player, 2
  * already the checkpoint, 3 broken by the yeti. */
@@ -739,8 +739,8 @@ public:
                                                   struct actor_spawn *spawn); // CreateJetpackActor
 };
 
-COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackPlayer) == 0x58);
-COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackPlayer) == 0x58);
+LAYOUT_ASSERT(vehicle_hpp, sizeof(JetpackPlayer) == 0x58);
+LAYOUT_ASSERT(vehicle_hpp, sizeof(JetpackPlayer) == 0x58);
 
 } // namespace Jetpack
 } // namespace Vehicles
@@ -810,7 +810,7 @@ public:
     static void Spawn(s32 x, s32 y, s32 z, s32 velX, s32 velY); // SpawnJetpackShot
 };
 
-COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackShot) == 0x60);
+LAYOUT_ASSERT(vehicle_hpp, sizeof(JetpackShot) == 0x60);
 
 /* The plane (gJetpackPlaneVtable, src/game/vehicles/jetpack/jetpack_plane.cpp): it hops
  * from spawn point to spawn point (Aim, the GetActorSpawn* accessors) and
@@ -875,7 +875,7 @@ public:
     static const StateFunc stateFuncs[4];
 };
 
-COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackPlane) == 0x80);
+LAYOUT_ASSERT(vehicle_hpp, sizeof(JetpackPlane) == 0x80);
 
 /* The bomber (gJetpackBomberVtable, src/game/vehicles/jetpack/jetpack_bomber.cpp): its
  * record's kind (4-9) picks how it moves around its home point; it
@@ -921,7 +921,7 @@ public:
     static const StateFunc stateFuncs[7];
 };
 
-COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackBomber) == 0x64);
+LAYOUT_ASSERT(vehicle_hpp, sizeof(JetpackBomber) == 0x64);
 
 /* The cannonball the planes and the airship fire
  * (gJetpackCannonballVtable, src/game/vehicles/jetpack/jetpack_cannonball.cpp). */
@@ -940,7 +940,7 @@ public:
     static void Spawn(s32 x, s32 y, s32 z, s32 velX, s32 velY); // SpawnJetpackCannonball
 };
 
-COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackCannonball) == 0x60);
+LAYOUT_ASSERT(vehicle_hpp, sizeof(JetpackCannonball) == 0x60);
 
 class JetpackBalloonCrate;
 
@@ -993,7 +993,7 @@ public:
                                  JetpackBalloonCrate *crate); // SpawnJetpackBalloon
 };
 
-COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackBalloon) == 0x64);
+LAYOUT_ASSERT(vehicle_hpp, sizeof(JetpackBalloon) == 0x64);
 
 /* The crates hanging from balloons (gJetpackBalloonCrateVtable,
  * src/game/vehicles/jetpack/jetpack_crates.cpp): each hangs from a balloon of its own
@@ -1048,7 +1048,7 @@ protected:
     void Hang(s32 x, s32 y, s32 z, u8 kind);
 };
 
-COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackBalloonCrate) == 0x70);
+LAYOUT_ASSERT(vehicle_hpp, sizeof(JetpackBalloonCrate) == 0x70);
 
 /* Heals the player (gJetpackHealthCrateVtable). */
 class JetpackHealthCrate : public JetpackBalloonCrate
@@ -1084,7 +1084,7 @@ public:
     virtual void Damage(s32 amount); // 4 DamageJetpackQuestionCrate
 };
 
-COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackQuestionCrate) == 0x74);
+LAYOUT_ASSERT(vehicle_hpp, sizeof(JetpackQuestionCrate) == 0x74);
 
 /* A nitro crate on a parachute (gJetpackParachuteNitroVtable,
  * src/game/vehicles/jetpack/jetpack_crates.cpp): it rises to `limitY`, and explodes on
@@ -1103,7 +1103,7 @@ public:
     virtual u8 IsUnshootable();       // 5 IsJetpackParachuteNitroUnshootable
 };
 
-COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackParachuteNitro) == 0x60);
+LAYOUT_ASSERT(vehicle_hpp, sizeof(JetpackParachuteNitro) == 0x60);
 
 /* A rocket (gJetpackRocketVtable, src/game/vehicles/jetpack/jetpack_rocket.cpp): it
  * swings around `originX` while it comes down by `stepY` to `limitY`,
@@ -1127,7 +1127,7 @@ public:
     void Launch(); // LaunchJetpackRocket
 };
 
-COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackRocket) == 0x68);
+LAYOUT_ASSERT(vehicle_hpp, sizeof(JetpackRocket) == 0x68);
 
 /* A jetpack ring (gJetpackRingVtable). Its constructor and slot 5 are in
  * src/game/vehicles/jetpack/jetpack_collected_wumpa.cpp (part 11h), its Update in
@@ -1144,7 +1144,7 @@ public:
     virtual u8 IsUnshootable(); // 5 IsJetpackRingUnshootable
 };
 
-COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackRing) == 0x5C);
+LAYOUT_ASSERT(vehicle_hpp, sizeof(JetpackRing) == 0x5C);
 
 /* A collected wumpa of the jetpack levels (gJetpackCollectedWumpaVtable,
  * src/game/vehicles/jetpack/jetpack_collected_wumpa.cpp, part 11h;
@@ -1168,7 +1168,7 @@ public:
     static void Spawn(s32 x, s32 y, s32 reward); // SpawnJetpackCollectedWumpa
 };
 
-COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackCollectedWumpa) == 0x64);
+LAYOUT_ASSERT(vehicle_hpp, sizeof(JetpackCollectedWumpa) == 0x64);
 
 } // namespace Jetpack
 } // namespace Vehicles

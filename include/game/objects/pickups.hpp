@@ -166,7 +166,7 @@ public:
     }
 };
 
-COMPILE_TIME_ASSERT(pickups_hpp, sizeof(ExtraLife) == 0x54);
+LAYOUT_ASSERT(pickups_hpp, sizeof(ExtraLife) == 0x54);
 
 /* The wumpa fruit (gWumpaVtable): the extra life's fields and behaviour,
  * plus a payout (`state` 3: it stays at the player and drops 10 wumpas
@@ -228,7 +228,7 @@ public:
     }
 };
 
-COMPILE_TIME_ASSERT(pickups_hpp, sizeof(Wumpa) == 0x54);
+LAYOUT_ASSERT(pickups_hpp, sizeof(Wumpa) == 0x54);
 
 /* The time trial's stopwatch (gStopwatchVtable): a plain sprite, updated
  * while the player is within 0x180 pixels and gone once the player is
@@ -256,7 +256,7 @@ public:
     void Reset();                                       // ResetStopwatch
 };
 
-COMPILE_TIME_ASSERT(pickups_hpp, sizeof(Stopwatch) == 0x40);
+LAYOUT_ASSERT(pickups_hpp, sizeof(Stopwatch) == 0x40);
 
 /* The spawners of the pickups that are a plain Sprite of a bank (#915,
  * docs/cplusplus.md, "The entity spawners as static members"): the four

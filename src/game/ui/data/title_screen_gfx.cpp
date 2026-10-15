@@ -143,9 +143,11 @@ extern const struct delta_record gTitleLogoPieceMotion8[6] = {
  * part from (actor_anim.h's `struct anim_table_record`; this file had its
  * own view, `struct anim_record_view`). The keyframes and frames are
  * record 0's of the categories 0-2 family (Crash riding the polar bear),
- * inside gPolarCategoryPalette. */
+ * right after gPolarCategoryPalette (data/levels/anim_tables/polar.json,
+ * polar_anim_family.cpp). */
+extern const struct anim_frame_record gPolarPlayerKeyframes[];
+extern const u8 *const gPolarPlayerFrames[];
 const struct anim_table_record gLogoActorAnim = {
-    0, (struct anim_frame_record *)((const u8 *)gPolarCategoryPalette + 0x400),
-    (u32 *)((const u8 *)gPolarCategoryPalette + 0x49C),
+    0, gPolarPlayerKeyframes, gPolarPlayerFrames,
     0, 0x100, { -10, -20, -1, 20, 44, 3 }, 0, 0,
 };

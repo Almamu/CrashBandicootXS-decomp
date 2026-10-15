@@ -204,9 +204,9 @@ void CompanyLogos::Run()
  * allocation (the ROM's order). */
 void CompanyLogos::LoadVvLogoGraphics()
 {
-    tilesA = (u32)ObjTileAllocator::Alloc(0x1200);
-    tilesB = (u32)ObjTileAllocator::Alloc(0x400);
-    tilesC = (u32)ObjTileAllocator::Alloc(0x1000);
+    tilesA = (uintptr_t)ObjTileAllocator::Alloc(0x1200);
+    tilesB = (uintptr_t)ObjTileAllocator::Alloc(0x400);
+    tilesC = (uintptr_t)ObjTileAllocator::Alloc(0x1000);
     LoadAssetBuffered(gVvLogoEmblemObj.paletteAsset, OBJ_PALETTE(15));
     LoadAssetBuffered(gVvLogoLettersObj.paletteAsset, OBJ_PALETTE(14));
     LoadAssetBuffered(gVvLogoUrlObj.paletteAsset, OBJ_PALETTE(13));
@@ -335,7 +335,7 @@ void CompanyLogos::UpdateVvLogoPieces()
                     slot->active = allDone;
             }
             slot++;
-        } while ((s32)slot <= (s32)end);
+        } while ((intptr_t)slot <= (intptr_t)end);
         if (allDone) {
             fade = 0x10;
             timer = -3;
@@ -407,7 +407,7 @@ void CompanyLogos::DrawVvLogoPieces()
     }
 
     LogoPiece *slot = &slots[1];
-    u32 tile = (tilesA - (u32)OBJ_VRAM0) >> 5;
+    u32 tile = (tilesA - (uintptr_t)OBJ_VRAM0) >> 5;
 
     for (i = 0; i <= 0x11; i++) {
         if (slot->active) {
@@ -463,7 +463,7 @@ void CompanyLogos::DrawVvLogoPieces()
             *flag = 0;
         }
         slot = &slots[0];
-        tile = (tilesC - (u32)OBJ_VRAM0) >> 5;
+        tile = (tilesC - (uintptr_t)OBJ_VRAM0) >> 5;
         /* `scratch` cleared with a 32-bit DMA3 fill, and in the loop each
          * row's two halves copied with DmaCopy16. The fill's `scratch`
          * load also serves `buf` (the ROM loads it once, between the SAD
@@ -658,7 +658,7 @@ void LogoActor::Draw()
     val = table[idx].frameIndex;
     rec = &table[idx];
     val += base;
-    frame = (u8 *)frameOffsets[val];
+    frame = (u8 *)frameAddrs[val];
     /* Declared in a nested block so their stack slots land after
      * `rec`'s, as in the ROM. */
     {

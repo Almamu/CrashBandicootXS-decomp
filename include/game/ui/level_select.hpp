@@ -111,7 +111,7 @@ public:
     s32 GetOffset();       // GetCameraLeadOffset (UNUSED)
 };
 
-COMPILE_TIME_ASSERT(level_select_hpp, sizeof(CameraLead) == 0x80);
+LAYOUT_ASSERT(level_select_hpp, sizeof(CameraLead) == 0x80);
 
 /* The launch pad (gLaunchPadVtable): the green pad of entity type 0x3D
  * (sprite bank 28). When the player touches it (slot 14), it sends the
@@ -141,7 +141,7 @@ public:
     void ClearVulnerable(); // ClearLaunchPadVulnerable: Sprite's, again
 };
 
-COMPILE_TIME_ASSERT(level_select_hpp, sizeof(LaunchPad) == 0x78);
+LAYOUT_ASSERT(level_select_hpp, sizeof(LaunchPad) == 0x78);
 
 } // namespace Objects
 } // namespace Game
@@ -176,7 +176,7 @@ public:
     void SetBox(s32 kind);                       // SetLevelSelectEntryBox
 };
 
-COMPILE_TIME_ASSERT(level_select_hpp, sizeof(LevelSelectEntry) == 0x14);
+LAYOUT_ASSERT(level_select_hpp, sizeof(LevelSelectEntry) == 0x14);
 
 /* BG1, the page strip (CreateLevelSelectPageBg). `bg` is its BG setup
  * (BGxCNT at +0x0C, BgSetup::GetControl). */
@@ -313,7 +313,7 @@ public:
     u16 GetControl(); // GetZoomBgControl
 };
 
-COMPILE_TIME_ASSERT(level_select_hpp, sizeof(ZoomBg) == 0x8C);
+LAYOUT_ASSERT(level_select_hpp, sizeof(ZoomBg) == 0x8C);
 
 /* The level-select cursor. It glides between entries along a Bresenham
  * line (two steps per frame), plays an idle animation cycle at random
@@ -368,7 +368,7 @@ public:
     }
 };
 
-COMPILE_TIME_ASSERT(level_select_hpp, sizeof(LevelSelectCursor) == 0x54);
+LAYOUT_ASSERT(level_select_hpp, sizeof(LevelSelectCursor) == 0x54);
 
 /* The level-select screen (LevelSelect::Run): a world's numbered levels
  * (LEVELS_PER_WORLD at most) and its boss per page (a world;
@@ -547,7 +547,7 @@ private:
 };
 
 /* 0xAC with the ROM's levels: `items` has LEVEL_SELECT_ENTRIES entries. */
-COMPILE_TIME_ASSERT(level_select_hpp, sizeof(LevelSelect) == 0x94 + 4 * LEVEL_SELECT_ENTRIES);
+LAYOUT_ASSERT(level_select_hpp, sizeof(LevelSelect) == 0x94 + 4 * LEVEL_SELECT_ENTRIES);
 
 } // namespace Ui
 } // namespace Game

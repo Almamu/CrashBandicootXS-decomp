@@ -55,11 +55,11 @@ void SaveTransfer::SendChunk()
 void SaveTransfer::ReceiveChunk(s32 playerIndex)
 {
     LinkSession *s = gLinkSession;
-    s32 offset;
+    intptr_t offset;
     s32 n;
 
     offset = playerIndex * sizeof(LinkPlayer);
-    offset = offset + (s32)s;
+    offset = offset + (intptr_t)s;
     n = ((LinkSession *)offset)->players[0].ring.count;
     if (n != 0) {
         s->players[playerIndex].ring.Pop(writePtr, n);

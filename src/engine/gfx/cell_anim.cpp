@@ -31,7 +31,7 @@ using Engine::Gfx::CellAnim;
 void CellAnim::UploadFrame()
 {
     u8 *src = (u8 *)data + (Q8_TO_INT(time) * frameSize + 0x204);
-    u32 dst;
+    uintptr_t dst;
 
     if (hasBanks != 0) {
         u8 *next;

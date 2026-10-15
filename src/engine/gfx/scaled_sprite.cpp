@@ -121,7 +121,7 @@ void ScaledSprite::SetColor(s32 color)
     oam.palette = color / 16;
     nibble = color & 0xf;
     nibble |= nibble << 4 | nibble << 8 | nibble << 12;
-    dest = (u32)(OBJ_VRAM0 + 0x3C0 * TILE_SIZE_4BPP);
+    dest = (uintptr_t)(OBJ_VRAM0 + 0x3C0 * TILE_SIZE_4BPP);
     DmaFill16(3, nibble, dest, 0x800);
 }
 

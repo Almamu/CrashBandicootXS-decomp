@@ -458,14 +458,14 @@ fade:
         ret = ROOM_EXIT_CLEARED;
         if (!IsInBonusRoom() && gLevelState->IsInBonusRound()) {
             struct vec2 point;
-            s32 x;
+            intptr_t x;
 
             x = gLevelState->GetBonusPlatform()->x + -INT_TO_Q8(30);
             i = gPlayer->y + INT_TO_Q8(18);
             point.x = x;
             point.y = i;
             // `x` again: the level state goes through the same register
-            x = (s32)gLevelState;
+            x = (intptr_t)gLevelState;
             {
                 LevelState *state = (LevelState *)x;
 

@@ -329,7 +329,7 @@ public:
     }
 };
 
-COMPILE_TIME_ASSERT(player_hpp, sizeof(Player) == 0x350);
+LAYOUT_ASSERT(player_hpp, sizeof(Player) == 0x350);
 
 } // namespace Crash
 } // namespace Game

@@ -107,7 +107,7 @@ void Yeti::Update()
     cur = Q8_TO_INT(obj->animTime);
     if (old != cur) {
         gUnpackNibbleTilesFunc(
-            (u16 *)((u8 *)obj->frameOffsets[obj->anims[obj->animIndex].frameIndex + cur] + 4),
+            (u16 *)((u8 *)obj->frameAddrs[obj->anims[obj->animIndex].frameIndex + cur] + 4),
             bg2Page);
         bg2PageFlip = 1;
     }

@@ -103,7 +103,7 @@ public:
     }
 };
 
-COMPILE_TIME_ASSERT(platform_hpp, sizeof(Platform) == 0x80);
+LAYOUT_ASSERT(platform_hpp, sizeof(Platform) == 0x80);
 
 /* A platform's controller (CreatePlatform allocates 0x38 bytes): it moves
  * its platform back and forth over `rangeX`/`rangeY` pixels with the
@@ -140,7 +140,7 @@ public:
     void ClearActive();
 };
 
-COMPILE_TIME_ASSERT(platform_hpp, sizeof(PlatformMover) == 0x38);
+LAYOUT_ASSERT(platform_hpp, sizeof(PlatformMover) == 0x38);
 
 } // namespace Objects
 } // namespace Game
@@ -166,7 +166,7 @@ public:
     virtual ~CortexBossPlatformMover(); // DestroyCortexBossPlatformMover
 };
 
-COMPILE_TIME_ASSERT(platform_hpp, sizeof(CortexBossPlatformMover) == 0x38);
+LAYOUT_ASSERT(platform_hpp, sizeof(CortexBossPlatformMover) == 0x38);
 
 } // namespace Bosses
 } // namespace Game

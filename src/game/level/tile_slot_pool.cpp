@@ -114,7 +114,7 @@ void TileSlotPool::Upload(s32 tileId, s32 slot)
     VramDmaQueue::Add((void *)(srcBase + tileId * 64), (void *)(vramBase + slot * 64), 0x40, 0x10);
 }
 
-void TileSlotPool::SetSource(s32 charBase, u32 src)
+void TileSlotPool::SetSource(s32 charBase, uintptr_t src)
 {
     vramBase = VRAM + (charBase << 14);
     srcBase = src;

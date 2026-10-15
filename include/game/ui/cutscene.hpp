@@ -113,7 +113,7 @@ public:
     void Reset();                        // ResetSlideshow
 };
 
-COMPILE_TIME_ASSERT(cutscene_hpp, sizeof(Slideshow) == 0x10);
+LAYOUT_ASSERT(cutscene_hpp, sizeof(Slideshow) == 0x10);
 
 /* The cutscene player: the slideshow plus each slide's pages of text,
  * drawn with `font` into `box` (PlayCutscene, level_cutscene.cpp). */
@@ -129,7 +129,7 @@ public:
     void Run();        // RunCutscenePlayer
 };
 
-COMPILE_TIME_ASSERT(cutscene_hpp, sizeof(CutscenePlayer) == 0x28);
+LAYOUT_ASSERT(cutscene_hpp, sizeof(CutscenePlayer) == 0x28);
 
 } // namespace Ui
 } // namespace Game

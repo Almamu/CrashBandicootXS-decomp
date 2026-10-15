@@ -124,7 +124,55 @@ removal and the 64-bit fixes ("64-bit hosts" below).
 ## 64-bit hosts
 
 The code must compile for a 64-bit host with the GBA build unchanged
-(the owner's decision: no `-m32`). Where the ROM stores or computes with
-an address as an integer, the code uses `uintptr_t` (`<stdint.h>`, which
-`gba/defines.h` already includes) or a real pointer type, which compile
-to the same code on the GBA, where both are 32 bits.
+(the owner's decision: no `-m32`). The rules:
+
+- **An address held or computed as an integer is a `uintptr_t`** (an
+  `intptr_t` where the ROM compares it signed), never a `u32`/`s32`:
+  `(uintptr_t)table + (kind << 2)`, a `uintptr_t` field for a VRAM block
+  (`CompanyLogos::tilesA`, `TileSlotPool::vramBase`, `Starfield::mapVramBase`),
+  the allocator's `start`/`end`. agbcc's `<stdint.h>` (which
+  `gba/defines.h` includes) has `uintptr_t` as `unsigned int` and
+  `intptr_t` as `int`: the same types as `u32` and `s32`, so the GBA code,
+  the aliasing and the C++ mangled names are unchanged. Many of these
+  integer forms are there for matching (the ROM's operand order); on a
+  64-bit host they are only wider.
+- **The memory map is integers.** `REG_BASE`, `EWRAM_START`,
+  `IWRAM_START`, `PLTT`, `VRAM` and `OAM` are integer constants on the
+  GBA, and the game adds to them and stores them in `uintptr_t`s; a
+  port's headers define them as integers too
+  (`#define VRAM ((uintptr_t)gHostVram)`), not as pointers.
+- **A table of addresses is pointer-sized.** `anim_table_record.table_B`
+  (actor_anim.h) is a `const void *` to either a `const u32[]` of sheet
+  offsets or a `const u8 *const[]` of frame addresses, and AnimPart
+  (actor_self.hpp) reads it as `frameOffsets` (`u32 *`) or `frameAddrs`
+  (`uintptr_t *`, a union with it) by the record's mode. The airship's
+  and the hovercraft's `mapFrames` are `uintptr_t[]`. The generated
+  animation tables (tools/levels.py) need no casts.
+- **Layout asserts are the platform's.** A `sizeof`/`offsetof` assert on
+  a struct or class that holds a pointer (or a vtable) is a
+  `LAYOUT_ASSERT` (gba/defines.h): `COMPILE_TIME_ASSERT` on the GBA, and
+  `#define LAYOUT_ASSERT(T, X) COMPILE_TIME_ASSERT(T, 1)` (checks nothing,
+  still a typedef, so the `;` after it stays valid) in a platform whose
+  pointers aren't 4 bytes. A pointer-free struct's assert stays a
+  `COMPILE_TIME_ASSERT`, which holds everywhere. 127 asserts are
+  `LAYOUT_ASSERT`s; the other 38, and the ones tools/levels.py generates,
+  are not. A new assert follows the same rule.
+
+What phase 0 left (none of it can change without changing the GBA code,
+or it is replaced at its API, see "What a port provides"):
+
+- `vsprintf` (src/engine/util/printf.cpp) reads its arguments as 4-byte
+  slots of the stack (`u32 *args`, `%s` as `(u8 *)*args`), not with
+  `va_arg`: a host needs its own. Nothing in the game calls `sprintf`.
+- GAX2 (`lib/gax/`, its `.4byte` pointer blobs included) and AgbEeprom
+  (`lib/agb_eeprom/`, which writes the DMA registers with addresses as
+  `u32`s) are replaced at their APIs, not compiled for a host.
+
+As a check, every `src/` object and the `lib/` C compiles with the host
+`g++ -m64 -fsyntax-only` (and `gcc` for the C) against a stub
+`platform/<host>/include/gba/` (the GBA headers with the memory map on
+host arrays as above, `DmaSet` as a function call and an empty
+`LAYOUT_ASSERT`), with `-fpermissive` for the g++ 2.9 extension phase 1
+has to deal with (a struct type declared in an anonymous union,
+sprite_obj.hpp's `MirrorBits`/`MirrorFlags`). The only pointer/integer
+size warnings left are the ones above.

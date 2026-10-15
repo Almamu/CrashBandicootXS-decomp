@@ -281,7 +281,7 @@ void TitleScreen::DrawLogoPieces()
             {
                 /* `idx` is needed: inlined, the instructions are reordered */
                 u32 idx = (7 - i) << 2;
-                u32 base = (u32)landTimer;
+                uintptr_t base = (uintptr_t)landTimer;
                 cnt = (s32 *)(base + idx);
             }
             if (*cnt != 0) {
@@ -328,7 +328,7 @@ void TitleScreen::DrawLogoPieces()
             /* landTimer[k], built like landTimer[7 - i] above */
 
             u32 off = k << 2;
-            u32 base = (u32)landTimer;
+            uintptr_t base = (uintptr_t)landTimer;
             cnt = (s32 *)(base + off);
 
             if (*cnt != 0) {

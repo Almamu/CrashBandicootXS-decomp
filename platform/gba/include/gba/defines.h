@@ -12,6 +12,15 @@
 #define IWRAM_DATA __attribute__((section("iwram_data")))
 #define EWRAM_DATA __attribute__((section("ewram_data")))
 
+// LAYOUT_ASSERT(TAG, COND): core.h's COMPILE_TIME_ASSERT for the ROM's
+// layout of a struct or class that holds a pointer (a vtable pointer
+// too): its size or a field's offset, which follow from the GBA's 4-byte
+// pointers. The GBA checks them; a platform with other pointer sizes
+// defines LAYOUT_ASSERT as nothing in its own gba/defines.h (#1093,
+// docs/platforms.md). A struct without pointers keeps COMPILE_TIME_ASSERT,
+// which every platform checks.
+#define LAYOUT_ASSERT(T, X) COMPILE_TIME_ASSERT(T, X)
+
 // TODO: Move these elsewhere?
 // #ifdef __GNUC__
 #define NAKED __attribute__((naked))

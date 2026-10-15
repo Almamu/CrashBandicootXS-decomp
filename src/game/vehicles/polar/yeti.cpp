@@ -46,7 +46,7 @@ void Yeti::Destroy()
 void Yeti::Create(s32 level)
 {
     paramsIndex = level;
-    anim = new AnimPart(keyframes, (u32 *)frames, 0xf);
+    anim = new AnimPart(keyframes, frames, 0xf);
 
     x = 0;
     distance = INT_TO_Q8(160);

@@ -395,6 +395,6 @@ public:
 } // namespace Save
 } // namespace Engine
 
-COMPILE_TIME_ASSERT(save_data_hpp, sizeof(Engine::Save::SaveTransfer) == 0x220);
+LAYOUT_ASSERT(save_data_hpp, sizeof(Engine::Save::SaveTransfer) == 0x220);
 
 #endif /* !GUARD_SAVE_DATA_HPP */

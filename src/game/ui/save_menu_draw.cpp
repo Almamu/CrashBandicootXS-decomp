@@ -137,7 +137,7 @@ s32 SaveMenu::LinkExchange()
     result = RunLinkTransfer(spinner);
     if (result == 0) {
         /* `data` is needed: inlined, the code is 1 instruction longer */
-        s32 data = (s32)spinner->GetData();
+        intptr_t data = (intptr_t)spinner->GetData();
 
         if (!SAVE_LINK_VIEW) {
             MemCopy32(linkSave, (void *)data, SAVE_LINK_SIZE);

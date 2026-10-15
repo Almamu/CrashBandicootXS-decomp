@@ -151,7 +151,7 @@ public:
     static s32 GetDriftStep(s32 v);
 };
 
-COMPILE_TIME_ASSERT(swim_ctrl_hpp, sizeof(SwimCtrl) == 0x30);
+LAYOUT_ASSERT(swim_ctrl_hpp, sizeof(SwimCtrl) == 0x30);
 
 } // namespace Crash
 } // namespace Game

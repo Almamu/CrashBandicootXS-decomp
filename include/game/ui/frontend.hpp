@@ -182,8 +182,8 @@ namespace Ui
 class Starfield
 {
 public:
-    u32 tileVramBase;        // 0x00 - VRAM, where tileBuffer is DMA'd
-    u32 mapVramBase;         // 0x04 - BG0's screen base
+    uintptr_t tileVramBase;  // 0x00 - VRAM, where tileBuffer is DMA'd
+    uintptr_t mapVramBase;   // 0x04 - BG0's screen base
     StarParticle *particles; // 0x08 - 128 stars
     s32 count;               // 0x0C - stars alive
     u16 *tileBuffer;         // 0x10 - the 4bpp screen buffer
@@ -198,7 +198,7 @@ public:
     void WaitForButton();                                 // StarfieldWaitForButton
 };
 
-COMPILE_TIME_ASSERT(frontend_hpp, sizeof(Starfield) == 0x14);
+LAYOUT_ASSERT(frontend_hpp, sizeof(Starfield) == 0x14);
 
 } // namespace Ui
 } // namespace Game
@@ -268,7 +268,7 @@ public:
     void CommitFrame(); // CommitCreditsFrame
 };
 
-COMPILE_TIME_ASSERT(frontend_hpp, sizeof(Credits) == 0x98);
+LAYOUT_ASSERT(frontend_hpp, sizeof(Credits) == 0x98);
 
 /* The continue prompt ("Continue? Yes/No" over the Uka Uka background,
  * 0x24 bytes). Its constructor, InitGraphics and Loop are in
@@ -297,7 +297,7 @@ public:
     void CommitFrame();    // CommitContinuePromptFrame
 };
 
-COMPILE_TIME_ASSERT(frontend_hpp, sizeof(ContinuePrompt) == 0x24);
+LAYOUT_ASSERT(frontend_hpp, sizeof(ContinuePrompt) == 0x24);
 
 } // namespace Ui
 } // namespace Game
@@ -337,7 +337,7 @@ struct LogoPiece {
     const struct delta_record *record; // 0x30 - the next motion step
 };
 
-COMPILE_TIME_ASSERT(frontend_hpp, sizeof(LogoPiece) == 0x34);
+LAYOUT_ASSERT(frontend_hpp, sizeof(LogoPiece) == 0x34);
 
 /* The centre of the title logo's BG2 picture (gTitleScreenBg: 16x16
  * tiles of the affine map, 128x128 pixels), in its own coordinates: the
@@ -386,7 +386,7 @@ public:
     void ResetLogoPieces();                      // ResetTitleLogoPieces (unused)
 };
 
-COMPILE_TIME_ASSERT(frontend_hpp, sizeof(TitleScreen) == 0x220);
+LAYOUT_ASSERT(frontend_hpp, sizeof(TitleScreen) == 0x220);
 
 /* The 0x44C-byte company-logo screen (ShowCompanyLogos, level_state.cpp):
  * the Vicarious Visions logo's 20 pieces, the frame strip of its first
@@ -396,9 +396,9 @@ class CompanyLogos
 public:
     LogoPiece slots[20]; // 0x000
     u8 sfxPending[0x12]; // 0x410 - per-slot "play the cue once" flags
-    u32 tilesA;          // 0x424 - OBJ VRAM tile block (0x1200 bytes)
-    u32 tilesB;          // 0x428 - OBJ VRAM tile block (0x400 bytes)
-    u32 tilesC;          // 0x42C - OBJ VRAM tile block (0x1000 bytes)
+    uintptr_t tilesA;    // 0x424 - OBJ VRAM tile block (0x1200 bytes)
+    uintptr_t tilesB;    // 0x428 - OBJ VRAM tile block (0x400 bytes)
+    uintptr_t tilesC;    // 0x42C - OBJ VRAM tile block (0x1000 bytes)
     u8 *frames;          // 0x430 - unpacked frame strip, 0xa00 bytes a frame
     u8 *scratch;         // 0x434 - 0x1000-byte frame build buffer
     s32 frame;           // 0x438 - index into `frames` (0-9)
@@ -418,7 +418,7 @@ public:
     void LoadAssetBuffered(const void *asset, void *dest); // LoadTaggedAssetBuffered
 };
 
-COMPILE_TIME_ASSERT(frontend_hpp, sizeof(CompanyLogos) == 0x44C);
+LAYOUT_ASSERT(frontend_hpp, sizeof(CompanyLogos) == 0x44C);
 
 /* The company logos' 3D actor (gLogoActorVtable): Crash, who walks on
  * between the logos (UpdateLogoActor's states 0-4), double-buffering his
@@ -450,11 +450,11 @@ public:
         s32 val = table[idx].frameIndex;
 
         val += base;
-        return (u8 *)frameOffsets[val];
+        return (u8 *)frameAddrs[val];
     }
 };
 
-COMPILE_TIME_ASSERT(frontend_hpp, sizeof(LogoActor) == 0x54);
+LAYOUT_ASSERT(frontend_hpp, sizeof(LogoActor) == 0x54);
 
 /* The language select at boot (OpenLanguageSelect/Run/CloseLanguageSelect,
  * called from MainLoop): up/down cycles `language` through the six
@@ -482,7 +482,7 @@ public:
     void CommitFrame();   // CommitLanguageSelectFrame
 };
 
-COMPILE_TIME_ASSERT(frontend_hpp, sizeof(LanguageSelect) == 0x14);
+LAYOUT_ASSERT(frontend_hpp, sizeof(LanguageSelect) == 0x14);
 
 } // namespace Ui
 } // namespace Game

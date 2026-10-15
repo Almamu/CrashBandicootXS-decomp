@@ -209,10 +209,12 @@ void UnpackRleSpriteFrame(u16 *dst, struct rle_frame *frame)
  * is always true), and loop.c hoists that register out of both loops.
  * As two statements combine merges them into one `plus` that
  * *addsi3_insn accepts ("?n"), and the post-reload split prints it in
- * place as the ROM's `add #0xF9000000; add #0xFF0000`. */
-static inline s32 ObjTileIndex(u32 vramAddr)
+ * place as the ROM's `add #0xF9000000; add #0xFF0000`. The first one is
+ * spelled from OBJ_VRAM0 (0x06010000 + 0xFF0000 = 0x07000000), so the
+ * index is relative to the platform's OBJ_VRAM0 (docs/platforms.md). */
+static inline s32 ObjTileIndex(uintptr_t vramAddr)
 {
-    vramAddr -= 0x07000000;
+    vramAddr -= (uintptr_t)OBJ_VRAM0 + 0xFF0000;
     vramAddr += 0xFF0000;
     return vramAddr >> 5;
 }
@@ -236,7 +238,7 @@ s32 SpriteFrameCache::Lookup(u8 *frame)
 
     for (node = current.next; node != &current; node = node->next) {
         if (node->frame == frame)
-            return ObjTileIndex((u32)node->vramAddr);
+            return ObjTileIndex((uintptr_t)node->vramAddr);
     }
     for (node = previous.next; node != &previous; node = node->next) {
         if (node->frame == frame) {
@@ -246,7 +248,7 @@ s32 SpriteFrameCache::Lookup(u8 *frame)
             node->next = current.next;
             current.next->prev = node;
             current.next = node;
-            return ObjTileIndex((u32)node->vramAddr);
+            return ObjTileIndex((uintptr_t)node->vramAddr);
         }
     }
     return -1;

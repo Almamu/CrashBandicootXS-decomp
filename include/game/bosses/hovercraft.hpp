@@ -192,9 +192,9 @@ private:
     static s16 hitFlashTimer; // gHovercraftHitFlashTimer
     static u8 hitFlashOn;     // gHovercraftHitFlashOn
     static u8 gone;           // gHovercraftGone
-    /* The picture's row addresses, as the AnimPart's u32 frame offsets
-     * (ConvertTiles fills them; a u32 store may alias its heights[]). */
-    static u32 mapFrames[]; // gHovercraftMapFrames
+    /* The picture's row addresses, the AnimPart's frame table (ConvertTiles
+     * fills them; an integer store may alias its heights[]). */
+    static uintptr_t mapFrames[]; // gHovercraftMapFrames
 
     /* The ROM tables (src/.../data): attacks, box and keyframes are in
      * hovercraft_attacks.cpp, palette and picture in

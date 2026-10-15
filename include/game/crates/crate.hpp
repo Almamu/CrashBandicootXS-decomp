@@ -41,7 +41,7 @@ struct crate_group {
 };
 
 #define PHYS_NO_GROUP ((struct crate_group *)-1)
-#define PHYS_HAS_GROUP(g) ((u32)(g) + 1 > 1)
+#define PHYS_HAS_GROUP(g) ((uintptr_t)(g) + 1 > 1)
 
 /* Crate's `state`: the low 7 bits
  * are the state (0: idle; 1: committed - the physics AABB tests skip it
@@ -338,6 +338,6 @@ extern "C" void ApplyCrateCollision(Game::Crates::Crate *self, s32 kind, s32 cod
                                     s32 depth, struct vec2 pos, s32 hit, struct byte_arg p20,
                                     struct byte_arg p21, struct byte_arg pforced);
 
-COMPILE_TIME_ASSERT(crate_hpp, sizeof(Game::Crates::Crate) == 0x64);
+LAYOUT_ASSERT(crate_hpp, sizeof(Game::Crates::Crate) == 0x64);
 
 #endif /* !GUARD_CRATE_HPP */

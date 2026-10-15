@@ -65,7 +65,7 @@ public:
              struct byte_arg p21); // AddCollisionCandidate
 };
 
-COMPILE_TIME_ASSERT(part_list_hpp, sizeof(CollisionQueue) == 0x248);
+LAYOUT_ASSERT(part_list_hpp, sizeof(CollisionQueue) == 0x248);
 
 } // namespace Crates
 } // namespace Game
@@ -107,7 +107,7 @@ public:
     void Clear();                        // ClearPaletteCycles
 };
 
-COMPILE_TIME_ASSERT(part_list_hpp, sizeof(PaletteCycles) == 0x48);
+LAYOUT_ASSERT(part_list_hpp, sizeof(PaletteCycles) == 0x48);
 
 } // namespace Gfx
 } // namespace Engine
@@ -126,7 +126,7 @@ public:
     void Draw(screen_dx_t dx, screen_dy_t dy); // DrawHudPart
 };
 
-COMPILE_TIME_ASSERT(part_list_hpp, sizeof(HudPart) == 0x40);
+LAYOUT_ASSERT(part_list_hpp, sizeof(HudPart) == 0x40);
 
 } // namespace Ui
 } // namespace Game

@@ -2582,7 +2582,7 @@ def anim_table_c(name):
                     out.append("    { %d }, /* %d%s: unused */" % (r.get("index", slot), slot, kind))
                     continue
                 out += ["    /* %d%s */" % (slot, kind),
-                        "    { %d, (struct anim_frame_record *)%s, (u32 *)%s, %d, 0x%X, { %s }, %d, %d },"
+                        "    { %d, %s, %s, %d, 0x%X, { %s }, %d, %d },"
                         % (r.get("index", slot), r["keyframes"], r["frames"], r["palette"], r["depth"],
                            ", ".join("%d" % x for x in r["box"]), r.get("spawn_x", 0), r.get("spawn_y", 0))]
             out.append("};")

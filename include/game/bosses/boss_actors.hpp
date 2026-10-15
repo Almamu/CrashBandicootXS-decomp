@@ -90,8 +90,8 @@ public:
     static void Spawn(s32 x, s32 y, s32 z); // SpawnAirshipFireball
 };
 
-COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(AirshipFireball) == 0x6C);
-COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(AirshipFireball) == 0x6C);
+LAYOUT_ASSERT(boss_actors_hpp, sizeof(AirshipFireball) == 0x6C);
+LAYOUT_ASSERT(boss_actors_hpp, sizeof(AirshipFireball) == 0x6C);
 
 } // namespace Jetpack
 } // namespace Vehicles
@@ -152,7 +152,7 @@ public:
     static void Spawn(s32 x, s32 y, s32 z); // SpawnHovercraftFireball
 };
 
-COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftFireball) == 0x6C);
+LAYOUT_ASSERT(boss_actors_hpp, sizeof(HovercraftFireball) == 0x6C);
 
 /* The cannon (gHovercraftCannonVtable, hovercraft_cannon.cpp): it waits until the hovercraft is close
  * enough (StateWait), then fires cannonballs at the player in bursts
@@ -191,8 +191,8 @@ public:
     static void Spawn(s32 x, s32 y, s32 z); // SpawnHovercraftCannon
 };
 
-COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftCannon) == 0x70);
-COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftCannon) == 0x70);
+LAYOUT_ASSERT(boss_actors_hpp, sizeof(HovercraftCannon) == 0x70);
+LAYOUT_ASSERT(boss_actors_hpp, sizeof(HovercraftCannon) == 0x70);
 
 /* The launcher (gHovercraftLauncherVtable, hovercraft_launcher.cpp; the
  * same layout as the cannon): it launches planes,
@@ -232,8 +232,8 @@ public:
     static void Spawn(s32 x, s32 y, s32 z); // SpawnHovercraftLauncher
 };
 
-COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftLauncher) == 0x70);
-COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftLauncher) == 0x70);
+LAYOUT_ASSERT(boss_actors_hpp, sizeof(HovercraftLauncher) == 0x70);
+LAYOUT_ASSERT(boss_actors_hpp, sizeof(HovercraftLauncher) == 0x70);
 
 /* A side gun (gHovercraftSideGunVtable, hovercraft_side_gun.cpp): one on
  * each side of the hovercraft (`left`), firing fireballs in bursts. */
@@ -263,7 +263,7 @@ public:
     static void Spawn(s32 x, s32 y, s32 z, bool left); // SpawnHovercraftSideGun
 };
 
-COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftSideGun) == 0x70);
+LAYOUT_ASSERT(boss_actors_hpp, sizeof(HovercraftSideGun) == 0x70);
 
 /* The cannon's muzzle flash (gHovercraftCannonFlashVtable,
  * hovercraft_cannon_flash.cpp): it plays its animation once in front of the cannon, then deletes
@@ -285,8 +285,8 @@ public:
     static void Spawn(s32 x, s32 y, s32 z); // SpawnHovercraftCannonFlash
 };
 
-COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftCannonFlash) == 0x5C);
-COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftCannonFlash) == 0x5C);
+LAYOUT_ASSERT(boss_actors_hpp, sizeof(HovercraftCannonFlash) == 0x5C);
+LAYOUT_ASSERT(boss_actors_hpp, sizeof(HovercraftCannonFlash) == 0x5C);
 
 } // namespace Bosses
 } // namespace Game

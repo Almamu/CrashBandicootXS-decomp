@@ -32,13 +32,13 @@ extern "C" {
  * move.
  */
 
-COMPILE_TIME_ASSERT(level_table_cpp, sizeof(struct level_info) == 0x24);
-COMPILE_TIME_ASSERT(level_table_cpp, sizeof(struct level_room_list) == 0x10);
+LAYOUT_ASSERT(level_table_cpp, sizeof(struct level_info) == 0x24);
+LAYOUT_ASSERT(level_table_cpp, sizeof(struct level_room_list) == 0x10);
 COMPILE_TIME_ASSERT(level_table_cpp, sizeof(struct level_room_blend) == 4);
-COMPILE_TIME_ASSERT(level_table_cpp, sizeof(struct level_room) == 0x14);
-COMPILE_TIME_ASSERT(level_table_cpp, offsetof(struct level_room, param) == 0x10);
-COMPILE_TIME_ASSERT(level_table_cpp, offsetof(struct level_room, param.blend.eva) == 0x12);
-COMPILE_TIME_ASSERT(level_table_cpp, offsetof(struct level_room, param.blend.evb) == 0x13);
+LAYOUT_ASSERT(level_table_cpp, sizeof(struct level_room) == 0x14);
+LAYOUT_ASSERT(level_table_cpp, offsetof(struct level_room, param) == 0x10);
+LAYOUT_ASSERT(level_table_cpp, offsetof(struct level_room, param.blend.eva) == 0x12);
+LAYOUT_ASSERT(level_table_cpp, offsetof(struct level_room, param.blend.evb) == 0x13);
 
 /* A stage's `param.catIndex` is written as `param.blend`'s first field:
  * C++ initialises only a union's first member, and `catIndex` is the
