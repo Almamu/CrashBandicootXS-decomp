@@ -43,6 +43,8 @@ SECTIONS
 		build/ntranced/games/n2/asm/code_0800AB38.o(.text);
 		build/ntranced/src/game/enemies/periodic_spawner.o(.text);
 		build/ntranced/games/n2/asm/code_0800E7EC.o(.text);
+		build/ntranced/src/game/crates/crate_reset.o(.text);
+		build/ntranced/games/n2/asm/code_08011C80.o(.text);
 		build/ntranced/src/game/crates/collision_queue.o(.text);
 		build/ntranced/games/n2/asm/code_08012CF8.o(.text);
 		build/ntranced/src/game/level/tile_cache_cell.o(.text);
@@ -167,6 +169,7 @@ SECTIONS
 	PROVIDE(ClearPartList = ((ResetCrateList & ~1) + 0x8) | 1);
 	PROVIDE(sub_0800E7A8 = ((UpdatePeriodicSpawner & ~1) + 0x54) | 1);
 	PROVIDE(sub_0800E7E4 = ((UpdatePeriodicSpawner & ~1) + 0x90) | 1);
+	PROVIDE(ResetCrate = ((FindLineCrossing & ~1) + 0xE8) | 1);
 	PROVIDE(AddCollisionCandidate = ((ResolveCollisionCandidates & ~1) + 0x1E8) | 1);
 	PROVIDE(DestroyCollisionQueue = ((ResolveCollisionCandidates & ~1) + 0x2A8) | 1);
 	PROVIDE(ResetCollisionQueue = ((ResolveCollisionCandidates & ~1) + 0x2C0) | 1);

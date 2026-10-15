@@ -65,6 +65,9 @@ void Crate::Reset()
     paramB = 0;
     touched = 0;
     trialKind = CRATE_TRIAL_KIND_NONE;
+#ifdef GAME_N2
+    unk_5A = 0;
+#endif
     above = 0;
     below = 0;
 }

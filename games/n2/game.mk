@@ -93,7 +93,8 @@ N2_AGBCP_NO_BUGFIX_OBJS := $(C_BUILDDIR)/engine/gfx/fade.o $(C_BUILDDIR)/engine/
 	$(C_BUILDDIR)/engine/gfx/palette_cycle.o $(C_BUILDDIR)/game/level/tile_slot_pool.o \
 	$(C_BUILDDIR)/engine/util/fixed_math.o $(C_BUILDDIR)/game/crates/crate_list_update.o \
 	$(C_BUILDDIR)/game/level/bg_layer.o $(C_BUILDDIR)/game/level/entity_bitmap.o \
-	$(C_BUILDDIR)/game/level/pooled_bg_layer.o $(C_BUILDDIR)/game/entities/ui_sprite.o
+	$(C_BUILDDIR)/game/level/pooled_bg_layer.o $(C_BUILDDIR)/game/entities/ui_sprite.o \
+	$(C_BUILDDIR)/game/crates/crate_reset.o
 # and N2_TRY_AGBCP, objects tools/nt_compare/n2_objects.py --agbcp tries so
 N2_AGBCP_NO_BUGFIX_OBJS += $(N2_TRY_AGBCP)
 NEW_COMPILER_OBJS := $(C_BUILDDIR)/engine/sys/vram_dma_queue.o $(N2_AGBCP_NO_BUGFIX_OBJS)
