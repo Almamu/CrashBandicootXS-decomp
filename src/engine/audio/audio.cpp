@@ -108,7 +108,7 @@ void AudioContext::StartSong(u32 songIndex)
 
 /* `PlaySfx(context, sfxId, volumeParam)` - see docs/audio.md's "Sound
  * effects" section (called ~264 times across gameplay code). Looks up
- * `sfxId` in the 99-entry `gSfxTable` table, steals a mixing voice via
+ * `sfxId` in `gSfxTable` (SFX_COUNT entries), steals a mixing voice via
  * `GAX_fx_ex` (retrying once with the alternate slot on failure - a
  * two-channel round-robin toggled by `gSfxVoiceToggle`), and plays
  * it at a volume scaled by both the table's own base volume and the
@@ -150,7 +150,7 @@ void AudioContext::PlaySfx(u32 id, u32 volumeParam)
  * include/engine/audio/audio.hpp) and triggering it via `GAX_fx_ex`. */
 void AudioContext::TickAmbientSfx()
 {
-    if (activeSfx.id == 0x63) {
+    if (activeSfx.id == SFX_NONE) {
         return;
     }
     if (gRoomFrameCount >= activeSfx.deadline) {
@@ -160,8 +160,8 @@ void AudioContext::TickAmbientSfx()
             ambientSfxVolume = 0;
             GAX_stop_fx(2);
             activeSfx = pendingSfx;
-            if (activeSfx.id != 0x63) {
-                pendingSfx.id = 0x63;
+            if (activeSfx.id != SFX_NONE) {
+                pendingSfx.id = SFX_NONE;
                 GAX_fx_ex(gSfxTable[activeSfx.id].slotId, 2, 0, -1);
             }
         }
@@ -198,11 +198,11 @@ void AudioContext::StopSfx(u32 id)
 }
 
 /* Resets the ambient-sfx channel (both `activeSfx`/`pendingSfx`
- * records cleared to the `0x63` "none" sentinel) and mutes it. */
+ * records cleared to the `SFX_NONE` "none" sentinel) and mutes it. */
 void AudioContext::ResetAmbientSfx()
 {
-    pendingSfx.id = 0x63;
-    activeSfx.id = 0x63;
+    pendingSfx.id = SFX_NONE;
+    activeSfx.id = SFX_NONE;
     ambientSfxVolume = 0;
     pendingSfx.volume = 0;
     activeSfx.volume = 0;
@@ -214,7 +214,7 @@ void AudioContext::ResetAmbientSfx()
  * the next `TickAmbientSfx` tick will fade it out and go idle. */
 void AudioContext::StopAmbientSfx()
 {
-    pendingSfx.id = 0x63;
+    pendingSfx.id = SFX_NONE;
     activeSfx.deadline = gRoomFrameCount;
 }
 
@@ -238,7 +238,7 @@ void AudioContext::PlayAmbientSfx(u32 id, u32 frameOffset, s32 volumeMul, bool f
         s32 volume = Q16_TO_INT((gSfxTable[id].baseVolume * volumeMul) * sfxVolume);
         u32 cur = activeSfx.id;
 
-        if (cur == 0x63) {
+        if (cur == SFX_NONE) {
             GAX_fx_ex(handle, 2, 0, -1);
             GAX_set_fx_volume(2, ambientSfxVolume);
             activeSfx.id = id;
@@ -252,7 +252,7 @@ void AudioContext::PlayAmbientSfx(u32 id, u32 frameOffset, s32 volumeMul, bool f
                     GAX_fx_ex(handle, 2, 0, -1);
                     GAX_set_fx_volume(2, ambientSfxVolume);
                 }
-                pendingSfx.id = 0x63;
+                pendingSfx.id = SFX_NONE;
                 pendingSfx.volume = 0;
             } else {
                 u32 now;
@@ -427,7 +427,7 @@ AudioContext::AudioContext()
     duckVolDefault = 0x100;
     sfxVolume = 0x100;
     ambientSfxVolume = 0;
-    activeSfx.id = 0x63;
+    activeSfx.id = SFX_NONE;
     musicVolFadeDownArmed = 0;
     musicVolFadeUpArmed = 0;
     duckVolFadeDownArmed = 0;
