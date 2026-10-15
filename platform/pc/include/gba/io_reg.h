@@ -11,4 +11,10 @@
 #undef REG_BASE
 #define REG_BASE ((uintptr_t)gHostIo)
 
+/* The game reads the keys once a frame (KeyInput::Update): on the host
+ * that read is the platform's call, which plays the scripted input and
+ * counts the game's frames (platform/pc/src/input.c). */
+#undef REG_KEYINPUT
+#define REG_KEYINPUT (HostReadKeys())
+
 #endif /* GUARD_PC_GBA_IO_REG_H */

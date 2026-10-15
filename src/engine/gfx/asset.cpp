@@ -3,6 +3,7 @@
 extern "C" {
 #include "core.h"
 #include "engine/sys/system.h"
+#include <agb_syscall.h>
 }
 
 using Engine::Sys::FrameLimiter;
@@ -10,8 +11,6 @@ using Engine::Sys::FrameLimiter;
 /* Sits right after the still-parked WaitForKeyPress (asm/code_3_1_5.s) and
  * before whatever's still raw in asm/code_3_1_6.s. */
 
-extern "C" void LZ77UnCompVram(const void *src);
-extern "C" void RLUnCompVram(const void *src);
 
 /* Decompresses (or raw-DMA-copies) a "tagged" asset into `dest`. Bits 4-7
  * of the asset's first word, the BIOS's compression type (ASSET_TYPE_*),
@@ -37,10 +36,10 @@ void LoadTaggedAsset(const void *asset, void *dest)
         DmaCopy32(3, (const u8 *)asset + 4, dest, (*(const u32 *)asset >> 8) - 4);
         break;
     case ASSET_TYPE_LZ77:
-        LZ77UnCompVram(asset);
+        LZ77UnCompVram(asset, dest);
         break;
     case ASSET_TYPE_RL:
-        RLUnCompVram(asset);
+        RLUnCompVram(asset, dest);
         break;
     }
 }

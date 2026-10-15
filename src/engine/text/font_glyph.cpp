@@ -44,7 +44,7 @@ void Font::DrawGlyph(u8 charByte)
     oam->y = glyphRecords[glyph].yOffset + *y;
     oam->shape = glyphRecords[glyph].shape;
     oam->tileNum = tileBase + glyph * glyphTileStride;
-    gOamBuffer->Add(this);
+    gOamBuffer->Add(oam);
     posX += glyphRecords[glyph].width;
 }
 

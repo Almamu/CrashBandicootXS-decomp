@@ -1,0 +1,13 @@
+# The game's functions named as the C library's (src/engine/util/): the
+# pc platform renames them in the game's objects (platform.mk, objcopy
+# --redefine-syms), so that the host's C library keeps its own for its
+# other users (platform/pc/src/, libstdc++). Their callers in the game are
+# renamed with them. host_link.py --libs checks that the list is complete.
+rand GameRand
+srand GameSrand
+sprintf GameSprintf
+vsprintf GameVsprintf
+strcat GameStrcat
+strcpy GameStrcpy
+strlen GameStrlen
+strncpy GameStrncpy

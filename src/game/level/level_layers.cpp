@@ -111,6 +111,8 @@ LevelLayers::LevelLayers()
 
 LevelLayers::~LevelLayers()
 {
+    /* `||`: an asset the room references in the ROM is freed too, which
+     * the GBA's ROM shrugs off (MEM_FREE_LOST, gba/defines.h). */
     if (assetOwned != 0 || asset != NULL)
         delete[] (u8 *)asset;
 

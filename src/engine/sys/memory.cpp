@@ -203,9 +203,10 @@ void *mem_alloc(u32 requestedSize, u32 flags)
         heap = mem_ewram_heap_pointer;
     }
 
-    // align value
-    alignedSize += 0x13;
-    alignedSize &= ~3;
+    // the block's header and the size, rounded up to a pointer's
+    // alignment (0x13 and ~3 on the GBA, whose header is 0x10 bytes)
+    alignedSize += sizeof(struct mem_block) + sizeof(void *) - 1;
+    alignedSize &= ~(sizeof(void *) - 1);
 
     current = heap->base.nextFreeBlock;
     end = current->tail;
@@ -248,7 +249,7 @@ void mem_free(void *address)
     struct mem_block *adjacent;
     struct mem_block *current;
 
-    if (address == 0) {
+    if (address == 0 || MEM_FREE_LOST(address)) {
         return;
     }
 

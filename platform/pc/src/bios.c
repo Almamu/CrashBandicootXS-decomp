@@ -2,8 +2,8 @@
  * of platform/gba/lib/libagbsyscall). DivMod, the game's inline `svc #6`,
  * is in the pc platform's bios_util.cpp (platform/pc/units/).
  *
- * VBlankIntrWait is a stub: the frame loop that raises VBlank and runs
- * the game's interrupt handlers is phase 2 of #1093. */
+ * VBlankIntrWait, which runs the display until the next VBlank, is the
+ * frame loop's (irq.c). */
 
 #include <math.h>
 #include <string.h>
@@ -192,8 +192,4 @@ s32 Sqrt(s32 num)
         bit >>= 2;
     }
     return (s32)root;
-}
-
-void VBlankIntrWait(void)
-{
 }

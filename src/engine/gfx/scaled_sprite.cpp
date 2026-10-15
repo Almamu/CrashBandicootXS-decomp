@@ -115,7 +115,7 @@ void ScaledSprite::SetColor(s32 color)
 {
     u32 nibble;
     /* `dest` is needed: inlined, the instructions differ */
-    u32 dest;
+    uintptr_t dest;
 
     this->color = color;
     oam.palette = color / 16;

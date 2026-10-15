@@ -270,6 +270,8 @@ CLASSES = [
     ("hardware", r"platform/gba/include/gba/defines\.h", r"DISPLAY_(WIDTH|HEIGHT)", "the screen size itself (gba/defines.h)"),
     ("hardware", r"include/screen\.h", r"DISPLAY_ART_", "the fixed 240x160 art's size (screen.h)"),
     ("hardware", r"platform/gba/include/gba/", r".", "a GBA register offset or field value"),
+    ("hardware", r"platform/pc/src/irq\.c", r"VBLANK_LINE", "the GBA display's VBlank line, which the pc platform's frame loop plays"),
+    ("coincidence", r"platform/pc/src/sha1\.c", r".", "SHA-1's 80 rounds"),
     (
         "hardware",
         r".",

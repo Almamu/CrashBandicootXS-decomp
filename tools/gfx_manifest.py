@@ -715,9 +715,12 @@ def class_parts(e):
         parts.append(Part(cls, "tiles", e, "u8", stem + ".img.bin.lz.inc",
                           "%dbpp %s, LZ77" % (e["bpp"], "OBJ tiles" if "obj_sheet" in e else "tiles")))
     elif kind == "bitmap":
-        # no aligned(4): it is right after its word-aligned 512-byte palette
-        parts.append(Part(cls, "bitmap", e, "u8", stem + ".img.bin.lz.inc", "Mode 4 bitmap, 240x160 8bpp, LZ77",
-                          aligned=False))
+        # right after its 512-byte palette, which the game reads it after
+        # (slideshow.cpp, +0x200): aligned(4), the palette's alignment, so
+        # that a compiler that aligns a large array further (the pc
+        # platform's x86-64 g++, to 16) leaves no gap; on the GBA it is
+        # word-aligned there anyway
+        parts.append(Part(cls, "bitmap", e, "u8", stem + ".img.bin.lz.inc", "Mode 4 bitmap, 240x160 8bpp, LZ77"))
     elif kind == "rle_frames":
         # its palette, the category's (or Yeti::palette), is defined with other data
         parts.append(Part(cls, "frames", e, "u8", stem + ".inc", "zero-run-compressed OBJ frames", aligned=False))

@@ -114,7 +114,9 @@ static inline void CopyBitmapSpan(void *dst, void *src)
  * reads like an end-of-level "freeze the HUD/save state" snapshot. */
 void LevelState::SetCheckpointAtPlayer(u8 checkpointFlags)
 {
-    const struct level_room *level = room.cat;
+    /* At a level's start (UpdateGameFrame) neither the room nor the
+     * player exists yet: both are NULL, and the ROM reads through them. */
+    const struct level_room *level = NULL_READ(room.cat);
 
     if (level->kind == ROOM_KIND_CATEGORY) {
         room.checkpointCrateCount = GetCrateCount();
@@ -122,7 +124,7 @@ void LevelState::SetCheckpointAtPlayer(u8 checkpointFlags)
         room.checkpointSwitchPressed = switchPressed;
         MemCopy32(&checkpointData, &progress, sizeof(GameProgress));
     } else {
-        Player *player = gPlayer;
+        Player *player = NULL_READ(gPlayer);
         s32 x = player->x;
         s32 y = player->y;
         LevelEntityFlags *flags;

@@ -21,6 +21,24 @@
 // which every platform checks.
 #define LAYOUT_ASSERT(T, X) COMPILE_TIME_ASSERT(T, X)
 
+// NULL_READ(p): a struct pointer that the ROM reads through while it can
+// still be NULL (the level's first SetCheckpointAtPlayer reads the room
+// and the player before either exists). On the GBA the read lands in the
+// BIOS area, which answers with its open-bus value, and nothing comes of
+// it; a platform where a NULL read faults points it at memory of its own
+// (#1093, docs/platforms.md).
+#define NULL_READ(p) (p)
+
+// MEM_FREE_LOST(p): nonzero when mem_free(p) has no effect on the GBA for
+// want of RAM to write to. The ROM frees a room's asset even when it is
+// the ROM's own data (LevelLayers' destructor, an `||` where `&&` was
+// meant): mem_free's writes then land in the ROM, which ignores them, and
+// the blocks it would merge with are open-bus reads, never a free block's
+// 0 (checked for every room asset that isn't unpacked). On the GBA that
+// is the hardware's doing, so 0; a platform whose ROM data is read-only
+// memory skips a free of an address outside its heaps (#1093).
+#define MEM_FREE_LOST(p) 0
+
 // TODO: Move these elsewhere?
 // #ifdef __GNUC__
 #define NAKED __attribute__((naked))
