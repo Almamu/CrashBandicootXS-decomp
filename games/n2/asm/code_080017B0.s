@@ -8367,7 +8367,7 @@ sub_08005830: @ 0x08005830
 	bl sub_080273EC
 	bl sub_08007CA8
 	str r0, [r5]
-	ldr r2, _08005918 @ =gUnknown_084768B4
+	ldr r2, _08005918 @ =gSpriteBankTable
 	ldrh r1, [r2, #0xe]
 	ldr r2, [r2, #8]
 	bl sub_08007A68
@@ -8439,7 +8439,7 @@ _080058FA:
 _0800590C: .4byte 0x02000E6C
 _08005910: .4byte 0x02000E68
 _08005914: .4byte 0x00000914
-_08005918: .4byte gUnknown_084768B4
+_08005918: .4byte gSpriteBankTable
 _0800591C: .4byte 0x02000E90
 _08005920: .4byte gLargeFont
 _08005924: .4byte gObjVramCursor

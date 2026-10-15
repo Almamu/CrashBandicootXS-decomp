@@ -17,6 +17,10 @@
 0x0826FE48 0x327C4 games/n2/src/game/level/data/level_bg0_tiles_2.cpp
 0x082A260C 0x11308 games/n2/src/game/level/data/level_rooms_3.cpp
 0x082B3914 0x1C2FA0 games/n2/src/engine/gfx/data/sprite_tiles.cpp
+0x084768B4 0x07A64 games/n2/src/engine/gfx/data/sprite_banks_00_06.cpp
+0x0847E318 0x079E8 games/n2/src/engine/gfx/data/sprite_banks_07_25.cpp
+0x08485D00 0x0CC08 games/n2/src/engine/gfx/data/sprite_banks_26_46.cpp
+0x08492908 0x001C3 games/n2/src/engine/gfx/data/sprite_banks_47_48.cpp
 0x0852D868 0x06E44 games/n2/src/game/ui/data/menu_graphics.cpp
 0x085346AC 0x09CCF games/n2/src/game/level/data/level_bg_tiles_0.cpp
 0x0853FD10 0x04925 games/n2/src/game/level/data/level_bg_tiles_1.cpp

@@ -19,6 +19,7 @@
 0x081D0244 gEntitySpawnFuncs  # the 110-entry spawn table, checked by hand (#1113)
 0x081D0430 gLevelTable
 0x081DF5A8 gContinuePromptCursorText
+0x084768B4 gSpriteBankTable
 0x085291D0 __clz_tab_divdi3
 0x085292D0 __clz_tab_udivdi3
 0x087F843C gEepromConfig512

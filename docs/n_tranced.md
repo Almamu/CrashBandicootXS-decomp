@@ -298,6 +298,7 @@ N-Tranced's or the shared XS one, with N-Tranced's ROM.
 | What | Where (ROM) | Source |
 |---|---|---|
 | The sprite tile pool (49 banks) and the 93 OBJ palettes | `0x082B3914`-`0x084768B4` | `games/n2/src/engine/gfx/data/sprite_tiles.cpp` |
+| The sprite banks' tables (animations, frames, piece arrays) | `0x084768B4`-`0x08492ACB` | `games/n2/src/engine/gfx/data/sprite_banks_*.cpp` |
 | The pause screen (N-Tranced's own) and the continue prompt's three BG packages (XS's) | `0x0852D868`-`0x085346AC` | `games/n2/src/game/ui/data/menu_graphics.cpp` |
 
 Every LZ77 stream N-Tranced has is one gbagfx makes, but 28 of them
@@ -326,10 +327,18 @@ its own PNG, `fKKK_pN.png` (N its index in the frame), marked
 `"own_png"` in `bank.json`, so the frame keeps every pixel.
 
 The tile pool and the palettes are built from these sources
-(`sprite_tiles.cpp`, with graphics_rules.mk's rules). The banks' frame
-tables and animations (`0x084768B4`-`0x084EAEA8`) are still incbin'd, and
-they hold the frames' offsets into the pool, so a bank can't change size
-until they are built from source too.
+(`sprite_tiles.cpp`, with graphics_rules.mk's rules), and so are the
+banks' tables (`0x084768B4`-`0x08492ACB`: `gSpriteBankTable`, the
+animations, the frames and their piece arrays), which
+`tools/sprite_banks.py --graphics-dir games/n2/graphics baserom_n2.gba`
+extracted into `games/n2/src/engine/gfx/data/sprite_banks_*.cpp` as it did
+XS's. Their frames give their tiles' offsets with
+`SPRITE_TILES_BANKnn_FRAMEkkk`, so a bank can change size.
+
+N-Tranced's sprite boxes (`struct hitbox_quad`) are `{s16 offX, s16 offY,
+u16 w, u16 h}` where XS's are `{s16, s16, u8 w, u8 h}` and two bytes of
+padding: in all 2,903 of them the height is at +6, and +5 (XS's `h`) and
+`w`'s high byte are 0. `hitbox_quad.h` has both, under `GAME_N2`.
 
 ## Progress
 

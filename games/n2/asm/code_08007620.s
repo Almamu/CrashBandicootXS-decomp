@@ -51058,7 +51058,7 @@ InitLevelState: @ 0x08021070
 	movs r0, #4
 	bl sub_080273EC
 	str r0, [r4]
-	ldr r4, _08021198 @ =gUnknown_084768B4
+	ldr r4, _08021198 @ =gSpriteBankTable
 	adds r1, r4, #0
 	bl sub_08007D94
 	ldr r5, _0802119C @ =0x02000E68
@@ -51145,7 +51145,7 @@ _08021188: .4byte 0x02000E6C
 _0802118C: .4byte 0x00002094
 _08021190: .4byte 0x02000E7C
 _08021194: .4byte gSpriteBankSet
-_08021198: .4byte gUnknown_084768B4
+_08021198: .4byte gSpriteBankTable
 _0802119C: .4byte 0x02000E68
 _080211A0: .4byte 0x00000914
 _080211A4: .4byte 0x02000E90
@@ -72624,7 +72624,7 @@ _0802C1FC:
 	bl sub_080273EC
 	bl sub_08007CA8
 	str r0, [r4]
-	ldr r2, _0802C310 @ =gUnknown_084768B4
+	ldr r2, _0802C310 @ =gSpriteBankTable
 	ldrh r1, [r2, #0xe]
 	ldr r2, [r2, #8]
 	bl sub_08007A68
@@ -72730,7 +72730,7 @@ _0802C2D0:
 _0802C304: .4byte 0x04000008
 _0802C308: .4byte 0x02000E68
 _0802C30C: .4byte 0x00000914
-_0802C310: .4byte gUnknown_084768B4
+_0802C310: .4byte gSpriteBankTable
 _0802C314: .4byte gUnknown_0814371C
 _0802C318: .4byte 0x0600A000
 _0802C31C: .4byte 0x02000E6C
@@ -98116,7 +98116,7 @@ sub_08038FB4: @ 0x08038FB4
 	bl sub_080273EC
 	bl sub_08007CA8
 	str r0, [r4]
-	ldr r2, _08039018 @ =gUnknown_084768B4
+	ldr r2, _08039018 @ =gSpriteBankTable
 	ldrh r1, [r2, #0xe]
 	ldr r2, [r2, #8]
 	bl sub_08007A68
@@ -98136,7 +98136,7 @@ sub_08038FB4: @ 0x08038FB4
 	.align 2, 0
 _08039010: .4byte 0x02000E68
 _08039014: .4byte 0x00000914
-_08039018: .4byte gUnknown_084768B4
+_08039018: .4byte gSpriteBankTable
 _0803901C: .4byte 0x02000E90
 _08039020: .4byte gLargeFont
 _08039024: .4byte gObjVramCursor
@@ -118961,7 +118961,7 @@ sub_08043B08: @ 0x08043B08
 	bl sub_080273EC
 	bl sub_08007CA8
 	str r0, [r4]
-	ldr r2, _08043B80 @ =gUnknown_084768B4
+	ldr r2, _08043B80 @ =gSpriteBankTable
 	ldrh r1, [r2, #0xe]
 	ldr r2, [r2, #8]
 	bl sub_08007A68
@@ -118993,7 +118993,7 @@ sub_08043B08: @ 0x08043B08
 _08043B74: .4byte 0x01002800
 _08043B78: .4byte 0x02000E68
 _08043B7C: .4byte 0x00000914
-_08043B80: .4byte gUnknown_084768B4
+_08043B80: .4byte gSpriteBankTable
 _08043B84: .4byte 0x02000E90
 _08043B88: .4byte 0x0600A000
 _08043B8C:

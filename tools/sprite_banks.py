@@ -31,13 +31,20 @@ graphics/sprites/bankNN_<name>/bank.json (`sprites/bankNN_pieces.inc`,
 the same ROM. This script still checks that they sit where the ROM has them.
 
     tools/sprite_banks.py [baserom.gba]
+    tools/sprite_banks.py --graphics-dir DIR ROM
+        Another game's tables (docs/n_tranced.md, "Sprite banks"): the bank
+        table of DIR's manifest (sprite_frames.py --graphics-dir), into
+        DIR/../src/engine/gfx/data/, split into files as auto_files()
+        picks, ending where its last bank's piece bytes end.
 """
+import argparse
 import struct
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from sprite_frames import BANK_NAMES, NEW_FRAME_HOOKS, Rom  # noqa: E402
+import sprite_frames  # noqa: E402
+from sprite_frames import Rom  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 TABLE = 0x084A5600
@@ -49,6 +56,11 @@ OBJ_PALETTES = 0x084A4660
 # starts with a word-aligned struct and tools/report_units.py doesn't allow
 # linker fill), so the cuts are after banks whose piece bytes end on a word.
 FILES = [(0, 9), (10, 21), (22, 38), (39, 55)]
+# where the files go, the ldscript that links them and the banks' sources,
+# per game (main())
+OUT_DIR = ROOT / "src" / "engine" / "gfx" / "data"
+LDSCRIPT = "games/xs/ldscript.txt"
+SPRITES = "graphics/sprites"
 
 # layout type -> (struct, number of boxes, has anchor)
 LAYOUTS = {
@@ -65,12 +77,13 @@ LAYOUTS = {
 def frames_bound(i, n):
     """The bound of bank i's frame table: its n frames, and for a bank of
     NEW_FRAME_HOOKS the new frames sprite_frames.py pack adds."""
-    return f"{n} + SPRITE_BANK{i:02}_NEW_FRAME_COUNT" if i in NEW_FRAME_HOOKS else f"{n}"
+    return f"{n} + SPRITE_BANK{i:02}_NEW_FRAME_COUNT" if i in sprite_frames.NEW_FRAME_HOOKS else f"{n}"
 
 
 def seq_bound(i, k, n):
     """The bound of animation k's sequence of bank i: likewise its new steps."""
-    return f"{n} + SPRITE_BANK{i:02}_ANIM{k:02}_NEW_STEP_COUNT" if k in NEW_FRAME_HOOKS.get(i, []) else f"{n}"
+    return f"{n} + SPRITE_BANK{i:02}_ANIM{k:02}_NEW_STEP_COUNT" if k in sprite_frames.NEW_FRAME_HOOKS.get(i, []) \
+        else f"{n}"
 
 
 def frame_size(layout):
@@ -93,7 +106,15 @@ class Emitter:
         self.pos = addr + size
 
 
+# struct hitbox_quad: XS's {s16, s16, u8 w, u8 h} and 2 bytes of padding,
+# N-Tranced's {s16, s16, u16 w, u16 h} (include/engine/gfx/hitbox_quad.h)
+WIDE_BOXES = False
+
+
 def box(rom, a):
+    if WIDE_BOXES:
+        x, y, w, h = struct.unpack_from("<hhHH", rom.data, a - 0x08000000)
+        return f"{{ {x}, {y}, {w}, {h} }}"
     x, y, w, h, unk = struct.unpack_from("<hhBBH", rom.data, a - 0x08000000)
     assert unk == 0, f"{a:#x}: box padding {unk:#x}"
     return f"{{ {x}, {y}, {w}, {h} }}"
@@ -159,12 +180,12 @@ def emit_bank(rom, i, em, out, decls):
                        name=f"{B}Anim{k:02}Seq", bound=seq_bound(i, k, count)))
     assert len({x["seq"] for x in an}) == nanims
 
-    d = f"bank{i:02}_{BANK_NAMES[i]}"
+    d = f"bank{i:02}_{sprite_frames.BANK_NAMES[i]}"
     out.append(f"/* {'-' * 70} */")
     head = (f"/* Bank {i}: {nanims} animation{'s' if nanims != 1 else ''}, {nframes} frames,"
-            f" graphics/sprites/{d}/.")
-    if i in NEW_FRAME_HOOKS:
-        which = " and ".join(str(k) for k in NEW_FRAME_HOOKS[i])
+            f" {SPRITES}/{d}/.")
+    if i in sprite_frames.NEW_FRAME_HOOKS:
+        which = " and ".join(str(k) for k in sprite_frames.NEW_FRAME_HOOKS[i])
         out.append(head)
         out.append(f" * The frame table and animation {which}'s sequence end with the new frames and")
         out.append(" * steps of bank.json (\"boxes\", \"new_steps\"; tools/sprite_frames.py,")
@@ -218,7 +239,7 @@ def emit_bank(rom, i, em, out, decls):
     for f in fr:
         ref = f"&{f['name']}" if f["layout"] == 1 else f"&{f['name']}.frame"
         out.append(f"    {ref},")
-    if i in NEW_FRAME_HOOKS:
+    if i in sprite_frames.NEW_FRAME_HOOKS:
         out.append(f"    SPRITE_BANK{i:02}_NEW_FRAMES")
     out.append("};")
     out.append("")
@@ -252,7 +273,7 @@ def emit_bank(rom, i, em, out, decls):
     for f in fr:
         if f["count"]:
             em.place(f["pieces"], f["count"], 1)
-    out.append(f"/* The piece arrays, from graphics/sprites/{d}/bank.json. */")
+    out.append(f"/* The piece arrays, from {SPRITES}/{d}/bank.json. */")
     out.append(f'#include "sprites/bank{i:02}_pieces.inc"')
     out.append("")
 
@@ -261,30 +282,74 @@ FILE_COMMENT = """\
 /*
  * ROM {start:#010x}-{end:#010x}: sprite banks {first}-{last} of the sprite-bank
  * animation system (gSpriteBankTable, include/engine/gfx/sprite_bank.h). Linked in
- * ROM order between data/data.s sections by games/xs/ldscript.txt - see
+ * ROM order {between} by {ldscript} - see
  * docs/data.md and docs/data_map.md ("gSpriteBankTable").
  *
- * Extracted once from baserom.gba by tools/sprite_banks.py; this file is
+ * Extracted once from {baserom} by tools/sprite_banks.py{args}; this file is
  * the source now. Per bank: the animations (a frame-index sequence each),
  * the frame pointer array, the frames (header plus the boxes/anchor of
  * their layout type), then every frame's piece positions and piece bytes.
- * The pieces and the frames' tiles come from graphics/sprites/bankNN_<name>/
+ * The pieces and the frames' tiles come from {sprites}/bankNN_<name>/
  * (a PNG per frame and bank.json, see docs/graphics.md "Sprite banks"):
  * tools/sprite_frames.py generates the piece arrays (sprites/bankNN_pieces.inc),
  * and sprites/sprite_frames.h declares the frames and gives each one's
- * offset in the sprite tile pool (src/engine/gfx/data/sprite_tiles.cpp),
+ * offset in the sprite tile pool ({src}/engine/gfx/data/sprite_tiles.cpp),
  * SPRITE_TILES_BANKnn_FRAMEkkk. A frame's struct type has to match its
  * "layout" in bank.json.
  */
 """
 
 
+def bank_end(rom, i):
+    """Where bank i's last piece bytes end."""
+    _, _, _, ptrs = read_bank(rom, i)
+    return max(rom.w(p + 4) + (rom.w(p + 8) >> 24) for p in ptrs)
+
+
+def auto_files(rom, nbanks, starts, parts=4):
+    """Another game's split: about `parts` files of about the same size,
+    each cut after a bank whose piece bytes end on a word (as FILES)."""
+    total = bank_end(rom, nbanks - 1) - TABLE
+    cuts, lo = [], 0
+    for i in range(nbanks - 1):
+        if starts[i + 1] % 4 == 0 and bank_end(rom, i) == starts[i + 1] \
+                and starts[i + 1] - TABLE >= total * (len(cuts) + 1) // parts:
+            cuts.append((lo, i))
+            lo = i + 1
+            if len(cuts) == parts - 1:
+                break
+    return cuts + [(lo, nbanks - 1)]
+
+
 def main():
-    rom = Rom(sys.argv[1] if len(sys.argv) > 1 else ROOT / "baserom.gba")
+    global TABLE, END, TILE_BASE, OBJ_PALETTES, FILES, OUT_DIR, LDSCRIPT, SPRITES, WIDE_BOXES
+    ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    ap.add_argument("--graphics-dir", default="graphics")
+    ap.add_argument("rom", nargs="?", default=str(ROOT / "baserom.gba"))
+    args = ap.parse_args()
+    rom = Rom(args.rom)
+    xs = args.graphics_dir == "graphics"
+    if not xs:
+        sprite_frames.use_graphics_dir(args.graphics_dir)
+        TABLE = sprite_frames.BANK_TABLE
+        TILE_BASE, OBJ_PALETTES = rom.w(TABLE + 4), rom.w(TABLE + 8)
+        game = Path(args.graphics_dir).parent
+        OUT_DIR = ROOT / game / "src" / "engine" / "gfx" / "data"
+        LDSCRIPT = (game / "ldscript.txt").as_posix()
+        SPRITES = sprite_frames.SPRITES.as_posix()
+        WIDE_BOXES = True  # N-Tranced's, the only other game
+    nbanks, npal = rom.h(TABLE + 12), rom.h(TABLE + 14)
     assert rom.w(TABLE + 4) == TILE_BASE and rom.w(TABLE + 8) == OBJ_PALETTES
-    assert rom.w(TABLE) == TABLE + 16 and rom.h(TABLE + 12) == 56 and rom.h(TABLE + 14) == 125
-    nbanks = 56
+    assert rom.w(TABLE) == TABLE + 16 and nbanks == len(sprite_frames.BANK_NAMES)
+    assert not xs or (nbanks, npal) == (56, 125)
     starts = [read_bank(rom, i)[0] for i in range(nbanks)]
+    if not xs:
+        END = bank_end(rom, nbanks - 1)
+        FILES = auto_files(rom, nbanks, starts)
+    src = "src" if xs else (Path(args.graphics_dir).parent / "src").as_posix()
+    comment = dict(between="between data/data.s sections" if xs else "between the incbin'd data",
+                   ldscript=LDSCRIPT, baserom="baserom.gba" if xs else Path(args.rom).name,
+                   args="" if xs else " --graphics-dir " + args.graphics_dir, sprites=SPRITES, src=src)
 
     em = Emitter(rom, TABLE)
     for fi, (lo, hi) in enumerate(FILES):
@@ -310,11 +375,11 @@ def main():
         out.append("}")
         out.append('#include "sprites/sprite_frames.h"')
         out.append("")
-        out.append(FILE_COMMENT.format(start=start, end=end, first=lo, last=hi))
+        out.append(FILE_COMMENT.format(start=start, end=end, first=lo, last=hi, **comment))
         if lo == 0:
             out.append("extern const u8 gSpriteBank00Tiles[];  /* sprite_tiles.cpp, bank 0's tiles */")
-            out.append("extern const u8 gObjPalettes[0xfa0];")
-            out.append("extern const struct sprite_bank gSpriteBanks[56];")
+            out.append(f"extern const u8 gObjPalettes[{32 * npal:#x}];")
+            out.append(f"extern const struct sprite_bank gSpriteBanks[{nbanks}];")
             for i in range(nbanks):
                 if not (lo <= i <= hi):
                     b = f"gSpriteBank{i:02}"
@@ -336,7 +401,7 @@ def main():
             out.append("};")
             out.append("")
             out.append("/* Bank N is `**gSpriteBankSet + 12 * N` in the code (a part's +0x20). */")
-            out.append("const struct sprite_bank gSpriteBanks[56] = {")
+            out.append(f"const struct sprite_bank gSpriteBanks[{nbanks}] = {{")
             for i in range(nbanks):
                 b = f"gSpriteBank{i:02}"
                 out.append(f"    /* {i} */ {{ {b}Anims, {b}Frames, 0, ARRAY_COUNT({b}Anims) }},")
@@ -345,8 +410,9 @@ def main():
         out.extend(body)
         while out and out[-1] == "":
             out.pop()
-        (ROOT / "src" / "engine" / "gfx" / "data" / name).write_text("\n".join(out) + "\n")
-        print(f"wrote src/engine/gfx/data/{name}: {start:#x}-{end:#x}")
+        OUT_DIR.mkdir(parents=True, exist_ok=True)
+        (OUT_DIR / name).write_text("\n".join(out) + "\n")
+        print(f"wrote {(OUT_DIR / name).relative_to(ROOT)}: {start:#x}-{end:#x}")
     assert em.pos == END
 
 

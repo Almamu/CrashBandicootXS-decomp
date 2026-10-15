@@ -26,7 +26,11 @@ SECTIONS
 		build/ntranced/src/game/level/data/level_bg0_tiles_2.o(.rodata);
 		build/ntranced/src/game/level/data/level_rooms_3.o(.rodata);
 		build/ntranced/src/engine/gfx/data/sprite_tiles.o(.rodata);
-		build/ntranced/games/n2/data/data_084768B4.o(.rodata);
+		build/ntranced/src/engine/gfx/data/sprite_banks_00_06.o(.rodata);
+		build/ntranced/src/engine/gfx/data/sprite_banks_07_25.o(.rodata);
+		build/ntranced/src/engine/gfx/data/sprite_banks_26_46.o(.rodata);
+		build/ntranced/src/engine/gfx/data/sprite_banks_47_48.o(.rodata);
+		build/ntranced/games/n2/data/data_08492ACB.o(.rodata);
 		build/ntranced/src/game/ui/data/menu_graphics.o(.rodata);
 		build/ntranced/src/game/level/data/level_bg_tiles_0.o(.rodata);
 		build/ntranced/games/n2/data/data_0853E37B.o(.rodata);
