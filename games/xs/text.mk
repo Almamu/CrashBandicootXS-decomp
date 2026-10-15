@@ -20,7 +20,7 @@ TEXT_POS := $(TEXT_LANGS:%=$(TEXT_DIR)/%.po)
 TEXT_BUILDDIR := $(OBJ_DIR)/text
 TEXT_MOS := $(TEXT_LANGS:%=$(TEXT_BUILDDIR)/%.mo)
 TEXT_TABLES := ui_text cutscene_text_english cutscene_text_translations credits_text
-TEXT_DEPS := $(TEXT_POT) tools/text.py engine/src/game/ui/data/hud_font_tables.cpp
+TEXT_DEPS := $(TEXT_POT) $(PY_TEXT) engine/src/game/ui/data/hud_font_tables.cpp
 
 MSGFMT := msgfmt
 MSGMERGE := msgmerge

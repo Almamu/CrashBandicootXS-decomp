@@ -64,6 +64,7 @@ decomp.yaml
 report.json
 /objdiff.json
 
-# Python cache
+# Python cache, and the workspace's environment (`uv sync`, pyproject.toml)
 __pycache__/
+.venv/
 ntranced_progress.json

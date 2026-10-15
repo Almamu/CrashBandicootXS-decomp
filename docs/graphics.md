@@ -132,7 +132,8 @@ padding"](./data.md#lz77-stream-padding)).
 `games/xs/graphics/manifest.json` lists every source under `games/xs/graphics/`, one entry
 per asset: its path, what kind of asset it is, its symbol and its ROM
 address, and what extracting it needs (bpp, width, palette, OBJ layout).
-Its header comment in `tools/gfx_manifest.py` describes each kind.
+Its header comment in `packages/crashdata/src/crashdata/graphics/manifest.py`
+(`tools/gfx_manifest.py`'s code) describes each kind.
 
 **The build reads it for the graphics classes** (below) **and for the
 build rules' lists**: `tools/gfx_manifest.py make` writes
@@ -1780,7 +1781,7 @@ counts in their bounds. With no new frames they are empty and 0, and the
 ROM's bytes don't change.
 
 Only bank 51's C takes them, and only its animation 0's sequence
-(`NEW_FRAME_HOOKS` in `tools/sprite_frames.py`, which `pack` checks): the
+(`NEW_FRAME_HOOKS` in `crashdata.graphics.sprite_frames`, which `pack` checks): the
 numbered levels' icons, for the levels past the ROM's 20 ([levels.md,
 "Level-select pages"](./levels.md#level-select-pages)). Another bank or
 animation needs the same macros in its C (`tools/sprite_banks.py` writes

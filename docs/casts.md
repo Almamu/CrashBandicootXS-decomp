@@ -10,7 +10,7 @@ and then it has a short comment.
 
 ## The inventory: `tools/magic_numbers.py --casts`
 
-[tools/magic_casts.py](../tools/magic_casts.py) lists the C-style casts in
+[tools/magic_casts.py](../packages/buildtools/src/buildtools/magic_casts.py) lists the C-style casts in
 the game code (engine/src/ without engine/src/*/data/, and engine/include/), grouped by the thing
 being cast:
 

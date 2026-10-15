@@ -1,0 +1,11 @@
+[project]
+name = "crashdata"
+version = "0.1.0"
+description = "Crash Bandicoot XS's and N-Tranced's game data: levels, graphics, cutscenes, music, text, mods"
+requires-python = ">=3.12"
+# PIL, for the PNG sources (python3-pil in CI, pillow in the devshell)
+dependencies = ["pillow"]
+
+[build-system]
+requires = ["uv_build>=0.8,<0.14"]
+build-backend = "uv_build"

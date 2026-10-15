@@ -63,8 +63,9 @@ jobs:
       run: python3 tools/text.py --game n2 check
 
     # The C style (.clang-format, CONTRIBUTING.md "Code style"), checked on
-    # all the C but the data tables (FORMATTED/UNFORMATTED in
-    # tools/format.py). The clang-format version is pinned: other versions
+    # all the C but the data tables (FORMATTED/UNFORMATTED in tools/format.py's
+    # code, packages/buildtools/src/buildtools/format.py). The clang-format
+    # version is pinned: other versions
     # format differently.
     - name: Check formatting
       run: |
