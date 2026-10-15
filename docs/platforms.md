@@ -48,7 +48,8 @@ and the N-Tranced disassembly include.
 The build (Makefile, before the per-game part, so every game gets it):
 
 ```
-PLATFORM_DIR := platform/gba
+PLATFORM ?= gba
+PLATFORM_DIR := platform/$(PLATFORM)
 CPPFLAGS := ... -iquote include -I $(PLATFORM_DIR)/include \
 	-I lib/*/include -I $(PLATFORM_DIR)/lib/*/include ...
 ```
@@ -168,11 +169,93 @@ or it is replaced at its API, see "What a port provides"):
   (`lib/agb_eeprom/`, which writes the DMA registers with addresses as
   `u32`s) are replaced at their APIs, not compiled for a host.
 
-As a check, every `src/` object and the `lib/` C compiles with the host
-`g++ -m64 -fsyntax-only` (and `gcc` for the C) against a stub
-`platform/<host>/include/gba/` (the GBA headers with the memory map on
-host arrays as above, `DmaSet` as a function call and an empty
-`LAYOUT_ASSERT`), with `-fpermissive` for the g++ 2.9 extension phase 1
-has to deal with (a struct type declared in an anonymous union,
-sprite_obj.hpp's `MirrorBits`/`MirrorFlags`). The only pointer/integer
-size warnings left are the ones above.
+The pc platform (below) is the check that this holds: every `src/`
+object compiles and links on a 64-bit host, in CI.
+
+## `platform/pc/`
+
+The game for a 64-bit host (Linux, a stock g++/gcc). Phase 1 of
+#1093: it compiles and links; it doesn't run the game yet (it starts
+AgbMain, which crashes without a frame loop).
+
+```
+make PLATFORM=pc        # build/pc/crashbandicootxs_pc; XS only
+```
+
+It needs no ARM toolchain, agbcc or baserom, only what the data
+generators need (CI: `.github/workflows/host.yml`).
+
+```
+platform/pc/platform.mk            the build: the Makefile includes it instead of
+                                   its GBA link and compile rules (compile.mk), with
+                                   the rest (object lists, generated data) shared,
+                                   under build/pc/crashbandicootxs/
+platform/pc/include/gba/*.h        the GBA's headers, included by relative path, with
+                                   REG_BASE, EWRAM_START, IWRAM_START, PLTT, VRAM, OAM
+                                   on host arrays, DmaSet a call, LAYOUT_ASSERT empty,
+                                   IWRAM_DATA/EWRAM_DATA empty
+platform/pc/include/agb_syscall.h  the GBA's prototypes
+platform/pc/src/
+    memory.c                       the host arrays (gba/host.h)
+    dma.c                          DmaSet: an immediate transfer done at once
+    bios.c                         the 8 BIOS calls in C (VBlankIntrWait a stub)
+    main.c                         main -> AgbMain; IntrMain_Buffer; HostIntrMain,
+                                   IntrMain's dispatch (nothing calls it yet)
+    gax.c, eeprom.c                GAX2's API (silent stubs) and AgbEeprom's (a RAM
+                                   buffer), in place of lib/gax and lib/agb_eeprom
+    libgcc.c                       __divsi3 & co., which the game calls by name
+    sound_data.S                   gSfxTable and gGaxMusicData, data/data.s's
+                                   blocks the game reads, as the built bytes
+platform/pc/units/                 units built in place of src/'s
+    engine/sys/bios_util.cpp       DivMod in C (the GBA's is an inline `svc #6`)
+platform/pc/tools/host_link.py     the link's symbol assignments (below)
+```
+
+**Swapping a unit.** `platform/pc/units/<path>.cpp` is built in place of
+`src/<path>.cpp`, into the same object, so that object's dependencies and
+flags still apply. It is for a unit the host can't compile as it is; only
+bios_util.cpp so far.
+
+**The link.** On the GBA, games/xs/ldscript.txt places the globals that
+have no C definition (games/xs/sym_iwram.txt, sym_ewram.txt) and
+`objcopy --redefine-syms` gives the C++ symbols the C names of
+cxx_symbols.txt. platform/pc/tools/host_link.py does both for the host,
+as a linker script of `PROVIDE` assignments passed to the link:
+
+- each linker-placed global at twice its GBA offset in gHostIwram or
+  gHostEwram (a struct is at most twice its GBA size with 8-byte
+  pointers, and an alias inside a table of pointers, gIntrTableTimer2,
+  stays inside it), under its C name and under the host's mangled name
+  of the C++ symbol cxx_symbols.txt gives that C name (Irq::table is
+  gIntrTable). The heaps (memory.cpp) are twice the GBA's too;
+- each C name of a C++ symbol that a declaration uses
+  (`asm("SetCheckpointAtPlayer")`, `extern "C" SetEntityPos`, ...) as an
+  alias of the host's definition, matched by qualified name (g++ 2.9's
+  mangling decoded from cxx_symbols.txt, the host's with c++filt).
+
+**Host flags.** GNU C++98 with no RTTI or exceptions, as on the GBA, and
+`-funsigned-char` (ARM's `char`), `-fno-strict-aliasing -fwrapv` (gcc
+2.9's semantics), `-fno-builtin` (the game's own strcpy, strlen, sprintf).
+entity.o gets `-fkeep-inline-functions`: g++ 2.9's `#pragma
+implementation` emitted Entity's inline methods there, and other files
+call SetEntityPos, SetEntityPixelPos and the constructor out of line.
+clang has no such option: with `HOST_CC=clang HOST_CXX=clang++`
+everything compiles, but those three are missing at the link. No
+`-Werror`: the build's warnings are the GBA's.
+
+**Shared code changed for it** (each byte-identical on the GBA, both ROMs
+and maps unchanged):
+
+- sprite_obj.hpp: `Sprite::MirrorBits`/`MirrorFlags` are declared in the
+  class, not inside the anonymous union (a g++ 2.9 extension).
+- A variable of an unnamed struct type has internal linkage on a modern
+  g++: the tile sets (`TAGGED_RAW_ASSET`), the spawn tables
+  (`ACTOR_SPAWN_TABLE`) and the room links (`LEVEL_LINKS`, both written
+  by tools/levels.py) are defined `extern "C"`.
+
+**Not done yet** (the later phases): the frame loop (VBlank and VCount,
+HostIntrMain) and so a boot, the PPU, input, saving to a file, audio
+(GAX2's API is silent; gGaxMusicData's pointers are the GBA's), the link.
+`vsprintf` stays as it is (4-byte argument slots, see above). The game
+defines `strcpy` and `strlen` (string.cpp's asm labels), which a host
+links in front of the C library's.

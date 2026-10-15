@@ -1,0 +1,27 @@
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  host:
+    runs-on: ubuntu-24.04
+    name: Host build (platform/pc)
+    steps:
+    - uses: actions/checkout@v5
+
+    # The host build needs no ARM toolchain, agbcc or baserom: the stock
+    # compiler, and what the data generators need (libpng and zlib for
+    # gbagfx and grit, PIL, gettext).
+    - name: Install dependencies
+      run: sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 update && sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 install -y --no-install-recommends build-essential libpng-dev zlib1g-dev python3-pil gettext
+
+    # The game compiled and linked into a 64-bit host executable on the pc
+    # platform (#1093, docs/platforms.md): phase 1, compile and link only.
+    - name: Build for the host
+      run: |
+        g++ --version
+        make -j"$(nproc)" PLATFORM=pc

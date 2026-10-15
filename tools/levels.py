@@ -770,7 +770,8 @@ def room_c(room_dir, build_dir=None):
     out = blocks.setdefault("links", [])
     links = room.get("links")
     if links is not None:
-        out.append("extern const LEVEL_LINKS(%d) %s =\n{\n    %d,\n    {" % (len(links), sym["links"], len(links)))
+        # C linkage, as for the spawn tables (spawn_table_c).
+        out.append("extern \"C\" const LEVEL_LINKS(%d) %s =\n{\n    %d,\n    {" % (len(links), sym["links"], len(links)))
         for i in range(0, len(links), 6):
             out.append("        " + " ".join("{ %d, %d }," % tuple(l) for l in links[i:i + 6]))
         out.append("    },\n};\n")
@@ -2205,7 +2206,10 @@ def spawn_table_c(name):
     s = spawn_list(name)
     f = s["family"]
     out = ["/* data/levels/spawns/%s.json */" % name,
-           "extern const ACTOR_SPAWN_TABLE(%d) %s = {" % (len(s["spawns"]), s["symbol"]),
+           # C linkage: the table's struct type has no name, and a C++
+           # variable of an unnamed type is local to its file on a modern
+           # compiler (the pc platform, #1093).
+           'extern "C" const ACTOR_SPAWN_TABLE(%d) %s = {' % (len(s["spawns"]), s["symbol"]),
            "    %d," % s["length"], "    %d," % len(s["spawns"]), "    {"]
     for e in s["spawns"]:
         k = e["kind"]
