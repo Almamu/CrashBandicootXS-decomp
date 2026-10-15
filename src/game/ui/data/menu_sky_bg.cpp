@@ -10,7 +10,7 @@ using Engine::Gfx::MenuSkyBg;
 
 /*
  * ROM 0x0816C484-0x0816C498. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 /* BG0 graphics package shared by LoadSaveMenuBg (save_menu_draw.cpp),

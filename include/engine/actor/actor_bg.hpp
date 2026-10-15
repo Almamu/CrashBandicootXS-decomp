@@ -12,7 +12,7 @@
  * member functions like plain functions. The data members are only
  * declared: cxx_symbols.txt (block "#915 ActorBg") maps each one to its C
  * name (`_Q36Engine5Actor7ActorBg.scrollX` is gActorBgScrollX, ...), whose address is in
- * sym_iwram.txt, and the functions keep their C names the same way
+ * games/xs/sym_iwram.txt, and the functions keep their C names the same way
  * (`Shake__Q36Engine5Actor7ActorBgi` is ShakeActorBg).
  *
  * In the namespace Engine::Actor (#1033, docs/cplusplus.md "Namespaces").
@@ -43,7 +43,7 @@ public:
     static s32 GetCenterX();                // GetActorBgCenterX
 
 private:
-    /* IWRAM (sym_iwram.txt). The scroll and the sizes are Q8 pixels. */
+    /* IWRAM (games/xs/sym_iwram.txt). The scroll and the sizes are Q8 pixels. */
     static s32 scrollY; // gActorBgScrollY
     static s32 scrollX; // gActorBgScrollX
     static s32 shake;   // gActorBgShake - a Y bias UpdateScroll subtracts, CommitScroll clears

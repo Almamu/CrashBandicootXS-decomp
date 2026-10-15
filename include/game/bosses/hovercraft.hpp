@@ -8,7 +8,7 @@
  * fields, and static data members compile exactly like them (and static
  * member functions like plain functions). The data members are only
  * declared: cxx_symbols.txt (block "#772 Hovercraft") maps each mangled
- * name to its C name, whose address is in sym_iwram.txt; the functions
+ * name to its C name, whose address is in games/xs/sym_iwram.txt; the functions
  * keep their C names the same way. Its weapons (include/game/bosses/boss_actors.hpp)
  * read it through the public getters.
  *
@@ -157,7 +157,7 @@ private:
      * src/game/bosses/data/hovercraft_state_tables.cpp), a plain function table. */
     static void (*const stateFuncs[6])();
 
-    /* IWRAM 0x1590-0x1600, in address order (sym_iwram.txt) */
+    /* IWRAM 0x1590-0x1600, in address order (games/xs/sym_iwram.txt) */
     static u16 flashSavedColor;                    // gHovercraftFlashSavedColor
     static s32 flashColorSaved;                    // gHovercraftFlashColorSaved
     static s32 bg2Page;                            // gHovercraftBg2Page

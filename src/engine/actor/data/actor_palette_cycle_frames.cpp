@@ -4,7 +4,7 @@ using Engine::Actor::ActorPaletteCycle;
 
 /*
  * ROM 0x08175760-0x08178F80. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 /* The BG palette-cycle animation: 32 frames of BG palettes 0-13

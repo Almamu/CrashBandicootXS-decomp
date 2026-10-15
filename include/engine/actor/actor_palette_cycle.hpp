@@ -13,7 +13,7 @@
  * member functions like plain functions. The data members are only
  * declared: cxx_symbols.txt (block "#915 ActorPaletteCycle") maps each
  * one to its C name (`_Q36Engine5Actor17ActorPaletteCycle.frame` is
- * gActorPaletteCycleFrame, ...), whose address is in sym_iwram.txt; the
+ * gActorPaletteCycleFrame, ...), whose address is in games/xs/sym_iwram.txt; the
  * ROM tables are defined in src/engine/actor/data/actor_palette_cycle_frames.cpp. The
  * functions keep their C names the same way (`Update__Q36Engine5Actor17ActorPaletteCycle`
  * is UpdateActorPaletteCycle).
@@ -45,7 +45,7 @@ public:
     static void Enable(u8 flag); // EnableActorPaletteCycle
 
 private:
-    /* IWRAM (sym_iwram.txt) */
+    /* IWRAM (games/xs/sym_iwram.txt) */
     static u8 enabled;      // gActorPaletteCycleEnabled
     static s32 savedFrame;  // gSavedActorPaletteCycleFrame
     static s32 savedTarget; // gSavedActorPaletteCycleTarget

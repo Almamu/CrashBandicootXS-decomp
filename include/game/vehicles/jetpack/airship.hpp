@@ -12,7 +12,7 @@
  * The data members are only declared: cxx_symbols.txt (block "#772
  * Airship") maps each mangled name to its C name
  * (`_Q44Game8Vehicles7Jetpack7Airship.state` to gAirshipState, ...), whose
- * address is in sym_iwram.txt; the functions keep their C names the same
+ * address is in games/xs/sym_iwram.txt; the functions keep their C names the same
  * way (`Update__Q44Game8Vehicles7Jetpack7Airship` is UpdateAirship).
  * The picture's animation is a bare AnimPart (`anim`, gAirship; `new
  * AnimPart` in Create); its fireballs are AirshipFireball
@@ -133,7 +133,7 @@ private:
             a->animTime = 0;
     }
 
-    /* IWRAM 0x03001520-0x03001580 (sym_iwram.txt) */
+    /* IWRAM 0x03001520-0x03001580 (games/xs/sym_iwram.txt) */
     static s32 bg2Page;                    // gAirshipBg2Page
     static u8 bg2PageFlip;                 // gAirshipBg2PageFlip: "apply now" latch for UpdateBg2
     static s32 mapCols;                    // gAirshipMapCols

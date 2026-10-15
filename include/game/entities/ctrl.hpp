@@ -6,7 +6,7 @@
  *
  * No `#pragma interface`: g++ emits each class's vtable in the object
  * that defines its first non-inline virtual method (its key method),
- * and ldscript.txt places it at its ROM address (docs/cplusplus.md,
+ * and games/xs/ldscript.txt places it at its ROM address (docs/cplusplus.md,
  * "Emitting the vtables"). Ctrl's own, gCtrlVtable, is emitted in
  * src/engine/sys/bios_util.cpp, which has its key method, Update (UpdateCtrl).
  * cxx_symbols.txt maps the mangled vtable, method, constructor and

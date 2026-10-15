@@ -6,7 +6,7 @@ extern "C" {
 
 /*
  * ROM 0x080C0C38-0x080C2758: categories 1 and 2's spawn tables.
- * Linked in ROM order between data/data.s sections by ldscript.txt - see
+ * Linked in ROM order between data/data.s sections by games/xs/ldscript.txt - see
  * docs/data.md.
  */
 

@@ -24,7 +24,7 @@ using Game::Vehicles::Jetpack::Airship;
  * ROM 0x08175558-0x08175760: the actor category descriptors and the
  * per-type category vtables (include/engine/actor/actor_anim.h, docs/graphics.md "An
  * actor \"vtable\" system"). Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 extern const u8 gCategoryFamily0CellAnim[];

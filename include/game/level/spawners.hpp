@@ -106,7 +106,7 @@ public:
 
 private:
     /* gEntitySpawner, the one spawner: an IWRAM global at 0x30012E4
-     * (sym_iwram.txt; cxx_symbols.txt maps `_13EntitySpawner.instance`
+     * (games/xs/sym_iwram.txt; cxx_symbols.txt maps `_13EntitySpawner.instance`
      * to it), not a field. */
     static EntitySpawner *instance;
 };

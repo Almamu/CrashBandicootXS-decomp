@@ -16,7 +16,7 @@
 #include "engine/util/aabb.h"
 #include "engine/text/bitmap_font.h"
 
-/* The two font instances, built by InitLevelState (IWRAM, sym_iwram.txt):
+/* The two font instances, built by InitLevelState (IWRAM, games/xs/sym_iwram.txt):
  * a SmallFont and a LargeFont (include/engine/text/font.hpp). No C file uses them. */
 #ifdef __cplusplus
 /* In its namespace (font.hpp; docs/cplusplus.md, "Namespaces"). */

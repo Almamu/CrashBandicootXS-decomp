@@ -6,7 +6,7 @@ extern "C" {
 
 /*
  * ROM 0x0816B298-0x0816B2E0. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 /* The rows of the pause/options screen: InitPauseMenu (pause_menu.cpp)

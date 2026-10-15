@@ -10,7 +10,7 @@ using Engine::Gfx::PauseMenuBg;
 
 /*
  * ROM 0x0816B284-0x0816B298. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 /* BG graphics package loaded by RunPauseMenu (pause_menu.cpp). */

@@ -432,7 +432,7 @@ bool LevelState::HasTurboRun()
 /* GitHub issues #35/#36: 0x080231CC-0x08023488, the remainder of the
  * UpdateGameFrame-MainLoop cluster's "level" object accessor family
  * (`gLevelState`) - fully contiguous with the functions above (no
- * ldscript.txt change needed, this is still the same class and
+ * games/xs/ldscript.txt change needed, this is still the same class and
  * still the same object file). See docs/matching/archive/issue-35-36-0x080231cc-game-loop.md
  * for the full write-up. Bit-7 getter for the `+2` flags byte this
  * file's own family already covers bits 4-6 of. */
@@ -986,7 +986,7 @@ void LevelState::PlayBootCutscene()
     PlayCutscene(CUTSCENE_LEGAL_NOTICE);
 }
 
-/* UNUSED - no caller anywhere in the ROM (checked src/, asm/, expected/
+/* UNUSED - no caller anywhere in the ROM (checked src/, asm/, games/xs/expected/
  * and every word-aligned Thumb pointer in baserom.gba). Empty; keeps the
  * nullsub_N name (docs/naming.md): no call, table slot or neighbour
  * shows what it stood for. */

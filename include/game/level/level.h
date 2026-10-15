@@ -105,7 +105,7 @@ extern void SpawnStartMarker(u32 id, u16 x, u16 y, u16 param);
  * bg_layer.hpp) */
 extern s32 sub_8026C8C(void);
 
-/* sym_iwram.txt */
+/* games/xs/sym_iwram.txt */
 #ifdef __cplusplus
 /* The decoration parts (PartList, sprite_obj.hpp; C++ only), in its
  * namespace (docs/cplusplus.md, "Namespaces"). */

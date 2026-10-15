@@ -10,7 +10,7 @@ using Game::Vehicles::Jetpack::Airship;
 
 /*
  * ROM 0x0817C2D0-0x0817C3FC. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 /* Airship::attacks (include/game/vehicles/jetpack/airship.hpp): the airship's attack

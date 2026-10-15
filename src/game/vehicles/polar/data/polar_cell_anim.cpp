@@ -7,7 +7,7 @@ extern "C" {
 /*
  * ROM 0x0803B8B0-0x080B2120: BG0 cell animation A (categories 0-2) and
  * category 0's spawnTable. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md ("Category backgrounds").
+ * sections by games/xs/ldscript.txt - see docs/data.md ("Category backgrounds").
  */
 
 /* BG0 cell animation A, ActorCategory::descriptors[0..2].cellAnim

@@ -16,7 +16,7 @@
  * functions like plain functions. cxx_symbols.txt (block "#915
  * ActorCategoryStats") maps each member to its C name
  * (`_Q36Engine5Actor18ActorCategoryStats.deaths` is gActorCategoryDeaths, ...):
- * sym_iwram.txt places the counters, iwram_data.cpp defines `checkpoint`
+ * games/xs/sym_iwram.txt places the counters, iwram_data.cpp defines `checkpoint`
  * with the other initialised IWRAM globals. The functions keep their C
  * names the same way (`AddMissedNitro__Q36Engine5Actor18ActorCategoryStats` is
  * AddActorMissedNitro).
@@ -50,7 +50,7 @@ private:
      * counts the deaths */
     friend class ActorCategory;
 
-    /* IWRAM (sym_iwram.txt) */
+    /* IWRAM (games/xs/sym_iwram.txt) */
     static s32 deaths; // gActorCategoryDeaths - since the checkpoint
     /* gActorCategoryBossDeaths - the deaths since the checkpoint that count
      * towards the category's `retryBossDeaths`: being carried off by the

@@ -30,7 +30,7 @@ page, with the tools that check it (`tools/extern_audit.py`,
    subject: `DestroyLargeFont`/`DestroySmallFont` are defined in
    `src/engine/util/aabb_setters.cpp` but declared in `text.h`.
 2. A symbol defined only in data (`src/*/data/`, the generated level and
-   graphics sources) or in the linker script (`sym_*.txt`, the IWRAM/EWRAM
+   graphics sources) or in the linker script (`games/xs/sym_*.txt`, the IWRAM/EWRAM
    globals) goes in the header of the subsystem that uses it most, unless
    the subsystem it belongs to is clearer: `gSmallFont`/`gLargeFont` are
    mostly used by menus, but they are the text subsystem's fonts, so they

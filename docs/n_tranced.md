@@ -14,6 +14,8 @@ games keep the XS names, and differences go behind `GAME_XS` /
 | Build | `make compare` | `make GAME=n2 compare` |
 | Build dir | `build/crashbandicootxs/` | `build/ntranced/` |
 | Checksum | `games/xs/checksum.sha1` | `games/n2/checksum.sha1` |
+| Linker script | `games/xs/ldscript.txt` | `games/n2/ldscript.txt` (generated) |
+| RAM symbols | `games/xs/sym_ewram.txt`, `games/xs/sym_iwram.txt` | `games/n2/symbols.txt` |
 | Defines | `GAME_XS=1` | `GAME_N2=1` |
 | Original ROM | not needed | `baserom_n2.gba`, in the project root |
 
@@ -27,11 +29,11 @@ two builds share only the toolchain variables at the top (`AS`, `LD`,
 `CC1FLAGS`, `CPPFLAGS`, ...). Each game defines `GAME_XS` or `GAME_N2`,
 for the preprocessor and as an assembler symbol.
 
-Each game's checksum is in `games/<game>/checksum.sha1`. XS's other
-per-game files (`ldscript.txt`, `sym_*.txt`, `expected/`) are still at
-the root; they move to `games/xs/` too (#1108). N-Tranced's are all under
-`games/n2/`. How the two games share sources is "Sharing sources"
-below.
+Each game's own files are in `games/<game>/` (#1108): its checksum, its
+linker script, its RAM symbols (XS's `sym_ewram.txt`/`sym_iwram.txt`,
+N-Tranced's `symbols.txt`) and, for XS, the frozen disassembly the
+progress report diffs against (`games/xs/expected/`). How the two games
+share sources is "Sharing sources" below.
 
 The compile rules and the per-object compiler choices (which objects
 old_agbcp builds, `-fno-implement-inlines`, `-O1`, ...) are in

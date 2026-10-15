@@ -27,7 +27,7 @@ extern const struct entry_set gEnemyCtrlMotionSet;
 
 /* The part position UpdateEnemyCtrl's state 9 records the first time it
  * runs, and the flags that say each axis was recorded (IWRAM,
- * sym_iwram.txt). */
+ * games/xs/sym_iwram.txt). */
 extern s32 gHomingEnemyX;
 extern s32 gHomingEnemyXSaved;
 extern s32 gHomingEnemyY;

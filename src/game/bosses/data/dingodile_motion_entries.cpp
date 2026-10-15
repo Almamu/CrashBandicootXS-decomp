@@ -7,7 +7,7 @@ extern "C" {
 /*
  * ROM 0x0816C418-0x0816C460: an entry table and the entry set that
  * points into it. Linked in ROM order between data/data.s sections by
- * ldscript.txt - see docs/data.md.
+ * games/xs/ldscript.txt - see docs/data.md.
  */
 
 /* {a, b} motion-record index pairs:

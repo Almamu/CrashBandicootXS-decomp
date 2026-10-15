@@ -10,7 +10,7 @@
  * the class is byte-identical to the C.
  *
  * cxx_symbols.txt maps every member onto its C name: the IWRAM variables
- * get their addresses from sym_iwram.txt under those names, and the ROM
+ * get their addresses from games/xs/sym_iwram.txt under those names, and the ROM
  * tables are defined in src/.../data/*.cpp as the members (`const
  * struct YetiCharge Yeti::chargeParams[6] = ...`). The actor category table
  * (src/engine/actor/data/actor_categories.cpp) points at Create, Update,
@@ -91,7 +91,7 @@ private:
     static void UpdatePalette();               // UpdateYetiPalette
     static void BuildBg2Map(u8 *dst, u8 seed); // BuildYetiBg2Map: UNUSED
 
-    /* IWRAM (sym_iwram.txt) */
+    /* IWRAM (games/xs/sym_iwram.txt) */
     static Game::Entities::AnimPart *anim; // gYeti - the 0x1C-byte animation
     static u8 bg2Page;                     // gYetiBg2Page
     static u8 bg2PageFlip;                 // gYetiBg2PageFlip

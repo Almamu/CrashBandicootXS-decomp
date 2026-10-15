@@ -14,7 +14,7 @@
  * member functions like plain functions. The data members are only
  * declared: cxx_symbols.txt (block "#915 Irq") maps each one to its C
  * name (`_Q36Engine3Sys3Irq.table` is gIntrTable, ...), whose address is in
- * sym_iwram.txt and which crt0.s and intr_main.s use, and the functions
+ * games/xs/sym_iwram.txt and which crt0.s and intr_main.s use, and the functions
  * keep their C names the same way (`SetHandler__Q36Engine3Sys3IrqiPFv_v` is
  * IrqSetHandler).
  *
@@ -51,7 +51,7 @@ private:
     static void EmptyHandler();  // IrqEmptyHandler: an IRQ with no handler
     static void VBlankHandler(); // VBlankHandler: the VBlank IRQ's handler
 
-    /* IWRAM (sym_iwram.txt) */
+    /* IWRAM (games/xs/sym_iwram.txt) */
     static irq_handler_t table[14];                 // gIntrTable - one per REG_IF bit
     static irq_handler_t prevTable[14];             // gPrevIntrTable - what SetHandler replaced
     static struct vblank_callbacks vblankCallbacks; // gVBlankCallbacks

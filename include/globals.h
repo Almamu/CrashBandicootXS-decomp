@@ -2,7 +2,7 @@
 #define GUARD_GLOBALS_H
 
 /* The globals that three or more subsystems use (docs/headers.md,
- * "Who owns a symbol", rule 3): the sym_iwram.txt singletons the game
+ * "Who owns a symbol", rule 3): the games/xs/sym_iwram.txt singletons the game
  * builds at boot or per level (the audio context, the input object, the
  * OAM shadow buffer, the palette cache, ...), the key state and frame
  * counter of src/engine/sys/iwram_data.cpp, and the sine table.
@@ -114,7 +114,7 @@ extern Game::Ui::Hud *gHud;
 #endif
 extern u8 gJetpackPlayerInactive;
 
-/* sym_iwram.txt: the level's objects. game_frame.cpp builds the level
+/* games/xs/sym_iwram.txt: the level's objects. game_frame.cpp builds the level
  * state and the entity flags; PlayRoom (play_room.cpp) builds the rest per
  * room. The level state is a C++ class, LevelState (level_state.hpp;
  * C sees an incomplete struct level_state). The entity flags
@@ -172,7 +172,7 @@ class CrateList;
 extern Game::Crates::CrateList *gCrateList;
 #endif
 
-/* sym_iwram.txt: the player object, built by PlayRoom: a Player
+/* games/xs/sym_iwram.txt: the player object, built by PlayRoom: a Player
  * (player.hpp). No C file uses it. */
 #ifdef __cplusplus
 /* In its namespace (docs/cplusplus.md, "Namespaces"). */

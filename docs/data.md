@@ -27,7 +27,7 @@ libgcc's `__clz_tab`) follow the same convention in C under
   each other when their tables are unrelated (`level_select_page_bg_package.cpp`,
   then `level_select_picture_table.cpp`).
 - **Symbol names don't change.** The code references
-  `gStaticData_XXXXXXXX`, and so does the frozen `expected/` assembly the
+  `gStaticData_XXXXXXXX`, and so does the frozen `games/xs/expected/` assembly the
   code report diffs against, so a converted table keeps its label. The
   meaning goes into the type and a comment naming the consumer. A new
   label is fine where a table had none (`gMegaMixMotionEntries`), and a
@@ -41,7 +41,7 @@ libgcc's `__clz_tab`) follow the same convention in C under
   uses a plain type or a small local struct and says whose view it
   mirrors. Moving such structs into headers is a separate cleanup.
 
-### Layout: `data/data.s` sections and `ldscript.txt`
+### Layout: `data/data.s` sections and `games/xs/ldscript.txt`
 
 `data/data.s` is split into sections at every C object. Each section is
 named after the ROM address of its first byte, and a comment marks the
@@ -60,7 +60,7 @@ gSwimCtrlTurnSpeeds:
 	.incbin "baserom.gba", 0x0016C090, 0x000001C0
 ```
 
-The `/* Data */` block of `ldscript.txt` lists every piece in ROM order:
+The `/* Data */` block of `games/xs/ldscript.txt` lists every piece in ROM order:
 
 ```
 build/crashbandicootxs/data/data.o(.rodata);
@@ -112,7 +112,7 @@ registering. Everything the linker script doesn't name is discarded
    `.section .rodata.<ADDR>` at the next label, `<ADDR>` being that
    label's ROM address. (When the next thing is already another data
    object, no new section is needed.)
-4. **Add it to `ldscript.txt`:** the object's `(.rodata)` line and the new
+4. **Add it to `games/xs/ldscript.txt`:** the object's `(.rodata)` line and the new
    `data.o(.rodata.<ADDR>)` line, right after the `data.o` section the
    table was cut from.
 5. **Check.** `make compare` must print `crashbandicootxs.gba: OK`. Then
@@ -480,7 +480,7 @@ the matched code's `struct anim_frame_record`.
 
 Graphics, and other assets built from files, use the same layout as the
 hand-written tables: each asset becomes a `const` array in a `src/*/data/*.cpp`
-object, and `ldscript.txt` places that object's `.rodata` at the asset's
+object, and `games/xs/ldscript.txt` places that object's `.rodata` at the asset's
 address in the `/* Data */` block. The pixel conversion is done by
 [grit](https://github.com/devkitPro/grit). Built this way so far:
 the 24 cutscene pictures (Mode 4 bitmaps,
@@ -1018,7 +1018,7 @@ linker's zero fill up to the 4-aligned `.rodata` of `gax_tables.o`.
 Placement is the same as for a hand-written table (see "Layout" above).
 `data/data.s` drops the asset's label and `.incbin`, leaves a
 `@ ...: src/.../data/<file>.cpp` comment, and starts a new `.section` for what
-follows; `ldscript.txt` links the object's `.rodata` in between (the
+follows; `games/xs/ldscript.txt` links the object's `.rodata` in between (the
 first asset done this way was the intro bitmap `gCutscenePicture00Bitmap`,
 now part of `cutscene_pictures.cpp`). agbcc doesn't align a `u8`
 array, so whatever follows starts right at the array's end, which is
@@ -1027,7 +1027,7 @@ a stream on a word boundary (every other LZ77 asset), the definition says
 `__attribute__((aligned(4)))`, see "LZ77 stream padding".
 
 The report needs nothing extra. The object is in `src/*/data/`, so
-`tools/report_units.py` counts it as built data from the `ldscript.txt`
+`tools/report_units.py` counts it as built data from the `games/xs/ldscript.txt`
 layout like any other table. `make report` depends on `$(C_OBJS)`, and
 `graphics.mk` makes the object depend on its generated `.inc`, so grit
 and gbagfx run first. The asset was already counted as built data when it
@@ -1042,7 +1042,7 @@ was an `.incbin` of the gbagfx output, so converting it doesn't change
    that reads it, named after what it holds, never its address) with the
    hand-written declaration. Add a `$(call data_obj,<content>): <...>.lz.inc`
    dependency line to `graphics.mk`.
-3. Split `data/data.s` and add the `ldscript.txt` lines, as for any table.
+3. Split `data/data.s` and add the `games/xs/ldscript.txt` lines, as for any table.
 4. Run a full clean `make` (`make tidy && make`). It must print
    `crashbandicootxs.gba: OK`.
 

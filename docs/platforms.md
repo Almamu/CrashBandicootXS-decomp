@@ -55,7 +55,7 @@ CPPFLAGS := ... -iquote include -I $(PLATFORM_DIR)/include \
 
 and the XS part assembles `platform/gba/asm/*.s` and
 `platform/gba/lib/*/*.s` into `build/crashbandicootxs/platform/gba/`,
-where `ldscript.txt` places them (crt0 first, the SWI wrappers after
+where `games/xs/ldscript.txt` places them (crt0 first, the SWI wrappers after
 GAX2's ARM DSP code, IntrMain first in the IWRAM image).
 
 ## Including the platform headers

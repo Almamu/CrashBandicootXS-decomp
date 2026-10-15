@@ -12,7 +12,7 @@
  * compile like those globals, static member functions like plain
  * functions. cxx_symbols.txt (block "#915 FrameLimiter") maps each member
  * to its C name (`_Q36Engine3Sys12FrameLimiter.target` is gFrameLimitTarget, ...):
- * sym_iwram.txt places `target` and `interval`, iwram_data.cpp defines
+ * games/xs/sym_iwram.txt places `target` and `interval`, iwram_data.cpp defines
  * `enabled` with the other initialised IWRAM globals. The functions keep
  * their C names the same way (`WaitForVBlank__Q36Engine3Sys12FrameLimiter` is
  * WaitForVBlank).

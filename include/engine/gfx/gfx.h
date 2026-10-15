@@ -238,7 +238,7 @@ extern const struct bg_package gMenuSkyBg;
  * sprite_bank.h): its palettes seed the palette cache. */
 extern const struct sprite_bank_table gSpriteBankTable;
 
-/* The palette cycles (PaletteCycles, part_list.hpp; sym_iwram.txt; NULL
+/* The palette cycles (PaletteCycles, part_list.hpp; games/xs/sym_iwram.txt; NULL
  * outside a level). C++ only: no C file uses them. */
 #ifdef __cplusplus
 namespace Engine
@@ -266,6 +266,6 @@ extern const u8 gObjPieceWidths[12];
 extern const s32 gObjSizeHeights[12];
 extern const s32 gObjSizeWidths[12];
 
-/* sym_iwram.txt: the palette fade buffers are PaletteFade's (fade.hpp) */
+/* games/xs/sym_iwram.txt: the palette fade buffers are PaletteFade's (fade.hpp) */
 
 #endif /* __GFX_H__ */

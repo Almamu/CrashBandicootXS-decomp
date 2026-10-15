@@ -12,7 +12,7 @@
  * like that global, static member functions like plain functions. The
  * data member is only declared: cxx_symbols.txt (block "#915
  * VramDmaQueue") maps it to its C name (`_Q36Engine3Sys12VramDmaQueue.queue` is
- * gVramDmaQueue), whose address is in sym_iwram.txt, and the functions
+ * gVramDmaQueue), whose address is in games/xs/sym_iwram.txt, and the functions
  * keep their C names the same way (`Flush__Q36Engine3Sys12VramDmaQueue` is
  * FlushVramDmaQueue).
  *
@@ -44,7 +44,7 @@ public:
     static s32 Init();     // AllocVramDmaQueue: 0, or -1 when out of EWRAM
 
 private:
-    /* IWRAM (sym_iwram.txt): the EWRAM entries and their count, one
+    /* IWRAM (games/xs/sym_iwram.txt): the EWRAM entries and their count, one
      * struct (vram_dma_queue.cpp) */
     static struct dma_queue queue; // gVramDmaQueue
 };

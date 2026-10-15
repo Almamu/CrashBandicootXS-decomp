@@ -2,7 +2,7 @@
 # The Makefile renames these in every C++ object (CXX_OBJS) with
 # `objcopy --redefine-syms` after assembling it: definitions get the
 # names the C callers (and the C vtables left in src/*/data) use, the
-# vtables g++ emits get their C table names (ldscript.txt places them),
+# vtables g++ emits get their C table names (games/xs/ldscript.txt places them),
 # and references get the C names of the functions and vtables they
 # point at. See docs/cplusplus.md.
 #
@@ -1360,7 +1360,7 @@ __Q36Engine3Sys8KeyInput ClearKeys
 Create__Q34Game5Level13EntitySpawner CreateEntitySpawner
 Destroy__Q34Game5Level13EntitySpawner DestroyEntitySpawner
 LaunchHarmfulEffectPart__Q34Game5Level13EntitySpawneriiiiiPQ34Game8Entities12MovingSprite LaunchHarmfulEffectPart
-# Its data member keeps the C name: sym_iwram.txt places it.
+# Its data member keeps the C name: games/xs/sym_iwram.txt places it.
 _Q34Game5Level13EntitySpawner.instance gEntitySpawner
 #
 # part 10b: the front end (include/game/ui/frontend.hpp, include/game/entities/actor_self.hpp;
@@ -2098,7 +2098,7 @@ _._Q36Engine5Audio12AudioContext DestroyAudioContext
 __Q36Engine5Audio12AudioContext InitAudioContext
 DisableVCountIrq__Q36Engine5Audio12AudioContext DisableMusicVCountIrq
 # #915 Irq: the interrupt handlers as an all-static class (include/engine/sys/irq.hpp,
-# src/engine/sys/irq.cpp). Its data members keep the C names: sym_iwram.txt
+# src/engine/sys/irq.cpp). Its data members keep the C names: games/xs/sym_iwram.txt
 # places them, crt0.s and intr_main.s name gIntrTable.
 ClearHandler__Q36Engine3Sys3Irqi IrqClearHandler
 RestoreHandler__Q36Engine3Sys3Irqi IrqRestoreHandler
@@ -2117,7 +2117,7 @@ _Q36Engine3Sys3Irq.vblankCallbacks gVBlankCallbacks
 #
 # #915 FrameLimiter: the VBlank wait and its frame limit as an all-static
 # class (include/engine/sys/frame_limiter.hpp, src/engine/sys/irq.cpp). Its data members
-# keep the C names: sym_iwram.txt places target and interval,
+# keep the C names: games/xs/sym_iwram.txt places target and interval,
 # iwram_data.cpp defines enabled.
 WaitForVBlank__Q36Engine3Sys12FrameLimiter WaitForVBlank
 Disable__Q36Engine3Sys12FrameLimiter DisableFrameLimit
@@ -2129,7 +2129,7 @@ _Q36Engine3Sys12FrameLimiter.interval gFrameLimitInterval
 # #915 BrightnessFade and PaletteFade: the brightness fade and the palette
 # fade to black as all-static classes (include/engine/gfx/fade.hpp, src/engine/gfx/fade.cpp,
 # src/engine/gfx/fade_to_black.cpp). Their data members keep the C names:
-# iwram_data.cpp defines BrightnessFade's, sym_iwram.txt places
+# iwram_data.cpp defines BrightnessFade's, games/xs/sym_iwram.txt places
 # PaletteFade's.
 Step__Q36Engine3Gfx14BrightnessFade StepBrightnessFade
 Start__Q36Engine3Gfx14BrightnessFadeUciUc FadeBrightness
@@ -2167,7 +2167,7 @@ SetPos__Q36Engine3Gfx12ScaledSpriteUiUi SetScaledSpritePos
 ResetAttrs__Q36Engine3Gfx12ScaledSprite ResetScaledSpriteAttrs
 # #915 Display: the display register shadows as an all-static class
 # (include/engine/sys/display.hpp, src/engine/sys/display.cpp). Its data members keep the C
-# names: sym_iwram.txt places them.
+# names: games/xs/sym_iwram.txt places them.
 SetMode__Q36Engine3Sys7Displayi SetDispcntMode
 HideBg3__Q36Engine3Sys7Display HideBg3
 HideBg2__Q36Engine3Sys7Display HideBg2
@@ -2188,7 +2188,7 @@ _Q36Engine3Sys7Display.dispcnt gDispcnt
 #
 # #915 VramDmaQueue: the VRAM DMA queue as an all-static class
 # (include/engine/sys/vram_dma_queue.hpp, src/engine/sys/vram_dma_queue.cpp). Its data
-# member keeps the C name: sym_iwram.txt places it.
+# member keeps the C name: games/xs/sym_iwram.txt places it.
 Flush__Q36Engine3Sys12VramDmaQueue FlushVramDmaQueue
 Add__Q36Engine3Sys12VramDmaQueuePCvPvUsUs QueueVramDmaTransfer
 Destroy__Q36Engine3Sys12VramDmaQueue FreeVramDmaQueue
@@ -2361,7 +2361,7 @@ GetCompletionPercent__CQ34Game5Level12GameProgress GetCompletionPercent
 #
 # #772 Hovercraft: the hovercraft as an all-static class (include/game/bosses/hovercraft.hpp;
 # src/game/bosses/hovercraft.cpp, hovercraft_state.cpp). The data members are
-# only declared: the IWRAM ones get their addresses from sym_iwram.txt, the
+# only declared: the IWRAM ones get their addresses from games/xs/sym_iwram.txt, the
 # ROM tables are defined in src/*/data under their C names.
 _Q34Game6Bosses10Hovercraft.flashSavedColor gHovercraftFlashSavedColor
 _Q34Game6Bosses10Hovercraft.flashColorSaved gHovercraftFlashColorSaved
@@ -2433,7 +2433,7 @@ StateExplodeStub__Q34Game6Bosses10Hovercraft HovercraftStateExplodeStub
 #
 # #772 Yeti: the yeti as an all-static class (include/game/vehicles/polar/yeti.hpp, src/vehicle/polar/yeti*.cpp,
 # StateStop in src/game/vehicles/jetpack/jetpack_spawn.cpp). Its data members keep
-# the C names: sym_iwram.txt places the IWRAM ones, the ROM tables are
+# the C names: games/xs/sym_iwram.txt places the IWRAM ones, the ROM tables are
 # defined in src/*/data under them (stateFuncs in yeti_state_table.cpp).
 Create__Q44Game8Vehicles5Polar4Yetii CreateYeti
 Update__Q44Game8Vehicles5Polar4Yeti UpdateYeti
@@ -2466,7 +2466,7 @@ _Q44Game8Vehicles5Polar4Yeti.keyframes gYetiKeyframes
 #
 # #915 CellAnim: the 3D stages' BG0 cell animation as an all-static class
 # (include/engine/gfx/cell_anim.hpp, src/engine/gfx/cell_anim.cpp). Its data members keep
-# the C names: sym_iwram.txt places them.
+# the C names: games/xs/sym_iwram.txt places them.
 UploadFrame__Q36Engine3Gfx8CellAnim UploadCellAnimFrame
 Init__Q36Engine3Gfx8CellAnimiPvUii InitCellAnim
 ResetBg__Q36Engine3Gfx8CellAnim ResetCellAnimBg
@@ -2494,7 +2494,7 @@ _Q36Engine3Gfx8CellAnim.frameStep gCellAnimFrameStep
 #
 # #915 ActorBg: the 3D stages' BG scroll as an all-static class
 # (include/engine/actor/actor_bg.hpp, src/engine/actor/actor_bg.cpp). Its data members keep
-# the C names: sym_iwram.txt places them.
+# the C names: games/xs/sym_iwram.txt places them.
 InitScroll__Q36Engine5Actor7ActorBgi InitActorBgScroll
 UpdateScroll__Q36Engine5Actor7ActorBgii UpdateActorBgScroll
 Shake__Q36Engine5Actor7ActorBgi ShakeActorBg
@@ -2573,7 +2573,7 @@ _Q44Game8Vehicles7Jetpack7Airship.picture gAirshipPicture
 #
 # #915 ObjTileAllocator: the OBJ tile VRAM allocator as an all-static class
 # (include/engine/gfx/obj_tile_allocator.hpp, the start of src/engine/gfx/sprite_frame.cpp).
-# Its data members keep the C names: sym_iwram.txt places them.
+# Its data members keep the C names: games/xs/sym_iwram.txt places them.
 Init__Q36Engine3Gfx16ObjTileAllocatorPv InitObjTileFreeList
 Free__Q36Engine3Gfx16ObjTileAllocatorPv FreeVramTileBlock
 Alloc__Q36Engine3Gfx16ObjTileAllocatori AllocVramTileBlock
@@ -2590,7 +2590,7 @@ _Q36Engine3Gfx16ObjTileAllocator.index gVramTileBlockIndex
 # sprite frame cache as all-static classes (include/engine/gfx/sprite_oam_queue.hpp,
 # include/engine/gfx/sprite_frame_cache.hpp, src/engine/gfx/sprite_frame.cpp; the cache's
 # Lookup is ARM, src/engine/gfx/sprite_arm.cpp). Their data members keep the C
-# names: sym_iwram.txt places them.
+# names: games/xs/sym_iwram.txt places them.
 Add__Q36Engine3Gfx14SpriteOamQueueUiUsi QueueSpriteFrameOam
 Destroy__Q36Engine3Gfx14SpriteOamQueue FreeSpriteFrameOamQueue
 Flush__Q36Engine3Gfx14SpriteOamQueue FlushSpriteFrameOamQueue
@@ -2611,14 +2611,14 @@ _Q36Engine3Gfx16SpriteFrameCache.pool gSpriteFrameCachePool
 #
 # #915 CategorySpriteSheet: the category sprite sheet as an all-static
 # class (include/engine/gfx/category_sprite_sheet.hpp, src/engine/gfx/sprite_frame.cpp). Its
-# data member keeps the C name: sym_iwram.txt places it.
+# data member keeps the C name: games/xs/sym_iwram.txt places it.
 Free__Q36Engine3Gfx19CategorySpriteSheet FreeCategorySpriteSheet
 Decompress__Q36Engine3Gfx19CategorySpriteSheetPCv DecompressCategorySpriteSheet
 _Q36Engine3Gfx19CategorySpriteSheet.data gCategorySpriteSheet
 #
 # #915 CollectedSpawns: the collected spawn records as an all-static class
 # (include/engine/actor/collected_spawns.hpp, src/engine/actor/actor_spawn_collected.cpp). Its
-# data members keep the C names: sym_iwram.txt places spawns,
+# data members keep the C names: games/xs/sym_iwram.txt places spawns,
 # iwram_data.cpp defines count.
 Contains__Q36Engine5Actor15CollectedSpawnsP11actor_spawn IsSpawnCollected
 Add__Q36Engine5Actor15CollectedSpawnsP11actor_spawn MarkSpawnCollected
@@ -2629,7 +2629,7 @@ _Q36Engine5Actor15CollectedSpawns.count gCollectedSpawnCount
 # #915 ActorCategoryStats: the actor category's deaths, missed nitros and
 # checkpoint as an all-static class (include/engine/actor/actor_category_stats.hpp,
 # src/engine/actor/actor_category_stats.cpp). Its data members keep the C names:
-# sym_iwram.txt places the counters, iwram_data.cpp defines checkpoint.
+# games/xs/sym_iwram.txt places the counters, iwram_data.cpp defines checkpoint.
 AddMissedNitro__Q36Engine5Actor18ActorCategoryStats AddActorMissedNitro
 GetMissedNitros__Q36Engine5Actor18ActorCategoryStats GetActorMissedNitros
 GetCheckpoint__Q36Engine5Actor18ActorCategoryStats GetActorCheckpoint
@@ -2643,7 +2643,7 @@ _Q36Engine5Actor18ActorCategoryStats.checkpoint gActorCheckpoint
 #
 # #915 ActorSpawns: the actor category's spawn table as an all-static class
 # (include/engine/actor/actor_spawns.hpp, src/engine/actor/actor_spawn.cpp). Its data members
-# keep the C names, which sym_iwram.txt places.
+# keep the C names, which games/xs/sym_iwram.txt places.
 GetOffset__Q36Engine5Actor11ActorSpawns GetActorSpawnOffset
 Resume__Q36Engine5Actor11ActorSpawns ResumeActorSpawns
 Pause__Q36Engine5Actor11ActorSpawns PauseActorSpawns
@@ -2663,7 +2663,7 @@ _Q36Engine5Actor11ActorSpawns.offset gActorSpawnOffset
 # actor_category_init.cpp, actor_category_stats.cpp,
 # actor_category_select.cpp, actor_category_frame.cpp, actor_spawn.cpp,
 # actor_category.cpp, actor_category_hooks.cpp). Its data members keep the
-# C names: sym_iwram.txt places the IWRAM ones,
+# C names: games/xs/sym_iwram.txt places the IWRAM ones,
 # src/engine/actor/data/actor_categories.cpp defines the ROM tables.
 SetupVramPool__Q36Engine5Actor13ActorCategory SetupActorVramPool
 Init__Q36Engine5Actor13ActorCategoryi InitActorCategory
@@ -2688,7 +2688,7 @@ _Q36Engine5Actor13ActorCategory.vtables gActorCategoryVtables
 #
 # #915 ActorPaletteCycle: the 3D stages' BG palette cycle as an all-static
 # class (include/engine/actor/actor_palette_cycle.hpp, src/engine/actor/actor_palette_cycle.cpp).
-# Its data members keep the C names: sym_iwram.txt places the IWRAM ones,
+# Its data members keep the C names: games/xs/sym_iwram.txt places the IWRAM ones,
 # src/engine/actor/data/actor_palette_cycle_frames.cpp defines the ROM tables.
 Restore__Q36Engine5Actor17ActorPaletteCycle RestoreActorPaletteCycle
 Save__Q36Engine5Actor17ActorPaletteCycle SaveActorPaletteCycle

@@ -2,7 +2,7 @@
 
 ## gDispcnt is a union dispcnt
 
-`gDispcnt` (sym_iwram.txt, 2 bytes) was declared `u8 [2]` in globals.h,
+`gDispcnt` (games/xs/sym_iwram.txt, 2 bytes) was declared `u8 [2]` in globals.h,
 and every reader cast it: to `struct dispcnt_bits *` for a field, to
 `u16 *` for the whole value. It is now `union dispcnt` (gfx.h, next to the
 union), the type the menus' own DISPCNT copies already had:

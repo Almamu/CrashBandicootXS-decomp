@@ -7,7 +7,7 @@ extern "C" {
 
 /*
  * ROM 0x0816C498-0x0816C58C. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 /* `struct vec2` (aabb.h) positions and animation ids of the level-select

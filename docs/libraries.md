@@ -137,7 +137,7 @@ owner's decision in #662):
 The libraries are linked as plain objects, not `.a` archives. They are
 interleaved with game code in the ROM (the GAX2 block sits between the
 language-select screen and the AgbEeprom library; game code resumes after
-libgcc's lib1funcs routines), so `ldscript.txt` lists every object where
+libgcc's lib1funcs routines), so `games/xs/ldscript.txt` lists every object where
 the ROM has it, exactly as for game code. Only the paths say which code is
 a library's.
 

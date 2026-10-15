@@ -12,8 +12,8 @@ or a plain function prototype) it reports:
 
   * where the symbol is defined: a C file (function or global definition,
     or a label/.set inside a top-level asm() block), an assembly file
-    (`asm/`, `data/`, `lib/**/*.s`), the linker script (`ldscript.txt`,
-    `sym_*.txt`), or `?` when nothing defines it;
+    (`asm/`, `data/`, `lib/**/*.s`), the linker script (`games/xs/ldscript.txt`,
+    `games/xs/sym_*.txt`), or `?` when nothing defines it;
   * how many .c files declare it, and which headers already do;
   * whether the declarations agree:
       identical    same text after whitespace/comment normalisation
@@ -678,7 +678,7 @@ def scan_c(path, is_header=False):
 
 
 def scan_asm_defs():
-    """Symbols defined outside C: .s files, the linker script and sym_*.txt."""
+    """Symbols defined outside C: .s files, the linker script and games/xs/sym_*.txt."""
     out = {}
     s_files = sorted(set(glob.glob('asm/**/*.s', root_dir=ROOT, recursive=True)
                          + glob.glob('data/**/*.s', root_dir=ROOT, recursive=True)
@@ -693,7 +693,7 @@ def scan_asm_defs():
         # lib1funcs-style `FUNC_START name` / `LSYM(name)` macros
         for g in re.findall(r'^\s*(?:FUNC_START|THUMB_FUNC_START|ARM_FUNC_START)\s+([A-Za-z_]\w*)', t, flags=re.M):
             out.setdefault(g, p)
-    for p in ('ldscript.txt', 'sym_ewram.txt', 'sym_iwram.txt'):
+    for p in ('games/xs/ldscript.txt', 'games/xs/sym_ewram.txt', 'games/xs/sym_iwram.txt'):
         if os.path.exists(os.path.join(ROOT, p)):
             for g in re.findall(r'\b([A-Za-z_]\w*)\s*=\s*[^=;]+;', read(p)):
                 out.setdefault(g, p)

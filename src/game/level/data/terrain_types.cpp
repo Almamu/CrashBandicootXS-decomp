@@ -5,7 +5,7 @@ extern "C" {
 
 /*
  * ROM 0x081725A8-0x08172CD4. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 const struct terrain_type gTerrainTypes[51] = {

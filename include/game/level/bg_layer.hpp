@@ -11,7 +11,7 @@
  * src/game/level/bg_streamer.cpp, BgLayerBase's in src/game/level/bg_layer_base.cpp,
  * PooledBgLayer's in src/game/level/pooled_bg_layer.cpp; BgLayer's is inline,
  * so its key method is Reset, in src/game/level/bg_layer.cpp),
- * and ldscript.txt places them at their ROM addresses (docs/cplusplus.md,
+ * and games/xs/ldscript.txt places them at their ROM addresses (docs/cplusplus.md,
  * "Emitting the vtables"). cxx_symbols.txt maps the mangled names onto
  * the C names. The classes have no C view (bg_scroll_layer.h's `struct
  * bg_scroll_layer` and level.h's `struct level_layers` went in #754);

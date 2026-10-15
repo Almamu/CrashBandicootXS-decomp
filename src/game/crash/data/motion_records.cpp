@@ -9,7 +9,7 @@ extern "C" {
 
 /*
  * ROM 0x0816B304-0x0816B92C. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 /* Read by StartCtrlTargetMotionYFromSet/StartCtrlTargetMotionXFromSet (ctrl.cpp) and ApplyActionCtrlMotion

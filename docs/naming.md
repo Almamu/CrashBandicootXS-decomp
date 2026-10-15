@@ -73,7 +73,7 @@ normal conventions. See [`docs/audio.md`](./audio.md#engine-api-names).
 
 A function can turn out to be genuinely dead code - nothing in the whole
 ROM (`bl`/`.4byte` reference) ever calls it, confirmed by grepping every
-`asm/*.s`/`expected/*.s`/`src/**/*.c` for its address/symbol before
+`asm/*.s`/`games/xs/expected/*.s`/`src/**/*.c` for its address/symbol before
 concluding this, not just the files nearby. This does **not** mean skip
 matching it - it still goes through the full workflow.md loop like any
 other function, since it's still real code that shipped in the ROM and its
@@ -109,11 +109,11 @@ honest placeholder, since other code and docs will start depending on it.
 2. Its declaration in the owning header (see
    [`docs/headers.md`](./headers.md)), any codegen alias's
    `asm("<name>")` label, and every reference: `src/`, `lib/`, `asm/*.s`
-   (`bl <name>`/`.4byte <name>`), `ldscript.txt` and `sym_*.txt`.
+   (`bl <name>`/`.4byte <name>`), `games/xs/ldscript.txt` and `games/xs/sym_*.txt`.
 3. `docs/matching.md`'s per-function entry.
-4. If the function is covered by `expected/code_3.s` or `expected/legacy.s`
+4. If the function is covered by `games/xs/expected/code_3.s` or `games/xs/expected/legacy.s`
    (i.e. it was matched from one of those historical eras), add or update
-   its `rename` line in `expected/corrections.txt` to the new name - see
+   its `rename` line in `games/xs/expected/corrections.txt` to the new name - see
    [`docs/progress_report.md`](./progress_report.md). A function renamed *after*
    already having a real name (not straight from `sub_XXXXXXXX`) needs its
    correction's target name updated too, not a second entry.

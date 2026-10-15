@@ -150,7 +150,7 @@ jobs:
 
     # The objdiff progress report (see docs/progress_report.md), which the
     # badges below are drawn from. Code needs no baserom.gba, since
-    # expected/code_3.s (checked into the repo) is the ground truth it
+    # games/xs/expected/code_3.s (checked into the repo) is the ground truth it
     # diffs against. The data units take their target bytes
     # from baserom.gba when it's there, and fall back to sizes only when not.
     - name: Build progress report objects

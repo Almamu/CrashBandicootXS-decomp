@@ -319,7 +319,7 @@ void AudioContext::FadeInMasterVolume(u32 value)
     musicVolFadeDownArmed = 0;
 }
 
-/* UNUSED - no caller anywhere in the ROM (no `bl` in expected/*.s, no
+/* UNUSED - no caller anywhere in the ROM (no `bl` in games/xs/expected/*.s, no
  * pointer to it in baserom.gba). Sets the music's GAX2 low-pass filter
  * amount: `musicFilter`, and while a song is playing the parameter
  * block's `filter` (`gax.filter`), which GAX_play

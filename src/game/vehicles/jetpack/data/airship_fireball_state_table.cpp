@@ -4,7 +4,7 @@ using Game::Vehicles::Jetpack::AirshipFireball;
 
 /*
  * ROM 0x0817C2B8-0x0817C2D0, split from jetpack_plane_bomber_state_tables.cpp (#664 part
- * 11i). Linked in ROM order between data/data.s sections by ldscript.txt
+ * 11i). Linked in ROM order between data/data.s sections by games/xs/ldscript.txt
  * - see docs/data.md.
  */
 

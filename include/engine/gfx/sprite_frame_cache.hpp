@@ -15,7 +15,7 @@
  * static member functions like plain functions. The data members are only
  * declared: cxx_symbols.txt (block "#915 SpriteFrameCache") maps each one
  * to its C name (`_Q36Engine3Gfx16SpriteFrameCache.current` is
- * gSpriteFrameCacheCurrent, ...), whose address is in sym_iwram.txt, and
+ * gSpriteFrameCacheCurrent, ...), whose address is in games/xs/sym_iwram.txt, and
  * the functions keep their C names the same way (`Age__Q36Engine3Gfx16SpriteFrameCache`
  * is AgeSpriteFrameCache).
  *
@@ -49,7 +49,7 @@ public:
     static s32 Lookup(u8 *frame);
 
 private:
-    /* IWRAM (sym_iwram.txt). `current` and `previous` are the two lists'
+    /* IWRAM (games/xs/sym_iwram.txt). `current` and `previous` are the two lists'
      * sentinels, `spares` the unused nodes' stack, `pool` the 128 nodes. */
     static struct sprite_frame_cache_node current;  // gSpriteFrameCacheCurrent
     static struct sprite_frame_cache_node previous; // gSpriteFrameCachePrevious

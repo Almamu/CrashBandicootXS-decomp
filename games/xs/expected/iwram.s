@@ -3,8 +3,8 @@
 @ for the IWRAM code units in tools/report_units.py. Generated once from
 @ baserom.gba (objdump -marm, branch targets and literal pools turned into
 @ labels, the pool words into the symbols they point at) and never edited
-@ afterwards, like expected/code_3.s and expected/legacy.s - see
-@ expected/README.md and docs/decomp_dev.md. Addresses are IWRAM (run)
+@ afterwards, like games/xs/expected/code_3.s and games/xs/expected/legacy.s - see
+@ games/xs/expected/README.md and docs/decomp_dev.md. Addresses are IWRAM (run)
 @ addresses.
 
 .include "asm/macros.inc"

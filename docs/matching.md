@@ -63,7 +63,7 @@ contiguous ROM region, not one per "topic":** `GetAnimFrameBaseOffset`
 (ROM `0x0803B058`) is nowhere near `QueueVramDmaTransfer`/
 `FreeVramDmaQueue` (ROM `0x08006B94`-ish) even though all three are part
 of the same animation-frame system - since one object file's `.text` can
-only be placed as a single contiguous block by `ldscript.txt`, a function
+only be placed as a single contiguous block by `games/xs/ldscript.txt`, a function
 whose real address isn't adjacent to an existing matched file's functions
 needs its own new `.c` file (here, `src/game/vehicles/actor_destructors.cpp`), not just an
 addition to the existing one - adding it to the wrong file would silently
@@ -399,7 +399,7 @@ Matching this function also **retired** the `asm/code_3_1_697c.o` split
 from the previous entry: since `GetCompletionPercent` occupied that entire split
 file and is immediately followed by `SetOamAffineScales` (already in
 `graphics.c`), moving it to `graphics.c` too closed the gap completely -
-deleted the split file and removed its `ldscript.txt` line. `power_dialog_draw.c`
+deleted the split file and removed its `games/xs/ldscript.txt` line. `power_dialog_draw.c`
 (holding `CountCrystals`) is still needed as its own file, since it's
 followed by `GetCompletionPercent`'s ROM address, not `graphics.c`'s.
 
@@ -846,13 +846,13 @@ assembly) rather than chase the exact ordering further, and - since this
 function must stay in `asm/code_3_1.s` either way - the once-contiguous
 `asm/code_3_1.s` was split at this exact point so functions *after* it
 could still be extracted to C: `asm/code_3_1.s` now holds only
-`ShowBitmapScreen`, followed in `ldscript.txt` by the newly-matched
+`ShowBitmapScreen`, followed in `games/xs/ldscript.txt` by the newly-matched
 function's own object file, then a new `asm/code_3_1_2.s` picking up
 where `ShowBitmapScreen` ends (`FixedDist` onward) - the address layout
 this relies on was verified with a full `rm -rf build && make compare`.
 This is the first split of its kind in the project; reuse the same
 pattern (trim the tail of the `.s` file at the boundary, start a new
-`_2.s` with the same three-line header, add one `ldscript.txt` line)
+`_2.s` with the same three-line header, add one `games/xs/ldscript.txt` line)
 whenever a hard-to-match function needs to be skipped without blocking
 everything after it.
 
@@ -1032,7 +1032,7 @@ s32 caseInsensitive)` scans `haystack0` for the first occurrence of
 range check for `'A'`-`'Z'`), returning a pointer into `haystack0` at
 the match or `0` if not found or if `needle` is empty. Kept in
 `printf.c` (not printf-related) purely to preserve ROM address
-order right after `sprintf` without another `ldscript.txt` split.
+order right after `sprintf` without another `games/xs/ldscript.txt` split.
 
 Register findings: `haystack` (the outer scan cursor) is pinned to
 `r5` and the outer loop's post-case-fold char to `r3`, matching the ROM;
@@ -1099,10 +1099,10 @@ trimmed to end right after `FindSubstring`'s `.endif`, everything from
 `strcat` on moved to a new `asm/code_3_1_3.s` (same three-line
 header), and `CountNonSpaceChars` itself lives in a new `src/engine/util/string.cpp`
 (not `number_format.c` - that object already links *before*
-`printf.o`/`code_3_1_2.o` in `ldscript.txt`, which would put this
+`printf.o`/`code_3_1_2.o` in `games/xs/ldscript.txt`, which would put this
 function's code at the wrong address; a fresh translation unit was the
 only way to get its object linked exactly between `code_3_1_2.o` and
-`code_3_1_3.o`). `ldscript.txt` now lists, in order:
+`code_3_1_3.o`). `games/xs/ldscript.txt` now lists, in order:
 `code_3_1_2.o`, `string.o`, `code_3_1_3.o`. Verified with a full
 `rm -rf build && make compare` (and a `NON_MATCHING=1` build to confirm
 `FindSubstring`'s parked toggle still links cleanly around the new
@@ -1170,7 +1170,7 @@ as-is.
 
 Removed these three functions' raw bytes directly from the existing
 `asm/code_3_1_3.s` (no further file-splitting needed - they sit
-entirely inside one already-open file) and added one `ldscript.txt`
+entirely inside one already-open file) and added one `games/xs/ldscript.txt`
 line for `rand.o` between `string.o` and `code_3_1_3.o`.
 
 Twentieth matched function: `InitBresenhamLine` (ROM `0x08000E6C`, right after
@@ -1185,7 +1185,7 @@ a `u8` "which axis is driving the walk" flag. Matched first-try;
 non-input fields are left as `field_N` (not e.g. `err`/`step`) since no
 caller has been matched yet to confirm their actual roles. Removed the
 function's raw bytes directly from `asm/code_3_1_3.s` (no further
-splitting needed) and added one more `ldscript.txt` line
+splitting needed) and added one more `games/xs/ldscript.txt` line
 (`line.o`, between `rand.o` and `code_3_1_3.o`).
 
 **Parked, not matched: `DrawWrappedText`** (ROM `0x08000EE4`, right after `InitBresenhamLine`), in new
@@ -1306,7 +1306,7 @@ Extracting this one function required the same kind of split as
 `FindSubstring`'s and `CountNonSpaceChars`'s: `asm/code_3_1_3.s` was trimmed to
 end right after `DrawWrappedText`'s `.endif`, and everything from
 `WaitForKeyPress` on moved to a new `asm/code_3_1_4.s`, with
-`src/engine/util/time_format.cpp`'s object linked between them in `ldscript.txt`.
+`src/engine/util/time_format.cpp`'s object linked between them in `games/xs/ldscript.txt`.
 (`asm/code_3_1_4.s` was later removed again - see `WaitForKeyPress`'s own
 notes just below - once it turned out to hold only one function that
 also needed parking.)
@@ -1449,7 +1449,7 @@ accumulated error term (`field_10`) is positive, in which case the
 error term is corrected by `field_18` instead of `field_14`. Kept in
 its own file (redefining the same `struct bresenham_line` locally
 rather than sharing `InitBresenhamLine`'s) purely because `line.o`
-already links much earlier in `ldscript.txt` and this function's
+already links much earlier in `games/xs/ldscript.txt` and this function's
 address requires it to come after `text_box.o` instead. Two things
 needed fixing versus a first attempt that seemed to match on casual
 inspection but didn't: the error term must be re-read fresh inside
@@ -2153,7 +2153,7 @@ address, `0x08007A48`, sits right after the still-unclaimed
 `DrawSpritePieces`/`DrawAffineSpritePieces` pair, so it isn't adjacent to any of
 `graphics.c`'s matched functions; `asm/code_3_2.s` was split at this
 boundary into itself (ending after `DrawAffineSpritePieces`) and a new
-`asm/code_3_2_2.s` picking up at `DrawSprite`, with `ldscript.txt`
+`asm/code_3_2_2.s` picking up at `DrawSprite`, with `games/xs/ldscript.txt`
 updated to interleave `sprite.o` between them - see
 `docs/workflow.md` step 4's "needs its own new `.c` file" case).
 Resolves whether `(x, y)` are already screen-relative
@@ -2394,7 +2394,7 @@ split: `GetSpriteAttackBox` isn't ROM-adjacent to `sprite.c` (the parked
 them), so it needed its own new `.c` file - but naively appending it
 to the end of `sprite.c` and rebuilding produced a byte-exact
 *function* that still broke the checksum, because `sprite.o` links
-*before* `asm/code_3_2_2.o` in `ldscript.txt`: appending `GetSpriteAttackBox`
+*before* `asm/code_3_2_2.o` in `games/xs/ldscript.txt`: appending `GetSpriteAttackBox`
 to `sprite.c` placed its compiled bytes right after `ResetSpriteObj`,
 *before* `GetSpriteBounds`/`GetSpriteHitbox`'s raw bytes instead of after them,
 shifting everything downstream. Fixed by splitting `asm/code_3_2_2.s`
@@ -2402,7 +2402,7 @@ itself a second time, at the `GetSpriteBodyBox` boundary right after
 `GetSpriteHitbox`'s NON_MATCHING guard: `asm/code_3_2_2.s` now ends there,
 a new `asm/code_3_2_3.s` picks up the (unchanged) remainder starting
 at `GetSpriteBodyBox`, and the new `src/game/entities/sprite.c` (holding
-just `GetSpriteAttackBox`) is inserted between them in `ldscript.txt` - the
+just `GetSpriteAttackBox`) is inserted between them in `games/xs/ldscript.txt` - the
 same "split file, new file for the non-adjacent function" pattern used
 for `DrawSpriteAt`/`sprite.c` itself, just one level deeper. (The
 second split boundary moved to `CheckSpritePickup` once `GetSpriteBodyBox`, right
@@ -2555,7 +2555,7 @@ time at the `SpriteObjOverlapsRect` boundary right after `CheckSpritePickup`'s g
 into `asm/code_3_2_3.s` (now just the parked `CheckSpritePickup`) and a new
 `asm/code_3_2_4.s` (the unchanged remainder), with the new
 `src/game/entities/sprite.c` (holding just `IsSpriteObjOnScreen`) inserted
-between them in `ldscript.txt`.
+between them in `games/xs/ldscript.txt`.
 
 **`UpdateHudLives`** (ROM `0x08027838`, 262 bytes, contributed via PR #1 by
 @MiryamSanchez26, new
@@ -2585,7 +2585,7 @@ plus two bytes of alignment) produced identical SHA-1 values
 post-cleanup `make compare` runs passed. `asm/code_3_2_17.s` was split at
 this exact location; its untouched remainder begins at `UpdateHudCrates` in
 new `asm/code_3_2_20.s`, with `hud_lives.o` interleaved between them in
-`ldscript.txt`. (The PR's own second matched function, `SetSpriteFrameIndex`,
+`games/xs/ldscript.txt`. (The PR's own second matched function, `SetSpriteFrameIndex`,
 turned out to duplicate work already matched independently on `main` in
 `sprite_obj.c` - see that file's own entry above for the real writeup;
 the PR's version wasn't merged.)
@@ -2731,7 +2731,7 @@ needed the same file-split treatment: `asm/code_3_2_4.s` split again
 at the `GetSpriteAnimPaletteSlot` boundary right after `AdvanceSpriteAnim`'s guard, into
 `asm/code_3_2_4.s` (now just the parked `AdvanceSpriteAnim`) and a new
 `asm/code_3_2_5.s`, with the new `src/game/entities/sprite_obj.c`
-(holding just `SpriteHitboxOverlaps`) inserted between them in `ldscript.txt`.
+(holding just `SpriteHitboxOverlaps`) inserted between them in `games/xs/ldscript.txt`.
 
 **`GetSpriteAnimPaletteSlot`** (ROM `0x0800815C`, right after `SpriteHitboxOverlaps`, same
 file): a small lookup - reads `part`'s current keyframe record's
@@ -2908,7 +2908,7 @@ differences. Same file-split treatment as the previous non-adjacent
 functions in this cluster: `asm/code_3_2_5.s` split at the
 `IsSpriteObjNearCamera` boundary into itself (now just the three parked
 functions) and a new `asm/code_3_2_6.s`, with the new
-`src/game/entities/sprite_obj.c` inserted between them in `ldscript.txt`.
+`src/game/entities/sprite_obj.c` inserted between them in `games/xs/ldscript.txt`.
 
 **`IsSpriteObjNearCamera`** (ROM `0x08008328`, right after `IsSpriteObjInsideRect`, same
 file): the same `part+0x25 == 1` fast-override shape, deferring to
@@ -2991,7 +2991,7 @@ parked `GetSpriteFrame` sits raw between them), so it needed the same
 file-split treatment used throughout this cluster: `asm/code_3_2_6.s`
 split at the `CreateSpriteObj` boundary into itself (now just the parked
 `GetSpriteFrame`) and the new `asm/code_3_2_7.s`, with the new
-`src/game/entities/sprite_obj.c` inserted between them in `ldscript.txt`.
+`src/game/entities/sprite_obj.c` inserted between them in `games/xs/ldscript.txt`.
 
 **`CreateSpriteObj`** (ROM `0x08008434`, right after `GetSpriteObjPriority`, same
 file): a `struct actor`-shaped object constructor - allocates via
@@ -3057,7 +3057,7 @@ just cosmetic.
 local `static const void *[]` initialized from `&&label` addresses,
 reproduced the ROM's exact instruction sequence in isolation - but
 the array itself gets emitted into `.data`, a section this project's
-`ldscript.txt` doesn't retain for arbitrary objects (only `data.o`'s
+`games/xs/ldscript.txt` doesn't retain for arbitrary objects (only `data.o`'s
 `.rodata` and each object's `.text` are kept, everything else is
 `/DISCARD/`ed), so the reference would dangle in the actual linked
 ROM. Forcing the array's section via
@@ -3277,7 +3277,7 @@ with the usual file split: `asm/code_3_2_7.s` split again at the
 `SetSpriteGfxMode` boundary into itself (now holding just the parked
 `IsSpriteAnimLooping`) and a new `asm/code_3_2_8.s`, with a new
 `src/game/entities/sprite_obj.cpp` holding this whole batch inserted between
-them in `ldscript.txt`.
+them in `games/xs/ldscript.txt`.
 
 **Parked, not matched: `IsSpriteAnimLooping`** (ROM `0x08008770`, right after
 `GetSpriteAnimTable`, same file): the same keyframe-record lookup as
@@ -3914,7 +3914,7 @@ a concurrent PR matched-as-NAKED `CollideCrateGrid` into
 `.if NON_MATCHING == 0` guard block was removed from
 `asm/code_3_2_13_944c.s`; once `CollideCrateGrid` also moved out (see that
 function's own "Update: converted to `NAKED`" entry below), the shared
-file held nothing at all and was deleted entirely. `ldscript.txt` got a
+file held nothing at all and was deleted entirely. `games/xs/ldscript.txt` got a
 new `crate_list_link_active.o` (#771: now part of `crate_list_update.o`) entry inserted between `crate_list_update.o` and
 `crate_list_collide.o` (`CollideCrateGrid`'s own new home), preserving ROM order.
 
@@ -3964,7 +3964,7 @@ asm in `asm/code_3_2_13_944c.s`, and `CollideCrateGridPartWithPlayer`,
 `src/game/crates/crate_list_collide.cpp` - per docs/workflow.md step 4's "needs
 its own new .c file" case). Its raw `.if NON_MATCHING == 0` guard block
 was removed from `asm/code_3_2_13_944c.s` (which still carries
-`DrawCrateList`'s own guard, untouched); `ldscript.txt` got a new
+`DrawCrateList`'s own guard, untouched); `games/xs/ldscript.txt` got a new
 `crate_list_collide.o` entry inserted between `asm/code_3_2_13_944c.o` and
 `crate_list_collide.o`. Verified byte-identical via `arm-none-eabi-as`
 isolated assemble (a standalone reassembly of both the ROM's own
@@ -4005,7 +4005,7 @@ between `CollideCrateGrid`, still raw asm in `asm/code_3_2_13_944c.s`, and
 "needs its own new .c file" case). Its raw `.if NON_MATCHING == 0`
 guard block was removed from `asm/code_3_2_13_944c.s` (which still
 carries `DrawCrateList`/`CollideCrateGrid`'s own still-parked guards,
-untouched); `ldscript.txt` got a new `crate_list_collide.o` entry inserted
+untouched); `games/xs/ldscript.txt` got a new `crate_list_collide.o` entry inserted
 between `asm/code_3_2_13_944c.o` and `crate_list_collide.o`. Verified
 byte-identical via `arm-none-eabi-as` isolated assemble (every
 differing byte against the raw ROM bytes falls exactly on an
@@ -4141,7 +4141,7 @@ differ), `CollideCrateGridPartWithObject` was hand-transcribed as literal Thumb 
 NON_MATCHING == 0` guard block was removed from
 `asm/code_3_2_13_9914.s` (which still carries `ResetCrateList`'s own
 still-parked guard, untouched); `crate_list.o` already linked right
-after that object in `ldscript.txt`, so no linker-script change was
+after that object in `games/xs/ldscript.txt`, so no linker-script change was
 needed. Verified byte-identical via `arm-none-eabi-as` isolated
 assemble plus a full clean `make compare` (`crashbandicootxs.gba: La
 suma coincide`). Per project policy a `NAKED` transcription doesn't
@@ -4624,7 +4624,7 @@ of the run:
 
 All 44 non-parked functions plus the 2 parked ones were verified via a
 full clean `make compare` after being split into `player_update.c`/
-`player.cpp` around the raw `InitPlayer` gap; `ldscript.txt` links
+`player.cpp` around the raw `InitPlayer` gap; `games/xs/ldscript.txt` links
 them in real ROM order: `player_update.o`, `asm/code_3_2_19.o`
 (`InitPlayer`, raw), `player.o`, `asm/code_3_2_18.o` (the two
 parked functions' real bytes), `asm/code_3_2_17.o` (`StartCtrlTargetMotionYFromSet`
@@ -4784,7 +4784,7 @@ cluster).
   peephole optimization for this instruction pair.
 
 All 14 matched functions plus the 3 parked ones were verified via a
-full clean `make compare` after the five-way file split; `ldscript.txt`
+full clean `make compare` after the five-way file split; `games/xs/ldscript.txt`
 links them in real ROM order: `code_3_1_7.o`, `fade_to_black.o`,
 `code_3_1_8.o`, `display.o`, `code_3_1_9.o`.
 
@@ -4891,7 +4891,7 @@ All four verified via a full clean `make compare`. `start` (the boot
 stub itself) is permanent hand-written asm per standard GBA-decomp
 convention and isn't tracked as a function to match. `asm/code_3_1.s`
 (which held only `ShowBitmapScreen`) was deleted once matched, and
-`ldscript.txt`/`tools/report_units.py` updated for the new
+`games/xs/ldscript.txt`/`tools/report_units.py` updated for the new
 `bios_util.o`/`bitmap_screen.o` split.
 
 ## `0x080016EC`-`0x08001C80`: the `AudioContext` wrapper layer (first audio matches)
@@ -5187,7 +5187,7 @@ after splitting `asm/code_3_2_20.s` into `code_3_2_20.s` (before) plus
 four new raw fragments (`code_3_2_20a.s` through `code_3_2_20d.s`,
 holding the left-raw functions above in ROM order) and a renamed tail
 (`code_3_2_20e.s`, everything from `GAX2_init` on, unchanged) around
-the four new matched `.c` files, each inserted into `ldscript.txt` at
+the four new matched `.c` files, each inserted into `games/xs/ldscript.txt` at
 its real ROM position.
 ## GitHub issue #34: `0x080225A0`-`0x080231C4` (`UpdateGameFrame`-`MainLoop` cluster, part)
 
@@ -5353,7 +5353,7 @@ NON_MATCHING == 0`), `bonus_round.o`, `code_3_2_17_22d50.s` (raw
 `StartTimeTrial`), `level_state.o` (now covering `FreezeLevelClock`/
 `TickLevelClock` too - `code_3_2_17_22ea8.s`, their former raw twin, is
 removed), and finally `code_3_2_17_231cc.s` (the original file's
-unchanged remainder, from `HasDoubleJump` on) - see `ldscript.txt` and
+unchanged remainder, from `HasDoubleJump` on) - see `games/xs/ldscript.txt` and
 `tools/report_units.py`'s `game_loop` category, both updated to match.
 Verified via a full clean `make compare` (`La suma coincide`) and
 `make NON_MATCHING=1 report`.
@@ -5507,7 +5507,7 @@ the new raw `code_3_2_17_27138.s` (`InitHud` through
 existing `hud_lives.o`. `asm/code_3_2_20.s` is now truncated to just
 `UpdateHudCrates`/`UpdateHudWumpa`/`UpdateHudPercentCounters`; followed by `hud_slide.o`,
 then the new raw `code_3_2_20_28568.s` (`SetHudCrateTotal` onward - the
-original file's unchanged remainder). See `ldscript.txt` and
+original file's unchanged remainder). See `games/xs/ldscript.txt` and
 `tools/report_units.py`'s `hud` category entries, both updated to
 match. Verified via a full clean `make compare` (`La suma coincide`)
 and `make NON_MATCHING=1 report`.
@@ -5615,7 +5615,7 @@ anticipation; the actual `CpuSet` definition was still raw here.
 parked `eeprom_timer.c` functions), `code_3_2_20e_ab54.s` (raw, left
 untouched), `_call_via_rX.o`, and finally `code_3_2_20e_3adb4.s`
 (the original file's unchanged remainder, from `__divsi3`'s division
-helper on) - see `ldscript.txt` and `tools/report_units.py`'s `system`
+helper on) - see `games/xs/ldscript.txt` and `tools/report_units.py`'s `system`
 category, both updated to match. Verified via a full clean `make
 compare` (`La suma coincide`) and `make NON_MATCHING=1 report`.
 ## Issue #17: `0x0801426C`-`0x080145E4` (6 of the 25-function chunk)
@@ -5751,7 +5751,7 @@ focused pass rather than a rushed low-confidence match.
 `ActionCtrlStateCrawl`), `action_ctrl_land.o` (`ActionCtrlStateCrawlStandUp`/`ActionCtrlStateBodySlamLand`),
 `code_3_2_17_145e4.s` (raw parked `ActionCtrlStateLand`), and finally
 `code_3_2_17_14674.s` (the original file's unchanged remainder, from
-`ActionCtrlStateLeftGround` on) - see `ldscript.txt` and `tools/report_units.py`'s
+`ActionCtrlStateLeftGround` on) - see `games/xs/ldscript.txt` and `tools/report_units.py`'s
 `graphics` category, both updated to match. Verified via a full clean
 `make compare` (`La suma coincide`) and `make NON_MATCHING=1 report`.
 
@@ -5857,7 +5857,7 @@ after splitting `asm/code_3_2_20e.s` into its unchanged head (now just
 (`code_3_2_20e_8c88.s`, `code_3_2_20e_8fd0.s`, `code_3_2_20e_92e0.s`,
 `code_3_2_20e_943c.s`) and a renamed tail (`code_3_2_20e_95a4.s`,
 everything from `GaxChannelPlay` on, unchanged) around the five new matched
-`.c` files, each inserted into `ldscript.txt` at its real ROM position.
+`.c` files, each inserted into `games/xs/ldscript.txt` at its real ROM position.
 One non-obvious fixup the split needed: `gGaxArmDownmix`/
 `_0803A67C`/`_0803A73C`/`_0803A818` (the ARM-mode-blob data labels
 docs/audio.md's `sub_803A608` entry describes) are referenced from
@@ -5986,7 +5986,7 @@ other two parked/raw runs, and `asm/code_3_1_10_6.s` is the original
 file's unchanged remainder from `SaveMenuMessageInput` (outside this chunk) on.
 `include/save_menu.h` holds the shared `struct
 save_menu`/`struct settings_row_stats` types used across all
-three new `.c` files. See `ldscript.txt` and `tools/report_units.py`'s
+three new `.c` files. See `games/xs/ldscript.txt` and `tools/report_units.py`'s
 `overlay_ui` category, both updated to match. Verified via a full clean
 `make compare` (`La suma coincide`) and `make NON_MATCHING=1 report`.
 ## The polar files (`src/vehicle/polar/polar_*.c`): the action-object family's `0x0802BED8`-`0x0802C99C` chunk (issue #52)
@@ -6153,7 +6153,7 @@ tail `UpdatePolarCrate`).
 `UpdatePolarNitroCrate`), the new raw `code_3_2_20_28568_c7a8.s` (left-untouched
 `DetonateNearbyPolarNitros`), `actor_part19d.o` (`UpdatePolarAkuAkuCrate`), and finally the new
 raw `code_3_2_20_28568_c99c.s` (the original file's unchanged
-remainder, from `UpdatePolarTimeCrate` on) - see `ldscript.txt` and
+remainder, from `UpdatePolarTimeCrate` on) - see `games/xs/ldscript.txt` and
 `tools/report_units.py`'s `actor` category, both updated to match.
 (Every raw piece has since been matched, and #575 merged these objects
 into `src/vehicle/polar/polar_player_actions.c`, `polar_player_dispatch.c`
@@ -6282,7 +6282,7 @@ parked functions under `#if NON_MATCHING` - only `__div0` actually
 contributes bytes in a matching build), the new
 `asm/code_3_2_20e_3ae4c.s` (parked `__modsi3`/`__umodsi3`,
 guarded), and the new `src/engine/util/aabb_setters.o`
-(`SetAabbSize`-`DestroySmallFont`, all matched) - see `ldscript.txt` and
+(`SetAabbSize`-`DestroySmallFont`, all matched) - see `games/xs/ldscript.txt` and
 `tools/report_units.py`'s `util`/`graphics` categories, both updated to
 match. Verified via a full clean `make compare` (`La suma coincide`)
 and `make NON_MATCHING=1 report`.
@@ -6507,7 +6507,7 @@ untouched), `src/game/ui/pause_menu_pages_init.c` (`InitPauseCrystalsPage` match
 (`PauseMenuCursorDown`/`PauseMenuCursorUp`, matched), and finally the new raw
 `asm/code_3_1_10_11.s` (the original file's unchanged remainder, from
 `FormatDecimal` on, including its pre-existing parked `DrawPowerDialog` guard)
-- see `ldscript.txt` and `tools/report_units.py`'s `overlay_ui` entries,
+- see `games/xs/ldscript.txt` and `tools/report_units.py`'s `overlay_ui` entries,
 both updated to match. `include/save_menu.h` gained two named
 fields (`field_0`/`field_1c`, both previously padding) for
 `CommitSaveMenuFrame`'s use. Verified via a full clean `make compare`

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Applies expected/corrections.txt to an assembled target object in place.
+"""Applies games/xs/expected/corrections.txt to an assembled target object in place.
 
-See expected/corrections.txt and docs/progress_report.md for why this exists:
-expected/code_3.s (and expected/legacy.s) are frozen, never-edited
+See games/xs/expected/corrections.txt and docs/progress_report.md for why this exists:
+games/xs/expected/code_3.s (and games/xs/expected/legacy.s) are frozen, never-edited
 historical disassembly, so any function boundary or name they never
 anticipated (because later matching work discovered/renamed it) has to
 be patched onto the assembled object instead - never onto the source.
@@ -36,7 +36,7 @@ def text_base_address(obj_path):
     file offset 0 in .text corresponds to. Derived from the symbol's own
     name (this project names every not-yet-renamed function sub_<hex
     address>) rather than hardcoded, so this keeps working if
-    expected/code_3.s is ever regenerated from a different commit."""
+    games/xs/expected/code_3.s is ever regenerated from a different commit."""
     out = subprocess.run([NM, obj_path], capture_output=True, text=True, check=True).stdout
     lowest = None
     for line in out.splitlines():
@@ -154,7 +154,7 @@ def main():
 def set_function_sizes(obj_path, unlabelled=(), grow_only=False):
     """Gives every function symbol in .text an explicit st_size, in place.
 
-    Target objects (assembled from the frozen expected/*.s, which has no
+    Target objects (assembled from the frozen games/xs/expected/*.s, which has no
     `.size` directives at all) otherwise leave objdiff to infer each size
     from the next symbol, after which it trims trailing zero bytes as if
     they were alignment padding. That is wrong whenever a function ends
@@ -171,7 +171,7 @@ def set_function_sizes(obj_path, unlabelled=(), grow_only=False):
     `$t` region, where the disassembly wrote it as `movs r0, r0`), while a
     pool word's `$d` region started at the word, two bytes earlier.
 
-    `unlabelled` names (the `unlabel` entries in expected/corrections.txt,
+    `unlabelled` names (the `unlabel` entries in games/xs/expected/corrections.txt,
     already made local by objcopy) lose their function type: labels the
     frozen disassembly treated as a function start that the C source
     doesn't have (a return point in the middle of a function, or a

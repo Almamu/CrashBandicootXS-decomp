@@ -33,16 +33,16 @@ project didn't start that way: matched functions were **cut out of**
 `asm/code_3_*.s` as they were matched, so there's no standing pristine copy
 left to assemble a target object from directly.
 
-**The fix**: `expected/code_3.s` is a frozen copy of `asm/code_3.s` as it
+**The fix**: `games/xs/expected/code_3.s` is a frozen copy of `asm/code_3.s` as it
 existed at commit `710cc9a`, the last point before any function was ever cut
 out of it - i.e. exactly the original disassembly, with real names already
-applied wherever they were known at that point. `expected/legacy.s` is the
+applied wherever they were known at that point. `games/xs/expected/legacy.s` is the
 same idea for the ROM's very first region (`main.c`/`memory.c`/`irq.c`'s
 functions): a frozen copy of `asm/code.s` as it existed at the very first
 commit (`8b090ca`), before *any* splitting or renaming happened at all -
 that region was fully matched away by late 2025, well before `code_3.s`
 even existed as a separate file, so it needed its own, earlier frozen
-source (see `expected/README.md` for the exact address range and how it
+source (see `games/xs/expected/README.md` for the exact address range and how it
 was verified). Both are committed once and **must never be edited again**.
 This is what "pristine baseline" from the earlier discussion of this
 integration turned into in practice: rather than repeatedly re-extracting
@@ -86,16 +86,16 @@ For each entry in `tools/report_units.py`'s address table:
   `build/expected/units/` with its function sizes fixed up - see "Byte-exact
   functions must score exactly 100%" below.
 - **target**: `tools/slice_expected.py` pulls the matching address range's
-  *text* out of `expected/code_3.s` or `expected/legacy.s` (whichever one
-  covers it - see below) - the same technique `expected/legacy.s` itself
+  *text* out of `games/xs/expected/code_3.s` or `games/xs/expected/legacy.s` (whichever one
+  covers it - see below) - the same technique `games/xs/expected/legacy.s` itself
   was carved out with, so relocations and literal pools survive intact -
-  then `tools/patch_expected_target.py` applies `expected/corrections.txt`
+  then `tools/patch_expected_target.py` applies `games/xs/expected/corrections.txt`
   to the assembled slice (see the next section). Four files
   (`printf.c`, `wrapped_text.c`, `input.c`, `power_dialog_draw.cpp`) contain
   a still-parked function; their range is wider than their own
   `NON_MATCHING=0` object shows, since the parked function's real ROM
   bytes currently live in the *neighboring* still-raw `asm/*.s` chunk
-  instead - `expected/code_3.s` already has it labelled at its true
+  instead - `games/xs/expected/code_3.s` already has it labelled at its true
   address regardless (it was only ever parked, never extracted), so
   slicing still works unmodified once the address table accounts for it.
 - Still-fully-raw stretches (nothing matched there yet) get a unit with
@@ -122,9 +122,9 @@ produce `objdiff.json` and every unit's objects, matching
 [`docs/workflow.md`](./workflow.md)'s convention for `NON_MATCHING` builds
 generally.
 
-## `expected/corrections.txt`: patching targets without editing the source
+## `games/xs/expected/corrections.txt`: patching targets without editing the source
 
-Since `expected/code_3.s`/`expected/legacy.s` are frozen, they can't be
+Since `games/xs/expected/code_3.s`/`games/xs/expected/legacy.s` are frozen, they can't be
 corrected in place when later matching work finds something the original
 disassembly got wrong - namely:
 
@@ -140,7 +140,7 @@ disassembly got wrong - namely:
   too large (compared against extra bytes that belong to the other one),
   and the other doesn't appear at all.
 
-`tools/patch_expected_target.py` applies `expected/corrections.txt` to each
+`tools/patch_expected_target.py` applies `games/xs/expected/corrections.txt` to each
 *assembled* target slice via `objcopy --redefine-sym`/`--add-symbol` - never
 to either `.s` source. It's run once per unit now (see above), so it's
 built to tolerate corrections that don't apply to a given slice (a rename
@@ -150,7 +150,7 @@ range) by skipping them silently rather than erroring - the same
 and `split` there are `unlabel`, `code`/`data` and `resolve` entries for
 the less common cases described under "Byte-exact functions must score
 exactly 100%" below. See the comment at the top of
-`expected/corrections.txt` for the exact line format.
+`games/xs/expected/corrections.txt` for the exact line format.
 
 **When to add one**: whenever a newly-matched function doesn't show up in a
 locally-generated `report.json` at all, or reports an unexpectedly low match
@@ -244,8 +244,8 @@ functions were in neither total (2059, and the clean-function count,
 which only counts report units). They were still in `platform/gba/asm/crt0.s` when
 the per-file units were made (`ae75a634`), so the first unit started at
 `AgbMain` and their range fell into crt0's. When they were decompiled
-(#191) nothing added the unit. It has one now: `expected/legacy.s` was
-regenerated to start at `sub_8000140` (expected/README.md), and
+(#191) nothing added the unit. It has one now: `games/xs/expected/legacy.s` was
+regenerated to start at `sub_8000140` (games/xs/expected/README.md), and
 `corrections.txt` renames `nullsub_9` to `UpdateCtrl`. The total went
 from 2059 to 2062.
 
@@ -254,12 +254,12 @@ from 2059 to 2062.
 crt0 copies `0x9E8` bytes from ROM `0x087E55E4` to IWRAM `0x03000000` at
 boot. That image is built from source and linked the usual GBA way,
 with a separate run address (VMA) and load address (LMA):
-`ldscript.txt`'s `iwram` output section is placed at `0x03000000` with
+`games/xs/ldscript.txt`'s `iwram` output section is placed at `0x03000000` with
 `AT(LOADADDR(ROM) + SIZEOF(ROM))`, so its bytes follow the ROM data and
 every symbol in it has its IWRAM address. `__iwram_lma` (its load
 address) is crt0's copy source, the length is still
 `gIntrTable - IntrMain_Buffer`. The `rom_fill` section after it
-fills the rest of the 8 MB with `0xFF`. `sym_iwram.txt` only names the
+fills the rest of the 8 MB with `0xFF`. `games/xs/sym_iwram.txt` only names the
 uninitialised IWRAM from `0x030009E8` on (its `IWRAM (NOLOAD)` section
 still starts at `0x03000000` and overlaps `iwram`; ld allows that for a
 NOLOAD section). The image holds, in order:
@@ -275,8 +275,8 @@ NOLOAD section). The image holds, in order:
 - `src/engine/sys/iwram_data.cpp`: the initialised globals from `0x030007CC`,
   its `.data`.
 
-**Code units.** The report can't slice these from `expected/code_3.s`:
-the image was never disassembled as code there. `expected/iwram.s` is
+**Code units.** The report can't slice these from `games/xs/expected/code_3.s`:
+the image was never disassembled as code there. `games/xs/expected/iwram.s` is
 its frozen target, generated once from `baserom.gba` (ARM disassembly,
 branch targets and pool words as labels and symbols, IWRAM addresses in
 the `name: @ 0x030000D4` labels `slice_expected.py` looks for) and never
@@ -327,7 +327,7 @@ where each is handled:
   no `ldr` loads (so it can't be a pool word) becomes two `.inst.n`
   halfwords.
 - **Stale labels and boundaries.** Handled per function in
-  `expected/corrections.txt`: `split` for functions the disassembly never
+  `games/xs/expected/corrections.txt`: `split` for functions the disassembly never
   labelled, `unlabel` for labels it took for function starts that the C
   doesn't have (the `GAX_CALL_ARM` return points `sub_8039E50`,
   `sub_803A318`, `sub_803A608`; `sub_802613E`, which starts
@@ -362,7 +362,7 @@ decides "matched".
 These three were matched even earlier than `asm/code_3.s` existed as a named
 file (back when the whole ROM was still one `asm/code.s`), through several
 more splits than `code_3.s` went through, and were originally excluded from
-the report entirely for lack of a pristine source. `expected/legacy.s` (see
+the report entirely for lack of a pristine source. `games/xs/expected/legacy.s` (see
 above) closed that gap.
 
 Closing it also surfaced two real, distinct problems, worth knowing about
@@ -390,7 +390,7 @@ since both patterns will likely recur:
   had this embedded as a raw `.byte` blob (`// this is ugly AF`) from
   whoever matched `mem_collect` originally, precisely because leaving it
   out breaks the ROM's byte layout - it's now written as real, labelled
-  Thumb instructions (`mem_walk_heaps`) instead, with `expected/corrections.txt`
+  Thumb instructions (`mem_walk_heaps`) instead, with `games/xs/expected/corrections.txt`
   giving the frozen target a matching `split` entry. Same bytes, same
   `make compare` result, just inspectable instead of opaque. #662
   round 2 replaced the asm with plain C (a walk to each heap's last
@@ -418,7 +418,7 @@ that, so matching bytes can't be the test. The source is what decides.
 
 **Scope.** Everything after the code, from `0x0803B8B0` to the end of the
 ROM (`0x08800000`), is linked from the `/* Data */` block of
-`ldscript.txt`: the sections of `data/data.s` (one label per blob and one
+`games/xs/ldscript.txt`: the sections of `data/data.s` (one label per blob and one
 `.incbin` per label) interleaved with the `.rodata` of the `src/*/data/*.c`
 tables, in ROM order, then the IWRAM image (`0x087E55E4`-`0x087E5FCC`,
 see "The IWRAM image": only its initialised data, `0x087E5DB0` on, is
@@ -434,12 +434,12 @@ nearly all inside the big `gLanguageSelectPalette3`/`gSpriteBankTable`
 blobs) still count as data: they sit inside real data, and there are no
 other `0xFF` runs. Apart from `src/*/data/`, no C file puts data in the
 ROM: agbcc emits no `.rodata`/`.data` for the code files, and
-`ldscript.txt` only places their `.text`, discarding everything else.
+`games/xs/ldscript.txt` only places their `.text`, discarding everything else.
 Jump tables and literal pools inside code are counted as code.
 
 **How `tools/report_units.py` builds the units** (`data_units()`):
 
-1. It walks the `/* Data */` block of `ldscript.txt` (`data_layout()`)
+1. It walks the `/* Data */` block of `games/xs/ldscript.txt` (`data_layout()`)
    and turns each piece into blobs (label, address, size, source): a
    `data/data.s` section into one blob per label, a `src/*/data/*.o` object
    into one blob per global object symbol in its `.rodata` (a blob runs to
@@ -487,7 +487,7 @@ in a PR) drops to 0%. objdiff compares the actual bytes, so that shows up.
 script. Replace its `.incbin "baserom.gba", ...` in `data/data.s` with the
 built file, keeping the label, and the next `make report` counts it. The
 same goes for a table moved into `src/*/data/` (the steps are in
-[data.md](./data.md)): once `ldscript.txt` places the object, the report
+[data.md](./data.md)): once `games/xs/ldscript.txt` places the object, the report
 picks it up.
 
 **Build requirements.** `make report` depends on the built graphics and

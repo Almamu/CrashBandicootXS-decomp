@@ -44,7 +44,7 @@ void GaxInfoInit(void *self)
     GaxInfoResetPosition(self);
 }
 
-/* UNUSED - no caller anywhere in the ROM (no `bl` in expected/*.s, no
+/* UNUSED - no caller anywhere in the ROM (no `bl` in games/xs/expected/*.s, no
  * pointer to 0x0803941D in baserom.gba). Restarts the song from the top
  * while it keeps playing: the same position reset as GaxInfoInit, but
  * `playing` set and `muteTicks` at 2, so the channels stay silent for the

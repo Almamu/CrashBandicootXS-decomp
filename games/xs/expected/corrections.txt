@@ -1,7 +1,7 @@
 # Corrections applied to build/expected/target.o (the merge of
-# expected/code_3.s and expected/legacy.s - see Makefile's `report`
+# games/xs/expected/code_3.s and games/xs/expected/legacy.s - see Makefile's `report`
 # target) after assembling, never to either frozen source itself (see
-# docs/progress_report.md and expected/README.md for why). Kinds of entry,
+# docs/progress_report.md and games/xs/expected/README.md for why). Kinds of entry,
 # one per line:
 #
 #   rename OLD_NAME NEW_NAME
@@ -64,8 +64,8 @@ rename sub_800106C FormatCentiseconds
 rename sub_80011F4 GetWordLength
 rename sub_8000D68 CountNonSpaceChars
 
-# expected/legacy.s (commit 8b090ca, the very first commit - see
-# expected/README.md) predates commit 710cc9a's renaming pass entirely,
+# games/xs/expected/legacy.s (commit 8b090ca, the very first commit - see
+# games/xs/expected/README.md) predates commit 710cc9a's renaming pass entirely,
 # so main.c/memory.c/irq.c's functions are still sub_XXXXXXXX there even
 # though they've had real names since 2025 - one rename per function
 # that got named while it was still being matched, back before this
@@ -141,7 +141,7 @@ unlabel sub_803A318
 unlabel sub_803A608
 
 # GAX2's DMA settle delay (GAX_DMA_WAIT, Shin'en's `mov r3, r3`) is a
-# `.byte 0x1b, 0x1c` in expected/code_3.s, which puts a data mapping
+# `.byte 0x1b, 0x1c` in games/xs/expected/code_3.s, which puts a data mapping
 # symbol on that halfword; the C build has it as code. GaxResetSoundHardware,
 # GAX_irq, GAX_stop, GaxStopDma.
 code 0x080384E4
@@ -153,7 +153,7 @@ code 0x080391F8
 # non_word_aligned_thumb_func_start; nothing in src/ defines it.
 unlabel sub_8016046
 
-# sub_800039C (see the split above) is a raw .byte blob in expected/legacy.s,
+# sub_800039C (see the split above) is a raw .byte blob in games/xs/expected/legacy.s,
 # so the assembler put all 64 bytes in one data mapping region and objdiff
 # decoded them as .words. These restore its code/pool layout: code,
 # padding + pool word, code, padding + pool word, code, trailing padding.
@@ -165,7 +165,7 @@ code 0x080003D0
 data 0x080003DA
 
 # lib/agb_eeprom/src/eeprom_timer.c: sub_803A9AC (SDK EepromTimerIntr) is an unlabelled
-# .byte blob right after sub_803A968's pool in expected/code_3.s, with a
+# .byte blob right after sub_803A968's pool in games/xs/expected/code_3.s, with a
 # stray gStaticData_0803A9AD label one byte in. Code, then its two pool words.
 split 0x0803A9AC EepromTimerIntr
 unlabel gStaticData_0803A9AD

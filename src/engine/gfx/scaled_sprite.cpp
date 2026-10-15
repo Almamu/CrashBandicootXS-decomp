@@ -104,7 +104,7 @@ void ScaledSprite::Draw()
     gOamBuffer->Add(&oam);
 }
 
-/* UNUSED - no caller anywhere in the ROM (no `bl` in expected/*.s, no
+/* UNUSED - no caller anywhere in the ROM (no `bl` in games/xs/expected/*.s, no
  * pointer to it in baserom.gba), like the other three setters below and
  * Fit/Draw above (ScaledSprite's other methods). Sets the sprite box's solid color `color` (a 256-color
  * index): stores it in `color` (+0x1c), puts its palette bank

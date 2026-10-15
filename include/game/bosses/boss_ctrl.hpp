@@ -14,7 +14,7 @@
  * boss_actors.hpp):
  * `Update__Q34Game6Bosses8TinyCtrlPQ34Game8Entities12MovingSprite`,
  * `_vt.Q34Game6Bosses8BossCtrl` (in the section
- * `.gnu.linkonce.d._vt.Q34Game6Bosses8BossCtrl`, which ldscript.txt
+ * `.gnu.linkonce.d._vt.Q34Game6Bosses8BossCtrl`, which games/xs/ldscript.txt
  * names) & co. bosses.h's C structs and declarations stay global. */
 
 #include "game/entities/ctrl.hpp"

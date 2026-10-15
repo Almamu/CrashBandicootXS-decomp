@@ -142,7 +142,7 @@ from the entries: the tile sheets by bpp (`TILE_SHEETS_4BPP`, `_8BPP`, the
 (`BG_PACKAGES`, `BG_PACKAGE_BPP_<package>`, `BG_PACKAGES_AFFINE`), the
 16-colour PNG palettes (`PALETTE_COLORS_16`), the class objects and each
 object's prerequisites (the `.inc` files of its members). The ROM's
-layout comes from `ldscript.txt` and the order of the definitions in each
+layout comes from `games/xs/ldscript.txt` and the order of the definitions in each
 `src/*/data/*.cpp`, and every reference is a symbol, so an asset that grows
 or shrinks just moves what follows it. The addresses are kept so the
 sources can be extracted from `baserom.gba` again, and to put the
@@ -724,7 +724,7 @@ analysis allows, and the write site still can't be found.
   main loop's state machine) - these turned out to be level-transition
   fade effects and a level-title-card display, not sprite-package setup
   either.
-- Checked the IWRAM linker symbol map (`sym_iwram.txt`) - confirms
+- Checked the IWRAM linker symbol map (`games/xs/sym_iwram.txt`) - confirms
   `gTitleObjPackages` is a genuine standalone 16-byte variable, and that
   the whole IWRAM/EWRAM region is linked `(NOLOAD)` - i.e. **there is no
   ROM-side initializer copied in at boot**; every byte of it must be

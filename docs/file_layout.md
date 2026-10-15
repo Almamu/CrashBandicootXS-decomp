@@ -6,7 +6,7 @@ ROM address. [CONTRIBUTING.md](../CONTRIBUTING.md) "Source layout" has
 the layout and the naming rules; this page records how the tree got
 there: the decisions and the map from every old path to its new one.
 
-The ROM didn't change: the object order is `ldscript.txt`'s, and only the
+The ROM didn't change: the object order is `games/xs/ldscript.txt`'s, and only the
 paths in it moved. Each step was checked with a clean `make compare`, and
 the .map compared with the one before, with the old object paths mapped
 to the new ones: every address is the same.
@@ -96,7 +96,7 @@ platform/gba/lib/libagbsyscall/     the BIOS SWI wrappers
   links point at the new files (a `.c` path of the C era is mapped like
   the `.cpp` it became). A path to a file that was already gone before the
   move (`src/gfx/graphics.c`, ...) keeps its name, as do the frozen
-  `expected/` files.
+  `games/xs/expected/` files.
 
 ## The rename map
 

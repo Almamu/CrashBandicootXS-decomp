@@ -12,7 +12,7 @@ using Engine::Gfx::VvLogoUrl;
 
 /*
  * ROM 0x0817D6C0-0x0817D7A4. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 extern const struct delta_record gVvLogoPieceMotion00[];

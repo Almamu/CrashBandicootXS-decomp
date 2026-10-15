@@ -7,7 +7,7 @@ extern "C" {
 /*
  * ROM 0x080FF1B0-0x0814174C: BG0 cell animation B (categories 3-6),
  * category 3's BG1 picture and its spawnTable. Linked in ROM order
- * between data/data.s sections by ldscript.txt - see docs/data.md
+ * between data/data.s sections by games/xs/ldscript.txt - see docs/data.md
  * ("Category backgrounds").
  */
 

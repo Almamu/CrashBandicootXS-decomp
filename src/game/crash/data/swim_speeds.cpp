@@ -8,7 +8,7 @@ extern "C" {
 
 /*
  * ROM 0x0816C090-0x0816C250. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 const struct speed_table gSwimCtrlTurnSpeeds = { {

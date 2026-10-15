@@ -15,7 +15,7 @@
  * member functions like plain functions. The data members are only
  * declared: cxx_symbols.txt (block "#915 ObjTileAllocator") maps each one
  * to its C name (`_Q36Engine3Gfx16ObjTileAllocator.rover` is gVramTileBlockRover,
- * ...), whose address is in sym_iwram.txt, and the functions keep their
+ * ...), whose address is in games/xs/sym_iwram.txt, and the functions keep their
  * C names the same way (`Alloc__Q36Engine3Gfx16ObjTileAllocatori` is
  * AllocVramTileBlock).
  *
@@ -47,7 +47,7 @@ public:
     static void Destroy();        // FreeObjTileFreeList
 
 private:
-    /* IWRAM (sym_iwram.txt). `list` is the sentinel of the blocks'
+    /* IWRAM (games/xs/sym_iwram.txt). `list` is the sentinel of the blocks'
      * address-ordered ring, `rover` where the next-fit search starts,
      * `spares` the stack of unused records, and `index` the record of
      * each tile (TOTAL_OBJ_TILE_COUNT bytes). */

@@ -3,7 +3,7 @@
 where baserom.gba has it (docs/graphics.md, "The manifest").
 
 The build reads the manifest only for the graphics classes (below): the
-ROM's layout comes from ldscript.txt and the order of the definitions in
+ROM's layout comes from games/xs/ldscript.txt and the order of the definitions in
 each src/.../data/*.cpp, and every reference is a symbol. The ROM addresses
 are kept so the sources can be extracted from baserom.gba again, and to
 put a class's members in ROM order.

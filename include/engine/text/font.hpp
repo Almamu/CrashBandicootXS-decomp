@@ -10,14 +10,14 @@
  * No `#pragma interface`: g++ emits Font's vtable in src/engine/text/font.cpp,
  * which has its key method, MeasureText (its first non-inline virtual
  * one; the destructor is inline), and SmallFont's and LargeFont's in
- * src/engine/util/aabb_setters.cpp, which has their destructors. ldscript.txt
+ * src/engine/util/aabb_setters.cpp, which has their destructors. games/xs/ldscript.txt
  * places them at their ROM addresses (docs/cplusplus.md, "Emitting the
  * vtables"); cxx_symbols.txt maps the mangled names onto the C names.
  *
  * The three classes are in the namespace Engine::Text (#1033,
  * docs/cplusplus.md "Namespaces"): `DrawText__Q36Engine4Text4FontPCUc`,
  * `_vt.Q36Engine4Text4Font` (in the section
- * `.gnu.linkonce.d._vt.Q36Engine4Text4Font`, which ldscript.txt names) &
+ * `.gnu.linkonce.d._vt.Q36Engine4Text4Font`, which games/xs/ldscript.txt names) &
  * co. text.h's C-linkage wrapped-text functions stay global. */
 
 extern "C" {

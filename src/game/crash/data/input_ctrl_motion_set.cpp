@@ -7,7 +7,7 @@ extern "C" {
 
 /*
  * ROM 0x0816B93C-0x0816B98C. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 extern const u32 gInputCtrlMotionEntries[9][2];

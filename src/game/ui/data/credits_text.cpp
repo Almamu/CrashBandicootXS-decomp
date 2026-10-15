@@ -6,7 +6,7 @@ extern "C" {
 
 /*
  * ROM 0x0817C5D0-0x0817CF40. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 /* The credits (InitCredits/UpdateCreditsText, credits.cpp): a stream of

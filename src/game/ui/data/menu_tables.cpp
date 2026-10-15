@@ -7,7 +7,7 @@ extern "C" {
 
 /*
  * ROM 0x0816B138-0x0816B284. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 /* The text DrawYesNoPrompt (save_menu_draw.cpp) draws in an icon's text slot. */

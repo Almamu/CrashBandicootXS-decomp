@@ -4,7 +4,7 @@ using Game::Bosses::HovercraftFireball;
 
 /*
  * ROM 0x0817C450-0x0817C460. Linked in ROM order between data/data.s
- * sections by ldscript.txt - see docs/data.md.
+ * sections by games/xs/ldscript.txt - see docs/data.md.
  */
 
 /* The hovercraft fireball's state methods, indexed by `state`

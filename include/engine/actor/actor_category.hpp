@@ -18,7 +18,7 @@
  * plain functions. Its statistics (ActorCategoryStats) and its spawn
  * table (ActorSpawns) are classes of their own. cxx_symbols.txt (block
  * "#915 ActorCategory") maps each member to its C name
- * (`_Q36Engine5Actor13ActorCategory.current` is gActorCategory, ...): sym_iwram.txt
+ * (`_Q36Engine5Actor13ActorCategory.current` is gActorCategory, ...): games/xs/sym_iwram.txt
  * places the IWRAM ones, src/engine/actor/data/actor_categories.cpp defines the
  * ROM tables. The functions keep their C names the same way
  * (`Init__Q36Engine5Actor13ActorCategoryi` is InitActorCategory).
@@ -76,7 +76,7 @@ private:
     static void DestroyActors();       // DestroyAllActors
     static void UpdateBg2();           // UpdateActorCategoryBg2
 
-    /* IWRAM (sym_iwram.txt) */
+    /* IWRAM (games/xs/sym_iwram.txt) */
     static s32 current;                          // gActorCategory - the descriptors index
     static Game::Entities::ActorSelf **drawList; // gActorDrawList - 50 entries
     static s32 drawCount;                        // gActorDrawCount

@@ -3,7 +3,7 @@
 /*
  * ROM 0x0815A050-0x08167AD4: a zero-run-compressed OBJ frame set (the old
  * "rotation strip C"), same format as polar_rle_sprites.cpp. Linked in ROM
- * order between data/data.s sections by ldscript.txt - see docs/data.md
+ * order between data/data.s sections by games/xs/ldscript.txt - see docs/data.md
  * ("Compressed sprite frames").
  *
  * The set is JetpackPlayerFrameSet::frames of graphics.hpp (categories

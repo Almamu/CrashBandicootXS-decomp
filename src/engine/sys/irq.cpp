@@ -162,7 +162,7 @@ void FrameLimiter::WaitForVBlank()
 }
 
 /* UNUSED - no caller anywhere in the ROM (checked every asm/*.s,
- * expected/*.s and src/ file for a bl/.4byte reference). Turns
+ * games/xs/expected/*.s and src/ file for a bl/.4byte reference). Turns
  * WaitForVBlank's frame limit off. */
 void FrameLimiter::Disable()
 {

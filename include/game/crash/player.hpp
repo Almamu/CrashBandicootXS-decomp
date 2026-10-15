@@ -15,7 +15,7 @@
  * "Namespaces"), with the controllers of action_ctrl.hpp, swim_ctrl.hpp
  * and input_ctrl.hpp: `Update__Q34Game5Crash6Player`,
  * `_vt.Q34Game5Crash6Player` (in the section
- * `.gnu.linkonce.d._vt.Q34Game5Crash6Player`, which ldscript.txt names)
+ * `.gnu.linkonce.d._vt.Q34Game5Crash6Player`, which games/xs/ldscript.txt names)
  * & co. The C structs and the data stay global. */
 
 #include "game/entities/ctrl.hpp"
@@ -56,7 +56,7 @@ extern const struct level_anim gSwimCtrlModeLevelAnims[8][13];
 extern const struct level_anim *const gSwimCtrlModeAnimRows[8];
 extern const struct speed_table gSwimCtrlTurnSpeeds;
 
-/* The player's speedY after its last ApplyPlayerVelocity (sym_iwram.txt;
+/* The player's speedY after its last ApplyPlayerVelocity (games/xs/sym_iwram.txt;
  * gLastSpriteVelY is the moving sprites'). Nothing reads it. */
 extern s32 gLastPlayerVelY;
 
@@ -127,7 +127,7 @@ extern const struct entry_set gActionCtrlMotionSet;
 extern const struct entry_set gSwimCtrlMotionSet;
 extern const struct entry_set gInputCtrlMotionSet;
 
-/* The player's controller (sym_iwram.txt), built by PlayRoom
+/* The player's controller (games/xs/sym_iwram.txt), built by PlayRoom
  * (swim_ctrl.hpp's class, declared in its namespace). */
 namespace Game
 {
