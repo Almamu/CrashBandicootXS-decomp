@@ -62,7 +62,6 @@ kappa-db.json
 context
 decomp.yaml
 report.json
-progress.json
 /objdiff.json
 
 # Python cache

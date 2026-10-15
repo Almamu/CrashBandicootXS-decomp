@@ -124,26 +124,35 @@ jobs:
     - name: Generate progress report
       run: ./objdiff-cli report generate -o report.json
 
-    # On main, send the report to decompilati.onl (tools/progress_api.py,
-    # docs/progress_report.md). The API key is the repository secret
-    # DECOMPILATION_PROGRESS_TOKEN; without it the step does nothing. The
-    # commit message goes through env, never into the script itself.
-    - name: Report progress to decompilati.onl
+    # The report for decompilati.onl, both ways it takes an objdiff report
+    # (docs/progress_report.md, "decompilati.onl"). The old way, as for
+    # decomp.dev: the europe_report artifact, which its GitHub App imports
+    # from a successful run on main.
+    - name: Upload progress report artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: europe_report
+        path: report.json
+
+    # The new way: on main, POST the same report to the webhook with the
+    # commit and version in the query string. The API key is the repository
+    # secret DECOMPILATION_PROGRESS_TOKEN; without it the step does nothing.
+    - name: Send progress to decompilati.onl
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       env:
         TOKEN: ${{ secrets.DECOMPILATION_PROGRESS_TOKEN }}
-        COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
       run: |
         if [ -z "$TOKEN" ]; then
           echo "No DECOMPILATION_PROGRESS_TOKEN secret, not reporting"
           exit 0
         fi
-        python3 tools/progress_api.py --version europe --commit "$GITHUB_SHA" \
-          --message "$(printf '%s\n' "$COMMIT_MESSAGE" | head -n 1)" > progress.json
-        curl --fail-with-body -sS -X POST https://decompilati.onl/api/v1/progress \
+        gzip -kf report.json
+        curl --fail-with-body -sS -X POST \
+          "https://decompilati.onl/api/v1/progress?commit=$GITHUB_SHA&version=europe" \
           -H "Authorization: Bearer $TOKEN" \
           -H "Content-Type: application/json" \
-          --data @progress.json
+          -H "Content-Encoding: gzip" \
+          --data-binary @report.json.gz
 
     # The README's progress badges (tools/badges.py): matching and
     # non-matching from the report above, clean functions and workarounds

@@ -13,8 +13,8 @@ read by `report generate`) is generated fresh by `make report` every time
 (see "One unit per matched file" below) and gitignored - never hand-edit or
 commit it.
 
-On every push to `main`, CI also sends the progress to
-[decompilati.onl](https://decompilati.onl) (see "decompilati.onl" below).
+CI also sends it to [decompilati.onl](https://decompilati.onl), as an
+artifact and through its webhook (see "decompilati.onl" below).
 The report used to be uploaded for [decomp.dev](https://decomp.dev), which
 has since closed.
 
@@ -572,36 +572,25 @@ the files on that branch.
 
 ## decompilati.onl
 
-[decompilati.onl](https://decompilati.onl) takes progress as a JSON
-document POSTed to its webhook ([API docs](https://decompilati.onl/docs)):
-code and data totals in bytes, plus a tree of areas for the project's map.
-`tools/progress_api.py` builds that document from `report.json` and
-`objdiff.json`:
+[decompilati.onl](https://decompilati.onl) ([API docs](https://decompilati.onl/docs))
+reads objdiff reports the way decomp.dev did, and CI sends it this one
+both ways it takes them, so the project tests the two side by side:
 
-- `version` is `europe`, the ROM this repository builds (`--version`).
-  decompilati.onl keeps each version's progress and history apart, with a
-  tab per version on the project page.
-- `code.matching` is objdiff's `matched_code`. `code.non_matching` is the
-  code that has C but doesn't match: the bytes of the units with a base
-  object, less what matches, the same split as the *non-matching* badge.
-  `data.done` is objdiff's `matched_data`.
-- The areas follow the source tree: **Engine** and **Game** with one area
-  per namespace (`src/engine/<ns>/`, `src/game/<ns>/`), **Libraries** with
-  one per `lib/` library, **Sound data** and **Assembly** (`asm/itoa_arm`).
-  A code unit goes where the object `tools/report_units.py` builds its base
-  from lives; a data unit where its name says its source is. The script
-  stops if a unit has no area or the areas don't add up to the report's
-  totals.
-- The map sizes a tile by its code, so a data-only area (the sound data)
-  gets a `weight`: its share of the data, at the code's scale.
+- **The GitHub App** (the decomp.dev way). The "Upload progress report
+  artifact" step uploads `report.json` as the `europe_report` artifact on
+  every run. With the decompilati.onl GitHub App installed on the
+  repository, it imports the artifact of each successful run on `main`,
+  with the run's commit; the version is the artifact name's prefix,
+  `europe`.
+- **The webhook.** On pushes to `main`, "Send progress to decompilati.onl"
+  POSTs the same `report.json`, gzip-compressed, to
+  `/api/v1/progress?commit=<sha>&version=europe`, with the repository
+  secret `DECOMPILATION_PROGRESS_TOKEN` as the bearer token. Without the
+  secret the step does nothing.
 
-The "Report progress to decompilati.onl" step in
-`.github/workflows/build.yml` runs it on pushes to `main` only, with
-`--version europe`, the commit hash and the first line of its message, and POSTs the result with
-the repository secret `DECOMPILATION_PROGRESS_TOKEN` as the bearer token.
-Without the secret the step does nothing. To see what would be sent:
-
-```
-make NON_MATCHING=1 report && objdiff-cli report generate -o report.json
-tools/progress_api.py > progress.json
-```
+decompilati.onl counts matched code as matching, fuzzy-matched code beyond
+that as non-matching and objdiff's matched data as data, and makes an
+area of each progress category (see "Categorizing the still-raw majority
+of the ROM" above), with its units inside. Both ways send the same report,
+so they agree; a report identical to the current state is accepted and
+not stored.
