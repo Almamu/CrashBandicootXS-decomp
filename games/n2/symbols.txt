@@ -1,10 +1,10 @@
-/* N-Tranced addresses of the RAM variables and ROM data the shared
- * sources (games/n2/objects.txt) use, while N-Tranced's RAM and data
- * aren't laid out from sources yet (#1110). From the XS/N-Tranced
- * comparison (#1107): the same code reads them in both games. */
+/* N-Tranced addresses of its RAM variables, for the linker script
+ * (games/n2/ldscript.txt), while N-Tranced's RAM isn't laid out from
+ * sources yet (#1110): what the shared sources (games/n2/objects.txt)
+ * use, and XS's names the XS/N-Tranced comparison (#1107) found. Data
+ * in the ROM is named in games/n2/data_names.txt. */
 
 gVramDmaQueue = 0x02000E50;
-gEntitySpawnFuncs = 0x081D0244;  /* the 110-entry spawn table, checked by hand (#1113) */
 
 /* From the XS/N-Tranced comparison (tools/nt_compare/name_data.py). */
 mem_iwram_heap_pointer = 0x02000004;
@@ -82,21 +82,3 @@ gEepromTimerReg = 0x02002664;
 gEepromSavedIme = 0x02002668;
 gEepromConfig = 0x02002670;
 gIntrTable = 0x03000E08;
-gSineTable = 0x081CD704;
-gSfxTable = 0x081CD958;
-gCrc16Table = 0x081CDC58;
-gMenuCursorText = 0x081CDE84;
-gPauseRelicIconPos = 0x081CDF64;
-gPauseRelicIconFrames = 0x081CDF7C;
-gPauseTimeTrialIconPos = 0x081CDF88;
-gObjPieceHeights = 0x081CDFF8;
-gEmptySpriteBox = 0x081CE004;
-gCrateKindBreakable = 0x081CFADE;
-gCrateKindExplosive = 0x081CFAF8;
-gCrateKindUnbreakable = 0x081CFB12;
-gCrateHitResponse = 0x081CFC04;
-gLevelTable = 0x081D0430;
-gContinuePromptCursorText = 0x081DF5A8;
-__clz_tab_divdi3 = 0x085291D0;
-__clz_tab_udivdi3 = 0x085292D0;
-gEepromConfig512 = 0x087F843C;

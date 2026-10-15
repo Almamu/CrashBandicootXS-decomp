@@ -35,7 +35,7 @@ _080000C0:
 	svc #0x10000
 	ldr sp, _08000150 @ =0x03007E00
 	ldr r2, _0800016C @ =0x040000D4
-	ldr r0, _08000158 @ =0x087FBE94
+	ldr r0, _08000158 @ =gUnknown_087FBE94
 	str r0, [r2]
 	ldr r0, _08000168 @ =0x03000000
 	str r0, [r2, #4]
@@ -45,7 +45,7 @@ _080000C0:
 	orr r0, r1, r3, asr #2
 	str r0, [r2, #8]
 	ldr r2, _0800016C @ =0x040000D4
-	ldr r0, _08000158 @ =0x087FBE94
+	ldr r0, _08000158 @ =gUnknown_087FBE94
 	add r0, r0, r3
 	str r0, [r2]
 	ldr r0, _08000160 @ =0x02000000
@@ -65,7 +65,7 @@ _0800014C: .4byte 0x03007FA0
 _08000150: .4byte 0x03007E00
 _08000154:
 	.byte 0x80, 0x13, 0x00, 0x00
-_08000158: .4byte 0x087FBE94
+_08000158: .4byte gUnknown_087FBE94
 _0800015C: .4byte gPrevIntrTable
 _08000160: .4byte 0x02000000
 _08000164: .4byte 0x03002FF8
@@ -1081,14 +1081,14 @@ _080008BE:
 	movs r0, #1
 	orrs r1, r0
 _080008CA:
-	ldr r0, _080008D8 @ =0x081CD6F4
+	ldr r0, _080008D8 @ =gUnknown_081CD6F4
 	adds r0, r1, r0
 	ldrb r0, [r0]
 	pop {r1}
 	bx r1
 	.align 2, 0
 _080008D4: .4byte gKeys
-_080008D8: .4byte 0x081CD6F4
+_080008D8: .4byte gUnknown_081CD6F4
 
 	thumb_func_start sub_080008DC
 sub_080008DC: @ 0x080008DC
