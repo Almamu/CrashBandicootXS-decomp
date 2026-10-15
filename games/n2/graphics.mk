@@ -22,3 +22,7 @@ $(GRIT):
 
 # the sprite tile pool and the OBJ palettes (graphics_rules.mk's rules)
 $(C_BUILDDIR)/engine/gfx/data/sprite_tiles.o: $(SPRITE_FRAMES_OUT) $(GRAPHICS_BUILDDIR)/sprites/obj_palettes.bin.inc
+
+# the sprite banks' tables (sprite_banks_*.cpp, tools/sprite_banks.py):
+# their piece arrays and frames' tile offsets
+$(foreach o,$(filter %/sprite_banks_00_06.o %/sprite_banks_07_25.o %/sprite_banks_26_46.o %/sprite_banks_47_48.o,$(DATA_OBJS)),$(eval $(o): $(SPRITE_FRAMES_OUT)))

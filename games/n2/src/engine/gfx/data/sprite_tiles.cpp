@@ -6,17 +6,16 @@ extern "C" {
 /*
  * N-Tranced's ROM 0x082B3914-0x084768B4: the sprite tile pool and the 93
  * OBJ palettes, as XS's sprite_tiles.cpp (see it, and docs/graphics.md
- * "Sprite banks"): N-Tranced's gSpriteBankTable (0x084768B4, still
- * incbin'd) starts with {banks, tileBase = gSpriteBank00Tiles, palettes =
+ * "Sprite banks"): N-Tranced's gSpriteBankTable (0x084768B4,
+ * sprite_banks_00_06.cpp) starts with {banks, tileBase = gSpriteBank00Tiles, palettes =
  * gObjPalettes, 49, 93}, and each of the 49 banks has its own range of the
  * pool, back to back in bank order, one array below.
  *
  * Raw 4bpp (32-byte) OBJ tiles, no header. tools/sprite_frames.py
  * --graphics-dir games/n2/graphics pack builds them from
  * games/n2/graphics/sprites/bankNN_<name>/ (docs/n_tranced.md, "Sprite
- * banks"). N-Tranced's frames hold offsets into the pool, which its
- * incbin'd bank table keeps: a bank can't change size until that table is
- * built from source too.
+ * banks"), with each frame's offset in the pool (sprites/sprite_frames.h),
+ * which the frames of sprite_banks_*.cpp use, so a bank can change size.
  * Linked in ROM order between the incbin'd data by games/n2/ldscript.txt.
  */
 
