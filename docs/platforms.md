@@ -183,9 +183,11 @@ The code must compile for a 64-bit host with the GBA build unchanged
 What phase 0 left (none of it can change without changing the GBA code,
 or it is replaced at its API, see "What a port provides"):
 
-- `vsprintf` (src/engine/util/printf.cpp) reads its arguments as 4-byte
-  slots of the stack (`u32 *args`, `%s` as `(u8 *)*args`), not with
-  `va_arg`: a host needs its own. Nothing in the game calls `sprintf`.
+- `vsprintf` (src/engine/util/printf.cpp) reads its arguments as
+  pointer-sized slots (`uintptr_t *args`, `%s` as `(u8 *)*args`: 4 bytes
+  on the GBA, so that a host's `%s` reads a whole address), and `sprintf`
+  hands it the stack's, not `va_arg`'s: a host needs its own `sprintf`.
+  Nothing in the game calls `sprintf`.
 - AgbEeprom (`lib/agb_eeprom/`, which writes the DMA registers with
   addresses as `u32`s) is replaced at its API, not compiled for a host.
   GAX2 (`lib/gax/`) is compiled, but for its ARM parts, and its song data
@@ -775,8 +777,8 @@ and tests/boot_mgba_screens.json, every frame).
 **Not done yet:** the gamepad mapping is built but untested with a real
 pad (the tests had none). The link is stubbed by decision ("The link
 cable" above), not left to do.
-`vsprintf` stays as it is (4-byte argument slots, see above; renamed
-GameVsprintf, and never called).
+`sprintf` stays as it is (it hands `vsprintf` the stack's slots, see
+above; renamed GameSprintf, and never called).
 Other ABI differences that a later phase may meet: the `asm("CName")`
 views with another return type (`RandRange_s32`, `GetPaletteSlot_s32`)
 read a register the host doesn't promise to extend, and the game's

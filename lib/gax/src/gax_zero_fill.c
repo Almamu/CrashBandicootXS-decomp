@@ -28,7 +28,7 @@ void GaxZeroFill(void *destArg, s32 count)
     s32 aligned;
     u32 zero;
 
-    while ((u32)dest & 3) {
+    while ((uintptr_t)dest & 3) {
         *dest++ = 0;
         cnt--;
     }

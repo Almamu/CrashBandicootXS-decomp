@@ -33,7 +33,7 @@
 void GaxDrawText(u32 col, u32 row, const char *str)
 {
     const u8 *s = (const u8 *)str;
-    u32 base = col + BG_SCREEN_ADDR(0);
+    uintptr_t base = col + BG_SCREEN_ADDR(0);
     u8 *dst = (u8 *)(col + base + row * 64);
     s32 x;
     s32 len;
@@ -47,7 +47,7 @@ void GaxDrawText(u32 col, u32 row, const char *str)
         return;
     do {
         len = 0;
-        x = ((u32)dst & 0x3f) >> 1;
+        x = ((uintptr_t)dst & 0x3f) >> 1;
         c = *s;
         if (x <= 0x1f) {
             /* The loop is entered at its test, with the byte already
@@ -64,7 +64,7 @@ void GaxDrawText(u32 col, u32 row, const char *str)
                 if (peek == 0 || peek == ' ' || peek == '\n')
                     break;
                 if (x > 0x1d) {
-                    dst = (u8 *)(((s32)dst & ~0x3f) + 0x40);
+                    dst = (u8 *)(((uintptr_t)dst & ~0x3f) + 0x40);
                     break;
                 }
             }
@@ -78,7 +78,7 @@ void GaxDrawText(u32 col, u32 row, const char *str)
         if (tile == '.')
             tile = 0x5b;
         if (tile == '\n')
-            dst = (u8 *)(((s32)dst & ~0x3f) + 0x3f);
+            dst = (u8 *)(((uintptr_t)dst & ~0x3f) + 0x3f);
         if (tile == ' ')
             tile = 0;
         else if (tile <= 0x40)

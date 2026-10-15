@@ -6,11 +6,12 @@ extern "C" {
 
 /* Custom sprintf: writes the formatted result of `fmt`/`args` into
  * `dest` (NUL-terminated) and returns a pointer to the end of it.
- * `args` is a raw array of 4-byte argument slots (not real varargs) -
- * every conversion, including `%c`, advances it by one slot regardless
- * of the actual value's size. Supported conversions: `%s` (string),
- * `%c` (single byte), `%d`/`%x`/`%X` (via itoa), `%<width>d/x/X`
- * with a space pad (`%5d`), and `%0<width>d/x/X` with a zero pad
+ * `args` is a raw array of pointer-sized argument slots (not real
+ * varargs; 4 bytes on the GBA) - every conversion, including `%c`,
+ * advances it by one slot regardless of the actual value's size, and
+ * `%s` reads its string's address from a whole slot. Supported
+ * conversions: `%s` (string), `%c` (single byte), `%d`/`%x`/`%X` (via
+ * itoa), `%<width>d/x/X` with a space pad (`%5d`), and `%0<width>d/x/X` with a zero pad
  * (`%05d`, via FormatPaddedNumber) - anything else (including a literal `%%`)
  * is echoed as-is.
  *
@@ -39,7 +40,7 @@ extern "C" {
  * pointer: the ROM's epilogue here never sets up r0 before the
  * `pop {r0}; bx r0` return dance, so whatever's left in r0 (0, from the
  * NUL-terminator write) is discarded by the caller regardless. */
-void vsprintf(u8 *dest, u8 *fmt, u32 *args)
+void vsprintf(u8 *dest, u8 *fmt, uintptr_t *args)
 {
     u8 c;
 
@@ -117,12 +118,13 @@ void vsprintf(u8 *dest, u8 *fmt, u32 *args)
 }
 
 /* Thin variadic wrapper: forwards straight to vsprintf with a
- * pointer to the first vararg (each slot is a plain 4-byte word, not
- * type-aware - matches vsprintf's raw `u32 *` argument array). */
+ * pointer to the first vararg (each slot is a plain 4-byte word on the
+ * GBA, not type-aware - matches vsprintf's raw `uintptr_t *` argument
+ * array). */
 void sprintf(u8 *dest, u8 *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    vsprintf(dest, fmt, (u32 *)args);
+    vsprintf(dest, fmt, (uintptr_t *)args);
     va_end(args);
 }
