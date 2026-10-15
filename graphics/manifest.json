@@ -1,12 +1,12 @@
 {
   "assets": [
     {"path": "vehicles/polar/ice_wall.png", "kind": "cell_anim", "symbol": "gCategoryFamily0CellAnim", "rom": "0x0803B8B0", "frames": 60, "banks": true},
-    {"path": "vehicles/polar/sprite_sheet/", "kind": "framed_sheet", "symbol": "gPolarSpriteSheet", "rom": "0x080B2120"},
+    {"path": "vehicles/polar/sprite_sheet/", "kind": "framed_sheet", "symbol": "gPolarSpriteSheet", "prefix": "POLAR", "rom": "0x080B2120"},
     {"path": "vehicles/polar/player.png", "kind": "rle_frames", "symbol": "gPolarPlayerRleFrames", "class": "PolarPlayerFrameSet", "about": "Crash riding the polar bear, 152 frames of 8x8 tiles, animation record 0 of categories 0-2 (gPolarPlayerFrames)", "rom": "0x080C2758", "end": "0x080DA1D8", "palette": {"symbol": "gPolarCategoryPalette", "rom": "0x08178F80"}},
     {"path": "vehicles/polar/yeti.png", "kind": "rle_frames", "symbol": "gYetiRleFrames", "class": "YetiFrameSet", "about": "the yeti, 112 frames of 10x10 tiles (Yeti::frames)", "rom": "0x080DA1D8", "end": "0x080FF1B0", "palette": {"symbol": "gYetiPalette", "rom": "0x0817AA6C"}},
     {"path": "vehicles/jetpack/clouds.png", "kind": "cell_anim", "symbol": "gCategoryFamily1CellAnim", "rom": "0x080FF1B0", "frames": 21, "banks": false},
     {"paths": ["vehicles/jetpack/skies/rocket_racket.png", "vehicles/jetpack/skies/rocket_racket_tiles.png"], "kind": "bg_picture", "symbol": "gCategory3BgPicture", "rom": "0x0813D934"},
-    {"path": "vehicles/jetpack/sprite_sheet/", "kind": "framed_sheet", "symbol": "gJetpackSpriteSheet", "rom": "0x0814174C", "folder_banks": {"explosion": 4}},
+    {"path": "vehicles/jetpack/sprite_sheet/", "kind": "framed_sheet", "symbol": "gJetpackSpriteSheet", "prefix": "JETPACK", "rom": "0x0814174C", "folder_banks": {"explosion": 4}},
     {"paths": ["vehicles/jetpack/skies/blimp_bonanza.png", "vehicles/jetpack/skies/blimp_bonanza_tiles.png"], "kind": "bg_picture", "symbol": "gCategory4BgPicture", "rom": "0x08151AC4"},
     {"paths": ["vehicles/jetpack/skies/no_fly_zone.png", "vehicles/jetpack/skies/no_fly_zone_tiles.png"], "kind": "bg_picture", "symbol": "gCategory5BgPicture", "rom": "0x08155260"},
     {"path": "vehicles/jetpack/player.png", "kind": "rle_frames", "symbol": "gJetpackPlayerRleFrames", "class": "JetpackPlayerFrameSet", "about": "Crash's jetpack, 80 frames of 8x8 tiles, animation record 0 of categories 3-6 (gJetpackPlayerFrames)", "rom": "0x0815A050", "end": "0x08167AD4", "palette": {"symbol": "gAirshipCategoryPalette", "rom": "0x0817AAA4"}},

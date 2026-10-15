@@ -76,6 +76,7 @@ everything under it not claimed by a longer entry) or its `paths`, its
 and, extracted by their own tools, which find them through the ROM's
 tables: sprite_banks (tools/sprite_frames.py extract) and framed_sheet
 (tools/split_entities.py, then tools/dump_entities.py; a framed_sheet's
+`prefix` names its frames' offsets, FRAMED_<prefix>_<FOLDER>_<NN>, and its
 `folder_banks`, {folder: bank}, draws a folder in another of its records'
 banks than the first's). The level BG tile
 sets have no source: the build generates them from the rooms' pictures,
@@ -100,16 +101,17 @@ manifest order, so the linker places them and moves what follows
 (docs/shifting.md); the ROM's graphics keep their addresses. extract and
 table leave it out: the ROM has nothing to extract.
 
-A new category graphic (CATEGORY_KINDS: a cell_anim, bg_picture or
-category_palette with no `rom`) is no class and names no object: an actor
-category of levels.json that names it (its "cell_anim", "sky" or
-"palette") has it defined by tools/levels.py categories, before
-ActorCategory::descriptors (docs/levels.md, "Category graphics").
-graphics_manifest.mk gives its build rules (CELL_ANIMS, BG_PICTURES,
-CATEGORY_PALETTES) as for the ROM's.
+A new category graphic (CATEGORY_KINDS: a cell_anim, bg_picture,
+category_palette or framed_sheet with no `rom`) is no class and names no
+object: an actor category of levels.json that names it (its "cell_anim",
+"sky", "palette" or "sprite_sheet") has it defined by tools/levels.py
+categories, before ActorCategory::descriptors (docs/levels.md, "Category
+graphics"). graphics_manifest.mk gives its build rules (CELL_ANIMS,
+BG_PICTURES, CATEGORY_PALETTES, FRAMED_SHEETS) as for the ROM's.
 """
 import argparse
 import json
+import re
 import shlex
 import shutil
 import struct
@@ -165,7 +167,7 @@ NEW_KINDS = ("tiles", "bg_package", "bitmap")
 NEW_BITMAP_DIR, NEW_BITMAP_OBJECT = "cutscenes/", "cutscene_pictures"
 # The kinds a new category graphic can be: an actor category names it, and
 # tools/levels.py categories defines it (no class, no object).
-CATEGORY_KINDS = ("cell_anim", "bg_picture", "category_palette")
+CATEGORY_KINDS = ("cell_anim", "bg_picture", "category_palette", "framed_sheet")
 
 
 def is_new(e):
@@ -222,6 +224,10 @@ def category_entry_errors(e, what):
     elif e["kind"] == "bg_picture":
         if len(paths) != 2 or not all(p.endswith(".png") for p in paths):
             errors.append("%s: a bg_picture's `paths` are its picture and its tile set strip, two PNGs" % what)
+    elif e["kind"] == "framed_sheet":
+        if len(paths) != 1 or not paths[0].endswith("/"):
+            errors.append("%s: a framed_sheet is a directory (its path ends in /) of frame folders and its "
+                          "sheet.json" % what)
     elif len(paths) != 1 or not paths[0].endswith(".pal") or e.get("colors") != 256:
         errors.append("%s: a category_palette is a JASC .pal of `colors` 256" % what)
     return errors
@@ -235,7 +241,9 @@ def category_graphics():
 
 def category_stem(e):
     """A category graphic's built name: its (first) path without the
-    extension."""
+    extension, or a framed sheet's directory without the /."""
+    if e["kind"] == "framed_sheet":
+        return entry_paths(e)[0].rstrip("/")
     return entry_paths(e)[0].rsplit(".", 1)[0]
 
 
@@ -246,6 +254,8 @@ def category_incs(e):
         return [stem + ".pal.inc", stem + "_frames.inc"]
     if e["kind"] == "bg_picture":
         return [stem + ".pal.inc", stem + "_map.inc", stem + "_tiles.img.inc", stem + "_banks.inc"]
+    if e["kind"] == "framed_sheet":
+        return [stem + ".bin.lz.inc", stem + "_frames.h"]
     return [stem + ".gbapal.inc"]
 
 
@@ -280,6 +290,12 @@ def check(root=Path(".")):
     roms = [addr(e["rom"]) for e in entries if not is_new(e)]
     if roms != sorted(roms):
         errors.append("the manifest isn't sorted by ROM address")
+    prefixes = [e.get("prefix") for e in entries if e["kind"] == "framed_sheet"]
+    for e in entries:
+        if e["kind"] == "framed_sheet" and not (isinstance(e.get("prefix"), str) and re.fullmatch(
+                r"[A-Z][A-Z0-9_]*", e["prefix"]) and prefixes.count(e["prefix"]) == 1):
+            errors.append("%s: a framed_sheet has its own `prefix`, FRAMED_<prefix>_<FOLDER>_<NN> (A-Z, 0-9, _)"
+                          % e["symbol"])
     objects = [o["name"] for o in load_objects()]
     for e in entries:
         if is_new(e):
@@ -813,8 +829,9 @@ def make_fragment():
     packages (BG_PACKAGES, BG_PACKAGE_BPP_<package>, BG_PACKAGES_AFFINE),
     the PNG palettes of 16 colours (PALETTE_COLORS_16), the category
     graphics (CELL_ANIMS, CELL_ANIM_FRAMES_<anim>, CELL_ANIM_BANKS_<anim>,
-    BG_PICTURES, CATEGORY_PALETTES, and the new ones' sources and .inc
-    files, CATEGORY_GRAPHICS_NEW, CATEGORY_GRAPHICS_NEW_INCS), the class objects
+    BG_PICTURES, CATEGORY_PALETTES, FRAMED_SHEETS with FRAMED_NAME_<sheet>,
+    and the new ones' sources and .inc files, CATEGORY_GRAPHICS_NEW,
+    CATEGORY_GRAPHICS_NEW_INCS), the class objects
     (GRAPHICS_CLASS_OBJECTS) and each object's prerequisites: the .inc
     files its members' definitions #include."""
     entries = load()
@@ -844,8 +861,15 @@ def make_fragment():
         out.append("CELL_ANIM_BANKS_%s :=%s" % (category_stem(e), " banks" if e["banks"] else ""))
     var("BG_PICTURES", [category_stem(e) for e in entries if e["kind"] == "bg_picture"])
     var("CATEGORY_PALETTES", [category_stem(e) for e in entries if e["kind"] == "category_palette"])
+    # the framed sprite sheets, by their directory, with their frames'
+    # FRAMED_<prefix> (graphics.mk)
+    sheets = [e for e in entries if e["kind"] == "framed_sheet"]
+    var("FRAMED_SHEETS", [category_stem(e) for e in sheets])
+    out += ["FRAMED_NAME_%s := %s" % (category_stem(e), e["prefix"]) for e in sheets]
     new = [e for e in entries if e["kind"] in CATEGORY_KINDS and is_new(e)]
-    var("CATEGORY_GRAPHICS_NEW", ["graphics/" + p for e in new for p in entry_paths(e)])
+    var("CATEGORY_GRAPHICS_NEW", ["graphics/" + p if not p.endswith("/") else
+                                  "graphics/%ssheet.json $(wildcard graphics/%s*/*.png)" % (p, p)
+                                  for e in new for p in entry_paths(e)])
     var("CATEGORY_GRAPHICS_NEW_INCS", ["$(GRAPHICS_BUILDDIR)/" + i for e in new for i in category_incs(e)])
     objects = [o["name"] for o in load_objects()]
     var("GRAPHICS_CLASS_OBJECTS", objects)

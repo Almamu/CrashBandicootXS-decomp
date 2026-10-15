@@ -1310,6 +1310,7 @@ scope).
 | `"cell_anim"` (optional) | `cellAnim`, `cellAnimSize` | the BG0 cell animation instead of the type's: a `cell_anim` of `graphics/manifest.json`, by its path (see "Category graphics") |
 | `"sky"` (optional) | `bgPicture` | the BG1 picture: one of the jetpack skies, `rocket_racket`, `blimp_bonanza`, `no_fly_zone` (`gCategory3/4/5BgPicture`, `graphics/vehicles/jetpack/skies/`), or a `bg_picture` of the manifest by its path (see "Category graphics"). None for a polar category |
 | `"palette"` (optional) | `palette` | the OBJ palette instead of the type's: a `category_palette` of the manifest, by its path (see "Category graphics") |
+| `"sprite_sheet"`, `"anim_table"` (optional) | `sprite_sheet`, `anim_table` | the sprite sheet (a `framed_sheet` of the manifest, by its path) and the animation table (of `data/levels/anim_tables/`, by name) instead of the type's (see "Category sprite sheets") |
 | `"spawns"` | `spawnTable` | its spawn list, `data/levels/spawns/<spawns>.json` |
 | `"mask_assist_deaths"`, `"bonus_kind_deaths"`, `"retry_boss_deaths"` | the same | deaths before the mask assist, before the spawns' `bonus` kinds, before the boss's retry level |
 | `"boss_level"`, `"retry_boss_level"` | `bossLevel`, `retryBossLevel` | the boss's level: 0-5 for the yeti (`Yeti::chargeParams`), 0-3 for the airship (`Airship::attacks[kind + level]`), 0-1 for the hovercraft (`Hovercraft::attacks`) |
@@ -1381,8 +1382,9 @@ what a save's records mean.
    plays it, and the ROM data after them moves ([shifting.md](./shifting.md)).
 
 A category can also have its own cell animation, sky or OBJ palette as
-new graphics (see "Category graphics"). Its sprite sheet and animation
-table stay the type's: the actor kinds index them.
+new graphics (see "Category graphics"), and its own sprite sheet and
+animation table (see "Category sprite sheets"). Its actor kinds stay the
+type's: the code makes them.
 
 Tested in scratch with plain `make` and mGBA, with two new categories:
 `CATEGORY_SNOW_STORM` (polar, snow crash's spawn list with each basic
@@ -1503,7 +1505,10 @@ at:
 
 - `"symbol"`: the table's C name. `"family"`: `POLAR` or `JETPACK`, the
   kinds that index it (`constants/actor_kinds.h`) and the sprite sheet
-  and player frames its records' frames are.
+  and player frames its records' frames are. `"sheet"` (optional, a
+  category's own table only): another sprite sheet its frames are, a
+  `framed_sheet` of the manifest by its path (see "Category sprite
+  sheets").
 - `"records"`, one per kind the code indexes (41 polar, 47 jetpack):
   `"keyframes"` and `"frames"` (arrays of `"arrays"`, by symbol),
   `"palette"` (the OBJ palette bank, 0-15), `"depth"` (the depth at which
@@ -1520,10 +1525,11 @@ at:
     record's frames and loops back to `frame + loop start`; the attribute
     is OR'd into the OAM attributes (`0x1000`: flipped horizontally);
   - `{"frames": symbol, "list": [...]}`: frames of the family's sprite
-    sheet (`graphics/vehicles/<family>/sprite_sheet/`), each its entity
-    folder and frame PNG, `"wumpa/03"`, which the build turns into the
-    frame's offset in the decompressed sheet (`FRAMED_POLAR_WUMPA_03`,
-    `tools/framed_gfx.py header`);
+    sheet (`graphics/vehicles/<family>/sprite_sheet/`, or the table's
+    `"sheet"`), each its entity folder and frame PNG, `"wumpa/03"`, which
+    the build turns into the frame's offset in the decompressed sheet
+    (`FRAMED_POLAR_WUMPA_03`, `tools/framed_gfx.py header`, under the
+    sheet's `"prefix"`);
   - `{"player_frames": symbol, "list": [...]}`: record 0's, Crash's
     compressed frames (`graphics/vehicles/<family>/player.png`) by number
     (`PolarPlayerFrameSet::frames + RLE_SPRITES_POLAR_PLAYER_FRAME_nnn`).
@@ -1549,7 +1555,116 @@ gives the ROM's bytes, and `levels.py extract` writes both JSONs again
 from the ROM, keeping their arrays' symbols, lengths, order and comments.
 Editing a value (a box, a palette bank, a keyframe, which frames a clip
 shows) builds with plain `make`; adding or removing an array moves the
-ROM data after the table ([shifting.md](./shifting.md)).
+ROM data after the table ([shifting.md](./shifting.md)). A table only a
+category names goes with the categories (see "Category sprite sheets").
+
+### Category sprite sheets
+
+A category's actors draw their frames from its sprite sheet, through its
+animation table: `ActorCategory::Init` unpacks
+`descriptors[cat].sprite_sheet` (`CategorySpriteSheet::Decompress`, into
+a buffer of the size the LZ77 header gives) and hands
+`descriptors[cat].anim_table` to the spawner (`ActorCategory::Select`),
+and a record's frames are offsets into the unpacked sheet. Both are the
+type's unless the category names its own (#1087):
+
+| key | the descriptor's | what |
+|---|---|---|
+| `"sprite_sheet"` (optional) | `sprite_sheet` | a `framed_sheet` of `graphics/manifest.json`, by its path: the ROM's two, or a new one ([graphics.md, "New graphics"](./graphics.md#new-graphics)) |
+| `"anim_table"` (optional) | `anim_table` | an animation table of `data/levels/anim_tables/`, by name (see "Animation tables"), of the type's family |
+
+```json
+{"path": "vehicles/jetpack/sprite_sheet_red/", "kind": "framed_sheet", "symbol": "gJetpackRedSpriteSheet", "prefix": "JETPACK_RED"}
+```
+
+```json
+{"constant": "CATEGORY_ROCKET_RED", "name": "rocket red", "type": "JETPACK", "sky": "rocket_racket", "sprite_sheet": "vehicles/jetpack/sprite_sheet_red/", "spawns": "rocket_racket", ...}
+{"constant": "CATEGORY_SNOW_ALT", "name": "snow alt", "type": "POLAR", "anim_table": "polar_alt", "spawns": "snow_crash", ...}
+{"constant": "CATEGORY_FROST_SMALL", "name": "frost small", "type": "POLAR", "sprite_sheet": "vehicles/polar/sprite_sheet_small/", "anim_table": "polar_small", "spawns": "snow_crash", ...}
+```
+
+- **A reskin: the type's frames, other pixels.** A sheet with the type's
+  sheet's folders, frames and frame sizes has the same offsets, so the
+  type's table works with it: only the sheet changes. Copy the type's
+  sheet folder, edit the pixels, add the manifest entry, and name it as
+  the category's `"sprite_sheet"`.
+- **Other frames: its own table.** A sheet with other frames (a frame of
+  another size, frames added or removed) moves the offsets, so the
+  category also names a table of that sheet: a table with `"sheet"`, the
+  sheet's path. Its frame arrays name that sheet's frames, under the
+  sheet's prefix (`FRAMED_POLAR_SMALL_WUMPA_03`).
+- **Another table on the type's sheet.** A table with no `"sheet"` is of
+  the family's, so a category can change its records (which frames a
+  kind shows, its keyframes, palette bank, box, depth) without a new
+  sheet.
+
+A table that isn't the ROM's is like the ROM's (see "Animation tables")
+but its records can also point at the arrays of its family's ROM table,
+by symbol: the keyframes, the player frames (record 0's: a new table has
+none of its own, so Crash's frames stay the type's), and, if it is of the
+type's sheet, the frames. So a table that changes a few records names its
+own arrays only for those. Its symbols are its own: no other table has
+them.
+
+`levels.py` stops on a `"sprite_sheet"` that isn't a framed sheet of the
+manifest, a sheet with frames other than the type's (it names the first
+frame that differs) and no `"anim_table"`, an `"anim_table"` that isn't a
+table or is another family's, a table of another sheet than the
+category's, a sheet that unpacks bigger than the type's (`Decompress`
+allocates it from the EWRAM heap: the polar sheet is 0x34048 bytes of
+EWRAM's 0x40000), a new table with player
+frames of its own, a record pointing at a ROM table's frames of another
+sheet, and a symbol two tables share.
+
+**What is generated.** `actor_categories.inc` defines a new sheet (`u8[]`,
+LZ77, `#include`ing its built `.bin.lz.inc`) with the other new graphics,
+then the tables the categories name that aren't the ROM's: the frame
+offsets of their sheets (`#include "<sheet>_frames.h"`), the declarations
+of the ROM tables' arrays they point at, and each table. The descriptor
+points at them. `graphics_manifest.mk` lists every framed sheet
+(`FRAMED_SHEETS`, with `FRAMED_NAME_<sheet>`), so a new one gets the
+ROM's rules: its folders packed in `sheet.json`'s order, LZ77-compressed,
+and its frames' offsets. With the ROM's categories nothing is new and
+every output is the ROM's.
+
+**The OBJ palette.** A recolour without new pixels is the category's
+`"palette"` (see "Category graphics"): the 256 colours `ActorCategory::
+Init` copies to OBJ palette RAM. A table's records pick each kind's bank
+of it (`"palette"`). The palette-cache slots `ActorCategory::
+SetupVramPool` binds by type from sprite bank 35 (`actor_vram_pool.cpp`)
+stay the type's: they're code.
+
+**New actor kinds stay code.** What the data reaches is the records the
+kinds index: a kind's frames, keyframes, bank, box, depth and spawn
+offset. Which class a kind makes, and how it moves, collides and what
+breaking it does, is `PolarPlayer::CreateActor` and `JetpackPlayer::
+CreateActor`'s `switch (kind)` and the classes' code, and the code also
+names some records itself (`JETPACK_KIND_QUESTION_CRATE_WUMPA_1`'s for a
+question crate, the explosion's, the checkpoint text's). So a table has
+the family's record count, a record of a kind is drawn by that kind's
+class, and a reskinned or re-animated kind is data; a kind with a new
+class or new behaviour is a new `case` and a class, code.
+
+Tested in scratch with plain `make` and mGBA, with three new categories,
+each played by a level instead of its own stage: `CATEGORY_ROCKET_RED`
+(jetpack, rocket racket's list, a copy of the jetpack sheet with the
+plane's and the bomber's colour indices reversed) by rocket racket,
+`CATEGORY_SNOW_ALT` (polar, snow crash's list, table `polar_alt` on the
+type's sheet: the basic crate records show the aku aku crate's frames
+through its own frame array, the wumpa its own keyframes, the rest the
+ROM table's arrays) by snow crash, and `CATEGORY_FROST_SMALL` (polar,
+snow crash's list, a copy of the polar sheet with the wumpa frames
+16x16 instead of 32x32, and table `polar_small`, a copy of `polar.json`
+with its own symbols on that sheet) by frostbite cavern. Rocket racket's
+stage (`InitActorCategory(7)`) unpacks `gJetpackRedSpriteSheet`, keeps
+`gCategoryFamily1AnimTable`, and its planes show in the reversed colours
+where the original stage's are red. Snow crash's (`InitActorCategory(8)`)
+selects `gPolarAltAnimTable`, and its basic crates show as aku aku
+crates. Frostbite cavern's (`InitActorCategory(9)`) unpacks
+`gPolarSmallSpriteSheet` and selects `gPolarSmallAnimTable`: the wumpa
+are half the size, and the crates, Crash and the checkpoint text (after
+the wumpa in the sheet) show right. `levels.py` stops on each of the
+errors above.
 
 ## Boss levels
 
