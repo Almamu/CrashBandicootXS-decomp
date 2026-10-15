@@ -67,7 +67,7 @@
     {"type": "WUMPA", "x": 782, "y": 227, "param": 6},
     {"type": "WUMPA", "x": 782, "y": 259, "param": 6},
     {"type": "WUMPA", "x": 782, "y": 287, "param": 6},
-    {"type": 21, "x": 714, "y": 394, "param": 4},
+    {"type": "IRON_ARROW_CRATE", "x": 714, "y": 394, "param": 4},
     {"type": "BASIC_CRATE", "x": 676, "y": 310, "param": 4},
     {"type": "IRON_CRATE", "x": 676, "y": 330, "param": 4},
     {"type": "WUMPA", "x": 670, "y": 271, "param": 6},

@@ -339,8 +339,10 @@ Its 110 entity types (XS has 93) are in
 [`entity_types.json`](../games/n2/data/levels/entity_types.json), one per
 `gEntitySpawnFuncs` slot (`0x081D0244`), as XS's: `room.json` gives a
 placed entity's type by its name, and the build generates
-`constants/entities.h` from it. 45 have names: the ones whose spawner is
-XS's (the crates, `WUMPA`, ...) keep XS's name, and the ones whose
+`constants/entities.h` from it. 48 have names: the ones whose spawner is
+XS's (the crates, `WUMPA`, ...) keep XS's name, as do the crates whose
+spawner calls `CreateCrate` (`0x08011C80`) with XS's kind for that type
+(`CHECKPOINT_CRATE`, `AKU_AKU_CRATE`, `IRON_ARROW_CRATE`), and the ones whose
 spawner loads a sprite bank no other type does are named after it (its
 `Bank(n)` call, `0x08007D80`: `POT_CARRIER`, `MUMMY`, `N_TRANCE`, ...),
 their spawner `Spawn<Name>` in `gbadisasm.cfg`. The others stay numbers

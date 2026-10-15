@@ -27588,8 +27588,8 @@ SpawnLifeCrate: @ 0x08020C38
 	pop {r0}
 	bx r0
 
-	thumb_func_start sub_08020C5C
-sub_08020C5C: @ 0x08020C5C
+	thumb_func_start SpawnIronArrowCrate
+SpawnIronArrowCrate: @ 0x08020C5C
 	push {r4, lr}
 	sub sp, #4
 	lsls r1, r1, #0x10
@@ -27732,8 +27732,8 @@ SpawnIronSwitchCrate: @ 0x08020D40
 	pop {r0}
 	bx r0
 
-	thumb_func_start sub_08020D64
-sub_08020D64: @ 0x08020D64
+	thumb_func_start SpawnAkuAkuCrate
+SpawnAkuAkuCrate: @ 0x08020D64
 	push {r4, lr}
 	sub sp, #4
 	lsls r1, r1, #0x10
@@ -27752,8 +27752,8 @@ sub_08020D64: @ 0x08020D64
 	pop {r0}
 	bx r0
 
-	thumb_func_start sub_08020D88
-sub_08020D88: @ 0x08020D88
+	thumb_func_start SpawnCheckpointCrate
+SpawnCheckpointCrate: @ 0x08020D88
 	push {r4, lr}
 	sub sp, #4
 	lsls r1, r1, #0x10

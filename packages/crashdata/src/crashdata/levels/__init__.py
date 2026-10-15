@@ -4030,7 +4030,11 @@ def extract_rooms_from_table(rom_path, table):
     levels.update({"rooms": names, "regions": regions,
                    "assets": {"name": "level_assets", "rooms": [n for _, n in sorted(assets)]},
                    "room_layout": list(full[0]), "entity_types": min(counts)})
-    LEVELS_JSON.write_text(json.dumps(levels, indent=2) + "\n")
+    # the rest of levels.json (extract-table's level table and themes) is
+    # kept, after these
+    kept = read_json(LEVELS_JSON) if LEVELS_JSON.exists() else {}
+    levels.update({k: v for k, v in kept.items() if k not in levels})
+    write_levels_json(levels)
     check_tilesets(levels, names, rom_tiles, set_blocks, decoded, list(set_blocks))
     print("%d rooms, %d tile sets: the ROM's" % (len(names), len(set_blocks)), file=sys.stderr)
 
