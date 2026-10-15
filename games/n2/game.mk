@@ -44,6 +44,9 @@ CPPFLAGS += -iquote $(GENERATED_INCLUDE_DIR)
 # The sources (games/n2/objects.txt's third column), each as its src/ path:
 # games/n2/src/<path> builds the same object as src/<path> would
 SHARED_SRCS := $(patsubst $(N2_SRC)/%,$(C_SUBDIR)/%,$(shell sed -e 's/\#.*//' $(N2_DIR)/objects.txt | awk 'NF { print $$3 }'))
+# and N2_TRY_SRCS, sources tools/nt_compare/n2_objects.py builds as if
+# they were in objects.txt (the same compiler and flags), unlinked
+SHARED_SRCS += $(N2_TRY_SRCS)
 CXX_OBJS    := $(patsubst $(C_SUBDIR)/%.cpp,$(C_BUILDDIR)/%.o,$(filter %.cpp,$(SHARED_SRCS)))
 C_OBJS      := $(patsubst $(C_SUBDIR)/%.c,$(C_BUILDDIR)/%.o,$(filter $(C_SUBDIR)/%.c,$(SHARED_SRCS)))
 # lib/'s (compile.mk's lib rules, as for XS)
@@ -81,7 +84,12 @@ $(ROM): $(ELF)
 # (agbcp, with -fprologue-bugfix) where XS's used old_agbcp:
 # - vram_dma_queue.o: FlushVramDmaQueue's `ldrh r0, [r2, #8]; lsrs r0, r0, #2`
 #   is agbcp's (old_agbcp loads into r1 first, as in XS).
-NEW_COMPILER_OBJS := $(C_BUILDDIR)/engine/sys/vram_dma_queue.o
+# And with agbcp without -fprologue-bugfix (N2_NO_PROLOGUE_BUGFIX_OBJS too),
+# its registers agbcp's, a leaf function's push {lr} old_agbcp's:
+# fade.o, oam_buffer.o, palette_cycle.o, tile_slot_pool.o.
+N2_AGBCP_NO_BUGFIX_OBJS := $(C_BUILDDIR)/engine/gfx/fade.o $(C_BUILDDIR)/engine/gfx/oam_buffer.o \
+	$(C_BUILDDIR)/engine/gfx/palette_cycle.o $(C_BUILDDIR)/game/level/tile_slot_pool.o
+NEW_COMPILER_OBJS := $(C_BUILDDIR)/engine/sys/vram_dma_queue.o $(N2_AGBCP_NO_BUGFIX_OBJS)
 
 # N-Tranced's copy of a source, games/n2/src/<path>.cpp, over src/<path>.cpp:
 # the same object, so compile.mk's per-object flags apply to it too. Before
@@ -95,6 +103,14 @@ $(C_BUILDDIR)/%.o : $(N2_SRC)/%.cpp cxx_symbols.txt
 	$(OBJCOPY) --redefine-syms=$(CXX_SYMBOLS) $@
 
 include compile.mk
+
+# Objects N-Tranced's build compiled with agbcp but without
+# -fprologue-bugfix: a leaf function still pushes lr and returns with
+# pop {r0}; bx r0 (line_step.o's StepBresenhamLine, 0x08001294), and
+# N2_AGBCP_NO_BUGFIX_OBJS (above).
+N2_NO_PROLOGUE_BUGFIX_OBJS := $(C_BUILDDIR)/engine/util/line_step.o $(N2_AGBCP_NO_BUGFIX_OBJS)
+$(N2_NO_PROLOGUE_BUGFIX_OBJS): CC1FLAGS := $(filter-out -fprologue-bugfix,$(CC1FLAGS))
+
 include $(N2_DIR)/levels.mk
 include $(N2_DIR)/graphics.mk
 
