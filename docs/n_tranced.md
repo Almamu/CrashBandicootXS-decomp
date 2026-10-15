@@ -316,10 +316,14 @@ bosses:
 | 24-28 | evil_crunch (7), evil_coco (8), fake_crash (9), n_trance (10), n_tropy (11) |
 
 Only 21 of them have rooms in this format (the others, the atlasphere's
-and the jet ski's among them, are N-Tranced's own kinds of level). The
-tile sets are `gStaticData_<address>` and the entity types are numbers
-until they have names (there is no `entity_types.json` yet: 110 types,
-XS has 93).
+and the jet ski's among them, are N-Tranced's own kinds of level). The 8
+tile sets are named by the levels that use them, `levels.json`'s
+`"tileset_names"` (kept by `extract-rooms` too): `gArabiaBg0Tiles`,
+`gVolcanoBg0Tiles` and `gEgyptBg0Tiles` (BG0), and `gArabiaBgTiles`,
+`gArabiaSkyBgTiles` (Runaway Rug, 101 Arabian Kites, Evil Crunch, N.
+Tropy's first part), `gEgyptBgTiles`, `gVolcanoBgTiles` and
+`gIslandBgTiles` (BG1-3). The entity types are numbers until they have
+names (there is no `entity_types.json` yet: 110 types, XS has 93).
 
 What differs from XS, in `levels.py`:
 
@@ -346,12 +350,12 @@ That's 2,313,432 bytes, 28.9% of its data. A room's parts are in another
 order than XS's (`levels.json`'s `"room_layout"`: the type counts, entity
 list and links before the chunk grids, the groups before the layer
 descriptors) and N-Tranced has 110 entity types (`"entity_types"`; XS
-93): `levels.py` takes both from the game's `levels.json`. The tile
-sets' names (`gStaticData_<address>`) and the regions' (`level_rooms_<N>`)
-are placeholders until the themes and levels have names, and
-`constants/levels.h` and `constants/categories.h` are empty for now
-(`levels.mk`). Still to do for #1113: the level table, its themes and the
-level select, and names.
+93): `levels.py` takes both from the game's `levels.json`. The regions'
+names (`level_rooms_<N>`) are placeholders, and the `constants/*.h`
+headers are placeholders with only the counts the shared headers need
+(`levels.mk`, "Linking a shared source into N-Tranced"). Still to do for
+#1113: the level table, its themes and the level select as sources, and
+the entity types' names.
 
 ## Graphics (#1115)
 

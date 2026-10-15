@@ -210,7 +210,7 @@ def use_levels_dir(path):
     games/n2/data/levels/ (docs/n_tranced.md). Its collision_legend.json,
     if it has one, is the collision images' legend."""
     global LEVELS_DIR, ENTITY_TYPES_JSON, CRATE_KINDS_JSON, LEVELS_JSON, TILESET_ORDER_JSON, SPAWNS_DIR
-    global ENTITY_TYPES, ROOM_LAYOUT
+    global ENTITY_TYPES, ROOM_LAYOUT, TILESET_SYMBOLS
     LEVELS_DIR = Path(path)
     ENTITY_TYPES_JSON = LEVELS_DIR / "entity_types.json"
     CRATE_KINDS_JSON = LEVELS_DIR / "crate_kinds.json"
@@ -223,6 +223,9 @@ def use_levels_dir(path):
         levels = read_json(LEVELS_JSON)
         ENTITY_TYPES = levels.get("entity_types", ENTITY_TYPES)
         ROOM_LAYOUT = levels.get("room_layout", ROOM_LAYOUT)
+        # its tile sets' names, by their ROM address (gStaticData_<address>
+        # for one it doesn't name)
+        TILESET_SYMBOLS = {int(a, 16): n for a, n in levels.get("tileset_names", {}).items()}
 
 
 # ---------------------------------------------------------------------------
@@ -3852,7 +3855,8 @@ def extract_rooms_from_table(rom_path, table):
     that isn't a level), into LEVELS_DIR (`--levels-dir`). The folders are
     <level>/<slot>: the level's name from levels.json's "level_names" (one
     per level, hand-written and kept, as XS's names; level<NN> by its index
-    without them) and the slot as in data/levels:
+    without them) and the slot as in data/levels; the tile sets are named
+    by levels.json's "tileset_names" (kept too). The slots are as in data/levels:
     main (or part1, part2, ... for several played rooms), bonus (extra1),
     gem_path (extra2). The rooms are numbered (gRoomNN) in the order of
     their struct level_room in the ROM. Writes each room (extract_rooms),
@@ -3907,6 +3911,8 @@ def extract_rooms_from_table(rom_path, table):
         regions[-1]["rooms"].append(name)
         end = stop
     levels = ({"level_names": level_names} if level_names else {})
+    if TILESET_SYMBOLS:
+        levels["tileset_names"] = {"0x%08X" % a: n for a, n in sorted(TILESET_SYMBOLS.items())}
     levels.update({"rooms": names, "regions": regions,
                    "assets": {"name": "level_assets", "rooms": [n for _, n in sorted(assets)]},
                    "room_layout": list(full[0]), "entity_types": min(counts)})

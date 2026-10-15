@@ -3,9 +3,9 @@
   "record": {"symbol": "gLevelRoom04", "kind": "ON_FOOT", "blend": {"effect": 0, "eva": 0, "evb": 0}, "unk_0C": 1},
   "symbols": {"desc": "gRoom04Desc", "palette": "gRoom04Palette", "entities": "gRoom04EntityList", "groups": "gRoom04EntityGroups", "param_offsets": "gRoom04ParamOffsets", "params": "gRoom04Params", "type_counts": "gRoom04TypeCounts", "layers": "gRoom04Layers", "items": "gRoom04Entities", "links": "gRoom04Links"},
   "layers": {
-    "bg1": {"map": "bg1.png", "size_chunks": [10, 4], "size_tiles": [152, 32], "tileset": "gStaticData_0853B250", "scale": [128, 128], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom04Bg1Grid"},
-    "bg3": {"map": "bg3.png", "size_chunks": [14, 4], "size_tiles": [224, 32], "tileset": "gStaticData_0853B250", "scale": [256, 256], "cnt": 1, "unk_1E": 2, "grid_symbol": "gRoom04Bg3Grid"},
-    "bg0": {"map": "bg0.png", "size_chunks": [14, 4], "size_tiles": [224, 32], "tileset": "gStaticData_0826FE48", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom04Bg0Grid"},
+    "bg1": {"map": "bg1.png", "size_chunks": [10, 4], "size_tiles": [152, 32], "tileset": "gEgyptBgTiles", "scale": [128, 128], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom04Bg1Grid"},
+    "bg3": {"map": "bg3.png", "size_chunks": [14, 4], "size_tiles": [224, 32], "tileset": "gEgyptBgTiles", "scale": [256, 256], "cnt": 1, "unk_1E": 2, "grid_symbol": "gRoom04Bg3Grid"},
+    "bg0": {"map": "bg0.png", "size_chunks": [14, 4], "size_tiles": [224, 32], "tileset": "gEgyptBg0Tiles", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom04Bg0Grid"},
     "collision": {"map": "collision.png", "size_chunks": [14, 4], "size_tiles": [224, 32], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom04CollisionGrid"}
   },
   "params": [

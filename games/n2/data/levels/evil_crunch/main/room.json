@@ -3,9 +3,9 @@
   "record": {"symbol": "gLevelRoom28", "kind": "UNDERWATER", "blend": {"effect": 0, "eva": 0, "evb": 0}},
   "symbols": {"desc": "gRoom28Desc", "palette": "gRoom28Palette", "entities": "gRoom28EntityList", "groups": "gRoom28EntityGroups", "param_offsets": "gRoom28ParamOffsets", "params": "gRoom28Params", "type_counts": "gRoom28TypeCounts", "layers": "gRoom28Layers", "items": "gRoom28Entities"},
   "layers": {
-    "bg1": {"map": "bg1.png", "size_chunks": [20, 3], "size_tiles": [320, 20], "tileset": "gStaticData_08538320", "scale": [58, 0], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom28Bg1Grid"},
-    "bg2": {"map": "bg2.png", "size_chunks": [40, 3], "size_tiles": [640, 20], "tileset": "gStaticData_08538320", "scale": [122, 0], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom28Bg2Grid"},
-    "bg0": {"map": "bg0.png", "size_chunks": [80, 3], "size_tiles": [1280, 20], "tileset": "gStaticData_081E5394", "scale": [256, 256], "cnt": 1, "unk_1E": 2, "grid_symbol": "gRoom28Bg0Grid"},
+    "bg1": {"map": "bg1.png", "size_chunks": [20, 3], "size_tiles": [320, 20], "tileset": "gArabiaSkyBgTiles", "scale": [58, 0], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom28Bg1Grid"},
+    "bg2": {"map": "bg2.png", "size_chunks": [40, 3], "size_tiles": [640, 20], "tileset": "gArabiaSkyBgTiles", "scale": [122, 0], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom28Bg2Grid"},
+    "bg0": {"map": "bg0.png", "size_chunks": [80, 3], "size_tiles": [1280, 20], "tileset": "gArabiaBg0Tiles", "scale": [256, 256], "cnt": 1, "unk_1E": 2, "grid_symbol": "gRoom28Bg0Grid"},
     "collision": {"map": "collision.png", "size_chunks": [80, 3], "size_tiles": [1280, 20], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom28CollisionGrid"}
   },
   "params": [

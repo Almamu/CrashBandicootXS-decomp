@@ -7,10 +7,10 @@ extern "C" {
 #include "gba/types.h"
 }
 
-extern const u8 gStaticData_0853FD10[] __attribute__((aligned(4))) = {
-#include "tilesets/gStaticData_0853FD10.bin.lz.inc"
+extern const u8 gVolcanoBgTiles[] __attribute__((aligned(4))) = {
+#include "tilesets/gVolcanoBgTiles.bin.lz.inc"
 };
 
-extern const u8 gStaticData_0854309C[] __attribute__((aligned(4))) = {
-#include "tilesets/gStaticData_0854309C.bin.lz.inc"
+extern const u8 gIslandBgTiles[] __attribute__((aligned(4))) = {
+#include "tilesets/gIslandBgTiles.bin.lz.inc"
 };

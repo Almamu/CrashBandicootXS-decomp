@@ -7,10 +7,10 @@ extern "C" {
 #include "engine/gfx/tagged_asset.h"
 }
 
-#include "tilesets/gStaticData_08220840.h"
-extern const TAGGED_RAW_ASSET(TILES_SIZE_gStaticData_08220840) gStaticData_08220840 = {
-    TAGGED_RAW_HEADER(TILES_SIZE_gStaticData_08220840),
+#include "tilesets/gVolcanoBg0Tiles.h"
+extern const TAGGED_RAW_ASSET(TILES_SIZE_gVolcanoBg0Tiles) gVolcanoBg0Tiles = {
+    TAGGED_RAW_HEADER(TILES_SIZE_gVolcanoBg0Tiles),
     {
-#include "tilesets/gStaticData_08220840.bin.inc"
+#include "tilesets/gVolcanoBg0Tiles.bin.inc"
     },
 };

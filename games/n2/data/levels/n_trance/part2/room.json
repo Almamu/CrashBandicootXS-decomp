@@ -3,10 +3,10 @@
   "record": {"symbol": "gLevelRoom32", "kind": "HOVER", "blend": {"effect": 0, "eva": 0, "evb": 0}},
   "symbols": {"desc": "gRoom32Desc", "palette": "gRoom32Palette", "entities": "gRoom32EntityList", "groups": "gRoom32EntityGroups", "param_offsets": "gRoom32ParamOffsets", "params": "gRoom32Params", "type_counts": "gRoom32TypeCounts", "layers": "gRoom32Layers", "items": "gRoom32Entities"},
   "layers": {
-    "bg1": {"map": "bg1.png", "size_chunks": [4, 7], "size_tiles": [52, 52], "tileset": "gStaticData_0853FD10", "scale": [128, 128], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom32Bg1Grid"},
-    "bg2": {"map": "bg2.png", "size_chunks": [4, 7], "size_tiles": [52, 52], "tileset": "gStaticData_0853FD10", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom32Bg2Grid"},
-    "bg3": {"map": "bg3.png", "size_chunks": [4, 7], "size_tiles": [52, 52], "tileset": "gStaticData_0853FD10", "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom32Bg3Grid"},
-    "bg0": {"map": "bg0.png", "size_chunks": [3, 6], "size_tiles": [48, 48], "tileset": "gStaticData_08220840", "scale": [256, 256], "cnt": 1, "unk_1E": 2, "grid_symbol": "gRoom32Bg0Grid"},
+    "bg1": {"map": "bg1.png", "size_chunks": [4, 7], "size_tiles": [52, 52], "tileset": "gVolcanoBgTiles", "scale": [128, 128], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom32Bg1Grid"},
+    "bg2": {"map": "bg2.png", "size_chunks": [4, 7], "size_tiles": [52, 52], "tileset": "gVolcanoBgTiles", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom32Bg2Grid"},
+    "bg3": {"map": "bg3.png", "size_chunks": [4, 7], "size_tiles": [52, 52], "tileset": "gVolcanoBgTiles", "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom32Bg3Grid"},
+    "bg0": {"map": "bg0.png", "size_chunks": [3, 6], "size_tiles": [48, 48], "tileset": "gVolcanoBg0Tiles", "scale": [256, 256], "cnt": 1, "unk_1E": 2, "grid_symbol": "gRoom32Bg0Grid"},
     "collision": {"map": "collision.png", "size_chunks": [3, 6], "size_tiles": [48, 48], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom32CollisionGrid"}
   },
   "params": [

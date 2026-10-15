@@ -30,6 +30,16 @@
     "n_trance",
     "n_tropy"
   ],
+  "tileset_names": {
+    "0x081E5394": "gArabiaBg0Tiles",
+    "0x08220840": "gVolcanoBg0Tiles",
+    "0x0826FE48": "gEgyptBg0Tiles",
+    "0x085346AC": "gArabiaBgTiles",
+    "0x08538320": "gArabiaSkyBgTiles",
+    "0x0853B250": "gEgyptBgTiles",
+    "0x0853FD10": "gVolcanoBgTiles",
+    "0x0854309C": "gIslandBgTiles"
+  },
   "rooms": [
     "prints_of_persia/bonus",
     "runaway_rug/bonus",

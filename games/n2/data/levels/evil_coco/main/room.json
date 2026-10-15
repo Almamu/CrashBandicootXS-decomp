@@ -3,7 +3,7 @@
   "record": {"symbol": "gLevelRoom29", "kind": "HOVER", "blend": {"effect": 0, "eva": 0, "evb": 0}},
   "symbols": {"desc": "gRoom29Desc", "palette": "gRoom29Palette", "entities": "gRoom29EntityList", "groups": "gRoom29EntityGroups", "param_offsets": "gRoom29ParamOffsets", "params": "gRoom29Params", "type_counts": "gRoom29TypeCounts", "layers": "gRoom29Layers", "items": "gRoom29Entities"},
   "layers": {
-    "bg0": {"map": "bg0.png", "size_chunks": [2, 4], "size_tiles": [32, 32], "tileset": "gStaticData_08220840", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom29Bg0Grid"},
+    "bg0": {"map": "bg0.png", "size_chunks": [2, 4], "size_tiles": [32, 32], "tileset": "gVolcanoBg0Tiles", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom29Bg0Grid"},
     "collision": {"map": "collision.png", "size_chunks": [2, 4], "size_tiles": [32, 32], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom29CollisionGrid"}
   },
   "params": [
