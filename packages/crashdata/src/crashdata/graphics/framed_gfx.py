@@ -19,7 +19,6 @@
 import glob
 import json
 import os
-import sys
 
 from PIL import Image
 
@@ -175,29 +174,3 @@ def write_header(sheet_dir, h_path, sheet):
     lines += ["", f"#define FRAMED_{sheet}_SIZE {off:#x}", "", "#endif", ""]
     with open(h_path, 'w') as f:
         f.write("\n".join(lines))
-
-
-def main(argv):
-    if len(argv) < 2:
-        raise SystemExit(
-            f"Usage: {argv[0]} to-frames IN.bin OUT_DIR PAL.bin\n"
-            f"       {argv[0]} to-bin-folder IN_DIR OUT.bin [--any-size]\n"
-            f"       {argv[0]} header SHEET_DIR OUT.h --name SHEET\n"
-            f"       {argv[0]} order SHEET_DIR")
-    cmd = argv[1]
-    if cmd == 'to-frames':
-        to_frames(argv[2], argv[3], argv[4])
-    elif cmd == 'to-bin-folder':
-        to_bin_folder(argv[2], argv[3], argv[4:5] == ['--any-size'])
-    elif cmd == 'header':
-        if argv[4:5] != ['--name'] or len(argv) != 6:
-            raise SystemExit(f"Usage: {argv[0]} header SHEET_DIR OUT.h --name SHEET")
-        write_header(argv[2], argv[3], argv[5])
-    elif cmd == 'order':
-        print(" ".join(entity_order(argv[2])))
-    else:
-        raise SystemExit(f"Unknown command: {cmd}")
-
-
-if __name__ == '__main__':
-    main(sys.argv)

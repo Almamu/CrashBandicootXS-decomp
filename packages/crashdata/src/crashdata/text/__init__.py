@@ -60,7 +60,6 @@ decay_conversion turns a plain `gX` (and `&gX[0]`, `gX + 0`, ...) into
 a pointer to a new copy of the string literal.
 """
 
-import argparse
 import difflib
 import filecmp
 import gettext
@@ -74,7 +73,8 @@ import sys
 import tempfile
 import textwrap
 
-ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+from crashdata.common.game import ROOT
+
 TEXT_DIR = os.path.join(ROOT, "games", "xs", "text")
 POT = os.path.join(TEXT_DIR, "crashxs.pot")
 FONTS_SRC = os.path.join(ROOT, "engine", "src", "game", "ui", "data", "hud_font_tables.cpp")
@@ -1005,44 +1005,13 @@ N2_POT_HEADER = """\
 
 
 def use_game(game):
-    """Work on `game`'s text: XS's, or N-Tranced's (n2)."""
+    """Work on `game`'s text: XS's, or N-Tranced's (n2); a
+    crashdata.common.game.Game or its name."""
     global GAME, GAME_TITLE, PROJECT, TEXT_DIR, POT, TABLES, UI_TABLES, UI_ROM_COUNT
+    game = getattr(game, "name", game)
     if game == "n2":
         GAME, GAME_TITLE, PROJECT = "n2", "Crash Bandicoot 2: N-Tranced", "ntranced"
         TEXT_DIR = os.path.join(ROOT, "games", "n2", "text")
         POT = os.path.join(TEXT_DIR, "ntranced.pot")
         TABLES = ["ui_text"]
         UI_TABLES, UI_ROM_COUNT = N2_UI_TABLES, N2_UI_COUNT
-
-
-def main():
-    ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("--game", choices=["xs", "n2"], default="xs")
-    sub = ap.add_subparsers(dest="cmd", required=True)
-    p = sub.add_parser("cpp")
-    p.add_argument("table", choices=["ui_text", "cutscene_text_english", "cutscene_text_translations",
-                                     "credits_text"])
-    p.add_argument("out")
-    p.add_argument("--mo", default=None, help="the directory of the compiled <lang>.mo files")
-    sub.add_parser("check")
-    p = sub.add_parser("extract")
-    p.add_argument("rom", nargs="?", default=None)
-    p.add_argument("--check", action="store_true")
-    args = ap.parse_args()
-    use_game(args.game)
-    if args.cmd == "extract" and args.rom is None:
-        args.rom = os.path.join(ROOT, "baserom.gba" if GAME == "xs" else "baserom_n2.gba")
-    if args.cmd == "cpp" and args.table not in TABLES:
-        fail("%s has no table %s" % (GAME_TITLE, args.table))
-    if args.cmd == "cpp":
-        if args.table not in ("cutscene_text_english", "credits_text") and not args.mo:
-            fail("cpp %s needs --mo" % args.table)
-        write_lines(args.out, generate(args.table, args.mo))
-    elif args.cmd == "check":
-        check()
-    else:
-        extract(args.rom, args.check)
-
-
-if __name__ == "__main__":
-    main()

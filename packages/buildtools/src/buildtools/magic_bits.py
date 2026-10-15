@@ -39,7 +39,7 @@ import os
 import re
 import sys
 
-import magic_numbers as mn
+from buildtools import magic_numbers as mn
 
 ROOT = mn.ROOT
 

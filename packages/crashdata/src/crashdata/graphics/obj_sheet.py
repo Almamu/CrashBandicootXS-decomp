@@ -33,7 +33,6 @@ LAYOUT:
     or
     --at X,Y        each OBJ's position in pixels (once per OBJ)
 """
-import argparse
 import sys
 
 
@@ -140,25 +139,3 @@ def from_tiles(args):
                     sys.exit("obj_sheet: OBJ %d isn't transparent at (%d, %d), which OBJ %d covers"
                              % (n, x + i, y + j, owner[x + i, y + j]))
     sheet.save(args.dst)
-
-
-def main():
-    ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    sub = ap.add_subparsers(dest="mode", required=True)
-    for name, fn in (("to-tiles", to_tiles), ("from-tiles", from_tiles)):
-        p = sub.add_parser(name)
-        p.add_argument("src")
-        p.add_argument("dst")
-        p.add_argument("--obj", action="append", required=True)
-        p.add_argument("--columns", type=int)
-        p.add_argument("--cell")
-        p.add_argument("--at", action="append")
-        if fn is to_tiles:
-            p.add_argument("--width", type=int, default=1)
-        p.set_defaults(fn=fn)
-    args = ap.parse_args()
-    args.fn(args)
-
-
-if __name__ == "__main__":
-    main()

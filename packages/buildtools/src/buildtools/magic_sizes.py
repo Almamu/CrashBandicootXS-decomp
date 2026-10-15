@@ -84,10 +84,8 @@ import shutil
 import sys
 import tempfile
 
-TOOLS = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, TOOLS)
-import layout_audit as la  # noqa: E402
-import magic_numbers as mn  # noqa: E402
+from buildtools import layout_audit as la
+from buildtools import magic_numbers as mn
 
 ROOT = mn.ROOT
 GBA_HEADERS = [os.path.join(ROOT, "platform", "gba", "include", "gba", f) for f in ("defines.h", "io_reg.h", "dma_macros.h")]

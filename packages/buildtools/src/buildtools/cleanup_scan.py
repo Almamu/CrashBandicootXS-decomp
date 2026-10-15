@@ -18,7 +18,9 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+from crashdata.common import game
+
+ROOT = Path(game.ROOT).resolve()
 SRC_DIR = ROOT / "engine" / "src"
 # The third-party/SDK libraries (docs/libraries.md): matched C too.
 LIB_DIR = ROOT / "lib"

@@ -17,7 +17,7 @@ $(N2_TEXT_BUILDDIR)/%.mo: $(N2_TEXT_DIR)/%.po
 	@mkdir -p $(dir $@)
 	msgfmt --check -o $@ $<
 
-$(N2_TEXT_BUILDDIR)/ui_text.inc: $(N2_TEXT_POT) $(N2_TEXT_MOS) tools/text.py
+$(N2_TEXT_BUILDDIR)/ui_text.inc: $(N2_TEXT_POT) $(N2_TEXT_MOS) $(PY_TEXT)
 	python3 tools/text.py --game n2 cpp ui_text $@ --mo $(N2_TEXT_BUILDDIR)
 
 $(C_BUILDDIR)/game/ui/data/ui_text.o: $(N2_TEXT_BUILDDIR)/ui_text.inc

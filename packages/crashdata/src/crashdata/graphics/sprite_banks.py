@@ -37,16 +37,14 @@ the same ROM. This script still checks that they sit where the ROM has them.
         DIR/../src/engine/gfx/data/, split into files as auto_files()
         picks, ending where its last bank's piece bytes end.
 """
-import argparse
 import struct
-import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import sprite_frames  # noqa: E402
-from sprite_frames import Rom  # noqa: E402
+from crashdata.common.game import ROOT as TREE_ROOT
+from crashdata.graphics import sprite_frames
+from crashdata.graphics.sprite_frames import Rom
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(TREE_ROOT).resolve()
 TABLE = 0x084A5600
 END = 0x084C0006
 TILE_BASE = 0x082BF120
@@ -321,19 +319,17 @@ def auto_files(rom, nbanks, starts, parts=4):
     return cuts + [(lo, nbanks - 1)]
 
 
-def main():
+def extract(rom_path, graphics_dir="games/xs/graphics"):
+    """Writes the sprite banks' C files (FILES, in OUT_DIR) from the ROM at
+    `rom_path`: XS's, or another game's, whose graphics are `graphics_dir`."""
     global TABLE, END, TILE_BASE, OBJ_PALETTES, FILES, OUT_DIR, LDSCRIPT, SPRITES, WIDE_BOXES
-    ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("--graphics-dir", default="games/xs/graphics")
-    ap.add_argument("rom", nargs="?", default=str(ROOT / "baserom.gba"))
-    args = ap.parse_args()
-    rom = Rom(args.rom)
-    xs = Path(args.graphics_dir) == Path("games/xs/graphics")
+    rom = Rom(rom_path)
+    xs = Path(graphics_dir) == Path("games/xs/graphics")
     if not xs:
-        sprite_frames.use_graphics_dir(args.graphics_dir)
+        sprite_frames.use_graphics_dir(graphics_dir)
         TABLE = sprite_frames.BANK_TABLE
         TILE_BASE, OBJ_PALETTES = rom.w(TABLE + 4), rom.w(TABLE + 8)
-        game = Path(args.graphics_dir).parent
+        game = Path(graphics_dir).parent
         OUT_DIR = ROOT / game / "src" / "engine" / "gfx" / "data"
         LDSCRIPT = (game / "ldscript.txt").as_posix()
         SPRITES = sprite_frames.SPRITES.as_posix()
@@ -346,10 +342,10 @@ def main():
     if not xs:
         END = bank_end(rom, nbanks - 1)
         FILES = auto_files(rom, nbanks, starts)
-    src = "engine/src" if xs else (Path(args.graphics_dir).parent / "src").as_posix()
+    src = "engine/src" if xs else (Path(graphics_dir).parent / "src").as_posix()
     comment = dict(between="between games/xs/data/data.s sections" if xs else "between the incbin'd data",
-                   ldscript=LDSCRIPT, baserom="baserom.gba" if xs else Path(args.rom).name,
-                   args="" if xs else " --graphics-dir " + args.graphics_dir, sprites=SPRITES, src=src)
+                   ldscript=LDSCRIPT, baserom="baserom.gba" if xs else Path(rom_path).name,
+                   args="" if xs else " --graphics-dir " + graphics_dir, sprites=SPRITES, src=src)
 
     em = Emitter(rom, TABLE)
     for fi, (lo, hi) in enumerate(FILES):
@@ -415,6 +411,3 @@ def main():
         print(f"wrote {(OUT_DIR / name).relative_to(ROOT)}: {start:#x}-{end:#x}")
     assert em.pos == END
 
-
-if __name__ == "__main__":
-    main()

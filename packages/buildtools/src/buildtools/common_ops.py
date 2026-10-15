@@ -39,10 +39,8 @@ import os
 import re
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from magic_numbers import blank_directives, line_of, strip_comments  # noqa: E402
-
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from buildtools.magic_numbers import blank_directives, line_of, strip_comments
+from crashdata.common.game import ROOT
 SCAN_DIRS = (os.path.join("engine", "src"), os.path.join("engine", "include"), "platform")
 SKIP_DIRS = ()  # the data/ directories, below
 

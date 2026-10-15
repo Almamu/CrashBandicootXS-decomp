@@ -42,12 +42,12 @@ import subprocess
 import sys
 import tempfile
 
-sys.path.insert(0, os.path.dirname(__file__))
-from dump_entities import rd, hx, lz77_decompress  # noqa: E402
+from crashdata.common.game import ROOT
+from crashdata.graphics.dump_entities import rd, hx, lz77_decompress
 
-FRAMED_GFX = os.path.join(os.path.dirname(__file__), 'framed_gfx.py')
-GRAPHICS_ROOT = os.path.join(os.path.dirname(__file__), '..', 'games', 'xs', 'graphics', 'vehicles')
-MANIFEST = os.path.join(os.path.dirname(__file__), '..', 'games', 'xs', 'graphics', 'manifest.json')
+FRAMED_GFX = os.path.join(ROOT, 'tools', 'framed_gfx.py')
+GRAPHICS_ROOT = os.path.join(ROOT, 'games', 'xs', 'graphics', 'vehicles')
+MANIFEST = os.path.join(ROOT, 'games', 'xs', 'graphics', 'manifest.json')
 RECORD_SIZE = 40
 
 PALETTES = {
@@ -246,23 +246,3 @@ def split_family(sheet_rom_addr, decompressed_size, sheet_dir, anim_table_base,
     with open(os.path.join(sheet_dir, 'sheet.json'), 'w') as f:
         json.dump({'sheet_rom_address': hx(sheet_rom_addr), 'folders': folders}, f, indent=2)
         f.write('\n')
-
-
-def main():
-    split_family(
-        sheet_rom_addr=0x080B2120, decompressed_size=213064,
-        sheet_dir=os.path.join(GRAPHICS_ROOT, 'polar', 'sprite_sheet'),
-        anim_table_base=0x081796CC, record_slot_count=41, data_end=0x0817A6B8,
-        names=POLAR_NAMES, family_palette=0x08178F80,
-    )
-    split_family(
-        sheet_rom_addr=0x0814174C, decompressed_size=207124,
-        sheet_dir=os.path.join(GRAPHICS_ROOT, 'jetpack', 'sprite_sheet'),
-        anim_table_base=0x0817B2A4, record_slot_count=47, data_end=0x0817C1C0,
-        names=JETPACK_NAMES, family_palette=0x0817AAA4,
-        own_palettes={slot: 0x0817AEA4 for slot in HOVERCRAFT_SLOTS},
-    )
-
-
-if __name__ == '__main__':
-    main()

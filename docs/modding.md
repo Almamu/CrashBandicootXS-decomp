@@ -36,7 +36,8 @@ no copyrighted music.
     make mod MOD=mods/sample
 
 applies the mod to a copy of the tree in `build/mods/sample`
-([`tools/apply_mod.py`](../tools/apply_mod.py)) and builds it there with a
+(`tools/apply_mod.py`, whose code is [`crashdata.mods`](../packages/crashdata/src/crashdata/mods/__init__.py))
+and builds it there with a
 plain `make`. The modded ROM is `build/mods/sample/crashbandicootxs.gba`
 (16 MB: the new data goes past the original's 8 MB). Your own tree is
 not changed. In the modded tree,
@@ -47,7 +48,8 @@ not changed. In the modded tree,
 
 check the translations and the graphics manifest, and play the ROM in
 headless mGBA (`mgba`, its SDL frontend, on `PATH`: 0.10.5, which CI
-builds from source; see [`tools/boottest.py`](../tools/boottest.py)): the new room and its song,
+builds from source; see `tools/boottest.py`,
+[`buildtools.boottest`](../packages/buildtools/src/buildtools/boottest.py)): the new room and its song,
 the category's palettes on the screen, the fifth page and its boss entry,
 the boss HUD, the cutscene after the boss and the 8 KiB save. CI
 (`.github/workflows/mods.yml`) does all of this on every PR, so a change
@@ -70,12 +72,16 @@ A mod is a folder with a `mod.py` and, optionally, a `files/` folder:
   `tree.json(...)`) are the tree's too: `games/xs/sound/gax_manifest.json`,
   `engine/src/game/...`;
 - `mod.py` defines `apply(tree)`, which edits the copy's data with the
-  helpers of `tools/apply_mod.py`'s `Tree`: `tree.levels()` and
+  helpers of `crashdata.mods.Tree` (`tools/apply_mod.py`'s): `tree.levels()` and
   `tree.json(path)` edit a JSON file, `tree.add_graphics(...)` adds
   `games/xs/graphics/manifest.json` entries, `tree.copy_room(...)` copies a room
   under new symbols, `tree.add_level_name(...)` and
   `tree.add_cutscene_text(...)` add text in the six languages,
-  `tree.run(...)` runs a tool.
+  `tree.run(...)` runs a tool. `mod.py` runs with the copy's `tools/` on
+  `sys.path`, so it can import a tool by its old name (`import
+  jasc_pal`, which is `crashdata.common.jasc_pal`, as the sample does) or
+  the packages themselves (`from crashdata.common import jasc_pal`;
+  [file_layout.md](file_layout.md), "The Python packages").
 
 `tools/apply_mod.py MOD DEST` applies it to a new copy at `DEST`, and
 `make mod MOD=<folder>` does that and builds it. To work on the data

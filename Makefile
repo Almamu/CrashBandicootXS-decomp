@@ -14,6 +14,30 @@ OBJCOPY  := $(PREFIX)objcopy
 GFX := tools/gbagfx/gbagfx
 GRIT := tools/grit/grit
 
+# The Python tools (#1167): `python3 tools/<name>.py` runs packages/buildtools'
+# <name> command, whose data logic is packages/crashdata's (no install
+# needed: tools/_packages.py). A rule that runs one depends on PY_<NAME>, the
+# files that were tools/<name>.py: the shim, the command and its crashdata
+# module.
+CRASHDATA_SRC  := packages/crashdata/src/crashdata
+BUILDTOOLS_SRC := packages/buildtools/src/buildtools
+PY_BG_MAP        := $(PY_BG_MAP) $(BUILDTOOLS_SRC)/bg_map.py $(CRASHDATA_SRC)/graphics/bg_map.py
+PY_BIN2C         := $(PY_BIN2C) $(BUILDTOOLS_SRC)/bin2c.py
+PY_BOSS_PICTURES := $(PY_BOSS_PICTURES) $(BUILDTOOLS_SRC)/boss_pictures.py $(CRASHDATA_SRC)/graphics/boss_pictures.py
+PY_COLLISION_BMP := $(PY_COLLISION_BMP) $(BUILDTOOLS_SRC)/collision_bmp.py $(CRASHDATA_SRC)/levels/collision.py
+PY_CUTSCENES     := $(PY_CUTSCENES) $(BUILDTOOLS_SRC)/cutscenes.py $(CRASHDATA_SRC)/cutscenes/__init__.py
+PY_FRAMED_GFX    := $(PY_FRAMED_GFX) $(BUILDTOOLS_SRC)/framed_gfx.py $(CRASHDATA_SRC)/graphics/framed_gfx.py
+PY_GAX_AUDIO     := $(PY_GAX_AUDIO) $(BUILDTOOLS_SRC)/gax_audio.py $(CRASHDATA_SRC)/audio/gax.py
+PY_GFX_MANIFEST  := $(PY_GFX_MANIFEST) $(BUILDTOOLS_SRC)/gfx_manifest.py $(CRASHDATA_SRC)/graphics/manifest.py
+PY_GRIT_BG       := $(PY_GRIT_BG) $(BUILDTOOLS_SRC)/grit_bg.py $(CRASHDATA_SRC)/graphics/grit_bg.py
+PY_JASC_PAL      := $(PY_JASC_PAL) $(BUILDTOOLS_SRC)/jasc_pal.py $(CRASHDATA_SRC)/common/jasc_pal.py
+PY_LEVELS        := $(PY_LEVELS) $(BUILDTOOLS_SRC)/levels.py $(CRASHDATA_SRC)/levels/__init__.py
+PY_OBJ_SHEET     := $(PY_OBJ_SHEET) $(BUILDTOOLS_SRC)/obj_sheet.py $(CRASHDATA_SRC)/graphics/obj_sheet.py
+PY_RLE_SPRITES   := $(PY_RLE_SPRITES) $(BUILDTOOLS_SRC)/rle_sprites.py $(CRASHDATA_SRC)/graphics/rle_sprites.py
+PY_SFX_TABLE     := $(PY_SFX_TABLE) $(BUILDTOOLS_SRC)/sfx_table.py $(CRASHDATA_SRC)/audio/sfx_table.py
+PY_SPRITE_FRAMES := $(PY_SPRITE_FRAMES) $(BUILDTOOLS_SRC)/sprite_frames.py $(CRASHDATA_SRC)/graphics/sprite_frames.py
+PY_TEXT          := $(PY_TEXT) $(BUILDTOOLS_SRC)/text.py $(CRASHDATA_SRC)/text/__init__.py
+
 # Warnings (#577). Every C and C++ object, whichever compiler builds it
 # (agbcc, agbcp, old_agbcp, agbcp_arm_patched), gets this set, and -Werror makes any warning
 # fail the build, locally and in CI. A fix must keep the ROM matching;
@@ -240,22 +264,22 @@ $(DATA_ASM_OBJS): $(SOUND_BUILT)
 # struct (gGaxDefaultSong) and the song offsets the song table
 # (engine/src/engine/audio/data/song_table.cpp) is written with.
 $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/gax_audio_data.s $(SOUND_BUILDDIR)/gax_default_layout.bin \
-		$(SOUND_BUILDDIR)/gax_default_layout.s $(SOUND_BUILDDIR)/gax_songs.h &: $(XS_DIR)/sound/gax_manifest.json $(SOUND_SONGS) $(SOUND_INSTRUMENTS) $(SOUND_SFX_SOURCES) tools/gax_audio.py
+		$(SOUND_BUILDDIR)/gax_default_layout.s $(SOUND_BUILDDIR)/gax_songs.h &: $(XS_DIR)/sound/gax_manifest.json $(SOUND_SONGS) $(SOUND_INSTRUMENTS) $(SOUND_SFX_SOURCES) $(PY_GAX_AUDIO)
 	python3 tools/gax_audio.py $(SOUND_BUILDDIR)/gax_audio_data.bin $(SOUND_BUILDDIR)/gax_default_layout.bin $(SOUND_BUILDDIR)/gax_songs.h
 
 # gSongTable itself, in song id order (the manifest's song_table), which
 # song_table.cpp #includes.
-$(SOUND_BUILDDIR)/song_table.inc: $(XS_DIR)/sound/gax_manifest.json tools/gax_audio.py
+$(SOUND_BUILDDIR)/song_table.inc: $(XS_DIR)/sound/gax_manifest.json $(PY_GAX_AUDIO)
 	python3 tools/gax_audio.py --table $@
 
 $(C_BUILDDIR)/engine/audio/data/song_table.o: CPPFLAGS += -iquote $(SOUND_BUILDDIR)
 $(C_BUILDDIR)/engine/audio/data/song_table.o: $(SOUND_BUILDDIR)/gax_songs.h $(SOUND_BUILDDIR)/song_table.inc
 
-$(SOUND_BUILDDIR)/gax_sfx_data.bin $(SOUND_BUILDDIR)/gax_sfx_data.s &: $(SOUND_SFX_SOURCES) tools/gax_audio.py
+$(SOUND_BUILDDIR)/gax_sfx_data.bin $(SOUND_BUILDDIR)/gax_sfx_data.s &: $(SOUND_SFX_SOURCES) $(PY_GAX_AUDIO)
 	python3 tools/gax_audio.py --sfx $(SOUND_BUILDDIR)/gax_sfx_data.bin
 
 # An entry naming a new instrument gets its number in the set.
-$(SOUND_BUILDDIR)/sfx_table.bin: $(SOUND_SFX_SOURCES) tools/sfx_table.py tools/gax_audio.py
+$(SOUND_BUILDDIR)/sfx_table.bin: $(SOUND_SFX_SOURCES) $(PY_SFX_TABLE) $(PY_GAX_AUDIO)
 	python3 tools/sfx_table.py $@
 
 # The song and sound-effect IDs (#655), generated like levels.mk's
@@ -264,11 +288,11 @@ $(SOUND_BUILDDIR)/sfx_table.bin: $(SOUND_SFX_SOURCES) tools/sfx_table.py tools/g
 # wait for the music block.
 GENERATED_HEADERS += $(GENERATED_INCLUDE_DIR)/constants/songs.h $(GENERATED_INCLUDE_DIR)/constants/sfx.h
 
-$(GENERATED_INCLUDE_DIR)/constants/songs.h: $(XS_DIR)/sound/gax_manifest.json $(XS_DIR)/sound/music.json tools/gax_audio.py
+$(GENERATED_INCLUDE_DIR)/constants/songs.h: $(XS_DIR)/sound/gax_manifest.json $(XS_DIR)/sound/music.json $(PY_GAX_AUDIO)
 	@mkdir -p $(dir $@)
 	python3 tools/gax_audio.py --constants $@
 
-$(GENERATED_INCLUDE_DIR)/constants/sfx.h: $(XS_DIR)/sound/sfx_table.json tools/sfx_table.py
+$(GENERATED_INCLUDE_DIR)/constants/sfx.h: $(XS_DIR)/sound/sfx_table.json $(PY_SFX_TABLE)
 	@mkdir -p $(dir $@)
 	python3 tools/sfx_table.py --constants $@
 

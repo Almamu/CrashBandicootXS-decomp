@@ -14,7 +14,7 @@ plainer version doesn't.
 
 - The workaround idioms that fit in a macro have a named form in
   [engine/include/match.h](../engine/include/match.h) (see [The match.h macros](#the-matchh-macros)).
-- [tools/match_idioms.py](../tools/match_idioms.py) counts every idiom
+- [tools/match_idioms.py](../packages/buildtools/src/buildtools/match_idioms.py) counts every idiom
   by kind and file (`--kind K --show` lists the sites), checks that the
   macros expand to the spellings they replace (`--check-macros`),
   converts a kind to its macro (`--convert K`) and fails if an idiom
@@ -22,12 +22,12 @@ plainer version doesn't.
   `--functions` (after a build) counts the functions with no workaround
   at all, the number in README.md, and `--functions --files` lists the
   others with their kinds.
-- [tools/match_prune.py](../tools/match_prune.py) finds the workarounds
+- [tools/match_prune.py](../packages/buildtools/src/buildtools/match_prune.py) finds the workarounds
   that are no longer needed (#662): it removes each site, alone and
   then in pairs and pin bundles, rebuilds the object through the
   Makefile and keeps every removal that leaves the object
   byte-identical (see [Pruning workarounds](#pruning-workarounds)).
-- [tools/natural_enum.py](../tools/natural_enum.py) searches natural
+- [tools/natural_enum.py](../packages/buildtools/src/buildtools/natural_enum.py) searches natural
   rewrites of one function (#662 round 8). The alternatives are what a
   programmer would write (a type, a statement order, a helper, a loop
   form), given either as a spec file (the function's text with
@@ -48,7 +48,7 @@ plainer version doesn't.
   function and any `extra` functions of the object; `drop_werror` and
   `cflags` test a warning-only form or a flag. The winner is judged by
   hand.
-- [tools/rtl_corpus.py](../tools/rtl_corpus.py) compiles every object
+- [tools/rtl_corpus.py](../packages/buildtools/src/buildtools/rtl_corpus.py) compiles every object
   again with `-da -g` (`build`, into build/rtl_corpus: about 530 MB of
   dumps, or 15 MB of index with `--no-dumps`) and queries the matched
   functions' per-pass RTL (`list`, `query NAME --src`), each query

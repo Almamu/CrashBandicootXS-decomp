@@ -38,7 +38,7 @@ import os
 import re
 import sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from crashdata.common.game import ROOT
 SCAN_DIRS = ("engine/src", "lib", "engine/include", "platform")
 # Where the macros are defined: not counted as sites.
 SKIP_FILES = ("engine/include/match.h",)
@@ -772,8 +772,7 @@ def report_objects():
     paths relative to build/crashbandicootxs/ without `.o`: the code
     the progress report counts (crt0 and the hand-written assembly have no
     unit)."""
-    sys.path.insert(0, os.path.join(ROOT, "tools"))
-    import report_units
+    from buildtools import report_units
     objs = set()
     for _, base, _ in report_units.UNITS + report_units.IWRAM_UNITS:
         if base and base != report_units.HANDWRITTEN:

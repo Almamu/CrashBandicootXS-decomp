@@ -133,7 +133,7 @@ import os
 import re
 import sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from crashdata.common.game import ROOT
 SCAN_DIRS = (os.path.join("engine", "src"), os.path.join("engine", "include"), "platform")
 C_EXTS = (".c", ".h")
 CXX_EXTS = (".cpp", ".hpp")
@@ -1715,7 +1715,7 @@ def main():
     args = ap.parse_args()
 
     if args.fixed:
-        import magic_fixed
+        from buildtools import magic_fixed
 
         for c in args.category or ():
             if c not in magic_fixed.CATEGORIES:
@@ -1723,7 +1723,7 @@ def main():
         return magic_fixed.run(args)
 
     if args.screen:
-        import magic_screen
+        from buildtools import magic_screen
 
         for c in args.category or ():
             if c not in magic_screen.CATEGORIES:
@@ -1731,17 +1731,17 @@ def main():
         return magic_screen.run(args)
 
     if args.casts:
-        import magic_casts
+        from buildtools import magic_casts
 
         return magic_casts.run(args)
 
     if args.bits:
-        import magic_bits
+        from buildtools import magic_bits
 
         return magic_bits.run(args)
 
     if args.sizes:
-        import magic_sizes
+        from buildtools import magic_sizes
 
         for c in args.category or ():
             if c not in magic_sizes.CATEGORIES:

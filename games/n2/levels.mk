@@ -11,14 +11,14 @@ N2_LEVELS_BUILDDIR := $(OBJ_DIR)/data/levels
 N2_LEVEL_ROOMS        := $(shell $(N2_LEVELS) rooms)
 N2_LEVEL_PACKED_ROOMS := $(shell $(N2_LEVELS) rooms --packed)
 N2_LEVEL_ROOM_JSONS   := $(foreach room,$(N2_LEVEL_ROOMS),$(N2_LEVELS_DIR)/$(room)/room.json)
-N2_LEVEL_TOOLS        := tools/levels.py tools/collision_bmp.py $(N2_LEVELS_DIR)/collision_legend.json
+N2_LEVEL_TOOLS        := $(PY_LEVELS) $(PY_COLLISION_BMP) $(N2_LEVELS_DIR)/collision_legend.json
 
 n2_level_bg_maps = $(foreach l,$(patsubst $(N2_LEVELS_DIR)/$(1)/%.png,%,$(wildcard $(N2_LEVELS_DIR)/$(1)/bg?.png)),\
 	$(N2_LEVELS_BUILDDIR)/$(1)/$(l).map.bin)
 
 # the tile sets, and each layer's cells in them (levels.py tilesets-mk)
 $(N2_LEVELS_BUILDDIR)/tilesets.mk: $(N2_LEVELS_DIR)/levels.json $(N2_LEVEL_ROOM_JSONS) \
-		$(wildcard $(N2_LEVELS_DIR)/tileset_order.json) tools/levels.py
+		$(wildcard $(N2_LEVELS_DIR)/tileset_order.json) $(PY_LEVELS)
 	$(N2_LEVELS) tilesets-mk $@ --build $(N2_LEVELS_BUILDDIR)
 include $(N2_LEVELS_BUILDDIR)/tilesets.mk
 
@@ -34,18 +34,18 @@ $(foreach room,$(N2_LEVEL_ROOMS),$(eval $(call N2_LEVEL_ASSET_RULE,$(room))))
 $(N2_LEVELS_BUILDDIR)/%.lz: $(N2_LEVELS_BUILDDIR)/% | $(GFX)
 	$(GFX) $< $@
 
-$(N2_LEVELS_BUILDDIR)/%.lz.inc: $(N2_LEVELS_BUILDDIR)/%.lz tools/bin2c.py
+$(N2_LEVELS_BUILDDIR)/%.lz.inc: $(N2_LEVELS_BUILDDIR)/%.lz $(PY_BIN2C)
 	python3 tools/bin2c.py $< $@ --lz
 
-$(N2_LEVELS_BUILDDIR)/%/asset.bin.inc: $(N2_LEVELS_BUILDDIR)/%/asset.bin tools/bin2c.py
+$(N2_LEVELS_BUILDDIR)/%/asset.bin.inc: $(N2_LEVELS_BUILDDIR)/%/asset.bin $(PY_BIN2C)
 	python3 tools/bin2c.py $< $@
 
 # the assets' definitions, in the ROM's order, and the rooms' classes
-$(N2_LEVELS_BUILDDIR)/level_assets.inc: $(N2_LEVELS_DIR)/levels.json $(N2_LEVEL_ROOM_JSONS) tools/levels.py
+$(N2_LEVELS_BUILDDIR)/level_assets.inc: $(N2_LEVELS_DIR)/levels.json $(N2_LEVEL_ROOM_JSONS) $(PY_LEVELS)
 	@mkdir -p $(dir $@)
 	$(N2_LEVELS) assets $@
 
-$(GENERATED_INCLUDE_DIR)/rooms.hpp: $(N2_LEVELS_DIR)/levels.json $(N2_LEVEL_ROOM_JSONS) tools/levels.py
+$(GENERATED_INCLUDE_DIR)/rooms.hpp: $(N2_LEVELS_DIR)/levels.json $(N2_LEVEL_ROOM_JSONS) $(PY_LEVELS)
 	@mkdir -p $(dir $@)
 	$(N2_LEVELS) classes $@
 
@@ -67,7 +67,7 @@ $(N2_LEVELS_BUILDDIR)/level_rooms_%.inc: $(N2_LEVELS_DIR)/levels.json $(N2_LEVEL
 	@mkdir -p $(dir $@)
 	$(N2_LEVELS) c level_rooms_$* $@ --build $(N2_LEVELS_BUILDDIR)
 
-$(N2_LEVELS_BUILDDIR)/tilesets/%.bin.inc: $(N2_LEVELS_BUILDDIR)/tilesets/%.bin tools/bin2c.py
+$(N2_LEVELS_BUILDDIR)/tilesets/%.bin.inc: $(N2_LEVELS_BUILDDIR)/tilesets/%.bin $(PY_BIN2C)
 	python3 tools/bin2c.py $< $@
 
 N2_LEVEL_DATA_OBJS := $(foreach r,$(N2_LEVEL_REGIONS),$(C_BUILDDIR)/game/level/data/$(r).o) \
@@ -126,6 +126,6 @@ $(CXX_OBJS) $(C_OBJS) $(LIB_C_OBJS): | $(N2_PLACEHOLDER_CONSTANTS) $(GENERATED_I
 
 # constants/entities.h (ENTITY_*, ENTITY_COUNT), generated as XS's from
 # N-Tranced's entity_types.json (docs/n_tranced.md, "Levels")
-$(GENERATED_INCLUDE_DIR)/constants/entities.h: $(N2_LEVELS_DIR)/entity_types.json tools/levels.py
+$(GENERATED_INCLUDE_DIR)/constants/entities.h: $(N2_LEVELS_DIR)/entity_types.json $(PY_LEVELS)
 	@mkdir -p $(dir $@)
 	$(N2_LEVELS) constants entities $@

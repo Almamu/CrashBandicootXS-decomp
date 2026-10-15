@@ -22,7 +22,6 @@ the ROM's bytes).
         picture struct's initializer (after {cols, rows}), and a header
         with NAME_COLS, NAME_ROWS and each frame's NAME_FRAMEn_TILES.
 """
-import argparse
 import struct
 import sys
 from pathlib import Path
@@ -126,20 +125,3 @@ def pack(args):
            f"#define {args.name}_ROWS {rows}"]
     hdr += [f"#define {args.name}_FRAME{f}_TILES {n}" for f, (n, _, _) in enumerate(built)]
     Path(args.header).write_text("\n".join(hdr) + "\n")
-
-
-def main():
-    ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    sub = ap.add_subparsers(dest="mode", required=True)
-    pk = sub.add_parser("pack")
-    pk.add_argument("output")
-    pk.add_argument("header")
-    pk.add_argument("--name", required=True)
-    pk.add_argument("--cols", type=int, required=True)
-    pk.add_argument("tiles", nargs="+")
-    args = ap.parse_args()
-    pack(args)
-
-
-if __name__ == "__main__":
-    main()

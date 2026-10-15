@@ -11,7 +11,7 @@
 CUTSCENES_JSON := $(XS_DIR)/data/cutscenes.json
 CUTSCENES_BUILDDIR := $(OBJ_DIR)/cutscenes
 CUTSCENE_TABLES := cutscenes cutscene_slides
-CUTSCENE_DEPS := $(CUTSCENES_JSON) $(TEXT_POT) $(XS_DIR)/graphics/manifest.json tools/cutscenes.py tools/text.py
+CUTSCENE_DEPS := $(CUTSCENES_JSON) $(TEXT_POT) $(XS_DIR)/graphics/manifest.json $(PY_CUTSCENES) $(PY_TEXT)
 
 $(CUTSCENES_BUILDDIR)/%.inc: $(CUTSCENE_DEPS)
 	python3 tools/cutscenes.py cpp $* $@

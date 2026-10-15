@@ -136,13 +136,13 @@ import sys
 import tempfile
 from pathlib import Path
 
-TOOLS = Path(__file__).resolve().parent
-sys.path.insert(0, str(TOOLS))
-import bg_map  # noqa: E402
-import boss_pictures  # noqa: E402
-import jasc_pal  # noqa: E402
-import obj_sheet  # noqa: E402
-import rle_sprites  # noqa: E402
+from crashdata.common import jasc_pal
+from crashdata.common.game import ROOT
+from crashdata.graphics import bg_map, boss_pictures, obj_sheet, rle_sprites
+
+# The tools' shims and the packages (extract_check runs them in a copy of the tree)
+TOOLS = Path(ROOT).resolve() / "tools"
+PACKAGES = Path(ROOT).resolve() / "packages"
 
 ROM_BASE = 0x08000000
 # The game's graphics (--graphics-dir), XS's by default, and its manifest
@@ -166,6 +166,12 @@ def use_graphics_dir(d):
     global GRAPHICS, MANIFEST
     GRAPHICS = Path(d)
     MANIFEST = GRAPHICS / "manifest.json"
+
+
+def use_game(game):
+    """Works on `game`'s graphics (a crashdata.common.game.Game, in the
+    tree the tools run in) from now on."""
+    use_graphics_dir(game.graphics_dir)
 
 
 def is_xs():
@@ -587,7 +593,7 @@ def extract_framed_frames(rom, e, out, by_symbol):
     known yet: its frames in the sheet's order, one folder (frames/,
     000.png, ...), in the first 16 colours of the 256-colour palette at
     `view_palette` (only for viewing: the build reads the indices)."""
-    import framed_gfx
+    from crashdata.graphics import framed_gfx
     from PIL import Image
 
     frames = framed_gfx.parse_frames(rom.lz77(addr(e["rom"])))
@@ -658,7 +664,7 @@ def extract(rom_path, root):
             extract_framed_frames(rom, e, root / GRAPHICS, by_symbol)
         elif e["kind"] == "sprite_banks" and not is_xs():
             # the sprite banks of another game's manifest entry
-            import sprite_frames
+            from crashdata.graphics import sprite_frames
             sprite_frames.use_graphics_dir(GRAPHICS)
             sprite_frames.extract(rom_path, root / GRAPHICS / e["path"])
         elif e["kind"] not in FAMILY_TOOLS or not is_xs():
@@ -731,9 +737,11 @@ def extract_check(rom_path):
     rom_path = Path(rom_path).resolve()
     with tempfile.TemporaryDirectory(prefix="gfx_manifest_") as tmp:
         root = Path(tmp)
-        # the tools, and the hand-written level lists levels.py extract keeps
+        # the tools (their shims and packages/), and the hand-written level
+        # lists levels.py extract keeps
         shutil.copytree(TOOLS, root / "tools", ignore=shutil.ignore_patterns("agbcc", "gbagfx", "grit", "permuter",
                                                                               "__pycache__", "*.c", "*.h"))
+        shutil.copytree(PACKAGES, root / "packages", ignore=shutil.ignore_patterns("__pycache__"))
         (root / XS_DIR / "data/levels").mkdir(parents=True)
         for f in (XS_DIR / "data/levels").glob("*.json"):
             shutil.copy(f, root / XS_DIR / "data/levels" / f.name)
@@ -978,7 +986,7 @@ def check_classes():
     if split_symbols()[1] != symbols_block():
         errors.append("%s: the graphics classes block is out of date (tools/gfx_manifest.py symbols)" % SYMBOLS)
     # the rooms' classes (tools/levels.py), whose block sits next to it
-    import levels
+    from crashdata import levels
     if levels.room_symbols_error():
         errors.append(levels.room_symbols_error())
     return errors
@@ -1087,59 +1095,3 @@ def table():
     head, rest = text.split(TABLE_BEGIN, 1)
     _, tail = rest.split(TABLE_END, 1)
     DATA_MAP.write_text(head + TABLE_BEGIN + "\n" + "\n".join(rows) + "\n" + TABLE_END + tail)
-
-
-def main():
-    ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("--graphics-dir", default=str(XS_GRAPHICS),
-                    help="the game's graphics directory (XS's games/xs/graphics/ by default)")
-    sub = ap.add_subparsers(dest="mode", required=True)
-    sub.add_parser("check")
-    p = sub.add_parser("extract")
-    p.add_argument("rom", nargs="?", default="baserom.gba")
-    p.add_argument("--check", action="store_true")
-    sub.add_parser("table")
-    p = sub.add_parser("header")
-    p.add_argument("out")
-    p = sub.add_parser("defs")
-    p.add_argument("object")
-    p.add_argument("out")
-    sub.add_parser("symbols")
-    p = sub.add_parser("make")
-    p.add_argument("out")
-    args = ap.parse_args()
-    use_graphics_dir(args.graphics_dir)
-    if not is_xs() and args.mode in ("table", "symbols"):
-        sys.exit("gfx_manifest: %s is XS's only (docs/data_map.md, cxx_symbols.txt)" % args.mode)
-    if args.mode in ("header", "defs", "symbols", "make"):
-        if args.mode == "header":
-            write_if_changed(args.out, header())
-        elif args.mode == "make":
-            Path(args.out).parent.mkdir(parents=True, exist_ok=True)
-            Path(args.out).write_text(make_fragment())
-        elif args.mode == "defs":
-            Path(args.out).parent.mkdir(parents=True, exist_ok=True)
-            Path(args.out).write_text(defs(args.object))
-        else:
-            write_symbols()
-        return
-    if args.mode == "check":
-        errors = check()
-    elif args.mode == "extract" and not is_xs():
-        errors = extract_game(args.rom, args.check)
-    elif args.mode == "extract" and args.check:
-        errors = extract_check(args.rom)
-    elif args.mode == "extract":
-        extract(args.rom, Path("."))
-        errors = []
-    else:
-        table()
-        errors = []
-    if errors:
-        sys.exit("\n".join(errors[:50] + (["... and %d more" % (len(errors) - 50)] if len(errors) > 50 else [])))
-    if args.mode != "table":
-        print("gfx_manifest: OK")
-
-
-if __name__ == "__main__":
-    main()

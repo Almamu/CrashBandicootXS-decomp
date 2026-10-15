@@ -45,10 +45,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from cleanup_scan import scan_cleanup_candidates  # noqa: E402
+from buildtools.cleanup_scan import scan_cleanup_candidates
+from crashdata.common import game
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(game.ROOT).resolve()
 BUILD_DIR = ROOT / "build" / "expected" / "units"
 CODE3 = ROOT / "games" / "xs" / "expected" / "code_3.s"
 LEGACY = ROOT / "games" / "xs" / "expected" / "legacy.s"

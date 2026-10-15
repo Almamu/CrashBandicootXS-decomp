@@ -48,3 +48,9 @@ Once those packages are installed you'll need to provide agbcc, which is the com
 `tools/gbagfx` and `tools/grit`, the graphics converters, are built by the Makefile on first use.
 
 For the progress report (`make NON_MATCHING=1 report`, see [docs/progress_report.md](docs/progress_report.md)), you also need [objdiff-cli](https://github.com/encounter/objdiff/releases).
+
+The Python tools need only `python3` with Pillow (`python3-pil` above): the Makefile runs `python3 tools/<name>.py`, which runs the code in `packages/` from the tree, so there is nothing to install. With [uv](https://docs.astral.sh/uv/), `uv sync` also installs the workspace (`packages/crashdata`, `packages/buildtools`) into `.venv/`, with each command as a console script (`crash-levels`, `crash-gfx-manifest`, ...); see [docs/file_layout.md](docs/file_layout.md), "The Python packages".
+
+# Updating an existing checkout
+
+A `build/` directory from before #1169 (which moved `src/` and `include/` to `engine/`, and XS's data to `games/xs/`) stops the build: its `.d` dependency files still name the old `src/...` paths. Remove it with `rm -rf build` and build again.

@@ -158,9 +158,9 @@ import sys
 import zlib
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import collision_bmp  # noqa: E402
-import jasc_pal  # noqa: E402
+from crashdata.common import jasc_pal
+from crashdata.common.game import Game
+from crashdata.levels import collision as collision_bmp
 
 ROM_BASE = 0x08000000
 # gLevelRoomLists: per level (levels.json's "levels" order) a struct
@@ -199,7 +199,10 @@ ROOM_LAYOUT = ["params", "grids", "palette", "type_counts", "links", "desc", "en
 # Entities are grouped into 256-px columns (x >> 8).
 GROUP_SHIFT = 8
 
-LEVELS_DIR = Path("games/xs/data/levels")
+# The game whose level data this works on (use_game): XS's, in the tree
+# the tools run in.
+GAME = Game("xs")
+LEVELS_DIR = GAME.levels_dir
 ENTITY_TYPES_JSON = LEVELS_DIR / "entity_types.json"
 CRATE_KINDS_JSON = LEVELS_DIR / "crate_kinds.json"
 LEVELS_JSON = LEVELS_DIR / "levels.json"
@@ -226,6 +229,38 @@ def use_levels_dir(path):
         # its tile sets' names, by their ROM address (gStaticData_<address>
         # for one it doesn't name)
         TILESET_SYMBOLS = {int(a, 16): n for a, n in levels.get("tileset_names", {}).items()}
+
+
+def use_game(game, levels_dir=None):
+    """Work on `game`'s level data (a crashdata.common.game.Game: the game
+    and the root of its tree), or on the level data in `levels_dir` (the
+    game's own by default). This is where a game's level state is bound:
+    XS's is this module's constants, another game's comes from its
+    levels.json (use_levels_dir). The data the levels name that is XS's
+    only (the songs, the graphics manifest, the cutscenes, the actor kinds,
+    cxx_symbols.txt) is XS's under the same root."""
+    global GAME, GAX_MANIFEST, GFX_MANIFEST, CUTSCENES_JSON, LEVEL_ICONS_BANK, ACTOR_KINDS_H, CXX_SYMBOLS
+    global LEVELS_DIR, ENTITY_TYPES_JSON, CRATE_KINDS_JSON, LEVELS_JSON, TILESET_ORDER_JSON, SPAWNS_DIR
+    global ANIM_TABLES_DIR
+    GAME = game
+    xs = Game("xs", game.root)
+    GAX_MANIFEST = xs.sound_dir / "gax_manifest.json"
+    GFX_MANIFEST = xs.graphics_dir / "manifest.json"
+    CUTSCENES_JSON = xs.data_dir / "cutscenes.json"
+    LEVEL_ICONS_BANK = xs.graphics_dir / "sprites/bank51_level_select_icons/bank.json"
+    ACTOR_KINDS_H = game.root / "engine/include/constants/actor_kinds.h"
+    CXX_SYMBOLS = game.root / "cxx_symbols.txt"
+    if game.is_xs and levels_dir is None:
+        LEVELS_DIR = game.levels_dir
+        ENTITY_TYPES_JSON = LEVELS_DIR / "entity_types.json"
+        CRATE_KINDS_JSON = LEVELS_DIR / "crate_kinds.json"
+        LEVELS_JSON = LEVELS_DIR / "levels.json"
+        TILESET_ORDER_JSON = LEVELS_DIR / "tileset_order.json"
+        SPAWNS_DIR = LEVELS_DIR / "spawns"
+        ANIM_TABLES_DIR = LEVELS_DIR / "anim_tables"
+        collision_bmp.LEGEND_JSON = LEVELS_DIR / "collision_legend.json"
+    else:
+        use_levels_dir(levels_dir if levels_dir is not None else game.levels_dir)
 
 
 # ---------------------------------------------------------------------------
@@ -1239,7 +1274,7 @@ def tilesets_mk(out_path, build_dir):
             deps.append("%s/%s/room.json" % (d, r))
             deps += ["%s/%s/%s" % (d, r, layers[lname]["map"]) for lname in lays]
         stamp = "%s/tilesets/%s.stamp" % (b, symbol)
-        lines += ["%s: %s%s tools/levels.py" % (stamp, " ".join(deps), order_dep),
+        lines += ["%s: %s%s $(PY_LEVELS)" % (stamp, " ".join(deps), order_dep),
                   "\t@mkdir -p $(dir $@)",
                   "\tpython3 %s tileset %s --build %s" % (tool, symbol, b),
                   "\t@touch $@",
@@ -1867,7 +1902,7 @@ _category_gfx = {}
 def category_graphic_entries():
     """games/xs/graphics/manifest.json's category graphics: path -> entry."""
     if not _category_gfx:
-        import gfx_manifest
+        from crashdata.graphics import manifest as gfx_manifest
         _category_gfx.update(gfx_manifest.category_graphics())
     return _category_gfx
 
@@ -1935,7 +1970,6 @@ def category_graphics(c):
         out["sky"] = (sym, e, {"cols": bc, "rows": br, "tiles": ntiles})
     sym, e, _ = out["palette"]
     if e is not None:
-        import jasc_pal
         n = len(jasc_pal.read_jasc(GFX_MANIFEST.parent / e["path"]))
         if n != 256:
             fail("its palette games/xs/graphics/%s has %d colours, an OBJ palette 256" % (e["path"], n))
@@ -1949,7 +1983,7 @@ def category_palette_cycle(c, cycle, fail):
     none. Only a polar category has one (ActorCategory::Init enables the
     cycle for CATEGORY_TYPE_POLAR), and a new one is PALETTE_CYCLE_FRAMES
     JASC files of BG palettes 0-13."""
-    import gfx_manifest
+    from crashdata.graphics import manifest as gfx_manifest
 
     sym, e, _ = cycle
     if e is None:
@@ -1959,7 +1993,7 @@ def category_palette_cycle(c, cycle, fail):
              "(ActorCategory::Init enables it for CATEGORY_TYPE_POLAR)" % c["type"].lower())
     if "rom" in e:
         return (None, None, None)
-    errors = gfx_manifest.palette_cycle_errors(e, "its palette cycle %s" % sym, Path("."))
+    errors = gfx_manifest.palette_cycle_errors(e, "its palette cycle %s" % sym, GAME.root)
     if errors:
         fail(errors[0])
     return cycle
@@ -2423,7 +2457,7 @@ def sheet_size(sheet):
 
 def sheet_layout(sheet):
     if sheet not in _sheet_frames:
-        import framed_gfx
+        from crashdata.graphics import framed_gfx
 
         out, off = {}, 0
         sheet_dir = GFX_MANIFEST.parent / sheet
@@ -2742,8 +2776,8 @@ def anim_tables_from_rom(rom):
     with the kept JSON's arrays (their symbols, lengths, kinds and
     comments, in their order); the rest from the ROM. The arrays are laid
     out back to back around the table."""
-    import gfx_manifest
-    import rle_sprites
+    from crashdata.graphics import manifest as gfx_manifest
+    from crashdata.graphics import rle_sprites
 
     players = {}
     for e in gfx_manifest.load():
@@ -4401,83 +4435,3 @@ def constants_h(which):
     return "\n".join(["/* Generated by tools/levels.py from %s. Do not edit. */" % src.as_posix(),
                       "#ifndef " + guard, "#define " + guard, "", doc, ""] + body
                      + ["", "#endif /* %s */" % guard, ""])
-
-
-def main():
-    args = sys.argv[1:]
-    if not args or args[0] in ("-h", "--help"):
-        print(__doc__)
-        return
-    if "--levels-dir" in args:
-        i = args.index("--levels-dir")
-        use_levels_dir(args[i + 1])
-        del args[i:i + 2]
-    cmd = args[0]
-    build_dir = None
-    if "--build" in args:
-        i = args.index("--build")
-        build_dir = args[i + 1]
-        del args[i:i + 2]
-    if cmd == "extract":
-        extract(args[1] if len(args) > 1 else "baserom.gba")
-    elif cmd == "extract-rooms":
-        extract_rooms_from_table(args[1], int(args[2], 16))
-    elif cmd == "rooms":
-        # levels.json's rooms (their folders); with --packed the ones whose
-        # asset is LZ77-packed, with --new the ones in no ROM region
-        levels = read_json(LEVELS_JSON)
-        rooms = new_rooms(levels) if "--new" in args else levels["rooms"]
-        if "--packed" in args:
-            rooms = [r for r in rooms if read_json(LEVELS_DIR / r / "room.json")["asset"]["packed"]]
-        print(" ".join(rooms))
-    elif cmd == "tileset":
-        tileset_build(args[1], build_dir)
-    elif cmd == "tilesets-mk":
-        tilesets_mk(args[1], build_dir)
-    elif cmd == "table":
-        if len(args) != 3 or args[1] not in ("levels", "records", "pictures"):
-            sys.exit("usage: levels.py table levels|records|pictures OUT")
-        table_c(args[1], args[2])
-    elif cmd == "asset":
-        asset, offsets, grids = build_asset(args[1], build_dir)
-        Path(args[2]).write_bytes(asset)
-        layout = Path(args[2]).with_name("asset.layout.json")
-        layout.write_text(json.dumps({"offsets": offsets, "grids": grids}) + "\n")
-    elif cmd == "c":
-        region_c(args[1], args[2], build_dir)
-    elif cmd == "assets":
-        assets_c(args[1])
-    elif cmd == "classes":
-        write_if_changed(args[1], rooms_hpp().encode())
-    elif cmd == "symbols":
-        room_symbols("--check" in args)
-    elif cmd == "render":
-        render(args[1], args[2], args[3], build_dir)
-    elif cmd == "constants":
-        write_if_changed(args[2], constants_h(args[1]).encode())
-    elif cmd == "palette-cycles":
-        write_if_changed(args[1], theme_palette_cycles_h(read_json(LEVELS_JSON)).encode())
-    elif cmd == "worlds":
-        write_if_changed(args[1], level_select_worlds_h(read_json(LEVELS_JSON)).encode())
-    elif cmd == "bosses":
-        write_if_changed(args[1], level_bosses_h(read_json(LEVELS_JSON)).encode())
-    elif cmd == "category-cycles":
-        write_if_changed(args[1], category_palette_cycles_h(read_json(LEVELS_JSON)).encode())
-    elif cmd == "on-clear":
-        write_if_changed(args[1], level_on_clear_h(read_json(LEVELS_JSON)).encode())
-    elif cmd == "spawns":
-        Path(args[2]).parent.mkdir(parents=True, exist_ok=True)
-        Path(args[2]).write_text(spawns_inc(args[1]))
-    elif cmd == "categories":
-        Path(args[1]).parent.mkdir(parents=True, exist_ok=True)
-        Path(args[1]).write_text(actor_categories_inc(read_json(LEVELS_JSON)))
-        category_palette_warnings(read_json(LEVELS_JSON))
-    elif cmd == "anim-table":
-        Path(args[2]).parent.mkdir(parents=True, exist_ok=True)
-        Path(args[2]).write_text(anim_table_inc(args[1]))
-    else:
-        sys.exit("unknown command %s" % cmd)
-
-
-if __name__ == "__main__":
-    main()

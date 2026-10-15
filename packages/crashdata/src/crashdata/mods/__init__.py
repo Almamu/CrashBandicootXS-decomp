@@ -17,23 +17,23 @@ A mod is a folder:
   languages, a copied room). Its own generated assets (a song, a picture)
   are written there too, so the mod stays small.
 """
-import argparse
 import json
-import os
 import re
-import runpy
 import shutil
 import subprocess
 import sys
 from contextlib import contextmanager
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+from crashdata.common import game
+
+ROOT = Path(game.ROOT).resolve()
 LANGUAGES = ("fr", "de", "es", "it", "nl")
 
-# What the copy leaves out: the git data, the build outputs, the ROM and
-# CI's compiler checkouts (the built compilers are in tools/agbcc).
-SKIP_TOP = {".git", "build", "agbcc", "agbcc-cp", ".claude", ".vscode", "objdiff-cli", "report.json"}
+# What the copy leaves out: the git data, the build outputs, the ROM,
+# CI's compiler checkouts (the built compilers are in tools/agbcc) and the
+# Python workspace's environment (`uv sync`).
+SKIP_TOP = {".git", "build", "agbcc", "agbcc-cp", ".claude", ".vscode", "objdiff-cli", "report.json", ".venv"}
 SKIP_ANY = ["*.gba", "*.sav", "*.elf", "*.map", "*.o", "__pycache__"]
 
 
@@ -80,7 +80,7 @@ class Tree:
     @contextmanager
     def levels(self):
         """Edits games/xs/data/levels/levels.json, written back in levels.py's layout."""
-        import levels as L
+        from crashdata import levels as L
         data = L.read_json(L.LEVELS_JSON)
         yield data
         L.write_levels_json(data)
@@ -151,26 +151,3 @@ class Tree:
 
     def run(self, *cmd):
         subprocess.check_call(list(cmd), cwd=self.root)
-
-
-def main():
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("mod", help="the mod's folder, e.g. mods/sample")
-    ap.add_argument("dest", help="where to put the modded copy of the tree (must not exist)")
-    args = ap.parse_args()
-    mod, dest = Path(args.mod).resolve(), Path(args.dest).resolve()
-    if not (mod / "mod.py").exists():
-        sys.exit("apply_mod: %s has no mod.py" % mod)
-    copy_tree(dest)
-    files = mod / "files"
-    if files.is_dir():
-        shutil.copytree(files, dest, dirs_exist_ok=True)
-    # the mod runs in the copy, with the copy's tools importable
-    os.chdir(dest)
-    sys.path.insert(0, str(dest / "tools"))
-    runpy.run_path(str(mod / "mod.py"))["apply"](Tree(dest, mod))
-    print("apply_mod: %s applied to %s; build it there with `make`" % (mod.name, dest))
-
-
-if __name__ == "__main__":
-    main()

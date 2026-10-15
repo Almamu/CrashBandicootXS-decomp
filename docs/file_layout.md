@@ -33,13 +33,20 @@ games/xs/                           Crash Bandicoot XS: data/ (data.s,
                                     ldscript.txt, sym_*.txt, expected/,
                                     checksum.sha1
 games/n2/                           Crash Bandicoot 2: N-Tranced (n_tranced.md)
+packages/crashdata/                 Python: the games' data (levels, graphics,
+                                    cutscenes, music, text, mods), below
+packages/buildtools/                Python: the commands (tools/<name>.py)
+tools/                              the vendored C tools (agbcc, gbagfx,
+                                    grit, permuter), nt_compare/, and the
+                                    shims tools/<name>.py of the commands
 ```
 
 The rest stays at the root: the Makefile (the toolchain, the flags, the
 game switch and XS's build), `compile.mk` and `graphics_rules.mk` (the
 rules both games share), `cxx_symbols.txt` (the C names of
 `engine/src/`'s C++ symbols, which both games' objects are renamed with),
-`tools/`, `mods/` and `docs/`.
+`pyproject.toml` and `uv.lock` (the Python workspace), `mods/` and
+`docs/`.
 
 ## The monorepo move (#1167)
 
@@ -80,6 +87,101 @@ data, each a rename (`git log --follow` and rebases follow them):
   paths, old and new, are the tree's before this move (`src/` is now
   `engine/src/`, `include/` `engine/include/`, `graphics/` and `data/`
   `games/xs/graphics/` and `games/xs/data/`).
+
+## The Python packages (#1167)
+
+The second step of #1167 moved `tools/*.py` into a [uv](https://docs.astral.sh/uv/)
+workspace (`pyproject.toml` at the root, members `packages/*`), in two
+packages, each with its own `pyproject.toml` and a `src/` layout:
+
+- **`packages/crashdata/`** (`crashdata`): the games' data, the model the
+  build's tools and the editors share: reading, checking, extracting
+  from a ROM and converting the levels, graphics, cutscenes, music and
+  sound, text and mods. By domain: `crashdata.common`,
+  `crashdata.levels`, `crashdata.graphics`, `crashdata.cutscenes`,
+  `crashdata.audio`, `crashdata.text`, `crashdata.mods`.
+- **`packages/buildtools/`** (`buildtools`): the commands. The build's
+  steps, the checks and scanners (`match_idioms`, `magic_*`, `format`,
+  `shiftcheck`, `simplify_scan`, ...), the progress report
+  (`report_units`, `badges`), `boottest`, and the command line of each
+  crashdata tool (`buildtools.levels` parses `tools/levels.py`'s
+  arguments and calls `crashdata.levels`).
+
+`tools/` keeps the vendored C tools (agbcc, gbagfx, grit, permuter, the
+agbcc patches, `build_agbccpp.sh`) and `tools/nt_compare/`, the
+N-Tranced comparison's scripts, which stayed where they are.
+
+- **The commands are run as before**: `python3 tools/<name>.py ...`, from
+  the Makefile, CI and the docs. Each `tools/<name>.py` is now a shim:
+  run, it runs `buildtools.<name>`'s `main()` (the same arguments, help,
+  output and exit status); imported (`sys.path.insert(0, "tools")`;
+  `import levels`, as `games/n2/progress.py`, `mods/sample/` and
+  `tools/nt_compare/` do), it is the module its code moved to
+  (`crashdata.levels`). `tools/_packages.py` puts the packages' `src/`
+  directories on `sys.path`, so nothing needs installing: the
+  devshell's or CI's `python3` with PIL is all the build needs.
+- **`uv sync`** (optional) installs both packages, editable, into `.venv/`,
+  with every command as a console script: `crash-levels`,
+  `crash-gfx-manifest`, `crash-match-idioms`, ... (`tools/<name>.py` with
+  `_` as `-`, `packages/buildtools/pyproject.toml`). The only dependency
+  outside the standard library is Pillow. Python 3.12 or later (CI's).
+- **The Makefile depends on the code**: a rule that runs
+  `tools/<name>.py` depends on `$(PY_<NAME>)` (the Makefile), the files
+  that were `tools/<name>.py`: the shim, `buildtools/<name>.py` and its
+  crashdata module, so editing the module rebuilds what it generates. The
+  tile sets' generated rules (`levels.py tilesets-mk`) depend on
+  `$(PY_LEVELS)` too.
+- **The game is a parameter**: `crashdata.common.game.Game` is a game
+  (`"xs"`, `"n2"`) and the root of its tree, with its directories
+  (`games/<name>/data/`, `levels/`, `graphics/`, `sound/`, `text/`) and its
+  ROM. `crashdata.levels.use_game(game, levels_dir=None)` binds the level
+  module's per-game state (the levels directory and, for another game,
+  its levels.json's entity types, room layout and tile set names);
+  `crashdata.graphics.manifest.use_game` and `crashdata.text.use_game`
+  do the same for the graphics and the text. The commands keep their
+  options (`--levels-dir`, `--graphics-dir`, `--game`), and the modules
+  that only XS has data for (the music, the cutscenes) keep XS's paths.
+- **Behaviour is the same**: the code moved and its imports changed, no
+  more. Both ROMs, both .map files, every generated file and every
+  check's and scanner's output are what they were before the move.
+- **The tree's root** is found from where the package is
+  (`crashdata.common.game.ROOT`, `packages/crashdata/src/crashdata/` is
+  five levels down), as the tools found it from `tools/` before; an
+  editable install keeps it right.
+
+| Old path | Command (`packages/buildtools/src/buildtools/`) | Data (`packages/crashdata/src/crashdata/`) |
+|---|---|---|
+| `tools/levels.py` | `levels.py` | `levels/__init__.py` (`crashdata.levels`) |
+| `tools/collision_bmp.py` | `collision_bmp.py` | `levels/collision.py` |
+| `tools/gfx_manifest.py` | `gfx_manifest.py` | `graphics/manifest.py` |
+| `tools/sprite_frames.py` | `sprite_frames.py` | `graphics/sprite_frames.py` |
+| `tools/sprite_banks.py` | `sprite_banks.py` | `graphics/sprite_banks.py` (`main()` is `extract()`) |
+| `tools/framed_gfx.py` | `framed_gfx.py` | `graphics/framed_gfx.py` |
+| `tools/obj_sheet.py` | `obj_sheet.py` | `graphics/obj_sheet.py` |
+| `tools/rle_sprites.py` | `rle_sprites.py` | `graphics/rle_sprites.py` |
+| `tools/bg_map.py` | `bg_map.py` | `graphics/bg_map.py` |
+| `tools/grit_bg.py` | `grit_bg.py` | `graphics/grit_bg.py` |
+| `tools/boss_pictures.py` | `boss_pictures.py` | `graphics/boss_pictures.py` |
+| `tools/dump_entities.py` | `dump_entities.py` | `graphics/dump_entities.py` |
+| `tools/split_entities.py` | `split_entities.py` | `graphics/split_entities.py` |
+| `tools/cutscenes.py` | `cutscenes.py` | `cutscenes/__init__.py` (`crashdata.cutscenes`) |
+| `tools/gax_audio.py` | `gax_audio.py` | `audio/gax.py` |
+| `tools/sfx_table.py` | `sfx_table.py` | `audio/sfx_table.py` |
+| `tools/text.py` | `text.py` | `text/__init__.py` (`crashdata.text`) |
+| `tools/apply_mod.py` | `apply_mod.py` | `mods/__init__.py` (`crashdata.mods`: the `Tree` a mod edits) |
+| `tools/jasc_pal.py` | `jasc_pal.py` | `common/jasc_pal.py` |
+| (new) | | `common/game.py` (`Game`, `ROOT`) |
+| `tools/<name>.py`, the others | `<name>.py` | |
+
+The others are `badges`, `bin2c`, `boottest`, `cleanup_scan`,
+`common_ops`, `cxx_rename`, `extern_audit`, `format`, `layout_audit`,
+`magic_bits`, `magic_casts`, `magic_fixed`, `magic_numbers`,
+`magic_screen`, `magic_sizes`, `match_idioms`, `match_prune`,
+`natural_enum`, `patch_expected_target`, `report_units`, `rtl_corpus`,
+`shiftcheck`, `simplify_scan` and `slice_expected`: build, matching and
+report tools with no game data model of their own. Each crashdata
+module keeps its docstring (the format and the commands, which the
+command prints as its help); the command module is its `main()`, moved.
 
 ## Decisions (#1071)
 

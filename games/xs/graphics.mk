@@ -37,17 +37,17 @@ include graphics_rules.mk
 $(GRAPHICS_BUILDDIR)/cutscenes/%.img.bin: $(XS_DIR)/graphics/cutscenes/%.png | $(GRIT)
 	@mkdir -p $(dir $@)
 	$(GRIT) $< -gb -gB8 -p! -ftb -fh! -o $(@:.img.bin=)
-$(GRAPHICS_BUILDDIR)/cutscenes/%.pal.inc: $(GRAPHICS_BUILDDIR)/cutscenes/%.gbapal tools/bin2c.py
+$(GRAPHICS_BUILDDIR)/cutscenes/%.pal.inc: $(GRAPHICS_BUILDDIR)/cutscenes/%.gbapal $(PY_BIN2C)
 	python3 tools/bin2c.py $< $@ --u16
 
 define OBJ_SHEET_TILES_RULE
-$(GRAPHICS_BUILDDIR)/$(1).img.bin: $(XS_DIR)/graphics/$(1).png tools/obj_sheet.py | $(GRIT)
+$(GRAPHICS_BUILDDIR)/$(1).img.bin: $(XS_DIR)/graphics/$(1).png $(PY_OBJ_SHEET) | $(GRIT)
 	@mkdir -p $$(dir $$@)
 	python3 tools/obj_sheet.py to-tiles $$< $(GRAPHICS_BUILDDIR)/$(1)_objs.png $(OBJ_SHEET_$(1))
 	$(GRIT) $(GRAPHICS_BUILDDIR)/$(1)_objs.png -gt -gB4 -p! -ftb -fh! -o $(GRAPHICS_BUILDDIR)/$(1)
 endef
 define OBJ_SHEET_PACKAGE_RULE
-$(GRAPHICS_BUILDDIR)/$(1)_grit.img.bin $(GRAPHICS_BUILDDIR)/$(1)_grit.map.bin &: $(XS_DIR)/graphics/$(1).png tools/obj_sheet.py | $(GRIT)
+$(GRAPHICS_BUILDDIR)/$(1)_grit.img.bin $(GRAPHICS_BUILDDIR)/$(1)_grit.map.bin &: $(XS_DIR)/graphics/$(1).png $(PY_OBJ_SHEET) | $(GRIT)
 	@mkdir -p $$(dir $$@)
 	python3 tools/obj_sheet.py to-tiles $$< $(GRAPHICS_BUILDDIR)/$(1)_objs.png $(OBJ_SHEET_$(1))
 	$(GRIT) $(GRAPHICS_BUILDDIR)/$(1)_objs.png -gt -gB4 -p! -m -mLf -mRtf -ftb -fh! -o $(GRAPHICS_BUILDDIR)/$(1)_grit
@@ -102,7 +102,7 @@ $(patsubst %,$(GRAPHICS_BUILDDIR)/%.img.bin,$(BOSS_PICTURE_FRAMES)): $(GRAPHICS_
 # $(1): the picture's built name, $(2): its frames, $(3): its macro prefix,
 # $(4): its width in cells.
 define BOSS_PICTURE_RULE
-$(GRAPHICS_BUILDDIR)/$(1).inc $(GRAPHICS_BUILDDIR)/$(1).h &: tools/boss_pictures.py $(patsubst %,$(GRAPHICS_BUILDDIR)/%.img.bin,$(2))
+$(GRAPHICS_BUILDDIR)/$(1).inc $(GRAPHICS_BUILDDIR)/$(1).h &: $(PY_BOSS_PICTURES) $(patsubst %,$(GRAPHICS_BUILDDIR)/%.img.bin,$(2))
 	@mkdir -p $$(dir $$@)
 	python3 tools/boss_pictures.py pack $(GRAPHICS_BUILDDIR)/$(1).inc $(GRAPHICS_BUILDDIR)/$(1).h --name $(3) --cols $(4) $(patsubst %,$(GRAPHICS_BUILDDIR)/%.img.bin,$(2))
 endef
@@ -123,7 +123,7 @@ define RLE_SPRITE_RULE
 $(GRAPHICS_BUILDDIR)/$(1).img.bin: $(XS_DIR)/graphics/$(1).png | $(GRIT)
 	@mkdir -p $$(dir $$@)
 	$(GRIT) $$< -gt -gB4 -p! -ftb -fh! -o $(GRAPHICS_BUILDDIR)/$(1)
-$(GRAPHICS_BUILDDIR)/$(1).inc $(GRAPHICS_BUILDDIR)/$(1).h &: $(GRAPHICS_BUILDDIR)/$(1).img.bin tools/rle_sprites.py
+$(GRAPHICS_BUILDDIR)/$(1).inc $(GRAPHICS_BUILDDIR)/$(1).h &: $(GRAPHICS_BUILDDIR)/$(1).img.bin $(PY_RLE_SPRITES)
 	python3 tools/rle_sprites.py pack $$< $(GRAPHICS_BUILDDIR)/$(1).inc $(GRAPHICS_BUILDDIR)/$(1).h --frame $(2) --name RLE_SPRITES_$(3)
 endef
 $(eval $(call RLE_SPRITE_RULE,vehicles/polar/player,8x8,POLAR_PLAYER))

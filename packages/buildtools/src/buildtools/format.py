@@ -44,7 +44,7 @@ import shutil
 import subprocess
 import sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from crashdata.common.game import ROOT
 
 # The paths kept formatted: all the C (#572).
 FORMATTED = [

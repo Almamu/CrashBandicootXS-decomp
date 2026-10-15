@@ -107,7 +107,8 @@ matched code - read it before starting.** In short:
   code under `platform/gba/` ([docs/platforms.md](docs/platforms.md)). Each object
   is placed at its ROM address by its position in `games/xs/ldscript.txt`, so
   splitting or merging files means updating `games/xs/ldscript.txt` and
-  `tools/report_units.py` too.
+  the report units (`tools/report_units.py`'s table, in
+  `packages/buildtools/src/buildtools/report_units.py`) too.
 - **C++:** the game was C++. An object rewritten as C++ is a
   `engine/src/<dir>/<name>.cpp` (the Makefile's `CXX_OBJS`), its classes go in
   a `.hpp` header, in their namespace (`Engine::Sys`, ..., #1033), and
@@ -135,7 +136,12 @@ engine in `engine/src/engine/`, the Crash-specific game in
 `engine/src/game/`, one directory per namespace, and `engine/include/`
 mirrors `engine/src/`. Each game's own files are under `games/<game>/`:
 XS's data (`games/xs/data/`, `graphics/`, `sound/`, `text/`), its .mk
-files, linker script and checksum; N-Tranced's in `games/n2/`.
+files, linker script and checksum; N-Tranced's in `games/n2/`. The
+Python is a uv workspace (#1167): `packages/crashdata/` (the games' data:
+levels, graphics, cutscenes, music, text, mods) and `packages/buildtools/`
+(the commands), run as `python3 tools/<name>.py` with nothing to install
+(`tools/<name>.py` is a shim); a new tool's data logic goes in crashdata,
+its command line in buildtools, and a shim in `tools/`.
 [docs/file_layout.md](docs/file_layout.md) has the full map from the old
 paths and the decisions behind it.
 
@@ -579,7 +585,8 @@ operand layout stay as written. Do the same by hand for anything else
 whose layout is the point, such as a table aligned in columns.
 
 All the C is formatted (`engine/src/`, `engine/include/` and `lib/`) except the data:
-`engine/src/*/data` and `lib/*/data` (`UNFORMATTED` in `tools/format.py`). Those
+`engine/src/*/data` and `lib/*/data` (`UNFORMATTED` in `tools/format.py`'s
+code, `packages/buildtools/src/buildtools/format.py`). Those
 files are ROM-order tables emitted by the extraction tools, laid out one
 entry per line with row labels; that layout is their documentation, and
 clang-format would pack the entries into columns and split the labels

@@ -39,7 +39,8 @@ platform/gba/lib/libagbsyscall/
 
 All of it is the original's: the headers are the ones the code was
 matched against, and the three `.s` files are hand-written assembly
-(`HANDWRITTEN` in `tools/report_units.py`, out of the progress totals;
+(`HANDWRITTEN` in `tools/report_units.py`'s code,
+`packages/buildtools/src/buildtools/report_units.py`, out of the progress totals;
 crt0 never had a unit). `asm/` keeps what isn't the platform's: itoa_arm
 (game code, assembly by #662's decision) and the assembler macros
 (`asm/macros.inc`, `asm/macros/`), which the GBA platform's `.s` files

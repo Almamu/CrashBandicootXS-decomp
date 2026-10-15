@@ -76,7 +76,8 @@ import struct
 import sys
 import wave
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from crashdata.common.game import ROOT
+
 SOUND_DIR = os.path.join(ROOT, 'games', 'xs', 'sound')
 
 # The labels games/xs/data/data.s gives the two blocks: every pointer into a block
@@ -1853,31 +1854,3 @@ SFX_MANIFEST = os.path.join(SOUND_DIR, 'gax_sfx_manifest.json')
 MUSIC_JSON = os.path.join(SOUND_DIR, 'music.json')
 SFX_SAMPLES_DIR = os.path.join(SOUND_DIR, 'sfx_samples')
 SFX_TABLE = os.path.join(SOUND_DIR, 'sfx_table.json')
-
-if __name__ == '__main__':
-    if len(sys.argv) == 3 and sys.argv[1] == '--sfx':
-        sfx_pool()[0].report()
-        alloc, _ = build_sfx(SFX_MANIFEST, SFX_SAMPLES_DIR)
-        n = alloc.write(sys.argv[2], asm_path(sys.argv[2]))
-        print(f"wrote {sys.argv[2]}: {n} bytes")
-        sys.exit(0)
-    if len(sys.argv) == 3 and sys.argv[1] == '--constants':
-        write_constants(os.path.join(SOUND_DIR, 'gax_manifest.json'), sys.argv[2])
-        sys.exit(0)
-    if len(sys.argv) == 3 and sys.argv[1] == '--table':
-        write_song_table(os.path.join(SOUND_DIR, 'gax_manifest.json'), sys.argv[2])
-        sys.exit(0)
-    if len(sys.argv) not in (2, 4):
-        print(f"Usage: {sys.argv[0]} OUTPUT.bin [LAYOUT.bin SONGS.h]  (music block, default layout, song offsets)")
-        print(f"       {sys.argv[0]} --sfx OUTPUT.bin                (sound-effect set)")
-        print("       (each OUTPUT.bin comes with OUTPUT.s: its bytes, the pointers as relocations)")
-        print(f"       {sys.argv[0]} --constants SONGS.h             (constants/songs.h: the song IDs)")
-        print(f"       {sys.argv[0]} --table SONG_TABLE.inc          (gSongTable, in song id order)")
-        sys.exit(1)
-    build(
-        os.path.join(SOUND_DIR, 'gax_manifest.json'),
-        os.path.join(SOUND_DIR, 'songs'),
-        os.path.join(SOUND_DIR, 'samples'),
-        sys.argv[1],
-        *sys.argv[2:],
-    )

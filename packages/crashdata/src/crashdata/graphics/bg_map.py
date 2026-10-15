@@ -22,14 +22,11 @@ from grit.
 The packages' sources are extracted from baserom.gba by
 tools/gfx_manifest.py extract (render() below), which has their addresses.
 """
-import argparse
 import json
 import struct
 import sys
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import jasc_pal  # noqa: E402
+from crashdata.common import jasc_pal
 
 
 def lz77_decompress(rom, addr):
@@ -129,22 +126,3 @@ def first_use(args):
                          % (args.high, cell, byte))
             entries[i] |= byte << 8
     write_u16(args.out_map, entries)
-
-
-def main():
-    ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    sub = ap.add_subparsers(dest="mode", required=True)
-    p = sub.add_parser("first-use")
-    p.add_argument("tiles")
-    p.add_argument("map")
-    p.add_argument("out_tiles")
-    p.add_argument("out_map")
-    p.add_argument("--bpp", type=int, choices=(4, 8), required=True)
-    p.add_argument("--high", help="JSON of an affine map's nonzero high bytes")
-    p.set_defaults(fn=first_use)
-    args = ap.parse_args()
-    args.fn(args)
-
-
-if __name__ == "__main__":
-    main()

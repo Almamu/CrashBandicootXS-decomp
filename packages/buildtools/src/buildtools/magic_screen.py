@@ -72,7 +72,7 @@ import os
 import re
 import sys
 
-import magic_numbers as mn
+from buildtools import magic_numbers as mn
 
 ROOT = mn.ROOT
 CATEGORIES = ("screen", "hardware", "coincidence", "unclassified")
@@ -631,7 +631,7 @@ def run(args):
     return 0
 
 
-if __name__ == "__main__":
+def main():
     import argparse
 
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -642,3 +642,7 @@ if __name__ == "__main__":
     ap.add_argument("--category", action="append", choices=CATEGORIES)
     ap.add_argument("--check", action="store_true")
     sys.exit(run(ap.parse_args()))
+
+
+if __name__ == "__main__":
+    main()

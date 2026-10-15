@@ -1,0 +1,25 @@
+# The tree's Python, a uv workspace (#1167, docs/file_layout.md "The Python
+# packages"): packages/crashdata, the games' data (levels, graphics,
+# cutscenes, music and sound, text, mods), and packages/buildtools, the
+# commands (the build's steps, the checks and the scanners).
+#
+# Nothing needs installing to build: the Makefile, CI and the docs run
+# `python3 tools/<name>.py`, a shim that runs the package code from the tree
+# (tools/_packages.py). `uv sync` installs both packages editable into .venv,
+# with the commands as console scripts (crash-levels, crash-gfx-manifest, ...).
+[project]
+name = "crashbandicootxs-decomp"
+version = "0"
+description = "The matching decompilation's Python workspace: crashdata and buildtools"
+requires-python = ">=3.12"
+dependencies = ["crashdata", "buildtools"]
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[tool.uv.sources]
+crashdata = { workspace = true }
+buildtools = { workspace = true }

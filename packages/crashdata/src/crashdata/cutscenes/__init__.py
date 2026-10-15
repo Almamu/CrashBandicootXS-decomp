@@ -37,8 +37,7 @@ import json
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import text  # noqa: E402
+from crashdata import text
 
 ROOT = text.ROOT
 CUTSCENES_JSON = os.path.join(ROOT, "games", "xs", "data", "cutscenes.json")
@@ -304,27 +303,3 @@ def write_if_changed(path, data):
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
     with open(path, "w", encoding="ascii", newline="\n") as f:
         f.write(data)
-
-
-def main():
-    args = sys.argv[1:]
-    if not args or args[0] in ("-h", "--help"):
-        print(__doc__)
-        return
-    cutscenes, slides, slide_index, pages, orders, pictures = load()
-    if args[0] == "cpp" and len(args) == 3 and args[1] in ("cutscenes", "cutscene_slides"):
-        if args[1] == "cutscenes":
-            lines = cutscenes_cpp(cutscenes, slides, slide_index, pages, orders)
-        else:
-            lines = cutscene_slides_cpp(cutscenes, slides, slide_index, pages, orders, pictures)
-        text.write_lines(args[2], lines)
-    elif args[0] == "constants" and len(args) == 2:
-        write_if_changed(args[1], constants_h(cutscenes))
-    elif args[0] == "check" and len(args) == 1:
-        print("cutscenes: OK")
-    else:
-        fail("usage: see tools/cutscenes.py --help")
-
-
-if __name__ == "__main__":
-    main()

@@ -57,7 +57,7 @@ import json
 import os
 import re
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from crashdata.common.game import ROOT
 
 KEYWORDS = {
     'extern', 'static', 'const', 'volatile', 'struct', 'union', 'enum',

@@ -109,7 +109,7 @@ import subprocess
 import sys
 import tempfile
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from crashdata.common.game import ROOT
 READELF = 'arm-none-eabi-readelf'
 
 # Added to the Makefile by `make -f Makefile -f <this>`. -w: the warnings

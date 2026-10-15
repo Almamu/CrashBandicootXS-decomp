@@ -19,16 +19,15 @@
 # games/xs/graphics/ sources (this only reads them, never writes to games/xs/graphics/).
 
 import glob
-import json
 import os
-import sys
 import struct
 
-ROM_PATH = os.path.join(os.path.dirname(__file__), '..', 'baserom.gba')
-GRAPHICS_ROOT = os.path.join(os.path.dirname(__file__), '..', 'games', 'xs', 'graphics', 'vehicles')
-DOCS_ROOT = os.path.join(os.path.dirname(__file__), '..', 'docs', 'entities')
-sys.path.insert(0, os.path.dirname(__file__))
-from framed_gfx import entity_order  # noqa: E402
+from crashdata.common.game import ROOT
+from crashdata.graphics.framed_gfx import entity_order
+
+ROM_PATH = os.path.join(ROOT, 'baserom.gba')
+GRAPHICS_ROOT = os.path.join(ROOT, 'games', 'xs', 'graphics', 'vehicles')
+DOCS_ROOT = os.path.join(ROOT, 'docs', 'entities')
 
 with open(ROM_PATH, 'rb') as f:
     ROM = f.read()
@@ -389,40 +388,3 @@ FAMILY2_LABELS = {
     45: 'JETPACK_KIND_EXPLOSION',
     46: 'JETPACK_KIND_CHECKPOINT_TEXT',
 }
-
-
-def main():
-    family1 = dump_family(
-        sheet_rom_addr=0x080B2120,
-        decompressed_size=213064,
-        sheet_dir=os.path.join(GRAPHICS_ROOT, 'polar', 'sprite_sheet'),
-        anim_table_base=0x081796CC,
-        category_indices=[0, 1, 2],
-        record_slot_count=41,
-        labels=FAMILY1_LABELS,
-    )
-    os.makedirs(DOCS_ROOT, exist_ok=True)
-    out1 = os.path.join(DOCS_ROOT, 'polar.json')
-    with open(out1, 'w') as f:
-        json.dump(family1, f, indent=2)
-        f.write('\n')
-    print('wrote', out1)
-
-    family2 = dump_family(
-        sheet_rom_addr=0x0814174C,
-        decompressed_size=207124,
-        sheet_dir=os.path.join(GRAPHICS_ROOT, 'jetpack', 'sprite_sheet'),
-        anim_table_base=0x0817B2A4,
-        category_indices=[3, 4, 5, 6],
-        record_slot_count=47,
-        labels=FAMILY2_LABELS,
-    )
-    out2 = os.path.join(DOCS_ROOT, 'jetpack.json')
-    with open(out2, 'w') as f:
-        json.dump(family2, f, indent=2)
-        f.write('\n')
-    print('wrote', out2)
-
-
-if __name__ == '__main__':
-    main()

@@ -76,7 +76,6 @@ places the frames' runs in frame order. Tiles a frame shares with an
 earlier frame must be the same pixels in both PNGs, or pack fails and
 names the frame and the tile. So does a pixel drawn outside every piece.
 """
-import argparse
 import json
 import struct
 import sys
@@ -689,23 +688,3 @@ def extract(rom_path, out=None):
             assert ranges[f["bank"]][0] + f["offset"] == rf["off"]
     print(f"sprite_frames: {len(packed)} banks, {sum(len(b['frames']) for b in banks)} frames, "
           f"{len(pool)} bytes of tiles: round trip OK")
-
-
-def main():
-    ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("--graphics-dir", default=str(XS_GRAPHICS))
-    sub = ap.add_subparsers(dest="mode", required=True)
-    p = sub.add_parser("extract")
-    p.add_argument("rom", nargs="?", default="baserom.gba")
-    p = sub.add_parser("pack")
-    p.add_argument("outdir")
-    args = ap.parse_args()
-    use_graphics_dir(args.graphics_dir)
-    if args.mode == "extract":
-        extract(args.rom)
-    else:
-        write_pack(pack(bank_dirs()), args.outdir)
-
-
-if __name__ == "__main__":
-    main()

@@ -28,9 +28,8 @@ import json
 import os
 import sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(ROOT, "tools"))
-import match_idioms  # noqa: E402
+from buildtools import match_idioms
+from crashdata.common.game import ROOT
 
 # The badge drawing is Almamu/MotoRacerWorldTour-decomp's (tools/chunks.py
 # badge()): shields.io's flat style, drawn here so the badges need no

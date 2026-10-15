@@ -100,7 +100,7 @@ import tempfile
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from crashdata.common.game import ROOT
 TYPES = ["s8", "u8", "s16", "u16", "s32", "u32"]
 
 # ---------------------------------------------------------------- sources
@@ -787,6 +787,13 @@ def main():
         r.keep_diff = True
         r.cache.pop(r.key(body), None)
         r.compile(body)
+
+
+
+def cli():
+    """The console script (pyproject.toml): main(), whose value isn't the
+    exit status."""
+    main()
 
 
 if __name__ == "__main__":

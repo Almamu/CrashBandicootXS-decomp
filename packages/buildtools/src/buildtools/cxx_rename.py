@@ -31,7 +31,7 @@ import re
 import shutil
 import sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from crashdata.common.game import ROOT
 BUILD = os.path.join(ROOT, "build", "crashbandicootxs", "src")
 CXX_SYMBOLS = os.path.join(ROOT, "cxx_symbols.txt")
 TOKEN = re.compile(r"[A-Za-z_.$][\w.$]*|\S")

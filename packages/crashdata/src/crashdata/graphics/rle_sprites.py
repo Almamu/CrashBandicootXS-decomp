@@ -25,7 +25,6 @@ below, which checks that re-encoding gives the ROM's bytes).
         Writes the compressed frames as the body of a u8 initializer, and a
         header with each frame's byte offset in it, NAME_FRAME_nnn.
 """
-import argparse
 import struct
 import sys
 from pathlib import Path
@@ -153,20 +152,3 @@ def pack(args):
            f"#define {args.name}_COUNT {len(offsets)}"]
     hdr += [f"#define {args.name}_FRAME_{f:03d} 0x{off:x}" for f, off in enumerate(offsets)]
     Path(args.header).write_text("\n".join(hdr) + "\n")
-
-
-def main():
-    ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    sub = ap.add_subparsers(dest="mode", required=True)
-    pk = sub.add_parser("pack")
-    pk.add_argument("input")
-    pk.add_argument("output")
-    pk.add_argument("header")
-    pk.add_argument("--frame", required=True)
-    pk.add_argument("--name", required=True)
-    args = ap.parse_args()
-    pack(args)
-
-
-if __name__ == "__main__":
-    main()

@@ -65,7 +65,7 @@ import textwrap
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from crashdata.common.game import ROOT
 
 # ---------------------------------------------------------------- lexer
 

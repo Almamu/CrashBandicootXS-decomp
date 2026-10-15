@@ -2,7 +2,7 @@
 
 The game has 41 rooms (playable areas). Everything a room needs besides
 its tile graphics is built from [`games/xs/data/levels/`](../games/xs/data/levels) by
-[`tools/levels.py`](../tools/levels.py):
+[`tools/levels.py`](../packages/crashdata/src/crashdata/levels/__init__.py):
 
 - the room data proper, 178,208 bytes in two ROM regions
   (`0x0824B638`-`0x08270F08`, 33 rooms, and `0x082B91D0`-`0x082BF120`,

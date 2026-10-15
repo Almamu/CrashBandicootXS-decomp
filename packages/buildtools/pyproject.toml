@@ -1,0 +1,57 @@
+[project]
+name = "buildtools"
+version = "0.1.0"
+description = "Crash Bandicoot XS decomp's commands: the build's steps, checks, scanners and the data tools' CLIs"
+requires-python = ">=3.12"
+# PIL, for boottest's pictures; crashdata, the data the commands work on
+dependencies = ["crashdata", "pillow"]
+
+# Each command, as tools/<name>.py runs it (tools/_packages.py)
+[project.scripts]
+crash-apply-mod = "buildtools.apply_mod:main"
+crash-badges = "buildtools.badges:main"
+crash-bg-map = "buildtools.bg_map:main"
+crash-bin2c = "buildtools.bin2c:main"
+crash-boottest = "buildtools.boottest:main"
+crash-boss-pictures = "buildtools.boss_pictures:main"
+crash-cleanup-scan = "buildtools.cleanup_scan:main"
+crash-collision-bmp = "buildtools.collision_bmp:main"
+crash-common-ops = "buildtools.common_ops:main"
+crash-cutscenes = "buildtools.cutscenes:main"
+crash-cxx-rename = "buildtools.cxx_rename:main"
+crash-dump-entities = "buildtools.dump_entities:main"
+crash-extern-audit = "buildtools.extern_audit:main"
+crash-format = "buildtools.format:main"
+crash-framed-gfx = "buildtools.framed_gfx:main"
+crash-gax-audio = "buildtools.gax_audio:main"
+crash-gfx-manifest = "buildtools.gfx_manifest:main"
+crash-grit-bg = "buildtools.grit_bg:main"
+crash-jasc-pal = "buildtools.jasc_pal:main"
+crash-layout-audit = "buildtools.layout_audit:main"
+crash-levels = "buildtools.levels:main"
+crash-magic-fixed = "buildtools.magic_fixed:main"
+crash-magic-numbers = "buildtools.magic_numbers:main"
+crash-magic-screen = "buildtools.magic_screen:main"
+crash-match-idioms = "buildtools.match_idioms:main"
+crash-match-prune = "buildtools.match_prune:main"
+crash-natural-enum = "buildtools.natural_enum:cli"
+crash-obj-sheet = "buildtools.obj_sheet:main"
+crash-patch-expected-target = "buildtools.patch_expected_target:main"
+crash-report-units = "buildtools.report_units:main"
+crash-rle-sprites = "buildtools.rle_sprites:main"
+crash-rtl-corpus = "buildtools.rtl_corpus:main"
+crash-sfx-table = "buildtools.sfx_table:main"
+crash-shiftcheck = "buildtools.shiftcheck:main"
+crash-simplify-scan = "buildtools.simplify_scan:main"
+crash-slice-expected = "buildtools.slice_expected:main"
+crash-split-entities = "buildtools.split_entities:main"
+crash-sprite-banks = "buildtools.sprite_banks:main"
+crash-sprite-frames = "buildtools.sprite_frames:main"
+crash-text = "buildtools.text:main"
+
+[tool.uv.sources]
+crashdata = { workspace = true }
+
+[build-system]
+requires = ["uv_build>=0.8,<0.14"]
+build-backend = "uv_build"

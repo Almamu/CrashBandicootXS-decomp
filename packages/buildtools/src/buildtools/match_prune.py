@@ -111,9 +111,8 @@ import sys
 import tempfile
 import threading
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(ROOT, "tools"))
-import match_idioms as mi  # noqa: E402
+from buildtools import match_idioms as mi
+from crashdata.common.game import ROOT
 
 # ---------------------------------------------------------------------------
 # Sites
@@ -1143,7 +1142,7 @@ def write_form(res):
 
 def clang_formatted(rel, text):
     try:
-        import format as fmt
+        from buildtools import format as fmt
         exe = os.environ.get("CLANG_FORMAT") or shutil.which("clang-format")
         if not exe:
             return None

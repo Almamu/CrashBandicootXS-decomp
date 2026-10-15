@@ -25,13 +25,13 @@ legend with a colour of its own.
 tools/levels.py reads the images directly (load_map), so the build needs no
 intermediate file; `to-bin` is there to get the binary layout by hand.
 """
-import argparse
 import json
-import struct
 import sys
 from pathlib import Path
 
-LEGEND_JSON = Path(__file__).resolve().parent.parent / "games/xs/data/levels/collision_legend.json"
+from crashdata.common.game import ROOT
+
+LEGEND_JSON = Path(ROOT).resolve() / "games/xs/data/levels/collision_legend.json"
 
 # A cell's size in pixels, each way: one 8x8 tile, as in the BG layers.
 CELL_PX = 8
@@ -137,24 +137,3 @@ def read_image(path):
                          % ((path, _where(x, y)) + colour + (LEGEND_JSON.name,)))
             cells.append(entries[i][0])
     return w, h, cells
-
-
-def main():
-    ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("mode", choices=("to-image", "to-bin"))
-    ap.add_argument("input")
-    ap.add_argument("output")
-    ap.add_argument("--width", type=int, help="map width in cells (to-image)")
-    args = ap.parse_args()
-    if args.mode == "to-image":
-        if not args.width:
-            sys.exit("collision_bmp: to-image needs --width")
-        data = Path(args.input).read_bytes()
-        write_image(args.output, args.width, list(struct.unpack("<%dH" % (len(data) // 2), data)))
-    else:
-        _, _, cells = read_image(args.input)
-        Path(args.output).write_bytes(struct.pack("<%dH" % len(cells), *cells))
-
-
-if __name__ == "__main__":
-    main()

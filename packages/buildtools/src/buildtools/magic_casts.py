@@ -52,8 +52,8 @@ import json
 import re
 import sys
 
-import magic_bits as mb
-import magic_numbers as mn
+from buildtools import magic_bits as mb
+from buildtools import magic_numbers as mn
 
 KINDS = ("scalar", "ptrint", "pointer", "derived", "byteoff", "same")
 

@@ -83,6 +83,8 @@ import sys
 import tempfile
 import time
 
+from crashdata.common.game import ROOT
+
 KEY_A, KEY_B, KEY_SELECT, KEY_START = 0x1, 0x2, 0x4, 0x8
 KEY_RIGHT, KEY_LEFT, KEY_UP, KEY_DOWN, KEY_R, KEY_L = 0x10, 0x20, 0x40, 0x80, 0x100, 0x200
 
@@ -513,8 +515,7 @@ def run_screens(rom, keys, frames, timeout, prefix, every=CHECKPOINT_EVERY, scre
         extra += ["--level", hex(call_return(romdata, syms["RunLevelSelect"], syms["LevelSelectLoop"])), str(level)]
         if room is not None:
             extra += ["--room", hex(syms["SelectRoom"]), str(room)]
-    here = os.path.dirname(os.path.abspath(__file__))
-    pc = os.path.join(here, "..", "platform", "pc")
+    pc = os.path.join(ROOT, "platform", "pc")
     lib = next((os.path.join(prefix, d) for d in ("lib", "lib64")
                 if os.path.exists(os.path.join(prefix, d, "libmgba.so"))), os.path.join(prefix, "lib"))
     work = tempfile.mkdtemp(prefix="boottest-")
@@ -526,7 +527,7 @@ def run_screens(rom, keys, frames, timeout, prefix, every=CHECKPOINT_EVERY, scre
                         os.path.join(pc, "tools", "mgba_screens.c"), os.path.join(pc, "src", "sha1.c"),
                         os.path.join(pc, "src", "png.c"), "-I", os.path.join(prefix, "include"),
                         "-I", os.path.join(pc, "include"), "-I", os.path.join(pc, "src"),
-                        "-I", os.path.join(here, "..", "engine", "include"), "-L", lib, "-lmgba",
+                        "-I", os.path.join(ROOT, "engine", "include"), "-L", lib, "-lmgba",
                         f"-Wl,-rpath,{lib}"], check=True)
         with open(os.path.join(work, "keys.txt"), "w") as f:
             for frame, k in read_keys(keys):
@@ -567,8 +568,7 @@ def run_gax_trace(rom, elf, keys, frames, timeout, prefix, out, level=None):
     if level is not None:
         extra += [f"level={call_return(romdata, syms['RunLevelSelect'], syms['LevelSelectLoop']):#x}",
                   f"levelN={level}"]
-    here = os.path.dirname(os.path.abspath(__file__))
-    pc = os.path.join(here, "..", "platform", "pc")
+    pc = os.path.join(ROOT, "platform", "pc")
     lib = next((os.path.join(prefix, d) for d in ("lib", "lib64")
                 if os.path.exists(os.path.join(prefix, d, "libmgba.so"))), os.path.join(prefix, "lib"))
     work = tempfile.mkdtemp(prefix="boottest-")

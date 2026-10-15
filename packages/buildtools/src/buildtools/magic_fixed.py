@@ -73,8 +73,8 @@ import os
 import re
 import sys
 
-import magic_bits as mb
-import magic_numbers as mn
+from buildtools import magic_bits as mb
+from buildtools import magic_numbers as mn
 
 ROOT = mn.ROOT
 CATEGORIES = ("fixed", "integer", "bitfield", "spelled")
@@ -864,7 +864,7 @@ def run(args):
     return 0
 
 
-if __name__ == "__main__":
+def main():
     import argparse
 
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -876,3 +876,7 @@ if __name__ == "__main__":
     ap.add_argument("--field")
     ap.add_argument("--category", action="append", choices=CATEGORIES)
     sys.exit(run(ap.parse_args()))
+
+
+if __name__ == "__main__":
+    main()

@@ -44,7 +44,7 @@ import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from crashdata.common.game import ROOT
 
 
 # ---------------------------------------------------------------- build
