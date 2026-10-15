@@ -1,0 +1,52 @@
+{
+  "asset": {"symbol": "gRoom35Asset", "packed": true},
+  "record": {"symbol": "gLevelRoom35", "kind": "ON_FOOT", "blend": {"effect": 0, "eva": 0, "evb": 0}},
+  "symbols": {"desc": "gRoom35Desc", "palette": "gRoom35Palette", "entities": "gRoom35EntityList", "groups": "gRoom35EntityGroups", "param_offsets": "gRoom35ParamOffsets", "params": "gRoom35Params", "type_counts": "gRoom35TypeCounts", "layers": "gRoom35Layers", "items": "gRoom35Entities"},
+  "layers": {
+    "bg1": {"map": "bg1.png", "size_chunks": [2, 4], "size_tiles": [31, 25], "tileset": "gStaticData_0853FD10", "scale": [5, 104], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom35Bg1Grid"},
+    "bg2": {"map": "bg2.png", "size_chunks": [4, 4], "size_tiles": [64, 32], "tileset": "gStaticData_0853FD10", "scale": [174, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom35Bg2Grid"},
+    "bg0": {"map": "bg0.png", "size_chunks": [5, 4], "size_tiles": [80, 32], "tileset": "gStaticData_08220840", "scale": [256, 256], "cnt": 1, "unk_1E": 2, "grid_symbol": "gRoom35Bg0Grid"},
+    "collision": {"map": "collision.png", "size_chunks": [5, 4], "size_tiles": [80, 32], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom35CollisionGrid"}
+  },
+  "params": [
+    [0],
+    [0],
+    [0, 1, 0, 0, 0, 0, 3],
+    [0, 1, 0, 0, 0, 0, 1],
+    [0, 1, 0, 0, 0, 0, 2],
+    [0, 0],
+    [0, 1, 0, 0, 0, 0, 1],
+    [0, 1, 0, 0, 0, 0, 1],
+    [0, 1, 0, 0, 0, 0, 1],
+    [0, 1, 0, 0, 0, 0, 3],
+    [0, 1, 0, 0, 0, 0, 3],
+    [0, 1, 0, 0, 0, 0, 3],
+    [0, 1, 0, 0, 0, 0, 2],
+    [0, 1, 0, 0, 0, 0, 2],
+    [0, 1, 0, 0, 0, 0, 2],
+    [0, 1, 0, 0, 0, 0, 2],
+    [0, 1, 0, 0, 0, 0, 2],
+    [0, 65536]
+  ],
+  "links": null,
+  "entities": [
+    {"type": 83, "x": 557, "y": 111, "param": 5},
+    {"type": 104, "x": 480, "y": 155, "param": 4},
+    {"type": 104, "x": 440, "y": 155, "param": 3},
+    {"type": 104, "x": 416, "y": 151, "param": 2},
+    {"type": 104, "x": 392, "y": 155, "param": 16},
+    {"type": 104, "x": 348, "y": 155, "param": 15},
+    {"type": 104, "x": 340, "y": 155, "param": 8},
+    {"type": 104, "x": 328, "y": 127, "param": 11},
+    {"type": 104, "x": 280, "y": 155, "param": 14},
+    {"type": 104, "x": 268, "y": 155, "param": 7},
+    {"type": 104, "x": 263, "y": 113, "param": 10},
+    {"type": 104, "x": 232, "y": 155, "param": 13},
+    {"type": 104, "x": 192, "y": 155, "param": 9},
+    {"type": 103, "x": 210, "y": 116, "param": 1},
+    {"type": 104, "x": 164, "y": 155, "param": 6},
+    {"type": 104, "x": 148, "y": 155, "param": 12},
+    {"type": 83, "x": 87, "y": 111, "param": 17},
+    {"type": 0, "x": 79, "y": 139, "param": 1}
+  ]
+}

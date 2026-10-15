@@ -1,0 +1,58 @@
+{
+  "asset": {"symbol": "gRoom04Asset", "packed": true},
+  "record": {"symbol": "gLevelRoom04", "kind": "ON_FOOT", "blend": {"effect": 0, "eva": 0, "evb": 0}, "unk_0C": 1},
+  "symbols": {"desc": "gRoom04Desc", "palette": "gRoom04Palette", "entities": "gRoom04EntityList", "groups": "gRoom04EntityGroups", "param_offsets": "gRoom04ParamOffsets", "params": "gRoom04Params", "type_counts": "gRoom04TypeCounts", "layers": "gRoom04Layers", "items": "gRoom04Entities", "links": "gRoom04Links"},
+  "layers": {
+    "bg1": {"map": "bg1.png", "size_chunks": [10, 4], "size_tiles": [152, 32], "tileset": "gStaticData_0853B250", "scale": [128, 128], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom04Bg1Grid"},
+    "bg3": {"map": "bg3.png", "size_chunks": [14, 4], "size_tiles": [224, 32], "tileset": "gStaticData_0853B250", "scale": [256, 256], "cnt": 1, "unk_1E": 2, "grid_symbol": "gRoom04Bg3Grid"},
+    "bg0": {"map": "bg0.png", "size_chunks": [14, 4], "size_tiles": [224, 32], "tileset": "gStaticData_0826FE48", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom04Bg0Grid"},
+    "collision": {"map": "collision.png", "size_chunks": [14, 4], "size_tiles": [224, 32], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom04CollisionGrid"}
+  },
+  "params": [
+    [0],
+    [0],
+    [0, 1, 0, 0, 0, 0, 0],
+    [0, 1, 25, 0, 1, 0, 0],
+    [0, 27],
+    [0, 196635],
+    [0, 1, 30, 0, 0, 0, 0],
+    [0, 1, 25, 0, 0, 0, 0],
+    [64, 196635],
+    [64, 27],
+    [64, 27],
+    [64, 131099],
+    [64, 327707],
+    [0, 262171],
+    [0, 65563]
+  ],
+  "links": [
+    [22, 21]
+  ],
+  "entities": [
+    {"type": 39, "x": 1714, "y": 89, "param": 2},
+    {"type": 69, "x": 1407, "y": 135, "param": 3},
+    {"type": 20, "x": 1396, "y": 50, "param": 4},
+    {"type": 22, "x": 1368, "y": 50, "param": 10},
+    {"type": 24, "x": 1340, "y": 50, "param": 11},
+    {"type": 20, "x": 1312, "y": 50, "param": 4},
+    {"type": 69, "x": 1307, "y": 135, "param": 7},
+    {"type": 13, "x": 1088, "y": 110, "param": 9},
+    {"type": 69, "x": 1043, "y": 131, "param": 6},
+    {"type": 24, "x": 1040, "y": 58, "param": 8},
+    {"type": 13, "x": 904, "y": 122, "param": 4},
+    {"type": 13, "x": 632, "y": 54, "param": 4},
+    {"type": 27, "x": 632, "y": 178, "param": 4},
+    {"type": 25, "x": 612, "y": 54, "param": 4},
+    {"type": 17, "x": 612, "y": 178, "param": 4},
+    {"type": 24, "x": 592, "y": 54, "param": 5},
+    {"type": 27, "x": 592, "y": 178, "param": 4},
+    {"type": 27, "x": 456, "y": 126, "param": 4},
+    {"type": 26, "x": 456, "y": 146, "param": 4},
+    {"type": 26, "x": 456, "y": 166, "param": 4},
+    {"type": 24, "x": 456, "y": 186, "param": 12},
+    {"type": 24, "x": 372, "y": 134, "param": 14},
+    {"type": 13, "x": 372, "y": 154, "param": 4},
+    {"type": 24, "x": 352, "y": 154, "param": 13},
+    {"type": 0, "x": 71, "y": 123, "param": 1}
+  ]
+}

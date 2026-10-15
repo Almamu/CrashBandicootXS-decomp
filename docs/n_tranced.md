@@ -207,6 +207,40 @@ the data and 3,445 into the code) stay where they are when what they
 point at moves. It shifts once its data is source, as XS's is: the
 level, text and graphics data (#1113, #1114, #1115) and the tables.
 
+## Levels (#1113)
+
+N-Tranced's level data is XS's format (docs/levels.md): its 36 rooms are
+in [`games/n2/data/levels/`](../games/n2/data/levels/), extracted by
+`tools/levels.py` the way XS's are, in the same form (each room's
+`room.json`, a picture per BG layer and `collision.png`):
+
+```
+python3 tools/levels.py --levels-dir games/n2/data/levels extract-rooms baserom_n2.gba 081d0430
+```
+
+`extract-rooms` walks the level table (`gLevelTable`, `0x081D0430`) and
+checks what `extract` checks for XS: every layer's chunks re-encode to
+the ROM's bytes (2 rooms need `pad_overrides`, as 2 of XS's do), and the
+8 BG tile sets the build makes from the pictures are the ROM's, and so is
+every layer's cells. The folders are `level<NN>/<slot>` (the level's
+index, and `main`/`part<N>`/`bonus`/`gem_path` as in data/levels) until
+the levels have names, the tile sets are `gStaticData_<address>`, and
+the entity types are numbers (there is no `entity_types.json` yet: 110
+types, XS has 93).
+
+What differs from XS, in `levels.py`:
+
+- Each room's data is in another order in the ROM: N-Tranced has the
+  type counts, the entity list and the links between the parameter
+  offsets and the chunk grids.
+- Its extra rooms' records set `unk_0C` (room.json's `"unk_0C"`).
+- Its collision layers use 18 values XS's don't:
+  [`collision_legend.json`](../games/n2/data/levels/collision_legend.json)
+  is XS's legend plus those, not identified yet.
+
+The rooms aren't built into the N-Tranced ROM yet: that, then the level
+table, its themes and the level select, are the rest of #1113.
+
 ## Progress
 
 N-Tranced has its own project on [decompilati.onl](https://decompilati.onl).
