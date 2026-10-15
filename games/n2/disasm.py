@@ -18,6 +18,9 @@ and the code pointers' targets; it follows the calls from there. Then:
   `asm/code_<address>.s`, each ending with `.align 2, 0` (zero padding,
   not a Thumb nop). A function the disassembly calls inside a cut-out
   stretch has to be named as the source names it (gbadisasm.cfg).
+- A literal-pool word whose value games/n2/symbols.txt names is written
+  as that name (`.4byte gLevelTable`), and so is the `ldr`'s `@ =`
+  comment; the linker gives it the same value.
 - Only the code is kept (up to CODE_END): the rest of the ROM is
   games/n2/data/rom_data.s's incbin.
 """
@@ -67,6 +70,8 @@ SECTIONS
 }
 """
 
+SYMBOL = re.compile(r'^(\w+) = (0x[0-9A-Fa-f]+);')
+WORD = re.compile(r'(\.4byte |@ =)0x([0-9A-F]{8})\b')
 ADDS = re.compile(r'^\tadds (r([0-7])), \1, #(0x[0-9a-fA-F]+|\d+)$')
 LABEL = re.compile(r'^(\w+): @ 0x([0-9A-Fa-f]{8})$')
 
@@ -85,8 +90,15 @@ def main():
     rom = sys.argv[2] if len(sys.argv) > 2 else str(ROOT / 'baserom_n2.gba')
     out = subprocess.run([gbadisasm, rom, '-c', str(HERE / 'gbadisasm.cfg')],
                          capture_output=True, text=True, check=True).stdout.split('\n')
+    names = {}
+    for line in (HERE / 'symbols.txt').read_text().splitlines():
+        m = SYMBOL.match(line)
+        if m:
+            names[int(m.group(2), 16)] = m.group(1)
     lines = []
     for line in out:
+        line = WORD.sub(lambda m: m.group(1) + names[int(m.group(2), 16)]
+                        if int(m.group(2), 16) in names else m.group(0), line)
         m = ADDS.match(line)
         if m:
             n, k = int(m.group(2)), int(m.group(3), 0)

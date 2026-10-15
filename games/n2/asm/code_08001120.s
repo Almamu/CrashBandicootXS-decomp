@@ -37,7 +37,7 @@ _08001144:
 	ldr r0, _08001168 @ =0x02000EA0
 	ldr r0, [r0]
 	bl sub_080008DC
-	ldr r0, _0800116C @ =0x02000018
+	ldr r0, _0800116C @ =gKeys
 	ldrh r1, [r0, #2]
 	ands r1, r7
 	cmp r4, #0
@@ -49,7 +49,7 @@ _08001144:
 	b _0800119A
 	.align 2, 0
 _08001168: .4byte 0x02000EA0
-_0800116C: .4byte 0x02000018
+_0800116C: .4byte gKeys
 _08001170:
 	cmp r4, #0
 	beq _0800119A
@@ -58,7 +58,7 @@ _08001174:
 	ldr r0, _080011A8 @ =0x02000EA0
 	ldr r0, [r0]
 	bl sub_080008DC
-	ldr r0, _080011AC @ =0x02000018
+	ldr r0, _080011AC @ =gKeys
 	ldrh r1, [r0, #2]
 	ands r1, r7
 	movs r0, #1
@@ -81,7 +81,7 @@ _0800119A:
 	bx r1
 	.align 2, 0
 _080011A8: .4byte 0x02000EA0
-_080011AC: .4byte 0x02000018
+_080011AC: .4byte gKeys
 
 	thumb_func_start LoadTaggedAsset
 LoadTaggedAsset: @ 0x080011B0
@@ -270,7 +270,7 @@ StepBrightnessFade: @ 0x080012F0
 	ldr r0, [r1]
 	adds r0, #1
 	str r0, [r1]
-	ldr r2, _08001328 @ =0x02000020
+	ldr r2, _08001328 @ =gBrightnessFade
 	ldr r3, [r2]
 	adds r4, r1, #0
 	adds r5, r2, #0
@@ -284,7 +284,7 @@ StepBrightnessFade: @ 0x080012F0
 	cmp r0, #0
 	beq _08001334
 	ldr r3, _0800132C @ =0x04000054
-	ldr r2, _08001330 @ =0x0200002C
+	ldr r2, _08001330 @ =gBrightnessFadeStep
 	ldr r1, [r2]
 	movs r0, #0x10
 	subs r0, r0, r1
@@ -293,12 +293,12 @@ StepBrightnessFade: @ 0x080012F0
 	b _0800133C
 	.align 2, 0
 _08001324: .4byte 0x02000030
-_08001328: .4byte 0x02000020
+_08001328: .4byte gBrightnessFade
 _0800132C: .4byte 0x04000054
-_08001330: .4byte 0x0200002C
+_08001330: .4byte gBrightnessFadeStep
 _08001334:
 	ldr r2, _08001364 @ =0x04000054
-	ldr r1, _08001368 @ =0x0200002C
+	ldr r1, _08001368 @ =gBrightnessFadeStep
 	ldr r0, [r1]
 	strh r0, [r2]
 _0800133C:
@@ -324,7 +324,7 @@ _0800135E:
 	bx r0
 	.align 2, 0
 _08001364: .4byte 0x04000054
-_08001368: .4byte 0x0200002C
+_08001368: .4byte gBrightnessFadeStep
 _0800136C: .4byte 0x04000208
 
 	thumb_func_start FadeBrightness
@@ -337,7 +337,7 @@ FadeBrightness: @ 0x08001370
 	lsrs r3, r0, #0x18
 	lsls r2, r2, #0x18
 	lsrs r4, r2, #0x18
-	ldr r2, _080013A4 @ =0x02000020
+	ldr r2, _080013A4 @ =gBrightnessFade
 	ldr r0, [r2]
 	mvns r0, r0
 	rsbs r1, r0, #0
@@ -357,7 +357,7 @@ _08001396:
 	movs r0, #0xbf
 	b _080013B0
 	.align 2, 0
-_080013A4: .4byte 0x02000020
+_080013A4: .4byte gBrightnessFade
 _080013A8: .4byte 0x04000050
 _080013AC:
 	ldr r1, _080013CC @ =0x04000050
@@ -444,9 +444,9 @@ DarkenPalette: @ 0x08001440
 	push {r4, r5, r6, r7, lr}
 	adds r4, r0, #0
 	movs r6, #0
-	ldr r0, _080014D0 @ =0x02000640
+	ldr r0, _080014D0 @ =gPaletteBackup
 	mov ip, r0
-	ldr r7, _080014D4 @ =0x02000A40
+	ldr r7, _080014D4 @ =gPaletteFadeBuffer
 _0800144C:
 	lsls r5, r6, #1
 	mov r1, ip
@@ -517,8 +517,8 @@ _080014AA:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_080014D0: .4byte 0x02000640
-_080014D4: .4byte 0x02000A40
+_080014D0: .4byte gPaletteBackup
+_080014D4: .4byte gPaletteFadeBuffer
 _080014D8: .4byte 0xFFFF0000
 _080014DC: .4byte 0xFFFFFC1F
 _080014E0: .4byte 0xFFFF83FF
@@ -531,14 +531,14 @@ FadePaletteToBlack: @ 0x080014E8
 	movs r0, #0xa0
 	lsls r0, r0, #0x13
 	str r0, [r1]
-	ldr r0, _08001544 @ =0x02000640
+	ldr r0, _08001544 @ =gPaletteBackup
 	str r0, [r1, #4]
 	ldr r0, _08001548 @ =0x80000200
 	str r0, [r1, #8]
 	ldr r0, [r1, #8]
 	movs r5, #0
 	adds r4, r1, #0
-	ldr r6, _0800154C @ =0x02000A40
+	ldr r6, _0800154C @ =gPaletteFadeBuffer
 _08001502:
 	adds r0, r5, #0
 	bl DarkenPalette
@@ -560,7 +560,7 @@ _08001502:
 	movs r0, #0x10
 	strh r0, [r1]
 	ldr r0, _08001540 @ =0x040000D4
-	ldr r1, _08001544 @ =0x02000640
+	ldr r1, _08001544 @ =gPaletteBackup
 	str r1, [r0]
 	str r3, [r0, #4]
 	str r2, [r0, #8]
@@ -570,14 +570,14 @@ _08001502:
 	bx r0
 	.align 2, 0
 _08001540: .4byte 0x040000D4
-_08001544: .4byte 0x02000640
+_08001544: .4byte gPaletteBackup
 _08001548: .4byte 0x80000200
-_0800154C: .4byte 0x02000A40
+_0800154C: .4byte gPaletteFadeBuffer
 _08001550: .4byte 0x04000050
 
 	thumb_func_start IsBrightnessFadeActive
 IsBrightnessFadeActive: @ 0x08001554
-	ldr r0, _08001564 @ =0x02000020
+	ldr r0, _08001564 @ =gBrightnessFade
 	ldr r1, [r0]
 	mvns r1, r1
 	rsbs r0, r1, #0
@@ -585,11 +585,11 @@ IsBrightnessFadeActive: @ 0x08001554
 	lsrs r0, r0, #0x1f
 	bx lr
 	.align 2, 0
-_08001564: .4byte 0x02000020
+_08001564: .4byte gBrightnessFade
 
 	thumb_func_start SetDispcntMode
 SetDispcntMode: @ 0x08001568
-	ldr r3, _0800157C @ =0x02000E48
+	ldr r3, _0800157C @ =gDispcnt
 	movs r1, #7
 	ands r0, r1
 	ldrb r2, [r3]
@@ -600,11 +600,11 @@ SetDispcntMode: @ 0x08001568
 	strb r1, [r3]
 	bx lr
 	.align 2, 0
-_0800157C: .4byte 0x02000E48
+_0800157C: .4byte gDispcnt
 
 	thumb_func_start sub_08001580
 sub_08001580: @ 0x08001580
-	ldr r2, _08001590 @ =0x02000E48
+	ldr r2, _08001590 @ =gDispcnt
 	ldrb r1, [r2, #1]
 	movs r0, #9
 	rsbs r0, r0, #0
@@ -612,11 +612,11 @@ sub_08001580: @ 0x08001580
 	strb r0, [r2, #1]
 	bx lr
 	.align 2, 0
-_08001590: .4byte 0x02000E48
+_08001590: .4byte gDispcnt
 
 	thumb_func_start sub_08001594
 sub_08001594: @ 0x08001594
-	ldr r2, _080015A4 @ =0x02000E48
+	ldr r2, _080015A4 @ =gDispcnt
 	ldrb r1, [r2, #1]
 	movs r0, #5
 	rsbs r0, r0, #0
@@ -624,11 +624,11 @@ sub_08001594: @ 0x08001594
 	strb r0, [r2, #1]
 	bx lr
 	.align 2, 0
-_080015A4: .4byte 0x02000E48
+_080015A4: .4byte gDispcnt
 
 	thumb_func_start sub_080015A8
 sub_080015A8: @ 0x080015A8
-	ldr r2, _080015B8 @ =0x02000E48
+	ldr r2, _080015B8 @ =gDispcnt
 	ldrb r1, [r2, #1]
 	movs r0, #3
 	rsbs r0, r0, #0
@@ -636,11 +636,11 @@ sub_080015A8: @ 0x080015A8
 	strb r0, [r2, #1]
 	bx lr
 	.align 2, 0
-_080015B8: .4byte 0x02000E48
+_080015B8: .4byte gDispcnt
 
 	thumb_func_start sub_080015BC
 sub_080015BC: @ 0x080015BC
-	ldr r2, _080015CC @ =0x02000E48
+	ldr r2, _080015CC @ =gDispcnt
 	ldrb r1, [r2, #1]
 	movs r0, #2
 	rsbs r0, r0, #0
@@ -648,11 +648,11 @@ sub_080015BC: @ 0x080015BC
 	strb r0, [r2, #1]
 	bx lr
 	.align 2, 0
-_080015CC: .4byte 0x02000E48
+_080015CC: .4byte gDispcnt
 
 	thumb_func_start sub_080015D0
 sub_080015D0: @ 0x080015D0
-	ldr r2, _080015E0 @ =0x02000E48
+	ldr r2, _080015E0 @ =gDispcnt
 	ldrb r1, [r2, #1]
 	movs r0, #0x11
 	rsbs r0, r0, #0
@@ -660,92 +660,92 @@ sub_080015D0: @ 0x080015D0
 	strb r0, [r2, #1]
 	bx lr
 	.align 2, 0
-_080015E0: .4byte 0x02000E48
+_080015E0: .4byte gDispcnt
 
 	thumb_func_start sub_080015E4
 sub_080015E4: @ 0x080015E4
-	ldr r0, _080015F0 @ =0x02000E48
+	ldr r0, _080015F0 @ =gDispcnt
 	ldrb r1, [r0, #1]
 	movs r2, #8
 	orrs r1, r2
 	strb r1, [r0, #1]
 	bx lr
 	.align 2, 0
-_080015F0: .4byte 0x02000E48
+_080015F0: .4byte gDispcnt
 
 	thumb_func_start sub_080015F4
 sub_080015F4: @ 0x080015F4
-	ldr r0, _08001600 @ =0x02000E48
+	ldr r0, _08001600 @ =gDispcnt
 	ldrb r1, [r0, #1]
 	movs r2, #4
 	orrs r1, r2
 	strb r1, [r0, #1]
 	bx lr
 	.align 2, 0
-_08001600: .4byte 0x02000E48
+_08001600: .4byte gDispcnt
 
 	thumb_func_start sub_08001604
 sub_08001604: @ 0x08001604
-	ldr r0, _08001610 @ =0x02000E48
+	ldr r0, _08001610 @ =gDispcnt
 	ldrb r1, [r0, #1]
 	movs r2, #2
 	orrs r1, r2
 	strb r1, [r0, #1]
 	bx lr
 	.align 2, 0
-_08001610: .4byte 0x02000E48
+_08001610: .4byte gDispcnt
 
 	thumb_func_start sub_08001614
 sub_08001614: @ 0x08001614
-	ldr r0, _08001620 @ =0x02000E48
+	ldr r0, _08001620 @ =gDispcnt
 	ldrb r1, [r0, #1]
 	movs r2, #1
 	orrs r1, r2
 	strb r1, [r0, #1]
 	bx lr
 	.align 2, 0
-_08001620: .4byte 0x02000E48
+_08001620: .4byte gDispcnt
 
 	thumb_func_start sub_08001624
 sub_08001624: @ 0x08001624
-	ldr r0, _08001630 @ =0x02000E48
+	ldr r0, _08001630 @ =gDispcnt
 	ldrb r1, [r0, #1]
 	movs r2, #0x10
 	orrs r1, r2
 	strb r1, [r0, #1]
 	bx lr
 	.align 2, 0
-_08001630: .4byte 0x02000E48
+_08001630: .4byte gDispcnt
 _08001634:
 	.byte 0x03, 0x4A, 0x11, 0x78, 0x41, 0x20, 0x40, 0x42, 0x08, 0x40, 0x10, 0x70
 	.byte 0x70, 0x47, 0x00, 0x00, 0x48, 0x0E, 0x00, 0x02
 
 	thumb_func_start sub_08001648
 sub_08001648: @ 0x08001648
-	ldr r0, _08001654 @ =0x02000E48
+	ldr r0, _08001654 @ =gDispcnt
 	ldrb r1, [r0]
 	movs r2, #0x40
 	orrs r1, r2
 	strb r1, [r0]
 	bx lr
 	.align 2, 0
-_08001654: .4byte 0x02000E48
+_08001654: .4byte gDispcnt
 
 	thumb_func_start CommitDispcnt
 CommitDispcnt: @ 0x08001658
 	movs r0, #0x80
 	lsls r0, r0, #0x13
-	ldr r1, _08001664 @ =0x02000E48
+	ldr r1, _08001664 @ =gDispcnt
 	ldrh r1, [r1]
 	strh r1, [r0]
 	bx lr
 	.align 2, 0
-_08001664: .4byte 0x02000E48
+_08001664: .4byte gDispcnt
 
 	thumb_func_start CommitBlendRegs
 CommitBlendRegs: @ 0x08001668
 	ldr r2, _0800167C @ =0x04000050
-	ldr r1, _08001680 @ =0x02000E40
+	ldr r1, _08001680 @ =gBlendRegs
 	ldr r0, [r1]
 	str r0, [r2]
 	adds r2, #4
@@ -756,7 +756,7 @@ CommitBlendRegs: @ 0x08001668
 	bx lr
 	.align 2, 0
 _0800167C: .4byte 0x04000050
-_08001680: .4byte 0x02000E40
+_08001680: .4byte gBlendRegs
 
 	thumb_func_start sub_08001684
 sub_08001684: @ 0x08001684

@@ -143,7 +143,7 @@ _08001890:
 	str r0, [r5, #8]
 	str r4, [r5, #4]
 	bl GAX_stop
-	ldr r0, _0800190C @ =0x02000015
+	ldr r0, _0800190C @ =gGaxIrqEnabled
 	strb r4, [r0]
 _080018A6:
 	adds r4, r5, #0
@@ -185,7 +185,7 @@ _080018A6:
 	strb r6, [r0]
 	adds r0, r5, #0
 	bl FadeInMusic
-	ldr r1, _0800190C @ =0x02000015
+	ldr r1, _0800190C @ =gGaxIrqEnabled
 	movs r0, #1
 	strb r0, [r1]
 	movs r0, #1
@@ -195,7 +195,7 @@ _08001904:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_0800190C: .4byte 0x02000015
+_0800190C: .4byte gGaxIrqEnabled
 _08001910: .4byte 0x081CD904
 _08001914: .4byte 0x084EAEA8
 
@@ -222,7 +222,7 @@ _08001934:
 	lsls r0, r1, #1
 	add r0, sl
 	lsls r5, r0, #2
-	ldr r2, _080019C8 @ =0x081CD958
+	ldr r2, _080019C8 @ =gSfxTable
 	adds r0, r5, r2
 	ldr r4, [r0]
 	cmp r4, #0
@@ -255,7 +255,7 @@ _08001934:
 	cmp r3, r6
 	beq _080019B8
 _08001984:
-	ldr r0, _080019C8 @ =0x081CD958
+	ldr r0, _080019C8 @ =gSfxTable
 	adds r0, #8
 	adds r0, r5, r0
 	ldr r1, [r0]
@@ -290,7 +290,7 @@ _080019B8:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_080019C8: .4byte 0x081CD958
+_080019C8: .4byte gSfxTable
 _080019CC: .4byte 0x02000034
 
 	thumb_func_start TickAmbientSfx
@@ -300,7 +300,7 @@ TickAmbientSfx: @ 0x080019D0
 	ldr r0, [r4, #0x38]
 	cmp r0, #0x40
 	beq _08001A66
-	ldr r0, _08001A2C @ =0x020001CC
+	ldr r0, _08001A2C @ =gRoomFrameCount
 	ldr r1, [r0]
 	ldr r0, [r4, #0x3c]
 	cmp r1, r0
@@ -326,7 +326,7 @@ TickAmbientSfx: @ 0x080019D0
 	beq _08001A46
 	movs r0, #0x40
 	str r0, [r4, #0x44]
-	ldr r1, _08001A30 @ =0x081CD958
+	ldr r1, _08001A30 @ =gSfxTable
 	lsls r0, r2, #1
 	adds r0, r0, r2
 	lsls r0, r0, #2
@@ -339,8 +339,8 @@ TickAmbientSfx: @ 0x080019D0
 	bl GAX_fx_ex
 	b _08001A46
 	.align 2, 0
-_08001A2C: .4byte 0x020001CC
-_08001A30: .4byte 0x081CD958
+_08001A2C: .4byte gRoomFrameCount
+_08001A30: .4byte gSfxTable
 _08001A34:
 	ldr r0, [r4, #0x34]
 	ldr r1, [r4, #0x40]
@@ -415,12 +415,12 @@ ResetAmbientSfx: @ 0x08001A90
 StopAmbientSfx: @ 0x08001AAC
 	movs r1, #0x40
 	str r1, [r0, #0x44]
-	ldr r1, _08001AB8 @ =0x020001CC
+	ldr r1, _08001AB8 @ =gRoomFrameCount
 	ldr r1, [r1]
 	str r1, [r0, #0x3c]
 	bx lr
 	.align 2, 0
-_08001AB8: .4byte 0x020001CC
+_08001AB8: .4byte gRoomFrameCount
 
 	thumb_func_start PlayAmbientSfx
 PlayAmbientSfx: @ 0x08001ABC
@@ -431,7 +431,7 @@ PlayAmbientSfx: @ 0x08001ABC
 	add r0, sp, #0x14
 	ldrb r0, [r0]
 	mov ip, r0
-	ldr r5, _08001B1C @ =0x081CD958
+	ldr r5, _08001B1C @ =gSfxTable
 	lsls r0, r6, #1
 	adds r0, r0, r6
 	lsls r1, r0, #2
@@ -463,22 +463,22 @@ PlayAmbientSfx: @ 0x08001ABC
 	movs r0, #2
 	bl GAX_set_fx_volume
 	str r6, [r4, #0x38]
-	ldr r0, _08001B20 @ =0x020001CC
+	ldr r0, _08001B20 @ =gRoomFrameCount
 	ldr r0, [r0]
 	adds r0, r0, r7
 	str r0, [r4, #0x3c]
 	str r5, [r4, #0x40]
 	b _08001B72
 	.align 2, 0
-_08001B1C: .4byte 0x081CD958
-_08001B20: .4byte 0x020001CC
+_08001B1C: .4byte gSfxTable
+_08001B20: .4byte gRoomFrameCount
 _08001B24:
 	ldr r0, [r4, #0x40]
 	cmp r5, r0
 	blt _08001B72
 	cmp r1, r6
 	bne _08001B64
-	ldr r0, _08001B60 @ =0x020001CC
+	ldr r0, _08001B60 @ =gRoomFrameCount
 	ldr r0, [r0]
 	adds r0, r0, r7
 	str r0, [r4, #0x3c]
@@ -502,10 +502,10 @@ _08001B54:
 	str r0, [r4, #0x4c]
 	b _08001B72
 	.align 2, 0
-_08001B60: .4byte 0x020001CC
+_08001B60: .4byte gRoomFrameCount
 _08001B64:
 	str r6, [r4, #0x44]
-	ldr r0, _08001B78 @ =0x020001CC
+	ldr r0, _08001B78 @ =gRoomFrameCount
 	ldr r1, [r0]
 	adds r0, r1, r7
 	str r0, [r4, #0x48]
@@ -516,7 +516,7 @@ _08001B72:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_08001B78: .4byte 0x020001CC
+_08001B78: .4byte gRoomFrameCount
 
 	thumb_func_start GetCurrentSong
 GetCurrentSong: @ 0x08001B7C
@@ -705,14 +705,14 @@ _08001CAA:
 	str r0, [r1, #8]
 	str r4, [r1, #4]
 	bl GAX_stop
-	ldr r0, _08001CC8 @ =0x02000015
+	ldr r0, _08001CC8 @ =gGaxIrqEnabled
 	strb r4, [r0]
 _08001CC0:
 	pop {r4}
 	pop {r0}
 	bx r0
 	.align 2, 0
-_08001CC8: .4byte 0x02000015
+_08001CC8: .4byte gGaxIrqEnabled
 
 	thumb_func_start DestroyAudioContext
 DestroyAudioContext: @ 0x08001CCC
@@ -720,7 +720,7 @@ DestroyAudioContext: @ 0x08001CCC
 	adds r5, r0, #0
 	adds r4, r1, #0
 	bl StopSong
-	ldr r1, _08001CF0 @ =0x02000015
+	ldr r1, _08001CF0 @ =gGaxIrqEnabled
 	movs r0, #0
 	strb r0, [r1]
 	movs r0, #1
@@ -734,7 +734,7 @@ _08001CEA:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_08001CF0: .4byte 0x02000015
+_08001CF0: .4byte gGaxIrqEnabled
 
 	thumb_func_start InitAudioContext
 InitAudioContext: @ 0x08001CF4
@@ -924,7 +924,7 @@ _08001EAC:
 	ldr r2, _08001F14 @ =0x00001234
 	adds r3, r4, #1
 	movs r5, #4
-	ldr r0, _08001F18 @ =0x081CDC58
+	ldr r0, _08001F18 @ =gCrc16Table
 	mov ip, r0
 	movs r7, #0xff
 	movs r6, #1
@@ -966,7 +966,7 @@ _08001ED0:
 	bx r0
 	.align 2, 0
 _08001F14: .4byte 0x00001234
-_08001F18: .4byte 0x081CDC58
+_08001F18: .4byte gCrc16Table
 
 	thumb_func_start LinkStop
 LinkStop: @ 0x08001F1C
@@ -1041,7 +1041,7 @@ ResetLinkSessionState: @ 0x08001FA0
 	strb r2, [r5, #6]
 	strb r2, [r5, #8]
 	strb r2, [r5, #7]
-	ldr r1, _0800212C @ =0x0200003C
+	ldr r1, _0800212C @ =gLinkSessionReset
 	movs r0, #1
 	strb r0, [r1]
 	strb r2, [r5, #4]
@@ -1230,7 +1230,7 @@ _08002068:
 	pop {r1}
 	bx r1
 	.align 2, 0
-_0800212C: .4byte 0x0200003C
+_0800212C: .4byte gLinkSessionReset
 _08002130: .4byte 0x00001234
 _08002134: .4byte 0x0000F0B0
 _08002138: .4byte 0x0400012A
@@ -1746,7 +1746,7 @@ _080024F4:
 	mov r3, sb
 	adds r3, #1
 	movs r5, #4
-	ldr r0, _08002550 @ =0x081CDC58
+	ldr r0, _08002550 @ =gCrc16Table
 	mov r8, r0
 	movs r7, #0xff
 	movs r6, #1
@@ -1773,7 +1773,7 @@ _0800252A:
 _0800254E:
 	b _080026A2
 	.align 2, 0
-_08002550: .4byte 0x081CDC58
+_08002550: .4byte gCrc16Table
 _08002554:
 	lsls r0, r3, #0x1c
 	lsrs r0, r0, #0x1c
@@ -1791,7 +1791,7 @@ _08002562:
 	ldrh r3, [r2, #6]
 	adds r4, #1
 	movs r6, #4
-	ldr r0, _080025F0 @ =0x081CDC58
+	ldr r0, _080025F0 @ =gCrc16Table
 	mov r8, r0
 	movs r2, #0xff
 	movs r7, #1
@@ -1858,7 +1858,7 @@ _080025CE:
 	bne _080025CE
 	b _08002632
 	.align 2, 0
-_080025F0: .4byte 0x081CDC58
+_080025F0: .4byte gCrc16Table
 _080025F4:
 	subs r3, r7, #1
 	movs r1, #1
@@ -2108,7 +2108,7 @@ _080027A2:
 	ldrh r2, [r4, #0x36]
 	ldr r3, [sp, #0x28]
 	movs r4, #4
-	ldr r7, _08002874 @ =0x081CDC58
+	ldr r7, _08002874 @ =gCrc16Table
 	movs r6, #0xff
 	movs r5, #1
 	rsbs r5, r5, #0
@@ -2202,7 +2202,7 @@ _08002856:
 	adds r0, #0x29
 	b _08002888
 	.align 2, 0
-_08002874: .4byte 0x081CDC58
+_08002874: .4byte gCrc16Table
 _08002878:
 	mov r4, sl
 	ldr r0, [r4, #0x38]
@@ -2423,14 +2423,14 @@ _080029FE:
 	thumb_func_start LinkSerialIntr
 LinkSerialIntr: @ 0x08002A20
 	push {lr}
-	ldr r0, _08002A30 @ =0x02000040
+	ldr r0, _08002A30 @ =gLinkSession
 	ldr r0, [r0]
 	ldr r1, _08002A34 @ =0x04000120
 	bl HandleLinkSerial
 	pop {r0}
 	bx r0
 	.align 2, 0
-_08002A30: .4byte 0x02000040
+_08002A30: .4byte gLinkSession
 _08002A34: .4byte 0x04000120
 
 	thumb_func_start LinkTimer3Intr
@@ -3413,7 +3413,7 @@ SendSaveTransferChunk: @ 0x08003140
 	ldr r1, [r0]
 	cmp r1, #0
 	beq _080031F6
-	ldr r0, _080031AC @ =0x02000040
+	ldr r0, _080031AC @ =gLinkSession
 	ldr r0, [r0]
 	mov ip, r0
 	adds r0, #0xc4
@@ -3461,7 +3461,7 @@ _0800318C:
 	bne _0800318C
 	b _080031E8
 	.align 2, 0
-_080031AC: .4byte 0x02000040
+_080031AC: .4byte gLinkSession
 _080031B0:
 	subs r2, r7, #1
 	movs r0, #1
@@ -3502,7 +3502,7 @@ _080031E8:
 	subs r0, r0, r7
 	b _0800320A
 _080031F6:
-	ldr r0, _08003218 @ =0x02000040
+	ldr r0, _08003218 @ =gLinkSession
 	ldr r0, [r0]
 	adds r0, #0xc4
 	ldr r0, [r0]
@@ -3522,7 +3522,7 @@ _0800320C:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_08003218: .4byte 0x02000040
+_08003218: .4byte gLinkSession
 
 	thumb_func_start ReceiveSaveTransferChunk
 ReceiveSaveTransferChunk: @ 0x0800321C
@@ -3530,7 +3530,7 @@ ReceiveSaveTransferChunk: @ 0x0800321C
 	mov r7, r8
 	push {r7}
 	mov ip, r0
-	ldr r0, _0800328C @ =0x02000040
+	ldr r0, _0800328C @ =gLinkSession
 	ldr r3, [r0]
 	movs r2, #0xc8
 	adds r0, r1, #0
@@ -3584,7 +3584,7 @@ _0800326E:
 	bne _0800326E
 	b _080032C2
 	.align 2, 0
-_0800328C: .4byte 0x02000040
+_0800328C: .4byte gLinkSession
 _08003290:
 	subs r3, r6, #1
 	movs r0, #1
@@ -3648,7 +3648,7 @@ _080032EE:
 PollSaveTransfer: @ 0x080032F8
 	push {r4, r5, r6, lr}
 	adds r4, r0, #0
-	ldr r0, _08003350 @ =0x02000040
+	ldr r0, _08003350 @ =gLinkSession
 	ldr r1, [r0]
 	ldrb r0, [r1, #7]
 	cmp r0, #0
@@ -3691,7 +3691,7 @@ _0800331C:
 	movs r0, #1
 	b _080033C0
 	.align 2, 0
-_08003350: .4byte 0x02000040
+_08003350: .4byte gLinkSession
 _08003354:
 	movs r0, #0xff
 	lsls r0, r0, #2
@@ -3883,7 +3883,7 @@ _08003494:
 	ldr r0, _080034F4 @ =0x02000EA0
 	ldr r0, [r0]
 	bl sub_080008DC
-	ldr r0, _080034F8 @ =0x02000018
+	ldr r0, _080034F8 @ =gKeys
 	ldrh r1, [r0, #2]
 	ldr r0, [r4]
 	bl SaveMenuInput
@@ -3923,7 +3923,7 @@ _080034DE:
 	bx r1
 	.align 2, 0
 _080034F4: .4byte 0x02000EA0
-_080034F8: .4byte 0x02000018
+_080034F8: .4byte gKeys
 _080034FC: .4byte 0x0200004C
 _08003500: .4byte 0x02000E68
 
@@ -4158,7 +4158,7 @@ InitSaveMenu: @ 0x0800366C
 	ldr r1, [r0]
 	adds r0, r5, #0
 	bl RefreshSaveSlotSummaries
-	ldr r4, _08003710 @ =0x02000040
+	ldr r4, _08003710 @ =gLinkSession
 	movs r0, #0x81
 	lsls r0, r0, #3
 	bl IwramAlloc
@@ -4178,7 +4178,7 @@ InitSaveMenu: @ 0x0800366C
 	.align 2, 0
 _08003708: .4byte 0x02000E68
 _0800370C: .4byte 0x02000E70
-_08003710: .4byte 0x02000040
+_08003710: .4byte gLinkSession
 
 	thumb_func_start DestroySaveMenu
 DestroySaveMenu: @ 0x08003714
@@ -4188,7 +4188,7 @@ DestroySaveMenu: @ 0x08003714
 	push {r6, r7}
 	adds r5, r0, #0
 	mov sb, r1
-	ldr r0, _080037E4 @ =0x02000040
+	ldr r0, _080037E4 @ =gLinkSession
 	ldr r0, [r0]
 	cmp r0, #0
 	beq _0800372E
@@ -4285,7 +4285,7 @@ _080037D8:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_080037E4: .4byte 0x02000040
+_080037E4: .4byte gLinkSession
 
 	thumb_func_start SaveMenuInput
 SaveMenuInput: @ 0x080037E8
@@ -5828,7 +5828,7 @@ _08004410:
 	ldr r0, _08004430 @ =0x02000EA0
 	ldr r0, [r0]
 	bl sub_080008DC
-	ldr r0, _08004434 @ =0x02000018
+	ldr r0, _08004434 @ =gKeys
 	ldr r0, [r0]
 	movs r1, #2
 	ands r0, r1
@@ -5840,9 +5840,9 @@ _08004410:
 	b _08004458
 	.align 2, 0
 _08004430: .4byte 0x02000EA0
-_08004434: .4byte 0x02000018
+_08004434: .4byte gKeys
 _08004438:
-	ldr r2, _08004484 @ =0x0200003C
+	ldr r2, _08004484 @ =gLinkSessionReset
 	ldrb r0, [r2]
 	cmp r0, #0
 	beq _08004448
@@ -5850,7 +5850,7 @@ _08004438:
 	adds r0, r5, #0
 	bl ResetSaveTransfer
 _08004448:
-	ldr r0, _08004488 @ =0x02000040
+	ldr r0, _08004488 @ =gLinkSession
 	ldr r0, [r0]
 	bl UpdateLinkSession
 	adds r0, r5, #0
@@ -5878,8 +5878,8 @@ _08004476:
 	pop {r1}
 	bx r1
 	.align 2, 0
-_08004484: .4byte 0x0200003C
-_08004488: .4byte 0x02000040
+_08004484: .4byte gLinkSessionReset
+_08004488: .4byte gLinkSession
 
 	thumb_func_start sub_0800448C
 sub_0800448C: @ 0x0800448C
@@ -6512,7 +6512,7 @@ _0800498A:
 	movs r4, #0x10
 	ldrsh r1, [r2, r4]
 	adds r0, r0, r1
-	ldr r1, _08004A00 @ =0x081CDE84
+	ldr r1, _08004A00 @ =gMenuCursorText
 	ldr r2, [r2, #0x14]
 	bl sub_08047970
 	ldr r4, [r7]
@@ -6543,7 +6543,7 @@ _0800498A:
 	b _08004A60
 	.align 2, 0
 _080049FC: .4byte 0x02000E90
-_08004A00: .4byte 0x081CDE84
+_08004A00: .4byte gMenuCursorText
 _08004A04:
 	ldr r0, [r7]
 	movs r2, #0xa8
@@ -6561,7 +6561,7 @@ _08004A04:
 	movs r4, #0x10
 	ldrsh r1, [r2, r4]
 	adds r0, r0, r1
-	ldr r1, _08004AA8 @ =0x081CDE84
+	ldr r1, _08004AA8 @ =gMenuCursorText
 	ldr r2, [r2, #0x14]
 	bl sub_08047970
 	ldr r4, [r7]
@@ -6623,7 +6623,7 @@ _08004A60:
 	bl sub_08047970
 	b _08004AE4
 	.align 2, 0
-_08004AA8: .4byte 0x081CDE84
+_08004AA8: .4byte gMenuCursorText
 _08004AAC: .4byte 0x02000E90
 _08004AB0:
 	ldr r3, [r4]
@@ -6916,7 +6916,7 @@ _08004CEA:
 	cmp r3, #6
 	ble _08004CEA
 _08004CFA:
-	ldr r4, _08004D38 @ =0x02000E94
+	ldr r4, _08004D38 @ =gLargeFont
 	ldr r0, [r4]
 	movs r3, #0x9c
 	lsls r3, r3, #1
@@ -6946,7 +6946,7 @@ _08004D2C:
 	b _08004D44
 	.align 2, 0
 _08004D34: .4byte 0x02000E90
-_08004D38: .4byte 0x02000E94
+_08004D38: .4byte gLargeFont
 _08004D3C:
 	ldr r0, [r4]
 	movs r1, #0
@@ -6954,7 +6954,7 @@ _08004D3C:
 _08004D44:
 	mov r2, r8
 	subs r1, r2, r5
-	ldr r0, _08004D84 @ =0x02000E94
+	ldr r0, _08004D84 @ =gLargeFont
 	ldr r2, [r0]
 	adds r1, #0x1f
 	movs r3, #0x8a
@@ -6983,7 +6983,7 @@ _08004D44:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_08004D84: .4byte 0x02000E94
+_08004D84: .4byte gLargeFont
 
 	thumb_func_start DrawSaveSlots
 DrawSaveSlots: @ 0x08004D88
@@ -7424,17 +7424,17 @@ sub_080050D8: @ 0x080050D8
 	ldr r0, [r0]
 	movs r1, #0
 	bl FontResetPalette
-	ldr r0, _08005280 @ =0x02000E94
+	ldr r0, _08005280 @ =gLargeFont
 	ldr r0, [r0]
 	movs r1, #0
 	bl FontResetPalette
-	ldr r0, _08005284 @ =0x02000E98
+	ldr r0, _08005284 @ =gObjVramCursor
 	ldr r0, [r0]
 	movs r1, #0
 	bl sub_0800763C
 	movs r0, #0
 	mov r8, r0
-	ldr r1, _08005288 @ =0x02000E80
+	ldr r1, _08005288 @ =gSpriteBankSet
 	mov sl, r1
 	movs r0, #0x80
 	mov sb, r0
@@ -7586,9 +7586,9 @@ _0800513C:
 _08005274: .4byte 0x02000E9C
 _08005278: .4byte 0x02000E68
 _0800527C: .4byte 0x02000E90
-_08005280: .4byte 0x02000E94
-_08005284: .4byte 0x02000E98
-_08005288: .4byte 0x02000E80
+_08005280: .4byte gLargeFont
+_08005284: .4byte gObjVramCursor
+_08005288: .4byte gSpriteBankSet
 
 	thumb_func_start sub_0800528C
 sub_0800528C: @ 0x0800528C
@@ -7828,7 +7828,7 @@ DrawSaveMenuTitle: @ 0x08005468
 	mov r5, r8
 	push {r5, r6}
 	mov sb, r1
-	ldr r6, _080054E8 @ =0x02000E94
+	ldr r6, _080054E8 @ =gLargeFont
 	ldr r0, [r6]
 	movs r1, #0
 	bl FontResetPalette
@@ -7883,7 +7883,7 @@ DrawSaveMenuTitle: @ 0x08005468
 	pop {r0}
 	bx r0
 	.align 2, 0
-_080054E8: .4byte 0x02000E94
+_080054E8: .4byte gLargeFont
 
 	thumb_func_start GetSaveMenuBlinkPalette
 GetSaveMenuBlinkPalette: @ 0x080054EC
@@ -7905,7 +7905,7 @@ _08005500:
 	thumb_func_start EndLinkSaveTransfer
 EndLinkSaveTransfer: @ 0x08005504
 	push {r4, lr}
-	ldr r0, _0800551C @ =0x02000040
+	ldr r0, _0800551C @ =gLinkSession
 	ldr r4, [r0]
 	adds r0, r4, #0
 	bl ResetLinkSession
@@ -7915,13 +7915,13 @@ EndLinkSaveTransfer: @ 0x08005504
 	pop {r0}
 	bx r0
 	.align 2, 0
-_0800551C: .4byte 0x02000040
+_0800551C: .4byte gLinkSession
 
 	thumb_func_start BeginLinkSaveTransfer
 BeginLinkSaveTransfer: @ 0x08005520
 	push {r4, r5, lr}
 	adds r4, r0, #0
-	ldr r5, _08005540 @ =0x02000040
+	ldr r5, _08005540 @ =gLinkSession
 	ldr r0, [r5]
 	bl ResetLinkSession
 	ldr r1, [r5]
@@ -7934,7 +7934,7 @@ BeginLinkSaveTransfer: @ 0x08005520
 	pop {r0}
 	bx r0
 	.align 2, 0
-_08005540: .4byte 0x02000040
+_08005540: .4byte gLinkSession
 
 	thumb_func_start sub_08005544
 sub_08005544: @ 0x08005544
@@ -8106,7 +8106,7 @@ sub_0800567C: @ 0x0800567C
 	ldr r0, _080056AC @ =0x02000E9C
 	ldr r0, [r0]
 	bl ResetOamBuffer
-	ldr r4, _080056B0 @ =0x02000E98
+	ldr r4, _080056B0 @ =gObjVramCursor
 	ldr r0, [r4]
 	bl sub_08007670
 	ldr r0, [r4]
@@ -8123,7 +8123,7 @@ sub_0800567C: @ 0x0800567C
 	mov pc, r0
 	.align 2, 0
 _080056AC: .4byte 0x02000E9C
-_080056B0: .4byte 0x02000E98
+_080056B0: .4byte gObjVramCursor
 _080056B4: .4byte _080056B8
 _080056B8: @ jump table
 	.4byte _080056EC @ case 0
@@ -8336,11 +8336,11 @@ sub_08005830: @ 0x08005830
 	ldr r0, [r0]
 	movs r1, #0
 	bl FontResetPalette
-	ldr r0, _08005920 @ =0x02000E94
+	ldr r0, _08005920 @ =gLargeFont
 	ldr r0, [r0]
 	movs r1, #0
 	bl FontResetPalette
-	ldr r4, _08005924 @ =0x02000E98
+	ldr r4, _08005924 @ =gObjVramCursor
 	ldr r0, [r4]
 	bl sub_08007620
 	ldr r0, [r4]
@@ -8402,8 +8402,8 @@ _08005910: .4byte 0x02000E68
 _08005914: .4byte 0x00000914
 _08005918: .4byte 0x084768B4
 _0800591C: .4byte 0x02000E90
-_08005920: .4byte 0x02000E94
-_08005924: .4byte 0x02000E98
+_08005920: .4byte gLargeFont
+_08005924: .4byte gObjVramCursor
 _08005928: .4byte 0x02000E70
 _0800592C: .4byte 0x02000044
 _08005930:
@@ -8540,7 +8540,7 @@ _08005A3C:
 	bl sub_08022C00
 	cmp r0, #0
 	bne _08005A58
-	ldr r0, _08005A54 @ =0x02000EA8
+	ldr r0, _08005A54 @ =gPaletteCycles
 	ldr r0, [r0]
 	ldrb r0, [r0, #1]
 	cmp r0, #0
@@ -8548,7 +8548,7 @@ _08005A3C:
 	mov r0, r8
 	b _08005A5A
 	.align 2, 0
-_08005A54: .4byte 0x02000EA8
+_08005A54: .4byte gPaletteCycles
 _08005A58:
 	movs r0, #4
 _08005A5A:
@@ -8833,7 +8833,7 @@ _08005C78: .4byte 0x02000044
 _08005C7C: .4byte 0x02000E70
 _08005C80: .4byte 0x02000E6C
 _08005C84:
-	ldr r0, _08005CA0 @ =0x02000018
+	ldr r0, _08005CA0 @ =gKeys
 	ldrh r1, [r0, #2]
 	movs r0, #8
 	ands r0, r1
@@ -8847,7 +8847,7 @@ _08005C84:
 	movs r7, #0
 	b _08005DE4
 	.align 2, 0
-_08005CA0: .4byte 0x02000018
+_08005CA0: .4byte gKeys
 _08005CA4:
 	ldr r0, _08005CCC @ =0x02000E70
 	ldr r0, [r0]
@@ -8880,7 +8880,7 @@ _08005CD4:
 	ldr r0, _08005D4C @ =0x02000EA0
 	ldr r0, [r0]
 	bl sub_080008DC
-	ldr r4, _08005D50 @ =0x02000018
+	ldr r4, _08005D50 @ =gKeys
 	ldrh r1, [r4, #2]
 	movs r0, #0x40
 	ands r0, r1
@@ -8925,7 +8925,7 @@ _08005D30:
 	b _08005D6E
 	.align 2, 0
 _08005D4C: .4byte 0x02000EA0
-_08005D50: .4byte 0x02000018
+_08005D50: .4byte gKeys
 _08005D54:
 	ands r2, r3
 	cmp r2, #0
@@ -8942,7 +8942,7 @@ _08005D6A:
 _08005D6C:
 	str r0, [r5, #0x70]
 _08005D6E:
-	ldr r0, _08005D88 @ =0x02000018
+	ldr r0, _08005D88 @ =gKeys
 	ldr r2, [r0]
 	lsrs r1, r2, #0x10
 	movs r3, #0x10
@@ -8955,7 +8955,7 @@ _08005D6E:
 	mov r0, r8
 	b _08005DA4
 	.align 2, 0
-_08005D88: .4byte 0x02000018
+_08005D88: .4byte gKeys
 _08005D8C:
 	ands r2, r3
 	cmp r2, #0
@@ -8972,7 +8972,7 @@ _08005DA2:
 _08005DA4:
 	str r0, [r5, #0x70]
 _08005DA6:
-	ldr r0, _08005DD4 @ =0x02000018
+	ldr r0, _08005DD4 @ =gKeys
 	ldrh r1, [r0, #2]
 	movs r0, #1
 	ands r0, r1
@@ -8995,7 +8995,7 @@ _08005DB4:
 	bl PlaySfx
 	b _08005C84
 	.align 2, 0
-_08005DD4: .4byte 0x02000018
+_08005DD4: .4byte gKeys
 _08005DD8:
 	ldr r0, [r6]
 	movs r1, #0x3c
@@ -9182,10 +9182,10 @@ DrawPauseMenu: @ 0x08005F3C
 	ldr r0, _08006044 @ =0x02000E9C
 	ldr r0, [r0]
 	bl ResetOamBuffer
-	ldr r0, _08006048 @ =0x02000E98
+	ldr r0, _08006048 @ =gObjVramCursor
 	ldr r0, [r0]
 	bl sub_08007670
-	ldr r6, _0800604C @ =0x02000E94
+	ldr r6, _0800604C @ =gLargeFont
 	ldr r0, [r6]
 	movs r7, #0x9c
 	lsls r7, r7, #1
@@ -9301,8 +9301,8 @@ _08005FE0:
 	mov pc, r0
 	.align 2, 0
 _08006044: .4byte 0x02000E9C
-_08006048: .4byte 0x02000E98
-_0800604C: .4byte 0x02000E94
+_08006048: .4byte gObjVramCursor
+_0800604C: .4byte gLargeFont
 _08006050: .4byte _08006054
 _08006054: @ jump table
 	.4byte _0800606C @ case 0
@@ -9372,7 +9372,7 @@ _080060D6:
 	ldr r0, [r7, #0x18]
 	cmp sl, r0
 	bne _08006120
-	ldr r0, _08006108 @ =0x02000010
+	ldr r0, _08006108 @ =gVBlankCounter
 	ldr r0, [r0]
 	movs r1, #5
 	bl __umodsi3
@@ -9394,7 +9394,7 @@ _080060F6:
 	bl FontResetPalette
 	b _0800612A
 	.align 2, 0
-_08006108: .4byte 0x02000010
+_08006108: .4byte gVBlankCounter
 _0800610C: .4byte 0x02000E90
 _08006110:
 	ldr r0, _0800611C @ =0x02000E90
@@ -9632,7 +9632,7 @@ _080062E4:
 	movs r0, #0x78
 	bl sub_08000188
 	adds r1, r0, #0
-	ldr r0, _080063B8 @ =0x02000010
+	ldr r0, _080063B8 @ =gVBlankCounter
 	lsls r1, r1, #0x10
 	lsrs r1, r1, #0x10
 	adds r1, #0x78
@@ -9663,7 +9663,7 @@ _08006326:
 	movs r0, #0x78
 	bl sub_08000188
 	adds r1, r0, #0
-	ldr r0, _080063B8 @ =0x02000010
+	ldr r0, _080063B8 @ =gVBlankCounter
 	lsls r1, r1, #0x10
 	lsrs r1, r1, #0x10
 	adds r1, #0x73
@@ -9692,7 +9692,7 @@ _0800636C:
 	movs r0, #0x78
 	bl sub_08000188
 	adds r1, r0, #0
-	ldr r0, _080063B8 @ =0x02000010
+	ldr r0, _080063B8 @ =gVBlankCounter
 	lsls r1, r1, #0x10
 	lsrs r1, r1, #0x10
 	adds r1, #0x82
@@ -9718,7 +9718,7 @@ _080063AE:
 	bx r0
 	.align 2, 0
 _080063B4: .4byte 0x02000E70
-_080063B8: .4byte 0x02000010
+_080063B8: .4byte gVBlankCounter
 
 	thumb_func_start sub_080063BC
 sub_080063BC: @ 0x080063BC
@@ -10076,7 +10076,7 @@ _08006676:
 	adds r4, #1
 	cmp r4, #2
 	ble _08006676
-	ldr r4, _0800674C @ =0x081CDF64
+	ldr r4, _0800674C @ =gPauseRelicIconPos
 	ldr r6, _08006750 @ =0x02000E90
 	ldr r0, [r6]
 	ldr r2, [r4, #0x10]
@@ -10165,7 +10165,7 @@ _08006676:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_0800674C: .4byte 0x081CDF64
+_0800674C: .4byte gPauseRelicIconPos
 _08006750: .4byte 0x02000E90
 
 	thumb_func_start sub_08006754
@@ -10199,7 +10199,7 @@ _08006774:
 	ldr r2, [r2, #0x1c]
 	adds r1, r6, #0
 	bl sub_08047970
-	ldr r1, _080067CC @ =0x081CDF88
+	ldr r1, _080067CC @ =gPauseTimeTrialIconPos
 	lsrs r0, r0, #1
 	ldr r2, [r1]
 	subs r2, r2, r0
@@ -10228,7 +10228,7 @@ _08006774:
 	bx r0
 	.align 2, 0
 _080067C8: .4byte 0x02000E90
-_080067CC: .4byte 0x081CDF88
+_080067CC: .4byte gPauseTimeTrialIconPos
 
 	thumb_func_start InitPauseMenuInfo
 InitPauseMenuInfo: @ 0x080067D0
@@ -10241,7 +10241,7 @@ InitPauseMenuInfo: @ 0x080067D0
 	lsls r0, r4, #3
 	adds r0, r0, r4
 	lsls r0, r0, #2
-	ldr r1, _08006814 @ =0x081D0430
+	ldr r1, _08006814 @ =gLevelTable
 	adds r0, r0, r1
 	ldr r0, [r0]
 	bl GetUiText
@@ -10261,7 +10261,7 @@ InitPauseMenuInfo: @ 0x080067D0
 	b _0800681C
 	.align 2, 0
 _08006810: .4byte 0x02000E70
-_08006814: .4byte 0x081D0430
+_08006814: .4byte gLevelTable
 _08006818:
 	movs r0, #0
 	str r0, [r5, #0x7c]
@@ -10346,7 +10346,7 @@ sub_080068B8: @ 0x080068B8
 	bl sub_080273EC
 	bl sub_080097B0
 	str r0, [r6]
-	ldr r0, _080069BC @ =0x02000E80
+	ldr r0, _080069BC @ =gSpriteBankSet
 	mov r8, r0
 	ldr r0, [r0]
 	movs r1, #0x24
@@ -10445,7 +10445,7 @@ _080069B2:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_080069BC: .4byte 0x02000E80
+_080069BC: .4byte gSpriteBankSet
 _080069C0: .4byte 0x081CDEB8
 _080069C4: .4byte 0x081CDEC8
 _080069C8: .4byte 0x081CDED0
@@ -10468,7 +10468,7 @@ _080069DE:
 	bl sub_080273EC
 	bl sub_080097B0
 	str r0, [r6]
-	ldr r0, _08006A40 @ =0x02000E80
+	ldr r0, _08006A40 @ =gSpriteBankSet
 	ldr r0, [r0]
 	movs r1, #0x1e
 	bl sub_08007D80
@@ -10503,7 +10503,7 @@ _080069DE:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_08006A40: .4byte 0x02000E80
+_08006A40: .4byte gSpriteBankSet
 _08006A44: .4byte 0x081CDF00
 _08006A48: .4byte 0x081CDEE0
 
@@ -10528,7 +10528,7 @@ _08006A5E:
 	bl sub_080273EC
 	bl sub_080097B0
 	str r0, [r6]
-	ldr r0, _08006B00 @ =0x02000E80
+	ldr r0, _08006B00 @ =gSpriteBankSet
 	ldr r0, [r0]
 	movs r1, #0x18
 	bl sub_08007D80
@@ -10589,7 +10589,7 @@ _08006A5E:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_08006B00: .4byte 0x02000E80
+_08006B00: .4byte gSpriteBankSet
 _08006B04: .4byte 0x081CDF30
 _08006B08: .4byte 0x081CDF10
 
@@ -10612,7 +10612,7 @@ _08006B1C:
 	bl sub_080273EC
 	bl sub_080097B0
 	str r0, [r6]
-	ldr r0, _08006BCC @ =0x02000E80
+	ldr r0, _08006BCC @ =gSpriteBankSet
 	ldr r0, [r0]
 	movs r1, #0x18
 	bl sub_08007D80
@@ -10686,7 +10686,7 @@ _08006BA2:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_08006BCC: .4byte 0x02000E80
+_08006BCC: .4byte gSpriteBankSet
 _08006BD0: .4byte 0x081CDF58
 _08006BD4: .4byte 0x081CDF40
 
@@ -10711,13 +10711,13 @@ _08006BEA:
 	bl sub_080273EC
 	bl sub_080097B0
 	str r0, [r6]
-	ldr r0, _08006CA0 @ =0x02000E80
+	ldr r0, _08006CA0 @ =gSpriteBankSet
 	ldr r0, [r0]
 	movs r1, #0x19
 	bl sub_08007D80
 	ldr r4, [r6]
 	str r0, [r4, #0x2c]
-	ldr r0, _08006CA4 @ =0x081CDF7C
+	ldr r0, _08006CA4 @ =gPauseRelicIconFrames
 	adds r5, r5, r0
 	ldr r1, [r5]
 	adds r0, r4, #0
@@ -10733,7 +10733,7 @@ _08006BEA:
 	ldr r0, [r6]
 	mov r1, r8
 	lsls r2, r1, #3
-	ldr r1, _08006CA8 @ =0x081CDF64
+	ldr r1, _08006CA8 @ =gPauseRelicIconPos
 	adds r2, r2, r1
 	ldr r1, [r2]
 	ldr r2, [r2, #4]
@@ -10778,9 +10778,9 @@ _08006BEA:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_08006CA0: .4byte 0x02000E80
-_08006CA4: .4byte 0x081CDF7C
-_08006CA8: .4byte 0x081CDF64
+_08006CA0: .4byte gSpriteBankSet
+_08006CA4: .4byte gPauseRelicIconFrames
+_08006CA8: .4byte gPauseRelicIconPos
 
 	thumb_func_start InitPauseTimeTrialPage
 InitPauseTimeTrialPage: @ 0x08006CAC
@@ -10804,7 +10804,7 @@ InitPauseTimeTrialPage: @ 0x08006CAC
 	lsls r0, r4, #3
 	adds r0, r0, r4
 	lsls r0, r0, #2
-	ldr r1, _08006D98 @ =0x081D0430
+	ldr r1, _08006D98 @ =gLevelTable
 	adds r7, r0, r1
 	movs r1, #0
 	cmp r5, #0
@@ -10822,14 +10822,14 @@ _08006CEA:
 	bl sub_080273EC
 	bl sub_080097B0
 	str r0, [r6]
-	ldr r0, _08006D9C @ =0x02000E80
+	ldr r0, _08006D9C @ =gSpriteBankSet
 	ldr r0, [r0]
 	movs r1, #0x19
 	bl sub_08007D80
 	ldr r1, [r6]
 	str r0, [r1, #0x2c]
 	ldr r0, [r6]
-	ldr r2, _08006DA0 @ =0x081CDF88
+	ldr r2, _08006DA0 @ =gPauseTimeTrialIconPos
 	ldr r1, [r2]
 	ldr r2, [r2, #4]
 	bl SetEntityPixelPos
@@ -10838,7 +10838,7 @@ _08006CEA:
 	ldr r0, [r7, #8]
 	cmp r5, r0
 	bhi _08006D42
-	ldr r0, _08006DA4 @ =0x081CDF7C
+	ldr r0, _08006DA4 @ =gPauseRelicIconFrames
 	ldr r4, [r6]
 	ldr r1, [r0, #8]
 	adds r0, r4, #0
@@ -10855,7 +10855,7 @@ _08006D42:
 	ldr r0, [r7, #0xc]
 	cmp r5, r0
 	bhi _08006D68
-	ldr r0, _08006DA4 @ =0x081CDF7C
+	ldr r0, _08006DA4 @ =gPauseRelicIconFrames
 	ldr r4, [r6]
 	ldr r1, [r0, #4]
 	adds r0, r4, #0
@@ -10872,7 +10872,7 @@ _08006D68:
 	ldr r0, [r7, #0x10]
 	cmp r5, r0
 	bhi _08006D8E
-	ldr r0, _08006DA4 @ =0x081CDF7C
+	ldr r0, _08006DA4 @ =gPauseRelicIconFrames
 	ldr r4, [r6]
 	ldr r1, [r0]
 	adds r0, r4, #0
@@ -10891,10 +10891,10 @@ _08006D8E:
 	bx r0
 	.align 2, 0
 _08006D94: .4byte 0x02000E70
-_08006D98: .4byte 0x081D0430
-_08006D9C: .4byte 0x02000E80
-_08006DA0: .4byte 0x081CDF88
-_08006DA4: .4byte 0x081CDF7C
+_08006D98: .4byte gLevelTable
+_08006D9C: .4byte gSpriteBankSet
+_08006DA0: .4byte gPauseTimeTrialIconPos
+_08006DA4: .4byte gPauseRelicIconFrames
 
 	thumb_func_start DrawPauseFraction
 DrawPauseFraction: @ 0x08006DA8
@@ -10922,7 +10922,7 @@ DrawPauseFraction: @ 0x08006DA8
 	lsls r3, r3, #1
 	adds r0, r1, r3
 	ldr r3, [r0]
-	ldr r4, _08006E30 @ =0x02000E94
+	ldr r4, _08006E30 @ =gLargeFont
 	ldr r0, [r4]
 	subs r2, #2
 	adds r1, r0, r7
@@ -10963,7 +10963,7 @@ DrawPauseFraction: @ 0x08006DA8
 	bx r0
 	.align 2, 0
 _08006E2C: .4byte 0x02000E90
-_08006E30: .4byte 0x02000E94
+_08006E30: .4byte gLargeFont
 
 	thumb_func_start PauseMenuVolumeDown
 PauseMenuVolumeDown: @ 0x08006E34
@@ -11238,7 +11238,7 @@ sub_0800703C: @ 0x0800703C
 	bl sub_080273EC
 	bl sub_080097B0
 	str r0, [r4]
-	ldr r0, _08007088 @ =0x02000E80
+	ldr r0, _08007088 @ =gSpriteBankSet
 	ldr r0, [r0]
 	movs r1, #0x1d
 	bl sub_08007D80
@@ -11262,7 +11262,7 @@ sub_0800703C: @ 0x0800703C
 	pop {r0}
 	bx r0
 	.align 2, 0
-_08007088: .4byte 0x02000E80
+_08007088: .4byte gSpriteBankSet
 _0800708C: .4byte 0x081CDED8
 
 	thumb_func_start FormatVolumePercent
@@ -11502,7 +11502,7 @@ GetProgressLives: @ 0x08007268
 CountPlatinumRelics: @ 0x08007270
 	push {r4, r5, lr}
 	movs r5, #0
-	ldr r1, _080072A0 @ =0x081D0430
+	ldr r1, _080072A0 @ =gLevelTable
 	adds r4, r1, #0
 	adds r4, #0x10
 	adds r3, r0, #0
@@ -11527,7 +11527,7 @@ _0800728E:
 	pop {r1}
 	bx r1
 	.align 2, 0
-_080072A0: .4byte 0x081D0430
+_080072A0: .4byte gLevelTable
 
 	thumb_func_start CountGoldRelics
 CountGoldRelics: @ 0x080072A4
@@ -11541,7 +11541,7 @@ _080072AE:
 	lsrs r1, r0, #3
 	cmp r1, #0
 	beq _080072D2
-	ldr r2, _080072E4 @ =0x081D0430
+	ldr r2, _080072E4 @ =gLevelTable
 	adds r0, r2, #0
 	adds r0, #0xc
 	adds r0, r4, r0
@@ -11566,7 +11566,7 @@ _080072D2:
 	pop {r1}
 	bx r1
 	.align 2, 0
-_080072E4: .4byte 0x081D0430
+_080072E4: .4byte gLevelTable
 
 	thumb_func_start CountSapphireRelics
 CountSapphireRelics: @ 0x080072E8
@@ -11580,7 +11580,7 @@ _080072F2:
 	lsrs r1, r0, #3
 	cmp r1, #0
 	beq _08007316
-	ldr r2, _08007328 @ =0x081D0430
+	ldr r2, _08007328 @ =gLevelTable
 	adds r0, r2, #0
 	adds r0, #8
 	adds r0, r4, r0
@@ -11605,7 +11605,7 @@ _08007316:
 	pop {r1}
 	bx r1
 	.align 2, 0
-_08007328: .4byte 0x081D0430
+_08007328: .4byte gLevelTable
 
 	thumb_func_start CountRelics
 CountRelics: @ 0x0800732C
