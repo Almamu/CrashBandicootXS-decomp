@@ -9,9 +9,10 @@ tables from the template and the .mo files.
 
     tools/text.py cpp TABLE OUT [--mo DIR]
         Writes the C++ definitions of TABLE (ui_text,
-        cutscene_text_english or cutscene_text_translations), which
-        src/.../data/TABLE.cpp #includes, reading each language's text from
-        DIR/<lang>.mo with the stdlib gettext module (pgettext).
+        cutscene_text_english, cutscene_text_translations or
+        credits_text), which src/.../data/TABLE.cpp #includes, reading each
+        language's text from DIR/<lang>.mo with the stdlib gettext module
+        (pgettext).
 
     tools/text.py check
         The translations' checks: `msgfmt --check --statistics` for each
@@ -20,7 +21,8 @@ tables from the template and the .mo files.
         generator's own checks (every character in the game's font).
 
     tools/text.py extract [baserom.gba] [--check]
-        Writes text/crashxs.pot and the .po files from the ROM's tables,
+        Writes text/crashxs.pot, the .po files and text/credits.pot from
+        the ROM's tables (the credits' keys from data/credits.json),
         through msgcat so they are in gettext's own layout. With --check,
         writes them into a temporary directory and compares them with
         text/ byte for byte.
@@ -35,6 +37,10 @@ The tables (docs/data.md, "Text tables"):
   then its `gCutscene<NN>EnglishPage<P>` array; cutscene_text_translations the
   other five languages' pages the same way. The template's
   `cutscene<NN>.page<P>.<I>` entries are in ROM order.
+- credits_text: gCreditsText, the credits' one stream (every language
+  shows it): text/credits.pot's entries (English only, no .po) in the
+  order data/credits.json lists them, with the font switches and the logos
+  it gives.
 
 A string is stored once, under its first use in this order; a later use
 (another language, or another id) points at it. The ROM has no repeat
@@ -63,13 +69,15 @@ POT = os.path.join(TEXT_DIR, "crashxs.pot")
 FONTS_SRC = os.path.join(ROOT, "src", "game", "ui", "data", "hud_font_tables.cpp")
 LEVELS_JSON = os.path.join(ROOT, "data", "levels", "levels.json")
 GRAPHICS_MANIFEST = os.path.join(ROOT, "graphics", "manifest.json")
+CREDITS_POT = os.path.join(TEXT_DIR, "credits.pot")
+CREDITS_JSON = os.path.join(ROOT, "data", "credits.json")
 
 # gLanguage's order: the languages of gUiTextTables and gCutsceneTexts.
 LANGUAGES = [("en", "English"), ("fr", "French"), ("de", "German"), ("es", "Spanish"), ("it", "Italian"),
              ("nl", "Dutch")]
 TRANSLATIONS = [code for code, _ in LANGUAGES[1:]]
 
-TABLES = ["ui_text", "cutscene_text_english", "cutscene_text_translations"]
+TABLES = ["ui_text", "cutscene_text_english", "cutscene_text_translations", "credits_text"]
 
 # The text's encoding: Latin-1, and the font's 0x9C is "œ", Windows-1252's
 # code for it. A character the encoding lacks is an error; one the font
@@ -94,6 +102,10 @@ KEY_CUTSCENE = re.compile(r"^cutscene(\d\d)\.page(\d+)\.(\d+)$")
 
 def fail(msg):
     sys.exit("text.py: " + msg)
+
+
+def rel(path):
+    return os.path.relpath(path, ROOT)
 
 
 # --- PO files -------------------------------------------------------------
@@ -423,8 +435,111 @@ def cutscene_tables(pages, tr, small, large):
     return list(HEADER) + english, list(HEADER) + externs + ([""] if externs else []) + others
 
 
+# --- The credits ----------------------------------------------------------
+
+# The credits stream's opcodes (include/game/ui/frontend.hpp, CREDITS_OP_*)
+# and its logos (Credits::logos, gCreditsLogos).
+CREDITS_OP_PICTURE, CREDITS_OP_SMALL, CREDITS_OP_LARGE = 1, 2, 3
+CREDITS_LOGOS = 5
+KEY_CREDITS = re.compile(r"^credits\.[a-z0-9_.]+$")
+
+
+def read_credits():
+    """data/credits.json's items, checked: each is {"large": key},
+    {"small": key} (the font switch, then the text), {"text": key} (the
+    text in the font so far), {"picture": n} (logo n) or {"blank": n} (n
+    empty lines). Each text item is a line, or lines, then a newline."""
+    where = rel(CREDITS_JSON)
+    with open(CREDITS_JSON, encoding="utf-8") as f:
+        items = json.load(f).get("credits")
+    if not isinstance(items, list) or not items:
+        fail("%s: no \"credits\" list" % where)
+    for i, it in enumerate(items):
+        if not isinstance(it, dict) or len(it) != 1:
+            fail("%s: item %d: not one of {\"large\"|\"small\"|\"text\": key}, {\"picture\": n}, {\"blank\": n}"
+                 % (where, i))
+        (k, v), = it.items()
+        if k in ("large", "small", "text"):
+            if not isinstance(v, str) or not KEY_CREDITS.match(v):
+                fail("%s: item %d: %r isn't a credits.* key" % (where, i, v))
+        elif k == "picture":
+            if not isinstance(v, int) or isinstance(v, bool) or not 0 <= v < CREDITS_LOGOS:
+                fail("%s: item %d: picture %r isn't a logo (0 to %d)" % (where, i, v, CREDITS_LOGOS - 1))
+        elif k == "blank":
+            if not isinstance(v, int) or isinstance(v, bool) or v < 1:
+                fail("%s: item %d: blank %r isn't a number of lines" % (where, i, v))
+        else:
+            fail("%s: item %d: unknown item %r" % (where, i, k))
+    return items
+
+
+def credits_entries():
+    """text/credits.pot's entries by key, checked against the items."""
+    entries = {}
+    for e in read_po(CREDITS_POT):
+        if e["ctx"] is None or not KEY_CREDITS.match(e["ctx"]):
+            fail("%s: %r: an entry's key (msgctxt) is credits.<name>" % (rel(CREDITS_POT), e["ctx"]))
+        if e["ctx"] in entries:
+            fail("%s: the key %s twice" % (rel(CREDITS_POT), e["ctx"]))
+        entries[e["ctx"]] = e
+    return entries
+
+
+def credits_stream(small, large):
+    """gCreditsText's lines, as (bytes, what) pairs: the opcodes and text
+    of each line, its newline included."""
+    items = read_credits()
+    entries = credits_entries()
+    used = set()
+    font = "small"  # Credits::Init: largeFont = 0
+    out = []
+    for it in items:
+        (k, v), = it.items()
+        if k == "blank":
+            out += [(b"\n", None)] * v
+        elif k == "picture":
+            out.append((bytes([CREDITS_OP_PICTURE, v]) + b"\n", None))
+        else:
+            if v not in entries:
+                fail("%s: %s isn't in %s" % (rel(CREDITS_JSON), v, rel(CREDITS_POT)))
+            used.add(v)
+            op = b""
+            if k != "text":
+                font = k
+                op = bytes([CREDITS_OP_LARGE if k == "large" else CREDITS_OP_SMALL])
+            text = entries[v]["id"]
+            if not text:
+                fail("%s: %s is empty (a blank line is {\"blank\": 1})" % (rel(CREDITS_POT), v))
+            try:
+                data = text.encode(ENCODING)
+            except UnicodeEncodeError as e:
+                fail("%s: %r can't be written in the game's encoding (Latin-1)" % (v, e.object[e.start:e.end]))
+            if any(b < 0x20 and b != 0x0A for b in data):
+                fail("%s: a control character" % v)
+            missing = (large if font == "large" else small).missing(data)
+            if missing:
+                fail("%s: the %s font, which the credits draw it in, has no %s" % (v, font, show_bytes(missing)))
+            out.append((op + data + b"\n", v))
+    unused = sorted(set(entries) - used)
+    if unused:
+        fail("%s: %s: in no item of %s" % (rel(CREDITS_POT), ", ".join(unused), rel(CREDITS_JSON)))
+    return out
+
+
+def credits_table(small, large):
+    out = ["/* Generated by tools/text.py from text/credits.pot and data/credits.json",
+           " * (docs/text.md, \"The credits\"): don't edit. gCreditsText's initializer:",
+           " * one string per line, \\001 n before a logo's line (n: the logo),",
+           " * \\002 or \\003 before a line in the small or large font. */"]
+    for data, key in credits_stream(small, large):
+        out.append("    %s%s" % (c_string(data), "" if key is None else " // " + key))
+    return out
+
+
 def generate(table, mo_dir):
     small, large = fonts()
+    if table == "credits_text":
+        return credits_table(small, large)
     ui, pages = read_template()
     if table == "ui_text":
         check_level_names(ui)
@@ -699,18 +814,100 @@ def write_po(path, entries, code, lang):
         fail("msgcat %s:\n%s" % (path, r.stderr))
 
 
+# gCreditsText (credits_text.cpp).
+CREDITS_TEXT = 0x0817C5D0
+
+CREDITS_POT_HEADER = """\
+# Crash Bandicoot XS: the credits' text (docs/text.md, "The credits").
+#
+# msgctxt is the key, msgid the text. The credits are one text in every
+# language (Credits::Init reads gCreditsText), so this template has no
+# translations. data/credits.json lists the keys in the order the credits
+# show them, with the font of each and the logos between them. The text is
+# lower case; characters are Latin-1 and must be in the font they are drawn
+# in (tools/text.py checks).
+"""
+
+
+def extract_credits(rom):
+    """The credits' entries from the ROM's stream, keyed by data/credits.json:
+    (key, text, comments) in the order the items list them. A text item's
+    lines run on across empty lines that a plain line (no opcode) follows,
+    except a large-font item's; the extracted structure must be the
+    items'."""
+    start = end = CREDITS_TEXT - ROM_BASE
+    while rom.data[end] != 0:  # the end; a logo's index can be 0
+        end += 2 if rom.data[end] == CREDITS_OP_PICTURE else 1
+    data = rom.data[start:end]
+    lines = data[:-1].split(b"\n")
+    items = read_credits()
+    entries, i, font = [], 0, "small"
+    where = rel(CREDITS_JSON)
+    for n, it in enumerate(items):
+        (k, v), = it.items()
+        if k == "blank":
+            if lines[i:i + v] != [b""] * v:
+                fail("%s: item %d: the ROM has no %d empty lines there" % (where, n, v))
+            i += v
+        elif k == "picture":
+            if lines[i] != bytes([CREDITS_OP_PICTURE, v]):
+                fail("%s: item %d: the ROM has no logo %d there" % (where, n, v))
+            i += 1
+        else:
+            line = lines[i]
+            if k != "text":
+                font = k
+                if line[:1] != bytes([CREDITS_OP_LARGE if k == "large" else CREDITS_OP_SMALL]):
+                    fail("%s: item %d: the ROM has no %s font switch there" % (where, n, k))
+                line = line[1:]
+            text = [line]
+            i += 1
+            while i < len(lines):
+                j = i
+                while k != "large" and j < len(lines) and lines[j] == b"":
+                    j += 1
+                if j < len(lines) and lines[j] and lines[j][0] >= 0x20:
+                    text += lines[i:j + 1]
+                    i = j + 1
+                else:
+                    break
+            what = "a heading" if k == "large" else "lines"
+            entries.append((v, b"\n".join(text).decode(ENCODING), ["The credits: %s, in the %s font." % (what, font)]))
+    if i != len(lines):
+        fail("%s: the ROM's credits go on after the last item" % where)
+    return entries
+
+
+def write_credits_pot(path, entries):
+    lines = CREDITS_POT_HEADER.splitlines() + po_header(None, None)
+    for key, text, comments in entries:
+        lines.append("")
+        lines += ["#. " + c for c in comments]
+        lines += ["msgctxt " + po_quote(key), "msgid " + po_quote(text), 'msgstr ""']
+    raw = path + ".raw"
+    with open(raw, "w", encoding="utf-8", newline="\n") as f:
+        f.write("\n".join(lines) + "\n")
+    r = run(["msgcat", "-o", path, raw])
+    os.unlink(raw)
+    if r.returncode:
+        fail("msgcat %s:\n%s" % (path, r.stderr))
+
+
 def extract(rom_path, check_only):
-    entries = extract_entries(Rom(rom_path))
+    rom = Rom(rom_path)
+    entries = extract_entries(rom)
+    credits = extract_credits(rom)
     out = tempfile.mkdtemp() if check_only else TEXT_DIR
     try:
         os.makedirs(out, exist_ok=True)
         write_po(os.path.join(out, "crashxs.pot"), entries, None, None)
         for code, lang in LANGUAGES[1:]:
             write_po(os.path.join(out, code + ".po"), entries, code, lang)
+        write_credits_pot(os.path.join(out, "credits.pot"), credits)
         if not check_only:
             return
         bad = []
-        for name in ["crashxs.pot"] + [c + ".po" for c in TRANSLATIONS]:
+        for name in ["crashxs.pot"] + [c + ".po" for c in TRANSLATIONS] + ["credits.pot"]:
             mine, theirs = os.path.join(out, name), os.path.join(TEXT_DIR, name)
             if not os.path.exists(theirs) or not filecmp.cmp(mine, theirs, shallow=False):
                 bad.append(name)
@@ -739,7 +936,7 @@ def main():
     p.add_argument("--check", action="store_true")
     args = ap.parse_args()
     if args.cmd == "cpp":
-        if args.table != "cutscene_text_english" and not args.mo:
+        if args.table not in ("cutscene_text_english", "credits_text") and not args.mo:
             fail("cpp %s needs --mo" % args.table)
         write_lines(args.out, generate(args.table, args.mo))
     elif args.cmd == "check":

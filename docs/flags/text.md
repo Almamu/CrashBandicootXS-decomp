@@ -15,15 +15,16 @@ screen. The names are in include/engine/text/text.h, next to the prototypes.
 ## The credits, `CREDITS_OP_*` and `CREDITS_POPUP_MODE_*`
 
 Credits::UpdateText (src/game/ui/credits.cpp) reads gCreditsText
-(src/game/ui/data/credits_text.cpp) a line at a time. Three bytes are opcodes;
-the data spells them with its own string macros. The names are in
-include/game/ui/frontend.hpp, before `struct CreditsPopup`.
+(src/game/ui/data/credits_text.cpp) a line at a time. Three bytes are opcodes.
+The names are in include/game/ui/frontend.hpp, before `struct CreditsPopup`.
+The stream is generated from data/credits.json and text/credits.pot
+(docs/text.md, "The credits"), whose items stand for the opcodes:
 
-| Byte | Name | Data macro | Meaning |
+| Byte | Name | data/credits.json item | Meaning |
 |---|---|---|---|
-| 1 | `CREDITS_OP_PICTURE` | `CREDITS_PICTURE_0`..`_4` | the next byte is a logo's index: a logo popup |
-| 2 | `CREDITS_OP_SMALL` | `CREDITS_SMALL` | the text that follows is in gSmallFont |
-| 3 | `CREDITS_OP_LARGE` | `CREDITS_LARGE` | ... in gLargeFont |
+| 1 | `CREDITS_OP_PICTURE` | `{"picture": n}` (0-4) | the next byte is a logo's index: a logo popup |
+| 2 | `CREDITS_OP_SMALL` | `{"small": key}` | the text that follows is in gSmallFont |
+| 3 | `CREDITS_OP_LARGE` | `{"large": key}` | ... in gLargeFont |
 
 Each character or logo becomes a CreditsPopup, whose `mode` Credits::DrawText
 switches on:
