@@ -57,10 +57,68 @@ using Game::Ui::SaveMenu;
  * the received one into linkSave, returning 2 ("connection failed") if
  * its checksum fails (save_data.hpp; docs/levels.md, "The link cable").
  *
+ * When both are 64 Kbit builds of the same level data (the view says so:
+ * LinkRecord::SendsWhole), they then exchange the whole records too, in
+ * two more transfers (ExchangeWholeRecords), so a slot loads with all of
+ * its levels.
+ *
  * Once a NAKED transcription; it matches as plain C under both
  * compilers. The cancel test is `(u16)(keys & 2)`, whose known-zero
  * value the ROM reuses to clear `gLinkSessionReset`, and the
  * `SaveTransfer::GetData` result is taken before `linkSave` is loaded. */
+
+/* Runs a transfer until it settles: SaveTransfer::Poll's 0 (done) or 2
+ * (no player id), or 3 if B cancels. */
+static inline s32 RunLinkTransfer(SaveTransfer *spinner)
+{
+    s32 result;
+
+    do {
+        FrameLimiter::WaitForVBlank();
+        gInput->Update();
+        if ((u16)(gKeys.all & B_BUTTON)) {
+            result = 3;
+        } else {
+            if (gLinkSessionReset) {
+                gLinkSessionReset = 0;
+                spinner->Reset();
+            }
+            gLinkSession->Update();
+            result = spinner->Poll();
+        }
+    } while (result == 1);
+    return result;
+}
+
+/* Sends `sent` whole and receives the other console's into `received`,
+ * after the LinkRecords (a 64 Kbit build of the same level data on both
+ * sides): its first SAVE_LINK_SIZE bytes, then its last, which cover
+ * the record. Returns RunLinkTransfer's result, or 2 if the received
+ * record's checksum fails. */
+static inline s32 ExchangeWholeRecords(SaveTransfer *spinner, SaveData *sent, SaveData *received)
+{
+    s32 result = 0;
+    s32 part;
+
+    for (part = 0; part <= 1 && result == 0; part++) {
+        s32 offset = part * (SAVE_DATA_SIZE - SAVE_LINK_SIZE);
+
+        spinner->SetRecord((SaveData *)((u8 *)sent + offset));
+        spinner->Reset();
+        result = RunLinkTransfer(spinner);
+        if (result == 0) {
+            MemCopy32((u8 *)received + offset, spinner->GetData(), SAVE_LINK_SIZE);
+        }
+    }
+    if (result == 0 && !received->CheckChecksum()) {
+        result = 2;
+    }
+    return result;
+}
+
+/* The two parts cover the record. */
+COMPILE_TIME_ASSERT(save_menu_draw_cpp, SAVE_DATA_SIZE <= 2 * SAVE_LINK_SIZE);
+
 s32 SaveMenu::LinkExchange()
 {
     SaveTransfer *spinner = new SaveTransfer;
@@ -76,20 +134,7 @@ s32 SaveMenu::LinkExchange()
         spinner->SetRecord(cartSave);
     }
     spinner->Reset();
-    do {
-        FrameLimiter::WaitForVBlank();
-        gInput->Update();
-        if ((u16)(gKeys.all & B_BUTTON)) {
-            result = 3;
-        } else {
-            if (gLinkSessionReset) {
-                gLinkSessionReset = 0;
-                spinner->Reset();
-            }
-            gLinkSession->Update();
-            result = spinner->Poll();
-        }
-    } while (result == 1);
+    result = RunLinkTransfer(spinner);
     if (result == 0) {
         /* `data` is needed: inlined, the code is 1 instruction longer */
         s32 data = (s32)spinner->GetData();
@@ -98,6 +143,8 @@ s32 SaveMenu::LinkExchange()
             MemCopy32(linkSave, (void *)data, SAVE_LINK_SIZE);
         } else if (!((LinkRecord *)data)->Unpack(linkSave)) {
             result = 2;
+        } else if (((LinkRecord *)data)->SendsWhole()) {
+            result = ExchangeWholeRecords(spinner, cartSave, linkSave);
         }
     }
     delete spinner;

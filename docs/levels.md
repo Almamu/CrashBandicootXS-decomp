@@ -1625,7 +1625,7 @@ ROM's data). The view has the ROM's layout:
 | offset | the ROM's record | the view |
 |---|---|---|
 | 0x000 | four 0x70-byte slots | the four slots, with the first 25 level words (`SAVE_LINK_LEVELS`), no extra flags |
-| 0x1C0 | unused, 0 (`Reset` clears it) | the sender's `SAVE_CHECKSUM_SEED`, then its `slotEmpty` |
+| 0x1C0 | unused, 0 (`Reset` clears it) | the sender's `SAVE_CHECKSUM_SEED`, its `slotEmpty`, its `SAVE_DATA_SIZE` (`wholeSize`) |
 | 0x1F4 | `slotEmpty` | 1, 1, 1, 1 |
 | 0x1F8 | `'C'`, the version, the flags, 0 | `'C'`, the sender's version, its flags, 0 |
 | 0x1FC | the checksum from `SAVE_CHECKSUM_SEED` | the checksum from 0, the ROM's seed (`SAVE_LINK_CHECKSUM_SEED`) |
@@ -1638,7 +1638,7 @@ What each side gets:
 | Crash 2 or 3 | a Crash XS record, as from the ROM | the Crash 2 or 3 record: the bonus (`SetFlags(2)` or `(4)`) and its message |
 | a 4 Kbit build of other level data | "connection failed": it checks the view from its own seed | "connection failed": the record's checksum isn't from 0 |
 | a 64 Kbit build of other level data | a Crash XS record with four empty slots | the same |
-| a 64 Kbit build of the same level data | the sender's slots: the version and the seed in the gap are the build's | the same |
+| a 64 Kbit build of the same level data | then the whole record, below | the same |
 
 `LinkRecord::Pack` marks the four slots empty in the ROM's trailer: they
 mean something only with the sender's levels, and the ROM would load them
@@ -1648,12 +1648,38 @@ first 25 level words, and the levels past them and the extra progress
 flags are 0. A view whose checksum fails is "connection failed"
 (`LinkExchange` returns 2).
 
+Two 64 Kbit builds of the same level data then exchange their whole
+records. Each view says it with `wholeSize`, the sender's
+`SAVE_DATA_SIZE` (`LinkRecord::SendsWhole`: the same version and seed,
+and `wholeSize` is the build's), so both sides decide the same thing
+from the view they receive. `ExchangeWholeRecords` runs two more
+transfers of `SAVE_LINK_SIZE` bytes, the record's first 0x200 bytes and
+its last 0x200 (they overlap: a record is 0x400 bytes at most), into
+`linkSave`, whose own checksum then has to hold. A slot then loads with
+all of its levels and extra flags. The transfers are the ROM's
+(`SaveTransfer`, `RunLinkTransfer` is `LinkExchange`'s loop), so B
+cancels them as it cancels the first. A view from a build of the same
+levels without `wholeSize` (0 there) gets only the view's slots, both
+ways.
+
+The link session has no flow control. A console starts the next
+transfer once its own has settled (`SaveTransfer::Poll`'s 0x1F extra
+polls after both directions are done), and the other console may still
+be settling: until it starts the next transfer too, it doesn't take the
+new bytes out of its 0x80-byte incoming ring. They wait there, and only
+past 0x80 bytes would they be lost, which fails the record's checksum
+("connection failed"). In mGBA the ring held 8 bytes at most at the end
+of a frame.
+If only one side's view fails its checksum, that side stops while the
+other waits for the next transfer, until B.
+
 Tested on two mGBA 0.10.5 cores linked by its lockstep link cable, with
 a 31-level build: with the ROM, both show four empty slots and load none;
 with the ROM patched to version 0x22 and 0x32 (as Crash 2 and 3 identify
 themselves), the 31-level build stores flag 2 or 4 and shows the Crash 2
-or 3 message; between two 31-level builds, a slot loads with its first
-25 level words.
+or 3 message; between two 31-level builds, `linkSave` is the sender's
+record byte for byte and a slot loads with all 31 level words, and with
+a build without `wholeSize`, with the first 25.
 
 ### Extra progress flags
 
