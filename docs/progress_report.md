@@ -13,8 +13,8 @@ read by `report generate`) is generated fresh by `make report` every time
 (see "One unit per matched file" below) and gitignored - never hand-edit or
 commit it.
 
-CI also sends it to [decompilati.onl](https://decompilati.onl), as an
-artifact and through its webhook (see "decompilati.onl" below).
+CI also uploads it as an artifact for
+[decompilati.onl](https://decompilati.onl) (see "decompilati.onl" below).
 The report used to be uploaded for [decomp.dev](https://decomp.dev), which
 has since closed.
 
@@ -573,24 +573,16 @@ the files on that branch.
 ## decompilati.onl
 
 [decompilati.onl](https://decompilati.onl) ([API docs](https://decompilati.onl/docs))
-reads objdiff reports the way decomp.dev did, and CI sends it this one
-both ways it takes them, so the project tests the two side by side:
-
-- **The GitHub App** (the decomp.dev way). The "Upload progress report
-  artifact" step uploads `report.json` as the `europe_report` artifact on
-  every run. With the decompilati.onl GitHub App installed on the
-  repository, it imports the artifact of each successful run on `main`,
-  with the run's commit; the version is the artifact name's prefix,
-  `europe`.
-- **The webhook.** On pushes to `main`, "Send progress to decompilati.onl"
-  POSTs the same `report.json`, gzip-compressed, to
-  `/api/v1/progress?commit=<sha>&version=europe`, with the repository
-  secret `DECOMPILATION_PROGRESS_TOKEN` as the bearer token. Without the
-  secret the step does nothing.
+reads objdiff reports the way decomp.dev did. The "Upload progress report
+artifact" step uploads `report.json` as the `europe_report` artifact on
+every run; with the decompilati.onl GitHub App installed on the
+repository, it imports the artifact of each successful run on `main`, with
+the run's commit. The version is the artifact name's prefix, `europe`.
 
 decompilati.onl counts matched code as matching, fuzzy-matched code beyond
 that as non-matching and objdiff's matched data as data, and makes an
 area of each progress category (see "Categorizing the still-raw majority
-of the ROM" above), with its units inside. Both ways send the same report,
-so they agree; a report identical to the current state is accepted and
-not stored.
+of the ROM" above), with its units inside.
+
+This project doesn't use the webhook (`/api/v1/progress`); it stays for
+another project.
