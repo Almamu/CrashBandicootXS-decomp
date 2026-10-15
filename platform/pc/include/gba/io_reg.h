@@ -17,4 +17,9 @@
 #undef REG_KEYINPUT
 #define REG_KEYINPUT (HostReadKeys())
 
+/* SIOCNT reads as the GBA's with no cable attached: the platform sets its
+ * read-only bits before each access (platform/pc/src/sio.c). */
+#undef REG_SIOCNT
+#define REG_SIOCNT (*HostSioCnt())
+
 #endif /* GUARD_PC_GBA_IO_REG_H */

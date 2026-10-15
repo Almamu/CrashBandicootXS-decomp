@@ -53,6 +53,16 @@ jobs:
         python3 tools/boottest.py compare platform/pc/tests/intro_mgba_screens.json host_intro_screens.json
         python3 tools/boottest.py diff-screens platform/pc/tests/screens host_screens
 
+    # Phase 7: the link, stubbed as a GBA with no cable (platform/pc/src/sio.c).
+    # tests/link.keys opens the save menu's "load link game", which waits
+    # for a console that isn't there until B aborts it, and leaves the menu;
+    # every frame's picture is mGBA's with no link (tests/link_mgba_screens.json).
+    - name: Check the link
+      run: |
+        python3 tools/boottest.py host build/pc/crashbandicootxs_pc --keys platform/pc/tests/link.keys \
+          --frames 1000 --every 1 --timeout 300 --out host_link_screens.json
+        python3 tools/boottest.py compare platform/pc/tests/link_mgba_screens.json host_link_screens.json
+
     # Phase 6: GAX2 on the host mixes what the GBA's mixes, byte for byte:
     # tests/boot_gax.trace is mGBA 0.10.5's trace of the game's GAX2 calls
     # and blocks in the boot (tools/boottest.py `gax-trace`), which

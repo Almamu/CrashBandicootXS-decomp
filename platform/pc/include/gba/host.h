@@ -44,6 +44,10 @@ void HostDmaSet(int channel, uintptr_t src, uintptr_t dest, uint32_t control);
  * (platform/pc/src/input.c). */
 uint16_t HostReadKeys(void);
 
+/* REG_SIOCNT: the register, its read-only bits those of a GBA with no
+ * cable attached (platform/pc/src/sio.c). */
+volatile uint16_t *HostSioCnt(void);
+
 #ifdef __cplusplus
 }
 #endif

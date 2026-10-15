@@ -18,8 +18,9 @@
  * run (INTR_CHECK, as on the GBA).
  *
  * Timers and the serial port raise nothing: the EEPROM (eeprom.c, a RAM
- * buffer) needs no Timer2 timeout, and the link (Timer3, Serial) never
- * connects. */
+ * buffer) needs no Timer2 timeout, and no link cable is attached (sio.c):
+ * no transfer raises Serial, and the game, a child console, arms no
+ * Timer3. */
 
 #include <stdio.h>
 
