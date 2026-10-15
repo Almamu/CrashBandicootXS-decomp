@@ -116,6 +116,9 @@ def main():
             print('%-50s no build: %s' % (obj, (err or ['?'])[0][:110]))
             continue
         text, relocs = text_of(out)
+        if not text:
+            print('%-50s empty    no .text built for N-Tranced' % obj)
+            continue
         # the object's start: the anchor's N-Tranced address less its offset
         # in XS's object (its first function's address in XS is the start)
         at = anchor['nt'] - (anchor['addr'] - fs[0]['addr'])
