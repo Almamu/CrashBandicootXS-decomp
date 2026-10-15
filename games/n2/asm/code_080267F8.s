@@ -28,7 +28,7 @@ _08026814:
 	ldr r0, [r0, #0x14]
 	ldr r0, [r0]
 	lsrs r0, r0, #8
-	bl sub_080273D0
+	bl OperatorNewArray
 	adds r1, r0, #0
 	str r1, [r4, #0x24]
 	ldr r0, [r5, #4]
@@ -123,26 +123,26 @@ InitLevelLayers: @ 0x080268DC
 	ldr r0, _08026948 @ =gUnknown_087F9954
 	str r0, [r4, #0x2c]
 	movs r0, #0x60
-	bl sub_080273EC
+	bl OperatorNew
 	movs r1, #0
 	bl InitPooledBgLayer
 	str r0, [r4, #0x10]
 	ldr r0, _0802694C @ =0x00001064
-	bl sub_080273EC
+	bl OperatorNew
 	bl InitTileCache
 	str r0, [r4, #0x20]
 	movs r0, #0x5c
-	bl sub_080273EC
+	bl OperatorNew
 	movs r1, #1
 	bl InitBgLayer
 	str r0, [r4, #0x14]
 	movs r0, #0x5c
-	bl sub_080273EC
+	bl OperatorNew
 	movs r1, #2
 	bl sub_08027398
 	str r0, [r4, #0x18]
 	movs r0, #0x5c
-	bl sub_080273EC
+	bl OperatorNew
 	movs r1, #3
 	bl InitBgLayer
 	str r0, [r4, #0x1c]
@@ -180,7 +180,7 @@ DestroyLevelLayers: @ 0x08026950
 	ldr r0, [r4, #0x24]
 	cmp r0, #0
 	beq _0802696E
-	bl sub_080273C4
+	bl OperatorDeleteArray
 _0802696E:
 	ldr r2, [r4, #0x10]
 	cmp r2, #0
@@ -240,7 +240,7 @@ _080269D2:
 	cmp r0, #0
 	beq _080269E6
 	adds r0, r4, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _080269E6:
 	pop {r4, r5}
 	pop {r0}
@@ -257,7 +257,7 @@ GetLevelLayers: @ 0x080269F4
 	cmp r0, #0
 	bne _08026A0A
 	movs r0, #0x30
-	bl sub_080273EC
+	bl OperatorNew
 	bl InitLevelLayers
 	str r0, [r4]
 _08026A0A:

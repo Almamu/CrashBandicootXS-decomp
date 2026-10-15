@@ -39,7 +39,7 @@ _08047C04:
 	bl sub_0804A3E4
 	ldr r4, _08047C58 @ =0x02000520
 	movs r0, #0x10
-	bl sub_080273EC
+	bl OperatorNew
 	bl sub_08048004
 	str r0, [r4]
 	ldr r0, _08047C5C @ =gUnknown_087D946C
@@ -49,7 +49,7 @@ _08047C04:
 	ldr r4, _08047C60 @ =0x02000528
 	movs r0, #0xbb
 	lsls r0, r0, #3
-	bl sub_080273EC
+	bl OperatorNew
 	bl sub_0804A2E4
 	str r0, [r4]
 	ldr r1, _08047C64 @ =sub_08049368
@@ -87,7 +87,7 @@ _08047C76:
 _08047C84:
 	ldr r4, _08047CD0 @ =0x02000524
 	ldr r0, _08047CD4 @ =0x00000734
-	bl sub_080273EC
+	bl OperatorNew
 	bl sub_08048360
 	str r0, [r4]
 	ldrb r2, [r5]
@@ -98,7 +98,7 @@ _08047C84:
 	adds r0, r0, r2
 	strb r1, [r0]
 	movs r0, #0xc
-	bl sub_080273EC
+	bl OperatorNew
 	bl sub_080490A0
 	adds r6, r0, #0
 	movs r7, #0
@@ -127,7 +127,7 @@ _08047CD8:
 	b _08047D26
 _08047CDE:
 	ldr r0, _08047CF4 @ =0x000007A4
-	bl sub_080273EC
+	bl OperatorNew
 	ldr r1, [r5, #8]
 	str r1, [sp]
 	adds r1, r4, #0
@@ -140,7 +140,7 @@ _08047CF4: .4byte 0x000007A4
 _08047CF8:
 	movs r0, #0xf6
 	lsls r0, r0, #3
-	bl sub_080273EC
+	bl OperatorNew
 	ldr r1, [r5, #8]
 	str r1, [sp]
 	adds r1, r4, #0
@@ -150,7 +150,7 @@ _08047CF8:
 	b _08047D24
 _08047D10:
 	ldr r0, _08047D3C @ =0x0000079C
-	bl sub_080273EC
+	bl OperatorNew
 	ldr r1, [r5, #8]
 	str r1, [sp]
 	adds r1, r4, #0
@@ -161,7 +161,7 @@ _08047D24:
 	adds r7, r0, #0
 _08047D26:
 	movs r0, #0x18
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r7, #0
 	bl sub_080507C4
 	adds r1, r0, #0
@@ -179,7 +179,7 @@ _08047D40:
 	rsbs r0, r0, #0
 	str r0, [sp, #8]
 	ldr r0, _08047DC8 @ =0x0000078C
-	bl sub_080273EC
+	bl OperatorNew
 	ldr r3, [r5, #0x18]
 	adds r1, r4, #0
 	add r2, sp, #4
@@ -482,7 +482,7 @@ sub_08047FE4: @ 0x08047FE4
 	cmp r0, #0
 	beq _08047FFA
 	adds r0, r2, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _08047FFA:
 	pop {r0}
 	bx r0
@@ -1534,7 +1534,7 @@ sub_0804881C: @ 0x0804881C
 	cmp r0, #0
 	beq _0804882E
 	adds r0, r2, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _0804882E:
 	pop {r0}
 	bx r0
@@ -2492,7 +2492,7 @@ _08048F7E:
 	bl sub_08047970
 _08048FAC:
 	adds r0, r5, #0
-	bl sub_080273E0
+	bl OperatorDelete
 	b _08048FB6
 _08048FB4:
 	ldr r4, [r4, #4]
@@ -2533,7 +2533,7 @@ _08048FDE:
 	ldr r0, [r2, #8]
 	str r0, [r1, #8]
 	adds r0, r2, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _08048FF4:
 	pop {r0}
 	bx r0
@@ -2548,7 +2548,7 @@ sub_0804901C: @ 0x0804901C
 	adds r5, r0, #0
 	adds r4, r1, #0
 	movs r0, #0xc
-	bl sub_080273EC
+	bl OperatorNew
 	str r4, [r0]
 	ldr r1, [r5, #8]
 	str r1, [r0, #4]
@@ -2588,13 +2588,13 @@ _08049052:
 	bl sub_08047970
 _0804906C:
 	adds r0, r5, #0
-	bl sub_080273E0
+	bl OperatorDelete
 	ldr r0, [r6, #8]
 	cmp r4, r0
 	bne _08049052
 _08049078:
 	adds r0, r4, #0
-	bl sub_080273E0
+	bl OperatorDelete
 	ldr r0, _0804909C @ =gUnknown_087FB1AC
 	str r0, [r6, #4]
 	movs r0, #1
@@ -2602,7 +2602,7 @@ _08049078:
 	cmp r0, #0
 	beq _08049090
 	adds r0, r6, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _08049090:
 	pop {r4, r5, r6, r7}
 	pop {r0}
@@ -2620,7 +2620,7 @@ sub_080490A0: @ 0x080490A0
 	ldr r0, _080490C4 @ =gUnknown_087FB18C
 	str r0, [r4, #4]
 	movs r0, #0xc
-	bl sub_080273EC
+	bl OperatorNew
 	str r0, [r4, #8]
 	str r5, [r0]
 	str r0, [r0, #8]
@@ -2645,7 +2645,7 @@ sub_080490D0: @ 0x080490D0
 	cmp r0, #0
 	beq _080490E6
 	adds r0, r2, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _080490E6:
 	pop {r0}
 	bx r0
@@ -5005,7 +5005,7 @@ sub_0804A2B0: @ 0x0804A2B0
 	cmp r0, #0
 	beq _0804A2D8
 	adds r0, r5, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _0804A2D8:
 	pop {r4, r5}
 	pop {r0}
@@ -5424,7 +5424,7 @@ _0804A61C:
 	ldr r0, [r4, #0x10]
 	cmp r0, #0
 	beq _0804A62A
-	bl sub_080273C4
+	bl OperatorDeleteArray
 	movs r0, #0
 	str r0, [r4, #0x10]
 _0804A62A:
@@ -5451,7 +5451,7 @@ sub_0804A634: @ 0x0804A634
 	str r0, [r4, #0xc]
 	movs r0, #0x80
 	lsls r0, r0, #3
-	bl sub_080273D0
+	bl OperatorNewArray
 	adds r1, r0, #0
 	str r1, [r4, #0x10]
 	cmp r1, #0
@@ -5522,7 +5522,7 @@ sub_0804A6D0: @ 0x0804A6D0
 	subs r0, #1
 	mov r8, r0
 	movs r0, #0x30
-	bl sub_080273EC
+	bl OperatorNew
 	lsls r1, r7, #5
 	ldrh r2, [r6, #4]
 	ldrh r3, [r6, #6]
@@ -5531,7 +5531,7 @@ sub_0804A6D0: @ 0x0804A6D0
 	bl sub_0804BB80
 	str r0, [r5, #8]
 	movs r0, #0x2c
-	bl sub_080273EC
+	bl OperatorNew
 	ldr r2, [r5, #8]
 	str r7, [sp]
 	ldr r1, [r6, #0xc]
@@ -5546,7 +5546,7 @@ sub_0804A6D0: @ 0x0804A6D0
 	cmp r0, #0
 	beq _0804A768
 	movs r0, #0x2c
-	bl sub_080273EC
+	bl OperatorNew
 	ldr r2, [r5, #8]
 	adds r1, r7, #1
 	str r1, [sp]
@@ -5563,7 +5563,7 @@ _0804A768:
 	cmp r0, #0
 	beq _0804A78C
 	movs r0, #0x2c
-	bl sub_080273EC
+	bl OperatorNew
 	ldr r2, [r5, #8]
 	adds r1, r7, #2
 	str r1, [sp]
@@ -5580,7 +5580,7 @@ _0804A78C:
 	cmp r0, #0
 	beq _0804A7B0
 	movs r0, #0x2c
-	bl sub_080273EC
+	bl OperatorNew
 	ldr r2, [r5, #8]
 	adds r1, r7, #3
 	str r1, [sp]
@@ -7151,7 +7151,7 @@ _0804B45E:
 	cmp r0, #0
 	beq _0804B46C
 	adds r0, r5, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _0804B46C:
 	pop {r4, r5, r6, r7}
 	pop {r0}
@@ -7914,24 +7914,24 @@ sub_0804BB48: @ 0x0804BB48
 	ldr r0, [r4, #0x24]
 	cmp r0, #0
 	beq _0804BB58
-	bl sub_080273C4
+	bl OperatorDeleteArray
 _0804BB58:
 	ldr r0, [r4, #0x20]
 	cmp r0, #0
 	beq _0804BB62
-	bl sub_080273C4
+	bl OperatorDeleteArray
 _0804BB62:
 	ldr r0, [r4, #0x1c]
 	cmp r0, #0
 	beq _0804BB6C
-	bl sub_080273C4
+	bl OperatorDeleteArray
 _0804BB6C:
 	movs r0, #1
 	ands r0, r5
 	cmp r0, #0
 	beq _0804BB7A
 	adds r0, r4, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _0804BB7A:
 	pop {r4, r5}
 	pop {r0}
@@ -7967,14 +7967,14 @@ _0804BB90:
 	str r6, [r4, #0x18]
 	str r3, [r4, #0x14]
 	lsls r0, r5, #1
-	bl sub_080273D0
+	bl OperatorNewArray
 	str r0, [r4, #0x1c]
 	lsls r0, r6, #1
-	bl sub_080273D0
+	bl OperatorNewArray
 	str r0, [r4, #0x20]
 	movs r0, #0x80
 	lsls r0, r0, #4
-	bl sub_080273D0
+	bl OperatorNewArray
 	str r0, [r4, #0x24]
 	adds r0, r4, #0
 	bl sub_0804B9EC
@@ -8175,7 +8175,7 @@ _0804BD60:
 	adds r0, r0, r1
 	str r0, [r6, #0x10]
 	movs r0, #0xa0
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r4, #0
 	adds r2, r5, #0
 	bl sub_08051BF8
@@ -8372,7 +8372,7 @@ _0804BEDC:
 	cmp r0, #0
 	beq _0804BEF2
 	adds r0, r4, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _0804BEF2:
 	pop {r4, r5}
 	pop {r0}
@@ -11221,7 +11221,7 @@ _0804ED7A:
 	bne _0804ED7A
 _0804ED8A:
 	movs r0, #0x44
-	bl sub_080273EC
+	bl OperatorNew
 	ldr r1, _0804EDB4 @ =0x0000078C
 	adds r2, r6, r1
 	adds r1, #4
@@ -11313,14 +11313,14 @@ _0804EE36:
 	ldr r1, _0804EE98 @ =0x0000078C
 	adds r4, r6, r1
 	movs r0, #0x28
-	bl sub_080273EC
+	bl OperatorNew
 	bl sub_08055E20
 	str r0, [r4]
 	movs r0, #0xf2
 	lsls r0, r0, #3
 	adds r5, r6, r0
 	movs r0, #0x24
-	bl sub_080273EC
+	bl OperatorNew
 	ldr r1, [r4]
 	bl sub_08050E94
 	str r0, [r5]
@@ -11331,7 +11331,7 @@ _0804EE36:
 	adds r0, r6, #0
 	bl sub_0804901C
 	movs r0, #0x44
-	bl sub_080273EC
+	bl OperatorNew
 	ldr r1, _0804EE94 @ =0x00000794
 	adds r2, r6, r1
 	adds r1, #4
@@ -11535,7 +11535,7 @@ sub_0804EFC4: @ 0x0804EFC4
 	lsls r0, r0, #2
 	adds r4, r5, r0
 	movs r0, #0x58
-	bl sub_080273EC
+	bl OperatorNew
 	movs r1, #1
 	bl sub_080533EC
 	adds r1, r0, #0
@@ -11808,7 +11808,7 @@ _0804F22E:
 	mov sb, r1
 	str r0, [r1]
 	movs r0, #0x20
-	bl sub_080273EC
+	bl OperatorNew
 	ldr r1, [sp, #0x48]
 	adds r1, #0x4c
 	adds r1, r6, r1
@@ -11861,7 +11861,7 @@ _0804F22E:
 	ldr r0, _0804F448 @ =0x0200052C
 	mov r8, r0
 	movs r0, #0x2c
-	bl sub_080273EC
+	bl OperatorNew
 	ldr r1, [sp, #0x48]
 	adds r1, #4
 	adds r6, r6, r1
@@ -11878,7 +11878,7 @@ _0804F22E:
 	adds r0, r5, #0
 	bl sub_0804901C
 	movs r0, #0xc
-	bl sub_080273EC
+	bl OperatorNew
 	bl sub_0805090C
 	adds r1, r0, #0
 	adds r0, r5, #0
@@ -11893,7 +11893,7 @@ _0804F372:
 	cmp r1, #0
 	bne _0804F388
 	movs r0, #8
-	bl sub_080273EC
+	bl OperatorNew
 	bl sub_08054470
 	adds r1, r0, #0
 	adds r0, r5, #0
@@ -11932,13 +11932,13 @@ _0804F3AC:
 	cmp r8, r2
 	bne _0804F450
 	movs r0, #0x1c
-	bl sub_080273EC
+	bl OperatorNew
 	ldr r2, [r7]
 	mov r1, sb
 	bl sub_08053D5C
 	adds r6, r0, #0
 	movs r0, #0x18
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r6, #0
 	bl sub_0805887C
 	mov r3, sl
@@ -11952,7 +11952,7 @@ _0804F3AC:
 	lsls r4, r4, #2
 	adds r4, r5, r4
 	movs r0, #0x2c
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r6, #0
 	bl sub_08054630
 	adds r1, r0, #0
@@ -11960,7 +11960,7 @@ _0804F3AC:
 	adds r0, r5, #0
 	bl sub_0804901C
 	movs r0, #0x28
-	bl sub_080273EC
+	bl OperatorNew
 	ldr r2, [r7]
 	lsls r1, r2, #4
 	adds r1, r1, r2
@@ -11985,14 +11985,14 @@ _0804F448: .4byte 0x0200052C
 _0804F44C: .4byte gUnknown_086D7D94
 _0804F450:
 	movs r0, #0x54
-	bl sub_080273EC
+	bl OperatorNew
 	ldr r3, [r7]
 	mov r1, sb
 	mov r2, r8
 	bl sub_08053C70
 	adds r6, r0, #0
 	movs r0, #0x28
-	bl sub_080273EC
+	bl OperatorNew
 	ldr r2, [r7]
 	lsls r1, r2, #4
 	adds r1, r1, r2
@@ -12007,7 +12007,7 @@ _0804F450:
 	adds r1, r6, #0
 	bl sub_0804901C
 	movs r0, #0x1c
-	bl sub_080273EC
+	bl OperatorNew
 	ldr r3, [r7]
 	lsls r3, r3, #3
 	ldr r2, _0804F634 @ =gUnknown_086CDEE8
@@ -12156,7 +12156,7 @@ _0804F5BA:
 	lsls r0, r0, #2
 	adds r6, r5, r0
 	movs r0, #0x3c
-	bl sub_080273EC
+	bl OperatorNew
 	bl sub_080528D8
 	adds r1, r0, #0
 	str r1, [r6]
@@ -12166,7 +12166,7 @@ _0804F5BA:
 	lsls r1, r1, #2
 	adds r6, r5, r1
 	movs r0, #0x38
-	bl sub_080273EC
+	bl OperatorNew
 	ldr r2, _0804F640 @ =0x0000023D
 	adds r1, r5, r2
 	ldrb r1, [r1]
@@ -12179,7 +12179,7 @@ _0804F5BA:
 	lsls r3, r3, #2
 	adds r7, r5, r3
 	movs r0, #0x54
-	bl sub_080273EC
+	bl OperatorNew
 	adds r6, r0, #0
 	movs r4, #0x90
 	lsls r4, r4, #2
@@ -12206,7 +12206,7 @@ _0804F63C: .4byte 0x02000E70
 _0804F640: .4byte 0x0000023D
 _0804F644:
 	movs r0, #0x34
-	bl sub_080273EC
+	bl OperatorNew
 	movs r3, #0x8b
 	lsls r3, r3, #2
 	adds r2, r5, r3
@@ -12226,7 +12226,7 @@ _0804F644:
 	adds r0, r5, #0
 	bl sub_0804901C
 	movs r0, #0x34
-	bl sub_080273EC
+	bl OperatorNew
 	movs r1, #0x8c
 	lsls r1, r1, #2
 	adds r2, r5, r1
@@ -12259,7 +12259,7 @@ _0804F6B2:
 	cmp r1, #0
 	bne _0804F712
 	movs r0, #0x20
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r0, #0
 	movs r4, #0x8b
 	lsls r4, r4, #2
@@ -12282,7 +12282,7 @@ _0804F6D4:
 	adds r0, r5, #0
 	bl sub_0804901C
 	movs r0, #0x20
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r0, #0
 	movs r3, #0x8c
 	lsls r3, r3, #2
@@ -12353,7 +12353,7 @@ sub_0804F770: @ 0x0804F770
 	adds r5, r4, r0
 	movs r0, #0xa8
 	lsls r0, r0, #1
-	bl sub_080273EC
+	bl OperatorNew
 	adds r2, r0, #0
 	movs r1, #0
 	movs r3, #0x8a
@@ -12804,7 +12804,7 @@ _0804FB14:
 	str r0, [r5]
 	movs r0, #0x80
 	lsls r0, r0, #8
-	bl sub_080273D0
+	bl OperatorNewArray
 	str r0, [r4, #0x1c]
 	ldr r2, _0804FB54 @ =0x040000D4
 	ldr r1, _0804FB58 @ =0x06010000
@@ -13080,7 +13080,7 @@ sub_0804FD30: @ 0x0804FD30
 	lsls r0, r0, #2
 	adds r4, r4, r0
 	movs r0, #0x14
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r5, #0
 	bl sub_08050AD0
 	str r0, [r4]
@@ -13122,12 +13122,12 @@ sub_0804FD74: @ 0x0804FD74
 	ldr r1, _0804FE0C @ =0x84002000
 	str r1, [r2, #8]
 	ldr r1, [r2, #8]
-	bl sub_080273E0
+	bl OperatorDelete
 	movs r4, #0
 	str r4, [r6, #0x1c]
 	ldr r5, _0804FE10 @ =0x0200052C
 	movs r0, #0x2c
-	bl sub_080273EC
+	bl OperatorNew
 	movs r2, #0x90
 	lsls r2, r2, #2
 	adds r1, r6, r2
@@ -13252,7 +13252,7 @@ sub_0804FE88: @ 0x0804FE88
 	ldr r0, [r4, #0x1c]
 	cmp r0, #0
 	beq _0804FEA2
-	bl sub_080273E0
+	bl OperatorDelete
 _0804FEA2:
 	adds r0, r4, #0
 	adds r1, r5, #0
@@ -13590,7 +13590,7 @@ sub_0805011C: @ 0x0805011C
 	adds r4, r1, #0
 	adds r5, r2, #0
 	movs r0, #0x34
-	bl sub_080273EC
+	bl OperatorNew
 	movs r2, #0x91
 	lsls r2, r2, #2
 	adds r1, r6, r2
@@ -13630,7 +13630,7 @@ sub_080501C0: @ 0x080501C0
 	ldr r1, _080502BC @ =0x0000078C
 	adds r5, r7, r1
 	movs r0, #0x24
-	bl sub_080273EC
+	bl OperatorNew
 	bl sub_080594B8
 	adds r1, r0, #0
 	str r1, [r5]
@@ -13640,7 +13640,7 @@ sub_080501C0: @ 0x080501C0
 	lsls r0, r0, #3
 	adds r4, r7, r0
 	movs r0, #0x24
-	bl sub_080273EC
+	bl OperatorNew
 	ldr r1, [r5]
 	bl sub_08050E94
 	adds r1, r0, #0
@@ -13650,7 +13650,7 @@ sub_080501C0: @ 0x080501C0
 	ldr r1, _080502C0 @ =0x00000794
 	adds r4, r7, r1
 	movs r0, #0x58
-	bl sub_080273EC
+	bl OperatorNew
 	movs r1, #0
 	bl sub_080533EC
 	adds r1, r0, #0
@@ -13687,7 +13687,7 @@ _08050254:
 	movs r1, #0
 	bl sub_080593BC
 	movs r0, #0x44
-	bl sub_080273EC
+	bl OperatorNew
 	ldr r1, _080502C8 @ =0x0000079C
 	adds r2, r7, r1
 	adds r1, #4
@@ -13703,7 +13703,7 @@ _08050254:
 	movs r0, #0
 	str r0, [r4]
 	movs r0, #0x20
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r0, #0
 	movs r3, #0
 	ldr r0, [sp, #0x1c]
@@ -14193,7 +14193,7 @@ _08050634:
 	bl sub_08047970
 _08050674:
 	movs r0, #0x44
-	bl sub_080273EC
+	bl OperatorNew
 	adds r3, r0, #0
 	ldr r0, [r4, #0xc]
 	movs r1, #0x91
@@ -14246,7 +14246,7 @@ _080506A2:
 	bl sub_08047970
 _080506E4:
 	movs r0, #0x44
-	bl sub_080273EC
+	bl OperatorNew
 	movs r1, #1
 	movs r2, #0
 	bl sub_080567E8
@@ -14366,7 +14366,7 @@ sub_080507C4: @ 0x080507C4
 	adds r1, r5, #0
 	bl sub_0804901C
 	movs r0, #0x44
-	bl sub_080273EC
+	bl OperatorNew
 	movs r1, #1
 	movs r2, #0
 	bl sub_080567E8
@@ -14782,7 +14782,7 @@ sub_08050AD0: @ 0x08050AD0
 	movs r2, #0x10
 	bl sub_0804A498
 	movs r0, #0x24
-	bl sub_080273EC
+	bl OperatorNew
 	movs r1, #0
 	str r1, [sp]
 	movs r2, #0x13
@@ -14892,7 +14892,7 @@ _08050C04:
 	cmp r0, #0
 	beq _08050C26
 	adds r0, r5, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _08050C26:
 	pop {r4, r5, r6}
 	pop {r0}
@@ -15989,10 +15989,10 @@ _08051470:
 	ldr r0, [r7, #0x14]
 	muls r0, r1, r0
 	lsls r0, r0, #3
-	bl sub_080273D0
+	bl OperatorNewArray
 	str r0, [r7, #0x18]
 	lsls r0, r4, #4
-	bl sub_080273D0
+	bl OperatorNewArray
 	str r0, [r7, #0x1c]
 	mov r8, r4
 	movs r4, #1
@@ -16311,12 +16311,12 @@ sub_08051780: @ 0x08051780
 	ldr r0, [r4, #0x1c]
 	cmp r0, #0
 	beq _08051794
-	bl sub_080273C4
+	bl OperatorDeleteArray
 _08051794:
 	ldr r0, [r4, #0x18]
 	cmp r0, #0
 	beq _0805179E
-	bl sub_080273C4
+	bl OperatorDeleteArray
 _0805179E:
 	adds r0, r4, #0
 	adds r1, r5, #0
@@ -16513,7 +16513,7 @@ sub_08051970: @ 0x08051970
 	ldrh r0, [r7, #2]
 	str r0, [r4]
 	lsls r0, r0, #2
-	bl sub_080273D0
+	bl OperatorNewArray
 	adds r1, r0, #0
 	mov r0, r8
 	str r1, [r0, #4]
@@ -16584,7 +16584,7 @@ _08051A14:
 	adds r5, #0x88
 	ldr r0, [r5]
 	lsls r0, r0, #6
-	bl sub_080273D0
+	bl OperatorNewArray
 	str r0, [r4]
 	mov r7, r8
 	adds r7, #0x8c
@@ -16819,15 +16819,15 @@ sub_08051BC0: @ 0x08051BC0
 	adds r0, r5, #0
 	adds r0, #0x98
 	ldr r0, [r0]
-	bl sub_080273E0
+	bl OperatorDelete
 	ldr r0, [r5, #4]
-	bl sub_080273E0
+	bl OperatorDelete
 	movs r0, #1
 	ands r0, r4
 	cmp r0, #0
 	beq _08051BEC
 	adds r0, r5, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _08051BEC:
 	pop {r4, r5}
 	pop {r0}
@@ -16913,15 +16913,15 @@ sub_08051C80: @ 0x08051C80
 	adds r0, r5, #0
 	adds r0, #0x98
 	ldr r0, [r0]
-	bl sub_080273E0
+	bl OperatorDelete
 	ldr r0, [r5, #4]
-	bl sub_080273E0
+	bl OperatorDelete
 	movs r0, #1
 	ands r0, r4
 	cmp r0, #0
 	beq _08051CAC
 	adds r0, r5, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _08051CAC:
 	pop {r4, r5}
 	pop {r0}
@@ -17070,7 +17070,7 @@ _08051D98:
 	ldr r2, _08051E40 @ =0x0200055C
 	mov sl, r2
 	movs r0, #0x44
-	bl sub_080273EC
+	bl OperatorNew
 	ldr r1, _08051E44 @ =0x02000554
 	ldr r3, _08051E48 @ =gUnknown_086CF750
 	mov r2, r8
@@ -17617,7 +17617,7 @@ _0805218C:
 	ldr r0, _08052298 @ =0x0200056C
 	mov sl, r0
 	movs r0, #0x44
-	bl sub_080273EC
+	bl OperatorNew
 	ldr r1, _0805229C @ =0x02000564
 	ldr r3, _080522A0 @ =gUnknown_086CF75C
 	str r5, [sp]
@@ -18324,7 +18324,7 @@ sub_080527D8: @ 0x080527D8
 	b _08052812
 _080527EE:
 	movs r0, #0x5c
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r4, #0
 	adds r2, r5, #0
 	adds r3, r6, #0
@@ -18332,7 +18332,7 @@ _080527EE:
 	b _08052814
 _08052800:
 	movs r0, #0x54
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r4, #0
 	adds r2, r5, #0
 	adds r3, r6, #0
@@ -18487,7 +18487,7 @@ sub_080528D8: @ 0x080528D8
 	bl sub_08048D78
 	str r0, [r4, #0x38]
 	movs r0, #0x44
-	bl sub_080273EC
+	bl OperatorNew
 	adds r6, r0, #0
 	ldr r0, [r4, #0x38]
 	bl sub_08048D04
@@ -20834,7 +20834,7 @@ _08053D3A:
 	cmp r0, #0
 	beq _08053D4C
 	adds r0, r4, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _08053D4C:
 	pop {r4, r5}
 	pop {r0}
@@ -20868,7 +20868,7 @@ sub_08053D5C: @ 0x08053D5C
 	adds r4, r4, r0
 	movs r0, #0x84
 	lsls r0, r0, #2
-	bl sub_080273EC
+	bl OperatorNew
 	ldr r2, [r4, #0x2c]
 	ldr r3, [r4, #0x30]
 	ldr r1, [r4, #0x34]
@@ -20904,7 +20904,7 @@ sub_08053DC4: @ 0x08053DC4
 	cmp r0, #0
 	beq _08053DDA
 	adds r0, r2, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _08053DDA:
 	pop {r0}
 	bx r0
@@ -23761,7 +23761,7 @@ _08055486:
 	cmp r0, #0
 	beq _0805549E
 	adds r0, r6, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _0805549E:
 	pop {r4, r5, r6, r7}
 	pop {r0}
@@ -24657,7 +24657,7 @@ sub_08055B7C: @ 0x08055B7C
 	cmp r0, #0
 	beq _08055B8E
 	adds r0, r2, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _08055B8E:
 	pop {r0}
 	bx r0
@@ -25018,7 +25018,7 @@ sub_08055E20: @ 0x08055E20
 	movs r2, #0x10
 	bl sub_0804A498
 	movs r0, #0x44
-	bl sub_080273EC
+	bl OperatorNew
 	adds r6, r0, #0
 	ldr r0, [r4, #0x14]
 	bl sub_08048D04
@@ -25712,7 +25712,7 @@ sub_080564A8: @ 0x080564A8
 	adds r6, #0x28
 	strb r4, [r6]
 	movs r0, #0x58
-	bl sub_080273EC
+	bl OperatorNew
 	movs r1, #1
 	str r1, [sp]
 	str r4, [sp, #4]
@@ -25952,7 +25952,7 @@ sub_080567E8: @ 0x080567E8
 	cmp r0, #0
 	beq _080568B4
 	movs r0, #0x50
-	bl sub_080273EC
+	bl OperatorNew
 	adds r4, r0, #0
 	movs r0, #0xbf
 	bl GetUiText
@@ -25969,7 +25969,7 @@ sub_080567E8: @ 0x080567E8
 	adds r0, r6, #0
 	bl sub_080560DC
 	movs r0, #0x50
-	bl sub_080273EC
+	bl OperatorNew
 	adds r4, r0, #0
 	movs r0, #0xc0
 	bl GetUiText
@@ -26012,7 +26012,7 @@ _080568A8:
 	b _080568DE
 _080568B4:
 	movs r0, #0x50
-	bl sub_080273EC
+	bl OperatorNew
 	adds r4, r0, #0
 	movs r0, #0xc1
 	bl GetUiText
@@ -26673,105 +26673,105 @@ _08056FA0: @ jump table
 	.global _08056FFC
 _08056FFC:
 	movs r0, #0x3c
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r4, #0
 	bl sub_08059324
 	b _08057100
 	.global _0805700A
 _0805700A:
 	movs r0, #0x3c
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r4, #0
 	bl sub_080592C0
 	b _08057100
 	.global _08057018
 _08057018:
 	movs r0, #0x40
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r4, #0
 	bl sub_08059258
 	b _08057100
 	.global _08057026
 _08057026:
 	movs r0, #0x3c
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r4, #0
 	bl sub_080591C0
 	b _08057100
 	.global _08057034
 _08057034:
 	movs r0, #0x3c
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r4, #0
 	bl sub_08059154
 	b _08057100
 	.global _08057042
 _08057042:
 	movs r0, #0x3c
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r4, #0
 	bl sub_080590DC
 	b _08057100
 	.global _08057050
 _08057050:
 	movs r0, #0x3c
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r4, #0
 	bl sub_0805905C
 	b _08057100
 	.global _0805705E
 _0805705E:
 	movs r0, #0x3c
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r4, #0
 	bl sub_08059010
 	b _08057100
 	.global _0805706C
 _0805706C:
 	movs r0, #0x3c
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r4, #0
 	bl sub_08058FA4
 	b _08057100
 	.global _0805707A
 _0805707A:
 	movs r0, #0x3c
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r4, #0
 	bl sub_08058F38
 	b _08057100
 	.global _08057088
 _08057088:
 	movs r0, #0x3c
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r4, #0
 	bl sub_08058ECC
 	b _08057100
 	.global _08057096
 _08057096:
 	movs r0, #0x3c
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r4, #0
 	bl sub_08058E74
 	b _08057100
 	.global _080570A4
 _080570A4:
 	movs r0, #0x3c
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r4, #0
 	bl sub_08058E14
 	b _08057100
 	.global _080570B2
 _080570B2:
 	movs r0, #0x3c
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r4, #0
 	bl sub_08058D8C
 	b _08057100
 	.global _080570C0
 _080570C0:
 	movs r0, #0x3c
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r5, #0
 	adds r2, r4, #0
 	bl sub_08058D3C
@@ -26779,14 +26779,14 @@ _080570C0:
 	.global _080570D0
 _080570D0:
 	movs r0, #0x3c
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r4, #0
 	bl sub_08058D20
 	b _08057100
 	.global _080570DE
 _080570DE:
 	movs r0, #0x44
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r4, #0
 	adds r2, r6, #0
 	bl sub_0805AE9C
@@ -26794,7 +26794,7 @@ _080570DE:
 	.global _080570EE
 _080570EE:
 	movs r0, #0x3c
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r4, #0
 	adds r2, r6, #0
 	bl sub_0805ADE4
@@ -27058,7 +27058,7 @@ _080572AE:
 	adds r2, r4, r2
 	str r2, [sp, #0xc]
 	movs r0, #0x44
-	bl sub_080273EC
+	bl OperatorNew
 	ldr r1, _08057328 @ =gUnknown_086D786C
 	adds r1, #0x10
 	adds r1, r5, r1
@@ -27242,7 +27242,7 @@ sub_08057450: @ 0x08057450
 	ldr r0, _0805753C @ =0x020005A0
 	str r5, [r0]
 	movs r0, #0xb8
-	bl sub_080273EC
+	bl OperatorNew
 	adds r4, r0, #0
 	movs r0, #0
 	str r0, [r4]
@@ -27420,7 +27420,7 @@ _080575D8:
 	cmp r1, #0
 	bge _08057584
 	mov r0, r8
-	bl sub_080273E0
+	bl OperatorDelete
 _080575EC:
 	mov r3, sl
 	ldr r4, [r3, #0x38]
@@ -28136,7 +28136,7 @@ _08057D10: @ jump table
 	.global _08057D38
 _08057D38:
 	movs r0, #0x24
-	bl sub_080273EC
+	bl OperatorNew
 	adds r4, r0, #0
 	ldr r6, _08057DA8 @ =0x020005A8
 	ldr r0, _08057DAC @ =gUnknown_086D7C20
@@ -28157,7 +28157,7 @@ _08057D38:
 	bl sub_08048D78
 	str r0, [r4, #0x14]
 	movs r0, #0x44
-	bl sub_080273EC
+	bl OperatorNew
 	adds r5, r0, #0
 	ldr r0, [r4, #0x14]
 	bl sub_08048D04
@@ -28191,7 +28191,7 @@ _08057DB4: .4byte 0x00001030
 	.global _08057DB8
 _08057DB8:
 	movs r0, #0x24
-	bl sub_080273EC
+	bl OperatorNew
 	adds r4, r0, #0
 	ldr r6, _08057DE4 @ =0x020005AC
 	ldr r1, _08057DE8 @ =gUnknown_086D7C38
@@ -28217,7 +28217,7 @@ _08057DF0: .4byte 0x00002030
 	.global _08057DF4
 _08057DF4:
 	movs r0, #0x24
-	bl sub_080273EC
+	bl OperatorNew
 	adds r4, r0, #0
 	ldr r6, _08057E20 @ =0x020005B0
 	ldr r1, _08057E24 @ =gUnknown_086D7C58
@@ -28243,7 +28243,7 @@ _08057E2C: .4byte 0x00002030
 	.global _08057E30
 _08057E30:
 	movs r0, #0x24
-	bl sub_080273EC
+	bl OperatorNew
 	adds r4, r0, #0
 	ldr r6, _08057E5C @ =0x020005A8
 	ldr r1, _08057E60 @ =gUnknown_086D7C20
@@ -28278,7 +28278,7 @@ _08057E6C:
 	adds r2, r2, r0
 	str r2, [sp, #0xc]
 	movs r0, #0x24
-	bl sub_080273EC
+	bl OperatorNew
 	adds r4, r0, #0
 	ldr r1, _08057EFC @ =0x020005B4
 	mov r8, r1
@@ -28300,7 +28300,7 @@ _08057E6C:
 	bl sub_08048D78
 	str r0, [r4, #0x14]
 	movs r0, #0x44
-	bl sub_080273EC
+	bl OperatorNew
 	adds r6, r0, #0
 	ldr r0, [r4, #0x14]
 	bl sub_08048D04
@@ -28344,7 +28344,7 @@ _08057F0C:
 	movs r2, #0x10
 	bl sub_0804A498
 	movs r0, #0x24
-	bl sub_080273EC
+	bl OperatorNew
 	adds r4, r0, #0
 	ldr r6, _08057F44 @ =0x020005B8
 	ldr r1, _08057F48 @ =gUnknown_086D7C94
@@ -28375,7 +28375,7 @@ _08057F54:
 	movs r2, #0x10
 	bl sub_0804A498
 	movs r0, #0x24
-	bl sub_080273EC
+	bl OperatorNew
 	adds r4, r0, #0
 	ldr r6, _08057FF4 @ =0x020005B8
 	ldr r1, _08057FF8 @ =gUnknown_086D7C94
@@ -28398,7 +28398,7 @@ _08057F86:
 	bl sub_08048D78
 	str r0, [r4, #0x14]
 	movs r0, #0x44
-	bl sub_080273EC
+	bl OperatorNew
 	adds r5, r0, #0
 	ldr r0, [r4, #0x14]
 	bl sub_08048D04
@@ -28451,7 +28451,7 @@ _08058000: .4byte 0x0000C030
 	.global _08058004
 _08058004:
 	movs r0, #0x24
-	bl sub_080273EC
+	bl OperatorNew
 	adds r4, r0, #0
 	ldr r6, _080580A4 @ =0x020005BC
 	ldr r1, _080580A8 @ =gUnknown_086D7CBC
@@ -28474,7 +28474,7 @@ _08058004:
 	bl sub_08048D78
 	str r0, [r4, #0x14]
 	movs r0, #0x44
-	bl sub_080273EC
+	bl OperatorNew
 	adds r5, r0, #0
 	ldr r0, [r4, #0x14]
 	bl sub_08048D04
@@ -28985,7 +28985,7 @@ sub_08058534: @ 0x08058534
 	cmp r0, #0
 	beq _0805854A
 	adds r0, r2, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _0805854A:
 	pop {r0}
 	bx r0
@@ -29414,7 +29414,7 @@ sub_080588F0: @ 0x080588F0
 	adds r5, r5, r2
 _08058932:
 	movs r0, #0xc8
-	bl sub_080273EC
+	bl OperatorNew
 	adds r4, r0, #0
 	ldr r0, [r6, #0x14]
 	bl sub_08048D04
@@ -30892,7 +30892,7 @@ sub_080594B8: @ 0x080594B8
 	movs r2, #0x10
 	bl sub_0804A498
 	movs r0, #0x44
-	bl sub_080273EC
+	bl OperatorNew
 	adds r6, r0, #0
 	ldr r0, [r4, #0x14]
 	bl sub_08048D04
@@ -31025,14 +31025,14 @@ _080595EA:
 	bl sub_080001C0
 	adds r7, r0, #0
 	lsls r0, r7, #2
-	bl sub_080273D0
+	bl OperatorNewArray
 	str r0, [r4, #4]
 	cmp r0, #0
 	beq _0805961C
 	movs r6, #0x80
 	lsls r6, r6, #1
 	adds r0, r6, #0
-	bl sub_080273D0
+	bl OperatorNewArray
 	str r0, [r4, #8]
 	cmp r0, #0
 	bne _08059622
@@ -31291,7 +31291,7 @@ _080597DC:
 	ldr r0, [r0]
 	cmp r0, #0
 	beq _080597F6
-	bl sub_080273C4
+	bl OperatorDeleteArray
 _080597F6:
 	ldr r0, [r4]
 	lsls r1, r0, #1
@@ -31304,7 +31304,7 @@ _080597F6:
 	ldr r0, [r1]
 	cmp r0, #0
 	beq _08059810
-	bl sub_080273C4
+	bl OperatorDeleteArray
 _08059810:
 	ldr r1, [r4]
 	lsls r0, r1, #1
@@ -32409,7 +32409,7 @@ sub_0805A02C: @ 0x0805A02C
 	cmp r0, #0
 	beq _0805A054
 	adds r0, r5, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _0805A054:
 	pop {r4, r5}
 	pop {r0}
@@ -32609,13 +32609,13 @@ sub_0805A23C: @ 0x0805A23C
 	ldr r0, _0805A27C @ =gUnknown_087FBD74
 	str r0, [r4, #0x48]
 	ldr r0, [r4, #0x50]
-	bl sub_080273E0
+	bl OperatorDelete
 	adds r0, r4, #0
 	bl sub_0805A1D8
 	ldr r0, [r4, #0x4c]
 	cmp r0, #0
 	beq _0805A25C
-	bl sub_080273C4
+	bl OperatorDeleteArray
 _0805A25C:
 	ldr r0, _0805A280 @ =gUnknown_087FBDAC
 	str r0, [r4, #0x48]
@@ -32626,7 +32626,7 @@ _0805A25C:
 	cmp r0, #0
 	beq _0805A274
 	adds r0, r4, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _0805A274:
 	pop {r4, r5}
 	pop {r0}
@@ -32671,7 +32671,7 @@ sub_0805A284: @ 0x0805A284
 	lsls r0, r0, #1
 	str r0, [r5, #0x54]
 	lsls r0, r6, #3
-	bl sub_080273D0
+	bl OperatorNewArray
 	adds r1, r0, #0
 	str r1, [r5, #0x4c]
 	movs r2, #0
@@ -32744,7 +32744,7 @@ _0805A318:
 	blt _0805A318
 _0805A354:
 	movs r0, #0x30
-	bl sub_080273EC
+	bl OperatorNew
 	adds r1, r5, #0
 	bl sub_0805A83C
 	str r0, [r5, #0x50]
@@ -32846,7 +32846,7 @@ sub_0805A42C: @ 0x0805A42C
 	cmp r0, #0
 	beq _0805A44A
 	adds r0, r5, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _0805A44A:
 	pop {r4, r5}
 	pop {r0}
@@ -33530,7 +33530,7 @@ _0805A994:
 	cmp r6, #0
 	bne _0805A9BC
 	movs r0, #0x58
-	bl sub_080273EC
+	bl OperatorNew
 	mov r4, sl
 	ldr r1, [r4]
 	ldr r2, [r4, #4]
@@ -33874,7 +33874,7 @@ _0805AC1E:
 	cmp r0, #0
 	beq _0805AC2C
 	adds r0, r4, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _0805AC2C:
 	pop {r4, r5}
 	pop {r0}

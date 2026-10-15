@@ -26,12 +26,18 @@ SECTIONS
 		build/ntranced/games/n2/asm/code_08002A58.o(.text);
 		build/ntranced/src/engine/sys/vram_dma_queue.o(.text);
 		build/ntranced/games/n2/asm/code_08007620.o(.text);
+		build/ntranced/src/game/crates/collision_queue.o(.text);
+		build/ntranced/games/n2/asm/code_08012CF8.o(.text);
 		build/ntranced/src/game/level/tile_cache_cell.o(.text);
 		build/ntranced/games/n2/asm/code_08025170.o(.text);
 		build/ntranced/src/game/level/terrain_probe.o(.text);
 		build/ntranced/games/n2/asm/code_080267F8.o(.text);
 		build/ntranced/src/game/level/terrain_probe_axes.o(.text);
 		build/ntranced/games/n2/asm/code_08026D10.o(.text);
+		build/ntranced/src/engine/sys/operator_new.o(.text);
+		build/ntranced/games/n2/asm/code_080273FC.o(.text);
+		build/ntranced/src/engine/actor/actor_spawn_collected.o(.text);
+		build/ntranced/games/n2/asm/code_080322F8.o(.text);
 		build/ntranced/lib/libgcc/_divdi3.o(.text);
 		build/ntranced/lib/libgcc/_udivdi3.o(.text);
 		build/ntranced/lib/libgcc/_udivsi3.o(.text);

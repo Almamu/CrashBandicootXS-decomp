@@ -31,7 +31,7 @@ extern const u8 gCrateKindCounted[CRATE_KIND_COUNT];
 extern const u8 gCrateKindBreakable[CRATE_KIND_COUNT];
 extern const u8 gCrateKindExplosive[CRATE_KIND_COUNT];
 extern const u8 gCrateKindUnbreakable[CRATE_KIND_COUNT];
-extern const s32 gCrateHitResponse[CRATE_KIND_COUNT][7];
+extern const s32 gCrateHitResponse[CRATE_KIND_COUNT][ATTACK_KIND_COUNT];
 extern const u8 gAttackKindBreakLimited[8];
 
 /* Set when the crate list changes (games/xs/sym_iwram.txt). */

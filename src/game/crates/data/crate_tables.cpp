@@ -103,7 +103,7 @@ const s32 gActionCtrlStateAttackKinds[ACTION_STATE_COUNT] = {
 /* QueueCratePlayerCollision and ApplyCrateCollision (crate_break.cpp): the collision response
  * code of each crate kind (row) against each attack kind (column,
  * ATTACK_KIND_*). */
-const s32 gCrateHitResponse[CRATE_KIND_COUNT][7] = {
+const s32 gCrateHitResponse[CRATE_KIND_COUNT][ATTACK_KIND_COUNT] = {
     /* CRATE_KIND_BASIC */ { 0, 1, 3, 3, 3, 3, 3 },
     /* CRATE_KIND_CHECKPOINT */ { 0, 0, 5, 5, 5, 5, 5 },
     /* CRATE_KIND_AKU_AKU */ { 0, 1, 3, 3, 3, 3, 3 },

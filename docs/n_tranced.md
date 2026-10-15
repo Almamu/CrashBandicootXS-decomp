@@ -170,7 +170,11 @@ match it, and the original's bytes:
    (`vram_dma_queue.o`).
    `tools/nt_compare`'s `match.json` gives the candidates: the XS objects
    whose functions are all "exact", in the same order and as contiguous
-   in N-Tranced.
+   in N-Tranced. A short function N-Tranced has several copies of can be
+   matched to the wrong copy (`dup` > 1), which breaks an object's order:
+   look for the whole object's bytes too (`operator_new.o`,
+   `actor_spawn_collected.o`), and check a name the comparison gave such
+   a function (`ClearCollectedSpawns` was another copy's).
 2. Add it to `objects.txt` (address, size of its `.text`, source; for
    libgcc's functions the object, `lib/libgcc/_divdi3.o`). A code object's
    `.rodata` that the script doesn't place is discarded, as XS's script
@@ -187,7 +191,8 @@ match it, and the original's bytes:
 A source that includes a generated header (`constants/levels.h`, ...)
 gets N-Tranced's placeholder for it (`games/n2/levels.mk`): only the
 counts the shared headers' declarations need (`LEVEL_COUNT` 29,
-`UI_TEXT_COUNT` 196, `THEME_COUNT` 12, `ENTITY_COUNT` 110), N-Tranced's
+`UI_TEXT_COUNT` 196, `THEME_COUNT` 12, `ENTITY_COUNT` 110,
+`CRATE_KIND_COUNT` 26), N-Tranced's
 own, until #1113
 generates the headers from its data. A source that needs another of
 their constants doesn't build for N-Tranced yet.
