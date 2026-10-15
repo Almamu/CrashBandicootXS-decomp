@@ -1,73 +1,84 @@
 [![Build and compare](https://github.com/Almamu/CrashBandicootXS-decomp/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/Almamu/CrashBandicootXS-decomp/actions/workflows/build.yml)
+[![Mods](https://github.com/Almamu/CrashBandicootXS-decomp/actions/workflows/mods.yml/badge.svg?branch=main)](https://github.com/Almamu/CrashBandicootXS-decomp/actions/workflows/mods.yml)
 [![Matching decompilation](https://github.com/Almamu/CrashBandicootXS-decomp/blob/badges/matching.svg?raw=true)](docs/progress_report.md#progress-badges)
 [![Non-matching decompilation](https://github.com/Almamu/CrashBandicootXS-decomp/blob/badges/nonmatching.svg?raw=true)](docs/progress_report.md#progress-badges)
 [![Functions with no matching workarounds](https://github.com/Almamu/CrashBandicootXS-decomp/blob/badges/clean.svg?raw=true)](docs/progress_report.md#progress-badges)
 [![Functions with matching workarounds left](https://github.com/Almamu/CrashBandicootXS-decomp/blob/badges/workarounds.svg?raw=true)](docs/progress_report.md#progress-badges)
+[![decompilati.onl](https://decompilati.onl/badge/crash-bandicoot-xs-the-huge-adventure.svg)](https://decompilati.onl/projects/crash-bandicoot-xs-the-huge-adventure)
+[![bytematch.dev](https://bytematch.dev/Almamu/CrashBandicootXS-decomp.svg?label=bytematch.dev&measure=matched_code_percent)](https://bytematch.dev/Almamu/CrashBandicootXS-decomp)
 
-Matching decompilation of Crash Bandicoot XS (Crash Bandicoot: The Huge Adventure).
+# Crash Bandicoot XS
 
-It builds the following ROM:
+A matching decompilation of Crash Bandicoot XS (Crash Bandicoot: The Huge
+Adventure), Vicarious Visions' 2002 Game Boy Advance game. It builds:
+
 * [**crashbandicootxs.gba**](https://datomatic.no-intro.org/index.php?page=show_record&s=23&n=0310) `sha1: bdd061e1b5187c0528928ec0ddb6886b1de16970` (Europe) (En,Fr,De,Es,It,Nl)
 
-The whole ROM is built from the sources in this repository: C, a little
-hand-written assembly, and the assets as PNGs, palettes, level JSON, XM
-songs and WAV samples. `baserom.gba` isn't needed to build it.
+The whole ROM is built from this repository: C++ game code, C libraries,
+a little hand-written assembly, and the assets as PNGs, palettes, level
+JSON, XM songs, WAV samples and gettext text. You don't need a copy of
+the game to build it.
 
-> :warning: **Changing code? Read [CONTRIBUTING.md](./CONTRIBUTING.md) and
-> [docs/workflow.md](./docs/workflow.md) first.** Every change has to keep
-> the ROM byte-identical, and only a full clean `make compare` proves it.
+- **Want to make a level or a mod?** Start at [docs/modding.md](./docs/modding.md);
+  the levels themselves are in [docs/levels.md](./docs/levels.md).
+- **Want to build it?** See [INSTALL.md](./INSTALL.md), then [Building](#building).
+- **Want to change code?** Read [CONTRIBUTING.md](./CONTRIBUTING.md) and
+  [docs/workflow.md](./docs/workflow.md) first.
 
-## Current state
+## Status
 
-- **Code: all 2062 functions are byte-exact; 2061 are C.** The ARM functions in
-  the IWRAM image (`src/engine/gfx/sprite_arm.cpp`,
-  `src/engine/util/string_arm.cpp`) are built with a locally patched ARM
-  compiler (`agbcp_arm_patched`, see INSTALL.md): the ROM's ARM compiler
-  is a later, unreleased build whose return code and jump rules stock
-  agbcc_arm can't produce (#553,
-  [docs/matching/iwram-image.md](./docs/matching/iwram-image.md)). The
-  other one, `itoa_arm`, is assembly by owner decision (`asm/itoa_arm.s`,
-  #662): its ROM code is another compiler's, most likely armcc's, which
-  no gcc reproduces. It is still counted as a function. Hand-written
-  assembly (crt0, IntrMain, libgcc's lib1funcs, the BIOS SWI wrappers,
-  GAX2's ARM DSP routines) isn't counted.
-- **Data: 100%.** Every ROM table is a typed C `const` array in
-  `src/*/data/` (a library's own tables are in `lib/<name>/data/`), and
-  every asset is rebuilt from a source file (see "Data and assets"
-  below).
-- **Done:** the cleanup pass (raw pointer arithmetic and hardware
-  addresses replaced with structs, fields and `REG_*` macros), naming
-  (no `sub_XXXXXXXX` function names left), the library split (#573), the
-  file layout (#575) and the headers (#574: every function and global is
-  declared once, in a header).
-- **Matching workarounds:** the *clean functions* and *workarounds left*
-  badges above (redrawn by CI on every push to main) show how many
-  functions still need a register pin, empty-asm nudge
-  (`include/match.h`), instruction asm, retyped field access, scoped
-  `volatile` or self-init to come out byte-exact. Each has a comment
-  saying why (#662,
+- **The decompilation is complete and byte-exact.** All 2062 functions
+  match and the data is at 100% (the objdiff report, see
+  [docs/progress_report.md](./docs/progress_report.md)). Every ROM table is
+  a typed `const` array and every asset is rebuilt from a source file.
+- **The cleanup is complete.** The game code is real g++ 2.9 C++
+  (`src/**/*.cpp`, [docs/cplusplus.md](./docs/cplusplus.md)) with its
+  classes and namespaces; pointer arithmetic and hardware addresses are
+  structs, fields and `REG_*` macros; every function and global is
+  declared once, in a header; and the text is gettext files. Functions
+  have real names, apart from 19 small ones (mostly empty or unused) that
+  keep their `sub_`/`nullsub_` placeholder, as
+  [docs/naming.md](./docs/naming.md) allows. No `cleanup` issue is open.
+- **Two functions keep matching workarounds**, by owner decision:
+  `GAX2_init` and `GaxChannelMix`, in the GAX2 sound library. Each
+  workaround has a comment saying why ([#662](https://github.com/Almamu/CrashBandicootXS-decomp/issues/662),
   [docs/matching_techniques.md](./docs/matching_techniques.md)). After a
-  build, `tools/match_idioms.py --functions` prints the numbers per
-  directory and `--functions --files` lists the functions.
-- **What's left** is code quality: the remaining placeholder names
-  (`gUnknown_`, `gStaticData_`, `nullsub_N`, `unk_XX` fields), compiler
-  warnings, formatting, and the matching workarounds above. It's
-  tracked as `cleanup` issues on GitHub.
+  build, `tools/match_idioms.py --functions` prints the count.
+- **Hand-written assembly** is left only where C or C++ can't produce the
+  ROM's code: crt0, `IntrMain`, libgcc's `lib1funcs`, the BIOS SWI
+  wrappers, GAX2's ARM DSP routines, and `itoa_arm` (`asm/itoa_arm.s`,
+  [#662](https://github.com/Almamu/CrashBandicootXS-decomp/issues/662): another compiler's output, most likely armcc's; it is counted as a
+  function).
+- **The ARM functions of the IWRAM image** (`src/engine/gfx/sprite_arm.cpp`,
+  `src/engine/util/string_arm.cpp`) are built with a locally patched ARM
+  compiler, `agbcp_arm_patched` (see INSTALL.md): the ROM's ARM compiler
+  was a later build whose code stock agbcc_arm can't produce ([#553](https://github.com/Almamu/CrashBandicootXS-decomp/issues/553),
+  [docs/matching/iwram-image.md](./docs/matching/iwram-image.md)).
 
+The project's progress is also on [decompilati.onl](https://decompilati.onl/projects/crash-bandicoot-xs-the-huge-adventure)
+and [bytematch.dev](https://bytematch.dev/Almamu/CrashBandicootXS-decomp).
 
-`src/` follows the code's namespaces: the engine in `src/engine/`
-(`sys/`, `gfx/`, `actor/`, `audio/`, `save/`, `link/`, `text/`,
-`util/`) and the game in `src/game/` (`crash/`, `entities/`,
-`enemies/`, `bosses/`, `vehicles/`, `crates/`, `objects/`, `level/`,
-`ui/`), with `include/` mirroring it, and every file is named after what
-it holds, never after its ROM address (see
-[CONTRIBUTING.md](./CONTRIBUTING.md#source-layout) and
-[docs/file_layout.md](./docs/file_layout.md)). The
-third-party and SDK code linked into the ROM (the GAX2 sound engine,
-Nintendo's AgbEeprom library, libgcc, the BIOS SWI wrappers) is under
-`lib/` (see [docs/libraries.md](./docs/libraries.md)). Declarations live
-in `include/` and in each library's `include/` (see
-[docs/headers.md](./docs/headers.md)).
+### Crash Bandicoot 2: N-Tranced
+
+The repository has started on a second ROM, Crash Bandicoot 2: N-Tranced
+(Europe), with `make GAME=n2 compare` ([#1106](https://github.com/Almamu/CrashBandicootXS-decomp/issues/1106)). It is an early bootstrap:
+a disassembly with XS's names where they are known, a few shared sources
+that match both games, and the rest of the ROM incbin'd from
+`baserom_n2.gba`, which this build needs. See
+[docs/n_tranced.md](./docs/n_tranced.md); its progress is on
+[decompilati.onl](https://decompilati.onl/projects/crash-bandicoot-2-n-tranced).
+The next steps are open issues: the build layout
+([#1108](https://github.com/Almamu/CrashBandicootXS-decomp/issues/1108),
+[#1109](https://github.com/Almamu/CrashBandicootXS-decomp/issues/1109)),
+the bootstrap ([#1110](https://github.com/Almamu/CrashBandicootXS-decomp/issues/1110)),
+the shared structs and code
+([#1111](https://github.com/Almamu/CrashBandicootXS-decomp/issues/1111),
+[#1116](https://github.com/Almamu/CrashBandicootXS-decomp/issues/1116)),
+its sound engine ([#1112](https://github.com/Almamu/CrashBandicootXS-decomp/issues/1112)),
+levels ([#1113](https://github.com/Almamu/CrashBandicootXS-decomp/issues/1113)),
+text ([#1114](https://github.com/Almamu/CrashBandicootXS-decomp/issues/1114)),
+graphics ([#1115](https://github.com/Almamu/CrashBandicootXS-decomp/issues/1115))
+and its own code ([#1117](https://github.com/Almamu/CrashBandicootXS-decomp/issues/1117)).
 
 ## Building
 
@@ -77,121 +88,179 @@ See [INSTALL.md](./INSTALL.md) for the toolchain. Then:
 make compare
 ```
 
-builds `crashbandicootxs.gba` and checks its SHA-1. It must print
+builds `crashbandicootxs.gba` and checks its SHA-1 against
+[`games/xs/checksum.sha1`](./games/xs/checksum.sha1). It must print
 `crashbandicootxs.gba: OK` (`sha1sum` translates the "OK" in some
-locales). A plain `make` builds the ROM from whatever is in the tree
-without checking it, for example with edited graphics or levels. The
-Makefile tracks header dependencies, so
-after editing a header a plain `make` rebuilds the files that include
-it. Before opening a PR, check from clean:
+locales).
+
+A plain `make` builds the ROM from whatever data is in the tree without
+checking it: edited graphics, new levels, a mod. `make compare` only
+applies to the original data. The Makefile tracks header dependencies,
+so a plain `make` rebuilds what an edit touches. Before opening a PR,
+check from clean:
 
 ```
 rm -rf build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make compare
 rm -rf build objdiff.json && make NON_MATCHING=1 report && objdiff-cli report generate -o report.json
 ```
 
-The second line builds the objdiff progress
-report (see [docs/progress_report.md](./docs/progress_report.md)). It must show
-2062/2062 functions and 100% data.
+The second line builds the objdiff progress report
+([docs/progress_report.md](./docs/progress_report.md)). It must show
+2062/2062 functions and 100% data. The compile rules and the per-object
+compiler choices are in [`compile.mk`](./compile.mk).
 
-## Data and assets
+## Modding
 
-The build regenerates every asset under `build/` from its source; no
-generated file is checked in.
+The game's content is data, and a plain `make` builds whatever data the
+tree has: no code change and no `baserom.gba`. **[docs/modding.md](./docs/modding.md)
+is the modders' entry point**: what a mod can change, how to write one,
+and the sample mod.
 
-- **Graphics** (`graphics/`: indexed PNGs, most carrying their palette,
-  and JASC `.pal` OBJ palettes, in folders by what the game does with
-  them: `cutscenes/`, `fonts/`, `logos/`, `title/`, `menus/`,
-  `level_select/`, `sprites/`, `vehicles/`, `bosses/`): `tools/grit` lays
-  out bitmaps, tilesets and tilemaps, `tools/gbagfx` does the LZ77
-  compression, and `tools/bin2c.py` turns the result into the bytes a
-  `src/*/data/*.cpp` file `#include`s. The rules are in `graphics.mk`.
-  `graphics/manifest.json` records where the ROM has each asset, for
-  `tools/gfx_manifest.py extract`. See [docs/graphics.md](./docs/graphics.md)
-  and [docs/data.md](./docs/data.md), "Resources (grit-style)".
-- **Levels** (`data/levels/<level>/<slot>/`: a `room.json`, one picture
-  per BG layer and the collision layer as an image, for each of the 41
-  rooms): `tools/levels.py` builds the room data, the level assets and the
-  BG tile sets, which it makes from the pictures. The rules are in
-  `levels.mk`. A room added there is built too, after the ROM's data. See
-  [docs/levels.md](./docs/levels.md).
-- **Audio** (`sound/`: XM songs, WAV samples and JSON manifests):
-  `tools/gax_audio.py` rebuilds the GAX2 music and sound-effect data, and
-  `tools/sfx_table.py` the sound-effect table. See
-  [docs/audio.md](./docs/audio.md).
-- **Text** (`text/`: the gettext template `crashxs.pot` and a `.po` per
-  language): msgfmt compiles each language and `tools/text.py` writes the
-  UI and cutscene string tables from them. The rules are in `text.mk`;
-  `make text-check` runs the translation checks and `make text-update`
-  merges a template change into the `.po` files. See
-  [docs/text.md](./docs/text.md).
-- **Tables** are C++ `const` arrays in `src/*/data/`, placed at their ROM
-  addresses by `ldscript.txt`. See [docs/data.md](./docs/data.md).
+- **The sample mod.** [`mods/sample/`](./mods/sample/) adds a fifth world
+  with a new room, theme, song, recoloured vehicle stage, boss level,
+  cutscene and level names in the six languages. `make mod MOD=mods/sample`
+  applies it to a copy of the tree in `build/mods/sample` and builds
+  `build/mods/sample/crashbandicootxs.gba`; your own tree isn't changed.
+  CI builds and boot-tests it in mGBA on every PR.
+- **Levels** ([docs/levels.md](./docs/levels.md)): rooms (one picture per
+  BG layer, the collision layer as an image, and a `room.json` of
+  entities), the level table, themes and their colour cycles, the
+  level-select pages and what unlocks them, level names, actor
+  categories (the vehicle and boss stages, with their own graphics,
+  palettes, sky and animation), boss levels and what clearing a level
+  does.
+- **The save** ([docs/levels.md, "The save"](./docs/levels.md#the-save))
+  grows with the levels: past 28 levels the build switches to a 64 Kbit
+  EEPROM. A build with other level data gets another save version, from
+  a hash of the level data, so a save made with other levels is reset
+  instead of misread.
+- **Graphics** ([docs/graphics.md](./docs/graphics.md)): indexed PNGs and
+  JASC palettes under `graphics/`, sprite banks and new frames.
+- **Text and translations** ([docs/text.md](./docs/text.md)): every string
+  and the credits, as gettext files in `text/` (the template
+  `crashxs.pot` and a `.po` per translation). `make text-check` runs the
+  translation checks.
+- **Audio** ([docs/audio.md](./docs/audio.md)): XM songs and WAV samples
+  under `sound/`, new songs on the ROM's instruments, and which song plays
+  where.
+- **Cutscenes** ([docs/data.md, "Cutscenes"](./docs/data.md#cutscenes)):
+  slides, pictures, timing, music and text.
 
-`expected/` holds frozen copies of the original disassembly: the target
+New or grown data moves everything after it: the ROM's contents can
+shift and grow, and the modded ROM still works
+([docs/shifting.md](./docs/shifting.md)). Only the original data is
+pinned to the original layout.
+
+### What a mod can't do yet
+
+- **New instruments and samples** for new songs: [#1118](https://github.com/Almamu/CrashBandicootXS-decomp/issues/1118).
+- **Level and cutscene editors, and a platform library for ports**: [#1093](https://github.com/Almamu/CrashBandicootXS-decomp/issues/1093).
+- **New behaviour**: a new actor, boss, power or entity type is code; the
+  data decides what the existing kinds look like and where they spawn,
+  not what they do.
+- **N-Tranced**: the modding pipeline is XS's; N-Tranced's data isn't
+  decompiled yet.
+
+The full list is in [docs/modding.md, "What a mod can't do yet"](./docs/modding.md#what-a-mod-cant-do-yet).
+
+## How the code is organised
+
+`src/` follows the code's namespaces: `Engine` in `src/engine/` (`sys/`,
+`gfx/`, `actor/`, `audio/`, `save/`, `link/`, `text/`, `util/`) and
+`Game` in `src/game/` (`crash/`, `entities/`, `enemies/`, `bosses/`,
+`vehicles/`, `crates/`, `objects/`, `level/`, `ui/`), with `include/`
+mirroring it. Each area's ROM tables are in its `data/` folder. No file
+is named after a ROM address. See
+[CONTRIBUTING.md, "Source layout"](./CONTRIBUTING.md#source-layout) and
+[docs/file_layout.md](./docs/file_layout.md).
+
+The third-party and SDK code linked into the ROM is C under `lib/`: the
+GAX2 sound engine, Nintendo's AgbEeprom library, libgcc and the BIOS SWI
+wrappers ([docs/libraries.md](./docs/libraries.md)).
+
+`expected/` holds frozen copies of the original disassembly, the target
 the progress report diffs the build against. Never edit them; see
 [expected/README.md](./expected/README.md).
 
+## Contributing
+
+Read [CONTRIBUTING.md](./CONTRIBUTING.md) and
+[docs/workflow.md](./docs/workflow.md) before changing code. Every change
+has to keep the ROM byte-identical with the original data, and only a
+full clean `make compare` proves it. A change under `text/` also needs
+`make text-check`, and a change to what a doc says updates that doc in
+the same PR.
+
 ## AI-assisted decompilation
 
-A large part of this project's work (function reversal, byte-exact C
-reconstruction, ROM address-space mapping, and documentation) has been
-done with the help of AI coding agents (Claude Code), under human
-supervision and review. This isn't a secret or an experiment on the side -
-it's the primary way this project has been making progress, and it's
-expected to keep being used that way. A few things follow from that:
+Much of this project's work (reversing functions, the byte-exact
+reconstruction, mapping the ROM, and the documentation) has been done
+with AI coding agents (Claude Code), under human supervision and review.
+It is the main way the project has made progress, and it will keep being
+used. So:
 
-- **Nothing is trusted on the AI's say-so.** Every function marked
-  "matched" has gone through the full clean-rebuild verification described
-  in [docs/workflow.md](./docs/workflow.md) - an isolated compile matching
-  is not proof, only a byte-identical `make compare` against the real ROM
-  is. This applies equally whether a human or an AI made the change.
-- **Contributions from AI-assisted work are welcome**, including from
-  contributors using their own AI tooling - as long as the same
-  verification standard is met (the ROM stays byte-identical, and nothing
-  is presented as more certain than it is).
-  [docs/matching.md](./docs/matching.md) and [docs/matching/](./docs/matching/)
-  exist so an AI agent (or a human)
-  picking up a fresh session has enough context to keep going without
-  re-deriving everything from scratch.
-- **Semantic naming should stay honest.** A placeholder name
-  (`gUnknown_XXXXXXXX`, `unk_XX`) is a valid name - AI agents (and
-  humans) should only replace it with a real name when genuinely
-  confident, per [docs/naming.md](./docs/naming.md). An overconfident or
-  invented name is worse than an honest placeholder.
-- **Humans still make the calls that matter**: what gets merged, how the
-  project is organized, and any judgment call that isn't purely mechanical
+- **Nothing is trusted on the AI's say-so.** A function counts as matched
+  only after the full clean rebuild in [docs/workflow.md](./docs/workflow.md):
+  an isolated compile matching is not proof, a byte-identical
+  `make compare` is. This applies to a human's change as much as an
+  agent's.
+- **AI-assisted contributions are welcome**, with your own tooling too,
+  as long as they meet the same standard: the ROM stays byte-identical,
+  and nothing is presented as more certain than it is.
+  [docs/matching.md](./docs/matching.md) and
+  [docs/matching/](./docs/matching/) give an agent (or a human) starting a
+  fresh session the context to keep going.
+- **Names stay honest.** A placeholder name (`gUnknown_XXXXXXXX`,
+  `unk_XX`) is valid; replace it only when genuinely confident, per
+  [docs/naming.md](./docs/naming.md). An invented name is worse than an
+  honest placeholder.
+- **Humans make the calls that matter**: what gets merged, how the
+  project is organised, and every judgement that isn't mechanical
   verification.
 
-If this isn't the kind of project you want to contribute to for that
-reason, that's a completely reasonable position - just know it going in.
+If that's a reason not to contribute, that's a reasonable position; just
+know it going in.
 
-## Notes
+## Documentation
 
-- [INSTALL.md](./INSTALL.md) - **setting up the toolchain and building the ROM**
-- [CONTRIBUTING.md](./CONTRIBUTING.md) - **how to pick up work from the issue tracker, human or agent, and get it to a PR**
-- [docs/workflow.md](./docs/workflow.md) - **the required loop for changing matched code, must be followed for every change**
-- [docs/naming.md](./docs/naming.md) - **the naming convention, and the checklist of what a rename touches**
-- [docs/data.md](./docs/data.md) - how ROM data tables became C `const` arrays in `src/*/data/`, linked in ROM order, and the asset pipeline
-- [docs/text.md](./docs/text.md) - the game's text as gettext files (`text/`): the keys, the checks and the translators' workflow
-- [docs/libraries.md](./docs/libraries.md) - the third-party/SDK libraries under `lib/` (GAX2, AgbEeprom, libgcc, libagbsyscall): layout, headers, flags
-- [docs/cplusplus.md](./docs/cplusplus.md) - the game is g++ 2.x C++: what the ROM shows, the agbcp/old_agbcp C++ compilers, and building objects from C++ source (every `.cpp` under `src/`, `CXX_OBJS`)
-- [docs/file_layout.md](./docs/file_layout.md) - the source tree's layout (by namespace) and the map from the old file names
-- [docs/headers.md](./docs/headers.md) - where declarations live, and the codegen exceptions
-- [docs/audio.md](./docs/audio.md) - how the Shin'en GAX2 sound engine's data is laid out and rebuilt
-- [docs/graphics.md](./docs/graphics.md) - how graphics were extracted, and notes on the sprite/actor system
-- [docs/levels.md](./docs/levels.md) - the level data: rooms, layers, chunk streams, entities
-- [docs/shifting.md](./docs/shifting.md) - the ROM's contents can move and grow: `make shiftcheck` and the mGBA boot test (`tools/boottest.py`)
-- [docs/matching_techniques.md](./docs/matching_techniques.md) - the matching techniques (compilers and flags, source shapes, register pins and holds, the `include/match.h` asm idioms)
-- [docs/matching/](./docs/matching/) - the current matching references (the IWRAM image, per-file flags), plus [archive/](./docs/matching/archive/) and [docs/matching.md](./docs/matching.md), the frozen per-pass matching logs
-- [docs/progress_report.md](./docs/progress_report.md) - the objdiff progress report (`report.json`), the progress badges and the progress sites (decompilati.onl, bytematch.dev), generated in CI
-- [docs/rom_map.md](./docs/rom_map.md) - the historical whole-ROM map used to plan the matching work
-- [docs/n_tranced.md](./docs/n_tranced.md) - the second ROM, Crash Bandicoot 2: N-Tranced (#1106): the `GAME` switch and its bootstrap build
-- The [Kirby & The Amazing Mirror](https://github.com/jiangzhengwenjz/katam/) decompilation uses a very similar codebase, as it was written by the same dev team (Dimps)
-- `ldscript.txt` tells the linker the order in which files are linked, which places every object at its ROM address
+**Modding and the game's data**
+
+- [docs/modding.md](./docs/modding.md): **the modders' entry point**, the sample mod and what a mod can and can't change
+- [docs/levels.md](./docs/levels.md): rooms, layers, entities, themes, level-select pages, actor categories, boss levels and the save
+- [docs/graphics.md](./docs/graphics.md): the graphics, the manifest, sprite banks and the sprite/actor system
+- [docs/text.md](./docs/text.md): the game's text as gettext files, the keys, the checks and the translators' workflow
+- [docs/audio.md](./docs/audio.md): the Shin'en GAX2 sound engine's data, and how songs and samples are built
+- [docs/data.md](./docs/data.md): the ROM's data tables as C++ `const` arrays, the asset pipeline and the cutscenes
+- [docs/shifting.md](./docs/shifting.md): how the ROM's contents move and grow, `make shiftcheck` and the mGBA boot test
+- [docs/screen.md](./docs/screen.md), [docs/fixed_point.md](./docs/fixed_point.md), [docs/dma.md](./docs/dma.md): the screen size, the fixed-point formats and the DMA macros
+- [docs/flags/](./docs/flags/): the game's flag and state values, one page per field
+
+**Building and contributing**
+
+- [INSTALL.md](./INSTALL.md): **the toolchain and building the ROM**
+- [CONTRIBUTING.md](./CONTRIBUTING.md): **picking up work, human or agent, and getting it to a PR**
+- [docs/workflow.md](./docs/workflow.md): **the required loop for changing matched code**
+- [docs/naming.md](./docs/naming.md): **the naming convention, and what a rename touches**
+- [docs/cplusplus.md](./docs/cplusplus.md): the game is g++ 2.9 C++: the agbcp/old_agbcp compilers and the namespaces
+- [docs/file_layout.md](./docs/file_layout.md): the source tree's layout and the map from the old file names
+- [docs/headers.md](./docs/headers.md): where declarations live
+- [docs/libraries.md](./docs/libraries.md): the libraries under `lib/` (GAX2, AgbEeprom, libgcc, libagbsyscall)
+- [docs/progress_report.md](./docs/progress_report.md): the objdiff progress report, the badges and the progress sites
+- [docs/n_tranced.md](./docs/n_tranced.md): the second ROM, Crash Bandicoot 2: N-Tranced, and the `GAME` switch
+
+**Matching history**
+
+- [docs/matching_techniques.md](./docs/matching_techniques.md): the matching techniques (compilers and flags, source shapes, register pins, the `include/match.h` idioms)
+- [docs/matching/](./docs/matching/): the matching references (the IWRAM image, per-file flags) and the [archive](./docs/matching/archive/)
+- [docs/matching.md](./docs/matching.md): the frozen per-pass matching log
+- [docs/casts.md](./docs/casts.md), [docs/simplify.md](./docs/simplify.md): the cleanup of casts and of matching-only source shapes
+- [docs/rom_map.md](./docs/rom_map.md), [docs/data_map.md](./docs/data_map.md): the historical whole-ROM code and data maps used to plan the work
+
+The [Kirby & The Amazing Mirror](https://github.com/jiangzhengwenjz/katam/)
+decompilation is of a game on a very similar codebase.
 
 ## Credits
 
-- [@normmatt](https://github.com/normmatt) for the basic initial repository setup that he did for [Sonic Adventure 2](https://github.com/SAT-R/sa2) decompilation
-- [Sonic Adventure 2](https://github.com/SAT-R/sa2) decompilation as a starting point to get the project building too
+- [@normmatt](https://github.com/normmatt) for the initial repository setup he did for the [Sonic Advance 2](https://github.com/SAT-R/sa2) decompilation
+- The [Sonic Advance 2](https://github.com/SAT-R/sa2) decompilation, the starting point that got this project building
 - [Pokemon Reverse Engineering Tools](https://github.com/pret) for some of the GBA tooling
