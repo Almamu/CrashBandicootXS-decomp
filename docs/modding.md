@@ -46,8 +46,8 @@ not changed. In the modded tree,
     python3 mods/sample/boottest.py
 
 check the translations and the graphics manifest, and play the ROM in
-headless mGBA (`mgba`, its SDL frontend, on `PATH`; see
-[`tools/boottest.py`](../tools/boottest.py)): the new room and its song,
+headless mGBA (`mgba`, its SDL frontend, on `PATH`: 0.10.5, which CI
+builds from source; see [`tools/boottest.py`](../tools/boottest.py)): the new room and its song,
 the category's palettes on the screen, the fifth page and its boss entry,
 the boss HUD, the cutscene after the boss and the 8 KiB save. CI
 (`.github/workflows/mods.yml`) does all of this on every PR, so a change

@@ -20,10 +20,39 @@ jobs:
       with:
         persist-credentials: false
 
-    # mgba-sdl is mGBA's SDL frontend (/usr/games/mgba), which
-    # tools/boottest.py runs headless with its GDB stub.
     - name: Install dependencies
-      run: sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 update && sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 install -y --no-install-recommends build-essential binutils-arm-none-eabi gcc-arm-none-eabi libpng-dev zlib1g-dev python3-pil gettext mgba-sdl
+      run: sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 update && sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 install -y --no-install-recommends build-essential binutils-arm-none-eabi gcc-arm-none-eabi libpng-dev zlib1g-dev python3-pil gettext cmake pkg-config libsdl2-dev
+
+    # mGBA's SDL frontend (`mgba`), which tools/boottest.py runs headless
+    # with its GDB stub: 0.10.5, the version the boot tests were written
+    # against, built from source (SDL only, no OpenGL) and cached. Ubuntu
+    # 24.04's mgba-sdl (0.10.2) reported the first breakpoint's stop 2 bytes
+    # past its address (PlayCutscene + 2), which the driver doesn't expect.
+    - name: Cache mGBA
+      id: mgba-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/mgba
+        key: mgba-0.10.5-sdl-${{ runner.os }}-ubuntu-24.04
+
+    - name: Build mGBA
+      if: steps.mgba-cache.outputs.cache-hit != 'true'
+      run: |
+        curl -fsSL -o mgba.tar.gz https://github.com/mgba-emu/mgba/archive/refs/tags/0.10.5.tar.gz
+        tar -xzf mgba.tar.gz
+        cmake -S mgba-0.10.5 -B mgba-build -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_INSTALL_PREFIX="$HOME/mgba" "-DCMAKE_INSTALL_RPATH=\$ORIGIN/../lib" \
+          -DBUILD_QT=OFF -DBUILD_SDL=ON -DUSE_FFMPEG=OFF -DUSE_EPOXY=OFF -DBUILD_GL=OFF -DBUILD_GLES2=OFF \
+          -DBUILD_GLES3=OFF -DUSE_LUA=OFF -DUSE_DISCORD_RPC=OFF -DUSE_SQLITE3=OFF -DUSE_ELF=OFF \
+          -DUSE_LIBZIP=OFF -DUSE_MINIZIP=OFF -DUSE_EDITLINE=OFF -DUSE_LZMA=OFF -DENABLE_SCRIPTING=OFF
+        cmake --build mgba-build -j"$(nproc)"
+        cmake --install mgba-build
+        rm -rf mgba.tar.gz mgba-0.10.5 mgba-build
+
+    - name: Check mGBA
+      run: |
+        "$HOME/mgba/bin/mgba" --version
+        echo "$HOME/mgba/bin" >> "$GITHUB_PATH"
 
     # The compilers, as in build.yml.
     - name: Checkout agbcc
@@ -67,7 +96,7 @@ jobs:
     # and 64 Kbit save. It fails the step if any check fails.
     - name: Boot-test the sample mod
       working-directory: build/mods/sample
-      run: PATH="/usr/games:$PATH" python3 mods/sample/boottest.py --out boottest.json
+      run: python3 mods/sample/boottest.py --out boottest.json
 
     - name: Upload the boot test's log
       if: always()
