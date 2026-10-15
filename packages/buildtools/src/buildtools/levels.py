@@ -25,6 +25,8 @@ def main():
         L.extract(args[1] if len(args) > 1 else "baserom.gba")
     elif cmd == "extract-rooms":
         L.extract_rooms_from_table(args[1], int(args[2], 16))
+    elif cmd == "extract-table":
+        L.extract_table(args[1], int(args[2], 16))
     elif cmd == "rooms":
         # levels.json's rooms (their folders); with --packed the ones whose
         # asset is LZ77-packed, with --new the ones in no ROM region

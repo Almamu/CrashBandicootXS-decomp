@@ -1333,6 +1333,14 @@ def new_tilesets_c(levels, build_dir):
 # With the ROM's levels that is the ROM's layout; anything else grows or
 # shrinks the table in place, and the ROM data after it moves
 # (docs/shifting.md).
+#
+# Another game's (N-Tranced's, levels.py extract-table) can have more:
+# "records", the played records' order when it isn't their first use, and
+# "room_lists", the levels whose room lists gLevelRoomLists has, in its
+# order, when they aren't in level order. Its stages can be
+# {"kind": K, "index": N}: a record of kind K (3: ROOM_KIND_CATEGORY,
+# actor category N; others the game's own) with no room; and a room's
+# record can set "unk_0C" (N-Tranced's extra rooms: 1).
 
 # The record kinds (ROOM_KIND_*, engine/include/constants/rooms.h); a room's
 # "kind" is one of the first three.
@@ -1349,6 +1357,12 @@ LEVEL_KEYS = ["constant", "name", "name_text", "theme", "times", "mask_assist_de
 
 def stage_symbol(number):
     return "gLevelStage%d" % number
+
+
+def kind_stage_symbol(kind, index):
+    """A {"kind": K, "index": N} stage's record: gLevelStageN for kind 3
+    (as an actor category's), gLevelKindKStageN for another kind."""
+    return stage_symbol(index) if kind == ROOM_KINDS.index("CATEGORY") else "gLevelKind%dStage%d" % (kind, index)
 
 
 def room_list_symbol(level_id):
@@ -1370,7 +1384,10 @@ class LevelTable:
             sys.exit("%s: \"table\" lists a level twice" % LEVELS_JSON)
         self.rooms = levels["rooms"]
         self.rom_rooms = set(rom_region_rooms(levels))
-        self.cats = categories()
+        # the actor categories, when a stage names one ({"stage": NAME})
+        self.cats = categories() if "categories" in levels else {}
+        self.record_order = table.get("records")
+        self.room_lists = table.get("room_lists")
         self.records = {r: read_json(LEVELS_DIR / r / "room.json") for r in self.rooms}
         # the arrays' order: the ROM's (the levels "table" lists, which a
         # level that is gone leaves), then the new levels' in id order
@@ -1392,6 +1409,11 @@ class LevelTable:
 
     def ref(self, e, where):
         """A room-list entry's record symbol."""
+        if isinstance(e, dict) and set(e) == {"kind", "index"}:
+            if not all(isinstance(e[k], int) and 0 <= e[k] <= 0xFFFF for k in e) or e["kind"] < 3:
+                sys.exit("%s: %s: %s: a stage's \"kind\" is 3 or more (no room), \"index\" its number"
+                         % (LEVELS_JSON, where, json.dumps(e)))
+            return kind_stage_symbol(e["kind"], e["index"])
         if isinstance(e, dict):
             if set(e) != {"stage"} or e["stage"] not in self.cats:
                 sys.exit("%s: %s: %s isn't a room folder or {\"stage\": <a category of \"categories\", its "
@@ -1401,8 +1423,8 @@ class LevelTable:
             sys.exit("%s: %s plays %s, which isn't in \"rooms\"" % (LEVELS_JSON, where, e))
         rec = self.records[e].get("record")
         if rec is None:
-            sys.exit("games/xs/data/levels/%s/room.json: no \"record\" (the room's struct level_room: its symbol, "
-                     "\"kind\" and \"blend\")" % e)
+            sys.exit("%s/%s/room.json: no \"record\" (the room's struct level_room: its symbol, "
+                     "\"kind\" and \"blend\")" % (LEVELS_DIR, e))
         return rec["symbol"]
 
     def array(self, constant):
@@ -1414,21 +1436,36 @@ class LevelTable:
         rec = self.records[r]["record"]
         sym = self.records[r]["symbols"]
         if rec.get("kind") not in ROOM_KINDS[:3]:
-            sys.exit("games/xs/data/levels/%s/room.json: \"record\" \"kind\" is one of %s" % (r, ", ".join(ROOM_KINDS[:3])))
+            sys.exit("%s/%s/room.json: \"record\" \"kind\" is one of %s" % (LEVELS_DIR, r, ", ".join(ROOM_KINDS[:3])))
         b = rec.get("blend", {})
         blend = [b.get(k, 0) for k in ("effect", "eva", "evb")]
         if not (0 <= blend[0] <= 0xFFFF and 0 <= blend[1] <= 0xFF and 0 <= blend[2] <= 0xFF):
-            sys.exit("games/xs/data/levels/%s/room.json: \"blend\" is a u16 \"effect\" and u8 \"eva\", \"evb\"" % r)
+            sys.exit("%s/%s/room.json: \"blend\" is a u16 \"effect\" and u8 \"eva\", \"evb\"" % (LEVELS_DIR, r))
         return ["extern const struct level_room %s = {" % rec["symbol"],
-                "    %s, &%s, ROOM_KIND_%s, 0, { { %d, %d, %d } }" % (member(self.records[r], "palette"), sym["desc"],
-                                                                     rec["kind"], *blend),
-                "}; /* games/xs/data/levels/%s */" % r]
+                "    %s, &%s, ROOM_KIND_%s, %d, { { %d, %d, %d } }" % (member(self.records[r], "palette"), sym["desc"],
+                                                                      rec["kind"], rec.get("unk_0C", 0), *blend),
+                "}; /* %s/%s */" % (LEVELS_DIR, r)]
 
     @staticmethod
     def stage_record(name, number):
         return ["extern const struct level_room %s = {" % stage_symbol(number),
                 "    0, 0, ROOM_KIND_CATEGORY, 0, { { /* catIndex */ CATEGORY_%s } }" % name,
                 "};"]
+
+    @staticmethod
+    def kind_stage_record(kind, index):
+        k = "ROOM_KIND_CATEGORY" if kind == ROOM_KINDS.index("CATEGORY") else "%d" % kind
+        return ["extern const struct level_room %s = {" % kind_stage_symbol(kind, index),
+                "    0, 0, %s, 0, { { /* index */ %d } }" % (k, index),
+                "};"]
+
+    def record_of(self, e):
+        """A played entry's record."""
+        if isinstance(e, str):
+            return self.room_record(e)
+        if "kind" in e:
+            return self.kind_stage_record(e["kind"], e["index"])
+        return self.stage_record(e["stage"], self.cats[e["stage"]])
 
     def array_c(self, symbol, entries, comment):
         return ["extern const struct level_room *const %s[%d] = { %s }; /* %s */"
@@ -1448,25 +1485,39 @@ class LevelTable:
         return [(self.array(c)[0], len(self.array(c)[1])) for c in self.order]
 
     def all_records(self):
+        kinds = sorted({(e["kind"], e["index"]) for c in self.order for e in self.array(c)[1]
+                        if isinstance(e, dict) and "kind" in e})
         return [self.records[r]["record"]["symbol"] for r in self.rooms] + \
-            [stage_symbol(n) for n in sorted(self.cats.values())]
+            [stage_symbol(n) for n in sorted(self.cats.values())] + [kind_stage_symbol(k, n) for k, n in kinds]
+
+    def list_order(self):
+        """The levels whose room lists gLevelRoomLists has, in its order."""
+        if self.room_lists is None:
+            return [lv["constant"] for lv in self.levels]
+        if sorted(self.room_lists) != sorted(self.ids):
+            sys.exit("%s: \"table\" \"room_lists\" isn't every level once" % LEVELS_JSON)
+        return self.room_lists
 
     def level_table_c(self, data):
         """The colour cycles' lists, gLevelTable, gLevelRoomLists and
         gThemeMusicCues (level_table.inc)."""
-        out = ["/* Generated by tools/levels.py from games/xs/data/levels/levels.json - do not edit. */", ""]
+        out = ["/* Generated by tools/levels.py from %s - do not edit. */" % LEVELS_JSON, ""]
         out += palette_cycles_c(data) + [""]
         out += ["extern const struct level_room_list gLevelRoomLists[LEVEL_COUNT];"]
         out += self.externs(arrays=self.all_arrays(), records=self.all_records()) + [""]
         out.append("extern const struct level_info gLevelTable[LEVEL_COUNT] = {")
+        lists = self.list_order()
         for lv in self.levels:
             c = lv["constant"]
+            # its room list, by index where the lists aren't in level order
+            k = c if self.room_lists is None else "%d" % lists.index(c)
             out.append("    { %d, %d, { %s }, %d, %d, %d, &gLevelRoomLists[%s] }, /* %s */"
                        % (lv["name_text"], lv["theme"], ", ".join("%d" % t for t in lv["times"]),
-                          lv["mask_assist_deaths"], lv["crate_assist_deaths"], 1 if lv.get("boss") else 0, c, c))
+                          lv["mask_assist_deaths"], lv["crate_assist_deaths"], 1 if lv.get("boss") else 0, k, c))
         out += ["};", ""]
         out.append("extern const struct level_room_list gLevelRoomLists[LEVEL_COUNT] = {")
-        for lv in self.levels:
+        for c in lists:
+            lv = self.levels[self.ids[c]]
             sym, _ = self.array(lv["constant"])
             extra = ["&" + self.ref(lv[k], lv["constant"]) if lv.get(k) else "0" for k in ("bonus", "gem_path")]
             out.append("    { ARRAY_COUNT(%s), %s, %s, %s }, /* %s */" % (sym, sym, extra[0], extra[1], lv["constant"]))
@@ -1488,7 +1539,12 @@ class LevelTable:
                 if key not in seen:
                     seen.add(key)
                     played.append(e)
-        out = ["/* Generated by tools/levels.py from games/xs/data/levels/ - do not edit. */", ""]
+        if self.record_order is not None:
+            # the game's own order of them
+            if sorted(json.dumps(e) for e in self.record_order) != sorted(seen):
+                sys.exit("%s: \"table\" \"records\" isn't the records the levels play, each once" % LEVELS_JSON)
+            played = self.record_order
+        out = ["/* Generated by tools/levels.py from %s/ - do not edit. */" % LEVELS_DIR, ""]
         out += self.externs(rooms=extras + [e for e in played if isinstance(e, str)],
                             records=[self.ref(e, "table") for e in played]) + [""]
         out.append("/* The extra rooms' records. */")
@@ -1499,7 +1555,7 @@ class LevelTable:
             out += self.array_c(sym, entries, c)
         out += ["", "/* The records of the rooms and stages they play. */"]
         for e in played:
-            out += self.room_record(e) if isinstance(e, str) else self.stage_record(e["stage"], self.cats[e["stage"]])
+            out += self.record_of(e)
         return "\n".join(out) + "\n"
 
 
@@ -1592,7 +1648,9 @@ def level_themes(data):
         unknown = [k for k in t if k not in THEME_KEYS + THEME_OPTIONAL_KEYS]
         if unknown:
             fail("%s: unknown %s" % (t["constant"], ", ".join('"%s"' % k for k in unknown)))
-        if t["song"] not in songs:
+        if isinstance(t["song"], int):
+            pass  # its number (N-Tranced's songs have no names yet)
+        elif t["song"] not in songs:
             fail("%s: \"song\" %s isn't a song of %s's song_table (%s)" % (t["constant"], t["song"], GAX_MANIFEST,
                                                                           ", ".join(songs)))
         if "picture" in t and t["picture"] not in pictures:
@@ -1650,7 +1708,8 @@ def music_cues_c(data):
     out = ["/* The music cue of each level theme (`struct level_info.theme`, levels.json's",
            " * \"themes\" \"song\"), read by PlayRoomMusic (room_select.cpp). */",
            "extern const u8 gThemeMusicCues[THEME_COUNT] = {"]
-    out += ["    SONG_%s, /* %s */" % (t["song"].upper(), t["constant"]) for t in themes]
+    out += ["    %s, /* %s */" % ("%d" % t["song"] if isinstance(t["song"], int) else "SONG_" + t["song"].upper(),
+                                    t["constant"]) for t in themes]
     return out + ["};"]
 
 
@@ -3953,6 +4012,112 @@ def extract_rooms_from_table(rom_path, table):
     LEVELS_JSON.write_text(json.dumps(levels, indent=2) + "\n")
     check_tilesets(levels, names, rom_tiles, set_blocks, decoded, list(set_blocks))
     print("%d rooms, %d tile sets: the ROM's" % (len(names), len(set_blocks)), file=sys.stderr)
+
+
+def extract_table(rom_path, table):
+    """extract-table: another game's level table at `table` (struct
+    level_info, LEVEL_INFO_SIZE each, as extract-rooms walks it) into
+    LEVELS_DIR's levels.json (`--levels-dir`), after extract-rooms: its
+    "levels" (constant LEVEL_<NAME> after "level_names"), "themes" (the
+    music cue of each theme after the room lists; names kept from the
+    levels.json's "themes", THEME_<N> without them) and "table" (the
+    played-room arrays and the records they play, in ROM order). A stage
+    (a record with no room) is {"kind": K, "index": N}: kind 3 runs actor
+    category N (ROOM_KIND_CATEGORY), others are the game's own. Checks
+    that the table, the room lists, the music cues, the extra rooms'
+    records, the arrays and the played records are back to back, as
+    level_table_c and records_c write them."""
+    rom = Rom(rom_path)
+    data = read_json(LEVELS_JSON)
+    names = data.get("level_names", [])
+    folders = {}
+    for name in data["rooms"]:
+        rec = read_json(LEVELS_DIR / name / "room.json")["record"]["symbol"]
+        folders[rec] = name
+    # the levels: up to the room lists, the first level's the first
+    lists = rom.w(table + 0x20)
+    n, rest = divmod(lists - table, LEVEL_INFO_SIZE)
+    assert rest == 0 and n > 0, "the room lists don't follow the table"
+    # the records, by address: the rooms' are gLevelRoomNN in record order
+    by_addr = {}
+    # each level's room list: gLevelRoomLists' entry, not always the
+    # level's own (N-Tranced's last levels' aren't in level order)
+    list_of = []
+    for i in range(n):
+        k, rest = divmod(rom.w(table + LEVEL_INFO_SIZE * i + 0x20) - lists, 16)
+        assert rest == 0 and 0 <= k < n, hex(table + LEVEL_INFO_SIZE * i)
+        list_of.append(k)
+    assert sorted(list_of) == list(range(n)), "two levels share a room list"
+    played_addrs, extra_addrs = set(), set()
+    for i in range(n):
+        lst = lists + 16 * list_of[i]
+        count, played = rom.w(lst), rom.w(lst + 4)
+        played_addrs.update(rom.w(played + 4 * k) for k in range(count))
+        extra_addrs.update(r for r in (rom.w(lst + 8), rom.w(lst + 12)) if r)
+    room_addrs = sorted(a for a in played_addrs | extra_addrs if rom.w(a + 4))
+    assert len(room_addrs) == len(data["rooms"]), "the table's rooms aren't levels.json's"
+    for k, a in enumerate(room_addrs):
+        by_addr[a] = folders["gLevelRoom%02d" % k]
+
+    def entry(r):
+        if r in by_addr:
+            return by_addr[r]
+        assert rom.w(r) == 0 and rom.w(r + 4) == 0 and rom.w(r + 12) == 0 and rom.h(r + 0x12) == 0, hex(r)
+        return {"kind": rom.w(r + 8), "index": rom.h(r + 0x10)}
+
+    levels, arrays = [], []
+    for i in range(n):
+        a, lst = table + LEVEL_INFO_SIZE * i, lists + 16 * list_of[i]
+        assert rom.bytes(a + 0x1D, 3) == b"\0\0\0", hex(a)
+        count, played, extra1, extra2 = rom.w(lst), rom.w(lst + 4), rom.w(lst + 8), rom.w(lst + 12)
+        name = names[i] if i < len(names) else "level%02d" % i
+        lv = {"constant": "LEVEL_" + slug(name).upper(), "name": name}
+        if rom.b(a + 0x1C):
+            lv["boss"] = True
+        rooms = [entry(rom.w(played + 4 * k)) for k in range(count)]
+        lv.update({"name_text": struct.unpack_from("<i", rom.data, a - ROM_BASE)[0], "theme": rom.w(a + 4),
+                   "times": [rom.w(a + 8 + 4 * k) for k in range(3)],
+                   "mask_assist_deaths": struct.unpack_from("<i", rom.data, a + 0x14 - ROM_BASE)[0],
+                   "crate_assist_deaths": struct.unpack_from("<i", rom.data, a + 0x18 - ROM_BASE)[0],
+                   "rooms": rooms})
+        for key, r in (("bonus", extra1), ("gem_path", extra2)):
+            if r:
+                lv[key] = by_addr[r]
+        levels.append(lv)
+        arrays.append((played, count, {"level": lv["constant"], "rooms": rooms}))
+    arrays.sort(key=lambda x: x[0])
+    # the music cues after the room lists, a byte per theme
+    theme_count = max(lv["theme"] for lv in levels) + 1
+    cues = lists + 16 * n
+    kept = {i: t for i, t in enumerate(data.get("themes", []))}
+    themes = []
+    for i in range(theme_count):
+        k = kept.get(i, {})
+        themes.append({"constant": k.get("constant", "THEME_%d" % i), "name": k.get("name", "theme %d" % i),
+                       "song": rom.b(cues + i)})
+    # back to back: the extra rooms' records (room order), the arrays, the
+    # played records (the "records" order)
+    a = (cues + theme_count + 3) & ~3
+    for r in sorted(extra_addrs - played_addrs):
+        assert r == a, "extra room record %#x isn't at %#x" % (r, a)
+        a += LEVEL_ROOM_SIZE
+    for played, count, _ in arrays:
+        assert played == a, "played-room array %#x isn't at %#x" % (played, a)
+        a += 4 * count
+    for r in sorted(played_addrs):
+        assert r == a, "played record %#x isn't at %#x" % (r, a)
+        a += LEVEL_ROOM_SIZE
+    out = {}
+    for k, v in data.items():
+        if k not in ("levels", "themes", "table"):
+            out[k] = v
+    order = {k: i for i, k in enumerate(list_of)}
+    tbl = {"lists": [x for _, _, x in arrays], "records": [entry(r) for r in sorted(played_addrs)]}
+    if list_of != list(range(n)):
+        tbl["room_lists"] = [levels[order[k]]["constant"] for k in range(n)]
+    out.update({"levels": levels, "themes": themes, "table": tbl})
+    write_levels_json(out)
+    print("%d levels, %d themes, the table %#x-%#x: the ROM's" % (n, theme_count, table, a), file=sys.stderr)
 
 
 def extract(rom_path):

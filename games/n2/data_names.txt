@@ -23,6 +23,7 @@
 0x081CFC04 gCrateHitResponse
 0x081D0244 gEntitySpawnFuncs  # the 110-entry spawn table, checked by hand (#1113)
 0x081D0430 gLevelTable
+0x081D0A14 gThemeMusicCues
 0x081D0E10 gTerrainTypes
 0x081D0E14 gTerrainHeights0
 0x081D0E1C gTerrainHeights1

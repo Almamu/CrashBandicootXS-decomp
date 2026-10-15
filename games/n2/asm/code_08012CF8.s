@@ -33907,7 +33907,7 @@ _08023F7C:
 	adds r2, #4
 	adds r0, r0, r2
 	ldr r0, [r0]
-	ldr r1, _08023FA4 @ =gUnknown_081D0A14
+	ldr r1, _08023FA4 @ =gThemeMusicCues
 	adds r0, r0, r1
 	ldrb r1, [r0]
 _08023F92:
@@ -33919,7 +33919,7 @@ _08023F92:
 	bx r0
 	.align 2, 0
 _08023FA0: .4byte gLevelTable
-_08023FA4: .4byte gUnknown_081D0A14
+_08023FA4: .4byte gThemeMusicCues
 _08023FA8: .4byte 0x02000E6C
 
 	thumb_func_start NextRoom
