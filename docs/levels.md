@@ -675,7 +675,7 @@ it; with the ROM's levels each rule gives the ROM's number, and
 | `LEVEL_NUMBERED_COUNT` | 20 | the numbered levels | the relic, gem and crystal counts (`GameProgress`) |
 | `LEVEL_LAST_NUMBERED`, `LEVEL_FIRST_BOSS` | 19, 20 | the last numbered level, the first boss | the level select, the pause menu |
 | `LEVEL_LAST_ON_GRID` | `LEVEL_NEO_CORTEX` | the last boss | `UpdateGameFrame`'s level-select cap |
-| `LEVEL_FINALE` | `LEVEL_MEGA_MIX` | the first level off the grid | `CountGems`, `CountClearGems`, `UpdateGameFrame`'s step from Neo Cortex to mega-mix |
+| `LEVEL_FINALE` | `LEVEL_MEGA_MIX` | the first level off the grid | `CountGems`, `CountClearGems` (Neo Cortex's step on to mega-mix is its `"on_clear"`, see "Boss levels") |
 | `LEVEL_SELECT_ENTRIES` | 6 | `LEVELS_PER_WORLD` + the boss: a full page | `LevelSelect::items`, the entry positions |
 | `CRYSTAL_TOTAL`, `RELIC_TOTAL` | 20 | the numbered levels | the pause menu |
 | `GEM_TOTAL` | 28 | a crate gem per numbered level, the `GEM_PATH_GEM` entities in the rooms of the numbered levels and the finale, and the 4 coloured gems | the pause menu |
@@ -1059,11 +1059,12 @@ level played (`room.level`, capped at `LEVEL_LAST_ON_GRID`).
 
 Beating a boss for the first time gives its power and calls
 `LevelSelect::SetNewWorldOpened`: the next level select turns to the
-new page by itself (`Loop`), if `IsNextWorldOpen` says it is open. Neo
-Cortex's power (Turbo Run) opens no page in the ROM. The eight bits of
-`save->flags` (`GameProgress` byte 2) are all used: the four coloured
-gems and the four powers. A boss's level word gets no `cleared` bit:
-`UpdateGameFrame`'s boss cases give the power instead.
+new page by itself (`Loop`), if `IsNextWorldOpen` says it is open (the
+level's `"on_clear"`, see "Boss levels"). Neo Cortex's power (Turbo Run)
+opens no page in the ROM. The eight bits of `save->flags`
+(`GameProgress` byte 2) are all used: the four coloured gems and the
+four powers. A ROM boss's level word gets no `cleared` bit: its
+`"on_clear"` gives the power instead.
 
 ### The worlds
 
@@ -1133,18 +1134,20 @@ ROM's behaviour where they say nothing):
 
 - A new world comes after Neo Cortex's page, as post-game content, like
   mega-mix. The ending is the ROM's: Neo Cortex plays the ending
-  cutscene and the credits, or mega-mix at over 99% (`UpdateGameFrame`
-  goes `LEVEL_FINALE - LEVEL_NEO_CORTEX` levels on: 1 in the ROM, past
-  the new bosses otherwise).
+  cutscene and the credits, or mega-mix at over 99% (its `"on_clear"`'s
+  `"next_level"`: `UpdateGameFrame` goes `LEVEL_MEGA_MIX -
+  LEVEL_NEO_CORTEX` levels on, 1 in the ROM, past the new bosses
+  otherwise).
 - A world after Neo Cortex's opens when every numbered level of the
   world before is cleared (`{"levels_cleared": true}`). There is no free
-  bit in `save->flags` for a new boss's win, and a new boss gives no
-  power (its rewards are out of scope), so the rule the boss entry
-  already uses is the one that needs no new save data. Neo Cortex's
+  bit in `save->flags` for a new boss's win, and the four powers are
+  the ROM's bosses' (a power is given by one level), so the rule the
+  boss entry already uses is the one that needs no new save data. Neo Cortex's
   first win calls `SetNewWorldOpened` as in the ROM, so if the world
   after it is open then, the next level select turns to it by itself.
 - Its boss entry appears once its levels are cleared, like the ROM's
-  (`PlaceItems` doesn't change). Beating a new boss takes
+  (`PlaceItems` doesn't change). Beating a new boss does what its
+  `"on_clear"` says (see "Boss levels"); without one it takes
   `UpdateGameFrame`'s default case: no power, dialog or cutscene.
 - The completion percentage counts the new levels' crystals, gems and
   relics (`COMPLETION_TOTAL`), so mega-mix (over 99%) needs them too.
@@ -1288,8 +1291,7 @@ A new type is new code (a vtable and those tests), so a category is one
 of the three. The boss HUD (`LevelState::GetBossHealth` and
 `GetBossIndex`) is the level's, not the category's: a level that plays a
 hovercraft stage names its boss, `"boss_kind": "N_GIN"` (see "Boss
-levels"). `UpdateGameFrame`'s boss rewards stay the ROM's levels' (out of
-scope).
+levels"). What clearing it gives is the level's too, its `"on_clear"`.
 
 **`"categories"`**, one per category in `CATEGORY_*` order:
 
@@ -1504,18 +1506,9 @@ the kept kinds against `ROM_BOSS_KINDS`). The three 2D bosses' health
 blocks stay apart: g++ merges them into the ROM's one, while a single
 block with their labels comes out 4 bytes shorter.
 
-**Not in the data: the rewards.** `UpdateGameFrame`'s switch on the
-cleared level stays the ROM's: the power, its dialog
-(`Show*Dialog`), the cutscene and opening the next world for
-`LEVEL_DINGODILE`, `LEVEL_N_GIN`, `LEVEL_TINY` and `LEVEL_NEO_CORTEX`,
-the credits and the step to mega-mix for Neo Cortex and mega-mix. The
-line is drawn there: the HUD and health are the kind's; what clearing a
-level gives is the level's (#966, out of scope). A new boss level
-therefore gives no power and no cutscene, and, as its `default:` case
-marks only a level of a `ROOM_KIND_CATEGORY` stage cleared
-(`w.cleared`), a new 2D boss level isn't marked cleared either. The
-`BOSS_NEO_CORTEX` tests of the gem spawners (`SpawnRedGem` and friends,
-`platform_create.cpp`) follow the kind, since they ask `GetBossIndex`.
+The `BOSS_NEO_CORTEX` tests of the gem spawners (`SpawnRedGem` and
+friends, `platform_create.cpp`) follow the kind, since they ask
+`GetBossIndex`.
 
 `"boss_kind"` isn't part of the save version's CRC (`level_data_crc`
 leaves it out): it doesn't change what a save's records mean.
@@ -1535,6 +1528,104 @@ the hovercraft stage with no `"boss_kind"`, on a level that places a
 boss with none, on `"boss_kind": "TINY"` for Dingodile's room, on a
 kind for a level with no such boss, on an unknown kind, and on a level
 with two bosses.
+
+### What clearing a level does
+
+A level's optional `"on_clear"` in `levels.json` (#1086) is what
+clearing it does besides the save: the power, its dialog, a cutscene,
+opening the next world, the level's `cleared` bit, going straight on to
+another level, the credits. It is `UpdateGameFrame`'s switch on the
+cleared level (`game_frame.cpp`), a generated case per level that has
+one. The HUD and the health are the boss kind's (above); what clearing
+a level gives is the level's.
+
+```json
+{"constant": "LEVEL_DINGODILE", ..., "boss_kind": "DINGODILE",
+ "on_clear": {"power": "SUPER_BODY_SLAM", "open_world": true, "cutscene": 4}, ...}
+```
+
+| key | what | the code |
+|---|---|---|
+| `"power"` | a power of `save->flags`: `TURBO_RUN`, `SUPER_BODY_SLAM`, `TORNADO_SPIN` or `DOUBLE_JUMP` (a new power is code). Given the first time the level is cleared, with its dialog | `if (!Has<Power>()) { ...; Give<Power>(); Show<Power>Dialog(); ... }` |
+| `"open_world"` | with a `"power"`, when it is given: the next level select turns to the next page by itself if it is open (see "Level-select pages") | `LevelSelect::SetNewWorldOpened()`, first in the block |
+| `"cutscene"` | a cutscene index, 0-10 (`gCutscenes`, `PlayCutscene`). With a `"power"`, played once, last in its block; without one, at every clear | `PlayCutscene(N)` |
+| `"mark_cleared"` | sets the level word's `cleared` bit (`LEVEL_FLAG_CRYSTAL`, the bit the crystal pickup sets) | `GetCurrentLevelFlags()->w.cleared = 1` |
+| `"next_level"` | `{"if_completion_over": N, "cutscene": C, "level": L}`: over N% completion (0-99), play C (optional) and go straight on to level L, with no level select in between | `if (progress.GetCompletionPercent() > N) { PlayCutscene(C); room.level += L - <this level>; room.roomIndex = 0; goto start; }` |
+| `"credits"` | `{}` or `{"cutscene": C}`: play C, then the credits | `PlayCutscene(C); RunCredits()` |
+
+They come in that order in the case, then `break`. The ROM's
+`"on_clear"`s:
+
+| level | `"on_clear"` |
+|---|---|
+| `LEVEL_DINGODILE` | `{"power": "SUPER_BODY_SLAM", "open_world": true, "cutscene": 4}` |
+| `LEVEL_N_GIN` | `{"power": "DOUBLE_JUMP", "open_world": true, "cutscene": 5}` |
+| `LEVEL_TINY` | `{"power": "TORNADO_SPIN", "open_world": true, "cutscene": 6}` |
+| `LEVEL_NEO_CORTEX` | `{"power": "TURBO_RUN", "open_world": true, "next_level": {"if_completion_over": 99, "cutscene": 8, "level": "LEVEL_MEGA_MIX"}, "credits": {"cutscene": 10}}` |
+| `LEVEL_MEGA_MIX` | `{"credits": {"cutscene": 9}}` |
+
+None of them has `"mark_cleared"`: the ROM's bosses don't set their
+`cleared` bit. A boss's (`"boss": true`) bit is only read by
+`Pickups::SpawnCrystal` (a crystal in its rooms isn't spawned again):
+the crystal count, the boss entry (`PlaceItems`) and `{"levels_cleared":
+true}` (`IsWorldCleared`) count the numbered levels only. It matters for
+a numbered level with a boss (a `"boss_kind"`), which has no crystal to
+pick up.
+
+**A level without `"on_clear"`** takes the switch's default case, as
+every level but the ROM's five does: its `cleared` bit is set when the
+room it ended in is a category stage (`room.cat->kind ==
+ROOM_KIND_CATEGORY`), so a polar or jetpack level, or a hovercraft boss
+whose stage is its last room. A level with an `"on_clear"` never takes
+it: a hovercraft boss level with an `"on_clear"` needs
+`"mark_cleared"` to be marked.
+
+**The power dialogs** stay the ROM's: each power's dialog has its text
+and icon (`power_dialog_draw.cpp`). Any level can give any of the four
+powers, but only one level each: the power is a bit of the save, and the
+second level's block would never run.
+
+**Checks.** `levels.py` stops on an unknown key or power, a power given
+by two levels, `"open_world"` without a `"power"`, a cutscene index past
+`gCutscenes` (`CUTSCENE_COUNT`, 11), a `"next_level"` level that doesn't
+exist, a percentage past 0-99, and `"next_level"`s that come back round
+(a level that leads back to itself would replay forever). It warns
+(and builds) when a numbered level with a `"boss_kind"` is never marked
+cleared: no `"mark_cleared"`, no `CRYSTAL` entity in its rooms, and
+(without an `"on_clear"`) not ending in a category stage. Its world's
+boss entry, the world after it if `{"levels_cleared": true}` opens it,
+and the crystal count wait for its bit.
+
+**What is generated.** `level_on_clear.h` (`levels.py on-clear`):
+`LEVEL_ON_CLEAR_CASES`, the cases with their statements, in the levels'
+order, like RunRoom's `THEME_PALETTE_CYCLE_CASES`. With the ROM's levels
+they are the ROM's five cases, so `UpdateGameFrame` is the ROM's code
+(`levels.py extract` keeps the `"on_clear"`s, which are code, and checks
+them against `ROM_ON_CLEAR`). Neo Cortex's step is `room.level +=
+LEVEL_MEGA_MIX - LEVEL_NEO_CORTEX`: the ROM's `add #1`.
+
+`"on_clear"` isn't part of the save version's CRC either: it doesn't
+change what a save's records mean.
+
+Tested in scratch with plain `make` and mGBA: a new level off the grid
+after mega-mix, `LEVEL_DINGO_REMATCH` (25), playing `dingodile/main`
+with `"boss_kind": "DINGODILE"` and `"on_clear": {"power":
+"DOUBLE_JUMP", "open_world": true, "cutscene": 4, "mark_cleared":
+true}`, with n. gin's `"on_clear"` taken out (the power is given by one
+level). From a new game, with the level picked and its room exit
+requested by hand (as the boss's power pickup does), clearing it calls
+`SetNewWorldOpened`, `GiveDoubleJump` and `ShowDoubleJumpDialog` (the
+Double Jump dialog shows) and plays cutscene 4 ("Cortex: Meddling
+marsupial!"). Back at the level select, the save's flags are 0x80
+(`DOUBLE_JUMP`) and level 25's word has its `cleared` bit, both 0 before.
+On the level select, Up on page 1 turns to page 2 (`IsNextWorldOpen`'s
+`DOUBLE_JUMP` rule), and Up there plays the error sound (no Tornado
+Spin). `levels.py` stops on each check above (a power given twice, an
+unknown power, cutscenes 11, 40 and -1, a `"next_level"` loop, one to
+the level itself, an unknown level, 100%, `"open_world"` without a
+power, an unknown key, a `"mark_cleared"` of 1) and warns for jungle jam
+playing Dingodile's room with no `"on_clear"`, and with one without
+`"mark_cleared"` and world 1 opened by `{"levels_cleared": true}`.
 
 ## The save
 
