@@ -427,8 +427,8 @@ drawn in the first, and the others are listed. docs/graphics.md, "Sprite
 banks (#914)", has the details.
 
 The category families' animation tables (`actor_anim.h`'s
-`gCategoryFamily0AnimTable`/`gCategoryFamily1AnimTable`) are C as well now, see
-"Category families" below.
+`gCategoryFamily0AnimTable`/`gCategoryFamily1AnimTable`) are data,
+`data/levels/anim_tables/`, see "Category families" below.
 
 ### Category families
 
@@ -437,7 +437,11 @@ The two actor-category families (docs/data_map.md, `08178F80` and
 `src/game/vehicles/jetpack/data/jetpack_anim_family.cpp` (categories 3-6). Each is an OBJ palette
 (256 colours, then 0x200 zero bytes nothing reads; the second family has
 two), the animation table (`struct anim_table_record`, `actor_anim.h`,
-41 and 47 records), and the arrays the records point at:
+41 and 47 records), and the arrays the records point at. The palettes
+(and the yeti's palette and boxes) are C; the tables and their arrays are
+`data/levels/anim_tables/polar.json` and `jetpack.json`, which
+`tools/levels.py anim-table` generates in place (docs/levels.md,
+"Animation tables"):
 
 - **table_A**: the clip's keyframes, `struct anim_frame_record`
   (`actor_anim.h`: duration, index into table_B, loop threshold and

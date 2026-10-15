@@ -66,8 +66,8 @@ $(GRAPHICS_BUILDDIR)/vehicles/$(1)/sprite_sheet.bin: $(foreach e,$(FRAMED_ENTITI
 endef
 
 # The byte offset of every frame in a sheet (FRAMED_<FAMILY>_<ENTITY>_<NN>),
-# for the category families' pool_offset table_B arrays (polar_anim_family.cpp,
-# jetpack_anim_family.cpp).
+# for the category families' pool_offset table_B arrays (data/levels/anim_tables/,
+# which levels.mk generates into polar_anim_family.cpp and jetpack_anim_family.cpp).
 define FRAMED_HEADER_RULE
 $(GRAPHICS_BUILDDIR)/vehicles/$(1)/sprite_sheet_frames.h: $(sort $(wildcard graphics/vehicles/$(1)/sprite_sheet/*/*.png)) graphics/vehicles/$(1)/sprite_sheet/sheet.json tools/framed_gfx.py
 	@mkdir -p $$(dir $$@)

@@ -1306,7 +1306,7 @@ scope).
 |---|---|---|
 | `"constant"`, `"name"` | (its index) | `CATEGORY_<NAME>` (`constants/categories.h`), which a stage names as `<NAME>` |
 | `"type"` | `type` | `POLAR`, `JETPACK` or `HOVERCRAFT` (`CATEGORY_TYPE_*`) |
-| (the type) | `cellAnim`, `cellAnimSize`, `palette`, `anim_table`, `sprite_sheet` | the type's: polar `gCategoryFamily0CellAnim`, `gPolarCategoryPalette`, `gCategoryFamily0AnimTable`, `gPolarSpriteSheet`; jetpack `gCategoryFamily1CellAnim`, `gAirshipCategoryPalette`, `gCategoryFamily1AnimTable`, `gJetpackSpriteSheet`; hovercraft the jetpack's with `gHovercraftCategoryPalette`. The ROM's categories of a type all have the same ones, and the actor kinds index the type's animation table |
+| (the type) | `cellAnim`, `cellAnimSize`, `palette`, `anim_table`, `sprite_sheet` | the type's: polar `gCategoryFamily0CellAnim`, `gPolarCategoryPalette`, `gCategoryFamily0AnimTable`, `gPolarSpriteSheet`; jetpack `gCategoryFamily1CellAnim`, `gAirshipCategoryPalette`, `gCategoryFamily1AnimTable`, `gJetpackSpriteSheet`; hovercraft the jetpack's with `gHovercraftCategoryPalette`. The ROM's categories of a type all have the same ones, and the actor kinds index the type's animation table (data, see "Animation tables") |
 | `"cell_anim"` (optional) | `cellAnim`, `cellAnimSize` | the BG0 cell animation instead of the type's: a `cell_anim` of `graphics/manifest.json`, by its path (see "Category graphics") |
 | `"sky"` (optional) | `bgPicture` | the BG1 picture: one of the jetpack skies, `rocket_racket`, `blimp_bonanza`, `no_fly_zone` (`gCategory3/4/5BgPicture`, `graphics/vehicles/jetpack/skies/`), or a `bg_picture` of the manifest by its path (see "Category graphics"). None for a polar category |
 | `"palette"` (optional) | `palette` | the OBJ palette instead of the type's: a `category_palette` of the manifest, by its path (see "Category graphics") |
@@ -1460,6 +1460,96 @@ colours reversed in their bank: the polar palette cycle sets those
 banks' colours, so a polar cell animation shows in its pixels, not its
 palette. The ROM's descriptors are unchanged, and with no new graphic
 nothing new is defined.
+
+### Animation tables
+
+A type's animation table (`category_descriptor.anim_table`, `struct
+anim_table_record`, `actor_anim.h`) has one record per actor kind: the
+spawner indexes it with the spawn's kind (`gActorAnimTable[kind]`,
+`gJetpackAnimTable[kind]`, set by `ActorCategory::Select` from the
+descriptor), and the actors it makes draw the record's keyframes and
+frames. The ROM's two are data, `data/levels/anim_tables/polar.json`
+(`gCategoryFamily0AnimTable`, 41 records) and `jetpack.json`
+(`gCategoryFamily1AnimTable`, 47), with the arrays their records point
+at:
+
+```json
+{
+  "symbol": "gCategoryFamily0AnimTable",
+  "family": "POLAR",
+  "records": [
+    {"keyframes": "gPolarPlayerKeyframes", "frames": "gPolarPlayerFrames", "palette": 0, "depth": 12032, "box": [-10, -20, -1, 20, 44, 3]},
+    {"keyframes": "gPolarBasicCrateKeyframes", "frames": "gPolarBasicCrateFrames", "palette": 1, "depth": 12604, "box": [-10, -10, -1, 20, 20, 3]},
+    ...
+    {},
+    ...
+  ],
+  "arrays": [
+    {"keyframes": "gPolarPlayerKeyframes", "list": [
+      [128, 0, 20, 0, 0],
+      ...
+    ]},
+    {"player_frames": "gPolarPlayerFrames", "list": [
+      0, 1, 2, ...
+    ]},
+    {"frames": "gRiderlessPolarFrames", "list": [
+      "riderless_polar/00", "riderless_polar/01", ...
+    ]},
+    "table",
+    ...
+  ]
+}
+```
+
+- `"symbol"`: the table's C name. `"family"`: `POLAR` or `JETPACK`, the
+  kinds that index it (`constants/actor_kinds.h`) and the sprite sheet
+  and player frames its records' frames are.
+- `"records"`, one per kind the code indexes (41 polar, 47 jetpack):
+  `"keyframes"` and `"frames"` (arrays of `"arrays"`, by symbol),
+  `"palette"` (the OBJ palette bank, 0-15), `"depth"` (the depth at which
+  it draws unscaled, `DrawActor` divides by it), `"box"` (`[x, y, z, w, h,
+  d]`, `struct anim_box`), and when not 0 `"spawn_x"` and `"spawn_y"`
+  (added to the spawn's position by `CreateActor`). `"index"` is the
+  record's first byte when it isn't the kind (records 15 of both tables
+  have 0). `{}` is a kind with no record (polar 32-34).
+- `"arrays"`, in the order they are defined (the ROM's), with `"table"`
+  where the table itself goes. Each is one of:
+  - `{"keyframes": symbol, "list": [...]}`: the clip's keyframes, `struct
+    anim_frame_record`, each `[duration, frame, loop end, loop start, OAM
+    attribute]`: it shows frames `frame` to `frame + loop end - 1` of the
+    record's frames and loops back to `frame + loop start`; the attribute
+    is OR'd into the OAM attributes (`0x1000`: flipped horizontally);
+  - `{"frames": symbol, "list": [...]}`: frames of the family's sprite
+    sheet (`graphics/vehicles/<family>/sprite_sheet/`), each its entity
+    folder and frame PNG, `"wumpa/03"`, which the build turns into the
+    frame's offset in the decompressed sheet (`FRAMED_POLAR_WUMPA_03`,
+    `tools/framed_gfx.py header`);
+  - `{"player_frames": symbol, "list": [...]}`: record 0's, Crash's
+    compressed frames (`graphics/vehicles/<family>/player.png`) by number
+    (`PolarPlayerFrameSet::frames + RLE_SPRITES_POLAR_PLAYER_FRAME_nnn`).
+    Only record 0 has them: the others' frames are sheet offsets.
+
+  and has an optional `"comment"`, which goes into the C.
+
+`levels.py` stops on an unknown key, a family that isn't one, a record
+count that isn't the family's, a record with a missing key or a value out
+of range, a record naming an array that isn't there or isn't its kind (a
+player frame array on a record but 0, or the other way round), a frame
+that isn't a PNG of the sheet, a player frame past the PNG's, a keyframe
+whose frames run past its record's frames or whose loop start isn't
+before its end, and a duplicate symbol.
+
+**What is generated.** `levels.py anim-table <name>` writes
+`anim_tables/<name>.inc`: the arrays' declarations, then the arrays and
+the table in `"arrays"` order, which `polar_anim_family.cpp` and
+`jetpack_anim_family.cpp` `#include` after their palettes (the C keeps
+the palettes and, in the jetpack file, the yeti's palette and boxes
+before them). With the ROM's data it is the ROM's C, so `make compare`
+gives the ROM's bytes, and `levels.py extract` writes both JSONs again
+from the ROM, keeping their arrays' symbols, lengths, order and comments.
+Editing a value (a box, a palette bank, a keyframe, which frames a clip
+shows) builds with plain `make`; adding or removing an array moves the
+ROM data after the table ([shifting.md](./shifting.md)).
 
 ## Boss levels
 

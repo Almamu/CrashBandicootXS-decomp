@@ -145,6 +145,23 @@ $(foreach o,engine/actor/data/actor_categories game/vehicles/polar/data/polar_ce
 	game/vehicles/polar/data/polar_spawn_tables game/vehicles/jetpack/data/jetpack_cell_anim \
 	game/vehicles/jetpack/data/jetpack_sky_pictures,$(eval $(C_BUILDDIR)/$(o).o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)))
 
+# The animation tables (docs/levels.md, "Animation tables"):
+# data/levels/anim_tables/<name>.json, a type's records (one per actor
+# kind) and the keyframes and frames they point at. `levels.py anim-table
+# NAME` writes the ROM's table NAME, which its family's C file #includes
+# after the palettes. Its frames are named by the sprite sheet's frame
+# folders and the player frames' PNG, which it checks them against.
+ANIM_TABLE_DEPS := $(wildcard data/levels/anim_tables/*.json) include/constants/actor_kinds.h tools/levels.py \
+	tools/framed_gfx.py $(foreach s,$(FRAMED_SHEETS),$(call framed_dir,$(s))/sheet.json \
+	$(wildcard $(call framed_dir,$(s))/*/*.png)) graphics/vehicles/polar/player.png graphics/vehicles/jetpack/player.png
+$(LEVELS_BUILDDIR)/anim_tables/%.inc: $(ANIM_TABLE_DEPS)
+	@mkdir -p $(dir $@)
+	python3 tools/levels.py anim-table $* $@
+$(foreach f,polar jetpack,$(eval $(C_BUILDDIR)/game/vehicles/$(f)/data/$(f)_anim_family.o: \
+	$(LEVELS_BUILDDIR)/anim_tables/$(f).inc))
+$(foreach f,polar jetpack,$(eval $(C_BUILDDIR)/game/vehicles/$(f)/data/$(f)_anim_family.o: \
+	CPPFLAGS += -iquote $(LEVELS_BUILDDIR)))
+
 # The level table (docs/levels.md, "The level table"), which
 # src/game/level/data/level_table.cpp #includes: gLevelTable and
 # gLevelRoomLists (`levels.py table levels`), and the room records and the
