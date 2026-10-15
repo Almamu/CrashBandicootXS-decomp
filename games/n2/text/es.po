@@ -2,8 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: ntranced\n"
-"Report-Msgid-Bugs-To: https://github.com/Almamu/CrashBandicootXS-decomp/"
-"issues\n"
+"Report-Msgid-Bugs-To: https://github.com/Almamu/CrashBandicootXS-decomp/issues\n"
 "POT-Creation-Date: 2026-10-14 00:00+0000\n"
 "PO-Revision-Date: 2026-10-14 00:00+0000\n"
 "Last-Translator: the original game's translators (extracted from the ROM)\n"
@@ -670,10 +669,8 @@ msgstr "pulsa A para saltar."
 
 #. Text id 125 (0x7D). Not named yet.
 msgctxt "ui.text.125"
-msgid ""
-"bouncy crates allow you to bounce on them several times before breaking."
-msgstr ""
-"puedes botar varias veces sobre las cajas que rebotan antes de que se rompan."
+msgid "bouncy crates allow you to bounce on them several times before breaking."
+msgstr "puedes botar varias veces sobre las cajas que rebotan antes de que se rompan."
 
 #. Text id 126 (0x7E). Not named yet.
 msgctxt "ui.text.126"
@@ -682,17 +679,13 @@ msgstr "las cajas pueden apilarse. para pasar, gira o salta sobre ellas."
 
 #. Text id 127 (0x7F). Not named yet.
 msgctxt "ui.text.127"
-msgid ""
-"do not spin tnt crates or they will explode! jump on them to start the timer."
-msgstr ""
-"no gires sobre cajas tnt o explotarán. inicia el reloj saltando sobre ellas."
+msgid "do not spin tnt crates or they will explode! jump on them to start the timer."
+msgstr "no gires sobre cajas tnt o explotarán. inicia el reloj saltando sobre ellas."
 
 #. Text id 128 (0x80). Not named yet.
 msgctxt "ui.text.128"
 msgid "break the aku aku crate to summon me. i will protect you from one hit."
-msgstr ""
-"rompe la caja de aku y conseguirás la máscara aku aku. te protegerá de un "
-"golpe."
+msgstr "rompe la caja de aku y conseguirás la máscara aku aku. te protegerá de un golpe."
 
 #. Text id 129 (0x81). Not named yet.
 msgctxt "ui.text.129"
@@ -721,12 +714,8 @@ msgstr "al correr, pulsa R para deslizarte."
 
 #. Text id 134 (0x86). Not named yet.
 msgctxt "ui.text.134"
-msgid ""
-"tnt crates can break other crates.  just jump on one to start the timer."
-msgstr ""
-"las cajas tnt rompen otras "
-"cajas.                                                   salta sobre ellas "
-"para iniciar el reloj."
+msgid "tnt crates can break other crates.  just jump on one to start the timer."
+msgstr "las cajas tnt rompen otras cajas.                                                   salta sobre ellas para iniciar el reloj."
 
 #. Text id 135 (0x87). Not named yet.
 msgctxt "ui.text.135"
@@ -736,15 +725,12 @@ msgstr "¡no toques las cajas de nitro verdes o explotarán!"
 #. Text id 136 (0x88). Not named yet.
 msgctxt "ui.text.136"
 msgid "spin the slot crate before it becomes unbreakable!"
-msgstr ""
-"haz girar la caja de la ranura antes de que se convierta en indestructible."
+msgstr "haz girar la caja de la ranura antes de que se convierta en indestructible."
 
 #. Text id 137 (0x89). Not named yet.
 msgctxt "ui.text.137"
 msgid "the green nitro switch box destroys all nitro crates in a level."
-msgstr ""
-"la caja nitro de interruptores verde destruye todas las cajas nitro de un "
-"nivel."
+msgstr "la caja nitro de interruptores verde destruye todas las cajas nitro de un nivel."
 
 #. Text id 138 (0x8A). Not named yet.
 msgctxt "ui.text.138"
@@ -758,14 +744,8 @@ msgstr "en lo más profundo del hiperespacio..."
 
 #. Text id 140 (0x8C). Not named yet.
 msgctxt "ui.text.140"
-msgid ""
-"uka uka: that incompetent neo cortex. he cannot do anything right! his last "
-"scheme to shrink the earth failed miserably! you have been a great asset to "
-"the cause of evil over the years n. tropy."
-msgstr ""
-"uka uka: ¡ese incompetente de neo cortex no sabe hacer nada! su último plan "
-"para reducir la tierra fue un estrepitoso fracaso! has sido muy valioso para "
-"la causa del mal durante todos estos años n. tropy."
+msgid "uka uka: that incompetent neo cortex. he cannot do anything right! his last scheme to shrink the earth failed miserably! you have been a great asset to the cause of evil over the years n. tropy."
+msgstr "uka uka: ¡ese incompetente de neo cortex no sabe hacer nada! su último plan para reducir la tierra fue un estrepitoso fracaso! has sido muy valioso para la causa del mal durante todos estos años n. tropy."
 
 #. Text id 141 (0x8D). Not named yet.
 msgctxt "ui.text.141"
@@ -774,37 +754,23 @@ msgstr "n. tropy: gracias, mi señor."
 
 #. Text id 142 (0x8E). Not named yet.
 msgctxt "ui.text.142"
-msgid ""
-"uka uka: that is why i trust you with the task of aiding me in universal "
-"domination."
-msgstr ""
-"uka uka: por eso te confío la tarea de ayudarme en mi proyecto de dominar el "
-"universo."
+msgid "uka uka: that is why i trust you with the task of aiding me in universal domination."
+msgstr "uka uka: por eso te confío la tarea de ayudarme en mi proyecto de dominar el universo."
 
 #. Text id 143 (0x8F). Not named yet.
 msgctxt "ui.text.143"
 msgid "n. tropy: great uka uka, i am honored! and i have the perfect scheme."
-msgstr ""
-"n. tropy: ¡es un honor para mí, gran uka uka! y tengo el plan perfecto."
+msgstr "n. tropy: ¡es un honor para mí, gran uka uka! y tengo el plan perfecto."
 
 #. Text id 144 (0x90). Not named yet.
 msgctxt "ui.text.144"
-msgid ""
-"n. tropy: allow me to harness my powers of time and space to peer into the "
-"future..."
-msgstr ""
-"n. tropy: permíteme utilizar mis poderes de tiempo y espacio para echar un "
-"vistazo al futuro..."
+msgid "n. tropy: allow me to harness my powers of time and space to peer into the future..."
+msgstr "n. tropy: permíteme utilizar mis poderes de tiempo y espacio para echar un vistazo al futuro..."
 
 #. Text id 145 (0x91). Not named yet.
 msgctxt "ui.text.145"
-msgid ""
-"n. tropy: of course! since those wretched bandicoots keep thwarting us, the "
-"solution is to get them on our side. and i know just the fellow for the job."
-msgstr ""
-"n. tropy: ¡por supuesto! esos lamentables bandibobos no dejan de "
-"estorbarnos, así que la única solución es ponerlos de nuestro lado. y "
-"conozco al tipo perfecto para conseguirlo."
+msgid "n. tropy: of course! since those wretched bandicoots keep thwarting us, the solution is to get them on our side. and i know just the fellow for the job."
+msgstr "n. tropy: ¡por supuesto! esos lamentables bandibobos no dejan de estorbarnos, así que la única solución es ponerlos de nuestro lado. y conozco al tipo perfecto para conseguirlo."
 
 #. Text id 146 (0x92). Not named yet.
 msgctxt "ui.text.146"
@@ -833,12 +799,8 @@ msgstr "coco: ¡crash, socorroooooo! "
 
 #. Text id 151 (0x97). Not named yet.
 msgctxt "ui.text.151"
-msgid ""
-"aku aku: crash! wake up! coco and crunch have been abducted! find me a power "
-"crystal so i can look into what's going on! hurry!"
-msgstr ""
-"aku aku: ¡crash! ¡despierta! ¡han raptado a coco y a crunch! ¡busca un "
-"cristal de energía para que pueda ver qué está pasando! ¡rápido!"
+msgid "aku aku: crash! wake up! coco and crunch have been abducted! find me a power crystal so i can look into what's going on! hurry!"
+msgstr "aku aku: ¡crash! ¡despierta! ¡han raptado a coco y a crunch! ¡busca un cristal de energía para que pueda ver qué está pasando! ¡rápido!"
 
 #. Text id 152 (0x98). Not named yet.
 msgctxt "ui.text.152"
@@ -872,12 +834,8 @@ msgstr " "
 
 #. Text id 158 (0x9E). Not named yet.
 msgctxt "ui.text.158"
-msgid ""
-"n. tropy: i finally got all you obnoxious bandicoots! would you do the "
-"honors, n. trance!"
-msgstr ""
-"n. tropy:¡al fin he logrado atraparos a todos, repugnantes bandibobos! "
-"¿quieres hacer los honores, n. trance?"
+msgid "n. tropy: i finally got all you obnoxious bandicoots! would you do the honors, n. trance!"
+msgstr "n. tropy:¡al fin he logrado atraparos a todos, repugnantes bandibobos! ¿quieres hacer los honores, n. trance?"
 
 #. Text id 159 (0x9F). Not named yet.
 msgctxt "ui.text.159"
@@ -891,87 +849,48 @@ msgstr "en algún otro lugar del hiperespacio..."
 
 #. Text id 161 (0xA1). Not named yet.
 msgctxt "ui.text.161"
-msgid ""
-"aku aku: that took almost all the power i had, crash. good job getting the "
-"power crystal before you were pulled into the vortex. but, i'll need a lot "
-"more crystals if we are to put an end to n. tropy's plans."
-msgstr ""
-"aku aku: eso ha agotado casi toda mi energía. has hecho un buen trabajo "
-"consiguiendo el cristal de energía antes de ser absorbido por el vórtice. "
-"pero necesitaré muchos más cristales si queremos terminar con los planes de "
-"n. tropy."
+msgid "aku aku: that took almost all the power i had, crash. good job getting the power crystal before you were pulled into the vortex. but, i'll need a lot more crystals if we are to put an end to n. tropy's plans."
+msgstr "aku aku: eso ha agotado casi toda mi energía. has hecho un buen trabajo consiguiendo el cristal de energía antes de ser absorbido por el vórtice. pero necesitaré muchos más cristales si queremos terminar con los planes de n. tropy."
 
 #. Text id 162 (0xA2). Not named yet.
 msgctxt "ui.text.162"
-msgid ""
-"aku aku: that floating island up ahead will allow us to go to different "
-"worlds and find crystals. hopefully we can find coco and crunch and stop n. "
-"tropy!"
-msgstr ""
-"aku aku: esa isla flotante de ahí nos permitirá llegar a diferentes mundos y "
-"encontrar cristales. ¡con suerte encontraremos a coco y a crunch y "
-"detendremos a n. tropy!"
+msgid "aku aku: that floating island up ahead will allow us to go to different worlds and find crystals. hopefully we can find coco and crunch and stop n. tropy!"
+msgstr "aku aku: esa isla flotante de ahí nos permitirá llegar a diferentes mundos y encontrar cristales. ¡con suerte encontraremos a coco y a crunch y detendremos a n. tropy!"
 
 #. Text id 163 (0xA3). Not named yet.
 msgctxt "ui.text.163"
 msgid "crunch: oohh man...brainwashed again! thanks for saving me crash."
-msgstr ""
-"crunch: oohh vaya...¡me han vuelto a lavar el cerebro! gracias por salvarme, "
-"crash."
+msgstr "crunch: oohh vaya...¡me han vuelto a lavar el cerebro! gracias por salvarme, crash."
 
 #. Text id 164 (0xA4). Not named yet.
 msgctxt "ui.text.164"
-msgid ""
-"aku aku: good news crash. the crystals you've collected have allowed me to "
-"open up a new area of the island. we can get to new worlds from there."
-msgstr ""
-"aku aku: buenas noticias, crash. con los cristales que has reunido he podido "
-"abrir una nueva área de la isla. desde ahí podremos llegar a nuevos mundos."
+msgid "aku aku: good news crash. the crystals you've collected have allowed me to open up a new area of the island. we can get to new worlds from there."
+msgstr "aku aku: buenas noticias, crash. con los cristales que has reunido he podido abrir una nueva área de la isla. desde ahí podremos llegar a nuevos mundos."
 
 #. Text id 165 (0xA5). Not named yet.
 msgctxt "ui.text.165"
-msgid ""
-"coco: oh, crash, thank you. how did you break out of n. trance's hypnosis?"
-msgstr ""
-"coco: oh, gracias crash. ¿pero cómo te libraste de la hipnosis de n. trance?"
+msgid "coco: oh, crash, thank you. how did you break out of n. trance's hypnosis?"
+msgstr "coco: oh, gracias crash. ¿pero cómo te libraste de la hipnosis de n. trance?"
 
 #. Text id 166 (0xA6). Not named yet.
 msgctxt "ui.text.166"
-msgid ""
-"aku aku: something strange happened when you were being pulled into the "
-"vortex, crash. coco saw someone in n. tropy's secret base that looked like "
-"you. i'll try to find out who while you go collect more crystals."
-msgstr ""
-"aku aku: algo extraño ocurrió cuando el vórtice te atraía, crash. en la base "
-"secreta de n. tropy, coco vio a alguien que se parecía a ti. intentaré "
-"averiguar de quién se trata mientras tu reúnes más cristales."
+msgid "aku aku: something strange happened when you were being pulled into the vortex, crash. coco saw someone in n. tropy's secret base that looked like you. i'll try to find out who while you go collect more crystals."
+msgstr "aku aku: algo extraño ocurrió cuando el vórtice te atraía, crash. en la base secreta de n. tropy, coco vio a alguien que se parecía a ti. intentaré averiguar de quién se trata mientras tu reúnes más cristales."
 
 #. Text id 167 (0xA7). Not named yet.
 msgctxt "ui.text.167"
-msgid ""
-"n. tropy: n. trance, you blundering idiot! that was not crash! it was some "
-"sort of... fake crash!"
-msgstr ""
-"n. tropy: ¡n. trance, eres un torpe! ¡ése no era crash! era una especie "
-"de... crash falso!"
+msgid "n. tropy: n. trance, you blundering idiot! that was not crash! it was some sort of... fake crash!"
+msgstr "n. tropy: ¡n. trance, eres un torpe! ¡ése no era crash! era una especie de... crash falso!"
 
 #. Text id 168 (0xA8). Not named yet.
 msgctxt "ui.text.168"
-msgid ""
-"n. trance: how was i supposed to know? he fooled you too. besides, they will "
-"never find our hideout. not in a million years!"
-msgstr ""
-"n. trance: ¿y cómo lo iba a saber yo? también te engañó a ti. además, nunca "
-"encontrarán nuestro escondite. ¡ni en un millón de años!"
+msgid "n. trance: how was i supposed to know? he fooled you too. besides, they will never find our hideout. not in a million years!"
+msgstr "n. trance: ¿y cómo lo iba a saber yo? también te engañó a ti. además, nunca encontrarán nuestro escondite. ¡ni en un millón de años!"
 
 #. Text id 169 (0xA9). Not named yet.
 msgctxt "ui.text.169"
-msgid ""
-"aku aku: good job crash! with a few more crystals, i'll be able to open the "
-"vortex to n. tropy's hideout!"
-msgstr ""
-"aku aku: ¡buen trabajo crash! con algunos cristales más podré abrir el "
-"vórtice y llegar al escondite de n. tropy!"
+msgid "aku aku: good job crash! with a few more crystals, i'll be able to open the vortex to n. tropy's hideout!"
+msgstr "aku aku: ¡buen trabajo crash! con algunos cristales más podré abrir el vórtice y llegar al escondite de n. tropy!"
 
 #. Text id 170 (0xAA). Not named yet.
 msgctxt "ui.text.170"
@@ -986,32 +905,22 @@ msgstr "aku aku: si! hemos llegado a la base secreta de n. tropy!"
 #. Text id 172 (0xAC). Not named yet.
 msgctxt "ui.text.172"
 msgid "n. tropy: n. trance, you fool! they have found us! destroy them!"
-msgstr ""
-"n. tropy: ¡n. trance, eres un tonto! ¡nos han encontrado! ¡destrúyelos!"
+msgstr "n. tropy: ¡n. trance, eres un tonto! ¡nos han encontrado! ¡destrúyelos!"
 
 #. Text id 173 (0xAD). Not named yet.
 msgctxt "ui.text.173"
 msgid "n. trance: it should have taken a million years to find us... how?"
-msgstr ""
-"n. trance: pero... ¿cómo? se habría necesitado un millón de años para "
-"encontrarnos."
+msgstr "n. trance: pero... ¿cómo? se habría necesitado un millón de años para encontrarnos."
 
 #. Text id 174 (0xAE). Not named yet.
 msgctxt "ui.text.174"
-msgid ""
-"aku aku: time does not pass in the vortex... i had all the time i needed to "
-"find you!"
-msgstr ""
-"aku aku: en el vórtice no pasa el tiempo... ¡he tenido todo el tiempo "
-"necesario para encontrarte!"
+msgid "aku aku: time does not pass in the vortex... i had all the time i needed to find you!"
+msgstr "aku aku: en el vórtice no pasa el tiempo... ¡he tenido todo el tiempo necesario para encontrarte!"
 
 #. Text id 175 (0xAF). Not named yet.
 msgctxt "ui.text.175"
-msgid ""
-"n. tropy: you have one last chance to stop them. do not disappoint me again!"
-msgstr ""
-"n. tropy: ésta es tu última oportunidad de detenerlos. ¡no vuelvas a "
-"decepcionarme!"
+msgid "n. tropy: you have one last chance to stop them. do not disappoint me again!"
+msgstr "n. tropy: ésta es tu última oportunidad de detenerlos. ¡no vuelvas a decepcionarme!"
 
 #. Text id 176 (0xB0). Not named yet.
 msgctxt "ui.text.176"
@@ -1021,9 +930,7 @@ msgstr "n. trance: ¡destruye a todos los bandibobos!"
 #. Text id 177 (0xB1). Not named yet.
 msgctxt "ui.text.177"
 msgid "n. tropy: noooo! i can't defeat all these wretched bandicoots myself!"
-msgstr ""
-"n. tropy: ¡noooo! ¡no puedo derrotar a todos esos miserables bandibobos yo "
-"solo!"
+msgstr "n. tropy: ¡noooo! ¡no puedo derrotar a todos esos miserables bandibobos yo solo!"
 
 #. Text id 178 (0xB2). Not named yet.
 msgctxt "ui.text.178"
@@ -1032,15 +939,8 @@ msgstr "n. tropy: pero recordad mis palabras. ¡volveréeee!"
 
 #. Text id 179 (0xB3). Not named yet.
 msgctxt "ui.text.179"
-msgid ""
-"aku aku: good job crash! you've rescued the other bandicoots from n. tropy "
-"and defeated n. trance! too bad n. tropy got away. if only we had all of the "
-"gem shards, i could re-open his space vortex and you could go after him!"
-msgstr ""
-"aku aku: ¡bien hecho crash! has rescatado a los demás bandibobos de las "
-"garras de n. tropy y has derrotado a n. trance! lástima que n. tropy haya "
-"escapado. ¡si tuviéramos todos los fragmentos yo podría volver a abrir el "
-"vórtice espacial y tú podrías atraparlo! "
+msgid "aku aku: good job crash! you've rescued the other bandicoots from n. tropy and defeated n. trance! too bad n. tropy got away. if only we had all of the gem shards, i could re-open his space vortex and you could go after him!"
+msgstr "aku aku: ¡bien hecho crash! has rescatado a los demás bandibobos de las garras de n. tropy y has derrotado a n. trance! lástima que n. tropy haya escapado. ¡si tuviéramos todos los fragmentos yo podría volver a abrir el vórtice espacial y tú podrías atraparlo! "
 
 #. Text id 180 (0xB4). Not named yet.
 msgctxt "ui.text.180"
@@ -1049,24 +949,13 @@ msgstr "¿fin?"
 
 #. Text id 181 (0xB5). Not named yet.
 msgctxt "ui.text.181"
-msgid ""
-"aku aku: good job, crash! you've rescued the other bandicoots from n. tropy "
-"and defeated n. trance!  lucky thing you collected all of the gem shards. i "
-"can use them to re-open his space vortex and you can go after him!"
-msgstr ""
-"aku aku: ¡bien hecho crash! has rescatado a los demás bandibobos de las "
-"garras de n. tropy y has derrotado a n. trance! es una suerte que hayamos "
-"reunido todos los fragmentos. ¡las usaré para volver a abrir el vórtice "
-"espacial y tú podrás atraparlo!"
+msgid "aku aku: good job, crash! you've rescued the other bandicoots from n. tropy and defeated n. trance!  lucky thing you collected all of the gem shards. i can use them to re-open his space vortex and you can go after him!"
+msgstr "aku aku: ¡bien hecho crash! has rescatado a los demás bandibobos de las garras de n. tropy y has derrotado a n. trance! es una suerte que hayamos reunido todos los fragmentos. ¡las usaré para volver a abrir el vórtice espacial y tú podrás atraparlo!"
 
 #. Text id 182 (0xB6). Not named yet.
 msgctxt "ui.text.182"
-msgid ""
-"aku aku: congratulations everyone, for defeating n. tropy and capturing him! "
-"let's take a picture to celebrate!"
-msgstr ""
-"aku aku: enhorabuena a todos por derrotar a n. tropy y atraparlo. ¡hagámonos "
-"una foto para celebrarlo!"
+msgid "aku aku: congratulations everyone, for defeating n. tropy and capturing him! let's take a picture to celebrate!"
+msgstr "aku aku: enhorabuena a todos por derrotar a n. tropy y atraparlo. ¡hagámonos una foto para celebrarlo!"
 
 #. Text id 183 (0xB7). Not named yet.
 msgctxt "ui.text.183"
@@ -1075,12 +964,8 @@ msgstr " "
 
 #. Text id 184 (0xB8). Not named yet.
 msgctxt "ui.text.184"
-msgid ""
-"uka uka: that's it! no more underlings! next time you will face a real "
-"adversary!"
-msgstr ""
-"uka uka: ¡ya es suficiente! ¡no habrá más subordinados! ¡la próxima vez os "
-"enfrentaréis a un adversario de verdad!"
+msgid "uka uka: that's it! no more underlings! next time you will face a real adversary!"
+msgstr "uka uka: ¡ya es suficiente! ¡no habrá más subordinados! ¡la próxima vez os enfrentaréis a un adversario de verdad!"
 
 #. Text id 185 (0xB9). Not named yet.
 msgctxt "ui.text.185"
@@ -1089,47 +974,23 @@ msgstr "fin... por ahora..."
 
 #. Text id 186 (0xBA). Not named yet.
 msgctxt "ui.text.186"
-msgid ""
-"aku aku: crash, these mayan ruins can only be traversed by using one of your "
-"favorite toys, the atlasphere. look out for nitro traps and ledges."
-msgstr ""
-"aku aku: crash, estas ruinas mayas sólo pueden atravesarse utilizando uno de "
-"tus juguetes favoritos, la atlasfera. cuidado con las trampas de nitro y los "
-"salientes."
+msgid "aku aku: crash, these mayan ruins can only be traversed by using one of your favorite toys, the atlasphere. look out for nitro traps and ledges."
+msgstr "aku aku: crash, estas ruinas mayas sólo pueden atravesarse utilizando uno de tus juguetes favoritos, la atlasfera. cuidado con las trampas de nitro y los salientes."
 
 #. Text id 187 (0xBB). Not named yet.
 msgctxt "ui.text.187"
-msgid ""
-"aku aku: now it is your turn to use the atlasphere, crunch.  but be "
-"careful!  n. tropy has added some new dangers."
-msgstr ""
-"aku aku: crunch, ahora te toca a ti utilizar la atlasfera. ¡ten cuidado! n. "
-"tropy ha añadido nuevos peligros."
+msgid "aku aku: now it is your turn to use the atlasphere, crunch.  but be careful!  n. tropy has added some new dangers."
+msgstr "aku aku: crunch, ahora te toca a ti utilizar la atlasfera. ¡ten cuidado! n. tropy ha añadido nuevos peligros."
 
 #. Text id 188 (0xBC). Not named yet.
 msgctxt "ui.text.188"
-msgid ""
-"aku aku: crash, in this water world you will need to use your wakeboard to "
-"collect the power crystal. the waters are guarded by a vicious shark so be "
-"careful!"
-msgstr ""
-"aku aku: crash, en este mundo acuático deberás usar tu tabla para conseguir "
-"el cristal de energía. hay un malvado tiburón que guarda las aguas, así que "
-"¡ten cuidado!"
+msgid "aku aku: crash, in this water world you will need to use your wakeboard to collect the power crystal. the waters are guarded by a vicious shark so be careful!"
+msgstr "aku aku: crash, en este mundo acuático deberás usar tu tabla para conseguir el cristal de energía. hay un malvado tiburón que guarda las aguas, así que ¡ten cuidado!"
 
 #. Text id 189 (0xBD). Not named yet.
 msgctxt "ui.text.189"
-msgid ""
-"aku aku: the next power crystal is located in space, coco. you must use your "
-"space suit and rocket tug to retrieve it.  n. tropy has sent a huge fireball "
-"that will destroy the crystal if you do not move fast enough, but i have "
-"created turbo gates to help you stay ahead of the danger."
-msgstr ""
-"aku aku: coco, el siguiente cristal de energía se encuentra en el espacio. "
-"para recuperarlo debes usar tu traje espacial y el cohete remolcador. n. "
-"tropy ha lanzado una enorme bola de fuego que destruirá el cristal si no "
-"eres rápido, pero yo he creado puertas turbo para que el peligro no te "
-"alcance."
+msgid "aku aku: the next power crystal is located in space, coco. you must use your space suit and rocket tug to retrieve it.  n. tropy has sent a huge fireball that will destroy the crystal if you do not move fast enough, but i have created turbo gates to help you stay ahead of the danger."
+msgstr "aku aku: coco, el siguiente cristal de energía se encuentra en el espacio. para recuperarlo debes usar tu traje espacial y el cohete remolcador. n. tropy ha lanzado una enorme bola de fuego que destruirá el cristal si no eres rápido, pero yo he creado puertas turbo para que el peligro no te alcance."
 
 #. Text id 190 (0xBE). Not named yet.
 msgctxt "ui.text.190"

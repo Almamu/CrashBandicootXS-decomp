@@ -856,8 +856,10 @@ def write_po(path, entries, code, lang):
     raw = path + ".raw"
     with open(raw, "w", encoding="utf-8", newline="\n") as f:
         f.write("\n".join(lines) + "\n")
-    # gettext's own layout (line wrapping), which msgmerge keeps.
-    r = run(["msgcat", "-o", path, raw])
+    # gettext's own layout (line wrapping), which msgmerge keeps; N-Tranced's
+    # unwrapped, as gettext versions wrap some of its longer lines
+    # differently (and its extract --check compares byte for byte)
+    r = run(["msgcat"] + (["--no-wrap"] if GAME == "n2" else []) + ["-o", path, raw])
     os.unlink(raw)
     if r.returncode:
         fail("msgcat %s:\n%s" % (path, r.stderr))
