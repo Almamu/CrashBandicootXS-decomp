@@ -410,8 +410,11 @@ entry gives the table, `gObjPieceWidths` (`piece_sizes`) and the banks'
 names. A bank N-Tranced shares with XS keeps XS's name (`crash`,
 `crates`, `aku_aku`, `wumpa`, ...), even where it has other frames; the
 others are named for what their frames show (`genie`, `mummy`,
-`n_trance`, ...), until the code that loads them is known. The palettes
-are named as XS's are, after the first bank using them.
+`scarab`, ...), until the code that loads them is known. The bosses'
+are named by the boss whose room places their spawner (the spawner's
+`Bank(n)` call): `evil_crunch` (42), `evil_coco` (43), `n_trance` (44)
+and `n_tropy` (45); Fake Crash uses Crash's, bank 0. The palettes are
+named as XS's are, after the first bank using them.
 
 Seven frames of bank 31 (`platforms`) have a piece that an earlier piece
 draws over with other pixels, which XS's frames never do. Such a piece is
