@@ -3924,8 +3924,8 @@ _08009700:
 	.byte 0x34, 0x30, 0x00, 0x78, 0x00, 0x07, 0xC0, 0x0F, 0x70, 0x47, 0x00, 0x00, 0x50, 0x30, 0x00, 0x88
 	.byte 0x70, 0x47, 0x00, 0x00, 0x50, 0x30, 0x01, 0x80, 0x70, 0x47, 0x00, 0x00
 
-	thumb_func_start sub_0800971C
-sub_0800971C: @ 0x0800971C
+	thumb_func_start DrawSpriteWithOffset
+DrawSpriteWithOffset: @ 0x0800971C
 	push {r4, lr}
 	sub sp, #8
 	adds r3, r0, #0
@@ -3976,7 +3976,7 @@ sub_08009774: @ 0x08009774
 	push {lr}
 	movs r1, #0
 	movs r2, #0
-	bl sub_0800971C
+	bl DrawSpriteWithOffset
 	pop {r0}
 	bx r0
 	.align 2, 0
@@ -3984,8 +3984,8 @@ _08009784:
 	.byte 0x34, 0x30, 0x89, 0x01, 0x03, 0x78, 0x3F, 0x22, 0x1A, 0x40, 0x0A, 0x43
 	.byte 0x02, 0x70, 0x70, 0x47, 0x34, 0x30, 0x00, 0x78, 0x80, 0x09, 0x70, 0x47
 
-	thumb_func_start sub_0800979C
-sub_0800979C: @ 0x0800979C
+	thumb_func_start DestroyUiSpriteObj
+DestroyUiSpriteObj: @ 0x0800979C
 	push {lr}
 	ldr r2, _080097AC @ =gUnknown_087F85A4
 	str r2, [r0, #0x24]
@@ -3995,8 +3995,8 @@ sub_0800979C: @ 0x0800979C
 	.align 2, 0
 _080097AC: .4byte gUnknown_087F85A4
 
-	thumb_func_start sub_080097B0
-sub_080097B0: @ 0x080097B0
+	thumb_func_start InitUiSpriteObj
+InitUiSpriteObj: @ 0x080097B0
 	push {r4, lr}
 	adds r4, r0, #0
 	bl sub_080092B4

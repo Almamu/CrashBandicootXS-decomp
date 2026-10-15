@@ -35,6 +35,7 @@
 0x08026B68 0x1A8 src/game/level/terrain_probe_axes.cpp
 0x080273C4 0x038 src/engine/sys/operator_new.cpp
 0x08027468 0x194 src/engine/gfx/palette_cycle.cpp
+0x08027714 0x060 src/game/ui/hud_part.cpp
 0x08032270 0x088 src/engine/actor/actor_spawn_collected.cpp
 0x0804406C 0x434 lib/libgcc/_divdi3.o
 0x080444A0 0x3D8 lib/libgcc/_udivdi3.o

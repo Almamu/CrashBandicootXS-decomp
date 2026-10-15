@@ -124,9 +124,13 @@ public:
     HudPart();                                 // InitHudPart
     virtual ~HudPart();                        // DestroyHudPart
     void Draw(screen_dx_t dx, screen_dy_t dy); // DrawHudPart
+#ifdef GAME_N2
+    s32 unk_60; // N-Tranced's: -1 after its constructor (InitHudPart, 0x08027754)
+#endif
 };
 
 LAYOUT_ASSERT(part_list_hpp, sizeof(HudPart) == 0x40);
+N2_LAYOUT_ASSERT(part_list_hpp, sizeof(HudPart) == 0x64);
 
 } // namespace Ui
 } // namespace Game

@@ -27,4 +27,7 @@ HudPart::~HudPart()
 
 HudPart::HudPart()
 {
+#ifdef GAME_N2
+    unk_60 = -1;
+#endif
 }

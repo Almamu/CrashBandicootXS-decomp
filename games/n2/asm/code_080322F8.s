@@ -13557,7 +13557,7 @@ _0803907E:
 	adds r4, r7, r3
 	movs r0, #0x60
 	bl OperatorNew
-	bl sub_080097B0
+	bl InitUiSpriteObj
 	str r0, [r4]
 	ldr r4, [r6, #0x38]
 	adds r4, r7, r4

@@ -188,8 +188,8 @@ gUnknown_087F9974:
 gUnknown_087F99C4:
 	.incbin "baserom_n2.gba", 0x7F99C4, 0x78
 
-	.global gUnknown_087F9A3C
-gUnknown_087F9A3C:
+	.global gHudPartVtable
+gHudPartVtable:
 	.incbin "baserom_n2.gba", 0x7F9A3C, 0x88
 
 	.global gUnknown_087F9AC4
