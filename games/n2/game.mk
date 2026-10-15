@@ -91,6 +91,10 @@ $(C_BUILDDIR)/%.o : $(N2_SRC)/%.cpp cxx_symbols.txt
 	$(OBJCOPY) --redefine-syms=$(CXX_SYMBOLS) $@
 
 include compile.mk
+include $(N2_DIR)/levels.mk
+
+$(GFX):
+	$(MAKE) -C tools/gbagfx
 
 $(OBJ_DIR)/$(N2_DIR)/asm/%.o: $(N2_DIR)/asm/%.s asm/macros.inc asm/macros/function.inc
 	@mkdir -p $(dir $@)

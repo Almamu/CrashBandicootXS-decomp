@@ -12,7 +12,9 @@ same terms as XS's report:
   functions.total    every function in ntranced.elf
   functions.matching the shared sources' functions
   data.total         the rest of the ROM (ntranced.gba's size less the code)
-  data.done          0: all of it is still incbin'd from baserom_n2.gba
+  data.done          the data objects' (objects.txt's entries after the
+                     code: data built from sources, such as the level
+                     assets); the rest is still incbin'd from baserom_n2.gba
 
 The areas are XS's report categories (System, Graphics, Actor, ...,
 tools/report_units.py). A function gets its category from the XS function
@@ -21,6 +23,8 @@ XS/N-Tranced comparison found it (games/n2/gbadisasm.cfg). The rest,
 N-Tranced's own code and what isn't identified yet, are "Not identified
 yet". This needs the XS build too (crashbandicootxs.elf, for the XS
 functions' addresses); without it every function is in that one area.
+The data is two areas: what is built from sources (one child per data
+object) and the incbin'd rest.
 Run it after `make GAME=n2`; it prints the JSON document decompilati.onl's
 webhook takes (https://decompilati.onl/docs).
 
@@ -122,6 +126,8 @@ def main():
 
     code_total = code_end - CODE_START
     data_total = os.path.getsize(ROM) - code_total
+    data_objs = [(a, e, src) for a, e, src in shared if a >= code_end]
+    data_done = sum(e - a for a, e, _ in data_objs)
     area_list = []
     for name in sorted(areas, key=lambda n: (n == UNIDENTIFIED, n)):
         c = areas[name]["code"]
@@ -131,11 +137,17 @@ def main():
                           "code": {"total": c["total"], "matching": c["matching"], "non_matching": 0}})
     # the map sizes tiles by code, and the data has none: draw it as big as
     # all the code (it is 20 times bigger)
+    if data_objs:
+        area_list.append({"name": "Data built from sources",
+                          "description": "games/n2/objects.txt's data objects",
+                          "data": {"total": data_done, "done": data_done},
+                          "children": [{"name": os.path.basename(src), "description": src,
+                                        "data": {"total": e - a, "done": e - a}} for a, e, src in data_objs]})
     area_list.append({"name": "ROM data", "description": "incbin'd from baserom_n2.gba",
-                      "data": {"total": data_total, "done": 0}, "weight": code_total})
+                      "data": {"total": data_total - data_done, "done": 0}, "weight": code_total})
     doc = {"version": args.version, "unit": "bytes",
            "code": {"total": code_total, "matching": total_matching, "non_matching": 0},
-           "data": {"total": data_total, "done": 0},
+           "data": {"total": data_total, "done": data_done},
            "functions": {"total": len(funcs), "matching": matched_funcs},
            "layout": "treemap", "areas": area_list}
     if args.commit:

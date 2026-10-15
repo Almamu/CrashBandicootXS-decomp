@@ -1,10 +1,12 @@
-# The shared sources N-Tranced links in place of its disassembly (#1110,
-# #1116, docs/n_tranced.md): the N-Tranced address of the object's code,
-# its size (its .text, padding included), and the source. Each one's code
-# is byte-identical to the disassembly it replaces. In ROM order.
-# games/n2/disasm.py splits games/n2/asm/ around them and writes the
-# linker script.
+# The sources N-Tranced links in place of its disassembly (#1110, #1116)
+# and of its incbin'd data (#1113, #1131), docs/n_tranced.md: the
+# N-Tranced address of the object's code or data, its size (its .text or
+# .rodata, padding included), and the source. Each one's bytes are the
+# original's. In ROM order, the code's then the data's.
+# games/n2/disasm.py cuts games/n2/asm/ and games/n2/data/ around them and
+# writes the linker script.
 0x08000ED8 0x078 src/engine/util/line.cpp
 0x080010AC 0x074 src/engine/util/time_format.cpp
 0x08001794 0x01C src/engine/sys/iwram_alloc.cpp
 0x08007514 0x10C src/engine/sys/vram_dma_queue.cpp
+0x08544638 0x157294 src/game/level/data/level_assets.cpp
