@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Almamu/CrashBandicootXS-decomp/raw/main/packages/crashdata/schemas/tileset_order.schema.json",
+  "title": "The BG tile sets' room order",
+  "description": "games/<game>/data/levels/tileset_order.json (docs/levels.md, \"Tile sets\")",
+  "type": "object",
+  "patternProperties": {
+    "^[A-Za-z_][A-Za-z0-9_]*$": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9_]+/[a-z0-9_]+$",
+        "description": "a room's folder under the level data, <level>/<slot>"
+      }
+    }
+  },
+  "additionalProperties": false
+}

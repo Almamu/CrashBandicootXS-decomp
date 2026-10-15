@@ -144,6 +144,10 @@ N-Tranced comparison's scripts, which stayed where they are.
 - **Behaviour is the same**: the code moved and its imports changed, no
   more. Both ROMs, both .map files, every generated file and every
   check's and scanner's output are what they were before the move.
+- **The JSON Schemas** of the data files are crashdata's output,
+  `packages/crashdata/schemas/` (`make schemas`, from each domain's
+  `schema.py`; [editors.md](editors.md)), and `crashdata.datacheck` is
+  `make data-check`.
 - **The tree's root** is found from where the package is
   (`crashdata.common.game.ROOT`, `packages/crashdata/src/crashdata/` is
   five levels down), as the tools found it from `tools/` before; an

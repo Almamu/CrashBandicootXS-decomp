@@ -232,6 +232,7 @@ know it going in.
 **Modding and the game's data**
 
 - [docs/modding.md](./docs/modding.md): **the modders' entry point**, the sample mod and what a mod can and can't change
+- [docs/editors.md](./docs/editors.md): the contract editors build on: the data files' JSON Schemas, `--json` errors and `make data-check`
 - [docs/levels.md](./docs/levels.md): rooms, layers, entities, themes, level-select pages, actor categories, boss levels and the save
 - [docs/graphics.md](./docs/graphics.md): the graphics, the manifest, sprite banks and the sprite/actor system
 - [docs/text.md](./docs/text.md): the game's text as gettext files, the keys, the checks and the translators' workflow

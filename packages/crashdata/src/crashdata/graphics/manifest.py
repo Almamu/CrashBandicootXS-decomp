@@ -139,6 +139,7 @@ import tempfile
 from pathlib import Path
 
 from crashdata.common import jasc_pal
+from crashdata import schemas
 from crashdata.common.game import ROOT
 from crashdata.graphics import bg_map, boss_pictures, obj_sheet, rle_sprites
 
@@ -189,11 +190,11 @@ def source(p, root=Path(".")):
 
 
 def load():
-    return json.loads(MANIFEST.read_text())["assets"]
+    return schemas.load(MANIFEST)["assets"]
 
 
 def load_objects():
-    return json.loads(MANIFEST.read_text()).get("objects", [])
+    return schemas.load(MANIFEST).get("objects", [])
 
 
 def entry_paths(e):

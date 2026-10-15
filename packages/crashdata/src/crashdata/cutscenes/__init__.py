@@ -37,7 +37,7 @@ import json
 import os
 import sys
 
-from crashdata import text
+from crashdata import schemas, text
 
 ROOT = text.ROOT
 CUTSCENES_JSON = os.path.join(ROOT, "games", "xs", "data", "cutscenes.json")
@@ -66,8 +66,7 @@ def load():
     (cutscenes, slides by name, slide index by name, template pages by
     key)."""
     where = rel(CUTSCENES_JSON)
-    with open(CUTSCENES_JSON, encoding="utf-8") as f:
-        data = json.load(f)
+    data = schemas.load(CUTSCENES_JSON)
     for k in ("cutscenes", "slides"):
         if not isinstance(data.get(k), list):
             fail("%s: no \"%s\" list" % (where, k))
@@ -75,9 +74,8 @@ def load():
     if not cutscenes:
         fail("%s: no cutscenes" % where)
 
-    with open(MANIFEST, encoding="utf-8") as f:
-        pictures = {e["path"]: e for e in json.load(f)["assets"]
-                    if e.get("kind") == "bitmap" and e.get("path", "").startswith("cutscenes/")}
+    pictures = {e["path"]: e for e in schemas.load(MANIFEST)["assets"]
+                if e.get("kind") == "bitmap" and e.get("path", "").startswith("cutscenes/")}
     slide_index = {}
     for i, s in enumerate(slides):
         name = s.get("name")

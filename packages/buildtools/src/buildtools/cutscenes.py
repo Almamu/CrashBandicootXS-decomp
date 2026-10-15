@@ -2,9 +2,10 @@
 import sys
 
 from crashdata import cutscenes as C
+from crashdata.common import diagnostics as D
 
 
-def main():
+def run():
     args = sys.argv[1:]
     if not args or args[0] in ("-h", "--help"):
         print(C.__doc__)
@@ -22,6 +23,12 @@ def main():
         print("cutscenes: OK")
     else:
         C.fail("usage: see tools/cutscenes.py --help")
+
+
+def main():
+    """run(), or with --json its errors and warnings as one JSON report
+    (crashdata.common.diagnostics, docs/editors.md)."""
+    return D.json_cli('cutscenes', run)
 
 
 if __name__ == "__main__":

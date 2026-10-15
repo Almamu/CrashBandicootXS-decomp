@@ -62,6 +62,16 @@ jobs:
     - name: Check N-Tranced's text
       run: python3 tools/text.py --game n2 check
 
+    # The editors' contract (#1167, docs/editors.md): the JSON Schemas in
+    # packages/crashdata/schemas/ are what the model gives (`make schemas`
+    # writes them), and both games' data passes every check without a
+    # build: each file against its schema, then the model's checks.
+    - name: Check the data schemas
+      run: make schemas-check
+
+    - name: Check the data (both games)
+      run: make data-check
+
     # The C style (.clang-format, CONTRIBUTING.md "Code style"), checked on
     # all the C but the data tables (FORMATTED/UNFORMATTED in tools/format.py's
     # code, packages/buildtools/src/buildtools/format.py). The clang-format

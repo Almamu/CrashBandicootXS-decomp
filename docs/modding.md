@@ -84,7 +84,10 @@ A mod is a folder with a `mod.py` and, optionally, a `files/` folder:
   [file_layout.md](file_layout.md), "The Python packages").
 
 `tools/apply_mod.py MOD DEST` applies it to a new copy at `DEST`, and
-`make mod MOD=<folder>` does that and builds it. To work on the data
+`make mod MOD=<folder>` does that and builds it. `make data-check
+MOD=<folder>` applies it and checks the copy's data without building:
+every file against its JSON Schema, then the checks the build makes
+([editors.md](./editors.md), "Checking the data"). To work on the data
 directly instead, edit the tree itself, following the docs above, and
 run `make`; `make compare` then fails, as it should.
 
@@ -105,8 +108,9 @@ run `make`; `make compare` then fails, as it should.
 
 These are code, or not built yet:
 
-- **Editors and ports.** There is no level or cutscene editor and no
-  platform library for a PC port yet: [#1093](https://github.com/Almamu/CrashBandicootXS-decomp/issues/1093).
+- **Editors.** There is no level or cutscene editor yet (#1167). What
+  one will build on is here: the data files' JSON Schemas, the tools'
+  `--json` errors and `make data-check`, [editors.md](./editors.md).
 - **New behaviour.** A new actor kind, boss kind, power, category type or
   entity type is code: the data reaches what the existing kinds draw and
   where they spawn, not what they do (levels.md, "Category sprite

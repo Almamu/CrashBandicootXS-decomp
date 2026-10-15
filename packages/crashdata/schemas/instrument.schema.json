@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Almamu/CrashBandicootXS-decomp/raw/main/packages/crashdata/schemas/instrument.schema.json",
+  "title": "A new instrument (instruments/<name>.json)",
+  "description": "games/xs/sound/instruments/<name>.json (docs/audio.md, \"From a WAV\")",
+  "type": "object",
+  "properties": {
+    "sample": {
+      "type": "string",
+      "minLength": 1,
+      "description": "the WAV, a path under games/xs/sound/"
+    },
+    "rate": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 1
+        },
+        {
+          "type": "number",
+          "minimum": 0
+        }
+      ],
+      "description": "Hz"
+    },
+    "loop": {
+      "enum": [
+        "none",
+        "forward",
+        "pingpong"
+      ]
+    },
+    "loop_start": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "loop_end": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "volume": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 64
+    },
+    "envelope": {
+      "type": "object",
+      "properties": {
+        "points": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "minItems": 1,
+          "maxItems": 255,
+          "description": "[tick, volume 0-64]"
+        },
+        "sustain": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "loop_start": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "loop_end": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
+      },
+      "required": [
+        "points"
+      ],
+      "additionalProperties": false
+    },
+    "vibrato": {
+      "type": "object",
+      "properties": {
+        "delay": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "speed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 63
+        }
+      },
+      "additionalProperties": false
+    },
+    "comment": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "sample"
+  ],
+  "additionalProperties": false
+}

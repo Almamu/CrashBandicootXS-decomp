@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Almamu/CrashBandicootXS-decomp/raw/main/packages/crashdata/schemas/song_settings.schema.json",
+  "title": "A new song's settings (songs/<key>.json)",
+  "description": "games/xs/sound/songs/<key>.json, next to its XM (docs/audio.md, \"Adding a song\")",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "artist": {
+      "type": "string"
+    },
+    "volume": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535,
+      "description": "Q8: 256 is 1.0"
+    },
+    "sample_rate": {
+      "enum": [
+        5735,
+        10513,
+        11469,
+        13380,
+        15769,
+        18158,
+        21025,
+        26760,
+        31537,
+        36316,
+        40138,
+        42049
+      ],
+      "description": "the mix rate, Hz"
+    },
+    "num_fx_channels": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535
+    },
+    "half_rate_fx": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "mixer_data_bytes": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "minItems": 28,
+      "maxItems": 28
+    }
+  },
+  "additionalProperties": false
+}

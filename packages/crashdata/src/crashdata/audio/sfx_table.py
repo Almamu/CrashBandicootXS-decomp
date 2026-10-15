@@ -36,10 +36,11 @@ import json
 import struct
 
 from crashdata.audio.gax import sfx_pool
+from crashdata import schemas
 
 
 def build(json_path, out_path):
-    manifest = json.load(open(json_path))
+    manifest = schemas.load(json_path)
     entries = manifest['entries']
     # a new sound effect's instrument (games/xs/sound/instruments/<name>.json): its
     # number in the sound-effect set, after the ROM's (tools/gax_audio.py)
@@ -61,7 +62,7 @@ def define_lines(rows):
 
 def write_constants(json_path, out_path):
     """constants/sfx.h: the SFX_* name of each named entry, by ID."""
-    manifest = json.load(open(json_path))
+    manifest = schemas.load(json_path)
     entries = manifest['entries']
     rows = [('SFX_' + e['name'], '%#x' % i, e['comment']) for i, e in enumerate(entries) if 'name' in e]
     rows.append(('SFX_NONE', '%#x' % len(entries), manifest['none_comment']))

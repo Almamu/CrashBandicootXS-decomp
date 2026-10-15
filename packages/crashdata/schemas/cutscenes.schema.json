@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Almamu/CrashBandicootXS-decomp/raw/main/packages/crashdata/schemas/cutscenes.schema.json",
+  "title": "The cutscenes (cutscenes.json)",
+  "description": "games/xs/data/cutscenes.json (docs/data.md, \"Cutscenes\")",
+  "type": "object",
+  "properties": {
+    "cutscenes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "constant": {
+            "type": "string",
+            "pattern": "^CUTSCENE_[A-Z0-9_]+$"
+          },
+          "about": {
+            "type": "string"
+          },
+          "slides": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "slide": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "a slide of \"slides\", by name"
+                },
+                "text": {
+                  "type": "string",
+                  "pattern": "^cutscene[0-9]{2}\\.page[0-9]+$",
+                  "description": "its page of text, cutsceneNN.pageP"
+                }
+              },
+              "required": [
+                "slide"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1
+          }
+        },
+        "required": [
+          "constant",
+          "slides"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1,
+      "description": "in id order: PlayCutscene's argument"
+    },
+    "slides": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "picture": {
+            "type": "string",
+            "pattern": "^cutscenes/.+\\.png$",
+            "description": "a cutscene picture of the graphics manifest, by path"
+          },
+          "wait": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "fade": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "fade_after": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "buttons": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "duck_music": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "rearm_sfx": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "song": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+            "description": "a constant's name (SONG_*)"
+          },
+          "sfx": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+            "description": "a constant's name (SFX_*)"
+          }
+        },
+        "required": [
+          "name",
+          "picture",
+          "wait",
+          "fade",
+          "fade_after",
+          "buttons",
+          "duck_music",
+          "rearm_sfx",
+          "song",
+          "sfx"
+        ],
+        "additionalProperties": false
+      },
+      "description": "the slide records (struct cutscene_slide)"
+    },
+    "rom_order": {
+      "type": "object",
+      "properties": {
+        "pages": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^CUTSCENE_[A-Z0-9_]+$"
+          }
+        },
+        "slide_lists": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^CUTSCENE_[A-Z0-9_]+$"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "description": "the ROM's order of the tables"
+    }
+  },
+  "required": [
+    "cutscenes",
+    "slides"
+  ],
+  "additionalProperties": false
+}

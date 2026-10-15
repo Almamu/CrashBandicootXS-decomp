@@ -1,0 +1,365 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Almamu/CrashBandicootXS-decomp/raw/main/packages/crashdata/schemas/room.schema.json",
+  "title": "A room (room.json)",
+  "description": "games/<game>/data/levels/<level>/<slot>/room.json (docs/levels.md, \"Sources and build\")",
+  "type": "object",
+  "properties": {
+    "asset": {
+      "type": "object",
+      "properties": {
+        "symbol": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        },
+        "packed": {
+          "type": "boolean",
+          "description": "LZ77-packed (34 of XS's rooms)"
+        }
+      },
+      "required": [
+        "symbol",
+        "packed"
+      ],
+      "additionalProperties": false,
+      "description": "the level asset: the layers' chunk streams"
+    },
+    "record": {
+      "type": "object",
+      "properties": {
+        "symbol": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        },
+        "kind": {
+          "enum": [
+            "ON_FOOT",
+            "UNDERWATER",
+            "HOVER"
+          ],
+          "description": "ROOM_KIND_*"
+        },
+        "blend": {
+          "type": "object",
+          "properties": {
+            "effect": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            },
+            "eva": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "evb": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          },
+          "additionalProperties": false,
+          "description": "SetupRoomBlend's colour effect"
+        },
+        "unk_0C": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647,
+          "description": "N-Tranced's extra rooms: the record's +0x0C when not 0"
+        }
+      },
+      "required": [
+        "symbol",
+        "kind"
+      ],
+      "additionalProperties": false,
+      "description": "the room's struct level_room in the level table"
+    },
+    "symbols": {
+      "type": "object",
+      "properties": {
+        "desc": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        },
+        "palette": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        },
+        "entities": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        },
+        "groups": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        },
+        "param_offsets": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        },
+        "params": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        },
+        "type_counts": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        },
+        "layers": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        },
+        "items": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        },
+        "links": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        }
+      },
+      "required": [
+        "desc",
+        "palette",
+        "entities",
+        "groups",
+        "param_offsets",
+        "params",
+        "type_counts",
+        "layers",
+        "items"
+      ],
+      "additionalProperties": false,
+      "description": "the C names of the room's objects"
+    },
+    "layers": {
+      "type": "object",
+      "properties": {
+        "bg1": {
+          "$ref": "#/$defs/layer"
+        },
+        "bg2": {
+          "$ref": "#/$defs/layer"
+        },
+        "bg3": {
+          "$ref": "#/$defs/layer"
+        },
+        "bg0": {
+          "$ref": "#/$defs/layer"
+        },
+        "collision": {
+          "$ref": "#/$defs/layer"
+        }
+      },
+      "required": [
+        "collision"
+      ],
+      "additionalProperties": false,
+      "description": "BG1-3, the pooled BG0 and the collision layer"
+    },
+    "params": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/param_record"
+      },
+      "description": "the entities' parameter records (an entity's \"param\" is an index)"
+    },
+    "links": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "description": "[from, to] entity ids: a crate and the crate on top of it"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "entities": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/entity"
+      },
+      "description": "in id order: the last 256-px column first"
+    }
+  },
+  "required": [
+    "asset",
+    "symbols",
+    "layers",
+    "params",
+    "entities"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "layer": {
+      "type": "object",
+      "properties": {
+        "map": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the layer's picture (bg0-3.png) or collision image, in the room's folder"
+        },
+        "size_chunks": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "[width, height] in 16x8-cell chunks"
+        },
+        "size_tiles": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 65535
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "[width, height] in cells"
+        },
+        "tileset": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+              "description": "its BG tile set's symbol"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scale": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 4294967295
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "the parallax scale, [x, y] (256: the camera's speed)"
+        },
+        "cnt": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "unk_1E": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "grid_symbol": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        },
+        "pad_overrides": {
+          "type": "object",
+          "patternProperties": {
+            "^[0-9]+$": {
+              "type": "object",
+              "properties": {
+                "crc": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{8}$"
+                },
+                "pad": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]*$"
+                }
+              },
+              "required": [
+                "crc",
+                "pad"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false,
+          "description": "ROM rooms only: the junk bytes the ROM's chunk streams pad with, by chunk"
+        }
+      },
+      "required": [
+        "map",
+        "size_chunks",
+        "size_tiles",
+        "tileset",
+        "scale",
+        "cnt",
+        "unk_1E",
+        "grid_symbol"
+      ],
+      "additionalProperties": false
+    },
+    "param_record": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 4294967295
+      },
+      "minItems": 1,
+      "description": "the record's 32-bit words"
+    },
+    "entity": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+              "description": "its name in entity_types.json"
+            },
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535,
+              "description": "an unnamed type's number"
+            }
+          ]
+        },
+        "x": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "y": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "param": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535,
+          "description": "its parameter record, an index of \"params\""
+        }
+      },
+      "required": [
+        "type",
+        "x",
+        "y",
+        "param"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -3,9 +3,10 @@ import os
 import sys
 
 from crashdata.audio import gax
+from crashdata.common import diagnostics as D
 
 
-def main():
+def run():
     if len(sys.argv) == 3 and sys.argv[1] == '--sfx':
         gax.sfx_pool()[0].report()
         alloc, _ = gax.build_sfx(gax.SFX_MANIFEST, gax.SFX_SAMPLES_DIR)
@@ -32,6 +33,12 @@ def main():
         sys.argv[1],
         *sys.argv[2:],
     )
+
+
+def main():
+    """run(), or with --json its errors and warnings as one JSON report
+    (crashdata.common.diagnostics, docs/editors.md)."""
+    return D.json_cli('gax_audio', run)
 
 
 if __name__ == '__main__':

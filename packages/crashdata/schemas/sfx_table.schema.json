@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Almamu/CrashBandicootXS-decomp/raw/main/packages/crashdata/schemas/sfx_table.schema.json",
+  "title": "The sound effects (sfx_table.json)",
+  "description": "games/xs/sound/sfx_table.json (docs/audio.md, \"Sound effects\")",
+  "type": "object",
+  "properties": {
+    "none_comment": {
+      "type": "string"
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "slot_id": {
+                "type": "integer",
+                "minimum": -2147483648,
+                "maximum": 2147483647,
+                "description": "an instrument of the sound-effect set"
+              },
+              "instrument": {
+                "type": "string",
+                "pattern": "^[a-z0-9_]+$",
+                "description": "a new instrument, instruments/<name>.json"
+              },
+              "pitch_offset": {
+                "type": "integer",
+                "minimum": -2147483648,
+                "maximum": 2147483647
+              },
+              "volume": {
+                "type": "integer",
+                "minimum": -2147483648,
+                "maximum": 2147483647
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^[A-Z0-9_]+$",
+                "description": "SFX_<NAME>"
+              },
+              "comment": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "pitch_offset",
+              "volume",
+              "slot_id"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "slot_id": {
+                "type": "integer",
+                "minimum": -2147483648,
+                "maximum": 2147483647,
+                "description": "an instrument of the sound-effect set"
+              },
+              "instrument": {
+                "type": "string",
+                "pattern": "^[a-z0-9_]+$",
+                "description": "a new instrument, instruments/<name>.json"
+              },
+              "pitch_offset": {
+                "type": "integer",
+                "minimum": -2147483648,
+                "maximum": 2147483647
+              },
+              "volume": {
+                "type": "integer",
+                "minimum": -2147483648,
+                "maximum": 2147483647
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^[A-Z0-9_]+$",
+                "description": "SFX_<NAME>"
+              },
+              "comment": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "pitch_offset",
+              "volume",
+              "instrument"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "description": "gSfxTable, in sound id order"
+    }
+  },
+  "required": [
+    "entries"
+  ],
+  "additionalProperties": false
+}

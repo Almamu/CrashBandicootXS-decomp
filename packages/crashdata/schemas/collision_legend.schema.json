@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Almamu/CrashBandicootXS-decomp/raw/main/packages/crashdata/schemas/collision_legend.schema.json",
+  "title": "The collision images' legend",
+  "description": "games/<game>/data/levels/collision_legend.json (docs/levels.md, \"Collision layers\")",
+  "type": "object",
+  "properties": {
+    "cells": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "pattern": "^[0-9A-Fa-f]{4}$",
+            "description": "the cell value, 4 hex digits"
+          },
+          "colour": {
+            "type": "string",
+            "pattern": "^[0-9A-Fa-f]{6}$",
+            "description": "its colour in the collision images, RRGGBB"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "value",
+          "colour",
+          "name"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 255
+    }
+  },
+  "required": [
+    "cells"
+  ],
+  "additionalProperties": false
+}

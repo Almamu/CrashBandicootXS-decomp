@@ -74,6 +74,7 @@ import tempfile
 import textwrap
 
 from crashdata.common.game import ROOT
+from crashdata import schemas
 
 TEXT_DIR = os.path.join(ROOT, "games", "xs", "text")
 POT = os.path.join(TEXT_DIR, "crashxs.pot")
@@ -328,8 +329,7 @@ def check_level_names(ui):
     UI entries' order is their text ids, so an entry inserted in the middle
     would shift every later id, and a level pointing at another level's
     name, or a name no level uses, is a slip in the data."""
-    with open(LEVELS_JSON, encoding="utf-8") as f:
-        levels = json.load(f)["levels"]
+    levels = schemas.load(LEVELS_JSON)["levels"]
     for lv in levels:
         t = lv["name_text"]
         if t >= len(ui) or not ui[t]["ctx"].startswith("ui.level."):
@@ -476,8 +476,7 @@ def read_credits():
     text in the font so far), {"picture": n} (logo n) or {"blank": n} (n
     empty lines). Each text item is a line, or lines, then a newline."""
     where = rel(CREDITS_JSON)
-    with open(CREDITS_JSON, encoding="utf-8") as f:
-        items = json.load(f).get("credits")
+    items = schemas.load(CREDITS_JSON).get("credits")
     if not isinstance(items, list) or not items:
         fail("%s: no \"credits\" list" % where)
     for i, it in enumerate(items):
@@ -774,8 +773,7 @@ def extract_entries(rom):
     """The template's entries from the ROM: (key, English, {lang: text},
     comments), UI first, then the cutscene pages in ROM order."""
     small, large = fonts()
-    with open(LEVELS_JSON, encoding="utf-8") as f:
-        levels = json.load(f)["levels"]
+    levels = schemas.load(LEVELS_JSON)["levels"]
     level_keys = {lv["name_text"]: lv for lv in levels}
     entries = []
 
@@ -800,8 +798,7 @@ def extract_entries(rom):
 
     # The cutscenes: per language, page (cutscene, page) -> its strings'
     # array, and each array's first use.
-    with open(GRAPHICS_MANIFEST, encoding="utf-8") as f:
-        manifest = json.load(f)
+    manifest = schemas.load(GRAPHICS_MANIFEST)
     pictures = {int(e["palette"]["rom"], 16): e["path"] for e in manifest["assets"]
                 if e.get("kind") == "bitmap" and e["path"].startswith("cutscenes/")}
     counts = [rom.w(CUTSCENES + 8 * c + 4) for c in range(CUTSCENE_COUNT)]
@@ -936,8 +933,7 @@ def extract_entries_n2(rom):
     """N-Tranced's template entries: its UI text, ui.level.<level> for the
     level names (its level table's name_text, levels.json's
     "level_names"), ui.text.<id> for the others."""
-    with open(N2_LEVELS_JSON, encoding="utf-8") as f:
-        level_names = json.load(f)["level_names"]
+    level_names = schemas.load(N2_LEVELS_JSON)["level_names"]
     level_keys = {rom.w(N2_LEVEL_TABLE + N2_LEVEL_INFO_SIZE * i): name for i, name in enumerate(level_names)}
     texts = [[rom.string(rom.w(t + 4 * i)) for i in range(UI_ROM_COUNT)] for t in UI_TABLES]
     entries = []

@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Almamu/CrashBandicootXS-decomp/raw/main/packages/crashdata/schemas/sprite_sheet.schema.json",
+  "title": "A framed sprite sheet's folders (sheet.json)",
+  "description": "games/<game>/graphics/**/sprite_sheet/sheet.json (docs/graphics.md)",
+  "type": "object",
+  "properties": {
+    "sheet_rom_address": {
+      "type": "string",
+      "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+      "description": "a ROM address, 0x08......"
+    },
+    "folders": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "folder": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$"
+          },
+          "frames": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535
+          },
+          "records": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "minItems": 1,
+            "description": "the animation records drawing it"
+          },
+          "palette": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
+          "bank": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "other_banks": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          }
+        },
+        "required": [
+          "folder",
+          "frames"
+        ],
+        "additionalProperties": false
+      },
+      "description": "the entity folders, in the sheet's byte order"
+    }
+  },
+  "required": [
+    "folders"
+  ],
+  "additionalProperties": false
+}

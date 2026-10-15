@@ -77,6 +77,7 @@ import sys
 import wave
 
 from crashdata.common.game import ROOT
+from crashdata import schemas
 
 SOUND_DIR = os.path.join(ROOT, 'games', 'xs', 'sound')
 
@@ -1184,7 +1185,7 @@ def json_instrument_spec(name, fixed_pitch, fail):
         fail(f"{rel}: {msg}")
 
     try:
-        m = json.load(open(path))
+        m = schemas.load(path)
     except ValueError as e:
         bad(f"not JSON ({e})")
     unknown = sorted(set(m) - set(INSTRUMENT_FIELDS))
@@ -1335,12 +1336,12 @@ def sfx_pool(manifest_path=None, samples_dir=None, table_path=None):
     writes as the entry's slot_id."""
     manifest_path = manifest_path or SFX_MANIFEST
     table_path = table_path or SFX_TABLE
-    manifest = json.load(open(manifest_path))
+    manifest = schemas.load(manifest_path)
     instruments, samples = load_pool(manifest, samples_dir or SFX_SAMPLES_DIR)
     pool = Pool(manifest, instruments, samples, 'the sound-effect set')
     rel = os.path.relpath(table_path, ROOT)
     slots = {}
-    for i, e in enumerate(json.load(open(table_path))['entries']):
+    for i, e in enumerate(schemas.load(table_path)['entries']):
         def fail(msg, i=i):
             sys.exit(f"{rel}: entry {i} ({e.get('name', 'unnamed')}): {msg}")
 
@@ -1366,7 +1367,7 @@ def build_sfx(manifest_path, samples_dir):
     Returns (the set's Allocator, the sfxTypes Chunk). Every pointer is a
     relocation, so the set can change size (a longer sample) and the
     blocks can move."""
-    manifest = json.load(open(manifest_path))
+    manifest = schemas.load(manifest_path)
     pool, _ = sfx_pool(manifest_path, samples_dir)
     alloc, handler_addr = link_sfx(pool.instruments, pool.samples, SongInfo(manifest['song_info']))
     # GaxSongHeader.sfxTypes (StartSong): the handler type of each
@@ -1434,7 +1435,7 @@ def song_keys(manifest_path=None):
     """The songs' names in song id order (SONG_<KEY>, constants/songs.h):
     what data that names a song by name (a level theme's "song", a
     screen's, a cutscene's) checks the name against."""
-    manifest = json.load(open(manifest_path or os.path.join(SOUND_DIR, 'gax_manifest.json')))
+    manifest = schemas.load(manifest_path or os.path.join(SOUND_DIR, 'gax_manifest.json'))
     return [t['song'] for t in manifest['song_table']]
 
 
@@ -1443,7 +1444,7 @@ def screen_songs(music_path, keys):
     SONG_<KEY>, comment) for each screen, in the file's order."""
     rel = os.path.relpath(music_path, ROOT)
     out = []
-    for s in json.load(open(music_path))['screen_music']:
+    for s in schemas.load(music_path)['screen_music']:
         name = 'SCREEN_SONG_' + s['screen'].upper()
         if any(n == name for n, _, _ in out):
             sys.exit(f"{rel}: screen_music lists {s['screen']} more than once")
@@ -1457,7 +1458,7 @@ def screen_songs(music_path, keys):
 def write_constants(manifest_path, path):
     """constants/songs.h: SONG_<KEY> for each song, in gSongTable order,
     and SCREEN_SONG_<SCREEN>, the song each screen plays (music.json)."""
-    manifest = json.load(open(manifest_path))
+    manifest = schemas.load(manifest_path)
     check_song_table(manifest, manifest_path)
     table = manifest['song_table']
     rows = [('SONG_' + t['song'].upper(), f'{i:#x}', t['comment']) for i, t in enumerate(table)]
@@ -1508,7 +1509,7 @@ def write_song_table(manifest_path, path):
     #includes. One entry per song of the manifest's song_table, in song id
     order: the song's GAX_SONG_<KEY> offset in the music block (gax_songs.h).
     Generated with constants/songs.h's ids, so no song is left NULL."""
-    manifest = json.load(open(manifest_path))
+    manifest = schemas.load(manifest_path)
     check_song_table(manifest, manifest_path)
     rel = os.path.relpath(manifest_path, ROOT)
     out = [
@@ -1705,7 +1706,7 @@ def new_song(key, xm_path, xm, pool):
     settings = dict(NEW_SONG_DEFAULTS)
     json_path = os.path.splitext(xm_path)[0] + '.json'
     if os.path.exists(json_path):
-        given = json.load(open(json_path))
+        given = schemas.load(json_path)
         unknown = sorted(set(given) - set(NEW_SONG_DEFAULTS))
         if unknown:
             sys.exit(f"{os.path.relpath(json_path, ROOT)}: unknown settings {', '.join(unknown)} "
@@ -1806,7 +1807,7 @@ def block_songs(manifest):
 
 
 def build(manifest_path, songs_dir, samples_dir, out_path, layout_path=None, header_path=None):
-    manifest = json.load(open(manifest_path))
+    manifest = schemas.load(manifest_path)
 
     instruments, samples = load_pool(manifest, samples_dir)
     # the new songs' new instruments are appended to it

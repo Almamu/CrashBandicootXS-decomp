@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Almamu/CrashBandicootXS-decomp/raw/main/packages/crashdata/schemas/anim_table.schema.json",
+  "title": "An actor family's animation table",
+  "description": "games/xs/data/levels/anim_tables/<name>.json (docs/levels.md, \"Animation tables\")",
+  "type": "object",
+  "properties": {
+    "symbol": {
+      "type": "string",
+      "pattern": "^g[A-Za-z0-9_]+$"
+    },
+    "family": {
+      "enum": [
+        "POLAR",
+        "JETPACK"
+      ]
+    },
+    "sheet": {
+      "type": "string",
+      "minLength": 1,
+      "description": "a framed_sheet of the graphics manifest, by path"
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255,
+            "description": "the record's first byte, when not its kind"
+          },
+          "keyframes": {
+            "type": "string",
+            "pattern": "^g[A-Za-z0-9_]+$"
+          },
+          "frames": {
+            "type": "string",
+            "pattern": "^g[A-Za-z0-9_]+$"
+          },
+          "palette": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 15,
+            "description": "the OBJ palette bank"
+          },
+          "depth": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647,
+            "description": "the depth at which it draws unscaled"
+          },
+          "box": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": -32768,
+              "maximum": 32767
+            },
+            "minItems": 6,
+            "maxItems": 6,
+            "description": "[x, y, z, w, h, d]"
+          },
+          "spawn_x": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "spawn_y": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          }
+        },
+        "additionalProperties": false
+      },
+      "description": "one per actor kind; {} for a kind with none"
+    },
+    "arrays": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "const": "table"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "keyframes": {
+                "type": "string",
+                "pattern": "^g[A-Za-z0-9_]+$"
+              },
+              "comment": {
+                "type": "string"
+              },
+              "list": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": -32768,
+                    "maximum": 65535
+                  },
+                  "minItems": 5,
+                  "maxItems": 5,
+                  "description": "[duration, frame, loop end, loop start, OAM attribute]"
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "keyframes",
+              "list"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "frames": {
+                "type": "string",
+                "pattern": "^g[A-Za-z0-9_]+$"
+              },
+              "comment": {
+                "type": "string"
+              },
+              "list": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9_]+/[0-9]+$",
+                  "description": "a frame of the sheet, entity/NN"
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "frames",
+              "list"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "player_frames": {
+                "type": "string",
+                "pattern": "^g[A-Za-z0-9_]+$"
+              },
+              "comment": {
+                "type": "string"
+              },
+              "list": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 65535
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "player_frames",
+              "list"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "description": "the keyframes and frames, with \"table\" where the table goes"
+    }
+  },
+  "required": [
+    "symbol",
+    "family",
+    "records",
+    "arrays"
+  ],
+  "additionalProperties": false
+}

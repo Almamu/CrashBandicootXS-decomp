@@ -1,0 +1,1681 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Almamu/CrashBandicootXS-decomp/raw/main/packages/crashdata/schemas/graphics_manifest.schema.json",
+  "title": "The graphics manifest (manifest.json)",
+  "description": "games/<game>/graphics/manifest.json (docs/graphics.md, \"The manifest\")",
+  "type": "object",
+  "properties": {
+    "assets": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/entry"
+      },
+      "description": "every source under the graphics directory"
+    },
+    "objects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
+          "rom": {
+            "type": "string",
+            "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+            "description": "a ROM address, 0x08......"
+          },
+          "end": {
+            "type": "string",
+            "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+            "description": "a ROM address, 0x08......"
+          }
+        },
+        "required": [
+          "name",
+          "rom",
+          "end"
+        ],
+        "additionalProperties": false
+      },
+      "description": "the data objects whose graphics are all class members"
+    }
+  },
+  "required": [
+    "assets"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "entry": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "bitmap"
+                },
+                "symbol": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                },
+                "rom": {
+                  "type": "string",
+                  "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                  "description": "a ROM address, 0x08......"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^[^/].*$",
+                  "description": "a path under the graphics directory (a directory ends in /)"
+                },
+                "paths": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^/].*$",
+                    "description": "a path under the graphics directory (a directory ends in /)"
+                  },
+                  "minItems": 1
+                },
+                "class": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                  "description": "the graphics class whose static members its parts are"
+                },
+                "about": {
+                  "type": "string"
+                },
+                "object": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                  "description": "a new graphic: the object defining it"
+                },
+                "palette": {
+                  "type": "object",
+                  "properties": {
+                    "symbol": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                    },
+                    "rom": {
+                      "type": "string",
+                      "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                      "description": "a ROM address, 0x08......"
+                    },
+                    "colors": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 256
+                    },
+                    "lz77": {
+                      "type": "boolean",
+                      "description": "the palette is LZ77-packed"
+                    },
+                    "obj_palette": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 65535,
+                      "description": "a sheet whose palette OAM picks: the gObjPalettes entry the PNG is drawn with"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "kind",
+                "symbol",
+                "path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "bitmap"
+                },
+                "symbol": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                },
+                "rom": {
+                  "type": "string",
+                  "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                  "description": "a ROM address, 0x08......"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^[^/].*$",
+                  "description": "a path under the graphics directory (a directory ends in /)"
+                },
+                "paths": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^/].*$",
+                    "description": "a path under the graphics directory (a directory ends in /)"
+                  },
+                  "minItems": 1
+                },
+                "class": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                  "description": "the graphics class whose static members its parts are"
+                },
+                "about": {
+                  "type": "string"
+                },
+                "object": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                  "description": "a new graphic: the object defining it"
+                },
+                "palette": {
+                  "type": "object",
+                  "properties": {
+                    "symbol": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                    },
+                    "rom": {
+                      "type": "string",
+                      "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                      "description": "a ROM address, 0x08......"
+                    },
+                    "colors": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 256
+                    },
+                    "lz77": {
+                      "type": "boolean",
+                      "description": "the palette is LZ77-packed"
+                    },
+                    "obj_palette": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 65535,
+                      "description": "a sheet whose palette OAM picks: the gObjPalettes entry the PNG is drawn with"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "kind",
+                "symbol",
+                "paths"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "a bitmap"
+        },
+        {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "tiles"
+                },
+                "symbol": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                },
+                "rom": {
+                  "type": "string",
+                  "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                  "description": "a ROM address, 0x08......"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^[^/].*$",
+                  "description": "a path under the graphics directory (a directory ends in /)"
+                },
+                "paths": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^/].*$",
+                    "description": "a path under the graphics directory (a directory ends in /)"
+                  },
+                  "minItems": 1
+                },
+                "class": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                  "description": "the graphics class whose static members its parts are"
+                },
+                "about": {
+                  "type": "string"
+                },
+                "object": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                  "description": "a new graphic: the object defining it"
+                },
+                "bpp": {
+                  "enum": [
+                    4,
+                    8
+                  ]
+                },
+                "width": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 1024,
+                  "description": "tiles per row"
+                },
+                "obj_sheet": {
+                  "type": "string",
+                  "pattern": "^--",
+                  "description": "a sheet of whole OBJs: tools/obj_sheet.py's layout options"
+                },
+                "palette": {
+                  "type": "object",
+                  "properties": {
+                    "symbol": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                    },
+                    "rom": {
+                      "type": "string",
+                      "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                      "description": "a ROM address, 0x08......"
+                    },
+                    "colors": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 256
+                    },
+                    "lz77": {
+                      "type": "boolean",
+                      "description": "the palette is LZ77-packed"
+                    },
+                    "obj_palette": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 65535,
+                      "description": "a sheet whose palette OAM picks: the gObjPalettes entry the PNG is drawn with"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "packed": {
+                  "type": "boolean",
+                  "description": "false: the raw tiles, `bytes` long (LZ77-packed by default)"
+                },
+                "bytes": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "a raw sheet's length in bytes"
+                }
+              },
+              "required": [
+                "kind",
+                "symbol",
+                "path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "tiles"
+                },
+                "symbol": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                },
+                "rom": {
+                  "type": "string",
+                  "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                  "description": "a ROM address, 0x08......"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^[^/].*$",
+                  "description": "a path under the graphics directory (a directory ends in /)"
+                },
+                "paths": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^/].*$",
+                    "description": "a path under the graphics directory (a directory ends in /)"
+                  },
+                  "minItems": 1
+                },
+                "class": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                  "description": "the graphics class whose static members its parts are"
+                },
+                "about": {
+                  "type": "string"
+                },
+                "object": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                  "description": "a new graphic: the object defining it"
+                },
+                "bpp": {
+                  "enum": [
+                    4,
+                    8
+                  ]
+                },
+                "width": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 1024,
+                  "description": "tiles per row"
+                },
+                "obj_sheet": {
+                  "type": "string",
+                  "pattern": "^--",
+                  "description": "a sheet of whole OBJs: tools/obj_sheet.py's layout options"
+                },
+                "palette": {
+                  "type": "object",
+                  "properties": {
+                    "symbol": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                    },
+                    "rom": {
+                      "type": "string",
+                      "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                      "description": "a ROM address, 0x08......"
+                    },
+                    "colors": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 256
+                    },
+                    "lz77": {
+                      "type": "boolean",
+                      "description": "the palette is LZ77-packed"
+                    },
+                    "obj_palette": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 65535,
+                      "description": "a sheet whose palette OAM picks: the gObjPalettes entry the PNG is drawn with"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "packed": {
+                  "type": "boolean",
+                  "description": "false: the raw tiles, `bytes` long (LZ77-packed by default)"
+                },
+                "bytes": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "a raw sheet's length in bytes"
+                }
+              },
+              "required": [
+                "kind",
+                "symbol",
+                "paths"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "a tiles"
+        },
+        {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "bg_package"
+                },
+                "symbol": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                },
+                "rom": {
+                  "type": "string",
+                  "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                  "description": "a ROM address, 0x08......"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^[^/].*$",
+                  "description": "a path under the graphics directory (a directory ends in /)"
+                },
+                "paths": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^/].*$",
+                    "description": "a path under the graphics directory (a directory ends in /)"
+                  },
+                  "minItems": 1
+                },
+                "class": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                  "description": "the graphics class whose static members its parts are"
+                },
+                "about": {
+                  "type": "string"
+                },
+                "object": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                  "description": "a new graphic: the object defining it"
+                },
+                "palette": {
+                  "type": "object",
+                  "properties": {
+                    "symbol": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                    },
+                    "rom": {
+                      "type": "string",
+                      "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                      "description": "a ROM address, 0x08......"
+                    },
+                    "colors": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 256
+                    },
+                    "lz77": {
+                      "type": "boolean",
+                      "description": "the palette is LZ77-packed"
+                    },
+                    "obj_palette": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 65535,
+                      "description": "a sheet whose palette OAM picks: the gObjPalettes entry the PNG is drawn with"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "map": {
+                  "type": "object",
+                  "properties": {
+                    "symbol": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                    },
+                    "rom": {
+                      "type": "string",
+                      "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                      "description": "a ROM address, 0x08......"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "size": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1024
+                  },
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "description": "[width, height] in cells"
+                },
+                "bpp": {
+                  "enum": [
+                    4,
+                    8
+                  ]
+                },
+                "affine": {
+                  "type": "boolean"
+                },
+                "obj_sheet": {
+                  "type": "string",
+                  "pattern": "^--",
+                  "description": "a sheet of whole OBJs: tools/obj_sheet.py's layout options"
+                }
+              },
+              "required": [
+                "kind",
+                "symbol",
+                "path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "bg_package"
+                },
+                "symbol": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                },
+                "rom": {
+                  "type": "string",
+                  "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                  "description": "a ROM address, 0x08......"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^[^/].*$",
+                  "description": "a path under the graphics directory (a directory ends in /)"
+                },
+                "paths": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^/].*$",
+                    "description": "a path under the graphics directory (a directory ends in /)"
+                  },
+                  "minItems": 1
+                },
+                "class": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                  "description": "the graphics class whose static members its parts are"
+                },
+                "about": {
+                  "type": "string"
+                },
+                "object": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                  "description": "a new graphic: the object defining it"
+                },
+                "palette": {
+                  "type": "object",
+                  "properties": {
+                    "symbol": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                    },
+                    "rom": {
+                      "type": "string",
+                      "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                      "description": "a ROM address, 0x08......"
+                    },
+                    "colors": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 256
+                    },
+                    "lz77": {
+                      "type": "boolean",
+                      "description": "the palette is LZ77-packed"
+                    },
+                    "obj_palette": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 65535,
+                      "description": "a sheet whose palette OAM picks: the gObjPalettes entry the PNG is drawn with"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "map": {
+                  "type": "object",
+                  "properties": {
+                    "symbol": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                    },
+                    "rom": {
+                      "type": "string",
+                      "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                      "description": "a ROM address, 0x08......"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "size": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1024
+                  },
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "description": "[width, height] in cells"
+                },
+                "bpp": {
+                  "enum": [
+                    4,
+                    8
+                  ]
+                },
+                "affine": {
+                  "type": "boolean"
+                },
+                "obj_sheet": {
+                  "type": "string",
+                  "pattern": "^--",
+                  "description": "a sheet of whole OBJs: tools/obj_sheet.py's layout options"
+                }
+              },
+              "required": [
+                "kind",
+                "symbol",
+                "paths"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "a bg_package"
+        },
+        {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "rle_frames"
+                },
+                "symbol": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                },
+                "rom": {
+                  "type": "string",
+                  "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                  "description": "a ROM address, 0x08......"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^[^/].*$",
+                  "description": "a path under the graphics directory (a directory ends in /)"
+                },
+                "paths": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^/].*$",
+                    "description": "a path under the graphics directory (a directory ends in /)"
+                  },
+                  "minItems": 1
+                },
+                "class": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                  "description": "the graphics class whose static members its parts are"
+                },
+                "about": {
+                  "type": "string"
+                },
+                "object": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                  "description": "a new graphic: the object defining it"
+                },
+                "end": {
+                  "type": "string",
+                  "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                  "description": "a ROM address, 0x08......"
+                },
+                "palette": {
+                  "type": "object",
+                  "properties": {
+                    "symbol": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                    },
+                    "rom": {
+                      "type": "string",
+                      "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                      "description": "a ROM address, 0x08......"
+                    },
+                    "colors": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 256
+                    },
+                    "lz77": {
+                      "type": "boolean",
+                      "description": "the palette is LZ77-packed"
+                    },
+                    "obj_palette": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 65535,
+                      "description": "a sheet whose palette OAM picks: the gObjPalettes entry the PNG is drawn with"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "kind",
+                "symbol",
+                "path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "rle_frames"
+                },
+                "symbol": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                },
+                "rom": {
+                  "type": "string",
+                  "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                  "description": "a ROM address, 0x08......"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^[^/].*$",
+                  "description": "a path under the graphics directory (a directory ends in /)"
+                },
+                "paths": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^/].*$",
+                    "description": "a path under the graphics directory (a directory ends in /)"
+                  },
+                  "minItems": 1
+                },
+                "class": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                  "description": "the graphics class whose static members its parts are"
+                },
+                "about": {
+                  "type": "string"
+                },
+                "object": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                  "description": "a new graphic: the object defining it"
+                },
+                "end": {
+                  "type": "string",
+                  "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                  "description": "a ROM address, 0x08......"
+                },
+                "palette": {
+                  "type": "object",
+                  "properties": {
+                    "symbol": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                    },
+                    "rom": {
+                      "type": "string",
+                      "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                      "description": "a ROM address, 0x08......"
+                    },
+                    "colors": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 256
+                    },
+                    "lz77": {
+                      "type": "boolean",
+                      "description": "the palette is LZ77-packed"
+                    },
+                    "obj_palette": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 65535,
+                      "description": "a sheet whose palette OAM picks: the gObjPalettes entry the PNG is drawn with"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "kind",
+                "symbol",
+                "paths"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "a rle_frames"
+        },
+        {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "boss_picture"
+                },
+                "symbol": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                },
+                "rom": {
+                  "type": "string",
+                  "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                  "description": "a ROM address, 0x08......"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^[^/].*$",
+                  "description": "a path under the graphics directory (a directory ends in /)"
+                },
+                "paths": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^/].*$",
+                    "description": "a path under the graphics directory (a directory ends in /)"
+                  },
+                  "minItems": 1
+                },
+                "end": {
+                  "type": "string",
+                  "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                  "description": "a ROM address, 0x08......"
+                },
+                "palette": {
+                  "type": "object",
+                  "properties": {
+                    "symbol": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                    },
+                    "rom": {
+                      "type": "string",
+                      "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                      "description": "a ROM address, 0x08......"
+                    },
+                    "colors": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 256
+                    },
+                    "lz77": {
+                      "type": "boolean",
+                      "description": "the palette is LZ77-packed"
+                    },
+                    "obj_palette": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 65535,
+                      "description": "a sheet whose palette OAM picks: the gObjPalettes entry the PNG is drawn with"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "kind",
+                "symbol",
+                "path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "boss_picture"
+                },
+                "symbol": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                },
+                "rom": {
+                  "type": "string",
+                  "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                  "description": "a ROM address, 0x08......"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^[^/].*$",
+                  "description": "a path under the graphics directory (a directory ends in /)"
+                },
+                "paths": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^/].*$",
+                    "description": "a path under the graphics directory (a directory ends in /)"
+                  },
+                  "minItems": 1
+                },
+                "end": {
+                  "type": "string",
+                  "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                  "description": "a ROM address, 0x08......"
+                },
+                "palette": {
+                  "type": "object",
+                  "properties": {
+                    "symbol": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                    },
+                    "rom": {
+                      "type": "string",
+                      "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                      "description": "a ROM address, 0x08......"
+                    },
+                    "colors": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 256
+                    },
+                    "lz77": {
+                      "type": "boolean",
+                      "description": "the palette is LZ77-packed"
+                    },
+                    "obj_palette": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 65535,
+                      "description": "a sheet whose palette OAM picks: the gObjPalettes entry the PNG is drawn with"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "kind",
+                "symbol",
+                "paths"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "a boss_picture"
+        },
+        {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "cell_anim"
+                },
+                "symbol": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                },
+                "rom": {
+                  "type": "string",
+                  "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                  "description": "a ROM address, 0x08......"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^[^/].*$",
+                  "description": "a path under the graphics directory (a directory ends in /)"
+                },
+                "paths": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^/].*$",
+                    "description": "a path under the graphics directory (a directory ends in /)"
+                  },
+                  "minItems": 1
+                },
+                "frames": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 65535
+                },
+                "banks": {
+                  "type": "boolean",
+                  "description": "each frame carries its palette banks"
+                }
+              },
+              "required": [
+                "kind",
+                "symbol",
+                "path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "cell_anim"
+                },
+                "symbol": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                },
+                "rom": {
+                  "type": "string",
+                  "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                  "description": "a ROM address, 0x08......"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^[^/].*$",
+                  "description": "a path under the graphics directory (a directory ends in /)"
+                },
+                "paths": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^/].*$",
+                    "description": "a path under the graphics directory (a directory ends in /)"
+                  },
+                  "minItems": 1
+                },
+                "frames": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 65535
+                },
+                "banks": {
+                  "type": "boolean",
+                  "description": "each frame carries its palette banks"
+                }
+              },
+              "required": [
+                "kind",
+                "symbol",
+                "paths"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "a cell_anim"
+        },
+        {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "bg_picture"
+                },
+                "symbol": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                },
+                "rom": {
+                  "type": "string",
+                  "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                  "description": "a ROM address, 0x08......"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^[^/].*$",
+                  "description": "a path under the graphics directory (a directory ends in /)"
+                },
+                "paths": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^/].*$",
+                    "description": "a path under the graphics directory (a directory ends in /)"
+                  },
+                  "minItems": 1
+                }
+              },
+              "required": [
+                "kind",
+                "symbol",
+                "path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "bg_picture"
+                },
+                "symbol": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                },
+                "rom": {
+                  "type": "string",
+                  "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                  "description": "a ROM address, 0x08......"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^[^/].*$",
+                  "description": "a path under the graphics directory (a directory ends in /)"
+                },
+                "paths": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^/].*$",
+                    "description": "a path under the graphics directory (a directory ends in /)"
+                  },
+                  "minItems": 1
+                }
+              },
+              "required": [
+                "kind",
+                "symbol",
+                "paths"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "a bg_picture"
+        },
+        {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "category_palette"
+                },
+                "symbol": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                },
+                "rom": {
+                  "type": "string",
+                  "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                  "description": "a ROM address, 0x08......"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^[^/].*$",
+                  "description": "a path under the graphics directory (a directory ends in /)"
+                },
+                "paths": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^/].*$",
+                    "description": "a path under the graphics directory (a directory ends in /)"
+                  },
+                  "minItems": 1
+                },
+                "colors": {
+                  "const": 256
+                }
+              },
+              "required": [
+                "kind",
+                "symbol",
+                "path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "category_palette"
+                },
+                "symbol": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                },
+                "rom": {
+                  "type": "string",
+                  "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                  "description": "a ROM address, 0x08......"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^[^/].*$",
+                  "description": "a path under the graphics directory (a directory ends in /)"
+                },
+                "paths": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^/].*$",
+                    "description": "a path under the graphics directory (a directory ends in /)"
+                  },
+                  "minItems": 1
+                },
+                "colors": {
+                  "const": 256
+                }
+              },
+              "required": [
+                "kind",
+                "symbol",
+                "paths"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "a category_palette"
+        },
+        {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "palette_cycle"
+                },
+                "symbol": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                },
+                "rom": {
+                  "type": "string",
+                  "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                  "description": "a ROM address, 0x08......"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^[^/].*$",
+                  "description": "a path under the graphics directory (a directory ends in /)"
+                },
+                "paths": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^/].*$",
+                    "description": "a path under the graphics directory (a directory ends in /)"
+                  },
+                  "minItems": 1
+                },
+                "frames": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 255
+                }
+              },
+              "required": [
+                "kind",
+                "symbol",
+                "path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "palette_cycle"
+                },
+                "symbol": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                },
+                "rom": {
+                  "type": "string",
+                  "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                  "description": "a ROM address, 0x08......"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^[^/].*$",
+                  "description": "a path under the graphics directory (a directory ends in /)"
+                },
+                "paths": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^/].*$",
+                    "description": "a path under the graphics directory (a directory ends in /)"
+                  },
+                  "minItems": 1
+                },
+                "frames": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 255
+                }
+              },
+              "required": [
+                "kind",
+                "symbol",
+                "paths"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "a palette_cycle"
+        },
+        {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "obj_palettes"
+                },
+                "symbol": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                },
+                "rom": {
+                  "type": "string",
+                  "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                  "description": "a ROM address, 0x08......"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^[^/].*$",
+                  "description": "a path under the graphics directory (a directory ends in /)"
+                },
+                "paths": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^/].*$",
+                    "description": "a path under the graphics directory (a directory ends in /)"
+                  },
+                  "minItems": 1
+                },
+                "names": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[0-9]{3}_[a-z0-9_]+$"
+                  }
+                }
+              },
+              "required": [
+                "kind",
+                "symbol",
+                "path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "obj_palettes"
+                },
+                "symbol": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                },
+                "rom": {
+                  "type": "string",
+                  "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                  "description": "a ROM address, 0x08......"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^[^/].*$",
+                  "description": "a path under the graphics directory (a directory ends in /)"
+                },
+                "paths": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^/].*$",
+                    "description": "a path under the graphics directory (a directory ends in /)"
+                  },
+                  "minItems": 1
+                },
+                "names": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[0-9]{3}_[a-z0-9_]+$"
+                  }
+                }
+              },
+              "required": [
+                "kind",
+                "symbol",
+                "paths"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "a obj_palettes"
+        },
+        {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "sprite_banks"
+                },
+                "symbol": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                },
+                "rom": {
+                  "type": "string",
+                  "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                  "description": "a ROM address, 0x08......"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^[^/].*$",
+                  "description": "a path under the graphics directory (a directory ends in /)"
+                },
+                "paths": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^/].*$",
+                    "description": "a path under the graphics directory (a directory ends in /)"
+                  },
+                  "minItems": 1
+                },
+                "names": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "piece_sizes": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind",
+                "symbol",
+                "path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "sprite_banks"
+                },
+                "symbol": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                },
+                "rom": {
+                  "type": "string",
+                  "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                  "description": "a ROM address, 0x08......"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^[^/].*$",
+                  "description": "a path under the graphics directory (a directory ends in /)"
+                },
+                "paths": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^/].*$",
+                    "description": "a path under the graphics directory (a directory ends in /)"
+                  },
+                  "minItems": 1
+                },
+                "names": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "piece_sizes": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind",
+                "symbol",
+                "paths"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "a sprite_banks"
+        },
+        {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "framed_sheet"
+                },
+                "symbol": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                },
+                "rom": {
+                  "type": "string",
+                  "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                  "description": "a ROM address, 0x08......"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^[^/].*$",
+                  "description": "a path under the graphics directory (a directory ends in /)"
+                },
+                "paths": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^/].*$",
+                    "description": "a path under the graphics directory (a directory ends in /)"
+                  },
+                  "minItems": 1
+                },
+                "prefix": {
+                  "type": "string",
+                  "pattern": "^[A-Z0-9_]+$",
+                  "description": "FRAMED_<prefix>_<FOLDER>_<NN>"
+                },
+                "folder_banks": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255
+                  },
+                  "description": "{folder: bank}: a folder drawn in another bank"
+                },
+                "view_palette": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                    },
+                    {
+                      "type": "string",
+                      "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                      "description": "a ROM address, 0x08......"
+                    }
+                  ],
+                  "description": "the palette the frames' PNGs are drawn in"
+                }
+              },
+              "required": [
+                "kind",
+                "symbol",
+                "path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "framed_sheet"
+                },
+                "symbol": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                },
+                "rom": {
+                  "type": "string",
+                  "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                  "description": "a ROM address, 0x08......"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^[^/].*$",
+                  "description": "a path under the graphics directory (a directory ends in /)"
+                },
+                "paths": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^/].*$",
+                    "description": "a path under the graphics directory (a directory ends in /)"
+                  },
+                  "minItems": 1
+                },
+                "prefix": {
+                  "type": "string",
+                  "pattern": "^[A-Z0-9_]+$",
+                  "description": "FRAMED_<prefix>_<FOLDER>_<NN>"
+                },
+                "folder_banks": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255
+                  },
+                  "description": "{folder: bank}: a folder drawn in another bank"
+                },
+                "view_palette": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                    },
+                    {
+                      "type": "string",
+                      "pattern": "^0x0[89][0-9A-Fa-f]{6}$",
+                      "description": "a ROM address, 0x08......"
+                    }
+                  ],
+                  "description": "the palette the frames' PNGs are drawn in"
+                }
+              },
+              "required": [
+                "kind",
+                "symbol",
+                "paths"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "a framed_sheet"
+        }
+      ]
+    }
+  }
+}
