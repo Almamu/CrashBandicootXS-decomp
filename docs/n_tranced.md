@@ -302,11 +302,24 @@ python3 tools/levels.py --levels-dir games/n2/data/levels extract-rooms baserom_
 checks what `extract` checks for XS: every layer's chunks re-encode to
 the ROM's bytes (2 rooms need `pad_overrides`, as 2 of XS's do), and the
 8 BG tile sets the build makes from the pictures are the ROM's, and so is
-every layer's cells. The folders are `level<NN>/<slot>` (the level's
-index, and `main`/`part<N>`/`bonus`/`gem_path` as in data/levels) until
-the levels have names, the tile sets are `gStaticData_<address>`, and
-the entity types are numbers (there is no `entity_types.json` yet: 110
-types, XS has 93).
+every layer's cells. The folders are `<level>/<slot>`: the level's name
+and `main`/`part<N>`/`bonus`/`gem_path` as in data/levels. The names are
+`levels.json`'s `"level_names"`, one per level of `gLevelTable`, which
+`extract-rooms` keeps: each level's own name (its record's `name_text`, an
+index into the UI strings, 41-69). Its 29 levels are 24 and then the 5
+bosses:
+
+| | Levels (theme) |
+|---|---|
+| 0-11 | island_intro (5), prints_of_persia (0), lagoony_tunes (4), globe_trottin (6), pharaohs_funhouse (1), runaway_rug (0), tiki_torture (2), hoppin_coffins (1), barrel_roll (6), flockful_of_seagulls (4), magma_mania (2), run_from_the_sun (3) |
+| 12-23 | now_its_istanbul (0), mister_lava_lava (2), water_logged (4), slip_n_slidin_sphinx (1), rocks_can_roll (6), rock_the_casaba (0), eruption_disruption (2), spaced_out (3), king_too_uncommon (1), wild_nile_ride (1), 101_arabian_kites (0), fire_walker (2) |
+| 24-28 | evil_crunch (7), evil_coco (8), fake_crash (9), n_trance (10), n_tropy (11) |
+
+Only 21 of them have rooms in this format (the others, the atlasphere's
+and the jet ski's among them, are N-Tranced's own kinds of level). The
+tile sets are `gStaticData_<address>` and the entity types are numbers
+until they have names (there is no `entity_types.json` yet: 110 types,
+XS has 93).
 
 What differs from XS, in `levels.py`:
 
