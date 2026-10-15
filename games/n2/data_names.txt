@@ -44,3 +44,4 @@
 0x087F894C gPeriodicSpawnerVtable
 0x087F98B4 gBgLayerVtable
 0x087F9904 gPooledBgLayerVtable
+0x087F9A3C gHudPartVtable

@@ -22,6 +22,8 @@ link sets). Prints per object:
 With --agbcp, as agbcp without -fprologue-bugfix builds them: N-Tranced's
 build used it for some objects XS's built with old_agbcp (game.mk).
     linked   already in objects.txt (an object given by name is checked)
+    overlaps where the comparison put it, another linked object is: a
+             copy of short code that object has
 
 Needs build/nt_compare/match.json (run.py) and XS built.
 """
@@ -86,7 +88,11 @@ def main():
     by = collections.defaultdict(list)
     for r in rows:
         by[r['obj']].append(r)
-    linked = {l.split()[2].rsplit('.', 1)[0] for l in open('games/n2/objects.txt') if l.strip() and not l.startswith('#')}
+    rows = [l.split() for l in open('games/n2/objects.txt') if l.strip() and not l.startswith('#')]
+    linked = {r[2].rsplit('.', 1)[0] for r in rows}
+    # the linked objects' ranges: a place inside one is another copy of the
+    # same code (a short function the ROM has several of), not this object
+    spans = [(int(r[0], 16), int(r[0], 16) + int(r[1], 16), r[2]) for r in rows]
     linked |= {s.replace('games/n2/', '') for s in linked}
     objs = args.objects or sorted(by)
     known = map_names()
@@ -127,6 +133,10 @@ def main():
             mask.update(range(o, o + 4))
         got = rom[at - B:at - B + len(text)]
         diff = [i for i in range(len(text)) if i not in mask and text[i] != got[i]]
+        inside = [s for lo, hi, s in spans if lo < at + len(text) and at < hi and s.rsplit('.', 1)[0] != obj[:-2]]
+        if inside:
+            print('%-50s overlaps at %#x: %s is linked there' % (obj, at, inside[0]))
+            continue
         if not diff:
             print('%-50s match    at %#x, %d bytes' % (obj, at, len(text)))
             need = {}

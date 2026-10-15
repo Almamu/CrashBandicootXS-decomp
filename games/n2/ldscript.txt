@@ -55,6 +55,8 @@ SECTIONS
 		build/ntranced/games/n2/asm/code_080273FC.o(.text);
 		build/ntranced/src/engine/gfx/palette_cycle.o(.text);
 		build/ntranced/games/n2/asm/code_080275FC.o(.text);
+		build/ntranced/src/game/ui/hud_part.o(.text);
+		build/ntranced/games/n2/asm/code_08027774.o(.text);
 		build/ntranced/src/engine/actor/actor_spawn_collected.o(.text);
 		build/ntranced/games/n2/asm/code_080322F8.o(.text);
 		build/ntranced/lib/libgcc/_divdi3.o(.text);
@@ -198,6 +200,8 @@ SECTIONS
 	PROVIDE(ClearPaletteCycles = ((TickPaletteCycles & ~1) + 0x134) | 1);
 	PROVIDE(DestroyPaletteCycles = ((TickPaletteCycles & ~1) + 0x158) | 1);
 	PROVIDE(InitPaletteCycles = ((TickPaletteCycles & ~1) + 0x170) | 1);
+	PROVIDE(sub_08027740 = ((DrawHudPart & ~1) + 0x2C) | 1);
+	PROVIDE(sub_08027754 = ((DrawHudPart & ~1) + 0x40) | 1);
 	PROVIDE(MarkSpawnCollected = ((IsSpawnCollected & ~1) + 0x34) | 1);
 	PROVIDE(ClearCollectedSpawns = ((IsSpawnCollected & ~1) + 0x7C) | 1);
 	PROVIDE(_call_via_r1 = ((_call_via_r0 & ~1) + 0x4) | 1);

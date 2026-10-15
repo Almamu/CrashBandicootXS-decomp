@@ -5037,7 +5037,7 @@ _0800513C:
 	adds r5, r5, r6
 	movs r0, #0x60
 	bl OperatorNew
-	bl sub_080097B0
+	bl InitUiSpriteObj
 	str r0, [r5]
 	mov r1, sl
 	ldr r0, [r1]
@@ -5065,7 +5065,7 @@ _0800513C:
 	adds r5, r5, r6
 	movs r0, #0x60
 	bl OperatorNew
-	bl sub_080097B0
+	bl InitUiSpriteObj
 	str r0, [r5]
 	mov r1, sl
 	ldr r0, [r1]
@@ -5094,7 +5094,7 @@ _0800513C:
 	adds r5, r5, r6
 	movs r0, #0x60
 	bl OperatorNew
-	bl sub_080097B0
+	bl InitUiSpriteObj
 	str r0, [r5]
 	mov r1, sl
 	ldr r0, [r1]
@@ -7955,7 +7955,7 @@ sub_080068B8: @ 0x080068B8
 	adds r6, #0xd0
 	movs r0, #0x60
 	bl OperatorNew
-	bl sub_080097B0
+	bl InitUiSpriteObj
 	str r0, [r6]
 	ldr r0, _080069BC @ =gSpriteBankSet
 	mov r8, r0
@@ -7985,7 +7985,7 @@ sub_080068B8: @ 0x080068B8
 	adds r5, #0xd4
 	movs r0, #0x60
 	bl OperatorNew
-	bl sub_080097B0
+	bl InitUiSpriteObj
 	str r0, [r5]
 	mov r1, r8
 	ldr r0, [r1]
@@ -8013,7 +8013,7 @@ sub_080068B8: @ 0x080068B8
 	adds r5, #4
 	movs r0, #0x60
 	bl OperatorNew
-	bl sub_080097B0
+	bl InitUiSpriteObj
 	str r0, [r5]
 	mov r1, r8
 	ldr r0, [r1]
@@ -8077,7 +8077,7 @@ _080069DE:
 	adds r6, r6, r5
 	movs r0, #0x60
 	bl OperatorNew
-	bl sub_080097B0
+	bl InitUiSpriteObj
 	str r0, [r6]
 	ldr r0, _08006A40 @ =gSpriteBankSet
 	ldr r0, [r0]
@@ -8137,7 +8137,7 @@ _08006A5E:
 	adds r6, r6, r5
 	movs r0, #0x60
 	bl OperatorNew
-	bl sub_080097B0
+	bl InitUiSpriteObj
 	str r0, [r6]
 	ldr r0, _08006B00 @ =gSpriteBankSet
 	ldr r0, [r0]
@@ -8221,7 +8221,7 @@ _08006B1C:
 	adds r6, r6, r5
 	movs r0, #0x60
 	bl OperatorNew
-	bl sub_080097B0
+	bl InitUiSpriteObj
 	str r0, [r6]
 	ldr r0, _08006BCC @ =gSpriteBankSet
 	ldr r0, [r0]
@@ -8320,7 +8320,7 @@ _08006BEA:
 	adds r6, r6, r5
 	movs r0, #0x60
 	bl OperatorNew
-	bl sub_080097B0
+	bl InitUiSpriteObj
 	str r0, [r6]
 	ldr r0, _08006CA0 @ =gSpriteBankSet
 	ldr r0, [r0]
@@ -8431,7 +8431,7 @@ _08006CEA:
 	adds r6, #0xcc
 	movs r0, #0x60
 	bl OperatorNew
-	bl sub_080097B0
+	bl InitUiSpriteObj
 	str r0, [r6]
 	ldr r0, _08006D9C @ =gSpriteBankSet
 	ldr r0, [r0]
@@ -8847,7 +8847,7 @@ sub_0800703C: @ 0x0800703C
 	adds r4, #0x90
 	movs r0, #0x60
 	bl OperatorNew
-	bl sub_080097B0
+	bl InitUiSpriteObj
 	str r0, [r4]
 	ldr r0, _08007088 @ =gSpriteBankSet
 	ldr r0, [r0]

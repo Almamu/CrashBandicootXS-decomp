@@ -19829,7 +19829,7 @@ sub_0801CA0C: @ 0x0801CA0C
 	push {lr}
 	ldr r2, _0801CA1C @ =gUnknown_087F97F4
 	str r2, [r0, #0x24]
-	bl sub_0800979C
+	bl DestroyUiSpriteObj
 	pop {r0}
 	bx r0
 	.align 2, 0
@@ -19839,7 +19839,7 @@ _0801CA1C: .4byte gUnknown_087F97F4
 sub_0801CA20: @ 0x0801CA20
 	push {r4, lr}
 	adds r4, r0, #0
-	bl sub_080097B0
+	bl InitUiSpriteObj
 	ldr r0, _0801CA3C @ =gUnknown_087F97F4
 	str r0, [r4, #0x24]
 	movs r0, #0
