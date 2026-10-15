@@ -36,6 +36,7 @@
 0x080273C4 0x038 engine/src/engine/sys/operator_new.cpp
 0x08027468 0x194 engine/src/engine/gfx/palette_cycle.cpp
 0x08027714 0x060 engine/src/game/ui/hud_part.cpp
+0x080292F8 0x02C engine/src/engine/text/font_height.cpp
 0x08032270 0x088 engine/src/engine/actor/actor_spawn_collected.cpp
 0x0804406C 0x434 lib/libgcc/_divdi3.o
 0x080444A0 0x3D8 lib/libgcc/_udivdi3.o

@@ -48,6 +48,15 @@ public:
     // 0x000 - the glyph's OAM entry, rebuilt by DrawGlyph for every glyph and
     //         handed to AddOamEntry; the constructor zeroes it
     struct oam_attrs oam_scratch;
+#ifdef GAME_N2
+    /* N-Tranced's font is 0x13C bytes, built from a descriptor (its
+     * constructor, 0x08028E14, copies the descriptor's words into it):
+     * this word (the descriptor's fourth) is new, so everything up to
+     * glyphTileStride is 4 bytes later (lineHeight at 0x120: TextHeight,
+     * its accessors 0x08029414-0x08029484); then two more words, and no
+     * tileCount (the constructor doesn't zero one). */
+    u32 unk_08;
+#endif
     // 0x008 - char -> glyph index (1-0x4F; 0: not in the font), built by the
     //         subclasses' constructors from the font's character set
     u8 charLookup[0x100];
@@ -60,9 +69,16 @@ public:
     screen_h_t lineHeight;                         // 0x11C - posY's step on a newline
     screen_w_t spaceWidth;                         // 0x120 - a space's advance
     s32 glyphTileStride;                           // 0x124
-    const void *tiles;                             // 0x128 - the tagged tile asset
+#ifdef GAME_N2
+    u32 unk_12C;       // the descriptor's third word (glyphTileStride is it << 5)
+    const void *tiles; // 0x130 - the descriptor's fifth word
+    // 0x134 - a pointer its 0x08029390 sets by its u8 argument (0-2)
+    const void *unk_134;
+#else
+    const void *tiles; // 0x128 - the tagged tile asset
     // 0x12C - set by UploadTiles: the tile asset's first word >> 13
     u32 tileCount;
+#endif
     // 0x130: the vtable pointer, gFontVtable or a subclass's
 
     /* 1 DestroyFont */
@@ -126,11 +142,13 @@ public:
         posY = y;
     }
 
+#ifndef GAME_N2
     /* FontGetTileCount */
     u32 GetTileCount()
     {
         return tileCount;
     }
+#endif
 
     /* The lines of text that fit in `height` pixels (FontHeightToLines). */
     s32 HeightToLines(screen_h_t height)
@@ -146,7 +164,9 @@ public:
 
         posX = posY = 0;
         marginX = 0;
+#ifndef GAME_N2
         tileCount = 0;
+#endif
         zero = 0;
         CpuSet(&zero, &oam_scratch,
                CPU_SET_32BIT | CPU_SET_SRC_FIXED | sizeof(oam_scratch) / sizeof(u32));
@@ -154,6 +174,7 @@ public:
 };
 
 LAYOUT_ASSERT(font_hpp, sizeof(Font) == 0x134);
+N2_LAYOUT_ASSERT(font_hpp, sizeof(Font) == 0x13C);
 
 /* gSmallFont: 9-pixel lines, 4-pixel spaces, 2 tiles per glyph
  * (InitSmallFont, engine/src/engine/text/font_glyph.cpp; ~SmallFont, aabb_setters.cpp). */

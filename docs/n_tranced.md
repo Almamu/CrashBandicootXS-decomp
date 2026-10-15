@@ -256,6 +256,12 @@ far:
   and three after `affine`, which its `Reset` sets; two more virtual
   methods, slots 13 and 15 (`GetPriority` 14, `ApplyVelocity` 16).
   `MovingSprite` is 0x98 (XS 0x78).
+- `Font` (0x13C bytes, XS 0x134): N-Tranced's constructor (0x08028E14)
+  fills it from a descriptor. A word after the OAM entry (+0x08), so
+  `charLookup` to `glyphTileStride` are 4 bytes later (`lineHeight` at
+  +0x120); then two more words (+0x12C, and +0x134, which 0x08029390
+  sets) and no `tileCount`. Its virtual methods differ from XS's too
+  (not in the header yet): only `TextHeight` (font_height.cpp) links.
 - `gCrateHitResponse`'s rows: `ATTACK_KIND_COUNT`, 8 (XS 7).
 
 `tools/nt_compare`'s `structs.txt` gives the members' offsets the code

@@ -57,6 +57,8 @@ SECTIONS
 		build/ntranced/games/n2/asm/code_080275FC.o(.text);
 		build/ntranced/src/game/ui/hud_part.o(.text);
 		build/ntranced/games/n2/asm/code_08027774.o(.text);
+		build/ntranced/src/engine/text/font_height.o(.text);
+		build/ntranced/games/n2/asm/code_08029324.o(.text);
 		build/ntranced/src/engine/actor/actor_spawn_collected.o(.text);
 		build/ntranced/games/n2/asm/code_080322F8.o(.text);
 		build/ntranced/lib/libgcc/_divdi3.o(.text);
