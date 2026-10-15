@@ -14,7 +14,11 @@ bank, graphics/sprites/bankNN_<name>/:
 - bank.json: per frame, in frame order:
     "origin": [x, y]   the sprite's position in the PNG
     "pieces": [["WxH", x, y], ...]   each piece's size in pixels and its
-                       offset from the sprite's position, in piece order
+                       offset from the sprite's position, in piece order;
+                       ["WxH", x, y, "own_png"] for a piece drawn over by
+                       an earlier one with other pixels (7 of N-Tranced's
+                       frames), which is its own PNG, fKKK_pN.png (N its
+                       index), not part of fKKK.png
     "layout": n        the frame's layout type (the high nibble of its first
                        piece byte, include/engine/gfx/sprite_bank.h); it says which
                        struct the frame is in the C
@@ -60,11 +64,19 @@ bank, graphics/sprites/bankNN_<name>/:
                                   frame table and sequences
         The new frames' headers go at the end of their bankNN_pieces.inc.
 
+    tools/sprite_frames.py --graphics-dir DIR extract|pack ...
+        Another game's banks (docs/n_tranced.md, "Sprite banks"), in
+        DIR/sprites/: its manifest's sprite_banks entry gives the bank
+        table (`rom`), gObjPieceWidths (`piece_sizes`, the heights right
+        after) and the banks' `names`; the table's header gives the tile
+        pool and the palettes. Only XS's banks take new frames.
+
 pack cuts each piece's rectangle out of the frame's PNG into tiles and
 places the frames' runs in frame order. Tiles a frame shares with an
 earlier frame must be the same pixels in both PNGs, or pack fails and
 names the frame and the tile. So does a pixel drawn outside every piece.
 """
+import argparse
 import json
 import struct
 import sys
@@ -79,6 +91,7 @@ OBJ_PALETTES = 0x084A4660
 OBJ_W = 0x0816B2E0  # gObjPieceWidths
 OBJ_H = 0x0816B2EC  # gObjPieceHeights
 SPRITES = Path("graphics/sprites")
+XS_GRAPHICS = Path("graphics")
 
 # shape/size index (the low nibble of a piece byte) -> (width, height)
 SHAPES = [(8, 8), (16, 16), (32, 32), (64, 64), (16, 8), (32, 8), (32, 16), (64, 32),
@@ -173,6 +186,24 @@ BANK_NAMES = [
 ]
 
 
+def use_graphics_dir(d):
+    """Works on the game whose graphics are in `d` (its manifest's
+    sprite_banks entry); XS's constants for XS's graphics/."""
+    global BANK_TABLE, TILE_BASE, OBJ_PALETTES, OBJ_W, OBJ_H, SPRITES, BANK_NAMES, NEW_FRAME_HOOKS
+    d = Path(d)
+    if d == XS_GRAPHICS:
+        return
+    entries = json.loads((d / "manifest.json").read_text())["assets"]
+    e = [e for e in entries if e["kind"] == "sprite_banks"][0]
+    BANK_TABLE = int(e["rom"], 16)
+    TILE_BASE = OBJ_PALETTES = None  # the table header's (read_banks)
+    OBJ_W = int(e["piece_sizes"], 16)
+    OBJ_H = OBJ_W + len(SHAPES)
+    BANK_NAMES = e["names"]
+    SPRITES = d / e["path"].rstrip("/")
+    NEW_FRAME_HOOKS = {}
+
+
 def fail(msg):
     sys.exit(f"sprite_frames: {msg}")
 
@@ -212,7 +243,10 @@ class Rom:
 
 def read_banks(rom):
     """[{anims: [(paletteId, seq)], frames: [{off, pieces, layout}]}]"""
+    global TILE_BASE, OBJ_PALETTES
     banks_p, tile_base = rom.w(BANK_TABLE), rom.w(BANK_TABLE + 4)
+    if TILE_BASE is None:
+        TILE_BASE, OBJ_PALETTES = tile_base, rom.w(BANK_TABLE + 8)
     assert tile_base == TILE_BASE and rom.w(BANK_TABLE + 8) == OBJ_PALETTES
     assert list(zip(rom.bytes(OBJ_W, 12), rom.bytes(OBJ_H, 12))) == SHAPES
     out = []
@@ -312,42 +346,76 @@ def bbox(pieces):
     return min(xs), min(ys), max(xs), max(ys)
 
 
-def draw_frame(pieces, data, palette):
-    """The frame's image from its tile run `data`."""
-    x0, y0, x1, y1 = bbox(pieces)
-    img = Image.new("P", (x1 - x0, y1 - y0), 0)
-    px = img.load()
-    drawn = {}
-    t = 0
+def piece_pixels(pieces, data):
+    """Each piece's pixels, {(x, y) from the sprite's position: index}."""
+    out, t = [], 0
     for s, x, y in pieces:
         w, h = SHAPES[s]
+        px = {}
         for ty in range(h // 8):
             for tx in range(w // 8):
                 tile = data[t * 32:(t + 1) * 32]
                 t += 1
                 for i in range(64):
-                    v = tile[i // 2] >> 4 * (i & 1) & 15
-                    p = (x - x0 + tx * 8 + i % 8, y - y0 + ty * 8 + i // 8)
-                    if drawn.setdefault(p, v) != v:
-                        raise ValueError(f"overlapping pieces differ at {p}")
-                    px[p] = v
-    img.putpalette([c for rgb in palette for c in rgb] + [0] * (768 - 3 * len(palette)))
-    return img, (-x0, -y0)
+                    px[(x + tx * 8 + i % 8, y + ty * 8 + i // 8)] = tile[i // 2] >> 4 * (i & 1) & 15
+        out.append(px)
+    return out
 
 
-def cut_frame(path, origin, pieces):
-    """The tile run of a frame's PNG, piece by piece."""
+def draw_frame(pieces, data, palette):
+    """The frame's image from its tile run `data`, and the pieces that are
+    their own PNGs ({index: image}): those an earlier piece draws over
+    with other pixels."""
+    pal = [c for rgb in palette for c in rgb] + [0] * (768 - 3 * len(palette))
+    drawn, own = {}, {}
+    for n, px in enumerate(piece_pixels(pieces, data)):
+        if any(drawn.get(p, v) != v for p, v in px.items()):
+            w, h = SHAPES[pieces[n][0]]
+            img = Image.new("P", (w, h), 0)
+            for (x, y), v in px.items():
+                img.putpixel((x - pieces[n][1], y - pieces[n][2]), v)
+            img.putpalette(pal)
+            own[n] = img
+        else:
+            drawn.update(px)
+    x0, y0, x1, y1 = bbox([pc for n, pc in enumerate(pieces) if n not in own])
+    img = Image.new("P", (x1 - x0, y1 - y0), 0)
+    px = img.load()
+    for (x, y), v in drawn.items():
+        px[x - x0, y - y0] = v
+    img.putpalette(pal)
+    return img, (-x0, -y0), own
+
+
+def open_frame(path):
     img = Image.open(path)
     if img.mode != "P":
         fail(f"{path}: not an indexed PNG")
-    px = img.load()
-    W, H = img.size
     if max(img.tobytes(), default=0) > 15:
         fail(f"{path}: colour index above 15 (a 4bpp frame has 16)")
+    return img
+
+
+def cut_frame(path, origin, pieces, own=()):
+    """The tile run of a frame's PNG, piece by piece; a piece of `own`
+    from its own PNG (path's stem + _pN.png)."""
+    img = open_frame(path)
+    px = img.load()
+    W, H = img.size
     covered = set()
     out = bytearray()
     for n, (s, x, y) in enumerate(pieces):
         w, h = SHAPES[s]
+        if n in own:
+            part = path.with_name(f"{path.stem}_p{n}.png")
+            pimg = open_frame(part)
+            if pimg.size != (w, h):
+                fail(f"{part}: {pimg.size[0]}x{pimg.size[1]}, its piece is {w}x{h}")
+            ppx = pimg.load()
+            for ty in range(0, h, 8):
+                for tx in range(0, w, 8):
+                    out += tile_bytes(ppx, tx, ty)
+            continue
         px0, py0 = origin[0] + x, origin[1] + y
         if px0 < 0 or py0 < 0 or px0 + w > W or py0 + h > H:
             fail(f"{path}: piece {n} ({w}x{h} at {x}, {y}) is outside the {W}x{H} image")
@@ -380,7 +448,8 @@ def write_json(path, frames):
         e = {}
         if f["pieces"]:
             e["origin"] = list(f["origin"])
-            e["pieces"] = [[f"{SHAPES[s][0]}x{SHAPES[s][1]}", x, y] for s, x, y in f["pieces"]]
+            e["pieces"] = [[f"{SHAPES[s][0]}x{SHAPES[s][1]}", x, y] + (["own_png"] if n in f.get("own", ()) else [])
+                           for n, (s, x, y) in enumerate(f["pieces"])]
             e["layout"] = f["layout"]
         else:
             e["pieces"] = []
@@ -398,12 +467,16 @@ def read_json(d):
         fail(f"{path}: {e}")
     out = []
     for k, e in enumerate(frames):
-        pieces = []
-        for p in e["pieces"]:
+        pieces, own = [], set()
+        for n, p in enumerate(e["pieces"]):
             if p[0] not in SHAPE_NAMES:
                 fail(f"{path}: frame {k}: no OBJ piece is {p[0]}")
+            if p[3:] not in ([], ["own_png"]):
+                fail(f"{path}: frame {k}: piece {n}: [\"WxH\", x, y] or [\"WxH\", x, y, \"own_png\"]")
+            if p[3:]:
+                own.add(n)
             pieces.append((SHAPE_NAMES[p[0]], int(p[1]), int(p[2])))
-        f = dict(pieces=pieces, tiles=e["tiles"], palettes=e.get("palettes", []))
+        f = dict(pieces=pieces, own=own, tiles=e["tiles"], palettes=e.get("palettes", []))
         if pieces:
             if e.get("layout") not in LAYOUT_STRUCTS:
                 fail(f"{path}: frame {k}: layout {e.get('layout')!r}")
@@ -457,7 +530,7 @@ def pack(dirs):
         pool = bytearray()
         for k, f in enumerate(frames):
             where = f"{d}/bank.json: frame {k}"
-            data = cut_frame(d / f"f{k:03}.png", f["origin"], f["pieces"]) if f["pieces"] else b""
+            data = cut_frame(d / f"f{k:03}.png", f["origin"], f["pieces"], f["own"]) if f["pieces"] else b""
             src = f["tiles"]
             if src == "own":
                 b, at = i, len(pool)
@@ -493,7 +566,7 @@ def pack(dirs):
 def write_pack(banks, outdir):
     outdir = Path(outdir)
     outdir.mkdir(parents=True, exist_ok=True)
-    h = ["/* Generated by tools/sprite_frames.py pack from graphics/sprites/bankNN_<name>/:",
+    h = [f"/* Generated by tools/sprite_frames.py pack from {SPRITES.as_posix()}/bankNN_<name>/:",
          " * the sprite tile pool's layout and the frames' piece arrays. */",
          ""]
     base = 0
@@ -550,13 +623,13 @@ def write_pack(banks, outdir):
                     heads.append(f"const struct {LAYOUT_STRUCTS[f['layout']]} {n} = {{ " + ", ".join(parts) + " };")
         h.append("")
         write_text(outdir / f"bank{i:02}_pieces.inc",
-                         f"/* Generated by tools/sprite_frames.py pack from graphics/sprites/{name}/bank.json */\n"
+                         f"/* Generated by tools/sprite_frames.py pack from {SPRITES.as_posix()}/{name}/bank.json */\n"
                          + "\n".join(pos) + "\n\n" + "\n".join(ids) + "\n"
                          + ("\n/* The new frames' headers (bank.json \"boxes\"), not in the ROM. */\n"
                             + "\n".join(heads) + "\n" if heads else ""))
         lines = ["\t" + ", ".join(f"0x{b:02X}" for b in pool[j:j + 16]) + "," for j in range(0, len(pool), 16)]
         write_text(outdir / f"bank{i:02}_tiles.inc",
-                         f"/* Generated by tools/sprite_frames.py pack from graphics/sprites/{name}/: "
+                         f"/* Generated by tools/sprite_frames.py pack from {SPRITES.as_posix()}/{name}/: "
                          f"{len(pool)} bytes */\n" + "\n".join(lines) + "\n")
     write_text(outdir / "sprite_frames.h", "\n".join(h) + "\n")
 
@@ -577,7 +650,11 @@ def bgr555(raw):
     return out
 
 
-def extract(rom_path):
+def extract(rom_path, out=None):
+    """Writes the banks (to `out`, the game's sprites/ by default)."""
+    global SPRITES
+    if out is not None:
+        SPRITES = Path(out)
     rom = Rom(rom_path)
     banks = read_banks(rom)
     assert len(banks) == len(BANK_NAMES)
@@ -587,7 +664,7 @@ def extract(rom_path):
         d = SPRITES / f"bank{i:02}_{BANK_NAMES[i]}"
         d.mkdir(parents=True, exist_ok=True)
         for old in d.glob("f*.png"):
-            old.unlink()
+            old.unlink()  # and the pieces' own PNGs, fKKK_pN.png
         pals = frame_palettes(bank)
         for k, f in enumerate(bank["frames"]):
             f["palettes"] = pals[k]
@@ -595,11 +672,11 @@ def extract(rom_path):
                 continue
             data = rom.bytes(TILE_BASE + f["off"], 32 * run_tiles(f["pieces"]))
             palette = bgr555(rom.bytes(OBJ_PALETTES + 32 * pals[k][0], 32))
-            try:
-                img, f["origin"] = draw_frame(f["pieces"], data, palette)
-            except ValueError as e:
-                fail(f"bank {i} frame {k}: {e}")
+            img, f["origin"], own = draw_frame(f["pieces"], data, palette)
             img.save(d / f"f{k:03}.png", bits=4)
+            for n, pimg in own.items():
+                pimg.save(d / f"f{k:03}_p{n}.png", bits=4)
+            f["own"] = set(own)
         write_json(d / "bank.json", bank["frames"])
     # The round trip: packing the files gives the ROM's pool.
     packed = pack(bank_dirs())
@@ -615,13 +692,19 @@ def extract(rom_path):
 
 
 def main():
-    args = sys.argv[1:]
-    if args and args[0] == "extract" and len(args) <= 2:
-        extract(args[1] if len(args) > 1 else "baserom.gba")
-    elif args and args[0] == "pack" and len(args) == 2:
-        write_pack(pack(bank_dirs()), args[1])
+    ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    ap.add_argument("--graphics-dir", default=str(XS_GRAPHICS))
+    sub = ap.add_subparsers(dest="mode", required=True)
+    p = sub.add_parser("extract")
+    p.add_argument("rom", nargs="?", default="baserom.gba")
+    p = sub.add_parser("pack")
+    p.add_argument("outdir")
+    args = ap.parse_args()
+    use_graphics_dir(args.graphics_dir)
+    if args.mode == "extract":
+        extract(args.rom)
     else:
-        sys.exit(__doc__)
+        write_pack(pack(bank_dirs()), args.outdir)
 
 
 if __name__ == "__main__":

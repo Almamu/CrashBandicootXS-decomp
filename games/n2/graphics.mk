@@ -19,3 +19,6 @@ $(foreach o,$(GRAPHICS_CLASS_OBJECTS),$(call data_obj,$(o))): $(GRAPHICS_CLASSES
 
 $(GRIT):
 	$(MAKE) -C tools/grit
+
+# the sprite tile pool and the OBJ palettes (graphics_rules.mk's rules)
+$(C_BUILDDIR)/engine/gfx/data/sprite_tiles.o: $(SPRITE_FRAMES_OUT) $(GRAPHICS_BUILDDIR)/sprites/obj_palettes.bin.inc

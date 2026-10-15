@@ -297,11 +297,39 @@ N-Tranced's or the shared XS one, with N-Tranced's ROM.
 
 | What | Where (ROM) | Source |
 |---|---|---|
+| The sprite tile pool (49 banks) and the 93 OBJ palettes | `0x082B3914`-`0x084768B4` | `games/n2/src/engine/gfx/data/sprite_tiles.cpp` |
 | The pause screen (N-Tranced's own) and the continue prompt's three BG packages (XS's) | `0x0852D868`-`0x085346AC` | `games/n2/src/game/ui/data/menu_graphics.cpp` |
 
 Every LZ77 stream N-Tranced has is one gbagfx makes, but 28 of them
 only with `-search 1` (no VRAM-safe minimum distance): a built file in
 `GFX_LZ_SEARCH1` is compressed that way (`graphics_rules.mk`).
+
+### Sprite banks
+
+N-Tranced's sprite banks are XS's format (docs/graphics.md, "Sprite
+banks"): its `gSpriteBankTable` (`0x084768B4`) has 49 banks, 2,754
+frames and 93 OBJ palettes (XS: 56, 2,429 and 125). Their sources are in
+`games/n2/graphics/sprites/`, one `bankNN_<name>/` per bank and
+`palettes/NNN_<owner>.pal` per palette, which `gfx_manifest.py
+--graphics-dir games/n2/graphics extract` writes with
+`tools/sprite_frames.py --graphics-dir`. The manifest's `sprite_banks`
+entry gives the table, `gObjPieceWidths` (`piece_sizes`) and the banks'
+names. A bank N-Tranced shares with XS keeps XS's name (`crash`,
+`crates`, `aku_aku`, `wumpa`, ...), even where it has other frames; the
+others are named for what their frames show (`genie`, `mummy`,
+`n_trance`, ...), until the code that loads them is known. The palettes
+are named as XS's are, after the first bank using them.
+
+Seven frames of bank 31 (`platforms`) have a piece that an earlier piece
+draws over with other pixels, which XS's frames never do. Such a piece is
+its own PNG, `fKKK_pN.png` (N its index in the frame), marked
+`"own_png"` in `bank.json`, so the frame keeps every pixel.
+
+The tile pool and the palettes are built from these sources
+(`sprite_tiles.cpp`, with graphics_rules.mk's rules). The banks' frame
+tables and animations (`0x084768B4`-`0x084EAEA8`) are still incbin'd, and
+they hold the frames' offsets into the pool, so a bank can't change size
+until they are built from source too.
 
 ## Progress
 
