@@ -15,8 +15,8 @@ using Engine::Text::font_glyph;
  * to the Font constructor (the small font: gSmallFont; the large one:
  * gLargeFont); the palettes text codes 2 and 3 and the button glyphs
  * (A, B, L, R) draw with; then each font's glyph records. The tiles,
- * gSmallFontTiles and gLargeFontTiles, are still the ROM's (0x085293D0,
- * 0x0852A810). Latin-1, as XS's (hud_font_tables.cpp).
+ * gSmallFontTiles and gLargeFontTiles, are font_tiles.cpp's. Latin-1, as
+ * XS's (hud_font_tables.cpp).
  */
 
 extern "C" const u8 gSmallFontTiles[];
