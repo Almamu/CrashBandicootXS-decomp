@@ -29,13 +29,13 @@ jobs:
 
     # Phase 2: the executable boots headless and plays
     # platform/pc/tests/boot.keys (the logos, the menus, the intro and
-    # Jungle Jam) for 960 frames without crashing, and its palette RAM,
+    # Jungle Jam, played on) for 6000 frames without crashing, and its palette RAM,
     # VRAM and OAM at each checkpoint are mGBA's (tests/boot_mgba.json,
     # tools/boottest.py run on the ROM with the same key file).
     - name: Boot headless
       run: |
         python3 tools/boottest.py host build/pc/crashbandicootxs_pc --keys platform/pc/tests/boot.keys \
-          --frames 960 --timeout 300 --screens host_screens --out host_boot.json
+          --frames 6000 --timeout 300 --screens host_screens --out host_boot.json
         python3 tools/boottest.py compare platform/pc/tests/boot_mgba.json host_boot.json
 
     # Phase 3: the PPU's picture (platform/pc/src/ppu.c) is mGBA's, pixel
@@ -46,7 +46,7 @@ jobs:
     - name: Check the picture
       run: |
         python3 tools/boottest.py host build/pc/crashbandicootxs_pc --keys platform/pc/tests/boot.keys \
-          --frames 960 --every 1 --timeout 300 --out host_boot_screens.json
+          --frames 6000 --every 1 --timeout 300 --out host_boot_screens.json
         python3 tools/boottest.py compare platform/pc/tests/boot_mgba_screens.json host_boot_screens.json
         python3 tools/boottest.py host build/pc/crashbandicootxs_pc --keys platform/pc/tests/intro.keys \
           --frames 2400 --every 4 --timeout 300 --out host_intro_screens.json

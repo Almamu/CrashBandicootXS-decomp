@@ -80,7 +80,8 @@ void PartList::Update()
         if (part->IsGone()) {
             if (i < capacity) {
                 CpuSet(&items[i + 1], &items[i],
-                       ((count - i) & CPU_SET_COUNT_MASK) | CPU_SET_32BIT);
+                       (((count - i) * (sizeof(*items) / sizeof(u32))) & CPU_SET_COUNT_MASK) |
+                           CPU_SET_32BIT);
                 count--;
                 items[count] = 0;
             }
