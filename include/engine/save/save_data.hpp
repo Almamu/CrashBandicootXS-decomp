@@ -206,7 +206,8 @@ namespace Save
  * record of the ROM, whose gap Reset clears; never 0 in a build of other
  * levels), and only a build of the same level data, so of the same seed,
  * takes the slots back (Unpack). They carry no level past the first
- * SAVE_LINK_LEVELS and no extra progress flags. */
+ * SAVE_LINK_LEVELS and no extra progress flags; so two such builds then
+ * exchange their whole records too (`wholeSize`, SendsWhole). */
 class LinkRecord
 {
 public:
@@ -215,7 +216,10 @@ public:
      * level data's), 0 in a ROM record */
     u32 senderSeed;
     u8 senderSlotEmpty[4]; // 0x1c4 - the sender's slotEmpty
-    u8 unused_1c8[0x2c];
+    /* 0x1c8 - the sender's SAVE_DATA_SIZE: it sends its whole record
+     * after this view to a build of its level data (SendsWhole) */
+    u16 wholeSize;
+    u8 unused_1ca[0x2a];
     /* the ROM's trailer */
     u8 slotEmpty[4];  // 0x1f4 - all 1 (Pack)
     u8 magic;         // 0x1f8 - 'C'
@@ -268,16 +272,32 @@ public:
             slotEmpty[i] = 1;
         }
         senderSeed = SAVE_CHECKSUM_SEED;
+        wholeSize = SAVE_DATA_SIZE;
         magic = 0x43;
         versionNibble = SAVE_VERSION;
         flags = save->flags;
         checksum = Sum();
     }
 
+    /* Whether the sender has this build's level data: its version and
+     * its seed. */
+    bool SameLevels()
+    {
+        return versionNibble == SAVE_VERSION && senderSeed == SAVE_CHECKSUM_SEED;
+    }
+
+    /* Whether the sender sends its whole record next: it has this
+     * build's level data, so its record is this build's size. A view
+     * from before `wholeSize` has 0 there. */
+    bool SendsWhole()
+    {
+        return SameLevels() && wholeSize == SAVE_DATA_SIZE;
+    }
+
     /* Turns the received view into `save`, or returns false if its
      * checksum fails. `save` gets the sender's version (LinkInput reads
      * the game id from it) and flags, and the sender's slots if it has
-     * this build's level data (its version and seed): the levels past
+     * this build's level data (SameLevels): the levels past
      * SAVE_LINK_LEVELS and the extra progress flags are 0. Then `save`'s
      * own checksum. */
     bool Unpack(SaveData *save)
@@ -291,7 +311,7 @@ public:
         save->Reset();
         save->versionNibble = versionNibble;
         save->flags = flags;
-        if (versionNibble == SAVE_VERSION && senderSeed == SAVE_CHECKSUM_SEED) {
+        if (SameLevels()) {
             for (i = 0; i <= 3; i++) {
                 struct save_link_slot *src = &slots[i];
                 struct save_slot *dst = &save->slots[i];
