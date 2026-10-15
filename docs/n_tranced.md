@@ -27,10 +27,11 @@ two builds share only the toolchain variables at the top (`AS`, `LD`,
 `CC1FLAGS`, `CPPFLAGS`, ...). Each game defines `GAME_XS` or `GAME_N2`,
 for the preprocessor and as an assembler symbol.
 
-Each game's checksum is in `games/<game>/checksum.sha1`. Where XS's
-other files (`ldscript.txt`, `sym_*.txt`, `expected/`) end up, and how
-source files are shared, is #1108 and #1109; for now XS's stay where
-they were and N-Tranced's are under `games/n2/`.
+Each game's checksum is in `games/<game>/checksum.sha1`. XS's other
+per-game files (`ldscript.txt`, `sym_*.txt`, `expected/`) are still at
+the root; they move to `games/xs/` too (#1108). N-Tranced's are all under
+`games/n2/`. How the two games share sources is "Sharing sources"
+below.
 
 The compile rules and the per-object compiler choices (which objects
 old_agbcp builds, `-fno-implement-inlines`, `-O1`, ...) are in
@@ -57,6 +58,73 @@ against **main's** `games/n2/checksum.sha1`, so a PR can't pass by editing
 the checksum. Both need the N-Tranced ROM: the `BASEROM_N2_URL` secret,
 fetched with the same `BASEROM_USERNAME`/`BASEROM_PASSWORD` as XS's. The
 N-Tranced steps are skipped until that secret exists.
+
+## Sharing sources (#1109)
+
+The two games share XS's sources, with N-Tranced's own on top:
+
+- **`src/` and `include/`** are XS's, and shared. N-Tranced builds the
+  `src/` files `games/n2/objects.txt` lists, with `GAME_N2` defined (XS's
+  build defines `GAME_XS`).
+- **`games/n2/src/<path>`**, when it exists, replaces `src/<path>` in
+  N-Tranced's build: the same object (`build/ntranced/src/<path>.o`), so
+  compile.mk's per-object flags apply to it too. `objects.txt` can name
+  it either way. **`games/n2/include/`** comes before `include/` on
+  N-Tranced's include path, for a header of its own or its copy of one.
+  Only C++ sources can be replaced (all the game code is C++).
+- **XS-only files** need nothing: N-Tranced doesn't list them.
+
+No XS file moves for N-Tranced.
+
+### `#ifdef GAME_N2` or a copy
+
+A difference stays in the shared file when it is small and contained:
+
+- a block of a struct's members (the layouts that differ: #1111);
+- a constant, a table size, a different value;
+- a few lines of a function.
+
+```c
+#ifdef GAME_N2
+    s32 extraState;        // 0x2C
+#endif
+```
+
+```c
+#ifdef GAME_N2
+    count = DoTheN2Thing(count);
+#else
+    count = DoTheXsThing(count);
+#endif // GAME_N2
+```
+
+- Test `GAME_N2` (XS is the `#else`, or nothing when N-Tranced only adds
+  lines); never nest them, and end a block longer than a few lines with
+  `#endif // GAME_N2`.
+- A generated constant that comes from the game's data (`LEVEL_COUNT`,
+  `ENTITY_TYPES`, ...) needs no `#ifdef`: each game generates its own
+  (`build/<rom>/include/`).
+- A declaration that only one game has sits under its `#ifdef` in the
+  shared header, so each game's build still declares everything exactly
+  once (docs/headers.md).
+
+When a function differs throughout, most of a file does, or the file is
+N-Tranced's own, it is a copy in `games/n2/src/` instead: start it with
+`cp src/<path> games/n2/src/<path>` and change what N-Tranced does
+differently. Moving code out of a shared file into copies (or back) is
+fine as long as both ROMs keep matching.
+
+### Names
+
+- **Same job, same name.** A function, member, global or table that does
+  the same thing in both games keeps XS's name, even where N-Tranced
+  reordered or rewrote it.
+- N-Tranced's own things are named by docs/naming.md's rules, with the
+  same placeholders (`sub_<address>`, `gUnknown_<address>`, `unk_XX`)
+  until they are understood.
+
+Every change keeps both ROMs matching: `make compare` and
+`make GAME=n2 compare`, from clean.
 
 ## The N-Tranced bootstrap (#1110)
 
@@ -90,11 +158,11 @@ match it, and the original's bytes:
 ### Linking a shared source into N-Tranced
 
 1. Check the source's code is the same in N-Tranced: same functions, same
-   order, contiguous, and byte-identical once compiled (`GAME_N2` blocks
-   where it isn't, #1109). The comparison's "exact" (#1107) is a good
-   start but not proof: it ignores any aligned word that looks like a ROM
-   pointer, which can hide an instruction pair (`vram_dma_queue.o`'s
-   `ldrh`/`lsrs` was one).
+   order, contiguous, and byte-identical once compiled (`GAME_N2` blocks,
+   or a copy in `games/n2/src/`, where it isn't: "Sharing sources"). The
+   comparison's "exact" (`tools/nt_compare`) is a good start but not
+   proof: N-Tranced's build sometimes used the other compiler for a file
+   (`vram_dma_queue.o`).
 2. Add it to `objects.txt` (address, size of its `.text`, source).
 3. Give every function the disassembly still calls in it the name the
    source defines, in `gbadisasm.cfg` (`disasm.py` lists them), and add

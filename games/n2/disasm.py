@@ -213,7 +213,9 @@ def main():
             (asm / (name + '.s')).write_text(HEADER % (at, o[0] if o else CODE_END) + body + '\n\t.align 2, 0\n')
             script.append('\t\t%s/games/n2/asm/%s.o(.text);' % (BUILD, name))
         if o:
-            script.append('\t\t%s/%s.o(.text);' % (BUILD, o[2].rsplit('.', 1)[0]))
+            # games/n2/src/<path> builds src/<path>'s object (game.mk)
+            src = o[2][len('games/n2/'):] if o[2].startswith('games/n2/src/') else o[2]
+            script.append('\t\t%s/%s.o(.text);' % (BUILD, src.rsplit('.', 1)[0]))
             at = o[0] + o[1]
         pos = ce
     (HERE / 'ldscript.txt').write_text(LDSCRIPT % ('\n'.join(script), BUILD))
