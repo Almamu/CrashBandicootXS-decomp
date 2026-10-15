@@ -22,6 +22,10 @@ jobs:
     runs-on: ubuntu-24.04
     name: Crash Bandicoot XS European (fork PR ROM check, needs approval)
     environment: fork-pr-rom
+    env:
+      # The N-Tranced ROM check runs once its ROM's secret is set up
+      # (BASEROM_N2_URL, docs/n_tranced.md).
+      HAS_N2_ROM: ${{ secrets.BASEROM_N2_URL != '' }}
     steps:
     - uses: actions/checkout@v5
       with:
@@ -32,6 +36,12 @@ jobs:
     # compare against that - a PR editing the checksum can't pass itself.
     - name: Take the checksum from main
       run: curl -fsS -o "$RUNNER_TEMP/checksum.sha1" "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.event.pull_request.base.sha }}/checksum.sha1"
+
+    - name: Take the N-Tranced checksum from main
+      if: env.HAS_N2_ROM == 'true'
+      run: |
+        mkdir -p "$RUNNER_TEMP/n2"
+        curl -fsS -o "$RUNNER_TEMP/n2/checksum.sha1" "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.event.pull_request.base.sha }}/games/n2/checksum.sha1"
 
     - name: Install dependencies
       run: sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 update && sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 install -y --no-install-recommends build-essential binutils-arm-none-eabi gcc-arm-none-eabi libpng-dev zlib1g-dev python3-pil gettext
@@ -47,6 +57,18 @@ jobs:
       working-directory: agbcc
       run: ./build.sh && ./install.sh ../
 
+    # agbcp/old_agbcp, the game code's C++ compilers (see build.yml).
+    - name: Checkout agbcc (C++)
+      uses: actions/checkout@v5
+      with:
+        path: agbcc-cp
+        repository: notyourav/agbcc
+        ref: 1caa6becde5e4676b59c31c74d68f45ced79557c
+        persist-credentials: false
+
+    - name: Build agbcp, old_agbcp and agbcp_arm_patched
+      run: tools/build_agbccpp.sh agbcc-cp .
+
     - name: Fetch baserom
       run: curl -fsS -o baserom.gba -u '${{ secrets.BASEROM_USERNAME }}:${{ secrets.BASEROM_PASSWORD }}' ${{ secrets.BASEROM_URL }}
 
@@ -55,3 +77,15 @@ jobs:
 
     - name: Compare against main's checksum
       run: sha1sum -c "$RUNNER_TEMP/checksum.sha1"
+
+    - name: Fetch the N-Tranced baserom
+      if: env.HAS_N2_ROM == 'true'
+      run: curl -fsS -o baserom_n2.gba -u '${{ secrets.BASEROM_USERNAME }}:${{ secrets.BASEROM_PASSWORD }}' ${{ secrets.BASEROM_N2_URL }}
+
+    - name: Build N-Tranced
+      if: env.HAS_N2_ROM == 'true'
+      run: make GAME=n2 ntranced.gba
+
+    - name: Compare N-Tranced against main's checksum
+      if: env.HAS_N2_ROM == 'true'
+      run: sha1sum -c "$RUNNER_TEMP/n2/checksum.sha1"

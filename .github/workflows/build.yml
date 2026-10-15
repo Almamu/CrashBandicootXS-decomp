@@ -15,6 +15,10 @@ jobs:
     name: "${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'Crash Bandicoot XS European' || 'Crash Bandicoot XS European (fork PR: compile and report only, no ROM check)' }}"
     env:
       HAS_ROM: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+      # The N-Tranced ROM check (docs/n_tranced.md) runs once its ROM's
+      # secret is set up, like XS's: BASEROM_N2_URL, with XS's username and
+      # password.
+      HAS_N2_ROM: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && secrets.BASEROM_N2_URL != '' }}
     steps:
     - uses: actions/checkout@v5
 
@@ -98,6 +102,17 @@ jobs:
     - name: Build and compare
       if: env.HAS_ROM == 'true'
       run: make compare
+
+    # Crash Bandicoot 2: N-Tranced (#1106): its build still incbins the
+    # original's data, so it needs baserom_n2.gba to build at all.
+    # `make GAME=n2 compare` checks it against games/n2/checksum.sha1.
+    - name: Fetch the N-Tranced baserom
+      if: env.HAS_N2_ROM == 'true'
+      run: curl -fsS -o baserom_n2.gba -u '${{ secrets.BASEROM_USERNAME }}:${{ secrets.BASEROM_PASSWORD }}' ${{ secrets.BASEROM_N2_URL }}
+
+    - name: Build and compare N-Tranced
+      if: env.HAS_N2_ROM == 'true'
+      run: make GAME=n2 compare
 
     # The ROM shiftability check (#967, docs/shifting.md): links the ROM
     # again with padding in front of several objects and fails on anything

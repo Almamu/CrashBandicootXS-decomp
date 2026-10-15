@@ -38,6 +38,25 @@ where N-Tranced's original build chose differently, `games/n2/game.mk`
 says so before including it (`NEW_COMPILER_OBJS`: objects N-Tranced built
 with agbcp where XS used old_agbcp, e.g. `vram_dma_queue.o`).
 
+## Checking both ROMs
+
+`make compare` checks XS against `checksum.sha1` and
+`make GAME=n2 compare` checks N-Tranced against
+`games/n2/checksum.sha1`. Before a PR, check both from clean:
+
+```
+rm -rf build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make compare
+rm -rf build/ntranced ntranced.elf ntranced.gba ntranced.map && make GAME=n2 compare
+```
+
+CI does the same as for XS. `build.yml` builds and compares N-Tranced
+after XS, on pushes and same-repository PRs. `fork-rom-check.yml` builds a
+fork PR's N-Tranced (after a maintainer approves the run) and checks it
+against **main's** `games/n2/checksum.sha1`, so a PR can't pass by editing
+the checksum. Both need the N-Tranced ROM: the `BASEROM_N2_URL` secret,
+fetched with the same `BASEROM_USERNAME`/`BASEROM_PASSWORD` as XS's. The
+N-Tranced steps are skipped until that secret exists.
+
 ## The N-Tranced bootstrap (#1110)
 
 N-Tranced builds from a disassembly, the shared sources that already
