@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Almamu/CrashBandicootXS-decomp/raw/main/packages/crashdata/schemas/spawn_list.schema.json",
+  "title": "An actor category's spawn list",
+  "description": "games/xs/data/levels/spawns/<name>.json (docs/levels.md, \"Actor categories\")",
+  "type": "object",
+  "properties": {
+    "symbol": {
+      "type": "string",
+      "pattern": "^g[A-Za-z0-9_]+$"
+    },
+    "family": {
+      "enum": [
+        "POLAR",
+        "JETPACK"
+      ]
+    },
+    "length": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2147483647,
+      "description": "the course length"
+    },
+    "spawns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                "description": "a <FAMILY>_KIND_* name without the prefix"
+              },
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            ]
+          },
+          "alt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                "description": "a <FAMILY>_KIND_* name without the prefix"
+              },
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            ]
+          },
+          "bonus": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                "description": "a <FAMILY>_KIND_* name without the prefix"
+              },
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            ]
+          },
+          "unk_03": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "x": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "y": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "z": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647,
+            "description": "depth"
+          },
+          "next": {
+            "type": "integer",
+            "minimum": -1,
+            "maximum": 2147483647,
+            "description": "a spawn's index, or -1"
+          }
+        },
+        "required": [
+          "kind",
+          "x",
+          "y",
+          "z"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1,
+      "description": "in depth order"
+    },
+    "end": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "minItems": 4,
+      "maxItems": 4,
+      "description": "the table's last 4 bytes"
+    }
+  },
+  "required": [
+    "symbol",
+    "family",
+    "length",
+    "spawns"
+  ],
+  "additionalProperties": false
+}

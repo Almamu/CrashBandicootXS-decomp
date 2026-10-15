@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Almamu/CrashBandicootXS-decomp/raw/main/packages/crashdata/schemas/credits.schema.json",
+  "title": "The credits (credits.json)",
+  "description": "games/xs/data/credits.json (docs/text.md, \"The credits\")",
+  "type": "object",
+  "properties": {
+    "credits": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "large": {
+                "type": "string",
+                "pattern": "^credits\\.[a-z0-9_.]+$",
+                "description": "a credits.* key of the text template"
+              }
+            },
+            "required": [
+              "large"
+            ],
+            "additionalProperties": false,
+            "description": "the large font, then the text"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "small": {
+                "type": "string",
+                "pattern": "^credits\\.[a-z0-9_.]+$",
+                "description": "a credits.* key of the text template"
+              }
+            },
+            "required": [
+              "small"
+            ],
+            "additionalProperties": false,
+            "description": "the small font, then the text"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string",
+                "pattern": "^credits\\.[a-z0-9_.]+$",
+                "description": "a credits.* key of the text template"
+              }
+            },
+            "required": [
+              "text"
+            ],
+            "additionalProperties": false,
+            "description": "the text, in the font so far"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "picture": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4
+              }
+            },
+            "required": [
+              "picture"
+            ],
+            "additionalProperties": false,
+            "description": "a logo"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "blank": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "blank"
+            ],
+            "additionalProperties": false,
+            "description": "empty lines"
+          }
+        ]
+      },
+      "minItems": 1
+    }
+  },
+  "required": [
+    "credits"
+  ],
+  "additionalProperties": false
+}

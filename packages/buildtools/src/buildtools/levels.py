@@ -4,9 +4,10 @@ import sys
 from pathlib import Path
 
 from crashdata import levels as L
+from crashdata.common import diagnostics as D
 
 
-def main():
+def run():
     args = sys.argv[1:]
     if not args or args[0] in ("-h", "--help"):
         print(L.__doc__)
@@ -82,6 +83,12 @@ def main():
         Path(args[2]).write_text(L.anim_table_inc(args[1]))
     else:
         sys.exit("unknown command %s" % cmd)
+
+
+def main():
+    """run(), or with --json its errors and warnings as one JSON report
+    (crashdata.common.diagnostics, docs/editors.md)."""
+    return D.json_cli('levels', run)
 
 
 if __name__ == "__main__":

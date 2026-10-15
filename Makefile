@@ -251,6 +251,32 @@ mod:
 	python3 tools/apply_mod.py $(MOD) $(MOD_TREE)
 	$(MAKE) -C $(MOD_TREE)
 
+# The editors' contract (#1167, docs/editors.md). `make data-check` runs
+# every check of the data without building (tools/data_check.py: each
+# file against its JSON Schema, then the model's checks): both games'
+# data, or GAME's when given (`make GAME=n2 data-check`), or with MOD a
+# mod's, applied to MOD_TREE first (`make data-check MOD=mods/sample`).
+# DATA_CHECK_ARGS go to the tool (`--json`, `--no-text`). `make schemas`
+# writes packages/crashdata/schemas/ from the model, `make schemas-check`
+# fails if they are out of date.
+DATA_CHECK_ARGS ?=
+DATA_CHECK_GAMES := $(if $(filter command line environment,$(origin GAME)),$(GAME),xs n2)
+.PHONY: data-check schemas schemas-check
+data-check:
+ifneq ($(filter command line environment,$(origin MOD)),)
+	rm -rf $(MOD_TREE)
+	python3 tools/apply_mod.py $(MOD) $(MOD_TREE)
+	cd $(MOD_TREE) && python3 tools/data_check.py --game xs $(DATA_CHECK_ARGS)
+else
+	$(foreach g,$(DATA_CHECK_GAMES),python3 tools/data_check.py --game $(g) $(DATA_CHECK_ARGS) &&) true
+endif
+
+schemas:
+	python3 tools/schemas.py write
+
+schemas-check:
+	python3 tools/schemas.py --check
+
 # Every incbin and include in games/xs/data/*.s (the sound blocks) needs the
 # corresponding built file to exist first. Each GAX2 block is a .bin and
 # the .s that data.s includes: its bytes, with the pointers as

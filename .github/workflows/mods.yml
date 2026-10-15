@@ -91,6 +91,12 @@ jobs:
       working-directory: build/mods/sample
       run: python3 tools/gfx_manifest.py check
 
+    # Every check of the mod's data, schemas included (docs/editors.md,
+    # `make data-check MOD=mods/sample` without applying it again).
+    - name: Check the mod's data
+      working-directory: build/mods/sample
+      run: python3 tools/data_check.py --game xs
+
     # mods/sample/boottest.py plays the mod's ROM: its new room and song,
     # its recoloured category, its level-select page, boss HUD, cutscene
     # and 64 Kbit save. It fails the step if any check fails.

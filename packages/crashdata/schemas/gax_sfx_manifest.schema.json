@@ -1,0 +1,425 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Almamu/CrashBandicootXS-decomp/raw/main/packages/crashdata/schemas/gax_sfx_manifest.schema.json",
+  "title": "The sound-effect set (gax_sfx_manifest.json)",
+  "description": "games/xs/sound/gax_sfx_manifest.json (docs/audio.md, \"Sound effects\")",
+  "type": "object",
+  "properties": {
+    "song_info": {
+      "type": "object",
+      "properties": {
+        "num_channels": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "num_rows_per_pattern": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "num_patterns_per_channel": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "loop_point": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "volume": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "ushort_0a": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "sample_rate": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "num_fx_channels": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "half_rate_fx": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        }
+      },
+      "required": [
+        "num_channels",
+        "num_rows_per_pattern",
+        "num_patterns_per_channel",
+        "loop_point",
+        "volume",
+        "ushort_0a",
+        "sample_rate",
+        "num_fx_channels",
+        "half_rate_fx"
+      ],
+      "additionalProperties": false
+    },
+    "voice_types": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535
+    },
+    "instruments": {
+      "type": "object",
+      "patternProperties": {
+        "^[0-9]+$": {
+          "$ref": "#/$defs/instrument"
+        }
+      },
+      "additionalProperties": false
+    },
+    "samples": {
+      "type": "object",
+      "patternProperties": {
+        "^[0-9]+$": {
+          "type": "object",
+          "properties": {
+            "has_data": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "has_data"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "song_info",
+    "voice_types",
+    "instruments",
+    "samples"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "instrument": {
+      "type": "object",
+      "properties": {
+        "byte_00": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "sample_indices": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "byte_05": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "byte_06": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "byte_07": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "vibrato_delay": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "vibrato_depth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "vibrato_speed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "byte_0b": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "unknown12": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "minItems": 12,
+          "maxItems": 12
+        },
+        "row_speed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "ushort_12": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "samples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "byte_02": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              },
+              "is_bidirectional": {
+                "type": "boolean"
+              },
+              "start_position": {
+                "type": "integer",
+                "minimum": -2147483648,
+                "maximum": 2147483647
+              },
+              "loop_start": {
+                "type": "integer",
+                "minimum": -2147483648,
+                "maximum": 2147483647
+              },
+              "loop_end": {
+                "type": "integer",
+                "minimum": -2147483648,
+                "maximum": 2147483647
+              },
+              "int_10": {
+                "type": "integer",
+                "minimum": -2147483648,
+                "maximum": 2147483647
+              },
+              "ushort_14": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 65535
+              },
+              "ushort_16": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 65535
+              },
+              "pitch": {
+                "type": "integer",
+                "minimum": -32768,
+                "maximum": 32767
+              }
+            },
+            "required": [
+              "byte_02",
+              "is_bidirectional",
+              "start_position",
+              "loop_start",
+              "loop_end",
+              "int_10",
+              "ushort_14",
+              "ushort_16",
+              "pitch"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "relative_note_number": {
+                "type": "integer",
+                "minimum": -128,
+                "maximum": 255
+              },
+              "dont_use_note_pitch": {
+                "type": "boolean"
+              },
+              "sample_index": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              },
+              "byte_03": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              },
+              "effects": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    },
+                    "param": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "param"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 2,
+                "maxItems": 2
+              }
+            },
+            "required": [
+              "relative_note_number",
+              "dont_use_note_pitch",
+              "sample_index",
+              "byte_03",
+              "effects"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        },
+        "envelope": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "sustain": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "loop_start": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "loop_end": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "points": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 65535
+                      },
+                      "interpolation": {
+                        "type": "integer",
+                        "minimum": -32768,
+                        "maximum": 32767
+                      },
+                      "y": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 255
+                      },
+                      "byte_05": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 255
+                      },
+                      "ushort_06": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 65535
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "interpolation",
+                      "y",
+                      "byte_05",
+                      "ushort_06"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "minItems": 1
+                }
+              },
+              "required": [
+                "sustain",
+                "loop_start",
+                "loop_end",
+                "points"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "byte_00",
+        "sample_indices",
+        "byte_05",
+        "byte_06",
+        "byte_07",
+        "vibrato_delay",
+        "vibrato_depth",
+        "vibrato_speed",
+        "byte_0b",
+        "unknown12",
+        "row_speed",
+        "ushort_12",
+        "samples",
+        "rows",
+        "envelope"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

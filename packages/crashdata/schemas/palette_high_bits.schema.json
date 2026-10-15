@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Almamu/CrashBandicootXS-decomp/raw/main/packages/crashdata/schemas/palette_high_bits.schema.json",
+  "title": "A palette's extra bits (universal_high.json)",
+  "description": "games/xs/graphics/logos/universal_high.json",
+  "type": "object",
+  "patternProperties": {
+    "^[0-9]+$": {
+      "type": "string",
+      "pattern": "^[0-9A-Fa-f]{2}$"
+    }
+  },
+  "additionalProperties": false
+}

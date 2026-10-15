@@ -4,9 +4,10 @@ import sys
 from pathlib import Path
 
 from crashdata.graphics import manifest
+from crashdata.common import diagnostics as D
 
 
-def main():
+def run():
     ap = argparse.ArgumentParser(description=manifest.__doc__.split("\n\n")[0])
     ap.add_argument("--graphics-dir", default=str(manifest.XS_GRAPHICS),
                     help="the game's graphics directory (XS's games/xs/graphics/ by default)")
@@ -24,6 +25,8 @@ def main():
     sub.add_parser("symbols")
     p = sub.add_parser("make")
     p.add_argument("out")
+    ap.add_argument("--json", action="store_true",
+                    help="print the errors and warnings as one JSON report (docs/editors.md)")
     args = ap.parse_args()
     manifest.use_graphics_dir(args.graphics_dir)
     if not manifest.is_xs() and args.mode in ("table", "symbols"):
@@ -56,6 +59,12 @@ def main():
         sys.exit("\n".join(errors[:50] + (["... and %d more" % (len(errors) - 50)] if len(errors) > 50 else [])))
     if args.mode != "table":
         print("gfx_manifest: OK")
+
+
+def main():
+    """run(), or with --json its errors and warnings as one JSON report
+    (crashdata.common.diagnostics, docs/editors.md)."""
+    return D.json_cli('gfx_manifest', run)
 
 
 if __name__ == "__main__":

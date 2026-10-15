@@ -83,6 +83,8 @@ from pathlib import Path
 
 from PIL import Image
 
+from crashdata import schemas
+
 ROM_BASE = 0x08000000
 BANK_TABLE = 0x084A5600
 TILE_BASE = 0x082BF120
@@ -192,7 +194,7 @@ def use_graphics_dir(d):
     d = Path(d)
     if d == XS_GRAPHICS:
         return
-    entries = json.loads((d / "manifest.json").read_text())["assets"]
+    entries = schemas.load(d / "manifest.json")["assets"]
     e = [e for e in entries if e["kind"] == "sprite_banks"][0]
     BANK_TABLE = int(e["rom"], 16)
     TILE_BASE = OBJ_PALETTES = None  # the table header's (read_banks)
@@ -461,7 +463,7 @@ def write_json(path, frames):
 def read_json(d):
     path = d / "bank.json"
     try:
-        frames = json.loads(path.read_text())["frames"]
+        frames = schemas.load(path)["frames"]
     except (OSError, ValueError, KeyError) as e:
         fail(f"{path}: {e}")
     out = []
@@ -501,7 +503,7 @@ def read_json(d):
 def read_new_steps(d, frames):
     """bank.json's "new_steps": {animation: [frame, ...]}, checked."""
     path = d / "bank.json"
-    steps = json.loads(path.read_text()).get("new_steps", {})
+    steps = schemas.load(path).get("new_steps", {})
     bank = int(d.name[4:6])
     hooks = NEW_FRAME_HOOKS.get(bank, [])
     if any("new" in f for f in frames) and bank not in NEW_FRAME_HOOKS:

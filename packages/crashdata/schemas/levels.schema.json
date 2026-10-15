@@ -1,0 +1,822 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Almamu/CrashBandicootXS-decomp/raw/main/packages/crashdata/schemas/levels.schema.json",
+  "title": "The levels (levels.json)",
+  "description": "games/<game>/data/levels/levels.json (docs/levels.md)",
+  "type": "object",
+  "properties": {
+    "rooms": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9_]+/[a-z0-9_]+$",
+        "description": "a room's folder under the level data, <level>/<slot>"
+      },
+      "description": "the rooms, in room-table order (gRoomNN is the NNth)"
+    },
+    "regions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
+          "rooms": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]+/[a-z0-9_]+$",
+              "description": "a room's folder under the level data, <level>/<slot>"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "rooms"
+        ],
+        "additionalProperties": false
+      },
+      "description": "the ROM's room regions: each one's C file and its rooms in ROM order"
+    },
+    "assets": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        },
+        "rooms": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+/[a-z0-9_]+$",
+            "description": "a room's folder under the level data, <level>/<slot>"
+          }
+        }
+      },
+      "required": [
+        "name",
+        "rooms"
+      ],
+      "additionalProperties": false,
+      "description": "the ROM order of the level assets"
+    },
+    "table": {
+      "type": "object",
+      "properties": {
+        "lists": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "level": {
+                "type": "string",
+                "pattern": "^LEVEL_[A-Z0-9_]+$"
+              },
+              "rooms": {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^[a-z0-9_]+/[a-z0-9_]+$",
+                      "description": "a room's folder under the level data, <level>/<slot>"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "stage": {
+                          "type": "string",
+                          "pattern": "^[A-Z][A-Z0-9_]*$"
+                        }
+                      },
+                      "required": [
+                        "stage"
+                      ],
+                      "additionalProperties": false,
+                      "description": "a stage played in an actor category, its constant without CATEGORY_"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "integer",
+                          "minimum": 3,
+                          "maximum": 65535
+                        },
+                        "index": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 65535
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "index"
+                      ],
+                      "additionalProperties": false,
+                      "description": "N-Tranced: a record with no room, of kind K (3: ROOM_KIND_CATEGORY, a stage of category N)"
+                    }
+                  ]
+                }
+              }
+            },
+            "required": [
+              "level",
+              "rooms"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-z0-9_]+/[a-z0-9_]+$",
+                "description": "a room's folder under the level data, <level>/<slot>"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "stage": {
+                    "type": "string",
+                    "pattern": "^[A-Z][A-Z0-9_]*$"
+                  }
+                },
+                "required": [
+                  "stage"
+                ],
+                "additionalProperties": false,
+                "description": "a stage played in an actor category, its constant without CATEGORY_"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "integer",
+                    "minimum": 3,
+                    "maximum": 65535
+                  },
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 65535
+                  }
+                },
+                "required": [
+                  "kind",
+                  "index"
+                ],
+                "additionalProperties": false,
+                "description": "N-Tranced: a record with no room, of kind K (3: ROOM_KIND_CATEGORY, a stage of category N)"
+              }
+            ]
+          }
+        },
+        "room_lists": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^LEVEL_[A-Z0-9_]+$"
+          }
+        }
+      },
+      "required": [
+        "lists"
+      ],
+      "additionalProperties": false,
+      "description": "the ROM's layout of the level table"
+    },
+    "levels": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "constant": {
+            "type": "string",
+            "pattern": "^LEVEL_[A-Z0-9_]+$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name_text": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647,
+            "description": "its name's text id (GetUiText)"
+          },
+          "theme": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255,
+            "description": "an index of \"themes\""
+          },
+          "times": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "minItems": 3,
+            "maxItems": 3,
+            "description": "time-trial times, centiseconds, loosest first"
+          },
+          "mask_assist_deaths": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "crate_assist_deaths": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "rooms": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[a-z0-9_]+/[a-z0-9_]+$",
+                  "description": "a room's folder under the level data, <level>/<slot>"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "stage": {
+                      "type": "string",
+                      "pattern": "^[A-Z][A-Z0-9_]*$"
+                    }
+                  },
+                  "required": [
+                    "stage"
+                  ],
+                  "additionalProperties": false,
+                  "description": "a stage played in an actor category, its constant without CATEGORY_"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "integer",
+                      "minimum": 3,
+                      "maximum": 65535
+                    },
+                    "index": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 65535
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "index"
+                  ],
+                  "additionalProperties": false,
+                  "description": "N-Tranced: a record with no room, of kind K (3: ROOM_KIND_CATEGORY, a stage of category N)"
+                }
+              ]
+            },
+            "minItems": 1
+          },
+          "bonus": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+/[a-z0-9_]+$",
+            "description": "a room's folder under the level data, <level>/<slot>"
+          },
+          "gem_path": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+/[a-z0-9_]+$",
+            "description": "a room's folder under the level data, <level>/<slot>"
+          },
+          "world": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255,
+                "description": "its level-select page, or none"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "boss": {
+            "type": "boolean",
+            "description": "struct level_info.isBoss"
+          },
+          "boss_kind": {
+            "enum": [
+              "DINGODILE",
+              "N_GIN",
+              "TINY",
+              "NEO_CORTEX",
+              "MEGA_MIX"
+            ]
+          },
+          "on_clear": {
+            "$ref": "#/$defs/on_clear"
+          }
+        },
+        "required": [
+          "constant",
+          "name",
+          "name_text",
+          "theme",
+          "times",
+          "mask_assist_deaths",
+          "crate_assist_deaths",
+          "rooms"
+        ],
+        "additionalProperties": false
+      },
+      "description": "the levels, in id order"
+    },
+    "worlds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "page_title": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 12
+          },
+          "entry_box": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4
+          },
+          "boss_icon": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4
+          },
+          "opened_by": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "power": {
+                    "enum": [
+                      "TURBO_RUN",
+                      "SUPER_BODY_SLAM",
+                      "TORNADO_SPIN",
+                      "DOUBLE_JUMP"
+                    ]
+                  }
+                },
+                "required": [
+                  "power"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "levels_cleared": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "levels_cleared"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "description": "the level-select pages, in world order"
+    },
+    "themes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "constant": {
+            "type": "string",
+            "pattern": "^THEME_[A-Z0-9_]+$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "song": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                "description": "a song of gax_manifest.json's song_table"
+              },
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255,
+                "description": "a song id (N-Tranced's)"
+              }
+            ]
+          },
+          "picture": {
+            "type": "string",
+            "description": "a level-select picture of the graphics manifest"
+          },
+          "palette_cycle": {
+            "type": "string",
+            "description": "one of \"palette_cycles\""
+          },
+          "first_room_exit_zone": {
+            "type": "boolean"
+          },
+          "palette_glow": {
+            "type": "string",
+            "description": "one of \"palette_glows\""
+          }
+        },
+        "required": [
+          "constant",
+          "name",
+          "song"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "palette_cycles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "lists": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "symbol": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                },
+                "rate": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 255
+                },
+                "direction": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "entries": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255
+                  },
+                  "minItems": 1
+                }
+              },
+              "required": [
+                "symbol",
+                "rate",
+                "direction",
+                "entries"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1
+          }
+        },
+        "required": [
+          "name",
+          "lists"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "palette_glows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rate": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 255
+          },
+          "entries": {
+            "type": "object",
+            "properties": {
+              "symbol": {
+                "type": "string",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+              },
+              "values": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "symbol",
+              "values"
+            ],
+            "additionalProperties": false,
+            "description": "the BG palette entries it glows"
+          },
+          "colors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "symbol": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                },
+                "values": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 32767
+                  },
+                  "minItems": 1
+                }
+              },
+              "required": [
+                "symbol",
+                "values"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 2,
+            "maxItems": 2,
+            "description": "the two 15-bit colours of each entry it goes between"
+          }
+        },
+        "required": [
+          "name",
+          "rate",
+          "entries",
+          "colors"
+        ],
+        "additionalProperties": false
+      },
+      "description": "N-Tranced: the themes' palette glows"
+    },
+    "categories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "constant": {
+            "type": "string",
+            "pattern": "^CATEGORY_[A-Z0-9_]+$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "enum": [
+              "POLAR",
+              "JETPACK",
+              "HOVERCRAFT"
+            ]
+          },
+          "spawns": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$",
+            "description": "its spawn list, spawns/<name>.json"
+          },
+          "anim_table": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$",
+            "description": "its animation table, anim_tables/<name>.json"
+          },
+          "mask_assist_deaths": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 65535
+          },
+          "bonus_kind_deaths": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 65535
+          },
+          "retry_boss_deaths": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 65535
+          },
+          "boss_level": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 65535
+          },
+          "retry_boss_level": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 65535
+          },
+          "cell_anim": {
+            "type": "string",
+            "minLength": 1,
+            "description": "a cell_anim of the graphics manifest, by path"
+          },
+          "sky": {
+            "type": "string",
+            "minLength": 1,
+            "description": "a bg_picture of the graphics manifest, by path"
+          },
+          "palette": {
+            "type": "string",
+            "minLength": 1,
+            "description": "a category_palette of the graphics manifest, by path"
+          },
+          "sprite_sheet": {
+            "type": "string",
+            "minLength": 1,
+            "description": "a framed_sheet of the graphics manifest, by path"
+          },
+          "palette_cycle": {
+            "type": "string",
+            "minLength": 1,
+            "description": "a palette_cycle of the graphics manifest, by path"
+          }
+        },
+        "required": [
+          "constant",
+          "name",
+          "type",
+          "spawns",
+          "mask_assist_deaths",
+          "bonus_kind_deaths",
+          "retry_boss_deaths",
+          "boss_level",
+          "retry_boss_level"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "level_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "N-Tranced: its levels' folder names, in id order"
+    },
+    "tileset_names": {
+      "type": "object",
+      "patternProperties": {
+        "^0x[0-9A-Fa-f]{8}$": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        }
+      },
+      "additionalProperties": false,
+      "description": "N-Tranced: its tile sets' names by ROM address"
+    },
+    "room_layout": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "params",
+          "grids",
+          "palette",
+          "type_counts",
+          "links",
+          "desc",
+          "entity_list",
+          "layers",
+          "groups",
+          "entities"
+        ]
+      },
+      "description": "the order of a room's parts in its region"
+    },
+    "entity_types": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65535,
+      "description": "the number of entity types (the type counts' length)"
+    }
+  },
+  "required": [
+    "rooms",
+    "regions",
+    "assets"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "on_clear": {
+      "type": "object",
+      "properties": {
+        "power": {
+          "enum": [
+            "TURBO_RUN",
+            "SUPER_BODY_SLAM",
+            "TORNADO_SPIN",
+            "DOUBLE_JUMP"
+          ]
+        },
+        "open_world": {
+          "type": "boolean"
+        },
+        "cutscene": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            {
+              "type": "string",
+              "pattern": "^CUTSCENE_[A-Z0-9_]+$"
+            }
+          ],
+          "description": "a cutscene of cutscenes.json, its index or constant"
+        },
+        "mark_cleared": {
+          "type": "boolean"
+        },
+        "next_level": {
+          "type": "object",
+          "properties": {
+            "if_completion_over": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 99
+            },
+            "cutscene": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                },
+                {
+                  "type": "string",
+                  "pattern": "^CUTSCENE_[A-Z0-9_]+$"
+                }
+              ],
+              "description": "a cutscene of cutscenes.json, its index or constant"
+            },
+            "level": {
+              "type": "string",
+              "pattern": "^LEVEL_[A-Z0-9_]+$"
+            }
+          },
+          "required": [
+            "if_completion_over",
+            "level"
+          ],
+          "additionalProperties": false
+        },
+        "credits": {
+          "type": "object",
+          "properties": {
+            "cutscene": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                },
+                {
+                  "type": "string",
+                  "pattern": "^CUTSCENE_[A-Z0-9_]+$"
+                }
+              ],
+              "description": "a cutscene of cutscenes.json, its index or constant"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false,
+      "description": "what clearing the level does (docs/levels.md, \"What clearing a level does\")"
+    }
+  }
+}

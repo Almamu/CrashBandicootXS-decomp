@@ -158,6 +158,8 @@ import sys
 import zlib
 from pathlib import Path
 
+from crashdata import schemas
+from crashdata.common import diagnostics as D
 from crashdata.common import jasc_pal
 from crashdata.common.game import Game
 from crashdata.levels import collision as collision_bmp
@@ -463,7 +465,9 @@ def encode_section(chunks, pad_overrides=None):
 # Room sources
 
 def read_json(path):
-    return json.loads(Path(path).read_text())
+    """A level data file (levels.json, a room.json, ...), checked against its
+    JSON Schema (crashdata.levels.schema, docs/editors.md) first."""
+    return schemas.load(path)
 
 
 def room_key(room_dir):
@@ -726,6 +730,44 @@ def entity_groups(room):
         groups.append((first, len(members[g]), starts[g]))
         first += len(members[g])
     return groups
+
+
+def check_room(room_dir):
+    """`make data-check`'s checks of a room (docs/editors.md): what the build
+    checks on its way (its layer pictures' palettes, the collision image's
+    size, its entities' types and order) and the references within it: an
+    entity's "param" is one of its records, a link's ids are entities, a
+    room with links names their symbol."""
+    room = load_room(room_dir)
+    path = (Path(room_dir) / "room.json").as_posix()
+    errors = []
+
+    def bad(pointer, msg, code):
+        errors.append(D.Diagnostic(msg, path, pointer, code=code))
+
+    by_name = {n: t for t, n in enumerate(entity_type_names()) if n}
+    for i, e in enumerate(room["entities"]):
+        t = e["type"]
+        if isinstance(t, str) and t not in by_name:
+            bad("/entities/%d/type" % i, "unknown entity type %s (see %s)" % (t, ENTITY_TYPES_JSON), "entity-type")
+        elif isinstance(t, int) and not 0 <= t < ENTITY_TYPES:
+            bad("/entities/%d/type" % i, "entity type %d out of range (0-%d)" % (t, ENTITY_TYPES - 1), "entity-type")
+        if not 0 <= e["param"] < len(room["params"]):
+            bad("/entities/%d/param" % i, "parameter record %d, but the room has %d (\"params\")"
+                % (e["param"], len(room["params"])), "entity-param")
+    for i, link in enumerate(room.get("links") or []):
+        for k, v in zip(("from", "to"), link):
+            if not 0 <= v < len(room["entities"]):
+                bad("/links/%d" % i, "the link's %s, %d, isn't an entity id (0-%d)"
+                    % (k, v, len(room["entities"]) - 1), "link")
+    if room.get("links") is not None and "links" not in room["symbols"]:
+        bad("/symbols", "the room has links, so its symbols name them (\"links\")", "symbols")
+    if errors:
+        raise D.DataError(errors)
+    entity_groups(room)
+    room_palette(room_dir, room)
+    load_map(room_dir, "collision", room["layers"]["collision"])
+    return room
 
 
 def room_c(room_dir, build_dir=None):
@@ -3043,7 +3085,7 @@ ROM_ON_CLEAR = {
 
 def warn(msg):
     """A levels.json warning: printed, and the build goes on."""
-    print("%s: warning: %s" % (LEVELS_JSON, msg), file=sys.stderr)
+    D.warn(msg, LEVELS_JSON)
 
 
 def level_on_clear(data):

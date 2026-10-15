@@ -22,6 +22,8 @@ import os
 
 from PIL import Image
 
+from crashdata import schemas
+
 PAD2 = 0x10
 PAD3 = 0x00
 
@@ -140,8 +142,7 @@ def to_bin_folder(in_dir, bin_path, any_size=False):
 def entity_order(sheet_dir):
     """The sheet's entity folders in the sheet's order: the "folders" list
     of its sheet.json. Every folder of the sheet must be listed once."""
-    with open(os.path.join(sheet_dir, 'sheet.json')) as f:
-        names = [e['folder'] for e in json.load(f)['folders']]
+    names = [e['folder'] for e in schemas.load(os.path.join(sheet_dir, 'sheet.json'))['folders']]
     dirs = sorted(d for d in os.listdir(sheet_dir) if os.path.isdir(os.path.join(sheet_dir, d)))
     missing = [n for n in names if n not in dirs]
     extra = sorted(set(dirs) - set(names))

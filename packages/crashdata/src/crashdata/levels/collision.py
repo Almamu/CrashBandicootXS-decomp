@@ -31,6 +31,8 @@ from pathlib import Path
 
 from crashdata.common.game import ROOT
 
+from crashdata import schemas
+
 LEGEND_JSON = Path(ROOT).resolve() / "games/xs/data/levels/collision_legend.json"
 
 # A cell's size in pixels, each way: one 8x8 tile, as in the BG layers.
@@ -40,7 +42,7 @@ CELL_PX = 8
 def legend():
     """The legend's entries as (value, (r, g, b), name), in palette order."""
     out = []
-    for e in json.loads(LEGEND_JSON.read_text())["cells"]:
+    for e in schemas.load(LEGEND_JSON)["cells"]:
         c = int(e["colour"], 16)
         out.append((int(e["value"], 16), (c >> 16, c >> 8 & 0xFF, c & 0xFF), e["name"]))
     values = [v for v, _, _ in out]

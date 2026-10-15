@@ -3,9 +3,10 @@ import argparse
 import os
 
 from crashdata import text
+from crashdata.common import diagnostics as D
 
 
-def main():
+def run():
     ap = argparse.ArgumentParser(description=text.__doc__.split("\n\n")[0])
     ap.add_argument("--game", choices=["xs", "n2"], default="xs")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -18,6 +19,8 @@ def main():
     p = sub.add_parser("extract")
     p.add_argument("rom", nargs="?", default=None)
     p.add_argument("--check", action="store_true")
+    ap.add_argument("--json", action="store_true",
+                    help="print the errors and warnings as one JSON report (docs/editors.md)")
     args = ap.parse_args()
     text.use_game(args.game)
     if args.cmd == "extract" and args.rom is None:
@@ -32,6 +35,12 @@ def main():
         text.check()
     else:
         text.extract(args.rom, args.check)
+
+
+def main():
+    """run(), or with --json its errors and warnings as one JSON report
+    (crashdata.common.diagnostics, docs/editors.md)."""
+    return D.json_cli('text', run)
 
 
 if __name__ == "__main__":

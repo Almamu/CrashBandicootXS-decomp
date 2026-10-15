@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Almamu/CrashBandicootXS-decomp/raw/main/packages/crashdata/schemas/music.schema.json",
+  "title": "The screens' music (music.json)",
+  "description": "games/xs/sound/music.json (docs/audio.md, \"Which song plays where\")",
+  "type": "object",
+  "properties": {
+    "screen_music": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "screen": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$",
+            "description": "SCREEN_SONG_<SCREEN>"
+          },
+          "song": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$",
+            "description": "a song's key (SONG_<KEY>)"
+          },
+          "comment": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "screen",
+          "song"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "screen_music"
+  ],
+  "additionalProperties": false
+}
