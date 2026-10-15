@@ -3,7 +3,9 @@
 the game does, so two builds (the matching ROM and a shifted one, see
 docs/shifting.md) can be compared run against run.
 
-    tools/boottest.py run ROM.gba ROM.elf [--script NAME ...] [--out LOG.json]
+    tools/boottest.py run ROM.gba ROM.elf [--script NAME ... | --keys FILE --frames N]
+                      [--dump DIR] [--out LOG.json]
+    tools/boottest.py host EXE --keys FILE --frames N [--dump DIR] [--out LOG.json]
     tools/boottest.py compare A.json B.json
 
 mGBA's SDL frontend (`mgba`) runs with SDL's dummy video and audio
@@ -19,12 +21,25 @@ each script (each run boots the ROM from a fresh copy, so with no save):
   stages), PlayCutscene, RunSaveMenu and EEPROMWrite;
 - every CHECKPOINT_EVERY frames, a hash of palette RAM, VRAM and OAM,
   the picture on the screen, which holds no ROM addresses, so it must be
-  the same in both builds, and whether the GAX2 mixer (GaxMixerPlay) ran
-  since the checkpoint before;
+  the same in both builds, whether the GAX2 mixer (GaxMixerPlay) ran
+  since the checkpoint before, and the picture's hash (picture_hash: the
+  same bytes, with the OAM bits the hardware ignores cleared);
 - the hash of the save file at the end, and how the run ended.
 
 ROM.elf is the ELF the ROM was linked from: it gives the symbols'
 addresses. `compare` exits 1 if two logs differ.
+
+A key file (--keys, with --frames) is a fixed script, the same on mGBA
+and on the pc platform's host executable (platform/pc, #1093): a line
+`FRAME KEYS` holds KEYS (`-`, a number, or names joined by `+`: A B
+SELECT START RIGHT LEFT UP DOWN R L) from that frame on. `host` runs the
+host executable with it and logs its checkpoints the same way (it has no
+events), so `compare` of a `run` and a `host` log with the same key file
+checks the host's palette RAM, VRAM and OAM against mGBA's, by their
+picture hashes: the game leaves some OAM bits it doesn't use as whatever
+was on the stack, which differs between the two. --dump writes
+each checkpoint's bytes (palette RAM, VRAM, OAM) to DIR/FRAME.bin, to find
+where two runs differ.
 """
 import argparse
 import hashlib
@@ -130,6 +145,44 @@ SCRIPTS.update({f"level{n}": script_level(n) for n in LEVELS})
 SCRIPTS.update({f"level{n}_room1": script_level(n, 1) for n in STAGES})
 DEFAULT_SCRIPTS = (["cutscene", "save"] + [f"level{n}" for n in LEVELS]
                    + [f"level{n}_room1" for n in STAGES])
+
+KEY_NAMES = {"A": KEY_A, "B": KEY_B, "SELECT": KEY_SELECT, "START": KEY_START, "RIGHT": KEY_RIGHT,
+             "LEFT": KEY_LEFT, "UP": KEY_UP, "DOWN": KEY_DOWN, "R": KEY_R, "L": KEY_L}
+
+
+def read_keys(path):
+    """A key file's [(frame, keys)], as platform/pc/src/input.c reads it."""
+    runs = []
+    for n, line in enumerate(open(path), 1):
+        f = line.split("#")[0].split()
+        if not f:
+            continue
+        if len(f) != 2:
+            raise SystemExit(f"{path}:{n}: expected `FRAME KEYS`")
+        if f[1] == "-":
+            keys = 0
+        elif f[1][0].isdigit():
+            keys = int(f[1], 0) & 0x3FF
+        else:
+            keys = 0
+            for k in f[1].split("+"):
+                keys |= KEY_NAMES[k.upper()]
+        if runs and int(f[0]) <= runs[-1][0]:
+            raise SystemExit(f"{path}:{n}: frames out of order")
+        runs.append((int(f[0]), keys))
+    return runs
+
+
+def script_keys(runs, frames):
+    """A key file as a script: frames 1 to `frames`."""
+    def script(st):
+        k, i = 0, 0
+        for frame in range(1, frames + 1):
+            while i < len(runs) and runs[i][0] <= frame:
+                k = runs[i][1]
+                i += 1
+            yield k
+    return script
 
 
 # ---------------------------------------------------------------------------
@@ -247,10 +300,29 @@ class State:
         self.actions = []  # functions of the Gdb, run before the next frame's keys
 
 
-def run_script(rom_path, syms, rom, script, timeout, extra_hooks=None):
+def picture_hash(data):
+    """The hash of a checkpoint's bytes (palette RAM, VRAM, OAM) with the
+    OAM bits the display ignores cleared: a hidden entry's attributes
+    (but not its affine parameter, part of a matrix), and a regular
+    entry's matrix bits (attr1 bits 9-11), which DrawSpritePieces leaves
+    as whatever its stack held. platform/pc/src/input.c hashes the same."""
+    oam = bytearray(data[-0x400:])
+    for i in range(0, 0x400, 8):
+        attr0, attr1 = struct.unpack_from("<HH", oam, i)
+        mode = (attr0 >> 8) & 3
+        if mode == 2:
+            struct.pack_into("<HHH", oam, i, 0x200, 0, 0)
+        elif mode == 0:
+            struct.pack_into("<H", oam, i + 2, attr1 & ~0xE00)
+    return hashlib.sha1(data[:-0x400] + bytes(oam)).hexdigest()[:16]
+
+
+def run_script(rom_path, syms, rom, script, timeout, extra_hooks=None, dump=None,
+               every=CHECKPOINT_EVERY):
     """Plays the script in a fresh mGBA and returns its log. extra_hooks:
     {address: function(gdb) -> event or None}, more breakpoints whose
-    events go into the log (mods/sample/boottest.py's)."""
+    events go into the log (mods/sample/boottest.py's). dump: a directory
+    for each checkpoint's bytes; every: the frames between checkpoints."""
     by_addr = {}
     for name, a in syms.items():
         by_addr.setdefault(a, name)
@@ -323,11 +395,14 @@ def run_script(rom_path, syms, rom, script, timeout, extra_hooks=None):
                     log["end"] = f"done at frame {st.frame}"
                     break
                 g.set_reg(KEYS_HOOK[2], k)
-                if st.frame % CHECKPOINT_EVERY == 0:
-                    h = hashlib.sha1()
-                    for base, n in ((0x05000000, 0x400), (0x06000000, 0x18000), (0x07000000, 0x400)):
-                        h.update(g.read(base, n))
-                    log["checkpoints"].append([st.frame, h.hexdigest()[:16], mixer_ran])
+                if st.frame % every == 0:
+                    data = b"".join(g.read(base, n) for base, n in
+                                    ((0x05000000, 0x400), (0x06000000, 0x18000), (0x07000000, 0x400)))
+                    if dump:
+                        with open(os.path.join(dump, f"{st.frame:05}.bin"), "wb") as f:
+                            f.write(data)
+                    log["checkpoints"].append([st.frame, hashlib.sha1(data).hexdigest()[:16], mixer_ran,
+                                               picture_hash(data)])
                     mixer_ran = False
                     g.bp(mixer)
             else:
@@ -354,15 +429,48 @@ def run_script(rom_path, syms, rom, script, timeout, extra_hooks=None):
     return log
 
 
+def run_host(exe, keys, frames, timeout, dump=None, every=CHECKPOINT_EVERY):
+    """Plays a key file on the pc platform's host executable and returns
+    its log: the checkpoints (with no mixer flag, None) and how it ended;
+    no events (None) and no save."""
+    cmd = [exe, "--keys", keys, "--frames", str(frames), "--checkpoint-every", str(every)]
+    if dump:
+        cmd += ["--dump", dump]
+    start = time.time()
+    log = {"events": None, "checkpoints": [], "save": None, "end": None}
+    try:
+        p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        out, code = p.stdout, p.returncode
+    except subprocess.TimeoutExpired as e:
+        out, code = e.stdout.decode() if e.stdout else "", None
+    for line in out.splitlines():
+        f = line.split()
+        if f[:1] == ["checkpoint"]:
+            log["checkpoints"].append([int(f[1]), f[2], None, f[3]])
+        elif f[:1] == ["end"]:
+            log["end"] = " ".join(f[1:5])  # "done at frame N", as run's
+    if code is None:
+        log["end"] = "timeout"
+    elif code != 0 or log["end"] is None:
+        log["end"] = f"exit status {code}: {log['end']}"
+    log["seconds"] = round(time.time() - start, 1)
+    return log
+
+
 def compare(a, b):
-    """The differences between two logs, as lines."""
+    """The differences between two logs, as lines. A host log (no events,
+    no mixer flags, no save) is compared by its checkpoints' frames and
+    picture hashes and how it ended."""
     out = []
     for name in sorted(set(a) | set(b)):
         if name not in a or name not in b:
             out.append(f"{name}: only in one log")
             continue
         x, y = a[name], b[name]
-        if x["events"] != y["events"]:
+        if x["events"] is None or y["events"] is None:
+            x = dict(x, checkpoints=[[c[0], c[3]] for c in x["checkpoints"]], save=None)
+            y = dict(y, checkpoints=[[c[0], c[3]] for c in y["checkpoints"]], save=None)
+        elif x["events"] != y["events"]:
             diff = next(((p, q) for p, q in zip(x["events"], y["events"]) if p != q), None)
             out.append(f"{name}: events differ: " + (f"{diff[0]} vs {diff[1]}" if diff else
                                                      f"{len(x['events'])} vs {len(y['events'])}"))
@@ -383,8 +491,20 @@ def main():
     r.add_argument("elf")
     r.add_argument("--script", action="append", choices=sorted(SCRIPTS),
                    help=f"default: {' '.join(DEFAULT_SCRIPTS)}")
+    r.add_argument("--keys", help="a key file, the script (with --frames)")
+    r.add_argument("--frames", type=int, help="the key file's frames")
+    r.add_argument("--dump", help="write each checkpoint's bytes to this directory")
+    r.add_argument("--every", type=int, default=CHECKPOINT_EVERY, help="frames between checkpoints")
     r.add_argument("--out")
     r.add_argument("--timeout", type=float, default=600, help="seconds per script")
+    h = sub.add_parser("host", help="play a key file on the pc platform's host executable")
+    h.add_argument("exe")
+    h.add_argument("--keys", required=True)
+    h.add_argument("--frames", type=int, required=True)
+    h.add_argument("--dump")
+    h.add_argument("--every", type=int, default=CHECKPOINT_EVERY)
+    h.add_argument("--out")
+    h.add_argument("--timeout", type=float, default=600)
     c = sub.add_parser("compare", help="compare two logs")
     c.add_argument("logs", nargs=2)
     args = ap.parse_args()
@@ -398,11 +518,28 @@ def main():
               + ("differ" if diffs else f"the same ({len(a)} scripts)"))
         return 1 if diffs else 0
 
+    if (args.keys is None) != (args.frames is None):
+        ap.error("--keys and --frames go together")
+    if args.dump:
+        os.makedirs(args.dump, exist_ok=True)
+    if args.cmd == "host":
+        log = run_host(args.exe, args.keys, args.frames, args.timeout, args.dump, args.every)
+        print(f"keys: {log['end']} ({log['seconds']} s); {len(log['checkpoints'])} checkpoints")
+        if args.out:
+            with open(args.out, "w") as f:
+                json.dump({"keys": log}, f, indent=1)
+        return 0 if log["end"].startswith("done") else 1
+
     syms, rom = read_elf(args.elf)
     logs = {}
     failed = False
-    for name in args.script or DEFAULT_SCRIPTS:
-        log = run_script(args.rom, syms, rom, SCRIPTS[name], args.timeout)
+    if args.keys:
+        if args.script:
+            ap.error("--keys is the script")
+        SCRIPTS["keys"] = script_keys(read_keys(args.keys), args.frames)
+    for name in ["keys"] if args.keys else args.script or DEFAULT_SCRIPTS:
+        log = run_script(args.rom, syms, rom, SCRIPTS[name], args.timeout, dump=args.dump,
+                         every=args.every)
         logs[name] = log
         kinds = {}
         for e in log["events"]:

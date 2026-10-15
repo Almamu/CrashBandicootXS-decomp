@@ -163,7 +163,8 @@ void EntitySpawner::Spawn(u32 id, const struct level_entity *rec)
 {
     /* `table`, `e`, `px` are needed: inlined, the instructions are reordered */
     const entity_spawn_fn *table = funcs;
-    const entity_spawn_fn *e = (const entity_spawn_fn *)((rec->type << 2) + (uintptr_t)table);
+    const entity_spawn_fn *e =
+        (const entity_spawn_fn *)(rec->type * sizeof(*table) + (uintptr_t)table);
     u16 px = rec->x;
     /* `py` is needed: inlined, the code is 1 instruction shorter */
     u16 py = rec->y;

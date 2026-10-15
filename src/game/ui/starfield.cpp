@@ -64,7 +64,7 @@ Starfield::Starfield()
     s32 row;
     s32 tileIdx;
     /* `tileBase` is needed: inlined, the code is 2 instructions shorter */
-    u32 tileBase;
+    uintptr_t tileBase;
     u16 *gradDst;
     u16 dmaFillSrc16;
     u32 dmaFillSrc32;

@@ -25,6 +25,14 @@ script of symbol assignments, passed to the host link as an input file:
 Every assignment is a PROVIDE, so it only defines a name that the objects
 use and don't define. The objects' symbols are read with nm, the host's
 names demangled with c++filt.
+
+With --libs, it also checks that no object defines a name the host's
+libraries (libc, libm, libstdc++) export: the game's own strcpy, rand,
+sprintf and the like would be linked in front of the C library's, for its
+other users too, so platform.mk renames them in the game's objects
+(platform/pc/libc_names.txt). The global operator new and delete are the
+exception: C++ lets a program replace them, as the game does
+(operator_new.cpp).
 """
 
 import argparse
@@ -102,6 +110,11 @@ def demangle_gxx29(name):
     return None
 
 
+# The replaceable global allocation functions (operator new, new[],
+# delete, delete[]), which the game defines (operator_new.cpp).
+REPLACEABLE = {"_Znwm", "_Znam", "_ZdlPv", "_ZdaPv"}
+
+
 def host_qualified(demangled):
     """(is_vtable, qualified name) of a c++filt-demangled host name, or None."""
     if demangled.startswith("vtable for "):
@@ -129,6 +142,7 @@ def main():
     ap.add_argument("--cxx-symbols", required=True)
     ap.add_argument("--iwram", required=True)
     ap.add_argument("--ewram", required=True)
+    ap.add_argument("--libs", nargs="*", default=[], help="the host's shared libraries, to check names against")
     ap.add_argument("-o", "--output", required=True)
     ap.add_argument("objects", nargs="+")
     args = ap.parse_args()
@@ -158,6 +172,19 @@ def main():
             continue
         (undefined if f[1] in "Uw" else defined).add(f[0])
     undefined -= defined
+
+    # The game's definitions of the host libraries' names.
+    lib_names = set()
+    for lib in args.libs:
+        out = subprocess.run(shlex.split(args.nm) + ["-D", "--defined-only", "-P", lib], capture_output=True,
+                             text=True, check=True).stdout
+        lib_names.update(line.split()[0].split("@")[0] for line in out.splitlines() if line.split())
+    clashes = sorted(n for n in defined & lib_names if n not in REPLACEABLE)
+    for name in clashes:
+        print(f"host_link.py: the objects define {name}, which the host's libraries do too: "
+              f"add it to platform/pc/libc_names.txt", file=sys.stderr)
+    if clashes:
+        return 1
 
     names = sorted(defined | undefined)
     mangled = [n for n in names if n.startswith("_Z")]

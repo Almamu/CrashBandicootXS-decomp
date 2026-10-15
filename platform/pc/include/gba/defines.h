@@ -19,6 +19,18 @@
 #undef LAYOUT_ASSERT
 #define LAYOUT_ASSERT(T, X) COMPILE_TIME_ASSERT(T, 1)
 
+/* A NULL pointer the ROM reads through (gba/defines.h) reads the host's
+ * zeroed page instead, where the GBA reads its BIOS area. */
+#undef NULL_READ
+#define NULL_READ(p) ((p) != 0 ? (p) : (__typeof__(p))gHostNullPage)
+
+/* A free of the ROM's own data (gba/defines.h): its writes would fault
+ * in the host's read-only data, so it is skipped. The heaps are in
+ * gHostEwram and gHostIwram, in that order in one block (memory.S). */
+#undef MEM_FREE_LOST
+#define MEM_FREE_LOST(p) \
+    ((uintptr_t)(p) < (uintptr_t)gHostEwram || (uintptr_t)(p) >= (uintptr_t)gHostIwram + HOST_IWRAM_SIZE)
+
 #undef EWRAM_START
 #undef IWRAM_START
 #undef EWRAM_SIZE
