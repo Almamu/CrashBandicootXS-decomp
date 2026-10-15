@@ -128,20 +128,35 @@ N-Tranced has its own project on [decompilati.onl](https://decompilati.onl).
 It has no objdiff report yet, so
 [`games/n2/progress.py`](../games/n2/progress.py) reads its progress from
 the build and prints the document decompilati.onl's webhook takes
-([docs](https://decompilati.onl/docs)), in bytes:
+([docs](https://decompilati.onl/docs)), with the same measures as XS's
+report:
 
-- **code:** the `.text` of every code object. **Matching** is the shared
-  sources' (`games/n2/objects.txt`, built from `src/`, byte-identical); the
-  disassembly (`games/n2/asm/`) is still to do.
+- **code**, in bytes: the code, `0x08000000` to the start of the
+  incbin'd data. **Matching** is the shared sources' (`games/n2/objects.txt`,
+  built from `src/`, byte-identical); the disassembly (`games/n2/asm/`) is
+  still to do.
+- **functions:** every function of `ntranced.elf`; matching, the shared
+  sources'.
 - **data:** the rest of the ROM, all of it still incbin'd from
   `baserom_n2.gba`.
-- **areas:** "Shared with Crash XS", one per shared source; "Disassembly",
-  one per `games/n2/asm/` file; and "ROM data".
+- **areas:** XS's report categories (System, Graphics, Actor, ...,
+  `tools/report_units.py`). A function has the category of the XS function
+  whose name the disassembly gives it (`gbadisasm.cfg`); N-Tranced's own
+  code, and what isn't identified yet, is "Not identified yet". Plus "ROM
+  data". The categories need the XS build (`crashbandicootxs.elf`); without
+  it every function is in "Not identified yet".
 
 On pushes to `main`, `build.yml`'s "Send N-Tranced's progress to
 decompilati.onl" step runs it after the N-Tranced compare and POSTs the
 result to `/api/v1/progress`, with the commit and version `europe`, using
 the repository secret `DECOMPILATION2_PROGRESS_TOKEN`. Without the secret
 the step does nothing, and a failed upload doesn't fail the build. To see
-what would be sent: `make GAME=n2 && games/n2/progress.py`.
+what would be sent: `make && make GAME=n2 && games/n2/progress.py`.
 
+
+decompilati.onl's GitHub App imports each `<version>_report` artifact of a
+successful run on `main` into the project linked to the repository. Here
+that's XS's objdiff report (`europe_report`, 100%), so if the N-Tranced
+project imports it too, it shows XS's numbers in place of its own (it did
+after #1123: 2,062 functions, 100%). N-Tranced's project must take its
+progress from this webhook only, not from the App.
