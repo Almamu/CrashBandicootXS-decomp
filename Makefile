@@ -178,6 +178,18 @@ shiftcheck: $(OBJS) $(LDSCRIPT)
 	python3 tools/shiftcheck.py --ld '$(LD) $(LDFLAGS)' --ldscript $(LDSCRIPT) --out $(OBJ_DIR)/shiftcheck $(SHIFTCHECK_FLAGS) \
 		-- $(OBJS) tools/agbcc/lib/libgcc.a tools/agbcc/lib/libc.a
 
+# A mod (docs/modding.md): `make mod MOD=mods/sample` applies the mod to a
+# copy of the tree, MOD_TREE (tools/apply_mod.py), and builds it there with
+# a plain make: the ROM is $(MOD_TREE)/crashbandicootxs.gba. This tree's
+# data, and so `make compare`, stays as it is. No baserom.gba needed.
+MOD ?= mods/sample
+MOD_TREE ?= build/mods/$(notdir $(MOD))
+.PHONY: mod
+mod:
+	rm -rf $(MOD_TREE)
+	python3 tools/apply_mod.py $(MOD) $(MOD_TREE)
+	$(MAKE) -C $(MOD_TREE)
+
 # Every incbin and include in data/*.s (the sound blocks) needs the
 # corresponding built file to exist first. Each GAX2 block is a .bin and
 # the .s that data.s includes: its bytes, with the pointers as

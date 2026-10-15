@@ -47,6 +47,11 @@ jobs:
     - name: Check the translations
       run: make text-check
 
+    # graphics/manifest.json against the files, the graphics classes and
+    # cxx_symbols.txt (docs/graphics.md, "The manifest").
+    - name: Check the graphics manifest
+      run: python3 tools/gfx_manifest.py check
+
     # The C style (.clang-format, CONTRIBUTING.md "Code style"), checked on
     # all the C but the data tables (FORMATTED/UNFORMATTED in
     # tools/format.py). The clang-format version is pinned: other versions
