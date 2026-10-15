@@ -21,6 +21,7 @@
 0x080028D4 0x184 engine/src/engine/link/link_sio.cpp
 0x080073E0 0x134 engine/src/engine/gfx/oam_buffer.cpp
 0x08007514 0x10C engine/src/engine/sys/vram_dma_queue.cpp
+0x08009794 0x048 engine/src/game/entities/ui_sprite.cpp
 0x08009DA4 0x52C engine/src/game/crates/crate_list_update.cpp
 0x0800A2D0 0x0DC engine/src/game/crates/crate_list_draw.cpp
 0x0800A5A4 0x0DC engine/src/game/crates/crate_list_reset.cpp

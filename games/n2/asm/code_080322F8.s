@@ -23978,14 +23978,14 @@ sub_0803E5CC: @ 0x0803E5CC
 	adds r5, #0xa0
 	movs r0, #0x60
 	bl OperatorNew
-	bl sub_080092B4
+	bl InitSpriteObj
 	str r0, [r5]
 	movs r0, #0xa4
 	adds r0, r0, r7
 	mov sb, r0
 	movs r0, #0x60
 	bl OperatorNew
-	bl sub_080092B4
+	bl InitSpriteObj
 	mov r1, sb
 	str r0, [r1]
 	movs r2, #0xa8
@@ -23993,7 +23993,7 @@ sub_0803E5CC: @ 0x0803E5CC
 	mov sl, r2
 	movs r0, #0x60
 	bl OperatorNew
-	bl sub_080092B4
+	bl InitSpriteObj
 	mov r1, sl
 	str r0, [r1]
 	movs r2, #0xac
@@ -24001,7 +24001,7 @@ sub_0803E5CC: @ 0x0803E5CC
 	mov r8, r2
 	movs r0, #0x60
 	bl OperatorNew
-	bl sub_080092B4
+	bl InitSpriteObj
 	mov r1, r8
 	str r0, [r1]
 	adds r2, r7, #0
@@ -24009,7 +24009,7 @@ sub_0803E5CC: @ 0x0803E5CC
 	str r2, [sp]
 	movs r0, #0x60
 	bl OperatorNew
-	bl sub_080092B4
+	bl InitSpriteObj
 	ldr r1, [sp]
 	str r0, [r1]
 	adds r6, r7, #0
@@ -26302,7 +26302,7 @@ sub_0803F934: @ 0x0803F934
 	push {lr}
 	ldr r2, _0803F944 @ =gUnknown_087FAD64
 	str r2, [r0, #0x24]
-	bl sub_08009294
+	bl DestroySpriteObj
 	pop {r0}
 	bx r0
 	.align 2, 0
@@ -26312,7 +26312,7 @@ _0803F944: .4byte gUnknown_087FAD64
 sub_0803F948: @ 0x0803F948
 	push {r4, lr}
 	adds r4, r0, #0
-	bl sub_080092B4
+	bl InitSpriteObj
 	ldr r0, _0803F960 @ =gUnknown_087FAD64
 	str r0, [r4, #0x24]
 	movs r0, #2

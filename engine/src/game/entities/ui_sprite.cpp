@@ -19,4 +19,11 @@ UiSprite::~UiSprite()
 
 UiSprite::UiSprite()
 {
+#ifdef GAME_N2
+    /* N-Tranced's (0x080097B0) also turns off the contact, attack and
+     * terrain-probe bits */
+    DisableContact();
+    ClearFlag1();
+    f.b.collides = 0;
+#endif
 }

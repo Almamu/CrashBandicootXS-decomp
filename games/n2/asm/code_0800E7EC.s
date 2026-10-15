@@ -6879,7 +6879,7 @@ sub_08011C80: @ 0x08011C80
 	movs r0, #0x84
 	bl OperatorNew
 	adds r4, r0, #0
-	bl sub_080092B4
+	bl InitSpriteObj
 	ldr r0, _08011D3C @ =gUnknown_087F8AA4
 	str r0, [r4, #0x24]
 	adds r1, r4, #0
@@ -8077,7 +8077,7 @@ _080125E6:
 _080125EE:
 	adds r0, r4, #0
 	adds r1, r5, #0
-	bl sub_08009294
+	bl DestroySpriteObj
 	pop {r4, r5}
 	pop {r0}
 	bx r0
@@ -8088,7 +8088,7 @@ _080125FC: .4byte gUnknown_087F8AA4
 InitCrate: @ 0x08012600
 	push {r4, lr}
 	adds r4, r0, #0
-	bl sub_080092B4
+	bl InitSpriteObj
 	ldr r0, _08012624 @ =gUnknown_087F8AA4
 	str r0, [r4, #0x24]
 	adds r1, r4, #0
