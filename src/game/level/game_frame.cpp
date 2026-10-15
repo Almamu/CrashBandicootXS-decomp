@@ -8,6 +8,7 @@
 #include "engine/actor/actor_category_stats.hpp"
 #include "engine/actor/actor_category.hpp"
 #include "game/ui/level_select.hpp"
+#include "level_on_clear.h"
 
 extern "C" {
 #include "core.h"
@@ -255,53 +256,18 @@ load:
             maskLevel = tier;
         }
         if (status == ROOM_EXIT_CLEARED) {
+            /* What clearing the level does: a case per level with an
+             * "on_clear" in levels.json (level_on_clear.h, docs/levels.md
+             * "Boss levels"). The ROM's are the bosses': Dingodile, N. Gin
+             * and Tiny give their power the first time, with its dialog,
+             * the next world and a cutscene; Neo Cortex gives Turbo Run,
+             * then goes on to mega-mix over 99% completion (an `add #1`,
+             * `goto start`) or plays the ending and the credits; mega-mix
+             * plays its ending and the credits. None of them sets the
+             * level's `cleared` bit. Any other level takes the default:
+             * the bit is set when it ended in a category stage. */
             switch (room.level) {
-            case LEVEL_DINGODILE:
-                if (!HasSuperBodySlam()) {
-                    LevelSelect::SetNewWorldOpened();
-                    GiveSuperBodySlam();
-                    ShowSuperBodySlamDialog();
-                    PlayCutscene(4);
-                }
-                break;
-            case LEVEL_N_GIN:
-                if (!HasDoubleJump()) {
-                    LevelSelect::SetNewWorldOpened();
-                    GiveDoubleJump();
-                    ShowDoubleJumpDialog();
-                    PlayCutscene(5);
-                }
-                break;
-            case LEVEL_TINY:
-                if (!HasTornadoSpin()) {
-                    LevelSelect::SetNewWorldOpened();
-                    GiveTornadoSpin();
-                    ShowTornadoSpinDialog();
-                    PlayCutscene(6);
-                }
-                break;
-            case LEVEL_NEO_CORTEX:
-                if (!HasTurboRun()) {
-                    LevelSelect::SetNewWorldOpened();
-                    GiveTurboRun();
-                    ShowTurboRunDialog();
-                }
-                if (progress.GetCompletionPercent() > 99) {
-                    PlayCutscene(8);
-                    /* on to mega-mix: the level after Neo Cortex in the
-                     * ROM (an `add #1`), after the bosses of the worlds
-                     * levels.json adds past Neo Cortex's otherwise */
-                    room.level += LEVEL_FINALE - LEVEL_NEO_CORTEX;
-                    room.roomIndex = 0;
-                    goto start;
-                }
-                PlayCutscene(10);
-                RunCredits();
-                break;
-            case LEVEL_MEGA_MIX:
-                PlayCutscene(9);
-                RunCredits();
-                break;
+                LEVEL_ON_CLEAR_CASES
             default:
                 if (room.cat->kind == ROOM_KIND_CATEGORY)
                     GetCurrentLevelFlags()->w.cleared = 1;

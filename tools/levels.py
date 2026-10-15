@@ -85,6 +85,9 @@ derived from those again.
     tools/levels.py bosses OUT                level_bosses.h: the case labels of
                                               each boss kind's levels, from
                                               levels.json's "boss_kind"
+    tools/levels.py on-clear OUT              level_on_clear.h: UpdateGameFrame's
+                                              cases on the cleared level, from
+                                              levels.json's "on_clear"
     tools/levels.py spawns SYMBOL OUT         the ROM's spawn list SYMBOL
                                               (gCategoryNSpawnTable), from its
                                               category's data/levels/spawns/ file,
@@ -2599,7 +2602,8 @@ def anim_tables_from_rom(rom):
 #   parts left), "hits" (3 - the controller's hits taken), or None (0).
 #
 # Rewards (the powers, their dialogs, the cutscenes and credits of
-# UpdateGameFrame's switch) aren't the kind's: they stay the ROM's levels'.
+# UpdateGameFrame's switch) aren't the kind's: they are the level's
+# "on_clear" (level_on_clear_h).
 BOSS_KINDS = {
     "DINGODILE": {"entity": "DINGODILE", "hud": "BOSS_DINGODILE", "health": "hits"},
     "N_GIN": {"category_type": "HOVERCRAFT", "hud": "BOSS_N_GIN", "health": "parts"},
@@ -2667,6 +2671,207 @@ def level_bosses_h(data):
         out += ["", "/* %s: HUD %s, health %s */" % (k, info["hud"] or "none", info["health"] or "none"),
                 ("#define LEVEL_BOSS_CASES_%s %s" % (k, " ".join("case %s:" % c for c in levels))).rstrip()]
     return "\n".join(out + ["", "#endif /* GUARD_LEVEL_BOSSES_H */", ""])
+
+
+# ---------------------------------------------------------------------------
+# What clearing a level does (docs/levels.md, "Boss levels")
+#
+# A level's optional "on_clear" in levels.json is what clearing it does
+# besides the save: UpdateGameFrame's switch on the level (game_frame.cpp).
+# level_on_clear.h writes a case for each level that has one
+# (LEVEL_ON_CLEAR_CASES), in the levels' order, its statements in this
+# order:
+#
+# - "power": a power of save->flags (WORLD_OPEN_POWERS). If the save hasn't
+#   it yet: "open_world" (LevelSelect::SetNewWorldOpened: the next level
+#   select turns to the next page if it is open), the power (Give<Power>),
+#   its dialog (Show<Power>Dialog) and "cutscene", played once, with the
+#   power. Without a power, "cutscene" plays at every clear.
+# - "mark_cleared": the level word's `cleared` bit (LEVEL_FLAG_CRYSTAL), the
+#   bit the crystal pickup sets.
+# - "next_level": {"if_completion_over": N, "cutscene": C, "level": L}: past
+#   N% completion, play C (optional) and go straight on to the level L.
+# - "credits": {"cutscene": C}: play C (optional), then the credits.
+#
+# A level with no "on_clear" takes the switch's default case: its `cleared`
+# bit is set when the room it ended in is a category stage.
+ON_CLEAR_KEYS = ["power", "open_world", "cutscene", "mark_cleared", "next_level", "credits"]
+NEXT_LEVEL_KEYS = ["if_completion_over", "cutscene", "level"]
+# The cutscenes LevelState::PlayCutscene plays by index (gCutscenes,
+# src/game/ui/data/cutscenes.cpp).
+CUTSCENE_COUNT = 11
+# The ROM's rewards, which extract checks the kept "on_clear"s give.
+ROM_ON_CLEAR = {
+    "LEVEL_DINGODILE": {"power": "SUPER_BODY_SLAM", "open_world": True, "cutscene": 4},
+    "LEVEL_N_GIN": {"power": "DOUBLE_JUMP", "open_world": True, "cutscene": 5},
+    "LEVEL_TINY": {"power": "TORNADO_SPIN", "open_world": True, "cutscene": 6},
+    "LEVEL_NEO_CORTEX": {"power": "TURBO_RUN", "open_world": True,
+                         "next_level": {"if_completion_over": 99, "cutscene": 8, "level": "LEVEL_MEGA_MIX"},
+                         "credits": {"cutscene": 10}},
+    "LEVEL_MEGA_MIX": {"credits": {"cutscene": 9}},
+}
+
+
+def warn(msg):
+    """A levels.json warning: printed, and the build goes on."""
+    print("%s: warning: %s" % (LEVELS_JSON, msg), file=sys.stderr)
+
+
+def level_on_clear(data):
+    """{level constant: its "on_clear"}, checked: known keys and values, a
+    power given by one level at most, cutscenes PlayCutscene has, and
+    "next_level"s that don't come back round. Warns about a numbered boss
+    level that nothing marks cleared (on_clear_unmarked_warnings)."""
+    levels = {lv["constant"]: lv for lv in data["levels"]}
+
+    def fail(c, msg):
+        sys.exit("%s: %s: \"on_clear\": %s (docs/levels.md, \"Boss levels\")" % (LEVELS_JSON, c, msg))
+
+    def check_cutscene(c, v, where):
+        if not isinstance(v, int) or isinstance(v, bool) or not 0 <= v < CUTSCENE_COUNT:
+            fail(c, "%s is a cutscene, 0-%d (gCutscenes), not %s" % (where, CUTSCENE_COUNT - 1, json.dumps(v)))
+
+    out, given = {}, {}
+    for c, lv in levels.items():
+        oc = lv.get("on_clear")
+        if oc is None:
+            continue
+        if not isinstance(oc, dict):
+            fail(c, "an object of %s" % ", ".join('"%s"' % k for k in ON_CLEAR_KEYS))
+        unknown = [k for k in oc if k not in ON_CLEAR_KEYS]
+        if unknown:
+            fail(c, "unknown %s" % ", ".join('"%s"' % k for k in unknown))
+        for k in ("open_world", "mark_cleared"):
+            if not isinstance(oc.get(k, False), bool):
+                fail(c, "\"%s\" is true or false" % k)
+        power = oc.get("power")
+        if power is not None:
+            if power not in WORLD_OPEN_POWERS:
+                fail(c, "\"power\" is one of %s (a new power is code)" % ", ".join(WORLD_OPEN_POWERS))
+            if power in given:
+                fail(c, "%s gives %s already: a power is given by one level" % (given[power], power))
+            given[power] = c
+        elif oc.get("open_world"):
+            fail(c, "\"open_world\" comes with a \"power\": it is done the first time the power is given")
+        if "cutscene" in oc:
+            check_cutscene(c, oc["cutscene"], "\"cutscene\"")
+        nl = oc.get("next_level")
+        if nl is not None:
+            if not isinstance(nl, dict) or [k for k in nl if k not in NEXT_LEVEL_KEYS] or \
+                    "level" not in nl or "if_completion_over" not in nl:
+                fail(c, "\"next_level\" is {\"if_completion_over\": N, \"level\": LEVEL_*} and an optional "
+                     "\"cutscene\"")
+            n = nl["if_completion_over"]
+            if not isinstance(n, int) or isinstance(n, bool) or not 0 <= n <= 99:
+                fail(c, "\"next_level\" \"if_completion_over\" is a percentage, 0-99")
+            if nl["level"] not in levels:
+                fail(c, "\"next_level\" \"level\" %s isn't a level" % nl["level"])
+            if "cutscene" in nl:
+                check_cutscene(c, nl["cutscene"], "\"next_level\" \"cutscene\"")
+        cr = oc.get("credits")
+        if cr is not None:
+            if not isinstance(cr, dict) or [k for k in cr if k != "cutscene"]:
+                fail(c, "\"credits\" is {} or {\"cutscene\": N}, the cutscene played before them")
+            if "cutscene" in cr:
+                check_cutscene(c, cr["cutscene"], "\"credits\" \"cutscene\"")
+        out[c] = oc
+    for c in out:
+        chain = [c]
+        while "next_level" in out.get(chain[-1], {}):
+            n = out[chain[-1]]["next_level"]["level"]
+            if n in chain:
+                fail(c, "the \"next_level\"s go round: %s" % " -> ".join(chain + [n]))
+            chain.append(n)
+    on_clear_unmarked_warnings(data, out)
+    return out
+
+
+def on_clear_unmarked_warnings(data, on_clear):
+    """Warn about a numbered level with a "boss_kind" that nothing marks
+    cleared: its world's boss entry (LevelSelect::PlaceItems), the world
+    after it if {"levels_cleared": true} opens it (IsWorldCleared) and the
+    crystal count wait for every numbered level's `cleared` bit. A boss
+    ("boss": true) isn't counted by any of them."""
+    worlds = data.get("worlds") or []
+    names = entity_type_names()
+    cats = {c["constant"][len("CATEGORY_"):] for c in level_categories(data)}
+    for lv in data["levels"]:
+        c = lv["constant"]
+        if "boss_kind" not in lv or lv.get("boss") or "world" not in lv:
+            continue
+        oc = on_clear.get(c)
+        if oc is not None:
+            if oc.get("mark_cleared"):
+                continue
+        elif isinstance(lv["rooms"][-1], dict) and lv["rooms"][-1].get("stage") in cats:
+            continue  # the default case: it ends in a category stage
+        if any((e["type"] if isinstance(e["type"], str) else names[e["type"]]) == "CRYSTAL"
+               for r in lv["rooms"] if isinstance(r, str)
+               for e in read_json(LEVELS_DIR / r / "room.json")["entities"]):
+            continue  # the crystal pickup
+        w = lv["world"]
+        what = ["world %d's boss entry" % w]
+        if w + 1 < len(worlds) and worlds[w + 1].get("opened_by") == {"levels_cleared": True}:
+            what.append("world %d (\"opened_by\": {\"levels_cleared\": true})" % (w + 1))
+        warn("%s is a numbered level with a boss (\"boss_kind\": \"%s\") that nothing marks cleared (no "
+             "\"on_clear\" \"mark_cleared\", no crystal, and it doesn't end in a category stage): %s never "
+             "open%s, and the crystal count stays short (docs/levels.md, \"Boss levels\")"
+             % (c, lv["boss_kind"], " and ".join(what), "s" if len(what) == 1 else ""))
+
+
+def power_name(power):
+    """SUPER_BODY_SLAM -> SuperBodySlam, as in LevelState::Has<Power> and
+    Give<Power> and Show<Power>Dialog (menus.hpp)."""
+    return "".join(p.capitalize() for p in power.split("_"))
+
+
+def level_on_clear_h(data):
+    """level_on_clear.h: UpdateGameFrame's cases on the cleared level
+    (LEVEL_ON_CLEAR_CASES), one per level with an "on_clear"."""
+    on_clear = level_on_clear(data)
+    out = ["/* Generated by tools/levels.py from data/levels/levels.json. Do not edit. */",
+           "#ifndef GUARD_LEVEL_ON_CLEAR_H", "#define GUARD_LEVEL_ON_CLEAR_H", "",
+           "#include \"constants/levels.h\"", "",
+           "/*",
+           " * What clearing a level does (levels.json's \"on_clear\", docs/levels.md \"Boss",
+           " * levels\"): LevelState::UpdateGameFrame's cases on the level (game_frame.cpp),",
+           " * one per level that has one, in the levels' order. The other levels take its",
+           " * default case.",
+           " */"]
+    lines = []
+    for c, oc in on_clear.items():
+        lines.append("case %s:" % c)
+        power = oc.get("power")
+        if power:
+            p = power_name(power)
+            lines.append("    if (!Has%s()) {" % p)
+            if oc.get("open_world"):
+                lines.append("        LevelSelect::SetNewWorldOpened();")
+            lines += ["        Give%s();" % p, "        Show%sDialog();" % p]
+            if "cutscene" in oc:
+                lines.append("        PlayCutscene(%d);" % oc["cutscene"])
+            lines.append("    }")
+        elif "cutscene" in oc:
+            lines.append("    PlayCutscene(%d);" % oc["cutscene"])
+        if oc.get("mark_cleared"):
+            lines.append("    GetCurrentLevelFlags()->w.cleared = 1;")
+        nl = oc.get("next_level")
+        if nl:
+            lines.append("    if (progress.GetCompletionPercent() > %d) {" % nl["if_completion_over"])
+            if "cutscene" in nl:
+                lines.append("        PlayCutscene(%d);" % nl["cutscene"])
+            lines += ["        room.level += %s - %s;" % (nl["level"], c), "        room.roomIndex = 0;",
+                      "        goto start;", "    }"]
+        cr = oc.get("credits")
+        if cr is not None:
+            if "cutscene" in cr:
+                lines.append("    PlayCutscene(%d);" % cr["cutscene"])
+            lines.append("    RunCredits();")
+        lines.append("    break;")
+    width = max(len(s) for s in lines) if lines else 0
+    out += ["", "#define LEVEL_ON_CLEAR_CASES%s" % (" \\" if lines else "")]
+    out += ["    " + (s.ljust(width) + " \\" if k + 1 < len(lines) else s) for k, s in enumerate(lines)]
+    return "\n".join(out + ["", "#endif /* GUARD_LEVEL_ON_CLEAR_H */", ""])
 
 
 # ---------------------------------------------------------------------------
@@ -3126,8 +3331,8 @@ def room_record(rom, a, symbol):
 
 # The level fields levels.py extract keeps from the hand-written levels.json
 # (the names); it writes the others from the ROM ("boss" must agree). It
-# keeps "boss_kind" too, which is code (GetBossIndex's cases; check_rom_counts
-# checks they are the ROM's). Of the "themes" and "palette_cycles" it keeps
+# keeps "boss_kind" and "on_clear" too, which are code (GetBossIndex's and
+# UpdateGameFrame's cases; check_rom_counts checks they are the ROM's). Of the "themes" and "palette_cycles" it keeps
 # what the code says (themes_from_rom).
 LEVEL_KEYS_KEPT = ["constant", "name", "world"]
 
@@ -3164,6 +3369,8 @@ def level_table_from_rom(rom, level_list, folders):
             lv["boss"] = True
         if "boss_kind" in kept:
             lv["boss_kind"] = kept["boss_kind"]  # GetBossIndex's cases: code, kept
+        if "on_clear" in kept:
+            lv["on_clear"] = kept["on_clear"]  # UpdateGameFrame's cases: code, kept
         lv.update({"name_text": struct.unpack_from("<i", rom.data, a - ROM_BASE)[0], "theme": rom.w(a + 4),
                    "times": [rom.w(a + 8 + 4 * k) for k in range(3)],
                    "mask_assist_deaths": struct.unpack_from("<i", rom.data, a + 0x14 - ROM_BASE)[0],
@@ -3640,6 +3847,7 @@ def check_rom_counts(data):
         "the worlds' rules aren't the ROM's"
     assert save_layout(data) == (EEPROM_4KBIT, SAVE_4KBIT_SIZE, 0x70), "the save isn't the ROM's"
     assert level_boss_kinds(data) == ROM_BOSS_KINDS, "the boss kinds aren't the ROM's GetBossIndex cases"
+    assert level_on_clear(data) == ROM_ON_CLEAR, "the rewards aren't the ROM's UpdateGameFrame cases"
     assert c["LEVEL_COUNT"] == (LEVEL_ROOM_LISTS - LEVEL_TABLE) // LEVEL_INFO_SIZE
 
 
@@ -3656,8 +3864,8 @@ ROM_SAVE_VERSION = 0x12
 
 
 # The levels' keys level_data_crc leaves out: they don't change what a save's
-# records mean.
-CRC_LEVEL_KEYS_LEFT_OUT = ("boss_kind",)
+# records mean (the boss's HUD, what clearing the level does).
+CRC_LEVEL_KEYS_LEFT_OUT = ("boss_kind", "on_clear")
 
 
 def level_data_crc(levels):
@@ -3670,7 +3878,8 @@ def level_data_crc(levels):
     def canon(v):
         return json.dumps(v, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
 
-    # a level's boss kind (the HUD's, level_bosses.h) doesn't count either
+    # a level's boss kind (the HUD's, level_bosses.h) and its rewards
+    # (level_on_clear.h) don't count either
     crc = zlib.crc32(canon([{k: v for k, v in lv.items() if k not in CRC_LEVEL_KEYS_LEFT_OUT}
                             for lv in levels["levels"]]))
     for r in levels["rooms"]:
@@ -3901,6 +4110,8 @@ def main():
         write_if_changed(args[1], level_select_worlds_h(read_json(LEVELS_JSON)).encode())
     elif cmd == "bosses":
         write_if_changed(args[1], level_bosses_h(read_json(LEVELS_JSON)).encode())
+    elif cmd == "on-clear":
+        write_if_changed(args[1], level_on_clear_h(read_json(LEVELS_JSON)).encode())
     elif cmd == "spawns":
         Path(args[2]).parent.mkdir(parents=True, exist_ok=True)
         Path(args[2]).write_text(spawns_inc(args[1]))

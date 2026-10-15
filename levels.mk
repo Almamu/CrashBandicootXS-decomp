@@ -224,6 +224,21 @@ $(GENERATED_INCLUDE_DIR)/level_bosses.h.stamp: data/levels/levels.json $(LEVEL_R
 $(GENERATED_INCLUDE_DIR)/level_bosses.h: $(GENERATED_INCLUDE_DIR)/level_bosses.h.stamp
 	@test -f $@ || python3 tools/levels.py bosses $@
 
+# What clearing a level does (level_on_clear.h, `levels.py on-clear`,
+# docs/levels.md "Boss levels"): LevelState::UpdateGameFrame's cases on the
+# cleared level (the powers, cutscenes, the step on to mega-mix and the
+# credits), from levels.json's "on_clear"; it warns about a numbered boss
+# level that nothing marks cleared, which reads its rooms. Written only if it
+# changed, behind a stamp.
+GENERATED_HEADERS += $(GENERATED_INCLUDE_DIR)/level_on_clear.h
+$(GENERATED_INCLUDE_DIR)/level_on_clear.h.stamp: data/levels/levels.json $(LEVEL_ROOM_JSONS) $(CATEGORY_DEPS) \
+	data/levels/entity_types.json tools/levels.py
+	@mkdir -p $(dir $@)
+	python3 tools/levels.py on-clear $(GENERATED_INCLUDE_DIR)/level_on_clear.h
+	@touch $@
+$(GENERATED_INCLUDE_DIR)/level_on_clear.h: $(GENERATED_INCLUDE_DIR)/level_on_clear.h.stamp
+	@test -f $@ || python3 tools/levels.py on-clear $@
+
 # The level select's per-world tables, IsNextWorldOpen's cases and the page
 # macros (level_select_worlds.h, `levels.py worlds`, docs/levels.md
 # "Level-select pages" and "Partial pages"), from levels.json's "worlds" and
