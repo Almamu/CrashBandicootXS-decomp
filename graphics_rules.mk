@@ -74,7 +74,7 @@ $(foreach s,$(FRAMED_SHEETS),$(eval FRAMED_ENTITIES_$(s) := $(shell python3 tool
 define FRAMED_ENTITY_RULE
 $(GRAPHICS_BUILDDIR)/$(1)/$(2).bin: $$(sort $$(wildcard $(call gfx_src,$(1)/$(2))/*.png)) tools/framed_gfx.py
 	@mkdir -p $$(dir $$@)
-	python3 tools/framed_gfx.py to-bin-folder $(call gfx_src,$(1)/$(2)) $$@
+	python3 tools/framed_gfx.py to-bin-folder $(call gfx_src,$(1)/$(2)) $$@ $(FRAMED_TO_BIN_FLAGS)
 endef
 
 # Split multi-record sprite sheets: each ROM asset below was originally one

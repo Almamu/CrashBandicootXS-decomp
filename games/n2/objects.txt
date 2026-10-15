@@ -51,6 +51,8 @@
 0x0805B124 0x0C4 lib/agb_eeprom/src/eeprom_timer_stop.c
 0x0805B1E8 0x18C lib/agb_eeprom/src/eeprom_read_write.c
 0x0805B374 0x098 lib/agb_eeprom/src/eeprom_verify.c
+0x080BF458 0x0E2F0 games/n2/src/game/vehicles/ocean/data/ocean_sprite_sheet.cpp
+0x08106C58 0x11670 games/n2/src/game/vehicles/space/data/space_sprite_sheet.cpp
 0x081CDFEC 0x00024 src/engine/gfx/data/obj_piece_sizes.cpp
 0x081CE454 0x00050 src/game/crash/data/input_ctrl_motion_set.cpp
 0x081D0E10 0x0072C src/game/level/data/terrain_types.cpp

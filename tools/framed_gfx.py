@@ -104,7 +104,7 @@ def to_frames(bin_path, out_dir, pal_path):
         img.save(os.path.join(out_dir, f'{idx:0{digits}d}.png'))
 
 
-def to_bin_folder(in_dir, bin_path):
+def to_bin_folder(in_dir, bin_path, any_size=False):
     paths = sorted(glob.glob(os.path.join(in_dir, '*.png')))
     if not paths:
         raise SystemExit(f"{in_dir}: no .png files found")
@@ -118,7 +118,9 @@ def to_bin_folder(in_dir, bin_path):
         if width % 8 or height % 8:
             raise SystemExit(f"{path}: {width}x{height} isn't a multiple of 8x8")
         w, h = width // 8, height // 8
-        if w not in (1, 2, 4, 8) or h not in (1, 2, 4, 8):
+        # XS's frames are 1, 2, 4 or 8 tiles a side; --any-size (N-Tranced's,
+        # which has 3x2 frames) takes any up to the header's byte
+        if not (any_size and 1 <= w <= 255 and 1 <= h <= 255) and (w not in (1, 2, 4, 8) or h not in (1, 2, 4, 8)):
             raise SystemExit(f"{path}: {w}x{h} tiles isn't a valid frame size")
 
         pixels = img.load()
@@ -179,14 +181,14 @@ def main(argv):
     if len(argv) < 2:
         raise SystemExit(
             f"Usage: {argv[0]} to-frames IN.bin OUT_DIR PAL.bin\n"
-            f"       {argv[0]} to-bin-folder IN_DIR OUT.bin\n"
+            f"       {argv[0]} to-bin-folder IN_DIR OUT.bin [--any-size]\n"
             f"       {argv[0]} header SHEET_DIR OUT.h --name SHEET\n"
             f"       {argv[0]} order SHEET_DIR")
     cmd = argv[1]
     if cmd == 'to-frames':
         to_frames(argv[2], argv[3], argv[4])
     elif cmd == 'to-bin-folder':
-        to_bin_folder(argv[2], argv[3])
+        to_bin_folder(argv[2], argv[3], argv[4:5] == ['--any-size'])
     elif cmd == 'header':
         if argv[4:5] != ['--name'] or len(argv) != 6:
             raise SystemExit(f"Usage: {argv[0]} header SHEET_DIR OUT.h --name SHEET")

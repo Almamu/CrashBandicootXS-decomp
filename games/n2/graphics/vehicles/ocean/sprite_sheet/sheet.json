@@ -1,0 +1,9 @@
+{
+  "sheet_rom_address": "0x080BF458",
+  "folders": [
+    {
+      "folder": "frames",
+      "frames": 262
+    }
+  ]
+}
