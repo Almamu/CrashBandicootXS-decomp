@@ -2924,7 +2924,7 @@ const struct sprite_frame gSpriteBank41Frame064 = SPRITE_FRAME(gSpriteBank41Fram
 #include "sprites/bank41_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 42: 10 animations, 135 frames, games/n2/graphics/sprites/bank42_dingodile/. */
+/* Bank 42: 10 animations, 135 frames, games/n2/graphics/sprites/bank42_evil_crunch/. */
 
 extern const u16 gSpriteBank42Anim00Seq[12];
 extern const u16 gSpriteBank42Anim01Seq[11];
@@ -3658,11 +3658,11 @@ const struct sprite_frame_1box gSpriteBank42Frame134 = {
     { { -7, -2, 14, 4 } },
 };
 
-/* The piece arrays, from games/n2/graphics/sprites/bank42_dingodile/bank.json. */
+/* The piece arrays, from games/n2/graphics/sprites/bank42_evil_crunch/bank.json. */
 #include "sprites/bank42_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 43: 34 animations, 234 frames, games/n2/graphics/sprites/bank43_skull_hovercraft/. */
+/* Bank 43: 34 animations, 234 frames, games/n2/graphics/sprites/bank43_evil_coco/. */
 
 extern const u16 gSpriteBank43Anim00Seq[9];
 extern const u16 gSpriteBank43Anim01Seq[10];
@@ -4668,7 +4668,7 @@ const struct sprite_frame gSpriteBank43Frame231 = SPRITE_FRAME(gSpriteBank43Fram
 const struct sprite_frame gSpriteBank43Frame232 = SPRITE_FRAME(gSpriteBank43Frame232, SPRITE_TILES_BANK43_FRAME232);
 const struct sprite_frame gSpriteBank43Frame233 = SPRITE_FRAME(gSpriteBank43Frame233, SPRITE_TILES_BANK43_FRAME233);
 
-/* The piece arrays, from games/n2/graphics/sprites/bank43_skull_hovercraft/bank.json. */
+/* The piece arrays, from games/n2/graphics/sprites/bank43_evil_coco/bank.json. */
 #include "sprites/bank43_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
@@ -5771,7 +5771,7 @@ const struct sprite_frame_1box_anchor gSpriteBank44Frame189 = {
 #include "sprites/bank44_pieces.inc"
 
 /* ---------------------------------------------------------------------- */
-/* Bank 45: 20 animations, 163 frames, games/n2/graphics/sprites/bank45_n_gin/. */
+/* Bank 45: 20 animations, 163 frames, games/n2/graphics/sprites/bank45_n_tropy/. */
 
 extern const u16 gSpriteBank45Anim00Seq[10];
 extern const u16 gSpriteBank45Anim01Seq[8];
@@ -6729,7 +6729,7 @@ const struct sprite_frame_1box gSpriteBank45Frame162 = {
     { { -7, -30, 28, 66 } },
 };
 
-/* The piece arrays, from games/n2/graphics/sprites/bank45_n_gin/bank.json. */
+/* The piece arrays, from games/n2/graphics/sprites/bank45_n_tropy/bank.json. */
 #include "sprites/bank45_pieces.inc"
 
 /* ---------------------------------------------------------------------- */

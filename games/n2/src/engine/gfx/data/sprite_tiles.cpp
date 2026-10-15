@@ -229,12 +229,12 @@ extern const u8 gSpriteBank41Tiles[SPRITE_TILES_BANK41_SIZE] = {
 #include "sprites/bank41_tiles.inc"
 };
 
-/* Bank 42: games/n2/graphics/sprites/bank42_dingodile/. */
+/* Bank 42: games/n2/graphics/sprites/bank42_evil_crunch/. */
 extern const u8 gSpriteBank42Tiles[SPRITE_TILES_BANK42_SIZE] = {
 #include "sprites/bank42_tiles.inc"
 };
 
-/* Bank 43: games/n2/graphics/sprites/bank43_skull_hovercraft/. */
+/* Bank 43: games/n2/graphics/sprites/bank43_evil_coco/. */
 extern const u8 gSpriteBank43Tiles[SPRITE_TILES_BANK43_SIZE] = {
 #include "sprites/bank43_tiles.inc"
 };
@@ -244,7 +244,7 @@ extern const u8 gSpriteBank44Tiles[SPRITE_TILES_BANK44_SIZE] = {
 #include "sprites/bank44_tiles.inc"
 };
 
-/* Bank 45: games/n2/graphics/sprites/bank45_n_gin/. */
+/* Bank 45: games/n2/graphics/sprites/bank45_n_tropy/. */
 extern const u8 gSpriteBank45Tiles[SPRITE_TILES_BANK45_SIZE] = {
 #include "sprites/bank45_tiles.inc"
 };
