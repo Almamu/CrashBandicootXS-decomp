@@ -31,8 +31,10 @@ $(GRAPHICS_BUILDDIR)/%.gbapal: graphics/%.png tools/jasc_pal.py
 	@mkdir -p $(dir $@)
 	python3 tools/jasc_pal.py png-to-gba $< $@ --colors $(if $(filter $*,$(PALETTE_COLORS_16)),16,256)
 
-# The framed OBJ sprite sheets of the polar and jetpack families
-# (graphics/vehicles/<family>/sprite_sheet/): each subdirectory is one
+# The framed OBJ sprite sheets of the actor categories (the polar and
+# jetpack families' graphics/vehicles/<family>/sprite_sheet/, and any new
+# one a category names, docs/levels.md "Category sprite sheets"): each
+# subdirectory is one
 # distinct entity (one animation's worth of frame data - see
 # docs/graphics.md, "Re-splitting into one file per entity"), containing
 # one indexed PNG per frame, named so filename sort order matches original
@@ -42,17 +44,16 @@ $(GRAPHICS_BUILDDIR)/%.gbapal: graphics/%.png tools/jasc_pal.py
 # Explicit (non-pattern) rules, one per entity folder, so
 # editing/adding/removing a frame PNG is tracked like any other
 # prerequisite. The sheet's sheet.json lists the entities in the sheet's
-# order (FRAMED_ENTITIES_<family>, tools/framed_gfx.py order).
-FRAMED_SHEETS := polar jetpack
-FRAMED_NAME_polar := POLAR
-FRAMED_NAME_jetpack := JETPACK
-framed_dir = graphics/vehicles/$(1)/sprite_sheet
-$(foreach f,$(FRAMED_SHEETS),$(eval FRAMED_ENTITIES_$(f) := $(shell python3 tools/framed_gfx.py order $(call framed_dir,$(f)))))
+# order (FRAMED_ENTITIES_<sheet>, tools/framed_gfx.py order). The sheets
+# are graphics/manifest.json's framed_sheet entries, by their directory
+# under graphics/ (FRAMED_SHEETS, with each one's FRAMED_NAME_<sheet>,
+# graphics_manifest.mk).
+$(foreach s,$(FRAMED_SHEETS),$(eval FRAMED_ENTITIES_$(s) := $(shell python3 tools/framed_gfx.py order graphics/$(s))))
 
 define FRAMED_ENTITY_RULE
-$(GRAPHICS_BUILDDIR)/vehicles/$(1)/sprite_sheet/$(2).bin: $$(sort $$(wildcard graphics/vehicles/$(1)/sprite_sheet/$(2)/*.png)) tools/framed_gfx.py
+$(GRAPHICS_BUILDDIR)/$(1)/$(2).bin: $$(sort $$(wildcard graphics/$(1)/$(2)/*.png)) tools/framed_gfx.py
 	@mkdir -p $$(dir $$@)
-	python3 tools/framed_gfx.py to-bin-folder graphics/vehicles/$(1)/sprite_sheet/$(2) $$@
+	python3 tools/framed_gfx.py to-bin-folder graphics/$(1)/$(2) $$@
 endef
 
 # Split multi-record sprite sheets: each ROM asset below was originally one
@@ -60,18 +61,19 @@ endef
 # entity's converted bytes get concatenated back in the order of the
 # sheet's sheet.json before compression.
 define FRAMED_SHEET_RULE
-$(GRAPHICS_BUILDDIR)/vehicles/$(1)/sprite_sheet.bin: $(foreach e,$(FRAMED_ENTITIES_$(1)),$(GRAPHICS_BUILDDIR)/vehicles/$(1)/sprite_sheet/$(e).bin) graphics/vehicles/$(1)/sprite_sheet/sheet.json
+$(GRAPHICS_BUILDDIR)/$(1).bin: $(foreach e,$(FRAMED_ENTITIES_$(1)),$(GRAPHICS_BUILDDIR)/$(1)/$(e).bin) graphics/$(1)/sheet.json
 	@mkdir -p $$(dir $$@)
 	cat $$(filter %.bin,$$^) > $$@
 endef
 
-# The byte offset of every frame in a sheet (FRAMED_<FAMILY>_<ENTITY>_<NN>),
-# for the category families' pool_offset table_B arrays (data/levels/anim_tables/,
-# which levels.mk generates into polar_anim_family.cpp and jetpack_anim_family.cpp).
+# The byte offset of every frame in a sheet (FRAMED_<NAME>_<ENTITY>_<NN>),
+# for the animation tables' pool_offset table_B arrays (data/levels/anim_tables/,
+# which levels.mk generates into polar_anim_family.cpp and jetpack_anim_family.cpp,
+# and a new one into actor_categories.cpp).
 define FRAMED_HEADER_RULE
-$(GRAPHICS_BUILDDIR)/vehicles/$(1)/sprite_sheet_frames.h: $(sort $(wildcard graphics/vehicles/$(1)/sprite_sheet/*/*.png)) graphics/vehicles/$(1)/sprite_sheet/sheet.json tools/framed_gfx.py
+$(GRAPHICS_BUILDDIR)/$(1)_frames.h: $(sort $(wildcard graphics/$(1)/*/*.png)) graphics/$(1)/sheet.json tools/framed_gfx.py
 	@mkdir -p $$(dir $$@)
-	python3 tools/framed_gfx.py header graphics/vehicles/$(1)/sprite_sheet $$@ --name $(FRAMED_NAME_$(1))
+	python3 tools/framed_gfx.py header graphics/$(1) $$@ --name $(FRAMED_NAME_$(1))
 endef
 
 $(foreach sheet,$(FRAMED_SHEETS),\

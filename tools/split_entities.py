@@ -161,7 +161,7 @@ def folder_banks(sheet_rom_addr):
     the bank to draw a folder in instead of its first record's."""
     with open(MANIFEST) as f:
         for e in json.load(f)['assets']:
-            if e['kind'] == 'framed_sheet' and int(e['rom'], 16) == sheet_rom_addr:
+            if e['kind'] == 'framed_sheet' and 'rom' in e and int(e['rom'], 16) == sheet_rom_addr:
                 return e.get('folder_banks', {})
     raise SystemExit(f'{MANIFEST}: no framed_sheet entry at {hx(sheet_rom_addr)}')
 

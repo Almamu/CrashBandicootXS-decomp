@@ -215,18 +215,36 @@ after the ROM's 24 pictures, its bitmap right after it, where
 `ShowSlidePicture` reads it. A slide of `data/cutscenes.json` names it
 by its path ([data.md, "A new cutscene"](./data.md#a-new-cutscene)).
 
-**Category graphics.** A new `cell_anim`, `bg_picture` or
-`category_palette` (`CATEGORY_KINDS`) is no class and names no object:
-an actor category of `levels.json` that names it (its `"cell_anim"`,
-`"sky"` or `"palette"`) has `levels.py categories` define it, before
-`ActorCategory::descriptors` ([levels.md, "Category
-graphics"](./levels.md#category-graphics)). Its entry gives its build
-rules, as for the ROM's: `graphics_manifest.mk` lists the cell animations
-(`CELL_ANIMS`, with their frame counts and banks), the BG1 pictures
-(`BG_PICTURES`) and the OBJ palettes (`CATEGORY_PALETTES`, a JASC `.pal`
-of 256 colours, the only kind with no ROM entry: the ROM's three are C
-arrays). `check` checks it: no `class`, `object`, `palette` or `map`, and
-its kind's files and fields.
+**Category graphics.** A new `cell_anim`, `bg_picture`,
+`category_palette` or `framed_sheet` (`CATEGORY_KINDS`) is no class and
+names no object: an actor category of `levels.json` that names it (its
+`"cell_anim"`, `"sky"`, `"palette"` or `"sprite_sheet"`) has `levels.py
+categories` define it, before `ActorCategory::descriptors` ([levels.md,
+"Category graphics"](./levels.md#category-graphics)). Its entry gives its
+build rules, as for the ROM's: `graphics_manifest.mk` lists the cell
+animations (`CELL_ANIMS`, with their frame counts and banks), the BG1
+pictures (`BG_PICTURES`), the OBJ palettes (`CATEGORY_PALETTES`, a JASC
+`.pal` of 256 colours, the only kind with no ROM entry: the ROM's three
+are C arrays) and the framed sprite sheets (`FRAMED_SHEETS`, by their
+directory, with each one's `FRAMED_NAME_<sheet>`, its `"prefix"`). `check`
+checks it: no `class`, `object`, `palette` or `map`, and its kind's files
+and fields.
+
+A new framed sheet is a directory like the ROM's two
+(`graphics/vehicles/<family>/sprite_sheet/`): one folder of frame PNGs
+per entity and a `sheet.json` listing the folders in the sheet's order
+(see "The framed sheets' folders and colours"), with its own `"prefix"`,
+which names its frames' offsets (`FRAMED_<prefix>_<FOLDER>_<NN>`, in
+`<sheet>_frames.h`):
+
+```json
+{"path": "vehicles/jetpack/sprite_sheet_red/", "kind": "framed_sheet", "symbol": "gJetpackRedSpriteSheet", "prefix": "JETPACK_RED"}
+```
+
+Every framed sheet has a `"prefix"` (the ROM's are `POLAR` and
+`JETPACK`), and no two the same. A category names it as its
+`"sprite_sheet"` ([levels.md, "Category sprite
+sheets"](./levels.md#category-sprite-sheets)).
 
 ### Graphics classes
 
@@ -1535,7 +1553,7 @@ ends in the shared `19_crate_shards/`, the jetpack rocket is
 and the folders are just the names (`question_crate/`, `rocket/`): the
 order of the `"folders"` list in the sheet's `sheet.json` is the sheet's
 byte order, which is also the build's pack order (`tools/framed_gfx.py
-order`, graphics.mk's `FRAMED_ENTITIES_<family>`), so the ROM doesn't
+order`, graphics.mk's `FRAMED_ENTITIES_<sheet>`), so the ROM doesn't
 change. The `FRAMED_POLAR_<FOLDER>_<NN>` and `FRAMED_JETPACK_...` names
 in the animation tables (`data/levels/anim_tables/`, where a frame is
 `"<folder>/<NN>"`, docs/levels.md "Animation tables") follow the folders'
