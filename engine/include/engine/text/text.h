@@ -31,12 +31,15 @@ extern Engine::Text::Font *gSmallFont;
 extern Engine::Text::Font *gLargeFont;
 #endif
 
+#ifndef GAME_N2
 /* The two fonts' character sets and glyph metrics
- * (engine/src/game/ui/data/hud_font_tables.cpp) and tile data (games/xs/data/data.s). */
+ * (engine/src/game/ui/data/hud_font_tables.cpp) and tile data (games/xs/data/data.s).
+ * N-Tranced's are its own (games/n2/src/engine/text/data/font_tables.cpp). */
 extern const u8 gSmallFontChars[];
 extern const struct icon_glyph_metrics gSmallFontGlyphs[79];
 extern const u8 gLargeFontChars[];
 extern const struct icon_glyph_metrics gLargeFontGlyphs[75];
+#endif
 
 /* engine/src/engine/text/text_box.cpp and engine/src/engine/text/wrapped_text.cpp (C linkage). Their
  * callers are all C++. */

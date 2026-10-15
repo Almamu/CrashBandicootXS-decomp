@@ -78,6 +78,10 @@ from crashdata.common.game import ROOT
 TEXT_DIR = os.path.join(ROOT, "games", "xs", "text")
 POT = os.path.join(TEXT_DIR, "crashxs.pot")
 FONTS_SRC = os.path.join(ROOT, "engine", "src", "game", "ui", "data", "hud_font_tables.cpp")
+# Bytes of the text that are codes, not characters (none in XS's)
+TEXT_CODES = b""
+# The UI texts drawn by a font other than the two (none in XS's)
+OTHER_FONT_KEYS = set()
 LEVELS_JSON = os.path.join(ROOT, "games", "xs", "data", "levels", "levels.json")
 GRAPHICS_MANIFEST = os.path.join(ROOT, "games", "xs", "graphics", "manifest.json")
 CREDITS_JSON = os.path.join(ROOT, "games", "xs", "data", "credits.json")
@@ -195,6 +199,12 @@ def po_quote(s):
 # --- The font -------------------------------------------------------------
 
 def read_c_string(src, name):
+    """A char array's bytes: a string literal, or a list of characters and
+    numbers (N-Tranced's, whose last is its 0)."""
+    m = re.search(re.escape(name) + r"\[\d*\]\s*=\s*\{(.*?)\};", src, re.S)
+    if m:
+        items = re.findall(r"'(\\.|[^'])'|(0x[0-9A-Fa-f]+|\d+)", m.group(1))
+        return bytes(ord(c[-1]) if c else int(n, 0) for c, n in items).rstrip(b"\0")
     m = re.search(re.escape(name) + r'\[\]\s*=\s*((?:"(?:[^"\\]|\\.)*"\s*)+);', src)
     if not m:
         fail("%s: no %s" % (FONTS_SRC, name))
@@ -220,7 +230,7 @@ class Font:
         self.space = space
 
     def missing(self, data):
-        return sorted(set(b for b in data if b not in self.chars and b not in b" \n"))
+        return sorted(set(b for b in data if b not in self.chars and b not in b" \n" + TEXT_CODES))
 
     def width(self, data):
         """Font::MeasureText: the widest line's advance."""
@@ -230,6 +240,8 @@ class Font:
                 cur += self.space
             elif b == 0x0A:
                 best, cur = max(best, cur), 0
+            elif b in TEXT_CODES:
+                pass  # no glyph, no space
             else:
                 i = self.chars.index(b) if b in self.chars else 0
                 cur += self.widths[i]
@@ -237,8 +249,6 @@ class Font:
 
 
 def fonts():
-    if GAME != "xs":
-        return None, None  # its font isn't known yet: no font checks
     with open(FONTS_SRC, encoding="latin-1") as f:
         src = f.read()
     return (Font(src, "gSmallFontChars", "gSmallFontGlyphs", 4),
@@ -409,7 +419,9 @@ def ui_table(ui, tr, small, large):
         lines, symbols = [], []
         for i, e in enumerate(ui):
             text = from_po(e["id"] if code == "en" else translate(tr[code], code, e))
-            data = encode(text, "%s (%s)" % (e["ctx"], code), small, large, large_font(e["ctx"]))
+            # a text another font draws isn't checked against these
+            fs = (None, None) if e["ctx"] in OTHER_FONT_KEYS else (small, large)
+            data = encode(text, "%s (%s)" % (e["ctx"], code), *fs, large_font(e["ctx"]))
             symbols.append(strings.use(data, "gUiText%s%02d" % (lang, i), lines))
         out += lines + [""] + pointer_array("gUiText" + lang, symbols) + [""]
     return out
@@ -1007,10 +1019,19 @@ N2_POT_HEADER = """\
 def use_game(game):
     """Work on `game`'s text: XS's, or N-Tranced's (n2); a
     crashdata.common.game.Game or its name."""
-    global GAME, GAME_TITLE, PROJECT, TEXT_DIR, POT, TABLES, UI_TABLES, UI_ROM_COUNT
+    global GAME, GAME_TITLE, PROJECT, TEXT_DIR, POT, TABLES, UI_TABLES, UI_ROM_COUNT, FONTS_SRC, TEXT_CODES
+    global OTHER_FONT_KEYS
     game = getattr(game, "name", game)
     if game == "n2":
         GAME, GAME_TITLE, PROJECT = "n2", "Crash Bandicoot 2: N-Tranced", "ntranced"
+        # its fonts' tables, and its text's codes 1-3 (the glyphs' palette,
+        # its Font::DrawText)
+        FONTS_SRC = os.path.join(ROOT, "games", "n2", "src", "engine", "text", "data", "font_tables.cpp")
+        TEXT_CODES = b"\x01\x02\x03"
+        # the atlasphere's texts (its pause menu, its hints): capitals
+        # and <#>/<$> neither font has, so another font draws them (its
+        # 3D levels' own, not known yet)
+        OTHER_FONT_KEYS = {"ui.text.%d" % i for i in range(191, 196)}
         TEXT_DIR = os.path.join(ROOT, "games", "n2", "text")
         POT = os.path.join(TEXT_DIR, "ntranced.pot")
         TABLES = ["ui_text"]

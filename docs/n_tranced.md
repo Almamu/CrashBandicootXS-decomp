@@ -518,15 +518,29 @@ python3 tools/text.py --game n2 extract --check
 | What | Where (ROM) | Source |
 |---|---|---|
 | The UI text: per language its strings, then its 196 pointers (`gUiText<Lang>`) | `0x081D1C8C`-`0x081DEA40` | `games/n2/src/game/ui/data/ui_text.cpp` |
+| The two fonts' characters, descriptors and glyph records, and the glyphs' palettes | `0x081DEC60`-`0x081DF520` | `games/n2/src/engine/text/data/font_tables.cpp` |
 
 Its 196 texts (XS has 70) are keyed `ui.level.<level>` for the 29 level
 names (each level's `name_text`, `levels.json`'s `"level_names"`) and
 `ui.text.<id>` for the others, until they have names. A text's final
 newline is written `␤` (U+2424) in these files: the ROM's French,
 German and Spanish texts 36 and 37 end in a newline their English doesn't,
-or the other way round, which `msgfmt` rejects. N-Tranced's font isn't
-known yet, so the font checks are XS's only. Its cutscenes' and dialogues'
-text is still to do.
+or the other way round, which `msgfmt` rejects.
+
+The font checks are XS's, against N-Tranced's two fonts
+([`font_tables.cpp`](../games/n2/src/engine/text/data/font_tables.cpp), what its
+`Font` is built from: "Struct layouts"). Its text's codes 1-3, which set
+the glyphs' palette, aren't characters. Texts 191-195 aren't checked:
+they are the atlasphere's (its pause menu's "Resume", "Exit", "Paused"
+and its hints, with `<#>` and `<$>`), in capitals neither font has, so
+another font draws them, not known yet. The fonts' tiles
+(`gSmallFontTiles`, `gLargeFontTiles`) are still the ROM's.
+
+Apart from the UI text, the ROM has no text for cutscenes or dialogues:
+the only other English is a list of character names (Crash, Crunch,
+Coco, Fake Crash, N. Trance, N. Tropy, N. Cortex, Dingodile, Tiny,
+N. Gin, Megamix) at `0x086D7D1C`, at the start of the 1 MB block its own
+code loads (`0x086D80EC`, not identified yet).
 
 ## Progress
 

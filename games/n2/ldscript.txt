@@ -102,6 +102,8 @@ SECTIONS
 		build/ntranced/games/n2/data/data_081D153C.o(.rodata);
 		build/ntranced/src/game/ui/data/ui_text.o(.rodata);
 		build/ntranced/games/n2/data/data_081DEA40.o(.rodata);
+		build/ntranced/src/engine/text/data/font_tables.o(.rodata);
+		build/ntranced/games/n2/data/data_081DF520.o(.rodata);
 		build/ntranced/src/game/level/data/level_rooms_0.o(.rodata);
 		build/ntranced/src/game/level/data/level_bg0_tiles_0.o(.rodata);
 		build/ntranced/src/game/level/data/level_rooms_1.o(.rodata);

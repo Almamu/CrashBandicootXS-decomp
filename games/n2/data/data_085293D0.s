@@ -7,7 +7,14 @@
 
 	.balign 4
 
-	.incbin "baserom_n2.gba", 0x5293D0, 0x3A08
+
+	.global gSmallFontTiles
+gSmallFontTiles:
+	.incbin "baserom_n2.gba", 0x5293D0, 0x1440
+
+	.global gLargeFontTiles
+gLargeFontTiles:
+	.incbin "baserom_n2.gba", 0x52A810, 0x25C8
 
 	.global gUnknown_0852CDD8
 gUnknown_0852CDD8:
