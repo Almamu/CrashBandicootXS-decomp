@@ -400,6 +400,8 @@ Everything is generated from editable sources, never read from
   editable in any XM tracker; and a new song's optional settings,
   `sound/songs/<key>.json` (see "Adding a song").
 - `sound/samples/*.wav` — one sample per instrument sample slot.
+- `sound/music.json` — `screen_music`, the song each screen plays (see
+  "Which song plays where").
 - `sound/gax_sfx_manifest.json` — the sound-effect set: its 88 instruments
   (the same fields as the music's), the voice type's song-header fields,
   and `voice_types`, the length of the `sfxTypes` array (9).
@@ -492,8 +494,10 @@ byte. A song that isn't in `songs` has no ROM history, and
    `SONG_<KEY>` (`constants/songs.h`), and `gSongTable` gets its entry
    (`song_table.inc`). At the end, the ROM's ids stay as they are;
    `SONG_COUNT` and `SONG_NONE` grow by one.
-4. **Use it**: a level theme's `"song"` (`data/levels/levels.json`,
-   [levels.md, "Adding a theme"](./levels.md#adding-a-theme)) names it.
+4. **Use it**: name it where a song is chosen (see "Which song plays
+   where"): a level theme's `"song"` (`data/levels/levels.json`,
+   [levels.md, "Adding a theme"](./levels.md#adding-a-theme)) or a
+   screen's (`sound/music.json`).
 5. **Run `make`.** The song is linked after the ROM's songs, before the
    default song, so the music block grows and everything after it moves
    ([shifting.md](./shifting.md)).
@@ -531,6 +535,51 @@ captured output (the 8-bit buffer each `GAX_play` mixed, at 15769 Hz) is
 not silent, and the two order positions that play XM pattern 1 (1 and 3)
 give the same samples (correlation 1.000), while positions 1 and 2 don't
 (0.348).
+
+## Which song plays where
+
+Every song the game picks is named in data, by its `song_table` name:
+
+| what | where | data |
+|---|---|---|
+| a level's music | `PlayRoomMusic` plays `gThemeMusicCues[theme]` | the level theme's `"song"`, `data/levels/levels.json` ([levels.md, "Themes"](./levels.md#themes)) |
+| the screens' music, the bonus rooms' and the invincibility drums | `SCREEN_SONG_<SCREEN>` (`constants/songs.h`) where the code plays it | `sound/music.json`'s `screen_music` |
+| a cutscene slide's | the slide's song | the cutscene data (#1092) |
+
+`sound/music.json`'s `screen_music` has one entry per place the code
+plays a fixed song: `{"screen": "title", "song": "main_menu_europe",
+"comment": "..."}`. `tools/gax_audio.py --constants` writes each as
+`#define SCREEN_SONG_<SCREEN> SONG_<KEY>` into `constants/songs.h`, after
+the song ids, and stops when a song isn't one of `song_table`'s. With
+the ROM's songs they are:
+
+| `SCREEN_SONG_` | song | played by |
+|---|---|---|
+| `TITLE` | `main_menu_europe` | the title screen (`TitleScreen::TitleScreen`, `StartSong`) |
+| `TITLE_CHEAT` | `main_menu_japan` | the title screen's R-button cheat (`TitleScreen::CheatInput`) |
+| `LEVEL_SELECT` | `warp_room` | the level select (`LevelSelect::Run`) |
+| `SAVE_MENU` | `warp_room` | the save menu (`SaveMenu::SaveMenu`) |
+| `POWER_DIALOG` | `intro` | a new power's dialog (`PowerDialog::PowerDialog`) |
+| `CREDITS` | `credits` | the credits (`Credits::Credits`) |
+| `INVINCIBLE` | `drums` | the invincibility mask (`SetMaskLevel`'s `StartSong`, `PlayRoomMusic`) |
+| `BONUS_ROOM` | `bonus_round` | a bonus room (`PlayRoomMusic`) |
+
+To swap a screen's song, name another song there (one of the ROM's or a
+new one) and run `make`: the code is the same, with another song id. Each
+id is an immediate under 0x100 (`mov r1, #id`), so the code doesn't
+change size. `song_table`'s comments say where the ROM plays each song;
+they describe the ROM's choices, not what the data picks.
+
+A tool that writes song ids from data (a theme's, a cutscene's) checks
+the name against `tools/gax_audio.py`'s `song_keys()`, the names in song
+id order, and writes `SONG_<KEY>` (the name in upper case), as
+`levels.py`'s themes do.
+
+Tested in scratch with plain `make`, with the new song of "Adding a song":
+`screen_music`'s `title` set to `test_tune` and `level_select` to
+`credits`. In mGBA the title screen starts song 0x13 (`StartSong(0x13)`,
+`GAX2_init` on `gSongTable[19]`) and the level select plays 0x11
+(`SONG_CREDITS`, `gSongTable[17]`).
 
 ## Tooling used during reverse-engineering (not part of the build)
 

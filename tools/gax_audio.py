@@ -50,7 +50,8 @@ The song IDs (the gSongTable index) come from the manifest's `song_table`
 list, in table order, each with a comment on where the game plays it, and
 `no_song_comment` documents SONG_NONE (one past the table).
 `--constants SONGS.h` writes them as the SONG_* #defines of
-constants/songs.h (build/include), and `--table SONG_TABLE.inc` gSongTable
+constants/songs.h (build/include), with the song each screen plays
+(sound/music.json's screen_music) as SCREEN_SONG_<SCREEN>, and `--table SONG_TABLE.inc` gSongTable
 in the same order (the song table song_table.cpp #includes); both read only
 the manifest.
 
@@ -998,8 +999,33 @@ def check_song_table(manifest, manifest_path):
             sys.exit(f"{rel}: song_table's {k} is neither a song of the ROM nor sound/songs/{k}.xm")
 
 
+def song_keys(manifest_path=None):
+    """The songs' names in song id order (SONG_<KEY>, constants/songs.h):
+    what data that names a song by name (a level theme's "song", a
+    screen's, a cutscene's) checks the name against."""
+    manifest = json.load(open(manifest_path or os.path.join(SOUND_DIR, 'gax_manifest.json')))
+    return [t['song'] for t in manifest['song_table']]
+
+
+def screen_songs(music_path, keys):
+    """sound/music.json's screen_music: (SCREEN_SONG_<SCREEN>, its song's
+    SONG_<KEY>, comment) for each screen, in the file's order."""
+    rel = os.path.relpath(music_path, ROOT)
+    out = []
+    for s in json.load(open(music_path))['screen_music']:
+        name = 'SCREEN_SONG_' + s['screen'].upper()
+        if any(n == name for n, _, _ in out):
+            sys.exit(f"{rel}: screen_music lists {s['screen']} more than once")
+        if s['song'] not in keys:
+            sys.exit(f"{rel}: {s['screen']}'s \"song\" {s['song']} isn't a song of the manifest's "
+                     f"song_table ({', '.join(keys)})")
+        out.append((name, 'SONG_' + s['song'].upper(), s['comment']))
+    return out
+
+
 def write_constants(manifest_path, path):
-    """constants/songs.h: SONG_<KEY> for each song, in gSongTable order."""
+    """constants/songs.h: SONG_<KEY> for each song, in gSongTable order,
+    and SCREEN_SONG_<SCREEN>, the song each screen plays (music.json)."""
     manifest = json.load(open(manifest_path))
     check_song_table(manifest, manifest_path)
     table = manifest['song_table']
@@ -1028,6 +1054,16 @@ def write_constants(manifest_path, path):
         '',
         f'#define SONG_COUNT {len(table)}',
         f'#define SONG_NONE {len(table):#x} // {manifest["no_song_comment"]}',
+        '',
+        '/*',
+        f' * The song each screen plays, from {os.path.relpath(MUSIC_JSON, ROOT)}\'s screen_music.',
+        ' */',
+        '',
+    ]
+    screens = screen_songs(MUSIC_JSON, [t['song'] for t in table])
+    width = max(len(n) + len(v) for n, v, _ in screens)
+    out += [f'#define {n} {v}{" " * (width - len(n) - len(v) + 1)}// {c}' for n, v, c in screens]
+    out += [
         '',
         '#endif /* GUARD_CONSTANTS_SONGS_H */',
         '',
@@ -1241,6 +1277,7 @@ def asm_path(bin_path):
 
 
 SFX_MANIFEST = os.path.join(SOUND_DIR, 'gax_sfx_manifest.json')
+MUSIC_JSON = os.path.join(SOUND_DIR, 'music.json')
 SFX_SAMPLES_DIR = os.path.join(SOUND_DIR, 'sfx_samples')
 
 if __name__ == '__main__':

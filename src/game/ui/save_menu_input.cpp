@@ -106,7 +106,7 @@ SaveMenu::SaveMenu()
     gPaletteCache->FreeUnlockedSlots();
     InitIcons();
     LoadBg();
-    gAudioContext->PlaySong(SONG_WARP_ROOM);
+    gAudioContext->PlaySong(SCREEN_SONG_SAVE_MENU);
     LoadData();
     SummarizeProgress(&currentStats, gLevelState->PackSaveData());
     RefreshSlotSummaries(*cartSaveAddr);

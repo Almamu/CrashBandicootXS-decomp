@@ -265,7 +265,7 @@ public:
     // `crateTotal` awards the crate gem (LEVEL_FLAG_CRATE_GEM)
     s32 crateCount;
     s32 lives;     // 0x074 - 5 at the start (ResetLives), capped at 99
-    s32 maskLevel; // 0x078 - MASK_LEVEL_*; invincible plays SONG_DRUMS (SetMaskLevel)
+    s32 maskLevel; // 0x078 - MASK_LEVEL_*; invincible plays SCREEN_SONG_INVINCIBLE (SetMaskLevel)
     s32 deaths;    // 0x07C - maskless hits since the last checkpoint (AddDeath, ResetDeaths)
     // 0x080 - 5 at game start (UpdateGameFrame); SetUnusedAssistDeaths/
     // GetUnusedAssistDeaths, but nothing reads it

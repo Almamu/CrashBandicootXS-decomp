@@ -1,0 +1,12 @@
+{
+  "screen_music": [
+    {"screen": "title", "song": "main_menu_europe", "comment": "the title screen (TitleScreen::TitleScreen, StartSong)"},
+    {"screen": "title_cheat", "song": "main_menu_japan", "comment": "the title screen's R-button cheat (TitleScreen::CheatInput)"},
+    {"screen": "level_select", "song": "warp_room", "comment": "the level select (LevelSelect::Run)"},
+    {"screen": "save_menu", "song": "warp_room", "comment": "the save menu (SaveMenu::SaveMenu)"},
+    {"screen": "power_dialog", "song": "intro", "comment": "a new power's dialog (PowerDialog::PowerDialog)"},
+    {"screen": "credits", "song": "credits", "comment": "the credits (Credits::Credits)"},
+    {"screen": "invincible", "song": "drums", "comment": "the invincibility mask, maskLevel MASK_LEVEL_INVINCIBLE (SetMaskLevel, StartSong; PlayRoomMusic)"},
+    {"screen": "bonus_room", "song": "bonus_round", "comment": "a bonus room (PlayRoomMusic, IsInBonusRoom)"}
+  ]
+}

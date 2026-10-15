@@ -103,7 +103,7 @@ PowerDialog::PowerDialog(const u8 *titleText, const u8 *descText, s32 type) : bg
     icon->palette = icon->GetAnimPaletteSlot();
     REG_BG0CNT = bg.GetControl();
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
-    gAudioContext->PlaySong(SONG_INTRO);
+    gAudioContext->PlaySong(SCREEN_SONG_POWER_DIALOG);
 }
 
 /* PowerDialog::Loop (C++ since the #664 cleanup; power_dialog_loop.cpp
