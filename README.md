@@ -264,6 +264,18 @@ know it going in.
 The [Kirby & The Amazing Mirror](https://github.com/jiangzhengwenjz/katam/)
 decompilation is of a game on a very similar codebase.
 
+## License
+
+This repository's source code, tools and documentation are licensed under
+the [GNU General Public License v3.0](./LICENSE).
+
+That covers this project's own work. It doesn't grant any rights to
+Crash Bandicoot XS itself: its characters, art, music and text, including
+the assets extracted into this repository (`graphics/`, `sound/`, `text/`,
+`data/levels/`), belong to their owners. The libraries in [`lib/`](./lib/) (Shin'en's GAX2 sound engine,
+Nintendo's AgbEeprom library, libgcc) are reconstructions of third-party
+code and keep their authors' terms; see [docs/libraries.md](./docs/libraries.md).
+
 ## Credits
 
 - [@normmatt](https://github.com/normmatt) for the initial repository setup he did for the [Sonic Advance 2](https://github.com/SAT-R/sa2) decompilation
