@@ -43,6 +43,9 @@ the desktop app's pages (tauri://localhost, http(s)://tauri.localhost)
 may call it.
 """
 import argparse
+import base64
+import contextlib
+import gzip
 import hashlib
 import http.server
 import json
@@ -51,6 +54,7 @@ import os
 import re
 import secrets
 import shutil
+import struct
 import subprocess
 import sys
 import threading
@@ -60,6 +64,8 @@ import webbrowser
 from pathlib import Path
 
 from crashdata import editing, schemas
+from crashdata import levels as L
+from crashdata.levels import room_edit
 from crashdata.common import diagnostics as D
 from crashdata.common import jsonfmt
 from crashdata.common.game import GAMES, ROOT, Game
@@ -68,7 +74,11 @@ API_VERSION = 1
 DEFAULT_PORT = 8765
 DESKTOP_ORIGINS = ("tauri://localhost", "http://tauri.localhost", "https://tauri.localhost")
 CHECK_TIMEOUT = 600
+SCHEMA_REJECTS = "the schema rejects it"
 PREVIEW_TIMEOUT = 3600
+# crashdata.levels binds its game in module state (levels.use_game): one
+# request at a time works on it
+LEVELS_LOCK = threading.Lock()
 
 
 class HttpError(Exception):
@@ -122,6 +132,7 @@ class Server:
         self.origins = DESKTOP_ORIGINS + tuple(origins)
         self.python = python
         self.projects = {}
+        self.tile_cache = {}  # (project, tile set): (fingerprint, {(room, layer): the answer})
         for name, title in GAMES.items():
             self.projects[name] = Project(name, "game", name, self.tree, title)
         mods = self.tree / "mods"
@@ -226,8 +237,12 @@ class Server:
         return report
 
     def fingerprint(self, project):
+        """The data files' and the rooms' pictures' sizes and times: the
+        model's checks are run again when it changes."""
         h = hashlib.sha1()
-        for p, _ in schemas.files(Game(project.game, project.root), project.root):
+        game = Game(project.game, project.root)
+        files = [p for p, _ in schemas.files(game, project.root)] + sorted(game.levels_dir.glob("*/*/*.png"))
+        for p in files:
             st = p.stat()
             h.update(("%s %d %d\n" % (p, st.st_mtime_ns, st.st_size)).encode())
         return h.hexdigest()
@@ -244,53 +259,87 @@ class Server:
         if not isinstance(items, list) or not items:
             raise HttpError(400, "nothing to save")
         with project.lock:
-            plan, diags = [], []
-            for rel, value in items:
-                p, schema = self.resolve(project, rel)
-                old = p.read_bytes() if p.is_file() else None
-                old_text = old.decode("utf-8") if old is not None else None
-                text = editing.render(p, value, old_text, schema)
-                if not jsonfmt.same(json.loads(text), value):
-                    raise HttpError(500, "%s: the writer didn't give back the value" % rel)
-                if old_text == text:
-                    continue
-                if not p.parent.is_dir():
-                    raise HttpError(400, "%s: its directory doesn't exist" % rel)
-                tmp = p.with_name(".%s.editor-%s.tmp" % (p.name, secrets.token_hex(4)))
-                tmp.write_text(text, encoding="utf-8")
-                try:
-                    schemas.load(tmp, schema)
-                except D.DataError as e:
-                    tmp.unlink()
-                    diags += _diags(e.diagnostics, rel)
-                    continue
-                plan.append((rel, p, tmp, old))
-            if diags:
-                for _, _, tmp, _ in plan:
-                    tmp.unlink()
-                raise HttpError(422, "the schema rejects it", diags)
-            if not plan:
-                return {"ok": True, "saved": [], "diagnostics": []}
+            staged, diags = [], []
             try:
-                before = self.baseline(project)
+                for rel, value in items:
+                    try:
+                        staged.append(self._stage_json(project, rel, value))
+                    except HttpError as e:
+                        if e.message != SCHEMA_REJECTS:
+                            raise
+                        diags += e.diagnostics
+                if diags:
+                    raise HttpError(422, SCHEMA_REJECTS, diags)
             except BaseException:
-                for _, _, tmp, _ in plan:
-                    tmp.unlink()
+                self._unstage(staged)
                 raise
-            for _, p, tmp, _ in plan:
-                os.replace(tmp, p)
-            try:
-                after = self.model_check(project)["diagnostics"]
-            except BaseException:
-                self._restore(plan)
-                raise
-            seen = {_key(d) for d in before}
-            new = [d for d in after if d["severity"] == D.ERROR and _key(d) not in seen]
-            if new:
-                self._restore(plan)
-                raise HttpError(422, "the model's checks reject it", new)
-            project.baseline = (self.fingerprint(project), after)
-            return {"ok": True, "saved": [rel for rel, _, _, _ in plan], "diagnostics": after}
+            return self._commit(project, staged)
+
+    def _stage_json(self, project, rel, value):
+        """A data file's new text in a temporary file next to it, checked
+        against its schema: (rel, path, tmp, old bytes), or None when it
+        would be the same text."""
+        p, schema = self.resolve(project, rel)
+        old = p.read_bytes() if p.is_file() else None
+        old_text = old.decode("utf-8") if old is not None else None
+        text = editing.render(p, value, old_text, schema)
+        if not jsonfmt.same(json.loads(text), value):
+            raise HttpError(500, "%s: the writer didn't give back the value" % rel)
+        if old_text == text:
+            return None
+        if not p.parent.is_dir():
+            raise HttpError(400, "%s: its directory doesn't exist" % rel)
+        tmp = p.with_name(".%s.editor-%s.tmp" % (p.name, secrets.token_hex(4)))
+        tmp.write_text(text, encoding="utf-8")
+        try:
+            schemas.load(tmp, schema)
+        except D.DataError as e:
+            tmp.unlink()
+            raise HttpError(422, SCHEMA_REJECTS, _diags(e.diagnostics, rel))
+        return (rel, p, tmp, old)
+
+    @staticmethod
+    def _stage_bytes(rel, p, data):
+        """Another file's new bytes (a room's picture), staged the same way;
+        None when they are its bytes."""
+        old = p.read_bytes() if p.is_file() else None
+        if old == data:
+            return None
+        tmp = p.with_name(".%s.editor-%s.tmp" % (p.name, secrets.token_hex(4)))
+        tmp.write_bytes(data)
+        return (rel, p, tmp, old)
+
+    @staticmethod
+    def _unstage(staged):
+        for item in staged:
+            if item is not None:
+                item[2].unlink(missing_ok=True)
+
+    def _commit(self, project, staged):
+        """Put the staged files in place and run the model's checks: an error
+        that wasn't there before puts every file back. Under project.lock."""
+        plan = [x for x in staged if x is not None]
+        if not plan:
+            return {"ok": True, "saved": [], "diagnostics": []}
+        try:
+            before = self.baseline(project)
+        except BaseException:
+            self._unstage(plan)
+            raise
+        for _, p, tmp, _ in plan:
+            os.replace(tmp, p)
+        try:
+            after = self.model_check(project)["diagnostics"]
+        except BaseException:
+            self._restore(plan)
+            raise
+        seen = {_key(d) for d in before}
+        new = [d for d in after if d["severity"] == D.ERROR and _key(d) not in seen]
+        if new:
+            self._restore(plan)
+            raise HttpError(422, "the model's checks reject it", new)
+        project.baseline = (self.fingerprint(project), after)
+        return {"ok": True, "saved": [rel for rel, _, _, _ in plan], "diagnostics": after}
 
     @staticmethod
     def _restore(plan):
@@ -351,6 +400,165 @@ class Server:
         return {"ok": True, "started": True, "pid": proc.pid, "command": cmd[1:],
                 "log": _shown(log, project.root)}
 
+    # -- the level editor: rooms ---------------------------------------------
+
+    @contextlib.contextmanager
+    def levels(self, project):
+        """crashdata.levels bound to the project's game (module state, so one
+        request at a time); its errors are 422s."""
+        with LEVELS_LOCK:
+            L.use_game(Game(project.game, project.root))
+            try:
+                yield
+            except room_edit.EditError as e:
+                raise HttpError(422, str(e))
+            except D.DataError as e:
+                raise HttpError(422, str(e), _diags(e.diagnostics, None))
+            except SystemExit as e:
+                raise HttpError(422, str(e.code if e.code is not None else e))
+
+    def room_dir(self, project, rel):
+        """A room's folder (games/<game>/data/levels/<level>/<slot>): its path,
+        its key (<level>/<slot>)."""
+        rel = (rel or "").rstrip("/")
+        p, schema = self.resolve(project, rel + "/room.json")
+        if schema != "room.schema.json":
+            raise HttpError(400, "%s isn't a room's folder (games/%s/data/levels/<level>/<slot>)" % (rel, project.game))
+        if not p.is_file():
+            raise HttpError(404, "%s: no room.json" % rel)
+        return p.parent, p.parent.relative_to(Game(project.game, project.root).levels_dir.resolve()).as_posix()
+
+    def room_layer(self, project, d, lname):
+        room = D.read_json(d / "room.json")
+        layer = (room.get("layers") or {}).get(lname)
+        if not isinstance(layer, dict):
+            raise HttpError(404, "the room has no layer %r" % lname)
+        p = (d / layer["map"]).resolve()
+        if not p.is_relative_to(d.resolve()) or not p.is_file():
+            raise HttpError(404, "%s: the layer's picture %s isn't in the room's folder" % (lname, layer["map"]))
+        return room, p, room_edit.layer_info(room)[lname]
+
+    def room(self, project, rel):
+        d, _ = self.room_dir(project, rel)
+        game = Game(project.game, project.root)
+        with self.levels(project):
+            view = room_edit.room_view(d, project.game, game.graphics_dir)
+        view["path"] = rel.rstrip("/")
+        return view
+
+    def room_layer_data(self, project, rel, lname):
+        """A layer's picture's indices (BG) or cells (collision): 8 bytes of
+        width and height (u32 LE), then a byte per pixel or a u16 per cell."""
+        d, _ = self.room_dir(project, rel)
+        with self.levels(project):
+            _, p, info = self.room_layer(project, d, lname)
+            if lname == "collision":
+                w, h, data = room_edit.collision_cells(p)
+            else:
+                w, h, data = room_edit.layer_pixels(p, info)
+        return struct.pack("<II", w, h) + data
+
+    def room_tiles(self, project, rel, lname):
+        """The tile set a BG layer names (the build's, from its rooms'
+        pictures) and the layer's cells in it; cached until a room's data
+        changes."""
+        d, key = self.room_dir(project, rel)
+        with self.levels(project):
+            _, _, info = self.room_layer(project, d, lname)
+            if info["tileset"] is None:
+                raise HttpError(400, "%s has no tile set" % lname)
+            fp = self.fingerprint(project)
+            cache = self.tile_cache.get((project.id, info["tileset"]))
+            if cache is None or cache[0] != fp:
+                cache = (fp, {})
+                self.tile_cache[(project.id, info["tileset"])] = cache
+            if (key, lname) not in cache[1]:
+                bpp, tiles, banks, cells = room_edit.tileset(info["tileset"], key, lname)
+                cache[1][(key, lname)] = {
+                    "tileset": info["tileset"], "bpp": bpp, "count": len(tiles) // 64,
+                    "tiles": base64.b64encode(tiles).decode("ascii"), "banks": banks,
+                    "cells": base64.b64encode(cells).decode("ascii")}
+            return cache[1][(key, lname)]
+
+    def sprite(self, project, bank, frame, palette=None):
+        """A sprite bank's frame, index 0 transparent (in OBJ palette
+        `palette`, else its own): PNG bytes."""
+        try:
+            bank, frame = int(bank), int(frame)
+            palette = int(palette) if palette not in (None, "") else None
+        except (TypeError, ValueError):
+            raise HttpError(400, "bank, frame and palette are numbers")
+        game = Game(project.game, project.root)
+        banks = room_edit.sprite_banks(game.graphics_dir)
+        if bank not in banks or not (banks[bank] / ("f%03d.png" % frame)).is_file():
+            raise HttpError(404, "no frame %d in sprite bank %d" % (frame, bank))
+        pal = None
+        if palette is not None:
+            found = sorted((game.graphics_dir / "sprites" / "palettes").glob("%03d_*.pal" % palette))
+            if not found:
+                raise HttpError(404, "no OBJ palette %d" % palette)
+            pal = found[0]
+        with self.levels(project):
+            return room_edit.sprite_png(banks[bank], frame, pal)
+
+    def save_room(self, project, body):
+        """A room's edits, saved together, all or none
+        (crashdata.levels.room_edit): {"path": its folder, "room":
+        room.json's value, "layers": {"bg1": [[cx, cy, base64 of the 64
+        pixels], ...]}, "collision": [[cx, cy, value], ...], "palette": [256
+        BGR555 entries]}, each but "path" optional."""
+        rel = body.get("path")
+        if not isinstance(rel, str):
+            raise HttpError(400, "give the room's folder as \"path\"")
+        rel = rel.rstrip("/")
+        d, _ = self.room_dir(project, rel)
+        layers = body.get("layers") or {}
+        if not isinstance(layers, dict):
+            raise HttpError(400, "\"layers\" is {layer: [[cx, cy, pixels], ...]}")
+        palette = body.get("palette")
+        collision = body.get("collision") or []
+        if not isinstance(collision, list):
+            raise HttpError(400, "\"collision\" is [[cx, cy, value], ...]")
+        with project.lock:
+            staged = []
+            try:
+                if "room" in body:
+                    staged.append(self._stage_json(project, rel + "/room.json", body["room"]))
+                with self.levels(project):
+                    room = D.read_json(d / "room.json")
+                    for lname in layers:
+                        if lname not in room_edit.BG_LAYERS or lname not in room["layers"]:
+                            raise HttpError(400, "the room has no BG layer %r" % lname)
+                    for lname in room_edit.BG_LAYERS:
+                        if lname not in room["layers"] or (lname not in layers and palette is None):
+                            continue
+                        _, p, info = self.room_layer(project, d, lname)
+                        cells = [[c[0], c[1], _b64(c[2])] if isinstance(c, list) and len(c) == 3 else c
+                                 for c in layers.get(lname) or []]
+                        data = room_edit.patch_layer(p, info, lname, cells, palette)
+                        staged.append(self._stage_bytes(_rel(p, project), p, data))
+                    if collision:
+                        _, p, info = self.room_layer(project, d, "collision")
+                        data = room_edit.patch_collision(p, info, collision)
+                        staged.append(self._stage_bytes(_rel(p, project), p, data))
+            except BaseException:
+                self._unstage(staged)
+                raise
+            return self._commit(project, staged)
+
+
+def _b64(v):
+    if not isinstance(v, str):
+        raise HttpError(400, "a cell's pixels are base64")
+    try:
+        return base64.b64decode(v, validate=True)
+    except ValueError:
+        raise HttpError(400, "a cell's pixels aren't base64")
+
+
+def _rel(p, project):
+    return p.relative_to(project.root.resolve()).as_posix()
+
 
 def _key(d):
     return (d.get("file"), d.get("code"), d.get("message"))
@@ -401,11 +609,15 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.send_header("Access-Control-Allow-Origin", origin)
             self.send_header("Vary", "Origin")
 
-    def _send(self, status, body, ctype="application/json; charset=utf-8", extra=()):
+    def _send(self, status, body, ctype="application/json; charset=utf-8", extra=(), compress=False):
         if isinstance(body, (dict, list)):
             body = (json.dumps(body, ensure_ascii=False) + "\n").encode("utf-8")
         elif isinstance(body, str):
             body = body.encode("utf-8")
+        # a room's layers are megabytes of palette indices: gzipped, a tenth
+        if compress and "gzip" in (self.headers.get("Accept-Encoding") or ""):
+            body = gzip.compress(body, compresslevel=1)
+            extra = tuple(extra) + (("Content-Encoding", "gzip"),)
         self.send_response(status)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
@@ -546,6 +758,19 @@ class Handler(http.server.BaseHTTPRequestHandler):
             return self._send(200, app.model_check(project, text=query.get("text", "1") != "0"))
         if (method, what) == ("POST", "preview"):
             return self._send(200, app.preview(project, self._body()))
+        if (method, what) == ("GET", "room"):
+            return self._send(200, app.room(project, query.get("path", "")))
+        if (method, what) == ("GET", "room/layer"):
+            return self._send(200, app.room_layer_data(project, query.get("path", ""), query.get("layer", "")),
+                              "application/octet-stream", compress=True)
+        if (method, what) == ("GET", "room/tiles"):
+            return self._send(200, app.room_tiles(project, query.get("path", ""), query.get("layer", "")),
+                              compress=True)
+        if (method, what) == ("POST", "room/save"):
+            return self._send(200, app.save_room(project, self._body()))
+        if (method, what) == ("GET", "sprite"):
+            return self._send(200, app.sprite(project, query.get("bank"), query.get("frame"), query.get("palette")),
+                              "image/png")
         if (method, what) == ("GET", "preview.png"):
             p = project.root / "build" / "editor" / "preview.png"
             if not p.is_file():

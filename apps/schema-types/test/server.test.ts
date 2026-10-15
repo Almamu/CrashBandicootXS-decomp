@@ -47,6 +47,18 @@ describe.skipIf(!url)("the backend", () => {
     expect((e as { diagnostics: { pointer: string }[] }).diagnostics[0]!.pointer).toBe("/screen_music/0/bogus");
   });
 
+  it("opens a room for the level editor, and saves it unchanged without writing it", async () => {
+    const path = "games/xs/data/levels/jungle_jam/main";
+    const v = await c.room("xs", path);
+    expect(v.palette).toHaveLength(256);
+    const bg1 = await c.roomLayer("xs", path, "bg1");
+    expect([bg1.width, bg1.height]).toEqual([v.layers.bg1!.width, v.layers.bg1!.height]);
+    const col = await c.roomLayer("xs", path, "collision");
+    expect([col.width, col.height]).toEqual(v.layers.collision!.cells);
+    const r = await c.saveRoom("xs", { path, room: v.room, palette: v.palette });
+    expect(r.saved).toEqual([]);
+  });
+
   it("gives data-check's report", async () => {
     const r = await c.check("xs", { text: false });
     expect(r.version).toBe(1);

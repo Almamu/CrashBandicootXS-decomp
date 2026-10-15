@@ -1,0 +1,235 @@
+"""The level editor's backend (docs/editors.md, "The level editor"): the
+room API of buildtools.editor_server over crashdata.levels.room_edit,
+started on a free port of 127.0.0.1 against this tree. A test that
+changes a file puts it back.
+
+    python3 -m unittest discover -s packages/buildtools/tests
+"""
+import base64
+import gzip
+import io
+import json
+import struct
+import sys
+import unittest
+import urllib.error
+import urllib.request
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[3]
+for _p in ("crashdata", "buildtools"):
+    sys.path.insert(0, str(ROOT / "packages" / _p / "src"))
+
+from test_editor_server import Backend  # noqa: E402
+
+ROOM = "games/xs/data/levels/jungle_jam/main"
+
+
+def rooms(game):
+    levels = json.loads((ROOT / "games" / game / "data/levels/levels.json").read_text())
+    return ["games/%s/data/levels/%s" % (game, r) for r in levels["rooms"]]
+
+
+class LevelEditor(Backend):
+    def get_bytes(self, path, gz=True):
+        h = {"Accept-Encoding": "gzip"} if gz else {}
+        req = urllib.request.Request("http://127.0.0.1:%d%s" % (self.port, path), headers=h)
+        try:
+            with urllib.request.urlopen(req, timeout=600) as r:
+                data = r.read()
+                if r.headers.get("Content-Encoding") == "gzip":
+                    data = gzip.decompress(data)
+                return r.status, r.headers.get("Content-Type"), data
+        except urllib.error.HTTPError as e:
+            with e:
+                return e.code, e.headers.get("Content-Type"), e.read()
+
+    def layer(self, game, room, layer):
+        st, _, data = self.get_bytes("/api/projects/%s/room/layer?path=%s&layer=%s" % (game, room, layer))
+        self.assertEqual(st, 200, data[:300])
+        w, h = struct.unpack_from("<II", data)
+        return w, h, data[8:]
+
+
+class Reading(LevelEditor):
+    def test_a_room(self):
+        st, v = self.call("GET", "/api/projects/xs/room?path=" + ROOM)
+        self.assertEqual(st, 200, v)
+        self.assertEqual(v["room"], json.loads((ROOT / ROOM / "room.json").read_text()))
+        self.assertEqual(len(v["palette"]), 256)
+        self.assertEqual(sorted(v["layers"]), ["bg0", "bg1", "bg2", "bg3", "collision"])
+        bg1 = v["layers"]["bg1"]
+        self.assertEqual((bg1["width"], bg1["height"], bg1["priority"], bg1["scale"], bg1["bpp"]),
+                         (26 * 128, 8 * 64, 3, [128, 128], 4))
+        self.assertIn({"value": 0x2B, "colour": "#C8C8C8", "name": "solid 0x2B"}, v["legend"])
+        crate = next(t["type"] for t in v["entityTypes"] if t["name"] == "BASIC_CRATE")
+        self.assertEqual(v["sprites"][str(crate)]["bank"], 31)
+        lizard = next(t["type"] for t in v["entityTypes"] if t["name"] == "LIZARD")
+        self.assertEqual(v["sprites"][str(lizard)]["bank"], 13)  # its enemy kind
+
+    def test_an_n_tranced_room(self):
+        st, v = self.call("GET", "/api/projects/n2/room?path=games/n2/data/levels/island_intro/main")
+        self.assertEqual(st, 200, v)
+        self.assertEqual(sorted(v["layers"]), ["bg0", "bg1", "bg3", "collision"])
+        scarab = next(t["type"] for t in v["entityTypes"] if t["name"] == "SCARAB")
+        self.assertEqual(v["sprites"][str(scarab)]["bank"], 13)  # bank13_scarab, by name
+
+    def test_layers_and_cells(self):
+        _, v = self.call("GET", "/api/projects/xs/room?path=" + ROOM)
+        from PIL import Image
+
+        w, h, px = self.layer("xs", ROOM, "bg1")
+        img = Image.open(ROOT / ROOM / "bg1.png")
+        self.assertEqual(((w, h), px), (img.size, img.tobytes()))
+        cw, ch, cells = self.layer("xs", ROOM, "collision")
+        self.assertEqual([cw, ch], v["layers"]["collision"]["cells"])
+        self.assertEqual(len(cells), cw * ch * 2)
+        values = set(struct.unpack("<%dH" % (cw * ch), cells))
+        self.assertLessEqual(values, {e["value"] for e in v["legend"]})
+
+    def test_the_tile_set_draws_the_layer(self):
+        """A cell of the tile set's answer is the picture's block: the tile,
+        flipped as the cell says, in the cell's bank (what the editor's tile
+        painting and its eyedropper rely on)."""
+        w, h, px = self.layer("xs", ROOM, "bg1")
+        st, t = self.call("GET", "/api/projects/xs/room/tiles?path=%s&layer=bg1" % ROOM)
+        self.assertEqual(st, 200, t)
+        self.assertEqual((t["tileset"], t["bpp"]), ("gJungleBgTiles", 4))
+        tiles = base64.b64decode(t["tiles"])
+        self.assertEqual(len(tiles), t["count"] * 64)
+        cw = w // 8
+        cells = struct.unpack("<%dH" % (len(base64.b64decode(t["cells"])) // 2), base64.b64decode(t["cells"]))
+        self.assertEqual(len(cells), cw * (h // 8))
+        for i in range(0, len(cells), 97):
+            v = cells[i]
+            tile, hf, vf, bank = v & 0x3FF, v >> 10 & 1, v >> 11 & 1, v >> 12
+            cx, cy = i % cw, i // cw
+            for y in range(8):
+                for x in range(8):
+                    sx, sy = (7 - x if hf else x), (7 - y if vf else y)
+                    want = tiles[tile * 64 + sy * 8 + sx] + bank * 16
+                    self.assertEqual(px[(cy * 8 + y) * w + cx * 8 + x], want, (cx, cy))
+
+    def test_a_sprite(self):
+        st, ctype, data = self.get_bytes("/api/projects/xs/sprite?bank=32&frame=0&palette=53")
+        self.assertEqual((st, ctype), (200, "image/png"))
+        from PIL import Image
+
+        img = Image.open(io.BytesIO(data))
+        self.assertEqual(img.info.get("transparency"), 0)
+        self.assertEqual(self.get_bytes("/api/projects/xs/sprite?bank=32&frame=999")[0], 404)
+        self.assertEqual(self.get_bytes("/api/projects/xs/sprite?bank=x&frame=0")[0], 400)
+
+    def test_not_a_room(self):
+        self.assertEqual(self.call("GET", "/api/projects/xs/room?path=games/xs/data/levels")[0], 403)
+        self.assertEqual(self.call("GET", "/api/projects/xs/room?path=games/xs/data/levels/no/such")[0], 404)
+        self.assertEqual(self.call("GET", "/api/projects/xs/room?path=games/xs/../../x")[0], 400)
+        self.assertEqual(self.get_bytes("/api/projects/xs/room/layer?path=%s&layer=bg9" % ROOM)[0], 404)
+
+
+def same_cell(px, w, cx, cy):
+    """A cell's 64 pixels, as the editor sends them."""
+    return base64.b64encode(b"".join(px[(cy * 8 + y) * w + cx * 8:(cy * 8 + y) * w + cx * 8 + 8]
+                                     for y in range(8))).decode()
+
+
+class Saving(LevelEditor):
+    def test_every_room_saved_unchanged_is_not_written(self):
+        """Every room of both games through the API and back, unchanged: a
+        cell of each layer painted with what it has, the palette it has,
+        room.json as it is. Nothing is written."""
+        for game in ("xs", "n2"):
+            for room in rooms(game):
+                st, v = self.call("GET", "/api/projects/%s/room?path=%s" % (game, room))
+                self.assertEqual(st, 200, (room, v))
+                body = {"path": room, "room": v["room"], "palette": v["palette"], "layers": {}}
+                for lname in v["layers"]:
+                    w, h, data = self.layer(game, room, lname)
+                    if lname == "collision":
+                        body["collision"] = [[w - 1, h - 1, struct.unpack_from("<H", data, len(data) - 2)[0]]]
+                    else:
+                        body["layers"][lname] = [[0, 0, same_cell(data, w, 0, 0)],
+                                                 [w // 8 - 1, h // 8 - 1, same_cell(data, w, w // 8 - 1, h // 8 - 1)]]
+                before = {p: p.read_bytes() for p in (ROOT / room).iterdir()}
+                st, r = self.call("POST", "/api/projects/%s/room/save" % game, body)
+                self.assertEqual((st, r.get("saved")), (200, []), (room, r))
+                for p, b in before.items():
+                    self.assertEqual(p.read_bytes(), b, p)
+
+    def test_an_edit_then_put_back(self):
+        """An entity moved, a collision cell and a BG cell painted, a palette
+        entry changed: saved together (the model's checks pass), then saved
+        back."""
+        from PIL import Image
+
+        files = {p: p.read_bytes() for p in (ROOT / ROOM).iterdir()}
+        try:
+            _, v = self.call("GET", "/api/projects/xs/room?path=" + ROOM)
+            room = json.loads(json.dumps(v["room"]))
+            room["entities"][1]["y"] -= 8
+            cw, ch, cells = self.layer("xs", ROOM, "collision")
+            old_value = struct.unpack_from("<H", cells, 2 * (10 * cw + 5))[0]
+            value = 0x2B if old_value != 0x2B else 0
+            w, h, px = self.layer("xs", ROOM, "bg1")
+            palette = list(v["palette"])
+            palette[17] ^= 0x1F
+            body = {"path": ROOM, "room": room, "collision": [[5, 10, value]], "palette": palette,
+                    "layers": {"bg1": [[0, 0, same_cell(px, w, 1, 2)]]}}
+            st, r = self.call("POST", "/api/projects/xs/room/save", body)
+            self.assertEqual(st, 200, r)
+            self.assertEqual(sorted(r["saved"]), sorted(ROOM + "/" + n for n in
+                                                        ("room.json", "collision.png", "bg0.png", "bg1.png",
+                                                         "bg2.png", "bg3.png")))
+            self.assertFalse([d for d in r["diagnostics"] if d["severity"] == "error"])
+            c2 = self.layer("xs", ROOM, "collision")[2]
+            self.assertEqual(struct.unpack_from("<H", c2, 2 * (10 * cw + 5))[0], value)
+            _, v2 = self.call("GET", "/api/projects/xs/room?path=" + ROOM)
+            self.assertEqual((v2["palette"], v2["room"]), (palette, room))
+            # back: what the API wrote gives back the pictures' pixels and colours
+            body = {"path": ROOM, "room": v["room"], "collision": [[5, 10, old_value]], "palette": v["palette"],
+                    "layers": {"bg1": [[0, 0, same_cell(px, w, 0, 0)]]}}
+            st, r = self.call("POST", "/api/projects/xs/room/save", body)
+            self.assertEqual(st, 200, r)
+            for p, b in files.items():
+                if p.suffix == ".png":
+                    a, o = Image.open(p), Image.open(io.BytesIO(b))
+                    self.assertEqual((a.tobytes(), a.getpalette()), (o.tobytes(), o.getpalette()), p)
+                else:
+                    self.assertEqual(p.read_bytes(), b, p)
+        finally:
+            for p, b in files.items():
+                p.write_bytes(b)
+
+    def test_refused(self):
+        files = {p: p.read_bytes() for p in (ROOT / ROOM).iterdir()}
+        try:
+            mixed = base64.b64encode(bytes([16] * 32 + [32] * 32)).decode()
+            for body, status in [
+                ({"path": ROOM, "layers": {"bg1": [[0, 0, mixed]]}}, 422),          # two palette banks
+                ({"path": ROOM, "layers": {"bg1": [[9999, 0, mixed]]}}, 422),       # outside
+                ({"path": ROOM, "layers": {"bg1": [[0, 0, "AAAA"]]}}, 422),         # not 64 pixels
+                ({"path": ROOM, "layers": {"bg9": []}}, 400),
+                ({"path": ROOM, "collision": [[0, 0, 0x7777]]}, 422),               # not in the legend
+                ({"path": ROOM, "palette": [0] * 255}, 422),
+                ({"path": ROOM, "room": {"bogus": 1}}, 422),                        # the schema
+                ({"path": "games/xs/data/levels"}, 403),
+            ]:
+                st, r = self.call("POST", "/api/projects/xs/room/save", body)
+                self.assertEqual(st, status, (body, r))
+            # the model: an entity in another column than its id order allows
+            _, v = self.call("GET", "/api/projects/xs/room?path=" + ROOM)
+            room = json.loads(json.dumps(v["room"]))
+            room["entities"][0]["x"] = 0
+            st, r = self.call("POST", "/api/projects/xs/room/save", {"path": ROOM, "room": room,
+                                                                      "collision": [[0, 0, 0x2B]]})
+            self.assertEqual(st, 422, r)
+            for p, b in files.items():
+                self.assertEqual(p.read_bytes(), b, p)
+            self.assertEqual(sorted(p.name for p in (ROOT / ROOM).glob(".*.tmp")), [])
+        finally:
+            for p, b in files.items():
+                p.write_bytes(b)
+
+
+if __name__ == "__main__":
+    unittest.main()

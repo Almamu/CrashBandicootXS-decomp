@@ -1,7 +1,7 @@
 // A typed client of the editors' backend, tools/editor_server.py (#1167,
 // docs/editors.md "The editor's backend"). The browser editor calls it on
 // its own origin; the desktop app gives it the backend's URL and token.
-import type { SchemaFiles, SchemaName } from "./generated/index.ts";
+import type { Room, SchemaFiles, SchemaName } from "./generated/index.ts";
 
 /** One problem with the data (crashdata.common.diagnostics.Diagnostic). */
 export interface Diagnostic {
@@ -102,6 +102,100 @@ export interface ApplyResult {
   report: Report;
 }
 
+/** A room layer's picture as the level editor draws it (crashdata.levels.room_edit.layer_info). */
+export interface RoomLayerInfo {
+  /** the picture, in the room's folder */
+  map: string;
+  /** in pixels: the chunk grid's (128x64 pixels a chunk) */
+  width: number;
+  height: number;
+  /** [width, height] in 8x8 cells */
+  cells: [number, number];
+  /** the scrollable part, in cells */
+  sizeTiles: [number, number];
+  /** the parallax factors (Q8: 256 is the camera's speed) */
+  scale: [number, number];
+  /** BGnCNT's priority: 0 is drawn over 3 */
+  priority: number;
+  tileset: string | null;
+  /** 8 for BG0, 4 for BG1-3, null for the collision layer */
+  bpp: 8 | 4 | null;
+}
+
+/** A collision value's colour (collision_legend.json). */
+export interface LegendEntry {
+  value: number;
+  /** "#RRGGBB" */
+  colour: string;
+  name: string;
+}
+
+/** An entity type (entity_types.json's record). */
+export interface EntityTypeInfo {
+  type: number;
+  name: string | null;
+  spawner?: string;
+  params?: string;
+  enemy_kind?: number;
+  comment?: string;
+}
+
+/** The sprite frame the editor draws an entity type with. */
+export interface SpriteInfo {
+  bank: number;
+  frame: number;
+  /** an OBJ palette id, or null: the frame's own */
+  palette: number | null;
+  /** the sprite's position in the frame's picture */
+  origin: [number, number];
+  size: [number, number];
+}
+
+/** GET /api/projects/ID/room: a room, as the level editor opens it. */
+export interface RoomView {
+  path: string;
+  room: Room;
+  /** the room's 256 colours, BGR555 (bit 15 kept, docs/graphics.md "Palettes") */
+  palette: number[];
+  layers: Partial<Record<"bg0" | "bg1" | "bg2" | "bg3" | "collision", RoomLayerInfo>>;
+  legend: LegendEntry[];
+  entityTypes: EntityTypeInfo[];
+  /** by entity type (its number, as a string) */
+  sprites: Record<string, SpriteInfo>;
+}
+
+/** A layer's data: a BG picture's palette indices (a byte a pixel), or the collision layer's cells (a u16 a cell). */
+export interface RoomLayerData {
+  width: number;
+  height: number;
+  data: Uint8Array | Uint16Array;
+}
+
+/** GET /api/projects/ID/room/tiles: a BG layer's tile set and its cells in it. */
+export interface RoomTiles {
+  tileset: string;
+  bpp: 8 | 4;
+  count: number;
+  /** base64: 64 bytes a tile, a pixel a byte (4bpp: 0-15) */
+  tiles: string;
+  /** each tile's palette bank where it is first drawn */
+  banks: number[];
+  /** base64 of the layer's cells, u16 LE: BG0 tile | flip << 14, BG1-3 tile | flip << 10 | bank << 12 */
+  cells: string;
+}
+
+/** POST /api/projects/ID/room/save: a room's edits, saved together. */
+export interface RoomSave {
+  path: string;
+  room?: Room;
+  /** per BG layer: [cx, cy, base64 of the cell's 64 palette indices] */
+  layers?: Partial<Record<"bg0" | "bg1" | "bg2" | "bg3", [number, number, string][]>>;
+  /** [cx, cy, value] */
+  collision?: [number, number, number][];
+  /** 256 BGR555 entries: every layer picture's palette */
+  palette?: number[];
+}
+
 /** A JSON Schema, as the backend serves it. */
 export type JsonSchema = Record<string, unknown>;
 
@@ -177,6 +271,21 @@ export class EditorClient {
     return json as T;
   }
 
+  /** A binary answer (a room's layer). */
+  async requestBytes(path: string, query?: Record<string, string | undefined>): Promise<ArrayBuffer> {
+    const res = await this.fetchImpl(this.url(path, query), { method: "GET", headers: this.headers(false) });
+    if (!res.ok) {
+      let e: { error?: string; diagnostics?: Diagnostic[] } = {};
+      try {
+        e = (await res.json()) as typeof e;
+      } catch {
+        // not JSON
+      }
+      throw new ApiError(res.status, e.error ?? `GET ${path}: ${res.status}`, e.diagnostics ?? []);
+    }
+    return res.arrayBuffer();
+  }
+
   private project(id: string, rest: string): string {
     return `/api/projects/${encodeURIComponent(id)}/${rest}`;
   }
@@ -240,4 +349,50 @@ export class EditorClient {
   rawUrl(id: string, path: string): string {
     return this.url(this.project(id, "raw"), { path });
   }
+
+  /** A room's folder (games/<game>/data/levels/<level>/<slot>), as the level editor opens it. */
+  room(id: string, path: string): Promise<RoomView> {
+    return this.request("GET", this.project(id, "room"), undefined, { path });
+  }
+
+  /** A layer of a room: a BG picture's palette indices, or the collision layer's cells. */
+  async roomLayer(id: string, path: string, layer: string): Promise<RoomLayerData> {
+    return parseRoomLayer(await this.requestBytes(this.project(id, "room/layer"), { path, layer }), layer === "collision");
+  }
+
+  /** The tile set a room's BG layer names, as the build makes it, and the layer's cells in it. */
+  roomTiles(id: string, path: string, layer: string): Promise<RoomTiles> {
+    return this.request("GET", this.project(id, "room/tiles"), undefined, { path, layer });
+  }
+
+  /** Saves a room's edits (room.json, painted cells, the palette) together: all, or none. */
+  saveRoom(id: string, body: RoomSave): Promise<SaveResult> {
+    return this.request("POST", this.project(id, "room/save"), body);
+  }
+
+  /** A sprite bank's frame as a PNG (index 0 transparent), in an OBJ palette or its own. */
+  spriteUrl(id: string, bank: number, frame: number, palette: number | null = null): string {
+    return this.url(this.project(id, "sprite"), {
+      bank: String(bank),
+      frame: String(frame),
+      palette: palette === null ? undefined : String(palette),
+    });
+  }
+}
+
+/** GET .../room/layer's answer: width and height (u32 LE), then a byte a pixel or a u16 a cell. */
+export function parseRoomLayer(buf: ArrayBuffer, cells: boolean): RoomLayerData {
+  const view = new DataView(buf);
+  if (buf.byteLength < 8) throw new Error("a room layer's answer is at least 8 bytes");
+  const width = view.getUint32(0, true);
+  const height = view.getUint32(4, true);
+  const n = width * height;
+  if (cells) {
+    if (buf.byteLength !== 8 + n * 2) throw new Error(`a collision layer of ${width}x${height} cells is ${8 + n * 2} bytes, not ${buf.byteLength}`);
+    const data = new Uint16Array(n);
+    for (let i = 0; i < n; i++) data[i] = view.getUint16(8 + i * 2, true);
+    return { width, height, data };
+  }
+  if (buf.byteLength !== 8 + n) throw new Error(`a layer of ${width}x${height} pixels is ${8 + n} bytes, not ${buf.byteLength}`);
+  return { width, height, data: new Uint8Array(buf, 8, n) };
 }
