@@ -11,6 +11,8 @@ docs/shifting.md) can be compared run against run.
                       [--screens DIR] [--save FILE] [--out LOG.json]
     tools/boottest.py compare A.json B.json
     tools/boottest.py diff-screens REFERENCE_DIR DIR
+    tools/boottest.py gax-trace ROM.gba ROM.elf --keys FILE --frames N [--level N] --out TRACE
+    tools/boottest.py gax-calls REFERENCE_TRACE TRACE
 
 mGBA's SDL frontend (`mgba`) runs with SDL's dummy video and audio
 drivers and its GDB stub, which this drives with the GDB remote protocol.
@@ -59,6 +61,15 @@ the level (and its first room) at the first level select, as the level
 scripts do: on the host with its own --level and --room, on libmgba with
 breakpoints at the addresses ROM.elf gives. --save keeps mGBA's EEPROM in
 a file, the image the host's --save writes.
+
+`gax-trace` plays a key file on libmgba with platform/pc/tools/
+mgba_gax_trace.c, which writes a trace of every call the game makes into
+GAX2's API (the arguments) and of every block GAX2 mixes (a hash): the
+host executable's --gax-trace replays it through the host's GAX2 and
+checks each block is the GBA's, and its --gax-log writes the same trace
+of the game on the host. `gax-calls` compares two traces' calls, not when
+they came: the song starts, sound effects, volumes and stops in their
+order, and the music volumes the fades set every VBlank in theirs.
 """
 import argparse
 import hashlib
@@ -542,6 +553,60 @@ def run_screens(rom, keys, frames, timeout, prefix, every=CHECKPOINT_EVERY, scre
     return log
 
 
+GAX_API = ["GAX2_init", "GAX_fx_ex", "GAX_fx", "GAX_fx_note", "GAX_stop_fx", "GAX_set_music_volume",
+           "GAX_set_fx_volume", "GAX_stop", "GAX_pause", "GAX_resume", "GAX_play", "GAX_irq", "GAX2_jingle"]
+
+
+def run_gax_trace(rom, elf, keys, frames, timeout, prefix, out, level=None):
+    """Plays a key file on libmgba with platform/pc/tools/mgba_gax_trace.c,
+    which writes to `out` the trace of the game's calls into GAX2's API and
+    of the blocks GAX2 mixes (platform/pc/src/gax_trace.c has the format).
+    Returns how the run ended."""
+    syms, romdata = read_elf(elf)
+    extra = [f"{n}={syms[n]:#x}" for n in GAX_API + ["gGaxPlayerState", "gGaxMusicData"]]
+    if level is not None:
+        extra += [f"level={call_return(romdata, syms['RunLevelSelect'], syms['LevelSelectLoop']):#x}",
+                  f"levelN={level}"]
+    here = os.path.dirname(os.path.abspath(__file__))
+    pc = os.path.join(here, "..", "platform", "pc")
+    lib = next((os.path.join(prefix, d) for d in ("lib", "lib64")
+                if os.path.exists(os.path.join(prefix, d, "libmgba.so"))), os.path.join(prefix, "lib"))
+    work = tempfile.mkdtemp(prefix="boottest-")
+    try:
+        exe = os.path.join(work, "mgba_gax_trace")
+        subprocess.run([os.environ.get("CC", "cc"), "-O2", "-o", exe, os.path.join(pc, "tools", "mgba_gax_trace.c"),
+                        "-I", os.path.join(prefix, "include"), "-L", lib, "-lmgba", f"-Wl,-rpath,{lib}"], check=True)
+        with open(os.path.join(work, "keys.txt"), "w") as f:
+            for frame, k in read_keys(keys):
+                f.write(f"{frame} {k}\n")
+        try:
+            p = subprocess.run([exe, rom, os.path.join(work, "keys.txt"), str(frames), out] + extra,
+                               capture_output=True, text=True, timeout=timeout)
+            end = next((" ".join(line.split()[1:5]) for line in p.stdout.splitlines() if line.startswith("end ")),
+                       None)
+            return end if p.returncode == 0 and end else f"exit status {p.returncode}: {end}"
+        except subprocess.TimeoutExpired:
+            return "timeout"
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+
+def gax_calls(path):
+    """A GAX2 trace's calls, in two lists: the ones the game's frames make
+    (a song's start, the sound effects and their volumes, the stops), and
+    the music volumes, which the fades set every VBlank (AudioContext::
+    Update), so that they come between the others at the VBlanks they
+    happen at. The VBlanks' own calls (play, irq) and the blocks are left
+    out, and the comments (`# vblank N frame N`)."""
+    calls, volumes = [], []
+    for line in open(path):
+        f = line.split("#", 1)[0].split()
+        if not f or f[0] in ("play", "irq", "block"):
+            continue
+        (volumes if f[0] == "music_vol" else calls).append(" ".join(f))
+    return calls, volumes
+
+
 def checkpoint_fields(c, fields):
     """A checkpoint's frame and the fields `fields` (None where missing)."""
     return [c[0]] + [c[i] if len(c) > i else None for i in fields]
@@ -662,7 +727,39 @@ def main():
     c.add_argument("logs", nargs=2)
     d = sub.add_parser("diff-screens", help="compare the PNGs of a reference directory with another's")
     d.add_argument("dirs", nargs=2)
+    g = sub.add_parser("gax-trace", help="play a key file on libmgba, tracing the game's GAX2 calls and blocks")
+    g.add_argument("rom")
+    g.add_argument("elf")
+    g.add_argument("--keys", required=True)
+    g.add_argument("--frames", type=int, required=True)
+    g.add_argument("--level", type=int, help="the level the first level select picks")
+    g.add_argument("--mgba", help="mGBA's install prefix (default: the `mgba` on the PATH)")
+    g.add_argument("--out", required=True)
+    g.add_argument("--timeout", type=float, default=600)
+    gc = sub.add_parser("gax-calls", help="compare the GAX2 calls of two traces (not their timing)")
+    gc.add_argument("traces", nargs=2)
     args = ap.parse_args()
+
+    if args.cmd == "gax-trace":
+        end = run_gax_trace(args.rom, args.elf, args.keys, args.frames, args.timeout, mgba_prefix(args.mgba),
+                            args.out, args.level)
+        print(f"keys: {end}")
+        return 0 if end.startswith("done") else 1
+
+    if args.cmd == "gax-calls":
+        (a, av), (b, bv) = (gax_calls(p) for p in args.traces)
+        diffs = []
+        for name, x, y in (("call", a, b), ("music volume", av, bv)):
+            i = next((i for i, (p, q) in enumerate(zip(x, y)) if p != q), None)
+            if i is not None:
+                diffs.append(f"{name} {i + 1} differs: {x[i]!r} vs {y[i]!r}")
+            elif len(x) != len(y):
+                diffs.append(f"{len(x)} vs {len(y)} {name}s")
+        for line in diffs:
+            print(line)
+        print(f"boottest: {args.traces[0]} and {args.traces[1]}: "
+              + ("differ" if diffs else f"the same calls ({len(a)}, and {len(av)} music volumes)"))
+        return 1 if diffs else 0
 
     if args.cmd == "diff-screens":
         diffs, n = diff_screens(*args.dirs)

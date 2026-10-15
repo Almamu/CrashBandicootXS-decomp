@@ -54,7 +54,7 @@ u8 GaxCreateHandlers(struct GaxHandlerLayout *layout, struct GaxHandlerType **sf
 
             if (i == 0)
                 cnt += numSfx;
-            n = cnt * 4;
+            n = cnt * sizeof(struct GaxHandler *);
             need = n + (sizeof(struct GaxHandler) + t->instanceSize);
             size = *sizep;
             if (size < need)
@@ -123,7 +123,7 @@ done:
         t = layout->types[0];
         for (; i <= 2; i++) {
             struct GaxDspRate *r;
-            u32 base = gGaxPlayerState->echoTaps;
+            uintptr_t base = gGaxPlayerState->echoTaps;
 
             r = (struct GaxDspRate *)(i * 8 + base);
             r->step = (i + t->data.dsp->taps)->rate * gGaxPlayerState->format->mixRate / 1000 * 2;

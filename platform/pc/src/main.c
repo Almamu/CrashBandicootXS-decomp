@@ -6,7 +6,7 @@
  * host code and data, and the host memory (memory.S) starts zeroed, so
  * main reads the command line and runs AgbMain.
  *
- *     crashbandicootxs_pc [--headless] [--scale N] [--save FILE] [--screenshot-at N]
+ *     crashbandicootxs_pc [--headless] [--scale N] [--save FILE] [--wav FILE] [--screenshot-at N]
  *                         [--frames N] [--vblanks N] [--keys FILE]
  *                         [--checkpoint-every N] [--dump DIR]
  *                         [--screens DIR] [--ppu-stats] [--quiet]
@@ -16,7 +16,8 @@
  * without SDL) shows nothing and takes no time: the frames run as fast as
  * the host goes, for tests (tools/boottest.py `host`). input.c has the key
  * file and the checkpoints, irq.c the frame loop, ppu.c the picture,
- * eeprom.c the save. */
+ * eeprom.c the save, audio.c the sound (GAX2 itself is lib/gax, with
+ * platform/pc/units/lib/gax/ in place of what can't run on a host). */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,11 +27,14 @@
 #include "engine/sys/system.h"
 #include "host_platform.h"
 
-struct HostOptions gHostOptions = { 0, 0, 60, NULL, NULL, NULL, NULL, 3, 0, -1, -1, 0, 0, 0 };
+struct HostOptions gHostOptions = { 0,    0, 60, NULL, NULL, NULL, NULL, NULL, NULL,
+                                    NULL, 3, 0,  -1,   -1,   0,    0,    0 };
 
 void HostExit(int status, const char *how)
 {
     HostSaveFlush();
+    HostAudioEnd();
+    HostGaxLogEnd();
     if (gHostOptions.ppuStats) {
         HostPpuPrintStats();
     }
@@ -43,12 +47,15 @@ static void Usage(const char *argv0)
 {
     fprintf(
         stderr,
-        "usage: %s [--headless] [--scale N] [--save FILE] [--frames N] [--vblanks N]\n"
+        "usage: %s [--headless] [--scale N] [--save FILE] [--wav FILE] [--frames N] [--vblanks N]\n"
         "       [--keys FILE] [--checkpoint-every N] [--dump DIR] [--screens DIR]\n"
         "       [--ppu-stats] [--quiet]\n"
         "  --headless            no window, no frame pacing (always, built without SDL)\n"
         "  --scale N             the window's size, N times the GBA's (3)\n"
         "  --save FILE           keep the EEPROM in FILE (read at start, written as it changes)\n"
+        "  --wav FILE            write the audio output to FILE (8-bit, at the first song's mix rate)\n"
+        "  --gax-trace FILE      replay a trace of the GBA's GAX2 calls, compare the mixed blocks\n"
+        "  --gax-log FILE        write a trace of the game's GAX2 calls to FILE\n"
         "  --screenshot-at N     in the window, take F12's screenshot at game frame N\n"
         "  --level N             the level select picks level N (gLevelTable's index), once\n"
         "  --room R              with --level: the level starts in its room R\n"
@@ -112,6 +119,12 @@ int main(int argc, char **argv)
             gHostOptions.screenDir = value;
         } else if (strcmp(arg, "--save") == 0) {
             gHostOptions.save = value;
+        } else if (strcmp(arg, "--wav") == 0) {
+            gHostOptions.wav = value;
+        } else if (strcmp(arg, "--gax-trace") == 0) {
+            gHostOptions.gaxTrace = value;
+        } else if (strcmp(arg, "--gax-log") == 0) {
+            gHostOptions.gaxLog = value;
         } else if (strcmp(arg, "--level") == 0) {
             gHostOptions.level = (s32)Number(argv[0], value);
         } else if (strcmp(arg, "--room") == 0) {
@@ -127,6 +140,9 @@ int main(int argc, char **argv)
             Usage(argv[0]);
         }
         i++;
+    }
+    if (gHostOptions.gaxTrace != NULL) {
+        HostGaxTrace(gHostOptions.gaxTrace);
     }
     HostInputInit();
     if (!HostFrontendAvailable()) {

@@ -22,3 +22,10 @@ u32 __umodsi3(u32 dividend, u32 divisor)
 {
     return dividend % divisor;
 }
+
+/* And the 64-bit one GAX2 calls by name (GaxChannelInit's mix-rate
+ * reciprocal); a 64-bit host's libgcc has it as native division. */
+u64 __udivdi3(u64 n, u64 d)
+{
+    return n / d;
+}

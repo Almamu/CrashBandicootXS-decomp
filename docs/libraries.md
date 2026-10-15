@@ -132,6 +132,10 @@ owner's decision in #662):
   What these functions still need beyond them (GaxChannelMix's keep and
   volatile read) is counted as usual.
 
+The pc platform (docs/platforms.md, "The sound") builds the rest of the C
+for a host as it is, and its own units in place of the files with these
+pieces: the ARM routines in C, the calls into them as C calls.
+
 ## Linking
 
 The libraries are linked as plain objects, not `.a` archives. They are

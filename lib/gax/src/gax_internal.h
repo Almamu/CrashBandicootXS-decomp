@@ -32,11 +32,11 @@ struct GaxPlayerState {
      * found the pointer (any pointee type gives the same code). */
     s8 *outBuf;
     /* 0x1c - the 16-bit mix buffer ((frames + 4) halfwords) the mixer renders into */
-    u32 mixBuf;
+    uintptr_t mixBuf;
     /* 0x20 - the echo delay line, sized for the longest DSP tap delay */
-    u32 echoBuf;
+    uintptr_t echoBuf;
     /* 0x24 - the 3 echo taps' {step, value} pairs (GaxCreateHandlers), 0 = no echo */
-    u32 echoTaps;
+    uintptr_t echoTaps;
     u32 echoLen; /* 0x28 - echoBuf's size in bytes */
     /* 0x2c - which half of outBuf GAX_play mixes into next (0/1) */
     u32 outHalf;
@@ -249,7 +249,7 @@ struct GaxMixerHandler {
     struct GaxHandler **children;  /* 0x08 */
     u32 pos;                       /* 0x0c */
     /* 0x10 - GaxPlayerState.mixBuf, the buffer the mix renders into */
-    u32 mixBuf;
+    uintptr_t mixBuf;
     u32 extraChildren; /* 0x14 - number of SFX voices after the song's channels */
 };
 
