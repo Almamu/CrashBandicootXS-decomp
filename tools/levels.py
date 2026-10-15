@@ -95,7 +95,10 @@ derived from those again.
     tools/levels.py categories OUT            actor_categories.inc:
                                               ActorCategory::descriptors, from
                                               levels.json's "categories", and the
-                                              spawn lists that aren't the ROM's
+                                              spawn lists that aren't the ROM's;
+                                              warns about a category's own
+                                              colours the palette cycle or its
+                                              sky replace
     tools/levels.py anim-table NAME OUT       the ROM's animation table NAME (polar,
                                               jetpack) and its keyframes and
                                               frames, from data/levels/
@@ -1925,6 +1928,81 @@ def new_category_graphics_c(cats):
                 out += ["/* graphics/%s: %s's OBJ palette, 256 colours (new) */" % (e["path"], c["constant"]),
                         "extern const u16 %s[256] = {" % sym, "#include \"%s.gbapal.inc\"" % stem, "};"]
     return out
+
+
+# ---------------------------------------------------------------------------
+# Colours a category names that the engine overwrites (#1089; docs/levels.md,
+# "Category graphics")
+#
+# - A polar category's palette cycle (ActorPaletteCycle::Update, enabled for
+#   CATEGORY_TYPE_POLAR by ActorCategory::Init) DMAs a frame of
+#   PALETTE_CYCLE_BANKS banks to BG palette 0 whenever the cell animation
+#   scrolls: of a polar cell animation's own palette only banks 14-15 show.
+# - A sky (LoadBgPicture, from ActorCategory::Init and after the pause menu)
+#   loads its whole 256-colour palette over the cell animation's.
+#
+# Both are the ROM's design: its ice wall shows the cycle's colours (its
+# own palette's banks 0-13 are none of the cycle's frames), and blimp
+# bonanza's and no fly zone's skies tint the type's clouds. So only a
+# category's own cell animation (not the type's) is checked, and only the
+# colours its pixels use: for a polar one, those it changed from the ice
+# wall's.
+PALETTE_CYCLE_BANKS = 14
+
+
+def png_palette(path):
+    """A paletted PNG's 256 colours (RGB tuples) and the indices its pixels
+    use, but each bank's colour 0 (transparent in a 4bpp cell)."""
+    from PIL import Image
+
+    with Image.open(path) as img:
+        flat = img.getpalette() or []
+        flat += [0] * (768 - len(flat))
+        used = sorted({i for i in set(img.tobytes()) if i % 16})
+    return [tuple(flat[3 * i:3 * i + 3]) for i in range(256)], used
+
+
+def category_palette_warnings(data):
+    """Warn about a category's own cell animation colours the engine
+    replaces: a polar one's in banks 0 to PALETTE_CYCLE_BANKS - 1 that
+    aren't the type's cell animation's, a jetpack or hovercraft one's that
+    aren't its sky's."""
+    by_symbol = {e["symbol"]: e for e in category_graphic_entries().values()}
+
+    def path(e):
+        return GFX_MANIFEST.parent / (e["paths"][0] if "paths" in e else e["path"])
+
+    def colours(idx):
+        return ", ".join("%d" % i for i in idx[:8]) + (" and %d more" % (len(idx) - 8) if len(idx) > 8 else "")
+
+    for c in level_categories(data):
+        g = category_graphics(c)
+        sym, e, _ = g["cell_anim"]
+        t = CATEGORY_TYPES[c["type"]]
+        if e is None or sym == t["cell_anim"]:
+            continue
+        pal, used = png_palette(path(e))
+        if c["type"] == "POLAR":
+            base, _ = png_palette(path(by_symbol[t["cell_anim"]]))
+            bad = [i for i in used if i < PALETTE_CYCLE_BANKS * 16 and pal[i] != base[i]]
+            if bad:
+                warn("%s: its cell animation graphics/%s uses colours of its own in banks 0-%d (indices %s). The polar "
+                     "palette cycle replaces banks 0-%d every moving frame (ActorPaletteCycle::Update), so they "
+                     "won't show: recolour through the pixels (the banks' indices) or put them in banks %d-15 "
+                     "(docs/levels.md, \"Category graphics\")"
+                     % (c["constant"], e["path"], PALETTE_CYCLE_BANKS - 1, colours(bad), PALETTE_CYCLE_BANKS - 1,
+                        PALETTE_CYCLE_BANKS))
+            continue
+        sky, se, _ = g["sky"]
+        if sky is None:
+            continue
+        spal, _ = png_palette(path(se or by_symbol[sky]))
+        bad = [i for i in used if pal[i] != spal[i]]
+        if bad:
+            warn("%s: its cell animation graphics/%s has colours its sky's palette (graphics/%s) doesn't (indices %s). "
+                 "The sky's palette replaces the cell animation's (LoadBgPicture), so the sky's show: give the "
+                 "sky the same colours at those indices (docs/levels.md, \"Category graphics\")"
+                 % (c["constant"], e["path"], (se or by_symbol[sky])["paths"][0], colours(bad)))
 
 
 def categories():
@@ -4118,6 +4196,7 @@ def main():
     elif cmd == "categories":
         Path(args[1]).parent.mkdir(parents=True, exist_ok=True)
         Path(args[1]).write_text(actor_categories_inc(read_json(LEVELS_JSON)))
+        category_palette_warnings(read_json(LEVELS_JSON))
     elif cmd == "anim-table":
         Path(args[2]).parent.mkdir(parents=True, exist_ok=True)
         Path(args[2]).write_text(anim_table_inc(args[1]))
