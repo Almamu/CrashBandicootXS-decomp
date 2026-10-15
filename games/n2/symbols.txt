@@ -5,6 +5,7 @@
  * in the ROM is named in games/n2/data_names.txt. */
 
 gVramDmaQueue = 0x02000E50;
+gBrightnessFadeTimer = 0x02000030; /* fade.cpp: tools/nt_compare/n2_objects.py */
 gCollectedSpawnCount = 0x0200025C; /* actor_spawn_collected.cpp: its IsSpawnCollected literal */
 
 /* From the XS/N-Tranced comparison (tools/nt_compare/name_data.py). */

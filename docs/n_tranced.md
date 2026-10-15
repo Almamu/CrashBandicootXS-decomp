@@ -170,7 +170,9 @@ match it, and the original's bytes:
    (`vram_dma_queue.o`).
    `tools/nt_compare`'s `match.json` gives the candidates: the XS objects
    whose functions are all "exact", in the same order and as contiguous
-   in N-Tranced. A short function N-Tranced has several copies of can be
+   in N-Tranced. `tools/nt_compare/n2_objects.py` checks them for real:
+   it builds each for N-Tranced and compares it with the ROM, and lists
+   the RAM symbols it needs. A short function N-Tranced has several copies of can be
    matched to the wrong copy (`dup` > 1), which breaks an object's order:
    look for the whole object's bytes too (`operator_new.o`,
    `actor_spawn_collected.o`), and check a name the comparison gave such
@@ -186,7 +188,9 @@ match it, and the original's bytes:
    `thumb_func` line before the split can cut after the object.
 4. `python3 games/n2/disasm.py path/to/gbadisasm`, then
    `make GAME=n2 compare`. If it doesn't match, try the other compiler
-   (`NEW_COMPILER_OBJS`) before changing the source.
+   (`NEW_COMPILER_OBJS`), or agbcp without `-fprologue-bugfix`
+   (`N2_NO_PROLOGUE_BUGFIX_OBJS`: a leaf function that pushes `lr` and
+   returns with `pop {r0}; bx r0`), before changing the source.
 
 A source that includes a generated header (`constants/levels.h`, ...)
 gets N-Tranced's placeholder for it (`games/n2/levels.mk`): only the

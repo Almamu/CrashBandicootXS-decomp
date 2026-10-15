@@ -70,6 +70,13 @@ build sometimes used the other compiler for a file (docs/n_tranced.md,
   the entity-list invariants of docs/levels.md. `rooms_roundtrip.py
   crashbandicootxs.gba 0816c86c` is the XS control (39/41: the two rooms
   with `pad_overrides`).
+- `n2_objects.py`: XS's code objects (at least 90% exact/near) built as
+  N-Tranced builds them (`GAME_N2`, its headers) and compared with
+  N-Tranced's ROM where the comparison placed them, relocated words aside:
+  `match` (it links as it is; with the `symbols.txt` lines its pointers
+  need), `differs` (how many bytes), or why it doesn't build. A "near"
+  function whose difference `GAME_N2` already covers (a struct's layout)
+  matches here.
 - `xs_data_objects.py`: XS's data objects N-Tranced has whole, each one's
   `.rodata` found as one run with every pointer checked (the N-Tranced
   address of the symbol its relocation names, from `ntranced.map`, or
