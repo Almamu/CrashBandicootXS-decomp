@@ -302,7 +302,6 @@ CLASSES = [
         "a logo piece's position on the 240x160 logo art (DISPLAY_ART_X/Y)",
     ),
     ("coincidence", r"src/game/bosses/data/boss_motion_tables\.cpp", r".", "a position in the boss arena (Dingodile's stops, Q8)"),
-    ("coincidence", r"src/engine/actor/data/actor_palette_cycle_frames\.cpp", r".", "a colour (BGR555)"),
     ("coincidence", r"src/(?:[a-z_]+/)+data/", r"^\s*(0x[0-9A-F]{4}, ){4}", "a colour (BGR555)"),
     ("coincidence", r"src/(?:[a-z_]+/)+data/(polar|jetpack)_anim_family", r"\{ -?\d+, -?\d+, -?\d+, \d+, \d+, \d+ \}", "a hit box (offset and size)"),
     ("coincidence", r"src/(?:[a-z_]+/)+data/", r"(JETPACK|POLAR)_KIND_", "a 3D course's spawn record (offset, angle, distance)"),

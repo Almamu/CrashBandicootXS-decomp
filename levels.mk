@@ -111,6 +111,18 @@ $(GENERATED_INCLUDE_DIR)/rooms.hpp.stamp: data/levels/levels.json $(LEVEL_ROOM_J
 $(GENERATED_INCLUDE_DIR)/rooms.hpp: $(GENERATED_INCLUDE_DIR)/rooms.hpp.stamp
 	@test -f $@ || python3 tools/levels.py classes $@
 
+# The animation tables (docs/levels.md, "Animation tables"):
+# data/levels/anim_tables/<name>.json, a type's records (one per actor
+# kind) and the keyframes and frames they point at. `levels.py anim-table
+# NAME` writes the ROM's table NAME, which its family's C file #includes
+# after the palettes; `levels.py categories` the ones only a category
+# names. Its frames are named by the sprite sheet's frame folders (a
+# framed_sheet of the manifest, FRAMED_SHEETS) and the player frames' PNG,
+# which it checks them against.
+ANIM_TABLE_DEPS := $(wildcard data/levels/anim_tables/*.json) include/constants/actor_kinds.h tools/levels.py \
+	tools/framed_gfx.py graphics/manifest.json tools/gfx_manifest.py $(foreach s,$(FRAMED_SHEETS),graphics/$(s)/sheet.json \
+	$(wildcard graphics/$(s)/*/*.png)) graphics/vehicles/polar/player.png graphics/vehicles/jetpack/player.png
+
 # The actor categories (docs/levels.md, "Actor categories"): levels.json's
 # "categories" and their spawn lists, data/levels/spawns/*.json (whose kinds
 # are named by constants/actor_kinds.h). `levels.py categories` writes
@@ -126,15 +138,17 @@ CATEGORY_DEPS := data/levels/levels.json $(wildcard data/levels/spawns/*.json) i
 # are defined in actor_categories.inc, whose generator reads their PNGs'
 # sizes and their palettes; their built .inc files
 # (CATEGORY_GRAPHICS_NEW_INCS, graphics_manifest.mk) are #included there.
+# So are its own animation table and the frame offsets of its sheet
+# ("Category sprite sheets").
 $(LEVELS_BUILDDIR)/actor_categories.inc: $(CATEGORY_DEPS) graphics/manifest.json $(CATEGORY_GRAPHICS_NEW) \
-	tools/gfx_manifest.py tools/jasc_pal.py
+	tools/gfx_manifest.py tools/jasc_pal.py $(ANIM_TABLE_DEPS)
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py categories $@
 $(LEVELS_BUILDDIR)/spawns/%.inc: $(CATEGORY_DEPS)
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py spawns $* $@
 $(C_BUILDDIR)/engine/actor/data/actor_categories.o: $(LEVELS_BUILDDIR)/actor_categories.inc \
-	$(CATEGORY_GRAPHICS_NEW_INCS)
+	$(CATEGORY_GRAPHICS_NEW_INCS) $(foreach s,$(FRAMED_SHEETS),$(GRAPHICS_BUILDDIR)/$(s)_frames.h)
 $(C_BUILDDIR)/game/vehicles/polar/data/polar_cell_anim.o: $(LEVELS_BUILDDIR)/spawns/gCategory0SpawnTable.inc
 $(C_BUILDDIR)/game/vehicles/polar/data/polar_spawn_tables.o: \
 	$(foreach t,gCategory1SpawnTable gCategory2SpawnTable,$(LEVELS_BUILDDIR)/spawns/$(t).inc)
@@ -144,6 +158,15 @@ $(C_BUILDDIR)/game/vehicles/jetpack/data/jetpack_sky_pictures.o: \
 $(foreach o,engine/actor/data/actor_categories game/vehicles/polar/data/polar_cell_anim \
 	game/vehicles/polar/data/polar_spawn_tables game/vehicles/jetpack/data/jetpack_cell_anim \
 	game/vehicles/jetpack/data/jetpack_sky_pictures,$(eval $(C_BUILDDIR)/$(o).o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)))
+
+# The ROM's animation tables.
+$(LEVELS_BUILDDIR)/anim_tables/%.inc: $(ANIM_TABLE_DEPS)
+	@mkdir -p $(dir $@)
+	python3 tools/levels.py anim-table $* $@
+$(foreach f,polar jetpack,$(eval $(C_BUILDDIR)/game/vehicles/$(f)/data/$(f)_anim_family.o: \
+	$(LEVELS_BUILDDIR)/anim_tables/$(f).inc))
+$(foreach f,polar jetpack,$(eval $(C_BUILDDIR)/game/vehicles/$(f)/data/$(f)_anim_family.o: \
+	CPPFLAGS += -iquote $(LEVELS_BUILDDIR)))
 
 # The level table (docs/levels.md, "The level table"), which
 # src/game/level/data/level_table.cpp #includes: gLevelTable and
@@ -200,6 +223,35 @@ $(GENERATED_INCLUDE_DIR)/level_bosses.h.stamp: data/levels/levels.json $(LEVEL_R
 	@touch $@
 $(GENERATED_INCLUDE_DIR)/level_bosses.h: $(GENERATED_INCLUDE_DIR)/level_bosses.h.stamp
 	@test -f $@ || python3 tools/levels.py bosses $@
+
+# The BG palette cycle frames ActorPaletteCycle::Update DMAs
+# (category_palette_cycles.h, `levels.py category-cycles`, docs/levels.md
+# "Category graphics"): the ROM's, or each polar category's own "palette_cycle"
+# (a palette_cycle of graphics/manifest.json). Written only if it changed,
+# behind a stamp.
+GENERATED_HEADERS += $(GENERATED_INCLUDE_DIR)/category_palette_cycles.h
+$(GENERATED_INCLUDE_DIR)/category_palette_cycles.h.stamp: $(CATEGORY_DEPS) graphics/manifest.json \
+	$(CATEGORY_GRAPHICS_NEW) tools/gfx_manifest.py tools/jasc_pal.py
+	@mkdir -p $(dir $@)
+	python3 tools/levels.py category-cycles $(GENERATED_INCLUDE_DIR)/category_palette_cycles.h
+	@touch $@
+$(GENERATED_INCLUDE_DIR)/category_palette_cycles.h: $(GENERATED_INCLUDE_DIR)/category_palette_cycles.h.stamp
+	@test -f $@ || python3 tools/levels.py category-cycles $@
+
+# What clearing a level does (level_on_clear.h, `levels.py on-clear`,
+# docs/levels.md "Boss levels"): LevelState::UpdateGameFrame's cases on the
+# cleared level (the powers, cutscenes, the step on to mega-mix and the
+# credits), from levels.json's "on_clear"; it warns about a numbered boss
+# level that nothing marks cleared, which reads its rooms. Written only if it
+# changed, behind a stamp.
+GENERATED_HEADERS += $(GENERATED_INCLUDE_DIR)/level_on_clear.h
+$(GENERATED_INCLUDE_DIR)/level_on_clear.h.stamp: data/levels/levels.json $(LEVEL_ROOM_JSONS) $(CATEGORY_DEPS) \
+	data/levels/entity_types.json tools/levels.py
+	@mkdir -p $(dir $@)
+	python3 tools/levels.py on-clear $(GENERATED_INCLUDE_DIR)/level_on_clear.h
+	@touch $@
+$(GENERATED_INCLUDE_DIR)/level_on_clear.h: $(GENERATED_INCLUDE_DIR)/level_on_clear.h.stamp
+	@test -f $@ || python3 tools/levels.py on-clear $@
 
 # The level select's per-world tables, IsNextWorldOpen's cases and the page
 # macros (level_select_worlds.h, `levels.py worlds`, docs/levels.md

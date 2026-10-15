@@ -77,7 +77,7 @@ Credits::Credits()
     Display::dispcnt.bits.obj = 1;
     Display::CommitDispcnt();
     frameParity = 0;
-    gAudioContext->PlaySong(SONG_CREDITS);
+    gAudioContext->PlaySong(SCREEN_SONG_CREDITS);
 }
 
 /* Runs the credits until A or START, then fades out over 17 frames and

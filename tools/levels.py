@@ -85,6 +85,13 @@ derived from those again.
     tools/levels.py bosses OUT                level_bosses.h: the case labels of
                                               each boss kind's levels, from
                                               levels.json's "boss_kind"
+    tools/levels.py category-cycles OUT       category_palette_cycles.h: the
+                                              palette cycle frames
+                                              ActorPaletteCycle::Update DMAs, the
+                                              ROM's or each polar category's own
+    tools/levels.py on-clear OUT              level_on_clear.h: UpdateGameFrame's
+                                              cases on the cleared level, from
+                                              levels.json's "on_clear"
     tools/levels.py spawns SYMBOL OUT         the ROM's spawn list SYMBOL
                                               (gCategoryNSpawnTable), from its
                                               category's data/levels/spawns/ file,
@@ -92,7 +99,15 @@ derived from those again.
     tools/levels.py categories OUT            actor_categories.inc:
                                               ActorCategory::descriptors, from
                                               levels.json's "categories", and the
-                                              spawn lists that aren't the ROM's
+                                              spawn lists that aren't the ROM's;
+                                              warns about a category's own
+                                              colours the palette cycle or its
+                                              sky replace
+    tools/levels.py anim-table NAME OUT       the ROM's animation table NAME (polar,
+                                              jetpack) and its keyframes and
+                                              frames, from data/levels/
+                                              anim_tables/NAME.json, #included by
+                                              its family's *_anim_family.cpp
     tools/levels.py classes OUT               rooms.hpp: every room's class (its BG
                                               palette, chunk grids and level asset
                                               as static members), see "Room
@@ -1683,8 +1698,10 @@ CATEGORY_SKIES = {"rocket_racket": "gCategory3BgPicture", "blimp_bonanza": "gCat
                   "no_fly_zone": "gCategory5BgPicture"}
 # A category's own graphics (docs/levels.md, "Category graphics"): the
 # optional keys naming them, by their path under graphics/, and the
-# manifest kind each must be. "sky" can also be one of CATEGORY_SKIES.
-CATEGORY_GRAPHIC_KEYS = {"cell_anim": "cell_anim", "sky": "bg_picture", "palette": "category_palette"}
+# manifest kind each must be. "sky" can also be one of CATEGORY_SKIES. A
+# category's "sprite_sheet" goes with its "anim_table" (category_anim).
+CATEGORY_GRAPHIC_KEYS = {"cell_anim": "cell_anim", "sky": "bg_picture", "palette": "category_palette",
+                         "sprite_sheet": "framed_sheet", "palette_cycle": "palette_cycle"}
 # The geometry the code takes for a type's cell animation, in cells: its
 # ROM animation's (CellAnim::Init reads it from the header, but
 # ActorBg::InitScroll's scroll, the VRAM after the two pages, which the BG1
@@ -1748,7 +1765,7 @@ def level_categories(data):
         missing = [k for k in CATEGORY_KEYS if k not in c]
         if missing:
             fail("%s has no %s" % (c["constant"], ", ".join('"%s"' % k for k in missing)))
-        unknown = [k for k in c if k not in CATEGORY_KEYS + list(CATEGORY_GRAPHIC_KEYS)]
+        unknown = [k for k in c if k not in CATEGORY_KEYS + list(CATEGORY_GRAPHIC_KEYS) + ["anim_table"]]
         if unknown:
             fail("%s: unknown %s" % (c["constant"], ", ".join('"%s"' % k for k in unknown)))
         if c["type"] not in CATEGORY_TYPES:
@@ -1756,6 +1773,7 @@ def level_categories(data):
         if "sky" in c and c["type"] == "POLAR":
             fail("%s: a polar category has no \"sky\" (BG1 is the yeti's)" % c["constant"])
         category_graphics(c)
+        category_anim(c)
         for k in CATEGORY_KEYS[4:]:
             if not isinstance(c[k], int) or not 0 <= c[k] < 0x10000:
                 fail("%s: \"%s\" is a number" % (c["constant"], k))
@@ -1812,7 +1830,8 @@ def category_graphics(c):
 
     entries = category_graphic_entries()
     out = {"cell_anim": (t["cell_anim"], None, t["cell_anim_size"]), "sky": (None, None, None),
-           "palette": (t["palette"], None, None)}
+           "palette": (t["palette"], None, None), "sprite_sheet": (t["sprite_sheet"], None, None),
+           "palette_cycle": (None, None, None)}
     for key, kind in CATEGORY_GRAPHIC_KEYS.items():
         if key not in c:
             continue
@@ -1858,7 +1877,68 @@ def category_graphics(c):
         n = len(jasc_pal.read_jasc(GFX_MANIFEST.parent / e["path"]))
         if n != 256:
             fail("its palette graphics/%s has %d colours, an OBJ palette 256" % (e["path"], n))
+    out["palette_cycle"] = category_palette_cycle(c, out["palette_cycle"], fail)
     return out
+
+
+def category_palette_cycle(c, cycle, fail):
+    """A category's "palette_cycle", checked: (symbol, entry, None) of its
+    own, or (None, None, None) for the ROM's (ActorPaletteCycle::frames) or
+    none. Only a polar category has one (ActorCategory::Init enables the
+    cycle for CATEGORY_TYPE_POLAR), and a new one is PALETTE_CYCLE_FRAMES
+    JASC files of BG palettes 0-13."""
+    import gfx_manifest
+
+    sym, e, _ = cycle
+    if e is None:
+        return cycle
+    if c["type"] != "POLAR":
+        fail("a %s category has no \"palette_cycle\": the palette cycle is a polar category's "
+             "(ActorCategory::Init enables it for CATEGORY_TYPE_POLAR)" % c["type"].lower())
+    if "rom" in e:
+        return (None, None, None)
+    errors = gfx_manifest.palette_cycle_errors(e, "its palette cycle %s" % sym, GFX_MANIFEST.parent.parent)
+    if errors:
+        fail(errors[0])
+    return cycle
+
+
+def category_palette_cycles_h(data):
+    """category_palette_cycles.h (`levels.py category-cycles OUT`): the
+    palette cycle frames ActorPaletteCycle::Update DMAs. With no category
+    naming its own "palette_cycle", the ROM's `frames`, so the code is the
+    ROM's; otherwise the current category's, from the table
+    actor_categories.inc defines (ActorPaletteCycle::categoryFrames)."""
+    own = [c["constant"] for c in level_categories(data) if category_graphics(c)["palette_cycle"][0]]
+    out = ["/* Generated by tools/levels.py from data/levels/levels.json. Do not edit. */",
+           "#ifndef GUARD_CATEGORY_PALETTE_CYCLES_H", "#define GUARD_CATEGORY_PALETTE_CYCLES_H", "",
+           "/*",
+           " * The BG palette cycle frames ActorPaletteCycle::Update DMAs (a polar category's,",
+           " * levels.json's \"palette_cycle\", docs/levels.md \"Category graphics\"): the ROM's",
+           " * (ActorPaletteCycle::frames) when no category names its own, else the current",
+           " * category's (ActorPaletteCycle::categoryFrames, actor_categories.inc).",
+           " */"]
+    if own:
+        out += ["/* Their own: %s */" % ", ".join(own),
+                "#define ACTOR_PALETTE_CYCLE_FRAMES categoryFrames[ActorCategory::current]"]
+    else:
+        out.append("#define ACTOR_PALETTE_CYCLE_FRAMES frames")
+    return "\n".join(out + ["", "#endif /* GUARD_CATEGORY_PALETTE_CYCLES_H */", ""])
+
+
+def category_palette_cycles_c(cats):
+    """ActorPaletteCycle::categoryFrames, the frames of each category's
+    palette cycle (its own, or the ROM's), when a category names its own;
+    nothing otherwise."""
+    cycles = [category_graphics(c)["palette_cycle"][0] for c in cats]
+    if not any(cycles):
+        return []
+    out = ["", "/* Per category, the BG palette cycle ActorPaletteCycle::Update DMAs (its",
+           " * \"palette_cycle\", or the ROM's frames; category_palette_cycles.h). */",
+           "const ActorPaletteCycle::Frame *const ActorPaletteCycle::categoryFrames[CATEGORY_COUNT] = {"]
+    for c, sym in zip(cats, cycles):
+        out.append("    %s, /* %s */" % (sym or "ActorPaletteCycle::frames", c["constant"]))
+    return out + ["};"]
 
 
 def new_category_graphics_c(cats):
@@ -1906,10 +1986,94 @@ def new_category_graphics_c(cats):
                         "    {", "#include \"%s_map.inc\"" % stem, "    },",
                         "    {", "#include \"%s_tiles.img.inc\"" % stem, "    },",
                         "    {", "#include \"%s_banks.inc\"" % stem, "    },", "};"]
+            elif key == "sprite_sheet":
+                out += ["/* graphics/%s: %s's sprite sheet, LZ77 (new) */" % (e["path"], c["constant"]),
+                        "extern const u8 %s[] __attribute__((aligned(4))) = {" % sym,
+                        "#include \"%s.bin.lz.inc\"" % e["path"].rstrip("/"), "};"]
+            elif key == "palette_cycle":
+                out += ["/* graphics/%s: %s's BG palette cycle, %d frames of BG palettes 0-13 (new) */"
+                        % (e["path"], c["constant"], e["frames"]),
+                        "extern const u16 %s[%d][14 * 16] = {" % (sym, e["frames"]),
+                        "#include \"%s.bin.inc\"" % e["path"].rstrip("/"), "};"]
             else:
                 out += ["/* graphics/%s: %s's OBJ palette, 256 colours (new) */" % (e["path"], c["constant"]),
                         "extern const u16 %s[256] = {" % sym, "#include \"%s.gbapal.inc\"" % stem, "};"]
     return out
+
+
+# ---------------------------------------------------------------------------
+# Colours a category names that the engine overwrites (#1089; docs/levels.md,
+# "Category graphics")
+#
+# - A polar category's palette cycle (ActorPaletteCycle::Update, enabled for
+#   CATEGORY_TYPE_POLAR by ActorCategory::Init) DMAs a frame of
+#   PALETTE_CYCLE_BANKS banks to BG palette 0 whenever the cell animation
+#   scrolls: of a polar cell animation's own palette only banks 14-15 show.
+# - A sky (LoadBgPicture, from ActorCategory::Init and after the pause menu)
+#   loads its whole 256-colour palette over the cell animation's.
+#
+# Both are the ROM's design: its ice wall shows the cycle's colours (its
+# own palette's banks 0-13 are none of the cycle's frames), and blimp
+# bonanza's and no fly zone's skies tint the type's clouds. So only a
+# category's own cell animation (not the type's) is checked, and only the
+# colours its pixels use: for a polar one, those it changed from the ice
+# wall's.
+PALETTE_CYCLE_BANKS = 14
+
+
+def png_palette(path):
+    """A paletted PNG's 256 colours (RGB tuples) and the indices its pixels
+    use, but each bank's colour 0 (transparent in a 4bpp cell)."""
+    from PIL import Image
+
+    with Image.open(path) as img:
+        flat = img.getpalette() or []
+        flat += [0] * (768 - len(flat))
+        used = sorted({i for i in set(img.tobytes()) if i % 16})
+    return [tuple(flat[3 * i:3 * i + 3]) for i in range(256)], used
+
+
+def category_palette_warnings(data):
+    """Warn about a category's own cell animation colours the engine
+    replaces: a polar one's in banks 0 to PALETTE_CYCLE_BANKS - 1 that
+    aren't the type's cell animation's, a jetpack or hovercraft one's that
+    aren't its sky's."""
+    by_symbol = {e["symbol"]: e for e in category_graphic_entries().values()}
+
+    def path(e):
+        return GFX_MANIFEST.parent / (e["paths"][0] if "paths" in e else e["path"])
+
+    def colours(idx):
+        return ", ".join("%d" % i for i in idx[:8]) + (" and %d more" % (len(idx) - 8) if len(idx) > 8 else "")
+
+    for c in level_categories(data):
+        g = category_graphics(c)
+        sym, e, _ = g["cell_anim"]
+        t = CATEGORY_TYPES[c["type"]]
+        if e is None or sym == t["cell_anim"]:
+            continue
+        pal, used = png_palette(path(e))
+        if c["type"] == "POLAR":
+            base, _ = png_palette(path(by_symbol[t["cell_anim"]]))
+            bad = [i for i in used if i < PALETTE_CYCLE_BANKS * 16 and pal[i] != base[i]]
+            if bad:
+                warn("%s: its cell animation graphics/%s uses colours of its own in banks 0-%d (indices %s). The polar "
+                     "palette cycle replaces banks 0-%d every moving frame (ActorPaletteCycle::Update), so they "
+                     "won't show: recolour through the pixels (the banks' indices), put them in banks %d-15, or "
+                     "give the category its own \"palette_cycle\" (docs/levels.md, \"Category graphics\")"
+                     % (c["constant"], e["path"], PALETTE_CYCLE_BANKS - 1, colours(bad), PALETTE_CYCLE_BANKS - 1,
+                        PALETTE_CYCLE_BANKS))
+            continue
+        sky, se, _ = g["sky"]
+        if sky is None:
+            continue
+        spal, _ = png_palette(path(se or by_symbol[sky]))
+        bad = [i for i in used if pal[i] != spal[i]]
+        if bad:
+            warn("%s: its cell animation graphics/%s has colours its sky's palette (graphics/%s) doesn't (indices %s). "
+                 "The sky's palette replaces the cell animation's (LoadBgPicture), so the sky's show: give the "
+                 "sky the same colours at those indices (docs/levels.md, \"Category graphics\")"
+                 % (c["constant"], e["path"], (se or by_symbol[sky])["paths"][0], colours(bad)))
 
 
 def categories():
@@ -2025,6 +2189,10 @@ def actor_categories_inc(data):
     if graphics:
         out += ["", "/* The new graphics the categories name (graphics/manifest.json entries with no",
                 " * ROM address; docs/levels.md \"Category graphics\"). */"] + graphics
+    tables = new_anim_tables_c(cats)
+    if tables:
+        out += ["", "/* The animation tables the categories name that aren't the ROM's (docs/levels.md,",
+                " * \"Category sprite sheets\"). */"] + tables
     out += ["", "/* One descriptor per actor category (levels.json's \"categories\"). */",
             "const struct category_descriptor ActorCategory::descriptors[CATEGORY_COUNT] = {"]
     for c in cats:
@@ -2046,11 +2214,11 @@ def actor_categories_inc(data):
                 "        %s," % ref("palette", None),
                 "        (struct actor_spawn_table *)%s%s," % ("&" if c["spawns"] in new else "",
                                                                spawn_list(c["spawns"])["symbol"]),
-                "        (struct anim_table_record *)%s," % t["anim_table"],
-                "        %s," % t["sprite_sheet"]]
+                "        (struct anim_table_record *)%s," % category_anim(c)[1],
+                "        %s," % g["sprite_sheet"][0]]
         out += ["        %d," % c[k] for k in CATEGORY_KEYS[4:]]
         out.append("    },")
-    out += ["};", ""]
+    out += ["};"] + category_palette_cycles_c(cats) + [""]
     return "\n".join(out)
 
 
@@ -2123,6 +2291,451 @@ def categories_from_rom(rom, kept):
 
 
 # ---------------------------------------------------------------------------
+# Animation tables (docs/levels.md, "Animation tables")
+#
+# A type's animation table (category_descriptor.anim_table, struct
+# anim_table_record, actor_anim.h) is data/levels/anim_tables/<name>.json:
+# its records, one per actor kind (the spawner indexes the table with the
+# kind), and the arrays they point at, the keyframes (table_A) and the
+# frames (table_B), in the order they are defined, with "table" where the
+# table itself goes. A record's frames are the type's sprite sheet's, by
+# entity folder and frame ("wumpa/03": FRAMED_POLAR_WUMPA_03); record 0's,
+# Crash's, are the type's compressed player frames by number
+# ("player_frames"). The ROM's two are generated in place, where their C
+# files #include them (ROM_ANIM_TABLES); a category's own, with the
+# descriptors (actor_categories.inc, docs/levels.md "Category sprite
+# sheets").
+#
+# - "symbol": the table's C name; "family": POLAR or JETPACK, the kinds it
+#   is indexed by (constants/actor_kinds.h); "sheet" (a category's own
+#   only): the framed sheet its frames are, if not the family's;
+# - "records": per kind, {"keyframes", "frames", "palette" (the OBJ
+#   palette bank), "depth" (the depth at which it draws unscaled), "box"
+#   (x, y, z, w, h, d)}, with "index" (the record's first byte) when not
+#   the kind, "spawn_x" and "spawn_y" when not 0; {} for a kind with none;
+# - "arrays": each {"keyframes": symbol, "list": [[duration, frame,
+#   loop end, loop start, OAM attribute], ...]}, {"frames": symbol, "list":
+#   ["entity/NN", ...]} or {"player_frames": symbol, "list": [n, ...]},
+#   with an optional "comment"; and "table".
+
+ANIM_TABLES_DIR = LEVELS_DIR / "anim_tables"
+# Per family: its ROM table (by name), its sprite sheet (a framed_sheet
+# of graphics/manifest.json, by path; a table's "sheet" by default), the
+# compressed player frames' class and offsets
+# (RLE_SPRITES_<name>_FRAME_<nnn>), their PNG and frame height in pixels,
+# and the length of its tables (the kinds the code indexes).
+ANIM_FAMILIES = {
+    "POLAR": {"table": "polar", "sheet": "vehicles/polar/sprite_sheet/", "player_class": "PolarPlayerFrameSet",
+              "player_name": "RLE_SPRITES_POLAR_PLAYER", "player_png": "vehicles/polar/player.png",
+              "player_height": 64, "records": 41},
+    "JETPACK": {"table": "jetpack", "sheet": "vehicles/jetpack/sprite_sheet/",
+                "player_class": "JetpackPlayerFrameSet", "player_name": "RLE_SPRITES_JETPACK_PLAYER",
+                "player_png": "vehicles/jetpack/player.png", "player_height": 64, "records": 47},
+}
+# The ROM's tables, by name (their C files #include them), and where they
+# are in the ROM.
+ROM_ANIM_TABLES = {"polar": 0x081796CC, "jetpack": 0x0817B2A4}
+ANIM_RECORD_SIZE = 0x28
+ANIM_KEYFRAME_SIZE = 0xC
+ANIM_RECORD_KEYS = ["index", "keyframes", "frames", "palette", "depth", "box", "spawn_x", "spawn_y"]
+ANIM_ARRAY_CTYPES = {"keyframes": "const struct anim_frame_record %s[%d]", "frames": "const u32 %s[%d]",
+                     "player_frames": "const u8 *const %s[%d]"}
+
+_sheet_frames = {}
+
+
+def sheet_frames(sheet):
+    """A framed sheet's frames (graphics/<sheet>, by entity folder in its
+    sheet.json's order, each folder's PNGs in name order): "entity/NN" ->
+    byte offset in its decompressed data, as tools/framed_gfx.py header."""
+    return sheet_layout(sheet)[0]
+
+
+def sheet_size(sheet):
+    """A framed sheet's decompressed size."""
+    return sheet_layout(sheet)[1]
+
+
+def sheet_layout(sheet):
+    if sheet not in _sheet_frames:
+        import framed_gfx
+
+        out, off = {}, 0
+        sheet_dir = GFX_MANIFEST.parent / sheet
+        for entity in framed_gfx.entity_order(str(sheet_dir)):
+            for p in sorted((sheet_dir / entity).glob("*.png")):
+                w, h = png_size(p)
+                out["%s/%s" % (entity, p.stem)] = off
+                off += 4 + (w // 8) * (h // 8) * 32
+        _sheet_frames[sheet] = (out, off)
+    return _sheet_frames[sheet]
+
+
+def framed_sheet(sheet):
+    """The framed_sheet entry of graphics/manifest.json at path `sheet`,
+    or None."""
+    e = category_graphic_entries().get(sheet)
+    return e if e is not None and e["kind"] == "framed_sheet" else None
+
+
+def player_frame_count(family):
+    f = ANIM_FAMILIES[family]
+    return png_size(GFX_MANIFEST.parent / f["player_png"])[1] // f["player_height"]
+
+
+def anim_array_kind(a):
+    """An "arrays" entry's kind: "keyframes", "frames" or "player_frames"."""
+    kinds = [k for k in ("keyframes", "frames", "player_frames") if k in a]
+    return kinds[0] if len(kinds) == 1 else None
+
+
+def anim_arrays(t):
+    """A table's arrays: symbol -> its "arrays" entry."""
+    return {a[anim_array_kind(a)]: a for a in t["arrays"] if a != "table"}
+
+
+def anim_table_sheet(t):
+    """The framed sheet a table's frames are: its "sheet", or its family's."""
+    return t.get("sheet", ANIM_FAMILIES[t["family"]]["sheet"])
+
+
+def anim_foreign_arrays(name):
+    """The arrays of its family's ROM table that table `name` (not the
+    ROM's) points at: symbol -> its "arrays" entry, in the ROM table's
+    order."""
+    t = anim_table(name)
+    rom = anim_table(ANIM_FAMILIES[t["family"]]["table"])
+    own = anim_arrays(t)
+    used = {r[k] for r in t["records"] for k in ("keyframes", "frames") if k in r and r[k] not in own}
+    return {s: a for s, a in anim_arrays(rom).items() if s in used}
+
+
+_anim_tables = {}
+
+
+def anim_table(name):
+    """data/levels/anim_tables/<name>.json, checked. A table that isn't the
+    ROM's has no player frames of its own, and its records can point at
+    the keyframes and player frames of its family's ROM table, and at its
+    frames if it is of the same sheet."""
+    if name in _anim_tables:
+        return _anim_tables[name]
+    path = ANIM_TABLES_DIR / ("%s.json" % name)
+
+    def fail(msg):
+        sys.exit("%s: %s (docs/levels.md, \"Animation tables\")" % (path, msg))
+
+    if not isinstance(name, str) or not path.exists():
+        sys.exit("%s: %s isn't an animation table of %s" % (LEVELS_JSON, json.dumps(name), ANIM_TABLES_DIR))
+    t = read_json(path)
+    unknown = [k for k in t if k not in ("symbol", "family", "sheet", "records", "arrays")]
+    if unknown:
+        fail("unknown %s" % ", ".join('"%s"' % k for k in unknown))
+    if not re.fullmatch(r"g[A-Za-z0-9_]+", t.get("symbol", "")):
+        fail("\"symbol\" is its C name, gSomething")
+    fam = ANIM_FAMILIES.get(t.get("family"))
+    if fam is None:
+        fail("\"family\" is POLAR or JETPACK (the kinds of constants/actor_kinds.h that index it)")
+    if "sheet" in t and framed_sheet(t["sheet"]) is None:
+        fail("\"sheet\" %s isn't a framed_sheet of graphics/manifest.json (by its path under graphics/)"
+             % json.dumps(t["sheet"]))
+    arrays = t.get("arrays")
+    if not isinstance(arrays, list) or arrays.count("table") != 1:
+        fail("\"arrays\" lists the keyframes and frames, with \"table\" where the table goes")
+    sheet = anim_table_sheet(t)
+    frames = sheet_frames(sheet)
+    players = player_frame_count(t["family"])
+    kinds = {}
+    if name != fam["table"]:
+        rom = anim_table(fam["table"])
+        kinds = {s: (anim_array_kind(a), len(a["list"]), a["list"]) for s, a in anim_arrays(rom).items()
+                 if anim_array_kind(a) != "frames" or sheet == anim_table_sheet(rom)}
+        if rom["symbol"] == t["symbol"]:
+            fail("\"symbol\" %s is the ROM table's" % t["symbol"])
+    for i, a in enumerate(arrays):
+        if a == "table":
+            continue
+        kind = anim_array_kind(a) if isinstance(a, dict) else None
+        if kind is None or any(k not in (kind, "list", "comment") for k in a) or not isinstance(a.get("list"), list) \
+                or not a["list"]:
+            fail("array %d is {\"keyframes\"|\"frames\"|\"player_frames\": its symbol, \"list\"}, with an optional "
+                 "\"comment\"" % i)
+        if kind == "player_frames" and name not in ROM_ANIM_TABLES:
+            fail("array %d: only the ROM's tables have player frames; record 0 can point at %s's"
+                 % (i, fam["table"]))
+        sym = a[kind]
+        if not re.fullmatch(r"g[A-Za-z0-9_]+", sym if isinstance(sym, str) else "") or sym in kinds \
+                or sym == t["symbol"]:
+            fail("array %d: %s isn't a unique C name, gSomething" % (i, json.dumps(sym)))
+        kinds[sym] = (kind, len(a["list"]), a["list"])
+        for n, v in enumerate(a["list"]):
+            if kind == "keyframes":
+                ok = isinstance(v, list) and len(v) == 5 and all(isinstance(x, int) for x in v) \
+                    and 0 <= v[0] < 0x10000 and all(-0x8000 <= x < 0x8000 for x in v[1:4]) and 0 <= v[4] < 0x10000
+                what = "[duration, frame, loop end, loop start, OAM attribute]"
+            elif kind == "frames":
+                ok = isinstance(v, str) and v in frames
+                what = "a frame of graphics/%s, \"entity/NN\"" % sheet
+            else:
+                ok = isinstance(v, int) and 0 <= v < players
+                what = "a frame of graphics/%s, 0-%d" % (fam["player_png"], players - 1)
+            if not ok:
+                fail("%s[%d] %s isn't %s" % (sym, n, json.dumps(v), what))
+    records = t.get("records")
+    if not isinstance(records, list) or len(records) != fam["records"]:
+        fail("\"records\" has one record per %s kind the code indexes, %d" % (t["family"], fam["records"]))
+    where = "\"arrays\"" if name == fam["table"] else "\"arrays\" or %s's" % fam["table"]
+    for slot, r in enumerate(records):
+        bad = [k for k in r if k not in ANIM_RECORD_KEYS] if isinstance(r, dict) else ["?"]
+        if bad or (r and not all(k in r for k in ANIM_RECORD_KEYS[1:6])):
+            fail("record %d is {\"keyframes\", \"frames\", \"palette\", \"depth\", \"box\"}, with optional "
+                 "\"index\", \"spawn_x\", \"spawn_y\", or {} (or just its \"index\")" % slot)
+        if not (isinstance(r.get("index", slot), int) and 0 <= r.get("index", slot) < 256):
+            fail("record %d: \"index\" is a byte" % slot)
+        if "keyframes" not in r:
+            continue
+        kf, fr = kinds.get(r["keyframes"]), kinds.get(r["frames"])
+        if kf is None or kf[0] != "keyframes":
+            fail("record %d: \"keyframes\" %s isn't a keyframes array of %s" % (slot, json.dumps(r["keyframes"]),
+                                                                               where))
+        if fr is None or fr[0] == "keyframes" or (fr[0] == "player_frames") != (slot == 0):
+            fail("record %d: \"frames\" %s isn't a %s array of %s%s" % (
+                slot, json.dumps(r["frames"]), "player_frames" if slot == 0 else "frames", where,
+                " (of its sheet)" if name != fam["table"] else ""))
+        if not (isinstance(r["palette"], int) and 0 <= r["palette"] < 16):
+            fail("record %d: \"palette\" is an OBJ palette bank, 0-15" % slot)
+        if not (isinstance(r["depth"], int) and 0 <= r["depth"] < 0x80000000):
+            fail("record %d: \"depth\" is a number" % slot)
+        if not (isinstance(r["box"], list) and len(r["box"]) == 6
+                and all(isinstance(x, int) and -0x8000 <= x < 0x8000 for x in r["box"])):
+            fail("record %d: \"box\" is [x, y, z, w, h, d]" % slot)
+        for k in ("spawn_x", "spawn_y"):
+            if not (isinstance(r.get(k, 0), int) and -0x80000000 <= r.get(k, 0) < 0x80000000):
+                fail("record %d: \"%s\" is a number" % (slot, k))
+        for n, k in enumerate(kf[2]):
+            if k[1] < 0 or k[2] < 1 or not 0 <= k[3] < k[2] or k[1] + k[2] > fr[1]:
+                fail("record %d: keyframe %d of %s plays frames %d-%d, and loops back to %d, of %s's %d"
+                     % (slot, n, r["keyframes"], k[1], k[1] + k[2] - 1, k[1] + k[3], r["frames"], fr[1]))
+    _anim_tables[name] = t
+    return t
+
+
+def anim_array_decl(a):
+    kind = anim_array_kind(a)
+    return "extern " + ANIM_ARRAY_CTYPES[kind] % (a[kind], len(a["list"])) + ";"
+
+
+def anim_table_c(name):
+    """An animation table's C definitions: the declarations of its arrays
+    (and, for a table that isn't the ROM's, of the table), then the arrays
+    and the table in "arrays" order."""
+    t = anim_table(name)
+    fam = ANIM_FAMILIES[t["family"]]
+    sheet = anim_table_sheet(t)
+    frames = sheet_frames(sheet)
+    prefix = framed_sheet(sheet)["prefix"]
+    first = {}
+    for k, v in actor_kinds()[t["family"]].items():
+        first.setdefault(v, k)
+    out = ["/* data/levels/anim_tables/%s.json */" % name]
+    out += [anim_array_decl(a) for a in t["arrays"] if a != "table"]
+    if name not in ROM_ANIM_TABLES:
+        out.append("extern const struct anim_table_record %s[%d];" % (t["symbol"], len(t["records"])))
+    for a in t["arrays"]:
+        out.append("")
+        if a == "table":
+            out.append("const struct anim_table_record %s[%d] = {" % (t["symbol"], len(t["records"])))
+            for slot, r in enumerate(t["records"]):
+                kind = " (%s_KIND_%s)" % (t["family"], first[slot]) if slot in first else ""
+                if "keyframes" not in r:
+                    out.append("    { %d }, /* %d%s: unused */" % (r.get("index", slot), slot, kind))
+                    continue
+                out += ["    /* %d%s */" % (slot, kind),
+                        "    { %d, (struct anim_frame_record *)%s, (u32 *)%s, %d, 0x%X, { %s }, %d, %d },"
+                        % (r.get("index", slot), r["keyframes"], r["frames"], r["palette"], r["depth"],
+                           ", ".join("%d" % x for x in r["box"]), r.get("spawn_x", 0), r.get("spawn_y", 0))]
+            out.append("};")
+            continue
+        kind = anim_array_kind(a)
+        if "comment" in a:
+            out.append("/* %s */" % a["comment"])
+        out.append(ANIM_ARRAY_CTYPES[kind] % (a[kind], len(a["list"])) + " = {")
+        for v in a["list"]:
+            if kind == "keyframes":
+                out.append("    { %d, %d, %d, %d, 0x%X, { 0, 0 } }," % tuple(v))
+            elif kind == "frames":
+                entity, frame = v.split("/")
+                out.append("    FRAMED_%s_%s_%s, /* 0x%x */" % (prefix, entity.upper(), frame, frames[v]))
+            else:
+                out.append("    %s::frames + %s_FRAME_%03d," % (fam["player_class"], fam["player_name"], v))
+        out.append("};")
+    return out
+
+
+def anim_table_inc(name):
+    """`levels.py anim-table NAME OUT`: what the C file of the ROM's
+    animation table NAME (ROM_ANIM_TABLES) #includes."""
+    if name not in ROM_ANIM_TABLES:
+        sys.exit("levels.py anim-table: %s isn't one of %s" % (name, ", ".join(ROM_ANIM_TABLES)))
+    out = ["/* Generated by tools/levels.py from data/levels/anim_tables/ - do not edit. */", ""]
+    return "\n".join(out + anim_table_c(name)) + "\n"
+
+
+def new_anim_tables_c(cats):
+    """The definitions of the animation tables the categories name that
+    aren't the ROM's, in category order, each once: the frame offsets of
+    their sheets, the ROM tables' arrays they point at, then each table."""
+    names = list(dict.fromkeys(c["anim_table"] for c in cats
+                               if c.get("anim_table") not in (None,) + tuple(ROM_ANIM_TABLES)))
+    if not names:
+        return []
+    seen = {}
+    for n in list(ROM_ANIM_TABLES) + names:
+        t = anim_table(n)
+        for s in [t["symbol"]] + list(anim_arrays(t)):
+            if s in seen:
+                sys.exit("%s: %s is %s's too (docs/levels.md, \"Animation tables\")"
+                         % (ANIM_TABLES_DIR / ("%s.json" % n), s, seen[s]))
+            seen[s] = n
+    out = [""]
+    for sheet in dict.fromkeys(anim_table_sheet(anim_table(n)) for n in names):
+        out.append("#include \"%s_frames.h\"" % sheet.rstrip("/"))
+    foreign = {}
+    for n in names:
+        foreign.update(anim_foreign_arrays(n))
+    if foreign:
+        out += ["", "/* The ROM tables' arrays they point at. */"] + [anim_array_decl(a) for a in foreign.values()]
+    for n in names:
+        out.append("")
+        out += anim_table_c(n)
+    return out
+
+
+def category_anim(c):
+    """A category's animation table and sprite sheet, checked: (the
+    table's name, its symbol). Its "anim_table" (a table of its type's
+    family) or the type's; its sheet, "sprite_sheet" or the type's, must be
+    the table's sheet, or, with the type's table, have the same frames as
+    the type's sheet (the same folders, frames and sizes, so the same
+    offsets). A sheet is no bigger than the type's: CategorySpriteSheet::
+    Decompress allocates it from the EWRAM heap."""
+    t = CATEGORY_TYPES[c["type"]]
+    fam = ANIM_FAMILIES[t["family"]]
+
+    def fail(msg):
+        sys.exit("%s: %s: %s (docs/levels.md, \"Category sprite sheets\")" % (LEVELS_JSON, c["constant"], msg))
+
+    name = c.get("anim_table", fam["table"])
+    table = anim_table(name)
+    if table["family"] != t["family"]:
+        fail("its animation table %s is %s's, its type %s's kinds are %s"
+             % (name, table["family"], c["type"], t["family"]))
+    sheet = c.get("sprite_sheet", fam["sheet"])
+    if sheet != anim_table_sheet(table):
+        if "anim_table" in c:
+            fail("its sprite sheet is graphics/%s, its animation table %s's frames graphics/%s's"
+                 % (sheet, name, anim_table_sheet(table)))
+        own, rom = sheet_frames(sheet), sheet_frames(fam["sheet"])
+        diff = next((k for k in list(rom) + list(own) if own.get(k) != rom.get(k)), None)
+        if diff is not None:
+            what = "has no %s" % diff if diff not in own else "has a %s the type's hasn't" % diff \
+                if diff not in rom else "has %s at 0x%x, the type's at 0x%x" % (diff, own[diff], rom[diff])
+            fail("its sprite sheet graphics/%s %s: with the type's animation table, a sheet has the type's "
+                 "frames (graphics/%s's folders, frames and sizes); one with others has its own \"anim_table\""
+                 % (sheet, what, fam["sheet"]))
+    size, top = sheet_size(sheet), sheet_size(fam["sheet"])
+    if size > top:
+        fail("its sprite sheet graphics/%s is 0x%x bytes unpacked, more than the type's 0x%x (the stage "
+             "unpacks it into the EWRAM heap)" % (sheet, size, top))
+    return name, table["symbol"]
+
+
+def write_anim_table(path, t):
+    """An animation table's JSON: one record, keyframe or line of frames
+    per line."""
+    def items(lst, per):
+        return ",\n".join("      " + ", ".join(json.dumps(v) for v in lst[i:i + per]) for i in range(0, len(lst), per))
+
+    head = ",\n".join('  "%s": %s' % (k, json.dumps(t[k])) for k in ("symbol", "family", "sheet") if k in t)
+    recs = ",\n".join("    " + json.dumps(r) for r in t["records"])
+    arrays = []
+    for a in t["arrays"]:
+        if a == "table":
+            arrays.append('    "table"')
+            continue
+        kind = anim_array_kind(a)
+        keys = "".join('"%s": %s, ' % (k, json.dumps(a[k])) for k in (kind, "comment") if k in a)
+        arrays.append("    {%s\"list\": [\n%s\n    ]}" % (keys, items(a["list"], {"keyframes": 1, "frames": 6,
+                                                                                    "player_frames": 16}[kind])))
+    text = "{\n%s,\n  \"records\": [\n%s\n  ],\n  \"arrays\": [\n%s\n  ]\n}\n" % (head, recs, ",\n".join(arrays))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text)
+
+
+def anim_tables_from_rom(rom):
+    """extract: the ROM's animation tables (data/levels/anim_tables/), each
+    with the kept JSON's arrays (their symbols, lengths, kinds and
+    comments, in their order); the rest from the ROM. The arrays are laid
+    out back to back around the table."""
+    import gfx_manifest
+    import rle_sprites
+
+    players = {}
+    for e in gfx_manifest.load():
+        if e["kind"] == "rle_frames":
+            pos, starts = gfx_manifest.addr(e["rom"]) - ROM_BASE, []
+            while pos < gfx_manifest.addr(e["end"]) - ROM_BASE:
+                starts.append(pos + ROM_BASE)
+                pos = rle_sprites.decode(rom.data, pos)[3]
+            players[e["path"]] = {a: n for n, a in enumerate(starts)}
+    for name, table in ROM_ANIM_TABLES.items():
+        path = ANIM_TABLES_DIR / ("%s.json" % name)
+        kept = read_json(path)
+        fam = ANIM_FAMILIES[kept["family"]]
+        offsets = {v: k for k, v in sheet_frames(fam["sheet"]).items()}
+        sizes = [ANIM_RECORD_SIZE * fam["records"] if a == "table" else
+                 (ANIM_KEYFRAME_SIZE if anim_array_kind(a) == "keyframes" else 4) * len(a["list"])
+                 for a in kept["arrays"]]
+        at = kept["arrays"].index("table")
+        a = table - sum(sizes[:at])
+        addrs = {}
+        arrays = []
+        for k, size in zip(kept["arrays"], sizes):
+            if k != "table":
+                kind = anim_array_kind(k)
+                addrs[a] = k[kind]
+                n = len(k["list"])
+                if kind == "keyframes":
+                    lst = []
+                    for i in range(n):
+                        e = a + ANIM_KEYFRAME_SIZE * i
+                        v = list(struct.unpack_from("<HhhhH", rom.data, e - ROM_BASE))
+                        assert rom.bytes(e + 10, 2) == b"\0\0", "%s[%d]: bytes 10-11 aren't 0" % (k[kind], i)
+                        lst.append(v)
+                elif kind == "frames":
+                    lst = [offsets[rom.w(a + 4 * i)] for i in range(n)]
+                else:
+                    lst = [players[fam["player_png"]][rom.w(a + 4 * i)] for i in range(n)]
+                k = dict(k, list=lst)
+            arrays.append(k)
+            a += size
+        records = []
+        for slot in range(fam["records"]):
+            r = table + ANIM_RECORD_SIZE * slot
+            f = struct.unpack_from("<BxxxIIBxxxi6hii", rom.data, r - ROM_BASE)
+            assert not any(rom.bytes(r + 1, 3) + rom.bytes(r + 0xD, 3)), "%s record %d: its padding isn't 0" \
+                % (kept["symbol"], slot)
+            rec = {} if f[0] == slot else {"index": f[0]}
+            if f[1] or any(f[2:]):
+                rec.update({"keyframes": addrs[f[1]], "frames": addrs[f[2]], "palette": f[3], "depth": f[4],
+                            "box": list(f[5:11])})
+                rec.update({k: v for k, v in (("spawn_x", f[11]), ("spawn_y", f[12])) if v})
+            records.append(rec)
+        write_anim_table(path, {"symbol": kept["symbol"], "family": kept["family"], "records": records,
+                                "arrays": arrays})
+
+
+# ---------------------------------------------------------------------------
 # Boss levels (docs/levels.md, "Boss levels")
 #
 # A level's boss is its "boss_kind" in levels.json. LevelState::GetBossIndex
@@ -2138,7 +2751,8 @@ def categories_from_rom(rom, kept):
 #   parts left), "hits" (3 - the controller's hits taken), or None (0).
 #
 # Rewards (the powers, their dialogs, the cutscenes and credits of
-# UpdateGameFrame's switch) aren't the kind's: they stay the ROM's levels'.
+# UpdateGameFrame's switch) aren't the kind's: they are the level's
+# "on_clear" (level_on_clear_h).
 BOSS_KINDS = {
     "DINGODILE": {"entity": "DINGODILE", "hud": "BOSS_DINGODILE", "health": "hits"},
     "N_GIN": {"category_type": "HOVERCRAFT", "hud": "BOSS_N_GIN", "health": "parts"},
@@ -2206,6 +2820,207 @@ def level_bosses_h(data):
         out += ["", "/* %s: HUD %s, health %s */" % (k, info["hud"] or "none", info["health"] or "none"),
                 ("#define LEVEL_BOSS_CASES_%s %s" % (k, " ".join("case %s:" % c for c in levels))).rstrip()]
     return "\n".join(out + ["", "#endif /* GUARD_LEVEL_BOSSES_H */", ""])
+
+
+# ---------------------------------------------------------------------------
+# What clearing a level does (docs/levels.md, "Boss levels")
+#
+# A level's optional "on_clear" in levels.json is what clearing it does
+# besides the save: UpdateGameFrame's switch on the level (game_frame.cpp).
+# level_on_clear.h writes a case for each level that has one
+# (LEVEL_ON_CLEAR_CASES), in the levels' order, its statements in this
+# order:
+#
+# - "power": a power of save->flags (WORLD_OPEN_POWERS). If the save hasn't
+#   it yet: "open_world" (LevelSelect::SetNewWorldOpened: the next level
+#   select turns to the next page if it is open), the power (Give<Power>),
+#   its dialog (Show<Power>Dialog) and "cutscene", played once, with the
+#   power. Without a power, "cutscene" plays at every clear.
+# - "mark_cleared": the level word's `cleared` bit (LEVEL_FLAG_CRYSTAL), the
+#   bit the crystal pickup sets.
+# - "next_level": {"if_completion_over": N, "cutscene": C, "level": L}: past
+#   N% completion, play C (optional) and go straight on to the level L.
+# - "credits": {"cutscene": C}: play C (optional), then the credits.
+#
+# A level with no "on_clear" takes the switch's default case: its `cleared`
+# bit is set when the room it ended in is a category stage.
+ON_CLEAR_KEYS = ["power", "open_world", "cutscene", "mark_cleared", "next_level", "credits"]
+NEXT_LEVEL_KEYS = ["if_completion_over", "cutscene", "level"]
+# The cutscenes LevelState::PlayCutscene plays by index (gCutscenes,
+# src/game/ui/data/cutscenes.cpp).
+CUTSCENE_COUNT = 11
+# The ROM's rewards, which extract checks the kept "on_clear"s give.
+ROM_ON_CLEAR = {
+    "LEVEL_DINGODILE": {"power": "SUPER_BODY_SLAM", "open_world": True, "cutscene": 4},
+    "LEVEL_N_GIN": {"power": "DOUBLE_JUMP", "open_world": True, "cutscene": 5},
+    "LEVEL_TINY": {"power": "TORNADO_SPIN", "open_world": True, "cutscene": 6},
+    "LEVEL_NEO_CORTEX": {"power": "TURBO_RUN", "open_world": True,
+                         "next_level": {"if_completion_over": 99, "cutscene": 8, "level": "LEVEL_MEGA_MIX"},
+                         "credits": {"cutscene": 10}},
+    "LEVEL_MEGA_MIX": {"credits": {"cutscene": 9}},
+}
+
+
+def warn(msg):
+    """A levels.json warning: printed, and the build goes on."""
+    print("%s: warning: %s" % (LEVELS_JSON, msg), file=sys.stderr)
+
+
+def level_on_clear(data):
+    """{level constant: its "on_clear"}, checked: known keys and values, a
+    power given by one level at most, cutscenes PlayCutscene has, and
+    "next_level"s that don't come back round. Warns about a numbered boss
+    level that nothing marks cleared (on_clear_unmarked_warnings)."""
+    levels = {lv["constant"]: lv for lv in data["levels"]}
+
+    def fail(c, msg):
+        sys.exit("%s: %s: \"on_clear\": %s (docs/levels.md, \"Boss levels\")" % (LEVELS_JSON, c, msg))
+
+    def check_cutscene(c, v, where):
+        if not isinstance(v, int) or isinstance(v, bool) or not 0 <= v < CUTSCENE_COUNT:
+            fail(c, "%s is a cutscene, 0-%d (gCutscenes), not %s" % (where, CUTSCENE_COUNT - 1, json.dumps(v)))
+
+    out, given = {}, {}
+    for c, lv in levels.items():
+        oc = lv.get("on_clear")
+        if oc is None:
+            continue
+        if not isinstance(oc, dict):
+            fail(c, "an object of %s" % ", ".join('"%s"' % k for k in ON_CLEAR_KEYS))
+        unknown = [k for k in oc if k not in ON_CLEAR_KEYS]
+        if unknown:
+            fail(c, "unknown %s" % ", ".join('"%s"' % k for k in unknown))
+        for k in ("open_world", "mark_cleared"):
+            if not isinstance(oc.get(k, False), bool):
+                fail(c, "\"%s\" is true or false" % k)
+        power = oc.get("power")
+        if power is not None:
+            if power not in WORLD_OPEN_POWERS:
+                fail(c, "\"power\" is one of %s (a new power is code)" % ", ".join(WORLD_OPEN_POWERS))
+            if power in given:
+                fail(c, "%s gives %s already: a power is given by one level" % (given[power], power))
+            given[power] = c
+        elif oc.get("open_world"):
+            fail(c, "\"open_world\" comes with a \"power\": it is done the first time the power is given")
+        if "cutscene" in oc:
+            check_cutscene(c, oc["cutscene"], "\"cutscene\"")
+        nl = oc.get("next_level")
+        if nl is not None:
+            if not isinstance(nl, dict) or [k for k in nl if k not in NEXT_LEVEL_KEYS] or \
+                    "level" not in nl or "if_completion_over" not in nl:
+                fail(c, "\"next_level\" is {\"if_completion_over\": N, \"level\": LEVEL_*} and an optional "
+                     "\"cutscene\"")
+            n = nl["if_completion_over"]
+            if not isinstance(n, int) or isinstance(n, bool) or not 0 <= n <= 99:
+                fail(c, "\"next_level\" \"if_completion_over\" is a percentage, 0-99")
+            if nl["level"] not in levels:
+                fail(c, "\"next_level\" \"level\" %s isn't a level" % nl["level"])
+            if "cutscene" in nl:
+                check_cutscene(c, nl["cutscene"], "\"next_level\" \"cutscene\"")
+        cr = oc.get("credits")
+        if cr is not None:
+            if not isinstance(cr, dict) or [k for k in cr if k != "cutscene"]:
+                fail(c, "\"credits\" is {} or {\"cutscene\": N}, the cutscene played before them")
+            if "cutscene" in cr:
+                check_cutscene(c, cr["cutscene"], "\"credits\" \"cutscene\"")
+        out[c] = oc
+    for c in out:
+        chain = [c]
+        while "next_level" in out.get(chain[-1], {}):
+            n = out[chain[-1]]["next_level"]["level"]
+            if n in chain:
+                fail(c, "the \"next_level\"s go round: %s" % " -> ".join(chain + [n]))
+            chain.append(n)
+    on_clear_unmarked_warnings(data, out)
+    return out
+
+
+def on_clear_unmarked_warnings(data, on_clear):
+    """Warn about a numbered level with a "boss_kind" that nothing marks
+    cleared: its world's boss entry (LevelSelect::PlaceItems), the world
+    after it if {"levels_cleared": true} opens it (IsWorldCleared) and the
+    crystal count wait for every numbered level's `cleared` bit. A boss
+    ("boss": true) isn't counted by any of them."""
+    worlds = data.get("worlds") or []
+    names = entity_type_names()
+    cats = {c["constant"][len("CATEGORY_"):] for c in level_categories(data)}
+    for lv in data["levels"]:
+        c = lv["constant"]
+        if "boss_kind" not in lv or lv.get("boss") or "world" not in lv:
+            continue
+        oc = on_clear.get(c)
+        if oc is not None:
+            if oc.get("mark_cleared"):
+                continue
+        elif isinstance(lv["rooms"][-1], dict) and lv["rooms"][-1].get("stage") in cats:
+            continue  # the default case: it ends in a category stage
+        if any((e["type"] if isinstance(e["type"], str) else names[e["type"]]) == "CRYSTAL"
+               for r in lv["rooms"] if isinstance(r, str)
+               for e in read_json(LEVELS_DIR / r / "room.json")["entities"]):
+            continue  # the crystal pickup
+        w = lv["world"]
+        what = ["world %d's boss entry" % w]
+        if w + 1 < len(worlds) and worlds[w + 1].get("opened_by") == {"levels_cleared": True}:
+            what.append("world %d (\"opened_by\": {\"levels_cleared\": true})" % (w + 1))
+        warn("%s is a numbered level with a boss (\"boss_kind\": \"%s\") that nothing marks cleared (no "
+             "\"on_clear\" \"mark_cleared\", no crystal, and it doesn't end in a category stage): %s never "
+             "open%s, and the crystal count stays short (docs/levels.md, \"Boss levels\")"
+             % (c, lv["boss_kind"], " and ".join(what), "s" if len(what) == 1 else ""))
+
+
+def power_name(power):
+    """SUPER_BODY_SLAM -> SuperBodySlam, as in LevelState::Has<Power> and
+    Give<Power> and Show<Power>Dialog (menus.hpp)."""
+    return "".join(p.capitalize() for p in power.split("_"))
+
+
+def level_on_clear_h(data):
+    """level_on_clear.h: UpdateGameFrame's cases on the cleared level
+    (LEVEL_ON_CLEAR_CASES), one per level with an "on_clear"."""
+    on_clear = level_on_clear(data)
+    out = ["/* Generated by tools/levels.py from data/levels/levels.json. Do not edit. */",
+           "#ifndef GUARD_LEVEL_ON_CLEAR_H", "#define GUARD_LEVEL_ON_CLEAR_H", "",
+           "#include \"constants/levels.h\"", "",
+           "/*",
+           " * What clearing a level does (levels.json's \"on_clear\", docs/levels.md \"Boss",
+           " * levels\"): LevelState::UpdateGameFrame's cases on the level (game_frame.cpp),",
+           " * one per level that has one, in the levels' order. The other levels take its",
+           " * default case.",
+           " */"]
+    lines = []
+    for c, oc in on_clear.items():
+        lines.append("case %s:" % c)
+        power = oc.get("power")
+        if power:
+            p = power_name(power)
+            lines.append("    if (!Has%s()) {" % p)
+            if oc.get("open_world"):
+                lines.append("        LevelSelect::SetNewWorldOpened();")
+            lines += ["        Give%s();" % p, "        Show%sDialog();" % p]
+            if "cutscene" in oc:
+                lines.append("        PlayCutscene(%d);" % oc["cutscene"])
+            lines.append("    }")
+        elif "cutscene" in oc:
+            lines.append("    PlayCutscene(%d);" % oc["cutscene"])
+        if oc.get("mark_cleared"):
+            lines.append("    GetCurrentLevelFlags()->w.cleared = 1;")
+        nl = oc.get("next_level")
+        if nl:
+            lines.append("    if (progress.GetCompletionPercent() > %d) {" % nl["if_completion_over"])
+            if "cutscene" in nl:
+                lines.append("        PlayCutscene(%d);" % nl["cutscene"])
+            lines += ["        room.level += %s - %s;" % (nl["level"], c), "        room.roomIndex = 0;",
+                      "        goto start;", "    }"]
+        cr = oc.get("credits")
+        if cr is not None:
+            if "cutscene" in cr:
+                lines.append("    PlayCutscene(%d);" % cr["cutscene"])
+            lines.append("    RunCredits();")
+        lines.append("    break;")
+    width = max(len(s) for s in lines) if lines else 0
+    out += ["", "#define LEVEL_ON_CLEAR_CASES%s" % (" \\" if lines else "")]
+    out += ["    " + (s.ljust(width) + " \\" if k + 1 < len(lines) else s) for k, s in enumerate(lines)]
+    return "\n".join(out + ["", "#endif /* GUARD_LEVEL_ON_CLEAR_H */", ""])
 
 
 # ---------------------------------------------------------------------------
@@ -2665,8 +3480,8 @@ def room_record(rom, a, symbol):
 
 # The level fields levels.py extract keeps from the hand-written levels.json
 # (the names); it writes the others from the ROM ("boss" must agree). It
-# keeps "boss_kind" too, which is code (GetBossIndex's cases; check_rom_counts
-# checks they are the ROM's). Of the "themes" and "palette_cycles" it keeps
+# keeps "boss_kind" and "on_clear" too, which are code (GetBossIndex's and
+# UpdateGameFrame's cases; check_rom_counts checks they are the ROM's). Of the "themes" and "palette_cycles" it keeps
 # what the code says (themes_from_rom).
 LEVEL_KEYS_KEPT = ["constant", "name", "world"]
 
@@ -2703,6 +3518,8 @@ def level_table_from_rom(rom, level_list, folders):
             lv["boss"] = True
         if "boss_kind" in kept:
             lv["boss_kind"] = kept["boss_kind"]  # GetBossIndex's cases: code, kept
+        if "on_clear" in kept:
+            lv["on_clear"] = kept["on_clear"]  # UpdateGameFrame's cases: code, kept
         lv.update({"name_text": struct.unpack_from("<i", rom.data, a - ROM_BASE)[0], "theme": rom.w(a + 4),
                    "times": [rom.w(a + 8 + 4 * k) for k in range(3)],
                    "mask_assist_deaths": struct.unpack_from("<i", rom.data, a + 0x14 - ROM_BASE)[0],
@@ -2925,6 +3742,7 @@ def extract(rom_path):
               "levels": level_info, "worlds": worlds_from_rom(rom, kept)}
     levels["themes"], levels["palette_cycles"] = themes_from_rom(rom, kept)
     levels["categories"] = categories_from_rom(rom, kept)
+    anim_tables_from_rom(rom)
     # the derived counts (constants/levels.h, themes.h) are the ROM's
     check_rom_counts(levels)
     write_levels_json(levels)
@@ -3178,6 +3996,7 @@ def check_rom_counts(data):
         "the worlds' rules aren't the ROM's"
     assert save_layout(data) == (EEPROM_4KBIT, SAVE_4KBIT_SIZE, 0x70), "the save isn't the ROM's"
     assert level_boss_kinds(data) == ROM_BOSS_KINDS, "the boss kinds aren't the ROM's GetBossIndex cases"
+    assert level_on_clear(data) == ROM_ON_CLEAR, "the rewards aren't the ROM's UpdateGameFrame cases"
     assert c["LEVEL_COUNT"] == (LEVEL_ROOM_LISTS - LEVEL_TABLE) // LEVEL_INFO_SIZE
 
 
@@ -3194,8 +4013,8 @@ ROM_SAVE_VERSION = 0x12
 
 
 # The levels' keys level_data_crc leaves out: they don't change what a save's
-# records mean.
-CRC_LEVEL_KEYS_LEFT_OUT = ("boss_kind",)
+# records mean (the boss's HUD, what clearing the level does).
+CRC_LEVEL_KEYS_LEFT_OUT = ("boss_kind", "on_clear")
 
 
 def level_data_crc(levels):
@@ -3208,7 +4027,8 @@ def level_data_crc(levels):
     def canon(v):
         return json.dumps(v, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
 
-    # a level's boss kind (the HUD's, level_bosses.h) doesn't count either
+    # a level's boss kind (the HUD's, level_bosses.h) and its rewards
+    # (level_on_clear.h) don't count either
     crc = zlib.crc32(canon([{k: v for k, v in lv.items() if k not in CRC_LEVEL_KEYS_LEFT_OUT}
                             for lv in levels["levels"]]))
     for r in levels["rooms"]:
@@ -3439,12 +4259,20 @@ def main():
         write_if_changed(args[1], level_select_worlds_h(read_json(LEVELS_JSON)).encode())
     elif cmd == "bosses":
         write_if_changed(args[1], level_bosses_h(read_json(LEVELS_JSON)).encode())
+    elif cmd == "category-cycles":
+        write_if_changed(args[1], category_palette_cycles_h(read_json(LEVELS_JSON)).encode())
+    elif cmd == "on-clear":
+        write_if_changed(args[1], level_on_clear_h(read_json(LEVELS_JSON)).encode())
     elif cmd == "spawns":
         Path(args[2]).parent.mkdir(parents=True, exist_ok=True)
         Path(args[2]).write_text(spawns_inc(args[1]))
     elif cmd == "categories":
         Path(args[1]).parent.mkdir(parents=True, exist_ok=True)
         Path(args[1]).write_text(actor_categories_inc(read_json(LEVELS_JSON)))
+        category_palette_warnings(read_json(LEVELS_JSON))
+    elif cmd == "anim-table":
+        Path(args[2]).parent.mkdir(parents=True, exist_ok=True)
+        Path(args[2]).write_text(anim_table_inc(args[1]))
     else:
         sys.exit("unknown command %s" % cmd)
 

@@ -1,0 +1,310 @@
+{
+  "symbol": "gCategoryFamily0AnimTable",
+  "family": "POLAR",
+  "records": [
+    {"keyframes": "gPolarPlayerKeyframes", "frames": "gPolarPlayerFrames", "palette": 0, "depth": 12032, "box": [-10, -20, -1, 20, 44, 3]},
+    {"keyframes": "gPolarBasicCrateKeyframes", "frames": "gPolarBasicCrateFrames", "palette": 1, "depth": 12604, "box": [-10, -10, -1, 20, 20, 3]},
+    {"keyframes": "gRiderlessPolarKeyframes", "frames": "gRiderlessPolarFrames", "palette": 0, "depth": 12032, "box": [0, 0, 0, 0, 0, 0]},
+    {"keyframes": "gPolarCheckpointCrateKeyframes", "frames": "gPolarCheckpointCrateFrames", "palette": 5, "depth": 12604, "box": [-12, -20, -2, 24, 30, 5], "spawn_y": 256},
+    {"keyframes": "gPolarNitroCrateKeyframes", "frames": "gPolarNitroCrateFrames", "palette": 2, "depth": 12604, "box": [-10, -10, -1, 20, 20, 3]},
+    {"keyframes": "gPolarCrateKeyframes", "frames": "gPolarTimeCrate1Frames", "palette": 4, "depth": 12604, "box": [-10, -10, -1, 20, 20, 3]},
+    {"keyframes": "gPolarCrateKeyframes", "frames": "gPolarTimeCrate2Frames", "palette": 4, "depth": 12604, "box": [-10, -10, -1, 20, 20, 3]},
+    {"keyframes": "gPolarCrateKeyframes", "frames": "gPolarTimeCrate3Frames", "palette": 4, "depth": 12604, "box": [-10, -10, -1, 20, 20, 3]},
+    {"keyframes": "gPolarCrateKeyframes", "frames": "gPolarLifeCrateFrames", "palette": 3, "depth": 12604, "box": [-10, -10, -1, 20, 20, 3]},
+    {"keyframes": "gPolarCrateKeyframes", "frames": "gPolarAkuAkuCrateFrames", "palette": 3, "depth": 12604, "box": [-10, -10, -1, 20, 20, 3]},
+    {"keyframes": "gPolarBasicCrateKeyframes", "frames": "gPolarBasicCrateFrames", "palette": 1, "depth": 12604, "box": [-10, -10, -1, 20, 20, 3]},
+    {"keyframes": "gPolarWumpaKeyframes", "frames": "gPolarWumpaFrames", "palette": 7, "depth": 10313, "box": [-12, -12, -1, 24, 24, 3]},
+    {"keyframes": "gPolarBoostPadKeyframes", "frames": "gPolarBoostPadFrames", "palette": 6, "depth": 10313, "box": [-1, 4, -2, 2, 10, 4]},
+    {"keyframes": "gPolarObstacleKeyframes", "frames": "gPolarObstacleFrames", "palette": 11, "depth": 11745, "box": [-30, -4, -1, 120, 20, 3], "spawn_x": -7680, "spawn_y": -1024},
+    {"keyframes": "gPolarObstacleKeyframes", "frames": "gPolarObstacleFrames", "palette": 11, "depth": 11745, "box": [0, 0, 0, 0, 0, 0], "spawn_x": 7680},
+    {"index": 0, "keyframes": "gPolarBoostPadKeyframes", "frames": "gPolarBoostPadFrames", "palette": 6, "depth": 10313, "box": [-10, 8, -1, 20, 3, 3]},
+    {"keyframes": "gPolarIcicleKeyframes", "frames": "gPolarIcicleFrames", "palette": 10, "depth": 12032, "box": [-8, -20, 0, 16, 36, 1]},
+    {"keyframes": "gPolarIcicleKeyframes", "frames": "gPolarIcicleFrames", "palette": 10, "depth": 12032, "box": [-8, -20, 0, 16, 36, 1]},
+    {"keyframes": "gPolarIcicleKeyframes", "frames": "gPolarIcicleFrames", "palette": 10, "depth": 12032, "box": [-4, -20, 0, 8, 36, 1]},
+    {"keyframes": "gPolarIcicleKeyframes", "frames": "gPolarIcicleFrames", "palette": 10, "depth": 12032, "box": [-4, -20, 0, 8, 36, 1]},
+    {"keyframes": "gPolarIcicleKeyframes", "frames": "gPolarIcicleFrames", "palette": 10, "depth": 12032, "box": [-3, -12, 0, 6, 24, 1], "spawn_y": -2048},
+    {"keyframes": "gPolarIcicleKeyframes", "frames": "gPolarIcicleFrames", "palette": 10, "depth": 12032, "box": [-3, -12, 0, 6, 24, 1], "spawn_y": -2048},
+    {"keyframes": "gPolarLauncherKeyframes", "frames": "gPolarLauncherFrames", "palette": 8, "depth": 12604, "box": [-9, -1, -1, 18, 4, 2], "spawn_y": 2048},
+    {"keyframes": "gPolarElectricFenceKeyframes", "frames": "gPolarElectricFenceFrames", "palette": 9, "depth": 9740, "box": [-24, -25, 0, 48, 40, 1], "spawn_y": -1024},
+    {"keyframes": "gPolarPenguinKeyframes", "frames": "gPolarPenguinFrames", "palette": 13, "depth": 14037, "box": [-12, -2, -1, 24, 12, 2]},
+    {"keyframes": "gPolarGoalKeyframes", "frames": "gPolarGoalFrames", "palette": 12, "depth": 11459, "box": [-30, -120, -28, 120, 140, 3], "spawn_x": -7680, "spawn_y": 1536},
+    {"keyframes": "gPolarGoalKeyframes", "frames": "gPolarGoalFrames", "palette": 12, "depth": 11459, "box": [0, 0, 0, 0, 0, 0], "spawn_x": 7680},
+    {"keyframes": "gPolarAkuAkuKeyframes", "frames": "gPolarAkuAkuFrames", "palette": 14, "depth": 12032, "box": [0, 0, 0, 0, 0, 0]},
+    {"keyframes": "gPolarCrateKeyframes", "frames": "gPolarQuestionCrateFrames", "palette": 1, "depth": 12604, "box": [-10, -10, -1, 20, 20, 3]},
+    {"keyframes": "gPolarCrateKeyframes", "frames": "gPolarQuestionCrateFrames", "palette": 1, "depth": 12604, "box": [-10, -10, -1, 20, 20, 3]},
+    {"keyframes": "gPolarCrateKeyframes", "frames": "gPolarQuestionCrateFrames", "palette": 1, "depth": 12604, "box": [-10, -10, -1, 20, 20, 3]},
+    {"keyframes": "gPolarCrateKeyframes", "frames": "gPolarQuestionCrateFrames", "palette": 1, "depth": 12604, "box": [-10, -10, -1, 20, 20, 3]},
+    {},
+    {},
+    {},
+    {"keyframes": "gPolarCrateKeyframes", "frames": "gPolarQuestionCrateFrames", "palette": 1, "depth": 12604, "box": [-10, -10, -1, 20, 20, 3]},
+    {"keyframes": "gPolarBoostPadKeyframes", "frames": "gPolarBoostPadFrames", "palette": 6, "depth": 10313, "box": [0, 0, 0, 0, 0, 0]},
+    {"keyframes": "gPolarBoostPadKeyframes", "frames": "gPolarBoostPadFrames", "palette": 6, "depth": 10313, "box": [0, 0, 0, 0, 0, 0]},
+    {"keyframes": "gPolarBoostPadKeyframes", "frames": "gPolarBoostPadFrames", "palette": 6, "depth": 10313, "box": [0, 0, 0, 0, 0, 0]},
+    {"keyframes": "gPolarBoostPadKeyframes", "frames": "gPolarBoostPadFrames", "palette": 6, "depth": 10313, "box": [0, 0, 0, 0, 0, 0]},
+    {"keyframes": "gPolarCheckpointTextKeyframes", "frames": "gPolarCheckpointTextFrames", "palette": 7, "depth": 12604, "box": [0, 0, 0, 0, 0, 0]}
+  ],
+  "arrays": [
+    {"keyframes": "gPolarPlayerKeyframes", "list": [
+      [128, 0, 20, 0, 0],
+      [128, 20, 39, 0, 0],
+      [128, 59, 20, 0, 0],
+      [64, 79, 9, 8, 0],
+      [128, 88, 9, 8, 0],
+      [64, 97, 16, 0, 0],
+      [64, 113, 8, 7, 0],
+      [64, 121, 11, 0, 0],
+      [128, 132, 1, 0, 0],
+      [128, 133, 23, 22, 0],
+      [64, 117, 4, 3, 0],
+      [64, 60, 2, 0, 0],
+      [64, 0, 1, 0, 0]
+    ]},
+    {"player_frames": "gPolarPlayerFrames", "list": [
+      0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+      16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+      32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+      48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+      64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
+      80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95,
+      96, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150,
+      151, 20, 21, 22, 23, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107,
+      108, 109, 110, 111, 135, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122,
+      123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134
+    ]},
+    {"keyframes": "gRiderlessPolarKeyframes", "list": [
+      [64, 0, 9, 8, 0],
+      [64, 9, 1, 0, 0]
+    ]},
+    {"frames": "gRiderlessPolarFrames", "list": [
+      "riderless_polar/00", "riderless_polar/01", "riderless_polar/02", "riderless_polar/03", "riderless_polar/04", "riderless_polar/05",
+      "riderless_polar/06", "riderless_polar/07", "riderless_polar/08", "riderless_polar/09"
+    ]},
+    "table",
+    {"keyframes": "gPolarWumpaKeyframes", "list": [
+      [85, 0, 14, 0, 0]
+    ]},
+    {"frames": "gPolarWumpaFrames", "list": [
+      "wumpa/00", "wumpa/01", "wumpa/02", "wumpa/03", "wumpa/04", "wumpa/05",
+      "wumpa/06", "wumpa/07", "wumpa/08", "wumpa/09", "wumpa/10", "wumpa/11",
+      "wumpa/12", "wumpa/13"
+    ]},
+    {"keyframes": "gPolarLauncherKeyframes", "list": [
+      [64, 0, 10, 0, 0],
+      [64, 10, 10, 0, 0]
+    ]},
+    {"frames": "gPolarLauncherFrames", "list": [
+      "launcher/00", "launcher/01", "launcher/02", "launcher/03", "launcher/04", "launcher/05",
+      "launcher/06", "launcher/07", "launcher/08", "launcher/09", "launcher/10", "launcher/11",
+      "launcher/12", "launcher/13", "launcher/14", "launcher/15", "launcher/16", "launcher/17",
+      "launcher/18", "launcher/19"
+    ]},
+    {"keyframes": "gPolarBoostPadKeyframes", "list": [
+      [42, 4, 4, 0, 4096],
+      [42, 0, 4, 0, 0],
+      [42, 4, 4, 0, 0]
+    ]},
+    {"frames": "gPolarBoostPadFrames", "list": [
+      "boost_pad/00", "boost_pad/01", "boost_pad/02", "boost_pad/03", "boost_pad/04", "boost_pad/05",
+      "boost_pad/06", "boost_pad/07"
+    ]},
+    {"keyframes": "gPolarElectricFenceKeyframes", "list": [
+      [64, 0, 8, 0, 0],
+      [64, 8, 14, 13, 0]
+    ]},
+    {"frames": "gPolarElectricFenceFrames", "list": [
+      "electric_fence/00", "electric_fence/01", "electric_fence/02", "electric_fence/03", "electric_fence/04", "electric_fence/05",
+      "electric_fence/06", "electric_fence/07", "electric_fence_wreck/00", "electric_fence_wreck/01", "electric_fence_wreck/02", "electric_fence_wreck/03",
+      "electric_fence_wreck/04", "electric_fence_wreck/05", "electric_fence_wreck/06", "electric_fence_wreck/07", "electric_fence_wreck/08", "electric_fence_wreck/09",
+      "electric_fence_wreck/10", "electric_fence_wreck/11", "electric_fence_wreck/12", "electric_fence_wreck/13"
+    ]},
+    {"keyframes": "gPolarIcicleKeyframes", "list": [
+      [0, 0, 1, 0, 0],
+      [0, 1, 1, 0, 0],
+      [0, 2, 1, 0, 0],
+      [0, 3, 1, 0, 0],
+      [0, 0, 1, 0, 4096],
+      [0, 1, 1, 0, 4096],
+      [0, 2, 1, 0, 4096],
+      [0, 3, 1, 0, 4096],
+      [0, 4, 1, 0, 0],
+      [0, 5, 1, 0, 0],
+      [0, 6, 1, 0, 0],
+      [0, 7, 1, 0, 0],
+      [0, 4, 1, 0, 4096],
+      [0, 5, 1, 0, 4096],
+      [0, 6, 1, 0, 4096],
+      [0, 7, 1, 0, 4096],
+      [0, 8, 1, 0, 0],
+      [0, 9, 1, 0, 0],
+      [0, 10, 1, 0, 0],
+      [0, 11, 1, 0, 0],
+      [0, 8, 1, 0, 4096],
+      [0, 9, 1, 0, 4096],
+      [0, 10, 1, 0, 4096],
+      [0, 11, 1, 0, 4096]
+    ]},
+    {"frames": "gPolarIcicleFrames", "list": [
+      "icicle/00", "icicle/01", "icicle/02", "icicle/03", "icicle/04", "icicle/05",
+      "icicle/06", "icicle/07", "icicle/08", "icicle/09", "icicle/10", "icicle/11"
+    ]},
+    {"frames": "gPolarObstacleFrames", "comment": "Records 13/14, the two halves of the polar obstacle (CreatePolarObstacle): a low 120-pixel-wide ridge across the track, only in category 2.", "list": [
+      "obstacle/00"
+    ]},
+    {"keyframes": "gPolarObstacleKeyframes", "list": [
+      [0, 0, 1, 0, 0],
+      [0, 0, 1, 0, 4096]
+    ]},
+    {"frames": "gPolarGoalFrames", "list": [
+      "goal/00"
+    ]},
+    {"keyframes": "gPolarGoalKeyframes", "list": [
+      [0, 0, 1, 0, 0],
+      [0, 0, 1, 0, 4096]
+    ]},
+    {"frames": "gPolarPenguinFrames", "list": [
+      "penguin/00", "penguin/01", "penguin/02", "penguin/03", "penguin/04", "penguin/05",
+      "penguin/06", "penguin/07", "penguin/08"
+    ]},
+    {"keyframes": "gPolarPenguinKeyframes", "list": [
+      [64, 0, 9, 0, 0]
+    ]},
+    {"keyframes": "gPolarBasicCrateKeyframes", "list": [
+      [0, 0, 1, 0, 0],
+      [0, 1, 1, 0, 0],
+      [0, 2, 1, 0, 0],
+      [0, 2, 1, 0, 4096],
+      [0, 1, 1, 0, 4096],
+      [0, 0, 1, 0, 4096],
+      [0, 3, 1, 0, 0],
+      [0, 4, 1, 0, 0],
+      [0, 5, 1, 0, 0],
+      [0, 5, 1, 0, 4096],
+      [0, 4, 1, 0, 4096],
+      [0, 3, 1, 0, 4096],
+      [0, 6, 1, 0, 0],
+      [0, 7, 1, 0, 0],
+      [0, 8, 1, 0, 0],
+      [0, 8, 1, 0, 4096],
+      [0, 7, 1, 0, 4096],
+      [0, 6, 1, 0, 4096],
+      [51, 9, 6, 5, 0]
+    ]},
+    {"frames": "gPolarBasicCrateFrames", "list": [
+      "basic_crate/00", "basic_crate/01", "basic_crate/02", "basic_crate/03", "basic_crate/04", "basic_crate/05",
+      "basic_crate/06", "basic_crate/07", "basic_crate/08", "crate_shards/00", "crate_shards/01", "crate_shards/02",
+      "crate_shards/03", "crate_shards/04", "crate_shards/05"
+    ]},
+    {"keyframes": "gPolarNitroCrateKeyframes", "list": [
+      [0, 0, 1, 0, 0],
+      [0, 1, 1, 0, 0],
+      [0, 2, 1, 0, 0],
+      [0, 3, 1, 0, 0],
+      [0, 4, 1, 0, 0],
+      [0, 5, 1, 0, 0],
+      [0, 6, 1, 0, 0],
+      [0, 7, 1, 0, 0],
+      [0, 8, 1, 0, 0],
+      [0, 9, 1, 0, 0],
+      [0, 10, 1, 0, 0],
+      [0, 11, 1, 0, 0],
+      [0, 12, 1, 0, 0],
+      [0, 13, 1, 0, 0],
+      [0, 14, 1, 0, 0],
+      [0, 15, 1, 0, 0],
+      [0, 16, 1, 0, 0],
+      [0, 17, 1, 0, 0],
+      [51, 18, 8, 7, 0]
+    ]},
+    {"frames": "gPolarNitroCrateFrames", "list": [
+      "nitro_crate/00", "nitro_crate/01", "nitro_crate/02", "nitro_crate/03", "nitro_crate/04", "nitro_crate/05",
+      "nitro_crate/06", "nitro_crate/07", "nitro_crate/08", "nitro_crate/09", "nitro_crate/10", "nitro_crate/11",
+      "nitro_crate/12", "nitro_crate/13", "nitro_crate/14", "nitro_crate/15", "nitro_crate/16", "nitro_crate/17",
+      "nitro_crate_burst/00", "nitro_crate_burst/01", "nitro_crate_burst/02", "nitro_crate_burst/03", "nitro_crate_burst/04", "nitro_crate_burst/05",
+      "nitro_crate_burst/06", "nitro_crate_burst/07"
+    ]},
+    {"keyframes": "gPolarCrateKeyframes", "list": [
+      [0, 0, 1, 0, 0],
+      [0, 1, 1, 0, 0],
+      [0, 2, 1, 0, 0],
+      [0, 3, 1, 0, 0],
+      [0, 4, 1, 0, 0],
+      [0, 5, 1, 0, 0],
+      [0, 6, 1, 0, 0],
+      [0, 7, 1, 0, 0],
+      [0, 8, 1, 0, 0],
+      [0, 9, 1, 0, 0],
+      [0, 10, 1, 0, 0],
+      [0, 11, 1, 0, 0],
+      [0, 12, 1, 0, 0],
+      [0, 13, 1, 0, 0],
+      [0, 14, 1, 0, 0],
+      [0, 15, 1, 0, 0],
+      [0, 16, 1, 0, 0],
+      [0, 17, 1, 0, 0],
+      [51, 18, 6, 5, 0]
+    ]},
+    {"frames": "gPolarTimeCrate1Frames", "list": [
+      "time_crate_1/00", "time_crate_1/01", "time_crate_1/02", "time_crate_1/03", "time_crate_1/04", "time_crate_1/05",
+      "time_crate_1/06", "time_crate_1/07", "time_crate_1/08", "time_crate_1/09", "time_crate_1/10", "time_crate_1/11",
+      "time_crate_1/12", "time_crate_1/13", "time_crate_1/14", "time_crate_1/15", "time_crate_1/16", "time_crate_1/17",
+      "time_crate_shards/00", "time_crate_shards/01", "time_crate_shards/02", "time_crate_shards/03", "time_crate_shards/04", "time_crate_shards/05"
+    ]},
+    {"frames": "gPolarTimeCrate2Frames", "list": [
+      "time_crate_2/00", "time_crate_2/01", "time_crate_2/02", "time_crate_2/03", "time_crate_2/04", "time_crate_2/05",
+      "time_crate_2/06", "time_crate_2/07", "time_crate_2/08", "time_crate_2/09", "time_crate_2/10", "time_crate_2/11",
+      "time_crate_2/12", "time_crate_2/13", "time_crate_2/14", "time_crate_2/15", "time_crate_2/16", "time_crate_2/17",
+      "time_crate_shards/00", "time_crate_shards/01", "time_crate_shards/02", "time_crate_shards/03", "time_crate_shards/04", "time_crate_shards/05"
+    ]},
+    {"frames": "gPolarTimeCrate3Frames", "list": [
+      "time_crate_3/00", "time_crate_3/01", "time_crate_3/02", "time_crate_3/03", "time_crate_3/04", "time_crate_3/05",
+      "time_crate_3/06", "time_crate_3/07", "time_crate_3/08", "time_crate_3/09", "time_crate_3/10", "time_crate_3/11",
+      "time_crate_3/12", "time_crate_3/13", "time_crate_3/14", "time_crate_3/15", "time_crate_3/16", "time_crate_3/17",
+      "time_crate_shards/00", "time_crate_shards/01", "time_crate_shards/02", "time_crate_shards/03", "time_crate_shards/04", "time_crate_shards/05"
+    ]},
+    {"frames": "gPolarQuestionCrateFrames", "list": [
+      "question_crate/00", "question_crate/01", "question_crate/02", "question_crate/03", "question_crate/04", "question_crate/05",
+      "question_crate/06", "question_crate/07", "question_crate/08", "question_crate/09", "question_crate/10", "question_crate/11",
+      "question_crate/12", "question_crate/13", "question_crate/14", "question_crate/15", "question_crate/16", "question_crate/17",
+      "crate_shards/00", "crate_shards/01", "crate_shards/02", "crate_shards/03", "crate_shards/04", "crate_shards/05"
+    ]},
+    {"frames": "gPolarLifeCrateFrames", "list": [
+      "life_crate/00", "life_crate/01", "life_crate/02", "life_crate/03", "life_crate/04", "life_crate/05",
+      "life_crate/06", "life_crate/07", "life_crate/08", "life_crate/09", "life_crate/10", "life_crate/11",
+      "life_crate/12", "life_crate/13", "life_crate/14", "life_crate/15", "life_crate/16", "life_crate/17",
+      "crate_shards/00", "crate_shards/01", "crate_shards/02", "crate_shards/03", "crate_shards/04", "crate_shards/05"
+    ]},
+    {"frames": "gPolarAkuAkuCrateFrames", "list": [
+      "aku_aku_crate/00", "aku_aku_crate/01", "aku_aku_crate/02", "aku_aku_crate/03", "aku_aku_crate/04", "aku_aku_crate/05",
+      "aku_aku_crate/06", "aku_aku_crate/07", "aku_aku_crate/08", "aku_aku_crate/09", "aku_aku_crate/10", "aku_aku_crate/11",
+      "aku_aku_crate/12", "aku_aku_crate/13", "aku_aku_crate/14", "aku_aku_crate/15", "aku_aku_crate/16", "aku_aku_crate/17",
+      "crate_shards/00", "crate_shards/01", "crate_shards/02", "crate_shards/03", "crate_shards/04", "crate_shards/05"
+    ]},
+    {"frames": "gPolarCheckpointCrateFrames", "list": [
+      "checkpoint_crate/00", "checkpoint_crate/01", "checkpoint_crate/02", "checkpoint_crate/03", "checkpoint_crate/04", "checkpoint_crate/05",
+      "checkpoint_crate/06", "checkpoint_crate/07", "checkpoint_crate/08", "checkpoint_crate/09", "checkpoint_crate/10", "checkpoint_crate/11",
+      "checkpoint_crate/12", "checkpoint_crate/13", "crate_shards/00", "crate_shards/01", "crate_shards/02", "crate_shards/03",
+      "crate_shards/04", "crate_shards/05"
+    ]},
+    {"keyframes": "gPolarCheckpointCrateKeyframes", "list": [
+      [128, 0, 1, 0, 0],
+      [128, 1, 13, 12, 0],
+      [128, 13, 1, 0, 0],
+      [51, 14, 6, 5, 0]
+    ]},
+    {"frames": "gPolarAkuAkuFrames", "list": [
+      "aku_aku/00", "aku_aku/01", "aku_aku/01", "aku_aku/01", "aku_aku/01", "aku_aku/01",
+      "aku_aku_feathers/00", "aku_aku_feathers/01", "aku_aku_feathers/02", "aku_aku_feathers/03", "aku_aku_feathers/04"
+    ]},
+    {"keyframes": "gPolarAkuAkuKeyframes", "list": [
+      [34, 0, 6, 0, 0],
+      [34, 6, 5, 4, 0]
+    ]},
+    {"keyframes": "gPolarCheckpointTextKeyframes", "list": [
+      [8, 0, 3, 0, 0]
+    ]},
+    {"frames": "gPolarCheckpointTextFrames", "list": [
+      "checkpoint_text/00", "checkpoint_text/00", "checkpoint_text/00"
+    ]}
+  ]
+}

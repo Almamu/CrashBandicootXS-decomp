@@ -785,3 +785,735 @@ msgstr ""
 "aku: crash, prima ... maar we zijn nog niet van cortex af, want we hebben "
 "zijn ruimtestation en de planetenverkleiner nog niet vernietigd. je moet "
 "teruggaan en alle edelstenen ophalen."
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.developed_by"
+msgid "developed by"
+msgstr "developed by"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.executive_producers"
+msgid "executive producers"
+msgstr "executive producers"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.executive_producers.names"
+msgid ""
+"karthik bala\n"
+"tobi saulnier"
+msgstr ""
+"karthik bala\n"
+"tobi saulnier"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.project_managers"
+msgid "project managers"
+msgstr "project managers"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.project_managers.names"
+msgid ""
+"karthik bala\n"
+"jesse booth\n"
+"mike meischeid"
+msgstr ""
+"karthik bala\n"
+"jesse booth\n"
+"mike meischeid"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.game_design"
+msgid "game design"
+msgstr "game design"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.game_design.names"
+msgid ""
+"luis barriga\n"
+"karthik bala"
+msgstr ""
+"luis barriga\n"
+"karthik bala"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.additional_game_design"
+msgid "additional game design"
+msgstr "additional game design"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.additional_game_design.names"
+msgid ""
+"theodore bialek\n"
+"christopher winters\n"
+"chris degnan\n"
+"benjamin raymond\n"
+"jonathan russell"
+msgstr ""
+"theodore bialek\n"
+"christopher winters\n"
+"chris degnan\n"
+"benjamin raymond\n"
+"jonathan russell"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.programming"
+msgid "programming"
+msgstr "programming"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.programming.names"
+msgid ""
+"nate trost\n"
+"robert trevellyan\n"
+"alex rybakov\n"
+"jesse raymond\n"
+"chris pruett\n"
+"jesse booth\n"
+"viktor kuzmin"
+msgstr ""
+"nate trost\n"
+"robert trevellyan\n"
+"alex rybakov\n"
+"jesse raymond\n"
+"chris pruett\n"
+"jesse booth\n"
+"viktor kuzmin"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.graphics"
+msgid "graphics"
+msgstr "graphics"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.graphics.names"
+msgid ""
+"steve derrick\n"
+"theodore bialek\n"
+"christopher winters\n"
+"mei he\n"
+"jason harlow\n"
+"carl schell\n"
+"jim powell\n"
+"wes merritt\n"
+"jorge diaz\n"
+"florian freisleder"
+msgstr ""
+"steve derrick\n"
+"theodore bialek\n"
+"christopher winters\n"
+"mei he\n"
+"jason harlow\n"
+"carl schell\n"
+"jim powell\n"
+"wes merritt\n"
+"jorge diaz\n"
+"florian freisleder"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.audio"
+msgid "audio"
+msgstr "audio"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.audio.names"
+msgid ""
+"manfred linzner\n"
+"todd masten"
+msgstr ""
+"manfred linzner\n"
+"todd masten"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.vv_thanks"
+msgid ""
+"vicarious visions\n"
+"would like to thank"
+msgstr ""
+"vicarious visions\n"
+"would like to thank"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.thanks.red_eye_studios"
+msgid ""
+"red eye studios\n"
+"for aiding and abetting\n"
+"in graphics, animation\n"
+"and design"
+msgstr ""
+"red eye studios\n"
+"for aiding and abetting\n"
+"in graphics, animation\n"
+"and design"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.thanks.cosmigo"
+msgid ""
+"cosmigo\n"
+"for nefarious\n"
+"coding support"
+msgstr ""
+"cosmigo\n"
+"for nefarious\n"
+"coding support"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.thanks.shinen"
+msgid ""
+"shin'en multimedia\n"
+"for composing\n"
+"killer tunes"
+msgstr ""
+"shin'en multimedia\n"
+"for composing\n"
+"killer tunes"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.and_last_but_not_least"
+msgid "and last but not least"
+msgstr "and last but not least"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.and_last_but_not_least.names"
+msgid ""
+"guha bala\n"
+"nehme frangie\n"
+"kerry coffey\n"
+"lauren costello\n"
+"\n"
+"dawn harrington\n"
+"matt conte\n"
+"eric caraszi\n"
+"team baisoku \n"
+"\n"
+"daniel suarez\n"
+"sean krankel\n"
+"phillipe erwin\n"
+"vijay lakshman\n"
+"naughty dog"
+msgstr ""
+"guha bala\n"
+"nehme frangie\n"
+"kerry coffey\n"
+"lauren costello\n"
+"\n"
+"dawn harrington\n"
+"matt conte\n"
+"eric caraszi\n"
+"team baisoku \n"
+"\n"
+"daniel suarez\n"
+"sean krankel\n"
+"phillipe erwin\n"
+"vijay lakshman\n"
+"naughty dog"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.published_by"
+msgid "published by"
+msgstr "published by"
+
+#. The credits: lines, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.publisher"
+msgid "universal interactive"
+msgstr "universal interactive"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.vice_president_of_production"
+msgid ""
+"vice president\n"
+"of production"
+msgstr ""
+"vice president\n"
+"of production"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.vice_president_of_production.names"
+msgid "vijay lakshman"
+msgstr "vijay lakshman"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.senior_producer"
+msgid "senior producer"
+msgstr "senior producer"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.senior_producer.names"
+msgid "daniel suarez"
+msgstr "daniel suarez"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.producer"
+msgid "producer"
+msgstr "producer"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.producer.names"
+msgid "sean krankel"
+msgstr "sean krankel"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.production_coordinator"
+msgid "production coordinator"
+msgstr "production coordinator"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.production_coordinator.names"
+msgid "carlos schulte"
+msgstr "carlos schulte"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.additional_production_support"
+msgid ""
+"additional\n"
+"production support"
+msgstr ""
+"additional\n"
+"production support"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.additional_production_support.names"
+msgid ""
+"sean mountain\n"
+"nick torchia"
+msgstr ""
+"sean mountain\n"
+"nick torchia"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.additional_sound_effects"
+msgid ""
+"additional\n"
+"sound effects"
+msgstr ""
+"additional\n"
+"sound effects"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.additional_sound_effects.names"
+msgid "universal sound studios"
+msgstr "universal sound studios"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.vice_president_of_global_marketing"
+msgid ""
+"vice president\n"
+"of global marketing"
+msgstr ""
+"vice president\n"
+"of global marketing"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.vice_president_of_global_marketing.names"
+msgid "torrie dorrell"
+msgstr "torrie dorrell"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.sr_product_manager"
+msgid "sr. product manager"
+msgstr "sr. product manager"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.sr_product_manager.names"
+msgid "craig howe"
+msgstr "craig howe"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.associate_product_manager"
+msgid ""
+"associate\n"
+"product manager"
+msgstr ""
+"associate\n"
+"product manager"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.associate_product_manager.names"
+msgid "marcus savino"
+msgstr "marcus savino"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.marketing_coordinator"
+msgid "marketing coordinator"
+msgstr "marketing coordinator"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.marketing_coordinator.names"
+msgid "jason covey"
+msgstr "jason covey"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.senior_manager_public_relations"
+msgid ""
+"senior manager\n"
+"public relations"
+msgstr ""
+"senior manager\n"
+"public relations"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.senior_manager_public_relations.names"
+msgid "alex skillman"
+msgstr "alex skillman"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.jr_publicist"
+msgid "jr. publicist"
+msgstr "jr. publicist"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.jr_publicist.names"
+msgid "sandra shagat"
+msgstr "sandra shagat"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.director_of_promotions"
+msgid "director of promotions"
+msgstr "director of promotions"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.director_of_promotions.names"
+msgid "chandra hill"
+msgstr "chandra hill"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.creative_services_supervisor"
+msgid ""
+"creative services\n"
+"supervisor"
+msgstr ""
+"creative services\n"
+"supervisor"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.creative_services_supervisor.names"
+msgid "michael sequeira"
+msgstr "michael sequeira"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.testing"
+msgid "testing"
+msgstr "testing"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.testing.names"
+msgid "absolute quality inc."
+msgstr "absolute quality inc."
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.localisation"
+msgid "localisation"
+msgstr "localisation"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.localisation.names"
+msgid ""
+"david hickey\n"
+"thorsten stichweh\n"
+"conor harlow\n"
+"john macguill\n"
+"james mcmanus\n"
+"fiona wilson"
+msgstr ""
+"david hickey\n"
+"thorsten stichweh\n"
+"conor harlow\n"
+"john macguill\n"
+"james mcmanus\n"
+"fiona wilson"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.special_thanks"
+msgid "special thanks"
+msgstr "special thanks"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.special_thanks.names"
+msgid ""
+"bender-helper-impact\n"
+"big sesh studios\n"
+"grace baca\n"
+"letty cadena\n"
+"\n"
+"virginia fout\n"
+"scott johnson\n"
+"neal robison\n"
+"suzan rude\n"
+"\n"
+"ricci rukavina\n"
+"marcus sanford\n"
+"charles yam\n"
+"jim wilson\n"
+"\n"
+"luc vanhal\n"
+"ken cron\n"
+"agnès touraine\n"
+"sarah rico-zager"
+msgstr ""
+"bender-helper-impact\n"
+"big sesh studios\n"
+"grace baca\n"
+"letty cadena\n"
+"\n"
+"virginia fout\n"
+"scott johnson\n"
+"neal robison\n"
+"suzan rude\n"
+"\n"
+"ricci rukavina\n"
+"marcus sanford\n"
+"charles yam\n"
+"jim wilson\n"
+"\n"
+"luc vanhal\n"
+"ken cron\n"
+"agnès touraine\n"
+"sarah rico-zager"
+
+#. The credits: a heading, in the large font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.kid_testers"
+msgid ""
+"vv special thanks\n"
+"to all our kid testers"
+msgstr ""
+"vv special thanks\n"
+"to all our kid testers"
+
+#. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
+msgctxt "credits.kid_testers.names"
+msgid ""
+"michael brunick\n"
+"steven brunick\n"
+"ande cappellano\n"
+"zach catel\n"
+"\n"
+"luke citriniti\n"
+"aaron costello\n"
+"erik cotch\n"
+"madison derrick\n"
+"\n"
+"morgan derrick\n"
+"emma eames\n"
+"steven eames\n"
+"lauren hagerty\n"
+"\n"
+"meghan hagerty\n"
+"michael hagerty\n"
+"joseph isaacson\n"
+"greg izzo\n"
+"\n"
+"george karathomas\n"
+"ryan kelton\n"
+"sean kelton\n"
+"dylan mac vane\n"
+"\n"
+"alaina montello\n"
+"kelsey saulnier\n"
+"ellen waggoner\n"
+"zahgyee whineglass"
+msgstr ""
+"michael brunick\n"
+"steven brunick\n"
+"ande cappellano\n"
+"zach catel\n"
+"\n"
+"luke citriniti\n"
+"aaron costello\n"
+"erik cotch\n"
+"madison derrick\n"
+"\n"
+"morgan derrick\n"
+"emma eames\n"
+"steven eames\n"
+"lauren hagerty\n"
+"\n"
+"meghan hagerty\n"
+"michael hagerty\n"
+"joseph isaacson\n"
+"greg izzo\n"
+"\n"
+"george karathomas\n"
+"ryan kelton\n"
+"sean kelton\n"
+"dylan mac vane\n"
+"\n"
+"alaina montello\n"
+"kelsey saulnier\n"
+"ellen waggoner\n"
+"zahgyee whineglass"

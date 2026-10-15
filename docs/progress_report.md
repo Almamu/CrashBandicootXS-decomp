@@ -13,8 +13,10 @@ read by `report generate`) is generated fresh by `make report` every time
 (see "One unit per matched file" below) and gitignored - never hand-edit or
 commit it.
 
+CI also uploads it as an artifact for
+[decompilati.onl](https://decompilati.onl) (see "decompilati.onl" below).
 The report used to be uploaded for [decomp.dev](https://decomp.dev), which
-has since closed; nothing reads `report.json` outside this repository now.
+has since closed.
 
 ## Why this needed more than just running objdiff-cli
 
@@ -567,3 +569,20 @@ badges it would publish. On a push to `main`, once every job passed,
 the `badges` job (the only one with `contents: write`) replaces the
 single commit of the `badges` branch with them, and the README links to
 the files on that branch.
+
+## decompilati.onl
+
+[decompilati.onl](https://decompilati.onl) ([API docs](https://decompilati.onl/docs))
+reads objdiff reports the way decomp.dev did. The "Upload progress report
+artifact" step uploads `report.json` as the `europe_report` artifact on
+every run; with the decompilati.onl GitHub App installed on the
+repository, it imports the artifact of each successful run on `main`, with
+the run's commit. The version is the artifact name's prefix, `europe`.
+
+decompilati.onl counts matched code as matching, fuzzy-matched code beyond
+that as non-matching and objdiff's matched data as data, and makes an
+area of each progress category (see "Categorizing the still-raw majority
+of the ROM" above), with its units inside.
+
+This project doesn't use the webhook (`/api/v1/progress`); it stays for
+another project.

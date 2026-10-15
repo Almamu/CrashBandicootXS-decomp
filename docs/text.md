@@ -3,15 +3,14 @@
 The game's text is in `text/` as gettext files (#1070): the menus, the
 level names and the other UI strings (`GetUiText`'s text ids), and the
 cutscenes' pages, in the six languages of the language select (English,
-French, German, Spanish, Italian, Dutch), and the credits, in English
-only (see "The credits"). The build generates the ROM's three string
+French, German, Spanish, Italian, Dutch), and the credits, which every
+language shows in English (see "The credits"). The build generates the ROM's three string
 tables and the credits from them (docs/data.md, "Text tables").
 
 | File | What |
 |---|---|
 | `text/crashxs.pot` | the template: every string's key, its English text and the translator comments |
 | `text/fr.po`, `de.po`, `es.po`, `it.po`, `nl.po` | a language's text, one entry per template entry |
-| `text/credits.pot` | the credits' text, one for every language (see "The credits") |
 | `tools/text.py` | the generator, the checks and the extractor |
 | `text.mk` | the build rules and the `text-check`/`text-update` targets |
 
@@ -110,6 +109,8 @@ ROM that `make compare` rejects.
   `#|` lines;
 - a key the language lacks or one the template doesn't have (`msgcmp`
   against the template, both ways): run `make text-update`;
+- a `credits.*` entry whose `msgstr` isn't the English `msgid`, or
+  that is missing or fuzzy (see "The credits");
 - a character the font lacks, a character Latin-1 lacks, a level name
   that isn't at its text id (tools/text.py's own checks, the same as the
   build's).
@@ -188,22 +189,32 @@ French and German.
 
 ## The credits
 
-The credits' text is `text/credits.pot` (#1092), a template of its own
-with no `.po` files: the game has one credits text, `gCreditsText`, and
-every language shows it (`Credits::Init` reads it, not a per-language
-table, so a translation would need a code change and another ROM). An
-entry is a heading or a block of lines (`msgid` with `\n` between the
-lines, and an empty line where a block has a gap), keyed
-`credits.<heading>` and `credits.<heading>.names`:
+The credits' text is the template's `credits.*` entries (#1092), after
+the cutscenes'. The game has one credits text, `gCreditsText`, and every
+language shows it in English (`Credits::Init` reads it, not a
+per-language table, so a translation would need a code change and
+another ROM). An entry is a heading or a block of lines (`msgid` with
+`\n` between the lines, and an empty line where a block has a gap),
+keyed `credits.<heading>` and `credits.<heading>.names`. Each `.po` has
+the entries too, as copies of the English, with a comment that says so:
 
 ```po
 #. The credits: lines, in the small font.
+#. The credits are shown in English in every language (Credits::Init reads one
+#. text, gCreditsText): msgstr is the English text, unchanged (tools/text.py
+#. checks).
 msgctxt "credits.executive_producers.names"
 msgid ""
 "karthik bala\n"
 "tobi saulnier"
 msgstr ""
+"karthik bala\n"
+"tobi saulnier"
 ```
+
+The build reads only the template's English. `make text-check` fails if
+a language's copy isn't the English, unchanged, or is missing or fuzzy,
+so a translation can't go in by mistake and look as if the game used it.
 
 `data/credits.json` gives the order the credits show them in, with the
 fonts and the logos:
@@ -224,13 +235,16 @@ fonts and the logos:
 
 `tools/text.py cpp credits_text` writes the stream from them, a line per
 string (`credits_text.cpp` #includes it). To change a name or add one,
-edit the entry; to add a heading, add its entries to the template and
-its items to the list. The build, and `make text-check`, stop on an item
+edit the entry in `text/crashxs.pot`; to add a heading, add its entries
+to the template and its items to the list. Then run `make text-update`
+and copy the new English into each `.po`'s `msgstr` (for a changed
+entry, also delete its `#, fuzzy` and `#|` lines). The build, and `make text-check`, stop on an item
 whose key the template lacks, an entry no item uses, an empty entry, a
 logo past the fifth, and a character the font the item is drawn in lacks
 (a heading's must be in the large font). `tools/text.py extract` writes
-`credits.pot` from the ROM too, keyed by `data/credits.json`, and
-`extract --check` compares it.
+the `credits.*` entries from the ROM too, keyed by `data/credits.json`,
+into the template and the `.po` files, and `extract --check` compares
+them.
 
 ## How the tables are built
 

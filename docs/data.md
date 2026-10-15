@@ -290,7 +290,7 @@ The first batch (all pointer tables, all byte-exact):
 | `ui_text.cpp` | `0x08172CD4` | the game's UI text in six languages, generated from `text/` (see "Terrain types and UI text") |
 | `hud_font_tables.cpp` | `0x08174BE0` | the HUD digit slots and the two HUD fonts' character lists and glyph metrics |
 | `actor_categories.cpp` | `0x08175558` | 7 `struct category_descriptor`, 3 `struct category_vtable` |
-| `actor_palette_cycle_frames.cpp` | `0x08175760` | the 32-frame BG palette cycle and its 4 cursor start/bound pairs (`ActorPaletteCycle::frames`, `startFrames`, `targetFrames`, docs/cplusplus.md) |
+| `actor_palette_cycle_frames.cpp` | `0x08175760` | the 32-frame BG palette cycle (`ActorPaletteCycle::frames`, from `graphics/vehicles/polar/palette_cycle/NN.pal`, docs/levels.md "Category graphics") and its 4 cursor start/bound pairs (`startFrames`, `targetFrames`, docs/cplusplus.md) |
 | `polar_anim_family.cpp` | `0x08178F80` | categories 0-2: OBJ palette, animation table `gCategoryFamily0AnimTable`, keyframe and frame arrays (see "Category families") |
 | `polar_player_state_table.cpp` | `0x0817A6B8` | 1 actor PMF table, in C++ (`PolarPlayer::stateFuncs`, docs/cplusplus.md) |
 | `polar_palettes_boxes.cpp` | `0x0817A728` | 5 small palettes, 4 `struct anim_box`, 6 threshold records |
@@ -427,8 +427,8 @@ drawn in the first, and the others are listed. docs/graphics.md, "Sprite
 banks (#914)", has the details.
 
 The category families' animation tables (`actor_anim.h`'s
-`gCategoryFamily0AnimTable`/`gCategoryFamily1AnimTable`) are C as well now, see
-"Category families" below.
+`gCategoryFamily0AnimTable`/`gCategoryFamily1AnimTable`) are data,
+`data/levels/anim_tables/`, see "Category families" below.
 
 ### Category families
 
@@ -437,7 +437,11 @@ The two actor-category families (docs/data_map.md, `08178F80` and
 `src/game/vehicles/jetpack/data/jetpack_anim_family.cpp` (categories 3-6). Each is an OBJ palette
 (256 colours, then 0x200 zero bytes nothing reads; the second family has
 two), the animation table (`struct anim_table_record`, `actor_anim.h`,
-41 and 47 records), and the arrays the records point at:
+41 and 47 records), and the arrays the records point at. The palettes
+(and the yeti's palette and boxes) are C; the tables and their arrays are
+`data/levels/anim_tables/polar.json` and `jetpack.json`, which
+`tools/levels.py anim-table` generates in place (docs/levels.md,
+"Animation tables"):
 
 - **table_A**: the clip's keyframes, `struct anim_frame_record`
   (`actor_anim.h`: duration, index into table_B, loop threshold and
@@ -1074,7 +1078,8 @@ stream `UpdateCreditsText` draws line by line as floating glyphs. It is text
 with three opcodes: 1, n (popup glyph picture n, the logos of
 `credits_title_logos.cpp`), 2 and 3 (the small and the large HUD font).
 A zero byte ends it, and the code starts over there. It is generated from
-`text/credits.pot` (the text) and `data/credits.json` (the order, the
+`text/crashxs.pot`'s `credits.*` entries (the English text, which every
+language shows) and `data/credits.json` (the order, the
 font switches and the logos), see [text.md, "The
 credits"](./text.md#the-credits).
 

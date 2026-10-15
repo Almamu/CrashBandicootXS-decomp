@@ -162,6 +162,15 @@ jobs:
     - name: Generate progress report
       run: ./objdiff-cli report generate -o report.json
 
+    # The report for decompilati.onl (docs/progress_report.md,
+    # "decompilati.onl"), the way decomp.dev took it: the europe_report
+    # artifact, which its GitHub App imports from a successful run on main.
+    - name: Upload progress report artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: europe_report
+        path: report.json
+
     # The README's progress badges (tools/badges.py): matching and
     # non-matching from the report above, clean functions and workarounds
     # left from tools/match_idioms.py --functions on the same build's

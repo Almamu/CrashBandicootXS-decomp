@@ -675,7 +675,7 @@ it; with the ROM's levels each rule gives the ROM's number, and
 | `LEVEL_NUMBERED_COUNT` | 20 | the numbered levels | the relic, gem and crystal counts (`GameProgress`) |
 | `LEVEL_LAST_NUMBERED`, `LEVEL_FIRST_BOSS` | 19, 20 | the last numbered level, the first boss | the level select, the pause menu |
 | `LEVEL_LAST_ON_GRID` | `LEVEL_NEO_CORTEX` | the last boss | `UpdateGameFrame`'s level-select cap |
-| `LEVEL_FINALE` | `LEVEL_MEGA_MIX` | the first level off the grid | `CountGems`, `CountClearGems`, `UpdateGameFrame`'s step from Neo Cortex to mega-mix |
+| `LEVEL_FINALE` | `LEVEL_MEGA_MIX` | the first level off the grid | `CountGems`, `CountClearGems` (Neo Cortex's step on to mega-mix is its `"on_clear"`, see "Boss levels") |
 | `LEVEL_SELECT_ENTRIES` | 6 | `LEVELS_PER_WORLD` + the boss: a full page | `LevelSelect::items`, the entry positions |
 | `CRYSTAL_TOTAL`, `RELIC_TOTAL` | 20 | the numbered levels | the pause menu |
 | `GEM_TOTAL` | 28 | a crate gem per numbered level, the `GEM_PATH_GEM` entities in the rooms of the numbered levels and the finale, and the 4 coloured gems | the pause menu |
@@ -1060,11 +1060,12 @@ level played (`room.level`, capped at `LEVEL_LAST_ON_GRID`).
 
 Beating a boss for the first time gives its power and calls
 `LevelSelect::SetNewWorldOpened`: the next level select turns to the
-new page by itself (`Loop`), if `IsNextWorldOpen` says it is open. Neo
-Cortex's power (Turbo Run) opens no page in the ROM. The eight bits of
-`save->flags` (`GameProgress` byte 2) are all used: the four coloured
-gems and the four powers. A boss's level word gets no `cleared` bit:
-`UpdateGameFrame`'s boss cases give the power instead.
+new page by itself (`Loop`), if `IsNextWorldOpen` says it is open (the
+level's `"on_clear"`, see "Boss levels"). Neo Cortex's power (Turbo Run)
+opens no page in the ROM. The eight bits of `save->flags`
+(`GameProgress` byte 2) are all used: the four coloured gems and the
+four powers. A ROM boss's level word gets no `cleared` bit: its
+`"on_clear"` gives the power instead.
 
 ### The worlds
 
@@ -1134,18 +1135,20 @@ ROM's behaviour where they say nothing):
 
 - A new world comes after Neo Cortex's page, as post-game content, like
   mega-mix. The ending is the ROM's: Neo Cortex plays the ending
-  cutscene and the credits, or mega-mix at over 99% (`UpdateGameFrame`
-  goes `LEVEL_FINALE - LEVEL_NEO_CORTEX` levels on: 1 in the ROM, past
-  the new bosses otherwise).
+  cutscene and the credits, or mega-mix at over 99% (its `"on_clear"`'s
+  `"next_level"`: `UpdateGameFrame` goes `LEVEL_MEGA_MIX -
+  LEVEL_NEO_CORTEX` levels on, 1 in the ROM, past the new bosses
+  otherwise).
 - A world after Neo Cortex's opens when every numbered level of the
   world before is cleared (`{"levels_cleared": true}`). There is no free
-  bit in `save->flags` for a new boss's win, and a new boss gives no
-  power (its rewards are out of scope), so the rule the boss entry
-  already uses is the one that needs no new save data. Neo Cortex's
+  bit in `save->flags` for a new boss's win, and the four powers are
+  the ROM's bosses' (a power is given by one level), so the rule the
+  boss entry already uses is the one that needs no new save data. Neo Cortex's
   first win calls `SetNewWorldOpened` as in the ROM, so if the world
   after it is open then, the next level select turns to it by itself.
 - Its boss entry appears once its levels are cleared, like the ROM's
-  (`PlaceItems` doesn't change). Beating a new boss takes
+  (`PlaceItems` doesn't change). Beating a new boss does what its
+  `"on_clear"` says (see "Boss levels"); without one it takes
   `UpdateGameFrame`'s default case: no power, dialog or cutscene.
 - The completion percentage counts the new levels' crystals, gems and
   relics (`COMPLETION_TOTAL`), so mega-mix (over 99%) needs them too.
@@ -1289,8 +1292,7 @@ A new type is new code (a vtable and those tests), so a category is one
 of the three. The boss HUD (`LevelState::GetBossHealth` and
 `GetBossIndex`) is the level's, not the category's: a level that plays a
 hovercraft stage names its boss, `"boss_kind": "N_GIN"` (see "Boss
-levels"). `UpdateGameFrame`'s boss rewards stay the ROM's levels' (out of
-scope).
+levels"). What clearing it gives is the level's too, its `"on_clear"`.
 
 **`"categories"`**, one per category in `CATEGORY_*` order:
 
@@ -1306,10 +1308,11 @@ scope).
 |---|---|---|
 | `"constant"`, `"name"` | (its index) | `CATEGORY_<NAME>` (`constants/categories.h`), which a stage names as `<NAME>` |
 | `"type"` | `type` | `POLAR`, `JETPACK` or `HOVERCRAFT` (`CATEGORY_TYPE_*`) |
-| (the type) | `cellAnim`, `cellAnimSize`, `palette`, `anim_table`, `sprite_sheet` | the type's: polar `gCategoryFamily0CellAnim`, `gPolarCategoryPalette`, `gCategoryFamily0AnimTable`, `gPolarSpriteSheet`; jetpack `gCategoryFamily1CellAnim`, `gAirshipCategoryPalette`, `gCategoryFamily1AnimTable`, `gJetpackSpriteSheet`; hovercraft the jetpack's with `gHovercraftCategoryPalette`. The ROM's categories of a type all have the same ones, and the actor kinds index the type's animation table |
+| (the type) | `cellAnim`, `cellAnimSize`, `palette`, `anim_table`, `sprite_sheet` | the type's: polar `gCategoryFamily0CellAnim`, `gPolarCategoryPalette`, `gCategoryFamily0AnimTable`, `gPolarSpriteSheet`; jetpack `gCategoryFamily1CellAnim`, `gAirshipCategoryPalette`, `gCategoryFamily1AnimTable`, `gJetpackSpriteSheet`; hovercraft the jetpack's with `gHovercraftCategoryPalette`. The ROM's categories of a type all have the same ones, and the actor kinds index the type's animation table (data, see "Animation tables") |
 | `"cell_anim"` (optional) | `cellAnim`, `cellAnimSize` | the BG0 cell animation instead of the type's: a `cell_anim` of `graphics/manifest.json`, by its path (see "Category graphics") |
 | `"sky"` (optional) | `bgPicture` | the BG1 picture: one of the jetpack skies, `rocket_racket`, `blimp_bonanza`, `no_fly_zone` (`gCategory3/4/5BgPicture`, `graphics/vehicles/jetpack/skies/`), or a `bg_picture` of the manifest by its path (see "Category graphics"). None for a polar category |
 | `"palette"` (optional) | `palette` | the OBJ palette instead of the type's: a `category_palette` of the manifest, by its path (see "Category graphics") |
+| `"sprite_sheet"`, `"anim_table"` (optional) | `sprite_sheet`, `anim_table` | the sprite sheet (a `framed_sheet` of the manifest, by its path) and the animation table (of `data/levels/anim_tables/`, by name) instead of the type's (see "Category sprite sheets") |
 | `"spawns"` | `spawnTable` | its spawn list, `data/levels/spawns/<spawns>.json` |
 | `"mask_assist_deaths"`, `"bonus_kind_deaths"`, `"retry_boss_deaths"` | the same | deaths before the mask assist, before the spawns' `bonus` kinds, before the boss's retry level |
 | `"boss_level"`, `"retry_boss_level"` | `bossLevel`, `retryBossLevel` | the boss's level: 0-5 for the yeti (`Yeti::chargeParams`), 0-3 for the airship (`Airship::attacks[kind + level]`), 0-1 for the hovercraft (`Hovercraft::attacks`) |
@@ -1381,8 +1384,9 @@ what a save's records mean.
    plays it, and the ROM data after them moves ([shifting.md](./shifting.md)).
 
 A category can also have its own cell animation, sky or OBJ palette as
-new graphics (see "Category graphics"). Its sprite sheet and animation
-table stay the type's: the actor kinds index them.
+new graphics (see "Category graphics"), and its own sprite sheet and
+animation table (see "Category sprite sheets"). Its actor kinds stay the
+type's: the code makes them.
 
 Tested in scratch with plain `make` and mGBA, with two new categories:
 `CATEGORY_SNOW_STORM` (polar, snow crash's spawn list with each basic
@@ -1404,9 +1408,10 @@ spawn list.
 
 ### Category graphics
 
-A category's BG0 cell animation, BG1 sky and OBJ palette are the type's
-unless it names its own (#966): `"cell_anim"`, `"sky"` and `"palette"`
-name an entry of `graphics/manifest.json` by its path under `graphics/`.
+A category's BG0 cell animation, BG1 sky, OBJ palette and (polar only)
+BG palette cycle are the type's unless it names its own (#966, #1089):
+`"cell_anim"`, `"sky"`, `"palette"` and `"palette_cycle"` name an entry
+of `graphics/manifest.json` by its path under `graphics/`.
 That can be one of the ROM's (`vehicles/jetpack/clouds.png`, a sky) or a
 new graphic, an entry with no ROM address ([graphics.md, "New
 graphics"](./graphics.md#new-graphics)):
@@ -1415,11 +1420,13 @@ graphics"](./graphics.md#new-graphics)):
 {"paths": ["vehicles/jetpack/skies/sky_red.png", "vehicles/jetpack/skies/sky_red_tiles.png"], "kind": "bg_picture", "symbol": "gSkyRedBgPicture"}
 {"path": "vehicles/polar/ice_wall_red.png", "kind": "cell_anim", "symbol": "gIceWallRedCellAnim", "frames": 60, "banks": true}
 {"path": "vehicles/polar/polar_green.pal", "kind": "category_palette", "symbol": "gPolarGreenCategoryPalette", "colors": 256}
+{"path": "vehicles/polar/palette_cycle_red/", "kind": "palette_cycle", "symbol": "gPaletteCycleRedFrames", "frames": 32}
 ```
 
 ```json
 {"constant": "CATEGORY_SKY_RED", "name": "sky red", "type": "JETPACK", "sky": "vehicles/jetpack/skies/sky_red.png", "spawns": "rocket_racket", ...}
 {"constant": "CATEGORY_POLAR_GREEN", "name": "polar green", "type": "POLAR", "cell_anim": "vehicles/polar/ice_wall_red.png", "palette": "vehicles/polar/polar_green.pal", "spawns": "snow_crash", ...}
+{"constant": "CATEGORY_POLAR_RED", "name": "polar red", "type": "POLAR", "palette_cycle": "vehicles/polar/palette_cycle_red/", "spawns": "snow_crash", ...}
 ```
 
 | kind | source | what the code takes |
@@ -1427,11 +1434,75 @@ graphics"](./graphics.md#new-graphics)):
 | `cell_anim` | one PNG, its `"frames"` stacked top to bottom, 8bpp with the 256-colour BG palette, each 8x8 cell in one 16-colour bank (as `ice_wall.png`, `clouds.png`); `"banks"`: whether each frame carries its cells' banks | the type's geometry (`CELL_ANIM_GEOMETRY`: 19x13 cells for a polar category, 38x10 otherwise), and banks for a polar category only (`CellAnim::Init`'s `hasBanks` is the type's). Any number of frames: `cellAnimSize` gives the count. Its palette is the BG palette until something replaces it, as in the ROM: a polar category's palette cycle writes banks 0-13 every frame (`ActorPaletteCycle::Update`), and a sky's palette replaces it (`LoadBgPicture`) |
 | `bg_picture` | the picture and its tile set as an 8-pixel-wide strip (as the skies); its palette is the BG palette, the cell animation's too | a 38x16-cell picture (`BG_PICTURE_GEOMETRY`) whose tiles fit after the cell animation's two pages (`LoadBgPicture` puts them at `CellAnim::GetFreeTile()`, and the BG1 map reaches tile 0x5FF), for a jetpack or hovercraft category |
 | `category_palette` | a JASC `.pal` of 256 colours | the OBJ palette, `DmaCopy`'d to OBJ palette RAM by `ActorCategory::Init`. New only: the ROM's three are C arrays with other data |
+| `palette_cycle` | a directory of 32 JASC `.pal` files, `00.pal` to `31.pal`, each 224 colours: BG palettes 0-13 (the ROM's is `vehicles/polar/palette_cycle/`, `ActorPaletteCycle::frames`) | a polar category's only: `ActorPaletteCycle::Update` DMAs the cursor's frame to BG palettes 0-13 whenever the cell animation scrolls. 32 frames, as the ROM's: the polar spawn kinds' cycles (`POLAR_KIND_PALETTE_CYCLE_*`, `startFrames`/`targetFrames`) run 0-15 and 16-31, forwards or back |
 
 `levels.py` stops on any other: a path that isn't such an entry, a
 cell animation of another geometry or with the other banks, a sky of
 another size or too many tiles, a sky on a polar category, a palette of
-another count.
+another count, a palette cycle on a jetpack or hovercraft category, a
+palette cycle of another frame count or a frame of another colour count.
+
+**A category's own palette cycle.** `ActorPaletteCycle::Update` takes
+its frames from `ACTOR_PALETTE_CYCLE_FRAMES`
+(`category_palette_cycles.h`, `levels.py category-cycles`). With no
+category naming its own `"palette_cycle"` that is `frames`, the ROM's, so
+the code is the ROM's. Otherwise it is
+`categoryFrames[ActorCategory::current]`: `actor_categories.inc` then
+defines `ActorPaletteCycle::categoryFrames`, each category's frames (its
+own, or the ROM's `frames`), after the descriptors. The descriptors
+don't change (the ROM's have no field for it). The ROM's frames are
+`graphics/vehicles/polar/palette_cycle/` (the manifest's
+`gActorPaletteCycleFrames`, `actor_palette_cycle_frames.cpp` `#include`s
+them), so a recolour of every polar category is an edit of those 32
+files, and one category's a copy of them it names.
+
+Tested in scratch with plain `make` and mGBA: `CATEGORY_POLAR_RED`
+(snow crash's, with `"palette_cycle": "vehicles/polar/palette_cycle_red/"`,
+the ROM's 32 frames with red and blue swapped) played by snow crash's
+level, and `CATEGORY_SNOW_CRASH` by snow job's. 500 and 800 frames after
+the level select, BG palettes 0-13 are the red cycle's frame 0 in the
+first and the ROM's frame 0 in the second, and the ice wall shows gold
+where it is blue. `UpdateActorPaletteCycle` then reads
+`categoryFrames[gActorCategory]`. `levels.py` stops on a cycle on a
+jetpack category, one of 31 frames, one with 256-colour frames and a
+path that isn't a `palette_cycle`; the ROM's cycle named by a polar
+category builds the ROM's code.
+
+**Colours the engine replaces** (#1089). Two things load over a
+category's own cell animation palette. `levels.py categories` (the
+`actor_categories.inc` rule) warns about each, and the build goes on, so
+a mod can keep the colours on purpose:
+
+- **The polar palette cycle.** `ActorPaletteCycle::Update` DMAs a
+  0x1C0-byte frame to BG palettes 0-13 every moving frame, for a polar
+  category only. So a polar cell animation of its own keeps only banks
+  14-15 of its palette. The warning lists the colours its pixels use in
+  banks 0-13 that differ from the ice wall's, the colours a mod changed
+  (the ice wall's own banks 0-13 don't show either: its palette differs
+  from every cycle frame). Recolour such an animation through its pixels
+  (each cell's indices in its bank), through banks 14-15, or through
+  the category's own `"palette_cycle"` (above).
+- **A sky.** `LoadBgPicture` (from `ActorCategory::Init`, and again
+  after the pause menu) loads the sky's whole 256-colour palette over
+  the cell animation's (`CellAnim::ResetBg`). The warning lists the
+  colours a jetpack or hovercraft category's own cell animation uses
+  that its sky's palette doesn't have at the same index. Give the sky
+  those colours.
+
+Only a category's own cell animation is checked, not the type's: the
+ROM's skies recolour the type's clouds on purpose (blimp bonanza's and
+no fly zone's palettes differ from the clouds' in all 15 of their
+colours). Bank colour 0 isn't checked: it is transparent in a cell.
+
+Tested in scratch with four new cell animations made from the ROM's. The
+ice wall with bank 2's colours inverted in its palette warns (indices 33
+on); the ice wall with each pixel's index reversed in its bank, its
+palette unchanged, doesn't; neither does the ice wall itself named as a
+category's. The clouds with red and blue swapped in the palette warn
+under rocket racket's and no fly zone's skies (a hovercraft category);
+the clouds copied as they are don't under rocket racket's sky (the same
+colours) but warn under blimp bonanza's; the type's clouds under blimp
+bonanza's sky, as the ROM has them, don't.
 
 **What is generated.** `actor_categories.inc` defines the new graphics the
 categories name, each once, between the new spawn lists and the
@@ -1460,6 +1531,209 @@ colours reversed in their bank: the polar palette cycle sets those
 banks' colours, so a polar cell animation shows in its pixels, not its
 palette. The ROM's descriptors are unchanged, and with no new graphic
 nothing new is defined.
+
+### Animation tables
+
+A type's animation table (`category_descriptor.anim_table`, `struct
+anim_table_record`, `actor_anim.h`) has one record per actor kind: the
+spawner indexes it with the spawn's kind (`gActorAnimTable[kind]`,
+`gJetpackAnimTable[kind]`, set by `ActorCategory::Select` from the
+descriptor), and the actors it makes draw the record's keyframes and
+frames. The ROM's two are data, `data/levels/anim_tables/polar.json`
+(`gCategoryFamily0AnimTable`, 41 records) and `jetpack.json`
+(`gCategoryFamily1AnimTable`, 47), with the arrays their records point
+at:
+
+```json
+{
+  "symbol": "gCategoryFamily0AnimTable",
+  "family": "POLAR",
+  "records": [
+    {"keyframes": "gPolarPlayerKeyframes", "frames": "gPolarPlayerFrames", "palette": 0, "depth": 12032, "box": [-10, -20, -1, 20, 44, 3]},
+    {"keyframes": "gPolarBasicCrateKeyframes", "frames": "gPolarBasicCrateFrames", "palette": 1, "depth": 12604, "box": [-10, -10, -1, 20, 20, 3]},
+    ...
+    {},
+    ...
+  ],
+  "arrays": [
+    {"keyframes": "gPolarPlayerKeyframes", "list": [
+      [128, 0, 20, 0, 0],
+      ...
+    ]},
+    {"player_frames": "gPolarPlayerFrames", "list": [
+      0, 1, 2, ...
+    ]},
+    {"frames": "gRiderlessPolarFrames", "list": [
+      "riderless_polar/00", "riderless_polar/01", ...
+    ]},
+    "table",
+    ...
+  ]
+}
+```
+
+- `"symbol"`: the table's C name. `"family"`: `POLAR` or `JETPACK`, the
+  kinds that index it (`constants/actor_kinds.h`) and the sprite sheet
+  and player frames its records' frames are. `"sheet"` (optional, a
+  category's own table only): another sprite sheet its frames are, a
+  `framed_sheet` of the manifest by its path (see "Category sprite
+  sheets").
+- `"records"`, one per kind the code indexes (41 polar, 47 jetpack):
+  `"keyframes"` and `"frames"` (arrays of `"arrays"`, by symbol),
+  `"palette"` (the OBJ palette bank, 0-15), `"depth"` (the depth at which
+  it draws unscaled, `DrawActor` divides by it), `"box"` (`[x, y, z, w, h,
+  d]`, `struct anim_box`), and when not 0 `"spawn_x"` and `"spawn_y"`
+  (added to the spawn's position by `CreateActor`). `"index"` is the
+  record's first byte when it isn't the kind (records 15 of both tables
+  have 0). `{}` is a kind with no record (polar 32-34).
+- `"arrays"`, in the order they are defined (the ROM's), with `"table"`
+  where the table itself goes. Each is one of:
+  - `{"keyframes": symbol, "list": [...]}`: the clip's keyframes, `struct
+    anim_frame_record`, each `[duration, frame, loop end, loop start, OAM
+    attribute]`: it shows frames `frame` to `frame + loop end - 1` of the
+    record's frames and loops back to `frame + loop start`; the attribute
+    is OR'd into the OAM attributes (`0x1000`: flipped horizontally);
+  - `{"frames": symbol, "list": [...]}`: frames of the family's sprite
+    sheet (`graphics/vehicles/<family>/sprite_sheet/`, or the table's
+    `"sheet"`), each its entity folder and frame PNG, `"wumpa/03"`, which
+    the build turns into the frame's offset in the decompressed sheet
+    (`FRAMED_POLAR_WUMPA_03`, `tools/framed_gfx.py header`, under the
+    sheet's `"prefix"`);
+  - `{"player_frames": symbol, "list": [...]}`: record 0's, Crash's
+    compressed frames (`graphics/vehicles/<family>/player.png`) by number
+    (`PolarPlayerFrameSet::frames + RLE_SPRITES_POLAR_PLAYER_FRAME_nnn`).
+    Only record 0 has them: the others' frames are sheet offsets.
+
+  and has an optional `"comment"`, which goes into the C.
+
+`levels.py` stops on an unknown key, a family that isn't one, a record
+count that isn't the family's, a record with a missing key or a value out
+of range, a record naming an array that isn't there or isn't its kind (a
+player frame array on a record but 0, or the other way round), a frame
+that isn't a PNG of the sheet, a player frame past the PNG's, a keyframe
+whose frames run past its record's frames or whose loop start isn't
+before its end, and a duplicate symbol.
+
+**What is generated.** `levels.py anim-table <name>` writes
+`anim_tables/<name>.inc`: the arrays' declarations, then the arrays and
+the table in `"arrays"` order, which `polar_anim_family.cpp` and
+`jetpack_anim_family.cpp` `#include` after their palettes (the C keeps
+the palettes and, in the jetpack file, the yeti's palette and boxes
+before them). With the ROM's data it is the ROM's C, so `make compare`
+gives the ROM's bytes, and `levels.py extract` writes both JSONs again
+from the ROM, keeping their arrays' symbols, lengths, order and comments.
+Editing a value (a box, a palette bank, a keyframe, which frames a clip
+shows) builds with plain `make`; adding or removing an array moves the
+ROM data after the table ([shifting.md](./shifting.md)). A table only a
+category names goes with the categories (see "Category sprite sheets").
+
+### Category sprite sheets
+
+A category's actors draw their frames from its sprite sheet, through its
+animation table: `ActorCategory::Init` unpacks
+`descriptors[cat].sprite_sheet` (`CategorySpriteSheet::Decompress`, into
+a buffer of the size the LZ77 header gives) and hands
+`descriptors[cat].anim_table` to the spawner (`ActorCategory::Select`),
+and a record's frames are offsets into the unpacked sheet. Both are the
+type's unless the category names its own (#1087):
+
+| key | the descriptor's | what |
+|---|---|---|
+| `"sprite_sheet"` (optional) | `sprite_sheet` | a `framed_sheet` of `graphics/manifest.json`, by its path: the ROM's two, or a new one ([graphics.md, "New graphics"](./graphics.md#new-graphics)) |
+| `"anim_table"` (optional) | `anim_table` | an animation table of `data/levels/anim_tables/`, by name (see "Animation tables"), of the type's family |
+
+```json
+{"path": "vehicles/jetpack/sprite_sheet_red/", "kind": "framed_sheet", "symbol": "gJetpackRedSpriteSheet", "prefix": "JETPACK_RED"}
+```
+
+```json
+{"constant": "CATEGORY_ROCKET_RED", "name": "rocket red", "type": "JETPACK", "sky": "rocket_racket", "sprite_sheet": "vehicles/jetpack/sprite_sheet_red/", "spawns": "rocket_racket", ...}
+{"constant": "CATEGORY_SNOW_ALT", "name": "snow alt", "type": "POLAR", "anim_table": "polar_alt", "spawns": "snow_crash", ...}
+{"constant": "CATEGORY_FROST_SMALL", "name": "frost small", "type": "POLAR", "sprite_sheet": "vehicles/polar/sprite_sheet_small/", "anim_table": "polar_small", "spawns": "snow_crash", ...}
+```
+
+- **A reskin: the type's frames, other pixels.** A sheet with the type's
+  sheet's folders, frames and frame sizes has the same offsets, so the
+  type's table works with it: only the sheet changes. Copy the type's
+  sheet folder, edit the pixels, add the manifest entry, and name it as
+  the category's `"sprite_sheet"`.
+- **Other frames: its own table.** A sheet with other frames (a frame of
+  another size, frames added or removed) moves the offsets, so the
+  category also names a table of that sheet: a table with `"sheet"`, the
+  sheet's path. Its frame arrays name that sheet's frames, under the
+  sheet's prefix (`FRAMED_POLAR_SMALL_WUMPA_03`).
+- **Another table on the type's sheet.** A table with no `"sheet"` is of
+  the family's, so a category can change its records (which frames a
+  kind shows, its keyframes, palette bank, box, depth) without a new
+  sheet.
+
+A table that isn't the ROM's is like the ROM's (see "Animation tables")
+but its records can also point at the arrays of its family's ROM table,
+by symbol: the keyframes, the player frames (record 0's: a new table has
+none of its own, so Crash's frames stay the type's), and, if it is of the
+type's sheet, the frames. So a table that changes a few records names its
+own arrays only for those. Its symbols are its own: no other table has
+them.
+
+`levels.py` stops on a `"sprite_sheet"` that isn't a framed sheet of the
+manifest, a sheet with frames other than the type's (it names the first
+frame that differs) and no `"anim_table"`, an `"anim_table"` that isn't a
+table or is another family's, a table of another sheet than the
+category's, a sheet that unpacks bigger than the type's (`Decompress`
+allocates it from the EWRAM heap: the polar sheet is 0x34048 bytes of
+EWRAM's 0x40000), a new table with player
+frames of its own, a record pointing at a ROM table's frames of another
+sheet, and a symbol two tables share.
+
+**What is generated.** `actor_categories.inc` defines a new sheet (`u8[]`,
+LZ77, `#include`ing its built `.bin.lz.inc`) with the other new graphics,
+then the tables the categories name that aren't the ROM's: the frame
+offsets of their sheets (`#include "<sheet>_frames.h"`), the declarations
+of the ROM tables' arrays they point at, and each table. The descriptor
+points at them. `graphics_manifest.mk` lists every framed sheet
+(`FRAMED_SHEETS`, with `FRAMED_NAME_<sheet>`), so a new one gets the
+ROM's rules: its folders packed in `sheet.json`'s order, LZ77-compressed,
+and its frames' offsets. With the ROM's categories nothing is new and
+every output is the ROM's.
+
+**The OBJ palette.** A recolour without new pixels is the category's
+`"palette"` (see "Category graphics"): the 256 colours `ActorCategory::
+Init` copies to OBJ palette RAM. A table's records pick each kind's bank
+of it (`"palette"`). The palette-cache slots `ActorCategory::
+SetupVramPool` binds by type from sprite bank 35 (`actor_vram_pool.cpp`)
+stay the type's: they're code.
+
+**New actor kinds stay code.** What the data reaches is the records the
+kinds index: a kind's frames, keyframes, bank, box, depth and spawn
+offset. Which class a kind makes, and how it moves, collides and what
+breaking it does, is `PolarPlayer::CreateActor` and `JetpackPlayer::
+CreateActor`'s `switch (kind)` and the classes' code, and the code also
+names some records itself (`JETPACK_KIND_QUESTION_CRATE_WUMPA_1`'s for a
+question crate, the explosion's, the checkpoint text's). So a table has
+the family's record count, a record of a kind is drawn by that kind's
+class, and a reskinned or re-animated kind is data; a kind with a new
+class or new behaviour is a new `case` and a class, code.
+
+Tested in scratch with plain `make` and mGBA, with three new categories,
+each played by a level instead of its own stage: `CATEGORY_ROCKET_RED`
+(jetpack, rocket racket's list, a copy of the jetpack sheet with the
+plane's and the bomber's colour indices reversed) by rocket racket,
+`CATEGORY_SNOW_ALT` (polar, snow crash's list, table `polar_alt` on the
+type's sheet: the basic crate records show the aku aku crate's frames
+through its own frame array, the wumpa its own keyframes, the rest the
+ROM table's arrays) by snow crash, and `CATEGORY_FROST_SMALL` (polar,
+snow crash's list, a copy of the polar sheet with the wumpa frames
+16x16 instead of 32x32, and table `polar_small`, a copy of `polar.json`
+with its own symbols on that sheet) by frostbite cavern. Rocket racket's
+stage (`InitActorCategory(7)`) unpacks `gJetpackRedSpriteSheet`, keeps
+`gCategoryFamily1AnimTable`, and its planes show in the reversed colours
+where the original stage's are red. Snow crash's (`InitActorCategory(8)`)
+selects `gPolarAltAnimTable`, and its basic crates show as aku aku
+crates. Frostbite cavern's (`InitActorCategory(9)`) unpacks
+`gPolarSmallSpriteSheet` and selects `gPolarSmallAnimTable`: the wumpa
+are half the size, and the crates, Crash and the checkpoint text (after
+the wumpa in the sheet) show right. `levels.py` stops on each of the
+errors above.
 
 ## Boss levels
 
@@ -1505,18 +1779,9 @@ the kept kinds against `ROM_BOSS_KINDS`). The three 2D bosses' health
 blocks stay apart: g++ merges them into the ROM's one, while a single
 block with their labels comes out 4 bytes shorter.
 
-**Not in the data: the rewards.** `UpdateGameFrame`'s switch on the
-cleared level stays the ROM's: the power, its dialog
-(`Show*Dialog`), the cutscene and opening the next world for
-`LEVEL_DINGODILE`, `LEVEL_N_GIN`, `LEVEL_TINY` and `LEVEL_NEO_CORTEX`,
-the credits and the step to mega-mix for Neo Cortex and mega-mix. The
-line is drawn there: the HUD and health are the kind's; what clearing a
-level gives is the level's (#966, out of scope). A new boss level
-therefore gives no power and no cutscene, and, as its `default:` case
-marks only a level of a `ROOM_KIND_CATEGORY` stage cleared
-(`w.cleared`), a new 2D boss level isn't marked cleared either. The
-`BOSS_NEO_CORTEX` tests of the gem spawners (`SpawnRedGem` and friends,
-`platform_create.cpp`) follow the kind, since they ask `GetBossIndex`.
+The `BOSS_NEO_CORTEX` tests of the gem spawners (`SpawnRedGem` and
+friends, `platform_create.cpp`) follow the kind, since they ask
+`GetBossIndex`.
 
 `"boss_kind"` isn't part of the save version's CRC (`level_data_crc`
 leaves it out): it doesn't change what a save's records mean.
@@ -1536,6 +1801,104 @@ the hovercraft stage with no `"boss_kind"`, on a level that places a
 boss with none, on `"boss_kind": "TINY"` for Dingodile's room, on a
 kind for a level with no such boss, on an unknown kind, and on a level
 with two bosses.
+
+### What clearing a level does
+
+A level's optional `"on_clear"` in `levels.json` (#1086) is what
+clearing it does besides the save: the power, its dialog, a cutscene,
+opening the next world, the level's `cleared` bit, going straight on to
+another level, the credits. It is `UpdateGameFrame`'s switch on the
+cleared level (`game_frame.cpp`), a generated case per level that has
+one. The HUD and the health are the boss kind's (above); what clearing
+a level gives is the level's.
+
+```json
+{"constant": "LEVEL_DINGODILE", ..., "boss_kind": "DINGODILE",
+ "on_clear": {"power": "SUPER_BODY_SLAM", "open_world": true, "cutscene": 4}, ...}
+```
+
+| key | what | the code |
+|---|---|---|
+| `"power"` | a power of `save->flags`: `TURBO_RUN`, `SUPER_BODY_SLAM`, `TORNADO_SPIN` or `DOUBLE_JUMP` (a new power is code). Given the first time the level is cleared, with its dialog | `if (!Has<Power>()) { ...; Give<Power>(); Show<Power>Dialog(); ... }` |
+| `"open_world"` | with a `"power"`, when it is given: the next level select turns to the next page by itself if it is open (see "Level-select pages") | `LevelSelect::SetNewWorldOpened()`, first in the block |
+| `"cutscene"` | a cutscene index, 0-10 (`gCutscenes`, `PlayCutscene`). With a `"power"`, played once, last in its block; without one, at every clear | `PlayCutscene(N)` |
+| `"mark_cleared"` | sets the level word's `cleared` bit (`LEVEL_FLAG_CRYSTAL`, the bit the crystal pickup sets) | `GetCurrentLevelFlags()->w.cleared = 1` |
+| `"next_level"` | `{"if_completion_over": N, "cutscene": C, "level": L}`: over N% completion (0-99), play C (optional) and go straight on to level L, with no level select in between | `if (progress.GetCompletionPercent() > N) { PlayCutscene(C); room.level += L - <this level>; room.roomIndex = 0; goto start; }` |
+| `"credits"` | `{}` or `{"cutscene": C}`: play C, then the credits | `PlayCutscene(C); RunCredits()` |
+
+They come in that order in the case, then `break`. The ROM's
+`"on_clear"`s:
+
+| level | `"on_clear"` |
+|---|---|
+| `LEVEL_DINGODILE` | `{"power": "SUPER_BODY_SLAM", "open_world": true, "cutscene": 4}` |
+| `LEVEL_N_GIN` | `{"power": "DOUBLE_JUMP", "open_world": true, "cutscene": 5}` |
+| `LEVEL_TINY` | `{"power": "TORNADO_SPIN", "open_world": true, "cutscene": 6}` |
+| `LEVEL_NEO_CORTEX` | `{"power": "TURBO_RUN", "open_world": true, "next_level": {"if_completion_over": 99, "cutscene": 8, "level": "LEVEL_MEGA_MIX"}, "credits": {"cutscene": 10}}` |
+| `LEVEL_MEGA_MIX` | `{"credits": {"cutscene": 9}}` |
+
+None of them has `"mark_cleared"`: the ROM's bosses don't set their
+`cleared` bit. A boss's (`"boss": true`) bit is only read by
+`Pickups::SpawnCrystal` (a crystal in its rooms isn't spawned again):
+the crystal count, the boss entry (`PlaceItems`) and `{"levels_cleared":
+true}` (`IsWorldCleared`) count the numbered levels only. It matters for
+a numbered level with a boss (a `"boss_kind"`), which has no crystal to
+pick up.
+
+**A level without `"on_clear"`** takes the switch's default case, as
+every level but the ROM's five does: its `cleared` bit is set when the
+room it ended in is a category stage (`room.cat->kind ==
+ROOM_KIND_CATEGORY`), so a polar or jetpack level, or a hovercraft boss
+whose stage is its last room. A level with an `"on_clear"` never takes
+it: a hovercraft boss level with an `"on_clear"` needs
+`"mark_cleared"` to be marked.
+
+**The power dialogs** stay the ROM's: each power's dialog has its text
+and icon (`power_dialog_draw.cpp`). Any level can give any of the four
+powers, but only one level each: the power is a bit of the save, and the
+second level's block would never run.
+
+**Checks.** `levels.py` stops on an unknown key or power, a power given
+by two levels, `"open_world"` without a `"power"`, a cutscene index past
+`gCutscenes` (`CUTSCENE_COUNT`, 11), a `"next_level"` level that doesn't
+exist, a percentage past 0-99, and `"next_level"`s that come back round
+(a level that leads back to itself would replay forever). It warns
+(and builds) when a numbered level with a `"boss_kind"` is never marked
+cleared: no `"mark_cleared"`, no `CRYSTAL` entity in its rooms, and
+(without an `"on_clear"`) not ending in a category stage. Its world's
+boss entry, the world after it if `{"levels_cleared": true}` opens it,
+and the crystal count wait for its bit.
+
+**What is generated.** `level_on_clear.h` (`levels.py on-clear`):
+`LEVEL_ON_CLEAR_CASES`, the cases with their statements, in the levels'
+order, like RunRoom's `THEME_PALETTE_CYCLE_CASES`. With the ROM's levels
+they are the ROM's five cases, so `UpdateGameFrame` is the ROM's code
+(`levels.py extract` keeps the `"on_clear"`s, which are code, and checks
+them against `ROM_ON_CLEAR`). Neo Cortex's step is `room.level +=
+LEVEL_MEGA_MIX - LEVEL_NEO_CORTEX`: the ROM's `add #1`.
+
+`"on_clear"` isn't part of the save version's CRC either: it doesn't
+change what a save's records mean.
+
+Tested in scratch with plain `make` and mGBA: a new level off the grid
+after mega-mix, `LEVEL_DINGO_REMATCH` (25), playing `dingodile/main`
+with `"boss_kind": "DINGODILE"` and `"on_clear": {"power":
+"DOUBLE_JUMP", "open_world": true, "cutscene": 4, "mark_cleared":
+true}`, with n. gin's `"on_clear"` taken out (the power is given by one
+level). From a new game, with the level picked and its room exit
+requested by hand (as the boss's power pickup does), clearing it calls
+`SetNewWorldOpened`, `GiveDoubleJump` and `ShowDoubleJumpDialog` (the
+Double Jump dialog shows) and plays cutscene 4 ("Cortex: Meddling
+marsupial!"). Back at the level select, the save's flags are 0x80
+(`DOUBLE_JUMP`) and level 25's word has its `cleared` bit, both 0 before.
+On the level select, Up on page 1 turns to page 2 (`IsNextWorldOpen`'s
+`DOUBLE_JUMP` rule), and Up there plays the error sound (no Tornado
+Spin). `levels.py` stops on each check above (a power given twice, an
+unknown power, cutscenes 11, 40 and -1, a `"next_level"` loop, one to
+the level itself, an unknown level, 100%, `"open_world"` without a
+power, an unknown key, a `"mark_cleared"` of 1) and warns for jungle jam
+playing Dingodile's room with no `"on_clear"`, and with one without
+`"mark_cleared"` and world 1 opened by `{"levels_cleared": true}`.
 
 ## The save
 

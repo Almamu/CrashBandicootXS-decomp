@@ -460,13 +460,13 @@ void LevelState::ResetLives()
 
 /* Sets the Aku Aku mask level (`maskLevel`, +0x78, 0-3): level `3` (the
  * invincibility mask) always fires a jingle (`StartSong(
- * gAudioContext, SONG_DRUMS)`) and skips the rest; leaving level 3 re-fires
- * `room.PlayRoomMusic()` once. Either way `maskLevel` ends up
+ * gAudioContext, SCREEN_SONG_INVINCIBLE)`, the drums) and skips the
+ * rest; leaving level 3 re-fires `room.PlayRoomMusic()` once. Either way `maskLevel` ends up
  * holding `state`. */
 void LevelState::SetMaskLevel(s32 state)
 {
     if (state == MASK_LEVEL_INVINCIBLE) {
-        gAudioContext->StartSong(SONG_DRUMS);
+        gAudioContext->StartSong(SCREEN_SONG_INVINCIBLE);
     } else if (maskLevel == MASK_LEVEL_INVINCIBLE) {
         maskLevel = state;
         room.PlayRoomMusic();

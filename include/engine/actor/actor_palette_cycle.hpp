@@ -36,6 +36,8 @@ namespace Actor
 class ActorPaletteCycle
 {
 public:
+    typedef u16 Frame[14 * 16]; // a frame of the cycle: BG palettes 0-13
+
     static void Restore();       // RestoreActorPaletteCycle: the saved cursor and bound
     static void Save();          // SaveActorPaletteCycle
     static void Update();        // UpdateActorPaletteCycle: CellAnim::Advance's
@@ -55,6 +57,10 @@ private:
     static const u16 frames[32][14 * 16]; // gActorPaletteCycleFrames - BG palettes 0-13
     static const s32 startFrames[4];      // gActorPaletteCycleStartFrames
     static const s32 targetFrames[4];     // gActorPaletteCycleTargetFrames
+    /* Per category, its frames, when a category names its own
+     * "palette_cycle" (defined by actor_categories.inc then only;
+     * category_palette_cycles.h) */
+    static const Frame *const categoryFrames[];
 };
 
 } // namespace Actor
