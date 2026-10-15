@@ -311,7 +311,7 @@ void Crate::BreakInArea(s32 x, s32 y, s32 dist, s32 height)
 
                 if (dx + dy <= dist && dy < height && (o->state & CRATE_STATE_MASK) == 0) {
                     /* `kind + table`, as in BlastNearbyCrates */
-                    if (*(u8 *)(o->kind + (u32)commit))
+                    if (*(u8 *)(o->kind + (uintptr_t)commit))
                         o->Explode(0);
                     else if (gCrateKindBreakable[o->kind]) {
                         if (o->kind == CRATE_KIND_CHECKPOINT)

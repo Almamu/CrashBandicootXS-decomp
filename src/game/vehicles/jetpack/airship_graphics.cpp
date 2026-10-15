@@ -79,8 +79,8 @@ void Airship::Damage(s32 delta)
 
 void Airship::LoadGraphics()
 {
-    s32 i;
-    s32 base = BG_CHAR_ADDR(2) + 0xff * TILE_SIZE_8BPP;
+    intptr_t i;
+    intptr_t base = BG_CHAR_ADDR(2) + 0xff * TILE_SIZE_8BPP;
     u32 zero = 0;
 
     for (i = base + TILE_SIZE_8BPP - 4; i >= base; i -= 4)
@@ -96,7 +96,7 @@ void Airship::LoadGraphics()
         self = anim;
 
         s32 t = Q8_TO_INT(self->animTime);
-        DrawMap((u16 *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
+        DrawMap((u16 *)self->frameAddrs[self->anims[self->animIndex].frameIndex + t]);
         REG_DISPCNT |= DISPCNT_BG2_ON;
         UpdateBg2();
         pal = BG_PALETTE(1);
@@ -257,7 +257,7 @@ void Airship::ConvertTiles()
         heights[k] = x;
         sum += x;
         off += 4;
-        mapFrames[k] = (u32)((u8 *)palette + off);
+        mapFrames[k] = (uintptr_t)((u8 *)palette + off);
         off += stride;
         off += heights[k] << 5;
     }

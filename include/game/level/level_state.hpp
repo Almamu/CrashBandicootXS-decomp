@@ -137,8 +137,8 @@ public:
 #define CHECKPOINT_FLAG_MIRROR_X 1
 
 COMPILE_TIME_ASSERT(level_state_hpp, offsetof(LevelProgress, cat) == 0x18);
-COMPILE_TIME_ASSERT(level_state_hpp, offsetof(LevelProgress, checkpointFlags) == 0x1C);
-COMPILE_TIME_ASSERT(level_state_hpp, sizeof(LevelProgress) == 0x20);
+LAYOUT_ASSERT(level_state_hpp, offsetof(LevelProgress, checkpointFlags) == 0x1C);
+LAYOUT_ASSERT(level_state_hpp, sizeof(LevelProgress) == 0x20);
 
 /*
  * The level/session state (0x1CC bytes): the lives, wumpa, crates, mask,
@@ -330,14 +330,11 @@ private:
  * (LEVEL_COUNT) and by its extra progress flags (PROGRESS_EXTRA_FLAG_BYTES). */
 #define LEVEL_STATE_GROWTH (sizeof(GameProgress) - 0x68)
 COMPILE_TIME_ASSERT(level_state_hpp, offsetof(LevelState, unk_68) == 0x068 + LEVEL_STATE_GROWTH);
-COMPILE_TIME_ASSERT(level_state_hpp, offsetof(LevelState, room) == 0x0C4 + LEVEL_STATE_GROWTH);
-COMPILE_TIME_ASSERT(level_state_hpp,
-                    offsetof(LevelState, checkpointData) == 0x0E4 + LEVEL_STATE_GROWTH);
-COMPILE_TIME_ASSERT(level_state_hpp,
-                    offsetof(LevelState, saveData) == 0x14C + 2 * LEVEL_STATE_GROWTH);
-COMPILE_TIME_ASSERT(level_state_hpp,
-                    offsetof(LevelState, savedBitmap) == 0x1B4 + 3 * LEVEL_STATE_GROWTH);
-COMPILE_TIME_ASSERT(level_state_hpp, sizeof(LevelState) == 0x1CC + 3 * LEVEL_STATE_GROWTH);
+LAYOUT_ASSERT(level_state_hpp, offsetof(LevelState, room) == 0x0C4 + LEVEL_STATE_GROWTH);
+LAYOUT_ASSERT(level_state_hpp, offsetof(LevelState, checkpointData) == 0x0E4 + LEVEL_STATE_GROWTH);
+LAYOUT_ASSERT(level_state_hpp, offsetof(LevelState, saveData) == 0x14C + 2 * LEVEL_STATE_GROWTH);
+LAYOUT_ASSERT(level_state_hpp, offsetof(LevelState, savedBitmap) == 0x1B4 + 3 * LEVEL_STATE_GROWTH);
+LAYOUT_ASSERT(level_state_hpp, sizeof(LevelState) == 0x1CC + 3 * LEVEL_STATE_GROWTH);
 
 } // namespace Level
 } // namespace Game

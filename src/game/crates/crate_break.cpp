@@ -1533,7 +1533,7 @@ void Crate::BlastNearby(s32 dist)
         /* gCrateKindExplosive as an integer: `kind + table` is the ROM's
          * operand order; indexing it (or `kind + pointer`) adds the other
          * way round. */
-        u32 commit = (u32)gCrateKindExplosive;
+        uintptr_t commit = (uintptr_t)gCrateKindExplosive;
 
         do {
             Crate *o = gCrateList->slots[i];
@@ -1545,7 +1545,7 @@ void Crate::BlastNearby(s32 dist)
                 s32 dy = ABS_BRANCHLESS(t2);
 
                 if (dx + dy <= dist && (o->state & CRATE_STATE_MASK) == 0) {
-                    u32 k = o->kind;
+                    uintptr_t k = o->kind;
 
                     if (*(u8 *)(k + commit))
                         o->Explode(0);

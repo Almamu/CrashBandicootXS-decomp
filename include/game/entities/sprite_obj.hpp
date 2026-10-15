@@ -244,7 +244,7 @@ public:
     inline MovingSprite *AsMovingSprite();
 };
 
-COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(Sprite) == 0x40);
+LAYOUT_ASSERT(sprite_obj_hpp, sizeof(Sprite) == 0x40);
 
 /* The mirror bits' setters, inline: the spawners and the menus expand
  * them. Inlined with a parameter (not a literal), the store is a general
@@ -273,7 +273,7 @@ public:
     virtual s32 GetPriority(); // GetSpritePriority: the mirror byte's
 };
 
-COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(UiSprite) == 0x40);
+LAYOUT_ASSERT(sprite_obj_hpp, sizeof(UiSprite) == 0x40);
 
 /* The moving sprite (src/game/entities/moving_sprite.cpp, moving_sprite_collide.cpp,
  * moving_sprite.cpp, moving_sprite_probe.cpp; gMovingSpriteVtable): a sprite with a
@@ -361,7 +361,7 @@ public:
     bool ProbeEdgeTerrain(s32 mode, const struct hitbox_quad *quad);
 };
 
-COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(MovingSprite) == 0x78);
+LAYOUT_ASSERT(sprite_obj_hpp, sizeof(MovingSprite) == 0x78);
 
 inline MovingSprite *Sprite::AsMovingSprite()
 {
@@ -414,7 +414,7 @@ public:
     void AnchorHitbox();                                        // AnchorGroundSpriteHitbox
 };
 
-COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(GroundSprite) == 0x80);
+LAYOUT_ASSERT(sprite_obj_hpp, sizeof(GroundSprite) == 0x80);
 
 /* A list of sprite objects (the room's part lists, globals.h):
  * Update compacts `items` and fills `visible`, the parts on screen, which
@@ -452,7 +452,7 @@ public:
     void CollideClass(s32 classId); // CollidePartsOfClass
 };
 
-COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(PartList) == 0x14);
+LAYOUT_ASSERT(sprite_obj_hpp, sizeof(PartList) == 0x14);
 
 /* The room's part lists (globals.h), as RoomCrates() is the crate list
  * (crate_list.hpp). */
@@ -570,7 +570,7 @@ public:
     void Clear();
 };
 
-COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(PaletteCache) == 0x230);
+LAYOUT_ASSERT(sprite_obj_hpp, sizeof(PaletteCache) == 0x230);
 
 /* The sprite bank set (gSpriteBankSet, 4 bytes): InitLevelState points it
  * at gSpriteBankTable, the table the level's sprites come from. Its users
@@ -600,7 +600,7 @@ public:
     ~SpriteBankSet(); // DestroySpriteBankSet
 };
 
-COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(SpriteBankSet) == 4);
+LAYOUT_ASSERT(sprite_obj_hpp, sizeof(SpriteBankSet) == 4);
 
 /* The sprite renderer (gSpriteRenderer, an empty object InitLevelState
  * allocates): draws a sprite's OAM pieces (DrawPieces and

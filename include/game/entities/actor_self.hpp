@@ -71,10 +71,19 @@ class AnimPart
 {
 public:
     const struct anim_frame_record *anims; // 0x00
-    u32 *frameOffsets;                     // 0x04
-    s32 animTime;                          // 0x08 - Q8 frame accumulator
-    s32 animIndex;                         // 0x0C - current index into anims
-    s16 animTimer;                         // 0x10
+    /* 0x04 - the frame table (anim_table_record.table_B, actor_anim.h):
+     * byte offsets into the category sprite sheet (GetAnimFrameData), or
+     * the frames' own addresses (CurFrame; record 0's compressed frames,
+     * the yeti's, the airship's and the hovercraft's map rows), by the
+     * record's addressing mode. An address is pointer-sized, an offset
+     * isn't: on the GBA both are 4 bytes. */
+    union {
+        u32 *frameOffsets;
+        uintptr_t *frameAddrs;
+    };
+    s32 animTime;  // 0x08 - Q8 frame accumulator
+    s32 animIndex; // 0x0C - current index into anims
+    s16 animTimer; // 0x10
     // 0x12 - set once the current sequence has played through
     u8 animDone;
     // 0x14 - draw order: ActorCategory::RunFrame heapsorts the draw list by it
@@ -85,10 +94,10 @@ public:
     s32 palette; // 0x18 - OBJ palette bank (OAM attr 2 << 12), from anim_table_record.palette
 
     /* Inline: InitActorPart and CreateAirship expand it. */
-    AnimPart(const struct anim_frame_record *a, u32 *offsets, s32 pal)
+    AnimPart(const struct anim_frame_record *a, const void *frames, s32 pal)
     {
         anims = a;
-        frameOffsets = offsets;
+        frameOffsets = (u32 *)frames;
         palette = pal;
         SetAnim(0);
     }
@@ -108,7 +117,7 @@ public:
         animTime = 0;
     }
 
-    /* The current frame's entry in frameOffsets (the keyframe's
+    /* The current frame's entry in frameAddrs (the keyframe's
      * frameIndex plus the whole frames of animTime), as a pointer: what
      * the 3D draws inline (polar_player.cpp, yeti_graphics.cpp). Unlike
      * GetAnimFrameData, no category sprite sheet base is added. */
@@ -116,7 +125,7 @@ public:
     {
         s32 t = Q8_TO_INT(animTime);
 
-        return (u8 *)frameOffsets[anims[animIndex].frameIndex + t];
+        return (u8 *)frameAddrs[anims[animIndex].frameIndex + t];
     }
 
     /* GetAnimFrameAttr's body, inline: the keyframe's attr in the high
@@ -139,7 +148,7 @@ public:
     }
 };
 
-COMPILE_TIME_ASSERT(actor_self_hpp, sizeof(AnimPart) == 0x1C);
+LAYOUT_ASSERT(actor_self_hpp, sizeof(AnimPart) == 0x1C);
 
 class ActorSelf : public AnimPart
 {
@@ -210,7 +219,7 @@ public:
     inline Game::Vehicles::Polar::PolarPlayer *AsPolarPlayer();
 };
 
-COMPILE_TIME_ASSERT(actor_self_hpp, sizeof(ActorSelf) == 0x54);
+LAYOUT_ASSERT(actor_self_hpp, sizeof(ActorSelf) == 0x54);
 
 /* actor_self.cpp defines ACTOR_SELF_DESTRUCTOR_OUT_OF_LINE for its own copy. */
 #ifndef ACTOR_SELF_DESTRUCTOR_OUT_OF_LINE
@@ -364,7 +373,7 @@ public:
     virtual s32 GetHp();        // 6 GetActorHp
 };
 
-COMPILE_TIME_ASSERT(actor_self_hpp, sizeof(HpActor) == 0x58);
+LAYOUT_ASSERT(actor_self_hpp, sizeof(HpActor) == 0x58);
 
 inline HpActor *ActorSelf::AsHpActor()
 {

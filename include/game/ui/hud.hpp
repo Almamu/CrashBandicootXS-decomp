@@ -135,7 +135,7 @@ public:
     void IncCrateTotal();                                  // IncHudCrateTotal
 };
 
-COMPILE_TIME_ASSERT(hud_hpp, sizeof(Hud) == 0x68);
+LAYOUT_ASSERT(hud_hpp, sizeof(Hud) == 0x68);
 
 } // namespace Ui
 } // namespace Game

@@ -111,7 +111,7 @@ private:
     static EntitySpawner *instance;
 };
 
-COMPILE_TIME_ASSERT(spawners_hpp, sizeof(EntitySpawner) == 8);
+LAYOUT_ASSERT(spawners_hpp, sizeof(EntitySpawner) == 8);
 
 } // namespace Level
 } // namespace Game

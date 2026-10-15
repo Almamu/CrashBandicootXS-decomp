@@ -67,7 +67,7 @@ public:
     void SetSize(s32 x, s32 y);                      // SetBgStreamerSize
 };
 
-COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(BgStreamer) == 0x24);
+LAYOUT_ASSERT(bg_layer_hpp, sizeof(BgStreamer) == 0x24);
 
 /* A scrolling layer's position and size (0x34 bytes): the base of
  * BgLayer. Its methods are in src/game/level/bg_layer_base.cpp. Scroll scales
@@ -108,7 +108,7 @@ public:
     s32 GetWidth();                                        // GetBgLayerWidth
 };
 
-COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(BgLayerBase) == 0x34);
+LAYOUT_ASSERT(bg_layer_hpp, sizeof(BgLayerBase) == 0x34);
 
 /* A hardware BG layer (0x5C bytes; level_layers' BG1-3): keeps a 32x32
  * window of the level's tile map resident in its BG screen block, rows
@@ -216,7 +216,7 @@ public:
     }
 };
 
-COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(BgLayer) == 0x5C);
+LAYOUT_ASSERT(bg_layer_hpp, sizeof(BgLayer) == 0x5C);
 
 #define TILE_SLOT_NONE 0x200
 
@@ -228,18 +228,18 @@ COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(BgLayer) == 0x5C);
 class TileSlotPool
 {
 public:
-    u32 vramBase;            // 0x0000
-    u32 srcBase;             // 0x0004
+    uintptr_t vramBase;      // 0x0000
+    uintptr_t srcBase;       // 0x0004
     u16 refCount[0x200];     // 0x0008
     u16 slotForTile[0x2000]; // 0x0408 - TILE_SLOT_NONE when not resident
     u16 freeSlots[0x200];    // 0x4408
     s32 freeTop;             // 0x4808
 
-    void Reset();                          // ResetTileSlotPool
-    u16 Acquire(u16 tile);                 // AcquireTileSlot
-    void Release(u32 tile);                // ReleaseTileSlot
-    void Upload(s32 tileId, s32 slot);     // UploadTileSlot
-    void SetSource(s32 charBase, u32 src); // SetTileSlotPoolSource
+    void Reset();                                // ResetTileSlotPool
+    u16 Acquire(u16 tile);                       // AcquireTileSlot
+    void Release(u32 tile);                      // ReleaseTileSlot
+    void Upload(s32 tileId, s32 slot);           // UploadTileSlot
+    void SetSource(s32 charBase, uintptr_t src); // SetTileSlotPoolSource
 
 private:
     /* The free-stack push and the slot-table accessors: as inline
@@ -272,7 +272,7 @@ private:
     }
 };
 
-COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(TileSlotPool) == 0x480C);
+LAYOUT_ASSERT(bg_layer_hpp, sizeof(TileSlotPool) == 0x480C);
 
 /* BG layer 0 (0x60 bytes): a BgLayer whose tiles go through a VRAM tile
  * slot pool (TileSlotPool, src/game/level/tile_slot_pool.cpp) instead
@@ -298,7 +298,7 @@ public:
     u32 GetPriority();                        // GetPooledBgLayerPriority
 };
 
-COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(PooledBgLayer) == 0x60);
+LAYOUT_ASSERT(bg_layer_hpp, sizeof(PooledBgLayer) == 0x60);
 
 /* The collision tile cache (LevelLayers' `tiles`, 0x1064 bytes): a 16-slot decode/LRU cache of
  * the room's collision tile records (docs/rom_map.md's "Collision/terrain-map
@@ -349,7 +349,7 @@ private:
     }
 };
 
-COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(TileCache) == 0x1064);
+LAYOUT_ASSERT(bg_layer_hpp, sizeof(TileCache) == 0x1064);
 
 /* The level-layers singleton (gLevelLayersSingleton, gLevelLayers;
  * src/game/level/level_layers.cpp): BG layer 0, the three other BG layers, the
@@ -397,7 +397,7 @@ public:
     s32 sub_8026C80(s32 cond, volatile s32 *ptr);                        // UNUSED
 };
 
-COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(LevelLayers) == 0x2C);
+LAYOUT_ASSERT(bg_layer_hpp, sizeof(LevelLayers) == 0x2C);
 
 } // namespace Level
 } // namespace Game

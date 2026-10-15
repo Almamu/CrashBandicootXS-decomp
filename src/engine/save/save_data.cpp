@@ -306,10 +306,10 @@ s32 SaveData::Store()
 void SaveData::ReadSlot(s32 row, void *dst)
 {
     if (slotEmpty[row] == 0) {
-        s32 offset;
+        intptr_t offset;
 
         offset = row * sizeof(struct save_slot);
-        offset = offset + (s32)this;
+        offset = offset + (intptr_t)this;
         MemCopy32(dst, (void *)offset, sizeof(struct save_slot));
     }
 }
@@ -319,11 +319,11 @@ void SaveData::ReadSlot(s32 row, void *dst)
  * refreshes the checksum. */
 void SaveData::WriteSlot(s32 row, void *src)
 {
-    s32 offset;
+    intptr_t offset;
 
     slotEmpty[row] = 0;
     offset = row * sizeof(struct save_slot);
-    offset = offset + (s32)this;
+    offset = offset + (intptr_t)this;
     MemCopy32((void *)offset, src, sizeof(struct save_slot));
     UpdateChecksum();
 }

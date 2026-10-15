@@ -89,7 +89,7 @@ void Irq::EnableVBlankHandler()
 
     do {
         *current-- = zero;
-    } while ((s32)current >= (s32)&base->funcs[0]);
+    } while ((intptr_t)current >= (intptr_t)&base->funcs[0]);
 
     SetHandler(INTR_INDEX_VBLANK, fn);
 

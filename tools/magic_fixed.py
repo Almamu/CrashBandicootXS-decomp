@@ -228,7 +228,7 @@ class FixedScan(mb.BitScan):
         """(thing key, name, role) of the expression text[start:end]."""
         field, expr = self.field_of(start, end)
         flat = re.sub(r"\s+", "", mb.strip_expr(self.text[start:end]))
-        if re.match(r"(?:sizeof|COMPILE_TIME_ASSERT)\b", flat):
+        if re.match(r"(?:sizeof|COMPILE_TIME_ASSERT|LAYOUT_ASSERT)\b", flat):
             return f"expr {flat[:48]}", None, None
         if re.match(r"Q\d+_TO_INT\(|.*>>\d+\)*$", flat):
             return f"expr {flat[:48]}", "converted", "converted"  # whole units

@@ -66,7 +66,7 @@ public:
     void Update();          // UpdateCamera
 };
 
-COMPILE_TIME_ASSERT(camera_hpp, sizeof(Camera) == 0x18);
+LAYOUT_ASSERT(camera_hpp, sizeof(Camera) == 0x18);
 
 } // namespace Level
 } // namespace Game

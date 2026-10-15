@@ -60,7 +60,7 @@ struct CrateGridNode {
     u8 mark2;                  // 0x11 - handled by Draw
 };
 
-COMPILE_TIME_ASSERT(crate_list_hpp, sizeof(CrateGridNode) == 0x14);
+LAYOUT_ASSERT(crate_list_hpp, sizeof(CrateGridNode) == 0x14);
 
 /* An entry of the free list: a node not in use, and the next entry. */
 struct CrateGridLink {
@@ -68,7 +68,7 @@ struct CrateGridLink {
     CrateGridLink *next; // 0x04
 };
 
-COMPILE_TIME_ASSERT(crate_list_hpp, sizeof(CrateGridLink) == 8);
+LAYOUT_ASSERT(crate_list_hpp, sizeof(CrateGridLink) == 8);
 
 /* codegen: a grid node with untyped pointers, the view ResetGrid (below)
  * zeroes the nodes through (CrateList::InitView): through the real
@@ -244,7 +244,7 @@ public:
     }
 };
 
-COMPILE_TIME_ASSERT(crate_list_hpp, sizeof(CrateList) == 0x818);
+LAYOUT_ASSERT(crate_list_hpp, sizeof(CrateList) == 0x818);
 
 } // namespace Crates
 } // namespace Game

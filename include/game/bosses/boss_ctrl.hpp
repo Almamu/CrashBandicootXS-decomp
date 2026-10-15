@@ -49,7 +49,7 @@ public:
     void *GetTarget();   // GetCtrlTarget
 };
 
-COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(BossCtrl) == 0x1C);
+LAYOUT_ASSERT(boss_ctrl_hpp, sizeof(BossCtrl) == 0x1C);
 
 /* The Mega Mix boss's controller (gMegaMixCtrlVtable;
  * src/game/bosses/mega_mix.cpp, and its Update,
@@ -80,7 +80,7 @@ public:
     static void Spawn(u32 id, u16 x, u16 y, u16 param); // SpawnMegaMix
 };
 
-COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(MegaMixCtrl) == 0x24);
+LAYOUT_ASSERT(boss_ctrl_hpp, sizeof(MegaMixCtrl) == 0x24);
 
 /* The Tiny boss's controller (gTinyVtable; src/game/bosses/tiny.cpp).
  * Tiny hops his part along parabolic arcs between gTouchableList's
@@ -138,7 +138,7 @@ public:
     static void Spawn(u32 id, u16 x, u16 y, u16 param); // SpawnTiny
 };
 
-COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(TinyCtrl) == 0x4C);
+LAYOUT_ASSERT(boss_ctrl_hpp, sizeof(TinyCtrl) == 0x4C);
 
 /* The Neo Cortex fight's controller (gCortexBossVtable;
  * src/game/bosses/cortex.cpp). `counter` is the round. It spawns the
@@ -169,7 +169,7 @@ public:
     static void Spawn(u32 id, u16 x, u16 y, u16 param); // SpawnCortexBoss
 };
 
-COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexBossCtrl) == 0x24);
+LAYOUT_ASSERT(boss_ctrl_hpp, sizeof(CortexBossCtrl) == 0x24);
 
 /* The Neo Cortex fight's cannon (gCortexCannonVtable; 0x10 bytes,
  * src/game/bosses/cortex.cpp): hides its part in state 0. */
@@ -184,7 +184,7 @@ public:
     void SetState(Game::Entities::MovingSprite *part, s32 next);
 };
 
-COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexCannonCtrl) == 0x10);
+LAYOUT_ASSERT(boss_ctrl_hpp, sizeof(CortexCannonCtrl) == 0x10);
 
 /* The Neo Cortex fight's target, the crosshair that hops between the
  * player and the platforms (gCortexTargetVtable, 0x40 bytes;
@@ -230,7 +230,7 @@ public:
     void FireShot(Game::Entities::MovingSprite *part, s32 kind); // FireCortexShot
 };
 
-COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexTargetCtrl) == 0x40);
+LAYOUT_ASSERT(boss_ctrl_hpp, sizeof(CortexTargetCtrl) == 0x40);
 
 /* The target's shot (gCortexShotVtable, 0x18 bytes; src/game/bosses/cortex.cpp):
  * a slow one (kind 0) hurts the player, a fast one (1) also shrinks the
@@ -249,7 +249,7 @@ public:
     virtual ~CortexShotCtrl(); // DestroyCortexShotCtrl
 };
 
-COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexShotCtrl) == 0x18);
+LAYOUT_ASSERT(boss_ctrl_hpp, sizeof(CortexShotCtrl) == 0x18);
 
 /* A gem of the Neo Cortex fight (gCortexBossGemVtable, 0x14 bytes;
  * src/game/bosses/cortex.cpp, SpawnCortexBossGem): once a fast shot hits it
@@ -267,7 +267,7 @@ public:
     virtual ~CortexBossGemCtrl(); // DestroyCortexBossGemCtrl
 };
 
-COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexBossGemCtrl) == 0x14);
+LAYOUT_ASSERT(boss_ctrl_hpp, sizeof(CortexBossGemCtrl) == 0x14);
 
 /* gUnusedOneShotAnimCtrlVtable's class (src/game/bosses/tiny.cpp): does what
  * OneShotAnimCtrl does. Its constructor has no caller (UNUSED). */
@@ -279,7 +279,7 @@ public:
     virtual ~UnusedOneShotAnimCtrl(); // DestroyUnusedOneShotAnimCtrl
 };
 
-COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(UnusedOneShotAnimCtrl) == 0x10);
+LAYOUT_ASSERT(boss_ctrl_hpp, sizeof(UnusedOneShotAnimCtrl) == 0x10);
 
 /* Dingodile (gDingodileVtable, src/game/bosses/dingodile.cpp and
  * dingodile_create.cpp): he walks the level, stopping at the approach
@@ -336,7 +336,7 @@ public:
     static void Spawn(u32 id, u16 x, u16 y, u16 param); // SpawnDingodile
 };
 
-COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(DingodileCtrl) == 0x30);
+LAYOUT_ASSERT(boss_ctrl_hpp, sizeof(DingodileCtrl) == 0x30);
 
 /* Dingodile's shield (gDingodileShieldVtable, 0x28 bytes): hurts the
  * player on contact, and blinks twice when Dingodile is hit. */
@@ -360,7 +360,7 @@ public:
     virtual ~DingodileShieldCtrl(); // DestroyDingodileShieldCtrl
 };
 
-COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(DingodileShieldCtrl) == 0x28);
+LAYOUT_ASSERT(boss_ctrl_hpp, sizeof(DingodileShieldCtrl) == 0x28);
 
 /* Dingodile's rocket, and the stalactite it drops
  * (gDingodileProjectileVtable, 0x20 bytes): both hurt the player, and
@@ -391,7 +391,7 @@ public:
     void SpawnStalactite(u16 x, u16 y);
 };
 
-COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(DingodileProjectileCtrl) == 0x20);
+LAYOUT_ASSERT(boss_ctrl_hpp, sizeof(DingodileProjectileCtrl) == 0x20);
 
 /* The shark Dingodile's fight sends across the level
  * (gDingodileSharkVtable): an enemy controller in a 0x8C-byte block. */
@@ -408,7 +408,7 @@ public:
     virtual ~DingodileSharkCtrl(); // DestroyDingodileSharkCtrl
 };
 
-COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(DingodileSharkCtrl) == 0x8C);
+LAYOUT_ASSERT(boss_ctrl_hpp, sizeof(DingodileSharkCtrl) == 0x8C);
 
 } // namespace Bosses
 } // namespace Game

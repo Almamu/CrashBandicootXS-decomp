@@ -244,6 +244,6 @@ struct level_info {
 #define LEVEL_LINKS(n) struct { s32 count; struct level_link links[n]; }
 
 /* Byte offset of a parameter record in a room's parameter struct. */
-#define LEVEL_PARAM_OFFSET(type, member) ((u16)(u32)&((type *)0)->member)
+#define LEVEL_PARAM_OFFSET(type, member) ((u16)offsetof(type, member))
 
 #endif // GUARD_LEVEL_DATA_H

@@ -105,10 +105,10 @@ void Yeti::LoadGraphics()
     FillDotPattern(buf, 0x80);
     DmaCopy16(3, buf, (void *)BG_SCREEN_ADDR(27), sizeof(buf));
 
-    s32 base = BG_CHAR_ADDR(2) + 0xff * TILE_SIZE_8BPP;
+    intptr_t base = BG_CHAR_ADDR(2) + 0xff * TILE_SIZE_8BPP;
     /* `zero` is needed: inlined, the instructions are reordered */
     u32 zero = 0;
-    s32 p;
+    intptr_t p;
 
     for (p = base + TILE_SIZE_8BPP - 4; p >= base; p -= 4)
         *(u32 *)p = zero;

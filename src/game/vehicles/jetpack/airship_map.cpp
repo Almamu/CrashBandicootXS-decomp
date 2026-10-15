@@ -24,7 +24,7 @@ using Game::Vehicles::Jetpack::Airship;
 
 void Airship::DrawMap(u16 *src)
 {
-    u8 *row = (u8 *)((bg2Page + 0x18) << 11) + (VRAM + (0x20 - mapCols) / 4 * 2) +
+    u8 *row = (u8 *)(uintptr_t)((bg2Page + 0x18) << 11) + (VRAM + (0x20 - mapCols) / 4 * 2) +
               ((0x20 - mapRows) / 2 * 32 + 2);
     s32 i, j;
 

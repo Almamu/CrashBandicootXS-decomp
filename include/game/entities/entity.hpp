@@ -234,7 +234,7 @@ public:
     }
 };
 
-COMPILE_TIME_ASSERT(entity_hpp, sizeof(Entity) == 0x1C);
+LAYOUT_ASSERT(entity_hpp, sizeof(Entity) == 0x1C);
 
 } // namespace Entities
 } // namespace Game

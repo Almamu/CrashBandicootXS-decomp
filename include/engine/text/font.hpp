@@ -152,7 +152,7 @@ public:
     }
 };
 
-COMPILE_TIME_ASSERT(font_hpp, sizeof(Font) == 0x134);
+LAYOUT_ASSERT(font_hpp, sizeof(Font) == 0x134);
 
 /* gSmallFont: 9-pixel lines, 4-pixel spaces, 2 tiles per glyph
  * (InitSmallFont, src/engine/text/font_glyph.cpp; ~SmallFont, aabb_setters.cpp). */

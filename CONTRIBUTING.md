@@ -435,6 +435,13 @@ full rules (#574). For new code:
     type changes, and `ASSERT_VIEW_FIELD(tag, Class, view, field)` (core.h:
     `COMPILE_TIME_ASSERT(tag, offsetof(Class, field) == offsetof(struct
     view, field))`) on every named field.
+  - **Size and offset asserts:** a struct's or class's size and field
+    offsets are checked with `COMPILE_TIME_ASSERT` (core.h) if it holds
+    no pointer, and with `LAYOUT_ASSERT` (gba/defines.h) if it does (a
+    vtable pointer included): its layout is the GBA's, with 4-byte
+    pointers, and a 64-bit port doesn't check it
+    ([docs/platforms.md](docs/platforms.md), "64-bit hosts"). An address
+    kept as an integer is a `uintptr_t`/`intptr_t`, never a `u32`/`s32`.
   - `tools/layout_audit.py views` and `names` list the layouts that
     still view one another and the bytes that have two names; check them
     before and after such a change.

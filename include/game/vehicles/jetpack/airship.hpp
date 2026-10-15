@@ -160,7 +160,7 @@ private:
     static s32 checkpointCount;                 // gAirshipCheckpointCount
     /* The picture's row addresses, as the AnimPart's u32 frame offsets
      * (ConvertTiles fills them; a u32 store may alias its heights[]). */
-    static u32 mapFrames[]; // gAirshipMapFrames
+    static uintptr_t mapFrames[]; // gAirshipMapFrames
 
     /* The ROM tables (src/.../data) */
     static void (*const stateFuncs[6])();          // gAirshipStateFuncs (airship_state_table.cpp)

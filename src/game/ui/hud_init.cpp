@@ -62,7 +62,7 @@ Hud::Hud()
 
         const struct sprite_bank *anim = gSpriteBankSet->Bank(47);
 
-        slot = (HudPart *)(i * sizeof(HudPart) + (u32)parts);
+        slot = (HudPart *)(i * sizeof(HudPart) + (uintptr_t)parts);
         SET_PART_BANK(slot, anim);
         if (i == 0x16) {
             s32 life = gLevelState->GetBossIndex();

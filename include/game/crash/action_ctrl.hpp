@@ -266,7 +266,7 @@ public:
     s32 UpdateFacing();
 };
 
-COMPILE_TIME_ASSERT(action_ctrl_hpp, sizeof(ActionCtrl) == 0x38);
+LAYOUT_ASSERT(action_ctrl_hpp, sizeof(ActionCtrl) == 0x38);
 
 /* The player's `slippery` (+0x100), read through an inline function (and
  * written through Player::StoreSlippery): the 0x100 offset is then

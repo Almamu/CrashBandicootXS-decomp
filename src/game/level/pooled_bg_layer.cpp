@@ -138,7 +138,7 @@ void PooledBgLayer::Reset(const s32 *pos)
 void PooledBgLayer::LoadTiles()
 {
     /* `tiles` is needed: inlined, the code is 1 instruction longer */
-    u32 tiles = (u32)tileData;
+    uintptr_t tiles = (uintptr_t)tileData;
 
     pool->SetSource(GetCharBase(), tiles + 4);
 }

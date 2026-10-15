@@ -28,8 +28,8 @@ static inline void mem_heap_init_section(struct mem_heap_header *first, struct m
 s32 mem_heap_init(u32 reservedBytes)
 {
     /* `start`, `end` are needed: inlined, the registers differ */
-    u32 start = (u32)&mem_iwram_heap;
-    u32 end = (u32)&iwram_end;
+    uintptr_t start = (uintptr_t)&mem_iwram_heap;
+    uintptr_t end = (uintptr_t)&iwram_end;
     u32 iwram_size_left = end - start - reservedBytes;
 
     // zero-out the regions we're going to use
@@ -91,7 +91,7 @@ static inline void mem_collect_heap(struct mem_heap_header *start)
         }
 
         // looks like the ewram and the iwram are treated as contiguos
-        if ((u32)buffer >= (u32)mem_iwram_heap_pointer) {
+        if ((uintptr_t)buffer >= (uintptr_t)mem_iwram_heap_pointer) {
             boundary = mem_iwram_heap_pointer;
         } else {
             boundary = mem_ewram_heap_pointer;
@@ -222,7 +222,7 @@ void *mem_alloc(u32 requestedSize, u32 flags)
     // do not bother updating sizes if the difference in bytes
     // is not enough to fit a decent block of free data
     if ((u32)freeBytesAfterReservation > 0x40U) {
-        struct mem_block *newBlockAfter = (struct mem_block *)((u32)current + alignedSize);
+        struct mem_block *newBlockAfter = (struct mem_block *)((uintptr_t)current + alignedSize);
         struct mem_block *temp_r1_3;
 
         newBlockAfter->size = freeBytesAfterReservation;

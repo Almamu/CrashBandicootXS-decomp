@@ -42,8 +42,8 @@ only by gaining a `const`.
   ShowPicture rebuilds a byte of and REG_DISPCNT takes a halfword of.
 - `Hovercraft::palette`, `Airship::palette` and their `mapFrames`: the
   palette is the start of a blob (palette, then the frame heights and
-  frames), and `mapFrames` holds the frame addresses as words, as
-  AnimPart::frameOffsets does for every animation.
+  frames), and `mapFrames` holds the frame addresses as `uintptr_t`s,
+  the AnimPart's frame table (`frameAddrs`, #1093).
 - The LoadGraphics tile clears (`*(u32 *)i = zero`): a signed-address
   loop, as in the ROM.
 - SaveTransfer's `cursor = (u8 *)tmpl`: the save data streamed as bytes.

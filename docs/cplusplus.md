@@ -5083,7 +5083,7 @@ is byte-identical to origin/main's:
   u32 copies had.
 - **`AnimPart::CurFrame()`/`CurAttr()`** (polar_player.cpp,
   yeti_graphics.cpp, jetpack_player_update.cpp's `CurFrame`, `CurAttr`
-  and `CurFrameData`): the frame's frameOffsets entry, with no sprite
+  and `CurFrameData`): the frame's frameAddrs entry, with no sprite
   sheet base (unlike GetAnimFrameData), and the keyframe's attr. The
   jetpack's `CurFrame`, spelled out with locals, compiles the same as the
   one-expression body.

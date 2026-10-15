@@ -187,7 +187,7 @@ public:
     static void SpawnWoodenCrusher(u32 id, u16 x, u16 y, u16 param);
 };
 
-COMPILE_TIME_ASSERT(enemy_ctrl_hpp, sizeof(EnemyCtrl) == 0x8C);
+LAYOUT_ASSERT(enemy_ctrl_hpp, sizeof(EnemyCtrl) == 0x8C);
 
 /* The knocked enemy's controller (gKnockedEnemyCtrlVtable,
  * src/game/enemies/knocked_enemy_ctrl.cpp): HitEnemy
@@ -202,7 +202,7 @@ public:
     void Reset();                                            // ResetKnockedEnemyCtrl
 };
 
-COMPILE_TIME_ASSERT(enemy_ctrl_hpp, sizeof(KnockedEnemyCtrl) == 0x10);
+LAYOUT_ASSERT(enemy_ctrl_hpp, sizeof(KnockedEnemyCtrl) == 0x10);
 
 /* A periodic trigger entity (gPeriodicSpawnerVtable, 0x28 bytes;
  * src/game/enemies/periodic_spawner.cpp): calls `callback` at its own position
@@ -226,7 +226,7 @@ public:
     static void Spawn(u32 id, u16 x, u16 y, u16 param); // SpawnSealSpawner
 };
 
-COMPILE_TIME_ASSERT(enemy_ctrl_hpp, sizeof(PeriodicSpawner) == 0x28);
+LAYOUT_ASSERT(enemy_ctrl_hpp, sizeof(PeriodicSpawner) == 0x28);
 
 } // namespace Enemies
 } // namespace Game

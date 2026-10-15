@@ -102,7 +102,7 @@ public:
     }
 };
 
-COMPILE_TIME_ASSERT(input_ctrl_hpp, sizeof(InputCtrl) == 0x28);
+LAYOUT_ASSERT(input_ctrl_hpp, sizeof(InputCtrl) == 0x28);
 
 } // namespace Crash
 } // namespace Game

@@ -232,7 +232,7 @@ public:
     void DrawRows();                                     // DrawPauseMenuRows
 };
 
-COMPILE_TIME_ASSERT(menus_hpp, sizeof(PauseMenu) == 0xD4);
+LAYOUT_ASSERT(menus_hpp, sizeof(PauseMenu) == 0xD4);
 
 /* The power dialog (ShowPowerDialog, from the four Show*Dialog wrappers
  * game_frame.cpp calls when a boss gives Crash a power): the power's name
@@ -259,7 +259,7 @@ public:
     void Loop();                                                    // PowerDialogLoop
 };
 
-COMPILE_TIME_ASSERT(menus_hpp, sizeof(PowerDialog) == 0x2C);
+LAYOUT_ASSERT(menus_hpp, sizeof(PowerDialog) == 0x2C);
 
 } // namespace Ui
 } // namespace Game

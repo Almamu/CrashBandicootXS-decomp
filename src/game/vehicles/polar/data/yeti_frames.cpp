@@ -17,7 +17,7 @@ using Engine::Gfx::YetiFrameSet;
 using Game::Vehicles::Polar::Yeti;
 
 /* Yeti::frames (include/game/vehicles/polar/yeti.hpp): the yeti animation's frame table (its
- * `frameOffsets`, set up by CreateYeti in yeti.cpp next to the
+ * `frameAddrs`, set up by CreateYeti in yeti.cpp next to the
  * gYetiKeyframes animation records): 123 pointers to compressed
  * frames of YetiFrameSet::frames (polar_rle_sprites.cpp). The offsets come
  * from the header tools/rle_sprites.py generates, so they follow edits to

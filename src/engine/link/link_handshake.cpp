@@ -47,11 +47,11 @@ void MakeLinkHandshakeId(u8 *self)
     s32 i;
 
     u8 c = 0xec;
-    s32 a = (s32)self + 7;
+    intptr_t a = (intptr_t)self + 7;
 
     do {
         *(u8 *)a = c;
-    } while (--a >= (s32)self);
+    } while (--a >= (intptr_t)self);
     self[0] &= 0xf;
     self[1] = 0;
     hash = 0x1234;

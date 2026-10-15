@@ -362,7 +362,7 @@ CLASSES = [
         "the screen's centre column (the level select's zoom)",
     ),
     # --- coincidence: the same number for something else --------------
-    ("coincidence", r".", r"COMPILE_TIME_ASSERT", "a struct size"),
+    ("coincidence", r".", r"(COMPILE_TIME|LAYOUT)_ASSERT", "a struct size"),
     ("coincidence", r".", r"(?i)timer|period|time\b|time =|stateTime|RandRange|wait", "a frame count (timer, period)"),
     (
         "coincidence",

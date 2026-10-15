@@ -53,7 +53,7 @@ public:
                            const struct level_link_list *links, s32 posArg, s32 unused);
 };
 
-COMPILE_TIME_ASSERT(entity_flags_hpp, sizeof(LevelEntityFlags) == 0x408);
+LAYOUT_ASSERT(entity_flags_hpp, sizeof(LevelEntityFlags) == 0x408);
 
 /* A 32-word (1024-bit) bitmap (src/game/level/entity_bitmap.cpp, ROM
  * 0x08025554-0x080255D4). UNUSED: nothing in the ROM calls its code or

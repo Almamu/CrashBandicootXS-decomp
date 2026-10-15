@@ -64,7 +64,7 @@ public:
     void SetAnimSet(const struct entry_set *set);                                // SetCtrlAnimSet
 };
 
-COMPILE_TIME_ASSERT(ctrl_hpp, sizeof(Ctrl) == 0x10);
+LAYOUT_ASSERT(ctrl_hpp, sizeof(Ctrl) == 0x10);
 
 /* The effect controller (src/game/entities/effect_ctrl.cpp, gEffectCtrlVtable):
  * a spawned effect part's controller. SpawnEffectPart (entity_spawner.cpp)
@@ -80,7 +80,7 @@ public:
     void Reset();          // ResetEffectCtrl
 };
 
-COMPILE_TIME_ASSERT(ctrl_hpp, sizeof(EffectCtrl) == 0x10);
+LAYOUT_ASSERT(ctrl_hpp, sizeof(EffectCtrl) == 0x10);
 
 } // namespace Entities
 } // namespace Game
@@ -105,7 +105,7 @@ public:
     virtual ~StompedHopPadCtrl(); // DestroyStompedHopPadCtrl
 };
 
-COMPILE_TIME_ASSERT(ctrl_hpp, sizeof(StompedHopPadCtrl) == 0x10);
+LAYOUT_ASSERT(ctrl_hpp, sizeof(StompedHopPadCtrl) == 0x10);
 
 /* A controller that marks its sprite object gone once the animation has
  * played through (gOneShotAnimCtrlVtable). Its Update is in
@@ -118,7 +118,7 @@ public:
     virtual ~OneShotAnimCtrl();
 };
 
-COMPILE_TIME_ASSERT(ctrl_hpp, sizeof(OneShotAnimCtrl) == 0x10);
+LAYOUT_ASSERT(ctrl_hpp, sizeof(OneShotAnimCtrl) == 0x10);
 
 } // namespace Bosses
 } // namespace Game
