@@ -392,6 +392,16 @@ N-Tranced's or the shared XS one, with N-Tranced's ROM.
 | The sprite tile pool (49 banks) and the 93 OBJ palettes | `0x082B3914`-`0x084768B4` | `games/n2/src/engine/gfx/data/sprite_tiles.cpp` |
 | The sprite banks' tables (animations, frames, piece arrays) | `0x084768B4`-`0x08492ACB` | `games/n2/src/engine/gfx/data/sprite_banks_*.cpp` |
 | The pause screen (N-Tranced's own) and the continue prompt's three BG packages (XS's) | `0x0852D868`-`0x085346AC` | `games/n2/src/game/ui/data/menu_graphics.cpp` |
+| The framed sprite sheet of the water levels' categories (262 frames) | `0x080BF458` | `games/n2/src/game/vehicles/ocean/data/ocean_sprite_sheet.cpp` |
+| The framed sprite sheet of the space levels' categories (213 frames) | `0x08106C58` | `games/n2/src/game/vehicles/space/data/space_sprite_sheet.cpp` |
+
+The framed sheets (XS's format, docs/graphics.md "The framed sheets") are
+extracted in the sheet's order into one folder, `frames/`, until the
+actor categories that use them are known: XS's tools split a sheet by its
+categories' animation tables. Their PNGs are drawn in the first 16
+colours of the category palette at the entry's `view_palette`, only for
+viewing. Some of their frames are 3 tiles a side, which XS's aren't
+(`framed_gfx.py to-bin-folder --any-size`, `FRAMED_TO_BIN_FLAGS`).
 
 Every LZ77 stream N-Tranced has is one gbagfx makes, but 28 of them
 only with `-search 1` (no VRAM-safe minimum distance): a built file in

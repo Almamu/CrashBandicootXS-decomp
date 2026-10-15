@@ -12,6 +12,9 @@ DATA_OBJS := $(foreach o,$(CXX_OBJS),$(if $(findstring /data/,$(o)),$(o)))
 data_obj   = $(filter %/$(1).o,$(DATA_OBJS))
 $(DATA_OBJS): CPPFLAGS += -iquote $(GRAPHICS_BUILDDIR)
 
+# its framed sheets have frames of 3 tiles a side (tools/framed_gfx.py)
+FRAMED_TO_BIN_FLAGS := --any-size
+
 include graphics_rules.mk
 
 # graphics.hpp, which the class objects' sources include
@@ -26,3 +29,7 @@ $(C_BUILDDIR)/engine/gfx/data/sprite_tiles.o: $(SPRITE_FRAMES_OUT) $(GRAPHICS_BU
 # the sprite banks' tables (sprite_banks_*.cpp, tools/sprite_banks.py):
 # their piece arrays and frames' tile offsets
 $(foreach o,$(filter %/sprite_banks_00_06.o %/sprite_banks_07_25.o %/sprite_banks_26_46.o %/sprite_banks_47_48.o,$(DATA_OBJS)),$(eval $(o): $(SPRITE_FRAMES_OUT)))
+
+# the actor categories' framed sprite sheets (graphics_rules.mk's rules)
+$(C_BUILDDIR)/game/vehicles/ocean/data/ocean_sprite_sheet.o: $(GRAPHICS_BUILDDIR)/vehicles/ocean/sprite_sheet.bin.lz.inc
+$(C_BUILDDIR)/game/vehicles/space/data/space_sprite_sheet.o: $(GRAPHICS_BUILDDIR)/vehicles/space/sprite_sheet.bin.lz.inc

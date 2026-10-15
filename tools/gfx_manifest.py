@@ -581,6 +581,33 @@ def extract_bg_picture(rom, e, out, by_symbol):
         save(img, out / p)
 
 
+def extract_framed_frames(rom, e, out, by_symbol):
+    """Another game's framed sheet (--graphics-dir) whose categories aren't
+    known yet: its frames in the sheet's order, one folder (frames/,
+    000.png, ...), in the first 16 colours of the 256-colour palette at
+    `view_palette` (only for viewing: the build reads the indices)."""
+    import framed_gfx
+    from PIL import Image
+
+    frames = framed_gfx.parse_frames(rom.lz77(addr(e["rom"])))
+    rgb = jasc_rgb(rom.u16s(addr(e["view_palette"]), 16))
+    d = out / e["path"] / "frames"
+    d.mkdir(parents=True, exist_ok=True)
+    for k, (w, h, data) in enumerate(frames):
+        img = Image.new("P", (w * 8, h * 8))
+        px = img.load()
+        for ty in range(h):
+            for tx in range(w):
+                tile = framed_gfx.decode_tile(data, (ty * w + tx) * 32)
+                for y in range(8):
+                    for x in range(8):
+                        px[tx * 8 + x, ty * 8 + y] = tile[y][x]
+        img.putpalette(rgb)
+        save(img, d / ("%03d.png" % k), 4)
+    sheet = {"sheet_rom_address": e["rom"], "folders": [{"folder": "frames", "frames": len(frames)}]}
+    (out / e["path"] / "sheet.json").write_text(json.dumps(sheet, indent=2) + "\n")
+
+
 def extract_palette_cycle(rom, e, out, by_symbol):
     d = out / e["path"]
     d.mkdir(parents=True, exist_ok=True)
@@ -626,6 +653,8 @@ def extract(rom_path, root):
             continue
         if e["kind"] in EXTRACT:
             EXTRACT[e["kind"]](rom, e, root / GRAPHICS, by_symbol)
+        elif e["kind"] == "framed_sheet" and not is_xs():
+            extract_framed_frames(rom, e, root / GRAPHICS, by_symbol)
         elif e["kind"] == "sprite_banks" and not is_xs():
             # the sprite banks of another game's manifest entry
             import sprite_frames

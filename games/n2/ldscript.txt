@@ -81,6 +81,10 @@ SECTIONS
 		build/ntranced/lib/agb_eeprom/src/eeprom_verify.o(.text);
 		build/ntranced/games/n2/asm/code_0805B40C.o(.text);
 		build/ntranced/games/n2/data/data_0805BEA8.o(.rodata);
+		build/ntranced/src/game/vehicles/ocean/data/ocean_sprite_sheet.o(.rodata);
+		build/ntranced/games/n2/data/data_080CD748.o(.rodata);
+		build/ntranced/src/game/vehicles/space/data/space_sprite_sheet.o(.rodata);
+		build/ntranced/games/n2/data/data_081182C8.o(.rodata);
 		build/ntranced/src/engine/gfx/data/obj_piece_sizes.o(.rodata);
 		build/ntranced/games/n2/data/data_081CE010.o(.rodata);
 		build/ntranced/src/game/crash/data/input_ctrl_motion_set.o(.rodata);
