@@ -109,7 +109,7 @@ sub_0805B490: @ 0x0805B490
 	cmp r0, #0
 	beq _0805B4A6
 	adds r0, r2, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _0805B4A6:
 	pop {r0}
 	bx r0
@@ -158,7 +158,7 @@ sub_0805B4DC: @ 0x0805B4DC
 	cmp r0, #0
 	beq _0805B4F2
 	adds r0, r2, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _0805B4F2:
 	pop {r0}
 	bx r0
@@ -1178,7 +1178,7 @@ sub_0805BBE8: @ 0x0805BBE8
 	cmp r0, #0
 	beq _0805BBFE
 	adds r0, r2, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _0805BBFE:
 	pop {r0}
 	bx r0
@@ -1196,7 +1196,7 @@ sub_0805BC08: @ 0x0805BC08
 	cmp r0, #0
 	beq _0805BC1E
 	adds r0, r2, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _0805BC1E:
 	pop {r0}
 	bx r0
@@ -1214,7 +1214,7 @@ sub_0805BC28: @ 0x0805BC28
 	cmp r0, #0
 	beq _0805BC3E
 	adds r0, r2, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _0805BC3E:
 	pop {r0}
 	bx r0

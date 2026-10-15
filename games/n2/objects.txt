@@ -16,9 +16,12 @@
 0x08001794 0x01C src/engine/sys/iwram_alloc.cpp
 0x080028D4 0x184 src/engine/link/link_sio.cpp
 0x08007514 0x10C src/engine/sys/vram_dma_queue.cpp
+0x08012A30 0x2C8 src/game/crates/collision_queue.cpp
 0x080250DC 0x094 src/game/level/tile_cache_cell.cpp
 0x08026764 0x094 src/game/level/terrain_probe.cpp
 0x08026B68 0x1A8 src/game/level/terrain_probe_axes.cpp
+0x080273C4 0x038 src/engine/sys/operator_new.cpp
+0x08032270 0x088 src/engine/actor/actor_spawn_collected.cpp
 0x0804406C 0x434 lib/libgcc/_divdi3.o
 0x080444A0 0x3D8 lib/libgcc/_udivdi3.o
 0x08044878 0x078 lib/libgcc/_udivsi3.o

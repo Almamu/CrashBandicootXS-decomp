@@ -18,4 +18,13 @@
 #define ATTACK_KIND_BODY_SLAM 5 // the body slam and its landing; a reinforced crate needs it (or INVINCIBLE)
 #define ATTACK_KIND_INVINCIBLE 6 // the invincibility mask, whatever the state
 
+/* gCrateHitResponse's columns. N-Tranced's rows have an eighth after
+ * INVINCIBLE (its gCrateHitResponse, 0x081CFC04: 26 rows of 8), not
+ * identified yet. */
+#ifdef GAME_N2
+#define ATTACK_KIND_COUNT 8
+#else
+#define ATTACK_KIND_COUNT 7
+#endif
+
 #endif /* GUARD_CONSTANTS_ATTACK_KINDS_H */

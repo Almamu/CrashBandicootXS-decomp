@@ -85,8 +85,9 @@ $(C_BUILDDIR)/game/level/data/level_bg_tiles_0.o: $(foreach t,gStaticData_085346
 $(C_BUILDDIR)/game/level/data/level_bg_tiles_1.o: $(foreach t,gStaticData_0853FD10 \
 	gStaticData_0854309C,$(N2_LEVELS_BUILDDIR)/tilesets/$(t).bin.lz.inc)
 
-# The constants XS generates from its levels.json and entity_types.json
-# (constants/levels.h, themes.h, entities.h, categories.h): N-Tranced's
+# The constants XS generates from its levels.json, entity_types.json and
+# crate_kinds.json (constants/levels.h, themes.h, entities.h, categories.h,
+# crates.h): N-Tranced's
 # aren't generated yet (#1113), so each is a placeholder with only the
 # counts the shared headers' declarations need, N-Tranced's own values
 # (N2_CONSTANTS_<header>, "NAME value" pairs). A source that uses one of
@@ -102,13 +103,17 @@ $(C_BUILDDIR)/game/level/data/level_bg_tiles_1.o: $(foreach t,gStaticData_0853FD
 #   past the ROM's (levels.json's "extra_progress_flags").
 # - THEME_COUNT: the levels' themes are 0-11, and gThemeMusicCues
 #   (0x081D0A14) has 12 entries where XS's has 11 and a padding byte.
+# - CRATE_KIND_COUNT: the gCrateKind* tables (0x081CFAC4, ...) are 26 bytes
+#   apart (XS's 22), and gCrateHitResponse (0x081CFC04) has 26 rows (of
+#   8, ATTACK_KIND_COUNT) up to gAttackKindBreakLimited.
 # - ENTITY_COUNT: the length of gEntitySpawnFuncs, levels.json's
 #   "entity_types".
 N2_CONSTANTS_levels     := LEVEL_COUNT 29 UI_TEXT_COUNT 196 PROGRESS_EXTRA_FLAG_BYTES 0
 N2_CONSTANTS_themes     := THEME_COUNT 12
 N2_CONSTANTS_entities   := ENTITY_COUNT $(shell python3 -c "import json; print(json.load(open('$(N2_LEVELS_DIR)/levels.json'))['entity_types'])")
 N2_CONSTANTS_categories :=
-N2_PLACEHOLDER_CONSTANTS := $(foreach h,levels themes entities categories,$(GENERATED_INCLUDE_DIR)/constants/$(h).h)
+N2_CONSTANTS_crates     := CRATE_KIND_COUNT 26
+N2_PLACEHOLDER_CONSTANTS := $(foreach h,levels themes entities categories crates,$(GENERATED_INCLUDE_DIR)/constants/$(h).h)
 $(N2_PLACEHOLDER_CONSTANTS): $(GENERATED_INCLUDE_DIR)/constants/%.h: $(N2_DIR)/levels.mk $(N2_LEVELS_DIR)/levels.json
 	@mkdir -p $(dir $@)
 	printf '/* N-Tranced: not generated from its levels yet (games/n2/levels.mk). */\n#ifndef GUARD_CONSTANTS_$*_H\n#define GUARD_CONSTANTS_$*_H\n' > $@

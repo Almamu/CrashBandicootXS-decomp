@@ -938,7 +938,7 @@ _08025892:
 	movs r1, #0
 	bl sub_0800956C
 	movs r0, #0x18
-	bl sub_080273EC
+	bl OperatorNew
 	bl sub_0800EA68
 	adds r2, r0, #0
 	str r2, [r4, #0x64]
@@ -1336,7 +1336,7 @@ DestroyEntitySpawnerObj: @ 0x08025BE8
 	cmp r0, #0
 	beq _08025BFA
 	adds r0, r2, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _08025BFA:
 	pop {r0}
 	bx r0
@@ -1568,7 +1568,7 @@ sub_08025D70: @ 0x08025D70
 	ldr r0, [r2, #4]
 	str r0, [r3]
 	adds r0, r2, #0
-	bl sub_080273E0
+	bl OperatorDelete
 	ldr r0, [r6]
 	subs r0, #1
 	str r0, [r6]
@@ -1577,7 +1577,7 @@ _08025D9C:
 	ldr r0, [r1, #4]
 	str r0, [r2, #4]
 	adds r0, r1, #0
-	bl sub_080273E0
+	bl OperatorDelete
 	subs r0, r7, #1
 	lsls r0, r0, #4
 	adds r1, r5, #4
@@ -1610,7 +1610,7 @@ sub_08025DD0: @ 0x08025DD0
 	adds r6, r1, #0
 	adds r5, r2, #0
 	movs r0, #8
-	bl sub_080273EC
+	bl OperatorNew
 	str r6, [r0]
 	subs r5, #1
 	lsls r5, r5, #4
@@ -1654,7 +1654,7 @@ _08025E16:
 _08025E26:
 	adds r0, r4, #0
 	ldr r4, [r4, #4]
-	bl sub_080273E0
+	bl OperatorDelete
 	cmp r4, #0
 	bne _08025E26
 _08025E32:
@@ -1689,7 +1689,7 @@ DestroyPaletteCache: @ 0x08025E58
 	cmp r0, #0
 	beq _08025E70
 	adds r0, r5, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _08025E70:
 	pop {r4, r5}
 	pop {r0}
@@ -2614,7 +2614,7 @@ DestroyPooledBgLayer: @ 0x08026550
 	ldr r0, [r4, #0x5c]
 	cmp r0, #0
 	beq _08026564
-	bl sub_080273E0
+	bl OperatorDelete
 _08026564:
 	ldr r0, _0802657C @ =gUnknown_087F98B4
 	str r0, [r4, #0x30]
@@ -2647,7 +2647,7 @@ InitPooledBgLayer: @ 0x08026580
 	ands r0, r1
 	strb r0, [r3]
 	ldr r0, _080265B8 @ =0x0000480C
-	bl sub_080273EC
+	bl OperatorNew
 	str r0, [r4, #0x5c]
 	adds r0, r4, #0
 	pop {r4}

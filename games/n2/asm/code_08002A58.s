@@ -234,7 +234,7 @@ _08002BDC:
 	cmp r0, #0
 	beq _08002BEE
 	adds r0, r6, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _08002BEE:
 	pop {r4, r5, r6}
 	pop {r0}
@@ -249,7 +249,7 @@ sub_08002BF8: @ 0x08002BF8
 	ldr r4, _08002C44 @ =0x02000528
 	movs r0, #0xbb
 	lsls r0, r0, #3
-	bl sub_080273EC
+	bl OperatorNew
 	bl sub_0804A2E4
 	str r0, [r4]
 	ldr r1, _08002C48 @ =sub_08002C60
@@ -1403,7 +1403,7 @@ sub_08003434: @ 0x08003434
 	ldr r6, _08003480 @ =0x0200004C
 	movs r0, #0xca
 	lsls r0, r0, #2
-	bl sub_080273EC
+	bl OperatorNew
 	bl InitSaveMenu
 	str r0, [r6]
 	str r4, [r0, #0xc]
@@ -1491,7 +1491,7 @@ sub_08003504: @ 0x08003504
 	sub sp, #0x6c
 	movs r0, #0x80
 	lsls r0, r0, #2
-	bl sub_080273EC
+	bl OperatorNew
 	adds r4, r0, #0
 	bl ResetSaveData
 	adds r5, r4, #0
@@ -1553,7 +1553,7 @@ _0800358C:
 	adds r0, r5, r1
 	ldrb r4, [r0]
 	adds r0, r5, #0
-	bl sub_080273E0
+	bl OperatorDelete
 	adds r0, r4, #0
 	add sp, #0x6c
 	pop {r4, r5, r6, r7}
@@ -1680,7 +1680,7 @@ InitSaveMenu: @ 0x0800366C
 	movs r6, #0x80
 	lsls r6, r6, #2
 	adds r0, r6, #0
-	bl sub_080273EC
+	bl OperatorNew
 	adds r4, r0, #0
 	bl ResetSaveData
 	mov r0, sb
@@ -1689,7 +1689,7 @@ InitSaveMenu: @ 0x0800366C
 	adds r0, r0, r5
 	mov r8, r0
 	adds r0, r6, #0
-	bl sub_080273EC
+	bl OperatorNew
 	adds r4, r0, #0
 	bl ResetSaveData
 	mov r0, r8
@@ -1756,11 +1756,11 @@ _0800372E:
 	adds r0, r5, #0
 	adds r0, #0xcc
 	ldr r0, [r0]
-	bl sub_080273E0
+	bl OperatorDelete
 	adds r0, r5, #0
 	adds r0, #0xc8
 	ldr r0, [r0]
-	bl sub_080273E0
+	bl OperatorDelete
 	movs r0, #0
 	mov r8, r0
 	adds r6, r5, #0
@@ -1834,7 +1834,7 @@ _080037C8:
 	cmp r0, #0
 	beq _080037D8
 	adds r0, r5, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _080037D8:
 	pop {r3, r4}
 	mov r8, r3
@@ -3399,7 +3399,7 @@ LinkExchangeSaveData: @ 0x080043F0
 	adds r6, r0, #0
 	movs r0, #0x88
 	lsls r0, r0, #2
-	bl sub_080273EC
+	bl OperatorNew
 	adds r5, r0, #0
 	adds r0, r6, #0
 	adds r0, #0xc8
@@ -3457,7 +3457,7 @@ _08004458:
 	bl MemCopy32
 _08004476:
 	adds r0, r5, #0
-	bl sub_080273E0
+	bl OperatorDelete
 	adds r0, r4, #0
 	pop {r4, r5, r6}
 	pop {r1}
@@ -5036,7 +5036,7 @@ _0800513C:
 	adds r5, #0xe4
 	adds r5, r5, r6
 	movs r0, #0x60
-	bl sub_080273EC
+	bl OperatorNew
 	bl sub_080097B0
 	str r0, [r5]
 	mov r1, sl
@@ -5064,7 +5064,7 @@ _0800513C:
 	adds r5, #0xf8
 	adds r5, r5, r6
 	movs r0, #0x60
-	bl sub_080273EC
+	bl OperatorNew
 	bl sub_080097B0
 	str r0, [r5]
 	mov r1, sl
@@ -5093,7 +5093,7 @@ _0800513C:
 	adds r5, r7, r0
 	adds r5, r5, r6
 	movs r0, #0x60
-	bl sub_080273EC
+	bl OperatorNew
 	bl sub_080097B0
 	str r0, [r5]
 	mov r1, sl
@@ -5203,7 +5203,7 @@ sub_0800528C: @ 0x0800528C
 	lsls r0, r0, #2
 	adds r4, r5, r0
 	subs r0, #0x60
-	bl sub_080273EC
+	bl OperatorNew
 	bl sub_080388E0
 	str r0, [r4]
 	ldr r1, _080052F0 @ =gUnknown_0814371C
@@ -5922,7 +5922,7 @@ sub_08005830: @ 0x08005830
 	ldr r0, [r5]
 	mov r8, r0
 	ldr r0, _08005914 @ =0x00000914
-	bl sub_080273EC
+	bl OperatorNew
 	bl sub_08007CA8
 	str r0, [r5]
 	ldr r2, _08005918 @ =gSpriteBankTable
@@ -5956,7 +5956,7 @@ sub_08005830: @ 0x08005830
 	bl sub_08002B6C
 _080058B2:
 	movs r0, #0xec
-	bl sub_080273EC
+	bl OperatorNew
 	bl sub_08005954
 	adds r4, r0, #0
 	bl sub_08005BFC
@@ -5968,7 +5968,7 @@ _080058B2:
 	bl sub_08005A90
 _080058D0:
 	ldr r0, [r5]
-	bl sub_080273E0
+	bl OperatorDelete
 	mov r0, r8
 	str r0, [r5]
 	ldr r0, [r7]
@@ -6354,7 +6354,7 @@ _08005BDC:
 	cmp r0, #0
 	beq _08005BEC
 	adds r0, r6, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _08005BEC:
 	add sp, #0x10
 	pop {r3, r4, r5}
@@ -7954,7 +7954,7 @@ sub_080068B8: @ 0x080068B8
 	adds r6, r7, #0
 	adds r6, #0xd0
 	movs r0, #0x60
-	bl sub_080273EC
+	bl OperatorNew
 	bl sub_080097B0
 	str r0, [r6]
 	ldr r0, _080069BC @ =gSpriteBankSet
@@ -7984,7 +7984,7 @@ sub_080068B8: @ 0x080068B8
 	adds r5, r7, #0
 	adds r5, #0xd4
 	movs r0, #0x60
-	bl sub_080273EC
+	bl OperatorNew
 	bl sub_080097B0
 	str r0, [r5]
 	mov r1, r8
@@ -8012,7 +8012,7 @@ sub_080068B8: @ 0x080068B8
 	bl SetEntityPixelPos
 	adds r5, #4
 	movs r0, #0x60
-	bl sub_080273EC
+	bl OperatorNew
 	bl sub_080097B0
 	str r0, [r5]
 	mov r1, r8
@@ -8076,7 +8076,7 @@ _080069DE:
 	adds r6, #0x94
 	adds r6, r6, r5
 	movs r0, #0x60
-	bl sub_080273EC
+	bl OperatorNew
 	bl sub_080097B0
 	str r0, [r6]
 	ldr r0, _08006A40 @ =gSpriteBankSet
@@ -8136,7 +8136,7 @@ _08006A5E:
 	adds r6, #0xa4
 	adds r6, r6, r5
 	movs r0, #0x60
-	bl sub_080273EC
+	bl OperatorNew
 	bl sub_080097B0
 	str r0, [r6]
 	ldr r0, _08006B00 @ =gSpriteBankSet
@@ -8220,7 +8220,7 @@ _08006B1C:
 	adds r6, #0xb4
 	adds r6, r6, r5
 	movs r0, #0x60
-	bl sub_080273EC
+	bl OperatorNew
 	bl sub_080097B0
 	str r0, [r6]
 	ldr r0, _08006BCC @ =gSpriteBankSet
@@ -8319,7 +8319,7 @@ _08006BEA:
 	adds r6, #0xc0
 	adds r6, r6, r5
 	movs r0, #0x60
-	bl sub_080273EC
+	bl OperatorNew
 	bl sub_080097B0
 	str r0, [r6]
 	ldr r0, _08006CA0 @ =gSpriteBankSet
@@ -8430,7 +8430,7 @@ _08006CEA:
 	strb r1, [r0]
 	adds r6, #0xcc
 	movs r0, #0x60
-	bl sub_080273EC
+	bl OperatorNew
 	bl sub_080097B0
 	str r0, [r6]
 	ldr r0, _08006D9C @ =gSpriteBankSet
@@ -8846,7 +8846,7 @@ sub_0800703C: @ 0x0800703C
 	adds r4, r5, #0
 	adds r4, #0x90
 	movs r0, #0x60
-	bl sub_080273EC
+	bl OperatorNew
 	bl sub_080097B0
 	str r0, [r4]
 	ldr r0, _08007088 @ =gSpriteBankSet
@@ -9496,7 +9496,7 @@ sub_080074EC: @ 0x080074EC
 	cmp r0, #0
 	beq _080074FE
 	adds r0, r2, #0
-	bl sub_080273E0
+	bl OperatorDelete
 _080074FE:
 	pop {r0}
 	bx r0
