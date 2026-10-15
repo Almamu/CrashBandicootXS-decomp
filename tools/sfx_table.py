@@ -1,7 +1,8 @@
 """Build sound/sfx_table.bin from the editable sound/sfx_table.json source.
 
 This is the GAX2 "sound effect" trigger table (originally at ROM address
-0x0816AA6C): 99 fixed-size entries, one per sound effect ID. PlaySfx
+0x0816AA6C): fixed-size entries, one per sound effect ID (99 in the ROM;
+an entry can be added at the end, see SFX_NONE below). PlaySfx
 (src/engine/audio/audio.c, called ~264 times from all over the game's logic - jumping,
 menus, hits, pickups, etc.) looks up the SFX ID in this table and uses it to
 steal a mixing voice and play a note from the GAX2 sound-effect data set
@@ -21,26 +22,23 @@ haven't been fully reversed.
 
 An entry may also have a `name` and a `comment`: `--constants OUT` writes
 them as the SFX_<name> #defines of constants/sfx.h (build/include), and the
-top-level `none_comment` documents SFX_NONE, the ID one past the table.
+top-level `none_comment` documents SFX_NONE, the ID one past the table:
+the "no sound effect" the code and the data use (0x63 in the ROM), and
+SFX_COUNT, gSfxTable's length. Both follow the table's length, so a new
+entry doesn't collide with the sentinel.
 """
 import json
 import struct
 import sys
 
-ENTRY_COUNT = 99
-ENTRY_SIZE = 12
-
-
 def build(json_path, out_path):
     manifest = json.load(open(json_path))
     entries = manifest['entries']
-    assert len(entries) == ENTRY_COUNT, f"expected {ENTRY_COUNT} entries, got {len(entries)}"
 
     out = bytearray()
     for e in entries:
         out += struct.pack('<iii', e['slot_id'], e['pitch_offset'], e['volume'])
 
-    assert len(out) == ENTRY_COUNT * ENTRY_SIZE
     open(out_path, 'wb').write(out)
 
 
@@ -64,8 +62,8 @@ def write_constants(json_path, out_path):
         '#define GUARD_CONSTANTS_SFX_H',
         '',
         '/*',
-        ' * Sound-effect IDs: the index into gSfxTable (sound/sfx_table.json, 99',
-        ' * entries) that PlaySfx, PlayAmbientSfx and StopSfx take. Neither the',
+        ' * Sound-effect IDs: the index into gSfxTable (sound/sfx_table.json, one',
+        ' * per entry) that PlaySfx, PlayAmbientSfx and StopSfx take. Neither the',
         ' * ROM nor the GAX sound-effect set (sound/gax_sfx_manifest.json) names',
         ' * them, so each name comes from where the game plays it; the comment',
         " * says where. An ID whose sound isn't clear from its callers is",
@@ -74,6 +72,9 @@ def write_constants(json_path, out_path):
         ' */',
         '',
         *define_lines(rows),
+        '',
+        '/* gSfxTable\'s length; SFX_NONE is the ID one past it. */',
+        f'#define SFX_COUNT {len(entries)}',
         '',
         '#endif /* GUARD_CONSTANTS_SFX_H */',
         '',

@@ -37,9 +37,10 @@ extern "C" {
 #include "constants/songs.h"
 }
 
-/* One record of the 99-entry sound-effect trigger table at ROM
- * `0x0816AA6C` (`sound/sfx_table.json`) - see docs/audio.md's "Sound
- * effects" section. Indexed by the id `PlaySfx`/`PlayAmbientSfx` take. */
+/* One record of the sound-effect trigger table at ROM `0x0816AA6C`
+ * (`sound/sfx_table.json`, SFX_COUNT entries, 99 in the ROM) - see
+ * docs/audio.md's "Sound effects" section. Indexed by the id
+ * `PlaySfx`/`PlayAmbientSfx` take. */
 struct SfxTableEntry {
     /* instrument index into the sound-effect data set
      * (gGaxSfxData, docs/audio.md) - 0 = unused slot */
@@ -51,7 +52,7 @@ struct SfxTableEntry {
     u32 baseVolume;
 };
 
-extern struct SfxTableEntry gSfxTable[99];
+extern struct SfxTableEntry gSfxTable[SFX_COUNT];
 
 /* The GAX2 music block (data/data.s, built by tools/gax_audio.py) and
  * the song table pointing into it (src/engine/audio/data/song_table.cpp). */
@@ -94,12 +95,13 @@ extern "C" void MusicVCountIrqHandler(void);
  * "ambient" sound effect (distinct from the one-shot `PlaySfx` calls):
  * `activeSfx`/`pendingSfx`, each `{id, gRoomFrameCount-relative
  * deadline, volume}` - see `TickAmbientSfx`/`ResetAmbientSfx`/`StopAmbientSfx`/
- * `PlayAmbientSfx`. `0x63` (99) is the "none" sentinel for both ids.
+ * `PlayAmbientSfx`. `SFX_NONE` (0x63 in the ROM, one past the table) is
+ * the "none" sentinel for both ids.
  * `TickAmbientSfx` copies `pendingSfx` over `activeSfx` as a single 12-byte
  * struct assignment (not 3 separate field copies) - that's what gets it
  * to reproduce the ROM's `ldm/stm {r2,r3,r5}` block-move codegen. */
 struct SfxRecord {
-    u32 id;       // 0x63 (99) = none
+    u32 id;       // SFX_NONE = none
     u32 deadline; // gRoomFrameCount-relative
     s32 volume;   // target the owning ambientSfxVolume fade ramps toward
 };

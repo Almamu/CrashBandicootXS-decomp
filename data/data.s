@@ -24,10 +24,10 @@
 
 .global gSfxTable
 gSfxTable:
-	@ GAX2 sound-effect trigger table: 99 entries of {slot_id, pitch_offset,
-	@ volume}, indexed by the sound effect IDs passed to PlaySfx. Reuses
-	@ the same instrument/sample pool as the music (sound/gax_manifest.json)
-	@ instead of storing separate sound-effect audio.
+	@ GAX2 sound-effect trigger table: SFX_COUNT entries (99 in the ROM)
+	@ of {slot_id, pitch_offset, volume}, indexed by the sound effect IDs
+	@ passed to PlaySfx. slot_id is an instrument of the sound-effect set
+	@ (gGaxSfxData, sound/gax_sfx_manifest.json; docs/audio.md).
 	@
 	@ Built from sound/sfx_table.json by tools/sfx_table.py.
 	.incbin "build/crashbandicootxs/sound/sfx_table.bin"

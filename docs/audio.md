@@ -314,8 +314,8 @@ picture):
 Distinct from music: `PlaySfx` (ROM `0x08001854`, called ~264 times
 across gameplay code), is the sound-effect trigger:
 `PlaySfx(context, sfx_id, volume_param)`. It looks up `sfx_id` in a
-99-entry table at ROM `0x0816AA6C` (`sound/sfx_table.json`,
-`struct SfxTableEntry` in `include/engine/audio/audio.hpp`), each entry `{slot_id,
+table at ROM `0x0816AA6C`, 99 entries in the ROM (`gSfxTable[SFX_COUNT]`,
+`sound/sfx_table.json`, `struct SfxTableEntry` in `include/engine/audio/audio.hpp`), each entry `{slot_id,
 chan_arg, volume}` (volume as 8.8 fixed point; the JSON still calls the
 middle field `pitch_offset`) - the matching pass corrected the middle
 field's guessed name from "pitch_offset" to `chan_arg`: `PlaySfx` passes
@@ -328,7 +328,8 @@ Every ID the game plays is named in `sound/sfx_table.json`: such an
 entry has a `name` and a `comment`, and `tools/sfx_table.py --constants`
 writes them as the `SFX_<name>` defines of the generated
 `constants/sfx.h` (`SFX_CRATE_BREAK`, `SFX_MENU_SELECT`, ...;
-`none_comment` documents `SFX_NONE`, ID 99). An ID whose sound isn't
+`none_comment` documents `SFX_NONE`, the ID one past the table, 0x63 in
+the ROM; `SFX_COUNT` is the table's length). An ID whose sound isn't
 clear from where it plays is an `SFX_UNKNOWN_<ID>` placeholder until
 someone identifies it (docs/naming.md, "Constants"). The song IDs (the
 `gSongTable` index) are the order of `gax_manifest.json`'s `song_table`
@@ -386,6 +387,27 @@ fixed pitch (`dont_use_note_pitch`, note 2) and the same `Pitch` (1511),
 so every sound effect plays its sample at one rate, about 7,994 Hz by
 the formula in "Sample pitch / playback rate" below. That is the rate the
 `.wav` files declare.
+
+### Adding a sound effect
+
+`SFX_NONE`, the "no sound effect" the ambient channel (`activeSfx`,
+`pendingSfx`) and the cutscene slides use, is the ID one past the table,
+not a fixed 0x63: the code compares with `SFX_NONE`, and `gSfxTable` is
+`SFX_COUNT` long, both from `tools/sfx_table.py --constants`. So an entry
+can be added at the end of `sound/sfx_table.json`'s `entries`:
+`{"slot_id": 40, "pitch_offset": 0, "volume": 256, "name": "BEEP",
+"comment": "..."}`, `slot_id` one of the sound-effect set's instruments
+(1-87), `pitch_offset` the priority and `volume` the 8.8 volume. It is
+`SFX_BEEP`, the next ID (0x63 for the first), and `SFX_NONE` moves one
+up. `PlaySfx` call sites are code, so a new sound effect is for data
+that names one (a cutscene slide's); the ROM's IDs stay as they are.
+
+Tested in scratch with plain `make`: a 100th entry `TEST_BEEP` (instrument
+40) and the first slide of the intro cutscene playing it instead of the
+space-station ambience. `SFX_TEST_BEEP` is 0x63, `SFX_NONE` 0x64,
+`SFX_COUNT` 100 and the table 1200 bytes. In mGBA the intro cutscene's
+first slide calls `PlaySfx(0x63)` and `GAX_fx_ex` with instrument 40, and
+the audio context's `activeSfx.id` is 0x64, the new "none".
 
 ## Build pipeline
 
