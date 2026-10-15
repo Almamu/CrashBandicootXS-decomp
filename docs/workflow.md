@@ -111,8 +111,8 @@ incomplete pass and should be finished before moving on.
    to a later batch pass:**
    - Replace every raw hardware address (`0x040000xx`/`0x0500...`/
      `0x0600...`/`0x0700...`) with the matching `REG_*`/`OAM`/`PLTT`/
-     `DMA_*` macro from `include/gba/io_reg.h`/`defines.h`/
-     `include/gba/dma_macros.h`. If the register genuinely isn't covered
+     `DMA_*` macro from `platform/gba/include/gba/io_reg.h`/`defines.h`/
+     `platform/gba/include/gba/dma_macros.h`. If the register genuinely isn't covered
      yet, add a new macro there (following the existing naming) rather
      than leaving raw hex in the function.
    - Replace raw pointer-arithmetic field access (`*(u32 *)((u8 *)base +

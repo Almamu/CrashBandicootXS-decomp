@@ -19,7 +19,12 @@ src/game/{crash,entities,enemies,bosses,crates,objects,level,ui}/
 src/game/vehicles/{polar,jetpack}/
 src/<area>/<namespace>/data/        the ROM data tables of that code
 include/engine/... include/game/... mirroring src/
-include/{core.h,globals.h,match.h,byte_arg.h,screen.h,gba/,constants/}
+include/{core.h,globals.h,match.h,byte_arg.h,screen.h,constants/}
+lib/{gax,agb_eeprom,libgcc}/        the third-party and SDK libraries
+asm/                                itoa_arm.s, the assembler macros
+platform/gba/include/gba/           the GBA's hardware headers (#1093)
+platform/gba/asm/                   crt0, IntrMain, the ROM header
+platform/gba/lib/libagbsyscall/     the BIOS SWI wrappers
 ```
 
 ## Decisions
@@ -40,8 +45,10 @@ include/{core.h,globals.h,match.h,byte_arg.h,screen.h,gba/,constants/}
   `game/vehicles/` itself.
 - **Shared headers stay at the root of `include/`**: `core.h`,
   `globals.h`, `match.h`, `byte_arg.h` (the matching helpers), `screen.h`
-  (the screen size, #979), `gba/` and `constants/`. The subsystem headers
-  (`gfx.h`, `level.h`, `system.h`, ...) go with their subsystem.
+  (the screen size, #979) and `constants/`. The subsystem headers
+  (`gfx.h`, `level.h`, `system.h`, ...) go with their subsystem. The
+  hardware headers (`gba/`) were here too until #1093 moved them to the
+  GBA platform (below).
 - **Includes name the header's path from `include/`**
   (`#include "engine/gfx/cell_anim.hpp"`): the Makefile's search path is
   unchanged (`-iquote include`, and `-iquote build/include` for the
@@ -78,6 +85,13 @@ include/{core.h,globals.h,match.h,byte_arg.h,screen.h,gba/,constants/}
   argument, `struct cell_anim_0ff1b0`) is renamed with it.
 - **lib/ keeps its layout**: only its three address-named data files lose
   the address (`eeprom_data.c`, `gax_tables.c`, `clz_tab.c`).
+- **The GBA platform is its own tree** (#1093, [platforms.md](platforms.md)):
+  the hardware headers, crt0/IntrMain/the ROM header and libagbsyscall
+  moved from `include/gba/`, `asm/` and `lib/` to `platform/gba/`, and the
+  Makefile has `-I platform/gba/include` for every game. Their objects are
+  `build/crashbandicootxs/platform/gba/...`; the ROM and every symbol's
+  address stayed the same. `asm/` keeps itoa_arm (game code) and the
+  macros the N-Tranced disassembly includes.
 - **The docs' paths were updated**, the matching archive's too, so its
   links point at the new files (a `.c` path of the C era is mapped like
   the `.cpp` it became). A path to a file that was already gone before the
@@ -664,5 +678,13 @@ include/{core.h,globals.h,match.h,byte_arg.h,screen.h,gba/,constants/}
 | `lib/agb_eeprom/data/eeprom_5a9eec.c` | `lib/agb_eeprom/data/eeprom_data.c` |
 | `lib/gax/data/gax_tables_5a6100.c` | `lib/gax/data/gax_tables.c` |
 | `lib/libgcc/data/clz_tab_5a4c70.c` | `lib/libgcc/data/clz_tab.c` |
+
+**The GBA platform (#1093)**
+
+| Old path | New path |
+|---|---|
+| `include/gba/{defines,dma_macros,gba,io_reg,types}.h` | `platform/gba/include/gba/` |
+| `asm/crt0.s`, `asm/intr_main.s`, `asm/rom_header.inc` | `platform/gba/asm/` |
+| `lib/libagbsyscall/` (`libagbsyscall.s`, `include/agb_syscall.h`) | `platform/gba/lib/libagbsyscall/` |
 
 <!-- end rename map -->

@@ -86,7 +86,7 @@ The rest of the library (`eeprom_timer.c`, `eeprom_verify.c`) moved to
 Every compiler-generated function in `0x0803A944`-`0x0803ADB0` is now
 real C. What's left NAKED there is hand-written library code: the BIOS
 SWI wrappers (then in `timer_util.c`, now
-`lib/libagbsyscall/libagbsyscall.s`) and the libgcc `_call_via_rN`
+`platform/gba/lib/libagbsyscall/libagbsyscall.s`) and the libgcc `_call_via_rN`
 trampolines (now `lib/libgcc/lib1funcs.s`).
 
 ## Second pass: the rest of the library
@@ -110,7 +110,7 @@ that hold them joined `O1_OBJS`, so the whole library
 whole `.text` of both objects is also byte-identical to the ROM at
 -O1, including the NAKED BIOS SWI wrappers that object still held
 then, which are hand-written and unaffected by the flag; they are
-`lib/libagbsyscall/libagbsyscall.s` now.)
+`platform/gba/lib/libagbsyscall/libagbsyscall.s` now.)
 
 `eeprom_timer.c` did not need splitting: its only non-SDK code is the
 BIOS SWI wrappers (libagbsyscall-style, also Nintendo library code),
@@ -180,7 +180,7 @@ Searched for, and nothing else found:
   third-party library whose flags are covered by
   `docs/matching/archive/gax-toolchain-retry.md`.
 - **Nintendo library code that isn't compiled C.** The BIOS SWI
-  wrappers (`lib/libagbsyscall/libagbsyscall.s`, `BgAffineSet`-`VBlankIntrWait`), the libgcc
+  wrappers (`platform/gba/lib/libagbsyscall/libagbsyscall.s`, `BgAffineSet`-`VBlankIntrWait`), the libgcc
   `_call_via_rN` table (`lib1funcs.s`), `__divsi3`/`__modsi3`/
   `__umodsi3`/`__div0` and `crt0.s` are all hand-written asm. Compiler
   flags don't apply to them.

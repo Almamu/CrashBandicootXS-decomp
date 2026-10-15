@@ -3,7 +3,7 @@
 
 /* The interrupt table's types (src/engine/sys/irq.cpp). The table, the VBlank
  * callbacks and their functions are class Irq's (irq.hpp); IntrMain
- * (asm/intr_main.s) dispatches each IRQ through Irq::table (gIntrTable). */
+ * (platform/gba/asm/intr_main.s) dispatches each IRQ through Irq::table (gIntrTable). */
 
 #include "core.h"
 
@@ -19,7 +19,7 @@ struct vblank_callbacks {
  * slot SetEepromTimerIntr() installs the EEPROM timer handler in
  * (save_data.cpp). */
 extern void (*gIntrTableTimer2)(void);
-/* IntrMain's IWRAM copy (asm/intr_main.s), what INTR_VECTOR points at. */
+/* IntrMain's IWRAM copy (platform/gba/asm/intr_main.s), what INTR_VECTOR points at. */
 extern u32 IntrMain_Buffer;
 
 #endif /* __IRQ_H__ */

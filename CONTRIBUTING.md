@@ -103,7 +103,8 @@ matched code - read it before starting.** In short:
 - **Files:** a new file goes in the `src/` subsystem directory that fits
   what it holds and is named after its subject (see
   [Source layout](#source-layout) below); library code goes
-  under `lib/` (see [docs/libraries.md](docs/libraries.md)). Each object
+  under `lib/` (see [docs/libraries.md](docs/libraries.md)), GBA hardware
+  code under `platform/gba/` ([docs/platforms.md](docs/platforms.md)). Each object
   is placed at its ROM address by its position in `ldscript.txt`, so
   splitting or merging files means updating `ldscript.txt` and
   `tools/report_units.py` too.
@@ -156,10 +157,20 @@ paths and the decisions behind it.
 | `<dir>/data/` | | The ROM data tables of that directory's code |
 
 `include/` keeps at its root only the headers every part of the program
-shares: `core.h`, `globals.h`, `match.h`, `byte_arg.h`, `screen.h`,
-`gba/` and `constants/`. Every other header is in the directory of what
+shares: `core.h`, `globals.h`, `match.h`, `byte_arg.h`, `screen.h` and
+`constants/`. Every other header is in the directory of what
 it declares, and is included by its path from `include/`:
 `#include "engine/gfx/cell_anim.hpp"`, `#include "game/crash/player.hpp"`.
+
+The hardware is the platform's, not the game's
+([docs/platforms.md](docs/platforms.md), #1093): the GBA's headers are in
+`platform/gba/include/gba/` (`#include "gba/io_reg.h"`, on the -I path),
+its startup and interrupt code in `platform/gba/asm/` and the BIOS calls in
+`platform/gba/lib/libagbsyscall/` (`<agb_syscall.h>`). Game code never
+tests which platform it is built for: no `#if` on the platform, and a
+header named `gba/...` goes nowhere but `platform/<name>/include/`. A new
+hardware define goes into `platform/gba/include/gba/`. `asm/` holds only
+itoa_arm (game code) and the assembler macros.
 
 A file goes in the directory of the namespace of what it defines (a
 class's methods go with the class, wherever its users are; the spawners
@@ -334,7 +345,7 @@ full rules (#574). For new code:
   for matching (#662): rebuild and compare after each change. Some
   suggestions use a define that doesn't exist yet (`new_defines`:
   `PALETTE_SIZE_16`, `BG_SCREEN_SIZE`, `BG_CHAR_SIZE`); add it to
-  include/gba/defines.h with the first use.
+  platform/gba/include/gba/defines.h with the first use.
 - **Casts:** `python3 tools/magic_numbers.py --casts` (#855) lists the
   casts in src/ (not src/*/data/) and include/, grouped by the thing cast (a
   field, a local or parameter, a global, a function's result, an address,

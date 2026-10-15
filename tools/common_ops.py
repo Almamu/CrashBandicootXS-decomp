@@ -43,7 +43,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from magic_numbers import blank_directives, line_of, strip_comments  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SCAN_DIRS = ("src", "include")
+SCAN_DIRS = ("src", "include", "platform")
 SKIP_DIRS = ()  # the data/ directories, below
 
 # An operand: an identifier, a field chain or a parenthesized group with

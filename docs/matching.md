@@ -1540,7 +1540,7 @@ edit below):
 - **Hardware registers**: every raw address (`0x040000D4`, `0x07000000`,
   `0x05000000`, `0x04000010`/`0x04000050`/`0x04000054`/`0x04000000`) now
   goes through the existing `REG_ADDR_*`/`OAM`/`PLTT` constants from
-  `include/gba/io_reg.h`/`defines.h`, and the DMA control words are built
+  `platform/gba/include/gba/io_reg.h`/`defines.h`, and the DMA control words are built
   from `DMA_ENABLE`/`DMA_32BIT`/`DMA_16BIT` instead of the raw hex
   (`0x84000000` → `(DMA_ENABLE | DMA_32BIT) << 16`, etc.) - these headers
   were already in the project, just unused by the newly-matched code.
@@ -1598,7 +1598,7 @@ previous cleanup, again re-checking both `make compare` and
   (see next point) through `REG_ADDR_DMA3SAD`.
 - **Struct consolidation**:
   - `struct dma_regs` (`src/gfx/graphics.c`'s local `{ vu32 src, dst, cnt;
-    }`) moved to `include/gba/dma_macros.h` (the header that already
+    }`) moved to `platform/gba/include/gba/dma_macros.h` (the header that already
     holds every other DMA-related macro) and is now shared by
     `src/engine/gfx/asset.cpp`'s `LoadTaggedAsset`/`LoadBackgroundTileAndPalette` instead of each
     doing raw `vu32 *` + manual `[0]`/`[1]`/`[2]` indexing.
@@ -3513,7 +3513,7 @@ testing across a screen/room boundary vs within the active one".
 long-standing open questions ("packed state round-tripping through
 `MemCopy32`", cited as one of `UpdateGameFrame`'s own direct top-
 level calls, referenced ~140 times project-wide): reading its actual
-definition directly in `asm/crt0.s` shows it's a plain `memcpy`-style
+definition directly in `platform/gba/asm/crt0.s` shows it's a plain `memcpy`-style
 wrapper - `void *MemCopy32(void *dest, void *src, s32 size)` copies
 `size` bytes from `src` to `dest` via the GBA BIOS `CpuSet` SWI
 (`CpuSet`, the same BIOS wrapper already identified for
@@ -4829,7 +4829,7 @@ established for other files' trailing functions.
 
 ## `bios_util.cpp`/`bitmap_screen.c`: the boot-adjacent BIOS wrappers and the intro's affine BG setup
 
-Four functions right after `asm/crt0.s`'s permanent hand-written boot
+Four functions right after `platform/gba/asm/crt0.s`'s permanent hand-written boot
 stub, picked up from issue #2 as an end-to-end test of the chunk-issue
 contribution workflow:
 

@@ -267,9 +267,9 @@ CLASSES = [
     ("coincidence", r"src/game/entities/ground_sprite_collide\.cpp", r".", "a collision probe step"),
     ("coincidence", r".", r"COS_Q8\(.*\* 80", "an orbit radius"),
     # --- hardware: the GBA's own formats and sizes --------------------
-    ("hardware", r"include/gba/defines\.h", r"DISPLAY_(WIDTH|HEIGHT)", "the screen size itself (gba/defines.h)"),
+    ("hardware", r"platform/gba/include/gba/defines\.h", r"DISPLAY_(WIDTH|HEIGHT)", "the screen size itself (gba/defines.h)"),
     ("hardware", r"include/screen\.h", r"DISPLAY_ART_", "the fixed 240x160 art's size (screen.h)"),
-    ("hardware", r"include/gba/", r".", "a GBA register offset or field value"),
+    ("hardware", r"platform/gba/include/gba/", r".", "a GBA register offset or field value"),
     (
         "hardware",
         r".",

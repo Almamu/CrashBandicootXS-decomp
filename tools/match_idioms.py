@@ -39,7 +39,7 @@ import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SCAN_DIRS = ("src", "lib", "include")
+SCAN_DIRS = ("src", "lib", "include", "platform")
 # Where the macros are defined: not counted as sites.
 SKIP_FILES = ("include/match.h",)
 
@@ -551,6 +551,7 @@ def check_macros():
 
     def tokens(src):
         out = subprocess.run(["arm-none-eabi-cpp", "-iquote", os.path.join(ROOT, "include"),
+                              "-I", os.path.join(ROOT, "platform", "gba", "include"),
                               "-nostdinc", "-undef", "-P"], input=src,
                              capture_output=True, text=True, check=True).stdout
         return C_TOKEN.findall(out)

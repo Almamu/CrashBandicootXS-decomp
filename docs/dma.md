@@ -1,7 +1,7 @@
 # DMA
 
 The game code issues every DMA transfer through the macros in
-`include/gba/dma_macros.h`. The registers are never written field by
+`platform/gba/include/gba/dma_macros.h`. The registers are never written field by
 field (#912). All game transfers use channel 3 and start immediately.
 None of them repeat or raise an IRQ.
 

@@ -53,6 +53,16 @@ Other homes:
   `lib/gax/src/gax_internal.h`. The libraries' public headers are in each
   library's `include/` (docs/libraries.md); libgcc's division routines are
   in `lib/libgcc/include/libgcc.h`.
+- The hardware (registers, memory map, DMA macros, the integer types) and
+  the BIOS calls: the platform's headers, `platform/gba/include/gba/*.h`
+  and `platform/gba/lib/libagbsyscall/include/agb_syscall.h`
+  ([platforms.md](platforms.md), #1093). They are on the -I path, not
+  under `include/`: a port supplies its own under `platform/<name>/`.
+  Include them by their name from the platform's include directory
+  (`#include "gba/io_reg.h"`, `<agb_syscall.h>`), never with a relative
+  path, and don't put a header named `gba/...` anywhere else: a quoted
+  include looks in the including file's own directory first, so a file
+  there would be picked instead of the platform's.
 - A struct that several subsystems share gets its own small type header
   (`aabb.h`, `hitbox_quad.h`, `line_util.h`) rather than living in one
   subsystem's header. A subsystem header includes the type headers its

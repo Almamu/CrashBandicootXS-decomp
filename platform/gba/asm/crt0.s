@@ -6,7 +6,7 @@
 	arm_func_start start
 start: @ 0x08000000
 	b init_vector
-	.include "asm/rom_header.inc"
+	.include "platform/gba/asm/rom_header.inc"
 
 init_vector:
 	mov r0, #0x12

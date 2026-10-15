@@ -19,7 +19,7 @@ SECTIONS
     ROM :
 	ALIGN(4)
 	{
-        build/crashbandicootxs/asm/crt0.o(.text);
+        build/crashbandicootxs/platform/gba/asm/crt0.o(.text);
         build/crashbandicootxs/src/engine/sys/bios_util.o(.text);
         build/crashbandicootxs/src/engine/sys/main.o(.text);
         build/crashbandicootxs/src/engine/sys/memory.o(.text);
@@ -296,7 +296,7 @@ SECTIONS
         build/crashbandicootxs/lib/gax/src/gax_sound_handler_mixer.o(.text);
         build/crashbandicootxs/lib/gax/src/gax_sound_handler_mixer_play.o(.text);
         build/crashbandicootxs/lib/gax/asm/gax_arm_dsp.o(.text);
-        build/crashbandicootxs/lib/libagbsyscall/libagbsyscall.o(.text);
+        build/crashbandicootxs/platform/gba/lib/libagbsyscall/libagbsyscall.o(.text);
         build/crashbandicootxs/lib/agb_eeprom/src/eeprom_timer.o(.text);
         build/crashbandicootxs/lib/agb_eeprom/src/eeprom_timer_stop.o(.text);
         build/crashbandicootxs/lib/agb_eeprom/src/eeprom_read_write.o(.text);
@@ -509,7 +509,7 @@ SECTIONS
      * gIntrTable - IntrMain_Buffer. See docs/progress_report.md. */
     iwram 0x03000000 : AT(LOADADDR(ROM) + SIZEOF(ROM))
     {
-        build/crashbandicootxs/asm/intr_main.o(.text);
+        build/crashbandicootxs/platform/gba/asm/intr_main.o(.text);
         build/crashbandicootxs/src/engine/util/string_arm.o(.text);
         build/crashbandicootxs/asm/itoa_arm.o(.text);
         build/crashbandicootxs/src/engine/gfx/sprite_arm.o(.text);

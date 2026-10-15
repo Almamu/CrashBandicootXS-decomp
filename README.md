@@ -175,8 +175,12 @@ is named after a ROM address. See
 [docs/file_layout.md](./docs/file_layout.md).
 
 The third-party and SDK code linked into the ROM is C under `lib/`: the
-GAX2 sound engine, Nintendo's AgbEeprom library, libgcc and the BIOS SWI
-wrappers ([docs/libraries.md](./docs/libraries.md)).
+GAX2 sound engine, Nintendo's AgbEeprom library and libgcc
+([docs/libraries.md](./docs/libraries.md)). The GBA hardware is the
+platform's, under `platform/gba/`: its headers (`gba/io_reg.h`, ...),
+crt0, `IntrMain` and the BIOS SWI wrappers
+([docs/platforms.md](./docs/platforms.md)); a port to another system
+supplies its own platform there.
 
 `expected/` holds frozen copies of the original disassembly, the target
 the progress report diffs the build against. Never edit them; see
@@ -244,7 +248,8 @@ know it going in.
 - [docs/cplusplus.md](./docs/cplusplus.md): the game is g++ 2.9 C++: the agbcp/old_agbcp compilers and the namespaces
 - [docs/file_layout.md](./docs/file_layout.md): the source tree's layout and the map from the old file names
 - [docs/headers.md](./docs/headers.md): where declarations live
-- [docs/libraries.md](./docs/libraries.md): the libraries under `lib/` (GAX2, AgbEeprom, libgcc, libagbsyscall)
+- [docs/libraries.md](./docs/libraries.md): the libraries under `lib/` (GAX2, AgbEeprom, libgcc) and the platform's libagbsyscall
+- [docs/platforms.md](./docs/platforms.md): `platform/gba/` (the hardware headers, crt0, IntrMain, the BIOS calls) and what a port provides
 - [docs/progress_report.md](./docs/progress_report.md): the objdiff progress report, the badges and the progress sites
 - [docs/n_tranced.md](./docs/n_tranced.md): the second ROM, Crash Bandicoot 2: N-Tranced, and the `GAME` switch
 

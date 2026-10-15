@@ -682,7 +682,8 @@ def scan_asm_defs():
     out = {}
     s_files = sorted(set(glob.glob('asm/**/*.s', root_dir=ROOT, recursive=True)
                          + glob.glob('data/**/*.s', root_dir=ROOT, recursive=True)
-                         + glob.glob('lib/**/*.s', root_dir=ROOT, recursive=True)))
+                         + glob.glob('lib/**/*.s', root_dir=ROOT, recursive=True)
+                         + glob.glob('platform/**/*.s', root_dir=ROOT, recursive=True)))
     for p in s_files:
         t = read(p)
         for g in re.findall(r'^\s*([A-Za-z_]\w*)\s*:', t, flags=re.M):
@@ -750,7 +751,8 @@ def main():
 
     os.chdir(ROOT)
     c_files = sorted(glob.glob('src/**/*.c', recursive=True) + glob.glob('lib/**/*.c', recursive=True))
-    h_files = sorted(glob.glob('include/**/*.h', recursive=True) + glob.glob('lib/**/*.h', recursive=True))
+    h_files = sorted(glob.glob('include/**/*.h', recursive=True) + glob.glob('lib/**/*.h', recursive=True)
+                     + glob.glob('platform/**/*.h', recursive=True))
 
     scans = {p: scan_c(p) for p in c_files}
     hscans = {p: scan_c(p, is_header=True) for p in h_files}

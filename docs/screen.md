@@ -1,8 +1,8 @@
 # Screen size
 
-The GBA's screen is 240x160. `include/gba/defines.h` has it as
-`DISPLAY_WIDTH` x `DISPLAY_HEIGHT` (and 426x240 under `PORTABLE`, the
-scaffold for a native or widescreen port). Every value the game derives
+The GBA's screen is 240x160. `platform/gba/include/gba/defines.h` has it as
+`DISPLAY_WIDTH` x `DISPLAY_HEIGHT` (a port's own `gba/defines.h` can set
+another size, a widescreen 426x240 say; docs/platforms.md). Every value the game derives
 from the screen size is spelled with these, through the names in
 `include/screen.h`, so that changing the defines changes the game
 consistently (#979). `core.h` includes `screen.h`.
@@ -24,7 +24,7 @@ consistently (#979). `core.h` includes `screen.h`.
 
 `gba/defines.h` has the hardware's side, next to `OAM_ENTRY_COUNT`:
 
-| Macro | GBA | `PORTABLE` | What |
+| Macro | GBA | A port with wider OAM fields | What |
 |---|---|---|---|
 | `OAM_X(x)` | `x & 0x1FF` | `x` | a screen X written into OAM attribute 1's 9-bit field |
 | `OAM_Y(y)` | `y & 0xFF` | `y` | a screen Y written into OAM attribute 0's 8-bit field |
@@ -247,13 +247,13 @@ has the rest.
    screen, the menus' backgrounds) are 240x160 whatever the screen is;
    `DISPLAY_ART_X/Y` is their origin, and layouts drawn over them are
    relative to it (see "Layouts").
-6. **Sprite count.** `OAM_ENTRY_COUNT` (128, more under `EXTENDED_OAM`)
+6. **Sprite count.** `OAM_ENTRY_COUNT` (128 on the GBA; a port's `gba/defines.h` can have more)
    sizes the OAM shadow buffer.
 7. **A compile check.** `make screen-check` compiles every game object
    (src/, and the src/*/data/ tables that spell a `DISPLAY_` name or a
    logo fly-in's `_FLY_IN`: the layouts' position tables, the logo
    pieces' motions and their seeds) with another screen size,
-   `SCREEN_CHECK_WIDTH` x `SCREEN_CHECK_HEIGHT` (PORTABLE's 426x240 by
+   `SCREEN_CHECK_WIDTH` x `SCREEN_CHECK_HEIGHT` (426x240, a widescreen size, by
    default; `make screen-check SCREEN_CHECK_WIDTH=256
    SCREEN_CHECK_HEIGHT=192` for another), into build/screen-check, with
    the usual warnings as errors. Nothing is linked or compared. gba/
@@ -276,7 +276,7 @@ replaces what uses them in its platform layer. `screen.h` names them:
 |---|---|---|---|
 | `BG_SCREEN_BLOCK_TILES` | 32 | a text BG's screen block: 32x32 map entries, 256x256 pixels. `BgLayer` (bg_layer.cpp) keeps a 32x32 window of the level map in one, wrapping modulo 32; the cell-anim maps (`FillTileMap`, cell_anim.cpp) put columns past 31 in the next block | the screen and one tile more must fit in 256 pixels each way: a wider or taller screen needs a bigger BG map |
 | `BG_STREAM_RING_COLS` x `BG_STREAM_RING_ROWS` | 64 x 32 | `BgStreamer`'s ring (bg_streamer.cpp): 4x4 chunks of 16x8 tiles (128x64 pixels), the four from the chunk at the layer's scroll position, wrapped with `& (COLS - 1)` / `& (ROWS - 1)` | `DISPLAY_WIDTH` <= 512 - 127 and `DISPLAY_HEIGHT` <= 256 - 63: 240x160 fits, 426x240 doesn't |
-| `OAM_X(x)`, `OAM_Y(y)` (gba/defines.h) | 9 bits, 8 bits | OAM attribute 1's X and attribute 0's Y | no-ops under `PORTABLE`, where the platform library's OAM has wider fields |
+| `OAM_X(x)`, `OAM_Y(y)` (gba/defines.h) | 9 bits, 8 bits | OAM attribute 1's X and attribute 0's Y | no-ops in a port whose platform headers give OAM wider fields (docs/platforms.md) |
 | `Font::DrawGlyph`'s read of `posY` (font_glyph.cpp) | 8 bits | the ROM reads the font cursor's Y with a byte load: OAM's 8-bit Y, truncated by the load itself, which `OAM_Y()` can't spell | a screen taller than 256 pixels needs that read widened to the whole `posY` |
 | Mode 4's second frame (slideshow.cpp) | `VRAM + 0xA000` | the cutscene's double-buffered 240x160 bitmap | the picture is fixed-size art; the frame size is the hardware's |
 

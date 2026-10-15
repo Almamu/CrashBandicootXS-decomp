@@ -79,7 +79,7 @@ the appendix.
 | `086C127C`-`086D9CAC` | 100,912 | raw level asset (room `0825E7DC`) | `LoadRoom` -> `SetCollisionSource`/`SetBgStreamerSource` | high | **done** (decoded tilemaps) |
 | `086ECCD2`-`087E3BEC` | 1,011,482 | 2 B pad + 6 raw level assets | same | high | **done** (the pad is gbagfx's padding) |
 | `087E3BEC`-`087E55E4` | 6,648 | 93 gcc 2.x vtables | constructors (`CreateMovingSprite`, ...) | high | easy |
-| `087E55E4`-`087E5FCC` | 2,536 | IWRAM image (ARM code + data, copied by `crt0`) | `crt0.s` | high | **converted** (`asm/intr_main.s`, `src/engine/*/*_arm.cpp`, `src/engine/sys/iwram_data.cpp`; the code counts as code, 540 B of data) |
+| `087E55E4`-`087E5FCC` | 2,536 | IWRAM image (ARM code + data, copied by `crt0`) | `crt0.s` | high | **converted** (`platform/gba/asm/intr_main.s`, `src/engine/*/*_arm.cpp`, `src/engine/sys/iwram_data.cpp`; the code counts as code, 540 B of data) |
 | `087E5FCC`-`08800000` | 106,548 | `0xFF` fill (not counted as data) | - | high | - |
 
 By category, as a share of the 8,038,172-byte data total:
@@ -454,7 +454,7 @@ and the encoder are in [levels.md](./levels.md).
 from here (`__iwram_lma`) to `0x03000000` at boot. **Converted**: the
 image is now built from source and linked to run at `0x03000000`
 (ldscript.txt's `iwram` section, stored in ROM with `AT(...)`):
-`IntrMain`, the hand-written interrupt dispatcher (`asm/intr_main.s`),
+`IntrMain`, the hand-written interrupt dispatcher (`platform/gba/asm/intr_main.s`),
 ten ARM routines (`src/engine/util/string_arm.cpp`, `src/engine/gfx/sprite_arm.cpp`,
 built with agbcp_arm_patched) and the initialised IWRAM globals
 (`src/engine/sys/iwram_data.cpp`, 540 bytes from `0x030007CC`). The code counts
@@ -1201,4 +1201,4 @@ vtable shapes).
 | `087E5554` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateHovercraftSideGun` | high | easy |
 | `087E558C` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateHovercraftCannonFlash` | high | easy |
 | `087E55C4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `InitLogoActor`, `DestroyLogoActor` | high | easy |
-| `087E55E4` | 0x1AA1C | IWRAM image (ARM code + initialised data, 0x9E8 B) copied to 0x03000000 by crt0, then 0xFF cartridge fill | `_0800012C` | high | **converted** (`asm/intr_main.s`, `src/engine/*/*_arm.cpp`, `src/engine/sys/iwram_data.cpp`, ldscript `iwram`/`rom_fill`) |
+| `087E55E4` | 0x1AA1C | IWRAM image (ARM code + initialised data, 0x9E8 B) copied to 0x03000000 by crt0, then 0xFF cartridge fill | `_0800012C` | high | **converted** (`platform/gba/asm/intr_main.s`, `src/engine/*/*_arm.cpp`, `src/engine/sys/iwram_data.cpp`, ldscript `iwram`/`rom_fill`) |
