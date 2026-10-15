@@ -194,6 +194,70 @@ In the ROM:
 The links stack crates: `from` is the lower crate and `to` the one on
 top of it (`SetCrateAbove`/`SetCrateBelow`).
 
+### Parameter records
+
+A room.json record (`"params"`) is the bytes an entity's `param` points
+at, in one of two forms (`crashdata.levels.params`, #1167):
+
+- **named**: the view its entities' spawner reads, `"layout"`, and that
+  view's fields:
+
+  ```json
+  {"layout": "crate", "flags": ["TRIAL_KIND"], "options": [], "unk_02": 0,
+   "trial_kind": "TIME_CRATE_3", "param6": 5, "param7": 0}
+  {"layout": "patrol", "flags": ["FLIP_X"], "range_x": 40}
+  {"layout": "platform", "flags": [], "type": 1, "dist_x": 0, "dist_y": 96, "dir_x": 0, "dir_y": 1, "flag": 0}
+  ```
+
+- **raw**: its 32-bit words, `[0, 327707]`, for a record whose meaning
+  isn't known: N-Tranced's (its entity types have no views yet), a record
+  no entity uses, one that entities of two views share.
+
+The views are level_data.h's `struct entity_params.p` and crate.hpp's
+`struct crate_placement`, by name:
+
+| layout | fields after `flags` | spawners (entity_types.json's `"params"`) |
+|---|---|---|
+| `flags` | (none) | start markers, pickups, gems, bosses, flames, seaweed, the enemies that read no words (vulture, venus flytrap, moray eel, squid, laser barrier, frog), the seal spawner, the launch pad |
+| `patrol` | `range_x` | lizard, patrolling jungle and sewer enemies, polar bear, rat |
+| `cycle` | `idle_time`, `attack_time`, `cycle_offset`, `wave_amplitude`, `wave_period`, `wave_phase` | blowgun tribesman, pufferfish, saucer lab assistants, piston and wooden crushers |
+| `attack_first` | `attack_time`, `idle_time`, `cycle_offset` | stationary space enemy, flamethrower lab assistant |
+| `range_cycle` | `range_x`, `idle_time`, `attack_time`, `cycle_offset` | electric eel, patrolling space enemy |
+| `range_attack_first` | `range_x`, `attack_time`, `idle_time`, `cycle_offset` | penguin |
+| `range_homing_y` | `range_x`, `range_y`, `speed_y`, `accel_y` | shark |
+| `wave` | `amplitude`, `period`, `phase` | jellyfish |
+| `homing_x` | `range_x`, `speed_x`, `accel_x` | homing sewer enemy |
+| `homing_xy` | `range_y`, `speed_y`, `accel_y`, `range_x`, `speed_x`, `accel_x` | sea mines |
+| `platform` | `type` (PLATFORM_TYPE_*), `dist_x`, `dist_y`, `dir_x`, `dir_y`, `flag` | the platforms, the gem platforms, the room exit |
+| `crate` | `options`, `unk_02`, `trial_kind`, `param6`, `param7` | the crates |
+| `iron_switch_crate` | `options`, `unk_02`, `trial_kind`, `group`, `steps`, `step_delay` | the iron switch crate |
+| `outline_crate` | `options`, `unk_02`, `trial_kind`, `group`, `step`, `solid_kind` | the outline crate |
+
+- `flags` and a crate's `options` are their bits by name:
+  `EXIT_MIRROR`, `FLIP_X`, `FLIP_Y`, `UNK3`, `UNK4`, `TRIAL_KIND`,
+  `ASSIST_AKU_AKU` (on a checkpoint crate the respawn's X mirror),
+  `ASSIST_CHECKPOINT` (docs/flags/entity_params.md); `ASSIST_LIFE`,
+  `SLOT_MYSTERY`, `SLOT_LIFE`, `SLOT_TNT`, `BIT4`-`BIT7`.
+- `trial_kind` and `solid_kind` are entity types, by name (a number for
+  an unnamed one). `trial_kind` `NITRO_SWITCH_CRATE` is how the ROM
+  spells "a basic crate" (Crate::Create reads 0x1B as 0x15).
+- A record holds the view's fields in order up to its last one (the
+  ROM's records are as long as what their entities read: a piston
+  crusher's ends after `cycle_offset`); the words past the view's end,
+  which nothing names yet, are `"extra"` (the flip platform's seventh
+  word, the seal spawner's second).
+- Every byte the view doesn't name is 0: a record where one isn't stays
+  raw, so the named form holds the record exactly. The build writes the
+  same words from either form, and the save version's CRC (see "The
+  save") hashes the words, so the form doesn't change the ROM.
+
+`tools/levels.py name-params [ROOMDIR ...]` writes each raw record that
+its entities' types name by name (the one-time migration, #1167; it
+leaves alone what it can't name), and `extract` writes the named form
+itself. `make data-check` fails on a raw record that `name-params` would
+name, on a named one whose view isn't its entities' (`param-layout`), and
+on one that skips a field before its last.
+
 ### Entity types
 
 The spawn functions in `gEntitySpawnFuncs`, identified from the sprite
@@ -320,7 +384,8 @@ game's, such as N-Tranced's `games/n2/data/levels/`, docs/n_tranced.md):
 - `<level>/<slot>/room.json`: the asset's symbol and whether it is packed,
   the room's record in the level table (`"record"`, see "The level
   table"), per layer its tile set, scale, `cnt`, size in
-  chunks and tiles and map file, the parameter records (lists of words),
+  chunks and tiles and map file, the parameter records (by name, or
+  their words: see "Parameter records"),
   the links and the entities (in id order; an entity's `type` is its
   name from `entity_types.json`, or a number for an unnamed type), and
   the symbol names of the
@@ -2074,7 +2139,9 @@ the save code uses them where the ROM had numbers.
 
 - **The CRC.** `level_data_crc` is the CRC-32 of the canonical JSON
   (sorted keys, no spaces, UTF-8) of `levels.json`'s `"levels"`, then
-  of each room's `[folder, room.json]` in `"rooms"` order, then of
+  of each room's `[folder, room.json]` in `"rooms"` order (its
+  parameter records as their words, whichever form room.json writes
+  them in: "Parameter records"), then of
   `"extra_progress_flags"` when there are any. The ROM layout
   residuals (`"regions"`, `"assets"`, `"table"`), the levels'
   `"boss_kind"` (see "Boss levels"), the pictures and the collision

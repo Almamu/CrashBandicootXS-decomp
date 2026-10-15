@@ -57,6 +57,18 @@ def run():
         L.write_if_changed(args[1], L.rooms_hpp().encode())
     elif cmd == "symbols":
         L.room_symbols("--check" in args)
+    elif cmd == "name-params":
+        # the one-time migration (#1167): the rooms' raw parameter records
+        # their entity types say how to name, by name
+        rooms = args[1:] or [str(L.LEVELS_DIR / r) for r in L.read_json(L.LEVELS_JSON)["rooms"]]
+        total = 0
+        for r in rooms:
+            room = L.read_json(Path(r) / "room.json")
+            n = L.name_params(room)
+            if n:
+                L.write_room_json(Path(r) / "room.json", room)
+                total += n
+        print("name-params: %d records named in %d rooms" % (total, len(rooms)))
     elif cmd == "render":
         L.render(args[1], args[2], args[3], build_dir)
     elif cmd == "constants":

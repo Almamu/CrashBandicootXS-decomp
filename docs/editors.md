@@ -11,7 +11,8 @@ and run the same tools. This page is what they can rely on (#1167 stage 3,
 - **machine-readable errors**: `--json` on the data tools, and one error
   format ("Errors");
 - **`make data-check`**: every check of the data, without building
-  ("Checking the data").
+  ("Checking the data");
+- **named room parameters** in room.json ("Named room parameters").
 
 Nothing here changes what the build makes: both ROMs and both .map files
 are the same with or without it.
@@ -81,6 +82,25 @@ type, a room folder, a song, a graphic of the manifest), that the
 entities are in id order, that a palette matches. Those are "Checking the
 data"'s second half.
 
+## Named room parameters
+
+A room's entity parameter records were raw word lists; they now name
+their fields where the entity types say which view their spawner reads
+(entity_types.json's `"params"`), as docs/levels.md, "Parameter records"
+describes, and stay words where nothing does (N-Tranced's, unused or
+shared records). The schema's `room.schema.json` has each view
+(`$defs/param_<layout>`).
+
+**Migration (#1167, one time).** XS's 41 rooms were rewritten with
+`tools/levels.py name-params`: 587 of their 624 records are named, every
+one giving back the same words (the ROM is the same; the save version's
+CRC hashes the words, not the form). The loader accepts both forms, but
+`make data-check` rejects a raw record that `name-params` can name, so the
+named form is the one the data keeps. A mod's room copied before this
+(`tree.copy_room` copies the tree's, already named) or written by hand as
+words is still read: `tools/levels.py name-params games/xs/data/levels/<room>`
+names it.
+
 ## Errors
 
 Every data tool reports a problem as a **diagnostic**
@@ -92,7 +112,7 @@ Every data tool reports a problem as a **diagnostic**
 | `pointer` | where in it: a JSON pointer (RFC 6901), `/entities/3/param`; `null` when the check doesn't know |
 | `line`, `col` | the pointer's place in the file (1-based), or a JSON syntax error's; `null` when unknown |
 | `severity` | `error` (the build stops) or `warning` (it goes on) |
-| `code` | which check: `schema`, `json-syntax`, `entity-type`, `entity-param`, `link`, `rooms`, `themes`, `categories`, `graphics`, `text`, ... |
+| `code` | which check: `schema`, `json-syntax`, `entity-type`, `entity-param`, `param-raw`, `param-layout`, `param-record`, `link`, `rooms`, `themes`, `categories`, `graphics`, `text`, ... |
 | `message` | what's wrong, as the text output says it |
 
 As text a diagnostic is `FILE: POINTER: MESSAGE` (`FILE: warning: MESSAGE`
@@ -141,7 +161,8 @@ meaning. Without `--json` every command prints what it always has.
 2. runs the model's checks, each on its own so one failure doesn't hide
    another: the rooms (`crashdata.levels.check_room`: the layer
    pictures' palettes, the collision image's size, the entity types, the
-   entities' order, each entity's parameter record, the links' ids), the
+   entities' order, each entity's parameter record and its view, the
+   links' ids), the
    level table, the themes, the actor categories (spawn lists, graphics,
    animation tables), the bosses, what clearing a level does, the
    level-select worlds, the save's layout, the tile set order; the

@@ -42,6 +42,25 @@
           "enemy_kind_name": {
             "type": "string",
             "pattern": "^[A-Z][A-Z0-9_]*$"
+          },
+          "params": {
+            "enum": [
+              "flags",
+              "patrol",
+              "cycle",
+              "attack_first",
+              "range_cycle",
+              "range_attack_first",
+              "range_homing_y",
+              "wave",
+              "homing_x",
+              "homing_xy",
+              "platform",
+              "crate",
+              "iron_switch_crate",
+              "outline_crate"
+            ],
+            "description": "the view of its parameter records its spawner reads (crashdata.levels.params)"
           }
         },
         "required": [

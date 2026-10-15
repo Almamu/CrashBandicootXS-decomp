@@ -125,6 +125,10 @@ derived from those again.
     tools/levels.py symbols [--check]         write cxx_symbols.txt's room classes
                                               block (with --check, fail if it is
                                               out of date)
+    tools/levels.py name-params [ROOMDIR ...] write the rooms' raw parameter
+                                              records their entity types name
+                                              by name (crashdata.levels.params,
+                                              docs/levels.md "Parameter records")
     tools/levels.py render ROOMDIR LAYER OUT [--build DIR]
                                               one layer's picture: the collision
                                               image, or a BG layer drawn again
@@ -163,6 +167,7 @@ from crashdata.common import diagnostics as D
 from crashdata.common import jasc_pal
 from crashdata.common.game import Game
 from crashdata.levels import collision as collision_bmp
+from crashdata.levels import params as room_params
 
 ROM_BASE = 0x08000000
 # gLevelRoomLists: per level (levels.json's "levels" order) a struct
@@ -518,6 +523,31 @@ def entity_type_names():
     return [t["name"] for t in types]
 
 
+def entity_type_layouts():
+    """type -> the view of its parameter records (entity_types.json's
+    "params", crashdata.levels.params.LAYOUTS), or None."""
+    if not ENTITY_TYPES_JSON.exists():
+        return []
+    return [t.get("params") for t in read_json(ENTITY_TYPES_JSON)["types"]]
+
+
+def param_words(room, by_name=None):
+    """The room's parameter records as words (a named record's from its
+    fields, crashdata.levels.params)."""
+    if by_name is None:
+        by_name = {n: t for t, n in enumerate(entity_type_names()) if n}
+    return [room_params.encode(r, by_name) for r in room["params"]]
+
+
+def name_params(room):
+    """The room with each raw parameter record its entity types say how to
+    name in the named form (`levels.py name-params`): how many it named."""
+    named = room_params.nameable(room, entity_type_layouts(), entity_type_names())
+    for i, rec in named.items():
+        room["params"][i] = rec
+    return len(named)
+
+
 def entity_type(room_name, t, by_name):
     """A room.json entity type (a name from entity_types.json, or a number
     for an unnamed type) -> its number."""
@@ -760,6 +790,19 @@ def check_room(room_dir):
             if not 0 <= v < len(room["entities"]):
                 bad("/links/%d" % i, "the link's %s, %d, isn't an entity id (0-%d)"
                     % (k, v, len(room["entities"]) - 1), "link")
+    layouts = entity_type_layouts()
+    users = room_params.layouts_of(room, layouts, entity_type_names())
+    for i, rec in enumerate(room["params"]):
+        if isinstance(rec, dict):
+            for field, msg in room_params.check(rec, by_name):
+                bad("/params/%d/%s" % (i, field), msg, "param-record")
+            for layout in sorted(users.get(i, set()) - {rec["layout"]}, key=str):
+                bad("/params/%d/layout" % i, "a %s record, but an entity of a type whose spawner reads the %s "
+                    "view uses it (entity_types.json's \"params\")" % (rec["layout"], layout), "param-layout")
+    for i in sorted(room_params.nameable(room, layouts, entity_type_names())):
+        bad("/params/%d" % i, "a raw record its entities' types name (the %s view): `tools/levels.py "
+            "name-params` writes it by name (docs/levels.md, \"Parameter records\")"
+            % next(iter(users[i])), "param-raw")
     if room.get("links") is not None and "links" not in room["symbols"]:
         bad("/symbols", "the room has links, so its symbols name them (\"links\")", "symbols")
     if errors:
@@ -804,7 +847,7 @@ def room_c(room_dir, build_dir=None):
 
     # Spawn parameter records.
     out = blocks.setdefault("params", [])
-    recs = room["params"]
+    recs = param_words(room, by_name)
     stype = "level_params_%s" % sym["desc"][1:].removesuffix("Desc").lower()
     out.append("struct %s\n{" % stype)
     for i, r in enumerate(recs):
@@ -3959,6 +4002,7 @@ def extract_rooms(rom, rooms, records, folders, raw_sizes=None, strict=True):
             n = rom.w(L[8])
             room["links"] = [[rom.w(L[8] + 4 + 8 * k), rom.w(L[8] + 8 + 8 * k)] for k in range(n)]
             room["symbols"]["links"] = pre + "Links"
+        name_params(room)
         write_room_json(room_dir / "room.json", room)
         pieces.append((params, folder))
     return names, pieces, assets, rom_tiles, decoded, set_blocks
@@ -4517,7 +4561,11 @@ def level_data_crc(levels):
     crc = zlib.crc32(canon([{k: v for k, v in lv.items() if k not in CRC_LEVEL_KEYS_LEFT_OUT}
                             for lv in levels["levels"]]))
     for r in levels["rooms"]:
-        crc = zlib.crc32(canon([r, read_json(LEVELS_DIR / r / "room.json")]), crc)
+        # the records as words: their named form (crashdata.levels.params)
+        # is the same data
+        room = read_json(LEVELS_DIR / r / "room.json")
+        room["params"] = param_words(room)
+        crc = zlib.crc32(canon([r, room]), crc)
     if extra_progress_flags(levels):
         crc = zlib.crc32(canon(extra_progress_flags(levels)), crc)
     return crc

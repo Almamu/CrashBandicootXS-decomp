@@ -12,12 +12,12 @@
   "params": [
     [0],
     [0],
-    [0, 27],
-    [0, 0, 0, 0, 0, 1],
-    [0, 40, 120, 120, 0],
-    [0, 120, 120, 0],
-    [0, 40, 120, 0, 0],
-    [0, 40, 0, 120, 0]
+    {"layout": "crate", "flags": [], "options": [], "unk_02": 0, "trial_kind": "NITRO_SWITCH_CRATE", "param6": 0, "param7": 0},
+    {"layout": "platform", "flags": [], "type": 0, "dist_x": 0, "dist_y": 0, "dir_x": 0, "dir_y": 0, "flag": 1},
+    {"layout": "range_cycle", "flags": [], "range_x": 40, "idle_time": 120, "attack_time": 120, "cycle_offset": 0},
+    {"layout": "attack_first", "flags": [], "attack_time": 120, "idle_time": 120, "cycle_offset": 0},
+    {"layout": "range_cycle", "flags": [], "range_x": 40, "idle_time": 120, "attack_time": 0, "cycle_offset": 0},
+    {"layout": "range_cycle", "flags": [], "range_x": 40, "idle_time": 0, "attack_time": 120, "cycle_offset": 0}
   ],
   "links": [
     [31, 30],
