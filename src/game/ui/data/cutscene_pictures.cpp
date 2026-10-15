@@ -3,9 +3,11 @@
 /*
  * ROM 0x085A9F70-0x0861BADC: the 24 cutscene pictures, each a 256-colour
  * palette directly followed by its Mode 4 bitmap (240x160 8bpp, LZ77).
- * A cutscene slide (src/game/ui/data/cutscene_slides.cpp) points at the
- * palette and ShowSlidePicture (slideshow.cpp) finds the bitmap at +0x200,
- * so each bitmap must stay right after its palette.
+ * A cutscene slide (data/cutscenes.json, src/game/ui/data/cutscene_slides.cpp)
+ * points at the palette and ShowSlidePicture (slideshow.cpp) finds the
+ * bitmap at +0x200, so each bitmap must stay right after its palette. A
+ * new picture's palette and bitmap come after the ROM's
+ * (docs/data.md, "A new cutscene").
  *
  * Each picture is a class of graphics.hpp (CutscenePicture00 to
  * CutscenePicture23), its palette and bitmap static const data members.

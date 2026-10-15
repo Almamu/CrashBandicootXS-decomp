@@ -135,6 +135,7 @@ CPPFLAGS += -iquote $(GENERATED_INCLUDE_DIR)
 include graphics.mk
 include levels.mk
 include text.mk
+include cutscenes.mk
 
 SOUND_SONGS := $(wildcard sound/songs/*.xm)
 SOUND_SAMPLES := $(wildcard sound/samples/*.wav)

@@ -159,7 +159,7 @@ public:
      * (GetLevelState, level_state.cpp; MainLoop keeps it in gLevelState).
      * Static: it takes no level state. */
     static LevelState *Get();
-    void PlayCutscene(s32 idx); // level_cutscene.cpp
+    void PlayCutscene(s32 idx); // level_cutscene.cpp; idx: a CUTSCENE_* id
     void UpdateGameFrame();     // game_frame.cpp
     // bonus_round.cpp
     void EndBonusRound(u8 cleared);
