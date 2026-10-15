@@ -1,0 +1,11 @@
+{
+  "objects": [
+    {"name": "menu_graphics", "rom": "0x0852D868", "end": "0x085346AC"}
+  ],
+  "assets": [
+    {"path": "menus/pause.png", "kind": "bg_package", "symbol": "gPauseMenuBgTiles", "class": "PauseMenuBg", "about": "the pause screen (gPauseMenuBg)", "rom": "0x0852DCD8", "palette": {"symbol": "gPauseMenuBgPalette", "rom": "0x0852D868", "colors": 256, "lz77": true}, "map": {"symbol": "gPauseMenuBgMap", "rom": "0x08533898"}, "size": [30, 20], "bpp": 8, "affine": false},
+    {"path": "menus/continue_prompt/smoke.png", "kind": "bg_package", "symbol": "gContinuePromptSmokeBgTiles", "class": "ContinuePromptSmokeBg", "about": "the continue prompt's red smoke texture (gContinuePromptSmokeBg)", "rom": "0x08530220", "palette": {"symbol": "gContinuePromptSmokeBgPalette", "rom": "0x0852DAAC", "colors": 16, "lz77": true}, "map": {"symbol": "gContinuePromptSmokeBgMap", "rom": "0x08533C28"}, "size": [30, 20], "bpp": 4, "affine": false},
+    {"path": "menus/continue_prompt/glow.png", "kind": "bg_package", "symbol": "gContinuePromptGlowBgTiles", "class": "ContinuePromptGlowBg", "about": "the continue prompt's fire glow (gContinuePromptGlowBg)", "rom": "0x08531F28", "palette": {"symbol": "gContinuePromptGlowBgPalette", "rom": "0x0852DAD4", "colors": 16, "lz77": true}, "map": {"symbol": "gContinuePromptGlowBgMap", "rom": "0x08534154"}, "size": [30, 20], "bpp": 4, "affine": false},
+    {"path": "menus/continue_prompt/uka_uka.png", "kind": "bg_package", "symbol": "gContinuePromptUkaUkaBgTiles", "class": "ContinuePromptUkaUkaBg", "about": "the continue prompt's Uka Uka mask (gContinuePromptUkaUkaBg)", "rom": "0x0853291C", "palette": {"symbol": "gContinuePromptUkaUkaBgPalette", "rom": "0x0852DAFC", "colors": 256, "lz77": true}, "map": {"symbol": "gContinuePromptUkaUkaBgMap", "rom": "0x08534490"}, "size": [30, 20], "bpp": 8, "affine": false}
+  ]
+}

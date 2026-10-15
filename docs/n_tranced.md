@@ -265,6 +265,44 @@ are placeholders until the themes and levels have names, and
 (`levels.mk`). Still to do for #1113: the level table, its themes and the
 level select, and names.
 
+## Graphics (#1115)
+
+N-Tranced's graphics are built as XS's are (docs/graphics.md), from
+[`games/n2/graphics/manifest.json`](../games/n2/graphics/manifest.json),
+which has XS's format: its entries have N-Tranced's addresses, and its
+`objects` are N-Tranced's graphics class objects (in `objects.txt` too).
+A graphic both games have keeps XS's source: an entry whose file isn't
+under `games/n2/graphics/` is XS's `graphics/<path>`, so the continue
+prompt's three pictures, the same bytes in both ROMs, have one PNG each.
+Only N-Tranced's own art is under `games/n2/graphics/`. A class keeps
+XS's name and its parts XS's C names ("same job, same name"; both builds
+rename with `cxx_symbols.txt`, and `check` says so if one isn't there).
+
+The rules are XS's: [`graphics_rules.mk`](../graphics_rules.mk) has the
+ones the manifest drives (palettes, BG packages, tile sheets, the
+category graphics, the classes), for the game's `GRAPHICS_DIR`; XS's
+`graphics.mk` includes it with the rules for its other assets, and
+[`games/n2/graphics.mk`](../games/n2/graphics.mk) for N-Tranced.
+`tools/gfx_manifest.py --graphics-dir games/n2/graphics` works on
+N-Tranced's manifest:
+
+```
+python3 tools/gfx_manifest.py --graphics-dir games/n2/graphics check
+python3 tools/gfx_manifest.py --graphics-dir games/n2/graphics extract baserom_n2.gba --check
+```
+
+`extract` (without `--check`) writes into `games/n2/graphics/` only what
+XS's `graphics/` doesn't have the same; `--check` compares every source,
+N-Tranced's or the shared XS one, with N-Tranced's ROM.
+
+| What | Where (ROM) | Source |
+|---|---|---|
+| The pause screen (N-Tranced's own) and the continue prompt's three BG packages (XS's) | `0x0852D868`-`0x085346AC` | `games/n2/src/game/ui/data/menu_graphics.cpp` |
+
+Every LZ77 stream N-Tranced has is one gbagfx makes, but 28 of them
+only with `-search 1` (no VRAM-safe minimum distance): a built file in
+`GFX_LZ_SEARCH1` is compressed that way (`graphics_rules.mk`).
+
 ## Progress
 
 N-Tranced has its own project on [decompilati.onl](https://decompilati.onl).

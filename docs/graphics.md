@@ -136,7 +136,9 @@ Its header comment in `tools/gfx_manifest.py` describes each kind.
 
 **The build reads it for the graphics classes** (below) **and for the
 build rules' lists**: `tools/gfx_manifest.py make` writes
-`build/.../graphics/graphics_manifest.mk`, which `graphics.mk` includes,
+`build/.../graphics/graphics_manifest.mk`, which `graphics.mk` includes
+(through `graphics_rules.mk`, the rules it shares with N-Tranced's build,
+docs/n_tranced.md "Graphics"),
 from the entries: the tile sheets by bpp (`TILE_SHEETS_4BPP`, `_8BPP`, the
 `tiles` that aren't OBJ sheets), the BG packages and their bpp
 (`BG_PACKAGES`, `BG_PACKAGE_BPP_<package>`, `BG_PACKAGES_AFFINE`), the
