@@ -204,7 +204,7 @@ COMPILE_TIME_ASSERT(frontend_hpp, sizeof(Starfield) == 0x14);
 } // namespace Game
 
 /* The credits stream's opcodes (gCreditsText, credits_text.cpp, its text
- * generated from data/credits.json and text/credits.pot, docs/text.md;
+ * generated from data/credits.json and text/crashxs.pot, docs/text.md;
  * #843, docs/flags/text.md). */
 #define CREDITS_OP_PICTURE 1 // the next byte is a logo's index
 #define CREDITS_OP_SMALL 2   // the text that follows in gSmallFont

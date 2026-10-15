@@ -17,8 +17,9 @@ screen. The names are in include/engine/text/text.h, next to the prototypes.
 Credits::UpdateText (src/game/ui/credits.cpp) reads gCreditsText
 (src/game/ui/data/credits_text.cpp) a line at a time. Three bytes are opcodes.
 The names are in include/game/ui/frontend.hpp, before `struct CreditsPopup`.
-The stream is generated from data/credits.json and text/credits.pot
-(docs/text.md, "The credits"), whose items stand for the opcodes:
+The stream is generated from data/credits.json and text/crashxs.pot's
+credits.* entries (docs/text.md, "The credits"), whose items stand for the
+opcodes:
 
 | Byte | Name | data/credits.json item | Meaning |
 |---|---|---|---|
