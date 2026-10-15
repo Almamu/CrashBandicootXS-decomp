@@ -1,0 +1,6 @@
+/* N-Tranced addresses of the RAM variables and ROM data the shared
+ * sources (games/n2/objects.txt) use, while N-Tranced's RAM and data
+ * aren't laid out from sources yet (#1110). From the XS/N-Tranced
+ * comparison (#1107): the same code reads them in both games. */
+
+gVramDmaQueue = 0x02000E50;

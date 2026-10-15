@@ -186,6 +186,7 @@ reason, that's a completely reasonable position - just know it going in.
 - [docs/matching/](./docs/matching/) - the current matching references (the IWRAM image, per-file flags), plus [archive/](./docs/matching/archive/) and [docs/matching.md](./docs/matching.md), the frozen per-pass matching logs
 - [docs/progress_report.md](./docs/progress_report.md) - the objdiff progress report (`report.json`), the progress badges and the progress sites (decompilati.onl, bytematch.dev), generated in CI
 - [docs/rom_map.md](./docs/rom_map.md) - the historical whole-ROM map used to plan the matching work
+- [docs/n_tranced.md](./docs/n_tranced.md) - the second ROM, Crash Bandicoot 2: N-Tranced (#1106): the `GAME` switch and its bootstrap build
 - The [Kirby & The Amazing Mirror](https://github.com/jiangzhengwenjz/katam/) decompilation uses a very similar codebase, as it was written by the same dev team (Dimps)
 - `ldscript.txt` tells the linker the order in which files are linked, which places every object at its ROM address
 
