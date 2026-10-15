@@ -22,7 +22,7 @@ literals in six kinds of places:
            REG_ADDR_*, ...;
   hw       literals assigned to, OR-ed into, masked out of or compared
            with a REG_* register (or a shadow named like one: dispcnt,
-           bldcnt, bgNcnt, ...) that include/gba/io_reg.h's defines spell
+           bldcnt, bgNcnt, ...) that platform/gba/include/gba/io_reg.h's defines spell
            (`DISPCNT_BG2_ON | DISPCNT_OBJ_ON`, `BGCNT_PRIORITY(3) | ...`).
 
 The struct and class sizes, member offsets and the types of every
@@ -54,7 +54,7 @@ Each hit has a confidence:
 One hit per literal; each has the literal, the expression it replaces
 (`expr`: the literal, or `VRAM + 0xE000`, `(u8 *)p + 0x24`), the
 suggestions, the confidence and its context. A suggestion may use a
-define include/gba/defines.h doesn't have yet (`new_defines`, `(new: ...)`
+define platform/gba/include/gba/defines.h doesn't have yet (`new_defines`, `(new: ...)`
 in the listing): PALETTE_SIZE_16 (0x20, one 16-colour palette),
 BG_SCREEN_SIZE (0x800) and BG_CHAR_SIZE (0x4000).
 
@@ -90,7 +90,7 @@ import layout_audit as la  # noqa: E402
 import magic_numbers as mn  # noqa: E402
 
 ROOT = mn.ROOT
-GBA_HEADERS = [os.path.join(ROOT, "include", "gba", f) for f in ("defines.h", "io_reg.h", "dma_macros.h")]
+GBA_HEADERS = [os.path.join(ROOT, "platform", "gba", "include", "gba", f) for f in ("defines.h", "io_reg.h", "dma_macros.h")]
 MEMORY_HEADER = os.path.join(ROOT, "include", "engine", "sys", "memory.h")
 DB_VERSION = 1
 
@@ -106,9 +106,9 @@ CATEGORIES = collections.OrderedDict(
 )
 CONFIDENCES = ("high", "medium", "low")
 
-# Named sizes (include/gba/defines.h) and the ones #820 proposes.
+# Named sizes (platform/gba/include/gba/defines.h) and the ones #820 proposes.
 NEW = " (new)"
-# The defines `(new)` suggestions use, which include/gba/defines.h doesn't
+# The defines `(new)` suggestions use, which platform/gba/include/gba/defines.h doesn't
 # have yet: name -> (value, meaning).
 NEW_DEFINES = {
     "PALETTE_SIZE_16": (0x20, "one 16-colour palette"),
@@ -653,7 +653,7 @@ def pointee(types, tree, src):
 
 
 # ---------------------------------------------------------------------------
-# Named constants (include/gba/*.h, include/engine/sys/memory.h)
+# Named constants (platform/gba/include/gba/*.h, include/engine/sys/memory.h)
 
 
 def load_defines(paths):

@@ -3,14 +3,17 @@
 Part of the ROM was never this game's code: it is third-party and SDK code
 that was linked in. It lives under `lib/`, one directory per library, the
 way pokeemerald keeps `libagbsyscall`/`libgcc` apart from the game. `src/`
-holds only the game.
+holds only the game. The one library that only wraps the GBA's hardware,
+`libagbsyscall` (the BIOS calls), is part of the GBA platform instead:
+`platform/gba/lib/libagbsyscall/`, laid out the same way
+([platforms.md](./platforms.md), #1093).
 
 | Library | What it is | ROM code | Data |
 |---|---|---|---|
 | [`lib/gax/`](../lib/gax) | Shin'en's GAX Sound Engine 2.01D | `0x08037F3C`-`0x0803A944` | `lib/gax/data/gax_tables.c` |
 | [`lib/agb_eeprom/`](../lib/agb_eeprom) | Nintendo's AgbEeprom SDK library, `EEPROM_V122` | `0x0803A968`-`0x0803AD78` | `lib/agb_eeprom/data/eeprom_data.c` |
 | [`lib/libgcc/`](../lib/libgcc) | gcc 2.9's libgcc: libgcc2.c's 64-bit helpers and lib1funcs.asm's routines | `0x08037648`-`0x08037F3C`, `0x0803AD78`-`0x0803AFDC` | `lib/libgcc/data/clz_tab.c` |
-| [`lib/libagbsyscall/`](../lib/libagbsyscall) | the BIOS SWI wrappers | `0x0803A944`-`0x0803A968` | - |
+| [`platform/gba/lib/libagbsyscall/`](../platform/gba/lib/libagbsyscall) | the BIOS SWI wrappers | `0x0803A944`-`0x0803A968` | - |
 
 ## Layout
 
@@ -21,6 +24,10 @@ lib/<name>/asm/       its hand-written assembly (GAX2's ARM DSP routines)
 lib/<name>/data/      its constant data (C tables, linked in the data block)
 ```
 
+`platform/gba/lib/<name>/` follows the same layout, its `include/` on the
+-I path too. `libagbsyscall`'s one `.s` sits at the top of its directory,
+as it did under `lib/`.
+
 `libgcc` and `libagbsyscall` are built the way their originals are:
 
 - `lib/libgcc/libgcc2.c` is compiled once per function with `-DL_<name>`
@@ -28,7 +35,7 @@ lib/<name>/data/      its constant data (C tables, linked in the data block)
   is assembled once per routine with `L_<name>` defined (`_udivsi3.o`,
   `_divsi3.o`, `_dvmd_tls.o`, `_modsi3.o`, `_umodsi3.o`,
   `_call_via_rX.o`): the Makefile's `LIBGCC2_FUNCS`/`LIB1FUNCS`.
-- `lib/libagbsyscall/libagbsyscall.s` holds the eight wrappers in the
+- `platform/gba/lib/libagbsyscall/libagbsyscall.s` holds the eight wrappers in the
   ROM's (alphabetical) order.
 
 The lib1funcs routines and the SWI wrappers are hand-written assembly.
@@ -57,8 +64,9 @@ Game code includes a library's public header and nothing else from it:
   callers leave the destination in r1 from their own argument, and the
   two-argument call compiles differently.
 
-The libraries include `gba/gba.h` (the hardware headers in `include/gba/`)
-but not the game's headers.
+The libraries include `gba/gba.h` (the hardware headers, in the GBA
+platform's `platform/gba/include/gba/`, on the -I path) but not the game's
+headers.
 
 ## GAX implementation notes
 
@@ -138,7 +146,7 @@ ROM order of the library code:
 ```
 lib/libgcc/_divdi3.o _udivdi3.o _udivsi3.o _muldi3.o   (linked in with GAX2)
 lib/gax/src/gax_*.o lib/gax/asm/gax_arm_dsp.o          (the engine)
-lib/libagbsyscall/libagbsyscall.o
+platform/gba/lib/libagbsyscall/libagbsyscall.o
 lib/agb_eeprom/src/eeprom_timer.o eeprom_timer_stop.o eeprom_read_write.o eeprom_verify.o
 lib/libgcc/_call_via_rX.o _divsi3.o _dvmd_tls.o _modsi3.o _umodsi3.o
 ```
@@ -152,7 +160,7 @@ The per-object flags moved with the files, unchanged:
 | `lib/gax/src/*.o`, `lib/*/data/*.o` | agbcc | default (`-O2 -mthumb-interwork ... -fprologue-bugfix`) |
 | `lib/agb_eeprom/src/*.o` | agbcc | `-O1` instead of `-O2` (`O1_OBJS`, [eeprom-sdk-o1.md](./matching/eeprom-sdk-o1.md)) |
 | `lib/libgcc/_divdi3.o`, `_udivdi3.o`, `_muldi3.o` | agbcc | no `-mthumb-interwork` (`NO_INTERWORK_OBJS`, [gax-toolchain-retry.md](./matching/archive/gax-toolchain-retry.md)) |
-| `lib/libgcc/_*.o` from lib1funcs.s, `lib/libagbsyscall/*.o`, `lib/gax/asm/*.o` | as | `ASFLAGS` |
+| `lib/libgcc/_*.o` from lib1funcs.s, `platform/gba/lib/libagbsyscall/*.o`, `lib/gax/asm/*.o` | as | `ASFLAGS` |
 
 No library object uses old_agbcc, agbcp_arm_patched or
 `-fno-rerun-loop-opt` (`OLD_AGBCC_OBJS`, `ARM_OBJS`,
@@ -175,12 +183,14 @@ No library object uses old_agbcc, agbcp_arm_patched or
   fatal-error screen's font, is GAX2 data, but it sits in the middle of
   the IWRAM image's initialised data (`src/engine/sys/iwram_data.cpp`, one
   object), so it stays there.
-- **crt0 and IntrMain** (`asm/crt0.s`, `asm/intr_main.s`) stay in `asm/`.
-  They derive from the AGB SDK's crt0 template, but they are this game's
-  startup code: crt0 carries the game's ROM header and IWRAM-image copy,
-  IntrMain dispatches through the game's `gIntrTable` and is the first
-  thing in the game's IWRAM image. pokeemerald keeps its crt0 in the game
-  tree too.
+- **crt0 and IntrMain** (`platform/gba/asm/crt0.s`,
+  `platform/gba/asm/intr_main.s`) are not libraries: they derive from the
+  AGB SDK's crt0 template, but they are this game's startup code (crt0
+  carries the game's ROM header, `platform/gba/asm/rom_header.inc`, and
+  the IWRAM-image copy; IntrMain dispatches through the game's
+  `gIntrTable` and is the first thing in the game's IWRAM image). They are
+  the GBA platform's, since a port replaces both (#1093,
+  [platforms.md](./platforms.md)).
 
 ## Progress report
 

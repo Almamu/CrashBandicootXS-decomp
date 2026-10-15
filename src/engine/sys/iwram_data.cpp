@@ -45,7 +45,7 @@ using Game::Ui::SaveMenu;
 /*
  * IWRAM 0x030007CC-0x030009E8 (stored in ROM at 0x087E5DB0-0x087E5FCC):
  * the initialised IWRAM globals, the end of the IWRAM image crt0 copies
- * to 0x03000000 at boot. The image is IntrMain (asm/intr_main.s), the ARM
+ * to 0x03000000 at boot. The image is IntrMain (platform/gba/asm/intr_main.s), the ARM
  * code (src/engine/util/string_arm.cpp, src/engine/gfx/sprite_arm.cpp) and this file's
  * .data, linked to run at 0x03000000 and stored after the vtables in ROM
  * (the `iwram` section in ldscript.txt, docs/progress_report.md). Everything

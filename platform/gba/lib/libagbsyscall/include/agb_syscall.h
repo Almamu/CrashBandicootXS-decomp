@@ -3,7 +3,7 @@
 
 #include "gba/types.h"
 
-/* The GBA BIOS SWI wrappers of lib/libagbsyscall (libagbsyscall.s), each a
+/* The GBA BIOS SWI wrappers of platform/gba/lib/libagbsyscall (libagbsyscall.s), each a
  * bare `svc #N; bx lr`. The argument and return types are the ones the
  * game's callers use (they decide the callers' code, the wrappers don't
  * care). */

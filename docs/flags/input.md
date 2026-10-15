@@ -1,6 +1,6 @@
 # Input bits: the KEYINPUT buttons (#843)
 
-The game reads the buttons as KEYINPUT bits, and include/gba/io_reg.h already
+The game reads the buttons as KEYINPUT bits, and platform/gba/include/gba/io_reg.h already
 names them: `A_BUTTON` (1), `B_BUTTON` (2), `SELECT_BUTTON` (4),
 `START_BUTTON` (8), `DPAD_*` (0x10-0x80), `R_BUTTON` (0x100) and `L_BUTTON`
 (0x200). Each test now uses these names instead of the bit's value. The

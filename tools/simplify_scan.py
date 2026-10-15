@@ -776,10 +776,11 @@ def macros(text):
     if _MACROS is None:
         # filled before it is published: --try's threads read it while it's built
         found = {}
-        for d, _, fs in os.walk(os.path.join(ROOT, "include")):
-            for f in fs:
-                with open(os.path.join(d, f), errors="replace") as fh:
-                    found.update(_macro_defs(fh.read()))
+        for top in ("include", os.path.join("platform", "gba", "include")):
+            for d, _, fs in os.walk(os.path.join(ROOT, top)):
+                for f in fs:
+                    with open(os.path.join(d, f), errors="replace") as fh:
+                        found.update(_macro_defs(fh.read()))
         _MACROS = found
     out = dict(_MACROS)
     out.update(_macro_defs(text))

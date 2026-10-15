@@ -21,9 +21,16 @@ GRIT := tools/grit/grit
 # byte-neutrally and the per-site escape hatches.
 WARNFLAGS := -Wall -Wmissing-prototypes -Wstrict-prototypes -Wpointer-arith -Wnested-externs -Wredundant-decls -Werror
 CC1FLAGS := -mthumb-interwork $(WARNFLAGS) -O2 -fhex-asm  -fprologue-bugfix
-# The libraries' public headers (lib/*/include) are on the -I path, so
-# game code includes them as <gax.h>, <agb_eeprom.h>, <agb_syscall.h>.
-CPPFLAGS := -I tools/agbcc/include -iquote include $(patsubst %,-I %,$(wildcard lib/*/include)) -nostdinc -undef
+# The platform (#1093, docs/platforms.md): the GBA's hardware headers
+# (platform/gba/include/gba/*.h, included as "gba/io_reg.h" and so on),
+# its startup and interrupt code and its BIOS wrappers. A port builds
+# with its own platform/<name>/ in its place. Both games build for the GBA.
+PLATFORM_DIR := platform/gba
+# The libraries' public headers (lib/*/include, and the platform's own,
+# platform/gba/lib/*/include) are on the -I path, so game code includes
+# them as <gax.h>, <agb_eeprom.h>, <agb_syscall.h>.
+CPPFLAGS := -I tools/agbcc/include -iquote include -I $(PLATFORM_DIR)/include \
+	$(patsubst %,-I %,$(wildcard lib/*/include $(PLATFORM_DIR)/lib/*/include)) -nostdinc -undef
 ASFLAGS  := -mcpu=arm7tdmi -mthumb-interwork
 # The GBA has no memory protection, so the ELF's RWX LOAD segment is
 # expected; binutils >= 2.39 warns about it unless told not to.
@@ -113,7 +120,8 @@ DATA_ASM_OBJS := $(patsubst $(DATA_ASM_SUBDIR)/%.s,$(DATA_ASM_BUILDDIR)/%.o,$(DA
 #    hand-written ARM DSP routines, data/*.c tables)
 #  - lib/agb_eeprom: Nintendo's AgbEeprom SDK library, EEPROM_V122
 #  - lib/libgcc: libgcc2.c's 64-bit helpers and lib1funcs.asm's routines
-#  - lib/libagbsyscall: the BIOS SWI wrappers
+# and the platform's own library, platform/gba/lib/libagbsyscall: the BIOS
+# SWI wrappers (see "Platform" below).
 LIB_SUBDIR = lib
 LIB_BUILDDIR = $(OBJ_DIR)/lib
 
@@ -130,15 +138,23 @@ LIBGCC2_OBJS := $(patsubst %,$(LIB_BUILDDIR)/libgcc/%.o,$(LIBGCC2_FUNCS))
 LIBGCC2_ASMS := $(LIBGCC2_OBJS:.o=.s)
 LIB1FUNCS_OBJS := $(patsubst %,$(LIB_BUILDDIR)/libgcc/%.o,$(LIB1FUNCS))
 
-LIBAGBSYSCALL_OBJS := $(LIB_BUILDDIR)/libagbsyscall/libagbsyscall.o
-
 # A library's hand-written assembly (lib/<name>/asm/*.s: GAX2's ARM DSP code).
 LIB_ASM_OBJS := $(patsubst $(LIB_SUBDIR)/%.s,$(LIB_BUILDDIR)/%.o,$(wildcard $(LIB_SUBDIR)/*/asm/*.s))
 $(LIB_ASM_OBJS): asm/macros.inc asm/macros/function.inc
 
-LIB_OBJS := $(LIB_C_OBJS) $(LIBGCC2_OBJS) $(LIB1FUNCS_OBJS) $(LIBAGBSYSCALL_OBJS) $(LIB_ASM_OBJS)
+LIB_OBJS := $(LIB_C_OBJS) $(LIBGCC2_OBJS) $(LIB1FUNCS_OBJS) $(LIB_ASM_OBJS)
 
-OBJS := $(C_OBJS) $(CXX_OBJS) $(LIB_OBJS) $(ASM_OBJS) $(DATA_ASM_OBJS)
+#### Platform ####
+# The GBA platform's assembly (docs/platforms.md): crt0 and IntrMain
+# (platform/gba/asm/) and the BIOS SWI wrappers
+# (platform/gba/lib/libagbsyscall/), all hand-written.
+PLATFORM_BUILDDIR := $(OBJ_DIR)/$(PLATFORM_DIR)
+PLATFORM_ASM_SRCS := $(wildcard $(PLATFORM_DIR)/asm/*.s $(PLATFORM_DIR)/lib/*/*.s)
+PLATFORM_ASM_OBJS := $(patsubst $(PLATFORM_DIR)/%.s,$(PLATFORM_BUILDDIR)/%.o,$(PLATFORM_ASM_SRCS))
+$(PLATFORM_ASM_OBJS): asm/macros.inc asm/macros/function.inc
+$(PLATFORM_BUILDDIR)/asm/crt0.o: $(PLATFORM_DIR)/asm/rom_header.inc
+
+OBJS := $(C_OBJS) $(CXX_OBJS) $(LIB_OBJS) $(PLATFORM_ASM_OBJS) $(ASM_OBJS) $(DATA_ASM_OBJS)
 
 # The .d files the C objects' preprocess step writes (see DEPFLAGS).
 DEPS := $(C_OBJS:.o=.d) $(CXX_OBJS:.o=.d) $(LIB_C_OBJS:.o=.d) $(LIBGCC2_OBJS:.o=.d)
@@ -250,7 +266,7 @@ tidy:
 # data tables those that spell a DISPLAY_ name or a logo fly-in's
 # _FLY_IN: the layouts' position tables, the logo pieces' motions and
 # their seeds) with another screen size, SCREEN_CHECK_WIDTH x
-# SCREEN_CHECK_HEIGHT (PORTABLE's 426x240 by default), into
+# SCREEN_CHECK_HEIGHT (426x240 by default, a widescreen size), into
 # build/screen-check. Nothing is linked or compared: it only has to
 # compile, with the same warnings as errors, so a screen constant stored
 # in a type or a bitfield too narrow for the bigger size (agbcc's "large
@@ -300,6 +316,10 @@ $(ELF): $(OBJS) $(LDSCRIPT)
 	$(OBJCOPY) -O binary $< $@
 
 include compile.mk
+
+$(PLATFORM_BUILDDIR)/%.o: $(PLATFORM_DIR)/%.s
+	@mkdir -p $(dir $@)
+	$(AS) $(ASFLAGS) -o $@ $<
 
 $(GFX):
 	$(MAKE) -C tools/gbagfx

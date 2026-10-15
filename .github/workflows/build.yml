@@ -91,7 +91,7 @@ jobs:
     - name: Build agbcp, old_agbcp and agbcp_arm_patched
       run: tools/build_agbccpp.sh agbcc-cp .
 
-    # The game code compiled with another screen size (PORTABLE's 426x240,
+    # The game code compiled with another screen size (426x240 by default,
     # the Makefile's screen-check, #979): it only has to compile, so a screen
     # constant stored in a type too narrow for a bigger screen fails it
     # (docs/screen.md).

@@ -9,7 +9,7 @@ script and the report. Contents:
 
 | IWRAM | Name | Source | Status |
 |---|---|---|---|
-| `03000000` | `IntrMain` (alias `IntrMain_Buffer`) | `asm/intr_main.s` | hand-written ARM, `HANDWRITTEN` |
+| `03000000` | `IntrMain` (alias `IntrMain_Buffer`) | `platform/gba/asm/intr_main.s` | hand-written ARM, `HANDWRITTEN` |
 | `030000D4` | `strlen_arm` | `src/engine/util/string_arm.cpp` | matched, UNUSED |
 | `030000FC` | `strcpy_arm` | same | matched, UNUSED |
 | `03000120` | `strncpy_arm` | same | matched (second pass; plain since the ninth step, `-mno-cond-return`), UNUSED |

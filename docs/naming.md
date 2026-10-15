@@ -218,7 +218,7 @@ CONTRIBUTING.md). A new kind of value gets a rule in its tables
 header. `tools/magic_numbers.py --sizes` (#820, see
 CONTRIBUTING.md) does the same for sizes, strides, struct offsets,
 hardware addresses and register values: the ones that should be a
-`sizeof`, a member or an include/gba/ define, with the replacement and a
+`sizeof`, a member or a platform/gba/include/gba/ define, with the replacement and a
 confidence (`--json` for agents).
 
 - **`#define`, not `enum`.** The project has no enums. A define can't

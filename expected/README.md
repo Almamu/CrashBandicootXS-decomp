@@ -28,7 +28,7 @@ Thumb code, and one for the ARM code of the IWRAM image:
 - **`iwram.s`** is different in origin: the IWRAM image's ARM code
   (IWRAM `0x03000000`-`0x030007CC`, stored in ROM at `0x087E55E4`) was
   never in any disassembly as code - it sat in `data/data.s` as one
-  `.incbin` until it was decompiled (`asm/intr_main.s`, `src/iwram/`). So
+  `.incbin` until it was decompiled (`platform/gba/asm/intr_main.s`, `src/iwram/`). So
   it was generated once from `baserom.gba` when that happened (ARM
   `objdump`, branch targets and literal pools as labels, pool words as
   the symbols they point at, function names as in `src/iwram/`), checked
@@ -36,7 +36,7 @@ Thumb code, and one for the ARM code of the IWRAM image:
   IWRAM addresses. See docs/progress_report.md's "The IWRAM image".
 
 `legacy.s` first started at `AgbMain` (`0x08000170`): the three functions
-before it, now `bios_util.cpp`'s, were still in `asm/crt0.s` when the
+before it, now `bios_util.cpp`'s, were still in `platform/gba/asm/crt0.s` when the
 report units were made, so they had no unit. It was regenerated from the
 same commit to start at `sub_8000140` (lines 46-770 of `8b090ca:asm/code.s`
 after its 5-line header, instead of 78-770) when they got one (#662).

@@ -87,7 +87,7 @@ Usage:
 --sizes is a separate mode (#820, tools/magic_sizes.py): allocation sizes,
 copy lengths, index strides and byte offsets that have a sizeof or a
 member (from the compiler's debug info, tools/layout_audit.py), and
-hardware addresses and register values that include/gba/ names:
+hardware addresses and register values that platform/gba/include/gba/ names:
   tools/magic_numbers.py --sizes [--show] [--json] [--report [OUT]]
       [--category C ...] [--min-confidence high|medium|low] [--path P ...]
       [--db FILE [--rebuild]] [-j N] [--samples N]
@@ -134,7 +134,7 @@ import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SCAN_DIRS = ("src", "include")
+SCAN_DIRS = ("src", "include", "platform")
 C_EXTS = (".c", ".h")
 CXX_EXTS = (".cpp", ".hpp")
 CXX_SYMBOLS = os.path.join(ROOT, "cxx_symbols.txt")

@@ -211,8 +211,8 @@ Some of the ROM was never C: crt0.s's `start`, libgcc's `lib1funcs.asm`
 routines (`__udivsi3`, `__divsi3`, `__modsi3`, `__umodsi3`, `__div0` and
 the `_call_via_rN`/`_call_via_lr` trampolines, `lib/libgcc/lib1funcs.s`),
 the BIOS SWI wrappers (each is just `svc #N; bx lr`,
-`lib/libagbsyscall/libagbsyscall.s`) and `IntrMain`, the IWRAM image's
-interrupt dispatcher (`asm/intr_main.s`, first entry of `IWRAM_UNITS`,
+`platform/gba/lib/libagbsyscall/libagbsyscall.s`) and `IntrMain`, the IWRAM image's
+interrupt dispatcher (`platform/gba/asm/intr_main.s`, first entry of `IWRAM_UNITS`,
 see "The IWRAM image" below). There is nothing to decompile there, so
 counting that code as unmatched (or as "matched", which is what happened
 while a NAKED transcription sat inside a C unit) would misstate progress.
@@ -241,7 +241,7 @@ it counts as one of the 2062.
 `bios_util.cpp` (`DivMod`, `MemCopy32` and `Ctrl::Update`, 0x08000140-
 0x0800016F, right after crt0) had no unit until #662's audit, so its 3
 functions were in neither total (2059, and the clean-function count,
-which only counts report units). They were still in `asm/crt0.s` when
+which only counts report units). They were still in `platform/gba/asm/crt0.s` when
 the per-file units were made (`ae75a634`), so the first unit started at
 `AgbMain` and their range fell into crt0's. When they were decompiled
 (#191) nothing added the unit. It has one now: `expected/legacy.s` was
@@ -264,7 +264,7 @@ uninitialised IWRAM from `0x030009E8` on (its `IWRAM (NOLOAD)` section
 still starts at `0x03000000` and overlaps `iwram`; ld allows that for a
 NOLOAD section). The image holds, in order:
 
-- `asm/intr_main.s`: `IntrMain`, hand-written ARM - `HANDWRITTEN`.
+- `platform/gba/asm/intr_main.s`: `IntrMain`, hand-written ARM - `HANDWRITTEN`.
 - `src/engine/util/string_arm.cpp`, `asm/itoa_arm.s` and
   `src/engine/gfx/sprite_arm.cpp`: compiled ARM C++, except `itoa_arm`, which
   is assembly (not gcc's code, see above; its own report unit). The C++ is built with `tools/agbcc/bin/agbcp_arm_patched` (the `ARM_OBJS` in

@@ -9,13 +9,8 @@
 #define TRUE  1
 #define FALSE 0
 
-#if !PORTABLE
 #define IWRAM_DATA __attribute__((section("iwram_data")))
 #define EWRAM_DATA __attribute__((section("ewram_data")))
-#else
-#define IWRAM_DATA
-#define EWRAM_DATA
-#endif
 
 // TODO: Move these elsewhere?
 // #ifdef __GNUC__
@@ -44,60 +39,11 @@
 // and attribute 0's 8-bit Y (#979). The game code never truncates a
 // screen coordinate itself; where the ROM masks one before packing it
 // into the attributes, the mask is spelled with these, so a platform
-// layer with wider OAM fields (PORTABLE) makes them no-ops.
-#if PORTABLE
-#define OAM_X(x) (x)
-#define OAM_Y(y) (y)
-#else
+// whose OAM has wider fields can define them as no-ops in its own
+// gba/defines.h (docs/platforms.md).
 #define OAM_X(x) ((x) & 0x1FF)
 #define OAM_Y(y) ((y) & 0xFF)
-#endif
-#if PORTABLE
-// NOTE: Used in gba/types.h, so they have to be defined before the #include
-#define DISPLAY_WIDTH  426
-#define DISPLAY_HEIGHT 240
 
-// NOTE: We shouldn't consider WIDESCREEN_HACK a permanent thing.
-//       This hack should best be removed once there's a "native" platform layer.
-#if ((DISPLAY_WIDTH >= 256) || (DISPLAY_HEIGHT >= 256))
-#undef VRAM_SIZE
-#define VRAM_SIZE (0x18000 + (0x800 * (12)))
-#define WIDESCREEN_HACK TRUE
-#define EXTENDED_OAM TRUE
-#else
-#define WIDESCREEN_HACK FALSE
-#define EXTENDED_OAM !TRUE
-#endif
-extern uint8_t VRAM[VRAM_SIZE];
-
-#if !EXTENDED_OAM
-//#include "gba/types.h"
-// TODO: Fix #define OAM_SIZE (OAM_ENTRY_COUNT*sizeof(OamData))
-#define OAM_SIZE (OAM_ENTRY_COUNT*8)
-#else // EXTENDED_OAM
-#define OAM_SIZE (OAM_ENTRY_COUNT*0xC)
-#endif
-extern struct SoundMixerState *SOUND_INFO_PTR;
-extern uint16_t INTR_CHECK;
-extern void (*INTR_VECTOR)(void);
-
-extern uint8_t EWRAM_START[EWRAM_SIZE];
-extern uint8_t IWRAM_START[IWRAM_SIZE];
-extern uint16_t PLTT[PLTT_SIZE / sizeof(uint16_t)];
-#define BG_PLTT (u8*)&PLTT[0]
-#define OBJ_PLTT (u8*)&PLTT[BG_PLTT_SIZE/sizeof(uint16_t)]
-extern uint8_t OAM[OAM_SIZE];
-
-#define BG_VRAM           &VRAM[0]
-#define BG_CHAR_ADDR(n)   (((u8*)BG_VRAM) + (0x4000 * (n)))
-#define BG_CHAR_ADDR_FROM_BGCNT(bg)   (BG_VRAM + ((gBgCntRegs[bg] & BGCNT_CHARBASE(0x3)) << 12))
-#define BG_SCREEN_ADDR(n) (((u8*)BG_VRAM) + (0x800 * (n)))
-#define BG_TILE_ADDR(n)   (((u8*)BG_VRAM) + (0x80 * (n)))
-
-#define OBJ_VRAM0         &VRAM[0x10000]
-#define OBJ_VRAM1         &VRAM[0x14000]
-
-#else
 // The GBA's screen. A build can define another size (the Makefile's
 // `screen-check`, #979, docs/screen.md): that build only has to compile;
 // only 240x160 matches.
@@ -145,21 +91,11 @@ extern uint8_t OAM[OAM_SIZE];
 #define OAM      0x7000000
 #define OAM_SIZE (OAM_ENTRY_COUNT*sizeof(OamData))
 
-#endif
-
-#if WIDESCREEN_HACK
-#define WIN_REG_SIZE 4
-#define WIN_RANGE(a, b) (((a) << 16) | (b))
-#define WIN_GET_LOWER(win_reg)  (((win_reg) & 0xFFFF0000) >> 16)
-#define WIN_GET_HIGHER(win_reg) (((win_reg) & 0x0000FFFF) >> 0)
-typedef uint32_t winreg_t;
-#else
 #define WIN_REG_SIZE 2
 #define WIN_RANGE(a, b) (((a) << 8) | (b))
 #define WIN_GET_LOWER(win_reg)  (((win_reg) & 0xFF00) >> 8)
 #define WIN_GET_HIGHER(win_reg) (((win_reg) & 0x00FF) >> 0)
 typedef uint16_t winreg_t;
-#endif
 
 #define TILE_SIZE_4BPP 32
 #define TILE_SIZE_8BPP 64

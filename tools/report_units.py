@@ -66,9 +66,9 @@ LD = ["arm-none-eabi-ld", "-r"]
 #
 # HANDWRITTEN as the base object marks a range of confirmed hand-written
 # assembly (libgcc's lib1funcs.asm routines, lib/libgcc/lib1funcs.s; the
-# BIOS SWI wrappers, lib/libagbsyscall/libagbsyscall.s; GAX2's ARM DSP
+# BIOS SWI wrappers, platform/gba/lib/libagbsyscall/libagbsyscall.s; GAX2's ARM DSP
 # routines, lib/gax/asm/gax_arm_dsp.s; IntrMain in the IWRAM image,
-# asm/intr_main.s): code that was never C, so there is nothing to
+# platform/gba/asm/intr_main.s): code that was never C, so there is nothing to
 # decompile. (itoa_arm, asm/itoa_arm.s, is assembly too, but it was
 # compiled code - most likely armcc's - so it keeps its own unit and
 # counts as a function; see IWRAM_UNITS.) No unit is emitted
@@ -627,7 +627,7 @@ UNITS = [
     (0x0803A228, "lib/gax/src/gax_sound_handler_mixer.o", "gax"),  # GaxFxChannelUnknown (the SFX voice type's unknown_fn), GaxMixerInit (the GAX2_SoundHandler mixer type's init_fn), GaxMixerUnknown (its unknown_fn) - matched, issue #68
     (0x0803A278, "lib/gax/src/gax_sound_handler_mixer_play.o", "gax"),  # GaxMixerApplyEcho/GaxMixerApplyFilter/GaxMixerPlay/GaxMixFrame - the mixer handler's play_fn and its three ARM DSP-routine callers; matched (real C - the Thumb->ARM call is GAX2's own inline asm, GAX_CALL_ARM in lib/gax/src/gax_internal.h). sub_803A318/sub_803A608 in expected/code_3.s are only the ARM calls' return points, not functions - issue #68, see docs/matching/archive/gax-toolchain-retry.md
     (0x0803A628, HANDWRITTEN, None),  # GAX2's ARM DSP routines gGaxArmDownmix/Filter/Echo/Resample after an 8-byte zero lead-in, lib/gax/asm/gax_arm_dsp.s - hand-written ARM in the original (GAX 3.05A has them as asm too, docs/libraries.md "GAX implementation notes"), excluded from progress
-    (0x0803A944, HANDWRITTEN, None),  # BIOS SWI wrappers BgAffineSet-VBlankIntrWait (each `svc #N; bx lr`), lib/libagbsyscall/libagbsyscall.s - hand-written asm, excluded from progress, see HANDWRITTEN above
+    (0x0803A944, HANDWRITTEN, None),  # BIOS SWI wrappers BgAffineSet-VBlankIntrWait (each `svc #N; bx lr`), platform/gba/lib/libagbsyscall/libagbsyscall.s - hand-written asm, excluded from progress, see HANDWRITTEN above
     (0x0803A968, "lib/agb_eeprom/src/eeprom_timer.o", "agb_eeprom"),  # EEPROMConfigure, EepromTimerIntr (the timer IRQ handler, formerly a raw .byte blob), SetEepromTimerIntr and StartEepromTimer - Nintendo AgbEeprom EEPROM_V122 library C, object built with -O1 (Makefile O1_OBJS), plain C with no pins; matched as real C, see docs/matching/eeprom-sdk-o1.md, issue #69
     (0x0803AA90, "lib/agb_eeprom/src/eeprom_timer_stop.o", "agb_eeprom"),  # StopEepromTimer + DMA3Transfer - Nintendo AgbEeprom EEPROM_V122 library C, object built with -O1 (Makefile O1_OBJS); matched as real C, see docs/matching/eeprom-sdk-o1.md, issue #69
     (0x0803AB54, "lib/agb_eeprom/src/eeprom_read_write.o", "agb_eeprom"),  # EEPROMRead/EEPROMWrite (timer watchdog) - Nintendo AgbEeprom EEPROM_V122 library C, object built with -O1 (Makefile O1_OBJS); matched as real C, see docs/matching/eeprom-sdk-o1.md, issue #69
@@ -653,7 +653,7 @@ UNITS = [
 # (src/engine/sys/iwram_data.cpp) is a data unit, see IWRAM_DATA below.
 IWRAM_CODE = ROOT / "expected" / "iwram.s"
 IWRAM_UNITS = [
-    (0x03000000, HANDWRITTEN, None),  # IntrMain (asm/intr_main.s), the interrupt dispatcher - hand-written ARM, excluded from progress
+    (0x03000000, HANDWRITTEN, None),  # IntrMain (platform/gba/asm/intr_main.s), the interrupt dispatcher - hand-written ARM, excluded from progress
     (0x030000D4, "src/engine/util/string_arm.o", "util"),  # strlen_arm/strcpy_arm/strncpy_arm/strcat_arm (C++, ARM, agbcp_arm_patched -mno-cond-return) - docs/matching/iwram-image.md
     (0x03000198, "asm/itoa_arm.o", "util"),  # itoa_arm (asm/itoa_arm.s) - assembly by owner decision (#662): its ROM code isn't gcc output (most likely armcc); still counted as a function, unlike HANDWRITTEN - docs/matching/iwram-image.md, "itoa_arm: assembly"
     (0x0300024C, "src/engine/gfx/sprite_arm.o", "graphics"),  # UnpackNibbleTiles/DrawMirroredTilemap/HeapSortActorsByKey/UnpackRleSpriteFrame/LookupSpriteFrameCache (C++, ARM, agbcp_arm_patched -minterwork-return-lr) - docs/matching/iwram-image.md
