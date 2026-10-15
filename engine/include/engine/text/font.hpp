@@ -86,6 +86,17 @@ public:
     {
     }
 
+#ifdef GAME_N2
+    /* N-Tranced's vtable (0x087F9AC4) has three more slots: DrawText
+     * (0x08028F04), MeasureText and TextHeight; the rest aren't virtual
+     * (its DrawChars calls PutChar directly) */
+    virtual void DrawText(const u8 *str);           // 2
+    virtual screen_w_t MeasureText(const u8 *text); // 3
+    virtual s32 TextHeight(const u8 *str);          // 4
+    screen_w_t MeasureChars(const u8 *str, s32 count);
+    void DrawChars(const u8 *str, s32 count);
+    void PutChar(u32 charByte);
+#else
     virtual screen_w_t MeasureText(const u8 *text);            // 2 FontMeasureText
     virtual screen_w_t MeasureChars(const u8 *str, s32 count); // 3 FontMeasureChars
     virtual void DrawText(const u8 *str);                      // 4 FontDrawText
@@ -96,13 +107,16 @@ public:
     void SetPalette(u8 palette);                               // FontSetPalette
     void ResetPalette();                                       // FontResetPalette
     s32 TextHeight(const u8 *str);                             // FontTextHeight
+#endif
 
+#ifndef GAME_N2
     /* FontSetTileBase */
     void SetTileBase(u32 base)
     {
         tileBase = base;
         UploadTiles();
     }
+#endif
 
     /* FontGetX */
     screen_ux_t GetX()

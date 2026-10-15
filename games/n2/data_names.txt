@@ -46,3 +46,4 @@
 0x087F98B4 gBgLayerVtable
 0x087F9904 gPooledBgLayerVtable
 0x087F9A3C gHudPartVtable
+0x087F9AC4 gFontVtable

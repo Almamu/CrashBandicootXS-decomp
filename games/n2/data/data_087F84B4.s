@@ -192,8 +192,8 @@ gUnknown_087F99C4:
 gHudPartVtable:
 	.incbin "baserom_n2.gba", 0x7F9A3C, 0x88
 
-	.global gUnknown_087F9AC4
-gUnknown_087F9AC4:
+	.global gFontVtable
+gFontVtable:
 	.incbin "baserom_n2.gba", 0x7F9AC4, 0x208
 
 	.global gUnknown_087F9CCC

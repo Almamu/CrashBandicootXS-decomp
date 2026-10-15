@@ -91,7 +91,7 @@ _08000FE0:
 _08000FF2:
 	mov r0, r8
 	movs r1, #0xa
-	bl sub_08029034
+	bl FontPutChar
 	movs r2, #0
 	str r2, [sp, #8]
 	movs r0, #1
@@ -105,7 +105,7 @@ _0800100A:
 	mov r0, r8
 	adds r1, r5, #0
 	adds r2, r6, #0
-	bl sub_08029298
+	bl FontMeasureChars
 	adds r7, r0, #0
 	ldr r2, [sp, #8]
 	adds r4, r2, r7
@@ -116,7 +116,7 @@ _0800100A:
 	mov r0, r8
 	adds r1, r5, #0
 	adds r2, r6, #0
-	bl sub_08029274
+	bl FontDrawChars
 	str r4, [sp, #8]
 	ldr r2, [sp, #0x38]
 	cmp r2, #1
@@ -130,11 +130,11 @@ _08001036:
 	bge _08001072
 	mov r0, r8
 	movs r1, #0xa
-	bl sub_08029034
+	bl FontPutChar
 	mov r0, r8
 	adds r1, r5, #0
 	adds r2, r6, #0
-	bl sub_08029274
+	bl FontDrawChars
 	str r7, [sp, #8]
 	ldr r0, [sp, #0x38]
 	subs r0, #1

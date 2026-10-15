@@ -260,8 +260,11 @@ far:
   fills it from a descriptor. A word after the OAM entry (+0x08), so
   `charLookup` to `glyphTileStride` are 4 bytes later (`lineHeight` at
   +0x120); then two more words (+0x12C, and +0x134, which 0x08029390
-  sets) and no `tileCount`. Its virtual methods differ from XS's too
-  (not in the header yet): only `TextHeight` (font_height.cpp) links.
+  sets) and no `tileCount`. Its vtable (`gFontVtable`, 0x087F9AC4) is
+  the destructor, `DrawText` (0x08028F04, with control codes 1-3),
+  `MeasureText` and `TextHeight`; the other methods aren't virtual
+  (`DrawChars` calls `PutChar` directly), and it has no `UploadTiles` or
+  `SetTileBase`. `DrawChars`, `MeasureChars` and `TextHeight` link.
 - `gCrateHitResponse`'s rows: `ATTACK_KIND_COUNT`, 8 (XS 7).
 
 `tools/nt_compare`'s `structs.txt` gives the members' offsets the code

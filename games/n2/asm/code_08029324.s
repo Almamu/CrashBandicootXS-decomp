@@ -8,8 +8,8 @@
 
 	.text
 
-	thumb_func_start sub_08029324
-sub_08029324: @ 0x08029324
+	thumb_func_start FontMeasureText
+FontMeasureText: @ 0x08029324
 	push {r4, r5, r6, r7, lr}
 	mov ip, r0
 	adds r4, r1, #0
@@ -212,7 +212,7 @@ sub_08029484: @ 0x08029484
 	movs r0, #0x9c
 	lsls r0, r0, #1
 	adds r2, r3, r0
-	ldr r0, _080294A4 @ =gUnknown_087F9AC4
+	ldr r0, _080294A4 @ =gFontVtable
 	str r0, [r2]
 	movs r0, #1
 	ands r0, r1
@@ -224,7 +224,7 @@ _080294A0:
 	pop {r0}
 	bx r0
 	.align 2, 0
-_080294A4: .4byte gUnknown_087F9AC4
+_080294A4: .4byte gFontVtable
 
 	thumb_func_start sub_080294A8
 sub_080294A8: @ 0x080294A8
