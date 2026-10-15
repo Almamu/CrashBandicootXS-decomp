@@ -1,6 +1,7 @@
 // The level editor's logic (docs/editors.md, "The level editor"): the view's
-// coordinates and the game's parallax, the undo stack, the entities' id order
-// and links, the palette's colour rule, the parameter record views.
+// coordinates and the game's parallax, the undo stack, painting cells, the
+// entities' id order and links, the palette's colour rule, the parameter
+// record views.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Room } from "@crash/schema-types";
@@ -8,6 +9,24 @@ import { describe, expect, it } from "vitest";
 import { cameraFor, cellAt, clampCamera, fit, layerOrigin, lineCells, rectCells, scaleQ8, toScreen, toWorld, zoomAt } from "../src/lib/level/coords.ts";
 import { addEntity, addLink, deleteEntity, inIdOrder, insertionIndex, layoutFields, layouts, moveEntity, newRecord, ownRecord, recordUsers, remapLinks } from "../src/lib/level/entities.ts";
 import { History } from "../src/lib/level/history.ts";
+import {
+  applyBlocks,
+  applyValues,
+  base64,
+  brushOf,
+  brushOfBlock,
+  cellValue,
+  changedCells,
+  fromBase64,
+  oneBank,
+  paintBlock,
+  paintValue,
+  readCell,
+  tileBlock,
+  tileIndex,
+  u16le,
+  type PixelLayer,
+} from "../src/lib/level/paint.ts";
 import { channels, fromChannels, fromHex, fromRgb, hex, pixelTable, toRgb } from "../src/lib/level/palette.ts";
 import { visibleTiles } from "../src/lib/level/render.ts";
 
@@ -139,6 +158,66 @@ describe("the undo stack", () => {
     for (let i = 0; i < 5; i++) h.apply(add(1));
     while (h.undo());
     expect(s.v).toBe(2);
+  });
+});
+
+describe("painting", () => {
+  const tiles = new Uint8Array(64 * 2);
+  for (let i = 0; i < 64; i++) tiles[64 + i] = (i % 8) + 1; // tile 1: columns 1-8 (4bpp: 1-8)
+
+  it("draws a tile flipped, in a bank, and reads the cell back", () => {
+    const b = tileBlock(tiles, { tile: 1, hflip: true, vflip: false, bank: 3 }, 4);
+    expect([...b.subarray(0, 8)]).toEqual([56, 55, 54, 53, 52, 51, 50, 49]);
+    expect(oneBank(b)).toBe(true);
+    expect(tileBlock(tiles, { tile: 1, hflip: false, vflip: false, bank: 3 }, 8)[0]).toBe(1);
+    const v = cellValue({ tile: 5, hflip: true, vflip: true, bank: 2 }, false);
+    expect(v).toBe(5 | (3 << 10) | (2 << 12));
+    expect(brushOf(v, false)).toEqual({ tile: 5, hflip: true, vflip: true, bank: 2 });
+    expect(brushOf(cellValue({ tile: 300, hflip: false, vflip: true, bank: 0 }, true), true)).toEqual({ tile: 300, hflip: false, vflip: true, bank: 0 });
+  });
+
+  it("paints cells, undoes them, and sends only what changed", () => {
+    const layer: PixelLayer = { width: 32, height: 16, data: new Uint8Array(32 * 16) };
+    const original = layer.data.slice();
+    const block = tileBlock(tiles, { tile: 1, hflip: false, vflip: false, bank: 1 }, 4);
+    const ch = paintBlock(layer, [{ x: 1, y: 1 }, { x: 1, y: 1 }, { x: 3, y: 0 }], block);
+    expect(ch.map((c) => c.index)).toEqual([5, 3]);
+    expect([...readCell(layer, 1, 1)]).toEqual([...block]);
+    expect(paintBlock(layer, [{ x: 1, y: 1 }], block)).toEqual([]);
+    const sent = changedCells(layer, original, [5, 3, 0]);
+    expect(sent.map(([x, y]) => [x, y])).toEqual([
+      [3, 0],
+      [1, 1],
+    ]);
+    applyBlocks(layer, ch, true);
+    expect(layer.data).toEqual(original);
+    expect(changedCells(layer, original, [5, 3])).toEqual([]);
+    applyBlocks(layer, ch, false);
+    expect([...readCell(layer, 3, 0)]).toEqual([...block]);
+  });
+
+  it("paints collision values", () => {
+    const cells = new Uint16Array(6);
+    const ch = paintValue(cells, 3, [{ x: 1, y: 1 }, { x: 2, y: 0 }], 0x2b);
+    expect([...cells]).toEqual([0, 0, 0x2b, 0, 0x2b, 0]);
+    applyValues(cells, ch, true);
+    expect([...cells]).toEqual([0, 0, 0, 0, 0, 0]);
+  });
+
+  it("finds a block's tile under its flips (the eyedropper)", () => {
+    const index = tileIndex(tiles, 2, 4);
+    const b = tileBlock(tiles, { tile: 1, hflip: true, vflip: true, bank: 7 }, 4);
+    const got = brushOfBlock(index, b, 4)!;
+    expect(got.tile).toBe(1);
+    expect(got.bank).toBe(7);
+    expect(tileBlock(tiles, got, 4)).toEqual(b);
+    expect(brushOfBlock(index, new Uint8Array(64).fill(9), 4)).toBeNull();
+  });
+
+  it("round-trips base64 and u16 cells", () => {
+    const b = new Uint8Array([0, 1, 254, 255, 16]);
+    expect(fromBase64(base64(b))).toEqual(b);
+    expect([...u16le(new Uint8Array([0x34, 0x12, 0xff, 0xff]))]).toEqual([0x1234, 0xffff]);
   });
 });
 

@@ -1,25 +1,44 @@
 // The level editor's state (docs/editors.md, "The level editor"): the open
 // room (room.json's value, its layers' pictures, its collision cells, its
-// palette), what is shown, the tool, the undo stack, and saving it back
+// palette), what is shown, the tool, the undo stack, and saving it all back
 // through the backend's room save (crashdata.levels.room_edit), which checks
 // it like any save and keeps it all or none.
-import type { EntityTypeInfo, LegendEntry, Room, RoomSave, RoomView } from "@crash/schema-types";
+import type { EntityTypeInfo, LegendEntry, Room, RoomSave, RoomTiles, RoomView } from "@crash/schema-types";
 import { client } from "../api.ts";
 import { editor } from "../state.svelte.ts";
 import { History, type Edit } from "./history.ts";
+import {
+  applyBlocks,
+  applyValues,
+  base64,
+  brushOfBlock,
+  changedCells,
+  fromBase64,
+  paintBlock,
+  paintValue,
+  readCell,
+  tileBlock,
+  tileIndex,
+  type CellChange,
+  type PixelLayer,
+  type TileBrush,
+} from "./paint.ts";
+import type { Point } from "./coords.ts";
 import { addEntity, addLink, deleteEntity, deleteLink, moveEntity, newRecord, ownRecord, type Entity, type ParamRecord } from "./entities.ts";
 
 export type BgName = "bg0" | "bg1" | "bg2" | "bg3";
 export type LayerName = BgName | "collision";
 export const BG_NAMES: BgName[] = ["bg0", "bg1", "bg2", "bg3"];
 
-export type Tool = "select" | "add" | "link";
+export type Tool = "select" | "add" | "link" | "tile" | "collision";
 
-/** A layer's picture: its palette indices, row by row. */
-export interface PixelLayer {
-  width: number;
-  height: number;
-  data: Uint8Array;
+export interface TileSet {
+  name: string;
+  bpp: 4 | 8;
+  count: number;
+  tiles: Uint8Array;
+  banks: number[];
+  index: Map<string, TileBrush>;
 }
 
 /** A room of the level table, for the navigation. */
@@ -66,13 +85,19 @@ class LevelEditorState {
   /** room.json's value now */
   room = $state.raw<Room | null>(null);
   palette = $state.raw<number[]>([]);
-  /** bumped when a layer's pixels or the collision cells change (the canvas redraws) */
+  /** bumped when a layer's pixels or the collision cells change (the canvas redraws `damage`) */
   pixels = $state(0);
+  /** the cells changed since the canvas last drew: (layer, cell index) */
+  damage: { layer: LayerName; index: number }[] = [];
   loading = $state<string | null>(null);
 
   // the layers' data: not reactive (megabytes), `pixels` says when they change
   layers: Partial<Record<BgName, PixelLayer>> = {};
-  collision: { cols: number; rows: number; cells: Uint16Array } | null = null;
+  originals: Partial<Record<BgName, Uint8Array>> = {};
+  touched: Partial<Record<BgName, Set<number>>> = {};
+  collision: { cols: number; rows: number; cells: Uint16Array; original: Uint16Array } | null = null;
+  collisionTouched = new Set<number>();
+  tileSets = $state.raw<Partial<Record<BgName, TileSet | string>>>({});
 
   history = new History();
   /** the history's version, reactively */
@@ -80,6 +105,9 @@ class LevelEditorState {
 
   selected = $state<number | null>(null);
   tool = $state<Tool>("select");
+  paintLayer = $state<BgName>("bg0");
+  brush = $state<TileBrush>({ tile: 0, hflip: false, vflip: false, bank: 0 });
+  collisionValue = $state(0x2b);
   addType = $state<string | number>("WUMPA");
   show = $state<Show>({
     bg0: true,
@@ -199,7 +227,11 @@ class LevelEditorState {
     this.room = null;
     this.palette = [];
     this.layers = {};
+    this.originals = {};
+    this.touched = {};
     this.collision = null;
+    this.collisionTouched = new Set();
+    this.tileSets = {};
     this.selected = null;
     this.linkFrom = null;
     this.history.clear();
@@ -219,12 +251,20 @@ class LevelEditorState {
         this.close();
         names.forEach((n, i) => {
           const d = data[i]!;
-          if (n === "collision") this.collision = { cols: d.width, rows: d.height, cells: d.data as Uint16Array };
-          else this.layers[n] = { width: d.width, height: d.height, data: d.data as Uint8Array };
+          if (n === "collision") {
+            const cells = d.data as Uint16Array;
+            this.collision = { cols: d.width, rows: d.height, cells, original: cells.slice() };
+          } else {
+            const px = d.data as Uint8Array;
+            this.layers[n] = { width: d.width, height: d.height, data: px.slice() };
+            this.originals[n] = px.slice();
+            this.touched[n] = new Set();
+          }
         });
         this.view = view;
         this.room = structuredClone(view.room);
         this.palette = [...view.palette];
+        this.paintLayer = (BG_NAMES.find((n) => n in view.layers) ?? "bg0") as BgName;
         const firstNamed = view.entityTypes.find((t) => t.name);
         if (!this.typeOf(this.addType) && firstNamed?.name) this.addType = firstNamed.name;
         this.pixels++;
@@ -236,7 +276,33 @@ class LevelEditorState {
     }
   }
 
+  /** The tile set of a BG layer, fetched once (the build's: a few seconds for the largest). */
+  async loadTiles(layer: BgName): Promise<TileSet | null> {
+    const have = this.tileSets[layer];
+    if (have && typeof have !== "string") return have;
+    if (!this.view) return null;
+    const path = this.view.path;
+    this.tileSets = { ...this.tileSets, [layer]: "loading" };
+    try {
+      const t: RoomTiles = await client.roomTiles(editor.projectId, path, layer);
+      if (this.view?.path !== path) return null;
+      const tiles = fromBase64(t.tiles);
+      const set: TileSet = { name: t.tileset, bpp: t.bpp, count: t.count, tiles, banks: t.banks, index: tileIndex(tiles, t.count, t.bpp) };
+      this.tileSets = { ...this.tileSets, [layer]: set };
+      return set;
+    } catch (e) {
+      this.tileSets = { ...this.tileSets, [layer]: e instanceof Error ? e.message : String(e) };
+      return null;
+    }
+  }
+
   // -- edits ----------------------------------------------------------------------
+
+  private damaged(layer: LayerName, changes: { index: number }[]): void {
+    if (!changes.length) return;
+    for (const c of changes) this.damage.push({ layer, index: c.index });
+    this.pixels++;
+  }
 
   private record(e: Edit): void {
     this.history.push(e);
@@ -330,6 +396,99 @@ class LevelEditorState {
     this.setRoom("Delete a link", deleteLink(this.room, index));
   }
 
+  /** The block the brush paints on the paint layer, or null without its tile set. */
+  brushBlock(): Uint8Array | null {
+    const set = this.tileSets[this.paintLayer];
+    if (!set || typeof set === "string") return null;
+    return tileBlock(set.tiles, this.brush, set.bpp);
+  }
+
+  /** Paints the brush's tile into cells of the paint layer: the changes, applied (a stroke gathers them). */
+  paintTiles(at: Point[]): CellChange<Uint8Array>[] {
+    const layer = this.layers[this.paintLayer];
+    const block = this.brushBlock();
+    if (!layer || !block) return [];
+    const changes = paintBlock(layer, at, block);
+    for (const c of changes) this.touched[this.paintLayer]!.add(c.index);
+    this.damaged(this.paintLayer, changes);
+    return changes;
+  }
+
+  /** Records a stroke's tile changes as one edit. */
+  commitTiles(layerName: BgName, changes: CellChange<Uint8Array>[]): void {
+    const layer = this.layers[layerName];
+    if (!layer || !changes.length) return;
+    this.record({
+      label: `Paint ${layerName}`,
+      undo: () => {
+        // a saved stroke undone is a change again: the cells go in the next save
+        applyBlocks(layer, changes, true);
+        for (const c of changes) this.touched[layerName]!.add(c.index);
+        this.damaged(layerName, changes);
+      },
+      redo: () => {
+        applyBlocks(layer, changes, false);
+        for (const c of changes) this.touched[layerName]!.add(c.index);
+        this.damaged(layerName, changes);
+      },
+    });
+  }
+
+  paintCollision(at: Point[]): CellChange<number>[] {
+    const c = this.collision;
+    if (!c) return [];
+    const changes = paintValue(c.cells, c.cols, at, this.collisionValue);
+    for (const x of changes) this.collisionTouched.add(x.index);
+    this.damaged("collision", changes);
+    return changes;
+  }
+
+  commitCollision(changes: CellChange<number>[]): void {
+    const c = this.collision;
+    if (!c || !changes.length) return;
+    this.record({
+      label: "Paint the collision",
+      undo: () => {
+        applyValues(c.cells, changes, true);
+        for (const x of changes) this.collisionTouched.add(x.index);
+        this.damaged("collision", changes);
+      },
+      redo: () => {
+        applyValues(c.cells, changes, false);
+        for (const x of changes) this.collisionTouched.add(x.index);
+        this.damaged("collision", changes);
+      },
+    });
+  }
+
+  /** The eyedropper: the brush from a paint layer cell, or the collision value. */
+  pickTile(cell: Point): boolean {
+    const layer = this.layers[this.paintLayer];
+    const set = this.tileSets[this.paintLayer];
+    if (!layer || !set || typeof set === "string") return false;
+    const b = brushOfBlock(set.index, readCell(layer, cell.x, cell.y), set.bpp);
+    if (b) this.brush = b;
+    return !!b;
+  }
+
+  pickCollision(cell: Point): void {
+    const c = this.collision;
+    if (c) this.collisionValue = c.cells[cell.y * c.cols + cell.x] ?? 0;
+  }
+
+  setPaletteEntry(i: number, v: number): void {
+    if (this.palette[i] === v) return;
+    const before = this.palette;
+    const after = [...before];
+    after[i] = v;
+    this.palette = after;
+    this.record({
+      label: `Colour ${i}`,
+      undo: () => (this.palette = before),
+      redo: () => (this.palette = after),
+    });
+  }
+
   undo(): void {
     if (this.history.undo()) this.bump();
   }
@@ -345,6 +504,23 @@ class LevelEditorState {
     if (!this.view || !this.room) return null;
     const body: RoomSave = { path: this.view.path };
     if (!same(this.room, this.view.room)) body.room = this.room;
+    if (!same(this.palette, this.view.palette)) body.palette = this.palette;
+    const layers: NonNullable<RoomSave["layers"]> = {};
+    for (const n of BG_NAMES) {
+      const l = this.layers[n];
+      if (!l) continue;
+      const cells = changedCells(l, this.originals[n]!, this.touched[n]!);
+      if (cells.length) layers[n] = cells.map(([x, y, px]) => [x, y, base64(px)]);
+    }
+    if (Object.keys(layers).length) body.layers = layers;
+    const c = this.collision;
+    if (c) {
+      const out: [number, number, number][] = [];
+      for (const i of [...this.collisionTouched].sort((a, b) => a - b)) {
+        if (c.cells[i] !== c.original[i]) out.push([i % c.cols, Math.floor(i / c.cols), c.cells[i]!]);
+      }
+      if (out.length) body.collision = out;
+    }
     return body;
   }
 
@@ -355,7 +531,19 @@ class LevelEditorState {
       const r = await client.saveRoom(editor.projectId, body);
       // what is saved is now the room as opened
       const view = this.view!;
-      this.view = { ...view, room: structuredClone(this.room!) };
+      this.view = { ...view, room: structuredClone(this.room!), palette: [...this.palette] };
+      for (const n of BG_NAMES) {
+        const l = this.layers[n];
+        if (!l) continue;
+        this.originals[n] = l.data.slice();
+        this.touched[n] = new Set();
+      }
+      if (this.collision) {
+        this.collision.original = this.collision.cells.slice();
+        this.collisionTouched = new Set();
+      }
+      // painted tiles may be new to the set's order: fetch it again when needed
+      if (body.layers) this.tileSets = {};
       this.history.markSaved();
       this.bump();
       const errors = r.diagnostics.filter((d) => d.severity === "error").length;
