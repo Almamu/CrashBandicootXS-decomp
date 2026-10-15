@@ -250,6 +250,33 @@ endef
 $(foreach p,$(filter-out $(OBJ_SHEET_PACKAGES),$(BG_PACKAGES)),$(eval $(call BG_PACKAGE_GRIT_RULE,$(p))))
 $(foreach p,$(BG_PACKAGES),$(eval $(call BG_PACKAGE_RULE,$(p))))
 
+# The sprite banks (GRAPHICS_DIR/sprites/bankNN_<name>/, docs/graphics.md
+# "Sprite banks"): a PNG per frame and bank.json per bank.
+# tools/sprite_frames.py pack cuts the frames into the tile pool, one
+# tiles .inc per bank, generates the frames' piece arrays (a pieces .inc
+# per bank) and sprite_frames.h with each frame's tile offset. One run for
+# all banks, since a bank's offset depends on every earlier bank's size.
+SPRITE_FRAMES := python3 tools/sprite_frames.py$(if $(filter-out graphics,$(GRAPHICS_DIR)), --graphics-dir $(GRAPHICS_DIR))
+SPRITE_BANK_DIRS := $(sort $(wildcard $(GRAPHICS_DIR)/sprites/bank[0-9][0-9]_*))
+SPRITE_FRAME_SOURCES := $(foreach d,$(SPRITE_BANK_DIRS),$(d)/bank.json $(wildcard $(d)/f*.png))
+SPRITE_FRAMES_DIR := $(GRAPHICS_BUILDDIR)/sprites
+SPRITE_FRAMES_OUT := $(SPRITE_FRAMES_DIR)/sprite_frames.h \
+	$(foreach d,$(SPRITE_BANK_DIRS),$(SPRITE_FRAMES_DIR)/$(word 1,$(subst _, ,$(notdir $(d))))_tiles.inc \
+	$(SPRITE_FRAMES_DIR)/$(word 1,$(subst _, ,$(notdir $(d))))_pieces.inc)
+$(SPRITE_FRAMES_OUT) &: $(SPRITE_FRAME_SOURCES) tools/sprite_frames.py
+	$(SPRITE_FRAMES) pack $(SPRITE_FRAMES_DIR)
+
+# The OBJ palettes (gObjPalettes): one JASC file per paletteId,
+# GRAPHICS_DIR/sprites/palettes/NNN_<owner>.pal (NNN the paletteId, <owner>
+# the first sprite bank whose animations use it, or `unused`), back to
+# back in index order.
+OBJ_PALETTE_PALS := $(sort $(wildcard $(GRAPHICS_DIR)/sprites/palettes/*.pal))
+$(GRAPHICS_BUILDDIR)/sprites/obj_palettes.bin: $(patsubst $(GRAPHICS_DIR)/%.pal,$(GRAPHICS_BUILDDIR)/%.gbapal,$(OBJ_PALETTE_PALS))
+	@mkdir -p $(dir $@)
+	cat $^ > $@
+$(GRAPHICS_BUILDDIR)/sprites/obj_palettes.bin.inc: $(GRAPHICS_BUILDDIR)/sprites/obj_palettes.bin tools/bin2c.py
+	python3 tools/bin2c.py $< $@
+
 # The graphics classes (docs/graphics.md, "Graphics classes"): a graphic of
 # the manifest with a `class` is that class, its parts static const data
 # members. graphics.hpp declares them all (written only if it changed,

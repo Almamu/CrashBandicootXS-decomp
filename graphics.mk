@@ -83,33 +83,9 @@ $(C_BUILDDIR)/game/vehicles/jetpack/data/jetpack_cell_anim.o: $(GRAPHICS_BUILDDI
 	$(GRAPHICS_BUILDDIR)/vehicles/jetpack/clouds_frames.inc $(call bg_picture_incs,vehicles/jetpack/skies/rocket_racket)
 $(C_BUILDDIR)/game/vehicles/jetpack/data/jetpack_sky_pictures.o: $(call bg_picture_incs,vehicles/jetpack/skies/blimp_bonanza vehicles/jetpack/skies/no_fly_zone)
 
-# The sprite banks (graphics/sprites/bankNN_<name>/, docs/graphics.md
-# "Sprite banks"): a PNG per frame and bank.json per bank.
-# tools/sprite_frames.py pack cuts the frames into the tile pool, one
-# tiles .inc per bank, generates the frames' piece arrays (a pieces .inc
-# per bank) and sprite_frames.h with each frame's tile offset. One run for
-# all banks, since a bank's offset depends on every earlier bank's size.
-SPRITE_BANK_DIRS := $(sort $(wildcard graphics/sprites/bank[0-9][0-9]_*))
-SPRITE_FRAME_SOURCES := $(foreach d,$(SPRITE_BANK_DIRS),$(d)/bank.json $(wildcard $(d)/f*.png))
-SPRITE_FRAMES_DIR := $(GRAPHICS_BUILDDIR)/sprites
-SPRITE_FRAMES_OUT := $(SPRITE_FRAMES_DIR)/sprite_frames.h \
-	$(foreach d,$(SPRITE_BANK_DIRS),$(SPRITE_FRAMES_DIR)/$(word 1,$(subst _, ,$(notdir $(d))))_tiles.inc \
-	$(SPRITE_FRAMES_DIR)/$(word 1,$(subst _, ,$(notdir $(d))))_pieces.inc)
-$(SPRITE_FRAMES_OUT) &: $(SPRITE_FRAME_SOURCES) tools/sprite_frames.py
-	python3 tools/sprite_frames.py pack $(SPRITE_FRAMES_DIR)
-
 $(C_BUILDDIR)/engine/gfx/data/sprite_tiles.o $(foreach f,00_09 10_21 22_38 39_55,$(call data_obj,sprite_banks_$(f))): $(SPRITE_FRAMES_OUT)
 
-# The 125 OBJ palettes (gObjPalettes): one JASC file per paletteId,
-# graphics/sprites/palettes/NNN_<owner>.pal (NNN the paletteId, <owner>
-# the first sprite bank whose animations use it, or `unused`), back to
-# back in index order.
-OBJ_PALETTE_PALS := $(sort $(wildcard graphics/sprites/palettes/*.pal))
-$(GRAPHICS_BUILDDIR)/sprites/obj_palettes.bin: $(patsubst graphics/%.pal,$(GRAPHICS_BUILDDIR)/%.gbapal,$(OBJ_PALETTE_PALS))
-	@mkdir -p $(dir $@)
-	cat $^ > $@
-$(GRAPHICS_BUILDDIR)/sprites/obj_palettes.bin.inc: $(GRAPHICS_BUILDDIR)/sprites/obj_palettes.bin tools/bin2c.py
-	python3 tools/bin2c.py $< $@
+# The sprite banks and the OBJ palettes are built by graphics_rules.mk.
 $(C_BUILDDIR)/engine/gfx/data/sprite_tiles.o: $(GRAPHICS_BUILDDIR)/sprites/obj_palettes.bin.inc
 
 # The two boss pictures (docs/data.md "Boss pictures"): the airship

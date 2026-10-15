@@ -1,0 +1,20 @@
+{
+  "frames": [
+    {"origin": [14, 22], "pieces": [["32x32", -14, -22], ["8x16", -4, 10]], "layout": 2, "tiles": "own", "palettes": [35]},
+    {"origin": [15, 22], "pieces": [["32x32", -15, -22], ["8x16", -4, 10]], "layout": 2, "tiles": "own", "palettes": [35]},
+    {"origin": [15, 22], "pieces": [["32x32", -15, -22], ["8x16", -4, 10]], "layout": 2, "tiles": "own", "palettes": [35]},
+    {"origin": [12, 22], "pieces": [["16x32", -12, -22], ["8x32", 4, -22], ["8x16", -4, 10]], "layout": 2, "tiles": "own", "palettes": [35]},
+    {"origin": [8, 22], "pieces": [["16x32", -8, -22], ["8x16", -3, 10]], "layout": 2, "tiles": "own", "palettes": [35]},
+    {"origin": [3, 22], "pieces": [["8x32", -3, -22], ["8x16", -3, 10]], "layout": 2, "tiles": "own", "palettes": [35]},
+    {"origin": [8, 22], "pieces": [["16x32", -8, -22], ["8x16", -2, 10], ["8x8", 8, -1]], "layout": 2, "tiles": "own", "palettes": [35]},
+    {"origin": [12, 22], "pieces": [["32x32", -12, -22], ["8x16", -4, 10]], "layout": 2, "tiles": "own", "palettes": [35]},
+    {"origin": [14, 22], "pieces": [["32x32", -14, -22], ["8x16", -4, 10]], "layout": 2, "tiles": "own", "palettes": [36, 37]},
+    {"origin": [15, 22], "pieces": [["32x32", -15, -22], ["8x16", -4, 10]], "layout": 2, "tiles": "own", "palettes": [36, 37]},
+    {"origin": [15, 22], "pieces": [["32x32", -15, -22], ["8x16", -4, 10]], "layout": 2, "tiles": "own", "palettes": [36, 37]},
+    {"origin": [12, 22], "pieces": [["16x32", -12, -22], ["8x32", 4, -22], ["8x16", -4, 10]], "layout": 2, "tiles": "own", "palettes": [36, 37]},
+    {"origin": [8, 22], "pieces": [["16x32", -8, -22], ["8x16", -3, 10]], "layout": 2, "tiles": "own", "palettes": [36, 37]},
+    {"origin": [3, 22], "pieces": [["8x32", -3, -22], ["8x16", -3, 10]], "layout": 2, "tiles": "own", "palettes": [36, 37]},
+    {"origin": [8, 22], "pieces": [["16x32", -8, -22], ["8x16", -2, 10], ["8x8", 8, -1]], "layout": 2, "tiles": "own", "palettes": [36, 37]},
+    {"origin": [12, 22], "pieces": [["32x32", -12, -22], ["8x16", -4, 10]], "layout": 2, "tiles": "own", "palettes": [36, 37]}
+  ]
+}

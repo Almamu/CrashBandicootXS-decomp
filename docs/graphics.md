@@ -1704,8 +1704,9 @@ In the ROM:
 
 `tools/sprite_frames.py extract` writes the 56 directories from
 `baserom.gba` and checks that packing them gives the ROM's pool and every
-frame's offset. `tools/sprite_frames.py pack OUTDIR` is the build step
-(`graphics.mk`, one run for all banks, since a bank's position depends on
+frame's offset (with `--graphics-dir games/n2/graphics`, N-Tranced's 49:
+docs/n_tranced.md, "Sprite banks"). `tools/sprite_frames.py pack OUTDIR` is the build step
+(`graphics_rules.mk`, one run for all banks, since a bank's position depends on
 the size of every bank before it). It reads the PNG indices (the palette
 is ignored), cuts each piece's rectangle into tiles, and places the runs
 frame by frame. It writes:

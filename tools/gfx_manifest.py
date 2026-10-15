@@ -46,8 +46,10 @@ put a class's members in ROM order.
         DIR/manifest.json, its sources in DIR or, for a graphic it shares
         with XS, in graphics/ (source()). check, extract, header, defs and
         make work on it as on XS's; extract writes to DIR only what isn't
-        XS's already, and extract --check compares each source, DIR's or
-        XS's, with the game's ROM (the second argument, its baserom). The
+        XS's already (a file entry's; a directory's files are all the
+        game's, as sprite_frames.py reads only its own), and extract --check
+        compares each source, DIR's or XS's, with the game's ROM (the second
+        argument, its baserom). The
         classes keep XS's C names: a part's must be in cxx_symbols.txt
         already, which both games' builds rename with.
 
@@ -624,6 +626,11 @@ def extract(rom_path, root):
             continue
         if e["kind"] in EXTRACT:
             EXTRACT[e["kind"]](rom, e, root / GRAPHICS, by_symbol)
+        elif e["kind"] == "sprite_banks" and not is_xs():
+            # the sprite banks of another game's manifest entry
+            import sprite_frames
+            sprite_frames.use_graphics_dir(GRAPHICS)
+            sprite_frames.extract(rom_path, root / GRAPHICS / e["path"])
         elif e["kind"] not in FAMILY_TOOLS or not is_xs():
             sys.exit("gfx_manifest: %s: unknown kind %s" % (e["symbol"], e["kind"]))
     if not is_xs():
@@ -676,7 +683,8 @@ def extract_game(rom_path, check_only):
                     errors.append("%s/%s: not in the tree" % (GRAPHICS, rel))
                 elif not same_file(got / rel, want):
                     errors.append("%s: differs from the ROM's" % want)
-            elif not ((XS_GRAPHICS / rel).exists() and same_file(got / rel, XS_GRAPHICS / rel)):
+            elif not ((XS_GRAPHICS / rel).exists() and not owner(load(), rel)["path"].endswith("/")
+                      and same_file(got / rel, XS_GRAPHICS / rel)):
                 (GRAPHICS / rel).parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy(got / rel, GRAPHICS / rel)
                 print("gfx_manifest: wrote %s/%s" % (GRAPHICS, rel))

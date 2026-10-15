@@ -1,0 +1,23 @@
+{
+  "frames": [
+    {"origin": [21, 15], "pieces": [["32x32", -21, -15], ["16x16", 11, -7]], "layout": 2, "tiles": "own", "palettes": [11]},
+    {"origin": [20, 13], "pieces": [["32x32", -20, -13], ["8x32", 12, -13]], "layout": 2, "tiles": "own", "palettes": [11]},
+    {"origin": [17, 12], "pieces": [["32x32", -17, -12], ["8x8", 15, -1]], "layout": 2, "tiles": "own", "palettes": [11]},
+    {"origin": [20, 12], "pieces": [["32x32", -20, -12], ["8x32", 12, -12]], "layout": 2, "tiles": "own", "palettes": [11]},
+    {"origin": [21, 14], "pieces": [["32x32", -21, -14], ["16x32", 11, -14]], "layout": 2, "tiles": "own", "palettes": [11]},
+    {"origin": [22, 15], "pieces": [["32x32", -22, -15], ["16x32", 10, -15]], "layout": 2, "tiles": "own", "palettes": [11]},
+    {"origin": [20, 15], "pieces": [["32x32", -20, -15], ["16x16", 12, -7]], "layout": 2, "tiles": "own", "palettes": [11]},
+    {"origin": [17, 12], "pieces": [["32x32", -17, -12]], "layout": 2, "tiles": "own", "palettes": [11]},
+    {"origin": [20, 12], "pieces": [["32x32", -20, -12], ["8x16", 12, -7]], "layout": 2, "tiles": "own", "palettes": [11]},
+    {"origin": [20, 13], "pieces": [["32x32", -20, -13], ["16x16", 12, -5]], "layout": 2, "tiles": "own", "palettes": [11]},
+    {"origin": [20, 13], "pieces": [["32x32", -20, -13], ["8x16", 12, -3]], "layout": 2, "tiles": "own", "palettes": [11]},
+    {"origin": [16, 12], "pieces": [["32x32", -16, -12], ["8x8", 16, 0]], "layout": 2, "tiles": "own", "palettes": [11]},
+    {"origin": [16, 13], "pieces": [["32x32", -16, -13], ["16x8", 16, 1]], "layout": 2, "tiles": "own", "palettes": [11]},
+    {"origin": [13, 16], "pieces": [["32x32", -13, -8], ["8x16", 19, 0], ["8x8", -5, -16]], "layout": 2, "tiles": "own", "palettes": [11]},
+    {"origin": [13, 16], "pieces": [["16x32", -5, -16], ["16x16", 11, 0], ["8x16", -13, 2]], "layout": 2, "tiles": "own", "palettes": [11]},
+    {"origin": [26, 14], "pieces": [["32x32", -10, -14], ["16x8", -26, 1]], "layout": 2, "tiles": "own", "palettes": [11]},
+    {"origin": [21, 12], "pieces": [["32x32", -5, -12], ["16x8", -21, 2]], "layout": 2, "tiles": "own", "palettes": [11]},
+    {"origin": [15, 12], "pieces": [["32x32", -7, -12], ["8x16", -15, 3]], "layout": 2, "tiles": "own", "palettes": [11]},
+    {"origin": [24, 14], "pieces": [["32x32", -8, -14], ["16x16", -24, -6]], "layout": 2, "tiles": "own", "palettes": [11]}
+  ]
+}
