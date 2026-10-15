@@ -171,8 +171,11 @@ XS, N-Tranced or a mod's tree, a form for any data file made from its
 JSON Schema, `make data-check`'s problems with a click to their place,
 and a preview of a room in the PC port. A save keeps the file's own
 layout and is refused when the schema or the model's checks reject it.
-See [docs/editors.md](./docs/editors.md), "Running the editor"; the
-level, cutscene and music editors come next (#1167).
+See [docs/editors.md](./docs/editors.md), "Running the editor". The same
+editor is a desktop app (Linux, Windows, macOS: CI's "Desktop app"
+artifacts) that runs on a checkout with Python 3.12, no browser
+("The desktop app"). The level, cutscene and music editors come next
+(#1167).
 
 ## How the code is organised
 

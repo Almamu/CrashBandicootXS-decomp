@@ -40,6 +40,7 @@ apps/schema-types/                  TypeScript: the data files' types, generated
                                     from packages/crashdata/schemas/, and the
                                     editor backend's client (editors.md)
 apps/editor/                        the web editor (Svelte, Vite; editors.md)
+apps/desktop/                       the desktop editor (Tauri: src-tauri/)
 tools/                              the vendored C tools (agbcc, gbagfx,
                                     grit, permuter), nt_compare/, and the
                                     shims tools/<name>.py of the commands

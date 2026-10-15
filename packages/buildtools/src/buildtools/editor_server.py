@@ -1,6 +1,7 @@
 """The editors' backend: crashdata over HTTP, on 127.0.0.1 (#1167, docs/editors.md "The editor's backend").
 
-    tools/editor_server.py [--port N] [--static DIR] [--token T] [--open] [--verbose]
+    tools/editor_server.py [--port N] [--static DIR] [--token T] [--allow-origin O] [--watch-stdin]
+                           [--open] [--verbose]
     make editor [EDITOR_ARGS=...]
 
 serves the web editor (apps/editor's build, apps/editor/dist) and its
@@ -113,10 +114,12 @@ def _shown(p, tree):
 
 
 class Server:
-    def __init__(self, tree=ROOT, static=None, token=None, python=sys.executable):
+    def __init__(self, tree=ROOT, static=None, token=None, python=sys.executable, origins=()):
         self.tree = Path(tree).resolve()
         self.static = Path(static) if static else self.tree / "apps" / "editor" / "dist"
         self.token = token
+        # with a token, the pages that may call it: the desktop app's, and those asked for
+        self.origins = DESKTOP_ORIGINS + tuple(origins)
         self.python = python
         self.projects = {}
         for name, title in GAMES.items():
@@ -383,7 +386,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             return None
         port = self.server.server_address[1]
         own = ("http://127.0.0.1:%d" % port, "http://localhost:%d" % port)
-        if origin in own or (self.app.token and origin in DESKTOP_ORIGINS):
+        if origin in own or (self.app.token and origin in self.app.origins):
             return origin
         return False
 
@@ -596,10 +599,14 @@ def main(argv=None):
     ap.add_argument("--static", help="the built web editor (default: the tree's apps/editor/dist)")
     ap.add_argument("--token", default=os.environ.get("CRASH_EDITOR_TOKEN"),
                     help="require it on every API request (the desktop app's; default $CRASH_EDITOR_TOKEN)")
+    ap.add_argument("--allow-origin", action="append", default=[], metavar="ORIGIN",
+                    help="with --token, another page that may call it (the desktop app's `tauri dev`)")
+    ap.add_argument("--watch-stdin", action="store_true",
+                    help="stop when stdin closes (the desktop app's: the backend goes with the app, however it ends)")
     ap.add_argument("--open", action="store_true", help="open the editor in the browser")
     ap.add_argument("--verbose", action="store_true", help="log every request on stderr")
     args = ap.parse_args(argv)
-    app = Server(ROOT, args.static, args.token)
+    app = Server(ROOT, args.static, args.token, origins=args.allow_origin)
     httpd = serve(app, args.port, args.verbose)
     url = "http://127.0.0.1:%d/" % httpd.server_address[1]
     # the desktop app reads this line for the port
@@ -607,6 +614,12 @@ def main(argv=None):
     if not (app.static / "index.html").is_file():
         print("editor-server: no web editor in %s yet: `make editor-build` (docs/editors.md)" % app.static,
               flush=True)
+    if args.watch_stdin:
+        def watch():
+            while sys.stdin.buffer.read(4096):
+                pass
+            os._exit(0)
+        threading.Thread(target=watch, daemon=True).start()
     if args.open:
         webbrowser.open(url)
     try:
